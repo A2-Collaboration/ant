@@ -1,17 +1,6 @@
 #ifndef EVENTMANAGER_H
 #define EVENTMANAGER_H
 
-// GoAT headers
-#include "GTreeManager.h"
-#include "GTree.h"
-#include "GTreeTrack.h"
-#include "GTreeParticle.h"
-#include "GTreeMeson.h"
-#include "GTreeDetectorHits.h"
-#include "GTreeEventParameters.h"
-#include "GTreeA2Geant.h"
-#include "GTreePluto.h"
-
 // Ant
 #include "ParticleType.h"
 #include "Particle.h"
@@ -44,7 +33,7 @@ public:
 /**
  * @brief The EventManager class
  */
-class EventManager: public GTreeManager {
+class EventManager  {
 public:
     using PhysicsList = std::list<ant::Physics*>;
 
@@ -62,11 +51,11 @@ protected:
     void RunPhysics(const ant::Event& event);
 
 
-    void CopyParticles(GTreeParticle* tree, const ant::ParticleTypeDatabase::Type& type, ant::Event& event);
-    void CopyTracks(GTreeTrack* tree, Event& event);
-    void CopyPlutoParticles(GTreePluto* tree, Event &event);
-    void CopyTaggerHits(Event& event);
-    void CopyTriggerInfo(GTreeTrigger* tree, Event& event);
+//    void CopyParticles(GTreeParticle* tree, const ant::ParticleTypeDatabase::Type& type, ant::Event& event);
+//    void CopyTracks(GTreeTrack* tree, Event& event);
+//    void CopyPlutoParticles(GTreePluto* tree, Event &event);
+//    void CopyTaggerHits(Event& event);
+//    void CopyTriggerInfo(GTreeTrigger* tree, Event& event);
 
     void checkMCIDs();
 

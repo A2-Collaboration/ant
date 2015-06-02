@@ -4,7 +4,7 @@
 #
 #   PLUTO_FOUND              Pluto library and include path were found
 #
-#   PLUTO_INCLUDE_PATH       The pluto inlcude path
+#   PLUTO_INCLUDE_DIR       The pluto inlcude path
 #
 #   PLUTO_LIBRARY            Full path of the pluto library
 #
@@ -25,21 +25,21 @@ Set(PLUTO_FOUND FALSE)
 find_library(PLUTO_LIBRARY NAMES Pluto PATHS ${PLUTO_SEARCHPATH})
 get_filename_component(PLUTO_LIBRARY_PATH ${PLUTO_LIBRARY} PATH)
 
-find_path(PLUTO_INCLUDE_PATH NAMES PPlutoBulkDecay.h PATHS ${PLUTO_SEARCHPATH} PATH_SUFFIXES src)
+find_path(PLUTO_INCLUDE_DIR NAMES PPlutoBulkDecay.h PATHS ${PLUTO_SEARCHPATH} PATH_SUFFIXES src)
 
 if(NOT PLUTO_LIBRARY)
 	Message(STATUS "Looking for Pluto... Library not found!")
 else()
-	Message(STATUS "Looking for Pluto... PLUTO_LIBRARY: " ${PLUTO_LIBRARY})
+	Message(STATUS "Looking for Pluto... " ${PLUTO_LIBRARY})
 endif()
 
-if(NOT PLUTO_INCLUDE_PATH)
+if(NOT PLUTO_INCLUDE_DIR)
 	Message(STATUS "Looking for Pluto...  Include path not found!")
 else()
-	Message(STATUS "Looking for Pluto... PLUTO_INCLUDE_PATH: " ${PLUTO_INCLUDE_PATH})
+	Message(STATUS "Looking for Pluto... " ${PLUTO_INCLUDE_DIR})
 endif()
 
-if(PLUTO_LIBRARY AND PLUTO_INCLUDE_PATH )
+if(PLUTO_LIBRARY AND PLUTO_INCLUDE_DIR)
 	Set(PLUTO_FOUND TRUE)
 endif()
 

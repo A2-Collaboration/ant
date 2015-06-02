@@ -28,7 +28,7 @@ include_directories(src
   ${PLUTO_INCLUDE_DIR}
   ${APLCON_INCLUDE_DIR})
 link_directories(${ROOT_LIBRARY_DIR})
-list(APPEND LIBS ${ROOT_LIBRARIES} ${APLCON_LIBRARIES} ${PLUTO_LIBRARIES})
+list(APPEND LIBS ${ROOT_LIBRARIES} ${APLCON_LIBRARY} ${PLUTO_LIBRARY})
 
 set(ANT_BASE
   src/base/types.cc

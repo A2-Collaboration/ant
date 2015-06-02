@@ -16,17 +16,17 @@ if(NOT APLCON_INCLUDE_DIR)
   return()
 endif()
 
-find_library(APLCON_LIBRARIES NAMES aplcon++
+find_library(APLCON_LIBRARY NAMES aplcon++
   PATHS ${APLCON_SEARCH_PATHS}
   PATH_SUFFIXES build
   NO_DEFAULT_PATH
   )
-if(NOT APLCON_LIBRARIES)
+if(NOT APLCON_LIBRARY)
   Message(STATUS "Looking for APLCON... - aplcon++ library not found.")
 endif()
 
 
-if(APLCON_INCLUDE_DIR AND APLCON_LIBRARIES)
+if(APLCON_INCLUDE_DIR AND APLCON_LIBRARY)
   set(APLCON_FOUND TRUE)
   Message(STATUS "Looking for APLCON... - Found ${APLCON_LIBRARIES}")
 endif()

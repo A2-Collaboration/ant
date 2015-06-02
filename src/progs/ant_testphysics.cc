@@ -4,7 +4,6 @@
 #include "EventManager.h"
 #include "AntPhysics.h"
 #include "analysis/TestPhysics.h"
-#include "GoatExceptions.h"
 #include "TFile.h"
 #include "plot/Histogram.h"
 using namespace std;
@@ -12,8 +11,8 @@ using namespace std;
 
 TFile* OpenAsOutput(const std::string& filename) {
     TFile* file = new TFile(filename.c_str(),"recreate");
-    if(!file || !file->IsOpen())
-        throw GoatOutputFileError(filename, "Can't open output file for writing: "+filename);
+//    if(!file || !file->IsOpen())
+//        throw GoatOutputFileError(filename, "Can't open output file for writing: "+filename);
 
     return file;
 }
@@ -87,11 +86,11 @@ int main(int argc, char *argv[])
     gargs.push_back(argv[2]);
 
     // Perform basic configuration
-    if(!analysis.BaseConfig(gargs.size(), &(gargs[0]), "GoAT", "Physics"))
-    {
-        system("man ./documents/goat.man");
-        return 0;
-    }
+//    if(!analysis.BaseConfig(gargs.size(), &(gargs[0]), "GoAT", "Physics"))
+//    {
+//        system("man ./documents/goat.man");
+//        return 0;
+//    }
 
     // Perform full initialisation
     if(!analysis.Init(""))
@@ -101,7 +100,7 @@ int main(int argc, char *argv[])
     }
 
     // Run over files
-    analysis.TraverseFiles();
+//    analysis.TraverseFiles();
 
     analysis.Finish();
 
