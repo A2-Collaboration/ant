@@ -1,0 +1,11 @@
+# Ignore build directory
+/build*
+
+# some files usually ignored
+/CMakeLists.txt.user*
+*.root
+
+# Temp files
+*.swp
+*~
+*.autosave
