@@ -21,12 +21,14 @@ void ant::input::TreeManager::AddTree(TTree *tree)
             throw false;
     }
 
-    trees.push_back(tree);
+    trees.insert(tree);
 }
 
 Long64_t ant::input::TreeManager::GetEntries() const
 {
-    return trees.front()->GetEntries();
+    const auto& it = trees.begin();
+    return it != trees.end() ? (*it)->GetEntries() : 0 ;
+
 }
 
 void ant::input::TreeManager::GetEntry(Long64_t entry)

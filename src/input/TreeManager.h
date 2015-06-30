@@ -1,7 +1,7 @@
 #ifndef TREEMANAGER_H
 #define TREEMANAGER_H
 
-#include <list>
+#include <set>
 #include "Rtypes.h"
 
 class TTree;
@@ -11,7 +11,7 @@ namespace input {
 
 class TreeManager {
 protected:
-    using tree_list_t = std::list<TTree*>;
+    using tree_list_t = std::set<TTree*>;
     tree_list_t trees;
 
 public:
