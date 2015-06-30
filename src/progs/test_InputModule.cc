@@ -4,6 +4,7 @@
 #include "input/TrackInput.h"
 #include "input/TriggerInput.h"
 #include "input/DetectorHitInput.h"
+#include "input/ParticleInput.h"
 #include "TTree.h"
 
 #include <iostream>
@@ -44,6 +45,7 @@ int main(int argc, char** argv) {
     TrackInput tracks;
     TriggerInput trigger;
     DetectorHitInput detectorhit;
+    ParticleInput photons("photons");
 
     bool init1 = pluto.SetupBranches( MyTreeRequestMgr(m,treeManager) );
 
@@ -69,7 +71,14 @@ int main(int argc, char** argv) {
         cout << "DetectorHit Init OK" << endl;
     }
 
-    if( init1 || init2 || init3) {
+    bool init5 = photons.SetupBranches( MyTreeRequestMgr(m,treeManager) );
+
+    if( init5 == true) {
+        cout << "Photons Init OK" << endl;
+    }
+
+
+    if( init1 || init2 || init3 || init4 || init5) {
 
         cout << treeManager.GetEntries() << " entries " << endl;
 
@@ -78,11 +87,13 @@ int main(int argc, char** argv) {
         if (init2) tracks.GetEntry();
         if (init3) trigger.GetEntry();
         if (init4) detectorhit.GetEntry();
+        if (init5) photons.GetEntry();
 
         if (init1) cout << "Pluto Particles: " << pluto.Particles().size() << endl;
         if (init2) cout << "Goat Tracks: " << tracks.GetNTracks() << endl;
         if (init3) cout << "Trigger CBEsum: " << trigger.GetEnergySum() << "MeV" << endl;
         if (init4) cout << "DetectorHit: N NaIHits: " << detectorhit.GetNNaIHits() << endl;
+        if (init5) cout << "Photons: " << photons.GetNParticles() << endl;
 
     }
 
