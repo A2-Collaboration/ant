@@ -5,6 +5,7 @@
 #include "input/TriggerInput.h"
 #include "input/DetectorHitInput.h"
 #include "input/ParticleInput.h"
+#include "input/GeantInput.h"
 #include "TTree.h"
 
 #include <iostream>
@@ -46,6 +47,7 @@ int main(int argc, char** argv) {
     TriggerInput trigger;
     DetectorHitInput detectorhit;
     ParticleInput photons("photons");
+    GeantInput geant;
 
     bool init1 = pluto.SetupBranches( MyTreeRequestMgr(m,treeManager) );
 
@@ -77,8 +79,14 @@ int main(int argc, char** argv) {
         cout << "Photons Init OK" << endl;
     }
 
+    bool init6 = geant.SetupBranches( MyTreeRequestMgr(m,treeManager) );
 
-    if( init1 || init2 || init3 || init4 || init5) {
+    if( init6 == true) {
+        cout << "Geant Init OK" << endl;
+    }
+
+
+    if( init1 || init2 || init3 || init4 || init5 || init6 ) {
 
         cout << treeManager.GetEntries() << " entries " << endl;
 
@@ -88,12 +96,14 @@ int main(int argc, char** argv) {
         if (init3) trigger.GetEntry();
         if (init4) detectorhit.GetEntry();
         if (init5) photons.GetEntry();
+        if (init6) geant.GetEntry();
 
         if (init1) cout << "Pluto Particles: " << pluto.Particles().size() << endl;
         if (init2) cout << "Goat Tracks: " << tracks.GetNTracks() << endl;
         if (init3) cout << "Trigger CBEsum: " << trigger.GetEnergySum() << "MeV" << endl;
         if (init4) cout << "DetectorHit: N NaIHits: " << detectorhit.GetNNaIHits() << endl;
         if (init5) cout << "Photons: " << photons.GetNParticles() << endl;
+        if (init6) cout << "Geant: " << geant.GetNCBHits() << endl;
 
     }
 
