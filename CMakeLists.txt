@@ -66,6 +66,14 @@ set(ANT_BASE
   src/plot/SmartHist.cc
   src/plot/HistogramFactories.h
   src/plot/HistogramFactories.cc
+  src/input/InputModule.h
+  src/input/InputModule.cc
+  src/input/FileManager.h
+  src/input/FileManager.cc
+  src/input/PlutoInput.h
+  src/input/PlutoInput.cc
+  src/input/TreeManager.h
+  src/input/TreeManager.cc
   )
 
 set(ANT_PHYSICS
