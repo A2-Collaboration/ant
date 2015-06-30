@@ -76,6 +76,8 @@ set(ANT_BASE
   src/input/TreeManager.cc
   src/input/TrackInput.h
   src/input/TrackInput.cc
+  src/input/TriggerInput.h
+  src/input/TriggerInput.cc
   )
 
 set(ANT_PHYSICS

@@ -2,6 +2,7 @@
 #include "input/TreeManager.h"
 #include "input/PlutoInput.h"
 #include "input/TrackInput.h"
+#include "input/TriggerInput.h"
 #include "TTree.h"
 
 #include <iostream>
@@ -40,6 +41,7 @@ int main(int argc, char** argv) {
 
     PlutoInput pluto;
     TrackInput tracks;
+    TriggerInput trigger;
 
     bool init1 = pluto.SetupBranches( MyTreeRequestMgr(m,treeManager) );
 
@@ -53,16 +55,24 @@ int main(int argc, char** argv) {
         cout << "Tracks Init OK" << endl;
     }
 
-    if( init1 || init2 ) {
+    bool init3 = trigger.SetupBranches( MyTreeRequestMgr(m,treeManager) );
+
+    if( init2 == true) {
+        cout << "Tracks Init OK" << endl;
+    }
+
+    if( init1 || init2 || init3) {
 
         cout << treeManager.GetEntries() << " entries " << endl;
 
         treeManager.GetEntry(1);
         pluto.GetEntry();
         tracks.GetEntry();
+        trigger.GetEntry();
 
         cout << "Pluto Particles: " << pluto.Particles().size() << endl;
         cout << "Goat Tracks: " << tracks.GetNTracks() << endl;
+        cout << "Trigger CBEsum: " << trigger.GetEnergySum() << "MeV" << endl;
 
     }
 
