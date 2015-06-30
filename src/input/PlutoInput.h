@@ -4,6 +4,7 @@
 #include "FileManager.h"
 #include "InputModule.h"
 #include <vector>
+#include "Rtypes.h"
 
 class TClonesArray;
 class TTree;
@@ -19,8 +20,8 @@ public:
 protected:
     TTree*          data = nullptr;
     TClonesArray*   PlutoMCTrue = nullptr;
-    int64_t         plutoID = 0;
-    int64_t         plutoRandomID = 0;
+    Long64_t        plutoID = 0;
+    Long64_t        plutoRandomID = 0;
 
     PParticleVector particles;
 public:
@@ -31,9 +32,9 @@ public:
     bool SetupBranches(TreeRequestManager&& input_files);
     void GetEntry();
 
-    const PParticleVector&  Particles() const   { return particles; }
-    const int64_t           GetPlutoID() const  { return plutoID; }
-    const int64_t           GetRandomID() const { return plutoRandomID; }
+    const PParticleVector&  Particles()   const { return particles; }
+    const Long64_t          GetPlutoID()  const { return plutoID; }
+    const Long64_t          GetRandomID() const { return plutoRandomID; }
 };
 }
 }
