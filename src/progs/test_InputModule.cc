@@ -6,6 +6,8 @@
 #include "input/DetectorHitInput.h"
 #include "input/ParticleInput.h"
 #include "input/GeantInput.h"
+#include "input/TaggerInput.h"
+
 #include "TTree.h"
 
 #include <iostream>
@@ -48,6 +50,7 @@ int main(int argc, char** argv) {
     DetectorHitInput detectorhit;
     ParticleInput photons("photons");
     GeantInput geant;
+    TaggerInput tagger;
 
     bool init1 = pluto.SetupBranches( MyTreeRequestMgr(m,treeManager) );
 
@@ -85,8 +88,14 @@ int main(int argc, char** argv) {
         cout << "Geant Init OK" << endl;
     }
 
+    bool init7 = tagger.SetupBranches( MyTreeRequestMgr(m,treeManager) );
 
-    if( init1 || init2 || init3 || init4 || init5 || init6 ) {
+    if( init7 == true) {
+        cout << "Tagger Init OK" << endl;
+    }
+
+
+    if( init1 || init2 || init3 || init4 || init5 || init6 || init7) {
 
         cout << treeManager.GetEntries() << " entries " << endl;
 
@@ -97,6 +106,7 @@ int main(int argc, char** argv) {
         if (init4) detectorhit.GetEntry();
         if (init5) photons.GetEntry();
         if (init6) geant.GetEntry();
+        if (init7) tagger.GetEntry();
 
         if (init1) cout << "Pluto Particles: " << pluto.Particles().size() << endl;
         if (init2) cout << "Goat Tracks: " << tracks.GetNTracks() << endl;
@@ -104,6 +114,7 @@ int main(int argc, char** argv) {
         if (init4) cout << "DetectorHit: N NaIHits: " << detectorhit.GetNNaIHits() << endl;
         if (init5) cout << "Photons: " << photons.GetNParticles() << endl;
         if (init6) cout << "Geant: " << geant.GetNCBHits() << endl;
+        if (init7) cout << "Tagger hits: " << tagger.GetNTagged() << endl;
 
     }
 

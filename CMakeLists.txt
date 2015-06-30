@@ -84,6 +84,8 @@ set(ANT_BASE
   src/input/DetectorHitInput.cc
   src/input/GeantInput.h
   src/input/GeantInput.cc
+  src/input/TaggerInput.h
+  src/input/TaggerInput.cc
   )
 
 set(ANT_PHYSICS
