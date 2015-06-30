@@ -74,6 +74,8 @@ set(ANT_BASE
   src/input/PlutoInput.cc
   src/input/TreeManager.h
   src/input/TreeManager.cc
+  src/input/TrackInput.h
+  src/input/TrackInput.cc
   )
 
 set(ANT_PHYSICS

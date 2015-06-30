@@ -1,6 +1,7 @@
 #include "input/FileManager.h"
 #include "input/TreeManager.h"
 #include "input/PlutoInput.h"
+#include "input/TrackInput.h"
 #include "TTree.h"
 
 #include <iostream>
@@ -38,19 +39,33 @@ int main(int argc, char** argv) {
     TreeManager treeManager;
 
     PlutoInput pluto;
+    TrackInput tracks;
 
-    bool init = pluto.SetupBranches( MyTreeRequestMgr(m,treeManager) );
+    bool init1 = pluto.SetupBranches( MyTreeRequestMgr(m,treeManager) );
 
-    if( init == true) {
-        cout << "Init OK" << endl;
+    if( init1 == true) {
+        cout << "Pluto Init OK" << endl;
+    }
+
+    bool init2 = tracks.SetupBranches( MyTreeRequestMgr(m,treeManager) );
+
+    if( init2 == true) {
+        cout << "Tracks Init OK" << endl;
+    }
+
+    if( init1 || init2 ) {
 
         cout << treeManager.GetEntries() << " entries " << endl;
 
         treeManager.GetEntry(1);
         pluto.GetEntry();
+        tracks.GetEntry();
 
-        cout << "Pluto particles: " << pluto.Particles().size() << endl;
+        cout << "Pluto Particles: " << pluto.Particles().size() << endl;
+        cout << "Goat Tracks: " << tracks.GetNTracks() << endl;
+
     }
+
 
     m.CloseAll();
 
