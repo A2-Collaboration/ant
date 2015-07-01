@@ -86,6 +86,8 @@ set(ANT_BASE
   src/input/GeantInput.cc
   src/input/TaggerInput.h
   src/input/TaggerInput.cc
+  src/input/GoatReader.h
+  src/input/GoatReader.cc
   src/DataReader.h
   src/DataReader.cc
   )
