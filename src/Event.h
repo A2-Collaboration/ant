@@ -34,6 +34,11 @@ public:
                 particles.emplace_back(particle);
             }
 
+            void AddParticle(ParticlePtr& particle) {
+                lists[&particle->Type()].emplace_back(particle);
+                particles.emplace_back(particle);
+            }
+
 
             const ParticleList& GetAll() const { return particles; }
 
