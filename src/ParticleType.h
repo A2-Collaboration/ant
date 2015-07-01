@@ -92,6 +92,8 @@ public:
     static const Type Omega;
     static const Type EtaPrime;
 
+    static const Type BeamProton;
+
     static const Particles_t& GetParticles() { return types; }
 
     class const_iterator : public Particles_t::const_iterator {

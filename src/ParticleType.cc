@@ -36,6 +36,8 @@ const ParticleTypeDatabase::Type ParticleTypeDatabase::Eta("Eta",               
 const ParticleTypeDatabase::Type ParticleTypeDatabase::Omega("Omega",                 "#omega",        782.65, false);
 const ParticleTypeDatabase::Type ParticleTypeDatabase::EtaPrime("EtaPrime",           "#eta'",         957.78, false);
 
+const ParticleTypeDatabase::Type ParticleTypeDatabase::BeamProton("BeamProton",           "#gamma p",  938.272046, true);
+
 ParticleTypeDatabase::Type::Type(const string &_name, const string &_print_name, const mev_t &_mass, const bool &_charged, const ParticleTypeDatabase::Type *_sametype):
     name(_name),
     print_name(_print_name),
@@ -112,5 +114,6 @@ ParticleTypeDatabase::PIDMap_t ParticleTypeDatabase::pluto_pid_map = [] () {
     m[17] = &ParticleTypeDatabase::Eta;
     m[53] = &ParticleTypeDatabase::EtaPrime;
     m[52] = &ParticleTypeDatabase::Omega;
+    m[14001] = &ParticleTypeDatabase::BeamProton;
     return std::move(m);
 }();
