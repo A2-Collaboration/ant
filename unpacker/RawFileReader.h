@@ -41,9 +41,12 @@ public:
   }
   
   // read
-  void read(uint8_t* s, std::streamsize n) { 
-    
+  void read(char* s, std::streamsize n) { 
     p->read(s,n); 
+  }
+  
+  std::streamsize gcount() const {
+    return p->gcount();
   }
   
   class Exception : public std::runtime_error {
@@ -72,13 +75,12 @@ private:
     //bool is_open() const { return file.is_open(); }
     //bool operator!() const { return file.operator!(); }
     virtual explicit operator bool() const { 
-      return file; 
+      return file.operator bool(); 
     }
     
     // read methods
-    virtual void read(uint8_t* s, std::streamsize n) {
-      static_assert(sizeof(uint8_t)==sizeof(char),"System does not have 8bit characters.");
-      file.read((char*)s,n); 
+    virtual void read(char* s, std::streamsize n) {
+      file.read(s, n); 
     }    
     
     virtual bool eof() const {
@@ -112,7 +114,7 @@ private:
       return Plain::operator bool() && !decompressFailed; 
     }
     
-    virtual void read(uint8_t *s, std::streamsize n);
+    virtual void read(char *s, std::streamsize n);
     
     virtual std::streamsize gcount() const {
       return gcount_;

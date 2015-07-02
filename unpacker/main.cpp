@@ -17,9 +17,14 @@ int main() {
   RawFileReader r("scratch/CBTaggTAPS_7892.dat.xz");
   if(r) {
     
-    vector<uint32_t> buffer(128);
+    vector<uint32_t> buffer(100);
+    unsigned offset = 4;
+    unsigned total = 32; 
+    
     try {
-      r.read((uint8_t*)&buffer[0], 4*buffer.size());
+      r.read((char*)&buffer[0],  4*offset);
+      r.read((char*)&buffer[offset],  4*(total-offset));
+      //r.read((char*)&buffer[0],  4*8);
     }
     catch(ant::RawFileReader::Exception e) {
       cerr << "exception " << e.what() << endl;
@@ -27,7 +32,7 @@ int main() {
 
     if(r) {
       cout << hex;
-      for(size_t i=0;i<buffer.size();i++) {
+      for(size_t i=0;i<total;i++) {
         if(i>0 && i%8 == 0) 
           cout << endl;
         cout << setw(8) << setfill('0') << buffer[i] << " ";
