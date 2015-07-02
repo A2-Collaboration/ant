@@ -32,3 +32,4 @@ link_directories(${ROOT_LIBRARY_DIR})
 list(APPEND LIBS ${ROOT_LIBRARIES} ${APLCON_LIBRARY} ${PLUTO_LIBRARY})
 
 add_subdirectory(src)
+add_subdirectory(unpacker)
