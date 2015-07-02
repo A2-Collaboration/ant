@@ -75,7 +75,7 @@ private:
     //bool is_open() const { return file.is_open(); }
     //bool operator!() const { return file.operator!(); }
     virtual explicit operator bool() const { 
-      return file.operator bool(); 
+      return !file.operator!(); // some older ifstream version don't implement "operator bool" 
     }
     
     // read methods

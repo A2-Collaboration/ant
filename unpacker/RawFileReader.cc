@@ -7,8 +7,6 @@
 #include "RawFileReader.h"
 #undef RAWFILEREADER_H_IMPL
 
-#include <iostream>
-
 #include <cstdio> // for BUFSIZ
 
 using namespace std;
@@ -41,7 +39,6 @@ RawFileReader::XZ::~XZ() {
 
 void RawFileReader::XZ::cleanup()
 {
-  cout << "Cleanup" << endl;
   lzma_end(strm);
   free(strm);
 }
