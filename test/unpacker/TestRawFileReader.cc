@@ -14,28 +14,36 @@
 
 using namespace std;
 
-void dotest(bool, streamsize, streamsize);
+void dotest(bool, streamsize, streamsize, streamsize);
 
-constexpr streamsize totalSize = 10;
-constexpr streamsize chunkSize = 4;
+constexpr streamsize totalSize = 10*BUFSIZ;
+constexpr streamsize chunkSize = totalSize/17;
+constexpr streamsize inbufSize = BUFSIZ;
 
 TEST_CASE("Test RawFileReader: nocompress, one chunk", "[unpacker]") {
-  dotest(false, totalSize, totalSize);
+  dotest(false, totalSize, totalSize, inbufSize);
 }
 
 TEST_CASE("Test RawFileReader: compress, one chunk", "[unpacker]") {
-  dotest(true, totalSize, totalSize);
+  dotest(true, totalSize, totalSize, inbufSize);
 }
 
 TEST_CASE("Test RawFileReader: nocompress, chunks", "[unpacker]") {
-  dotest(false, totalSize, chunkSize);
+  dotest(false, totalSize, chunkSize, inbufSize);
 }
 
 TEST_CASE("Test RawFileReader: compress, chunks", "[unpacker]") {
-  dotest(true, totalSize, chunkSize);
+  dotest(true, totalSize, chunkSize, inbufSize);
 }
 
-void dotest(bool compress, streamsize totalSize, streamsize chunkSize) {
+TEST_CASE("Test RawFileReader: weird stuff", "[unpacker]") {
+  dotest(true, 10, 100, inbufSize);
+}
+
+void dotest(bool compress,
+            streamsize totalSize,
+            streamsize chunkSize,
+            streamsize inbufSize) {
 
   // use some little class which cleans up after itself properly
   struct tmpfile_t {
@@ -78,9 +86,9 @@ void dotest(bool compress, streamsize totalSize, streamsize chunkSize) {
   }
 
   // then continue reading in the file with the RawFileReader
-  REQUIRE_NOTHROW(ant::RawFileReader r(f.filename));
+  REQUIRE_NOTHROW(ant::RawFileReader r(f.filename, inbufSize));
 
-  ant::RawFileReader r(f.filename);
+  ant::RawFileReader r(f.filename, inbufSize);
   { // INFO scope
     INFO("Check if file is open");
     REQUIRE(r); // uses the operator bool() of RawFileReader

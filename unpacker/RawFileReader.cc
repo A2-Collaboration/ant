@@ -16,9 +16,9 @@ using namespace std;
 using namespace ant;
 
 
-
-RawFileReader::XZ::XZ(const std::string &filename) :
-  Plain(filename),
+RawFileReader::XZ::XZ(const std::string &filename, const size_t inbufsize) :
+  PlainBase(filename),
+  inbuf(inbufsize),
   decompressFailed(false),
   gcount_(0),
   eof_(false)
@@ -34,9 +34,6 @@ RawFileReader::XZ::XZ(const std::string &filename) :
     // propagate the exception
     throw e;
   }
-  //strm->next_in = inbuf;
-  //strm
-  //strm->avail_in = 0;
 }
 
 RawFileReader::XZ::~XZ() {
@@ -74,23 +71,23 @@ void RawFileReader::XZ::init_decoder()
 
 void RawFileReader::XZ::read(char* s, streamsize n) {
 
-  lzma_action action = Plain::eof() ? LZMA_FINISH : LZMA_RUN;
+  lzma_action action = PlainBase::eof() ? LZMA_FINISH : LZMA_RUN;
 
   strm->next_out = reinterpret_cast<uint8_t*>(s);
   strm->avail_out = n;
 
   while (true) {
 
-    if (strm->avail_in == 0 && !Plain::eof()) {
+    if (strm->avail_in == 0 && !PlainBase::eof()) {
       // read from the underlying compressed file into buffer
-      Plain::read(reinterpret_cast<char*>(inbuf), inbufsiz);
-      strm->next_in = inbuf;
-      strm->avail_in = Plain::gcount();
+      PlainBase::read(reinterpret_cast<char*>(inbuf.data()), inbuf.size());
+      strm->next_in = inbuf.data();
+      strm->avail_in = PlainBase::gcount();
 
-      if(Plain::eof()) {
+      if(PlainBase::eof()) {
         action = LZMA_FINISH;
       }
-      else if (!Plain::operator bool()) {
+      else if (!PlainBase::operator bool()) {
         throw Exception("Error while reading from compressed input file");
       }
     }

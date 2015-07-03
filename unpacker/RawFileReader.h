@@ -5,6 +5,7 @@
 #include <string>
 #include <memory>
 #include <cstdint>
+#include <vector>
 
 #include "stl_helpers.h"
 
@@ -23,13 +24,20 @@ class RawFileReader {
 
 public:
 
-  explicit RawFileReader(const std::string& filename)
+  /**
+   * @brief RawFileReader
+   * @param filename
+   * @param inbufsize
+   *
+   * Parameter inbufsize is ignored if non-compressed data is read
+   */
+  explicit RawFileReader(const std::string& filename, const size_t inbufsize = BUFSIZ)
   {
     if(std_ext::string_ends_with(filename, ".xz")) {
-      p = std::unique_ptr<Plain>(new XZ(filename));
+      p = std::unique_ptr<PlainBase>(new XZ(filename, inbufsize));
     }
     else {
-      p = std::unique_ptr<Plain>(new Plain(filename));
+      p = std::unique_ptr<PlainBase>(new PlainBase(filename));
     }
   }
 
@@ -40,15 +48,29 @@ public:
     return p->operator bool();
   }
 
-  // read
+  /**
+   * @brief read n bytes to buffer s
+   * @param s buffer (must be allocated by caller)
+   * @param n
+   */
   void read(char* s, std::streamsize n) {
     p->read(s,n);
   }
 
+  /**
+   * @brief gcount
+   * @return number of bytes read
+   */
   std::streamsize gcount() const {
     return p->gcount();
   }
 
+  /**
+   * @brief eof
+   * @return true if last read went beyond end of file.
+   *
+   * Note that reading the exact number of bytes
+   */
   bool eof() const {
     return p->eof();
   }
@@ -60,24 +82,22 @@ public:
 private:
 
   /**
-   * @brief The Plain class
+   * @brief The PlainBase class
    *
    * Plain and simple filereader, encapsulating an ifstream
    * and providing a base class for the more complicated decompression classes
    *
    * Only the really needed methods are exported
    */
-  class Plain {
+  class PlainBase {
   public:
-    explicit Plain(const std::string& filename)
+    explicit PlainBase(const std::string& filename)
       : file(filename.c_str(), std::ios::binary)
     {}
 
-    virtual ~Plain() {} // derived classes may want to
+    virtual ~PlainBase() {} // derived classes may want to
 
     // methods/operators for testing the state
-    //bool is_open() const { return file.is_open(); }
-    //bool operator!() const { return file.operator!(); }
     virtual explicit operator bool() const {
       return !file.operator!(); // some older ifstream version don't implement "operator bool"
     }
@@ -107,15 +127,15 @@ private:
    * http://git.tukaani.org/?p=xz.git;a=blob_plain;f=doc/examples/02_decompress.c;hb=HEAD
    *
    */
-  class XZ : public Plain {
+  class XZ : public PlainBase {
   public:
 
-    XZ(const std::string& filename);
+    XZ(const std::string& filename, const size_t inbufsize);
 
     virtual ~XZ();
 
     virtual explicit operator bool() const {
-      return Plain::operator bool() && !decompressFailed;
+      return PlainBase::operator bool() && !decompressFailed;
     }
 
     virtual void read(char *s, std::streamsize n);
@@ -129,8 +149,7 @@ private:
     }
 
   private:
-    static constexpr std::streamsize inbufsiz = 6;
-    uint8_t inbuf[inbufsiz];
+    std::vector<uint8_t> inbuf;
     bool decompressFailed;
     std::streamsize gcount_;
     bool eof_;
@@ -143,14 +162,11 @@ private:
     void init_decoder();
     void cleanup();
 
-
-
   }; // class RawFileReader::XZ
 
 
   // private stuff for RawFileReader
-  std::unique_ptr<Plain> p;
-
+  std::unique_ptr<PlainBase> p;
 
 }; // class RawFileReader
 
