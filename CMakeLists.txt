@@ -33,3 +33,4 @@ list(APPEND LIBS ${ROOT_LIBRARIES} ${APLCON_LIBRARY} ${PLUTO_LIBRARY})
 
 add_subdirectory(src)
 add_subdirectory(unpacker)
+add_subdirectory(test)
