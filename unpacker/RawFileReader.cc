@@ -13,6 +13,21 @@
 using namespace std;
 using namespace ant;
 
+void RawFileReader::open(const string &filename, const size_t inbufsize) {
+  if(std_ext::string_ends_with(filename, ".xz")) {
+    p = std::unique_ptr<PlainBase>(new XZ(filename, inbufsize));
+  }
+  else {
+    p = std::unique_ptr<PlainBase>(new PlainBase(filename));
+  }
+  // already check here if the open was ok
+  if(!(*p))
+    throw Exception(string("Error when opening file ")
+                    +filename
+                    +": "
+                    +string(strerror(errno)));
+}
+
 
 RawFileReader::XZ::XZ(const std::string &filename, const size_t inbufsize) :
   PlainBase(filename),
@@ -138,11 +153,3 @@ void RawFileReader::XZ::read(char* s, streamsize n) {
     }
   }
 }
-
-
-
-
-
-
-
-

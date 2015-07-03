@@ -13,7 +13,7 @@ using namespace ant;
 int main() {
 
 
-  auto unpacker = Unpacker::Get("scratch/CBTaggTAPS_7892.dat");
+  auto unpacker = Unpacker::Get("scratch/CBTaggTAPS_7892.dat.xz");
 
   //cout << unpacker->OpenFile("scratch/CBTaggTAPS_7892.dat.xz") << endl;
 

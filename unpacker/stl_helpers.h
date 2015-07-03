@@ -2,6 +2,7 @@
 #define STL_HELPERS_H
 
 #include <string>
+#include <algorithm>
 
 namespace std_ext {
 
@@ -9,6 +10,19 @@ inline bool string_ends_with(std::string const& value, std::string const& ending
 {
     if (ending.size() > value.size()) return false;
     return std::equal(ending.rbegin(), ending.rend(), value.rbegin());
+}
+
+inline std::string string_sanitize(const char* in) {
+  std::string s(in);
+  const std::string& whitespace = " \t\f\v\n\r";
+  int start = s.find_first_not_of(whitespace);
+  int end = s.find_last_not_of(whitespace);
+  if(start == -1 && end == -1)
+    return std::string("");
+  s.erase(0,start);
+  s.erase((end - start) + 1);
+  s.erase(std::remove(s.begin(), s.end(), '\n'), s.end());
+  return s;
 }
 
 }

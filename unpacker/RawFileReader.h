@@ -31,14 +31,7 @@ public:
    *
    * Parameter inbufsize is ignored if non-compressed data is read
    */
-  void open(const std::string& filename, const size_t inbufsize = BUFSIZ) {
-    if(std_ext::string_ends_with(filename, ".xz")) {
-      p = std::unique_ptr<PlainBase>(new XZ(filename, inbufsize));
-    }
-    else {
-      p = std::unique_ptr<PlainBase>(new PlainBase(filename));
-    }
-  }
+  void open(const std::string& filename, const size_t inbufsize = BUFSIZ);
 
   /**
    * @brief operator bool
