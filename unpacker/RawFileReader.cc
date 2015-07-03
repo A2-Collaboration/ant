@@ -8,9 +8,7 @@
 #undef RAWFILEREADER_H_IMPL
 
 #include <cstdio> // for BUFSIZ
-
-#include <iostream>
-#include <iomanip>
+#include <cstring> // for strerror
 
 using namespace std;
 using namespace ant;
@@ -88,7 +86,8 @@ void RawFileReader::XZ::read(char* s, streamsize n) {
         action = LZMA_FINISH;
       }
       else if (!PlainBase::operator bool()) {
-        throw Exception("Error while reading from compressed input file");
+        throw Exception(string("Error while reading from compressed input file: ")
+                        +string(strerror(errno)));
       }
     }
 

@@ -5,7 +5,15 @@ set(SRCS
   stl_helpers.h
   RawFileReader.cc
   RawFileReader.h
+  Unpacker.cc
+  Unpacker.h
+  UnpackerAcquMk2.cc
+  UnpackerAcquMk2.h
+  TDataRecord.cc
+  TDataRecord.h
 )
+
+include_directories(.)
 
 add_library(unpacker ${SRCS})
 target_link_libraries(unpacker ${LIBLZMA_LIBRARY})

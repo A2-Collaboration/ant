@@ -24,7 +24,5 @@ macro(add_ant_test name)
   add_dependencies(build_and_test ${TESTNAME})
 endmacro()
 
-  
-
 add_test_subdirectory(unpacker)
 

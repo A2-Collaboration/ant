@@ -17,7 +17,7 @@ namespace ant {
 /**
  * @brief The RawFileReader class
  * Super-simple wrapper for reading binary files,
- * even if they are compressed
+ * even if they are compressed :)
  * Possible IO errors are propagated as exceptions
  */
 class RawFileReader {
@@ -25,14 +25,13 @@ class RawFileReader {
 public:
 
   /**
-   * @brief RawFileReader
+   * @brief open
    * @param filename
    * @param inbufsize
    *
    * Parameter inbufsize is ignored if non-compressed data is read
    */
-  explicit RawFileReader(const std::string& filename, const size_t inbufsize = BUFSIZ)
-  {
+  void open(const std::string& filename, const size_t inbufsize = BUFSIZ) {
     if(std_ext::string_ends_with(filename, ".xz")) {
       p = std::unique_ptr<PlainBase>(new XZ(filename, inbufsize));
     }
@@ -41,9 +40,11 @@ public:
     }
   }
 
-  // methods/operators for testing the state
-  //bool is_open() const { return file.is_open(); }
-  //bool operator!() const { return file.operator!(); }
+  /**
+   * @brief operator bool
+   *
+   * is false if the reader has a problem
+   */
   explicit operator bool() const {
     return p->operator bool();
   }
@@ -55,6 +56,10 @@ public:
    */
   void read(char* s, std::streamsize n) {
     p->read(s,n);
+  }
+
+  void read(std::uint32_t* s, std::streamsize n) {
+    read(reinterpret_cast<char*>(s), 4*n);
   }
 
   /**
@@ -69,7 +74,7 @@ public:
    * @brief eof
    * @return true if last read went beyond end of file.
    *
-   * Note that reading the exact number of bytes
+   * Note that reading the exact number of bytes makes eof() stay false
    */
   bool eof() const {
     return p->eof();
@@ -95,14 +100,12 @@ private:
       : file(filename.c_str(), std::ios::binary)
     {}
 
-    virtual ~PlainBase() {} // derived classes may want to
+    virtual ~PlainBase() = default;
 
-    // methods/operators for testing the state
     virtual explicit operator bool() const {
       return !file.operator!(); // some older ifstream version don't implement "operator bool"
     }
 
-    // read methods
     virtual void read(char* s, std::streamsize n) {
       file.read(s, n);
     }
