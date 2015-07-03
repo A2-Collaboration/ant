@@ -129,16 +129,18 @@ private:
     }
 
   private:
+    static constexpr std::streamsize inbufsiz = 6;
+    uint8_t inbuf[inbufsiz];
     bool decompressFailed;
     std::streamsize gcount_;
     bool eof_;
+
 
 #ifndef RAWFILEREADER_H_IMPL
     struct lzma_stream;
 #endif
     lzma_stream* strm;
     void init_decoder();
-
     void cleanup();
 
 

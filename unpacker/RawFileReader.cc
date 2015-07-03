@@ -9,9 +9,11 @@
 
 #include <cstdio> // for BUFSIZ
 
+#include <iostream>
+#include <iomanip>
+
 using namespace std;
 using namespace ant;
-
 
 
 
@@ -22,6 +24,8 @@ RawFileReader::XZ::XZ(const std::string &filename) :
   eof_(false)
 {
   strm = (lzma_stream*)malloc(sizeof(lzma_stream));
+  if(strm==nullptr)
+    throw Exception("Cannot allocate memory");
   try {
     init_decoder();
   }
@@ -30,8 +34,9 @@ RawFileReader::XZ::XZ(const std::string &filename) :
     // propagate the exception
     throw e;
   }
-  strm->next_in = NULL;
-  strm->avail_in = 0;
+  //strm->next_in = inbuf;
+  //strm
+  //strm->avail_in = 0;
 }
 
 RawFileReader::XZ::~XZ() {
@@ -69,11 +74,7 @@ void RawFileReader::XZ::init_decoder()
 
 void RawFileReader::XZ::read(char* s, streamsize n) {
 
-  constexpr streamsize inbufsiz = BUFSIZ;
-
   lzma_action action = Plain::eof() ? LZMA_FINISH : LZMA_RUN;
-
-  char inbuf[inbufsiz];
 
   strm->next_out = reinterpret_cast<uint8_t*>(s);
   strm->avail_out = n;
@@ -81,8 +82,9 @@ void RawFileReader::XZ::read(char* s, streamsize n) {
   while (true) {
 
     if (strm->avail_in == 0 && !Plain::eof()) {
-      strm->next_in = reinterpret_cast<uint8_t*>(inbuf);
-      Plain::read(inbuf, inbufsiz); // read from the underlying file into buffer
+      // read from the underlying compressed file into buffer
+      Plain::read(reinterpret_cast<char*>(inbuf), inbufsiz);
+      strm->next_in = inbuf;
       strm->avail_in = Plain::gcount();
 
       if(Plain::eof()) {
@@ -97,7 +99,7 @@ void RawFileReader::XZ::read(char* s, streamsize n) {
 
     if(ret == LZMA_STREAM_END) {
       gcount_ = n - strm->avail_out; // number of decompressed bytes
-      if(gcount_ != 0)
+      if(strm->avail_out > 0)
         eof_ = true;
       return;
     }

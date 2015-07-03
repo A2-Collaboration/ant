@@ -14,17 +14,28 @@
 
 using namespace std;
 
-void dotest(bool);
+void dotest(bool, streamsize, streamsize);
 
-//TEST_CASE( "Test RawFileReader without compression", "[unpacker]") {
-//  dotest(false);
-//}
+constexpr streamsize totalSize = 10;
+constexpr streamsize chunkSize = 4;
 
-TEST_CASE( "Test RawFileReader with compression", "[unpacker]") {
-  dotest(true);
+TEST_CASE("Test RawFileReader: nocompress, one chunk", "[unpacker]") {
+  dotest(false, totalSize, totalSize);
 }
 
-void dotest(bool compress) {
+TEST_CASE("Test RawFileReader: compress, one chunk", "[unpacker]") {
+  dotest(true, totalSize, totalSize);
+}
+
+TEST_CASE("Test RawFileReader: nocompress, chunks", "[unpacker]") {
+  dotest(false, totalSize, chunkSize);
+}
+
+TEST_CASE("Test RawFileReader: compress, chunks", "[unpacker]") {
+  dotest(true, totalSize, chunkSize);
+}
+
+void dotest(bool compress, streamsize totalSize, streamsize chunkSize) {
 
   // use some little class which cleans up after itself properly
   struct tmpfile_t {
@@ -43,14 +54,12 @@ void dotest(bool compress) {
          throw runtime_error("Cannot cleanup tmpfile for test");
     }
   };
-
   tmpfile_t f;
 
-  constexpr streamsize totalSize = 10;
-  constexpr streamsize chunkSize = 3;
-
-  // write some testdata to given filename
+  // write some testdata to given temporary filename
   vector<uint8_t> testdata(totalSize);
+  int n(0);
+  //generate(testdata.begin(), testdata.end(), [&n] {return n++;});
   generate(testdata.begin(), testdata.end(), rand);
   ofstream outfile(f.filename);
   ostream_iterator<uint8_t> outiterator(outfile);
@@ -80,7 +89,8 @@ void dotest(bool compress) {
   // read in the data again and compare bytewise
   vector<uint8_t> indata(testdata.size());
 
-  SECTION("Read in one go") {
+  // two different reading modes are possible
+  if(totalSize == chunkSize) {
     REQUIRE_NOTHROW(r.read((char*)&indata[0], indata.size()));
     REQUIRE(r.gcount()==indata.size());
     REQUIRE(!r.eof());
@@ -89,14 +99,9 @@ void dotest(bool compress) {
     REQUIRE_NOTHROW(r.read((char*)&indata[0], 1));
     REQUIRE(r.gcount()==0);
     REQUIRE(r.eof());
-
-    // test the read in data
-    const bool inputEqualsOutput = indata == testdata;
-    REQUIRE(inputEqualsOutput);
   }
-
-  SECTION("Read in weird chunks") {
-    constexpr size_t nChunks = totalSize / chunkSize;
+  else {
+    const size_t nChunks = totalSize / chunkSize;
     size_t offset = 0;
     for(size_t i=0;i<nChunks;i++) {
       REQUIRE_NOTHROW(r.read((char*)&indata[offset], chunkSize));
@@ -110,15 +115,23 @@ void dotest(bool compress) {
     REQUIRE(r.gcount() <= chunkSize); // never more than requested
 
     // the eof flag is there when trying to read past the end of a file
+    // so, if by conincidence, the chunks fitted into totalSize with remainder,
+    // the r.eof is not set yet
     if(r.gcount() == chunkSize)
       REQUIRE(!r.eof());
     else
       REQUIRE(r.eof());
 
-    // test the read in data
-    const bool inputEqualsOutput = indata == testdata;
-    REQUIRE(inputEqualsOutput);
+    // reading just one more byte should not be possible
+    // and should be indicated by eof
+    REQUIRE_NOTHROW(r.read((char*)&indata[0], 1));
+    REQUIRE(r.gcount()==0);
+    REQUIRE(r.eof());
   }
+
+  // test the read in data
+  const bool inputEqualsOutput = indata == testdata;
+  REQUIRE(inputEqualsOutput);
 }
 
 
