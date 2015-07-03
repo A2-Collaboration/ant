@@ -1,13 +1,15 @@
 #ifndef UNPACKER_H
 #define UNPACKER_H
 
+#include <TDataRecord.h>
+
 #include <string>
 #include <memory>
 #include <list>
 
-namespace ant {
 
-class TDataRecord;
+
+namespace ant {
 
 class Unpacker {
 public:

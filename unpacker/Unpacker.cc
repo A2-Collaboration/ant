@@ -1,5 +1,5 @@
 #include "Unpacker.h"
-#include "UnpackerAcquMk2.h"
+#include "UnpackerAcqu.h"
 
 #include <algorithm>
 
@@ -10,7 +10,7 @@ using namespace ant;
 
 Unpacker::Unpacker()
 {
-  modules.emplace_back(new UnpackerAcquMk2());
+  modules.emplace_back(new UnpackerAcqu());
 }
 
 unique_ptr<Unpacker::Module> Unpacker::Get(const string& filename)

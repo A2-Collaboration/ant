@@ -10,16 +10,12 @@
 using namespace std;
 using namespace ant;
 
-// fix qtcreator highlighting...
-typedef std::uint32_t uint32_t;
-
-
 int main() {
 
 
-  auto unpacker = Unpacker::Get("scratch/CBTaggTAPS_7892.dat.xz");
+  auto unpacker = Unpacker::Get("scratch/CBTaggTAPS_7892.dat");
 
-  cout << unpacker->OpenFile("scratch/CBTaggTAPS_7892.dat.xz") << endl;
+  //cout << unpacker->OpenFile("scratch/CBTaggTAPS_7892.dat.xz") << endl;
 
   cout << unpacker->NextItem() << endl;
 

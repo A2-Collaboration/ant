@@ -7,8 +7,9 @@ set(SRCS
   RawFileReader.h
   Unpacker.cc
   Unpacker.h
-  UnpackerAcquMk2.cc
-  UnpackerAcquMk2.h
+  UnpackerAcqu.cc
+  UnpackerAcqu.h
+  UnpackerAcqu_detail.h # move in subfolder later
   TDataRecord.cc
   TDataRecord.h
 )

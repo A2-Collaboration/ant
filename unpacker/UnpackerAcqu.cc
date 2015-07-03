@@ -1,17 +1,18 @@
-#include "UnpackerAcquMk2.h"
+#include "UnpackerAcqu.h"
 
+#include "UnpackerAcqu_detail.h"
 #include "RawFileReader.h"
 
 
 using namespace std;
 using namespace ant;
 
-UnpackerAcquMk2::UnpackerAcquMk2()
+UnpackerAcqu::UnpackerAcqu()
 {
 
 }
 
-bool UnpackerAcquMk2::OpenFile(const std::string &filename)
+bool UnpackerAcqu::OpenFile(const std::string &filename)
 {
   RawFileReader reader;
   reader.open(filename);
@@ -25,7 +26,7 @@ bool UnpackerAcquMk2::OpenFile(const std::string &filename)
   return true;
 }
 
-shared_ptr<TDataRecord> UnpackerAcquMk2::NextItem()
+shared_ptr<TDataRecord> UnpackerAcqu::NextItem()
 {
   return nullptr;
 }
