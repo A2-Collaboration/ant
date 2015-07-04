@@ -16,8 +16,14 @@ set(SRCS
 
 include_directories(.)
 
+add_library(logger
+  Logger.cc
+  Logger.h
+  easylogging++.h
+)
+
 add_library(unpacker ${SRCS})
-target_link_libraries(unpacker ${LIBLZMA_LIBRARY})
+target_link_libraries(unpacker logger ${LIBLZMA_LIBRARY})
 
 add_executable(unpacker_main main.cpp)
 target_link_libraries(unpacker_main unpacker)

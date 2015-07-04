@@ -3,6 +3,8 @@
 #include "UnpackerAcqu_detail.h"
 #include "RawFileReader.h"
 
+#include "Logger.h"
+
 #include "stl_helpers.h"
 #include <iostream>
 
