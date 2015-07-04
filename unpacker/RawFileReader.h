@@ -130,17 +130,19 @@ private:
 
     virtual ~XZ();
 
-    virtual explicit operator bool() const {
+    static bool test(std::ifstream& file);
+
+    virtual explicit operator bool() const override {
       return PlainBase::operator bool() && !decompressFailed;
     }
 
-    virtual void read(char *s, std::streamsize n);
+    virtual void read(char *s, std::streamsize n) override;
 
-    virtual std::streamsize gcount() const {
+    virtual std::streamsize gcount() const override {
       return gcount_;
     }
 
-    virtual bool eof() const {
+    virtual bool eof() const override {
       return eof_;
     }
 

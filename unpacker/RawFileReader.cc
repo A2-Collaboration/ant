@@ -14,18 +14,22 @@ using namespace std;
 using namespace ant;
 
 void RawFileReader::open(const string &filename, const size_t inbufsize) {
-  if(std_ext::string_ends_with(filename, ".xz")) {
+  // open it as plain raw file
+  ifstream file(filename.c_str());
+
+  // already check here if the open was ok
+  if(!file)
+    throw Exception(string("Error when opening file ")
+                    +filename
+                    +": "
+                    +string(strerror(errno)));
+
+  if(XZ::test(file)) {
     p = std::unique_ptr<PlainBase>(new XZ(filename, inbufsize));
   }
   else {
     p = std::unique_ptr<PlainBase>(new PlainBase(filename));
   }
-  // already check here if the open was ok
-  if(!(*p))
-    throw Exception(string("Error when opening file ")
-                    +filename
-                    +": "
-                    +string(strerror(errno)));
 }
 
 
@@ -53,27 +57,40 @@ RawFileReader::XZ::~XZ() {
   cleanup();
 }
 
-void RawFileReader::XZ::cleanup()
-{
-  lzma_end(strm);
-  free(strm);
+bool RawFileReader::XZ::test(ifstream& file) {
+  // check some magic bytes in the beginning
+  // to determine possible compression
+  std::vector<char> file_bytes(6);
+  file.seekg(0, file.beg); // ensure start of file
+  file.read(file_bytes.data(), file_bytes.size());
+
+
+  vector<char> magic_bytes_xz{ static_cast<char>(0xFD), '7', 'z', 'X', 'Z', 0x00 };
+
+  return file_bytes == magic_bytes_xz;
 }
 
-void RawFileReader::XZ::init_decoder()
-{
-  *strm = LZMA_STREAM_INIT;
+     void RawFileReader::XZ::cleanup()
+  {
+     lzma_end(strm);
+     free(strm);
+}
 
-  lzma_ret ret = lzma_stream_decoder(
-        strm, UINT64_MAX, LZMA_CONCATENATED);
+     void RawFileReader::XZ::init_decoder()
+  {
+     *strm = LZMA_STREAM_INIT;
 
-  // Return successfully if the initialization went fine.
-  if (ret == LZMA_OK) {
-    return;
-  }
+     lzma_ret ret = lzma_stream_decoder(
+       strm, UINT64_MAX, LZMA_CONCATENATED);
 
-  // otherwise throw some exceptions
-  switch (ret) {
-  case LZMA_MEM_ERROR:
+     // Return successfully if the initialization went fine.
+     if (ret == LZMA_OK) {
+     return;
+}
+
+     // otherwise throw some exceptions
+     switch (ret) {
+     case LZMA_MEM_ERROR:
     throw Exception("Memory allocation failed");
   case LZMA_OPTIONS_ERROR:
     throw Exception("Unsupported decompressor flags");
