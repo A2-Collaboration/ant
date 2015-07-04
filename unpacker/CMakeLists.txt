@@ -9,7 +9,9 @@ set(SRCS
   Unpacker.h
   UnpackerAcqu.cc
   UnpackerAcqu.h
-  UnpackerAcqu_detail.h # move in subfolder later
+  UnpackerAcqu_detail.cc
+  UnpackerAcqu_detail.h
+  UnpackerAcqu_legacy.h
   TDataRecord.cc
   TDataRecord.h
 )

@@ -8,23 +8,25 @@
 using namespace std;
 using namespace ant;
 
-Unpacker::Unpacker()
-{
-  modules.emplace_back(new UnpackerAcqu());
-}
-
 unique_ptr<Unpacker::Module> Unpacker::Get(const string& filename)
 {
-  Unpacker unpacker;
-  unpacker.modules.remove_if([&filename] (const unique_ptr<Unpacker::Module>& m) {
+  // make a list of available unpackers
+  std::list< std::unique_ptr<Module> > modules;
+  modules.emplace_back(new UnpackerAcqu());
+
+  // remove the unpacker if it says that it could not open the file
+  modules.remove_if([&filename] (const unique_ptr<Unpacker::Module>& m) {
     return !m->OpenFile(filename);
   });
-  if(unpacker.modules.empty()) {
+
+  // check if something reasonable is left
+  if(modules.empty()) {
     throw Exception("No suitable unpacker found for file "+filename);
   }
-  if(unpacker.modules.size()>1) {
+  if(modules.size()>1) {
     throw Exception("More than one unpacker found for file "+filename);
   }
+
   // hand over the unique ptr
-  return std::move(unpacker.modules.back());
+  return std::move(modules.back());
 }
