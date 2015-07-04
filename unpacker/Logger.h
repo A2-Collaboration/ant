@@ -1,7 +1,9 @@
 #ifndef LOGGER_H
 #define LOGGER_H
 
+// STL container printout made easy...
 #define ELPP_STL_LOGGING
+
 #include "easylogging++.h"
 
 

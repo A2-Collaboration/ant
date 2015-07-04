@@ -14,6 +14,7 @@ using namespace ant;
 
 int main(int argc, char* argv[]) {
   START_EASYLOGGINGPP(argc, argv);
+  el::Loggers::reconfigureAllLoggers(el::ConfigurationType::Format, "%datetime [%level] %fbase : %msg");
 
   auto unpacker = Unpacker::Get("scratch/CBTaggTAPS_7892.dat.xz");
 
@@ -25,7 +26,6 @@ int main(int argc, char* argv[]) {
 
   LOG(INFO) << v;
 
-  LOG(INFO) << "Bla";
   for(size_t i=0;i<100;i++) {
     LOG_N_TIMES(10,WARNING) << "OHOH";
   }

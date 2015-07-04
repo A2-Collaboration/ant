@@ -5,6 +5,9 @@
 
 #include "Logger.h"
 
+#include "easylogging++.h"
+
+
 #include "stl_helpers.h"
 #include <iostream>
 
@@ -66,10 +69,12 @@ bool UnpackerAcqu::OpenFile(const std::string &filename)
   acqu_t::AcquMk2Info_t* header =
       reinterpret_cast<acqu_t::AcquMk2Info_t*>(buffer.data()+1);
 
-  cout << std_ext::string_sanitize(header->fDescription) << endl;
-  cout << header->fMk2 << endl;
+  //cout << std_ext::string_sanitize(header->fDescription);
+  //cout << header->fMk2;
 
 
+  LOG(INFO) << "Successfully opened " << filename;
+  VLOG(2) << "Verbose!";
   return true;
 }
 

@@ -16,7 +16,11 @@ set(SRCS
 
 include_directories(.)
 
+# hack in some useful ant base stuff for now
+include_directories(../src/base)
+
 add_library(logger
+  ../src/base/printable.cc
   Logger.cc
   Logger.h
   easylogging++.h
