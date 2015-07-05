@@ -32,13 +32,11 @@ public:
    * This factory method returns a fully setup reader. It might already fill
    * the quere with some events about the header or some unpacker messages, for example.
    */
-  static std::unique_ptr<UnpackerAcquFileFormat> Get(const std::string& filename);
+  static std::unique_ptr<UnpackerAcquFileFormat> Get(const std::string& filename,
+                                                     std::deque< std::unique_ptr<TDataRecord> >& queue
+                                                     );
 
-//  class Info {
-
-//  };
-//  virtual Info GetInfo() { return Info(); }
-
+  virtual void FillEvents(std::deque< std::unique_ptr<TDataRecord> >& queue) = 0;
 
 protected:
 
@@ -46,7 +44,7 @@ protected:
   virtual bool InspectHeader(const std::vector<uint32_t>& buffer) const = 0;
   virtual void Setup(std::unique_ptr<RawFileReader>&& reader_,
                      std::vector<uint32_t>&& buffer_) = 0;
-
+  virtual void FillHeader(std::deque< std::unique_ptr<TDataRecord> >& queue) = 0;
 };
 
 // the derived file format classes
@@ -70,16 +68,18 @@ class FileFormatMk1 : public FileFormatBase {
 protected:
   virtual size_t SizeOfHeader() const override;
   virtual bool InspectHeader(const std::vector<uint32_t> &buffer) const override;
+  virtual void FillEvents(std::deque<std::unique_ptr<TDataRecord> > &queue) override;
+  virtual void FillHeader(std::deque< std::unique_ptr<TDataRecord> >& queue) override;
 };
 
 class FileFormatMk2 : public FileFormatBase {
 
   // UnpackerAcquFile interface
 protected:
-  //std::unique_ptr<RawFileReader> reader;
-
   virtual size_t SizeOfHeader() const override;
   virtual bool InspectHeader(const std::vector<uint32_t> &buffer) const override;
+  virtual void FillEvents(std::deque<std::unique_ptr<TDataRecord> > &queue) override;
+  virtual void FillHeader(std::deque< std::unique_ptr<TDataRecord> >& queue) override;
 };
 
 }} // namespace unpacker::acqu

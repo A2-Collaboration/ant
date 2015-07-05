@@ -17,7 +17,9 @@ using namespace ant;
 using namespace ant::unpacker;
 
 
-unique_ptr<UnpackerAcquFileFormat> UnpackerAcquFileFormat::Get(const string &filename)
+unique_ptr<UnpackerAcquFileFormat>
+UnpackerAcquFileFormat::Get(const string &filename,
+                            deque<unique_ptr<TDataRecord> >& queue)
 {
   // make a list of all available acqu file format classes
   using format_t = unique_ptr<UnpackerAcquFileFormat>;
@@ -62,6 +64,7 @@ unique_ptr<UnpackerAcquFileFormat> UnpackerAcquFileFormat::Get(const string &fil
   // give him the reader and the buffer for further processing
   const format_t& format = formats.back();
   format->Setup(move(reader), move(buffer));
+  format->FillHeader(queue);
 
   // return the UnpackerAcquFormat instance
   return move(formats.back());
@@ -71,6 +74,30 @@ void acqu::FileFormatBase::Setup(std::unique_ptr<RawFileReader> &&reader_, std::
   reader = move(reader_);
   buffer = move(buffer_);
 }
+
+void acqu::FileFormatMk1::FillEvents(std::deque<std::unique_ptr<TDataRecord> >& queue)
+{
+  throw logic_error("Mk1 format not implemented yet");
+}
+
+void acqu::FileFormatMk1::FillHeader(std::deque<std::unique_ptr<TDataRecord> >& queue)
+{
+  throw logic_error("Mk1 format not implemented yet");
+}
+
+
+void acqu::FileFormatMk2::FillEvents(std::deque<std::unique_ptr<TDataRecord> >& queue)
+{
+
+}
+
+void acqu::FileFormatMk2::FillHeader(std::deque<std::unique_ptr<TDataRecord> >& queue)
+{
+  // we build up the header structure, and read the file until the first event buffer
+  const acqu::AcquMk2Info_t* h = reinterpret_cast<const acqu::AcquMk2Info_t*>(buffer.data()+1);
+  VLOG(9) << h->fDescription << endl;
+}
+
 
 size_t acqu::FileFormatMk1::SizeOfHeader() const
 {

@@ -18,7 +18,7 @@ int main(int argc, char* argv[]) {
 
   auto unpacker = Unpacker::Get("scratch/CBTaggTAPS_7892.dat.xz");
 
-  unpacker->NextItem();
+  LOG(INFO) << "Got item: " << unpacker->NextItem();
 
   //cout << unpacker->OpenFile("scratch/CBTaggTAPS_7892.dat.xz") << endl;
 
