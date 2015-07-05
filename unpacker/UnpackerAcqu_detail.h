@@ -6,6 +6,7 @@
 #include <memory>
 #include <string>
 #include <deque>
+#include <ctime>
 
 namespace ant {
 
@@ -24,22 +25,29 @@ class UnpackerAcquFileFormat {
 public:
 
   /**
-   * @brief Get
-   * @param filename
-   * @param queue
-   * @return
+   * @brief Get a suitable instance for this Acqu Fileformat
+   * @param filename the file to read
+   * @param queue for possible ant::T* messages during setup
+   * @return the instance, or nullptr if nothing found
    *
    * This factory method returns a fully setup reader. It might already fill
-   * the quere with some events about the header or some unpacker messages, for example.
+   * the queue with some events about the header or some unpacker messages, for example.
+   *
+   * Throws exception if something unusual is encountered.
+   *
    */
-  static std::unique_ptr<UnpackerAcquFileFormat> Get(const std::string& filename,
-                                                     std::deque< std::unique_ptr<TDataRecord> >& queue
-                                                     );
+  static std::unique_ptr<UnpackerAcquFileFormat>
+  Get(const std::string& filename,
+      std::deque< std::unique_ptr<TDataRecord> >& queue
+      );
 
+  /**
+   * @brief FillEvents fills the given queue with more TDataRecord items (if any left)
+   * @param queue
+   */
   virtual void FillEvents(std::deque< std::unique_ptr<TDataRecord> >& queue) = 0;
 
 protected:
-
   virtual size_t SizeOfHeader() const = 0;
   virtual bool InspectHeader(const std::vector<uint32_t>& buffer) const = 0;
   virtual void Setup(std::unique_ptr<RawFileReader>&& reader_,
@@ -57,6 +65,28 @@ class FileFormatBase : public UnpackerAcquFileFormat {
 protected:
   std::unique_ptr<RawFileReader> reader;
   std::vector<uint32_t> buffer;
+
+  // helper class to finally create the THeaderInfo items
+  // the fields are still very similar to the Acqu header info fields
+  // but the knowledge what data format it actually was created from
+  // is already gone
+  struct Info {
+    struct HardwareModule {
+      std::string Identifier; // some more or less unique identifier of the module
+      bool IsADC;
+      bool IsScaler;
+    };
+    std::vector<HardwareModule> Modules;
+
+    std::tm Time;
+    std::string Description;
+    std::string RunNote;
+    std::string OutFile;
+    unsigned RunNumber;
+    unsigned RecordLength;
+  };
+
+  Info info;
 
   virtual void Setup(std::unique_ptr<RawFileReader>&& reader_,
                      std::vector<uint32_t>&& buffer_) override;

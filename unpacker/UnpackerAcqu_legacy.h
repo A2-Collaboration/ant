@@ -1,8 +1,9 @@
 #ifndef UNPACKERACQU_LEGACY_H
 #define UNPACKERACQU_LEGACY_H
 
-//#include <cstddef>
 #include <cstdint>
+#include <map>
+#include <string>
 
 
 // the following is copy-pasted code
@@ -60,13 +61,12 @@ constexpr uint32_t EReadError = 0xEFEFEFEF;     // start of error block (hardwar
 //enum{ EMaxEventSize = 32768, EMaxName = 256 };
 
 // Definitions for ADC setup
-//enum{ EUndefinedADC = 0,          // ADC index not registered in analysis
-//      EPatternADC = 0xffff,       // its a bit-pattern unit
-//      EForeignADC = 0x3000,       // foreign data formats
-//      EForeignScaler = 0x4000,    // ditto
-//      EMultiADC = 0x10000,        // multi-hit ADC
-//      EFlashADC = 0x20000         // flash ADC
-//    };
+constexpr int32_t EUndefinedADC = 0;          // ADC index not registered in analysis
+constexpr int32_t EPatternADC = 0xffff;       // its a bit-pattern unit
+constexpr int32_t EForeignADC = 0x3000;       // foreign data formats
+constexpr int32_t EForeignScaler = 0x4000;    // ditto
+constexpr int32_t EMultiADC = 0x10000;        // multi-hit ADC
+constexpr int32_t EFlashADC = 0x20000;        // flash ADC
 
 /////////////////////
 // DataFormats.h
@@ -388,6 +388,84 @@ struct EpicsChannelInfo_t {      //header for channel info
 //  UInt_t fID;
 //  UInt_t fCounts;
 //}
+
+//////////////////////////////
+// Adapted from ModuleIndex.h
+//////////////////////////////
+
+// add IDs as you encounter them in files
+// do not cargo-cult totally unused IDs
+
+static const std::map<uint32_t, std::string> ModuleIDToString = {
+  // Controllers
+//  {"CAEN_V2718", ECAEN_V2718},
+  {0xf001, "KPH_I686"},
+  // VMEbus
+//  {"VMEbus",     EVMEbus},
+  {0x0001, "CBD_8210"},
+//  {"HSM_8170",   EHSM_8170},
+//  {"VIC_8250",   EVIC_8250},
+//  {"SLV_8250",   ESLV_8250},
+//  {"LRS_1131",   ELRS_1131},
+  {0x0400, "KPH_SMI"},
+  {0x0401, "KPH_VITEC"},
+//  {"CAEN_1465",  ECAEN_1465},
+//  {"CAEN_1488",  ECAEN_1488},
+  {0x0302, "CAEN_V792"},
+//  {"CAEN_V775",  ECAEN_V775},
+  {0x304, "CAEN_V874"},
+  {0x305, "CAEN_V1190"},
+  {0x306, "CAEN_V965"},
+//  {"CAEN_SY1527",ECAEN_SY1527},
+//  {"CAEN_208",   ECAEN_208},
+//  {"INFN_56001", EINFN_56001},
+//  {"FIADC_64",   EFIADC_64},
+  {0x601, "CATCH_TDC"},
+//  {"CATCH_SCA",  ECATCH_SCA},
+  {0x0603, "GeSiCA"},
+  {0x604, "CATCH_TCS"},
+  {0x0700, "GSI_VUPROM"},
+  {0x0701, "GSI_VUPROMT"},
+  {0x0702, "GSI_VUPROM_Scaler"},
+  {0x0703, "GSI_VUPROM_Moeller"},
+  {0x0704, "GSI_VUPROM_Pattern"},
+//  {"SIS_3820",   ESIS_3820},
+//  // CAMAC
+  {0x1fff, "CAMAC"},
+//  {"VUCAM",      EKPH_VUCAM},
+//  {"LRS_4508",   ELRS_4508},
+//  {"LRS_4516",   ELRS_4516},
+//  {"LRS_4434",   ELRS_4434},
+//  {"LRS_2341",   ELRS_2341},
+//  {"LRS_2373",   ELRS_2373},
+//  {"LRS_3420",   ELRS_3420},
+//  {"LRS_2323",   ELRS_2323},
+//  {"LRS_2891",   ELRS_2891},
+//  {"LRS_2132",   ELRS_2132},
+//  {"LRS_4413",   ELRS_4413},
+//  {"LRS_4413SPILL",   ELRS_4413SPILL},
+//  {"LRS_4413DAQEnable",   ELRS_4413DAQEnable},
+//  {"GSI_4800",   EGSI_4800},
+
+
+//  // FASTBUS
+//  {"FASTBUS",    EFASTBUS},
+//  {"LRS_1821",   ELRS_1821},
+//  {"LRS_1875",   ELRS_1875},
+//  {"LRS_1872",   ELRS_1872},
+//  {"LRS_1885",   ELRS_1800},
+//  {"LRS_1877",   ELRS_1877},
+//  {"LRS_1879",   ELRS_1879},
+//  {"LRS_1881",   ELRS_1881},
+//  {"PH_10C6",    EPH_10C6},
+//  {"PH_10C2",    EPH_10C2},
+//  {"STR_200",    ESTR_200},
+//  {"STR_136",    ESTR_136},
+//  // I2C
+//  // PCI
+//  {"Virtual",    EDAQ_Virtual},
+//  {"EPICS",      EDAQ_Epics},
+};
 
 }}} // namespace ant::unpacker::acqu
 

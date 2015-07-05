@@ -52,7 +52,7 @@ public:
   }
 
   void read(std::uint32_t* s, std::streamsize n) {
-    read(reinterpret_cast<char*>(s), 4*n);
+    read(reinterpret_cast<char*>(s), n*sizeof(uint32_t)/sizeof(char));
   }
 
   /**

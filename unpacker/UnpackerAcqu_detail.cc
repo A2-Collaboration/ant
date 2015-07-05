@@ -10,6 +10,9 @@
 #include <algorithm>
 #include <exception>
 #include <list>
+#include <iomanip>
+
+#include <chrono>
 
 
 using namespace std;
@@ -62,6 +65,7 @@ UnpackerAcquFileFormat::Get(const string &filename,
 
   // we found only one candidate
   // give him the reader and the buffer for further processing
+  // also fill some header-like events into the queue
   const format_t& format = formats.back();
   format->Setup(move(reader), move(buffer));
   format->FillHeader(queue);
@@ -93,9 +97,52 @@ void acqu::FileFormatMk2::FillEvents(std::deque<std::unique_ptr<TDataRecord> >& 
 
 void acqu::FileFormatMk2::FillHeader(std::deque<std::unique_ptr<TDataRecord> >& queue)
 {
-  // we build up the header structure, and read the file until the first event buffer
   const acqu::AcquMk2Info_t* h = reinterpret_cast<const acqu::AcquMk2Info_t*>(buffer.data()+1);
-  VLOG(9) << h->fDescription << endl;
+
+  // fill the Info
+  istringstream ss_time(h->fTime);
+  ss_time >> get_time(&info.Time,"%a %b %d %T %Y");
+  info.Time.tm_isdst = -1; // std::get_time does not set this, but mktime wants to know this
+
+  info.Description = std_ext::string_sanitize(h->fDescription);
+  info.RunNote = std_ext::string_sanitize(h->fRunNote);
+  info.OutFile = std_ext::string_sanitize(h->fOutFile);
+  info.RunNumber = static_cast<unsigned>(h->fRun);
+  info.RecordLength = static_cast<unsigned>(h->fRecLen);
+
+  // extract the module info
+  const unsigned nModules = static_cast<unsigned>(h->fNModule);
+  VLOG(9) << "Header says it has " << nModules << " modules";
+
+  // calculate sizes, ensure that on this platform the extraction works
+  using buffer_type = decltype(buffer);
+  static_assert(sizeof(acqu::AcquMk2Info_t) % sizeof(buffer_type::value_type) == 0,
+                "AcquMk2Info_t is not aligned to buffer");
+  static_assert(sizeof(acqu::ModuleInfoMk2_t) % sizeof(buffer_type::value_type) == 0,
+                "ModuleInfoMk2_t is not aligned to buffer");
+  constexpr size_t infoSize = 1 + // dont't forget the 32bit start marker
+      sizeof(acqu::AcquMk2Info_t)/4; // division by four is ok since static_assert'ed
+  constexpr size_t moduleSize = sizeof(acqu::ModuleInfoMk2_t)/4;
+  const size_t totalSize =
+      infoSize +
+      nModules*moduleSize;
+
+  // read enough into buffer
+  // it might be that the buffer is already larger,
+  // since it was already used to inspect headers by all FileFormats
+  if(buffer.size()<totalSize) {
+    const streamsize toBeRead = totalSize - buffer.size();
+    buffer.resize(totalSize); // make space in buffer
+    reader->read(&buffer[totalSize-toBeRead], toBeRead);
+  }
+
+  for(unsigned i=0;i<nModules;i++) {
+    auto buffer_ptr = &buffer[infoSize+i*moduleSize];
+    const acqu::ModuleInfoMk2_t* m =
+        reinterpret_cast<const acqu::ModuleInfoMk2_t*>(buffer_ptr);
+    //cout << hex << m->fModID << dec << endl;
+    cout << ModuleIDToString.at(m->fModID) << endl;
+  }
 }
 
 
@@ -110,12 +157,12 @@ size_t acqu::FileFormatMk2::SizeOfHeader() const
 }
 
 template<typename T>
-bool checkMk2(const T* h, true_type) {
+bool inspectHeaderMk1Mk2_(const T* h, true_type) {
   return h->fMk2 != acqu::EHeadBuff;
 }
 
 template<typename T>
-bool checkMk2(const T*, false_type) {
+bool inspectHeaderMk1Mk2_(const T*, false_type) {
   return false;
 }
 
@@ -138,11 +185,10 @@ bool inspectHeaderMk1Mk2(const vector<uint32_t>& buffer) {
   // if T is AcquMk2Info_t, then call the checkMk2 which inspects the struct,
   // if T is something else, then call the empty
   using tag = integral_constant<bool, is_same<T, acqu::AcquMk2Info_t>::value >;
-  if(checkMk2(h, tag{}))
+  if(inspectHeaderMk1Mk2_(h, tag{}))
     return false;
 
-  if(h->fRun<0)
-    return false;
+  /// \todo Improve the checking here
 
   if(std_ext::string_sanitize(h->fTime).length() != 24)
     return false;
