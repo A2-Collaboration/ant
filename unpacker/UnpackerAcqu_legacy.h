@@ -393,6 +393,18 @@ struct EpicsChannelInfo_t {      //header for channel info
 // Adapted from ModuleIndex.h
 //////////////////////////////
 
+constexpr uint32_t EDAQ_Undef=0;
+constexpr uint32_t EDAQ_ADC=0x1;
+constexpr uint32_t EDAQ_Scaler=0x2;
+constexpr uint32_t EDAQ_SlowCtrl=0x4;
+constexpr uint32_t EDAQ_Ctrl=0x8;
+constexpr uint32_t EDAQ_SCtrl=0x10;
+constexpr uint32_t EDAQ_IRQ=0x20;
+constexpr uint32_t EDAQ_VADC=0x40;
+constexpr uint32_t EDAQ_VScaler=0x80;
+//constexpr uint32_t EDAQ_ADC_Scaler=0x3;
+constexpr uint32_t EDAQ_Epics=0x100;
+
 // add IDs as you encounter them in files
 // do not cargo-cult totally unused IDs
 

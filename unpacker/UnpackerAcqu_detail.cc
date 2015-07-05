@@ -112,7 +112,7 @@ void acqu::FileFormatMk2::FillHeader(std::deque<std::unique_ptr<TDataRecord> >& 
 
   // extract the module info
   const unsigned nModules = static_cast<unsigned>(h->fNModule);
-  VLOG(9) << "Header says it has " << nModules << " modules";
+  VLOG(9) << "Header says: Have " << nModules << " modules";
 
   // calculate sizes, ensure that on this platform the extraction works
   using buffer_type = decltype(buffer);
@@ -136,13 +136,43 @@ void acqu::FileFormatMk2::FillHeader(std::deque<std::unique_ptr<TDataRecord> >& 
     reader->read(&buffer[totalSize-toBeRead], toBeRead);
   }
 
+  // add modules to lists
+  /// \todo Check for overlapping of raw channels
+
+  unsigned totalADCs = 0;
+  unsigned totalScalers = 0;
   for(unsigned i=0;i<nModules;i++) {
-    auto buffer_ptr = &buffer[infoSize+i*moduleSize];
+    const auto buffer_ptr = &buffer[infoSize+i*moduleSize];
     const acqu::ModuleInfoMk2_t* m =
         reinterpret_cast<const acqu::ModuleInfoMk2_t*>(buffer_ptr);
-    //cout << hex << m->fModID << dec << endl;
-    cout << ModuleIDToString.at(m->fModID) << endl;
+    auto it = ModuleIDToString.find(m->fModID);
+    if(it == ModuleIDToString.end()) {
+      LOG(WARNING) << "Skipping unknown module with ID=0x" << hex << m->fModID << dec;
+      continue;
+    }
+
+    Info::HardwareModule module;
+    module.Identifier = it->second;
+    module.Index = m->fModIndex;
+    module.Bits = m->fBits;
+    module.FirstRawChannel = m->fAmin;
+
+    // ADC and Scaler will be added twice!
+    if(m->fModType & acqu::EDAQ_ADC) {
+      totalADCs += m->fNChannel;
+      module.NRawChannels = m->fNChannel;
+      info.ADCModules.emplace_back(module);
+    }
+    if(m->fModType & acqu::EDAQ_Scaler) {
+      totalScalers += m->fNScChannel;
+      module.NRawChannels = m->fNScChannel;
+      info.ScalerModules.emplace_back(module);
+    }
   }
+  VLOG(9) << "Header says: Have " << info.ADCModules.size() << " ADC modules with "
+          << totalADCs << " channels";
+  VLOG(9) << "Header says: Have " << info.ScalerModules.size() << " Scaler modules with "
+          << totalScalers << " channels";
 }
 
 

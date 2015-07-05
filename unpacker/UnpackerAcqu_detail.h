@@ -69,14 +69,17 @@ protected:
   // helper class to finally create the THeaderInfo items
   // the fields are still very similar to the Acqu header info fields
   // but the knowledge what data format it actually was created from
-  // is already gone
+  // is already gone, yay
   struct Info {
     struct HardwareModule {
       std::string Identifier; // some more or less unique identifier of the module
-      bool IsADC;
-      bool IsScaler;
+      unsigned Index; // non-unique! Within VME it is however
+      unsigned Bits;
+      unsigned FirstRawChannel;
+      unsigned NRawChannels;
     };
-    std::vector<HardwareModule> Modules;
+    std::vector<HardwareModule> ADCModules; // appear only in normal event
+    std::vector<HardwareModule> ScalerModules; // appear only in scaler blocks
 
     std::tm Time;
     std::string Description;
