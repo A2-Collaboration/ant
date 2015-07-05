@@ -25,6 +25,12 @@ unique_ptr<UnpackerAcquFileFormat> UnpackerAcquFileFormat::Get(const string &fil
   formats.emplace_back(new acqu::FileFormatMk1());
   formats.emplace_back(new acqu::FileFormatMk2());
 
+  // the rather complicated setup of FileFormat implementation
+  // is due to the fact that we want to open the file only once,
+  // but cannot seek in it (due to compressed files)
+
+  // that means that this factory method needs to know something about
+
   // how many words shall we read for header inspection?
   const auto it_max =
       max_element(formats.cbegin(), formats.cend(),
@@ -57,8 +63,13 @@ unique_ptr<UnpackerAcquFileFormat> UnpackerAcquFileFormat::Get(const string &fil
   const format_t& format = formats.back();
   format->Setup(move(reader), move(buffer));
 
-  // return the fully setup UnpackerAcquFormat instance
+  // return the UnpackerAcquFormat instance
   return move(formats.back());
+}
+
+void acqu::FileFormatBase::Setup(std::unique_ptr<RawFileReader> &&reader_, std::vector<uint32_t> &&buffer_) {
+  reader = move(reader_);
+  buffer = move(buffer_);
 }
 
 size_t acqu::FileFormatMk1::SizeOfHeader() const
@@ -70,7 +81,6 @@ size_t acqu::FileFormatMk2::SizeOfHeader() const
 {
   return sizeof(AcquMk2Info_t);
 }
-
 
 template<typename T>
 bool checkMk2(const T* h, true_type) {
@@ -124,15 +134,4 @@ bool acqu::FileFormatMk1::InspectHeader(const vector<uint32_t>& buffer) const
 bool acqu::FileFormatMk2::InspectHeader(const vector<uint32_t>& buffer) const
 {
   return inspectHeaderMk1Mk2<AcquMk2Info_t>(buffer);
-}
-
-
-void acqu::FileFormatMk1::Setup(std::unique_ptr<RawFileReader> &&reader, std::vector<uint32_t> &&buffer)
-{
-
-}
-
-void acqu::FileFormatMk2::Setup(std::unique_ptr<RawFileReader> &&reader, std::vector<uint32_t> &&buffer)
-{
-
 }

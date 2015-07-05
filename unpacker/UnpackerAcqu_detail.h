@@ -5,7 +5,7 @@
 #include "stl_helpers.h"
 #include <memory>
 #include <string>
-
+#include <deque>
 
 namespace ant {
 
@@ -16,22 +16,37 @@ namespace ant {
  */
 
 class RawFileReader;
+class TDataRecord;
+
+
 
 class UnpackerAcquFileFormat {
 public:
-  virtual ~UnpackerAcquFileFormat() = default;
-  // factory method to get concrete implementation
+
+  /**
+   * @brief Get
+   * @param filename
+   * @param queue
+   * @return
+   *
+   * This factory method returns a fully setup reader. It might already fill
+   * the quere with some events about the header or some unpacker messages, for example.
+   */
   static std::unique_ptr<UnpackerAcquFileFormat> Get(const std::string& filename);
 
-  class Info {
+//  class Info {
 
-  };
-  virtual Info GetInfo() { return Info(); }
+//  };
+//  virtual Info GetInfo() { return Info(); }
+
 
 protected:
+
   virtual size_t SizeOfHeader() const = 0;
   virtual bool InspectHeader(const std::vector<uint32_t>& buffer) const = 0;
-  virtual void Setup(std::unique_ptr<RawFileReader>&& reader, std::vector<uint32_t>&& buffer) = 0;
+  virtual void Setup(std::unique_ptr<RawFileReader>&& reader_,
+                     std::vector<uint32_t>&& buffer_) = 0;
+
 };
 
 // the derived file format classes
@@ -39,22 +54,32 @@ protected:
 namespace unpacker {
 namespace acqu {
 
-class FileFormatMk1 : public UnpackerAcquFileFormat {
 
-  // UnpackerAcquFile interface
+class FileFormatBase : public UnpackerAcquFileFormat {
 protected:
-  virtual size_t SizeOfHeader() const override;
-  virtual bool InspectHeader(const std::vector<uint32_t> &buffer) const override;
-  virtual void Setup(std::unique_ptr<RawFileReader>&& reader, std::vector<uint32_t>&& buffer) override;
+  std::unique_ptr<RawFileReader> reader;
+  std::vector<uint32_t> buffer;
+
+  virtual void Setup(std::unique_ptr<RawFileReader>&& reader_,
+                     std::vector<uint32_t>&& buffer_) override;
 };
 
-class FileFormatMk2 : public UnpackerAcquFileFormat {
+class FileFormatMk1 : public FileFormatBase {
 
   // UnpackerAcquFile interface
 protected:
   virtual size_t SizeOfHeader() const override;
   virtual bool InspectHeader(const std::vector<uint32_t> &buffer) const override;
-  virtual void Setup(std::unique_ptr<RawFileReader>&& reader, std::vector<uint32_t>&& buffer) override;
+};
+
+class FileFormatMk2 : public FileFormatBase {
+
+  // UnpackerAcquFile interface
+protected:
+  //std::unique_ptr<RawFileReader> reader;
+
+  virtual size_t SizeOfHeader() const override;
+  virtual bool InspectHeader(const std::vector<uint32_t> &buffer) const override;
 };
 
 }} // namespace unpacker::acqu
