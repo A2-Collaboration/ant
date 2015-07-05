@@ -71,36 +71,38 @@ size_t acqu::FileFormatMk2::SizeOfHeader() const
   return sizeof(AcquMk2Info_t);
 }
 
-//template<typename T>
-//bool Mk1Mk2InspectHeader(const vector<uint32_t>& buffer) {
-//  if(buffer[0] != EHeadBuff)
-//    return false;
 
-//  // try to interpret the buffer as some Mk2 header
-//  const T* h = reinterpret_cast<const T*>(buffer.data()+1);
+template<typename T>
+bool checkMk2(const T* h, true_type) {
+  return h->fMk2 != acqu::EHeadBuff;
+}
 
-//  // Mk2 has some head marker
-//  if(h->fMk2 != EHeadBuff)
-//    return false;
+template<typename T>
+bool checkMk2(const T*, false_type) {
+  return false;
+}
 
-//  if(h->fRun<0)
-//    return false;
+template<typename T>
+bool inspectHeaderMk1Mk2(const vector<uint32_t>& buffer) {
+  // ensure the correct T at compile time
+  static_assert(is_same<T, acqu::AcquExptInfo_t>::value
+                || is_same<T, acqu::AcquMk2Info_t>::value,
+                "T can only be either Mk1 or Mk2 header struct");
 
-//  if(std_ext::string_sanitize(h->fTime).length() != 24)
-//    return false;
-
-//  if(std_ext::string_sanitize(h->fOutFile).empty())
-//    return false;
-
-//  return true;
-//}
-
-bool acqu::FileFormatMk1::InspectHeader(const vector<uint32_t>& buffer) const
-{
-  if(buffer[0] != EHeadBuff)
+  if(buffer[0] != acqu::EHeadBuff)
     return false;
 
-  const AcquExptInfo_t* h = reinterpret_cast<const AcquExptInfo_t*>(buffer.data()+1);
+  // try to interpret the buffer as some Mk2 header
+  const T* h = reinterpret_cast<const T*>(buffer.data()+1);
+
+  // Mk2 has some additional head marker in the struct,
+  // but the other type does not have it
+  // we use tag-based dispatching here:
+  // if T is AcquMk2Info_t, then call the checkMk2 which inspects the struct,
+  // if T is something else, then call the empty
+  using tag = integral_constant<bool, is_same<T, acqu::AcquMk2Info_t>::value >;
+  if(checkMk2(h, tag{}))
+    return false;
 
   if(h->fRun<0)
     return false;
@@ -114,28 +116,14 @@ bool acqu::FileFormatMk1::InspectHeader(const vector<uint32_t>& buffer) const
   return true;
 }
 
+bool acqu::FileFormatMk1::InspectHeader(const vector<uint32_t>& buffer) const
+{
+  return inspectHeaderMk1Mk2<AcquExptInfo_t>(buffer);
+}
+
 bool acqu::FileFormatMk2::InspectHeader(const vector<uint32_t>& buffer) const
 {
-  if(buffer[0] != EHeadBuff)
-    return false;
-
-  // try to interpret the buffer as some Mk2 header
-  const AcquMk2Info_t* h = reinterpret_cast<const AcquMk2Info_t*>(buffer.data()+1);
-
-  // Mk2 has some head marker
-  if(h->fMk2 != EHeadBuff)
-    return false;
-
-  if(h->fRun<0)
-    return false;
-
-  if(std_ext::string_sanitize(h->fTime).length() != 24)
-    return false;
-
-  if(std_ext::string_sanitize(h->fOutFile).empty())
-    return false;
-
-  return true;
+  return inspectHeaderMk1Mk2<AcquMk2Info_t>(buffer);
 }
 
 
@@ -143,9 +131,6 @@ void acqu::FileFormatMk1::Setup(std::unique_ptr<RawFileReader> &&reader, std::ve
 {
 
 }
-
-
-
 
 void acqu::FileFormatMk2::Setup(std::unique_ptr<RawFileReader> &&reader, std::vector<uint32_t> &&buffer)
 {
