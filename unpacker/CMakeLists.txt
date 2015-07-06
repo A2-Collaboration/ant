@@ -16,6 +16,12 @@ set(SRCS
   TDataRecord.h
   THeaderInfo.cc
   THeaderInfo.h
+  TDetectorRead.cc
+  TDetectorRead.h
+  TSlowControl.cc
+  TSlowControl.h
+  TUnpackerMessage.cc
+  TUnpackerMessage.h
 )
 
 include_directories(.)
