@@ -3,6 +3,12 @@
 
 #include "Event.h"
 #include "plot/HistogramFactories.h"
+#include <list>
+#include <string>
+#include <memory>
+
+class TFile;
+class TDirectory;
 
 namespace ant {
 
@@ -25,6 +31,22 @@ public:
     virtual void ProcessEvent(const ant::Event& event);
     virtual void Finish();
     virtual void ShowResult();
+};
+
+class PhysicsManager {
+protected:
+    using physics_list_t = std::list< std::unique_ptr<ant::Physics> >;
+
+    physics_list_t physics;
+
+public:
+    PhysicsManager();
+    template <typename T, typename ... args_t>
+    void AddPhysics(args_t&&... args) {
+        physics.emplace_back(
+                    std::unique_ptr<ant::Physics>(
+                        new T(std::forward<args_t>(args)...)));
+    }
 };
 }
 

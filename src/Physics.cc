@@ -1,5 +1,8 @@
 #include "Physics.h"
 
+#include "TFile.h"
+#include "TDirectory.h"
+
 #include <iostream>
 
 using namespace std;
@@ -23,3 +26,9 @@ void ant::DebugPhysics::ShowResult()
 ant::Physics::Physics(const string &name):
     HistFac(name)
 {}
+
+
+ant::PhysicsManager::PhysicsManager()
+{
+
+}
