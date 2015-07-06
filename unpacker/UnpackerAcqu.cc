@@ -1,5 +1,6 @@
 #include "UnpackerAcqu.h"
 #include "UnpackerAcqu_detail.h"
+#include "ExpConfig.h"
 
 #include "Logger.h"
 
@@ -42,15 +43,4 @@ shared_ptr<TDataRecord> UnpackerAcqu::NextItem()
   return element;
 }
 
-namespace ant { // templates need explicit namespace
 
-template<>
-unique_ptr< Unpacker::Config<UnpackerAcqu> >
-Unpacker::Config<UnpackerAcqu>::Get(const THeaderInfo& headerInfo) {
-
-  VLOG(9) << "Hello";
-
-  return nullptr;
-}
-
-}

@@ -1,6 +1,7 @@
 #ifndef UNPACKER_H
 #define UNPACKER_H
 
+#include <ExpConfig.h>
 #include <TDataRecord.h>
 
 #include <string>
@@ -9,9 +10,8 @@
 
 namespace ant {
 
-class THeaderInfo;
-
 class Unpacker {
+
 public:
 
   Unpacker() = delete;
@@ -25,13 +25,6 @@ public:
 
   // factory method to get an unpacker module
   static std::unique_ptr<Module> Get(const std::string &filename);
-
-  template<class Module>
-  class Config {
-  public:
-    virtual bool Matches(const THeaderInfo& headerInfo) = 0;
-    static std::unique_ptr< Unpacker::Config<Module> > Get(const THeaderInfo& headerInfo);
-  };
 
   class Exception : public std::runtime_error {
     using std::runtime_error::runtime_error; // use base class constructor

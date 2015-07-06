@@ -103,9 +103,9 @@ void acqu::FileFormatMk2::FillEvents(std::deque<std::unique_ptr<TDataRecord> >& 
 void acqu::FileFormatBase::FillHeader(std::deque<std::unique_ptr<TDataRecord> >& queue)
 {
   FillInfo();
-  auto headerInfo = BuildTHeaderInfo();
+  const auto& headerInfo = BuildTHeaderInfo();
   // try to find some config with the headerInfo
-  Unpacker::Config<UnpackerAcqu>::Get(*headerInfo);
+  ExpConfig::Unpacker<UnpackerAcqu>::Get(*headerInfo);
 
   //THeaderInfo h(TDataRecord::UUID_t(4,5));
 }
