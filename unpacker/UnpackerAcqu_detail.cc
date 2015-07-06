@@ -1,7 +1,6 @@
 #include "UnpackerAcqu_detail.h"
 #include "UnpackerAcqu_legacy.h"
 
-
 #include "TDataRecord.h"
 #include "THeaderInfo.h"
 
@@ -17,6 +16,8 @@
 
 #include <chrono>
 
+#include "Unpacker.h"
+#include "UnpackerAcqu.h"
 
 using namespace std;
 using namespace ant;
@@ -102,13 +103,16 @@ void acqu::FileFormatMk2::FillEvents(std::deque<std::unique_ptr<TDataRecord> >& 
 void acqu::FileFormatBase::FillHeader(std::deque<std::unique_ptr<TDataRecord> >& queue)
 {
   FillInfo();
-  std::unique_ptr<TDataRecord> headerInfo = BuildTHeaderInfo();
+  auto headerInfo = BuildTHeaderInfo();
   // try to find some config with the headerInfo
+  Unpacker::Config<UnpackerAcqu>::Get(*headerInfo);
 
   //THeaderInfo h(TDataRecord::UUID_t(4,5));
 }
 
-unique_ptr<TDataRecord> acqu::FileFormatBase::BuildTHeaderInfo()
+
+
+unique_ptr<THeaderInfo> acqu::FileFormatBase::BuildTHeaderInfo()
 {
   // this unpacker has a constant ID_upper
   // based on the timestamp inside the file
@@ -129,7 +133,7 @@ unique_ptr<TDataRecord> acqu::FileFormatBase::BuildTHeaderInfo()
               << "Note='"+info.RunNote+"' ";
 
 
-  return unique_ptr<TDataRecord>(
+  return unique_ptr<THeaderInfo>(
         new THeaderInfo(id, timestamp, description.str(), info.RunNumber)
         );
 }

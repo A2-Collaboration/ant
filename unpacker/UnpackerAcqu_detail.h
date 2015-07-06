@@ -7,6 +7,8 @@
 #include <string>
 #include <deque>
 #include <ctime>
+#include <cstdint>
+
 
 namespace ant {
 
@@ -18,6 +20,7 @@ namespace ant {
 
 class RawFileReader;
 class TDataRecord;
+class THeaderInfo;
 
 class UnpackerAcquFileFormat {
 public:
@@ -49,7 +52,7 @@ protected:
   virtual size_t SizeOfHeader() const = 0;
   virtual bool InspectHeader(const std::vector<uint32_t>& buffer) const = 0;
   virtual void Setup(std::unique_ptr<RawFileReader>&& reader_,
-                     std::vector<uint32_t>&& buffer_) = 0;
+                     std::vector<std::uint32_t>&& buffer_) = 0;
   virtual void FillHeader(std::deque< std::unique_ptr<TDataRecord> >& queue) = 0;
 };
 
@@ -59,11 +62,11 @@ namespace unpacker {
 namespace acqu {
 
 
-// FileFormatBase provides a common class for Mk1/Mk2 formats so far
+// FileFormatBase provides a common class for Mk1/Mk2 formats (so far)
 class FileFormatBase : public UnpackerAcquFileFormat {
 protected:
   std::unique_ptr<RawFileReader> reader;
-  std::vector<uint32_t> buffer;
+  std::vector<std::uint32_t> buffer;
 
   // helper class to finally create the THeaderInfo items
   // the fields are still very similar to the Acqu header info fields
@@ -86,20 +89,19 @@ protected:
     std::string OutFile;
     unsigned RunNumber;
     unsigned RecordLength;
-
   };
 
   Info info;
-  uint32_t ID_upper; // upper part of UID, set by BuildTHeaderInfo
+  std::uint32_t ID_upper; // upper part of UID, set by BuildTHeaderInfo
   //std::unique_ptr<
 
   virtual void Setup(std::unique_ptr<RawFileReader>&& reader_,
-                     std::vector<uint32_t>&& buffer_) override;
+                     std::vector<std::uint32_t>&& buffer_) override;
   virtual void FillHeader(std::deque< std::unique_ptr<TDataRecord> >& queue) override;
   virtual void FillInfo() = 0;
 
 private:
-  std::unique_ptr<TDataRecord> BuildTHeaderInfo();
+  std::unique_ptr<THeaderInfo> BuildTHeaderInfo();
 };
 
 class FileFormatMk1 : public FileFormatBase {
@@ -107,7 +109,7 @@ class FileFormatMk1 : public FileFormatBase {
   // UnpackerAcquFile interface
 protected:
   virtual size_t SizeOfHeader() const override;
-  virtual bool InspectHeader(const std::vector<uint32_t> &buffer) const override;
+  virtual bool InspectHeader(const std::vector<std::uint32_t>& buffer) const override;
   virtual void FillEvents(std::deque<std::unique_ptr<TDataRecord> > &queue) override;
   virtual void FillInfo() override;
 };
@@ -117,7 +119,7 @@ class FileFormatMk2 : public FileFormatBase {
   // UnpackerAcquFile interface
 protected:
   virtual size_t SizeOfHeader() const override;
-  virtual bool InspectHeader(const std::vector<uint32_t> &buffer) const override;
+  virtual bool InspectHeader(const std::vector<std::uint32_t> &buffer) const override;
   virtual void FillEvents(std::deque<std::unique_ptr<TDataRecord> > &queue) override;
   virtual void FillInfo() override;
 

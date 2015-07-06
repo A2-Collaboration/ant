@@ -12,9 +12,10 @@ class BeamtimeConfig
 {
 public:
   BeamtimeConfig() = delete;
+
   class Module {
   public:
-    enum class DetectorType_t {
+    enum class Component_t {
       Trigger, Tagger, Moeller, CB, PID, MWPC, TAPS, TAPSVeto
     };
 
@@ -24,13 +25,15 @@ public:
     };
 
     struct LogicalChannel_t {
-      DetectorType_t Detector;
+      Component_t Detector;
       ChannelType_t Type;
       unsigned LogicalChannel;
     };
 
     virtual ~Module() = default;
+
     virtual bool Matches(const THeaderInfo& header) = 0;
+
     using RawChannelMapping_t = std::map<unsigned, LogicalChannel_t>;
     virtual RawChannelMapping_t GetRawChannelMapping() = 0;
   };

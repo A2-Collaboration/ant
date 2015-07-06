@@ -14,7 +14,7 @@ class UnpackerAcqu : public Unpacker::Module
 {
 public:
   UnpackerAcqu();
-  virtual bool OpenFile(const std::string &filename) override;
+  virtual bool OpenFile(const std::string& filename) override;
   virtual std::shared_ptr<TDataRecord> NextItem() override;
 
   class Exception : public Unpacker::Exception {
@@ -26,6 +26,7 @@ private:
   std::unique_ptr<UnpackerAcquFileFormat> file;
 
 };
+
 
 
 
