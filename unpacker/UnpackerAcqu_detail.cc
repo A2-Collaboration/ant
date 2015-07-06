@@ -2,6 +2,9 @@
 #include "UnpackerAcqu_legacy.h"
 
 
+#include "TDataRecord.h"
+#include "THeaderInfo.h"
+
 #include "Logger.h"
 #include "RawFileReader.h"
 
@@ -99,6 +102,7 @@ void acqu::FileFormatMk2::FillEvents(std::deque<std::unique_ptr<TDataRecord> >& 
 void acqu::FileFormatMk2::FillHeader(std::deque<std::unique_ptr<TDataRecord> >& queue)
 {
   FillInfo();
+  //THeaderInfo h(TDataRecord::UUID_t(4,5));
 }
 
 void acqu::FileFormatMk2::FillInfo()

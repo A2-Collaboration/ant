@@ -12,15 +12,10 @@ set(SRCS
   UnpackerAcqu_detail.cc
   UnpackerAcqu_detail.h
   UnpackerAcqu_legacy.h
-  TDataRecord.cc
   TDataRecord.h
-  THeaderInfo.cc
   THeaderInfo.h
-  TDetectorRead.cc
   TDetectorRead.h
-  TSlowControl.cc
   TSlowControl.h
-  TUnpackerMessage.cc
   TUnpackerMessage.h
 )
 
