@@ -95,6 +95,40 @@ public:
     void ShowResult();
 };
 
+class Omega3: public Physics {
+protected:
+    bool run_on_true;
+
+    TH2D* ggg_gg;
+    TH2D* ggg_gg_bg;    // if not from omega decay
+    TH2D* ggg_gg_all;
+
+    //TH1D* gg_bg;        // if from omega but not pi0 or eta decay
+
+    TH1D* ggg;
+    TH1D* ggg_omega;
+    TH1D* ggg_bg;
+    TH1D* ggg_omega_pi0oreta;
+
+    TH2D* ggg_gg_omega_eta;
+    TH2D* ggg_gg_omega_pi0;
+
+    TH1D* steps;
+
+
+    A2SimpleGeometry geo;
+
+    double calcEnergySum(const ParticleList &particles) const;
+    ParticleList getGeoAccepted(const ParticleList& p) const;
+
+public:
+    Omega3(const std::string& name="omega3", bool mctrue=false);
+    virtual ~Omega3() {}
+    void ProcessEvent(const Event &event);
+    void Finish();
+    void ShowResult();
+};
+
 }
 }
 #endif
