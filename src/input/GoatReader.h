@@ -16,15 +16,22 @@
 #include "TaggerInput.h"
 #include "DetectorHitInput.h"
 #include "TrackInput.h"
+#include "PlutoInput.h"
+#include "ParticleInput.h"
+
+
+class PStaticData;
+
 
 namespace ant {
 namespace input {
 
-
-
-
 class GoatReader: public DataReader {
 protected:
+
+    class InputWrapper {
+
+    };
 
     class ModuleManager: public std::list<BaseInputModule*> {
     public:
@@ -37,24 +44,53 @@ protected:
                 module->GetEntry();
             }
         }
-
     };
 
     FileManager   files;
     TreeManager   trees;
 
 
-    TriggerInput trigger;
-    TaggerInput  tagger;
+    TriggerInput        trigger;
+    TaggerInput         tagger;
+    TrackInput          tracks;
+    DetectorHitInput    detectorhits;
+    PlutoInput          pluto;
+    ParticleInput       photons   = ParticleInput("photons");
+    ParticleInput       protons   = ParticleInput("protons");
+    ParticleInput       pichagred = ParticleInput("pions");
+    ParticleInput       echarged  = ParticleInput("echarged");
+    ParticleInput       neutrons  = ParticleInput("neutrons");
 
-    ModuleManager active_modules = {&trigger, &tagger};
+    ModuleManager active_modules = {
+        &trigger,
+        &tagger,
+        &tracks,
+        &detectorhits,
+        &pluto,
+        &photons,
+        &protons,
+        &pichagred,
+        &echarged,
+        &neutrons
+    };
 
     Long64_t    current_entry = -1;
 
     void AddInputModule(BaseInputModule& module);
 
+    static clustersize_t MapClusterSize(const int& size);
+
+    void CopyTagger(std::shared_ptr<Event>& event);
+    void CopyTrigger(std::shared_ptr<Event>& event);
+    void CopyDetectorHits(std::shared_ptr<Event>& event);
+    void CopyTracks(std::shared_ptr<Event>& event);
+    void CopyPluto(std::shared_ptr<Event>& event);
+    void CopyParticles(std::shared_ptr<Event>& event, ParticleInput& input_module, const ParticleTypeDatabase::Type& type);
+
+    PStaticData* pluto_database;
+
 public:
-    GoatReader() = default;
+    GoatReader();
     virtual ~GoatReader() = default;
 
     void AddInputFile(const std::string& filename);

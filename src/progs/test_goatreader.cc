@@ -1,6 +1,10 @@
 #include "input/GoatReader.h"
+#include "Event.h"
 
 #include <iostream>
+
+using namespace std;
+using namespace ant;
 
 int main(int argc, char** argv) {
 
@@ -12,8 +16,10 @@ int main(int argc, char** argv) {
 
     g.Initialize();
 
-    while(g.hasData()) {
-        g.ReadNextEvent();
+    unsigned int n = 0;
+    while(g.hasData() && (n++ < 10)) {
+        auto event = g.ReadNextEvent();
+        cout << *event << endl;
     }
 
     return 0;
