@@ -113,6 +113,9 @@ protected:
   virtual bool InspectHeader(const std::vector<uint32_t> &buffer) const override;
   virtual void FillEvents(std::deque<std::unique_ptr<TDataRecord> > &queue) override;
   virtual void FillHeader(std::deque< std::unique_ptr<TDataRecord> >& queue) override;
+
+private:
+  void FillInfo();
 };
 
 }} // namespace unpacker::acqu

@@ -14,6 +14,8 @@ set(SRCS
   UnpackerAcqu_legacy.h
   TDataRecord.cc
   TDataRecord.h
+  THeaderInfo.cc
+  THeaderInfo.h
 )
 
 include_directories(.)

@@ -95,7 +95,13 @@ void acqu::FileFormatMk2::FillEvents(std::deque<std::unique_ptr<TDataRecord> >& 
 
 }
 
+
 void acqu::FileFormatMk2::FillHeader(std::deque<std::unique_ptr<TDataRecord> >& queue)
+{
+  FillInfo();
+}
+
+void acqu::FileFormatMk2::FillInfo()
 {
   const acqu::AcquMk2Info_t* h = reinterpret_cast<const acqu::AcquMk2Info_t*>(buffer.data()+1);
 
