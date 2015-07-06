@@ -9,17 +9,20 @@
 
 namespace ant {
 
-class THeaderInfo : public TDataRecord
+struct THeaderInfo : public TDataRecord
 {
-public:
+  struct HardwareModule {
+
+  };
+
   THeaderInfo(
-      TDataRecord::UUID_t uuid,
+      const TDataRecord::ID_t& id,
       std::time_t timestamp,
       const std::string& description,
       unsigned runnumber
       )
     :
-      TDataRecord(uuid),
+      TDataRecord(id),
       Timestamp(timestamp),
       Description(description),
       RunNumber(runnumber)
@@ -32,8 +35,7 @@ public:
                   );
   }
 
-private:
-  uint64_t Timestamp; // unix epoch
+  uint64_t Timestamp;      // unix epoch
   std::string Description; // full descriptive string
   uint32_t RunNumber;
 };

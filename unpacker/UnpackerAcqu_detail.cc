@@ -87,7 +87,7 @@ void acqu::FileFormatMk1::FillEvents(std::deque<std::unique_ptr<TDataRecord> >& 
   throw logic_error("Mk1 format not implemented yet");
 }
 
-void acqu::FileFormatMk1::FillHeader(std::deque<std::unique_ptr<TDataRecord> >& queue)
+void acqu::FileFormatMk1::FillInfo()
 {
   throw logic_error("Mk1 format not implemented yet");
 }
@@ -99,10 +99,39 @@ void acqu::FileFormatMk2::FillEvents(std::deque<std::unique_ptr<TDataRecord> >& 
 }
 
 
-void acqu::FileFormatMk2::FillHeader(std::deque<std::unique_ptr<TDataRecord> >& queue)
+void acqu::FileFormatBase::FillHeader(std::deque<std::unique_ptr<TDataRecord> >& queue)
 {
   FillInfo();
+  std::unique_ptr<TDataRecord> headerInfo = BuildTHeaderInfo();
+  // try to find some config with the headerInfo
+
   //THeaderInfo h(TDataRecord::UUID_t(4,5));
+}
+
+unique_ptr<TDataRecord> acqu::FileFormatBase::BuildTHeaderInfo()
+{
+  // this unpacker has a constant ID_upper
+  // based on the timestamp inside the file
+  /// \todo make 100% unique due to daylight saving time,
+
+  const time_t timestamp = mktime(&info.Time); // convert to unix epoch
+  ID_upper = static_cast<decltype(ID_upper)>(timestamp);
+
+  // construct the unique ID, header record as lower ID=0
+  const TDataRecord::ID_t id(ID_upper, 0);
+
+
+  stringstream description;
+  description << "RunData "
+              << "RunNumber=" << info.RunNumber << "' "
+              << "OutFile='" << info.OutFile << "' "
+              << "Description='"+info.Description+"' "
+              << "Note='"+info.RunNote+"' ";
+
+
+  return unique_ptr<TDataRecord>(
+        new THeaderInfo(id, timestamp, description.str(), info.RunNumber)
+        );
 }
 
 void acqu::FileFormatMk2::FillInfo()
@@ -110,12 +139,13 @@ void acqu::FileFormatMk2::FillInfo()
   const acqu::AcquMk2Info_t* h = reinterpret_cast<const acqu::AcquMk2Info_t*>(buffer.data()+1);
 
   // fill the Info
+
   // the C++11 istringstream way is not working on older systems
   // since std::get_time is missing :(
   //istringstream ss_time(h->fTime);
   //ss_time >> get_time(&info.Time,"%a %b %d %T %Y");
   strptime(h->fTime, "%a %b %d %T %Y", &info.Time);
-  info.Time.tm_isdst = -1; // std::get_time does not set this, but mktime wants to know
+  info.Time.tm_isdst = 0; // std::get_time does not set this, but mktime wants to know
 
 
   info.Description = std_ext::string_sanitize(h->fDescription);
@@ -151,7 +181,7 @@ void acqu::FileFormatMk2::FillInfo()
   }
 
   // add modules to lists
-  /// \todo Check for overlapping of raw channels
+  /// \todo Check for overlapping of raw channels?
 
   unsigned totalADCs = 0;
   unsigned totalScalers = 0;

@@ -17,6 +17,8 @@ set(SRCS
   TDetectorRead.h
   TSlowControl.h
   TUnpackerMessage.h
+  BeamtimeConfig.cc
+  BeamtimeConfig.h
 )
 
 include_directories(.)

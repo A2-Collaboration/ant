@@ -14,7 +14,15 @@ using namespace ant;
 
 int main(int argc, char* argv[]) {
   START_EASYLOGGINGPP(argc, argv);
-  el::Loggers::reconfigureAllLoggers(el::ConfigurationType::Format, "%datetime [%level] %fbase : %msg");
+  el::Loggers::reconfigureLogger("default",
+                                 el::ConfigurationType::Format,
+                                 "%datetime [%level] %fbase : %msg");
+
+  el::Configurations loggerConf;
+  loggerConf.setToDefault();
+  loggerConf.setGlobally(el::ConfigurationType::Format, "%datetime [%level] %fbase : %msg");
+  loggerConf.set(el::Level::Verbose,  el::ConfigurationType::Format, "%datetime [%level-%vlevel] %fbase : %msg");
+  el::Loggers::reconfigureLogger("default", loggerConf);
 
   auto unpacker = Unpacker::Get("scratch/CBTaggTAPS_7892.dat.xz");
 

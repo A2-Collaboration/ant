@@ -15,7 +15,7 @@ unique_ptr<Unpacker::Module> Unpacker::Get(const string& filename)
   modules.emplace_back(new UnpackerAcqu());
 
   // remove the unpacker if it says that it could not open the file
-  modules.remove_if([&filename] (const unique_ptr<Unpacker::Module>& m) {
+  modules.remove_if([&filename] (const unique_ptr<Module>& m) {
     return !m->OpenFile(filename);
   });
 
