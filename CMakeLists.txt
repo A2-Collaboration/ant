@@ -90,6 +90,8 @@ set(ANT_BASE
   src/input/GoatReader.cc
   src/DataReader.h
   src/DataReader.cc
+  src/OutputManager.h
+  src/OutputManager.cc
   )
 
 set(ANT_PHYSICS
