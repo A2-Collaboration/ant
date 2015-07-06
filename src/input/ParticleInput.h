@@ -15,9 +15,9 @@ namespace input {
 class ParticleInput: public BaseInputModule {
 protected:
     std::string         name;
-    Int_t               nParticles;
-    Double_t            mass[GTreeTrack_MAX];
-    Int_t               trackIndex[GTreeTrack_MAX];  // index of the corresponding tack in the track list, -1 => No track
+    Int_t               nParticles = 0;
+    Double_t            mass[GTreeTrack_MAX] = {};
+    Int_t               trackIndex[GTreeTrack_MAX] = {};  // index of the corresponding tack in the track list, -1 => No track
 
 public:
 
