@@ -44,7 +44,7 @@ std::ostream &Particle::Print(std::ostream &stream) const
     stream << " Theta=" << Theta();
     stream << " Phi=" << Phi();
     for( auto& track : tracks ) {
-        stream << "\t" << track << "\n";
+        stream << "\t" << *track << "\n";
     }
     return stream;
 }
