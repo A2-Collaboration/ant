@@ -3,7 +3,7 @@
 #include "TRint.h"
 
 #include "EventManager.h"
-#include "AntPhysics.h"
+#include "Physics.h"
 
 #include "analysis/omega.h"
 #include "analysis/omega_bottomup.h"

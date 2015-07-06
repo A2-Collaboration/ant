@@ -1,7 +1,7 @@
 #ifndef MCTRUE_ACCEPTANCE_H
 #define MCTRUE_ACCEPTANCE_H
 
-#include "AntPhysics.h"
+#include "Physics.h"
 #include "plot/SmartHist.h"
 
 #include "A2GeoAcceptance.h"

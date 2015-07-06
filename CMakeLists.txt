@@ -43,8 +43,8 @@ set(ANT_BASE
   src/Event.cc
   src/EventManager.h
   src/EventManager.cc
-  src/AntPhysics.h
-  src/AntPhysics.cc
+  src/Physics.h
+  src/Physics.cc
   src/base/printable.h
   src/base/printable.cc
   src/utils/combinatorics.h

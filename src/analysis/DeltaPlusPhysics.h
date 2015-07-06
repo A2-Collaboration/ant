@@ -1,7 +1,7 @@
 #ifndef DELTAPLUSPHYSICS_H
 #define DELTAPLUSPHYSICS_H
 
-#include "AntPhysics.h"
+#include "Physics.h"
 #include "plot/Histogram.h"
 #include "base/interval.h"
 #include <map>

@@ -1,7 +1,7 @@
 #ifndef APLCON_H
 #define APLCON_H
 
-#include "AntPhysics.h"
+#include "Physics.h"
 
 #include <APLCON.hpp>
 #include "plot/Histogram.h"

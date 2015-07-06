@@ -5,7 +5,7 @@
 #include "ParticleType.h"
 #include "Particle.h"
 #include "Event.h"
-#include "AntPhysics.h"
+#include "Physics.h"
 
 // std
 #include <stdexcept>

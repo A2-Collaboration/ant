@@ -1,7 +1,7 @@
 #ifndef OMEGA_H
 #define OMEGA_H
 
-#include "AntPhysics.h"
+#include "Physics.h"
 #include "base/interval.h"
 #include "plot/SmartHist.h"
 #include "A2GeoAcceptance.h"
