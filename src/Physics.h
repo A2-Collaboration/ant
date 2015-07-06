@@ -6,6 +6,7 @@
 #include <list>
 #include <string>
 #include <memory>
+#include "DataReader.h"
 
 class TFile;
 class TDirectory;
@@ -47,6 +48,8 @@ public:
                     std::unique_ptr<ant::Physics>(
                         new T(std::forward<args_t>(args)...)));
     }
+
+    void ReadFrom(ant::input::DataReader& reader);
 };
 }
 

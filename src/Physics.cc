@@ -32,3 +32,13 @@ ant::PhysicsManager::PhysicsManager()
 {
 
 }
+
+void ant::PhysicsManager::ReadFrom(ant::input::DataReader &reader)
+{
+    while(reader.hasData()) {
+        auto event = reader.ReadNextEvent();
+        for( auto& m : physics ) {
+            m->ProcessEvent(*event.get());
+        }
+    }
+}
