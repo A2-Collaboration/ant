@@ -89,8 +89,8 @@ void GoatReader::CopyTracks(std::shared_ptr<Event> &event)
         event->Reconstructed().Tracks().emplace_back(
                     TrackPtr( new Track(
                                   tracks.GetClusterEnergy(i),
-                                  tracks.GetTheta(i) * TMath::DegToRad(),
-                                  tracks.GetPhi(i) * TMath::DegToRad(),
+                                  tracks.GetTheta(i),
+                                  tracks.GetPhi(i),
                                   tracks.GetTime(i),
                                   MapClusterSize(tracks.GetClusterSize(i)),
                                   IntToDetector_t(tracks.GetDetectors(i)),
