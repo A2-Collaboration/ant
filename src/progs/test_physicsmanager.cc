@@ -15,10 +15,12 @@ int main(int argc, char** argv) {
     OutputManager om;
 
     om.SetNewOutput("out.root");
-    TH1* h1 = new TH1D("a","A",10,0,10);
+    auto h1 = new TH1D("a","A",10,0,10);
+    h1->Fill(2);
 
     om.SetNewOutput("out2.root");
-    TH1* h2 = new TH1D("b","B",10,0,10);
+    auto h2 = new TH1D("b","B",10,0,10);
+    h2->Fill(3);
 
     PhysicsManager pm;
 
