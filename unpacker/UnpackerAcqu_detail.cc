@@ -10,7 +10,7 @@
 #include <algorithm>
 #include <exception>
 #include <list>
-#include <iomanip>
+#include <ctime>
 
 #include <chrono>
 
@@ -106,9 +106,13 @@ void acqu::FileFormatMk2::FillInfo()
   const acqu::AcquMk2Info_t* h = reinterpret_cast<const acqu::AcquMk2Info_t*>(buffer.data()+1);
 
   // fill the Info
-  istringstream ss_time(h->fTime);
-  ss_time >> get_time(&info.Time,"%a %b %d %T %Y");
-  info.Time.tm_isdst = -1; // std::get_time does not set this, but mktime wants to know this
+  // the C++11 istringstream way is not working on older systems
+  // since std::get_time is missing :(
+  //istringstream ss_time(h->fTime);
+  //ss_time >> get_time(&info.Time,"%a %b %d %T %Y");
+  strptime(h->fTime, "%a %b %d %T %Y", &info.Time);
+  info.Time.tm_isdst = -1; // std::get_time does not set this, but mktime wants to know
+
 
   info.Description = std_ext::string_sanitize(h->fDescription);
   info.RunNote = std_ext::string_sanitize(h->fRunNote);
