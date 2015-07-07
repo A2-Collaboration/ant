@@ -7,8 +7,11 @@
 #include "RawFileReader.h"
 #undef RAWFILEREADER_H_IMPL
 
+#include "Logger.h"
+
 #include <cstdio> // for BUFSIZ
 #include <cstring> // for strerror
+
 
 using namespace std;
 using namespace ant;

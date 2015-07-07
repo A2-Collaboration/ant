@@ -100,7 +100,7 @@ void acqu::FileFormatMk2::FillEvents(std::deque<std::unique_ptr<TDataRecord> >& 
 void acqu::FileFormatBase::FillHeader(std::deque<std::unique_ptr<TDataRecord> >& queue)
 {
   FillInfo();
-  // now the reader is somewhere in the first buffer
+
 
 
 
@@ -221,6 +221,36 @@ void acqu::FileFormatMk2::FillInfo()
           << totalADCs << " channels";
   VLOG(9) << "Header says: Have " << info.ScalerModules.size() << " Scaler modules with "
           << totalScalers << " channels";
+
+  // finally search for the Mk2Header
+
+  // first search at 0x8000 bytes
+  if(SearchMk2Signature(0x8000))
+    return;
+
+  // then search at 10*0x8000
+  if(SearchMk2Signature(10*0x8000))
+    return;
+
+  // else fail
+  throw UnpackerAcqu::Exception("Did not find first data buffer with Mk2 signature");
+}
+
+bool acqu::FileFormatMk2::SearchMk2Signature(size_t offset)
+{
+  VLOG(9) << "Searching first Mk2 buffer at offset 0x" << hex << offset << dec;
+  // read full header record, and one additional word
+  reader->expand_buffer(buffer, offset/4+1);
+  // this word should be the Mk2DataBuff...
+  if(buffer.back() != acqu::EMk2DataBuff)
+    return false;
+  // check header info
+  LOG_IF(info.RecordLength != offset, WARNING)
+      << "Record length in header 0x" << hex << info.RecordLength
+      << " does not match true file record length 0x" << offset << dec;
+  // overwrite the RecordLength
+  info.RecordLength = offset;
+  return true;
 }
 
 

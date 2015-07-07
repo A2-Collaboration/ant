@@ -418,7 +418,7 @@ static const std::map<uint32_t, std::string> ModuleIDToString = {
 //  {"HSM_8170",   EHSM_8170},
 //  {"VIC_8250",   EVIC_8250},
 //  {"SLV_8250",   ESLV_8250},
-//  {"LRS_1131",   ELRS_1131},
+  {0x0100, "LRS_1131"},
   {0x0400, "KPH_SMI"},
   {0x0401, "KPH_VITEC"},
 //  {"CAEN_1465",  ECAEN_1465},

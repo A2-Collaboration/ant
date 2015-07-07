@@ -87,7 +87,7 @@ protected:
     std::string RunNote;
     std::string OutFile;
     unsigned RunNumber;
-    unsigned RecordLength;
+    unsigned RecordLength; // the true record length, not the one from the header
   };
 
   Info info;
@@ -122,6 +122,8 @@ protected:
   virtual void FillEvents(std::deque<std::unique_ptr<TDataRecord> > &queue) override;
   virtual void FillInfo() override;
 
+private:
+  bool SearchMk2Signature(size_t offset);
 };
 
 }} // namespace unpacker::acqu

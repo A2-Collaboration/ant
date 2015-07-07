@@ -21,7 +21,6 @@ namespace ant {
  * Possible IO errors are propagated as exceptions
  */
 class RawFileReader {
-
 public:
 
   /**
@@ -52,7 +51,7 @@ public:
   }
 
   void read(std::uint32_t* s, std::streamsize n) {
-    read(reinterpret_cast<char*>(s), n*sizeof(uint32_t)/sizeof(char));
+    read(reinterpret_cast<char*>(s), n*uint32_t_factor);
   }
 
   /**
@@ -73,12 +72,15 @@ public:
     return p->eof();
   }
 
-  void expand_buffer(std::vector<uint32_t>& buffer, size_t totalSize) {
+  void expand_buffer(std::vector<std::uint32_t>& buffer, size_t totalSize) {
     if(buffer.size()>=totalSize)
       return;
     const std::streamsize toBeRead = totalSize - buffer.size();
     buffer.resize(totalSize); // make space in buffer
     read(&buffer[totalSize-toBeRead], toBeRead);
+    if(uint32_t_factor*toBeRead != gcount()) {
+      throw Exception("Not enough bytes available from file to expand buffer");
+    }
   }
 
   class Exception : public std::runtime_error {
@@ -86,6 +88,7 @@ public:
   };
 
 private:
+  static constexpr std::streamsize uint32_t_factor = sizeof(std::uint32_t)/sizeof(char);
 
   /**
    * @brief The PlainBase class

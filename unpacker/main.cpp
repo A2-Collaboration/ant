@@ -17,7 +17,7 @@ using namespace ant;
 int main(int argc, char* argv[]) {
   SetupLogger(argc, argv);
 
-  auto unpacker = Unpacker::Get("scratch/CBTaggTAPS_7892.dat.xz");
+  auto unpacker = Unpacker::Get("scratch/CBTaggTAPS_9227.dat");
 
   LOG(INFO) << "Got item:   " << unpacker->NextItem();
 
