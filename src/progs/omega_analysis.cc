@@ -1,11 +1,7 @@
-#include "TRint.h"
-
 #include "input/goat/GoatReader.h"
 #include "OutputManager.h"
 #include "physics/Physics.h"
 #include "physics/omega/omega.h"
-#include <string>
-
 
 using namespace std;
 using namespace ant::output;
@@ -15,7 +11,7 @@ int main(int argc, char** argv) {
 
     OutputManager om;
 
-    om.SetNewOutput("out.root");
+    om.SetNewOutput("omega.root");
 
     PhysicsManager pm;
 
