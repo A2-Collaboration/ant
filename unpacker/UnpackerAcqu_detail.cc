@@ -126,8 +126,8 @@ unique_ptr<THeaderInfo> acqu::FileFormatBase::BuildTHeaderInfo()
 
 
   stringstream description;
-  description << "RunData "
-              << "RunNumber=" << info.RunNumber << "' "
+  description << "AcquData "
+              << "Number=" << info.RunNumber << " "
               << "OutFile='" << info.OutFile << "' "
               << "Description='"+info.Description+"' "
               << "Note='"+info.RunNote+"' ";

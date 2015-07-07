@@ -9,8 +9,8 @@ namespace ant {
 class THeaderInfo;
 
 enum class Detector_t {
-  Trigger, Tagger, CB, PID, MWPC,
-  TAPS, TAPSVeto, Moeller
+  Trigger, Tagger, EPT, CB, PID, MWPC0, MWPC1,
+  TAPS, TAPSVeto, Cherenkov, Moeller
 };
 
 enum class ChannelType_t {
@@ -37,20 +37,20 @@ public:
   };
 
   // the ExpConfig::Module defines methods for unpacker-independent configs
-  class Module : public Base {
+  class Module : public virtual Base {
 
   };
 
   // each unpacker has its own config,
-  // that's why it's templated
+  // we enforce this by templates
   template<class T>
-  class Unpacker : public Base {
+  class Unpacker : public virtual Base {
   public:
-    static std::shared_ptr< Unpacker<T> > Get(const THeaderInfo& headerInfo);
+    static std::unique_ptr< Unpacker<T> > Get(const THeaderInfo& header);
   };
 
-  // factory method to get a config for unpacked data
-  static std::shared_ptr<Module> Get(const THeaderInfo& header);
+  // factory method to get a config for already unpacked data
+  static std::unique_ptr<Module> Get(const THeaderInfo& header);
 
   class Exception : public std::runtime_error {
     using std::runtime_error::runtime_error; // use base class constructor
