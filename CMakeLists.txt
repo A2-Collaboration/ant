@@ -41,8 +41,6 @@ set(ANT_BASE
   src/data/Particle.cc
   src/data/Event.h
   src/data/Event.cc
-  src/EventManager.h
-  src/EventManager.cc
   src/Physics.h
   src/Physics.cc
   src/base/printable.h
