@@ -19,7 +19,8 @@ int main(int argc, char* argv[]) {
 
   //auto unpacker = Unpacker::Get("scratch/CBTaggTAPS_9227.dat");
   //auto unpacker = Unpacker::Get("scratch/CBTaggTAPS_7892.dat");
-  auto unpacker = Unpacker::Get("scratch/CBTaggTAPS_5711.dat.xz");
+  //auto unpacker = Unpacker::Get("scratch/CBTaggTAPS_5711.dat.xz");
+  auto unpacker = Unpacker::Get("scratch/headeronly-small.dat");
 
   LOG(INFO) << "Got item:   " << unpacker->NextItem();
 

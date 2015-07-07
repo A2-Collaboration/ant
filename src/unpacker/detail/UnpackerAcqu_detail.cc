@@ -241,8 +241,23 @@ bool acqu::FileFormatMk2::SearchMk2Signature(size_t offset)
 {
   VLOG(9) << "Searching first Mk2 buffer at offset 0x"
           << hex << offset << dec;
-  // read full header record, and one additional word
-  reader->expand_buffer(buffer, offset/4+1);
+  // read full header record, the file
+  // should be at least this long
+  reader->expand_buffer(buffer, offset/4);
+  // if this is a header-only file, the next expand might file
+  try {
+    reader->expand_buffer(buffer, offset/4+1);
+  }
+  catch(RawFileReader::Exception e) {
+    if(reader->eof()) {
+      LOG(WARNING) << "File is exactly " << offset
+                    << " bytes long, and contains only header.";
+      buffer.clear();
+      return true;
+    }
+    throw e;
+  }
+
   // this word should be the Mk2DataBuff...
   if(buffer.back() != acqu::EMk2DataBuff)
     return false;
