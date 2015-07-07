@@ -24,5 +24,7 @@ macro(add_ant_test name)
   add_dependencies(build_and_test ${TESTNAME})
 endmacro()
 
+include_directories(${CMAKE_SOURCE_DIR}/src)
+
 add_test_subdirectory(unpacker)
 
