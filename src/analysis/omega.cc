@@ -1,12 +1,12 @@
 #include "omega.h"
-#include "Particle.h"
-#include "Event.h"
+#include "data/Particle.h"
+#include "data/Event.h"
 #include "TLorentzVector.h"
 #include "TH1D.h"
 #include "plot/root_draw.h"
 #include "plot/Histogram.h"
 #include "utils/combinatorics.h"
-#include "TaggerHit.h"
+#include "data/TaggerHit.h"
 #include <string>
 #include <iostream>
 #include "plot/SmartHist.h"

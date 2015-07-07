@@ -2,7 +2,7 @@
 #define GOATREADER_H
 
 #include "DataReader.h"
-#include "Event.h"
+#include "data/Event.h"
 
 #include <memory>
 #include <string>

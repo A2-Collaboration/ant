@@ -1,7 +1,7 @@
 #ifndef DATAREADER_H
 #define DATAREADER_H
 
-#include "Event.h"
+#include "data/Event.h"
 #include <memory>
 
 namespace ant {

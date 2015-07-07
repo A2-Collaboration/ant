@@ -1,5 +1,5 @@
 #include "input/GoatReader.h"
-#include "Event.h"
+#include "data/Event.h"
 #include "TH1D.h"
 
 #include <iostream>

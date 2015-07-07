@@ -4,8 +4,8 @@
 
 #include "base/types.h"
 #include "ParticleType.h"
-#include "Track.h"
-#include "Particle.h"
+#include "data/Track.h"
+#include "data/Particle.h"
 
 #include "utils/combinatorics.h"
 

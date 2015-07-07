@@ -1,6 +1,6 @@
 #include <iostream>
 #include "TH1D.h"
-#include "Particle.h"
+#include "data/Particle.h"
 #include <memory>
 #include <list>
 #include <algorithm>

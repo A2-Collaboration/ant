@@ -3,7 +3,7 @@
 
 #include "plot/Histogram.h"
 #include "plot/SmartHist.h"
-#include "Particle.h"
+#include "data/Particle.h"
 
 #include <string>
 

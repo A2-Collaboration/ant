@@ -35,12 +35,12 @@ set(ANT_BASE
   src/base/types.h
   src/ParticleType.h
   src/ParticleType.cc
-  src/Track.h
-  src/Track.cc
-  src/Particle.h
-  src/Particle.cc
-  src/Event.h
-  src/Event.cc
+  src/data/Track.h
+  src/data/Track.cc
+  src/data/Particle.h
+  src/data/Particle.cc
+  src/data/Event.h
+  src/data/Event.cc
   src/EventManager.h
   src/EventManager.cc
   src/Physics.h
@@ -51,15 +51,15 @@ set(ANT_BASE
   src/plot/Histogram.h
   src/plot/Histogram.cc
   src/base/interval.h
-  src/TaggerHit.h
-  src/TaggerHit.cc
+  src/data/TaggerHit.h
+  src/data/TaggerHit.cc
   src/plot/root_draw.h
   src/plot/root_draw.cc
   src/Detector.h
   src/Detector.cc
   src/utils/matcher.h
-  src/TriggerInfo.h
-  src/TriggerInfo.cc
+  src/data/TriggerInfo.h
+  src/data/TriggerInfo.cc
   src/A2GeoAcceptance.h
   src/A2GeoAcceptance.cc
   src/plot/SmartHist.h

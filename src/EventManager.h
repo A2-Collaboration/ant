@@ -3,8 +3,8 @@
 
 // Ant
 #include "ParticleType.h"
-#include "Particle.h"
-#include "Event.h"
+#include "data/Particle.h"
+#include "data/Event.h"
 #include "Physics.h"
 
 // std

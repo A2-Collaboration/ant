@@ -1,7 +1,7 @@
 #include "TestPhysics.h"
 
-#include "Event.h"
-#include "Particle.h"
+#include "data/Event.h"
+#include "data/Particle.h"
 #include "ParticleType.h"
 #include "utils/combinatorics.h"
 #include "TH1D.h"

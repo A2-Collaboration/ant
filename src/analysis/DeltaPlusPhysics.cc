@@ -1,8 +1,8 @@
 #include "DeltaPlusPhysics.h"
 
 #include "plot/Histogram.h"
-#include "Event.h"
-#include "Particle.h"
+#include "data/Event.h"
+#include "data/Particle.h"
 #include "ParticleType.h"
 #include "TH1.h"
 #include "TH2.h"

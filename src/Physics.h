@@ -1,7 +1,7 @@
 #ifndef ANTPHYSICS_H
 #define ANTPHYSICS_H
 
-#include "Event.h"
+#include "data/Event.h"
 #include "plot/HistogramFactories.h"
 #include <list>
 #include <string>

@@ -4,7 +4,7 @@
 #include "Physics.h"
 #include "plot/SmartHist.h"
 #include "base/interval.h"
-#include "Particle.h"
+#include "data/Particle.h"
 
 
 #include <list>
