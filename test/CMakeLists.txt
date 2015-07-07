@@ -10,7 +10,7 @@ enable_testing()
 
 macro(add_test_subdirectory subdir)
   set(TEST_SUBDIR ${subdir})
-  include_directories(${CMAKE_SOURCE_DIR}/${subdir})
+  include_directories(${CMAKE_SOURCE_DIR}/src/${subdir})
   add_subdirectory(${subdir})
 endmacro()
 

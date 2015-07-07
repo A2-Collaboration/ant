@@ -23,8 +23,7 @@ find_package(Pluto REQUIRED)
 find_package(APLCON REQUIRED)
 
 
-include_directories(src
-  ${ROOT_INCLUDE_DIR}
+include_directories(${ROOT_INCLUDE_DIR}
   ${PLUTO_INCLUDE_DIR}
   ${APLCON_INCLUDE_DIR})
 
@@ -32,5 +31,4 @@ link_directories(${ROOT_LIBRARY_DIR})
 list(APPEND LIBS ${ROOT_LIBRARIES} ${APLCON_LIBRARY} ${PLUTO_LIBRARY})
 
 add_subdirectory(src)
-add_subdirectory(unpacker)
 add_subdirectory(test)
