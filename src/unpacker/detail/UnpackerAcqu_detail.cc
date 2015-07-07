@@ -1,8 +1,7 @@
-#include "../UnpackerAcqu.h" // for UnpackerAcquConfig
 
-#include "UnpackerAcqu.h"
+#include "UnpackerAcqu.h" // for UnpackerAcquConfig
+#include "UnpackerAcqu_detail.h"
 #include "UnpackerAcqu_legacy.h"
-
 
 #include "tree/TDataRecord.h"
 #include "tree/THeaderInfo.h"

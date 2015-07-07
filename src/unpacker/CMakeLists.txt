@@ -10,8 +10,8 @@ set(SRCS
   Unpacker.h
   UnpackerAcqu.cc
   UnpackerAcqu.h
-  detail/UnpackerAcqu.cc
-  detail/UnpackerAcqu.h
+  detail/UnpackerAcqu_detail.cc
+  detail/UnpackerAcqu_detail.h
   detail/UnpackerAcqu_legacy.h
   tree/TDataRecord.h
   tree/THeaderInfo.h
