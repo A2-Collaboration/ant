@@ -1,8 +1,7 @@
 #ifndef UNPACKERACQU_DETAIL_H
 #define UNPACKERACQU_DETAIL_H
 
-#include "printable.h"
-#include "stl_helpers.h"
+#include <vector>
 #include <memory>
 #include <string>
 #include <deque>
@@ -17,16 +16,16 @@ namespace ant {
  *
  * Base class for file access management of acqu files
  */
-
 class RawFileReader;
 class TDataRecord;
 class THeaderInfo;
+class UnpackerAcquConfig;
 
 class UnpackerAcquFileFormat {
 public:
 
   /**
-   * @brief Get a suitable instance for this Acqu Fileformat
+   * @brief Get a suitable instance for the given filename
    * @param filename the file to read
    * @param queue for possible ant::T* messages during setup
    * @return the instance, or nullptr if nothing found
@@ -37,8 +36,8 @@ public:
    * Throws exception if something unusual is encountered.
    *
    */
-  static std::unique_ptr<UnpackerAcquFileFormat>
-  Get(const std::string& filename,
+  static std::unique_ptr<UnpackerAcquFileFormat> Get(
+      const std::string& filename,
       std::deque< std::unique_ptr<TDataRecord> >& queue
       );
 
@@ -93,7 +92,7 @@ protected:
 
   Info info;
   std::uint32_t ID_upper; // upper part of UID, set by BuildTHeaderInfo
-  //std::unique_ptr<
+  std::unique_ptr<UnpackerAcquConfig> config;
 
   virtual void Setup(std::unique_ptr<RawFileReader>&& reader_,
                      std::vector<std::uint32_t>&& buffer_) override;

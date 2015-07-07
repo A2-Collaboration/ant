@@ -3,6 +3,8 @@
 
 #include <string>
 #include <algorithm>
+#include <memory>
+#include <type_traits>
 
 namespace std_ext {
 
@@ -23,6 +25,12 @@ inline std::string string_sanitize(const char* in) {
   s.erase((end - start) + 1);
   s.erase(std::remove(s.begin(), s.end(), '\n'), s.end());
   return s;
+}
+
+template<typename From, typename To>
+inline std::unique_ptr<To> static_cast_uptr(std::unique_ptr<From>&& ptr) {
+  static_assert(std::is_base_of<To, From>::value, "Type From does not derive from type To");
+  return std::unique_ptr<To>(static_cast<To*>(ptr.release()));
 }
 
 }

@@ -35,9 +35,9 @@ struct THeaderInfo : public TDataRecord
                   );
   }
 
-  uint64_t Timestamp;      // unix epoch
+  std::uint64_t Timestamp;      // unix epoch
   std::string Description; // full descriptive string
-  uint32_t RunNumber;
+  std::uint32_t RunNumber;
 };
 
 }

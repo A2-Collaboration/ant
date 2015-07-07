@@ -1,14 +1,14 @@
 #ifndef UNPACKER_H
 #define UNPACKER_H
 
-#include <ExpConfig.h>
-#include <TDataRecord.h>
 
 #include <string>
 #include <memory>
 #include <list>
 
 namespace ant {
+
+class TDataRecord;
 
 class Unpacker {
 
@@ -23,7 +23,7 @@ public:
     virtual bool OpenFile(const std::string& filename) = 0;
   };
 
-  // factory method to get an unpacker module
+  // factory method to get a suitable unpacker module for the file
   static std::unique_ptr<Module> Get(const std::string &filename);
 
   class Exception : public std::runtime_error {

@@ -4,24 +4,18 @@
 
 #include "THeaderInfo.h"
 
-//#include "UnpackerAcqu.h"
+#include "UnpackerAcqu.h"
+
+#include <type_traits>
+#include <list>
+#include <cxxabi.h>
 
 using namespace std;
 using namespace ant;
 
 
-#include <type_traits>
-#include <list>
-
-
-//template<>
-//unique_ptr<ExpConfig::Module> Get(const THeaderInfo& headerInfo);
-
-
 
 namespace ant { // templates need explicit namespace
-
-class UnpackerAcqu;
 
 namespace config {
 
@@ -29,6 +23,7 @@ namespace detector {
 
 struct Detector {
   const Detector_t Type;
+
 protected:
   Detector(const Detector_t& type) :
     Type(type) {}
@@ -54,13 +49,18 @@ namespace beamtime {
 
 class EtaPrime :
     public ExpConfig::Module,
-    public ExpConfig::Unpacker<UnpackerAcqu>
+    public UnpackerAcquConfig
 {
-
-  // Base interface
 public:
-  bool Matches(const THeaderInfo &header) const {
+  bool Matches(const THeaderInfo &header) const override {
     return true;
+  }
+
+  void BuildMapping(std::vector<mapping_t>& mapping) override
+  {
+    mapping_t map;
+    map.first.push_back({});
+    mapping.push_back(map);
   }
 };
 
@@ -74,6 +74,9 @@ public:
 
 template<typename T>
 unique_ptr<T> Get_(const THeaderInfo& header) {
+  VLOG(9) << "Searching for config of type "
+          << abi::__cxa_demangle(typeid(T).name(), nullptr, nullptr, nullptr);
+
   static_assert(is_base_of<ExpConfig::Base, T>::value, "T must be a base of ExpConfig::Base");
 
   // make a list of available configs
@@ -101,7 +104,7 @@ unique_ptr<T> Get_(const THeaderInfo& header) {
   T* ptr = dynamic_cast<T*>(modules.back().release());
 
   if(ptr==nullptr) {
-    throw ExpConfig::Exception("Matched config does not fit to type");
+    throw ExpConfig::Exception("Matched config does not fit to requested type");
   }
 
   // hand over the unique ptr
@@ -115,12 +118,9 @@ unique_ptr<ExpConfig::Module> ExpConfig::Get(const THeaderInfo& header)
 }
 
 template<>
-unique_ptr< ExpConfig::Unpacker<UnpackerAcqu> >
-ExpConfig::Unpacker<UnpackerAcqu>::Get(const THeaderInfo& header) {
-
-  VLOG(9) << "Hello";
-
-  return Get_< ExpConfig::Unpacker<UnpackerAcqu> >(header);
+unique_ptr< UnpackerAcquConfig >
+ExpConfig::Unpacker<UnpackerAcquConfig>::Get(const THeaderInfo& header) {
+  return Get_< UnpackerAcquConfig >(header);
 }
 
 

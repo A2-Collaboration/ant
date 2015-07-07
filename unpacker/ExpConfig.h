@@ -46,7 +46,7 @@ public:
   template<class T>
   class Unpacker : public virtual Base {
   public:
-    static std::unique_ptr< Unpacker<T> > Get(const THeaderInfo& header);
+    static std::unique_ptr<T> Get(const THeaderInfo& header);
   };
 
   // factory method to get a config for already unpacked data

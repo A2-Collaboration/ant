@@ -1,9 +1,11 @@
 #include "UnpackerAcqu_detail.h"
 #include "UnpackerAcqu_legacy.h"
+#include "UnpackerAcqu.h"
 
 #include "TDataRecord.h"
 #include "THeaderInfo.h"
 
+#include "ExpConfig.h"
 #include "Logger.h"
 #include "RawFileReader.h"
 
@@ -13,11 +15,6 @@
 #include <exception>
 #include <list>
 #include <ctime>
-
-#include <chrono>
-
-#include "Unpacker.h"
-#include "UnpackerAcqu.h"
 
 using namespace std;
 using namespace ant;
@@ -85,12 +82,12 @@ void acqu::FileFormatBase::Setup(std::unique_ptr<RawFileReader> &&reader_, std::
 
 void acqu::FileFormatMk1::FillEvents(std::deque<std::unique_ptr<TDataRecord> >& queue)
 {
-  throw logic_error("Mk1 format not implemented yet");
+  throw UnpackerAcqu::Exception("Mk1 format not implemented yet");
 }
 
 void acqu::FileFormatMk1::FillInfo()
 {
-  throw logic_error("Mk1 format not implemented yet");
+  throw UnpackerAcqu::Exception("Mk1 format not implemented yet");
 }
 
 
@@ -103,11 +100,19 @@ void acqu::FileFormatMk2::FillEvents(std::deque<std::unique_ptr<TDataRecord> >& 
 void acqu::FileFormatBase::FillHeader(std::deque<std::unique_ptr<TDataRecord> >& queue)
 {
   FillInfo();
-  const auto& headerInfo = BuildTHeaderInfo();
-  // try to find some config with the headerInfo
-  ExpConfig::Unpacker<UnpackerAcqu>::Get(*headerInfo);
+  // now the reader is somewhere in the first buffer
 
-  //THeaderInfo h(TDataRecord::UUID_t(4,5));
+
+
+  auto headerInfo = BuildTHeaderInfo();
+  // try to find some config with the headerInfo
+  config = ExpConfig::Unpacker<UnpackerAcquConfig>::Get(*headerInfo);
+  // then enqueue the header info
+  // but upcast the pointer for this
+  queue.emplace_back(
+        std_ext::static_cast_uptr<THeaderInfo, TDataRecord>(move(headerInfo))
+        );
+
 }
 
 
@@ -125,6 +130,7 @@ unique_ptr<THeaderInfo> acqu::FileFormatBase::BuildTHeaderInfo()
   const TDataRecord::ID_t id(ID_upper, 0);
 
 
+  // build the genernal description
   stringstream description;
   description << "AcquData "
               << "Number=" << info.RunNumber << " "
@@ -176,13 +182,7 @@ void acqu::FileFormatMk2::FillInfo()
       nModules*moduleSize;
 
   // read enough into buffer
-  // it might be that the buffer is already larger,
-  // since it was already used to inspect headers by all FileFormats
-  if(buffer.size()<totalSize) {
-    const streamsize toBeRead = totalSize - buffer.size();
-    buffer.resize(totalSize); // make space in buffer
-    reader->read(&buffer[totalSize-toBeRead], toBeRead);
-  }
+  reader->expand_buffer(buffer, totalSize);
 
   // add modules to lists
   /// \todo Check for overlapping of raw channels?

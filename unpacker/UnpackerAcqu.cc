@@ -2,6 +2,7 @@
 #include "UnpackerAcqu_detail.h"
 #include "ExpConfig.h"
 
+#include "TDataRecord.h"
 #include "Logger.h"
 
 using namespace std;

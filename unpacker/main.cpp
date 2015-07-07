@@ -6,6 +6,8 @@
 #include <cstdint>
 #include <cstring>
 #include "Unpacker.h"
+#include "ExpConfig.h"
+#include "THeaderInfo.h"
 
 #include "Logger.h"
 
@@ -17,7 +19,11 @@ int main(int argc, char* argv[]) {
 
   auto unpacker = Unpacker::Get("scratch/CBTaggTAPS_7892.dat.xz");
 
-  LOG(INFO) << "Got item: " << unpacker->NextItem();
+  LOG(INFO) << "Got item:   " << unpacker->NextItem();
+
+  THeaderInfo header(TDataRecord::ID_t(0,0), 0, "", 0);
+  auto config = shared_ptr<ExpConfig::Module>(ExpConfig::Get(header));
+  LOG(INFO) << "Got config: " << config << endl;
 
   //cout << unpacker->OpenFile("scratch/CBTaggTAPS_7892.dat.xz") << endl;
 

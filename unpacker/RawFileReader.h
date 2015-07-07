@@ -73,6 +73,14 @@ public:
     return p->eof();
   }
 
+  void expand_buffer(std::vector<uint32_t>& buffer, size_t totalSize) {
+    if(buffer.size()>=totalSize)
+      return;
+    const std::streamsize toBeRead = totalSize - buffer.size();
+    buffer.resize(totalSize); // make space in buffer
+    read(&buffer[totalSize-toBeRead], toBeRead);
+  }
+
   class Exception : public std::runtime_error {
     using std::runtime_error::runtime_error; // use base class constructor
   };
