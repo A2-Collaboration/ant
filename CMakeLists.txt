@@ -30,40 +30,53 @@ include_directories(src
 link_directories(${ROOT_LIBRARY_DIR})
 list(APPEND LIBS ${ROOT_LIBRARIES} ${APLCON_LIBRARY} ${PLUTO_LIBRARY})
 
-set(ANT_BASE
+set(ANALYSIS_BASE
   src/base/types.cc
   src/base/types.h
+  src/base/interval.h
+  src/base/printable.h
+  src/base/printable.cc
   src/ParticleType.h
   src/ParticleType.cc
+  src/physics/Physics.h
+  src/physics/Physics.cc
+  src/utils/combinatorics.h
+  src/utils/matcher.h
+  src/Detector.h
+  src/Detector.cc
+  src/A2GeoAcceptance.h
+  src/A2GeoAcceptance.cc
+  src/input/DataReader.h
+  src/input/DataReader.cc
+  src/OutputManager.h
+  src/OutputManager.cc
+  )
+
+set(ANALYSIS_PLOT
+  src/plot/Histogram.h
+  src/plot/Histogram.cc
+  src/plot/root_draw.h
+  src/plot/root_draw.cc
+  src/plot/SmartHist.h
+  src/plot/SmartHist.cc
+  src/plot/HistogramFactories.h
+  src/plot/HistogramFactories.cc
+)
+
+set(ANALYSIS_DATASTRUCTURES
   src/data/Track.h
   src/data/Track.cc
   src/data/Particle.h
   src/data/Particle.cc
   src/data/Event.h
   src/data/Event.cc
-  src/physics/Physics.h
-  src/physics/Physics.cc
-  src/base/printable.h
-  src/base/printable.cc
-  src/utils/combinatorics.h
-  src/plot/Histogram.h
-  src/plot/Histogram.cc
-  src/base/interval.h
   src/data/TaggerHit.h
   src/data/TaggerHit.cc
-  src/plot/root_draw.h
-  src/plot/root_draw.cc
-  src/Detector.h
-  src/Detector.cc
-  src/utils/matcher.h
   src/data/TriggerInfo.h
   src/data/TriggerInfo.cc
-  src/A2GeoAcceptance.h
-  src/A2GeoAcceptance.cc
-  src/plot/SmartHist.h
-  src/plot/SmartHist.cc
-  src/plot/HistogramFactories.h
-  src/plot/HistogramFactories.cc
+)
+
+set(ANALYSIS_INPUT_GOAT
   src/input/goat/detail/InputModule.h
   src/input/goat/detail/InputModule.cc
   src/input/goat/detail/FileManager.h
@@ -86,13 +99,9 @@ set(ANT_BASE
   src/input/goat/detail/TaggerInput.cc
   src/input/goat/GoatReader.h
   src/input/goat/GoatReader.cc
-  src/input/DataReader.h
-  src/input//DataReader.cc
-  src/OutputManager.h
-  src/OutputManager.cc
-  )
+)
 
-set(ANT_PHYSICS
+set(ANALYSIS_PHYSICS
   src/physics/test/TestPhysics.h
   src/physics/test/TestPhysics.cc
   src/physics/DeltaPlus/DeltaPlusPhysics.h
@@ -111,11 +120,19 @@ set(ANT_PHYSICS
   src/physics/omega/mctrue_acceptance.cc
   )
 
-add_library(antlib SHARED ${ANT_BASE} ${ANT_PHYSICS})
-list(APPEND LIBS antlib)
+set(ANALYSIS_ALL
+    ${ANALYSIS_BASE}
+    ${ANALYSIS_PLOT}
+    ${ANALYSIS_DATASTRUCTURES}
+    ${ANALYSIS_INPUT_GOAT}
+    ${ANALYSIS_PHYSICS}
+)
 
-aux_source_directory("src/progs" ANT_PROGS)
-foreach(PROG_SRC ${ANT_PROGS})
+add_library(analysis SHARED ${ANALYSIS_ALL})
+list(APPEND LIBS analysis)
+
+aux_source_directory("src/progs" ANALYSIS_PROGS)
+foreach(PROG_SRC ${ANALYSIS_PROGS})
 
   get_filename_component(name ${PROG_SRC} NAME_WE)
   message(STATUS "Adding ant executable: ${name}")
