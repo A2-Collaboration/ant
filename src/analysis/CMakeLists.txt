@@ -1,11 +1,7 @@
 INCLUDE_DIRECTORIES(.)
+INCLUDE_DIRECTORIES(base)
 
 set(ANALYSIS_BASE
-  base/types.cc
-  base/types.h
-  base/interval.h
-  base/printable.h
-  base/printable.cc
   ParticleType.h
   ParticleType.cc
   physics/Physics.h
@@ -99,6 +95,8 @@ set(ANALYSIS_ALL
 )
 
 add_library(analysis SHARED ${ANALYSIS_ALL})
+target_link_libraries(analysis base)
+
 list(APPEND LIBS analysis)
 
 aux_source_directory("progs" ANALYSIS_PROGS)
