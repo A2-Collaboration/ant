@@ -14,7 +14,12 @@ link_directories(${ROOT_LIBRARY_DIR})
 
 # the order is important if libraries from
 # other subdirectories are needed
-add_subdirectory(base)
-add_subdirectory(expconfig)
-add_subdirectory(unpacker)
-add_subdirectory(analysis)
+macro(add_ant_subdirectory name)
+  message(STATUS "Configuring ${name}...")
+  add_subdirectory(${name})
+endmacro()
+
+add_ant_subdirectory(base)
+add_ant_subdirectory(expconfig)
+add_ant_subdirectory(unpacker)
+add_ant_subdirectory(analysis)
