@@ -7,7 +7,7 @@
 #include <cstdint>
 #include <vector>
 
-#include "stl_helpers.h"
+#include "base/stl_helpers.h"
 
 // fix qtcreator highlighting...
 typedef std::uint8_t uint8_t;

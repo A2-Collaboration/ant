@@ -4,7 +4,6 @@ include_directories(${LIBLZMA_INCLUDE_DIRS})
 include_directories(.)
 
 set(SRCS
-  stl_helpers.h
   RawFileReader.cc
   RawFileReader.h
   Unpacker.cc
@@ -19,12 +18,10 @@ set(SRCS
   TDetectorRead.h
   TSlowControl.h
   TUnpackerMessage.h
-  ExpConfig.cc
-  ExpConfig.h
 )
 
 add_library(unpacker ${SRCS})
-target_link_libraries(unpacker base ${LIBLZMA_LIBRARY})
+target_link_libraries(unpacker base expconfig ${LIBLZMA_LIBRARY})
 
 add_executable(unpacker_main main.cpp)
 target_link_libraries(unpacker_main unpacker)

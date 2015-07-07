@@ -1,6 +1,6 @@
 #include "UnpackerAcqu.h"
 #include "UnpackerAcqu_detail.h"
-#include "ExpConfig.h"
+#include "expconfig/ExpConfig.h"
 
 #include "TDataRecord.h"
 #include "base/Logger.h"

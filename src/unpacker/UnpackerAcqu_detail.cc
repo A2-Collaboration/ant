@@ -5,11 +5,11 @@
 #include "TDataRecord.h"
 #include "THeaderInfo.h"
 
-#include "ExpConfig.h"
+#include "expconfig/ExpConfig.h"
 #include "base/Logger.h"
 #include "RawFileReader.h"
 
-#include "stl_helpers.h"
+#include "base/stl_helpers.h"
 
 #include <algorithm>
 #include <exception>

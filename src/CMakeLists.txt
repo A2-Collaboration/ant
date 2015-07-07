@@ -9,5 +9,6 @@ include_directories(.)
 # the order is important if libraries from
 # other subdirectories are needed
 add_subdirectory(base)
+add_subdirectory(expconfig)
 add_subdirectory(unpacker)
 add_subdirectory(analysis)
