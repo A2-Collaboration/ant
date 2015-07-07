@@ -220,6 +220,16 @@ bool GoatReader::hasData() const {
     return current_entry+1 < GetNEvents();
 }
 
+long long GoatReader::EventsRead() const
+{
+    return current_entry;
+}
+
+long long GoatReader::TotalEvents() const
+{
+    return GetNEvents();
+}
+
 std::shared_ptr<Event> GoatReader::ReadNextEvent()
 {
     ++current_entry;

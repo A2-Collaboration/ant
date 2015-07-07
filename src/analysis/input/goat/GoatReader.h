@@ -96,12 +96,18 @@ public:
     void AddInputFile(const std::string& filename);
     void Initialize();
 
+    /**
+     * @brief Get number of events in tree
+     * @see TotalEvents()
+     * @return number of events total
+     */
     Long64_t  GetNEvents() const;
 
     std::shared_ptr<Event> ReadNextEvent();
     bool hasData() const;
 
-
+    long long EventsRead() const override;
+    long long TotalEvents() const override;
 };
 
 }
