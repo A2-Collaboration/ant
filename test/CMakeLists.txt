@@ -1,7 +1,7 @@
-# the framework for our tests
+# the catch++ library is the workhorse for our tests
 include_directories(.)
 add_custom_target(build_and_test ${CMAKE_CTEST_COMMAND} -V)
-add_library(catch main.cpp catch.hpp)
+add_library(catch catch.cc catch.hpp)
 enable_testing()
 
 # two helpers for defining tests
