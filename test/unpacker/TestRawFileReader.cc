@@ -1,16 +1,13 @@
 #include "catch.hpp"
+#include "base/tmpfile_t.h"
 #include "RawFileReader.h"
 #include <cstdlib>
 #include <cstdint>
-#include <fstream>
 #include <vector>
 #include <algorithm>
-#include <iostream>
 #include <string>
-#include <iterator>
-#include <cstring>
-#include <cstdio>
-#include <exception>
+
+
 
 using namespace std;
 
@@ -18,35 +15,6 @@ using namespace std;
 constexpr streamsize totalSize = 10*BUFSIZ;
 constexpr streamsize chunkSize = totalSize/17;
 constexpr streamsize inbufSize = BUFSIZ;
-
-// use some little class which cleans up after itself properly
-struct tmpfile_t {
-  string filename;
-  vector<uint8_t> testdata;
-
-  tmpfile_t() {
-    // obtain some random filename
-    char filename_[128];
-    strcpy(filename_, "rawfilereader.XXXXXX");
-    if(mkstemp(filename_) == -1)
-      throw runtime_error("Cannot create tmpfile for test");
-    filename = filename_;
-  }
-
-
-  void write_testdata() {
-    ofstream outfile(filename);
-    ostream_iterator<uint8_t> outiterator(outfile);
-    copy(testdata.begin(), testdata.end(), outiterator);
-    outfile.close();
-    REQUIRE(outfile); // file properly written and closed
-  }
-
-  ~tmpfile_t() {
-    if(remove(filename.c_str()) != 0)
-       throw runtime_error("Cannot cleanup tmpfile for test");
-  }
-};
 
 void dotest(bool, streamsize, streamsize, streamsize);
 void doendianness();

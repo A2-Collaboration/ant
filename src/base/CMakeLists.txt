@@ -9,6 +9,8 @@ set(BASE_ALL
   Logger.cc
   Logger.h
   detail/easylogging++.h
+  tmpfile_t.h
+  tmpfile_t.cc
 )
 
 add_library(base ${BASE_ALL})
