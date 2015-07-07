@@ -1,4 +1,13 @@
-INCLUDE_DIRECTORIES(.)
+# analysis needs some more libraries
+find_package(Pluto REQUIRED)
+find_package(APLCON REQUIRED)
+
+include_directories(
+  .
+  ${PLUTO_INCLUDE_DIR}
+  ${APLCON_INCLUDE_DIR}
+  )
+
 
 set(ANALYSIS_BASE
   ParticleType.h
@@ -93,10 +102,13 @@ set(ANALYSIS_ALL
     ${ANALYSIS_PHYSICS}
 )
 
-add_library(analysis SHARED ${ANALYSIS_ALL})
-target_link_libraries(analysis base)
-
-list(APPEND LIBS analysis)
+add_library(analysis ${ANALYSIS_ALL})
+target_link_libraries(analysis
+  ${ROOT_LIBRARIES}
+  ${PLUTO_LIBRARY}
+  ${APLCON_LIBRARY}  
+  base
+  )
 
 aux_source_directory("progs" ANALYSIS_PROGS)
 foreach(PROG_SRC ${ANALYSIS_PROGS})
@@ -107,5 +119,5 @@ foreach(PROG_SRC ${ANALYSIS_PROGS})
     ${PROG_SRC}
     )
 
-  target_link_libraries(${name} ${LIBS})
+  target_link_libraries(${name} analysis)
 endforeach()
