@@ -1,6 +1,6 @@
 #include "TRint.h"
 
-#include "input/GoatReader.h"
+#include "input/goat/GoatReader.h"
 #include "OutputManager.h"
 #include "Physics.h"
 #include "analysis/omega.h"

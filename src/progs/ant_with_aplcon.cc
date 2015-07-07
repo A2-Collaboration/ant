@@ -1,6 +1,6 @@
 #include "analysis/TestAPLCON.h"
 #include "OutputManager.h"
-#include "input/GoatReader.h"
+#include "input/goat/GoatReader.h"
 #include "Physics.h"
 
 using namespace std;

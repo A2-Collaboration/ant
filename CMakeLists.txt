@@ -64,30 +64,30 @@ set(ANT_BASE
   src/plot/SmartHist.cc
   src/plot/HistogramFactories.h
   src/plot/HistogramFactories.cc
-  src/input/InputModule.h
-  src/input/InputModule.cc
-  src/input/FileManager.h
-  src/input/FileManager.cc
-  src/input/PlutoInput.h
-  src/input/PlutoInput.cc
-  src/input/TreeManager.h
-  src/input/TreeManager.cc
-  src/input/TrackInput.h
-  src/input/TrackInput.cc
-  src/input/ParticleInput.h
-  src/input/ParticleInput.cc
-  src/input/TriggerInput.h
-  src/input/TriggerInput.cc
-  src/input/DetectorHitInput.h
-  src/input/DetectorHitInput.cc
-  src/input/GeantInput.h
-  src/input/GeantInput.cc
-  src/input/TaggerInput.h
-  src/input/TaggerInput.cc
-  src/input/GoatReader.h
-  src/input/GoatReader.cc
-  src/DataReader.h
-  src/DataReader.cc
+  src/input/goat/detail/InputModule.h
+  src/input/goat/detail/InputModule.cc
+  src/input/goat/detail/FileManager.h
+  src/input/goat/detail/FileManager.cc
+  src/input/goat/detail/PlutoInput.h
+  src/input/goat/detail/PlutoInput.cc
+  src/input/goat/detail/TreeManager.h
+  src/input/goat/detail//TreeManager.cc
+  src/input/goat/detail/TrackInput.h
+  src/input/goat/detail/TrackInput.cc
+  src/input/goat/detail/ParticleInput.h
+  src/input/goat/detail/ParticleInput.cc
+  src/input/goat/detail/TriggerInput.h
+  src/input/goat/detail/TriggerInput.cc
+  src/input/goat/detail/DetectorHitInput.h
+  src/input/goat/detail/DetectorHitInput.cc
+  src/input/goat/detail/GeantInput.h
+  src/input/goat/detail/GeantInput.cc
+  src/input/goat/detail/TaggerInput.h
+  src/input/goat/detail/TaggerInput.cc
+  src/input/goat/GoatReader.h
+  src/input/goat/GoatReader.cc
+  src/input/DataReader.h
+  src/input//DataReader.cc
   src/OutputManager.h
   src/OutputManager.cc
   )

@@ -1,23 +1,23 @@
 #ifndef GOATREADER_H
 #define GOATREADER_H
 
-#include "DataReader.h"
+#include "input/DataReader.h"
 #include "data/Event.h"
 
 #include <memory>
 #include <string>
 #include <list>
 
-#include "FileManager.h"
-#include "TreeManager.h"
-#include "InputModule.h"
+#include "detail/FileManager.h"
+#include "detail/TreeManager.h"
+#include "detail/InputModule.h"
 
-#include "TriggerInput.h"
-#include "TaggerInput.h"
-#include "DetectorHitInput.h"
-#include "TrackInput.h"
-#include "PlutoInput.h"
-#include "ParticleInput.h"
+#include "detail/TriggerInput.h"
+#include "detail/TaggerInput.h"
+#include "detail/DetectorHitInput.h"
+#include "detail/TrackInput.h"
+#include "detail/PlutoInput.h"
+#include "detail/ParticleInput.h"
 
 
 class PStaticData;

@@ -1,6 +1,6 @@
 #include "Physics.h"
 #include "OutputManager.h"
-#include "input/GoatReader.h"
+#include "input/goat/GoatReader.h"
 #include "analysis/DataOverview.h"
 
 using namespace std;

@@ -1,4 +1,4 @@
-#include "input/GoatReader.h"
+#include "input/goat/GoatReader.h"
 #include "data/Event.h"
 
 #include <iostream>

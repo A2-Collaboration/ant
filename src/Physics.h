@@ -6,7 +6,7 @@
 #include <list>
 #include <string>
 #include <memory>
-#include "DataReader.h"
+#include "input/DataReader.h"
 
 class TFile;
 class TDirectory;
