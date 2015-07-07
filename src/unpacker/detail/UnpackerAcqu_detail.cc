@@ -239,7 +239,8 @@ void acqu::FileFormatMk2::FillInfo()
 
 bool acqu::FileFormatMk2::SearchMk2Signature(size_t offset)
 {
-  VLOG(9) << "Searching first Mk2 buffer at offset 0x" << hex << offset << dec;
+  VLOG(9) << "Searching first Mk2 buffer at offset 0x"
+          << hex << offset << dec;
   // read full header record, and one additional word
   reader->expand_buffer(buffer, offset/4+1);
   // this word should be the Mk2DataBuff...
@@ -251,6 +252,8 @@ bool acqu::FileFormatMk2::SearchMk2Signature(size_t offset)
       << " does not match true file record length 0x" << offset << dec;
   // overwrite the RecordLength
   info.RecordLength = offset;
+  VLOG(9) << "Found first Mk2 buffer at offset 0x"
+          << hex << info.RecordLength << dec;
   return true;
 }
 

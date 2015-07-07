@@ -4,6 +4,12 @@ add_custom_target(build_and_test ${CMAKE_CTEST_COMMAND} -V)
 add_library(catch catch.cc catch.hpp)
 enable_testing()
 
+# some tests need binary blobs
+# use a configure file to
+set(TEST_BLOBS_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/_blobs")
+configure_file(test_config.h.in test_config.h)
+include_directories(${CMAKE_CURRENT_BINARY_DIR})
+
 # two helpers for defining tests
 # we don't simply GLOB over all files,
 # because macros are more flexible
