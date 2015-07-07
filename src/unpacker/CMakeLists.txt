@@ -10,14 +10,14 @@ set(SRCS
   Unpacker.h
   UnpackerAcqu.cc
   UnpackerAcqu.h
-  UnpackerAcqu_detail.cc
-  UnpackerAcqu_detail.h
-  UnpackerAcqu_legacy.h
-  TDataRecord.h
-  THeaderInfo.h
-  TDetectorRead.h
-  TSlowControl.h
-  TUnpackerMessage.h
+  detail/UnpackerAcqu.cc
+  detail/UnpackerAcqu.h
+  detail/UnpackerAcqu_legacy.h
+  tree/TDataRecord.h
+  tree/THeaderInfo.h
+  tree/TDetectorRead.h
+  tree/TSlowControl.h
+  tree/TUnpackerMessage.h
 )
 
 add_library(unpacker ${SRCS})

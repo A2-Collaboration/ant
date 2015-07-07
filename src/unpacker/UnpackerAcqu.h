@@ -11,7 +11,7 @@
 
 namespace ant {
 
-class UnpackerAcquFileFormat; // implemented in UnpackerAcqu_detail.h
+class UnpackerAcquFileFormat; // implemented in detail/UnpackerAcqu.h
 
 class UnpackerAcqu : public Unpacker::Module
 {

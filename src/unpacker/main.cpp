@@ -7,7 +7,7 @@
 #include <cstring>
 #include "Unpacker.h"
 #include "expconfig/ExpConfig.h"
-#include "THeaderInfo.h"
+#include "tree/THeaderInfo.h"
 
 #include "base/Logger.h"
 

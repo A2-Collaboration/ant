@@ -6,9 +6,9 @@ set(BASE_ALL
   interval.h
   printable.h
   printable.cc
-  easylogging++.h
   Logger.cc
   Logger.h
+  detail/easylogging++.h
 )
 
 add_library(base ${BASE_ALL})

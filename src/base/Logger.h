@@ -4,7 +4,7 @@
 // STL container printout made easy...
 #define ELPP_STL_LOGGING
 
-#include "easylogging++.h"
+#include "detail/easylogging++.h"
 
 void SetupLogger(int argc, char* argv[]);
 

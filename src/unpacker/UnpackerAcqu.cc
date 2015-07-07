@@ -1,8 +1,8 @@
 #include "UnpackerAcqu.h"
-#include "UnpackerAcqu_detail.h"
+#include "detail/UnpackerAcqu.h"
 #include "expconfig/ExpConfig.h"
 
-#include "TDataRecord.h"
+#include "tree/TDataRecord.h"
 #include "base/Logger.h"
 
 using namespace std;

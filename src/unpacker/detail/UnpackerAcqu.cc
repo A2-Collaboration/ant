@@ -1,9 +1,11 @@
-#include "UnpackerAcqu_detail.h"
-#include "UnpackerAcqu_legacy.h"
-#include "UnpackerAcqu.h"
+#include "../UnpackerAcqu.h" // for UnpackerAcquConfig
 
-#include "TDataRecord.h"
-#include "THeaderInfo.h"
+#include "UnpackerAcqu.h"
+#include "UnpackerAcqu_legacy.h"
+
+
+#include "tree/TDataRecord.h"
+#include "tree/THeaderInfo.h"
 
 #include "expconfig/ExpConfig.h"
 #include "base/Logger.h"
