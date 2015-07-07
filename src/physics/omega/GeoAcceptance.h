@@ -1,7 +1,7 @@
 #ifndef GEOACCEPTANCE_H
 #define GEOACCEPTANCE_H
 
-#include "Physics.h"
+#include "physics/Physics.h"
 #include "plot/Histogram.h"
 #include "plot/SmartHist.h"
 #include "plot/HistogramFactories.h"

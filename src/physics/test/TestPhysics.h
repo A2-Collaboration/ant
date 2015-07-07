@@ -1,7 +1,7 @@
 #ifndef TESTPHYSICS_H
 #define TESTPHYSICS_H
 
-#include "Physics.h"
+#include "physics/Physics.h"
 #include "plot/Histogram.h"
 #include "plot/SmartHist.h"
 

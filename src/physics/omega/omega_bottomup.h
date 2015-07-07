@@ -1,7 +1,7 @@
 #ifndef OMEGA_BOTTOMUP_H
 #define OMEGA_BOTTOMUP_H
 
-#include "Physics.h"
+#include "physics/Physics.h"
 #include "plot/SmartHist.h"
 #include "base/interval.h"
 #include "data/Particle.h"

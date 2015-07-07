@@ -1,7 +1,7 @@
-#include "Physics.h"
+#include "physics/Physics.h"
 #include "OutputManager.h"
 #include "input/goat/GoatReader.h"
-#include "analysis/DataOverview.h"
+#include "physics/common/DataOverview.h"
 
 using namespace std;
 using namespace ant;

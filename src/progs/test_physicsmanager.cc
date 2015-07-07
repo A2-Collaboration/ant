@@ -4,7 +4,7 @@
 
 #include <iostream>
 #include "OutputManager.h"
-#include "Physics.h"
+#include "physics/Physics.h"
 
 using namespace std;
 using namespace ant::output;

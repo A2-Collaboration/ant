@@ -2,9 +2,8 @@
 
 #include "input/goat/GoatReader.h"
 #include "OutputManager.h"
-#include "Physics.h"
-#include "analysis/omega.h"
-#include "analysis/TestPhysics.h"
+#include "physics/Physics.h"
+#include "physics/omega/omega.h"
 #include <string>
 
 

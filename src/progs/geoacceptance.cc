@@ -1,7 +1,7 @@
 #include "input/goat/GoatReader.h"
 #include "OutputManager.h"
-#include "Physics.h"
-#include "analysis/GeoAcceptance.h"
+#include "physics/Physics.h"
+#include "physics/omega/GeoAcceptance.h"
 
 using namespace std;
 using namespace ant::output;

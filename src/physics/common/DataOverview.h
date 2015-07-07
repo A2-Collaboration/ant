@@ -1,7 +1,7 @@
 #ifndef DATAOVERVIEW_H
 #define DATAOVERVIEW_H
 
-#include "Physics.h"
+#include "physics/Physics.h"
 #include "plot/SmartHist.h"
 
 #include <string>

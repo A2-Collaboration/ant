@@ -1,7 +1,7 @@
-#include "analysis/TestAPLCON.h"
+#include "physics/test/TestAPLCON.h"
 #include "OutputManager.h"
 #include "input/goat/GoatReader.h"
-#include "Physics.h"
+#include "physics/Physics.h"
 
 using namespace std;
 using namespace ant;

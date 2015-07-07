@@ -41,8 +41,8 @@ set(ANT_BASE
   src/data/Particle.cc
   src/data/Event.h
   src/data/Event.cc
-  src/Physics.h
-  src/Physics.cc
+  src/physics/Physics.h
+  src/physics/Physics.cc
   src/base/printable.h
   src/base/printable.cc
   src/utils/combinatorics.h
@@ -93,22 +93,22 @@ set(ANT_BASE
   )
 
 set(ANT_PHYSICS
-  src/analysis/TestPhysics.h
-  src/analysis/TestPhysics.cc
-  src/analysis/DeltaPlusPhysics.h
-  src/analysis/DeltaPlusPhysics.cc
-  src/analysis/omega.h
-  src/analysis/omega.cc
-  src/analysis/omega_bottomup.h
-  src/analysis/omega_bottomup.cc
-  src/analysis/GeoAcceptance.h
-  src/analysis/GeoAcceptance.cc
-  src/analysis/TestAPLCON.h
-  src/analysis/TestAPLCON.cc
-  src/analysis/DataOverview.h
-  src/analysis/DataOverview.cc
-  src/analysis/mctrue_acceptance.h
-  src/analysis/mctrue_acceptance.cc
+  src/physics/test/TestPhysics.h
+  src/physics/test/TestPhysics.cc
+  src/physics/DeltaPlus/DeltaPlusPhysics.h
+  src/physics/DeltaPlus/DeltaPlusPhysics.cc
+  src/physics/omega/omega.h
+  src/physics/omega/omega.cc
+  src/physics/omega/omega_bottomup.h
+  src/physics/omega/omega_bottomup.cc
+  src/physics/omega/GeoAcceptance.h
+  src/physics/omega/GeoAcceptance.cc
+  src/physics/test/TestAPLCON.h
+  src/physics/test/TestAPLCON.cc
+  src/physics/common/DataOverview.h
+  src/physics/common/DataOverview.cc
+  src/physics/omega/mctrue_acceptance.h
+  src/physics/omega/mctrue_acceptance.cc
   )
 
 add_library(antlib SHARED ${ANT_BASE} ${ANT_PHYSICS})
