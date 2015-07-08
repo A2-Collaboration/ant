@@ -91,7 +91,7 @@ void acqu::FileFormatMk1::FillInfo()
   throw UnpackerAcqu::Exception("Mk1 format not implemented yet");
 }
 
-void acqu::FileFormatMk1::SearchFirstDataBuffer()
+void acqu::FileFormatMk1::FillFirstDataBuffer()
 {
   throw UnpackerAcqu::Exception("Mk1 format not implemented yet");
 }
@@ -118,7 +118,7 @@ void acqu::FileFormatMk2::FillEvents(std::deque<std::unique_ptr<TDataRecord> >& 
 void acqu::FileFormatBase::FillHeader(std::deque<std::unique_ptr<TDataRecord> >& queue)
 {
   FillInfo();
-  SearchFirstDataBuffer();
+  FillFirstDataBuffer();
 
   auto headerInfo = BuildTHeaderInfo();
   // try to find some config with the headerInfo
@@ -239,24 +239,24 @@ void acqu::FileFormatMk2::FillInfo()
           << totalScalers << " channels";
 }
 
-void acqu::FileFormatMk2::SearchFirstDataBuffer()
+void acqu::FileFormatMk2::FillFirstDataBuffer()
 {
   // finally search for the Mk2Header, this also
   // fills the buffer correctly with the first Mk2DataBuffer (if available)
 
   // first search at 0x8000 bytes
-  if(ReadFirstDataBuffer(0x8000))
+  if(SearchFirstDataBuffer(0x8000))
     return;
 
   // then search at 10*0x8000
-  if(ReadFirstDataBuffer(10*0x8000))
+  if(SearchFirstDataBuffer(10*0x8000))
     return;
 
   // else fail
   throw UnpackerAcqu::Exception("Did not find first data buffer with Mk2 signature");
 }
 
-bool acqu::FileFormatMk2::ReadFirstDataBuffer(size_t offset)
+bool acqu::FileFormatMk2::SearchFirstDataBuffer(size_t offset)
 {
   VLOG(9) << "Searching first Mk2 buffer at offset 0x"
           << hex << offset << dec;

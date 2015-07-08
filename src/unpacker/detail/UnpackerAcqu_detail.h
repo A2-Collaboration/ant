@@ -98,7 +98,7 @@ protected:
                      std::vector<std::uint32_t>&& buffer_) override;
   virtual void FillHeader(std::deque< std::unique_ptr<TDataRecord> >& queue) override;
   virtual void FillInfo() = 0;
-  virtual void SearchFirstDataBuffer() = 0;
+  virtual void FillFirstDataBuffer() = 0;
 
 private:
   std::unique_ptr<THeaderInfo> BuildTHeaderInfo();
@@ -112,7 +112,7 @@ protected:
   virtual bool InspectHeader(const std::vector<std::uint32_t>& buffer) const override;
   virtual void FillEvents(std::deque<std::unique_ptr<TDataRecord> > &queue) noexcept override;
   virtual void FillInfo() override;
-  virtual void SearchFirstDataBuffer() override;
+  virtual void FillFirstDataBuffer() override;
 };
 
 class FileFormatMk2 : public FileFormatBase {
@@ -123,10 +123,10 @@ protected:
   virtual bool InspectHeader(const std::vector<std::uint32_t> &buffer) const override;
   virtual void FillEvents(std::deque<std::unique_ptr<TDataRecord> > &queue) noexcept override;
   virtual void FillInfo() override;
-  virtual void SearchFirstDataBuffer() override;
+  virtual void FillFirstDataBuffer() override;
 
 private:
-  bool ReadFirstDataBuffer(size_t offset);
+  bool SearchFirstDataBuffer(size_t offset);
 };
 
 }} // namespace unpacker::acqu
