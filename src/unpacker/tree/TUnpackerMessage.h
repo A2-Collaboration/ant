@@ -25,6 +25,7 @@ struct TUnpackerMessage : TDataRecord
 
   Level_t Level;
   std::string Message;
+
   /// \todo Support formatted message, but still store the arguments?
 };
 

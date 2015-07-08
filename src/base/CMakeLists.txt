@@ -11,7 +11,7 @@ set(SRCS
   detail/easylogging++.h
   tmpfile_t.h
   tmpfile_t.cc
-  stl_helpers.h
+  std_ext.h
   Format.h
   detail/format.cc
   detail/format.h

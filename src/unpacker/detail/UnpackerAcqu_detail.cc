@@ -11,7 +11,7 @@
 #include "base/Logger.h"
 #include "RawFileReader.h"
 
-#include "base/stl_helpers.h"
+#include "base/std_ext.h"
 
 #include <algorithm>
 #include <exception>
@@ -310,8 +310,9 @@ bool acqu::FileFormatMk2::SearchFirstDataBuffer(queue_t& queue, size_t offset)
     auto msg = createDataRecord<TUnpackerMessage>(
           TDataRecord::ID_t(ID_upper, ID_lower),
           TUnpackerMessage::Level_t::Warn,
-          string(std_ext::formatter() << "Record length in header 0x" << hex << info.RecordLength
-          << " does not match true file record length 0x" << offset << dec)
+          std_ext::formatter()
+          << "Record length in header 0x" << hex << info.RecordLength
+          << " does not match true file record length 0x" << offset << dec
           );
     LOG(WARNING) << msg->Message;
     fillQueue(queue, move(msg));

@@ -1,11 +1,13 @@
-#ifndef STL_HELPERS_H
-#define STL_HELPERS_H
+#ifndef ANT_STD_EXT_H
+#define ANT_STD_EXT_H
 
 #include <string>
 #include <sstream>
 #include <algorithm>
 #include <memory>
 #include <type_traits>
+
+namespace ant {
 
 namespace std_ext {
 
@@ -62,6 +64,10 @@ private:
     formatter & operator = (formatter &);
 };
 
-}
+} // namespace ant::std_ext
 
-#endif // STL_HELPERS_H
+} // namespace ant
+
+
+
+#endif // ANT_STD_EXT
