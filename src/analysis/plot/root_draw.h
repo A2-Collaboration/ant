@@ -157,7 +157,7 @@ public:
  *
  * When drawn, ant::canvas automatically builds the legend.
  *
- * @BUG No axis lables. Because they have to be set *after* the THStack is drawn
+ * @bug No axis lables. Because they have to be set *after* the THStack is drawn
  *  (https://root.cern.ch/root/html/THStack.html#THStack:GetXaxis).
  *  ant::canvas stores a list of TObjects and draws them alter all together, so there
  *  is no way hstack can set the title afterwards. :-(

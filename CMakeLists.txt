@@ -20,3 +20,5 @@ message(STATUS "*** Install bin to:  " ${EXECUTABLE_OUTPUT_PATH})
 
 add_subdirectory(src)
 add_subdirectory(test)
+
+include(cmake/doxygen.cmake)

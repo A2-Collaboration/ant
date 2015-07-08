@@ -1,6 +1,9 @@
 # Ignore build directory
 /build*
 
+# Doxygen output
+/doc/html
+
 # some files usually ignored
 /CMakeLists.txt.user*
 *.root
