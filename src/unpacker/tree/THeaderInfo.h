@@ -9,7 +9,7 @@
 
 namespace ant {
 
-struct THeaderInfo : public TDataRecord
+struct THeaderInfo : TDataRecord
 {
   struct HardwareModule {
 
@@ -35,9 +35,9 @@ struct THeaderInfo : public TDataRecord
                   );
   }
 
-  std::uint64_t Timestamp;      // unix epoch
-  std::string Description; // full descriptive string
-  std::uint32_t RunNumber;
+  std::uint64_t Timestamp;   // unix epoch
+  std::string   Description; // full descriptive string
+  std::uint32_t RunNumber;   // runnumber
 };
 
 }

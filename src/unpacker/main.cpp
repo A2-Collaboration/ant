@@ -10,6 +10,8 @@
 #include "tree/THeaderInfo.h"
 
 #include "base/Logger.h"
+#include "base/Format.h"
+
 
 using namespace std;
 using namespace ant;
@@ -17,18 +19,26 @@ using namespace ant;
 int main(int argc, char* argv[]) {
   SetupLogger(argc, argv);
 
-  //auto unpacker = Unpacker::Get("scratch/CBTaggTAPS_9227.dat");
+  //std::vector<double> v{2,3};
+  //string str = fmt::format("Bla {}", v);
+  //cout << str << endl;
+
+  auto unpacker = Unpacker::Get("scratch/CBTaggTAPS_9227.dat");
   //auto unpacker = Unpacker::Get("scratch/CBTaggTAPS_7892.dat");
   //auto unpacker = Unpacker::Get("scratch/CBTaggTAPS_5711.dat.xz");
-  auto unpacker = Unpacker::Get("scratch/oneevent-small.dat");
+//  auto unpacker = Unpacker::Get("scratch/oneevent-small.dat");
 
-  for(size_t i=0;i<5;i++)
-    LOG(INFO) << "i=" << i << " Got item:   " << unpacker->NextItem();
+  for(size_t i=0;i<5;i++) {
+    auto item = unpacker->NextItem();
+    if(item==nullptr)
+      break;
+    LOG(INFO) << "i=" << i << " Got item: " << *item;
 
+  }
 
-  THeaderInfo header(TDataRecord::ID_t(0,0), 0, "", 0);
-  auto config = shared_ptr<ExpConfig::Module>(ExpConfig::Get(header));
-  LOG(INFO) << "Got config: " << config << endl;
+//  THeaderInfo header(TDataRecord::ID_t(0,0), 0, "", 0);
+//  auto config = shared_ptr<ExpConfig::Module>(ExpConfig::Get(header));
+//  LOG(INFO) << "Got config: " << config << endl;
 
   //cout << unpacker->OpenFile("scratch/CBTaggTAPS_7892.dat.xz") << endl;
 

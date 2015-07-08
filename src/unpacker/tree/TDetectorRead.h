@@ -5,7 +5,7 @@
 
 namespace ant {
 
-class TDetectorRead : public TDataRecord
+struct TDetectorRead : TDataRecord
 {
 
 };

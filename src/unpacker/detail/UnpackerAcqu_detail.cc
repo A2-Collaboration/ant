@@ -5,6 +5,7 @@
 
 #include "tree/TDataRecord.h"
 #include "tree/THeaderInfo.h"
+#include "tree/TUnpackerMessage.h"
 
 #include "expconfig/ExpConfig.h"
 #include "base/Logger.h"
@@ -24,7 +25,7 @@ using namespace ant::unpacker;
 
 unique_ptr<UnpackerAcquFileFormat>
 UnpackerAcquFileFormat::Get(const string &filename,
-                            deque<unique_ptr<TDataRecord> >& queue)
+                            queue_t &queue)
 {
   // make a list of all available acqu file format classes
   using format_t = unique_ptr<UnpackerAcquFileFormat>;
@@ -81,6 +82,71 @@ void acqu::FileFormatBase::Setup(std::unique_ptr<RawFileReader> &&reader_, std::
   buffer = move(buffer_);
 }
 
+// little helper to fill the queue
+
+
+template<typename T>
+void fillQueue(UnpackerAcquFileFormat::queue_t& queue, std::unique_ptr<T>&& item) {
+  // but upcast the pointer for this
+  queue.emplace_back(
+        std_ext::static_cast_uptr<T, TDataRecord>(move(item))
+        );
+}
+
+template<typename T, typename... Arg>
+std::unique_ptr<T> createDataRecord(Arg&&... arg)
+{
+  return std::unique_ptr<T>(new T(forward<Arg>(arg)...));
+}
+
+
+void acqu::FileFormatBase::FillHeader(queue_t& queue)
+{
+  FillInfo();
+
+  auto headerInfo = BuildTHeaderInfo();
+
+  // try to find some config with the headerInfo
+  config = ExpConfig::Unpacker<UnpackerAcquConfig>::Get(*headerInfo);
+
+  // then enqueue the header info
+  fillQueue<THeaderInfo>(queue, move(headerInfo));
+
+  // also fill the first data buffer,
+  // since it might be in a weird state
+  FillFirstDataBuffer(queue);
+}
+
+
+
+unique_ptr<THeaderInfo> acqu::FileFormatBase::BuildTHeaderInfo()
+{
+  // this unpacker has a constant ID_upper
+  // based on the timestamp inside the file
+  /// \todo make 100% unique due to daylight saving time,
+
+  const time_t timestamp = mktime(&info.Time); // convert to unix epoch
+  ID_upper = static_cast<decltype(ID_upper)>(timestamp);
+  ID_lower = 0;
+
+  // construct the unique ID, header record as lower ID=0
+  const TDataRecord::ID_t id(ID_upper, ID_lower);
+
+
+  // build the genernal description
+  stringstream description;
+  description << "AcquData "
+              << "Number=" << info.RunNumber << " "
+              << "OutFile='" << info.OutFile << "' "
+              << "Description='"+info.Description+"' "
+              << "Note='"+info.RunNote+"' ";
+
+
+  return unique_ptr<THeaderInfo>(
+        new THeaderInfo(id, timestamp, description.str(), info.RunNumber)
+        );
+}
+
 void acqu::FileFormatMk1::FillEvents(std::deque<std::unique_ptr<TDataRecord> >& queue) noexcept
 {
 
@@ -91,7 +157,7 @@ void acqu::FileFormatMk1::FillInfo()
   throw UnpackerAcqu::Exception("Mk1 format not implemented yet");
 }
 
-void acqu::FileFormatMk1::FillFirstDataBuffer()
+void acqu::FileFormatMk1::FillFirstDataBuffer(queue_t& queue)
 {
   throw UnpackerAcqu::Exception("Mk1 format not implemented yet");
 }
@@ -112,52 +178,6 @@ void acqu::FileFormatMk2::FillEvents(std::deque<std::unique_ptr<TDataRecord> >& 
 
   // refill the buffer
 
-}
-
-
-void acqu::FileFormatBase::FillHeader(std::deque<std::unique_ptr<TDataRecord> >& queue)
-{
-  FillInfo();
-  FillFirstDataBuffer();
-
-  auto headerInfo = BuildTHeaderInfo();
-  // try to find some config with the headerInfo
-  config = ExpConfig::Unpacker<UnpackerAcquConfig>::Get(*headerInfo);
-  // then enqueue the header info
-  // but upcast the pointer for this
-  queue.emplace_back(
-        std_ext::static_cast_uptr<THeaderInfo, TDataRecord>(move(headerInfo))
-        );
-
-}
-
-
-
-unique_ptr<THeaderInfo> acqu::FileFormatBase::BuildTHeaderInfo()
-{
-  // this unpacker has a constant ID_upper
-  // based on the timestamp inside the file
-  /// \todo make 100% unique due to daylight saving time,
-
-  const time_t timestamp = mktime(&info.Time); // convert to unix epoch
-  ID_upper = static_cast<decltype(ID_upper)>(timestamp);
-
-  // construct the unique ID, header record as lower ID=0
-  const TDataRecord::ID_t id(ID_upper, 0);
-
-
-  // build the genernal description
-  stringstream description;
-  description << "AcquData "
-              << "Number=" << info.RunNumber << " "
-              << "OutFile='" << info.OutFile << "' "
-              << "Description='"+info.Description+"' "
-              << "Note='"+info.RunNote+"' ";
-
-
-  return unique_ptr<THeaderInfo>(
-        new THeaderInfo(id, timestamp, description.str(), info.RunNumber)
-        );
 }
 
 void acqu::FileFormatMk2::FillInfo()
@@ -239,24 +259,24 @@ void acqu::FileFormatMk2::FillInfo()
           << totalScalers << " channels";
 }
 
-void acqu::FileFormatMk2::FillFirstDataBuffer()
+void acqu::FileFormatMk2::FillFirstDataBuffer(queue_t& queue)
 {
   // finally search for the Mk2Header, this also
   // fills the buffer correctly with the first Mk2DataBuffer (if available)
 
   // first search at 0x8000 bytes
-  if(SearchFirstDataBuffer(0x8000))
+  if(SearchFirstDataBuffer(queue, 0x8000))
     return;
 
-  // then search at 10*0x8000
-  if(SearchFirstDataBuffer(10*0x8000))
+  // then search at 10*0x8000 bytes
+  if(SearchFirstDataBuffer(queue, 10*0x8000))
     return;
 
   // else fail
   throw UnpackerAcqu::Exception("Did not find first data buffer with Mk2 signature");
 }
 
-bool acqu::FileFormatMk2::SearchFirstDataBuffer(size_t offset)
+bool acqu::FileFormatMk2::SearchFirstDataBuffer(queue_t& queue, size_t offset)
 {
   VLOG(9) << "Searching first Mk2 buffer at offset 0x"
           << hex << offset << dec;
@@ -286,14 +306,21 @@ bool acqu::FileFormatMk2::SearchFirstDataBuffer(size_t offset)
     return false;
 
   // check header info
-  LOG_IF(info.RecordLength != offset, WARNING)
-      << "Record length in header 0x" << hex << info.RecordLength
-      << " does not match true file record length 0x" << offset << dec;
+  if(info.RecordLength != offset) {
+    auto msg = createDataRecord<TUnpackerMessage>(
+          TDataRecord::ID_t(ID_upper, ID_lower),
+          TUnpackerMessage::Level_t::Warn,
+          string(std_ext::formatter() << "Record length in header 0x" << hex << info.RecordLength
+          << " does not match true file record length 0x" << offset << dec)
+          );
+    LOG(WARNING) << msg->Message;
+    fillQueue(queue, move(msg));
+  }
 
-  // overwrite the RecordLength
-  info.RecordLength = offset;
+
+
   VLOG(9) << "Found first Mk2 buffer at offset 0x"
-          << hex << info.RecordLength << dec;
+          << hex << offset << dec;
 
   // we finally prepare the first data buffer
   // buffer is at the moment nWords+1 large, and the last word
@@ -310,7 +337,9 @@ bool acqu::FileFormatMk2::SearchFirstDataBuffer(size_t offset)
           << expectedBytes << " required"
           );
   }
-  buffer.resize(nWords); // get rid of duplicate header word at very end
+  // get rid of duplicate header word at very end
+  // now the buffer.size() has exactly the length of one file record
+  buffer.resize(nWords);
 
   return true;
 }

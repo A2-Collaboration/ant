@@ -32,9 +32,6 @@ public:
 
 };
 
-
-
-
 } // namespace ant
 
 #endif // UNPACKER_H

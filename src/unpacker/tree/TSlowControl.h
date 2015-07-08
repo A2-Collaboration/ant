@@ -5,7 +5,7 @@
 
 namespace ant {
 
-class TSlowControl : public TDataRecord
+struct TSlowControl : TDataRecord
 {
 
 };

@@ -24,6 +24,8 @@ class UnpackerAcquConfig;
 class UnpackerAcquFileFormat {
 public:
 
+  using queue_t = std::deque< std::unique_ptr<TDataRecord> >;
+
   /**
    * @brief Get a suitable instance for the given filename
    * @param filename the file to read
@@ -38,28 +40,28 @@ public:
    */
   static std::unique_ptr<UnpackerAcquFileFormat> Get(
       const std::string& filename,
-      std::deque< std::unique_ptr<TDataRecord> >& queue
+      queue_t& queue
       );
 
   /**
    * @brief FillEvents fills the given queue with more TDataRecord items (if any left)
    * @param queue
    */
-  virtual void FillEvents(std::deque< std::unique_ptr<TDataRecord> >& queue) noexcept = 0;
+  virtual void FillEvents(queue_t& queue) noexcept = 0;
 
 protected:
   virtual size_t SizeOfHeader() const = 0;
   virtual bool InspectHeader(const std::vector<uint32_t>& buffer) const = 0;
   virtual void Setup(std::unique_ptr<RawFileReader>&& reader_,
                      std::vector<std::uint32_t>&& buffer_) = 0;
-  virtual void FillHeader(std::deque< std::unique_ptr<TDataRecord> >& queue) = 0;
+  virtual void FillHeader(queue_t& queue) = 0;
 };
 
 // the derived file format classes
 // have their own namespace
 namespace unpacker {
-namespace acqu {
 
+namespace acqu {
 
 // FileFormatBase provides a common class for Mk1/Mk2 formats (so far)
 class FileFormatBase : public UnpackerAcquFileFormat {
@@ -87,18 +89,19 @@ protected:
     std::string RunNote;
     std::string OutFile;
     unsigned RunNumber;
-    unsigned RecordLength; // the true record length, not the one from the header
+    unsigned RecordLength; // Record length according to header (might not be correct!)
   };
 
   Info info;
   std::uint32_t ID_upper; // upper part of UID, set by BuildTHeaderInfo
+  std::uint32_t ID_lower; // lower part, incremented by FillEvents
   std::unique_ptr<UnpackerAcquConfig> config;
 
   virtual void Setup(std::unique_ptr<RawFileReader>&& reader_,
                      std::vector<std::uint32_t>&& buffer_) override;
-  virtual void FillHeader(std::deque< std::unique_ptr<TDataRecord> >& queue) override;
+  virtual void FillHeader(queue_t& queue) override;
   virtual void FillInfo() = 0;
-  virtual void FillFirstDataBuffer() = 0;
+  virtual void FillFirstDataBuffer(queue_t& queue) = 0;
 
 private:
   std::unique_ptr<THeaderInfo> BuildTHeaderInfo();
@@ -112,7 +115,7 @@ protected:
   virtual bool InspectHeader(const std::vector<std::uint32_t>& buffer) const override;
   virtual void FillEvents(std::deque<std::unique_ptr<TDataRecord> > &queue) noexcept override;
   virtual void FillInfo() override;
-  virtual void FillFirstDataBuffer() override;
+  virtual void FillFirstDataBuffer(queue_t& queue) override;
 };
 
 class FileFormatMk2 : public FileFormatBase {
@@ -123,10 +126,10 @@ protected:
   virtual bool InspectHeader(const std::vector<std::uint32_t> &buffer) const override;
   virtual void FillEvents(std::deque<std::unique_ptr<TDataRecord> > &queue) noexcept override;
   virtual void FillInfo() override;
-  virtual void FillFirstDataBuffer() override;
+  virtual void FillFirstDataBuffer(queue_t& queue) override;
 
 private:
-  bool SearchFirstDataBuffer(size_t offset);
+  bool SearchFirstDataBuffer(queue_t &queue, size_t offset);
 };
 
 }} // namespace unpacker::acqu
