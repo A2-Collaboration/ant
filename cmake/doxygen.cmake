@@ -6,7 +6,7 @@ endif()
 
 set(DOXYGEN_INPUT_DIR "${CMAKE_SOURCE_DIR}")
 
-set(DOXYGEN_OUTPUT_DIR ${CMAKE_SOURCE_DIR}/doc)
+set(DOXYGEN_OUTPUT_DIR ${CMAKE_SOURCE_DIR}/doxygen)
 
 # we look for Graphviz, if found, we enable the
 # include graph generation

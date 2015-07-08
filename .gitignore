@@ -2,7 +2,7 @@
 /build*
 
 # Doxygen output
-/doc/html
+/doxygen/
 
 # some files usually ignored
 /CMakeLists.txt.user*
