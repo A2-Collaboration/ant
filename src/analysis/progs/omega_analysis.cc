@@ -2,12 +2,14 @@
 #include "OutputManager.h"
 #include "physics/Physics.h"
 #include "physics/omega/omega.h"
+#include "base/Logger.h"
 
 using namespace std;
 using namespace ant::output;
 using namespace ant;
 
 int main(int argc, char** argv) {
+    SetupLogger(argc, argv);
 
     OutputManager om;
 
@@ -19,8 +21,10 @@ int main(int argc, char** argv) {
 
     input::GoatReader reader;
 
-    for(int i=1; i<argc;++i)
-        reader.AddInputFile(argv[i]);
+    for(int i=1; i<argc;++i) {
+        if(argv[i][0] != '-')
+            reader.AddInputFile(argv[i]);
+    }
 
     reader.Initialize();
 
