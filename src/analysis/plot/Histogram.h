@@ -67,8 +67,8 @@ public:
      * @param title The title of the histogram
      * @param xlabel X axis label (required, cause... always label your axes ;-) )
      * @param ylabel Y axis label (required)
-     * @param bins X axis binning settings, (Number, min, max)
-     * @param bins Y axis binning settings, (Number, min, max)
+     * @param xbins x axis binning settings, (Number, min, max)
+     * @param ybins y axis binning settings, (Number, min, max)
      * @param name optional name. If "", a number will be inserted
      * @return A pointer to the new histogram
      */

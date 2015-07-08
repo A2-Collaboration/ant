@@ -50,6 +50,8 @@ struct scored_match {
  * @brief Particle Matcher
  * @param list1 vector of elements 1
  * @param list2 vector of elements 2
+ * @param f
+ * @param score_window
  *
  * Matches the elements in list1 and list2 by a score calculated by a MatchFunction.
  * returns a list of best-matching pairs (minimal score),
