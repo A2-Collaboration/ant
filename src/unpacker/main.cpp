@@ -23,8 +23,8 @@ int main(int argc, char* argv[]) {
   //string str = fmt::format("Bla {}", v);
   //cout << str << endl;
 
-  auto unpacker = Unpacker::Get("scratch/CBTaggTAPS_9227.dat");
-  //auto unpacker = Unpacker::Get("scratch/CBTaggTAPS_7892.dat");
+  //auto unpacker = Unpacker::Get("scratch/CBTaggTAPS_9227.dat");
+  auto unpacker = Unpacker::Get("scratch/CBTaggTAPS_7892.dat");
   //auto unpacker = Unpacker::Get("scratch/CBTaggTAPS_5711.dat.xz");
 //  auto unpacker = Unpacker::Get("scratch/oneevent-small.dat");
 

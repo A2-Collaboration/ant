@@ -12,7 +12,7 @@ struct TUnpackerMessage : TDataRecord
 {
 
   enum class Level_t : unsigned {
-    Info, Warn, SoftError, HardError
+    Info, Warn, Error
   };
 
   TUnpackerMessage(TDataRecord::ID_t id,

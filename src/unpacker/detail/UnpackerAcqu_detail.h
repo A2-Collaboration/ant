@@ -8,8 +8,13 @@
 #include <ctime>
 #include <cstdint>
 
+#include "tree/TUnpackerMessage.h"
+
+
+#define __unpacker_noexcept
 
 namespace ant {
+
 
 /**
  * @brief The UnpackerAcquFile class
@@ -47,7 +52,7 @@ public:
    * @brief FillEvents fills the given queue with more TDataRecord items (if any left)
    * @param queue
    */
-  virtual void FillEvents(queue_t& queue) noexcept = 0;
+  virtual void FillEvents(queue_t& queue) __unpacker_noexcept = 0;
 
 protected:
   virtual size_t SizeOfHeader() const = 0;
@@ -97,11 +102,17 @@ protected:
   std::uint32_t ID_lower; // lower part, incremented by FillEvents
   std::unique_ptr<UnpackerAcquConfig> config;
 
-  virtual void Setup(std::unique_ptr<RawFileReader>&& reader_,
+  void Setup(std::unique_ptr<RawFileReader>&& reader_,
                      std::vector<std::uint32_t>&& buffer_) override;
-  virtual void FillHeader(queue_t& queue) override;
+  void FillHeader(queue_t& queue) override;
+  void FillEvents(queue_t& queue) __unpacker_noexcept override;
+  void LogMessage(queue_t& queue, ant::TUnpackerMessage::Level_t level,
+                  const std::string &msg) const;
+
+  // Mk1/Mk2 specific methods
   virtual void FillInfo() = 0;
   virtual void FillFirstDataBuffer(queue_t& queue) = 0;
+  virtual bool UnpackDataBuffer(queue_t &queue) __unpacker_noexcept = 0;
 
 private:
   std::unique_ptr<THeaderInfo> BuildTHeaderInfo();
@@ -113,9 +124,10 @@ class FileFormatMk1 : public FileFormatBase {
 protected:
   virtual size_t SizeOfHeader() const override;
   virtual bool InspectHeader(const std::vector<std::uint32_t>& buffer) const override;
-  virtual void FillEvents(std::deque<std::unique_ptr<TDataRecord> > &queue) noexcept override;
   virtual void FillInfo() override;
   virtual void FillFirstDataBuffer(queue_t& queue) override;
+  virtual bool UnpackDataBuffer(queue_t &queue) __unpacker_noexcept override;
+
 };
 
 class FileFormatMk2 : public FileFormatBase {
@@ -124,12 +136,16 @@ class FileFormatMk2 : public FileFormatBase {
 protected:
   virtual size_t SizeOfHeader() const override;
   virtual bool InspectHeader(const std::vector<std::uint32_t> &buffer) const override;
-  virtual void FillEvents(std::deque<std::unique_ptr<TDataRecord> > &queue) noexcept override;
   virtual void FillInfo() override;
   virtual void FillFirstDataBuffer(queue_t& queue) override;
+  virtual bool UnpackDataBuffer(queue_t &queue) __unpacker_noexcept override;
 
 private:
   bool SearchFirstDataBuffer(queue_t &queue, size_t offset);
+  using it_t = std::vector<uint32_t>::const_iterator;
+  void HandleEPICSBuffer(queue_t& queue, it_t& it, const it_t& it_end) const __unpacker_noexcept;
+  void HandleScalerBuffer(queue_t& queue, it_t& it, const it_t& it_end) const __unpacker_noexcept;
+  void HandleReadError(queue_t& queue, it_t& it, const it_t& it_end) const __unpacker_noexcept;
 };
 
 }} // namespace unpacker::acqu

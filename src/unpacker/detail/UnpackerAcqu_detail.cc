@@ -5,7 +5,7 @@
 
 #include "tree/TDataRecord.h"
 #include "tree/THeaderInfo.h"
-#include "tree/TUnpackerMessage.h"
+
 
 #include "expconfig/ExpConfig.h"
 #include "base/Logger.h"
@@ -17,6 +17,7 @@
 #include <exception>
 #include <list>
 #include <ctime>
+#include <iterator> // for std::next
 
 using namespace std;
 using namespace ant;
@@ -117,13 +118,40 @@ void acqu::FileFormatBase::FillHeader(queue_t& queue)
   FillFirstDataBuffer(queue);
 }
 
+void acqu::FileFormatBase::LogMessage(
+    UnpackerAcquFileFormat::queue_t &queue,
+    TUnpackerMessage::Level_t level,
+    const string& msg
+    ) const
+{
+  auto record = createDataRecord<TUnpackerMessage>(
+        TDataRecord::ID_t(ID_upper, ID_lower),
+        level,
+        msg
+        );
 
+  const string& text = "[TUnpackerMessage] " + record->Message ;
+
+  switch(level) {
+  case TUnpackerMessage::Level_t::Info:
+    LOG(INFO) << text;
+    break;
+  case TUnpackerMessage::Level_t::Warn:
+    LOG(WARNING) << text;
+    break;
+  case TUnpackerMessage::Level_t::Error:
+    LOG(ERROR) << text;
+    break;
+  }
+
+  fillQueue(queue, move(record));
+}
 
 unique_ptr<THeaderInfo> acqu::FileFormatBase::BuildTHeaderInfo()
 {
   // this unpacker has a constant ID_upper
   // based on the timestamp inside the file
-  /// \todo make 100% unique due to daylight saving time,
+  /// \todo make ID really unique due to daylight saving time...
 
   const time_t timestamp = mktime(&info.Time); // convert to unix epoch
   ID_upper = static_cast<decltype(ID_upper)>(timestamp);
@@ -147,10 +175,29 @@ unique_ptr<THeaderInfo> acqu::FileFormatBase::BuildTHeaderInfo()
         );
 }
 
-void acqu::FileFormatMk1::FillEvents(std::deque<std::unique_ptr<TDataRecord> >& queue) noexcept
+void acqu::FileFormatBase::FillEvents(std::deque<std::unique_ptr<TDataRecord> >& queue) __unpacker_noexcept
 {
+  // this method never throws exceptions, but just adds TUnpackerMessage to queue
+  // if something strange while unpacking is encountered
+
+  // we use the buffer as some state-variable
+  // if the buffer is already empty now, there is nothing more to read
+  if(buffer.empty())
+    return;
+
+  //
+  ID_lower++;
+
+  // start parsing the filled buffer
+  UnpackDataBuffer(queue);
+
+  // refill the buffer, clear if there was a problem when reading
+
+  /// \todo Implement!
 
 }
+
+
 
 void acqu::FileFormatMk1::FillInfo()
 {
@@ -162,23 +209,14 @@ void acqu::FileFormatMk1::FillFirstDataBuffer(queue_t& queue)
   throw UnpackerAcqu::Exception("Mk1 format not implemented yet");
 }
 
-
-void acqu::FileFormatMk2::FillEvents(std::deque<std::unique_ptr<TDataRecord> >& queue) noexcept
+bool acqu::FileFormatMk1::UnpackDataBuffer(UnpackerAcquFileFormat::queue_t &queue) __unpacker_noexcept
 {
-  // this method never throws exceptions, but just adds TUnpackerMessage to queue
-  // if something strange while unpacking is encountered
-
-  // we use the buffer as some state-variable
-  // if the buffer is already empty now, there is nothing more to read
-  if(buffer.empty())
-    return;
-
-  // start parsing the filled buffer
-
-
-  // refill the buffer
-
+  /// \todo Implement Mk1 unpacking
+  return true;
 }
+
+
+
 
 void acqu::FileFormatMk2::FillInfo()
 {
@@ -276,6 +314,7 @@ void acqu::FileFormatMk2::FillFirstDataBuffer(queue_t& queue)
   throw UnpackerAcqu::Exception("Did not find first data buffer with Mk2 signature");
 }
 
+
 bool acqu::FileFormatMk2::SearchFirstDataBuffer(queue_t& queue, size_t offset)
 {
   VLOG(9) << "Searching first Mk2 buffer at offset 0x"
@@ -305,20 +344,15 @@ bool acqu::FileFormatMk2::SearchFirstDataBuffer(queue_t& queue, size_t offset)
   if(buffer.back() != acqu::EMk2DataBuff)
     return false;
 
-  // check header info
+  // check header info, emit message if there's a problem
   if(info.RecordLength != offset) {
-    auto msg = createDataRecord<TUnpackerMessage>(
-          TDataRecord::ID_t(ID_upper, ID_lower),
+    LogMessage(queue,
           TUnpackerMessage::Level_t::Warn,
           std_ext::formatter()
           << "Record length in header 0x" << hex << info.RecordLength
           << " does not match true file record length 0x" << offset << dec
           );
-    LOG(WARNING) << msg->Message;
-    fillQueue(queue, move(msg));
   }
-
-
 
   VLOG(9) << "Found first Mk2 buffer at offset 0x"
           << hex << offset << dec;
@@ -335,7 +369,7 @@ bool acqu::FileFormatMk2::SearchFirstDataBuffer(queue_t& queue, size_t offset)
     throw UnpackerAcqu::Exception(
           std_ext::formatter()
           << "Only " << reader->gcount() << " bytes read from file, but "
-          << expectedBytes << " required"
+          << expectedBytes << " required for first data buffer"
           );
   }
   // get rid of duplicate header word at very end
@@ -343,6 +377,103 @@ bool acqu::FileFormatMk2::SearchFirstDataBuffer(queue_t& queue, size_t offset)
   buffer.resize(nWords);
 
   return true;
+}
+
+bool acqu::FileFormatMk2::UnpackDataBuffer(UnpackerAcquFileFormat::queue_t &queue) __unpacker_noexcept
+{
+  auto it = buffer.cbegin();
+
+  // check header word
+  if(*it != acqu::EMk2DataBuff) {
+    LogMessage(queue,
+               TUnpackerMessage::Level_t::Error,
+               std_ext::formatter() <<
+               "Buffer starts with unexpected header word 0x" << hex << *it << dec
+               );
+    return false;
+  }
+  it++;
+
+  while(*it != acqu::EBufferEnd) {
+
+    // extract serial ID and eventLength
+    const unsigned eventID = *it++;
+    const unsigned eventLength = *it/sizeof(uint32_t);
+
+    // check eventLength
+    const auto it_end = next(it, eventLength);
+    if(it_end == buffer.cend()) {
+      LogMessage(queue,
+                 TUnpackerMessage::Level_t::Error,
+                 std_ext::formatter() <<
+                 "Event with size 0x" << eventLength
+                 << " too big to fit in buffer of remaining size " << distance(it, buffer.cend())
+                 );
+      return false;
+    }
+    if(*it_end != acqu::EEndEvent) {
+      LogMessage(queue,
+                 TUnpackerMessage::Level_t::Error,
+                 std_ext::formatter() <<
+                 "At designated end of event, found unexpected word 0x" << hex << *it_end << dec
+                 );
+      return false;
+    }
+    it++;
+
+    // now decompose the event blocks for some block marker
+    /// \todo Scan config if there's an ADC channel defined which mimicks those blocks
+
+    while(*it != acqu::EEndEvent) {
+      switch(*it) {
+      case acqu::EEPICSBuffer:
+        // EPICS buffer
+        HandleEPICSBuffer(queue, it, it_end);
+        break;
+      case acqu::EScalerBuffer:
+        // Scaler read in this event
+        HandleScalerBuffer(queue, it, it_end);
+        break;
+      case acqu::EReadError:
+        // read error block, some hardware-related information
+        HandleReadError(queue, it, it_end);
+        break;
+      default:
+        // unfortunately, normal hits don't have a marker
+        // so we hope for the best at this position
+
+        break;
+      }
+
+    }
+
+    // increment official unique event ID
+    ID_lower++;
+  }
+
+
+  return true;
+}
+
+void acqu::FileFormatMk2::HandleEPICSBuffer(
+    UnpackerAcquFileFormat::queue_t &queue,
+    it_t& it, const it_t& it_end) const __unpacker_noexcept
+{
+  throw UnpackerAcqu::Exception("Not implemented");
+}
+
+void acqu::FileFormatMk2::HandleScalerBuffer(
+    UnpackerAcquFileFormat::queue_t &queue,
+    it_t& it, const it_t& it_end) const __unpacker_noexcept
+{
+  throw UnpackerAcqu::Exception("Not implemented");
+}
+
+void acqu::FileFormatMk2::HandleReadError(
+    UnpackerAcquFileFormat::queue_t &queue,
+    it_t& it, const it_t& it_end) const __unpacker_noexcept
+{
+  throw UnpackerAcqu::Exception("Not implemented");
 }
 
 
