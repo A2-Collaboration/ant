@@ -457,12 +457,12 @@ static const std::map<uint32_t, std::string> ModuleIDToString = {
 //  {"LRS_4413",   ELRS_4413},
 //  {"LRS_4413SPILL",   ELRS_4413SPILL},
 //  {"LRS_4413DAQEnable",   ELRS_4413DAQEnable},
-//  {"GSI_4800",   EGSI_4800},
+  {0x1c00, "GSI_4800"},
 
 
 //  // FASTBUS
 //  {"FASTBUS",    EFASTBUS},
-//  {"LRS_1821",   ELRS_1821},
+  {0x2100, "LRS_1821"},
 //  {"LRS_1875",   ELRS_1875},
 //  {"LRS_1872",   ELRS_1872},
 //  {"LRS_1885",   ELRS_1800},
@@ -471,7 +471,7 @@ static const std::map<uint32_t, std::string> ModuleIDToString = {
 //  {"LRS_1881",   ELRS_1881},
 //  {"PH_10C6",    EPH_10C6},
 //  {"PH_10C2",    EPH_10C2},
-//  {"STR_200",    ESTR_200},
+  {0x2600, "STR_200"},
 //  {"STR_136",    ESTR_136},
 //  // I2C
 //  // PCI
