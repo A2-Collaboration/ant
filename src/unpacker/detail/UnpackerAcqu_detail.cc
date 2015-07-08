@@ -405,7 +405,9 @@ bool acqu::FileFormatMk2::UnpackDataBuffer(UnpackerAcquFileFormat::queue_t& queu
     if(AcquID_last>acquID) {
       LogMessage(queue,
                  TUnpackerMessage::Level_t::Info,
-                 "Overflow of Acqu EventId detected"
+                 std_ext::formatter()
+                 << "Overflow of Acqu EventId detected from "
+                 << AcquID_last << " to " << acquID
                  );
     }
     AcquID_last = acquID;
@@ -484,14 +486,98 @@ bool acqu::FileFormatMk2::UnpackDataBuffer(UnpackerAcquFileFormat::queue_t& queu
   return true;
 }
 
+
 void acqu::FileFormatMk2::HandleEPICSBuffer(
     UnpackerAcquFileFormat::queue_t &queue,
     it_t& it, const it_t& it_end,
     bool& good
     ) const noexcept
 {
-  throw UnpackerAcqu::Exception("Not implemented");
+  // ignore EPICS buffer marker
+  it++;
 
+  // is there enough space in the event at all?
+  static_assert(sizeof(acqu::EpicsHeaderInfo_t) % sizeof(uint32_t) == 0,
+                "acqu::EpicsHeaderInfo_t is not word aligned");
+  constexpr int headerWordsize = sizeof(acqu::EpicsHeaderInfo_t)/sizeof(uint32_t);
+
+  if(distance(it, it_end)<headerWordsize) {
+    LogMessage(queue,
+               TUnpackerMessage::Level_t::DataError,
+               "acqu::EpicsHeaderInfo_t header not completely present in buffer"
+               );
+    return;
+  }
+
+  // then cast it to data structure
+  const acqu::EpicsHeaderInfo_t* hdr =
+      reinterpret_cast<const acqu::EpicsHeaderInfo_t*>(addressof(*it));
+
+  // check the header info a bit
+  // hdr->len is the maximum size of the EPICS data including first header
+  const int epicsTotalWords = hdr->len/sizeof(uint32_t);
+  const string epicsModName = hdr->name;
+  const string epicsTime = std_ext::ctime(hdr->time);
+
+  if(epicsModName.length()>32 || epicsTime.length() != 24) {
+    LogMessage(queue,
+               TUnpackerMessage::Level_t::DataError,
+               "acqu::EpicsHeaderInfo_t header has malformed information"
+               );
+    return;
+  }
+  if(distance(it, it_end)<epicsTotalWords) {
+    LogMessage(queue,
+               TUnpackerMessage::Level_t::DataError,
+               "EPICS data not completely present in buffer"
+               );
+    return;
+  }
+
+  // then skip the epics header info
+  advance(it, headerWordsize);
+
+
+
+  const acqu::EpicsChannelInfo_t* ch =
+      reinterpret_cast<const acqu::EpicsChannelInfo_t*>(addressof(*it));
+
+
+
+  VLOG(9) << ch->pvname;
+
+
+//  // some checks
+//  if(err->fTrailer != acqu::EReadError) {
+//    LogMessage(queue,
+//               TUnpackerMessage::Level_t::DataError,
+//               "Acqu ErrorBlock does not end with expected trailer word"
+//               );
+//    return;
+//  }
+
+//  auto it_modname = acqu::ModuleIDToString.find(err->fModID);
+//  const string& modname = it_modname == acqu::ModuleIDToString.cend()
+//      ? "UNKNOWN" : it_modname->second;
+
+//  // build TUnpackerMessage record from error info
+
+//  auto record = createDataRecord<TUnpackerMessage>(
+//        TDataRecord::ID_t(ID_upper, ID_lower),
+//        TUnpackerMessage::Level_t::HardwareError,
+//        std_ext::formatter()
+//        << "Acqu HardwareError ModuleID={} (" << modname << ") "
+//        << "Index={} ErrorCode={}"
+//        );
+//  record->Payload.push_back(err->fModID);
+//  record->Payload.push_back(err->fModIndex);
+//  record->Payload.push_back(err->fErrCode);
+
+//  VLOG(9) << *record;
+
+//  fillQueue(queue, move(record));
+
+  advance(it, headerWordsize);
   good = true;
 }
 
@@ -510,13 +596,14 @@ void acqu::FileFormatMk2::HandleReadError(
     bool& good) const noexcept
 {
   // is there enough space in the event at all?
-  static_assert(sizeof(acqu::ReadErrorMk2_t) % 4 == 0, "acqu::ReadErrorMk2_t is not word aligned");
-  constexpr int wordsize = sizeof(acqu::ReadErrorMk2_t)/4;
+  static_assert(sizeof(acqu::ReadErrorMk2_t) % sizeof(uint32_t) == 0,
+                "acqu::ReadErrorMk2_t is not word aligned");
+  constexpr int wordsize = sizeof(acqu::ReadErrorMk2_t)/sizeof(uint32_t);
 
   if(distance(it, it_end)<wordsize) {
     LogMessage(queue,
                TUnpackerMessage::Level_t::DataError,
-               "Acqu ErrorBlock not completely written to buffer"
+               "acqu::ReadErrorMk2_t block not completely present in buffer"
                );
     return;
   }
@@ -537,9 +624,6 @@ void acqu::FileFormatMk2::HandleReadError(
   auto it_modname = acqu::ModuleIDToString.find(err->fModID);
   const string& modname = it_modname == acqu::ModuleIDToString.cend()
       ? "UNKNOWN" : it_modname->second;
-
-
-
 
   // build TUnpackerMessage record from error info
 

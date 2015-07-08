@@ -2,6 +2,7 @@
 include_directories(.)
 add_custom_target(build_and_test ${CMAKE_CTEST_COMMAND} -V)
 add_library(catch catch.cc catch.hpp)
+target_link_libraries(catch base)
 enable_testing()
 
 # some tests need binary blobs

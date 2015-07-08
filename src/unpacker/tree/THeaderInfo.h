@@ -33,14 +33,14 @@ struct THeaderInfo : TDataRecord
                   );
   }
 
-  std::time_t   Timestamp;   // unix epoch
+  std::uint64_t Timestamp;   // unix epoch
   std::uint32_t RunNumber;   // runnumber
   std::string   Description; // full descriptive string
 
 #ifndef __CINT__
   virtual std::ostream& Print( std::ostream& s) const override {
     return s << "THeaderInfo ID=" << ID
-             << " Timestamp='" << std_ext::string_sanitize(std::ctime(std::addressof(Timestamp))) << "'"
+             << " Timestamp='" << std_ext::ctime(Timestamp) << "'"
              << " RunNumber=" << RunNumber
              << " Description='" << Description << "'";
 

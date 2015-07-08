@@ -6,6 +6,7 @@
 #include <algorithm>
 #include <memory>
 #include <type_traits>
+#include <ctime>
 
 namespace ant {
 
@@ -29,6 +30,12 @@ inline std::string string_sanitize(const char* in) {
   s.erase(std::remove(s.begin(), s.end(), '\n'), s.end());
   return s;
 }
+
+inline std::string ctime(const std::uint64_t& time) {
+  time_t time_ = time;
+  return string_sanitize(std::ctime(std::addressof(time_)));
+}
+
 
 template<typename From, typename To>
 inline std::unique_ptr<To> static_cast_uptr(std::unique_ptr<From>&& ptr) {
