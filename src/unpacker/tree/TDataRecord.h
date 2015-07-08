@@ -18,6 +18,8 @@ typedef UInt_t  uint32_t;
 #include <string>
 #include <iomanip>
 
+#define ANT_UNPACKER_ROOT_VERSION 1
+
 namespace ant {
 
 struct TDataRecord : printable_traits
@@ -44,7 +46,7 @@ struct TDataRecord : printable_traits
     std::uint64_t Value;
     std::uint32_t Flags;
 
-    virtual std::ostream& Print( std::ostream& s) const {
+    virtual std::ostream& Print( std::ostream& s) const override {
       return s << std::hex << "(flags=0x" << Flags << ",0x"
                << std::setw(sizeof(decltype(Value))*2) << std::setfill('0')
                << Value
@@ -61,11 +63,11 @@ struct TDataRecord : printable_traits
 
   ID_t ID;
 
-  virtual std::ostream& Print( std::ostream& s) const {
+  virtual std::ostream& Print( std::ostream& s) const override {
     return s << "TDataRecord ID=" << ID;
   }
 
-  ClassDef(TDataRecord, 1)
+  ClassDef(TDataRecord, ANT_UNPACKER_ROOT_VERSION)
 
 };
 

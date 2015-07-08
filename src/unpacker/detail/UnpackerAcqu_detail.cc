@@ -139,7 +139,9 @@ void acqu::FileFormatBase::LogMessage(
   case TUnpackerMessage::Level_t::Warn:
     LOG(WARNING) << text;
     break;
-  case TUnpackerMessage::Level_t::Error:
+  case TUnpackerMessage::Level_t::DataError:
+  case TUnpackerMessage::Level_t::HardwareError:
+  case TUnpackerMessage::Level_t::DataDiscard:
     LOG(ERROR) << text;
     break;
   }
@@ -387,7 +389,7 @@ bool acqu::FileFormatMk2::UnpackDataBuffer(UnpackerAcquFileFormat::queue_t& queu
   // check header word
   if(*it != acqu::EMk2DataBuff) {
     LogMessage(queue,
-               TUnpackerMessage::Level_t::Error,
+               TUnpackerMessage::Level_t::DataError,
                std_ext::formatter() <<
                "Buffer starts with unexpected header word 0x" << hex << *it << dec
                );
@@ -415,7 +417,7 @@ bool acqu::FileFormatMk2::UnpackDataBuffer(UnpackerAcquFileFormat::queue_t& queu
     const auto it_end = next(it, eventLength);
     if(it_end == buffer.cend()) {
       LogMessage(queue,
-                 TUnpackerMessage::Level_t::Error,
+                 TUnpackerMessage::Level_t::DataError,
                  std_ext::formatter() <<
                  "Event with size 0x" << eventLength
                  << " too big to fit in buffer of remaining size "
@@ -425,7 +427,7 @@ bool acqu::FileFormatMk2::UnpackDataBuffer(UnpackerAcquFileFormat::queue_t& queu
     }
     if(*it_end != acqu::EEndEvent) {
       LogMessage(queue,
-                 TUnpackerMessage::Level_t::Error,
+                 TUnpackerMessage::Level_t::DataError,
                  std_ext::formatter() <<
                  "At designated end of event, found unexpected word 0x"
                  << hex << *it_end << dec
@@ -439,9 +441,10 @@ bool acqu::FileFormatMk2::UnpackDataBuffer(UnpackerAcquFileFormat::queue_t& queu
 
     bool good;
     while(*it != acqu::EEndEvent && it != buffer.cend()) {
-      good = false;
       // note that the Handle* methods move the iterator
-      // themselves
+      // themselves and set good to true if nothing went wrong
+      good = false;
+
       switch(*it) {
       case acqu::EEPICSBuffer:
         // EPICS buffer
@@ -461,7 +464,7 @@ bool acqu::FileFormatMk2::UnpackDataBuffer(UnpackerAcquFileFormat::queue_t& queu
         static_assert(sizeof(acqu::AcquBlock_t) <= sizeof(decltype(*it)),
                       "acqu::AcquBlock_t does not fit into word of buffer");
         const acqu::AcquBlock_t* acqu_hit = reinterpret_cast<const acqu::AcquBlock_t*>(addressof(*it));
-        VLOG(9) << "ADC ID=" << acqu_hit->id << " Value=" << acqu_hit->adc;
+        //VLOG(9) << "ADC ID=" << acqu_hit->id << " Value=" << acqu_hit->adc;
         good = true;
         it++;
         break;
@@ -469,6 +472,9 @@ bool acqu::FileFormatMk2::UnpackDataBuffer(UnpackerAcquFileFormat::queue_t& queu
       if(!good)
         break;
     }
+
+    // assume EEndEvent, skip it
+    it++;
 
     // increment official unique event ID
     ID_lower++;
@@ -504,15 +510,54 @@ void acqu::FileFormatMk2::HandleReadError(
     bool& good) const noexcept
 {
   // is there enough space in the event at all?
-  if(sizeof(uint32_t)*distance(it, it_end)<sizeof(acqu::ReadErrorMk2_t)) {
-    return;
-  }
-  const acqu::ReadErrorMk2_t* err =
-      reinterpret_cast<const acqu::ReadErrorMk2_t*>(addressof(*it));
-  if(err->fTrailer != acqu::EReadError) {
+  static_assert(sizeof(acqu::ReadErrorMk2_t) % 4 == 0, "acqu::ReadErrorMk2_t is not word aligned");
+  constexpr int wordsize = sizeof(acqu::ReadErrorMk2_t)/4;
+
+  if(distance(it, it_end)<wordsize) {
+    LogMessage(queue,
+               TUnpackerMessage::Level_t::DataError,
+               "Acqu ErrorBlock not completely written to buffer"
+               );
     return;
   }
 
+  // then cast it to data structure
+  const acqu::ReadErrorMk2_t* err =
+      reinterpret_cast<const acqu::ReadErrorMk2_t*>(addressof(*it));
+
+  // some checks
+  if(err->fTrailer != acqu::EReadError) {
+    LogMessage(queue,
+               TUnpackerMessage::Level_t::DataError,
+               "Acqu ErrorBlock does not end with expected trailer word"
+               );
+    return;
+  }
+
+  auto it_modname = acqu::ModuleIDToString.find(err->fModID);
+  const string& modname = it_modname == acqu::ModuleIDToString.cend()
+      ? "UNKNOWN" : it_modname->second;
+
+
+
+
+  // build TUnpackerMessage record from error info
+
+  auto record = createDataRecord<TUnpackerMessage>(
+        TDataRecord::ID_t(ID_upper, ID_lower),
+        TUnpackerMessage::Level_t::HardwareError,
+        std_ext::formatter()
+        << "Acqu HardwareError ModuleID={} (" << modname << ") "
+        << "Index={} ErrorCode={}"
+        );
+  record->Payload.push_back(err->fModID);
+  record->Payload.push_back(err->fModIndex);
+  record->Payload.push_back(err->fErrCode);
+
+  VLOG(9) << *record;
+
+  fillQueue(queue, move(record));
+  advance(it, wordsize);
   good = true;
 }
 

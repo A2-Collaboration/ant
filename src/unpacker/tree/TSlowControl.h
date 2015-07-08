@@ -8,7 +8,7 @@ namespace ant {
 struct TSlowControl : TDataRecord
 {
 
-  ClassDef(TSlowControl, 1)
+  ClassDef(TSlowControl, ANT_UNPACKER_ROOT_VERSION)
 };
 
 }

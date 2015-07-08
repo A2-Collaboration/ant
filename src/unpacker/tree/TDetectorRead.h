@@ -9,7 +9,7 @@ struct TDetectorRead : TDataRecord
 {
 
 
-  ClassDef(TDetectorRead, 1)
+  ClassDef(TDetectorRead, ANT_UNPACKER_ROOT_VERSION)
 };
 
 }

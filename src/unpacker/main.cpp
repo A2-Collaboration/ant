@@ -28,7 +28,7 @@ int main(int argc, char* argv[]) {
   //auto unpacker = Unpacker::Get("scratch/CBTaggTAPS_5711.dat.xz");
 //  auto unpacker = Unpacker::Get("scratch/oneevent-small.dat");
 
-  for(size_t i=0;i<5;i++) {
+  for(size_t i=0;i<100;i++) {
     auto item = unpacker->NextItem();
     if(item==nullptr)
       break;
