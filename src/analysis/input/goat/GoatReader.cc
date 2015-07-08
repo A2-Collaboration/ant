@@ -9,6 +9,8 @@
 #include "PParticle.h"
 #include "PStaticData.h"
 
+#include "base/Logger.h"
+
 using namespace ant;
 using namespace ant::input;
 using namespace std;
@@ -70,7 +72,6 @@ void GoatReader::CopyTrigger(std::shared_ptr<Event> &event)
 
 void GoatReader::CopyDetectorHits(std::shared_ptr<Event> &event)
 {
-
 }
 
 /**
@@ -118,6 +119,7 @@ void GoatReader::CopyPluto(std::shared_ptr<Event> &event)
                         pluto_database->GetParticleMass(p->ID())*1000.0,
                         pluto_database->GetParticleCharge(p->ID()) != 0
                     );
+            VLOG(7) << "Adding a ParticleType for pluto ID " << p->ID() << " to ParticleTypeDatabse";
 
             if(!type)
                 // TODO: Change this so that it does not stop the whole process and can be caught for each particle
@@ -186,8 +188,10 @@ public:
         TTree* tree = nullptr;
         if( m.GetObject(name, tree) ) {
             t.AddTree(tree);
+            VLOG(6) << "TTree " << name << " opened";
             return tree;
         } else
+            VLOG(7) << "Could not find TTree " << name << " in any open GoAT file";
             return nullptr;
     }
 
@@ -206,6 +210,7 @@ void GoatReader::Initialize()
             module++;
         } else {
             module = active_modules.erase(module);
+            VLOG(7) << "Not activating GoAT Input module";
         }
     }
 
