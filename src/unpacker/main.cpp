@@ -20,9 +20,11 @@ int main(int argc, char* argv[]) {
   //auto unpacker = Unpacker::Get("scratch/CBTaggTAPS_9227.dat");
   //auto unpacker = Unpacker::Get("scratch/CBTaggTAPS_7892.dat");
   //auto unpacker = Unpacker::Get("scratch/CBTaggTAPS_5711.dat.xz");
-  auto unpacker = Unpacker::Get("scratch/headeronly-small.dat");
+  auto unpacker = Unpacker::Get("scratch/oneevent-small.dat");
 
-  LOG(INFO) << "Got item:   " << unpacker->NextItem();
+  for(size_t i=0;i<5;i++)
+    LOG(INFO) << "i=" << i << " Got item:   " << unpacker->NextItem();
+
 
   THeaderInfo header(TDataRecord::ID_t(0,0), 0, "", 0);
   auto config = shared_ptr<ExpConfig::Module>(ExpConfig::Get(header));

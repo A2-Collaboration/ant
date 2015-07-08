@@ -45,7 +45,7 @@ public:
    * @brief FillEvents fills the given queue with more TDataRecord items (if any left)
    * @param queue
    */
-  virtual void FillEvents(std::deque< std::unique_ptr<TDataRecord> >& queue) = 0;
+  virtual void FillEvents(std::deque< std::unique_ptr<TDataRecord> >& queue) noexcept = 0;
 
 protected:
   virtual size_t SizeOfHeader() const = 0;
@@ -98,6 +98,7 @@ protected:
                      std::vector<std::uint32_t>&& buffer_) override;
   virtual void FillHeader(std::deque< std::unique_ptr<TDataRecord> >& queue) override;
   virtual void FillInfo() = 0;
+  virtual void SearchFirstDataBuffer() = 0;
 
 private:
   std::unique_ptr<THeaderInfo> BuildTHeaderInfo();
@@ -109,8 +110,9 @@ class FileFormatMk1 : public FileFormatBase {
 protected:
   virtual size_t SizeOfHeader() const override;
   virtual bool InspectHeader(const std::vector<std::uint32_t>& buffer) const override;
-  virtual void FillEvents(std::deque<std::unique_ptr<TDataRecord> > &queue) override;
+  virtual void FillEvents(std::deque<std::unique_ptr<TDataRecord> > &queue) noexcept override;
   virtual void FillInfo() override;
+  virtual void SearchFirstDataBuffer() override;
 };
 
 class FileFormatMk2 : public FileFormatBase {
@@ -119,11 +121,12 @@ class FileFormatMk2 : public FileFormatBase {
 protected:
   virtual size_t SizeOfHeader() const override;
   virtual bool InspectHeader(const std::vector<std::uint32_t> &buffer) const override;
-  virtual void FillEvents(std::deque<std::unique_ptr<TDataRecord> > &queue) override;
+  virtual void FillEvents(std::deque<std::unique_ptr<TDataRecord> > &queue) noexcept override;
   virtual void FillInfo() override;
+  virtual void SearchFirstDataBuffer() override;
 
 private:
-  bool SearchMk2Signature(size_t offset);
+  bool ReadFirstDataBuffer(size_t offset);
 };
 
 }} // namespace unpacker::acqu

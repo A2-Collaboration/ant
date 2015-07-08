@@ -81,9 +81,9 @@ void acqu::FileFormatBase::Setup(std::unique_ptr<RawFileReader> &&reader_, std::
   buffer = move(buffer_);
 }
 
-void acqu::FileFormatMk1::FillEvents(std::deque<std::unique_ptr<TDataRecord> >& queue)
+void acqu::FileFormatMk1::FillEvents(std::deque<std::unique_ptr<TDataRecord> >& queue) noexcept
 {
-  throw UnpackerAcqu::Exception("Mk1 format not implemented yet");
+
 }
 
 void acqu::FileFormatMk1::FillInfo()
@@ -91,9 +91,26 @@ void acqu::FileFormatMk1::FillInfo()
   throw UnpackerAcqu::Exception("Mk1 format not implemented yet");
 }
 
-
-void acqu::FileFormatMk2::FillEvents(std::deque<std::unique_ptr<TDataRecord> >& queue)
+void acqu::FileFormatMk1::SearchFirstDataBuffer()
 {
+  throw UnpackerAcqu::Exception("Mk1 format not implemented yet");
+}
+
+
+void acqu::FileFormatMk2::FillEvents(std::deque<std::unique_ptr<TDataRecord> >& queue) noexcept
+{
+  // this method never throws exceptions, but just adds TUnpackerMessage to queue
+  // if something strange while unpacking is encountered
+
+  // we use the buffer as some state-variable
+  // if the buffer is already empty now, there is nothing more to read
+  if(buffer.empty())
+    return;
+
+  // start parsing the filled buffer
+
+
+  // refill the buffer
 
 }
 
@@ -101,9 +118,7 @@ void acqu::FileFormatMk2::FillEvents(std::deque<std::unique_ptr<TDataRecord> >& 
 void acqu::FileFormatBase::FillHeader(std::deque<std::unique_ptr<TDataRecord> >& queue)
 {
   FillInfo();
-
-
-
+  SearchFirstDataBuffer();
 
   auto headerInfo = BuildTHeaderInfo();
   // try to find some config with the headerInfo
@@ -222,53 +237,81 @@ void acqu::FileFormatMk2::FillInfo()
           << totalADCs << " channels";
   VLOG(9) << "Header says: Have " << info.ScalerModules.size() << " Scaler modules with "
           << totalScalers << " channels";
+}
 
-  // finally search for the Mk2Header
+void acqu::FileFormatMk2::SearchFirstDataBuffer()
+{
+  // finally search for the Mk2Header, this also
+  // fills the buffer correctly with the first Mk2DataBuffer (if available)
 
   // first search at 0x8000 bytes
-  if(SearchMk2Signature(0x8000))
+  if(ReadFirstDataBuffer(0x8000))
     return;
 
   // then search at 10*0x8000
-  if(SearchMk2Signature(10*0x8000))
+  if(ReadFirstDataBuffer(10*0x8000))
     return;
 
   // else fail
   throw UnpackerAcqu::Exception("Did not find first data buffer with Mk2 signature");
 }
 
-bool acqu::FileFormatMk2::SearchMk2Signature(size_t offset)
+bool acqu::FileFormatMk2::ReadFirstDataBuffer(size_t offset)
 {
   VLOG(9) << "Searching first Mk2 buffer at offset 0x"
           << hex << offset << dec;
+  // offset is given in bytes, convert to number of words in uint32_t buffer
+  const streamsize nWords = offset/sizeof(uint32_t);
   // read full header record, the file
   // should be at least this long
-  reader->expand_buffer(buffer, offset/4);
+  reader->expand_buffer(buffer, nWords);
   // if this is a header-only file, the next expand might file
   try {
-    reader->expand_buffer(buffer, offset/4+1);
+    reader->expand_buffer(buffer, nWords+1);
   }
   catch(RawFileReader::Exception e) {
     if(reader->eof()) {
       LOG(WARNING) << "File is exactly " << offset
                     << " bytes long, and contains only header.";
+      // indicate eof by empty buffer
       buffer.clear();
       return true;
     }
+    // else throw e
     throw e;
   }
 
   // this word should be the Mk2DataBuff...
   if(buffer.back() != acqu::EMk2DataBuff)
     return false;
+
   // check header info
   LOG_IF(info.RecordLength != offset, WARNING)
       << "Record length in header 0x" << hex << info.RecordLength
       << " does not match true file record length 0x" << offset << dec;
+
   // overwrite the RecordLength
   info.RecordLength = offset;
   VLOG(9) << "Found first Mk2 buffer at offset 0x"
           << hex << info.RecordLength << dec;
+
+  // we finally prepare the first data buffer
+  // buffer is at the moment nWords+1 large, and the last word
+  // is the first word of the first data buffer
+  buffer[0] = buffer.back();
+
+  reader->read(&buffer[1], nWords-1);
+  // ensure that nWords-1 are actually read
+  streamsize expectedBytes = (nWords-1)*sizeof(uint32_t);
+  if(reader->gcount() != expectedBytes) {
+    throw UnpackerAcqu::Exception(
+          std_ext::formatter()
+          << "Only " << reader->gcount() << " bytes read from file, but "
+          << expectedBytes << " required"
+          );
+  }
+  buffer.resize(nWords); // get rid of duplicate header word at very end
+
   return true;
 }
 

@@ -19,7 +19,7 @@ public:
   class Module {
   public:
     virtual ~Module() = default;
-    virtual std::shared_ptr<TDataRecord> NextItem() = 0;
+    virtual std::shared_ptr<TDataRecord> NextItem() noexcept = 0;
     virtual bool OpenFile(const std::string& filename) = 0;
   };
 

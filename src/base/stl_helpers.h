@@ -2,6 +2,7 @@
 #define STL_HELPERS_H
 
 #include <string>
+#include <sstream>
 #include <algorithm>
 #include <memory>
 #include <type_traits>
@@ -32,6 +33,34 @@ inline std::unique_ptr<To> static_cast_uptr(std::unique_ptr<From>&& ptr) {
   static_assert(std::is_base_of<To, From>::value, "Type From does not derive from type To");
   return std::unique_ptr<To>(static_cast<To*>(ptr.release()));
 }
+
+/**
+ * @brief The formatter class
+ *
+ * Used to create formatted strings with stringstream
+ */
+class formatter
+{
+public:
+    formatter() {}
+    ~formatter() {}
+
+    template <typename Type>
+    formatter & operator << (const Type & value)
+    {
+        stream_ << value;
+        return *this;
+    }
+
+    std::string str() const         { return stream_.str(); }
+    operator std::string () const   { return stream_.str(); }
+
+private:
+    std::stringstream stream_;
+
+    formatter(const formatter &);
+    formatter & operator = (formatter &);
+};
 
 }
 

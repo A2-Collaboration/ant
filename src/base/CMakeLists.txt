@@ -1,6 +1,6 @@
 include_directories(.)
 
-set(BASE_ALL
+set(SRCS
   types.cc
   types.h
   interval.h
@@ -11,6 +11,7 @@ set(BASE_ALL
   detail/easylogging++.h
   tmpfile_t.h
   tmpfile_t.cc
+  stl_helpers.h
 )
 
-add_library(base ${BASE_ALL})
+add_library(base ${SRCS})

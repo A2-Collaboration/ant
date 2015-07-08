@@ -27,7 +27,7 @@ bool UnpackerAcqu::OpenFile(const std::string &filename)
   return true;
 }
 
-shared_ptr<TDataRecord> UnpackerAcqu::NextItem()
+shared_ptr<TDataRecord> UnpackerAcqu::NextItem() noexcept
 {
   // check if we need to replenish the queue
   if(queue.empty()) {
