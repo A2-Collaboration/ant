@@ -1,2 +1,15 @@
-#define CATCH_CONFIG_MAIN  // This tells Catch to provide a main() - only do this in one cpp file
+#define CATCH_CONFIG_RUNNER
 #include "catch.hpp"
+
+#include "base/Logger.h"
+
+
+int main( int argc, char* const argv[] )
+{
+  el::Configurations loggerConf;
+  loggerConf.setToDefault();
+  loggerConf.setGlobally(el::ConfigurationType::Enabled, "false");
+  el::Loggers::reconfigureAllLoggers(loggerConf);
+
+  return Catch::Session().run( argc, argv );
+}
