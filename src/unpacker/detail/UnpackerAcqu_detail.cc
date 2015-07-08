@@ -175,7 +175,7 @@ unique_ptr<THeaderInfo> acqu::FileFormatBase::BuildTHeaderInfo()
         );
 }
 
-void acqu::FileFormatBase::FillEvents(std::deque<std::unique_ptr<TDataRecord> >& queue) __unpacker_noexcept
+void acqu::FileFormatBase::FillEvents(std::deque<std::unique_ptr<TDataRecord> >& queue) noexcept
 {
   // this method never throws exceptions, but just adds TUnpackerMessage to queue
   // if something strange while unpacking is encountered
@@ -209,7 +209,7 @@ void acqu::FileFormatMk1::FillFirstDataBuffer(queue_t& queue)
   throw UnpackerAcqu::Exception("Mk1 format not implemented yet");
 }
 
-bool acqu::FileFormatMk1::UnpackDataBuffer(UnpackerAcquFileFormat::queue_t &queue) __unpacker_noexcept
+bool acqu::FileFormatMk1::UnpackDataBuffer(UnpackerAcquFileFormat::queue_t &queue) noexcept
 {
   /// \todo Implement Mk1 unpacking
   return true;
@@ -379,9 +379,10 @@ bool acqu::FileFormatMk2::SearchFirstDataBuffer(queue_t& queue, size_t offset)
   return true;
 }
 
-bool acqu::FileFormatMk2::UnpackDataBuffer(UnpackerAcquFileFormat::queue_t &queue) __unpacker_noexcept
+bool acqu::FileFormatMk2::UnpackDataBuffer(UnpackerAcquFileFormat::queue_t& queue) noexcept
 {
-  auto it = buffer.cbegin();
+  // this codes uses STL iterators with C++11 features
+  it_t it = buffer.cbegin();
 
   // check header word
   if(*it != acqu::EMk2DataBuff) {
@@ -394,20 +395,31 @@ bool acqu::FileFormatMk2::UnpackDataBuffer(UnpackerAcquFileFormat::queue_t &queu
   }
   it++;
 
-  while(*it != acqu::EBufferEnd) {
+  // now loop over buffer contents
+  while(*it != acqu::EBufferEnd && it != buffer.cend()) {
 
-    // extract serial ID and eventLength
-    const unsigned eventID = *it++;
+    // extract and check serial ID
+    const unsigned acquID = *it;
+    if(AcquID_last>acquID) {
+      LogMessage(queue,
+                 TUnpackerMessage::Level_t::Info,
+                 "Overflow of Acqu EventId detected"
+                 );
+    }
+    AcquID_last = acquID;
+    it++;
+
+    // extract and check eventLength
     const unsigned eventLength = *it/sizeof(uint32_t);
 
-    // check eventLength
     const auto it_end = next(it, eventLength);
     if(it_end == buffer.cend()) {
       LogMessage(queue,
                  TUnpackerMessage::Level_t::Error,
                  std_ext::formatter() <<
                  "Event with size 0x" << eventLength
-                 << " too big to fit in buffer of remaining size " << distance(it, buffer.cend())
+                 << " too big to fit in buffer of remaining size "
+                 << distance(it, buffer.cend())
                  );
       return false;
     }
@@ -415,36 +427,47 @@ bool acqu::FileFormatMk2::UnpackDataBuffer(UnpackerAcquFileFormat::queue_t &queu
       LogMessage(queue,
                  TUnpackerMessage::Level_t::Error,
                  std_ext::formatter() <<
-                 "At designated end of event, found unexpected word 0x" << hex << *it_end << dec
+                 "At designated end of event, found unexpected word 0x"
+                 << hex << *it_end << dec
                  );
       return false;
     }
     it++;
 
-    // now decompose the event blocks for some block marker
+    // now work on one event inside buffer
     /// \todo Scan config if there's an ADC channel defined which mimicks those blocks
 
-    while(*it != acqu::EEndEvent) {
+    bool good;
+    while(*it != acqu::EEndEvent && it != buffer.cend()) {
+      good = false;
+      // note that the Handle* methods move the iterator
+      // themselves
       switch(*it) {
       case acqu::EEPICSBuffer:
         // EPICS buffer
-        HandleEPICSBuffer(queue, it, it_end);
+        HandleEPICSBuffer(queue, it, it_end, good);
         break;
       case acqu::EScalerBuffer:
         // Scaler read in this event
-        HandleScalerBuffer(queue, it, it_end);
+        HandleScalerBuffer(queue, it, it_end, good);
         break;
       case acqu::EReadError:
         // read error block, some hardware-related information
-        HandleReadError(queue, it, it_end);
+        HandleReadError(queue, it, it_end, good);
         break;
       default:
         // unfortunately, normal hits don't have a marker
         // so we hope for the best at this position
-
+        static_assert(sizeof(acqu::AcquBlock_t) <= sizeof(decltype(*it)),
+                      "acqu::AcquBlock_t does not fit into word of buffer");
+        const acqu::AcquBlock_t* acqu_hit = reinterpret_cast<const acqu::AcquBlock_t*>(addressof(*it));
+        VLOG(9) << "ADC ID=" << acqu_hit->id << " Value=" << acqu_hit->adc;
+        good = true;
+        it++;
         break;
       }
-
+      if(!good)
+        break;
     }
 
     // increment official unique event ID
@@ -457,23 +480,40 @@ bool acqu::FileFormatMk2::UnpackDataBuffer(UnpackerAcquFileFormat::queue_t &queu
 
 void acqu::FileFormatMk2::HandleEPICSBuffer(
     UnpackerAcquFileFormat::queue_t &queue,
-    it_t& it, const it_t& it_end) const __unpacker_noexcept
+    it_t& it, const it_t& it_end,
+    bool& good
+    ) const noexcept
 {
   throw UnpackerAcqu::Exception("Not implemented");
+
+  good = true;
 }
 
-void acqu::FileFormatMk2::HandleScalerBuffer(
-    UnpackerAcquFileFormat::queue_t &queue,
-    it_t& it, const it_t& it_end) const __unpacker_noexcept
+void acqu::FileFormatMk2::HandleScalerBuffer(UnpackerAcquFileFormat::queue_t &queue,
+    it_t& it, const it_t& it_end,
+    bool& good) const noexcept
 {
   throw UnpackerAcqu::Exception("Not implemented");
+
+  good = true;
 }
 
 void acqu::FileFormatMk2::HandleReadError(
     UnpackerAcquFileFormat::queue_t &queue,
-    it_t& it, const it_t& it_end) const __unpacker_noexcept
+    it_t& it, const it_t& it_end,
+    bool& good) const noexcept
 {
-  throw UnpackerAcqu::Exception("Not implemented");
+  // is there enough space in the event at all?
+  if(sizeof(uint32_t)*distance(it, it_end)<sizeof(acqu::ReadErrorMk2_t)) {
+    return;
+  }
+  const acqu::ReadErrorMk2_t* err =
+      reinterpret_cast<const acqu::ReadErrorMk2_t*>(addressof(*it));
+  if(err->fTrailer != acqu::EReadError) {
+    return;
+  }
+
+  good = true;
 }
 
 

@@ -11,8 +11,6 @@
 #include "tree/TUnpackerMessage.h"
 
 
-#define __unpacker_noexcept
-
 namespace ant {
 
 
@@ -52,7 +50,7 @@ public:
    * @brief FillEvents fills the given queue with more TDataRecord items (if any left)
    * @param queue
    */
-  virtual void FillEvents(queue_t& queue) __unpacker_noexcept = 0;
+  virtual void FillEvents(queue_t& queue) noexcept = 0;
 
 protected:
   virtual size_t SizeOfHeader() const = 0;
@@ -98,21 +96,23 @@ protected:
   };
 
   Info info;
+  std::unique_ptr<UnpackerAcquConfig> config;
+
   std::uint32_t ID_upper; // upper part of UID, set by BuildTHeaderInfo
   std::uint32_t ID_lower; // lower part, incremented by FillEvents
-  std::unique_ptr<UnpackerAcquConfig> config;
+  unsigned AcquID_last = 0;
 
   void Setup(std::unique_ptr<RawFileReader>&& reader_,
                      std::vector<std::uint32_t>&& buffer_) override;
   void FillHeader(queue_t& queue) override;
-  void FillEvents(queue_t& queue) __unpacker_noexcept override;
-  void LogMessage(queue_t& queue, ant::TUnpackerMessage::Level_t level,
+  void FillEvents(queue_t& queue) noexcept override;
+  void LogMessage(queue_t& queue, TUnpackerMessage::Level_t level,
                   const std::string &msg) const;
 
   // Mk1/Mk2 specific methods
   virtual void FillInfo() = 0;
   virtual void FillFirstDataBuffer(queue_t& queue) = 0;
-  virtual bool UnpackDataBuffer(queue_t &queue) __unpacker_noexcept = 0;
+  virtual bool UnpackDataBuffer(queue_t &queue) noexcept = 0;
 
 private:
   std::unique_ptr<THeaderInfo> BuildTHeaderInfo();
@@ -126,7 +126,7 @@ protected:
   virtual bool InspectHeader(const std::vector<std::uint32_t>& buffer) const override;
   virtual void FillInfo() override;
   virtual void FillFirstDataBuffer(queue_t& queue) override;
-  virtual bool UnpackDataBuffer(queue_t &queue) __unpacker_noexcept override;
+  virtual bool UnpackDataBuffer(queue_t &queue) noexcept override;
 
 };
 
@@ -138,14 +138,14 @@ protected:
   virtual bool InspectHeader(const std::vector<std::uint32_t> &buffer) const override;
   virtual void FillInfo() override;
   virtual void FillFirstDataBuffer(queue_t& queue) override;
-  virtual bool UnpackDataBuffer(queue_t &queue) __unpacker_noexcept override;
+  virtual bool UnpackDataBuffer(queue_t &queue) noexcept override;
 
 private:
   bool SearchFirstDataBuffer(queue_t &queue, size_t offset);
   using it_t = std::vector<uint32_t>::const_iterator;
-  void HandleEPICSBuffer(queue_t& queue, it_t& it, const it_t& it_end) const __unpacker_noexcept;
-  void HandleScalerBuffer(queue_t& queue, it_t& it, const it_t& it_end) const __unpacker_noexcept;
-  void HandleReadError(queue_t& queue, it_t& it, const it_t& it_end) const __unpacker_noexcept;
+  void HandleEPICSBuffer(queue_t& queue, it_t& it, const it_t& it_end, bool& good) const noexcept;
+  void HandleScalerBuffer(queue_t& queue, it_t& it, const it_t& it_end, bool& good) const noexcept;
+  void HandleReadError(queue_t& queue, it_t& it, const it_t& it_end, bool& good) const noexcept;
 };
 
 }} // namespace unpacker::acqu

@@ -360,7 +360,7 @@ struct ReadErrorMk2_t {
   int32_t fModID;                 // hardware identifier
   int32_t fModIndex;	        // list index of module
   int32_t fErrCode;	       	// error code returned
-  int32_t fTrailer;              // end of error block marker
+  uint32_t fTrailer;              // end of error block marker
 };
 
 // time was originally a time_t, now changed to UInt_t

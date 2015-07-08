@@ -77,7 +77,7 @@ public:
       return;
     const std::streamsize toBeRead = totalSize - buffer.size();
     buffer.resize(totalSize); // make space in buffer
-    read(&buffer[totalSize-toBeRead], toBeRead);
+    read(std::addressof(buffer[totalSize-toBeRead]), toBeRead);
     if(uint32_t_factor*toBeRead != gcount()) {
       throw Exception("Not enough bytes available from file to expand buffer");
     }
