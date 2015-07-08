@@ -1,17 +1,24 @@
 ant
 ===
 
-Just another analysis toolkit `ant`, based on GoAT tree output from
-AcquRoot.
+Just another **AN**alysis **T**oolkit `ant`,
+based on GoAT tree output from AcquRoot.
+
+It also includes it's own unpacker for acqu data files,
+but this is WIP.
+
+## Dependencies
+  * C++11
+  * cmake
+  * doxygen
+  * [CERN ROOT5](https://root.cern.ch/)
+  * [PLUTO](https://www-hades.gsi.de/?q=pluto)
+  * [APLCON++](https://github.com/neiser/APLCON)
 
 
 ## GoAT File Reader
 
 Almost implemented.
-
-### Notes
- * Output module missing
- * Physics manager missing
 
 #### Tree Manager
 TODOs:
