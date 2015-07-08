@@ -8,6 +8,7 @@ namespace ant {
 struct TSlowControl : TDataRecord
 {
 
+  ClassDef(TSlowControl, 1)
 };
 
 }

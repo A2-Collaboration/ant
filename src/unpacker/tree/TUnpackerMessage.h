@@ -2,31 +2,39 @@
 #define TUNPACKERMESSAGE_H
 
 #include "TDataRecord.h"
-#include "base/Format.h"
-#include <string>
-
 
 namespace ant {
 
 struct TUnpackerMessage : TDataRecord
 {
 
-  enum class Level_t : unsigned {
+#ifndef __CINT__
+  enum class Level_t : std::uint32_t {
     Info, Warn, Error
   };
+#endif
 
   TUnpackerMessage(TDataRecord::ID_t id,
-                   Level_t level,
+                   std::uint32_t level,
                    const std::string& message) :
     TDataRecord(id),
     Level(level),
     Message(message)
   {}
 
-  Level_t Level;
+  TUnpackerMessage(TDataRecord::ID_t id,
+                   Level_t level,
+                   const std::string& message) :
+    TUnpackerMessage(id, static_cast<std::uint32_t>(level), message)
+  {}
+
+  std::uint32_t Level;
   std::string Message;
 
   /// \todo Support formatted message, but still store the arguments?
+
+
+  ClassDef(TUnpackerMessage, 1)
 };
 
 }

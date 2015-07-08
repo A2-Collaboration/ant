@@ -8,6 +8,8 @@ namespace ant {
 struct TDetectorRead : TDataRecord
 {
 
+
+  ClassDef(TDetectorRead, 1)
 };
 
 }

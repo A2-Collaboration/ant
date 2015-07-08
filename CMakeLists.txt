@@ -17,6 +17,11 @@ message(STATUS "*** Compiler Flags:  " ${DEFAULT_COMPILE_FLAGS})
 message(STATUS "*** Install libs to: " ${LIBRARY_OUTPUT_PATH})
 message(STATUS "*** Install bin to:  " ${EXECUTABLE_OUTPUT_PATH})
 
+# require a fairly recent ROOT version
+# this is needed by all subdirectories
+find_package(ROOT "5.30" REQUIRED)
+include_directories(${ROOT_INCLUDE_DIR})
+link_directories(${ROOT_LIBRARY_DIR})
 
 add_subdirectory(src)
 add_subdirectory(test)

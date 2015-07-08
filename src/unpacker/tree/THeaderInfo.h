@@ -3,17 +3,10 @@
 
 #include "TDataRecord.h"
 
-#include <string>
-#include <vector>
-#include <ctime>
-
 namespace ant {
 
 struct THeaderInfo : TDataRecord
 {
-  struct HardwareModule {
-
-  };
 
   THeaderInfo(
       const TDataRecord::ID_t& id,
@@ -38,6 +31,8 @@ struct THeaderInfo : TDataRecord
   std::uint64_t Timestamp;   // unix epoch
   std::string   Description; // full descriptive string
   std::uint32_t RunNumber;   // runnumber
+
+  ClassDef(THeaderInfo, 1)
 };
 
 }

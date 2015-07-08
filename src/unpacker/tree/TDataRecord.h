@@ -1,29 +1,44 @@
 #ifndef TDATARECORD_H
 #define TDATARECORD_H
 
+#include "base/printable.h"
+
+#include "Rtypes.h"
+
+#ifdef __CINT__
+// simulate minimal cstdint for ROOTCINT
+namespace std {
+typedef ULong64_t  uint64_t;
+typedef UInt_t  uint32_t;
+}
+#else
 #include <cstdint>
-#include <base/printable.h>
+#endif // __CINT__
+
+#include <string>
 #include <iomanip>
 
 namespace ant {
 
 struct TDataRecord : printable_traits
 {
-  struct ID_t : printable_traits {
+  struct ID_t  : printable_traits {
     // you may append flags, but never remove or change order!
     enum class Flags_t : unsigned {
       MC
     };
 
+    ID_t() : Value(0), Flags(0) {}
+
     ID_t(
-        uint32_t upper,
-        uint32_t lower,
+        UInt_t upper,
+        UInt_t lower,
         bool isMC = false
         ) {
       Flags = 0;
       Flags |= static_cast<decltype(Flags)>(isMC) << static_cast<unsigned>(Flags_t::MC);
       Value = lower;
-      Value |= static_cast<decltype(Value)>(upper) << sizeof(uint32_t)*8;
+      Value |= static_cast<decltype(Value)>(upper) << sizeof(std::uint32_t)*8;
     }
 
     std::uint64_t Value;
@@ -31,16 +46,18 @@ struct TDataRecord : printable_traits
 
     virtual std::ostream& Print( std::ostream& s) const {
       return s << std::hex << "(flags=0x" << Flags << ",0x"
-               << std::setw(sizeof(std::uint64_t)*2) << std::setfill('0')
+               << std::setw(sizeof(decltype(Value))*2) << std::setfill('0')
                << Value
                << ")" << std::dec;
     }
 
-  }; // UUID_t
+
+  }; // ID_t
 
 
+  TDataRecord() {}
   TDataRecord(const ID_t& id) : ID(id) {}
-  virtual ~TDataRecord() = default;
+  virtual ~TDataRecord() {}
 
   ID_t ID;
 
@@ -48,8 +65,12 @@ struct TDataRecord : printable_traits
     return s << "TDataRecord ID=" << ID;
   }
 
+  ClassDef(TDataRecord, 1)
+
 };
 
+
 } // namespace ant
+
 
 #endif // TDATARECORD_H

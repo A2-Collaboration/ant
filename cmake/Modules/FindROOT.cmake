@@ -164,3 +164,5 @@ Find_Program(RLIBMAP_EXECUTABLE
   PATHS ${ROOT_BINARY_DIR}
   NO_DEFAULT_PATH
   )
+
+include(FindROOTHelpers)
