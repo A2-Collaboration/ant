@@ -12,6 +12,9 @@ set(SRCS
   tmpfile_t.h
   tmpfile_t.cc
   stl_helpers.h
+  Format.h
+  detail/format.cc
+  detail/format.h
 )
 
 add_library(base ${SRCS})
