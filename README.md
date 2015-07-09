@@ -15,6 +15,9 @@ but this is WIP.
   * [PLUTO](https://www-hades.gsi.de/?q=pluto)
   * [APLCON++](https://github.com/neiser/APLCON)
 
+## External Components
+  * [Easylogging++](http://easylogging.muflihun.com/)
+  * [Catch] (https://github.com/philsquared/Catch) (framework for unit-tests, TDD)
 
 ## GoAT File Reader
 
