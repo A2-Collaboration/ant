@@ -1,7 +1,8 @@
 #ifndef UNPACKERACQU_DETAIL_H
 #define UNPACKERACQU_DETAIL_H
 
-#include "tree/TUnpackerMessage.h"
+#include "tree/TUnpackerMessage.h" // TUnpackerMessage::Level_t
+#include "UnpackerAcqu.h" // UnpackerAcquConfig
 
 #include <cstdint>
 #include <ctime>
@@ -21,7 +22,6 @@ namespace ant {
 class RawFileReader;
 class TDataRecord;
 class THeaderInfo;
-class UnpackerAcquConfig;
 
 class UnpackerAcquFileFormat {
 public:
@@ -106,6 +106,7 @@ protected:
   std::uint32_t ID_lower; // lower part, incremented by FillEvents
   unsigned AcquID_last = 0;
 
+  std::vector<UnpackerAcquConfig::mapping_t> mappings;
 
   // this class already implements some stuff
   void Setup(reader_t&& reader_, buffer_t&& buffer_) override;

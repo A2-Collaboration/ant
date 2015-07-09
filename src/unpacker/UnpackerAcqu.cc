@@ -4,6 +4,8 @@
 #include "tree/TDataRecord.h"
 #include "base/Logger.h"
 
+#include <stdexcept>
+
 using namespace std;
 using namespace ant;
 
@@ -44,3 +46,17 @@ shared_ptr<TDataRecord> UnpackerAcqu::NextItem() noexcept
 }
 
 
+UnpackerAcquConfig::RawChannel_t::RawChannel_t(const initializer_list<uint32_t> &l) {
+  if(l.size()==2) {
+    RawChannel = *l.begin();
+    Mask = *l.end();
+  }
+  else
+    throw runtime_error("bits_t can only be initialized with 2 values.");
+}
+
+UnpackerAcquConfig::RawChannel_t::RawChannel_t(const uint32_t &ch)
+{
+  RawChannel = ch;
+  Mask = 0xffffffff;
+}

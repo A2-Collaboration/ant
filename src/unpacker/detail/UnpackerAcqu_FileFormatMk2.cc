@@ -286,6 +286,9 @@ bool acqu::FileFormatMk2::UnpackDataBuffer(UnpackerAcquFileFormat::queue_t& queu
         break;
     }
 
+
+
+
     // check proper EEndEvent
     if(it == it_endbuffer) {
       LogMessage(queue,

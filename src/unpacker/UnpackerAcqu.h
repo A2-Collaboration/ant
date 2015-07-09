@@ -34,13 +34,20 @@ private:
 // we require the configs to implement
 class UnpackerAcquConfig : public ExpConfig::Unpacker<UnpackerAcquConfig> {
 public:
-  struct bits_t {
+
+  struct RawChannel_t {
     std::uint32_t RawChannel;
     std::uint32_t Mask;
+    RawChannel_t(const std::initializer_list<uint32_t>& l);
+    RawChannel_t(const uint32_t& ch);
   };
 
-  using mapping_t = std::pair< std::vector<bits_t> , LogicalElement_t >;
-  virtual void BuildMapping(std::vector<mapping_t>& mapping) = 0;
+  struct mapping_t {
+    LogicalElement_t LogicalElement;
+    std::vector<RawChannel_t> RawChannels;
+  };
+
+  virtual void BuildMappings(std::vector<mapping_t>& mappings) = 0;
 };
 
 } // namespace ant

@@ -55,11 +55,12 @@ public:
     return true;
   }
 
-  void BuildMapping(std::vector<mapping_t>& mapping) override
+  void BuildMappings(std::vector<mapping_t>& mappings) override
   {
     mapping_t map;
-    map.first.push_back({});
-    mapping.push_back(map);
+    map.LogicalElement = {Detector_t::Trigger, ChannelType_t::Counter, 0};
+    map.RawChannels.push_back(400);
+    mappings.push_back(map);
   }
 };
 

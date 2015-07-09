@@ -106,6 +106,10 @@ void acqu::FileFormatBase::FillHeader(queue_t& queue)
 
   // remember the record length size
   trueRecordLength = buffer.size();
+
+  // get the mappings
+
+  config->BuildMappings(mappings);
 }
 
 unique_ptr<THeaderInfo> acqu::FileFormatBase::BuildTHeaderInfo()

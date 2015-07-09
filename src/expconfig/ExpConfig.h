@@ -16,14 +16,23 @@ enum class Detector_t : std::uint8_t {
 };
 
 enum class ChannelType_t : std::uint8_t {
-  Time, Integral, IntegralShort,
-  BitPattern, Scaler
+  Timing, Integral, IntegralShort,
+  BitPattern, Scaler, Counter
 };
 
 struct LogicalElement_t {
   Detector_t Detector;
   ChannelType_t Type;
   unsigned Element;
+//  LogicalElement_t(
+//      const Detector_t& detector,
+//      const ChannelType_t& type,
+//      unsigned element
+//      ) :
+//    Detector(detector),
+//    Type(type),
+//    Element(element)
+//  {}
 };
 
 class ExpConfig
