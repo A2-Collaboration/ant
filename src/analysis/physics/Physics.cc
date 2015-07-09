@@ -46,10 +46,11 @@ void ant::PhysicsManager::ReadFrom(ant::input::DataReader &reader)
         const auto i = reader.EventsRead();
         if( i % 10000 == 0) {
             const auto nevents = reader.TotalEvents();
-            if(nevents>0)
+            if(nevents>0) {
                 VLOG(3) << "Events processed: " << i << " (" << std::fixed << std::setprecision(2) << (double(i)/double(nevents)*100.0) << "%)";
-            else
+            } else {
                 VLOG(3) << "Events processed: " << i;
+            }
         }
     }
 }
