@@ -5,12 +5,15 @@
 #include <iostream>
 #include "OutputManager.h"
 #include "physics/Physics.h"
+#include "base/Logger.h"
 
 using namespace std;
 using namespace ant::output;
 using namespace ant;
 
-int main() {
+int main(int argc, char** argv) {
+    SetupLogger(argc, argv);
+    LOG(INFO) << "Debug Program. Please run with --v=9";
 
     OutputManager om;
 
