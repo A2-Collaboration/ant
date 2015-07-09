@@ -389,6 +389,34 @@ struct EpicsChannelInfo_t {      //header for channel info
 //  UInt_t fCounts;
 //}
 
+//////////////////////////////////
+// Adapted from TEPICSmodule.cc
+//////////////////////////////////
+
+//enum  EepicsType{              EepicsBYTE,    EepicsSTRING,     EepicsSHORT,    EepicsLONG,    EepicsFLOAT,    EepicsDOUBLE, EepicsNULL};
+//const char *epicsTypeName[] = {"epicsBYTE",   "epicsSTRING",    "epicsSHORT",   "epicsLONG",   "epicsFLOAT",   "epicsDOUBLE",      NULL};
+//enum  EepicsTypeSize{           ESizeBYTE = 1, ESizeSTRING = 40, ESizeSHORT = 2, ESizeLONG = 8, ESizeFLOAT = 4, ESizeDOUBLE = 8};
+//const int   epicsTypeSize[] = { ESizeBYTE,     ESizeSTRING,      ESizeSHORT,     ESizeLONG,     ESizeFLOAT,     ESizeDOUBLE};
+
+enum class EpicsDataTypes_t {
+  BYTE, STRING, SHORT, LONG, FLOAT, DOUBLE, NUL
+};
+
+// still use a more flexible map although the elements appear
+// to be ordered by an index
+static const std::map<int16_t, std::pair<EpicsDataTypes_t, int16_t> >
+map_EpicsTypes =
+{
+  {0 , {EpicsDataTypes_t::BYTE,    1}},
+//  {1 , {EpicsTypes_t::STRING, 40}}, // comment said it does not work
+  {2 , {EpicsDataTypes_t::SHORT,   2}},
+  {3 , {EpicsDataTypes_t::LONG,    8}},
+  {4 , {EpicsDataTypes_t::FLOAT,   4}},
+  {5 , {EpicsDataTypes_t::DOUBLE,  8}},
+//  {6 , {EpicsTypes_t::NUL,     0}}, // ever used?
+};
+
+
 //////////////////////////////
 // Adapted from ModuleIndex.h
 //////////////////////////////

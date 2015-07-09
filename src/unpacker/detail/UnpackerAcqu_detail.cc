@@ -5,6 +5,7 @@
 
 #include "tree/TDataRecord.h"
 #include "tree/THeaderInfo.h"
+#include "tree/TSlowControl.h"
 
 
 #include "expconfig/ExpConfig.h"
@@ -186,9 +187,6 @@ void acqu::FileFormatBase::FillEvents(std::deque<std::unique_ptr<TDataRecord> >&
   // if the buffer is already empty now, there is nothing more to read
   if(buffer.empty())
     return;
-
-  //
-  ID_lower++;
 
   // start parsing the filled buffer
   UnpackDataBuffer(queue);
@@ -414,7 +412,7 @@ bool acqu::FileFormatMk2::UnpackDataBuffer(UnpackerAcquFileFormat::queue_t& queu
     it++;
 
     // extract and check eventLength
-    const unsigned eventLength = *it/sizeof(uint32_t);
+    const unsigned eventLength = *it/sizeof(decltype(*it));
 
     const auto it_end = next(it, eventLength);
     if(it_end == buffer.cend()) {
@@ -497,9 +495,10 @@ void acqu::FileFormatMk2::HandleEPICSBuffer(
   it++;
 
   // is there enough space in the event at all?
-  static_assert(sizeof(acqu::EpicsHeaderInfo_t) % sizeof(uint32_t) == 0,
+  constexpr size_t wordbytes = sizeof(decltype(*it));
+  static_assert(sizeof(acqu::EpicsHeaderInfo_t) % wordbytes == 0,
                 "acqu::EpicsHeaderInfo_t is not word aligned");
-  constexpr int headerWordsize = sizeof(acqu::EpicsHeaderInfo_t)/sizeof(uint32_t);
+  constexpr int headerWordsize = sizeof(acqu::EpicsHeaderInfo_t)/wordbytes;
 
   if(distance(it, it_end)<headerWordsize) {
     LogMessage(queue,
@@ -513,16 +512,26 @@ void acqu::FileFormatMk2::HandleEPICSBuffer(
   const acqu::EpicsHeaderInfo_t* hdr =
       reinterpret_cast<const acqu::EpicsHeaderInfo_t*>(addressof(*it));
 
-  // check the header info a bit
-  // hdr->len is the maximum size of the EPICS data including first header
-  const int epicsTotalWords = hdr->len/sizeof(uint32_t);
-  const string epicsModName = hdr->name;
-  const string epicsTime = std_ext::ctime(hdr->time);
-
-  if(epicsModName.length()>32 || epicsTime.length() != 24) {
+  // check the given header info
+  // hdr->len aka epicsTotalWords
+  // is the maximum size of the EPICS data including the info header
+  if(hdr->len % wordbytes != 0) {
     LogMessage(queue,
                TUnpackerMessage::Level_t::DataError,
-               "acqu::EpicsHeaderInfo_t header has malformed information"
+               "EPICS data not word aligned"
+               );
+    return;
+  }
+  const int epicsTotalWords = hdr->len/wordbytes;
+  const string epicsModName = hdr->name;
+  const size_t nChannels = hdr->nchan;
+  const time_t hdr_timestamp = hdr->time;
+  //const string epicsTime = std_ext::ctime(hdr->time);
+
+  if(epicsModName.length()>32) {
+    LogMessage(queue,
+               TUnpackerMessage::Level_t::DataError,
+               "acqu::EpicsHeaderInfo_t header has malformed module name"
                );
     return;
   }
@@ -534,50 +543,153 @@ void acqu::FileFormatMk2::HandleEPICSBuffer(
     return;
   }
 
+  // unfortunately, the EPICS data is no longer word-aligned,
+  // so create some additional uint8_t buffer here
+  /// \todo Find some way without copying the data?
+  /// \todo correct for endian-ness / machine byte ordering?
+  const uint8_t* byte_ptr = reinterpret_cast<const uint8_t*>(addressof(*it));
+  const vector<uint8_t> bytes(byte_ptr, byte_ptr + epicsTotalWords*wordbytes);
+
+  auto it_byte = bytes.cbegin();
+
   // then skip the epics header info
-  advance(it, headerWordsize);
+  advance(it_byte, headerWordsize*wordbytes);
 
+  // the header told us how many EPICS channels there are,
+  // so start decoding them
 
+  for(size_t i=0; i<nChannels; i++) {
+    constexpr int chHdrBytes = sizeof(acqu::EpicsChannelInfo_t);
+    if(distance(it_byte, bytes.cend()) < chHdrBytes) {
+      LogMessage(queue,
+                 TUnpackerMessage::Level_t::DataError,
+                 "EPICS channel header not completely present in buffer"
+                 );
+      return;
+    }
 
-  const acqu::EpicsChannelInfo_t* ch =
-      reinterpret_cast<const acqu::EpicsChannelInfo_t*>(addressof(*it));
+    const acqu::EpicsChannelInfo_t* ch =
+        reinterpret_cast<const acqu::EpicsChannelInfo_t*>(addressof(*it_byte));
 
+    if(distance(it_byte, bytes.cend()) < ch->bytes) {
+      LogMessage(queue,
+                 TUnpackerMessage::Level_t::DataError,
+                 "EPICS channel payload not completely present in buffer"
+                 );
+      return;
+    }
 
+    auto it_map = map_EpicsTypes.find(ch->type);
+    if(it_map == map_EpicsTypes.cend()) {
+      LogMessage(queue,
+                 TUnpackerMessage::Level_t::DataError,
+                 "EPICS channel type unknown"
+                 );
+      return;
+    }
 
-  VLOG(9) << ch->pvname;
+    const acqu::EpicsDataTypes_t ch_datatype = it_map->second.first;
+    const int16_t ch_typesize = it_map->second.second;
+    const int16_t ch_nElements = ch->nelem;
+    const string  ch_Name = ch->pvname;
 
+    // another size check for the channel payload
+    if(ch->bytes != chHdrBytes + ch_nElements * ch_typesize) {
+      LogMessage(queue,
+                 TUnpackerMessage::Level_t::DataError,
+                 "EPICS channel payload size inconsistent"
+                 );
+      return;
+    }
 
-//  // some checks
-//  if(err->fTrailer != acqu::EReadError) {
-//    LogMessage(queue,
-//               TUnpackerMessage::Level_t::DataError,
-//               "Acqu ErrorBlock does not end with expected trailer word"
-//               );
-//    return;
-//  }
+    // finally we can create the TSlowControl record
 
-//  auto it_modname = acqu::ModuleIDToString.find(err->fModID);
-//  const string& modname = it_modname == acqu::ModuleIDToString.cend()
-//      ? "UNKNOWN" : it_modname->second;
+    TSlowControl::Type_t record_type = TSlowControl::Type_t::EpicsOneShot;
+    stringstream description;
+    if(hdr->period<0) {
+      record_type = TSlowControl::Type_t::EpicsTimer;
+      description << "Period='" << -hdr->period << " ms'";
+    }
+    else if(hdr->period>0) {
+      record_type = TSlowControl::Type_t::EpicsScaler;
+      description << "Period='" << hdr->period << " events'";
+    }
 
-//  // build TUnpackerMessage record from error info
+    auto record = createDataRecord<TSlowControl>(
+          TDataRecord::ID_t(ID_upper, ID_lower),
+          record_type,
+          hdr_timestamp,
+          ch_Name,
+          description.str()
+          );
 
-//  auto record = createDataRecord<TUnpackerMessage>(
-//        TDataRecord::ID_t(ID_upper, ID_lower),
-//        TUnpackerMessage::Level_t::HardwareError,
-//        std_ext::formatter()
-//        << "Acqu HardwareError ModuleID={} (" << modname << ") "
-//        << "Index={} ErrorCode={}"
-//        );
-//  record->Payload.push_back(err->fModID);
-//  record->Payload.push_back(err->fModIndex);
-//  record->Payload.push_back(err->fErrCode);
+    // advance to the EPICS channel data (skip channel info header)
+    advance(it_byte, chHdrBytes);
 
-//  VLOG(9) << *record;
+    // fill the payload depending on the EPICS data type
+    // upcast float to double and short,byte to long
 
-//  fillQueue(queue, move(record));
+    for(int16_t elem=0;elem<ch_nElements;elem++) {
+      switch(ch_datatype) {
+      case acqu::EpicsDataTypes_t::BYTE:
+        record->Payload_Int.push_back(*it_byte);
+        break;
+      case acqu::EpicsDataTypes_t::SHORT: {
+        const int16_t* value = reinterpret_cast<const int16_t*>(addressof(*it_byte));
+        record->Payload_Int.push_back(*value);
+        break;
+      }
+      case acqu::EpicsDataTypes_t::LONG: {
+        const int64_t* value = reinterpret_cast<const int64_t*>(addressof(*it_byte));
+        record->Payload_Int.push_back(*value);
+        break;
+      }
+      case acqu::EpicsDataTypes_t::FLOAT: {
+        static_assert(sizeof(float)==4,"Float should be 4 bytes long");
+        const float* value = reinterpret_cast<const float*>(addressof(*it_byte));
+        record->Payload_Float.push_back(*value);
+        break;
+      }
+      case acqu::EpicsDataTypes_t::DOUBLE: {
+        static_assert(sizeof(double)==8,"Float should be 8 bytes long");
+        const double* value = reinterpret_cast<const double*>(addressof(*it_byte));
+        record->Payload_Float.push_back(*value);
+        break;
+      }
+      case acqu::EpicsDataTypes_t::STRING: {
+        const char* value = reinterpret_cast<const char*>(addressof(*it_byte));
+        // interpret as string
+        const string value_str(value);
+        if((signed)value_str.length()>=ch_typesize) {
+          LogMessage(queue,
+                     TUnpackerMessage::Level_t::DataError,
+                     "EPICS channel string data too long (no terminating \\0?)"
+                     );
+          return;
+        }
+        record->Payload_String.push_back(value);
+        break;
+      }
+      default:
+        throw UnpackerAcqu::Exception("Not implemented");
 
-  advance(it, headerWordsize);
+      } // end switch
+
+      advance(it_byte, ch_typesize);
+    }
+
+    VLOG(9) << *record;
+
+    // enqueue the nicely created EPICS slowcontrol record
+    fillQueue(queue, move(record));
+
+  } // end channel loop
+
+  // we successfully parsed the EPICS buffer
+  advance(it, epicsTotalWords);
+
+  VLOG(9) << "Successfully parsed EPICS buffer";
+
   good = true;
 }
 
@@ -596,9 +708,9 @@ void acqu::FileFormatMk2::HandleReadError(
     bool& good) const noexcept
 {
   // is there enough space in the event at all?
-  static_assert(sizeof(acqu::ReadErrorMk2_t) % sizeof(uint32_t) == 0,
+  static_assert(sizeof(acqu::ReadErrorMk2_t) % sizeof(decltype(*it)) == 0,
                 "acqu::ReadErrorMk2_t is not word aligned");
-  constexpr int wordsize = sizeof(acqu::ReadErrorMk2_t)/sizeof(uint32_t);
+  constexpr int wordsize = sizeof(acqu::ReadErrorMk2_t)/sizeof(decltype(*it));
 
   if(distance(it, it_end)<wordsize) {
     LogMessage(queue,
@@ -612,7 +724,7 @@ void acqu::FileFormatMk2::HandleReadError(
   const acqu::ReadErrorMk2_t* err =
       reinterpret_cast<const acqu::ReadErrorMk2_t*>(addressof(*it));
 
-  // some checks
+  // check for trailer word
   if(err->fTrailer != acqu::EReadError) {
     LogMessage(queue,
                TUnpackerMessage::Level_t::DataError,
@@ -621,12 +733,12 @@ void acqu::FileFormatMk2::HandleReadError(
     return;
   }
 
+  // lookup the module name
   auto it_modname = acqu::ModuleIDToString.find(err->fModID);
   const string& modname = it_modname == acqu::ModuleIDToString.cend()
       ? "UNKNOWN" : it_modname->second;
 
   // build TUnpackerMessage record from error info
-
   auto record = createDataRecord<TUnpackerMessage>(
         TDataRecord::ID_t(ID_upper, ID_lower),
         TUnpackerMessage::Level_t::HardwareError,

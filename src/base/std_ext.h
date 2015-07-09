@@ -31,9 +31,9 @@ inline std::string string_sanitize(const char* in) {
   return s;
 }
 
-inline std::string ctime(const std::uint64_t& time) {
-  time_t time_ = time;
-  return string_sanitize(std::ctime(std::addressof(time_)));
+inline std::string ctime(const time_t& time) {
+  // std::ctime returns some carriage return
+  return string_sanitize(std::ctime(std::addressof(time)));
 }
 
 

@@ -23,25 +23,25 @@ struct TUnpackerMessage : TDataRecord
 
 
 
-  std::uint32_t Level;
+  std::uint8_t Level;
   std::string Message;
   std::vector<double> Payload;
 
 #ifndef __CINT__
-  enum class Level_t : std::uint32_t {
+  enum class Level_t : std::uint8_t {
     Info, Warn, DataError, DataDiscard, HardwareError
   };
   TUnpackerMessage(TDataRecord::ID_t id,
                    Level_t level,
                    const std::string& message) :
-    TUnpackerMessage(id, static_cast<std::uint32_t>(level), message)
+    TUnpackerMessage(id, static_cast<decltype(Level)>(level), message)
   {}
   std::string FormattedMessage() const {
     return fmt::format_vector(Message, Payload);
   }
   virtual std::ostream& Print( std::ostream& s) const override {
     return s << "TUnpackerMessage ID=" << ID
-             << " Level=" << Level << " Msg='" << FormattedMessage() << "'";
+             << " Level=" << static_cast<int>(Level) << " Msg='" << FormattedMessage() << "'";
   }
 #endif
 

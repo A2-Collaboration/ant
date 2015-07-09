@@ -4,7 +4,6 @@
 #include "TDataRecord.h"
 
 #ifndef __CINT__
-#include <ctime>
 #include "base/std_ext.h"
 #endif
 
@@ -33,7 +32,7 @@ struct THeaderInfo : TDataRecord
                   );
   }
 
-  std::uint64_t Timestamp;   // unix epoch
+  std::int64_t Timestamp;   // unix epoch
   std::uint32_t RunNumber;   // runnumber
   std::string   Description; // full descriptive string
 

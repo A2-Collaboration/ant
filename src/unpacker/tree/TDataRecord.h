@@ -8,8 +8,10 @@
 #ifdef __CINT__
 // simulate minimal cstdint for ROOTCINT
 namespace std {
+typedef UChar_t    uint8_t;
+typedef UInt_t     uint32_t;
 typedef ULong64_t  uint64_t;
-typedef UInt_t  uint32_t;
+typedef Long64_t   int64_t;
 }
 #else
 #include <cstdint>
@@ -17,7 +19,11 @@ typedef UInt_t  uint32_t;
 
 #include <string>
 #include <iomanip>
+#include <ctime>
 
+
+// if we want to change something
+// of the data format defined by the ant::T* classes
 #define ANT_UNPACKER_ROOT_VERSION 1
 
 namespace ant {
