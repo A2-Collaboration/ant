@@ -82,8 +82,6 @@ set(ANALYSIS_PHYSICS
   physics/DeltaPlus/DeltaPlusPhysics.cc
   physics/omega/omega.h
   physics/omega/omega.cc
-  physics/omega/omega_bottomup.h
-  physics/omega/omega_bottomup.cc
   physics/omega/GeoAcceptance.h
   physics/omega/GeoAcceptance.cc
   physics/test/TestAPLCON.h

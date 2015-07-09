@@ -7,6 +7,7 @@
 using namespace std;
 using namespace ant::output;
 using namespace ant;
+using namespace ant::analysis;
 
 int main(int argc, char** argv) {
     SetupLogger(argc, argv);
@@ -17,7 +18,7 @@ int main(int argc, char** argv) {
 
     PhysicsManager pm;
 
-    pm.AddPhysics<ant::analysis::Omega3>("Omega3_rec", false);
+    pm.AddPhysics<OmegaEtaG>(OmegaBase::DataMode::Reconstructed);
 
     input::GoatReader reader;
 
