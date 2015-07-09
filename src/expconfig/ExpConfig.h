@@ -3,17 +3,19 @@
 
 #include <map>
 #include <memory>
+#include <cstdint>
+
 
 namespace ant {
 
 class THeaderInfo;
 
-enum class Detector_t {
+enum class Detector_t : std::uint8_t {
   Trigger, Tagger, EPT, CB, PID, MWPC0, MWPC1,
   TAPS, TAPSVeto, Cherenkov, Moeller
 };
 
-enum class ChannelType_t {
+enum class ChannelType_t : std::uint8_t {
   Time, Integral, IntegralShort,
   BitPattern, Scaler
 };

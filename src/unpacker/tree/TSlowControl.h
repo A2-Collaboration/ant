@@ -25,7 +25,7 @@ struct TSlowControl : TDataRecord
   }
 
   std::uint8_t Type;
-  std::int64_t Timestamp;   // unix epoch, not always meaningful
+  std::int64_t Timestamp;   // unix epoch, only meaningful for Epics data
   std::string  Name;
   std::string  Description;
 
