@@ -6,6 +6,7 @@
 #include "tree/THeaderInfo.h"
 #include "tree/TUnpackerMessage.h"
 #include "tree/TSlowControl.h"
+#include "tree/TDetectorRead.h"
 
 #include "base/tmpfile_t.h"
 
@@ -17,6 +18,9 @@
 
 #include <cxxabi.h>
 
+// some REQUIRE statements produce those warnings
+// ignore them in this file
+#pragma GCC diagnostic ignored "-Wparentheses"
 
 using namespace std;
 
@@ -33,6 +37,10 @@ TEST_CASE("Test TreeWriter: ant::TSlowControl", "[unpacker]") {
 
 TEST_CASE("Test TreeWriter: ant::TUnpackerMessage", "[unpacker]") {
   dotest<ant::TUnpackerMessage>(8);
+}
+
+TEST_CASE("Test TreeWriter: ant::TDetectorRead", "[unpacker]") {
+  dotest<ant::TDetectorRead>(0);
 }
 
 template<typename T>
@@ -58,7 +66,7 @@ void dotest(Long64_t expectedEntries) {
     tree->Fill();
   }
 
-  REQUIRE((tree->GetEntries()==expectedEntries));
+  REQUIRE( tree->GetEntries() == expectedEntries );
 
   file->Write();
   file->Close();
