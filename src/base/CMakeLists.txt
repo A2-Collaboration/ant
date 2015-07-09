@@ -4,6 +4,7 @@ set(SRCS
   types.cc
   types.h
   interval.h
+  piecewise_interval.h
   printable.h
   printable.cc
   Logger.cc
