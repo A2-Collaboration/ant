@@ -163,6 +163,20 @@ public:
     }
 
     /**
+     * @brief Join another interval into this one if they overlap
+     * @param other another interval
+     * @return true if joined, false if intervals are disjoint
+     */
+    bool tryJoinWith(const ant::interval<T>& other) {
+        if( ! Disjoint(other) ) {
+            Start() = std::min(Start(), other.Start());
+            Stop()  = std::max(Stop(),  other.Stop());
+            return true;
+        }
+        return false;
+    }
+
+    /**
      * @brief Make sure, start < stop
      *
      * This protected method is called whenever a write access to _start or _stop occurs.
@@ -178,6 +192,14 @@ public:
     std::ostream &Print(std::ostream &stream) const {
         stream << "[" << _start << ":" << _stop << "]";
         return stream;
+    }
+
+    bool operator == (const interval<T>& rhs) const {
+        return Start() == rhs.Start() && Stop() == rhs.Stop();
+    }
+
+    bool operator != (const interval<T>& rhs) const {
+        return !(*this == rhs);
     }
 
 };
