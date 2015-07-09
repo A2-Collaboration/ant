@@ -203,7 +203,7 @@ bool acqu::FileFormatMk2::UnpackDataBuffer(UnpackerAcquFileFormat::queue_t& queu
   it++;
 
   // now loop over buffer contents
-  while(*it != acqu::EBufferEnd && it != it_endbuffer) {
+  while(it != it_endbuffer && *it != acqu::EBufferEnd) {
 
     // extract and check serial ID
     const unsigned acquID = *it;
@@ -302,6 +302,15 @@ bool acqu::FileFormatMk2::UnpackDataBuffer(UnpackerAcquFileFormat::queue_t& queu
     ID_lower++;
   }
 
+  // check proper EEndEvent
+  if(it == it_endbuffer) {
+    LogMessage(queue,
+               TUnpackerMessage::Level_t::DataError,
+               std_ext::formatter() <<
+               "Buffer did not have end buffer marker"
+               );
+    return false;
+  }
 
   return true;
 }
