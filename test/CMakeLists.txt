@@ -1,14 +1,14 @@
 # the catch++ library is the workhorse for our tests
 include_directories(.)
 add_custom_target(build_and_test ${CMAKE_CTEST_COMMAND} -V)
-add_library(catch catch.cc catch.hpp)
+add_library(catch catch.cc catch.hpp catch_config.h)
 target_link_libraries(catch base)
 enable_testing()
 
 # some tests need binary blobs
 # use a configure file to
 set(TEST_BLOBS_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/_blobs")
-configure_file(test_config.h.in test_config.h)
+configure_file(catch_config.h.in catch_config.h)
 include_directories(${CMAKE_CURRENT_BINARY_DIR})
 
 # two helpers for defining tests

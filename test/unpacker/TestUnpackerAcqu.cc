@@ -1,9 +1,8 @@
+#include "catch.hpp"
+#include "catch_config.h"
 
 #include "Unpacker.h"
 
-
-#include "catch.hpp"
-#include "test_config.h"
 #include <iostream>
 #include <string>
 

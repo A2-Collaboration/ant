@@ -1,5 +1,5 @@
 #include "catch.hpp"
-#include "test_config.h"
+#include "catch_config.h"
 
 #include "Unpacker.h"
 
