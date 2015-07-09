@@ -274,7 +274,9 @@ bool acqu::FileFormatMk2::UnpackDataBuffer(UnpackerAcquFileFormat::queue_t& queu
                       "acqu::AcquBlock_t does not fit into word of buffer");
         const acqu::AcquBlock_t* acqu_hit = reinterpret_cast<const acqu::AcquBlock_t*>(addressof(*it));
         //VLOG(9) << "ADC ID=" << acqu_hit->id << " Value=" << acqu_hit->adc;
+
         good = true;
+
         it++;
         break;
       }

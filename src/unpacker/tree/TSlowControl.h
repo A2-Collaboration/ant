@@ -7,7 +7,6 @@ namespace ant {
 
 struct TSlowControl : TDataRecord
 {
-
   TSlowControl(TDataRecord::ID_t id,
                std::uint8_t type,
                std::time_t timestamp,
@@ -58,6 +57,7 @@ struct TSlowControl : TDataRecord
   }
 #endif
 
+  TSlowControl() : TDataRecord() {}
   ClassDef(TSlowControl, ANT_UNPACKER_ROOT_VERSION)
 };
 

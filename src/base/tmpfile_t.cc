@@ -12,10 +12,10 @@ using namespace std;
 tmpfile_t::tmpfile_t() {
   // obtain some random filename
   char filename_[128];
-  strcpy(filename_, "rawfilereader.XXXXXX");
+  strcpy(filename_, "anttmpfile.XXXXXX");
   filename = filename_;
   if(mkstemp(filename_) == -1)
-    throw runtime_error("Cannot create tmpfile"+filename);
+    throw runtime_error("Cannot create tmpfile "+filename);
 }
 
 
@@ -30,6 +30,6 @@ void tmpfile_t::write_testdata() {
 
 
 tmpfile_t::~tmpfile_t() {
-  if(remove(filename.c_str()) != 0)
-    throw runtime_error("Cannot cleanup tmpfile for test");
+  // do not really
+  remove(filename.c_str());
 }

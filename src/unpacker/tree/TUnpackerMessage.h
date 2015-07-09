@@ -45,7 +45,7 @@ struct TUnpackerMessage : TDataRecord
   }
 #endif
 
-
+  TUnpackerMessage() : TDataRecord() {}
   ClassDef(TUnpackerMessage, ANT_UNPACKER_ROOT_VERSION)
 };
 

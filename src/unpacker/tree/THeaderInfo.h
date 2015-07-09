@@ -46,6 +46,7 @@ struct THeaderInfo : TDataRecord
   }
 #endif
 
+  THeaderInfo() : TDataRecord() {}
   ClassDef(THeaderInfo, ANT_UNPACKER_ROOT_VERSION)
 };
 

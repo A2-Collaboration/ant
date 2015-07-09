@@ -29,7 +29,7 @@ int main(int argc, char* argv[]) {
 //  auto unpacker = Unpacker::Get("scratch/oneevent-small.dat");
 
  while(auto item = unpacker->NextItem()) {
-   VLOG(6) << *item;
+   //VLOG(6) << *item;
  }
 
 //  THeaderInfo header(TDataRecord::ID_t(0,0), 0, "", 0);
