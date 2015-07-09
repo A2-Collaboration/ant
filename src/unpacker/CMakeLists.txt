@@ -21,6 +21,11 @@ set(SRCS
   detail/UnpackerAcqu_detail.cc
   detail/UnpackerAcqu_detail.h
   detail/UnpackerAcqu_legacy.h
+  detail/UnpackerAcqu_FileFormatMk1.cc
+  detail/UnpackerAcqu_FileFormatMk1.h
+  detail/UnpackerAcqu_FileFormatMk2.cc
+  detail/UnpackerAcqu_FileFormatMk2.h
+  detail/UnpackerAcqu_templates.h
 )
 
 set(ROOT_DICTIONARY "${CMAKE_CURRENT_BINARY_DIR}/G__tree.cc")

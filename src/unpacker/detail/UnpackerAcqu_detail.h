@@ -63,10 +63,9 @@ protected:
 // the derived file format classes
 // have their own namespace
 namespace unpacker {
-
 namespace acqu {
 
-// FileFormatBase provides a common class for Mk1/Mk2 formats (so far)
+// FileFormatBase provides a common class for Mk1/Mk2 formats
 class FileFormatBase : public UnpackerAcquFileFormat {
 protected:
   std::unique_ptr<RawFileReader> reader;
@@ -116,36 +115,6 @@ protected:
 
 private:
   std::unique_ptr<THeaderInfo> BuildTHeaderInfo();
-};
-
-class FileFormatMk1 : public FileFormatBase {
-
-  // UnpackerAcquFile interface
-protected:
-  virtual size_t SizeOfHeader() const override;
-  virtual bool InspectHeader(const std::vector<std::uint32_t>& buffer) const override;
-  virtual void FillInfo() override;
-  virtual void FillFirstDataBuffer(queue_t& queue) override;
-  virtual bool UnpackDataBuffer(queue_t &queue) noexcept override;
-
-};
-
-class FileFormatMk2 : public FileFormatBase {
-
-  // UnpackerAcquFile interface
-protected:
-  virtual size_t SizeOfHeader() const override;
-  virtual bool InspectHeader(const std::vector<std::uint32_t> &buffer) const override;
-  virtual void FillInfo() override;
-  virtual void FillFirstDataBuffer(queue_t& queue) override;
-  virtual bool UnpackDataBuffer(queue_t &queue) noexcept override;
-
-private:
-  bool SearchFirstDataBuffer(queue_t &queue, size_t offset);
-  using it_t = std::vector<uint32_t>::const_iterator;
-  void HandleEPICSBuffer(queue_t& queue, it_t& it, const it_t& it_end, bool& good) const noexcept;
-  void HandleScalerBuffer(queue_t& queue, it_t& it, const it_t& it_end, bool& good) const noexcept;
-  void HandleReadError(queue_t& queue, it_t& it, const it_t& it_end, bool& good) const noexcept;
 };
 
 }} // namespace unpacker::acqu
