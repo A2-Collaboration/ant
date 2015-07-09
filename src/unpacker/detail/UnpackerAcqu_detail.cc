@@ -83,14 +83,14 @@ UnpackerAcquFileFormat::Get(const string &filename,
   return move(formats.back());
 }
 
-void acqu::FileFormatBase::Setup(std::unique_ptr<RawFileReader> &&reader_, std::vector<uint32_t> &&buffer_) {
+void acqu::FileFormatBase::Setup(reader_t &&reader_, buffer_t &&buffer_) {
   reader = move(reader_);
   buffer = move(buffer_);
 }
 
 void acqu::FileFormatBase::FillHeader(queue_t& queue)
 {
-  FillInfo();
+  FillInfo(reader, buffer, info);
 
   auto headerInfo = BuildTHeaderInfo();
 
@@ -102,7 +102,7 @@ void acqu::FileFormatBase::FillHeader(queue_t& queue)
 
   // also fill the first data buffer,
   // since it might be in a weird state
-  FillFirstDataBuffer(queue);
+  FillFirstDataBuffer(queue, reader, buffer);
 }
 
 void acqu::FileFormatBase::LogMessage(
@@ -174,23 +174,11 @@ void acqu::FileFormatBase::FillEvents(std::deque<std::unique_ptr<TDataRecord> >&
     return;
 
   // start parsing the filled buffer
-  UnpackDataBuffer(queue);
+  auto it = buffer.cbegin();
+  UnpackDataBuffer(queue, it, buffer.cend());
 
   // refill the buffer, clear if there was a problem when reading
 
   /// \todo Implement!
 
-}
-
-
-
-
-bool acqu::FileFormatMk1::InspectHeader(const vector<uint32_t>& buffer) const
-{
-  return inspectHeaderMk1Mk2<AcquExptInfo_t>(buffer);
-}
-
-bool acqu::FileFormatMk2::InspectHeader(const vector<uint32_t>& buffer) const
-{
-  return inspectHeaderMk1Mk2<AcquMk2Info_t>(buffer);
 }

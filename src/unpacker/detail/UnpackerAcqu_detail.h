@@ -1,15 +1,14 @@
 #ifndef UNPACKERACQU_DETAIL_H
 #define UNPACKERACQU_DETAIL_H
 
-#include <vector>
-#include <memory>
-#include <string>
-#include <deque>
-#include <ctime>
-#include <cstdint>
-
 #include "tree/TUnpackerMessage.h"
 
+#include <cstdint>
+#include <ctime>
+#include <deque>
+#include <memory>
+#include <string>
+#include <vector>
 
 namespace ant {
 
@@ -67,9 +66,15 @@ namespace acqu {
 
 // FileFormatBase provides a common class for Mk1/Mk2 formats
 class FileFormatBase : public UnpackerAcquFileFormat {
-protected:
+private:
   std::unique_ptr<RawFileReader> reader;
   std::vector<std::uint32_t> buffer;
+  std::unique_ptr<THeaderInfo> BuildTHeaderInfo();
+
+protected:
+  using reader_t = decltype(reader);
+  using buffer_t = decltype(buffer);
+  using it_t = buffer_t::const_iterator;
 
   // helper class to finally create the THeaderInfo items
   // the fields are still very similar to the Acqu header info fields
@@ -96,25 +101,25 @@ protected:
 
   Info info;
   std::unique_ptr<UnpackerAcquConfig> config;
-
   std::uint32_t ID_upper; // upper part of UID, set by BuildTHeaderInfo
   std::uint32_t ID_lower; // lower part, incremented by FillEvents
   unsigned AcquID_last = 0;
 
-  void Setup(std::unique_ptr<RawFileReader>&& reader_,
-                     std::vector<std::uint32_t>&& buffer_) override;
+
+  // this class already implements some stuff
+  void Setup(reader_t&& reader_, buffer_t&& buffer_) override;
   void FillHeader(queue_t& queue) override;
   void FillEvents(queue_t& queue) noexcept override;
-  void LogMessage(queue_t& queue, TUnpackerMessage::Level_t level,
+  void LogMessage(queue_t& queue,
+                  TUnpackerMessage::Level_t level,
                   const std::string &msg) const;
 
   // Mk1/Mk2 specific methods
-  virtual void FillInfo() = 0;
-  virtual void FillFirstDataBuffer(queue_t& queue) = 0;
-  virtual bool UnpackDataBuffer(queue_t &queue) noexcept = 0;
+  virtual void FillInfo(reader_t& reader, buffer_t& buffer, Info& info) const = 0;
+  virtual void FillFirstDataBuffer(queue_t& queue, reader_t& reader, buffer_t& buffer) const = 0;
+  virtual bool UnpackDataBuffer(queue_t &queue, it_t& it, const it_t& it_endbuffer) noexcept = 0;
 
-private:
-  std::unique_ptr<THeaderInfo> BuildTHeaderInfo();
+
 };
 
 }} // namespace unpacker::acqu

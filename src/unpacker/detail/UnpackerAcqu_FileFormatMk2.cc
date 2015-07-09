@@ -22,7 +22,12 @@ size_t acqu::FileFormatMk2::SizeOfHeader() const
   return sizeof(AcquMk2Info_t);
 }
 
-void acqu::FileFormatMk2::FillInfo()
+bool acqu::FileFormatMk2::InspectHeader(const vector<uint32_t>& buffer) const
+{
+  return inspectHeaderMk1Mk2<AcquMk2Info_t>(buffer);
+}
+
+void acqu::FileFormatMk2::FillInfo(reader_t &reader, buffer_t &buffer, Info &info) const
 {
   const acqu::AcquMk2Info_t* h = reinterpret_cast<const acqu::AcquMk2Info_t*>(buffer.data()+1);
 
@@ -47,10 +52,9 @@ void acqu::FileFormatMk2::FillInfo()
   VLOG(9) << "Header says: Have " << nModules << " modules";
 
   // calculate sizes, ensure that on this platform the extraction works
-  using buffer_type = decltype(buffer);
-  static_assert(sizeof(acqu::AcquMk2Info_t) % sizeof(buffer_type::value_type) == 0,
+  static_assert(sizeof(acqu::AcquMk2Info_t) % sizeof(buffer_t::value_type) == 0,
                 "AcquMk2Info_t is not aligned to buffer");
-  static_assert(sizeof(acqu::ModuleInfoMk2_t) % sizeof(buffer_type::value_type) == 0,
+  static_assert(sizeof(acqu::ModuleInfoMk2_t) % sizeof(buffer_t::value_type) == 0,
                 "ModuleInfoMk2_t is not aligned to buffer");
   constexpr size_t infoSize = 1 + // dont't forget the 32bit start marker
       sizeof(acqu::AcquMk2Info_t)/4; // division by four is ok since static_assert'ed
@@ -101,17 +105,17 @@ void acqu::FileFormatMk2::FillInfo()
           << totalScalers << " channels";
 }
 
-void acqu::FileFormatMk2::FillFirstDataBuffer(queue_t& queue)
+void acqu::FileFormatMk2::FillFirstDataBuffer(queue_t& queue, reader_t& reader, buffer_t& buffer) const
 {
   // finally search for the Mk2Header, this also
   // fills the buffer correctly with the first Mk2DataBuffer (if available)
 
   // first search at 0x8000 bytes
-  if(SearchFirstDataBuffer(queue, 0x8000))
+  if(SearchFirstDataBuffer(queue, reader, buffer, 0x8000))
     return;
 
   // then search at 10*0x8000 bytes
-  if(SearchFirstDataBuffer(queue, 10*0x8000))
+  if(SearchFirstDataBuffer(queue, reader, buffer, 10*0x8000))
     return;
 
   // else fail
@@ -119,7 +123,9 @@ void acqu::FileFormatMk2::FillFirstDataBuffer(queue_t& queue)
 }
 
 
-bool acqu::FileFormatMk2::SearchFirstDataBuffer(queue_t& queue, size_t offset)
+bool acqu::FileFormatMk2::SearchFirstDataBuffer(queue_t& queue,
+                                                reader_t& reader, buffer_t& buffer,
+                                                size_t offset) const
 {
   VLOG(9) << "Searching first Mk2 buffer at offset 0x"
           << hex << offset << dec;
@@ -183,11 +189,8 @@ bool acqu::FileFormatMk2::SearchFirstDataBuffer(queue_t& queue, size_t offset)
   return true;
 }
 
-bool acqu::FileFormatMk2::UnpackDataBuffer(UnpackerAcquFileFormat::queue_t& queue) noexcept
+bool acqu::FileFormatMk2::UnpackDataBuffer(UnpackerAcquFileFormat::queue_t& queue, it_t& it, const it_t& it_endbuffer) noexcept
 {
-  // this codes uses STL iterators with C++11 features
-  it_t it = buffer.cbegin();
-
   // check header word
   if(*it != acqu::EMk2DataBuff) {
     LogMessage(queue,
@@ -200,7 +203,7 @@ bool acqu::FileFormatMk2::UnpackDataBuffer(UnpackerAcquFileFormat::queue_t& queu
   it++;
 
   // now loop over buffer contents
-  while(*it != acqu::EBufferEnd && it != buffer.cend()) {
+  while(*it != acqu::EBufferEnd && it != it_endbuffer) {
 
     // extract and check serial ID
     const unsigned acquID = *it;
@@ -218,23 +221,23 @@ bool acqu::FileFormatMk2::UnpackDataBuffer(UnpackerAcquFileFormat::queue_t& queu
     // extract and check eventLength
     const unsigned eventLength = *it/sizeof(decltype(*it));
 
-    const auto it_end = next(it, eventLength);
-    if(it_end == buffer.cend()) {
+    const auto it_endevent = next(it, eventLength);
+    if(it_endevent == it_endbuffer) {
       LogMessage(queue,
                  TUnpackerMessage::Level_t::DataError,
                  std_ext::formatter() <<
                  "Event with size 0x" << eventLength
                  << " too big to fit in buffer of remaining size "
-                 << distance(it, buffer.cend())
+                 << distance(it, it_endbuffer)
                  );
       return false;
     }
-    if(*it_end != acqu::EEndEvent) {
+    if(*it_endevent != acqu::EEndEvent) {
       LogMessage(queue,
                  TUnpackerMessage::Level_t::DataError,
                  std_ext::formatter() <<
                  "At designated end of event, found unexpected word 0x"
-                 << hex << *it_end << dec
+                 << hex << *it_endevent << dec
                  );
       return false;
     }
@@ -244,7 +247,7 @@ bool acqu::FileFormatMk2::UnpackDataBuffer(UnpackerAcquFileFormat::queue_t& queu
     /// \todo Scan config if there's an ADC channel defined which mimicks those blocks
 
     bool good;
-    while(*it != acqu::EEndEvent && it != buffer.cend()) {
+    while(*it != acqu::EEndEvent && it != it_endbuffer) {
       // note that the Handle* methods move the iterator
       // themselves and set good to true if nothing went wrong
       good = false;
@@ -252,15 +255,15 @@ bool acqu::FileFormatMk2::UnpackDataBuffer(UnpackerAcquFileFormat::queue_t& queu
       switch(*it) {
       case acqu::EEPICSBuffer:
         // EPICS buffer
-        HandleEPICSBuffer(queue, it, it_end, good);
+        HandleEPICSBuffer(queue, it, it_endevent, good);
         break;
       case acqu::EScalerBuffer:
         // Scaler read in this event
-        HandleScalerBuffer(queue, it, it_end, good);
+        HandleScalerBuffer(queue, it, it_endevent, good);
         break;
       case acqu::EReadError:
         // read error block, some hardware-related information
-        HandleReadError(queue, it, it_end, good);
+        HandleReadError(queue, it, it_endevent, good);
         break;
       default:
         // unfortunately, normal hits don't have a marker
