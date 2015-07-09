@@ -10,17 +10,17 @@ using namespace std;
 
 void ant::DebugPhysics::ProcessEvent(const ant::Event &event)
 {
-    cout << event << endl;
+    VLOG(8) << event;
 }
 
 void ant::DebugPhysics::Finish()
 {
-    cout << "DebugPhysics Done." << endl;
+    VLOG(8) << "Nop";
 }
 
 void ant::DebugPhysics::ShowResult()
 {
-    cout << "DebugPhysics ShowResults." << endl;
+    VLOG(8) << "Nop";
 }
 
 
@@ -53,4 +53,5 @@ void ant::PhysicsManager::ReadFrom(ant::input::DataReader &reader)
             }
         }
     }
+    VLOG(3) << "No more data to read";
 }
