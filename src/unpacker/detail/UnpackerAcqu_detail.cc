@@ -90,6 +90,7 @@ void acqu::FileFormatBase::Setup(reader_t &&reader_, buffer_t &&buffer_) {
 
 void acqu::FileFormatBase::FillHeader(queue_t& queue)
 {
+  // let child class fill the info
   FillInfo(reader, buffer, info);
 
   auto headerInfo = BuildTHeaderInfo();
@@ -100,9 +101,39 @@ void acqu::FileFormatBase::FillHeader(queue_t& queue)
   // then enqueue the header info
   fillQueue<THeaderInfo>(queue, move(headerInfo));
 
-  // also fill the first data buffer,
-  // since it might be in a weird state
+  // now try to fine the first data buffer
   FillFirstDataBuffer(queue, reader, buffer);
+
+  // remember the record length size
+  trueRecordLength = buffer.size();
+}
+
+unique_ptr<THeaderInfo> acqu::FileFormatBase::BuildTHeaderInfo()
+{
+  // this unpacker has a constant ID_upper
+  // based on the timestamp inside the file
+  /// \todo make ID really unique due to daylight saving time...
+
+  const time_t timestamp = mktime(&info.Time); // convert to unix epoch
+  ID_upper = static_cast<decltype(ID_upper)>(timestamp);
+  ID_lower = 0;
+
+  // construct the unique ID, header record as lower ID=0
+  const TDataRecord::ID_t id(ID_upper, ID_lower);
+
+
+  // build the genernal description
+  stringstream description;
+  description << "AcquData "
+              << "Number=" << info.RunNumber << " "
+              << "OutFile='" << info.OutFile << "' "
+              << "Description='"+info.Description+"' "
+              << "Note='"+info.RunNote+"' ";
+
+
+  return unique_ptr<THeaderInfo>(
+        new THeaderInfo(id, timestamp, description.str(), info.RunNumber)
+        );
 }
 
 void acqu::FileFormatBase::LogMessage(
@@ -135,33 +166,6 @@ void acqu::FileFormatBase::LogMessage(
   fillQueue(queue, move(record));
 }
 
-unique_ptr<THeaderInfo> acqu::FileFormatBase::BuildTHeaderInfo()
-{
-  // this unpacker has a constant ID_upper
-  // based on the timestamp inside the file
-  /// \todo make ID really unique due to daylight saving time...
-
-  const time_t timestamp = mktime(&info.Time); // convert to unix epoch
-  ID_upper = static_cast<decltype(ID_upper)>(timestamp);
-  ID_lower = 0;
-
-  // construct the unique ID, header record as lower ID=0
-  const TDataRecord::ID_t id(ID_upper, ID_lower);
-
-
-  // build the genernal description
-  stringstream description;
-  description << "AcquData "
-              << "Number=" << info.RunNumber << " "
-              << "OutFile='" << info.OutFile << "' "
-              << "Description='"+info.Description+"' "
-              << "Note='"+info.RunNote+"' ";
-
-
-  return unique_ptr<THeaderInfo>(
-        new THeaderInfo(id, timestamp, description.str(), info.RunNumber)
-        );
-}
 
 void acqu::FileFormatBase::FillEvents(std::deque<std::unique_ptr<TDataRecord> >& queue) noexcept
 {
@@ -175,10 +179,32 @@ void acqu::FileFormatBase::FillEvents(std::deque<std::unique_ptr<TDataRecord> >&
 
   // start parsing the filled buffer
   auto it = buffer.cbegin();
-  UnpackDataBuffer(queue, it, buffer.cend());
+  if(!UnpackDataBuffer(queue, it, buffer.cend())) {
+    // handle errors on buffer scale
+    VLOG(7) << "Handling error while buffer unpacking";
+  }
 
-  // refill the buffer, clear if there was a problem when reading
+  const int unpackedWords = distance(buffer.cbegin(), it);
+  VLOG(7) << "Unpacked " << unpackedWords << " words ("
+          << 100.0*unpackedWords/buffer.size() << " %) from buffer ";
 
-  /// \todo Implement!
-
+  // refill the buffer, clear buffer if there was a problem when reading
+  reader->read(buffer.data(), trueRecordLength);
+  if(reader->gcount() != 4*trueRecordLength) {
+    // we might have reached the end of file
+    if(reader->gcount() == 0 && reader->eof()) {
+      LogMessage(queue,
+                 TUnpackerMessage::Level_t::Info,
+                 std_ext::formatter()
+                 << "Found proper end of file");
+    }
+    else {
+      LogMessage(queue,
+                 TUnpackerMessage::Level_t::DataError,
+                 std_ext::formatter()
+                 << "Read only " << reader->gcount()
+                 << " bytes, not enough for record length " << 4*trueRecordLength);
+    }
+    buffer.clear();
+  }
 }

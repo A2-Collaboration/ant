@@ -208,12 +208,14 @@ bool acqu::FileFormatMk2::UnpackDataBuffer(UnpackerAcquFileFormat::queue_t& queu
     // extract and check serial ID
     const unsigned acquID = *it;
     if(AcquID_last>acquID) {
-      LogMessage(queue,
-                 TUnpackerMessage::Level_t::Info,
-                 std_ext::formatter()
-                 << "Overflow of Acqu EventId detected from "
-                 << AcquID_last << " to " << acquID
-                 );
+//      LogMessage(queue,
+//                 TUnpackerMessage::Level_t::Info,
+//                 std_ext::formatter()
+//                 << "Overflow of Acqu EventId detected from "
+//                 << AcquID_last << " to " << acquID
+//                 );
+        VLOG(8) << "Overflow of Acqu EventId detected from "
+                << AcquID_last << " to " << acquID;
     }
     AcquID_last = acquID;
     it++;

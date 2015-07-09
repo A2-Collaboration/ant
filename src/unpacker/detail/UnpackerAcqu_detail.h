@@ -69,6 +69,7 @@ class FileFormatBase : public UnpackerAcquFileFormat {
 private:
   std::unique_ptr<RawFileReader> reader;
   std::vector<std::uint32_t> buffer;
+  signed trueRecordLength;
   std::unique_ptr<THeaderInfo> BuildTHeaderInfo();
 
 protected:
@@ -96,7 +97,7 @@ protected:
     std::string RunNote;
     std::string OutFile;
     unsigned RunNumber;
-    unsigned RecordLength; // Record length according to header (might not be correct!)
+    unsigned RecordLength; // Record length according to header (might not be correct, see trueRecordLength)
   };
 
   Info info;
