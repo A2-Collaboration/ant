@@ -156,7 +156,7 @@ public:
 
     SmartHist1( SmartHist1&& ) = default;
 
-    SmartHist1(): SmartHist1Base(nullptr), fillfunction(makeFunc<T>([] (const T& x) { throw uninitialized_histogram(); return 0;})) {}
+    SmartHist1(): SmartHist1Base(nullptr), fillfunction(makeFunc<T>([] (const T&) { throw uninitialized_histogram(); return 0;})) {}
 
     void Fill(const T& data, const double weight=1.0) {
         fillfunction->Fill(*histogram, data, weight);

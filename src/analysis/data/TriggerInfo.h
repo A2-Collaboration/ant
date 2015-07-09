@@ -24,9 +24,9 @@ public:
 
     virtual ~DAQError() {}
 
-    const index_t ModuleID() const { return module_id; }
-    const index_t ModuleIndex() const { return module_index; }
-    const int     ErrorCode() const { return error; }
+    index_t ModuleID() const { return module_id; }
+    index_t ModuleIndex() const { return module_index; }
+    int     ErrorCode() const { return error; }
 
     std::ostream &Print(std::ostream &stream) const;
 };

@@ -10,7 +10,7 @@ using namespace std;
 using namespace ant::output;
 using namespace ant;
 
-int main(int argc, char** argv) {
+int main() {
 
     OutputManager om;
 

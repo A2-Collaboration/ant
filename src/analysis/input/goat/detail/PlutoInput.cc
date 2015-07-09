@@ -1,7 +1,15 @@
 #include "PlutoInput.h"
 #include "TTree.h"
-#include "PParticle.h"
+
 #include "TClonesArray.h"
+
+// Switch of some warnings for the Pluto headers
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wunused-local-typedefs"
+#pragma GCC diagnostic ignored "-Wvla"
+#pragma GCC diagnostic ignored "-Wignored-qualifiers"
+#include "PParticle.h"
+#pragma GCC diagnostic pop
 
 using namespace ant;
 using namespace ant::input;

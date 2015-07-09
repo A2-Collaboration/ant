@@ -80,7 +80,7 @@ private:
     std::list<AcceptanceAnalysis> analyses;
 
 public:
-    GeoAcceptance(const std::string& name="GeoAcceptance", const mev_t energy_scale=1000.0);
+    GeoAcceptance(const std::string& name="GeoAcceptance");
     virtual ~GeoAcceptance();
     void ProcessEvent(const Event &event);
     void Finish();

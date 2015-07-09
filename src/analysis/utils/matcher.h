@@ -6,23 +6,12 @@
 #include <algorithm>
 
 #include "base/interval.h"
-#include "TLorentzVector.h"
 #include <limits>
 
 
 
 namespace ant {
 namespace utils {
-
-/**
- * @brief Matcher Function: By Angle
- * @param a first LorentzVector
- * @param b second LoentzVector
- * @return
- */
-static double matchAngle( const TLorentzVector* const a, const TLorentzVector* const b ) {
-    return a->Vect().Angle(b->Vect());
-}
 
 /**
  * @gbrief Matcher Function Template: Match by simple distance |a-b|

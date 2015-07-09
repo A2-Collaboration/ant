@@ -6,8 +6,14 @@
 
 #include "TTree.h"
 
+// Switch of some warnings for the Pluto headers
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wunused-local-typedefs"
+#pragma GCC diagnostic ignored "-Wvla"
+#pragma GCC diagnostic ignored "-Wignored-qualifiers"
 #include "PParticle.h"
 #include "PStaticData.h"
+#pragma GCC diagnostic pop
 
 #include "base/Logger.h"
 
@@ -70,8 +76,9 @@ void GoatReader::CopyTrigger(std::shared_ptr<Event> &event)
     }
 }
 
-void GoatReader::CopyDetectorHits(std::shared_ptr<Event> &event)
+void GoatReader::CopyDetectorHits(std::shared_ptr<Event>&)
 {
+
 }
 
 /**

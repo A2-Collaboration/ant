@@ -118,12 +118,12 @@ Float_t GeantInput::GetCBHitEnergy(const UInt_t n) const throw (std::out_of_rang
     return ecryst[n];
 }
 
-const Int_t * const GeantInput::GetCBHitIndices() const
+const Int_t * GeantInput::GetCBHitIndices() const
 {
     return icryst;
 }
 
-const Float_t * const GeantInput::GetCBHitEnergies() const
+const Float_t * GeantInput::GetCBHitEnergies() const
 {
     return ecryst;
 }
@@ -134,7 +134,7 @@ Int_t GeantInput::GetNTAPSHits() const
     return fntaps;
 }
 
-const Int_t * const GeantInput::GetTAPSHitIndices() const
+const Int_t * GeantInput::GetTAPSHitIndices() const
 {
     return ictaps;
 }
@@ -163,12 +163,12 @@ Float_t GeantInput::GetTAPSHitEnergyShort(const UInt_t n) const throw (std::out_
     return ectapfs[n];
 }
 
-const Float_t * const GeantInput::GetTAPSHitEnergiesLong() const
+const Float_t * GeantInput::GetTAPSHitEnergiesLong() const
 {
     return ectapsl;
 }
 
-const Float_t * const GeantInput::GetTAPSHitEnergiesShort() const
+const Float_t * GeantInput::GetTAPSHitEnergiesShort() const
 {
     return ectapfs;
 }
@@ -181,7 +181,7 @@ Float_t GeantInput::GetTAPSHitTime(const UInt_t n) const throw (std::out_of_rang
     return tctaps[n];
 }
 
-const Float_t * const GeantInput::GetTAPSHitTimes() const
+const Float_t * GeantInput::GetTAPSHitTimes() const
 {
     return tctaps;
 }
@@ -199,7 +199,7 @@ Int_t GeantInput::GetTAPSVetoHitIndex(const UInt_t n) const throw (std::out_of_r
     return ivtaps[n];
 }
 
-const Int_t * const GeantInput::GetTAPSVetoHitIndices() const
+const Int_t * GeantInput::GetTAPSVetoHitIndices() const
 {
     return ivtaps;
 }
@@ -212,7 +212,7 @@ Float_t GeantInput::GetTAPSVetoHitEnergy(const UInt_t n) const throw (std::out_o
     return evtaps[n];
 }
 
-const Float_t * const GeantInput::GetTAPSVetoHitEnergies() const
+const Float_t * GeantInput::GetTAPSVetoHitEnergies() const
 {
     return evtaps;
 }
@@ -238,12 +238,12 @@ Float_t GeantInput::GetPIDHitEnergy(const UInt_t n) const throw (std::out_of_ran
     return eveto[n];
 }
 
-const Int_t * const GeantInput::GetPIDHitIndices() const
+const Int_t * GeantInput::GetPIDHitIndices() const
 {
     return iveto;
 }
 
-const Float_t * const GeantInput::GetPIDHitEnergies() const
+const Float_t * GeantInput::GetPIDHitEnergies() const
 {
     return eveto;
 }
@@ -256,7 +256,7 @@ Float_t GeantInput::GetPIDHitTime(const UInt_t n) const throw (std::out_of_range
     return tveto[n];
 }
 
-const Float_t * const GeantInput::GetPIDHitTimes() const
+const Float_t * GeantInput::GetPIDHitTimes() const
 {
     return tveto;
 }
@@ -266,27 +266,27 @@ Int_t GeantInput::GetNMWPCHits() const
     return fnmwpc;
 }
 
-const Int_t * const GeantInput::GetMWPCHitIndices() const
+const Int_t * GeantInput::GetMWPCHitIndices() const
 {
     return imwpc;
 }
 
-const Float_t * const GeantInput::GetMWPCHitEnergies() const
+const Float_t * GeantInput::GetMWPCHitEnergies() const
 {
     return emwpc;
 }
 
-const Float_t * const GeantInput::GetMWPCHitPosX() const
+const Float_t * GeantInput::GetMWPCHitPosX() const
 {
     return mposx;
 }
 
-const Float_t * const GeantInput::GetMWPCHitPosY() const
+const Float_t * GeantInput::GetMWPCHitPosY() const
 {
     return mposy;
 }
 
-const Float_t * const GeantInput::GetMWPCHitPosZ() const
+const Float_t * GeantInput::GetMWPCHitPosZ() const
 {
     return mposz;
 }

@@ -38,7 +38,7 @@ void analysis::GeoAcceptance::ParticleThetaPhiPlot::Draw(const string &option) c
 }
 
 
-analysis::GeoAcceptance::GeoAcceptance(const std::string& name, const mev_t energy_scale):
+analysis::GeoAcceptance::GeoAcceptance(const std::string& name):
     Physics(name)
 {
     for( auto& emin : std::vector<double>({0.95,0.9,0.8,0})) {
@@ -95,7 +95,7 @@ TObject *analysis::GeoAcceptance::ParticleThetaPhiPlot3D::GetObject()
 
 void analysis::GeoAcceptance::ParticleThetaPhiPlot3D::Draw(const string &option) const
 {
-    hist->Draw();
+    hist->Draw(option.c_str());
 }
 
 

@@ -82,6 +82,12 @@ protected:
 
     void CopyTagger(std::shared_ptr<Event>& event);
     void CopyTrigger(std::shared_ptr<Event>& event);
+
+    /**
+     * @brief CopyDetectorHits
+     * @param event
+     * @todo implement
+     */
     void CopyDetectorHits(std::shared_ptr<Event>& event);
     void CopyTracks(std::shared_ptr<Event>& event);
     void CopyPluto(std::shared_ptr<Event>& event);

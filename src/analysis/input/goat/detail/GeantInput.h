@@ -80,43 +80,43 @@ public:
 
     virtual Int_t                   GetNCBHits() const;
     virtual Int_t                   GetCBHitIndex(const UInt_t n) const throw (std::out_of_range);
-    virtual const Int_t * const     GetCBHitIndices() const;
+    virtual const Int_t *           GetCBHitIndices() const;
     virtual Float_t                 GetCBHitEnergy(const UInt_t n) const throw (std::out_of_range);
-    virtual const Float_t * const   GetCBHitEnergies() const;
+    virtual const Float_t *         GetCBHitEnergies() const;
 
     virtual Int_t                   GetNPIDHits() const;
     virtual Int_t                   GetPIDHitIndex(const UInt_t n) const throw (std::out_of_range);
-    virtual const Int_t * const     GetPIDHitIndices() const;
+    virtual const Int_t *           GetPIDHitIndices() const;
     virtual Float_t                 GetPIDHitEnergy(const UInt_t n) const throw (std::out_of_range);
-    virtual const Float_t * const   GetPIDHitEnergies() const;
+    virtual const Float_t *         GetPIDHitEnergies() const;
     virtual Float_t                 GetPIDHitTime(const UInt_t n) const throw (std::out_of_range);
-    virtual const Float_t * const   GetPIDHitTimes() const;
+    virtual const Float_t *         GetPIDHitTimes() const;
 
     virtual Int_t                   GetNTAPSHits() const;
     virtual Int_t                   GetTAPSHitIndex(const UInt_t n) const throw (std::out_of_range);
-    virtual const Int_t * const     GetTAPSHitIndices() const;
+    virtual const Int_t *           GetTAPSHitIndices() const;
     virtual Float_t                 GetTAPSHitEnergyLong(const UInt_t n) const throw (std::out_of_range);
-    virtual const Float_t * const   GetTAPSHitEnergiesLong() const;
+    virtual const Float_t *         GetTAPSHitEnergiesLong() const;
     virtual Float_t                 GetTAPSHitEnergyShort(const UInt_t n) const throw (std::out_of_range);
-    virtual const Float_t * const   GetTAPSHitEnergiesShort() const;
+    virtual const Float_t *         GetTAPSHitEnergiesShort() const;
     virtual Float_t                 GetTAPSHitTime(const UInt_t n) const throw (std::out_of_range);
-    virtual const Float_t * const   GetTAPSHitTimes() const;
+    virtual const Float_t *         GetTAPSHitTimes() const;
 
     virtual Int_t                   GetNTAPSVetoHits() const;
     virtual Int_t                   GetTAPSVetoHitIndex(const UInt_t n) const throw (std::out_of_range);
-    virtual const Int_t * const     GetTAPSVetoHitIndices() const;
+    virtual const Int_t *           GetTAPSVetoHitIndices() const;
     virtual Float_t                 GetTAPSVetoHitEnergy(const UInt_t n) const throw (std::out_of_range);
-    virtual const Float_t * const   GetTAPSVetoHitEnergies() const;
+    virtual const Float_t *         GetTAPSVetoHitEnergies() const;
 
 
     virtual Int_t                   GetNMWPCHits() const;
     virtual Int_t                   GetMWPCIndex( const UInt_t n )  const throw (std::out_of_range);
-    virtual const Int_t * const     GetMWPCHitIndices() const;
+    virtual const Int_t *           GetMWPCHitIndices() const;
     virtual Float_t                 GetMWPCEnergy( const UInt_t n ) const throw (std::out_of_range);
-    virtual const Float_t * const   GetMWPCHitEnergies() const;
-    virtual const Float_t * const   GetMWPCHitPosX() const;
-    virtual const Float_t * const   GetMWPCHitPosY() const;
-    virtual const Float_t * const   GetMWPCHitPosZ() const;
+    virtual const Float_t *         GetMWPCHitEnergies() const;
+    virtual const Float_t *         GetMWPCHitPosX() const;
+    virtual const Float_t *         GetMWPCHitPosY() const;
+    virtual const Float_t *         GetMWPCHitPosZ() const;
     virtual TVector3                GetMWPCVector( const UInt_t n ) const throw (std::out_of_range);
 
     virtual void        BuildCBHitPattern( hitvector& pattern) const;

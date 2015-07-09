@@ -152,49 +152,49 @@ void DeltaPlusPhysics::Histogm::AddHistogram(const string &name, const string &t
 DeltaPlusPhysics::Histogm::Histogm(const string &prefix)
 {
 
-    AddHistogram("nPart", "number of particles",
+    AddHistogram(prefix+"_nPart", prefix+" number of particles",
                    "number of particles / event", "",
                    10, 0, 10); // 10 bins from 0 to 10
 
-    AddHistogram("pid", "PID Bananas",
+    AddHistogram(prefix+"pid", prefix+" PID Bananas",
                    "CB Energy [MeV]", "dE [MeV]",
                    100,0,450, // 100 bins from 0 to 450 in x
                    100,0,20   // 100 bins from 0 to 20  in y
                    );
 
-    AddHistogram("2gIM", "2#gamma invariant mass",
+    AddHistogram(prefix+"2gIM", prefix+" 2#gamma invariant mass",
                    "M_{#gamma #gamma} [MeV]", "",
                    100,0,300);
 
-    AddHistogram("tag_time", "Tagger time",
+    AddHistogram(prefix+"tag_time", prefix+" Tagger time",
                    "t [ns]", "",
                    100,-50,50);
 
-    AddHistogram("tag_energy", "Tagged Photon Energy",
+    AddHistogram(prefix+"tag_energy", prefix+" Tagged Photon Energy",
                    "E_{#gamma} [MeV]", "",
                    100,100,450);
 
-    AddHistogram("mmp", "Missing Mass Proton",
+    AddHistogram(prefix+"mmp", prefix+" Missing Mass Proton",
                    "MM_{p} [MeV]", "",
                    100,600,1100);
 
-    AddHistogram("pi0angle", "#pi^{0} #Theta angle (boosted)",
+    AddHistogram(prefix+"pi0angle", prefix+" #pi^{0} #Theta angle (boosted)",
                    "cos(#theta_{#pi^{0}})", "",
                    180,-1,1);
 
-    AddHistogram("pi0angle_noboost", "#pi^{0} #Theta angle (not boosted)",
+    AddHistogram(prefix+"pi0angle_noboost", prefix+" #pi^{0} #Theta angle (not boosted)",
                    "cos(#theta_{#pi^{0}})", "",
                    180,-1,1);
 
-    AddHistogram("pi0angle_tagged", "#pi^{0} #Theta angle (boosted) vs tagged E",
+    AddHistogram(prefix+"pi0angle_tagged", prefix+" #pi^{0} #Theta angle (boosted) vs tagged E",
                    "E_{#gamma} [MeV]", "cos(#theta_{pi^{0}})",
                    180,-1,1,14,110,300);
 
-    AddHistogram("delta_pz", "#Delta^{+} momentum magnitude (boosted)",
+    AddHistogram(prefix+"delta_pz", prefix+" #Delta^{+} momentum magnitude (boosted)",
                    "p_{#Delta^{+}} [MeV]","",
                    100,0,300);
 
-    AddHistogram("delta_IM", "#Delta^{+} Invariant mass",
+    AddHistogram(prefix+"delta_IM", prefix+" #Delta^{+} Invariant mass",
                    "M_{#Delta^{+}} [MeV]","",
                    100,800,1500);
 }

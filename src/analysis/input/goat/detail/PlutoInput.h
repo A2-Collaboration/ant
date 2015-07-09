@@ -33,8 +33,8 @@ public:
     void GetEntry();
 
     const PParticleVector&  Particles()   const { return particles; }
-    const Long64_t          GetPlutoID()  const { return plutoID; }
-    const Long64_t          GetRandomID() const { return plutoRandomID; }
+    Long64_t                GetPlutoID()  const { return plutoID; }
+    Long64_t                GetRandomID() const { return plutoRandomID; }
 };
 }
 }
