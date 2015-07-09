@@ -12,18 +12,33 @@ namespace ant {
 struct TDetectorRead : TDataRecord
 {
 
-  std::uint8_t  Detector;
-  std::uint8_t  Kind;
-  std::uint32_t LogicalChannel;
+#ifndef __CINT__
+  struct Hit  : printable_traits
+#else
+  struct Hit
+#endif
+  {
+    std::uint8_t  Detector;
+    std::uint8_t  Kind;
+    std::uint32_t LogicalChannel;
 
-
-  std::vector<std::uint8_t>  RawData;
-  std::vector<double>        Values;
-  std::vector<bool>          ValueBits;
+    std::vector<std::uint8_t>  RawData;
+    std::vector<double>        Values;
+    std::vector<bool>          ValueBits;
 
 #ifndef __CINT__
+    virtual std::ostream& Print( std::ostream& s) const override {
+      return s << "Hit " << Detector;
+    }
+#endif
 
+    virtual ~Hit() {}
+    ClassDef(Hit, ANT_UNPACKER_ROOT_VERSION)
+  };
 
+  std::vector<Hit> Hits;
+
+#ifndef __CINT__
   virtual std::ostream& Print( std::ostream& s) const override {
     return s << "TDetectorRead ID=" << ID;
   }

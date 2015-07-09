@@ -71,6 +71,7 @@ private:
   std::vector<std::uint32_t> buffer;
   signed trueRecordLength;
   std::unique_ptr<THeaderInfo> BuildTHeaderInfo();
+  std::unique_ptr<UnpackerAcquConfig> config;
 
 protected:
   using reader_t = decltype(reader);
@@ -101,7 +102,6 @@ protected:
   };
 
   Info info;
-  std::unique_ptr<UnpackerAcquConfig> config;
   std::uint32_t ID_upper; // upper part of UID, set by BuildTHeaderInfo
   std::uint32_t ID_lower; // lower part, incremented by FillEvents
   unsigned AcquID_last = 0;

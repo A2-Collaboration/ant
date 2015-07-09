@@ -181,6 +181,7 @@ void acqu::FileFormatBase::FillEvents(std::deque<std::unique_ptr<TDataRecord> >&
   auto it = buffer.cbegin();
   if(!UnpackDataBuffer(queue, it, buffer.cend())) {
     // handle errors on buffer scale
+    /// \todo Implement proper data discard
     VLOG(7) << "Handling error while buffer unpacking";
   }
 

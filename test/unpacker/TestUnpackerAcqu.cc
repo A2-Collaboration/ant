@@ -28,5 +28,6 @@ TEST_CASE("Test UnpackerAcqu: one event, small record length", "[unpacker]") {
 
 
 void dotest(const string &filename) {
+  /// \todo Make Unpacker test better
   REQUIRE_NOTHROW(ant::Unpacker::Get(filename));
 }

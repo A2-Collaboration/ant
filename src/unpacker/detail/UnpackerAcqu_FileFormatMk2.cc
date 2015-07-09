@@ -249,7 +249,8 @@ bool acqu::FileFormatMk2::UnpackDataBuffer(UnpackerAcquFileFormat::queue_t& queu
     /// \todo Scan config if there's an ADC channel defined which mimicks those blocks
 
     bool good;
-    while(*it != acqu::EEndEvent && it != it_endbuffer) {
+    map<uint16_t, vector<uint16_t> > hits;
+    while(it != it_endbuffer && *it != acqu::EEndEvent) {
       // note that the Handle* methods move the iterator
       // themselves and set good to true if nothing went wrong
       good = false;
@@ -273,8 +274,9 @@ bool acqu::FileFormatMk2::UnpackDataBuffer(UnpackerAcquFileFormat::queue_t& queu
         static_assert(sizeof(acqu::AcquBlock_t) <= sizeof(decltype(*it)),
                       "acqu::AcquBlock_t does not fit into word of buffer");
         const acqu::AcquBlock_t* acqu_hit = reinterpret_cast<const acqu::AcquBlock_t*>(addressof(*it));
-        //VLOG(9) << "ADC ID=" << acqu_hit->id << " Value=" << acqu_hit->adc;
-
+        // during a buffer, hits can come in any order,
+        // and multiple hits with the same ID can happen
+        hits[acqu_hit->id].emplace_back(move(acqu_hit->adc));
         good = true;
 
         it++;
@@ -284,8 +286,17 @@ bool acqu::FileFormatMk2::UnpackDataBuffer(UnpackerAcquFileFormat::queue_t& queu
         break;
     }
 
-    // assume EEndEvent, skip it
-    it++;
+    // check proper EEndEvent
+    if(it == it_endbuffer) {
+      LogMessage(queue,
+                 TUnpackerMessage::Level_t::DataError,
+                 std_ext::formatter() <<
+                 "While unpacking event, found premature end of buffer."
+                 );
+      return false;
+    }
+    it++; // go to next event (if any)
+
 
     // increment official unique event ID
     ID_lower++;

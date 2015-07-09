@@ -9,6 +9,7 @@
 #pragma link C++ class ant::TDataRecord+;
 #pragma link C++ class ant::TDataRecord::ID_t+;
 #pragma link C++ class ant::TDetectorRead+;
+#pragma link C++ class ant::TDetectorRead::Hit+;
 #pragma link C++ class ant::THeaderInfo+;
 #pragma link C++ class ant::TSlowControl+;
 #pragma link C++ class ant::TUnpackerMessage+;

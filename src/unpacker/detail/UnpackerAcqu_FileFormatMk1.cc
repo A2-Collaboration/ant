@@ -13,6 +13,9 @@ size_t acqu::FileFormatMk1::SizeOfHeader() const
   return sizeof(AcquExptInfo_t);
 }
 
+/// \todo Remove this prama after implementation
+#pragma GCC diagnostic ignored "-Wunused-parameter"
+
 bool acqu::FileFormatMk1::InspectHeader(const vector<uint32_t>& buffer) const
 {
   return inspectHeaderMk1Mk2<AcquExptInfo_t>(buffer);
