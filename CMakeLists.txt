@@ -25,5 +25,6 @@ link_directories(${ROOT_LIBRARY_DIR})
 
 add_subdirectory(src)
 add_subdirectory(test)
+add_subdirectory(progs)
 
 include(cmake/doxygen.cmake)
