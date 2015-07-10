@@ -37,7 +37,7 @@ const ParticleTypeDatabase::Type ParticleTypeDatabase::Omega("Omega",           
 const ParticleTypeDatabase::Type ParticleTypeDatabase::EtaPrime("EtaPrime",           "#eta'",         957.78, false);
 const ParticleTypeDatabase::Type ParticleTypeDatabase::Rho("Rho",                     "#rho'",         775.26, false);
 
-const ParticleTypeDatabase::Type ParticleTypeDatabase::BeamProton("BeamProton",           "#gamma p",  938.272046, true);
+const ParticleTypeDatabase::Type ParticleTypeDatabase::BeamProton("BeamProton",       "(#gamma p)",    938.272046, true);
 
 ParticleTypeDatabase::Type::Type(const string &_name, const string &_print_name, const mev_t &_mass, const bool &_charged, const ParticleTypeDatabase::Type *_sametype):
     name(_name),
