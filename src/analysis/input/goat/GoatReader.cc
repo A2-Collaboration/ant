@@ -112,6 +112,8 @@ void GoatReader::CopyTracks(std::shared_ptr<Event> &event)
 void GoatReader::CopyPluto(std::shared_ptr<Event> &event)
 {
     const auto particles = pluto.Particles();
+    ParticleList buffer;
+    buffer.reserve(particles.size());
 
     for( auto& p : particles ) {
 
@@ -143,15 +145,33 @@ void GoatReader::CopyPluto(std::shared_ptr<Event> &event)
             const int channel = 0; //TODO: Get tagger channel from energy -> Tagger cfg
             const double time = 0.0;
             event->MCTrue().TaggerHits().emplace_back( TaggerHitPtr( new TaggerHit(channel, energy, time) ) );
+        }
+
+        if(p->GetDaughterIndex() == -1 ) { // final state
+            event->MCTrue().Particles().AddParticle(ap);
         } else {
-            if(p->GetDaughterIndex() == -1 ) { // final state
-                event->MCTrue().Particles().AddParticle(ap);
-            } else {
-                event->MCTrue().Intermediates().AddParticle(ap);
-            }
+            event->MCTrue().Intermediates().AddParticle(ap);
         }
 
 
+        buffer.emplace_back(ap);
+
+
+    }
+
+    if(buffer.size() != particles.size())
+        throw std::domain_error("particle list sizes differ: "+to_string(buffer.size())+" " + to_string(particles.size()));
+
+    for(int i=0; i<particles.size(); ++i) {
+
+        const PParticle* plp = particles.at(i);
+        ParticlePtr alp = buffer.at(i);
+
+        if(plp->GetParentIndex() >= 0 && plp->GetParentIndex() < buffer.size()) {
+            ParticlePtr parent = buffer.at(plp->GetParentIndex());
+            alp->Partents().emplace_back(parent);
+            parent->Daughters().emplace_back(alp);
+        }
     }
     //TODO: CBEsum/Multiplicity into TriggerInfo
 }
