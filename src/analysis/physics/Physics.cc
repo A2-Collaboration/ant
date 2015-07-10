@@ -55,3 +55,10 @@ void ant::PhysicsManager::ReadFrom(ant::input::DataReader &reader)
     }
     VLOG(3) << "No more data to read";
 }
+
+void ant::PhysicsManager::ShowResults()
+{
+    for(auto& p : physics) {
+        p->ShowResult();
+    }
+}

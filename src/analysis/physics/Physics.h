@@ -50,6 +50,7 @@ public:
     }
 
     void ReadFrom(ant::input::DataReader& reader);
+    void ShowResults();
 };
 }
 
