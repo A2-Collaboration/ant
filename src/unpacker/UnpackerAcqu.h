@@ -35,22 +35,29 @@ private:
 class UnpackerAcquConfig : public ExpConfig::Unpacker<UnpackerAcquConfig> {
 public:
 
+
+  template<typename T>
   struct RawChannel_t {
-    std::uint32_t RawChannel;
-    std::uint32_t Mask;
+    T RawChannel;
+    T Mask;
     // provide some handy constructors
-    RawChannel_t(const std::initializer_list<uint32_t>& l);
-    RawChannel_t(const uint32_t& ch);
+    RawChannel_t(const std::initializer_list<T>& l);
+    RawChannel_t(const T& ch);
   };
 
   // this defines how one LogicalChannel is built from
   // the given RawChannels
   struct mapping_t {
     LogicalChannel_t LogicalElement;
-    std::vector<RawChannel_t> RawChannels;
+    std::vector< RawChannel_t<std::uint16_t> > RawChannels;
   };
 
   virtual void BuildMappings(std::vector<mapping_t>& mappings) = 0;
+
+  // scalers in acqu can be handled as additional information
+  // for a logical detector channel, or as TSlowControl items
+
+
 };
 
 } // namespace ant

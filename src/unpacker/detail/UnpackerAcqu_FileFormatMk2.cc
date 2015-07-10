@@ -336,33 +336,35 @@ void acqu::FileFormatMk2::UnpackEvent(
   for(const UnpackerAcquConfig::mapping_t& mapping : mappings) {
     // build the raw data
     vector<uint8_t> rawData;
-    for(const UnpackerAcquConfig::RawChannel_t& rawChannel : mapping.RawChannels) {
+    for(const UnpackerAcquConfig::RawChannel_t<uint16_t>& rawChannel : mapping.RawChannels) {
       const auto it_map = hits.find(rawChannel.RawChannel);
       if(it_map==hits.cend())
         continue;
       const std::vector<uint16_t>& values = it_map->second;
-      for(const uint16_t& value : values) {
-        // all 16 bits are easy
-        if((rawChannel.Mask & 0xffff) == 0xffff) {
-          // higher byte first, then lower byte
-          rawData.push_back(value >> 8);
-          rawData.push_back(value);
-        }
-        else {
-          /// \todo Implement non-trivial RawChannel masks
-          throw UnpackerAcqu::Exception("Not implemented");
-        }
+      if(rawChannel.Mask == 0xffff) {
+        const size_t offset = rawData.size();
+        const size_t length = sizeof(uint16_t)*values.size();
+        rawData.resize(offset+length);
+        /// \todo Think about byte ordering here, isn't x86's little-endian quasi standard?!
+        std::copy(values.begin(), values.end(),
+                  reinterpret_cast<uint16_t*>(addressof(rawData[offset])));
+      }
+      else {
+        /// \todo Implement non-trivial RawChannel masks (if that's actually needed)
+        throw UnpackerAcqu::Exception("Not implemented");
       }
     }
-    // add the hit
-    record->Hits.emplace_back(mapping.LogicalElement, rawData);
+    // add to TDetectorRead record if something was found
+    if(!rawData.empty())
+      record->Hits.emplace_back(mapping.LogicalElement, move(rawData));
   }
 
   if(!scalers.empty()) {
     cout << "FOUND SCALER BLOCK with " << scalers.size() << endl;
   }
 
-  fillQueue(queue, move(record));
+  if(!record->Hits.empty())
+    fillQueue(queue, move(record));
 
   it++; // go to next event (if any)
 }

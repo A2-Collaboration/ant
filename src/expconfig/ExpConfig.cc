@@ -59,7 +59,9 @@ public:
   {
     mapping_t map;
     map.LogicalElement = {Detector_t::Trigger, ChannelType_t::Counter, 0};
-    map.RawChannels.push_back(400);
+    map.RawChannels.push_back({400, 0xffff});
+//    map.LogicalElement = {Detector_t::Trigger, ChannelType_t::Counter, 1};
+//    map.RawChannels.push_back(1853);
     mappings.push_back(map);
   }
 };
