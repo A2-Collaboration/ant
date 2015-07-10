@@ -114,6 +114,8 @@ public:
 
     long long EventsRead() const override;
     long long TotalEvents() const override;
+
+    const PlutoInput& GetPlutoInput() { return pluto; }
 };
 
 }
