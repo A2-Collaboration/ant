@@ -93,7 +93,9 @@ public:
     static const Type EtaPrime;
     static const Type Rho;
 
+    static const Type BeamTarget;
     static const Type BeamProton;
+    static const Type BeamNeutron;
 
     static const Particles_t& GetParticles() { return types; }
 
