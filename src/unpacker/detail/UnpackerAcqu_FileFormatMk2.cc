@@ -189,6 +189,8 @@ bool acqu::FileFormatMk2::SearchFirstDataBuffer(queue_t& queue,
   return true;
 }
 
+
+
 bool acqu::FileFormatMk2::UnpackDataBuffer(UnpackerAcquFileFormat::queue_t& queue, it_t& it, const it_t& it_endbuffer) noexcept
 {
   // check header word
@@ -220,92 +222,18 @@ bool acqu::FileFormatMk2::UnpackDataBuffer(UnpackerAcquFileFormat::queue_t& queu
     AcquID_last = acquID;
     it++;
 
-    // extract and check eventLength
-    const unsigned eventLength = *it/sizeof(decltype(*it));
-
-    const auto it_endevent = next(it, eventLength);
-    if(it_endevent == it_endbuffer) {
-      LogMessage(queue,
-                 TUnpackerMessage::Level_t::DataError,
-                 std_ext::formatter() <<
-                 "Event with size 0x" << eventLength
-                 << " too big to fit in buffer of remaining size "
-                 << distance(it, it_endbuffer)
-                 );
+    bool good = false;
+    UnpackEvent(queue, it, it_endbuffer, good);
+    if(!good)
       return false;
-    }
-    if(*it_endevent != acqu::EEndEvent) {
-      LogMessage(queue,
-                 TUnpackerMessage::Level_t::DataError,
-                 std_ext::formatter() <<
-                 "At designated end of event, found unexpected word 0x"
-                 << hex << *it_endevent << dec
-                 );
-      return false;
-    }
-    it++;
 
-    // now work on one event inside buffer
-    /// \todo Scan config if there's an ADC channel defined which mimicks those blocks
-
-    bool good;
-    map<uint16_t, vector<uint16_t> > hits;
-    while(it != it_endbuffer && *it != acqu::EEndEvent) {
-      // note that the Handle* methods move the iterator
-      // themselves and set good to true if nothing went wrong
-      good = false;
-
-      switch(*it) {
-      case acqu::EEPICSBuffer:
-        // EPICS buffer
-        HandleEPICSBuffer(queue, it, it_endevent, good);
-        break;
-      case acqu::EScalerBuffer:
-        // Scaler read in this event
-        HandleScalerBuffer(queue, it, it_endevent, good);
-        break;
-      case acqu::EReadError:
-        // read error block, some hardware-related information
-        HandleReadError(queue, it, it_endevent, good);
-        break;
-      default:
-        // unfortunately, normal hits don't have a marker
-        // so we hope for the best at this position
-        static_assert(sizeof(acqu::AcquBlock_t) <= sizeof(decltype(*it)),
-                      "acqu::AcquBlock_t does not fit into word of buffer");
-        const acqu::AcquBlock_t* acqu_hit = reinterpret_cast<const acqu::AcquBlock_t*>(addressof(*it));
-        // during a buffer, hits can come in any order,
-        // and multiple hits with the same ID can happen
-        hits[acqu_hit->id].emplace_back(move(acqu_hit->adc));
-        good = true;
-
-        it++;
-        break;
-      }
-      if(!good)
-        break;
-    }
-
-
-
-
-    // check proper EEndEvent
-    if(it == it_endbuffer) {
-      LogMessage(queue,
-                 TUnpackerMessage::Level_t::DataError,
-                 std_ext::formatter() <<
-                 "While unpacking event, found premature end of buffer."
-                 );
-      return false;
-    }
-    it++; // go to next event (if any)
 
 
     // increment official unique event ID
     ID_lower++;
   }
 
-  // check proper EEndEvent
+  // check proper end of buffer
   if(it == it_endbuffer) {
     LogMessage(queue,
                TUnpackerMessage::Level_t::DataError,
@@ -318,9 +246,91 @@ bool acqu::FileFormatMk2::UnpackDataBuffer(UnpackerAcquFileFormat::queue_t& queu
   return true;
 }
 
+void acqu::FileFormatMk2::UnpackEvent(
+    queue_t &queue, it_t &it, const it_t &it_endbuffer, bool &good) const noexcept
+{
+  // extract and check eventLength
+  const unsigned eventLength = *it/sizeof(decltype(*it));
+
+  const auto it_endevent = next(it, eventLength);
+  if(it_endevent == it_endbuffer) {
+    LogMessage(queue,
+               TUnpackerMessage::Level_t::DataError,
+               std_ext::formatter() <<
+               "Event with size 0x" << eventLength
+               << " too big to fit in buffer of remaining size "
+               << distance(it, it_endbuffer)
+               );
+    return;
+  }
+  if(*it_endevent != acqu::EEndEvent) {
+    LogMessage(queue,
+               TUnpackerMessage::Level_t::DataError,
+               std_ext::formatter() <<
+               "At designated end of event, found unexpected word 0x"
+               << hex << *it_endevent << dec
+               );
+    return;
+  }
+  it++;
+
+  // now work on one event inside buffer
+  /// \todo Scan config if there's an ADC channel defined which mimicks those blocks
+
+  map<uint16_t, vector<uint16_t> > hits;
+  while(it != it_endbuffer && *it != acqu::EEndEvent) {
+    // note that the Handle* methods move the iterator
+    // themselves and set good to true if nothing went wrong
+    good = false;
+
+    switch(*it) {
+    case acqu::EEPICSBuffer:
+      // EPICS buffer
+      HandleEPICSBuffer(queue, it, it_endevent, good);
+      break;
+    case acqu::EScalerBuffer:
+      // Scaler read in this event
+      HandleScalerBuffer(queue, it, it_endevent, good);
+      break;
+    case acqu::EReadError:
+      // read error block, some hardware-related information
+      HandleReadError(queue, it, it_endevent, good);
+      break;
+    default:
+      // unfortunately, normal hits don't have a marker
+      // so we hope for the best at this position
+      static_assert(sizeof(acqu::AcquBlock_t) <= sizeof(decltype(*it)),
+                    "acqu::AcquBlock_t does not fit into word of buffer");
+      const acqu::AcquBlock_t* acqu_hit = reinterpret_cast<const acqu::AcquBlock_t*>(addressof(*it));
+      // during a buffer, hits can come in any order,
+      // and multiple hits with the same ID can happen
+      hits[acqu_hit->id].emplace_back(move(acqu_hit->adc));
+      good = true;
+
+      it++;
+      break;
+    }
+    if(!good)
+      return;
+  }
+
+  // check proper EEndEvent
+  if(it == it_endbuffer) {
+    LogMessage(queue,
+               TUnpackerMessage::Level_t::DataError,
+               std_ext::formatter() <<
+               "While unpacking event, found premature end of buffer."
+               );
+    return;
+  }
+
+
+
+  it++; // go to next event (if any)
+}
 
 void acqu::FileFormatMk2::HandleEPICSBuffer(
-    UnpackerAcquFileFormat::queue_t &queue,
+    queue_t &queue,
     it_t& it, const it_t& it_end,
     bool& good
     ) const noexcept

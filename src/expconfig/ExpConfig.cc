@@ -26,7 +26,7 @@ struct Detector {
 protected:
   Detector(const Detector_t& type) :
     Type(type) {}
-  Detector(const Detector&) = delete; // forbid copy
+  Detector(const Detector&) = delete; // disable copy
   virtual ~Detector() = default;
 };
 
