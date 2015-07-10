@@ -3,6 +3,7 @@
 #include "physics/Physics.h"
 #include "physics/omega/omega.h"
 #include "base/Logger.h"
+#include "TRint.h"
 
 using namespace std;
 using namespace ant::output;
@@ -11,6 +12,10 @@ using namespace ant::analysis;
 
 int main(int argc, char** argv) {
     SetupLogger(argc, argv);
+
+    int a=0;
+    char** b=nullptr;
+    TRint app("omega",&a,b);
 
     OutputManager om;
 
@@ -30,6 +35,9 @@ int main(int argc, char** argv) {
     reader.Initialize();
 
     pm.ReadFrom(reader);
+    pm.ShowResults();
+
+    app.Run(kTRUE);
 
     return 0;
 

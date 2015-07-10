@@ -5,9 +5,11 @@
 #include "base/interval.h"
 #include "plot/SmartHist.h"
 #include "A2GeoAcceptance.h"
+#include <map>
 
 class TH1D;
 class TH2D;
+class TH3D;
 
 namespace ant {
 namespace analysis {
@@ -29,6 +31,8 @@ protected:
 
     virtual void Analyse(const Event::Data& data, const Event& event) =0;
 
+    static std::string GetDecayString(const ParticleList& particles);
+
 public:
     OmegaBase(const string &name, const DataMode m);
     virtual ~OmegaBase() = default;
@@ -44,6 +48,7 @@ class OmegaEtaG: public OmegaBase {
 protected:
 
     TH2D* ggg_gg;
+    TH3D* ggg_gg_decays;
     TH2D* ggg_gg_bg;    // if not from omega decay
     TH2D* ggg_gg_all;
 
@@ -59,7 +64,12 @@ protected:
 
     TH1D* steps;
 
+    IntervalD omega_range = IntervalD(740,820);
+    std::map<std::string, TH1D*> gg_decays;
+
     virtual void Analyse(const Event::Data& data, const Event& event) override;
+
+    BinSettings imbinning = BinSettings(1000);
 
 public:
     OmegaEtaG(DataMode m);
