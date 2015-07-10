@@ -277,9 +277,12 @@ void acqu::FileFormatMk2::UnpackEvent(
   /// \todo Scan config if there's an ADC channel defined which mimicks those blocks
 
   map<uint16_t, vector<uint16_t> > hits; // maybe an unordered map works better here?
+  scalers_t scalers;
   while(it != it_endbuffer && *it != acqu::EEndEvent) {
     // note that the Handle* methods move the iterator
     // themselves and set good to true if nothing went wrong
+
+    good = false;
 
     switch(*it) {
     case acqu::EEPICSBuffer:
@@ -288,7 +291,7 @@ void acqu::FileFormatMk2::UnpackEvent(
       break;
     case acqu::EScalerBuffer:
       // Scaler read in this event
-      HandleScalerBuffer(queue, it, it_endevent, good);
+      HandleScalerBuffer(queue, it, it_endevent, good, scalers);
       break;
     case acqu::EReadError:
       // read error block, some hardware-related information
@@ -300,7 +303,8 @@ void acqu::FileFormatMk2::UnpackEvent(
       /// \todo Implement better handling of malformed event buffers
       static_assert(sizeof(acqu::AcquBlock_t) <= sizeof(decltype(*it)),
                     "acqu::AcquBlock_t does not fit into word of buffer");
-      const acqu::AcquBlock_t* acqu_hit = reinterpret_cast<const acqu::AcquBlock_t*>(addressof(*it));
+      const acqu::AcquBlock_t* acqu_hit =
+          reinterpret_cast<const acqu::AcquBlock_t*>(addressof(*it));
       // during a buffer, hits can come in any order,
       // and multiple hits with the same ID can happen
       hits[acqu_hit->id].emplace_back(move(acqu_hit->adc));
@@ -309,6 +313,7 @@ void acqu::FileFormatMk2::UnpackEvent(
       it++;
       break;
     }
+    // stop immediately in case of problem
     if(!good)
       return;
   }
@@ -326,7 +331,7 @@ void acqu::FileFormatMk2::UnpackEvent(
   // build the TDetectorRead,
   // the order of its hits corresponds to the given mappings
 
-  auto record = createDataRecord<TDetectorRead>();
+  auto record = createDataRecord<TDetectorRead>(); // default constructor
 
   for(const UnpackerAcquConfig::mapping_t& mapping : mappings) {
     // build the raw data
@@ -353,9 +358,135 @@ void acqu::FileFormatMk2::UnpackEvent(
     record->Hits.emplace_back(mapping.LogicalElement, rawData);
   }
 
+  if(!scalers.empty()) {
+    cout << "FOUND SCALER BLOCK with " << scalers.size() << endl;
+  }
+
   fillQueue(queue, move(record));
 
   it++; // go to next event (if any)
+}
+
+void acqu::FileFormatMk2::HandleScalerBuffer(
+    queue_t &queue,
+    it_t& it, const it_t& it_end,
+    bool& good,
+    scalers_t& scalers
+    ) const noexcept
+{
+  // ignore Scaler buffer marker
+  it++;
+
+  if(it==it_end) {
+    LogMessage(queue,
+               TUnpackerMessage::Level_t::DataError,
+               "Acqu ScalerBlock only start marker found"
+               );
+    return;
+  }
+
+  // get the scaler block length in words
+  const int scalerLength = *it;
+  constexpr int wordsize = sizeof(decltype(*it));
+  if(scalerLength % wordsize != 0
+     || distance(it,it_end)<scalerLength/wordsize) {
+    LogMessage(queue,
+               TUnpackerMessage::Level_t::DataError,
+               "Acqu ScalerBlock length invalid"
+               );
+    return;
+  }
+
+  const auto it_endscaler = next(it, scalerLength/wordsize);
+  if(*it_endscaler != acqu::EScalerBuffer) {
+    LogMessage(queue,
+               TUnpackerMessage::Level_t::DataError,
+               "Acqu ScalerBlock did not have proper end marker"
+               );
+    return;
+  }
+  it++; // skip the length word now
+
+  while(it != it_endscaler) {
+    // within a scaler block, there might be error blocks
+    if(*it == acqu::EReadError) {
+       HandleReadError(queue, it, it_end, good);
+       if(!good)
+         return;
+    }
+    //
+    if(distance(it, it_endscaler) < 2) {
+      LogMessage(queue,
+                 TUnpackerMessage::Level_t::DataError,
+                 "Acqu ScalerBlock contains malformed scaler read"
+                 );
+      return;
+    }
+    const uint32_t index = *it++;
+    const uint32_t value = *it++;
+    scalers[index].push_back(value);
+  }
+
+  // skip the scaler buffer end marker
+  // already checked above with it_endscaler
+  it++;
+
+  good = true;
+}
+
+void acqu::FileFormatMk2::HandleReadError(
+    UnpackerAcquFileFormat::queue_t &queue,
+    it_t& it, const it_t& it_end,
+    bool& good) const noexcept
+{
+  // is there enough space in the event at all?
+  static_assert(sizeof(acqu::ReadErrorMk2_t) % sizeof(decltype(*it)) == 0,
+                "acqu::ReadErrorMk2_t is not word aligned");
+  constexpr int wordsize = sizeof(acqu::ReadErrorMk2_t)/sizeof(decltype(*it));
+
+  if(distance(it, it_end)<wordsize) {
+    LogMessage(queue,
+               TUnpackerMessage::Level_t::DataError,
+               "acqu::ReadErrorMk2_t block not completely present in buffer"
+               );
+    return;
+  }
+
+  // then cast it to data structure
+  const acqu::ReadErrorMk2_t* err =
+      reinterpret_cast<const acqu::ReadErrorMk2_t*>(addressof(*it));
+
+  // check for trailer word
+  if(err->fTrailer != acqu::EReadError) {
+    LogMessage(queue,
+               TUnpackerMessage::Level_t::DataError,
+               "Acqu ErrorBlock does not end with expected trailer word"
+               );
+    return;
+  }
+
+  // lookup the module name
+  auto it_modname = acqu::ModuleIDToString.find(err->fModID);
+  const string& modname = it_modname == acqu::ModuleIDToString.cend()
+      ? "UNKNOWN" : it_modname->second;
+
+  // build TUnpackerMessage record from error info
+  auto record = createDataRecord<TUnpackerMessage>(
+        TDataRecord::ID_t(ID_upper, ID_lower),
+        TUnpackerMessage::Level_t::HardwareError,
+        std_ext::formatter()
+        << "Acqu HardwareError ModuleID={} (" << modname << ") "
+        << "Index={} ErrorCode={}"
+        );
+  record->Payload.push_back(err->fModID);
+  record->Payload.push_back(err->fModIndex);
+  record->Payload.push_back(err->fErrCode);
+
+  VLOG(9) << *record;
+
+  fillQueue(queue, move(record));
+  advance(it, wordsize);
+  good = true;
 }
 
 void acqu::FileFormatMk2::HandleEPICSBuffer(
@@ -565,68 +696,3 @@ void acqu::FileFormatMk2::HandleEPICSBuffer(
 
   good = true;
 }
-
-void acqu::FileFormatMk2::HandleScalerBuffer(UnpackerAcquFileFormat::queue_t &queue,
-    it_t& it, const it_t& it_end,
-    bool& good) const noexcept
-{
-  throw UnpackerAcqu::Exception("Not implemented");
-
-  good = true;
-}
-
-void acqu::FileFormatMk2::HandleReadError(
-    UnpackerAcquFileFormat::queue_t &queue,
-    it_t& it, const it_t& it_end,
-    bool& good) const noexcept
-{
-  // is there enough space in the event at all?
-  static_assert(sizeof(acqu::ReadErrorMk2_t) % sizeof(decltype(*it)) == 0,
-                "acqu::ReadErrorMk2_t is not word aligned");
-  constexpr int wordsize = sizeof(acqu::ReadErrorMk2_t)/sizeof(decltype(*it));
-
-  if(distance(it, it_end)<wordsize) {
-    LogMessage(queue,
-               TUnpackerMessage::Level_t::DataError,
-               "acqu::ReadErrorMk2_t block not completely present in buffer"
-               );
-    return;
-  }
-
-  // then cast it to data structure
-  const acqu::ReadErrorMk2_t* err =
-      reinterpret_cast<const acqu::ReadErrorMk2_t*>(addressof(*it));
-
-  // check for trailer word
-  if(err->fTrailer != acqu::EReadError) {
-    LogMessage(queue,
-               TUnpackerMessage::Level_t::DataError,
-               "Acqu ErrorBlock does not end with expected trailer word"
-               );
-    return;
-  }
-
-  // lookup the module name
-  auto it_modname = acqu::ModuleIDToString.find(err->fModID);
-  const string& modname = it_modname == acqu::ModuleIDToString.cend()
-      ? "UNKNOWN" : it_modname->second;
-
-  // build TUnpackerMessage record from error info
-  auto record = createDataRecord<TUnpackerMessage>(
-        TDataRecord::ID_t(ID_upper, ID_lower),
-        TUnpackerMessage::Level_t::HardwareError,
-        std_ext::formatter()
-        << "Acqu HardwareError ModuleID={} (" << modname << ") "
-        << "Index={} ErrorCode={}"
-        );
-  record->Payload.push_back(err->fModID);
-  record->Payload.push_back(err->fModIndex);
-  record->Payload.push_back(err->fErrCode);
-
-  VLOG(9) << *record;
-
-  fillQueue(queue, move(record));
-  advance(it, wordsize);
-  good = true;
-}
-
