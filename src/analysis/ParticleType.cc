@@ -35,6 +35,7 @@ const ParticleTypeDatabase::Type ParticleTypeDatabase::MuMinus("MuMinus",       
 const ParticleTypeDatabase::Type ParticleTypeDatabase::Eta("Eta",                     "#eta",          547.853, false);
 const ParticleTypeDatabase::Type ParticleTypeDatabase::Omega("Omega",                 "#omega",        782.65, false);
 const ParticleTypeDatabase::Type ParticleTypeDatabase::EtaPrime("EtaPrime",           "#eta'",         957.78, false);
+const ParticleTypeDatabase::Type ParticleTypeDatabase::Rho("Rho",                     "#rho'",         775.26, false);
 
 const ParticleTypeDatabase::Type ParticleTypeDatabase::BeamProton("BeamProton",           "#gamma p",  938.272046, true);
 
@@ -112,6 +113,7 @@ ParticleTypeDatabase::PIDMap_t ParticleTypeDatabase::pluto_pid_map = [] () {
     m[13] = &ParticleTypeDatabase::Neutron;
     m[14] = &ParticleTypeDatabase::Proton;
     m[17] = &ParticleTypeDatabase::Eta;
+    m[41] = &ParticleTypeDatabase::Rho;
     m[53] = &ParticleTypeDatabase::EtaPrime;
     m[52] = &ParticleTypeDatabase::Omega;
     m[14001] = &ParticleTypeDatabase::BeamProton;

@@ -91,6 +91,7 @@ public:
     static const Type Eta;
     static const Type Omega;
     static const Type EtaPrime;
+    static const Type Rho;
 
     static const Type BeamProton;
 
