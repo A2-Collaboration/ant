@@ -94,6 +94,7 @@ protected:
     void CopyParticles(std::shared_ptr<Event>& event, ParticleInput& input_module, const ParticleTypeDatabase::Type& type);
 
     PStaticData* pluto_database;
+    const ParticleTypeDatabase::Type* GetType(const PParticle* p) const;
 
 public:
     GoatReader();

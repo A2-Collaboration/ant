@@ -109,73 +109,80 @@ void GoatReader::CopyTracks(std::shared_ptr<Event> &event)
     }
 }
 
+const ParticleTypeDatabase::Type* GoatReader::GetType(const PParticle* p) const {
+
+    const ParticleTypeDatabase::Type* type= ParticleTypeDatabase::GetTypeOfPlutoID( p->ID() );
+
+    if(!type) {
+
+        type = ParticleTypeDatabase::AddTempPlutoType(
+                    p->ID(),
+                    "Pluto_"+to_string(p->ID()),
+                    "Pluto_"+ string( pluto_database->GetParticleName(p->ID()) ),
+                    pluto_database->GetParticleMass(p->ID())*1000.0,
+                    pluto_database->GetParticleCharge(p->ID()) != 0
+                );
+        VLOG(7) << "Adding a ParticleType for pluto ID " << p->ID() << " to ParticleTypeDatabse";
+
+        if(!type)
+            // TODO: Change this so that it does not stop the whole process and can be caught for each particle
+            throw std::out_of_range("Could not create dynamic mapping for Pluto Particle ID "+to_string(p->ID()));
+    }
+
+    return type;
+}
+
 void GoatReader::CopyPluto(std::shared_ptr<Event> &event)
 {
     const auto particles = pluto.Particles();
+
     ParticleList buffer;
     buffer.reserve(particles.size());
 
+    // convert pluto particles to ant particles and place in buffer list
     for( auto& p : particles ) {
 
-        const ParticleTypeDatabase::Type* type= ParticleTypeDatabase::GetTypeOfPlutoID( p->ID() );
-
-        if(!type) {
-
-            type = ParticleTypeDatabase::AddTempPlutoType(
-                        p->ID(),
-                        "Pluto_"+to_string(p->ID()),
-                        "Pluto_"+ string( pluto_database->GetParticleName(p->ID()) ),
-                        pluto_database->GetParticleMass(p->ID())*1000.0,
-                        pluto_database->GetParticleCharge(p->ID()) != 0
-                    );
-            VLOG(7) << "Adding a ParticleType for pluto ID " << p->ID() << " to ParticleTypeDatabse";
-
-            if(!type)
-                // TODO: Change this so that it does not stop the whole process and can be caught for each particle
-                throw std::out_of_range("Could not create dynamic mapping for Pluto Particle ID "+to_string(p->ID()));
-        }
-
+        auto type = GetType(p);
         TLorentzVector lv = *p;
         lv *= 1000.0;   // convert to MeV
 
-        auto ap = ParticlePtr(new Particle(*type,lv));
-
-        if( ap->Type() == ParticleTypeDatabase::BeamProton) {
-            const double energy = ap->E() - ParticleTypeDatabase::Proton.Mass();
-            const int channel = 0; //TODO: Get tagger channel from energy -> Tagger cfg
-            const double time = 0.0;
-            event->MCTrue().TaggerHits().emplace_back( TaggerHitPtr( new TaggerHit(channel, energy, time) ) );
-        }
-
-        if(p->GetDaughterIndex() == -1 ) { // final state
-            event->MCTrue().Particles().AddParticle(ap);
-        } else {
-            event->MCTrue().Intermediates().AddParticle(ap);
-        }
-
-
-        buffer.emplace_back(ap);
-
+        buffer.emplace_back(new Particle(*type,lv));
 
     }
 
-    if(buffer.size() != particles.size())
-        throw std::domain_error("particle list sizes differ: "+to_string(buffer.size())+" " + to_string(particles.size()));
-
+    // loop over both lists (pluto and ant particles)
     for(size_t i=0; i<particles.size(); ++i) {
 
         const PParticle* plp = particles.at(i);
-        ParticlePtr alp = buffer.at(i);
+        ParticlePtr      alp = buffer.at(i);
 
+        // Set up tree relations (parent/daughter)
         if(plp->GetParentIndex() >= 0) {
+
             if( size_t(plp->GetParentIndex()) < buffer.size()) {
                 ParticlePtr parent = buffer.at(plp->GetParentIndex());
                 alp->Partents().emplace_back(parent);
                 parent->Daughters().emplace_back(alp);
             }
+
         } else {
             if(! (alp->Type() == ParticleTypeDatabase::BeamProton))
-                LOG(WARNING) << "Missing decay tree info for pluto particle";
+                LOG(WARNING) << "Missing decay tree info for pluto particle";  // BeamProton is not supposed to have a parent
+        }
+
+        // create a tagger hit corresponding to beam+parget particle
+        if( alp->Type() == ParticleTypeDatabase::BeamProton) {
+            const double energy = alp->E() - ParticleTypeDatabase::Proton.Mass();
+            const int channel = 0; //TODO: Get tagger channel from energy -> Tagger cfg
+            const double time = 0.0;
+            event->MCTrue().TaggerHits().emplace_back( TaggerHitPtr( new TaggerHit(channel, energy, time) ) );
+        }
+
+        // Add particle to event storage
+        if(plp->GetDaughterIndex() == -1 ) { // final state
+            event->MCTrue().Particles().AddParticle(alp);
+        } else { //intermediate
+            event->MCTrue().Intermediates().AddParticle(alp);
         }
     }
     //TODO: CBEsum/Multiplicity into TriggerInfo
