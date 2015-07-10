@@ -7,6 +7,7 @@
 #include "tree/THeaderInfo.h"
 #include "tree/TUnpackerMessage.h"
 #include "tree/TSlowControl.h"
+#include "tree/TDetectorRead.h"
 
 #include "RawFileReader.h"
 
@@ -216,8 +217,8 @@ bool acqu::FileFormatMk2::UnpackDataBuffer(UnpackerAcquFileFormat::queue_t& queu
 //                 << "Overflow of Acqu EventId detected from "
 //                 << AcquID_last << " to " << acquID
 //                 );
-        VLOG(8) << "Overflow of Acqu EventId detected from "
-                << AcquID_last << " to " << acquID;
+      VLOG(8) << "Overflow of Acqu EventId detected from "
+              << AcquID_last << " to " << acquID;
     }
     AcquID_last = acquID;
     it++;
@@ -226,8 +227,6 @@ bool acqu::FileFormatMk2::UnpackDataBuffer(UnpackerAcquFileFormat::queue_t& queu
     UnpackEvent(queue, it, it_endbuffer, good);
     if(!good)
       return false;
-
-
 
     // increment official unique event ID
     ID_lower++;
@@ -238,7 +237,7 @@ bool acqu::FileFormatMk2::UnpackDataBuffer(UnpackerAcquFileFormat::queue_t& queu
     LogMessage(queue,
                TUnpackerMessage::Level_t::DataError,
                std_ext::formatter() <<
-               "Buffer did not have end buffer marker"
+               "Buffer did not have proper end buffer marker"
                );
     return false;
   }
@@ -277,11 +276,10 @@ void acqu::FileFormatMk2::UnpackEvent(
   // now work on one event inside buffer
   /// \todo Scan config if there's an ADC channel defined which mimicks those blocks
 
-  map<uint16_t, vector<uint16_t> > hits;
+  map<uint16_t, vector<uint16_t> > hits; // maybe an unordered map works better here?
   while(it != it_endbuffer && *it != acqu::EEndEvent) {
     // note that the Handle* methods move the iterator
     // themselves and set good to true if nothing went wrong
-    good = false;
 
     switch(*it) {
     case acqu::EEPICSBuffer:
@@ -298,15 +296,16 @@ void acqu::FileFormatMk2::UnpackEvent(
       break;
     default:
       // unfortunately, normal hits don't have a marker
-      // so we hope for the best at this position
+      // so we hope for the best at this position in the buffer
+      /// \todo Implement better handling of malformed event buffers
       static_assert(sizeof(acqu::AcquBlock_t) <= sizeof(decltype(*it)),
                     "acqu::AcquBlock_t does not fit into word of buffer");
       const acqu::AcquBlock_t* acqu_hit = reinterpret_cast<const acqu::AcquBlock_t*>(addressof(*it));
       // during a buffer, hits can come in any order,
       // and multiple hits with the same ID can happen
       hits[acqu_hit->id].emplace_back(move(acqu_hit->adc));
+      // decoding hits always works
       good = true;
-
       it++;
       break;
     }
@@ -324,7 +323,37 @@ void acqu::FileFormatMk2::UnpackEvent(
     return;
   }
 
+  // build the TDetectorRead,
+  // the order of its hits corresponds to the given mappings
 
+  auto record = createDataRecord<TDetectorRead>();
+
+  for(const UnpackerAcquConfig::mapping_t& mapping : mappings) {
+    // build the raw data
+    vector<uint8_t> rawData;
+    for(const UnpackerAcquConfig::RawChannel_t& rawChannel : mapping.RawChannels) {
+      const auto it_map = hits.find(rawChannel.RawChannel);
+      if(it_map==hits.cend())
+        continue;
+      const std::vector<uint16_t>& values = it_map->second;
+      for(const uint16_t& value : values) {
+        // all 16 bits are easy
+        if((rawChannel.Mask & 0xffff) == 0xffff) {
+          // higher byte first, then lower byte
+          rawData.push_back(value >> 8);
+          rawData.push_back(value);
+        }
+        else {
+          /// \todo Implement non-trivial RawChannel masks
+          throw UnpackerAcqu::Exception("Not implemented");
+        }
+      }
+    }
+    // add the hit
+    record->Hits.emplace_back(mapping.LogicalElement, rawData);
+  }
+
+  fillQueue(queue, move(record));
 
   it++; // go to next event (if any)
 }

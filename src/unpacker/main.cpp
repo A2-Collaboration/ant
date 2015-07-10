@@ -8,6 +8,7 @@
 #include "Unpacker.h"
 #include "expconfig/ExpConfig.h"
 #include "tree/THeaderInfo.h"
+#include "tree/TDetectorRead.h"
 
 #include "base/Logger.h"
 #include "base/Format.h"
@@ -28,9 +29,16 @@ int main(int argc, char* argv[]) {
   auto unpacker = Unpacker::Get("scratch/CBTaggTAPS_5711.dat.xz");
 //  auto unpacker = Unpacker::Get("scratch/oneevent-small.dat");
 
- while(auto item = unpacker->NextItem()) {
-   //VLOG(6) << *item;
- }
+  unsigned nReads = 0;
+  while(auto item = unpacker->NextItem()) {
+    const TDetectorRead* read = dynamic_cast<const TDetectorRead*>(item.get());
+    if(read == nullptr)
+      continue;
+    nReads++;
+    if(nReads % 1000 == 0) {
+      VLOG(5) << "Unpacked " << nReads << " events";
+    }
+  }
 
 //  THeaderInfo header(TDataRecord::ID_t(0,0), 0, "", 0);
 //  auto config = shared_ptr<ExpConfig::Module>(ExpConfig::Get(header));

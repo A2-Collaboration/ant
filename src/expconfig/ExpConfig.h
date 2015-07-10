@@ -20,10 +20,10 @@ enum class ChannelType_t : std::uint8_t {
   BitPattern, Scaler, Counter
 };
 
-struct LogicalElement_t {
+struct LogicalChannel_t {
   Detector_t Detector;
   ChannelType_t Type;
-  unsigned Element;
+  unsigned Channel;
 //  LogicalElement_t(
 //      const Detector_t& detector,
 //      const ChannelType_t& type,

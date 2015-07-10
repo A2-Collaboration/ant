@@ -40,7 +40,7 @@ TEST_CASE("Test TreeWriter: ant::TUnpackerMessage", "[unpacker]") {
 }
 
 TEST_CASE("Test TreeWriter: ant::TDetectorRead", "[unpacker]") {
-  dotest<ant::TDetectorRead>(0);
+  dotest<ant::TDetectorRead>(221);
 }
 
 template<typename T>

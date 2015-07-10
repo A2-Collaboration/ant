@@ -31,19 +31,22 @@ private:
 };
 
 // we define some methods here which
-// we require the configs to implement
+// the configs are required to implement
 class UnpackerAcquConfig : public ExpConfig::Unpacker<UnpackerAcquConfig> {
 public:
 
   struct RawChannel_t {
     std::uint32_t RawChannel;
     std::uint32_t Mask;
+    // provide some handy constructors
     RawChannel_t(const std::initializer_list<uint32_t>& l);
     RawChannel_t(const uint32_t& ch);
   };
 
+  // this defines how one LogicalChannel is built from
+  // the given RawChannels
   struct mapping_t {
-    LogicalElement_t LogicalElement;
+    LogicalChannel_t LogicalElement;
     std::vector<RawChannel_t> RawChannels;
   };
 
