@@ -92,10 +92,6 @@ OmegaEtaG::OmegaEtaG(OmegaBase::DataMode m):
 
     ggg_omega_pi0oreta = HistFac.makeTH1D("3#gamma IM (#omega #rightarrow #pi^{0}/#eta)","3#gamma IM [MeV]","",imbinning,"ggg_omega_pi0oreta");
 
-    ggg_gg_decays = HistFac.makeTH3D(
-                "3#gamma IM vs 2#gamma sub IM (signal only)","3#gamma IM [MeV]", "2#gamma sub IM [MeV]","decay",
-                imbinning,imbinning,BinSettings(1),"ggg_gg_decays");
-
     steps = HistFac.makeTH1D("steps", "", "", BinSettings(10));
 }
 
@@ -130,28 +126,24 @@ void OmegaEtaG::Analyse(const Event::Data &data, const Event &event)
     steps->Fill("ESum",1);
 
     const ParticleList photons = getGeoAccepted(data.Particles().Get(ParticleTypeDatabase::Photon));
-    const ParticleList protons = getGeoAccepted(data.Particles().Get(ParticleTypeDatabase::Proton));
+//    const ParticleList protons = getGeoAccepted(data.Particles().Get(ParticleTypeDatabase::Proton));
 
-    auto& mctrue_final  = event.MCTrue().Particles().GetAll();
-    auto& mctrue_interm = event.MCTrue().Intermediates().GetAll();
+//    auto& mctrue_final  = event.MCTrue().Particles().GetAll();
+//    auto& mctrue_interm = event.MCTrue().Intermediates().GetAll();
 
     bool is_omega_decay = false;
     const ParticleTypeDatabase::Type* subtype = nullptr;
 
-    if(!mctrue_final.empty() && mctrue_final.at(0)->Type() == ParticleTypeDatabase::Proton) {
+//    if(mctrue_interm.size() == 3) {
+//        if(mctrue_interm.at(0)->Type() == ParticleTypeDatabase::BeamProton) {
+//            const auto& bt = mctrue_interm.at(0);
+//            if(bt->Daughters().size()==2) {
+//                if(bt->Daughters().at(1)->Type() == ParticleTypeDatabase::Omega)
+//            }
+//        }
 
-        if( mctrue_interm.size() >= 1) {
-            is_omega_decay = (mctrue_interm.at(0)->Type() == ParticleTypeDatabase::Omega);
+//    }
 
-            if(mctrue_interm.size() ==2) {
-            if( mctrue_interm.at(1)->Type() == ParticleTypeDatabase::Eta ||
-                    mctrue_interm.at(1)->Type() == ParticleTypeDatabase::Pi0) {
-                subtype = &(mctrue_interm.at(1)->Type());
-            }
-            }
-
-        }
-    }
 
     TH1D* h = nullptr;
 
@@ -207,8 +199,6 @@ void OmegaEtaG::Analyse(const Event::Data &data, const Event &event)
                 ggg_gg_bg->Fill(gggIM,ggIM);
 
             ggg_gg_all->Fill(gggIM,ggIM);
-
-            ggg_gg_decays->Fill(gggIM,ggIM,decaystring.c_str(),1);
 
             if(h)
                 h->Fill(ggIM);

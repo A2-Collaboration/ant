@@ -48,7 +48,6 @@ class OmegaEtaG: public OmegaBase {
 protected:
 
     TH2D* ggg_gg;
-    TH3D* ggg_gg_decays;
     TH2D* ggg_gg_bg;    // if not from omega decay
     TH2D* ggg_gg_all;
 
