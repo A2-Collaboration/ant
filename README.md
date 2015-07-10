@@ -40,3 +40,39 @@ Ant data structure missing.
 
 #### Pluto
 Works, but no decay tree inforamtion. PParticle::GetDauther() always returns nullptr.
+
+
+## Brainstorm stuff
+ant
+ base
+   - Logger
+   - printable
+   - stl extensions
+
+  analysis
+   - datastructures
+   - plot
+   - utils
+   - input
+     - goat
+     - unpacker
+   - physics classes
+
+   unpacker
+    - raw file reader
+    - unpacker cfg
+    - logical channel mapping
+
+   reconstruct
+    - apply "calibration"
+    - clustering
+    - track matching
+   
+   Exp cfg
+    - ADC <-> log. channel cfg
+    - element positions, properties...
+    - broken channels
+
+   Calibrations
+
+
