@@ -162,15 +162,20 @@ void GoatReader::CopyPluto(std::shared_ptr<Event> &event)
     if(buffer.size() != particles.size())
         throw std::domain_error("particle list sizes differ: "+to_string(buffer.size())+" " + to_string(particles.size()));
 
-    for(int i=0; i<particles.size(); ++i) {
+    for(size_t i=0; i<particles.size(); ++i) {
 
         const PParticle* plp = particles.at(i);
         ParticlePtr alp = buffer.at(i);
 
-        if(plp->GetParentIndex() >= 0 && plp->GetParentIndex() < buffer.size()) {
-            ParticlePtr parent = buffer.at(plp->GetParentIndex());
-            alp->Partents().emplace_back(parent);
-            parent->Daughters().emplace_back(alp);
+        if(plp->GetParentIndex() >= 0) {
+            if( size_t(plp->GetParentIndex()) < buffer.size()) {
+                ParticlePtr parent = buffer.at(plp->GetParentIndex());
+                alp->Partents().emplace_back(parent);
+                parent->Daughters().emplace_back(alp);
+            }
+        } else {
+            if(! (alp->Type() == ParticleTypeDatabase::BeamProton))
+                LOG(WARNING) << "Missing decay tree info for pluto particle";
         }
     }
     //TODO: CBEsum/Multiplicity into TriggerInfo
