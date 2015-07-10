@@ -20,17 +20,6 @@ std::string plutoname(const int id) {
     return makeStaticData()->GetParticleName(id);
 }
 
-void RecPrint(const ParticlePtr& p, std::ostream& stream) {
-    stream << p->Type().Name() << " ";
-    if(! p->Daughters().empty()) {
-        stream << "[ ";
-        for(auto& d : p->Daughters()) {
-            RecPrint(d, stream);
-        }
-        stream << "] ";
-    }
-}
-
 int main(int argc, char** argv) {
     SetupLogger(argc, argv);
 
@@ -59,7 +48,7 @@ int main(int argc, char** argv) {
 
     cout << "--- ant:" << endl;
 
-    RecPrint(event->MCTrue().Intermediates().Get(ParticleTypeDatabase::BeamProton).front(),cout);
+    Particle::RecPrint(event->MCTrue().Intermediates().Get(ParticleTypeDatabase::BeamProton).front());
     cout << endl;
 
     if(!reader.hasData())

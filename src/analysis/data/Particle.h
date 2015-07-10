@@ -9,7 +9,7 @@
 #include "TLorentzVector.h"
 #include <vector>
 #include <list>
-#include <ostream>
+#include <iostream>
 
 
 namespace ant {
@@ -74,6 +74,8 @@ public:
     static double calcAngle( const ParticlePtr& p1, const ParticlePtr& p2 ) {
         return p1->Angle(p2->Vect());
     }
+
+    static void RecPrint(const ParticlePtr& p, std::ostream& stream=std::cout);
 
 };
 

@@ -48,3 +48,18 @@ std::ostream &Particle::Print(std::ostream &stream) const
     }
     return stream;
 }
+
+
+void Particle::RecPrint(const ParticlePtr &p, std::ostream &stream)
+{
+
+    stream << p->Type().PrintName() << " ";
+    if(! p->Daughters().empty()) {
+        stream << "[ ";
+        for(auto& d : p->Daughters()) {
+            RecPrint(d, stream);
+        }
+        stream << "] ";
+    }
+
+}
