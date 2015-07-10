@@ -54,12 +54,22 @@ void Particle::RecPrint(const ParticlePtr &p, std::ostream &stream)
 {
 
     stream << p->Type().PrintName() << " ";
-    if(! p->Daughters().empty()) {
-        stream << "[ ";
-        for(auto& d : p->Daughters()) {
-            RecPrint(d, stream);
-        }
-        stream << "] ";
-    }
 
+    if(! p->Daughters().empty()) {
+
+        if(p->Type() == ParticleTypeDatabase::BeamTarget) {
+            stream << "#rightarrow ";
+            for(auto& d : p->Daughters()) {
+                RecPrint(d, stream);
+            }
+            stream << " ";
+        } else {
+            stream << "[ ";
+            for(auto& d : p->Daughters()) {
+                RecPrint(d, stream);
+            }
+            stream << "] ";
+        }
+
+    }
 }
