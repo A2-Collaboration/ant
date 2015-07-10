@@ -51,9 +51,11 @@ ParticleList OmegaBase::getGeoAccepted(const ParticleList &p) const
 string OmegaBase::GetDecayString(const ParticleList &particles)
 {
     stringstream s;
-    for(auto& p : particles) {
-        s << p->Type().PrintName() << " ";
+    if(! particles.empty()) {
+        const auto& start = particles.front();
+        Particle::RecPrint(start, s);
     }
+
     return s.str();
 }
 
