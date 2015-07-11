@@ -65,7 +65,7 @@ public:
   virtual void BuildMappings(
       std::vector<hit_mapping_t>& hit_mappings,
       std::vector<scaler_mapping_t>& scaler_mappings
-      ) = 0;
+      ) const = 0;
 };
 
 // define the templated constructors here to keep the class definition clean

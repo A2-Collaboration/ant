@@ -4,6 +4,7 @@ set(SRCS
   detectors/TAPS.h
   detectors/CB.h
   detectors/CB.cc
+  detectors/detail/CB_elements.h
   setups/Setup_2014_EtaPrime.h
   )
 

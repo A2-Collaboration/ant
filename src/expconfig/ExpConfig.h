@@ -41,11 +41,12 @@ struct Detector_t {
     Position_t Position;
   };
 
+  virtual ~Detector_t() = default;
+
 protected:
   Detector_t(const Type_t& type) :
     Type(type) {}
   Detector_t(const Detector_t&) = delete; // disable copy
-  virtual ~Detector_t() = default;
 };
 
 

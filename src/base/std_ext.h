@@ -12,6 +12,16 @@ namespace ant {
 
 namespace std_ext {
 
+inline void insertRange(std::vector<unsigned>& v, unsigned start, unsigned stop) {
+  int length = stop-start+1;
+  if(length<1)
+    return;
+  std::vector<unsigned> v_(static_cast<size_t>(length));
+  std::iota(v_.begin(), v_.end(), start);
+  v.insert(v.end(), v_.cbegin(), v_.cend());
+}
+
+
 inline bool string_ends_with(std::string const& value, std::string const& ending)
 {
     if (ending.size() > value.size()) return false;

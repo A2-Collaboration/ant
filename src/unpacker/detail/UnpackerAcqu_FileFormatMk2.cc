@@ -334,7 +334,11 @@ void acqu::FileFormatMk2::UnpackEvent(
   it++; // go to next event (if any)
 }
 
-void acqu::FileFormatMk2::FillTDetectorRead(queue_t &queue, const hits_t &hits, const scalers_t &scalers) const noexcept
+void acqu::FileFormatMk2::FillTDetectorRead(
+    queue_t &queue,
+    const hits_t& hits,
+    const scalers_t& scalers
+    ) const noexcept
 {
   // build the TDetectorRead,
   // the order of its hits corresponds to the given mappings

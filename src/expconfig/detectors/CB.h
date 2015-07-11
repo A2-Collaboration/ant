@@ -11,24 +11,22 @@ struct CB : Detector_t, UnpackerAcquConfig {
 
   CB() : Detector_t(Detector_t::Type_t::CB) {}
 
-
-
-  virtual bool Matches(const THeaderInfo &header) const override {
+  virtual bool Matches(const THeaderInfo&) const override {
     return true;
   }
 
-  virtual void BuildMappings(std::vector<hit_mapping_t> &hit_mappings,
-                             std::vector<scaler_mapping_t> &) {
-    // CB has only hit_mappings to add, no scalers
-
-  }
+  // for UnpackerAcqu
+  virtual void BuildMappings(
+      std::vector<hit_mapping_t>&,
+      std::vector<scaler_mapping_t>&) const override;
 
 private:
   struct CBElement_t : Element_t {
     CBElement_t(unsigned channel,
                 const Position_t& position,
                 unsigned adc,
-                unsigned tdc) :
+                unsigned tdc
+                ) :
       Element_t(channel, position), // init fields
       ADC(adc),
       TDC(tdc)
@@ -37,9 +35,7 @@ private:
     unsigned TDC;
   };
   static const std::vector<CBElement_t> elements;
-
-
-
+  static std::vector<CBElement_t> initElements();
 };
 
 
