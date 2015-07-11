@@ -17,11 +17,22 @@ class Setup_2014_EtaPrime :
 public:
   Setup_2014_EtaPrime() {
     detectors.emplace_back(new detector::CB());
-    detectors.emplace_back(new detector::TAPS());
+    detectors.emplace_back(new detector::TAPS_2013(false)); // no Cherenkov
   }
 
   bool Matches(const THeaderInfo& header) const override {
+    // check that all detectors match
+    for(const auto& detector : detectors) {
+      const ExpConfig::Base* cfg
+          = dynamic_cast<const ExpConfig::Base*>(detector.get());
+      if(cfg == nullptr)
+        continue;
+      if(!cfg->Matches(header))
+        return false;
+    }
+    /// \todo Make beamtime match stricter than just detectors
     return true;
+
   }
 
   void BuildMappings(std::vector<hit_mapping_t>& hit_mappings,

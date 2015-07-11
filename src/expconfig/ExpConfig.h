@@ -30,7 +30,7 @@ struct Detector_t {
   static std::string ToString(const Type_t& type);
 
   // Element_t is the minimum information,
-  // derived classes may extend this class
+  // derived classes may extend this
   struct Element_t {
     struct Position_t {
       double X, Y, Z;
@@ -50,8 +50,6 @@ protected:
     Type(type) {}
   Detector_t(const Detector_t&) = delete; // disable copy
 };
-
-
 
 struct LogicalChannel_t {
   Detector_t::Type_t Detector;

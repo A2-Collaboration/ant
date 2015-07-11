@@ -24,7 +24,7 @@ struct CB :
       std::vector<hit_mapping_t>&,
       std::vector<scaler_mapping_t>&) const override;
 
-private:
+protected:
   struct CBElement_t : Element_t {
     CBElement_t(unsigned channel,
                 const Position_t& position,

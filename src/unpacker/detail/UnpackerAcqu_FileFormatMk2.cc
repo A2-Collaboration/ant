@@ -276,7 +276,7 @@ void acqu::FileFormatMk2::UnpackEvent(
   // now work on one event inside buffer
   /// \todo Scan config if there's an ADC channel defined which mimicks those blocks
 
-  hits_t    hits;    // maybe an unordered map works better here?
+  hits_t    hits;
   scalers_t scalers;
   while(it != it_endbuffer && *it != acqu::EEndEvent) {
     // note that the Handle* methods move the iterator
