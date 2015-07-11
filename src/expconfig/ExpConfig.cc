@@ -5,6 +5,8 @@
 #include "unpacker/tree/THeaderInfo.h"
 #include "unpacker/UnpackerAcqu.h"
 
+#include "setups/Setup_2014_EtaPrime.h"
+
 #include <type_traits>
 #include <list>
 #include <cxxabi.h>
@@ -12,70 +14,19 @@
 using namespace std;
 using namespace ant;
 
-
+bool Channel_t::IsIntegral(const Channel_t::Type_t t) {
+  switch(t) {
+  case Type_t::Integral:
+  case Type_t::IntegralShort:
+  case Type_t::IntegralAlternate:
+  case Type_t::IntegralShortAlternate:
+    return true;
+  default:
+    return false;
+  }
+}
 
 namespace ant { // templates need explicit namespace
-
-namespace config {
-
-namespace detector {
-
-struct Detector {
-  const Detector_t Type;
-
-protected:
-  Detector(const Detector_t& type) :
-    Type(type) {}
-  Detector(const Detector&) = delete; // disable copy
-  virtual ~Detector() = default;
-};
-
-struct CB : public Detector {
-  CB() : Detector(Detector_t::CB) {}
-};
-
-struct TAPS : public Detector {
-  TAPS() : Detector(Detector_t::TAPS) {}
-};
-
-} // namespace detector
-
-namespace setup {
-
-} // namespace setup
-
-namespace beamtime {
-
-class EtaPrime :
-    public ExpConfig::Module,
-    public UnpackerAcquConfig
-{
-public:
-  bool Matches(const THeaderInfo &header) const override {
-    return true;
-  }
-
-  void BuildMappings(std::vector<hit_mapping_t>& hit_mappings,
-                     std::vector<scaler_mapping_t>& scaler_mappings) override
-  {
-    hit_mapping_t map;
-    map.LogicalChannel = {Detector_t::Trigger, ChannelType_t::Counter, 0};
-    map.RawChannels.push_back(400);
-//    map.LogicalElement = {Detector_t::Trigger, ChannelType_t::Counter, 1};
-//    map.RawChannels.push_back(1853);
-    hit_mappings.push_back(map);
-  }
-
-
-};
-
-
-} // namespace beamtime
-
-} // namespace config
-
-
-
 
 template<typename T>
 unique_ptr<T> Get_(const THeaderInfo& header) {
@@ -87,7 +38,7 @@ unique_ptr<T> Get_(const THeaderInfo& header) {
   // make a list of available configs
   std::list< std::unique_ptr<ExpConfig::Base> > modules;
 
-  modules.emplace_back(new config::beamtime::EtaPrime());
+  modules.emplace_back(new expconfig::setup::Setup_2014_EtaPrime());
 
   // remove the config if the config says it does not match
   modules.remove_if([&header] (const unique_ptr<ExpConfig::Base>& m) {
@@ -127,7 +78,6 @@ unique_ptr< UnpackerAcquConfig >
 ExpConfig::Unpacker<UnpackerAcquConfig>::Get(const THeaderInfo& header) {
   return Get_< UnpackerAcquConfig >(header);
 }
-
 
 } // namespace ant
 

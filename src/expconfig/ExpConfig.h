@@ -10,29 +10,50 @@ namespace ant {
 
 class THeaderInfo;
 
-enum class Detector_t : std::uint8_t {
-  Trigger, Tagger, EPT, CB, PID, MWPC0, MWPC1,
-  TAPS, TAPSVeto, Cherenkov, Moeller
+struct Channel_t {
+  enum class Type_t : std::uint8_t {
+    Timing,
+    Integral, IntegralShort,
+    IntegralAlternate, IntegralShortAlternate,
+    BitPattern, Scaler, Counter
+  };
+  static bool IsIntegral(const Type_t t);
 };
 
-enum class ChannelType_t : std::uint8_t {
-  Timing, Integral, IntegralShort,
-  BitPattern, Scaler, Counter
+struct Detector_t {
+  enum class Type_t : std::uint8_t {
+    Trigger, Tagger, EPT, CB, PID, MWPC0, MWPC1,
+    TAPS, TAPSVeto, Cherenkov, Moeller
+  };
+  const Type_t Type;
+
+  // Element_t is the minimum information,
+  // derived classes may extend this class
+  struct Element_t {
+    struct Position_t {
+      double X, Y, Z;
+    };
+    Element_t(unsigned channel, const Position_t& position) :
+      Channel(channel),
+      Position(position)
+    {}
+    unsigned Channel; // unique within Detector for all time!
+    Position_t Position;
+  };
+
+protected:
+  Detector_t(const Type_t& type) :
+    Type(type) {}
+  Detector_t(const Detector_t&) = delete; // disable copy
+  virtual ~Detector_t() = default;
 };
+
+
 
 struct LogicalChannel_t {
-  Detector_t Detector;
-  ChannelType_t Type;
+  Detector_t::Type_t Detector;
+  Channel_t::Type_t Type;
   unsigned Channel;
-//  LogicalElement_t(
-//      const Detector_t& detector,
-//      const ChannelType_t& type,
-//      unsigned element
-//      ) :
-//    Detector(detector),
-//    Type(type),
-//    Element(element)
-//  {}
 };
 
 class ExpConfig
