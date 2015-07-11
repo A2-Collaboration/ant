@@ -34,6 +34,6 @@ void acqu::FileFormatMk1::FillFirstDataBuffer(queue_t& queue, reader_t &reader, 
 bool acqu::FileFormatMk1::UnpackDataBuffer(queue_t &queue, it_t& it, const it_t& it_endbuffer) noexcept
 {
   /// \todo Implement Mk1 unpacking
-  return true;
+  throw UnpackerAcqu::Exception("Mk1 format not implemented yet");
 }
 

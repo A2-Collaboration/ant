@@ -45,22 +45,4 @@ shared_ptr<TDataRecord> UnpackerAcqu::NextItem() noexcept
   return element;
 }
 
-namespace ant {
 
-template<>
-UnpackerAcquConfig::RawChannel_t<uint16_t>::RawChannel_t(const initializer_list<uint16_t> &l) {
-  if(l.size()==2) {
-    RawChannel = *l.begin();
-    Mask = *l.end();
-  }
-  else
-    throw runtime_error("bits_t can only be initialized with 2 values.");
-}
-
-template<>
-UnpackerAcquConfig::RawChannel_t<uint16_t>::RawChannel_t(const uint16_t &ch)
-{
-  RawChannel = ch;
-  Mask = 0xffff;
-}
-}

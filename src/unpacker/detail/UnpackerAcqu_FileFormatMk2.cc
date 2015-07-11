@@ -341,7 +341,7 @@ void acqu::FileFormatMk2::UnpackEvent(
       if(it_map==hits.cend())
         continue;
       const std::vector<uint16_t>& values = it_map->second;
-      if(rawChannel.Mask == 0xffff) {
+      if(rawChannel.Mask == UnpackerAcquConfig::RawChannel_t<uint16_t>::NoMask) {
         const size_t offset = rawData.size();
         const size_t length = sizeof(uint16_t)*values.size();
         rawData.resize(offset+length);
@@ -429,6 +429,7 @@ void acqu::FileFormatMk2::HandleScalerBuffer(
     scalers[index].push_back(value);
   }
 
+  // this position is only reached when it==it_endscaler
   // skip the scaler buffer end marker
   // already checked above with it_endscaler
   it++;
