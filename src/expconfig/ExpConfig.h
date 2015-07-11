@@ -4,7 +4,7 @@
 #include <map>
 #include <memory>
 #include <cstdint>
-
+#include "base/printable.h"
 
 namespace ant {
 
@@ -17,7 +17,8 @@ struct Channel_t {
     IntegralAlternate, IntegralShortAlternate,
     BitPattern, Scaler, Counter
   };
-  static bool IsIntegral(const Type_t t);
+  static bool IsIntegral(const Type_t& t);
+  static std::string ToString(const Type_t& type);
 };
 
 struct Detector_t {
@@ -26,6 +27,7 @@ struct Detector_t {
     TAPS, TAPSVeto, Cherenkov, Moeller
   };
   const Type_t Type;
+  static std::string ToString(const Type_t& type);
 
   // Element_t is the minimum information,
   // derived classes may extend this class
@@ -91,5 +93,7 @@ public:
 };
 
 } // namespace ant
+
+
 
 #endif // EXPCONFIG_H

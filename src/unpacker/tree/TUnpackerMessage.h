@@ -31,6 +31,21 @@ struct TUnpackerMessage : TDataRecord
   enum class Level_t : std::uint8_t {
     Info, Warn, DataError, DataDiscard, HardwareError
   };
+  static std::string LevelToString(const Level_t& level) {
+    switch(level) {
+    case Level_t::Info:
+      return "Info";
+    case Level_t::Warn:
+      return "Warn";
+    case Level_t::DataError:
+      return "DataError";
+    case Level_t::DataDiscard:
+      return "DataDiscard";
+    case Level_t::HardwareError:
+      return "HardwareError";
+    }
+    throw std::runtime_error("Not implemented");
+  }
   TUnpackerMessage(TDataRecord::ID_t id,
                    Level_t level,
                    const std::string& message) :
@@ -41,7 +56,8 @@ struct TUnpackerMessage : TDataRecord
   }
   virtual std::ostream& Print( std::ostream& s) const override {
     return s << "TUnpackerMessage ID=" << ID
-             << " Level=" << static_cast<int>(Level) << " Msg='" << FormattedMessage() << "'";
+             << " Level=" << LevelToString(static_cast<Level_t>(Level))
+             << " Msg='" << FormattedMessage() << "'";
   }
 #endif
 

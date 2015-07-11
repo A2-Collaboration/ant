@@ -103,6 +103,7 @@ void acqu::FileFormatBase::FillHeader(queue_t& queue)
 
   // now try to fine the first data buffer
   FillFirstDataBuffer(queue, reader, buffer);
+  unpackedBuffers = 0; // not yet unpacked
 
   // remember the record length size
   trueRecordLength = buffer.size();
@@ -170,7 +171,7 @@ void acqu::FileFormatBase::LogMessage(
 }
 
 
-void acqu::FileFormatBase::FillEvents(std::deque<std::unique_ptr<TDataRecord> >& queue) noexcept
+void acqu::FileFormatBase::FillEvents(queue_t& queue) noexcept
 {
   // this method never throws exceptions, but just adds TUnpackerMessage to queue
   // if something strange while unpacking is encountered
@@ -181,21 +182,57 @@ void acqu::FileFormatBase::FillEvents(std::deque<std::unique_ptr<TDataRecord> >&
     return;
 
   // start parsing the filled buffer
+  // however, we fill a temporary queue first
   auto it = buffer.cbegin();
-  if(!UnpackDataBuffer(queue, it, buffer.cend())) {
+  queue_t queue_buffer;
+  if(!UnpackDataBuffer(queue_buffer, it, buffer.cend())) {
     // handle errors on buffer scale
-    /// \todo Implement proper data discard
-    VLOG(7) << "Handling error while buffer unpacking";
+    VLOG(7) << "Error while unpacking buffer, discarding all unpacked data from buffer.";
+    // add the last item in the queue (if any), which should be a TUnpackerMessage instance
+    if(!queue_buffer.empty()) {
+      const auto& lastItem = queue.back();
+      auto ptr = dynamic_cast<const TUnpackerMessage*>(lastItem.get());
+      if(ptr != nullptr) {
+        queue.splice(queue.cend(), move(queue_buffer),
+                     next(queue_buffer.cend(),-1), queue_buffer.cend());
+      }
+    }
+    // always add an datadiscard info record
+    auto record = createDataRecord<TUnpackerMessage>(
+          TDataRecord::ID_t(ID_upper, ID_lower),
+          TUnpackerMessage::Level_t::DataDiscard,
+          "Discarded buffer number {}"
+          );
+    record->Payload.push_back(unpackedBuffers);
+    fillQueue(queue, move(record));
+  }
+  else {
+    // successful, so add all to output
+    const int unpackedWords = distance(buffer.cbegin(), it);
+    VLOG(7) << "Successfully unpacked " << unpackedWords << " words ("
+            << 100.0*unpackedWords/buffer.size() << " %) from buffer ";
+    queue.splice(queue.cend(), move(queue_buffer));
   }
 
-  const int unpackedWords = distance(buffer.cbegin(), it);
-  VLOG(7) << "Unpacked " << unpackedWords << " words ("
-          << 100.0*unpackedWords/buffer.size() << " %) from buffer ";
+  unpackedBuffers++;
 
-  // refill the buffer, clear buffer if there was a problem when reading
-  reader->read(buffer.data(), trueRecordLength);
+
+  // refill the buffer
+  try {
+    reader->read(buffer.data(), trueRecordLength);
+  }
+  catch(ant::RawFileReader::Exception e) {
+    // clear buffer if there was a problem when reading
+    LogMessage(queue,
+               TUnpackerMessage::Level_t::DataError,
+               std_ext::formatter()
+               << "Error while reading input: " << e.what());
+    buffer.clear();
+  }
+
+  // check if actually enough bytes were read
   if(reader->gcount() != 4*trueRecordLength) {
-    // we might have reached the end of file
+    // reached the end of file properly?
     if(reader->gcount() == 0 && reader->eof()) {
       LogMessage(queue,
                  TUnpackerMessage::Level_t::Info,

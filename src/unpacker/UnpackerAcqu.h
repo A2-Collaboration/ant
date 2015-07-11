@@ -5,7 +5,7 @@
 #include "expconfig/ExpConfig.h"
 
 #include <memory>
-#include <deque>
+#include <list>
 #include <vector>
 #include <cstdint>
 #include <limits>
@@ -26,7 +26,7 @@ public:
   };
 
 private:
-  std::deque< std::unique_ptr<TDataRecord> > queue;
+  std::list< std::unique_ptr<TDataRecord> > queue; // std::list supports splice
   std::unique_ptr<UnpackerAcquFileFormat> file;
 
 };

@@ -6,7 +6,7 @@
 
 #include <cstdint>
 #include <ctime>
-#include <deque>
+#include <list>
 #include <memory>
 #include <string>
 #include <vector>
@@ -26,7 +26,7 @@ class THeaderInfo;
 class UnpackerAcquFileFormat {
 public:
 
-  using queue_t = std::deque< std::unique_ptr<TDataRecord> >;
+  using queue_t = std::list< std::unique_ptr<TDataRecord> >;
 
   /**
    * @brief Get a suitable instance for the given filename
@@ -70,6 +70,7 @@ private:
   std::unique_ptr<RawFileReader> reader;
   std::vector<std::uint32_t> buffer;
   signed trueRecordLength;
+  unsigned unpackedBuffers;
   std::unique_ptr<THeaderInfo> BuildTHeaderInfo();
   std::unique_ptr<UnpackerAcquConfig> config;
 

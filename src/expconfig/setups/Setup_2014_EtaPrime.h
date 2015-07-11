@@ -37,6 +37,7 @@ public:
       cfg->BuildMappings(hit_mappings, scaler_mappings);
     }
     // you may tweak the mapping at this location here
+    // for example, ignore elements
   }
 
 private:

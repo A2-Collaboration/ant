@@ -5,6 +5,8 @@
 
 #ifndef __CINT__
 #include "expconfig/ExpConfig.h"
+#include <iomanip>
+#include <sstream>
 #endif
 
 namespace ant {
@@ -40,11 +42,27 @@ struct TDetectorRead : TDataRecord
       RawData(rawData)
     {
       static_assert(sizeof(Channel)>=sizeof(decltype(element.Channel)),
-                    "LogicalElement_t::Channel does not fit into this.Channel");
+                    "LogicalElement_t::Channel does not fit into TDetecorRead::Channel");
     }
 
     virtual std::ostream& Print( std::ostream& s) const override {
-      return s << "Hit Detector=" << static_cast<int>(Detector);
+      std::ostringstream rawdata;
+
+      rawdata << std::hex << std::uppercase << std::setfill( '0' );
+      for(int c : RawData) {
+        rawdata << std::setw( 2 ) << c;
+      }
+
+      return s << "Hit Detector="
+               //<< std::left << std::setfill(' ') << std::setw(4)
+               << Detector_t::ToString(static_cast<Detector_t::Type_t>(Detector)) << std::right
+               << " Channel="
+               << std::setw(3)
+               << Channel
+               << " Type="
+               << Channel_t::ToString(static_cast<Channel_t::Type_t>(Type))
+               << " RawData=0x" << rawdata.str()
+                  ;
     }
 #endif
 
@@ -55,12 +73,16 @@ struct TDetectorRead : TDataRecord
 
   std::vector<Hit> Hits;
 
-
-
-
 #ifndef __CINT__
   virtual std::ostream& Print( std::ostream& s) const override {
-    return s << "TDetectorRead ID=" << ID;
+    s << "TDetectorRead ID=" << ID << " Hits=" << Hits.size() << '\n';
+    for(size_t i=0;i<Hits.size();i++) {
+      s << "  i="
+        << std::setw(3)
+        << i << " "
+        << Hits[i] << '\n';
+    }
+    return s;
   }
 #endif
 
