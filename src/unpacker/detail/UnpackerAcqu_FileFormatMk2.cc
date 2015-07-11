@@ -276,7 +276,7 @@ void acqu::FileFormatMk2::UnpackEvent(
   // now work on one event inside buffer
   /// \todo Scan config if there's an ADC channel defined which mimicks those blocks
 
-  map<uint16_t, vector<uint16_t> > hits; // maybe an unordered map works better here?
+  hits_t    hits;    // maybe an unordered map works better here?
   scalers_t scalers;
   while(it != it_endbuffer && *it != acqu::EEndEvent) {
     // note that the Handle* methods move the iterator
@@ -290,7 +290,7 @@ void acqu::FileFormatMk2::UnpackEvent(
       HandleEPICSBuffer(queue, it, it_endevent, good);
       break;
     case acqu::EScalerBuffer:
-      // Scaler read in this event
+      // Scaler read in this event, fill the scalers map
       HandleScalerBuffer(queue, it, it_endevent, good, scalers);
       break;
     case acqu::EReadError:
@@ -314,6 +314,7 @@ void acqu::FileFormatMk2::UnpackEvent(
       break;
     }
     // stop immediately in case of problem
+    /// \todo Implement more fine-grained unpacking error handling
     if(!good)
       return;
   }
@@ -328,45 +329,78 @@ void acqu::FileFormatMk2::UnpackEvent(
     return;
   }
 
+  FillTDetectorRead(queue, hits, scalers);
+
+  it++; // go to next event (if any)
+}
+
+void acqu::FileFormatMk2::FillTDetectorRead(queue_t &queue, const hits_t &hits, const scalers_t &scalers) const noexcept
+{
   // build the TDetectorRead,
   // the order of its hits corresponds to the given mappings
 
-  auto record = createDataRecord<TDetectorRead>(); // default constructor
+  auto record = createDataRecord<TDetectorRead>(TDataRecord::ID_t(ID_upper, ID_lower));
 
-  for(const UnpackerAcquConfig::mapping_t& mapping : mappings) {
+  for(const UnpackerAcquConfig::hit_mapping_t& mapping : hit_mappings) {
     // build the raw data
-    vector<uint8_t> rawData;
-    for(const UnpackerAcquConfig::RawChannel_t<uint16_t>& rawChannel : mapping.RawChannels) {
-      const auto it_map = hits.find(rawChannel.RawChannel);
-      if(it_map==hits.cend())
-        continue;
-      const std::vector<uint16_t>& values = it_map->second;
-      if(rawChannel.Mask == UnpackerAcquConfig::RawChannel_t<uint16_t>::NoMask) {
-        const size_t offset = rawData.size();
-        const size_t length = sizeof(uint16_t)*values.size();
-        rawData.resize(offset+length);
-        /// \todo Think about byte ordering here, isn't x86's little-endian quasi standard?!
-        std::copy(values.begin(), values.end(),
-                  reinterpret_cast<uint16_t*>(addressof(rawData[offset])));
+    const auto& rawData = getRawData(mapping, hits);
+    // add to TDetectorRead's Hits if something was found
+    if(!rawData.empty())
+      record->Hits.emplace_back(mapping.LogicalChannel, move(rawData));
+  }
+
+  // scalers are bit more complicated to add,
+  // since there might be added as TSlowControl items
+  // instead of TDetectorRead Hit
+  if(!scalers.empty()) {
+    for(const UnpackerAcquConfig::scaler_mapping_t& mapping : scaler_mappings) {
+      if(mapping.SlowControlName.empty()) {
+        // scaler should be handled as part of the TDetectorRead's Hits
+        // build the raw data
+        const auto& rawData = getRawData(mapping, scalers);
+        // add to TDetectorRead record if something was found
+        if(!rawData.empty())
+          record->Hits.emplace_back(mapping.LogicalChannel, move(rawData));
       }
       else {
-        /// \todo Implement non-trivial RawChannel masks (if that's actually needed)
-        throw UnpackerAcqu::Exception("Not implemented");
+        // this scaler should be handled as TSlowControl item
+        auto record_sc = createDataRecord<TSlowControl>(
+              TDataRecord::ID_t(ID_upper, ID_lower),
+              TSlowControl::Type_t::AcquScaler,
+              0, /// \todo estimate some timestamp from ID_lower here?
+              mapping.SlowControlName,
+              ""
+              );
+
+        // fill TSlowControl's payload
+        using RawChannel_t = UnpackerAcquConfig::RawChannel_t<uint32_t>;
+        for(const RawChannel_t& rawChannel : mapping.RawChannels) {
+          const auto it_map = scalers.find(rawChannel.RawChannel);
+          if(it_map==scalers.cend())
+            continue;
+          const std::vector<uint32_t>& values = it_map->second;
+          using payload_t = decltype(record_sc->Payload_Int);
+          // require strict > to prevent signed/unsigned ambiguity
+          static_assert(sizeof(payload_t::value_type) > sizeof(uint32_t),
+                        "Payload_Int not suitable for scaler value");
+          record_sc->Payload_Int.insert(
+                record_sc->Payload_Int.cbegin(),
+                values.cbegin(),
+                values.cend()
+                );
+        }
+
+        fillQueue(queue, move(record_sc));
       }
     }
-    // add to TDetectorRead record if something was found
-    if(!rawData.empty())
-      record->Hits.emplace_back(mapping.LogicalElement, move(rawData));
   }
 
-  if(!scalers.empty()) {
-    cout << "FOUND SCALER BLOCK with " << scalers.size() << endl;
+  if(record->Hits.empty()) {
+    /// \todo Improve message, maybe add TUnpackerMessage then?
+    LOG(WARNING) << "Found event with no hits at all";
   }
 
-  if(!record->Hits.empty())
-    fillQueue(queue, move(record));
-
-  it++; // go to next event (if any)
+  fillQueue(queue, move(record));
 }
 
 void acqu::FileFormatMk2::HandleScalerBuffer(

@@ -11,6 +11,10 @@ namespace ant {
 
 struct TDetectorRead : TDataRecord
 {
+  TDetectorRead(const TDataRecord::ID_t& id) :
+    TDataRecord(id),
+    Hits()
+  {}
 
 #ifndef __CINT__
   struct Hit  : printable_traits
@@ -50,6 +54,9 @@ struct TDetectorRead : TDataRecord
   };
 
   std::vector<Hit> Hits;
+
+
+
 
 #ifndef __CINT__
   virtual std::ostream& Print( std::ostream& s) const override {

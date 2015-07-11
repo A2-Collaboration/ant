@@ -55,15 +55,18 @@ public:
     return true;
   }
 
-  void BuildMappings(std::vector<mapping_t>& mappings) override
+  void BuildMappings(std::vector<hit_mapping_t>& hit_mappings,
+                     std::vector<scaler_mapping_t>& scaler_mappings) override
   {
-    mapping_t map;
-    map.LogicalElement = {Detector_t::Trigger, ChannelType_t::Counter, 0};
-    map.RawChannels.push_back({400, 0xffff});
+    hit_mapping_t map;
+    map.LogicalChannel = {Detector_t::Trigger, ChannelType_t::Counter, 0};
+    map.RawChannels.push_back(400);
 //    map.LogicalElement = {Detector_t::Trigger, ChannelType_t::Counter, 1};
 //    map.RawChannels.push_back(1853);
-    mappings.push_back(map);
+    hit_mappings.push_back(map);
   }
+
+
 };
 
 

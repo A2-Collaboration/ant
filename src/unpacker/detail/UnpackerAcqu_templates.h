@@ -74,6 +74,36 @@ bool inspectHeaderMk1Mk2(const std::vector<uint32_t>& buffer) {
   return true;
 }
 
+template<typename T>
+std::vector<std::uint8_t>
+getRawData(
+    const UnpackerAcquConfig::mapping_t<T>& mapping,
+    const std::map<T, std::vector<T> >& items // scalers or hits
+    ) {
+  using RawChannel_t = UnpackerAcquConfig::RawChannel_t<T>;
+
+  std::vector<std::uint8_t> rawData;
+  for(const RawChannel_t& rawChannel : mapping.RawChannels) {
+    const auto it_map = items.find(rawChannel.RawChannel);
+    if(it_map==items.cend())
+      continue;
+    const std::vector<T>& values = it_map->second;
+    if(rawChannel.Mask == RawChannel_t::NoMask) {
+      const size_t offset = rawData.size();
+      const size_t length = sizeof(T)*values.size();
+      rawData.resize(offset+length);
+      /// \todo Think about byte ordering here, isn't x86's little-endian quasi standard?!
+      std::copy(values.begin(), values.end(),
+                reinterpret_cast<T*>(std::addressof(rawData[offset])));
+    }
+    else {
+      /// \todo Implement non-trivial RawChannel masks (if that's actually needed)
+      throw UnpackerAcqu::Exception("Not implemented");
+    }
+  }
+  return rawData;
+}
+
 }} // namespace ant::unpacker
 
 

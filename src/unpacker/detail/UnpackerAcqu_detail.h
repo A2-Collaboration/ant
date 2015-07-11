@@ -106,7 +106,9 @@ protected:
   std::uint32_t ID_lower; // lower part, incremented by FillEvents
   unsigned AcquID_last = 0;
 
-  std::vector<UnpackerAcquConfig::mapping_t> mappings;
+  std::vector<UnpackerAcquConfig::hit_mapping_t> hit_mappings;
+  std::vector<UnpackerAcquConfig::scaler_mapping_t> scaler_mappings;
+
 
   // this class already implements some stuff
   void Setup(reader_t&& reader_, buffer_t&& buffer_) override;

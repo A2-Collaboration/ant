@@ -7,7 +7,7 @@ namespace ant {
 
 struct TSlowControl : TDataRecord
 {
-  TSlowControl(TDataRecord::ID_t id,
+  TSlowControl(const TDataRecord::ID_t& id,
                std::uint8_t type,
                std::time_t timestamp,
                const std::string& name,
@@ -36,9 +36,9 @@ struct TSlowControl : TDataRecord
   std::vector<double>       Payload_Float;
 
 #ifndef __CINT__
-  /// \todo Maybe those types are bit too Acqu-like...
+  /// \todo Maybe those types are bit too Acqu-like...?!
   enum class Type_t : std::uint8_t {
-    Scaler, EpicsOneShot, EpicsScaler, EpicsTimer
+    AcquScaler, EpicsOneShot, EpicsScaler, EpicsTimer
   };
   TSlowControl(TDataRecord::ID_t id,
                Type_t type,

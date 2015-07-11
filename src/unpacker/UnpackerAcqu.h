@@ -36,35 +36,36 @@ private:
 class UnpackerAcquConfig : public ExpConfig::Unpacker<UnpackerAcquConfig> {
 public:
 
-
   template<typename T>
   struct RawChannel_t {
     static_assert(std::is_unsigned<T>::value, "T must be unsigned");
     T RawChannel;
     T Mask;
+    static constexpr T NoMask = std::numeric_limits<T>::max();
     // provide some handy constructors (implemented below)
-    // and constants
     RawChannel_t(const std::initializer_list<T>& l);
     RawChannel_t(const T& ch);
-    static constexpr T NoMask = std::numeric_limits<T>::max();
   };
 
-  // this defines how one LogicalChannel is built from
-  // the given RawChannels
+  template<typename T>
   struct mapping_t {
-    LogicalChannel_t LogicalElement;
-    std::vector< RawChannel_t<std::uint16_t> > RawChannels;
+    LogicalChannel_t LogicalChannel;
+    std::vector< RawChannel_t<T> > RawChannels;
   };
 
-  virtual void BuildMappings(std::vector<mapping_t>& mappings) = 0;
+  // hits (or Acqu ADC values) are always part of TDetectorRead
+  struct hit_mapping_t : mapping_t<std::uint16_t> {};
 
   // scalers in acqu can be handled as additional information
   // for a logical detector channel, or as TSlowControl items
-  struct scaler_mapping_t {
-    LogicalChannel_t LogicalElement;
-    std::vector< RawChannel_t<std::uint32_t> > RawChannels;
+  struct scaler_mapping_t : mapping_t<std::uint32_t> {
+    std::string SlowControlName;     // if non-empty, scaler is converted to TSlowControl item
   };
 
+  virtual void BuildMappings(
+      std::vector<hit_mapping_t>& hit_mappings,
+      std::vector<scaler_mapping_t>& scaler_mappings
+      ) = 0;
 };
 
 // define the templated constructors here to keep the class definition clean
