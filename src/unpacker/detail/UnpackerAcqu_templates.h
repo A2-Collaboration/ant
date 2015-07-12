@@ -68,11 +68,11 @@ bool inspectHeaderMk1Mk2(const std::vector<uint32_t>& buffer) {
   return true;
 }
 
-template<typename T>
+template<typename T, typename Map>
 std::vector<std::uint8_t>
 getRawData(
     const UnpackerAcquConfig::mapping_t<T>& mapping,
-    const std::map<T, std::vector<T> >& items // scalers or hits
+    const Map& items // scalers or hits
     ) {
   using RawChannel_t = UnpackerAcquConfig::RawChannel_t<T>;
 
