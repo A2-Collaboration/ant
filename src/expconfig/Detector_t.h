@@ -2,20 +2,13 @@
 #define EXPCONFIG_DETECTOR_T_H
 
 #include <string>
+#include <vector>
 
 namespace ant {
 
-struct Channel_t {
-  enum class Type_t : std::uint8_t {
-    Timing,
-    Integral, IntegralShort,
-    IntegralAlternate, IntegralShortAlternate,
-    BitPattern, Scaler, Counter
-  };
-  static bool IsIntegral(const Type_t& t);
-  static std::string ToString(const Type_t& type);
-};
-
+/**
+ * @brief The Detector_t struct is the minimal base class for all detectors
+ */
 struct Detector_t {
   enum class Type_t : std::uint8_t {
     Trigger, Tagger, EPT, CB, PID, MWPC0, MWPC1,
@@ -46,14 +39,39 @@ protected:
   Detector_t(const Detector_t&) = delete; // disable copy
 };
 
+/**
+ * @brief The Channel_t struct enumerates the different channel types
+ */
+struct Channel_t {
+  enum class Type_t : std::uint8_t {
+    Timing,
+    Integral, IntegralShort,
+    IntegralAlternate, IntegralShortAlternate,
+    BitPattern, Scaler, Counter
+  };
+  static bool IsIntegral(const Type_t& t);
+  static std::string ToString(const Type_t& type);
+};
+
+/**
+ * @brief The LogicalChannel_t struct uniquely identifies detector element within setup
+ */
 struct LogicalChannel_t {
   Detector_t::Type_t Detector;
   Channel_t::Type_t Type;
   unsigned Channel;
 };
 
+struct ClusterDetector_t : Detector_t {
+
+  virtual std::vector<unsigned> GetNeighbours(unsigned channel) const = 0;
+  virtual double GetMoliereRadius(unsigned channel) const = 0;
 
 
+protected:
+  ClusterDetector_t(const Type_t& type) :
+    Detector_t(type) {}
+};
 
 } // namespace ant
 

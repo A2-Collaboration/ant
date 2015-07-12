@@ -14,7 +14,7 @@ namespace calibration {
  */
 class CalibrationApply_traits {
 public:
-    virtual void ApplyTo() =0;
+    virtual void ApplyTo() = 0;
 };
 
 /**

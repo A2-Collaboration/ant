@@ -20,14 +20,15 @@ struct TAPS :
 
 protected:
   struct TAPSElement_t : Element_t {
-    TAPSElement_t(unsigned channel,
-                const Position_t& position,
-                unsigned tac,
-                unsigned lg,
-                unsigned sg,
-                unsigned lgs,
-                unsigned sgs
-                ) :
+    TAPSElement_t(
+        unsigned channel,
+        const Position_t& position,
+        unsigned tac,
+        unsigned lg,
+        unsigned sg,
+        unsigned lgs,
+        unsigned sgs
+        ) :
       Element_t(channel, position), // init fields
       TAC(tac),
       LG(lg),
