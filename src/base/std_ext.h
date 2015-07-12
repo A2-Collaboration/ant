@@ -7,8 +7,9 @@
 #include <memory>
 #include <type_traits>
 #include <ctime>
-
 #include <iostream>
+
+#include <cxxabi.h> // works only with GCC?
 
 namespace ant {
 
@@ -72,6 +73,11 @@ inline bool time_between(const time_t& moment,
                          const std::string& begin,
                          const std::string& end) {
   return time_before(moment, end) && time_after(moment, begin);
+}
+
+template<typename T>
+std::string getTypeAsString() {
+  return abi::__cxa_demangle(typeid(T).name(), nullptr, nullptr, nullptr);
 }
 
 

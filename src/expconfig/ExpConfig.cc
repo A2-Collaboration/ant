@@ -85,7 +85,7 @@ namespace ant { // templates need explicit namespace
 template<typename T>
 unique_ptr<T> Get_(const THeaderInfo& header) {
   VLOG(9) << "Searching for config of type "
-          << abi::__cxa_demangle(typeid(T).name(), nullptr, nullptr, nullptr);
+          << std_ext::getTypeAsString<T>();
 
   static_assert(is_base_of<ExpConfig::Base, T>::value, "T must be a base of ExpConfig::Base");
 
