@@ -15,6 +15,8 @@
 
 #include <exception>
 
+#include "base/std_ext.h"
+
 using namespace std;
 namespace ant {
 
@@ -40,13 +42,13 @@ public:
     }
 
     virtual std::unique_ptr<BaseFillFunction<T>> Copy() const {
-        return std::unique_ptr<BaseFillFunction<T>>( new FillFunction<T,FunctionType>(function) );
+        return std_ext::make_unique< FillFunction<T,FunctionType> >( function );
     }
 };
 
 template<typename T, typename FunctionType>
 std::unique_ptr<BaseFillFunction<T>> makeFunc(FunctionType f) {
-    return std::unique_ptr<BaseFillFunction<T>>(new FillFunction<T,FunctionType>(f));
+    return std_ext::make_unique< FillFunction<T,FunctionType> >(f);
 }
 
 class uninitialized_histogram : public std::exception {

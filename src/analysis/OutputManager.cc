@@ -6,6 +6,8 @@
 #include "TDirectory.h"
 #include "base/Logger.h"
 
+#include "base/std_ext.h"
+
 using namespace std;
 using namespace ant;
 using namespace ant::output;
@@ -21,7 +23,7 @@ void OutputManager::SetNewOutput(const string &filename)
 {
 
     try {
-        auto f = std::unique_ptr<TFileWrapper>( new TFileWrapper(filename));
+        auto f = std_ext::make_unique<TFileWrapper>(filename);
         current_dir = **f;
         files.emplace_back( std::move(f) );
         VLOG(5) << "Current root output directory is " << current_dir->GetPath();

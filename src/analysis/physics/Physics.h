@@ -8,6 +8,8 @@
 #include <memory>
 #include "input/DataReader.h"
 
+#include "base/std_ext.h"
+
 class TFile;
 class TDirectory;
 
@@ -44,9 +46,11 @@ public:
     PhysicsManager();
     template <typename T, typename ... args_t>
     void AddPhysics(args_t&&... args) {
-        physics.emplace_back(
-                    std::unique_ptr<ant::Physics>(
-                        new T(std::forward<args_t>(args)...)));
+        physics.push_back(
+              std_ext::make_unique<T>(
+                std::forward<args_t>(args)...
+                )
+              );
     }
 
     void ReadFrom(ant::input::DataReader& reader);
