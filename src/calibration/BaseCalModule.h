@@ -3,7 +3,12 @@
 
 #include "analysis/physics/Physics.h"
 
+#include <memory>
+
 namespace ant {
+
+class TDetectorRead;
+
 namespace calibration {
 
 
@@ -14,7 +19,7 @@ namespace calibration {
  */
 class CalibrationApply_traits {
 public:
-    virtual void ApplyTo() = 0;
+  virtual void ApplyTo(std::unique_ptr<TDetectorRead>& detectorRead) = 0;
 };
 
 /**
@@ -25,8 +30,8 @@ public:
  */
 class BaseCalibrationModule: public ant::Physics, public CalibrationApply_traits {
 public:
-    BaseCalibrationModule(const std::string& name): Physics(name) {}
-    virtual ~BaseCalibrationModule() = default;
+  BaseCalibrationModule(const std::string& name): Physics(name) {}
+  virtual ~BaseCalibrationModule() = default;
 };
 
 }

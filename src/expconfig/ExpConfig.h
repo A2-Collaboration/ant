@@ -27,6 +27,7 @@ public:
   // the ExpConfig::Module defines methods for unpacker-independent configs
   class Module : public virtual Base {
 
+    virtual void GetCalibrations() const = 0;
   };
 
   // each unpacker has its own config,

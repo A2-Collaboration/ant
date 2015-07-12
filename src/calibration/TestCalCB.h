@@ -18,7 +18,7 @@ public:
 
     // CalibrationApply_traits interface
 public:
-    void ApplyTo();
+    virtual void ApplyTo(std::unique_ptr<TDetectorRead> &) override;
 
     // Physics interface
 public:

@@ -11,7 +11,7 @@ ant::calibration::TestCalCB::TestCalCB():
     ggIM = HistFac.makeTH1D("ggIM","2 #gamma IM [MeV]","#",energybins,"ggIM");
 }
 
-void ant::calibration::TestCalCB::ApplyTo()
+void ant::calibration::TestCalCB::ApplyTo(std::unique_ptr<TDetectorRead>&)
 {
 
 }

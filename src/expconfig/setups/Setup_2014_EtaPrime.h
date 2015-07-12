@@ -21,6 +21,8 @@ public:
     detectors.push_back(std_ext::make_unique<detector::TAPS_2013>(false)); // no Cherenkov
   }
 
+  virtual void GetCalibrations() const override {}
+
   bool Matches(const THeaderInfo& header) const override {
     // check that all detectors match
     for(const auto& detector : detectors) {
