@@ -24,12 +24,6 @@ void fillQueue(UnpackerAcquFileFormat::queue_t& queue, std::unique_ptr<T>&& item
         );
 }
 
-template<typename T, typename... Arg>
-std::unique_ptr<T> createDataRecord(Arg&&... arg)
-{
-  return std::unique_ptr<T>(new T(std::forward<Arg>(arg)...));
-}
-
 // inspectHeader can actually be implemented for Mk1 and Mk2...
 template<typename T>
 bool inspectHeaderMk1Mk2_(const T* h, std::true_type) {

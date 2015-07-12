@@ -91,8 +91,7 @@ unique_ptr<T> Get_(const THeaderInfo& header) {
 
   // make a list of available configs
   std::list< std::unique_ptr<ExpConfig::Base> > modules;
-
-  modules.emplace_back(new expconfig::setup::Setup_2014_EtaPrime());
+  modules.push_back(std_ext::make_unique<expconfig::setup::Setup_2014_EtaPrime>());
 
   // remove the config if the config says it does not match
   modules.remove_if([&header] (const unique_ptr<ExpConfig::Base>& m) {

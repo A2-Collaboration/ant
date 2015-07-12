@@ -36,8 +36,8 @@ UnpackerAcquFileFormat::Get(const string &filename,
   // make a list of all available acqu file format classes
   using format_t = unique_ptr<UnpackerAcquFileFormat>;
   list< format_t > formats;
-  formats.emplace_back(new acqu::FileFormatMk1());
-  formats.emplace_back(new acqu::FileFormatMk2());
+  formats.push_back(std_ext::make_unique<acqu::FileFormatMk1>());
+  formats.push_back(std_ext::make_unique<acqu::FileFormatMk2>());
 
   // the rather complicated setup of FileFormat implementation
   // is due to the fact that we want to open the file only once,
@@ -58,7 +58,7 @@ UnpackerAcquFileFormat::Get(const string &filename,
   const size_t bufferSize = (*it_max)->SizeOfHeader()/sizeof(uint32_t) + 1;
 
   // now we try to open the file
-  unique_ptr<RawFileReader> reader(new RawFileReader());
+  auto reader = std_ext::make_unique<RawFileReader>();
   reader->open(filename);
   vector<uint32_t> buffer(bufferSize);
   reader->read(buffer.data(), buffer.size());
@@ -135,9 +135,7 @@ unique_ptr<THeaderInfo> acqu::FileFormatBase::BuildTHeaderInfo()
               << "Note='"+info.RunNote+"' ";
 
 
-  return unique_ptr<THeaderInfo>(
-        new THeaderInfo(id, timestamp, description.str(), info.RunNumber)
-        );
+  return std_ext::make_unique<THeaderInfo>(id, timestamp, description.str(), info.RunNumber);
 }
 
 void acqu::FileFormatBase::LogMessage(
@@ -146,7 +144,7 @@ void acqu::FileFormatBase::LogMessage(
     const string& msg
     ) const
 {
-  auto record = createDataRecord<TUnpackerMessage>(
+  auto record = std_ext::make_unique<TUnpackerMessage>(
         TDataRecord::ID_t(ID_upper, ID_lower),
         level,
         msg
@@ -198,7 +196,7 @@ void acqu::FileFormatBase::FillEvents(queue_t& queue) noexcept
       }
     }
     // always add an datadiscard info record
-    auto record = createDataRecord<TUnpackerMessage>(
+    auto record = std_ext::make_unique<TUnpackerMessage>(
           TDataRecord::ID_t(ID_upper, ID_lower),
           TUnpackerMessage::Level_t::DataDiscard,
           "Discarded buffer number {}"

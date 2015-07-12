@@ -343,7 +343,7 @@ void acqu::FileFormatMk2::FillTDetectorRead(
   // build the TDetectorRead,
   // the order of its hits corresponds to the given mappings
 
-  auto record = createDataRecord<TDetectorRead>(TDataRecord::ID_t(ID_upper, ID_lower));
+  auto record = std_ext::make_unique<TDetectorRead>(TDataRecord::ID_t(ID_upper, ID_lower));
 
   for(const UnpackerAcquConfig::hit_mapping_t& mapping : hit_mappings) {
     // build the raw data
@@ -368,7 +368,7 @@ void acqu::FileFormatMk2::FillTDetectorRead(
       }
       else {
         // this scaler should be handled as TSlowControl item
-        auto record_sc = createDataRecord<TSlowControl>(
+        auto record_sc = std_ext::make_unique<TSlowControl>(
               TDataRecord::ID_t(ID_upper, ID_lower),
               TSlowControl::Type_t::AcquScaler,
               0, /// \todo estimate some timestamp from ID_lower here?
@@ -512,7 +512,7 @@ void acqu::FileFormatMk2::HandleReadError(
       ? "UNKNOWN" : it_modname->second;
 
   // build TUnpackerMessage record from error info
-  auto record = createDataRecord<TUnpackerMessage>(
+  auto record = std_ext::make_unique<TUnpackerMessage>(
         TDataRecord::ID_t(ID_upper, ID_lower),
         TUnpackerMessage::Level_t::HardwareError,
         std_ext::formatter()
@@ -660,7 +660,7 @@ void acqu::FileFormatMk2::HandleEPICSBuffer(
       description << "Period='" << hdr->period << " events'";
     }
 
-    auto record = createDataRecord<TSlowControl>(
+    auto record = std_ext::make_unique<TSlowControl>(
           TDataRecord::ID_t(ID_upper, ID_lower),
           record_type,
           hdr_timestamp,

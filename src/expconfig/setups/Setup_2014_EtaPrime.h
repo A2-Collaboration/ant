@@ -2,8 +2,9 @@
 #include "ExpConfig.h"
 #include "detectors/CB.h"
 #include "detectors/TAPS.h"
-
 #include "unpacker/UnpackerAcqu.h"
+
+#include "base/std_ext.h"
 
 
 namespace ant {
@@ -16,8 +17,8 @@ class Setup_2014_EtaPrime :
 {
 public:
   Setup_2014_EtaPrime() {
-    detectors.emplace_back(new detector::CB());
-    detectors.emplace_back(new detector::TAPS_2013(false)); // no Cherenkov
+    detectors.push_back(std_ext::make_unique<detector::CB>());
+    detectors.push_back(std_ext::make_unique<detector::TAPS_2013>(false)); // no Cherenkov
   }
 
   bool Matches(const THeaderInfo& header) const override {

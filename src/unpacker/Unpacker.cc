@@ -1,7 +1,9 @@
 #include "Unpacker.h"
 #include "UnpackerAcqu.h"
+#include "detail/UnpackerAcqu_detail.h"
 
 #include "base/Logger.h"
+#include "base/std_ext.h"
 
 #include <algorithm>
 #include <iostream>
@@ -14,7 +16,7 @@ unique_ptr<Unpacker::Module> Unpacker::Get(const string& filename)
 {
   // make a list of available unpackers
   std::list< std::unique_ptr<Module> > modules;
-  modules.emplace_back(new UnpackerAcqu());
+  modules.push_back(std_ext::make_unique<UnpackerAcqu>());
 
   // remove the unpacker if it says that it could not open the file
   modules.remove_if([&filename] (const unique_ptr<Module>& m) {

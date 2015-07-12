@@ -8,6 +8,7 @@
 #undef RAWFILEREADER_H_IMPL
 
 #include "base/Logger.h"
+#include "base/std_ext.h"
 
 #include <cstdio> // for BUFSIZ
 #include <cstring> // for strerror
@@ -28,10 +29,10 @@ void RawFileReader::open(const string &filename, const size_t inbufsize) {
                     +string(strerror(errno)));
 
   if(XZ::test(file)) {
-    p = std::unique_ptr<PlainBase>(new XZ(filename, inbufsize));
+    p = std_ext::make_unique<XZ>(filename, inbufsize);
   }
   else {
-    p = std::unique_ptr<PlainBase>(new PlainBase(filename));
+    p = std_ext::make_unique<PlainBase>(filename);
   }
 }
 
