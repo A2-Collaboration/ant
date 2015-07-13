@@ -6,14 +6,7 @@
 
 #include "TTree.h"
 
-// Switch of some warnings for the Pluto headers
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wunused-local-typedefs"
-#pragma GCC diagnostic ignored "-Wvla"
-#pragma GCC diagnostic ignored "-Wignored-qualifiers"
-#include "PParticle.h"
-#include "PStaticData.h"
-#pragma GCC diagnostic pop
+#include "detail/PlutoWrapper.h"
 
 #include "base/Logger.h"
 

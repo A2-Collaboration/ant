@@ -55,6 +55,8 @@ set(ANALYSIS_INPUT_GOAT
   input/goat/detail/InputModule.cc
   input/goat/detail/FileManager.h
   input/goat/detail/FileManager.cc
+  input/goat/detail/PlutoWrapper.h
+  input/goat/detail/PlutoWrapper.cc
   input/goat/detail/PlutoInput.h
   input/goat/detail/PlutoInput.cc
   input/goat/detail/TreeManager.h
