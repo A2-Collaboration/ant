@@ -125,6 +125,32 @@ const ParticleTypeDatabase::Type* GoatReader::GetType(const PParticle* p) const 
     return type;
 }
 
+/**
+ * @brief Find a PParticle in a vector by its ID. ID has to be unique in the vector.
+ * @param particles vector to search
+ * @param ID Id to look for
+ * @return pair<size_t,bool>, first=Index of found particle, bool: true if found and unique, false else
+ */
+std::pair<std::size_t,bool> FindParticleByID(const std::vector<const PParticle*> particles, const int ID) {
+
+    std::pair<std::size_t,bool> result = {0, false};
+
+    for(std::size_t i = 0; i<particles.size(); ++i) {
+        if(particles.at(i)->ID() == ID) {
+            if(!result.second) {
+                result.first = i;
+                result.second = true;
+            } else {
+                result.second = false;
+                return result;
+            }
+        }
+    }
+
+    return result;
+
+}
+
 void GoatReader::CopyPluto(std::shared_ptr<Event> &event)
 {
     const auto particles = pluto.Particles();
@@ -159,8 +185,19 @@ void GoatReader::CopyPluto(std::shared_ptr<Event> &event)
             }
 
         } else {
-            if(! (alp->Type() == ParticleTypeDatabase::BeamProton))
-                LOG(WARNING) << "Missing decay tree info for pluto particle";  // BeamProton is not supposed to have a parent
+            if(! (alp->Type() == ParticleTypeDatabase::BeamProton)) {
+
+                auto sr = FindParticleByID(particles, plp->GetParentId());
+
+                if(sr.second) {
+                    VLOG(7) << "Recovered missing pluto decay tree inforamtion.";
+                    ParticlePtr parent = buffer.at(sr.first);
+                    alp->Partents().emplace_back(parent);
+                    parent->Daughters().emplace_back(alp);
+                } else {
+                    LOG(WARNING) << "Missing decay tree info for pluto particle";  // BeamProton is not supposed to have a parent
+                }
+            }
         }
 
         // create a tagger hit corresponding to beam+parget particle
