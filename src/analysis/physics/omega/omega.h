@@ -64,11 +64,21 @@ protected:
     TH1D* steps;
 
     IntervalD omega_range = IntervalD(740,820);
-    std::map<std::string, TH1D*> gg_decays;
+
+    struct perDecayhists_t {
+        TH1D* gg = nullptr;
+        TH1D* ggg = nullptr;
+        TH1D* mm = nullptr;
+    };
+
+    perDecayhists_t makePerDecayHists(const std::string &title="");
+
+    std::map<std::string, perDecayhists_t> gg_decays;
 
     virtual void Analyse(const Event::Data& data, const Event& event) override;
 
     BinSettings imbinning = BinSettings(1000);
+    BinSettings mmbinning = BinSettings(1000, 400,1400);
 
 public:
     OmegaEtaG(DataMode m);

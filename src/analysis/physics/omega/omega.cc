@@ -95,9 +95,19 @@ OmegaEtaG::OmegaEtaG(OmegaBase::DataMode m):
     steps = HistFac.makeTH1D("steps", "", "", BinSettings(10));
 }
 
+OmegaEtaG::perDecayhists_t OmegaEtaG::makePerDecayHists(const string &title)
+{
+    perDecayhists_t h;
+
+    h.gg = HistFac.makeTH1D("2#gamma "+title,"2#gamma IM [MeV]","#",imbinning);
+    h.ggg  = HistFac.makeTH1D("3#gamma "+title,"3#gamma IM [MeV]","",imbinning);
+    h.mm = HistFac.makeTH1D("MM "+title,"MM [MeV]","",mmbinning);
+
+    return h;
+}
+
 void OmegaEtaG::Analyse(const Event::Data &data, const Event &event)
 {
-
 
     steps->Fill("Events seen",1);
 
@@ -126,26 +136,13 @@ void OmegaEtaG::Analyse(const Event::Data &data, const Event &event)
     steps->Fill("ESum",1);
 
     const ParticleList photons = getGeoAccepted(data.Particles().Get(ParticleTypeDatabase::Photon));
-//    const ParticleList protons = getGeoAccepted(data.Particles().Get(ParticleTypeDatabase::Proton));
+    const ParticleList protons = getGeoAccepted(data.Particles().Get(ParticleTypeDatabase::Proton));
 
-//    auto& mctrue_final  = event.MCTrue().Particles().GetAll();
-//    auto& mctrue_interm = event.MCTrue().Intermediates().GetAll();
 
     bool is_omega_decay = false;
     const ParticleTypeDatabase::Type* subtype = nullptr;
 
-//    if(mctrue_interm.size() == 3) {
-//        if(mctrue_interm.at(0)->Type() == ParticleTypeDatabase::BeamProton) {
-//            const auto& bt = mctrue_interm.at(0);
-//            if(bt->Daughters().size()==2) {
-//                if(bt->Daughters().at(1)->Type() == ParticleTypeDatabase::Omega)
-//            }
-//        }
-
-//    }
-
-
-    TH1D* h = nullptr;
+    perDecayhists_t* h = nullptr;
 
     const string decaystring = GetDecayString(event.MCTrue().Intermediates().GetAll());
 
@@ -164,6 +161,7 @@ void OmegaEtaG::Analyse(const Event::Data &data, const Event &event)
         else
             ggg_bg->Fill(gggIM);
 
+
         if(subtype!=nullptr) {
             ggg_omega_pi0oreta->Fill(gggIM);
         }
@@ -172,11 +170,21 @@ void OmegaEtaG::Analyse(const Event::Data &data, const Event &event)
 
             auto entry = gg_decays.find(decaystring);
             if(entry == gg_decays.end()) {
-                VLOG(9) << "Adding Histogram for " << decaystring;
-                h = HistFac.makeTH1D(decaystring,"2#gamma IM [MeV]","#",imbinning);
-                gg_decays[decaystring] = h;
+                VLOG(9) << "Adding Histograms for " << decaystring;
+                gg_decays[decaystring] = makePerDecayHists(decaystring);
+                h = &(gg_decays[decaystring]);
             } else {
-                h = entry->second;
+                h = &(entry->second);
+            }
+        }
+
+        if(h)
+            h->ggg->Fill(gggIM);
+
+        if(h) {
+            for(auto& th : data.TaggerHits()) {
+                const TLorentzVector mm = th->PhotonBeam() - TLorentzVector(ParticleTypeDatabase::Proton.Mass(), 0, 0, 0) - gggState;
+                h->mm->Fill(mm.M());
             }
         }
 
@@ -201,7 +209,7 @@ void OmegaEtaG::Analyse(const Event::Data &data, const Event &event)
             ggg_gg_all->Fill(gggIM,ggIM);
 
             if(h)
-                h->Fill(ggIM);
+                h->gg->Fill(ggIM);
 
         }
 
@@ -248,13 +256,13 @@ void OmegaEtaG::ShowResult()
             << endc;
 
     canvas c1("OmegaEtaG per Decay Results");
-    hstack stack("decays","Decays");
+    hstack stack("decays","gg");
 
     std::list<TH1D*> histlist;
 
     for(auto& hist : gg_decays) {
 
-       histlist.emplace_back(hist.second);
+       histlist.emplace_back(hist.second.gg);
     }
 
     histlist.sort( [] (const TH1D* h1, const TH1D* h2) -> bool {return h1->GetEntries() > h2->GetEntries();});
@@ -270,6 +278,51 @@ void OmegaEtaG::ShowResult()
 
     c1 << stack << endc;
 
+
+    canvas c2("OmegaEtaG per Decay Results 2");
+    hstack stack2("ggg","ggg");
+
+    histlist.clear();
+
+    for(auto& hist : gg_decays) {
+
+       histlist.emplace_back(hist.second.ggg);
+    }
+
+    histlist.sort( [] (const TH1D* h1, const TH1D* h2) -> bool {return h1->GetEntries() > h2->GetEntries();});
+
+    cit.Reset();
+
+    for(auto& hist:histlist) {
+        hist->SetFillColor(*cit);
+        cit.next();
+        stack2 << hist;
+    }
+
+    c2 << stack2 << endc;
+
+    canvas c3("OmegaEtaG per Decay Results 3");
+    hstack stack3("mm","mm");
+
+    histlist.clear();
+
+    for(auto& hist : gg_decays) {
+
+       histlist.emplace_back(hist.second.mm);
+    }
+
+    histlist.sort( [] (const TH1D* h1, const TH1D* h2) -> bool {return h1->GetEntries() > h2->GetEntries();});
+
+    cit.Reset();
+
+    for(auto& hist:histlist) {
+        hist->SetFillColor(*cit);
+        cit.next();
+        stack3 << hist;
+    }
+
+    c3 << stack3 << endc;
+
 }
 
 
@@ -281,3 +334,4 @@ string to_string(const OmegaBase::DataMode &m)
         return "Reconstructed";
     }
 }
+
