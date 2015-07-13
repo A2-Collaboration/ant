@@ -23,7 +23,8 @@ std::ostream& operator <<(std::ostream& stream, const PParticle& p);
  * @return name of the particle type (e.g. "eta")
  */
 std::string GetParticleName(const PParticle* p);
+std::string GetParticleName(const int id);
 
-void PrintParticleTable(std::ostream& stream, const std::vector<PParticle*> plist);
+void PrintParticleTable(std::ostream& stream, const std::vector<const PParticle*> plist);
 
 #endif

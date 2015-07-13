@@ -17,14 +17,16 @@ ostream& operator <<(ostream &stream, const PParticle &p)
 
 string GetParticleName(const PParticle *p)
 {
-    // Unfortunately PParticle::Name() to get the string repesentation of the particle type in
-    // pluto is not const. Working around this... (urhg).
-    PParticle* ncp = const_cast<PParticle*>(p);
-    return ncp->Name();
+    return GetParticleName(p->ID());
 }
 
+string GetParticleName(const int id)
+{
+    if(id == 14001) return "gp";
+    return makeStaticData()->GetParticleName(id);
+}
 
-void PrintParticleTable(ostream & stream, const std::vector<PParticle *> plist)
+void PrintParticleTable(ostream & stream, const std::vector<const PParticle *> plist)
 {
     for(std::size_t i=0; i<plist.size(); ++i) {
         stream << i << " " << plist.at(i) << "\n";
