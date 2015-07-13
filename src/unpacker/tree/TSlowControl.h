@@ -35,11 +35,14 @@ struct TSlowControl : TDataRecord
   std::vector<std::string>  Payload_String;
   std::vector<double>       Payload_Float;
 
+  const char* TypeToString() const;
+
 #ifndef __CINT__
   /// \todo Maybe those types are bit too Acqu-like...?!
   enum class Type_t : std::uint8_t {
     AcquScaler, EpicsOneShot, EpicsScaler, EpicsTimer
   };
+  static const char* TypeToString(const Type_t&);
   TSlowControl(TDataRecord::ID_t id,
                Type_t type,
                std::time_t timestamp,
@@ -61,6 +64,26 @@ struct TSlowControl : TDataRecord
   ClassDef(TSlowControl, ANT_UNPACKER_ROOT_VERSION)
 };
 
+#ifndef __CINT__
+inline const char* TSlowControl::TypeToString(const TSlowControl::Type_t& level) {
+  switch(level) {
+  case Type_t::AcquScaler:
+    return "AcquScaler";
+  case Type_t::EpicsOneShot:
+    return "EpicsOneShort";
+  case Type_t::EpicsScaler:
+    return "EpicsScaler";
+  case Type_t::EpicsTimer:
+    return "EpicsTimer";
+  }
+  throw std::runtime_error("Not implemented");
 }
+inline const char* TSlowControl::TypeToString() const {
+  return TypeToString(static_cast<Type_t>(Type));
+}
+#endif
+
+
+} // namespace ant
 
 #endif // TSLOWCONTROL_H

@@ -17,7 +17,7 @@ bool Channel_t::IsIntegral(const Channel_t::Type_t& t) {
   }
 }
 
-string Channel_t::ToString(const Type_t& type)
+const char *Channel_t::ToString(const Type_t& type)
 {
   switch(type) {
   case Channel_t::Type_t::BitPattern:
@@ -40,7 +40,7 @@ string Channel_t::ToString(const Type_t& type)
   throw runtime_error("Not implemented");
 }
 
-string Detector_t::ToString(const Type_t &type)
+const char* Detector_t::ToString(const Type_t &type)
 {
   switch(type) {
   case Detector_t::Type_t::CB :

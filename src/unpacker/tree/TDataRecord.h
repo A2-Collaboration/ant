@@ -15,6 +15,7 @@ typedef Long64_t   int64_t;
 }
 #else
 #include <cstdint>
+#include <stdexcept>
 #endif // __CINT__
 
 #include <string>

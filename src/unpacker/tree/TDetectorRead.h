@@ -33,6 +33,9 @@ struct TDetectorRead : TDataRecord
     std::vector<double>        Values;
     std::vector<bool>          ValueBits;
 
+    const char* GetDetectorAsString() const;
+    const char* GetTypeAsString() const;
+
 #ifndef __CINT__
     Hit(const LogicalChannel_t& element,
         const std::vector<std::uint8_t>& rawData) :
@@ -55,12 +58,12 @@ struct TDetectorRead : TDataRecord
 
       return s << "Hit Detector="
                //<< std::left << std::setfill(' ') << std::setw(4)
-               << Detector_t::ToString(static_cast<Detector_t::Type_t>(Detector)) << std::right
+               << GetDetectorAsString() << std::right
                << " Channel="
                << std::setw(3)
                << Channel
                << " Type="
-               << Channel_t::ToString(static_cast<Channel_t::Type_t>(Type))
+               << GetTypeAsString()
                << " RawData=0x" << rawdata.str()
                   ;
     }
@@ -90,6 +93,15 @@ struct TDetectorRead : TDataRecord
   ClassDef(TDetectorRead, ANT_UNPACKER_ROOT_VERSION)
 
 };
+
+#ifndef __CINT__
+inline const char* TDetectorRead::Hit::GetDetectorAsString() const {
+  return Detector_t::ToString(static_cast<Detector_t::Type_t>(Detector));
+}
+inline const char* TDetectorRead::Hit::GetTypeAsString() const {
+  return Channel_t::ToString(static_cast<Channel_t::Type_t>(Type));
+}
+#endif
 
 }
 

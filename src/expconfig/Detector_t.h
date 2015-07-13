@@ -15,7 +15,7 @@ struct Detector_t {
     TAPS, TAPSVeto, Cherenkov, Moeller
   };
   const Type_t Type;
-  static std::string ToString(const Type_t& type);
+  static const char* ToString(const Type_t& type);
 
   // Element_t is the minimum information,
   // derived classes may extend this
@@ -50,7 +50,7 @@ struct Channel_t {
     BitPattern, Scaler, Counter
   };
   static bool IsIntegral(const Type_t& t);
-  static std::string ToString(const Type_t& type);
+  static const char* ToString(const Type_t& type);
 };
 
 /**

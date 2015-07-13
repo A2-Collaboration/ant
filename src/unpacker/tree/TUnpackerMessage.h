@@ -27,25 +27,13 @@ struct TUnpackerMessage : TDataRecord
   std::string Message;
   std::vector<double> Payload;
 
+  const char* LevelToString() const;
+
 #ifndef __CINT__
   enum class Level_t : std::uint8_t {
     Info, Warn, DataError, DataDiscard, HardwareError
   };
-  static std::string LevelToString(const Level_t& level) {
-    switch(level) {
-    case Level_t::Info:
-      return "Info";
-    case Level_t::Warn:
-      return "Warn";
-    case Level_t::DataError:
-      return "DataError";
-    case Level_t::DataDiscard:
-      return "DataDiscard";
-    case Level_t::HardwareError:
-      return "HardwareError";
-    }
-    throw std::runtime_error("Not implemented");
-  }
+  static const char* LevelToString(const Level_t&);
   TUnpackerMessage(TDataRecord::ID_t id,
                    Level_t level,
                    const std::string& message) :
@@ -56,7 +44,7 @@ struct TUnpackerMessage : TDataRecord
   }
   virtual std::ostream& Print( std::ostream& s) const override {
     return s << "TUnpackerMessage ID=" << ID
-             << " Level=" << LevelToString(static_cast<Level_t>(Level))
+             << " Level=" << LevelToString()
              << " Msg='" << FormattedMessage() << "'";
   }
 #endif
@@ -65,6 +53,27 @@ struct TUnpackerMessage : TDataRecord
   ClassDef(TUnpackerMessage, ANT_UNPACKER_ROOT_VERSION)
 };
 
+#ifndef __CINT__
+inline const char* TUnpackerMessage::LevelToString(const Level_t& level) {
+  switch(level) {
+  case Level_t::Info:
+    return "Info";
+  case Level_t::Warn:
+    return "Warn";
+  case Level_t::DataError:
+    return "DataError";
+  case Level_t::DataDiscard:
+    return "DataDiscard";
+  case Level_t::HardwareError:
+    return "HardwareError";
+  }
+  throw std::runtime_error("Not implemented");
 }
+inline const char* TUnpackerMessage::LevelToString() const {
+  return LevelToString(static_cast<Level_t>(Level));
+}
+#endif
+
+} // namespace ant
 
 #endif // TUNPACKERMESSAGE_H

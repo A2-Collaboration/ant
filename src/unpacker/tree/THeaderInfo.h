@@ -50,6 +50,6 @@ struct THeaderInfo : TDataRecord
   ClassDef(THeaderInfo, ANT_UNPACKER_ROOT_VERSION)
 };
 
-}
+} // namespace ant
 
 #endif // THEADERINFO_H
