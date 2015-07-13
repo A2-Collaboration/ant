@@ -151,68 +151,84 @@ std::pair<std::size_t,bool> FindParticleByID(const std::vector<const PParticle*>
 
 }
 
+void SetParticleRelations(ParticleList list, ParticlePtr& particle, size_t parent_index) {
+    ParticlePtr& parent = list.at(parent_index);
+    particle->Partents().emplace_back(parent);
+    parent->Daughters().emplace_back(particle);
+}
+
+std::string PlutoTable(const std::vector<const PParticle*> particles) {
+    stringstream s;
+    int i=0;
+    for(auto& p : particles ) {
+        const PParticle* pl = p;
+        s << i++ << "\t" << GetParticleName(p) << "\t" << p->GetParentIndex() << "\t" << GetParticleName(pl->GetParentId()) << "\t|\t" <<  p->GetDaughterIndex() << "\t" <<  endl;
+    }
+
+    return s.str();
+}
+
 void GoatReader::CopyPluto(std::shared_ptr<Event> &event)
 {
-    const auto particles = pluto.Particles();
+    const auto PlutoParticles = pluto.Particles();
 
-    ParticleList buffer;
-    buffer.reserve(particles.size());
+    ParticleList AntParticles;
+    AntParticles.reserve(PlutoParticles.size());
 
     // convert pluto particles to ant particles and place in buffer list
-    for( auto& p : particles ) {
+    for( auto& p : PlutoParticles ) {
 
         auto type = GetType(p);
         TLorentzVector lv = *p;
         lv *= 1000.0;   // convert to MeV
 
-        buffer.emplace_back(new Particle(*type,lv));
+        AntParticles.emplace_back(new Particle(*type,lv));
 
     }
 
     // loop over both lists (pluto and ant particles)
-    for(size_t i=0; i<particles.size(); ++i) {
+    for(size_t i=0; i<PlutoParticles.size(); ++i) {
 
-        const PParticle* plp = particles.at(i);
-        ParticlePtr      alp = buffer.at(i);
+        const PParticle* PlutoParticle = PlutoParticles.at(i);
+        ParticlePtr      AntParticle = AntParticles.at(i);
 
         // Set up tree relations (parent/daughter)
-        if(plp->GetParentIndex() >= 0) {
+        if(PlutoParticle->GetParentIndex() >= 0) {
 
-            if( size_t(plp->GetParentIndex()) < buffer.size()) {
-                ParticlePtr parent = buffer.at(plp->GetParentIndex());
-                alp->Partents().emplace_back(parent);
-                parent->Daughters().emplace_back(alp);
+            if( size_t(PlutoParticle->GetParentIndex()) < AntParticles.size()) {
+                SetParticleRelations(AntParticles, AntParticle, PlutoParticle->GetParentIndex());
             }
 
         } else {
-            if(! (alp->Type() == ParticleTypeDatabase::BeamProton)) {
+            if( ! (AntParticle->Type() == ParticleTypeDatabase::BeamProton)) {
 
-                auto sr = FindParticleByID(particles, plp->GetParentId());
+                auto search_result = FindParticleByID(PlutoParticles, PlutoParticle->GetParentId());
 
-                if(sr.second) {
+                if(search_result.second) {
                     VLOG(7) << "Recovered missing pluto decay tree inforamtion.";
-                    ParticlePtr parent = buffer.at(sr.first);
-                    alp->Partents().emplace_back(parent);
-                    parent->Daughters().emplace_back(alp);
-                } else {
-                    LOG(WARNING) << "Missing decay tree info for pluto particle";  // BeamProton is not supposed to have a parent
+                    SetParticleRelations(AntParticles, AntParticle, search_result.first);
+
+                } else {  // BeamProton is not supposed to have a parent
+                    LOG(WARNING) << "Missing decay tree info for pluto particle";
                 }
+
+                VLOG(9) << "\n" << PlutoTable(PlutoParticles);
             }
         }
 
         // create a tagger hit corresponding to beam+parget particle
-        if( alp->Type() == ParticleTypeDatabase::BeamProton) {
-            const double energy = alp->E() - ParticleTypeDatabase::Proton.Mass();
+        if( AntParticle->Type() == ParticleTypeDatabase::BeamProton) {
+            const double energy = AntParticle->E() - ParticleTypeDatabase::Proton.Mass();
             const int channel = 0; //TODO: Get tagger channel from energy -> Tagger cfg
             const double time = 0.0;
             event->MCTrue().TaggerHits().emplace_back( TaggerHitPtr( new TaggerHit(channel, energy, time) ) );
         }
 
         // Add particle to event storage
-        if(plp->GetDaughterIndex() == -1 ) { // final state
-            event->MCTrue().Particles().AddParticle(alp);
+        if(PlutoParticle->GetDaughterIndex() == -1 ) { // final state
+            event->MCTrue().Particles().AddParticle(AntParticle);
         } else { //intermediate
-            event->MCTrue().Intermediates().AddParticle(alp);
+            event->MCTrue().Intermediates().AddParticle(AntParticle);
         }
     }
     //TODO: CBEsum/Multiplicity into TriggerInfo
