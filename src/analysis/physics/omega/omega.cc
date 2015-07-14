@@ -299,7 +299,7 @@ void OmegaEtaG::ShowResult()
         stack2 << hist;
     }
 
-    c2 << stack2 << endc;
+    c2 << drawoption("pads") << stack2 << endc;
 
     canvas c3("OmegaEtaG per Decay Results 3");
     hstack stack3("mm","mm");
@@ -321,7 +321,7 @@ void OmegaEtaG::ShowResult()
         stack3 << hist;
     }
 
-    c3 << stack3 << endc;
+    c3 << drawoption("pads") << stack3 << endc;
 
 }
 

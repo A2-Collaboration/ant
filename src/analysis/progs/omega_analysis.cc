@@ -14,16 +14,18 @@ using namespace ant::analysis;
 
 int main(int argc, char** argv) {
     SetupLogger(argc, argv);
+
+
     TCLAP::CmdLine cmd("Omega Analysis", ' ', "0.1");
     auto input  = cmd.add<TCLAP::MultiArg<string>>("i","input","GoAT input files",true,"string");
     auto output = cmd.add<TCLAP::ValueArg<string>>("o","output","Output file",false,"","string");
-    auto batchmode = cmd.add<TCLAP::SwitchArg>("b","batch","Run in batch mode (No ROOT Windows)",false);
+    auto max_event = cmd.add<TCLAP::ValueArg<int>>("","stop-at","Stop at event number",false,0,"int");
+//    auto batchmode = cmd.add<TCLAP::SwitchArg>("b","batch","Run in batch mode (No ROOT Windows)",false);
+//    auto verbose = cmd.add<TCLAP::ValueArg<int>>("v","v","Verbosity level (0..9)", false, 0,"int");
 
     cmd.parse(argc, argv);
 
-    int a=0;
-    char** b=nullptr;
-    TRint app("omega",&a,b);
+
 
     OutputManager om;
 
@@ -41,7 +43,16 @@ int main(int argc, char** argv) {
 
     reader.Initialize();
 
+    if(max_event->isSet()) {
+        reader.SetMaxEntries(max_event->getValue());
+    }
+
     pm.ReadFrom(reader);
+
+    int a=0;
+    char** b=nullptr;
+    TRint app("omega",&a,b);
+
     pm.ShowResults();
 
     app.Run(kTRUE);
