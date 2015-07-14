@@ -6,6 +6,7 @@
 
 #include "base/std_ext.h"
 
+#include "calibration/CalibrationApply.h"
 
 namespace ant {
 namespace expconfig {
@@ -21,7 +22,9 @@ public:
     detectors.push_back(std_ext::make_unique<detector::TAPS_2013>(false)); // no Cherenkov
   }
 
-  virtual void GetCalibrations() const override {}
+  virtual std::vector< std::unique_ptr< CalibrationApply_traits > > GetCalibrations() const override {
+    return {};
+  }
 
   bool Matches(const THeaderInfo& header) const override {
     // check that all detectors match

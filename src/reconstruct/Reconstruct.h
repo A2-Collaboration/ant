@@ -2,7 +2,6 @@
 #define ANT_RECONSTRUCT_H
 
 #include <memory>
-#include "expconfig/ExpConfig.h"
 
 namespace ant {
 

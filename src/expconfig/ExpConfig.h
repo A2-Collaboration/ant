@@ -11,6 +11,7 @@
 namespace ant {
 
 class THeaderInfo;
+class CalibrationApply_traits;
 
 class ExpConfig
 {
@@ -27,7 +28,7 @@ public:
   // the ExpConfig::Module defines methods for unpacker-independent configs
   class Module : public virtual Base {
 
-    virtual void GetCalibrations() const = 0;
+    virtual std::vector< std::unique_ptr< CalibrationApply_traits > > GetCalibrations() const = 0;
   };
 
   // each unpacker has its own config,

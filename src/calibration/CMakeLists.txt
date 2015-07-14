@@ -7,6 +7,7 @@ include_directories(
 
 
 set(CALIBRATION_BASE
+    CalibrationApply.h
     BaseCalModule.h
     BaseCalModule.cc
     TestCalCB.h
