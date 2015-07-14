@@ -3,6 +3,8 @@
 #include "physics/Physics.h"
 #include "physics/omega/omega.h"
 #include "base/Logger.h"
+#include "base/detail/CmdLine.h"
+
 #include "TRint.h"
 
 using namespace std;
@@ -12,6 +14,10 @@ using namespace ant::analysis;
 
 int main(int argc, char** argv) {
     SetupLogger(argc, argv);
+    TCLAP::CmdLine cmd("Omega Analysis", ' ', "0.1");
+    auto input  = cmd.add<TCLAP::MultiArg<string>>("i","input","GoAT input files",true,"string");
+    auto output = cmd.add<TCLAP::ValueArg<string>>("o","output","Output file",false,"","string");
+    cmd.parse(argc, argv);
 
     int a=0;
     char** b=nullptr;
@@ -19,7 +25,8 @@ int main(int argc, char** argv) {
 
     OutputManager om;
 
-    om.SetNewOutput("omega.root");
+    if(output->isSet())
+        om.SetNewOutput(output->getValue());
 
     PhysicsManager pm;
 
@@ -27,10 +34,8 @@ int main(int argc, char** argv) {
 
     input::GoatReader reader;
 
-    for(int i=1; i<argc;++i) {
-        if(argv[i][0] != '-')
-            reader.AddInputFile(argv[i]);
-    }
+    for(auto& file : input->getValue())
+            reader.AddInputFile(file);
 
     reader.Initialize();
 
