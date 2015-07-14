@@ -25,6 +25,10 @@ int main(int argc, char** argv)
     SwitchArg reverseSwitch("r","reverse","Print name backwards", false);
     cmd.add( reverseSwitch );
 
+    // Define a multiarg. This can appear more than one... like ''prog -i 5 -i 10 -i 2''
+    MultiArg<int> itest("i", "intTest", "multi int test", false, "int" );
+    cmd.add( itest );
+
     // Parse the args.
     cmd.parse( argc, argv );
 
@@ -40,6 +44,11 @@ int main(int argc, char** argv)
     }
     else
         cout << "My name is: " << name << endl;
+
+    for(auto& i : itest.getValue()) {
+        cout << i << " ";
+    }
+    cout << endl;
 
 
     } catch (ArgException &e)  // catch any exceptions
