@@ -16,6 +16,30 @@ set(SRCS
   Format.h
   detail/format.cc
   detail/format.h
+  detail/CmdLine.h
+  detail/tclap/ArgException.h
+  detail/tclap/Arg.h
+  detail/tclap/ArgTraits.h
+  detail/tclap/CmdLineInterface.h
+  detail/tclap/CmdLineOutput.h
+  detail/tclap/Constraint.h
+  detail/tclap/DocBookOutput.h
+  detail/tclap/HelpVisitor.h
+  detail/tclap/IgnoreRestVisitor.h
+  detail/tclap/MultiArg.h
+  detail/tclap/MultiSwitchArg.h
+  detail/tclap/OptionalUnlabeledTracker.h
+  detail/tclap/StandardTraits.h
+  detail/tclap/StdOutput.h
+  detail/tclap/SwitchArg.h
+  detail/tclap/UnlabeledMultiArg.h
+  detail/tclap/UnlabeledValueArg.h
+  detail/tclap/ValueArg.h
+  detail/tclap/ValuesConstraint.h
+  detail/tclap/VersionVisitor.h
+  detail/tclap/Visitor.h
+  detail/tclap/XorHandler.h
+  detail/tclap/ZshCompletionOutput.h
 )
 
 add_library(base ${SRCS})
