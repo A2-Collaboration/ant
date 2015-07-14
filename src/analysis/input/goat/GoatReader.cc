@@ -299,6 +299,8 @@ void GoatReader::Initialize()
         }
     }
 
+    max_entry = std::min(GetNEvents(), max_entry);
+
 }
 
 Long64_t GoatReader::GetNEvents() const
@@ -307,7 +309,7 @@ Long64_t GoatReader::GetNEvents() const
 }
 
 bool GoatReader::hasData() const {
-    return current_entry+1 < GetNEvents();
+    return current_entry+1 < max_entry;
 }
 
 long long GoatReader::EventsRead() const
@@ -317,7 +319,12 @@ long long GoatReader::EventsRead() const
 
 long long GoatReader::TotalEvents() const
 {
-    return GetNEvents();
+    return max_entry;
+}
+
+void GoatReader::SetMaxEntries(const long long max)
+{
+    max_entry = std::min(max, GetNEvents());
 }
 
 std::shared_ptr<Event> GoatReader::ReadNextEvent()

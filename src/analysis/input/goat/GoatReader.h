@@ -75,6 +75,7 @@ protected:
     };
 
     Long64_t    current_entry = -1;
+    Long64_t    max_entry = std::numeric_limits<Long64_t>::max();
 
     void AddInputModule(BaseInputModule& module);
 
@@ -115,6 +116,8 @@ public:
 
     long long EventsRead() const override;
     long long TotalEvents() const override;
+
+    void SetMaxEntries(const long long max);
 
     const PlutoInput& GetPlutoInput() { return pluto; }
 };
