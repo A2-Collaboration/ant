@@ -4,6 +4,7 @@
 #include <iostream>
 #include <algorithm>
 #include "base/detail/CmdLine.h"
+#include <memory>
 
 using namespace TCLAP;
 using namespace std;
@@ -20,6 +21,8 @@ int main(int argc, char** argv)
     // Define a value argument and add it to the command line.
     ValueArg<string> nameArg("n","name","Name to print",true,"homer","string");
     cmd.add( nameArg );
+
+    auto a = cmd.add<ValueArg<string>>("v","vname","VName to print",false,"homer","string");
 
     // Define a switch and add it to the command line.
     SwitchArg reverseSwitch("r","reverse","Print name backwards", false);
@@ -49,6 +52,9 @@ int main(int argc, char** argv)
         cout << i << " ";
     }
     cout << endl;
+
+    if(a->isSet())
+        cout << a->getValue() << endl;
 
 
     } catch (ArgException &e)  // catch any exceptions

@@ -47,6 +47,8 @@
 #include <iomanip>
 #include <algorithm>
 #include <stdlib.h> // Needed for exit(), which isn't defined in some envs.
+#include <memory>
+#include "base/std_ext.h"
 
 namespace TCLAP {
 
@@ -218,6 +220,13 @@ private:
 		 * \param a - Argument to be added.
 		 */
 		void add( Arg* a );
+
+        template <typename T, typename ... args_t>
+        std::unique_ptr<T> add(args_t&&... args) {
+           std::unique_ptr<T> a(new T(std::forward<args_t>(args)...));
+           add(*a);
+           return std::move(a);
+        }
 
 		/**
 		 * Add two Args that will be xor'd.  If this method is used, add does
