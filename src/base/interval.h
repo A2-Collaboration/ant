@@ -5,6 +5,7 @@
 #include <stdexcept>
 #include "printable.h"
 #include "types.h"
+#include <limits>
 
 namespace ant {
 
@@ -202,6 +203,30 @@ public:
         return !(*this == rhs);
     }
 
+    static interval getMaxRange() {
+        if(std::numeric_limits<T>::has_infinity) {
+            return interval(-std::numeric_limits<T>::infinity(), std::numeric_limits<T>::infinity() );
+        } else {
+            return interval(std::numeric_limits<T>::min(), std::numeric_limits<T>::max() );
+        }
+    }
+
+    static interval getMaxPositiveRange() {
+        if(std::numeric_limits<T>::has_infinity) {
+            return interval( 0, std::numeric_limits<T>::infinity() );
+        } else {
+            return interval( 0, std::numeric_limits<T>::max() );
+        }
+    }
+
+    static interval getMaxNegativeRange() {
+        if(std::numeric_limits<T>::has_infinity) {
+            return interval( -std::numeric_limits<T>::infinity(), 0 );
+        } else {
+            return interval( std::numeric_limits<T>::min(), 0 );
+        }
+    }
+
 };
 
 /**
@@ -213,6 +238,17 @@ typedef ant::interval<double> IntervalD;
  * @brief Interval of ints
  */
 typedef ant::interval<int> IntervalI;
+}
+
+template <typename T>
+ant::interval<T> intersect(const ant::interval<T> a, const ant::interval<T> b) {
+    if(!a.Disjoint(b)) {
+        return ant::interval<T> (
+                    std::max(a.Start(), b.Start()),
+                    std::min(a.Stop(), b.Stop())
+                    );
+    }
+    return ant::interval<T>();
 }
 
 #endif /* INTERVAL_H_ */

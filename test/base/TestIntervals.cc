@@ -6,6 +6,29 @@
 using namespace std;
 using namespace ant;
 
+TEST_CASE("Interval: Default ctor", "[base]") {
+    REQUIRE_NOTHROW( interval<int> a; );
+    REQUIRE_NOTHROW( interval<int> a(0,10); );
+}
+
+TEST_CASE("Interval: Length", "[base]") {
+
+    interval<double> a(0,10);
+    REQUIRE(a.Length()==10);
+}
+
+TEST_CASE("Interval:Inersect", "[base]") {
+    interval<int> a(0,100);
+    interval<int> b(50,150);
+    interval<int> c = intersect(a,b);
+    REQUIRE(c.Start()==50);
+    REQUIRE(c.Stop()==100);
+    interval<int> d = intersect(b,a);
+    REQUIRE(c.Start()==50);
+    REQUIRE(c.Stop()==100);
+}
+
+
 TEST_CASE("Piecewiese Interval: Default ctor", "[base]") {
     REQUIRE_NOTHROW( PiecewiseInterval<int> a; );
 }
