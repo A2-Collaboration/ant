@@ -17,6 +17,8 @@ int main(int argc, char** argv) {
     TCLAP::CmdLine cmd("Omega Analysis", ' ', "0.1");
     auto input  = cmd.add<TCLAP::MultiArg<string>>("i","input","GoAT input files",true,"string");
     auto output = cmd.add<TCLAP::ValueArg<string>>("o","output","Output file",false,"","string");
+    auto batchmode = cmd.add<TCLAP::SwitchArg>("b","batch","Run in batch mode (No ROOT Windows)",false);
+
     cmd.parse(argc, argv);
 
     int a=0;
