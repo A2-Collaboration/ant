@@ -111,6 +111,8 @@ target_link_libraries(analysis
   )
 
 aux_source_directory("progs" ANALYSIS_PROGS)
+
+INCLUDE_DIRECTORIES(../base/)
 foreach(PROG_SRC ${ANALYSIS_PROGS})
 
   get_filename_component(name ${PROG_SRC} NAME_WE)
