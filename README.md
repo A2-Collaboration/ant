@@ -18,6 +18,7 @@ but this is WIP.
 ## External Components
   * [Easylogging++](http://easylogging.muflihun.com/)
   * [Catch] (https://github.com/philsquared/Catch) (framework for unit-tests, TDD)
+  * [TCLAP - Templatized C++ Command Line Parser] (http://tclap.sourceforge.net)
 
 ## GoAT File Reader
 
