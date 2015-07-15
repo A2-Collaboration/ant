@@ -1,5 +1,5 @@
-#ifndef TSLOWCONTROL_H
-#define TSLOWCONTROL_H
+#ifndef ANT_TSLOWCONTROL_H
+#define ANT_TSLOWCONTROL_H
 
 #include "TDataRecord.h"
 
@@ -86,4 +86,4 @@ inline const char* TSlowControl::TypeToString() const {
 
 } // namespace ant
 
-#endif // TSLOWCONTROL_H
+#endif // ANT_TSLOWCONTROL_H

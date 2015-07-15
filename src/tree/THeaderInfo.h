@@ -1,5 +1,5 @@
-#ifndef THEADERINFO_H
-#define THEADERINFO_H
+#ifndef ANT_THEADERINFO_H
+#define ANT_THEADERINFO_H
 
 #include "TDataRecord.h"
 
@@ -52,4 +52,4 @@ struct THeaderInfo : TDataRecord
 
 } // namespace ant
 
-#endif // THEADERINFO_H
+#endif // ANT_THEADERINFO_H

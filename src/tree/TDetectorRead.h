@@ -1,5 +1,5 @@
-#ifndef TDETECTORREAD_H
-#define TDETECTORREAD_H
+#ifndef ANT_TDETECTORREAD_H
+#define ANT_TDETECTORREAD_H
 
 #include "TDataRecord.h"
 
@@ -105,4 +105,4 @@ inline const char* TDetectorRead::Hit::GetTypeAsString() const {
 
 }
 
-#endif // TDETECTORREAD_H
+#endif // ANT_TDETECTORREAD_H

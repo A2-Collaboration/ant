@@ -1,5 +1,5 @@
-#ifndef TDATARECORD_H
-#define TDATARECORD_H
+#ifndef ANT_TDATARECORD_H
+#define ANT_TDATARECORD_H
 
 #include "base/printable.h"
 
@@ -99,4 +99,4 @@ struct TDataRecord
 } // namespace ant
 
 
-#endif // TDATARECORD_H
+#endif // ANT_TDATARECORD_H

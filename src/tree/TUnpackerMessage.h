@@ -1,5 +1,5 @@
-#ifndef TUNPACKERMESSAGE_H
-#define TUNPACKERMESSAGE_H
+#ifndef ANT_TUNPACKERMESSAGE_H
+#define ANT_TUNPACKERMESSAGE_H
 
 #include "TDataRecord.h"
 
@@ -76,4 +76,4 @@ inline const char* TUnpackerMessage::LevelToString() const {
 
 } // namespace ant
 
-#endif // TUNPACKERMESSAGE_H
+#endif // ANT_TUNPACKERMESSAGE_H
