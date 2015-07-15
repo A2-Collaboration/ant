@@ -101,7 +101,7 @@ void acqu::FileFormatBase::FillHeader(queue_t& queue)
   // then enqueue the header info
   fillQueue<THeaderInfo>(queue, move(headerInfo));
 
-  // now try to fine the first data buffer
+  // now try to fill the first data buffer
   FillFirstDataBuffer(queue, reader, buffer);
   unpackedBuffers = 0; // not yet unpacked
 

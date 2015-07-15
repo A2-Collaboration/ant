@@ -22,9 +22,14 @@ public:
 
     // Physics interface
 public:
-    void ProcessEvent(const Event &event);
-    void Finish();
-    void ShowResult();
+    void ProcessEvent(const Event &event) override;
+    void Finish() override;
+    void ShowResult() override;
+
+    // CalibrationUpdate_traits interface
+private:
+    void BuildRanges(std::list<TDataRecord::ID_t> &ranges) override;
+    void Update(const TDataRecord::ID_t &id) override;
 };
 
 }

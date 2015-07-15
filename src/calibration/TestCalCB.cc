@@ -36,3 +36,12 @@ void ant::calibration::TestCalCB::ShowResult()
 {
 
 }
+
+
+void ant::calibration::TestCalCB::BuildRanges(std::list<ant::TDataRecord::ID_t> &ranges)
+{
+}
+
+void ant::calibration::TestCalCB::Update(const ant::TDataRecord::ID_t &id)
+{
+}

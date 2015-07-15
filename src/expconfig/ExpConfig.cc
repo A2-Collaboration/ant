@@ -53,9 +53,14 @@ unique_ptr<T> Get_(const THeaderInfo& header) {
 }
 
 
-unique_ptr<ExpConfig::Module> ExpConfig::Get(const THeaderInfo& header)
+unique_ptr<ExpConfig::Module> ExpConfig::Module::Get(const THeaderInfo& header)
 {
   return Get_<ExpConfig::Module>(header);
+}
+
+unique_ptr<ExpConfig::Reconstruct> ExpConfig::Reconstruct::Get(const THeaderInfo& header)
+{
+  return Get_<ExpConfig::Reconstruct>(header);
 }
 
 template<>

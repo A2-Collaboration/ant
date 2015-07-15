@@ -14,15 +14,20 @@ namespace setup {
 
 class Setup_2014_EtaPrime :
     public ExpConfig::Module,
+    public ExpConfig::Reconstruct,
     public UnpackerAcquConfig
 {
 public:
   Setup_2014_EtaPrime() {
-    detectors.push_back(std_ext::make_unique<detector::CB>());
-    detectors.push_back(std_ext::make_unique<detector::TAPS_2013>(false)); // no Cherenkov
+    detectors.push_back(std::make_shared<detector::CB>());
+    detectors.push_back(std::make_shared<detector::TAPS_2013>(false)); // no Cherenkov
   }
 
-  virtual std::vector< std::unique_ptr< CalibrationApply_traits > > GetCalibrations() const override {
+  virtual std::list< std::shared_ptr< CalibrationApply_traits > > GetCalibrations() const override {
+    return {};
+  }
+
+  virtual std::list< std::shared_ptr< CalibrationUpdate_traits > > GetUpdateables() const override {
     return {};
   }
 
@@ -58,7 +63,7 @@ public:
   }
 
 private:
-  std::list< std::unique_ptr<Detector_t> > detectors;
+  std::list< std::shared_ptr<Detector_t> > detectors;
 };
 
 }}} // namespace ant::expconfig::setup

@@ -51,7 +51,7 @@ struct TDataRecord
 
 #ifndef __CINT__
     // you may append flags, but never remove or change order!
-    enum class Flags_t : unsigned {
+    enum class Flags_t : std::uint8_t {
       MC
     };
 
@@ -61,7 +61,7 @@ struct TDataRecord
         bool isMC = false
         ) {
       Flags = 0;
-      Flags |= static_cast<decltype(Flags)>(isMC) << static_cast<unsigned>(Flags_t::MC);
+      Flags |= static_cast<decltype(Flags)>(isMC) << static_cast<std::uint8_t>(Flags_t::MC);
       Value = lower;
       Value |= static_cast<decltype(Value)>(upper) << sizeof(std::uint32_t)*8;
     }
