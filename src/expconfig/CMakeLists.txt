@@ -1,7 +1,6 @@
 set(SRCS
   ExpConfig.cc
   ExpConfig.h
-  Detector_t.cc
   Detector_t.h
   detectors/TAPS.h
   detectors/TAPS.cc
@@ -11,6 +10,6 @@ set(SRCS
   setups/Setup_2014_EtaPrime.h
   )
 
-include_directories(.)
+include_directories(. ../analysis)
 add_library(expconfig ${SRCS})
-target_link_libraries(expconfig base)
+target_link_libraries(expconfig base tree)

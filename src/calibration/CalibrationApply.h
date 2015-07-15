@@ -5,11 +5,10 @@
 #include <list>
 
 #include "tree/TDataRecord.h"
+#include "tree/TDetectorRead.h"
 #include "base/interval.h"
 
 namespace ant {
-
-class TDetectorRead;
 
 /**
  * @brief The CalibrationApply_traits class

@@ -7,6 +7,7 @@
 #include "base/std_ext.h"
 
 #include "calibration/CalibrationApply.h"
+#include "calibration/TestCalCB.h"
 
 namespace ant {
 namespace expconfig {

@@ -16,4 +16,4 @@ ROOT_GENERATE_DICTIONARY("${SRCS}"
 list(APPEND SRCS ${ROOT_DICTIONARY})
 
 add_library(tree ${SRCS})
-target_link_libraries(tree base expconfig ${ROOT_LIBRARIES})
+target_link_libraries(tree base ${ROOT_LIBRARIES})
