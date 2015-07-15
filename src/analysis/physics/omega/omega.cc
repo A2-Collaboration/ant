@@ -182,8 +182,8 @@ void OmegaEtaG::Analyse(const Event::Data &data, const Event &event)
             h->ggg->Fill(gggIM);
 
         if(h) {
-            for(auto& th : data.TaggerHits()) {
-                const TLorentzVector mm = th->PhotonBeam() - TLorentzVector(ParticleTypeDatabase::Proton.Mass(), 0, 0, 0) - gggState;
+            for(auto& th : event.MCTrue().TaggerHits()) {
+                const TLorentzVector mm = th->PhotonBeam() + TLorentzVector(0, 0, 0, ParticleTypeDatabase::Proton.Mass()) - gggState;
                 h->mm->Fill(mm.M());
             }
         }
@@ -255,73 +255,35 @@ void OmegaEtaG::ShowResult()
             << ggg
             << endc;
 
-    canvas c1("OmegaEtaG per Decay Results");
-    hstack stack("decays","gg");
-
-    std::list<TH1D*> histlist;
+    std::list<perDecayhists_t*> histlist;
 
     for(auto& hist : gg_decays) {
 
-       histlist.emplace_back(hist.second.gg);
+       histlist.emplace_back(&(hist.second));
     }
 
-    histlist.sort( [] (const TH1D* h1, const TH1D* h2) -> bool {return h1->GetEntries() > h2->GetEntries();});
-    std::vector<Color_t> color = {kRed, kGreen, kBlue, kYellow, kMagenta, kCyan, kOrange, kPink+9, kSpring+10, kGray};
+    histlist.sort( [] (const perDecayhists_t* h1, const perDecayhists_t* h2) -> bool {return h1->gg->GetEntries() > h2->gg->GetEntries();});
 
+    std::vector<Color_t> color = {kRed, kGreen, kBlue, kYellow, kMagenta, kCyan, kOrange, kPink+9, kSpring+10, kGray};
     auto cit = circit<decltype(color.begin())>(color.begin(),color.end());
 
-    for(auto& hist:histlist) {
-        hist->SetFillColor(*cit);
-        cit.next();
-        stack << hist;
-    }
-
-    c1 << stack << endc;
-
-
-    canvas c2("OmegaEtaG per Decay Results 2");
+    hstack stack("decays","gg");
     hstack stack2("ggg","ggg");
-
-    histlist.clear();
-
-    for(auto& hist : gg_decays) {
-
-       histlist.emplace_back(hist.second.ggg);
-    }
-
-    histlist.sort( [] (const TH1D* h1, const TH1D* h2) -> bool {return h1->GetEntries() > h2->GetEntries();});
-
-    cit.Reset();
-
-    for(auto& hist:histlist) {
-        hist->SetFillColor(*cit);
-        cit.next();
-        stack2 << hist;
-    }
-
-    c2 << drawoption("pads") << stack2 << endc;
-
-    canvas c3("OmegaEtaG per Decay Results 3");
     hstack stack3("mm","mm");
 
-    histlist.clear();
-
-    for(auto& hist : gg_decays) {
-
-       histlist.emplace_back(hist.second.mm);
-    }
-
-    histlist.sort( [] (const TH1D* h1, const TH1D* h2) -> bool {return h1->GetEntries() > h2->GetEntries();});
-
-    cit.Reset();
-
     for(auto& hist:histlist) {
-        hist->SetFillColor(*cit);
+        hist->gg->SetFillColor(*cit);
+        hist->ggg->SetFillColor(*cit);
+        hist->mm->SetFillColor(*cit);
         cit.next();
-        stack3 << hist;
+        stack << hist->gg;
+        stack2 << hist->ggg;
+        stack3 << hist->mm;
     }
 
-    c3 << drawoption("pads") << stack3 << endc;
+    canvas("OmegaEtaG per Decay Results gg") << stack << endc;
+    canvas("OmegaEtaG per Decay Results ggg") << stack2 << endc;
+    canvas("OmegaEtaG per Decay Results mm") << drawoption("pads") << stack3 << endc;
 
 }
 

@@ -4,7 +4,7 @@
 #include "physics/omega/omega.h"
 #include "base/Logger.h"
 #include "base/detail/CmdLine.h"
-
+#include"physics/common/DataOverview.h"
 #include "TRint.h"
 
 using namespace std;
@@ -20,7 +20,7 @@ int main(int argc, char** argv) {
     auto input  = cmd.add<TCLAP::MultiArg<string>>("i","input","GoAT input files",true,"string");
     auto output = cmd.add<TCLAP::ValueArg<string>>("o","output","Output file",false,"","string");
     auto max_event = cmd.add<TCLAP::ValueArg<int>>("","stop-at","Stop at event number",false,0,"int");
-//    auto batchmode = cmd.add<TCLAP::SwitchArg>("b","batch","Run in batch mode (No ROOT Windows)",false);
+    auto batchmode = cmd.add<TCLAP::SwitchArg>("b","batch","Run in batch mode (No ROOT Windows)",false);
 //    auto verbose = cmd.add<TCLAP::ValueArg<int>>("v","v","Verbosity level (0..9)", false, 0,"int");
 
     cmd.parse(argc, argv);
@@ -35,6 +35,7 @@ int main(int argc, char** argv) {
     PhysicsManager pm;
 
     pm.AddPhysics<OmegaEtaG>(OmegaBase::DataMode::Reconstructed);
+    pm.AddPhysics<DataOverview>();
 
     input::GoatReader reader;
 
@@ -49,13 +50,13 @@ int main(int argc, char** argv) {
 
     pm.ReadFrom(reader);
 
-    int a=0;
-    char** b=nullptr;
-    TRint app("omega",&a,b);
-
-    pm.ShowResults();
-
-    app.Run(kTRUE);
+    if(!batchmode->isSet()) {
+        int a=0;
+        char** b=nullptr;
+        TRint app("omega",&a,b);
+        pm.ShowResults();
+        app.Run(kTRUE);
+    }
 
     return 0;
 
