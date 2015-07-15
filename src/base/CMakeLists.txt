@@ -40,6 +40,7 @@ set(SRCS
   detail/tclap/Visitor.h
   detail/tclap/XorHandler.h
   detail/tclap/ZshCompletionOutput.h
+  Tree.h
 )
 
 add_library(base ${SRCS})
