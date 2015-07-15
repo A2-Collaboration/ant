@@ -2,7 +2,7 @@
 
 #include "setups/Setup_2014_EtaPrime.h"
 
-#include "unpacker/tree/THeaderInfo.h"
+#include "tree/THeaderInfo.h"
 #include "unpacker/UnpackerAcqu.h"
 
 #include "base/Logger.h"
