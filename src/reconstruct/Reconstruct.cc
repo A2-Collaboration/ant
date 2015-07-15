@@ -14,7 +14,7 @@ Reconstruct::Reconstruct(const THeaderInfo &headerInfo)
   auto config = ExpConfig::Reconstruct::Get(headerInfo);
 }
 
-unique_ptr<TEvent> Reconstruct::DoReconstruct(unique_ptr<TDetectorRead>& read)
+unique_ptr<TEvent> Reconstruct::DoReconstruct(TDetectorRead& read)
 {
 
 }

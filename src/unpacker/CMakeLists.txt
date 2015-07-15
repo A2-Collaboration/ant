@@ -9,6 +9,7 @@ set(SRCS_TREE
   tree/TDetectorRead.h
   tree/TSlowControl.h
   tree/TUnpackerMessage.h
+  tree/TEvent.h
   )
 
 set(SRCS
@@ -36,4 +37,4 @@ add_library(unpacker ${SRCS})
 target_link_libraries(unpacker base expconfig ${LIBLZMA_LIBRARY} ${ROOT_LIBRARIES})
 
 add_executable(unpacker_main main.cpp)
-target_link_libraries(unpacker_main unpacker)
+target_link_libraries(unpacker_main unpacker reconstruct)

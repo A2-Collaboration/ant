@@ -4,11 +4,12 @@
 #include <memory>
 #include <list>
 
+#include "unpacker/tree/TEvent.h"
+
 namespace ant {
 
 class THeaderInfo;
 class TDetectorRead;
-class TEvent;
 
 class CalibrationUpdate_traits;
 class CalibrationApply_traits;
@@ -22,7 +23,7 @@ public:
 
   // this method converts a TDetectorRead
   // into a calibrated TEvent
-  std::unique_ptr<TEvent> DoReconstruct(std::unique_ptr<TDetectorRead>& read);
+  std::unique_ptr<TEvent> DoReconstruct(TDetectorRead& read);
 
 private:
 

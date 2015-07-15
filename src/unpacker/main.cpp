@@ -15,6 +15,8 @@
 
 #include "unpacker/RawFileReader.h"
 
+#include "reconstruct/Reconstruct.h"
+
 #include "base/Logger.h"
 #include "base/Format.h"
 
@@ -58,11 +60,14 @@ int main(int argc, char* argv[]) {
   treeDetectorRead->Branch("DetectorRead", "ant::TDetectorRead", &DetectorRead);
 
 
+  unique_ptr<Reconstruct> reconstruct;
+
   while(auto item = unpacker->NextItem()) {
     //cout << *item << endl;
     HeaderInfo = dynamic_cast<THeaderInfo*>(item.get());
     if(HeaderInfo != nullptr) {
       treeHeaderInfo->Fill();
+      reconstruct = std_ext::make_unique<Reconstruct>(*HeaderInfo);
       continue;
     }
     UnpackerMessage = dynamic_cast<TUnpackerMessage*>(item.get());
@@ -78,6 +83,10 @@ int main(int argc, char* argv[]) {
     DetectorRead = dynamic_cast<TDetectorRead*>(item.get());
     if(DetectorRead != nullptr) {
       treeDetectorRead->Fill();
+
+      if(reconstruct)
+        reconstruct->DoReconstruct(*DetectorRead);
+
       nReads++;
       if(nReads % 10000 == 0) {
         VLOG(5) << "Unpacked " << nReads << " detector reads";
