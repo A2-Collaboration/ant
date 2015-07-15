@@ -7,6 +7,7 @@
 #include "detail/easylogging++.h"
 
 void SetupLogger(int argc, char* argv[]);
+void SetupLogger();
 
 
 // Please see
