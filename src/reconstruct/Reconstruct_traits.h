@@ -2,15 +2,17 @@
 #define ANT_RECONSTRUCT_TRAITS_H
 
 #include <memory>
-#include <list>
+#include <map>
 
-
+#include "expconfig/Detector_t.h"
 
 namespace ant {
 
 class TID;
-class TDetectorRead;
+class TDetectorReadHit;
 class TEvent;
+
+
 
 /**
  * @brief The CalibrationApply_traits class
@@ -18,7 +20,7 @@ class TEvent;
  */
 class CalibrationApply_traits {
 public:
-  virtual void ApplyTo(std::unique_ptr<TDetectorRead>& detectorRead) = 0;
+  virtual void ApplyTo(const std::map< Detector_t::Type_t, std::list< TDetectorReadHit* > >& hits) = 0;
   virtual void ApplyTo(std::unique_ptr<TEvent>& event) = 0;
 };
 

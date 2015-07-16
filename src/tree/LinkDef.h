@@ -8,8 +8,8 @@
 // the relevant classes
 #pragma link C++ class ant::TID+;
 #pragma link C++ class ant::TDataRecord+;
+#pragma link C++ class ant::TDetectorReadHit+;
 #pragma link C++ class ant::TDetectorRead+;
-#pragma link C++ class ant::TDetectorRead::Hit+;
 #pragma link C++ class ant::TEvent+;
 #pragma link C++ class ant::THeaderInfo+;
 #pragma link C++ class ant::TSlowControl+;

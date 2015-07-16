@@ -10,6 +10,7 @@
 namespace ant {
 
 class THeaderInfo;
+class TDetectorRead;
 
 class Reconstruct {
 public:
@@ -20,7 +21,7 @@ public:
 
   // this method converts a TDetectorRead
   // into a calibrated TEvent
-  std::unique_ptr<TEvent> DoReconstruct(TDetectorRead& read);
+  std::unique_ptr<TEvent> DoReconstruct(TDetectorRead& detectorRead);
 
 private:
   std::list< std::shared_ptr<CalibrationApply_traits> >  calibrations;

@@ -17,6 +17,8 @@ TestCalCB::TestCalCB():
 
 
 
+
+
 void TestCalCB::ProcessEvent(const Event &event)
 {
     const auto& photons = event.Reconstructed().Particles().Get(ParticleTypeDatabase::Photon);
@@ -38,13 +40,12 @@ void TestCalCB::ShowResult()
 
 }
 
-
-void TestCalCB::ApplyTo(unique_ptr<TDetectorRead>&)
+void TestCalCB::ApplyTo(const std::map< Detector_t::Type_t, std::list< TDetectorReadHit* > >& hits)
 {
 
 }
 
-void TestCalCB::BuildRanges(list<TID> &ranges)
+void TestCalCB::BuildRanges(list<TID>& ranges)
 {
 
 }
