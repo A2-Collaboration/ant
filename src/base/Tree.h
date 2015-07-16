@@ -16,25 +16,25 @@ protected:
     using snodelist_t = std::list<snode_t>;
 
     wnode_t partent;
+    wnode_t self;
     snodelist_t daughters;
 
     void remove_daughter(Tree* t) {
         daughters.remove_if( [t] (snode_t& n) { return n.get() == t;});
     }
 
-public:
 
     Tree() {}
     Tree(const T& data_): data(data_) {}
 
-    static snode_t makeNode(const T& data) { return std::move(std::make_shared<Tree>(data)); }
+public:
 
-    static snode_t makeNode(snode_t& p, const T& data) {
-        auto n =  makeNode(data);
-        link(p,n);
+    template <typename ... args_t>
+    static snode_t makeNode(args_t&&... args) {
+        auto n = std::shared_ptr<Tree>(new Tree(std::forward<args_t>(args)...));
+        n->self = n;
         return std::move(n);
     }
-
 
     bool isRoot() const { return partent.expired(); }
     bool isLeaf() const { return daughters.empty(); }
@@ -44,19 +44,9 @@ public:
 
     const T& get() const { return data; }
 
-    static void link( snode_t& p, snode_t& daughter) {
-
-        if(!p || !daughter)
-            return;
-
-        if( !daughter->isRoot() ) {
-            daughter->Unlink();
-        }
-        daughter->partent = p;
-        p->daughters.emplace_back(daughter);
-    }
-
     snode_t GetParent() { return partent.lock(); }
+    snode_t Self() { return self.lock(); }
+    const snodelist_t& Daughters() const { return daughters; }
 
     void Unlink() {
         if(auto p = GetParent()) {
@@ -65,7 +55,20 @@ public:
         }
     }
 
-    const snodelist_t& Daughters() const { return daughters; }
+    template <typename ... args_t>
+    snode_t createDaughter(args_t&&... args) {
+        auto n = makeNode(std::forward<args_t>(args)...);
+        n->partent = Self();
+        daughters.emplace_back(n);
+        return std::move(n);
+    }
+
+    void setParent(snode_t& p) {
+        if(!isRoot())
+            Unlink();
+        partent = p;
+        p->daughters.emplace_back(Self);
+    }
 
     template <typename F>
     void map(F function) const {
