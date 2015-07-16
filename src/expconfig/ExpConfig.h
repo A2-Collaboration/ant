@@ -10,7 +10,7 @@ namespace ant {
 
 class THeaderInfo;
 class CalibrationApply_traits;
-class CalibrationUpdate_traits;
+class Updateable_traits;
 class Detector_t;
 
 class ExpConfig
@@ -36,7 +36,7 @@ public:
   class Reconstruct : public virtual Base {
   public:
     virtual std::list< std::shared_ptr< CalibrationApply_traits > > GetCalibrations() const = 0;
-    virtual std::list< std::shared_ptr< CalibrationUpdate_traits > > GetUpdateables() const = 0;
+    virtual std::list< std::shared_ptr< Updateable_traits > > GetUpdateables() const = 0;
     static std::shared_ptr<Reconstruct> Get(const THeaderInfo& header);
   };
 

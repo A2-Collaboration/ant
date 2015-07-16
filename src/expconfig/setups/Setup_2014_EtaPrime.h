@@ -6,7 +6,7 @@
 
 #include "base/std_ext.h"
 
-#include "calibration/CalibrationApply.h"
+#include "reconstruct/Reconstruct_traits.h"
 #include "calibration/TestCalCB.h"
 
 namespace ant {
@@ -29,7 +29,7 @@ public:
     return calibrations;
   }
 
-  virtual std::list< std::shared_ptr< CalibrationUpdate_traits > > GetUpdateables() const override {
+  virtual std::list< std::shared_ptr< Updateable_traits > > GetUpdateables() const override {
     return {};
   }
 

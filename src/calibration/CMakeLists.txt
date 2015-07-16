@@ -7,7 +7,6 @@ include_directories(
 
 
 set(CALIBRATION_BASE
-    CalibrationApply.h
     BaseCalModule.h
     BaseCalModule.cc
     TestCalCB.h
@@ -16,8 +15,6 @@ set(CALIBRATION_BASE
 
 add_library(calibration ${CALIBRATION_BASE})
 target_link_libraries(calibration
-  ${ROOT_LIBRARIES}
   base
   analysis
   )
-

@@ -11,7 +11,7 @@ namespace ant {
 class THeaderInfo;
 class TDetectorRead;
 
-class CalibrationUpdate_traits;
+class Updateable_traits;
 class CalibrationApply_traits;
 
 class Reconstruct {

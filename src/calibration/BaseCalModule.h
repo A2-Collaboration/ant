@@ -2,7 +2,7 @@
 #define BASECALMODULE_H
 
 #include "analysis/physics/Physics.h"
-#include "CalibrationApply.h"
+#include "reconstruct/Reconstruct_traits.h"
 
 namespace ant {
 
@@ -15,9 +15,9 @@ namespace calibration {
  * * and a CalibrationApply class that can apply those factors to data
  */
 class BaseCalibrationModule :
-    public ant::Physics,
+    public Physics,
     public CalibrationApply_traits,
-    public CalibrationUpdate_traits
+    public Updateable_traits
 {
 public:
   BaseCalibrationModule(const std::string& name): Physics(name) {}

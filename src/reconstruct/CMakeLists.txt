@@ -1,6 +1,7 @@
 set(SRCS
   Reconstruct.h
   Reconstruct.cc
+  Reconstruct_traits.h
   HitMatching.h
   ApplyCalibrations.h
   Clustering.h
