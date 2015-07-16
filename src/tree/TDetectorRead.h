@@ -4,7 +4,7 @@
 #include "TDataRecord.h"
 
 #ifndef __CINT__
-#include "expconfig/ExpConfig.h"
+#include "expconfig/Detector_t.h"
 #include <iomanip>
 #include <sstream>
 #endif
@@ -13,7 +13,7 @@ namespace ant {
 
 struct TDetectorRead : TDataRecord
 {
-  TDetectorRead(const TDataRecord::ID_t& id) :
+  TDetectorRead(const TID& id) :
     TDataRecord(id),
     Hits()
   {}

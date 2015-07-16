@@ -4,15 +4,12 @@
 #include <memory>
 #include <list>
 
+#include "Reconstruct_traits.h"
 #include "tree/TEvent.h"
 
 namespace ant {
 
 class THeaderInfo;
-class TDetectorRead;
-
-class Updateable_traits;
-class CalibrationApply_traits;
 
 class Reconstruct {
 public:
@@ -26,6 +23,9 @@ public:
   std::unique_ptr<TEvent> DoReconstruct(TDetectorRead& read);
 
 private:
+  std::list< std::shared_ptr<CalibrationApply_traits> >  calibrations;
+  std::list< std::shared_ptr<Updateable_traits> >  updateables;
+
 
 };
 

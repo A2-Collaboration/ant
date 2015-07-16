@@ -1,10 +1,12 @@
 #ifndef EXPCONFIG_H
 #define EXPCONFIG_H
 
-#include <memory>
+//#include "Detector_t.h"
+
 #include "base/printable.h"
+
+#include <memory>
 #include <list>
-#include "Detector_t.h"
 
 namespace ant {
 

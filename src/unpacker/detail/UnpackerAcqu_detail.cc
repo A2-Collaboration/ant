@@ -123,7 +123,7 @@ unique_ptr<THeaderInfo> acqu::FileFormatBase::BuildTHeaderInfo()
   ID_lower = 0;
 
   // construct the unique ID, header record as lower ID=0
-  const TDataRecord::ID_t id(ID_upper, ID_lower);
+  const TID id(ID_upper, ID_lower);
 
 
   // build the genernal description
@@ -145,7 +145,7 @@ void acqu::FileFormatBase::LogMessage(
     ) const
 {
   auto record = std_ext::make_unique<TUnpackerMessage>(
-        TDataRecord::ID_t(ID_upper, ID_lower),
+        TID(ID_upper, ID_lower),
         level,
         msg
         );
@@ -197,7 +197,7 @@ void acqu::FileFormatBase::FillEvents(queue_t& queue) noexcept
     }
     // always add an datadiscard info record
     auto record = std_ext::make_unique<TUnpackerMessage>(
-          TDataRecord::ID_t(ID_upper, ID_lower),
+          TID(ID_upper, ID_lower),
           TUnpackerMessage::Level_t::DataDiscard,
           "Discarded buffer number {}"
           );

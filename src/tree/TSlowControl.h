@@ -7,7 +7,7 @@ namespace ant {
 
 struct TSlowControl : TDataRecord
 {
-  TSlowControl(const TDataRecord::ID_t& id,
+  TSlowControl(const TID& id,
                std::uint8_t type,
                std::time_t timestamp,
                const std::string& name,
@@ -43,7 +43,7 @@ struct TSlowControl : TDataRecord
     AcquScaler, EpicsOneShot, EpicsScaler, EpicsTimer
   };
   static const char* TypeToString(const Type_t&);
-  TSlowControl(TDataRecord::ID_t id,
+  TSlowControl(TID id,
                Type_t type,
                std::time_t timestamp,
                const std::string& name,

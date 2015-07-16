@@ -13,7 +13,7 @@ struct THeaderInfo : TDataRecord
 {
 
   THeaderInfo(
-      const TDataRecord::ID_t& id,
+      const TID& id,
       std::time_t timestamp,
       const std::string& description,
       unsigned runnumber

@@ -30,8 +30,8 @@ public:
 
     // CalibrationUpdate_traits interface
 private:
-    void BuildRanges(std::list<TDataRecord::ID_t> &ranges) override;
-    void Update(const TDataRecord::ID_t &id) override;
+    void BuildRanges(std::list<TID> &ranges) override;
+    void Update(const TID &id) override;
 };
 
 }

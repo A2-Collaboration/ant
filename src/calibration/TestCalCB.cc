@@ -44,12 +44,12 @@ void TestCalCB::ApplyTo(unique_ptr<TDetectorRead>&)
 
 }
 
-void TestCalCB::BuildRanges(list<TDataRecord::ID_t> &ranges)
+void TestCalCB::BuildRanges(list<TID> &ranges)
 {
 
 }
 
-void TestCalCB::Update(const TDataRecord::ID_t &id)
+void TestCalCB::Update(const TID &id)
 {
 
 }

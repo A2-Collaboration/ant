@@ -6,8 +6,8 @@
 #pragma link C++ nestedclasses;
 
 // the relevant classes
+#pragma link C++ class ant::TID+;
 #pragma link C++ class ant::TDataRecord+;
-#pragma link C++ class ant::TDataRecord::ID_t+;
 #pragma link C++ class ant::TDetectorRead+;
 #pragma link C++ class ant::TDetectorRead::Hit+;
 #pragma link C++ class ant::TEvent+;

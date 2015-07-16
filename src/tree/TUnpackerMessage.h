@@ -13,7 +13,7 @@ struct TUnpackerMessage : TDataRecord
 {
 
 
-  TUnpackerMessage(TDataRecord::ID_t id,
+  TUnpackerMessage(TID id,
                    std::uint32_t level,
                    const std::string& message) :
     TDataRecord(id),
@@ -34,7 +34,7 @@ struct TUnpackerMessage : TDataRecord
     Info, Warn, DataError, DataDiscard, HardwareError
   };
   static const char* LevelToString(const Level_t&);
-  TUnpackerMessage(TDataRecord::ID_t id,
+  TUnpackerMessage(TID id,
                    Level_t level,
                    const std::string& message) :
     TUnpackerMessage(id, static_cast<decltype(Level)>(level), message)

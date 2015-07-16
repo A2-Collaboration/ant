@@ -12,7 +12,7 @@ namespace ant {
 
 struct TEvent : TDataRecord
 {
-  TEvent(const TDataRecord::ID_t& id) :
+  TEvent(const TID& id) :
     TDataRecord(id)
   {}
 

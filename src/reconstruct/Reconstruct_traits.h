@@ -4,12 +4,13 @@
 #include <memory>
 #include <list>
 
-#include "tree/TDataRecord.h"
-#include "tree/TDetectorRead.h"
-#include "tree/TEvent.h"
-#include "base/interval.h"
+
 
 namespace ant {
+
+class TID;
+class TDetectorRead;
+class TEvent;
 
 /**
  * @brief The CalibrationApply_traits class
@@ -27,8 +28,8 @@ public:
  *
  */
 class Updateable_traits {
-  virtual void BuildRanges(std::list<TDataRecord::ID_t>& ranges) = 0;
-  virtual void Update(const TDataRecord::ID_t& id) = 0;
+  virtual void BuildRanges(std::list<TID>& ranges) = 0;
+  virtual void Update(const TID& id) = 0;
 };
 
 } // namespace ant
