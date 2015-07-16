@@ -23,5 +23,3 @@ set(SRCS
 add_library(unpacker ${SRCS})
 target_link_libraries(unpacker base tree expconfig ${LIBLZMA_LIBRARY})
 
-add_executable(unpacker_main main.cpp)
-target_link_libraries(unpacker_main unpacker reconstruct)

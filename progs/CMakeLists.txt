@@ -20,5 +20,5 @@ foreach(PROG_SRC ${PROGS})
     ${PROG_SRC}
     )
 
-  target_link_libraries(${name} analysis base calibration unpacker)
+  target_link_libraries(${name} analysis base calibration unpacker reconstruct)
 endforeach()
