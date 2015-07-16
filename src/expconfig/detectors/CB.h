@@ -1,7 +1,7 @@
 #ifndef DETECTORS_CB_H
 #define DETECTORS_CB_H
 
-#include "ExpConfig.h"
+#include "Detector_t.h"
 #include "unpacker/UnpackerAcqu.h"
 
 namespace ant {

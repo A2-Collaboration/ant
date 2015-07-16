@@ -2,6 +2,7 @@ set(SRCS
   ExpConfig.cc
   ExpConfig.h
   Detector_t.h
+  detectors/Trigger.h
   detectors/TAPS.h
   detectors/TAPS.cc
   detectors/CB.h

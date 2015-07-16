@@ -26,7 +26,7 @@ unique_ptr<TEvent> Reconstruct::DoReconstruct(TDetectorRead& detectorRead)
   // this is handy for all subsequent reconstruction steps
   map<Detector_t::Type_t, std::list< TDetectorReadHit* > > sorted_hits;
   for(TDetectorReadHit& hit : detectorRead.Hits) {
-    const auto detector = static_cast<Detector_t::Type_t>(hit.Detector);
+    const auto detector = static_cast<Detector_t::Type_t>(hit.DetectorType);
     sorted_hits[detector].push_back(addressof(hit));
   }
 
@@ -35,7 +35,7 @@ unique_ptr<TEvent> Reconstruct::DoReconstruct(TDetectorRead& detectorRead)
     calib->ApplyTo(sorted_hits);
   }
 
-
+  // we
 
   return nullptr;
 }

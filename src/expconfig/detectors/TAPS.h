@@ -1,7 +1,7 @@
 #ifndef DETECTORS_TAPS_H
 #define DETECTORS_TAPS_H
 
-#include "ExpConfig.h"
+#include "Detector_t.h"
 #include "unpacker/UnpackerAcqu.h"
 
 namespace ant {

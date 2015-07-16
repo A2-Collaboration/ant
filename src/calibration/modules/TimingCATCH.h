@@ -1,0 +1,46 @@
+#ifndef ANT_CALIBRATION_TIMINGCATCH_H
+#define ANT_CALIBRATION_TIMINGCATCH_H
+
+#include "Calibration.h"
+#include "expconfig/Detector_t.h"
+
+class TH1;
+
+namespace ant {
+namespace calibration {
+
+class TimingCATCH : public Calibration::Module {
+
+
+public:
+  TimingCATCH(
+      Detector_t::Type_t detectorType,
+      const LogicalChannel_t& referenceChannel
+      ) :
+    Calibration::Module("TimingCATCH"),
+    DetectorType(detectorType),
+    ReferenceChannel(referenceChannel)
+  {}
+
+  // CalibrationApply_traits interface
+  virtual void ApplyTo(const std::map< Detector_t::Type_t, std::list< TDetectorReadHit* > >& hits) override;
+  virtual void ApplyTo(std::unique_ptr<TEvent>&) override {}
+
+
+  // Physics interface
+  void ProcessEvent(const Event &event) override;
+  void Finish() override;
+  void ShowResult() override;
+
+  // CalibrationUpdate_traits interface
+  void BuildRanges(std::list<TID>&) override {}
+  void Update(const TID&) override {}
+
+protected:
+  const Detector_t::Type_t DetectorType;
+  const LogicalChannel_t   ReferenceChannel;
+};
+
+}}  // namespace ant::calibration
+
+#endif

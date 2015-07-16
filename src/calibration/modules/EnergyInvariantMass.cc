@@ -8,7 +8,7 @@ using namespace ant;
 using namespace ant::calibration;
 
 EnergyInvariantMass::EnergyInvariantMass():
-    Calibration::Module("TestCalCB")
+    Calibration::Module("EnergyInvariantMass")
 {
     const BinSettings energybins(1000);
 

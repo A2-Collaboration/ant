@@ -11,7 +11,7 @@ class Calibration {
 public:
 
   /**
-   * @brief The Module class
+   * @brief The Calibration::Module class
    * A calibration module is two things:
    * * A physics class to make histograms and determine calibration factors
    * * and a CalibrationApply class that can apply those factors to data
@@ -23,7 +23,8 @@ public:
       public Updateable_traits
   {
   public:
-    Module(const std::string& name): Physics(name) {}
+    Module(const std::string& name) :
+      Physics(std::string("Calibration_")+name) {} /// \todo put calibration histograms in subdir?
     virtual ~Module() = default;
   };
 

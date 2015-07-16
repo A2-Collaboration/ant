@@ -10,30 +10,25 @@ namespace calibration {
 
 class EnergyInvariantMass : public Calibration::Module {
 protected:
-    TH1* ggIM = nullptr;
+  TH1* ggIM = nullptr;
 
 public:
-    EnergyInvariantMass();
+  EnergyInvariantMass();
 
-    // CalibrationApply_traits interface
-public:
-    virtual void ApplyTo(const std::map< Detector_t::Type_t, std::list< TDetectorReadHit* > >& hits) override;
-    virtual void ApplyTo(std::unique_ptr<TEvent>&) override {}
+  // CalibrationApply_traits interface
+  virtual void ApplyTo(const std::map< Detector_t::Type_t, std::list< TDetectorReadHit* > >& hits) override;
+  virtual void ApplyTo(std::unique_ptr<TEvent>&) override {}
 
+  // Physics interface
+  void ProcessEvent(const Event &event) override;
+  void Finish() override;
+  void ShowResult() override;
 
-    // Physics interface
-public:
-    void ProcessEvent(const Event &event) override;
-    void Finish() override;
-    void ShowResult() override;
-
-    // CalibrationUpdate_traits interface
-private:
-    void BuildRanges(std::list<TID> &ranges) override;
-    void Update(const TID &id) override;
+  // CalibrationUpdate_traits interface
+  void BuildRanges(std::list<TID> &ranges) override;
+  void Update(const TID &id) override;
 };
 
-}
-}
+}} // namespace ant::calibration
 
 #endif

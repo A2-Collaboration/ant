@@ -2,6 +2,7 @@
 #include "ExpConfig.h"
 #include "detectors/CB.h"
 #include "detectors/TAPS.h"
+#include "detectors/Trigger.h"
 #include "unpacker/UnpackerAcqu.h"
 
 #include "base/std_ext.h"
@@ -20,6 +21,7 @@ class Setup_2014_EtaPrime :
 {
 public:
   Setup_2014_EtaPrime() {
+    detectors.push_back(std::make_shared<detector::Trigger>());
     detectors.push_back(std::make_shared<detector::CB>());
     detectors.push_back(std::make_shared<detector::TAPS_2013>(false)); // no Cherenkov
     calibrations.push_back(std::make_shared<calibration::EnergyInvariantMass>());

@@ -17,8 +17,8 @@ struct TDetectorReadHit  : printable_traits
 struct TDetectorReadHit
 #endif
 {
-  std::uint8_t  Detector;
-  std::uint8_t  Type;
+  std::uint8_t  DetectorType;
+  std::uint8_t  ChannelType;
   std::uint32_t Channel;
 
   std::vector<std::uint8_t>  RawData;
@@ -32,8 +32,8 @@ struct TDetectorReadHit
 #ifndef __CINT__
   TDetectorReadHit(const LogicalChannel_t& element,
       const std::vector<std::uint8_t>& rawData) :
-    Detector(static_cast<std::uint8_t>(element.Detector)),
-    Type(static_cast<std::uint8_t>(element.Type)),
+    DetectorType(static_cast<std::uint8_t>(element.DetectorType)),
+    ChannelType(static_cast<std::uint8_t>(element.ChannelType)),
     Channel(element.Channel),
     RawData(rawData)
   {
@@ -41,7 +41,13 @@ struct TDetectorReadHit
                   "LogicalElement_t::Channel does not fit into TDetecorReadHit::Channel");
   }
 
+  Channel_t::Type_t GetChannelType() const {
+    return static_cast<Channel_t::Type_t>(ChannelType);
+  }
 
+  Detector_t::Type_t GetDetectorType() const {
+    return static_cast<Detector_t::Type_t>(DetectorType);
+  }
 
   virtual std::ostream& Print( std::ostream& s) const override {
     std::ostringstream rawdata;
@@ -100,10 +106,10 @@ struct TDetectorRead : TDataRecord
 
 #ifndef __CINT__
 inline const char* TDetectorReadHit::GetDetectorAsString() const {
-  return Detector_t::ToString(static_cast<Detector_t::Type_t>(Detector));
+  return Detector_t::ToString(GetDetectorType());
 }
 inline const char* TDetectorReadHit::GetTypeAsString() const {
-  return Channel_t::ToString(static_cast<Channel_t::Type_t>(Type));
+  return Channel_t::ToString(GetChannelType());
 }
 #endif
 

@@ -58,8 +58,8 @@ struct Channel_t {
  * @brief The LogicalChannel_t struct uniquely identifies detector element within setup
  */
 struct LogicalChannel_t {
-  Detector_t::Type_t Detector;
-  Channel_t::Type_t Type;
+  Detector_t::Type_t DetectorType;
+  Channel_t::Type_t ChannelType;
   unsigned Channel;
 };
 
