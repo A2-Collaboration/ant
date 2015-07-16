@@ -41,6 +41,9 @@ set(SRCS
   detail/tclap/XorHandler.h
   detail/tclap/ZshCompletionOutput.h
   Tree.h
+  root_printable.h
+  root_printable.cc
 )
 
 add_library(base ${SRCS})
+target_link_libraries(base ${ROOT_LIBRARIES})
