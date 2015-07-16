@@ -30,17 +30,33 @@ public:
   }
 
   virtual std::list< std::shared_ptr< Updateable_traits > > GetUpdateables() const override {
-    return {};
+
+    // calibrations and detectors may be updateable
+    // so search the list for those kind of objects
+
+    std::list< std::shared_ptr< Updateable_traits > > updateables;
+    for(const auto& detector : detectors) {
+      const auto& ptr = dynamic_pointer_cast<Updateable_traits, Detector_t>(detector);
+      if(ptr == nullptr)
+        continue;
+      updateables.push_back(ptr);
+    }
+    for(const auto& calibration : calibrations) {
+      const auto& ptr = dynamic_pointer_cast<Updateable_traits, CalibrationApply_traits>(calibration);
+      if(ptr == nullptr)
+        continue;
+      updateables.push_back(ptr);
+    }
+    return updateables;
   }
 
   bool Matches(const THeaderInfo& header) const override {
     // check that all detectors match
     for(const auto& detector : detectors) {
-      const ExpConfig::Base* cfg
-          = dynamic_cast<const ExpConfig::Base*>(detector.get());
-      if(cfg == nullptr)
+      const auto& ptr = dynamic_pointer_cast<ExpConfig::Base, Detector_t>(detector);
+      if(ptr == nullptr)
         continue;
-      if(!cfg->Matches(header))
+      if(!ptr->Matches(header))
         return false;
     }
     /// \todo Make beamtime match stricter than just detectors

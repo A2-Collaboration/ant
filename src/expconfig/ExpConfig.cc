@@ -45,7 +45,7 @@ shared_ptr<T> ExpConfig::Get_(const THeaderInfo& header) {
   // requested type unique_ptr<T>
   // this only works if the found module is a derived class of the requested type
 
-  auto ptr = dynamic_pointer_cast<T, Base>(modules.back());
+  const auto& ptr = dynamic_pointer_cast<T, Base>(modules.back());
 
 
   if(ptr==nullptr) {

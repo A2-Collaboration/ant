@@ -14,7 +14,7 @@ using namespace ant;
 
 Reconstruct::Reconstruct(const THeaderInfo &headerInfo)
 {
-  auto config = ExpConfig::Reconstruct::Get(headerInfo);
+  const auto& config = ExpConfig::Reconstruct::Get(headerInfo);
   calibrations = config->GetCalibrations();
   updateables = config->GetUpdateables();
 }
