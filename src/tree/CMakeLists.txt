@@ -7,6 +7,9 @@ set(SRCS
   TSlowControl.h
   TUnpackerMessage.h
   TEvent.h
+  TCluster.h
+  TTrack.h
+  TTaggerHit.h
   )
 
 set(ROOT_DICTIONARY "${CMAKE_CURRENT_BINARY_DIR}/G__tree.cc")
