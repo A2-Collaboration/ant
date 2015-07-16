@@ -63,6 +63,9 @@ int main(int argc, char* argv[]) {
   unique_ptr<Reconstruct> reconstruct;
 
   while(auto item = unpacker->NextItem()) {
+    if(nReads>30000)
+      break;
+
     //cout << *item << endl;
     HeaderInfo = dynamic_cast<THeaderInfo*>(item.get());
     if(HeaderInfo != nullptr) {
@@ -82,10 +85,11 @@ int main(int argc, char* argv[]) {
     }
     DetectorRead = dynamic_cast<TDetectorRead*>(item.get());
     if(DetectorRead != nullptr) {
-      treeDetectorRead->Fill();
 
       if(reconstruct)
         reconstruct->DoReconstruct(*DetectorRead);
+
+      treeDetectorRead->Fill();
 
       nReads++;
       if(nReads % 10000 == 0) {
@@ -101,7 +105,7 @@ int main(int argc, char* argv[]) {
 
   end = std::chrono::system_clock::now();
   std::chrono::duration<double> elapsed_seconds = end-start;
-  cout << "Analyzed " << nReads/elapsed_seconds.count() << " Reads/s" << endl;
+  cout << "Analyzed " << nReads << " reads, speed " << nReads/elapsed_seconds.count() << " Reads/s" << endl;
 
   return EXIT_SUCCESS;
 }
