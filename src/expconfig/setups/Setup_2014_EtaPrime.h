@@ -9,6 +9,7 @@
 
 #include "reconstruct/Reconstruct_traits.h"
 #include "calibration/modules/EnergyInvariantMass.h"
+#include "calibration/modules/TimingCATCH.h"
 
 namespace ant {
 namespace expconfig {
@@ -20,11 +21,32 @@ class Setup_2014_EtaPrime :
     public UnpackerAcquConfig
 {
 public:
+  void AddDetector(const std::shared_ptr<Detector_t>& detector) {
+    detectors.push_back(detector);
+  }
+
+  template<typename T, typename... Args>
+  void AddDetector(Args&&... args) {
+    AddDetector(std::make_shared<T>(std::forward<Args>(args)...));
+  }
+
+  template<typename T, typename... Args>
+  void AddCalibration(Args&&... args) {
+    calibrations.push_back(std::make_shared<T>(std::forward<Args>(args)...));
+  }
+
   Setup_2014_EtaPrime() {
-    detectors.push_back(std::make_shared<detector::Trigger>());
-    detectors.push_back(std::make_shared<detector::CB>());
-    detectors.push_back(std::make_shared<detector::TAPS_2013>(false)); // no Cherenkov
-    calibrations.push_back(std::make_shared<calibration::EnergyInvariantMass>());
+    const auto trigger = std::make_shared<detector::Trigger>();
+
+    AddDetector(trigger);
+    AddDetector<detector::CB>();
+    AddDetector<detector::TAPS_2013>(false); // no Cherenkov
+
+    AddCalibration<calibration::EnergyInvariantMass>();
+    AddCalibration<calibration::TimingCATCH>(
+          Detector_t::Type_t::CB,
+          trigger->Reference_CATCH_CBCrate
+          );
   }
 
   virtual std::list< std::shared_ptr< CalibrationApply_traits > > GetCalibrations() const override {

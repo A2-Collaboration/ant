@@ -18,18 +18,21 @@ struct Trigger :
     return true;
   }
 
+  const LogicalChannel_t Reference_CATCH_TaggerCrate = {Type, Channel_t::Type_t::Timing, 1000};
+  const LogicalChannel_t Reference_CATCH_CBCrate = {Type, Channel_t::Type_t::Timing, 1001};
+
   // for UnpackerAcquConfig
   virtual void BuildMappings(
       std::vector<hit_mapping_t>& hit_mappings,
       std::vector<scaler_mapping_t>&) const override {
 
     hit_mapping_t refCATCH1;
-    refCATCH1.LogicalChannel = {Type, Channel_t::Type_t::Timing, 1000};
+    refCATCH1.LogicalChannel = Reference_CATCH_TaggerCrate;
     refCATCH1.RawChannels.push_back(1400);
     hit_mappings.emplace_back(std::move(refCATCH1));
 
     hit_mapping_t refCATCH2;
-    refCATCH2.LogicalChannel = {Type, Channel_t::Type_t::Timing, 1001};
+    refCATCH2.LogicalChannel = Reference_CATCH_CBCrate;
     refCATCH2.RawChannels.push_back(2000);
     hit_mappings.emplace_back(std::move(refCATCH2));
 

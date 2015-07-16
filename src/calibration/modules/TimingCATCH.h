@@ -17,7 +17,11 @@ public:
       Detector_t::Type_t detectorType,
       const LogicalChannel_t& referenceChannel
       ) :
-    Calibration::Module("TimingCATCH"),
+    Calibration::Module(
+      std_ext::formatter()
+      << "TimingCATCH_"
+      << Detector_t::ToString(detectorType)
+         ),
     DetectorType(detectorType),
     ReferenceChannel(referenceChannel)
   {}

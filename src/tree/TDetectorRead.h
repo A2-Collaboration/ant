@@ -50,23 +50,32 @@ struct TDetectorReadHit
   }
 
   virtual std::ostream& Print( std::ostream& s) const override {
-    std::ostringstream rawdata;
+    s << "Hit Detector="
+         //<< std::left << std::setfill(' ') << std::setw(4)
+      << GetDetectorAsString() << std::right
+      << " Channel="
+      << std::setw(3)
+      << Channel
+      << " Type="
+      << GetTypeAsString();
 
-    rawdata << std::hex << std::uppercase << std::setfill( '0' );
-    for(int c : RawData) {
-      rawdata << std::setw( 2 ) << c;
+    if(!RawData.empty()) {
+      std::ostringstream s_rawdata;
+      s_rawdata << std::hex << std::uppercase << std::setfill( '0' );
+      for(int c : RawData) {
+        s_rawdata << std::setw( 2 ) << c;
+      }
+      s << " RawData=0x" << s_rawdata.str();
+    }
+    if(!Values.empty()) {
+      std::ostringstream s_values;
+      for(double c : Values) {
+        s_values << c << " ";
+      }
+      s << " Values=" << s_values.str();
     }
 
-    return s << "Hit Detector="
-                //<< std::left << std::setfill(' ') << std::setw(4)
-             << GetDetectorAsString() << std::right
-             << " Channel="
-             << std::setw(3)
-             << Channel
-             << " Type="
-             << GetTypeAsString()
-             << " RawData=0x" << rawdata.str()
-                ;
+    return s;
   }
 #endif
 

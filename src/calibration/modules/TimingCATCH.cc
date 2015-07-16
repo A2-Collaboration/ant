@@ -44,7 +44,7 @@ void TimingCATCH::ApplyTo(const map< Detector_t::Type_t, list< TDetectorReadHit*
   if(it_refhits == hits.end())
     return;
   const list<TDetectorReadHit*>& refhits = it_refhits->second;
-  const auto comparer = [this] (TDetectorReadHit* hit) {
+  auto comparer = [this] (TDetectorReadHit* hit) {
     return hit->GetChannelType() == ReferenceChannel.ChannelType &&
         hit->Channel == ReferenceChannel.Channel;
   };
@@ -59,11 +59,27 @@ void TimingCATCH::ApplyTo(const map< Detector_t::Type_t, list< TDetectorReadHit*
   const double refhit_timing = refhit_timings[0];
 
   // search for to be calibrated timings
-  const auto it_hits = hits.find(DetectorType);
-  if(it_hits == hits.end())
+  const auto it_dethits = hits.find(DetectorType);
+  if(it_dethits == hits.end())
     return;
 
+  const auto& dethits = it_dethits->second;
 
+  // now calibrate the timings (ignore any other kind of hits)
+  for(TDetectorReadHit* dethit : dethits) {
+    if(dethit->GetChannelType() != Channel_t::Type_t::Timing)
+      continue;
+    dethit->Values = convertToTiming(dethit->RawData);
+    // apply offset to each of the values (might be multihit)
+    auto apply_offset = [refhit_timing] (double& v) {
+      v -= refhit_timing;
+      /// \todo apply channel dependent offset as well here
+    };
+    for_each(dethit->Values.begin(), dethit->Values.end(),
+             apply_offset);
+
+    dethit->RawData.clear(); // by clearing the RawData, we indicate successful calibration
+  }
 
 }
 

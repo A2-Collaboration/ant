@@ -9,6 +9,8 @@
 #include "tree/TDataRecord.h"
 #include "tree/TDetectorRead.h"
 
+#include <iostream>
+
 using namespace std;
 using namespace ant;
 
@@ -22,6 +24,7 @@ Reconstruct::Reconstruct(const THeaderInfo &headerInfo)
 
 unique_ptr<TEvent> Reconstruct::DoReconstruct(TDetectorRead& detectorRead)
 {
+
   // categorize the hits by detector type
   // this is handy for all subsequent reconstruction steps
   map<Detector_t::Type_t, std::list< TDetectorReadHit* > > sorted_hits;
@@ -35,7 +38,10 @@ unique_ptr<TEvent> Reconstruct::DoReconstruct(TDetectorRead& detectorRead)
     calib->ApplyTo(sorted_hits);
   }
 
-  // we
+  // the detectorRead is now calibrated as far as possible
+
+  //cout << detectorRead << endl;
+
 
   return nullptr;
 }
