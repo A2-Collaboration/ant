@@ -6,14 +6,14 @@ include_directories(
   )
 
 
-set(CALIBRATION_BASE
-    BaseCalModule.h
-    BaseCalModule.cc
-    TestCalCB.h
-    TestCalCB.cc
+set(SRCS
+    Calibration.h
+    Calibration.cc
+    modules/EnergyInvariantMass.h
+    modules/EnergyInvariantMass.cc
   )
 
-add_library(calibration ${CALIBRATION_BASE})
+add_library(calibration ${SRCS})
 target_link_libraries(calibration
   base
   analysis

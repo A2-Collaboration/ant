@@ -1,4 +1,4 @@
-#include "TestCalCB.h"
+#include "EnergyInvariantMass.h"
 #include "analysis/plot/HistogramFactories.h"
 #include "analysis/data/Event.h"
 #include "analysis/utils/combinatorics.h"
@@ -7,8 +7,8 @@ using namespace std;
 using namespace ant;
 using namespace ant::calibration;
 
-TestCalCB::TestCalCB():
-    BaseCalibrationModule("TestCalCB")
+EnergyInvariantMass::EnergyInvariantMass():
+    Calibration::Module("TestCalCB")
 {
     const BinSettings energybins(1000);
 
@@ -19,7 +19,7 @@ TestCalCB::TestCalCB():
 
 
 
-void TestCalCB::ProcessEvent(const Event &event)
+void EnergyInvariantMass::ProcessEvent(const Event &event)
 {
     const auto& photons = event.Reconstructed().Particles().Get(ParticleTypeDatabase::Photon);
 
@@ -30,27 +30,27 @@ void TestCalCB::ProcessEvent(const Event &event)
     }
 }
 
-void TestCalCB::Finish()
+void EnergyInvariantMass::Finish()
 {
 
 }
 
-void TestCalCB::ShowResult()
+void EnergyInvariantMass::ShowResult()
 {
 
 }
 
-void TestCalCB::ApplyTo(const std::map< Detector_t::Type_t, std::list< TDetectorReadHit* > >& hits)
+void EnergyInvariantMass::ApplyTo(const std::map< Detector_t::Type_t, std::list< TDetectorReadHit* > >& hits)
 {
 
 }
 
-void TestCalCB::BuildRanges(list<TID>& ranges)
+void EnergyInvariantMass::BuildRanges(list<TID>& ranges)
 {
 
 }
 
-void TestCalCB::Update(const TID &id)
+void EnergyInvariantMass::Update(const TID &id)
 {
 
 }

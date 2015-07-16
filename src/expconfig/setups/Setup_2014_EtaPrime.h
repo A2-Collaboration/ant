@@ -7,7 +7,7 @@
 #include "base/std_ext.h"
 
 #include "reconstruct/Reconstruct_traits.h"
-#include "calibration/TestCalCB.h"
+#include "calibration/modules/EnergyInvariantMass.h"
 
 namespace ant {
 namespace expconfig {
@@ -22,7 +22,7 @@ public:
   Setup_2014_EtaPrime() {
     detectors.push_back(std::make_shared<detector::CB>());
     detectors.push_back(std::make_shared<detector::TAPS_2013>(false)); // no Cherenkov
-    calibrations.push_back(std::make_shared<calibration::TestCalCB>());
+    calibrations.push_back(std::make_shared<calibration::EnergyInvariantMass>());
   }
 
   virtual std::list< std::shared_ptr< CalibrationApply_traits > > GetCalibrations() const override {

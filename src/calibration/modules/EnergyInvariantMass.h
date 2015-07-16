@@ -1,20 +1,19 @@
-#ifndef TESTCALCB_H
-#define TESTCALCB_H
+#ifndef ANT_CALIBRATION_ENERGYINVARIANTMASS_H
+#define ANT_CALIBRATION_ENERGYINVARIANTMASS_H
 
-#include "BaseCalModule.h"
+#include "Calibration.h"
 
 class TH1;
 
 namespace ant {
 namespace calibration {
 
-class TestCalCB: public BaseCalibrationModule {
+class EnergyInvariantMass : public Calibration::Module {
 protected:
     TH1* ggIM = nullptr;
 
 public:
-    TestCalCB();
-    virtual ~TestCalCB() = default;
+    EnergyInvariantMass();
 
     // CalibrationApply_traits interface
 public:

@@ -10,6 +10,6 @@ set(SRCS
   setups/Setup_2014_EtaPrime.h
   )
 
-include_directories(. ../analysis)
+include_directories(. ../analysis ../calibration)
 add_library(expconfig ${SRCS})
 target_link_libraries(expconfig base tree calibration)
