@@ -12,4 +12,4 @@ set(SRCS
 
 include_directories(. ../analysis)
 add_library(expconfig ${SRCS})
-target_link_libraries(expconfig base tree)
+target_link_libraries(expconfig base tree calibration)

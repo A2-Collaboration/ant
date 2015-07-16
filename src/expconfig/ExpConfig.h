@@ -28,7 +28,7 @@ public:
   // the ExpConfig::Module provides general information about the experiment
   class Module : public virtual Base {
   public:
-    static std::unique_ptr<Module> Get(const THeaderInfo& header);
+    static std::shared_ptr<Module> Get(const THeaderInfo& header);
   };
 
   // in order to run the Reconstruction,
@@ -37,7 +37,7 @@ public:
   public:
     virtual std::list< std::shared_ptr< CalibrationApply_traits > > GetCalibrations() const = 0;
     virtual std::list< std::shared_ptr< CalibrationUpdate_traits > > GetUpdateables() const = 0;
-    static std::unique_ptr<Reconstruct> Get(const THeaderInfo& header);
+    static std::shared_ptr<Reconstruct> Get(const THeaderInfo& header);
   };
 
   // each unpacker has its own config,
@@ -45,12 +45,17 @@ public:
   template<class T>
   class Unpacker : public virtual Base {
   public:
-    static std::unique_ptr<T> Get(const THeaderInfo& header);
+    static std::shared_ptr<T> Get(const THeaderInfo& header);
   };
 
   class Exception : public std::runtime_error {
     using std::runtime_error::runtime_error; // use base class constructor
   };
+
+private:
+  static const std::list< std::shared_ptr<ExpConfig::Base> > modules_available;
+  template<typename T>
+  static std::shared_ptr<T> Get_(const THeaderInfo& header);
 };
 
 } // namespace ant

@@ -72,7 +72,7 @@ private:
   signed trueRecordLength;
   unsigned unpackedBuffers;
   std::unique_ptr<THeaderInfo> BuildTHeaderInfo();
-  std::unique_ptr<UnpackerAcquConfig> config;
+  //std::unique_ptr<UnpackerAcquConfig> config;
 
 protected:
   using reader_t = decltype(reader);

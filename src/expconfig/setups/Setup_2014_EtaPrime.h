@@ -22,10 +22,11 @@ public:
   Setup_2014_EtaPrime() {
     detectors.push_back(std::make_shared<detector::CB>());
     detectors.push_back(std::make_shared<detector::TAPS_2013>(false)); // no Cherenkov
+    calibrations.push_back(std::make_shared<calibration::TestCalCB>());
   }
 
   virtual std::list< std::shared_ptr< CalibrationApply_traits > > GetCalibrations() const override {
-    return {};
+    return calibrations;
   }
 
   virtual std::list< std::shared_ptr< CalibrationUpdate_traits > > GetUpdateables() const override {
@@ -48,7 +49,7 @@ public:
   }
 
   void BuildMappings(std::vector<hit_mapping_t>& hit_mappings,
-                     std::vector<scaler_mapping_t>& scaler_mappings) const override
+                     std::vector<scaler_mapping_t>& scaler_mappings) const
   {
     // this setup simply asks its underlying
     // detectors for the mappings
@@ -65,6 +66,7 @@ public:
 
 private:
   std::list< std::shared_ptr<Detector_t> > detectors;
+  std::list< std::shared_ptr<CalibrationApply_traits> > calibrations;
 };
 
 }}} // namespace ant::expconfig::setup

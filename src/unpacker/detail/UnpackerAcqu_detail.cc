@@ -96,7 +96,7 @@ void acqu::FileFormatBase::FillHeader(queue_t& queue)
   auto headerInfo = BuildTHeaderInfo();
 
   // try to find some config with the headerInfo
-  config = ExpConfig::Unpacker<UnpackerAcquConfig>::Get(*headerInfo);
+  auto config = ExpConfig::Unpacker<UnpackerAcquConfig>::Get(*headerInfo);
 
   // then enqueue the header info
   fillQueue<THeaderInfo>(queue, move(headerInfo));
