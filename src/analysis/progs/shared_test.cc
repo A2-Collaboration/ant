@@ -74,7 +74,24 @@ int main() {
     unique_ptr<base> up2cp = up2->CopyU();
     up2cp->action();
 
+    //====================
 
+    std::shared_ptr<base> test = std::make_shared<base>();
+    cout << "use count " << test.use_count() << endl;
+
+    const auto ctest = test;
+    cout << "use count " << test.use_count() << endl;
+
+    const auto ctest2 = ctest;
+    cout << "use count " << test.use_count() << endl;
+
+    std::weak_ptr<base> wp = test;
+    if(auto s = wp.lock()) {
+        s->action();
+        cout << "use count " << test.use_count() << endl;
+    }
+    wp.reset();
+    cout << wp.expired() << endl;
 
     return 0;
 }
