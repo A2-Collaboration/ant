@@ -34,7 +34,7 @@ void dotest() {
 
 
   buffer->Tracks.push_back(
-        ant::TTrack(200,1,2,2,0,0)
+        ant::TTrack(200,1,2,2,{})
         );
 
   buffer->Tracks.back().Clusters.push_back(
@@ -64,9 +64,9 @@ void dotest() {
         ant::TClusterHit(20, {{ant::Channel_t::Type_t::Integral, 4}})
         );
 
-  //======= Track 1 =============
+  //======= Track 2 =============
   buffer->Tracks.push_back(
-        ant::TTrack(300,0.5,2,3,0,0)
+        ant::TTrack(300,0.5,2,3)
         );
   buffer->Tracks.back().Clusters.push_back(
         ant::TCluster(TVector3(25,10,0),300,ant::Detector_t::Type_t::TAPS)

@@ -236,7 +236,26 @@ unique_ptr<TEvent> Reconstruct::DoReconstruct(TDetectorRead& detectorRead)
                                make_pair(detectortype, move(clusters)));
   }
 
+  // super-stupid track matching for now
+  // each track contains just one cluster
 
+  for(const auto& it_clusters : sorted_clusters) {
+    //const Detector_t::Type_t detectortype = it_clusters.first;
+    const list<TCluster>& clusters = it_clusters.second;
+
+    for(const TCluster& cluster : clusters) {
+      event->Tracks.emplace_back(
+            cluster.Energy,
+            0, // time unknown...
+            cluster.Position.Theta(),
+            cluster.Position.Phi(),
+            std::vector<TCluster>{cluster}
+            );
+    }
+  }
+
+  // uncomment for debug purposes
+  //cout << *event << endl;
 
   return event;
 }
