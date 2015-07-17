@@ -8,6 +8,8 @@
 #include "tree/TDetectorRead.h"
 #include "tree/TEvent.h"
 
+#include "base/std_ext.h"
+
 #include <algorithm>
 #include <iostream>
 #include <iterator>
@@ -15,6 +17,7 @@
 
 using namespace std;
 using namespace ant;
+using namespace ant::reconstruct;
 
 Reconstruct::Reconstruct(const THeaderInfo &headerInfo)
 {
@@ -86,7 +89,7 @@ unique_ptr<TEvent> Reconstruct::DoReconstruct(TDetectorRead& detectorRead)
   };
 
   map<Detector_t::Type_t, list< HitWithEnergy_t > > sorted_clusterhits;
-  auto sorted_clusterhits_hint = sorted_clusterhits.begin();
+  auto sorted_clusterhits_hint = sorted_clusterhits.cbegin();
 
   for(const auto& it_hit : sorted_readhits) {
     list<HitWithEnergy_t> clusterhits;
@@ -140,7 +143,7 @@ unique_ptr<TEvent> Reconstruct::DoReconstruct(TDetectorRead& detectorRead)
 
   // already create the event here, since TaggerHits
   // don't need tracking and thus can be filled already
-  auto event = make_shared<TEvent>(detectorRead.ID);
+  auto event = std_ext::make_unique<TEvent>(detectorRead.ID);
 
   map<Detector_t::Type_t, list< TCluster > > sorted_clusters;
   auto sorted_clusters_hint = sorted_clusters.begin();
@@ -173,11 +176,51 @@ unique_ptr<TEvent> Reconstruct::DoReconstruct(TDetectorRead& detectorRead)
         = dynamic_pointer_cast<ClusterDetector_t>(detector);
 
     if(clusterdetector != nullptr) {
-      // clustering detector, so we need more than just energy and position
+      // clustering detector, so we need additional information
+      // to build the crystals_t
+      list<clustering::crystal_t> crystals;
+      for(const HitWithEnergy_t& clusterhit : clusterhits) {
+        const TClusterHit& hit = clusterhit.Hit;
+        const unsigned ch = hit.Channel;
+        crystals.emplace_back(
+              ch,
+              clusterhit.Energy,
+              clusterdetector->GetPosition(ch),
+              clusterdetector->GetNeighbours(ch),
+              clusterdetector->GetMoliereRadius(ch),
+              addressof(hit)
+              );
+      }
+      // do the clustering
+      vector< vector< clustering::crystal_t> > crystal_clusters;
+      do_clustering(crystals, crystal_clusters);
 
+      // now calculate some cluster properties,
+      // and create TCluster out of it
+      for(const auto& cluster : crystal_clusters) {
+        const double cluster_energy = clustering::calc_total_energy(cluster);
+        /// \todo already cut low-energy clusters here?
+        TVector3 weightedPosition(0,0,0);
+        double weightedSum = 0;
+        std::vector<TClusterHit> clusterhits;
+        clusterhits.reserve(cluster.size());
+        for(const clustering::crystal_t& crystal : cluster) {
+          double wgtE = clustering::calc_energy_weight(crystal.Energy, cluster_energy);
+          weightedPosition += crystal.Position * wgtE;
+          weightedSum += wgtE;
+          clusterhits.emplace_back(*crystal.Hit);
+        }
+        weightedPosition *= 1.0/weightedSum;
+        clusters.emplace_back(
+              weightedPosition,
+              cluster_energy,
+              detector->Type,
+              clusterhits
+              );
+      }
     }
     else {
-      // in case of no clustering,
+      // in case of no clustering detector,
       // build "cluster" consisting of single TClusterHit
       for(const HitWithEnergy_t& clusterhit : clusterhits) {
         const TClusterHit& hit = clusterhit.Hit;
@@ -185,7 +228,7 @@ unique_ptr<TEvent> Reconstruct::DoReconstruct(TDetectorRead& detectorRead)
               detector->GetPosition(hit.Channel),
               clusterhit.Energy,
               detector->Type,
-              initializer_list<TClusterHit>{hit}
+              vector<TClusterHit>{hit}
               );
       }
     }
@@ -198,5 +241,5 @@ unique_ptr<TEvent> Reconstruct::DoReconstruct(TDetectorRead& detectorRead)
 
 
 
-  return nullptr;
+  return event;
 }

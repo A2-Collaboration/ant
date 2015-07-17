@@ -1,7 +1,7 @@
 #ifndef RECONSTRUCT_CLUSTERING_H
 #define RECONSTRUCT_CLUSTERING_H
 
-
+#include "tree/TCluster.h"
 
 #include "TVector3.h"
 #include "TMath.h"
@@ -20,6 +20,23 @@ struct crystal_t  {
   TVector3 Position;
   std::vector<unsigned> Neighbours; // potential neighbours (as channels)
   double MoliereRadius;
+  const TClusterHit* Hit;
+  crystal_t(
+      unsigned channel,
+      double energy,
+      const TVector3& position,
+      const std::vector<unsigned>& neighbours,
+      double moliereRadius,
+      const TClusterHit* hit_ptr
+      )
+    :
+      Channel(channel),
+      Energy(energy),
+      Position(position),
+      Neighbours(neighbours),
+      MoliereRadius(moliereRadius),
+      Hit(hit_ptr)
+  {}
 };
 
 inline bool operator< (const crystal_t& lhs, const crystal_t& rhs){
@@ -40,10 +57,10 @@ static double calc_total_energy(const std::vector< crystal_t >& cluster) {
   return energy;
 }
 
-static double opening_angle(const crystal_t& c1, const crystal_t& c2)  {
-  // use TMath::ACos since it catches some NaN cases due to double rounding issues
-  return TMath::RadToDeg()*TMath::ACos(c1.Position.Unit()*c2.Position.Unit());
-}
+//static double opening_angle(const crystal_t& c1, const crystal_t& c2)  {
+//  // use TMath::ACos since it catches some NaN cases due to double rounding issues
+//  return TMath::RadToDeg()*TMath::ACos(c1.Position.Unit()*c2.Position.Unit());
+//}
 
 static double calc_energy_weight(const double energy, const double total_energy) {
   double wgtE = 4.0 + TMath::Log(energy / total_energy); /// \todo use optimal cutoff value
@@ -409,7 +426,7 @@ static void build_cluster(std::list<crystal_t>& crystals,
 
 static void do_clustering(
     std::list<crystal_t>& crystals,
-    std::vector< std::vector<crystal_t> > clusters
+    std::vector< std::vector<crystal_t> >& clusters
     ) {
   crystals.sort();
 
