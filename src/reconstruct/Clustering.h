@@ -15,26 +15,11 @@ namespace reconstruct {
 namespace clustering {
 
 struct crystal_t  {
-  unsigned Index;
+  unsigned Channel;
   double Energy;
   TVector3 Position;
-  std::vector<unsigned> NeighbourIndices; // potential neighbours
+  std::vector<unsigned> Neighbours; // potential neighbours (as channels)
   double MoliereRadius;
-//  crystal_t(
-//      const double energy,
-//            const double time,
-//            const Int_t timeMultiplicity,
-//            const TVector3& position,
-//            const unsigned nNeighbours,
-//            const unsigned* neighbours,
-//            const double moliere
-//            ) :
-//    Energy(energy),
-//    Position(position),
-//    MoliereRadius(moliere)
-//  {
-//    NeighbourIndices.assign(neighbours,neighbours+nNeighbours);
-//  }
 };
 
 inline bool operator< (const crystal_t& lhs, const crystal_t& rhs){
@@ -151,10 +136,10 @@ static void split_cluster(const std::vector<crystal_t>& cluster,
     while(!reachedMaxEnergy) {
       // find neighbours intersection with actually hit clusters
       reachedMaxEnergy = true;
-      std::vector<unsigned> neighbours = cluster[currPos].NeighbourIndices;
+      std::vector<unsigned> neighbours = cluster[currPos].Neighbours;
       for(size_t j=0;j<cluster.size();j++) {
         for(unsigned n=0;n<neighbours.size();n++) {
-          if(neighbours[n] != cluster[j].Index)
+          if(neighbours[n] != cluster[j].Channel)
             continue; // cluster element j not neighbour of element currPos, go to next
           double energy = cluster[j].Energy;
           if(maxEnergy < energy) {
@@ -297,8 +282,8 @@ static void split_cluster(const std::vector<crystal_t>& cluster,
           continue;
         for(size_t s=0; s<seeds.size(); s++) {
           crystal_t seed = cluster[seeds[s]];
-          for(size_t n=0;n<seed.NeighbourIndices.size();n++) {
-            if(seed.NeighbourIndices[n] != cluster[j].Index)
+          for(size_t n=0;n<seed.Neighbours.size();n++) {
+            if(seed.Neighbours[n] != cluster[j].Channel)
               continue;
             // for bump i, we found a next_seed, ...
             b_next_seeds[i].push_back(j);
