@@ -54,6 +54,7 @@ public:
     }
 
     void ReadFrom(ant::input::DataReader& reader);
+    void ProcessEvent(const ant::Event& event);
     void ShowResults();
 };
 }

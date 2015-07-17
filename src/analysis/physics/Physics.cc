@@ -38,10 +38,7 @@ void ant::PhysicsManager::ReadFrom(ant::input::DataReader &reader)
 {
     while(reader.hasData()) {
         const auto event = reader.ReadNextEvent();
-        for( auto& m : physics ) {
-
-            m->ProcessEvent(*event.get());
-        }
+        ProcessEvent(event);
 
         const auto i = reader.EventsRead();
         if( i % 10000 == 0) {
@@ -54,6 +51,14 @@ void ant::PhysicsManager::ReadFrom(ant::input::DataReader &reader)
         }
     }
     VLOG(3) << "No more data to read";
+}
+
+void ant::PhysicsManager::ProcessEvent(const ant::Event &event)
+{
+    for( auto& m : physics ) {
+
+        m->ProcessEvent(event);
+    }
 }
 
 void ant::PhysicsManager::ShowResults()
