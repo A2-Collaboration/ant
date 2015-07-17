@@ -48,7 +48,7 @@ struct Channel_t {
     Timing,
     Integral, IntegralShort,
     IntegralAlternate, IntegralShortAlternate,
-    BitPattern, Scaler, Counter
+    BitPattern, Scaler, Pedestal, Counter
   };
   static bool IsIntegral(const Type_t& t);
   static const char* ToString(const Type_t& type);
@@ -94,6 +94,8 @@ inline const char* Channel_t::ToString(const Type_t& type)
     return "Scaler";
   case Channel_t::Type_t::Timing:
     return "Timing";
+  case Channel_t::Type_t::Pedestal:
+    return "Pedestal";
   }
   throw std::runtime_error("Not implemented");
 }

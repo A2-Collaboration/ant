@@ -44,7 +44,7 @@ void TimingCATCH::ApplyTo(const map< Detector_t::Type_t, list< TDetectorReadHit*
   if(it_refhits == hits.end())
     return;
   const list<TDetectorReadHit*>& refhits = it_refhits->second;
-  auto comparer = [this] (TDetectorReadHit* hit) {
+  const auto comparer = [this] (TDetectorReadHit* hit) {
     return hit->GetChannelType() == ReferenceChannel.ChannelType &&
         hit->Channel == ReferenceChannel.Channel;
   };
@@ -71,7 +71,7 @@ void TimingCATCH::ApplyTo(const map< Detector_t::Type_t, list< TDetectorReadHit*
       continue;
     dethit->Values = convertToTiming(dethit->RawData);
     // apply offset to each of the values (might be multihit)
-    auto apply_offset = [refhit_timing] (double& v) {
+    const auto apply_offset = [refhit_timing] (double& v) {
       v -= refhit_timing;
       /// \todo apply channel dependent offset as well here
     };

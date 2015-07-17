@@ -52,7 +52,7 @@ void IntegralSADC::ApplyTo(const map< Detector_t::Type_t, list< TDetectorReadHit
       continue;
     dethit->Values = convertToValue(dethit->RawData);
     // apply offset to each of the values (might be multihit)
-    auto apply_gain = [] (double& v) {
+    const auto apply_gain = [] (double& v) {
       v *= 0.07;
       /// \todo use channel dependent gains here
     };

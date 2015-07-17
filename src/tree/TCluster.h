@@ -18,13 +18,11 @@ struct TClusterHitDatum
 {
   std::uint8_t Type;
   double Value;
-  std::int16_t ValueInt;
 
 #ifndef __CINT__
-  TClusterHitDatum(Channel_t::Type_t type, double value, std::int16_t value_int = 0) :
+  TClusterHitDatum(Channel_t::Type_t type, double value) :
     Type(static_cast<std::uint8_t>(type)),
-    Value(value),
-    ValueInt(value_int)
+    Value(value)
   {}
   Channel_t::Type_t GetType() const {
     return static_cast<Channel_t::Type_t>(Type);
@@ -57,7 +55,7 @@ struct TClusterHit
   }
 
   virtual std::ostream& Print( std::ostream& s) const override {
-    s << "TClusterHit: ";
+    s << "TClusterHit Ch=" << Channel << ": ";
     for(auto& datum : Data) {
       s << Channel_t::ToString(datum.GetType()) << "=" << datum.Value << " ";
     }

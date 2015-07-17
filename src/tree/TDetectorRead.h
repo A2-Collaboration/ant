@@ -23,8 +23,8 @@ struct TDetectorReadHit
 
   std::vector<std::uint8_t>   RawData;
 
-  std::vector<double>         Values;
-  std::vector<std::int16_t>  ValuesInt;
+  std::vector<double> Values;
+  std::vector<bool>   ValueBits;
 
   const char* GetDetectorAsString() const;
   const char* GetTypeAsString() const;
