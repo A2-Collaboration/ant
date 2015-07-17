@@ -3,21 +3,23 @@
 
 #include <memory>
 
-class ant::Event;
+namespace ant {
 class TEvent;
+class TTrack;
 
-namespace ant {
+class Event;
+class Track;
+
 namespace input {
-namespace ant {
 
 /**
  * @brief Convert a TEvent from the reconstruct stage into an analysis style event
  * @param event
  * @return a shared ptr to the new event
  */
-std::shared_ptr<ant::Event> Convert(const std::shared_ptr<TEvent>& event);
+std::shared_ptr<ant::Event> Convert(const TEvent &event);
 
-}
+std::shared_ptr<ant::Track> Convert(const TTrack &track);
 }
 }
 
