@@ -5,6 +5,8 @@
 #include <vector>
 #include <stdexcept>
 
+#include "TVector3.h"
+
 namespace ant {
 
 /**
@@ -21,15 +23,13 @@ struct Detector_t {
   // Element_t is the minimum information,
   // derived classes may extend this
   struct Element_t {
-    struct Position_t {
-      double X, Y, Z;
-    };
-    Element_t(unsigned channel, const Position_t& position) :
+
+    Element_t(unsigned channel, const TVector3& position) :
       Channel(channel),
       Position(position)
     {}
     unsigned Channel; // unique within Detector for all time!
-    Position_t Position;
+    TVector3 Position;
   };
 
   virtual ~Detector_t() = default;

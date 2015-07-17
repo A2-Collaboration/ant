@@ -22,7 +22,7 @@ protected:
   struct TAPSElement_t : Element_t {
     TAPSElement_t(
         unsigned channel,
-        const Position_t& position,
+        const TVector3& position,
         unsigned tac,
         unsigned lg,
         unsigned sg,

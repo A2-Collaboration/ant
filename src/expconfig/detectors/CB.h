@@ -36,7 +36,7 @@ protected:
   struct CBElement_t : Element_t {
     CBElement_t(
         unsigned channel,
-        const Position_t& position,
+        const TVector3& position,
         unsigned adc,
         unsigned tdc
         ) :
