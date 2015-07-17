@@ -38,7 +38,7 @@ public:
   class Reconstruct : public virtual Base {
   public:
     virtual std::list< std::shared_ptr< CalibrationApply_traits > > GetCalibrations() const = 0;
-    virtual std::list< std::shared_ptr< Updateable_traits > > GetUpdateables() const = 0;
+    virtual std::list< std::shared_ptr< Detector_t > > GetDetectors() const = 0;
     static std::shared_ptr<Reconstruct> Get(const THeaderInfo& header);
   };
 

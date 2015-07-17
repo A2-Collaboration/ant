@@ -18,7 +18,23 @@ Reconstruct::Reconstruct(const THeaderInfo &headerInfo)
 {
   const auto& config = ExpConfig::Reconstruct::Get(headerInfo);
   calibrations = config->GetCalibrations();
-  updateables = config->GetUpdateables();
+  auto detectors = config->GetDetectors();
+
+  // calibrations and detectors may be updateable
+  // so search the list for those kind of objects
+  for(const auto& detector : detectors) {
+    const auto& ptr = dynamic_pointer_cast<Updateable_traits, Detector_t>(detector);
+    if(ptr == nullptr)
+      continue;
+    updateables.push_back(ptr);
+  }
+  for(const auto& calibration : calibrations) {
+    const auto& ptr = dynamic_pointer_cast<Updateable_traits, CalibrationApply_traits>(calibration);
+    if(ptr == nullptr)
+      continue;
+    updateables.push_back(ptr);
+  }
+
   /// \todo build the range list from updateables
 }
 

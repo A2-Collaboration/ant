@@ -52,25 +52,8 @@ public:
     return calibrations;
   }
 
-  virtual std::list< std::shared_ptr< Updateable_traits > > GetUpdateables() const override {
-
-    // calibrations and detectors may be updateable
-    // so search the list for those kind of objects
-
-    std::list< std::shared_ptr< Updateable_traits > > updateables;
-    for(const auto& detector : detectors) {
-      const auto& ptr = dynamic_pointer_cast<Updateable_traits, Detector_t>(detector);
-      if(ptr == nullptr)
-        continue;
-      updateables.push_back(ptr);
-    }
-    for(const auto& calibration : calibrations) {
-      const auto& ptr = dynamic_pointer_cast<Updateable_traits, CalibrationApply_traits>(calibration);
-      if(ptr == nullptr)
-        continue;
-      updateables.push_back(ptr);
-    }
-    return updateables;
+  virtual std::list< std::shared_ptr< Detector_t > > GetDetectors() const override {
+    return detectors;
   }
 
   bool Matches(const THeaderInfo& header) const override {
