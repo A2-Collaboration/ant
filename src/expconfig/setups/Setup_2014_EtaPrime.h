@@ -10,6 +10,7 @@
 #include "reconstruct/Reconstruct_traits.h"
 #include "calibration/modules/EnergyInvariantMass.h"
 #include "calibration/modules/TimingCATCH.h"
+#include "calibration/modules/IntegralSADC.h"
 
 namespace ant {
 namespace expconfig {
@@ -42,11 +43,9 @@ public:
     AddDetector<detector::CB>();
     AddDetector<detector::TAPS_2013>(false); // no Cherenkov
 
-    AddCalibration<calibration::EnergyInvariantMass>();
-    AddCalibration<calibration::TimingCATCH>(
-          Detector_t::Type_t::CB,
-          trigger->Reference_CATCH_CBCrate
-          );
+    // the order of the calibrations is important
+    AddCalibration<calibration::TimingCATCH>(Detector_t::Type_t::CB, trigger->Reference_CATCH_CBCrate);
+    AddCalibration<calibration::IntegralSADC>(Detector_t::Type_t::CB);
   }
 
   virtual std::list< std::shared_ptr< CalibrationApply_traits > > GetCalibrations() const override {

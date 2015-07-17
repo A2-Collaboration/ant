@@ -77,8 +77,6 @@ void TimingCATCH::ApplyTo(const map< Detector_t::Type_t, list< TDetectorReadHit*
     };
     for_each(dethit->Values.begin(), dethit->Values.end(),
              apply_offset);
-
-    dethit->RawData.clear(); // by clearing the RawData, we indicate successful calibration
   }
 
 }

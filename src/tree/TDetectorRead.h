@@ -21,10 +21,10 @@ struct TDetectorReadHit
   std::uint8_t  ChannelType;
   std::uint32_t Channel;
 
-  std::vector<std::uint8_t>  RawData;
+  std::vector<std::uint8_t>   RawData;
 
-  std::vector<double>        Values;
-  std::vector<bool>          ValueBits;
+  std::vector<double>         Values;
+  std::vector<std::uint16_t>  ValuesInt;
 
   const char* GetDetectorAsString() const;
   const char* GetTypeAsString() const;

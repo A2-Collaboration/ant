@@ -13,6 +13,8 @@ set(SRCS
     modules/EnergyInvariantMass.cc
     modules/TimingCATCH.cc
     modules/TimingCATCH.h
+    modules/IntegralSADC.cc
+    modules/IntegralSADC.h
   )
 
 add_library(calibration ${SRCS})
