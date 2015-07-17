@@ -1,109 +1,107 @@
 #include "catch.hpp"
+
 #include "tree/TEvent.h"
 #include "tree/TTrack.h"
+
+#include "base/tmpfile_t.h"
+
 #include "TFile.h"
 #include "TTree.h"
+
 #include <iostream>
-#include "TRandom2.h"
 
 using namespace std;
-using namespace ant;
 
-TRandom2 rng;
-
+void dotest();
 
 TEST_CASE("TEvent: Write to TTree", "[tree]") {
+  dotest();
+}
 
-    TFile f("TEvent_test.root","RECREATE");
-
-    TTree* tree = new TTree("teventtest","TEvent Test Tree");
-    TEvent* buffer = new TEvent();
-
-    tree->Branch("event", buffer);
-
-    //======= Track 1 =============
-
-    LogicalChannel_t lc;
+void dotest() {
+  tmpfile_t tmpfile;
 
 
-    buffer->Tracks.push_back(
-                TTrack(200,1,2,2,0,0)
-            );
+  TFile f(tmpfile.filename.c_str(),"RECREATE");
 
-    buffer->Tracks.back().Clusters.push_back(
-                TCluster(TVector3(25,0,0),200,Detector_t::Type_t::CB)
-                );
+  TTree* tree = new TTree("teventtest","TEvent Test Tree");
+  ant::TEvent* buffer = new ant::TEvent();
 
-    lc.Channel = 1;
-    lc.ChannelType = Channel_t::Type_t::Integral;
-    lc.DetectorType = Detector_t::Type_t::CB;
+  tree->Branch("event", buffer);
 
-    buffer->Tracks.back().Clusters.back().Hits.push_back(
-                TDetectorReadHit(lc,{2})
-                );
+  //======= Track 1 =============
 
-    lc.Channel = 2;
-    lc.ChannelType = Channel_t::Type_t::Integral;
-    lc.DetectorType = Detector_t::Type_t::CB;
-    buffer->Tracks.back().Clusters.back().Hits.push_back(
-                TDetectorReadHit(lc,{3})
-                );
 
-    buffer->Tracks.back().Clusters.push_back(
-                TCluster(TVector3(10,0,0),5,Detector_t::Type_t::PID)
-                );
 
-    lc.Channel = 20;
-    lc.ChannelType = Channel_t::Type_t::Integral;
-    lc.DetectorType = Detector_t::Type_t::PID;
-    buffer->Tracks.back().Clusters.back().Hits.push_back(
-                TDetectorReadHit(lc,{6})
-                );
-    lc.Channel = 20;
-    lc.ChannelType = Channel_t::Type_t::Timing;
-    lc.DetectorType = Detector_t::Type_t::PID;
-    buffer->Tracks.back().Clusters.back().Hits.push_back(
-                TDetectorReadHit(lc,{1})
-                );
+  buffer->Tracks.push_back(
+        ant::TTrack(200,1,2,2,0,0)
+        );
 
-    //======= Track 1 =============
-    buffer->Tracks.push_back(
-                TTrack(300,0.5,2,3,0,0)
-            );
-    buffer->Tracks.back().Clusters.push_back(
-                TCluster(TVector3(25,10,0),300,Detector_t::Type_t::TAPS)
-                );
-    buffer->Tracks.back().Clusters.push_back(
-                TCluster(TVector3(10,1,0),5,Detector_t::Type_t::TAPSVeto)
-                );
+  buffer->Tracks.back().Clusters.push_back(
+        ant::TCluster(TVector3(25,0,0), 270, ant::Detector_t::Type_t::CB)
+        );
 
-    tree->Fill();
 
-    cout << buffer << endl;
+  buffer->Tracks.back().Clusters.back().Hits.push_back(
+        ant::TClusterHit(110, {
+                           {ant::Channel_t::Type_t::Integral, 150}, // MeV
+                           {ant::Channel_t::Type_t::Timing, -290}   // ns
+                         })
+        );
 
-    f.Write();
-    f.Close();
+  buffer->Tracks.back().Clusters.back().Hits.push_back(
+        ant::TClusterHit(220, {
+                           {ant::Channel_t::Type_t::Integral, 120}, // MeV
+                           {ant::Channel_t::Type_t::Timing, -280}   // ns
+                         })
+        );
 
-    tree = nullptr;
+  buffer->Tracks.back().Clusters.push_back(
+        ant::TCluster(TVector3(10,0,0), 5, ant::Detector_t::Type_t::PID)
+        );
 
-    TFile f2("TEvent_test.root","READ");
-    REQUIRE(f2.IsOpen());
+  buffer->Tracks.back().Clusters.back().Hits.push_back(
+        ant::TClusterHit(20, {{ant::Channel_t::Type_t::Integral, 4}})
+        );
 
-    f2.GetObject("teventtest", tree);
+  //======= Track 1 =============
+  buffer->Tracks.push_back(
+        ant::TTrack(300,0.5,2,3,0,0)
+        );
+  buffer->Tracks.back().Clusters.push_back(
+        ant::TCluster(TVector3(25,10,0),300,ant::Detector_t::Type_t::TAPS)
+        );
+  buffer->Tracks.back().Clusters.push_back(
+        ant::TCluster(TVector3(10,1,0),5, ant::Detector_t::Type_t::TAPSVeto)
+        );
 
-    REQUIRE(tree!=nullptr);
+  tree->Fill();
 
-    TEvent* readback = nullptr;
+  cout << buffer << endl;
 
-    tree->SetBranchAddress("event",&readback);
+  f.Write();
+  f.Close();
 
-    REQUIRE(tree->GetEntries()==1);
+  tree = nullptr;
 
-    tree->GetEntry(0);
+  TFile f2(tmpfile.filename.c_str(),"READ");
+  REQUIRE(f2.IsOpen());
 
-    cout << *readback << endl;
+  f2.GetObject("teventtest", tree);
 
-    //TODO: Compate the events. implement == operator for events...
+  REQUIRE(tree!=nullptr);
+
+  ant::TEvent* readback = nullptr;
+
+  tree->SetBranchAddress("event",&readback);
+
+  REQUIRE(tree->GetEntries()==1);
+
+  tree->GetEntry(0);
+
+  cout << *readback << endl;
+
+  /// \todo Compare the events. implement == operator for events...
 
 
 }

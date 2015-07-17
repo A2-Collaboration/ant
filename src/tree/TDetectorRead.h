@@ -24,7 +24,7 @@ struct TDetectorReadHit
   std::vector<std::uint8_t>   RawData;
 
   std::vector<double>         Values;
-  std::vector<std::uint16_t>  ValuesInt;
+  std::vector<std::int16_t>  ValuesInt;
 
   const char* GetDetectorAsString() const;
   const char* GetTypeAsString() const;
@@ -37,7 +37,7 @@ struct TDetectorReadHit
     Channel(element.Channel),
     RawData(rawData)
   {
-    static_assert(sizeof(Channel)>=sizeof(decltype(element.Channel)),
+    static_assert(sizeof(Channel)>=sizeof(element.Channel),
                   "LogicalElement_t::Channel does not fit into TDetecorReadHit::Channel");
   }
 

@@ -26,12 +26,12 @@ struct TEvent : TDataRecord
 
 #ifndef __CINT__
   virtual std::ostream& Print( std::ostream& s) const override {
-    s << "TEvent:";
+    s << "TEvent:\n";
     s << " " << TaggerHits.size() << " Taggerhits:\n";
     for(auto& th : TaggerHits) {
         s << "  " << th << "\n";
     }
-    s << " " << Tracks.size() << " Tracks\n";
+    s << " " << Tracks.size() << " Tracks:\n";
     for(auto& t : Tracks) {
         s << "  " << t << "\n";
         for(auto& c : t.Clusters) {

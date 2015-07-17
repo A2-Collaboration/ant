@@ -11,6 +11,8 @@
 #pragma link C++ class ant::TDetectorReadHit+;
 #pragma link C++ class ant::TDetectorRead+;
 #pragma link C++ class ant::TEvent+;
+#pragma link C++ class ant::TClusterHitDatum+;
+#pragma link C++ class ant::TClusterHit+;
 #pragma link C++ class ant::TCluster+;
 #pragma link C++ class ant::TTrack+;
 #pragma link C++ class ant::TTaggerHit+;
