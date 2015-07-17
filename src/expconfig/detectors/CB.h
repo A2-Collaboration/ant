@@ -42,14 +42,17 @@ protected:
         unsigned channel,
         const TVector3& position,
         unsigned adc,
-        unsigned tdc
+        unsigned tdc,
+        const std::initializer_list<unsigned>& neighbours
         ) :
       Element_t(channel, position), // init fields
       ADC(adc),
-      TDC(tdc)
+      TDC(tdc),
+      Neighbours(neighbours)
     {}
     unsigned ADC;
     unsigned TDC;
+    std::vector<unsigned> Neighbours;
   };
   static const std::vector<CBElement_t> elements;
   static const std::map<unsigned, TVector3> positions;
