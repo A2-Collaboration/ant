@@ -38,7 +38,7 @@ void ant::PhysicsManager::ReadFrom(ant::input::DataReader &reader)
 {
     while(reader.hasData()) {
         const auto event = reader.ReadNextEvent();
-        ProcessEvent(event);
+        ProcessEvent(*event);
 
         const auto i = reader.EventsRead();
         if( i % 10000 == 0) {
