@@ -146,7 +146,6 @@ unique_ptr<TEvent> Reconstruct::DoReconstruct(TDetectorRead& detectorRead)
   auto sorted_clusters_hint = sorted_clusters.begin();
 
   for(const auto& it_clusterhits : sorted_clusterhits) {
-    list<TCluster> clusters;
     const Detector_t::Type_t detectortype = it_clusterhits.first;
     const list<HitWithEnergy_t>& clusterhits = it_clusterhits.second;
 
@@ -158,9 +157,12 @@ unique_ptr<TEvent> Reconstruct::DoReconstruct(TDetectorRead& detectorRead)
 
     // we handle stuff a bit differently for
     // each detector from now on: tagger, cluster, everything else
+    list<TCluster> clusters;
 
     // first the tagging device, which is excluded from track matching
-    if(detectortype == Detector_t::Type_t::Tagger) {
+    const shared_ptr<TaggerDetector_t>& taggerdetector
+        = dynamic_pointer_cast<TaggerDetector_t>(detector);
+    if(taggerdetector != nullptr) {
       // one might do some double-hit decoding here...?
       /// \todo handle the TaggerHit stuff here, maybe include PairSpec and Moeller?
       continue;
@@ -171,22 +173,24 @@ unique_ptr<TEvent> Reconstruct::DoReconstruct(TDetectorRead& detectorRead)
         = dynamic_pointer_cast<ClusterDetector_t>(detector);
 
     if(clusterdetector != nullptr) {
-      // clustering detector, we need more than energy and position
+      // clustering detector, so we need more than just energy and position
 
     }
     else {
       // in case of no clustering,
-      // build cluster for each hit
+      // build "cluster" consisting of single TClusterHit
       for(const HitWithEnergy_t& clusterhit : clusterhits) {
-
-        clusters.emplace_back(TCluster());
+        const TClusterHit& hit = clusterhit.Hit;
+        clusters.emplace_back(
+              detector->GetPosition(hit.Channel),
+              clusterhit.Energy,
+              detector->Type,
+              initializer_list<TClusterHit>{hit}
+              );
       }
     }
 
-
-
-
-    // insert the clusterhits
+    // insert the clusters
     sorted_clusters_hint =
         sorted_clusters.insert(sorted_clusters_hint,
                                make_pair(detectortype, move(clusters)));

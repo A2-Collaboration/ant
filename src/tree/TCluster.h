@@ -77,17 +77,25 @@ struct TCluster
 #endif
 {
 
-  std::vector<ant::TClusterHit> Hits;
   TVector3 Position;
   double Energy;
   std::uint8_t DetectorType;
 
+  std::vector<TClusterHit> Hits;
+
 #ifndef __CINT__
 
-  TCluster(const TVector3& pos, double E, const ant::Detector_t::Type_t& type):
+  TCluster(
+      const TVector3& pos,
+      double E,
+      const Detector_t::Type_t& type,
+      const std::vector<TClusterHit>& hits = {}
+      ):
     Position(pos),
     Energy(E),
-    DetectorType(static_cast<std::uint8_t>(type)) {}
+    DetectorType(static_cast<std::uint8_t>(type)),
+    Hits(hits)
+  {}
 
   Detector_t::Type_t GetDetectorType() const {
     return static_cast<Detector_t::Type_t>(DetectorType);

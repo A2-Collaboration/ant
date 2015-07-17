@@ -69,9 +69,17 @@ struct ClusterDetector_t : Detector_t {
   virtual std::vector<unsigned> GetNeighbours(unsigned channel) const = 0;
   virtual double GetMoliereRadius(unsigned channel) const = 0;
 
-
 protected:
   ClusterDetector_t(const Type_t& type) :
+    Detector_t(type) {}
+};
+
+struct TaggerDetector_t : Detector_t {
+
+  virtual double GetPhotonEnergy(unsigned channel) const = 0;
+
+protected:
+  TaggerDetector_t(const Type_t& type) :
     Detector_t(type) {}
 };
 
