@@ -77,6 +77,11 @@ set(ANALYSIS_INPUT_GOAT
   input/goat/GoatReader.cc
 )
 
+set(ANALYSIS_INPUT_ANT
+  input/ant/detail/Convert.cc
+  input/ant/detail/Convert.h
+)
+
 set(ANALYSIS_PHYSICS
   physics/test/TestPhysics.h
   physics/test/TestPhysics.cc
@@ -99,6 +104,7 @@ set(ANALYSIS_ALL
     ${ANALYSIS_PLOT}
     ${ANALYSIS_DATASTRUCTURES}
     ${ANALYSIS_INPUT_GOAT}
+    ${ANALYSIS_INPUT_ANT}
     ${ANALYSIS_PHYSICS}
 )
 
