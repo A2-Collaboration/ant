@@ -17,6 +17,9 @@ struct TEvent : TDataRecord
 {
   TEvent() : TDataRecord() {}
   TEvent(const TID& id) :
+
+
+
     TDataRecord(id)
   {}
   virtual ~TEvent() {}

@@ -10,6 +10,7 @@ set(SRCS
   TCluster.h
   TTrack.h
   TTaggerHit.h
+  TCalibrationData.h
   )
 
 set(ROOT_DICTIONARY "${CMAKE_CURRENT_BINARY_DIR}/G__tree.cc")
