@@ -28,27 +28,32 @@ struct CB :
       std::vector<hit_mapping_t>&,
       std::vector<scaler_mapping_t>&) const override;
 
-  virtual const ClusterElement_t* GetClusterElement(unsigned channel) const override {
+  virtual const ClusterDetector_t::Element_t* GetClusterElement(unsigned channel) const override {
     return std::addressof(elements[channel]);
   }
 
 protected:
-  struct CBElement_t : ClusterElement_t {
-    CBElement_t(
+  struct Element_t : ClusterDetector_t::Element_t {
+    Element_t(
         unsigned channel,
         const TVector3& position,
         unsigned adc,
         unsigned tdc,
         const std::vector<unsigned>& neighbours
         ) :
-      ClusterElement_t(channel, position, neighbours, 4.0), // all NaI elements have 4.0 as MoliereRadius
+      ClusterDetector_t::Element_t(
+        channel,
+        position,
+        neighbours,
+        4.0 // all NaI elements have 4.0 as MoliereRadius
+        ),
       ADC(adc),
       TDC(tdc)
     {}
     unsigned ADC;
     unsigned TDC;
   };
-  static const std::vector<CBElement_t> elements;
+  static const std::vector<Element_t> elements;
   static const std::vector<unsigned> holes;
 
   static std::vector<unsigned> initHoles();

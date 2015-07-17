@@ -18,11 +18,11 @@ namespace clustering {
 
 struct crystal_t  {
   double Energy;
-  const ClusterDetector_t::ClusterElement_t* Element;
+  const ClusterDetector_t::Element_t* Element;
   const TClusterHit* Hit;
   crystal_t(
       double energy,
-      const ClusterDetector_t::ClusterElement_t* element,
+      const ClusterDetector_t::Element_t* element,
       const TClusterHit* hit
       )
     :

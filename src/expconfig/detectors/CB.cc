@@ -16,7 +16,7 @@ void CB::BuildMappings(vector<UnpackerAcquConfig::hit_mapping_t> &hit_mappings,
   // CB has only hit_mappings to add,
   // no scalers
   unsigned true_elements = 0;
-  for(const CBElement_t& element : elements)  {
+  for(const Element_t& element : elements)  {
     if(std_ext::contains(holes, element.Channel))
       continue;
 

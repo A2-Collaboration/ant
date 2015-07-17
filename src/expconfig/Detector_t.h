@@ -65,14 +65,14 @@ struct LogicalChannel_t {
 };
 
 struct ClusterDetector_t : Detector_t {
-  struct ClusterElement_t : Element_t {
-    ClusterElement_t(
+  struct Element_t : Detector_t::Element_t {
+    Element_t(
         unsigned channel,
         const TVector3& position,
         const std::vector<unsigned>& neighbours,
         double moliereRadius
         ) :
-      Element_t(channel, position),
+      Detector_t::Element_t(channel, position),
       Neighbours(neighbours),
       MoliereRadius(moliereRadius)
     {}
@@ -80,7 +80,7 @@ struct ClusterDetector_t : Detector_t {
     double MoliereRadius;
   };
 
-  virtual const ClusterElement_t* GetClusterElement(unsigned channel) const = 0;
+  virtual const Element_t* GetClusterElement(unsigned channel) const = 0;
 
 protected:
   ClusterDetector_t(const Type_t& type) :
