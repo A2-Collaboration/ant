@@ -3,6 +3,7 @@
 
 #include "Detector_t.h"
 #include "unpacker/UnpackerAcqu.h"
+#include <stdexcept>
 
 namespace ant {
 namespace expconfig {
@@ -13,6 +14,10 @@ struct Trigger :
 {
 
   Trigger() : Detector_t(Detector_t::Type_t::Trigger) {}
+
+  virtual TVector3 GetPosition(unsigned) const override {
+    throw std::runtime_error("This detector knows nothing about positions.");
+  }
 
   virtual bool Matches(const THeaderInfo&) const override {
     return true;

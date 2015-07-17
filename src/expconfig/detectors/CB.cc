@@ -56,8 +56,17 @@ vector<CB::CBElement_t> CB::initElements() {
   return elements;
 }
 
+std::map<unsigned, TVector3> CB::initPositions()
+{
+  map<unsigned, TVector3> positions;
+  for(const CB::CBElement_t& elem : elements) {
+    positions[elem.Channel] = elem.Position;
+  }
+  return positions;
+}
 
+// the declaration order is important here
 const vector<CB::CBElement_t> CB::elements = CB::initElements();
-
+const map<unsigned, TVector3> CB::positions = CB::initPositions();
 
 

@@ -18,6 +18,11 @@ struct TAPS :
     CherenkovInstalled(cherenkovInstalled)
   {}
 
+  virtual TVector3 GetPosition(unsigned channel) const override {
+    /// \todo Implement proper position stuff for TAPS
+    return TVector3();
+  }
+
 protected:
   struct TAPSElement_t : Element_t {
     TAPSElement_t(

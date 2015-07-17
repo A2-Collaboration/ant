@@ -23,7 +23,6 @@ struct Detector_t {
   // Element_t is the minimum information,
   // derived classes may extend this
   struct Element_t {
-
     Element_t(unsigned channel, const TVector3& position) :
       Channel(channel),
       Position(position)
@@ -31,6 +30,8 @@ struct Detector_t {
     unsigned Channel; // unique within Detector for all time!
     TVector3 Position;
   };
+
+  virtual TVector3 GetPosition(unsigned channel) const = 0;
 
   virtual ~Detector_t() = default;
 

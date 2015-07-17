@@ -14,6 +14,10 @@ struct CB :
 
   CB() : ClusterDetector_t(Detector_t::Type_t::CB) {}
 
+  virtual TVector3 GetPosition(unsigned channel) const override {
+    return positions.at(channel);
+  }
+
   virtual bool Matches(const THeaderInfo&) const override {
     // always match, since CB never changed over A2's lifetime
     return true;
@@ -48,7 +52,9 @@ protected:
     unsigned TDC;
   };
   static const std::vector<CBElement_t> elements;
+  static const std::map<unsigned, TVector3> positions;
   static std::vector<CBElement_t> initElements();
+  static std::map<unsigned, TVector3> initPositions();
 };
 
 
