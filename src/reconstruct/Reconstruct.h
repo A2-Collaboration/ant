@@ -24,9 +24,12 @@ public:
   std::unique_ptr<TEvent> DoReconstruct(TDetectorRead& detectorRead);
 
 private:
-  std::list< std::shared_ptr<CalibrationApply_traits> >  calibrations;
-  std::list< std::shared_ptr<Updateable_traits> >  updateables;
+  template<typename T>
+  using shared_ptr_list = std::list< std::shared_ptr<T> >;
 
+  shared_ptr_list<CalibrationApply_traits> calibrations;
+  shared_ptr_list<Updateable_traits>       updateables;
+  shared_ptr_list<ClusterDetector_t>       detectors_cluster;
 
 };
 

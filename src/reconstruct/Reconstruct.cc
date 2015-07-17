@@ -10,6 +10,7 @@
 
 #include <algorithm>
 #include <iostream>
+#include <iterator>
 
 using namespace std;
 using namespace ant;
@@ -17,22 +18,27 @@ using namespace ant;
 Reconstruct::Reconstruct(const THeaderInfo &headerInfo)
 {
   const auto& config = ExpConfig::Reconstruct::Get(headerInfo);
-  calibrations = config->GetCalibrations();
-  auto detectors = config->GetDetectors();
 
-  // calibrations and detectors may be updateable
-  // so search the list for those kind of objects
-  for(const auto& detector : detectors) {
-    const auto& ptr = dynamic_pointer_cast<Updateable_traits, Detector_t>(detector);
-    if(ptr == nullptr)
-      continue;
-    updateables.push_back(ptr);
-  }
+  // calibrations are the natural Updateable_traits objects,
+  // but they could be constant (in case of a very simple calibration)
+  calibrations = config->GetCalibrations();
   for(const auto& calibration : calibrations) {
     const auto& ptr = dynamic_pointer_cast<Updateable_traits, CalibrationApply_traits>(calibration);
-    if(ptr == nullptr)
-      continue;
-    updateables.push_back(ptr);
+    if(ptr != nullptr)
+      updateables.push_back(ptr);
+  }
+
+  // detectors serve different purposes, ...
+  auto detectors = config->GetDetectors();
+  for(const auto& detector : detectors) {
+    // ... they may be updateable (think of the PID Phi angles)
+    const auto& updateable = dynamic_pointer_cast<Updateable_traits, Detector_t>(detector);
+    if(updateable != nullptr)
+      updateables.push_back(updateable);
+    // ... they may be a cluster detector
+    const auto& detector_cluster = dynamic_pointer_cast<ClusterDetector_t, Detector_t>(detector);
+    if(detector_cluster != nullptr)
+      detectors_cluster.push_back(detector_cluster);
   }
 
   /// \todo build the range list from updateables
@@ -61,7 +67,7 @@ unique_ptr<TEvent> Reconstruct::DoReconstruct(TDetectorRead& detectorRead)
   // lets start the hit matching, which builds the TClusterHit's
   map<Detector_t::Type_t, std::list< TClusterHit > > sorted_clusterhits;
 
-  auto hint = sorted_clusterhits.begin();
+  auto sorted_clusterhits_hint = sorted_clusterhits.begin(); // use some hinting to speed up the map filling
   for(const auto& it_hit : sorted_readhits) {
     std::list<TClusterHit> clusterhits;
     const Detector_t::Type_t detector = it_hit.first;
@@ -89,13 +95,13 @@ unique_ptr<TEvent> Reconstruct::DoReconstruct(TDetectorRead& detectorRead)
                                          match_channel);
       if(it_clusterhit == clusterhits.end()) {
         // not found, create new TClusterHit from readhit
-        clusterhits.emplace_back(readhit->Channel, data);
+        clusterhits.emplace_back(readhit->Channel, move(data));
       }
       else {
-        // clusterhit with channel of readhit exists,
+        // clusterhit with channel of readhit already exists,
         // so append TClusterHitDatum's
-        auto& data_ = it_clusterhit->Data;
-        data_.insert(data_.end(), data.cbegin(), data.cend());
+        move(data.begin(), data.end(),
+             back_inserter(it_clusterhit->Data));
       }
     }
 
@@ -105,11 +111,19 @@ unique_ptr<TEvent> Reconstruct::DoReconstruct(TDetectorRead& detectorRead)
     if(clusterhits.empty())
       continue;
 
-    hint = sorted_clusterhits.insert(hint, make_pair(detector, clusterhits));
+    // insert the clusterhits
+    sorted_clusterhits_hint =
+        sorted_clusterhits.insert(sorted_clusterhits_hint,
+                                  make_pair(detector, move(clusterhits)));
   }
 
 
-  // now we can do clustering on the sorted_clusterhits (by detector)
+  // now we can do clustering on the sorted_clusterhits (sorted by detector)
+  // we build some wrapper structure to hold necessary information for clustering
+
+
+
+
 
   return nullptr;
 }
