@@ -36,4 +36,5 @@ include_directories(${CMAKE_SOURCE_DIR}/src)
 add_test_subdirectory(base)
 add_test_subdirectory(unpacker)
 add_test_subdirectory(tree)
+add_test_subdirectory(analysis)
 
