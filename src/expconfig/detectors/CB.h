@@ -37,22 +37,20 @@ struct CB :
   }
 
 protected:
-  struct CBElement_t : Element_t {
+  struct CBElement_t : ClusterElement_t {
     CBElement_t(
         unsigned channel,
         const TVector3& position,
         unsigned adc,
         unsigned tdc,
-        const std::initializer_list<unsigned>& neighbours
+        const std::vector<unsigned>& neighbours
         ) :
-      Element_t(channel, position), // init fields
+      ClusterElement_t(channel, position, neighbours, 4.0), // all NaI elements have 4.0 as MoliereRadius
       ADC(adc),
-      TDC(tdc),
-      Neighbours(neighbours)
+      TDC(tdc)
     {}
     unsigned ADC;
     unsigned TDC;
-    std::vector<unsigned> Neighbours;
   };
   static const std::vector<CBElement_t> elements;
   static const std::map<unsigned, TVector3> positions;

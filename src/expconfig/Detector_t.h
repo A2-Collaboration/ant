@@ -70,6 +70,21 @@ struct ClusterDetector_t : Detector_t {
   virtual double GetMoliereRadius(unsigned channel) const = 0;
 
 protected:
+  struct ClusterElement_t : Element_t {
+    ClusterElement_t(
+        unsigned channel,
+        const TVector3& position,
+        const std::vector<unsigned>& neighbours,
+        double moliereRadius
+        ) :
+      Element_t(channel, position),
+      Neighbours(neighbours),
+      MoliereRadius(moliereRadius)
+    {}
+    std::vector<unsigned> Neighbours;
+    double MoliereRadius;
+  };
+
   ClusterDetector_t(const Type_t& type) :
     Detector_t(type) {}
 };
