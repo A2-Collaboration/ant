@@ -1,8 +1,11 @@
 #ifndef RECONSTRUCT_CLUSTERING_H
 #define RECONSTRUCT_CLUSTERING_H
 
+
+
 #include "TVector3.h"
 #include "TMath.h"
+
 #include <vector>
 #include <list>
 #include <set>
@@ -12,31 +15,26 @@ namespace reconstruct {
 namespace clustering {
 
 struct crystal_t  {
-  UInt_t Index;
-  Double_t Energy;
-  Double_t Time;
-  Int_t TimeMultiplicity;
+  unsigned Index;
+  double Energy;
   TVector3 Position;
-  std::vector<UInt_t> NeighbourIndices; // potential neighbours
-  Double_t MoliereRadius;
-  crystal_t(const UInt_t index,
-            const Double_t energy,
-            const Double_t time,
-            const Int_t timeMultiplicity,
-            const TVector3& position,
-            const UInt_t nNeighbours,
-            const UInt_t* neighbours,
-            const Double_t moliere
-            ) :
-    Index(index),
-    Energy(energy),
-    Time(time),
-    TimeMultiplicity(timeMultiplicity),
-    Position(position),
-    MoliereRadius(moliere)
-  {
-    NeighbourIndices.assign(neighbours,neighbours+nNeighbours);
-  }
+  std::vector<unsigned> NeighbourIndices; // potential neighbours
+  double MoliereRadius;
+//  crystal_t(
+//      const double energy,
+//            const double time,
+//            const Int_t timeMultiplicity,
+//            const TVector3& position,
+//            const unsigned nNeighbours,
+//            const unsigned* neighbours,
+//            const double moliere
+//            ) :
+//    Energy(energy),
+//    Position(position),
+//    MoliereRadius(moliere)
+//  {
+//    NeighbourIndices.assign(neighbours,neighbours+nNeighbours);
+//  }
 };
 
 inline bool operator< (const crystal_t& lhs, const crystal_t& rhs){
@@ -45,39 +43,39 @@ inline bool operator< (const crystal_t& lhs, const crystal_t& rhs){
 
 struct bump_t {
   TVector3 Position;
-  std::vector<Double_t> Weights;
+  std::vector<double> Weights;
   size_t MaxIndex; // index of highest weight
 };
 
-static Double_t calc_total_energy(const std::vector< crystal_t >& cluster) {
-  Double_t energy = 0;
+static double calc_total_energy(const std::vector< crystal_t >& cluster) {
+  double energy = 0;
   for(size_t i=0;i<cluster.size();i++) {
     energy += cluster[i].Energy;
   }
   return energy;
 }
 
-static Double_t opening_angle(const crystal_t& c1, const crystal_t& c2)  {
+static double opening_angle(const crystal_t& c1, const crystal_t& c2)  {
   // use TMath::ACos since it catches some NaN cases due to double rounding issues
   return TMath::RadToDeg()*TMath::ACos(c1.Position.Unit()*c2.Position.Unit());
 }
 
-static Double_t calc_energy_weight(const Double_t energy, const Double_t total_energy) {
-  Double_t wgtE = 4.0 + TMath::Log(energy / total_energy); /// \todo use optimal cutoff value
+static double calc_energy_weight(const double energy, const double total_energy) {
+  double wgtE = 4.0 + TMath::Log(energy / total_energy); /// \todo use optimal cutoff value
   return wgtE<0 ? 0 : wgtE;
 }
 
 static void calc_bump_weights(const std::vector<crystal_t>& cluster, bump_t& bump) {
-  Double_t w_sum = 0;
+  double w_sum = 0;
   for(size_t i=0;i<cluster.size();i++) {
-    Double_t r = (bump.Position - cluster[i].Position).Mag();
-    Double_t w = cluster[i].Energy*TMath::Exp(-2.5*r/cluster[i].MoliereRadius);
+    double r = (bump.Position - cluster[i].Position).Mag();
+    double w = cluster[i].Energy*TMath::Exp(-2.5*r/cluster[i].MoliereRadius);
     bump.Weights[i] = w;
     w_sum += w;
   }
   // normalize weights and find index of highest weight
   // (important for merging later)
-  Double_t w_max = 0;
+  double w_max = 0;
   size_t i_max = 0;
   for(size_t i=0;i<cluster.size();i++) {
     bump.Weights[i] /= w_sum;
@@ -90,15 +88,15 @@ static void calc_bump_weights(const std::vector<crystal_t>& cluster, bump_t& bum
 }
 
 static void update_bump_position(const std::vector<crystal_t>& cluster, bump_t& bump) {
-  Double_t bump_energy = 0;
+  double bump_energy = 0;
   for(size_t i=0;i<cluster.size();i++) {
     bump_energy += bump.Weights[i] * cluster[i].Energy;
   }
   TVector3 position(0,0,0);
-  Double_t w_sum = 0;
+  double w_sum = 0;
   for(size_t i=0;i<cluster.size();i++) {
-    Double_t energy = bump.Weights[i] * cluster[i].Energy;
-    Double_t w = calc_energy_weight(energy, bump_energy);
+    double energy = bump.Weights[i] * cluster[i].Energy;
+    double w = calc_energy_weight(energy, bump_energy);
     position += w * cluster[i].Position;
     w_sum += w;
   }
@@ -115,7 +113,7 @@ static bump_t merge_bumps(const std::vector<bump_t> bumps) {
     }
   }
   // normalize
-  Double_t w_max = 0;
+  double w_max = 0;
   size_t i_max = 0;
   for(size_t i=0;i<bump.Weights.size();i++) {
     bump.Weights[i] /= bumps.size();
@@ -133,8 +131,8 @@ static void split_cluster(const std::vector<crystal_t>& cluster,
 
   // make Voting based on relative distance or energy difference
 
-  Double_t totalClusterEnergy = 0;
-  std::vector<UInt_t> votes;
+  double totalClusterEnergy = 0;
+  std::vector<unsigned> votes;
   votes.resize(cluster.size(), 0);
   // start searching at the second highest energy (i>0 case in next for loop)
   // since we know that the highest energy always has a vote
@@ -147,18 +145,18 @@ static void split_cluster(const std::vector<crystal_t>& cluster,
     // i>0 now...
     // for each crystal walk through cluster
     // according to energy gradient
-    UInt_t currPos = i;
+    unsigned currPos = i;
     bool reachedMaxEnergy = false;
-    Double_t maxEnergy = 0;
+    double maxEnergy = 0;
     while(!reachedMaxEnergy) {
       // find neighbours intersection with actually hit clusters
       reachedMaxEnergy = true;
-      std::vector<UInt_t> neighbours = cluster[currPos].NeighbourIndices;
+      std::vector<unsigned> neighbours = cluster[currPos].NeighbourIndices;
       for(size_t j=0;j<cluster.size();j++) {
-        for(UInt_t n=0;n<neighbours.size();n++) {
+        for(unsigned n=0;n<neighbours.size();n++) {
           if(neighbours[n] != cluster[j].Index)
             continue; // cluster element j not neighbour of element currPos, go to next
-          Double_t energy = cluster[j].Energy;
+          double energy = cluster[j].Energy;
           if(maxEnergy < energy) {
             maxEnergy = energy;
             currPos = j;
@@ -200,15 +198,15 @@ static void split_cluster(const std::vector<crystal_t>& cluster,
 
   do {
     // converge the positions of the bumps
-    UInt_t iterations = 0;
+    unsigned iterations = 0;
     bumps_t stable_bumps;
-    const Double_t positionEpsilon = 0.01;
+    const double positionEpsilon = 0.01;
     while(!bumps.empty()) {
       for(bumps_t::iterator b=bumps.begin(); b != bumps.end(); ++b) {
         // calculate new bump position with current weights
         TVector3 oldPos = (*b).Position;
         update_bump_position(cluster, *b);
-        Double_t diff = (oldPos - (*b).Position).Mag();
+        double diff = (oldPos - (*b).Position).Mag();
         // check if position is stable
         if(diff>positionEpsilon) {
           // no, then calc new weights with new position
@@ -325,7 +323,7 @@ static void split_cluster(const std::vector<crystal_t>& cluster,
 
   // first assign easy things and determine rough bump energy
   std::vector< std::vector<crystal_t> > bump_clusters(bumps.size());
-  std::vector< Double_t > bump_energies(bumps.size(), 0);
+  std::vector< double > bump_energies(bumps.size(), 0);
   for(size_t j=0;j<cluster.size();j++) {
     if(state[j].size()==1) {
       // crystal claimed by only one bump
@@ -339,9 +337,9 @@ static void split_cluster(const std::vector<crystal_t>& cluster,
   std::vector<TVector3> bump_positions(bumps.size(), TVector3(0,0,0));
   for(size_t i=0; i<bump_clusters.size(); i++) {
     std::vector<crystal_t> bump_cluster = bump_clusters[i];
-    Double_t w_sum = 0;
+    double w_sum = 0;
     for(size_t j=0;j<bump_cluster.size();j++) {
-      Double_t w = calc_energy_weight(bump_cluster[j].Energy, bump_energies[i]);
+      double w = calc_energy_weight(bump_cluster[j].Energy, bump_energies[i]);
       bump_positions[i] += w * bump_cluster[j].Position;
       w_sum += w;
     }
@@ -355,11 +353,11 @@ static void split_cluster(const std::vector<crystal_t>& cluster,
       continue;
     // size should never be zero, aka a crystal always belongs to at least one bump
 
-    std::vector<Double_t> pulls(bumps.size());
-    Double_t sum_pull = 0;
+    std::vector<double> pulls(bumps.size());
+    double sum_pull = 0;
     for(std::set<size_t>::iterator b=state[j].begin(); b != state[j].end(); ++b) {
       TVector3 r = cluster[j].Position - bump_positions[*b];
-      Double_t pull = bump_energies[*b] * TMath::Exp(-r.Mag()/cluster[j].MoliereRadius);
+      double pull = bump_energies[*b] * TMath::Exp(-r.Mag()/cluster[j].MoliereRadius);
       pulls[*b] = pull;
       sum_pull += pull;
     }
