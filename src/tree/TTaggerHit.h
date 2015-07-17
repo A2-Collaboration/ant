@@ -13,12 +13,12 @@
 namespace ant {
 
 #ifndef __CINT__
-struct TTaggerHit: ant::printable_traits
+struct TTaggerHit : printable_traits
 #else
 struct TTaggerHit
 #endif
 {
-    std::vector<ant::TCluster> Clusters;
+    std::vector<TClusterHit> Electrons;
     double PhotonEnergy;
     double Time;
 
@@ -29,7 +29,7 @@ struct TTaggerHit
 
 #ifndef __CINT__
   virtual std::ostream& Print( std::ostream& s) const override {
-    return s << "TTaggerHit: " << Clusters.size() << " clusters PhotonEnergy=" << PhotonEnergy << " Time=" << Time;
+    return s << "TTaggerHit: Electrons=" << Electrons.size() << " PhotonEnergy=" << PhotonEnergy << " Time=" << Time;
   }
 #endif
 
