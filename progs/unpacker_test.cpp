@@ -12,6 +12,7 @@
 #include "tree/TUnpackerMessage.h"
 #include "tree/TSlowControl.h"
 #include "tree/TDetectorRead.h"
+#include "tree/TEvent.h"
 
 #include "unpacker/RawFileReader.h"
 
@@ -59,6 +60,10 @@ int main(int argc, char* argv[]) {
   TDetectorRead* DetectorRead = new TDetectorRead();
   treeDetectorRead->Branch("DetectorRead", "ant::TDetectorRead", &DetectorRead);
 
+  TTree* treeEvent = new TTree("treeEvent", "treeEvent");
+  TEvent* Event = new TEvent();
+  treeEvent->Branch("Event", "ant::TEvent", &Event);
+
 
   unique_ptr<Reconstruct> reconstruct;
 
@@ -86,8 +91,11 @@ int main(int argc, char* argv[]) {
     DetectorRead = dynamic_cast<TDetectorRead*>(item.get());
     if(DetectorRead != nullptr) {
 
-      if(reconstruct)
-        reconstruct->DoReconstruct(*DetectorRead);
+      if(reconstruct) {
+        auto event_ptr = reconstruct->DoReconstruct(*DetectorRead);
+        Event = event_ptr.get();
+        treeEvent->Fill();
+      }
 
       treeDetectorRead->Fill();
 
