@@ -6,11 +6,20 @@ using namespace std;
 using namespace ant;
 using namespace ant::expconfig::detector;
 
+// this include must be after using namespace std;
+#include "detail/CB_elements.h" // defines all_elements
+
+const vector<unsigned> CB::holes = CB::initHoles();
+
 void CB::BuildMappings(vector<UnpackerAcquConfig::hit_mapping_t> &hit_mappings,
                        vector<UnpackerAcquConfig::scaler_mapping_t>&) const {
   // CB has only hit_mappings to add,
   // no scalers
+  unsigned true_elements = 0;
   for(const CBElement_t& element : elements)  {
+    if(std_ext::contains(holes, element.Channel))
+      continue;
+
     hit_mapping_t m_adc;
     m_adc.LogicalChannel = {Type, Channel_t::Type_t::Integral, element.Channel};
     m_adc.RawChannels.push_back(element.ADC);
@@ -20,11 +29,14 @@ void CB::BuildMappings(vector<UnpackerAcquConfig::hit_mapping_t> &hit_mappings,
     m_tdc.LogicalChannel = {Type, Channel_t::Type_t::Timing, element.Channel};
     m_tdc.RawChannels.push_back(element.TDC);
     hit_mappings.emplace_back(move(m_tdc));
+    true_elements++;
   }
+
+  assert(true_elements == 672);
 }
 
-vector<CB::CBElement_t> CB::initElements() {
-  // hard-code the holes
+vector<unsigned> CB::initHoles() {
+  // hard-code the hole ranges here
   // we even use insert range for single elements
   // for the sake of code cleanness
   vector<unsigned> holes;
@@ -41,32 +53,8 @@ vector<CB::CBElement_t> CB::initElements() {
   std_ext::insertRange(holes, 679, 679);
   std_ext::insertRange(holes, 681, 689);
   std_ext::insertRange(holes, 691, 692);
-
-#include "detail/CB_elements.h" // defines all_elements
-
-  // build the really existing elements
-  vector<CB::CBElement_t> elements;
-  for(const CB::CBElement_t& elem : all_elements) {
-    // if the element is a hole, don't add it
-    if(find(holes.cbegin(), holes.cend(), elem.Channel) != holes.cend())
-      continue;
-    elements.push_back(elem);
-  }
-  assert(elements.size() == 672);
-  return elements;
+  return holes;
 }
 
-std::map<unsigned, TVector3> CB::initPositions()
-{
-  map<unsigned, TVector3> positions;
-  for(const CB::CBElement_t& elem : elements) {
-    positions[elem.Channel] = elem.Position;
-  }
-  return positions;
-}
-
-// the declaration order is important here
-const vector<CB::CBElement_t> CB::elements = CB::initElements();
-const map<unsigned, TVector3> CB::positions = CB::initPositions();
 
 

@@ -1,6 +1,8 @@
 #ifndef RECONSTRUCT_CLUSTERING_H
 #define RECONSTRUCT_CLUSTERING_H
 
+#include "expconfig/Detector_t.h"
+
 #include "tree/TCluster.h"
 
 #include "TVector3.h"
@@ -15,27 +17,18 @@ namespace reconstruct {
 namespace clustering {
 
 struct crystal_t  {
-  unsigned Channel;
   double Energy;
-  TVector3 Position;
-  std::vector<unsigned> Neighbours; // potential neighbours (as channels)
-  double MoliereRadius;
+  const ClusterDetector_t::ClusterElement_t* Element;
   const TClusterHit* Hit;
   crystal_t(
-      unsigned channel,
       double energy,
-      const TVector3& position,
-      const std::vector<unsigned>& neighbours,
-      double moliereRadius,
-      const TClusterHit* hit_ptr
+      const ClusterDetector_t::ClusterElement_t* element,
+      const TClusterHit* hit
       )
     :
-      Channel(channel),
       Energy(energy),
-      Position(position),
-      Neighbours(neighbours),
-      MoliereRadius(moliereRadius),
-      Hit(hit_ptr)
+      Element(element),
+      Hit(hit)
   {}
 };
 
@@ -70,8 +63,8 @@ static double calc_energy_weight(const double energy, const double total_energy)
 static void calc_bump_weights(const std::vector<crystal_t>& cluster, bump_t& bump) {
   double w_sum = 0;
   for(size_t i=0;i<cluster.size();i++) {
-    double r = (bump.Position - cluster[i].Position).Mag();
-    double w = cluster[i].Energy*TMath::Exp(-2.5*r/cluster[i].MoliereRadius);
+    double r = (bump.Position - cluster[i].Element->Position).Mag();
+    double w = cluster[i].Energy*TMath::Exp(-2.5*r/cluster[i].Element->MoliereRadius);
     bump.Weights[i] = w;
     w_sum += w;
   }
@@ -99,7 +92,7 @@ static void update_bump_position(const std::vector<crystal_t>& cluster, bump_t& 
   for(size_t i=0;i<cluster.size();i++) {
     double energy = bump.Weights[i] * cluster[i].Energy;
     double w = calc_energy_weight(energy, bump_energy);
-    position += w * cluster[i].Position;
+    position += w * cluster[i].Element->Position;
     w_sum += w;
   }
   position *= 1.0/w_sum;
@@ -153,10 +146,10 @@ static void split_cluster(const std::vector<crystal_t>& cluster,
     while(!reachedMaxEnergy) {
       // find neighbours intersection with actually hit clusters
       reachedMaxEnergy = true;
-      std::vector<unsigned> neighbours = cluster[currPos].Neighbours;
+      const std::vector<unsigned>& neighbours = cluster[currPos].Element->Neighbours;
       for(size_t j=0;j<cluster.size();j++) {
         for(unsigned n=0;n<neighbours.size();n++) {
-          if(neighbours[n] != cluster[j].Channel)
+          if(neighbours[n] != cluster[j].Element->Channel)
             continue; // cluster element j not neighbour of element currPos, go to next
           double energy = cluster[j].Energy;
           if(maxEnergy < energy) {
@@ -189,7 +182,7 @@ static void split_cluster(const std::vector<crystal_t>& cluster,
       continue;
     // initialize the weights with the position of the crystal
     bump_t bump;
-    bump.Position = cluster[i].Position;
+    bump.Position = cluster[i].Element->Position;
     bump.Weights.resize(cluster.size(), 0);
     calc_bump_weights(cluster, bump);
     bumps.push_back(bump);
@@ -299,8 +292,8 @@ static void split_cluster(const std::vector<crystal_t>& cluster,
           continue;
         for(size_t s=0; s<seeds.size(); s++) {
           crystal_t seed = cluster[seeds[s]];
-          for(size_t n=0;n<seed.Neighbours.size();n++) {
-            if(seed.Neighbours[n] != cluster[j].Channel)
+          for(size_t n=0;n<seed.Element->Neighbours.size();n++) {
+            if(seed.Element->Neighbours[n] != cluster[j].Element->Channel)
               continue;
             // for bump i, we found a next_seed, ...
             b_next_seeds[i].push_back(j);
@@ -342,7 +335,7 @@ static void split_cluster(const std::vector<crystal_t>& cluster,
     double w_sum = 0;
     for(size_t j=0;j<bump_cluster.size();j++) {
       double w = calc_energy_weight(bump_cluster[j].Energy, bump_energies[i]);
-      bump_positions[i] += w * bump_cluster[j].Position;
+      bump_positions[i] += w * bump_cluster[j].Element->Position;
       w_sum += w;
     }
     bump_positions[i] *= 1.0/w_sum;
@@ -358,8 +351,8 @@ static void split_cluster(const std::vector<crystal_t>& cluster,
     std::vector<double> pulls(bumps.size());
     double sum_pull = 0;
     for(std::set<size_t>::iterator b=state[j].begin(); b != state[j].end(); ++b) {
-      TVector3 r = cluster[j].Position - bump_positions[*b];
-      double pull = bump_energies[*b] * TMath::Exp(-r.Mag()/cluster[j].MoliereRadius);
+      TVector3 r = cluster[j].Element->Position - bump_positions[*b];
+      double pull = bump_energies[*b] * TMath::Exp(-r.Mag()/cluster[j].Element->MoliereRadius);
       pulls[*b] = pull;
       sum_pull += pull;
     }
@@ -401,8 +394,8 @@ static void build_cluster(std::list<crystal_t>& crystals,
       // find intersection of neighbours and seed
       for(std::list<crystal_t>::iterator j = crystals.begin() ; j != crystals.end() ; ) {
         bool foundNeighbour = false;
-        for(size_t n=0;n<(*seed).Neighbours.size();n++) {
-          if((*seed).Neighbours[n] != (*j).Channel)
+        for(size_t n=0;n<(*seed).Element->Neighbours.size();n++) {
+          if((*seed).Element->Neighbours[n] != (*j).Element->Channel)
             continue;
           next_seeds.push_back(*j);
           cluster.push_back(*j);

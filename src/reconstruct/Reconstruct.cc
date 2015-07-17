@@ -181,15 +181,12 @@ unique_ptr<TEvent> Reconstruct::DoReconstruct(TDetectorRead& detectorRead)
       list<clustering::crystal_t> crystals;
       for(const HitWithEnergy_t& clusterhit : clusterhits) {
         const TClusterHit& hit = clusterhit.Hit;
-        const unsigned ch = hit.Channel;
         crystals.emplace_back(
-              ch,
               clusterhit.Energy,
-              clusterdetector->GetPosition(ch),
-              clusterdetector->GetNeighbours(ch),
-              clusterdetector->GetMoliereRadius(ch),
+              clusterdetector->GetClusterElement(hit.Channel),
               addressof(hit)
               );
+
       }
       // do the clustering
       vector< vector< clustering::crystal_t> > crystal_clusters;
@@ -206,7 +203,7 @@ unique_ptr<TEvent> Reconstruct::DoReconstruct(TDetectorRead& detectorRead)
         clusterhits.reserve(cluster.size());
         for(const clustering::crystal_t& crystal : cluster) {
           double wgtE = clustering::calc_energy_weight(crystal.Energy, cluster_energy);
-          weightedPosition += crystal.Position * wgtE;
+          weightedPosition += crystal.Element->Position * wgtE;
           weightedSum += wgtE;
           clusterhits.emplace_back(*crystal.Hit);
         }

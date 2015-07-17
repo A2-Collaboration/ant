@@ -15,7 +15,7 @@ struct CB :
   CB() : ClusterDetector_t(Detector_t::Type_t::CB) {}
 
   virtual TVector3 GetPosition(unsigned channel) const override {
-    return positions.at(channel);
+    return elements[channel].Position;
   }
 
   virtual bool Matches(const THeaderInfo&) const override {
@@ -28,12 +28,8 @@ struct CB :
       std::vector<hit_mapping_t>&,
       std::vector<scaler_mapping_t>&) const override;
 
-  virtual double GetMoliereRadius(unsigned) const override {
-    return 4.5;
-  }
-
-  virtual std::vector<unsigned> GetNeighbours(unsigned) const override {
-    return {};
+  virtual const ClusterElement_t* GetClusterElement(unsigned channel) const override {
+    return std::addressof(elements[channel]);
   }
 
 protected:
@@ -53,9 +49,9 @@ protected:
     unsigned TDC;
   };
   static const std::vector<CBElement_t> elements;
-  static const std::map<unsigned, TVector3> positions;
-  static std::vector<CBElement_t> initElements();
-  static std::map<unsigned, TVector3> initPositions();
+  static const std::vector<unsigned> holes;
+
+  static std::vector<unsigned> initHoles();
 };
 
 

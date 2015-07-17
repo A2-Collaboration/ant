@@ -1,8 +1,7 @@
 // only to be included from CB.cc
 // generated with expconfig/tools/convert_acqucfg.pl
-// from data.general/Detector-NaI.dat
-const vector<CB::CBElement_t>
-all_elements = {
+// from acqu_user/data.general/Detector-NaI.dat
+const vector<CB::CBElement_t> CB::elements = {
   // element number, {xyz}, ADC, TDC, {neigbours}
   {  0, {  3.619000,  45.214000,   2.629000}, 3015, 2032, {1,144,576,145,577,432,579,2,3,146,288}},
   {  1, {  7.322000,  44.510000,   5.320000}, 3014, 2033, {0,2,3,5,6,4,146,145,144,576,577,579}},
