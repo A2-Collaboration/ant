@@ -362,6 +362,65 @@ static void split_cluster(const std::vector<crystal_t>& cluster,
   }
 }
 
+static void build_cluster(std::list<crystal_t>& crystals,
+                          std::vector<crystal_t>& cluster) {
+  // first crystal has highest energy
+  std::list<crystal_t>::iterator i = crystals.begin();
+
+  // start with initial seed list
+  std::vector<crystal_t> seeds;
+  seeds.push_back(*i);
+
+  // save i in the current cluster
+  cluster.push_back(*i);
+  // remove it from the candidates
+  crystals.erase(i);
+
+  while(seeds.size()>0) {
+    // neighbours of all seeds are next seeds
+    std::vector<crystal_t> next_seeds;
+
+    for(std::vector<crystal_t>::iterator seed=seeds.begin(); seed != seeds.end(); seed++) {
+      // find intersection of neighbours and seed
+      for(std::list<crystal_t>::iterator j = crystals.begin() ; j != crystals.end() ; ) {
+        bool foundNeighbour = false;
+        for(size_t n=0;n<(*seed).Neighbours.size();n++) {
+          if((*seed).Neighbours[n] != (*j).Channel)
+            continue;
+          next_seeds.push_back(*j);
+          cluster.push_back(*j);
+          j = crystals.erase(j);
+          foundNeighbour = true;
+          // neighbours is a list of unique items, we can stop searching
+          break;
+        }
+        // removal moves iterator already one forward
+        if(!foundNeighbour)
+          ++j;
+      }
+    }
+    // set new seeds, if any new found...
+    seeds = next_seeds;
+  }
+
+  // sort it by energy
+  sort(cluster.begin(), cluster.end());
+}
+
+static void do_clustering(
+    std::list<crystal_t>& crystals,
+    std::vector< std::vector<crystal_t> > clusters
+    ) {
+  crystals.sort();
+
+  while(crystals.size()>0) {
+    std::vector<crystal_t> cluster;
+    build_cluster(crystals, cluster); // already sorts "cluster" it by energy
+    split_cluster(cluster, clusters);
+  }
+}
+
+
 }}} // ant::reconstruct::clustering
 
 
