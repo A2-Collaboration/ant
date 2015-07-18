@@ -2,11 +2,14 @@
 
 #include <iostream>
 #include <string>
+#include "base/Logger.h"
+#include "base/std_ext.h"
+
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wnon-virtual-dtor"
 #include "TFile.h"
 #include "TDirectory.h"
-#include "base/Logger.h"
-
-#include "base/std_ext.h"
+#pragma GCC diagnostic pop
 
 using namespace std;
 using namespace ant;
@@ -14,7 +17,7 @@ using namespace ant::output;
 
 
 
-OutputManager::OutputManager()
+OutputManager::OutputManager() : files()
 {
     current_dir = gDirectory;
 }

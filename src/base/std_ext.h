@@ -132,7 +132,7 @@ inline std::unique_ptr<To> static_cast_uptr(std::unique_ptr<From>&& ptr) {
 class formatter
 {
 public:
-    formatter() {}
+    formatter() : stream_() {}
     ~formatter() {}
 
     template <typename Type>

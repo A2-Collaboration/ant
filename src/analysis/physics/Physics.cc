@@ -1,7 +1,4 @@
 #include "Physics.h"
-
-#include "TFile.h"
-#include "TDirectory.h"
 #include "base/Logger.h"
 
 #include <iomanip>
@@ -29,7 +26,7 @@ ant::Physics::Physics(const string &name):
 {}
 
 
-ant::PhysicsManager::PhysicsManager()
+ant::PhysicsManager::PhysicsManager() : physics()
 {
 
 }

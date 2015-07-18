@@ -5,7 +5,11 @@
 #include <string>
 #include <memory>
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wnon-virtual-dtor"
 #include "TFile.h"
+#pragma GCC diagnostic pop
+
 
 namespace ant {
 namespace input {

@@ -35,7 +35,9 @@ struct TDetectorReadHit
     DetectorType(static_cast<std::uint8_t>(element.DetectorType)),
     ChannelType(static_cast<std::uint8_t>(element.ChannelType)),
     Channel(element.Channel),
-    RawData(rawData)
+    RawData(rawData),
+    Values(),
+    ValueBits()
   {
     static_assert(sizeof(Channel)>=sizeof(element.Channel),
                   "LogicalElement_t::Channel does not fit into TDetecorReadHit::Channel");
@@ -79,7 +81,13 @@ struct TDetectorReadHit
   }
 #endif
 
-  TDetectorReadHit() {}
+  TDetectorReadHit() :
+    DetectorType(),
+    ChannelType(),
+    Channel(),
+    RawData(),
+    Values(),
+    ValueBits() {}
   virtual ~TDetectorReadHit() {}
   ClassDef(TDetectorReadHit, ANT_UNPACKER_ROOT_VERSION)
 };
@@ -108,7 +116,7 @@ struct TDetectorRead : TDataRecord
   }
 #endif
 
-  TDetectorRead() : TDataRecord() {}
+  TDetectorRead() : TDataRecord(), Hits() {}
   ClassDef(TDetectorRead, ANT_UNPACKER_ROOT_VERSION)
 
 };

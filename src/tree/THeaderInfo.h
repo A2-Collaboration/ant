@@ -46,7 +46,7 @@ struct THeaderInfo : TDataRecord
   }
 #endif
 
-  THeaderInfo() : TDataRecord() {}
+  THeaderInfo() :  TDataRecord(), Timestamp(), RunNumber(), Description() {}
   ClassDef(THeaderInfo, ANT_UNPACKER_ROOT_VERSION)
 };
 

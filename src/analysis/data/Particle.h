@@ -35,7 +35,10 @@ public:
 
     Particle(const ParticleTypeDatabase::Type &_type, const TLorentzVector &_lorentzvector):
         TLorentzVector(_lorentzvector),
-        type(&_type)
+        type(&_type),
+        parents(),
+        daughters(),
+        tracks()
     {}
 
     Particle(const ParticleTypeDatabase::Type& _type, ant::TrackPtr track):
@@ -43,7 +46,9 @@ public:
         tracks.emplace_back(track);
     }
 
-    virtual ~Particle() {}
+    Particle(const Particle&) = delete;
+    Particle& operator= (const Particle&) = delete;
+    virtual ~Particle() = default;
 
     mev_t Ek() const { return E() - type->Mass(); }
 

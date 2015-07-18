@@ -45,5 +45,7 @@ set(SRCS
   root_printable.cc
 )
 
+set_source_files_properties(detail/format.cc PROPERTIES COMPILE_FLAGS -Wno-effc++)
+
 add_library(base ${SRCS})
 target_link_libraries(base ${ROOT_LIBRARIES})

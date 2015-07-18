@@ -24,6 +24,8 @@ protected:
         TFile* operator* () { return file; }
 
         ~TFileWrapper();
+        TFileWrapper(const TFileWrapper&) = delete;
+        TFileWrapper& operator= (const TFileWrapper&) = delete;
     };
 
     using file_list_t = std::list< std::unique_ptr< TFileWrapper > >;
@@ -37,6 +39,8 @@ public:
 
     TDirectory* CurrentDirectory() { return current_dir; }
 
+    OutputManager(const OutputManager&) = delete;
+    OutputManager& operator= (const OutputManager&) = delete;
 };
 
 }

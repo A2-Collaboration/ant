@@ -21,11 +21,16 @@ class root_drawable_traits {
     friend class ant::canvas;
 public:
     virtual void Draw(const std::string& option) const =0;
+    virtual ~root_drawable_traits() = default;
 };
 
-class modifier {};
+class modifier {
+public:
+  virtual ~modifier() = default;
+};
 
 class endcanvas: public modifier {
+
 };
 static const endcanvas endc;
 
@@ -111,6 +116,8 @@ protected:
             void Draw(const std::string &option) const {
                 obj->Draw(option.c_str());
             }
+        drawable_container(const drawable_container&) = delete;
+        drawable_container& operator= (const drawable_container&) = delete;
     };
 
     using ObjectOption =
@@ -169,6 +176,8 @@ protected:
 public:
     hstack(const std::string& name, const std::string &title="");
     virtual ~hstack();
+    hstack(const hstack&) = delete;
+    hstack& operator= (const hstack&) = delete;
 
     virtual hstack &operator<< (TH1D* hist);
     virtual hstack &operator<< (const drawoption& c);

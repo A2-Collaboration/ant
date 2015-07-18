@@ -6,7 +6,7 @@
 using namespace ant;
 using namespace ant::input;
 
-FileManager::FileManager()
+FileManager::FileManager() : files()
 {
 
 }

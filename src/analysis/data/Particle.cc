@@ -6,8 +6,11 @@ T square(const T& a) { return a*a; }
 
 using namespace ant;
 
-Particle::Particle(const ParticleTypeDatabase::Type &_type, mev_t _Ek, radian_t _theta, radian_t _phi):
-    type(&_type)
+Particle::Particle(const ParticleTypeDatabase::Type &_type, mev_t _Ek, radian_t _theta, radian_t _phi) :
+  type(&_type),
+  parents(),
+  daughters(),
+  tracks()
 {
     const mev_t E = _Ek + type->Mass();
     const mev_t p = sqrt( square(E) - square(type->Mass()) );

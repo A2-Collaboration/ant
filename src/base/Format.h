@@ -1,7 +1,11 @@
 #ifndef FORMAT_H
 #define FORMAT_H
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Weffc++"
 #include "detail/format.h"
+#pragma GCC diagnostic pop
+
 #include <vector>
 
 namespace fmt {

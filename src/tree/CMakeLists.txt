@@ -19,5 +19,7 @@ ROOT_GENERATE_DICTIONARY("${SRCS}"
   ${ROOT_DICTIONARY})
 list(APPEND SRCS ${ROOT_DICTIONARY})
 
+set_source_files_properties(${ROOT_DICTIONARY} PROPERTIES COMPILE_FLAGS -Wno-effc++)
+
 add_library(tree ${SRCS})
 target_link_libraries(tree base ${ROOT_LIBRARIES})

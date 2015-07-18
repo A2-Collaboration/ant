@@ -4,7 +4,11 @@
 // STL container printout made easy...
 #define ELPP_STL_LOGGING
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Weffc++"
 #include "detail/easylogging++.h"
+#pragma GCC diagnostic pop
+
 
 void SetupLogger(int argc, char* argv[]);
 void SetupLogger();

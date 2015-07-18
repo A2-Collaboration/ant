@@ -49,7 +49,8 @@ TCanvas *ant::canvas::find()
         return create();
 }
 
-canvas::canvas(const string &title)
+canvas::canvas(const string &title) :
+  name(), objs(), current_drawoption(), current_padoptions()
 {
     create(title);
 }

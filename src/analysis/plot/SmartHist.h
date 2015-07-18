@@ -123,6 +123,10 @@ public:
             delete histogram;
     }
 
+    SmartHist1Base(const SmartHist1Base&) = delete;
+    SmartHist1Base& operator= (const SmartHist1Base&) = delete;
+    SmartHist1Base( SmartHist1Base&& ) = default;
+
 //    SmartHist1Base( const SmartHist1Base& other ): histogram(new TH1D(*other.histogram)), cleanup(true) {histogram->SetName("");}
 //    SmartHist1Base operator+ (const SmartHist1Base& rhs ) {
 //        SmartHist1Base result(*this);

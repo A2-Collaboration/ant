@@ -26,13 +26,16 @@ void SmartHistFactory::end_make_histogram(TDirectory* dir)
 }
 
 SmartHistFactory::SmartHistFactory(const string &directory_name, const SmartHistFactory& parent)
+  : dir(), base_factory()
 {
     dir = parent.dir->mkdir(directory_name.c_str());
     if(!dir)
         dir=gDirectory;
 }
 
-SmartHistFactory::SmartHistFactory(const string &directory_name, TDirectory* root) {
+SmartHistFactory::SmartHistFactory(const string &directory_name, TDirectory* root)
+  : dir(), base_factory()
+{
 
     if(!root)
         root=gDirectory;

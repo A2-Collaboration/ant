@@ -6,6 +6,7 @@
 #pragma GCC diagnostic ignored "-Wunused-local-typedefs"
 #pragma GCC diagnostic ignored "-Wvla"
 #pragma GCC diagnostic ignored "-Wignored-qualifiers"
+#pragma GCC diagnostic ignored "-Weffc++"
 #include "PParticle.h"
 #pragma GCC diagnostic pop
 

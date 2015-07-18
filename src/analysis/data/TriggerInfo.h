@@ -47,7 +47,8 @@ public:
 
     TriggerInfo( mev_t CBESum=0.0, unsigned int multiplicity=0):
         cb_energy_sum(CBESum),
-        cluster_multiplicity(multiplicity)
+        cluster_multiplicity(multiplicity),
+        errors()
     {}
 
     virtual ~TriggerInfo() {}
