@@ -65,7 +65,7 @@ public:
         return  detector_t(v | o.v);
     }
 
-    std::ostream& Print(std::ostream &stream) const;
+    std::ostream& Print(std::ostream &stream) const override;
 
     operator std::string() const;
 };

@@ -45,6 +45,8 @@ public:
                 return true;
             return false;
         }
+
+        Type& operator=(Type) = delete;
     };
 
     typedef std::map<index_t, const Type*> PIDMap_t;

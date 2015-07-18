@@ -9,7 +9,8 @@
 
 using namespace std;
 
-tmpfile_t::tmpfile_t() {
+tmpfile_t::tmpfile_t() : filename(), testdata()
+{
   // obtain some random filename
   char filename_[128];
   strcpy(filename_, "anttmpfile.XXXXXX");

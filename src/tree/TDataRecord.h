@@ -1,8 +1,6 @@
 #ifndef ANT_TDATARECORD_H
 #define ANT_TDATARECORD_H
 
-#include "base/printable.h"
-
 #include "Rtypes.h"
 
 #ifdef __CINT__
@@ -17,6 +15,7 @@ typedef Long64_t   int64_t;
 #else
 #include <cstdint>
 #include <stdexcept>
+#include "base/printable.h"
 #endif // __CINT__
 
 #include <string>
@@ -55,10 +54,12 @@ struct TID
       UInt_t upper,
       UInt_t lower,
       bool isMC = false
-      ) {
-    Flags = 0;
+      )
+    :
+      Value(lower),
+      Flags(0)
+  {
     Flags |= static_cast<decltype(Flags)>(isMC) << static_cast<std::uint8_t>(Flags_t::MC);
-    Value = lower;
     Value |= static_cast<decltype(Value)>(upper) << sizeof(std::uint32_t)*8;
   }
 

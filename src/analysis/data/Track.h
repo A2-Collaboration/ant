@@ -61,7 +61,7 @@ public:
     mev_t MWPC0Energy() const { return _MWPC0Energy; }
     mev_t MWPC1Energy() const { return _MWPC1Energy; }
 
-    virtual std::ostream &Print(std::ostream &stream) const;
+    virtual std::ostream &Print(std::ostream &stream) const override;
 
 };
 

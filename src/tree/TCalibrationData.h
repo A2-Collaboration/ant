@@ -1,18 +1,7 @@
 #ifndef ANT_TCALIBRATIONDATA_H
 #define ANT_TCALIBRATIONDATA_H
 
-#include "base/printable.h"
 #include "TDataRecord.h"
-
-#include "Rtypes.h"
-
-#include <map>
-
-
-#ifndef __CINT__
-#include <iomanip>
-#include <sstream>
-#endif
 
 #define ANT_CALIBRATION_DATA_VERSION 1
 
@@ -22,6 +11,7 @@ struct TCalibrationEntry
 {
   unsigned Key;
   double   Value;
+  TCalibrationEntry() : Key(), Value() {}
   virtual ~TCalibrationEntry(){}
   ClassDef(TCalibrationEntry, ANT_CALIBRATION_DATA_VERSION)
 };
@@ -33,11 +23,12 @@ struct TCalibrationData
 #endif
 {
 
-  TCalibrationData() {}
+  TCalibrationData() : FirstID(), LastID(), Data() {}
 
   TCalibrationData(const TID& first_id, const TID& last_id) :
     FirstID(first_id),
-    LastID(last_id)
+    LastID(last_id),
+    Data()
   {}
 
   virtual ~TCalibrationData() {}
