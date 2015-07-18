@@ -35,6 +35,9 @@ public:
     const PParticleVector&  Particles()   const { return particles; }
     Long64_t                GetPlutoID()  const { return plutoID; }
     Long64_t                GetRandomID() const { return plutoRandomID; }
+
+    PlutoInput(const PlutoInput&) = delete;
+    PlutoInput& operator= (const PlutoInput&) = delete;
 };
 }
 }

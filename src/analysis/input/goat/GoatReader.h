@@ -100,6 +100,8 @@ protected:
 public:
     GoatReader();
     virtual ~GoatReader() = default;
+    GoatReader(const GoatReader&) = delete;
+    GoatReader& operator= (const GoatReader&) = delete;
 
     void AddInputFile(const std::string& filename);
     void Initialize();
