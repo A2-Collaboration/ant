@@ -1,0 +1,25 @@
+language: cpp
+
+compiler:
+  - gcc
+
+sudo: false
+
+addons:
+  apt:
+    packages:
+    - build-essential
+    - cmake
+    - g++
+    - gfortran
+    - libx11-dev
+    - libxpm-dev
+    - libxft-dev
+    - libxext-dev
+    - liblzma-dev
+
+cache:
+  directories:
+    - $HOME/cache
+  
+script: ./.travis.build.sh
