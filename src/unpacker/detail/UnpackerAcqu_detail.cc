@@ -191,8 +191,8 @@ void acqu::FileFormatBase::FillEvents(queue_t& queue) noexcept
       const auto& lastItem = queue.back();
       auto ptr = dynamic_cast<const TUnpackerMessage*>(lastItem.get());
       if(ptr != nullptr) {
-        queue.splice(queue.cend(), move(queue_buffer),
-                     next(queue_buffer.cend(),-1), queue_buffer.cend());
+        queue.splice(queue.end(), move(queue_buffer),
+                     next(queue_buffer.end(),-1), queue_buffer.end());
       }
     }
     // always add an datadiscard info record
@@ -209,7 +209,7 @@ void acqu::FileFormatBase::FillEvents(queue_t& queue) noexcept
     const int unpackedWords = distance(buffer.cbegin(), it);
     VLOG(7) << "Successfully unpacked " << unpackedWords << " words ("
             << 100.0*unpackedWords/buffer.size() << " %) from buffer ";
-    queue.splice(queue.cend(), move(queue_buffer));
+    queue.splice(queue.end(), move(queue_buffer));
   }
 
   unpackedBuffers++;
