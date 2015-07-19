@@ -33,7 +33,7 @@ function(coveralls_setup _COVERAGE_SRCS _COVERALLS_UPLOAD)
 		set(_CMAKE_SCRIPT_PATH ${ARGN})
 		message("Coveralls: Using alternate CMake script dir: ${_CMAKE_SCRIPT_PATH}")
 	else()
-		set(_CMAKE_SCRIPT_PATH ${PROJECT_SOURCE_DIR}/cmake)
+		set(_CMAKE_SCRIPT_PATH ${PROJECT_SOURCE_DIR}/cmake/Modules)
 	endif()
 
 	if (NOT EXISTS "${_CMAKE_SCRIPT_PATH}/CoverallsClear.cmake")
@@ -84,7 +84,7 @@ function(coveralls_setup _COVERAGE_SRCS _COVERALLS_UPLOAD)
 		)
 
 	if (_COVERALLS_UPLOAD)
-		message("COVERALLS UPLOAD: ON")
+		#message("COVERALLS UPLOAD: ON")
 
 		find_program(CURL_EXECUTABLE curl)
 
@@ -105,7 +105,7 @@ function(coveralls_setup _COVERAGE_SRCS _COVERALLS_UPLOAD)
 
 		add_custom_target(coveralls DEPENDS coveralls_upload)
 	else()
-		message("COVERALLS UPLOAD: OFF")
+		#message("COVERALLS UPLOAD: OFF")
 		add_custom_target(coveralls DEPENDS coveralls_generate)
 	endif()
 
