@@ -38,7 +38,7 @@ else
     rm -rf $CACHE/root
     wget http://root.cern.ch/download/root_v5.34.32.source.tar.gz -O $CACHE/root.tar.gz
     tar -xf $CACHE/root.tar.gz -C $CACHE
-    cd $CACHE/root && ./configure --minimal && make -j2 >/dev/null
+    cd $CACHE/root && ./configure --minimal && make -j2
     cd $CACHE/root && source ./bin/thisroot.sh
     rm $CACHE/root.tar.gz
 
