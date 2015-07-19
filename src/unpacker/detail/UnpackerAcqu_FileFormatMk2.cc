@@ -388,9 +388,9 @@ void acqu::FileFormatMk2::FillTDetectorRead(
           static_assert(sizeof(payload_t::value_type) > sizeof(uint32_t),
                         "Payload_Int not suitable for scaler value");
           record_sc->Payload_Int.insert(
-                record_sc->Payload_Int.cbegin(),
-                values.cbegin(),
-                values.cend()
+                record_sc->Payload_Int.begin(),
+                values.begin(),
+                values.end()
                 );
         }
 
