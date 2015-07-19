@@ -1,4 +1,5 @@
-[![Build Status](https://travis-ci.org/A2-Collaboration-dev/ant.svg?branch=master)](https://travis-ci.org/A2-Collaboration-dev/ant)
+[![Build Status master branch](https://travis-ci.org/A2-Collaboration-dev/ant.svg?branch=master)](https://travis-ci.org/A2-Collaboration-dev/ant)
+[![Coverage Status master branch](https://coveralls.io/repos/A2-Collaboration-dev/ant/badge.svg?branch=master&service=github)](https://coveralls.io/github/A2-Collaboration-dev/ant?branch=master)
 
 ant
 ===
