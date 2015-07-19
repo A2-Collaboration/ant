@@ -49,3 +49,13 @@ set_source_files_properties(detail/format.cc PROPERTIES COMPILE_FLAGS -Wno-effc+
 
 add_library(base ${SRCS})
 target_link_libraries(base ${ROOT_LIBRARIES})
+
+if (COVERALLS)
+  set(COVERAGE_SRCS ${CMAKE_CURRENT_SOURCE_DIR}/root_printable.cc)
+
+  # Create the coveralls target.
+  coveralls_setup(
+    "${COVERAGE_SRCS}" # The source files.
+    ON                 # If we should upload.
+    ) 
+endif()
