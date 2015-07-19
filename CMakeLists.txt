@@ -12,6 +12,12 @@ endif()
 include(cmake/settings.cmake)
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake/Modules/")
 
+option(COVERALLS "Generate coveralls data" OFF)
+if (COVERALLS)
+  include(Coveralls)
+  coveralls_turn_on_coverage()
+endif()
+
 message(STATUS "*** Build Type:      " ${CMAKE_BUILD_TYPE})
 message(STATUS "*** Compiler Flags:  " ${DEFAULT_COMPILE_FLAGS})
 message(STATUS "*** Install libs to: " ${LIBRARY_OUTPUT_PATH})
