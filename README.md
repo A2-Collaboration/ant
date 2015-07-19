@@ -1,3 +1,5 @@
+[![Build Status](https://travis-ci.org/A2-Collaboration-dev/ant.svg?branch=master)](https://travis-ci.org/A2-Collaboration-dev/ant)
+
 ant
 ===
 
