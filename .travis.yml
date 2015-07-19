@@ -9,6 +9,7 @@ addons:
   apt:
     packages:
     - build-essential
+    - gfortran
     - libx11-dev
     - libxft-dev
     - libxext-dev
