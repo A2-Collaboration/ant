@@ -63,10 +63,9 @@ function(coveralls_setup _COVERAGE_SRCS _COVERALLS_UPLOAD)
 	add_custom_target(coveralls_generate
 
 		# Zero the coverage counters.
-		COMMAND ${CMAKE_COMMAND}
-				-P "${_CMAKE_SCRIPT_PATH}/CoverallsClear.cmake"
+		COMMAND ${CMAKE_COMMAND} -DPROJECT_BINARY_DIR="${PROJECT_BINARY_DIR}" -P "${_CMAKE_SCRIPT_PATH}/CoverallsClear.cmake"
 
-		# Run regress tests.
+		# Run tests
 		COMMAND ${CMAKE_CTEST_COMMAND} --output-on-failure
 
 		# Generate Gcov and translate it into coveralls JSON.
@@ -95,7 +94,7 @@ function(coveralls_setup _COVERAGE_SRCS _COVERALLS_UPLOAD)
 		add_custom_target(coveralls_upload
 			# Upload the JSON to coveralls.
 			COMMAND ${CURL_EXECUTABLE}
-					-S -F json_file=@${COVERALLS_FILE}
+					-sS -F json_file=@${COVERALLS_FILE}
 					https://coveralls.io/api/v1/jobs
 
 			DEPENDS coveralls_generate
