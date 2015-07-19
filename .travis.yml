@@ -10,10 +10,9 @@ addons:
     packages:
     - build-essential
     - cmake
-    - g++
-    - gfortran
+    - g++-4.8
+    - gfortran-4.8
     - libx11-dev
-    - libxpm-dev
     - libxft-dev
     - libxext-dev
     - liblzma-dev
@@ -21,5 +20,8 @@ addons:
 cache:
   directories:
     - $HOME/cache
+
+before-script:
+  export CC="gcc-4.8" CXX="g++-4.8" FC="gfortran-4.8"
   
 script: ./.travis.build.sh
