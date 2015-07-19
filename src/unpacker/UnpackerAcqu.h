@@ -52,8 +52,8 @@ public:
 
   template<typename T>
   struct mapping_t {
-    LogicalChannel_t LogicalChannel{};
-    std::vector< RawChannel_t<T> > RawChannels{};
+    LogicalChannel_t LogicalChannel;
+    std::vector< RawChannel_t<T> > RawChannels;
   };
 
   // hits (or Acqu ADC values) are always part of TDetectorRead
