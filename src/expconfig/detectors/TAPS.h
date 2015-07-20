@@ -6,6 +6,9 @@
 
 #include "TVector2.h"
 #include <limits>
+#include <cassert>
+
+#include <iostream>
 
 namespace ant {
 namespace expconfig {
@@ -16,18 +19,6 @@ struct TAPS :
     ClusterDetector_t,
     UnpackerAcquConfig
 {
-  TAPS(
-      bool cherenkovInstalled,
-      bool useSensitiveChannels = false
-      ) :
-    ClusterDetector_t(Detector_t::Type_t::TAPS),
-    CherenkovInstalled(cherenkovInstalled),
-    UseSensitiveChannels(useSensitiveChannels)
-  {
-    // set up clusterelements pointers from derived class
-    BuildClusterElements();
-  }
-
   virtual TVector3 GetPosition(unsigned channel) const override {
     return clusterelements[channel]->Position;
   }
@@ -42,6 +33,7 @@ struct TAPS :
       std::vector<scaler_mapping_t>&) const override;
 
 protected:
+
   // TAPS has BaF2 elements and PbWO4 elements
 
   struct BaF2_Element_t : ClusterDetector_t::Element_t {
@@ -100,37 +92,51 @@ protected:
     unsigned QDCL; // integral, sensitive
   };
 
-  // ask derived class for actual elements, then this base class
-  // can provide the ClusterDetector_t functions
-  // (and makes some more checks)
-  // we need references in order to modify the z-position for
-  // the Cherenkov detector
-  virtual std::vector<BaF2_Element_t>& GetBaF2Elements() const = 0;
-  virtual std::vector<PbWO4_Element_t>& GetPbWO4Elements() const = 0;
+  TAPS(
+      bool cherenkovInstalled,
+      bool useSensitiveChannels,
+      const std::vector<BaF2_Element_t>& BaF2s,
+      const std::vector<PbWO4_Element_t>& PbWO4s
+      ) :
+    ClusterDetector_t(Detector_t::Type_t::TAPS),
+    CherenkovInstalled(cherenkovInstalled),
+    UseSensitiveChannels(useSensitiveChannels),
+    BaF2_elements(BaF2s),
+    PbWO4_elements(PbWO4s)
+  {
+    // init clusterelements from given BaF2/PbWO4 elements
+    SetClusterElements();
+  }
+
 
 private:
-  void BuildClusterElements();
-  // use another storage to make access to data performant
-  std::vector<const ClusterDetector_t::Element_t*> clusterelements;
+
   bool CherenkovInstalled; // TAPS detectors moves downstream if Cherenkov installed
   bool UseSensitiveChannels; // Use sensitive channels as main integral
+
+  // given from derived class in constructor
+  std::vector<BaF2_Element_t>  BaF2_elements;
+  std::vector<PbWO4_Element_t> PbWO4_elements;
+
+  // use another storage to make access to data performant
+  void SetClusterElements();
+  std::vector<const ClusterDetector_t::Element_t*> clusterelements;
 };
 
 
 struct TAPS_2013 : TAPS {
-  using TAPS::TAPS; // use constructor from base class
+  TAPS_2013(
+      bool cherenkovInstalled,
+      bool useSensitiveChannels
+      ) :
+   TAPS(cherenkovInstalled, useSensitiveChannels, BaF2_elements_init, PbWO4_elements_init)
+  {}
 
   virtual bool Matches(const THeaderInfo& headerInfo) const override;
 
-protected:
-  static std::vector<BaF2_Element_t>  BaF2_elements;
-  static std::vector<PbWO4_Element_t> PbWO4_elements;
-  virtual std::vector<BaF2_Element_t>& GetBaF2Elements() const override {
-    return BaF2_elements;
-  }
-  virtual std::vector<PbWO4_Element_t>& GetPbWO4Elements() const override {
-    return PbWO4_elements;
-  }
+private:
+  const static std::vector<BaF2_Element_t>  BaF2_elements_init;
+  const static std::vector<PbWO4_Element_t> PbWO4_elements_init;
 
 }; // TAPS_2013
 

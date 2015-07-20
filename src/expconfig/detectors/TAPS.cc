@@ -19,34 +19,29 @@ void TAPS::BuildMappings(
     vector<UnpackerAcquConfig::hit_mapping_t>& hit_mappings,
     vector<UnpackerAcquConfig::scaler_mapping_t> &) const
 {
-  const auto& baf2s = GetBaF2Elements();
-  const auto& pbwo4s = GetPbWO4Elements();
-
 
 }
 
-void TAPS::BuildClusterElements()
+void TAPS::SetClusterElements()
 {
-  // get the elements from the derived class
-  // we cannout use GetClusterElement somehow because
-  // it returns a const ptr
-  auto& baf2s = GetBaF2Elements();
-  auto& pbwo4s = GetPbWO4Elements();
+  assert(BaF2_elements.size()>0);
 
-  clusterelements.resize(baf2s.size()+pbwo4s.size(), nullptr);
+  clusterelements.resize(BaF2_elements.size()+PbWO4_elements.size(), nullptr);
 
   // apply the z-position depending on Cherenkov
   // and build the clusterelements
   // we assume that the channel elements are consecutive
   const double zpos = CherenkovInstalled ? 174.2 : 145.7;
-  for(auto& baf2 : baf2s) {
+  for(auto& baf2 : BaF2_elements) {
     baf2.Position.SetZ(zpos);
     clusterelements[baf2.Channel] = addressof(baf2);
   }
-  for(auto& pbwo4 : pbwo4s) {
+  for(auto& pbwo4 : PbWO4_elements) {
     pbwo4.Position.SetZ(zpos);
     clusterelements[pbwo4.Channel] = addressof(pbwo4);
   }
+
+  assert(clusterelements.size()>0);
 
   // check that every element was actually set
   for(auto elem : clusterelements) {

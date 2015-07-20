@@ -41,7 +41,7 @@ public:
 
     AddDetector(trigger);
     AddDetector<detector::CB>();
-    AddDetector<detector::TAPS_2013>(false); // no Cherenkov
+    AddDetector<detector::TAPS_2013>(false, false); // no Cherenkov, don't use sensitive channels
 
     // the order of the calibrations is important
     AddCalibration<calibration::TimingCATCH>(Detector_t::Type_t::CB, trigger->Reference_CATCH_CBCrate);
