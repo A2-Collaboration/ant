@@ -45,7 +45,7 @@ protected:
         channel,
         position,
         neighbours,
-        4.0 // all NaI elements have 4.0 as MoliereRadius
+        4.8 /// \todo use best value from S. Lohse diploma thesis?
         ),
       ADC(adc),
       TDC(tdc)

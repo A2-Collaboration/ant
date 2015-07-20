@@ -2,12 +2,13 @@
 #include <cassert>
 #include "base/std_ext.h"
 
+#include "detail/CB_elements.h" // defines all_elements
+
 using namespace std;
 using namespace ant;
 using namespace ant::expconfig::detector;
 
-// this include must be after using namespace std;
-#include "detail/CB_elements.h" // defines all_elements
+
 
 const vector<unsigned> CB::holes = CB::initHoles();
 

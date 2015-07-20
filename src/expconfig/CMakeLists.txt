@@ -8,6 +8,8 @@ set(SRCS
   detectors/CB.h
   detectors/CB.cc
   detectors/detail/CB_elements.h
+  detectors/detail/TAPS_2013_BaF2_elements.h
+  detectors/detail/TAPS_2013_PbWO4_elements.h
   setups/Setup_2014_EtaPrime.h
   )
 
