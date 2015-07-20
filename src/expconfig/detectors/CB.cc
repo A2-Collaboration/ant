@@ -18,18 +18,20 @@ void CB::BuildMappings(vector<UnpackerAcquConfig::hit_mapping_t> &hit_mappings,
   // no scalers
   unsigned true_elements = 0;
   for(const Element_t& element : elements)  {
+    // exclude holes from mapping
     if(std_ext::contains(holes, element.Channel))
       continue;
 
-    hit_mapping_t m_adc;
-    m_adc.LogicalChannel = {Type, Channel_t::Type_t::Integral, element.Channel};
-    m_adc.RawChannels.push_back(element.ADC);
-    hit_mappings.emplace_back(move(m_adc));
+    hit_mappings.emplace_back(Type,
+                              Channel_t::Type_t::Integral,
+                              element.Channel,
+                              element.ADC);
 
-    hit_mapping_t m_tdc;
-    m_tdc.LogicalChannel = {Type, Channel_t::Type_t::Timing, element.Channel};
-    m_tdc.RawChannels.push_back(element.TDC);
-    hit_mappings.emplace_back(move(m_tdc));
+    hit_mappings.emplace_back(Type,
+                              Channel_t::Type_t::Timing,
+                              element.Channel,
+                              element.TDC);
+
     true_elements++;
   }
 

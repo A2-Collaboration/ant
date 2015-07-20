@@ -19,6 +19,67 @@ void TAPS::BuildMappings(
     vector<UnpackerAcquConfig::hit_mapping_t>& hit_mappings,
     vector<UnpackerAcquConfig::scaler_mapping_t> &) const
 {
+  for(const BaF2_Element_t& element : BaF2_elements)  {
+
+    // TAC provides timing information
+
+    hit_mappings.emplace_back(Type,
+                              Channel_t::Type_t::Timing,
+                              element.Channel,
+                              element.TAC);
+
+    // the flag UseSensitiveChannels swaps the mapping
+    // of LGS/LG to type Integral/IntegralAlternate
+    // only Integral is used in the clustering
+
+    hit_mappings.emplace_back(Type,
+                              Channel_t::Type_t::Integral,
+                              element.Channel,
+                              UseSensitiveChannels ? element.LGS : element.LG
+                                                     );
+
+    hit_mappings.emplace_back(Type,
+                              Channel_t::Type_t::IntegralAlternate,
+                              element.Channel,
+                              UseSensitiveChannels ? element.LG : element.LGS
+                                                     );
+
+    // the same logic applies to the short gate integral
+
+    hit_mappings.emplace_back(Type,
+                              Channel_t::Type_t::IntegralShort,
+                              element.Channel,
+                              UseSensitiveChannels ? element.SGS : element.SG
+                                                     );
+
+    hit_mappings.emplace_back(Type,
+                              Channel_t::Type_t::IntegralShortAlternate,
+                              element.Channel,
+                              UseSensitiveChannels ? element.SG : element.SGS
+                                                     );
+  }
+
+  // the PbWO4 are a bit simpler
+
+  for(const PbWO4_Element_t& element : PbWO4_elements)  {
+    hit_mappings.emplace_back(Type,
+                              Channel_t::Type_t::Timing,
+                              element.Channel,
+                              element.TDC);
+
+    /// \todo maybe use different switch for BaF2 and PbWO4 sensitive?!
+    hit_mappings.emplace_back(Type,
+                              Channel_t::Type_t::Integral,
+                              element.Channel,
+                              UseSensitiveChannels ? element.QDCL : element.QDCH
+                                                     );
+
+    hit_mappings.emplace_back(Type,
+                              Channel_t::Type_t::IntegralAlternate,
+                              element.Channel,
+                              UseSensitiveChannels ? element.QDCH : element.QDCL
+                                                     );
+  }
 
 }
 

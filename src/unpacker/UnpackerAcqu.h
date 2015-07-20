@@ -54,10 +54,29 @@ public:
   struct mapping_t {
     LogicalChannel_t LogicalChannel;
     std::vector< RawChannel_t<T> > RawChannels;
+    // provide constructors for single raw channel mapping
+    mapping_t(
+        const LogicalChannel_t& logicalChannel,
+        T rawChannel
+        ) :
+      LogicalChannel(logicalChannel),
+      RawChannels{rawChannel}
+    {}
+    mapping_t(
+        Detector_t::Type_t detector,
+        Channel_t::Type_t channeltype,
+        unsigned channel,
+        T rawChannel
+        ) :
+      LogicalChannel{detector, channeltype, channel},
+      RawChannels{rawChannel}
+    {}
   };
 
   // hits (or Acqu ADC values) are always part of TDetectorRead
-  struct hit_mapping_t : mapping_t<std::uint16_t> {};
+  struct hit_mapping_t : mapping_t<std::uint16_t> {
+    using mapping_t::mapping_t; // use constructors from base class
+  };
 
   // scalers in acqu can be handled as additional information
   // for a logical detector channel, or as TSlowControl items
