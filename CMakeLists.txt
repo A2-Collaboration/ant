@@ -13,6 +13,7 @@ include(cmake/settings.cmake)
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake/Modules/")
 
 option(COVERALLS "Generate coveralls data" OFF)
+enable_testing() # already here for correct coveralls functionality
 
 message(STATUS "*** Build Type:      " ${CMAKE_BUILD_TYPE})
 message(STATUS "*** Compiler Flags:  " ${DEFAULT_COMPILE_FLAGS})
@@ -22,11 +23,18 @@ message(STATUS "*** Install bin to:  " ${EXECUTABLE_OUTPUT_PATH})
 # require a fairly recent ROOT version
 # this is needed by all subdirectories
 find_package(ROOT "5.30" REQUIRED)
-include_directories(${ROOT_INCLUDE_DIR})
-link_directories(${ROOT_LIBRARY_DIR})
+find_package(Pluto REQUIRED)
+find_package(APLCON REQUIRED)
 
+link_directories(${ROOT_LIBRARY_DIR})
+include_directories(
+  ${ROOT_INCLUDE_DIR}
+  ${PLUTO_INCLUDE_DIR}
+  ${APLCON_INCLUDE_DIR}
+)
+
+# now the relevant subdirectories
 add_subdirectory(src)
-enable_testing()
 add_subdirectory(test)
 add_subdirectory(progs)
 

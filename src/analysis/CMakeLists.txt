@@ -1,12 +1,6 @@
-# analysis needs some more libraries
-find_package(Pluto REQUIRED)
-find_package(APLCON REQUIRED)
-
 include_directories(
   .
-  ${PLUTO_INCLUDE_DIR}
-  ${APLCON_INCLUDE_DIR}
-  )
+)
 
 
 set(ANALYSIS_BASE
@@ -112,7 +106,7 @@ add_library(analysis ${ANALYSIS_ALL})
 target_link_libraries(analysis
   ${ROOT_LIBRARIES}
   ${PLUTO_LIBRARY}
-  ${APLCON_LIBRARY}  
+  ${APLCON_LIBRARY}
   base
   )
 

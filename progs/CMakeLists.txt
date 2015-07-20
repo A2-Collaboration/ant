@@ -1,14 +1,6 @@
 # analysis needs some more libraries
-find_package(Pluto REQUIRED)
-find_package(APLCON REQUIRED)
-
 include_directories(
-  .
-  ${PLUTO_INCLUDE_DIR}
-  ${APLCON_INCLUDE_DIR}
   ../src
-  ../src/analysis
-  ../src/base
   )
 
 aux_source_directory("." PROGS)
