@@ -4,7 +4,6 @@
 #include <string>
 #include <vector>
 #include <stdexcept>
-#include <memory>
 
 #include "TVector3.h"
 
@@ -21,9 +20,7 @@ struct Detector_t {
   const Type_t Type;
   static const char* ToString(const Type_t& type);
 
-  virtual ~Detector_t() = default;
-
-  // Detector_t::Element_t is the minimum information,
+  // Element_t is the minimum information,
   // derived classes may extend this
   struct Element_t {
     Element_t(unsigned channel, const TVector3& position) :
@@ -33,7 +30,10 @@ struct Detector_t {
     unsigned Channel; // unique within Detector for all time!
     TVector3 Position;
   };
+
   virtual TVector3 GetPosition(unsigned channel) const = 0;
+
+  virtual ~Detector_t() = default;
 
 protected:
   Detector_t(const Type_t& type) :
