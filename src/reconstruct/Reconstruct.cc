@@ -73,7 +73,7 @@ unique_ptr<TEvent> Reconstruct::DoReconstruct(TDetectorRead& detectorRead)
   struct HitWithEnergy_t {
     TClusterHit Hit;
     double Energy = numeric_limits<double>::quiet_NaN();
-    void SetEnergy(const TDetectorReadHit* readhit) {
+    void MaybeSetEnergy(const TDetectorReadHit* readhit) {
       if(readhit->GetChannelType() != Channel_t::Type_t::Integral)
         return;
       if(readhit->Values.size() != 1)
@@ -84,7 +84,7 @@ unique_ptr<TEvent> Reconstruct::DoReconstruct(TDetectorRead& detectorRead)
                     const vector<TClusterHitDatum>&& data) :
       Hit(readhit->Channel, data)
     {
-      SetEnergy(readhit);
+      MaybeSetEnergy(readhit);
     }
   };
 
@@ -118,12 +118,12 @@ unique_ptr<TEvent> Reconstruct::DoReconstruct(TDetectorRead& detectorRead)
                                          match_channel);
       if(it_clusterhit == clusterhits.end()) {
         // not found, create new TClusterHit from readhit
-        if(readhit->GetChannelType() == Channel_t::Type_t::Integral)
-          clusterhits.emplace_back(readhit, move(data));
+        clusterhits.emplace_back(readhit, move(data));
       }
       else {
         // clusterhit with channel of readhit already exists,
-        // so append TClusterHitDatum's
+        // so append TClusterHitDatum's and set energy
+        it_clusterhit->MaybeSetEnergy(readhit);
         move(data.begin(), data.end(),
              back_inserter(it_clusterhit->Hit.Data));
       }
@@ -181,6 +181,8 @@ unique_ptr<TEvent> Reconstruct::DoReconstruct(TDetectorRead& detectorRead)
       list<clustering::crystal_t> crystals;
       for(const HitWithEnergy_t& clusterhit : clusterhits) {
         const TClusterHit& hit = clusterhit.Hit;
+        if(!isfinite(clusterhit.Energy))
+          continue;
         crystals.emplace_back(
               clusterhit.Energy,
               clusterdetector->GetClusterElement(hit.Channel),
