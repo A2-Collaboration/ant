@@ -1,4 +1,4 @@
-#include "IntegralSADC.h"
+#include "IntegralTAPS.h"
 #include "analysis/plot/HistogramFactories.h"
 #include "analysis/data/Event.h"
 #include "analysis/utils/combinatorics.h"
@@ -11,35 +11,32 @@ using namespace std;
 using namespace ant;
 using namespace ant::calibration;
 
-void IntegralSADC::ProcessEvent(const Event &)
+void IntegralTAPS::ProcessEvent(const Event &)
 {
 
 }
 
-void IntegralSADC::Finish()
+void IntegralTAPS::Finish()
 {
 
 }
 
-void IntegralSADC::ShowResult()
+void IntegralTAPS::ShowResult()
 {
 
 }
 
-vector<double> IntegralSADC::convert(const vector<uint8_t>& rawData) {
-  if(rawData.size() != 6) // expect three 16bit values
+vector<double> IntegralTAPS::convert(const vector<uint8_t>& rawData) {
+  if(rawData.size() != 2)
     return {};
-
-  const uint16_t* pedestal = reinterpret_cast<const uint16_t*>(&rawData[0]);
-  const uint16_t* signal = reinterpret_cast<const uint16_t*>(&rawData[2]);
-
-  return vector<double>(1, *signal - *pedestal);
+  const uint16_t* value = reinterpret_cast<const uint16_t*>(&rawData[0]);
+  return vector<double>(1, *value);
 }
 
-void IntegralSADC::ApplyTo(const map< Detector_t::Type_t, list< TDetectorReadHit* > >& hits)
+void IntegralTAPS::ApplyTo(const map< Detector_t::Type_t, list< TDetectorReadHit* > >& hits)
 {
   // search for to be calibrated timings
-  const auto it_dethits = hits.find(DetectorType);
+  const auto it_dethits = hits.find(Detector_t::Type_t::TAPS);
   if(it_dethits == hits.end())
     return;
 
@@ -52,7 +49,7 @@ void IntegralSADC::ApplyTo(const map< Detector_t::Type_t, list< TDetectorReadHit
     dethit->Values = convert(dethit->RawData);
     // apply offset to each of the values (might be multihit)
     const auto apply_gain = [] (double& v) {
-      v *= 0.07;
+      v *= 0.30;
       /// \todo use channel dependent gains here
     };
     for_each(dethit->Values.begin(), dethit->Values.end(),

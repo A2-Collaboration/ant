@@ -1,5 +1,5 @@
-#ifndef ANT_CALIBRATION_INTEGRALSADC_H
-#define ANT_CALIBRATION_INTEGRALSADC_H
+#ifndef ANT_CALIBRATION_INTEGRALTAPS_H
+#define ANT_CALIBRATION_INTEGRALTAPS_H
 
 #include "Calibration.h"
 #include "expconfig/Detector_t.h"
@@ -9,19 +9,12 @@ class TH1;
 namespace ant {
 namespace calibration {
 
-class IntegralSADC : public Calibration::Module {
+class IntegralTAPS : public Calibration::Module {
 
 
 public:
-  IntegralSADC(
-      Detector_t::Type_t detectorType
-      ) :
-    Calibration::Module(
-      std_ext::formatter()
-      << "IntegralSADC_"
-      << Detector_t::ToString(detectorType)
-         ),
-    DetectorType(detectorType)
+  IntegralTAPS() :
+    Calibration::Module("IntegralTAPS")
   {}
 
   // CalibrationApply_traits interface
@@ -37,9 +30,6 @@ public:
   // CalibrationUpdate_traits interface
   void BuildRanges(std::list<TID>&) override {}
   void Update(const TID&) override {}
-
-protected:
-  const Detector_t::Type_t DetectorType;
 private:
   static std::vector<double> convert(const std::vector<std::uint8_t>& rawData);
 };

@@ -26,7 +26,7 @@ void TimingCATCH::ShowResult()
 
 }
 
-vector<double> convertToTiming(const vector<uint8_t>& rawData) {
+vector<double> TimingCATCH::convert(const vector<uint8_t>& rawData) {
   if(rawData.size() % 2 != 0)
     return {};
   vector<double> ret(rawData.size()/2);
@@ -53,7 +53,7 @@ void TimingCATCH::ApplyTo(const map< Detector_t::Type_t, list< TDetectorReadHit*
     return;
 
   //
-  const vector<double> refhit_timings = convertToTiming((*it_refhit)->RawData);
+  const vector<double> refhit_timings = convert((*it_refhit)->RawData);
   if(refhit_timings.size() != 1)
     return;
   const double refhit_timing = refhit_timings[0];
@@ -69,7 +69,7 @@ void TimingCATCH::ApplyTo(const map< Detector_t::Type_t, list< TDetectorReadHit*
   for(TDetectorReadHit* dethit : dethits) {
     if(dethit->GetChannelType() != Channel_t::Type_t::Timing)
       continue;
-    dethit->Values = convertToTiming(dethit->RawData);
+    dethit->Values = convert(dethit->RawData);
     // apply offset to each of the values (might be multihit)
     const auto apply_offset = [refhit_timing] (double& v) {
       v -= refhit_timing;

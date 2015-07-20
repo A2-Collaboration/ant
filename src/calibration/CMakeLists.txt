@@ -15,6 +15,10 @@ set(SRCS
     modules/TimingCATCH.h
     modules/IntegralSADC.cc
     modules/IntegralSADC.h
+    modules/TimingTAPS.cc
+    modules/TimingTAPS.h
+    modules/IntegralTAPS.cc
+    modules/IntegralTAPS.h
   )
 
 add_library(calibration ${SRCS})

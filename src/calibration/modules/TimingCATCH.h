@@ -43,6 +43,9 @@ public:
 protected:
   const Detector_t::Type_t DetectorType;
   const LogicalChannel_t   ReferenceChannel;
+
+private:
+  static std::vector<double> convert(const std::vector<std::uint8_t>& rawData);
 };
 
 }}  // namespace ant::calibration
