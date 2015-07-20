@@ -1,15 +1,18 @@
-#include <iostream>
+#include "analysis/data/Particle.h"
+#include "analysis/plot/Histogram.h"
+#include "analysis/plot/SmartHist.h"
+#include "analysis/plot/HistogramFactories.h"
+
 #include "TH1D.h"
-#include "data/Particle.h"
-#include <memory>
-#include <list>
-#include <algorithm>
-#include "plot/Histogram.h"
-#include "plot/SmartHist.h"
-#include "plot/HistogramFactories.h"
 #include "TH1D.h"
 #include "TFile.h"
 #include "TRint.h"
+
+#include <memory>
+#include <list>
+#include <algorithm>
+#include <iostream>
+
 
 using namespace std;
 using namespace ant;

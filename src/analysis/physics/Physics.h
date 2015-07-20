@@ -1,14 +1,16 @@
 #ifndef ANTPHYSICS_H
 #define ANTPHYSICS_H
 
-#include "data/Event.h"
-#include "plot/HistogramFactories.h"
+#include "analysis/data/Event.h"
+#include "analysis/plot/HistogramFactories.h"
+#include "analysis/input/DataReader.h"
+
+#include "base/std_ext.h"
+
 #include <list>
 #include <string>
 #include <memory>
-#include "input/DataReader.h"
 
-#include "base/std_ext.h"
 
 class TFile;
 class TDirectory;

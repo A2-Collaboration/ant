@@ -1,21 +1,20 @@
-#ifndef HIST_H
-#define HIST_H
+#ifndef ANT_SMARTHIST_H
+#define ANT_SMARTHIST_H
+
+#include "Histogram.h"
+#include "root_draw.h"
+
+#include "base/std_ext.h"
 
 #include "TH1D.h"
 #include "TH2D.h"
 #include "TH3D.h"
 
-#include "plot/Histogram.h"
-#include "root_draw.h"
-
 #include <memory>
 #include <string>
-
 #include <iostream>
-
 #include <exception>
 
-#include "base/std_ext.h"
 
 using namespace std;
 namespace ant {

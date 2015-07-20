@@ -1,4 +1,4 @@
-#include "input/goat/detail/FileManager.h"
+#include "analysis/input/goat/detail/FileManager.h"
 #include "TTree.h"
 
 #include <iostream>

@@ -1,8 +1,8 @@
 #ifndef DATAOVERVIEW_H
 #define DATAOVERVIEW_H
 
-#include "physics/Physics.h"
-#include "plot/SmartHist.h"
+#include "analysis/physics/Physics.h"
+#include "analysis/plot/SmartHist.h"
 
 #include <string>
 

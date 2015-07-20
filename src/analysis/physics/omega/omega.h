@@ -1,10 +1,12 @@
 #ifndef OMEGA_H
 #define OMEGA_H
 
-#include "physics/Physics.h"
+#include "analysis/physics/Physics.h"
+#include "analysis/plot/SmartHist.h"
+#include "analysis/A2GeoAcceptance.h"
+
 #include "base/interval.h"
-#include "plot/SmartHist.h"
-#include "A2GeoAcceptance.h"
+
 #include <map>
 
 class TH1D;

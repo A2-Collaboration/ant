@@ -1,13 +1,13 @@
 #ifndef GEOACCEPTANCE_H
 #define GEOACCEPTANCE_H
 
-#include "physics/Physics.h"
-#include "plot/Histogram.h"
-#include "plot/SmartHist.h"
-#include "plot/HistogramFactories.h"
-#include "plot/root_draw.h"
+#include "analysis/physics/Physics.h"
+#include "analysis/plot/Histogram.h"
+#include "analysis/plot/SmartHist.h"
+#include "analysis/plot/HistogramFactories.h"
+#include "analysis/plot/root_draw.h"
 
-#include "A2GeoAcceptance.h"
+#include "analysis/A2GeoAcceptance.h"
 
 class TH3;
 class TH1D;

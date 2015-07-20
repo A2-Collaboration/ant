@@ -1,18 +1,16 @@
+#include "analysis/Detector.h"
+#include "analysis/utils/matcher.h"
+#include "analysis/ParticleType.h"
+#include "analysis/data/Track.h"
+#include "analysis/data/Particle.h"
+#include "analysis/utils/combinatorics.h"
+
+#include "base/types.h"
+#include "base/interval.h"
+
 #include <iostream>
 #include <typeinfo>
 #include <vector>
-
-#include "base/types.h"
-#include "ParticleType.h"
-#include "data/Track.h"
-#include "data/Particle.h"
-
-#include "utils/combinatorics.h"
-
-#include "base/interval.h"
-
-#include "Detector.h"
-#include "utils/matcher.h"
 
 using namespace std;
 using namespace ant;

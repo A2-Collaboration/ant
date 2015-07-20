@@ -1,7 +1,7 @@
-#include "physics/Physics.h"
-#include "OutputManager.h"
-#include "input/goat/GoatReader.h"
-#include "physics/common/DataOverview.h"
+#include "analysis/physics/test/TestAPLCON.h"
+#include "analysis/OutputManager.h"
+#include "analysis/input/goat/GoatReader.h"
+#include "analysis/physics/Physics.h"
 
 using namespace std;
 using namespace ant;
@@ -12,11 +12,11 @@ int main(int argc, char *argv[])
 
     OutputManager om;
 
-    om.SetNewOutput("data_overview.root");
+    om.SetNewOutput(string(argv[0])+"_output.root");
 
     PhysicsManager pm;
 
-    pm.AddPhysics<analysis::DataOverview>();
+    pm.AddPhysics<analysis::TestAPLCON>();
 
     input::GoatReader reader;
 
@@ -28,5 +28,5 @@ int main(int argc, char *argv[])
     pm.ReadFrom(reader);
 
     return 0;
-}
 
+}

@@ -1,10 +1,10 @@
 #ifndef APLCON_H
 #define APLCON_H
 
-#include "physics/Physics.h"
+#include "analysis/physics/Physics.h"
+#include "analysis/plot/Histogram.h"
 
 #include <APLCON.hpp>
-#include "plot/Histogram.h"
 
 
 #include <vector>

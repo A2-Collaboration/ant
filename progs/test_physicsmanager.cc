@@ -1,11 +1,13 @@
-#include "input/goat/GoatReader.h"
-#include "data/Event.h"
+#include "analysis/input/goat/GoatReader.h"
+#include "analysis/data/Event.h"
+#include "analysis/OutputManager.h"
+#include "analysis/physics/Physics.h"
+
+#include "base/Logger.h"
+
 #include "TH1D.h"
 
 #include <iostream>
-#include "OutputManager.h"
-#include "physics/Physics.h"
-#include "base/Logger.h"
 
 using namespace std;
 using namespace ant::output;

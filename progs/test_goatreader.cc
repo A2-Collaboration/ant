@@ -1,5 +1,5 @@
-#include "input/goat/GoatReader.h"
-#include "data/Event.h"
+#include "analysis/input/goat/GoatReader.h"
+#include "analysis/data/Event.h"
 
 #include <iostream>
 

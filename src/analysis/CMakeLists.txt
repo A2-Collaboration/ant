@@ -109,17 +109,3 @@ target_link_libraries(analysis
   ${APLCON_LIBRARY}
   base
   )
-
-aux_source_directory("progs" ANALYSIS_PROGS)
-
-INCLUDE_DIRECTORIES(../base/)
-foreach(PROG_SRC ${ANALYSIS_PROGS})
-
-  get_filename_component(name ${PROG_SRC} NAME_WE)
-  message(STATUS "Adding ant executable: ${name}")
-  add_executable(${name}
-    ${PROG_SRC}
-    )
-
-  target_link_libraries(${name} analysis)
-endforeach()

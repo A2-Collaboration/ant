@@ -1,9 +1,9 @@
 #ifndef HISTOGRAMFACTORIES_H
 #define HISTOGRAMFACTORIES_H
 
-#include "plot/Histogram.h"
-#include "plot/SmartHist.h"
-#include "data/Particle.h"
+#include "Histogram.h"
+#include "SmartHist.h"
+#include "analysis/data/Particle.h"
 
 #include <string>
 

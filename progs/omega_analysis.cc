@@ -1,10 +1,12 @@
-#include "input/goat/GoatReader.h"
-#include "OutputManager.h"
-#include "physics/Physics.h"
-#include "physics/omega/omega.h"
+
+#include "analysis/input/goat/GoatReader.h"
+#include "analysis/OutputManager.h"
+#include "analysis/physics/Physics.h"
+#include "analysis/physics/omega/omega.h"
+#include "analysis/physics/common/DataOverview.h"
+
 #include "base/Logger.h"
 #include "base/detail/CmdLine.h"
-#include"physics/common/DataOverview.h"
 #include "TRint.h"
 
 using namespace std;
