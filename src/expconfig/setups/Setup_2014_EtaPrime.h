@@ -11,6 +11,9 @@
 #include "calibration/modules/EnergyInvariantMass.h"
 #include "calibration/modules/TimingCATCH.h"
 #include "calibration/modules/IntegralSADC.h"
+#include "calibration/modules/TimingTAPS.h"
+#include "calibration/modules/IntegralTAPS.h"
+
 
 namespace ant {
 namespace expconfig {
@@ -46,6 +49,8 @@ public:
     // the order of the calibrations is important
     AddCalibration<calibration::TimingCATCH>(Detector_t::Type_t::CB, trigger->Reference_CATCH_CBCrate);
     AddCalibration<calibration::IntegralSADC>(Detector_t::Type_t::CB);
+    AddCalibration<calibration::TimingTAPS>();
+    AddCalibration<calibration::IntegralTAPS>();
   }
 
   virtual std::list< std::shared_ptr< CalibrationApply_traits > > GetCalibrations() const override {
