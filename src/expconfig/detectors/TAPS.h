@@ -4,6 +4,9 @@
 #include "Detector_t.h"
 #include "unpacker/UnpackerAcqu.h"
 
+#include "TVector2.h"
+#include <limits>
+
 namespace ant {
 namespace expconfig {
 namespace detector {
@@ -13,10 +16,30 @@ struct TAPS :
     ClusterDetector_t,
     UnpackerAcquConfig
 {
-  TAPS(bool cherenkovInstalled) :
+  TAPS(
+      bool cherenkovInstalled,
+      bool useSensitiveChannels = false
+      ) :
     ClusterDetector_t(Detector_t::Type_t::TAPS),
-    CherenkovInstalled(cherenkovInstalled)
-  {}
+    CherenkovInstalled(cherenkovInstalled),
+    UseSensitiveChannels(useSensitiveChannels)
+  {
+    // set up clusterelements pointers from derived class
+    BuildClusterElements();
+  }
+
+  virtual TVector3 GetPosition(unsigned channel) const override {
+    return clusterelements[channel]->Position;
+  }
+
+  virtual const ClusterDetector_t::Element_t* GetClusterElement(unsigned channel) const override {
+    return clusterelements[channel];
+  }
+
+  // for UnpackerAcquConfig
+  virtual void BuildMappings(
+      std::vector<hit_mapping_t>&,
+      std::vector<scaler_mapping_t>&) const override;
 
 protected:
   // TAPS has BaF2 elements and PbWO4 elements
@@ -24,7 +47,7 @@ protected:
   struct BaF2_Element_t : ClusterDetector_t::Element_t {
     BaF2_Element_t(
         unsigned channel,
-        const TVector3& position,
+        const TVector2& pos_xy,
         unsigned tac,
         unsigned lg,
         unsigned sg,
@@ -34,7 +57,8 @@ protected:
         ) :
       ClusterDetector_t::Element_t(
         channel,
-        position,
+        TVector3(pos_xy.X(), pos_xy.Y(), // z-component set by BuildClusterElements()
+                 std::numeric_limits<double>::quiet_NaN()),
         neighbours,
         3.4 /// \todo use best value from S. Lohse diploma thesis?
         ),
@@ -54,7 +78,7 @@ protected:
   struct PbWO4_Element_t : ClusterDetector_t::Element_t {
     PbWO4_Element_t(
         unsigned channel,
-        const TVector3& position,
+        const TVector2& pos_xy,
         unsigned tdc,
         unsigned qdch,
         unsigned qdcl,
@@ -62,7 +86,8 @@ protected:
         ) :
       ClusterDetector_t::Element_t(
         channel,
-        position,
+        TVector3(pos_xy.X(), pos_xy.Y(), // z-component set by BuildClusterElements()
+                 std::numeric_limits<double>::quiet_NaN()),
         neighbours,
         2.2 /// \todo use best value from S. Lohse diploma thesis?
         ),
@@ -75,34 +100,37 @@ protected:
     unsigned QDCL; // integral, sensitive
   };
 
+  // ask derived class for actual elements, then this base class
+  // can provide the ClusterDetector_t functions
+  // (and makes some more checks)
+  // we need references in order to modify the z-position for
+  // the Cherenkov detector
+  virtual std::vector<BaF2_Element_t>& GetBaF2Elements() const = 0;
+  virtual std::vector<PbWO4_Element_t>& GetPbWO4Elements() const = 0;
+
+private:
+  void BuildClusterElements();
+  // use another storage to make access to data performant
+  std::vector<const ClusterDetector_t::Element_t*> clusterelements;
   bool CherenkovInstalled; // TAPS detectors moves downstream if Cherenkov installed
+  bool UseSensitiveChannels; // Use sensitive channels as main integral
 };
 
 
 struct TAPS_2013 : TAPS {
   using TAPS::TAPS; // use constructor from base class
 
-
   virtual bool Matches(const THeaderInfo& headerInfo) const override;
 
-  virtual TVector3 GetPosition(unsigned channel) const override {
-    /// \todo Implement proper position stuff for TAPS
-    return TVector3();
-  }
-
-  virtual const ClusterDetector_t::Element_t* GetClusterElement(unsigned channel) const override {
-    return nullptr;
-  }
-
-  // for UnpackerAcquConfig
-  virtual void BuildMappings(
-      std::vector<hit_mapping_t>&,
-      std::vector<scaler_mapping_t>&) const override;
-
 protected:
-  static const std::vector<BaF2_Element_t>  BaF2_elements;
-  static const std::vector<PbWO4_Element_t> PbWO4_elements;
-
+  static std::vector<BaF2_Element_t>  BaF2_elements;
+  static std::vector<PbWO4_Element_t> PbWO4_elements;
+  virtual std::vector<BaF2_Element_t>& GetBaF2Elements() const override {
+    return BaF2_elements;
+  }
+  virtual std::vector<PbWO4_Element_t>& GetPbWO4Elements() const override {
+    return PbWO4_elements;
+  }
 
 }; // TAPS_2013
 

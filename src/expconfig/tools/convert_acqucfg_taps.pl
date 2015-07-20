@@ -36,8 +36,8 @@ while (my $line = <$fh>) {
   if ($line =~ /Element:/) {
     #print $line,"\n";
     my @cols = split(/\s+/,$line);
-    my @xyz = @cols[11..13];
-    $data->[$n]->{position} = \@xyz;
+    my @xy = @cols[11..12];
+    $data->[$n]->{position} = \@xy;
     $data->[$n]->{channels} = extract_tdc_adc(@cols);
     $n++;
   } elsif ($line =~ /Next-Neighbour:/) {
@@ -87,14 +87,14 @@ while (my $line = <$fh_S>) {
 #print join("", @lines_pbwo4);
 
 for($n=0;$n<@{$data};$n++) {
-  my @xyz = @{$data->[$n]->{position}};
+  my @xy = @{$data->[$n]->{position}};
   my @channels = @{$data->[$n]->{channels}};
   my $neighbours = join(",", @{$data->[$n]->{neighbours}});
   if(is_pbwo4($n)) {
-    #printf("{%3d, {%10.6f, %10.6f, %10.6f}, %04d, %04d, %04d, {%s}}, \n", $n, @xyz, @channels, $neighbours);
+    printf("{%3d, {%7.3f, %7.3f}, %04d, %04d, %04d, {%s}}, \n", $n, @xy, @channels, $neighbours);
   }
   else {
-    printf("{%3d, {%10.6f, %10.6f, %10.6f}, %04d, %04d, %04d, %04d, %04d, {%s}}, \n", $n, @xyz, @channels, $neighbours);
+    #printf("{%3d, {%7.3f, %7.3f}, %04d, %04d, %04d, %04d, %04d, {%s}}, \n", $n, @xy, @channels, $neighbours);
   }
 }
 
