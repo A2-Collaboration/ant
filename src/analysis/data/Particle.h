@@ -3,7 +3,7 @@
 
 #include "base/printable.h"
 #include "base/types.h"
-#include "ParticleType.h"
+#include "analysis/ParticleType.h"
 #include "Track.h"
 
 #include "TLorentzVector.h"

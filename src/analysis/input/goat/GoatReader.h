@@ -1,8 +1,8 @@
 #ifndef GOATREADER_H
 #define GOATREADER_H
 
-#include "input/DataReader.h"
-#include "data/Event.h"
+#include "analysis/input/DataReader.h"
+#include "analysis/data/Event.h"
 
 #include <memory>
 #include <string>

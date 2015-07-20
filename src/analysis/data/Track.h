@@ -3,7 +3,7 @@
 
 #include "base/printable.h"
 #include "base/types.h"
-#include "Detector.h"
+#include "analysis/Detector.h"
 
 #include <ostream>
 #include <memory>
