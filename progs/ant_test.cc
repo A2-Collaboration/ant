@@ -37,8 +37,7 @@ int main() {
             clustersize_t(4),
             detector_t::NaI,
             mev_t(0.4),
-            mev_t(0.3),
-            mev_t(0.2)
+            mev_t(0.3)
             ));
     cout << t << endl;
 
@@ -131,8 +130,7 @@ int main() {
             clustersize_t(4),
             detector_t::NaI,
             mev_t(0.4),
-            mev_t(0.3),
-            mev_t(0.2)
+            mev_t(0.3)
             ));
     rec.emplace_back( new Particle(ParticleTypeDatabase::Photon, r1));
 
@@ -143,8 +141,7 @@ int main() {
             clustersize_t(5),
             detector_t::NaI,
             mev_t(0.4),
-            mev_t(0.3),
-            mev_t(0.2)
+            mev_t(0.3)
             ));
 
     rec.emplace_back( new Particle(ParticleTypeDatabase::Photon, r2));
@@ -156,8 +153,7 @@ int main() {
             clustersize_t(5),
             detector_t::NaI,
             mev_t(0.4),
-            mev_t(0.3),
-            mev_t(0.2)
+            mev_t(0.3)
             ));
 
     rec.emplace_back( new Particle(ParticleTypeDatabase::Photon, r3));

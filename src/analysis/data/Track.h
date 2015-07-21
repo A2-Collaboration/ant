@@ -26,8 +26,7 @@ private:
     clustersize_t clusterSize;
     detector_t detector;
     mev_t vetoEnergy;
-    mev_t _MWPC0Energy;
-    mev_t _MWPC1Energy;
+    mev_t trackerEnergy;
 public:
     Track(const mev_t& _clusterEnergy,
           const radian_t& _theta,
@@ -36,8 +35,7 @@ public:
           const clustersize_t& _clusterSize,
           const detector_t& _detector,
           const mev_t& _vetoEnergy,
-          const mev_t& _MWPC0Energy,
-          const mev_t& _MWPC1Energy
+          const mev_t& _trackerEnergy
           ) :
         clusterEnergy(_clusterEnergy),
         theta(_theta),
@@ -46,8 +44,7 @@ public:
         clusterSize(_clusterSize),
         detector(_detector),
         vetoEnergy(_vetoEnergy),
-        _MWPC0Energy(_MWPC0Energy),
-        _MWPC1Energy(_MWPC1Energy)
+        trackerEnergy(_trackerEnergy)
     {}
 
 
@@ -58,8 +55,7 @@ public:
     clustersize_t ClusterSize() const { return clusterSize; }
     detector_t Detector() const { return detector; }
     mev_t VetoEnergy() const { return vetoEnergy; }
-    mev_t MWPC0Energy() const { return _MWPC0Energy; }
-    mev_t MWPC1Energy() const { return _MWPC1Energy; }
+    mev_t TrackerEnergy() const { return trackerEnergy; }
 
     virtual std::ostream &Print(std::ostream &stream) const override;
 

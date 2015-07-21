@@ -96,8 +96,7 @@ void GoatReader::CopyTracks(std::shared_ptr<Event> &event)
                                   MapClusterSize(tracks.GetClusterSize(i)),
                                   IntToDetector_t(tracks.GetDetectors(i)),
                                   tracks.GetVetoEnergy(i),
-                                  tracks.GetMWPC0Energy(i),
-                                  tracks.GetMWPC1Energy(i)
+                                  tracks.GetMWPC0Energy(i)+tracks.GetMWPC1Energy(i)
                                   )));
     }
 }

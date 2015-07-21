@@ -8,7 +8,7 @@
 #include "tree/TDataRecord.h"
 #include "analysis/data/Track.h"
 #include "analysis/Detector.h"
-
+#include <limits>
 using namespace ant;
 using namespace std;
 
@@ -36,8 +36,7 @@ std::shared_ptr<Track> input::Convert(const TTrack &track)
                 0,
                 ant::detector_t::None,
                 track.VetoEnergy,
-                0,
-                0
+                numeric_limits<double>::quiet_NaN()
                 );
     return anttrack;
 }

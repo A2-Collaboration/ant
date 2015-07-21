@@ -13,7 +13,6 @@ ostream& Track::Print(ostream &stream) const
            << " ClusterSize=" << ClusterSize()
            << " Detectors=" << Detector()
            << " VetoEnergy=" << VetoEnergy()
-           << " MWPC0Energy=" << MWPC0Energy()
-           << " MWPC1Energy=" << MWPC1Energy();
+           << " TrackerEnergy=" << TrackerEnergy();
     return stream;
 }
