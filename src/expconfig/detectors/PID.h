@@ -3,8 +3,8 @@
 
 #include "Detector_t.h"
 #include "unpacker/UnpackerAcqu.h"
-#include "tree/THeaderInfo.h"
 #include "base/std_ext.h"
+
 #include <cassert>
 
 namespace ant {
@@ -59,41 +59,31 @@ protected:
 
 struct PID_2014 : PID {
     PID_2014() : PID(elements_init) {}
-    virtual bool Matches(const THeaderInfo& headerInfo) const override {
-        return std_ext::time_after(headerInfo.Timestamp, "2014-01-26");
-    }
+    virtual bool Matches(const THeaderInfo& headerInfo) const override;
     static const std::vector<Element_t> elements_init;
 };
 
 struct PID_2009_07 : PID {
     PID_2009_07() : PID(elements_init) {}
-    virtual bool Matches(const THeaderInfo& headerInfo) const override {
-        return std_ext::time_between(headerInfo.Timestamp, "2009-07-13", "2014-01-25");
-    }
+    virtual bool Matches(const THeaderInfo& headerInfo) const override;
     static const std::vector<Element_t> elements_init;
 };
 
 struct PID_2009_06 : PID {
     PID_2009_06() : PID(elements_init) {}
-    virtual bool Matches(const THeaderInfo& headerInfo) const override {
-        return std_ext::time_between(headerInfo.Timestamp, "2009-06-30", "2009-07-12");
-    }
+    virtual bool Matches(const THeaderInfo& headerInfo) const override;
     static const std::vector<Element_t> elements_init;
 };
 
 struct PID_2009_05 : PID {
     PID_2009_05() : PID(elements_init) {}
-    virtual bool Matches(const THeaderInfo& headerInfo) const override {
-        return std_ext::time_between(headerInfo.Timestamp, "2009-05-10", "2009-06-29");
-    }
+    virtual bool Matches(const THeaderInfo& headerInfo) const override;
     static const std::vector<Element_t> elements_init;
 };
 
 struct PID_2004 : PID {
     PID_2004() : PID(elements_init) {}
-    virtual bool Matches(const THeaderInfo& headerInfo) const override {
-        return std_ext::time_between(headerInfo.Timestamp, "2004-04-30", "2009-05-09");
-    }
+    virtual bool Matches(const THeaderInfo& headerInfo) const override;
     static const std::vector<Element_t> elements_init;
 };
 
