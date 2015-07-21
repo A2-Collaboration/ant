@@ -6,6 +6,10 @@
 #pragma link C++ nestedclasses;
 
 // the relevant classes
+// templated classes need to have explicit type
+#pragma link C++ class ant::TKeyValue<std::int64_t>+;
+#pragma link C++ class ant::TKeyValue<std::string>+;
+#pragma link C++ class ant::TKeyValue<double>+;
 #pragma link C++ class ant::TID+;
 #pragma link C++ class ant::TDataRecord+;
 #pragma link C++ class ant::TDetectorReadHit+;

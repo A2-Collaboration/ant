@@ -8,11 +8,14 @@
 namespace std {
 typedef UChar_t    uint8_t;
 typedef UInt_t     uint32_t;
-typedef ULong64_t  uint64_t;
+typedef ULong_t  uint64_t;
 typedef Short_t    int16_t;
-typedef Long64_t   int64_t;
+typedef Long_t   int64_t;
 }
 #else
+#include <type_traits>
+static_assert(std::is_same<ULong_t, std::uint64_t>::value, "Type size mismatch");
+static_assert(std::is_same<Long_t, std::int64_t>::value, "Type size mismatch");
 #include <cstdint>
 #include <stdexcept>
 #include "base/printable.h"
@@ -29,7 +32,28 @@ typedef Long64_t   int64_t;
 
 namespace ant {
 
-
+template<typename ValueType>
+#ifndef __CINT__
+struct TKeyValue  : printable_traits
+#else
+struct TKeyValue
+#endif
+{
+    unsigned Key;
+    ValueType Value;
+    TKeyValue(unsigned key, ValueType value) :
+        Key(key), Value(value)
+    {}
+    TKeyValue() : Key(), Value() {}
+    // do not track versions, since this will never change!
+    ClassDef(TKeyValue, 0)
+    virtual ~TKeyValue() {}
+#ifndef __CINT__
+    virtual std::ostream& Print( std::ostream& s) const override {
+        return s << Key << "=" << Value;
+    }
+#endif
+}; // TKeyValue
 
 #ifndef __CINT__
 struct TID  : printable_traits
@@ -73,7 +97,7 @@ struct TID
 
   ClassDef(TID, ANT_UNPACKER_ROOT_VERSION)
 
-}; // ID
+}; // TID
 
 #ifndef __CINT__
 struct TDataRecord : printable_traits
@@ -81,10 +105,6 @@ struct TDataRecord : printable_traits
 struct TDataRecord
 #endif
 {
-
-
-
-
   TDataRecord() : ID() {}
   TDataRecord(const TID& id) : ID(id) {}
   virtual ~TDataRecord() {}
@@ -99,7 +119,7 @@ struct TDataRecord
 
   ClassDef(TDataRecord, ANT_UNPACKER_ROOT_VERSION)
 
-};
+}; // TDataRecord
 
 
 } // namespace ant

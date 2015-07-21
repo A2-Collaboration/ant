@@ -28,9 +28,9 @@ struct TTaggerHit
     virtual ~TTaggerHit() {}
 
 #ifndef __CINT__
-  virtual std::ostream& Print( std::ostream& s) const override {
-    return s << "TTaggerHit: Electrons=" << Electrons.size() << " PhotonEnergy=" << PhotonEnergy << " Time=" << Time;
-  }
+    virtual std::ostream& Print( std::ostream& s) const override {
+        return s << "TTaggerHit: Electrons=" << Electrons.size() << " PhotonEnergy=" << PhotonEnergy << " Time=" << Time;
+    }
 #endif
 
     ClassDef(TTaggerHit, ANT_UNPACKER_ROOT_VERSION)

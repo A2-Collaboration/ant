@@ -5,6 +5,8 @@
 
 namespace ant {
 
+// a slow control record
+// can carry very different types of payload
 struct TSlowControl : TDataRecord
 {
   TSlowControl(const TID& id,
@@ -29,11 +31,9 @@ struct TSlowControl : TDataRecord
   std::string  Name;
   std::string  Description;
 
-  // a slow control record
-  // can carry very different types of payload
-  std::vector<std::int64_t> Payload_Int;
-  std::vector<std::string>  Payload_String;
-  std::vector<double>       Payload_Float;
+  std::vector< TKeyValue<std::int64_t> > Payload_Int;
+  std::vector< TKeyValue<double> >       Payload_Float;
+  std::vector< TKeyValue<std::string> >  Payload_String;
 
   const char* TypeToString() const;
 

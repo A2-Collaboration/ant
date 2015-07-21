@@ -372,8 +372,11 @@ void acqu::FileFormatMk2::FillTDetectorRead(
               TID(ID_upper, ID_lower),
               TSlowControl::Type_t::AcquScaler,
               0, /// \todo estimate some timestamp from ID_lower here?
-              mapping.SlowControlName,
-              ""
+              std_ext::formatter()
+              << Detector_t::ToString(mapping.LogicalChannel.DetectorType)
+              << "/"
+              << mapping.SlowControlName,
+              "" // spare the description
               );
 
         // fill TSlowControl's payload
@@ -383,15 +386,19 @@ void acqu::FileFormatMk2::FillTDetectorRead(
           if(it_map==scalers.cend())
             continue;
           const std::vector<uint32_t>& values = it_map->second;
-          using payload_t = decltype(record_sc->Payload_Int);
           // require strict > to prevent signed/unsigned ambiguity
+          using payload_t = decltype(record_sc->Payload_Int);
           static_assert(sizeof(payload_t::value_type) > sizeof(uint32_t),
                         "Payload_Int not suitable for scaler value");
-          record_sc->Payload_Int.insert(
-                record_sc->Payload_Int.begin(),
-                values.begin(),
-                values.end()
-                );
+          // transform the scaler values to KeyValue entries
+          // in TSlowControl's Payload_Int
+          payload_t& payload = record_sc->Payload_Int;
+          auto do_transform = [&mapping] (uint32_t value) {
+              return TKeyValue<int64_t>{mapping.LogicalChannel.Channel, value};
+          };
+          payload.resize(values.size());
+          transform(values.cbegin(), values.cend(),
+                    payload.begin(), do_transform);
         }
 
         fillQueue(queue, move(record_sc));
@@ -674,31 +681,31 @@ void acqu::FileFormatMk2::HandleEPICSBuffer(
     // fill the payload depending on the EPICS data type
     // upcast float to double and short,byte to long
 
-    for(int16_t elem=0;elem<ch_nElements;elem++) {
+    for(unsigned elem=0;elem<(unsigned)ch_nElements;elem++) {
       switch(ch_datatype) {
       case acqu::EpicsDataTypes_t::BYTE:
-        record->Payload_Int.push_back(*it_byte);
+        record->Payload_Int.push_back({elem, *it_byte});
         break;
       case acqu::EpicsDataTypes_t::SHORT: {
         const int16_t* value = reinterpret_cast<const int16_t*>(addressof(*it_byte));
-        record->Payload_Int.push_back(*value);
+        record->Payload_Int.push_back({elem, *value});
         break;
       }
       case acqu::EpicsDataTypes_t::LONG: {
         const int64_t* value = reinterpret_cast<const int64_t*>(addressof(*it_byte));
-        record->Payload_Int.push_back(*value);
+        record->Payload_Int.push_back({elem, *value});
         break;
       }
       case acqu::EpicsDataTypes_t::FLOAT: {
         static_assert(sizeof(float)==4,"Float should be 4 bytes long");
         const float* value = reinterpret_cast<const float*>(addressof(*it_byte));
-        record->Payload_Float.push_back(*value);
+        record->Payload_Float.push_back({elem, *value});
         break;
       }
       case acqu::EpicsDataTypes_t::DOUBLE: {
         static_assert(sizeof(double)==8,"Float should be 8 bytes long");
         const double* value = reinterpret_cast<const double*>(addressof(*it_byte));
-        record->Payload_Float.push_back(*value);
+        record->Payload_Float.push_back({elem, *value});
         break;
       }
       case acqu::EpicsDataTypes_t::STRING: {
@@ -712,7 +719,7 @@ void acqu::FileFormatMk2::HandleEPICSBuffer(
                      );
           return;
         }
-        record->Payload_String.push_back(value);
+        record->Payload_String.push_back({elem, value});
         break;
       }
       default:
