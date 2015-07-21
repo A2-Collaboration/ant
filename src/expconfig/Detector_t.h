@@ -69,6 +69,7 @@ struct LogicalChannel_t {
 };
 
 struct ClusterDetector_t : Detector_t {
+
     struct Element_t : Detector_t::Element_t {
         Element_t(
                 unsigned channel,
@@ -94,10 +95,31 @@ protected:
 struct TaggerDetector_t : Detector_t {
 
     virtual double GetPhotonEnergy(unsigned channel) const = 0;
+    virtual TVector3 GetPosition(unsigned) const final {
+        throw std::runtime_error("You cannot ask a TaggerDetector_t for its position");
+    }
+
 
 protected:
-    TaggerDetector_t(const Type_t& type) :
-        Detector_t(type) {}
+    // Tagger elements don't derive from Detector_t::Element
+    // because positions are not meaningful for them (at least now)
+    struct Element_t {
+        Element_t(unsigned channel, double electronEnergy) :
+            Channel(channel),
+            ElectronEnergy(electronEnergy)
+        {}
+        unsigned Channel;
+        double   ElectronEnergy;
+    };
+
+    double BeamEnergy;
+
+    TaggerDetector_t(const Type_t& type,
+                     double beamEnergy
+                     ) :
+        Detector_t(type),
+        BeamEnergy(beamEnergy)
+    {}
 };
 
 
@@ -133,10 +155,6 @@ inline const char* Detector_t::ToString(const Type_t &type)
         return "CB";
     case Detector_t::Type_t::Cherenkov:
         return "Cherenkov";
-    case Detector_t::Type_t::EPT:
-        return "EPT";
-    case Detector_t::Type_t::Moeller:
-        return "Moeller";
     case Detector_t::Type_t::MWPC0:
         return "MWPC0";
     case Detector_t::Type_t::MWPC1:
@@ -145,6 +163,14 @@ inline const char* Detector_t::ToString(const Type_t &type)
         return "PID";
     case Detector_t::Type_t::Tagger:
         return "Tagger";
+    case Detector_t::Type_t::TaggerMicro:
+        return "TaggerMicro";
+    case Detector_t::Type_t::EPT:
+        return "EPT";
+    case Detector_t::Type_t::Moeller:
+        return "Moeller";
+    case Detector_t::Type_t::PairSpec:
+        return "PairSpec";
     case Detector_t::Type_t::TAPS:
         return "TAPS";
     case Detector_t::Type_t::TAPSVeto:

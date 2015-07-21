@@ -7,6 +7,8 @@ set(SRCS
 
 set(SRCS_DETECTORS
   detectors/Trigger.h
+  detectors/EPT.h
+  detectors/EPT.cc
   detectors/TAPS.h
   detectors/TAPS.cc
   detectors/CB.h
