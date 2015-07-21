@@ -7,6 +7,7 @@ include_directories(
 
 
 set(SRCS
+	CalibrationManager.h
     Calibration.h
     Calibration.cc
     modules/EnergyInvariantMass.h
