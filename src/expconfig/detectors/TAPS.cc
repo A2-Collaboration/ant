@@ -17,7 +17,7 @@ using namespace ant::expconfig::detector;
 
 void TAPS::BuildMappings(
     vector<UnpackerAcquConfig::hit_mapping_t>& hit_mappings,
-    vector<UnpackerAcquConfig::scaler_mapping_t> &) const
+    vector<UnpackerAcquConfig::scaler_mapping_t>&) const
 {
   for(const BaF2_Element_t& element : BaF2_elements)  {
 
@@ -83,7 +83,7 @@ void TAPS::BuildMappings(
 
 }
 
-void TAPS::SetClusterElements()
+void TAPS::InitClusterElements()
 {
   assert(BaF2_elements.size()>0);
 

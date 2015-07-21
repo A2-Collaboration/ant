@@ -1,8 +1,11 @@
 
 #include "ExpConfig.h"
-#include "detectors/CB.h"
-#include "detectors/TAPS.h"
+
 #include "detectors/Trigger.h"
+#include "detectors/CB.h"
+#include "detectors/PID.h"
+#include "detectors/TAPS.h"
+
 #include "unpacker/UnpackerAcqu.h"
 
 #include "base/std_ext.h"
@@ -44,11 +47,14 @@ public:
 
     AddDetector(trigger);
     AddDetector<detector::CB>();
+    AddDetector<detector::PID_2014>();
     AddDetector<detector::TAPS_2013>(false, false); // no Cherenkov, don't use sensitive channels
 
-    // the order of the calibrations is important
+    // the order of the calibrations can be important
     AddCalibration<calibration::TimingCATCH>(Detector_t::Type_t::CB, trigger->Reference_CATCH_CBCrate);
     AddCalibration<calibration::IntegralSADC>(Detector_t::Type_t::CB);
+    AddCalibration<calibration::TimingCATCH>(Detector_t::Type_t::PID, trigger->Reference_CATCH_CBCrate);
+
     AddCalibration<calibration::TimingTAPS>();
     AddCalibration<calibration::IntegralTAPS>();
   }

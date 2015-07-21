@@ -53,24 +53,24 @@ inline std::string ctime(const time_t& time) {
   return string_sanitize(std::ctime(std::addressof(time)));
 }
 
-inline time_t to_time_t(const std::string& str) {
+inline time_t to_time_t(const std::string& str, bool is_end) {
   // try to parse it as ISO standard format
   std::tm tm_str;
   strptime(str.c_str(), "%Y-%m-%d", &tm_str);
   // set the fields not defined by the given string
   tm_str.tm_isdst = 0;
-  tm_str.tm_sec = 0;
-  tm_str.tm_min = 0;
-  tm_str.tm_hour = 0;
+  tm_str.tm_sec = is_end ? 59 : 0;
+  tm_str.tm_min = is_end ? 59 : 0;
+  tm_str.tm_hour = is_end ? 23 : 0;
   return mktime(&tm_str);
 }
 
 inline bool time_before(const time_t& moment, const std::string& before) {
-  return moment<to_time_t(before);
+  return moment<to_time_t(before, true);
 }
 
 inline bool time_after(const time_t& moment, const std::string& after) {
-  return moment>to_time_t(after);
+  return moment>to_time_t(after, false);
 }
 
 inline bool time_between(const time_t& moment,
@@ -84,6 +84,9 @@ std::string getTypeAsString() {
   return abi::__cxa_demangle(typeid(T).name(), nullptr, nullptr, nullptr);
 }
 
+inline double degree_to_radian(const double degree) {
+  return degree * M_PI / 180.0;
+}
 
 // copied from C++14 draft
 // https://isocpp.org/files/papers/N3656.txt

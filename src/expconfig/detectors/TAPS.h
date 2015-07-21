@@ -105,7 +105,7 @@ protected:
     PbWO4_elements(PbWO4s)
   {
     // init clusterelements from given BaF2/PbWO4 elements
-    SetClusterElements();
+    InitClusterElements();
   }
 
 
@@ -119,7 +119,7 @@ private:
   std::vector<PbWO4_Element_t> PbWO4_elements;
 
   // use another storage to make access to data performant
-  void SetClusterElements();
+  void InitClusterElements();
   std::vector<const ClusterDetector_t::Element_t*> clusterelements;
 };
 
@@ -129,7 +129,8 @@ struct TAPS_2013 : TAPS {
       bool cherenkovInstalled,
       bool useSensitiveChannels
       ) :
-   TAPS(cherenkovInstalled, useSensitiveChannels, BaF2_elements_init, PbWO4_elements_init)
+   TAPS(cherenkovInstalled, useSensitiveChannels,
+        BaF2_elements_init, PbWO4_elements_init)
   {}
 
   virtual bool Matches(const THeaderInfo& headerInfo) const override;

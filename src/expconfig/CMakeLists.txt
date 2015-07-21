@@ -11,9 +11,16 @@ set(SRCS_DETECTORS
   detectors/TAPS.cc
   detectors/CB.h
   detectors/CB.cc
+  detectors/PID.h
+  detectors/PID.cc
   detectors/detail/CB_elements.h
   detectors/detail/TAPS_2013_BaF2_elements.h
   detectors/detail/TAPS_2013_PbWO4_elements.h
+  detectors/detail/PID_2004_elements.h
+  detectors/detail/PID_2009_05_elements.h
+  detectors/detail/PID_2009_06_elements.h
+  detectors/detail/PID_2009_07_elements.h
+  detectors/detail/PID_2014_elements.h
 )
 
 include_directories(. ../analysis ../calibration)
