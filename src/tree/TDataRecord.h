@@ -41,10 +41,11 @@ struct TKeyValue
 {
     unsigned Key;
     ValueType Value;
-    TKeyValue(unsigned key, ValueType value) :
-        Key(key), Value(value)
-    {}
+
 #ifndef __CINT__
+    TKeyValue(unsigned key, ValueType value) :
+        Key(key), Value(std::move(value))
+    {}
     virtual std::ostream& Print( std::ostream& s) const override {
         return s << Key << "=" << Value;
     }

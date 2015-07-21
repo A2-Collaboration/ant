@@ -684,28 +684,28 @@ void acqu::FileFormatMk2::HandleEPICSBuffer(
     for(unsigned elem=0;elem<(unsigned)ch_nElements;elem++) {
       switch(ch_datatype) {
       case acqu::EpicsDataTypes_t::BYTE:
-        record->Payload_Int.push_back({elem, *it_byte});
+        record->Payload_Int.emplace_back(elem, *it_byte);
         break;
       case acqu::EpicsDataTypes_t::SHORT: {
         const int16_t* value = reinterpret_cast<const int16_t*>(addressof(*it_byte));
-        record->Payload_Int.push_back({elem, *value});
+        record->Payload_Int.emplace_back(elem, *value);
         break;
       }
       case acqu::EpicsDataTypes_t::LONG: {
         const int64_t* value = reinterpret_cast<const int64_t*>(addressof(*it_byte));
-        record->Payload_Int.push_back({elem, *value});
+        record->Payload_Int.emplace_back(elem, *value);
         break;
       }
       case acqu::EpicsDataTypes_t::FLOAT: {
         static_assert(sizeof(float)==4,"Float should be 4 bytes long");
         const float* value = reinterpret_cast<const float*>(addressof(*it_byte));
-        record->Payload_Float.push_back({elem, *value});
+        record->Payload_Float.emplace_back(elem, *value);
         break;
       }
       case acqu::EpicsDataTypes_t::DOUBLE: {
         static_assert(sizeof(double)==8,"Float should be 8 bytes long");
         const double* value = reinterpret_cast<const double*>(addressof(*it_byte));
-        record->Payload_Float.push_back({elem, *value});
+        record->Payload_Float.emplace_back(elem, *value);
         break;
       }
       case acqu::EpicsDataTypes_t::STRING: {
@@ -719,7 +719,7 @@ void acqu::FileFormatMk2::HandleEPICSBuffer(
                      );
           return;
         }
-        record->Payload_String.push_back({elem, value});
+        record->Payload_String.emplace_back(elem, value);
         break;
       }
       default:
