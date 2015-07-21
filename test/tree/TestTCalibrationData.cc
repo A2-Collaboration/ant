@@ -29,18 +29,18 @@ void dotest()
     ant::TCalibrationData* cdata = new ant::TCalibrationData(tmpfile.filename,ant::TID(0,0,false),ant::TID(0,1,true));
     tree->Branch("cdata",cdata);
 
-    ant::TCalibrationData* cdata2 = new ant::TCalibrationData(tmpfile.filename,ant::TID(10,11,false),
-                                                              ant::TID(12,13,true),
-                                                              {1,1.});
-    tree->Branch("cdata2",cdata2);
-
-    //test 3rd constructor
-    REQUIRE_NOTHROW(ant::TCalibrationData* cdata3 = new ant::TCalibrationData(tmpfile.filename,
+    ant::TCalibrationData* cdata2 = new ant::TCalibrationData("Martin Wolfes", "Full initializer",
+                                                              1234567890,
+                                                              tmpfile.filename,
                                                               ant::TID(10,11,false),
                                                               ant::TID(12,13,true),
-                                                              {{1,1.},
-                                                               {2,2.}});
-                   );
+                                                              { {1,1.},
+                                                                {2,2.1}}
+                                                              );
+    tree->Branch("cdata2",cdata2);
+
+    cdata->Author  = "Martin Wolfes";
+    cdata->Comment = "This is a test, [junk]";
 
 
     cdata->Data.push_back(ant::TCalibrationEntry(1,2.1));
@@ -50,11 +50,6 @@ void dotest()
 
     cout << cdata << endl;
     cout << cdata2 << endl;
-
-
-
-
-
 
     f.Write();
     f.Close();
@@ -82,6 +77,6 @@ void dotest()
     REQUIRE(readcdata->Data.size() == 2);
 
     tree->GetEntry(2);
-    REQUIRE(readcdata2->Data.back().Value == 1);
+    REQUIRE(readcdata2->Data.back().Value == 2.1);
 
 }
