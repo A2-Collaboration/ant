@@ -1,0 +1,32 @@
+# ant code style
+# To be tested. not yet the same as in qt-creator
+#
+
+## Brackets
+
+# backet style (alwas open on new line)
+--style=allman
+
+# backet opens in the same line for namespaces and classes
+--attach-namespaces
+--attach-classes
+
+## Indentation
+--indent=spaces=2
+--min-conditional-indent=0
+
+## Pointers
+--align-pointer=type
+--align-reference=type
+
+## Parentheses
+--unpad-paren
+--pad-header
+--pad-oper
+
+## Blocks and Lines
+--keep-one-line-blocks
+--delete-empty-lines
+--break-blocks
+--fill-empty-lines
+--max-code-length=80
