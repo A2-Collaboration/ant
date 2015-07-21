@@ -35,10 +35,14 @@ shared_ptr<T> ExpConfig::Get_(const THeaderInfo& header) {
 
   // check if something reasonable is left
   if(modules.empty()) {
-    throw ExpConfig::Exception("No config found for header "+header.Description);
+    throw ExpConfig::Exception(std_ext::formatter()
+                               << "No config found for header "
+                               << header);
   }
   if(modules.size()>1) {
-    throw ExpConfig::Exception("More than one config found for header "+header.Description);
+    throw ExpConfig::Exception(std_ext::formatter()
+                               << "More than one config found for header "
+                               << header);
   }
 
   // only one instance found, now try to cast it to the
