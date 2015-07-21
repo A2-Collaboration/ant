@@ -12,10 +12,11 @@
 
 #include "reconstruct/Reconstruct_traits.h"
 #include "calibration/modules/EnergyInvariantMass.h"
-#include "calibration/modules/TimingCATCH.h"
 #include "calibration/modules/IntegralSADC.h"
-#include "calibration/modules/TimingTAPS.h"
 #include "calibration/modules/IntegralTAPS.h"
+#include "calibration/modules/IntegralCAEN.h"
+#include "calibration/modules/TimingCATCH.h"
+#include "calibration/modules/TimingTAPS.h"
 
 
 namespace ant {
@@ -54,7 +55,7 @@ public:
     AddCalibration<calibration::TimingCATCH>(Detector_t::Type_t::CB, trigger->Reference_CATCH_CBCrate);
     AddCalibration<calibration::IntegralSADC>(Detector_t::Type_t::CB);
     AddCalibration<calibration::TimingCATCH>(Detector_t::Type_t::PID, trigger->Reference_CATCH_CBCrate);
-
+    AddCalibration<calibration::IntegralCAEN>(Detector_t::Type_t::PID);
     AddCalibration<calibration::TimingTAPS>();
     AddCalibration<calibration::IntegralTAPS>();
   }

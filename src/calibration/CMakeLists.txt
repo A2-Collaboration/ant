@@ -15,6 +15,8 @@ set(SRCS
     modules/TimingCATCH.h
     modules/IntegralSADC.cc
     modules/IntegralSADC.h
+    modules/IntegralCAEN.cc
+    modules/IntegralCAEN.h
     modules/TimingTAPS.cc
     modules/TimingTAPS.h
     modules/IntegralTAPS.cc

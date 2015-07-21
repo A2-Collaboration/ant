@@ -20,8 +20,8 @@ class TEvent;
  */
 class CalibrationApply_traits {
 public:
-  virtual void ApplyTo(const std::map< Detector_t::Type_t, std::list< TDetectorReadHit* > >& hits) = 0;
-  virtual void ApplyTo(std::unique_ptr<TEvent>& event) = 0;
+    virtual void ApplyTo(const std::map< Detector_t::Type_t, std::list< TDetectorReadHit* > >& hits) = 0;
+    virtual void ApplyTo(std::unique_ptr<TEvent>& event) = 0;
 };
 
 
@@ -31,8 +31,8 @@ public:
  */
 class Updateable_traits {
 public:
-  virtual void BuildRanges(std::list<TID>& ranges) = 0;
-  virtual void Update(const TID& id) = 0;
+    virtual void BuildRanges(std::list<TID>& ranges) = 0;
+    virtual void Update(const TID& id) = 0;
 };
 
 } // namespace ant
