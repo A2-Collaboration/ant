@@ -15,6 +15,7 @@ set(SRCS_DETECTORS
   detectors/CB.cc
   detectors/PID.h
   detectors/PID.cc
+  detectors/detail/EPT_2014_elements.h
   detectors/detail/CB_elements.h
   detectors/detail/TAPS_2013_BaF2_elements.h
   detectors/detail/TAPS_2013_PbWO4_elements.h

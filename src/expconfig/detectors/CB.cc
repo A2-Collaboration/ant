@@ -2,7 +2,7 @@
 #include <cassert>
 #include "base/std_ext.h"
 
-#include "detail/CB_elements.h" // defines all_elements
+#include "detail/CB_elements.h"
 
 using namespace std;
 using namespace ant;

@@ -5,6 +5,7 @@
 #include "detectors/CB.h"
 #include "detectors/PID.h"
 #include "detectors/TAPS.h"
+#include "detectors/EPT.h"
 
 #include "unpacker/UnpackerAcqu.h"
 
@@ -47,6 +48,7 @@ public:
         const auto trigger = std::make_shared<detector::Trigger>();
 
         AddDetector(trigger);
+        AddDetector<detector::EPT_2014>(GetBeamEnergy());
         AddDetector<detector::CB>();
         AddDetector<detector::PID_2014>();
         AddDetector<detector::TAPS_2013>(false, false); // no Cherenkov, don't use sensitive channels
