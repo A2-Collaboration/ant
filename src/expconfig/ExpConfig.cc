@@ -1,6 +1,8 @@
 #include "ExpConfig.h"
 
-#include "setups/Setup_2014_EtaPrime.h"
+//#include "setups/Setup_2014_EtaPrime.h"
+
+#include <Setup.h>
 
 #include "tree/THeaderInfo.h"
 #include "unpacker/UnpackerAcqu.h"
@@ -9,14 +11,11 @@
 
 #include <type_traits>
 #include <list>
+#include <iostream>
 
 using namespace std;
 
 namespace ant { // templates need explicit namespace
-
-const std::list< std::shared_ptr<ExpConfig::Base> > ExpConfig::modules_available = {
-  std::make_shared<expconfig::setup::Setup_2014_EtaPrime>()
-};
 
 template<typename T>
 shared_ptr<T> ExpConfig::Get_(const THeaderInfo& header) {
@@ -25,8 +24,9 @@ shared_ptr<T> ExpConfig::Get_(const THeaderInfo& header) {
 
   static_assert(is_base_of<Base, T>::value, "T must be a base of ExpConfig::Base");
 
-  // make a copy of the list of available configs
-  std::list< std::shared_ptr<Base> > modules = modules_available;
+  // make a copy of the list of registered configs
+  auto& registry = expconfig::SetupRegistry::get();
+  std::list< std::shared_ptr<Base> > modules(registry.begin(), registry.end());
 
   // remove the config if the config says it does not match
   modules.remove_if([&header] (const shared_ptr<Base>& m) {

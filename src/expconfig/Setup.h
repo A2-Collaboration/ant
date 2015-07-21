@@ -4,6 +4,7 @@
 #include "ExpConfig.h"
 #include "unpacker/UnpackerAcqu.h"
 #include "base/std_ext.h"
+#include "tree/THeaderInfo.h"
 
 // this header always includes all detectors and calibrations
 // for convinient access in the derived classes
@@ -21,6 +22,7 @@
 #include "calibration/modules/TimingCATCH.h"
 #include "calibration/modules/TimingTAPS.h"
 
+#include <functional>
 
 namespace ant {
 namespace expconfig {
@@ -30,6 +32,12 @@ class Setup :
         public ExpConfig::Reconstruct,
         public UnpackerAcquConfig
 {
+public:
+    // every setup should have a name,
+    // does not need to be unique as long as the matching
+    // is unique
+    /// \todo Implement cmdline match override to make this meaningful...
+    virtual std::string GetName() const = 0;
 
 protected:
     Setup() = default;
@@ -85,6 +93,40 @@ protected:
     std::list< std::shared_ptr<Detector_t> > detectors;
     std::list< std::shared_ptr<CalibrationApply_traits> > calibrations;
 };
+
+// stuff for semiauto-registering the setups
+
+template<class T>
+std::shared_ptr<Setup> setup_factory()
+{
+    return std::move(std::make_shared<T>());
+}
+
+using setup_creator = std::function<std::shared_ptr<Setup>()>;
+
+class SetupRegistry
+{
+private:
+    using setup_creators_t = std::list<setup_creator>;
+    using setups_t = std::list< std::shared_ptr<Setup> >;
+    setup_creators_t setup_creators;
+    setups_t setups;
+    void init_setups();
+public:
+    static SetupRegistry& get();
+    void add(setup_creator);
+    setups_t::iterator begin();
+    setups_t::iterator end();
+};
+
+class SetupRegistration
+{
+public:
+    SetupRegistration(setup_creator);
+};
+
+#define AUTO_REGISTER_SETUP(setup) \
+    SetupRegistration _setup_registration_ ## setup(setup_factory<setup>);
 
 }} // namespace ant::expconfig
 

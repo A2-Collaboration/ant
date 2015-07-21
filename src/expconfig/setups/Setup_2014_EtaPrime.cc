@@ -8,6 +8,9 @@ class Setup_2014_EtaPrime :
         public Setup
 {
 public:
+    virtual std::string GetName() const override {
+        return "Setup_2014_EtaPrime";
+    }
 
     Setup_2014_EtaPrime() {
         const auto trigger = std::make_shared<detector::Trigger>();
@@ -47,5 +50,8 @@ public:
         // for example, ignore elements
     }
 };
+
+// don't forget registration
+AUTO_REGISTER_SETUP(Setup_2014_EtaPrime)
 
 }}} // namespace ant::expconfig::setup

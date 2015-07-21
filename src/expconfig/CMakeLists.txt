@@ -2,8 +2,13 @@ set(SRCS
   ExpConfig.cc
   ExpConfig.h
   Detector_t.h
+  )
+
+set(SRCS_SETUPS
   Setup.h
-  setups/Setup_2014_EtaPrime.h
+  Setup.cc
+  setups/Setup_2014_EtaPrime.cc
+  setups/Setup_2015_dummy.cc
   )
 
 set(SRCS_DETECTORS
@@ -34,5 +39,8 @@ include_directories(. ../analysis ../calibration)
 add_library(expconfig-detectors ${SRCS_DETECTORS})
 target_link_libraries(expconfig-detectors ${ROOT_LIBRARIES})
 
+add_library(expconfig-setups ${SRCS_SETUPS})
+target_link_libraries(expconfig-setups expconfig-detectors calibration)
+
 add_library(expconfig ${SRCS})
-target_link_libraries(expconfig expconfig-detectors calibration)
+target_link_libraries(expconfig expconfig-setups)

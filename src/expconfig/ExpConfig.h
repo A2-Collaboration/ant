@@ -56,7 +56,6 @@ public:
     };
 
 private:
-    static const std::list< std::shared_ptr<ExpConfig::Base> > modules_available;
     template<typename T>
     static std::shared_ptr<T> Get_(const THeaderInfo& header);
 };
