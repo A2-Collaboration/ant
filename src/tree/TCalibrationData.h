@@ -10,18 +10,6 @@
 
 namespace ant {
 
-struct TCalibrationEntry
-{
-    uint32_t Key;
-    double   Value;
-
-    TCalibrationEntry() : Key(), Value() {}
-    TCalibrationEntry(unsigned key, double value) : Key(key), Value(value) {}
-
-    virtual ~TCalibrationEntry(){}
-    ClassDef(TCalibrationEntry, ANT_CALIBRATION_DATA_VERSION)
-};
-
 #ifndef __CINT__
 struct TCalibrationData : printable_traits
         #else
@@ -38,6 +26,7 @@ struct TCalibrationData
     TID FirstID;
     TID LastID;
 
+    typedef TKeyValue<double> TCalibrationEntry;
     std::vector<TCalibrationEntry> Data;
 
     TCalibrationData() :

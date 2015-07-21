@@ -43,9 +43,9 @@ void dotest()
     cdata->Comment = "This is a test, [junk]";
 
 
-    cdata->Data.push_back(ant::TCalibrationEntry(1,2.1));
+    cdata->Data.emplace_back(1,2.1);
     tree->Fill();
-    cdata->Data.push_back(ant::TCalibrationEntry(2,3.2));
+    cdata->Data.emplace_back(2,3.2);
     tree->Fill();
 
     cout << cdata << endl;
