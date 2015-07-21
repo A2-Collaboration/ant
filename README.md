@@ -25,6 +25,15 @@ but this is WIP.
   * [Catch] (https://github.com/philsquared/Catch) (framework for unit-tests, TDD)
   * [TCLAP - Templatized C++ Command Line Parser] (http://tclap.sourceforge.net)
 
+## Coding Style
+  * Indentation: 4 spaces, no tabs
+  * Ant-Codesytle defined in doc/Ant-Codestyle.xml
+  * Includes
+   * header file for this .cc file first
+   * then grouped by ant, ROOT, STL, others
+   * one line between groups
+   * each group ordered alphabetically
+
 ## GoAT File Reader
 
 Almost implemented.
