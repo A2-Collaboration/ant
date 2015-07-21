@@ -39,7 +39,7 @@ struct TKeyValue  : printable_traits
 struct TKeyValue
 #endif
 {
-    unsigned Key;
+    std::uint32_t  Key;
     ValueType Value;
 
 #ifndef __CINT__
