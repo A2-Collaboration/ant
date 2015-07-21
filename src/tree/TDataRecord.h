@@ -44,16 +44,19 @@ struct TKeyValue
     TKeyValue(unsigned key, ValueType value) :
         Key(key), Value(value)
     {}
-    TKeyValue() : Key(), Value() {}
-    // do not track versions, since this will never change!
-    ClassDef(TKeyValue, 0)
-    virtual ~TKeyValue() {}
 #ifndef __CINT__
     virtual std::ostream& Print( std::ostream& s) const override {
         return s << Key << "=" << Value;
     }
 #endif
-}; // TKeyValue
+    TKeyValue() : Key(), Value() {}
+    virtual ~TKeyValue() {}
+    // for some very strange reason,
+    // ClassDef MUST NOT be used here
+    // otherwise reading it from the tree gives a segfault!
+    // Anyhow, reading/writing still works...
+    // ClassDef(TKeyValue,0)
+}; // TKeyValue<ValueType>
 
 #ifndef __CINT__
 struct TID  : printable_traits
