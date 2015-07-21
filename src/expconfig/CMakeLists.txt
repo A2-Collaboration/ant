@@ -2,6 +2,7 @@ set(SRCS
   ExpConfig.cc
   ExpConfig.h
   Detector_t.h
+  Setup.h
   setups/Setup_2014_EtaPrime.h
   )
 
