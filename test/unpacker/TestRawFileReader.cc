@@ -44,7 +44,7 @@ TEST_CASE("Test RawFileReader: uint32_t endianness","[unpacker]") {
 }
 
 void doendianness() {
-  tmpfile_t f;
+  ant::tmpfile_t f;
 
   f.testdata = {0x10, 0x20, 0x30, 0x40};
   f.write_testdata();
@@ -65,7 +65,7 @@ void dotest(bool compress,
             streamsize totalSize,
             streamsize chunkSize,
             streamsize inbufSize) {
-  tmpfile_t f;
+  ant::tmpfile_t f;
   // write some testdata to given temporary filename
   f.testdata.resize(totalSize);
   //int n(0);

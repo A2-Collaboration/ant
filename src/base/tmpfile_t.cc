@@ -8,6 +8,7 @@
 #include <fstream>
 
 using namespace std;
+using namespace ant;
 
 tmpfile_t::tmpfile_t() : filename(), testdata()
 {

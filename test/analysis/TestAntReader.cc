@@ -1,25 +1,24 @@
 #include "catch.hpp"
+#include "catch_config.h"
+
 #include "analysis/input/ant/AntReader.h"
 #include "analysis/data/Event.h"
-#include "base/Logger.h"
-#include "base/TFileWrapper.h"
-#include <string>
-#include <iostream>
-#include "unpacker/Unpacker.h"
-#include "expconfig/ExpConfig.h"
 
 #include "tree/THeaderInfo.h"
-#include "tree/TUnpackerMessage.h"
-#include "tree/TSlowControl.h"
 #include "tree/TDetectorRead.h"
 #include "tree/TEvent.h"
-#include "TTree.h"
-#include "unpacker/RawFileReader.h"
-#include "catch_config.h"
-#include "base/tmpfile_t.h"
 
+#include "expconfig/ExpConfig.h"
+#include "unpacker/Unpacker.h"
 #include "reconstruct/Reconstruct.h"
 
+#include "base/TFileWrapper.h"
+#include "base/tmpfile_t.h"
+
+#include "TTree.h"
+
+#include <string>
+#include <iostream>
 
 using namespace std;
 using namespace ant;
@@ -28,7 +27,7 @@ using namespace ant::input;
 void dotest();
 void generateInputFile(const std::string& filename);
 
-TEST_CASE("AntInput", "[analysis]") {
+TEST_CASE("AntReader", "[analysis]") {
     dotest();
 }
 
@@ -43,11 +42,14 @@ void dotest() {
 
     reader.Initialize();
 
-    unsigned int n = 0;
-    while(reader.hasData() && (n++ < 10)) {
+    unsigned int nEvents = 0;
+    while(reader.hasData()) {
         auto event = reader.ReadNextEvent();
-        cout << *event << endl;
+        REQUIRE(event != nullptr);
+        REQUIRE(event->Reconstructed().Tracks().size()>0);
+        nEvents++;
     }
+    REQUIRE(nEvents==222);
 }
 
 

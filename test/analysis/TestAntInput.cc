@@ -1,48 +1,78 @@
-#include "tree/TEvent.h"
-#include "TFile.h"
-#include "TTree.h"
+#include "catch.hpp"
+
 #include "analysis/input/ant/detail/Convert.h"
 #include "analysis/data/Event.h"
+
+#include "tree/TEvent.h"
+
 #include <iostream>
 
 using namespace std;
 using namespace ant;
 
+void dotest();
 
-int main() {
+TEST_CASE("AntInput", "[analysis]") {
+    dotest();
+}
 
-    TFile f2("TEvent_test.root","READ");
+void dotest() {
 
-    if(!f2.IsOpen()) {
-        cerr << "can't ope file" << endl;
-        return 1;
-    }
+    ant::TEvent* event = new ant::TEvent();
 
-    TTree* tree(nullptr);
+    //======= Track 1 =============
 
-    f2.GetObject("teventtest", tree);
+    event->Tracks.push_back(
+          ant::TTrack(200,1,2,2,{})
+          );
 
-    if(tree==nullptr) {
-        cerr << "Tree not found" << endl;
-        return 2;
-    }
+    event->Tracks.back().Clusters.push_back(
+          ant::TCluster(TVector3(25,0,0), 270, ant::Detector_t::Type_t::CB)
+          );
 
-    TEvent* readback = nullptr;
 
-    tree->SetBranchAddress("event",&readback);
+    event->Tracks.back().Clusters.back().Hits.push_back(
+          ant::TClusterHit(110, {
+                             {ant::Channel_t::Type_t::Integral, 150}, // MeV
+                             {ant::Channel_t::Type_t::Timing, -290}   // ns
+                           })
+          );
 
-    if(tree->GetEntries()!=1)
-        return 2;
+    event->Tracks.back().Clusters.back().Hits.push_back(
+          ant::TClusterHit(220, {
+                             {ant::Channel_t::Type_t::Integral, 120}, // MeV
+                             {ant::Channel_t::Type_t::Timing, -280}   // ns
+                           })
+          );
 
-    tree->GetEntry(0);
+    event->Tracks.back().Clusters.push_back(
+          ant::TCluster(TVector3(10,0,0), 5, ant::Detector_t::Type_t::PID)
+          );
 
-    cout << *readback << endl;
+    event->Tracks.back().Clusters.back().Hits.push_back(
+          ant::TClusterHit(20, {{ant::Channel_t::Type_t::Integral, 4}})
+          );
 
-    auto antevent = ant::input::Convert(*readback);
+    //======= Track 2 =============
+    event->Tracks.push_back(
+          ant::TTrack(300,0.5,2,3)
+          );
+    event->Tracks.back().Clusters.push_back(
+          ant::TCluster(TVector3(25,10,0),300,ant::Detector_t::Type_t::TAPS)
+          );
+    event->Tracks.back().Clusters.push_back(
+          ant::TCluster(TVector3(10,1,0),5, ant::Detector_t::Type_t::TAPSVeto)
+          );
+
+    cout << *event << endl;
+
+    shared_ptr<ant::Event> antevent = ant::input::Convert(*event);
 
     cout << *antevent << endl;
 
-    return 0;
+    REQUIRE(antevent->Reconstructed().Tracks().size() == 2);
+    /// \todo Write more REQUIRE stuff here
+
 }
 
 

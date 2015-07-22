@@ -19,7 +19,7 @@ TEST_CASE("TEvent: Write to TTree", "[tree]") {
 }
 
 void dotest() {
-  tmpfile_t tmpfile;
+  ant::tmpfile_t tmpfile;
 
 
   TFile f(tmpfile.filename.c_str(),"RECREATE");

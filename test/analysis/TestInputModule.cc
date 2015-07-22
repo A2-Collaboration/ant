@@ -1,3 +1,5 @@
+#include "catch.hpp"
+
 #include "analysis/input/detail/FileManager.h"
 #include "analysis/input/goat/detail/TreeManager.h"
 #include "analysis/input/goat/detail/PlutoInput.h"
@@ -14,6 +16,13 @@
 
 using namespace ant::input;
 using namespace std;
+
+void dotest();
+
+TEST_CASE("InputModule", "[analysis]") {
+    dotest();
+}
+
 
 class MyTreeRequestMgr: public TreeRequestManager {
 protected:
@@ -34,13 +43,11 @@ public:
     }
 };
 
-int main(int argc, char** argv) {
+void dotest() {
 
     FileManager m;
 
-    for(int i = 1; i < argc; ++i) {
-        m.OpenFile(argv[i]);
-    }
+    /// \todo Open some reasonable file here
 
     TreeManager treeManager;
 

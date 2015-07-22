@@ -47,7 +47,7 @@ void dotest(Long64_t expectedEntries) {
 
     const string& classname = ant::std_ext::getTypeAsString<T>();
 
-    tmpfile_t tmpfile;
+    ant::tmpfile_t tmpfile;
 
     auto unpacker = ant::Unpacker::Get(string(TEST_BLOBS_DIRECTORY)+"/Acqu_oneevent-big.dat.xz");
 

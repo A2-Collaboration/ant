@@ -11,6 +11,9 @@
  *
  * Mostly used by tests, but maybe helpful elsewhere
  */
+
+namespace ant {
+
 struct tmpfile_t {
   std::string filename;
   std::vector<std::uint8_t> testdata;
@@ -18,5 +21,7 @@ struct tmpfile_t {
   void write_testdata();
   ~tmpfile_t();
 };
+
+}
 
 #endif // TMPFILE_T_H

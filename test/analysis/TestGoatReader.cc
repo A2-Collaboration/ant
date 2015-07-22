@@ -1,3 +1,5 @@
+#include "catch.hpp"
+
 #include "analysis/input/goat/GoatReader.h"
 #include "analysis/data/Event.h"
 
@@ -6,13 +8,20 @@
 using namespace std;
 using namespace ant;
 
-int main(int argc, char** argv) {
+void dotest();
+
+
+TEST_CASE("GoatReader", "[analysis]") {
+    dotest();
+}
+
+void dotest() {
 
     ant::input::GoatReader g;
 
-    for(int i = 1; i < argc; ++i) {
-        g.AddInputFile(argv[i]);
-    }
+    /// \todo Generate or read some Goat file?
+
+    g.AddInputFile("NOTTHEREYET");
 
     g.Initialize();
 
@@ -21,6 +30,4 @@ int main(int argc, char** argv) {
         auto event = g.ReadNextEvent();
         cout << *event << endl;
     }
-
-    return 0;
 }
