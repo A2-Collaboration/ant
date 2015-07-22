@@ -31,15 +31,6 @@ set(_CMAKE_SCRIPT_PATH ${CMAKE_CURRENT_LIST_DIR}) # must be outside coveralls_se
 
 function(coveralls_setup _COVERAGE_SRCS _COVERALLS_UPLOAD)
 
-	if (ARGC GREATER 2)
-		set(_CMAKE_SCRIPT_PATH ${ARGN})
-		message(STATUS "Coveralls: Using alternate CMake script dir: ${_CMAKE_SCRIPT_PATH}")
-	endif()
-
-	if (NOT EXISTS "${_CMAKE_SCRIPT_PATH}/CoverallsClear.cmake")
-		message(FATAL_ERROR "Coveralls: Missing ${_CMAKE_SCRIPT_PATH}/CoverallsClear.cmake")
-	endif()
-
 	if (NOT EXISTS "${_CMAKE_SCRIPT_PATH}/CoverallsGenerateGcov.cmake")
 		message(FATAL_ERROR "Coveralls: Missing ${_CMAKE_SCRIPT_PATH}/CoverallsGenerateGcov.cmake")
 	endif()
@@ -61,13 +52,6 @@ function(coveralls_setup _COVERAGE_SRCS _COVERALLS_UPLOAD)
 	set(COVERALLS_FILE ${PROJECT_BINARY_DIR}/coveralls.json)
 
 	add_custom_target(coveralls_generate
-
-		# Zero the coverage counters.
-		COMMAND ${CMAKE_COMMAND} -DPROJECT_BINARY_DIR="${PROJECT_BINARY_DIR}" -P "${_CMAKE_SCRIPT_PATH}/CoverallsClear.cmake"
-
-		# Run tests
-		COMMAND ${CMAKE_CTEST_COMMAND} --output-on-failure
-
 		# Generate Gcov and translate it into coveralls JSON.
 		# We do this by executing an external CMake script.
 		# (We don't want this to run at CMake generation time, but after compilation and everything has run).

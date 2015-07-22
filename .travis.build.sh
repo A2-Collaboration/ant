@@ -63,4 +63,3 @@ mkdir build && cd build
 cmake -DCOVERALLS=On -DCMAKE_BUILD_TYPE=Debug ..
 make -j2
 make build_and_test
-make coveralls
