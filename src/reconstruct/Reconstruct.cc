@@ -7,6 +7,7 @@
 #include "tree/TDataRecord.h"
 #include "tree/TDetectorRead.h"
 #include "tree/TEvent.h"
+#include "TrackBuilder.h"
 
 #include "base/std_ext.h"
 
@@ -285,4 +286,9 @@ unique_ptr<TEvent> Reconstruct::DoReconstruct(TDetectorRead& detectorRead)
     //cout << *event << endl;
 
     return event;
+}
+
+Reconstruct::~Reconstruct()
+{
+
 }

@@ -6,13 +6,17 @@
 
 #include "Reconstruct_traits.h"
 #include "tree/TEvent.h"
-#include "TrackBuilder.h"
+
 
 
 namespace ant {
 
 class THeaderInfo;
 class TDetectorRead;
+
+namespace reconstruct {
+class TrackBuilder;
+}
 
 class Reconstruct {
 public:
@@ -24,6 +28,8 @@ public:
     // this method converts a TDetectorRead
     // into a calibrated TEvent
     std::unique_ptr<TEvent> DoReconstruct(TDetectorRead& detectorRead);
+
+    ~Reconstruct();
 
 private:
     template<typename T>
