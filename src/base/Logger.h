@@ -3,6 +3,7 @@
 
 // STL container printout made easy...
 #define ELPP_STL_LOGGING
+#define ELPP_DISABLE_DEFAULT_CRASH_HANDLING
 
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Weffc++"
