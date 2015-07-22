@@ -21,6 +21,4 @@ cache:
   
 script: ./.travis.build.sh
 
-after_success:
-  - cd build && make coveralls
-  - bash <(curl -s https://codecov.io/bash)
+after_success: ./.travis.aftersuccess.sh
