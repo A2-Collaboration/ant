@@ -1,7 +1,6 @@
 #ifndef TRACKINPUT_H
 #define TRACKINPUT_H
 
-#include "FileManager.h"
 #include "InputModule.h"
 #include "Rtypes.h"
 #include <vector>

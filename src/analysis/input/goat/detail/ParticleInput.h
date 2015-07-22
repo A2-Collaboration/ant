@@ -1,7 +1,6 @@
 #ifndef PARTICLEINPUT_H
 #define PARTICLEINPUT_H
 
-#include "FileManager.h"
 #include "InputModule.h"
 #include "Rtypes.h"
 #include <vector>

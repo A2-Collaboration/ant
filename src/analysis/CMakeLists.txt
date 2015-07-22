@@ -44,11 +44,13 @@ set(ANALYSIS_DATASTRUCTURES
   data/TriggerInfo.cc
 )
 
+set(ANALYSIS_INPUT
+  input/detail/FileManager.cc
+)
+
 set(ANALYSIS_INPUT_GOAT
   input/goat/detail/InputModule.h
   input/goat/detail/InputModule.cc
-  input/goat/detail/FileManager.h
-  input/goat/detail/FileManager.cc
   input/goat/detail/PlutoWrapper.h
   input/goat/detail/PlutoWrapper.cc
   input/goat/detail/PlutoInput.h
@@ -74,6 +76,7 @@ set(ANALYSIS_INPUT_GOAT
 set(ANALYSIS_INPUT_ANT
   input/ant/detail/Convert.cc
   input/ant/detail/Convert.h
+  input/ant/AntReader.cc
 )
 
 set(ANALYSIS_PHYSICS
@@ -97,6 +100,7 @@ set(ANALYSIS_ALL
     ${ANALYSIS_BASE}
     ${ANALYSIS_PLOT}
     ${ANALYSIS_DATASTRUCTURES}
+    ${ANALYSIS_INPUT}
     ${ANALYSIS_INPUT_GOAT}
     ${ANALYSIS_INPUT_ANT}
     ${ANALYSIS_PHYSICS}

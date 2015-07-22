@@ -1,7 +1,7 @@
 #ifndef INPUTMODULE_H
 #define INPUTMODULE_H
 
-#include "FileManager.h"
+#include <string>
 
 class TTree;
 

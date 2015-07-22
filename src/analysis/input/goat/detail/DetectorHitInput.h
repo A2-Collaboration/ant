@@ -1,7 +1,6 @@
 #ifndef DETECTORHITINPUT_H
 #define DETECTORHITINPUT_H
 
-#include "FileManager.h"
 #include "InputModule.h"
 #include "Rtypes.h"
 #include <vector>

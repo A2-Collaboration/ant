@@ -1,7 +1,6 @@
 #ifndef GEANTINPUT_H
 #define GEANTINPUT_H
 
-#include "FileManager.h"
 #include "InputModule.h"
 #include <vector>
 #include <stdexcept>

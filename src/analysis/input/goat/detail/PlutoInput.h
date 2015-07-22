@@ -1,7 +1,6 @@
 #ifndef PLUTOINPUT_H
 #define PLUTOINPUT_H
 
-#include "FileManager.h"
 #include "InputModule.h"
 #include <vector>
 #include "Rtypes.h"

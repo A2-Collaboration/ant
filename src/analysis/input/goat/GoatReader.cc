@@ -7,6 +7,8 @@
 #include "TTree.h"
 
 #include "detail/PlutoWrapper.h"
+#include "input/detail/FileManager.h"
+#include "detail/TreeManager.h"
 
 #include "base/Logger.h"
 
@@ -250,13 +252,17 @@ void GoatReader::CopyParticles(std::shared_ptr<Event> &event, ParticleInput &inp
     }
 }
 
-GoatReader::GoatReader(): pluto_database(makeStaticData())
+GoatReader::GoatReader():
+    files(new FileManager), trees(new TreeManager), pluto_database(makeStaticData())
 {
 }
 
+GoatReader::~GoatReader() {}
+
+
 void GoatReader::AddInputFile(const std::string &filename)
 {
-    files.OpenFile(filename);
+    files->OpenFile(filename);
 }
 
 class MyTreeRequestMgr: public TreeRequestManager {
@@ -290,7 +296,7 @@ void GoatReader::Initialize()
 {
     for(auto module = active_modules.begin(); module != active_modules.end(); ) {
 
-        if( (*module)->SetupBranches( MyTreeRequestMgr(files, trees))) {
+        if( (*module)->SetupBranches( MyTreeRequestMgr(*files, *trees))) {
             module++;
         } else {
             module = active_modules.erase(module);
@@ -304,7 +310,7 @@ void GoatReader::Initialize()
 
 Long64_t GoatReader::GetNEvents() const
 {
-    return trees.GetEntries();
+    return trees->GetEntries();
 }
 
 bool GoatReader::hasData() const {
@@ -329,7 +335,7 @@ void GoatReader::SetMaxEntries(const long long max)
 std::shared_ptr<Event> GoatReader::ReadNextEvent()
 {
     ++current_entry;
-    trees.GetEntry(current_entry);
+    trees->GetEntry(current_entry);
 
     active_modules.GetEntry();
 

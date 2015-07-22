@@ -1,4 +1,4 @@
-#include "analysis/input/goat/detail/FileManager.h"
+#include "analysis/input/detail/FileManager.h"
 #include "analysis/input/goat/detail/TreeManager.h"
 #include "analysis/input/goat/detail/PlutoInput.h"
 #include "analysis/input/goat/detail/TrackInput.h"

@@ -8,8 +8,6 @@
 #include <string>
 #include <list>
 
-#include "detail/FileManager.h"
-#include "detail/TreeManager.h"
 #include "detail/InputModule.h"
 
 #include "detail/TriggerInput.h"
@@ -25,6 +23,9 @@ class PStaticData;
 
 namespace ant {
 namespace input {
+
+class FileManager;
+class TreeManager;
 
 class GoatReader: public DataReader {
 protected:
@@ -46,8 +47,8 @@ protected:
         }
     };
 
-    FileManager   files;
-    TreeManager   trees;
+    std::unique_ptr<FileManager>   files;
+    std::unique_ptr<TreeManager>   trees;
 
 
     TriggerInput        trigger;
@@ -99,7 +100,7 @@ protected:
 
 public:
     GoatReader();
-    virtual ~GoatReader() = default;
+    virtual ~GoatReader();
     GoatReader(const GoatReader&) = delete;
     GoatReader& operator= (const GoatReader&) = delete;
 
