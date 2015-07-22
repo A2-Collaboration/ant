@@ -10,14 +10,27 @@
 #include <memory>
 
 namespace ant {
+
+namespace expconfig {
+namespace detector {
+class CB;
+class PID;
+}
+}
+
+
 namespace reconstruct {
 
 class TrackBuilder {
+protected:
+    std::shared_ptr<expconfig::detector::CB>  cb;
+    std::shared_ptr<expconfig::detector::PID> pid;
+
 public:
 
     using sorted_detectors_t = std::map<Detector_t::Type_t, std::shared_ptr<Detector_t> >;
 
-    TrackBuilder(const sorted_detectors_t& sorted_detectors) {}
+    TrackBuilder(const sorted_detectors_t& sorted_detectors);
     virtual ~TrackBuilder() = default;
 
     // this method shall fill the TEvent reference
