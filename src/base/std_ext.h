@@ -9,7 +9,7 @@
 #include <ctime>
 #include <iostream>
 
-#include <cxxabi.h> // works only with GCC?
+#include <cxxabi.h> /// \todo works only with GCC?
 
 namespace ant {
 
