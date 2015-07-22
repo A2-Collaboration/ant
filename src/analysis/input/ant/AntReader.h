@@ -3,11 +3,11 @@
 
 #include "analysis/input/DataReader.h"
 
+#include "Rtypes.h"
+
 #include <memory>
 #include <string>
-#include <list>
 
-#include "Rtypes.h"
 
 class TTree;
 
@@ -22,7 +22,7 @@ class FileManager;
 class AntReader: public DataReader {
 protected:
 
-    std::unique_ptr<ant::input::FileManager>   files;
+    std::unique_ptr<ant::input::FileManager> files;
 
     TTree* tree    = nullptr;
     TEvent* buffer = nullptr;
