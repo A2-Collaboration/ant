@@ -30,7 +30,7 @@ public:
         if(!Setup::Matches(header))
             return false;
         // just to get the Test case working
-        return std_ext::time_between(header.Timestamp, "2015-01-29", "2015-01-29");
+        return header.RunNumber == 7892;
     }
 
     void BuildMappings(std::vector<hit_mapping_t>& hit_mappings,
