@@ -43,6 +43,7 @@ set(SRCS
   Tree.h
   root_printable.h
   root_printable.cc
+  TFileWrapper.cc
 )
 
 set_source_files_properties(detail/format.cc PROPERTIES COMPILE_FLAGS -Wno-effc++)

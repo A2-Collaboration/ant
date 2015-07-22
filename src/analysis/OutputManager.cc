@@ -36,26 +36,3 @@ void OutputManager::SetNewOutput(const string &filename)
     }
 
 }
-
-OutputManager::TFileWrapper::TFileWrapper(const string &filename)
-{
-    TFile* f = new TFile(filename.c_str(), "RECREATE");
-    if(f && f->IsOpen()) {
-        VLOG(5) << "Opened output file " << filename;
-        file = f;
-    } else
-        throw false;
-}
-
-OutputManager::TFileWrapper::~TFileWrapper()
-{
-    if(file) {
-        if(file->IsOpen()) {
-            VLOG(5) << "Syncing output file " << file->GetName();
-            file->Write();
-            file->Close();
-            VLOG(5) << "Closed output file " << file->GetName();
-        }
-        delete file;
-    }
-}
