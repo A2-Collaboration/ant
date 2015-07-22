@@ -1,11 +1,12 @@
 #ifndef DETECTORS_PID_H
 #define DETECTORS_PID_H
 
-#include "Detector_t.h"
+#include "expconfig/Detector_t.h"
 #include "unpacker/UnpackerAcqu.h"
 #include "base/std_ext.h"
 
 #include <cassert>
+#include <cmath>
 
 namespace ant {
 namespace expconfig {
@@ -18,6 +19,10 @@ struct PID :
 
     virtual TVector3 GetPosition(unsigned channel) const override {
         return elements[channel].Position;
+    }
+
+    virtual double dPhi(unsigned) const {
+        return 2 * M_PI / elements.size();
     }
 
     // for UnpackerAcquConfig
