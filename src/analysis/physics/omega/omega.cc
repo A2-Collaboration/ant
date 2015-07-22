@@ -30,7 +30,7 @@ double OmegaBase::calcEnergySum(const ParticleList &particles) const
     double esum = 0.0;
 
     for( const ant::ParticlePtr& track : particles) {
-        if( geo.DetectorFromAngles(track->Theta(), track->Phi()) == detector_t::NaI ) {
+        if( geo.DetectorFromAngles(track->Theta(), track->Phi()) == detector_t::CB ) {
             esum += track->Ek();
         }
     }

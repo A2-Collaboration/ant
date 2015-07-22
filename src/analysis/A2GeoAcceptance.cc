@@ -13,11 +13,11 @@ ant::detector_t ant::A2SimpleGeometry::DetectorFromAngles(const ant::radian_t th
     if( cb_theta_region.Contains(theta) ) {
 
         if(cb_phi_hem1.Contains(fabs(phi))) {
-            return detector_t::NaI;
+            return detector_t::CB;
         }
 
     } else if( taps_region.Contains(theta)) {
-        return detector_t::BaF2 | detector_t::PbWO4;
+        return detector_t::TAPS;
     }
 
     return detector_t::None;

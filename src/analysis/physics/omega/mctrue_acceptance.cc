@@ -23,9 +23,9 @@ analysis::MCTrueAcceptance::det_hit_count_t analysis::MCTrueAcceptance::AllAccep
     for( auto& p : particles ) {
         const detector_t d = geo.DetectorFromAngles(*p);
 
-        if( d == detector_t::NaI) {
+        if( d == detector_t::CB) {
             acc.cb++;
-        } else if( d & (detector_t::BaF2 | detector_t::PbWO4) ) {
+        } else if( d & detector_t::TAPS ) {
             acc.taps++;
         }
     }

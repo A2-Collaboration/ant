@@ -21,7 +21,7 @@ using namespace std;
 detector_t IntToDetector_t( const int& a ) {
     detector_t d = detector_t::None;
     if(a & TrackInput::DETECTOR_NaI) {
-        d |= detector_t::NaI;
+        d |= detector_t::CB;
     }
     if(a & TrackInput::DETECTOR_PID) {
         d |= detector_t::PID;
@@ -30,13 +30,13 @@ detector_t IntToDetector_t( const int& a ) {
         d |= detector_t::MWPC;
     }
     if(a & TrackInput::DETECTOR_BaF2) {
-        d |= detector_t::BaF2;
+        d |= detector_t::TAPS;
     }
     if(a & TrackInput::DETECTOR_PbWO4) {
-        d |= detector_t::PbWO4;
+        d |= detector_t::TAPS;
     }
     if(a & TrackInput::DETECTOR_Veto) {
-        d |= detector_t::Veto;
+        d |= detector_t::TAPSVeto;
     }
     return d;
 }

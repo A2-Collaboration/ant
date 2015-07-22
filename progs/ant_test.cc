@@ -35,7 +35,7 @@ int main() {
             radian_t(1.0),
             time_t(0.324),
             clustersize_t(4),
-            detector_t::NaI,
+            detector_t::CB,
             mev_t(0.4),
             mev_t(0.3)
             ));
@@ -99,7 +99,7 @@ int main() {
 
     cout << "========================" << endl;
 
-    detector_t d = detector_t::NaI;
+    detector_t d = detector_t::CB;
 
     if( d & detector_t::anyCB )
         cout << "is in cb";
@@ -108,7 +108,7 @@ int main() {
 
     cout << d << endl;
 
-    d ^= detector_t::PbWO4;
+    d ^= detector_t::TAPS;
     cout << d << endl;
 
     std::string detector_name = detector_t::anyTAPS;
@@ -128,7 +128,7 @@ int main() {
             radian_t(2.01),
             time_t(0.324),
             clustersize_t(4),
-            detector_t::NaI,
+            detector_t::CB,
             mev_t(0.4),
             mev_t(0.3)
             ));
@@ -139,7 +139,7 @@ int main() {
             radian_t(.41),
             time_t(0.323),
             clustersize_t(5),
-            detector_t::NaI,
+            detector_t::CB,
             mev_t(0.4),
             mev_t(0.3)
             ));
@@ -151,7 +151,7 @@ int main() {
             radian_t(.41),
             time_t(0.323),
             clustersize_t(5),
-            detector_t::NaI,
+            detector_t::CB,
             mev_t(0.4),
             mev_t(0.3)
             ));

@@ -13,12 +13,15 @@ public:
     detector_t() : v(0) {}
 
     const static detector_t None;
-    const static detector_t NaI;
+    const static detector_t CB;
     const static detector_t PID;
+    const static detector_t MWPC0;
+    const static detector_t MWPC1;
+    const static detector_t TAPS;
+    const static detector_t TAPSVeto;
+    const static detector_t Cherenkov;
+
     const static detector_t MWPC;
-    const static detector_t BaF2;
-    const static detector_t PbWO4;
-    const static detector_t Veto;
     const static detector_t anyCB;
     const static detector_t anyTAPS;
     const static detector_t anyVeto;

@@ -90,4 +90,22 @@ ant
 
    Calibrations
 
+## Dector Type Mapping
+
+| Ant Reconstruct  | Ant Analysis  | Goat |
+|------------------|---------------|------|
+| Trigger          | -             | -    |
+| Tagger           | -             | -    |
+| TaggerMicroscope | -             | -    |
+| EPT              | -             | -    |
+| Moeller          | -             | -    |
+| PairSpec         | -             | -    |
+| CB               | CB            | NaI  |
+| PID              | PID           | PID  |
+| MWPC0            | MWPC0         | MWPC |
+| MWPC1            | MWPC1         |      |
+| TAPS             | TAPS          | BaF2 |
+|                  |               | PbWO4|
+| TAPSVeto         | TAPSVeto      | Veto |
+| Cherenkov        | Cherenkov     | -    |
 
