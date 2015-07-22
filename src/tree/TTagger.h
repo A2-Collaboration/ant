@@ -14,6 +14,8 @@ struct TTagger
 {
     std::vector<ant::TTaggerHit> Hits;
     std::vector< TKeyValue<double> > Scalers;
+    std::vector< TKeyValue<double> > Energies;
+
 
 
     /// \todo add fields for Moeller and PairSpec

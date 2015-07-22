@@ -40,6 +40,7 @@ Reconstruct::Reconstruct(const THeaderInfo &headerInfo)
         if(updateable != nullptr)
             updateables.push_back(updateable);
         // ... but also are needed in DoReconstruct
+        /// \todo check if types are unique
         sorted_detectors[detector->Type] = detector;
     }
 
@@ -88,18 +89,52 @@ unique_ptr<TEvent> Reconstruct::DoReconstruct(TDetectorRead& detectorRead)
         }
     };
 
+    // already create the event here, since TaggerHits
+    // don't need hit matching and thus can be filled already
+    auto event = std_ext::make_unique<TEvent>(detectorRead.ID);
+
     map<Detector_t::Type_t, list< HitWithEnergy_t > > sorted_clusterhits;
     auto sorted_clusterhits_hint = sorted_clusterhits.cbegin();
 
     for(const auto& it_hit : sorted_readhits) {
         list<HitWithEnergy_t> clusterhits;
-        const Detector_t::Type_t detector = it_hit.first;
+        const Detector_t::Type_t detectortype = it_hit.first;
         const auto& readhits = it_hit.second;
+
+        // find the detector instance for this type
+        const auto& it_detector = sorted_detectors.find(detectortype);
+        if(it_detector == sorted_detectors.end())
+            continue;
+        const shared_ptr<Detector_t>& detector = it_detector->second;
+
+        // the tagging devices are excluded from further hit matching and clustering
+        const shared_ptr<TaggerDetector_t>& taggerdetector
+                = dynamic_pointer_cast<TaggerDetector_t>(detector);
 
         for(const TDetectorReadHit* readhit : readhits) {
             // ignore uncalibrated items
             if(readhit->Values.empty())
                 continue;
+
+            // for tagger detectors, we do not match the hits by channel at all
+            if(taggerdetector != nullptr) {
+                /// \todo handle Integral and Scaler type information here
+                if(readhit->GetChannelType() != Channel_t::Type_t::Timing)
+                    continue;
+                // but we add each TClusterHitDatum as some single
+                // TClusterHit representing an electron with a timing
+                /// \todo implement tagger double-hit decoding?
+                TTagger& event_tagger = event->Tagger;
+                for(const double timing : readhit->Values) {
+                    event_tagger.Hits.emplace_back(
+                                taggerdetector->GetPhotonEnergy(readhit->Channel),
+                                TKeyValue<double>(readhit->Channel, timing)
+                                );
+                }
+
+                /// \todo add Moeller/PairSpec information here
+                continue;
+            }
 
             // transform the data from readhit into TClusterHitDatum's
             vector<TClusterHitDatum> data(readhit->Values.size());
@@ -109,7 +144,7 @@ unique_ptr<TEvent> Reconstruct::DoReconstruct(TDetectorRead& detectorRead)
             transform(readhit->Values.cbegin(), readhit->Values.cend(),
                       data.begin(), do_transform);
 
-            // search for a TClusterHit with same channel
+            // for non-tagger detectors, search for a TClusterHit with same channel
             const auto match_channel = [readhit] (const HitWithEnergy_t& hit) {
                 return hit.Hit.Channel == readhit->Channel;
             };
@@ -117,33 +152,29 @@ unique_ptr<TEvent> Reconstruct::DoReconstruct(TDetectorRead& detectorRead)
                                                clusterhits.end(),
                                                match_channel);
             if(it_clusterhit == clusterhits.end()) {
-                // not found, create new TClusterHit from readhit
+                // not found, create new HitWithEnergy from readhit
                 clusterhits.emplace_back(readhit, move(data));
             }
             else {
                 // clusterhit with channel of readhit already exists,
-                // so append TClusterHitDatum's and set energy
+                // so append TClusterHitDatum's and try to set energy
                 it_clusterhit->MaybeSetEnergy(readhit);
                 move(data.begin(), data.end(),
                      back_inserter(it_clusterhit->Hit.Data));
             }
         }
 
-        // The trigger detector, for example, might only carry
-        // reference hits, which are all not calibrated and thus
-        // never fill anything in clusterhits
+        // The trigger or tagger detectors don't fill anything
+        // so skip it
         if(clusterhits.empty())
             continue;
 
         // insert the clusterhits
         sorted_clusterhits_hint =
                 sorted_clusterhits.insert(sorted_clusterhits_hint,
-                                          make_pair(detector, move(clusterhits)));
+                                          make_pair(detectortype, move(clusterhits)));
     }
 
-    // already create the event here, since TaggerHits
-    // don't need tracking and thus can be filled already
-    auto event = std_ext::make_unique<TEvent>(detectorRead.ID);
 
     map<Detector_t::Type_t, list< TCluster > > sorted_clusters;
     auto sorted_clusters_hint = sorted_clusters.begin();
@@ -152,24 +183,28 @@ unique_ptr<TEvent> Reconstruct::DoReconstruct(TDetectorRead& detectorRead)
         const Detector_t::Type_t detectortype = it_clusterhits.first;
         const list<HitWithEnergy_t>& clusterhits = it_clusterhits.second;
 
-        // do we have a detector instance for this type?
+        // find the detector instance for this type?
         const auto& it_detector = sorted_detectors.find(detectortype);
         if(it_detector == sorted_detectors.end())
             continue;
         const shared_ptr<Detector_t>& detector = it_detector->second;
 
-        // we handle stuff a bit differently for
-        // each detector from now on: tagger, cluster, everything else
-        list<TCluster> clusters;
 
-        // first the tagging device, which is excluded from track matching
+        // first the tagging devices, which are excluded from further track matching
         const shared_ptr<TaggerDetector_t>& taggerdetector
                 = dynamic_pointer_cast<TaggerDetector_t>(detector);
         if(taggerdetector != nullptr) {
-            // one might do some double-hit decoding here...?
-            /// \todo handle the TaggerHit stuff here, maybe include PairSpec and Moeller?
+            TTagger& event_tagger = event->Tagger;
+            for(const HitWithEnergy_t& clusterhit : clusterhits) {
+                event_tagger.Hits.emplace_back();
+            }
+
+            /// \todo add Moeller/PairSpec information here
+            /// \todo implement tagger double-hit decoding?
             continue;
         }
+
+        list<TCluster> clusters;
 
         // check if detector can do clustering,
         const shared_ptr<ClusterDetector_t>& clusterdetector
@@ -181,6 +216,7 @@ unique_ptr<TEvent> Reconstruct::DoReconstruct(TDetectorRead& detectorRead)
             list<clustering::crystal_t> crystals;
             for(const HitWithEnergy_t& clusterhit : clusterhits) {
                 const TClusterHit& hit = clusterhit.Hit;
+                // ignore hits without energy information
                 if(!isfinite(clusterhit.Energy))
                     continue;
                 crystals.emplace_back(

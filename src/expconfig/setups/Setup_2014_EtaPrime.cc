@@ -21,10 +21,15 @@ public:
         AddDetector<detector::PID_2014>();
         AddDetector<detector::TAPS_2013>(false, false); // no Cherenkov, don't use sensitive channels
 
-        // the order of the calibrations can be important
-        AddCalibration<calibration::TimingCATCH>(Detector_t::Type_t::CB, trigger->Reference_CATCH_CBCrate);
+        // the order of the calibrations is important
+        // since they may depend on each other
+        AddCalibration<calibration::TimingCATCH>(Detector_t::Type_t::EPT,
+                                                 trigger->Reference_CATCH_TaggerCrate);
+        AddCalibration<calibration::TimingCATCH>(Detector_t::Type_t::CB,
+                                                 trigger->Reference_CATCH_CBCrate);
         AddCalibration<calibration::IntegralSADC>(Detector_t::Type_t::CB);
-        AddCalibration<calibration::TimingCATCH>(Detector_t::Type_t::PID, trigger->Reference_CATCH_CBCrate);
+        AddCalibration<calibration::TimingCATCH>(Detector_t::Type_t::PID,
+                                                 trigger->Reference_CATCH_CBCrate);
         AddCalibration<calibration::IntegralCAEN>(Detector_t::Type_t::PID);
         AddCalibration<calibration::TimingTAPS>();
         AddCalibration<calibration::IntegralTAPS>();

@@ -56,7 +56,7 @@ void dotest(Long64_t expectedEntries) {
 
     TTree* tree = new TTree("tree","tree");
     T* ptr = new T();
-    tree->Branch("branch", classname.c_str(), &ptr);
+    REQUIRE(tree->Branch("branch", classname.c_str(), &ptr) != nullptr);
 
     while(auto item = unpacker->NextItem()) {
         ptr = dynamic_cast<T*>(item.get());
@@ -82,7 +82,7 @@ void dotest(Long64_t expectedEntries) {
     REQUIRE((tree->GetEntries()==expectedEntries));
 
     ptr = 0;
-    tree->SetBranchAddress("branch", &ptr);
+    REQUIRE(tree->SetBranchAddress("branch", &ptr) == 0);
 
     for(Long64_t i=0;i<tree->GetEntries();i++) {
         delete ptr;
