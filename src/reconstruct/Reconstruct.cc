@@ -188,26 +188,11 @@ unique_ptr<TEvent> Reconstruct::DoReconstruct(TDetectorRead& detectorRead)
         const Detector_t::Type_t detectortype = it_clusterhits.first;
         const list<HitWithEnergy_t>& clusterhits = it_clusterhits.second;
 
-        // find the detector instance for this type?
+        // find the detector instance for this type
         const auto& it_detector = sorted_detectors.find(detectortype);
         if(it_detector == sorted_detectors.end())
             continue;
         const shared_ptr<Detector_t>& detector = it_detector->second;
-
-
-        // first the tagging devices, which are excluded from further track matching
-        const shared_ptr<TaggerDetector_t>& taggerdetector
-                = dynamic_pointer_cast<TaggerDetector_t>(detector);
-        if(taggerdetector != nullptr) {
-            TTagger& event_tagger = event->Tagger;
-            for(const HitWithEnergy_t& clusterhit : clusterhits) {
-                event_tagger.Hits.emplace_back();
-            }
-
-            /// \todo add Moeller/PairSpec information here
-            /// \todo implement tagger double-hit decoding?
-            continue;
-        }
 
         list<TCluster> clusters;
 
