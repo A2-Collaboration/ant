@@ -9,6 +9,7 @@ set(SRCS
   TEvent.h
   TCluster.h
   TTrack.h
+  TTagger.h
   TTaggerHit.h
   TCalibrationData.h
   )

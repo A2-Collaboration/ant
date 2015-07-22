@@ -4,7 +4,7 @@
 #include "TDataRecord.h"
 #include "TTrack.h"
 #include "TCluster.h"
-#include "TTaggerHit.h"
+#include "TTagger.h"
 
 #ifndef __CINT__
 #include <iomanip>
@@ -16,7 +16,7 @@ namespace ant {
 struct TEvent : TDataRecord
 {
   std::vector<ant::TTrack> Tracks;
-  std::vector<ant::TTaggerHit> TaggerHits;
+  TTagger Tagger;
 
 #ifndef __CINT__
   TEvent(const TID& id) :
@@ -25,8 +25,8 @@ struct TEvent : TDataRecord
 
   virtual std::ostream& Print( std::ostream& s) const override {
     s << "TEvent:\n";
-    s << " " << TaggerHits.size() << " Taggerhits:\n";
-    for(auto& th : TaggerHits) {
+    s << " " << Tagger.Hits.size() << " Taggerhits:\n";
+    for(auto& th : Tagger.Hits) {
       s << "  " << th << "\n";
     }
     s << " " << Tracks.size() << " Tracks:\n";
@@ -43,7 +43,7 @@ struct TEvent : TDataRecord
   }
 #endif
 
-  TEvent() : TDataRecord() {}
+  TEvent() : TDataRecord(), Tracks(), Tagger() {}
   virtual ~TEvent() {}
   ClassDef(TEvent, ANT_UNPACKER_ROOT_VERSION)
 

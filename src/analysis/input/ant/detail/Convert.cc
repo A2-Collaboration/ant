@@ -28,7 +28,7 @@ shared_ptr<ant::Event> input::Convert(const TEvent &event)
     shared_ptr<Event> antevent = make_shared<Event>();
 
     Copy(event.Tracks,     antevent->Reconstructed().Tracks());
-    Copy(event.TaggerHits, antevent->Reconstructed().TaggerHits());
+    Copy(event.Tagger.Hits, antevent->Reconstructed().TaggerHits());
 
     return std::move(antevent);
 }
