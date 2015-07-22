@@ -1,6 +1,9 @@
 # the catch++ library is the workhorse for our tests
 include_directories(.)
-add_custom_target(build_and_test ${CMAKE_CTEST_COMMAND} -V)
+add_custom_target(build_and_test
+  COMMAND ${CMAKE_CTEST_COMMAND} --output-on-failure -j${CTEST_PARALLEL_JOBS}
+  COMMENT "Running build_and_test with ${CTEST_PARALLEL_JOBS} workers"
+  )
 add_library(catch catch.cc catch.hpp catch_config.h)
 target_link_libraries(catch base)
 

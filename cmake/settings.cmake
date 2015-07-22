@@ -34,3 +34,7 @@ SET(BUILD_SHARED_LIBS ON)
 # for file(GLOB_RECURSE..) don't follow symlinks
 cmake_policy(SET CMP0009 NEW)
 
+# use some concurrency for tests
+if(NOT CTEST_PARALLEL_JOBS)
+  set(CTEST_PARALLEL_JOBS 2)
+endif()

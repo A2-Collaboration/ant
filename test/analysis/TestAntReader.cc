@@ -25,12 +25,15 @@ using namespace std;
 using namespace ant;
 using namespace ant::input;
 
+void dotest();
 void generateInputFile(const std::string& filename);
 
 TEST_CASE("AntInput", "[analysis]") {
-    SetupLogger();
-    el::Loggers::setVerboseLevel(9);
+    dotest();
+}
 
+
+void dotest() {
     tmpfile_t tmp;
     generateInputFile(tmp.filename);
 
@@ -45,7 +48,6 @@ TEST_CASE("AntInput", "[analysis]") {
         auto event = reader.ReadNextEvent();
         cout << *event << endl;
     }
-
 }
 
 

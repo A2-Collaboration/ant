@@ -3,6 +3,7 @@
 set -e
 
 CACHE=$HOME/cache
+NCPU=2
 
 pushd $PWD
 
@@ -32,13 +33,13 @@ else
     ## APLCON
     rm -rf $CACHE/APLCON
     git clone https://github.com/A2-Collaboration-dev/APLCON $CACHE/APLCON
-    cd $CACHE/APLCON && mkdir build && cd build && cmake .. && make -j2
+    cd $CACHE/APLCON && mkdir build && cd build && cmake .. && make -j$NCPU
 
     ## CERN ROOT
     rm -rf $CACHE/root
     wget http://root.cern.ch/download/root_v5.34.32.source.tar.gz -O $CACHE/root.tar.gz
     tar -xf $CACHE/root.tar.gz -C $CACHE
-    cd $CACHE/root && ./configure --minimal && make -j2
+    cd $CACHE/root && ./configure --minimal && make -j$NCPU
     cd $CACHE/root && source ./bin/thisroot.sh
     rm $CACHE/root.tar.gz
 
@@ -48,7 +49,7 @@ else
     # pluto installs in some version dependent directory,
     # so account for this in tar command
     mkdir $CACHE/pluto && tar -xf $CACHE/pluto.tar.gz -C $CACHE/pluto --strip-components=1
-    cd $CACHE/pluto && make -j2
+    cd $CACHE/pluto && make -j$NCPU
     rm $CACHE/pluto.tar.gz
 
     touch $CACHE/.good
@@ -60,6 +61,6 @@ export APLCONSYS=$CACHE/APLCON
 export PLUTOSYS=$CACHE/pluto
 
 mkdir build && cd build
-cmake -DCOVERALLS=On -DCMAKE_BUILD_TYPE=Debug ..
-make -j2
+cmake -DCTEST_PARALLEL_JOBS=$NCPU -DCOVERALLS=On -DCMAKE_BUILD_TYPE=Debug ..
+make -j$NCPU
 make build_and_test
