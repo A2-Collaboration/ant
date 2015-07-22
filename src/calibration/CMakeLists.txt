@@ -7,7 +7,7 @@ include_directories(
 
 
 set(SRCS
-	CalibrationManager.h
+    CalibrationManager.h
     Calibration.h
     Calibration.cc
     modules/EnergyInvariantMass.h
@@ -25,7 +25,4 @@ set(SRCS
   )
 
 add_library(calibration ${SRCS})
-target_link_libraries(calibration
-  base
-  analysis
-  )
+target_link_libraries(calibration base analysis)
