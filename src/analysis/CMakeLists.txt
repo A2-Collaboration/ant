@@ -112,4 +112,5 @@ target_link_libraries(analysis
   ${PLUTO_LIBRARY}
   ${APLCON_LIBRARY}
   base
+  tree
   )
