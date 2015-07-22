@@ -19,6 +19,10 @@ namespace input {
  */
 class DataReader {
 public:
+    class Exception : public std::runtime_error {
+      using std::runtime_error::runtime_error; // use base class constructor
+    };
+
     virtual ~DataReader() = default;
     virtual std::shared_ptr<Event> ReadNextEvent() =0;
     virtual bool hasData() const =0;
