@@ -6,6 +6,8 @@
 
 #include "Reconstruct_traits.h"
 #include "tree/TEvent.h"
+#include "TrackBuilder.h"
+
 
 namespace ant {
 
@@ -33,6 +35,8 @@ private:
     shared_ptr_list<CalibrationApply_traits>  calibrations;
     shared_ptr_list<Updateable_traits>        updateables;
     sorted_detectors_t                        sorted_detectors;
+
+    std::unique_ptr<reconstruct::TrackBuilder> trackbuilder;
 
 };
 

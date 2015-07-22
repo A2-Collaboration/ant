@@ -3,6 +3,8 @@ set(SRCS
   Reconstruct.cc
   Reconstruct_traits.h
   Clustering.h
+  TrackBuilder.h
+  TrackBuilder.cc
   )
 
 include_directories(.)

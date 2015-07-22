@@ -44,6 +44,10 @@ Reconstruct::Reconstruct(const THeaderInfo &headerInfo)
         sorted_detectors[detector->Type] = detector;
     }
 
+    // init the trackbuilder
+    /// \todo Make use of different TrackBuilders maybe?
+    trackbuilder = std_ext::make_unique<TrackBuilder>(sorted_detectors);
+
     /// \todo build the range list from updateables
 }
 
@@ -274,23 +278,8 @@ unique_ptr<TEvent> Reconstruct::DoReconstruct(TDetectorRead& detectorRead)
                                        make_pair(detectortype, move(clusters)));
     }
 
-    // super-stupid track matching for now
-    // each track contains just one cluster
-
-    for(const auto& it_clusters : sorted_clusters) {
-        //const Detector_t::Type_t detectortype = it_clusters.first;
-        const list<TCluster>& clusters = it_clusters.second;
-
-        for(const TCluster& cluster : clusters) {
-            event->Tracks.emplace_back(
-                        cluster.Energy,
-                        0, // time unknown...
-                        cluster.Position.Theta(),
-                        cluster.Position.Phi(),
-                        std::vector<TCluster>{cluster}
-                        );
-        }
-    }
+    // finally, do the track building
+    trackbuilder->Build(move(sorted_clusters), event);
 
     // uncomment for debug purposes
     //cout << *event << endl;
