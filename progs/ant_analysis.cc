@@ -1,5 +1,9 @@
 
+
+#include "analysis/input/DataReader.h"
 #include "analysis/input/ant/AntReader.h"
+#include "analysis/input/goat/GoatReader.h"
+#include "base/std_ext.h"
 #include "analysis/OutputManager.h"
 
 #include "analysis/physics/Physics.h"
@@ -24,6 +28,7 @@ int main(int argc, char** argv) {
 
 
     TCLAP::CmdLine cmd("Omega Analysis", ' ', "0.1");
+    auto input_type = cmd.add<TCLAP::SwitchArg>("g","goat","Input is GoAT files",false);
     auto input  = cmd.add<TCLAP::MultiArg<string>>("i","input","ant root file (events)",true,"string");
     auto physicsclasses  = cmd.add<TCLAP::MultiArg<string>>("p","physics","Physics Class to run",true,"string");
     auto output = cmd.add<TCLAP::ValueArg<string>>("o","output","Output file",false,"","string");
@@ -52,15 +57,21 @@ int main(int argc, char** argv) {
         }
     }
 
-    input::AntReader reader;
+    std::unique_ptr<input::FileDataReader> reader;
+
+    if(input_type->getValue()) {
+        reader = std_ext::make_unique<input::GoatReader>();
+    } else {
+        reader = std_ext::make_unique<input::AntReader>();
+    }
 
     for(auto& file : input->getValue())
-            reader.AddInputFile(file);
+            reader->AddInputFile(file);
 
-    reader.Initialize();
+    reader->Initialize();
 
 
-    pm.ReadFrom(reader);
+    pm.ReadFrom(*reader.get());
 
     if(!batchmode->isSet()) {
         int a=0;
