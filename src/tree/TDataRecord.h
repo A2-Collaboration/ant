@@ -101,12 +101,16 @@ struct TID
 
   bool operator<(const TID& other)
   {
-      return (Value < other.Value);
+      if (Flags == other.Flags)
+          return (Value < other.Value);
+      return (Flags < other.Flags);
   }
 
   bool operator>(const TID& other)
   {
-      return (Value > other.Value);
+      if (Flags == other.Flags)
+          return (Value > other.Value);
+      return (Flags > other.Flags);
   }
 
   bool operator!=(const TID& other)

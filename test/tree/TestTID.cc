@@ -18,12 +18,16 @@ void dotest()
     TID b(0,1);
     TID c(0,0,true);
 
-    REQUIRE_FALSE(a == b);
-    REQUIRE(a != b);
-    REQUIRE(a < b);
-    REQUIRE(b > a);
     REQUIRE(a == a);
+
+    REQUIRE_FALSE(a == b);
     REQUIRE_FALSE( a == c);
 
+    REQUIRE(a != b);
+    REQUIRE(a != c);
 
+    REQUIRE(a < b);
+    REQUIRE(b > a);
+    REQUIRE(a < c);
+    REQUIRE(b < c);
 }
