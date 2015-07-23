@@ -1,5 +1,4 @@
-#ifndef RECONSTRUCT_CLUSTERING_H
-#define RECONSTRUCT_CLUSTERING_H
+#pragma once
 
 #include "expconfig/Detector_t.h"
 
@@ -432,6 +431,3 @@ static void do_clustering(
 
 
 }}} // ant::reconstruct::clustering
-
-
-#endif // RECONSTRUCT_CLUSTERING_H

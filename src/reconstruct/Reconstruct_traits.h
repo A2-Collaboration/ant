@@ -1,5 +1,4 @@
-#ifndef ANT_RECONSTRUCT_TRAITS_H
-#define ANT_RECONSTRUCT_TRAITS_H
+#pragma once
 
 #include <memory>
 #include <map>
@@ -36,5 +35,3 @@ public:
 };
 
 } // namespace ant
-
-#endif // ANT_RECONSTRUCT_TRAITS_H
