@@ -1,5 +1,4 @@
-#ifndef ANT_TYPES_H
-#define ANT_TYPES_H
+#pragma once
 
 namespace ant {
 
@@ -11,5 +10,3 @@ typedef unsigned int clustersize_t;
 typedef int element_index_t;
 
 }
-
-#endif

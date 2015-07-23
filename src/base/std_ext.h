@@ -1,5 +1,4 @@
-#ifndef ANT_STD_EXT_H
-#define ANT_STD_EXT_H
+#pragma once
 
 #include <string>
 #include <sstream>
@@ -158,7 +157,3 @@ private:
 } // namespace ant::std_ext
 
 } // namespace ant
-
-
-
-#endif // ANT_STD_EXT

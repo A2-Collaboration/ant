@@ -1,5 +1,4 @@
-#ifndef ANT_WRAPTFILE_H
-#define ANT_WRAPTFILE_H
+#pragma once
 
 #include <memory>
 #include <string>
@@ -26,5 +25,3 @@ public:
     WrapTFile& operator= (const WrapTFile&) = delete;
 };
 }
-
-#endif

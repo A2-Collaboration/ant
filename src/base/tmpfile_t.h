@@ -1,5 +1,4 @@
-#ifndef TMPFILE_T_H
-#define TMPFILE_T_H
+#pragma once
 
 #include <vector>
 #include <string>
@@ -23,5 +22,3 @@ struct tmpfile_t {
 };
 
 }
-
-#endif // TMPFILE_T_H

@@ -1,5 +1,4 @@
-#ifndef TREE_H
-#define TREE_H
+#pragma once
 
 #include <memory>
 #include <list>
@@ -104,5 +103,3 @@ public:
 };
 
 }
-
-#endif

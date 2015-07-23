@@ -1,5 +1,4 @@
-#ifndef FORMAT_H
-#define FORMAT_H
+#pragma once
 
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Weffc++"
@@ -30,5 +29,3 @@ std::string format_vector(StringRef format_str, const std::vector<T> v) {
 }
 
 }
-
-#endif // FORMAT_H

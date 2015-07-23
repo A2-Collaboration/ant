@@ -1,5 +1,4 @@
-#ifndef PRINTABLE_H
-#define PRINTABLE_H
+#pragma once
 
 #include <ostream>
 
@@ -16,5 +15,3 @@ public:
 std::ostream& operator<< (std::ostream& stream, const ant::printable_traits& printable);
 
 std::ostream& operator<< (std::ostream& stream, const ant::printable_traits* printable);
-
-#endif

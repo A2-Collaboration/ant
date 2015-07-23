@@ -1,5 +1,4 @@
-#ifndef INTERVAL_H_
-#define INTERVAL_H_
+#pragma once
 
 #include <algorithm>
 #include <stdexcept>
@@ -251,4 +250,3 @@ ant::interval<T> intersect(const ant::interval<T> a, const ant::interval<T> b) {
     return ant::interval<T>();
 }
 
-#endif /* INTERVAL_H_ */

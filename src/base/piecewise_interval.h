@@ -1,6 +1,4 @@
-#ifndef PIECEWISE_INTERVAL_H
-#define PIECEWISE_INTERVAL_H
-
+#pragma once
 
 #include "interval.h"
 #include "printable.h"
@@ -81,5 +79,3 @@ public:
 };
 
 }
-
-#endif
