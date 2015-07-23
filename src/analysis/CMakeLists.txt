@@ -94,6 +94,7 @@ set(ANALYSIS_PHYSICS
   physics/common/DataOverview.cc
   physics/omega/mctrue_acceptance.h
   physics/omega/mctrue_acceptance.cc
+  physics/common/TrackAnalysis.cc
   )
 
 set(ANALYSIS_ALL
