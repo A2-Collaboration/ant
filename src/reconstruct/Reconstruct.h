@@ -32,6 +32,20 @@ public:
     ~Reconstruct();
 
 private:
+
+    /**
+     * @brief The HitWithEnergy_t struct
+     * Stores a TClusterHit together with its energy, if
+     * exactly one TDetectorReadHit was of channel type integral
+     */
+    struct HitWithEnergy_t {
+        TClusterHit Hit;
+        double Energy;
+        void MaybeSetEnergy(const TDetectorReadHit* readhit);
+        HitWithEnergy_t(const TDetectorReadHit* readhit,
+                        const std::vector<TClusterHitDatum>&& data);
+    };
+
     template<typename T>
     using shared_ptr_list = std::list< std::shared_ptr<T> >;
 

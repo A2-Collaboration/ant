@@ -9,6 +9,7 @@
 #include "tree/TEvent.h"
 #include "TrackBuilder.h"
 
+#include "base/Logger.h"
 #include "base/std_ext.h"
 
 #include <algorithm>
@@ -76,23 +77,7 @@ unique_ptr<TEvent> Reconstruct::DoReconstruct(TDetectorRead& detectorRead)
     // we also extract the energy, which is always defined as a
     // single value with type Channel_t::Type_t
 
-    struct HitWithEnergy_t {
-        TClusterHit Hit;
-        double Energy = numeric_limits<double>::quiet_NaN();
-        void MaybeSetEnergy(const TDetectorReadHit* readhit) {
-            if(readhit->GetChannelType() != Channel_t::Type_t::Integral)
-                return;
-            if(readhit->Values.size() != 1)
-                return;
-            Energy = readhit->Values[0];
-        }
-        HitWithEnergy_t(const TDetectorReadHit* readhit,
-                        const vector<TClusterHitDatum>&& data) :
-            Hit(readhit->Channel, data)
-        {
-            MaybeSetEnergy(readhit);
-        }
-    };
+
 
     // already create the event here, since TaggerHits
     // don't need hit matching and thus can be filled already
@@ -276,4 +261,24 @@ unique_ptr<TEvent> Reconstruct::DoReconstruct(TDetectorRead& detectorRead)
 Reconstruct::~Reconstruct()
 {
 
+}
+
+
+void Reconstruct::HitWithEnergy_t::MaybeSetEnergy(const TDetectorReadHit *readhit) {
+    if(readhit->GetChannelType() != Channel_t::Type_t::Integral)
+        return;
+    if(readhit->Values.size() != 1)
+        return;
+    if(isfinite(Energy)) {
+        LOG(WARNING) << "Found hit in channel with more than one energy information";
+        return;
+    }
+    Energy = readhit->Values[0];
+}
+
+Reconstruct::HitWithEnergy_t::HitWithEnergy_t(const TDetectorReadHit *readhit, const vector<TClusterHitDatum> &&data) :
+    Hit(readhit->Channel, data),
+    Energy(numeric_limits<double>::quiet_NaN())
+{
+    MaybeSetEnergy(readhit);
 }
