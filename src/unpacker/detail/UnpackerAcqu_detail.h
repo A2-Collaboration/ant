@@ -1,5 +1,4 @@
-#ifndef UNPACKERACQU_DETAIL_H
-#define UNPACKERACQU_DETAIL_H
+#pragma once
 
 #include "tree/TUnpackerMessage.h" // TUnpackerMessage::Level_t
 #include "UnpackerAcqu.h" // UnpackerAcquConfig
@@ -132,4 +131,3 @@ protected:
 
 } // namespace ant
 
-#endif // UNPACKERACQU_DETAIL_H

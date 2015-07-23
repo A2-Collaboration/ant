@@ -1,5 +1,4 @@
-#ifndef UNPACKERACQU_FILEFORMATMK1_H
-#define UNPACKERACQU_FILEFORMATMK1_H
+#pragma once
 
 #include "UnpackerAcqu_detail.h"
 
@@ -20,6 +19,3 @@ protected:
 };
 
 }}} // namespace ant::unpacker::acqu
-
-
-#endif // UNPACKERACQU_FILEFORMATMK1_H

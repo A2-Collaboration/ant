@@ -1,5 +1,4 @@
-#ifndef UNPACKERACQU_LEGACY_H
-#define UNPACKERACQU_LEGACY_H
+#pragma once
 
 #include <cstdint>
 #include <map>
@@ -508,5 +507,3 @@ static const std::map<uint32_t, std::string> ModuleIDToString = {
 };
 
 }}} // namespace ant::unpacker::acqu
-
-#endif // UNPACKERACQU_LEGACY_H

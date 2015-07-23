@@ -1,6 +1,4 @@
-#ifndef UNPACKERACQU_TEMPLATES_H
-#define UNPACKERACQU_TEMPLATES_H
-
+#pragma once
 
 #include "base/std_ext.h"
 #include "UnpackerAcqu_detail.h"
@@ -99,6 +97,3 @@ getRawData(
 }
 
 }} // namespace ant::unpacker
-
-
-#endif // UNPACKERACQU_TEMPLATES_H

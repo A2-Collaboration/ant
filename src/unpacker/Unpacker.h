@@ -1,6 +1,4 @@
-#ifndef UNPACKER_H
-#define UNPACKER_H
-
+#pragma once
 
 #include <string>
 #include <memory>
@@ -33,5 +31,3 @@ public:
 };
 
 } // namespace ant
-
-#endif // UNPACKER_H

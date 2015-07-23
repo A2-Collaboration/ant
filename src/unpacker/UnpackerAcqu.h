@@ -1,5 +1,4 @@
-#ifndef UNPACKERACQU_H
-#define UNPACKERACQU_H
+#pragma once
 
 #include "Unpacker.h"
 
@@ -111,5 +110,3 @@ inline UnpackerAcquConfig::RawChannel_t<T>::RawChannel_t(const T &ch)
 
 
 } // namespace ant
-
-#endif // UNPACKERACQU_H

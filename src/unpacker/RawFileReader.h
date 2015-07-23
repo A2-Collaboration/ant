@@ -1,5 +1,4 @@
-#ifndef RAWFILEREADER_H
-#define RAWFILEREADER_H
+#pragma once
 
 #include <fstream>
 #include <string>
@@ -182,5 +181,3 @@ private:
 
 
 } // namespace ant
-
-#endif // RAWFILEREADER_H

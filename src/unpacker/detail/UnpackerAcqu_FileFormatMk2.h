@@ -1,5 +1,4 @@
-#ifndef UNPACKERACQU_FILEFORMATMK2_H
-#define UNPACKERACQU_FILEFORMATMK2_H
+#pragma once
 
 #include "UnpackerAcqu_detail.h"
 
@@ -33,6 +32,3 @@ private:
 };
 
 }}} // namespace ant::unpacker::acqu
-
-
-#endif // UNPACKERACQU_FILEFORMATMK2_H
