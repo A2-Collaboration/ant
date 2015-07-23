@@ -26,7 +26,7 @@ TrackBuilder::TrackBuilder(const TrackBuilder::sorted_detectors_t& sorted_detect
 }
 
 void TrackBuilder::Build(std::map<Detector_t::Type_t, std::list<TCluster> >&& sorted_clusters,
-                         unique_ptr<TEvent>& event)
+                         TEvent::tracks_t& tracks)
 {
 
     if(cb) {
@@ -34,7 +34,7 @@ void TrackBuilder::Build(std::map<Detector_t::Type_t, std::list<TCluster> >&& so
         for(TCluster& cb_cluster : sorted_clusters[Detector_t::Type_t::CB]) {
             const auto cb_phi = cb_cluster.Position.Phi();
 
-            event->Tracks.emplace_back(
+            tracks.emplace_back(
                         cb_cluster.Energy,
                         0, // time unknown...
                         cb_cluster.Position.Theta(),
@@ -42,7 +42,7 @@ void TrackBuilder::Build(std::map<Detector_t::Type_t, std::list<TCluster> >&& so
                         std::vector<TCluster>{cb_cluster}
                         );
 
-            TTrack& track = event->Tracks.back();
+            TTrack& track = tracks.back();
 
             if(pid) {
                 for(TCluster& pid_cluster : sorted_clusters[Detector_t::Type_t::PID]) {

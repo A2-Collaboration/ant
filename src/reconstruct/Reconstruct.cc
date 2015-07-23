@@ -89,7 +89,7 @@ unique_ptr<TEvent> Reconstruct::DoReconstruct(TDetectorRead& detectorRead)
 
 
     // finally, do the track building
-    trackbuilder->Build(move(sorted_clusters), event);
+    trackbuilder->Build(move(sorted_clusters), event->Tracks);
 
     // uncomment for debug purposes
     //cout << *event << endl;
