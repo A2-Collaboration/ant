@@ -12,7 +12,9 @@
 #include "detectors/CB.h"
 #include "detectors/PID.h"
 #include "detectors/TAPS.h"
+#include "detectors/TAPSVeto.h"
 #include "detectors/EPT.h"
+
 
 #include "calibration/modules/EnergyInvariantMass.h"
 #include "calibration/modules/IntegralSADC.h"

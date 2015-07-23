@@ -77,7 +77,7 @@ protected:
         ) :
       ClusterDetector_t::Element_t(
         channel,
-        TVector3(pos_xy.X(), pos_xy.Y(), // z-component set by BuildClusterElements()
+        TVector3(pos_xy.X(), pos_xy.Y(), // z-component set by InitClusterElements()
                  std::numeric_limits<double>::quiet_NaN()),
         neighbours,
         2.2 /// \todo use best value from S. Lohse diploma thesis?

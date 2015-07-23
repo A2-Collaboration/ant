@@ -21,10 +21,15 @@ set(SRCS_DETECTORS
   detectors/CB.cc
   detectors/PID.h
   detectors/PID.cc
+  detectors/TAPSVeto.h
+  detectors/TAPSVeto.cc
   detectors/detail/EPT_2014_elements.h
   detectors/detail/CB_elements.h
   detectors/detail/TAPS_2013_BaF2_elements.h
   detectors/detail/TAPS_2013_PbWO4_elements.h
+  detectors/detail/TAPSVeto_2013_PbWO4_elements.h
+  detectors/detail/TAPSVeto_2013_BaF2_elements.h
+  detectors/detail/TAPSVeto_2014_BaF2_elements.h
   detectors/detail/PID_2004_elements.h
   detectors/detail/PID_2009_05_elements.h
   detectors/detail/PID_2009_06_elements.h
