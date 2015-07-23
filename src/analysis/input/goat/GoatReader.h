@@ -27,7 +27,7 @@ namespace input {
 class FileManager;
 class TreeManager;
 
-class GoatReader: public DataReader {
+class GoatReader: public FileDataReader {
 protected:
 
     class InputWrapper {
@@ -104,8 +104,8 @@ public:
     GoatReader(const GoatReader&) = delete;
     GoatReader& operator= (const GoatReader&) = delete;
 
-    void AddInputFile(const std::string& filename);
-    void Initialize();
+    void AddInputFile(const std::string& filename) override;
+    void Initialize() override;
 
     /**
      * @brief Get number of events in tree
@@ -115,7 +115,7 @@ public:
     Long64_t  GetNEvents() const;
 
     std::shared_ptr<Event> ReadNextEvent();
-    bool hasData() const;
+    bool hasData() const override;
 
     long long EventsRead() const override;
     long long TotalEvents() const override;

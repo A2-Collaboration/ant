@@ -19,7 +19,7 @@ namespace input {
 
 class FileManager;
 
-class AntReader: public DataReader {
+class AntReader: public FileDataReader {
 protected:
 
     std::unique_ptr<ant::input::FileManager> files;
@@ -35,8 +35,8 @@ public:
     AntReader(const AntReader&) = delete;
     AntReader& operator= (const AntReader&) = delete;
 
-    void AddInputFile(const std::string& filename);
-    void Initialize();
+    void AddInputFile(const std::string& filename) override;
+    void Initialize() override;
 
     /**
      * @brief Get number of events in tree
