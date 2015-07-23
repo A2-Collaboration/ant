@@ -17,6 +17,7 @@ protected:
     TH1D* theta = nullptr;
     TH1D* phi = nullptr;
     TH1D* ggIM = nullptr;
+    TH1D* ttIM = nullptr;
 
 public:
     TrackAnalysis(const std::string& name="TrackAnalysis");

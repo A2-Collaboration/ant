@@ -18,6 +18,7 @@ TrackAnalysis::TrackAnalysis(const string &name):
     theta  = HistFac.makeTH1D("Theta","#theta [#circ]","",BinSettings(360,0,180),"theta");
     phi    = HistFac.makeTH1D("Phi","#phi [#circ]","",BinSettings(720,-180,180),"phi");
     ggIM         = HistFac.makeTH1D("2 Neutral Tracks IM","M [MeV]","",BinSettings(1000),"ggIM");
+    ttIM         = HistFac.makeTH1D("2 Tracks IM","M [MeV]","",BinSettings(1000),"ttIM");
 }
 
 void TrackAnalysis::ProcessEvent(const ant::Event &event)
@@ -33,15 +34,19 @@ void TrackAnalysis::ProcessEvent(const ant::Event &event)
         theta->Fill((*i)->Theta()*TMath::RadToDeg());
         phi->Fill((*i)->Phi()*TMath::RadToDeg());
 
-        if(std::isnan((*i)->VetoEnergy()) && (*i)->ClusterEnergy()>20.0) {
+        if((*i)->ClusterEnergy()>20.0) {
             const Particle a(ParticleTypeDatabase::Photon,*i);
             TrackList::const_iterator j = i;
             ++j;
             while(j!=tracks.end()) {
-                if(std::isnan((*j)->VetoEnergy())&& (*i)->ClusterEnergy()>20.0) {
+                if((*i)->ClusterEnergy()>20.0) {
                     const Particle b(ParticleTypeDatabase::Photon,*j);
                     const TLorentzVector s = a + b;
-                    ggIM->Fill(s.M());
+
+                    if((*i)->VetoEnergy()==0 && (*j)->VetoEnergy()==0)
+                        ggIM->Fill(s.M());
+
+                    ttIM->Fill(s.M());
                 }
                 ++j;
             }
