@@ -1,5 +1,4 @@
-#ifndef ANT_CALIBRATION_ENERGYINVARIANTMASS_H
-#define ANT_CALIBRATION_ENERGYINVARIANTMASS_H
+#pragma once
 
 #include "Calibration.h"
 
@@ -30,5 +29,3 @@ public:
 };
 
 }} // namespace ant::calibration
-
-#endif

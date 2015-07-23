@@ -1,5 +1,4 @@
-#ifndef ANT_CALIBRATION_TIMINGTAPS_H
-#define ANT_CALIBRATION_TIMINGTAPS_H
+#pragma once
 
 #include "Calibration.h"
 #include "expconfig/Detector_t.h"
@@ -36,5 +35,3 @@ private:
 };
 
 }}  // namespace ant::calibration
-
-#endif

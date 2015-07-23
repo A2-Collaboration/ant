@@ -1,5 +1,4 @@
-#ifndef ANT_CALIBRATIONMANAGER
-#define ANT_CALIBRATIONMANAGER
+#pragma once
 
 //ant
 #include "tree/TCalibrationData.h"
@@ -61,5 +60,3 @@ public:
 };
 
 } //namespace ant
-
-#endif // ANT_CALIBRATIONMANAGER

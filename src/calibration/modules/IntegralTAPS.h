@@ -1,5 +1,4 @@
-#ifndef ANT_CALIBRATION_INTEGRALTAPS_H
-#define ANT_CALIBRATION_INTEGRALTAPS_H
+#pragma once
 
 #include "Calibration.h"
 #include "expconfig/Detector_t.h"
@@ -35,5 +34,3 @@ private:
 };
 
 }}  // namespace ant::calibration
-
-#endif

@@ -1,5 +1,4 @@
-#ifndef ANT_CALIBRATION_H
-#define ANT_CALIBRATION_H
+#pragma once
 
 #include "analysis/physics/Physics.h"
 #include "reconstruct/Reconstruct_traits.h"
@@ -32,4 +31,3 @@ public:
 
 } // namespace ant
 
-#endif // ANT_CALIBRATION_H
