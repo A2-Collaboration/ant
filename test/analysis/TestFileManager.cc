@@ -7,7 +7,7 @@
 
 #include "tree/THeaderInfo.h"
 
-#include "base/TFileWrapper.h"
+#include "base/WrapTFile.h"
 #include "base/tmpfile_t.h"
 
 
@@ -51,7 +51,7 @@ void generateInputFile(const string& filename) {
     auto unpacker = ant::Unpacker::Get(string(TEST_BLOBS_DIRECTORY)+"/Acqu_oneevent-small.dat.xz");
 
     // write some stuff to a ROOT tree
-    ant::TFileWrapper file(filename);
+    ant::WrapTFile file(filename);
 
     TTree* treeHeaderInfo = new TTree("treeHeaderInfo", "treeHeaderInfo");
     ant::THeaderInfo* HeaderInfo = new ant::THeaderInfo();

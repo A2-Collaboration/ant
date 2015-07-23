@@ -20,7 +20,7 @@
 
 #include "base/Logger.h"
 #include "base/Format.h"
-#include "base/TFileWrapper.h"
+#include "base/WrapTFile.h"
 
 #include <chrono>
 
@@ -54,7 +54,7 @@ int main(int argc, char* argv[]) {
     unsigned nReads = 0;
 
     // write some stuff to a ROOT tree
-    TFileWrapper file("unpacker_test_out.root");
+    WrapTFile file("unpacker_test_out.root");
 
     TTree* treeHeaderInfo = new TTree("treeHeaderInfo", "treeHeaderInfo");
     THeaderInfo* HeaderInfo = new THeaderInfo();

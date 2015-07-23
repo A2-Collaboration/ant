@@ -5,7 +5,7 @@
 #include <memory>
 #include <string>
 
-#include "base/TFileWrapper.h"
+#include "base/WrapTFile.h"
 
 class TFile;
 class TDirectory;
@@ -16,7 +16,7 @@ namespace output {
 class OutputManager {
 protected:
 
-    using file_list_t = std::list< std::unique_ptr< TFileWrapper > >;
+    using file_list_t = std::list< std::unique_ptr< WrapTFile > >;
     file_list_t files;
     TDirectory* current_dir = nullptr;
 

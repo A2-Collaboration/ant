@@ -1,4 +1,4 @@
-#include "TFileWrapper.h"
+#include "WrapTFile.h"
 #include "TFile.h"
 #include "std_ext.h"
 #include "Logger.h"
@@ -6,7 +6,7 @@
 using namespace std;
 using namespace ant;
 
-TFileWrapper::TFileWrapper(const string &filename)
+WrapTFile::WrapTFile(const string &filename)
 {
     file = std_ext::make_unique<TFile>(filename.c_str(), "RECREATE");
 
@@ -16,19 +16,19 @@ TFileWrapper::TFileWrapper(const string &filename)
         throw false;
 }
 
-bool TFileWrapper::isOpen() const
+bool WrapTFile::isOpen() const
 {
     return (file && file->IsOpen());
 }
 
-void TFileWrapper::cd()
+void WrapTFile::cd()
 {
     if(isOpen()) {
         file->cd();
     }
 }
 
-TFileWrapper::~TFileWrapper()
+WrapTFile::~WrapTFile()
 {
     if(file) {
         if(file->IsOpen()) {

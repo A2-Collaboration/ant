@@ -1,5 +1,5 @@
-#ifndef ANT_TFILEWRAPPER_H
-#define ANT_TFILEWRAPPER_H
+#ifndef ANT_WRAPTFILE_H
+#define ANT_WRAPTFILE_H
 
 #include <memory>
 #include <string>
@@ -8,12 +8,12 @@ class TFile;
 
 namespace ant {
 
-class TFileWrapper {
+class WrapTFile {
 protected:
     std::unique_ptr<TFile> file;
 
 public:
-    TFileWrapper(const std::string& filename);
+    WrapTFile(const std::string& filename);
 
     ///@fixme is this required?? remove if possible
     TFile* operator* () { return file.get(); }
@@ -21,9 +21,9 @@ public:
     bool isOpen() const;
     void cd();
 
-    ~TFileWrapper();
-    TFileWrapper(const TFileWrapper&) = delete;
-    TFileWrapper& operator= (const TFileWrapper&) = delete;
+    ~WrapTFile();
+    WrapTFile(const WrapTFile&) = delete;
+    WrapTFile& operator= (const WrapTFile&) = delete;
 };
 }
 

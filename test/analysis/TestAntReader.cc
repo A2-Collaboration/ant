@@ -12,7 +12,7 @@
 #include "unpacker/Unpacker.h"
 #include "reconstruct/Reconstruct.h"
 
-#include "base/TFileWrapper.h"
+#include "base/WrapTFile.h"
 #include "base/tmpfile_t.h"
 
 #include "TTree.h"
@@ -59,7 +59,7 @@ void generateInputFile(const string& filename) {
     auto unpacker = Unpacker::Get(string(TEST_BLOBS_DIRECTORY)+"/Acqu_oneevent-big.dat.xz");
 
     // write some stuff to a ROOT tree
-    TFileWrapper file(filename);
+    WrapTFile file(filename);
 
     TTree* treeEvent = new TTree("treeEvent", "treeEvent");
     TEvent* Event = new TEvent();
