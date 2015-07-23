@@ -49,7 +49,7 @@ struct TTrack
 
 
   virtual std::ostream& Print( std::ostream& s) const override {
-    return s << "TTrack: " << Clusters.size() << " clusters Energy=" << Energy << " Theta=" << Theta <<", Phi=" << Phi << " VetoEnergy=" << VetoEnergy << " TrackerEnergy=" << TrackerEnergy;
+    return s << "TTrack: " << Clusters.size() << " clusters, Energy=" << Energy << " Theta=" << Theta <<", Phi=" << Phi << " VetoEnergy=" << VetoEnergy << " TrackerEnergy=" << TrackerEnergy;
   }
 #endif
 
