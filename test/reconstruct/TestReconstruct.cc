@@ -11,11 +11,23 @@
 #include "base/std_ext.h"
 
 using namespace std;
+using namespace ant;
+
 
 void dotest();
 
 TEST_CASE("Reconstruct", "[reconstruct]") {
     dotest();
+}
+
+template<typename T>
+unsigned getTotalCount(Reconstruct::sorted_bydetectortype_t<T> m) {
+    unsigned total = 0;
+    for(const auto& m_item : m) {
+        const list<T>& list = m_item.second;
+        total += list.size();
+    }
+    return total;
 }
 
 // we use the friend class trick to test private methods
@@ -30,21 +42,27 @@ struct ReconstructTester {
 
     unique_ptr<TEvent> DoReconstruct(TDetectorRead& detectorRead)
     {
+        /// \todo Improve requirements
+
 
         // categorize the hits by detector type
         // this is handy for all subsequent reconstruction steps
-        map<Detector_t::Type_t, list< TDetectorReadHit* > > sorted_readhits;
+        Reconstruct::sorted_bydetectortype_t<TDetectorReadHit*> sorted_readhits;
         for(TDetectorReadHit& readhit : detectorRead.Hits) {
             sorted_readhits[readhit.GetDetectorType()].push_back(addressof(readhit));
         }
+
+        size_t n_readhits_before = getTotalCount(sorted_readhits);
+        REQUIRE(n_readhits_before>0);
 
         // apply calibration (this may change the given detectorRead!)
         for(const auto& calib : r.calibrations) {
             calib->ApplyTo(sorted_readhits);
         }
 
-        // for debug purposes, dump out the detectorRead
-        //cout << detectorRead << endl;
+        size_t n_readhits_after = getTotalCount(sorted_readhits);
+        REQUIRE(n_readhits_after==n_readhits_before);
+
 
         // already create the event here, since Tagger
         // doesn't need hit matching and thus can be filled already
@@ -57,24 +75,26 @@ struct ReconstructTester {
         // single value with type Channel_t::Type_t
         Reconstruct::sorted_bydetectortype_t<Reconstruct::HitWithEnergy_t> sorted_clusterhits;
         r.BuildHits(move(sorted_readhits), sorted_clusterhits, event->Tagger);
+        size_t n_clusterhits = getTotalCount(sorted_clusterhits);
+        REQUIRE(n_clusterhits + event->Tagger.Hits.size() <= n_readhits_after);
 
         // then build clusters (at least for calorimeters this is not trivial)
         Reconstruct::sorted_bydetectortype_t<TCluster> sorted_clusters;
         r.BuildClusters(move(sorted_clusterhits), sorted_clusters);
+        size_t n_clusters = getTotalCount(sorted_clusters);
+        REQUIRE(n_clusters <= n_clusterhits);
 
 
         // finally, do the track building
-        r.trackbuilder->Build(move(sorted_clusters), event);
-
-        // uncomment for debug purposes
-        //cout << *event << endl;
+        r.trackbuilder->Build(move(sorted_clusters), event->Tracks);
+        //REQUIRE(!event->Tracks.empty());
+        REQUIRE(event->Tracks.size() <= n_clusters);
 
         return event;
     }
 };
 }
 
-using namespace ant;
 
 void dotest() {
     auto unpacker = Unpacker::Get(string(TEST_BLOBS_DIRECTORY)+"/Acqu_oneevent-big.dat.xz");
