@@ -15,7 +15,7 @@
 
 using namespace std;
 using namespace ant;
-
+using namespace ant::analysis;
 
 analysis::GeoAcceptance::ParticleThetaPhiPlot::ParticleThetaPhiPlot(SmartHistFactory &factory, const string &title, const string &name,const BinSettings& thetabins,const BinSettings& phibins)
 {
@@ -186,3 +186,5 @@ void analysis::GeoAcceptance::AcceptanceAnalysis::ShowResult()
             << energy_reco
             << endc;
 }
+
+AUTO_REGISTER_PHYSICS(GeoAcceptance,"GeoAcceptance")

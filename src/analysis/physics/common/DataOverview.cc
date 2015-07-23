@@ -1,8 +1,10 @@
 #include "physics/common/DataOverview.h"
 #include "plot/root_draw.h"
 
-using namespace ant;
+
 using namespace std;
+using namespace ant;
+using namespace ant::analysis;
 
 
 analysis::DataOverview::OverviewSet::OverviewSet(SmartHistFactory &factory, const string &title)
@@ -77,4 +79,5 @@ void ant::analysis::DataOverview::ShowResult()
             << endc;
 }
 
+AUTO_REGISTER_PHYSICS(DataOverview, "DataOverview")
 

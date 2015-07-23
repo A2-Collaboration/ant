@@ -10,7 +10,7 @@
 #include <list>
 #include <string>
 #include <memory>
-
+#include <functional>
 
 class TFile;
 class TDirectory;
@@ -55,10 +55,50 @@ public:
               );
     }
 
+    void AddPhysics(std::unique_ptr<ant::Physics> pc) {
+        physics.emplace_back(std::move(pc));
+    }
+
     void ReadFrom(ant::input::DataReader& reader);
     void ProcessEvent(const ant::Event& event);
     void ShowResults();
+
 };
+
+template<class T>
+std::unique_ptr<Physics> physics_factory()
+{
+    return std::move(std_ext::make_unique<T>());
+}
+
+using physics_creator = std::function<std::unique_ptr<ant::Physics>()>;
+
+class PhysicsRegistry
+{
+private:
+    using physics_creators_t = std::map<std::string, physics_creator>;
+    physics_creators_t physics_creators;
+
+public:
+    static PhysicsRegistry& get();
+
+    static std::unique_ptr<ant::Physics> Create(const std::string& name);
+
+    void RegisterPhysics(physics_creator c, const std::string& name) {
+        physics_creators[name] = c;
+    }
+
+};
+
+class PhysicsRegistration
+{
+public:
+    PhysicsRegistration(physics_creator c, const std::string& name);
+};
+
+#define AUTO_REGISTER_PHYSICS(physics, name) \
+    PhysicsRegistration _physics_registration_ ## physics(physics_factory<physics>,name);
+
 }
 
 

@@ -65,4 +65,4 @@ void TrackAnalysis::ShowResult()
             << endc;
 }
 
-
+AUTO_REGISTER_PHYSICS(TrackAnalysis, "TrackAnalysis")

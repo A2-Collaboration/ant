@@ -83,7 +83,7 @@ protected:
     BinSettings mmbinning = BinSettings(1000, 400,1400);
 
 public:
-    OmegaEtaG(DataMode m);
+    OmegaEtaG(DataMode m=DataMode::Reconstructed);
     virtual ~OmegaEtaG() = default;
     void ShowResult() override;
 };

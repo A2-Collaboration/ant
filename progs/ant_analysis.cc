@@ -43,15 +43,12 @@ int main(int argc, char** argv) {
 
     PhysicsManager pm;
 
-    for( auto& p : physicsclasses->getValue()) {
-        if(p == "OmetaEtaG")
-            pm.AddPhysics<OmegaEtaG>(OmegaBase::DataMode::Reconstructed);
-        else if (p== "DataOverview")
-            pm.AddPhysics<DataOverview>();
-        else if (p=="TrackAnalysis")
-            pm.AddPhysics<TrackAnalysis>();
-        else {
-            LOG(WARNING) << "Unknown physics class " << p;
+    for(const auto& classname : physicsclasses->getValue()) {
+        try {
+            pm.AddPhysics( PhysicsRegistry::Create(classname) );
+            VLOG(3) << "Activated physics class \"" << classname << "\"";
+        } catch (...) {
+            LOG(WARNING) << "Physics class \"" << classname << "\" is not registered";
         }
     }
 

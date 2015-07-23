@@ -33,6 +33,10 @@ ant::PhysicsManager::PhysicsManager() : physics()
 
 void ant::PhysicsManager::ReadFrom(ant::input::DataReader &reader)
 {
+    if(physics.empty()) {
+        LOG(WARNING) << "No Analysis Instances activated. Will not analyse anything.";
+    }
+
     while(reader.hasData()) {
         const auto event = reader.ReadNextEvent();
 
@@ -64,4 +68,23 @@ void ant::PhysicsManager::ShowResults()
     for(auto& p : physics) {
         p->ShowResult();
     }
+}
+
+
+ant::PhysicsRegistry&ant::PhysicsRegistry::get()
+{
+    static PhysicsRegistry instance;
+    return instance;
+}
+
+std::unique_ptr<ant::Physics> ant::PhysicsRegistry::Create(const string& name)
+{
+    return PhysicsRegistry::get().physics_creators.at(name)();
+
+}
+
+
+ant::PhysicsRegistration::PhysicsRegistration(ant::physics_creator c, const string& name)
+{
+    PhysicsRegistry::get().RegisterPhysics(c,name);
 }

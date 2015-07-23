@@ -3,6 +3,7 @@
 
 using namespace std;
 using namespace ant;
+using namespace ant::analysis;
 
 analysis::MCTrueAcceptance::MCTrueAcceptance():
     Physics("McTrueAcceptance"), events_seen(0)
@@ -71,3 +72,4 @@ void ant::analysis::MCTrueAcceptance::ShowResult()
     canvas("MCTrueAcceptance") << detect << endc;
 }
 
+AUTO_REGISTER_PHYSICS(MCTrueAcceptance,"MCTrueAcceptance")

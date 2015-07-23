@@ -297,3 +297,5 @@ string to_string(const OmegaBase::DataMode &m)
     }
 }
 
+
+AUTO_REGISTER_PHYSICS(OmegaEtaG, "OmegaEtaG")
