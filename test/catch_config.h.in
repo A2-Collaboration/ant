@@ -1,3 +1,5 @@
+#pragma once
+
 // Cmake configure file for tests
 
 #cmakedefine TEST_BLOBS_DIRECTORY "@TEST_BLOBS_DIRECTORY@"

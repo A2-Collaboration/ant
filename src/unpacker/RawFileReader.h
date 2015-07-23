@@ -8,9 +8,6 @@
 
 #include "base/std_ext.h"
 
-// fix qtcreator highlighting...
-typedef std::uint8_t uint8_t;
-
 namespace ant {
 
 /**
