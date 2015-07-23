@@ -44,6 +44,9 @@ void TrackBuilder::Build_PID_CB(std::map<Detector_t::Type_t, std::list<TCluster>
                                 );
                     cb_cluster = cb_clusters.erase(cb_cluster);
                 }
+                else {
+                    ++cb_cluster;
+                }
             }
 
             if(matched) {
