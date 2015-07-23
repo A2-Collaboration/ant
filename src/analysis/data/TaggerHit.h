@@ -1,5 +1,4 @@
-#ifndef TAGGERHIT_H
-#define TAGGERHIT_H
+#pragma once
 
 #include <list>
 #include <memory>
@@ -43,5 +42,3 @@ using TaggerHitPtr   = std::shared_ptr<TaggerHit>;
 using TaggerHistList = std::vector<TaggerHitPtr>;
 
 }
-
-#endif

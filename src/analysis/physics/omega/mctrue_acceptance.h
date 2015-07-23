@@ -1,5 +1,4 @@
-#ifndef MCTRUE_ACCEPTANCE_H
-#define MCTRUE_ACCEPTANCE_H
+#pragma once
 
 #include "physics/Physics.h"
 #include "plot/SmartHist.h"
@@ -34,6 +33,3 @@ public:
 }
 
 }
-
-
-#endif

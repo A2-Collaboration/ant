@@ -1,5 +1,4 @@
-#ifndef TRIGGERINPUT_H
-#define TRIGGERINPUT_H
+#pragma once
 
 #include "InputModule.h"
 #include "Rtypes.h"
@@ -51,5 +50,3 @@ public:
 };
 }
 }
-
-#endif

@@ -1,5 +1,4 @@
-#ifndef SPLITCHECK_H
-#define SPLITCHECK_H
+#pragma once
 
 #include "AntPhysics.h"
 #include "base/interval.h"
@@ -32,4 +31,3 @@ public:
 
 }
 }
-#endif

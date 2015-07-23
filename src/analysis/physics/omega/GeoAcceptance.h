@@ -1,5 +1,4 @@
-#ifndef GEOACCEPTANCE_H
-#define GEOACCEPTANCE_H
+#pragma once
 
 #include "analysis/physics/Physics.h"
 #include "analysis/plot/Histogram.h"
@@ -88,6 +87,3 @@ public:
 };
 }
 }
-
-#endif
-

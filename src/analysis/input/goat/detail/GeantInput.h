@@ -1,5 +1,4 @@
-#ifndef GEANTINPUT_H
-#define GEANTINPUT_H
+#pragma once
 
 #include "InputModule.h"
 #include <vector>
@@ -127,5 +126,3 @@ public:
 };
 }
 }
-
-#endif

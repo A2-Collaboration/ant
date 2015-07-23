@@ -1,5 +1,4 @@
-#ifndef HISTOGRAM_H
-#define HISTOGRAM_H
+#pragma once
 
 #include "TColor.h"
 
@@ -102,5 +101,3 @@ public:
 };
 
 }
-
-#endif

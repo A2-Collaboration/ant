@@ -1,5 +1,4 @@
-#ifndef DATAOVERVIEW_H
-#define DATAOVERVIEW_H
+#pragma once
 
 #include "analysis/physics/Physics.h"
 #include "analysis/plot/SmartHist.h"
@@ -41,5 +40,3 @@ public:
 
 }
 }
-
-#endif

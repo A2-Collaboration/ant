@@ -1,5 +1,4 @@
-#ifndef TRIGGERINFO_H
-#define TRIGGERINFO_H
+#pragma once
 
 #include "base/types.h"
 #include "base/printable.h"
@@ -68,5 +67,3 @@ public:
 using TriggerInfoPtr = std::shared_ptr<TriggerInfo>;
 
 }
-
-#endif

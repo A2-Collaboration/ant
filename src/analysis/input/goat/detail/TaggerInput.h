@@ -1,5 +1,4 @@
-#ifndef TAGGERINPUT_H
-#define TAGGERINPUT_H
+#pragma once
 
 #include "InputModule.h"
 #include "Rtypes.h"
@@ -44,5 +43,3 @@ public:
 };
 }
 }
-
-#endif

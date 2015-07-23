@@ -1,5 +1,4 @@
-#ifndef ANTREDER_H
-#define ANTREDER_H
+#pragma once
 
 #include "analysis/input/DataReader.h"
 
@@ -55,5 +54,3 @@ public:
 
 }
 }
-
-#endif

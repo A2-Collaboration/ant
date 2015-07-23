@@ -1,5 +1,4 @@
-#ifndef ANT_PARTICLE_H
-#define ANT_PARTICLE_H
+#pragma once
 
 #include "base/printable.h"
 #include "base/types.h"
@@ -85,5 +84,3 @@ public:
 };
 
 }
-
-#endif

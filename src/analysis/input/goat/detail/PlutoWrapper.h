@@ -1,5 +1,4 @@
-#ifndef PLUTOWRAPPER_H
-#define PLUTOWRAPPER_H
+#pragma once
 
 // Switch of some warnings for the Pluto headers
 #pragma GCC diagnostic push
@@ -27,5 +26,3 @@ std::string GetParticleName(const PParticle* p);
 std::string GetParticleName(const int id);
 
 void PrintParticleTable(std::ostream& stream, const std::vector<const PParticle*> plist);
-
-#endif

@@ -1,5 +1,4 @@
-#ifndef FILEMANAGER_H
-#define FILEMANAGER_H
+#pragma once
 
 #include <list>
 #include <string>
@@ -47,4 +46,3 @@ public:
 }
 }
 
-#endif

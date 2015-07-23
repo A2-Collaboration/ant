@@ -1,5 +1,4 @@
-#ifndef GOATREADER_H
-#define GOATREADER_H
+#pragma once
 
 #include "analysis/input/DataReader.h"
 #include "analysis/data/Event.h"
@@ -127,5 +126,3 @@ public:
 
 }
 }
-
-#endif

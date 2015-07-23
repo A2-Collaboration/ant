@@ -1,5 +1,4 @@
-#ifndef EVENT_H
-#define EVENT_H
+#pragma once
 
 #include "base/types.h"
 
@@ -95,5 +94,3 @@ public:
 };
 
 }
-
-#endif

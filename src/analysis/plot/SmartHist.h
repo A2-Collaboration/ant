@@ -1,5 +1,4 @@
-#ifndef ANT_SMARTHIST_H
-#define ANT_SMARTHIST_H
+#pragma once
 
 #include "Histogram.h"
 #include "root_draw.h"
@@ -258,5 +257,3 @@ SmartHist1<std::string> SmartHist1<std::string>::makeHist(
     HistogramFactory& factory);
 
 }
-
-#endif

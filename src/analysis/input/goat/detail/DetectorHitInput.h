@@ -1,5 +1,4 @@
-#ifndef DETECTORHITINPUT_H
-#define DETECTORHITINPUT_H
+#pragma once
 
 #include "InputModule.h"
 #include "Rtypes.h"
@@ -59,5 +58,3 @@ public:
 };
 }
 }
-
-#endif

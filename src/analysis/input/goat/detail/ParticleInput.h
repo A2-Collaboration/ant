@@ -1,5 +1,4 @@
-#ifndef PARTICLEINPUT_H
-#define PARTICLEINPUT_H
+#pragma once
 
 #include "InputModule.h"
 #include "Rtypes.h"
@@ -33,5 +32,3 @@ public:
 };
 }
 }
-
-#endif

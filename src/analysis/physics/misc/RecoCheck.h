@@ -1,5 +1,4 @@
-#ifndef RECOCHECK_H
-#define RECOCHECK_H
+#pragma once
 
 #include "AntPhysics.h"
 #include "base/interval.h"
@@ -27,4 +26,3 @@ public:
 
 }
 }
-#endif

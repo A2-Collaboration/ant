@@ -1,5 +1,4 @@
-#ifndef DELTAPLUSPHYSICS_H
-#define DELTAPLUSPHYSICS_H
+#pragma once
 
 #include "physics/Physics.h"
 #include "plot/Histogram.h"
@@ -90,4 +89,3 @@ public:
 
 }
 }
-#endif

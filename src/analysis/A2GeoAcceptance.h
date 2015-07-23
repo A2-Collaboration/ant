@@ -1,5 +1,4 @@
-#ifndef A2GEOACCEPTANCE_H
-#define A2GEOACCEPTANCE_H
+#pragma once
 
 #include "base/interval.h"
 #include "TMath.h"
@@ -26,4 +25,3 @@ public:
 };
 
 }
-#endif

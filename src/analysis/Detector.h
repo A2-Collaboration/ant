@@ -1,5 +1,4 @@
-#ifndef DETECTOR_H
-#define DETECTOR_H
+#pragma once
 
 #include "base/printable.h"
 
@@ -74,5 +73,3 @@ public:
 };
 
 }
-
-#endif

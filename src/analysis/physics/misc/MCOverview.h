@@ -1,5 +1,5 @@
-#ifndef MCOVERVIEW_H
-#define MCOVERVIEW_H
+#pragma once
+
 
 #include "AntPhysics.h"
 #include "plot/Histogram.h"
@@ -24,5 +24,3 @@ public:
 };
 }
 }
-
-#endif

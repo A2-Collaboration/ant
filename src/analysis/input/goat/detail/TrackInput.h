@@ -1,5 +1,4 @@
-#ifndef TRACKINPUT_H
-#define TRACKINPUT_H
+#pragma once
 
 #include "InputModule.h"
 #include "Rtypes.h"
@@ -75,5 +74,3 @@ public:
 };
 }
 }
-
-#endif

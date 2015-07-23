@@ -1,5 +1,4 @@
-#ifndef DATAREADER_H
-#define DATAREADER_H
+#pragma once
 
 #include <memory>
 
@@ -46,4 +45,3 @@ public:
 }
 
 }
-#endif

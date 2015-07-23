@@ -1,5 +1,4 @@
-#ifndef OUTPUTMANAGER_H
-#define OUTPUTMANAGER_H
+#pragma once
 
 #include <list>
 #include <memory>
@@ -34,4 +33,3 @@ public:
 }
 }
 
-#endif

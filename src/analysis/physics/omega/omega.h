@@ -1,5 +1,4 @@
-#ifndef OMEGA_H
-#define OMEGA_H
+#pragma once
 
 #include "analysis/physics/Physics.h"
 #include "analysis/plot/SmartHist.h"
@@ -92,4 +91,3 @@ public:
 }
 
 std::string to_string(const ant::analysis::OmegaBase::DataMode& m);
-#endif

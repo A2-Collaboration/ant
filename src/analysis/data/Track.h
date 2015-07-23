@@ -1,5 +1,4 @@
-#ifndef TRACK_H
-#define TRACK_H
+#pragma once
 
 #include "base/printable.h"
 #include "base/types.h"
@@ -65,5 +64,3 @@ using TrackPtr  = std::shared_ptr<Track>;
 using TrackList = std::vector<TrackPtr>;
 
 }
-
-#endif // TRACK_H

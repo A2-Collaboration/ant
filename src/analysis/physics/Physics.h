@@ -1,5 +1,4 @@
-#ifndef ANTPHYSICS_H
-#define ANTPHYSICS_H
+#pragma once
 
 #include "analysis/data/Event.h"
 #include "analysis/plot/HistogramFactories.h"
@@ -100,6 +99,3 @@ public:
     PhysicsRegistration _physics_registration_ ## physics(physics_factory<physics>,name);
 
 }
-
-
-#endif

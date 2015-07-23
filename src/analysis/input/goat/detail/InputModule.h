@@ -1,5 +1,4 @@
-#ifndef INPUTMODULE_H
-#define INPUTMODULE_H
+#pragma once
 
 #include <string>
 
@@ -24,5 +23,3 @@ public:
 };
 }
 }
-
-#endif

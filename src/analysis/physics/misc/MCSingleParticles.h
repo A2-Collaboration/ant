@@ -1,5 +1,5 @@
-#ifndef MCSINGLEPARTICLES_H
-#define MCSINGLEPARTICLES_H
+#pragma once
+
 
 #include "AntPhysics.h"
 #include "plot/Histogram.h"
@@ -30,5 +30,3 @@ public:
 };
 }
 }
-
-#endif

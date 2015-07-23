@@ -1,5 +1,4 @@
-#ifndef TRUEMATCHER_H
-#define TRUEMATCHER_H
+#pragma once
 
 #include <list>
 #include <vector>
@@ -98,5 +97,3 @@ std::list< scored_match<typename List1::value_type, typename List2::value_type> 
 }
 }
 }
-
-#endif

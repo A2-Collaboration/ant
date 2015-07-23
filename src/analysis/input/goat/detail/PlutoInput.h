@@ -1,5 +1,4 @@
-#ifndef PLUTOINPUT_H
-#define PLUTOINPUT_H
+#pragma once
 
 #include "InputModule.h"
 #include <vector>
@@ -40,5 +39,3 @@ public:
 };
 }
 }
-
-#endif

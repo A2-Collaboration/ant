@@ -1,5 +1,4 @@
-#ifndef TREEMANAGER_H
-#define TREEMANAGER_H
+#pragma once
 
 #include <set>
 #include "Rtypes.h"
@@ -27,5 +26,3 @@ public:
 };
 }
 }
-
-#endif

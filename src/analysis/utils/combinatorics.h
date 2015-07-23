@@ -1,5 +1,4 @@
-#ifndef COMBINATORICS_H
-#define COMBINATORICS_H
+#pragma once
 
 #include <vector>
 
@@ -141,5 +140,3 @@ KofNvector<T> makeCombination( const std::vector<T>& data, const unsigned int k)
 }
 
 }
-
-#endif

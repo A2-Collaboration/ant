@@ -1,5 +1,4 @@
-#ifndef HISTOGRAMFACTORIES_H
-#define HISTOGRAMFACTORIES_H
+#pragma once
 
 #include "Histogram.h"
 #include "SmartHist.h"
@@ -121,5 +120,3 @@ public:
 };
 
 }
-
-#endif

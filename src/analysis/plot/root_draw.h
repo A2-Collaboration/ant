@@ -1,5 +1,4 @@
-#ifndef ROOT_DRAW_H
-#define ROOT_DRAW_H
+#pragma once
 
 #include <string>
 #include <list>
@@ -188,5 +187,3 @@ public:
 
 
 }
-
-#endif

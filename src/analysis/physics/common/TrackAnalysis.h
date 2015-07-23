@@ -1,5 +1,4 @@
-#ifndef ANTTRACKANALYSIS_H
-#define ANTTRACKANALYSIS_H
+#pragma once
 
 #include "analysis/physics/Physics.h"
 
@@ -29,5 +28,3 @@ public:
 
 }
 }
-
-#endif

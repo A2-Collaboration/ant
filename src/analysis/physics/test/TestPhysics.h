@@ -1,5 +1,4 @@
-#ifndef TESTPHYSICS_H
-#define TESTPHYSICS_H
+#pragma once
 
 #include "physics/Physics.h"
 #include "plot/Histogram.h"
@@ -28,4 +27,3 @@ public:
 };
 
 }
-#endif

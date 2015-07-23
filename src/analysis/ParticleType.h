@@ -1,5 +1,4 @@
-#ifndef ANT_PARTICLETYPES_H
-#define ANT_PARTICLETYPES_H
+#pragma once
 
 #include "base/types.h"
 
@@ -127,5 +126,3 @@ public:
 }
 
 std::ostream& operator<< ( std::ostream& stream, const ant::ParticleTypeDatabase::Type& particle_type );
-
-#endif

@@ -1,5 +1,4 @@
-#ifndef CONVERT_H
-#define CONVERT_H
+#pragma once
 
 #include <memory>
 
@@ -27,4 +26,3 @@ std::shared_ptr<ant::TaggerHit> Convert(const TTaggerHit& taggerhit);
 }
 }
 
-#endif
