@@ -15,6 +15,8 @@ namespace expconfig {
 namespace detector {
 class CB;
 class PID;
+class TAPS;
+//class TAPSVeto;
 }
 }
 
@@ -25,6 +27,23 @@ class TrackBuilder {
 protected:
     std::shared_ptr<expconfig::detector::CB>  cb;
     std::shared_ptr<expconfig::detector::PID> pid;
+    std::shared_ptr<expconfig::detector::TAPS> taps;
+//    std::shared_ptr<expconfig::detector::VETO> veto;
+
+    void Build_PID_CB(
+            std::map<Detector_t::Type_t, std::list< TCluster > >& sorted_clusters,
+            TEvent::tracks_t& tracks
+            );
+
+    void Build_TAPS_Veto(
+            std::map<Detector_t::Type_t, std::list< TCluster > >& sorted_clusters,
+            TEvent::tracks_t& tracks
+            );
+
+    void Catchall(
+            std::map<Detector_t::Type_t, std::list< TCluster > >& sorted_clusters,
+            TEvent::tracks_t& tracks
+            );
 
 public:
 
