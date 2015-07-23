@@ -1,5 +1,4 @@
-#ifndef DETECTORS_CB_H
-#define DETECTORS_CB_H
+#pragma once
 
 #include "expconfig/Detector_t.h"
 #include "unpacker/UnpackerAcqu.h"
@@ -61,7 +60,3 @@ protected:
 
 
 }}} // namespace ant::expconfig::detector
-
-
-
-#endif // DETECTORS_CB_H

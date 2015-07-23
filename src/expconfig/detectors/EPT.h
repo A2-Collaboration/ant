@@ -1,5 +1,4 @@
-#ifndef DETECTORS_EPT_H
-#define DETECTORS_EPT_H
+#pragma once
 
 #include "Detector_t.h"
 #include "unpacker/UnpackerAcqu.h"
@@ -66,7 +65,3 @@ struct EPT_2014 : EPT {
 
 
 }}} // namespace ant::expconfig::detector
-
-
-
-#endif // DETECTORS_EPT_H

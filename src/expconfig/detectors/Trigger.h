@@ -1,5 +1,4 @@
-#ifndef DETECTORS_TRIGGER_H
-#define DETECTORS_TRIGGER_H
+#pragma once
 
 #include "Detector_t.h"
 #include "unpacker/UnpackerAcqu.h"
@@ -51,7 +50,3 @@ struct Trigger :
 
 
 }}} // namespace ant::expconfig::detector
-
-
-
-#endif // DETECTORS_TRIGGER_H

@@ -1,5 +1,4 @@
-#ifndef ANT_EXPCONFIG_SETUP
-#define ANT_EXPCONFIG_SETUP
+#pragma once
 
 #include "ExpConfig.h"
 #include "unpacker/UnpackerAcqu.h"
@@ -129,5 +128,3 @@ public:
     SetupRegistration _setup_registration_ ## setup(setup_factory<setup>);
 
 }} // namespace ant::expconfig
-
-#endif

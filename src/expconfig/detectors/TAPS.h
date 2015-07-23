@@ -1,5 +1,4 @@
-#ifndef DETECTORS_TAPS_H
-#define DETECTORS_TAPS_H
+#pragma once
 
 #include "expconfig/Detector_t.h"
 #include "unpacker/UnpackerAcqu.h"
@@ -142,5 +141,3 @@ private:
 }; // TAPS_2013
 
 }}} // namespace ant::expconfig::detector
-
-#endif // DETECTORS_TAPS_H

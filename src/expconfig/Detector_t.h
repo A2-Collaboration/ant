@@ -1,5 +1,4 @@
-#ifndef EXPCONFIG_DETECTOR_T_H
-#define EXPCONFIG_DETECTOR_T_H
+#pragma once
 
 #include <string>
 #include <vector>
@@ -194,5 +193,3 @@ inline bool Channel_t::IsIntegral(const Channel_t::Type_t& t) {
 }
 
 } // namespace ant
-
-#endif // EXPCONFIG_DETECTOR_T_H

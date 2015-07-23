@@ -1,5 +1,4 @@
-#ifndef DETECTORS_PID_H
-#define DETECTORS_PID_H
+#pragma once
 
 #include "expconfig/Detector_t.h"
 #include "unpacker/UnpackerAcqu.h"
@@ -94,5 +93,3 @@ struct PID_2004 : PID {
 
 
 }}} // namespace ant::expconfig::detector
-
-#endif // DETECTORS_PID_H

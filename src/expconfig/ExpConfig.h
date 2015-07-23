@@ -1,7 +1,4 @@
-#ifndef EXPCONFIG_H
-#define EXPCONFIG_H
-
-//#include "Detector_t.h"
+#pragma once
 
 #include "base/printable.h"
 
@@ -61,7 +58,3 @@ private:
 };
 
 } // namespace ant
-
-
-
-#endif // EXPCONFIG_H
