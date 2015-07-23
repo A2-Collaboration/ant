@@ -47,6 +47,18 @@ private:
     };
 
     template<typename T>
+    using sorted_bydetectortype_t = std::map<Detector_t::Type_t, std::list< T > >;
+
+    void BuildHits(
+            sorted_bydetectortype_t<TDetectorReadHit*>&& sorted_readhits,
+            sorted_bydetectortype_t<HitWithEnergy_t>& sorted_clusterhits,
+            TTagger& event_tagger
+            );
+    void BuildClusters(
+
+            );
+
+    template<typename T>
     using shared_ptr_list = std::list< std::shared_ptr<T> >;
 
     using sorted_detectors_t = std::map<Detector_t::Type_t, std::shared_ptr<Detector_t> >;

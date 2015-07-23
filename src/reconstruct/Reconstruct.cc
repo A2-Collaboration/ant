@@ -60,8 +60,7 @@ unique_ptr<TEvent> Reconstruct::DoReconstruct(TDetectorRead& detectorRead)
     // this is handy for all subsequent reconstruction steps
     map<Detector_t::Type_t, list< TDetectorReadHit* > > sorted_readhits;
     for(TDetectorReadHit& readhit : detectorRead.Hits) {
-        const auto detector = static_cast<Detector_t::Type_t>(readhit.DetectorType);
-        sorted_readhits[detector].push_back(addressof(readhit));
+        sorted_readhits[readhit.GetDetectorType()].push_back(addressof(readhit));
     }
 
     // apply calibration (this may change the given detectorRead!)
@@ -72,101 +71,18 @@ unique_ptr<TEvent> Reconstruct::DoReconstruct(TDetectorRead& detectorRead)
     // for debug purposes, dump out the detectorRead
     //cout << detectorRead << endl;
 
-    // the detectorRead is now calibrated as far as possible
-    // lets start the hit matching, which builds the TClusterHit's
-    // we also extract the energy, which is always defined as a
-    // single value with type Channel_t::Type_t
-
-
-
     // already create the event here, since TaggerHits
     // don't need hit matching and thus can be filled already
     auto event = std_ext::make_unique<TEvent>(detectorRead.ID);
 
-    map<Detector_t::Type_t, list< HitWithEnergy_t > > sorted_clusterhits;
-    auto sorted_clusterhits_hint = sorted_clusterhits.cbegin();
+    // the detectorRead is now calibrated as far as possible
+    // lets start the hit matching, which builds the TClusterHit's
+    // we also extract the energy, which is always defined as a
+    // single value with type Channel_t::Type_t
+    sorted_bydetectortype_t<HitWithEnergy_t> sorted_clusterhits;
+    BuildHits(move(sorted_readhits), sorted_clusterhits, event->Tagger);
 
-    for(const auto& it_hit : sorted_readhits) {
-        list<HitWithEnergy_t> clusterhits;
-        const Detector_t::Type_t detectortype = it_hit.first;
-        const auto& readhits = it_hit.second;
-
-        // find the detector instance for this type
-        const auto& it_detector = sorted_detectors.find(detectortype);
-        if(it_detector == sorted_detectors.end())
-            continue;
-        const shared_ptr<Detector_t>& detector = it_detector->second;
-
-        // the tagging devices are excluded from further hit matching and clustering
-        const shared_ptr<TaggerDetector_t>& taggerdetector
-                = dynamic_pointer_cast<TaggerDetector_t>(detector);
-
-        for(const TDetectorReadHit* readhit : readhits) {
-            // ignore uncalibrated items
-            if(readhit->Values.empty())
-                continue;
-
-            // for tagger detectors, we do not match the hits by channel at all
-            if(taggerdetector != nullptr) {
-                /// \todo handle Integral and Scaler type information here
-                if(readhit->GetChannelType() != Channel_t::Type_t::Timing)
-                    continue;
-                // but we add each TClusterHitDatum as some single
-                // TClusterHit representing an electron with a timing
-                /// \todo implement tagger double-hit decoding?
-                TTagger& event_tagger = event->Tagger;
-                for(const double timing : readhit->Values) {
-                    event_tagger.Hits.emplace_back(
-                                taggerdetector->GetPhotonEnergy(readhit->Channel),
-                                TKeyValue<double>(readhit->Channel, timing)
-                                );
-                }
-
-                /// \todo add Moeller/PairSpec information here
-                continue;
-            }
-
-            // transform the data from readhit into TClusterHitDatum's
-            vector<TClusterHitDatum> data(readhit->Values.size());
-            auto do_transform = [readhit] (double value) {
-                return TClusterHitDatum(readhit->GetChannelType(), value);
-            };
-            transform(readhit->Values.cbegin(), readhit->Values.cend(),
-                      data.begin(), do_transform);
-
-            // for non-tagger detectors, search for a TClusterHit with same channel
-            const auto match_channel = [readhit] (const HitWithEnergy_t& hit) {
-                return hit.Hit.Channel == readhit->Channel;
-            };
-            const auto it_clusterhit = find_if(clusterhits.begin(),
-                                               clusterhits.end(),
-                                               match_channel);
-            if(it_clusterhit == clusterhits.end()) {
-                // not found, create new HitWithEnergy from readhit
-                clusterhits.emplace_back(readhit, move(data));
-            }
-            else {
-                // clusterhit with channel of readhit already exists,
-                // so append TClusterHitDatum's and try to set energy
-                it_clusterhit->MaybeSetEnergy(readhit);
-                move(data.begin(), data.end(),
-                     back_inserter(it_clusterhit->Hit.Data));
-            }
-        }
-
-        // The trigger or tagger detectors don't fill anything
-        // so skip it
-        if(clusterhits.empty())
-            continue;
-
-        // insert the clusterhits
-        sorted_clusterhits_hint =
-                sorted_clusterhits.insert(sorted_clusterhits_hint,
-                                          make_pair(detectortype, move(clusterhits)));
-    }
-
-
-    map<Detector_t::Type_t, list< TCluster > > sorted_clusters;
+    sorted_bydetectortype_t<TCluster> sorted_clusters;
     auto sorted_clusters_hint = sorted_clusters.begin();
 
     for(const auto& it_clusterhits : sorted_clusterhits) {
@@ -261,6 +177,92 @@ unique_ptr<TEvent> Reconstruct::DoReconstruct(TDetectorRead& detectorRead)
 Reconstruct::~Reconstruct()
 {
 
+}
+
+void Reconstruct::BuildHits(
+        sorted_bydetectortype_t<TDetectorReadHit *>&& sorted_readhits,
+        sorted_bydetectortype_t<Reconstruct::HitWithEnergy_t>& sorted_clusterhits,
+        TTagger& event_tagger)
+{
+    auto insert_hint = sorted_clusterhits.cbegin();
+
+    for(const auto& it_hit : sorted_readhits) {
+        list<HitWithEnergy_t> clusterhits;
+        const Detector_t::Type_t detectortype = it_hit.first;
+        const auto& readhits = it_hit.second;
+
+        // find the detector instance for this type
+        const auto& it_detector = sorted_detectors.find(detectortype);
+        if(it_detector == sorted_detectors.end())
+            continue;
+        const shared_ptr<Detector_t>& detector = it_detector->second;
+
+        // the tagging devices are excluded from further hit matching and clustering
+        const shared_ptr<TaggerDetector_t>& taggerdetector
+                = dynamic_pointer_cast<TaggerDetector_t>(detector);
+
+        for(const TDetectorReadHit* readhit : readhits) {
+            // ignore uncalibrated items
+            if(readhit->Values.empty())
+                continue;
+
+            // for tagger detectors, we do not match the hits by channel at all
+            if(taggerdetector != nullptr) {
+                /// \todo handle Integral and Scaler type information here
+                if(readhit->GetChannelType() != Channel_t::Type_t::Timing)
+                    continue;
+                // but we add each TClusterHitDatum as some single
+                // TClusterHit representing an electron with a timing
+                /// \todo implement tagger double-hit decoding?
+                for(const double timing : readhit->Values) {
+                    event_tagger.Hits.emplace_back(
+                                taggerdetector->GetPhotonEnergy(readhit->Channel),
+                                TKeyValue<double>(readhit->Channel, timing)
+                                );
+                }
+
+                /// \todo add Moeller/PairSpec information here
+                continue;
+            }
+
+            // transform the data from readhit into TClusterHitDatum's
+            vector<TClusterHitDatum> data(readhit->Values.size());
+            auto do_transform = [readhit] (double value) {
+                return TClusterHitDatum(readhit->GetChannelType(), value);
+            };
+            transform(readhit->Values.cbegin(), readhit->Values.cend(),
+                      data.begin(), do_transform);
+
+            // for non-tagger detectors, search for a TClusterHit with same channel
+            const auto match_channel = [readhit] (const HitWithEnergy_t& hit) {
+                return hit.Hit.Channel == readhit->Channel;
+            };
+            const auto it_clusterhit = find_if(clusterhits.begin(),
+                                               clusterhits.end(),
+                                               match_channel);
+            if(it_clusterhit == clusterhits.end()) {
+                // not found, create new HitWithEnergy from readhit
+                clusterhits.emplace_back(readhit, move(data));
+            }
+            else {
+                // clusterhit with channel of readhit already exists,
+                // so append TClusterHitDatum's and try to set energy
+                it_clusterhit->MaybeSetEnergy(readhit);
+                move(data.begin(), data.end(),
+                     back_inserter(it_clusterhit->Hit.Data));
+            }
+        }
+
+        // The trigger or tagger detectors don't fill anything
+        // so skip it
+        if(clusterhits.empty())
+            continue;
+
+        // insert the clusterhits
+        insert_hint =
+                sorted_clusterhits.insert(insert_hint,
+                                          make_pair(detectortype, move(clusterhits)));
+    }
 }
 
 
