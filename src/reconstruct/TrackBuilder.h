@@ -1,5 +1,4 @@
-#ifndef ANT_TRACKBUILDER_H
-#define ANT_TRACKBUILDER_H
+#pragma once
 
 #include "expconfig/Detector_t.h"
 #include "tree/TCluster.h"
@@ -62,5 +61,3 @@ public:
 };
 
 }} // namespace ant::reconstruct
-
-#endif // ANT_TRACKBUILDER_H
