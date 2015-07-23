@@ -1,7 +1,7 @@
 #ifndef DETECTORS_TAPS_H
 #define DETECTORS_TAPS_H
 
-#include "Detector_t.h"
+#include "expconfig/Detector_t.h"
 #include "unpacker/UnpackerAcqu.h"
 
 #include "TVector2.h"
