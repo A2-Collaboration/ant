@@ -2,7 +2,7 @@
 
 #include "expconfig/Detector_t.h"
 
-#include "tree/TCluster.h"
+
 
 #include "TVector3.h"
 #include "TMath.h"
@@ -13,16 +13,19 @@
 
 namespace ant {
 namespace reconstruct {
+
+class AdaptorTClusterHit;
+
 namespace clustering {
 
 struct crystal_t  {
     double Energy;
     const ClusterDetector_t::Element_t* Element;
-    const TClusterHit* Hit;
+    const AdaptorTClusterHit* Hit;
     crystal_t(
             double energy,
             const ClusterDetector_t::Element_t* element,
-            const TClusterHit* hit
+            const AdaptorTClusterHit* hit
             )
         :
           Energy(energy),

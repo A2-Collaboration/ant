@@ -15,24 +15,24 @@ class TClusterHitDatum;
 namespace reconstruct {
 
 /**
- * @brief The HitWithEnergy_t struct
+ * @brief The AdaptorTClusterHit struct
  *
- * Stores a TClusterHit together with its energy, if
- * exactly one TDetectorReadHit was of channel type integral
+ * Stores a TClusterHit together with its energy and timing
  *
  */
-struct HitWithEnergy_t {
+struct AdaptorTClusterHit {
     std::unique_ptr<TClusterHit> Hit;
     double Energy;
-    void MaybeSetEnergy(const TDetectorReadHit* readhit);
-    HitWithEnergy_t(const TDetectorReadHit* readhit,
-                    const std::vector<TClusterHitDatum>&& data);
+    double Time;
+    void SetFields(const TDetectorReadHit* readhit);
+    AdaptorTClusterHit(const TDetectorReadHit* readhit,
+                       const std::vector<TClusterHitDatum>&& data);
 };
 
 class Clustering {
 public:
     void Build(const std::shared_ptr<ClusterDetector_t>& clusterdetector,
-               const std::list<HitWithEnergy_t>& clusterhits,
+               const std::list<AdaptorTClusterHit>& clusterhits,
                std::list<TCluster>& clusters
                );
 };

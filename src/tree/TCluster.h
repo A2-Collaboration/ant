@@ -79,6 +79,7 @@ struct TCluster
 
   TVector3 Position;
   double Energy;
+  double Time;
   std::uint8_t DetectorType;
 
   std::vector<TClusterHit> Hits;
@@ -88,11 +89,13 @@ struct TCluster
   TCluster(
       const TVector3& pos,
       double E,
+      double t,
       const Detector_t::Type_t& type,
       const std::vector<TClusterHit>& hits = {}
       ):
     Position(pos),
     Energy(E),
+    Time(t),
     DetectorType(static_cast<std::uint8_t>(type)),
     Hits(hits)
   {}

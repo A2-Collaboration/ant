@@ -38,7 +38,7 @@ void dotest() {
         );
 
   buffer->Tracks.back().Clusters.push_back(
-        ant::TCluster(TVector3(25,0,0), 270, ant::Detector_t::Type_t::CB)
+        ant::TCluster(TVector3(25,0,0), 270, -350, ant::Detector_t::Type_t::CB)
         );
 
 
@@ -57,7 +57,7 @@ void dotest() {
         );
 
   buffer->Tracks.back().Clusters.push_back(
-        ant::TCluster(TVector3(10,0,0), 5, ant::Detector_t::Type_t::PID)
+        ant::TCluster(TVector3(10,0,0), 5, -270, ant::Detector_t::Type_t::PID)
         );
 
   buffer->Tracks.back().Clusters.back().Hits.push_back(
@@ -69,10 +69,10 @@ void dotest() {
         ant::TTrack(300,0.5,2,3)
         );
   buffer->Tracks.back().Clusters.push_back(
-        ant::TCluster(TVector3(25,10,0),300,ant::Detector_t::Type_t::TAPS)
+        ant::TCluster(TVector3(25,10,0),300,-200,ant::Detector_t::Type_t::TAPS)
         );
   buffer->Tracks.back().Clusters.push_back(
-        ant::TCluster(TVector3(10,1,0),5, ant::Detector_t::Type_t::TAPSVeto)
+        ant::TCluster(TVector3(10,1,0),5,-250, ant::Detector_t::Type_t::TAPSVeto)
         );
 
   tree->Fill();

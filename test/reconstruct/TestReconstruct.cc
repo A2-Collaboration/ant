@@ -75,7 +75,7 @@ struct ReconstructTester {
         // lets start the hit matching, which builds the TClusterHit's
         // we also extract the energy, which is always defined as a
         // single value with type Channel_t::Type_t
-        Reconstruct::sorted_bydetectortype_t<HitWithEnergy_t> sorted_clusterhits;
+        Reconstruct::sorted_bydetectortype_t<AdaptorTClusterHit> sorted_clusterhits;
         r.BuildHits(move(sorted_readhits), sorted_clusterhits, event->Tagger);
         size_t n_clusterhits = getTotalCount(sorted_clusterhits);
         REQUIRE(n_clusterhits + event->Tagger.Hits.size() <= n_readhits_after);

@@ -15,7 +15,7 @@ class TTagger;
 
 namespace reconstruct {
 class TrackBuilder;
-class HitWithEnergy_t;
+class AdaptorTClusterHit;
 class Clustering;
 }
 
@@ -43,10 +43,10 @@ private:
 
     void BuildHits(
             sorted_bydetectortype_t<TDetectorReadHit*>&& sorted_readhits,
-            sorted_bydetectortype_t<reconstruct::HitWithEnergy_t>& sorted_clusterhits,
+            sorted_bydetectortype_t<reconstruct::AdaptorTClusterHit>& sorted_clusterhits,
             TTagger& event_tagger
             );
-    void BuildClusters(sorted_bydetectortype_t<reconstruct::HitWithEnergy_t>&& sorted_clusterhits,
+    void BuildClusters(sorted_bydetectortype_t<reconstruct::AdaptorTClusterHit>&& sorted_clusterhits,
             sorted_bydetectortype_t<TCluster>& sorted_clusters
             );
 

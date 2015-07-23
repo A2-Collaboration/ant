@@ -80,7 +80,7 @@ unique_ptr<TEvent> Reconstruct::DoReconstruct(TDetectorRead& detectorRead)
     // lets start the hit matching, which builds the TClusterHit's
     // we also extract the energy, which is always defined as a
     // single value with type Channel_t::Type_t
-    sorted_bydetectortype_t<HitWithEnergy_t> sorted_clusterhits;
+    sorted_bydetectortype_t<AdaptorTClusterHit> sorted_clusterhits;
     BuildHits(move(sorted_readhits), sorted_clusterhits, event->Tagger);
 
     // then build clusters (at least for calorimeters this is not trivial)
@@ -104,13 +104,13 @@ Reconstruct::~Reconstruct()
 
 void Reconstruct::BuildHits(
         sorted_bydetectortype_t<TDetectorReadHit *>&& sorted_readhits,
-        sorted_bydetectortype_t<HitWithEnergy_t>& sorted_clusterhits,
+        sorted_bydetectortype_t<AdaptorTClusterHit>& sorted_clusterhits,
         TTagger& event_tagger)
 {
     auto insert_hint = sorted_clusterhits.cbegin();
 
     for(const auto& it_hit : sorted_readhits) {
-        list<HitWithEnergy_t> clusterhits;
+        list<AdaptorTClusterHit> clusterhits;
         const Detector_t::Type_t detectortype = it_hit.first;
         const auto& readhits = it_hit.second;
 
@@ -157,7 +157,7 @@ void Reconstruct::BuildHits(
                       data.begin(), do_transform);
 
             // for non-tagger detectors, search for a TClusterHit with same channel
-            const auto match_channel = [readhit] (const HitWithEnergy_t& hit) {
+            const auto match_channel = [readhit] (const AdaptorTClusterHit& hit) {
                 return hit.Hit->Channel == readhit->Channel;
             };
             const auto it_clusterhit = find_if(clusterhits.begin(),
@@ -169,8 +169,8 @@ void Reconstruct::BuildHits(
             }
             else {
                 // clusterhit with channel of readhit already exists,
-                // so append TClusterHitDatum's and try to set energy
-                it_clusterhit->MaybeSetEnergy(readhit);
+                // so append TClusterHitDatum's and try to set properties
+                it_clusterhit->SetFields(readhit);
                 move(data.begin(), data.end(),
                      back_inserter(it_clusterhit->Hit->Data));
             }
@@ -189,14 +189,14 @@ void Reconstruct::BuildHits(
 }
 
 void Reconstruct::BuildClusters(
-        sorted_bydetectortype_t<HitWithEnergy_t>&& sorted_clusterhits,
+        sorted_bydetectortype_t<AdaptorTClusterHit>&& sorted_clusterhits,
         sorted_bydetectortype_t<TCluster>& sorted_clusters)
 {
     auto insert_hint = sorted_clusters.begin();
 
     for(const auto& it_clusterhits : sorted_clusterhits) {
         const Detector_t::Type_t detectortype = it_clusterhits.first;
-        const list<HitWithEnergy_t>& clusterhits = it_clusterhits.second;
+        const list<AdaptorTClusterHit>& clusterhits = it_clusterhits.second;
 
         // find the detector instance for this type
         const auto& it_detector = sorted_detectors.find(detectortype);
@@ -217,11 +217,12 @@ void Reconstruct::BuildClusters(
         else {
             // in case of no clustering detector,
             // build simple "cluster" consisting of single TClusterHit
-            for(const HitWithEnergy_t& clusterhit : clusterhits) {
+            for(const AdaptorTClusterHit& clusterhit : clusterhits) {
                 const auto& hit = clusterhit.Hit;
                 clusters.emplace_back(
                             detector->GetPosition(hit->Channel),
                             clusterhit.Energy,
+                            clusterhit.Time,
                             detector->Type,
                             vector<TClusterHit>{*hit}
                             );
