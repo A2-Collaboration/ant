@@ -90,7 +90,7 @@ struct ReconstructTester {
 
         // finally, do the track building
         r.trackbuilder->Build(move(sorted_clusters), event->Tracks);
-        //REQUIRE(!event->Tracks.empty());
+        REQUIRE(!event->Tracks.empty());
         REQUIRE(event->Tracks.size() <= n_clusters);
 
         return event;
