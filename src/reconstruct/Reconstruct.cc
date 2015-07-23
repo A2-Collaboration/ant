@@ -71,8 +71,9 @@ unique_ptr<TEvent> Reconstruct::DoReconstruct(TDetectorRead& detectorRead)
     // for debug purposes, dump out the detectorRead
     //cout << detectorRead << endl;
 
-    // already create the event here, since TaggerHits
-    // don't need hit matching and thus can be filled already
+    // already create the event here, since Tagger
+    // doesn't need hit matching and thus can be filled already
+    // in BuildHits (see below)
     auto event = std_ext::make_unique<TEvent>(detectorRead.ID);
 
     // the detectorRead is now calibrated as far as possible
@@ -82,88 +83,10 @@ unique_ptr<TEvent> Reconstruct::DoReconstruct(TDetectorRead& detectorRead)
     sorted_bydetectortype_t<HitWithEnergy_t> sorted_clusterhits;
     BuildHits(move(sorted_readhits), sorted_clusterhits, event->Tagger);
 
+    // then build clusters (at least for calorimeters this is not trivial)
     sorted_bydetectortype_t<TCluster> sorted_clusters;
-    auto sorted_clusters_hint = sorted_clusters.begin();
+    BuildClusters(move(sorted_clusterhits), sorted_clusters);
 
-    for(const auto& it_clusterhits : sorted_clusterhits) {
-        const Detector_t::Type_t detectortype = it_clusterhits.first;
-        const list<HitWithEnergy_t>& clusterhits = it_clusterhits.second;
-
-        // find the detector instance for this type
-        const auto& it_detector = sorted_detectors.find(detectortype);
-        if(it_detector == sorted_detectors.end())
-            continue;
-        const shared_ptr<Detector_t>& detector = it_detector->second;
-
-        list<TCluster> clusters;
-
-        // check if detector can do clustering,
-        const shared_ptr<ClusterDetector_t>& clusterdetector
-                = dynamic_pointer_cast<ClusterDetector_t>(detector);
-
-        if(clusterdetector != nullptr) {
-            // clustering detector, so we need additional information
-            // to build the crystals_t
-            list<clustering::crystal_t> crystals;
-            for(const HitWithEnergy_t& clusterhit : clusterhits) {
-                const TClusterHit& hit = clusterhit.Hit;
-                // ignore hits without energy information
-                if(!isfinite(clusterhit.Energy))
-                    continue;
-                crystals.emplace_back(
-                            clusterhit.Energy,
-                            clusterdetector->GetClusterElement(hit.Channel),
-                            addressof(hit)
-                            );
-
-            }
-            // do the clustering
-            vector< vector< clustering::crystal_t> > crystal_clusters;
-            do_clustering(crystals, crystal_clusters);
-
-            // now calculate some cluster properties,
-            // and create TCluster out of it
-            for(const auto& cluster : crystal_clusters) {
-                const double cluster_energy = clustering::calc_total_energy(cluster);
-                /// \todo already cut low-energy clusters here?
-                TVector3 weightedPosition(0,0,0);
-                double weightedSum = 0;
-                std::vector<TClusterHit> clusterhits;
-                clusterhits.reserve(cluster.size());
-                for(const clustering::crystal_t& crystal : cluster) {
-                    double wgtE = clustering::calc_energy_weight(crystal.Energy, cluster_energy);
-                    weightedPosition += crystal.Element->Position * wgtE;
-                    weightedSum += wgtE;
-                    clusterhits.emplace_back(*crystal.Hit);
-                }
-                weightedPosition *= 1.0/weightedSum;
-                clusters.emplace_back(
-                            weightedPosition,
-                            cluster_energy,
-                            detector->Type,
-                            clusterhits
-                            );
-            }
-        }
-        else {
-            // in case of no clustering detector,
-            // build "cluster" consisting of single TClusterHit
-            for(const HitWithEnergy_t& clusterhit : clusterhits) {
-                const TClusterHit& hit = clusterhit.Hit;
-                clusters.emplace_back(
-                            detector->GetPosition(hit.Channel),
-                            clusterhit.Energy,
-                            detector->Type,
-                            vector<TClusterHit>{hit}
-                            );
-            }
-        }
-
-        // insert the clusters
-        sorted_clusters_hint =
-                sorted_clusters.insert(sorted_clusters_hint,
-                                       make_pair(detectortype, move(clusters)));
-    }
 
     // finally, do the track building
     trackbuilder->Build(move(sorted_clusters), event);
@@ -262,6 +185,93 @@ void Reconstruct::BuildHits(
         insert_hint =
                 sorted_clusterhits.insert(insert_hint,
                                           make_pair(detectortype, move(clusterhits)));
+    }
+}
+
+void Reconstruct::BuildClusters(
+        sorted_bydetectortype_t<Reconstruct::HitWithEnergy_t>&& sorted_clusterhits,
+        sorted_bydetectortype_t<TCluster>& sorted_clusters)
+{
+    auto insert_hint = sorted_clusters.begin();
+
+    for(const auto& it_clusterhits : sorted_clusterhits) {
+        const Detector_t::Type_t detectortype = it_clusterhits.first;
+        const list<HitWithEnergy_t>& clusterhits = it_clusterhits.second;
+
+        // find the detector instance for this type
+        const auto& it_detector = sorted_detectors.find(detectortype);
+        if(it_detector == sorted_detectors.end())
+            continue;
+        const shared_ptr<Detector_t>& detector = it_detector->second;
+
+        list<TCluster> clusters;
+
+        // check if detector can do clustering,
+        const shared_ptr<ClusterDetector_t>& clusterdetector
+                = dynamic_pointer_cast<ClusterDetector_t>(detector);
+
+        if(clusterdetector != nullptr) {
+            // clustering detector, so we need additional information
+            // to build the crystals_t
+            list<clustering::crystal_t> crystals;
+            for(const HitWithEnergy_t& clusterhit : clusterhits) {
+                const TClusterHit& hit = clusterhit.Hit;
+                // ignore hits without energy information
+                if(!isfinite(clusterhit.Energy))
+                    continue;
+                crystals.emplace_back(
+                            clusterhit.Energy,
+                            clusterdetector->GetClusterElement(hit.Channel),
+                            addressof(hit)
+                            );
+
+            }
+            // do the clustering
+            vector< vector< clustering::crystal_t> > crystal_clusters;
+            do_clustering(crystals, crystal_clusters);
+
+            // now calculate some cluster properties,
+            // and create TCluster out of it
+            for(const auto& cluster : crystal_clusters) {
+                const double cluster_energy = clustering::calc_total_energy(cluster);
+                /// \todo already cut low-energy clusters here?
+                TVector3 weightedPosition(0,0,0);
+                double weightedSum = 0;
+                std::vector<TClusterHit> clusterhits;
+                clusterhits.reserve(cluster.size());
+                for(const clustering::crystal_t& crystal : cluster) {
+                    double wgtE = clustering::calc_energy_weight(crystal.Energy, cluster_energy);
+                    weightedPosition += crystal.Element->Position * wgtE;
+                    weightedSum += wgtE;
+                    clusterhits.emplace_back(*crystal.Hit);
+                }
+                weightedPosition *= 1.0/weightedSum;
+                clusters.emplace_back(
+                            weightedPosition,
+                            cluster_energy,
+                            detector->Type,
+                            clusterhits
+                            );
+            }
+        }
+        else {
+            // in case of no clustering detector,
+            // build "cluster" consisting of single TClusterHit
+            for(const HitWithEnergy_t& clusterhit : clusterhits) {
+                const TClusterHit& hit = clusterhit.Hit;
+                clusters.emplace_back(
+                            detector->GetPosition(hit.Channel),
+                            clusterhit.Energy,
+                            detector->Type,
+                            vector<TClusterHit>{hit}
+                            );
+            }
+        }
+
+        // insert the clusters
+        insert_hint =
+                sorted_clusters.insert(insert_hint,
+                                       make_pair(detectortype, move(clusters)));
     }
 }
 

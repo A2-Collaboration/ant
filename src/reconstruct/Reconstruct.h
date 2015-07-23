@@ -54,8 +54,8 @@ private:
             sorted_bydetectortype_t<HitWithEnergy_t>& sorted_clusterhits,
             TTagger& event_tagger
             );
-    void BuildClusters(
-
+    void BuildClusters(sorted_bydetectortype_t<HitWithEnergy_t>&& sorted_clusterhits,
+            sorted_bydetectortype_t<TCluster>& sorted_clusters
             );
 
     template<typename T>
