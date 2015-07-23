@@ -9,7 +9,6 @@
 #ifndef __CINT__
 #include <iomanip>
 #include <sstream>
-#include <limits> // for NaN
 #endif
 
 namespace ant {
@@ -36,8 +35,8 @@ struct TTrack
       double theta,
       double phi,
       const std::vector<TCluster>& clusters = {},
-      double vetoE = std::numeric_limits<double>::quiet_NaN(),
-      double trackerE = std::numeric_limits<double>::quiet_NaN()
+      double vetoE = 0.0,
+      double trackerE = 0.0
       ) :
     Energy(E),
     Time(t),
