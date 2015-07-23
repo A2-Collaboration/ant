@@ -1,13 +1,13 @@
 #include "Reconstruct.h"
 
 #include "Clustering.h"
+#include "TrackBuilder.h"
 
 #include "expconfig/ExpConfig.h"
 
 #include "tree/TDataRecord.h"
 #include "tree/TDetectorRead.h"
 #include "tree/TEvent.h"
-#include "TrackBuilder.h"
 
 #include "base/Logger.h"
 #include "base/std_ext.h"
@@ -58,7 +58,7 @@ unique_ptr<TEvent> Reconstruct::DoReconstruct(TDetectorRead& detectorRead)
 
     // categorize the hits by detector type
     // this is handy for all subsequent reconstruction steps
-    map<Detector_t::Type_t, list< TDetectorReadHit* > > sorted_readhits;
+    sorted_bydetectortype_t<TDetectorReadHit*> sorted_readhits;
     for(TDetectorReadHit& readhit : detectorRead.Hits) {
         sorted_readhits[readhit.GetDetectorType()].push_back(addressof(readhit));
     }
@@ -104,7 +104,7 @@ Reconstruct::~Reconstruct()
 
 void Reconstruct::BuildHits(
         sorted_bydetectortype_t<TDetectorReadHit *>&& sorted_readhits,
-        sorted_bydetectortype_t<Reconstruct::HitWithEnergy_t>& sorted_clusterhits,
+        sorted_bydetectortype_t<HitWithEnergy_t>& sorted_clusterhits,
         TTagger& event_tagger)
 {
     auto insert_hint = sorted_clusterhits.cbegin();
@@ -158,7 +158,7 @@ void Reconstruct::BuildHits(
 
             // for non-tagger detectors, search for a TClusterHit with same channel
             const auto match_channel = [readhit] (const HitWithEnergy_t& hit) {
-                return hit.Hit.Channel == readhit->Channel;
+                return hit.Hit->Channel == readhit->Channel;
             };
             const auto it_clusterhit = find_if(clusterhits.begin(),
                                                clusterhits.end(),
@@ -172,7 +172,7 @@ void Reconstruct::BuildHits(
                 // so append TClusterHitDatum's and try to set energy
                 it_clusterhit->MaybeSetEnergy(readhit);
                 move(data.begin(), data.end(),
-                     back_inserter(it_clusterhit->Hit.Data));
+                     back_inserter(it_clusterhit->Hit->Data));
             }
         }
 
@@ -189,7 +189,7 @@ void Reconstruct::BuildHits(
 }
 
 void Reconstruct::BuildClusters(
-        sorted_bydetectortype_t<Reconstruct::HitWithEnergy_t>&& sorted_clusterhits,
+        sorted_bydetectortype_t<HitWithEnergy_t>&& sorted_clusterhits,
         sorted_bydetectortype_t<TCluster>& sorted_clusters)
 {
     auto insert_hint = sorted_clusters.begin();
@@ -211,59 +211,19 @@ void Reconstruct::BuildClusters(
                 = dynamic_pointer_cast<ClusterDetector_t>(detector);
 
         if(clusterdetector != nullptr) {
-            // clustering detector, so we need additional information
-            // to build the crystals_t
-            list<clustering::crystal_t> crystals;
-            for(const HitWithEnergy_t& clusterhit : clusterhits) {
-                const TClusterHit& hit = clusterhit.Hit;
-                // ignore hits without energy information
-                if(!isfinite(clusterhit.Energy))
-                    continue;
-                crystals.emplace_back(
-                            clusterhit.Energy,
-                            clusterdetector->GetClusterElement(hit.Channel),
-                            addressof(hit)
-                            );
-
-            }
-            // do the clustering
-            vector< vector< clustering::crystal_t> > crystal_clusters;
-            do_clustering(crystals, crystal_clusters);
-
-            // now calculate some cluster properties,
-            // and create TCluster out of it
-            for(const auto& cluster : crystal_clusters) {
-                const double cluster_energy = clustering::calc_total_energy(cluster);
-                /// \todo already cut low-energy clusters here?
-                TVector3 weightedPosition(0,0,0);
-                double weightedSum = 0;
-                std::vector<TClusterHit> clusterhits;
-                clusterhits.reserve(cluster.size());
-                for(const clustering::crystal_t& crystal : cluster) {
-                    double wgtE = clustering::calc_energy_weight(crystal.Energy, cluster_energy);
-                    weightedPosition += crystal.Element->Position * wgtE;
-                    weightedSum += wgtE;
-                    clusterhits.emplace_back(*crystal.Hit);
-                }
-                weightedPosition *= 1.0/weightedSum;
-                clusters.emplace_back(
-                            weightedPosition,
-                            cluster_energy,
-                            detector->Type,
-                            clusterhits
-                            );
-            }
+            // yes, then hand over to clustering algorithm
+            clustering->Build(clusterdetector, clusterhits, clusters);
         }
         else {
             // in case of no clustering detector,
-            // build "cluster" consisting of single TClusterHit
+            // build simple "cluster" consisting of single TClusterHit
             for(const HitWithEnergy_t& clusterhit : clusterhits) {
-                const TClusterHit& hit = clusterhit.Hit;
+                const auto& hit = clusterhit.Hit;
                 clusters.emplace_back(
-                            detector->GetPosition(hit.Channel),
+                            detector->GetPosition(hit->Channel),
                             clusterhit.Energy,
                             detector->Type,
-                            vector<TClusterHit>{hit}
+                            vector<TClusterHit>{*hit}
                             );
             }
         }
@@ -275,22 +235,3 @@ void Reconstruct::BuildClusters(
     }
 }
 
-
-void Reconstruct::HitWithEnergy_t::MaybeSetEnergy(const TDetectorReadHit *readhit) {
-    if(readhit->GetChannelType() != Channel_t::Type_t::Integral)
-        return;
-    if(readhit->Values.size() != 1)
-        return;
-    if(isfinite(Energy)) {
-        LOG(WARNING) << "Found hit in channel with more than one energy information";
-        return;
-    }
-    Energy = readhit->Values[0];
-}
-
-Reconstruct::HitWithEnergy_t::HitWithEnergy_t(const TDetectorReadHit *readhit, const vector<TClusterHitDatum> &&data) :
-    Hit(readhit->Channel, data),
-    Energy(numeric_limits<double>::quiet_NaN())
-{
-    MaybeSetEnergy(readhit);
-}

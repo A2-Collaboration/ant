@@ -3,6 +3,7 @@
 
 #include "reconstruct/Reconstruct.h"
 #include "reconstruct/TrackBuilder.h"
+#include "reconstruct/Clustering.h"
 
 #include "unpacker/Unpacker.h"
 
@@ -12,6 +13,7 @@
 
 using namespace std;
 using namespace ant;
+using namespace ant::reconstruct;
 
 
 void dotest();
@@ -21,7 +23,7 @@ TEST_CASE("Reconstruct", "[reconstruct]") {
 }
 
 template<typename T>
-unsigned getTotalCount(Reconstruct::sorted_bydetectortype_t<T> m) {
+unsigned getTotalCount(const Reconstruct::sorted_bydetectortype_t<T>& m) {
     unsigned total = 0;
     for(const auto& m_item : m) {
         const list<T>& list = m_item.second;
@@ -73,7 +75,7 @@ struct ReconstructTester {
         // lets start the hit matching, which builds the TClusterHit's
         // we also extract the energy, which is always defined as a
         // single value with type Channel_t::Type_t
-        Reconstruct::sorted_bydetectortype_t<Reconstruct::HitWithEnergy_t> sorted_clusterhits;
+        Reconstruct::sorted_bydetectortype_t<HitWithEnergy_t> sorted_clusterhits;
         r.BuildHits(move(sorted_readhits), sorted_clusterhits, event->Tagger);
         size_t n_clusterhits = getTotalCount(sorted_clusterhits);
         REQUIRE(n_clusterhits + event->Tagger.Hits.size() <= n_readhits_after);
@@ -82,6 +84,7 @@ struct ReconstructTester {
         Reconstruct::sorted_bydetectortype_t<TCluster> sorted_clusters;
         r.BuildClusters(move(sorted_clusterhits), sorted_clusters);
         size_t n_clusters = getTotalCount(sorted_clusters);
+        REQUIRE(n_clusters>0);
         REQUIRE(n_clusters <= n_clusterhits);
 
 
