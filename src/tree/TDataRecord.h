@@ -99,6 +99,25 @@ struct TID
   }
 #endif
 
+  bool operator<(const TID& other)
+  {
+      return (Value < other.Value);
+  }
+
+  bool operator>(const TID& other)
+  {
+      return (Value > other.Value);
+  }
+
+  bool operator!=(const TID& other)
+  {
+      return (Value != other.Value || Flags != other.Flags);
+  }
+  bool operator==(const TID& other)
+  {
+      return (!(this->operator !=(other)));
+  }
+
   ClassDef(TID, ANT_UNPACKER_ROOT_VERSION)
 
 }; // TID
