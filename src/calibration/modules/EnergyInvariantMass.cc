@@ -40,7 +40,7 @@ void EnergyInvariantMass::ShowResult()
 
 }
 
-void EnergyInvariantMass::ApplyTo(const std::map< Detector_t::Type_t, std::list< TDetectorReadHit* > >& hits)
+void EnergyInvariantMass::ApplyTo(const readhits_t& hits)
 {
 
 }

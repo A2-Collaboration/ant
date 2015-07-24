@@ -26,7 +26,7 @@ struct CATCH_TDC : MultiHit16bit, CalibrationApply_traits {
         return ConvertWithFactorAndOffset(rawData, CATCH_to_nanoseconds, ReferenceTiming);
     }
 
-    virtual void ApplyTo(const std::map< Detector_t::Type_t, std::list< TDetectorReadHit* > >& hits) override;
+    virtual void ApplyTo(const readhits_t& hits) override;
 
     virtual void ApplyTo(std::unique_ptr<TEvent>&) override {}
 

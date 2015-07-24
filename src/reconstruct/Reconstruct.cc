@@ -62,7 +62,9 @@ unique_ptr<TEvent> Reconstruct::DoReconstruct(TDetectorRead& detectorRead)
 
     // categorize the hits by detector type
     // this is handy for all subsequent reconstruction steps
-    sorted_bydetectortype_t<TDetectorReadHit*> sorted_readhits;
+    // we need to use non-const pointers because calibrations
+    // may change the content
+    CalibrationApply_traits::readhits_t sorted_readhits;
     for(TDetectorReadHit& readhit : detectorRead.Hits) {
         sorted_readhits[readhit.GetDetectorType()].push_back(addressof(readhit));
     }

@@ -49,7 +49,7 @@ Integral::Integral(Detector_t::Type_t detectorType,
         throw std::runtime_error("Given converter should not be nullptr");
 }
 
-void Integral::ApplyTo(const map< Detector_t::Type_t, list< TDetectorReadHit* > >& hits)
+void Integral::ApplyTo(const readhits_t& hits)
 {
     // search for to be calibrated Integrals
     const auto it_dethits = hits.find(DetectorType);
@@ -58,8 +58,10 @@ void Integral::ApplyTo(const map< Detector_t::Type_t, list< TDetectorReadHit* > 
 
     const auto& dethits = it_dethits->second;
 
+    //list<
+
     // now calibrate the Integrals (ignore any other kind of hits)
-    for(TDetectorReadHit* dethit : dethits) {
+    for(auto dethit : dethits) {
         if(dethit->GetChannelType() != Channel_t::Type_t::Integral)
             continue;
         // the Converter is smart enough to account for reference Integrals!
@@ -86,7 +88,6 @@ void Integral::ApplyTo(const map< Detector_t::Type_t, list< TDetectorReadHit* > 
             // only add if it passes the threshold
             dethit->Values.push_back(value);
         }
-
     }
 }
 

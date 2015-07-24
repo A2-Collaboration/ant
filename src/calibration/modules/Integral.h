@@ -22,8 +22,8 @@ public:
              const double defaultThreshold);
 
     // CalibrationApply_traits interface
-    virtual void ApplyTo(const std::map< Detector_t::Type_t, std::list< TDetectorReadHit* > >& hits) override;
-    virtual void ApplyTo(std::unique_ptr<TEvent>&) override {}
+    virtual void ApplyTo(const readhits_t& hits) override;
+    virtual void ApplyTo(event_ptr&) override {}
 
 
     // Physics interface

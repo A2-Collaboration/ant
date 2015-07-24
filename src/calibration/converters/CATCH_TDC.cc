@@ -6,14 +6,14 @@ using namespace std;
 using namespace ant;
 using namespace ant::calibration;
 
-void converter::CATCH_TDC::ApplyTo(const map<Detector_t::Type_t, list<TDetectorReadHit*> >& hits) {
+void converter::CATCH_TDC::ApplyTo(const readhits_t& hits) {
     ReferenceTiming = numeric_limits<double>::quiet_NaN();
     // search for reference timing
     const auto it_refhits = hits.find(ReferenceChannel.DetectorType);
     if(it_refhits == hits.end())
         return;
-    const list<TDetectorReadHit*>& refhits = it_refhits->second;
-    const auto comparer = [this] (TDetectorReadHit* hit) {
+    const auto& refhits = it_refhits->second;
+    const auto comparer = [this] (TDetectorReadHit const * hit) {
         return hit->GetChannelType() == ReferenceChannel.ChannelType &&
                 hit->Channel == ReferenceChannel.Channel;
     };

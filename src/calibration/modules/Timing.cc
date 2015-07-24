@@ -61,7 +61,7 @@ Timing::Timing(Detector_t::Type_t detectorType,
         Gains[gain.Key] = gain.Value;
 }
 
-void Timing::ApplyTo(const map< Detector_t::Type_t, list< TDetectorReadHit* > >& hits)
+void Timing::ApplyTo(const readhits_t& hits)
 {
     // search for to be calibrated timings
     const auto it_dethits = hits.find(DetectorType);
