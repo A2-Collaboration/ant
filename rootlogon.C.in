@@ -1,0 +1,3 @@
+{
+    gSystem->Load("@LIBRARY_OUTPUT_PATH@/libtree.so");
+}
