@@ -21,34 +21,43 @@ namespace ant
 class CalibrationManager
 {
 private:
-    TFile* dataFile;
-    TTree* dataSets;
+    std::string dataFileName;
+    std::vector<TCalibrationData> dataBase;
 
 public:
-    CalibrationManager(const std::string& dataFileName)
+    CalibrationManager(const std::string& DataFileName):
+    dataFileName(DataFileName)
     {
+        TFile* dataFile;
+        TTree* dataSets;
 
-        dataFile = new TFile(dataFileName.c_str(),"UPDATE");
-        if ( !dataFile->IsOpen() )
-            throw false;
+        dataFile = new TFile(dataFileName.c_str(),"READ");
+        if ( dataFile->IsOpen() )
+        {
+            dataFile->GetObject("dataSets", dataSets);
+            if (dataSets != nullptr){
+                TCalibrationData* cdata;
+                dataSets->SetBranchAddress("dataset",&cdata);
+                for ( Long64_t entry = 0; entry < dataSets->GetEntries(); ++entry){
+                    dataSets->GetEntry(entry);
+                    Add(*cdata);
+                }
+            }
 
-        dataSets = dataFile->GetObject("dataSets", dataSets);
-        if (dataSets == nullptr)
-            dataSets = new TTree("dataSets");
-
+            dataFile->Close();
+            delete(dataFile);
+            delete(dataSets);
+        }
     }
 
     void Add(const TCalibrationData& data)
     {
-        /// TODO: Sanity checks like eg.
-        ///  valid setupID?
-        ///  only one specific detector per beamtime
-
+        dataBase.push_back(data);
     }
 
-    const TCalibrationData& GetData(const std::string& setupID, const TID& eventID) const
+    const TCalibrationData GetData(const std::string& setupID, const TID& eventID) const
     {
-        std::cout << "TODO: add data" << endl;
+        std::cout << "TODO: add data" << std::endl;
         return TCalibrationData();
     }
 

@@ -40,4 +40,5 @@ add_test_subdirectory(unpacker)
 add_test_subdirectory(tree)
 add_test_subdirectory(reconstruct)
 add_test_subdirectory(analysis)
+add_test_subdirectory(calibration)
 
