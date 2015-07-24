@@ -7,6 +7,7 @@
 #include <type_traits>
 #include <ctime>
 #include <iostream>
+#include <vector>
 
 #include <cxxabi.h> /// \todo works only with GCC?
 
