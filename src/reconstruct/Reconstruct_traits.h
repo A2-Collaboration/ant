@@ -1,9 +1,10 @@
 #pragma once
 
+#include "expconfig/Detector_t.h"
+
 #include <memory>
 #include <map>
-
-#include "expconfig/Detector_t.h"
+#include <list>
 
 namespace ant {
 

@@ -25,17 +25,43 @@ public:
         AddDetector<detector::TAPSVeto_2014>(cherenkovInstalled); // no Cherenkov
 
         // the order of the calibrations is important
-        // since they may depend on each other
-        AddCalibration<calibration::TimingCATCH>(Detector_t::Type_t::EPT,
-                                                 trigger->Reference_CATCH_TaggerCrate);
-        AddCalibration<calibration::TimingCATCH>(Detector_t::Type_t::CB,
-                                                 trigger->Reference_CATCH_CBCrate);
-        AddCalibration<calibration::IntegralSADC>(Detector_t::Type_t::CB);
-        AddCalibration<calibration::TimingCATCH>(Detector_t::Type_t::PID,
-                                                 trigger->Reference_CATCH_CBCrate);
-        AddCalibration<calibration::IntegralCAEN>(Detector_t::Type_t::PID);
-        AddCalibration<calibration::TimingTAPS>();
-        AddCalibration<calibration::IntegralTAPS>();
+        auto convert_CATCH_Tagger = make_shared<calibration::converter::CATCH_TDC>(trigger->Reference_CATCH_TaggerCrate);
+        auto convert_CATCH_CB = make_shared<calibration::converter::CATCH_TDC>(trigger->Reference_CATCH_CBCrate);
+        auto convert_MultiHit16bit = make_shared<calibration::converter::MultiHit16bit>();
+
+
+        // add both CATCH converters first,
+        // since they need to scan for their reference hit
+        AddCalibration(convert_CATCH_Tagger);
+        AddCalibration(convert_CATCH_CB);
+
+        // then we link the other
+        AddCalibration<calibration::Timing>(Detector_t::Type_t::EPT, convert_CATCH_Tagger);
+        AddCalibration<calibration::Timing>(Detector_t::Type_t::CB,  convert_CATCH_CB);
+        AddCalibration<calibration::Timing>(Detector_t::Type_t::PID, convert_CATCH_CB);
+        AddCalibration<calibration::Timing>(Detector_t::Type_t::TAPS, convert_MultiHit16bit);
+        //AddCalibration<calibration::Timing>(Detector_t::Type_t::TAPSVeto, convert_TAPS_Timing);
+
+
+        AddCalibration<calibration::Integral>(Detector_t::Type_t::CB,
+                                              make_shared<calibration::converter::GeSiCa_SADC>(),
+                                              0,    // default pedestal in raw
+                                              0.07, // default gain
+                                              2     // default threshold in MeV
+                                              );
+        AddCalibration<calibration::Integral>(Detector_t::Type_t::PID,
+                                              convert_MultiHit16bit,
+                                              0,     // default pedestal in raw
+                                              0.014, // default gain
+                                              0.1    // default threshold in MeV
+                                              );
+
+        AddCalibration<calibration::Integral>(Detector_t::Type_t::TAPS,
+                                              convert_MultiHit16bit,
+                                              0,     // default pedestal in raw
+                                              0.30,  // default gain
+                                              2      // default threshold in MeV
+                                              );
     }
 
     virtual double GetBeamEnergy() const override {

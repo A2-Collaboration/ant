@@ -10,18 +10,16 @@ set(SRCS
     CalibrationManager.h
     Calibration.h
     Calibration.cc
+    modules/Timing.h
+    modules/Timing.cc
+    modules/Integral.h
+    modules/Integral.cc
     modules/EnergyInvariantMass.h
     modules/EnergyInvariantMass.cc
-    modules/TimingCATCH.cc
-    modules/TimingCATCH.h
-    modules/IntegralSADC.cc
-    modules/IntegralSADC.h
-    modules/IntegralCAEN.cc
-    modules/IntegralCAEN.h
-    modules/TimingTAPS.cc
-    modules/TimingTAPS.h
-    modules/IntegralTAPS.cc
-    modules/IntegralTAPS.h
+    converters/GeSiCa_SADC.h
+    converters/CATCH_TDC.h
+    converters/CATCH_TDC.cc
+    converters/MultiHit16bit.h
   )
 
 add_library(calibration ${SRCS})

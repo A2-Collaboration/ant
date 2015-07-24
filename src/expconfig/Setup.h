@@ -17,11 +17,13 @@
 
 
 #include "calibration/modules/EnergyInvariantMass.h"
-#include "calibration/modules/IntegralSADC.h"
-#include "calibration/modules/IntegralTAPS.h"
-#include "calibration/modules/IntegralCAEN.h"
-#include "calibration/modules/TimingCATCH.h"
-#include "calibration/modules/TimingTAPS.h"
+#include "calibration/modules/Timing.h"
+#include "calibration/modules/Integral.h"
+
+#include "calibration/converters/CATCH_TDC.h"
+#include "calibration/converters/MultiHit16bit.h"
+#include "calibration/converters/GeSiCa_SADC.h"
+
 
 #include <functional>
 
@@ -46,15 +48,17 @@ protected:
     void AddDetector(const std::shared_ptr<Detector_t>& detector) {
         detectors.push_back(detector);
     }
-
     template<typename T, typename... Args>
     void AddDetector(Args&&... args) {
         AddDetector(std::make_shared<T>(std::forward<Args>(args)...));
     }
 
+    void AddCalibration(const std::shared_ptr<CalibrationApply_traits>& calibration) {
+        calibrations.push_back(calibration);
+    }
     template<typename T, typename... Args>
     void AddCalibration(Args&&... args) {
-        calibrations.push_back(std::make_shared<T>(std::forward<Args>(args)...));
+        AddCalibration(std::make_shared<T>(std::forward<Args>(args)...));
     }
 
     virtual std::list< std::shared_ptr< CalibrationApply_traits > > GetCalibrations() const override {
