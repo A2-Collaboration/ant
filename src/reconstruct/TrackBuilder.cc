@@ -5,6 +5,8 @@
 #include "expconfig/detectors/PID.h"
 #include "expconfig/detectors/TAPS.h"
 
+#include "TVector2.h"
+
 using namespace ant;
 using namespace std;
 using namespace ant::reconstruct;
@@ -25,14 +27,17 @@ void TrackBuilder::Build_PID_CB(std::map<Detector_t::Type_t, std::list<TCluster>
 
             bool matched = false;
 
-            const auto dphi = pid->dPhi(pid_cluster->Hits.at(0).Channel) / 2.0;
+            const auto dphi_max = pid->dPhi(pid_cluster->Hits.at(0).Channel) / 2.0;
 
             auto cb_cluster = cb_clusters.begin();
 
             while(cb_cluster != cb_clusters.end()) {
                 const auto cb_phi = cb_cluster->Position.Phi();
 
-                if( fabs(cb_phi - pid_phi) < dphi ) { // match!
+                // calculate phi angle difference.
+                // Phi_mpi_pi() takes care of wrap-arounds at 180/-180 deg
+                const auto dphi = fabs(TVector2::Phi_mpi_pi(cb_phi - pid_phi));
+                if(  dphi < dphi_max ) { // match!
 
                     tracks.emplace_back(
                                 cb_cluster->Energy,
