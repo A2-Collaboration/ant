@@ -99,25 +99,41 @@ struct TID
   }
 #endif
 
-  bool operator<(const TID& other)
+  bool operator<(const TID& other) const
   {
       if (Flags == other.Flags)
           return (Value < other.Value);
       return (Flags < other.Flags);
   }
 
-  bool operator>(const TID& other)
+  /// TODO: impelemnt all others using < operator
+  bool operator<=(const TID& other) const
+  {
+      if (Flags == other.Flags)
+          return (Value <= other.Value);
+      return (Flags <= other.Flags);
+  }
+
+  bool operator>=(const TID& other) const
+  {
+      if (Flags == other.Flags)
+          return (Value >= other.Value);
+      return (Flags >= other.Flags);
+  }
+
+  bool operator>(const TID& other) const
   {
       if (Flags == other.Flags)
           return (Value > other.Value);
       return (Flags > other.Flags);
   }
 
-  bool operator!=(const TID& other)
+  bool operator!=(const TID& other) const
   {
       return (Value != other.Value || Flags != other.Flags);
   }
-  bool operator==(const TID& other)
+
+  bool operator==(const TID& other) const
   {
       return (!(this->operator !=(other)));
   }
