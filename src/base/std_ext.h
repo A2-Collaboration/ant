@@ -87,6 +87,9 @@ inline double degree_to_radian(const double degree) {
   return degree * M_PI / 180.0;
 }
 
+template <typename T>
+inline T sqr(const T& x) { return x*x; }
+
 // copied from C++14 draft
 // https://isocpp.org/files/papers/N3656.txt
 // once we use C++14 by default, we can remove this here
