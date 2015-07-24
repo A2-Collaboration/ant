@@ -43,6 +43,9 @@ private:
         {
             cdata = std::addressof(entry);
             cmTree->Fill();
+            VLOG(9) << "[CalibratioinManager]  Stored CalibrationData"
+                    << cdata
+                    << "                       to tree " << dataFileName << std::endl;
         }
     }
 
@@ -76,7 +79,7 @@ public:
             }
             else
             {
-                VLOG(5) << "[CalibratioinManager:  file " << DataFileName
+                VLOG(5) << "[CalibratioinManager]  file " << DataFileName
                         << " doesn't contain " << cm_treename << ", new will be generated.";
             }
 
