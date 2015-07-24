@@ -12,8 +12,7 @@ struct TAPSVeto :
 {
 
     virtual TVector3 GetPosition(unsigned channel) const override {
-        /// \todo implement me..
-        throw std::runtime_error("Not implemented");
+        return elements.at(channel)->Position;
     }
 
     virtual bool Matches(const THeaderInfo&) const override {
@@ -83,6 +82,13 @@ protected:
         InitElements();
     }
 
+    /**
+     * @brief Get a radius containing the veto element. Used for track building
+     * @return radius in cm
+     * @note Roughly estimated by looking at a dummy TAPS element
+     */
+    double GetElementRadius() const { return 7.0; }
+
 private:
 
     bool CherenkovInstalled; // TAPS detectors moves downstream if Cherenkov installed
@@ -92,6 +98,7 @@ private:
     std::vector<PbWO4_Element_t> PbWO4_elements;
 
     void InitElements();
+    std::vector<const Detector_t::Element_t*> elements;
 
 };
 
