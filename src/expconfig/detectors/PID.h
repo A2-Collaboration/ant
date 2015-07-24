@@ -33,8 +33,7 @@ protected:
                 ) :
             Detector_t::Element_t(
                 channel,
-                /// \todo Use correct PID radius here
-                TVector3(1,0,0) // start with unit vector in x/y plane, is rotated in InitElements()
+                TVector3(5.1, 0, 0) // start with vector in x/y plane, is rotated in InitElements()
                 ),
             ADC(adc),
             TDC(tdc)
