@@ -59,7 +59,7 @@ struct ReconstructTester {
 
         // apply calibration (this may change the given detectorRead!)
         for(const auto& calib : r.calibrations) {
-            calib->ApplyTo(sorted_readhits);
+            calib->ApplyTo(detectorRead, sorted_readhits);
         }
 
         size_t n_readhits_after = getTotalCount(sorted_readhits);

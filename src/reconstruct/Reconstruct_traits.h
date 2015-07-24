@@ -9,6 +9,7 @@
 namespace ant {
 
 class TID;
+class TDetectorRead;
 class TDetectorReadHit;
 class TEvent;
 
@@ -23,7 +24,7 @@ public:
     using readhits_t = std::map< Detector_t::Type_t, std::list< TDetectorReadHit* > >;
     using event_ptr = std::unique_ptr<TEvent>;
 
-    virtual void ApplyTo(const readhits_t& hits) = 0;
+    virtual void ApplyTo(TDetectorRead& detectorRead, const readhits_t& hits) = 0;
     virtual void ApplyTo(event_ptr& event) = 0;
 };
 

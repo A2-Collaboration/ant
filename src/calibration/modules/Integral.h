@@ -22,7 +22,7 @@ public:
              const double defaultThreshold);
 
     // CalibrationApply_traits interface
-    virtual void ApplyTo(const readhits_t& hits) override;
+    virtual void ApplyTo(ant::TDetectorRead& detectorRead, const readhits_t& hits) override;
     virtual void ApplyTo(event_ptr&) override {}
 
 

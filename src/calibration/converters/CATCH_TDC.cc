@@ -6,7 +6,7 @@ using namespace std;
 using namespace ant;
 using namespace ant::calibration;
 
-void converter::CATCH_TDC::ApplyTo(const readhits_t& hits) {
+void converter::CATCH_TDC::ApplyTo(TDetectorRead&, const readhits_t& hits) {
     ReferenceTiming = numeric_limits<double>::quiet_NaN();
     // search for reference timing
     const auto it_refhits = hits.find(ReferenceChannel.DetectorType);

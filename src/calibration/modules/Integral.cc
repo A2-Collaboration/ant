@@ -49,7 +49,7 @@ Integral::Integral(Detector_t::Type_t detectorType,
         throw std::runtime_error("Given converter should not be nullptr");
 }
 
-void Integral::ApplyTo(const readhits_t& hits)
+void Integral::ApplyTo(TDetectorRead& detectorRead, const readhits_t& hits)
 {
     // search for to be calibrated Integrals
     const auto it_dethits = hits.find(DetectorType);
@@ -57,8 +57,6 @@ void Integral::ApplyTo(const readhits_t& hits)
         return;
 
     const auto& dethits = it_dethits->second;
-
-    //list<
 
     // now calibrate the Integrals (ignore any other kind of hits)
     for(auto dethit : dethits) {

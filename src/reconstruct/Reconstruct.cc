@@ -71,7 +71,7 @@ unique_ptr<TEvent> Reconstruct::DoReconstruct(TDetectorRead& detectorRead)
 
     // apply calibration (this may change the given detectorRead!)
     for(const auto& calib : calibrations) {
-        calib->ApplyTo(sorted_readhits);
+        calib->ApplyTo(detectorRead, sorted_readhits);
     }
 
     // for debug purposes, dump out the detectorRead

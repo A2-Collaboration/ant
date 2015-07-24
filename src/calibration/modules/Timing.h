@@ -27,7 +27,7 @@ public:
             );
 
     // CalibrationApply_traits interface
-    virtual void ApplyTo(const readhits_t& hits) override;
+    virtual void ApplyTo(TDetectorRead&, const readhits_t& hits) override;
     virtual void ApplyTo(event_ptr&) override {}
 
 
