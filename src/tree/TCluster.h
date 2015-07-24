@@ -5,6 +5,7 @@
 #include "TDetectorRead.h"
 #include <TVector3.h>
 #include <vector>
+#include <cmath>
 
 #ifndef __CINT__
 #include <iomanip>
@@ -109,6 +110,10 @@ struct TCluster
              << " Detector=" << Detector_t::ToString(GetDetectorType());
   }
 #endif
+
+  bool isSane() const {
+      return std::isfinite(Energy) && std::isfinite(Time);
+  }
 
   TCluster(): Position(), Energy(0.0), DetectorType(0) {}
   virtual ~TCluster() {}
