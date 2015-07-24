@@ -47,7 +47,8 @@ private:
             TTagger& event_tagger
             );
     void BuildClusters(sorted_bydetectortype_t<reconstruct::AdaptorTClusterHit>&& sorted_clusterhits,
-            sorted_bydetectortype_t<TCluster>& sorted_clusters
+            sorted_bydetectortype_t<TCluster>& sorted_clusters,
+                       std::vector<TCluster>& insane_clusters
             );
 
     template<typename T>

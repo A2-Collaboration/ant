@@ -89,7 +89,7 @@ unique_ptr<TEvent> Reconstruct::DoReconstruct(TDetectorRead& detectorRead)
 
     // then build clusters (at least for calorimeters this is not trivial)
     sorted_bydetectortype_t<TCluster> sorted_clusters;
-    BuildClusters(move(sorted_clusterhits), sorted_clusters);
+    BuildClusters(move(sorted_clusterhits), sorted_clusters, event->InsaneClusters);
 
 
     // finally, do the track building
@@ -194,7 +194,8 @@ void Reconstruct::BuildHits(
 
 void Reconstruct::BuildClusters(
         sorted_bydetectortype_t<AdaptorTClusterHit>&& sorted_clusterhits,
-        sorted_bydetectortype_t<TCluster>& sorted_clusters)
+        sorted_bydetectortype_t<TCluster>& sorted_clusters,
+        std::vector<TCluster>& insane_clusters)
 {
     auto insert_hint = sorted_clusters.begin();
 
@@ -223,6 +224,7 @@ void Reconstruct::BuildClusters(
             // build simple "cluster" consisting of single TClusterHit
             for(const AdaptorTClusterHit& clusterhit : clusterhits) {
                 const auto& hit = clusterhit.Hit;
+
                 clusters.emplace_back(
                             detector->GetPosition(hit->Channel),
                             clusterhit.Energy,
@@ -230,6 +232,17 @@ void Reconstruct::BuildClusters(
                             detector->Type,
                             vector<TClusterHit>{*hit}
                             );
+
+            }
+        }
+
+        auto c = clusters.begin();
+        while (c!=clusters.end()) {
+            if(! c->isSane()) {
+                insane_clusters.emplace_back(std::move(*c));
+                c = clusters.erase(c);
+            } else {
+                ++c;
             }
         }
 

@@ -82,7 +82,7 @@ struct ReconstructTester {
 
         // then build clusters (at least for calorimeters this is not trivial)
         Reconstruct::sorted_bydetectortype_t<TCluster> sorted_clusters;
-        r.BuildClusters(move(sorted_clusterhits), sorted_clusters);
+        r.BuildClusters(move(sorted_clusterhits), sorted_clusters, event->InsaneClusters);
         size_t n_clusters = getTotalCount(sorted_clusters);
         REQUIRE(n_clusters>0);
         REQUIRE(n_clusters <= n_clusterhits);
