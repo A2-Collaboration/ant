@@ -2,10 +2,6 @@
 
 #include "expconfig/Detector_t.h"
 #include "unpacker/UnpackerAcqu.h"
-#include "base/std_ext.h"
-
-#include <cassert>
-#include <cmath>
 
 namespace ant {
 namespace expconfig {
@@ -20,9 +16,7 @@ struct PID :
         return elements[channel].Position;
     }
 
-    virtual double dPhi(unsigned) const {
-        return 2 * M_PI / elements.size();
-    }
+    virtual double dPhi(unsigned) const;
 
     // for UnpackerAcquConfig
     virtual void BuildMappings(
@@ -34,31 +28,34 @@ protected:
     struct Element_t : Detector_t::Element_t {
         Element_t(
                 unsigned channel,
-                double phi_degrees,
                 unsigned adc,
                 unsigned tdc
                 ) :
             Detector_t::Element_t(
                 channel,
-                TVector3(1,0,0) // start with unit vector in x/y plane
+                /// \todo Use correct PID radius here
+                TVector3(1,0,0) // start with unit vector in x/y plane, is rotated in InitElements()
                 ),
             ADC(adc),
             TDC(tdc)
-        {
-            Position.SetPhi(std_ext::degree_to_radian(phi_degrees));
-        }
+        {}
         unsigned ADC;
         unsigned TDC;
     };
 
     PID(const std::vector<Element_t>& elements_init) :
         Detector_t(Detector_t::Type_t::PID),
+        phi_offset0_degrees(15.476),
         elements(elements_init)
     {
-        assert(elements.size() == 24);
+        InitElements();
     }
 
-    const std::vector<Element_t> elements;
+private:
+    void InitElements();
+    double phi_offset0_degrees; // the offset in degrees of the first element, see InitElements()
+    std::vector<Element_t> elements;
+
 };
 
 struct PID_2014 : PID {
