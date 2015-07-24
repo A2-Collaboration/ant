@@ -46,9 +46,13 @@ Reconstruct::Reconstruct(const THeaderInfo &headerInfo)
         sorted_detectors[detector->Type] = detector;
     }
 
+    // init clustering
+    clustering = std_ext::make_unique<Clustering>(config);
+
     // init the trackbuilder
     /// \todo Make use of different TrackBuilders maybe?
     trackbuilder = std_ext::make_unique<TrackBuilder>(sorted_detectors);
+
 
     /// \todo build the range list from updateables
 }

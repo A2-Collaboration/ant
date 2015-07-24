@@ -52,11 +52,6 @@ static double calc_total_energy(const std::vector< crystal_t >& cluster) {
     return energy;
 }
 
-//static double opening_angle(const crystal_t& c1, const crystal_t& c2)  {
-//  // use TMath::ACos since it catches some NaN cases due to double rounding issues
-//  return TMath::RadToDeg()*TMath::ACos(c1.Position.Unit()*c2.Position.Unit());
-//}
-
 static double calc_energy_weight(const double energy, const double total_energy) {
     double wgtE = 4.0 + TMath::Log(energy / total_energy); /// \todo use optimal cutoff value
     return wgtE<0 ? 0 : wgtE;

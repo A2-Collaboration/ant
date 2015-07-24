@@ -1,16 +1,17 @@
 #pragma once
 
+#include "Detector_t.h"
 #include "base/printable.h"
 
 #include <memory>
 #include <list>
+#include <map>
 
 namespace ant {
 
 class THeaderInfo;
 class CalibrationApply_traits;
 class Updateable_traits;
-class Detector_t;
 
 class ExpConfig
 {
@@ -28,6 +29,8 @@ public:
     class Module : public virtual Base {
     public:
         virtual double GetBeamEnergy() const = 0;
+
+        // factory method to obtain such a type of config
         static std::shared_ptr<Module> Get(const THeaderInfo& header);
     };
 
@@ -37,6 +40,12 @@ public:
     public:
         virtual std::list< std::shared_ptr< CalibrationApply_traits > > GetCalibrations() const = 0;
         virtual std::list< std::shared_ptr< Detector_t > > GetDetectors() const = 0;
+
+        // for clustering
+        using cluster_thresholds_t = std::map<Detector_t::Type_t, double>;
+        virtual cluster_thresholds_t  GetClusterThresholds() const = 0;
+
+        // factory method to obtain such a type of config
         static std::shared_ptr<Reconstruct> Get(const THeaderInfo& header);
     };
 

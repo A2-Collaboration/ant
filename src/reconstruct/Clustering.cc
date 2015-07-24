@@ -28,6 +28,11 @@ void AdaptorTClusterHit::SetFields(const TDetectorReadHit *readhit) {
         Time = readhit->Values[0];
 }
 
+Clustering::Clustering(const shared_ptr<ExpConfig::Reconstruct>& config)
+{
+    cluster_thresholds = config->GetClusterThresholds();
+}
+
 void Clustering::Build(
         const shared_ptr<ClusterDetector_t>& clusterdetector,
         const list<AdaptorTClusterHit>& clusterhits,
@@ -48,15 +53,25 @@ void Clustering::Build(
                     );
 
     }
-    // do the clustering
+
+    // do the clustering (calls detail/Clustering_NextGen.h code)
     vector< vector< clustering::crystal_t> > crystal_clusters;
-    do_clustering(crystals, crystal_clusters);
+    clustering::do_clustering(crystals, crystal_clusters);
 
     // now calculate some cluster properties,
-    // and create TCluster out of it
+    // and create TCluster out of it (if they pass the energy threshold)
+
+    const auto it_threshold = cluster_thresholds.find(clusterdetector->Type);
+    const double threshold = it_threshold == cluster_thresholds.cend() ? 0 : it_threshold->second;
+
     for(const auto& cluster : crystal_clusters) {
         const double cluster_energy = clustering::calc_total_energy(cluster);
-        /// \todo already cut low-energy clusters here?
+
+        // discard low energetic clusters
+        if(cluster_energy<threshold) {
+            continue;
+        }
+
         TVector3 weightedPosition(0,0,0);
         double weightedSum = 0;
 
@@ -86,3 +101,4 @@ void Clustering::Build(
                     );
     }
 }
+

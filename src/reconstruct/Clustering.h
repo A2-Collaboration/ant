@@ -4,6 +4,8 @@
 #include <list>
 #include <vector>
 
+#include "expconfig/ExpConfig.h"
+
 namespace ant {
 
 class ClusterDetector_t;
@@ -31,10 +33,15 @@ struct AdaptorTClusterHit {
 
 class Clustering {
 public:
+    Clustering(const std::shared_ptr<ExpConfig::Reconstruct>& config);
+
     void Build(const std::shared_ptr<ClusterDetector_t>& clusterdetector,
                const std::list<AdaptorTClusterHit>& clusterhits,
                std::list<TCluster>& clusters
                );
+    virtual ~Clustering() = default;
+protected:
+    ExpConfig::Reconstruct::cluster_thresholds_t cluster_thresholds;
 };
 
 

@@ -26,6 +26,11 @@ public:
         return numeric_limits<double>::quiet_NaN();
     }
 
+    virtual cluster_thresholds_t GetClusterThresholds() const override {
+        // use no cluster thresholds at all, then defaults are used
+        return {};
+    }
+
     bool Matches(const THeaderInfo& header) const override {
         if(!Setup::Matches(header))
             return false;

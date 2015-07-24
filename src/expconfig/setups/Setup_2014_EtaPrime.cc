@@ -42,6 +42,13 @@ public:
         return 1604.0;
     }
 
+    virtual cluster_thresholds_t GetClusterThresholds() const override {
+        return {
+            {Detector_t::Type_t::CB,   15}, // in MeV
+            {Detector_t::Type_t::TAPS, 20}, // in MeV
+        };
+    }
+
     bool Matches(const THeaderInfo& header) const override {
         if(!Setup::Matches(header))
             return false;
