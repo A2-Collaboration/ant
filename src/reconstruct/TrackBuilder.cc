@@ -5,8 +5,10 @@
 #include "expconfig/detectors/PID.h"
 #include "expconfig/detectors/TAPS.h"
 #include "expconfig/detectors/TAPSVeto.h"
+#include "base/std_ext.h"
 
 #include "TVector2.h"
+
 
 using namespace ant;
 using namespace std;
@@ -42,7 +44,7 @@ void TrackBuilder::Build_PID_CB(std::map<Detector_t::Type_t, std::list<TCluster>
 
                     tracks.emplace_back(
                                 cb_cluster->Energy,
-                                0, // time unknown...
+                                cb_cluster->Time,
                                 cb_cluster->Position.Theta(),
                                 cb_cluster->Position.Phi(),
                                 std::vector<TCluster>{*cb_cluster, *pid_cluster},
@@ -71,7 +73,46 @@ void TrackBuilder::Build_PID_CB(std::map<Detector_t::Type_t, std::list<TCluster>
 
 void TrackBuilder::Build_TAPS_Veto(std::map<Detector_t::Type_t, std::list<TCluster> >& sorted_clusters, TEvent::tracks_t& tracks)
 {
+    auto& veto_clusters = sorted_clusters[Detector_t::Type_t::TAPSVeto];
+    auto& taps_clusters = sorted_clusters[Detector_t::Type_t::TAPS];
 
+    const auto element_radius2 = std_ext::sqr(tapsveto->GetElementRadius());
+
+    auto veto = veto_clusters.begin();
+    while(veto != veto_clusters.end()) {
+
+        bool matched = false;
+
+        const TVector3& vpos = veto->Position;
+
+        auto taps = taps_clusters.begin();
+
+        while(taps != taps_clusters.end()) {
+
+            const TVector3& tpos = taps->Position;
+            const TVector3 d = tpos - vpos;
+
+            if( d.XYvector().Mod() < element_radius2 ) {
+                tracks.emplace_back(
+                            taps->Energy,
+                            taps->Time,
+                            taps->Position.Theta(),
+                            taps->Position.Phi(),
+                            std::vector<TCluster>{*taps, *veto},
+                            veto->Energy
+                            );
+                taps = taps_clusters.erase(taps);
+            } else {
+                ++taps;
+            }
+        }
+
+        if(matched) {
+            veto = veto_clusters.erase(veto);
+        } else {
+            ++veto;
+        }
+    }
 }
 
 void TrackBuilder::Catchall(std::map<Detector_t::Type_t, std::list<TCluster> >& sorted_clusters, TEvent::tracks_t& tracks)
@@ -85,7 +126,7 @@ void TrackBuilder::Catchall(std::map<Detector_t::Type_t, std::list<TCluster> >& 
             for(auto& c : clusters) {
                 tracks.emplace_back(
                             0,
-                            0, // time unknown...
+                            c.Time,
                             c.Position.Theta(),
                             c.Position.Phi(),
                             std::vector<TCluster>{c},
@@ -96,7 +137,7 @@ void TrackBuilder::Catchall(std::map<Detector_t::Type_t, std::list<TCluster> >& 
             for(auto& c : clusters) {
                 tracks.emplace_back(
                             c.Energy,
-                            0, // time unknown...
+                            c.Time,
                             c.Position.Theta(),
                             c.Position.Phi(),
                             std::vector<TCluster>{c},
@@ -107,7 +148,7 @@ void TrackBuilder::Catchall(std::map<Detector_t::Type_t, std::list<TCluster> >& 
             for(auto& c : clusters) {
                 tracks.emplace_back(
                             0,
-                            0, // time unknown...
+                            c.Time,
                             c.Position.Theta(),
                             c.Position.Phi(),
                             std::vector<TCluster>{c},
