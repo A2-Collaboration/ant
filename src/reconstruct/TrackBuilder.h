@@ -15,7 +15,7 @@ namespace detector {
 class CB;
 class PID;
 class TAPS;
-//class TAPSVeto;
+class TAPSVeto;
 }
 }
 
@@ -27,7 +27,7 @@ protected:
     std::shared_ptr<expconfig::detector::CB>  cb;
     std::shared_ptr<expconfig::detector::PID> pid;
     std::shared_ptr<expconfig::detector::TAPS> taps;
-//    std::shared_ptr<expconfig::detector::VETO> veto;
+    std::shared_ptr<expconfig::detector::TAPSVeto> tapsveto;
 
     void Build_PID_CB(
             std::map<Detector_t::Type_t, std::list< TCluster > >& sorted_clusters,

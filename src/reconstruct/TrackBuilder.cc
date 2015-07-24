@@ -4,6 +4,7 @@
 #include "expconfig/detectors/CB.h"
 #include "expconfig/detectors/PID.h"
 #include "expconfig/detectors/TAPS.h"
+#include "expconfig/detectors/TAPSVeto.h"
 
 #include "TVector2.h"
 
@@ -80,7 +81,7 @@ void TrackBuilder::Catchall(std::map<Detector_t::Type_t, std::list<TCluster> >& 
         const auto& detector_type = cluster_list.first;
         const auto& clusters      = cluster_list.second;
 
-        if(detector_type == Detector_t::Type_t::PID /*|| detector_type == Detector_t::Type_t::Veto*/) {
+        if(detector_type == Detector_t::Type_t::PID || detector_type == Detector_t::Type_t::TAPSVeto) {
             for(auto& c : clusters) {
                 tracks.emplace_back(
                             0,
@@ -138,11 +139,11 @@ TrackBuilder::TrackBuilder(const TrackBuilder::sorted_detectors_t& sorted_detect
         VLOG(3) << "Detector TAPS not initialized";
     }
 
-//    try {
-//        veto = dynamic_pointer_cast<detector::TAPSVeto>(sorted_detectors.at(Detector_t::Type_t::TAPSVeto));
-//    } catch (...) {
-//        VLOG(3) << "Detector TAPSVeto not initialized";
-//    }
+    try {
+        tapsveto = dynamic_pointer_cast<detector::TAPSVeto>(sorted_detectors.at(Detector_t::Type_t::TAPSVeto));
+    } catch (...) {
+        VLOG(3) << "Detector TAPSVeto not initialized";
+    }
 
 }
 
@@ -153,7 +154,7 @@ void TrackBuilder::Build(std::map<Detector_t::Type_t, std::list<TCluster> >&& so
     if(cb && pid)
         Build_PID_CB(sorted_clusters, tracks);
 
-    if(taps /*&& tapsveto*/)
+    if(taps && tapsveto)
         Build_TAPS_Veto(sorted_clusters, tracks);
 
 
