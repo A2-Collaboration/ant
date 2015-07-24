@@ -31,16 +31,16 @@ public:
 
 
         // add both CATCH converters first,
-        // since they need to scan for their reference hit
+        // since they need to scan the detector read for their reference hit
         AddCalibration(convert_CATCH_Tagger);
         AddCalibration(convert_CATCH_CB);
 
-        // then we link the other
+        // then we add the others, and link it to the CATCH converters
         AddCalibration<calibration::Timing>(Detector_t::Type_t::EPT, convert_CATCH_Tagger);
         AddCalibration<calibration::Timing>(Detector_t::Type_t::CB,  convert_CATCH_CB);
         AddCalibration<calibration::Timing>(Detector_t::Type_t::PID, convert_CATCH_CB);
         AddCalibration<calibration::Timing>(Detector_t::Type_t::TAPS, convert_MultiHit16bit);
-        //AddCalibration<calibration::Timing>(Detector_t::Type_t::TAPSVeto, convert_TAPS_Timing);
+//        AddCalibration<calibration::Timing>(Detector_t::Type_t::TAPSVeto, convert_TAPS_Timing);
 
 
         AddCalibration<calibration::Integral>(Detector_t::Type_t::CB,
@@ -49,19 +49,27 @@ public:
                                               0.07, // default gain
                                               2     // default threshold in MeV
                                               );
+
         AddCalibration<calibration::Integral>(Detector_t::Type_t::PID,
                                               convert_MultiHit16bit,
-                                              0,     // default pedestal in raw
-                                              0.014, // default gain
-                                              0.1    // default threshold in MeV
+                                              100,    // default pedestal in raw
+                                              0.014,  // default gain
+                                              0.001   // default threshold in MeV
                                               );
 
         AddCalibration<calibration::Integral>(Detector_t::Type_t::TAPS,
                                               convert_MultiHit16bit,
-                                              0,     // default pedestal in raw
+                                              100,   // default pedestal in raw
                                               0.30,  // default gain
-                                              2      // default threshold in MeV
+                                              1      // default threshold in MeV
                                               );
+
+//        AddCalibration<calibration::Integral>(Detector_t::Type_t::TAPSVeto,
+//                                              convert_MultiHit16bit,
+//                                              100,     // default pedestal in raw
+//                                              0.010, // default gain
+//                                              0.1    // default threshold in MeV
+//                                              );
     }
 
     virtual double GetBeamEnergy() const override {
