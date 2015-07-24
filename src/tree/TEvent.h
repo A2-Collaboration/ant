@@ -18,6 +18,8 @@ struct TEvent : TDataRecord
     typedef std::vector<ant::TTrack> tracks_t;
     tracks_t Tracks;
     TTagger Tagger;
+    typedef std::vector<ant::TCluster> clusters_t;
+    clusters_t InsaneClusters;
 
 #ifndef __CINT__
     TEvent(const TID& id) :
