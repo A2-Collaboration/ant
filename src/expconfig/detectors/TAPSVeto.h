@@ -25,6 +25,12 @@ struct TAPSVeto :
             std::vector<hit_mapping_t>&,
             std::vector<scaler_mapping_t>&) const override;
 
+    /**
+     * @brief Get a radius containing the veto element. Used for track building
+     * @return radius in cm
+     * @note Roughly estimated by looking at a dummy TAPS element
+     */
+    double GetElementRadius() const { return 7.0; }
 
 protected:
 
@@ -82,12 +88,7 @@ protected:
         InitElements();
     }
 
-    /**
-     * @brief Get a radius containing the veto element. Used for track building
-     * @return radius in cm
-     * @note Roughly estimated by looking at a dummy TAPS element
-     */
-    double GetElementRadius() const { return 7.0; }
+
 
 private:
 
