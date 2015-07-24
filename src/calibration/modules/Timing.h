@@ -3,8 +3,10 @@
 #include "Calibration.h"
 #include "expconfig/Detector_t.h"
 #include "tree/TDataRecord.h"
+#include "base/interval.h"
 
 #include <memory>
+#include <limits>
 
 class TH1;
 
@@ -18,7 +20,9 @@ public:
     Timing(
             Detector_t::Type_t DetectorType,
             Calibration::Converter::ptr_t converter,
-            const double defaultGain = 1.0, // default gain is 1.0
+            double defaultOffset,
+            const interval<double>& timeWindow = {-std_ext::inf, std_ext::inf},
+            double defaultGain = 1.0, // default gain is 1.0
             const std::vector< TKeyValue<double> >& gains = {}
             );
 
@@ -41,10 +45,13 @@ protected:
     const Detector_t::Type_t DetectorType;
     const Calibration::Converter::ptr_t Converter;
 
-    const double DefaultGain;
-    std::vector<double> Gains; // externally given, usually constant over one beamtime
+    const interval<double> TimeWindow;
 
-    std::vector<double> Offsets; // to be calibrated values
+    const double DefaultOffset;
+    std::vector<double> Offsets;
+
+    const double DefaultGain;
+    std::vector<double> Gains;
 
 };
 

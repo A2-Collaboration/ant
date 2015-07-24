@@ -8,12 +8,15 @@
 #include <ctime>
 #include <iostream>
 #include <vector>
+#include <limits>
 
 #include <cxxabi.h> /// \todo works only with GCC?
 
 namespace ant {
 
 namespace std_ext {
+
+constexpr double inf = std::numeric_limits<double>::infinity();
 
 inline void insertRange(std::vector<unsigned>& v, unsigned start, unsigned stop) {
   int length = stop-start+1;

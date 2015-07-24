@@ -65,6 +65,7 @@ void Integral::ApplyTo(const map< Detector_t::Type_t, list< TDetectorReadHit* > 
         // the Converter is smart enough to account for reference Integrals!
         const auto& values = Converter->Convert(dethit->RawData);
         dethit->Values.reserve(values.size());
+
         // apply pedestal/gain/threshold to each of the values (might be multihit)
         for(double value : values) {
             if(Pedestals.empty())

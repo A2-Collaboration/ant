@@ -17,7 +17,7 @@ protected:
     T _stop;
 
 public:
-    interval( const T start=0.0, const T stop=0.0 ): _start(start), _stop(stop) {}
+    interval( const T& start=0.0, const T& stop=0.0 ): _start(start), _stop(stop) {}
 
     /**
      * @brief Factory Function: Create interval from center and widht

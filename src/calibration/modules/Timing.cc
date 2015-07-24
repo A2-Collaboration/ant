@@ -26,9 +26,10 @@ void Timing::ShowResult()
 
 }
 
-Timing::Timing(
-        Detector_t::Type_t detectorType,
+Timing::Timing(Detector_t::Type_t detectorType,
         Calibration::Converter::ptr_t converter,
+        double defaultOffset,
+        const interval<double>& timeWindow, // default {-inf, inf}
         const double defaultGain, // default gain is 1.0
         const std::vector< TKeyValue<double> >& gains
         ) :
@@ -39,9 +40,11 @@ Timing::Timing(
            ),
     DetectorType(detectorType),
     Converter(move(converter)),
+    TimeWindow(timeWindow),
+    DefaultOffset(defaultOffset),
+    Offsets(),
     DefaultGain(defaultGain),
-    Gains(),
-    Offsets()
+    Gains()
 {
     if(Converter==nullptr)
         throw std::runtime_error("Given converter should not be nullptr");
@@ -71,14 +74,27 @@ void Timing::ApplyTo(const map< Detector_t::Type_t, list< TDetectorReadHit* > >&
     for(TDetectorReadHit* dethit : dethits) {
         if(dethit->GetChannelType() != Channel_t::Type_t::Timing)
             continue;
+
         // the Converter is smart enough to account for reference timings!
-        dethit->Values = Converter->Convert(dethit->RawData);
+        const auto& values = Converter->Convert(dethit->RawData);
+        dethit->Values.reserve(values.size());
+
         // apply gain/offset to each of the values (might be multihit)
-        for(double& value : dethit->Values) {
-            if(!Gains.empty())
+        for(double value : values) {
+            if(Gains.empty())
+                value *= DefaultGain;
+            else
                 value *= Gains[dethit->Channel];
-            if(!Offsets.empty())
+
+            if(Offsets.empty())
+                value -= DefaultOffset;
+            else
                 value -= Offsets[dethit->Channel];
+
+            if(!TimeWindow.Contains(value))
+                continue;
+
+            dethit->Values.push_back(value);
         }
     }
 }
