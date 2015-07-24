@@ -22,9 +22,10 @@ class TEvent;
 class CalibrationApply_traits {
 public:
     using readhits_t = std::map< Detector_t::Type_t, std::list< TDetectorReadHit* > >;
+    using extrahits_t = std::list< TDetectorReadHit >;
     using event_ptr = std::unique_ptr<TEvent>;
 
-    virtual void ApplyTo(TDetectorRead& detectorRead, const readhits_t& hits) = 0;
+    virtual void ApplyTo(const readhits_t& hits, extrahits_t& extrahits) = 0;
     virtual void ApplyTo(event_ptr& event) = 0;
 };
 

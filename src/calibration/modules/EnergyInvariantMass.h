@@ -15,7 +15,7 @@ public:
   EnergyInvariantMass();
 
   // CalibrationApply_traits interface
-  virtual void ApplyTo(TDetectorRead& detectorRead, const readhits_t& hits) override;
+  virtual void ApplyTo(const readhits_t& hits, extrahits_t&) override;
   virtual void ApplyTo(event_ptr&) override {}
 
   // Physics interface

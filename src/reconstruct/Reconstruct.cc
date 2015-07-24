@@ -60,19 +60,10 @@ Reconstruct::Reconstruct(const THeaderInfo &headerInfo)
 unique_ptr<TEvent> Reconstruct::DoReconstruct(TDetectorRead& detectorRead)
 {
 
-    // categorize the hits by detector type
-    // this is handy for all subsequent reconstruction steps
-    // we need to use non-const pointers because calibrations
-    // may change the content
+    // apply the calibrations,
+    // note that this also changes the detectorRead
     CalibrationApply_traits::readhits_t sorted_readhits;
-    for(TDetectorReadHit& readhit : detectorRead.Hits) {
-        sorted_readhits[readhit.GetDetectorType()].push_back(addressof(readhit));
-    }
-
-    // apply calibration (this may change the given detectorRead!)
-    for(const auto& calib : calibrations) {
-        calib->ApplyTo(detectorRead, sorted_readhits);
-    }
+    ApplyCalibrations(detectorRead, sorted_readhits);
 
     // for debug purposes, dump out the detectorRead
     //cout << detectorRead << endl;
@@ -106,6 +97,38 @@ unique_ptr<TEvent> Reconstruct::DoReconstruct(TDetectorRead& detectorRead)
 Reconstruct::~Reconstruct()
 {
 
+}
+
+void Reconstruct::ApplyCalibrations(TDetectorRead& detectorRead,
+                                    sorted_bydetectortype_t<TDetectorReadHit*>& sorted_readhits)
+{
+    // categorize the hits by detector type
+    // this is handy for all subsequent reconstruction steps
+    // we need to use non-const pointers because calibrations
+    // may change the content
+    for(TDetectorReadHit& readhit : detectorRead.Hits) {
+        sorted_readhits[readhit.GetDetectorType()].push_back(addressof(readhit));
+    }
+
+    // apply calibration
+    // this may change the given detectorRead,
+    // and even provide use with extrahits to be added to it
+    list<TDetectorReadHit> extrahits;
+    for(const auto& calib : calibrations) {
+        calib->ApplyTo(sorted_readhits, extrahits);
+    }
+
+    // adding extrahits to the detectorRead invalidates the sorted_readhits pointer map
+    /// \todo make this more efficient
+    if(!extrahits.empty()) {
+        detectorRead.Hits.insert(detectorRead.Hits.end(),
+                                 make_move_iterator(extrahits.begin()),
+                                 make_move_iterator(extrahits.end()));
+        sorted_readhits.clear();
+        for(TDetectorReadHit& readhit : detectorRead.Hits) {
+            sorted_readhits[readhit.GetDetectorType()].push_back(addressof(readhit));
+        }
+    }
 }
 
 void Reconstruct::BuildHits(

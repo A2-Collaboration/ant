@@ -40,7 +40,7 @@ void EnergyInvariantMass::ShowResult()
 
 }
 
-void EnergyInvariantMass::ApplyTo(TDetectorRead& detectorRead, const readhits_t& hits)
+void EnergyInvariantMass::ApplyTo(const readhits_t& hits, extrahits_t&)
 {
 
 }

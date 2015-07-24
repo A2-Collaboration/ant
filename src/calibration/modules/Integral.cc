@@ -49,7 +49,7 @@ Integral::Integral(Detector_t::Type_t detectorType,
         throw std::runtime_error("Given converter should not be nullptr");
 }
 
-void Integral::ApplyTo(TDetectorRead& detectorRead, const readhits_t& hits)
+void Integral::ApplyTo(const readhits_t& hits, extrahits_t& extrahits)
 {
     // search for to be calibrated Integrals
     const auto it_dethits = hits.find(DetectorType);
@@ -59,12 +59,23 @@ void Integral::ApplyTo(TDetectorRead& detectorRead, const readhits_t& hits)
     const auto& dethits = it_dethits->second;
 
     // now calibrate the Integrals (ignore any other kind of hits)
-    for(auto dethit : dethits) {
+    for(TDetectorReadHit* dethit : dethits) {
         if(dethit->GetChannelType() != Channel_t::Type_t::Integral)
             continue;
         // the Converter is smart enough to account for reference Integrals!
-        const auto& values = Converter->Convert(dethit->RawData);
+        const std::vector<double>& values = Converter->Convert(dethit->RawData);
         dethit->Values.reserve(values.size());
+
+        // for pedestal calibration, we insert extra hits here
+        // containing the raw values
+        extrahits.emplace_back(
+                    LogicalChannel_t{
+                        dethit->GetDetectorType(),
+                        Channel_t::Type_t::Pedestal,
+                        dethit->Channel
+                    },
+                    values
+                    );
 
         // apply pedestal/gain/threshold to each of the values (might be multihit)
         for(double value : values) {

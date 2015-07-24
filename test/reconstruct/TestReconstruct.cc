@@ -47,24 +47,11 @@ struct ReconstructTester {
         /// \todo Improve requirements
 
 
-        // categorize the hits by detector type
-        // this is handy for all subsequent reconstruction steps
-        Reconstruct::sorted_bydetectortype_t<TDetectorReadHit*> sorted_readhits;
-        for(TDetectorReadHit& readhit : detectorRead.Hits) {
-            sorted_readhits[readhit.GetDetectorType()].push_back(addressof(readhit));
-        }
-
-        size_t n_readhits_before = getTotalCount(sorted_readhits);
-        REQUIRE(n_readhits_before>0);
-
-        // apply calibration (this may change the given detectorRead!)
-        for(const auto& calib : r.calibrations) {
-            calib->ApplyTo(detectorRead, sorted_readhits);
-        }
-
-        size_t n_readhits_after = getTotalCount(sorted_readhits);
-        REQUIRE(n_readhits_after==n_readhits_before);
-
+        // apply the calibrations,
+        CalibrationApply_traits::readhits_t sorted_readhits;
+        r.ApplyCalibrations(detectorRead, sorted_readhits);
+        size_t n_readhits = getTotalCount(sorted_readhits);
+        REQUIRE(n_readhits>0);
 
         // already create the event here, since Tagger
         // doesn't need hit matching and thus can be filled already
@@ -78,7 +65,7 @@ struct ReconstructTester {
         Reconstruct::sorted_bydetectortype_t<AdaptorTClusterHit> sorted_clusterhits;
         r.BuildHits(move(sorted_readhits), sorted_clusterhits, event->Tagger);
         size_t n_clusterhits = getTotalCount(sorted_clusterhits);
-        REQUIRE(n_clusterhits + event->Tagger.Hits.size() <= n_readhits_after);
+        REQUIRE(n_clusterhits + event->Tagger.Hits.size() <= n_readhits);
 
         // then build clusters (at least for calorimeters this is not trivial)
         Reconstruct::sorted_bydetectortype_t<TCluster> sorted_clusters;

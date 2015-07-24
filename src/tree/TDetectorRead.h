@@ -43,6 +43,19 @@ struct TDetectorReadHit
                   "LogicalElement_t::Channel does not fit into TDetecorReadHit::Channel");
   }
 
+  TDetectorReadHit(const LogicalChannel_t& element,
+      const std::vector<double>& values) :
+    DetectorType(static_cast<std::uint8_t>(element.DetectorType)),
+    ChannelType(static_cast<std::uint8_t>(element.ChannelType)),
+    Channel(element.Channel),
+    RawData(),
+    Values(values),
+    ValueBits()
+  {
+    static_assert(sizeof(Channel)>=sizeof(element.Channel),
+                  "LogicalElement_t::Channel does not fit into TDetecorReadHit::Channel");
+  }
+
   Channel_t::Type_t GetChannelType() const {
     return static_cast<Channel_t::Type_t>(ChannelType);
   }
