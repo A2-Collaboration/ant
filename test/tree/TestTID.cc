@@ -21,7 +21,7 @@ void dotest()
     REQUIRE(a == a);
 
     REQUIRE_FALSE(a == b);
-    REQUIRE_FALSE( a == c);
+    REQUIRE_FALSE(a == c);
 
     REQUIRE(a != b);
     REQUIRE(a != c);
@@ -30,4 +30,21 @@ void dotest()
     REQUIRE(b > a);
     REQUIRE(a < c);
     REQUIRE(b < c);
+
+    // increment / decrement
+    REQUIRE(++a == b);
+    REQUIRE(--b != a);
+    REQUIRE(a.Value == 1);
+    REQUIRE(b.Value == 0);
+
+    TID d;
+
+    // copy
+    REQUIRE_NOTHROW(d = c);
+
+    // flags same after copy
+    REQUIRE_NOTHROW(d.Flags = c.Flags);
+
+    //flags same after increment
+    REQUIRE((++c).Flags == d.Flags);
 }

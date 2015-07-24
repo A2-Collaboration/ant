@@ -75,7 +75,7 @@ struct TID
 #ifndef __CINT__
   // you may append flags, but never remove or change order!
   enum class Flags_t : std::uint8_t {
-    MC
+    MC, Acqu, GoAT
   };
 
   TID(
@@ -136,6 +136,16 @@ struct TID
   bool operator==(const TID& other) const
   {
       return (!(this->operator !=(other)));
+  }
+
+  TID& operator++() {
+      ++Value;
+      return *this;
+  }
+
+  TID& operator--() {
+      --Value;
+      return *this;
   }
 
   ClassDef(TID, ANT_UNPACKER_ROOT_VERSION)
