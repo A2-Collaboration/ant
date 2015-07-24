@@ -3,6 +3,7 @@
 //ant
 #include "tree/TCalibrationData.h"
 #include "tree/TDataRecord.h"
+#include "base/interval.h"
 
 //
 #include "base/Logger.h"
@@ -13,6 +14,7 @@
 
 //std
 #include <memory>
+#include <map>
 #include <vector>
 #include <string>
 #include <sstream>
@@ -28,7 +30,7 @@ private:
     const std::string cm_treename;
     const std::string cm_branchname;
     std::string dataFileName;
-    std::vector<TCalibrationData> dataBase;
+    std::map<std::string,std::vector<TCalibrationData>> dataBase;
 
 
     void finish() const
@@ -39,14 +41,15 @@ private:
         const TCalibrationData* cdata = nullptr;
         cmTree->Branch(cm_branchname.c_str(),&cdata);
 
-        for( auto& entry: dataBase)
-        {
-            cdata = std::addressof(entry);
-            cmTree->Fill();
-            VLOG(9) << "[CalibratioinManager]  Stored CalibrationData"
-                    << cdata
-                    << "                       to tree " << dataFileName << std::endl;
-        }
+        for( auto& setupList: dataBase)
+            for( auto& entry: setupList.second)
+            {
+                cdata = std::addressof(entry);
+                cmTree->Fill();
+                VLOG(9) << "[CalibratioinManager]  Stored CalibrationData"
+                        << cdata
+                        << "                       to tree " << dataFileName << std::endl;
+            }
     }
 
 public:
@@ -94,12 +97,21 @@ public:
 
     void Add(const TCalibrationData& data)
     {
-        dataBase.push_back(data);
+        dataBase[data.SetupID].push_back(data);
     }
 
     const TCalibrationData GetData(const std::string& setupID, const TID& eventID) const
     {
-        std::cout << "TODO: add data" << std::endl;
+        auto& setupList = dataBase.at(setupID);
+
+        for(auto& entry: setupList)
+        {
+            interval<TID> range(entry.FirstID,entry.LastID);
+            if (range.Contains(eventID)){
+                return entry;
+            }
+        }
+
         return TCalibrationData();
     }
 
