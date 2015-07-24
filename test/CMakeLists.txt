@@ -29,7 +29,7 @@ macro(add_ant_test name)
   add_executable(${TESTNAME} EXCLUDE_FROM_ALL ${TESTFILE})
   target_link_libraries(${TESTNAME} catch ${TEST_SUBDIR} ${ARGN})
   add_test(NAME ${TESTNAME} COMMAND ${TESTNAME})
-  set_tests_properties(${TESTNAME} PROPERTIES TIMEOUT 5)
+  set_tests_properties(${TESTNAME} PROPERTIES TIMEOUT 10)
   add_dependencies(build_and_test ${TESTNAME})
 endmacro()
 
