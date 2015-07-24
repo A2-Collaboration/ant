@@ -16,7 +16,6 @@ set(SRCS
   Format.h
   Tree.h
   root_printable.h
-  root_printable.cc
   WrapTFile.cc
   WrapTFile.h
   detail/format.cc
@@ -47,8 +46,8 @@ set(SRCS
   detail/tclap/ZshCompletionOutput.h
 )
 
-set_source_files_properties(detail/format.cc 
-	PROPERTIES COMPILE_FLAGS -Wno-effc++)
+set_source_files_properties(detail/format.cc
+        PROPERTIES COMPILE_FLAGS -Wno-effc++)
 
 add_library(base ${SRCS})
 target_link_libraries(base ${ROOT_LIBRARIES})
