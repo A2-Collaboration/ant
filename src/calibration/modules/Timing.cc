@@ -75,7 +75,7 @@ std::list<TID> Timing::GetChangePoints() const {
 }
 
 void Timing::Update(const TID& id) {
-    LOG(INFO) << "Update called with TID=" << id;
+    LOG(INFO) << GetName() << ": Update called with TID=" << id;
 }
 
 void Timing::ApplyTo(const readhits_t& hits, extrahits_t&)

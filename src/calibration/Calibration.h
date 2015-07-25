@@ -28,9 +28,15 @@ public:
             public Updateable_traits
     {
     public:
-        Module(const std::string& name) :
-            Physics(std::string("Calibration_")+name) {} /// \todo put calibration histograms in subdir?
         virtual ~Module() = default;
+        std::string GetName() const { return name; }
+    protected:
+        Module(const std::string& name_) :
+            Physics(std::string("Calibration_")+name_), /// \todo put calibration histograms in subdir?
+            name(name_)
+        {}
+    private:
+        const std::string name;
     };
 
 };
