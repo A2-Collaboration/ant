@@ -1,7 +1,7 @@
 #include "analysis/Detector.h"
 #include "analysis/utils/matcher.h"
 #include "analysis/ParticleType.h"
-#include "analysis/data/Track.h"
+#include "analysis/data/Candidate.h"
 #include "analysis/data/Particle.h"
 #include "analysis/utils/combinatorics.h"
 
@@ -30,7 +30,7 @@ int main() {
         }
     }
 
-    TrackPtr t(new Track(mev_t(100),
+    CandidatePtr t(new Candidate(mev_t(100),
             radian_t(2.0),
             radian_t(1.0),
             time_t(0.324),
@@ -123,7 +123,7 @@ int main() {
 
     ParticleList rec;
 
-    TrackPtr r1(new Track(mev_t(100),
+    CandidatePtr r1(new Candidate(mev_t(100),
             radian_t(1.01),
             radian_t(2.01),
             time_t(0.324),
@@ -134,7 +134,7 @@ int main() {
             ));
     rec.emplace_back( new Particle(ParticleTypeDatabase::Photon, r1));
 
-    TrackPtr r2(new Track(mev_t(210),
+    CandidatePtr r2(new Candidate(mev_t(210),
             radian_t(.19),
             radian_t(.41),
             time_t(0.323),
@@ -146,7 +146,7 @@ int main() {
 
     rec.emplace_back( new Particle(ParticleTypeDatabase::Photon, r2));
 
-    TrackPtr r3(new Track(mev_t(210),
+    CandidatePtr r3(new Candidate(mev_t(210),
             radian_t(1.19),
             radian_t(.41),
             time_t(0.323),

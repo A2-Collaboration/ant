@@ -20,7 +20,7 @@ void dotest() {
 
     ant::TEvent* event = new ant::TEvent();
 
-    //======= Track 1 =============
+    //======= Candidate 1 =============
 
     event->Candidates.push_back(
           ant::TCandidate(200,1,2,2,{})
@@ -53,7 +53,7 @@ void dotest() {
           ant::TClusterHit(20, {{ant::Channel_t::Type_t::Integral, 4}})
           );
 
-    //======= Track 2 =============
+    //======= Candidate 2 =============
     event->Candidates.push_back(
           ant::TCandidate(300,0.5,2,3)
           );
@@ -70,7 +70,7 @@ void dotest() {
 
     cout << *antevent << endl;
 
-    REQUIRE(antevent->Reconstructed().Tracks().size() == 2);
+    REQUIRE(antevent->Reconstructed().Candidates().size() == 2);
     /// \todo Write more REQUIRE stuff here
 
 }

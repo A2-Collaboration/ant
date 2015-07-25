@@ -1,9 +1,9 @@
-#include "Track.h"
+#include "Candidate.h"
 
 using namespace std;
 using namespace ant;
 
-ostream& Track::Print(ostream &stream) const
+ostream& Candidate::Print(ostream &stream) const
 {
     stream << "Track "
            << " ClusterEnergy=" << ClusterEnergy()

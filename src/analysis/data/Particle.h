@@ -3,7 +3,7 @@
 #include "base/printable.h"
 #include "base/types.h"
 #include "analysis/ParticleType.h"
-#include "Track.h"
+#include "analysis/data/Candidate.h"
 
 #include "TLorentzVector.h"
 #include <vector>
@@ -26,7 +26,7 @@ protected:
     const ant::ParticleTypeDatabase::Type* type;
     ParticleList parents;
     ParticleList daughters;
-    TrackList tracks;
+    CandidateList candidates;
 
 public:
 
@@ -37,12 +37,12 @@ public:
         type(&_type),
         parents(),
         daughters(),
-        tracks()
+        candidates()
     {}
 
-    Particle(const ParticleTypeDatabase::Type& _type, ant::TrackPtr track):
-        Particle(_type,track->ClusterEnergy(),track->Theta(), track->Phi()) {
-        tracks.emplace_back(track);
+    Particle(const ParticleTypeDatabase::Type& _type, ant::CandidatePtr candidate):
+        Particle(_type,candidate->ClusterEnergy(),candidate->Theta(), candidate->Phi()) {
+        candidates.emplace_back(candidate);
     }
 
     Particle(const Particle&) = delete;
@@ -67,9 +67,9 @@ public:
     ParticleList& Daughters() { return daughters; }
     const ParticleList& Daughters() const { return daughters; }
 
-    bool hasTracks() const { return tracks.size() != 0; }
-    TrackList& Tracks() { return tracks; }
-    const TrackList& Tracks() const { return tracks; }
+    bool hasCandidates() const { return candidates.size() != 0; }
+    CandidateList& Candidates() { return candidates; }
+    const CandidateList& Candidates() const { return candidates; }
 
     virtual std::ostream& Print(std::ostream& stream) const;
 

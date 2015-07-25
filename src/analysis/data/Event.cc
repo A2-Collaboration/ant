@@ -30,9 +30,9 @@ std::ostream &ant::Event::Data::Print(std::ostream &stream) const
     stream << "-- Intermediates --\n";
     stream << intermediates << "\n";
 
-    stream << "-- Tracks --\n";
-    for( auto& track : tracks ) {
-        stream << *track << '\n';
+    stream << "-- Candidates --\n";
+    for( auto& candidate : candidates ) {
+        stream << *candidate << '\n';
     }
 
     stream << "-- Tagger --\n";

@@ -1,6 +1,6 @@
 #include "TestAPLCON.h"
 #include "data/Particle.h"
-#include "data/Track.h"
+#include "data/Candidate.h"
 #include "plot/root_draw.h"
 #include <string>
 #include "utils/combinatorics.h"
@@ -228,8 +228,8 @@ void ant::analysis::TestAPLCON::ProcessEvent(const ant::Event &event)
 {
 
 
-    for(auto& track : event.Reconstructed().Tracks()) {
-        banana->Fill(track->ClusterEnergy(), track->VetoEnergy());
+    for(auto& cand : event.Reconstructed().Candidates()) {
+        banana->Fill(cand->ClusterEnergy(), cand->VetoEnergy());
     }
 
     for(auto& particle : event.Reconstructed().Particles().GetAll()) {

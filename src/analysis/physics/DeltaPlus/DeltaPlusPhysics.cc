@@ -45,7 +45,7 @@ void DeltaPlusPhysics::ProcessEvent(const Event &event)
 
     }
 
-    for( auto& track : event.Reconstructed().Tracks() ) {
+    for( auto& track : event.Reconstructed().Candidates() ) {
         prompt["pid"]->Fill(track->ClusterEnergy(), track->VetoEnergy());
     }
 

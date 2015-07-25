@@ -29,7 +29,7 @@ void dotest() {
 
   tree->Branch("event", buffer);
 
-  //======= Track 1 =============
+  //======= Candidate 1 =============
 
 
 
@@ -64,7 +64,7 @@ void dotest() {
         ant::TClusterHit(20, {{ant::Channel_t::Type_t::Integral, 4}})
         );
 
-  //======= Track 2 =============
+  //======= Candidate 2 =============
   buffer->Candidates.push_back(
         ant::TCandidate(300,0.5,2,3)
         );

@@ -3,7 +3,7 @@
 #include "base/types.h"
 
 #include "Particle.h"
-#include "Track.h"
+#include "Candidate.h"
 #include "TaggerHit.h"
 #include "TriggerInfo.h"
 #include "base/printable.h"
@@ -56,7 +56,7 @@ public:
         PTypeLists   particles;      //final state / reconstructred particles
         PTypeLists   intermediates;  //intermediate particles (if any)
 
-        ant::TrackList      tracks;         //detector tracks (if any)
+        ant::CandidateList      candidates;         //particle candidates (if any)
         ant::TaggerHistList taggerhits;     //tagger hits
         ant::TriggerInfo    triggerinfo;
 
@@ -68,8 +68,8 @@ public:
         const PTypeLists& Intermediates() const { return intermediates; }
               PTypeLists& Intermediates()       { return intermediates; }
 
-        const TrackList& Tracks() const { return tracks; }
-              TrackList& Tracks()       { return tracks; }
+        const CandidateList& Candidates() const { return candidates; }
+              CandidateList& Candidates()       { return candidates; }
 
         const TaggerHistList& TaggerHits() const { return taggerhits; }
               TaggerHistList& TaggerHits()       { return taggerhits; }

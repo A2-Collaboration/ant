@@ -9,7 +9,7 @@
 #include "analysis/physics/Physics.h"
 #include "analysis/physics/omega/omega.h"
 #include "analysis/physics/common/DataOverview.h"
-#include "analysis/physics/common/TrackAnalysis.h"
+#include "analysis/physics/common/CandidatesAnalysis.h"
 
 #include "base/Logger.h"
 #include "base/detail/CmdLine.h"

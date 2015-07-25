@@ -89,8 +89,8 @@ void GoatReader::CopyTracks(std::shared_ptr<Event> &event)
 {
     for(Int_t i=0; i< tracks.GetNTracks(); ++i) {
 
-        event->Reconstructed().Tracks().emplace_back(
-                    TrackPtr( new Track(
+        event->Reconstructed().Candidates().emplace_back(
+                    CandidatePtr( new Candidate(
                                   tracks.GetClusterEnergy(i),
                                   tracks.GetTheta(i),
                                   tracks.GetPhi(i),
@@ -243,7 +243,7 @@ void GoatReader::CopyParticles(std::shared_ptr<Event> &event, ParticleInput &inp
         if(trackIndex == -1) {
             cerr << "No Track for this particle!!" << endl;
         } else {
-            const auto& track = event->Reconstructed().Tracks().at(trackIndex);
+            const auto& track = event->Reconstructed().Candidates().at(trackIndex);
 
             event->Reconstructed().Particles().AddParticle(
                     std::make_shared<Particle>(type,track));

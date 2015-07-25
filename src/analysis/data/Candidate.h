@@ -15,7 +15,7 @@ namespace ant {
  * Representation of GoAT information, with emphasis on
  * physical particle information, not on detector information!
  */
-class Track: public ant::printable_traits
+class Candidate: public ant::printable_traits
 {
 private:
     mev_t clusterEnergy;
@@ -27,7 +27,7 @@ private:
     mev_t vetoEnergy;
     mev_t trackerEnergy;
 public:
-    Track(const mev_t& _clusterEnergy,
+    Candidate(const mev_t& _clusterEnergy,
           const radian_t& _theta,
           const radian_t& _phi,
           const ns_t& _time,
@@ -60,7 +60,7 @@ public:
 
 };
 
-using TrackPtr  = std::shared_ptr<Track>;
-using TrackList = std::vector<TrackPtr>;
+using CandidatePtr  = std::shared_ptr<Candidate>;
+using CandidateList = std::vector<CandidatePtr>;
 
 }

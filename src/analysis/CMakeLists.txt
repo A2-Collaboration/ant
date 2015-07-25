@@ -32,8 +32,8 @@ set(ANALYSIS_PLOT
 )
 
 set(ANALYSIS_DATASTRUCTURES
-  data/Track.h
-  data/Track.cc
+  data/Candidate.h
+  data/Candidate.cc
   data/Particle.h
   data/Particle.cc
   data/Event.h
@@ -94,7 +94,7 @@ set(ANALYSIS_PHYSICS
   physics/common/DataOverview.cc
   physics/omega/mctrue_acceptance.h
   physics/omega/mctrue_acceptance.cc
-  physics/common/TrackAnalysis.cc
+  physics/common/CandidatesAnalysis.cc
   )
 
 set(ANALYSIS_ALL

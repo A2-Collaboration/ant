@@ -29,9 +29,9 @@ double OmegaBase::calcEnergySum(const ParticleList &particles) const
 {
     double esum = 0.0;
 
-    for( const ant::ParticlePtr& track : particles) {
-        if( geo.DetectorFromAngles(track->Theta(), track->Phi()) == detector_t::CB ) {
-            esum += track->Ek();
+    for( const ant::ParticlePtr& p : particles) {
+        if( geo.DetectorFromAngles(p->Theta(), p->Phi()) == detector_t::CB ) {
+            esum += p->Ek();
         }
     }
 
@@ -123,10 +123,10 @@ void OmegaEtaG::Analyse(const Event::Data &data, const Event &event)
 
     steps->Fill("nProtons",1);
 
-    if( data.Tracks().size() > 4 || data.Tracks().size() < 3 ) // not more then that (3photns +0or1 protons)
+    if( data.Candidates().size() > 4 || data.Candidates().size() < 3 ) // not more then that (3photns +0or1 protons)
         return;
 
-    steps->Fill("nTracks",1);
+    steps->Fill("nCandidates",1);
 
     const double CBESum = mode==DataMode::Reconstructed ? calcEnergySum(data.Particles().Get(ParticleTypeDatabase::Photon)) : data.TriggerInfos().CBEenergySum();
 

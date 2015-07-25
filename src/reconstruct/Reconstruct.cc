@@ -52,8 +52,8 @@ Reconstruct::Reconstruct(const THeaderInfo& headerInfo)
     // init clustering
     clustering = std_ext::make_unique<Clustering>(config);
 
-    // init the trackbuilder
-    /// \todo Make use of different TrackBuilders maybe?
+    // init the candidate builder
+    /// \todo Make use of different candidate builders maybe?
     candidatebuilder = std_ext::make_unique<CandidateBuilder>(sorted_detectors);
 
     // ask each updateable for its update points and

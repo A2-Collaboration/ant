@@ -9,9 +9,9 @@ class TH1D;
 namespace ant {
 namespace analysis {
 
-class TrackAnalysis : public ant::Physics {
+class CandidatesAnalysis : public ant::Physics {
 protected:
-    TH1D* nTracksEvent = nullptr;
+    TH1D* nCandidatesEvent = nullptr;
     TH1D* energy = nullptr;
     TH1D* theta = nullptr;
     TH1D* phi = nullptr;
@@ -19,7 +19,7 @@ protected:
     TH1D* ttIM = nullptr;
 
 public:
-    TrackAnalysis(const std::string& name="TrackAnalysis");
+    CandidatesAnalysis(const std::string& name="CandidatesAnalysis");
 
     void ProcessEvent(const Event &event);
     void Finish();

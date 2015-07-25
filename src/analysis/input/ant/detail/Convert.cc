@@ -6,7 +6,7 @@
 #include "tree/TCandidate.h"
 #include "tree/TTaggerHit.h"
 #include "tree/TDataRecord.h"
-#include "analysis/data/Track.h"
+#include "analysis/data/Candidate.h"
 #include "analysis/data/TaggerHit.h"
 #include "analysis/Detector.h"
 #include <limits>
@@ -27,28 +27,28 @@ shared_ptr<ant::Event> input::Convert(const TEvent &event)
 {
     shared_ptr<Event> antevent = make_shared<Event>();
 
-    Copy(event.Candidates,     antevent->Reconstructed().Tracks());
+    Copy(event.Candidates,     antevent->Reconstructed().Candidates());
     Copy(event.Tagger.Hits, antevent->Reconstructed().TaggerHits());
 
     return std::move(antevent);
 }
 
 
-std::shared_ptr<Track> input::Convert(const TCandidate &track)
+std::shared_ptr<Candidate> input::Convert(const TCandidate &candidate)
 {
     /// @todo implement cluster size
-    /// @todo add clusters to ant::Track
-    auto anTCandidate = make_shared<Track>(
-                        track.Energy,
-                        track.Theta,
-                        track.Phi,
-                        track.Time,
+    /// @todo add clusters to ant::Candidate
+    auto antCandidate = make_shared<Candidate>(
+                        candidate.Energy,
+                        candidate.Theta,
+                        candidate.Phi,
+                        candidate.Time,
                         0,
                         ant::detector_t::None,
-                        track.VetoEnergy,
-                        track.TrackerEnergy
+                        candidate.VetoEnergy,
+                        candidate.TrackerEnergy
                         );
-    return anTCandidate;
+    return antCandidate;
 }
 
 std::shared_ptr<TaggerHit> input::Convert(const TTaggerHit& taggerhit)

@@ -10,7 +10,7 @@ Particle::Particle(const ParticleTypeDatabase::Type &_type, mev_t _Ek, radian_t 
   type(&_type),
   parents(),
   daughters(),
-  tracks()
+  candidates()
 {
     const mev_t E = _Ek + type->Mass();
     const mev_t p = sqrt( square(E) - square(type->Mass()) );
@@ -46,8 +46,8 @@ std::ostream &Particle::Print(std::ostream &stream) const
     stream << " E=" << E();
     stream << " Theta=" << Theta();
     stream << " Phi=" << Phi();
-    for( auto& track : tracks ) {
-        stream << "\t" << *track << "\n";
+    for( auto& candidate : candidates ) {
+        stream << "\t" << *candidate << "\n";
     }
     return stream;
 }
