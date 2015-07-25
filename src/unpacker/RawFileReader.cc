@@ -12,10 +12,13 @@
 
 #include <cstdio> // for BUFSIZ
 #include <cstring> // for strerror
+#include <limits>
 
 
 using namespace std;
 using namespace ant;
+
+double RawFileReader::OutputPerformanceStats = numeric_limits<double>::quiet_NaN();
 
 void RawFileReader::open(const string &filename, const size_t inbufsize) {
     // open it as plain raw file
@@ -34,6 +37,28 @@ void RawFileReader::open(const string &filename, const size_t inbufsize) {
     else {
         p = std_ext::make_unique<PlainBase>(filename);
     }
+}
+
+void RawFileReader::HandlePerformanceStats()
+{
+    if(!std::isfinite(OutputPerformanceStats))
+        return;
+    if(performanceBytesRead<0) {
+        // very first read, just setup the variables
+        lastPerformanceOutput = chrono::system_clock::now();
+        performanceBytesRead = gcount();
+        LOG(INFO) << "File read performance output every "
+                  << OutputPerformanceStats  << " seconds";
+        return;
+    }
+    performanceBytesRead += gcount();
+    const std::chrono::time_point<std::chrono::system_clock> now = std::chrono::system_clock::now();
+    const std::chrono::duration<double> elapsed_seconds = now - lastPerformanceOutput;
+    if(elapsed_seconds.count()<OutputPerformanceStats)
+        return;
+    LOG(INFO) << "Reading file with " << performanceBytesRead/elapsed_seconds.count()/(1<<20) << " MB/s (uncompressed)";
+    lastPerformanceOutput = now;
+    performanceBytesRead = 0;
 }
 
 

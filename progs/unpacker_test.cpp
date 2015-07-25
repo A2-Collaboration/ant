@@ -44,6 +44,8 @@ int main(int argc, char* argv[]) {
     SetupLogger(argc, argv);
     el::Helpers::setCrashHandler(myCrashHandler);
 
+    RawFileReader::OutputPerformanceStats = 5;
+
     std::chrono::time_point<std::chrono::system_clock> start, end;
     start = std::chrono::system_clock::now();
 

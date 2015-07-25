@@ -7,6 +7,7 @@
 #include <vector>
 
 #include "base/std_ext.h"
+#include <chrono>
 
 namespace ant {
 
@@ -18,6 +19,19 @@ namespace ant {
  */
 class RawFileReader {
 public:
+
+    /**
+     * @brief OutputPerformanceStats
+     *
+     * Set to finite number to output performance stats every
+     * given seconds for all RawFileReader's in use
+     */
+    static double OutputPerformanceStats;
+
+    RawFileReader() :
+        performanceBytesRead(-1) // nothing read at all
+    {}
+
 
     /**
    * @brief open
@@ -44,6 +58,8 @@ public:
    */
     void read(char* s, std::streamsize n) {
         p->read(s,n);
+        // track how much has been read if required
+        HandlePerformanceStats();
     }
 
     void read(std::uint32_t* s, std::streamsize n) {
@@ -172,6 +188,13 @@ private:
 
     // private stuff for RawFileReader
     std::unique_ptr<PlainBase> p;
+
+
+    std::chrono::time_point<std::chrono::system_clock> lastPerformanceOutput;
+    std::streamsize performanceBytesRead;
+    void HandlePerformanceStats();
+
+
 
 }; // class RawFileReader
 
