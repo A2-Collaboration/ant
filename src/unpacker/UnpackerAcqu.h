@@ -80,6 +80,7 @@ public:
     // scalers in acqu can be handled as additional information
     // for a logical detector channel, or as TSlowControl items
     struct scaler_mapping_t : mapping_t<std::uint32_t> {
+        using mapping_t::mapping_t; // use constructors from base class
         std::string SlowControlName;     // if non-empty, scaler is converted to TSlowControl item
     };
 

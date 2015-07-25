@@ -21,11 +21,17 @@ void EPT::BuildMappings(
         vector<UnpackerAcquConfig::scaler_mapping_t>& scaler_mappings) const
 {
     for(const Element_t& element : elements) {
+        // TDC/scaler information is most important
         hit_mappings.emplace_back(Type,
                                   Channel_t::Type_t::Timing,
                                   element.Channel,
                                   element.TDC
                                   );
+        scaler_mappings.emplace_back(Type,
+                                     Channel_t::Type_t::Scaler,
+                                     element.Channel,
+                                     element.Scaler);
+
         // ADC information are rarely present for the EPT
         hit_mappings.emplace_back(Type,
                                   Channel_t::Type_t::Integral,
