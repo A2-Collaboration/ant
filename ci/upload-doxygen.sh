@@ -24,6 +24,7 @@ cd -
 
 # Create and commit the documentation repo.
 cd ${HTML_PATH}
+rm -f *.map *.md5
 git add .
 git config user.name "${COMMIT_USER}"
 git config user.email "${COMMIT_EMAIL}"

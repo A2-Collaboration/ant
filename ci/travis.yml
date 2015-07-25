@@ -19,7 +19,6 @@ addons:
     - libxft-dev
     - libxext-dev
     - liblzma-dev
-    - doxygen
     - graphviz
 
 cache:
