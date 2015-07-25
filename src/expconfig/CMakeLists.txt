@@ -13,6 +13,7 @@ set(SRCS_SETUPS
 
 set(SRCS_DETECTORS
   detectors/Trigger.h
+  detectors/Trigger.cc
   detectors/EPT.h
   detectors/EPT.cc
   detectors/TAPS.h

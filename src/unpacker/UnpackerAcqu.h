@@ -80,8 +80,30 @@ public:
     // scalers in acqu can be handled as additional information
     // for a logical detector channel, or as TSlowControl items
     struct scaler_mapping_t : mapping_t<std::uint32_t> {
-        using mapping_t::mapping_t; // use constructors from base class
-        std::string SlowControlName;     // if non-empty, scaler is converted to TSlowControl item
+        // if non-empty, scaler is converted to TSlowControl item
+        std::string SlowControlName;
+
+        // provide constructors
+        scaler_mapping_t(
+                const std::string& slowControlName,
+                Detector_t::Type_t detector,
+                unsigned channel,
+                std::uint32_t rawChannel
+                ) :
+            mapping_t(detector, Channel_t::Type_t::Scaler, channel, rawChannel),
+            SlowControlName(slowControlName)
+        {
+            if(SlowControlName.empty())
+                throw std::runtime_error("Do not use this ctor with empty slowControlName");
+        }
+        scaler_mapping_t(
+                Detector_t::Type_t detector,
+                unsigned channel,
+                std::uint32_t rawChannel
+                ) :
+            mapping_t(detector, Channel_t::Type_t::Scaler, channel, rawChannel),
+            SlowControlName()
+        {}
     };
 
     virtual void BuildMappings(

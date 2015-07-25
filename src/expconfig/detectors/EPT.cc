@@ -28,7 +28,6 @@ void EPT::BuildMappings(
                                   element.TDC
                                   );
         scaler_mappings.emplace_back(Type,
-                                     Channel_t::Type_t::Scaler,
                                      element.Channel,
                                      element.Scaler);
 

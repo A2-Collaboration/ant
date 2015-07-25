@@ -15,7 +15,7 @@ public:
     Setup_2014_EtaPrime() {
 
         // setup the detectors of interest
-        const auto trigger = std::make_shared<detector::Trigger>();
+        const auto trigger = std::make_shared<detector::Trigger_2014>();
         const bool cherenkovInstalled = false;
         AddDetector(trigger);
         AddDetector<detector::EPT_2014>(GetBeamEnergy());
