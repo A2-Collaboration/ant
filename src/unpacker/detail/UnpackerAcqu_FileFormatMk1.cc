@@ -10,7 +10,7 @@ using namespace ant::unpacker;
 
 size_t acqu::FileFormatMk1::SizeOfHeader() const
 {
-  return sizeof(AcquExptInfo_t);
+    return sizeof(AcquExptInfo_t);
 }
 
 /// \todo Remove this prama after implementation
@@ -18,22 +18,22 @@ size_t acqu::FileFormatMk1::SizeOfHeader() const
 
 bool acqu::FileFormatMk1::InspectHeader(const vector<uint32_t>& buffer) const
 {
-  return inspectHeaderMk1Mk2<AcquExptInfo_t>(buffer);
+    return inspectHeaderMk1Mk2<AcquExptInfo_t>(buffer);
 }
 
 void acqu::FileFormatMk1::FillInfo(reader_t &reader, buffer_t &buffer, Info &info) const
 {
-  throw UnpackerAcqu::Exception("Mk1 format not implemented yet");
+    throw UnpackerAcqu::Exception("Mk1 format not implemented yet");
 }
 
 void acqu::FileFormatMk1::FillFirstDataBuffer(queue_t& queue, reader_t &reader, buffer_t &buffer) const
 {
-  throw UnpackerAcqu::Exception("Mk1 format not implemented yet");
+    throw UnpackerAcqu::Exception("Mk1 format not implemented yet");
 }
 
 bool acqu::FileFormatMk1::UnpackDataBuffer(queue_t &queue, it_t& it, const it_t& it_endbuffer) noexcept
 {
-  /// \todo Implement Mk1 unpacking
-  throw UnpackerAcqu::Exception("Mk1 format not implemented yet");
+    /// \todo Implement Mk1 unpacking
+    throw UnpackerAcqu::Exception("Mk1 format not implemented yet");
 }
 

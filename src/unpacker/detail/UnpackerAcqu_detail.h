@@ -25,9 +25,9 @@ class THeaderInfo;
 class UnpackerAcquFileFormat {
 public:
 
-  using queue_t = std::list< std::unique_ptr<TDataRecord> >;
+    using queue_t = std::list< std::unique_ptr<TDataRecord> >;
 
-  /**
+    /**
    * @brief Get a suitable instance for the given filename
    * @param filename the file to read
    * @param queue for possible ant::T* messages during setup
@@ -39,23 +39,23 @@ public:
    * Throws exception if something unusual is encountered.
    *
    */
-  static std::unique_ptr<UnpackerAcquFileFormat> Get(
-      const std::string& filename,
-      queue_t& queue
-      );
+    static std::unique_ptr<UnpackerAcquFileFormat> Get(
+            const std::string& filename,
+            queue_t& queue
+            );
 
-  /**
+    /**
    * @brief FillEvents fills the given queue with more TDataRecord items (if any left)
    * @param queue
    */
-  virtual void FillEvents(queue_t& queue) noexcept = 0;
+    virtual void FillEvents(queue_t& queue) noexcept = 0;
 
 protected:
-  virtual size_t SizeOfHeader() const = 0;
-  virtual bool InspectHeader(const std::vector<uint32_t>& buffer) const = 0;
-  virtual void Setup(std::unique_ptr<RawFileReader>&& reader_,
-                     std::vector<std::uint32_t>&& buffer_) = 0;
-  virtual void FillHeader(queue_t& queue) = 0;
+    virtual size_t SizeOfHeader() const = 0;
+    virtual bool InspectHeader(const std::vector<uint32_t>& buffer) const = 0;
+    virtual void Setup(std::unique_ptr<RawFileReader>&& reader_,
+                       std::vector<std::uint32_t>&& buffer_) = 0;
+    virtual void FillHeader(queue_t& queue) = 0;
 };
 
 // the derived file format classes
@@ -66,62 +66,62 @@ namespace acqu {
 // FileFormatBase provides a common class for Mk1/Mk2 formats
 class FileFormatBase : public UnpackerAcquFileFormat {
 private:
-  std::unique_ptr<RawFileReader> reader;
-  std::vector<std::uint32_t> buffer;
-  signed trueRecordLength;
-  unsigned unpackedBuffers;
-  std::unique_ptr<THeaderInfo> BuildTHeaderInfo();
-  //std::unique_ptr<UnpackerAcquConfig> config;
+    std::unique_ptr<RawFileReader> reader;
+    std::vector<std::uint32_t> buffer;
+    signed trueRecordLength;
+    unsigned unpackedBuffers;
+    std::unique_ptr<THeaderInfo> BuildTHeaderInfo();
+    //std::unique_ptr<UnpackerAcquConfig> config;
 
 protected:
-  using reader_t = decltype(reader);
-  using buffer_t = decltype(buffer);
-  using it_t = buffer_t::const_iterator;
+    using reader_t = decltype(reader);
+    using buffer_t = decltype(buffer);
+    using it_t = buffer_t::const_iterator;
 
-  // helper class to finally create the THeaderInfo items
-  // the fields are still very similar to the Acqu header info fields
-  // but the knowledge what data format it actually was created from
-  // is already gone, yay
-  struct Info {
-    struct HardwareModule {
-      std::string Identifier; // some more or less unique identifier of the module
-      unsigned Index; // non-unique! Within VME it is however
-      unsigned Bits;
-      unsigned FirstRawChannel;
-      unsigned NRawChannels;
+    // helper class to finally create the THeaderInfo items
+    // the fields are still very similar to the Acqu header info fields
+    // but the knowledge what data format it actually was created from
+    // is already gone, yay
+    struct Info {
+        struct HardwareModule {
+            std::string Identifier; // some more or less unique identifier of the module
+            unsigned Index; // non-unique! Within VME it is however
+            unsigned Bits;
+            unsigned FirstRawChannel;
+            unsigned NRawChannels;
+        };
+        std::vector<HardwareModule> ADCModules; // appear only in normal event
+        std::vector<HardwareModule> ScalerModules; // appear only in scaler blocks
+
+        std::tm Time;
+        std::string Description;
+        std::string RunNote;
+        std::string OutFile;
+        unsigned RunNumber;
+        unsigned RecordLength; // Record length according to header (might not be correct, see trueRecordLength)
     };
-    std::vector<HardwareModule> ADCModules; // appear only in normal event
-    std::vector<HardwareModule> ScalerModules; // appear only in scaler blocks
 
-    std::tm Time;
-    std::string Description;
-    std::string RunNote;
-    std::string OutFile;
-    unsigned RunNumber;
-    unsigned RecordLength; // Record length according to header (might not be correct, see trueRecordLength)
-  };
+    Info info;
+    std::uint32_t ID_upper; // upper part of UID, set by BuildTHeaderInfo
+    std::uint32_t ID_lower; // lower part, incremented by FillEvents
+    unsigned AcquID_last = 0;
 
-  Info info;
-  std::uint32_t ID_upper; // upper part of UID, set by BuildTHeaderInfo
-  std::uint32_t ID_lower; // lower part, incremented by FillEvents
-  unsigned AcquID_last = 0;
-
-  std::vector<UnpackerAcquConfig::hit_mapping_t> hit_mappings;
-  std::vector<UnpackerAcquConfig::scaler_mapping_t> scaler_mappings;
+    std::vector<UnpackerAcquConfig::hit_mapping_t> hit_mappings;
+    std::vector<UnpackerAcquConfig::scaler_mapping_t> scaler_mappings;
 
 
-  // this class already implements some stuff
-  void Setup(reader_t&& reader_, buffer_t&& buffer_) override;
-  void FillHeader(queue_t& queue) override;
-  void FillEvents(queue_t& queue) noexcept override;
-  void LogMessage(queue_t& queue,
-                  TUnpackerMessage::Level_t level,
-                  const std::string &msg) const;
+    // this class already implements some stuff
+    void Setup(reader_t&& reader_, buffer_t&& buffer_) override;
+    void FillHeader(queue_t& queue) override;
+    void FillEvents(queue_t& queue) noexcept override;
+    void LogMessage(queue_t& queue,
+                    TUnpackerMessage::Level_t level,
+                    const std::string &msg) const;
 
-  // Mk1/Mk2 specific methods
-  virtual void FillInfo(reader_t& reader, buffer_t& buffer, Info& info) const = 0;
-  virtual void FillFirstDataBuffer(queue_t& queue, reader_t& reader, buffer_t& buffer) const = 0;
-  virtual bool UnpackDataBuffer(queue_t &queue, it_t& it, const it_t& it_endbuffer) noexcept = 0;
+    // Mk1/Mk2 specific methods
+    virtual void FillInfo(reader_t& reader, buffer_t& buffer, Info& info) const = 0;
+    virtual void FillFirstDataBuffer(queue_t& queue, reader_t& reader, buffer_t& buffer) const = 0;
+    virtual bool UnpackDataBuffer(queue_t &queue, it_t& it, const it_t& it_endbuffer) noexcept = 0;
 
 
 };

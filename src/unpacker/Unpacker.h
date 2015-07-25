@@ -12,21 +12,21 @@ class Unpacker {
 
 public:
 
-  Unpacker() = delete;
+    Unpacker() = delete;
 
-  class Module {
-  public:
-    virtual ~Module() = default;
-    virtual std::shared_ptr<TDataRecord> NextItem() noexcept = 0;
-    virtual bool OpenFile(const std::string& filename) = 0;
-  };
+    class Module {
+    public:
+        virtual ~Module() = default;
+        virtual std::shared_ptr<TDataRecord> NextItem() noexcept = 0;
+        virtual bool OpenFile(const std::string& filename) = 0;
+    };
 
-  // factory method to get a suitable unpacker module for the file
-  static std::unique_ptr<Module> Get(const std::string &filename);
+    // factory method to get a suitable unpacker module for the file
+    static std::unique_ptr<Module> Get(const std::string &filename);
 
-  class Exception : public std::runtime_error {
-    using std::runtime_error::runtime_error; // use base class constructor
-  };
+    class Exception : public std::runtime_error {
+        using std::runtime_error::runtime_error; // use base class constructor
+    };
 
 };
 
