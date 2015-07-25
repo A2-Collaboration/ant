@@ -239,7 +239,7 @@ void GoatReader::CopyParticles(std::shared_ptr<Event> &event, ParticleInput &inp
 {
     for(Int_t i=0; i < input_module.GetNParticles(); ++i) {
 
-        const auto trackIndex = input_module.GetTrackIndex(i);
+        const auto trackIndex = input_module.GeTCandidateIndex(i);
         if(trackIndex == -1) {
             cerr << "No Track for this particle!!" << endl;
         } else {

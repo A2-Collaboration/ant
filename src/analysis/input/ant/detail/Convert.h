@@ -4,7 +4,7 @@
 
 namespace ant {
 class TEvent;
-class TTrack;
+class TCandidate;
 class TTaggerHit;
 
 class Event;
@@ -20,7 +20,7 @@ namespace input {
  */
 std::shared_ptr<ant::Event> Convert(const TEvent& event);
 
-std::shared_ptr<ant::Track> Convert(const TTrack& track);
+std::shared_ptr<ant::Track> Convert(const TCandidate& track);
 
 std::shared_ptr<ant::TaggerHit> Convert(const TTaggerHit& taggerhit);
 }

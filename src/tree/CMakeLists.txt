@@ -8,7 +8,7 @@ set(SRCS
   TUnpackerMessage.h
   TEvent.h
   TCluster.h
-  TTrack.h
+  TCandidate.h
   TTagger.h
   TTaggerHit.h
   TCalibrationData.h

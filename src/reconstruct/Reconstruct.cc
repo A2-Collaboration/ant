@@ -1,7 +1,7 @@
 #include "Reconstruct.h"
 
 #include "Clustering.h"
-#include "TrackBuilder.h"
+#include "CandidateBuilder.h"
 
 #include "expconfig/ExpConfig.h"
 
@@ -54,7 +54,7 @@ Reconstruct::Reconstruct(const THeaderInfo& headerInfo)
 
     // init the trackbuilder
     /// \todo Make use of different TrackBuilders maybe?
-    trackbuilder = std_ext::make_unique<TrackBuilder>(sorted_detectors);
+    candidatebuilder = std_ext::make_unique<CandidateBuilder>(sorted_detectors);
 
     // ask each updateable for its update points and
     // build the list of changePoints
@@ -117,8 +117,8 @@ unique_ptr<TEvent> Reconstruct::DoReconstruct(TDetectorRead& detectorRead)
     BuildClusters(move(sorted_clusterhits), sorted_clusters, event->InsaneClusters);
 
 
-    // finally, do the track building
-    trackbuilder->Build(move(sorted_clusters), event->Tracks);
+    // finally, do the candidate building
+    candidatebuilder->Build(move(sorted_clusters), event->Candidates);
 
     // uncomment for debug purposes
     //cout << *event << endl;

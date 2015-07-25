@@ -22,7 +22,7 @@ class TAPSVeto;
 
 namespace reconstruct {
 
-class TrackBuilder {
+class CandidateBuilder {
 protected:
     std::shared_ptr<expconfig::detector::CB>  cb;
     std::shared_ptr<expconfig::detector::PID> pid;
@@ -31,32 +31,32 @@ protected:
 
     void Build_PID_CB(
             std::map<Detector_t::Type_t, std::list< TCluster > >& sorted_clusters,
-            TEvent::tracks_t& tracks
+            TEvent::candidates_t& candidates
             );
 
     void Build_TAPS_Veto(
             std::map<Detector_t::Type_t, std::list< TCluster > >& sorted_clusters,
-            TEvent::tracks_t& tracks
+            TEvent::candidates_t& candidates
             );
 
     void Catchall(
             std::map<Detector_t::Type_t, std::list< TCluster > >& sorted_clusters,
-            TEvent::tracks_t& tracks
+            TEvent::candidates_t& candidates
             );
 
 public:
 
     using sorted_detectors_t = std::map<Detector_t::Type_t, std::shared_ptr<Detector_t> >;
 
-    TrackBuilder(const sorted_detectors_t& sorted_detectors);
-    virtual ~TrackBuilder() = default;
+    CandidateBuilder(const sorted_detectors_t& sorted_detectors);
+    virtual ~CandidateBuilder() = default;
 
     // this method shall fill the TEvent reference
     // with tracks built from the given sorted clusters
     /// \todo make this method abstract and create proper derived track builders
     virtual void Build(
             std::map<Detector_t::Type_t, std::list< TCluster > >&& sorted_clusters,
-            TEvent::tracks_t& tracks
+            TEvent::candidates_t& tracks
             );
 };
 

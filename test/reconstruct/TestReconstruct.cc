@@ -2,7 +2,7 @@
 #include "catch_config.h"
 
 #include "reconstruct/Reconstruct.h"
-#include "reconstruct/TrackBuilder.h"
+#include "reconstruct/CandidateBuilder.h"
 #include "reconstruct/Clustering.h"
 
 #include "unpacker/Unpacker.h"
@@ -75,10 +75,10 @@ struct ReconstructTester {
         REQUIRE(n_clusters <= n_clusterhits);
 
 
-        // finally, do the track building
-        r.trackbuilder->Build(move(sorted_clusters), event->Tracks);
-        REQUIRE(!event->Tracks.empty());
-        REQUIRE(event->Tracks.size() <= n_clusters);
+        // finally, do the candidate building
+        r.candidatebuilder->Build(move(sorted_clusters), event->Candidates);
+        REQUIRE(!event->Candidates.empty());
+        REQUIRE(event->Candidates.size() <= n_clusters);
 
         return event;
     }

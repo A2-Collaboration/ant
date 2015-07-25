@@ -2,7 +2,7 @@
 #define ANT_TEVENT_H
 
 #include "TDataRecord.h"
-#include "TTrack.h"
+#include "TCandidate.h"
 #include "TCluster.h"
 #include "TTagger.h"
 
@@ -15,8 +15,8 @@ namespace ant {
 
 struct TEvent : TDataRecord
 {
-    typedef std::vector<ant::TTrack> tracks_t;
-    tracks_t Tracks;
+    typedef std::vector<ant::TCandidate> candidates_t;
+    candidates_t Candidates;
     TTagger Tagger;
     typedef std::vector<ant::TCluster> clusters_t;
     clusters_t InsaneClusters;
@@ -32,10 +32,10 @@ struct TEvent : TDataRecord
         for(auto& th : Tagger.Hits) {
             s << "  " << th << "\n";
         }
-        s << " " << Tracks.size() << " Tracks:\n";
-        for(auto& t : Tracks) {
-            s << "  " << t << "\n";
-            for(auto& c : t.Clusters) {
+        s << " " << Candidates.size() << " Candidates:\n";
+        for(auto& cand : Candidates) {
+            s << "  " << cand << "\n";
+            for(auto& c : cand.Clusters) {
                 s << "   " << c << "\n";
                 for(auto& h : c.Hits) {
                     s << "    " << h << "\n";
@@ -46,7 +46,7 @@ struct TEvent : TDataRecord
     }
 #endif
 
-    TEvent() : TDataRecord(), Tracks(), Tagger() {}
+    TEvent() : TDataRecord(), Candidates(), Tagger() {}
     virtual ~TEvent() {}
     ClassDef(TEvent, ANT_UNPACKER_ROOT_VERSION)
 

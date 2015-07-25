@@ -22,45 +22,45 @@ void dotest() {
 
     //======= Track 1 =============
 
-    event->Tracks.push_back(
-          ant::TTrack(200,1,2,2,{})
+    event->Candidates.push_back(
+          ant::TCandidate(200,1,2,2,{})
           );
 
-    event->Tracks.back().Clusters.push_back(
+    event->Candidates.back().Clusters.push_back(
           ant::TCluster(TVector3(25,0,0), 270, -260, ant::Detector_t::Type_t::CB)
           );
 
 
-    event->Tracks.back().Clusters.back().Hits.push_back(
+    event->Candidates.back().Clusters.back().Hits.push_back(
           ant::TClusterHit(110, {
                              {ant::Channel_t::Type_t::Integral, 150}, // MeV
                              {ant::Channel_t::Type_t::Timing, -290}   // ns
                            })
           );
 
-    event->Tracks.back().Clusters.back().Hits.push_back(
+    event->Candidates.back().Clusters.back().Hits.push_back(
           ant::TClusterHit(220, {
                              {ant::Channel_t::Type_t::Integral, 120}, // MeV
                              {ant::Channel_t::Type_t::Timing, -280}   // ns
                            })
           );
 
-    event->Tracks.back().Clusters.push_back(
+    event->Candidates.back().Clusters.push_back(
           ant::TCluster(TVector3(10,0,0), 5, -260, ant::Detector_t::Type_t::PID)
           );
 
-    event->Tracks.back().Clusters.back().Hits.push_back(
+    event->Candidates.back().Clusters.back().Hits.push_back(
           ant::TClusterHit(20, {{ant::Channel_t::Type_t::Integral, 4}})
           );
 
     //======= Track 2 =============
-    event->Tracks.push_back(
-          ant::TTrack(300,0.5,2,3)
+    event->Candidates.push_back(
+          ant::TCandidate(300,0.5,2,3)
           );
-    event->Tracks.back().Clusters.push_back(
+    event->Candidates.back().Clusters.push_back(
           ant::TCluster(TVector3(25,10,0),300, -160, ant::Detector_t::Type_t::TAPS)
           );
-    event->Tracks.back().Clusters.push_back(
+    event->Candidates.back().Clusters.push_back(
           ant::TCluster(TVector3(10,1,0),5,-150, ant::Detector_t::Type_t::TAPSVeto)
           );
 

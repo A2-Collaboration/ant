@@ -3,7 +3,7 @@
 #include "data/Event.h"
 #include "tree/TEvent.h"
 #include "tree/TCluster.h"
-#include "tree/TTrack.h"
+#include "tree/TCandidate.h"
 #include "tree/TTaggerHit.h"
 #include "tree/TDataRecord.h"
 #include "analysis/data/Track.h"
@@ -27,18 +27,18 @@ shared_ptr<ant::Event> input::Convert(const TEvent &event)
 {
     shared_ptr<Event> antevent = make_shared<Event>();
 
-    Copy(event.Tracks,     antevent->Reconstructed().Tracks());
+    Copy(event.Candidates,     antevent->Reconstructed().Tracks());
     Copy(event.Tagger.Hits, antevent->Reconstructed().TaggerHits());
 
     return std::move(antevent);
 }
 
 
-std::shared_ptr<Track> input::Convert(const TTrack &track)
+std::shared_ptr<Track> input::Convert(const TCandidate &track)
 {
     /// @todo implement cluster size
     /// @todo add clusters to ant::Track
-    auto anttrack = make_shared<Track>(
+    auto anTCandidate = make_shared<Track>(
                         track.Energy,
                         track.Theta,
                         track.Phi,
@@ -48,7 +48,7 @@ std::shared_ptr<Track> input::Convert(const TTrack &track)
                         track.VetoEnergy,
                         track.TrackerEnergy
                         );
-    return anttrack;
+    return anTCandidate;
 }
 
 std::shared_ptr<TaggerHit> input::Convert(const TTaggerHit& taggerhit)

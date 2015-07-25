@@ -1,4 +1,4 @@
-#include "TrackBuilder.h"
+#include "CandidateBuilder.h"
 #include "base/Logger.h"
 #include "tree/TCluster.h"
 #include "expconfig/detectors/CB.h"
@@ -15,7 +15,7 @@ using namespace std;
 using namespace ant::reconstruct;
 using namespace ant::expconfig;
 
-void TrackBuilder::Build_PID_CB(std::map<Detector_t::Type_t, std::list<TCluster> >& sorted_clusters, TEvent::tracks_t& tracks)
+void CandidateBuilder::Build_PID_CB(std::map<Detector_t::Type_t, std::list<TCluster> >& sorted_clusters, TEvent::candidates_t& candidates)
 {
     auto& cb_clusters  = sorted_clusters[Detector_t::Type_t::CB];
     auto& pid_clusters = sorted_clusters[Detector_t::Type_t::PID];
@@ -42,7 +42,7 @@ void TrackBuilder::Build_PID_CB(std::map<Detector_t::Type_t, std::list<TCluster>
                 const auto dphi = fabs(TVector2::Phi_mpi_pi(cb_phi - pid_phi));
                 if(  dphi < dphi_max ) { // match!
 
-                    tracks.emplace_back(
+                    candidates.emplace_back(
                                 cb_cluster->Energy,
                                 cb_cluster->Time,
                                 cb_cluster->Position.Theta(),
@@ -71,7 +71,7 @@ void TrackBuilder::Build_PID_CB(std::map<Detector_t::Type_t, std::list<TCluster>
     }
 }
 
-void TrackBuilder::Build_TAPS_Veto(std::map<Detector_t::Type_t, std::list<TCluster> >& sorted_clusters, TEvent::tracks_t& tracks)
+void CandidateBuilder::Build_TAPS_Veto(std::map<Detector_t::Type_t, std::list<TCluster> >& sorted_clusters, TEvent::candidates_t& candidates)
 {
     auto& veto_clusters = sorted_clusters[Detector_t::Type_t::TAPSVeto];
     auto& taps_clusters = sorted_clusters[Detector_t::Type_t::TAPS];
@@ -93,7 +93,7 @@ void TrackBuilder::Build_TAPS_Veto(std::map<Detector_t::Type_t, std::list<TClust
             const TVector3 d = tpos - vpos;
 
             if( d.XYvector().Mod() < element_radius2 ) {
-                tracks.emplace_back(
+                candidates.emplace_back(
                             taps->Energy,
                             taps->Time,
                             taps->Position.Theta(),
@@ -115,7 +115,7 @@ void TrackBuilder::Build_TAPS_Veto(std::map<Detector_t::Type_t, std::list<TClust
     }
 }
 
-void TrackBuilder::Catchall(std::map<Detector_t::Type_t, std::list<TCluster> >& sorted_clusters, TEvent::tracks_t& tracks)
+void CandidateBuilder::Catchall(std::map<Detector_t::Type_t, std::list<TCluster> >& sorted_clusters, TEvent::candidates_t& candidates)
 {
     for(auto& cluster_list : sorted_clusters ) {
 
@@ -124,7 +124,7 @@ void TrackBuilder::Catchall(std::map<Detector_t::Type_t, std::list<TCluster> >& 
 
         if(detector_type == Detector_t::Type_t::PID || detector_type == Detector_t::Type_t::TAPSVeto) {
             for(auto& c : clusters) {
-                tracks.emplace_back(
+                candidates.emplace_back(
                             0,
                             c.Time,
                             c.Position.Theta(),
@@ -135,7 +135,7 @@ void TrackBuilder::Catchall(std::map<Detector_t::Type_t, std::list<TCluster> >& 
             }
         } else if(detector_type == Detector_t::Type_t::CB || detector_type == Detector_t::Type_t::TAPS) {
             for(auto& c : clusters) {
-                tracks.emplace_back(
+                candidates.emplace_back(
                             c.Energy,
                             c.Time,
                             c.Position.Theta(),
@@ -146,7 +146,7 @@ void TrackBuilder::Catchall(std::map<Detector_t::Type_t, std::list<TCluster> >& 
             }
         } else if(detector_type == Detector_t::Type_t::MWPC0 || detector_type == Detector_t::Type_t::MWPC1 || detector_type == Detector_t::Type_t::Cherenkov) {
             for(auto& c : clusters) {
-                tracks.emplace_back(
+                candidates.emplace_back(
                             0,
                             c.Time,
                             c.Position.Theta(),
@@ -160,7 +160,7 @@ void TrackBuilder::Catchall(std::map<Detector_t::Type_t, std::list<TCluster> >& 
     }
 }
 
-TrackBuilder::TrackBuilder(const TrackBuilder::sorted_detectors_t& sorted_detectors) {
+CandidateBuilder::CandidateBuilder(const CandidateBuilder::sorted_detectors_t& sorted_detectors) {
 
     try {
         cb  = dynamic_pointer_cast<detector::CB>(sorted_detectors.at(Detector_t::Type_t::CB));
@@ -188,8 +188,8 @@ TrackBuilder::TrackBuilder(const TrackBuilder::sorted_detectors_t& sorted_detect
 
 }
 
-void TrackBuilder::Build(std::map<Detector_t::Type_t, std::list<TCluster> >&& sorted_clusters,
-                         TEvent::tracks_t& tracks)
+void CandidateBuilder::Build(std::map<Detector_t::Type_t, std::list<TCluster> >&& sorted_clusters,
+                         TEvent::candidates_t& tracks)
 {
 
     if(cb && pid)

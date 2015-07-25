@@ -27,7 +27,7 @@ public:
 
     Int_t           GetNParticles()                     const	{return nParticles;}
     Double_t        GetMass(const Int_t index)          const   {return mass[index];}
-    Int_t           GetTrackIndex(const Int_t index)    const   {return trackIndex[index];}
+    Int_t           GeTCandidateIndex(const Int_t index)    const   {return trackIndex[index];}
 
 };
 }

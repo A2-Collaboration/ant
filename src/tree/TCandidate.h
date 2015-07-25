@@ -1,5 +1,5 @@
-#ifndef ANT_TTRACK_H
-#define ANT_TTRACK_H
+#ifndef ANT_TCandidate_H
+#define ANT_TCandidate_H
 
 #include "TDataRecord.h"
 #include "TCluster.h"
@@ -14,9 +14,9 @@
 namespace ant {
 
 #ifndef __CINT__
-struct TTrack: ant::printable_traits
+struct TCandidate: ant::printable_traits
 #else
-struct TTrack
+struct TCandidate
 #endif
 {
   double Energy;
@@ -29,7 +29,7 @@ struct TTrack
   std::vector<TCluster> Clusters;
 
 #ifndef __CINT__
-  TTrack(
+  TCandidate(
       double E,
       double t,
       double theta,
@@ -49,15 +49,15 @@ struct TTrack
 
 
   virtual std::ostream& Print( std::ostream& s) const override {
-    return s << "TTrack: " << Clusters.size() << " clusters, Energy=" << Energy << " Theta=" << Theta <<", Phi=" << Phi << " VetoEnergy=" << VetoEnergy << " TrackerEnergy=" << TrackerEnergy;
+    return s << "TCandidate: " << Clusters.size() << " clusters, Energy=" << Energy << " Theta=" << Theta <<", Phi=" << Phi << " VetoEnergy=" << VetoEnergy << " TrackerEnergy=" << TrackerEnergy;
   }
 #endif
 
-  TTrack() {}
-  virtual ~TTrack() {}
-  ClassDef(TTrack, ANT_UNPACKER_ROOT_VERSION)
+  TCandidate() {}
+  virtual ~TCandidate() {}
+  ClassDef(TCandidate, ANT_UNPACKER_ROOT_VERSION)
 };
 
 }
 
-#endif // ANT_TTRACK_H
+#endif // ANT_TCandidate_H

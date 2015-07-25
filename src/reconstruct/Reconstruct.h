@@ -14,7 +14,7 @@ class TCluster;
 class TTagger;
 
 namespace reconstruct {
-class TrackBuilder;
+class CandidateBuilder;
 class AdaptorTClusterHit;
 class Clustering;
 }
@@ -64,7 +64,7 @@ private:
     shared_ptr_list<Updateable_traits>        updateables;
     sorted_detectors_t                        sorted_detectors;
 
-    std::unique_ptr<reconstruct::TrackBuilder> trackbuilder;
+    std::unique_ptr<reconstruct::CandidateBuilder> candidatebuilder;
     std::unique_ptr<reconstruct::Clustering>   clustering;
 
     std::list< std::pair< TID, shared_ptr_list<Updateable_traits> > > changePoints;

@@ -4,8 +4,8 @@ set(SRCS
   Reconstruct_traits.h
   Clustering.h
   Clustering.cc
-  TrackBuilder.h
-  TrackBuilder.cc
+  CandidateBuilder.h
+  CandidateBuilder.cc
   detail/Clustering_NextGen.h
   )
 
