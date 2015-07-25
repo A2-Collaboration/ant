@@ -39,7 +39,7 @@ public:
     // every setup should have a name,
     // does not need to be unique as long as the matching
     // is unique
-    /// \todo Implement cmdline match override to make this meaningful...
+    /// \todo Implement cmdline match override in factor method to make this meaningful...
     virtual std::string GetName() const = 0;
 
 protected:
@@ -91,7 +91,10 @@ protected:
                     = dynamic_cast<const UnpackerAcquConfig*>(detector.get());
             if(cfg == nullptr)
                 continue;
+            //std::vector<hit_mapping_t> hit_mappings_;
+            //std::vector<scaler_mapping_t> scaler_mappings_;
             cfg->BuildMappings(hit_mappings, scaler_mappings);
+            /// \todo check that the detectors do not add overlapping mappings
         }
     }
 

@@ -119,8 +119,11 @@ public:
     void BuildMappings(std::vector<hit_mapping_t>& hit_mappings,
                        std::vector<scaler_mapping_t>& scaler_mappings) const
     {
+        // build the mappings from the given detectors
+        // that should provide sane and correct defaults
         Setup::BuildMappings(hit_mappings, scaler_mappings);
-        // you may tweak the mapping at this location here
+
+        // now you may tweak the mapping at this location here
         // for example, ignore elements
     }
 };
