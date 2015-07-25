@@ -42,8 +42,10 @@ Reconstruct::Reconstruct(const THeaderInfo &headerInfo)
         if(updateable != nullptr)
             updateables.push_back(updateable);
         // ... but also are needed in DoReconstruct
-        /// \todo check if types are unique
-        sorted_detectors[detector->Type] = detector;
+        auto ret = sorted_detectors.insert(make_pair(detector->Type, detector));
+        if(!ret.second) {
+            throw runtime_error("Reconstruct config provided detector list with two detectors of same type");
+        }
     }
 
     // init clustering
