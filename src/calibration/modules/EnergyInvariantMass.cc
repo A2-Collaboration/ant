@@ -3,6 +3,11 @@
 #include "analysis/data/Event.h"
 #include "analysis/utils/combinatorics.h"
 
+#include "tree/TDataRecord.h"
+
+#include <list>
+
+
 using namespace std;
 using namespace ant;
 using namespace ant::calibration;
@@ -45,9 +50,9 @@ void EnergyInvariantMass::ApplyTo(const readhits_t& hits, extrahits_t&)
 
 }
 
-void EnergyInvariantMass::BuildRanges(list<TID>& ranges)
+std::list<TID> EnergyInvariantMass::GetChangePoints() const
 {
-
+    return {};
 }
 
 void EnergyInvariantMass::Update(const TID &id)

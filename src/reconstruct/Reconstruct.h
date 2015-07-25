@@ -67,7 +67,7 @@ private:
     std::unique_ptr<reconstruct::TrackBuilder> trackbuilder;
     std::unique_ptr<reconstruct::Clustering>   clustering;
 
-
+    std::list< std::pair< TID, shared_ptr_list<Updateable_traits> > > changePoints;
 };
 
 }

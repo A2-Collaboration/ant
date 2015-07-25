@@ -32,7 +32,7 @@ public:
     void ShowResult() override;
 
     // CalibrationUpdate_traits interface
-    void BuildRanges(std::list<TID>&) override {}
+    virtual std::list<TID> GetChangePoints() const override { return {}; }
     void Update(const TID&) override {}
 
 protected:

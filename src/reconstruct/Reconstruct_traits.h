@@ -36,7 +36,7 @@ public:
  */
 class Updateable_traits {
 public:
-    virtual void BuildRanges(std::list<TID>& ranges) = 0;
+    virtual std::list<TID> GetChangePoints() const = 0;
     virtual void Update(const TID& id) = 0;
 };
 

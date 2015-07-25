@@ -7,6 +7,7 @@
 
 #include "tree/TDataRecord.h"
 #include "tree/TDetectorRead.h"
+#include "tree/THeaderInfo.h"
 #include "tree/TEvent.h"
 
 #include "base/Logger.h"
@@ -21,7 +22,7 @@ using namespace std;
 using namespace ant;
 using namespace ant::reconstruct;
 
-Reconstruct::Reconstruct(const THeaderInfo &headerInfo)
+Reconstruct::Reconstruct(const THeaderInfo& headerInfo)
 {
     const auto& config = ExpConfig::Reconstruct::Get(headerInfo);
 
@@ -55,12 +56,41 @@ Reconstruct::Reconstruct(const THeaderInfo &headerInfo)
     /// \todo Make use of different TrackBuilders maybe?
     trackbuilder = std_ext::make_unique<TrackBuilder>(sorted_detectors);
 
+    // ask each updateable for its update points and
+    // build the list of changePoints
 
-    /// \todo build the range list from updateables
+    map<TID, shared_ptr_list<Updateable_traits> > sorted_updateables;
+    for(const shared_ptr<Updateable_traits>& updateable : updateables) {
+        for(const TID& changePoint : updateable->GetChangePoints()) {
+            // ignore too early change points
+            /// \todo maybe headerInfo timepoint lies in between change points?
+            if(changePoint < headerInfo.ID)
+                continue;
+            sorted_updateables[changePoint].emplace_back(move(updateable));
+        }
+    }
+
+    // we rely on the fact that the map is sorted,
+    // and simply convert it to a list
+    for(auto it_updateable : sorted_updateables) {
+        changePoints.emplace_back(it_updateable);
+    }
 }
 
 unique_ptr<TEvent> Reconstruct::DoReconstruct(TDetectorRead& detectorRead)
 {
+    // update the updateables :)
+    if(!changePoints.empty() && changePoints.front().first <= detectorRead.ID) {
+        unsigned nUpdateables = 0;
+        for(const auto& updateable : changePoints.front().second) {
+            updateable->Update(changePoints.front().first);
+            nUpdateables++;
+        }
+
+        VLOG(7) << "Updated parameters for " << nUpdateables
+                << " calibrations and detectors at ID=" << detectorRead.ID;
+        changePoints.pop_front(); // go to next change point
+    }
 
     // apply the calibrations,
     // note that this also changes the detectorRead

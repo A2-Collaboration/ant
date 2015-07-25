@@ -24,8 +24,8 @@ public:
   void ShowResult() override;
 
   // CalibrationUpdate_traits interface
-  void BuildRanges(std::list<TID> &ranges) override;
-  void Update(const TID &id) override;
+  virtual std::list<TID> GetChangePoints() const override;
+  virtual void Update(const TID &id) override;
 };
 
 }} // namespace ant::calibration

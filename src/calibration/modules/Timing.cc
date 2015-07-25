@@ -5,6 +5,8 @@
 
 #include "tree/TDetectorRead.h"
 
+#include "base/Logger.h"
+
 #include <cstdint>
 
 using namespace std;
@@ -27,7 +29,7 @@ void Timing::ShowResult()
 }
 
 Timing::Timing(Detector_t::Type_t detectorType,
-        Calibration::Converter::ptr_t converter,
+               Calibration::Converter::ptr_t converter,
         double defaultOffset,
         const interval<double>& timeWindow, // default {-inf, inf}
         const double defaultGain, // default gain is 1.0
@@ -59,6 +61,21 @@ Timing::Timing(Detector_t::Type_t detectorType,
     Gains.resize(maxkey+1, DefaultGain);
     for(const auto& gain : gains)
         Gains[gain.Key] = gain.Value;
+}
+
+std::list<TID> Timing::GetChangePoints() const {
+    // just some dummy entries for testing
+    return
+    {
+        TID(0x53efce1a, 0x00000000),
+                TID(0x53efce1a, 0x00000010),
+                TID(0x53efce1a, 0x00000020),
+                TID(0x53efce1a, 0x00000030),
+    };
+}
+
+void Timing::Update(const TID& id) {
+    LOG(INFO) << "Update called with TID=" << id;
 }
 
 void Timing::ApplyTo(const readhits_t& hits, extrahits_t&)
