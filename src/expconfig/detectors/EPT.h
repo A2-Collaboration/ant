@@ -23,13 +23,15 @@ struct EPT :
             std::vector<scaler_mapping_t>&) const override;
 
 protected:
+
+    /// \todo have a look at ugcal?
     struct Element_t : TaggerDetector_t::Element_t {
         Element_t(
                 unsigned channel,
                 unsigned tdc,
                 unsigned scaler,
                 unsigned adc, // for Tagger, the ADC is least important
-                double electronEnergy /// \todo have a look at ugcal?
+                double electronEnergy
                 ) :
             TaggerDetector_t::Element_t(
                 channel,
