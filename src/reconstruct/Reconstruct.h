@@ -41,6 +41,8 @@ private:
     template<typename T>
     using sorted_bydetectortype_t = std::map<Detector_t::Type_t, std::list< T > >;
 
+    void UpdateParameters(const TID& currentPoint);
+
     void ApplyCalibrations(TDetectorRead& detectorRead,
                            sorted_bydetectortype_t<TDetectorReadHit*>& sorted_readhits);
 
@@ -61,7 +63,6 @@ private:
 
 
     shared_ptr_list<CalibrationApply_traits>  calibrations;
-    shared_ptr_list<Updateable_traits>        updateables;
     sorted_detectors_t                        sorted_detectors;
 
     std::unique_ptr<reconstruct::CandidateBuilder> candidatebuilder;

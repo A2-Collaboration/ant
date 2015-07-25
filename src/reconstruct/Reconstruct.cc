@@ -26,6 +26,10 @@ Reconstruct::Reconstruct(const THeaderInfo& headerInfo)
 {
     const auto& config = ExpConfig::Reconstruct::Get(headerInfo);
 
+    // calibrations and detector may change their parameters
+    // during reconstruct
+    shared_ptr_list<Updateable_traits>        updateables;
+
     // calibrations are the natural Updateable_traits objects,
     // but they could be constant (in case of a very simple calibration)
     calibrations = config->GetCalibrations();
@@ -80,17 +84,7 @@ Reconstruct::Reconstruct(const THeaderInfo& headerInfo)
 unique_ptr<TEvent> Reconstruct::DoReconstruct(TDetectorRead& detectorRead)
 {
     // update the updateables :)
-    if(!changePoints.empty() && changePoints.front().first <= detectorRead.ID) {
-        unsigned nUpdateables = 0;
-        for(const auto& updateable : changePoints.front().second) {
-            updateable->Update(changePoints.front().first);
-            nUpdateables++;
-        }
-
-        VLOG(7) << "Updated parameters for " << nUpdateables
-                << " calibrations and detectors at ID=" << detectorRead.ID;
-        changePoints.pop_front(); // go to next change point
-    }
+    UpdateParameters(detectorRead.ID);
 
     // apply the calibrations,
     // note that this also changes the detectorRead
@@ -129,6 +123,23 @@ unique_ptr<TEvent> Reconstruct::DoReconstruct(TDetectorRead& detectorRead)
 Reconstruct::~Reconstruct()
 {
 
+}
+
+void Reconstruct::UpdateParameters(const TID& currentPoint)
+{
+    if(changePoints.empty() || currentPoint <= changePoints.front().first)
+        return;
+
+    unsigned nUpdateables = 0;
+    for(const auto& updateable : changePoints.front().second) {
+        updateable->Update(changePoints.front().first);
+        nUpdateables++;
+    }
+
+    VLOG(7) << "Updated parameters for " << nUpdateables
+            << " calibrations and detectors at ID=" << currentPoint;
+
+    changePoints.pop_front(); // go to next change point (if any)
 }
 
 void Reconstruct::ApplyCalibrations(TDetectorRead& detectorRead,
