@@ -3,18 +3,25 @@
 set -e
 
 CACHE=$HOME/cache
+CACHE_REV=$CACHE/.rev2
 NCPU=2
 
 pushd $PWD
 
-if [ -f $CACHE/.good ]; then
+if [ -f $CACHE_REV ]; then
     export PATH=$CACHE/cmake/bin:$PATH
     export PATH=$CACHE/gcc/bin:$PATH
+    export PATH=$CACHE/doxygen/bin:$PATH
     export LIBRARY_PATH=$CACHE/gcc/lib64:$LIBRARY_PATH
     export LD_LIBRARY_PATH=$CACHE/gcc/lib64:$LD_LIBRARY_PATH
     export CPLUS_INCLUDE_PATH=$CACHE/gcc/include/c++/4.8.2:$CPLUS_INCLUDE_PATH    
     cd $CACHE/root && source ./bin/thisroot.sh
 else
+    # Clean the cache
+    echo "Cleaning the cache..."
+    rm -rf $CACHE
+    mkdir -p $CACHE
+    
     # Get CMake 3.1
     wget https://github.com/Viq111/travis-container-packets/releases/download/cmake-3.1.2/cmake.tar.bz2 -O $CACHE/cmake.tar.bz2
     tar -xjf $CACHE/cmake.tar.bz2 -C $CACHE
@@ -30,6 +37,12 @@ else
     export LD_LIBRARY_PATH=$CACHE/gcc/lib64:$LD_LIBRARY_PATH
     export CPLUS_INCLUDE_PATH=$CACHE/gcc/include/c++/4.8.2:$CPLUS_INCLUDE_PATH
 
+    # Get Doxygen
+    wget http://ftp.stack.nl/pub/users/dimitri/doxygen-1.8.10.linux.bin.tar.gz -O $CACHE/doxygen.tar.gz
+    mkdir $CACHE/doxygen && tar -xzf $CACHE/doxygen.tar.gz -C $CACHE/doxygen --strip-components=1
+    rm $CACHE/doxygen.tar.gz
+    export PATH=$CACHE/doxygen/bin:$PATH    
+    
     ## APLCON
     rm -rf $CACHE/APLCON
     git clone https://github.com/A2-Collaboration-dev/APLCON $CACHE/APLCON
@@ -52,7 +65,7 @@ else
     cd $CACHE/pluto && make -j$NCPU
     rm $CACHE/pluto.tar.gz
 
-    touch $CACHE/.good
+    touch $CACHE_REV
 fi
 
 popd
