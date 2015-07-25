@@ -29,10 +29,10 @@ public:
     virtual void ApplyTo(event_ptr& event) = 0;
 };
 
-
 /**
  * @brief The Updateable_traits class
  *
+ * used by the UpdateableManager
  */
 class Updateable_traits {
 public:
