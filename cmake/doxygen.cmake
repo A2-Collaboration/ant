@@ -24,12 +24,12 @@ configure_file(${CMAKE_SOURCE_DIR}/cmake/Doxyfile.in
 
 # and define how to run Doxygen
 # it always outputs a symbolic doc dir to avoid clashing
-# with the target "doc"
+# with the target "doxygen"
 add_custom_command(OUTPUT "DoxyfileDocDir"
   COMMAND ${DOXYGEN_EXECUTABLE} ${CMAKE_BINARY_DIR}/Doxyfile
   WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
   COMMENT "Running Doxygen...")
 set_source_files_properties("DoxyfileDocDir" PROPERTIES SYMBOLIC "on")
 
-# so we can make it saying "make doc"
-add_custom_target(doc DEPENDS "DoxyfileDocDir")
+# so we can make it saying "make doxygen"
+add_custom_target(doxygen DEPENDS "DoxyfileDocDir")

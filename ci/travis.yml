@@ -1,10 +1,15 @@
 language: cpp
 
 compiler:
-  - gcc
+- gcc
 
 sudo: false
-  
+
+before_install:
+- openssl aes-256-cbc -K $encrypted_b7ce407a834b_key -iv $encrypted_b7ce407a834b_iv -in ci/travis_rsa.enc -out ci/travis_rsa -d
+- chmod 0600 ci/travis_rsa
+- cp ci/travis_rsa ~/.ssh/id_rsa 
+
 addons:
   apt:
     packages:
@@ -14,12 +19,15 @@ addons:
     - libxft-dev
     - libxext-dev
     - liblzma-dev
+    - doxygen
+    - graphviz
 
 cache:
   directories:
-    - $HOME/cache
-  
-script: ./ci/build.sh
+  - "$HOME/cache"
 
-after_success: 
-  - ./ci/uploadcoverage.sh
+script: "./ci/build.sh"
+
+after_success:
+- "./ci/upload-doxygen.sh"
+- "./ci/upload-coverage.sh"
