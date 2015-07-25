@@ -40,6 +40,6 @@ add_subdirectory(progs)
 
 include(cmake/doxygen.cmake)
 
-#create a rootlogon.h
-configure_file(rootlogon.C.in rootlogon.C)
+# create a rootlogon.C
+configure_file(cmake/rootlogon.C.in rootlogon.C)
 
