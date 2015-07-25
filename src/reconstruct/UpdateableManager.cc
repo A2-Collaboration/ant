@@ -80,7 +80,7 @@ void UpdateableManager::UpdateParameters(const TID& currentPoint)
 {
     // it might be that the current point lies far in the future
     // so calling Update() more than once is necessary
-    while(!changePoints.empty() && changePoints.front().first < currentPoint) {
+    while(!changePoints.empty() && changePoints.front().first <= currentPoint) {
 
         unsigned nUpdateables = 0;
         for(const auto& updateable : changePoints.front().second) {
