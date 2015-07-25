@@ -46,6 +46,8 @@ struct ReconstructTester {
     {
         /// \todo Improve requirements
 
+        // update the updateables :)
+        r.UpdateParameters(detectorRead.ID);
 
         // apply the calibrations,
         CalibrationApply_traits::readhits_t sorted_readhits;
