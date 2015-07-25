@@ -2,6 +2,7 @@
 
 #include "Clustering.h"
 #include "CandidateBuilder.h"
+#include "UpdateableManager.h"
 
 #include "expconfig/ExpConfig.h"
 
@@ -27,8 +28,8 @@ Reconstruct::Reconstruct(const THeaderInfo& headerInfo)
     const auto& config = ExpConfig::Reconstruct::Get(headerInfo);
 
     // calibrations and detector may change their parameters
-    // during reconstruct
-    shared_ptr_list<Updateable_traits>        updateables;
+    // during reconstruct, so we scan for those items
+    shared_ptr_list<Updateable_traits> updateables;
 
     // calibrations are the natural Updateable_traits objects,
     // but they could be constant (in case of a very simple calibration)
@@ -36,7 +37,7 @@ Reconstruct::Reconstruct(const THeaderInfo& headerInfo)
     for(const auto& calibration : calibrations) {
         const auto& ptr = dynamic_pointer_cast<Updateable_traits, CalibrationApply_traits>(calibration);
         if(ptr != nullptr)
-            updateables.push_back(ptr);
+            updateables.emplace_back(move(ptr));
     }
 
     // detectors serve different purposes, ...
@@ -45,7 +46,7 @@ Reconstruct::Reconstruct(const THeaderInfo& headerInfo)
         // ... they may be updateable (think of the PID Phi angles)
         const auto& updateable = dynamic_pointer_cast<Updateable_traits, Detector_t>(detector);
         if(updateable != nullptr)
-            updateables.push_back(updateable);
+            updateables.emplace_back(move(updateable));
         // ... but also are needed in DoReconstruct
         auto ret = sorted_detectors.insert(make_pair(detector->Type, detector));
         if(!ret.second) {
@@ -60,65 +61,22 @@ Reconstruct::Reconstruct(const THeaderInfo& headerInfo)
     /// \todo Make use of different candidate builders maybe?
     candidatebuilder = std_ext::make_unique<CandidateBuilder>(sorted_detectors);
 
-    // ask each updateable for its update points and
-    // build the list of changePoints
+    // init the updateable manager
+    updateablemanager = std_ext::make_unique<UpdateableManager>(
+                            headerInfo.ID, move(updateables)
+                            );
 
-    map<TID, shared_ptr_list<Updateable_traits> > sorted_updateables;
-    for(const shared_ptr<Updateable_traits>& updateable : updateables) {
-        list<TID> all_changePoints = updateable->GetChangePoints();
+}
 
-        // no change points means the updateable is actually constant
-        if(all_changePoints.empty())
-            continue;
+Reconstruct::~Reconstruct()
+{
 
-        // the following extraction relies on the changepoints being sorted in time
-        // we don't require the updateables to provide a sorted list
-        all_changePoints.sort();
-
-        // scan the change points and build interesting_changePoints
-        const TID* lastBeforeHeaderInfo = nullptr;
-        list<TID> interesting_changePoints;
-        for(const TID& changePoint : all_changePoints) {
-            // ignore too early change points, but remember
-            // the last one seen as a pointer
-            if(changePoint < headerInfo.ID) {
-                lastBeforeHeaderInfo = addressof(changePoint);
-                continue;
-            }
-            interesting_changePoints.emplace_back(move(changePoint));
-        }
-
-        // check if we should add a timepoint before the headerInfo
-        // in order to init the updateable correctly at the first detectorRead
-        // in DoReconstruct()
-        if(lastBeforeHeaderInfo != nullptr) {
-            // prepend this last changepoint before headerInfo timepoint
-            // only if the interesting changePoints are empty so far,
-            // or the first interesting point is not equal the header timepoint
-            if(interesting_changePoints.empty()
-               || headerInfo.ID != interesting_changePoints.front())
-                interesting_changePoints.emplace_front(move(*lastBeforeHeaderInfo));
-        }
-
-        // now the interesting points are built, add the updateable to the map
-        for(const TID& changePoint : interesting_changePoints) {
-            sorted_updateables[changePoint].emplace_back(move(updateable));
-        }
-    }
-
-    // we rely on the fact that the map is sorted,
-    // and simply convert it to a list for easier handling
-    // in UpdateParameters()
-    for(auto it_updateable : sorted_updateables) {
-        // move the whole map pair into the list
-        changePoints.emplace_back(move(it_updateable));
-    }
 }
 
 unique_ptr<TEvent> Reconstruct::DoReconstruct(TDetectorRead& detectorRead)
 {
     // update the updateables :)
-    UpdateParameters(detectorRead.ID);
+    updateablemanager->UpdateParameters(detectorRead.ID);
 
     // apply the calibrations,
     // note that this also changes the detectorRead
@@ -152,31 +110,6 @@ unique_ptr<TEvent> Reconstruct::DoReconstruct(TDetectorRead& detectorRead)
     //cout << *event << endl;
 
     return event;
-}
-
-Reconstruct::~Reconstruct()
-{
-
-}
-
-void Reconstruct::UpdateParameters(const TID& currentPoint)
-{
-    // it might be that the current point lies far in the future
-    // so calling Update() more than once is necessary
-    while(!changePoints.empty() && changePoints.front().first < currentPoint) {
-
-        unsigned nUpdateables = 0;
-        for(const auto& updateable : changePoints.front().second) {
-            updateable->Update(changePoints.front().first);
-            nUpdateables++;
-        }
-
-        VLOG(7) << "Updated parameters for " << nUpdateables
-                << " calibrations and detectors at ID=" << currentPoint;
-
-        // go to next change point (if any)
-        changePoints.pop_front();
-    }
 }
 
 void Reconstruct::ApplyCalibrations(TDetectorRead& detectorRead,

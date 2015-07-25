@@ -6,6 +6,8 @@ set(SRCS
   Clustering.cc
   CandidateBuilder.h
   CandidateBuilder.cc
+  UpdateableManager.h
+  UpdateableManager.cc
   detail/Clustering_NextGen.h
   )
 

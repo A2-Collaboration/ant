@@ -17,6 +17,7 @@ namespace reconstruct {
 class CandidateBuilder;
 class AdaptorTClusterHit;
 class Clustering;
+class UpdateableManager;
 }
 
 class Reconstruct {
@@ -41,7 +42,7 @@ private:
     template<typename T>
     using sorted_bydetectortype_t = std::map<Detector_t::Type_t, std::list< T > >;
 
-    void UpdateParameters(const TID& currentPoint);
+
 
     void ApplyCalibrations(TDetectorRead& detectorRead,
                            sorted_bydetectortype_t<TDetectorReadHit*>& sorted_readhits);
@@ -67,8 +68,8 @@ private:
 
     std::unique_ptr<reconstruct::CandidateBuilder> candidatebuilder;
     std::unique_ptr<reconstruct::Clustering>   clustering;
+    std::unique_ptr<reconstruct::UpdateableManager>   updateablemanager;
 
-    std::list< std::pair< TID, shared_ptr_list<Updateable_traits> > > changePoints;
 };
 
 }

@@ -4,6 +4,7 @@
 #include "reconstruct/Reconstruct.h"
 #include "reconstruct/CandidateBuilder.h"
 #include "reconstruct/Clustering.h"
+#include "reconstruct/UpdateableManager.h"
 
 #include "unpacker/Unpacker.h"
 
@@ -47,7 +48,7 @@ struct ReconstructTester {
         /// \todo Improve requirements
 
         // update the updateables :)
-        r.UpdateParameters(detectorRead.ID);
+        r.updateablemanager->UpdateParameters(detectorRead.ID);
 
         // apply the calibrations,
         CalibrationApply_traits::readhits_t sorted_readhits;
