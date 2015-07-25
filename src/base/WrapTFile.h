@@ -14,7 +14,7 @@ protected:
 public:
     WrapTFile(const std::string& filename);
 
-    ///@fixme is this required?? remove if possible
+    ///@todo is this required?? remove if possible
     TFile* operator* () { return file.get(); }
 
     bool isOpen() const;
