@@ -17,9 +17,11 @@ cd ${HTML_PATH}
 git rm -rf .
 cd -
 
+find .
+
 # Generate the HTML documentation.
 cd build
-make doxygen
+make doxygen VERBOSE=1
 cd -
 
 # Create and commit the documentation repo.
