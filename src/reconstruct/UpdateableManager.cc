@@ -16,7 +16,7 @@ using namespace ant::reconstruct;
 
 
 UpdateableManager::UpdateableManager(
-        const TID& headerInfo_ID,
+        const TID& startPoint,
         const std::list<std::shared_ptr<Updateable_traits> >& updateables
         )
 {
@@ -42,7 +42,7 @@ UpdateableManager::UpdateableManager(
         for(const TID& changePoint : all_changePoints) {
             // ignore too early change points, but remember
             // the last one seen as a pointer
-            if(changePoint < headerInfo_ID) {
+            if(changePoint < startPoint) {
                 lastBeforeHeaderInfo = addressof(changePoint);
                 continue;
             }
@@ -57,7 +57,7 @@ UpdateableManager::UpdateableManager(
             // only if the interesting changePoints are empty so far,
             // or the first interesting point is not equal the header timepoint
             if(interesting_changePoints.empty()
-               || headerInfo_ID != interesting_changePoints.front())
+               || startPoint != interesting_changePoints.front())
                 interesting_changePoints.emplace_front(move(*lastBeforeHeaderInfo));
         }
 

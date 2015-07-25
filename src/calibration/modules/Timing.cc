@@ -64,16 +64,7 @@ Timing::Timing(Detector_t::Type_t detectorType,
 }
 
 std::list<TID> Timing::GetChangePoints() const {
-    // just some dummy entries for testing
-    return
-    {
-        {0x53aaaaaa, 0x00000050},
-        {0x53aaaaaa, 0x00000000},
-        //{0x53efce1a, 0x00000000},
-        {0x53efce1a, 0x00000010},
-        {0x53efce1a, 0x00000020},
-        {0x53efce1a, 0x00000030},
-    };
+    return {};
 }
 
 void Timing::Update(const TID& id) {
