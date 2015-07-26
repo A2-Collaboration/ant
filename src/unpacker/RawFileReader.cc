@@ -1,20 +1,15 @@
-
-
-// this ensure the correct forward
-// declaration of lzma_stream
-#include <lzma.h>
-#define RAWFILEREADER_H_IMPL
 #include "RawFileReader.h"
-#undef RAWFILEREADER_H_IMPL
 
 #include "base/Logger.h"
-#include "base/std_ext.h"
 
 #include <cstdio> // for BUFSIZ
 #include <cstring> // for strerror
 #include <limits>
 #include <iomanip>
 
+extern "C" {
+#include <lzma.h>
+}
 
 using namespace std;
 using namespace ant;
@@ -96,6 +91,7 @@ void RawFileReader::HandlePerformanceStats()
 
 }
 
+struct RawFileReader::XZ::lzma_stream : ::lzma_stream {};
 
 RawFileReader::XZ::XZ(const std::string &filename, const size_t inbufsize) :
     PlainBase(filename),
@@ -103,24 +99,14 @@ RawFileReader::XZ::XZ(const std::string &filename, const size_t inbufsize) :
     decompressFailed(false),
     gcount_(0),
     gcount_compressed_(0),
-    eof_(false)
+    eof_(false),
+    strm(new lzma_stream(),
+         [] (lzma_stream* strm) { lzma_end(strm); delete strm; })
 {
-    strm = (lzma_stream*)malloc(sizeof(lzma_stream));
-    if(strm==nullptr)
-        throw Exception("Cannot allocate memory");
-    try {
-        init_decoder();
-    }
-    catch(Exception e) {
-        cleanup();
-        // propagate the exception
-        throw e;
-    }
+    init_decoder();
 }
 
-RawFileReader::XZ::~XZ() {
-    cleanup();
-}
+RawFileReader::XZ::~XZ() {}
 
 bool RawFileReader::XZ::test(ifstream& file) {
     // check some magic bytes in the beginning
@@ -135,18 +121,14 @@ bool RawFileReader::XZ::test(ifstream& file) {
     return file_bytes == magic_bytes_xz;
 }
 
-void RawFileReader::XZ::cleanup()
-{
-    lzma_end(strm);
-    free(strm);
-}
-
 void RawFileReader::XZ::init_decoder()
 {
-    *strm = LZMA_STREAM_INIT;
+    // using C-style init is a bit messy in C++
+    using lzma_stream_pod = ::lzma_stream;
+    auto ptr = reinterpret_cast<lzma_stream_pod*>(strm.get());
+    *ptr = LZMA_STREAM_INIT;
 
-    lzma_ret ret = lzma_stream_decoder(
-                strm, UINT64_MAX, LZMA_CONCATENATED);
+    lzma_ret ret = lzma_stream_decoder(strm.get(), UINT64_MAX, LZMA_CONCATENATED);
 
     // Return successfully if the initialization went fine.
     if (ret == LZMA_OK) {
@@ -191,7 +173,7 @@ void RawFileReader::XZ::read(char* s, streamsize n) {
             }
         }
 
-        lzma_ret ret = lzma_code(strm, action);
+        lzma_ret ret = lzma_code(strm.get(), action);
 
         if(ret == LZMA_STREAM_END) {
             gcount_ = n - strm->avail_out; // number of decompressed bytes

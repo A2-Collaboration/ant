@@ -1,12 +1,12 @@
 #pragma once
 
+#include "base/std_ext.h"
+
 #include <fstream>
 #include <string>
 #include <memory>
 #include <cstdint>
 #include <vector>
-
-#include "base/std_ext.h"
 #include <chrono>
 
 namespace ant {
@@ -200,13 +200,12 @@ private:
         std::streamsize gcount_compressed_;
         bool eof_;
 
+        template<typename T>
+        using deleted_unique_ptr = std::unique_ptr<T, std::function<void(T*)>>;
 
-#ifndef RAWFILEREADER_H_IMPL
         struct lzma_stream;
-#endif
-        lzma_stream* strm;
+        deleted_unique_ptr<lzma_stream> strm;
         void init_decoder();
-        void cleanup();
 
     }; // class RawFileReader::XZ
 
