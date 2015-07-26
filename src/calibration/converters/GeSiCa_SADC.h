@@ -17,11 +17,11 @@ struct GeSiCa_SADC : Calibration::Converter {
         if(rawData.size() != 6) // expect three 16bit values
           return {};
 
-        const uint16_t* pedestal = reinterpret_cast<const uint16_t*>(&rawData[0]);
-        const uint16_t* signal = reinterpret_cast<const uint16_t*>(&rawData[2]);
+        const double pedestal = *reinterpret_cast<const uint16_t*>(&rawData[0]);
+        const double signal = *reinterpret_cast<const uint16_t*>(&rawData[2]);
 
         // return vector with size 1 and pedestal subtracted signal
-        return vector<double>(1, *signal - *pedestal);
+        return {signal - pedestal};
     }
 };
 

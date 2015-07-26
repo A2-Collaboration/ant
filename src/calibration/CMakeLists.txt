@@ -14,12 +14,16 @@ set(SRCS
     modules/Timing.cc
     modules/Integral.h
     modules/Integral.cc
+    modules/Scaler.h
+    modules/Scaler.cc
     modules/EnergyInvariantMass.h
     modules/EnergyInvariantMass.cc
     converters/GeSiCa_SADC.h
     converters/CATCH_TDC.h
     converters/CATCH_TDC.cc
     converters/MultiHit16bit.h
+    converters/ScalerFrequency.h
+    converters/ScalerFrequency.cc    
   )
 
 add_library(calibration ${SRCS})

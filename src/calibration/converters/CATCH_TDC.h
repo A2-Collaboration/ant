@@ -14,7 +14,7 @@ struct CATCH_TDC : MultiHit16bit, CalibrationApply_traits {
     CATCH_TDC(const LogicalChannel_t& referenceChannel) :
         ReferenceChannel(referenceChannel),
         ReferenceTiming(std::numeric_limits<double>::quiet_NaN()),
-        CATCH_to_nanoseconds(0.1171)
+        CATCH_to_nanoseconds(0.1171) // CATCH TDCs, the conversion to ns is known
     {}
 
     virtual std::vector<double> Convert(const vector<uint8_t>& rawData) const override
@@ -22,7 +22,7 @@ struct CATCH_TDC : MultiHit16bit, CalibrationApply_traits {
         // we can only convert if we have a reference hit timing
         if(std::isnan(ReferenceTiming))
             return {};
-        // CATCH TDCs, the gain is fixed
+
         return ConvertWithFactorAndOffset(rawData, CATCH_to_nanoseconds, ReferenceTiming);
     }
 

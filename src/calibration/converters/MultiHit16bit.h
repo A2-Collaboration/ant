@@ -27,7 +27,7 @@ protected:
             return {};
         vector<double> ret(rawData.size()/2);
         for(size_t i=0;i<ret.size();i++) {
-          const uint16_t* rawVal = reinterpret_cast<const uint16_t*>(&rawData[2*i]);
+          const uint16_t* rawVal = reinterpret_cast<const uint16_t*>(addressof(rawData[2*i]));
           ret[i] = *rawVal * factor - offset;
         }
         return ret;
