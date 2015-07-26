@@ -15,6 +15,20 @@ public:
         virtual ~Converter() = default;
     };
 
+    class SimpleModule :
+            public CalibrationApply_traits
+    {
+    public:
+        std::string GetName() const { return name; }
+        virtual ~SimpleModule() = default;
+    protected:
+        SimpleModule(const std::string& name_) :
+            name(std::string("Calibration_")+name_)
+        {}
+    private:
+        const std::string name;
+    };
+
     /**
    * @brief The Calibration::Module class
    * A calibration module is two things:
@@ -23,20 +37,15 @@ public:
    * * furthermore, it may update its constants during the analysis
    */
     class Module :
+            public SimpleModule,
             public Physics,
-            public CalibrationApply_traits,
             public Updateable_traits
     {
-    public:
-        virtual ~Module() = default;
-        std::string GetName() const { return name; }
     protected:
         Module(const std::string& name_) :
-            Physics(std::string("Calibration_")+name_), /// \todo put calibration histograms in subdir?
-            name(name_)
+            SimpleModule(name_),
+            Physics(GetName()) /// \todo put calibration histograms in subdir?
         {}
-    private:
-        const std::string name;
     };
 
 };

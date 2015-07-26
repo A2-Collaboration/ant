@@ -2,8 +2,8 @@
 
 #include "Calibration.h"
 #include "expconfig/Detector_t.h"
-#include "tree/TDataRecord.h"
-#include "base/interval.h"
+
+#include "tree/TDataRecord.h" // for TKeyValue, TID
 
 #include <memory>
 #include <limits>
@@ -36,7 +36,7 @@ public:
     void Finish() override;
     void ShowResult() override;
 
-    // CalibrationUpdate_traits interface
+    // Updateable_traits interface
     virtual std::list<TID> GetChangePoints() const override;
     void Update(const TID&) override;
 

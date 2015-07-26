@@ -32,8 +32,8 @@ struct Trigger :
 
 
 struct Trigger_2014 : Trigger {
-    const unsigned Scaler_Exptrigger_1MHz = 10;
-    const unsigned Scaler_Beampolmon_1MHz = 20;
+    const LogicalChannel_t Scaler_Exptrigger_1MHz = {Type, Channel_t::Type_t::Scaler, 10};
+    const LogicalChannel_t Scaler_Beampolmon_1MHz = {Type, Channel_t::Type_t::Scaler, 20};
 
     virtual bool Matches(const THeaderInfo& headerInfo) const override;
     virtual void BuildMappings(

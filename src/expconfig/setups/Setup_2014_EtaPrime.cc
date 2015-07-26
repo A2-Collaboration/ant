@@ -29,18 +29,25 @@ public:
         // they can be quite different (especially for the COMPASS TCS system), but most of them simply decode the bytes
         // to 16bit signed values
         /// \todo check if 16bit signed is correct for all those detectors
-        const auto convert_MultiHit16bit = make_shared<calibration::converter::MultiHit16bit>();
-        const auto convert_CATCH_Tagger = make_shared<calibration::converter::CATCH_TDC>(trigger->Reference_CATCH_TaggerCrate);
-        const auto convert_CATCH_CB = make_shared<calibration::converter::CATCH_TDC>(trigger->Reference_CATCH_CBCrate);
-        const auto convert_GeSiCa_SADC = make_shared<calibration::converter::GeSiCa_SADC>();
+        const auto& convert_MultiHit16bit = make_shared<calibration::converter::MultiHit16bit>();
+        const auto& convert_CATCH_Tagger = make_shared<calibration::converter::CATCH_TDC>(trigger->Reference_CATCH_TaggerCrate);
+        const auto& convert_CATCH_CB = make_shared<calibration::converter::CATCH_TDC>(trigger->Reference_CATCH_CBCrate);
+        const auto& convert_GeSiCa_SADC = make_shared<calibration::converter::GeSiCa_SADC>();
+        const auto& convert_ScalerFrequency_Beampolmon
+                = make_shared<calibration::converter::ScalerFrequency>(trigger->Scaler_Beampolmon_1MHz);
 
         // the order of the calibrations is important
         // add both CATCH converters first,
         // since they need to scan the detector read for their reference hit
         AddCalibration(convert_CATCH_Tagger);
         AddCalibration(convert_CATCH_CB);
+        // also the ScalerFrequency needs a reference
+        AddCalibration(convert_ScalerFrequency_Beampolmon);
 
-        // then we add the others, and link it to the CATCH converters
+        AddCalibration<calibration::Scaler>(Detector_t::Type_t::EPT,
+                                            convert_ScalerFrequency_Beampolmon);
+
+        // then we add the others, and link it to the converters
         AddCalibration<calibration::Timing>(Detector_t::Type_t::EPT,
                                             convert_CATCH_Tagger,
                                             -325 // default offset in ns

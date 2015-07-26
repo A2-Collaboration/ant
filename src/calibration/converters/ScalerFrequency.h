@@ -11,6 +11,10 @@ namespace converter {
 
 struct ScalerFrequency : Calibration::Converter, CalibrationApply_traits {
 
+    /**
+     * @brief ScalerFrequency converts scalers with reference from trigger detector
+     * @param referenceScaler logical channel number of reference scaler
+     */
     ScalerFrequency(const LogicalChannel_t& referenceScaler) :
         ReferenceScaler(referenceScaler),
         ReferenceCounts(std::numeric_limits<double>::quiet_NaN()),

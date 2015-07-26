@@ -34,51 +34,25 @@ void Trigger_2014::BuildMappings(std::vector<UnpackerAcquConfig::hit_mapping_t>&
     // call base method for mappings which have never changed over the years
     Trigger::BuildMappings(hit_mappings, scaler_mappings);
 
-    std::list<scaler_mapping_t> scalers;
+    std::list<scaler_mapping_t> reference_scalers;
 
-    scalers.emplace_back(
+    reference_scalers.emplace_back(
                 "Exptrigger_1MHz",
                 Type,
-                Scaler_Exptrigger_1MHz,
+                Scaler_Exptrigger_1MHz.Channel,
                 191
                 );
-
-    scalers.emplace_back(
+    reference_scalers.emplace_back(
                 "Beampolmon_1MHz",
                 Type,
-                Scaler_Beampolmon_1MHz,
+                Scaler_Beampolmon_1MHz.Channel,
                 315
                 );
 
-    // the four most important scalers
-    scalers.emplace_back(
-                "TotalLivetime",
-                Type,
-                100,
-                190
-                );
-    scalers.emplace_back(
-                "FaradayCup",
-                Type,
-                200,
-                313
-                );
-    scalers.emplace_back(
-                "IonChamber",
-                Type,
-                201,
-                312
-                );
-    scalers.emplace_back(
-                "PbGlass",
-                Type,
-                202,
-                311
-                );
-
-    // those most important scalers are all added as TSlowControl
+    // the reference scalers are added as TSlowControl
     // and as logical channels
-    for(const scaler_mapping_t& scaler : scalers) {
+    // (might be used by scaler calibrations from other detectors)
+    for(const scaler_mapping_t& scaler : reference_scalers) {
         scaler_mappings.push_back(scaler);
         // add again as DetectorRead item
         scaler_mappings.emplace_back(
@@ -88,4 +62,29 @@ void Trigger_2014::BuildMappings(std::vector<UnpackerAcquConfig::hit_mapping_t>&
                     );
     }
 
+    // some interesting scalers, added as TSlowControl only
+    scaler_mappings.emplace_back(
+                "TotalLivetime",
+                Type,
+                100,
+                190
+                );
+    scaler_mappings.emplace_back(
+                "FaradayCup",
+                Type,
+                200,
+                313
+                );
+    scaler_mappings.emplace_back(
+                "IonChamber",
+                Type,
+                201,
+                312
+                );
+    scaler_mappings.emplace_back(
+                "PbGlass",
+                Type,
+                202,
+                311
+                );
 }

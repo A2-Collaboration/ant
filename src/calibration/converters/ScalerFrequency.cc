@@ -9,7 +9,7 @@ using namespace ant::calibration;
 
 void converter::ScalerFrequency::ApplyTo(const readhits_t& hits, extrahits_t&) {
     ReferenceCounts = numeric_limits<double>::quiet_NaN();
-    // search for reference timing
+    // search for reference scaler
     const auto it_refhits = hits.find(ReferenceScaler.DetectorType);
     if(it_refhits == hits.end())
         return;
