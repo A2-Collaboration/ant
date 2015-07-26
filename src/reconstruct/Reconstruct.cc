@@ -82,6 +82,9 @@ unique_ptr<TEvent> Reconstruct::DoReconstruct(TDetectorRead& detectorRead)
     // note that this also changes the detectorRead
     CalibrationApply_traits::readhits_t sorted_readhits;
     ApplyCalibrations(detectorRead, sorted_readhits);
+    // the detectorRead is now calibrated as far as possible
+    // one might return now and detectorRead is just calibrated...
+
 
     // for debug purposes, dump out the detectorRead
     //cout << detectorRead << endl;
@@ -91,8 +94,7 @@ unique_ptr<TEvent> Reconstruct::DoReconstruct(TDetectorRead& detectorRead)
     // in BuildHits (see below)
     auto event = std_ext::make_unique<TEvent>(detectorRead.ID);
 
-    // the detectorRead is now calibrated as far as possible
-    // lets start the hit matching, which builds the TClusterHit's
+    // do the hit matching, which builds the TClusterHit's
     // we also extract the energy, which is always defined as a
     // single value with type Channel_t::Type_t
     sorted_bydetectortype_t<AdaptorTClusterHit> sorted_clusterhits;
@@ -166,29 +168,18 @@ void Reconstruct::BuildHits(
         const shared_ptr<TaggerDetector_t>& taggerdetector
                 = dynamic_pointer_cast<TaggerDetector_t>(detector);
 
+        // for tagger detectors, we do not match the hits by channel at all
+        if(taggerdetector != nullptr) {
+            HandleTagger(taggerdetector, readhits, event_tagger);
+            continue;
+        }
+
         for(const TDetectorReadHit* readhit : readhits) {
             // ignore uncalibrated items
             if(readhit->Values.empty())
                 continue;
 
-            // for tagger detectors, we do not match the hits by channel at all
-            if(taggerdetector != nullptr) {
-                /// \todo handle Integral and Scaler type information here
-                if(readhit->GetChannelType() != Channel_t::Type_t::Timing)
-                    continue;
-                // but we add each TClusterHitDatum as some single
-                // TClusterHit representing an electron with a timing
-                /// \todo implement tagger double-hit decoding?
-                for(const double timing : readhit->Values) {
-                    event_tagger.Hits.emplace_back(
-                                taggerdetector->GetPhotonEnergy(readhit->Channel),
-                                TKeyValue<double>(readhit->Channel, timing)
-                                );
-                }
 
-                /// \todo add Moeller/PairSpec information here
-                continue;
-            }
 
             // transform the data from readhit into TClusterHitDatum's
             vector<TClusterHitDatum> data(readhit->Values.size());
@@ -227,6 +218,57 @@ void Reconstruct::BuildHits(
         insert_hint =
                 sorted_clusterhits.insert(insert_hint,
                                           make_pair(detectortype, move(clusterhits)));
+    }
+}
+
+void Reconstruct::HandleTagger(const shared_ptr<TaggerDetector_t>& taggerdetector,
+                               std::list<TDetectorReadHit*> readhits,
+                               TTagger& event_tagger
+                               )
+{
+    /// \todo add Moeller/PairSpec information here
+
+    for(const TDetectorReadHit* readhit : readhits) {
+        // ignore uncalibrated items
+        if(readhit->Values.empty())
+            continue;
+
+        switch(readhit->GetChannelType()) {
+
+        case Channel_t::Type_t::Timing: {
+            // but we add each TClusterHitDatum as some single
+            // TClusterHit representing an electron with a timing
+            /// \todo implement tagger double-hit decoding?
+            for(const double timing : readhit->Values) {
+                event_tagger.Hits.emplace_back(
+                            taggerdetector->GetPhotonEnergy(readhit->Channel),
+                            TKeyValue<double>(readhit->Channel, timing)
+                            );
+            }
+            break;
+        }
+
+        case Channel_t::Type_t::Scaler: {
+            // scalers are already calibrated to frequencies
+            for(const double frequency : readhit->Values) {
+                event_tagger.Scalers.emplace_back(readhit->Channel, frequency);
+            }
+            break;
+        }
+
+        case Channel_t::Type_t::Integral: {
+            // tagger energies are rarely present, only for special fastbus QDC runs
+            /// \todo actually test this part of the code
+            for(const double energy : readhit->Values) {
+                event_tagger.Energies.emplace_back(readhit->Channel, energy);
+            }
+            break;
+        }
+
+        default:
+            break;
+        }
+
     }
 }
 

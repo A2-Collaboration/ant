@@ -42,16 +42,21 @@ private:
     template<typename T>
     using sorted_bydetectortype_t = std::map<Detector_t::Type_t, std::list< T > >;
 
-
-
     void ApplyCalibrations(TDetectorRead& detectorRead,
                            sorted_bydetectortype_t<TDetectorReadHit*>& sorted_readhits);
+
 
     void BuildHits(
             sorted_bydetectortype_t<TDetectorReadHit*>&& sorted_readhits,
             sorted_bydetectortype_t<reconstruct::AdaptorTClusterHit>& sorted_clusterhits,
             TTagger& event_tagger
             );
+
+
+    void HandleTagger(const std::shared_ptr<TaggerDetector_t>& taggerdetector,
+                      std::list<TDetectorReadHit*> readhits,
+                      TTagger& event_tagger);
+
     void BuildClusters(sorted_bydetectortype_t<reconstruct::AdaptorTClusterHit>&& sorted_clusterhits,
             sorted_bydetectortype_t<TCluster>& sorted_clusters,
                        std::vector<TCluster>& insane_clusters
