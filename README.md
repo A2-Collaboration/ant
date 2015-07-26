@@ -12,18 +12,21 @@ based on GoAT tree output from AcquRoot.
 It also includes it's own unpacker for acqu data files,
 but this is WIP.
 
+Please see also the automatically generated
+[Doxygen pages](http://a2-collaboration-dev.github.io/ant/).
+
 ## Dependencies
-  * C++11
+  * C++11 (gcc >4.8.2 works)
   * cmake
-  * doxygen
+  * doxygen (optional)
   * [CERN ROOT5](https://root.cern.ch/)
   * [PLUTO](https://www-hades.gsi.de/?q=pluto)
   * [APLCON++](https://github.com/neiser/APLCON)
 
 ## External Components
   * [Easylogging++](http://easylogging.muflihun.com/)
-  * [Catch] (https://github.com/philsquared/Catch) (framework for unit-tests, TDD)
-  * [TCLAP - Templatized C++ Command Line Parser] (http://tclap.sourceforge.net)
+  * [Catch](https://github.com/philsquared/Catch) framework for unit-tests, TDD
+  * [TCLAP - Templatized C++ Command Line Parser](http://tclap.sourceforge.net)
 
 ## Coding Style
   * Indentation: 4 spaces, no tabs
@@ -90,7 +93,7 @@ ant
 
    Calibrations
 
-## Dector Type Mapping
+## Detector Type Mapping
 
 | Ant Reconstruct  | Ant Analysis  | Goat |
 |------------------|---------------|------|
