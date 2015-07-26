@@ -29,7 +29,8 @@ public:
     static double OutputPerformanceStats;
 
     RawFileReader() :
-        performanceBytesRead(-1) // nothing read at all
+        performanceBytesRead(-1), // nothing read at all
+        performanceBytesRead_compressed(-1) // needed if there's underlying compression
     {}
 
 
@@ -114,7 +115,12 @@ private:
     public:
         explicit PlainBase(const std::string& filename)
             : file(filename.c_str(), std::ios::binary)
-        {}
+        {
+            const std::streampos begin = file.tellg();
+            file.seekg (0, std::ios::end);
+            filesize_ = file.tellg() - begin;
+            file.seekg(0, std::ios::beg);
+        }
 
         virtual ~PlainBase() = default;
 
@@ -124,6 +130,7 @@ private:
 
         virtual void read(char* s, std::streamsize n) {
             file.read(s, n);
+            gcount_total_ += file.gcount();
         }
 
         virtual bool eof() const {
@@ -134,8 +141,21 @@ private:
             return file.gcount();
         }
 
+        // PlainBase has no compression layer,
+        // indicate by returning negative value
+        virtual std::streamsize gcount_compressed() const {
+            return -1;
+        }
+
+        // used for estimating ETA in HandlePerformanceStats()
+        virtual std::streamsize filesize_remaining() const {
+            return filesize_ - gcount_total_;
+        }
+
     private:
         std::ifstream file;
+        std::streamsize filesize_;
+        std::streamsize gcount_total_;
     }; // class RawFileReader::Plain
 
     /**
@@ -165,6 +185,10 @@ private:
             return gcount_;
         }
 
+        virtual std::streamsize gcount_compressed() const {
+            return gcount_compressed_;
+        }
+
         virtual bool eof() const override {
             return eof_;
         }
@@ -173,6 +197,7 @@ private:
         std::vector<uint8_t> inbuf;
         bool decompressFailed;
         std::streamsize gcount_;
+        std::streamsize gcount_compressed_;
         bool eof_;
 
 
@@ -192,6 +217,7 @@ private:
 
     std::chrono::time_point<std::chrono::system_clock> lastPerformanceOutput;
     std::streamsize performanceBytesRead;
+    std::streamsize performanceBytesRead_compressed;
     void HandlePerformanceStats();
 
 

@@ -13,6 +13,7 @@
 #include <cstdio> // for BUFSIZ
 #include <cstring> // for strerror
 #include <limits>
+#include <iomanip>
 
 
 using namespace std;
@@ -47,18 +48,52 @@ void RawFileReader::HandlePerformanceStats()
         // very first read, just setup the variables
         lastPerformanceOutput = chrono::system_clock::now();
         performanceBytesRead = gcount();
+        performanceBytesRead_compressed = p->gcount_compressed();
         LOG(INFO) << "File read performance output every "
                   << OutputPerformanceStats  << " seconds";
         return;
     }
+
     performanceBytesRead += gcount();
+    performanceBytesRead_compressed += p->gcount_compressed();
+
+
     const std::chrono::time_point<std::chrono::system_clock> now = std::chrono::system_clock::now();
     const std::chrono::duration<double> elapsed_seconds = now - lastPerformanceOutput;
     if(elapsed_seconds.count()<OutputPerformanceStats)
         return;
-    LOG(INFO) << "Reading file with " << performanceBytesRead/elapsed_seconds.count()/(1<<20) << " MB/s (uncompressed)";
+
+
+    const double bytes_per_s = (performanceBytesRead_compressed<0 ? performanceBytesRead : performanceBytesRead_compressed)
+                               / elapsed_seconds.count();
+    const double bytes_per_s_uncompressed = performanceBytesRead/elapsed_seconds.count();
+
+    double seconds_left = p->filesize_remaining() / bytes_per_s;
+    const int hours_left = seconds_left / 3600;
+    seconds_left -= hours_left * 3600;
+    const int mins_left = seconds_left / 60;
+    seconds_left -= mins_left * 60;
+    std::stringstream ss_ETA;
+    if(hours_left>0)
+        ss_ETA << hours_left << ":";
+    if(mins_left>0)
+        ss_ETA << setw(2) << setfill('0') << mins_left << ":";
+    ss_ETA << setw(2) << setfill('0') << static_cast<int>(seconds_left);
+
+    if(performanceBytesRead_compressed<0) {
+        LOG(INFO) << "Reading file with " << std::fixed << setprecision(3) << bytes_per_s_uncompressed/(1<<20) << " MB/s, ETA: " << ss_ETA.str();
+    }
+    else {
+        LOG(INFO) << "Reading compressed file     with " << std::fixed << setprecision(3) << bytes_per_s/(1<<20) << " MB/s, ETA: " << ss_ETA.str();
+        LOG(INFO) << "Reading uncompressed stream with " << std::fixed << setprecision(3) << bytes_per_s_uncompressed/(1<<20) << " MB/s";
+        LOG(INFO) << "File compression ratio:          " << std::fixed << setprecision(2) << 100*bytes_per_s/bytes_per_s_uncompressed << " %";
+    }
+
+    // reset counters
     lastPerformanceOutput = now;
     performanceBytesRead = 0;
+    performanceBytesRead_compressed = 0;
+
 }
 
 
@@ -67,6 +102,7 @@ RawFileReader::XZ::XZ(const std::string &filename, const size_t inbufsize) :
     inbuf(inbufsize),
     decompressFailed(false),
     gcount_(0),
+    gcount_compressed_(0),
     eof_(false)
 {
     strm = (lzma_stream*)malloc(sizeof(lzma_stream));
@@ -135,6 +171,8 @@ void RawFileReader::XZ::read(char* s, streamsize n) {
     strm->next_out = reinterpret_cast<uint8_t*>(s);
     strm->avail_out = n;
 
+    gcount_compressed_ = 0;
+
     while (true) {
 
         if (strm->avail_in == 0 && !PlainBase::eof()) {
@@ -142,6 +180,7 @@ void RawFileReader::XZ::read(char* s, streamsize n) {
             PlainBase::read(reinterpret_cast<char*>(inbuf.data()), inbuf.size());
             strm->next_in = inbuf.data();
             strm->avail_in = PlainBase::gcount();
+            gcount_compressed_ += strm->avail_in;
 
             if(PlainBase::eof()) {
                 action = LZMA_FINISH;
