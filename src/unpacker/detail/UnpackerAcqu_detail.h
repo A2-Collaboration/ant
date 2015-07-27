@@ -3,6 +3,9 @@
 #include "tree/TUnpackerMessage.h" // TUnpackerMessage::Level_t
 #include "UnpackerAcqu.h" // UnpackerAcquConfig
 
+#include "base/mapped_vectors.h"
+
+
 #include <cstdint>
 #include <ctime>
 #include <list>
@@ -108,6 +111,10 @@ protected:
 
     std::vector<UnpackerAcquConfig::hit_mapping_t> hit_mappings;
     std::vector< std::vector< const UnpackerAcquConfig::hit_mapping_t* > > fast_hit_mappings;
+    using hits_t = std_ext::mapped_vectors<uint16_t, uint16_t>;
+
+    hits_t hits;
+
     std::vector<UnpackerAcquConfig::scaler_mapping_t> scaler_mappings;
 
 

@@ -39,7 +39,7 @@ public:
 
     void clear() {
         for(auto key : keys)
-            storage[key].clear();
+            storage[key]->second.clear();
         keys.clear();
     }
 
@@ -49,8 +49,9 @@ public:
         auto& ptr = storage[key];
         if(ptr==nullptr) {
             ptr = make_unique< std::pair<Key, std::vector<Value>> >(make_pair(key, std::vector<Value>()));
-            keys.push_back(key);
         }
+        if(ptr->second.empty())
+            keys.push_back(key);
         return ptr->second;
     }
 

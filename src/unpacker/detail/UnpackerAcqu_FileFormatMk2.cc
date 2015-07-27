@@ -246,7 +246,7 @@ bool acqu::FileFormatMk2::UnpackDataBuffer(UnpackerAcquFileFormat::queue_t& queu
 }
 
 void acqu::FileFormatMk2::UnpackEvent(
-        queue_t &queue, it_t &it, const it_t &it_endbuffer, bool &good) const noexcept
+        queue_t &queue, it_t &it, const it_t &it_endbuffer, bool &good) noexcept
 {
     // extract and check eventLength
     const unsigned eventLength = *it/sizeof(decltype(*it));
@@ -276,8 +276,7 @@ void acqu::FileFormatMk2::UnpackEvent(
     // now work on one event inside buffer
     /// \todo Scan config if there's an ADC channel defined which mimicks those blocks
 
-    hits_t    hits;
-    hits.init(32768);
+    hits.clear();
     scalers_t scalers;
     while(it != it_endbuffer && *it != acqu::EEndEvent) {
         // note that the Handle* methods move the iterator

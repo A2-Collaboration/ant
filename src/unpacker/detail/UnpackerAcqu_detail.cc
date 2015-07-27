@@ -119,6 +119,7 @@ void acqu::FileFormatBase::FillHeader(queue_t& queue)
             fast_hit_mappings[ch].push_back(addressof(hit_mapping));
         }
     }
+    hits.init(32768);
 }
 
 unique_ptr<THeaderInfo> acqu::FileFormatBase::BuildTHeaderInfo()
