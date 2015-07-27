@@ -42,6 +42,7 @@ set(ANALYSIS_DATASTRUCTURES
   data/TaggerHit.cc
   data/TriggerInfo.h
   data/TriggerInfo.cc
+  data/Cluster.cc
 )
 
 set(ANALYSIS_INPUT
