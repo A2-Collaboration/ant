@@ -274,9 +274,9 @@ void acqu::FileFormatMk2::UnpackEvent(
     it++;
 
     // now work on one event inside buffer
-    /// \todo Scan config if there's an ADC channel defined which mimicks those blocks
+    /// \todo Scan mappings if there's an ADC channel defined which mimicks those blocks
 
-    hits.clear();
+    hit_storage.clear();
     scalers_t scalers;
     while(it != it_endbuffer && *it != acqu::EEndEvent) {
         // note that the Handle* methods move the iterator
@@ -307,7 +307,7 @@ void acqu::FileFormatMk2::UnpackEvent(
                     reinterpret_cast<const acqu::AcquBlock_t*>(addressof(*it));
             // during a buffer, hits can come in any order,
             // and multiple hits with the same ID can happen
-            hits[acqu_hit->id].push_back(acqu_hit->adc);
+            hit_storage.add_item(acqu_hit->id, acqu_hit->adc);
             // decoding hits always works
             good = true;
             it++;
@@ -329,14 +329,14 @@ void acqu::FileFormatMk2::UnpackEvent(
         return;
     }
 
-    FillTDetectorRead(queue, hits, scalers);
+    // hit_storage is member variable for faster computation
+    FillTDetectorRead(queue, scalers);
 
     it++; // go to next event (if any)
 }
 
 void acqu::FileFormatMk2::FillTDetectorRead(
         queue_t &queue,
-        const hits_t& hits,
         const scalers_t& scalers
         ) const noexcept
 {
@@ -345,25 +345,17 @@ void acqu::FileFormatMk2::FillTDetectorRead(
 
     auto record = std_ext::make_unique<TDetectorRead>(TID(ID_upper, ID_lower));
 
-//    for(const UnpackerAcquConfig::hit_mapping_t& mapping : hit_mappings) {
-//        // build the raw data
-//        const auto& rawData = getRawData(mapping, hits);
-//        // add to TDetectorRead's Hits if something was found
-//        if(!rawData.empty())
-//            record->Hits.emplace_back(mapping.LogicalChannel, move(rawData));
-//    }
-
-    for(const auto& it_hits : hits) {
+    for(const auto& it_hits : hit_storage) {
         const uint16_t& ch = it_hits.first;
         const std::vector<uint16_t>& values = it_hits.second;
 
         if(values.empty())
             continue;
 
-        if(ch>=fast_hit_mappings.size())
+        if(ch>=hit_mappings_ptr.size())
             continue;
 
-        for(const UnpackerAcquConfig::hit_mapping_t* mapping : fast_hit_mappings[ch]) {
+        for(const UnpackerAcquConfig::hit_mapping_t* mapping : hit_mappings_ptr[ch]) {
             using RawChannel_t = UnpackerAcquConfig::RawChannel_t<uint16_t>;
             if(mapping->RawChannels.size() != 1)
                 throw UnpackerAcqu::Exception("Not implemented");
@@ -375,11 +367,7 @@ void acqu::FileFormatMk2::FillTDetectorRead(
 
             record->Hits.emplace_back(mapping->LogicalChannel, move(rawData));
         }
-
-
     }
-
-
 
     // scalers are bit more complicated to add,
     // since there might be added as TSlowControl items

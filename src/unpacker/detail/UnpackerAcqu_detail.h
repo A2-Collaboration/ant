@@ -5,7 +5,6 @@
 
 #include "base/mapped_vectors.h"
 
-
 #include <cstdint>
 #include <ctime>
 #include <list>
@@ -109,11 +108,13 @@ protected:
     std::uint32_t ID_lower; // lower part, incremented by FillEvents
     unsigned AcquID_last = 0;
 
+    // we so some more effort for the hits,
+    // especially keeping storage_hits over multiple
+    // events makes it considerably faster
     std::vector<UnpackerAcquConfig::hit_mapping_t> hit_mappings;
-    std::vector< std::vector< const UnpackerAcquConfig::hit_mapping_t* > > fast_hit_mappings;
+    std::vector< std::vector< const UnpackerAcquConfig::hit_mapping_t* > > hit_mappings_ptr;
     using hits_t = std_ext::mapped_vectors<uint16_t, uint16_t>;
-
-    hits_t hits;
+    hits_t hit_storage;
 
     std::vector<UnpackerAcquConfig::scaler_mapping_t> scaler_mappings;
 

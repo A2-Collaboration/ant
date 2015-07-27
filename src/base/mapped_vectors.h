@@ -29,12 +29,11 @@ private:
 
 public:
 
-    static_assert(std::is_integral<Key>::value, "Key for fast_map must be integral type");
+    static_assert(std::is_integral<Key>::value, "Key for mapped_vectors must be integral type");
 
     void init(Key maxKey) {
-        storage.clear();
         storage.resize(maxKey+1);
-        keys.clear();
+        clear();
     }
 
     void clear() {
@@ -43,16 +42,27 @@ public:
         keys.clear();
     }
 
-    std::vector<Value>& operator[](Key key) {
+    void add_item(const Key& key, const Value& value) {
+        // return silently if we encounter
+        // a key which is too large for the storage
         if(key>=storage.size())
-            throw std::runtime_error("fast_map_vector: Key too large (forgot to call init?)");
+            return;
+
+        // retrieve an already existing key
         auto& ptr = storage[key];
         if(ptr==nullptr) {
             ptr = make_unique< std::pair<Key, std::vector<Value>> >(make_pair(key, std::vector<Value>()));
         }
-        if(ptr->second.empty())
+
+        std::vector<Value>& values = ptr->second;
+
+        // first time something is added, remember the key
+        // for faster iteration later
+        if(values.empty())
             keys.push_back(key);
-        return ptr->second;
+
+        // add the value finally
+        ptr->second.push_back(value);
     }
 
     friend class const_iterator;
