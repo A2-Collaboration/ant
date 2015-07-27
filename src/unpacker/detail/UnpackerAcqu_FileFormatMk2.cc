@@ -277,6 +277,7 @@ void acqu::FileFormatMk2::UnpackEvent(
     /// \todo Scan config if there's an ADC channel defined which mimicks those blocks
 
     hits_t    hits;
+    hits.init(32768);
     scalers_t scalers;
     while(it != it_endbuffer && *it != acqu::EEndEvent) {
         // note that the Handle* methods move the iterator
@@ -307,7 +308,7 @@ void acqu::FileFormatMk2::UnpackEvent(
                     reinterpret_cast<const acqu::AcquBlock_t*>(addressof(*it));
             // during a buffer, hits can come in any order,
             // and multiple hits with the same ID can happen
-            hits[acqu_hit->id].emplace_back(move(acqu_hit->adc));
+            hits[acqu_hit->id].push_back(acqu_hit->adc);
             // decoding hits always works
             good = true;
             it++;
@@ -345,13 +346,22 @@ void acqu::FileFormatMk2::FillTDetectorRead(
 
     auto record = std_ext::make_unique<TDetectorRead>(TID(ID_upper, ID_lower));
 
-    for(const UnpackerAcquConfig::hit_mapping_t& mapping : hit_mappings) {
-        // build the raw data
-        const auto& rawData = getRawData(mapping, hits);
-        // add to TDetectorRead's Hits if something was found
-        if(!rawData.empty())
-            record->Hits.emplace_back(mapping.LogicalChannel, move(rawData));
+//    for(const UnpackerAcquConfig::hit_mapping_t& mapping : hit_mappings) {
+//        // build the raw data
+//        const auto& rawData = getRawData(mapping, hits);
+//        // add to TDetectorRead's Hits if something was found
+//        if(!rawData.empty())
+//            record->Hits.emplace_back(mapping.LogicalChannel, move(rawData));
+//    }
+
+    for(const auto& values : hits) {
+//        if(values.empty())
+//            continue;
+
+        //const vector<uint16_t>& hitdata = *hit;
     }
+
+
 
     // scalers are bit more complicated to add,
     // since there might be added as TSlowControl items

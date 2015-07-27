@@ -18,6 +18,7 @@ set(SRCS
   root_printable.h
   WrapTFile.cc
   WrapTFile.h
+  mapped_vectors.h
   detail/format.cc
   detail/format.h
   detail/CmdLine.h

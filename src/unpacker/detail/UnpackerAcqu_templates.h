@@ -6,12 +6,12 @@
 
 #include <memory>
 #include <vector>
+#include <type_traits>
 
 // only to be included in implementation files...
 
 namespace ant {
 namespace unpacker {
-
 
 // little helper to fill the queue
 template<typename T>
