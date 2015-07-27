@@ -100,6 +100,6 @@ public:
 };
 
 #define AUTO_REGISTER_PHYSICS(physics, name) \
-    PhysicsRegistration _physics_registration_ ## physics(physics_factory<physics>,name);
+    ant::PhysicsRegistration _physics_registration_ ## physics(ant::physics_factory<physics>,name);
 
 }
