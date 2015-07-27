@@ -76,12 +76,7 @@ public:
                                      -0.05 // default gain
                                      );
 
-        AddHook<calibration::CB_Energy>(
-                                       convert_GeSiCa_SADC,
-                                       0,    // default pedestal in raw
-                                       0.07, // default gain
-                                       2     // default threshold in MeV
-                                       );
+        AddHook<calibration::CB_Energy>(convert_GeSiCa_SADC);
 
         AddHook<calibration::Integral>(Detector_t::Type_t::PID,
                                        convert_MultiHit16bit,
@@ -90,12 +85,7 @@ public:
                                        0.001   // default threshold in MeV
                                        );
 
-        AddHook<calibration::Integral>(Detector_t::Type_t::TAPS,
-                                       convert_MultiHit16bit,
-                                       100,   // default pedestal in raw
-                                       0.30,  // default gain
-                                       1      // default threshold in MeV
-                                       );
+        AddHook<calibration::TAPS_Energy>(convert_MultiHit16bit);
 
         AddHook<calibration::Integral>(Detector_t::Type_t::TAPSVeto,
                                        convert_MultiHit16bit,

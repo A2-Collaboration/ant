@@ -21,6 +21,8 @@
 #include "calibration/modules/Scaler.h"
 #include "calibration/modules/TAPS_ShowerCorrection.h"
 #include "calibration/modules/CB_Energy.h"
+#include "calibration/modules/TAPS_Energy.h"
+
 
 #include "calibration/converters/CATCH_TDC.h"
 #include "calibration/converters/MultiHit16bit.h"

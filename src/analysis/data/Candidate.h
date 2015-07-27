@@ -59,7 +59,16 @@ public:
     mev_t VetoEnergy() const { return vetoEnergy; }
     mev_t TrackerEnergy() const { return trackerEnergy; }
 
-    virtual std::ostream &Print(std::ostream &stream) const override;
+    const Cluster* FindCaloCluster() {
+        for(const auto& cl : Clusters) {
+            if(cl.Detector & (detector_t::CB | detector_t::TAPS)) {
+                return std::addressof(cl);
+            }
+        }
+        return nullptr;
+    }
+
+    virtual std::ostream& Print(std::ostream &stream) const override;
 
 };
 

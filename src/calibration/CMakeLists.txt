@@ -8,24 +8,18 @@ include_directories(
 
 set(SRCS
     CalibrationManager.h
-    Calibration.h
     Calibration.cc
-    modules/Timing.h
     modules/Timing.cc
-    modules/Integral.h
     modules/Integral.cc
-    modules/Scaler.h
     modules/Scaler.cc
-    modules/EnergyInvariantMass.h
     modules/EnergyInvariantMass.cc
     modules/TAPS_ShowerCorrection.h
     modules/CB_Energy.cc
+    modules/TAPS_Energy.cc
     converters/GeSiCa_SADC.h
-    converters/CATCH_TDC.h
     converters/CATCH_TDC.cc
     converters/MultiHit16bit.h
-    converters/ScalerFrequency.h
-    converters/ScalerFrequency.cc    
+    converters/ScalerFrequency.cc
   )
 
 add_library(calibration ${SRCS})

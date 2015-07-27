@@ -8,7 +8,7 @@ class TH1;
 namespace ant {
 namespace calibration {
 
-class CB_Energy : public Integral
+class TAPS_Energy : public Integral
 {
 
 
@@ -26,10 +26,10 @@ public:
         virtual void ShowResult();
     };
 
-    CB_Energy(Calibration::Converter::ptr_t converter,
-              const double defaultPedestal = 0,
-              const double defaultGain = 0.07,
-              const double defaultThreshold = 2);
+    TAPS_Energy(Calibration::Converter::ptr_t converter,
+              const double defaultPedestal = 100,
+              const double defaultGain = 0.3,
+              const double defaultThreshold = 1);
 
     // BaseModule interface
     virtual std::unique_ptr<Physics> GetPhysicsModule();

@@ -1,4 +1,4 @@
-#include "CB_Energy.h"
+#include "TAPS_Energy.h"
 #include "analysis/plot/HistogramFactories.h"
 #include "analysis/data/Event.h"
 #include "analysis/utils/combinatorics.h"
@@ -12,11 +12,11 @@ using namespace std;
 using namespace ant;
 using namespace ant::calibration;
 
-CB_Energy::CB_Energy(Calibration::Converter::ptr_t converter,
+TAPS_Energy::TAPS_Energy(Calibration::Converter::ptr_t converter,
                                const double defaultPedestal,
                                const double defaultGain,
                                const double defaultThreshold):
-    Integral(Detector_t::Type_t::CB,
+    Integral(Detector_t::Type_t::TAPS,
              converter,
              defaultPedestal,
              defaultGain,
@@ -25,7 +25,7 @@ CB_Energy::CB_Energy(Calibration::Converter::ptr_t converter,
 
 }
 
-CB_Energy::ThePhysics::ThePhysics(const string& name):
+TAPS_Energy::ThePhysics::ThePhysics(const string& name):
     Physics(name)
 {
     const BinSettings cb_channels(720);
@@ -34,7 +34,7 @@ CB_Energy::ThePhysics::ThePhysics(const string& name):
     ggIM = HistFac.makeTH2D("2 neutral IM (CB,CB)", "IM [MeV]", "#", energybins, cb_channels, "ggIM");
 }
 
-void CB_Energy::ThePhysics::ProcessEvent(const Event& event)
+void TAPS_Energy::ThePhysics::ProcessEvent(const Event& event)
 {
     const auto& cands = event.Reconstructed().Candidates();
 
@@ -60,16 +60,16 @@ void CB_Energy::ThePhysics::ProcessEvent(const Event& event)
     }
 }
 
-void CB_Energy::ThePhysics::Finish()
+void TAPS_Energy::ThePhysics::Finish()
 {
 }
 
-void CB_Energy::ThePhysics::ShowResult()
+void TAPS_Energy::ThePhysics::ShowResult()
 {
-    canvas("CB_Energy") << drawoption("colz") << ggIM << endc;
+    canvas("TAPS_Energy") << drawoption("colz") << ggIM << endc;
 }
 
-unique_ptr<Physics> CB_Energy::GetPhysicsModule()
+unique_ptr<Physics> TAPS_Energy::GetPhysicsModule()
 {
     return std_ext::make_unique<ThePhysics>(GetName());
 }
