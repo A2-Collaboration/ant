@@ -75,20 +75,23 @@ void Clustering::Build(
         TVector3 weightedPosition(0,0,0);
         double weightedSum = 0;
 
-        double cluster_time = numeric_limits<double>::quiet_NaN();
-        double cluster_time_maxenergy = 0;
+        double   cluster_time        = numeric_limits<double>::quiet_NaN();
+        double   cluster_maxenergy   = 0;
+        unsigned cluster_max_channel = 0;
 
         std::vector<TClusterHit> clusterhits;
         clusterhits.reserve(cluster.size());
+
 
         for(const clustering::crystal_t& crystal : cluster) {
             double wgtE = clustering::calc_energy_weight(crystal.Energy, cluster_energy);
             weightedPosition += crystal.Element->Position * wgtE;
             weightedSum += wgtE;
             clusterhits.emplace_back(*(crystal.Hit->Hit));
-            if(cluster_time_maxenergy<crystal.Energy) {
+            if(cluster_maxenergy<=crystal.Energy) {
                 cluster_time = crystal.Hit->Time;
-                cluster_time_maxenergy = crystal.Energy;
+                cluster_maxenergy = crystal.Energy;
+                cluster_max_channel = crystal.Element->Channel;
             }
         }
         weightedPosition *= 1.0/weightedSum;
@@ -97,7 +100,7 @@ void Clustering::Build(
                     cluster_energy,
                     cluster_time,
                     clusterdetector->Type,
-                    0, /* @todo put central element here! */
+                    cluster_max_channel,
                     clusterhits
                     );
     }
