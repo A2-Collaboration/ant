@@ -16,10 +16,10 @@ namespace ant {
 struct TEvent : TDataRecord
 {
     typedef std::vector<ant::TCandidate> candidates_t;
-    candidates_t Candidates;
+    std::vector<ant::TCandidate> Candidates;
     TTagger Tagger;
     typedef std::vector<ant::TCluster> clusters_t;
-    clusters_t InsaneClusters;
+    std::vector<ant::TCluster> InsaneClusters;
 
 #ifndef __CINT__
     TEvent(const TID& id) :
