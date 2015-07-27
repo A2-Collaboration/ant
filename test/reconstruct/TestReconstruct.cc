@@ -50,9 +50,9 @@ struct ReconstructTester {
         // update the updateables :)
         r.updateablemanager->UpdateParameters(detectorRead.ID);
 
-        // apply the calibrations,
-        CalibrationApply_traits::readhits_t sorted_readhits;
-        r.ApplyCalibrations(detectorRead, sorted_readhits);
+        // apply the hooks (mostly calibrations)
+        Reconstruct::sorted_bydetectortype_t<TDetectorReadHit*> sorted_readhits;
+        r.ApplyHooksToReadHits(detectorRead, sorted_readhits);
         size_t n_readhits = getTotalCount(sorted_readhits);
         REQUIRE(n_readhits>0);
 

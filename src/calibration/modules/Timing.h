@@ -26,10 +26,8 @@ public:
             const std::vector< TKeyValue<double> >& gains = {}
             );
 
-    // CalibrationApply_traits interface
+    // ReconstructHook
     virtual void ApplyTo(const readhits_t& hits, extrahits_t&) override;
-    virtual void ApplyTo(event_ptr&) override {}
-
 
     // Physics interface
     void ProcessEvent(const Event &event) override;

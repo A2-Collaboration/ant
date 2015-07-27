@@ -1,6 +1,8 @@
 #pragma once
 
 #include "Detector_t.h"
+#include "reconstruct/Reconstruct_traits.h"
+
 #include "base/printable.h"
 
 #include <memory>
@@ -10,7 +12,6 @@
 namespace ant {
 
 class THeaderInfo;
-class CalibrationApply_traits;
 class Updateable_traits;
 
 class ExpConfig
@@ -38,10 +39,11 @@ public:
     // the following methods are needed
     class Reconstruct : public virtual Base {
     public:
-        virtual std::list< std::shared_ptr< CalibrationApply_traits > > GetCalibrations() const = 0;
+        virtual std::list< std::shared_ptr< ReconstructHook::Base > > GetReconstructHooks() const = 0;
         virtual std::list< std::shared_ptr< Detector_t > > GetDetectors() const = 0;
 
-        // for clustering
+        // for clustering, may be extended to config struct
+        // (e.g. for position weighting options)
         using cluster_thresholds_t = std::map<Detector_t::Type_t, double>;
         virtual cluster_thresholds_t  GetClusterThresholds() const = 0;
 

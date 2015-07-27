@@ -56,16 +56,16 @@ protected:
         AddDetector(std::make_shared<T>(std::forward<Args>(args)...));
     }
 
-    void AddCalibration(const std::shared_ptr<CalibrationApply_traits>& calibration) {
-        calibrations.push_back(calibration);
+    void AddHook(const std::shared_ptr<ReconstructHook::Base>& hook) {
+        reconstruct_hooks.push_back(hook);
     }
     template<typename T, typename... Args>
-    void AddCalibration(Args&&... args) {
-        AddCalibration(std::make_shared<T>(std::forward<Args>(args)...));
+    void AddHook(Args&&... args) {
+        AddHook(std::make_shared<T>(std::forward<Args>(args)...));
     }
 
-    virtual std::list< std::shared_ptr< CalibrationApply_traits > > GetCalibrations() const override {
-        return calibrations;
+    virtual std::list< std::shared_ptr< ReconstructHook::Base > > GetReconstructHooks() const override {
+        return reconstruct_hooks;
     }
 
     virtual std::list< std::shared_ptr< Detector_t > > GetDetectors() const override {
@@ -102,7 +102,7 @@ protected:
     }
 
     std::list< std::shared_ptr<Detector_t> > detectors;
-    std::list< std::shared_ptr<CalibrationApply_traits> > calibrations;
+    std::list< std::shared_ptr<ReconstructHook::Base> > reconstruct_hooks;
 };
 
 // stuff for semiauto-registering the setups

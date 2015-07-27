@@ -9,7 +9,7 @@ namespace ant {
 namespace calibration {
 namespace converter {
 
-struct CATCH_TDC : MultiHit16bit, CalibrationApply_traits {
+struct CATCH_TDC : MultiHit16bit, ReconstructHook::DetectorReadHits {
 
     CATCH_TDC(const LogicalChannel_t& referenceChannel) :
         ReferenceChannel(referenceChannel),
@@ -27,8 +27,6 @@ struct CATCH_TDC : MultiHit16bit, CalibrationApply_traits {
     }
 
     virtual void ApplyTo(const readhits_t& hits, extrahits_t&) override;
-
-    virtual void ApplyTo(std::unique_ptr<TEvent>&) override {}
 
 private:
     LogicalChannel_t ReferenceChannel;

@@ -16,7 +16,7 @@ public:
     };
 
     class SimpleModule :
-            public CalibrationApply_traits
+            public ReconstructHook::DetectorReadHits
     {
     public:
         std::string GetName() const { return name; }

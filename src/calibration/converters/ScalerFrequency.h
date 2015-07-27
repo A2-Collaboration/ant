@@ -9,7 +9,7 @@ namespace ant {
 namespace calibration {
 namespace converter {
 
-struct ScalerFrequency : Calibration::Converter, CalibrationApply_traits {
+struct ScalerFrequency : Calibration::Converter, ReconstructHook::DetectorReadHits {
 
     /**
      * @brief ScalerFrequency converts scalers with reference from trigger detector
@@ -24,8 +24,6 @@ struct ScalerFrequency : Calibration::Converter, CalibrationApply_traits {
     virtual std::vector<double> Convert(const vector<uint8_t>& rawData) const override;
 
     virtual void ApplyTo(const readhits_t& hits, extrahits_t&) override;
-
-    virtual void ApplyTo(std::unique_ptr<TEvent>&) override {}
 
 private:
     LogicalChannel_t ReferenceScaler;

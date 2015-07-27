@@ -31,22 +31,23 @@ Reconstruct::Reconstruct(const THeaderInfo& headerInfo)
     // during reconstruct, so we scan for those items
     shared_ptr_list<Updateable_traits> updateables;
 
-    // calibrations are the natural Updateable_traits objects,
-    // but they could be constant (in case of a very simple calibration)
-    calibrations = config->GetCalibrations();
-    for(const auto& calibration : calibrations) {
-        const auto& ptr = dynamic_pointer_cast<Updateable_traits, CalibrationApply_traits>(calibration);
-        if(ptr != nullptr)
-            updateables.emplace_back(move(ptr));
+    // hooks are usually calibrations, which may also be updateable
+    const shared_ptr_list<ReconstructHook::Base>& hooks = config->GetReconstructHooks();
+    for(const auto& hook : hooks) {
+        AddToSharedPtrList<ReconstructHook::DetectorReadHits, ReconstructHook::Base>
+                (hook, hooks_readhits);
+        AddToSharedPtrList<ReconstructHook::Clusters, ReconstructHook::Base>
+                (hook, hooks_clusters);
+        AddToSharedPtrList<Updateable_traits, ReconstructHook::Base>
+                (hook, updateables);
     }
 
     // detectors serve different purposes, ...
-    auto detectors = config->GetDetectors();
+    const shared_ptr_list<Detector_t>& detectors = config->GetDetectors();
     for(const auto& detector : detectors) {
         // ... they may be updateable (think of the PID Phi angles)
-        const auto& updateable = dynamic_pointer_cast<Updateable_traits, Detector_t>(detector);
-        if(updateable != nullptr)
-            updateables.emplace_back(move(updateable));
+        AddToSharedPtrList<Updateable_traits, Detector_t>
+                (detector, updateables);
         // ... but also are needed in DoReconstruct
         auto ret = sorted_detectors.insert(make_pair(detector->Type, detector));
         if(!ret.second) {
@@ -68,23 +69,21 @@ Reconstruct::Reconstruct(const THeaderInfo& headerInfo)
 
 }
 
-Reconstruct::~Reconstruct()
-{
-
-}
+// implement the destructor here,
+// makes forward declaration work properly
+Reconstruct::~Reconstruct() {}
 
 unique_ptr<TEvent> Reconstruct::DoReconstruct(TDetectorRead& detectorRead)
 {
     // update the updateables :)
     updateablemanager->UpdateParameters(detectorRead.ID);
 
-    // apply the calibrations,
+    // apply the hooks for detector read hits (mostly calibrations),
     // note that this also changes the detectorRead
-    CalibrationApply_traits::readhits_t sorted_readhits;
-    ApplyCalibrations(detectorRead, sorted_readhits);
+    sorted_bydetectortype_t<TDetectorReadHit*> sorted_readhits;
+    ApplyHooksToReadHits(detectorRead, sorted_readhits);
     // the detectorRead is now calibrated as far as possible
     // one might return now and detectorRead is just calibrated...
-
 
     // for debug purposes, dump out the detectorRead
     //cout << detectorRead << endl;
@@ -114,8 +113,9 @@ unique_ptr<TEvent> Reconstruct::DoReconstruct(TDetectorRead& detectorRead)
     return event;
 }
 
-void Reconstruct::ApplyCalibrations(TDetectorRead& detectorRead,
-                                    sorted_bydetectortype_t<TDetectorReadHit*>& sorted_readhits)
+void Reconstruct::ApplyHooksToReadHits(
+        TDetectorRead& detectorRead,
+        sorted_bydetectortype_t<TDetectorReadHit*>& sorted_readhits)
 {
     // categorize the hits by detector type
     // this is handy for all subsequent reconstruction steps
@@ -129,8 +129,8 @@ void Reconstruct::ApplyCalibrations(TDetectorRead& detectorRead,
     // this may change the given detectorRead,
     // and even provide use with extrahits to be added to it
     list<TDetectorReadHit> extrahits;
-    for(const auto& calib : calibrations) {
-        calib->ApplyTo(sorted_readhits, extrahits);
+    for(const auto& hook : hooks_readhits) {
+        hook->ApplyTo(sorted_readhits, extrahits);
     }
 
     // adding extrahits to the detectorRead invalidates the sorted_readhits pointer map

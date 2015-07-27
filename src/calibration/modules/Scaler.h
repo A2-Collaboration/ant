@@ -15,10 +15,8 @@ public:
            Calibration::Converter::ptr_t converter);
     virtual ~Scaler();
 
-    // CalibrationApply_traits interface
+    // ReconstructHook
     virtual void ApplyTo(const readhits_t& hits, extrahits_t&) override;
-    virtual void ApplyTo(event_ptr&) override {}
-
 
 protected:
     const Detector_t::Type_t DetectorType;

@@ -39,64 +39,64 @@ public:
         // the order of the calibrations is important
         // add both CATCH converters first,
         // since they need to scan the detector read for their reference hit
-        AddCalibration(convert_CATCH_Tagger);
-        AddCalibration(convert_CATCH_CB);
+        AddHook(convert_CATCH_Tagger);
+        AddHook(convert_CATCH_CB);
         // also the ScalerFrequency needs a reference
-        AddCalibration(convert_ScalerFrequency_Beampolmon);
+        AddHook(convert_ScalerFrequency_Beampolmon);
 
-        AddCalibration<calibration::Scaler>(Detector_t::Type_t::EPT,
+        AddHook<calibration::Scaler>(Detector_t::Type_t::EPT,
                                             convert_ScalerFrequency_Beampolmon);
 
         // then we add the others, and link it to the converters
-        AddCalibration<calibration::Timing>(Detector_t::Type_t::EPT,
+        AddHook<calibration::Timing>(Detector_t::Type_t::EPT,
                                             convert_CATCH_Tagger,
                                             -325 // default offset in ns
                                             );
-        AddCalibration<calibration::Timing>(Detector_t::Type_t::CB,
+        AddHook<calibration::Timing>(Detector_t::Type_t::CB,
                                             convert_CATCH_CB,
                                             -325,      // default offset in ns
                                             interval<double>{-100, 100} // default time window cut in ns
                                             );
-        AddCalibration<calibration::Timing>(Detector_t::Type_t::PID,
+        AddHook<calibration::Timing>(Detector_t::Type_t::PID,
                                             convert_CATCH_CB,
                                             -325,
                                             interval<double>{-500, 500} // default time window cut in ns
                                             );
-        AddCalibration<calibration::Timing>(Detector_t::Type_t::TAPS,
+        AddHook<calibration::Timing>(Detector_t::Type_t::TAPS,
                                             convert_MultiHit16bit,
                                             -300, /// \todo different default for PbWO
                                             interval<double>{-500, 500},
                                             -0.100 /// \todo give measured time gains for BaF2
                                             );
-        AddCalibration<calibration::Timing>(Detector_t::Type_t::TAPSVeto,
+        AddHook<calibration::Timing>(Detector_t::Type_t::TAPSVeto,
                                             convert_MultiHit16bit,
                                             160,
                                             interval<double>{-1000, 1000}, /// \todo make this window smaller...
                                             -0.05 // default gain
                                             );
 
-        AddCalibration<calibration::Integral>(Detector_t::Type_t::CB,
+        AddHook<calibration::Integral>(Detector_t::Type_t::CB,
                                               convert_GeSiCa_SADC,
                                               0,    // default pedestal in raw
                                               0.07, // default gain
                                               2     // default threshold in MeV
                                               );
 
-        AddCalibration<calibration::Integral>(Detector_t::Type_t::PID,
+        AddHook<calibration::Integral>(Detector_t::Type_t::PID,
                                               convert_MultiHit16bit,
                                               100,    // default pedestal in raw
                                               0.014,  // default gain
                                               0.001   // default threshold in MeV
                                               );
 
-        AddCalibration<calibration::Integral>(Detector_t::Type_t::TAPS,
+        AddHook<calibration::Integral>(Detector_t::Type_t::TAPS,
                                               convert_MultiHit16bit,
                                               100,   // default pedestal in raw
                                               0.30,  // default gain
                                               1      // default threshold in MeV
                                               );
 
-        AddCalibration<calibration::Integral>(Detector_t::Type_t::TAPSVeto,
+        AddHook<calibration::Integral>(Detector_t::Type_t::TAPSVeto,
                                               convert_MultiHit16bit,
                                               100,     // default pedestal in raw
                                               0.010, // default gain

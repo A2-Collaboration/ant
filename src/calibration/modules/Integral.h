@@ -22,10 +22,8 @@ public:
              const double defaultGain,
              const double defaultThreshold);
 
-    // CalibrationApply_traits interface
+    // ReconstructHook
     virtual void ApplyTo(const readhits_t& hits, extrahits_t& extrahits) override;
-    virtual void ApplyTo(event_ptr&) override {}
-
 
     // Physics interface
     void ProcessEvent(const Event &event) override;
