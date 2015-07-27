@@ -3,7 +3,6 @@
 #include "analysis/input/DataReader.h"
 #include "analysis/input/ant/AntReader.h"
 #include "analysis/input/goat/GoatReader.h"
-#include "base/std_ext.h"
 #include "analysis/OutputManager.h"
 
 #include "analysis/physics/Physics.h"
@@ -11,11 +10,15 @@
 #include "analysis/physics/common/DataOverview.h"
 #include "analysis/physics/common/CandidatesAnalysis.h"
 
+#include "expconfig/Setup.h"
+
+#include "base/std_ext.h"
 #include "base/Logger.h"
 #include "base/detail/CmdLine.h"
 
 #include "TRint.h"
 
+#include <sstream>
 #include <string>
 
 using namespace std;
@@ -30,7 +33,9 @@ int main(int argc, char** argv) {
     TCLAP::CmdLine cmd("Omega Analysis", ' ', "0.1");
     auto input_type = cmd.add<TCLAP::SwitchArg>("g","goat","Input is GoAT files",false);
     auto input  = cmd.add<TCLAP::MultiArg<string>>("i","input","ant root file (events)",true,"string");
-    auto physicsclasses  = cmd.add<TCLAP::MultiArg<string>>("p","physics","Physics Class to run",true,"string");
+    auto cmdline_setup  = cmd.add<TCLAP::ValueArg<string>>("","setup","Choose setup",false,"","string");
+    auto cmdline_calibrations  = cmd.add<TCLAP::MultiArg<string>>("c","calibration","Calibrations to run",false,"string");
+    auto physicsclasses  = cmd.add<TCLAP::MultiArg<string>>("p","physics","Physics Class to run",false,"string");
     auto output = cmd.add<TCLAP::ValueArg<string>>("o","output","Output file",false,"","string");
     auto batchmode = cmd.add<TCLAP::SwitchArg>("b","batch","Run in batch mode (No ROOT Windows)",false);
     auto verbose = cmd.add<TCLAP::ValueArg<int>>("v","verbose","Verbosity level (0..9)", false, 0,"int");
@@ -40,13 +45,54 @@ int main(int argc, char** argv) {
         el::Loggers::setVerboseLevel(verbose->getValue());
     }
 
+    auto& registry = expconfig::SetupRegistry::get();
+    using setup_ptr_t = shared_ptr<expconfig::Setup>;
+    list< setup_ptr_t > setups(registry.begin(), registry.end());
+    setup_ptr_t setup = nullptr;
+    if(cmdline_setup->isSet()) {
+        const string& setupname = cmdline_setup->getValue();
+        // search for setupname
+        for(const setup_ptr_t& item : setups) {
+            if(item->GetName() == setupname) {
+                LOG(INFO) << "Found setup " << setupname;
+                setup = move(item);
+                break;
+            }
+        }
+    }
 
+
+    list<shared_ptr<Calibration::BaseModule>> enabled_calibrations;
+    if(cmdline_calibrations->isSet()) {
+        if(setup==nullptr) {
+            stringstream ss_setups;
+            for(const setup_ptr_t& item : setups) {
+                ss_setups << item->GetName() << " ";
+            }
+            LOG(INFO)  << "Available setups: " << ss_setups.str();
+            LOG(ERROR) << "Please specify a --setup if you want to use calibrations as physics modules";
+        }
+        else {
+            stringstream ss_calibrations;
+
+            for(const auto& calibration : setup->GetCalibrations()) {
+                ss_calibrations << calibration->GetName() << " ";
+                if(!std_ext::contains(cmdline_calibrations->getValue(), calibration->GetName()))
+                    continue;
+                enabled_calibrations.emplace_back(move(calibration));
+            }
+            if(enabled_calibrations.empty()) {
+                LOG(ERROR) << "No calibrations enabled. Available: " << ss_calibrations.str();
+            }
+        }
+    }
+
+
+    PhysicsManager pm;
     OutputManager om;
 
     if(output->isSet())
         om.SetNewOutput(output->getValue());
-
-    PhysicsManager pm;
 
     for(const auto& classname : physicsclasses->getValue()) {
         try {
@@ -55,6 +101,10 @@ int main(int argc, char** argv) {
         } catch (...) {
             LOG(WARNING) << "Physics class \"" << classname << "\" is not registered";
         }
+    }
+
+    for(const auto& calibration : enabled_calibrations) {
+        pm.AddPhysics(calibration->GetPhysicsModule());
     }
 
     std::unique_ptr<input::FileDataReader> reader;

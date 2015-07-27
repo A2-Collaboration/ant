@@ -55,6 +55,8 @@ public:
     }
 
     void AddPhysics(std::unique_ptr<ant::Physics> pc) {
+        if(pc==nullptr)
+            return;
         physics.emplace_back(std::move(pc));
     }
 

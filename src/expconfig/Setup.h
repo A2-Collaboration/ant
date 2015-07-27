@@ -15,7 +15,6 @@
 #include "detectors/TAPSVeto.h"
 #include "detectors/EPT.h"
 
-
 #include "calibration/modules/EnergyInvariantMass.h"
 #include "calibration/modules/Timing.h"
 #include "calibration/modules/Integral.h"
@@ -26,8 +25,6 @@
 #include "calibration/converters/MultiHit16bit.h"
 #include "calibration/converters/GeSiCa_SADC.h"
 #include "calibration/converters/ScalerFrequency.h"
-
-
 
 #include <functional>
 
