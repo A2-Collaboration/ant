@@ -1,14 +1,14 @@
 #pragma once
 
 #include "calibration/Calibration.h"
-#include "Integral.h"
+#include "Energy.h"
 
 class TH1;
 
 namespace ant {
 namespace calibration {
 
-class CB_Energy : public Integral
+class CB_Energy : public Energy
 {
 
 

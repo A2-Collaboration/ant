@@ -49,27 +49,27 @@ public:
                                      convert_ScalerFrequency_Beampolmon);
 
         // then we add the others, and link it to the converters
-        AddHook<calibration::Timing>(Detector_t::Type_t::EPT,
+        AddHook<calibration::Time>(Detector_t::Type_t::EPT,
                                      convert_CATCH_Tagger,
                                      -325 // default offset in ns
                                      );
-        AddHook<calibration::Timing>(Detector_t::Type_t::CB,
+        AddHook<calibration::Time>(Detector_t::Type_t::CB,
                                      convert_CATCH_CB,
                                      -325,      // default offset in ns
                                      interval<double>{-100, 100} // default time window cut in ns
                                      );
-        AddHook<calibration::Timing>(Detector_t::Type_t::PID,
+        AddHook<calibration::Time>(Detector_t::Type_t::PID,
                                      convert_CATCH_CB,
                                      -325,
                                      interval<double>{-500, 500} // default time window cut in ns
                                      );
-        AddHook<calibration::Timing>(Detector_t::Type_t::TAPS,
+        AddHook<calibration::Time>(Detector_t::Type_t::TAPS,
                                      convert_MultiHit16bit,
                                      -300, /// \todo different default for PbWO
                                      interval<double>{-500, 500},
                                      -0.100 /// \todo give measured time gains for BaF2
                                      );
-        AddHook<calibration::Timing>(Detector_t::Type_t::TAPSVeto,
+        AddHook<calibration::Time>(Detector_t::Type_t::TAPSVeto,
                                      convert_MultiHit16bit,
                                      160,
                                      interval<double>{-1000, 1000}, /// \todo make this window smaller...
@@ -78,7 +78,7 @@ public:
 
         AddHook<calibration::CB_Energy>(convert_GeSiCa_SADC);
 
-        AddHook<calibration::Integral>(Detector_t::Type_t::PID,
+        AddHook<calibration::Energy>(Detector_t::Type_t::PID,
                                        convert_MultiHit16bit,
                                        100,    // default pedestal in raw
                                        0.014,  // default gain
@@ -87,7 +87,7 @@ public:
 
         AddHook<calibration::TAPS_Energy>(convert_MultiHit16bit);
 
-        AddHook<calibration::Integral>(Detector_t::Type_t::TAPSVeto,
+        AddHook<calibration::Energy>(Detector_t::Type_t::TAPSVeto,
                                        convert_MultiHit16bit,
                                        100,     // default pedestal in raw
                                        0.010, // default gain

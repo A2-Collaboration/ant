@@ -14,14 +14,14 @@ class TH1;
 namespace ant {
 namespace calibration {
 
-class Timing :
+class Time :
         public Calibration::Module,
         public ReconstructHook::DetectorReadHits
 {
 
 public:
 
-    Timing(
+    Time(
             Detector_t::Type_t DetectorType,
             Calibration::Converter::ptr_t converter,
             double defaultOffset,

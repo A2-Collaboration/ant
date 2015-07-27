@@ -9,8 +9,8 @@ include_directories(
 set(SRCS
     CalibrationManager.h
     Calibration.cc
-    modules/Timing.cc
-    modules/Integral.cc
+    modules/Time.cc
+    modules/Energy.cc
     modules/Scaler.cc
     modules/EnergyInvariantMass.cc
     modules/TAPS_ShowerCorrection.h

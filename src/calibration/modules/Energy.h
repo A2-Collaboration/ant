@@ -12,14 +12,14 @@ class TH1;
 namespace ant {
 namespace calibration {
 
-class Integral :
+class Energy :
         public Calibration::Module,
         public ReconstructHook::DetectorReadHits
 {
 
 public:
 
-    Integral(Detector_t::Type_t detectorType,
+    Energy(Detector_t::Type_t detectorType,
              Calibration::Converter::ptr_t converter,
              const double defaultPedestal,
              const double defaultGain,

@@ -16,11 +16,11 @@ TAPS_Energy::TAPS_Energy(Calibration::Converter::ptr_t converter,
                                const double defaultPedestal,
                                const double defaultGain,
                                const double defaultThreshold):
-    Integral(Detector_t::Type_t::TAPS,
-             converter,
-             defaultPedestal,
-             defaultGain,
-             defaultThreshold)
+    Energy(Detector_t::Type_t::TAPS,
+           converter,
+           defaultPedestal,
+           defaultGain,
+           defaultThreshold)
 {
 
 }

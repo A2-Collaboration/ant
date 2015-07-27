@@ -1,4 +1,4 @@
-#include "Timing.h"
+#include "Time.h"
 #include "analysis/plot/HistogramFactories.h"
 #include "analysis/data/Event.h"
 #include "analysis/utils/combinatorics.h"
@@ -13,7 +13,7 @@ using namespace std;
 using namespace ant;
 using namespace ant::calibration;
 
-Timing::Timing(Detector_t::Type_t detectorType,
+Time::Time(Detector_t::Type_t detectorType,
                Calibration::Converter::ptr_t converter,
         double defaultOffset,
         const interval<double>& timeWindow, // default {-inf, inf}
@@ -23,7 +23,7 @@ Timing::Timing(Detector_t::Type_t detectorType,
     Calibration::Module(
         std_ext::formatter()
         << Detector_t::ToString(detectorType)
-        << "_Timing"
+        << "_Time"
            ),
     DetectorType(detectorType),
     Converter(move(converter)),
@@ -48,29 +48,29 @@ Timing::Timing(Detector_t::Type_t detectorType,
         Gains[gain.Key] = gain.Value;
 }
 
-std::list<TID> Timing::GetChangePoints() const {
+std::list<TID> Time::GetChangePoints() const {
     return {};
 }
 
-void Timing::Update(const TID& id) {
+void Time::Update(const TID& id) {
     LOG(INFO) << GetName() << ": Update called with TID=" << id;
 }
 
-void Timing::ApplyTo(const readhits_t& hits, extrahits_t&)
+void Time::ApplyTo(const readhits_t& hits, extrahits_t&)
 {
-    // search for to be calibrated timings
+    // search for to be calibrated Times
     const auto it_dethits = hits.find(DetectorType);
     if(it_dethits == hits.end())
         return;
 
     const auto& dethits = it_dethits->second;
 
-    // now calibrate the timings (ignore any other kind of hits)
+    // now calibrate the Times (ignore any other kind of hits)
     for(TDetectorReadHit* dethit : dethits) {
         if(dethit->GetChannelType() != Channel_t::Type_t::Timing)
             continue;
 
-        // the Converter is smart enough to account for reference timings!
+        // the Converter is smart enough to account for reference Times!
         const auto& values = Converter->Convert(dethit->RawData);
         dethit->Values.reserve(values.size());
 

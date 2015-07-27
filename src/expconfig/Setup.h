@@ -16,8 +16,8 @@
 #include "detectors/EPT.h"
 
 #include "calibration/modules/EnergyInvariantMass.h"
-#include "calibration/modules/Timing.h"
-#include "calibration/modules/Integral.h"
+#include "calibration/modules/Time.h"
+#include "calibration/modules/Energy.h"
 #include "calibration/modules/Scaler.h"
 #include "calibration/modules/TAPS_ShowerCorrection.h"
 #include "calibration/modules/CB_Energy.h"
