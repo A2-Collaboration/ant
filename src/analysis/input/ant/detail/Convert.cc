@@ -87,8 +87,8 @@ Cluster input::Convert(const TCluster& cluster)
     return Cluster(
                 cluster.Energy,
                 cluster.Time,
-                detector_t(1 << cluster.DetectorType),
-                cluster.Time
+                detector_t(Detector_t::ToBitfield(cluster.GetDetectorType())),
+                cluster.CentralElement
                 );
 }
 
