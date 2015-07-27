@@ -17,11 +17,12 @@
 
 #include "calibration/modules/EnergyInvariantMass.h"
 #include "calibration/modules/Time.h"
-#include "calibration/modules/Energy.h"
 #include "calibration/modules/Scaler.h"
 #include "calibration/modules/TAPS_ShowerCorrection.h"
 #include "calibration/modules/CB_Energy.h"
+#include "calibration/modules/PID_Energy.h"
 #include "calibration/modules/TAPS_Energy.h"
+#include "calibration/modules/TAPSVeto_Energy.h"
 
 
 #include "calibration/converters/CATCH_TDC.h"

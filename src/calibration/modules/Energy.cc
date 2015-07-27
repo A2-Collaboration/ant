@@ -16,7 +16,7 @@ Energy::Energy(Detector_t::Type_t detectorType,
         const double defaultGain,
         const double defaultThreshold
         ) :
-    Calibration::Module(
+    Calibration::PhysicsModule(
         std_ext::formatter()
         << Detector_t::ToString(detectorType)
         << "_Energy"

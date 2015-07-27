@@ -78,21 +78,11 @@ public:
 
         AddHook<calibration::CB_Energy>(convert_GeSiCa_SADC);
 
-        AddHook<calibration::Energy>(Detector_t::Type_t::PID,
-                                       convert_MultiHit16bit,
-                                       100,    // default pedestal in raw
-                                       0.014,  // default gain
-                                       0.001   // default threshold in MeV
-                                       );
+        AddHook<calibration::PID_Energy>(convert_MultiHit16bit);
 
         AddHook<calibration::TAPS_Energy>(convert_MultiHit16bit);
 
-        AddHook<calibration::Energy>(Detector_t::Type_t::TAPSVeto,
-                                       convert_MultiHit16bit,
-                                       100,     // default pedestal in raw
-                                       0.010, // default gain
-                                       0.1    // default threshold in MeV
-                                       );
+        AddHook<calibration::TAPSVeto_Energy>(convert_MultiHit16bit);
 
         // enable TAPS shower correction, which is a hook running on list of clusters
         AddHook<calibration::TAPS_ShowerCorrection>();

@@ -13,7 +13,7 @@ namespace ant {
 namespace calibration {
 
 class Energy :
-        public Calibration::Module,
+        public Calibration::PhysicsModule, // this makes this module abstract
         public ReconstructHook::DetectorReadHits
 {
 
