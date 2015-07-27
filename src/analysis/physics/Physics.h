@@ -87,6 +87,8 @@ public:
         physics_creators[name] = c;
     }
 
+    static void PrintRegistry();
+
 };
 
 class PhysicsRegistration

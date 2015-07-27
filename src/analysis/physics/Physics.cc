@@ -83,6 +83,13 @@ std::unique_ptr<ant::Physics> ant::PhysicsRegistry::Create(const string& name)
 
 }
 
+void ant::PhysicsRegistry::PrintRegistry()
+{
+    for(auto& entry : get().physics_creators) {
+        LOG(INFO) << entry.first;
+    }
+}
+
 
 ant::PhysicsRegistration::PhysicsRegistration(ant::physics_creator c, const string& name)
 {
