@@ -530,7 +530,7 @@ void acqu::FileFormatMk2::HandleReadError(
     record->Payload.push_back(err->fModIndex);
     record->Payload.push_back(err->fErrCode);
 
-    VLOG(9) << *record;
+    LOG_N_TIMES(1000, WARNING) << *record;
 
     fillQueue(queue, move(record));
     advance(it, wordsize);
