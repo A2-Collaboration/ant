@@ -34,11 +34,11 @@ Reconstruct::Reconstruct(const THeaderInfo& headerInfo)
     // hooks are usually calibrations, which may also be updateable
     const shared_ptr_list<ReconstructHook::Base>& hooks = config->GetReconstructHooks();
     for(const auto& hook : hooks) {
-        AddToSharedPtrList<ReconstructHook::DetectorReadHits, ReconstructHook::Base>
+        std_ext::AddToSharedPtrList<ReconstructHook::DetectorReadHits, ReconstructHook::Base>
                 (hook, hooks_readhits);
-        AddToSharedPtrList<ReconstructHook::Clusters, ReconstructHook::Base>
+        std_ext::AddToSharedPtrList<ReconstructHook::Clusters, ReconstructHook::Base>
                 (hook, hooks_clusters);
-        AddToSharedPtrList<Updateable_traits, ReconstructHook::Base>
+        std_ext::AddToSharedPtrList<Updateable_traits, ReconstructHook::Base>
                 (hook, updateables);
     }
 
@@ -46,7 +46,7 @@ Reconstruct::Reconstruct(const THeaderInfo& headerInfo)
     const shared_ptr_list<Detector_t>& detectors = config->GetDetectors();
     for(const auto& detector : detectors) {
         // ... they may be updateable (think of the PID Phi angles)
-        AddToSharedPtrList<Updateable_traits, Detector_t>
+        std_ext::AddToSharedPtrList<Updateable_traits, Detector_t>
                 (detector, updateables);
         // ... but also are needed in DoReconstruct
         auto ret = sorted_detectors.insert(make_pair(detector->Type, detector));

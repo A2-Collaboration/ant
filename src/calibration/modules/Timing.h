@@ -32,11 +32,6 @@ public:
     // ReconstructHook
     virtual void ApplyTo(const readhits_t& hits, extrahits_t&) override;
 
-    // Physics interface
-    void ProcessEvent(const Event &event) override;
-    void Finish() override;
-    void ShowResult() override;
-
     // Updateable_traits interface
     virtual std::list<TID> GetChangePoints() const override;
     void Update(const TID&) override;

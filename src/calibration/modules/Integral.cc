@@ -11,21 +11,6 @@ using namespace std;
 using namespace ant;
 using namespace ant::calibration;
 
-void Integral::ProcessEvent(const Event &)
-{
-
-}
-
-void Integral::Finish()
-{
-
-}
-
-void Integral::ShowResult()
-{
-
-}
-
 Integral::Integral(Detector_t::Type_t detectorType,
         Calibration::Converter::ptr_t converter, const double defaultPedestal,
         const double defaultGain,

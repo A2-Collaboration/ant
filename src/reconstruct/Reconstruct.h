@@ -76,13 +76,6 @@ private:
     std::unique_ptr<reconstruct::CandidateBuilder>  candidatebuilder;
     std::unique_ptr<reconstruct::Clustering>        clustering;
     std::unique_ptr<reconstruct::UpdateableManager> updateablemanager;
-
-    template<typename T, typename Base>
-    void AddToSharedPtrList(const std::shared_ptr<Base> base, shared_ptr_list<T>& list) {
-        const auto& ptr = std::dynamic_pointer_cast<T, Base>(base);
-        if(ptr != nullptr)
-            list.emplace_back(std::move(ptr));
-    }
 };
 
 }

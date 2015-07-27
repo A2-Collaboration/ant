@@ -46,6 +46,17 @@ public:
     /// \todo Implement cmdline match override in factor method to make this meaningful...
     virtual std::string GetName() const = 0;
 
+    virtual std::list< std::shared_ptr<Calibration::BaseModule> > GetCalibrations() {
+        // search the hooks for modules which are calibrations
+        std::list< std::shared_ptr<Calibration::BaseModule> > calibrations;
+        for(auto hook : reconstruct_hooks) {
+            std_ext::AddToSharedPtrList<Calibration::BaseModule, ReconstructHook::Base>(
+                        hook, calibrations
+                        );
+        }
+        return calibrations;
+    }
+
 protected:
     Setup() = default;
 

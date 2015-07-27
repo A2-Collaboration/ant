@@ -13,21 +13,6 @@ using namespace std;
 using namespace ant;
 using namespace ant::calibration;
 
-void Timing::ProcessEvent(const Event &)
-{
-
-}
-
-void Timing::Finish()
-{
-
-}
-
-void Timing::ShowResult()
-{
-
-}
-
 Timing::Timing(Detector_t::Type_t detectorType,
                Calibration::Converter::ptr_t converter,
         double defaultOffset,

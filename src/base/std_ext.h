@@ -8,6 +8,7 @@
 #include <ctime>
 #include <iostream>
 #include <vector>
+#include <list>
 #include <limits>
 
 #include <cxxabi.h> /// \todo works only with GCC?
@@ -93,6 +94,14 @@ inline double degree_to_radian(const double degree) {
 
 template <typename T>
 inline T sqr(const T& x) { return x*x; }
+
+// hand
+template<typename T, typename Base>
+void AddToSharedPtrList(const std::shared_ptr<Base> base, std::list< std::shared_ptr<T> >& list) {
+    const auto& ptr = std::dynamic_pointer_cast<T, Base>(base);
+    if(ptr != nullptr)
+        list.emplace_back(std::move(ptr));
+}
 
 // copied from C++14 draft
 // https://isocpp.org/files/papers/N3656.txt

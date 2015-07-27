@@ -21,6 +21,7 @@ public:
     class BaseModule
     {
     public:
+        virtual std::unique_ptr<Physics> GetPhysicsModule() {return nullptr;}
         std::string GetName() const { return name; }
         virtual ~BaseModule() = default;
     protected:
@@ -39,13 +40,11 @@ public:
      */
     class Module :
             public BaseModule,
-            public Physics,
             public Updateable_traits
     {
     protected:
         Module(const std::string& name_) :
-            BaseModule(name_),
-            Physics(GetName()) /// \todo put calibration histograms in subdir?
+            BaseModule(name_)
         {}
     };
 

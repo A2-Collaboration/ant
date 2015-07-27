@@ -15,16 +15,19 @@ using namespace ant::calibration;
 EnergyInvariantMass::EnergyInvariantMass():
     Calibration::Module("EnergyInvariantMass")
 {
+
+}
+
+EnergyInvariantMass::ThePhysics::ThePhysics(const string& name):
+    Physics(name)
+{
     const BinSettings energybins(1000);
 
     ggIM = HistFac.makeTH1D("ggIM","2 #gamma IM [MeV]","#",energybins,"ggIM");
 }
 
 
-
-
-
-void EnergyInvariantMass::ProcessEvent(const Event &event)
+void EnergyInvariantMass::ThePhysics::ProcessEvent(const Event& event)
 {
     const auto& cands = event.Reconstructed().Candidates();
 
@@ -39,29 +42,15 @@ void EnergyInvariantMass::ProcessEvent(const Event &event)
     }
 }
 
-void EnergyInvariantMass::Finish()
+void EnergyInvariantMass::ThePhysics::Finish()
 {
-
 }
 
-void EnergyInvariantMass::ShowResult()
+void EnergyInvariantMass::ThePhysics::ShowResult()
 {
-
 }
 
-void EnergyInvariantMass::ApplyTo(const readhits_t& hits, extrahits_t&)
+unique_ptr<Physics> EnergyInvariantMass::GetPhysicsModule()
 {
-
+    return std_ext::make_unique<ThePhysics>(GetName());
 }
-
-std::list<TID> EnergyInvariantMass::GetChangePoints() const
-{
-    return {};
-}
-
-void EnergyInvariantMass::Update(const TID &id)
-{
-
-}
-
-AUTO_REGISTER_PHYSICS(EnergyInvariantMass, "EnergyInvariantMass")

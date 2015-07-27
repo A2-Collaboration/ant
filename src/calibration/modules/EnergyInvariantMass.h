@@ -11,23 +11,33 @@ class EnergyInvariantMass :
         public Calibration::Module,
         public ReconstructHook::DetectorReadHits
 {
-protected:
-  TH1* ggIM = nullptr;
+
 
 public:
-  EnergyInvariantMass();
+    class ThePhysics : public Physics {
 
-  // ReconstructHook
-  virtual void ApplyTo(const readhits_t& hits, extrahits_t&) override;
+    protected:
+        TH1* ggIM = nullptr;
 
-  // Physics interface
-  void ProcessEvent(const Event &event) override;
-  void Finish() override;
-  void ShowResult() override;
+    public:
+        ThePhysics(const std::string& name);
 
-  // CalibrationUpdate_traits interface
-  virtual std::list<TID> GetChangePoints() const override;
-  virtual void Update(const TID &id) override;
+        virtual void ProcessEvent(const Event& event);
+        virtual void Finish();
+        virtual void ShowResult();
+    };
+
+    EnergyInvariantMass();
+
+    // ReconstructHook
+    virtual void ApplyTo(const readhits_t&, extrahits_t&) override {}
+
+    // CalibrationUpdate_traits interface
+    virtual std::list<TID> GetChangePoints() const override { return {}; }
+    virtual void Update(const TID &) override {}
+
+    // BaseModule interface
+    virtual std::unique_ptr<Physics> GetPhysicsModule();
 };
 
 }} // namespace ant::calibration
