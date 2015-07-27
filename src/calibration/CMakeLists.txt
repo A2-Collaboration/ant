@@ -18,6 +18,7 @@ set(SRCS
     modules/Scaler.cc
     modules/EnergyInvariantMass.h
     modules/EnergyInvariantMass.cc
+    modules/TAPS_ShowerCorrection.h
     converters/GeSiCa_SADC.h
     converters/CATCH_TDC.h
     converters/CATCH_TDC.cc

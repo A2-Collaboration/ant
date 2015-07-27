@@ -42,7 +42,7 @@ struct ReconstructHook {
 
     class Clusters : public Base {
     public:
-        virtual void ApplyTo(const clusters_t& clusters) = 0;
+        virtual void ApplyTo(clusters_t& clusters) = 0;
     };
 };
 

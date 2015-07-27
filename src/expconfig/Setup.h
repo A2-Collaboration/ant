@@ -20,6 +20,7 @@
 #include "calibration/modules/Timing.h"
 #include "calibration/modules/Integral.h"
 #include "calibration/modules/Scaler.h"
+#include "calibration/modules/TAPS_ShowerCorrection.h"
 
 #include "calibration/converters/CATCH_TDC.h"
 #include "calibration/converters/MultiHit16bit.h"
