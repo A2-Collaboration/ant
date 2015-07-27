@@ -26,12 +26,16 @@ EnergyInvariantMass::EnergyInvariantMass():
 
 void EnergyInvariantMass::ProcessEvent(const Event &event)
 {
-    const auto& photons = event.Reconstructed().Particles().Get(ParticleTypeDatabase::Photon);
+    const auto& cands = event.Reconstructed().Candidates();
 
-    for( auto comb = makeCombination(photons,2); !comb.Done(); ++comb ) {
+    for( auto comb = makeCombination(cands,2); !comb.Done(); ++comb ) {
 
-        TLorentzVector gg = *comb.at(0) + *comb.at(1);
-        ggIM->Fill(gg.M());
+        if(comb.at(0)->VetoEnergy()==0 && comb.at(1)->VetoEnergy()==0) {
+            const Particle a(ParticleTypeDatabase::Photon,comb.at(0));
+            const Particle b(ParticleTypeDatabase::Photon,comb.at(1));
+            const TLorentzVector gg = a + b;
+            ggIM->Fill(gg.M());
+        }
     }
 }
 
@@ -59,3 +63,5 @@ void EnergyInvariantMass::Update(const TID &id)
 {
 
 }
+
+AUTO_REGISTER_PHYSICS(EnergyInvariantMass, "EnergyInvariantMass")
