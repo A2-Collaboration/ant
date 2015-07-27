@@ -314,6 +314,7 @@ void Reconstruct::BuildClusters(
                             clusterhit.Energy,
                             clusterhit.Time,
                             detector->Type,
+                            hit->Channel,
                             vector<TClusterHit>{*hit}
                             );
 

@@ -82,6 +82,7 @@ struct TCluster
   double Energy;
   double Time;
   std::uint8_t DetectorType;
+  std::uint32_t CentralElement;
 
   std::vector<TClusterHit> Hits;
 
@@ -92,12 +93,14 @@ struct TCluster
       double E,
       double t,
       const Detector_t::Type_t& type,
+      const unsigned central,
       const std::vector<TClusterHit>& hits = {}
       ):
     Position(pos),
     Energy(E),
     Time(t),
     DetectorType(static_cast<std::uint8_t>(type)),
+    CentralElement(central),
     Hits(hits)
   {}
 
@@ -107,6 +110,7 @@ struct TCluster
 
   virtual std::ostream& Print( std::ostream& s) const override {
     return s << "TCluster: " << Hits.size() << " hits @" << Position <<", Energy=" << Energy
+             << " Central Element=" << CentralElement
              << " Detector=" << Detector_t::ToString(GetDetectorType());
   }
 #endif
@@ -115,7 +119,7 @@ struct TCluster
       return std::isfinite(Energy) && std::isfinite(Time);
   }
 
-  TCluster(): Position(), Energy(0.0), DetectorType(0) {}
+  TCluster(): Position(), Energy(0.0), DetectorType(0), CentralElement(0) {}
   virtual ~TCluster() {}
   ClassDef(TCluster, ANT_UNPACKER_ROOT_VERSION)
 };

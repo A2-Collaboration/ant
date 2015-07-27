@@ -97,6 +97,7 @@ void Clustering::Build(
                     cluster_energy,
                     cluster_time,
                     clusterdetector->Type,
+                    0, /* @todo put central element here! */
                     clusterhits
                     );
     }
