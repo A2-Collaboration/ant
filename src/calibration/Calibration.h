@@ -15,14 +15,16 @@ public:
         virtual ~Converter() = default;
     };
 
-    class SimpleModule :
-            public ReconstructHook::DetectorReadHits
+    /**
+     * @brief The BaseModule class has just a name
+     */
+    class BaseModule
     {
     public:
         std::string GetName() const { return name; }
-        virtual ~SimpleModule() = default;
+        virtual ~BaseModule() = default;
     protected:
-        SimpleModule(const std::string& name_) :
+        BaseModule(const std::string& name_) :
             name(std::string("Calibration_")+name_)
         {}
     private:
@@ -30,20 +32,19 @@ public:
     };
 
     /**
-   * @brief The Calibration::Module class
-   * A calibration module is two things:
-   * * A physics class to make histograms and determine calibration factors
-   * * and a CalibrationApply class that can apply those factors to data
-   * * furthermore, it may update its constants during the analysis
-   */
+     * @brief The Module class is typically used for calibrations
+     *
+     * Note that each module has the freedom to implement ReconstructHook::DetectorReadHits
+     * or ReconstructHook::Clusters or both.
+     */
     class Module :
-            public SimpleModule,
+            public BaseModule,
             public Physics,
             public Updateable_traits
     {
     protected:
         Module(const std::string& name_) :
-            SimpleModule(name_),
+            BaseModule(name_),
             Physics(GetName()) /// \todo put calibration histograms in subdir?
         {}
     };

@@ -7,7 +7,10 @@ class TH1;
 namespace ant {
 namespace calibration {
 
-class EnergyInvariantMass : public Calibration::Module {
+class EnergyInvariantMass :
+        public Calibration::Module,
+        public ReconstructHook::DetectorReadHits
+{
 protected:
   TH1* ggIM = nullptr;
 

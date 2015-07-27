@@ -12,7 +12,10 @@ class TH1;
 namespace ant {
 namespace calibration {
 
-class Integral : public Calibration::Module {
+class Integral :
+        public Calibration::Module,
+        public ReconstructHook::DetectorReadHits
+{
 
 public:
 

@@ -7,7 +7,10 @@
 namespace ant {
 namespace calibration {
 
-class Scaler : public Calibration::SimpleModule {
+class Scaler :
+        public Calibration::BaseModule,
+        public ReconstructHook::DetectorReadHits
+{
 
 public:
 

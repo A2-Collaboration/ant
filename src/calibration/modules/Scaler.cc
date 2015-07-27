@@ -11,7 +11,7 @@ using namespace ant::calibration;
 
 
 Scaler::Scaler(Detector_t::Type_t detectorType, Calibration::Converter::ptr_t converter) :
-    Calibration::SimpleModule(
+    Calibration::BaseModule(
         std_ext::formatter()
         << Detector_t::ToString(detectorType)
         << "_Scaler"

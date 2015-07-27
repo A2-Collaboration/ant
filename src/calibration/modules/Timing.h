@@ -13,7 +13,10 @@ class TH1;
 namespace ant {
 namespace calibration {
 
-class Timing : public Calibration::Module {
+class Timing :
+        public Calibration::Module,
+        public ReconstructHook::DetectorReadHits
+{
 
 public:
 
