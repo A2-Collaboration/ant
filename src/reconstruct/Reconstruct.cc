@@ -330,6 +330,9 @@ void Reconstruct::BuildClusters(
             }
         }
 
+        if(clusters.empty())
+            continue;
+
         // insert the clusters
         insert_hint =
                 sorted_clusters.insert(insert_hint,
