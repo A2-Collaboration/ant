@@ -16,7 +16,7 @@ public:
     class ThePhysics : public Physics {
 
     protected:
-        TH1* ggIM = nullptr;
+        TH2* ggIM = nullptr;
 
     public:
         ThePhysics(const std::string& name);

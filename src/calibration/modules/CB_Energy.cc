@@ -28,11 +28,20 @@ CB_Energy::CB_Energy(Calibration::Converter::ptr_t converter,
 CB_Energy::ThePhysics::ThePhysics(const string& name):
     Physics(name)
 {
+    const BinSettings cb_channels(720);
     const BinSettings energybins(1000);
 
-    ggIM = HistFac.makeTH1D("ggIM","2 #gamma IM [MeV]","#",energybins,"ggIM");
+    ggIM = HistFac.makeTH2D("2 neutral IM (CB,CB)", "IM [MeV]", "#", energybins, cb_channels, "ggIM");
 }
 
+const Cluster* FindCaloCluster(const Candidate& c) {
+    for(const auto& cl : c.Clusters) {
+        if(cl.Detector & (detector_t::CB | detector_t::TAPS)) {
+            return addressof(cl);
+        }
+    }
+    return nullptr;
+}
 
 void CB_Energy::ThePhysics::ProcessEvent(const Event& event)
 {
@@ -48,7 +57,14 @@ void CB_Energy::ThePhysics::ProcessEvent(const Event& event)
             const Particle a(ParticleTypeDatabase::Photon,comb.at(0));
             const Particle b(ParticleTypeDatabase::Photon,comb.at(1));
             const TLorentzVector gg = a + b;
-            ggIM->Fill(gg.M());
+
+            auto cl1 = FindCaloCluster(*p1);
+            if(cl1)
+                ggIM->Fill(gg.M(),cl1->CentralElement);
+
+            auto cl2 = FindCaloCluster(*p2);
+            if(cl2)
+                ggIM->Fill(gg.M(),cl2->CentralElement);
         }
     }
 }
@@ -59,6 +75,7 @@ void CB_Energy::ThePhysics::Finish()
 
 void CB_Energy::ThePhysics::ShowResult()
 {
+    canvas("CB_Energy") << drawoption("colz") << ggIM << endc;
 }
 
 unique_ptr<Physics> CB_Energy::GetPhysicsModule()
