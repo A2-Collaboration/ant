@@ -99,6 +99,10 @@ void dotest() {
     // instead of the usual reconstruct, we use our tester
     unique_ptr<ReconstructTester> reconstruct;
 
+    unsigned nReads = 0;
+    unsigned nHits = 0;
+    unsigned nCandidates = 0;
+
     while(auto item = unpacker->NextItem()) {
 
         auto HeaderInfo = dynamic_cast<THeaderInfo*>(item.get());
@@ -109,10 +113,18 @@ void dotest() {
 
         auto DetectorRead = dynamic_cast<TDetectorRead*>(item.get());
         if(DetectorRead != nullptr) {
-
+            nReads++;
+            nHits += DetectorRead->Hits.size();
             if(reconstruct) {
-                reconstruct->DoReconstruct(*DetectorRead);
+                auto event = reconstruct->DoReconstruct(*DetectorRead);
+                nCandidates += event->Candidates.size();
             }
         }
     }
+
+    REQUIRE(nReads == 221);
+    REQUIRE(nHits == 30039);
+    REQUIRE(nCandidates == 2405);
+
+
 }
