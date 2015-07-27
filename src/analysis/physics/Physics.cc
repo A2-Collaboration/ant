@@ -4,6 +4,7 @@
 #include <iomanip>
 
 using namespace std;
+using namespace ant;
 
 void ant::DebugPhysics::ProcessEvent(const ant::Event &event)
 {
@@ -55,6 +56,8 @@ void ant::PhysicsManager::ReadFrom(ant::input::DataReader &reader)
     VLOG(3) << "No more data to read";
 }
 
+
+
 void ant::PhysicsManager::ProcessEvent(const ant::Event &event)
 {
     for( auto& m : physics ) {
@@ -95,3 +98,5 @@ ant::PhysicsRegistration::PhysicsRegistration(ant::physics_creator c, const stri
 {
     PhysicsRegistry::get().RegisterPhysics(c,name);
 }
+
+AUTO_REGISTER_PHYSICS(DebugPhysics, "DebugPhysics")
