@@ -9,6 +9,7 @@
 #include "analysis/data/Candidate.h"
 #include "analysis/data/TaggerHit.h"
 #include "analysis/Detector.h"
+#include "expconfig/Detector_t.h"
 #include <limits>
 
 using namespace ant;
@@ -38,7 +39,7 @@ std::shared_ptr<Candidate> input::Convert(const TCandidate &candidate)
 {
     /// @todo implement cluster size
     /// @todo add clusters to ant::Candidate
-    auto antCandidate = make_shared<Candidate>(
+    std::shared_ptr<Candidate> antCandidate = make_shared<Candidate>(
                         candidate.Energy,
                         candidate.Theta,
                         candidate.Phi,
@@ -48,6 +49,23 @@ std::shared_ptr<Candidate> input::Convert(const TCandidate &candidate)
                         candidate.VetoEnergy,
                         candidate.TrackerEnergy
                         );
+
+    auto det = ant::detector_t::None;
+
+    for(const TCluster& cluster: candidate.Clusters) {
+
+        antCandidate->Clusters.emplace_back( Convert(cluster) );
+        const auto& antCluster = antCandidate->Clusters.back();
+
+        det |= antCluster.Detector;
+
+        if(cluster.GetDetectorType() == Detector_t::Type_t::CB || cluster.GetDetectorType() == Detector_t::Type_t::TAPS) {
+            antCandidate->clusterSize = cluster.Hits.size();
+        }
+    }
+
+    antCandidate->detector    = det;
+
     return antCandidate;
 }
 
@@ -61,3 +79,16 @@ std::shared_ptr<TaggerHit> input::Convert(const TTaggerHit& taggerhit)
                             );
     return anttaggerhit;
 }
+
+
+Cluster input::Convert(const TCluster& cluster)
+{
+
+    return Cluster(
+                cluster.Energy,
+                cluster.Time,
+                detector_t(1 << cluster.DetectorType),
+                cluster.Time
+                );
+}
+

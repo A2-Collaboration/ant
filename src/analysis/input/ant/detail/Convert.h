@@ -1,6 +1,7 @@
 #pragma once
 
 #include <memory>
+#include "analysis/data/Cluster.h"
 
 namespace ant {
 class TEvent;
@@ -10,6 +11,7 @@ class TTaggerHit;
 class Event;
 class Candidate;
 class TaggerHit;
+class TCluster;
 
 namespace input {
 
@@ -23,6 +25,8 @@ std::shared_ptr<ant::Event> Convert(const TEvent& event);
 std::shared_ptr<ant::Candidate> Convert(const TCandidate& candidate);
 
 std::shared_ptr<ant::TaggerHit> Convert(const TTaggerHit& taggerhit);
+
+ant::Cluster Convert(const TCluster& cluster);
 }
 }
 

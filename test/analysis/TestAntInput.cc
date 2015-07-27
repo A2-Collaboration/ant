@@ -27,7 +27,7 @@ void dotest() {
           );
 
     event->Candidates.back().Clusters.push_back(
-          ant::TCluster(TVector3(25,0,0), 270, -260, ant::Detector_t::Type_t::CB)
+          ant::TCluster(TVector3(25,0,0), 270, -260, ant::Detector_t::Type_t::CB,0)
           );
 
 
@@ -46,7 +46,7 @@ void dotest() {
           );
 
     event->Candidates.back().Clusters.push_back(
-          ant::TCluster(TVector3(10,0,0), 5, -260, ant::Detector_t::Type_t::PID)
+          ant::TCluster(TVector3(10,0,0), 5, -260, ant::Detector_t::Type_t::PID,0)
           );
 
     event->Candidates.back().Clusters.back().Hits.push_back(
@@ -58,10 +58,10 @@ void dotest() {
           ant::TCandidate(300,0.5,2,3)
           );
     event->Candidates.back().Clusters.push_back(
-          ant::TCluster(TVector3(25,10,0),300, -160, ant::Detector_t::Type_t::TAPS)
+          ant::TCluster(TVector3(25,10,0),300, -160, ant::Detector_t::Type_t::TAPS,0)
           );
     event->Candidates.back().Clusters.push_back(
-          ant::TCluster(TVector3(10,1,0),5,-150, ant::Detector_t::Type_t::TAPSVeto)
+          ant::TCluster(TVector3(10,1,0),5,-150, ant::Detector_t::Type_t::TAPSVeto,0)
           );
 
     cout << *event << endl;
@@ -70,8 +70,16 @@ void dotest() {
 
     cout << *antevent << endl;
 
-    REQUIRE(antevent->Reconstructed().Candidates().size() == 2);
+    const CandidateList& cand = antevent->Reconstructed().Candidates();
+
+    REQUIRE(cand.size() == 2);
     /// \todo Write more REQUIRE stuff here
+
+    REQUIRE(cand.at(0)->ClusterSize()==2);
+    REQUIRE(cand.at(1)->ClusterSize()==0);
+
+    REQUIRE(cand.at(0)->Detector()==(detector_t::CB | detector_t::PID));
+    REQUIRE(cand.at(1)->Detector()==(detector_t::TAPS | detector_t::TAPSVeto));
 
 }
 
