@@ -1,6 +1,6 @@
 #pragma once
 
-#include "calibration/Calibration.h"
+#include "Calibration.h"
 
 class TH1;
 
@@ -8,7 +8,7 @@ namespace ant {
 namespace calibration {
 
 class EnergyInvariantMass :
-        public Calibration::Module,
+        public Calibration::PhysicsModule,
         public ReconstructHook::DetectorReadHits
 {
 
@@ -36,7 +36,7 @@ public:
     virtual std::list<TID> GetChangePoints() const override { return {}; }
     virtual void Update(const TID &) override {}
 
-    // BaseModule interface
+    // PhysicsFactory interface
     virtual std::unique_ptr<Physics> GetPhysicsModule();
 };
 

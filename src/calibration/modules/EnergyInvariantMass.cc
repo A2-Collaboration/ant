@@ -13,7 +13,7 @@ using namespace ant;
 using namespace ant::calibration;
 
 EnergyInvariantMass::EnergyInvariantMass():
-    Calibration::Module("EnergyInvariantMass")
+    Calibration::PhysicsModule("EnergyInvariantMass")
 {
 
 }

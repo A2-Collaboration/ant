@@ -3,7 +3,11 @@
 #include "analysis/physics/Physics.h"
 #include "reconstruct/Reconstruct_traits.h"
 
+#include <vector>
+
 namespace ant {
+
+class Physics;
 
 class Calibration {
 public:
@@ -11,7 +15,7 @@ public:
     struct Converter {
         using ptr_t = std::shared_ptr<Converter>;
 
-        virtual vector<double> Convert(const vector<uint8_t>& rawData) const = 0;
+        virtual std::vector<double> Convert(const std::vector<uint8_t>& rawData) const = 0;
         virtual ~Converter() = default;
     };
 
@@ -21,7 +25,6 @@ public:
     class BaseModule
     {
     public:
-        virtual std::unique_ptr<Physics> GetPhysicsModule() {return nullptr;}
         std::string GetName() const { return name; }
         virtual ~BaseModule() = default;
     protected:
@@ -46,6 +49,14 @@ public:
         Module(const std::string& name_) :
             BaseModule(name_)
         {}
+    };
+
+    class PhysicsModule : public Module
+    {
+    protected:
+        using Module::Module;
+    public:
+        virtual std::unique_ptr<Physics> GetPhysicsModule() = 0;
     };
 
 };

@@ -2,7 +2,7 @@
 
 #include "Detector_t.h"
 #include "reconstruct/Reconstruct_traits.h"
-
+#include "calibration/Calibration.h"
 #include "base/printable.h"
 
 #include <memory>
@@ -29,10 +29,14 @@ public:
     // the ExpConfig::Module provides general information about the experiment
     class Module : public virtual Base {
     public:
+        virtual std::string GetName() const = 0;
         virtual double GetBeamEnergy() const = 0;
+        virtual std::list< std::shared_ptr< Calibration::PhysicsModule> > GetCalibrations() = 0;
 
-        // factory method to obtain such a type of config
+        // you may obtain such an Expconfig::Module via headerInfo or name
         static std::shared_ptr<Module> Get(const THeaderInfo& header);
+        static std::shared_ptr<Module> Get(const std::string& name);
+        static std::list< std::shared_ptr<Module> > GetAll();
     };
 
     // in order to run the Reconstruction,

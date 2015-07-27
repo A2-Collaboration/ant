@@ -4,6 +4,7 @@
 #include "expconfig/Detector_t.h"
 
 #include "tree/TDataRecord.h" // for TKeyValue, TID
+#include "base/interval.h"
 
 #include <memory>
 #include <limits>

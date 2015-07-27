@@ -40,21 +40,15 @@ class Setup :
         public UnpackerAcquConfig
 {
 public:
-    // every setup should have a name,
-    // does not need to be unique as long as the matching
-    // is unique
-    /// \todo Implement cmdline match override in factor method to make this meaningful...
-    virtual std::string GetName() const = 0;
-
-    virtual std::list< std::shared_ptr<Calibration::BaseModule> > GetCalibrations() {
-        // search the hooks for modules which are calibrations
-        std::list< std::shared_ptr<Calibration::BaseModule> > calibrations;
-        for(auto hook : reconstruct_hooks) {
-            std_ext::AddToSharedPtrList<Calibration::BaseModule, ReconstructHook::Base>(
+    virtual std::list< std::shared_ptr< Calibration::PhysicsModule> > GetCalibrations() override {
+        // search the hooks for modules which are physics modules
+        std::list< std::shared_ptr<Calibration::PhysicsModule> > calibrations;
+        for(const auto& hook : reconstruct_hooks) {
+            std_ext::AddToSharedPtrList<Calibration::PhysicsModule, ReconstructHook::Base>(
                         hook, calibrations
                         );
         }
-        return calibrations;
+       return calibrations;
     }
 
 protected:

@@ -10,7 +10,7 @@
 #include "analysis/physics/common/DataOverview.h"
 #include "analysis/physics/common/CandidatesAnalysis.h"
 
-#include "expconfig/Setup.h"
+#include "expconfig/ExpConfig.h"
 
 #include "base/std_ext.h"
 #include "base/Logger.h"
@@ -45,28 +45,17 @@ int main(int argc, char** argv) {
         el::Loggers::setVerboseLevel(verbose->getValue());
     }
 
-    auto& registry = expconfig::SetupRegistry::get();
-    using setup_ptr_t = shared_ptr<expconfig::Setup>;
-    list< setup_ptr_t > setups(registry.begin(), registry.end());
-    setup_ptr_t setup = nullptr;
-    if(cmdline_setup->isSet()) {
-        const string& setupname = cmdline_setup->getValue();
-        // search for setupname
-        for(const setup_ptr_t& item : setups) {
-            if(item->GetName() == setupname) {
-                LOG(INFO) << "Found setup " << setupname;
-                setup = move(item);
-                break;
-            }
-        }
+    using setup_ptr_t = shared_ptr<ExpConfig::Module>;
+    setup_ptr_t setup = ExpConfig::Module::Get(cmdline_setup->getValue());
+    if(setup != nullptr) {
+        LOG(INFO) << "Found setup " << setup->GetName();
     }
 
-
-    list<shared_ptr<Calibration::BaseModule>> enabled_calibrations;
+    list<shared_ptr<Calibration::PhysicsModule>> enabled_calibrations;
     if(cmdline_calibrations->isSet()) {
         if(setup==nullptr) {
             stringstream ss_setups;
-            for(const setup_ptr_t& item : setups) {
+            for(const setup_ptr_t& item : ExpConfig::Module::GetAll()) {
                 ss_setups << item->GetName() << " ";
             }
             LOG(INFO)  << "Available setups: " << ss_setups.str();
