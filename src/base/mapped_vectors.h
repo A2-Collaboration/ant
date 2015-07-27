@@ -10,6 +10,11 @@ namespace ant {
 namespace std_ext {
 
 /**
+ * @brief The mapped_items struct
+ */
+
+
+/**
  * @brief The mapped_vectors struct provides fast access to a collection of vectors
  */
 template<typename Key, typename Value>
@@ -32,20 +37,26 @@ public:
         keys.clear();
     }
 
+    void clear() {
+        for(auto key : keys)
+            storage[key].clear();
+        keys.clear();
+    }
+
     std::vector<Value>& operator[](Key key) {
         if(key>=storage.size())
             throw std::runtime_error("fast_map_vector: Key too large (forgot to call init?)");
         auto& ptr = storage[key];
-        if(ptr.second==nullptr) {
-            ptr = make_unique<> make_pair(key, make_unique< std::vector<Value> >());
+        if(ptr==nullptr) {
+            ptr = make_unique< std::pair<Key, std::vector<Value>> >(make_pair(key, std::vector<Value>()));
             keys.push_back(key);
         }
-        return *(ptr.second);
+        return ptr->second;
     }
 
     friend class const_iterator;
 
-    using A = std::allocator< storage_item_t >;
+    using A = std::allocator< std::pair<Key, std::vector<Value>> >;
 
     class const_iterator {
     public:
@@ -69,9 +80,6 @@ public:
         const_reference operator*() const {
             return *(storage_ptr->at(*it_key));
         }
-//        const_pointer operator->() const {
-//            return std::addressof(*this);
-//        }
     private:
         friend class mapped_vectors;
 

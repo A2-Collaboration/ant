@@ -354,11 +354,30 @@ void acqu::FileFormatMk2::FillTDetectorRead(
 //            record->Hits.emplace_back(mapping.LogicalChannel, move(rawData));
 //    }
 
-    for(const auto& values : hits) {
-//        if(values.empty())
-//            continue;
+    for(const auto& it_hits : hits) {
+        const uint16_t& ch = it_hits.first;
+        const std::vector<uint16_t>& values = it_hits.second;
 
-        //const vector<uint16_t>& hitdata = *hit;
+        if(values.empty())
+            continue;
+
+        if(ch>=fast_hit_mappings.size())
+            continue;
+
+        for(const UnpackerAcquConfig::hit_mapping_t* mapping : fast_hit_mappings[ch]) {
+            using RawChannel_t = UnpackerAcquConfig::RawChannel_t<uint16_t>;
+            if(mapping->RawChannels.size() != 1)
+                throw UnpackerAcqu::Exception("Not implemented");
+            if(mapping->RawChannels[0].Mask != RawChannel_t::NoMask)
+                throw UnpackerAcqu::Exception("Not implemented");
+            std::vector<std::uint8_t> rawData(sizeof(uint16_t)*values.size());
+            std::copy(values.begin(), values.end(),
+                      reinterpret_cast<uint16_t*>(std::addressof(rawData[0])));
+
+            record->Hits.emplace_back(mapping->LogicalChannel, move(rawData));
+        }
+
+
     }
 
 

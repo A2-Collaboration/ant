@@ -107,6 +107,7 @@ protected:
     unsigned AcquID_last = 0;
 
     std::vector<UnpackerAcquConfig::hit_mapping_t> hit_mappings;
+    std::vector< std::vector< const UnpackerAcquConfig::hit_mapping_t* > > fast_hit_mappings;
     std::vector<UnpackerAcquConfig::scaler_mapping_t> scaler_mappings;
 
 

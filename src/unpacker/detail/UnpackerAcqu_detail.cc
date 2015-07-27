@@ -110,6 +110,15 @@ void acqu::FileFormatBase::FillHeader(queue_t& queue)
 
     // get the mappings once
     config->BuildMappings(hit_mappings, scaler_mappings);
+
+    for(const UnpackerAcquConfig::hit_mapping_t& hit_mapping : hit_mappings) {
+        for(const UnpackerAcquConfig::RawChannel_t<uint16_t>& rawChannel : hit_mapping.RawChannels) {
+            const uint16_t ch = rawChannel.RawChannel;
+            if(fast_hit_mappings.size()<=ch)
+                fast_hit_mappings.resize(ch+1);
+            fast_hit_mappings[ch].push_back(addressof(hit_mapping));
+        }
+    }
 }
 
 unique_ptr<THeaderInfo> acqu::FileFormatBase::BuildTHeaderInfo()
