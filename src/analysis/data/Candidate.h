@@ -3,6 +3,7 @@
 #include "base/printable.h"
 #include "base/types.h"
 #include "analysis/Detector.h"
+#include "analysis/data/Cluster.h"
 
 #include <ostream>
 #include <memory>
@@ -17,7 +18,7 @@ namespace ant {
  */
 class Candidate: public ant::printable_traits
 {
-private:
+public:
     mev_t clusterEnergy;
     radian_t theta;
     radian_t phi;
@@ -26,7 +27,9 @@ private:
     detector_t detector;
     mev_t vetoEnergy;
     mev_t trackerEnergy;
-public:
+
+    std::vector<ant::Cluster> Clusters;
+
     Candidate(const mev_t& _clusterEnergy,
           const radian_t& _theta,
           const radian_t& _phi,
