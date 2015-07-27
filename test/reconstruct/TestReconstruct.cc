@@ -77,6 +77,10 @@ struct ReconstructTester {
         REQUIRE(n_clusters>0);
         REQUIRE(n_clusters <= n_clusterhits);
 
+        // apply hooks which modify clusters
+        for(const auto& hook : r.hooks_clusters) {
+            hook->ApplyTo(sorted_clusters);
+        }
 
         // finally, do the candidate building
         r.candidatebuilder->Build(move(sorted_clusters), event->Candidates);

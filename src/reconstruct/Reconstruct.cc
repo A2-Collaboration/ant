@@ -103,6 +103,10 @@ unique_ptr<TEvent> Reconstruct::DoReconstruct(TDetectorRead& detectorRead)
     sorted_bydetectortype_t<TCluster> sorted_clusters;
     BuildClusters(move(sorted_clusterhits), sorted_clusters, event->InsaneClusters);
 
+    // apply hooks which modify clusters
+    for(const auto& hook : hooks_clusters) {
+        hook->ApplyTo(sorted_clusters);
+    }
 
     // finally, do the candidate building
     candidatebuilder->Build(move(sorted_clusters), event->Candidates);
