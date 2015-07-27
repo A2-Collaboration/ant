@@ -12,9 +12,12 @@ namespace ant {
  * @brief The Detector_t struct is the minimal base class for all detectors
  */
 struct Detector_t {
+
+    using basetype = std::uint8_t;
+
     // changing types here breaks the file format
     // the only operation allowed is to add detector types!
-    enum class Type_t : std::uint8_t {
+    enum class Type_t : basetype {
         Trigger,
         Tagger, TaggerMicro, EPT, Moeller, PairSpec,
         CB, PID, MWPC0, MWPC1,
@@ -22,6 +25,11 @@ struct Detector_t {
     };
     const Type_t Type;
     static const char* ToString(const Type_t& type);
+
+    static constexpr std::uint32_t ToBitfield(const Type_t& type) {
+        return 1 << static_cast<basetype>(type);
+    }
+
 
     // Element_t is the minimum information,
     // derived classes may extend this

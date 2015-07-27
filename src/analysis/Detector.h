@@ -7,9 +7,10 @@ namespace ant {
 class detector_t : public printable_traits {
 private:
     unsigned int v;
-    detector_t(unsigned int _v) : v(_v) {}
+
 public:
     detector_t() : v(0) {}
+    detector_t(unsigned int _v) : v(_v) {}
 
     const static detector_t None;
     const static detector_t CB;
