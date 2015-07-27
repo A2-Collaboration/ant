@@ -1,5 +1,6 @@
 #include "Setup.h"
 
+
 namespace ant {
 namespace expconfig {
 namespace setup {
@@ -75,7 +76,7 @@ public:
                                      -0.05 // default gain
                                      );
 
-        AddHook<calibration::Integral>(Detector_t::Type_t::CB,
+        AddHook<calibration::CB_Energy>(
                                        convert_GeSiCa_SADC,
                                        0,    // default pedestal in raw
                                        0.07, // default gain

@@ -20,11 +20,14 @@
 #include "calibration/modules/Integral.h"
 #include "calibration/modules/Scaler.h"
 #include "calibration/modules/TAPS_ShowerCorrection.h"
+#include "calibration/modules/CB_Energy.h"
 
 #include "calibration/converters/CATCH_TDC.h"
 #include "calibration/converters/MultiHit16bit.h"
 #include "calibration/converters/GeSiCa_SADC.h"
 #include "calibration/converters/ScalerFrequency.h"
+
+
 
 #include <functional>
 
