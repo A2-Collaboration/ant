@@ -15,7 +15,6 @@
 #include <exception>
 
 
-using namespace std;
 namespace ant {
 
 template <typename T>
@@ -69,7 +68,7 @@ public:
             histogram->Scale(f);
     }
 
-    void Draw(const string &option) const {
+    void Draw(const std::string &option) const {
         if(histogram)
             histogram->Draw(option.c_str());
     }
@@ -217,7 +216,7 @@ public:
             bins,
             name
             );
-        return move(SmartHist1<T>(*hist, makeFunc<T>(func)));
+        return std::move(SmartHist1<T>(*hist, makeFunc<T>(func)));
     }
 
     static SmartHist1<T> makeHist(
@@ -235,7 +234,7 @@ public:
             bins,
             name
             );
-        return move(SmartHist1<T>(*hist, makeFunc<T>([] (const T& data) { return data;})));
+        return std::move(SmartHist1<T>(*hist, makeFunc<T>([] (const T& data) { return data;})));
     }
 
     SmartHist1& operator= (SmartHist1&& rhs) {

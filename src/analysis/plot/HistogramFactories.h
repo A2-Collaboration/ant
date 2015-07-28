@@ -107,7 +107,7 @@ public:
         return std::move(r);
     }
 
-    TH1D* copyTH1D(TH1D* hist, const string &newname);
+    TH1D* copyTH1D(TH1D* hist, const std::string &newname);
 
     template<typename T>
     SmartHist1<T> Copy(const SmartHist1<T>& c, const std::string& newname) {

@@ -35,7 +35,7 @@ protected:
     static std::string GetDecayString(const ParticleList& particles);
 
 public:
-    OmegaBase(const string &name, const DataMode m);
+    OmegaBase(const std::string &name, const DataMode m);
     virtual ~OmegaBase() = default;
 
     virtual void ProcessEvent(const Event& event) override;

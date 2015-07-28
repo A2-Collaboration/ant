@@ -36,7 +36,7 @@ protected:
 //    const double IM = ParticleTypeDatabase::Pi0.Mass();
     const double IM = ParticleTypeDatabase::EtaPrime.Mass();
 
-    const map<short, string> component = {{0, "Energy"}, {1, "Theta"}, {2, "Phi"}};
+    const std::map<short, std::string> component = {{0, "Energy"}, {1, "Theta"}, {2, "Phi"}};
 
 
     TH2D* banana;

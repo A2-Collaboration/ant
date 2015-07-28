@@ -12,7 +12,7 @@ namespace converter {
 struct GeSiCa_SADC : Calibration::Converter {
 
 
-    virtual std::vector<double> Convert(const vector<uint8_t>& rawData) const override
+    virtual std::vector<double> Convert(const std::vector<uint8_t>& rawData) const override
     {
         if(rawData.size() != 6) // expect three 16bit values
           return {};

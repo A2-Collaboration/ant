@@ -1,5 +1,6 @@
 #include "Setup.h"
 
+using namespace std;
 
 namespace ant {
 namespace expconfig {

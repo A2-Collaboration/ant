@@ -17,7 +17,7 @@ struct CATCH_TDC : MultiHit16bit, ReconstructHook::DetectorReadHits {
         CATCH_to_nanoseconds(0.1171) // CATCH TDCs, the conversion to ns is known
     {}
 
-    virtual std::vector<double> Convert(const vector<uint8_t>& rawData) const override
+    virtual std::vector<double> Convert(const std::vector<uint8_t>& rawData) const override
     {
         // we can only convert if we have a reference hit timing
         if(std::isnan(ReferenceTiming))
