@@ -120,8 +120,6 @@ void acqu::FileFormatBase::FillHeader(queue_t& queue)
             hit_mappings_ptr[ch].push_back(addressof(hit_mapping));
         }
     }
-    if(hit_mappings_ptr.size()>0)
-        hit_storage.init(hit_mappings_ptr.size()-1);
 }
 
 unique_ptr<THeaderInfo> acqu::FileFormatBase::BuildTHeaderInfo()

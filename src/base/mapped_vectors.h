@@ -54,11 +54,6 @@ public:
 
 //    static_assert(std::is_integral< Key_u >::value, "Key for mapped_vectors must be integral type");
 
-    void init(unsigned maxKey) {
-        storage.resize(maxKey+1);
-        clear();
-    }
-
     void clear() {
         for(auto key : keys) {
             const auto key_u = to_integral(key);
@@ -75,8 +70,9 @@ public:
         // return silently if we encounter
         // a key which is too large for the storage
         const auto key_u = to_integral(key);
-        if(key_u>=storage.size())
-            return;
+        if(key_u>=storage.size()) {
+            storage.resize(key_u+1);
+        }
 
         // retrieve an already existing key
         auto& ptr = storage[key_u];

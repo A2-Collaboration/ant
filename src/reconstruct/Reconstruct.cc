@@ -66,9 +66,6 @@ Reconstruct::Reconstruct(const THeaderInfo& headerInfo)
     updateablemanager = std_ext::make_unique<UpdateableManager>(
                             headerInfo.ID, move(updateables)
                             );
-
-    sorted_readhits.init(255);
-
 }
 
 // implement the destructor here,
