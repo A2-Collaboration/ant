@@ -3,6 +3,7 @@
 #include <string>
 #include <vector>
 #include <stdexcept>
+#include <type_traits>
 
 #include "TVector3.h"
 
@@ -13,16 +14,16 @@ namespace ant {
  */
 struct Detector_t {
 
-    using basetype = std::uint8_t;
-
     // changing types here breaks the file format
     // the only operation allowed is to add detector types!
-    enum class Type_t : basetype {
+    enum class Type_t : std::uint8_t {
         Trigger,
         Tagger, TaggerMicro, EPT, Moeller, PairSpec,
         CB, PID, MWPC0, MWPC1,
         TAPS, TAPSVeto, Cherenkov
     };
+    using basetype = typename std::underlying_type<Type_t>::type;
+
     const Type_t Type;
     static const char* ToString(const Type_t& type);
 
