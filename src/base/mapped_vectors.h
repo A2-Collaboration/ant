@@ -9,9 +9,29 @@
 namespace ant {
 namespace std_ext {
 
-/**
- * @brief The mapped_items struct
- */
+template<class E, class Enable = void>
+struct to_integral_helper
+{
+    static E inner(E e)
+    {
+        return e;
+    }
+};
+
+template<typename E>
+struct to_integral_helper<E, typename std::enable_if<std::is_enum<E>::value>::type>
+{
+    static typename std::underlying_type<E>::type inner(E e)
+    {
+        return static_cast<typename std::underlying_type<E>::type>(e);
+    }
+};
+
+template<typename E>
+auto to_integral(E e) -> decltype(to_integral_helper<E>::inner(e))
+{
+    return to_integral_helper<E>::inner(e);
+}
 
 
 /**
@@ -28,28 +48,34 @@ private:
     keys_t keys;
 
 public:
+//    using is_enum = std::is_enum<Key>;
+//    using Key_enum = typename std::underlying_type<Key>::type;
+//    using Key_u = typename std::conditional< is_enum::value, typename std::underlying_type<Key>::type, Key >::type;
 
-    static_assert(std::is_integral<Key>::value, "Key for mapped_vectors must be integral type");
+//    static_assert(std::is_integral< Key_u >::value, "Key for mapped_vectors must be integral type");
 
-    void init(Key maxKey) {
+    void init(unsigned maxKey) {
         storage.resize(maxKey+1);
         clear();
     }
 
     void clear() {
-        for(auto key : keys)
-            storage[key]->second.clear();
+        for(auto key : keys) {
+            const auto key_u = to_integral(key);
+            storage[key_u]->second.clear();
+        }
         keys.clear();
     }
 
     void add_item(const Key& key, const Value& value) {
         // return silently if we encounter
         // a key which is too large for the storage
-        if(key>=storage.size())
+        const auto key_u = to_integral(key);
+        if(key_u>=storage.size())
             return;
 
         // retrieve an already existing key
-        auto& ptr = storage[key];
+        auto& ptr = storage[key_u];
         if(ptr==nullptr) {
             ptr = make_unique< std::pair<Key, std::vector<Value>> >(make_pair(key, std::vector<Value>()));
         }
@@ -63,6 +89,18 @@ public:
 
         // add the value finally
         ptr->second.push_back(value);
+    }
+
+    std::vector<Value> get_item(const Key& key) const {
+        // return silently if we encounter
+        // a key which is too large for the storage
+        const auto key_u = to_integral(key);
+        if(key_u>=storage.size())
+            return {};
+        auto& ptr = storage[key_u];
+        if(ptr==nullptr)
+            return {};
+        return ptr->second;
     }
 
     friend class const_iterator;
@@ -89,7 +127,7 @@ public:
         }
 
         const_reference operator*() const {
-            return *(storage_ptr->at(*it_key));
+            return *(storage_ptr->at(to_integral(*it_key)));
         }
     private:
         friend class mapped_vectors;
