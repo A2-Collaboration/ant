@@ -162,7 +162,12 @@ void acqu::FileFormatBase::LogMessage(
                 msg
                 );
 
-    const string& text = "[TUnpackerMessage] " + record->Message ;
+    stringstream ss_text;
+
+    ss_text << "Buffer n=" << unpackedBuffers
+            << " [TUnpackerMessage] " << record->Message ;
+
+    const string& text = ss_text.str();
 
     switch(level) {
     case TUnpackerMessage::Level_t::Info:
@@ -174,7 +179,10 @@ void acqu::FileFormatBase::LogMessage(
     case TUnpackerMessage::Level_t::DataError:
     case TUnpackerMessage::Level_t::HardwareError:
     case TUnpackerMessage::Level_t::DataDiscard:
-        LOG(ERROR) << text;
+        // we treat unpacker error messages as
+        // warnings in log, since they are not fatal
+        // for further processing
+        LOG(WARNING) << text;
         break;
     }
     fillQueue(queue, move(record));
@@ -197,7 +205,8 @@ void acqu::FileFormatBase::FillEvents(queue_t& queue) noexcept
     queue_t queue_buffer;
     if(!UnpackDataBuffer(queue_buffer, it, buffer.cend())) {
         // handle errors on buffer scale
-        VLOG(7) << "Error while unpacking buffer, discarding all unpacked data from buffer.";
+        LOG(WARNING) << "Error while unpacking buffer n=" << unpackedBuffers
+                     << ", discarding all unpacked data from buffer.";
         // add the last item in the queue (if any), which should be a TUnpackerMessage instance
         if(!queue_buffer.empty()) {
             const auto& lastItem = queue.back();

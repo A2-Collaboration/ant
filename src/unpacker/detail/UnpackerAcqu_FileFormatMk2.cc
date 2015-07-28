@@ -135,7 +135,7 @@ bool acqu::FileFormatMk2::SearchFirstDataBuffer(queue_t& queue,
     // read full header record, the file
     // should be at least this long
     reader->expand_buffer(buffer, nWords);
-    // if this is a header-only file, the next expand might file
+    // if this is a header-only file, the next expand might fail
     try {
         reader->expand_buffer(buffer, nWords+1);
     }
@@ -194,6 +194,8 @@ bool acqu::FileFormatMk2::SearchFirstDataBuffer(queue_t& queue,
 
 bool acqu::FileFormatMk2::UnpackDataBuffer(UnpackerAcquFileFormat::queue_t& queue, it_t& it, const it_t& it_endbuffer) noexcept
 {
+    const size_t buffersize_bytes = 4*distance(it, it_endbuffer);
+
     // check header word
     if(*it != acqu::EMk2DataBuff) {
         LogMessage(queue,
@@ -205,18 +207,13 @@ bool acqu::FileFormatMk2::UnpackDataBuffer(UnpackerAcquFileFormat::queue_t& queu
     }
     it++;
 
-    // now loop over buffer contents
+    // now loop over buffer contents, aka single events
+    unsigned nEventsInBuffer = 0;
     while(it != it_endbuffer && *it != acqu::EBufferEnd) {
 
         // extract and check serial ID
         const unsigned acquID = *it;
         if(AcquID_last>acquID) {
-            //      LogMessage(queue,
-            //                 TUnpackerMessage::Level_t::Info,
-            //                 std_ext::formatter()
-            //                 << "Overflow of Acqu EventId detected from "
-            //                 << AcquID_last << " to " << acquID
-            //                 );
             VLOG(8) << "Overflow of Acqu EventId detected from "
                     << AcquID_last << " to " << acquID;
         }
@@ -230,14 +227,33 @@ bool acqu::FileFormatMk2::UnpackDataBuffer(UnpackerAcquFileFormat::queue_t& queu
 
         // increment official unique event ID
         ID_lower++;
+        nEventsInBuffer++;
     }
 
-    // check proper end of buffer
+    // we reached the end of buffer before finding the acqu::EBufferEnd
     if(it == it_endbuffer) {
+        // there's one exception when the sum of the events
+        // inside one buffer fit exactly into the buffer,
+        // then only the end marker for the event is present
+        // but there's no way to detect this properly, since
+        // acqu::EEndEvent == acqu::EBufferEnd (grrrrr)
+        if(*next(it,-1) == acqu::EEndEvent) {
+            LogMessage(queue,
+                       TUnpackerMessage::Level_t::Info,
+                       std_ext::formatter()
+                       << "Buffer was exactly filled with " << nEventsInBuffer
+                       << " events, no buffer endmarker present"
+                       );
+            return true;
+        }
+
         LogMessage(queue,
                    TUnpackerMessage::Level_t::DataError,
-                   std_ext::formatter() <<
-                   "Buffer did not have proper end buffer marker"
+                   std_ext::formatter()
+                   << "Buffer did not have proper end buffer marker:"
+                   << "  1. lastword=0x" << hex << setw(8) << setfill('0') << *next(it,-1)
+                   << ", 2. lastword=0x" << hex << setw(8) << setfill('0') << *next(it,-2)
+                   << ", buffersize_bytes=0x" << buffersize_bytes
                    );
         return false;
     }
@@ -465,7 +481,9 @@ void acqu::FileFormatMk2::HandleScalerBuffer(
     if(*it_endscaler != acqu::EScalerBuffer) {
         LogMessage(queue,
                    TUnpackerMessage::Level_t::DataError,
-                   "Acqu ScalerBlock did not have proper end marker"
+                   std_ext::formatter()
+                   << "Acqu ScalerBlock did not have proper end marker: "
+
                    );
         return;
     }

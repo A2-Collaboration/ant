@@ -76,6 +76,7 @@ private:
     //std::unique_ptr<UnpackerAcquConfig> config;
 
 protected:
+
     using reader_t = decltype(reader);
     using buffer_t = decltype(buffer);
     using it_t = buffer_t::const_iterator;
