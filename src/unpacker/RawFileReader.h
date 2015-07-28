@@ -31,6 +31,7 @@ public:
         performanceBytesRead_compressed(-1) // needed if there's underlying compression
     {}
 
+    virtual ~RawFileReader();
 
     /**
    * @brief open

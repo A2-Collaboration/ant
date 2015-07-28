@@ -9,11 +9,8 @@
 using namespace std;
 using namespace ant;
 
-UnpackerAcqu::UnpackerAcqu()
-{
-
-}
-
+UnpackerAcqu::UnpackerAcqu() {}
+UnpackerAcqu::~UnpackerAcqu() {}
 
 bool UnpackerAcqu::OpenFile(const std::string &filename)
 {
@@ -44,5 +41,8 @@ shared_ptr<TDataRecord> UnpackerAcqu::NextItem() noexcept
     queue.pop_front();
     return element;
 }
+
+
+
 
 

@@ -52,6 +52,8 @@ public:
    */
     virtual void FillEvents(queue_t& queue) noexcept = 0;
 
+    virtual ~UnpackerAcquFileFormat();
+
 protected:
     virtual size_t SizeOfHeader() const = 0;
     virtual bool InspectHeader(const std::vector<uint32_t>& buffer) const = 0;
@@ -67,6 +69,9 @@ namespace acqu {
 
 // FileFormatBase provides a common class for Mk1/Mk2 formats
 class FileFormatBase : public UnpackerAcquFileFormat {
+public:
+    virtual ~FileFormatBase();
+
 private:
     std::unique_ptr<RawFileReader> reader;
     std::vector<std::uint32_t> buffer;

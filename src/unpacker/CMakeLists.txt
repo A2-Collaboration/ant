@@ -5,19 +5,14 @@ include_directories(.)
 
 set(SRCS
   RawFileReader.cc
-  RawFileReader.h
   Unpacker.cc
-  Unpacker.h
+  UnpackerA2Geant.cc
   UnpackerAcqu.cc
-  UnpackerAcqu.h
   detail/UnpackerAcqu_detail.cc
-  detail/UnpackerAcqu_detail.h
-  detail/UnpackerAcqu_legacy.h
   detail/UnpackerAcqu_FileFormatMk1.cc
-  detail/UnpackerAcqu_FileFormatMk1.h
   detail/UnpackerAcqu_FileFormatMk2.cc
-  detail/UnpackerAcqu_FileFormatMk2.h
   detail/UnpackerAcqu_templates.h
+  detail/UnpackerAcqu_legacy.h
 )
 
 add_library(unpacker ${SRCS})

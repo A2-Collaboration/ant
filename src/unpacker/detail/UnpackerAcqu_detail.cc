@@ -83,6 +83,8 @@ UnpackerAcquFileFormat::Get(const string &filename,
     return move(formats.back());
 }
 
+UnpackerAcquFileFormat::~UnpackerAcquFileFormat() {}
+
 void acqu::FileFormatBase::Setup(reader_t &&reader_, buffer_t &&buffer_) {
     reader = move(reader_);
     buffer = move(buffer_);
@@ -120,6 +122,11 @@ void acqu::FileFormatBase::FillHeader(queue_t& queue)
             hit_mappings_ptr[ch].push_back(addressof(hit_mapping));
         }
     }
+}
+
+acqu::FileFormatBase::~FileFormatBase()
+{
+
 }
 
 unique_ptr<THeaderInfo> acqu::FileFormatBase::BuildTHeaderInfo()

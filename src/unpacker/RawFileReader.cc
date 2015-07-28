@@ -17,6 +17,8 @@ using namespace ant;
 
 double RawFileReader::OutputPerformanceStats = numeric_limits<double>::quiet_NaN();
 
+ant::RawFileReader::~RawFileReader() {}
+
 void RawFileReader::open(const string &filename, const size_t inbufsize) {
     // open it as plain raw file
     ifstream file(filename.c_str());
@@ -45,8 +47,6 @@ void RawFileReader::HandlePerformanceStats()
         lastPerformanceOutput = chrono::system_clock::now();
         performanceBytesRead = gcount();
         performanceBytesRead_compressed = p->gcount_compressed();
-        LOG(INFO) << "File read performance output every "
-                  << OutputPerformanceStats  << " seconds";
         return;
     }
 
@@ -221,3 +221,5 @@ void RawFileReader::XZ::read(char* s, streamsize n) {
         }
     }
 }
+
+
