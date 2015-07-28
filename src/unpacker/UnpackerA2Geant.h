@@ -21,6 +21,7 @@ class TFile;
 
 namespace ant {
 
+class UnpackerA2GeantConfig; // see below
 
 class UnpackerA2Geant : public Unpacker::Module
 {
@@ -38,9 +39,11 @@ private:
     std::uint32_t ID_upper;
     std::uint32_t ID_lower;
 
-    unique_ptr<TFile> tfile;
+    std::unique_ptr<TFile> tfile;
     TTree* geant;
 
+    std::unique_ptr<THeaderInfo> headerInfo;
+    std::shared_ptr<UnpackerA2GeantConfig> config;
 
     // keep in syn with A2CBoutput.h in a2geant
     static constexpr int GEANT_MAX_TAPSHITS = 438;
@@ -84,6 +87,13 @@ private:
     Float_t         emwpc[GEANT_MAX_MWPCHITS] = {};
     Long64_t        mc_evt_id = -1;
     Long64_t        mc_rnd_id = -1;
+};
+
+// we define some methods here which
+// the configs are required to implement
+class UnpackerA2GeantConfig : public ExpConfig::Unpacker<UnpackerA2GeantConfig> {
+public:
+    virtual double GetElectronBeamEnergy() const = 0;
 };
 
 } // namespace ant

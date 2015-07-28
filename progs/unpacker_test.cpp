@@ -21,6 +21,7 @@
 #include "base/Logger.h"
 #include "base/Format.h"
 #include "base/WrapTFile.h"
+#include "base/CmdLine.h"
 
 #include <chrono>
 
@@ -41,9 +42,24 @@ void myCrashHandler(int sig) {
 }
 
 int main(int argc, char* argv[]) {
-    SetupLogger(argc, argv);
+    SetupLogger();
+
+    TCLAP::CmdLine cmd("unpacker_test", ' ', "0.01");
+    auto cmd_input  = cmd.add<TCLAP::ValueArg<string>>("i","input","Unpacker input file (Acqu/A2Geant)",false,"scratch/steffen-pi0-cluster-geant.root","string");
+    auto cmd_setup  = cmd.add<TCLAP::ValueArg<string>>("","setup","Manually choose setup",false,"Setup_2014_EtaPrime","string");
+    auto cmd_output = cmd.add<TCLAP::ValueArg<string>>("o","output","Output file",false,"unpacker_test_out.root","string");
+    auto cmd_verbose = cmd.add<TCLAP::ValueArg<int>>("v","verbose","Verbosity level (0..9)", false, 0,"int");
+    auto cmd_noreads = cmd.add<TCLAP::SwitchArg>("","noreads","Do not write detector reads to output",false);
+    auto cmd_noevents = cmd.add<TCLAP::SwitchArg>("","noevents","Do not write events to output",false);
+
+    cmd.parse(argc, argv);
+    if(cmd_verbose->isSet()) {
+        el::Loggers::setVerboseLevel(cmd_verbose->getValue());
+    }
     el::Helpers::setCrashHandler(myCrashHandler);
 
+
+    ExpConfig::ManualSetupName = cmd_setup->getValue(); // if non-empty, disables automatic setup determination
     RawFileReader::OutputPerformanceStats = 5;
 
     std::chrono::time_point<std::chrono::system_clock> start, end;
@@ -51,12 +67,13 @@ int main(int argc, char* argv[]) {
 
     //auto unpacker = Unpacker::Get("scratch/CBTaggTAPS_9227.dat");
     //auto unpacker = Unpacker::Get("scratch/CBTaggTAPS_7892.dat");
-    auto unpacker = Unpacker::Get("scratch/CBTaggTAPS_5711.dat.xz");
+    //auto unpacker = Unpacker::Get("scratch/CBTaggTAPS_5711.dat.xz");
     //auto unpacker = Unpacker::Get("scratch/oneevent-small.dat");
+    auto unpacker = Unpacker::Get(cmd_input->getValue());
     unsigned nReads = 0;
 
     // write some stuff to a ROOT tree
-    WrapTFile file("unpacker_test_out.root");
+    WrapTFile file(cmd_output->getValue());
 
     TTree* treeHeaderInfo = new TTree("treeHeaderInfo", "treeHeaderInfo");
     THeaderInfo* HeaderInfo = new THeaderInfo();
@@ -108,10 +125,12 @@ int main(int argc, char* argv[]) {
             if(reconstruct) {
                 auto event_ptr = reconstruct->DoReconstruct(*DetectorRead);
                 Event = event_ptr.get();
-                treeEvent->Fill();
+                if(!cmd_noevents->isSet())
+                    treeEvent->Fill();
             }
 
-            treeDetectorRead->Fill();
+            if(!cmd_noreads->isSet())
+                treeDetectorRead->Fill();
 
             nReads++;
             if(nReads % 10000 == 0) {

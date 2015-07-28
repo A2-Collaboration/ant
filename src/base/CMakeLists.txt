@@ -19,6 +19,7 @@ set(SRCS
   WrapTFile.cc
   WrapTFile.h
   mapped_vectors.h
+  CmdLine.h
   detail/format.cc
   detail/format.h
   detail/CmdLine.h

@@ -17,9 +17,10 @@ class Updateable_traits;
 class ExpConfig
 {
 public:
-    ExpConfig() = delete; // this class is more a wrapper for handling the config
 
-    // all configs have a common base and match via THeaderInfo
+    static std::string ManualSetupName;
+
+    // all configs have a common base and should match via THeaderInfo
     class Base {
     public:
         virtual ~Base() = default;
@@ -27,16 +28,16 @@ public:
     };
 
     // the ExpConfig::Module provides general information about the experiment
-    class Module : public virtual Base {
+    class Setup : public virtual Base {
     public:
         virtual std::string GetName() const = 0;
-        virtual double GetBeamEnergy() const = 0;
+        virtual double GetElectronBeamEnergy() const = 0;
         virtual std::list< std::shared_ptr< Calibration::PhysicsModule> > GetCalibrations() = 0;
 
-        // you may obtain such an Expconfig::Module via headerInfo or name
-        static std::shared_ptr<Module> Get(const THeaderInfo& header);
-        static std::shared_ptr<Module> Get(const std::string& name);
-        static std::list< std::shared_ptr<Module> > GetAll();
+        // you may obtain such an Expconfig::Module via headerInfo, name or get all of them
+        static std::shared_ptr<Setup> Get(const THeaderInfo& header);
+        static std::shared_ptr<Setup> Get(const std::string& name);
+        static std::list< std::shared_ptr<Setup> > GetAll();
     };
 
     // in order to run the Reconstruction,
@@ -67,6 +68,7 @@ public:
         using std::runtime_error::runtime_error; // use base class constructor
     };
 
+    ExpConfig() = delete; // this class is more a wrapper for handling the config
 private:
     template<typename T>
     static std::shared_ptr<T> Get_(const THeaderInfo& header);

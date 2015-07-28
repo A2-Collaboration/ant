@@ -20,6 +20,7 @@ struct THeaderInfo : TDataRecord
       )
     :
       TDataRecord(id),
+      SetupName(),
       Timestamp(timestamp),
       RunNumber(runnumber),
       Description(description)
@@ -32,21 +33,39 @@ struct THeaderInfo : TDataRecord
                   );
   }
 
-  std::int64_t Timestamp;   // unix epoch
+  THeaderInfo(
+      const TID& id,
+      const std::string& setupName
+      )
+    :
+      TDataRecord(id),
+      SetupName(setupName),
+      Timestamp(),
+      RunNumber(),
+      Description()
+  {}
+
+
+  std::string   SetupName;   // specify expconfig setup manually (if non empty)
+  std::int64_t  Timestamp;   // unix epoch
   std::uint32_t RunNumber;   // runnumber
   std::string   Description; // full descriptive string
 
 #ifndef __CINT__
   virtual std::ostream& Print( std::ostream& s) const override {
-    return s << "THeaderInfo ID=" << ID
-             << " Timestamp='" << std_ext::ctime(Timestamp) << "'"
-             << " RunNumber=" << RunNumber
-             << " Description='" << Description << "'";
-
+    s << "THeaderInfo ID=" << ID;
+    if(SetupName.empty()) {
+        s << " Timestamp='" << std_ext::ctime(Timestamp) << "'"
+          << " RunNumber=" << RunNumber
+          << " Description='" << Description << "'";
+    }
+    else
+        s << " SetupID=" << SetupName;
+    return s;
   }
 #endif
 
-  THeaderInfo() :  TDataRecord(), Timestamp(), RunNumber(), Description() {}
+  THeaderInfo() :  TDataRecord(), SetupName(), Timestamp(), RunNumber(), Description() {}
   ClassDef(THeaderInfo, ANT_UNPACKER_ROOT_VERSION)
 };
 

@@ -14,7 +14,7 @@
 
 #include "base/std_ext.h"
 #include "base/Logger.h"
-#include "base/detail/CmdLine.h"
+#include "base/CmdLine.h"
 
 #include "TRint.h"
 
@@ -45,8 +45,8 @@ int main(int argc, char** argv) {
         el::Loggers::setVerboseLevel(verbose->getValue());
     }
 
-    using setup_ptr_t = shared_ptr<ExpConfig::Module>;
-    setup_ptr_t setup = ExpConfig::Module::Get(cmdline_setup->getValue());
+    using setup_ptr_t = shared_ptr<ExpConfig::Setup>;
+    setup_ptr_t setup = ExpConfig::Setup::Get(ExpConfig::ManualSetupName);
     if(setup != nullptr) {
         LOG(INFO) << "Found setup " << setup->GetName();
     }
@@ -55,7 +55,7 @@ int main(int argc, char** argv) {
     if(cmdline_calibrations->isSet()) {
         if(setup==nullptr) {
             stringstream ss_setups;
-            for(const setup_ptr_t& item : ExpConfig::Module::GetAll()) {
+            for(const setup_ptr_t& item : ExpConfig::Setup::GetAll()) {
                 ss_setups << item->GetName() << " ";
             }
             LOG(INFO)  << "Available setups: " << ss_setups.str();

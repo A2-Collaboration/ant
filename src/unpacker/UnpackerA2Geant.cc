@@ -1,8 +1,11 @@
 #include "UnpackerA2Geant.h"
 
+#include "expconfig/ExpConfig.h"
+
 #include "base/Logger.h"
 #include "base/std_ext.h"
 
+#include "tree/THeaderInfo.h"
 #include "tree/TDetectorRead.h"
 
 #include "TFile.h"
@@ -74,12 +77,24 @@ bool UnpackerA2Geant::OpenFile(const string& filename)
         throw Exception("Tree file contains too many entries for building correct unique ID");
     }
 
-    LOG(INFO) << "Successfully opened tree in '" << filename
-              << "' with " << geant->GetEntries() << " entries";
+
 
     /// \todo think of some better upper Id?
     ID_lower = 0; // also counts number of entries in TTree
     ID_upper = geant->Hash();
+
+    // this unpacker has no chance to make a proper THeaderInfo
+    // so we ask the ExpConfig if it has an idea...
+
+    if(ExpConfig::ManualSetupName.empty()) {
+        throw Exception("This unpacker requires a manually set setup name");
+    }
+    headerInfo = std_ext::make_unique<THeaderInfo>(TID(ID_upper, ID_lower, true),
+                                                   ExpConfig::ManualSetupName);
+    config = ExpConfig::Unpacker<UnpackerA2GeantConfig>::Get(*headerInfo);
+
+    LOG(INFO) << "Successfully opened tree in '" << filename
+              << "' with " << geant->GetEntries() << " entries";
 
     return true;
 }
@@ -88,6 +103,13 @@ shared_ptr<TDataRecord> UnpackerA2Geant::NextItem() noexcept
 {
     if(ID_lower>=geant->GetEntriesFast())
         return nullptr;
+
+    // return the headerinfo as the very first item
+    if(headerInfo != nullptr) {
+        return make_shared<THeaderInfo>(*headerInfo.release());
+    }
+
+
     geant->GetEntry(ID_lower);
 
     // start with an empty detector read, don't forget MC flag true
@@ -99,13 +121,15 @@ shared_ptr<TDataRecord> UnpackerA2Geant::NextItem() noexcept
     vector<TDetectorReadHit>& hits = detread->Hits;
     hits.reserve(3*n_total); // approx. 3 detector read hits per detector
 
+    const double GeVtoMeV = 1000.0;
+
     // fill CB Hits
     for(int i=0;i<fnhits;i++) {
-        const unsigned ch = icryst[i];
+        const unsigned ch = icryst[i]; // no -1 here!
         const Detector_t::Type_t det = Detector_t::Type_t::CB;
         hits.emplace_back(
                     LogicalChannel_t{det, Channel_t::Type_t::Integral, ch},
-                    vector<double>{ecryst[i]}
+                    vector<double>{GeVtoMeV*ecryst[i]}
                     );
         hits.emplace_back(
                     LogicalChannel_t{det, Channel_t::Type_t::Timing, ch},
@@ -116,11 +140,11 @@ shared_ptr<TDataRecord> UnpackerA2Geant::NextItem() noexcept
     // fill PID Hits
     for(int i=0;i<fvhits;i++) {
         /// \todo take care of reversed PID orientation
-        const unsigned ch = iveto[i];
+        const unsigned ch = iveto[i]-1;
         const Detector_t::Type_t det = Detector_t::Type_t::PID;
         hits.emplace_back(
                     LogicalChannel_t{det, Channel_t::Type_t::Integral, ch},
-                    vector<double>{eveto[i]}
+                    vector<double>{GeVtoMeV*eveto[i]}
                     );
         hits.emplace_back(
                     LogicalChannel_t{det, Channel_t::Type_t::Timing, ch},
@@ -130,16 +154,16 @@ shared_ptr<TDataRecord> UnpackerA2Geant::NextItem() noexcept
 
     // fill TAPS Hits
     for(int i=0;i<fntaps;i++) {
-        const unsigned ch = ictaps[i];
+        const unsigned ch = ictaps[i]-1;
         const Detector_t::Type_t det = Detector_t::Type_t::TAPS;
         hits.emplace_back(
                     LogicalChannel_t{det, Channel_t::Type_t::Integral, ch},
-                    vector<double>{ectapsl[i]}
+                    vector<double>{GeVtoMeV*ectapsl[i]}
                     );
         /// \todo check if the short gate actually makes sense?
         hits.emplace_back(
                     LogicalChannel_t{det, Channel_t::Type_t::IntegralShort, ch},
-                    vector<double>{ectapfs[i]}
+                    vector<double>{GeVtoMeV*ectapfs[i]}
                     );
         hits.emplace_back(
                     LogicalChannel_t{det, Channel_t::Type_t::Timing, ch},
@@ -149,11 +173,12 @@ shared_ptr<TDataRecord> UnpackerA2Geant::NextItem() noexcept
 
     // fill TAPSVeto Hits
     for(int i=0;i<fnvtaps;i++) {
-        const unsigned ch = ivtaps[i];
+        /// \todo check if -1 here is really correct
+        const unsigned ch = ivtaps[i]-1;
         const Detector_t::Type_t det = Detector_t::Type_t::TAPSVeto;
         hits.emplace_back(
                     LogicalChannel_t{det, Channel_t::Type_t::Integral, ch},
-                    vector<double>{evtaps[i]}
+                    vector<double>{GeVtoMeV*evtaps[i]}
                     );
         /// \todo check if there's really no veto timing?
         hits.emplace_back(

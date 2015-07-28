@@ -1,7 +1,10 @@
 #pragma once
 
 #include "ExpConfig.h"
+
 #include "unpacker/UnpackerAcqu.h"
+#include "unpacker/UnpackerA2Geant.h"
+
 #include "base/std_ext.h"
 #include "tree/THeaderInfo.h"
 
@@ -38,9 +41,10 @@ namespace ant {
 namespace expconfig {
 
 class Setup :
-        public ExpConfig::Module,
+        public ExpConfig::Setup,
         public ExpConfig::Reconstruct,
-        public UnpackerAcquConfig
+        public UnpackerAcquConfig,
+        public UnpackerA2GeantConfig
 {
 public:
     virtual std::list< std::shared_ptr< Calibration::PhysicsModule> > GetCalibrations() override {
@@ -84,7 +88,7 @@ protected:
     bool Matches(const THeaderInfo& header) const override {
         // check that all detectors match
         for(const auto& detector : detectors) {
-            const auto& ptr = dynamic_pointer_cast<ExpConfig::Base, Detector_t>(detector);
+            const auto& ptr = std::dynamic_pointer_cast<ExpConfig::Base, Detector_t>(detector);
             if(ptr == nullptr)
                 continue;
             if(!ptr->Matches(header))
@@ -115,6 +119,7 @@ protected:
 };
 
 // stuff for semiauto-registering the setups
+// don't forget to use AUTO_REGISTER_SETUP
 
 template<class T>
 std::shared_ptr<Setup> setup_factory()

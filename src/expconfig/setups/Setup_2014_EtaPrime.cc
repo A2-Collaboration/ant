@@ -20,7 +20,7 @@ public:
         const auto trigger = std::make_shared<detector::Trigger_2014>();
         const bool cherenkovInstalled = false;
         AddDetector(trigger);
-        AddDetector<detector::EPT_2014>(GetBeamEnergy());
+        AddDetector<detector::EPT_2014>(GetElectronBeamEnergy());
         AddDetector<detector::CB>();
         AddDetector<detector::PID_2014>();
         AddDetector<detector::TAPS_2013>(cherenkovInstalled, false); // no Cherenkov, don't use sensitive channels
@@ -89,7 +89,7 @@ public:
         AddHook<calibration::TAPS_ShowerCorrection>();
     }
 
-    virtual double GetBeamEnergy() const override {
+    virtual double GetElectronBeamEnergy() const override {
         return 1604.0;
     }
 

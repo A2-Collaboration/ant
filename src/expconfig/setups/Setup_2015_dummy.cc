@@ -21,7 +21,7 @@ public:
         AddDetector<detector::CB>();
     }
 
-    virtual double GetBeamEnergy() const override {
+    virtual double GetElectronBeamEnergy() const override {
         // don't be afraid to use NaN if you don't know a value
         return numeric_limits<double>::quiet_NaN();
     }

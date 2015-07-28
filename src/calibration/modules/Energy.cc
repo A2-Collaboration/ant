@@ -38,12 +38,14 @@ void Energy::ApplyTo(const readhits_t& hits, extrahits_t& extrahits)
 {
     const auto& dethits = hits.get_item(DetectorType);
 
-    // now calibrate the Energys (ignore any other kind of hits)
+    // now calibrate the Energies (ignore any other kind of hits)
     for(TDetectorReadHit* dethit : dethits) {
         if(dethit->GetChannelType() != Channel_t::Type_t::Integral)
             continue;
         // the Converter is smart enough to account for reference Energys!
         const std::vector<double>& values = Converter->Convert(dethit->RawData);
+        if(values.empty())
+            continue;
         dethit->Values.reserve(values.size());
 
         // for pedestal calibration, we insert extra hits here
