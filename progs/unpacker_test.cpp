@@ -133,8 +133,8 @@ int main(int argc, char* argv[]) {
                 treeDetectorRead->Fill();
 
             nReads++;
-            if(nReads % 10000 == 0) {
-                VLOG(5) << "Unpacked " << nReads << " detector reads";
+            if(nReads % 3000 == 0) {
+                LOG(INFO) << "Unpacked " << nReads << " detector reads";
             }
             continue;
         }

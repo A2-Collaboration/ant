@@ -187,7 +187,10 @@ shared_ptr<TDataRecord> UnpackerA2Geant::NextItem() noexcept
                     );
     }
 
-    /// \todo simulate tagger hits...
+    // "reconstruct" a taggerhit from the photon
+    const double photon_energy = fbeam[4];
+
+    /// \todo implement this...
 
     ID_lower++;
     return detread;
