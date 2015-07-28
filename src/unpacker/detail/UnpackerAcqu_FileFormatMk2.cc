@@ -344,6 +344,7 @@ void acqu::FileFormatMk2::FillTDetectorRead(
     // the order of its hits corresponds to the given mappings
 
     auto record = std_ext::make_unique<TDetectorRead>(TID(ID_upper, ID_lower));
+    record->Hits.reserve(2*hit_storage.size());
 
     for(const auto& it_hits : hit_storage) {
         const uint16_t& ch = it_hits.first;

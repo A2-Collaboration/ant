@@ -67,6 +67,10 @@ public:
         keys.clear();
     }
 
+    std::size_t size() const {
+        return keys.size();
+    }
+
     void add_item(const Key& key, const Value& value) {
         // return silently if we encounter
         // a key which is too large for the storage
