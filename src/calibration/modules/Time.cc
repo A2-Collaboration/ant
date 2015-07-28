@@ -58,12 +58,7 @@ void Time::Update(const TID& id) {
 
 void Time::ApplyTo(const readhits_t& hits, extrahits_t&)
 {
-    // search for to be calibrated Times
-    const auto it_dethits = hits.find(DetectorType);
-    if(it_dethits == hits.end())
-        return;
-
-    const auto& dethits = it_dethits->second;
+    const auto& dethits = hits.get_item(DetectorType);
 
     // now calibrate the Times (ignore any other kind of hits)
     for(TDetectorReadHit* dethit : dethits) {

@@ -51,9 +51,13 @@ struct ReconstructTester {
         r.updateablemanager->UpdateParameters(detectorRead.ID);
 
         // apply the hooks (mostly calibrations)
-        Reconstruct::sorted_bydetectortype_t<TDetectorReadHit*> sorted_readhits;
-        r.ApplyHooksToReadHits(detectorRead, sorted_readhits);
-        size_t n_readhits = getTotalCount(sorted_readhits);
+        r.ApplyHooksToReadHits(detectorRead);
+        // manually scan the r.sorted_readhits
+        // they are a member variable for performance reasons
+        size_t n_readhits = 0;
+        for(const auto& readhit : r.sorted_readhits ) {
+            n_readhits += readhit.second.size();
+        }
         REQUIRE(n_readhits>0);
 
         // already create the event here, since Tagger
@@ -66,7 +70,7 @@ struct ReconstructTester {
         // we also extract the energy, which is always defined as a
         // single value with type Channel_t::Type_t
         Reconstruct::sorted_bydetectortype_t<AdaptorTClusterHit> sorted_clusterhits;
-        r.BuildHits(move(sorted_readhits), sorted_clusterhits, event->Tagger);
+        r.BuildHits(sorted_clusterhits, event->Tagger);
         size_t n_clusterhits = getTotalCount(sorted_clusterhits);
         REQUIRE(n_clusterhits + event->Tagger.Hits.size() <= n_readhits);
 

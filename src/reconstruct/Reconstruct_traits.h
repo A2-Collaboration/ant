@@ -2,6 +2,8 @@
 
 #include "expconfig/Detector_t.h"
 
+#include "base/mapped_vectors.h"
+
 #include <memory>
 #include <map>
 #include <list>
@@ -29,7 +31,8 @@ struct ReconstructHook {
 
     class Base {
     public:
-        using readhits_t = std::map< Detector_t::Type_t, std::list< TDetectorReadHit* > >;
+//        using readhits_t = std::map< Detector_t::Type_t, std::list< TDetectorReadHit* > >;
+        using readhits_t = std_ext::mapped_vectors< Detector_t::Type_t, TDetectorReadHit* >;
         using extrahits_t = std::list< TDetectorReadHit >;
         using clusters_t = std::map< Detector_t::Type_t, std::list< TCluster > >;
         virtual ~Base() = default;

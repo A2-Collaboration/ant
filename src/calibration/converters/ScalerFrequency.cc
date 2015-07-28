@@ -9,11 +9,10 @@ using namespace ant::calibration;
 
 void converter::ScalerFrequency::ApplyTo(const readhits_t& hits, extrahits_t&) {
     ReferenceCounts = numeric_limits<double>::quiet_NaN();
+
     // search for reference scaler
-    const auto it_refhits = hits.find(ReferenceScaler.DetectorType);
-    if(it_refhits == hits.end())
-        return;
-    const auto& refhits = it_refhits->second;
+    const auto& refhits = hits.get_item(ReferenceScaler.DetectorType);
+
     const auto comparer = [this] (TDetectorReadHit const * hit) {
         return hit->GetChannelType() == ReferenceScaler.ChannelType &&
                 hit->Channel == ReferenceScaler.Channel;

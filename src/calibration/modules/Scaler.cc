@@ -25,11 +25,7 @@ Scaler::~Scaler() {}
 void Scaler::ApplyTo(const readhits_t& hits, extrahits_t&)
 {
     // search for to be calibrated scalers
-    const auto it_dethits = hits.find(DetectorType);
-    if(it_dethits == hits.end())
-        return;
-
-    const auto& dethits = it_dethits->second;
+    const auto& dethits = hits.get_item(DetectorType);
 
     // now calibrate the scalers using the Converter
     for(TDetectorReadHit* dethit : dethits) {

@@ -36,12 +36,7 @@ Energy::Energy(Detector_t::Type_t detectorType,
 
 void Energy::ApplyTo(const readhits_t& hits, extrahits_t& extrahits)
 {
-    // search for to be calibrated Energys
-    const auto it_dethits = hits.find(DetectorType);
-    if(it_dethits == hits.end())
-        return;
-
-    const auto& dethits = it_dethits->second;
+    const auto& dethits = hits.get_item(DetectorType);
 
     // now calibrate the Energys (ignore any other kind of hits)
     for(TDetectorReadHit* dethit : dethits) {

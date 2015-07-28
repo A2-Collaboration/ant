@@ -67,6 +67,8 @@ Reconstruct::Reconstruct(const THeaderInfo& headerInfo)
                             headerInfo.ID, move(updateables)
                             );
 
+    sorted_readhits.init(255);
+
 }
 
 // implement the destructor here,
@@ -80,8 +82,8 @@ unique_ptr<TEvent> Reconstruct::DoReconstruct(TDetectorRead& detectorRead)
 
     // apply the hooks for detector read hits (mostly calibrations),
     // note that this also changes the detectorRead
-    sorted_bydetectortype_t<TDetectorReadHit*> sorted_readhits;
-    ApplyHooksToReadHits(detectorRead, sorted_readhits);
+
+    ApplyHooksToReadHits(detectorRead);
     // the detectorRead is now calibrated as far as possible
     // one might return now and detectorRead is just calibrated...
 
@@ -97,7 +99,7 @@ unique_ptr<TEvent> Reconstruct::DoReconstruct(TDetectorRead& detectorRead)
     // we also extract the energy, which is always defined as a
     // single value with type Channel_t::Type_t
     sorted_bydetectortype_t<AdaptorTClusterHit> sorted_clusterhits;
-    BuildHits(move(sorted_readhits), sorted_clusterhits, event->Tagger);
+    BuildHits(sorted_clusterhits, event->Tagger);
 
     // then build clusters (at least for calorimeters this is not trivial)
     sorted_bydetectortype_t<TCluster> sorted_clusters;
@@ -118,15 +120,15 @@ unique_ptr<TEvent> Reconstruct::DoReconstruct(TDetectorRead& detectorRead)
 }
 
 void Reconstruct::ApplyHooksToReadHits(
-        TDetectorRead& detectorRead,
-        sorted_bydetectortype_t<TDetectorReadHit*>& sorted_readhits)
+        TDetectorRead& detectorRead)
 {
     // categorize the hits by detector type
     // this is handy for all subsequent reconstruction steps
     // we need to use non-const pointers because calibrations
     // may change the content
+    sorted_readhits.clear();
     for(TDetectorReadHit& readhit : detectorRead.Hits) {
-        sorted_readhits[readhit.GetDetectorType()].push_back(addressof(readhit));
+        sorted_readhits.add_item(readhit.GetDetectorType(), addressof(readhit));
     }
 
     // apply calibration
@@ -145,14 +147,12 @@ void Reconstruct::ApplyHooksToReadHits(
                                  make_move_iterator(extrahits.end()));
         sorted_readhits.clear();
         for(TDetectorReadHit& readhit : detectorRead.Hits) {
-            sorted_readhits[readhit.GetDetectorType()].push_back(addressof(readhit));
+            sorted_readhits.add_item(readhit.GetDetectorType(), addressof(readhit));
         }
     }
 }
 
-void Reconstruct::BuildHits(
-        sorted_bydetectortype_t<TDetectorReadHit *>&& sorted_readhits,
-        sorted_bydetectortype_t<AdaptorTClusterHit>& sorted_clusterhits,
+void Reconstruct::BuildHits(sorted_bydetectortype_t<AdaptorTClusterHit>& sorted_clusterhits,
         TTagger& event_tagger)
 {
     auto insert_hint = sorted_clusterhits.cbegin();
@@ -226,7 +226,7 @@ void Reconstruct::BuildHits(
 }
 
 void Reconstruct::HandleTagger(const shared_ptr<TaggerDetector_t>& taggerdetector,
-                               std::list<TDetectorReadHit*> readhits,
+                               const std::vector<TDetectorReadHit*>& readhits,
                                TTagger& event_tagger
                                )
 {

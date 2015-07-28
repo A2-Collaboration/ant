@@ -42,19 +42,18 @@ private:
     template<typename T>
     using sorted_bydetectortype_t = std::map<Detector_t::Type_t, std::list< T > >;
 
-    void ApplyHooksToReadHits(
-            TDetectorRead& detectorRead,
-            sorted_bydetectortype_t<TDetectorReadHit*>& sorted_readhits);
+    using sorted_readhits_t = ReconstructHook::Base::readhits_t;
+    sorted_readhits_t sorted_readhits;
+
+    void ApplyHooksToReadHits(TDetectorRead& detectorRead);
 
     void BuildHits(
-            sorted_bydetectortype_t<TDetectorReadHit*>&& sorted_readhits,
             sorted_bydetectortype_t<reconstruct::AdaptorTClusterHit>& sorted_clusterhits,
             TTagger& event_tagger
             );
 
-    void HandleTagger(
-            const std::shared_ptr<TaggerDetector_t>& taggerdetector,
-            std::list<TDetectorReadHit*> readhits,
+    void HandleTagger(const std::shared_ptr<TaggerDetector_t>& taggerdetector,
+            const std::vector<TDetectorReadHit*>& readhits,
             TTagger& event_tagger);
 
     void BuildClusters(
