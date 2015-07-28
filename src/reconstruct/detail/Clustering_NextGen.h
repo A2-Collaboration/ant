@@ -46,8 +46,8 @@ struct bump_t {
 
 static double calc_total_energy(const std::vector< crystal_t >& cluster) {
     double energy = 0;
-    for(size_t i=0;i<cluster.size();i++) {
-        energy += cluster[i].Energy;
+    for(const auto& crystal : cluster) {
+        energy += crystal.Energy;
     }
     return energy;
 }
@@ -124,8 +124,7 @@ static void split_cluster(const std::vector<crystal_t>& cluster,
     // make Voting based on relative distance or energy difference
 
     double totalClusterEnergy = 0;
-    std::vector<unsigned> votes;
-    votes.resize(cluster.size(), 0);
+    std::vector<unsigned> votes(cluster.size(), 0);
     // start searching at the second highest energy (i>0 case in next for loop)
     // since we know that the highest energy always has a vote
     votes[0]++;

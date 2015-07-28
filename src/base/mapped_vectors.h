@@ -57,9 +57,9 @@ public:
     void clear() {
         for(auto key : keys) {
             const auto key_u = to_integral(key);
-            storage[key_u]->second.clear();
+            storage[key_u]->second.resize(0);
         }
-        keys.clear();
+        keys.resize(0);
     }
 
     std::size_t size() const {
