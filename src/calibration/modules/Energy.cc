@@ -12,10 +12,11 @@ using namespace ant;
 using namespace ant::calibration;
 
 Energy::Energy(Detector_t::Type_t detectorType,
-        Calibration::Converter::ptr_t converter, const double defaultPedestal,
-        const double defaultGain,
-        const double defaultThreshold
-        ) :
+               Calibration::Converter::ptr_t converter,
+               double defaultPedestal,
+               double defaultGain,
+               double defaultThreshold,
+               double defaultRelativeGain) :
     Calibration::PhysicsModule(
         std_ext::formatter()
         << Detector_t::ToString(detectorType)
@@ -28,7 +29,8 @@ Energy::Energy(Detector_t::Type_t detectorType,
     DefaultGain(defaultGain),
     Gains(),
     DefaultThreshold(defaultThreshold),
-    Thresholds()
+    Thresholds(),
+    DefaultRelativeGain(defaultRelativeGain)
 {
     if(Converter==nullptr)
         throw std::runtime_error("Given converter should not be nullptr");
@@ -43,8 +45,11 @@ void Energy::ApplyTo(const readhits_t& hits, extrahits_t& extrahits)
         if(dethit->GetChannelType() != Channel_t::Type_t::Integral)
             continue;
 
-        // Values might already be filled,
-        // then we apply only the threshold
+
+
+        // Values might already be filled
+        // (for example by previous calibration run, or A2Geant unpacker),
+        // then we apply the threshold and the relative gain only
         std::vector<double> values(0);
 
         // prefer RawData if available
@@ -83,10 +88,15 @@ void Energy::ApplyTo(const readhits_t& hits, extrahits_t& extrahits)
             dethit->Values.resize(0);
         }
 
-        // always apply the threshold cut
+        // always apply the threshold cut and the relative gains
         dethit->Values.reserve(values.size());
 
         for(double value : values) {
+            if(RelativeGains.empty())
+                value *= DefaultRelativeGain;
+            else
+                value *= RelativeGains[dethit->Channel];
+
             const double threshold = Thresholds.empty()
                                      ? DefaultThreshold
                                      : Thresholds[dethit->Channel];

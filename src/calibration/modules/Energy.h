@@ -20,10 +20,11 @@ class Energy :
 public:
 
     Energy(Detector_t::Type_t detectorType,
-             Calibration::Converter::ptr_t converter,
-             const double defaultPedestal,
-             const double defaultGain,
-             const double defaultThreshold);
+           Calibration::Converter::ptr_t converter,
+           double defaultPedestal,
+           double defaultGain,
+           double defaultThreshold,
+           double defaultRelativeGain);
 
     // ReconstructHook
     virtual void ApplyTo(const readhits_t& hits, extrahits_t& extrahits) override;
@@ -37,14 +38,19 @@ protected:
     const Detector_t::Type_t DetectorType;
     const Calibration::Converter::ptr_t Converter;
 
+    // only used for rawData conversion
     const double DefaultPedestal;
     std::vector<double> Pedestals;
 
     const double DefaultGain;
     std::vector<double> Gains;
 
+    // always applied to values
     const double DefaultThreshold;
     std::vector<double> Thresholds;
+
+    const double DefaultRelativeGain;
+    std::vector<double> RelativeGains;
 
 };
 

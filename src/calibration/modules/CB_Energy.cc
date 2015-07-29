@@ -13,14 +13,16 @@ using namespace ant;
 using namespace ant::calibration;
 
 CB_Energy::CB_Energy(Calibration::Converter::ptr_t converter,
-                               const double defaultPedestal,
-                               const double defaultGain,
-                               const double defaultThreshold):
+                     double defaultPedestal,
+                     double defaultGain,
+                     double defaultThreshold,
+                     double defaultRelativeGain):
     Energy(Detector_t::Type_t::CB,
            converter,
            defaultPedestal,
            defaultGain,
-           defaultThreshold)
+           defaultThreshold,
+           defaultRelativeGain)
 {
 
 }

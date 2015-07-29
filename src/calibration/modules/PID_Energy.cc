@@ -13,14 +13,17 @@ using namespace ant;
 using namespace ant::calibration;
 
 PID_Energy::PID_Energy(Calibration::Converter::ptr_t converter,
-                               const double defaultPedestal,
-                               const double defaultGain,
-                               const double defaultThreshold):
+                       double defaultPedestal,
+                       double defaultGain,
+                       double defaultThreshold,
+                       double defaultRelativeGain
+                       ) :
     Energy(Detector_t::Type_t::PID,
            converter,
            defaultPedestal,
            defaultGain,
-           defaultThreshold)
+           defaultThreshold,
+           defaultRelativeGain)
 {
 
 }

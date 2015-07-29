@@ -27,9 +27,10 @@ public:
     };
 
     TAPSVeto_Energy(Calibration::Converter::ptr_t converter,
-              const double defaultPedestal = 100,
-              const double defaultGain = 0.010,
-              const double defaultThreshold = 0.1);
+                    double defaultPedestal = 100,
+                    double defaultGain = 0.010,
+                    double defaultThreshold = 0.1,
+                    double defaultRelativeGain = 1.0);
 
     // BaseModule interface
     virtual std::unique_ptr<Physics> GetPhysicsModule();
