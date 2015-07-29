@@ -2,15 +2,15 @@
 
 #include "expconfig/ExpConfig.h"
 
-#include "base/Logger.h"
-#include "base/std_ext.h"
 
 #include "tree/THeaderInfo.h"
 #include "tree/TDetectorRead.h"
 
-#include "TFile.h"
+#include "base/ReadTFiles.h"
+#include "base/Logger.h"
+#include "base/std_ext.h"
+
 #include "TTree.h"
-#include "TError.h"
 
 #include <memory>
 
@@ -19,23 +19,17 @@ using namespace ant;
 
 UnpackerA2Geant::UnpackerA2Geant() {}
 
-UnpackerA2Geant::~UnpackerA2Geant() {
-    tfile->Close();
-}
+UnpackerA2Geant::~UnpackerA2Geant() {}
 
 bool UnpackerA2Geant::OpenFile(const string& filename)
 {
     // open a root file, ignore error silently
-    const auto prev_gErrorIgnoreLevel = gErrorIgnoreLevel;
-    gErrorIgnoreLevel = kError+1;
-    tfile = std_ext::make_unique<TFile>(filename.c_str(),"READ");
-    gErrorIgnoreLevel = prev_gErrorIgnoreLevel;
-    if(tfile->IsZombie())
+    filemanager = std_ext::make_unique<ReadTFiles>();
+    if(!filemanager->OpenFile(filename, true))
         return false;
 
     // setup the "expected" A2 geant tree
-    geant = dynamic_cast<TTree*>(tfile->Get("h12"));
-    if(geant == nullptr)
+    if(!filemanager->GetObject("h12", geant))
         return false;
 
     geant->SetBranchAddress("nhits",&fnhits);

@@ -17,10 +17,10 @@
 #include <limits>
 
 class TTree;
-class TFile;
 
 namespace ant {
 
+class ReadTFiles;
 class UnpackerA2GeantConfig; // see below
 
 class UnpackerA2Geant : public Unpacker::Module
@@ -39,7 +39,7 @@ private:
     std::uint32_t ID_upper;
     std::uint32_t ID_lower;
 
-    std::unique_ptr<TFile> tfile;
+    std::unique_ptr<ReadTFiles> filemanager;
     TTree* geant;
 
     std::unique_ptr<THeaderInfo> headerInfo;
@@ -50,7 +50,7 @@ private:
     static constexpr int GEANT_MAX_CBHITS   = 720;
     static constexpr int GEANT_MAX_PIDHITS  =  24;
     static constexpr int GEANT_MAX_MWPCHITS = 400;
-    static constexpr int GEANT_MAX_PART = 100;
+    static constexpr int GEANT_MAX_PART     = 100;
 
     // Brach memories
     Int_t           fnhits = 0;

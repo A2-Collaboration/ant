@@ -1,13 +1,17 @@
 #pragma once
 
-#include <list>
-#include <string>
-#include <memory>
+#include "base/std_ext.h"
 
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wnon-virtual-dtor"
 #include "TFile.h"
 #pragma GCC diagnostic pop
+
+#include <list>
+#include <string>
+#include <memory>
+#include <stdexcept>
+
 
 namespace ant {
 
@@ -22,17 +26,28 @@ public:
     ReadTFiles();
     virtual ~ReadTFiles();
 
-    virtual bool OpenFile(const std::string& filename);
+    virtual bool OpenFile(const std::string& filename, bool silent = false);
 
     template <typename T>
     bool GetObject(const std::string& name, T*& ptr) {
         ptr = nullptr;
 
-        for(auto& f : files) {
-            f->GetObject(name.c_str(), ptr);
-            if(ptr) break;
-        }
+        std::string filename;
 
+        for(auto& f : files) {
+            T* ptr_ = nullptr;
+            f->GetObject(name.c_str(), ptr_);
+            if(ptr == nullptr && ptr_ != nullptr) {
+                ptr = ptr_;
+                filename = f->GetName();
+            }
+            else if(ptr != nullptr && ptr_ != nullptr) {
+                throw std::runtime_error(
+                            std_ext::formatter()
+                            << "Found object " << name << " in "
+                            << filename << " and in " << f->GetName());
+            }
+        }
         return ptr != nullptr;
     }
 

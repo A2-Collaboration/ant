@@ -1,31 +1,36 @@
 #include "ReadTFiles.h"
 
 #include "base/Logger.h"
+#include "base/std_ext.h"
+
+#include "TError.h"
 
 using namespace std;
 using namespace ant;
 
-ReadTFiles::ReadTFiles() : files()
-{
-
-}
+ReadTFiles::ReadTFiles() : files() {}
 
 ReadTFiles::~ReadTFiles()
 {
     CloseAll();
 }
 
-bool ReadTFiles::OpenFile(const std::string &filename)
+bool ReadTFiles::OpenFile(const std::string& filename, bool silent)
 {
-    TFile* f = new TFile(filename.c_str(), "READ");
+    const auto prev_gErrorIgnoreLevel = gErrorIgnoreLevel;
+    if(silent)
+        gErrorIgnoreLevel = kError+1;
+    auto tfile = std_ext::make_unique<TFile>(filename.c_str(), "READ");
+    gErrorIgnoreLevel = prev_gErrorIgnoreLevel;
 
-    if(f && !f->IsZombie()) {
-        files.emplace_back(f);
-        LOG(INFO) << "Opened TFile " << filename << " as input";
-        return true;
+    if(tfile->IsZombie()) {
+        if(!silent)
+            LOG(ERROR) << "Could not open TFile " << filename;
+        return false;
     }
-    LOG(ERROR) << "Could not open TFile " << filename;
-    return false;
+
+    files.emplace_back(move(tfile));
+    return true;
 }
 
 void ReadTFiles::CloseAll()
