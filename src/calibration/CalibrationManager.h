@@ -4,13 +4,18 @@
 #include "tree/TCalibrationData.h"
 #include "tree/TDataRecord.h"
 #include "base/interval.h"
+#include "base/std_ext.h"
+#include "base/WrapTFile.h"
 
 //
 #include "base/Logger.h"
 
 //ROOT
+#include "TKey.h"
 #include "TFile.h"
 #include "TTree.h"
+#include "TIterator.h"
+#include "TList.h"
 
 //std
 #include <memory>
@@ -27,66 +32,77 @@ namespace ant
 class CalibrationManager
 {
 private:
-    const std::string cm_treename;
+    const std::string cm_treename_prefix;
     const std::string cm_branchname;
     std::string dataFileName;
-    std::map<std::string,std::vector<TCalibrationData>> dataBase;
 
+    std::map<std::string,std::vector<TCalibrationData>> dataBase;
 
     void finish() const
     {
-        std::unique_ptr<TFile> dataFile(new TFile);
-        TTree* cmTree = new TTree(cm_treename.c_str(),cm_treename.c_str());
+        WrapTFile file(dataFileName);
+        std::vector<TTree*> treeBuffer;
+        // loop over map and write a new tree for each setupID
 
-        const TCalibrationData* cdata = nullptr;
-        cmTree->Branch(cm_branchname.c_str(),&cdata);
-
-        for( auto& setupList: dataBase)
-            for( auto& entry: setupList.second)
-            {
-                cdata = std::addressof(entry);
-                cmTree->Fill();
-                VLOG(9) << "Stored CalibrationData"
-                        << cdata
-                        << "                       to tree " << dataFileName << std::endl;
+        for (auto& calibration: dataBase)
+        {
+            std::string tname = cm_treename_prefix + calibration.first;
+            TTree* currentTree = new TTree(tname.c_str(),tname.c_str());
+            const TCalibrationData* cdataptr = nullptr;
+            currentTree->Branch(cm_branchname.c_str(),&cdataptr);
+            for( auto& cdata: calibration.second){
+                cdataptr = &cdata;
+                currentTree->Fill();
             }
+            treeBuffer.push_back(currentTree);
+        }
     }
 
 public:
     CalibrationManager(const std::string& DataFileName):
-        cm_treename("antCalibration"),
-        cm_branchname("dataSets"),
+        cm_treename_prefix("calibration-"),
+        cm_branchname("cdata"),
         dataFileName(DataFileName)
     {
 
-        std::unique_ptr<TFile> dataFile(new TFile);
-        TTree* cmTree = nullptr;
+        TFile dataFile(dataFileName.c_str(),"READ");
 
-        if ( dataFile->IsOpen() )
+        if ( dataFile.IsOpen() )
         {
-            dataFile->GetObject(cm_treename.c_str(), cmTree);
-            if (cmTree != nullptr)
+            TList* keys = dataFile.GetListOfKeys();
+
+            if (!keys)
             {
-                TCalibrationData* cdata = nullptr;
-                cmTree->SetBranchAddress(cm_branchname.c_str(),&cdata);
-
-                for (Long64_t entry = 0 ; entry < cmTree->GetEntries() ; ++entry)
-                {
-                    cmTree->GetEntry(entry);
-                    Add(*cdata);
-                    VLOG(9) << "Adding CalibrationData "
-                            << cdata;
-                }
-
-                dataFile->Close();
+                std::cerr << "no keys  in file " << dataFileName << std::endl;
             }
             else
             {
-                VLOG(5) << "File " << DataFileName
-                        << " doesn't contain " << cm_treename << ", new will be generated.";
+                TTree* calibtree = nullptr;
+                TKey*  key  = nullptr;
+                const TCalibrationData* cdata = nullptr;
+                TIter nextk(keys);
+
+                while ((key = (TKey*)nextk()))
+                {
+                    calibtree = dynamic_cast<TTree*>(key->ReadObj());
+                    if ( !calibtree )
+                        continue;
+
+                    // sanity check: is this the tree you're looking for?
+                    std::string treename(calibtree->GetName());
+                    if (treename.find(cm_treename_prefix) != 0)
+                        continue;
+
+                    calibtree->SetBranchAddress(cm_branchname.c_str(),&cdata);
+                    for (Long64_t entry = 0; entry < calibtree->GetEntries(); ++entry)
+                    {
+                        calibtree->GetEntry(entry);
+                        Add(*cdata);
+                    }
+                }
             }
 
-            dataFile->Close();
+            dataFile.Close();
         }
     }
 
@@ -100,24 +116,58 @@ public:
         dataBase[data.SetupID].push_back(data);
     }
 
-    const TCalibrationData GetData(const std::string& setupID, const TID& eventID) const
+    ///
+    /// \brief GetData Query the calibration database for specific TID
+    /// \param setupID Calibration ID
+    /// \param eventID event ID
+    /// \param cdata   Reference to a TCalibrationData, data will be writter here
+    /// \return true if valid data was found
+    ///
+    bool GetData(const std::string& setupID, const TID& eventID, TCalibrationData& cdata) const
     {
-        auto& setupList = dataBase.at(setupID);
+        //case one: calibration doesn't exist
+        if ( dataBase.count(setupID) == 0)
+            return false;
 
-        for(auto& entry: setupList)
+        //case two: calibration exists
+        auto& calibPairs = dataBase.at(setupID);
+        for(auto rit = calibPairs.rbegin(); rit != calibPairs.rend(); ++rit)
         {
-            interval<TID> range(entry.FirstID,entry.LastID);
-            if (range.Contains(eventID)){
-                return entry;
+            interval<TID> range(rit->FirstID,rit->LastID);
+            if (range.Contains(eventID))
+            {
+                cdata = *rit;
+                return true;
             }
         }
 
-        return TCalibrationData();
+        //case three: TID not covered by calibration
+        return false;
     }
 
     const std::vector<TID> GetChangePoints(const std::string& setupID) const
     {
+
+        std::cout << "generate change points for " << setupID << std::endl;
         return {TID()};
+    }
+
+    std::uint32_t GetNumberOfCalibrations() const
+    {
+        return dataBase.size();
+    }
+
+    std::uint32_t GetNumberOfDataPoints(const std::string& setupID) const
+    {
+        try
+        {
+            return dataBase.at(setupID).size();
+        }
+        catch (std::out_of_range)
+        {
+            return 0;
+        }
+
     }
 
 };
