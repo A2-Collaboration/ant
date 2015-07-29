@@ -22,6 +22,10 @@ set(SRCS
     converters/CATCH_TDC.cc
     converters/MultiHit16bit.h
     converters/ScalerFrequency.cc
+    gui/GUIbase.h
+    gui/FitFunction.cc
+    gui/FitCanvas.cc
+    gui/GUIElements.cc
   )
 
 add_library(calibration ${SRCS})
