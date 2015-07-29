@@ -9,11 +9,9 @@
 #include "TFile.h"
 #pragma GCC diagnostic pop
 
-
 namespace ant {
-namespace input {
 
-class FileManager {
+class ReadTFiles {
 protected:
     using file_list_t = std::list<std::unique_ptr<TFile>>;
 
@@ -21,8 +19,8 @@ protected:
 
 public:
 
-    FileManager();
-    virtual ~FileManager();
+    ReadTFiles();
+    virtual ~ReadTFiles();
 
     virtual bool OpenFile(const std::string& filename);
 
@@ -43,6 +41,5 @@ public:
 
 };
 
-}
 }
 

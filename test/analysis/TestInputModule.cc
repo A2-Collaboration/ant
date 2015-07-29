@@ -1,6 +1,5 @@
 #include "catch.hpp"
 
-#include "analysis/input/detail/FileManager.h"
 #include "analysis/input/goat/detail/TreeManager.h"
 #include "analysis/input/goat/detail/PlutoInput.h"
 #include "analysis/input/goat/detail/TrackInput.h"
@@ -10,12 +9,16 @@
 #include "analysis/input/goat/detail/GeantInput.h"
 #include "analysis/input/goat/detail/TaggerInput.h"
 
+#include "base/ReadTFiles.h"
+
 #include "TTree.h"
 
 #include <iostream>
 
-using namespace ant::input;
+
 using namespace std;
+using namespace ant;
+using namespace ant::input;
 
 void dotest();
 
@@ -26,11 +29,11 @@ TEST_CASE("InputModule", "[analysis]") {
 
 class MyTreeRequestMgr: public TreeRequestManager {
 protected:
-    FileManager& m;
+    ReadTFiles& m;
     TreeManager& t;
 
 public:
-    MyTreeRequestMgr(FileManager& _m, TreeManager& _t):
+    MyTreeRequestMgr(ReadTFiles& _m, TreeManager& _t):
         m(_m), t(_t) {}
 
     TTree *GetTree(const string &name) {
@@ -45,7 +48,7 @@ public:
 
 void dotest() {
 
-    FileManager m;
+    ReadTFiles m;
 
     /// \todo Open some reasonable file here
 

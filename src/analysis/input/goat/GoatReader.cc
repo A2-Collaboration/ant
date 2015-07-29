@@ -7,10 +7,11 @@
 #include "TTree.h"
 
 #include "detail/PlutoWrapper.h"
-#include "input/detail/FileManager.h"
 #include "detail/TreeManager.h"
 
+#include "base/ReadTFiles.h"
 #include "base/Logger.h"
+#include "base/std_ext.h"
 
 using namespace ant;
 using namespace ant::input;
@@ -253,7 +254,9 @@ void GoatReader::CopyParticles(std::shared_ptr<Event> &event, ParticleInput &inp
 }
 
 GoatReader::GoatReader():
-    files(new FileManager), trees(new TreeManager), pluto_database(makeStaticData())
+    files(std_ext::make_unique<ReadTFiles>()),
+    trees(std_ext::make_unique<TreeManager>()),
+    pluto_database(makeStaticData())
 {
 }
 
@@ -267,11 +270,11 @@ void GoatReader::AddInputFile(const std::string &filename)
 
 class MyTreeRequestMgr: public TreeRequestManager {
 protected:
-    FileManager& m;
+    ReadTFiles& m;
     TreeManager& t;
 
 public:
-    MyTreeRequestMgr(FileManager& _m, TreeManager& _t):
+    MyTreeRequestMgr(ReadTFiles& _m, TreeManager& _t):
         m(_m), t(_t) {}
 
     TTree *GetTree(const std::string &name) {

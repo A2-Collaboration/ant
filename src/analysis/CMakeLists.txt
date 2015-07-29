@@ -45,10 +45,6 @@ set(ANALYSIS_DATASTRUCTURES
   data/Cluster.cc
 )
 
-set(ANALYSIS_INPUT
-  input/detail/FileManager.cc
-)
-
 set(ANALYSIS_INPUT_GOAT
   input/goat/detail/InputModule.h
   input/goat/detail/InputModule.cc
@@ -102,7 +98,6 @@ set(ANALYSIS_ALL
     ${ANALYSIS_BASE}
     ${ANALYSIS_PLOT}
     ${ANALYSIS_DATASTRUCTURES}
-    ${ANALYSIS_INPUT}
     ${ANALYSIS_INPUT_GOAT}
     ${ANALYSIS_INPUT_ANT}
     ${ANALYSIS_PHYSICS}

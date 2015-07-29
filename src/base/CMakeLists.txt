@@ -2,26 +2,21 @@ include_directories(.)
 
 set(SRCS
   types.cc
-  types.h
   interval.h
   piecewise_interval.h
-  printable.h
   printable.cc
   Logger.cc
-  Logger.h
-  detail/easylogging++.h
-  tmpfile_t.h
   tmpfile_t.cc
   std_ext.h
   Format.h
   Tree.h
   root_printable.h
   WrapTFile.cc
-  WrapTFile.h
+  ReadTFiles.cc
   mapped_vectors.h
   CmdLine.h
+  detail/easylogging++.h
   detail/format.cc
-  detail/format.h
   detail/CmdLine.h
   detail/tclap/ArgException.h
   detail/tclap/Arg.h

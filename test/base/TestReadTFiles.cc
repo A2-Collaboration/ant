@@ -1,7 +1,7 @@
 #include "catch.hpp"
 #include "catch_config.h"
 
-#include "analysis/input/detail/FileManager.h"
+#include "base/ReadTFiles.h"
 
 #include "unpacker/Unpacker.h"
 
@@ -15,7 +15,6 @@
 
 #include <iostream>
 
-using namespace ant::input;
 using namespace std;
 
 void dotest();
@@ -29,7 +28,7 @@ TEST_CASE("AntReader", "[analysis]") {
 void dotest() {
 
     ant::tmpfile_t tmp;
-    FileManager m;
+    ant::ReadTFiles m;
 
     generateInputFile(tmp.filename);
 

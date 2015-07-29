@@ -13,15 +13,16 @@ class TTree;
 namespace ant {
 
 class TEvent;
+class ReadTFiles;
+
 
 namespace input {
 
-class FileManager;
 
 class AntReader: public FileDataReader {
 protected:
 
-    std::unique_ptr<ant::input::FileManager> files;
+    std::unique_ptr<ReadTFiles> files;
 
     TTree* tree    = nullptr;
     TEvent* buffer = nullptr;

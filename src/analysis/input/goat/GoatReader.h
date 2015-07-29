@@ -21,9 +21,11 @@ class PStaticData;
 
 
 namespace ant {
+
+class ReadTFiles;
+
 namespace input {
 
-class FileManager;
 class TreeManager;
 
 class GoatReader: public FileDataReader {
@@ -46,7 +48,7 @@ protected:
         }
     };
 
-    std::unique_ptr<FileManager>   files;
+    std::unique_ptr<ReadTFiles>   files;
     std::unique_ptr<TreeManager>   trees;
 
 

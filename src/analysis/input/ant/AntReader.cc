@@ -2,7 +2,8 @@
 
 #include "data/Event.h"
 #include "detail/Convert.h"
-#include "input/detail/FileManager.h"
+#include "base/ReadTFiles.h"
+#include "base/std_ext.h"
 #include "tree/TEvent.h"
 
 #include "TTree.h"
@@ -15,7 +16,7 @@ using namespace ant;
 using namespace ant::input;
 
 AntReader::AntReader():
-    files(new FileManager)
+    files(std_ext::make_unique<ReadTFiles>())
 {
 }
 
