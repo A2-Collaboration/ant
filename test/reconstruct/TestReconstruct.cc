@@ -9,6 +9,7 @@
 #include "unpacker/Unpacker.h"
 
 #include "tree/THeaderInfo.h"
+#include "tree/TDetectorRead.h"
 
 #include "base/std_ext.h"
 

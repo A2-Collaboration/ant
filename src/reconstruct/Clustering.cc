@@ -4,6 +4,7 @@
 #include "expconfig/Detector_t.h"
 
 #include "tree/TCluster.h"
+#include "tree/TDetectorRead.h"
 
 #include "base/Logger.h"
 #include "base/std_ext.h"
@@ -13,7 +14,7 @@ using namespace ant;
 using namespace ant::reconstruct;
 
 AdaptorTClusterHit::AdaptorTClusterHit(const TDetectorReadHit* readhit,
-                                              const vector<TClusterHitDatum>&& data) :
+                                       const vector<TClusterHitDatum>&& data) :
     Hit(std_ext::make_unique<TClusterHit>(readhit->Channel, data)),
     Energy(numeric_limits<double>::quiet_NaN()), // use nan as unset indicator
     Time(numeric_limits<double>::quiet_NaN())

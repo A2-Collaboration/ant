@@ -13,6 +13,10 @@ set(SRCS
   TTaggerHit.h
   TCalibrationData.h
   )
+  
+set(SRCS_EXTRA
+  UnpackerReader.cc
+  )
 
 set(ROOT_DICTIONARY "${CMAKE_CURRENT_BINARY_DIR}/G__tree.cc")
 ROOT_GENERATE_DICTIONARY("${SRCS}"
@@ -22,5 +26,5 @@ list(APPEND SRCS ${ROOT_DICTIONARY})
 
 set_source_files_properties(${ROOT_DICTIONARY} PROPERTIES COMPILE_FLAGS -Wno-effc++)
 
-add_library(tree ${SRCS})
+add_library(tree ${SRCS} ${SRCS_EXTRA})
 target_link_libraries(tree base ${ROOT_LIBRARIES})

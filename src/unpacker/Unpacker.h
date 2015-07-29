@@ -14,10 +14,15 @@ public:
 
     Unpacker() = delete;
 
-    class Module {
+    class Reader {
     public:
-        virtual ~Module() = default;
+        virtual ~Reader() = default;
         virtual std::shared_ptr<TDataRecord> NextItem() noexcept = 0;
+    };
+
+    class Module : public Reader {
+        friend class Unpacker;
+    protected:
         virtual bool OpenFile(const std::string& filename) = 0;
     };
 

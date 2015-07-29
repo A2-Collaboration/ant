@@ -2,7 +2,8 @@
 #define ANT_TCLUSTER_H
 
 #include "TDataRecord.h"
-#include "TDetectorRead.h"
+
+
 #include <TVector3.h>
 #include <vector>
 #include <cmath>
@@ -11,6 +12,7 @@
 #include <iomanip>
 #include <sstream>
 #include "base/root_printable.h"
+#include "expconfig/Detector_t.h"
 #endif
 
 namespace ant {
