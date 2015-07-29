@@ -27,7 +27,7 @@ struct TEvent : TDataRecord
     {}
 
     virtual std::ostream& Print( std::ostream& s) const override {
-        s << "TEvent:\n";
+        s << "TEvent ID=" << ID << '\n';
         s << " " << Tagger.Hits.size() << " Taggerhits:\n";
         for(auto& th : Tagger.Hits) {
             s << "  " << th << "\n";

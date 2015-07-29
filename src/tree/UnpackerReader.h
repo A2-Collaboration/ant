@@ -37,25 +37,26 @@ class UnpackerReader : public Unpacker::Reader {
         const TDataRecord& GetRecord() const {
             return *(*Record);
         }
+        bool GetNext() {
+            ++CurrEntry;
+            if(CurrEntry == Tree->GetEntriesFast())
+                return false;
+            // setting the ptr to zero gives us the
+            // control over the allocated data
+            *Record = nullptr;
+            Tree->GetEntry(CurrEntry);
+            return true;
+        }
     };
 
-    using treerecords_t = std::vector<treerecord_t>;
+    using treerecords_t = std::list<treerecord_t>;
     treerecords_t treerecords;
     treerecords_t::iterator it_treerecord;
     bool isopen;
 
     TID currID;
 
-    TID findMinID() const {
-        TID tid_min = it_treerecord->GetRecord().ID; // start with something existing
-        // search all for minimum TID
-        for(const treerecord_t& treerecord : treerecords) {
-            const TDataRecord& record = treerecord.GetRecord();
-            if(record.ID < tid_min)
-                tid_min = record.ID;
-        }
-        return tid_min;
-    }
+    TID findMinID() const;
 
 public:
 

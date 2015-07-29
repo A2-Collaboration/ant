@@ -6,12 +6,18 @@
 #include "TUnpackerMessage.h"
 #include "TSlowControl.h"
 
+
 #include "base/ReadTFiles.h"
 #include "base/Logger.h"
+
+#include <algorithm>
+
 
 using namespace std;
 using namespace ant;
 using namespace ant::tree;
+
+
 
 
 UnpackerReader::UnpackerReader(const std::shared_ptr<ReadTFiles>& rootfiles) :
@@ -31,9 +37,9 @@ bool UnpackerReader::OpenInput() {
         return false;
     if(!SetupBranch("SlowControl", SlowControl))
         return false;
-    if(!SetupBranch("Event", Event))
-        return false;
     if(!SetupBranch("DetectorRead", DetectorRead))
+        return false;
+    if(!SetupBranch("Event", Event))
         return false;
 
     if(treerecords.empty())
@@ -72,11 +78,49 @@ bool UnpackerReader::GetUniqueHeaderInfo(THeaderInfo& headerInfo) {
     return false;
 }
 
+TID UnpackerReader::findMinID() const {
+    TID tid_min = it_treerecord->GetRecord().ID; // start with something existing
+    // search all for minimum TID
+    for(const treerecord_t& treerecord : treerecords) {
+        const TDataRecord& record = treerecord.GetRecord();
+        if(record.ID < tid_min)
+            tid_min = record.ID;
+    }
+    return tid_min;
+}
+
 std::shared_ptr<TDataRecord> UnpackerReader::NextItem() noexcept {
-    // the TID determines, what item is next,
-    // if there are multiple, the current iterator decides
 
+    if(it_treerecord == treerecords.end())
+        return nullptr;
 
+    auto record = shared_ptr<TDataRecord>(*(it_treerecord->Record));
+    if(!it_treerecord->GetNext()) {
+        it_treerecord = treerecords.erase(it_treerecord);
+        if(treerecords.empty())
+            return record;
+        //advance(it_treerecord, -1);
+    }
+
+    // find the global minimum
+    const TID& tid_min = findMinID();
+
+    // one left anyway
+    if(treerecords.size()==1)
+        return record;
+
+    // go to other
+    do {
+        ++it_treerecord;
+        if(it_treerecord==treerecords.end())
+            it_treerecord = treerecords.begin();
+
+        if(it_treerecord->GetRecord().ID == tid_min)
+            return record;
+    }
+    while(it_treerecord != treerecords.end());
+
+    // should never reach this point
     return nullptr;
 
 }

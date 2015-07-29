@@ -13,6 +13,7 @@
 #include "expconfig/ExpConfig.h"
 
 #include "unpacker/Unpacker.h"
+#include "unpacker/RawFileReader.h"
 
 #include "tree/UnpackerReader.h"
 #include "tree/THeaderInfo.h"
@@ -54,22 +55,24 @@ int main(int argc, char** argv) {
         el::Loggers::setVerboseLevel(cmd_verbose->getValue());
     }
 
-    // build the general file manager first
+    // build the general ROOT file manager first
     auto filemanager = make_shared<ReadTFiles>();
     for(const auto& inputfile : cmd_input->getValue()) {
         VLOG(5) << "ROOT File Manager: Looking at file " << inputfile;
         if(filemanager->OpenFile(inputfile))
             LOG(INFO) << "Opened file '" << inputfile << "' as ROOT file";
+        else
+            VLOG(5) << "Could not add " << inputfile << " to ROOT file manager";
     }
 
     // then init the unpacker root input file manager
-    tree::UnpackerReader unpackerFile(filemanager);
+    auto unpackerFile = std_ext::make_unique<tree::UnpackerReader>(filemanager);
 
     // search for header info?
-    if(unpackerFile.OpenInput()) {
+    if(unpackerFile->OpenInput()) {
         LOG(INFO) << "Found complete set of input ROOT trees for unpacker";
         THeaderInfo headerInfo;
-        if(unpackerFile.GetUniqueHeaderInfo(headerInfo)) {
+        if(unpackerFile->GetUniqueHeaderInfo(headerInfo)) {
             VLOG(5) << "Found unique header info " << headerInfo;
             if(!headerInfo.SetupName.empty()) {
                 ExpConfig::ManualSetupName = headerInfo.SetupName;
@@ -88,8 +91,8 @@ int main(int argc, char** argv) {
     }
 
 
-    // now we can try to open the files with the unpackers
-    std::unique_ptr<Unpacker::Module> unpacker = nullptr;
+    // now we can try to open the files with an unpacker
+    std::unique_ptr<Unpacker::Reader> unpacker = nullptr;
     for(const auto& inputfile : cmd_input->getValue()) {
         VLOG(5) << "Unpacker: Looking at file " << inputfile;
         try {
@@ -104,12 +107,34 @@ int main(int argc, char** argv) {
             VLOG(5) << "Unpacker::Get said: " << e.what();
             unpacker = nullptr;
         }
+        catch(RawFileReader::Exception e) {
+            LOG(WARNING) << "Error opening file "<<inputfile<<": " << e.what();
+            unpacker = nullptr;
+        }
+        catch(ExpConfig::ExceptionNoConfig) {
+            LOG(ERROR) << "The file "<<inputfile<<" cannot be unpacked without a manually specified setupname. "
+                       << "Consider using " << cmd_setup->longID();
+            return 1;
+        }
+    }
+
+    // select the right source for the unpacker stage
+    if(unpacker != nullptr && unpackerFile->IsOpen()) {
+        LOG(WARNING) << "Found file suitable for unpacker and ROOT file for unpacker stage, preferring raw data file";
+    }
+    else if(unpackerFile->IsOpen()) {
+        LOG(INFO) << "Running unpacker stage from input ROOT file(s)";
+        unpacker = move(unpackerFile);
+    }
+    else if(unpacker != nullptr) {
+        LOG(INFO) << "Running unpacker stage from raw data file";
     }
 
 
-    if(unpacker != nullptr && unpackerFile.IsOpen()) {
-        LOG(WARNING) << "Found file suitable for unpacker and ROOT file for unpacker stage, preferring raw data file!";
+    while(auto item = unpacker->NextItem()) {
+        cout << *item << endl;
     }
+
 
 
     //unpackerFile.DetectorRead->Class()->

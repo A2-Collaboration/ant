@@ -67,6 +67,9 @@ public:
     class Exception : public std::runtime_error {
         using std::runtime_error::runtime_error; // use base class constructor
     };
+    class ExceptionNoConfig : public Exception {
+        using Exception::Exception;
+    };
 
     ExpConfig() = delete; // this class is more a wrapper for handling the config
 private:

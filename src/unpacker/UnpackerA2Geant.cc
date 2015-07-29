@@ -79,7 +79,7 @@ bool UnpackerA2Geant::OpenFile(const string& filename)
     // this unpacker has no chance to make a proper THeaderInfo
     // so we ask the ExpConfig if it has an idea...
     if(ExpConfig::ManualSetupName.empty()) {
-        throw Exception("This unpacker requires a manually set setup name");
+        throw ExpConfig::ExceptionNoConfig("This unpacker requires a manually set setup name");
     }
     // build a bogus headerInfo and ask for config
     headerInfo = std_ext::make_unique<THeaderInfo>(TID(ID_upper, ID_lower, true),
@@ -99,7 +99,7 @@ bool UnpackerA2Geant::OpenFile(const string& filename)
 
 
 
-    LOG(INFO) << "Successfully opened tree in '" << filename
+    LOG(INFO) << "Successfully opened '" << filename
               << "' with " << geant->GetEntries() << " entries";
 
     return true;

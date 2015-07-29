@@ -12,7 +12,7 @@
 using namespace std;
 using namespace ant;
 
-unique_ptr<Unpacker::Module> Unpacker::Get(const string& filename)
+std::unique_ptr<Unpacker::Reader> Unpacker::Get(const string& filename)
 {
     // make a list of available unpackers
     std::list< std::unique_ptr<Module> > modules;

@@ -27,12 +27,11 @@ public:
     };
 
     // factory method to get a suitable unpacker module for the file
-    static std::unique_ptr<Module> Get(const std::string &filename);
+    static std::unique_ptr<Reader> Get(const std::string &filename);
 
     class Exception : public std::runtime_error {
         using std::runtime_error::runtime_error; // use base class constructor
     };
-
 };
 
 } // namespace ant
