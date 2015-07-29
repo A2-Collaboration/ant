@@ -45,6 +45,7 @@ int main(int argc, char** argv) {
         el::Loggers::setVerboseLevel(verbose->getValue());
     }
 
+    ExpConfig::ManualSetupName = cmdline_setup->getValue(); // force setupname
     using setup_ptr_t = shared_ptr<ExpConfig::Setup>;
     setup_ptr_t setup = ExpConfig::Setup::Get(ExpConfig::ManualSetupName);
     if(setup != nullptr) {
