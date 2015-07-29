@@ -43,7 +43,7 @@ private:
     TTree* geant;
 
     std::unique_ptr<THeaderInfo> headerInfo;
-    std::shared_ptr<UnpackerA2GeantConfig> config;
+    std::list< std::shared_ptr<TaggerDetector_t> >  taggerdetectors;
 
     // keep in syn with A2CBoutput.h in a2geant
     static constexpr int GEANT_MAX_TAPSHITS = 438;
@@ -93,7 +93,7 @@ private:
 // the configs are required to implement
 class UnpackerA2GeantConfig : public ExpConfig::Unpacker<UnpackerA2GeantConfig> {
 public:
-    virtual double GetElectronBeamEnergy() const = 0;
+    virtual std::list< std::shared_ptr< Detector_t > > GetDetectors() const = 0;
 };
 
 } // namespace ant

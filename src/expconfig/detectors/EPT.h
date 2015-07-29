@@ -17,6 +17,8 @@ struct EPT :
         return BeamEnergy - elements[channel].ElectronEnergy;
     }
 
+    virtual bool TryGetChannelFromPhoton(double photonEnergy, unsigned& channel) const override;
+
 
     // for UnpackerAcquConfig
     virtual void BuildMappings(std::vector<hit_mapping_t>&,
@@ -48,7 +50,11 @@ protected:
 
     EPT(double beamEnergy,
         const std::vector<Element_t>& elements_init) :
-        TaggerDetector_t(Detector_t::Type_t::EPT, beamEnergy),
+        TaggerDetector_t(
+            Detector_t::Type_t::EPT,
+            beamEnergy,
+            2.0 // electronEnergyWidth
+            ),
         elements(elements_init)
     {
         assert(elements.size()==47);

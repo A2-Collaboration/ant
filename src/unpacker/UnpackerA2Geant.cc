@@ -79,19 +79,31 @@ bool UnpackerA2Geant::OpenFile(const string& filename)
 
 
 
-    /// \todo think of some better upper Id?
     ID_lower = 0; // also counts number of entries in TTree
-    ID_upper = geant->Hash();
+    ID_upper = geant->Hash(); /// \todo think of some better upper Id?
 
     // this unpacker has no chance to make a proper THeaderInfo
     // so we ask the ExpConfig if it has an idea...
-
     if(ExpConfig::ManualSetupName.empty()) {
         throw Exception("This unpacker requires a manually set setup name");
     }
+    // build a bogus headerInfo and ask for config
     headerInfo = std_ext::make_unique<THeaderInfo>(TID(ID_upper, ID_lower, true),
                                                    ExpConfig::ManualSetupName);
-    config = ExpConfig::Unpacker<UnpackerA2GeantConfig>::Get(*headerInfo);
+    auto config = ExpConfig::Unpacker<UnpackerA2GeantConfig>::Get(*headerInfo);
+
+    // find some taggerdetectors
+    // needed to create proper tagger hits from incoming photons
+    for(const auto& detector : config->GetDetectors()) {
+        std_ext::AddToSharedPtrList<TaggerDetector_t, Detector_t>(
+                    detector, taggerdetectors
+                    );
+    }
+
+    if(taggerdetectors.empty())
+        LOG(WARNING) << "No tagger detector found in config, there will be no taggerhits generated";
+
+
 
     LOG(INFO) << "Successfully opened tree in '" << filename
               << "' with " << geant->GetEntries() << " entries";
@@ -104,11 +116,11 @@ shared_ptr<TDataRecord> UnpackerA2Geant::NextItem() noexcept
     if(ID_lower>=geant->GetEntriesFast())
         return nullptr;
 
-    // return the headerinfo as the very first item
+    // return the headerinfo as the very first item, afterwards,
+    // we can forget about the headerInfo...
     if(headerInfo != nullptr) {
         return make_shared<THeaderInfo>(*headerInfo.release());
     }
-
 
     geant->GetEntry(ID_lower);
 
@@ -118,9 +130,11 @@ shared_ptr<TDataRecord> UnpackerA2Geant::NextItem() noexcept
     const size_t n_total = fnhits+fnpart+fntaps+fnvtaps+fvhits;
 
 
+    // approx. 3 detector read hits per detector, we just want to prevent re-allocation
     vector<TDetectorReadHit>& hits = detread->Hits;
-    hits.reserve(3*n_total); // approx. 3 detector read hits per detector
+    hits.reserve(3*n_total);
 
+    // all energies from A2geant are in GeV, but here we need MeV...
     const double GeVtoMeV = 1000.0;
 
     // fill CB Hits
@@ -173,7 +187,9 @@ shared_ptr<TDataRecord> UnpackerA2Geant::NextItem() noexcept
 
     // fill TAPSVeto Hits
     for(int i=0;i<fnvtaps;i++) {
-        /// \todo check if -1 here is really correct
+        /// \todo check if -1 here is really correct, for now we throw silly exceptions
+        if(ivtaps[i]==0)
+            throw Exception("TAPS Veto index should start counting with 1");
         const unsigned ch = ivtaps[i]-1;
         const Detector_t::Type_t det = Detector_t::Type_t::TAPSVeto;
         hits.emplace_back(
@@ -187,10 +203,21 @@ shared_ptr<TDataRecord> UnpackerA2Geant::NextItem() noexcept
                     );
     }
 
-    // "reconstruct" a taggerhit from the photon
-    const double photon_energy = fbeam[4];
+    // "reconstruct" a tagger electron from the photon
+    const double photon_energy = GeVtoMeV*fbeam[4];
 
-    /// \todo implement this...
+    for(const shared_ptr<TaggerDetector_t>& tagger : taggerdetectors) {
+        // could the photon have been detected?
+        unsigned ch;
+        if(!tagger->TryGetChannelFromPhoton(photon_energy, ch))
+            continue;
+        /// \todo create some random hits here?
+        hits.emplace_back(
+                    LogicalChannel_t{tagger->Type, Channel_t::Type_t::Timing, ch},
+                    vector<double>{0}
+                    );
+    }
+
 
     ID_lower++;
     return detread;

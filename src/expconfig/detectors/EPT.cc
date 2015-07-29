@@ -1,9 +1,14 @@
 #include "EPT.h"
-#include <cassert>
-#include "base/std_ext.h"
-#include "tree/THeaderInfo.h"
 
 #include "detail/EPT_2014_elements.h"
+
+#include "tree/THeaderInfo.h"
+
+#include "base/std_ext.h"
+
+#include <limits>
+#include <cassert>
+
 
 using namespace std;
 using namespace ant;
@@ -14,6 +19,19 @@ using namespace ant::expconfig::detector;
 bool EPT_2014::Matches(const THeaderInfo &headerInfo) const {
     return std_ext::time_between(headerInfo.Timestamp,
                                  "2014-07-01", "2014-12-31");
+}
+
+bool EPT::TryGetChannelFromPhoton(double photonEnergy, unsigned& channel) const {
+    const double electronEnergy = BeamEnergy - photonEnergy;
+    for(const Element_t& elem : elements) {
+        const double lower = elem.ElectronEnergy - ElectronEnergyWidth/2;
+        const double upper = elem.ElectronEnergy + ElectronEnergyWidth/2;
+        if(electronEnergy >= lower && electronEnergy < upper) {
+            channel = elem.Channel;
+            return true;
+        }
+    }
+    return false;
 }
 
 void EPT::BuildMappings(
