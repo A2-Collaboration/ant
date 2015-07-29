@@ -77,7 +77,7 @@ int main(int argc, char* argv[]) {
 
     TTree* treeHeaderInfo = new TTree("treeHeaderInfo", "treeHeaderInfo");
     THeaderInfo* HeaderInfo = new THeaderInfo();
-    treeHeaderInfo->Branch("THeaderInfo", "ant::THeaderInfo", &HeaderInfo);
+    treeHeaderInfo->Branch("HeaderInfo", "ant::THeaderInfo", &HeaderInfo);
 
     TTree* treeUnpackerMessage = new TTree("treeUnpackerMessage", "treeUnpackerMessage");
     TUnpackerMessage* UnpackerMessage = new TUnpackerMessage();

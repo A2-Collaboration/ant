@@ -25,7 +25,7 @@ bool UnpackerA2Geant::OpenFile(const string& filename)
 {
     // open a root file, ignore error silently
     filemanager = std_ext::make_unique<ReadTFiles>();
-    if(!filemanager->OpenFile(filename, true))
+    if(!filemanager->OpenFile(filename))
         return false;
 
     // setup the "expected" A2 geant tree

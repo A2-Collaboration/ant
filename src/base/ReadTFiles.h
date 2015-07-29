@@ -18,7 +18,6 @@ namespace ant {
 class ReadTFiles {
 protected:
     using file_list_t = std::list<std::unique_ptr<TFile>>;
-
     file_list_t files;
 
 public:
@@ -26,7 +25,7 @@ public:
     ReadTFiles();
     virtual ~ReadTFiles();
 
-    virtual bool OpenFile(const std::string& filename, bool silent = false);
+    bool OpenFile(const std::string& filename);
 
     template <typename T>
     bool GetObject(const std::string& name, T*& ptr) {
@@ -51,8 +50,7 @@ public:
         return ptr != nullptr;
     }
 
-    virtual void CloseAll();
-
+    void CloseAll();
 
 };
 
