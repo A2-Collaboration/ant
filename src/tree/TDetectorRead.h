@@ -92,6 +92,12 @@ struct TDetectorReadHit
 
         return s;
     }
+#ifndef ANT_TREE_ENABLE_COPY_CTOR
+    TDetectorReadHit(const TDetectorReadHit&) = delete;
+    TDetectorReadHit& operator=(const TDetectorReadHit&) = delete;
+    TDetectorReadHit(TDetectorReadHit&&) = default;
+    TDetectorReadHit& operator=(TDetectorReadHit&&) = default;
+#endif
 #endif
 
     TDetectorReadHit() :
@@ -128,6 +134,10 @@ struct TDetectorRead : TDataRecord
         }
         return s;
     }
+#ifndef ANT_TREE_ENABLE_COPY_CTOR
+    TDetectorRead(const TDetectorRead&) = delete;
+    TDetectorRead& operator=(const TDetectorRead&) = delete;
+#endif
 #endif
 
     TDetectorRead() : TDataRecord(), Hits() {}
