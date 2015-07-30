@@ -29,7 +29,7 @@ namespace ant
 {
 
 
-class CalibrationManager
+class CalibrationDataManager
 {
 private:
     const std::string cm_treename_prefix;
@@ -41,25 +41,25 @@ private:
     /**
      * @brief isValid tests if the given id is a valid changepoint ( no newer data exists )
      * @param tid      queried event id
-     * @param setupID  calibration id
+     * @param calibrationID  calibration id
      * @param depth    depth(distance from last calibration iteration) of given data point
      * @return valid or not
      */
-    bool isValid(const TID& tid, const std::string& setupID, const std::uint32_t& depth) const
+    bool isValid(const TID& tid, const std::string& calibrationID, const std::uint32_t& depth) const
     {
-        return (depth <= getDepth(tid,setupID));
+        return (depth <= getDepth(tid,calibrationID));
     }
 
     /**
      * @brief getDepth returns the distance in steps to the latest calibration iteration
      * @param tid      event id
-     * @param setupID  calibration id
+     * @param calibrationID  calibration id
      * @return depth
      */
-    std::uint32_t getDepth(const TID& tid, const std::string& setupID) const
+    std::uint32_t getDepth(const TID& tid, const std::string& calibrationID) const
     {
         std::uint32_t current_depth = 0;
-        auto& calibPairs = dataBase.at(setupID);
+        auto& calibPairs = dataBase.at(calibrationID);
 
         for(auto rit = calibPairs.rbegin(); rit != calibPairs.rend(); ++rit)
         {
@@ -78,7 +78,7 @@ private:
     {
         WrapTFile file(dataFileName);
         std::vector<TTree*> treeBuffer;
-        // loop over map and write a new tree for each setupID
+        // loop over map and write a new tree for each calibrationID
         for (auto& calibration: dataBase)
         {
             std::string tname = cm_treename_prefix + calibration.first;
@@ -94,7 +94,7 @@ private:
     }
 
 public:
-    CalibrationManager(const std::string& DataFileName):
+    CalibrationDataManager(const std::string& DataFileName):
         cm_treename_prefix("calibration-"),
         cm_branchname("cdata"),
         dataFileName(DataFileName)
@@ -141,31 +141,31 @@ public:
         }
     }
 
-    ~CalibrationManager()
+    ~CalibrationDataManager()
     {
         finish();
     }
 
     void Add(const TCalibrationData& data)
     {
-        dataBase[data.SetupID].push_back(data);
+        dataBase[data.CalibrationID].push_back(data);
     }
 
     ///
     /// \brief GetData Query the calibration database for specific TID
-    /// \param setupID Calibration ID
+    /// \param calibrationID Calibration ID
     /// \param eventID event ID
     /// \param cdata   Reference to a TCalibrationData, data will be writter here
     /// \return true if valid data was found
     ///
-    bool GetData(const std::string& setupID, const TID& eventID, TCalibrationData& cdata) const
+    bool GetData(const std::string& calibrationID, const TID& eventID, TCalibrationData& cdata) const
     {
         //case one: calibration doesn't exist
-        if ( dataBase.count(setupID) == 0)
+        if ( dataBase.count(calibrationID) == 0)
             return false;
 
         //case two: calibration exists
-        auto& calibPairs = dataBase.at(setupID);
+        auto& calibPairs = dataBase.at(calibrationID);
         for(auto rit = calibPairs.rbegin(); rit != calibPairs.rend(); ++rit)
         {
             interval<TID> range(rit->FirstID,rit->LastID);
@@ -180,16 +180,16 @@ public:
         return false;
     }
 
-    const std::vector<TID> GetChangePoints(const std::string& setupID) const
+    const std::vector<TID> GetChangePoints(const std::string& calibrationID) const
     {
-        if ( dataBase.count(setupID) == 0)
+        if ( dataBase.count(calibrationID) == 0)
             return {};
 
         std::uint32_t depth = 0;
         std::vector<TID> ids;
 
 
-        auto& calibPairs = dataBase.at(setupID);
+        auto& calibPairs = dataBase.at(calibrationID);
 
         for(auto rit = calibPairs.rbegin(); rit != calibPairs.rend(); ++rit)
         {
@@ -197,9 +197,9 @@ public:
             auto inclastID(rit->LastID);
             ++inclastID;
 
-            if (isValid(rit->FirstID,setupID,depth) )
+            if (isValid(rit->FirstID,calibrationID,depth) )
                 ids.push_back(rit->FirstID);
-            if (isValid(inclastID,setupID,depth) )
+            if (isValid(inclastID,calibrationID,depth) )
                 ids.push_back(inclastID);
 
             depth++;
@@ -213,11 +213,11 @@ public:
         return dataBase.size();
     }
 
-    std::uint32_t GetNumberOfDataPoints(const std::string& setupID) const
+    std::uint32_t GetNumberOfDataPoints(const std::string& calibrationID) const
     {
         try
         {
-            return dataBase.at(setupID).size();
+            return dataBase.at(calibrationID).size();
         }
         catch (std::out_of_range)
         {

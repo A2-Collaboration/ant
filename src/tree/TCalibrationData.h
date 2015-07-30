@@ -21,7 +21,7 @@ struct TCalibrationData
 
     std::int64_t TimeStamp;
 
-    std::string SetupID;
+    std::string CalibrationID;
 
     TID FirstID;
     TID LastID;
@@ -33,17 +33,17 @@ struct TCalibrationData
         Author(),
         Comment(),
         TimeStamp(),
-        SetupID(),
+        CalibrationID(),
         FirstID(),
         LastID(),
         Data()
     {}
 
-    TCalibrationData(const std::string& setupID,const TID& first_id, const TID& last_id) :
+    TCalibrationData(const std::string& calibrationID,const TID& first_id, const TID& last_id) :
         Author(),
         Comment(),
         TimeStamp(),
-        SetupID(setupID),
+        CalibrationID(calibrationID),
         FirstID(first_id),
         LastID(last_id),
         Data()
@@ -53,13 +53,13 @@ struct TCalibrationData
 #ifndef __CINT__
     TCalibrationData(const std::string& author, const std::string& comment,
                      const std::time_t& time,
-                     const std::string& setupID, const TID& first_id,
+                     const std::string& calibrationID, const TID& first_id,
                      const TID& last_id,
                      const std::vector<TCalibrationEntry>& data) :
         Author   (author),
         Comment  (comment),
         TimeStamp(time),
-        SetupID  (setupID),
+        CalibrationID  (calibrationID),
         FirstID  (first_id),
         LastID   (last_id),
         Data     (data)
@@ -72,7 +72,7 @@ struct TCalibrationData
 #ifndef __CINT__
     virtual std::ostream& Print( std::ostream& s) const override {
         s << "TCalibrationData generated at " << std::asctime(std::localtime(&TimeStamp)) << std::endl
-          << "  SetupID:        " << SetupID << std::endl
+          << "  CalibrationID:  " << CalibrationID << std::endl
           << "  Valid for IDs:  [" << FirstID << ", " << LastID << "]" << std::endl
           << "  Data:" << std::endl;
         for (auto& entry: Data){

@@ -26,7 +26,7 @@ unsigned dotest_store(const string& filename)
 {
 
 
-    CalibrationManager calibman(filename);
+    CalibrationDataManager calibman(filename);
 
     TCalibrationData cdata("M",
                            "comment",
@@ -43,7 +43,7 @@ unsigned dotest_store(const string& filename)
         return TCalibrationData(cdata.Author,
                                 cdata.Comment,
                                 time,
-                                cdata.SetupID,
+                                cdata.CalibrationID,
                                 TID(0,first),TID(0,last),
                                 cdata.Data);
     };
@@ -56,7 +56,7 @@ unsigned dotest_store(const string& filename)
     calibman.Add(mdata(22, 24, 6));
     calibman.Add(mdata(14, 14, 7));
 
-    cdata.SetupID = "2";
+    cdata.CalibrationID = "2";
     cdata.TimeStamp++;
     cdata.FirstID.Value = 2;
     cdata.LastID.Value = 8;
@@ -81,7 +81,7 @@ unsigned dotest_store(const string& filename)
 
 void dotest_load(const string &filename,unsigned ndata)
 {
-    CalibrationManager calibman(filename);
+    CalibrationDataManager calibman(filename);
     REQUIRE(calibman.GetNumberOfCalibrations() == 2);
     REQUIRE(calibman.GetNumberOfDataPoints("1") == ndata);
     REQUIRE(calibman.GetNumberOfDataPoints("2") == 3);
@@ -89,7 +89,7 @@ void dotest_load(const string &filename,unsigned ndata)
 
 void dotest_changes(const string& filename)
 {
-    CalibrationManager calibman(filename);
+    CalibrationDataManager calibman(filename);
 
     TCalibrationData cdata;
 
