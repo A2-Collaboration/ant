@@ -11,6 +11,7 @@ void SetupLogger() {
     el::Configurations loggerConf;
     loggerConf.setToDefault();
     loggerConf.setGlobally(el::ConfigurationType::Format, "%datetime [%level] %fbase:%line : %msg");
+    loggerConf.setGlobally(el::ConfigurationType::ToFile, "false");
     loggerConf.set(el::Level::Verbose,  el::ConfigurationType::Format, "%datetime [%level-%vlevel] %fbase:%line : %msg");
     el::Loggers::reconfigureLogger("default", loggerConf);
 }
