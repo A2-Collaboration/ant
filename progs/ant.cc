@@ -31,6 +31,7 @@
 
 #include <sstream>
 #include <string>
+#include <chrono>
 
 using namespace std;
 using namespace ant::output;
@@ -38,11 +39,13 @@ using namespace ant;
 using namespace ant::analysis;
 
 
-
+bool running = true;
+void myCrashHandler(int sig);
 
 
 int main(int argc, char** argv) {
     SetupLogger();
+    el::Helpers::setCrashHandler(myCrashHandler);
 
     TCLAP::CmdLine cmd("ant", ' ', "0.1");
     auto cmd_verbose = cmd.add<TCLAP::ValueArg<int>>("v","verbose","Verbosity level (0..9)", false, 0,"int");
@@ -105,15 +108,15 @@ int main(int argc, char** argv) {
             unpacker = move(unpacker_);
         }
         catch(Unpacker::Exception e) {
-            VLOG(5) << "Unpacker::Get: " << e.what();
+            VLOG(5) << "Unpacker: " << e.what();
             unpacker = nullptr;
         }
         catch(RawFileReader::Exception e) {
-            LOG(WARNING) << "Error opening file "<<inputfile<<": " << e.what();
+            LOG(WARNING) << "Unpacker: Error opening file "<<inputfile<<": " << e.what();
             unpacker = nullptr;
         }
         catch(ExpConfig::ExceptionNoConfig) {
-            LOG(ERROR) << "The file "<<inputfile<<" cannot be unpacked without a manually specified setupname. "
+            LOG(ERROR) << "The inputfile " << inputfile << " cannot be unpacked without a manually specified setupname. "
                        << "Consider using " << cmd_setup->longID();
             return 1;
         }
@@ -138,19 +141,36 @@ int main(int argc, char** argv) {
         LOG(INFO) << "Writing unpacker stage output to " << cmd_unpackerout->getValue();
     }
 
-    unsigned n = 0;
-    list<shared_ptr<TDataRecord>> records;
+    if(!unpacker) {
+        LOG(ERROR) << "No unpacker available, exit.";
+        return 1;
+    }
+
+    std::chrono::time_point<std::chrono::system_clock> start, end;
+    start = std::chrono::system_clock::now();
+
+    unsigned nItems = 0;
     while(auto item = unpacker->NextItem()) {
-        n++;
-        records.push_back(item);
-    }
-
-    cout << "n=" << n << endl;
-
-    for(auto item : records) {
-        if(unpacker_writer != nullptr)
+        if(!running)
+            break;
+        if(unpacker_writer)
             unpacker_writer->Fill(item);
+        nItems++;
     }
+
+    end = std::chrono::system_clock::now();
+    std::chrono::duration<double> elapsed_seconds = end-start;
+    cout << "Processed " << nItems << " unpacker items, speed "
+         << nItems/elapsed_seconds.count() << " Items/s" << endl;
+
     return 0;
 }
 
+void myCrashHandler(int sig) {
+    if(sig == SIGINT) {
+        running = false;
+        return;
+    }
+    // FOLLOWING LINE IS ABSOLUTELY NEEDED AT THE END IN ORDER TO ABORT APPLICATION
+    el::Helpers::crashAbort(sig);
+}

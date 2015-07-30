@@ -38,7 +38,10 @@ class UnpackerWriter {
             size_t Tpos = classname.find_first_of('T');
             if(Tpos == std::string::npos)
                 return;
+            Tpos++; // get past the T
             const std::string& branchname = classname.substr(Tpos);
+            if(branchname.empty())
+                return;
             const std::string treename = std::string("tree")+branchname;
 
             Tree = new TTree(treename.c_str(), treename.c_str());
