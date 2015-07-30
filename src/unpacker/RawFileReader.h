@@ -113,11 +113,12 @@ private:
     class PlainBase {
     public:
         explicit PlainBase(const std::string& filename)
-            : file(filename.c_str(), std::ios::binary)
+            : file(filename.c_str(), std::ios::binary),
+              gcount_total(0)
         {
             const std::streampos begin = file.tellg();
             file.seekg (0, std::ios::end);
-            filesize_ = file.tellg() - begin;
+            filesize = file.tellg() - begin;
             file.seekg(0, std::ios::beg);
         }
 
@@ -129,7 +130,7 @@ private:
 
         virtual void read(char* s, std::streamsize n) {
             file.read(s, n);
-            gcount_total_ += file.gcount();
+            gcount_total += file.gcount();
         }
 
         virtual bool eof() const {
@@ -148,13 +149,13 @@ private:
 
         // used for estimating ETA in HandlePerformanceStats()
         virtual std::streamsize filesize_remaining() const {
-            return filesize_ - gcount_total_;
+            return filesize - gcount_total;
         }
 
     private:
         std::ifstream file;
-        std::streamsize filesize_;
-        std::streamsize gcount_total_;
+        std::streamsize filesize;
+        std::streamsize gcount_total;
     }; // class RawFileReader::Plain
 
     /**

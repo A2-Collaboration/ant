@@ -62,6 +62,7 @@ int main(int argc, char** argv) {
     if(cmd_verbose->isSet()) {
         el::Loggers::setVerboseLevel(cmd_verbose->getValue());
     }
+    RawFileReader::OutputPerformanceStats = 5;
 
     // build the general ROOT file manager first
     auto filemanager = make_shared<ReadTFiles>();
