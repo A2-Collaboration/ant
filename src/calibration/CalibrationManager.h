@@ -4,7 +4,6 @@
 #include "tree/TCalibrationData.h"
 #include "tree/TDataRecord.h"
 #include "base/interval.h"
-#include "base/std_ext.h"
 #include "base/WrapTFile.h"
 
 //
@@ -24,6 +23,7 @@
 #include <string>
 #include <sstream>
 #include <iostream>
+#include <algorithm>
 
 namespace ant
 {
@@ -38,12 +38,47 @@ private:
 
     std::map<std::string,std::vector<TCalibrationData>> dataBase;
 
+    /**
+     * @brief isValid tests if the given id is a valid changepoint ( no newer data exists )
+     * @param tid      queried event id
+     * @param setupID  calibration id
+     * @param depth    depth(distance from last calibration iteration) of given data point
+     * @return valid or not
+     */
+    bool isValid(const TID& tid, const std::string& setupID, const std::uint32_t& depth) const
+    {
+        return (depth <= getDepth(tid,setupID));
+    }
+
+    /**
+     * @brief getDepth returns the distance in steps to the latest calibration iteration
+     * @param tid      event id
+     * @param setupID  calibration id
+     * @return depth
+     */
+    std::uint32_t getDepth(const TID& tid, const std::string& setupID) const
+    {
+        std::uint32_t current_depth = 0;
+        auto& calibPairs = dataBase.at(setupID);
+
+        for(auto rit = calibPairs.rbegin(); rit != calibPairs.rend(); ++rit)
+        {
+            interval<TID> idint(rit->FirstID,rit->LastID);
+            if (idint.Contains(tid))
+                return current_depth;
+            current_depth++;
+        }
+        return current_depth;
+    }
+
+    /**
+     * @brief finish takes care of rewriting the data to the tree
+     */
     void finish() const
     {
         WrapTFile file(dataFileName);
         std::vector<TTree*> treeBuffer;
         // loop over map and write a new tree for each setupID
-
         for (auto& calibration: dataBase)
         {
             std::string tname = cm_treename_prefix + calibration.first;
@@ -147,9 +182,30 @@ public:
 
     const std::vector<TID> GetChangePoints(const std::string& setupID) const
     {
+        if ( dataBase.count(setupID) == 0)
+            return {};
 
-        std::cout << "generate change points for " << setupID << std::endl;
-        return {TID()};
+        std::uint32_t depth = 0;
+        std::vector<TID> ids;
+
+
+        auto& calibPairs = dataBase.at(setupID);
+
+        for(auto rit = calibPairs.rbegin(); rit != calibPairs.rend(); ++rit)
+        {
+            //changepoint is one after the last element;
+            auto inclastID(rit->LastID);
+            ++inclastID;
+
+            if (isValid(rit->FirstID,setupID,depth) )
+                ids.push_back(rit->FirstID);
+            if (isValid(inclastID,setupID,depth) )
+                ids.push_back(inclastID);
+
+            depth++;
+        }
+        std::sort(ids.begin(),ids.end());
+        return ids;
     }
 
     std::uint32_t GetNumberOfCalibrations() const

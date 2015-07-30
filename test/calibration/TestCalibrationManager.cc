@@ -5,48 +5,56 @@
 #include "TCalibrationData.h"
 #include "TDataRecord.h"
 
+#include <vector>
+
 using namespace std;
 using namespace ant;
 
-void dotest_store(const string& filename);
-void dotest_load(const string& filename);
+unsigned dotest_store(const string& filename);
+void dotest_load(const string& filename, unsigned ndata);
+void dotest_changes(const string& filename);
 
 TEST_CASE("CalibrationManager","[calibration]")
 {
     tmpfile_t tmpfile;
-    dotest_store(tmpfile.filename);
-    dotest_load(tmpfile.filename);
+    auto ndata = dotest_store(tmpfile.filename);
+    dotest_load(tmpfile.filename,ndata);
+    dotest_changes(tmpfile.filename);
 }
 
-
-void dotest_store(const string& filename)
+unsigned dotest_store(const string& filename)
 {
+
 
     CalibrationManager calibman(filename);
 
     TCalibrationData cdata("M",
                            "comment",
-                           std::time(nullptr),
+                           0,
                            "1",
-                           TID(0,0),TID(0,10),
+                           TID(0,0),TID(0,16),
                            {{0,1},{1,2}});
-
     calibman.Add(cdata);
+    unsigned ndata(1);
 
-    cdata.TimeStamp++;
-    cdata.FirstID.Value = 2;
-    cdata.LastID.Value = 8;
-    calibman.Add(cdata);
+    auto mdata = [&cdata,&ndata] (unsigned first, unsigned last, unsigned time)
+    {
+        ndata++;
+        return TCalibrationData(cdata.Author,
+                                cdata.Comment,
+                                time,
+                                cdata.SetupID,
+                                TID(0,first),TID(0,last),
+                                cdata.Data);
+    };
 
-    cdata.TimeStamp++;
-    cdata.FirstID.Value = 3;
-    cdata.LastID.Value = 6;
-    calibman.Add(cdata);
-
-    cdata.TimeStamp++;
-    cdata.FirstID.Value = 5;
-    cdata.LastID.Value = 7;
-    calibman.Add(cdata);
+    calibman.Add(mdata( 4,  4, 1));
+    calibman.Add(mdata( 2,  8, 2));
+    calibman.Add(mdata( 3,  6, 3));
+    calibman.Add(mdata( 5,  7, 4));
+    calibman.Add(mdata(13, 20, 5));
+    calibman.Add(mdata(22, 24, 6));
+    calibman.Add(mdata(14, 14, 7));
 
     cdata.SetupID = "2";
     cdata.TimeStamp++;
@@ -65,16 +73,70 @@ void dotest_store(const string& filename)
     calibman.Add(cdata);
 
     REQUIRE(calibman.GetNumberOfCalibrations() == 2);
-    REQUIRE(calibman.GetNumberOfDataPoints("1") == 4);
+    REQUIRE(calibman.GetNumberOfDataPoints("1") == ndata);
     REQUIRE(calibman.GetNumberOfDataPoints("2") == 3);
 
-
+    return ndata;
 }
 
-void dotest_load(const string &filename)
+void dotest_load(const string &filename,unsigned ndata)
 {
     CalibrationManager calibman(filename);
     REQUIRE(calibman.GetNumberOfCalibrations() == 2);
-    REQUIRE(calibman.GetNumberOfDataPoints("1") == 4);
+    REQUIRE(calibman.GetNumberOfDataPoints("1") == ndata);
     REQUIRE(calibman.GetNumberOfDataPoints("2") == 3);
+}
+
+void dotest_changes(const string& filename)
+{
+    CalibrationManager calibman(filename);
+
+    TCalibrationData cdata;
+
+    calibman.GetData("1",TID(0,0),cdata);
+    REQUIRE(cdata.TimeStamp == 0);
+
+    calibman.GetData("1",TID(0,1),cdata);
+    REQUIRE(cdata.TimeStamp == 0);
+
+    calibman.GetData("1",TID(0,3),cdata);
+    REQUIRE(cdata.TimeStamp == 3);
+
+    calibman.GetData("1",TID(0,4),cdata);
+    REQUIRE(cdata.TimeStamp == 3);
+
+    calibman.GetData("1",TID(0,5),cdata);
+    REQUIRE(cdata.TimeStamp == 4);
+
+    calibman.GetData("1",TID(0,14),cdata);
+    REQUIRE(cdata.TimeStamp == 7);
+
+    REQUIRE_FALSE(calibman.GetData("1",TID(0,21),cdata));
+
+    calibman.GetData("1",TID(0,23),cdata);
+    REQUIRE(cdata.TimeStamp == 6);
+
+    REQUIRE_FALSE(calibman.GetData("1",TID(0,29),cdata));
+
+    auto genchange = calibman.GetChangePoints("1");
+
+    vector<TID> manchange({TID(0,0),
+                           TID(0,2),
+                           TID(0,3),
+                           TID(0,5),
+                           TID(0,8),
+                           TID(0,9),
+                           TID(0,13),
+                           TID(0,14),
+                           TID(0,15),
+                           TID(0,21),
+                           TID(0,22),
+                           TID(0,25)
+                          });
+
+    REQUIRE(genchange.size() == manchange.size());
+
+    for ( unsigned i = 0 ; i < genchange.size() ; ++i ){
+        REQUIRE( genchange.at(i) == manchange.at(i));
+    }
 }
