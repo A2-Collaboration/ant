@@ -72,7 +72,7 @@ Reconstruct::Reconstruct(const THeaderInfo& headerInfo)
 // makes forward declaration work properly
 Reconstruct::~Reconstruct() {}
 
-unique_ptr<TEvent> Reconstruct::DoReconstruct(TDetectorRead& detectorRead)
+shared_ptr<TEvent> Reconstruct::DoReconstruct(TDetectorRead& detectorRead)
 {
     // update the updateables :)
     updateablemanager->UpdateParameters(detectorRead.ID);
@@ -90,7 +90,7 @@ unique_ptr<TEvent> Reconstruct::DoReconstruct(TDetectorRead& detectorRead)
     // already create the event here, since Tagger
     // doesn't need hit matching and thus can be filled already
     // in BuildHits (see below)
-    auto event = std_ext::make_unique<TEvent>(detectorRead.ID);
+    auto event = make_shared<TEvent>(detectorRead.ID);
 
     // do the hit matching, which builds the TClusterHit's
     // we also extract the energy, which is always defined as a

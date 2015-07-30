@@ -33,7 +33,7 @@ public:
 
     // this method converts a TDetectorRead
     // into a calibrated TEvent
-    std::unique_ptr<TEvent> DoReconstruct(TDetectorRead& detectorRead);
+    std::shared_ptr<TEvent> DoReconstruct(TDetectorRead& detectorRead);
 
     ~Reconstruct();
 

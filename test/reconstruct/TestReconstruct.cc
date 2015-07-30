@@ -44,7 +44,7 @@ struct ReconstructTester {
 
     Reconstruct r;
 
-    unique_ptr<TEvent> DoReconstruct(TDetectorRead& detectorRead)
+    shared_ptr<TEvent> DoReconstruct(TDetectorRead& detectorRead)
     {
         /// \todo Improve requirements
 
@@ -64,7 +64,7 @@ struct ReconstructTester {
         // already create the event here, since Tagger
         // doesn't need hit matching and thus can be filled already
         // in BuildHits (see below)
-        auto event = std_ext::make_unique<TEvent>(detectorRead.ID);
+        auto event = make_shared<TEvent>(detectorRead.ID);
 
         // the detectorRead is now calibrated as far as possible
         // lets start the hit matching, which builds the TClusterHit's
