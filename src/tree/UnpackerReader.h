@@ -1,9 +1,7 @@
 #pragma once
 
-#include "TDataRecord.h" // for TID
 #include "unpacker/Unpacker.h" // for Unpacker::Reader interface
 #include "base/ReadTFiles.h"
-
 #include "TTree.h"
 
 #include <vector>
@@ -53,11 +51,6 @@ class UnpackerReader : public Unpacker::Reader {
     treerecords_t treerecords;
     bool isopen;
 
-public:
-
-    UnpackerReader(const std::shared_ptr<ReadTFiles>& rootfiles);
-    virtual ~UnpackerReader();
-
     template<typename T>
     bool SetupBranch(const std::string& name, T*& ptr) {
         TTree* tree = nullptr;
@@ -79,6 +72,13 @@ public:
         tree->GetEntry(0);
         return true;
     }
+
+public:
+
+    UnpackerReader(const std::shared_ptr<ReadTFiles>& rootfiles);
+    virtual ~UnpackerReader();
+
+
 
     bool OpenInput();
     bool IsOpen() const { return isopen; }

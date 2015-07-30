@@ -16,6 +16,7 @@
 #include "unpacker/RawFileReader.h"
 
 #include "tree/UnpackerReader.h"
+#include "tree/UnpackerWriter.h"
 #include "tree/THeaderInfo.h"
 
 #include "base/std_ext.h"
@@ -47,7 +48,7 @@ int main(int argc, char** argv) {
     auto cmd_verbose = cmd.add<TCLAP::ValueArg<int>>("v","verbose","Verbosity level (0..9)", false, 0,"int");
     auto cmd_input  = cmd.add<TCLAP::MultiArg<string>>("i","input","Input files",true,"string");
     auto cmd_setup  = cmd.add<TCLAP::ValueArg<string>>("s","setup","Choose setup",false,"","string");
-
+    auto cmd_unpackerout  = cmd.add<TCLAP::ValueArg<string>>("u","unpackerout","Unpacker stage output file",false,"","string");
 
 
     cmd.parse(argc, argv);
@@ -104,7 +105,7 @@ int main(int argc, char** argv) {
             unpacker = move(unpacker_);
         }
         catch(Unpacker::Exception e) {
-            VLOG(5) << "Unpacker::Get said: " << e.what();
+            VLOG(5) << "Unpacker::Get: " << e.what();
             unpacker = nullptr;
         }
         catch(RawFileReader::Exception e) {
@@ -131,17 +132,25 @@ int main(int argc, char** argv) {
     }
 
 
-    while(auto item = unpacker->NextItem()) {
-        cout << *item << endl;
+    unique_ptr<tree::UnpackerWriter> unpacker_writer = nullptr;
+    if(cmd_unpackerout->isSet()) {
+        unpacker_writer = std_ext::make_unique<tree::UnpackerWriter>(cmd_unpackerout->getValue());
+        LOG(INFO) << "Writing unpacker stage output to " << cmd_unpackerout->getValue();
     }
 
+    unsigned n = 0;
+    list<shared_ptr<TDataRecord>> records;
+    while(auto item = unpacker->NextItem()) {
+        n++;
+        records.push_back(item);
+    }
 
+    cout << "n=" << n << endl;
 
-    //unpackerFile.DetectorRead->Class()->
-
-    //cout << unpackerFile.HeaderInfo->Class_Name() << endl;
-
+    for(auto item : records) {
+        if(unpacker_writer != nullptr)
+            unpacker_writer->Fill(item);
+    }
     return 0;
-
 }
 

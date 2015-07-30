@@ -16,6 +16,7 @@ set(SRCS
   
 set(SRCS_EXTRA
   UnpackerReader.cc
+  UnpackerWriter.cc
   )
 
 set(ROOT_DICTIONARY "${CMAKE_CURRENT_BINARY_DIR}/G__tree.cc")
