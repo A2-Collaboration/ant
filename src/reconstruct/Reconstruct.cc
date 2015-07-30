@@ -137,7 +137,6 @@ void Reconstruct::ApplyHooksToReadHits(
     }
 
     // adding extrahits to the detectorRead invalidates the sorted_readhits pointer map
-    /// \todo make this more efficient
     if(!extrahits.empty()) {
         detectorRead.Hits.insert(detectorRead.Hits.end(),
                                  make_move_iterator(extrahits.begin()),
