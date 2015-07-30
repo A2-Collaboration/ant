@@ -1,3 +1,3 @@
-add_ant_test(CalibrationManager)
+add_ant_test(CalibrationDataManager)
 
 
