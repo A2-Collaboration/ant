@@ -15,9 +15,13 @@
 #include "unpacker/Unpacker.h"
 #include "unpacker/RawFileReader.h"
 
+#include "reconstruct/Reconstruct.h"
+
 #include "tree/UnpackerReader.h"
 #include "tree/UnpackerWriter.h"
 #include "tree/THeaderInfo.h"
+#include "tree/TDetectorRead.h"
+#include "tree/TEvent.h"
 
 #include "base/std_ext.h"
 #include "base/Logger.h"
@@ -149,13 +153,41 @@ int main(int argc, char** argv) {
     std::chrono::time_point<std::chrono::system_clock> start, end;
     start = std::chrono::system_clock::now();
 
+    unique_ptr<Reconstruct> reconstruct = nullptr;
+
     unsigned nItems = 0;
     while(auto item = unpacker->NextItem()) {
         if(!running)
             break;
+
+        nItems++;
+
+        // we use ROOT's machinery to identify derived class types,
+        // because it's much faster than dynamic_cast (but also potentially unsafe)
+        const TClass* isA = item->IsA();
+
+        if(isA == THeaderInfo::Class()) {
+            const THeaderInfo* headerInfo = reinterpret_cast<THeaderInfo*>(item.get());
+            reconstruct = std_ext::make_unique<Reconstruct>(*headerInfo);
+            LOG(INFO) << "Found THeaderInfo in unpacker datastream, initialized Reconstruct";
+        }
+        else if(isA == TDetectorRead::Class()) {
+            TDetectorRead* detread = reinterpret_cast<TDetectorRead*>(item.get());
+
+
+            if(reconstruct) {
+                auto event = reconstruct->DoReconstruct(*detread);
+                if(unpacker_writer)
+                    unpacker_writer->Fill(event);
+            }
+
+            // skip the writing of the detector read item
+            continue;
+        }
+
+        // by default, we write the items to the file
         if(unpacker_writer)
             unpacker_writer->Fill(item);
-        nItems++;
     }
 
     end = std::chrono::system_clock::now();
