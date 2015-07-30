@@ -51,7 +51,7 @@ Reconstruct::Reconstruct(const THeaderInfo& headerInfo)
         // ... but also are needed in DoReconstruct
         auto ret = sorted_detectors.insert(make_pair(detector->Type, detector));
         if(!ret.second) {
-            throw runtime_error("Reconstruct config provided detector list with two detectors of same type");
+            throw Exception("Reconstruct config provided detector list with two detectors of same type");
         }
     }
 
@@ -163,15 +163,11 @@ void Reconstruct::BuildHits(sorted_bydetectortype_t<AdaptorTClusterHit>& sorted_
         const auto& it_detector = sorted_detectors.find(detectortype);
         if(it_detector == sorted_detectors.end())
             continue;
-        const shared_ptr<Detector_t>& detector = it_detector->second;
-
-        // the tagging devices are excluded from further hit matching and clustering
-        const shared_ptr<TaggerDetector_t>& taggerdetector
-                = dynamic_pointer_cast<TaggerDetector_t>(detector);
+        const detector_ptr_t& detector = it_detector->second;
 
         // for tagger detectors, we do not match the hits by channel at all
-        if(taggerdetector != nullptr) {
-            HandleTagger(taggerdetector, readhits, event_tagger);
+        if(detector.TaggerDetector != nullptr) {
+            HandleTagger(detector.TaggerDetector, readhits, event_tagger);
             continue;
         }
 
@@ -184,8 +180,9 @@ void Reconstruct::BuildHits(sorted_bydetectortype_t<AdaptorTClusterHit>& sorted_
 
             // transform the data from readhit into TClusterHitDatum's
             vector<TClusterHitDatum> data(readhit->Values.size());
-            auto do_transform = [readhit] (double value) {
-                return TClusterHitDatum(readhit->GetChannelType(), value);
+            const Channel_t::Type_t channeltype = readhit->GetChannelType();
+            auto do_transform = [channeltype] (double value) {
+                return TClusterHitDatum(channeltype, value);
             };
             transform(readhit->Values.cbegin(), readhit->Values.cend(),
                       data.begin(), do_transform);
@@ -288,17 +285,14 @@ void Reconstruct::BuildClusters(
         const auto& it_detector = sorted_detectors.find(detectortype);
         if(it_detector == sorted_detectors.end())
             continue;
-        const shared_ptr<Detector_t>& detector = it_detector->second;
+        const detector_ptr_t& detector = it_detector->second;
 
         list<TCluster> clusters;
 
-        // check if detector can do clustering,
-        const shared_ptr<ClusterDetector_t>& clusterdetector
-                = dynamic_pointer_cast<ClusterDetector_t>(detector);
-
-        if(clusterdetector != nullptr) {
+        // check if detector supports clustering
+        if(detector.ClusterDetector != nullptr) {
             // yes, then hand over to clustering algorithm
-            clustering->Build(clusterdetector, clusterhits, clusters);
+            clustering->Build(detector.ClusterDetector, clusterhits, clusters);
         }
         else {
             // in case of no clustering detector,
@@ -307,10 +301,10 @@ void Reconstruct::BuildClusters(
                 const auto& hit = clusterhit.Hit;
 
                 clusters.emplace_back(
-                            detector->GetPosition(hit->Channel),
+                            detector.Detector->GetPosition(hit->Channel),
                             clusterhit.Energy,
                             clusterhit.Time,
-                            detector->Type,
+                            detector.Detector->Type,
                             hit->Channel,
                             vector<TClusterHit>{*hit}
                             );
