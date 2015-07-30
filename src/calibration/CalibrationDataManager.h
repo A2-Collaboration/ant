@@ -180,13 +180,13 @@ public:
         return false;
     }
 
-    const std::vector<TID> GetChangePoints(const std::string& calibrationID) const
+    const std::list<TID> GetChangePoints(const std::string& calibrationID) const
     {
         if ( dataBase.count(calibrationID) == 0)
             return {};
 
         std::uint32_t depth = 0;
-        std::vector<TID> ids;
+        std::list<TID> ids;
 
 
         auto& calibPairs = dataBase.at(calibrationID);
@@ -204,7 +204,7 @@ public:
 
             depth++;
         }
-        std::sort(ids.begin(),ids.end());
+        ids.sort();
         return ids;
     }
 

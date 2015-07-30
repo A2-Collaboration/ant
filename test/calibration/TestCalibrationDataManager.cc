@@ -5,7 +5,9 @@
 #include "TCalibrationData.h"
 #include "TDataRecord.h"
 
-#include <vector>
+#include <list>
+#include <algorithm>
+
 
 using namespace std;
 using namespace ant;
@@ -120,7 +122,7 @@ void dotest_changes(const string& filename)
 
     auto genchange = calibman.GetChangePoints("1");
 
-    vector<TID> manchange({TID(0,0),
+    list<TID> manchange({TID(0,0),
                            TID(0,2),
                            TID(0,3),
                            TID(0,5),
@@ -136,7 +138,14 @@ void dotest_changes(const string& filename)
 
     REQUIRE(genchange.size() == manchange.size());
 
-    for ( unsigned i = 0 ; i < genchange.size() ; ++i ){
-        REQUIRE( genchange.at(i) == manchange.at(i));
+    auto itg = genchange.begin();
+    auto itm = manchange.begin();
+
+    while (itg != genchange.end())
+    {
+        REQUIRE(*itg == *itm);
+        itg++;
+        itm++;
     }
+
 }
