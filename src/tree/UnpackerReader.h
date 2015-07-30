@@ -51,12 +51,7 @@ class UnpackerReader : public Unpacker::Reader {
 
     using treerecords_t = std::list<treerecord_t>;
     treerecords_t treerecords;
-    treerecords_t::iterator it_treerecord;
     bool isopen;
-
-    TID currID;
-
-    TID findMinID() const;
 
 public:
 
@@ -66,6 +61,7 @@ public:
     template<typename T>
     bool SetupBranch(const std::string& name, T*& ptr) {
         TTree* tree = nullptr;
+        ptr = nullptr;
         const std::string treename = std::string("tree") + name;
         if(!file->GetObject(treename, tree))
             return false;
@@ -85,34 +81,10 @@ public:
     }
 
     bool OpenInput();
-
-    bool IsOpen() const {
-        return isopen;
-    }
+    bool IsOpen() const { return isopen; }
 
     bool GetUniqueHeaderInfo(THeaderInfo& headerInfo);
-
     virtual std::shared_ptr<TDataRecord> NextItem() noexcept override;
-
-
-
-//    void Fill(TDataRecord* rec) {
-//        const TClass* isA = rec->IsA();
-//        if(isA == TEvent::Class()) {
-//            Event = static_cast<TEvent*>(rec);
-//            treeEvent->Fill();
-//        }
-//        else if(isA == TDetectorRead::Class()) {
-//            DetectorRead = static_cast<TDetectorRead*>(rec);
-//            treeDetectorRead->Fill();
-//        }
-//        else if(isA == THeaderInfo::Class()) {
-//            HeaderInfo = static_cast<THeaderInfo*>(rec);
-//            treeHeaderInfo->Fill();
-//        }
-//    }
-
-
 
 };
 

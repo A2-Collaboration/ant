@@ -23,14 +23,14 @@ using namespace ant::tree;
 UnpackerReader::UnpackerReader(const std::shared_ptr<ReadTFiles>& rootfiles) :
     file(rootfiles), // remember the shared_ptr to make sure it lives as long as this class
     treerecords(),
-    it_treerecord(treerecords.end()), // invalid iterator position
-    isopen(false),
-    currID()
+    isopen(false)
 {}
 
 UnpackerReader::~UnpackerReader() {}
 
 bool UnpackerReader::OpenInput() {
+    // the order here determines the order of NextItem()
+    // if the TID is equal
     if(!SetupBranch("HeaderInfo", HeaderInfo))
         return false;
     if(!SetupBranch("UnpackerMessage", UnpackerMessage))
@@ -41,23 +41,6 @@ bool UnpackerReader::OpenInput() {
         return false;
     if(!SetupBranch("Event", Event))
         return false;
-
-    if(treerecords.empty())
-        return false;
-
-    // set it_treerecord to the item with the minimum ID
-    it_treerecord = treerecords.begin();
-    currID = findMinID();
-    while(it_treerecord != treerecords.end()) {
-        if(currID == it_treerecord->GetRecord().ID)
-            break;
-        ++it_treerecord;
-    }
-    if(it_treerecord == treerecords.end())
-        return false;
-
-    VLOG(9) << "Start reading at ID=" << currID << " with type="
-            << it_treerecord->GetRecord().IsA()->GetName();
 
     isopen = true;
     return true;
@@ -78,49 +61,22 @@ bool UnpackerReader::GetUniqueHeaderInfo(THeaderInfo& headerInfo) {
     return false;
 }
 
-TID UnpackerReader::findMinID() const {
-    TID tid_min = it_treerecord->GetRecord().ID; // start with something existing
-    // search all for minimum TID
-    for(const treerecord_t& treerecord : treerecords) {
-        const TDataRecord& record = treerecord.GetRecord();
-        if(record.ID < tid_min)
-            tid_min = record.ID;
-    }
-    return tid_min;
-}
-
 std::shared_ptr<TDataRecord> UnpackerReader::NextItem() noexcept {
 
-    if(it_treerecord == treerecords.end())
+    if(treerecords.empty())
         return nullptr;
+
+    auto compare = [] (const treerecord_t& a, const treerecord_t& b) {
+        return a.GetRecord().ID < b.GetRecord().ID;
+    };
+
+    auto it_treerecord = min_element(treerecords.begin(), treerecords.end(), compare);
 
     auto record = shared_ptr<TDataRecord>(*(it_treerecord->Record));
     if(!it_treerecord->GetNext()) {
-        it_treerecord = treerecords.erase(it_treerecord);
-        if(treerecords.empty())
-            return record;
-        //advance(it_treerecord, -1);
+        // fetched the last item from this treerecord entry,
+        // so remove it from the available treerecords
+        treerecords.erase(it_treerecord);
     }
-
-    // find the global minimum
-    const TID& tid_min = findMinID();
-
-    // one left anyway
-    if(treerecords.size()==1)
-        return record;
-
-    // go to other
-    do {
-        ++it_treerecord;
-        if(it_treerecord==treerecords.end())
-            it_treerecord = treerecords.begin();
-
-        if(it_treerecord->GetRecord().ID == tid_min)
-            return record;
-    }
-    while(it_treerecord != treerecords.end());
-
-    // should never reach this point
-    return nullptr;
-
+    return record;
 }
