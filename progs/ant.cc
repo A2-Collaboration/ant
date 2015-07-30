@@ -36,6 +36,9 @@
 #include <sstream>
 #include <string>
 #include <chrono>
+#include <cstdio>
+#include <cerrno>
+
 
 using namespace std;
 using namespace ant::output;
@@ -52,17 +55,32 @@ int main(int argc, char** argv) {
     el::Helpers::setCrashHandler(myCrashHandler);
 
     TCLAP::CmdLine cmd("ant", ' ', "0.1");
-    auto cmd_verbose = cmd.add<TCLAP::ValueArg<int>>("v","verbose","Verbosity level (0..9)", false, 0,"int");
-    auto cmd_input  = cmd.add<TCLAP::MultiArg<string>>("i","input","Input files",true,"string");
-    auto cmd_setup  = cmd.add<TCLAP::ValueArg<string>>("s","setup","Choose setup",false,"","string");
-    auto cmd_unpackerout  = cmd.add<TCLAP::ValueArg<string>>("u","unpackerout","Unpacker stage output file",false,"","string");
+    auto cmd_verbose = cmd.add<TCLAP::ValueArg<int>>("v","verbose","Verbosity level (0..9)", false, 0,"level");
+    auto cmd_input  = cmd.add<TCLAP::MultiArg<string>>("i","input","Input files",true,"inputfile");
+    auto cmd_setup  = cmd.add<TCLAP::ValueArg<string>>("s","setup","Choose setup",false,"","setupname");
+    auto cmd_maxevents = cmd.add<TCLAP::ValueArg<int>>("m","maxevents","Process only max events",false, 0, "maxevents");
 
+
+    auto cmd_unpackerout  = cmd.add<TCLAP::ValueArg<string>>("u","unpackerout","Unpacker output file",false,"","outputfile");
+    auto cmd_u_writeuncal  = cmd.add<TCLAP::SwitchArg>("","u_writeuncalibrated","Unpacker: Output UNcalibrated detector reads (before reconstruct)",false);
+    auto cmd_u_disablerecon  = cmd.add<TCLAP::SwitchArg>("","u_disablereconstruct","Unpacker: Disable Reconstruct (disables also all analysis)",false);
+    auto cmd_u_writecal  = cmd.add<TCLAP::SwitchArg>("","u_writecalibrated","Unpacker: Output calibrated detector reads (only if Reconstruct found)",false);
 
     cmd.parse(argc, argv);
     if(cmd_verbose->isSet()) {
         el::Loggers::setVerboseLevel(cmd_verbose->getValue());
     }
-    RawFileReader::OutputPerformanceStats = 5;
+    RawFileReader::OutputPerformanceStats = 3;
+
+    // check if input files are readable
+    for(const auto& inputfile : cmd_input->getValue()) {
+        FILE* fp = fopen(inputfile.c_str(),"r");
+        if(fp==NULL) {
+            LOG(ERROR) << "Inputfile '" << inputfile << "' could not be opened for reading: " << strerror(errno);
+            return 1;
+        }
+        fclose(fp);
+    }
 
     // build the general ROOT file manager first
     auto filemanager = make_shared<ReadTFiles>();
@@ -157,9 +175,14 @@ int main(int argc, char** argv) {
     unique_ptr<Reconstruct> reconstruct = nullptr;
 
     unsigned nItems = 0;
+    int nEvents = 0; // or detector reads
     while(auto item = unpacker->NextItem()) {
         if(!running)
             break;
+        if(cmd_maxevents->isSet() && nEvents>=cmd_maxevents->getValue()) {
+            LOG(INFO) << "Reached max events of " << nEvents << ", stopping.";
+            break;
+        }
 
         nItems++;
 
@@ -169,19 +192,27 @@ int main(int argc, char** argv) {
 
         if(isA == THeaderInfo::Class()) {
             const THeaderInfo* headerInfo = reinterpret_cast<THeaderInfo*>(item.get());
-            reconstruct = std_ext::make_unique<Reconstruct>(*headerInfo);
-            LOG(INFO) << "Found THeaderInfo in unpacker datastream, initialized Reconstruct";
+            if(!cmd_u_disablerecon->isSet()) {
+                reconstruct = std_ext::make_unique<Reconstruct>(*headerInfo);
+                LOG(INFO) << "Found THeaderInfo in unpacker datastream, initialized Reconstruct";
+            }
         }
         else if(isA == TDetectorRead::Class()) {
             TDetectorRead* detread = reinterpret_cast<TDetectorRead*>(item.get());
 
+            if(unpacker_writer && cmd_u_writeuncal->isSet())
+                unpacker_writer->Fill(item);
 
             if(reconstruct) {
                 auto event = reconstruct->DoReconstruct(*detread);
-                if(unpacker_writer)
+                if(unpacker_writer) {
+                    if(cmd_u_writecal->isSet())
+                        unpacker_writer->Fill(item);
                     unpacker_writer->Fill(event);
+                }
             }
 
+            nEvents++;
             // skip the writing of the detector read item
             continue;
         }
