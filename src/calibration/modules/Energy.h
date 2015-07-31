@@ -41,9 +41,10 @@ public:
 
 protected:
 
+    const Detector_t::Type_t DetectorType;
+
     std::shared_ptr<CalibrationDataManager> calibrationManager;
 
-    const Detector_t::Type_t DetectorType;
     const Calibration::Converter::ptr_t Converter;
 
     // only used for rawData conversion
