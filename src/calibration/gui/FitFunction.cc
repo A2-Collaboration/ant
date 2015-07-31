@@ -21,8 +21,8 @@ FitFunctionGaus::FitFunctionGaus(double A, double x0, double sigma, interval<dou
     func->SetParameter(2,sigma);
     func->SetNpx(1000);
 
-    Addknob<KnobsTF1::ParameterKnob>("A", func, 0, VirtualKnob::GUI_Type::slider_horizontal);
-    Addknob<KnobsTF1::ParameterKnob>("x_0",func,1);
+    Addknob<KnobsTF1::ParameterKnob>("A",     func, 0, GUIElementDescription::GUI_Type::slider_horizontal, kBlue, 3);
+    Addknob<KnobsTF1::ParameterKnob>("x_{0}", func, 1, GUIElementDescription::GUI_Type::slider_vertical,   kBlue, 3);
     Addknob<MyWKnob>("#sigma",func);
     Addknob<KnobsTF1::RangeKnob>("Min", func, KnobsTF1::RangeKnob::RangeEndType::lower);
     Addknob<KnobsTF1::RangeKnob>("Max", func, KnobsTF1::RangeKnob::RangeEndType::upper);
@@ -44,7 +44,7 @@ void FitFunctionGaus::Fit(TH1 *hist)
 
 
 FitFunctionGaus::MyWKnob::MyWKnob(const std::string &n, TF1 *Func):
-    VirtualKnob(n,GUI_Type::slider_vertical),
+    VirtualKnob(n,{GUIElementDescription::GUI_Type::slider_vertical,kBlue,3}),
     func(Func)
 {
 }

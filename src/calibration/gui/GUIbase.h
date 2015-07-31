@@ -32,23 +32,32 @@ public:
     virtual void RangeUpdate(const Viewport& p) =0;
 };
 
+struct GUIElementDescription {
 
-class VirtualKnob {
-public:
     enum class GUI_Type {
         slider_vertical,
         slider_horizontal,
         textbox
     };
 
-    std::string name;
-    GUI_Type GUI;
-    Color_t color;
+    GUIElementDescription(GUI_Type type, Color_t color, double lineWidth): Type(type), Color(color), LineWidth(lineWidth) {}
 
-    VirtualKnob(const std::string& name_="", const GUI_Type gui=GUI_Type::textbox, const Color_t col=kBlue):
+    GUI_Type Type;
+    Color_t Color;
+    double LineWidth;
+};
+
+class VirtualKnob {
+public:
+
+    std::string name;
+
+    GUIElementDescription gui;
+
+
+    VirtualKnob(const std::string& name_, GUIElementDescription Gui):
         name(name_),
-        GUI(gui),
-        color(col)
+        gui(Gui)
     {}
 
     virtual double get() const =0;

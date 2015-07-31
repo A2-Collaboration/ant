@@ -70,17 +70,18 @@ GUIIndicator *CalCanvas::MakeHorizontalIndicatorLine(VirtualKnob &knob) {
 
 GUIIndicator *CalCanvas::MakeGUIElement(VirtualKnob &knob)
 {
-    switch (knob.GUI) {
-    case VirtualKnob::GUI_Type::slider_horizontal:
+    switch (knob.gui.Type) {
+    case GUIElementDescription::GUI_Type::slider_horizontal:
         return MakeHorizontalIndicatorLine(knob);
         break;
-    case VirtualKnob::GUI_Type::slider_vertical:
+    case GUIElementDescription::GUI_Type::slider_vertical:
         return MakeVerticalIndicatorLine(knob);
         break;
-    default:
+    case GUIElementDescription::GUI_Type::textbox:
+        //@todo Implement
         return MakeVerticalIndicatorLine(knob);
-        break;
     }
+    return MakeVerticalIndicatorLine(knob);
 }
 
 void CalCanvas::HandleKeypress(const char key)

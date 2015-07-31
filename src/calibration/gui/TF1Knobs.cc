@@ -6,9 +6,9 @@ using namespace ant::calibration::gui;
 using namespace ant::calibration::gui::KnobsTF1;
 
 
-ParameterKnob::ParameterKnob(const std::string &n, TF1 *func, int par, VirtualKnob::GUI_Type gui):
-    VirtualKnob(n,gui),
-    func(func),
+ParameterKnob::ParameterKnob(const std::string& n, TF1* Func, int par, GUIElementDescription::GUI_Type type, Color_t color, double LineW):
+    VirtualKnob(n,GUIElementDescription(type,color,LineW)),
+    func(Func),
     parameter_index(par)
 {
 }
@@ -27,8 +27,8 @@ void ParameterKnob::set(double a)
 
 
 
-RangeKnob::RangeKnob(const std::string& Name, TF1* Func, RangeEndType Type)
-    :VirtualKnob(Name,GUI_Type::slider_vertical,kBlack),
+RangeKnob::RangeKnob(const std::string& Name, TF1* Func, RangeEndType Type, Color_t color, double LineW)
+    :VirtualKnob(Name,{GUIElementDescription::GUI_Type::slider_vertical,color,LineW}),
       func(Func),
       type(Type)
 {

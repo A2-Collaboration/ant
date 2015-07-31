@@ -27,8 +27,8 @@ IndicatorLine::IndicatorLine(ant::calibration::gui::VirtualKnob &k): TLine(),
     label(new UndeleteableTLatex(fX1,fY1,knob.name.c_str()))
 {
     SetBit(kCanDelete, false);
-    SetLineWidth(3);
-    SetColor(k.color);
+    SetLineWidth(k.gui.LineWidth);
+    SetColor(k.gui.Color);
 }
 
 IndicatorLine::~IndicatorLine()
