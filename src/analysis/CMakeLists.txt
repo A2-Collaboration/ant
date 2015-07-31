@@ -74,6 +74,7 @@ set(ANALYSIS_INPUT_ANT
   input/ant/detail/Convert.cc
   input/ant/detail/Convert.h
   input/ant/AntReader.cc
+  input/ant/AntUnpackerReader.cc
 )
 
 set(ANALYSIS_PHYSICS

@@ -16,7 +16,7 @@ using namespace ant;
 using namespace ant::input;
 
 AntReader::AntReader(const std::shared_ptr<ReadTFiles>& rootfiles) :
-    DataReader(rootfiles)
+    files(rootfiles)
 {
     if( !files->GetObject("treeEvent", tree)) {
         throw Exception("Can't find a TTree named treeEvent in input file(s).");

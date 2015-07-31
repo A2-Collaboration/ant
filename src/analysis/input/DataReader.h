@@ -5,7 +5,6 @@
 namespace ant {
 
 class Event;
-class ReadTFiles;
 
 namespace input {
 
@@ -18,12 +17,10 @@ namespace input {
  *  * new ant data foramt reader
  */
 class DataReader {
-protected:
-    std::shared_ptr<ReadTFiles> files;
 public:
 
-    DataReader(const std::shared_ptr<ReadTFiles>& rootfiles);
-    virtual ~DataReader();
+    DataReader() = default;
+    virtual ~DataReader() {}
     virtual std::shared_ptr<Event> ReadNextEvent() =0;
 
     virtual bool hasData() const =0;

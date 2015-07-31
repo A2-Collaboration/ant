@@ -48,6 +48,7 @@ protected:
         }
     };
 
+    std::shared_ptr<ReadTFiles>    files;
     std::unique_ptr<TreeManager>   trees;
 
 

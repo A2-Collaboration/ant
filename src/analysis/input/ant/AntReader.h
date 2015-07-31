@@ -19,18 +19,15 @@ class ReadTFiles;
 namespace input {
 
 
-class AntReader: public DataReader {
+class AntReader : public DataReader {
 protected:
+    std::shared_ptr<ReadTFiles>    files;
+
+
     TTree* tree    = nullptr;
     TEvent* buffer = nullptr;
 
     Long64_t current = -1;
-
-public:
-    AntReader(const std::shared_ptr<ReadTFiles>& rootfiles);
-    virtual ~AntReader();
-    AntReader(const AntReader&) = delete;
-    AntReader& operator= (const AntReader&) = delete;
 
     /**
      * @brief Get number of events in tree
@@ -38,6 +35,14 @@ public:
      * @return number of events total
      */
     Long64_t  GetNEvents() const;
+
+public:
+    AntReader(const std::shared_ptr<ReadTFiles>& rootfiles);
+    virtual ~AntReader();
+    AntReader(const AntReader&) = delete;
+    AntReader& operator= (const AntReader&) = delete;
+
+
 
     std::shared_ptr<Event> ReadNextEvent();
     virtual bool hasData() const override;

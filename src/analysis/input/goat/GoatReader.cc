@@ -276,7 +276,7 @@ public:
 };
 
 GoatReader::GoatReader(const std::shared_ptr<ReadTFiles>& rootfiles):
-    DataReader(rootfiles),
+    files(rootfiles),
     trees(std_ext::make_unique<TreeManager>()),
     pluto_database(makeStaticData())
 {
