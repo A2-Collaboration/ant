@@ -3,6 +3,7 @@
 #include "analysis/input/DataReader.h"
 #include "analysis/input/ant/AntReader.h"
 #include "analysis/input/goat/GoatReader.h"
+#include "analysis/input/ant/AntUnpackerReader.h"
 #include "analysis/OutputManager.h"
 
 #include "analysis/physics/Physics.h"
@@ -74,6 +75,7 @@ int main(int argc, char** argv) {
 
     // check if input files are readable
     for(const auto& inputfile : cmd_input->getValue()) {
+        /// \todo find some non-C'ish way of doing this?
         FILE* fp = fopen(inputfile.c_str(),"r");
         if(fp==NULL) {
             LOG(ERROR) << "Inputfile '" << inputfile << "' could not be opened for reading: " << strerror(errno);
@@ -158,69 +160,85 @@ int main(int argc, char** argv) {
     }
 
 
-    unique_ptr<tree::UnpackerWriter> unpacker_writer = nullptr;
-    if(cmd_unpackerout->isSet()) {
-        unpacker_writer = std_ext::make_unique<tree::UnpackerWriter>(cmd_unpackerout->getValue());
-        LOG(INFO) << "Writing unpacker stage output to " << cmd_unpackerout->getValue();
+    // we can finally we can create the available input readers
+    // for the analysis
+
+    list< unique_ptr<input::DataReader> > readers;
+
+    if(unpacker) {
+        // turn the unpacker into a input::DataReader
+        auto reconstruct = cmd_u_disablerecon->isSet() ? nullptr : std_ext::make_unique<Reconstruct>();
+        auto unpacker_reader = std_ext::make_unique<input::AntUnpackerReader>(
+                    move(unpacker),
+                    move(reconstruct)
+                    );
+        // it may write stuff during the unpacker stage
+        if(cmd_unpackerout->isSet()) {
+            unpacker_reader->EnableUnpackerWriter(
+                        cmd_unpackerout->getValue(),
+                        cmd_u_writeuncal->isSet(),
+                        cmd_u_writecal->isSet()
+                        );
+        }
+
+        readers.push_back(move(unpacker_reader));
     }
 
-    if(!unpacker) {
-        LOG(ERROR) << "No unpacker available, exit.";
-        return 1;
-    }
+
+
 
     std::chrono::time_point<std::chrono::system_clock> start, end;
     start = std::chrono::system_clock::now();
 
-    unique_ptr<Reconstruct> reconstruct = nullptr;
+//    auto reconstruct = nullptr;
 
     unsigned nItems = 0;
-    int nEvents = 0; // or detector reads
-    while(auto item = unpacker->NextItem()) {
-        if(!running)
-            break;
-        if(cmd_maxevents->isSet() && nEvents>=cmd_maxevents->getValue()) {
-            LOG(INFO) << "Reached max events of " << nEvents << ", stopping.";
-            break;
-        }
+//    int nEvents = 0; // or detector reads
+//    while(auto item = unpacker->NextItem()) {
+//        if(!running)
+//            break;
+//        if(cmd_maxevents->isSet() && nEvents>=cmd_maxevents->getValue()) {
+//            LOG(INFO) << "Reached max events of " << nEvents << ", stopping.";
+//            break;
+//        }
 
-        nItems++;
+//        nItems++;
 
-        // we use ROOT's machinery to identify derived class types,
-        // because it's much faster than dynamic_cast (but also potentially unsafe)
-        const TClass* isA = item->IsA();
+//        // we use ROOT's machinery to identify derived class types,
+//        // because it's much faster than dynamic_cast (but also potentially unsafe)
+//        const TClass* isA = item->IsA();
 
-        if(isA == THeaderInfo::Class()) {
-            const THeaderInfo* headerInfo = reinterpret_cast<THeaderInfo*>(item.get());
-            if(!cmd_u_disablerecon->isSet()) {
-                reconstruct = std_ext::make_unique<Reconstruct>(*headerInfo);
-                LOG(INFO) << "Found THeaderInfo in unpacker datastream, initialized Reconstruct";
-            }
-        }
-        else if(isA == TDetectorRead::Class()) {
-            TDetectorRead* detread = reinterpret_cast<TDetectorRead*>(item.get());
+//        if(isA == THeaderInfo::Class()) {
+//            const THeaderInfo* headerInfo = reinterpret_cast<THeaderInfo*>(item.get());
+//            if(!cmd_u_disablerecon->isSet()) {
+//                reconstruct = std_ext::make_unique<Reconstruct>(*headerInfo);
+//                LOG(INFO) << "Found THeaderInfo in unpacker datastream, initialized Reconstruct";
+//            }
+//        }
+//        else if(isA == TDetectorRead::Class()) {
+//            TDetectorRead* detread = reinterpret_cast<TDetectorRead*>(item.get());
 
-            if(unpacker_writer && cmd_u_writeuncal->isSet())
-                unpacker_writer->Fill(item);
+//            if(unpacker_writer && cmd_u_writeuncal->isSet())
+//                unpacker_writer->Fill(item);
 
-            if(reconstruct) {
-                auto event = reconstruct->DoReconstruct(*detread);
-                if(unpacker_writer) {
-                    if(cmd_u_writecal->isSet())
-                        unpacker_writer->Fill(item);
-                    unpacker_writer->Fill(event);
-                }
-            }
+//            if(reconstruct) {
+//                auto event = reconstruct->DoReconstruct(*detread);
+//                if(unpacker_writer) {
+//                    if(cmd_u_writecal->isSet())
+//                        unpacker_writer->Fill(item);
+//                    unpacker_writer->Fill(event);
+//                }
+//            }
 
-            nEvents++;
-            // skip the writing of the detector read item
-            continue;
-        }
+//            nEvents++;
+//            // skip the writing of the detector read item
+//            continue;
+//        }
 
-        // by default, we write the items to the file
-        if(unpacker_writer)
-            unpacker_writer->Fill(item);
-    }
+//        // by default, we write the items to the file
+//        if(unpacker_writer)
+//            unpacker_writer->Fill(item);
+//    }
 
     end = std::chrono::system_clock::now();
     std::chrono::duration<double> elapsed_seconds = end-start;

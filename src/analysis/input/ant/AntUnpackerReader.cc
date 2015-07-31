@@ -4,7 +4,7 @@
 
 #include "detail/Convert.h"
 
-
+#include "tree/UnpackerWriter.h"
 #include "tree/TEvent.h"
 #include "tree/THeaderInfo.h"
 #include "tree/TDetectorRead.h"
@@ -36,15 +36,27 @@ AntUnpackerReader::AntUnpackerReader(
 
 }
 
-
-
 AntUnpackerReader::~AntUnpackerReader() {}
+
+void AntUnpackerReader::EnableUnpackerWriter(
+        const string& outputfile,
+        bool uncalibratedDetectorReads,
+        bool calibratedDetectorReads
+        )
+{
+    writer = std_ext::make_unique<tree::UnpackerWriter>(outputfile);
+    writeUncalibrated = uncalibratedDetectorReads;
+    writeCalibrated = calibratedDetectorReads;
+    LOG(INFO) << "Writing unpacker stage output to " << outputfile;
+    if(writeUncalibrated)
+        LOG(INFO) << "Write UNcalibrated (before reconstruct) detectors reads to " << outputfile;
+    if(writeCalibrated)
+        LOG(INFO) << "Write calibrated (after reconstruct) detectors reads to " << outputfile;
+}
 
 std::shared_ptr<Event> AntUnpackerReader::ReadNextEvent()
 {
     while(auto item = reader->NextItem()) {
-
-
         // we use ROOT's machinery to identify derived class types,
         // because it's much faster than dynamic_cast (but also potentially unsafe)
         const TClass* isA = item->IsA();

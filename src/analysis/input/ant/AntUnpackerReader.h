@@ -37,11 +37,14 @@ protected:
 
 public:
     AntUnpackerReader(std::unique_ptr<Unpacker::Reader> unpacker_reader,
-                      std::unique_ptr<Reconstruct_traits> reconstruct);
+                      std::unique_ptr<Reconstruct_traits> reconstruct = nullptr);
     virtual ~AntUnpackerReader();
     AntUnpackerReader(const AntUnpackerReader&) = delete;
     AntUnpackerReader& operator= (const AntUnpackerReader&) = delete;
 
+    void EnableUnpackerWriter(const std::string& outputfile,
+                              bool uncalibratedDetectorReads = false,
+                              bool calibratedDetectorReads = false);
 
     // DataReader interface
     std::shared_ptr<Event> ReadNextEvent();
