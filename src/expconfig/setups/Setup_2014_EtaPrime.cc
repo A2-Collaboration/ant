@@ -26,6 +26,7 @@ public:
         AddDetector<detector::TAPS_2013>(cherenkovInstalled, false); // no Cherenkov, don't use sensitive channels
         AddDetector<detector::TAPSVeto_2014>(cherenkovInstalled); // no Cherenkov
 
+        auto calibrationManager = make_shared<CalibrationDataManager>(GetName());
 
         // then calibrations need some rawvalues to "physical" values converters
         // they can be quite different (especially for the COMPASS TCS system), but most of them simply decode the bytes
@@ -77,13 +78,13 @@ public:
                                      -0.05 // default gain
                                      );
 
-        AddHook<calibration::CB_Energy>(convert_GeSiCa_SADC);
+        AddHook<calibration::CB_Energy>(calibrationManager, convert_GeSiCa_SADC );
 
-        AddHook<calibration::PID_Energy>(convert_MultiHit16bit);
+        AddHook<calibration::PID_Energy>(calibrationManager, convert_MultiHit16bit );
 
-        AddHook<calibration::TAPS_Energy>(convert_MultiHit16bit);
+        AddHook<calibration::TAPS_Energy>(calibrationManager, convert_MultiHit16bit );
 
-        AddHook<calibration::TAPSVeto_Energy>(convert_MultiHit16bit);
+        AddHook<calibration::TAPSVeto_Energy>(calibrationManager, convert_MultiHit16bit);
 
         // enable TAPS shower correction, which is a hook running on list of clusters
         AddHook<calibration::TAPS_ShowerCorrection>();

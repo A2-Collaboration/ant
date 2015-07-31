@@ -26,7 +26,8 @@ public:
         virtual void ShowResult();
     };
 
-    PID_Energy(Calibration::Converter::ptr_t converter,
+    PID_Energy(std::shared_ptr<CalibrationDataManager> calmgr,
+               Calibration::Converter::ptr_t converter,
                double defaultPedestal = 100,
                double defaultGain = 0.014,
                double defaultThreshold = 0.001,

@@ -2,6 +2,7 @@
 #include "analysis/plot/HistogramFactories.h"
 #include "analysis/data/Event.h"
 #include "analysis/utils/combinatorics.h"
+#include "calibration/CalibrationDataManager.h"
 
 #include "tree/TDetectorRead.h"
 
@@ -12,6 +13,7 @@ using namespace ant;
 using namespace ant::calibration;
 
 Energy::Energy(Detector_t::Type_t detectorType,
+               std::shared_ptr<CalibrationDataManager> calmgr,
                Calibration::Converter::ptr_t converter,
                double defaultPedestal,
                double defaultGain,
@@ -23,6 +25,7 @@ Energy::Energy(Detector_t::Type_t detectorType,
         << "_Energy"
            ),
     DetectorType(detectorType),
+    calibrationManager(calmgr),
     Converter(move(converter)),
     DefaultPedestal(defaultPedestal),
     Pedestals(),
@@ -108,5 +111,10 @@ void Energy::ApplyTo(const readhits_t& hits, extrahits_t& extrahits)
         }
 
     }
+}
+
+Energy::~Energy()
+{
+
 }
 

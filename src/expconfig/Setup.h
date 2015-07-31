@@ -26,6 +26,7 @@
 #include "calibration/modules/PID_Energy.h"
 #include "calibration/modules/TAPS_Energy.h"
 #include "calibration/modules/TAPSVeto_Energy.h"
+#include "calibration/CalibrationDataManager.h"
 
 
 #include "calibration/converters/CATCH_TDC.h"

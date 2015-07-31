@@ -26,7 +26,8 @@ public:
         virtual void ShowResult();
     };
 
-    CB_Energy(Calibration::Converter::ptr_t converter,
+    CB_Energy(std::shared_ptr<CalibrationDataManager> calmgr,
+              Calibration::Converter::ptr_t converter,
               double defaultPedestal = 0,
               double defaultGain = 0.07,
               double defaultThreshold = 2,

@@ -10,6 +10,9 @@
 class TH1;
 
 namespace ant {
+
+class CalibrationDataManager;
+
 namespace calibration {
 
 class Energy :
@@ -20,6 +23,7 @@ class Energy :
 public:
 
     Energy(Detector_t::Type_t detectorType,
+           std::shared_ptr<CalibrationDataManager> calmgr,
            Calibration::Converter::ptr_t converter,
            double defaultPedestal,
            double defaultGain,
@@ -33,7 +37,11 @@ public:
     virtual std::list<TID> GetChangePoints() const override { return {}; }
     void Update(const TID&) override {}
 
+    virtual ~Energy();
+
 protected:
+
+    std::shared_ptr<CalibrationDataManager> calibrationManager;
 
     const Detector_t::Type_t DetectorType;
     const Calibration::Converter::ptr_t Converter;

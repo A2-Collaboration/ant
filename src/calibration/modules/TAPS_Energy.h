@@ -26,7 +26,8 @@ public:
         virtual void ShowResult();
     };
 
-    TAPS_Energy(Calibration::Converter::ptr_t converter,
+    TAPS_Energy(std::shared_ptr<CalibrationDataManager> calmgr,
+                Calibration::Converter::ptr_t converter,
                 double defaultPedestal = 100,
                 double defaultGain = 0.3,
                 double defaultThreshold = 1,

@@ -12,13 +12,15 @@ using namespace std;
 using namespace ant;
 using namespace ant::calibration;
 
-PID_Energy::PID_Energy(Calibration::Converter::ptr_t converter,
+PID_Energy::PID_Energy(std::shared_ptr<CalibrationDataManager> calmgr,
+                       Calibration::Converter::ptr_t converter,
                        double defaultPedestal,
                        double defaultGain,
                        double defaultThreshold,
                        double defaultRelativeGain
                        ) :
     Energy(Detector_t::Type_t::PID,
+           calmgr,
            converter,
            defaultPedestal,
            defaultGain,

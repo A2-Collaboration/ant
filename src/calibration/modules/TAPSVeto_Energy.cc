@@ -12,12 +12,14 @@ using namespace std;
 using namespace ant;
 using namespace ant::calibration;
 
-TAPSVeto_Energy::TAPSVeto_Energy(Calibration::Converter::ptr_t converter,
+TAPSVeto_Energy::TAPSVeto_Energy(std::shared_ptr<CalibrationDataManager> calmgr,
+                                 Calibration::Converter::ptr_t converter,
                                  double defaultPedestal,
                                  double defaultGain,
                                  double defaultThreshold,
                                  double defaultRelativeGain):
     Energy(Detector_t::Type_t::TAPSVeto,
+           calmgr,
            converter,
            defaultPedestal,
            defaultGain,
