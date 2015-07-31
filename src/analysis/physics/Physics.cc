@@ -1,34 +1,37 @@
 #include "Physics.h"
 #include "base/Logger.h"
 
+#include "tree/TSlowControl.h"
+
 #include <iomanip>
 #include <chrono>
+
 
 using namespace std;
 using namespace ant;
 
-void ant::DebugPhysics::ProcessEvent(const ant::Event &event)
+void DebugPhysics::ProcessEvent(const Event& event)
 {
     VLOG(8) << event;
 }
 
-void ant::DebugPhysics::Finish()
+void DebugPhysics::Finish()
 {
     VLOG(8) << "Nop";
 }
 
-void ant::DebugPhysics::ShowResult()
+void DebugPhysics::ShowResult()
 {
     VLOG(8) << "Nop";
 }
 
 
-ant::Physics::Physics(const string &name):
+Physics::Physics(const string &name):
     HistFac(name)
 {}
 
 
-ant::PhysicsManager::PhysicsManager() : physics()
+PhysicsManager::PhysicsManager() : physics()
 {
 
 }
@@ -37,6 +40,27 @@ void PhysicsManager::ReadFrom(list< unique_ptr<input::DataReader> > readers,
         long long maxevents,
         bool& running)
 {
+    if(readers.empty())
+        return;
+
+    // figure out what set of readers we have
+    // we expect maximum one source and several amends
+
+    unique_ptr<input::DataReader> source = nullptr;
+    auto it_reader = readers.begin();
+    while(it_reader != readers.end()) {
+        if((*it_reader)->IsSource()) {
+            if(source != nullptr) {
+                LOG(ERROR) << "Found more than one source for events, stop.";
+                return;
+            }
+            source = move(*it_reader);
+            it_reader = readers.erase(it_reader);
+        }
+        ++it_reader;
+    }
+
+
 
     chrono::time_point<std::chrono::system_clock> start, end;
     start = chrono::system_clock::now();
@@ -48,7 +72,24 @@ void PhysicsManager::ReadFrom(list< unique_ptr<input::DataReader> > readers,
         if(nEvents>=maxevents)
             break;
 
+        Event event;
+        TSlowControl slowcontrol; /// \todo make use of this
 
+        if(source) {
+            if(!source->ReadNextEvent(event, slowcontrol)) {
+                break;
+            }
+        }
+
+        it_reader = readers.begin();
+        while(it_reader != readers.end()) {
+            if(!(*it_reader)->ReadNextEvent(event, slowcontrol))
+                it_reader = readers.erase(it_reader);
+            ++it_reader;
+        }
+
+        if(!source && readers.empty())
+            break;
 
         nEvents++;
     }
@@ -62,7 +103,7 @@ void PhysicsManager::ReadFrom(list< unique_ptr<input::DataReader> > readers,
 
 
 
-void ant::PhysicsManager::ProcessEvent(const ant::Event &event)
+void PhysicsManager::ProcessEvent(const Event &event)
 {
     for( auto& m : physics ) {
 
@@ -70,7 +111,7 @@ void ant::PhysicsManager::ProcessEvent(const ant::Event &event)
     }
 }
 
-void ant::PhysicsManager::ShowResults()
+void PhysicsManager::ShowResults()
 {
     for(auto& p : physics) {
         p->ShowResult();
@@ -78,19 +119,19 @@ void ant::PhysicsManager::ShowResults()
 }
 
 
-ant::PhysicsRegistry&ant::PhysicsRegistry::get()
+PhysicsRegistry& PhysicsRegistry::get()
 {
     static PhysicsRegistry instance;
     return instance;
 }
 
-std::unique_ptr<ant::Physics> ant::PhysicsRegistry::Create(const string& name)
+std::unique_ptr<Physics> PhysicsRegistry::Create(const string& name)
 {
     return PhysicsRegistry::get().physics_creators.at(name)();
 
 }
 
-void ant::PhysicsRegistry::PrintRegistry()
+void PhysicsRegistry::PrintRegistry()
 {
     for(auto& entry : get().physics_creators) {
         LOG(INFO) << entry.first;
@@ -98,7 +139,7 @@ void ant::PhysicsRegistry::PrintRegistry()
 }
 
 
-ant::PhysicsRegistration::PhysicsRegistration(ant::physics_creator c, const string& name)
+PhysicsRegistration::PhysicsRegistration(physics_creator c, const string& name)
 {
     PhysicsRegistry::get().RegisterPhysics(c,name);
 }

@@ -49,9 +49,9 @@ void AntReader::EnableUnpackerWriter(
     writeCalibrated = calibratedDetectorReads;
     LOG(INFO) << "Writing unpacker stage output to " << outputfile;
     if(writeUncalibrated)
-        LOG(INFO) << "Write UNcalibrated (before reconstruct) detectors reads to " << outputfile;
+        LOG(INFO) << "Write UNcalibrated detectors reads (BEFORE DoReconstruct) to " << outputfile;
     if(writeCalibrated)
-        LOG(INFO) << "Write calibrated (after reconstruct) detectors reads to " << outputfile;
+        LOG(INFO) << "Write calibrated detectors (AFTER DoReconstruct) reads to " << outputfile;
 }
 
 bool AntReader::ReadNextEvent(Event& event, TSlowControl&)

@@ -48,6 +48,8 @@ public:
     PlutoReader(const PlutoReader&) = delete;
     PlutoReader& operator= (const PlutoReader&) = delete;
 
+    virtual bool IsSource() override { return false; }
+
     virtual bool ReadNextEvent(Event& event, TSlowControl&) override;
 
 };
