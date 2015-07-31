@@ -21,6 +21,8 @@ private:
     const std::string cm_branchname;
     std::string dataFileName;
 
+    bool changedDataBase;
+
     std::map<std::string,std::vector<TCalibrationData>> dataBase;
 
     /**
@@ -46,19 +48,23 @@ private:
     /**
      * @brief finish takes care of rewriting the data to the tree
      */
-    void finish() const;
+    void writeDataBase() const;
 
 public:
     CalibrationDataManager(const std::string& DataFileName);
 
     ~CalibrationDataManager()
     {
-        finish();
+        if (changedDataBase)
+            writeDataBase();
     }
+
+    void InitDataBase();
 
     void Add(const TCalibrationData& data)
     {
         dataBase[data.CalibrationID].push_back(data);
+        changedDataBase = true;
     }
 
     /**

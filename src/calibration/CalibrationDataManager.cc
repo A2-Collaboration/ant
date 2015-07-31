@@ -21,9 +21,14 @@ using namespace ant;
 CalibrationDataManager::CalibrationDataManager(const string& DataFileName):
         cm_treename_prefix("calibration-"),
         cm_branchname("cdata"),
-        dataFileName(DataFileName)
+        dataFileName(DataFileName),
+        changedDataBase(false)
 {
+    InitDataBase();
+}
 
+void CalibrationDataManager::InitDataBase()
+{
     TFile dataFile(dataFileName.c_str(),"READ");
 
     if ( dataFile.IsOpen() )
@@ -65,7 +70,7 @@ CalibrationDataManager::CalibrationDataManager(const string& DataFileName):
     }
 }
 
-void CalibrationDataManager::finish() const
+void CalibrationDataManager::writeDataBase() const
 {
     WrapTFile file(dataFileName);
     list<TTree*> treeBuffer;
