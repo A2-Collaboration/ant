@@ -10,6 +10,7 @@
 #include <list>
 #include <string>
 #include "base/std_ext.h"
+#include "base/interval.h"
 
 #include "Rtypes.h"
 
@@ -39,6 +40,10 @@ public:
     virtual void Draw() =0;
     knoblist_t& getKnobs() { return knobs; }
     virtual void Fit(TH1* hist) =0;
+
+    virtual void SetRange(ant::interval<double> i) =0;
+    virtual ant::interval<double> GetRange() const =0;
+
 };
 
 
@@ -67,6 +72,9 @@ public:
     virtual void Draw() override;
 
     virtual void Fit(TH1* hist) override;
+
+    virtual void SetRange(ant::interval<double> i) override;
+    virtual ant::interval<double> GetRange() const override;
 
 };
 

@@ -11,6 +11,8 @@ using namespace ant::calibration;
 using namespace ant::calibration::gui;
 
 
+FitFunction::~FitFunction()
+{}
 
 
 FitFunctionGaus::FitFunctionGaus(double A, double x0, double sigma, interval<double> range):
@@ -42,6 +44,17 @@ void FitFunctionGaus::Fit(TH1 *hist)
     hist->Fit(func,"RBQN");
 }
 
+void FitFunctionGaus::SetRange(ant::interval<double> i)
+{
+    func->SetRange(i.Start(), i.Stop());
+}
+
+ant::interval<double> FitFunctionGaus::GetRange() const
+{
+    interval<double> i;
+    func->GetRange(i.Start(), i.Stop());
+    return i;
+}
 
 FitFunctionGaus::MyWKnob::MyWKnob(const std::string &n, TF1 *Func):
     VirtualKnob(n,{GUIElementDescription::GUI_Type::slider_vertical,kBlue,3}),
@@ -58,10 +71,4 @@ void FitFunctionGaus::MyWKnob::set(double a)
 {
     auto v = a - func->GetParameter(1);
     func->SetParameter(2,v);
-}
-
-
-FitFunction::~FitFunction()
-{
-
 }
