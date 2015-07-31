@@ -20,7 +20,7 @@ namespace tree {
 
 class UnpackerReader : public Unpacker::Reader {
 
-    std::shared_ptr<ReadTFiles> file;
+    std::shared_ptr<ReadTFiles> files;
 
     TEvent* Event;
     TDetectorRead* DetectorRead;
@@ -56,7 +56,7 @@ class UnpackerReader : public Unpacker::Reader {
         TTree* tree = nullptr;
         ptr = nullptr;
         const std::string treename = std::string("tree") + name;
-        if(!file->GetObject(treename, tree))
+        if(!files->GetObject(treename, tree))
             return false;
         if(tree->GetEntries()==0)
             return true;

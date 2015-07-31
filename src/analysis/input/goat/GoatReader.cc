@@ -253,21 +253,6 @@ void GoatReader::CopyParticles(std::shared_ptr<Event> &event, ParticleInput &inp
     }
 }
 
-GoatReader::GoatReader():
-    files(std_ext::make_unique<ReadTFiles>()),
-    trees(std_ext::make_unique<TreeManager>()),
-    pluto_database(makeStaticData())
-{
-}
-
-GoatReader::~GoatReader() {}
-
-
-void GoatReader::AddInputFile(const std::string &filename)
-{
-    files->OpenFile(filename);
-}
-
 class MyTreeRequestMgr: public TreeRequestManager {
 protected:
     ReadTFiles& m;
@@ -284,19 +269,22 @@ public:
             VLOG(6) << "TTree " << name << " opened";
             return tree;
         } else
-            VLOG(7) << "Could not find TTree " << name << " in any open GoAT file";
+            VLOG(7) << "Could not find TTree " << name << " in any of the provided files";
             return nullptr;
     }
 
 };
 
-//TODO: find a smart way to manage trees and modules:
-//   if module does not init or gets removed-> remove also the tree from the list
-//   two modules use same tree?
-//   reset branch addresses ?
-
-void GoatReader::Initialize()
+GoatReader::GoatReader(const std::shared_ptr<ReadTFiles>& rootfiles):
+    DataReader(rootfiles),
+    trees(std_ext::make_unique<TreeManager>()),
+    pluto_database(makeStaticData())
 {
+    /// \todo find a smart way to manage trees and modules:
+    //   if module does not init or gets removed-> remove also the tree from the list
+    //   two modules use same tree?
+    //   reset branch addresses ?
+
     for(auto module = active_modules.begin(); module != active_modules.end(); ) {
 
         if( (*module)->SetupBranches( MyTreeRequestMgr(*files, *trees))) {
@@ -308,8 +296,9 @@ void GoatReader::Initialize()
     }
 
     max_entry = std::min(GetNEvents(), max_entry);
-
 }
+
+GoatReader::~GoatReader() {}
 
 Long64_t GoatReader::GetNEvents() const
 {

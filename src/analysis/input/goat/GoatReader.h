@@ -28,7 +28,7 @@ namespace input {
 
 class TreeManager;
 
-class GoatReader: public FileDataReader {
+class GoatReader: public DataReader {
 protected:
 
     class InputWrapper {
@@ -48,7 +48,6 @@ protected:
         }
     };
 
-    std::unique_ptr<ReadTFiles>   files;
     std::unique_ptr<TreeManager>   trees;
 
 
@@ -79,8 +78,6 @@ protected:
     Long64_t    current_entry = -1;
     Long64_t    max_entry = std::numeric_limits<Long64_t>::max();
 
-    void AddInputModule(BaseInputModule& module);
-
     static clustersize_t MapClusterSize(const int& size);
 
     void CopyTagger(std::shared_ptr<Event>& event);
@@ -99,15 +96,6 @@ protected:
     PStaticData* pluto_database;
     const ParticleTypeDatabase::Type* GetType(const PParticle* p) const;
 
-public:
-    GoatReader();
-    virtual ~GoatReader();
-    GoatReader(const GoatReader&) = delete;
-    GoatReader& operator= (const GoatReader&) = delete;
-
-    void AddInputFile(const std::string& filename) override;
-    void Initialize() override;
-
     /**
      * @brief Get number of events in tree
      * @see TotalEvents()
@@ -115,11 +103,17 @@ public:
      */
     Long64_t  GetNEvents() const;
 
-    std::shared_ptr<Event> ReadNextEvent();
-    bool hasData() const override;
+public:
+    GoatReader(const std::shared_ptr<ReadTFiles>& rootfiles);
+    virtual ~GoatReader();
+    GoatReader(const GoatReader&) = delete;
+    GoatReader& operator= (const GoatReader&) = delete;
 
-    long long EventsRead() const override;
-    long long TotalEvents() const override;
+    std::shared_ptr<Event> ReadNextEvent();
+    virtual bool hasData() const override;
+
+    virtual long long EventsRead() const override;
+    virtual long long TotalEvents() const override;
 
     void SetMaxEntries(const long long max);
 

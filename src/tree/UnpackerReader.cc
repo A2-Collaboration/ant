@@ -21,7 +21,7 @@ using namespace ant::tree;
 
 
 UnpackerReader::UnpackerReader(const std::shared_ptr<ReadTFiles>& rootfiles) :
-    file(rootfiles), // remember the shared_ptr to make sure it lives as long as this class
+    files(rootfiles), // remember the shared_ptr to make sure it lives as long as this class
     treerecords(),
     isopen(false)
 {}

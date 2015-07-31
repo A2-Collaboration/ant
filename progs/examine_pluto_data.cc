@@ -1,6 +1,7 @@
 #include "analysis/input/goat/GoatReader.h"
 #include "analysis/input/goat/detail/PlutoInput.h"
 #include "base/Logger.h"
+#include "base/ReadTFiles.h"
 
 // Switch of some warnings for the Pluto headers
 #pragma GCC diagnostic push
@@ -23,14 +24,18 @@ std::string plutoname(const int id) {
 int main(int argc, char** argv) {
     SetupLogger(argc, argv);
 
-    input::GoatReader reader;
+
+
+
+    auto filemanager = make_shared<ReadTFiles>();
 
     for(int i=1; i<argc;++i) {
         if(argv[i][0] != '-')
-            reader.AddInputFile(argv[i]);
+            filemanager->OpenFile(argv[i]);
     }
 
-    reader.Initialize();
+    input::GoatReader reader(filemanager);
+
 
     const ant::input::PlutoInput& pluto = reader.GetPlutoInput();
 

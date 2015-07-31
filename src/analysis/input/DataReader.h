@@ -5,6 +5,7 @@
 namespace ant {
 
 class Event;
+class ReadTFiles;
 
 namespace input {
 
@@ -17,16 +18,15 @@ namespace input {
  *  * new ant data foramt reader
  */
 class DataReader {
+protected:
+    std::shared_ptr<ReadTFiles> files;
 public:
-    class Exception : public std::runtime_error {
-      using std::runtime_error::runtime_error; // use base class constructor
-    };
 
-    virtual ~DataReader() = default;
+    DataReader(const std::shared_ptr<ReadTFiles>& rootfiles);
+    virtual ~DataReader();
     virtual std::shared_ptr<Event> ReadNextEvent() =0;
-    virtual bool hasData() const =0;
-    virtual void Initialize() =0;
 
+    virtual bool hasData() const =0;
 
     virtual long long EventsRead() const =0;
 
@@ -34,13 +34,13 @@ public:
      * @brief Get total number of events available
      * @return number, -1 if unknown/does not apply
      */
-    virtual long long TotalEvents() const;
+    virtual long long TotalEvents() const { return -1; }
+
+    class Exception : public std::runtime_error {
+      using std::runtime_error::runtime_error; // use base class constructor
+    };
 };
 
-class FileDataReader: public DataReader {
-public:
-    virtual void AddInputFile(const std::string& filename) =0;
-};
 
 }
 

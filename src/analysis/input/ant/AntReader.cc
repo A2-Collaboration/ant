@@ -15,20 +15,8 @@ using namespace std;
 using namespace ant;
 using namespace ant::input;
 
-AntReader::AntReader():
-    files(std_ext::make_unique<ReadTFiles>())
-{
-}
-
-AntReader::~AntReader() {}
-
-void AntReader::AddInputFile(const string& filename)
-{
-    files->OpenFile(filename);
-}
-
-
-void AntReader::Initialize()
+AntReader::AntReader(const std::shared_ptr<ReadTFiles>& rootfiles) :
+    DataReader(rootfiles)
 {
     if( !files->GetObject("treeEvent", tree)) {
         throw Exception("Can't find a TTree named treeEvent in input file(s).");
@@ -44,8 +32,10 @@ void AntReader::Initialize()
         throw Exception("Can't find a matching branch named \"Event\" in TTree \"treeEvent\" (" + to_string(result) + ")");
     }
 
+
 }
 
+AntReader::~AntReader() {}
 
 Long64_t AntReader::GetNEvents() const
 {

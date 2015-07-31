@@ -14,6 +14,7 @@
 
 #include "base/WrapTFile.h"
 #include "base/tmpfile_t.h"
+#include "base/ReadTFiles.h"
 
 #include "TTree.h"
 
@@ -35,19 +36,16 @@ TEST_CASE("AntReader", "[analysis]") {
 void dotest() {
     tmpfile_t tmp;
     generateInputFile(tmp.filename);
+    auto filemanager = make_shared<ReadTFiles>();
+    filemanager->OpenFile(tmp.filename);
 
-    ant::input::AntReader reader;
-
-    reader.AddInputFile(tmp.filename);
-
-    reader.Initialize();
+    ant::input::AntReader reader(filemanager);
 
     unsigned int nEvents = 0;
     while(reader.hasData()) {
         auto event = reader.ReadNextEvent();
         REQUIRE(event != nullptr);
-        /// \bug Fix missing candidates
-        //REQUIRE(event->Reconstructed().Candidates().size()>0);
+        REQUIRE(event->Reconstructed().Candidates().size()>0);
         nEvents++;
     }
     REQUIRE(nEvents==222);

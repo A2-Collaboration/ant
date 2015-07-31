@@ -3,6 +3,8 @@
 #include "analysis/input/goat/GoatReader.h"
 #include "analysis/data/Event.h"
 
+#include "base/ReadTFiles.h"
+
 #include <iostream>
 
 using namespace std;
@@ -17,13 +19,12 @@ TEST_CASE("GoatReader", "[analysis]") {
 
 void dotest() {
 
-    ant::input::GoatReader g;
 
     /// \todo Generate or read some Goat file?
 
-    g.AddInputFile("NOTTHEREYET");
-
-    g.Initialize();
+    auto filemanager = make_shared<ReadTFiles>();
+    filemanager->OpenFile("NOTTHEREYET");
+    ant::input::GoatReader g(filemanager);
 
     unsigned int n = 0;
     while(g.hasData() && (n++ < 10)) {

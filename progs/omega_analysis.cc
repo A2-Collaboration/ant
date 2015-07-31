@@ -6,7 +6,8 @@
 #include "analysis/physics/common/DataOverview.h"
 
 #include "base/Logger.h"
-#include "base/detail/CmdLine.h"
+#include "base/CmdLine.h"
+#include "base/ReadTFiles.h"
 #include "TRint.h"
 
 using namespace std;
@@ -41,12 +42,14 @@ int main(int argc, char** argv) {
     pm.AddPhysics<OmegaEtaG>(OmegaBase::DataMode::Reconstructed);
     pm.AddPhysics<DataOverview>();
 
-    input::GoatReader reader;
+    auto filemanager = make_shared<ReadTFiles>();
 
-    for(auto& file : input->getValue())
-            reader.AddInputFile(file);
+    for(const auto& file : input->getValue())
+        filemanager->OpenFile(file);
 
-    reader.Initialize();
+    input::GoatReader reader(filemanager);
+
+
 
     if(max_event->isSet()) {
         reader.SetMaxEntries(max_event->getValue());

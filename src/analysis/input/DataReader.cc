@@ -1,7 +1,16 @@
 #include "DataReader.h"
+#include "base/ReadTFiles.h"
 
 
-long long ant::input::DataReader::TotalEvents() const
+
+ant::input::DataReader::DataReader(const std::shared_ptr<ReadTFiles>& rootfiles) :
+    files(rootfiles)
 {
-    return -1;
+
 }
+
+ant::input::DataReader::~DataReader()
+{
+
+}
+

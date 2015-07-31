@@ -15,6 +15,7 @@
 #include "base/std_ext.h"
 #include "base/Logger.h"
 #include "base/CmdLine.h"
+#include "base/ReadTFiles.h"
 
 #include "TRint.h"
 
@@ -97,19 +98,23 @@ int main(int argc, char** argv) {
         pm.AddPhysics(calibration->GetPhysicsModule());
     }
 
-    std::unique_ptr<input::FileDataReader> reader;
-
-    if(input_type->getValue()) {
-        reader = std_ext::make_unique<input::GoatReader>();
-    } else {
-        reader = std_ext::make_unique<input::AntReader>();
+    // build the general ROOT file manager first
+    auto filemanager = make_shared<ReadTFiles>();
+    for(const auto& inputfile : input->getValue()) {
+        VLOG(5) << "ROOT File Manager: Looking at file " << inputfile;
+        if(filemanager->OpenFile(inputfile))
+            LOG(INFO) << "Opened file '" << inputfile << "' as ROOT file";
+        else
+            VLOG(5) << "Could not add " << inputfile << " to ROOT file manager";
     }
 
-    for(auto& file : input->getValue())
-            reader->AddInputFile(file);
+    std::unique_ptr<input::DataReader> reader;
 
-    reader->Initialize();
-
+    if(input_type->getValue()) {
+        reader = std_ext::make_unique<input::GoatReader>(filemanager);
+    } else {
+        reader = std_ext::make_unique<input::AntReader>(filemanager);
+    }
 
     pm.ReadFrom(*reader.get());
 
