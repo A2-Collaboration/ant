@@ -68,7 +68,7 @@ CalibrationDataManager::CalibrationDataManager(const string& DataFileName):
 void CalibrationDataManager::finish() const
 {
     WrapTFile file(dataFileName);
-    vector<TTree*> treeBuffer;
+    list<TTree*> treeBuffer;
     // loop over map and write a new tree for each calibrationID
     for (auto& calibration: dataBase)
     {
@@ -160,5 +160,4 @@ uint32_t CalibrationDataManager::GetNumberOfDataPoints(const string& calibration
     {
         return 0;
     }
-
 }
