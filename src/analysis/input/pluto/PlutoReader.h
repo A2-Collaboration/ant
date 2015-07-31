@@ -35,9 +35,9 @@ protected:
     using PParticleVector = std::vector<const PParticle*>;
     PParticleVector PlutoParticles;
 
-    Long64_t    current_entry = -1;
+    Long64_t    current_entry = 0;
 
-    void CopyPluto(std::shared_ptr<Event>& event);
+    void CopyPluto(Event& event);
 
     PStaticData* pluto_database;
     const ParticleTypeDatabase::Type* GetType(const PParticle* p) const;
@@ -48,11 +48,8 @@ public:
     PlutoReader(const PlutoReader&) = delete;
     PlutoReader& operator= (const PlutoReader&) = delete;
 
-    std::shared_ptr<Event> ReadNextEvent();
-    virtual bool hasData() const override;
+    virtual bool ReadNextEvent(Event& event, TSlowControl&) override;
 
-    virtual long long EventsRead() const override;
-    virtual long long TotalEvents() const override;
 };
 
 }

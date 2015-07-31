@@ -34,10 +34,14 @@ public:
         virtual double GetElectronBeamEnergy() const = 0;
         virtual std::list< std::shared_ptr< Calibration::PhysicsModule> > GetCalibrations() = 0;
 
-        // you may obtain such an Expconfig::Module via headerInfo, name or get all of them
+        // you may obtain such an Expconfig::Module via headerInfo, name,
+        // get all of them, or the last found one
         static std::shared_ptr<Setup> Get(const THeaderInfo& header);
         static std::shared_ptr<Setup> Get(const std::string& name);
-        static std::list< std::shared_ptr<Setup> > GetAll();
+        static std::list<std::string> GetNames();
+        static std::shared_ptr<Setup> GetLastFound();
+    private:
+        static std::list< std::shared_ptr<Setup> > getAll();
     };
 
     // in order to run the Reconstruction,
@@ -72,9 +76,12 @@ public:
     };
 
     ExpConfig() = delete; // this class is more a wrapper for handling the config
+
 private:
     template<typename T>
     static std::shared_ptr<T> Get_(const THeaderInfo& header);
+    static std::shared_ptr<Setup> lastSetupFound;
+
 };
 
 } // namespace ant

@@ -20,7 +20,7 @@ namespace input {
  * @param event
  * @return a shared ptr to the new event
  */
-std::shared_ptr<ant::Event> Convert(const TEvent& event);
+ant::Event Convert(const TEvent& event);
 
 std::shared_ptr<ant::Candidate> Convert(const TCandidate& candidate);
 

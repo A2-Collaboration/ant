@@ -1,10 +1,16 @@
 #include "AntReader.h"
 
 #include "data/Event.h"
+
 #include "detail/Convert.h"
-#include "base/ReadTFiles.h"
-#include "base/std_ext.h"
+
+#include "tree/UnpackerWriter.h"
 #include "tree/TEvent.h"
+#include "tree/THeaderInfo.h"
+#include "tree/TDetectorRead.h"
+
+#include "base/std_ext.h"
+#include "base/Logger.h"
 
 #include "TTree.h"
 
@@ -15,53 +21,87 @@ using namespace std;
 using namespace ant;
 using namespace ant::input;
 
-AntReader::AntReader(const std::shared_ptr<ReadTFiles>& rootfiles) :
-    files(rootfiles)
+AntReader::AntReader(
+        unique_ptr<Unpacker::Reader> unpacker_reader,
+        std::unique_ptr<Reconstruct_traits> reconstruct
+        ) :
+    reader(move(unpacker_reader)),
+    writer(nullptr),
+    reconstruct(move(reconstruct)),
+    haveReconstruct(false),
+    nEvents(0),
+    writeUncalibrated(false),
+    writeCalibrated(false)
 {
-    if( !files->GetObject("treeEvent", tree)) {
-        throw Exception("Can't find a TTree named treeEvent in input file(s).");
-    }
-
-
-    // Return values of SetBranchAddress:
-    // see https://root.cern.ch/root/html534/TTree.html#TTree:CheckBranchAddressType
-
-    const auto result = tree->SetBranchAddress("Event", &buffer);
-
-    if(result != TTree::kMatch) {
-        throw Exception("Can't find a matching branch named \"Event\" in TTree \"treeEvent\" (" + to_string(result) + ")");
-    }
-
 
 }
 
 AntReader::~AntReader() {}
 
-Long64_t AntReader::GetNEvents() const
+void AntReader::EnableUnpackerWriter(
+        const string& outputfile,
+        bool uncalibratedDetectorReads,
+        bool calibratedDetectorReads
+        )
 {
-    return tree->GetEntries();
+    writer = std_ext::make_unique<tree::UnpackerWriter>(outputfile);
+    writeUncalibrated = uncalibratedDetectorReads;
+    writeCalibrated = calibratedDetectorReads;
+    LOG(INFO) << "Writing unpacker stage output to " << outputfile;
+    if(writeUncalibrated)
+        LOG(INFO) << "Write UNcalibrated (before reconstruct) detectors reads to " << outputfile;
+    if(writeCalibrated)
+        LOG(INFO) << "Write calibrated (after reconstruct) detectors reads to " << outputfile;
 }
 
-
-std::shared_ptr<Event> AntReader::ReadNextEvent()
+bool AntReader::ReadNextEvent(Event& event, TSlowControl&)
 {
-    tree->GetEntry(++current);
+    while(auto item = reader->NextItem()) {
+        // we use ROOT's machinery to identify derived class types,
+        // because it's much faster than dynamic_cast (but also potentially unsafe)
+        const TClass* isA = item->IsA();
 
-    auto event = input::Convert(*buffer);
+        if(isA == THeaderInfo::Class()) {
+            const THeaderInfo* headerInfo = reinterpret_cast<THeaderInfo*>(item.get());
+            if(reconstruct) {
+                reconstruct->Initialize(*headerInfo);
+                haveReconstruct = true;
+                LOG(INFO) << "Found THeaderInfo in unpacker datastream, initialized Reconstruct";
+            }
+        }
+        else if(isA == TDetectorRead::Class()) {
+            TDetectorRead* detread = reinterpret_cast<TDetectorRead*>(item.get());
 
-    return event;
+            if(writer && writeUncalibrated)
+                writer->Fill(item);
+
+            if(haveReconstruct) {
+                const auto& tevent = reconstruct->DoReconstruct(*detread);
+                if(writer) {
+                    if(writeCalibrated)
+                        writer->Fill(item);
+                    writer->Fill(tevent);
+                }
+                event = input::Convert(*tevent);
+                return true;
+            }
+
+            nEvents++;
+            // skip the writing of the detector read item
+            // because item is handled above
+            continue;
+        }
+        else if(isA == TEvent::Class()) {
+            const TEvent* tevent = reinterpret_cast<TEvent*>(item.get());
+            event = input::Convert(*tevent);
+            return true;
+        }
+
+        // by default, we write the items to the file
+        if(writer)
+            writer->Fill(item);
+    }
+
+    return false;
 }
 
-bool AntReader::hasData() const {
-    return current < GetNEvents();
-}
-
-long long AntReader::EventsRead() const
-{
-    return current+1;
-}
-
-long long AntReader::TotalEvents() const
-{
-    return GetNEvents();
-}

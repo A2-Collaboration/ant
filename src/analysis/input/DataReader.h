@@ -5,6 +5,7 @@
 namespace ant {
 
 class Event;
+class TSlowControl;
 
 namespace input {
 
@@ -21,24 +22,14 @@ public:
 
     DataReader() = default;
     virtual ~DataReader() {}
-    virtual std::shared_ptr<Event> ReadNextEvent() =0;
-
-    virtual bool hasData() const =0;
-
-    virtual long long EventsRead() const =0;
-
-    /**
-     * @brief Get total number of events available
-     * @return number, -1 if unknown/does not apply
-     */
-    virtual long long TotalEvents() const { return -1; }
 
     class Exception : public std::runtime_error {
       using std::runtime_error::runtime_error; // use base class constructor
     };
+
+    virtual bool IsSource() { return true; }
+    virtual bool HaveSlowControl() { return false; }
+    virtual bool ReadNextEvent(Event& event, TSlowControl& slowControl) = 0;
 };
 
-
-}
-
-}
+}} //

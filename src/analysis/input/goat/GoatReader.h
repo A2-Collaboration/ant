@@ -73,22 +73,14 @@ protected:
         &neutrons
     };
 
-    Long64_t    current_entry = -1;
-    Long64_t    max_entry = std::numeric_limits<Long64_t>::max();
+    Long64_t    current_entry = 0;
 
     static clustersize_t MapClusterSize(const int& size);
 
-    void CopyTagger(std::shared_ptr<Event>& event);
-    void CopyTrigger(std::shared_ptr<Event>& event);
-
-    /**
-     * @brief CopyDetectorHits
-     * @param event
-     * @todo implement
-     */
-    void CopyDetectorHits(std::shared_ptr<Event>& event);
-    void CopyTracks(std::shared_ptr<Event>& event);
-    void CopyParticles(std::shared_ptr<Event>& event, ParticleInput& input_module, const ParticleTypeDatabase::Type& type);
+    void CopyTagger(Event& event);
+    void CopyTrigger(Event& event);
+    void CopyTracks(Event& event);
+    void CopyParticles(Event& event, ParticleInput& input_module, const ParticleTypeDatabase::Type& type);
 
 
     /**
@@ -104,13 +96,7 @@ public:
     GoatReader(const GoatReader&) = delete;
     GoatReader& operator= (const GoatReader&) = delete;
 
-    std::shared_ptr<Event> ReadNextEvent();
-    virtual bool hasData() const override;
-
-    virtual long long EventsRead() const override;
-    virtual long long TotalEvents() const override;
-
-    void SetMaxEntries(const long long max);
+    virtual bool ReadNextEvent(Event& event,  TSlowControl& slowControl) override;
 };
 
 }

@@ -47,17 +47,17 @@ int main(int argc, char** argv) {
     for(const auto& file : input->getValue())
         filemanager->OpenFile(file);
 
+
     input::GoatReader reader(filemanager);
 
 
 
-    if(max_event->isSet()) {
-        reader.SetMaxEntries(max_event->getValue());
-    }
-
-
-
-    pm.ReadFrom(reader);
+//    long long maxevents = max_event->isSet()
+//            ? max_event->getValue()
+//            :  numeric_limits<long long>::max();
+//    // this method does the hard work...
+//    bool running = true;
+//    pm.ReadFrom(move(readers), maxevents, running);
 
     if(!batchmode->isSet()) {
         int a=0;

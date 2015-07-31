@@ -39,16 +39,7 @@ void dotest() {
     auto filemanager = make_shared<ReadTFiles>();
     filemanager->OpenFile(tmp.filename);
 
-    ant::input::AntReader reader(filemanager);
-
-    unsigned int nEvents = 0;
-    while(reader.hasData()) {
-        auto event = reader.ReadNextEvent();
-        REQUIRE(event != nullptr);
-        REQUIRE(event->Reconstructed().Candidates().size()>0);
-        nEvents++;
-    }
-    REQUIRE(nEvents==222);
+    /// \todo use new unpacker-based AntReader here
 }
 
 

@@ -60,7 +60,12 @@ public:
         physics.emplace_back(std::move(pc));
     }
 
-    void ReadFrom(ant::input::DataReader& reader);
+    void ReadFrom(std::list< std::unique_ptr<input::DataReader> > readers,
+                  long long maxevents,
+                  bool& running
+                  );
+
+
     void ProcessEvent(const ant::Event& event);
     void ShowResults();
 

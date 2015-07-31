@@ -3,7 +3,7 @@
 #include "analysis/input/DataReader.h"
 #include "analysis/input/ant/AntReader.h"
 #include "analysis/input/goat/GoatReader.h"
-#include "analysis/input/ant/AntUnpackerReader.h"
+#include "analysis/input/pluto/PlutoReader.h"
 #include "analysis/OutputManager.h"
 
 #include "analysis/physics/Physics.h"
@@ -58,14 +58,20 @@ int main(int argc, char** argv) {
     TCLAP::CmdLine cmd("ant", ' ', "0.1");
     auto cmd_verbose = cmd.add<TCLAP::ValueArg<int>>("v","verbose","Verbosity level (0..9)", false, 0,"level");
     auto cmd_input  = cmd.add<TCLAP::MultiArg<string>>("i","input","Input files",true,"inputfile");
-    auto cmd_setup  = cmd.add<TCLAP::ValueArg<string>>("s","setup","Choose setup",false,"","setupname");
+    auto cmd_setup  = cmd.add<TCLAP::ValueArg<string>>("s","setup","Choose setup manually by name",false,"","setupname");
     auto cmd_maxevents = cmd.add<TCLAP::ValueArg<int>>("m","maxevents","Process only max events",false, 0, "maxevents");
+    auto cmd_physicsclasses  = cmd.add<TCLAP::MultiArg<string>>("p","physics","Physics class to run",false,"physics");
+    auto cmd_output = cmd.add<TCLAP::ValueArg<string>>("o","output","Output file",false,"","outputfile");
+    auto cmd_batchmode = cmd.add<TCLAP::SwitchArg>("b","batch","Run in batch mode (no ROOT shell afterwards)",false);
 
+    auto cmd_calibrations  = cmd.add<TCLAP::MultiArg<string>>("c","calibration","Calibration to run",false,"calibration");
 
     auto cmd_unpackerout  = cmd.add<TCLAP::ValueArg<string>>("u","unpackerout","Unpacker output file",false,"","outputfile");
     auto cmd_u_writeuncal  = cmd.add<TCLAP::SwitchArg>("","u_writeuncalibrated","Unpacker: Output UNcalibrated detector reads (before reconstruct)",false);
     auto cmd_u_disablerecon  = cmd.add<TCLAP::SwitchArg>("","u_disablereconstruct","Unpacker: Disable Reconstruct (disables also all analysis)",false);
     auto cmd_u_writecal  = cmd.add<TCLAP::SwitchArg>("","u_writecalibrated","Unpacker: Output calibrated detector reads (only if Reconstruct found)",false);
+
+
 
     cmd.parse(argc, argv);
     if(cmd_verbose->isSet()) {
@@ -84,18 +90,18 @@ int main(int argc, char** argv) {
         fclose(fp);
     }
 
-    // build the general ROOT file manager first
-    auto filemanager = make_shared<ReadTFiles>();
+    // build the list of ROOT files first
+    auto rootfiles = make_shared<ReadTFiles>();
     for(const auto& inputfile : cmd_input->getValue()) {
         VLOG(5) << "ROOT File Manager: Looking at file " << inputfile;
-        if(filemanager->OpenFile(inputfile))
+        if(rootfiles->OpenFile(inputfile))
             LOG(INFO) << "Opened file '" << inputfile << "' as ROOT file";
         else
             VLOG(5) << "Could not add " << inputfile << " to ROOT file manager";
     }
 
     // then init the unpacker root input file manager
-    auto unpackerFile = std_ext::make_unique<tree::UnpackerReader>(filemanager);
+    auto unpackerFile = std_ext::make_unique<tree::UnpackerReader>(rootfiles);
 
     // search for header info?
     if(unpackerFile->OpenInput()) {
@@ -168,7 +174,8 @@ int main(int argc, char** argv) {
     if(unpacker) {
         // turn the unpacker into a input::DataReader
         auto reconstruct = cmd_u_disablerecon->isSet() ? nullptr : std_ext::make_unique<Reconstruct>();
-        auto unpacker_reader = std_ext::make_unique<input::AntUnpackerReader>(
+        auto unpacker_reader =
+                std_ext::make_unique<input::AntReader>(
                     move(unpacker),
                     move(reconstruct)
                     );
@@ -180,76 +187,87 @@ int main(int argc, char** argv) {
                         cmd_u_writecal->isSet()
                         );
         }
-
         readers.push_back(move(unpacker_reader));
     }
 
+    readers.push_back(std_ext::make_unique<input::PlutoReader>(rootfiles));
+    readers.push_back(std_ext::make_unique<input::GoatReader>(rootfiles));
+
+    // create the list of enabled calibrations here,
+    // because now the readers (and underlying unpackers) did the work
+    // of finding the config, so that
+    list<shared_ptr<Calibration::PhysicsModule>> enabled_calibrations;
+    if(cmd_calibrations->isSet()) {
+        auto setup = ExpConfig::Setup::GetLastFound();
+        if(setup==nullptr) {
+            stringstream ss_setups;
+            for(auto name : ExpConfig::Setup::GetNames()) {
+                ss_setups << name << " ";
+            }
+            LOG(INFO)  << "Available setups: " << ss_setups.str();
+            LOG(ERROR) << "Please specify a --setup if you want to use calibrations as physics modules";
+            return 1;
+        }
+        else {
+            stringstream ss_calibrations;
+
+            for(const auto& calibration : setup->GetCalibrations()) {
+                ss_calibrations << calibration->GetName() << " ";
+                if(!std_ext::contains(cmd_calibrations->getValue(), calibration->GetName())) {
+                    LOG(WARNING) << "Calibration '" << calibration->GetName() << "' not found.";
+                    continue;
+                }
+                enabled_calibrations.emplace_back(move(calibration));
+            }
+            if(enabled_calibrations.empty()) {
+                LOG(WARNING) << "No physics for calibrations enabled at all. Available: " << ss_calibrations.str();
+            }
+        }
+    }
 
 
+    // the real output file, create it here to get all
+    // further ROOT objects into this output file
+    OutputManager om;
+    if(cmd_output->isSet())
+        om.SetNewOutput(cmd_output->getValue());
 
-    std::chrono::time_point<std::chrono::system_clock> start, end;
-    start = std::chrono::system_clock::now();
+    PhysicsManager pm;
+    for(const auto& classname : cmd_physicsclasses->getValue()) {
+        try {
+            pm.AddPhysics( PhysicsRegistry::Create(classname) );
+            LOG(INFO) << "Activated physics class '" << classname << "'";
+        } catch (...) {
+            LOG(WARNING) << "Physics class '" << classname << "' is not found.";
+        }
+    }
 
-//    auto reconstruct = nullptr;
+    for(const auto& calibration : enabled_calibrations) {
+        pm.AddPhysics(calibration->GetPhysicsModule());
+    }
 
-    unsigned nItems = 0;
-//    int nEvents = 0; // or detector reads
-//    while(auto item = unpacker->NextItem()) {
-//        if(!running)
-//            break;
-//        if(cmd_maxevents->isSet() && nEvents>=cmd_maxevents->getValue()) {
-//            LOG(INFO) << "Reached max events of " << nEvents << ", stopping.";
-//            break;
-//        }
+    long long maxevents = cmd_maxevents->isSet()
+            ? cmd_maxevents->getValue()
+            :  numeric_limits<long long>::max();
+    // this method does the hard work...
+    pm.ReadFrom(move(readers), maxevents, running);
 
-//        nItems++;
 
-//        // we use ROOT's machinery to identify derived class types,
-//        // because it's much faster than dynamic_cast (but also potentially unsafe)
-//        const TClass* isA = item->IsA();
-
-//        if(isA == THeaderInfo::Class()) {
-//            const THeaderInfo* headerInfo = reinterpret_cast<THeaderInfo*>(item.get());
-//            if(!cmd_u_disablerecon->isSet()) {
-//                reconstruct = std_ext::make_unique<Reconstruct>(*headerInfo);
-//                LOG(INFO) << "Found THeaderInfo in unpacker datastream, initialized Reconstruct";
-//            }
-//        }
-//        else if(isA == TDetectorRead::Class()) {
-//            TDetectorRead* detread = reinterpret_cast<TDetectorRead*>(item.get());
-
-//            if(unpacker_writer && cmd_u_writeuncal->isSet())
-//                unpacker_writer->Fill(item);
-
-//            if(reconstruct) {
-//                auto event = reconstruct->DoReconstruct(*detread);
-//                if(unpacker_writer) {
-//                    if(cmd_u_writecal->isSet())
-//                        unpacker_writer->Fill(item);
-//                    unpacker_writer->Fill(event);
-//                }
-//            }
-
-//            nEvents++;
-//            // skip the writing of the detector read item
-//            continue;
-//        }
-
-//        // by default, we write the items to the file
-//        if(unpacker_writer)
-//            unpacker_writer->Fill(item);
-//    }
-
-    end = std::chrono::system_clock::now();
-    std::chrono::duration<double> elapsed_seconds = end-start;
-    cout << "Processed " << nItems << " unpacker items, speed "
-         << nItems/elapsed_seconds.count() << " Items/s" << endl;
+    if(!cmd_batchmode->isSet()) {
+        LOG(INFO) << "Stopped running, but close ROOT properly to write data to disk.";
+        int a=0;
+        char** b=nullptr;
+        TRint app("ant",&a,b);
+        pm.ShowResults();
+        app.Run(kTRUE); // really important to return
+    }
 
     return 0;
 }
 
 void myCrashHandler(int sig) {
     if(sig == SIGINT) {
+        LOG(INFO) << "Ctrl-C received, stop running...";
         running = false;
         return;
     }

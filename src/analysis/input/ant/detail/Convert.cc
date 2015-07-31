@@ -24,18 +24,18 @@ void Copy(const Cont1& from, Cont2& to) {
     }
 }
 
-shared_ptr<ant::Event> input::Convert(const TEvent &event)
+ant::Event input::Convert(const TEvent &event)
 {
-    shared_ptr<Event> antevent = make_shared<Event>();
+    Event antevent;
 
-    Copy(event.Candidates,     antevent->Reconstructed().Candidates());
-    Copy(event.Tagger.Hits, antevent->Reconstructed().TaggerHits());
+    Copy(event.Candidates,  antevent.Reconstructed().Candidates());
+    Copy(event.Tagger.Hits, antevent.Reconstructed().TaggerHits());
 
-    return std::move(antevent);
+    return antevent;
 }
 
 
-std::shared_ptr<Candidate> input::Convert(const TCandidate &candidate)
+shared_ptr<Candidate> input::Convert(const TCandidate &candidate)
 {
     /// @todo implement cluster size
     /// @todo add clusters to ant::Candidate

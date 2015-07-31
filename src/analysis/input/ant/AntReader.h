@@ -2,6 +2,11 @@
 
 #include "analysis/input/DataReader.h"
 
+#include "unpacker/Unpacker.h"
+#include "tree/UnpackerWriter.h"
+
+#include "reconstruct/Reconstruct_traits.h"
+
 #include "Rtypes.h"
 
 #include <memory>
@@ -15,41 +20,34 @@ namespace ant {
 class TEvent;
 class ReadTFiles;
 
-
 namespace input {
 
 
 class AntReader : public DataReader {
 protected:
-    std::shared_ptr<ReadTFiles>    files;
+    std::unique_ptr<Unpacker::Reader> reader;
+    std::unique_ptr<tree::UnpackerWriter> writer;
+    std::unique_ptr<Reconstruct_traits> reconstruct;
+    bool haveReconstruct;
 
 
-    TTree* tree    = nullptr;
-    TEvent* buffer = nullptr;
-
-    Long64_t current = -1;
-
-    /**
-     * @brief Get number of events in tree
-     * @see TotalEvents()
-     * @return number of events total
-     */
-    Long64_t  GetNEvents() const;
+    long long nEvents;
+    bool writeUncalibrated;
+    bool writeCalibrated;
 
 public:
-    AntReader(const std::shared_ptr<ReadTFiles>& rootfiles);
+    AntReader(std::unique_ptr<Unpacker::Reader> unpacker_reader,
+                      std::unique_ptr<Reconstruct_traits> reconstruct = nullptr);
     virtual ~AntReader();
     AntReader(const AntReader&) = delete;
     AntReader& operator= (const AntReader&) = delete;
 
+    void EnableUnpackerWriter(const std::string& outputfile,
+                              bool uncalibratedDetectorReads = false,
+                              bool calibratedDetectorReads = false);
 
-
-    std::shared_ptr<Event> ReadNextEvent();
-    virtual bool hasData() const override;
-
-    virtual long long EventsRead() const override;
-    virtual long long TotalEvents() const override;
-
+    // DataReader interface
+    virtual bool ReadNextEvent(Event& event, TSlowControl& slowControl) override;
 };
 
 }

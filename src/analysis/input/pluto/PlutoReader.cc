@@ -21,8 +21,7 @@ using namespace ant::input;
 using namespace std;
 
 PlutoReader::PlutoReader(const std::shared_ptr<ReadTFiles>& rootfiles):
-    files(rootfiles),
-    pluto_database(makeStaticData())
+    files(rootfiles)
 {
     /// \note the Pluto tree is really named just "data"
     if(!files->GetObject("data", tree))
@@ -31,6 +30,8 @@ PlutoReader::PlutoReader(const std::shared_ptr<ReadTFiles>& rootfiles):
     tree->SetBranchAddress("Particles",         &PlutoMCTrue);
     tree->SetBranchAddress("plutoID",           &plutoID);
     tree->SetBranchAddress("plutoRandomID", 	&plutoRandomID);
+
+    pluto_database = makeStaticData();
 }
 
 PlutoReader::~PlutoReader() {}
@@ -102,7 +103,7 @@ std::string PlutoTable(const std::vector<const PParticle*> particles) {
     return s.str();
 }
 
-void PlutoReader::CopyPluto(std::shared_ptr<Event> &event)
+void PlutoReader::CopyPluto(Event& event)
 {
     const Long64_t entries = PlutoMCTrue->GetEntries();
     PlutoParticles.resize(0);
@@ -166,49 +167,34 @@ void PlutoReader::CopyPluto(std::shared_ptr<Event> &event)
             const double energy = AntParticle->E() - ParticleTypeDatabase::Proton.Mass();
             const int channel = 0; //TODO: Get tagger channel from energy -> Tagger cfg
             const double time = 0.0;
-            event->MCTrue().TaggerHits().emplace_back( TaggerHitPtr( new TaggerHit(channel, energy, time) ) );
+            event.MCTrue().TaggerHits().emplace_back( TaggerHitPtr( new TaggerHit(channel, energy, time) ) );
         }
 
         // Add particle to event storage
         if(PlutoParticle->GetDaughterIndex() == -1 ) { // final state
-            event->MCTrue().Particles().AddParticle(AntParticle);
+            event.MCTrue().Particles().AddParticle(AntParticle);
         } else { //intermediate
-            event->MCTrue().Intermediates().AddParticle(AntParticle);
+            event.MCTrue().Intermediates().AddParticle(AntParticle);
         }
     }
 
-    //TODO: CBEsum/Multiplicity into TriggerInfo
+    /// \todo CBEsum/Multiplicity into TriggerInfo
 }
 
 
-bool PlutoReader::hasData() const {
-    return current_entry+1 < TotalEvents();
-}
-
-long long PlutoReader::EventsRead() const
-{
-    return current_entry;
-}
-
-long long PlutoReader::TotalEvents() const
+bool PlutoReader::ReadNextEvent(Event& event, TSlowControl&)
 {
     if(!tree)
-        return 0;
-    return tree->GetEntries();
-}
+        return false;
 
+    if(current_entry >= tree->GetEntries())
+        return false;
 
-std::shared_ptr<Event> PlutoReader::ReadNextEvent()
-{
-    if(!tree)
-        return nullptr;
-
-    ++current_entry;
     tree->GetEntry(current_entry);
-
-    std::shared_ptr<Event> event = make_shared<Event>();
 
     CopyPluto(event);
 
-    return event;
+    ++current_entry;
+
+    return true;
 }

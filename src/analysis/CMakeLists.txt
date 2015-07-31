@@ -56,7 +56,6 @@ set(ANALYSIS_INPUT
   input/goat/GoatReader.cc
   input/ant/detail/Convert.cc
   input/ant/AntReader.cc
-  input/ant/AntUnpackerReader.cc  
   input/pluto/PlutoReader.cc
   input/pluto/detail/PlutoWrapper.cc
 )

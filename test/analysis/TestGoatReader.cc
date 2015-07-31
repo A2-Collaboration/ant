@@ -26,9 +26,9 @@ void dotest() {
     filemanager->OpenFile("NOTTHEREYET");
     ant::input::GoatReader g(filemanager);
 
-    unsigned int n = 0;
-    while(g.hasData() && (n++ < 10)) {
-        auto event = g.ReadNextEvent();
-        cout << *event << endl;
-    }
+//    unsigned int n = 0;
+//    while(g.hasData() && (n++ < 10)) {
+//        auto event = g.ReadNextEvent();
+//        cout << *event << endl;
+//    }
 }

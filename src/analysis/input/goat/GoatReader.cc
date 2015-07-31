@@ -43,10 +43,10 @@ detector_t IntToDetector_t( const int& a ) {
     return d;
 }
 
-void GoatReader::CopyTagger(std::shared_ptr<Event> &event)
+void GoatReader::CopyTagger(Event& event)
 {
     for( Int_t i=0; i<tagger.GetNTagged(); ++i) {
-        event->Reconstructed().TaggerHits().emplace_back(
+        event.Reconstructed().TaggerHits().emplace_back(
                     TaggerHitPtr(new TaggerHit(
                                      tagger.GetTaggedChannel(i),
                                      tagger.GetTaggedEnergy(i),
@@ -55,9 +55,9 @@ void GoatReader::CopyTagger(std::shared_ptr<Event> &event)
     }
 }
 
-void GoatReader::CopyTrigger(std::shared_ptr<Event> &event)
+void GoatReader::CopyTrigger(Event& event)
 {
-    TriggerInfo& ti = event->Reconstructed().TriggerInfos();
+    TriggerInfo& ti = event.Reconstructed().TriggerInfos();
 
     ti.CBEenergySum() = trigger.GetEnergySum();
     ti.Multiplicity() = trigger.GetMultiplicity();
@@ -71,10 +71,6 @@ void GoatReader::CopyTrigger(std::shared_ptr<Event> &event)
     }
 }
 
-void GoatReader::CopyDetectorHits(std::shared_ptr<Event>&)
-{
-
-}
 
 /**
  * @brief map the cluster sizes from goat to unisgend ints
@@ -85,11 +81,11 @@ clustersize_t GoatReader::MapClusterSize(const int& size) {
     return size < 0 ? 0 : size;
 }
 
-void GoatReader::CopyTracks(std::shared_ptr<Event> &event)
+void GoatReader::CopyTracks(Event& event)
 {
     for(Int_t i=0; i< tracks.GetNTracks(); ++i) {
 
-        event->Reconstructed().Candidates().emplace_back(
+        event.Reconstructed().Candidates().emplace_back(
                     CandidatePtr( new Candidate(
                                   tracks.GetClusterEnergy(i),
                                   tracks.GetTheta(i),
@@ -104,7 +100,8 @@ void GoatReader::CopyTracks(std::shared_ptr<Event> &event)
 }
 
 
-void GoatReader::CopyParticles(std::shared_ptr<Event> &event, ParticleInput &input_module, const ParticleTypeDatabase::Type &type)
+void GoatReader::CopyParticles(Event& event, ParticleInput& input_module,
+                               const ParticleTypeDatabase::Type& type)
 {
     for(Int_t i=0; i < input_module.GetNParticles(); ++i) {
 
@@ -112,9 +109,9 @@ void GoatReader::CopyParticles(std::shared_ptr<Event> &event, ParticleInput &inp
         if(trackIndex == -1) {
             cerr << "No Track for this particle!!" << endl;
         } else {
-            const auto& track = event->Reconstructed().Candidates().at(trackIndex);
+            const auto& track = event.Reconstructed().Candidates().at(trackIndex);
 
-            event->Reconstructed().Particles().AddParticle(
+            event.Reconstructed().Particles().AddParticle(
                     std::make_shared<Particle>(type,track));
         }
 
@@ -161,49 +158,23 @@ GoatReader::GoatReader(const std::shared_ptr<ReadTFiles>& rootfiles):
             VLOG(7) << "Not activating GoAT Input module";
         }
     }
-
-    max_entry = std::min(GetNEvents(), max_entry);
 }
 
 GoatReader::~GoatReader() {}
 
-Long64_t GoatReader::GetNEvents() const
-{
-    return trees->GetEntries();
-}
 
-bool GoatReader::hasData() const {
-    return current_entry+1 < max_entry;
-}
-
-long long GoatReader::EventsRead() const
+bool GoatReader::ReadNextEvent(Event& event, TSlowControl&)
 {
-    return current_entry;
-}
+    if(current_entry>=trees->GetEntries())
+        return false;
 
-long long GoatReader::TotalEvents() const
-{
-    return max_entry;
-}
-
-void GoatReader::SetMaxEntries(const long long max)
-{
-    max_entry = std::min(max, GetNEvents());
-}
-
-std::shared_ptr<Event> GoatReader::ReadNextEvent()
-{
-    ++current_entry;
     trees->GetEntry(current_entry);
 
     active_modules.GetEntry();
 
-    std::shared_ptr<Event> event = make_shared<Event>();
-
     CopyTrigger(event);
     CopyTagger(event);
     CopyTracks(event);
-    CopyDetectorHits(event);
 
     CopyParticles(event, photons, ParticleTypeDatabase::Photon);
     CopyParticles(event, protons, ParticleTypeDatabase::Proton);
@@ -211,6 +182,6 @@ std::shared_ptr<Event> GoatReader::ReadNextEvent()
     CopyParticles(event, echarged, ParticleTypeDatabase::PiCharged);
     CopyParticles(event, neutrons, ParticleTypeDatabase::Neutron);
 
-
-    return event;
+    ++current_entry;
+    return true;
 }

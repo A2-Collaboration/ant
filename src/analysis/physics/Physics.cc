@@ -2,6 +2,7 @@
 #include "base/Logger.h"
 
 #include <iomanip>
+#include <chrono>
 
 using namespace std;
 using namespace ant;
@@ -32,28 +33,31 @@ ant::PhysicsManager::PhysicsManager() : physics()
 
 }
 
-void ant::PhysicsManager::ReadFrom(ant::input::DataReader &reader)
+void PhysicsManager::ReadFrom(list< unique_ptr<input::DataReader> > readers,
+        long long maxevents,
+        bool& running)
 {
-    if(physics.empty()) {
-        LOG(WARNING) << "No Analysis Instances activated. Will not analyse anything.";
+
+    chrono::time_point<std::chrono::system_clock> start, end;
+    start = chrono::system_clock::now();
+    long long nEvents = 0;
+
+    while(true) {
+        if(!running)
+            break;
+        if(nEvents>=maxevents)
+            break;
+
+
+
+        nEvents++;
     }
 
-    while(reader.hasData()) {
-        const auto event = reader.ReadNextEvent();
 
-        ProcessEvent(*event);
-
-        const auto i = reader.EventsRead();
-        if( i % 10000 == 0) {
-            const auto nevents = reader.TotalEvents();
-            if(nevents>0) {
-                VLOG(3) << "Events processed: " << i << " (" << std::fixed << std::setprecision(2) << (double(i)/double(nevents)*100.0) << "%)";
-            } else {
-                VLOG(3) << "Events processed: " << i;
-            }
-        }
-    }
-    VLOG(3) << "No more data to read";
+    end = chrono::system_clock::now();
+    chrono::duration<double> elapsed_seconds = end-start;
+    LOG(INFO) << "Processed " << nEvents << " events, speed "
+              << nEvents/elapsed_seconds.count() << " Items/s";
 }
 
 
