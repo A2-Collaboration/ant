@@ -57,9 +57,30 @@ protected:
 
     };
 
+    class MyRangeKnob: public VirtualKnob {
+    public:
+        enum class RangeEndType {
+            upper,
+            lower
+        };
+
+    protected:
+        TF1* f = nullptr;
+        RangeEndType t;
+    public:
+
+        MyRangeKnob(const std::string& n, TF1* func, RangeEndType t_);
+
+        virtual double get() const override;
+        virtual void set(double a) override;
+
+    };
+
     MyKnob knob_A  = MyKnob("A",f,0, VirtualKnob::GUI_Type::slider_horizontal);
     MyKnob knob_x0 = MyKnob("x_{0}",f,1);
     MyWKnob knob_w = MyWKnob("#sigma",f);
+    MyRangeKnob knob_minR = MyRangeKnob("min",f,MyRangeKnob::RangeEndType::lower);
+    MyRangeKnob knob_maxR = MyRangeKnob("max",f,MyRangeKnob::RangeEndType::upper);
 
 public:
 

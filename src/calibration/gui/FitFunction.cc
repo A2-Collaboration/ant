@@ -23,6 +23,8 @@ FitFunctionGaus::FitFunctionGaus(double A, double x0, double sigma, interval<dou
     knobs.emplace_back(&knob_A);
     knobs.emplace_back(&knob_x0);
     knobs.emplace_back(&knob_w);
+    knobs.emplace_back(&knob_minR);
+    knobs.emplace_back(&knob_maxR);
 }
 
 FitFunctionGaus::~FitFunctionGaus()
@@ -78,4 +80,46 @@ void FitFunctionGaus::MyWKnob::set(double a)
 {
     auto v = a - f->GetParameter(1);
     f->SetParameter(2,v);
+}
+
+
+FitFunctionGaus::MyRangeKnob::MyRangeKnob(const std::string &n, TF1 *func, FitFunctionGaus::MyRangeKnob::RangeEndType t_)
+    :VirtualKnob(n,GUI_Type::slider_vertical,kBlack),
+      f(func),
+      t(t_)
+{
+}
+
+double FitFunctionGaus::MyRangeKnob::get() const
+{
+    double min, max;
+    f->GetRange(min,max);
+
+    if(t==RangeEndType::lower) {
+        return min;
+    }
+
+    return max;
+}
+
+void FitFunctionGaus::MyRangeKnob::set(double a)
+{
+    double min, max;
+    f->GetRange(min,max);
+
+    switch (t) {
+
+    case RangeEndType::lower:
+        if(a < max)
+            f->SetRange(a,max);
+        break;
+
+    case RangeEndType::upper:
+            if(a>min)
+          f->SetRange(min,a);
+        break;
+
+    default:
+        break;
+    }
 }
