@@ -39,8 +39,10 @@ namespace ant {
 struct ReconstructTester {
 
     ReconstructTester(const THeaderInfo& headerInfo) :
-        r(headerInfo)
-    {}
+        r()
+    {
+        r.Initialize(headerInfo);
+    }
 
     Reconstruct r;
 

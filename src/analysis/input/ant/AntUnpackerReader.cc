@@ -28,6 +28,7 @@ AntUnpackerReader::AntUnpackerReader(
     reader(move(unpacker_reader)),
     writer(nullptr),
     reconstruct(move(reconstruct)),
+    haveReconstruct(false),
     nEvents(0),
     writeUncalibrated(false),
     writeCalibrated(false)
@@ -48,13 +49,21 @@ std::shared_ptr<Event> AntUnpackerReader::ReadNextEvent()
         // because it's much faster than dynamic_cast (but also potentially unsafe)
         const TClass* isA = item->IsA();
 
-        if(isA == TDetectorRead::Class()) {
+        if(isA == THeaderInfo::Class()) {
+            const THeaderInfo* headerInfo = reinterpret_cast<THeaderInfo*>(item.get());
+            if(reconstruct) {
+                reconstruct->Initialize(*headerInfo);
+                haveReconstruct = true;
+                LOG(INFO) << "Found THeaderInfo in unpacker datastream, initialized Reconstruct";
+            }
+        }
+        else if(isA == TDetectorRead::Class()) {
             TDetectorRead* detread = reinterpret_cast<TDetectorRead*>(item.get());
 
             if(writer && writeUncalibrated)
                 writer->Fill(item);
 
-            if(reconstruct) {
+            if(haveReconstruct) {
                 auto event = reconstruct->DoReconstruct(*detread);
                 if(writer) {
                     if(writeCalibrated)

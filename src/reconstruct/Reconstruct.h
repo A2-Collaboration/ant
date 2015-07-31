@@ -26,10 +26,12 @@ class Reconstruct : public Reconstruct_traits {
     friend class ReconstructTester;
 
 public:
-    // You can only create the reconstruct machinery
+    Reconstruct();
+
+    // You can only use the reconstruct machinery
     // if it's able to find its config. For this, it needs the
     // some THeaderInfo object
-    Reconstruct(const THeaderInfo& headerInfo);
+    virtual void Initialize(const THeaderInfo& headerInfo) override;
 
     // this method converts a TDetectorRead
     // into a calibrated TEvent

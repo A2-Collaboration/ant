@@ -11,6 +11,7 @@
 namespace ant {
 
 class TID;
+class THeaderInfo;
 class TDetectorRead;
 class TDetectorReadHit;
 class TEvent;
@@ -19,6 +20,7 @@ class TCluster;
 
 struct Reconstruct_traits {
     virtual ~Reconstruct_traits() = default;
+    virtual void Initialize(const THeaderInfo& headerInfo) = 0;
     virtual std::shared_ptr<TEvent> DoReconstruct(TDetectorRead& detectorRead) = 0;
 };
 

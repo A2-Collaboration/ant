@@ -23,7 +23,13 @@ using namespace std;
 using namespace ant;
 using namespace ant::reconstruct;
 
-Reconstruct::Reconstruct(const THeaderInfo& headerInfo)
+Reconstruct::Reconstruct() {}
+
+// implement the destructor here,
+// makes forward declaration work properly
+Reconstruct::~Reconstruct() {}
+
+void Reconstruct::Initialize(const THeaderInfo& headerInfo)
 {
     const auto& config = ExpConfig::Reconstruct::Get(headerInfo);
 
@@ -67,10 +73,6 @@ Reconstruct::Reconstruct(const THeaderInfo& headerInfo)
                             headerInfo.ID, move(updateables)
                             );
 }
-
-// implement the destructor here,
-// makes forward declaration work properly
-Reconstruct::~Reconstruct() {}
 
 shared_ptr<TEvent> Reconstruct::DoReconstruct(TDetectorRead& detectorRead)
 {

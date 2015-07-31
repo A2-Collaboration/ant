@@ -64,20 +64,22 @@ void generateInputFile(const string& filename) {
     treeEvent->Branch("Event", "ant::TEvent", &Event);
 
 
-    unique_ptr<Reconstruct> reconstruct;
+    auto reconstruct = std_ext::make_unique<Reconstruct>();
+    bool haveReconstruct = false;
 
     while(auto item = unpacker->NextItem()) {
 
         auto HeaderInfo = dynamic_cast<THeaderInfo*>(item.get());
         if(HeaderInfo != nullptr) {
-            reconstruct = std_ext::make_unique<Reconstruct>(*HeaderInfo);
+            reconstruct->Initialize(*HeaderInfo);
+            haveReconstruct = true;
             continue;
         }
 
         auto DetectorRead = dynamic_cast<TDetectorRead*>(item.get());
         if(DetectorRead != nullptr) {
 
-            if(reconstruct) {
+            if(haveReconstruct) {
                 auto event_ptr = reconstruct->DoReconstruct(*DetectorRead);
                 Event = event_ptr.get();
                 treeEvent->Fill();
