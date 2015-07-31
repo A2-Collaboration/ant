@@ -32,6 +32,8 @@ protected:
     std::shared_ptr<ant::calibration::gui::FitFunction> func = nullptr;
     TH1* hist = nullptr;
 
+    virtual void HandleKeypress(const char key);
+
 public:
     CalCanvas(const std::string& name);
     virtual ~CalCanvas();
@@ -47,6 +49,14 @@ public:
     virtual void Execute(const char *method, const char *params, Int_t *error);
 
     virtual void Update() override;
+
+    /**
+     * @brief HandleInput: Override default to catch keyboard inputs
+     * @param button
+     * @param x
+     * @param y
+     */
+    virtual void HandleInput(EEventType button, Int_t x, Int_t y) override;
 
 };
 }

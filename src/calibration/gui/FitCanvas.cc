@@ -1,10 +1,11 @@
 #include "FitCanvas.h"
 
 #include "FitFunction.h"
+#include "GUIElements.h"
+#include "base/Logger.h"
 
 #include "TF1.h"
 #include "TH1.h"
-#include "GUIElements.h"
 
 
 using namespace ant::calibration::gui;
@@ -82,6 +83,17 @@ GUIIndicator *CalCanvas::MakeGUIElement(VirtualKnob &knob)
     }
 }
 
+void CalCanvas::HandleKeypress(const char key)
+{
+    switch (key) {
+    case 'f':
+        Fit();
+        break;
+    default:
+        break;
+    }
+}
+
 void CalCanvas::ClearInidators() {
     for(auto& i : indicators) {
         delete i;
@@ -105,6 +117,7 @@ void CalCanvas::ShowGuidelines(TObject *, const Int_t, const char, const bool) {
 
 void CalCanvas::Fit() {
     if(func && hist) {
+        VLOG(3) << "Refitting";
 
         func->Fit(hist);
 
@@ -133,4 +146,14 @@ void CalCanvas::Update() {
 
     TCanvas::Update();
 
+}
+
+void CalCanvas::HandleInput(EEventType button, Int_t x, Int_t y)
+{
+
+    if(button == kKeyPress) {
+        HandleKeypress(x);
+    } else {
+        TCanvas::HandleInput(button,x,y);
+    }
 }
