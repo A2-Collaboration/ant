@@ -17,6 +17,11 @@ namespace ant
 
 class CalibrationDataManager
 {
+    /**
+     * @brief The Backend class is the main worker for calibration manager,
+     *        implement methods here and use CalibrationDataManager to call them.
+     *        This allows lazy initialization of the database.
+     */
     class Backend
     {
     private:
