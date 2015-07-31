@@ -60,6 +60,12 @@ public:
         gui(Gui)
     {}
 
+    // no copies of knobs!
+    VirtualKnob(const VirtualKnob&) = delete;
+    VirtualKnob& operator=(const VirtualKnob&) = delete;
+    VirtualKnob(VirtualKnob&&) = delete;
+    VirtualKnob& operator=(VirtualKnob&&) = delete;
+
     virtual double get() const =0;
     virtual void set(double v) =0;
 };
