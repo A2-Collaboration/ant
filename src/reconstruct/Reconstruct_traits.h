@@ -16,6 +16,12 @@ class TDetectorReadHit;
 class TEvent;
 class TCluster;
 
+
+struct Reconstruct_traits {
+    virtual ~Reconstruct_traits() = default;
+    virtual std::shared_ptr<TEvent> DoReconstruct(TDetectorRead& detectorRead) = 0;
+};
+
 /**
  * @brief The ReconstructHook struct
  *

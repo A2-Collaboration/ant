@@ -20,7 +20,7 @@ class Clustering;
 class UpdateableManager;
 }
 
-class Reconstruct {
+class Reconstruct : public Reconstruct_traits {
     // used in test/reconstruct/TestReconstruct.cc
     // to test the private methods interplay
     friend class ReconstructTester;
@@ -33,7 +33,7 @@ public:
 
     // this method converts a TDetectorRead
     // into a calibrated TEvent
-    std::shared_ptr<TEvent> DoReconstruct(TDetectorRead& detectorRead);
+    virtual std::shared_ptr<TEvent> DoReconstruct(TDetectorRead& detectorRead) override;
 
     ~Reconstruct();
 
