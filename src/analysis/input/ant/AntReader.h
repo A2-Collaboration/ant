@@ -47,6 +47,7 @@ public:
                               bool calibratedDetectorReads = false);
 
     // DataReader interface
+    virtual bool IsSource() override { return true; }
     virtual bool ReadNextEvent(Event& event, TSlowControl& slowControl) override;
 };
 

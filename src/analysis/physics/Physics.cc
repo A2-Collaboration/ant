@@ -43,6 +43,11 @@ void PhysicsManager::ReadFrom(list< unique_ptr<input::DataReader> > readers,
     if(readers.empty())
         return;
 
+    if(physics.empty()) {
+        LOG(WARNING) << "No Analysis Instances activated. Will not analyse anything.";
+    }
+
+
     // figure out what set of readers we have
     // we expect maximum one source and several amends
 
@@ -73,7 +78,7 @@ void PhysicsManager::ReadFrom(list< unique_ptr<input::DataReader> > readers,
             break;
 
         Event event;
-        TSlowControl slowcontrol; /// \todo make use of this
+        TSlowControl slowcontrol;
 
         if(source) {
             if(!source->ReadNextEvent(event, slowcontrol)) {
@@ -90,6 +95,9 @@ void PhysicsManager::ReadFrom(list< unique_ptr<input::DataReader> > readers,
 
         if(!source && readers.empty())
             break;
+
+        /// \todo make use of slowcontrol
+        ProcessEvent(event);
 
         nEvents++;
     }

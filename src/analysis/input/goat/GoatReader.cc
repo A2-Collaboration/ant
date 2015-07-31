@@ -162,6 +162,8 @@ GoatReader::GoatReader(const std::shared_ptr<ReadTFiles>& rootfiles):
 
 GoatReader::~GoatReader() {}
 
+bool GoatReader::IsSource() { return trees->GetEntries()>0; }
+
 
 bool GoatReader::ReadNextEvent(Event& event, TSlowControl&)
 {

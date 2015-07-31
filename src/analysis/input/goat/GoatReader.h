@@ -96,6 +96,7 @@ public:
     GoatReader(const GoatReader&) = delete;
     GoatReader& operator= (const GoatReader&) = delete;
 
+    virtual bool IsSource() override;
     virtual bool ReadNextEvent(Event& event,  TSlowControl& slowControl) override;
 };
 

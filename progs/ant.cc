@@ -211,17 +211,22 @@ int main(int argc, char** argv) {
         else {
             stringstream ss_calibrations;
 
+            std::vector<std::string> calibrationnames = cmd_calibrations->getValue();
+            std::list<std::string> leftovers(calibrationnames.begin(), calibrationnames.end());
             for(const auto& calibration : setup->GetCalibrations()) {
                 ss_calibrations << calibration->GetName() << " ";
-                if(!std_ext::contains(cmd_calibrations->getValue(), calibration->GetName())) {
-                    LOG(WARNING) << "Calibration '" << calibration->GetName() << "' not found.";
+                if(!std_ext::contains(calibrationnames, calibration->GetName())) {
                     continue;
                 }
+                leftovers.remove(calibration->GetName());
                 enabled_calibrations.emplace_back(move(calibration));
             }
-            if(enabled_calibrations.empty()) {
-                LOG(WARNING) << "No physics for calibrations enabled at all. Available: " << ss_calibrations.str();
-            }
+
+            for(string leftover : leftovers)
+                LOG(WARNING) << "Specified calibration " << leftover << " not found in list of available calibrations";
+
+            if(!leftovers.empty())
+                LOG(INFO) << "Available calibrations: " << ss_calibrations.str();
         }
     }
 
@@ -251,7 +256,6 @@ int main(int argc, char** argv) {
             :  numeric_limits<long long>::max();
     // this method does the hard work...
     pm.ReadFrom(move(readers), maxevents, running);
-
 
     if(!cmd_batchmode->isSet()) {
         LOG(INFO) << "Stopped running, but close ROOT properly to write data to disk.";
