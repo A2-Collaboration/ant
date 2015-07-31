@@ -6,6 +6,7 @@
 #include <base/std_ext.h>
 #include "calibration/gui/FitCanvas.h"
 #include "calibration/gui/FitFunction.h"
+#include "base/Logger.h"
 
 #include "TRint.h"
 #include "TH1D.h"
@@ -15,6 +16,9 @@ using namespace ant::calibration::gui;
 
 
 int main(int argc, char** argv) {
+    SetupLogger();
+    el::Loggers::setVerboseLevel(9);
+
     TRint app("omega",&argc,argv);
 
     CalCanvas* c = new CalCanvas("test");
