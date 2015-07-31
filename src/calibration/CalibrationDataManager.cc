@@ -18,16 +18,16 @@
 using namespace std;
 using namespace ant;
 
-CalibrationDataManager::CalibrationDataManager(const string& DataFileName):
+CalibrationDataManager::Backend::Backend(const string& DataFileName):
         cm_treename_prefix("calibration-"),
         cm_branchname("cdata"),
         dataFileName(DataFileName),
         changedDataBase(false)
 {
-    InitDataBase();
+    readDataBase();
 }
 
-void CalibrationDataManager::InitDataBase()
+void CalibrationDataManager::Backend::readDataBase()
 {
     TFile dataFile(dataFileName.c_str(),"READ");
 
@@ -70,7 +70,7 @@ void CalibrationDataManager::InitDataBase()
     }
 }
 
-void CalibrationDataManager::writeDataBase() const
+void CalibrationDataManager::Backend::writeDataBase() const
 {
     WrapTFile file(dataFileName);
     list<TTree*> treeBuffer;
@@ -89,7 +89,7 @@ void CalibrationDataManager::writeDataBase() const
     }
 }
 
-uint32_t CalibrationDataManager::getDepth(const TID& tid, const string& calibrationID) const
+uint32_t CalibrationDataManager::Backend::getDepth(const TID& tid, const string& calibrationID) const
 {
     uint32_t current_depth = 0;
     auto& calibPairs = dataBase.at(calibrationID);
@@ -104,7 +104,7 @@ uint32_t CalibrationDataManager::getDepth(const TID& tid, const string& calibrat
     return current_depth;
 }
 
-bool CalibrationDataManager::GetData(const string& calibrationID, const TID& eventID, TCalibrationData& cdata) const
+bool CalibrationDataManager::Backend::GetData(const string& calibrationID, const TID& eventID, TCalibrationData& cdata) const
 {
     //case one: calibration doesn't exist
     if ( dataBase.count(calibrationID) == 0)
@@ -127,7 +127,7 @@ bool CalibrationDataManager::GetData(const string& calibrationID, const TID& eve
 }
 
 
-const list<TID> CalibrationDataManager::GetChangePoints(const string& calibrationID) const
+const list<TID> CalibrationDataManager::Backend::GetChangePoints(const string& calibrationID) const
 {
     if ( dataBase.count(calibrationID) == 0)
         return {};
@@ -155,7 +155,7 @@ const list<TID> CalibrationDataManager::GetChangePoints(const string& calibratio
     return ids;
 }
 
-uint32_t CalibrationDataManager::GetNumberOfDataPoints(const string& calibrationID) const
+uint32_t CalibrationDataManager::Backend::GetNumberOfDataPoints(const string& calibrationID) const
 {
     try
     {
