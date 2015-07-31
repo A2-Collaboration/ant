@@ -13,7 +13,6 @@
 #include "detail/TaggerInput.h"
 #include "detail/DetectorHitInput.h"
 #include "detail/TrackInput.h"
-#include "detail/PlutoInput.h"
 #include "detail/ParticleInput.h"
 
 
@@ -56,7 +55,6 @@ protected:
     TaggerInput         tagger;
     TrackInput          tracks;
     DetectorHitInput    detectorhits;
-    PlutoInput          pluto;
     ParticleInput       photons   = ParticleInput("photons");
     ParticleInput       protons   = ParticleInput("protons");
     ParticleInput       pichagred = ParticleInput("pions");
@@ -68,7 +66,6 @@ protected:
         &tagger,
         &tracks,
         &detectorhits,
-        &pluto,
         &photons,
         &protons,
         &pichagred,
@@ -91,11 +88,8 @@ protected:
      */
     void CopyDetectorHits(std::shared_ptr<Event>& event);
     void CopyTracks(std::shared_ptr<Event>& event);
-    void CopyPluto(std::shared_ptr<Event>& event);
     void CopyParticles(std::shared_ptr<Event>& event, ParticleInput& input_module, const ParticleTypeDatabase::Type& type);
 
-    PStaticData* pluto_database;
-    const ParticleTypeDatabase::Type* GetType(const PParticle* p) const;
 
     /**
      * @brief Get number of events in tree
@@ -117,8 +111,6 @@ public:
     virtual long long TotalEvents() const override;
 
     void SetMaxEntries(const long long max);
-
-    const PlutoInput& GetPlutoInput() { return pluto; }
 };
 
 }

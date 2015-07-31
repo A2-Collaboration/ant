@@ -45,36 +45,20 @@ set(ANALYSIS_DATASTRUCTURES
   data/Cluster.cc
 )
 
-set(ANALYSIS_INPUT_GOAT
-  input/goat/detail/InputModule.h
+set(ANALYSIS_INPUT
   input/goat/detail/InputModule.cc
-  input/goat/detail/PlutoWrapper.h
-  input/goat/detail/PlutoWrapper.cc
-  input/goat/detail/PlutoInput.h
-  input/goat/detail/PlutoInput.cc
-  input/goat/detail/TreeManager.h
   input/goat/detail//TreeManager.cc
-  input/goat/detail/TrackInput.h
   input/goat/detail/TrackInput.cc
-  input/goat/detail/ParticleInput.h
   input/goat/detail/ParticleInput.cc
-  input/goat/detail/TriggerInput.h
   input/goat/detail/TriggerInput.cc
-  input/goat/detail/DetectorHitInput.h
   input/goat/detail/DetectorHitInput.cc
-  input/goat/detail/GeantInput.h
-  input/goat/detail/GeantInput.cc
-  input/goat/detail/TaggerInput.h
   input/goat/detail/TaggerInput.cc
-  input/goat/GoatReader.h
   input/goat/GoatReader.cc
-)
-
-set(ANALYSIS_INPUT_ANT
   input/ant/detail/Convert.cc
-  input/ant/detail/Convert.h
   input/ant/AntReader.cc
-  input/ant/AntUnpackerReader.cc
+  input/ant/AntUnpackerReader.cc  
+  input/pluto/PlutoReader.cc
+  input/pluto/detail/PlutoWrapper.cc
 )
 
 set(ANALYSIS_PHYSICS
@@ -99,8 +83,7 @@ set(ANALYSIS_ALL
     ${ANALYSIS_BASE}
     ${ANALYSIS_PLOT}
     ${ANALYSIS_DATASTRUCTURES}
-    ${ANALYSIS_INPUT_GOAT}
-    ${ANALYSIS_INPUT_ANT}
+    ${ANALYSIS_INPUT}
     ${ANALYSIS_PHYSICS}
 )
 

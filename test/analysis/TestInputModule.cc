@@ -1,12 +1,10 @@
 #include "catch.hpp"
 
 #include "analysis/input/goat/detail/TreeManager.h"
-#include "analysis/input/goat/detail/PlutoInput.h"
 #include "analysis/input/goat/detail/TrackInput.h"
 #include "analysis/input/goat/detail/TriggerInput.h"
 #include "analysis/input/goat/detail/DetectorHitInput.h"
 #include "analysis/input/goat/detail/ParticleInput.h"
-#include "analysis/input/goat/detail/GeantInput.h"
 #include "analysis/input/goat/detail/TaggerInput.h"
 
 #include "base/ReadTFiles.h"
@@ -54,19 +52,11 @@ void dotest() {
 
     TreeManager treeManager;
 
-    PlutoInput pluto;
     TrackInput tracks;
     TriggerInput trigger;
     DetectorHitInput detectorhit;
     ParticleInput photons("photons");
-    GeantInput geant;
     TaggerInput tagger;
-
-    bool init1 = pluto.SetupBranches( MyTreeRequestMgr(m,treeManager) );
-
-    if( init1 == true) {
-        cout << "Pluto Init OK" << endl;
-    }
 
     bool init2 = tracks.SetupBranches( MyTreeRequestMgr(m,treeManager) );
 
@@ -92,12 +82,6 @@ void dotest() {
         cout << "Photons Init OK" << endl;
     }
 
-    bool init6 = geant.SetupBranches( MyTreeRequestMgr(m,treeManager) );
-
-    if( init6 == true) {
-        cout << "Geant Init OK" << endl;
-    }
-
     bool init7 = tagger.SetupBranches( MyTreeRequestMgr(m,treeManager) );
 
     if( init7 == true) {
@@ -105,25 +89,21 @@ void dotest() {
     }
 
 
-    if( init1 || init2 || init3 || init4 || init5 || init6 || init7) {
+    if(init2 || init3 || init4 || init5 || init7) {
 
         cout << treeManager.GetEntries() << " entries " << endl;
 
         treeManager.GetEntry(1);
-        if (init1) pluto.GetEntry();
         if (init2) tracks.GetEntry();
         if (init3) trigger.GetEntry();
         if (init4) detectorhit.GetEntry();
         if (init5) photons.GetEntry();
-        if (init6) geant.GetEntry();
         if (init7) tagger.GetEntry();
 
-        if (init1) cout << "Pluto Particles: " << pluto.Particles().size() << endl;
         if (init2) cout << "Goat Tracks: " << tracks.GetNTracks() << endl;
         if (init3) cout << "Trigger CBEsum: " << trigger.GetEnergySum() << "MeV" << endl;
         if (init4) cout << "DetectorHit: N NaIHits: " << detectorhit.GetNNaIHits() << endl;
         if (init5) cout << "Photons: " << photons.GetNParticles() << endl;
-        if (init6) cout << "Geant: " << geant.GetNCBHits() << endl;
         if (init7) cout << "Tagger hits: " << tagger.GetNTagged() << endl;
 
     }

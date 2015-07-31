@@ -60,8 +60,8 @@ public:
 
     bool hasParent() const { return daughters.size() != 0; }
     ParticlePtr Partent() const { return parents.front(); }
-    ParticleList Partents() { return parents; }
-    const ParticleList Partents() const { return parents; }
+    ParticleList Parents() { return parents; }
+    const ParticleList Parents() const { return parents; }
 
     bool hasDaughters() const { return daughters.size() != 0; }
     ParticleList& Daughters() { return daughters; }
