@@ -1,6 +1,7 @@
 #include "FitFunction.h"
 
 #include "base/interval.h"
+#include "TF1Knobs.h"
 
 #include "TF1.h"
 #include "TH1.h"
@@ -13,18 +14,18 @@ using namespace ant::calibration::gui;
 
 
 FitFunctionGaus::FitFunctionGaus(double A, double x0, double sigma, interval<double> range):
-    f(new TF1("","gaus", range.Start(), range.Stop()))
+    func(new TF1("","gaus", range.Start(), range.Stop()))
 {
-    f->SetParameter(0,A);
-    f->SetParameter(1,x0);
-    f->SetParameter(2,sigma);
-    f->SetNpx(1000);
+    func->SetParameter(0,A);
+    func->SetParameter(1,x0);
+    func->SetParameter(2,sigma);
+    func->SetNpx(1000);
 
-    knobs.emplace_back(&knob_A);
-    knobs.emplace_back(&knob_x0);
-    knobs.emplace_back(&knob_w);
-    knobs.emplace_back(&knob_minR);
-    knobs.emplace_back(&knob_maxR);
+    Addknob<KnobsTF1::ParameterKnob>("A", func, 0, VirtualKnob::GUI_Type::slider_horizontal);
+    Addknob<KnobsTF1::ParameterKnob>("x_0",func,1);
+    Addknob<MyWKnob>("#sigma",func);
+    Addknob<KnobsTF1::RangeKnob>("Min", func, KnobsTF1::RangeKnob::RangeEndType::lower);
+    Addknob<KnobsTF1::RangeKnob>("Max", func, KnobsTF1::RangeKnob::RangeEndType::upper);
 }
 
 FitFunctionGaus::~FitFunctionGaus()
@@ -33,93 +34,34 @@ FitFunctionGaus::~FitFunctionGaus()
 
 void FitFunctionGaus::Draw()
 {
-    f->Draw("same");
-}
-
-FitFunction::knoblist_t FitFunctionGaus::getKnobs()
-{
-    return knobs;
+    func->Draw("same");
 }
 
 void FitFunctionGaus::Fit(TH1 *hist)
 {
-    hist->Fit(f,"RBQN");
+    hist->Fit(func,"RBQN");
 }
 
 
-FitFunctionGaus::MyKnob::MyKnob(const std::string &n, TF1 *func, int par, VirtualKnob::GUI_Type gui):
-    VirtualKnob(n,gui),
-    f(func),
-    p(par)
-{
-}
-
-double FitFunctionGaus::MyKnob::get() const
-{
-    return f->GetParameter(p);
-}
-
-void FitFunctionGaus::MyKnob::set(double a)
-{
-    f->SetParameter(p,a);
-}
-
-
-FitFunctionGaus::MyWKnob::MyWKnob(const std::string &n, TF1 *func):
+FitFunctionGaus::MyWKnob::MyWKnob(const std::string &n, TF1 *Func):
     VirtualKnob(n,GUI_Type::slider_vertical),
-    f(func)
+    func(Func)
 {
 }
 
 double FitFunctionGaus::MyWKnob::get() const
 {
-    return f->GetParameter(1) + f->GetParameter(2);
+    return func->GetParameter(1) + func->GetParameter(2);
 }
 
 void FitFunctionGaus::MyWKnob::set(double a)
 {
-    auto v = a - f->GetParameter(1);
-    f->SetParameter(2,v);
+    auto v = a - func->GetParameter(1);
+    func->SetParameter(2,v);
 }
 
 
-FitFunctionGaus::MyRangeKnob::MyRangeKnob(const std::string &n, TF1 *func, FitFunctionGaus::MyRangeKnob::RangeEndType t_)
-    :VirtualKnob(n,GUI_Type::slider_vertical,kBlack),
-      f(func),
-      t(t_)
+FitFunction::~FitFunction()
 {
-}
 
-double FitFunctionGaus::MyRangeKnob::get() const
-{
-    double min, max;
-    f->GetRange(min,max);
-
-    if(t==RangeEndType::lower) {
-        return min;
-    }
-
-    return max;
-}
-
-void FitFunctionGaus::MyRangeKnob::set(double a)
-{
-    double min, max;
-    f->GetRange(min,max);
-
-    switch (t) {
-
-    case RangeEndType::lower:
-        if(a < max)
-            f->SetRange(a,max);
-        break;
-
-    case RangeEndType::upper:
-            if(a>min)
-          f->SetRange(min,a);
-        break;
-
-    default:
-        break;
-    }
 }

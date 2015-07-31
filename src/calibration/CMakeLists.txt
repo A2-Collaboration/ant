@@ -26,6 +26,7 @@ set(SRCS
     gui/FitFunction.cc
     gui/FitCanvas.cc
     gui/GUIElements.cc
+    gui/TF1Knobs.cc
   )
 
 add_library(calibration ${SRCS})

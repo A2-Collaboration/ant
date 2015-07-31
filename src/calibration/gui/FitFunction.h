@@ -3,8 +3,13 @@
 #include "base/interval.h"
 #include "calibration/gui/GUIbase.h"
 
+#include <memory>
+
+#include "TF1Knobs.h"
+
 #include <list>
 #include <string>
+#include "base/std_ext.h"
 
 #include "Rtypes.h"
 
@@ -18,11 +23,21 @@ namespace gui {
 
 class FitFunction {
 public:
-    using knoblist_t = std::list<ant::calibration::gui::VirtualKnob*>;
+    using knoblist_t = std::list<std::unique_ptr<VirtualKnob>>;
 
-    virtual ~FitFunction() = default;
+protected:
+    knoblist_t knobs;
+
+    template <typename T, typename ... Args_t>
+    void Addknob(Args_t&& ... args) {
+        knobs.emplace_back(std_ext::make_unique<T>(std::forward<Args_t>(args)...));
+    }
+
+public:
+
+    virtual ~FitFunction();
     virtual void Draw() =0;
-    virtual knoblist_t getKnobs() =0;
+    knoblist_t& getKnobs() { return knobs; }
     virtual void Fit(TH1* hist) =0;
 };
 
@@ -30,71 +45,28 @@ public:
 
 class FitFunctionGaus: public FitFunction {
 protected:
-    TF1* f = nullptr;
-
-    class MyKnob: public VirtualKnob {
-    protected:
-        TF1* f = nullptr;
-        int p = 0;
-    public:
-
-        MyKnob(const std::string& n, TF1* func, int par, GUI_Type gui=GUI_Type::slider_vertical);
-
-        virtual double get() const override;
-        virtual void set(double a) override;
-
-    };
+    TF1* func = nullptr;
 
     class MyWKnob: public VirtualKnob {
     protected:
-        TF1* f = nullptr;
+        TF1* func = nullptr;
     public:
 
-        MyWKnob(const std::string& n, TF1* func);
+        MyWKnob(const std::string& n, TF1* Func);
 
         virtual double get() const override;
         virtual void set(double a) override;
 
     };
-
-    class MyRangeKnob: public VirtualKnob {
-    public:
-        enum class RangeEndType {
-            upper,
-            lower
-        };
-
-    protected:
-        TF1* f = nullptr;
-        RangeEndType t;
-    public:
-
-        MyRangeKnob(const std::string& n, TF1* func, RangeEndType t_);
-
-        virtual double get() const override;
-        virtual void set(double a) override;
-
-    };
-
-    MyKnob knob_A  = MyKnob("A",f,0, VirtualKnob::GUI_Type::slider_horizontal);
-    MyKnob knob_x0 = MyKnob("x_{0}",f,1);
-    MyWKnob knob_w = MyWKnob("#sigma",f);
-    MyRangeKnob knob_minR = MyRangeKnob("min",f,MyRangeKnob::RangeEndType::lower);
-    MyRangeKnob knob_maxR = MyRangeKnob("max",f,MyRangeKnob::RangeEndType::upper);
 
 public:
-
-    std::list<VirtualKnob*> knobs;
-
     FitFunctionGaus(double A, double x0, double sigma, ant::interval<double> range);
 
     virtual ~FitFunctionGaus();
 
     virtual void Draw() override;
-    virtual knoblist_t getKnobs();
 
     virtual void Fit(TH1* hist) override;
-
 
 };
 
