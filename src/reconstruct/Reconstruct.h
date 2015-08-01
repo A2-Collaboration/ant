@@ -35,7 +35,7 @@ public:
 
     // this method converts a TDetectorRead
     // into a calibrated TEvent
-    virtual std::shared_ptr<TEvent> DoReconstruct(TDetectorRead& detectorRead) override;
+    virtual std::unique_ptr<TEvent> DoReconstruct(TDetectorRead& detectorRead) override;
 
     ~Reconstruct();
 

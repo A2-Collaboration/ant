@@ -29,7 +29,7 @@ public:
     UnpackerA2Geant();
     virtual ~UnpackerA2Geant();
     virtual bool OpenFile(const std::string& filename) override;
-    virtual std::shared_ptr<TDataRecord> NextItem() noexcept override;
+    virtual std::unique_ptr<TDataRecord> NextItem() noexcept override;
 
     class Exception : public Unpacker::Exception {
         using Unpacker::Exception::Exception; // use base class constructor

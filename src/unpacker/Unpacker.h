@@ -17,7 +17,7 @@ public:
     class Reader {
     public:
         virtual ~Reader() = default;
-        virtual std::shared_ptr<TDataRecord> NextItem() noexcept = 0;
+        virtual std::unique_ptr<TDataRecord> NextItem() noexcept = 0;
     };
 
     class Module : public Reader {

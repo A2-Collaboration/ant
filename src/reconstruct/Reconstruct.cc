@@ -74,7 +74,7 @@ void Reconstruct::Initialize(const THeaderInfo& headerInfo)
                             );
 }
 
-shared_ptr<TEvent> Reconstruct::DoReconstruct(TDetectorRead& detectorRead)
+unique_ptr<TEvent> Reconstruct::DoReconstruct(TDetectorRead& detectorRead)
 {
     // update the updateables :)
     updateablemanager->UpdateParameters(detectorRead.ID);
@@ -92,7 +92,7 @@ shared_ptr<TEvent> Reconstruct::DoReconstruct(TDetectorRead& detectorRead)
     // already create the event here, since Tagger
     // doesn't need hit matching and thus can be filled already
     // in BuildHits (see below)
-    auto event = make_shared<TEvent>(detectorRead.ID);
+    auto event = std_ext::make_unique<TEvent>(detectorRead.ID);
 
     // do the hit matching, which builds the TClusterHit's
     // we also extract the energy, which is always defined as a

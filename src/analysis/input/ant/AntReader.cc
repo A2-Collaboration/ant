@@ -76,13 +76,13 @@ bool AntReader::ReadNextEvent(Event& event, TSlowControl&)
                 writer->Fill(item);
 
             if(haveReconstruct) {
-                const auto& tevent = reconstruct->DoReconstruct(*detread);
+                auto tevent = reconstruct->DoReconstruct(*detread);
+                event = input::Convert(*tevent);
                 if(writer) {
                     if(writeCalibrated)
                         writer->Fill(item);
-                    writer->Fill(tevent);
+                    writer->Fill(move(tevent));
                 }
-                event = input::Convert(*tevent);
                 return true;
             }
 

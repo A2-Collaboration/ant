@@ -25,7 +25,7 @@ bool UnpackerAcqu::OpenFile(const std::string &filename)
     return true;
 }
 
-shared_ptr<TDataRecord> UnpackerAcqu::NextItem() noexcept
+std::unique_ptr<TDataRecord> UnpackerAcqu::NextItem() noexcept
 {
     // check if we need to replenish the queue
     if(queue.empty()) {
@@ -37,9 +37,9 @@ shared_ptr<TDataRecord> UnpackerAcqu::NextItem() noexcept
 
     // std;:deque does not have a method to get and remove the element
     // we also convert the unique_ptr here to some shared_ptr
-    const auto& element = shared_ptr<TDataRecord>(move(queue.front()));
+    auto element = move(queue.front());
     queue.pop_front();
-    return element;
+    return move(element);
 }
 
 

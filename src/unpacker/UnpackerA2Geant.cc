@@ -105,7 +105,7 @@ bool UnpackerA2Geant::OpenFile(const string& filename)
     return true;
 }
 
-shared_ptr<TDataRecord> UnpackerA2Geant::NextItem() noexcept
+unique_ptr<TDataRecord> UnpackerA2Geant::NextItem() noexcept
 {
     if(ID_lower>=geant->GetEntriesFast())
         return nullptr;
@@ -113,13 +113,13 @@ shared_ptr<TDataRecord> UnpackerA2Geant::NextItem() noexcept
     // return the headerinfo as the very first item, afterwards,
     // we can forget about the headerInfo...
     if(headerInfo != nullptr) {
-        return make_shared<THeaderInfo>(*headerInfo.release());
+        return move(headerInfo);
     }
 
     geant->GetEntry(ID_lower);
 
     // start with an empty detector read, don't forget MC flag true
-    shared_ptr<TDetectorRead> detread = make_shared<TDetectorRead>(TID(ID_upper, ID_lower, true));
+    unique_ptr<TDetectorRead> detread = std_ext::make_unique<TDetectorRead>(TID(ID_upper, ID_lower, true));
 
     const size_t n_total = fnhits+fnpart+fntaps+fnvtaps+fvhits;
 

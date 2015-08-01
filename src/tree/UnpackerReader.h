@@ -84,7 +84,7 @@ public:
     bool IsOpen() const { return isopen; }
 
     bool GetUniqueHeaderInfo(THeaderInfo& headerInfo);
-    virtual std::shared_ptr<TDataRecord> NextItem() noexcept override;
+    virtual std::unique_ptr<TDataRecord> NextItem() noexcept override;
 
 };
 

@@ -49,7 +49,7 @@ class UnpackerWriter {
             Tree->Branch(branchname.c_str(), classname.c_str(), &Record);
         }
 
-        bool TryFill(const std::shared_ptr<TDataRecord>& record) {
+        bool TryFill(const std::unique_ptr<TDataRecord>& record) {
             if(Tree==nullptr)
                 return false;
             if(record->IsA() != T::Class())
@@ -74,7 +74,7 @@ public:
     UnpackerWriter(const std::string& outputfile);
     virtual ~UnpackerWriter();
 
-    void Fill(const std::shared_ptr<TDataRecord>& record) noexcept;
+    void Fill(const std::unique_ptr<TDataRecord>& record) noexcept;
 
 };
 

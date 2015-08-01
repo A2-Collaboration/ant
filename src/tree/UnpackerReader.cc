@@ -61,7 +61,7 @@ bool UnpackerReader::GetUniqueHeaderInfo(THeaderInfo& headerInfo) {
     return false;
 }
 
-std::shared_ptr<TDataRecord> UnpackerReader::NextItem() noexcept {
+std::unique_ptr<TDataRecord> UnpackerReader::NextItem() noexcept {
 
     if(treerecords.empty())
         return nullptr;
@@ -72,7 +72,7 @@ std::shared_ptr<TDataRecord> UnpackerReader::NextItem() noexcept {
 
     auto it_treerecord = min_element(treerecords.begin(), treerecords.end(), compare);
 
-    auto record = shared_ptr<TDataRecord>(*(it_treerecord->Record));
+    auto record = unique_ptr<TDataRecord>(*(it_treerecord->Record));
     if(!it_treerecord->GetNext()) {
         // fetched the last item from this treerecord entry,
         // so remove it from the available treerecords
