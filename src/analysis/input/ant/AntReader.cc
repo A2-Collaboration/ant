@@ -94,6 +94,7 @@ bool AntReader::ReadNextEvent(Event& event, TSlowControl&)
         else if(isA == TEvent::Class()) {
             const TEvent* tevent = reinterpret_cast<TEvent*>(item.get());
             event = input::Convert(*tevent);
+            writer->Fill(move(item));
             return true;
         }
 
