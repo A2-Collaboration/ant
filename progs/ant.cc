@@ -261,7 +261,7 @@ int main(int argc, char** argv) {
         LOG(INFO) << "Stopped running, but close ROOT properly to write data to disk.";
         int a=0;
         char** b=nullptr;
-        TRint app("ant",&a,b);
+        TRint app("ant",&a,b,nullptr,0,true);
         pm.ShowResults();
         app.Run(kTRUE); // really important to return
     }
