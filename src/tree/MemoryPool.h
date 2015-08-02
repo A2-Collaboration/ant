@@ -17,7 +17,7 @@ struct MemoryPool {
         std::unique_ptr<T> ptr;
         Item(MemoryPool* pool_, std::unique_ptr<T> ptr_) :
             pool(pool_),
-            ptr(move(ptr_))
+            ptr(std::move(ptr_))
         {}
     public:
         T* get() const { return ptr.get(); }
@@ -26,7 +26,7 @@ struct MemoryPool {
         ~Item() {
             if(ptr == nullptr || pool == nullptr)
                return;
-            pool->ReturnToPool(move(ptr));
+            pool->ReturnToPool(std::move(ptr));
         }
         Item(Item&&) = default;
         Item& operator=(Item&&) = default;
@@ -39,7 +39,7 @@ struct MemoryPool {
         }
         else {
             m.items.front()->Clear();
-            Item item(std::addressof(m), move(m.items.front()));
+            Item item(std::addressof(m), std::move(m.items.front()));
             m.items.pop_front();
             return item;
         }
@@ -54,7 +54,7 @@ struct MemoryPool {
 private:
     std::forward_list<std::unique_ptr<T>> items;
     void ReturnToPool(std::unique_ptr<T> ptr) {
-        items.push_front(move(ptr));
+        items.push_front(std::move(ptr));
     }
 };
 
