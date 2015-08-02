@@ -214,7 +214,7 @@ unique_ptr<TDataRecord> UnpackerA2Geant::NextItem() noexcept
 
 
     ID_lower++;
-    return detread;
+    return move(detread);
 }
 
 
