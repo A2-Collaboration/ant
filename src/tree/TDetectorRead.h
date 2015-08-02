@@ -114,14 +114,15 @@ struct TDetectorReadHit
 struct TDetectorRead : TDataRecord
 {
     TDetectorRead(const TID& id) :
-
         TDataRecord(id),
         Hits()
     {}
 
-
-
     std::vector<TDetectorReadHit> Hits;
+
+    virtual void Clear() {
+        Hits.resize(0);
+    }
 
 #ifndef __CINT__
     virtual std::ostream& Print( std::ostream& s) const override {

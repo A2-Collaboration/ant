@@ -15,6 +15,7 @@ set(SRCS
   )
 
 set(SRCS_EXTRA
+  MemoryPool.cc
   UnpackerReader.cc
   UnpackerWriter.cc
   )
