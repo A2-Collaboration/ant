@@ -47,11 +47,15 @@ void AntReader::EnableUnpackerWriter(
     writer = std_ext::make_unique<tree::UnpackerWriter>(outputfile);
     writeUncalibrated = uncalibratedDetectorReads;
     writeCalibrated = calibratedDetectorReads;
-    LOG(INFO) << "Writing unpacker stage output to " << outputfile;
+    if(writeCalibrated && writeUncalibrated)
+        throw Exception("Writing calibrated AND uncalibrated detector reads in one file makes no sense");
+
     if(writeUncalibrated)
         LOG(INFO) << "Write UNcalibrated detectors reads (BEFORE DoReconstruct) to " << outputfile;
-    if(writeCalibrated)
+    else if(writeCalibrated)
         LOG(INFO) << "Write calibrated detectors (AFTER DoReconstruct) reads to " << outputfile;
+    else
+        LOG(INFO) << "Writing unpacker TEvents to " << outputfile;
 }
 
 bool AntReader::ReadNextEvent(Event& event, TSlowControl&)
@@ -81,7 +85,8 @@ bool AntReader::ReadNextEvent(Event& event, TSlowControl&)
                 if(writer) {
                     if(writeCalibrated)
                         writer->Fill(item.get());
-                    writer->Fill(tevent.get());
+                    else if(!writeUncalibrated)
+                        writer->Fill(tevent.get());
                 }
                 return true;
             }
@@ -94,7 +99,6 @@ bool AntReader::ReadNextEvent(Event& event, TSlowControl&)
         else if(isA == TEvent::Class()) {
             const TEvent* tevent = reinterpret_cast<TEvent*>(item.get());
             event = input::Convert(*tevent);
-            writer->Fill(item.get());
             return true;
         }
 
