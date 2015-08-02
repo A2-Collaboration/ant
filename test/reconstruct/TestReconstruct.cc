@@ -36,17 +36,15 @@ unsigned getTotalCount(const Reconstruct::sorted_bydetectortype_t<T>& m) {
 
 // we use the friend class trick to test private methods
 namespace ant {
-struct ReconstructTester {
+struct ReconstructTester : Reconstruct_traits {
+    Reconstruct r;
 
-    ReconstructTester(const THeaderInfo& headerInfo) :
-        r()
+    void Initialize(const THeaderInfo& headerInfo) override
     {
         r.Initialize(headerInfo);
     }
 
-    Reconstruct r;
-
-    shared_ptr<TEvent> DoReconstruct(TDetectorRead& detectorRead)
+    MemoryPool<TEvent>::Item DoReconstruct(TDetectorRead& detectorRead) override
     {
         /// \todo Improve requirements
 
@@ -66,7 +64,8 @@ struct ReconstructTester {
         // already create the event here, since Tagger
         // doesn't need hit matching and thus can be filled already
         // in BuildHits (see below)
-        auto event = make_shared<TEvent>(detectorRead.ID);
+        auto event = MemoryPool<TEvent>::Get();
+        event->ID = detectorRead.ID;
 
         // the detectorRead is now calibrated as far as possible
         // lets start the hit matching, which builds the TClusterHit's
@@ -114,7 +113,8 @@ void dotest() {
 
         auto HeaderInfo = dynamic_cast<THeaderInfo*>(item.get());
         if(HeaderInfo != nullptr) {
-            reconstruct = std_ext::make_unique<ReconstructTester>(*HeaderInfo);
+            reconstruct = std_ext::make_unique<ReconstructTester>();
+            reconstruct->Initialize(*HeaderInfo);
             continue;
         }
 

@@ -16,6 +16,11 @@ struct TTagger
     std::vector< TKeyValue<double> > Scalers;
     std::vector< TKeyValue<double> > Energies;
 
+    void Clear() {
+        Hits.resize(0);
+        Scalers.resize(0);
+        Energies.resize(0);
+    }
 
 
     /// \todo add fields for Moeller and PairSpec

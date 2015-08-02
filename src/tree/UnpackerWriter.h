@@ -2,6 +2,7 @@
 
 #include "unpacker/Unpacker.h" // for Unpacker::Reader interface
 
+#include "tree/MemoryPool.h"
 #include "tree/TDataRecord.h"
 
 #include "TTree.h"
@@ -49,12 +50,12 @@ class UnpackerWriter {
             Tree->Branch(branchname.c_str(), classname.c_str(), &Record);
         }
 
-        bool TryFill(const std::unique_ptr<TDataRecord>& record) {
+        bool TryFill(TDataRecord* record) {
             if(Tree==nullptr)
                 return false;
             if(record->IsA() != T::Class())
                 return false;
-            Record = reinterpret_cast<T*>(record.get());
+            Record = reinterpret_cast<T*>(record);
             Tree->Fill();
             return true;
         }
@@ -74,7 +75,7 @@ public:
     UnpackerWriter(const std::string& outputfile);
     virtual ~UnpackerWriter();
 
-    void Fill(const std::unique_ptr<TDataRecord>& record) noexcept;
+    void Fill(TDataRecord* record) noexcept;
 
 };
 

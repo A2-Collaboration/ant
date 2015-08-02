@@ -30,7 +30,7 @@ UnpackerWriter::UnpackerWriter(const string& outputfile)
 
 UnpackerWriter::~UnpackerWriter() {}
 
-void UnpackerWriter::Fill(const std::unique_ptr<TDataRecord>& record) noexcept
+void UnpackerWriter::Fill(TDataRecord* record) noexcept
 {
    if(Event.TryFill(record))
        return;

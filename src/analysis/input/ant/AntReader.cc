@@ -73,15 +73,15 @@ bool AntReader::ReadNextEvent(Event& event, TSlowControl&)
             TDetectorRead* detread = reinterpret_cast<TDetectorRead*>(item.get());
 
             if(writer && writeUncalibrated)
-                writer->Fill(item);
+                writer->Fill(item.get());
 
             if(haveReconstruct) {
-                auto tevent = reconstruct->DoReconstruct(*detread);
+                MemoryPool<TEvent>::Item tevent = reconstruct->DoReconstruct(*detread);
                 event = input::Convert(*tevent);
                 if(writer) {
                     if(writeCalibrated)
-                        writer->Fill(item);
-                    writer->Fill(move(tevent));
+                        writer->Fill(item.get());
+                    writer->Fill(tevent.get());
                 }
                 return true;
             }
@@ -94,13 +94,13 @@ bool AntReader::ReadNextEvent(Event& event, TSlowControl&)
         else if(isA == TEvent::Class()) {
             const TEvent* tevent = reinterpret_cast<TEvent*>(item.get());
             event = input::Convert(*tevent);
-            writer->Fill(move(item));
+            writer->Fill(item.get());
             return true;
         }
 
         // by default, we write the items to the file
         if(writer)
-            writer->Fill(item);
+            writer->Fill(item.get());
     }
 
     return false;

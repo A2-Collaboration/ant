@@ -14,6 +14,7 @@
 #include "base/Logger.h"
 #include "base/std_ext.h"
 
+
 #include <algorithm>
 #include <iostream>
 #include <iterator>
@@ -74,7 +75,7 @@ void Reconstruct::Initialize(const THeaderInfo& headerInfo)
                             );
 }
 
-unique_ptr<TEvent> Reconstruct::DoReconstruct(TDetectorRead& detectorRead)
+MemoryPool<TEvent>::Item Reconstruct::DoReconstruct(TDetectorRead& detectorRead)
 {
     // update the updateables :)
     updateablemanager->UpdateParameters(detectorRead.ID);
@@ -92,7 +93,8 @@ unique_ptr<TEvent> Reconstruct::DoReconstruct(TDetectorRead& detectorRead)
     // already create the event here, since Tagger
     // doesn't need hit matching and thus can be filled already
     // in BuildHits (see below)
-    auto event = std_ext::make_unique<TEvent>(detectorRead.ID);
+    auto event = MemoryPool<TEvent>::Get();
+    event->ID = detectorRead.ID;
 
     // do the hit matching, which builds the TClusterHit's
     // we also extract the energy, which is always defined as a

@@ -21,6 +21,12 @@ struct TEvent : TDataRecord
     typedef std::vector<ant::TCluster> clusters_t;
     std::vector<ant::TCluster> InsaneClusters;
 
+    void Clear() {
+        Candidates.resize(0);
+        Tagger.Clear();
+        InsaneClusters.resize(0);
+    }
+
 #ifndef __CINT__
     TEvent(const TID& id) :
         TDataRecord(id)
