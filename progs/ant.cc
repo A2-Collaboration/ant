@@ -234,10 +234,11 @@ int main(int argc, char** argv) {
 
     // the real output file, create it here to get all
     // further ROOT objects into this output file
-    auto om = std_ext::make_unique<OutputManager>();
-    if(cmd_output->isSet())
+    unique_ptr<OutputManager> om;
+    if(cmd_output->isSet()) {
+        om = std_ext::make_unique<OutputManager>();
         om->SetNewOutput(cmd_output->getValue());
-
+    }
 
     // add the physics/calibrationphysics modules
     PhysicsManager pm;
@@ -273,7 +274,8 @@ int main(int argc, char** argv) {
     }
 
     if(!cmd_batchmode->isSet()) {
-        LOG(INFO) << "Stopped running, but close ROOT properly to write data to disk.";
+        if(om != nullptr)
+            LOG(INFO) << "Stopped running, but close ROOT properly to write data to disk.";
         int a=0;
         char** b=nullptr;
         TRint app("ant",&a,b,nullptr,0,true);
