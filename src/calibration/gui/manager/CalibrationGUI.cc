@@ -2,12 +2,14 @@
 #include "AvgBuffer.h"
 #include "base/interval.h"
 #include "tree/TDataRecord.h"
-#include "TH1.h"
-#include "TH2.h"
+#include "TH1D.h"
+#include "TH2D.h"
 #include "base/std_ext.h"
-#include "TFile.h"
+#include "base/WrapTFile.h"
 #include "base/Logger.h"
-
+#include "tree/TAntHeader.h"
+#include "gui/FitCanvas.h"
+#include "GUIInterface.h"
 #include <memory>
 
 using namespace std;
@@ -15,66 +17,148 @@ using namespace ant;
 using namespace ant::calibration;
 using namespace ant::calibration::gui;
 
-class CalibrationGUI::myBuffer_t: public AvgBuffer<TH1,ant::interval<ant::TID>> {
-    using AvgBuffer<TH1,ant::interval<ant::TID>>::AvgBuffer;
-};
 
-void CalibrationGUI::ReadFile(const std::string& filename)
+std::list<CalibrationGUI::input_file_t> CalibrationGUI::ScanFiles(const std::vector<string> filenames)
 {
-    auto file = std_ext::make_unique<TFile>(filename.c_str(),"READ");
+    std::list<CalibrationGUI::input_file_t> inputs;
 
-    //@todo: ant histgoram file reader
+    for(auto& filename : filenames) {
 
-    if(!file->IsZombie()) {
+        try {
 
-        TID* first_it = nullptr;
-        file->GetObject("", first_it);
+            WrapTFile file(filename, WrapTFile::mode_t::read, false);
 
-        TID* last_it = nullptr;
-        file->GetObject("", last_it);
+            TAntHeader* header = nullptr;
+            file.GetObject("AntHeader", header);
 
-        if(last_it && first_it) {
 
-            for(auto& mod : mod_buffers) {
-
-                TH1* hist = nullptr;
-                file->GetObject(mod.module->GetHistogramName().c_str(), hist);
-
-                if(!hist) {
-                    LOG(WARNING) << "Histogram " << mod.module->GetHistogramName() << " not found in " << filename;
-                } else {
-                   auto shist = shared_ptr<TH1>(static_cast<TH1*>(hist->Clone()));
-                   mod.buffer->Push(shist, interval<TID>(*first_it, *last_it));
-                }
+            if(header) {
+                auto i = ant::interval<TID>(header->FirstID, header->LastID);
+                LOG(WARNING) << i;
+                inputs.emplace_back(filename, i);
+            } else {
+                LOG(WARNING) << "no TAntHeader in " << filename;
             }
+        } catch (const std::runtime_error& e) {
+            LOG(WARNING) << "Can't open " << filename << " " << e.what();
+
+        }
+    }
+
+    return inputs;
+}
+
+
+
+void CalibrationGUI::ProcessFile(input_file_t& file_input)
+{
+
+    try {
+        WrapTFile file(file_input.filename, WrapTFile::mode_t::read, false);
+
+
+        auto hist = file.GetSharedTH2(module->GetHistogramName());
+
+        if(!hist) {
+            LOG(WARNING) << "Histogram " << module->GetHistogramName() << " not found in " << file_input.filename;
         } else {
-            LOG(WARNING) << "TID interval not found/complete in " << filename;
+            buffer.Push(hist, file_input.range);
+        }
+
+    } catch (const std::runtime_error& e) {
+        LOG(WARNING) << "Can't open " << file_input.filename << " " << e.what();
+
+    }
+}
+
+CalibrationGUI::CalibrationGUI(GUIClientInrerface* Module, unsigned length): module(Module), buffer(length)
+{
+}
+
+void CalibrationGUI::SetFileList(const std::vector<string>& filelist)
+{
+    VLOG(7) << "Scanning input files...";
+    input_files = ScanFiles(filelist);
+    VLOG(7) << "Sorting input files by TID range...";
+    input_files.sort();
+    VLOG(7) << "Input files scanned";
+}
+
+bool CalibrationGUI::input_file_t::operator <(const CalibrationGUI::input_file_t& o) const {
+    return range.Start() < o.range.Start();
+}
+
+void CalibrationGUI::Prepare()
+{
+    state.is_init = false;
+    state.finish_mode = false;
+
+}
+
+CalibrationGUI::RunReturn_t CalibrationGUI::Run()
+{
+    if(!state.is_init) {
+        state.break_occured=false;
+        state.channel=0;
+        state.buffpos=buffer.begin();
+        state.file=input_files.begin();
+        ProcessFile(*state.file);
+
+        state.is_init = true;
+    }
+
+    if(state.break_occured == true) {
+        VLOG(7) << "Returning from GUI";
+        module->StoreResult(state.channel);
+        state.break_occured = false;
+    } else {
+
+        if(!buffer.Worklist().empty()) {
+            const string title = std_ext::formatter() << state.channel << " " << buffer.Worklist().top();
+            buffer.Average()->SetTitle(title.c_str());
+            GUIClientInrerface::FitStatus r = module->Fit(buffer.Average(), state.channel);
+
+            if(r == GUIClientInrerface::FitStatus::GUIWait) {
+                VLOG(7) << "GUI Opened";
+                state.break_occured = true;
+                return RunReturn_t(RunReturnStatus_t::OpenGUI, module->GetGUIInstance());
+            }
+
+            module->StoreResult(state.channel);
         }
     }
 
-    file->Close();
-}
+    VLOG(8) << "Buffer lenght " << buffer.Worklist().size();
 
-void CalibrationGUI::ProcessModules()
-{
-    for(auto& mod : mod_buffers) {
-        if(mod.buffer->isFull()) {
-            // process histograms
+    if(state.channel >= module->GetNumberOfChannels() || buffer.Worklist().empty()) {
+        state.channel = 0;
+
+        if(!buffer.Worklist().empty())
+            buffer.Worklist().pop();
+
+        if(buffer.Worklist().empty()) {
+            if(state.finish_mode) {
+                return RunReturn_t(RunReturnStatus_t::Done);
+            }
+
+            ++state.file;
+
+            if(state.file == input_files.end()) {
+
+                if(!state.finish_mode) {
+                    buffer.PushRestToWorklist();
+                    state.finish_mode = true;
+                }
+
+            } else {
+                ProcessFile(*state.file);
+            }
         }
+    } else {
+            ++state.channel;
     }
-}
 
-void CalibrationGUI::Run(const std::vector<std::string>& filelist)
-{
-    for(auto& filename : filelist) {
-        ReadFile(filename);
-        ProcessModules();
-    }
-}
-
-void CalibrationGUI::AddModule(GUIClientInrerface* module, unsigned avg_length)
-{
-    mod_buffers.emplace_back( module, move(std_ext::make_unique<myBuffer_t>(avg_length)));
+    return RunReturn_t(RunReturnStatus_t::Next);
 }
 
 CalibrationGUI::~CalibrationGUI()

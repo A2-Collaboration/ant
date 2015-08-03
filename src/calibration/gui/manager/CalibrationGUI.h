@@ -4,8 +4,16 @@
 #include <memory>
 #include <list>
 #include <vector>
+#include <string>
+#include "base/interval.h"
+#include "tree/TDataRecord.h"
+#include "AvgBuffer.h"
+#include "TMutex.h"
 
-class TH1;
+class TH1D;
+class TH2D;
+class TFile;
+class TQObject;
 
 namespace ant {
 namespace calibration {
@@ -14,24 +22,68 @@ namespace gui {
 class CalibrationGUI {
 protected:
 
-    class myBuffer_t;
+    using myBuffer_t = ant::calibration::gui::AvgBuffer<TH2D,ant::interval<ant::TID>>;
 
-    struct module_buffer {
-        module_buffer(GUIClientInrerface* gi, std::unique_ptr<myBuffer_t> bptr): module(gi), buffer(move(bptr)) {}
-        GUIClientInrerface* module;
-        std::unique_ptr<myBuffer_t> buffer;
+    GUIClientInrerface* module;
+    myBuffer_t buffer;
+
+    struct input_file_t {
+
+        input_file_t(const std::string& FileName, const ant::interval<ant::TID>& R):
+            filename(FileName),
+            range(R) {}
+
+        bool operator< (const input_file_t& other) const;
+
+        const std::string filename;
+        const ant::interval<ant::TID> range;
     };
 
-    std::list<module_buffer> mod_buffers;
+    std::list<input_file_t> input_files;
 
-    void ReadFile(const std::string& filename);
+
+    struct state_t {
+        bool is_init;
+
+        std::list<input_file_t>::iterator file;
+        myBuffer_t::const_iterator buffpos;
+        unsigned channel;
+
+        bool break_occured;
+        bool finish_mode;
+    };
+
+    state_t state;
+
+    std::list<input_file_t> ScanFiles(const std::vector<std::string> filenames);
+
+    void ProcessFile(input_file_t &file_input);
     void ProcessModules();
 
+
 public:
+    enum class RunReturnStatus_t {
+        Next,
+        OpenGUI,
+        Done
+    };
 
-    virtual void Run(const std::vector<std::string>& filelist);
+    struct RunReturn_t {
+        RunReturnStatus_t status;
+        TQObject* gui;
 
-    virtual void AddModule(GUIClientInrerface* module, unsigned avg_length);
+        RunReturn_t(RunReturnStatus_t Status=RunReturnStatus_t::Next, TQObject* Gui=nullptr):
+            status(Status),
+            gui(Gui) {}
+    };
+
+    CalibrationGUI(GUIClientInrerface* Module, unsigned length);
+
+    virtual void SetFileList(const std::vector<std::string>& filelist);
+
+    void Prepare();
+
+    virtual RunReturn_t Run();
 
     virtual ~CalibrationGUI();
 

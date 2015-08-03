@@ -25,4 +25,4 @@ std::ostream& operator<< (std::ostream& stream, const std::vector<T>& v)
     return stream;
 }
 
-std::ostream& operator<< (std::ostream& stream, const ant::printable_traits* printable);
+//std::ostream& operator<< (std::ostream& stream, const ant::printable_traits* printable);

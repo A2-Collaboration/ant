@@ -33,6 +33,7 @@ set(SRCS
     gui/manager/CalibrationGUI.cc
     gui/manager/GUIInterface.h
     detail/Helpers.h
+    gui/debug_GUIModule.cc
   )
 
 add_library(calibration ${SRCS})
