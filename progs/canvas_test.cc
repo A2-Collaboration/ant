@@ -29,7 +29,6 @@ int main(int argc, char** argv) {
 
     auto f1 = std::make_shared<FitGausPol3>();
     c->Show(h,f1);
-    app.Run(kTRUE);
+    app.Run(kFALSE);
 
 }
-
