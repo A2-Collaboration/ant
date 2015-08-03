@@ -46,6 +46,8 @@ ant::calibration::gui::FitGausPol3::FitGausPol3()
     Addknob<KnobsTF1::ParameterKnob>(combinded->GetParName(0), combinded, 0, GUIElementDescription::GUI_Type::slider_horizontal);
     Addknob<KnobsTF1::ParameterKnob>(combinded->GetParName(1), combinded, 1, GUIElementDescription::GUI_Type::slider_vertical);
     Addknob<KnobsTF1::ReferenceParameterKnob>(combinded->GetParName(2), combinded, 2, 1, GUIElementDescription::GUI_Type::slider_vertical);
+    Addknob<KnobsTF1::RangeKnob>("min",combinded,KnobsTF1::RangeKnob::RangeEndType::lower);
+    Addknob<KnobsTF1::RangeKnob>("max",combinded,KnobsTF1::RangeKnob::RangeEndType::upper);
 }
 
 ant::calibration::gui::FitGausPol3::~FitGausPol3()
