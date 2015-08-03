@@ -11,6 +11,8 @@ void ant::calibration::gui::FitGausPol3::sync()
 {
     signal->SetParameters(&(combinded->GetParameters()[0]));
     bg->SetParameters(    &(combinded->GetParameters()[3]));
+    setRange(signal,GetRange());
+    setRange(bg,GetRange());
 }
 
 ant::calibration::gui::FitGausPol3::FitGausPol3()
