@@ -22,7 +22,14 @@ CalCanvas::~CalCanvas() {
 }
 
 void CalCanvas::Show(TH1 *h, std::shared_ptr<FitFunction> f) {
+
+    while(!UndoStack.empty()) {
+        UndoStack.pop();
+    }
+
     func = f;
+    UndoPush();
+
     func->SetPoints(1000);
     hist = h;
     this->cd();
@@ -92,6 +99,12 @@ void CalCanvas::HandleKeypress(const char key)
     case 'f':
         Fit();
         break;
+    case 'u':
+        UndoPop();
+        break;
+    case 'i':
+        UndoPush();
+        break;
     default:
         break;
     }
@@ -122,10 +135,41 @@ void CalCanvas::Fit() {
     if(func && hist) {
         VLOG(3) << "Refitting";
 
+        UndoPush();
+
         func->Fit(hist);
 
         Modified();
         Update();
+    }
+}
+
+void CalCanvas::UndoPush()
+{
+    if(func) {
+        VLOG(7) << "Saving state to undo stack";
+        UndoStack.push(func->Save());
+    }
+}
+
+void CalCanvas::UndoPop()
+{
+    if(func) {
+        if(!UndoStack.empty()) {
+
+            VLOG(7) << "Loading state from undo stack";
+
+            func->Load(UndoStack.top());
+
+            if(UndoStack.size()>1) {
+                UndoStack.pop();
+            }
+
+            Modified();
+            update_me();
+        } else {
+            VLOG(7) << "No earlier states on the stack";
+        }
     }
 }
 

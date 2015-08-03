@@ -1,10 +1,13 @@
 #include "FitFunction.h"
 
 #include "base/interval.h"
+#include "base/Logger.h"
 #include "TF1Knobs.h"
 
 #include "TF1.h"
 #include "TH1.h"
+
+#include <algorithm>
 
 using namespace ant;
 using namespace ant::calibration;
@@ -71,21 +74,37 @@ void FitFunctionGaus::SetPoints(int n)
     func->SetNpx(n);
 }
 
-std::vector<double> FitFunctionGaus::Save() const
+FitFunction::SavedState_t FitFunctionGaus::Save() const
 {
     auto range = GetRange();
 
-    std::vector<double> params = {
-        range.Start(),
-        range.Stop()
-    };
+    std::vector<double> params;
+    params.reserve(2+func->GetNpar());
+
+    params.push_back(range.Start());
+    params.push_back(range.Stop());
+
+    for(int i=0; i <func->GetNpar(); ++i ) {
+        params.push_back(func->GetParameter(i));
+    }
 
     return params;
 }
 
-void FitFunctionGaus::Load(const std::vector<double> &data)
+void FitFunctionGaus::Load(const SavedState_t &data)
 {
-    //@todo IMPLEMENT
+    if(data.size() != std::size_t(2+func->GetNpar())) {
+        LOG(WARNING) << "Can't load parametes";
+        return;
+    }
+
+    auto i = data.begin();
+
+    SetRange({*(i++),*(i++)});
+
+    std::copy(i,i+func->GetNpar(),func->GetParameters());
+    sync();
+
 }
 
 FitFunctionGaus::MyWKnob::MyWKnob(const std::string &n, TF1 *Func):

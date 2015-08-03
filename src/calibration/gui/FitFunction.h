@@ -39,6 +39,8 @@ protected:
 
 public:
 
+    using SavedState_t = std::vector<double>;
+
     virtual ~FitFunction();
     virtual void Draw() =0;
     knoblist_t& getKnobs() { return knobs; }
@@ -48,6 +50,9 @@ public:
     virtual ant::interval<double> GetRange() const =0;
     virtual void Sync() {}
     virtual void SetPoints(int n) =0;
+
+    virtual SavedState_t Save() const =0;
+    virtual void Load(const std::vector<double>& data) =0;
 
 };
 
@@ -70,7 +75,7 @@ protected:
     };
 
 public:
-    FitFunctionGaus(double A, double x0, double sigma, ant::interval<double> range);
+    FitFunctionGaus(double A=2, double x0=1, double sigma=1, ant::interval<double> range={-8,8});
 
     virtual ~FitFunctionGaus();
 
@@ -82,6 +87,8 @@ public:
     virtual ant::interval<double> GetRange() const override;
     virtual void SetPoints(int n) override;
 
+    virtual SavedState_t Save() const override;
+    virtual void Load(const SavedState_t &data) override;
 };
 
 }

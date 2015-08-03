@@ -1,10 +1,12 @@
 #pragma once
 
 #include "calibration/gui/GUIbase.h"
+#include "calibration/gui/FitFunction.h"
 
 #include <list>
 #include <memory>
 #include <string>
+#include <stack>
 
 #include "TCanvas.h"
 
@@ -16,7 +18,7 @@ namespace ant {
 namespace calibration {
 namespace gui {
 
-class FitFunction;
+
 
 class CalCanvas : public TCanvas, public update_notify_traits {
 protected:
@@ -34,6 +36,8 @@ protected:
 
     virtual void HandleKeypress(const char key);
 
+    std::stack<ant::calibration::gui::FitFunction::SavedState_t> UndoStack;
+
 public:
     CalCanvas(const std::string& name);
     virtual ~CalCanvas();
@@ -45,6 +49,9 @@ public:
     virtual void ShowGuidelines(TObject*, const Int_t, const char, const bool) override;
 
     virtual void Fit();
+
+    virtual void UndoPush();
+    virtual void UndoPop();
 
     virtual void Execute(const char *method, const char *params, Int_t *error);
 
