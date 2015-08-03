@@ -89,3 +89,16 @@ void Time::ApplyTo(const readhits_t& hits, extrahits_t&)
     }
 }
 
+
+
+void ant::calibration::Time::ThePhysics::ProcessEvent(const Event& event)
+{
+}
+
+void ant::calibration::Time::ThePhysics::Finish()
+{
+}
+
+void ant::calibration::Time::ThePhysics::ShowResult()
+{
+}

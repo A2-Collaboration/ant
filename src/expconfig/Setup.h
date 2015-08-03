@@ -18,7 +18,6 @@
 #include "detectors/TAPSVeto.h"
 #include "detectors/EPT.h"
 
-#include "calibration/modules/EnergyInvariantMass.h"
 #include "calibration/modules/Time.h"
 #include "calibration/modules/Scaler.h"
 #include "calibration/modules/TAPS_ShowerCorrection.h"

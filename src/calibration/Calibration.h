@@ -35,6 +35,14 @@ public:
         const std::string name;
     };
 
+    class PhysicsModule : public BaseModule
+    {
+    protected:
+        using BaseModule::BaseModule; // constructors from base class
+    public:
+        virtual std::unique_ptr<Physics> GetPhysicsModule() = 0;
+    };
+
     /**
      * @brief The Module class is typically used for calibrations
      *
@@ -42,22 +50,16 @@ public:
      * or ReconstructHook::Clusters or both.
      */
     class Module :
-            public BaseModule,
+            public PhysicsModule,
             public Updateable_traits
     {
     protected:
         Module(const std::string& name_) :
-            BaseModule(name_)
+            PhysicsModule(name_)
         {}
     };
 
-    class PhysicsModule : public Module
-    {
-    protected:
-        using Module::Module;
-    public:
-        virtual std::unique_ptr<Physics> GetPhysicsModule() = 0;
-    };
+
 
 };
 

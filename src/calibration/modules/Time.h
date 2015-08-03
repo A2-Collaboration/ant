@@ -37,6 +37,20 @@ public:
     virtual std::vector<std::list<TID>> GetChangePoints() const override;
     void Update(std::size_t index, const TID&) override;
 
+    class ThePhysics : public Physics {
+    public:
+        using Physics::Physics;
+
+        virtual void ProcessEvent(const Event& event);
+        virtual void Finish();
+        virtual void ShowResult();
+    };
+
+    // Physics_traits interface
+    virtual std::unique_ptr<Physics> GetPhysicsModule() {
+        return std_ext::make_unique<ThePhysics>(GetName());
+    }
+
 protected:
 
     const Detector_t::Type_t DetectorType;

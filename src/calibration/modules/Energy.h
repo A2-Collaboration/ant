@@ -16,7 +16,7 @@ class CalibrationDataManager;
 namespace calibration {
 
 class Energy :
-        public Calibration::PhysicsModule, // this makes this module abstract
+        public Calibration::Module, // this makes this module abstract
         public ReconstructHook::DetectorReadHits
 {
 

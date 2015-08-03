@@ -12,11 +12,11 @@ set(SRCS
     modules/Time.cc
     modules/Energy.cc
     modules/Scaler.cc
-    modules/EnergyInvariantMass.cc
     modules/TAPS_ShowerCorrection.h
     modules/CB_Energy.cc
     modules/TAPS_Energy.cc
     modules/PID_Energy.cc
+    modules/PID_PhiAngle.cc
     modules/TAPSVeto_Energy.cc
     converters/GeSiCa_SADC.h
     converters/CATCH_TDC.cc
