@@ -40,8 +40,10 @@ public:
     protected:
         using BaseModule::BaseModule; // constructors from base class
     public:
-        virtual std::unique_ptr<Physics> GetPhysicsModule() {};
-        virtual std::vector<std::string> GetHistogramName() {};
+        virtual std::unique_ptr<Physics> GetPhysicsModule() = 0;
+        virtual std::vector<std::string> GetHistogramName() {
+            throw std::runtime_error("Not implemented");
+        }
     };
 
     /**
