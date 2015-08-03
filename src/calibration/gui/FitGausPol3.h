@@ -23,6 +23,7 @@ public:
 
     void Draw();
     void Fit(TH1* hist);
+    virtual void SetDefaults(TH1 *hist) override;
     void SetRange(ant::interval<double> i);
     ant::interval<double> GetRange() const;
     virtual void Sync() override;

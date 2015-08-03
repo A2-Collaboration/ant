@@ -48,14 +48,10 @@ FitFunction::~FitFunction()
 {}
 
 
-FitFunctionGaus::FitFunctionGaus(double A, double x0, double sigma, interval<double> range):
-    func(new TF1("","gaus", range.Start(), range.Stop()))
+FitFunctionGaus::FitFunctionGaus():
+    func(new TF1("","gaus"))
 {
-    func->SetParameter(0,A);
-    func->SetParameter(1,x0);
-    func->SetParameter(2,sigma);
     func->SetNpx(1000);
-
     Addknob<KnobsTF1::ParameterKnob>("A",     func, 0, GUIElementDescription::GUI_Type::slider_horizontal, kBlue, 3);
     Addknob<KnobsTF1::ParameterKnob>("x_{0}", func, 1, GUIElementDescription::GUI_Type::slider_vertical,   kBlue, 3);
     Addknob<MyWKnob>("#sigma",func);
@@ -75,6 +71,14 @@ void FitFunctionGaus::Draw()
 void FitFunctionGaus::Fit(TH1 *hist)
 {
     hist->Fit(func,"RBQN");
+}
+
+void FitFunctionGaus::SetDefaults(TH1 *hist)
+{
+    SetRange({0,400});
+    func->SetParameter(0,1000);
+    func->SetParameter(1,135);
+    func->SetParameter(2,20);
 }
 
 void FitFunctionGaus::SetRange(ant::interval<double> i)

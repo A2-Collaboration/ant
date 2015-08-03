@@ -28,10 +28,11 @@ void CalCanvas::Show(TH1 *h, std::shared_ptr<FitFunction> f) {
     }
 
     func = f;
-    UndoPush();
-
     func->SetPoints(1000);
     hist = h;
+    f->SetDefaults(hist);
+    UndoPush();
+
     this->cd();
     h->Draw();
     f->Draw();

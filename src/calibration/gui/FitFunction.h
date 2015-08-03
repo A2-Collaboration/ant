@@ -47,6 +47,12 @@ public:
     knoblist_t& getKnobs() { return knobs; }
     virtual void Fit(TH1* hist) =0;
 
+    /**
+     * @brief Set/Calcualte default parameter values. The hist that will be fitted later is given to allow adaptions
+     * @param hist The hist to fit later
+     */
+    virtual void SetDefaults(TH1* hist) =0;
+
     virtual void SetRange(ant::interval<double> i) =0;
     virtual ant::interval<double> GetRange() const =0;
     virtual void Sync() {}
@@ -76,13 +82,14 @@ protected:
     };
 
 public:
-    FitFunctionGaus(double A=2, double x0=1, double sigma=1, ant::interval<double> range={-8,8});
+    FitFunctionGaus();
 
     virtual ~FitFunctionGaus();
 
     virtual void Draw() override;
 
     virtual void Fit(TH1* hist) override;
+    virtual void SetDefaults(TH1* hist) override;
 
     virtual void SetRange(ant::interval<double> i) override;
     virtual ant::interval<double> GetRange() const override;

@@ -35,20 +35,6 @@ ant::calibration::gui::FitGausPol3::FitGausPol3()
     combinded->SetParName(5,"p_{2}");
     combinded->SetParName(6,"p_{3}");
 
-    combinded->SetParameter(0, 1000);
-    combinded->SetParameter(1, 135);
-    combinded->SetParameter(2, 8);
-    combinded->SetParameter(3, 1);
-    combinded->SetParameter(4, 1);
-    combinded->SetParameter(5, 1);
-    combinded->SetParameter(6, 0.1);
-
-    combinded->SetParLimits(1, 115, 140);
-    combinded->SetParLimits(2, 5, 50);
-    combinded->FixParameter(6, 0);
-
-    sync();
-
     Addknob<KnobsTF1::ParameterKnob>(combinded->GetParName(0), combinded, 0, GUIElementDescription::GUI_Type::slider_horizontal);
     Addknob<KnobsTF1::ParameterKnob>(combinded->GetParName(1), combinded, 1, GUIElementDescription::GUI_Type::slider_vertical);
     Addknob<KnobsTF1::ReferenceParameterKnob>(combinded->GetParName(2), combinded, 2, 1, GUIElementDescription::GUI_Type::slider_vertical);
@@ -73,6 +59,24 @@ void ant::calibration::gui::FitGausPol3::Draw()
 void ant::calibration::gui::FitGausPol3::Fit(TH1* hist)
 {
     hist->Fit(combinded, "RBQN");
+    sync();
+}
+
+void ant::calibration::gui::FitGausPol3::SetDefaults(TH1 *hist)
+{
+    // defaults for taps baf2
+    combinded->SetParameter(0, hist->GetMaximum());
+    combinded->SetParameter(1, 135);
+    combinded->SetParameter(2, 8);
+    combinded->SetParameter(3, 1);
+    combinded->SetParameter(4, 1);
+    combinded->SetParameter(5, 1);
+    combinded->SetParameter(6, 0.1);
+
+    combinded->SetParLimits(1, 115, 140);
+    combinded->SetParLimits(2, 5, 50);
+    combinded->FixParameter(6, 0);
+
     sync();
 }
 
