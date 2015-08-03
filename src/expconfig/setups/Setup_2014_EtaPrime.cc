@@ -15,18 +15,20 @@ public:
     }
 
     Setup_2014_EtaPrime() {
+        auto calibrationManager = make_shared<CalibrationDataManager>(GetName());
+
 
         // setup the detectors of interest
-        const auto trigger = std::make_shared<detector::Trigger_2014>();
+        const auto trigger = make_shared<detector::Trigger_2014>();
         const bool cherenkovInstalled = false;
         AddDetector(trigger);
         AddDetector<detector::EPT_2014>(GetElectronBeamEnergy());
         AddDetector<detector::CB>();
-        AddDetector<detector::PID_2014>();
+        auto pid = make_shared<detector::PID_2014>();
+        AddDetector(pid);
         AddDetector<detector::TAPS_2013>(cherenkovInstalled, false); // no Cherenkov, don't use sensitive channels
         AddDetector<detector::TAPSVeto_2014>(cherenkovInstalled); // no Cherenkov
 
-        auto calibrationManager = make_shared<CalibrationDataManager>(GetName());
 
         // then calibrations need some rawvalues to "physical" values converters
         // they can be quite different (especially for the COMPASS TCS system), but most of them simply decode the bytes
@@ -90,7 +92,7 @@ public:
         AddCalibration<calibration::TAPS_ShowerCorrection>();
 
         // the PID calibration is a physics module only
-        AddCalibration<calibration::PID_PhiAngle>();
+        AddCalibration<calibration::PID_PhiAngle>(pid);
 
 
     }

@@ -15,6 +15,9 @@ struct PID :
     virtual TVector3 GetPosition(unsigned channel) const override {
         return elements[channel].Position;
     }
+    virtual unsigned GetNChannels() const override {
+        return elements.size();
+    }
 
     virtual double dPhi(unsigned) const;
 

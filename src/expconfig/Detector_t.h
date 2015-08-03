@@ -44,8 +44,12 @@ struct Detector_t {
     };
 
     virtual TVector3 GetPosition(unsigned channel) const = 0;
+    virtual unsigned GetNChannels() const = 0;
 
     virtual ~Detector_t() = default;
+    class Exception : std::runtime_error {
+        using std::runtime_error::runtime_error; // use base class constructor
+    };
 
 protected:
     Detector_t(const Type_t& type) :
@@ -107,7 +111,7 @@ struct TaggerDetector_t : Detector_t {
     virtual bool TryGetChannelFromPhoton(double photonEnergy, unsigned& channel) const = 0;
 
     virtual TVector3 GetPosition(unsigned) const final {
-        throw std::runtime_error("You cannot ask a TaggerDetector_t for its position");
+        throw Exception("You cannot ask a TaggerDetector_t for its position");
     }
 
 

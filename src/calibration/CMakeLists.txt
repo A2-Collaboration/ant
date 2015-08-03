@@ -31,4 +31,4 @@ set(SRCS
   )
 
 add_library(calibration ${SRCS})
-target_link_libraries(calibration base analysis)
+target_link_libraries(calibration base analysis expconfig-detectors)

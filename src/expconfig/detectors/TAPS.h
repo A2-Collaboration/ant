@@ -21,6 +21,9 @@ struct TAPS :
     virtual TVector3 GetPosition(unsigned channel) const override {
         return clusterelements[channel]->Position;
     }
+    virtual unsigned GetNChannels() const override {
+        return clusterelements.size();
+    }
 
     // for UnpackerAcquConfig
     virtual void BuildMappings(

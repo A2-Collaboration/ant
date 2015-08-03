@@ -17,8 +17,12 @@ struct Trigger :
     virtual TVector3 GetPosition(unsigned) const override {
         // when you ask the trigger detector for positions,
         // this is certainly a bug :)
-        throw std::runtime_error("The trigger detector knows nothing about positions.");
+        throw Exception("The trigger detector knows nothing about positions.");
     }
+    virtual unsigned GetNChannels() const override {
+        throw Exception("The trigger detector knows nothing about number of channels.");
+    }
+
 
     const LogicalChannel_t Reference_CATCH_TaggerCrate = {Type, Channel_t::Type_t::Timing, 1000};
     const LogicalChannel_t Reference_CATCH_CBCrate = {Type, Channel_t::Type_t::Timing, 1001};

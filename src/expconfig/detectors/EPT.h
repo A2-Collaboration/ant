@@ -16,6 +16,9 @@ struct EPT :
     virtual double GetPhotonEnergy(unsigned channel) const override {
         return BeamEnergy - elements[channel].ElectronEnergy;
     }
+    virtual unsigned GetNChannels() const override {
+        return elements.size();
+    }
 
     virtual bool TryGetChannelFromPhoton(double photonEnergy, unsigned& channel) const override;
 

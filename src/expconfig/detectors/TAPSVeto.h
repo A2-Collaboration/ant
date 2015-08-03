@@ -14,6 +14,9 @@ struct TAPSVeto :
     virtual TVector3 GetPosition(unsigned channel) const override {
         return elements.at(channel)->Position;
     }
+    virtual unsigned GetNChannels() const override {
+        return elements.size();
+    }
 
     virtual bool Matches(const THeaderInfo&) const override {
         // always match, since TAPSVeto never changed over A2's lifetime
