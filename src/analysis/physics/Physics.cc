@@ -3,6 +3,8 @@
 
 #include "tree/TSlowControl.h"
 
+#include "TDirectory.h"
+
 #include <iomanip>
 #include <chrono>
 
@@ -71,6 +73,8 @@ void PhysicsManager::ReadFrom(list< unique_ptr<input::DataReader> > readers,
     start = chrono::system_clock::now();
     long long nEvents = 0;
 
+    TID firstEventID;
+    TID lastEventID;
     while(true) {
         if(!running)
             break;
@@ -96,12 +100,19 @@ void PhysicsManager::ReadFrom(list< unique_ptr<input::DataReader> > readers,
         if(!source && readers.empty())
             break;
 
+        if(nEvents==0)
+            firstEventID = event.Reconstructed().TriggerInfos().EventID();
+
         /// \todo make use of slowcontrol
         ProcessEvent(event);
+
+        lastEventID = event.Reconstructed().TriggerInfos().EventID();
 
         nEvents++;
     }
 
+    gDirectory->WriteObject(&firstEventID, "FirstEventID");
+    gDirectory->WriteObject(&lastEventID, "LastEventID");
 
     end = chrono::system_clock::now();
     chrono::duration<double> elapsed_seconds = end-start;
