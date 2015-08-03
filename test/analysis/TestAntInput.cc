@@ -66,7 +66,7 @@ void dotest() {
 
     cout << *event << endl;
 
-    auto antevent = ant::input::Convert(*event);
+    auto antevent = ant::input::Converter::Convert(*event);
 
     cout << antevent << endl;
 
