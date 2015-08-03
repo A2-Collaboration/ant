@@ -3,6 +3,7 @@
 #include "base/interval.h"
 #include "base/Logger.h"
 #include "TF1Knobs.h"
+#include "BaseFunctions.h"
 
 #include "TF1.h"
 #include "TH1.h"
@@ -48,9 +49,9 @@ FitFunction::~FitFunction()
 {}
 
 
-FitFunctionGaus::FitFunctionGaus():
-    func(new TF1("","gaus"))
+FitFunctionGaus::FitFunctionGaus()
 {
+    func = functions::gaus::getFT1();
     func->SetNpx(1000);
     Addknob<KnobsTF1::ParameterKnob>("A",     func, 0, GUIElementDescription::GUI_Type::slider_horizontal, kBlue, 3);
     Addknob<KnobsTF1::ParameterKnob>("x_{0}", func, 1, GUIElementDescription::GUI_Type::slider_vertical,   kBlue, 3);
@@ -76,7 +77,11 @@ void FitFunctionGaus::Fit(TH1 *hist)
 void FitFunctionGaus::SetDefaults(TH1 *hist)
 {
     SetRange({0,400});
-    func->SetParameter(0,1000);
+    if(hist) {
+        func->SetParameter(0,hist->GetMaximum());
+    } else {
+        func->SetParameter(0,1000);
+    }
     func->SetParameter(1,135);
     func->SetParameter(2,20);
 }

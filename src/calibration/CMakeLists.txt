@@ -22,6 +22,7 @@ set(SRCS
     converters/CATCH_TDC.cc
     converters/MultiHit16bit.h
     converters/ScalerFrequency.cc
+    gui/BaseFunctions.cc
     gui/GUIbase.h
     gui/FitFunction.cc
     gui/FitCanvas.cc

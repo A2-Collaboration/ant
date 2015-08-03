@@ -3,9 +3,11 @@
 #include "TF1.h"
 #include "TH1.h"
 #include "TF1Knobs.h"
+#include "BaseFunctions.h"
 
 #include "base/Logger.h"
 
+using namespace ant::calibration;
 
 void ant::calibration::gui::FitGausPol3::sync()
 {
@@ -17,13 +19,13 @@ void ant::calibration::gui::FitGausPol3::sync()
 
 ant::calibration::gui::FitGausPol3::FitGausPol3()
 {
-    signal = new TF1("","gaus");
+    signal = functions::gaus::getFT1();
     signal->SetLineColor(kRed);
 
-    bg = new TF1("","pol3");
+    bg = functions::pol<3>::getTF1();
     bg->SetLineColor(kBlue);
 
-    combinded = new TF1("","gaus(0)+pol3(3)");
+    combinded = functions::GausPol<3>::getTF1();
     combinded->SetLineColor(kGreen);
 
     SetRange(ant::interval<double>(100,250));
