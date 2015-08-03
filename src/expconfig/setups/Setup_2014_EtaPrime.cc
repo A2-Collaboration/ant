@@ -47,47 +47,52 @@ public:
         // also the ScalerFrequency needs a reference
         AddHook(convert_ScalerFrequency_Beampolmon);
 
-        AddHook<calibration::Scaler>(Detector_t::Type_t::EPT,
-                                     convert_ScalerFrequency_Beampolmon);
+        AddCalibration<calibration::Scaler>(Detector_t::Type_t::EPT,
+                                            convert_ScalerFrequency_Beampolmon);
 
         // then we add the others, and link it to the converters
-        AddHook<calibration::Time>(Detector_t::Type_t::EPT,
-                                     convert_CATCH_Tagger,
-                                     -325 // default offset in ns
-                                     );
-        AddHook<calibration::Time>(Detector_t::Type_t::CB,
-                                     convert_CATCH_CB,
-                                     -325,      // default offset in ns
-                                     interval<double>{-100, 100} // default time window cut in ns
-                                     );
-        AddHook<calibration::Time>(Detector_t::Type_t::PID,
-                                     convert_CATCH_CB,
-                                     -325,
-                                     interval<double>{-500, 500} // default time window cut in ns
-                                     );
-        AddHook<calibration::Time>(Detector_t::Type_t::TAPS,
-                                     convert_MultiHit16bit,
-                                     -300, /// \todo different default for PbWO
-                                     interval<double>{-500, 500},
-                                     -0.100 /// \todo give measured time gains for BaF2
-                                     );
-        AddHook<calibration::Time>(Detector_t::Type_t::TAPSVeto,
-                                     convert_MultiHit16bit,
-                                     160,
-                                     interval<double>{-1000, 1000}, /// \todo make this window smaller...
-                                     -0.05 // default gain
-                                     );
+        AddCalibration<calibration::Time>(Detector_t::Type_t::EPT,
+                                          convert_CATCH_Tagger,
+                                          -325 // default offset in ns
+                                          );
+        AddCalibration<calibration::Time>(Detector_t::Type_t::CB,
+                                          convert_CATCH_CB,
+                                          -325,      // default offset in ns
+                                          interval<double>{-100, 100} // default time window cut in ns
+                                          );
+        AddCalibration<calibration::Time>(Detector_t::Type_t::PID,
+                                          convert_CATCH_CB,
+                                          -325,
+                                          interval<double>{-500, 500} // default time window cut in ns
+                                          );
+        AddCalibration<calibration::Time>(Detector_t::Type_t::TAPS,
+                                          convert_MultiHit16bit,
+                                          -300, /// \todo different default for PbWO
+                                          interval<double>{-500, 500},
+                                          -0.100 /// \todo give measured time gains for BaF2
+                                          );
+        AddCalibration<calibration::Time>(Detector_t::Type_t::TAPSVeto,
+                                          convert_MultiHit16bit,
+                                          160,
+                                          interval<double>{-1000, 1000}, /// \todo make this window smaller...
+                                          -0.05 // default gain
+                                          );
 
-        AddHook<calibration::CB_Energy>(calibrationManager, convert_GeSiCa_SADC );
+        AddCalibration<calibration::CB_Energy>(calibrationManager, convert_GeSiCa_SADC );
 
-        AddHook<calibration::PID_Energy>(calibrationManager, convert_MultiHit16bit );
+        AddCalibration<calibration::PID_Energy>(calibrationManager, convert_MultiHit16bit );
 
-        AddHook<calibration::TAPS_Energy>(calibrationManager, convert_MultiHit16bit );
+        AddCalibration<calibration::TAPS_Energy>(calibrationManager, convert_MultiHit16bit );
 
-        AddHook<calibration::TAPSVeto_Energy>(calibrationManager, convert_MultiHit16bit);
+        AddCalibration<calibration::TAPSVeto_Energy>(calibrationManager, convert_MultiHit16bit);
 
         // enable TAPS shower correction, which is a hook running on list of clusters
-        AddHook<calibration::TAPS_ShowerCorrection>();
+        AddCalibration<calibration::TAPS_ShowerCorrection>();
+
+        // the PID calibration is a physics module only
+        AddCalibration<calibration::PID_PhiAngle>();
+
+
     }
 
     virtual double GetElectronBeamEnergy() const override {

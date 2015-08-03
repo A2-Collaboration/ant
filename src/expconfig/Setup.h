@@ -20,20 +20,19 @@
 
 #include "calibration/modules/Time.h"
 #include "calibration/modules/Scaler.h"
-#include "calibration/modules/TAPS_ShowerCorrection.h"
 #include "calibration/modules/CB_Energy.h"
 #include "calibration/modules/PID_Energy.h"
+#include "calibration/modules/PID_PhiAngle.h"
 #include "calibration/modules/TAPS_Energy.h"
+#include "calibration/modules/TAPS_ShowerCorrection.h"
 #include "calibration/modules/TAPSVeto_Energy.h"
-#include "calibration/CalibrationDataManager.h"
-
 
 #include "calibration/converters/CATCH_TDC.h"
 #include "calibration/converters/MultiHit16bit.h"
 #include "calibration/converters/GeSiCa_SADC.h"
 #include "calibration/converters/ScalerFrequency.h"
 
-
+#include "calibration/CalibrationDataManager.h"
 
 #include <functional>
 
@@ -47,15 +46,34 @@ class Setup :
         public UnpackerA2GeantConfig
 {
 public:
-    virtual std::list< std::shared_ptr< Calibration::PhysicsModule> > GetCalibrations() override {
+    virtual std::list< std::shared_ptr< Calibration::PhysicsModule> > GetCalibrations() const override {
         // search the hooks for modules which are physics modules
-        std::list< std::shared_ptr<Calibration::PhysicsModule> > calibrations;
+        std::list< std::shared_ptr<Calibration::PhysicsModule> > list;
         for(const auto& hook : reconstruct_hooks) {
             std_ext::AddToSharedPtrList<Calibration::PhysicsModule, ReconstructHook::Base>(
-                        hook, calibrations
+                        hook, list
                         );
         }
-       return calibrations;
+        for(const auto& calib : calibrations) {
+            std_ext::AddToSharedPtrList<Calibration::PhysicsModule, Calibration::BaseModule>(
+                        calib, list
+                        );
+        }
+        return list;
+    }
+
+    virtual std::list< std::shared_ptr< ReconstructHook::Base > > GetReconstructHooks() const override {
+        std::list< std::shared_ptr< ReconstructHook::Base > > list = reconstruct_hooks;
+        for(const auto& calib : calibrations) {
+            std_ext::AddToSharedPtrList<ReconstructHook::Base, Calibration::BaseModule>(
+                        calib, list
+                        );
+        }
+        return list;
+    }
+
+    virtual std::list< std::shared_ptr< Detector_t > > GetDetectors() const override {
+        return detectors;
     }
 
 protected:
@@ -77,12 +95,12 @@ protected:
         AddHook(std::make_shared<T>(std::forward<Args>(args)...));
     }
 
-    virtual std::list< std::shared_ptr< ReconstructHook::Base > > GetReconstructHooks() const override {
-        return reconstruct_hooks;
+    void AddCalibration(const std::shared_ptr<Calibration::BaseModule>& calib) {
+        calibrations.push_back(calib);
     }
-
-    virtual std::list< std::shared_ptr< Detector_t > > GetDetectors() const override {
-        return detectors;
+    template<typename T, typename... Args>
+    void AddCalibration(Args&&... args) {
+        AddCalibration(std::make_shared<T>(std::forward<Args>(args)...));
     }
 
     bool Matches(const THeaderInfo& header) const override {
@@ -116,6 +134,7 @@ protected:
 
     std::list< std::shared_ptr<Detector_t> > detectors;
     std::list< std::shared_ptr<ReconstructHook::Base> > reconstruct_hooks;
+    std::list< std::shared_ptr<Calibration::BaseModule> > calibrations;
 };
 
 // stuff for semiauto-registering the setups

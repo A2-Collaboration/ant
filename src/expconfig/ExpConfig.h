@@ -32,7 +32,7 @@ public:
     public:
         virtual std::string GetName() const = 0;
         virtual double GetElectronBeamEnergy() const = 0;
-        virtual std::list< std::shared_ptr< Calibration::PhysicsModule> > GetCalibrations() = 0;
+        virtual std::list< std::shared_ptr< Calibration::PhysicsModule> > GetCalibrations() const = 0;
 
         // you may obtain such an Expconfig::Module via headerInfo, name,
         // get all of them, or the last found one

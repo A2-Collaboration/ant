@@ -223,7 +223,7 @@ int main(int argc, char** argv) {
             }
 
             for(string leftover : leftovers)
-                LOG(WARNING) << "Specified calibration " << leftover << " not found in list of available calibrations";
+                LOG(ERROR) << "Specified calibration " << leftover << " not found in list of available calibrations";
 
             if(!leftovers.empty())
                 LOG(INFO) << "Available calibrations: " << ss_calibrations.str();

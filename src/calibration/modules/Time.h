@@ -41,9 +41,9 @@ public:
     public:
         using Physics::Physics;
 
-        virtual void ProcessEvent(const Event& event);
-        virtual void Finish();
-        virtual void ShowResult();
+        virtual void ProcessEvent(const Event& event) override;
+        virtual void Finish() override;
+        virtual void ShowResult() override;
     };
 
     // Physics_traits interface
