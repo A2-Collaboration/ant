@@ -24,7 +24,7 @@ ant::calibration::gui::FitGausPol3::FitGausPol3()
     combinded = new TF1("","gaus(0)+pol3(3)");
     combinded->SetLineColor(kGreen);
 
-    SetRange(ant::interval<double>(-10,10));
+    SetRange(ant::interval<double>(100,250));
     combinded->SetParName(0,"A");
     combinded->SetParName(1,"x_{0}");
     combinded->SetParName(2,"#sigma");
@@ -33,13 +33,17 @@ ant::calibration::gui::FitGausPol3::FitGausPol3()
     combinded->SetParName(5,"p_{2}");
     combinded->SetParName(6,"p_{3}");
 
-    combinded->SetParameter(0, 1);
-    combinded->SetParameter(1, 2);
-    combinded->SetParameter(2, 1);
+    combinded->SetParameter(0, 1000);
+    combinded->SetParameter(1, 135);
+    combinded->SetParameter(2, 8);
     combinded->SetParameter(3, 1);
     combinded->SetParameter(4, 1);
     combinded->SetParameter(5, 1);
-    combinded->SetParameter(6, 1);
+    combinded->SetParameter(6, 0.1);
+
+    combinded->SetParLimits(1, 115, 140);
+    combinded->SetParLimits(2, 5, 50);
+    combinded->FixParameter(6, 0);
 
     sync();
 
