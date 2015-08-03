@@ -59,6 +59,15 @@ public:
     mev_t VetoEnergy() const { return vetoEnergy; }
     mev_t TrackerEnergy() const { return trackerEnergy; }
 
+    const Cluster* FindCluster(detector_t detector) {
+        for(const auto& cl : Clusters) {
+            if(cl.Detector & detector) {
+                return std::addressof(cl);
+            }
+        }
+        return nullptr;
+    }
+
     const Cluster* FindCaloCluster() {
         for(const auto& cl : Clusters) {
             if(cl.Detector & (detector_t::CB | detector_t::TAPS)) {
