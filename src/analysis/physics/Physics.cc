@@ -29,6 +29,7 @@ void DebugPhysics::ShowResult()
 
 
 Physics::Physics(const string &name):
+    name_(name),
     HistFac(name)
 {}
 

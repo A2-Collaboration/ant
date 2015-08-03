@@ -71,7 +71,7 @@ void PID_Energy::ThePhysics::Finish()
 
 void PID_Energy::ThePhysics::ShowResult()
 {
-    canvas("PID_Energy") << drawoption("colz") << ggIM << endc;
+    canvas(GetName()) << drawoption("colz") << ggIM << endc;
 }
 
 unique_ptr<Physics> PID_Energy::GetPhysicsModule()

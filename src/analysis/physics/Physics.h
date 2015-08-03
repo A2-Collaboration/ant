@@ -17,6 +17,8 @@ class TDirectory;
 namespace ant {
 
 class Physics {
+private:
+    std::string name_;
 protected:
     SmartHistFactory HistFac;
 public:
@@ -25,6 +27,7 @@ public:
     virtual void ProcessEvent(const ant::Event& event) =0;
     virtual void Finish() =0;
     virtual void ShowResult() =0;
+    std::string GetName() { return name_; }
 };
 
 class DebugPhysics: public Physics {

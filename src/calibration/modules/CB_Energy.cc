@@ -71,11 +71,12 @@ void CB_Energy::ThePhysics::ProcessEvent(const Event& event)
 
 void CB_Energy::ThePhysics::Finish()
 {
+
 }
 
 void CB_Energy::ThePhysics::ShowResult()
 {
-    canvas("CB_Energy") << drawoption("colz") << ggIM << endc;
+    canvas(GetName()) << drawoption("colz") << ggIM << endc;
 }
 
 unique_ptr<Physics> CB_Energy::GetPhysicsModule()

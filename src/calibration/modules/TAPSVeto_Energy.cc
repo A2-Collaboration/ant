@@ -70,7 +70,7 @@ void TAPSVeto_Energy::ThePhysics::Finish()
 
 void TAPSVeto_Energy::ThePhysics::ShowResult()
 {
-    canvas("TAPSVeto_Energy") << drawoption("colz") << ggIM << endc;
+    canvas(GetName()) << drawoption("colz") << ggIM << endc;
 }
 
 unique_ptr<Physics> TAPSVeto_Energy::GetPhysicsModule()

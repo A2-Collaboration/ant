@@ -74,7 +74,7 @@ void TAPS_Energy::ThePhysics::Finish()
 
 void TAPS_Energy::ThePhysics::ShowResult()
 {
-    canvas("TAPS_Energy") << drawoption("colz") << ggIM << endc;
+    canvas(GetName()) << drawoption("colz") << ggIM << endc;
 }
 
 unique_ptr<Physics> TAPS_Energy::GetPhysicsModule()
