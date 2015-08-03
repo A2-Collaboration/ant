@@ -36,6 +36,6 @@ WrapTFile::~WrapTFile()
     VLOG(5) << "Syncing output file " << file->GetName();
     file->Write();
     file->Close();
-    VLOG(5) << "Closed output file " << file->GetName();
+    LOG(INFO) << "Closed output file " << file->GetName();
 
 }

@@ -49,7 +49,8 @@ using namespace ant::analysis;
 
 bool running = true;
 void myCrashHandler(int sig);
-
+string exec(const string& cmd);
+bool testopen(const string& filename, string& msg);
 
 int main(int argc, char** argv) {
     SetupLogger();
@@ -81,13 +82,11 @@ int main(int argc, char** argv) {
 
     // check if input files are readable
     for(const auto& inputfile : cmd_input->getValue()) {
-        /// \todo find some non-C'ish way of doing this?
-        FILE* fp = fopen(inputfile.c_str(),"r");
-        if(fp==NULL) {
-            LOG(ERROR) << "Inputfile '" << inputfile << "' could not be opened for reading: " << strerror(errno);
+        string errmsg;
+        if(!testopen(inputfile, errmsg)) {
+            LOG(ERROR) << "Cannot open inputfile '" << inputfile << "': " << errmsg;
             return 1;
         }
-        fclose(fp);
     }
 
     // build the list of ROOT files first
@@ -133,9 +132,10 @@ int main(int argc, char** argv) {
         try {
             auto unpacker_ = Unpacker::Get(inputfile);
             if(unpacker != nullptr && unpacker_ != nullptr) {
-                LOG(ERROR) << "Can only handle one unpacker, but input files suggest to use more than one.";
+                LOG(ERROR) << "Can only handle one unpacker, but given input files suggest to use more than one.";
                 return 1;
             }
+            LOG(INFO) << "Found unpacker for file " << inputfile;
             unpacker = move(unpacker_);
         }
         catch(Unpacker::Exception e) {
@@ -237,6 +237,8 @@ int main(int argc, char** argv) {
     if(cmd_output->isSet())
         om->SetNewOutput(cmd_output->getValue());
 
+
+    // add the physics/calibrationphysics modules
     PhysicsManager pm;
     for(const auto& classname : cmd_physicsclasses->getValue()) {
         try {
@@ -257,6 +259,17 @@ int main(int argc, char** argv) {
     // this method does the hard work...
     pm.ReadFrom(move(readers), maxevents, running);
 
+    // add some more info about the current state
+    if(auto setup = ExpConfig::Setup::GetLastFound()) {
+        string setupname = setup->GetName();
+        gDirectory->WriteObject(&setupname, "SetupName");
+    }
+    string gitinfo = exec("git describe --always --dirty");
+    if(!gitinfo.empty()) {
+        gDirectory->WriteObject(&gitinfo, "GitInfo");
+        VLOG(5) << "Added git info: " << gitinfo;
+    }
+
     if(!cmd_batchmode->isSet()) {
         LOG(INFO) << "Stopped running, but close ROOT properly to write data to disk.";
         int a=0;
@@ -268,6 +281,33 @@ int main(int argc, char** argv) {
     }
 
     return 0;
+}
+
+bool testopen(const string& filename, string& errmsg) {
+    /// \todo find some non-C'ish way of doing this?
+    FILE* fp = fopen(filename.c_str(),"r");
+    if(fp==NULL) {
+        errmsg = strerror(errno);
+        return false;
+    }
+    fclose(fp);
+    errmsg = "";
+    return true;
+}
+
+string exec(const string& cmd) {
+    string cmd_silent = cmd + string(" 2>/dev/null");
+    FILE* pipe = popen(cmd_silent.c_str(), "r");
+    if (!pipe) return "";
+    char buffer[128];
+    std::string result = "";
+    while(!feof(pipe)) {
+        if(fgets(buffer, 128, pipe) != NULL)
+            result += buffer;
+    }
+    pclose(pipe);
+    result = std_ext::string_sanitize(result.c_str());
+    return result;
 }
 
 void myCrashHandler(int sig) {

@@ -112,7 +112,7 @@ void PhysicsManager::ReadFrom(list< unique_ptr<input::DataReader> > readers,
     }
 
     gDirectory->WriteObject(&firstEventID, "FirstEventID");
-    gDirectory->WriteObject(&lastEventID, "LastEventID");
+    gDirectory->WriteObject(&lastEventID,  "LastEventID");
 
     end = chrono::system_clock::now();
     chrono::duration<double> elapsed_seconds = end-start;
