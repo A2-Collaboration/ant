@@ -29,6 +29,8 @@ set(SRCS
     gui/GUIElements.cc
     gui/TF1Knobs.cc
     gui/FitGausPol3.cc
+    gui/manager/AvgBuffer.cc
+    gui/manager/CalibrationGUI.cc
   )
 
 add_library(calibration ${SRCS})
