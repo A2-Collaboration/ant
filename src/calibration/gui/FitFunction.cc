@@ -11,6 +11,18 @@ using namespace ant::calibration;
 using namespace ant::calibration::gui;
 
 
+ant::interval<double> FitFunction::getRange(const TF1* func)
+{
+    interval<double> i;
+    func->GetRange(i.Start(), i.Stop());
+    return i;
+}
+
+void FitFunction::setRange(TF1* func, const ant::interval<double>& i)
+{
+    func->SetRange(i.Start(), i.Stop());
+}
+
 FitFunction::~FitFunction()
 {}
 
@@ -46,14 +58,34 @@ void FitFunctionGaus::Fit(TH1 *hist)
 
 void FitFunctionGaus::SetRange(ant::interval<double> i)
 {
-    func->SetRange(i.Start(), i.Stop());
+    setRange(func, i);
 }
 
 ant::interval<double> FitFunctionGaus::GetRange() const
 {
-    interval<double> i;
-    func->GetRange(i.Start(), i.Stop());
-    return i;
+    return getRange(func);
+}
+
+void FitFunctionGaus::SetPoints(int n)
+{
+    func->SetNpx(n);
+}
+
+std::vector<double> FitFunctionGaus::Save() const
+{
+    auto range = GetRange();
+
+    std::vector<double> params = {
+        range.Start(),
+        range.Stop()
+    };
+
+    return params;
+}
+
+void FitFunctionGaus::Load(const std::vector<double> &data)
+{
+    //@todo IMPLEMENT
 }
 
 FitFunctionGaus::MyWKnob::MyWKnob(const std::string &n, TF1 *Func):

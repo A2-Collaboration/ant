@@ -67,3 +67,26 @@ void RangeKnob::RangeKnob::set(double a)
         break;
     }
 }
+
+ReferenceParameterKnob::ReferenceParameterKnob(const std::string& Name, TF1* Func, int par, int reference, GUIElementDescription::GUI_Type type, Color_t color, double LineW):
+    VirtualKnob(Name,{type,color,LineW}),
+      func(Func),
+      parameter_index(par),
+      ref_index(reference)
+{
+}
+
+double ReferenceParameterKnob::get() const
+{
+    return func->GetParameter(parameter_index) + reference();
+}
+
+void ReferenceParameterKnob::set(double a)
+{
+    func->SetParameter(parameter_index, a-reference());
+}
+
+double ReferenceParameterKnob::reference() const
+{
+    return func->GetParameter(ref_index);
+}

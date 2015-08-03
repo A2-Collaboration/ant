@@ -23,6 +23,7 @@ CalCanvas::~CalCanvas() {
 
 void CalCanvas::Show(TH1 *h, std::shared_ptr<FitFunction> f) {
     func = f;
+    func->SetPoints(1000);
     hist = h;
     this->cd();
     h->Draw();
@@ -35,6 +36,7 @@ void CalCanvas::update_me() {
     for(auto& i : indicators) {
         i->update_me();
     }
+    func->Sync();
     Update();
 }
 

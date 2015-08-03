@@ -34,6 +34,9 @@ protected:
         knobs.emplace_back(std_ext::make_unique<T>(std::forward<Args_t>(args)...));
     }
 
+    static ant::interval<double> getRange(const TF1* func);
+    static void setRange(TF1* func, const ant::interval<double>& i);
+
 public:
 
     virtual ~FitFunction();
@@ -43,6 +46,8 @@ public:
 
     virtual void SetRange(ant::interval<double> i) =0;
     virtual ant::interval<double> GetRange() const =0;
+    virtual void Sync() {}
+    virtual void SetPoints(int n) =0;
 
 };
 
@@ -75,6 +80,7 @@ public:
 
     virtual void SetRange(ant::interval<double> i) override;
     virtual ant::interval<double> GetRange() const override;
+    virtual void SetPoints(int n) override;
 
 };
 
