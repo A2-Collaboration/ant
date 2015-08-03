@@ -48,12 +48,12 @@ Time::Time(Detector_t::Type_t detectorType,
         Gains[gain.Key] = gain.Value;
 }
 
-std::list<TID> Time::GetChangePoints() const {
+std::vector<std::list<TID> > Time::GetChangePoints() const {
     return {};
 }
 
-void Time::Update(const TID& id) {
-    LOG(INFO) << GetName() << ": Update called with TID=" << id;
+void Time::Update(size_t index, const TID& id) {
+    LOG(INFO) << GetName() << ": Update called for index " << index << " with TID=" << id;
 }
 
 void Time::ApplyTo(const readhits_t& hits, extrahits_t&)

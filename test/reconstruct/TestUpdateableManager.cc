@@ -43,21 +43,22 @@ TEST_CASE("UpdateableManager: Unallowed things", "[reconstruct]") {
 // implement some testable Updateable item
 struct UpdateableItem :  Updateable_traits {
 
-    std::vector<TID> UpdatePoints;
-    const std::list<TID> ChangePoints;
+    const std::vector<std::list<TID>> ChangePoints;
+    std::vector<std::vector<TID>> UpdatePoints;
 
-    UpdateableItem(std::list<TID> changePoints) :
-        ChangePoints(changePoints)
+    UpdateableItem(std::vector<std::list<TID>> changePoints) :
+        ChangePoints(changePoints),
+        UpdatePoints(changePoints.size())
     {}
 
-    std::list<TID> GetChangePoints() const override
+    std::vector<std::list<TID>> GetChangePoints() const override
     {
         return ChangePoints;
     }
 
-    void Update(const TID& id) override
+    void Update(std::size_t index, const TID& id) override
     {
-        UpdatePoints.push_back(id);
+        UpdatePoints[index].push_back(id);
     }
 };
 
@@ -79,7 +80,7 @@ void dotest1()
 
             // item returns no changepoints at all
             const shared_ptr<UpdateableItem>& item =
-                    make_shared<UpdateableItem>(std::list<TID>{});
+                    make_shared<UpdateableItem>(std::vector<std::list<TID>>{});
 
             list< shared_ptr<Updateable_traits> > updateables;
             updateables.push_back(item);
@@ -89,6 +90,7 @@ void dotest1()
 
             // check that the item was never updated
             REQUIRE(item->UpdatePoints.empty());
+            REQUIRE(item->UpdatePoints.empty());
         }
     }
 }
@@ -97,7 +99,7 @@ void dotest2()
 {
     const shared_ptr<UpdateableItem>& item =
             make_shared<UpdateableItem>(
-                std::list<TID>{p[1], p[3], p[5]});
+                std::vector<std::list<TID>>{{p[1], p[3], p[5]}});
 
     list< shared_ptr<Updateable_traits> > updateables;
     updateables.push_back(item);
@@ -106,13 +108,14 @@ void dotest2()
     manager.UpdateParameters(p[3]);
 
     REQUIRE(item->UpdatePoints.size() == 1);
-    REQUIRE(p[3] == item->UpdatePoints[0]);
+    REQUIRE(p[3] == item->UpdatePoints.at(0)[0]);
 }
 
 void dotest3() {
     const shared_ptr<UpdateableItem>& item =
             make_shared<UpdateableItem>(
-                std::list<TID>{p[1], p[3], p[5]});
+                std::vector<std::list<TID>>{{p[1], p[3], p[5]}});
+//                std::list<TID>{p[1], p[3], p[5]});
 
     list< shared_ptr<Updateable_traits> > updateables;
     updateables.push_back(item);
@@ -120,15 +123,17 @@ void dotest3() {
     UpdateableManager manager(p[2], updateables);
     manager.UpdateParameters(p[4]);
 
-    REQUIRE(item->UpdatePoints.size() == 2);
-    REQUIRE(p[1] == item->UpdatePoints[0]);
-    REQUIRE(p[3] == item->UpdatePoints[1]);
+    REQUIRE(item->UpdatePoints.size() == 1);
+    REQUIRE(item->UpdatePoints.at(0).size() == 2);
+    REQUIRE(p[1] == item->UpdatePoints.at(0)[0]);
+    REQUIRE(p[3] == item->UpdatePoints.at(0)[1]);
 }
 
 void dotest4() {
     const shared_ptr<UpdateableItem>& item =
             make_shared<UpdateableItem>(
-                std::list<TID>{p[1], p[3], p[5]});
+                std::vector<std::list<TID>>{{p[1], p[3], p[5]}});
+//                std::list<TID>{p[1], p[3], p[5]});
 
     list< shared_ptr<Updateable_traits> > updateables;
     updateables.push_back(item);
@@ -138,16 +143,18 @@ void dotest4() {
     manager.UpdateParameters(p[4]);
     manager.UpdateParameters(p[5]);
 
-    REQUIRE(item->UpdatePoints.size() == 3);
-    REQUIRE(p[1] == item->UpdatePoints[0]);
-    REQUIRE(p[3] == item->UpdatePoints[1]);
-    REQUIRE(p[5] == item->UpdatePoints[2]);
+    REQUIRE(item->UpdatePoints.size() == 1);
+    REQUIRE(item->UpdatePoints.at(0).size() == 3);
+    REQUIRE(p[1] == item->UpdatePoints.at(0)[0]);
+    REQUIRE(p[3] == item->UpdatePoints.at(0)[1]);
+    REQUIRE(p[5] == item->UpdatePoints.at(0)[2]);
 }
 
 void dotest5() {
     const shared_ptr<UpdateableItem>& item =
             make_shared<UpdateableItem>(
-                std::list<TID>{p[1], p[3], p[5]});
+                std::vector<std::list<TID>>{{p[1], p[3], p[5]}});
+//                std::list<TID>{p[1], p[3], p[5]});
 
     list< shared_ptr<Updateable_traits> > updateables;
     updateables.push_back(item);
@@ -156,7 +163,8 @@ void dotest5() {
     manager.UpdateParameters(p[4]);
     manager.UpdateParameters(p[4]);
 
-    REQUIRE(item->UpdatePoints.size() == 2);
-    REQUIRE(p[1] == item->UpdatePoints[0]);
-    REQUIRE(p[3] == item->UpdatePoints[1]);
+    REQUIRE(item->UpdatePoints.size() == 1);
+    REQUIRE(item->UpdatePoints.at(0).size() == 2);
+    REQUIRE(p[1] == item->UpdatePoints.at(0)[0]);
+    REQUIRE(p[3] == item->UpdatePoints.at(0)[1]);
 }

@@ -66,8 +66,8 @@ struct ReconstructHook {
  */
 class Updateable_traits {
 public:
-    virtual std::list<TID> GetChangePoints() const = 0;
-    virtual void Update(const TID& id) = 0;
+    virtual std::vector<std::list<TID>> GetChangePoints() const = 0;
+    virtual void Update(std::size_t index, const TID& id) = 0;
 };
 
 } // namespace ant

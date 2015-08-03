@@ -33,8 +33,8 @@ public:
     virtual void ApplyTo(const readhits_t&, extrahits_t&) override {}
 
     // CalibrationUpdate_traits interface
-    virtual std::list<TID> GetChangePoints() const override { return {}; }
-    virtual void Update(const TID &) override {}
+    virtual std::vector<std::list<TID>> GetChangePoints() const override { return {}; }
+    virtual void Update(std::size_t index, const TID &) override {}
 
     // PhysicsFactory interface
     virtual std::unique_ptr<Physics> GetPhysicsModule();

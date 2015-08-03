@@ -7,6 +7,7 @@
 #include "tree/TDetectorRead.h"
 
 #include <cstdint>
+#include <algorithm>
 
 using namespace std;
 using namespace ant;

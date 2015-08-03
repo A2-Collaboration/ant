@@ -29,7 +29,7 @@ public:
 
 private:
     template<typename T>
-    using shared_ptr_list = std::list< std::shared_ptr<T> >;
+    using shared_ptr_list = std::list< std::pair<std::size_t,std::shared_ptr<T>> >;
 
     std::list< std::pair< TID, shared_ptr_list<Updateable_traits> > > changePoints;
 };

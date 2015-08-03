@@ -34,8 +34,8 @@ public:
     virtual void ApplyTo(const readhits_t& hits, extrahits_t&) override;
 
     // Updateable_traits interface
-    virtual std::list<TID> GetChangePoints() const override;
-    void Update(const TID&) override;
+    virtual std::vector<std::list<TID>> GetChangePoints() const override;
+    void Update(std::size_t index, const TID&) override;
 
 protected:
 

@@ -25,45 +25,51 @@ UpdateableManager::UpdateableManager(
     // build the list of changePoints
 
     map<TID, shared_ptr_list<Updateable_traits> > sorted_updateables;
-    for(const shared_ptr<Updateable_traits>& updateable : updateables) {
-        list<TID> all_changePoints = updateable->GetChangePoints();
+    for(const shared_ptr<Updateable_traits>& updateable : updateables)
+    {
+        std::vector<list<TID>> all_changePoints = updateable->GetChangePoints();
 
         // no change points means the updateable is actually constant
-        if(all_changePoints.empty())
-            continue;
 
         // the following extraction relies on the changepoints being sorted in time
         // we don't require the updateables to provide a sorted list
-        all_changePoints.sort();
+        for (size_t i = 0 ; i < all_changePoints.size() ; ++i)
+        {
+            auto& lst = all_changePoints[i];
 
-        // scan the change points and build interesting_changePoints
-        const TID* lastBeforeHeaderInfo = nullptr;
-        list<TID> interesting_changePoints;
-        for(const TID& changePoint : all_changePoints) {
-            // ignore too early change points, but remember
-            // the last one seen as a pointer
-            if(changePoint < startPoint) {
-                lastBeforeHeaderInfo = addressof(changePoint);
+            if (lst.empty())
                 continue;
+            lst.sort();
+
+            // scan the change points and build interesting_changePoints
+            const TID* lastBeforeHeaderInfo = nullptr;
+            list<TID> interesting_changePoints;
+            for(const TID& changePoint : lst) {
+                // ignore too early change points, but remember
+                // the last one seen as a pointer
+                if(changePoint < startPoint) {
+                    lastBeforeHeaderInfo = addressof(changePoint);
+                    continue;
+                }
+                interesting_changePoints.emplace_back(move(changePoint));
             }
-            interesting_changePoints.emplace_back(move(changePoint));
-        }
 
-        // check if we should add a timepoint before the headerInfo
-        // in order to init the updateable correctly at the first detectorRead
-        // in DoReconstruct()
-        if(lastBeforeHeaderInfo != nullptr) {
-            // prepend this last changepoint before headerInfo timepoint
-            // only if the interesting changePoints are empty so far,
-            // or the first interesting point is not equal the header timepoint
-            if(interesting_changePoints.empty()
-               || startPoint != interesting_changePoints.front())
-                interesting_changePoints.emplace_front(move(*lastBeforeHeaderInfo));
-        }
+            // check if we should add a timepoint before the headerInfo
+            // in order to init the updateable correctly at the first detectorRead
+            // in DoReconstruct()
+            if(lastBeforeHeaderInfo != nullptr) {
+                // prepend this last changepoint before headerInfo timepoint
+                // only if the interesting changePoints are empty so far,
+                // or the first interesting point is not equal the header timepoint
+                if(interesting_changePoints.empty()
+                   || startPoint != interesting_changePoints.front())
+                    interesting_changePoints.emplace_front(move(*lastBeforeHeaderInfo));
+            }
 
-        // now the interesting points are built, add the updateable to the map
-        for(const TID& changePoint : interesting_changePoints) {
-            sorted_updateables[changePoint].emplace_back(move(updateable));
+            // now the interesting points are built, add the updateable to the map
+            for(const TID& changePoint : interesting_changePoints) {
+                sorted_updateables[changePoint].emplace_back(make_pair(i,move(updateable)));
+            }
         }
     }
 
@@ -73,7 +79,7 @@ UpdateableManager::UpdateableManager(
     for(auto it_updateable : sorted_updateables) {
         // move the whole map pair into the list
         changePoints.emplace_back(move(it_updateable));
-        }
+    }
 }
 
 void UpdateableManager::UpdateParameters(const TID& currentPoint)
@@ -84,7 +90,7 @@ void UpdateableManager::UpdateParameters(const TID& currentPoint)
 
         unsigned nUpdateables = 0;
         for(const auto& updateable : changePoints.front().second) {
-            updateable->Update(changePoints.front().first);
+            updateable.second->Update(updateable.first,changePoints.front().first);
             nUpdateables++;
         }
 
