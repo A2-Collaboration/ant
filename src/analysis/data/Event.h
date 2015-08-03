@@ -53,11 +53,11 @@ public:
         };
 
 
-        PTypeLists   particles;      //final state / reconstructred particles
-        PTypeLists   intermediates;  //intermediate particles (if any)
+        PTypeLists   particles;      // final state / reconstructred particles
+        PTypeLists   intermediates;  // intermediate particles (if any)
 
-        ant::CandidateList      candidates;         //particle candidates (if any)
-        ant::TaggerHistList taggerhits;     //tagger hits
+        ant::CandidateList  candidates;     // particle candidates (if any)
+        ant::TaggerHitList  taggerhits;     // tagger hits
         ant::TriggerInfo    triggerinfo;
 
     public:
@@ -71,14 +71,14 @@ public:
         const CandidateList& Candidates() const { return candidates; }
               CandidateList& Candidates()       { return candidates; }
 
-        const TaggerHistList& TaggerHits() const { return taggerhits; }
-              TaggerHistList& TaggerHits()       { return taggerhits; }
+        const TaggerHitList& TaggerHits() const { return taggerhits; }
+              TaggerHitList& TaggerHits()       { return taggerhits; }
 
         const TriggerInfo& TriggerInfos() const { return triggerinfo; }
               TriggerInfo& TriggerInfos()       { return triggerinfo; }
 
-              std::ostream &Print(std::ostream &stream) const;
-    };
+              std::ostream& Print(std::ostream& stream) const;
+    }; // class Data
 
 protected:
     Data    reconstructed;
@@ -90,7 +90,7 @@ public:
     const Data& MCTrue() const { return mctrue; }
           Data& MCTrue()       { return mctrue; }
 
-    std::ostream &Print(std::ostream &stream) const;
+    std::ostream& Print(std::ostream& stream) const;
 };
 
 }
