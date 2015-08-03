@@ -126,3 +126,8 @@ void ant::calibration::gui::FitGausPol3::Load(const std::vector<double> &data)
     sync();
 }
 
+double ant::calibration::gui::FitGausPol3::GetPeakPosition() const
+{
+    return combinded->GetParameter(1);
+}
+

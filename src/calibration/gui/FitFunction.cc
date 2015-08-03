@@ -118,6 +118,11 @@ void FitFunctionGaus::Load(const SavedState_t &data)
 
 }
 
+double FitFunctionGaus::GetPeakPosition() const
+{
+    return func->GetParameter(1);
+}
+
 FitFunctionGaus::MyWKnob::MyWKnob(const std::string &n, TF1 *Func):
     VirtualKnob(n,{GUIElementDescription::GUI_Type::slider_vertical,kBlue,3}),
     func(Func)
