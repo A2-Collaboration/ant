@@ -23,38 +23,33 @@ PID_PhiAngle::ThePhysics::ThePhysics(const string& name, unsigned nChannels) :
 void PID_PhiAngle::ThePhysics::ProcessEvent(const Event& event)
 {
     const auto& cands = event.Reconstructed().Candidates();
-    // search for exactly two cluster events,
-    // one in CB, one in PID
 
-    // a candidate has at least one cluster,
-    // so more than two candidates is already too many clusters
-    if(cands.size()>2)
-        return;
+    // search for events with
+    // one cluster in CB, one cluster in PID
+    // ignore the matched candidates, since this is what
+    // we want to calibrate
 
     const Cluster* cluster_pid = nullptr;
     double phi_cb = numeric_limits<double>::quiet_NaN();
 
     for(const auto& cand : cands) {
-        // finding a candidate with more than two clusters is
-        // also too many clusters
-        if(cand->Clusters.size() > 2)
-            return;
 
-        auto cl_pid_ = cand->FindCluster(detector_t::PID);
         auto cl_cb_  = cand->FindCluster(detector_t::CB);
-
-        if(cl_pid_ != nullptr) {
-            // found more than one pid cluster
-            if(cluster_pid != nullptr)
-                return;
-            cluster_pid = cl_pid_;
-        }
 
         if(cl_cb_ != nullptr) {
             // found more than one CB cluster
             if(isfinite(phi_cb))
                 return;
             phi_cb = cand->Phi();
+        }
+
+        auto cl_pid_ = cand->FindCluster(detector_t::PID);
+
+        if(cl_pid_ != nullptr) {
+            // found more than one pid cluster
+            if(cluster_pid != nullptr)
+                return;
+            cluster_pid = cl_pid_;
         }
     }
 
