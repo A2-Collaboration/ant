@@ -29,6 +29,9 @@ struct TCalibrationData
     typedef TKeyValue<double> TCalibrationEntry;
     std::vector<TCalibrationEntry> Data;
 
+    typedef TKeyValue<std::vector<double>> TFitParameters;
+    std::vector<TFitParameters> FitParameters;
+
     TCalibrationData() :
         Author(),
         Comment(),
@@ -36,7 +39,8 @@ struct TCalibrationData
         CalibrationID(),
         FirstID(),
         LastID(),
-        Data()
+        Data(),
+        FitParameters()
     {}
 
     TCalibrationData(const std::string& calibrationID,const TID& first_id, const TID& last_id) :
@@ -46,7 +50,8 @@ struct TCalibrationData
         CalibrationID(calibrationID),
         FirstID(first_id),
         LastID(last_id),
-        Data()
+        Data(),
+        FitParameters()
     {}
 
     //Constructors for readout from trees
@@ -62,7 +67,24 @@ struct TCalibrationData
         CalibrationID  (calibrationID),
         FirstID  (first_id),
         LastID   (last_id),
-        Data     (data)
+        Data     (data),
+        FitParameters()
+    {}
+
+    TCalibrationData(const std::string& author, const std::string& comment,
+                     const std::time_t& time,
+                     const std::string& calibrationID, const TID& first_id,
+                     const TID& last_id,
+                     const std::vector<TCalibrationEntry>& data,
+                     const std::vector<TFitParameters>& fitParameters):
+        Author   (author),
+        Comment  (comment),
+        TimeStamp(time),
+        CalibrationID  (calibrationID),
+        FirstID  (first_id),
+        LastID   (last_id),
+        Data     (data),
+        FitParameters(fitParameters)
     {}
 #endif
 

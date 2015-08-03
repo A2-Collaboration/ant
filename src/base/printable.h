@@ -1,5 +1,6 @@
 #pragma once
 
+#include <vector>
 #include <ostream>
 
 namespace ant {
@@ -13,5 +14,15 @@ public:
 }
 
 std::ostream& operator<< (std::ostream& stream, const ant::printable_traits& printable);
+
+template<class T>
+std::ostream& operator<< (std::ostream& stream, const std::vector<T>& v)
+{
+    for (auto& entry: v)
+    {
+        stream << entry << " , ";
+    }
+    return stream;
+}
 
 std::ostream& operator<< (std::ostream& stream, const ant::printable_traits* printable);
