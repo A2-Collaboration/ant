@@ -66,89 +66,100 @@ struct TID
 #endif
 {
 
-  TID() : Value(0), Flags(0) {}
-  virtual ~TID() {}
+    TID() : Value(0), Flags(1) {} // set the invalid flag by default
+    virtual ~TID() {}
 
-  std::uint64_t Value;
-  std::uint32_t Flags;
+    std::uint64_t Value;
+    std::uint32_t Flags;
 
 #ifndef __CINT__
-  // you may append flags, but never remove or change order!
-  enum class Flags_t : std::uint8_t {
-    MC, Acqu, GoAT
-  };
 
-  TID(
-      UInt_t upper,
-      UInt_t lower,
-      bool isMC = false
-      )
-    :
-      Value(lower),
-      Flags(0)
-  {
-    Flags |= static_cast<decltype(Flags)>(isMC) << static_cast<std::uint8_t>(Flags_t::MC);
-    Value |= static_cast<decltype(Value)>(upper) << sizeof(std::uint32_t)*8;
-  }
+    // you may append flags, but never remove or change order!
+    enum class Flags_t : std::uint8_t {
+        Invalid, MC, Acqu, GoAT
+    };
 
-  virtual std::ostream& Print( std::ostream& s) const override {
-    return s << std::hex << "(flags=0x" << Flags << ",0x"
-             << std::setw(sizeof(decltype(Value))*2) << std::setfill('0')
-             << Value
-             << ")" << std::dec;
-  }
+    // ensure correct init in default constructor
+    static_assert(static_cast<std::uint8_t>(Flags_t::Invalid) == 0, "Invalid flag should be first item in enum class");
+
+    TID(
+            UInt_t upper,
+            UInt_t lower,
+            bool isMC = false
+            )
+        :
+          Value(lower),
+          Flags(0)
+    {
+        Flags |= static_cast<decltype(Flags)>(isMC) << static_cast<std::uint8_t>(Flags_t::MC);
+        Value |= static_cast<decltype(Value)>(upper) << sizeof(std::uint32_t)*8;
+    }
+
+    bool IsInvalid() const {
+        return Flags & (1 << static_cast<std::uint8_t>(Flags_t::Invalid));
+    }
+
+    virtual std::ostream& Print( std::ostream& s) const override {
+        if(IsInvalid())
+            return s << "INVALID";
+
+        return s << std::hex << "(flags=0x" << Flags << ",0x"
+                 << std::setw(sizeof(decltype(Value))*2) << std::setfill('0')
+                 << Value
+                 << ")" << std::dec;
+    }
 #endif
 
-  bool operator<(const TID& other) const
-  {
-      if (Flags == other.Flags)
-          return (Value < other.Value);
-      return (Flags < other.Flags);
-  }
+    bool operator<(const TID& other) const
+    {
+        if (Flags == other.Flags)
+            return (Value < other.Value);
+        return (Flags < other.Flags);
+    }
 
-  /// TODO: impelemnt all others using < operator
-  bool operator<=(const TID& other) const
-  {
-      if (Flags == other.Flags)
-          return (Value <= other.Value);
-      return (Flags <= other.Flags);
-  }
+    /// TODO: impelemnt all others using < operator
+    bool operator<=(const TID& other) const
+    {
+        if (Flags == other.Flags)
+            return (Value <= other.Value);
+        return (Flags <= other.Flags);
+    }
 
-  bool operator>=(const TID& other) const
-  {
-      if (Flags == other.Flags)
-          return (Value >= other.Value);
-      return (Flags >= other.Flags);
-  }
+    bool operator>=(const TID& other) const
+    {
+        if (Flags == other.Flags)
+            return (Value >= other.Value);
+        return (Flags >= other.Flags);
+    }
 
-  bool operator>(const TID& other) const
-  {
-      if (Flags == other.Flags)
-          return (Value > other.Value);
-      return (Flags > other.Flags);
-  }
+    bool operator>(const TID& other) const
+    {
+        if (Flags == other.Flags)
+            return (Value > other.Value);
+        return (Flags > other.Flags);
+    }
 
-  bool operator!=(const TID& other) const
-  {
-      return (Value != other.Value || Flags != other.Flags);
-  }
+    bool operator!=(const TID& other) const
+    {
+        return (Value != other.Value || Flags != other.Flags);
+    }
 
-  bool operator==(const TID& other) const
-  {
-      return (!(this->operator !=(other)));
-  }
+    bool operator==(const TID& other) const
+    {
+        return (!(this->operator !=(other)));
+    }
 
-  TID& operator++() {
-      ++Value;
-      return *this;
-  }
+    TID& operator++() {
+        ++Value;
+        return *this;
+    }
 
-  TID& operator--() {
-      --Value;
-      return *this;
-  }
+    TID& operator--() {
+        --Value;
+        return *this;
+    }
 
-  ClassDef(TID, ANT_UNPACKER_ROOT_VERSION)
+    ClassDef(TID, ANT_UNPACKER_ROOT_VERSION)
 
 }; // TID
 
@@ -158,19 +169,19 @@ struct TDataRecord : printable_traits
 struct TDataRecord
 #endif
 {
-  TDataRecord() : ID() {}
-  TDataRecord(const TID& id) : ID(id) {}
-  virtual ~TDataRecord() {}
+    TDataRecord() : ID() {}
+    TDataRecord(const TID& id) : ID(id) {}
+    virtual ~TDataRecord() {}
 
-  TID ID;
+    TID ID;
 
 #ifndef __CINT__
-  virtual std::ostream& Print( std::ostream& s) const override {
-    return s << "TDataRecord ID=" << ID;
-  }
+    virtual std::ostream& Print( std::ostream& s) const override {
+        return s << "TDataRecord ID=" << ID;
+    }
 #endif
 
-  ClassDef(TDataRecord, ANT_UNPACKER_ROOT_VERSION)
+    ClassDef(TDataRecord, ANT_UNPACKER_ROOT_VERSION)
 
 }; // TDataRecord
 
