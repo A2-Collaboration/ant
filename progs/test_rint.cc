@@ -1,54 +1,59 @@
-#include "expconfig/ExpConfig.h"
-#include "analysis/OutputManager.h"
-
-#include "base/Logger.h"
 
 #include "TRint.h"
-#include "TFile.h"
-#include "TH1D.h"
+#include "TCanvas.h"
+
 #include <iostream>
 
 using namespace std;
-using namespace ant;
+
+struct MyCanvas : TCanvas {
+    using TCanvas::TCanvas;
+};
+
+struct MyWorker  {
+
+    unsigned i = 0;
+    TCanvas* c = nullptr;
+
+    void DoWork() {
+
+        if(i<10) {
+            i++;
+        }
+        else if(i==10) {
+            c = new TCanvas("bla", "bla");
+            c->Draw();
+        }
+    }
+
+};
+
+struct MyApp : TRint {
+    int argc = 0;
+    MyWorker worker;
+
+    MyApp(int* argc, char** argv, const MyWorker& worker_) :
+        TRint("MyApp", argc, argv, nullptr, 0, false),
+        worker(worker_)
+    {
+
+    }
+
+    virtual void StartIdleing() override {
+        TRint::StartIdleing();
+        //cout << "StartIdleing" << endl;
+        //worker.DoWork();
+    }
+
+};
 
 int main(int argc, char** argv) {
-    SetupLogger();
-    el::Loggers::setVerboseLevel(9);
-
-    ExpConfig::ManualSetupName = "Setup_2014_EtaPrime";
-
-    auto setup = ExpConfig::Setup::GetLastFound();
-
-    cout << setup->GetName() << endl;
-
-    auto calibs = setup->GetCalibrations();
 
 
-//    output::OutputManager om;
-//    om.SetNewOutput("test.root");
+    MyWorker worker;
+    MyApp app(&argc, argv, worker);
 
-    TRint app("test",&argc,argv,nullptr,0,true);
-
-    WrapTFile file("test.root");
-
-    auto module = calibs.front()->GetPhysicsModule();
+    app.Run(kTRUE);
 
 
-
-//    TH1D* h = new TH1D("h","h",100,0,100);
-//    h->Fill(50);
-
-
-
-//    h->Draw();
-
-    module->ShowResult();
-
-    app.Run(kTRUE); // really important to return
-
-
-    cout << "File open=" << file.IsOpen() << endl;
-
-//    file->Write();
-//    file->Close();
 }
