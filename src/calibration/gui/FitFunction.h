@@ -25,6 +25,7 @@ namespace gui {
 class FitFunction {
 public:
     using knoblist_t = std::list<std::unique_ptr<VirtualKnob>>;
+    using SavedState_t = std::vector<double>;
 
 protected:
     knoblist_t knobs;
@@ -37,10 +38,10 @@ protected:
     static ant::interval<double> getRange(const TF1* func);
     static void setRange(TF1* func, const ant::interval<double>& i);
 
+    static void saveTF1(const TF1* func, SavedState_t& out);
+    static void loadTF1(SavedState_t::const_iterator& data_pos, TF1* func);
+
 public:
-
-    using SavedState_t = std::vector<double>;
-
     virtual ~FitFunction();
     virtual void Draw() =0;
     knoblist_t& getKnobs() { return knobs; }

@@ -4,6 +4,8 @@
 #include "TH1.h"
 #include "TF1Knobs.h"
 
+#include "base/Logger.h"
+
 
 void ant::calibration::gui::FitGausPol3::sync()
 {
@@ -92,11 +94,23 @@ void ant::calibration::gui::FitGausPol3::SetPoints(int n)
 
 std::vector<double> ant::calibration::gui::FitGausPol3::Save() const
 {
+    SavedState_t params;
+    params.reserve(2+combinded->GetNpar());
+    saveTF1(combinded,params);
 
+    return params;
 }
 
 void ant::calibration::gui::FitGausPol3::Load(const std::vector<double> &data)
 {
+    if(data.size() != std::size_t(2+combinded->GetNpar())) {
+        LOG(WARNING) << "Can't load parametes";
+        return;
+    }
 
+    SavedState_t::const_iterator p = data.begin();
+    loadTF1(p, combinded);
+    SetRange(getRange(combinded));
+    sync();
 }
 

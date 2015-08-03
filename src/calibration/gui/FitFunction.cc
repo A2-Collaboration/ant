@@ -26,6 +26,24 @@ void FitFunction::setRange(TF1* func, const ant::interval<double>& i)
     func->SetRange(i.Start(), i.Stop());
 }
 
+void FitFunction::saveTF1(const TF1 *func, SavedState_t &out)
+{
+    auto range = getRange(func);
+    out.push_back(range.Start());
+    out.push_back(range.Stop());
+
+    for(int i=0; i <func->GetNpar(); ++i ) {
+        out.push_back(func->GetParameter(i));
+    }
+}
+
+void FitFunction::loadTF1(SavedState_t::const_iterator &data_pos, TF1 *func)
+{
+    setRange(func,{*(data_pos++),*(data_pos++)});
+
+    std::copy(data_pos,data_pos+func->GetNpar(),func->GetParameters());
+}
+
 FitFunction::~FitFunction()
 {}
 
@@ -76,17 +94,9 @@ void FitFunctionGaus::SetPoints(int n)
 
 FitFunction::SavedState_t FitFunctionGaus::Save() const
 {
-    auto range = GetRange();
-
     std::vector<double> params;
-    params.reserve(2+func->GetNpar());
 
-    params.push_back(range.Start());
-    params.push_back(range.Stop());
-
-    for(int i=0; i <func->GetNpar(); ++i ) {
-        params.push_back(func->GetParameter(i));
-    }
+    saveTF1(func,params);
 
     return params;
 }
@@ -97,12 +107,9 @@ void FitFunctionGaus::Load(const SavedState_t &data)
         LOG(WARNING) << "Can't load parametes";
         return;
     }
+    SavedState_t::const_iterator pos = data.begin();
+    loadTF1(pos, func);
 
-    auto i = data.begin();
-
-    SetRange({*(i++),*(i++)});
-
-    std::copy(i,i+func->GetNpar(),func->GetParameters());
     sync();
 
 }
