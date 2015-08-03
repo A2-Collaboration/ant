@@ -8,6 +8,9 @@
 
 #include <cstdint>
 #include <algorithm>
+#include <sstream>
+#include <vector>
+#include <list>
 
 using namespace std;
 using namespace ant;
@@ -28,13 +31,10 @@ Energy::Energy(Detector_t::Type_t detectorType,
     DetectorType(detectorType),
     calibrationManager(calmgr),
     Converter(move(converter)),
-    DefaultPedestal(defaultPedestal),
-    Pedestals(),
-    DefaultGain(defaultGain),
-    Gains(),
-    DefaultThreshold(defaultThreshold),
-    Thresholds(),
-    DefaultRelativeGain(defaultRelativeGain)
+    Pedestals(defaultPedestal,"Pedestals",0),
+    Gains(defaultGain,"Gains",1),
+    Thresholds(defaultThreshold,"Thresholds",2),
+    RelativeGains(defaultRelativeGain,"RelativeGains",3)
 {
     if(Converter==nullptr)
         throw std::runtime_error("Given converter should not be nullptr");
@@ -74,15 +74,15 @@ void Energy::ApplyTo(const readhits_t& hits, extrahits_t& extrahits)
 
             // apply pedestal/gain/threshold to each of the values (might be multihit)
             for(double& value : values) {
-                if(Pedestals.empty())
-                    value -= DefaultPedestal;
+                if(Pedestals.Values.empty())
+                    value -=Pedestals.DefaultValue;
                 else
-                    value -= Pedestals[dethit->Channel];
+                    value -= Pedestals.Values[dethit->Channel];
 
-                if(Gains.empty())
-                    value *= DefaultGain;
+                if(Gains.Values.empty())
+                    value *= Gains.DefaultValue;
                 else
-                    value *= Gains[dethit->Channel];
+                    value *= Gains.Values[dethit->Channel];
             }
 
         }
@@ -96,14 +96,14 @@ void Energy::ApplyTo(const readhits_t& hits, extrahits_t& extrahits)
         dethit->Values.reserve(values.size());
 
         for(double value : values) {
-            if(RelativeGains.empty())
-                value *= DefaultRelativeGain;
+            if(RelativeGains.Values.empty())
+                value *= RelativeGains.DefaultValue;
             else
-                value *= RelativeGains[dethit->Channel];
+                value *= RelativeGains.Values[dethit->Channel];
 
-            const double threshold = Thresholds.empty()
-                                     ? DefaultThreshold
-                                     : Thresholds[dethit->Channel];
+            const double threshold = Thresholds.Values.empty()
+                                     ? Thresholds.DefaultValue
+                                     : Thresholds.Values[dethit->Channel];
             if(value<threshold)
                 continue;
 
@@ -112,6 +112,32 @@ void Energy::ApplyTo(const readhits_t& hits, extrahits_t& extrahits)
         }
 
     }
+}
+
+std::vector<std::list<TID> > Energy::GetChangePoints() const
+{
+    vector<list<TID>> changePointLists;
+
+    for (auto& calibType: { Pedestals.Type, Gains.Type, Thresholds.Type, RelativeGains.Type})
+        changePointLists.push_back(calibrationManager->GetChangePoints(std_ext::formatter()
+                                                                       << GetName()
+                                                                       << "-" << calibType));
+    return changePointLists;
+}
+void Energy::Update(size_t index, const TID& tid)
+{
+    for (auto calibration: {&Pedestals, &Gains, &Thresholds, &RelativeGains})
+        if (calibration->Index == index)
+        {
+            TCalibrationData cdata;
+            calibrationManager->GetData(std_ext::formatter()<< GetName() <<
+                                          "-" << calibration->Type,
+                                        tid, cdata);
+            calibration->Values.clear();
+            calibration->Values.reserve(cdata.Data.size());
+            for (auto& val: cdata.Data)
+                calibration->Values.push_back(val.Value);
+        }
 }
 
 Energy::~Energy()

@@ -22,6 +22,7 @@ class Energy :
 
 public:
 
+
     Energy(Detector_t::Type_t detectorType,
            std::shared_ptr<CalibrationDataManager> calmgr,
            Calibration::Converter::ptr_t converter,
@@ -34,8 +35,8 @@ public:
     virtual void ApplyTo(const readhits_t& hits, extrahits_t& extrahits) override;
 
     // Updateable_traits interface
-    virtual std::vector<std::list<TID>> GetChangePoints() const override { return {};}
-    void Update(std::size_t index, const TID&) override {}
+    virtual std::vector<std::list<TID>> GetChangePoints() const override;
+    void Update(std::size_t index, const TID& tid) override;
 
     virtual ~Energy();
 
@@ -47,19 +48,25 @@ protected:
 
     const Calibration::Converter::ptr_t Converter;
 
-    // only used for rawData conversion
-    const double DefaultPedestal;
-    std::vector<double> Pedestals;
+    struct CalibType
+    {
+        const double        DefaultValue;
+        std::vector<double> Values;
+        const std::string   Type;
+        const std::size_t   Index;
+        CalibType(double defaultValue, const std::string type, size_t index):
+            DefaultValue(defaultValue),
+            Values(),
+            Type(type),
+            Index(index)
+        {}
+    };
 
-    const double DefaultGain;
-    std::vector<double> Gains;
 
-    // always applied to values
-    const double DefaultThreshold;
-    std::vector<double> Thresholds;
-
-    const double DefaultRelativeGain;
-    std::vector<double> RelativeGains;
+    CalibType Pedestals;
+    CalibType Gains;
+    CalibType Thresholds;
+    CalibType RelativeGains;
 
 };
 
