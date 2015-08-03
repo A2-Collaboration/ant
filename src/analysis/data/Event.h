@@ -1,11 +1,12 @@
 #pragma once
 
-#include "base/types.h"
 
 #include "Particle.h"
 #include "Candidate.h"
 #include "TaggerHit.h"
 #include "TriggerInfo.h"
+
+#include "base/types.h"
 #include "base/printable.h"
 
 #include <vector>

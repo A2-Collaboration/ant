@@ -2,13 +2,14 @@
 
 #include "base/types.h"
 #include "base/printable.h"
+#include "tree/TDataRecord.h"
 
 #include <list>
 #include <memory>
 
 namespace ant {
 
-class DAQError: public ant::printable_traits {
+class DAQError: public printable_traits {
 protected:
     index_t module_id;
     index_t module_index;
@@ -27,43 +28,45 @@ public:
     index_t ModuleIndex() const { return module_index; }
     int     ErrorCode() const { return error; }
 
-    std::ostream &Print(std::ostream &stream) const;
+    std::ostream& Print(std::ostream& stream) const;
 };
 
 
 
-class TriggerInfo: public ant::printable_traits {
-public:
-    typedef std::list<ant::DAQError> ErrorList_t;  //TODO: use shared_ptr also for DAQErrors?
-
+class TriggerInfo: public printable_traits {
 protected:
     mev_t           cb_energy_sum;
     unsigned int    cluster_multiplicity;
+    TID             event_id;
 
-    ErrorList_t     errors;
+    std::list<DAQError>     errors;
 
 public:
 
-    TriggerInfo( mev_t CBESum=0.0, unsigned int multiplicity=0):
+    TriggerInfo( mev_t CBESum=0.0,
+                 unsigned int multiplicity=0,
+                 const TID& event_id_ = TID()):
         cb_energy_sum(CBESum),
         cluster_multiplicity(multiplicity),
+        event_id(event_id_),
         errors()
     {}
 
     virtual ~TriggerInfo() {}
 
-    ErrorList_t& Errors()       { return errors; }
-    const ErrorList_t& Errors() const { return errors; }
+    std::list<DAQError>  Errors() const { return errors; }
+    std::list<DAQError>& Errors()       { return errors; }
 
-    mev_t CBEenergySum() const { return cb_energy_sum; }
+    mev_t  CBEenergySum() const { return cb_energy_sum; }
     mev_t& CBEenergySum()      { return cb_energy_sum; }
 
-    unsigned int Multiplicity() const { return cluster_multiplicity; }
+    unsigned int  Multiplicity() const { return cluster_multiplicity; }
     unsigned int& Multiplicity()       { return cluster_multiplicity; }
 
-    std::ostream &Print(std::ostream &stream) const;
-};
+    TID  EventID() const { return event_id; }
+    TID& EventID()       { return event_id; }
 
-using TriggerInfoPtr = std::shared_ptr<TriggerInfo>;
+    std::ostream& Print(std::ostream& stream) const;
+};
 
 }
