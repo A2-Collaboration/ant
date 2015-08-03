@@ -23,7 +23,8 @@ public:
         const bool cherenkovInstalled = false;
         AddDetector(trigger);
         AddDetector<detector::EPT_2014>(GetElectronBeamEnergy());
-        AddDetector<detector::CB>();
+        auto cb = make_shared<detector::CB>();
+        AddDetector(cb);
         auto pid = make_shared<detector::PID_2014>();
         AddDetector(pid);
         AddDetector<detector::TAPS_2013>(cherenkovInstalled, false); // no Cherenkov, don't use sensitive channels
@@ -80,7 +81,7 @@ public:
                                           -0.05 // default gain
                                           );
 
-        AddCalibration<calibration::CB_Energy>(calibrationManager, convert_GeSiCa_SADC );
+        AddCalibration<calibration::CB_Energy>(cb, calibrationManager, convert_GeSiCa_SADC );
 
         AddCalibration<calibration::PID_Energy>(calibrationManager, convert_MultiHit16bit );
 

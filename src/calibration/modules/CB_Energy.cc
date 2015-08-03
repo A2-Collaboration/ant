@@ -1,7 +1,10 @@
 #include "CB_Energy.h"
+
 #include "analysis/plot/HistogramFactories.h"
 #include "analysis/data/Event.h"
 #include "analysis/utils/combinatorics.h"
+
+#include "expconfig/detectors/CB.h"
 
 #include "tree/TDataRecord.h"
 
@@ -12,27 +15,29 @@ using namespace std;
 using namespace ant;
 using namespace ant::calibration;
 
-CB_Energy::CB_Energy(std::shared_ptr<CalibrationDataManager> calmgr,
+CB_Energy::CB_Energy(std::shared_ptr<expconfig::detector::CB> cb,
+                     std::shared_ptr<CalibrationDataManager> calmgr,
                      Calibration::Converter::ptr_t converter,
                      double defaultPedestal,
                      double defaultGain,
                      double defaultThreshold,
                      double defaultRelativeGain):
-    Energy(Detector_t::Type_t::CB,
+    Energy(cb->Type,
            calmgr,
            converter,
            defaultPedestal,
            defaultGain,
            defaultThreshold,
-           defaultRelativeGain)
+           defaultRelativeGain),
+    cb_detector(cb)
 {
 
 }
 
-CB_Energy::ThePhysics::ThePhysics(const string& name):
+CB_Energy::ThePhysics::ThePhysics(const string& name, unsigned nChannels):
     Physics(name)
 {
-    const BinSettings cb_channels(720);
+    const BinSettings cb_channels(nChannels);
     const BinSettings energybins(1000);
 
     ggIM = HistFac.makeTH2D("2 neutral IM (CB,CB)", "IM [MeV]", "#", energybins, cb_channels, "ggIM");
@@ -75,5 +80,6 @@ void CB_Energy::ThePhysics::ShowResult()
 
 unique_ptr<Physics> CB_Energy::GetPhysicsModule()
 {
-    return std_ext::make_unique<ThePhysics>(GetName());
+    return std_ext::make_unique<ThePhysics>(GetName()+"_Gains",
+                                            cb_detector->GetNChannels());
 }

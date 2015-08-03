@@ -21,6 +21,11 @@ struct PID :
 
     virtual double dPhi(unsigned) const;
 
+    virtual void SetPhiOffset(double offset_degrees) {
+        phi_offset0_degrees = offset_degrees;
+        RotateElements();
+    }
+
     // for UnpackerAcquConfig
     virtual void BuildMappings(
             std::vector<hit_mapping_t>&,
@@ -36,7 +41,7 @@ protected:
                 ) :
             Detector_t::Element_t(
                 channel,
-                TVector3(5.1, 0, 0) // start with vector in x/y plane, is rotated in InitElements()
+                TVector3(5.1, 0, 0) // start with vector in x/y plane, is rotated in RotateElements()
                 ),
             ADC(adc),
             TDC(tdc)
@@ -55,6 +60,7 @@ protected:
 
 private:
     void InitElements();
+    void RotateElements();
     double phi_offset0_degrees; // the offset in degrees of the first element, see InitElements()
     std::vector<Element_t> elements;
 

@@ -37,9 +37,12 @@ public:
     virtual std::vector<std::list<TID> > GetChangePoints() const override;
     virtual void Update(std::size_t index, const TID& id) override;
 
+
+
 protected:
     std::shared_ptr<CalibrationDataManager> calibrationManager;
     std::shared_ptr<expconfig::detector::PID> pid_detector;
+
 
 
 };

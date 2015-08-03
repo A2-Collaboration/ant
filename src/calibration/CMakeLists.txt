@@ -32,6 +32,7 @@ set(SRCS
     gui/manager/AvgBuffer.cc
     gui/manager/CalibrationGUI.cc
     gui/manager/GUIInterface.h
+    detail/Helpers.h
   )
 
 add_library(calibration ${SRCS})

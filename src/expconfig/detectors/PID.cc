@@ -51,9 +51,16 @@ void PID::InitElements()
         // we check the order here, instead of simply computing them
         // makes handling the array mappings in detail/PID_*_elements.h easier
         if(element.Channel != i)
-            throw runtime_error("PID element channels not in correct order");
+            throw Exception("PID element channels not in correct order");
+    }
+    RotateElements();
+}
 
-        // inside this project, the PID elements are ordered in positive mathematical rotation
+void PID::RotateElements()
+{
+    for(size_t i=0; i<elements.size();i++) {
+        Element_t& element = elements[i];
+        // we assume that the PID elements are ordered in positive mathematical rotation
         // the element is already initialized as a unit vector
         element.Position.SetPhi(std_ext::degree_to_radian(phi_offset0_degrees) + i*dPhi(element.Channel));
     }

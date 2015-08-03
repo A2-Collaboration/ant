@@ -1,6 +1,7 @@
 #include "PID_PhiAngle.h"
 #include "expconfig/detectors/PID.h"
 #include "CalibrationDataManager.h"
+#include "detail/Helpers.h"
 
 using namespace ant;
 using namespace ant::calibration;
@@ -29,6 +30,7 @@ PID_PhiAngle::PID_PhiAngle(shared_ptr<expconfig::detector::PID> pid) :
 
 PID_PhiAngle::~PID_PhiAngle()
 {
+
 }
 
 
@@ -45,5 +47,5 @@ void ant::calibration::PID_PhiAngle::Update(size_t, const TID& id)
     if(cdata.Data.size() != 1)
         return;
     const TKeyValue<double>& kv = cdata.Data.front();
-
+    pid_detector->SetPhiOffset(kv.Value);
 }
