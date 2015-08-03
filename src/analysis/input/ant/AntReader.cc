@@ -81,7 +81,7 @@ bool AntReader::ReadNextEvent(Event& event, TSlowControl&)
 
             if(haveReconstruct) {
                 MemoryPool<TEvent>::Item tevent = reconstruct->DoReconstruct(*detread);
-                event = input::Convert(*tevent);
+                event = Converter::Convert(*tevent);
                 if(writer) {
                     if(writeCalibrated)
                         writer->Fill(item.get());
@@ -98,7 +98,7 @@ bool AntReader::ReadNextEvent(Event& event, TSlowControl&)
         }
         else if(isA == TEvent::Class()) {
             const TEvent* tevent = reinterpret_cast<TEvent*>(item.get());
-            event = input::Convert(*tevent);
+            event = Converter::Convert(*tevent);
             return true;
         }
 

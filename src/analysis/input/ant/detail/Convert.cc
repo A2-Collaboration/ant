@@ -1,15 +1,18 @@
 #include "Convert.h"
-#include <memory>
 #include "data/Event.h"
+
+#include "Detector.h"
+
 #include "tree/TEvent.h"
 #include "tree/TCluster.h"
 #include "tree/TCandidate.h"
 #include "tree/TTaggerHit.h"
 #include "tree/TDataRecord.h"
-#include "analysis/data/Candidate.h"
-#include "analysis/data/TaggerHit.h"
-#include "analysis/Detector.h"
+
+
 #include "expconfig/Detector_t.h"
+
+#include <memory>
 #include <limits>
 
 using namespace ant;
@@ -20,11 +23,11 @@ template <class Cont1, class Cont2>
 void Copy(const Cont1& from, Cont2& to) {
     to.reserve(from.size());
     for(auto& from_element : from) {
-        to.emplace_back(ant::input::Convert(from_element));
+        to.emplace_back(Converter::Convert(from_element));
     }
 }
 
-ant::Event input::Convert(const TEvent &event)
+Event Converter::Convert(const TEvent &event)
 {
     Event antevent;
 
@@ -35,7 +38,7 @@ ant::Event input::Convert(const TEvent &event)
 }
 
 
-shared_ptr<Candidate> input::Convert(const TCandidate &candidate)
+shared_ptr<Candidate> Converter::Convert(const TCandidate &candidate)
 {
     /// @todo implement cluster size
     /// @todo add clusters to ant::Candidate
@@ -69,7 +72,7 @@ shared_ptr<Candidate> input::Convert(const TCandidate &candidate)
     return antCandidate;
 }
 
-std::shared_ptr<TaggerHit> input::Convert(const TTaggerHit& taggerhit)
+shared_ptr<TaggerHit> Converter::Convert(const TTaggerHit& taggerhit)
 {
     ///@todo implement something for tagger channel
     auto anttaggerhit = make_shared<TaggerHit>(
@@ -81,7 +84,7 @@ std::shared_ptr<TaggerHit> input::Convert(const TTaggerHit& taggerhit)
 }
 
 
-Cluster input::Convert(const TCluster& cluster)
+Cluster Converter::Convert(const TCluster& cluster)
 {
 
     return Cluster(

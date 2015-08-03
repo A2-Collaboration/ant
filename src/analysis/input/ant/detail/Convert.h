@@ -1,16 +1,16 @@
 #pragma once
 
 #include <memory>
-#include "analysis/data/Cluster.h"
 
 namespace ant {
-class TEvent;
-class TCandidate;
-class TTaggerHit;
-
+class Cluster;
 class Event;
 class Candidate;
 class TaggerHit;
+
+class TEvent;
+class TCandidate;
+class TTaggerHit;
 class TCluster;
 
 namespace input {
@@ -20,13 +20,20 @@ namespace input {
  * @param event
  * @return a shared ptr to the new event
  */
-ant::Event Convert(const TEvent& event);
 
-std::shared_ptr<ant::Candidate> Convert(const TCandidate& candidate);
+struct Converter {
 
-std::shared_ptr<ant::TaggerHit> Convert(const TTaggerHit& taggerhit);
+static Event Convert(const TEvent& event);
 
-ant::Cluster Convert(const TCluster& cluster);
+static std::shared_ptr<ant::Candidate> Convert(const TCandidate& candidate);
+
+static std::shared_ptr<ant::TaggerHit> Convert(const TTaggerHit& taggerhit);
+
+static Cluster Convert(const TCluster& cluster);
+
+};
+
+
 }
 }
 
