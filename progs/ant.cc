@@ -222,11 +222,12 @@ int main(int argc, char** argv) {
                 enabled_calibrations.emplace_back(move(calibration));
             }
 
-            for(string leftover : leftovers)
-                LOG(ERROR) << "Specified calibration " << leftover << " not found in list of available calibrations";
-
-            if(!leftovers.empty())
+            if(!leftovers.empty()) {
                 LOG(INFO) << "Available calibrations: " << ss_calibrations.str();
+                for(string leftover : leftovers)
+                    LOG(ERROR) << "Specified calibration '" << leftover << "' not found in list of available calibrations";
+                return 1;
+            }
         }
     }
 
@@ -245,7 +246,8 @@ int main(int argc, char** argv) {
             pm.AddPhysics( PhysicsRegistry::Create(classname) );
             LOG(INFO) << "Activated physics class '" << classname << "'";
         } catch (...) {
-            LOG(WARNING) << "Physics class '" << classname << "' is not found.";
+            LOG(ERROR) << "Physics class '" << classname << "' is not found.";
+            return 1;
         }
     }
 
