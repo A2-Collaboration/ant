@@ -21,17 +21,17 @@ public:
     virtual ~PID_PhiAngle();
 
     class ThePhysics : public Physics {
+    protected:
+        TH2* pid_cb_phi_corr;
     public:
-        using Physics::Physics;
+        ThePhysics(const std::string& name, unsigned nChannels);
 
         virtual void ProcessEvent(const Event& event) override;
         virtual void Finish() override ;
         virtual void ShowResult() override;
     };
 
-    virtual std::unique_ptr<Physics> GetPhysicsModule() {
-        return std_ext::make_unique<ThePhysics>(GetName());
-    }
+    virtual std::unique_ptr<Physics> GetPhysicsModule();
 
     // Updateable_traits interface
     virtual std::vector<std::list<TID> > GetChangePoints() const override;

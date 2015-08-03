@@ -3,12 +3,66 @@
 #include "CalibrationDataManager.h"
 #include "detail/Helpers.h"
 
+#include <limits>
+#include <cmath>
+
 using namespace ant;
 using namespace ant::calibration;
 using namespace std;
 
+PID_PhiAngle::ThePhysics::ThePhysics(const string& name, unsigned nChannels) :
+    Physics(name)
+{
+    const BinSettings pid_channels(nChannels);
+    const BinSettings phibins(1000, -M_PI, 3*M_PI);
+
+    pid_cb_phi_corr = HistFac.makeTH2D("CB Phi", "IM [MeV]", "#",
+                                       phibins, pid_channels, "pid_cb_phi_corr");
+}
+
 void PID_PhiAngle::ThePhysics::ProcessEvent(const Event& event)
 {
+    const auto& cands = event.Reconstructed().Candidates();
+    // search for exactly two cluster events,
+    // one in CB, one in PID
+
+    // a candidate has at least one cluster,
+    // so more than two candidates is already too many clusters
+    if(cands.size()>2)
+        return;
+
+    const Cluster* cluster_pid = nullptr;
+    double phi_cb = numeric_limits<double>::quiet_NaN();
+
+    for(const auto& cand : cands) {
+        // finding a candidate with more than two clusters is
+        // also too many clusters
+        if(cand->Clusters.size() > 2)
+            return;
+
+        auto cl_pid_ = cand->FindCluster(detector_t::PID);
+        auto cl_cb_  = cand->FindCluster(detector_t::CB);
+
+        if(cl_pid_ != nullptr) {
+            // found more than one pid cluster
+            if(cluster_pid != nullptr)
+                return;
+            cluster_pid = cl_pid_;
+        }
+
+        if(cl_cb_ != nullptr) {
+            // found more than one CB cluster
+            if(isfinite(phi_cb))
+                return;
+            phi_cb = cand->Phi();
+        }
+    }
+
+    if(!isfinite(phi_cb) || cluster_pid == nullptr)
+        return;
+
+    pid_cb_phi_corr->Fill(phi_cb,        cluster_pid->CentralElement);
+    pid_cb_phi_corr->Fill(phi_cb+2*M_PI, cluster_pid->CentralElement);
 
 }
 
@@ -19,7 +73,7 @@ void PID_PhiAngle::ThePhysics::Finish()
 
 void PID_PhiAngle::ThePhysics::ShowResult()
 {
-
+    canvas(GetName()) << drawoption("colz") << pid_cb_phi_corr << endc;
 }
 
 PID_PhiAngle::PID_PhiAngle(shared_ptr<expconfig::detector::PID> pid) :
@@ -30,7 +84,10 @@ PID_PhiAngle::PID_PhiAngle(shared_ptr<expconfig::detector::PID> pid) :
 
 PID_PhiAngle::~PID_PhiAngle()
 {
+}
 
+std::unique_ptr<Physics> PID_PhiAngle::GetPhysicsModule() {
+    return std_ext::make_unique<ThePhysics>(GetName(), pid_detector->GetNChannels());
 }
 
 
