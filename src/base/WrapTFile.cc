@@ -11,26 +11,26 @@ using namespace ant;
 WrapTFile::WrapTFile(const string &filename)
 {
     file = std_ext::make_unique<TFile>(filename.c_str(), "RECREATE");
-    if(!isOpen())
+    if(!IsOpen())
         throw std::runtime_error(string("Could not open TFile for writing at ")+filename);
     VLOG(5) << "Opened output file " << filename;
 }
 
-bool WrapTFile::isOpen() const
+bool WrapTFile::IsOpen() const
 {
     return file->IsOpen();
 }
 
 void WrapTFile::cd()
 {
-    if(!isOpen())
+    if(!IsOpen())
         return;
     file->cd();
 }
 
 WrapTFile::~WrapTFile()
 {
-    if(!isOpen())
+    if(!IsOpen())
         return;
 
     VLOG(5) << "Syncing output file " << file->GetName();

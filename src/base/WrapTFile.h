@@ -17,7 +17,7 @@ public:
     ///@todo is this required?? remove if possible
     TFile* operator* () { return file.get(); }
 
-    bool isOpen() const;
+    bool IsOpen() const;
     void cd();
 
     ~WrapTFile();
