@@ -10,6 +10,8 @@
 #include "TTree.h"
 #include "TIterator.h"
 #include "TList.h"
+#include "TError.h"
+#include "TDirectory.h"
 
 //std
 #include <algorithm>
@@ -29,45 +31,51 @@ CalibrationDataManager::Backend::Backend(const string& DataFileName):
 
 void CalibrationDataManager::Backend::readDataBase()
 {
-    TFile dataFile(dataFileName.c_str(),"READ");
+    const auto prev_gErrorIgnoreLevel = gErrorIgnoreLevel;
+    const auto prev_Directory = gDirectory;
+    gErrorIgnoreLevel = kError+1;
+    TFile dataFile(dataFileName.c_str(), "READ");
+    gDirectory = prev_Directory;
+    gErrorIgnoreLevel = prev_gErrorIgnoreLevel;
 
-    if ( dataFile.IsOpen() )
+    if(dataFile.IsZombie())
+        return;
+
+    TList* keys = dataFile.GetListOfKeys();
+
+    if (!keys)
     {
-        TList* keys = dataFile.GetListOfKeys();
+        cerr << "no keys  in file " << dataFileName << endl;
+    }
+    else
+    {
+        TTree* calibtree = nullptr;
+        TKey*  key  = nullptr;
+        const TCalibrationData* cdata = nullptr;
+        TIter nextk(keys);
 
-        if (!keys)
+        while ((key = (TKey*)nextk()))
         {
-            cerr << "no keys  in file " << dataFileName << endl;
-        }
-        else
-        {
-            TTree* calibtree = nullptr;
-            TKey*  key  = nullptr;
-            const TCalibrationData* cdata = nullptr;
-            TIter nextk(keys);
+            calibtree = dynamic_cast<TTree*>(key->ReadObj());
+            if ( !calibtree )
+                continue;
 
-            while ((key = (TKey*)nextk()))
+            // sanity check: is this the tree you're looking for?
+            string treename(calibtree->GetName());
+            if (treename.find(cm_treename_prefix) != 0)
+                continue;
+
+            calibtree->SetBranchAddress(cm_branchname.c_str(),&cdata);
+            for (Long64_t entry = 0; entry < calibtree->GetEntries(); ++entry)
             {
-                calibtree = dynamic_cast<TTree*>(key->ReadObj());
-                if ( !calibtree )
-                    continue;
-
-                // sanity check: is this the tree you're looking for?
-                string treename(calibtree->GetName());
-                if (treename.find(cm_treename_prefix) != 0)
-                    continue;
-
-                calibtree->SetBranchAddress(cm_branchname.c_str(),&cdata);
-                for (Long64_t entry = 0; entry < calibtree->GetEntries(); ++entry)
-                {
-                    calibtree->GetEntry(entry);
-                    Add(*cdata);
-                }
+                calibtree->GetEntry(entry);
+                Add(*cdata);
             }
         }
-
-        dataFile.Close();
     }
+
+    dataFile.Close();
+
 }
 
 void CalibrationDataManager::Backend::writeDataBase() const
