@@ -233,9 +233,9 @@ int main(int argc, char** argv) {
 
     // the real output file, create it here to get all
     // further ROOT objects into this output file
-    OutputManager om;
+    auto om = std_ext::make_unique<OutputManager>();
     if(cmd_output->isSet())
-        om.SetNewOutput(cmd_output->getValue());
+        om->SetNewOutput(cmd_output->getValue());
 
     PhysicsManager pm;
     for(const auto& classname : cmd_physicsclasses->getValue()) {
@@ -263,7 +263,8 @@ int main(int argc, char** argv) {
         char** b=nullptr;
         TRint app("ant",&a,b,nullptr,0,true);
         pm.ShowResults();
-        app.Run(kTRUE); // really important to return
+        app.Run(kTRUE); // really important to return...
+        om = nullptr;   // and to destroy the OutputManager before TRint is destroyed
     }
 
     return 0;
