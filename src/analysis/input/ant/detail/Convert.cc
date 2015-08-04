@@ -87,11 +87,20 @@ shared_ptr<TaggerHit> Converter::Convert(const TTaggerHit& taggerhit)
 Cluster Converter::Convert(const TCluster& cluster)
 {
 
-    return Cluster(
+    Cluster cl(
                 cluster.Energy,
                 cluster.Time,
                 detector_t(Detector_t::ToBitfield(cluster.GetDetectorType())),
                 cluster.CentralElement
                 );
+    for(const auto& hit : cluster.Hits) {
+       Cluster::Hit anthit;
+       anthit.Channel = hit.Channel;
+       for(const auto& datum : hit.Data) {
+           anthit.Data.emplace_back(static_cast<Channel_t::Type_t>(datum.Type), datum.Value);
+       }
+       cl.Hits.emplace_back(move(anthit));
+    }
+    return cl;
 }
 
