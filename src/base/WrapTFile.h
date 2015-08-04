@@ -83,6 +83,12 @@ public:
         return theList;
     }
 
+    template <typename T>
+    void GetObject(const std::string& name, T*& obj) {
+        file->GetObject(name.c_str(), obj);
+    }
+
+
     TList* GetListOfKeys() const
     {
         return file->GetListOfKeys();
