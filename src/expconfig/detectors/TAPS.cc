@@ -106,6 +106,7 @@ void TAPS::InitClusterElements()
 
     // check that every element was actually set
     for(auto elem : clusterelements) {
+        (void)elem; // prevent unused variable warning in Release build
         assert(elem != nullptr);
     }
 }
