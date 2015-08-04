@@ -52,7 +52,6 @@ void CalibrationDataManager::Backend::writeDataBase() const
 {
     WrapTFile file(dataFileName,
                    WrapTFile::mode_t::recreate);
-    list<TTree*> treeBuffer;
     // loop over map and write a new tree for each calibrationID
     for (auto& calibration: dataBase)
     {
@@ -66,8 +65,6 @@ void CalibrationDataManager::Backend::writeDataBase() const
             cdataptr = &cdata;
             currentTree->Fill();
         }
-
-        treeBuffer.push_back(currentTree);
     }
 }
 
