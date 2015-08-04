@@ -57,9 +57,11 @@ public:
         PTypeLists   particles;      // final state / reconstructred particles
         PTypeLists   intermediates;  // intermediate particles (if any)
 
-        ant::CandidateList  candidates;     // particle candidates (if any)
-        ant::TaggerHitList  taggerhits;     // tagger hits
-        ant::TriggerInfo    triggerinfo;
+        CandidateList  candidates;     // particle candidates (if any)
+        TaggerHitList  taggerhits;     // tagger hits
+        TriggerInfo    triggerinfo;
+        ClusterList    insaneclusters;
+
 
     public:
 
@@ -77,6 +79,10 @@ public:
 
         const TriggerInfo& TriggerInfos() const { return triggerinfo; }
               TriggerInfo& TriggerInfos()       { return triggerinfo; }
+
+        const ClusterList& InsaneClusters() const { return insaneclusters; }
+              ClusterList& InsaneClusters()       { return insaneclusters; }
+
 
               std::ostream& Print(std::ostream& stream) const;
     }; // class Data

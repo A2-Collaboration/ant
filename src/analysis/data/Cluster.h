@@ -38,4 +38,6 @@ public:
 
 };
 
+using ClusterList = std::vector<Cluster>;
+
 }

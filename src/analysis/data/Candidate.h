@@ -28,7 +28,7 @@ public:
     mev_t vetoEnergy;
     mev_t trackerEnergy;
 
-    std::vector<ant::Cluster> Clusters;
+    ClusterList Clusters;
 
     Candidate(const mev_t& _clusterEnergy,
           const radian_t& _theta,

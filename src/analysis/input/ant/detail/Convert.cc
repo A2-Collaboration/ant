@@ -31,8 +31,9 @@ Event Converter::Convert(const TEvent &event)
 {
     Event antevent;
 
-    Copy(event.Candidates,  antevent.Reconstructed().Candidates());
-    Copy(event.Tagger.Hits, antevent.Reconstructed().TaggerHits());
+    Copy(event.Candidates,     antevent.Reconstructed().Candidates());
+    Copy(event.Tagger.Hits,    antevent.Reconstructed().TaggerHits());
+    Copy(event.InsaneClusters, antevent.Reconstructed().InsaneClusters());
 
     return antevent;
 }
