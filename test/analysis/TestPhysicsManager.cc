@@ -11,6 +11,7 @@
 #include "TH1D.h"
 
 #include <iostream>
+#include <list>
 
 using namespace std;
 using namespace ant;
@@ -34,6 +35,7 @@ void dotest_write(const string& filename1, const string& filename2)
 
     WrapTFile sndFile(filename2);
     auto h2 = sndFile.CreateInside<TH1D>("b","B",10,0,10);
+    auto h3 = sndFile.CreateInside<TH1D>("c","C",10,0,10);
     h2->Fill(3);
 
     auto h1 = new TH1D("a","A",10,0,10);
@@ -48,7 +50,9 @@ void dotest_read(const string& filename1, const string& filename2)
 {
     WrapTFile masterRead(filename1,
                          WrapTFile::mode_t::read);
-
     WrapTFile sndRead(filename2,
                       WrapTFile::mode_t::read);
+
+    REQUIRE(masterRead.GetListOf<TH1D>().size() == 1);
+    REQUIRE(sndRead.GetListOf<TH1D>().size() == 2);
 }
