@@ -6,6 +6,12 @@
 class TH1;
 
 namespace ant {
+
+namespace expconfig {
+namespace detector {
+class PID;
+}}
+
 namespace calibration {
 
 class PID_Energy : public Energy
@@ -13,28 +19,37 @@ class PID_Energy : public Energy
 
 
 public:
+    PID_Energy(
+            std::shared_ptr<expconfig::detector::PID> pid,
+            std::shared_ptr<CalibrationDataManager> calmgr,
+            Calibration::Converter::ptr_t converter,
+            double defaultPedestal = 100,
+            double defaultGain = 0.014,
+            double defaultThreshold = 0.001,
+            double defaultRelativeGain = 1.0);
+
+    virtual ~PID_Energy();
+
+
     class ThePhysics : public Physics {
 
     protected:
-        TH2* ggIM = nullptr;
+        TH2* pedestals = nullptr;
 
     public:
-        ThePhysics(const std::string& name);
+         ThePhysics(const std::string& name, unsigned nChannels);
 
         virtual void ProcessEvent(const Event& event);
         virtual void Finish();
         virtual void ShowResult();
     };
 
-    PID_Energy(std::shared_ptr<CalibrationDataManager> calmgr,
-               Calibration::Converter::ptr_t converter,
-               double defaultPedestal = 100,
-               double defaultGain = 0.014,
-               double defaultThreshold = 0.001,
-               double defaultRelativeGain = 1.0);
 
-    // BaseModule interface
     virtual std::unique_ptr<Physics> GetPhysicsModule();
+
+protected:
+    std::shared_ptr<expconfig::detector::PID> pid_detector;
+
 };
 
 }} // namespace ant::calibration

@@ -83,7 +83,7 @@ public:
 
         AddCalibration<calibration::CB_Energy>(cb, calibrationManager, convert_GeSiCa_SADC );
 
-        AddCalibration<calibration::PID_Energy>(calibrationManager, convert_MultiHit16bit );
+        AddCalibration<calibration::PID_Energy>(pid, calibrationManager, convert_MultiHit16bit );
 
         AddCalibration<calibration::TAPS_Energy>(calibrationManager, convert_MultiHit16bit );
 

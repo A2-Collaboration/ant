@@ -16,7 +16,7 @@ PID_PhiAngle::ThePhysics::ThePhysics(const string& name, unsigned nChannels) :
     const BinSettings pid_channels(nChannels);
     const BinSettings phibins(1000, -M_PI, 3*M_PI);
 
-    pid_cb_phi_corr = HistFac.makeTH2D("CB Phi", "IM [MeV]", "#",
+    pid_cb_phi_corr = HistFac.makeTH2D("CB/PID Cluster/Channel Correlation", "CB Cluster Phi", "#",
                                        phibins, pid_channels, "pid_cb_phi_corr");
 }
 
