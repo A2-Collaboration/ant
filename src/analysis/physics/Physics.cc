@@ -2,6 +2,7 @@
 #include "base/Logger.h"
 
 #include "tree/TSlowControl.h"
+#include "tree/TAntHeader.h"
 
 #include "TDirectory.h"
 
@@ -74,8 +75,10 @@ void PhysicsManager::ReadFrom(list< unique_ptr<input::DataReader> > readers,
     start = chrono::system_clock::now();
     long long nEvents = 0;
 
-    TID firstEventID;
-    TID lastEventID;
+    TAntHeader* header = new TAntHeader();
+
+    TID& firstEventID = header->FirstID;
+    TID& lastEventID  = header->LastID;
     while(true) {
         if(!running)
             break;
@@ -111,9 +114,6 @@ void PhysicsManager::ReadFrom(list< unique_ptr<input::DataReader> > readers,
 
         nEvents++;
     }
-
-    gDirectory->WriteObject(&firstEventID, "FirstEventID");
-    gDirectory->WriteObject(&lastEventID,  "LastEventID");
 
     end = chrono::system_clock::now();
     chrono::duration<double> elapsed_seconds = end-start;

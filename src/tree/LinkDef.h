@@ -30,5 +30,7 @@
 #pragma link C++ class ant::TUnpackerMessage+;
 #pragma link C++ class ant::TCalibrationData+;
 
+#pragma link C++ class ant::TAntHeader+;
+
 #endif // __CINT__
 

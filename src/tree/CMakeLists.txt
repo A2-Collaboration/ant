@@ -12,12 +12,14 @@ set(SRCS
   TTagger.h
   TTaggerHit.h
   TCalibrationData.h
+  TAntHeader.h
   )
 
 set(SRCS_EXTRA
   MemoryPool.cc
   UnpackerReader.cc
   UnpackerWriter.cc
+  TAntHeader.cc
   )
 
 set(ROOT_DICTIONARY "${CMAKE_CURRENT_BINARY_DIR}/G__tree.cc")
