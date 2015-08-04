@@ -78,6 +78,13 @@ WrapTFile::~WrapTFile()
     if(!IsOpen())
         return;
 
+    if (mode == mode_t::read)
+    {
+        file->Close();
+        LOG(INFO) << "Closed file " << file->GetName();
+        return;
+    }
+
     VLOG(5) << "Syncing output file " << file->GetName();
     file->Write();
     file->Close();
