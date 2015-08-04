@@ -9,6 +9,11 @@
 #include <stdexcept>
 #include <string>
 
+
+#include "TH1.h"
+#include "TH2.h"
+#include "TH3.h"
+
 using namespace std;
 using namespace ant;
 
@@ -76,6 +81,33 @@ void WrapTFile::cd()
     if(!isOpen())
         return;
     file->cd();
+}
+
+std::shared_ptr<TH1> WrapTFile::GetSharedTH1(const string& name)
+{
+    TH1* hist = nullptr;
+    GetObject(name, hist);
+    if(hist)
+        hist->SetDirectory(nullptr);
+    return std::shared_ptr<TH1>(hist);
+}
+
+std::shared_ptr<TH2> WrapTFile::GetSharedTH2(const string& name)
+{
+    TH2* hist = nullptr;
+    GetObject(name, hist);
+    if(hist)
+        hist->SetDirectory(nullptr);
+    return std::shared_ptr<TH2>(hist);
+}
+
+std::shared_ptr<TH3> WrapTFile::GetSharedTH3(const string& name)
+{
+    TH3* hist = nullptr;
+    GetObject(name, hist);
+    if(hist)
+        hist->SetDirectory(nullptr);
+    return std::shared_ptr<TH3>(hist);
 }
 
 WrapTFile::~WrapTFile()

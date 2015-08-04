@@ -12,7 +12,9 @@
 #include "TCollection.h"
 #include "TKey.h"
 
-//class TList;
+class TH1;
+class TH2;
+class TH3;
 
 namespace ant {
 
@@ -87,6 +89,10 @@ public:
     void GetObject(const std::string& name, T*& obj) {
         file->GetObject(name.c_str(), obj);
     }
+
+    std::shared_ptr<TH1> GetSharedTH1(const std::string& name);
+    std::shared_ptr<TH2> GetSharedTH2(const std::string& name);
+    std::shared_ptr<TH3> GetSharedTH3(const std::string& name);
 
 
     TList* GetListOfKeys() const
