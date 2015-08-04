@@ -3,6 +3,7 @@
 //ant
 #include "base/WrapTFile.h"
 #include "base/interval.h"
+#include "base/Logger.h"
 
 //ROOT
 #include "TKey.h"
@@ -31,68 +32,64 @@ CalibrationDataManager::Backend::Backend(const string& DataFileName):
 
 void CalibrationDataManager::Backend::readDataBase()
 {
-    const auto prev_gErrorIgnoreLevel = gErrorIgnoreLevel;
-    const auto prev_Directory = gDirectory;
-    gErrorIgnoreLevel = kError+1;
-    TFile dataFile(dataFileName.c_str(), "READ");
-    gDirectory = prev_Directory;
-    gErrorIgnoreLevel = prev_gErrorIgnoreLevel;
+    try {
+        WrapTFile dataFile(dataFileName,
+                           WrapTFile::mode_t::read);
 
-    if(dataFile.IsZombie())
-        return;
 
-    TList* keys = dataFile.GetListOfKeys();
+        TList* keys = dataFile.GetListOfKeys();
 
-    if (!keys)
-    {
-        cerr << "no keys  in file " << dataFileName << endl;
-    }
-    else
-    {
-        TTree* calibtree = nullptr;
-        TKey*  key  = nullptr;
-        const TCalibrationData* cdata = nullptr;
-        TIter nextk(keys);
-
-        while ((key = (TKey*)nextk()))
+        if (keys)
         {
-            calibtree = dynamic_cast<TTree*>(key->ReadObj());
-            if ( !calibtree )
-                continue;
+            TTree* calibtree = nullptr;
+            TKey*  key  = nullptr;
+            const TCalibrationData* cdata = nullptr;
+            TIter nextk(keys);
 
-            // sanity check: is this the tree you're looking for?
-            string treename(calibtree->GetName());
-            if (treename.find(cm_treename_prefix) != 0)
-                continue;
-
-            calibtree->SetBranchAddress(cm_branchname.c_str(),&cdata);
-            for (Long64_t entry = 0; entry < calibtree->GetEntries(); ++entry)
+            while ((key = (TKey*)nextk()))
             {
-                calibtree->GetEntry(entry);
-                Add(*cdata);
+                calibtree = dynamic_cast<TTree*>(key->ReadObj());
+                if ( !calibtree )
+                    continue;
+
+                // sanity check: is this the tree you're looking for?
+                string treename(calibtree->GetName());
+                if (treename.find(cm_treename_prefix) != 0)
+                    continue;
+
+                calibtree->SetBranchAddress(cm_branchname.c_str(),&cdata);
+                for (Long64_t entry = 0; entry < calibtree->GetEntries(); ++entry)
+                {
+                    calibtree->GetEntry(entry);
+                    Add(*cdata);
+                }
             }
         }
+    } catch (...) {
+        VLOG(3) << "[CalibrationDataManager] Cannot open " << dataFileName << ": Starting with empty database.";
     }
-
-    dataFile.Close();
 
 }
 
 void CalibrationDataManager::Backend::writeDataBase() const
 {
-    WrapTFile file(dataFileName);
+    WrapTFile file(dataFileName,
+                   WrapTFile::mode_t::recreate);
     list<TTree*> treeBuffer;
     // loop over map and write a new tree for each calibrationID
     for (auto& calibration: dataBase)
     {
         string tname = cm_treename_prefix + calibration.first;
-        TTree* currentTree = new TTree(tname.c_str(),tname.c_str());
+
+        TTree* currentTree = file.CreateInside<TTree>(tname.c_str(),tname.c_str());
         const TCalibrationData* cdataptr = nullptr;
         currentTree->Branch(cm_branchname.c_str(),&cdataptr);
+
         for( auto& cdata: calibration.second){
             cdataptr = &cdata;
             currentTree->Fill();
         }
+
         treeBuffer.push_back(currentTree);
     }
 }

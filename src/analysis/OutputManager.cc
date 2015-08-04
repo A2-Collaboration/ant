@@ -26,7 +26,7 @@ void OutputManager::SetNewOutput(const string &filename)
 {
 
     try {
-        auto f = std_ext::make_unique<WrapTFile>(filename);
+        auto f = std_ext::make_unique<WrapTFile>(filename,WrapTFile::mode_t::recreate,true);
         current_dir = **f;
         files.emplace_back( std::move(f) );
         VLOG(5) << "Current root output directory is " << current_dir->GetPath();

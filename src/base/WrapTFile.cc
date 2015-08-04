@@ -4,10 +4,6 @@
 #include "std_ext.h"
 #include "Logger.h"
 
-//ROOT
-#include "TFile.h"
-#include "TDirectory.h"
-#include "TError.h"
 
 //std
 #include <stdexcept>
@@ -28,7 +24,6 @@ WrapTFile::WrapTFile(const std::string& filename, mode_t access_mode, bool chang
     case mode_t::recreate:
         root_mode = "RECREATE";
         break;
-        /*     TODO
     case mode_t::create:
         root_mode = "CREATE";
         break;
@@ -38,7 +33,6 @@ WrapTFile::WrapTFile(const std::string& filename, mode_t access_mode, bool chang
     case mode_t::read:
         root_mode = "READ";
         break;
-        */
     default:
         root_mode = "RECREATE";
         break;
@@ -56,26 +50,37 @@ WrapTFile::WrapTFile(const std::string& filename, mode_t access_mode, bool chang
     else
         file = std_ext::make_unique<TFile>(filename.c_str(), root_mode.c_str());
 
-    if(!IsOpen())
-        throw std::runtime_error(string("Could not open TFile for writing at ")+filename);
-    VLOG(5) << "Opened output file " << filename;
+    if(!isOpen() || isZombie() )
+    {
+        if ( mode == mode_t::read )
+            throw runtime_error(std_ext::formatter() << "Could not open " << filename << " for reading.");
+        else
+            throw std::runtime_error(string("Could not open TFile for writing at ")+filename);
+    }
+
+    VLOG(5) << "Opened file " << filename << " in " << root_mode << "-mode.";
 }
 
-bool WrapTFile::IsOpen() const
+bool WrapTFile::isOpen() const
 {
     return file->IsOpen();
 }
 
+bool WrapTFile::isZombie() const
+{
+    return file->IsZombie();
+}
+
 void WrapTFile::cd()
 {
-    if(!IsOpen())
+    if(!isOpen())
         return;
     file->cd();
 }
 
 WrapTFile::~WrapTFile()
 {
-    if(!IsOpen())
+    if(!isOpen())
         return;
 
     if (mode == mode_t::read)

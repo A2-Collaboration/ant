@@ -2,8 +2,14 @@
 
 #include <memory>
 #include <string>
+#include <list>
 
-class TFile;
+//ROOT
+#include "TFile.h"
+#include "TDirectory.h"
+#include "TError.h"
+
+class TList;
 
 namespace ant {
 
@@ -23,16 +29,38 @@ protected:
     mode_t mode;
     bool changeDirectory;
 
+    bool isOpen() const;
+    bool isZombie() const;
+
 
 public:
 
-    WrapTFile(const std::string& filename, mode_t access_mode = mode_t::recreate, bool change_gDirectory = true );
-
+    WrapTFile(const std::string& filename, mode_t access_mode = mode_t::recreate, bool change_gDirectory = false );
     ///@todo is this required?? remove if possible
     TFile* operator* () { return file.get(); }
 
-    bool IsOpen() const;
     void cd();
+
+    template<class T, typename... Args>
+    T* CreateInside(Args&&... args)
+    {
+        const auto prev_Directory = gDirectory;
+        cd();
+        T* object = new T(std::forward<Args>(args)...);
+        gDirectory = prev_Directory;
+
+        return object;
+    }
+
+    template<class T>
+    std::list<T> GetListOf() const{
+        return {};
+    }
+
+    TList* GetListOfKeys() const
+    {
+        return file->GetListOfKeys();
+    }
 
     ~WrapTFile();
     WrapTFile(const WrapTFile&) = delete;

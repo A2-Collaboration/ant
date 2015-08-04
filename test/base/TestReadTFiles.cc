@@ -51,9 +51,9 @@ void generateInputFile(const string& filename) {
 
     // write some stuff to a ROOT tree
     ant::WrapTFile file(filename);
+    TTree* treeHeaderInfo = file.CreateInside<TTree>("treeHeaderInfo", "treeHeaderInfo");
+    ant::THeaderInfo* HeaderInfo = file.CreateInside<ant::THeaderInfo>();
 
-    TTree* treeHeaderInfo = new TTree("treeHeaderInfo", "treeHeaderInfo");
-    ant::THeaderInfo* HeaderInfo = new ant::THeaderInfo();
     treeHeaderInfo->Branch("THeaderInfo", "ant::THeaderInfo", &HeaderInfo);
 
     while(auto item = unpacker->NextItem()) {
