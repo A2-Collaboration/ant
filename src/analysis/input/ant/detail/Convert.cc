@@ -35,6 +35,8 @@ Event Converter::Convert(const TEvent &event)
     Copy(event.Tagger.Hits,    antevent.Reconstructed().TaggerHits());
     Copy(event.InsaneClusters, antevent.Reconstructed().InsaneClusters());
 
+    antevent.Reconstructed().TriggerInfos().EventID() = event.ID;
+
     return antevent;
 }
 
