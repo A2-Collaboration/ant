@@ -12,6 +12,10 @@ class TAntHeader: public TNamed {
 public:
     ant::TID FirstID;
     ant::TID LastID;
+    std::string SetupName;
+    std::string CmdLine;
+    std::string WorkingDir;
+    std::string GitInfo;
 
     TAntHeader(const std::string& title="");
 

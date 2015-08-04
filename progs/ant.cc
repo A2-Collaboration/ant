@@ -5,11 +5,6 @@
 #include "analysis/input/goat/GoatReader.h"
 #include "analysis/input/pluto/PlutoReader.h"
 
-#include "analysis/physics/Physics.h"
-#include "analysis/physics/omega/omega.h"
-#include "analysis/physics/common/DataOverview.h"
-#include "analysis/physics/common/CandidatesAnalysis.h"
-
 #include "expconfig/ExpConfig.h"
 
 #include "unpacker/Unpacker.h"
@@ -20,8 +15,7 @@
 #include "tree/UnpackerReader.h"
 #include "tree/UnpackerWriter.h"
 #include "tree/THeaderInfo.h"
-#include "tree/TDetectorRead.h"
-#include "tree/TEvent.h"
+#include "tree/TAntHeader.h"
 
 #include "base/std_ext.h"
 #include "base/WrapTFile.h"
@@ -30,9 +24,6 @@
 #include "base/ReadTFiles.h"
 
 #include "TRint.h"
-#include "TClass.h"
-#include "TTree.h"
-#include "TFile.h"
 
 #include <sstream>
 #include <string>
@@ -43,8 +34,6 @@
 
 using namespace std;
 using namespace ant;
-using namespace ant::analysis;
-
 
 bool running = true;
 void myCrashHandler(int sig);
@@ -57,11 +46,11 @@ int main(int argc, char** argv) {
 
     TCLAP::CmdLine cmd("ant", ' ', "0.1");
     auto cmd_verbose = cmd.add<TCLAP::ValueArg<int>>("v","verbose","Verbosity level (0..9)", false, 0,"level");
-    auto cmd_input  = cmd.add<TCLAP::MultiArg<string>>("i","input","Input files",true,"inputfile");
+    auto cmd_input  = cmd.add<TCLAP::MultiArg<string>>("i","input","Input files",true,"filename");
     auto cmd_setup  = cmd.add<TCLAP::ValueArg<string>>("s","setup","Choose setup manually by name",false,"","setupname");
     auto cmd_maxevents = cmd.add<TCLAP::ValueArg<int>>("m","maxevents","Process only max events",false, 0, "maxevents");
     auto cmd_physicsclasses  = cmd.add<TCLAP::MultiArg<string>>("p","physics","Physics class to run",false,"physics");
-    auto cmd_output = cmd.add<TCLAP::ValueArg<string>>("o","output","Output file",false,"","outputfile");
+    auto cmd_output = cmd.add<TCLAP::ValueArg<string>>("o","output","Output file",false,"","filename");
     auto cmd_batchmode = cmd.add<TCLAP::SwitchArg>("b","batch","Run in batch mode (no ROOT shell afterwards)",false);
 
     auto cmd_calibrations  = cmd.add<TCLAP::MultiArg<string>>("c","calibration","Calibration to run",false,"calibration");
@@ -256,22 +245,24 @@ int main(int argc, char** argv) {
         pm.AddPhysics(calibration->GetPhysicsModule());
     }
 
+    // create some variables for running
     long long maxevents = cmd_maxevents->isSet()
             ? cmd_maxevents->getValue()
             :  numeric_limits<long long>::max();
+    TAntHeader* header = new TAntHeader();
+
     // this method does the hard work...
-    pm.ReadFrom(move(readers), maxevents, running);
+    pm.ReadFrom(move(readers), maxevents, running, header);
 
     // add some more info about the current state
     if(auto setup = ExpConfig::Setup::GetLastFound()) {
-        string setupname = setup->GetName();
-        gDirectory->WriteObject(&setupname, "SetupName");
+        header->SetupName = setup->GetName();
     }
-    string gitinfo = exec("git describe --always --dirty");
-    if(!gitinfo.empty()) {
-        gDirectory->WriteObject(&gitinfo, "GitInfo");
-        VLOG(5) << "Added git info: " << gitinfo;
+    header->GitInfo = exec("git describe --always --dirty");
+    if(!header->GitInfo.empty()) {
+        VLOG(5) << "Added git info: " << header->GitInfo;
     }
+    header->WorkingDir = getenv("PWD");
 
     if(!cmd_batchmode->isSet()) {
         if(masterFile != nullptr)

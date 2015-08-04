@@ -16,6 +16,8 @@ class TDirectory;
 
 namespace ant {
 
+class TAntHeader;
+
 class Physics {
 private:
     std::string name_;
@@ -65,7 +67,8 @@ public:
 
     void ReadFrom(std::list< std::unique_ptr<input::DataReader> > readers,
                   long long maxevents,
-                  bool& running
+                  bool& running,
+                  TAntHeader* header
                   );
 
 

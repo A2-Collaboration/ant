@@ -40,9 +40,11 @@ PhysicsManager::PhysicsManager() : physics()
 
 }
 
-void PhysicsManager::ReadFrom(list< unique_ptr<input::DataReader> > readers,
+void PhysicsManager::ReadFrom(
+        list< unique_ptr<input::DataReader> > readers,
         long long maxevents,
-        bool& running)
+        bool& running,
+        TAntHeader* header)
 {
     if(readers.empty())
         return;
@@ -74,8 +76,6 @@ void PhysicsManager::ReadFrom(list< unique_ptr<input::DataReader> > readers,
     chrono::time_point<std::chrono::system_clock> start, end;
     start = chrono::system_clock::now();
     long long nEvents = 0;
-
-    TAntHeader* header = new TAntHeader();
 
     TID& firstEventID = header->FirstID;
     TID& lastEventID  = header->LastID;
