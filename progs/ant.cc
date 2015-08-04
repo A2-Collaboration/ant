@@ -4,7 +4,6 @@
 #include "analysis/input/ant/AntReader.h"
 #include "analysis/input/goat/GoatReader.h"
 #include "analysis/input/pluto/PlutoReader.h"
-#include "analysis/OutputManager.h"
 
 #include "analysis/physics/Physics.h"
 #include "analysis/physics/omega/omega.h"
@@ -25,6 +24,7 @@
 #include "tree/TEvent.h"
 
 #include "base/std_ext.h"
+#include "base/WrapTFile.h"
 #include "base/Logger.h"
 #include "base/CmdLine.h"
 #include "base/ReadTFiles.h"
@@ -42,7 +42,6 @@
 
 
 using namespace std;
-using namespace ant::output;
 using namespace ant;
 using namespace ant::analysis;
 
@@ -234,10 +233,11 @@ int main(int argc, char** argv) {
 
     // the real output file, create it here to get all
     // further ROOT objects into this output file
-    unique_ptr<OutputManager> om;
+    unique_ptr<WrapTFile> masterFile;
     if(cmd_output->isSet()) {
-        om = std_ext::make_unique<OutputManager>();
-        om->SetNewOutput(cmd_output->getValue());
+        masterFile = std_ext::make_unique<WrapTFile>(cmd_output->getValue(),
+                                                    WrapTFile::mode_t::recreate,
+                                                     true); // cd into masterFile upon creation
     }
 
     // add the physics/calibrationphysics modules
@@ -274,14 +274,14 @@ int main(int argc, char** argv) {
     }
 
     if(!cmd_batchmode->isSet()) {
-        if(om != nullptr)
+        if(masterFile != nullptr)
             LOG(INFO) << "Stopped running, but close ROOT properly to write data to disk.";
         int a=0;
         char** b=nullptr;
         TRint app("ant",&a,b,nullptr,0,true);
         pm.ShowResults();
         app.Run(kTRUE); // really important to return...
-        om = nullptr;   // and to destroy the OutputManager before TRint is destroyed
+        masterFile = nullptr;   // and to destroy the OutputManager before TRint is destroyed
     }
 
     return 0;
