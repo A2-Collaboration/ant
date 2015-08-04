@@ -307,7 +307,6 @@ void Reconstruct::BuildClusters(
                             detector.Detector->GetPosition(hit->Channel),
                             clusterhit.Energy,
                             clusterhit.Time,
-                            clusterhit.RawADC,
                             detector.Detector->Type,
                             hit->Channel,
                             vector<TClusterHit>{*hit}

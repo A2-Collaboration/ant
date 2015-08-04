@@ -26,7 +26,6 @@ struct AdaptorTClusterHit {
     std::unique_ptr<TClusterHit> Hit;
     double Energy;
     double Time;
-    double RawADC;
     void SetFields(const TDetectorReadHit* readhit);
     AdaptorTClusterHit(const TDetectorReadHit* readhit,
                        const std::vector<TClusterHitDatum>&& data);

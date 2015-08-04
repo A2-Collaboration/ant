@@ -91,8 +91,7 @@ Cluster Converter::Convert(const TCluster& cluster)
                 cluster.Energy,
                 cluster.Time,
                 detector_t(Detector_t::ToBitfield(cluster.GetDetectorType())),
-                cluster.CentralElement,
-                cluster.RawADC
+                cluster.CentralElement
                 );
 }
 
