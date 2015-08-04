@@ -10,9 +10,9 @@
 #include <string>
 
 
-#include "TH1.h"
-#include "TH2.h"
-#include "TH3.h"
+#include "TH1D.h"
+#include "TH2D.h"
+#include "TH3D.h"
 
 using namespace std;
 using namespace ant;
@@ -83,31 +83,31 @@ void WrapTFile::cd()
     file->cd();
 }
 
-std::shared_ptr<TH1> WrapTFile::GetSharedTH1(const string& name)
+std::shared_ptr<TH1D> WrapTFile::GetSharedTH1(const string& name)
 {
-    TH1* hist = nullptr;
+    TH1D* hist = nullptr;
     GetObject(name, hist);
     if(hist)
         hist->SetDirectory(nullptr);
-    return std::shared_ptr<TH1>(hist);
+    return std::shared_ptr<TH1D>(hist);
 }
 
-std::shared_ptr<TH2> WrapTFile::GetSharedTH2(const string& name)
+std::shared_ptr<TH2D> WrapTFile::GetSharedTH2(const string& name)
 {
-    TH2* hist = nullptr;
+    TH2D* hist = nullptr;
     GetObject(name, hist);
     if(hist)
         hist->SetDirectory(nullptr);
-    return std::shared_ptr<TH2>(hist);
+    return std::shared_ptr<TH2D>(hist);
 }
 
-std::shared_ptr<TH3> WrapTFile::GetSharedTH3(const string& name)
+std::shared_ptr<TH3D> WrapTFile::GetSharedTH3(const string& name)
 {
-    TH3* hist = nullptr;
+    TH3D* hist = nullptr;
     GetObject(name, hist);
     if(hist)
         hist->SetDirectory(nullptr);
-    return std::shared_ptr<TH3>(hist);
+    return std::shared_ptr<TH3D>(hist);
 }
 
 WrapTFile::~WrapTFile()
