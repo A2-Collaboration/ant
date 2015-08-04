@@ -27,7 +27,7 @@ void dotest() {
           );
 
     event->Candidates.back().Clusters.push_back(
-          ant::TCluster(TVector3(25,0,0), 270, -260, ant::Detector_t::Type_t::CB,0)
+          ant::TCluster(TVector3(25,0,0), 270, -260, 7, ant::Detector_t::Type_t::CB,0)
           );
 
 
@@ -46,7 +46,7 @@ void dotest() {
           );
 
     event->Candidates.back().Clusters.push_back(
-          ant::TCluster(TVector3(10,0,0), 5, -260, ant::Detector_t::Type_t::PID,0)
+          ant::TCluster(TVector3(10,0,0), 5, -260, 7, ant::Detector_t::Type_t::PID,0)
           );
 
     event->Candidates.back().Clusters.back().Hits.push_back(
@@ -58,10 +58,10 @@ void dotest() {
           ant::TCandidate(300,0.5,2,3)
           );
     event->Candidates.back().Clusters.push_back(
-          ant::TCluster(TVector3(25,10,0),300, -160, ant::Detector_t::Type_t::TAPS,0)
+          ant::TCluster(TVector3(25,10,0),300, -160,7, ant::Detector_t::Type_t::TAPS,0)
           );
     event->Candidates.back().Clusters.push_back(
-          ant::TCluster(TVector3(10,1,0),5,-150, ant::Detector_t::Type_t::TAPSVeto,0)
+          ant::TCluster(TVector3(10,1,0),5,-150,9, ant::Detector_t::Type_t::TAPSVeto,0)
           );
 
     cout << *event << endl;

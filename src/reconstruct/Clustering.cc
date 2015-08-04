@@ -17,7 +17,8 @@ AdaptorTClusterHit::AdaptorTClusterHit(const TDetectorReadHit* readhit,
                                        const vector<TClusterHitDatum>&& data) :
     Hit(std_ext::make_unique<TClusterHit>(readhit->Channel, data)),
     Energy(numeric_limits<double>::quiet_NaN()), // use nan as unset indicator
-    Time(numeric_limits<double>::quiet_NaN())
+    Time(numeric_limits<double>::quiet_NaN()),
+    RawADC(numeric_limits<double>::quiet_NaN())
 {
     SetFields(readhit);
 }
@@ -27,6 +28,8 @@ void AdaptorTClusterHit::SetFields(const TDetectorReadHit *readhit) {
         Energy = readhit->Values[0];
     if(std::isnan(Time) && readhit->GetChannelType() == Channel_t::Type_t::Timing)
         Time = readhit->Values[0];
+    if(std::isnan(RawADC) && readhit->GetChannelType() == Channel_t::Type_t::Pedestal)
+        RawADC = readhit->Values[0];
 }
 
 Clustering::Clustering(const shared_ptr<ExpConfig::Reconstruct>& config)
@@ -76,8 +79,9 @@ void Clustering::Build(
         TVector3 weightedPosition(0,0,0);
         double weightedSum = 0;
 
+        double   cluster_maxenergy   = 0; // search for crystal with highest energy
         double   cluster_time        = numeric_limits<double>::quiet_NaN();
-        double   cluster_maxenergy   = 0;
+        double   cluster_rawadc      = numeric_limits<double>::quiet_NaN();
         unsigned cluster_max_channel = 0;
 
         std::vector<TClusterHit> clusterhits;
@@ -91,6 +95,7 @@ void Clustering::Build(
             clusterhits.emplace_back(*(crystal.Hit->Hit));
             if(cluster_maxenergy<=crystal.Energy) {
                 cluster_time = crystal.Hit->Time;
+                cluster_rawadc = crystal.Hit->RawADC;
                 cluster_maxenergy = crystal.Energy;
                 cluster_max_channel = crystal.Element->Channel;
             }
@@ -100,6 +105,7 @@ void Clustering::Build(
                     weightedPosition,
                     cluster_energy,
                     cluster_time,
+                    cluster_rawadc,
                     clusterdetector->Type,
                     cluster_max_channel,
                     clusterhits
