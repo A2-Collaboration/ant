@@ -6,11 +6,7 @@
 #include "base/Logger.h"
 
 //ROOT
-#include "TKey.h"
-#include "TFile.h"
 #include "TTree.h"
-#include "TIterator.h"
-#include "TList.h"
 #include "TError.h"
 #include "TDirectory.h"
 
@@ -36,33 +32,14 @@ void CalibrationDataManager::Backend::readDataBase()
         WrapTFile dataFile(dataFileName,
                            WrapTFile::mode_t::read);
 
-
-        TList* keys = dataFile.GetListOfKeys();
-
-        if (keys)
+        for( TTree* calibtree: dataFile.GetListOf<TTree>())
         {
-            TTree* calibtree = nullptr;
-            TKey*  key  = nullptr;
             const TCalibrationData* cdata = nullptr;
-            TIter nextk(keys);
-
-            while ((key = (TKey*)nextk()))
+            calibtree->SetBranchAddress(cm_branchname.c_str(),&cdata);
+            for (Long64_t entry = 0; entry < calibtree->GetEntries(); ++entry)
             {
-                calibtree = dynamic_cast<TTree*>(key->ReadObj());
-                if ( !calibtree )
-                    continue;
-
-                // sanity check: is this the tree you're looking for?
-                string treename(calibtree->GetName());
-                if (treename.find(cm_treename_prefix) != 0)
-                    continue;
-
-                calibtree->SetBranchAddress(cm_branchname.c_str(),&cdata);
-                for (Long64_t entry = 0; entry < calibtree->GetEntries(); ++entry)
-                {
-                    calibtree->GetEntry(entry);
-                    Add(*cdata);
-                }
+                calibtree->GetEntry(entry);
+                Add(*cdata);
             }
         }
     } catch (...) {

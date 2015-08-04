@@ -8,8 +8,11 @@
 #include "TFile.h"
 #include "TDirectory.h"
 #include "TError.h"
+#include "TList.h"
+#include "TCollection.h"
+#include "TKey.h"
 
-class TList;
+//class TList;
 
 namespace ant {
 
@@ -52,9 +55,32 @@ public:
         return object;
     }
 
+    /**
+     * @brief GetListOf Generate a list with all Object in File of provided Type
+     * @return list with pointers to object;
+     */
     template<class T>
-    std::list<T> GetListOf() const{
-        return {};
+    std::list<T*> GetListOf() const
+    {
+        std::list<T*> theList;
+
+        TList* keys = GetListOfKeys();
+
+        if(!keys)
+            return {};
+
+        T* objectPtr = nullptr;
+        TKey* key = nullptr;
+        TIter nextk(keys);
+
+        while((key = (TKey*)nextk()))
+        {
+            objectPtr = dynamic_cast<T*>(key->ReadObj());
+            if ( !objectPtr )
+                continue;
+            theList.push_back(objectPtr);
+        }
+        return theList;
     }
 
     TList* GetListOfKeys() const
