@@ -281,7 +281,7 @@ int main(int argc, char** argv) {
         TRint app("ant",&a,b,nullptr,0,true);
         pm.ShowResults();
         app.Run(kTRUE); // really important to return...
-        masterFile = nullptr;   // and to destroy the OutputManager before TRint is destroyed
+        masterFile = nullptr;   // and to destroy the master WrapTFile before TRint is destroyed
     }
 
     return 0;

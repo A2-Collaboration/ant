@@ -16,8 +16,6 @@ set(ANALYSIS_BASE
   A2GeoAcceptance.cc
   input/DataReader.h
   input/DataReader.cc
-  #OutputManager.h
-  #OutputManager.cc
   )
 
 set(ANALYSIS_PLOT
