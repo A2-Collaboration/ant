@@ -12,7 +12,7 @@ class FitGausPol3: public FitFunction {
 protected:
     TF1* signal;
     TF1* bg;
-    TF1* combinded;
+    TF1* combined;
 
     void sync();
 

@@ -11,8 +11,8 @@ using namespace ant::calibration;
 
 void ant::calibration::gui::FitGausPol3::sync()
 {
-    signal->SetParameters(&(combinded->GetParameters()[0]));
-    bg->SetParameters(    &(combinded->GetParameters()[3]));
+    signal->SetParameters(&(combined->GetParameters()[0]));
+    bg->SetParameters(    &(combined->GetParameters()[3]));
     setRange(signal,GetRange());
     setRange(bg,GetRange());
 }
@@ -25,73 +25,73 @@ ant::calibration::gui::FitGausPol3::FitGausPol3()
     bg = functions::pol<3>::getTF1();
     bg->SetLineColor(kBlue);
 
-    combinded = functions::GausPol<3>::getTF1();
-    combinded->SetLineColor(kGreen);
+    combined = functions::GausPol<3>::getTF1();
+    combined->SetLineColor(kGreen);
 
     SetRange(ant::interval<double>(100,250));
-    combinded->SetParName(0,"A");
-    combinded->SetParName(1,"x_{0}");
-    combinded->SetParName(2,"#sigma");
-    combinded->SetParName(3,"p_{0}");
-    combinded->SetParName(4,"p_{1}");
-    combinded->SetParName(5,"p_{2}");
-    combinded->SetParName(6,"p_{3}");
+    combined->SetParName(0,"A");
+    combined->SetParName(1,"x_{0}");
+    combined->SetParName(2,"#sigma");
+    combined->SetParName(3,"p_{0}");
+    combined->SetParName(4,"p_{1}");
+    combined->SetParName(5,"p_{2}");
+    combined->SetParName(6,"p_{3}");
 
-    Addknob<KnobsTF1::ParameterKnob>(combinded->GetParName(0), combinded, 0, GUIElementDescription::GUI_Type::slider_horizontal);
-    Addknob<KnobsTF1::ParameterKnob>(combinded->GetParName(1), combinded, 1, GUIElementDescription::GUI_Type::slider_vertical);
-    Addknob<KnobsTF1::ReferenceParameterKnob>(combinded->GetParName(2), combinded, 2, 1, GUIElementDescription::GUI_Type::slider_vertical);
-    Addknob<KnobsTF1::RangeKnob>("min",combinded,KnobsTF1::RangeKnob::RangeEndType::lower);
-    Addknob<KnobsTF1::RangeKnob>("max",combinded,KnobsTF1::RangeKnob::RangeEndType::upper);
+    Addknob<KnobsTF1::ParameterKnob>(combined->GetParName(0), combined, 0, GUIElementDescription::GUI_Type::slider_horizontal);
+    Addknob<KnobsTF1::ParameterKnob>(combined->GetParName(1), combined, 1, GUIElementDescription::GUI_Type::slider_vertical);
+    Addknob<KnobsTF1::ReferenceParameterKnob>(combined->GetParName(2), combined, 2, 1, GUIElementDescription::GUI_Type::slider_vertical);
+    Addknob<KnobsTF1::RangeKnob>("min",combined,KnobsTF1::RangeKnob::RangeEndType::lower);
+    Addknob<KnobsTF1::RangeKnob>("max",combined,KnobsTF1::RangeKnob::RangeEndType::upper);
 }
 
 ant::calibration::gui::FitGausPol3::~FitGausPol3()
 {
     delete signal;
     delete bg;
-    delete combinded;
+    delete combined;
 }
 
 void ant::calibration::gui::FitGausPol3::Draw()
 {
     signal->Draw("same");
     bg->Draw("same");
-    combinded->Draw("same");
+    combined->Draw("same");
 }
 
 void ant::calibration::gui::FitGausPol3::Fit(TH1* hist)
 {
-    hist->Fit(combinded, "RBQN");
+    hist->Fit(combined, "RBQN");
     sync();
 }
 
 void ant::calibration::gui::FitGausPol3::SetDefaults(TH1 *hist)
 {
     // defaults for taps baf2
-    combinded->SetParameter(0, hist->GetMaximum());
-    combinded->SetParameter(1, 135);
-    combinded->SetParameter(2, 8);
-    combinded->SetParameter(3, 1);
-    combinded->SetParameter(4, 1);
-    combinded->SetParameter(5, 1);
-    combinded->SetParameter(6, 0.1);
+    combined->SetParameter(0, hist->GetMaximum());
+    combined->SetParameter(1, 135);
+    combined->SetParameter(2, 8);
+    combined->SetParameter(3, 1);
+    combined->SetParameter(4, 1);
+    combined->SetParameter(5, 1);
+    combined->SetParameter(6, 0.1);
 
-    combinded->SetParLimits(1, 115, 140);
-    combinded->SetParLimits(2, 5, 50);
-    combinded->FixParameter(6, 0);
+    combined->SetParLimits(1, 115, 140);
+    combined->SetParLimits(2, 5, 50);
+    combined->FixParameter(6, 0);
 
     sync();
 }
 
 void ant::calibration::gui::FitGausPol3::SetRange(ant::interval<double> i)
 {
-    setRange(combinded, i);
+    setRange(combined, i);
     setRange(signal, i);
     setRange(bg, i);
 }
 
 ant::interval<double> ant::calibration::gui::FitGausPol3::GetRange() const
 {
-    return getRange(combinded);
+    return getRange(combined);
 }
 
 void ant::calibration::gui::FitGausPol3::Sync()
@@ -103,33 +103,33 @@ void ant::calibration::gui::FitGausPol3::SetPoints(int n)
 {
     signal->SetNpx(n);
     bg->SetNpx(n);
-    combinded->SetNpx(n);
+    combined->SetNpx(n);
 }
 
 std::vector<double> ant::calibration::gui::FitGausPol3::Save() const
 {
     SavedState_t params;
-    params.reserve(2+combinded->GetNpar());
-    saveTF1(combinded,params);
+    params.reserve(2+combined->GetNpar());
+    saveTF1(combined,params);
 
     return params;
 }
 
 void ant::calibration::gui::FitGausPol3::Load(const std::vector<double> &data)
 {
-    if(data.size() != std::size_t(2+combinded->GetNpar())) {
+    if(data.size() != std::size_t(2+combined->GetNpar())) {
         LOG(WARNING) << "Can't load parametes";
         return;
     }
 
     SavedState_t::const_iterator p = data.begin();
-    loadTF1(p, combinded);
-    SetRange(getRange(combinded));
+    loadTF1(p, combined);
+    SetRange(getRange(combined));
     sync();
 }
 
 double ant::calibration::gui::FitGausPol3::GetPeakPosition() const
 {
-    return combinded->GetParameter(1);
+    return combined->GetParameter(1);
 }
 
