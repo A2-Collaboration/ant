@@ -34,7 +34,7 @@ void PID_PhiAngle::ThePhysics::ProcessEvent(const Event& event)
 
     for(const auto& cand : cands) {
 
-        auto cl_cb_  = cand->FindCluster(detector_t::CB);
+        auto cl_cb_  = cand->FindFirstCluster(Detector_t::Type_t::CB);
 
         if(cl_cb_ != nullptr) {
             // found more than one CB cluster
@@ -43,7 +43,7 @@ void PID_PhiAngle::ThePhysics::ProcessEvent(const Event& event)
             phi_cb = cand->Phi();
         }
 
-        auto cl_pid_ = cand->FindCluster(detector_t::PID);
+        auto cl_pid_ = cand->FindFirstCluster(Detector_t::Type_t::PID);
 
         if(cl_pid_ != nullptr) {
             // found more than one pid cluster

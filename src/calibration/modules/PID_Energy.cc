@@ -49,7 +49,7 @@ void PID_Energy::ThePhysics::ProcessEvent(const Event& event)
 
     // pedestals
     for(const Cluster& cluster : event.Reconstructed().InsaneClusters()) {
-        if(!(cluster.Detector & detector_t::PID))
+        if(!(cluster.Detector & Detector_t::Type_t::PID))
             continue;
         for(const Cluster::Hit& clusterhit : cluster.Hits) {
             for(const Cluster::Hit::Datum& datum : clusterhit.Data) {
