@@ -115,6 +115,9 @@ void PhysicsManager::ReadFrom(
         nEvents++;
     }
 
+    VLOG(5) << "First EventId processed: " << firstEventID;
+    VLOG(5) << "Last  EventId processed: " << lastEventID;
+
     end = chrono::system_clock::now();
     chrono::duration<double> elapsed_seconds = end-start;
     LOG(INFO) << "Processed " << nEvents << " events, speed "
