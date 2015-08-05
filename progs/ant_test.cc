@@ -1,4 +1,3 @@
-#include "analysis/Detector.h"
 #include "analysis/utils/matcher.h"
 #include "analysis/ParticleType.h"
 #include "analysis/data/Candidate.h"
@@ -35,7 +34,7 @@ int main() {
             radian_t(1.0),
             time_t(0.324),
             clustersize_t(4),
-            detector_t::CB,
+            Detector_t::Type_t::CB,
             mev_t(0.4),
             mev_t(0.3)
             ));
@@ -99,19 +98,19 @@ int main() {
 
     cout << "========================" << endl;
 
-    detector_t d = detector_t::CB;
+    Detector_t::Any_t d = Detector_t::Type_t::CB;
 
-    if( d & detector_t::anyCB )
+    if( d & Detector_t::Any_t::CB() )
         cout << "is in cb";
     else
         cout << "NOT" << endl;
 
     cout << d << endl;
 
-    d ^= detector_t::TAPS;
+    d ^= Detector_t::Type_t::TAPS;
     cout << d << endl;
 
-    std::string detector_name = detector_t::anyTAPS;
+    std::string detector_name = Detector_t::Any_t::TAPS();
 
     cout << detector_name << endl;
 
@@ -128,7 +127,7 @@ int main() {
             radian_t(2.01),
             time_t(0.324),
             clustersize_t(4),
-            detector_t::CB,
+            Detector_t::Type_t::CB,
             mev_t(0.4),
             mev_t(0.3)
             ));
@@ -139,7 +138,7 @@ int main() {
             radian_t(.41),
             time_t(0.323),
             clustersize_t(5),
-            detector_t::CB,
+            Detector_t::Type_t::CB,
             mev_t(0.4),
             mev_t(0.3)
             ));
@@ -151,7 +150,7 @@ int main() {
             radian_t(.41),
             time_t(0.323),
             clustersize_t(5),
-            detector_t::CB,
+            Detector_t::Type_t::CB,
             mev_t(0.4),
             mev_t(0.3)
             ));
