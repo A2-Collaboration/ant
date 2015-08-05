@@ -262,14 +262,22 @@ int main(int argc, char** argv) {
     if(!header->GitInfo.empty()) {
         VLOG(5) << "Added git info: " << header->GitInfo;
     }
-    header->WorkingDir = getenv("PWD");
+    char* pwd = get_current_dir_name();
+    header->WorkingDir = pwd;
+    free(pwd);
+    VLOG(5) << "Added working directory: " << header->WorkingDir;
+    while(--argc>0) {
+        header->CmdLine += *argv++;
+        header->CmdLine += " ";
+    }
+    VLOG(5) << "Added command line: " << header->CmdLine;
 
     if(!cmd_batchmode->isSet()) {
         if(masterFile != nullptr)
             LOG(INFO) << "Stopped running, but close ROOT properly to write data to disk.";
-        int a=0;
-        char** b=nullptr;
-        TRint app("ant",&a,b,nullptr,0,true);
+        int fake_argc=0;
+        char** fake_argv=nullptr;
+        TRint app("ant",&fake_argc,fake_argv,nullptr,0,true);
         pm.ShowResults();
         app.Run(kTRUE); // really important to return...
         masterFile = nullptr;   // and to destroy the master WrapTFile before TRint is destroyed
