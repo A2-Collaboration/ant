@@ -1,7 +1,7 @@
 #include "Convert.h"
 #include "data/Event.h"
 
-#include "Detector.h"
+#include "expconfig/Detector_t.h"
 
 #include "tree/TEvent.h"
 #include "tree/TCluster.h"
@@ -51,12 +51,12 @@ shared_ptr<Candidate> Converter::Convert(const TCandidate &candidate)
                         candidate.Phi,
                         candidate.Time,
                         0,
-                        ant::detector_t::None,
+                        Detector_t::Any_t::None(),
                         candidate.VetoEnergy,
                         candidate.TrackerEnergy
                         );
 
-    auto det = ant::detector_t::None;
+    auto det = Detector_t::Any_t::None();
 
     for(const TCluster& cluster: candidate.Clusters) {
 
@@ -93,7 +93,7 @@ Cluster Converter::Convert(const TCluster& cluster)
     Cluster cl(
                 cluster.Energy,
                 cluster.Time,
-                detector_t(Detector_t::ToBitfield(cluster.GetDetectorType())),
+                cluster.GetDetectorType(),
                 cluster.CentralElement
                 );
     for(const auto& hit : cluster.Hits) {

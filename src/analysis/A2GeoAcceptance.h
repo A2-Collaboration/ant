@@ -2,7 +2,7 @@
 
 #include "base/interval.h"
 #include "TMath.h"
-#include "Detector.h"
+#include "expconfig/Detector_t.h"
 
 namespace ant {
 
@@ -15,10 +15,10 @@ protected:
 public:
     A2SimpleGeometry();
 
-    detector_t DetectorFromAngles( const radian_t theta, const radian_t phi) const;
+    Detector_t::Any_t DetectorFromAngles( const radian_t theta, const radian_t phi) const;
 
     template <class T>
-    detector_t DetectorFromAngles( const T& v) const {
+    Detector_t::Any_t  DetectorFromAngles( const T& v) const {
         return DetectorFromAngles(v.Theta(), v.Phi());
     }
 

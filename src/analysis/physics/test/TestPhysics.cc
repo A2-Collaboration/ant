@@ -11,7 +11,6 @@
 #include "TCanvas.h"
 
 #include "plot/root_draw.h"
-#include "Detector.h"
 
 using namespace std;
 using namespace ant;

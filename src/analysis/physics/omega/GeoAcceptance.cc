@@ -8,7 +8,6 @@
 #include "TMath.h"
 #include <tuple>
 #include "TVector3.h"
-#include "Detector.h"
 #include <sstream>
 #include "TH3D.h"
 #include "TH2D.h"
@@ -133,7 +132,7 @@ void analysis::GeoAcceptance::AcceptanceAnalysis::Fill(const ParticleList &mctru
 
     const auto& input = mctrue.front();
 
-    detector_t region = geo.DetectorFromAngles(*input);
+    auto region = geo.DetectorFromAngles(*input);
     stringstream region_name;
     region.Print(region_name);
 
@@ -156,7 +155,7 @@ void analysis::GeoAcceptance::AcceptanceAnalysis::Fill(const ParticleList &mctru
         if(reconstructed.size()>1)
             multimatched_pos.Fill(input);
 
-        if(region != detector_t::None) {
+        if(region != Detector_t::Any_t::None()) {
             matched_pos_after_geo.Fill(input);
         }
     }
@@ -164,7 +163,7 @@ void analysis::GeoAcceptance::AcceptanceAnalysis::Fill(const ParticleList &mctru
 
     int nphotonslost=0;
     for(auto& p : mctrue) {
-        if(geo.DetectorFromAngles(*p) == detector_t::None)
+        if(geo.DetectorFromAngles(*p) == Detector_t::Any_t::None())
             nphotonslost++;
     }
     nlost->Fill(nphotonslost);

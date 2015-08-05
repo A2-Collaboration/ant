@@ -30,7 +30,7 @@ double OmegaBase::calcEnergySum(const ParticleList &particles) const
     double esum = 0.0;
 
     for( const ant::ParticlePtr& p : particles) {
-        if( geo.DetectorFromAngles(p->Theta(), p->Phi()) == detector_t::CB ) {
+        if( geo.DetectorFromAngles(p->Theta(), p->Phi()) == Detector_t::Type_t::CB ) {
             esum += p->Ek();
         }
     }
@@ -42,7 +42,7 @@ ParticleList OmegaBase::getGeoAccepted(const ParticleList &p) const
 {
     ParticleList list;
     for( auto& particle : p) {
-        if( geo.DetectorFromAngles(particle->Theta(), particle->Phi()) != detector_t::None )
+        if( geo.DetectorFromAngles(particle->Theta(), particle->Phi()) != Detector_t::Any_t::None() )
                 list.emplace_back(particle);
     }
     return list;

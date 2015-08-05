@@ -2,7 +2,7 @@
 
 #include "base/printable.h"
 #include "base/types.h"
-#include "analysis/Detector.h"
+#include "expconfig/Detector_t.h"
 #include "analysis/data/Cluster.h"
 
 #include <ostream>
@@ -24,7 +24,7 @@ public:
     radian_t phi;
     ns_t time;
     clustersize_t clusterSize;
-    detector_t detector;
+    Detector_t::Any_t detector;
     mev_t vetoEnergy;
     mev_t trackerEnergy;
 
@@ -35,7 +35,7 @@ public:
           const radian_t& _phi,
           const ns_t& _time,
           const clustersize_t& _clusterSize,
-          const detector_t& _detector,
+          const Detector_t::Any_t& _detector,
           const mev_t& _vetoEnergy,
           const mev_t& _trackerEnergy
           ) :
@@ -55,11 +55,11 @@ public:
     radian_t Phi() const { return phi; }
     ns_t Time() const { return time; }
     clustersize_t ClusterSize() const { return clusterSize; }
-    detector_t Detector() const { return detector; }
+    Detector_t::Any_t Detector() const { return detector; }
     mev_t VetoEnergy() const { return vetoEnergy; }
     mev_t TrackerEnergy() const { return trackerEnergy; }
 
-    const Cluster* FindCluster(detector_t detector) {
+    const Cluster* FindFirstCluster(Detector_t::Any_t detector) {
         for(const auto& cl : Clusters) {
             if(cl.Detector & detector) {
                 return std::addressof(cl);
@@ -70,7 +70,7 @@ public:
 
     const Cluster* FindCaloCluster() {
         for(const auto& cl : Clusters) {
-            if(cl.Detector & (detector_t::CB | detector_t::TAPS)) {
+            if(cl.Detector & (Detector_t::Type_t::CB | Detector_t::Type_t::TAPS)) {
                 return std::addressof(cl);
             }
         }

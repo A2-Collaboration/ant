@@ -20,25 +20,25 @@ using namespace std;
  * @brief map goat apparatus numbers to apparatus_t enum values
  * in case unknown values show up: -> exception and do not sliently ignore
  */
-detector_t IntToDetector_t( const int& a ) {
-    detector_t d = detector_t::None;
+Detector_t::Any_t IntToDetector_t(const int& a) {
+    auto d = Detector_t::Any_t::None();
     if(a & TrackInput::DETECTOR_NaI) {
-        d |= detector_t::CB;
+        d |= Detector_t::Type_t::CB;
     }
     if(a & TrackInput::DETECTOR_PID) {
-        d |= detector_t::PID;
+        d |= Detector_t::Type_t::PID;
     }
     if(a & TrackInput::DETECTOR_MWPC) {
-        d |= detector_t::MWPC;
+        d |= Detector_t::Any_t::MWPC();
     }
     if(a & TrackInput::DETECTOR_BaF2) {
-        d |= detector_t::TAPS;
+        d |= Detector_t::Type_t::TAPS;
     }
     if(a & TrackInput::DETECTOR_PbWO4) {
-        d |= detector_t::TAPS;
+        d |= Detector_t::Type_t::TAPS;
     }
     if(a & TrackInput::DETECTOR_Veto) {
-        d |= detector_t::TAPSVeto;
+        d |= Detector_t::Type_t::TAPSVeto;
     }
     return d;
 }

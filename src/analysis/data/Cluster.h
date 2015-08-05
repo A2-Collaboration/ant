@@ -1,6 +1,5 @@
 #pragma once
 
-#include "analysis/Detector.h"
 #include "expconfig/Detector_t.h"
 
 #include <list>
@@ -12,7 +11,7 @@ class Cluster {
 public:
     double Energy = 0.0;
     double Time = 0.0;
-    detector_t Detector = detector_t::None;
+    Detector_t::Any_t Detector = Detector_t::Any_t::None();
     unsigned CentralElement = 0;
 
     struct Hit {
@@ -28,7 +27,7 @@ public:
 
     std::list<Hit> Hits;
 
-    Cluster(double E, double t, ant::detector_t d, unsigned ch):
+    Cluster(double E, double t, Detector_t::Any_t d, unsigned ch):
         Energy(E),
         Time(t),
         Detector(d),
