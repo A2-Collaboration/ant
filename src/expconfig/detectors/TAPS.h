@@ -35,7 +35,17 @@ struct TAPS :
         return clusterelements[channel];
     }
 
+    unsigned GetRing(const unsigned channel) const;
+    /**
+     * @brief GetHexChannel returns the "usual" hexagonal channel as if PbWO4s were not present
+     * @param channel logical channel
+     */
+    unsigned GetHexChannel(const unsigned channel) const;
+
 protected:
+
+    static constexpr unsigned NHexElements = 384;
+    static constexpr unsigned NSectors = 6; // this never changed over TAPS lifetime
 
     // TAPS has BaF2 elements and PbWO4 elements
 
@@ -117,7 +127,8 @@ private:
     bool CherenkovInstalled; // TAPS detectors moves downstream if Cherenkov installed
     bool UseSensitiveChannels; // Use sensitive channels as main integral
 
-    // given from derived class in constructor
+    // given from derived class in constructor,
+    // depending on the base class, the PbWO4_elements might be empty
     std::vector<BaF2_Element_t>  BaF2_elements;
     std::vector<PbWO4_Element_t> PbWO4_elements;
 
@@ -125,6 +136,8 @@ private:
     void InitClusterElements();
     std::vector<const ClusterDetector_t::Element_t*> clusterelements;
 };
+
+
 
 
 struct TAPS_2013 : TAPS {
@@ -137,7 +150,6 @@ struct TAPS_2013 : TAPS {
     {}
 
     virtual bool Matches(const THeaderInfo& headerInfo) const override;
-
 private:
     const static std::vector<BaF2_Element_t>  BaF2_elements_init;
     const static std::vector<PbWO4_Element_t> PbWO4_elements_init;

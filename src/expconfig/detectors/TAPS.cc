@@ -6,6 +6,7 @@
 
 #include "tree/THeaderInfo.h"
 #include "base/std_ext.h"
+#include "base/interval.h"
 
 #include <iostream>
 #include <cassert>
@@ -83,11 +84,64 @@ void TAPS::BuildMappings(
 
 }
 
+unsigned TAPS::GetRing(const unsigned channel) const
+{
+    const vector< interval<unsigned> > ringRanges = {
+        {0, 0}, {1, 2}, {3, 5}, {6, 9}, {10, 14}, {15, 20},
+        {21, 27}, {28, 35}, {36, 44}, {45, 54}, {55, 63}
+    };
+    assert(ringRanges.size() == 11);
+    // the GetGexChannel is always between 0 and 383
+    // the %64 maps it to the first sector
+    constexpr unsigned HexElementsPerSector = NHexElements/NSectors;
+    unsigned hexChannelFirstSector = GetHexChannel(channel) % HexElementsPerSector;
+
+    for(size_t i=0;i<ringRanges.size();i++) {
+        if(ringRanges[i].Contains(hexChannelFirstSector))
+            return i+1; // ring0 is central element (never installed)
+    }
+    throw Exception("Cannot find ring for TAPS channel "+to_string(channel));
+}
+
+unsigned TAPS::GetHexChannel(const unsigned channel) const
+{
+    constexpr unsigned HexElementsPerSector = NHexElements/NSectors;
+    constexpr unsigned PbWO4PerHex = 4;
+
+    // no PbWO4s at all, so nothing to do
+    if(BaF2_elements.size() == NHexElements && PbWO4_elements.size() == 0)
+        return channel;
+
+    const unsigned elementsPerSector = (BaF2_elements.size()+PbWO4_elements.size())/NSectors;
+
+    const unsigned channelSector = channel / elementsPerSector;
+    const unsigned channelFirstSector = channel % elementsPerSector;
+
+    const unsigned PbWO4_elementsPerSector = PbWO4_elements.size() / NSectors;
+    assert(PbWO4_elementsPerSector % PbWO4PerHex == 0);
+
+    // Handle PbWO4 channel first
+    if(channelFirstSector < PbWO4_elementsPerSector) {
+        // there are 4 PbWO4 elements per hex
+        const unsigned PbWO4_hexIndex = channelFirstSector / PbWO4PerHex;
+        return PbWO4_hexIndex + channelSector * HexElementsPerSector;
+    }
+    else {
+        const unsigned PbWO4_offset = PbWO4_elementsPerSector / PbWO4PerHex;
+        const unsigned BaF2_hexIndex = (channelFirstSector - PbWO4_elementsPerSector) + PbWO4_offset;
+        return BaF2_hexIndex + channelSector * HexElementsPerSector;
+    }
+}
+
 void TAPS::InitClusterElements()
 {
     assert(BaF2_elements.size()>0);
+    assert(BaF2_elements.size() % NSectors == 0);
+    assert(PbWO4_elements.size() % NSectors == 0);
 
     clusterelements.resize(BaF2_elements.size()+PbWO4_elements.size(), nullptr);
+
+
 
     // apply the z-position depending on Cherenkov
     // and build the clusterelements
