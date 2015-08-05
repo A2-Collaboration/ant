@@ -4,6 +4,7 @@
 #include "tree/TCalibrationData.h"
 #include "tree/TDataRecord.h"
 #include "base/std_ext.h"
+#include "base/interval.h"
 
 //std
 #include <map>
@@ -93,6 +94,8 @@ class CalibrationDataManager
 
         std::uint32_t GetNumberOfDataPoints(const std::string& calibrationID) const;
 
+        bool GetIDRange(const std::string& calibrationID, interval<TID>& IDinterval) const;
+
     };
 
 private:
@@ -138,6 +141,12 @@ public:
     {
         lazyInitBackend();
         return cdmgr->GetNumberOfDataPoints(calibrationID);
+    }
+
+    bool GetIDRange(const std::string& calibrationID, interval<TID>& IDinterval)
+    {
+        lazyInitBackend();
+        return cdmgr->GetIDRange(calibrationID, IDinterval);
     }
 
 };

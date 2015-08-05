@@ -2,7 +2,6 @@
 
 //ant
 #include "base/WrapTFile.h"
-#include "base/interval.h"
 #include "base/Logger.h"
 
 //ROOT
@@ -144,4 +143,25 @@ uint32_t CalibrationDataManager::Backend::GetNumberOfDataPoints(const string& ca
     {
         return 0;
     }
+}
+
+bool CalibrationDataManager::Backend::GetIDRange(const string& calibrationID, interval<TID>& IDinterval) const
+{
+    if (dataBase.count(calibrationID) == 0)
+        return false;
+
+    auto& data = dataBase.at(calibrationID);
+
+    IDinterval.Start() = data.front().FirstID;
+    IDinterval.Stop()  = data.front().LastID;
+
+    for (auto& entry: data)
+    {
+        if (entry.FirstID < IDinterval.Start())
+                IDinterval.Start() = entry.FirstID;
+        if (entry.LastID  > IDinterval.Stop())
+                IDinterval.Stop() = entry.LastID;
+    }
+
+    return true;
 }

@@ -94,6 +94,11 @@ void dotest_changes(const string& filename)
     CalibrationDataManager calibman(filename);
 
     TCalibrationData cdata;
+    interval<TID> idRangeTEST(TID(0,0),TID(0,24));
+    interval<TID> idRange(TID(1,1),TID(1,1));
+
+    REQUIRE(calibman.GetIDRange("1",idRange));
+    REQUIRE( idRangeTEST == idRange);
 
     calibman.GetData("1",TID(0,0),cdata);
     REQUIRE(cdata.TimeStamp == 0);
