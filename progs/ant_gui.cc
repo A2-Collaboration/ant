@@ -94,7 +94,6 @@ struct MyExec : TExec {
         CalibrationGUI::RunReturn_t c;
 
         do {
-
             c = gui->Run();
         } while (c.status == CalibrationGUI::RunReturnStatus_t::Next);
 
@@ -122,7 +121,6 @@ int main(int argc, char** argv) {
     auto app = std_ext::make_unique<TRint>("app",&i,nullptr);
     std::unique_ptr<ant::calibration::gui::CalibrationGUI> gui = std_ext::make_unique<ant::calibration::gui::CalibrationGUI>(&d,5);
     gui->SetFileList(cmd_input->getValue());
-    gui->Prepare();
 
     auto exec = std_ext::make_unique<MyExec>(std::move(gui), app.get());
     exec->Exec("firstcall");

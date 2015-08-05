@@ -26,7 +26,7 @@ string DebugModule::GetHistogramName() const
     return "Calibration_CB_Energy_Gains/ggIM";
 }
 
-GUIClientInrerface::FitStatus DebugModule::Fit(TH1* hist, unsigned channel)
+GUIClientInterface::FitStatus DebugModule::Fit(TH1* hist, unsigned channel)
 {
     TH2* hist2 = dynamic_cast<TH2*>(hist);
 
@@ -55,7 +55,7 @@ void DebugModule::StoreResult(unsigned channel)
     guiinstance = nullptr;
 }
 
-GUIClientInrerface::FitStatus DebugModule::Finish()
+GUIClientInterface::FitStatus DebugModule::Finish()
 {
     return FitStatus::FitOK;
 }

@@ -13,7 +13,7 @@ namespace gui {
 //    virtual
 //};
 
-class GUIClientInrerface {
+class GUIClientInterface {
 public:
     enum class FitStatus {
         FitOK,

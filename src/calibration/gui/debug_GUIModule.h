@@ -13,7 +13,7 @@ namespace gui {
 
 class FitGausPol3;
 
-class DebugModule: public GUIClientInrerface {
+class DebugModule: public GUIClientInterface {
 protected:
     TQObject* guiinstance = nullptr;
     std::shared_ptr<FitGausPol3> func;

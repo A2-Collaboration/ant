@@ -71,8 +71,11 @@ void CalibrationGUI::ProcessFile(input_file_t& file_input)
     }
 }
 
-CalibrationGUI::CalibrationGUI(GUIClientInrerface* Module, unsigned length): module(Module), buffer(length)
+CalibrationGUI::CalibrationGUI(GUIClientInterface* Module, unsigned length):
+    module(Module), buffer(length)
 {
+    state.is_init = false;
+    state.finish_mode = false;
 }
 
 void CalibrationGUI::SetFileList(const std::vector<string>& filelist)
@@ -86,13 +89,6 @@ void CalibrationGUI::SetFileList(const std::vector<string>& filelist)
 
 bool CalibrationGUI::input_file_t::operator <(const CalibrationGUI::input_file_t& o) const {
     return range.Start() < o.range.Start();
-}
-
-void CalibrationGUI::Prepare()
-{
-    state.is_init = false;
-    state.finish_mode = false;
-
 }
 
 CalibrationGUI::RunReturn_t CalibrationGUI::Run()
@@ -114,11 +110,11 @@ CalibrationGUI::RunReturn_t CalibrationGUI::Run()
     } else {
 
         if(!buffer.Worklist().empty()) {
-            const string title = std_ext::formatter() << state.channel << " " << buffer.Worklist().top();
+            const string& title = std_ext::formatter() << "Channel=" << state.channel << " " << buffer.Worklist().top();
             buffer.Average()->SetTitle(title.c_str());
-            GUIClientInrerface::FitStatus r = module->Fit(buffer.Average(), state.channel);
+            GUIClientInterface::FitStatus r = module->Fit(buffer.Average(), state.channel);
 
-            if(r == GUIClientInrerface::FitStatus::GUIWait) {
+            if(r == GUIClientInterface::FitStatus::GUIWait) {
                 VLOG(7) << "GUI Opened";
                 state.break_occured = true;
                 return RunReturn_t(RunReturnStatus_t::OpenGUI, module->GetGUIInstance());
@@ -128,7 +124,7 @@ CalibrationGUI::RunReturn_t CalibrationGUI::Run()
         }
     }
 
-    VLOG(8) << "Buffer lenght " << buffer.Worklist().size();
+    VLOG(8) << "Buffer length " << buffer.Worklist().size();
 
     if(state.channel >= module->GetNumberOfChannels() || buffer.Worklist().empty()) {
         state.channel = 0;
@@ -155,7 +151,7 @@ CalibrationGUI::RunReturn_t CalibrationGUI::Run()
             }
         }
     } else {
-            ++state.channel;
+        ++state.channel;
     }
 
     return RunReturn_t(RunReturnStatus_t::Next);

@@ -24,7 +24,7 @@ protected:
 
     using myBuffer_t = ant::calibration::gui::AvgBuffer<TH2D,ant::interval<ant::TID>>;
 
-    GUIClientInrerface* module;
+    GUIClientInterface* module;
     myBuffer_t buffer;
 
     struct input_file_t {
@@ -77,11 +77,9 @@ public:
             gui(Gui) {}
     };
 
-    CalibrationGUI(GUIClientInrerface* Module, unsigned length);
+    CalibrationGUI(GUIClientInterface* Module, unsigned length);
 
     virtual void SetFileList(const std::vector<std::string>& filelist);
-
-    void Prepare();
 
     virtual RunReturn_t Run();
 
