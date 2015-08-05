@@ -78,8 +78,8 @@ void dotest() {
     REQUIRE(cand.at(0)->ClusterSize()==2);
     REQUIRE(cand.at(1)->ClusterSize()==0);
 
-    REQUIRE(cand.at(0)->Detector()==(detector_t::CB | detector_t::PID));
-    REQUIRE(cand.at(1)->Detector()==(detector_t::TAPS | detector_t::TAPSVeto));
+    REQUIRE(cand.at(0)->Detector()==(Detector_t::Type_t::CB | Detector_t::Type_t::PID));
+    REQUIRE(cand.at(1)->Detector()==(Detector_t::Type_t::TAPS | Detector_t::Type_t::TAPSVeto));
 
 }
 
