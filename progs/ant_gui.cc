@@ -64,16 +64,15 @@ int main(int argc, char** argv) {
 
     auto d = std_ext::make_unique<ant::calibration::gui::DebugModule>();
 
-    int i=0;
-    auto app = std_ext::make_unique<TRint>("app",&i,nullptr);
-    std::unique_ptr<ant::calibration::gui::CalibrationGUI> gui = std_ext::make_unique<ant::calibration::gui::CalibrationGUI>(d.get(),5);
+    int fake_argc=0;
+    auto app = std_ext::make_unique<TRint>("app",&fake_argc,nullptr);
+    unique_ptr<CalibrationGUI> gui = std_ext::make_unique<CalibrationGUI>(move(d),5);
     gui->SetFileList(cmd_input->getValue());
 
     auto exec = std_ext::make_unique<MyExec>(gui.get(), app.get());
     exec->Exec("firstcall");
     app->Run(kTRUE);
 
-    d = nullptr;
     gui = nullptr;
     app = nullptr;
     exec = nullptr;

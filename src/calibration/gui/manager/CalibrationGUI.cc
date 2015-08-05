@@ -71,8 +71,8 @@ void CalibrationGUI::ProcessFile(input_file_t& file_input)
     }
 }
 
-CalibrationGUI::CalibrationGUI(GUIClientInterface* Module, unsigned length):
-    module(Module), buffer(length)
+CalibrationGUI::CalibrationGUI(std::unique_ptr<GUIClientInterface> Module, unsigned length):
+    module(move(Module)), buffer(length)
 {
     state.is_init = false;
     state.finish_mode = false;
