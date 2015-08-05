@@ -54,11 +54,6 @@ struct Detector_t : printable_traits {
 
     static const char* ToString(const Type_t& type);
 
-    static constexpr std::uint32_t ToBitfield(const Type_t& type) {
-        using basetype = typename std::underlying_type<Type_t>::type;
-        return 1 << static_cast<basetype>(type);
-    }
-
     const Type_t Type;
 
     // Element_t is the minimum information,
@@ -306,12 +301,18 @@ inline bool operator==(const Detector_t::Type_t& type, const Detector_t::Any_t& 
 inline bool operator!=(const Detector_t::Type_t& type, const Detector_t::Any_t& any) {
     return any != type;
 }
+inline Detector_t::Any_t operator|(const Detector_t::Type_t& type1,
+                                   const Detector_t::Type_t& type2) {
+    return static_cast<Detector_t::Any_t>(type1) | type2;
+}
+
 inline bool operator&(const Detector_t::Type_t& type, const Detector_t::Any_t& any) {
     return static_cast<bool>(any & type);
 }
 inline bool operator^(const Detector_t::Type_t& type, const Detector_t::Any_t& any) {
     return static_cast<bool>(any ^ type);
 }
+
 
 
 } // namespace ant
