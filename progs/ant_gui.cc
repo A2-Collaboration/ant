@@ -109,7 +109,8 @@ int main(int argc, char** argv) {
 
     TCLAP::CmdLine cmd("ant", ' ', "0.1");
     auto cmd_verbose = cmd.add<TCLAP::ValueArg<int>>("v","verbose","Verbosity level (0..9)", false, 0,"level");
-    auto cmd_input  = cmd.add<TCLAP::MultiArg<string>>("i","input","Input files",true,"filename");
+    // unlabeled multi arg must be the last element added, and interprets everything as a input file
+    auto cmd_input  = cmd.add<TCLAP::UnlabeledMultiArg<string>>("inputfiles","Ant files with histograms",true,"inputfiles");
     cmd.parse(argc, argv);
 
     if(cmd_verbose->isSet())
