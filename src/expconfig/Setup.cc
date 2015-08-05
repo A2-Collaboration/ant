@@ -14,7 +14,7 @@ void SetupRegistry::init_setups()
         return;
     for(const auto& creator : setup_creators) {
         const auto& setup = creator();
-        VLOG(4) << "Adding config " << setup->GetName();
+        VLOG(9) << "Adding setup config " << setup->GetName() << " to registry";
         setups.emplace_back(move(setup));
     }
 }
