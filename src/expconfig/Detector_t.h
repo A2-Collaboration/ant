@@ -1,18 +1,22 @@
 #pragma once
 
-#include <string>
-#include <vector>
-#include <stdexcept>
-#include <type_traits>
+#include "base/printable.h"
 
 #include "TVector3.h"
+
+#include <cstdint>
+#include <sstream>
+#include <stdexcept>
+#include <string>
+#include <type_traits>
+#include <vector>
 
 namespace ant {
 
 /**
  * @brief The Detector_t struct is the minimal base class for all detectors
  */
-struct Detector_t {
+struct Detector_t : printable_traits {
 
     // changing types here breaks the file format
     // the only operation allowed is to add detector types!
@@ -22,15 +26,40 @@ struct Detector_t {
         CB, PID, MWPC0, MWPC1,
         TAPS, TAPSVeto, Cherenkov
     };
-    using basetype = typename std::underlying_type<Type_t>::type;
 
-    const Type_t Type;
+    // Any_t represents a collection of detectors
+    struct Any_t : printable_traits {
+
+        static Any_t None() { return Any_t(0); }
+        static Any_t MWPC() { return None() | Type_t::MWPC0 | Type_t::MWPC1; }
+        static Any_t CB()   { return MWPC() | Type_t::PID | Type_t::CB; }
+        static Any_t TAPS() { return None() | Type_t::TAPS | Type_t::TAPSVeto; }
+        static Any_t Veto() { return None() | Type_t::PID | Type_t::TAPSVeto; }
+
+        Any_t(const Type_t& type);
+
+        bool operator==(const Any_t& other) const;
+        Any_t operator&(const Any_t& other) const;
+        Any_t operator|(const Any_t& other) const;
+        Any_t operator^(const Any_t& other) const;
+        explicit operator bool() const;
+        operator std::string() const;
+
+        virtual std::ostream& Print(std::ostream& stream) const override;
+    private:
+        Any_t(std::uint64_t bitfield_) : bitfield(bitfield_) {}
+        std::uint64_t bitfield;
+
+    }; // struct Any_t
+
     static const char* ToString(const Type_t& type);
 
     static constexpr std::uint32_t ToBitfield(const Type_t& type) {
+        using basetype = typename std::underlying_type<Type_t>::type;
         return 1 << static_cast<basetype>(type);
     }
 
+    const Type_t Type;
 
     // Element_t is the minimum information,
     // derived classes may extend this
@@ -46,11 +75,14 @@ struct Detector_t {
     virtual TVector3 GetPosition(unsigned channel) const = 0;
     virtual unsigned GetNChannels() const = 0;
 
-    virtual ~Detector_t() = default;
     class Exception : std::runtime_error {
         using std::runtime_error::runtime_error; // use base class constructor
     };
 
+    virtual ~Detector_t() = default;
+    virtual std::ostream& Print(std::ostream& stream) const override {
+        return stream << "Detector_t " << ToString(Type);
+    }
 protected:
     Detector_t(const Type_t& type) :
         Type(type) {}
@@ -211,4 +243,78 @@ inline bool Channel_t::IsIntegral(const Channel_t::Type_t& t) {
     }
 }
 
+inline std::ostream& Detector_t::Any_t::Print(std::ostream& stream) const  {
+    typename std::underlying_type<Type_t>::type i = 0;
+    decltype(bitfield) temp  = 1;
+    while(temp<=bitfield) {
+        if(bitfield & temp) {
+            stream << Detector_t::ToString(
+                          static_cast<Detector_t::Type_t>(i)
+                          )
+                   << " ";
+        }
+        ++i;
+        temp <<= 1;
+    }
+    return stream;
+}
+
+inline Detector_t::Any_t::Any_t(const Type_t& type)  :
+    bitfield(1 << static_cast<typename std::underlying_type<Type_t>::type>(type))
+{}
+
+inline bool Detector_t::Any_t::operator==(const Any_t& other) const {
+    return this->bitfield == other.bitfield;
+}
+inline Detector_t::Any_t Detector_t::Any_t::operator&(const Any_t& other) const {
+    return this->bitfield & other.bitfield;
+}
+inline Detector_t::Any_t Detector_t::Any_t::operator|(const Any_t& other) const {
+    return this->bitfield | other.bitfield;
+}
+inline Detector_t::Any_t Detector_t::Any_t::operator^(const Any_t& other) const {
+    return this->bitfield ^ other.bitfield;
+}
+inline Detector_t::Any_t::operator bool() const {
+    return bitfield;
+}
+inline Detector_t::Any_t::operator std::string() const {
+    std::stringstream s;
+    Print(s);
+    return s.str();
+}
+
+inline bool operator!=(const Detector_t::Any_t& any1, const Detector_t::Any_t& any2) {
+    return !(any1 == any2);
+}
+inline Detector_t::Any_t& operator&=(Detector_t::Any_t& any, const Detector_t::Any_t& other) {
+    any = any & other;
+    return any;
+}
+inline Detector_t::Any_t& operator|=(Detector_t::Any_t& any, const Detector_t::Any_t& other) {
+    any = any | other;
+    return any;
+}
+inline Detector_t::Any_t& operator^=(Detector_t::Any_t& any, const Detector_t::Any_t& other) {
+    any = any ^ other;
+    return any;
+}
+
+inline bool operator==(const Detector_t::Type_t& type, const Detector_t::Any_t& any) {
+    return any == type;
+}
+inline bool operator!=(const Detector_t::Type_t& type, const Detector_t::Any_t& any) {
+    return any != type;
+}
+inline bool operator&(const Detector_t::Type_t& type, const Detector_t::Any_t& any) {
+    return static_cast<bool>(any & type);
+}
+inline bool operator^(const Detector_t::Type_t& type, const Detector_t::Any_t& any) {
+    return static_cast<bool>(any ^ type);
+}
+
+
 } // namespace ant
+
+
+
