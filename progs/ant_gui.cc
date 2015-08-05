@@ -17,60 +17,6 @@
 using namespace std;
 using namespace ant;
 
-
-//// should be replaced by real ant gui worker class
-//struct MyWorker {
-//    struct state_t {
-//        int i;
-//        bool i_init;
-//        int j;
-//        bool break_occured;
-//    };
-
-//    state_t t = {0,false,0,false};
-//    MyWorker() {
-//        t.i = 0;
-//        t.i_init = false;
-//        t.j = 0;
-//        t.break_occured = false;
-//    }
-
-//    TCanvas* DoWork() {
-
-//        while(t.i <100) {
-
-//            if(!t.i_init) {
-//                t.i_init = true;
-//                cout << "INIT i" << t.i << endl;
-//            }
-
-//            while(t.j<100) {
-
-//                if(t.break_occured) {
-//                    cout << "returning from break. j="<<t.j << endl;
-//                    t.break_occured = false;
-//                    t.j++;
-//                }
-
-//                cout << "i=" << t.i << " " << t.j << endl;
-
-//                if((t.j%10)==0) {
-//                    cout << "Need break" <<endl;
-//                    t.break_occured = true;
-//                    return new TCanvas("bla", "bla");
-//                }
-//                ++t.j;
-//            }
-//            t.j=0;
-//            t.i_init=false;
-//            ++t.i;
-//        }
-
-//        cout << "DONE" << endl;
-//        return nullptr;
-//    }
-//};
-
 using namespace  ant::calibration::gui;
 
 struct MyExec : TExec {
