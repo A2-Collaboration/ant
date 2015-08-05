@@ -9,7 +9,7 @@
 #include "tree/TDataRecord.h"
 
 #include <list>
-
+#include <cmath>
 
 using namespace std;
 using namespace ant;
@@ -35,13 +35,15 @@ TAPS_Energy::TAPS_Energy(
 
 }
 
-TAPS_Energy::ThePhysics::ThePhysics(const string& name):
-    Physics(name)
+TAPS_Energy::ThePhysics::ThePhysics(const string& name, std::shared_ptr<expconfig::detector::TAPS> taps) :
+    Physics(name),
+    taps_detector(taps)
 {
-    const BinSettings cb_channels(438);
+    const BinSettings taps_channels(taps->GetNChannels());
     const BinSettings energybins(1000);
 
-    ggIM = HistFac.makeTH2D("2 neutral IM (TAPS,CB)", "IM [MeV]", "#", energybins, cb_channels, "ggIM");
+    ggIM = HistFac.makeTH2D("2 neutral IM (TAPS,CB)", "IM [MeV]", "#",
+                            energybins, taps_channels, "ggIM");
 }
 
 void TAPS_Energy::ThePhysics::ProcessEvent(const Event& event)
@@ -51,23 +53,30 @@ void TAPS_Energy::ThePhysics::ProcessEvent(const Event& event)
     const auto CBTAPS = Detector_t::Type_t::CB | Detector_t::Type_t::TAPS;
 
     for( auto comb = makeCombination(cands,2); !comb.Done(); ++comb ) {
-        const CandidatePtr& p1 = comb.at(0);
-        const CandidatePtr& p2 = comb.at(1);
+        const CandidatePtr& cand1 = comb.at(0);
+        const CandidatePtr& cand2 = comb.at(1);
 
-        if(p1->VetoEnergy()==0 && p2->VetoEnergy()==0) {
+        if(cand1->VetoEnergy()==0 && cand2->VetoEnergy()==0) {
 
             //require exactly 1 CB and 1 TAPS
-            const auto dets = (p1->Detector() & CBTAPS) ^ (p2->Detector() & CBTAPS);
+            const auto dets = (cand1->Detector() & CBTAPS) ^ (cand2->Detector() & CBTAPS);
 
             if(dets & CBTAPS) {
                 const Particle a(ParticleTypeDatabase::Photon,comb.at(0));
                 const Particle b(ParticleTypeDatabase::Photon,comb.at(1));
-                const TLorentzVector gg = a + b;
+                const TLorentzVector& gg = a + b;
+
 
                 // Find the one that was in TAPS
-                auto cl = p1->Detector() & Detector_t::Type_t::TAPS ? p1->FindCaloCluster() : p2->FindCaloCluster();
-                if(cl)
-                    ggIM->Fill(gg.M(),cl->CentralElement);
+                auto cand_taps = cand1->Detector() & Detector_t::Type_t::TAPS ? cand1 : cand2;
+                auto cl_taps = cand_taps->FindCaloCluster();
+                if(cl_taps) {
+                    const unsigned ch = cl_taps->CentralElement;
+                    const unsigned ring = taps_detector->GetRing(ch);
+
+                    if(ring > 4 || fabs(cand_taps->Time()) < 2.5)
+                        ggIM->Fill(gg.M(),ch);
+                }
             }
         }
     }
@@ -85,5 +94,5 @@ void TAPS_Energy::ThePhysics::ShowResult()
 
 unique_ptr<Physics> TAPS_Energy::GetPhysicsModule()
 {
-    return std_ext::make_unique<ThePhysics>(GetName());
+    return std_ext::make_unique<ThePhysics>(GetName(), taps_detector);
 }

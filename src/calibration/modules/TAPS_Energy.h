@@ -23,9 +23,11 @@ public:
 
     protected:
         TH2* ggIM = nullptr;
+        std::shared_ptr<expconfig::detector::TAPS> taps_detector;
 
     public:
-        ThePhysics(const std::string& name);
+        ThePhysics(const std::string& name,
+                   std::shared_ptr<expconfig::detector::TAPS> taps);
 
         virtual void ProcessEvent(const Event& event);
         virtual void Finish();
