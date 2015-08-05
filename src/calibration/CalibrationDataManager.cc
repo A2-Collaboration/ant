@@ -43,7 +43,7 @@ void CalibrationDataManager::Backend::readDataBase()
             }
         }
     } catch (...) {
-        VLOG(3) << "[CalibrationDataManager] Cannot open " << dataFileName << ": Starting with empty database.";
+        VLOG(3) << "Cannot open " << dataFileName << ": Starting with empty database.";
     }
 
 }
