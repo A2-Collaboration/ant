@@ -1,4 +1,7 @@
 #include "TAPS_Energy.h"
+
+#include "expconfig/detectors/TAPS.h"
+
 #include "analysis/plot/HistogramFactories.h"
 #include "analysis/data/Event.h"
 #include "analysis/utils/combinatorics.h"
@@ -12,19 +15,22 @@ using namespace std;
 using namespace ant;
 using namespace ant::calibration;
 
-TAPS_Energy::TAPS_Energy(std::shared_ptr<CalibrationDataManager> calmgr,
-                         Calibration::Converter::ptr_t converter,
-                         double defaultPedestal,
-                         double defaultGain,
-                         double defaultThreshold,
-                         double defaultRelativeGain):
+TAPS_Energy::TAPS_Energy(
+        std::shared_ptr<expconfig::detector::TAPS> taps,
+        std::shared_ptr<CalibrationDataManager> calmgr,
+        Calibration::Converter::ptr_t converter,
+        double defaultPedestal,
+        double defaultGain,
+        double defaultThreshold,
+        double defaultRelativeGain) :
     Energy(Detector_t::Type_t::TAPS,
            calmgr,
            converter,
            defaultPedestal,
            defaultGain,
            defaultThreshold,
-           defaultRelativeGain)
+           defaultRelativeGain),
+    taps_detector(taps)
 {
 
 }

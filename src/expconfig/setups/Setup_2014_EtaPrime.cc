@@ -27,7 +27,8 @@ public:
         AddDetector(cb);
         auto pid = make_shared<detector::PID_2014>();
         AddDetector(pid);
-        AddDetector<detector::TAPS_2013>(cherenkovInstalled, false); // no Cherenkov, don't use sensitive channels
+        auto taps = make_shared<detector::TAPS_2013>(cherenkovInstalled, false); // no Cherenkov, don't use sensitive channels
+        AddDetector(taps);
         AddDetector<detector::TAPSVeto_2014>(cherenkovInstalled); // no Cherenkov
 
 
@@ -85,7 +86,7 @@ public:
 
         AddCalibration<calibration::PID_Energy>(pid, calibrationManager, convert_MultiHit16bit );
 
-        AddCalibration<calibration::TAPS_Energy>(calibrationManager, convert_MultiHit16bit );
+        AddCalibration<calibration::TAPS_Energy>(taps, calibrationManager, convert_MultiHit16bit );
 
         AddCalibration<calibration::TAPSVeto_Energy>(calibrationManager, convert_MultiHit16bit);
 
