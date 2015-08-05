@@ -22,11 +22,11 @@ using namespace  ant::calibration::gui;
 struct MyExec : TExec {
 
     const TRint* rint = nullptr;
-    std::unique_ptr<ant::calibration::gui::CalibrationGUI> gui;
+    CalibrationGUI* gui;
 
-    MyExec(std::unique_ptr<ant::calibration::gui::CalibrationGUI> gui_, const TRint* Rint) :
+    MyExec(CalibrationGUI* gui_, const TRint* Rint) :
         rint(Rint),
-        gui(move(gui_))
+        gui(gui_)
     {}
 
     virtual void Exec(const char* arg) override {
@@ -62,16 +62,19 @@ int main(int argc, char** argv) {
     if(cmd_verbose->isSet())
     el::Loggers::setVerboseLevel(cmd_verbose->getValue());
 
-    ant::calibration::gui::DebugModule d;
+    auto d = std_ext::make_unique<ant::calibration::gui::DebugModule>();
 
     int i=0;
     auto app = std_ext::make_unique<TRint>("app",&i,nullptr);
-    std::unique_ptr<ant::calibration::gui::CalibrationGUI> gui = std_ext::make_unique<ant::calibration::gui::CalibrationGUI>(&d,5);
+    std::unique_ptr<ant::calibration::gui::CalibrationGUI> gui = std_ext::make_unique<ant::calibration::gui::CalibrationGUI>(d.get(),5);
     gui->SetFileList(cmd_input->getValue());
 
-    auto exec = std_ext::make_unique<MyExec>(std::move(gui), app.get());
+    auto exec = std_ext::make_unique<MyExec>(gui.get(), app.get());
     exec->Exec("firstcall");
     app->Run(kTRUE);
+
+    d = nullptr;
+    gui = nullptr;
     app = nullptr;
     exec = nullptr;
 }

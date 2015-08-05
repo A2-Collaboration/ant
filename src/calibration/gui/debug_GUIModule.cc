@@ -37,7 +37,7 @@ GUIClientInterface::FitStatus DebugModule::Fit(TH1* hist, unsigned channel)
         if(channel==0) {
             CalCanvas* c = new CalCanvas("aaa");
             c->Draw();
-            c->Show(hist1,func);
+            c->Show(hist1,func.get());
             guiinstance = c;
             return FitStatus::GUIWait;
         }

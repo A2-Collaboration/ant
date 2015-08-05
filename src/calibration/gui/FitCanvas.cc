@@ -21,7 +21,7 @@ CalCanvas::~CalCanvas() {
     ClearInidators();
 }
 
-void CalCanvas::Show(TH1 *h, std::shared_ptr<FitFunction> f) {
+void CalCanvas::Show(TH1 *h, FitFunction* f) {
 
     while(!UndoStack.empty()) {
         UndoStack.pop();

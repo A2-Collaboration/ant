@@ -44,7 +44,7 @@ int main(int argc, char** argv) {
     TH1D* h = nullptr;
     f->GetObject(histname->getValue().c_str(), h);
     auto f1 = std::make_shared<FitGausPol3>();
-    c->Show(h,f1);
+    c->Show(h,f1.get());
     app.Run(kFALSE);
 
 }

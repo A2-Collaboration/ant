@@ -31,18 +31,18 @@ protected:
     GUIIndicator* MakeGUIElement(VirtualKnob& knob);
 
     std::list<GUIIndicator*> indicators;
-    std::shared_ptr<ant::calibration::gui::FitFunction> func = nullptr;
+    FitFunction* func = nullptr;
     TH1* hist = nullptr;
 
     virtual void HandleKeypress(const char key);
 
-    std::stack<ant::calibration::gui::FitFunction::SavedState_t> UndoStack;
+    std::stack<FitFunction::SavedState_t> UndoStack;
 
 public:
     CalCanvas(const std::string& name);
     virtual ~CalCanvas();
 
-    virtual void Show(TH1* h, std::shared_ptr<FitFunction> f);
+    virtual void Show(TH1* h, FitFunction* f);
 
     virtual void update_me() override;
 
