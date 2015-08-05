@@ -13,6 +13,12 @@ TEST_CASE("Detector_t", "[expconfig]") {
     dotest();
 }
 
+const Detector_t::Any_t CBTAPS = Detector_t::Type_t::CB | Detector_t::Type_t::TAPS;
+
+Detector_t::Any_t cb_taps_test(const Detector_t::Any_t& a, const Detector_t::Any_t& b) {
+    return (a & CBTAPS) ^ (b & CBTAPS);
+}
+
 void dotest() {
 
     // test printable
@@ -50,6 +56,11 @@ void dotest() {
     REQUIRE(detector1 != Detector_t::Type_t::TAPS);
     REQUIRE(detector1 != Detector_t::Type_t::MWPC0);
 
+    REQUIRE((cb_taps_test(Detector_t::Type_t::CB, Detector_t::Type_t::TAPS) & CBTAPS));
+    REQUIRE((cb_taps_test(Detector_t::Type_t::TAPS, Detector_t::Type_t::CB) & CBTAPS));
+    REQUIRE_FALSE((cb_taps_test(Detector_t::Type_t::CB, Detector_t::Type_t::CB) & CBTAPS));
+    REQUIRE_FALSE((cb_taps_test(Detector_t::Type_t::TAPS, Detector_t::Type_t::TAPS) & CBTAPS));
 
+    REQUIRE((cb_taps_test(Detector_t::Type_t::CB | Detector_t::Type_t::PID, Detector_t::Type_t::TAPS) & CBTAPS));
 
 }
