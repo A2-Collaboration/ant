@@ -141,7 +141,7 @@ bool CalibrationGUI::Run()
 
             const bool stop = module->Fit(buffer.Average(), state.channel);
 
-            if(stop || mode->stopAlways ) {
+            if(stop || mode->stopAlways) {
                 VLOG(7) << "Open GUI...";
                 module->DisplayFit();
                 state.stop_fit = true;

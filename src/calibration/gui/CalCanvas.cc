@@ -119,7 +119,23 @@ void CalCanvas::HandleKeypress(const char key)
 
     switch (key) {
     case '\r':
+        gui_mode->channelStep = 1;
+        gui_mode->stopAlways = false;
+        gui_mode->gotoNextBuffer = true;
         rootcanvas->Emit("CloseWindow()");
+        break;
+    case 'n':
+        gui_mode->channelStep = 1;
+        gui_mode->stopAlways = true;
+        gui_mode->gotoNextBuffer = false;
+        rootcanvas->Emit("CloseWindow()");
+        break;
+    case 'b': // brevious item haha...
+        gui_mode->channelStep = -1;
+        gui_mode->stopAlways = true;
+        gui_mode->gotoNextBuffer = false;
+        rootcanvas->Emit("CloseWindow()");
+        break;
     default:
         break;
     }
@@ -224,10 +240,10 @@ void CalCanvas::Update() {
 
 void CalCanvas::HandleInput(EEventType button, Int_t x, Int_t y)
 {
+    TCanvas::HandleInput(button,x,y);
 
-    if(button == kKeyPress) {
+    if(button == kKeyPress)
         HandleKeypress(x);
-    } else {
-        TCanvas::HandleInput(button,x,y);
-    }
 }
+
+
