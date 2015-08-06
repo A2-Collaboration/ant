@@ -1,15 +1,21 @@
 #include "CalibrationGUI.h"
+
 #include "AvgBuffer.h"
-#include "base/interval.h"
+#include "GUIInterface.h"
+
+#include "calibration/gui/CalCanvas.h"
+
 #include "tree/TDataRecord.h"
-#include "TH1D.h"
-#include "TH2D.h"
+#include "tree/TAntHeader.h"
+
+#include "base/interval.h"
 #include "base/std_ext.h"
 #include "base/WrapTFile.h"
 #include "base/Logger.h"
-#include "tree/TAntHeader.h"
-#include "gui/FitCanvas.h"
-#include "GUIInterface.h"
+
+#include "TH1D.h"
+#include "TH2D.h"
+
 #include <memory>
 
 using namespace std;

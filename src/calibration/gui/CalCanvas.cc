@@ -1,4 +1,4 @@
-#include "FitCanvas.h"
+#include "CalCanvas.h"
 
 #include "FitFunction.h"
 #include "GUIElements.h"

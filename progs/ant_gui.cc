@@ -10,7 +10,7 @@
 #include "base/Logger.h"
 #include "calibration/gui/debug_GUIModule.h"
 #include "calibration/gui/manager/CalibrationGUI.h"
-#include "calibration/gui/FitCanvas.h"
+#include "calibration/gui/CalCanvas.h"
 #include "base/CmdLine.h"
 
 #include <iostream>

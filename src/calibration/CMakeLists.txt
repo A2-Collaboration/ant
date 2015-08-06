@@ -25,7 +25,7 @@ set(SRCS
     gui/BaseFunctions.cc
     gui/GUIbase.h
     gui/FitFunction.cc
-    gui/FitCanvas.cc
+    gui/CalCanvas.cc
     gui/GUIElements.cc
     gui/TF1Knobs.cc
     gui/FitGausPol3.cc

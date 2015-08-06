@@ -4,7 +4,7 @@
 #include <memory>
 
 #include <base/std_ext.h>
-#include "calibration/gui/FitCanvas.h"
+#include "calibration/gui/CalCanvas.h"
 #include "calibration/gui/FitFunction.h"
 #include "base/Logger.h"
 #include "base/CmdLine.h"
