@@ -30,9 +30,9 @@ set(SRCS
     gui/GUIElements.cc
     gui/TF1Knobs.cc
     gui/FitGausPol3.cc
-    gui/manager/AvgBuffer.cc
-    gui/manager/CalibrationGUI.cc
-    gui/manager/GUIInterface.h
+    gui/AvgBuffer.h
+    gui/CalibrationGUI.cc
+    gui/GUIInterface.h
     detail/Helpers.h
     gui/debug_GUIModule.cc
   )

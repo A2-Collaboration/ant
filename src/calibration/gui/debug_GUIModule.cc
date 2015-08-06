@@ -1,9 +1,9 @@
 #include "debug_GUIModule.h"
+
 #include "GUIbase.h"
 #include "CalCanvas.h"
 #include "FitGausPol3.h"
 #include "base/Logger.h"
-#include "calibration/gui/FitGausPol3.h"
 
 #include "TH2.h"
 #include "TText.h"

@@ -1,6 +1,6 @@
 #pragma once
 
-#include "calibration/gui/manager/GUIInterface.h"
+#include "GUIInterface.h"
 #include <memory>
 
 class TH1;
