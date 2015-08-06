@@ -16,6 +16,8 @@
 
 namespace ant
 {
+namespace calibration
+{
 
 using dataMap = std::map<std::string,std::vector<TCalibrationData>>;
 
@@ -39,7 +41,7 @@ public:
 };
 
 
-class CalibrationDataManager: public DataAccess
+class DataManager: public DataAccess
 {
 
 private:
@@ -79,9 +81,9 @@ private:
     void readDataBase();
 
 public:
-    CalibrationDataManager(const std::string& DataFileName);
+    DataManager(const std::string& DataFileName);
 
-    ~CalibrationDataManager()
+    ~DataManager()
     {
         if (changedDataBase)
             writeDataBase();
@@ -114,4 +116,5 @@ public:
 };
 
 
+} //namespace calibration
 } //namespace ant

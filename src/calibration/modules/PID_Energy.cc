@@ -16,7 +16,7 @@ using namespace ant::calibration;
 
 PID_Energy::PID_Energy(
         std::shared_ptr<expconfig::detector::PID> pid,
-        std::shared_ptr<CalibrationDataManager> calmgr,
+        std::shared_ptr<DataManager> calmgr,
         Calibration::Converter::ptr_t converter,
         double defaultPedestal,
         double defaultGain,

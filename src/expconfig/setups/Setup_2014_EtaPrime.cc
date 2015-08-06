@@ -15,7 +15,7 @@ public:
     }
 
     Setup_2014_EtaPrime() {
-        auto calibrationManager = make_shared<CalibrationDataManager>(GetName());
+        auto calibrationManager = make_shared<calibration::DataManager>(GetName());
 
 
         // setup the detectors of interest

@@ -7,6 +7,7 @@ include_directories(
 
 
 set(SRCS
+	CalibrationEditor.cc
     CalibrationDataManager.cc
     Calibration.cc
     modules/Time.cc

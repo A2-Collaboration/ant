@@ -15,8 +15,9 @@
 
 using namespace std;
 using namespace ant;
+using namespace ant::calibration;
 
-CalibrationDataManager::CalibrationDataManager(const string& DataFileName):
+DataManager::DataManager(const string& DataFileName):
         cm_treename_prefix("calibration-"),
         cm_branchname("cdata"),
         dataFileName(DataFileName),
@@ -24,7 +25,7 @@ CalibrationDataManager::CalibrationDataManager(const string& DataFileName):
 {
 }
 
-void CalibrationDataManager::readDataBase()
+void DataManager::readDataBase()
 {
     try {
         WrapTFile dataFile(dataFileName,
@@ -46,7 +47,7 @@ void CalibrationDataManager::readDataBase()
 
 }
 
-void CalibrationDataManager::writeDataBase()
+void DataManager::writeDataBase()
 {
     lazyInit();
     WrapTFile file(dataFileName,
@@ -67,7 +68,7 @@ void CalibrationDataManager::writeDataBase()
     }
 }
 
-void CalibrationDataManager::lazyInit()
+void DataManager::lazyInit()
 {
     if ( dataBase == nullptr )
     {
@@ -76,7 +77,7 @@ void CalibrationDataManager::lazyInit()
     }
 }
 
-uint32_t CalibrationDataManager::getDepth(const TID& tid, const string& calibrationID) const
+uint32_t DataManager::getDepth(const TID& tid, const string& calibrationID) const
 {
     uint32_t current_depth = 0;
     auto& calibPairs = dataBase->at(calibrationID);
@@ -91,7 +92,7 @@ uint32_t CalibrationDataManager::getDepth(const TID& tid, const string& calibrat
     return current_depth;
 }
 
-bool CalibrationDataManager::GetData(const string& calibrationID, const TID& eventID, TCalibrationData& cdata)
+bool DataManager::GetData(const string& calibrationID, const TID& eventID, TCalibrationData& cdata)
 {
     lazyInit();
     //case one: calibration doesn't exist
@@ -115,7 +116,7 @@ bool CalibrationDataManager::GetData(const string& calibrationID, const TID& eve
 }
 
 
-const list<TID> CalibrationDataManager::GetChangePoints(const string& calibrationID)
+const list<TID> DataManager::GetChangePoints(const string& calibrationID)
 {
     lazyInit();
     if ( dataBase->count(calibrationID) == 0)
@@ -144,7 +145,7 @@ const list<TID> CalibrationDataManager::GetChangePoints(const string& calibratio
     return ids;
 }
 
-uint32_t CalibrationDataManager::GetNumberOfDataPoints(const string& calibrationID)
+uint32_t DataManager::GetNumberOfDataPoints(const string& calibrationID)
 {
     lazyInit();
     try
@@ -157,7 +158,7 @@ uint32_t CalibrationDataManager::GetNumberOfDataPoints(const string& calibration
     }
 }
 
-bool CalibrationDataManager::GetIDRange(const string& calibrationID, interval<TID>& IDinterval)
+bool DataManager::GetIDRange(const string& calibrationID, interval<TID>& IDinterval)
 {
     lazyInit();
     if (dataBase->count(calibrationID) == 0)
@@ -179,7 +180,7 @@ bool CalibrationDataManager::GetIDRange(const string& calibrationID, interval<TI
     return true;
 }
 
-bool CalibrationDataManager::GetLastEntry(const std::string& calibrationID, TCalibrationData& cdata)
+bool DataManager::GetLastEntry(const std::string& calibrationID, TCalibrationData& cdata)
 {
     lazyInit();
     if (dataBase->count(calibrationID) == 0)

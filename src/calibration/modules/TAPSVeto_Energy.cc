@@ -12,7 +12,7 @@ using namespace std;
 using namespace ant;
 using namespace ant::calibration;
 
-TAPSVeto_Energy::TAPSVeto_Energy(std::shared_ptr<CalibrationDataManager> calmgr,
+TAPSVeto_Energy::TAPSVeto_Energy(std::shared_ptr<DataManager> calmgr,
                                  Calibration::Converter::ptr_t converter,
                                  double defaultPedestal,
                                  double defaultGain,

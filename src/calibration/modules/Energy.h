@@ -11,9 +11,9 @@ class TH1;
 
 namespace ant {
 
-class CalibrationDataManager;
-
 namespace calibration {
+
+class DataManager;
 
 class Energy :
         public Calibration::Module, // this makes this module abstract
@@ -24,7 +24,7 @@ public:
 
 
     Energy(Detector_t::Type_t detectorType,
-           std::shared_ptr<CalibrationDataManager> calmgr,
+           std::shared_ptr<DataManager> calmgr,
            Calibration::Converter::ptr_t converter,
            double defaultPedestal,
            double defaultGain,
@@ -44,7 +44,7 @@ protected:
 
     const Detector_t::Type_t DetectorType;
 
-    std::shared_ptr<CalibrationDataManager> calibrationManager;
+    std::shared_ptr<DataManager> calibrationManager;
 
     const Calibration::Converter::ptr_t Converter;
 

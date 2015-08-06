@@ -2,10 +2,14 @@
 
 #include "Calibration.h"
 
+namespace ant{
+namespace calibration{
+class DataManager;
+}
+}
 
 namespace ant {
 
-class CalibrationDataManager;
 
 namespace expconfig {
 namespace detector {
@@ -40,7 +44,7 @@ public:
 
 
 protected:
-    std::shared_ptr<CalibrationDataManager> calibrationManager;
+    std::shared_ptr<DataManager> calibrationManager;
     std::shared_ptr<expconfig::detector::PID> pid_detector;
 
 

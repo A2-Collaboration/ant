@@ -34,7 +34,7 @@ public:
 
     CB_Energy(
             std::shared_ptr<expconfig::detector::CB> cb,
-            std::shared_ptr<CalibrationDataManager> calmgr,
+            std::shared_ptr<DataManager> calmgr,
             Calibration::Converter::ptr_t converter,
             double defaultPedestal = 0,
             double defaultGain = 0.07,

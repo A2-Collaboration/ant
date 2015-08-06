@@ -16,7 +16,7 @@ using namespace ant;
 using namespace ant::calibration;
 
 CB_Energy::CB_Energy(std::shared_ptr<expconfig::detector::CB> cb,
-                     std::shared_ptr<CalibrationDataManager> calmgr,
+                     std::shared_ptr<DataManager> calmgr,
                      Calibration::Converter::ptr_t converter,
                      double defaultPedestal,
                      double defaultGain,

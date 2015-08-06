@@ -26,7 +26,7 @@ public:
         virtual void ShowResult();
     };
 
-    TAPSVeto_Energy(std::shared_ptr<CalibrationDataManager> calmgr,
+    TAPSVeto_Energy(std::shared_ptr<DataManager> calmgr,
                     Calibration::Converter::ptr_t converter,
                     double defaultPedestal = 100,
                     double defaultGain = 0.010,

@@ -17,7 +17,7 @@ using namespace ant;
 using namespace ant::calibration;
 
 Energy::Energy(Detector_t::Type_t detectorType,
-               std::shared_ptr<CalibrationDataManager> calmgr,
+               std::shared_ptr<DataManager> calmgr,
                Calibration::Converter::ptr_t converter,
                double defaultPedestal,
                double defaultGain,

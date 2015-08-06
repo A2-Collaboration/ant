@@ -11,12 +11,13 @@
 
 using namespace std;
 using namespace ant;
+using namespace ant::calibration;
 
 unsigned dotest_store(const string& filename);
 void dotest_load(const string& filename, unsigned ndata);
 void dotest_changes(const string& filename);
 
-TEST_CASE("CalibrationManager","[calibration]")
+TEST_CASE("CalibrationDataManager","[calibration]")
 {
     tmpfile_t tmpfile;
     auto ndata = dotest_store(tmpfile.filename);
@@ -28,7 +29,7 @@ unsigned dotest_store(const string& filename)
 {
 
 
-    CalibrationDataManager calibman(filename);
+    DataManager calibman(filename);
 
     TCalibrationData cdata("M",
                            "comment",
@@ -83,7 +84,7 @@ unsigned dotest_store(const string& filename)
 
 void dotest_load(const string &filename,unsigned ndata)
 {
-    CalibrationDataManager calibman(filename);
+    DataManager calibman(filename);
     REQUIRE(calibman.GetNumberOfCalibrations() == 2);
     REQUIRE(calibman.GetNumberOfDataPoints("1") == ndata);
     REQUIRE(calibman.GetNumberOfDataPoints("2") == 3);
@@ -91,7 +92,7 @@ void dotest_load(const string &filename,unsigned ndata)
 
 void dotest_changes(const string& filename)
 {
-    CalibrationDataManager calibman(filename);
+    DataManager calibman(filename);
 
     TCalibrationData cdata;
     interval<TID> idRangeTEST(TID(0,0),TID(0,24));

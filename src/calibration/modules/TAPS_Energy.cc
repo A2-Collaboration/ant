@@ -15,9 +15,8 @@ using namespace std;
 using namespace ant;
 using namespace ant::calibration;
 
-TAPS_Energy::TAPS_Energy(
-        std::shared_ptr<expconfig::detector::TAPS> taps,
-        std::shared_ptr<CalibrationDataManager> calmgr,
+TAPS_Energy::TAPS_Energy(std::shared_ptr<expconfig::detector::TAPS> taps,
+        std::shared_ptr<DataManager> calmgr,
         Calibration::Converter::ptr_t converter,
         double defaultPedestal,
         double defaultGain,
