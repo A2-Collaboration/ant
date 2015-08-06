@@ -25,14 +25,14 @@ class CalCanvasMode;
 class CalibrationGUI {
 protected:
 
-    using myBuffer_t = ant::calibration::gui::AvgBuffer<TH2D,ant::interval<ant::TID>>;
+    using myBuffer_t = AvgBuffer<TH2D, interval<TID>>;
 
     std::unique_ptr<GUIClientInterface> module;
     myBuffer_t buffer;
 
     struct input_file_t {
 
-        input_file_t(const std::string& FileName, const ant::interval<ant::TID>& R):
+        input_file_t(const std::string& FileName, const interval<TID>& R):
             filename(FileName),
             range(R) {}
 

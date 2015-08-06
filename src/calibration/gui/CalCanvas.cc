@@ -120,20 +120,20 @@ void CalCanvas::HandleKeypress(const char key)
     switch (key) {
     case '\r':
         gui_mode->channelStep = 1;
-        gui_mode->stopAlways = false;
-        gui_mode->gotoNextBuffer = true;
+        gui_mode->alwaysDisplayFit = false;
+        gui_mode->gotoNextRange = true;
         rootcanvas->Emit("CloseWindow()");
         break;
     case 'n':
         gui_mode->channelStep = 1;
-        gui_mode->stopAlways = true;
-        gui_mode->gotoNextBuffer = false;
+        gui_mode->alwaysDisplayFit = true;
+        gui_mode->gotoNextRange = false;
         rootcanvas->Emit("CloseWindow()");
         break;
     case 'b': // brevious item haha...
         gui_mode->channelStep = -1;
-        gui_mode->stopAlways = true;
-        gui_mode->gotoNextBuffer = false;
+        gui_mode->alwaysDisplayFit = true;
+        gui_mode->gotoNextRange = false;
         rootcanvas->Emit("CloseWindow()");
         break;
     default:

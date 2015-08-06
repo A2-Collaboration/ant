@@ -13,7 +13,7 @@ namespace gui {
 class FitGausPol3;
 class CalCanvas;
 
-class DebugModule: public GUIClientInterface {
+class DebugModule : public GUIClientInterface {
 protected:
     std::shared_ptr<FitGausPol3> func;
     CalCanvas* canvas  = nullptr;
@@ -28,13 +28,14 @@ public:
     std::list<CalCanvas*> GetCanvases() const override;
     void InitGUI() override;
 
-    bool Fit(TH1* hist, unsigned channel) override;
-    void DisplayFit() override;
-    void StoreResult(unsigned channel) override;
+    void StartRange(const interval<TID>& range) override;
 
-    bool Finish() override;
-    void StoreFinish() override;
+    bool DoFit(TH1* hist, unsigned channel) override;
+    void DisplayFit() override;
+    void StoreFit(unsigned channel) override;
+
+    bool FinishRange() override;
+    void StoreFinishRange(const interval<TID>& range) override;
 };
-}
-}
-}
+
+}}} // ant::calibration::gui

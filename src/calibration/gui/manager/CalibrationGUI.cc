@@ -129,6 +129,7 @@ bool CalibrationGUI::Run()
             return false;
         }
         state.is_init = true;
+        module->StartRange(buffer.Worklist().front());
     }
 
     VLOG(8) << "Worklist size " << buffer.Worklist().size();
@@ -139,35 +140,33 @@ bool CalibrationGUI::Run()
                                                        << " " << buffer.Worklist().front();
             buffer.Average()->SetTitle(title.c_str());
 
-            const bool stop = module->Fit(buffer.Average(), state.channel);
+            const bool stop = module->DoFit(buffer.Average(), state.channel);
 
-            if(stop || mode->stopAlways) {
+            if(stop || mode->alwaysDisplayFit) {
                 VLOG(7) << "Open GUI...";
                 module->DisplayFit();
                 state.stop_fit = true;
                 return false;
             }
         }
-        module->StoreResult(state.channel);
+        module->StoreFit(state.channel);
         state.stop_fit = false;
     }
 
-    if(
-       (state.channel >= (int)module->GetNumberOfChannels() && mode->gotoNextBuffer)
-       || state.stop_finish
-       )
+    if(state.stop_finish
+       || (state.channel >= (int)module->GetNumberOfChannels() && mode->gotoNextRange))
     {
 
         if(!state.stop_finish) {
             VLOG(7) << "Finish module first";
-            if(module->Finish()) {
-                VLOG(7) << "GUI Opened (finish)";
+            if(module->FinishRange()) {
+                VLOG(7) << "GUI Opened (finish range)";
                 state.stop_finish = true;
                 return false;
             }
         }
 
-        module->StoreFinish();
+        module->StoreFinishRange(buffer.Worklist().front());
         state.stop_finish = false;
         state.channel = 0;
 
@@ -183,6 +182,8 @@ bool CalibrationGUI::Run()
             LOG(INFO) << "Finished processing whole buffer";
             return false;
         }
+
+        module->StartRange(buffer.Worklist().front());
 
     }
     else

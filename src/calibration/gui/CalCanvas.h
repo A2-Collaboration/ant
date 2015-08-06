@@ -20,13 +20,13 @@ namespace gui {
 
 struct CalCanvasMode {
     CalCanvasMode() :
-        gotoNextBuffer(true),
-        stopAlways(false),
+        gotoNextRange(true),
+        alwaysDisplayFit(false),
         channelStep(1)
     {}
 
-    bool gotoNextBuffer;
-    bool stopAlways;
+    bool gotoNextRange;
+    bool alwaysDisplayFit;
     int  channelStep;
 };
 

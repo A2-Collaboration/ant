@@ -1,5 +1,8 @@
 #pragma once
 
+#include "base/interval.h"
+#include "tree/THeaderInfo.h"
+
 #include <string>
 #include <list>
 
@@ -17,15 +20,17 @@ public:
 
     virtual std::string GetHistogramName() const =0;
     virtual unsigned GetNumberOfChannels() const =0;
-    virtual std::list<CalCanvas*> GetCanvases() const =0;
     virtual void InitGUI() =0;
+    virtual std::list<CalCanvas*> GetCanvases() const =0;
 
-    virtual bool Fit(TH1* hist, unsigned channel) =0;
+    virtual void StartRange(const interval<TID>& interval) =0;
+
+    virtual bool DoFit(TH1* hist, unsigned channel) =0;
     virtual void DisplayFit() =0;
-    virtual void StoreResult(unsigned channel) =0;
+    virtual void StoreFit(unsigned channel) =0;
 
-    virtual bool Finish() =0;
-    virtual void StoreFinish() =0;
+    virtual bool FinishRange() =0;
+    virtual void StoreFinishRange(const interval<TID>& interval) =0;
 
 };
 

@@ -28,7 +28,28 @@ string DebugModule::GetHistogramName() const
     return "Calibration_CB_Energy_Gains/ggIM";
 }
 
-bool DebugModule::Fit(TH1* hist, unsigned channel)
+unsigned DebugModule::GetNumberOfChannels() const
+{
+    return 10;
+}
+
+
+std::list<CalCanvas*> ant::calibration::gui::DebugModule::GetCanvases() const
+{
+    return {canvas};
+}
+
+void DebugModule::InitGUI()
+{
+    canvas = new CalCanvas("DebugModule");
+}
+
+void DebugModule::StartRange(const interval<TID>& range)
+{
+    VLOG(5) << "Start range " << range;
+}
+
+bool DebugModule::DoFit(TH1* hist, unsigned channel)
 {
     TH2* hist2 = dynamic_cast<TH2*>(hist);
 
@@ -53,12 +74,12 @@ void DebugModule::DisplayFit()
     canvas->Show(projection, func.get());
 }
 
-void DebugModule::StoreResult(unsigned channel)
+void DebugModule::StoreFit(unsigned channel)
 {
-    LOG(INFO) << "Storing result " << func->GetPeakPosition() << " for channel " << channel;
+    LOG(INFO) << "Storing fit result " << func->GetPeakPosition() << " for channel " << channel;
 }
 
-bool DebugModule::Finish()
+bool DebugModule::FinishRange()
 {
     canvas->Clear();
     canvas->cd();
@@ -70,23 +91,10 @@ bool DebugModule::Finish()
     return true;
 }
 
-void DebugModule::StoreFinish()
+void DebugModule::StoreFinishRange(const interval<TID>& range)
 {
-    LOG(INFO) << "Storing finished result";
-}
-
-unsigned DebugModule::GetNumberOfChannels() const
-{
-    return 10;
+    LOG(INFO) << "Storing finished range " << range;
 }
 
 
-std::list<CalCanvas*> ant::calibration::gui::DebugModule::GetCanvases() const
-{
-    return {canvas};
-}
 
-void DebugModule::InitGUI()
-{
-    canvas = new CalCanvas("DebugModule");
-}
