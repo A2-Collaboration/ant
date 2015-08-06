@@ -16,17 +16,21 @@ class CalCanvas;
 class DebugModule: public GUIClientInterface {
 protected:
     std::shared_ptr<FitGausPol3> func;
+    CalCanvas* canvas;
 
 public:
     DebugModule ();
     virtual ~DebugModule();
 
     std::string GetHistogramName() const override;
-    FitStatus Fit(CalCanvas* c, TH1* hist, unsigned channel) override;
+    unsigned GetNumberOfChannels() const override;
+    std::list<CalCanvas*> GetCanvases() const override;
+    void InitGUI() override;
+
+    FitStatus Fit(TH1* hist, unsigned channel) override;
     void StoreResult(unsigned channel) override;
-    FitStatus Finish(CalCanvas* c) override;
+    FitStatus Finish() override;
     void StoreFinish() override;
-    unsigned GetNumberOfChannels();
 };
 }
 }

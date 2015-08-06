@@ -1,5 +1,7 @@
 #pragma once
+
 #include <string>
+#include <list>
 
 class TH1;
 class TQObject;
@@ -18,11 +20,15 @@ public:
     };
 
     virtual std::string GetHistogramName() const =0;
-    virtual FitStatus Fit(CalCanvas* c, TH1* hist, unsigned channel) =0;
+    virtual unsigned GetNumberOfChannels() const =0;
+    virtual std::list<CalCanvas*> GetCanvases() const =0;
+    virtual void InitGUI() =0;
+
+    virtual FitStatus Fit(TH1* hist, unsigned channel) =0;
     virtual void StoreResult(unsigned channel) =0;
-    virtual FitStatus Finish(CalCanvas* c) =0;
+    virtual FitStatus Finish() =0;
     virtual void StoreFinish() =0;
-    virtual unsigned GetNumberOfChannels() =0;
+
 };
 
 }

@@ -37,13 +37,16 @@ void CalCanvas::Show(TH1 *h, FitFunction* f) {
     this->cd();
     h->Draw();
     f->Draw();
-    Update();
+
     SetupGUI();
+
+    Modified();
+    Update();
 }
 
-void CalCanvas::update_me() {
+void CalCanvas::UpdateMe() {
     for(auto& i : indicators) {
-        i->update_me();
+        i->UpdateMe();
     }
     func->Sync();
     Update();
@@ -170,7 +173,7 @@ void CalCanvas::UndoPop()
             }
 
             Modified();
-            update_me();
+            UpdateMe();
         } else {
             VLOG(7) << "No earlier states on the stack";
         }
@@ -197,7 +200,7 @@ void CalCanvas::Update() {
     auto p = getViewport();
     for(auto& i : indicators) {
         i->RangeUpdate(p);
-        i->update_me();
+        i->UpdateMe();
     }
 
     TCanvas::Update();

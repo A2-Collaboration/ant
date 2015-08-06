@@ -23,14 +23,14 @@ protected:
 
     virtual void update_other() {
         if(update)
-            update->update_me();
+            update->UpdateMe();
     }
 
 public:
     IndicatorLine(VirtualKnob& k);
     virtual ~IndicatorLine();
 
-    virtual void update_me() override;
+    virtual void UpdateMe() override;
 
     update_notify_traits* update = nullptr;
 

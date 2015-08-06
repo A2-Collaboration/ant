@@ -17,7 +17,7 @@ public:
 
 
 
-void IndicatorLine::update_me()
+void IndicatorLine::UpdateMe()
 {
     SetPosition(knob.get());
 }

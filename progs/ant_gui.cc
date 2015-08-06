@@ -28,7 +28,9 @@ struct MyExec : TExec {
     MyExec(CalibrationGUI* gui_, const TRint* Rint) :
         rint(Rint),
         gui(gui_)
-    {}
+    {
+        gui->ConnectReturnFunc("TExec", this, "Exec(=\"\")");
+    }
 
     virtual void Exec(const char* arg) override {
 
@@ -44,9 +46,6 @@ struct MyExec : TExec {
             c = gui->Run();
         } while (c.Status == CalibrationGUI::RunReturnStatus_t::Next);
 
-        if( c.Status == CalibrationGUI::RunReturnStatus_t::OpenGUI ) {
-            c.Canvas->ConnectReturnFunc("TExec", this, "Exec(=\"\")");
-        }
     }
 };
 
@@ -67,6 +66,7 @@ int main(int argc, char** argv) {
 
     int fake_argc=0;
     auto app = std_ext::make_unique<TRint>("app",&fake_argc,nullptr);
+
     unique_ptr<CalibrationGUI> gui = std_ext::make_unique<CalibrationGUI>(move(d),5);
     gui->SetFileList(cmd_input->getValue());
 

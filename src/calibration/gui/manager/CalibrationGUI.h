@@ -26,7 +26,6 @@ protected:
     using myBuffer_t = ant::calibration::gui::AvgBuffer<TH2D,ant::interval<ant::TID>>;
 
     std::unique_ptr<GUIClientInterface> module;
-    std::unique_ptr<CalCanvas> canvas;
     myBuffer_t buffer;
 
     struct input_file_t {
@@ -81,7 +80,10 @@ public:
         {}
     };
 
-    CalibrationGUI(std::unique_ptr<GUIClientInterface> module_, unsigned length);
+    CalibrationGUI(std::unique_ptr<GUIClientInterface> module_,
+                   unsigned length);
+
+    virtual void ConnectReturnFunc(const char* receiver_class, void* receiver, const char* slot);
 
     virtual void SetFileList(const std::vector<std::string>& filelist);
 

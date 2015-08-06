@@ -46,7 +46,7 @@ public:
 
     virtual void Show(TH1* h, FitFunction* f);
 
-    virtual void update_me() override;
+    virtual void UpdateMe() override;
 
     virtual void ShowGuidelines(TObject*, const Int_t, const char, const bool) override;
 

@@ -18,7 +18,7 @@ struct Viewport {
 
 class update_notify_traits {
 public:
-    virtual void update_me() =0;
+    virtual void UpdateMe() =0;
 };
 
 

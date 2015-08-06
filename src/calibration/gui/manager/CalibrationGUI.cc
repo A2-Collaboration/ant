@@ -79,11 +79,18 @@ void CalibrationGUI::ProcessFile(input_file_t& file_input)
 
 CalibrationGUI::CalibrationGUI(std::unique_ptr<GUIClientInterface> module_, unsigned length):
     module(move(module_)),
-    canvas(std_ext::make_unique<CalCanvas>("ModuleName")), /// \todo obtain name from module
     buffer(length)
 {
     state.is_init = false;
     state.finish_mode = false;
+    module->InitGUI();
+}
+
+void CalibrationGUI::ConnectReturnFunc(const char* receiver_class, void* receiver, const char* slot)
+{
+    for(CalCanvas* canvas : module->GetCanvases()) {
+        canvas->ConnectReturnFunc(receiver_class, receiver, slot);
+    }
 }
 
 void CalibrationGUI::SetFileList(const std::vector<string>& filelist)
@@ -115,9 +122,6 @@ CalibrationGUI::RunReturn_t CalibrationGUI::Run()
         if(state.break_occured) {
             VLOG(7) << "Returning from GUI";
             module->StoreResult(state.channel);
-            canvas->Clear();
-            canvas->Modified();
-            canvas->Update();
             state.break_occured = false;
 
         } else {
@@ -125,12 +129,12 @@ CalibrationGUI::RunReturn_t CalibrationGUI::Run()
             if(!buffer.Worklist().empty()) {
                 const string& title = std_ext::formatter() << "Channel=" << state.channel << " " << buffer.Worklist().top();
                 buffer.Average()->SetTitle(title.c_str());
-                GUIClientInterface::FitStatus r = module->Fit(canvas.get(), buffer.Average(), state.channel);
+                GUIClientInterface::FitStatus r = module->Fit(buffer.Average(), state.channel);
 
                 if(r == GUIClientInterface::FitStatus::GUIWait) {
                     VLOG(7) << "GUI Opened";
                     state.break_occured = true;
-                    return RunReturn_t(RunReturnStatus_t::OpenGUI, canvas.get());
+                    return RunReturn_t(RunReturnStatus_t::OpenGUI);
                 }
 
                 module->StoreResult(state.channel);
@@ -150,11 +154,11 @@ CalibrationGUI::RunReturn_t CalibrationGUI::Run()
             if(state.finish_mode) {
                 VLOG(7) << "Finished all remaining fits";
                 if(!state.break_occured) {
-                    GUIClientInterface::FitStatus r = module->Finish(canvas.get());
+                    GUIClientInterface::FitStatus r = module->Finish();
                     if(r == GUIClientInterface::FitStatus::GUIWait) {
                         VLOG(7) << "GUI Opened (finish)";
                         state.break_occured = true;
-                        return RunReturn_t(RunReturnStatus_t::OpenGUI, canvas.get());
+                        return RunReturn_t(RunReturnStatus_t::OpenGUI);
                     }
                 }
                 else {
@@ -162,7 +166,6 @@ CalibrationGUI::RunReturn_t CalibrationGUI::Run()
                     state.break_occured = false;
                 }
                 module->StoreFinish();
-                canvas->Close();
                 return RunReturn_t(RunReturnStatus_t::Done);
             }
 
