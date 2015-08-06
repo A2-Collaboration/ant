@@ -1,7 +1,4 @@
-#include "CalibrationGUI.h"
-
-#include "AvgBuffer.h"
-#include "GUIInterface.h"
+#include "Manager.h"
 
 #include "calibration/gui/CalCanvas.h"
 
@@ -24,9 +21,9 @@ using namespace ant::calibration;
 using namespace ant::calibration::gui;
 
 
-std::list<CalibrationGUI::input_file_t> CalibrationGUI::ScanFiles(const std::vector<string> filenames)
+std::list<Manager::input_file_t> Manager::ScanFiles(const std::vector<string> filenames)
 {
-    std::list<CalibrationGUI::input_file_t> inputs;
+    std::list<Manager::input_file_t> inputs;
 
     for(auto& filename : filenames) {
 
@@ -56,7 +53,7 @@ std::list<CalibrationGUI::input_file_t> CalibrationGUI::ScanFiles(const std::vec
 
 
 
-void CalibrationGUI::FillWorklistFromFiles()
+void Manager::FillWorklistFromFiles()
 {
     while(buffer.Worklist().empty() && state.it_file != input_files.end()) {
         const input_file_t& file_input = *state.it_file;
@@ -85,7 +82,7 @@ void CalibrationGUI::FillWorklistFromFiles()
     }
 }
 
-CalibrationGUI::CalibrationGUI(std::unique_ptr<GUIClientInterface> module_, unsigned length):
+Manager::Manager(std::unique_ptr<Manager_traits> module_, unsigned length):
     module(move(module_)),
     buffer(length),
     state(),
@@ -97,14 +94,14 @@ CalibrationGUI::CalibrationGUI(std::unique_ptr<GUIClientInterface> module_, unsi
     }
 }
 
-void CalibrationGUI::ConnectReturnFunc(const char* receiver_class, void* receiver, const char* slot)
+void Manager::ConnectReturnFunc(const char* receiver_class, void* receiver, const char* slot)
 {
     for(CalCanvas* canvas : module->GetCanvases()) {
         canvas->ConnectReturnFunc(receiver_class, receiver, slot);
     }
 }
 
-void CalibrationGUI::SetFileList(const std::vector<string>& filelist)
+void Manager::SetFileList(const std::vector<string>& filelist)
 {
     VLOG(7) << "Scanning input files...";
     input_files = ScanFiles(filelist);
@@ -113,11 +110,11 @@ void CalibrationGUI::SetFileList(const std::vector<string>& filelist)
     VLOG(7) << "Input files scanned";
 }
 
-bool CalibrationGUI::input_file_t::operator <(const CalibrationGUI::input_file_t& o) const {
+bool Manager::input_file_t::operator <(const Manager::input_file_t& o) const {
     return range.Start() < o.range.Start();
 }
 
-bool CalibrationGUI::Run()
+bool Manager::Run()
 {
     if(!state.is_init) {
         state.channel = 0;
@@ -199,7 +196,7 @@ bool CalibrationGUI::Run()
     return true;
 }
 
-CalibrationGUI::~CalibrationGUI()
+Manager::~Manager()
 {
 
 }

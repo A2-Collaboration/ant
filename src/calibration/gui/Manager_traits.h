@@ -15,7 +15,7 @@ namespace gui {
 
 class CalCanvas;
 
-class GUIClientInterface {
+class Manager_traits {
 public:
 
     virtual std::string GetHistogramName() const =0;

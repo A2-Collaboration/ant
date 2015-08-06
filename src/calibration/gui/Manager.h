@@ -1,6 +1,6 @@
 #pragma once
 
-#include "GUIInterface.h"
+#include "Manager_traits.h"
 #include "AvgBuffer.h"
 
 #include "base/interval.h"
@@ -22,12 +22,13 @@ namespace gui {
 
 class CalCanvasMode;
 
-class CalibrationGUI {
+class Manager {
+
 protected:
 
     using myBuffer_t = AvgBuffer<TH2D, interval<TID>>;
 
-    std::unique_ptr<GUIClientInterface> module;
+    std::unique_ptr<Manager_traits> module;
     myBuffer_t buffer;
 
     struct input_file_t {
@@ -74,7 +75,7 @@ public:
         Stop
     };
 
-    CalibrationGUI(std::unique_ptr<GUIClientInterface> module_,
+    Manager(std::unique_ptr<Manager_traits> module_,
                    unsigned length);
 
     virtual void ConnectReturnFunc(const char* receiver_class, void* receiver, const char* slot);
@@ -83,7 +84,7 @@ public:
 
     virtual bool Run();
 
-    virtual ~CalibrationGUI();
+    virtual ~Manager();
 
 };
 

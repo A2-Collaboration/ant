@@ -7,7 +7,7 @@ include_directories(
 
 
 set(SRCS
-	CalibrationEditor.cc
+        CalibrationEditor.cc
     CalibrationDataManager.cc
     Calibration.cc
     modules/Time.cc
@@ -23,6 +23,8 @@ set(SRCS
     converters/CATCH_TDC.cc
     converters/MultiHit16bit.h
     converters/ScalerFrequency.cc
+    gui/Manager.cc
+    gui/Manager_traits.h
     gui/BaseFunctions.cc
     gui/GUIbase.h
     gui/FitFunction.cc
@@ -31,8 +33,6 @@ set(SRCS
     gui/TF1Knobs.cc
     gui/FitGausPol3.cc
     gui/AvgBuffer.h
-    gui/CalibrationGUI.cc
-    gui/GUIInterface.h
     detail/Helpers.h
     gui/debug_GUIModule.cc
   )

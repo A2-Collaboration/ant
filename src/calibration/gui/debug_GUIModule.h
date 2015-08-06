@@ -1,6 +1,6 @@
 #pragma once
 
-#include "GUIInterface.h"
+#include "Manager_traits.h"
 #include <memory>
 
 class TH1;
@@ -13,7 +13,7 @@ namespace gui {
 class FitGausPol3;
 class CalCanvas;
 
-class DebugModule : public GUIClientInterface {
+class DebugModule : public gui::Manager_traits {
 protected:
     std::shared_ptr<FitGausPol3> func;
     CalCanvas* canvas  = nullptr;

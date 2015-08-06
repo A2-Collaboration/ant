@@ -9,7 +9,7 @@
 #include "TObject.h"
 #include "base/Logger.h"
 #include "calibration/gui/debug_GUIModule.h"
-#include "calibration/gui/CalibrationGUI.h"
+#include "calibration/gui/Manager.h"
 #include "base/CmdLine.h"
 
 #include <iostream>
@@ -22,9 +22,9 @@ using namespace  ant::calibration::gui;
 struct MyExec : TExec {
 
     const TRint* rint = nullptr;
-    CalibrationGUI* gui;
+    Manager* gui;
 
-    MyExec(CalibrationGUI* gui_, const TRint* Rint) :
+    MyExec(Manager* gui_, const TRint* Rint) :
         rint(Rint),
         gui(gui_)
     {
@@ -57,7 +57,7 @@ int main(int argc, char** argv) {
     int fake_argc=0;
     auto app = std_ext::make_unique<TRint>("app",&fake_argc,nullptr);
 
-    unique_ptr<CalibrationGUI> gui = std_ext::make_unique<CalibrationGUI>(move(d),5);
+    unique_ptr<Manager> gui = std_ext::make_unique<Manager>(move(d),5);
     gui->SetFileList(cmd_input->getValue());
 
     auto exec = std_ext::make_unique<MyExec>(gui.get(), app.get());
