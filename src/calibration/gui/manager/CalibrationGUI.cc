@@ -106,7 +106,7 @@ bool CalibrationGUI::input_file_t::operator <(const CalibrationGUI::input_file_t
     return range.Start() < o.range.Start();
 }
 
-CalibrationGUI::RunReturn_t CalibrationGUI::Run()
+bool CalibrationGUI::Run()
 {
     if(!state.is_init) {
         state.break_occured=false;
@@ -134,7 +134,7 @@ CalibrationGUI::RunReturn_t CalibrationGUI::Run()
                 if(r == GUIClientInterface::FitStatus::GUIWait) {
                     VLOG(7) << "GUI Opened";
                     state.break_occured = true;
-                    return RunReturn_t(RunReturnStatus_t::OpenGUI);
+                    return false;
                 }
 
                 module->StoreResult(state.channel);
@@ -158,7 +158,7 @@ CalibrationGUI::RunReturn_t CalibrationGUI::Run()
                     if(r == GUIClientInterface::FitStatus::GUIWait) {
                         VLOG(7) << "GUI Opened (finish)";
                         state.break_occured = true;
-                        return RunReturn_t(RunReturnStatus_t::OpenGUI);
+                        return false;
                     }
                 }
                 else {
@@ -166,7 +166,7 @@ CalibrationGUI::RunReturn_t CalibrationGUI::Run()
                     state.break_occured = false;
                 }
                 module->StoreFinish();
-                return RunReturn_t(RunReturnStatus_t::Done);
+                return false;
             }
 
             ++state.file;
@@ -187,7 +187,7 @@ CalibrationGUI::RunReturn_t CalibrationGUI::Run()
         ++state.channel;
     }
 
-    return RunReturn_t(RunReturnStatus_t::Next);
+    return true;
 }
 
 CalibrationGUI::~CalibrationGUI()

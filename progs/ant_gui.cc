@@ -33,19 +33,10 @@ struct MyExec : TExec {
     }
 
     virtual void Exec(const char* arg) override {
-
-        const string Arg(arg);
-
-        if(Arg != "firstcall" && !rint->IsRunning()) {
+        if(string(arg) != "firstcall" && !rint->IsRunning()) {
             return;
         }
-
-        CalibrationGUI::RunReturn_t c;
-
-        do {
-            c = gui->Run();
-        } while (c.Status == CalibrationGUI::RunReturnStatus_t::Next);
-
+        while(gui->Run()) {}
     }
 };
 

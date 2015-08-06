@@ -64,20 +64,8 @@ protected:
 
 public:
     enum class RunReturnStatus_t {
-        Next,
-        OpenGUI,
-        Done
-    };
-
-    struct RunReturn_t {
-        RunReturnStatus_t Status;
-        CalCanvas* Canvas;
-
-        RunReturn_t(RunReturnStatus_t status=RunReturnStatus_t::Next,
-                    CalCanvas* canvas=nullptr):
-            Status(status),
-            Canvas(canvas)
-        {}
+        Continue,
+        Stop
     };
 
     CalibrationGUI(std::unique_ptr<GUIClientInterface> module_,
@@ -87,7 +75,7 @@ public:
 
     virtual void SetFileList(const std::vector<std::string>& filelist);
 
-    virtual RunReturn_t Run();
+    virtual bool Run();
 
     virtual ~CalibrationGUI();
 
