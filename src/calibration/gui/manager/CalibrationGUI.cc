@@ -71,8 +71,10 @@ void CalibrationGUI::ProcessFile(input_file_t& file_input)
     }
 }
 
-CalibrationGUI::CalibrationGUI(std::unique_ptr<GUIClientInterface> Module, unsigned length):
-    module(move(Module)), buffer(length)
+CalibrationGUI::CalibrationGUI(std::unique_ptr<GUIClientInterface> module_, unsigned length):
+    module(move(module_)),
+    canvas(std_ext::make_unique<CalCanvas>("ModuleName")), /// \todo obtain name from module
+    buffer(length)
 {
     state.is_init = false;
     state.finish_mode = false;
@@ -112,12 +114,13 @@ CalibrationGUI::RunReturn_t CalibrationGUI::Run()
         if(!buffer.Worklist().empty()) {
             const string& title = std_ext::formatter() << "Channel=" << state.channel << " " << buffer.Worklist().top();
             buffer.Average()->SetTitle(title.c_str());
-            GUIClientInterface::FitStatus r = module->Fit(buffer.Average(), state.channel);
+            canvas->Clear();
+            GUIClientInterface::FitStatus r = module->Fit(canvas.get(), buffer.Average(), state.channel);
 
             if(r == GUIClientInterface::FitStatus::GUIWait) {
                 VLOG(7) << "GUI Opened";
                 state.break_occured = true;
-                return RunReturn_t(RunReturnStatus_t::OpenGUI, module->GetGUIInstance());
+                return RunReturn_t(RunReturnStatus_t::OpenGUI, canvas.get());
             }
 
             module->StoreResult(state.channel);

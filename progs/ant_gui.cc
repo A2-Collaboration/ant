@@ -10,6 +10,7 @@
 #include "base/Logger.h"
 #include "calibration/gui/debug_GUIModule.h"
 #include "calibration/gui/manager/CalibrationGUI.h"
+#include "calibration/gui/FitCanvas.h"
 #include "base/CmdLine.h"
 
 #include <iostream>
@@ -41,10 +42,10 @@ struct MyExec : TExec {
 
         do {
             c = gui->Run();
-        } while (c.status == CalibrationGUI::RunReturnStatus_t::Next);
+        } while (c.Status == CalibrationGUI::RunReturnStatus_t::Next);
 
-        if( c.status == CalibrationGUI::RunReturnStatus_t::OpenGUI ) {
-            c.gui->Connect("Destroyed()", "TExec", this, "Exec(=\"\")");
+        if( c.Status == CalibrationGUI::RunReturnStatus_t::OpenGUI ) {
+            c.Canvas->ConnectReturnFunc("TExec", this, "Exec(=\"\")");
         }
     }
 };

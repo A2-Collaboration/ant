@@ -6,16 +6,15 @@
 class TH1;
 class TObject;
 
-
 namespace ant {
 namespace calibration {
 namespace gui {
 
 class FitGausPol3;
+class CalCanvas;
 
 class DebugModule: public GUIClientInterface {
 protected:
-    TQObject* guiinstance = nullptr;
     std::shared_ptr<FitGausPol3> func;
 
 public:
@@ -23,10 +22,9 @@ public:
     virtual ~DebugModule();
 
     std::string GetHistogramName() const;
-    FitStatus Fit(TH1* hist, unsigned channel);
+    FitStatus Fit(CalCanvas* c, TH1* hist, unsigned channel);
     void StoreResult(unsigned channel);
     FitStatus Finish();
-    TQObject* GetGUIInstance();
     unsigned GetNumberOfChannels();
 };
 }

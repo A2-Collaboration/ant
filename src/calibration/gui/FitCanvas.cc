@@ -6,15 +6,16 @@
 
 #include "TF1.h"
 #include "TH1.h"
-
+#include "TRootCanvas.h"
 
 using namespace ant::calibration::gui;
 
 
-
-
 CalCanvas::CalCanvas(const std::string &name):
     TCanvas(name.c_str()) {
+
+    rootcanvas = dynamic_cast<TRootCanvas*>(GetCanvasImp());
+    rootcanvas->DontCallClose();
 }
 
 CalCanvas::~CalCanvas() {
@@ -106,6 +107,8 @@ void CalCanvas::HandleKeypress(const char key)
     case 'i':
         UndoPush();
         break;
+    case '\r':
+        rootcanvas->Emit("CloseWindow()");
     default:
         break;
     }
@@ -172,6 +175,11 @@ void CalCanvas::UndoPop()
             VLOG(7) << "No earlier states on the stack";
         }
     }
+}
+
+void CalCanvas::ConnectReturnFunc(const char* receiver_class, void* receiver, const char* slot)
+{
+    rootcanvas->Connect("CloseWindow()", receiver_class, receiver, slot);
 }
 
 void CalCanvas::Execute(const char *method, const char *params, Int_t *error) {

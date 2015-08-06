@@ -12,7 +12,7 @@
 
 
 class TH1;
-
+class TRootCanvas;
 
 namespace ant {
 namespace calibration {
@@ -38,6 +38,8 @@ protected:
 
     std::stack<FitFunction::SavedState_t> UndoStack;
 
+    TRootCanvas* rootcanvas;
+
 public:
     CalCanvas(const std::string& name);
     virtual ~CalCanvas();
@@ -53,9 +55,14 @@ public:
     virtual void UndoPush();
     virtual void UndoPop();
 
+    virtual void ConnectReturnFunc(const char* receiver_class, void* receiver, const char* slot);
+
     virtual void Execute(const char *method, const char *params, Int_t *error);
 
     virtual void Update() override;
+
+
+
 
     /**
      * @brief HandleInput: Override default to catch keyboard inputs

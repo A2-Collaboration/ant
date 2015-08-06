@@ -1,14 +1,15 @@
 #pragma once
 
 #include "GUIInterface.h"
+#include "AvgBuffer.h"
+
+#include "base/interval.h"
+#include "tree/TDataRecord.h"
+
 #include <memory>
 #include <list>
 #include <vector>
 #include <string>
-#include "base/interval.h"
-#include "tree/TDataRecord.h"
-#include "AvgBuffer.h"
-#include "TMutex.h"
 
 class TH1D;
 class TH2D;
@@ -25,6 +26,7 @@ protected:
     using myBuffer_t = ant::calibration::gui::AvgBuffer<TH2D,ant::interval<ant::TID>>;
 
     std::unique_ptr<GUIClientInterface> module;
+    std::unique_ptr<CalCanvas> canvas;
     myBuffer_t buffer;
 
     struct input_file_t {
@@ -69,15 +71,17 @@ public:
     };
 
     struct RunReturn_t {
-        RunReturnStatus_t status;
-        TQObject* gui;
+        RunReturnStatus_t Status;
+        CalCanvas* Canvas;
 
-        RunReturn_t(RunReturnStatus_t Status=RunReturnStatus_t::Next, TQObject* Gui=nullptr):
-            status(Status),
-            gui(Gui) {}
+        RunReturn_t(RunReturnStatus_t status=RunReturnStatus_t::Next,
+                    CalCanvas* canvas=nullptr):
+            Status(status),
+            Canvas(canvas)
+        {}
     };
 
-    CalibrationGUI(std::unique_ptr<GUIClientInterface> Module, unsigned length);
+    CalibrationGUI(std::unique_ptr<GUIClientInterface> module_, unsigned length);
 
     virtual void SetFileList(const std::vector<std::string>& filelist);
 

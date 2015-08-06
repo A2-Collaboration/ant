@@ -12,7 +12,8 @@ using namespace ant;
 using namespace ant::calibration::gui;
 
 
-DebugModule::DebugModule(): func(new FitGausPol3())
+DebugModule::DebugModule() :
+    func(make_shared<FitGausPol3>())
 {
 }
 
@@ -26,7 +27,7 @@ string DebugModule::GetHistogramName() const
     return "Calibration_CB_Energy_Gains/ggIM";
 }
 
-GUIClientInterface::FitStatus DebugModule::Fit(TH1* hist, unsigned channel)
+GUIClientInterface::FitStatus DebugModule::Fit(CalCanvas* c, TH1* hist, unsigned channel)
 {
     TH2* hist2 = dynamic_cast<TH2*>(hist);
 
@@ -35,10 +36,7 @@ GUIClientInterface::FitStatus DebugModule::Fit(TH1* hist, unsigned channel)
         func->Fit(hist1);
 
         if(channel==0) {
-            CalCanvas* c = new CalCanvas("aaa");
-            c->Draw();
-            c->Show(hist1,func.get());
-            guiinstance = c;
+            c->Show(hist1, func.get());
             return FitStatus::GUIWait;
         }
 
@@ -52,17 +50,11 @@ GUIClientInterface::FitStatus DebugModule::Fit(TH1* hist, unsigned channel)
 void DebugModule::StoreResult(unsigned channel)
 {
     LOG(INFO) << "Storing result " << func->GetPeakPosition() << " for channel " << channel;
-    guiinstance = nullptr;
 }
 
 GUIClientInterface::FitStatus DebugModule::Finish()
 {
     return FitStatus::FitOK;
-}
-
-TQObject* DebugModule::GetGUIInstance()
-{
-    return guiinstance;
 }
 
 unsigned DebugModule::GetNumberOfChannels()
