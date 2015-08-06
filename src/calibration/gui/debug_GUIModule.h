@@ -16,7 +16,8 @@ class CalCanvas;
 class DebugModule: public GUIClientInterface {
 protected:
     std::shared_ptr<FitGausPol3> func;
-    CalCanvas* canvas;
+    CalCanvas* canvas  = nullptr;
+    TH1* projection = nullptr;
 
 public:
     DebugModule ();
@@ -27,9 +28,11 @@ public:
     std::list<CalCanvas*> GetCanvases() const override;
     void InitGUI() override;
 
-    FitStatus Fit(TH1* hist, unsigned channel) override;
+    bool Fit(TH1* hist, unsigned channel) override;
+    void DisplayFit() override;
     void StoreResult(unsigned channel) override;
-    FitStatus Finish() override;
+
+    bool Finish() override;
     void StoreFinish() override;
 };
 }

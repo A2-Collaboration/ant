@@ -110,11 +110,20 @@ void CalCanvas::HandleKeypress(const char key)
     case 'i':
         UndoPush();
         break;
+    default:
+        break;
+    }
+
+    if(gui_mode==nullptr)
+        return;
+
+    switch (key) {
     case '\r':
         rootcanvas->Emit("CloseWindow()");
     default:
         break;
     }
+
 }
 
 void CalCanvas::ClearInidators() {
@@ -185,11 +194,17 @@ void CalCanvas::ConnectReturnFunc(const char* receiver_class, void* receiver, co
     rootcanvas->Connect("CloseWindow()", receiver_class, receiver, slot);
 }
 
+void CalCanvas::LinkGUIMode(CalCanvasMode* guimode_)
+{
+    gui_mode = guimode_;
+}
+
 void CalCanvas::Execute(const char *method, const char *params, Int_t *error) {
     std::string cmd(method);
     if(cmd == "Fit") {
         Fit();
-    } else
+    }
+    else
     {
         TCanvas::Execute(method,params,error);
     }

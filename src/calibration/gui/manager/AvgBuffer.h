@@ -3,6 +3,7 @@
 #include <memory>
 #include <list>
 #include <stack>
+#include <cassert>
 
 namespace ant {
 namespace calibration {
@@ -36,7 +37,6 @@ public:
 
     using const_iterator =  typename shpBuffer::const_iterator;
 
-
     AvgBuffer(const std::size_t size):  midpos(m_buffer.end()), m_max_size(size) {}
 
     void Push(std::shared_ptr<HistType> h, const IDType& id)
@@ -44,25 +44,22 @@ public:
         if(m_average == nullptr) {
             m_average = std::unique_ptr<HistType>(dynamic_cast<HistType*>(h->Clone()));
         } else {
-            auto x = h.get();
-            m_average->Add(x, 1.0);
+            m_average->Add(h.get(), 1.0);
         }
 
         m_buffer.emplace_back(buffer_entry(h, id));
 
         if(isFull()) {
             if(!startup_done) {
-
                 auto pos = m_buffer.begin();
                 for(unsigned i=0;i<m_max_size/2;++i) {
                     worklist.emplace(pos->id);
+                    ++pos;
                 }
-
                 midpos = pos;
-
                 startup_done = true;
-
-            } else if(startup_done) {
+            }
+            else {
                 worklist.emplace(midpos->id);
                 ++midpos;
             }
@@ -72,7 +69,7 @@ public:
         {
             Pop();
         }
-
+        assert(m_buffer.size() <= m_max_size);
     }
 
     void Pop() {
@@ -87,7 +84,7 @@ public:
     std::size_t size() const { return m_buffer.size(); }
     std::size_t max_size() const { return m_max_size; }
 
-    bool isFull() const { return m_max_size >= size(); }
+    bool isFull() const { return m_max_size <= size(); }
 
     HistType* Average() { return m_average.get(); }
 

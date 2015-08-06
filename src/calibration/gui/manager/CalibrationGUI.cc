@@ -43,7 +43,7 @@ std::list<CalibrationGUI::input_file_t> CalibrationGUI::ScanFiles(const std::vec
                 LOG(WARNING) << i;
                 inputs.emplace_back(filename, i);
             } else {
-                LOG(WARNING) << "no TAntHeader in " << filename;
+                LOG(WARNING) << "No TAntHeader found in " << filename;
             }
         } catch (const std::runtime_error& e) {
             LOG(WARNING) << "Can't open " << filename << " " << e.what();
@@ -56,34 +56,45 @@ std::list<CalibrationGUI::input_file_t> CalibrationGUI::ScanFiles(const std::vec
 
 
 
-void CalibrationGUI::ProcessFile(input_file_t& file_input)
+void CalibrationGUI::FillWorklistFromFiles()
 {
+    while(buffer.Worklist().empty() && state.it_file != input_files.end()) {
+        const input_file_t& file_input = *state.it_file;
+        try
+        {
+            WrapTFile file(file_input.filename, WrapTFile::mode_t::read, false);
 
-    try {
-        WrapTFile file(file_input.filename, WrapTFile::mode_t::read, false);
+            auto hist = file.GetSharedTH2(module->GetHistogramName());
 
+            if(!hist) {
+                LOG(WARNING) << "Histogram " << module->GetHistogramName() << " not found in " << file_input.filename;
+            } else {
+                buffer.Push(hist, file_input.range);
+            }
 
-        auto hist = file.GetSharedTH2(module->GetHistogramName());
-
-        if(!hist) {
-            LOG(WARNING) << "Histogram " << module->GetHistogramName() << " not found in " << file_input.filename;
-        } else {
-            buffer.Push(hist, file_input.range);
         }
+        catch (const std::runtime_error& e) {
+            LOG(WARNING) << "Can't open " << file_input.filename << ": " << e.what();
+        }
+        state.it_file++;
+    }
 
-    } catch (const std::runtime_error& e) {
-        LOG(WARNING) << "Can't open " << file_input.filename << " " << e.what();
-
+    if(state.it_file == input_files.end()) {
+        VLOG(7) << "Reached end of files, processing remaining buffer";
+        buffer.PushRestToWorklist();
     }
 }
 
 CalibrationGUI::CalibrationGUI(std::unique_ptr<GUIClientInterface> module_, unsigned length):
     module(move(module_)),
-    buffer(length)
+    buffer(length),
+    state(),
+    mode(std_ext::make_unique<CalCanvasMode>())
 {
-    state.is_init = false;
-    state.finish_mode = false;
     module->InitGUI();
+    for(CalCanvas* canvas : module->GetCanvases()) {
+        canvas->LinkGUIMode(mode.get());
+    }
 }
 
 void CalibrationGUI::ConnectReturnFunc(const char* receiver_class, void* receiver, const char* slot)
@@ -109,84 +120,81 @@ bool CalibrationGUI::input_file_t::operator <(const CalibrationGUI::input_file_t
 bool CalibrationGUI::Run()
 {
     if(!state.is_init) {
-        state.break_occured=false;
-        state.channel=0;
-        state.buffpos=buffer.begin();
-        state.file=input_files.begin();
-        ProcessFile(*state.file);
-
+        state.channel = 0;
+        state.it_buffer = buffer.begin();
+        state.it_file = input_files.begin();
+        FillWorklistFromFiles();
+        if(buffer.Worklist().empty()) {
+            LOG(WARNING) << "Did not process anything";
+            return false;
+        }
         state.is_init = true;
     }
 
-    if(!state.finish_mode) {
-        if(state.break_occured) {
-            VLOG(7) << "Returning from GUI";
-            module->StoreResult(state.channel);
-            state.break_occured = false;
+    VLOG(8) << "Worklist size " << buffer.Worklist().size();
 
-        } else {
+    if(!state.stop_finish) {
+        if(!state.stop_fit) {
+            const string& title = std_ext::formatter() << "Channel=" << state.channel
+                                                       << " " << buffer.Worklist().top();
+            buffer.Average()->SetTitle(title.c_str());
 
-            if(!buffer.Worklist().empty()) {
-                const string& title = std_ext::formatter() << "Channel=" << state.channel << " " << buffer.Worklist().top();
-                buffer.Average()->SetTitle(title.c_str());
-                GUIClientInterface::FitStatus r = module->Fit(buffer.Average(), state.channel);
+            const bool stop = module->Fit(buffer.Average(), state.channel);
 
-                if(r == GUIClientInterface::FitStatus::GUIWait) {
-                    VLOG(7) << "GUI Opened";
-                    state.break_occured = true;
-                    return false;
-                }
-
-                module->StoreResult(state.channel);
-            }
-        }
-    }
-
-    VLOG(8) << "Buffer length " << buffer.Worklist().size();
-
-    if(state.channel >= module->GetNumberOfChannels() || buffer.Worklist().empty()) {
-        state.channel = 0;
-
-        if(!buffer.Worklist().empty())
-            buffer.Worklist().pop();
-
-        if(buffer.Worklist().empty()) {
-            if(state.finish_mode) {
-                VLOG(7) << "Finished all remaining fits";
-                if(!state.break_occured) {
-                    GUIClientInterface::FitStatus r = module->Finish();
-                    if(r == GUIClientInterface::FitStatus::GUIWait) {
-                        VLOG(7) << "GUI Opened (finish)";
-                        state.break_occured = true;
-                        return false;
-                    }
-                }
-                else {
-                    // just for completeness, since we will finally return soon
-                    state.break_occured = false;
-                }
-                module->StoreFinish();
+            if(stop || mode->stopAlways ) {
+                VLOG(7) << "Open GUI...";
+                module->DisplayFit();
+                state.stop_fit = true;
                 return false;
             }
-
-            ++state.file;
-
-            if(state.file == input_files.end()) {
-
-                if(!state.finish_mode) {
-                    VLOG(7) << "Entered finish mode";
-                    buffer.PushRestToWorklist();
-                    state.finish_mode = true;
-                }
-
-            } else {
-                ProcessFile(*state.file);
-            }
         }
-    } else {
-        ++state.channel;
+        module->StoreResult(state.channel);
+        state.stop_fit = false;
     }
 
+    if(
+       (state.channel >= (int)module->GetNumberOfChannels() && mode->gotoNextBuffer)
+       || state.stop_finish
+       )
+    {
+
+        if(!state.stop_finish) {
+            VLOG(7) << "Finish module first";
+            if(module->Finish()) {
+                VLOG(7) << "GUI Opened (finish)";
+                state.stop_finish = true;
+                return false;
+            }
+        }
+
+        module->StoreFinish();
+        state.stop_finish = false;
+        state.channel = 0;
+
+        buffer.Worklist().pop();
+
+        // try refilling the worklist
+        FillWorklistFromFiles();
+        if(buffer.Worklist().empty()) {
+            /// \todo give module a chance to do something again here???
+            for(CalCanvas* canvas : module->GetCanvases()) {
+                canvas->Close();
+            }
+            LOG(INFO) << "Finished processing whole buffer";
+            return false;
+        }
+
+    }
+    else
+    {
+        state.channel += mode->channelStep;
+        if(state.channel<0)
+            state.channel = 0;
+        else if(state.channel>(int)module->GetNumberOfChannels())
+            state.channel = module->GetNumberOfChannels();
+    }
+
+    // continue running by default
     return true;
 }
 

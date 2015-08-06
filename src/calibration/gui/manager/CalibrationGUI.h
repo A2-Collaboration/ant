@@ -20,6 +20,8 @@ namespace ant {
 namespace calibration {
 namespace gui {
 
+class CalCanvasMode;
+
 class CalibrationGUI {
 protected:
 
@@ -42,25 +44,29 @@ protected:
 
     std::list<input_file_t> input_files;
 
-
     struct state_t {
+        state_t() :
+              is_init(false),
+              stop_fit(false),
+              stop_finish(false)
+        {}
+
+        std::list<input_file_t>::iterator it_file;
+        myBuffer_t::const_iterator it_buffer;
+        int channel;
+
         bool is_init;
-
-        std::list<input_file_t>::iterator file;
-        myBuffer_t::const_iterator buffpos;
-        unsigned channel;
-
-        bool break_occured;
-        bool finish_mode;
+        bool stop_fit;
+        bool stop_finish;
     };
-
     state_t state;
+
+
+    std::unique_ptr<CalCanvasMode> mode;
 
     std::list<input_file_t> ScanFiles(const std::vector<std::string> filenames);
 
-    void ProcessFile(input_file_t &file_input);
-    void ProcessModules();
-
+    void FillWorklistFromFiles();
 
 public:
     enum class RunReturnStatus_t {

@@ -28,25 +28,29 @@ string DebugModule::GetHistogramName() const
     return "Calibration_CB_Energy_Gains/ggIM";
 }
 
-GUIClientInterface::FitStatus DebugModule::Fit(TH1* hist, unsigned channel)
+bool DebugModule::Fit(TH1* hist, unsigned channel)
 {
     TH2* hist2 = dynamic_cast<TH2*>(hist);
 
     if(hist2) {
-        TH1* hist1 = hist2->ProjectionX("",channel,channel+1);
-        func->Fit(hist1);
+        projection = hist2->ProjectionX("",channel,channel+1);
+        func->Fit(projection);
 
         if(channel==0) {
-
-            canvas->Show(hist1, func.get());
-            return FitStatus::GUIWait;
+            return true;
         }
 
     } else {
         LOG(WARNING) << "Supplied Hist is not 2D";
     }
 
-    return FitStatus::FitOK;
+    // do not show something
+    return false;
+}
+
+void DebugModule::DisplayFit()
+{
+    canvas->Show(projection, func.get());
 }
 
 void DebugModule::StoreResult(unsigned channel)
@@ -54,7 +58,7 @@ void DebugModule::StoreResult(unsigned channel)
     LOG(INFO) << "Storing result " << func->GetPeakPosition() << " for channel " << channel;
 }
 
-GUIClientInterface::FitStatus DebugModule::Finish()
+bool DebugModule::Finish()
 {
     canvas->Clear();
     canvas->cd();
@@ -63,18 +67,17 @@ GUIClientInterface::FitStatus DebugModule::Finish()
     canvas->Draw();
     canvas->Modified();
     canvas->Update();
-    return FitStatus::GUIWait;
+    return true;
 }
 
 void DebugModule::StoreFinish()
 {
     LOG(INFO) << "Storing finished result";
-    canvas->Close();
 }
 
 unsigned DebugModule::GetNumberOfChannels() const
 {
-    return 720;
+    return 10;
 }
 
 

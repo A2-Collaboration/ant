@@ -18,7 +18,17 @@ namespace ant {
 namespace calibration {
 namespace gui {
 
+struct CalCanvasMode {
+    CalCanvasMode() :
+        gotoNextBuffer(true),
+        stopAlways(false),
+        channelStep(1)
+    {}
 
+    bool gotoNextBuffer;
+    bool stopAlways;
+    int  channelStep;
+};
 
 class CalCanvas : public TCanvas, public update_notify_traits {
 protected:
@@ -38,7 +48,8 @@ protected:
 
     std::stack<FitFunction::SavedState_t> UndoStack;
 
-    TRootCanvas* rootcanvas;
+    TRootCanvas* rootcanvas = nullptr;
+    CalCanvasMode* gui_mode = nullptr;
 
 public:
     CalCanvas(const std::string& name);
@@ -56,6 +67,7 @@ public:
     virtual void UndoPop();
 
     virtual void ConnectReturnFunc(const char* receiver_class, void* receiver, const char* slot);
+    virtual void LinkGUIMode(CalCanvasMode* guimode_);
 
     virtual void Execute(const char *method, const char *params, Int_t *error);
 
