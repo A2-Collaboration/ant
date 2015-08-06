@@ -13,6 +13,11 @@ class Physics;
 class Calibration {
 public:
 
+    /**
+     * @brief The Converter struct handles the transition from raw bytes
+     * to somewhat meaningful values (not necessarily with physically meaningful units)
+     *
+     */
     struct Converter {
         using ptr_t = std::shared_ptr<Converter>;
 
@@ -21,7 +26,7 @@ public:
     };
 
     /**
-     * @brief The BaseModule class has just a name
+     * @brief The BaseModule class provides a name for identification
      */
     class BaseModule
     {
@@ -36,6 +41,11 @@ public:
         const std::string name;
     };
 
+    /**
+     * @brief The PhysicsModule class gives the modules the ability to create
+     * histograms from events as well as fitting those histograms in order to
+     * obtain the parameters needed for calibration
+     */
     class PhysicsModule : public BaseModule
     {
     protected:
@@ -49,16 +59,15 @@ public:
      * @brief The Module class is typically used for calibrations
      *
      * Note that each module has the freedom to implement ReconstructHook::DetectorReadHits
-     * or ReconstructHook::Clusters or both.
+     * or ReconstructHook::Clusters or both. Or you may define your own Calibration module,
+     * as long as it derives at least from Calibration::BaseModule
      */
     class Module :
             public PhysicsModule,
             public Updateable_traits
     {
     protected:
-        Module(const std::string& name_) :
-            PhysicsModule(name_)
-        {}
+       using PhysicsModule::PhysicsModule; // constructors from base class
     };
 
 
