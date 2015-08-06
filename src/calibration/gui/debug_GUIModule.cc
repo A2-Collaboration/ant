@@ -6,6 +6,7 @@
 #include "calibration/gui/FitGausPol3.h"
 
 #include "TH2.h"
+#include "TText.h"
 
 using namespace std;
 using namespace ant;
@@ -52,9 +53,20 @@ void DebugModule::StoreResult(unsigned channel)
     LOG(INFO) << "Storing result " << func->GetPeakPosition() << " for channel " << channel;
 }
 
-GUIClientInterface::FitStatus DebugModule::Finish()
+GUIClientInterface::FitStatus DebugModule::Finish(CalCanvas* c)
 {
-    return FitStatus::FitOK;
+    c->cd();
+    TText* text = new TText(0.5, 0.5, "Module finish");
+    text->Draw();
+    c->Draw();
+    c->Modified();
+    c->Update();
+    return FitStatus::GUIWait;
+}
+
+void DebugModule::StoreFinish()
+{
+    LOG(INFO) << "Storing finished result";
 }
 
 unsigned DebugModule::GetNumberOfChannels()

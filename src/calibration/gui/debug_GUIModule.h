@@ -21,10 +21,11 @@ public:
     DebugModule ();
     virtual ~DebugModule();
 
-    std::string GetHistogramName() const;
-    FitStatus Fit(CalCanvas* c, TH1* hist, unsigned channel);
-    void StoreResult(unsigned channel);
-    FitStatus Finish();
+    std::string GetHistogramName() const override;
+    FitStatus Fit(CalCanvas* c, TH1* hist, unsigned channel) override;
+    void StoreResult(unsigned channel) override;
+    FitStatus Finish(CalCanvas* c) override;
+    void StoreFinish() override;
     unsigned GetNumberOfChannels();
 };
 }
