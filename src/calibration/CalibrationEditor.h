@@ -13,9 +13,18 @@ namespace calibration
 class Editor
 {
 private:
-    DataManager calman;
+    DataBase dman;
+
+    bool getIDRange(const std::string& calibrationID, interval<TID>& IDinterval) ;
+
 public:
-    Editor(const std::string& filename): calman(filename){}
+    Editor(): dman(){}
+
+    void AddFromFile(const std::string& fileName) {dman.ReadData(fileName); }
+    void SaveToFile(const std::string& fileName)  {dman.WriteData(fileName);}
+
+
+
 };
 
 }

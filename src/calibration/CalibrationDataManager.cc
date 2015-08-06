@@ -149,27 +149,6 @@ uint32_t DataManager::GetNumberOfDataPoints(const string& calibrationID)
     }
 }
 
-bool DataManager::GetIDRange(const string& calibrationID, interval<TID>& IDinterval)
-{
-    lazyInit();
-    if (dataBase->DataMap.count(calibrationID) == 0)
-        return false;
-
-    auto& data = dataBase->DataMap.at(calibrationID);
-
-    IDinterval.Start() = data.front().FirstID;
-    IDinterval.Stop()  = data.front().LastID;
-
-    for (auto& entry: data)
-    {
-        if (entry.FirstID < IDinterval.Start())
-                IDinterval.Start() = entry.FirstID;
-        if (entry.LastID  > IDinterval.Stop())
-                IDinterval.Stop() = entry.LastID;
-    }
-
-    return true;
-}
 
 bool DataManager::GetLastEntry(const std::string& calibrationID, TCalibrationData& cdata)
 {

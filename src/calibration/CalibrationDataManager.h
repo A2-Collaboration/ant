@@ -121,7 +121,6 @@ public:
 
     std::uint32_t GetNumberOfDataPoints(const std::string& calibrationID) ;
 
-    bool GetIDRange(const std::string& calibrationID, interval<TID>& IDinterval) ;
 
     bool GetLastEntry(const std::string& calibrationID, TCalibrationData& cdata) override;
 
