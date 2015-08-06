@@ -13,12 +13,35 @@
 #include <string>
 #include <memory>
 
+
 namespace ant
 {
 
-class CalibrationDataManager
+using dataMap = std::map<std::string,std::vector<TCalibrationData>>;
+
+class DataAccess
 {
-    using dataMap = std::map<std::string,std::vector<TCalibrationData>>;
+public:
+   /**
+    *  \brief GetData Query the calibration database for specific TID
+    *  \param calibrationID Calibration ID
+    *  \param eventID event ID
+    *  \param cdata   Reference to a TCalibrationData, data will be writter here
+    *  \return true if valid data was found
+    */
+    virtual void Add(const TCalibrationData& data) = 0;
+
+    virtual bool GetData(const std::string& calibrationID, const TID& eventID, TCalibrationData& cdata) = 0;
+
+    virtual const std::list<TID> GetChangePoints(const std::string& calibrationID) = 0;
+
+    virtual bool GetLastEntry(const std::string& calibrationID, TCalibrationData& cdata) = 0;
+};
+
+
+class CalibrationDataManager: public DataAccess
+{
+
 private:
     const std::string cm_treename_prefix;
     const std::string cm_branchname;
@@ -65,23 +88,16 @@ public:
     }
 
 
-    void Add(const TCalibrationData& data)
+    void Add(const TCalibrationData& data) override
     {
         lazyInit();
         dataBase->operator[](data.CalibrationID).push_back(data);
         changedDataBase = true;
     }
 
-    /**
-     *  \brief GetData Query the calibration database for specific TID
-     *  \param calibrationID Calibration ID
-     *  \param eventID event ID
-     *  \param cdata   Reference to a TCalibrationData, data will be writter here
-     *  \return true if valid data was found
-     */
-    bool GetData(const std::string& calibrationID, const TID& eventID, TCalibrationData& cdata) ;
+    bool GetData(const std::string& calibrationID, const TID& eventID, TCalibrationData& cdata) override;
 
-    const std::list<TID> GetChangePoints(const std::string& calibrationID) ;
+    const std::list<TID> GetChangePoints(const std::string& calibrationID) override;
 
     std::uint32_t GetNumberOfCalibrations()
     {
@@ -93,7 +109,7 @@ public:
 
     bool GetIDRange(const std::string& calibrationID, interval<TID>& IDinterval) ;
 
-    bool GetLastEntry(const std::string& calibrationID, TCalibrationData& cdata) ;
+    bool GetLastEntry(const std::string& calibrationID, TCalibrationData& cdata) override;
 
 };
 
