@@ -23,21 +23,21 @@ public:
     Manager_traits(const std::string& name_) :
         name(name_) {}
     virtual ~Manager_traits() {}
-    std::string GetName() { return name; }
+    std::string GetName() const { return name; }
 
     virtual std::string GetHistogramName() const =0;
     virtual unsigned GetNumberOfChannels() const =0;
     virtual void InitGUI() =0;
     virtual std::list<CalCanvas*> GetCanvases() const =0;
 
-    virtual void StartRange(const interval<TID>& interval) =0;
+    virtual void StartRange(const interval<TID>& range) =0;
 
     virtual bool DoFit(TH1* hist, unsigned channel) =0;
     virtual void DisplayFit() =0;
     virtual void StoreFit(unsigned channel) =0;
 
     virtual bool FinishRange() =0;
-    virtual void StoreFinishRange(const interval<TID>& interval) =0;
+    virtual void StoreFinishRange(const interval<TID>& range) =0;
 
 };
 

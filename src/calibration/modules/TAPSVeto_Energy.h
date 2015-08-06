@@ -33,10 +33,8 @@ public:
                     double defaultThreshold = 0.1,
                     double defaultRelativeGain = 1.0);
 
-    virtual std::unique_ptr<Physics> GetPhysicsModule();
-    virtual std::list<std::unique_ptr<calibration::gui::Manager_traits>> GetGUIs() override {
-        return {};
-    }
+    virtual std::unique_ptr<Physics> GetPhysicsModule() override;
+    virtual void GetGUIs(std::list<std::unique_ptr<calibration::gui::Manager_traits> >& guis) override {}
 };
 
 }} // namespace ant::calibration

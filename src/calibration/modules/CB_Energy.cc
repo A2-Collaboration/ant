@@ -43,6 +43,17 @@ CB_Energy::ThePhysics::ThePhysics(const string& name, unsigned nChannels):
     ggIM = HistFac.makeTH2D("2 neutral IM (CB,CB)", "IM [MeV]", "#", energybins, cb_channels, "ggIM");
 }
 
+CB_Energy::TheGUI::TheGUI(const string& name, CB_Energy* parent_) :
+    Manager_traits(name),
+    parent(parent)
+{
+}
+
+string CB_Energy::TheGUI::GetHistogramName() const
+{
+    return GetName() + "/ggIM";
+}
+
 void CB_Energy::ThePhysics::ProcessEvent(const Event& event)
 {
     const auto& cands = event.Reconstructed().Candidates();
@@ -85,47 +96,45 @@ unique_ptr<Physics> CB_Energy::GetPhysicsModule()
                                             cb_detector->GetNChannels());
 }
 
-std::list<std::unique_ptr<gui::Manager_traits> > CB_Energy::GetGUIs() {
-    return {};
+void CB_Energy::GetGUIs(std::list<std::unique_ptr<gui::Manager_traits> >& guis) {
+    guis.emplace_back(std_ext::make_unique<TheGUI>(GetName()+"_Gains", this));
 }
 
 
-string ant::calibration::CB_Energy::TheGUI::GetHistogramName() const
+
+
+unsigned CB_Energy::TheGUI::GetNumberOfChannels() const
 {
 }
 
-unsigned ant::calibration::CB_Energy::TheGUI::GetNumberOfChannels() const
+void CB_Energy::TheGUI::InitGUI()
 {
 }
 
-void ant::calibration::CB_Energy::TheGUI::InitGUI()
+list<gui::CalCanvas*> CB_Energy::TheGUI::GetCanvases() const
 {
 }
 
-std::list<gui::CalCanvas*> ant::calibration::CB_Energy::TheGUI::GetCanvases() const
+void CB_Energy::TheGUI::StartRange(const interval<TID>& range)
 {
 }
 
-void ant::calibration::CB_Energy::TheGUI::StartRange(const interval<TID>& interval)
+bool CB_Energy::TheGUI::DoFit(TH1* hist, unsigned channel)
 {
 }
 
-bool ant::calibration::CB_Energy::TheGUI::DoFit(TH1* hist, unsigned channel)
+void CB_Energy::TheGUI::DisplayFit()
 {
 }
 
-void ant::calibration::CB_Energy::TheGUI::DisplayFit()
+void CB_Energy::TheGUI::StoreFit(unsigned channel)
 {
 }
 
-void ant::calibration::CB_Energy::TheGUI::StoreFit(unsigned channel)
+bool CB_Energy::TheGUI::FinishRange()
 {
 }
 
-bool ant::calibration::CB_Energy::TheGUI::FinishRange()
-{
-}
-
-void ant::calibration::CB_Energy::TheGUI::StoreFinishRange(const interval<TID>& interval)
+void CB_Energy::TheGUI::StoreFinishRange(const interval<TID>& range)
 {
 }

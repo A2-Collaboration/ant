@@ -35,10 +35,8 @@ public:
         virtual void ShowResult() override;
     };
 
-    virtual std::unique_ptr<Physics> GetPhysicsModule();
-    virtual std::list<std::unique_ptr<calibration::gui::Manager_traits>> GetGUIs() override {
-        return {};
-    }
+    virtual std::unique_ptr<Physics> GetPhysicsModule() override;
+    virtual void GetGUIs(std::list<std::unique_ptr<calibration::gui::Manager_traits> >& guis) override {}
 
     // Updateable_traits interface
     virtual std::vector<std::list<TID> > GetChangePoints() const override;

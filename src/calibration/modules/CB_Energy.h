@@ -19,7 +19,27 @@ class CB_Energy : public Energy
 
 
 public:
+    struct TheGUI : gui::Manager_traits {
+        TheGUI(const std::string& name, CB_Energy* parent);
+
+        virtual std::string GetHistogramName() const;
+        virtual unsigned GetNumberOfChannels() const;
+        virtual void InitGUI();
+        virtual std::list<gui::CalCanvas*> GetCanvases() const;
+        virtual void StartRange(const interval<TID>& range);
+        virtual bool DoFit(TH1* hist, unsigned channel);
+        virtual void DisplayFit();
+        virtual void StoreFit(unsigned channel);
+        virtual bool FinishRange();
+        virtual void StoreFinishRange(const interval<TID>& range);
+    protected:
+        CB_Energy* parent;
+        gui::CalCanvas* c_fit;
+        gui::CalCanvas* c_overview;
+    };
+
     struct ThePhysics : Physics {
+
         ThePhysics(const std::string& name, unsigned nChannels);
 
         virtual void ProcessEvent(const Event& event);
@@ -28,23 +48,9 @@ public:
 
     protected:
         TH2* ggIM = nullptr;
-
     };
 
-    struct TheGUI : gui::Manager_traits {
-
-        virtual std::string GetHistogramName() const;
-        virtual unsigned GetNumberOfChannels() const;
-        virtual void InitGUI();
-        virtual std::list<gui::CalCanvas*> GetCanvases() const;
-        virtual void StartRange(const interval<TID>& interval);
-        virtual bool DoFit(TH1* hist, unsigned channel);
-        virtual void DisplayFit();
-        virtual void StoreFit(unsigned channel);
-        virtual bool FinishRange();
-        virtual void StoreFinishRange(const interval<TID>& interval);
-
-    };
+    friend class TheGUI;
 
     CB_Energy(
             std::shared_ptr<expconfig::detector::CB> cb,
@@ -56,7 +62,7 @@ public:
             double defaultRelativeGain = 1.0);
 
     virtual std::unique_ptr<Physics> GetPhysicsModule() override;
-    virtual std::list<std::unique_ptr<calibration::gui::Manager_traits>> GetGUIs() override;
+    virtual void GetGUIs(std::list<std::unique_ptr<gui::Manager_traits> >& guis) override;
 
 
 protected:

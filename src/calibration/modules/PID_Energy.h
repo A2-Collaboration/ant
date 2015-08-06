@@ -46,9 +46,7 @@ public:
 
 
     virtual std::unique_ptr<Physics> GetPhysicsModule();
-    virtual std::list<std::unique_ptr<calibration::gui::Manager_traits>> GetGUIs() override {
-        return {};
-    }
+    virtual void GetGUIs(std::list<std::unique_ptr<calibration::gui::Manager_traits> >& guis) override {}
 
 protected:
     std::shared_ptr<expconfig::detector::PID> pid_detector;

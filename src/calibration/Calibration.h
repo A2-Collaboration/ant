@@ -52,7 +52,7 @@ public:
         using BaseModule::BaseModule; // constructors from base class
     public:
         virtual std::unique_ptr<Physics> GetPhysicsModule() =0;
-        virtual std::list<std::unique_ptr<calibration::gui::Manager_traits>> GetGUIs() =0;
+        virtual void GetGUIs(std::list<std::unique_ptr<calibration::gui::Manager_traits> >& guis) =0;
     };
 
     /**
