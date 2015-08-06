@@ -33,7 +33,7 @@ public:
         virtual bool FinishRange();
         virtual void StoreFinishRange(const interval<TID>& range);
     protected:
-        CB_Energy* parent;
+        CB_Energy* p;
         gui::CalCanvas* c_fit;
         gui::CalCanvas* c_overview;
     };

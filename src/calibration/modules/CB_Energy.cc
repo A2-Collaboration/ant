@@ -1,5 +1,7 @@
 #include "CB_Energy.h"
 
+#include "calibration/gui/CalCanvas.h"
+
 #include "analysis/plot/HistogramFactories.h"
 #include "analysis/data/Event.h"
 #include "analysis/utils/combinatorics.h"
@@ -7,6 +9,8 @@
 #include "expconfig/detectors/CB.h"
 
 #include "tree/TDataRecord.h"
+
+#include "base/Logger.h"
 
 #include <list>
 
@@ -43,9 +47,9 @@ CB_Energy::ThePhysics::ThePhysics(const string& name, unsigned nChannels):
     ggIM = HistFac.makeTH2D("2 neutral IM (CB,CB)", "IM [MeV]", "#", energybins, cb_channels, "ggIM");
 }
 
-CB_Energy::TheGUI::TheGUI(const string& name, CB_Energy* parent_) :
+CB_Energy::TheGUI::TheGUI(const string& name, CB_Energy* parent) :
     Manager_traits(name),
-    parent(parent)
+    p(parent)
 {
 }
 
@@ -96,7 +100,7 @@ unique_ptr<Physics> CB_Energy::GetPhysicsModule()
                                             cb_detector->GetNChannels());
 }
 
-void CB_Energy::GetGUIs(std::list<std::unique_ptr<gui::Manager_traits> >& guis) {
+void CB_Energy::GetGUIs(list<unique_ptr<gui::Manager_traits> >& guis) {
     guis.emplace_back(std_ext::make_unique<TheGUI>(GetName()+"_Gains", this));
 }
 
@@ -105,36 +109,49 @@ void CB_Energy::GetGUIs(std::list<std::unique_ptr<gui::Manager_traits> >& guis) 
 
 unsigned CB_Energy::TheGUI::GetNumberOfChannels() const
 {
+    p->cb_detector->GetNChannels();
 }
 
 void CB_Energy::TheGUI::InitGUI()
 {
+    c_fit = new gui::CalCanvas(GetName()+" Fit");
+    c_overview = new gui::CalCanvas(GetName()+" Overview");
 }
 
 list<gui::CalCanvas*> CB_Energy::TheGUI::GetCanvases() const
 {
+    return {c_fit, c_overview};
 }
 
 void CB_Energy::TheGUI::StartRange(const interval<TID>& range)
 {
+    LOG(INFO) << "StartRange " << range;
+    // have a look if we find some previous data for this range
+    //p->calibrationManager
 }
 
 bool CB_Energy::TheGUI::DoFit(TH1* hist, unsigned channel)
 {
+    return false;
 }
 
 void CB_Energy::TheGUI::DisplayFit()
 {
+    LOG(INFO) << "Displaying Fit";
 }
 
 void CB_Energy::TheGUI::StoreFit(unsigned channel)
 {
+    LOG(INFO) << "Storing data for channel " << channel;
 }
 
 bool CB_Energy::TheGUI::FinishRange()
 {
+    LOG(INFO) << "FinishRange";
+    return false;
 }
 
 void CB_Energy::TheGUI::StoreFinishRange(const interval<TID>& range)
 {
+    LOG(INFO) << "StoreFinishRange " << range;
 }
