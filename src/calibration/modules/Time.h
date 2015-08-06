@@ -51,6 +51,10 @@ public:
         return std_ext::make_unique<ThePhysics>(GetName());
     }
 
+    virtual std::list<std::unique_ptr<calibration::gui::Manager_traits>> GetGUIs() override {
+        return {};
+    }
+
 protected:
 
     const Detector_t::Type_t DetectorType;

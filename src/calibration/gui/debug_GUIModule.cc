@@ -14,6 +14,7 @@ using namespace ant::calibration::gui;
 
 
 DebugModule::DebugModule() :
+    Manager_traits("DebugModule"),
     func(make_shared<FitGausPol3>())
 {
 }

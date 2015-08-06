@@ -43,8 +43,10 @@ public:
             double defaultThreshold = 1,
             double defaultRelativeGain = 1.0);
 
-    // BaseModule interface
     virtual std::unique_ptr<Physics> GetPhysicsModule();
+    virtual std::list<std::unique_ptr<calibration::gui::Manager_traits>> GetGUIs() override {
+        return {};
+    }
 protected:
     std::shared_ptr<expconfig::detector::TAPS> taps_detector;
 };

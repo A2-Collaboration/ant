@@ -84,3 +84,48 @@ unique_ptr<Physics> CB_Energy::GetPhysicsModule()
     return std_ext::make_unique<ThePhysics>(GetName()+"_Gains",
                                             cb_detector->GetNChannels());
 }
+
+std::list<std::unique_ptr<gui::Manager_traits> > CB_Energy::GetGUIs() {
+    return {};
+}
+
+
+string ant::calibration::CB_Energy::TheGUI::GetHistogramName() const
+{
+}
+
+unsigned ant::calibration::CB_Energy::TheGUI::GetNumberOfChannels() const
+{
+}
+
+void ant::calibration::CB_Energy::TheGUI::InitGUI()
+{
+}
+
+std::list<gui::CalCanvas*> ant::calibration::CB_Energy::TheGUI::GetCanvases() const
+{
+}
+
+void ant::calibration::CB_Energy::TheGUI::StartRange(const interval<TID>& interval)
+{
+}
+
+bool ant::calibration::CB_Energy::TheGUI::DoFit(TH1* hist, unsigned channel)
+{
+}
+
+void ant::calibration::CB_Energy::TheGUI::DisplayFit()
+{
+}
+
+void ant::calibration::CB_Energy::TheGUI::StoreFit(unsigned channel)
+{
+}
+
+bool ant::calibration::CB_Energy::TheGUI::FinishRange()
+{
+}
+
+void ant::calibration::CB_Energy::TheGUI::StoreFinishRange(const interval<TID>& interval)
+{
+}

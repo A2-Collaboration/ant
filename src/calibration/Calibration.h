@@ -2,6 +2,7 @@
 
 #include "analysis/physics/Physics.h"
 #include "reconstruct/Reconstruct_traits.h"
+#include "calibration/gui/Manager_traits.h"
 
 #include <vector>
 
@@ -40,10 +41,8 @@ public:
     protected:
         using BaseModule::BaseModule; // constructors from base class
     public:
-        virtual std::unique_ptr<Physics> GetPhysicsModule() = 0;
-        virtual std::vector<std::string> GetHistogramName() {
-            throw std::runtime_error("Not implemented");
-        }
+        virtual std::unique_ptr<Physics> GetPhysicsModule() =0;
+        virtual std::list<std::unique_ptr<calibration::gui::Manager_traits>> GetGUIs() =0;
     };
 
     /**
