@@ -19,7 +19,23 @@ namespace ant
 namespace calibration
 {
 
-using dataMap = std::map<std::string,std::vector<TCalibrationData>>;
+using DataMap_t = std::map<std::string,std::vector<TCalibrationData>>;
+
+class DataBase
+{
+private:
+    const std::string cm_treename_prefix;
+    const std::string cm_branchname;
+
+public:
+    void ReadData(const std::string& filename);
+    void WriteData(const std::string& filename);
+    DataMap_t DataMap;
+    DataBase():
+        cm_treename_prefix("calibration-"),
+        cm_branchname("cdata")
+    {}
+};
 
 class DataAccess
 {
@@ -45,12 +61,10 @@ class DataManager: public DataAccess
 {
 
 private:
-    const std::string cm_treename_prefix;
-    const std::string cm_branchname;
+
     std::string dataFileName;
     bool changedDataBase;
-
-    std::unique_ptr<dataMap> dataBase;
+    std::unique_ptr<DataBase> dataBase;
 
     void lazyInit();
 
@@ -74,26 +88,24 @@ private:
      */
     std::uint32_t getDepth(const TID& tid, const std::string& calibrationID) const;
 
-    /**
-     * @brief finish takes care of rewriting the data to the tree
-     */
-    void writeDataBase() ;
-    void readDataBase();
-
 public:
-    DataManager(const std::string& DataFileName);
+    DataManager(const std::string& DataFileName):
+        dataFileName(DataFileName),
+        changedDataBase(false)
+    {}
+
 
     ~DataManager()
     {
         if (changedDataBase)
-            writeDataBase();
+            dataBase->WriteData(dataFileName);
     }
 
 
     void Add(const TCalibrationData& data) override
     {
         lazyInit();
-        dataBase->operator[](data.CalibrationID).push_back(data);
+        dataBase->DataMap[data.CalibrationID].push_back(data);
         changedDataBase = true;
     }
 
@@ -104,7 +116,7 @@ public:
     std::uint32_t GetNumberOfCalibrations()
     {
         lazyInit();
-        return dataBase->size();
+        return dataBase->DataMap.size();
     }
 
     std::uint32_t GetNumberOfDataPoints(const std::string& calibrationID) ;
