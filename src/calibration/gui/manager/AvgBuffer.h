@@ -2,7 +2,7 @@
 
 #include <memory>
 #include <list>
-#include <stack>
+#include <queue>
 #include <cassert>
 
 namespace ant {
@@ -31,7 +31,7 @@ protected:
 
     bool startup_done = false;
 
-    std::stack<IDType> worklist;
+    std::queue<IDType> worklist;
 
 public:
 
@@ -74,8 +74,7 @@ public:
 
     void Pop() {
         if(!m_buffer.empty()) {
-
-            std::shared_ptr<HistType>& last = m_buffer.front().hist;
+            const std::shared_ptr<HistType>& last = m_buffer.front().hist;
             m_average->Add(last.get(), -1.0);
             m_buffer.pop_front();
         }
@@ -92,7 +91,7 @@ public:
     const_iterator end() const { return m_buffer.end(); }
     const_iterator mid() const { return midpos; }
 
-    std::stack<IDType>& Worklist() { return worklist; }
+    std::queue<IDType>& Worklist() { return worklist; }
 
     void PushRestToWorklist() {
         while(midpos != m_buffer.end()) {

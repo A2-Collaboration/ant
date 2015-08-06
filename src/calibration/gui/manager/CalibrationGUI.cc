@@ -136,7 +136,7 @@ bool CalibrationGUI::Run()
     if(!state.stop_finish) {
         if(!state.stop_fit) {
             const string& title = std_ext::formatter() << "Channel=" << state.channel
-                                                       << " " << buffer.Worklist().top();
+                                                       << " " << buffer.Worklist().front();
             buffer.Average()->SetTitle(title.c_str());
 
             const bool stop = module->Fit(buffer.Average(), state.channel);
