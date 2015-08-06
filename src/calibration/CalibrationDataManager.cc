@@ -16,16 +16,15 @@
 using namespace std;
 using namespace ant;
 
-CalibrationDataManager::Backend::Backend(const string& DataFileName):
+CalibrationDataManager::CalibrationDataManager(const string& DataFileName):
         cm_treename_prefix("calibration-"),
         cm_branchname("cdata"),
         dataFileName(DataFileName),
         changedDataBase(false)
 {
-    readDataBase();
 }
 
-void CalibrationDataManager::Backend::readDataBase()
+void CalibrationDataManager::readDataBase()
 {
     try {
         WrapTFile dataFile(dataFileName,
@@ -47,12 +46,13 @@ void CalibrationDataManager::Backend::readDataBase()
 
 }
 
-void CalibrationDataManager::Backend::writeDataBase() const
+void CalibrationDataManager::writeDataBase()
 {
+    lazyInit();
     WrapTFile file(dataFileName,
                    WrapTFile::mode_t::recreate);
     // loop over map and write a new tree for each calibrationID
-    for (auto& calibration: dataBase)
+    for (auto& calibration: *dataBase)
     {
         string tname = cm_treename_prefix + calibration.first;
 
@@ -67,10 +67,19 @@ void CalibrationDataManager::Backend::writeDataBase() const
     }
 }
 
-uint32_t CalibrationDataManager::Backend::getDepth(const TID& tid, const string& calibrationID) const
+void CalibrationDataManager::lazyInit()
+{
+    if ( dataBase == nullptr )
+    {
+        dataBase = std_ext::make_unique<dataMap>();
+        readDataBase();
+    }
+}
+
+uint32_t CalibrationDataManager::getDepth(const TID& tid, const string& calibrationID) const
 {
     uint32_t current_depth = 0;
-    auto& calibPairs = dataBase.at(calibrationID);
+    auto& calibPairs = dataBase->at(calibrationID);
 
     for(auto rit = calibPairs.rbegin(); rit != calibPairs.rend(); ++rit)
     {
@@ -82,14 +91,15 @@ uint32_t CalibrationDataManager::Backend::getDepth(const TID& tid, const string&
     return current_depth;
 }
 
-bool CalibrationDataManager::Backend::GetData(const string& calibrationID, const TID& eventID, TCalibrationData& cdata) const
+bool CalibrationDataManager::GetData(const string& calibrationID, const TID& eventID, TCalibrationData& cdata)
 {
+    lazyInit();
     //case one: calibration doesn't exist
-    if ( dataBase.count(calibrationID) == 0)
+    if ( dataBase->count(calibrationID) == 0)
         return false;
 
     //case two: calibration exists
-    auto& calibPairs = dataBase.at(calibrationID);
+    auto& calibPairs = dataBase->at(calibrationID);
     for(auto rit = calibPairs.rbegin(); rit != calibPairs.rend(); ++rit)
     {
         interval<TID> range(rit->FirstID,rit->LastID);
@@ -105,16 +115,17 @@ bool CalibrationDataManager::Backend::GetData(const string& calibrationID, const
 }
 
 
-const list<TID> CalibrationDataManager::Backend::GetChangePoints(const string& calibrationID) const
+const list<TID> CalibrationDataManager::GetChangePoints(const string& calibrationID)
 {
-    if ( dataBase.count(calibrationID) == 0)
+    lazyInit();
+    if ( dataBase->count(calibrationID) == 0)
         return {};
 
     uint32_t depth = 0;
     list<TID> ids;
 
 
-    auto& calibPairs = dataBase.at(calibrationID);
+    auto& calibPairs = dataBase->at(calibrationID);
 
     for(auto rit = calibPairs.rbegin(); rit != calibPairs.rend(); ++rit)
     {
@@ -133,11 +144,12 @@ const list<TID> CalibrationDataManager::Backend::GetChangePoints(const string& c
     return ids;
 }
 
-uint32_t CalibrationDataManager::Backend::GetNumberOfDataPoints(const string& calibrationID) const
+uint32_t CalibrationDataManager::GetNumberOfDataPoints(const string& calibrationID)
 {
+    lazyInit();
     try
     {
-        return dataBase.at(calibrationID).size();
+        return dataBase->at(calibrationID).size();
     }
     catch (out_of_range)
     {
@@ -145,12 +157,13 @@ uint32_t CalibrationDataManager::Backend::GetNumberOfDataPoints(const string& ca
     }
 }
 
-bool CalibrationDataManager::Backend::GetIDRange(const string& calibrationID, interval<TID>& IDinterval) const
+bool CalibrationDataManager::GetIDRange(const string& calibrationID, interval<TID>& IDinterval)
 {
-    if (dataBase.count(calibrationID) == 0)
+    lazyInit();
+    if (dataBase->count(calibrationID) == 0)
         return false;
 
-    auto& data = dataBase.at(calibrationID);
+    auto& data = dataBase->at(calibrationID);
 
     IDinterval.Start() = data.front().FirstID;
     IDinterval.Stop()  = data.front().LastID;
@@ -162,6 +175,19 @@ bool CalibrationDataManager::Backend::GetIDRange(const string& calibrationID, in
         if (entry.LastID  > IDinterval.Stop())
                 IDinterval.Stop() = entry.LastID;
     }
+
+    return true;
+}
+
+bool CalibrationDataManager::GetLastEntry(const std::string& calibrationID, TCalibrationData& cdata)
+{
+    lazyInit();
+    if (dataBase->count(calibrationID) == 0)
+        return false;
+
+    auto& data = dataBase->at(calibrationID);
+
+    cdata = data.back();
 
     return true;
 }
