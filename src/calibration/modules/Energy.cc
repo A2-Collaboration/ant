@@ -16,6 +16,8 @@ using namespace std;
 using namespace ant;
 using namespace ant::calibration;
 
+size_t Energy::CalibType::Instances = 0;
+
 Energy::Energy(Detector_t::Type_t detectorType,
                std::shared_ptr<DataManager> calmgr,
                Calibration::Converter::ptr_t converter,
@@ -31,10 +33,10 @@ Energy::Energy(Detector_t::Type_t detectorType,
     DetectorType(detectorType),
     calibrationManager(calmgr),
     Converter(move(converter)),
-    Pedestals(defaultPedestal,"Pedestals",0),
-    Gains(defaultGain,"Gains",1),
-    Thresholds(defaultThreshold,"Thresholds",2),
-    RelativeGains(defaultRelativeGain,"RelativeGains",3)
+    Pedestals(defaultPedestal,"Pedestals"),
+    Gains(defaultGain,"Gains"),
+    Thresholds(defaultThreshold,"Thresholds"),
+    RelativeGains(defaultRelativeGain,"RelativeGains")
 {
     if(Converter==nullptr)
         throw std::runtime_error("Given converter should not be nullptr");

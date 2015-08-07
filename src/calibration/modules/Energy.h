@@ -54,12 +54,13 @@ protected:
         std::vector<double> Values;
         const std::string   Type;
         const std::size_t   Index;
-        CalibType(double defaultValue, const std::string type, size_t index):
+        CalibType(double defaultValue, const std::string type):
             DefaultValue(defaultValue),
             Values(),
             Type(type),
-            Index(index)
+            Index(Instances++)
         {}
+        static std::size_t Instances;
     };
 
 
