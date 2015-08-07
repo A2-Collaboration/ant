@@ -183,7 +183,7 @@ int main(int argc, char** argv) {
 
     // create the list of enabled calibrations here,
     // because now the readers (and underlying unpackers) did the work
-    // of finding the config, so that
+    // of finding the config, so that we can simply ask the ExpConfig now
     list<shared_ptr<Calibration::PhysicsModule>> enabled_calibrations;
     if(cmd_calibrations->isSet()) {
         auto setup = ExpConfig::Setup::GetLastFound();
