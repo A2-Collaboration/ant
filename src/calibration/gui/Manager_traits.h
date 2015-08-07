@@ -16,14 +16,13 @@ namespace gui {
 class CalCanvas;
 
 class Manager_traits {
-protected:
+private:
     std::string name;
-
 public:
     Manager_traits(const std::string& name_) :
         name(name_) {}
     virtual ~Manager_traits() {}
-    std::string GetName() const { return name; }
+    virtual std::string GetName() const { return name; }
 
     virtual std::string GetHistogramName() const =0;
     virtual unsigned GetNumberOfChannels() const =0;

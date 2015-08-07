@@ -38,24 +38,28 @@ CB_Energy::CB_Energy(std::shared_ptr<expconfig::detector::CB> cb,
 
 }
 
-CB_Energy::ThePhysics::ThePhysics(const string& name, unsigned nChannels):
+unique_ptr<Physics> CB_Energy::GetPhysicsModule()
+{
+    return std_ext::make_unique<ThePhysics>(GetName(),
+                                            GUI_CalibType::ConstructName(GetName(), Gains.Name),
+                                            cb_detector->GetNChannels());
+}
+
+void CB_Energy::GetGUIs(list<unique_ptr<gui::Manager_traits> >& guis) {
+    guis.emplace_back(std_ext::make_unique<TheGUI>(GetName(), Gains, this));
+}
+
+
+CB_Energy::ThePhysics::ThePhysics(const string& name,
+                                  const string& hist_name,
+                                  unsigned nChannels):
     Physics(name)
 {
     const BinSettings cb_channels(nChannels);
     const BinSettings energybins(1000);
 
-    ggIM = HistFac.makeTH2D("2 neutral IM (CB,CB)", "IM [MeV]", "#", energybins, cb_channels, "ggIM");
-}
-
-CB_Energy::TheGUI::TheGUI(const string& name, CB_Energy* parent) :
-    Manager_traits(name),
-    p(parent)
-{
-}
-
-string CB_Energy::TheGUI::GetHistogramName() const
-{
-    return GetName() + "/ggIM";
+    ggIM = HistFac.makeTH2D("2 neutral IM (CB,CB)", "IM [MeV]", "#",
+                            energybins, cb_channels, hist_name);
 }
 
 void CB_Energy::ThePhysics::ProcessEvent(const Event& event)
@@ -94,40 +98,27 @@ void CB_Energy::ThePhysics::ShowResult()
     canvas(GetName()) << drawoption("colz") << ggIM << endc;
 }
 
-unique_ptr<Physics> CB_Energy::GetPhysicsModule()
+CB_Energy::TheGUI::TheGUI(const string& basename, CalibType& type, CB_Energy* parent) :
+    GUI_CalibType(basename, type, p->calibrationManager),
+    p(parent)
 {
-    return std_ext::make_unique<ThePhysics>(GetName()+"_Gains",
-                                            cb_detector->GetNChannels());
+
 }
-
-void CB_Energy::GetGUIs(list<unique_ptr<gui::Manager_traits> >& guis) {
-    guis.emplace_back(std_ext::make_unique<TheGUI>(GetName()+"_Gains", this));
-}
-
-
-
 
 unsigned CB_Energy::TheGUI::GetNumberOfChannels() const
 {
-    p->cb_detector->GetNChannels();
+    return p->cb_detector->GetNChannels();
 }
 
 void CB_Energy::TheGUI::InitGUI()
 {
-    c_fit = new gui::CalCanvas(GetName()+" Fit");
-    c_overview = new gui::CalCanvas(GetName()+" Overview");
+    c_fit = new gui::CalCanvas(GetName()+": Fit");
+    c_overview = new gui::CalCanvas(GetName()+": Overview");
 }
 
 list<gui::CalCanvas*> CB_Energy::TheGUI::GetCanvases() const
 {
     return {c_fit, c_overview};
-}
-
-void CB_Energy::TheGUI::StartRange(const interval<TID>& range)
-{
-    LOG(INFO) << "StartRange " << range;
-    // have a look if we find some previous data for this range
-    //p->calibrationManager
 }
 
 bool CB_Energy::TheGUI::DoFit(TH1* hist, unsigned channel)
@@ -149,9 +140,4 @@ bool CB_Energy::TheGUI::FinishRange()
 {
     LOG(INFO) << "FinishRange";
     return false;
-}
-
-void CB_Energy::TheGUI::StoreFinishRange(const interval<TID>& range)
-{
-    LOG(INFO) << "StoreFinishRange " << range;
 }

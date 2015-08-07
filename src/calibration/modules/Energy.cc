@@ -120,7 +120,7 @@ std::vector<std::list<TID> > Energy::GetChangePoints() const
 {
     vector<list<TID>> changePointLists;
 
-    for (auto& calibType: { Pedestals.Type, Gains.Type, Thresholds.Type, RelativeGains.Type})
+    for (auto& calibType: { Pedestals.Name, Gains.Name, Thresholds.Name, RelativeGains.Name})
         changePointLists.push_back(calibrationManager->GetChangePoints(std_ext::formatter()
                                                                        << GetName()
                                                                        << "-" << calibType));
@@ -129,17 +129,19 @@ std::vector<std::list<TID> > Energy::GetChangePoints() const
 void Energy::Update(size_t index, const TID& tid)
 {
     for (auto calibration: {&Pedestals, &Gains, &Thresholds, &RelativeGains})
+    {
         if (calibration->Index == index)
         {
             TCalibrationData cdata;
             calibrationManager->GetData(std_ext::formatter()<< GetName() <<
-                                          "-" << calibration->Type,
+                                          "-" << calibration->Name,
                                         tid, cdata);
             calibration->Values.clear();
             calibration->Values.reserve(cdata.Data.size());
             for (auto& val: cdata.Data)
                 calibration->Values.push_back(val.Value);
         }
+    }
 }
 
 Energy::~Energy()
@@ -147,3 +149,29 @@ Energy::~Energy()
 
 }
 
+Energy::GUI_CalibType::GUI_CalibType(const string& basename, CalibType& type,
+                                     const shared_ptr<DataManager>& calmgr) :
+    gui::Manager_traits(basename),
+    calibType(type),
+    calibrationManager(calmgr)
+{}
+
+string Energy::GUI_CalibType::GetName() const
+{
+    return ConstructName(Manager_traits::GetName(), calibType.Name);
+}
+
+string Energy::GUI_CalibType::GetHistogramName() const
+{
+    return GetName();
+}
+
+void Energy::GUI_CalibType::StartRange(const interval<TID>& range)
+{
+
+}
+
+void Energy::GUI_CalibType::StoreFinishRange(const interval<TID>& range)
+{
+
+}

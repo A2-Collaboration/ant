@@ -44,7 +44,9 @@ public:
             double defaultRelativeGain = 1.0);
 
     virtual std::unique_ptr<Physics> GetPhysicsModule() override;
-    virtual void GetGUIs(std::list<std::unique_ptr<calibration::gui::Manager_traits> >& guis) override {}
+    virtual void GetGUIs(std::list<std::unique_ptr<calibration::gui::Manager_traits> >& guis) override {
+        guis.clear();
+    }
 protected:
     std::shared_ptr<expconfig::detector::TAPS> taps_detector;
 };

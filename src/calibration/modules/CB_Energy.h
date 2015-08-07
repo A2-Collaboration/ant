@@ -19,38 +19,34 @@ class CB_Energy : public Energy
 
 
 public:
-    struct TheGUI : gui::Manager_traits {
-        TheGUI(const std::string& name, CB_Energy* parent);
+    struct TheGUI : GUI_CalibType {
+        TheGUI(const std::string& basename, CalibType& type, CB_Energy* parent);
 
-        virtual std::string GetHistogramName() const;
-        virtual unsigned GetNumberOfChannels() const;
-        virtual void InitGUI();
-        virtual std::list<gui::CalCanvas*> GetCanvases() const;
-        virtual void StartRange(const interval<TID>& range);
-        virtual bool DoFit(TH1* hist, unsigned channel);
-        virtual void DisplayFit();
-        virtual void StoreFit(unsigned channel);
-        virtual bool FinishRange();
-        virtual void StoreFinishRange(const interval<TID>& range);
+        virtual unsigned GetNumberOfChannels() const override;
+        virtual void InitGUI() override;
+        virtual std::list<gui::CalCanvas*> GetCanvases() const override;
+        virtual bool DoFit(TH1* hist, unsigned channel) override;
+        virtual void DisplayFit() override;
+        virtual void StoreFit(unsigned channel) override;
+        virtual bool FinishRange() override;
     protected:
         CB_Energy* p;
         gui::CalCanvas* c_fit;
         gui::CalCanvas* c_overview;
     };
+    friend class TheGUI;
 
     struct ThePhysics : Physics {
 
-        ThePhysics(const std::string& name, unsigned nChannels);
+        ThePhysics(const std::string& name, const std::string& hist_name, unsigned nChannels);
 
-        virtual void ProcessEvent(const Event& event);
-        virtual void Finish();
-        virtual void ShowResult();
+        virtual void ProcessEvent(const Event& event) override;
+        virtual void Finish() override;
+        virtual void ShowResult() override;
 
     protected:
         TH2* ggIM = nullptr;
     };
-
-    friend class TheGUI;
 
     CB_Energy(
             std::shared_ptr<expconfig::detector::CB> cb,
