@@ -23,9 +23,20 @@ public:
 
     TCalibrationEditor();
 
+    /// ONLY FOR DEBUG!!!!!
+    void AddSomeRandomData();
+
+    void ListCalibrations() const;
+
     void AddFromFile(const std::string& fileName);
     void SaveToFile(const std::string& fileName);
+
     void ShowHistory(const std::string& calibrationID) const;
+    /**
+     * @brief ShowValid shows only calibration steps which are used
+     * @param calibrationID
+     */
+    void ShowValid(const std::string&  calibrationID) const;
 
     virtual ~TCalibrationEditor();
 
