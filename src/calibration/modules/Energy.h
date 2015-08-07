@@ -74,7 +74,7 @@ protected:
         virtual void StoreFinishRange(const interval<TID>& range) override;
 
         static std::string ConstructName(const std::string& basename, const std::string& type_name) {
-            return basename+"_"+type_name;
+            return basename+"/"+type_name;
         }
 
     protected:

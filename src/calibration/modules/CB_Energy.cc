@@ -42,7 +42,7 @@ CB_Energy::CB_Energy(std::shared_ptr<expconfig::detector::CB> cb,
 unique_ptr<Physics> CB_Energy::GetPhysicsModule()
 {
     return std_ext::make_unique<ThePhysics>(GetName(),
-                                            GUI_CalibType::ConstructName(GetName(), Gains.Name),
+                                            Gains.Name,
                                             cb_detector->GetNChannels());
 }
 
