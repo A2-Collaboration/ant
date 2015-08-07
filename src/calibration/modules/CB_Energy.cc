@@ -1,6 +1,7 @@
 #include "CB_Energy.h"
 
 #include "calibration/gui/CalCanvas.h"
+#include "calibration/gui/FitGausPol3.h"
 
 #include "analysis/plot/HistogramFactories.h"
 #include "analysis/data/Event.h"
@@ -100,7 +101,8 @@ void CB_Energy::ThePhysics::ShowResult()
 
 CB_Energy::TheGUI::TheGUI(const string& basename, CalibType& type, CB_Energy* parent) :
     GUI_CalibType(basename, type, p->calibrationManager),
-    p(parent)
+    p(parent),
+    func(make_shared<gui::FitGausPol3>())
 {
 
 }
@@ -123,21 +125,72 @@ list<gui::CalCanvas*> CB_Energy::TheGUI::GetCanvases() const
 
 bool CB_Energy::TheGUI::DoFit(TH1* hist, unsigned channel)
 {
+    TH2* hist2 = dynamic_cast<TH2*>(hist);
+
+    if(hist2) {
+        projection = hist2->ProjectionX("",channel,channel+1);
+
+        func->SetDefaults(projection);
+        const auto it_fit_param = fitParameters.find(channel);
+        if(it_fit_param != fitParameters.end()) {
+            VLOG(5) << "Loading previous fit parameters for channel " << channel;
+            func->Load(it_fit_param->second);
+        }
+
+        func->Fit(projection);
+
+        if(channel==0) {
+            return true;
+        }
+
+    } else {
+        LOG(WARNING) << "Supplied Hist is not 2D";
+    }
+
+    // do not show something
     return false;
 }
 
 void CB_Energy::TheGUI::DisplayFit()
 {
-    LOG(INFO) << "Displaying Fit";
+    c_fit->Show(projection, func.get());
 }
 
 void CB_Energy::TheGUI::StoreFit(unsigned channel)
 {
-    LOG(INFO) << "Storing data for channel " << channel;
+    const double oldValue = previousValues[channel];
+    /// \todo obtain convergenceFactor and pi0mass from config or database
+    const double convergenceFactor = 1.0;
+    const double pi0mass = 135.0;
+    const double pi0peak = func->GetPeakPosition();
+
+    // apply convergenceFactor only to the desired procentual change of oldValue,
+    // given by (pi0mass/pi0peak - 1)
+    const double newValue = oldValue + oldValue * convergenceFactor * (pi0mass/pi0peak - 1);
+
+    calibType.Values[channel] = newValue;
+
+    LOG(INFO) << "Stored Ch=" << channel << ": PeakPosition " << pi0peak
+              << " MeV,  gain changed " << oldValue << " -> " << newValue
+              << " (" << 100*newValue/oldValue << " %)";
+
+
 }
 
 bool CB_Energy::TheGUI::FinishRange()
 {
+//    c_overview->Clear();
+//    c_overview->cd();
+//    TH1D* overview = new TH1D("Overview", "");
+//    c_overview->Draw();
+
     LOG(INFO) << "FinishRange";
     return false;
+}
+
+void CB_Energy::TheGUI::StoreFinishRange(const interval<TID>& range)
+{
+    // c_overview->Close();
+
+    GUI_CalibType::StoreFinishRange(range);
 }

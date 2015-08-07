@@ -14,6 +14,10 @@ class CB;
 
 namespace calibration {
 
+namespace gui {
+class FitGausPol3;
+}
+
 class CB_Energy : public Energy
 {
 
@@ -29,8 +33,11 @@ public:
         virtual void DisplayFit() override;
         virtual void StoreFit(unsigned channel) override;
         virtual bool FinishRange() override;
+        virtual void StoreFinishRange(const interval<TID>& range) override;
     protected:
         CB_Energy* p;
+        std::shared_ptr<gui::FitGausPol3> func;
+        TH1* projection = nullptr;
         gui::CalCanvas* c_fit;
         gui::CalCanvas* c_overview;
     };
