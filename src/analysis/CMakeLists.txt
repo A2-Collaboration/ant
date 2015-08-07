@@ -4,7 +4,6 @@ include_directories(
 
 
 set(ANALYSIS_BASE
-  ParticleType.cc
   physics/Physics.cc
   utils/combinatorics.h
   utils/matcher.h

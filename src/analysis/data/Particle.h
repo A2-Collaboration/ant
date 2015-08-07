@@ -2,7 +2,7 @@
 
 #include "base/printable.h"
 #include "base/types.h"
-#include "analysis/ParticleType.h"
+#include "base/ParticleType.h"
 #include "analysis/data/Candidate.h"
 
 #include "TLorentzVector.h"

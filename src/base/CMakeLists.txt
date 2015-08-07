@@ -3,6 +3,7 @@ include_directories(.)
 set(SRCS
   types.cc
   Detector_t.cc
+  ParticleType.cc
   interval.h
   piecewise_interval.h
   printable.cc

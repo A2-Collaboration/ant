@@ -1,4 +1,4 @@
-#include "ParticleType.h"
+#include "base/ParticleType.h"
 #include <iostream>
 
 using namespace std;

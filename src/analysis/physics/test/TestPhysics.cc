@@ -2,7 +2,7 @@
 
 #include "data/Event.h"
 #include "data/Particle.h"
-#include "ParticleType.h"
+#include "base/ParticleType.h"
 #include "utils/combinatorics.h"
 #include "TH1D.h"
 #include <memory>

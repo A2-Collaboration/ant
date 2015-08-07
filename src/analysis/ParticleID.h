@@ -1,6 +1,6 @@
 #pragma once
 
-#include "ParticleType.h"
+#include "base/ParticleType.h"
 
 #include <memory>
 
