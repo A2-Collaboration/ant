@@ -37,7 +37,7 @@ public:
 
     using const_iterator =  typename shpBuffer::const_iterator;
 
-    AvgBuffer(const std::size_t size):  midpos(m_buffer.end()), m_max_size(size) {}
+    AvgBuffer(const std::size_t size):  midpos(m_buffer.begin()), m_max_size(size) {}
 
     void Push(std::shared_ptr<HistType> h, const IDType& id)
     {
@@ -64,6 +64,11 @@ public:
                 ++midpos;
             }
         }
+        else if(!startup_done) {
+            midpos = m_buffer.begin();
+        }
+
+
 
         if(m_buffer.size() > m_max_size)
         {
