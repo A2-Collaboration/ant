@@ -47,7 +47,12 @@ unique_ptr<Physics> CB_Energy::GetPhysicsModule()
 }
 
 void CB_Energy::GetGUIs(list<unique_ptr<gui::Manager_traits> >& guis) {
-    guis.emplace_back(std_ext::make_unique<TheGUI>(GetName(), Gains, this));
+    guis.emplace_back(std_ext::make_unique<TheGUI>(
+                          GetName(),
+                          Gains,
+                          calibrationManager,
+                          cb_detector
+                          ));
 }
 
 
@@ -99,9 +104,12 @@ void CB_Energy::ThePhysics::ShowResult()
     canvas(GetName()) << drawoption("colz") << ggIM << endc;
 }
 
-CB_Energy::TheGUI::TheGUI(const string& basename, CalibType& type, CB_Energy* parent) :
-    GUI_CalibType(basename, type, p->calibrationManager),
-    p(parent),
+CB_Energy::TheGUI::TheGUI(const string& basename,
+                          CalibType& type,
+                          const std::shared_ptr<DataManager>& calmgr,
+                          const std::shared_ptr<expconfig::detector::CB>& cb) :
+    GUI_CalibType(basename, type, calmgr),
+    cb_detector(cb),
     func(make_shared<gui::FitGausPol3>())
 {
 
@@ -109,7 +117,7 @@ CB_Energy::TheGUI::TheGUI(const string& basename, CalibType& type, CB_Energy* pa
 
 unsigned CB_Energy::TheGUI::GetNumberOfChannels() const
 {
-    return p->cb_detector->GetNChannels();
+    return cb_detector->GetNChannels();
 }
 
 void CB_Energy::TheGUI::InitGUI()

@@ -24,7 +24,10 @@ class CB_Energy : public Energy
 
 public:
     struct TheGUI : GUI_CalibType {
-        TheGUI(const std::string& basename, CalibType& type, CB_Energy* parent);
+        TheGUI(const std::string& basename,
+               CalibType& type,
+               const std::shared_ptr<DataManager>& calmgr,
+               const std::shared_ptr<expconfig::detector::CB>& cb);
 
         virtual unsigned GetNumberOfChannels() const override;
         virtual void InitGUI() override;
@@ -35,13 +38,12 @@ public:
         virtual bool FinishRange() override;
         virtual void StoreFinishRange(const interval<TID>& range) override;
     protected:
-        CB_Energy* p;
+        std::shared_ptr<expconfig::detector::CB> cb_detector;
         std::shared_ptr<gui::FitGausPol3> func;
         TH1* projection = nullptr;
         gui::CalCanvas* c_fit;
         gui::CalCanvas* c_overview;
     };
-    friend class TheGUI;
 
     struct ThePhysics : Physics {
 

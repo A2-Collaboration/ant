@@ -21,11 +21,12 @@ using namespace ant::calibration;
 using namespace ant::calibration::gui;
 
 
-std::list<Manager::input_file_t> Manager::ScanFiles(const std::vector<string> filenames)
+void Manager::BuildInputFiles(const vector<string>& filenames)
 {
-    std::list<Manager::input_file_t> inputs;
+    if(filenames.empty())
+        return;
 
-    for(auto& filename : filenames) {
+    for(const auto& filename : filenames) {
 
         try {
 
@@ -34,21 +35,37 @@ std::list<Manager::input_file_t> Manager::ScanFiles(const std::vector<string> fi
             TAntHeader* header = nullptr;
             file.GetObject("AntHeader", header);
 
-
-            if(header) {
-                auto i = ant::interval<TID>(header->FirstID, header->LastID);
-                LOG(WARNING) << i;
-                inputs.emplace_back(filename, i);
-            } else {
+            if(!header) {
                 LOG(WARNING) << "No TAntHeader found in " << filename;
+                continue;
             }
+
+            if(SetupName.empty()) {
+                SetupName = header->SetupName;
+            }
+            else if(SetupName != header->SetupName) {
+                LOG(WARNING) << "Previously found setup name '" << SetupName
+                             << "' does not match '" << header->SetupName << "' of file "
+                             << filename;
+                continue;
+            }
+
+            auto range = interval<TID>(header->FirstID, header->LastID);
+            if(!range.IsSane()) {
+                LOG(WARNING) << "Range " << range << " not sane in " << filename;
+                continue;
+            }
+            input_files.emplace_back(filename, range);
+
         } catch (const std::runtime_error& e) {
             LOG(WARNING) << "Can't open " << filename << " " << e.what();
-
         }
     }
 
-    return inputs;
+    input_files.sort();
+    LOG(INFO) << "Loaded " << input_files.size()
+              << " files from " << filenames.size() << " provided filenames ("
+              << 100*(double)input_files.size()/filenames.size() << " %)";
 }
 
 
@@ -82,32 +99,22 @@ void Manager::FillWorklistFromFiles()
     }
 }
 
-Manager::Manager(std::unique_ptr<Manager_traits> module_, unsigned length):
-    module(move(module_)),
-    buffer(length),
+Manager::Manager(const std::vector<std::string>& inputfiles, unsigned avglength):
+    buffer(avglength),
     state(),
     mode(std_ext::make_unique<CalCanvasMode>())
+{
+    BuildInputFiles(inputfiles);
+}
+void Manager::InitGUI(const char* receiver_class, void* receiver, const char* slot)
 {
     module->InitGUI();
     for(CalCanvas* canvas : module->GetCanvases()) {
         canvas->LinkGUIMode(mode.get());
     }
-}
-
-void Manager::ConnectReturnFunc(const char* receiver_class, void* receiver, const char* slot)
-{
     for(CalCanvas* canvas : module->GetCanvases()) {
         canvas->ConnectReturnFunc(receiver_class, receiver, slot);
     }
-}
-
-void Manager::SetFileList(const std::vector<string>& filelist)
-{
-    VLOG(7) << "Scanning input files...";
-    input_files = ScanFiles(filelist);
-    VLOG(7) << "Sorting input files by TID range...";
-    input_files.sort();
-    VLOG(7) << "Input files scanned";
 }
 
 bool Manager::input_file_t::operator <(const Manager::input_file_t& o) const {

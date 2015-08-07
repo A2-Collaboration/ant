@@ -28,7 +28,7 @@ protected:
 
     using myBuffer_t = AvgBuffer<TH2D, interval<TID>>;
 
-    std::unique_ptr<Manager_traits> module;
+    std::shared_ptr<Manager_traits> module;
     myBuffer_t buffer;
 
     struct input_file_t {
@@ -65,22 +65,20 @@ protected:
 
     std::unique_ptr<CalCanvasMode> mode;
 
-    std::list<input_file_t> ScanFiles(const std::vector<std::string> filenames);
+    void BuildInputFiles(const std::vector<std::string>& filenames);
 
     void FillWorklistFromFiles();
 
 public:
-    enum class RunReturnStatus_t {
-        Continue,
-        Stop
-    };
+    std::string SetupName;
 
-    Manager(std::unique_ptr<Manager_traits> module_,
-                   unsigned length);
+    Manager(const std::vector<std::string>& inputfiles, unsigned avglength);
 
-    virtual void ConnectReturnFunc(const char* receiver_class, void* receiver, const char* slot);
+    virtual void SetModule(const std::shared_ptr<Manager_traits>& module_) {
+        module = move(module_);
+    }
 
-    virtual void SetFileList(const std::vector<std::string>& filelist);
+    virtual void InitGUI(const char* receiver_class, void* receiver, const char* slot);
 
     virtual bool Run();
 
