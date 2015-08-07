@@ -9,7 +9,7 @@ set(ANALYSIS_BASE
   utils/matcher.h
   A2GeoAcceptance.cc
   input/DataReader.cc
-  ParticleID.cc
+  utils/ParticleID.cc
   )
 
 set(ANALYSIS_PLOT
