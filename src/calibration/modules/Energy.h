@@ -21,16 +21,6 @@ class Energy :
 {
 
 public:
-
-    Energy(Detector_t::Type_t detectorType,
-           std::shared_ptr<DataManager> calmgr,
-           Calibration::Converter::ptr_t converter,
-           double defaultPedestal,
-           double defaultGain,
-           double defaultThreshold,
-           double defaultRelativeGain);
-    virtual ~Energy();
-
     // ReconstructHook
     virtual void ApplyTo(const readhits_t& hits, extrahits_t& extrahits) override;
 
@@ -40,6 +30,15 @@ public:
 
 
 protected:
+    Energy(Detector_t::Type_t detectorType,
+           std::shared_ptr<DataManager> calmgr,
+           Calibration::Converter::ptr_t converter,
+           double defaultPedestal,
+           double defaultGain,
+           double defaultThreshold,
+           double defaultRelativeGain);
+    virtual ~Energy();
+
     /**
      * @brief The CalibType struct stores the data
      * for the Updateable interface and for the GUI
@@ -56,6 +55,7 @@ protected:
             Name(name),
             Index(Instances++)
         {}
+    private:
         static std::size_t Instances;
     }; // CalibType
 
@@ -64,7 +64,8 @@ protected:
      * handling the data storage for a provided CalibType
      */
     struct GUI_CalibType : gui::Manager_traits {
-        GUI_CalibType(const std::string& basename, CalibType& type,
+        GUI_CalibType(const std::string& basename,
+                      CalibType& type,
                       const std::shared_ptr<DataManager>& calmgr);
 
         virtual std::string GetName() const override;

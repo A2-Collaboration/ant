@@ -17,7 +17,7 @@ class CalCanvas;
 
 class Manager_traits {
 private:
-    std::string name;
+    const std::string name;
 public:
     Manager_traits(const std::string& name_) :
         name(name_) {}

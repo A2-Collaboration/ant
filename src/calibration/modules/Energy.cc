@@ -123,10 +123,12 @@ std::vector<std::list<TID> > Energy::GetChangePoints() const
 {
     vector<list<TID>> changePointLists;
 
-    for (auto& calibType: { Pedestals.Name, Gains.Name, Thresholds.Name, RelativeGains.Name})
-        changePointLists.push_back(calibrationManager->GetChangePoints(std_ext::formatter()
-                                                                       << GetName()
-                                                                       << "-" << calibType));
+    for (const auto& calib_name: { Pedestals.Name, Gains.Name, Thresholds.Name, RelativeGains.Name}) {
+        changePointLists.push_back(calibrationManager->GetChangePoints(
+                                       GUI_CalibType::ConstructName(GetName(), calib_name)
+                                       )
+                                   );
+    }
     return changePointLists;
 }
 void Energy::Update(size_t index, const TID& tid)
@@ -137,7 +139,8 @@ void Energy::Update(size_t index, const TID& tid)
         {
             TCalibrationData cdata;
             if(calibrationManager->GetData(GUI_CalibType::ConstructName(GetName(), calibration->Name),
-                                           tid, cdata)) {
+                                           tid, cdata))
+            {
                 calibration->Values.clear();
                 calibration->Values.reserve(cdata.Data.size());
                 for (auto& val: cdata.Data)
