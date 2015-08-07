@@ -6,7 +6,10 @@
 
 #include "tree/TDetectorRead.h"
 
+#include "base/Logger.h"
+
 #include <cstdint>
+#include <ctime>
 #include <algorithm>
 #include <sstream>
 #include <vector>
@@ -133,13 +136,17 @@ void Energy::Update(size_t index, const TID& tid)
         if (calibration->Index == index)
         {
             TCalibrationData cdata;
-            calibrationManager->GetData(std_ext::formatter()<< GetName() <<
-                                          "-" << calibration->Name,
-                                        tid, cdata);
-            calibration->Values.clear();
-            calibration->Values.reserve(cdata.Data.size());
-            for (auto& val: cdata.Data)
-                calibration->Values.push_back(val.Value);
+            if(calibrationManager->GetData(GUI_CalibType::ConstructName(GetName(), calibration->Name),
+                                           tid, cdata)) {
+                calibration->Values.clear();
+                calibration->Values.reserve(cdata.Data.size());
+                for (auto& val: cdata.Data)
+                    calibration->Values.push_back(val.Value);
+            }
+            else {
+                LOG(ERROR) << "Could not update calibration data for " << calibration->Name
+                             << "at changepoint TID=" << tid;
+            }
         }
     }
 }
@@ -158,6 +165,8 @@ Energy::GUI_CalibType::GUI_CalibType(const string& basename, CalibType& type,
 
 string Energy::GUI_CalibType::GetName() const
 {
+    // serves as the CalibrationID for the manager,
+    // and as the histogram name
     return ConstructName(Manager_traits::GetName(), calibType.Name);
 }
 
@@ -168,10 +177,57 @@ string Energy::GUI_CalibType::GetHistogramName() const
 
 void Energy::GUI_CalibType::StartRange(const interval<TID>& range)
 {
+    // always make sure the values are large enough
+    std::vector<double>& values = calibType.Values;
+    values.resize(GetNumberOfChannels(), calibType.DefaultValue);
+
+    TCalibrationData cdata;
+    if(calibrationManager->GetData(GetName(), range.Start(), cdata)) {
+        for(const TKeyValue<double>& kv : cdata.Data) {
+            values[kv.Key] = kv.Value;
+        }
+        for(const TKeyValue<vector<double>>& kv : cdata.FitParameters) {
+            fitParameters.insert(make_pair(kv.Key, kv.Value));
+        }
+        LOG(INFO) << GetName() << ": Loaded previous values from database";
+    }
+    else {
+        LOG(INFO) << GetName() << ": No previous values found, built new gains for all channel from default gain";
+    }
+
+    // save a copy for comparison at finish stage
+    previousValues = calibType.Values;
 
 }
 
 void Energy::GUI_CalibType::StoreFinishRange(const interval<TID>& range)
 {
+    TCalibrationData cdata(
+                "Unknown", /// \todo get static information about author/comment?
+                "No Comment",
+                time(nullptr),
+                GetName(),
+                range.Start(),
+                range.Stop()
+                );
 
+    std::vector<double>& values = calibType.Values;
+
+    // fill data
+    cdata.Data.resize(0);
+    for(unsigned ch=0;ch<values.size();ch++) {
+        cdata.Data.emplace_back(ch, values[ch]);
+    }
+
+    // fill fit parameters (if any)
+    cdata.FitParameters.resize(0);
+    for(const auto& it_map : fitParameters) {
+        const unsigned ch = it_map.first;
+        const vector<double>& params = it_map.second;
+        cdata.FitParameters.emplace_back(ch, params);
+    }
+
+    calibrationManager->Add(cdata);
+
+    LOG(INFO) << "Added TCalibrationData " << cdata;
 }

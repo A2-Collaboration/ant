@@ -33,10 +33,11 @@ void dotest()
                                                               1234567890,
                                                               tmpfile.filename,
                                                               ant::TID(10,11,false),
-                                                              ant::TID(12,13,true),
-                                                              { {1,1.},
-                                                                {2,2.1}}
+                                                              ant::TID(12,13,true)
                                                               );
+
+    cdata2->Data.emplace_back(1,1.);
+    cdata2->Data.emplace_back(2,2.1);
     tree->Branch("cdata2",cdata2);
 
     cdata->Author  = "Martin Wolfes";

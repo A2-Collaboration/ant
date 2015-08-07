@@ -79,6 +79,8 @@ protected:
     protected:
         CalibType& calibType;
         std::shared_ptr<DataManager> calibrationManager;
+        std::map< unsigned, std::vector<double> > fitParameters;
+        std::vector<double> previousValues;
 
     }; // GUI_CalibType
 

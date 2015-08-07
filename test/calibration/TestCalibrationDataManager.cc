@@ -35,20 +35,23 @@ unsigned dotest_store(const string& filename)
                            "comment",
                            0,
                            "1",
-                           TID(0,0),TID(0,16),
-                           {{0,1},{1,2}});
+                           TID(0,0),TID(0,16)
+                           );
+    cdata.Data.emplace_back(0,1);
+    cdata.Data.emplace_back(1,2);
     calibman.Add(cdata);
     unsigned ndata(1);
 
     auto mdata = [&cdata,&ndata] (unsigned first, unsigned last, unsigned time)
     {
         ndata++;
-        return TCalibrationData(cdata.Author,
+        TCalibrationData tmp(cdata.Author,
                                 cdata.Comment,
                                 time,
                                 cdata.CalibrationID,
-                                TID(0,first),TID(0,last),
-                                cdata.Data);
+                                TID(0,first),TID(0,last));
+        tmp.Data = cdata.Data;
+        return tmp;
     };
 
     calibman.Add(mdata( 4,  4, 1));

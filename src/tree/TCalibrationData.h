@@ -32,16 +32,7 @@ struct TCalibrationData
     typedef TKeyValue<std::vector<double>> TFitParameters;
     std::vector<TFitParameters> FitParameters;
 
-    TCalibrationData() :
-        Author(),
-        Comment(),
-        TimeStamp(),
-        CalibrationID(),
-        FirstID(),
-        LastID(),
-        Data(),
-        FitParameters()
-    {}
+
 
     TCalibrationData(const std::string& calibrationID,const TID& first_id, const TID& last_id) :
         Author(),
@@ -59,39 +50,18 @@ struct TCalibrationData
     TCalibrationData(const std::string& author, const std::string& comment,
                      const std::time_t& time,
                      const std::string& calibrationID, const TID& first_id,
-                     const TID& last_id,
-                     const std::vector<TCalibrationEntry>& data) :
+                     const TID& last_id
+                     ) :
         Author   (author),
         Comment  (comment),
         TimeStamp(time),
         CalibrationID  (calibrationID),
         FirstID  (first_id),
         LastID   (last_id),
-        Data     (data),
+        Data(),
         FitParameters()
     {}
 
-    TCalibrationData(const std::string& author, const std::string& comment,
-                     const std::time_t& time,
-                     const std::string& calibrationID, const TID& first_id,
-                     const TID& last_id,
-                     const std::vector<TCalibrationEntry>& data,
-                     const std::vector<TFitParameters>& fitParameters):
-        Author   (author),
-        Comment  (comment),
-        TimeStamp(time),
-        CalibrationID  (calibrationID),
-        FirstID  (first_id),
-        LastID   (last_id),
-        Data     (data),
-        FitParameters(fitParameters)
-    {}
-#endif
-
-    virtual ~TCalibrationData() {}
-
-
-#ifndef __CINT__
     virtual std::ostream& Print( std::ostream& s) const override {
         s << "TCalibrationData generated at " << std::asctime(std::localtime(&TimeStamp)) << std::endl
           << "  CalibrationID:  " << CalibrationID << std::endl
@@ -104,6 +74,17 @@ struct TCalibrationData
     }
 #endif
 
+    TCalibrationData() :
+        Author(),
+        Comment(),
+        TimeStamp(),
+        CalibrationID(),
+        FirstID(),
+        LastID(),
+        Data(),
+        FitParameters()
+    {}
+    virtual ~TCalibrationData() {}
     ClassDef(TCalibrationData, ANT_CALIBRATION_DATA_VERSION)
 
 };
