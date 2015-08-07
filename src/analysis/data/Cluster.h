@@ -11,7 +11,7 @@ class Cluster {
 public:
     double Energy = 0.0;
     double Time = 0.0;
-    Detector_t::Any_t Detector = Detector_t::Any_t::None();
+    Detector_t::Any_t Detector = Detector_t::Any_t::None;
     unsigned CentralElement = 0;
 
     struct Hit {

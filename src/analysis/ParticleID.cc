@@ -80,9 +80,9 @@ CBTAPSBasicParticleID::~CBTAPSBasicParticleID()
 
 std::shared_ptr<Particle> CBTAPSBasicParticleID::Process(std::shared_ptr<Candidate>& cand) const
 {
-    if(cand->Detector() & Detector_t::Any_t::CB()) {
+    if(cand->Detector() & Detector_t::Any_t::CB) {
         return cb.Process(cand);
-    } else if(cand->Detector() & Detector_t::Any_t::TAPS()) {
+    } else if(cand->Detector() & Detector_t::Any_t::TAPS) {
         return taps.Process(cand);
     }
 

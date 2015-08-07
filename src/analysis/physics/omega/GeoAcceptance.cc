@@ -155,7 +155,7 @@ void analysis::GeoAcceptance::AcceptanceAnalysis::Fill(const ParticleList &mctru
         if(reconstructed.size()>1)
             multimatched_pos.Fill(input);
 
-        if(region != Detector_t::Any_t::None()) {
+        if(region != Detector_t::Any_t::None) {
             matched_pos_after_geo.Fill(input);
         }
     }
@@ -163,7 +163,7 @@ void analysis::GeoAcceptance::AcceptanceAnalysis::Fill(const ParticleList &mctru
 
     int nphotonslost=0;
     for(auto& p : mctrue) {
-        if(geo.DetectorFromAngles(*p) == Detector_t::Any_t::None())
+        if(geo.DetectorFromAngles(*p) == Detector_t::Any_t::None)
             nphotonslost++;
     }
     nlost->Fill(nphotonslost);

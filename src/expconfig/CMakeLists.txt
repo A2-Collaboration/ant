@@ -42,7 +42,7 @@ include_directories(. ../analysis ../calibration)
 # make detector stuff own library,
 # very important to get init of static members at correct runtime
 add_library(expconfig-detectors ${SRCS_DETECTORS})
-target_link_libraries(expconfig-detectors ${ROOT_LIBRARIES})
+target_link_libraries(expconfig-detectors base ${ROOT_LIBRARIES})
 
 add_library(expconfig-setups ${SRCS_SETUPS})
 target_link_libraries(expconfig-setups expconfig-detectors calibration)

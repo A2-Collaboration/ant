@@ -42,7 +42,7 @@ ParticleList OmegaBase::getGeoAccepted(const ParticleList &p) const
 {
     ParticleList list;
     for( auto& particle : p) {
-        if( geo.DetectorFromAngles(particle->Theta(), particle->Phi()) != Detector_t::Any_t::None() )
+        if( geo.DetectorFromAngles(particle->Theta(), particle->Phi()) != Detector_t::Any_t::None )
                 list.emplace_back(particle);
     }
     return list;

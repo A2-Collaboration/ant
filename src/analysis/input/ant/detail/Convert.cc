@@ -51,12 +51,12 @@ shared_ptr<Candidate> Converter::Convert(const TCandidate &candidate)
                         candidate.Phi,
                         candidate.Time,
                         0,
-                        Detector_t::Any_t::None(),
+                        Detector_t::Any_t::None,
                         candidate.VetoEnergy,
                         candidate.TrackerEnergy
                         );
 
-    auto det = Detector_t::Any_t::None();
+    auto det = Detector_t::Any_t::None;
 
     for(const TCluster& cluster: candidate.Clusters) {
 

@@ -21,7 +21,7 @@ using namespace std;
  * in case unknown values show up: -> exception and do not sliently ignore
  */
 Detector_t::Any_t IntToDetector_t(const int& a) {
-    auto d = Detector_t::Any_t::None();
+    auto d = Detector_t::Any_t::None;
     if(a & TrackInput::DETECTOR_NaI) {
         d |= Detector_t::Type_t::CB;
     }
@@ -29,7 +29,7 @@ Detector_t::Any_t IntToDetector_t(const int& a) {
         d |= Detector_t::Type_t::PID;
     }
     if(a & TrackInput::DETECTOR_MWPC) {
-        d |= Detector_t::Any_t::MWPC();
+        d |= Detector_t::Any_t::MWPC;
     }
     if(a & TrackInput::DETECTOR_BaF2) {
         d |= Detector_t::Type_t::TAPS;

@@ -22,6 +22,6 @@ Detector_t::Any_t A2SimpleGeometry::DetectorFromAngles(const radian_t theta, con
         return Detector_t::Type_t::TAPS;
     }
 
-    return Detector_t::Any_t::None();
+    return Detector_t::Any_t::None;
 
 }

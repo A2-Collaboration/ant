@@ -5,11 +5,11 @@
 #include "TVector3.h"
 
 #include <cstdint>
-#include <sstream>
 #include <stdexcept>
 #include <string>
 #include <type_traits>
 #include <vector>
+#include <string>
 
 namespace ant {
 
@@ -30,11 +30,11 @@ struct Detector_t : printable_traits {
     // Any_t represents a collection of detectors
     struct Any_t : printable_traits {
 
-        static Any_t None() { return Any_t(0); }
-        static Any_t MWPC() { return None() | Type_t::MWPC0 | Type_t::MWPC1; }
-        static Any_t CB()   { return MWPC() | Type_t::PID | Type_t::CB; }
-        static Any_t TAPS() { return None() | Type_t::TAPS | Type_t::TAPSVeto; }
-        static Any_t Veto() { return None() | Type_t::PID | Type_t::TAPSVeto; }
+        static const Any_t None;
+        static const Any_t MWPC;
+        static const Any_t CB;
+        static const Any_t TAPS;
+        static const Any_t Veto;
 
         Any_t(const Type_t& type);
 
@@ -167,65 +167,6 @@ protected:
     {}
 };
 
-
-inline const char* Channel_t::ToString(const Type_t& type)
-{
-    switch(type) {
-    case Channel_t::Type_t::BitPattern:
-        return "BitPattern";
-    case Channel_t::Type_t::Counter:
-        return "Counter";
-    case Channel_t::Type_t::Integral:
-        return "Integral";
-    case Channel_t::Type_t::IntegralAlternate:
-        return "IntegralAlternate";
-    case Channel_t::Type_t::IntegralShort:
-        return "IntegralShort";
-    case Channel_t::Type_t::IntegralShortAlternate:
-        return "IntegralShortAlternate";
-    case Channel_t::Type_t::Scaler:
-        return "Scaler";
-    case Channel_t::Type_t::Timing:
-        return "Timing";
-    case Channel_t::Type_t::Pedestal:
-        return "Pedestal";
-    }
-    throw std::runtime_error("Not implemented");
-}
-
-inline const char* Detector_t::ToString(const Type_t &type)
-{
-    switch(type) {
-    case Detector_t::Type_t::CB :
-        return "CB";
-    case Detector_t::Type_t::Cherenkov:
-        return "Cherenkov";
-    case Detector_t::Type_t::MWPC0:
-        return "MWPC0";
-    case Detector_t::Type_t::MWPC1:
-        return "MWPC1";
-    case Detector_t::Type_t::PID:
-        return "PID";
-    case Detector_t::Type_t::Tagger:
-        return "Tagger";
-    case Detector_t::Type_t::TaggerMicro:
-        return "TaggerMicro";
-    case Detector_t::Type_t::EPT:
-        return "EPT";
-    case Detector_t::Type_t::Moeller:
-        return "Moeller";
-    case Detector_t::Type_t::PairSpec:
-        return "PairSpec";
-    case Detector_t::Type_t::TAPS:
-        return "TAPS";
-    case Detector_t::Type_t::TAPSVeto:
-        return "TAPSVeto";
-    case Detector_t::Type_t::Trigger:
-        return "Trigger";
-    }
-    throw std::runtime_error("Not implemented");
-}
-
 inline bool Channel_t::IsIntegral(const Channel_t::Type_t& t) {
     switch(t) {
     case Type_t::Integral:
@@ -236,22 +177,6 @@ inline bool Channel_t::IsIntegral(const Channel_t::Type_t& t) {
     default:
         return false;
     }
-}
-
-inline std::ostream& Detector_t::Any_t::Print(std::ostream& stream) const  {
-    typename std::underlying_type<Type_t>::type i = 0;
-    decltype(bitfield) temp  = 1;
-    while(temp<=bitfield) {
-        if(bitfield & temp) {
-            stream << Detector_t::ToString(
-                          static_cast<Detector_t::Type_t>(i)
-                          )
-                   << " ";
-        }
-        ++i;
-        temp <<= 1;
-    }
-    return stream;
 }
 
 inline Detector_t::Any_t::Any_t(const Type_t& type)  :
@@ -272,11 +197,6 @@ inline Detector_t::Any_t Detector_t::Any_t::operator^(const Any_t& other) const 
 }
 inline Detector_t::Any_t::operator bool() const {
     return bitfield;
-}
-inline Detector_t::Any_t::operator std::string() const {
-    std::stringstream s;
-    Print(s);
-    return s.str();
 }
 
 inline bool operator!=(const Detector_t::Any_t& any1, const Detector_t::Any_t& any2) {
