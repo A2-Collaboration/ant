@@ -1,30 +1,30 @@
 #pragma once
 
-#include "data/Event.h"
+#include "ParticleType.h"
 
 #include <memory>
 
 class TCutG;
 
+
 namespace ant {
+
+class Candidate;
+class Particle;
+
 namespace analysis {
 
 class ParticleID {
 public:
     virtual ~ParticleID() {}
 
-    /**
-     * @brief Identify particles in this event.
-     * @param event Is modified, particles added
-     */
-    virtual void Process(const ant::CandidateList& cands, ant::ParticleList& particles_out) const;
-
-    virtual void Process(const CandidatePtr& cand, ParticleList &particles_out) const =0;
+    virtual std::shared_ptr<Particle> Process(std::shared_ptr<ant::Candidate>& cand) const =0;
 };
 
 
 class BasicParticleID: public ParticleID {
 public:
+    BasicParticleID() {}
     virtual ~BasicParticleID();
 
     std::shared_ptr<TCutG> dEE_proton;
@@ -35,7 +35,8 @@ public:
 
     std::shared_ptr<TCutG> size;
 
-    virtual void Process(const CandidatePtr& cand, ParticleList &particles_out) const override;
+    virtual const ParticleTypeDatabase::Type* Identify(const std::shared_ptr<Candidate>& cand) const;
+    virtual std::shared_ptr<Particle> Process(std::shared_ptr<ant::Candidate>& cand) const override;
 };
 
 class CBTAPSBasicParticleID: public ParticleID {
@@ -44,9 +45,11 @@ protected:
     BasicParticleID taps;
 
 public:
+    CBTAPSBasicParticleID() {}
     virtual ~CBTAPSBasicParticleID();
 
-    virtual void Process(const CandidatePtr& cand, ParticleList &particles_out) const override;
+
+    virtual std::shared_ptr<Particle> Process(std::shared_ptr<ant::Candidate>& cand) const override;
 };
 
 }
