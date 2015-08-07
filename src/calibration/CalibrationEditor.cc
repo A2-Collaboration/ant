@@ -3,6 +3,7 @@
 #include "tree/TCalibrationData.h"
 
 #include "TH2D.h"
+#include "algorithm"
 
 
 using namespace std;
@@ -79,30 +80,51 @@ void Editor::ShowHistory(const string& calibrationID) const
 
 }
 
-vector<TCalibrationData> Editor::getValidData(const std::string& calibrationID) const
+vector<pair<uint32_t,TCalibrationData>> Editor::getValidData(const std::string& calibrationID) const
 {
-    vector<TCalibrationData> theList;
-    interval<TID> maxInt(TID(0,0),TID(0,0));
-    if (!getIDRange(calibrationID,maxInt))
+    vector<pair<uint32_t,TCalibrationData>> theList;
+    if (dman.DataMap.count(calibrationID) == 0)
         return theList;
-    for(auto rit = dman.DataMap.at(calibrationID).rbegin();
-        rit != dman.DataMap.at(calibrationID).rend();
-        ++rit)
+    cout << "HERE I AM:" << endl;
+
+    auto changePoints = dman.GetChangePoints(calibrationID);
+    auto& dVector = dman.DataMap.at(calibrationID);
+    cout << dVector.size() << endl;
+    cout << changePoints.size() << endl;
+
+    for (const auto&  cp: changePoints)
     {
-        interval<TID> currentInt(rit->FirstID,rit->LastID);
-        bool accepted = true;
-        for (auto& accCal: theList){
-            interval<TID> accInt(accCal.FirstID,accCal.LastID);
-            if (!currentInt.Disjoint(accInt))
+        cout << cp.Value << endl;
+        uint32_t index = dVector.size();
+        for(auto rit = dVector.rbegin(); rit != dVector.rend(); ++rit)
+        {
+            --index;
+            interval<TID> rit_int(rit->FirstID,rit->LastID);
+            if (rit_int.Contains(cp))
             {
-                accepted = false;
+                pair<uint32_t,TCalibrationData> thePair;
+                thePair.first = index;
+                thePair.second = *rit;
+                theList.push_back(thePair);
                 break;
             }
         }
-        if (accepted)
-            theList.push_back(*rit);
-
     }
+
+
+    //remove doubles
+    std::sort(theList.begin(),theList.end(),[](const pair<uint32_t,TCalibrationData>& a,
+                                               const pair<uint32_t,TCalibrationData>& b) -> bool
+                                               {
+                                                   return a.first < b.first;
+                                               } );
+    auto last = std::unique(theList.begin(),theList.end(),[](const pair<uint32_t,TCalibrationData>& a,
+                                               const pair<uint32_t,TCalibrationData>& b) -> bool
+                                               {
+                                                   return a.first == b.first;
+                                               });
+    theList.erase(last,theList.end());
+
     return theList;
 }
 
@@ -119,28 +141,25 @@ void Editor::ShowValid(const string& calibrationID) const
     auto len = maxInt.Stop().Value - maxInt.Start().Value;
     auto first = maxInt.Start().Value;
 
-    TH2D* hist = new TH2D( (std_ext::formatter() << "val-" << calibrationID).str().c_str(),
+    TH2D* valid = new TH2D( (std_ext::formatter() << "val-" << calibrationID).str().c_str(),
                           (std_ext::formatter() << "Valid data for " << calibrationID).str().c_str(),
                           100, 0, 100,
-                           dVector.size(),
+                            dman.GetNumberOfDataPoints(calibrationID),
                           0,
-                           dVector.size()
+                            dman.GetNumberOfDataPoints(calibrationID)
                           );
-    hist->SetXTitle("TID [%]");
-    hist->SetYTitle("crap, has no meaning");
+    valid->SetXTitle("TID [%]");
+    valid->SetYTitle("crap, has no meaning");
 
-    uint32_t step(0);
     for(const auto& cdata: dVector)
     {
-        unsigned min = (unsigned) (cdata.FirstID.Value - first) * 100 / len;
-        unsigned max = (unsigned) (cdata.LastID.Value - first) * 100 / len;
+        unsigned min = (unsigned) (cdata.second.FirstID.Value - first) * 100 / len;
+        unsigned max = (unsigned) (cdata.second.LastID.Value - first) * 100 / len;
 
         for ( auto i = min ; i <= max ; ++i)
-        {
-            hist->Fill(i,step);
-        }
-        ++step;
+            valid->Fill(i,cdata.first);
     }
-    hist->Draw("col");
+
+    valid->Draw("col");
 
 }

@@ -18,7 +18,7 @@ private:
     DataBase dman;
 
     bool getIDRange(const std::string& calibrationID, interval<TID>& IDinterval) const;
-    std::vector<ant::TCalibrationData> getValidData(const std::string& calibrationID) const;
+    std::vector<std::pair<std::uint32_t,ant::TCalibrationData>> getValidData(const std::string& calibrationID) const;
 
 public:
     Editor(): dman(){}
