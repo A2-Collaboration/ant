@@ -2,6 +2,7 @@ include_directories(.)
 
 set(SRCS
   types.cc
+  Detector_t.h
   interval.h
   piecewise_interval.h
   printable.cc

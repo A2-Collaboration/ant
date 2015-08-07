@@ -1,6 +1,6 @@
 #pragma once
 
-#include "expconfig/Detector_t.h"
+#include "base/Detector_t.h"
 #include "unpacker/UnpackerAcqu.h"
 #include <stdexcept>
 

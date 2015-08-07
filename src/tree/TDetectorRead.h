@@ -4,7 +4,7 @@
 #include "TDataRecord.h"
 
 #ifndef __CINT__
-#include "expconfig/Detector_t.h"
+#include "base/Detector_t.h"
 #include <iomanip>
 #include <sstream>
 #endif

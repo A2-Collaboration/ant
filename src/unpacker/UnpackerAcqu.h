@@ -3,7 +3,7 @@
 #include "Unpacker.h"
 
 #include "expconfig/ExpConfig.h"
-#include "expconfig/Detector_t.h"
+#include "base/Detector_t.h"
 
 #include <memory>
 #include <list>

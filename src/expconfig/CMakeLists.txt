@@ -1,7 +1,6 @@
 set(SRCS
   ExpConfig.cc
   ExpConfig.h
-  Detector_t.h
   )
 
 set(SRCS_SETUPS

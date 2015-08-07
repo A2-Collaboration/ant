@@ -12,7 +12,7 @@
 #include <iomanip>
 #include <sstream>
 #include "base/root_printable.h"
-#include "expconfig/Detector_t.h"
+#include "base/Detector_t.h"
 #endif
 
 namespace ant {

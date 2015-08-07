@@ -2,7 +2,7 @@
 
 #include "base/interval.h"
 #include "TMath.h"
-#include "expconfig/Detector_t.h"
+#include "base/Detector_t.h"
 
 namespace ant {
 

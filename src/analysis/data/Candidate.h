@@ -2,7 +2,7 @@
 
 #include "base/printable.h"
 #include "base/types.h"
-#include "expconfig/Detector_t.h"
+#include "base/Detector_t.h"
 #include "analysis/data/Cluster.h"
 
 #include <ostream>

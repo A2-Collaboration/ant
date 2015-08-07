@@ -1,7 +1,7 @@
 #pragma once
 
 #include "calibration/Calibration.h"
-#include "expconfig/Detector_t.h"
+#include "base/Detector_t.h"
 
 
 namespace ant {

@@ -1,7 +1,7 @@
 #include "Convert.h"
 #include "data/Event.h"
 
-#include "expconfig/Detector_t.h"
+#include "base/Detector_t.h"
 
 #include "tree/TEvent.h"
 #include "tree/TCluster.h"
@@ -10,7 +10,7 @@
 #include "tree/TDataRecord.h"
 
 
-#include "expconfig/Detector_t.h"
+#include "base/Detector_t.h"
 
 #include <memory>
 #include <limits>

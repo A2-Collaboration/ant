@@ -1,7 +1,7 @@
 #include "Clustering.h"
 #include "detail/Clustering_NextGen.h"
 
-#include "expconfig/Detector_t.h"
+#include "base/Detector_t.h"
 
 #include "tree/TCluster.h"
 #include "tree/TDetectorRead.h"

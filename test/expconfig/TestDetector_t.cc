@@ -1,6 +1,6 @@
 #include "catch.hpp"
 
-#include "expconfig/Detector_t.h"
+#include "base/Detector_t.h"
 
 #include <iostream>
 
