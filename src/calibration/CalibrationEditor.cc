@@ -1,4 +1,8 @@
 #include "CalibrationEditor.h"
+#include "base/std_ext.h"
+
+#include "TH2D.h"
+
 
 using namespace std;
 using namespace ant::calibration;
@@ -24,7 +28,8 @@ bool Editor::getIDRange(const string& calibrationID, interval<TID>& IDinterval) 
     return true;
 }
 
-void Editor::PrintHistory(const string& calibrationID) const
+
+void Editor::ShowHistory(const string& calibrationID) const
 {
     auto& dVector = dman.DataMap.at(calibrationID);
 
@@ -34,11 +39,28 @@ void Editor::PrintHistory(const string& calibrationID) const
         cout << "Calibration Doesn't exist" << endl;
         return;
     }
+    auto len = maxInt.Stop().Value - maxInt.Start().Value;
+    auto first = maxInt.Start().Value;
 
+    TH2D* hist = new TH2D( (std_ext::formatter() << "hist-" << calibrationID).str().c_str(),
+                          (std_ext::formatter() << "History for " << calibrationID).str().c_str(),
+                          100, 0, 100,
+                          dman.GetNumberOfDataPoints(calibrationID),
+                          0,
+                          dman.GetNumberOfDataPoints(calibrationID)
+                          );
 
-
-    for(auto& cdata: dVector)
+    uint32_t step(0);
+    for(const auto& cdata: dVector)
     {
+        unsigned min = (unsigned) (cdata.FirstID.Value - first) * 100 / len;
+        unsigned max = (unsigned) (cdata.LastID.Value - first) * 100 / len;
+
+        for ( auto i = min ; i <= max ; ++i)
+        {
+            hist->Fill(i,step);
+        }
+        ++step;
         cout << "show result" << endl;
     }
 

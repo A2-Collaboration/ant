@@ -30,6 +30,7 @@ private:
 public:
     void ReadData(const std::string& filename);
     void WriteData(const std::string& filename) const;
+    std::uint32_t GetNumberOfDataPoints(const std::string& calibrationID) const;
     DataMap_t DataMap;
     DataBase():
         cm_treename_prefix("calibration-"),
@@ -119,7 +120,7 @@ public:
         return dataBase->DataMap.size();
     }
 
-    std::uint32_t GetNumberOfDataPoints(const std::string& calibrationID) ;
+    std::uint32_t GetNumberOfDataPoints(const std::string& calibrationID);
 
 
     bool GetLastEntry(const std::string& calibrationID, TCalibrationData& cdata) override;

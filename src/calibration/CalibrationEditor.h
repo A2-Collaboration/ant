@@ -1,5 +1,5 @@
 #pragma once
-
+#include "analysis/plot/root_draw.h"
 #include "CalibrationDataManager.h"
 
 #include <memory>
@@ -7,6 +7,7 @@
 
 namespace ant
 {
+
 namespace calibration
 {
 
@@ -14,6 +15,8 @@ class Editor
 {
 private:
     DataBase dman;
+    ant::canvas theCanvas;
+
 
     bool getIDRange(const std::string& calibrationID, interval<TID>& IDinterval) const;
 
@@ -24,7 +27,7 @@ public:
     void SaveToFile(const std::string& fileName) const {dman.WriteData(fileName);}
 
 
-    void PrintHistory(const std::string& calibrationID) const;
+    void ShowHistory(const std::string& calibrationID) const;
 
 
 };

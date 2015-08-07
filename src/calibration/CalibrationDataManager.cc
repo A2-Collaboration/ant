@@ -139,9 +139,14 @@ const list<TID> DataManager::GetChangePoints(const string& calibrationID)
 uint32_t DataManager::GetNumberOfDataPoints(const string& calibrationID)
 {
     lazyInit();
+    return dataBase->GetNumberOfDataPoints(calibrationID);
+}
+
+uint32_t DataBase::GetNumberOfDataPoints(const string& calibrationID) const
+{
     try
     {
-        return dataBase->DataMap.at(calibrationID).size();
+        return DataMap.at(calibrationID).size();
     }
     catch (out_of_range)
     {
