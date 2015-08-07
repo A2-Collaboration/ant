@@ -39,7 +39,7 @@ void DataBase::ReadData(const std::string& filename)
 
 }
 
-void DataBase::WriteData(const std::string& filename)
+void DataBase::WriteData(const std::string& filename) const
 {
     WrapTFile file(filename,
                    WrapTFile::mode_t::recreate);

@@ -29,7 +29,7 @@ private:
 
 public:
     void ReadData(const std::string& filename);
-    void WriteData(const std::string& filename);
+    void WriteData(const std::string& filename) const;
     DataMap_t DataMap;
     DataBase():
         cm_treename_prefix("calibration-"),
