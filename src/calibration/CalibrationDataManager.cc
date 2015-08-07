@@ -68,10 +68,10 @@ void DataManager::lazyInit()
     }
 }
 
-uint32_t DataManager::getDepth(const TID& tid, const string& calibrationID) const
+uint32_t DataBase::getDepth(const TID& tid, const string& calibrationID) const
 {
     uint32_t current_depth = 0;
-    auto& calibPairs = dataBase->DataMap.at(calibrationID);
+    auto& calibPairs = DataMap.at(calibrationID);
 
     for(auto rit = calibPairs.rbegin(); rit != calibPairs.rend(); ++rit)
     {
@@ -110,30 +110,7 @@ bool DataManager::GetData(const string& calibrationID, const TID& eventID, TCali
 const list<TID> DataManager::GetChangePoints(const string& calibrationID)
 {
     lazyInit();
-    if ( dataBase->DataMap.count(calibrationID) == 0)
-        return {};
-
-    uint32_t depth = 0;
-    list<TID> ids;
-
-    auto& calibPairs = dataBase->DataMap.at(calibrationID);
-
-    for(auto rit = calibPairs.rbegin(); rit != calibPairs.rend(); ++rit)
-    {
-        //changepoint is one after the last element;
-        auto inclastID(rit->LastID);
-        ++inclastID;
-
-        if (isValid(rit->FirstID,calibrationID,depth) )
-            ids.push_back(rit->FirstID);
-        if (isValid(inclastID,calibrationID,depth) )
-            ids.push_back(inclastID);
-
-        depth++;
-    }
-
-    ids.sort();
-    return ids;
+    return dataBase->GetChangePoints(calibrationID);
 }
 
 uint32_t DataManager::GetNumberOfDataPoints(const string& calibrationID)
@@ -152,6 +129,35 @@ uint32_t DataBase::GetNumberOfDataPoints(const string& calibrationID) const
     {
         return 0;
     }
+}
+
+const std::list<TID> DataBase::GetChangePoints(const string& calibrationID) const
+{
+    if ( DataMap.count(calibrationID) == 0)
+        return {};
+
+    uint32_t depth = 0;
+    list<TID> ids;
+
+    auto& calibPairs = DataMap.at(calibrationID);
+
+    for(auto rit = calibPairs.rbegin(); rit != calibPairs.rend(); ++rit)
+    {
+        //changepoint is one after the last element;
+        auto inclastID(rit->LastID);
+        ++inclastID;
+
+        if (isValid(rit->FirstID,calibrationID,depth) )
+            ids.push_back(rit->FirstID);
+        if (isValid(inclastID,calibrationID,depth) )
+            ids.push_back(inclastID);
+
+        depth++;
+    }
+
+    ids.sort();
+
+    return ids;
 }
 
 
