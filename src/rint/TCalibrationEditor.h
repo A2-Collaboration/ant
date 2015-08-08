@@ -32,6 +32,7 @@ public:
     void SaveToFile(const std::string& fileName);
 
     void Remove(const std::string& calibrationID, const uint32_t& index);
+    void ReduceToValid(const std::string& calibrationID);
 
     void ShowHistory(const std::string& calibrationID) const;
     /**

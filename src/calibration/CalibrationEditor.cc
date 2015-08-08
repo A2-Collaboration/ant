@@ -175,7 +175,7 @@ bool Editor::ShowValid(const string& calibrationID) const
                             dman.GetNumberOfDataPoints(calibrationID)
                           );
     valid->SetXTitle("TID [%]");
-    valid->SetYTitle("crap, has no meaning");
+    valid->SetYTitle("step");
 
     for(const auto& cdata: dVector)
     {

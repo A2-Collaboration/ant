@@ -25,9 +25,17 @@ void ant::TCalibrationEditor::SaveToFile(const std::string& fileName)
 void TCalibrationEditor::Remove(const std::string& calibrationID, const uint32_t& index)
 {
     if (ed->Remove(calibrationID,index))
-        cout << "Succesfully removed iteration " << index << " in calibration " << calibrationID << endl;
+        cout << "Succesfully removed iteration " << index << " in calibration " << calibrationID << "." << endl;
     else
-        cout << "Calibration " << calibrationID << " doesn't exist" << endl;
+        cout << "Calibration " << calibrationID << " doesn't exist." << endl;
+}
+
+void TCalibrationEditor::ReduceToValid(const string &calibrationID)
+{
+    if (ed->ReduceToValid(calibrationID))
+        cout << "Succesfully reduced calibration " << calibrationID << "." << endl;
+    else
+        cout << "Unable to reduce caibration " << calibrationID << "." << endl;
 }
 
 void ant::TCalibrationEditor::ShowHistory(const std::string& calibrationID) const
