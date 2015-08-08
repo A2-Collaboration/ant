@@ -150,8 +150,23 @@ bool Editor::Remove(const string &calibrationID, const uint32_t &index)
         return false;
 
     auto& dVector = dman.DataMap.at(calibrationID);
+    if (index >= dVector.size())
+        return false;
     dVector.erase(dVector.begin()+index);
     return true;
+}
+
+bool Editor::Remove(const string &calibrationID, const uint32_t &index1, const uint32_t &index2)
+{
+    if (!dman.Has(calibrationID))
+        return false;
+
+    auto& dVector = dman.DataMap.at(calibrationID);
+    if ((index1 >= dVector.size()) && (index2 >= dVector.size()))
+        return false;
+    dVector.erase(dVector.begin()+index1,dVector.begin()+index2);
+    return true;
+
 }
 
 

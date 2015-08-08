@@ -27,7 +27,16 @@ void TCalibrationEditor::Remove(const std::string& calibrationID, const uint32_t
     if (ed->Remove(calibrationID,index))
         cout << "Succesfully removed iteration " << index << " in calibration " << calibrationID << "." << endl;
     else
-        cout << "Calibration " << calibrationID << " doesn't exist." << endl;
+        cout << "Calibration " << calibrationID << "or stepnumber don't exist." << endl;
+}
+
+void TCalibrationEditor::Remove(const std::string& calibrationID, const uint32_t& index1, const uint32_t& index2)
+{
+    if (ed->Remove(calibrationID,index1,index2))
+        cout << "Succesfully removed iterations [" << index1 << ", " << index2 << "]"
+             << " in calibration " << calibrationID << "." << endl;
+    else
+        cout << "Calibration " << calibrationID << " or stepnumbers don't exist." << endl;
 }
 
 void TCalibrationEditor::ReduceToValid(const string &calibrationID)
