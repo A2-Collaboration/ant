@@ -32,6 +32,7 @@ public:
                 const std::uint32_t& index1, const std::uint32_t& index2);
 
     void ListCalibrations() const;
+    bool Has(const std::string& calibrationID) const {return dman.Has(calibrationID);}
 
 
     bool ShowHistory(const std::string& calibrationID) const;

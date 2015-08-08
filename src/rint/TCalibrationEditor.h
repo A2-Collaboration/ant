@@ -1,6 +1,8 @@
 #ifndef ANT_TCALIBRATIONEDITOR_H
 #define ANT_TCALIBRATIONEDITOR_H
 #include <string>
+#include <map>
+#include <functional>
 #include "Rtypes.h"
 
 namespace ant
@@ -17,8 +19,29 @@ namespace ant {
 
 class TCalibrationEditor
 {
+#ifndef __CINT__
+
+    // This Map defines the functions the Editor should have
+    using CommandMap = std::map<std::string,std::function<int()>>;
+
 private:
     calibration::Editor* ed;
+    std::string currentCalibration;
+
+    CommandMap cmds;
+
+    int chcal();
+    int listcal();
+    int show();
+    int remove();
+    int removeRange();
+    int exit();
+    int addd();
+
+
+#endif
+
+
 public:
 
     TCalibrationEditor();
@@ -27,6 +50,7 @@ public:
     void AddSomeRandomData();
 
     void ListCalibrations() const;
+    void ListCommands();
 
     void AddFromFile(const std::string& fileName);
     void SaveToFile(const std::string& fileName);
@@ -41,6 +65,10 @@ public:
      * @param calibrationID
      */
     void ShowValid(const std::string&  calibrationID) const;
+
+    int Loop();
+
+    int Execute(const std::string& command);
 
     virtual ~TCalibrationEditor();
 

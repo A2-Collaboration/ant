@@ -6,9 +6,116 @@
 using namespace ant;
 using namespace std;
 
-ant::TCalibrationEditor::TCalibrationEditor()
+int TCalibrationEditor::Loop()
+{
+    int retval = 0;
+    while (retval == 0)
+    {
+        ListCommands();
+        string command;
+        cin >> command;
+        retval = Execute(command);
+    }
+
+    return 0;
+}
+
+int TCalibrationEditor::Execute(const string &command)
+{
+    try
+    {
+        return cmds[command]();
+    }
+    catch (...)
+    {
+        cout << "Command not found." << endl;
+        return 0;
+    }
+}
+
+ant::TCalibrationEditor::TCalibrationEditor():
+    currentCalibration()
 {
     ed = new calibration::Editor();
+    cmds["chcal"]     = function<int()>(bind(&TCalibrationEditor::chcal,this));
+    cmds["list"]      = function<int()>(bind(&TCalibrationEditor::listcal,this));
+    cmds["show"]      = function<int()>(bind(&TCalibrationEditor::show,this));
+    cmds["delete"]    = function<int()>(bind(&TCalibrationEditor::remove,this));
+    cmds["cut"]       = function<int()>(bind(&TCalibrationEditor::removeRange,this));
+    cmds["exit"]      = function<int()>(bind(&TCalibrationEditor::exit,this));
+    cmds["debug_add"] = function<int()>(bind(&TCalibrationEditor::addd,this));
+}
+
+int TCalibrationEditor::exit()
+{
+    cout << "   Bye!" << endl;
+    return 1;
+}
+
+int TCalibrationEditor::chcal()
+{
+    ed->ListCalibrations();
+    cout << "Choose new Calibration to edit:  > " ;
+    std::string newCal;
+    cin >> newCal;
+
+    if (ed->Has(newCal))
+    {
+        currentCalibration = newCal;
+        cout << "Changed Calibration." << endl;
+    }
+    show();
+
+    return 0;
+}
+
+int TCalibrationEditor::addd()
+{
+    AddSomeRandomData();
+    listcal();
+    return 0;
+}
+int TCalibrationEditor::listcal()
+{
+    ListCalibrations();
+    return 0;
+}
+
+void TCalibrationEditor::ListCommands()
+{
+    cout << "=========== Ant Calibration Editor ===================" << endl << endl;
+    cout << "   Available commands:" << endl ;
+    for (const auto& cmd: cmds)
+        cout << "   * " << cmd.first << endl;
+    cout << endl << "======================================================" << endl;
+}
+
+int TCalibrationEditor::show()
+{
+    ShowHistory(currentCalibration);
+    return 0;
+}
+
+int TCalibrationEditor::remove()
+{
+    cout << "Which step:  > " ;
+    uint32_t index;
+    cin >> index;
+    Remove(currentCalibration,index);
+    show();
+    return 0;
+}
+int TCalibrationEditor::removeRange()
+{
+    cout << "First step:  > " ;
+    uint32_t index1;
+    cin >> index1;
+    cout << "Last step:  > " ;
+    uint32_t index2;
+    cin >> index2;
+    Remove(currentCalibration,index1,index2);
+    show();
+    return 0;
 }
 
 
@@ -56,6 +163,7 @@ void TCalibrationEditor::ShowValid(const std::string& calibrationID) const
 {
     ed->ShowValid(calibrationID);
 }
+
 
 ant::TCalibrationEditor::~TCalibrationEditor()
 {

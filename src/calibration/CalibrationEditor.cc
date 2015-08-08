@@ -164,6 +164,9 @@ bool Editor::Remove(const string &calibrationID, const uint32_t &index1, const u
     auto& dVector = dman.DataMap.at(calibrationID);
     if ((index1 >= dVector.size()) && (index2 >= dVector.size()))
         return false;
+    if ( index1 > index2 )
+        return false;
+
     dVector.erase(dVector.begin()+index1,dVector.begin()+index2);
     return true;
 
