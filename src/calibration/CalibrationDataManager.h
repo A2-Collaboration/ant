@@ -51,6 +51,7 @@ public:
     void ReadData(const std::string& filename);
     void WriteData(const std::string& filename) const;
 
+    bool Has(const std::string& calibrationID) const{ return (DataMap.count(calibrationID) != 0);}
     std::uint32_t GetNumberOfDataPoints(const std::string& calibrationID) const;
     const std::list<TID> GetChangePoints(const std::string& calibrationID) const;
 

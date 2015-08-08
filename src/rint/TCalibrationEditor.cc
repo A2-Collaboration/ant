@@ -1,7 +1,10 @@
 #include "TCalibrationEditor.h"
 #include "calibration/CalibrationEditor.h"
 
+#include <iostream>
+
 using namespace ant;
+using namespace std;
 
 ant::TCalibrationEditor::TCalibrationEditor()
 {
@@ -17,6 +20,14 @@ void ant::TCalibrationEditor::AddFromFile(const std::string& fileName)
 void ant::TCalibrationEditor::SaveToFile(const std::string& fileName)
 {
     ed->SaveToFile(fileName);
+}
+
+void TCalibrationEditor::Remove(const std::string& calibrationID, const uint32_t& index)
+{
+    if (ed->Remove(calibrationID,index))
+        cout << "Succesfully removed iteration " << index << " in calibration " << calibrationID << endl;
+    else
+        cout << "Calibration " << calibrationID << " doesn't exist" << endl;
 }
 
 void ant::TCalibrationEditor::ShowHistory(const std::string& calibrationID) const

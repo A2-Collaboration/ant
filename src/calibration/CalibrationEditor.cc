@@ -41,15 +41,13 @@ void Editor::ListCalibrations() const
 }
 
 
-void Editor::ShowHistory(const string& calibrationID) const
+bool Editor::ShowHistory(const string& calibrationID) const
 {
 
     interval<TID> maxInt(TID(0,0),TID(0,0));
     if (!getIDRange(calibrationID,maxInt))
-    {
-        cout << "Calibration Doesn't exist" << endl;
-        return;
-    }
+        return false;
+
     auto& dVector = dman.DataMap.at(calibrationID);
     auto len = maxInt.Stop().Value - maxInt.Start().Value;
     auto first = maxInt.Start().Value;
@@ -64,6 +62,8 @@ void Editor::ShowHistory(const string& calibrationID) const
     hist->SetXTitle("TID [%]");
     hist->SetYTitle("Calibration Step");
 
+
+    //Fill ranges of calibration data
     uint32_t step(0);
     for(const auto& cdata: dVector)
     {
@@ -76,25 +76,38 @@ void Editor::ShowHistory(const string& calibrationID) const
         }
         ++step;
     }
+    //Fill valid IDs twice
+    auto valids = getValidData(calibrationID);
+    for (const auto& vcdata: valids)
+    {
+        unsigned min = (unsigned) (vcdata.second.FirstID.Value - first) * 100 / len;
+        unsigned max = (unsigned) (vcdata.second.LastID.Value - first) * 100 / len;
+
+        for ( auto i = min ; i <= max ; ++i)
+        {
+            hist->Fill(i,vcdata.first);
+        }
+
+    }
+
     hist->Draw("col");
+
+    return true;
 
 }
 
 vector<pair<uint32_t,TCalibrationData>> Editor::getValidData(const std::string& calibrationID) const
 {
     vector<pair<uint32_t,TCalibrationData>> theList;
-    if (dman.DataMap.count(calibrationID) == 0)
+
+    if ( !dman.Has(calibrationID) )
         return theList;
-    cout << "HERE I AM:" << endl;
 
     auto changePoints = dman.GetChangePoints(calibrationID);
     auto& dVector = dman.DataMap.at(calibrationID);
-    cout << dVector.size() << endl;
-    cout << changePoints.size() << endl;
 
     for (const auto&  cp: changePoints)
     {
-        cout << cp.Value << endl;
         uint32_t index = dVector.size();
         for(auto rit = dVector.rbegin(); rit != dVector.rend(); ++rit)
         {
@@ -112,31 +125,44 @@ vector<pair<uint32_t,TCalibrationData>> Editor::getValidData(const std::string& 
     }
 
 
+    //sort
+    std::sort(theList.begin(),theList.end(),
+              [](const pair<uint32_t,TCalibrationData>& a,
+                 const pair<uint32_t,TCalibrationData>& b) -> bool
+                 {
+                     return a.first < b.first;
+                 } );
     //remove doubles
-    std::sort(theList.begin(),theList.end(),[](const pair<uint32_t,TCalibrationData>& a,
-                                               const pair<uint32_t,TCalibrationData>& b) -> bool
-                                               {
-                                                   return a.first < b.first;
-                                               } );
-    auto last = std::unique(theList.begin(),theList.end(),[](const pair<uint32_t,TCalibrationData>& a,
-                                               const pair<uint32_t,TCalibrationData>& b) -> bool
-                                               {
-                                                   return a.first == b.first;
-                                               });
+    auto last = std::unique(theList.begin(),theList.end(),
+                            [](const pair<uint32_t,TCalibrationData>& a,
+                               const pair<uint32_t,TCalibrationData>& b) -> bool
+                               {
+                                   return a.first == b.first;
+                               } );
     theList.erase(last,theList.end());
 
     return theList;
 }
 
+bool Editor::Remove(const string &calibrationID, const uint32_t &index)
+{
+    if (!dman.Has(calibrationID))
+        return false;
 
-void Editor::ShowValid(const string& calibrationID) const
+    auto& dVector = dman.DataMap.at(calibrationID);
+    dVector.erase(dVector.begin()+index);
+    return true;
+}
+
+
+bool Editor::ShowValid(const string& calibrationID) const
 {
     interval<TID> maxInt(TID(0,0),TID(0,0));
     if (!getIDRange(calibrationID,maxInt))
     {
-        cout << "Calibration Doesn't exist" << endl;
-        return;
+        return false;
     }
+
     auto dVector = getValidData(calibrationID);
     auto len = maxInt.Stop().Value - maxInt.Start().Value;
     auto first = maxInt.Start().Value;
@@ -162,4 +188,19 @@ void Editor::ShowValid(const string& calibrationID) const
 
     valid->Draw("col");
 
+    return true;
+}
+
+bool Editor::ReduceToValid(const string &calibrationID)
+{
+   if(!dman.Has(calibrationID))
+       return false;
+
+   auto valids = getValidData(calibrationID);
+
+   dman.DataMap.at(calibrationID).clear();
+   for (const auto& pair: valids)
+       Add(pair.second);
+
+   return true;
 }

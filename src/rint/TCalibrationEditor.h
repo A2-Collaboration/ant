@@ -31,6 +31,8 @@ public:
     void AddFromFile(const std::string& fileName);
     void SaveToFile(const std::string& fileName);
 
+    void Remove(const std::string& calibrationID, const uint32_t& index);
+
     void ShowHistory(const std::string& calibrationID) const;
     /**
      * @brief ShowValid shows only calibration steps which are used

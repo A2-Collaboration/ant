@@ -27,17 +27,19 @@ public:
     void SaveToFile(const std::string& fileName) const {dman.WriteData(fileName);}
 
     void Add(const TCalibrationData& cdata) {dman.DataMap[cdata.CalibrationID].push_back(cdata);}
+    bool Remove(const std::string& calibrationID, const std::uint32_t& index);
 
     void ListCalibrations() const;
 
-    void ShowHistory(const std::string& calibrationID) const;
 
+    bool ShowHistory(const std::string& calibrationID) const;
     /**
      * @brief ShowValid shows only calibration steps which are used
      * @param calibrationID
      */
-    void ShowValid(const std::string&  calibrationID) const;
+    bool ShowValid(const std::string&  calibrationID) const;
 
+    bool ReduceToValid(const std::string&  calibrationID);
 
 
 };
