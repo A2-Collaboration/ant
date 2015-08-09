@@ -76,6 +76,12 @@ void ACECanvas::change_state(ACECanvas::state_t newstate)
              << "   *  <return>  remove selection" << endl
              << "   *  <esc>     abort" << endl;
         break;
+    case state_t::cut:
+        cout << "Cut interval Mode:" << endl
+             << "  Keys in Canvas:" << endl
+             << "   *  <return>  remove selection" << endl
+             << "   *  <esc>     abort" << endl;
+        break;
     default:
         break;
     }
@@ -89,7 +95,8 @@ ACECanvas::ACECanvas(const string &FileName):
     state(state_t::init),
     fileName(FileName),
     currentCalID(),
-    ed()
+    ed(),
+    intervalStartSet(false)
 {
     loadFile(fileName);
 }
@@ -104,6 +111,15 @@ void ACECanvas::removeAllinStepMemory()
     updateCalHist();
     this->Update();
 }
+void ACECanvas::removeInterValFromMemory()
+{
+    cout << endl << "Removing" << endl;
+    if (ed.Remove(currentCalID,stepInterVal[0]-1,stepInterVal[1]-1))
+        cout << "  [" << stepInterVal[0] - 1 << ", " << stepInterVal[1] -1 << "]" << endl;
+    intervalStartSet = false;
+    updateCalHist();
+    this->Update();
+}
 
 void ACECanvas::HandleKeypress(const char key)
 {
@@ -115,12 +131,14 @@ void ACECanvas::HandleKeypress(const char key)
         case 'r':
             change_state(state_t::remove);
             break;
-
+        case 'c':
+            change_state(state_t::cut);
+            break;
         default:
             break;
         }
+        break;
     case state_t::remove:
-    case state_t::cut:
         switch(key)
         {
         case 13:
@@ -132,13 +150,59 @@ void ACECanvas::HandleKeypress(const char key)
             updateCalHist();
             change_state(state_t::base);
         default:
-            cout << "unknown key in remove" << endl;
             break;
         }
+        break;
+    case state_t::cut:
+        switch(key)
+        {
+        case 13:
+            removeInterValFromMemory();
+            change_state(state_t::base);
+            break;
+        case 27:
+            intervalStartSet = false;
+            updateCalHist();
+            change_state(state_t::base);
+        default:
+            break;
+        }
+        break;
     default:
         break;
     }
 
+}
+
+void ACECanvas::markInterval(Int_t y)
+{
+    TH2* h = dynamic_cast<TH2*>(fClickSelected);
+    if (h){
+        auto step = floor(AbsPixeltoY(y))+1;
+
+
+        if (!intervalStartSet)
+        {
+            stepInterVal.Start() = step;
+//            Int_t minx = floor(ed.GetRange(currentCalID,step-1).second.Start());
+//            Int_t maxx = ceil(ed.GetRange(currentCalID,step-1).second.Stop());
+            for (Int_t i = 0; i < 100; ++i )
+                calHist->Fill(i-1,step-1,3);
+            intervalStartSet = true;
+        }
+        else
+        {
+            stepInterVal.Stop() = step;
+            for (auto inInt = stepInterVal.Start(); inInt < stepInterVal.Stop(); ++inInt)
+            {
+                for (Int_t i = 0; i < 100; ++i )
+                    calHist->Fill(i-1,inInt,3);
+            }
+            cout << "   Calibration steps marked for remove:" << endl
+                 << "     [" << stepInterVal.Start() << ", " << stepInterVal.Stop() <<"]" << endl
+                 << endl;
+        }
+    }
 }
 
 void ACECanvas::markLine(Int_t y)
@@ -179,9 +243,11 @@ void ACECanvas::HandleInput(EEventType button, Int_t x, Int_t y)
     {
     case state_t::remove:
         if (button == kButton1Down)
-        {
             markLine(y);
-        }
+        break;
+    case state_t::cut:
+        if (button == kButton1Down)
+            markInterval(y);
         break;
     default:
         break;

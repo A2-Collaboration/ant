@@ -1,6 +1,7 @@
 #pragma once
 
 #include "CalibrationEditor.h"
+#include "base/interval.h"
 
 #include <string>
 #include <map>
@@ -37,6 +38,9 @@ private:
 
     std::set<std::uint32_t> stepMemory;
 
+    interval<std::uint32_t> stepInterVal;
+    bool intervalStartSet;
+
     void makeCalHist();
 
     void change_state(state_t newstate);
@@ -50,6 +54,8 @@ private:
     void updateCalHist();
     void markLine(Int_t y);
     void removeAllinStepMemory();
+    void removeInterValFromMemory();
+    void markInterval(Int_t y);
 public:
     ACECanvas(const std::string& fileName);
 //    SaveToFile(const std::string& fileName);
