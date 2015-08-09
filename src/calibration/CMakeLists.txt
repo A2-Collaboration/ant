@@ -7,7 +7,8 @@ include_directories(
 
 
 set(SRCS
-        CalibrationEditor.cc
+	ACECanvas.cc
+    CalibrationEditor.cc
     CalibrationDataManager.cc
     Calibration.cc
     modules/Time.cc

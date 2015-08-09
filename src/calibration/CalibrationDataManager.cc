@@ -17,7 +17,7 @@ using namespace std;
 using namespace ant;
 using namespace ant::calibration;
 
-void DataBase::ReadData(const std::string& filename)
+bool DataBase::ReadData(const std::string& filename)
 {
     try {
         WrapTFile dataFile(filename,
@@ -33,8 +33,10 @@ void DataBase::ReadData(const std::string& filename)
                 DataMap[cdata->CalibrationID].push_back(*cdata); //emplace???
             }
         }
+        return true;
     } catch (...) {
-        VLOG(3) << "Cannot open " << filename;
+        //VLOG(3) << "Cannot open " << filename;
+        return false;
     }
 
 }

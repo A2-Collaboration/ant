@@ -54,7 +54,7 @@ int TCalibrationEditor::exit()
 
 int TCalibrationEditor::chcal()
 {
-    ed->ListCalibrations();
+    ListCalibrations();
     cout << "Choose new Calibration to edit:  > " ;
     std::string newCal;
     cin >> newCal;
@@ -200,5 +200,6 @@ void TCalibrationEditor::AddSomeRandomData()
 
 void TCalibrationEditor::ListCalibrations() const
 {
-    ed->ListCalibrations();
+    for (const auto& cal: ed->GetListOfCalibrations())
+        cout << cal << endl;
 }

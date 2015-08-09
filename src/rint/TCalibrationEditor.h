@@ -4,6 +4,11 @@
 #include <map>
 #include <functional>
 #include "Rtypes.h"
+#include "tree/TCalibrationData.h"
+
+#include "TCanvas.h"
+
+class TH2D;
 
 namespace ant
 {
@@ -74,6 +79,7 @@ public:
 
     ClassDef(TCalibrationEditor, ANT_RINT_VERSION)
 };
+
 
 }
 

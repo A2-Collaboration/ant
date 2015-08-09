@@ -48,7 +48,7 @@ private:
     }
 
 public:
-    void ReadData(const std::string& filename);
+    bool ReadData(const std::string& filename);
     void WriteData(const std::string& filename) const;
 
     bool Has(const std::string& calibrationID) const{ return (DataMap.count(calibrationID) != 0);}
