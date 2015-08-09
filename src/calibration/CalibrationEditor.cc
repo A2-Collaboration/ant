@@ -281,8 +281,9 @@ pair<uint32_t,IntervalD> Editor::GetRange(const string& calibrationID, uint32_t 
     pair<uint32_t,IntervalD> thePair;
     if (!dman.Has(calibrationID))
         return thePair;
-    if (index > dman.DataMap.size())
+    if (index > dman.DataMap.at(calibrationID).size())
         return thePair;
+
 
     auto maxInt = GetMaxInt(calibrationID);
     auto cdata = dman.DataMap.at(calibrationID).at(index);

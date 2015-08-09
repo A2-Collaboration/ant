@@ -4,6 +4,7 @@
 
 #include <string>
 #include <map>
+#include <set>
 #include <functional>
 #include "Rtypes.h"
 
@@ -34,6 +35,8 @@ private:
     calibration::Editor ed;
     TH2D* calHist;
 
+    std::set<std::uint32_t> stepMemory;
+
     void makeCalHist();
 
     void change_state(state_t newstate);
@@ -44,6 +47,9 @@ private:
 
     void addSomeRandomData();
 
+    void updateCalHist();
+    void markLine(Int_t y);
+    void removeAllinStepMemory();
 public:
     ACECanvas(const std::string& fileName);
 //    SaveToFile(const std::string& fileName);

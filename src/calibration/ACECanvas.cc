@@ -1,6 +1,10 @@
 #include "ACECanvas.h"
 #include "calibration/CalibrationEditor.h"
 #include "TH2D.h"
+#include "TH2.h"
+
+
+#include <cmath>
 
 #include <iostream>
 
@@ -30,10 +34,25 @@ void ant::ACECanvas::loadFile(const std::string& fileName)
     addSomeRandomData();
     currentCalID = "testID";
     // end DEBUG!!!!!!
-
     makeCalHist();
+    updateCalHist();
 
     change_state(state_t::base);
+}
+
+void ant::ACECanvas::updateCalHist()
+{
+    calHist->Reset();
+    for (const auto& ran: ed.GetAllRanges(currentCalID))
+        for (int i = floor(ran.second.Start()); i < ceil(ran.second.Stop()) ; ++i)
+            calHist->SetBinContent(i,ran.first+1,2);
+
+    for (const auto& ran: ed.GetAllValidRanges(currentCalID))
+        for (int i = floor(ran.second.Start()); i < ceil(ran.second.Stop()) ; ++i)
+            calHist->SetBinContent(i,ran.first+1,1);
+
+    this->cd();
+    calHist->Draw("col");
 }
 
 //void ant::TACECanvas::SaveToFile(const std::string& fileName)
@@ -44,12 +63,23 @@ void ant::ACECanvas::loadFile(const std::string& fileName)
 void ACECanvas::change_state(ACECanvas::state_t newstate)
 {
     switch (newstate) {
+    cout << endl;
     case state_t::base:
-//        updateHist();
+        cout << "Base Mode:" << endl
+             << "  Keys in Canvas:" << endl
+             << "   *  r         remove Calibration steps" << endl
+             << "   *  c   cut out intervals of Calibration steps" << endl;
+        break;
+    case state_t::remove:
+        cout << "Remove Mode:" << endl
+             << "  Keys in Canvas:" << endl
+             << "   *  <return>  remove selection" << endl
+             << "   *  <esc>     abort" << endl;
         break;
     default:
         break;
     }
+    cout << endl;
 
     state = newstate;
 }
@@ -64,16 +94,99 @@ ACECanvas::ACECanvas(const string &FileName):
     loadFile(fileName);
 }
 
+void ACECanvas::removeAllinStepMemory()
+{
+    cout << endl << "Removing:" << endl;
+    for (const auto& in: stepMemory)
+        if (ed.Remove(currentCalID,in-1))
+            cout << "  " << in-1 << endl;
+    stepMemory.clear();
+    updateCalHist();
+    this->Update();
+}
+
 void ACECanvas::HandleKeypress(const char key)
 {
-    switch (key) {
+    switch (state)
+    {
+    case state_t::base:
+        switch (key)
+        {
+        case 'r':
+            change_state(state_t::remove);
+            break;
+
+        default:
+            break;
+        }
+    case state_t::remove:
+    case state_t::cut:
+        switch(key)
+        {
+        case 13:
+            removeAllinStepMemory();
+            change_state(state_t::base);
+            break;
+        case 27:
+            stepMemory.clear();
+            updateCalHist();
+            change_state(state_t::base);
+        default:
+            cout << "unknown key in remove" << endl;
+            break;
+        }
     default:
         break;
     }
+
 }
+
+void ACECanvas::markLine(Int_t y)
+{
+    TH2* h = dynamic_cast<TH2*>(fClickSelected);
+    if (h){
+        auto step = floor(AbsPixeltoY(y))+1;
+
+        Int_t minx = floor(ed.GetRange(currentCalID,step-1).second.Start());
+        Int_t maxx = ceil(ed.GetRange(currentCalID,step-1).second.Stop());
+
+        auto foundat = stepMemory.find(step);
+        if ( foundat == stepMemory.end() )
+        {
+            stepMemory.emplace(step);
+            for (Int_t i = minx; i < maxx; ++i )
+                calHist->Fill(i-1,step-1,3);
+        }
+        else
+        {
+            stepMemory.erase(foundat);
+            for (Int_t i = minx; i < maxx; ++i )
+                calHist->Fill(i-1,step-1,-3);
+        }
+        cout << "   Calibration steps marked for remove:" << endl;
+        for (const auto& in: stepMemory)
+            cout << in << endl;
+        cout << endl;
+    }
+//    auto bin = h->GetYaxis()->FindBin(y);
+}
+
 void ACECanvas::HandleInput(EEventType button, Int_t x, Int_t y)
 {
     TCanvas::HandleInput(button,x,y);
+
+    switch (state)
+    {
+    case state_t::remove:
+        if (button == kButton1Down)
+        {
+            markLine(y);
+        }
+        break;
+    default:
+        break;
+    }
+
 
     if(button == kKeyPress)
         HandleKeypress(x);
