@@ -253,8 +253,12 @@ int main(int argc, char** argv) {
     auto particleID = std::make_shared<ant::analysis::utils::CBTAPSBasicParticleID>();
 
     if(auto setup = ExpConfig::Setup::GetLastFound()) {
-        WrapTFile cuts(setup->GetPIDCutsDirectory()+"/cuts.root");
-        particleID->LoadFrom(cuts);
+        try {
+            WrapTFile cuts(setup->GetPIDCutsDirectory()+"/cuts.root", WrapTFile::mode_t::read);
+            particleID->LoadFrom(cuts);
+        } catch (const std::runtime_error& e) {
+            LOG(INFO) << "Failed to load cuts: " << e.what();
+        }
     }
 
     pm.particleID = particleID;
