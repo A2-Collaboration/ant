@@ -24,6 +24,12 @@ struct TAPS :
     virtual unsigned GetNChannels() const override {
         return clusterelements.size();
     }
+    virtual void SetIgnored(unsigned channel) override {
+        clusterelements[channel]->Ignored = true;
+    }
+    virtual bool IsIgnored(unsigned channel) const override {
+        return clusterelements[channel]->Ignored;
+    }
 
     // for UnpackerAcquConfig
     virtual void BuildMappings(
@@ -49,7 +55,12 @@ protected:
 
     // TAPS has BaF2 elements and PbWO4 elements
 
-    struct BaF2_Element_t : ClusterDetector_t::Element_t {
+    struct TAPS_Element_t : ClusterDetector_t::Element_t {
+        using ClusterDetector_t::Element_t::Element_t;
+        bool Ignored = false;
+    };
+
+    struct BaF2_Element_t : TAPS_Element_t {
         BaF2_Element_t(
                 unsigned channel,
                 const TVector2& pos_xy,
@@ -60,7 +71,7 @@ protected:
                 unsigned sgs,
                 const std::vector<unsigned>& neighbours // as last column since it's a messy list of numbers
                 ) :
-            ClusterDetector_t::Element_t(
+            TAPS_Element_t(
                 channel,
                 TVector3(pos_xy.X(), pos_xy.Y(), // z-component set by BuildClusterElements()
                          std::numeric_limits<double>::quiet_NaN()),
@@ -80,7 +91,7 @@ protected:
         unsigned SGS; // integral, short gate, high gain
     };
 
-    struct PbWO4_Element_t : ClusterDetector_t::Element_t {
+    struct PbWO4_Element_t : TAPS_Element_t {
         PbWO4_Element_t(
                 unsigned channel,
                 const TVector2& pos_xy,
@@ -89,7 +100,7 @@ protected:
                 unsigned qdcl,
                 const std::vector<unsigned>& neighbours // as last column since it's a messy list of numbers
                 ) :
-            ClusterDetector_t::Element_t(
+            TAPS_Element_t(
                 channel,
                 TVector3(pos_xy.X(), pos_xy.Y(), // z-component set by InitClusterElements()
                          std::numeric_limits<double>::quiet_NaN()),
@@ -134,7 +145,7 @@ private:
 
     // use another storage to make access to data performant
     void InitClusterElements();
-    std::vector<const ClusterDetector_t::Element_t*> clusterelements;
+    std::vector<TAPS_Element_t*> clusterelements;
 };
 
 

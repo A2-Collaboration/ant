@@ -79,11 +79,11 @@ void TAPSVeto::InitElements()
     assert(nElements == 384);
 
     elements.resize(nElements);
-    for(const auto& element : BaF2_elements) {
+    for(auto& element : BaF2_elements) {
         elements[element.Channel] = std::addressof(element);
     }
 
-    for(const auto& element : PbWO4_elements) {
+    for(auto& element : PbWO4_elements) {
         elements[element.Channel] = std::addressof(element);
     }
 

@@ -17,6 +17,12 @@ struct TAPSVeto :
     virtual unsigned GetNChannels() const override {
         return elements.size();
     }
+    virtual void SetIgnored(unsigned channel) override {
+        elements[channel]->Ignored = true;
+    }
+    virtual bool IsIgnored(unsigned channel) const override {
+        return elements[channel]->Ignored;
+    }
 
     virtual bool Matches(const THeaderInfo&) const override {
         // always match, since TAPSVeto never changed over A2's lifetime
@@ -37,14 +43,19 @@ struct TAPSVeto :
 
 protected:
 
-    struct BaF2_Element_t : Detector_t::Element_t {
+    struct TAPSVeto_Element_t : Detector_t::Element_t {
+        using Detector_t::Element_t::Element_t;
+        bool Ignored = false;
+    };
+
+    struct BaF2_Element_t : TAPSVeto_Element_t {
         BaF2_Element_t(
                 unsigned channel,
                 const TVector2& pos_xy,
                 unsigned tac,
                 unsigned lgs // only sensitive for BaF2 Veto
                 ) :
-            Detector_t::Element_t(
+            TAPSVeto_Element_t(
                 channel,
                 TVector3(pos_xy.X(), pos_xy.Y(), // z-component set by InitElements()
                          std::numeric_limits<double>::quiet_NaN())
@@ -56,7 +67,7 @@ protected:
         unsigned LGS;
     };
 
-    struct PbWO4_Element_t : Detector_t::Element_t {
+    struct PbWO4_Element_t : TAPSVeto_Element_t {
       PbWO4_Element_t(
           unsigned channel,
           const TVector2& pos_xy,
@@ -64,7 +75,7 @@ protected:
           unsigned qdch,
           unsigned qdcl
           ) :
-        Detector_t::Element_t(
+        TAPSVeto_Element_t(
           channel,
           TVector3(pos_xy.X(), pos_xy.Y(), // z-component set by InitClusterElements()
                    std::numeric_limits<double>::quiet_NaN())
@@ -102,7 +113,7 @@ private:
     std::vector<PbWO4_Element_t> PbWO4_elements;
 
     void InitElements();
-    std::vector<const Detector_t::Element_t*> elements;
+    std::vector<TAPSVeto_Element_t*> elements;
 
 };
 

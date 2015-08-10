@@ -67,8 +67,10 @@ struct Detector_t : printable_traits {
         TVector3 Position;
     };
 
-    virtual TVector3 GetPosition(unsigned channel) const = 0;
     virtual unsigned GetNChannels() const = 0;
+    virtual TVector3 GetPosition(unsigned channel) const = 0;
+    virtual void SetIgnored(unsigned channel) = 0;
+    virtual bool IsIgnored(unsigned channel) const = 0;
 
     class Exception : std::runtime_error {
         using std::runtime_error::runtime_error; // use base class constructor

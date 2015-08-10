@@ -19,6 +19,12 @@ struct EPT :
     virtual unsigned GetNChannels() const override {
         return elements.size();
     }
+    virtual void SetIgnored(unsigned channel) override {
+        elements[channel].Ignored = true;
+    }
+    virtual bool IsIgnored(unsigned channel) const override {
+        return elements[channel].Ignored;
+    }
 
     virtual bool TryGetChannelFromPhoton(double photonEnergy, unsigned& channel) const override;
 
@@ -44,11 +50,13 @@ protected:
                 ),
             TDC(tdc),
             Scaler(scaler),
-            ADC(adc)
+            ADC(adc),
+            Ignored(false)
         {}
         unsigned TDC;
         unsigned Scaler;
         unsigned ADC;
+        bool Ignored;
     };
 
     EPT(double beamEnergy,
@@ -63,7 +71,7 @@ protected:
         assert(elements.size()==47);
     }
 
-    const std::vector<Element_t> elements;
+    std::vector<Element_t> elements;
 };
 
 struct EPT_2014 : EPT {

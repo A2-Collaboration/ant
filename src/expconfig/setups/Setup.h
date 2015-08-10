@@ -134,9 +134,8 @@ protected:
     {
         // the base setup simply asks its underlying
         // detectors for the mappings
-        for(const auto& detector : detectors) {
-            const UnpackerAcquConfig* cfg
-                    = dynamic_cast<const UnpackerAcquConfig*>(detector.get());
+        for(auto detector : detectors) {
+            auto cfg = std::dynamic_pointer_cast<UnpackerAcquConfig, Detector_t>(detector);
             if(cfg == nullptr)
                 continue;
             //std::vector<hit_mapping_t> hit_mappings_;

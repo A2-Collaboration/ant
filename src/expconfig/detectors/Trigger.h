@@ -22,6 +22,13 @@ struct Trigger :
     virtual unsigned GetNChannels() const override {
         throw Exception("The trigger detector knows nothing about number of channels.");
     }
+    virtual void SetIgnored(unsigned) override {
+        throw Exception("The trigger detector cannot ignore channels.");
+    }
+    virtual bool IsIgnored(unsigned) const override {
+        throw Exception("The trigger detector knows nothing about ignored channels.");
+    }
+
 
 
     const LogicalChannel_t Reference_CATCH_TaggerCrate = {Type, Channel_t::Type_t::Timing, 1000};

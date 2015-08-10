@@ -18,6 +18,12 @@ struct PID :
     virtual unsigned GetNChannels() const override {
         return elements.size();
     }
+    virtual void SetIgnored(unsigned channel) override {
+        elements[channel].Ignored = true;
+    }
+    virtual bool IsIgnored(unsigned channel) const override {
+        return elements[channel].Ignored;
+    }
 
     virtual double dPhi(unsigned) const;
 
@@ -44,10 +50,12 @@ protected:
                 TVector3(5.1, 0, 0) // start with vector in x/y plane, is rotated in RotateElements()
                 ),
             ADC(adc),
-            TDC(tdc)
+            TDC(tdc),
+            Ignored(false)
         {}
         unsigned ADC;
         unsigned TDC;
+        bool Ignored;
     };
 
     PID(const std::vector<Element_t>& elements_init) :

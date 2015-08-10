@@ -19,6 +19,8 @@ struct CB :
     virtual unsigned GetNChannels() const override {
         return elements.size();
     }
+    virtual void SetIgnored(unsigned channel) override;
+    virtual bool IsIgnored(unsigned channel) const override;
 
     virtual bool Matches(const THeaderInfo&) const override {
         // always match, since CB never changed over A2's lifetime
@@ -57,7 +59,7 @@ protected:
         unsigned TDC;
     };
     static const std::vector<Element_t> elements;
-    static const std::vector<unsigned> holes;
+    static std::vector<unsigned> ignoredChannels;
 
     static std::vector<unsigned> initHoles();
 };

@@ -10,7 +10,15 @@ using namespace ant::expconfig::detector;
 
 
 
-const vector<unsigned> CB::holes = CB::initHoles();
+vector<unsigned> CB::ignoredChannels = CB::initHoles();
+
+void CB::SetIgnored(unsigned channel) {
+    ignoredChannels.push_back(channel);
+}
+
+bool CB::IsIgnored(unsigned channel) const {
+    return std_ext::contains(ignoredChannels, channel);
+}
 
 void CB::BuildMappings(vector<UnpackerAcquConfig::hit_mapping_t> &hit_mappings,
                        vector<UnpackerAcquConfig::scaler_mapping_t>&) const {
@@ -18,8 +26,8 @@ void CB::BuildMappings(vector<UnpackerAcquConfig::hit_mapping_t> &hit_mappings,
     // no scalers
     unsigned true_elements = 0;
     for(const Element_t& element : elements)  {
-        // exclude holes from mapping
-        if(std_ext::contains(holes, element.Channel))
+        // exclude ignored elements from mapping
+        if(IsIgnored(element.Channel))
             continue;
 
         hit_mappings.emplace_back(Type,
@@ -35,7 +43,7 @@ void CB::BuildMappings(vector<UnpackerAcquConfig::hit_mapping_t> &hit_mappings,
         true_elements++;
     }
 
-    assert(true_elements == 672);
+    assert(true_elements <= 672);
 }
 
 vector<unsigned> CB::initHoles() {
