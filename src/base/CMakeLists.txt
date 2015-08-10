@@ -1,5 +1,8 @@
 include_directories(.)
 
+set(ANT_PATH_DATABASE "${CMAKE_SOURCE_DIR}/database")
+configure_file(Paths.h.in Paths.h)
+
 set(SRCS
   types.cc
   Detector_t.cc
@@ -17,6 +20,7 @@ set(SRCS
   ReadTFiles.cc
   mapped_vectors.h
   CmdLine.h
+  Paths.h
   detail/easylogging++.h
   detail/format.cc
   detail/CmdLine.h

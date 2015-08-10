@@ -38,7 +38,7 @@ set(SRCS_DETECTORS
   detectors/detail/PID_2014_elements.h
 )
 
-include_directories(. ../analysis ../calibration)
+include_directories(. ../analysis ../calibration ${CMAKE_CURRENT_BINARY_DIR}/../)
 
 # make detector stuff own library,
 # very important to get init of static members at correct runtime

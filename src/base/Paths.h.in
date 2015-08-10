@@ -1,0 +1,5 @@
+#pragma once
+
+// Cmake configure file for necessary source paths
+
+#cmakedefine ANT_PATH_DATABASE "@ANT_PATH_DATABASE@"

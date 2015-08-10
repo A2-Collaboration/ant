@@ -6,6 +6,7 @@
 #include "unpacker/UnpackerAcqu.h"
 #include "unpacker/UnpackerA2Geant.h"
 
+#include "base/Paths.h"
 #include "base/std_ext.h"
 #include "tree/THeaderInfo.h"
 
