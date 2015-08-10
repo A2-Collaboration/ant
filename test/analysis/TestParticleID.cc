@@ -3,6 +3,8 @@
 #include "base/ParticleType.h"
 #include "analysis/data/Particle.h"
 #include "analysis/utils/ParticleID.h"
+#include "analysis/utils/root-addons.h"
+
 #include "TCutG.h"
 
 #include <cassert>
@@ -13,22 +15,6 @@ using namespace std;
 using namespace ant;
 using namespace ant::analysis::data;
 using namespace ant::analysis::utils;
-
-
-std::shared_ptr<TCutG> makeTCutG(const std::initializer_list<std::pair<double,double>>& p, const std::string& name) {
-
-    assert(p.size() >= 3);
-
-    auto cut = std::make_shared<TCutG>(name.c_str(), p.size());
-
-    int i=0;
-    for(auto& point : p) {
-        cut->SetPoint(i++,point.first, point.second);
-    }
-
-    return move(cut);
-
-}
 
 bool dEEtest(const std::shared_ptr<Candidate>& cand, const std::shared_ptr<TCutG>& cut) {
     return cut->IsInside(cand->ClusterEnergy(), cand->VetoEnergy());
@@ -92,11 +78,11 @@ TEST_CASE("ParticleID: tof + dEE cut", "[analysis]") {
 }
 
 void test_makeTCutG() {
-    auto cut = makeTCutG({{1,1},{3,1},{3,3},{1,3}},"a");
+    auto cut = root::makeTCutG("a", {{1,1},{3,1},{3,3},{1,3}});
     REQUIRE(cut->IsInside(2,2));
     REQUIRE_FALSE(cut->IsInside(2,4));
 
-    auto cut2 = makeTCutG({{1,1},{3,1},{3,3},{1,3}},"b");
+    auto cut2 = root::makeTCutG("b",{{1,1},{3,1},{3,3},{1,3}});
 }
 
 void test_nocuts() {
@@ -177,9 +163,9 @@ testdata::testdata()
 {
     // set up cuts
     // Cut shapes used here are not realistic. Just some polygons for testing
-    dEE_electron = makeTCutG({{50,2},{300,2},{300,2.5},{50,2.5}},"electron");
-    dEE_proton = makeTCutG({{50,4},{300,4},{51,16}}, "proton");
-    tofcut = makeTCutG({{0,5},{400,5},{400,15},{0,15}},"tof");
+    dEE_electron = root::makeTCutG("electron", {{50,2},{300,2},{300,2.5},{50,2.5}});
+    dEE_proton = root::makeTCutG("proton",{{50,4},{300,4},{51,16}});
+    tofcut = root::makeTCutG("tof",{{0,5},{400,5},{400,15},{0,15}});
 
     //create particles and make sure they fulfill their respective cuts
     gamma     = std::make_shared<Candidate>(100,0,0, 0,10,Detector_t::Type_t::CB, 0, 0);

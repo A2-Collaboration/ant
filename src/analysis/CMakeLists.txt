@@ -10,6 +10,7 @@ set(ANALYSIS_BASE
   A2GeoAcceptance.cc
   input/DataReader.cc
   utils/ParticleID.cc
+  utils/root-addons.cc
   )
 
 set(ANALYSIS_PLOT
