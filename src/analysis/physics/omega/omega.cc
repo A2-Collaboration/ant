@@ -146,7 +146,7 @@ void OmegaEtaG::Analyse(const Event::Data &data, const Event &event)
 
     const string decaystring = GetDecayString(event.MCTrue().Intermediates().GetAll());
 
-    for( auto comb = makeCombination(photons,3); !comb.Done(); ++comb) {
+    for( auto comb = utils::makeCombination(photons,3); !comb.Done(); ++comb) {
 
         ParticleList ggg_list;
         ggg_list.assign(comb.begin(),comb.end());
@@ -188,7 +188,7 @@ void OmegaEtaG::Analyse(const Event::Data &data, const Event &event)
             }
         }
 
-        for( auto gcomb = makeCombination(ggg_list,2); !gcomb.Done(); ++gcomb) {
+        for( auto gcomb = utils::makeCombination(ggg_list,2); !gcomb.Done(); ++gcomb) {
 
             const TLorentzVector g1(*gcomb.at(0));
             const TLorentzVector g2(*gcomb.at(1));

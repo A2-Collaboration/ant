@@ -72,7 +72,7 @@ void CB_Energy::ThePhysics::ProcessEvent(const Event& event)
 {
     const auto& cands = event.Reconstructed().Candidates();
 
-    for( auto comb = makeCombination(cands,2); !comb.Done(); ++comb ) {
+    for( auto comb = analysis::utils::makeCombination(cands,2); !comb.Done(); ++comb ) {
         const CandidatePtr& p1 = comb.at(0);
         const CandidatePtr& p2 = comb.at(1);
 

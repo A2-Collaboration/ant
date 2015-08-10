@@ -10,6 +10,7 @@
 
 
 namespace ant {
+namespace analysis {
 namespace utils {
 
 /**
@@ -94,6 +95,7 @@ std::list< scored_match<typename List1::value_type, typename List2::value_type> 
     }
 
     return std::move(scores);
+}
 }
 }
 }

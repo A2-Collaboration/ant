@@ -3,6 +3,8 @@
 #include <vector>
 
 namespace ant {
+namespace analysis {
+namespace utils {
 
 /**
  * @brief KofNvector class: Generate all combinations when drawing k elements out of a vector.
@@ -138,5 +140,6 @@ template <typename T>
 KofNvector<T> makeCombination( const std::vector<T>& data, const unsigned int k) {
     return std::move(KofNvector<T>(data,k));
 }
-
+}
+}
 }

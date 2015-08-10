@@ -14,6 +14,7 @@
 
 using namespace std;
 using namespace ant;
+using namespace ant::analysis;
 using namespace ant::analysis::physics;
 
 ParticleCombinatoricsTest::ParticleCombinatoricsTest(const string &name):
@@ -56,7 +57,7 @@ void ParticleCombinatoricsTest::ProcessEvent(const Event &event)
     nphotons.Fill(photons.size());
     nprotons.Fill(protons.size());
 
-    auto combinations2 = makeCombination(photons,2);
+    auto combinations2 = utils::makeCombination(photons,2);
     do {
         TLorentzVector v;
         for( auto& i: combinations2 ) {
@@ -67,7 +68,7 @@ void ParticleCombinatoricsTest::ProcessEvent(const Event &event)
 
     } while(combinations2.next());
 
-    auto combinations3 = makeCombination(photons,3);
+    auto combinations3 = utils::makeCombination(photons,3);
     do {
         TLorentzVector v;
         for( auto& i: combinations3 ) {

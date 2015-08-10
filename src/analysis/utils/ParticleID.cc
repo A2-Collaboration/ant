@@ -7,6 +7,7 @@
 using namespace std;
 using namespace ant;
 using namespace ant::analysis;
+using namespace ant::analysis::utils;
 
 BasicParticleID::~BasicParticleID()
 {

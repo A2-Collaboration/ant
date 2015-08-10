@@ -13,6 +13,7 @@ class Candidate;
 class Particle;
 
 namespace analysis {
+namespace utils {
 
 class ParticleID {
 public:
@@ -54,4 +55,4 @@ public:
 
 }
 }
-
+}

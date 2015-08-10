@@ -11,6 +11,7 @@
 
 using namespace std;
 using namespace ant;
+using namespace ant::analysis::utils;
 
 
 std::shared_ptr<TCutG> makeTCutG(const std::initializer_list<std::pair<double,double>>& p, const std::string& name) {
@@ -98,7 +99,7 @@ void test_makeTCutG() {
 }
 
 void test_nocuts() {
-    ant::analysis::BasicParticleID pid;
+    BasicParticleID pid;
 
     // No cuts set
     REQUIRE(pid.Identify(data.gamma)   == &ParticleTypeDatabase::Photon);
@@ -108,7 +109,7 @@ void test_nocuts() {
 }
 
 void test_protoncut() {
-    ant::analysis::BasicParticleID pid;
+    BasicParticleID pid;
 
     // proton cut
     pid.dEE_proton = data.dEE_proton;
@@ -119,7 +120,7 @@ void test_protoncut() {
 }
 
 void test_electoncut() {
-    ant::analysis::BasicParticleID pid;
+    BasicParticleID pid;
 
     // electron cut
     pid.dEE_electron = data.dEE_electron;
@@ -131,7 +132,7 @@ void test_electoncut() {
 }
 
 void test_electonantprotoncut() {
-    ant::analysis::BasicParticleID pid;
+    BasicParticleID pid;
 
     // electron and proton cut
     pid.dEE_electron = data.dEE_electron;
@@ -144,7 +145,7 @@ void test_electonantprotoncut() {
 }
 
 void test_tof() {
-    ant::analysis::BasicParticleID pid;
+    BasicParticleID pid;
 
     // hadronic/tof
     pid.tof = data.tofcut;
@@ -155,7 +156,7 @@ void test_tof() {
 
 
 void test_tofdee() {
-    ant::analysis::BasicParticleID pid;
+    BasicParticleID pid;
 
     // tof + dEE
     pid.dEE_electron = data.dEE_electron;

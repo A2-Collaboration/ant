@@ -51,7 +51,7 @@ void TAPS_Energy::ThePhysics::ProcessEvent(const Event& event)
 
     const auto CBTAPS = Detector_t::Type_t::CB | Detector_t::Type_t::TAPS;
 
-    for( auto comb = makeCombination(cands,2); !comb.Done(); ++comb ) {
+    for( auto comb = analysis::utils::makeCombination(cands,2); !comb.Done(); ++comb ) {
         const CandidatePtr& cand1 = comb.at(0);
         const CandidatePtr& cand2 = comb.at(1);
 
