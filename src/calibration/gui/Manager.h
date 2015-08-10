@@ -69,6 +69,14 @@ protected:
 
     void FillWorklistFromFiles();
 
+    struct SignalConnection_t {
+
+        std::string receiver_class;
+        void* receiver = nullptr;
+        std::string slot;
+    };
+    SignalConnection_t signalConnection;
+
 public:
     std::string SetupName;
 
@@ -78,7 +86,7 @@ public:
         module = move(module_);
     }
 
-    virtual void InitGUI(const char* receiver_class, void* receiver, const char* slot);
+    virtual void ConnectReturnFunc(const char* receiver_class, void* receiver, const char* slot);
 
     virtual bool Run();
 

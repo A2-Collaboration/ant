@@ -106,15 +106,12 @@ Manager::Manager(const std::vector<std::string>& inputfiles, unsigned avglength)
 {
     BuildInputFiles(inputfiles);
 }
-void Manager::InitGUI(const char* receiver_class, void* receiver, const char* slot)
+
+void Manager::ConnectReturnFunc(const char* receiver_class, void* receiver, const char* slot)
 {
-    module->InitGUI();
-    for(CalCanvas* canvas : module->GetCanvases()) {
-        canvas->LinkGUIMode(mode.get());
-    }
-    for(CalCanvas* canvas : module->GetCanvases()) {
-        canvas->ConnectReturnFunc(receiver_class, receiver, slot);
-    }
+    signalConnection.receiver_class = receiver_class;
+    signalConnection.receiver = receiver;
+    signalConnection.slot = slot;
 }
 
 bool Manager::input_file_t::operator <(const Manager::input_file_t& o) const {
@@ -132,6 +129,14 @@ bool Manager::Run()
             LOG(WARNING) << "Did not process anything";
             return false;
         }
+        module->InitGUI();;
+        for(CalCanvas* canvas : module->GetCanvases()) {
+            canvas->ConnectReturnFunc(signalConnection.receiver_class.c_str(),
+                                      signalConnection.receiver,
+                                      signalConnection.slot.c_str());
+            canvas->LinkGUIMode(mode.get());
+        }
+
         state.is_init = true;
         module->StartRange(buffer.Worklist().front());
     }

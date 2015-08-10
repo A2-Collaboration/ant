@@ -28,7 +28,7 @@ struct MyExec : TExec {
         rint(Rint),
         gui(gui_)
     {
-        gui->InitGUI("TExec", this, "Exec(=\"\")");
+        gui->ConnectReturnFunc("TExec", this, "Exec(=\"\")");
     }
 
     virtual void Exec(const char* arg) override {
