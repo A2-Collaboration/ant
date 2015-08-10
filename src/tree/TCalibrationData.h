@@ -65,11 +65,7 @@ struct TCalibrationData
     virtual std::ostream& Print( std::ostream& s) const override {
         s << "TCalibrationData generated at " << std::asctime(std::localtime(&TimeStamp)) << std::endl
           << "  CalibrationID:  " << CalibrationID << std::endl
-          << "  Valid for IDs:  [" << FirstID << ", " << LastID << "]" << std::endl
-          << "  Data:" << std::endl;
-        for (auto& entry: Data){
-            s << "  " << entry.Key << "  " << entry.Value << std::endl;
-        }
+          << "  Valid for IDs:  [" << FirstID << ", " << LastID << "]" << std::endl;
         return s;
     }
 #endif
