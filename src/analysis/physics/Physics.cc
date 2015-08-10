@@ -136,9 +136,11 @@ void PhysicsManager::ProcessEvent(data::Event &event)
         // run particle ID for Reconstructed candidates
         for(auto cand : event.Reconstructed().Candidates()) {
 
-            event.Reconstructed().Particles().AddParticle(
-                        particleID->Process(cand)
-                        );
+            auto particle = particleID->Process(cand);
+
+            if(particle)
+                event.Reconstructed().Particles().AddParticle(
+                        particle);
         }
     }
 
