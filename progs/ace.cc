@@ -4,6 +4,7 @@
 
 using namespace std;
 using namespace ant;
+using namespace ant::calibration::gui;
 
 
 //int main(int argc, char** argv) {
@@ -13,7 +14,7 @@ int main() {
     int i = 0;
     TRint app("ACE",&i,nullptr);
 
-    ACECanvas* c = new ACECanvas("test");
+    new ACECanvas("test.root");
 
     app.Run(kFALSE);
 

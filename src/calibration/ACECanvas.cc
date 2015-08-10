@@ -10,6 +10,7 @@
 
 using namespace ant;
 using namespace std;
+using namespace ant::calibration::gui;
 
 
 void ACECanvas::update_modified()
@@ -31,23 +32,59 @@ void ACECanvas::makeCalHist()
     calHist->Draw("col");
 }
 
-void ant::ACECanvas::loadFile(const std::string& fileName)
+void ACECanvas::loadFile(const std::string& fileName)
 {
-    //    if ( !ed->AddFromFile(fileName) )
-    //        throw runtime_error(string("Could not file ")+filename);
+    if ( !ed.AddFromFile(fileName) )
+        throw runtime_error(string("Could not file ")+fileName);
 
-    //DEBUG!!!!
-    cout << "try load " << fileName << "  in future!!!" << endl;
-    addSomeRandomData();
-    currentCalID = "testID";
-    // end DEBUG!!!!!!
-    makeCalHist();
-    updateCalHist();
+    if (ed.GetListOfCalibrations().size() == 0 )
+        throw runtime_error(string("No calibration found in file ")+fileName);
+
+    cout << endl
+         << "  Sucessfully opened file."<< endl;
+
+    loadCalibration();
+
+    if (currentCalID.empty())
+        throw runtime_error("No calibration loaded, exiting... ");
 
     change_state(state_t::base);
 }
 
-void ant::ACECanvas::updateCalHist()
+void ACECanvas::loadCalibration()
+{
+    changeCalibrationID();
+
+    makeCalHist();
+    updateCalHist();
+}
+
+void ACECanvas::changeCalibrationID()
+{
+    cout << endl
+         << "  Available calibrationIDs:" << endl;
+    for (const auto& cID: ed.GetListOfCalibrations())
+    {
+        cout << "    *  " << cID << endl;
+    }
+    cout << endl
+         << "Enter the calibration you want to edit," << endl
+         << "'.q' to abort." << endl
+         << "   -->  ";
+
+    bool found = false;
+    string calID;
+    while (!found)
+    {
+        cin >> calID;
+        if ( calID.compare(".q") == 0 )
+            return;
+        found = ed.Has(calID);
+    }
+    currentCalID = calID;
+}
+
+void ACECanvas::updateCalHist()
 {
     calHist->Reset();
     for (const auto& ran: ed.GetAllRanges(currentCalID))
@@ -61,52 +98,71 @@ void ant::ACECanvas::updateCalHist()
     update_modified();
 }
 
-//void ant::TACECanvas::SaveToFile(const std::string& fileName)
-//{
-//    ed->SaveToFile(fileName);
-//}
+void ACECanvas::saveToFile(const std::string& fileName)
+{
+    ed.SaveToFile(fileName);
+    cout << endl << "Saved to File " << fileName << "." << endl;
+}
 
 void ACECanvas::change_state(ACECanvas::state_t newstate)
 {
     switch (newstate) {
-    cout << endl;
+    cout << endl
+         << endl
+         << "=====  Ant Calibration Editor  ========================" << endl
+         << endl;
     case state_t::base:
         cout << "Base Mode:" << endl
              << "  Keys in Canvas:" << endl
-             << "   *  e   expand Calibration steps" << endl
-             << "   *  c   cut out intervals of Calibration steps" << endl
-             << "   *  r   remove Calibration steps" << endl
-             << "   *  v   reduce to valid Calibration steps" << endl;
+             << "   *  e   Expand Calibration steps" << endl
+             << "   *  c   Cut out intervals of Calibration steps" << endl
+//             << "   *  l   Load new CalibrationID" << endl
+             << "   *  r   Remove Calibration steps" << endl
+             << "   *  s   Save Your changes" << endl
+             << "   *  v   reduce to Valid Calibration steps" << endl;
+        break;
+    case state_t::loadID:
+        loadCalibration();
+        change_state(state_t::base);
+        break;
+    case state_t::save:
+        cout << "Save all changes:" << endl
+             << "  Keys in Canvas:" << endl
+             << "   *  o   Override existing file with changes" << endl
+             << "   *  a   save As a new file" << endl
+             << "   *  c   Cancel" << endl;
         break;
     case state_t::expand:
         cout << "Expand Mode:" << endl
              << "  Keys in Canvas:" << endl
-             << "   *  a   apply changes" << endl
-             << "   *  c   cancel" << endl;
+             << "   *  a   Apply changes" << endl
+             << "   *  c   Cancel" << endl;
         break;
     case state_t::remove:
         cout << "Remove Mode:" << endl
              << "  Keys in Canvas:" << endl
-             << "   *  a   apply changes" << endl
-             << "   *  c   cancel" << endl;
+             << "   *  a   Apply changes" << endl
+             << "   *  c   Cancel" << endl;
         break;
     case state_t::cut:
         cout << "Cut interval Mode:" << endl
              << "  Keys in Canvas:" << endl
-             << "   *  a   apply changes" << endl
-             << "   *  c   cancel" << endl;
+             << "   *  a   Apply changes" << endl
+             << "   *  c   Cancel" << endl;
         break;
     case state_t::reduceToValid:
         markUnValid();
         cout << "Reduce Mode:" << endl
              << "  Keys in Canvas:" << endl
-             << "   *  a   apply changes" << endl
-             << "   *  c   cancel" << endl;
+             << "   *  a   Apply changes" << endl
+             << "   *  c   Cancel" << endl;
         break;
     default:
         break;
     }
-    cout << endl;
+    cout << endl
+         << "=======================================================" << endl
+         << endl;
     state = newstate;
 }
 
@@ -160,6 +216,12 @@ void ACECanvas::HandleKeypress(const char key)
         case 'e':
             change_state(state_t::expand);
             break;
+//        case 'l':
+//            change_state(state_t::loadID);
+//            break;
+        case 's':
+            change_state(state_t::save);
+            break;
         case 'r':
             change_state(state_t::remove);
             break;
@@ -168,6 +230,25 @@ void ACECanvas::HandleKeypress(const char key)
             break;
         case 'v':
             change_state(state_t::reduceToValid);
+            break;
+        default:
+            break;
+        }
+        break;
+    case state_t::save:
+        switch(key)
+        {
+        case 'o':
+            saveToFile(fileName);
+            change_state(state_t::base);
+            break;
+//        case 'a':
+//            indexMemory.clear();
+//            updateCalHist();
+//            change_state(state_t::base);
+//            break;
+        case 'c':
+            change_state(state_t::base);
             break;
         default:
             break;
@@ -251,7 +332,6 @@ void ACECanvas::fillLine(uint32_t lineNumber)
 {
     for (Int_t i = 0; i < 100; ++i )
         calHist->Fill(i,lineNumber,3);
-//    update_modified();
 }
 
 void ACECanvas::unFillLine(uint32_t lineNumber)
@@ -373,4 +453,25 @@ void ACECanvas::addSomeRandomData()
     for (int i = 50 ; i < 100; ++i)
         ed.Add(makedata(i*10,(i+1)*10));
     ed.Add(makedata(800,900));
+}
+
+
+TextPad::TextPad(double xmargin, double ymargin):
+    xMargin(xmargin), yMargin(ymargin)
+{
+    paveText = new TPaveText(xMargin,yMargin,1-xMargin,1-yMargin,"nb");
+}
+
+TextPad::TextPad(std::list<string>& lines, double xmargin, double ymargin):
+    xMargin(xmargin),
+    yMargin(ymargin)
+{
+    paveText = new TPaveText(xMargin,yMargin,1-xMargin,1-yMargin,"nb");
+    for (const auto& line: lines)
+        Add(line);
+}
+
+void TextPad::Draw(const string& option) const
+{
+    paveText->Draw(option.c_str());
 }
