@@ -3,12 +3,14 @@
 #include "data/Candidate.h"
 #include "data/Particle.h"
 #include "TCutG.h"
+#include "base/WrapTFile.h"
 
 using namespace std;
 using namespace ant;
 using namespace ant::analysis;
 using namespace ant::analysis::utils;
 using namespace ant::analysis::data;
+
 
 BasicParticleID::~BasicParticleID()
 {
@@ -63,7 +65,7 @@ const ParticleTypeDatabase::Type* BasicParticleID::Identify(const std::shared_pt
     return nullptr;
 }
 
-std::shared_ptr<Particle> BasicParticleID::Process(std::shared_ptr<Candidate>& cand) const
+std::shared_ptr<Particle> ParticleID::Process(std::shared_ptr<Candidate>& cand) const
 {
     auto type = Identify(cand);
     if(type !=nullptr) {
@@ -74,19 +76,34 @@ std::shared_ptr<Particle> BasicParticleID::Process(std::shared_ptr<Candidate>& c
 }
 
 
-
 CBTAPSBasicParticleID::~CBTAPSBasicParticleID()
 {
 
 }
 
-std::shared_ptr<Particle> CBTAPSBasicParticleID::Process(std::shared_ptr<Candidate>& cand) const
+const ParticleTypeDatabase::Type* CBTAPSBasicParticleID::Identify(const std::shared_ptr<data::Candidate>& cand) const
 {
     if(cand->Detector() & Detector_t::Any_t::CB) {
-        return cb.Process(cand);
+        return cb.Identify(cand);
     } else if(cand->Detector() & Detector_t::Any_t::TAPS) {
-        return taps.Process(cand);
+        return taps.Identify(cand);
     }
 
     return nullptr;
+}
+
+void CBTAPSBasicParticleID::LoadFrom(WrapTFile& file)
+{
+
+        cb.dEE_proton       = file.GetSharedClone<TCutG>("cb_dEE_proton");
+        cb.dEE_pion         = file.GetSharedClone<TCutG>("cb_dEE_pion");
+        cb.dEE_electron     = file.GetSharedClone<TCutG>("cb_dEE_electron");
+        cb.tof              = file.GetSharedClone<TCutG>("cb_ToF");
+        cb.size             = file.GetSharedClone<TCutG>("cb_CluserSize");
+
+        taps.dEE_proton     = file.GetSharedClone<TCutG>("taps_dEE_proton");
+        taps.dEE_pion       = file.GetSharedClone<TCutG>("taps_dEE_pion");
+        taps.dEE_electron   = file.GetSharedClone<TCutG>("taps_dEE_electron");
+        taps.tof            = file.GetSharedClone<TCutG>("taps_ToF");
+        taps.size           = file.GetSharedClone<TCutG>("taps_CluserSize");
 }

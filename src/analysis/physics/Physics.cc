@@ -3,6 +3,7 @@
 
 #include "tree/TSlowControl.h"
 #include "tree/TAntHeader.h"
+#include "utils/ParticleID.h"
 
 #include "TDirectory.h"
 
@@ -109,10 +110,10 @@ void PhysicsManager::ReadFrom(
         if(nEvents==0)
             firstEventID = event.Reconstructed().TriggerInfos().EventID();
 
+        lastEventID = event.Reconstructed().TriggerInfos().EventID();
+
         /// \todo make use of slowcontrol
         ProcessEvent(event);
-
-        lastEventID = event.Reconstructed().TriggerInfos().EventID();
 
         nEvents++;
     }
@@ -128,8 +129,20 @@ void PhysicsManager::ReadFrom(
 
 
 
-void PhysicsManager::ProcessEvent(const data::Event &event)
+void PhysicsManager::ProcessEvent(data::Event &event)
 {
+    if(particleID) {
+
+        // run particle ID for Reconstructed candidates
+        for(auto cand : event.Reconstructed().Candidates()) {
+
+            event.Reconstructed().Particles().AddParticle(
+                        particleID->Process(cand)
+                        );
+        }
+    }
+
+
     for( auto& m : physics ) {
 
         m->ProcessEvent(event);

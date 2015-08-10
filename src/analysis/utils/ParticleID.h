@@ -8,6 +8,7 @@ class TCutG;
 
 
 namespace ant {
+class WrapTFile;
 namespace analysis {
 
 namespace data {
@@ -21,7 +22,9 @@ class ParticleID {
 public:
     virtual ~ParticleID() {}
 
-    virtual std::shared_ptr<data::Particle> Process(std::shared_ptr<data::Candidate>& cand) const =0;
+    virtual const ParticleTypeDatabase::Type* Identify(const std::shared_ptr<data::Candidate>& cand) const =0;
+
+    virtual std::shared_ptr<ant::analysis::data::Particle> Process(std::shared_ptr<data::Candidate>& cand) const;
 };
 
 
@@ -38,8 +41,7 @@ public:
 
     std::shared_ptr<TCutG> size;
 
-    virtual const ParticleTypeDatabase::Type* Identify(const std::shared_ptr<data::Candidate>& cand) const;
-    virtual std::shared_ptr<data::Particle> Process(std::shared_ptr<data::Candidate>& cand) const override;
+    virtual const ParticleTypeDatabase::Type* Identify(const std::shared_ptr<data::Candidate>& cand) const override;
 };
 
 class CBTAPSBasicParticleID: public ParticleID {
@@ -51,8 +53,8 @@ public:
     CBTAPSBasicParticleID() {}
     virtual ~CBTAPSBasicParticleID();
 
-
-    virtual std::shared_ptr<data::Particle> Process(std::shared_ptr<data::Candidate>& cand) const override;
+    virtual const ParticleTypeDatabase::Type* Identify(const std::shared_ptr<data::Candidate>& cand) const override;
+    virtual void LoadFrom(WrapTFile& file);
 };
 
 }

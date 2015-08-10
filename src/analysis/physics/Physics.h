@@ -20,6 +20,10 @@ class TAntHeader;
 
 namespace analysis {
 
+namespace utils {
+    class ParticleID;
+}
+
 class Physics {
 private:
     std::string name_;
@@ -56,6 +60,8 @@ protected:
     physics_list_t physics;
 
 public:
+    std::shared_ptr<utils::ParticleID> particleID;
+
     PhysicsManager();
     template <typename T, typename ... args_t>
     void AddPhysics(args_t&&... args) {
@@ -79,7 +85,7 @@ public:
                   );
 
 
-    void ProcessEvent(const data::Event& event);
+    void ProcessEvent(data::Event& event);
     void ShowResults();
 
 };

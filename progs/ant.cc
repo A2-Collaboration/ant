@@ -4,6 +4,7 @@
 #include "analysis/input/ant/AntReader.h"
 #include "analysis/input/goat/GoatReader.h"
 #include "analysis/input/pluto/PlutoReader.h"
+#include "analysis/utils/ParticleID.h"
 
 #include "expconfig/ExpConfig.h"
 
@@ -244,6 +245,21 @@ int main(int argc, char** argv) {
     for(const auto& calibration : enabled_calibrations) {
         pm.AddPhysics(calibration->GetPhysicsModule());
     }
+
+
+
+    // set up particle ID
+
+    auto particleID = std::make_shared<ant::analysis::utils::CBTAPSBasicParticleID>();
+
+    if(auto setup = ExpConfig::Setup::GetLastFound()) {
+        WrapTFile cuts(setup->GetPIDCutsDirectory()+"/cuts.root");
+        particleID->LoadFrom(cuts);
+    }
+
+    pm.particleID = particleID;
+
+
 
     // create some variables for running
     long long maxevents = cmd_maxevents->isSet()
