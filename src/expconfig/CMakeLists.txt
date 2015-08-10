@@ -8,6 +8,8 @@ set(SRCS_SETUPS
   setups/SetupRegistry.cc
   setups/Setup_2014_EPT.h
   setups/Setup_2014_07_EPT_Prod.cc
+  setups/Setup_2014_10_EPT_Prod.cc
+  setups/Setup_2014_12_EPT_Prod.cc
   setups/Setup_2015_dummy.cc
   )
 
