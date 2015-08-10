@@ -180,9 +180,11 @@ void CB_Energy::TheGUI::StoreFit(unsigned channel)
 
     LOG(INFO) << "Stored Ch=" << channel << ": PeakPosition " << pi0peak
               << " MeV,  gain changed " << oldValue << " -> " << newValue
-              << " (" << 100*newValue/oldValue << " %)";
+              << " (" << 100*(newValue/oldValue-1) << " %)";
 
 
+    // don't forget the fit parameters
+    fitParameters[channel] = func->Save();
 }
 
 bool CB_Energy::TheGUI::FinishRange()
