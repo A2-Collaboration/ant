@@ -1,6 +1,6 @@
 #include "ExpConfig.h"
 
-#include "Setup.h"
+#include "setups/Setup.h"
 #include "tree/THeaderInfo.h"
 #include "unpacker/UnpackerAcqu.h"
 #include "unpacker/UnpackerA2Geant.h"
