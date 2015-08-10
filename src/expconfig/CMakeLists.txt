@@ -6,7 +6,8 @@ set(SRCS
 set(SRCS_SETUPS
   setups/Setup.h
   setups/SetupRegistry.cc
-  setups/Setup_2014_EtaPrime.cc
+  setups/Setup_2014_EPT.h
+  setups/Setup_2014_07_EPT_Prod.cc
   setups/Setup_2015_dummy.cc
   )
 

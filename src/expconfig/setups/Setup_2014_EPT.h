@@ -6,17 +6,12 @@ namespace ant {
 namespace expconfig {
 namespace setup {
 
-class Setup_2014_EtaPrime :
-        public Setup
+class Setup_2014_EPT : public Setup
 {
 public:
-    virtual std::string GetName() const override {
-        return "Setup_2014_EtaPrime";
-    }
 
-    Setup_2014_EtaPrime() {
-        auto calibrationManager = make_shared<calibration::DataManager>(GetName());
-
+    Setup_2014_EPT(const string& name) {
+        auto calibrationManager = make_shared<calibration::DataManager>(name);
 
         // setup the detectors of interest
         const auto trigger = make_shared<detector::Trigger_2014>();
@@ -96,7 +91,6 @@ public:
         // the PID calibration is a physics module only
         AddCalibration<calibration::PID_PhiAngle>(pid);
 
-
     }
 
     virtual double GetElectronBeamEnergy() const override {
@@ -113,9 +107,7 @@ public:
     bool Matches(const THeaderInfo& header) const override {
         if(!Setup::Matches(header))
             return false;
-        /// \todo Make beamtime match stricter than just detectors
         return true;
-
     }
 
     void BuildMappings(std::vector<hit_mapping_t>& hit_mappings,
@@ -129,8 +121,5 @@ public:
         // for example, ignore elements
     }
 };
-
-// don't forget registration
-AUTO_REGISTER_SETUP(Setup_2014_EtaPrime)
 
 }}} // namespace ant::expconfig::setup
