@@ -36,9 +36,9 @@ private:
     calibration::Editor ed;
     TH2D* calHist;
 
-    std::set<std::uint32_t> stepMemory;
+    std::set<std::uint32_t> indexMemory;
 
-    interval<std::uint32_t> stepInterVal;
+    interval<std::uint32_t> indexInterVal;
     bool intervalStartSet;
 
     void makeCalHist();

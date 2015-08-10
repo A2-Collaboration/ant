@@ -175,7 +175,7 @@ bool Editor::Remove(const string &calibrationID, const uint32_t &index1, const u
     if ( index1 > index2 )
         return false;
 
-    dVector.erase(dVector.begin()+index1,dVector.begin()+index2);
+    dVector.erase(dVector.begin()+index1,dVector.begin()+index2+1);
     return true;
 
 }
