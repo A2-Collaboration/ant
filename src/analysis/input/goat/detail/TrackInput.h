@@ -8,6 +8,7 @@
 #define GTreeTrack_MAX 128
 
 namespace ant {
+namespace analysis {
 namespace input {
 
 class TrackInput: public BaseInputModule {
@@ -72,5 +73,6 @@ public:
             Double_t        GetPseudoVertexY(const Int_t index)       const	{return pseudoVertexY[index];}
             Double_t        GetPseudoVertexZ(const Int_t index)       const	{return pseudoVertexZ[index];}
 };
+}
 }
 }

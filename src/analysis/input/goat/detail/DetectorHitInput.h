@@ -7,22 +7,23 @@
 
 
 namespace ant {
+namespace analysis {
 namespace input {
 
 class DetectorHitInput: public BaseInputModule {
 protected:
     Int_t		nNaIHits = 0;
-    Int_t		NaIHits[720];
-    Int_t		NaICluster[720];
+    Int_t		NaIHits[720] = {};
+    Int_t		NaICluster[720] = {};
     Int_t		nPIDHits = 0;
-    Int_t		PIDHits[24];
+    Int_t		PIDHits[24] = {};
     Int_t		nMWPCHits = 0;
-    Int_t		MWPCHits[860];
+    Int_t		MWPCHits[860] = {};
     Int_t		nBaF2Hits = 0;
-    Int_t		BaF2Hits[438];
-    Int_t		BaF2Cluster[438];
+    Int_t		BaF2Hits[438] = {};
+    Int_t		BaF2Cluster[438] = {};
     Int_t		nVetoHits = 0;
-    Int_t		VetoHits[438];
+    Int_t		VetoHits[438] = {};
 public:
 
     DetectorHitInput();
@@ -56,5 +57,6 @@ public:
             Int_t		GetVetoHits(const Int_t index)	const	{return VetoHits[index];}
 
 };
+}
 }
 }

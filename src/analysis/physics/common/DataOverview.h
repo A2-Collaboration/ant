@@ -9,7 +9,7 @@ namespace ant {
 namespace analysis {
 namespace physics {
 
-class DataOverview : public ant::Physics {
+class DataOverview : public Physics {
 protected:
     class OverviewSet {
     public:
@@ -25,7 +25,7 @@ protected:
 
         OverviewSet(SmartHistFactory& factory, const std::string& title);
 
-        void Fill(const ant::Event::Data& dataset);
+        void Fill(const data::Event::Data& dataset);
     };
 
     OverviewSet reconstructed;
@@ -34,7 +34,7 @@ protected:
 public:
     DataOverview(const std::string& name="OverviewSet");
 
-    void ProcessEvent(const Event &event);
+    void ProcessEvent(const data::Event &event);
     void Finish();
     void ShowResult();
 };

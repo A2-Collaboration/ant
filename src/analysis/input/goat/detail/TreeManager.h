@@ -6,6 +6,7 @@
 class TTree;
 
 namespace ant {
+namespace analysis {
 namespace input {
 
 class TreeManager {
@@ -24,5 +25,6 @@ public:
     virtual void GetEntry(Long64_t entry);
 
 };
+}
 }
 }

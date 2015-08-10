@@ -8,7 +8,7 @@
 #include "tree/TCandidate.h"
 #include "tree/TTaggerHit.h"
 #include "tree/TDataRecord.h"
-
+#include "data/Event.h"
 
 #include "base/Detector_t.h"
 
@@ -16,7 +16,8 @@
 #include <limits>
 
 using namespace ant;
-using namespace ant::input;
+using namespace ant::analysis::input;
+using namespace ant::analysis::data;
 using namespace std;
 
 template <class Cont1, class Cont2>

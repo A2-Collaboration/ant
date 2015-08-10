@@ -7,7 +7,7 @@
 #include <sstream>
 #include <iomanip>
 
-using namespace ant;
+using namespace ant::analysis;
 using namespace std;
 
 

@@ -11,6 +11,7 @@
 
 using namespace std;
 using namespace ant;
+using namespace ant::analysis::data;
 using namespace ant::analysis::utils;
 
 

@@ -16,6 +16,7 @@
 
 
 namespace ant {
+namespace analysis {
 
 template <typename T>
 class BaseFillFunction {
@@ -207,7 +208,7 @@ public:
         const std::string& ylabel,
         const BinSettings& bins,
         const std::string& name="",
-        HistogramFactory& factory=ant::HistogramFactory::Default())
+        HistogramFactory& factory = HistogramFactory::Default())
     {
         TH1D* hist = factory.Make1D(
             title,
@@ -225,7 +226,7 @@ public:
         const std::string& ylabel,
         const BinSettings& bins,
         const std::string& name="",
-        HistogramFactory& factory=ant::HistogramFactory::Default())
+        HistogramFactory& factory = HistogramFactory::Default())
     {
         TH1D* hist = factory.Make1D(
             title,
@@ -255,4 +256,5 @@ SmartHist1<std::string> SmartHist1<std::string>::makeHist(
     const std::string& name,
     HistogramFactory& factory);
 
+}
 }

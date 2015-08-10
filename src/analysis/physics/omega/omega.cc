@@ -18,8 +18,9 @@ using namespace std;
 using namespace ant;
 using namespace ant::analysis;
 using namespace ant::analysis::physics;
+using namespace ant::analysis::data;
 
-void OmegaBase::ProcessEvent(const ant::Event &event)
+void OmegaBase::ProcessEvent(const Event &event)
 {
     const auto& data = mode==DataMode::Reconstructed ? event.Reconstructed() : event.MCTrue();
     Analyse(data, event);
@@ -29,7 +30,7 @@ double OmegaBase::calcEnergySum(const ParticleList &particles) const
 {
     double esum = 0.0;
 
-    for( const ant::ParticlePtr& p : particles) {
+    for( const ParticlePtr& p : particles) {
         if( geo.DetectorFromAngles(p->Theta(), p->Phi()) == Detector_t::Type_t::CB ) {
             esum += p->Ek();
         }

@@ -12,7 +12,7 @@ namespace ant {
 namespace analysis {
 namespace physics {
 
-class DeltaPlusPhysics: public ant::Physics {
+class DeltaPlusPhysics: public Physics {
 
 protected:
 
@@ -83,7 +83,7 @@ public:
 
     // Physics interface
 public:
-    void ProcessEvent(const ant::Event &event);
+    void ProcessEvent(const data::Event &event);
     void Finish();
     void ShowResult();
 };

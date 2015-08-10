@@ -1,8 +1,7 @@
 #include "TrackInput.h"
 #include "TTree.h"
 
-using namespace ant;
-using namespace input;
+using namespace ant::analysis::input;
 
 TrackInput::TrackInput()
 {

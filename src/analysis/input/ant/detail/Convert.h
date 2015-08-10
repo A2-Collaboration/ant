@@ -3,15 +3,20 @@
 #include <memory>
 
 namespace ant {
-class Cluster;
-class Event;
-class Candidate;
-class TaggerHit;
 
 class TEvent;
 class TCandidate;
 class TTaggerHit;
 class TCluster;
+
+namespace analysis {
+
+namespace data {
+    class Cluster;
+    class Event;
+    class Candidate;
+    class TaggerHit;
+}
 
 namespace input {
 
@@ -23,17 +28,17 @@ namespace input {
 
 struct Converter {
 
-static Event Convert(const TEvent& event);
+    static data::Event Convert(const TEvent& event);
 
-static std::shared_ptr<ant::Candidate> Convert(const TCandidate& candidate);
+    static std::shared_ptr<data::Candidate> Convert(const TCandidate& candidate);
 
-static std::shared_ptr<ant::TaggerHit> Convert(const TTaggerHit& taggerhit);
+    static std::shared_ptr<data::TaggerHit> Convert(const TTaggerHit& taggerhit);
 
-static Cluster Convert(const TCluster& cluster);
+    static data::Cluster Convert(const TCluster& cluster);
 
 };
 
 
 }
 }
-
+}

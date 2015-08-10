@@ -24,7 +24,7 @@ void dotest() {
 
     auto filemanager = make_shared<ReadTFiles>();
     filemanager->OpenFile("NOTTHEREYET");
-    ant::input::GoatReader g(filemanager);
+    ant::analysis::input::GoatReader g(filemanager);
 
 //    unsigned int n = 0;
 //    while(g.hasData() && (n++ < 10)) {

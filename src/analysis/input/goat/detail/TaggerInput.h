@@ -8,6 +8,7 @@
 #define GTreeTagger_MAX 4096
 
 namespace ant {
+namespace analysis {
 namespace input {
 
 class TaggerInput: public BaseInputModule {
@@ -41,5 +42,6 @@ public:
 
 
 };
+}
 }
 }

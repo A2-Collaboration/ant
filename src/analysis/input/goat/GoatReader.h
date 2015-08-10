@@ -22,7 +22,7 @@ class PStaticData;
 namespace ant {
 
 class ReadTFiles;
-
+namespace analysis {
 namespace input {
 
 class TreeManager;
@@ -77,10 +77,10 @@ protected:
 
     static clustersize_t MapClusterSize(const int& size);
 
-    void CopyTagger(Event& event);
-    void CopyTrigger(Event& event);
-    void CopyTracks(Event& event);
-    void CopyParticles(Event& event, ParticleInput& input_module, const ParticleTypeDatabase::Type& type);
+    void CopyTagger(data::Event& event);
+    void CopyTrigger(data::Event& event);
+    void CopyTracks(data::Event& event);
+    void CopyParticles(data::Event& event, ParticleInput& input_module, const ParticleTypeDatabase::Type& type);
 
 
     /**
@@ -97,8 +97,9 @@ public:
     GoatReader& operator= (const GoatReader&) = delete;
 
     virtual bool IsSource() override;
-    virtual bool ReadNextEvent(Event& event,  TSlowControl& slowControl) override;
+    virtual bool ReadNextEvent(data::Event& event,  TSlowControl& slowControl) override;
 };
 
+}
 }
 }

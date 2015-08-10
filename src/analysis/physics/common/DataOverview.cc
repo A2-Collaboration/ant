@@ -6,6 +6,7 @@ using namespace std;
 using namespace ant;
 using namespace ant::analysis;
 using namespace ant::analysis::physics;
+using namespace ant::analysis::data;
 
 DataOverview::OverviewSet::OverviewSet(SmartHistFactory &factory, const string &title)
 {
@@ -48,7 +49,7 @@ DataOverview::DataOverview(const string &name):
 {
 }
 
-void DataOverview::ProcessEvent(const ant::Event &event)
+void DataOverview::ProcessEvent(const Event &event)
 {
     reconstructed.Fill(event.Reconstructed());
     mctrue.Fill(event.MCTrue());

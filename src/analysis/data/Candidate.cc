@@ -1,7 +1,7 @@
 #include "Candidate.h"
 
 using namespace std;
-using namespace ant;
+using namespace ant::analysis::data;
 
 ostream& Candidate::Print(ostream &stream) const
 {

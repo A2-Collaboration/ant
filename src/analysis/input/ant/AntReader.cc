@@ -19,7 +19,8 @@
 
 using namespace std;
 using namespace ant;
-using namespace ant::input;
+using namespace ant::analysis::input;
+using namespace ant::analysis::data;
 
 AntReader::AntReader(
         unique_ptr<Unpacker::Reader> unpacker_reader,

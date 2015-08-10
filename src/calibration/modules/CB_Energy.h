@@ -45,11 +45,11 @@ public:
         gui::CalCanvas* c_overview;
     };
 
-    struct ThePhysics : Physics {
+    struct ThePhysics : analysis::Physics {
 
         ThePhysics(const std::string& name, const std::string& hist_name, unsigned nChannels);
 
-        virtual void ProcessEvent(const Event& event) override;
+        virtual void ProcessEvent(const analysis::data::Event& event) override;
         virtual void Finish() override;
         virtual void ShowResult() override;
 
@@ -66,7 +66,7 @@ public:
             double defaultThreshold = 2,
             double defaultRelativeGain = 1.0);
 
-    virtual std::unique_ptr<Physics> GetPhysicsModule() override;
+    virtual std::unique_ptr<analysis::Physics> GetPhysicsModule() override;
     virtual void GetGUIs(std::list<std::unique_ptr<gui::Manager_traits> >& guis) override;
 
 

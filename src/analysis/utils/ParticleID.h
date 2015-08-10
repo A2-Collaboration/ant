@@ -8,18 +8,20 @@ class TCutG;
 
 
 namespace ant {
-
-class Candidate;
-class Particle;
-
 namespace analysis {
+
+namespace data {
+    class Candidate;
+    class Particle;
+}
+
 namespace utils {
 
 class ParticleID {
 public:
     virtual ~ParticleID() {}
 
-    virtual std::shared_ptr<Particle> Process(std::shared_ptr<ant::Candidate>& cand) const =0;
+    virtual std::shared_ptr<data::Particle> Process(std::shared_ptr<data::Candidate>& cand) const =0;
 };
 
 
@@ -36,8 +38,8 @@ public:
 
     std::shared_ptr<TCutG> size;
 
-    virtual const ParticleTypeDatabase::Type* Identify(const std::shared_ptr<Candidate>& cand) const;
-    virtual std::shared_ptr<Particle> Process(std::shared_ptr<ant::Candidate>& cand) const override;
+    virtual const ParticleTypeDatabase::Type* Identify(const std::shared_ptr<data::Candidate>& cand) const;
+    virtual std::shared_ptr<data::Particle> Process(std::shared_ptr<data::Candidate>& cand) const override;
 };
 
 class CBTAPSBasicParticleID: public ParticleID {
@@ -50,7 +52,7 @@ public:
     virtual ~CBTAPSBasicParticleID();
 
 
-    virtual std::shared_ptr<Particle> Process(std::shared_ptr<ant::Candidate>& cand) const override;
+    virtual std::shared_ptr<data::Particle> Process(std::shared_ptr<data::Candidate>& cand) const override;
 };
 
 }

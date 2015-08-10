@@ -1,6 +1,6 @@
 #include "TriggerInfo.h"
 
-using namespace ant;
+using namespace ant::analysis::data;
 using namespace std;
 
 ostream& DAQError::Print(ostream& stream) const

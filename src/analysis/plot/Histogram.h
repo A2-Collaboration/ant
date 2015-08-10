@@ -11,6 +11,7 @@ class TH2D;
 class TH3D;
 
 namespace ant {
+namespace analysis {
 
 class BinSettings: public interval<double>  {
 protected:
@@ -100,4 +101,5 @@ public:
 
 };
 
+}
 }

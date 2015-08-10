@@ -13,6 +13,8 @@
 using namespace std;
 using namespace ant;
 using namespace ant::calibration;
+using namespace ant::analysis;
+using namespace ant::analysis::data;
 
 PID_Energy::PID_Energy(
         std::shared_ptr<expconfig::detector::PID> pid,
@@ -44,7 +46,7 @@ PID_Energy::ThePhysics::ThePhysics(const string& name, unsigned nChannels):
     pedestals = HistFac.makeTH2D("PID Pedestals", "Raw ADC value", "#", rawbins, pid_channels, "pedestals");
 }
 
-void PID_Energy::ThePhysics::ProcessEvent(const Event& event)
+void PID_Energy::ThePhysics::ProcessEvent(const data::Event& event)
 {
 
     // pedestals
@@ -75,7 +77,7 @@ PID_Energy::~PID_Energy()
 
 }
 
-unique_ptr<Physics> PID_Energy::GetPhysicsModule()
+unique_ptr<analysis::Physics> PID_Energy::GetPhysicsModule()
 {
     return std_ext::make_unique<ThePhysics>(GetName(), pid_detector->GetNChannels());
 }

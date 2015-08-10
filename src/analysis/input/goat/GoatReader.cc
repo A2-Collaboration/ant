@@ -13,7 +13,9 @@
 #include "base/std_ext.h"
 
 using namespace ant;
-using namespace ant::input;
+using namespace ant::analysis;
+using namespace ant::analysis::input;
+using namespace ant::analysis::data;
 using namespace std;
 
 /**

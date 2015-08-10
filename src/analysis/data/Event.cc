@@ -1,12 +1,13 @@
 #include "Event.h"
 #include <iostream>
 
-using namespace  std;
+using namespace std;
+using namespace ant::analysis::data;
 
-const ant::ParticleList ant::Event::Data::PTypeLists::empty;
+const ParticleList Event::Data::PTypeLists::empty;
 
 
-std::ostream &ant::Event::Print(std::ostream &stream) const
+std::ostream &Event::Print(std::ostream &stream) const
 {
 
     stream << "----- Event ---------------------------------\n";
@@ -23,7 +24,7 @@ std::ostream &ant::Event::Print(std::ostream &stream) const
 }
 
 
-std::ostream &ant::Event::Data::Print(std::ostream &stream) const
+std::ostream &Event::Data::Print(std::ostream &stream) const
 {
     stream << "-- Particles --\n";
     stream << particles << "\n";
@@ -48,7 +49,7 @@ std::ostream &ant::Event::Data::Print(std::ostream &stream) const
 }
 
 
-std::ostream &ant::Event::Data::PTypeLists::Print(std::ostream &stream) const
+std::ostream &Event::Data::PTypeLists::Print(std::ostream &stream) const
 {
     for( auto& particle : particles ) {
         stream << *particle << '\n';

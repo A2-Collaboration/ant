@@ -112,9 +112,9 @@ protected:
 public:
     TestAPLCON(const mev_t energy_scale=1000.0);
     virtual ~TestAPLCON() {}
-    void ProcessEvent(const Event &event);
-    void Finish();
-    void ShowResult();
+    void ProcessEvent(const data::Event &event) override;
+    void Finish() override;
+    void ShowResult() override;
 };
 
 }

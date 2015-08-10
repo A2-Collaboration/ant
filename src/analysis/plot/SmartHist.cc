@@ -1,8 +1,10 @@
 #include "plot/SmartHist.h"
 #include "TH1D.h"
 
+using namespace ant::analysis;
+
 template<>
-ant::SmartHist1<std::string> ant::SmartHist1<std::string>::makeHist(
+SmartHist1<std::string> SmartHist1<std::string>::makeHist(
     const std::string& title,
     const std::string& xlabel,
     const std::string& ylabel,

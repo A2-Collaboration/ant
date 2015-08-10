@@ -8,6 +8,7 @@
 #define GTreeTrigger_MAX 256
 
 namespace ant {
+namespace analysis {
 namespace input {
 
 class TriggerInput: public BaseInputModule {
@@ -48,5 +49,6 @@ public:
             Long64_t    GetMCTrueEventID()      const {return MC_evt_id;}
             Long64_t    GetMCRandomID()         const {return MC_rnd_id;}
 };
+}
 }
 }

@@ -12,6 +12,7 @@ class TH2D;
 class TH3D;
 
 namespace ant {
+namespace analysis {
 
 class SmartHistFactory {
 private:
@@ -59,25 +60,25 @@ public:
 
     // Predef smart hists
 
-    ant::SmartHist1<const ParticlePtr&> InvariantMass(
+    SmartHist1<const data::ParticlePtr&> InvariantMass(
             const std::string& title,
             const std::string& xlabel="M [MeV]",
             const std::string& ylabel="",
-            ant::BinSettings bins=BinSettings(1000),
+            BinSettings bins=BinSettings(1000),
             const std::string& name="");
 
-    ant::SmartHist1<const ParticlePtr&> ThetaAngle(
+    SmartHist1<const data::ParticlePtr&> ThetaAngle(
             const std::string& title,
             const std::string& xlabel="#theta [#circ]",
             const std::string& ylabel="",
-            ant::BinSettings bins=BinSettings(180),
+            BinSettings bins=BinSettings(180),
             const std::string& name="");
 
-    ant::SmartHist1<const ParticlePtr &> KinEnergyPlot(
+    SmartHist1<const data::ParticlePtr &> KinEnergyPlot(
             const std::string& title,
             const std::string& xlabel="#E_{k} [MeV]",
             const std::string& ylabel="",
-            ant::BinSettings bins=BinSettings(1000),
+            BinSettings bins=BinSettings(1000),
             const std::string& name="");
 
 
@@ -119,4 +120,5 @@ public:
 //    void Add(SmartHist1Base& hist);
 };
 
+}
 }

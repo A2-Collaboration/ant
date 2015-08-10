@@ -12,6 +12,8 @@
 
 
 namespace ant {
+namespace analysis {
+namespace data {
 
 class Particle;
 
@@ -40,7 +42,7 @@ public:
         candidates()
     {}
 
-    Particle(const ParticleTypeDatabase::Type& _type, ant::CandidatePtr candidate):
+    Particle(const ParticleTypeDatabase::Type& _type, CandidatePtr candidate):
         Particle(_type,candidate->ClusterEnergy(),candidate->Theta(), candidate->Phi()) {
         candidates.emplace_back(candidate);
     }
@@ -83,4 +85,6 @@ public:
 
 };
 
+}
+}
 }

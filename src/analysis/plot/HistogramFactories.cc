@@ -1,12 +1,14 @@
 #include "plot/HistogramFactories.h"
 
 #include "plot/SmartHist.h"
+#include "data/Particle.h"
 
 #include "TMath.h"
 #include "TDirectory.h"
 #include "TH1D.h"
 
-using namespace ant;
+using namespace ant::analysis;
+using namespace ant::analysis::data;
 using namespace std;
 
 
@@ -90,7 +92,7 @@ SmartHist1<const ParticlePtr &> SmartHistFactory::InvariantMass(const string &ti
     name);
 }
 
-ant::SmartHist1<const ParticlePtr &> SmartHistFactory::ThetaAngle(const string &title, const string &xlabel, const string &ylabel, BinSettings bins, const string &name)
+SmartHist1<const ParticlePtr &> SmartHistFactory::ThetaAngle(const string &title, const string &xlabel, const string &ylabel, BinSettings bins, const string &name)
 {
     return makeHist<const ParticlePtr&>(
                 [] (const ParticlePtr& p) { return p->Theta() * TMath::DegToRad();},
@@ -101,7 +103,7 @@ ant::SmartHist1<const ParticlePtr &> SmartHistFactory::ThetaAngle(const string &
             name);
 }
 
-ant::SmartHist1<const ParticlePtr &> SmartHistFactory::KinEnergyPlot(const string &title, const string &xlabel, const string &ylabel, BinSettings bins, const string &name)
+SmartHist1<const ParticlePtr &> SmartHistFactory::KinEnergyPlot(const string &title, const string &xlabel, const string &ylabel, BinSettings bins, const string &name)
 {
     return makeHist<const ParticlePtr&>(
                 [] (const ParticlePtr& p) { return p->Ek();},

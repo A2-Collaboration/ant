@@ -2,9 +2,7 @@
 
 #include "TTree.h"
 
-using namespace ant;
-using namespace input;
-
+using namespace ant::analysis::input;
 
 
 ParticleInput::ParticleInput(const std::string name_):

@@ -8,6 +8,8 @@
 #include <memory>
 
 namespace ant {
+namespace analysis {
+namespace data {
 
 class DAQError: public printable_traits {
 protected:
@@ -69,4 +71,6 @@ public:
     std::ostream& Print(std::ostream& stream) const;
 };
 
+}
+}
 }

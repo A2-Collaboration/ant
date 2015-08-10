@@ -9,7 +9,7 @@ namespace ant {
 namespace analysis {
 namespace physics {
 
-class MCTrueAcceptance: public ant::Physics {
+class MCTrueAcceptance: public Physics {
 protected:
     SmartHist1<std::string> detect;
     A2SimpleGeometry geo;
@@ -21,14 +21,14 @@ protected:
         unsigned int taps;
     };
 
-    det_hit_count_t AllAccepted(const ParticleList& particles);
+    det_hit_count_t AllAccepted(const data::ParticleList& particles);
 
 public:
     MCTrueAcceptance();
 
-    void ProcessEvent(const Event &event);
-    void Finish();
-    void ShowResult();
+    void ProcessEvent(const data::Event &event) override;
+    void Finish() override;
+    void ShowResult() override;
 };
 
 }

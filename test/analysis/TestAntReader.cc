@@ -23,7 +23,7 @@
 
 using namespace std;
 using namespace ant;
-using namespace ant::input;
+using namespace ant::analysis::input;
 
 void dotest();
 void generateInputFile(const std::string& filename);

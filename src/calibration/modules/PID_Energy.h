@@ -31,7 +31,7 @@ public:
     virtual ~PID_Energy();
 
 
-    class ThePhysics : public Physics {
+    class ThePhysics : public analysis::Physics {
 
     protected:
         TH2* pedestals = nullptr;
@@ -39,13 +39,13 @@ public:
     public:
          ThePhysics(const std::string& name, unsigned nChannels);
 
-        virtual void ProcessEvent(const Event& event);
-        virtual void Finish();
-        virtual void ShowResult();
+        virtual void ProcessEvent(const analysis::data::Event& event) override;
+        virtual void Finish() override;
+        virtual void ShowResult() override;
     };
 
 
-    virtual std::unique_ptr<Physics> GetPhysicsModule();
+    virtual std::unique_ptr<analysis::Physics> GetPhysicsModule();
     virtual void GetGUIs(std::list<std::unique_ptr<calibration::gui::Manager_traits> >& guis) override {
         guis.clear();
     }

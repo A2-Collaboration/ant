@@ -8,6 +8,8 @@
 
 using namespace ant;
 using namespace ant::calibration;
+using namespace ant::analysis;
+using namespace ant::analysis::data;
 using namespace std;
 
 PID_PhiAngle::ThePhysics::ThePhysics(const string& name, unsigned nChannels) :
@@ -81,7 +83,7 @@ PID_PhiAngle::~PID_PhiAngle()
 {
 }
 
-std::unique_ptr<Physics> PID_PhiAngle::GetPhysicsModule() {
+std::unique_ptr<analysis::Physics> PID_PhiAngle::GetPhysicsModule() {
     return std_ext::make_unique<ThePhysics>(GetName(), pid_detector->GetNChannels());
 }
 

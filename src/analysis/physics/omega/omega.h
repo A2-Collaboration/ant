@@ -26,20 +26,20 @@ public:
 
 protected:
     A2SimpleGeometry geo;
-    double calcEnergySum(const ParticleList &particles) const;
-    ParticleList getGeoAccepted(const ParticleList& p) const;
+    double calcEnergySum(const data::ParticleList &particles) const;
+    data::ParticleList getGeoAccepted(const data::ParticleList& p) const;
 
     DataMode mode = DataMode::Reconstructed;
 
-    virtual void Analyse(const Event::Data& data, const Event& event) =0;
+    virtual void Analyse(const data::Event::Data& data, const data::Event& event) =0;
 
-    static std::string GetDecayString(const ParticleList& particles);
+    static std::string GetDecayString(const data::ParticleList& particles);
 
 public:
     OmegaBase(const std::string &name, const DataMode m);
     virtual ~OmegaBase() = default;
 
-    virtual void ProcessEvent(const Event& event) override;
+    virtual void ProcessEvent(const data::Event& event) override;
     void Finish() override;
     void ShowResult() override;
 
@@ -77,7 +77,7 @@ protected:
 
     std::map<std::string, perDecayhists_t> gg_decays;
 
-    virtual void Analyse(const Event::Data& data, const Event& event) override;
+    virtual void Analyse(const data::Event::Data& data, const data::Event& event) override;
 
     BinSettings imbinning = BinSettings(1000);
     BinSettings mmbinning = BinSettings(1000, 400,1400);

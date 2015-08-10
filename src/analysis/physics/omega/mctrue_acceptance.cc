@@ -5,6 +5,7 @@ using namespace std;
 using namespace ant;
 using namespace ant::analysis;
 using namespace ant::analysis::physics;
+using namespace ant::analysis::data;
 
 MCTrueAcceptance::MCTrueAcceptance():
     Physics("McTrueAcceptance"), events_seen(0)

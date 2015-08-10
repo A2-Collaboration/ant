@@ -9,7 +9,7 @@ using namespace std;
 using namespace ant;
 using namespace ant::analysis;
 using namespace ant::analysis::physics;
-
+using namespace ant::analysis::data;
 
 CandidatesAnalysis::CandidatesAnalysis(const string &name):
     Physics(name)
@@ -22,7 +22,7 @@ CandidatesAnalysis::CandidatesAnalysis(const string &name):
     ttIM         = HistFac.makeTH1D("2 Candidates IM","M [MeV]","",BinSettings(1000),"ttIM");
 }
 
-void CandidatesAnalysis::ProcessEvent(const ant::Event &event)
+void CandidatesAnalysis::ProcessEvent(const Event &event)
 {
     const auto& candidates = event.Reconstructed().Candidates();
 

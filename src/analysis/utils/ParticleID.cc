@@ -8,6 +8,7 @@ using namespace std;
 using namespace ant;
 using namespace ant::analysis;
 using namespace ant::analysis::utils;
+using namespace ant::analysis::data;
 
 BasicParticleID::~BasicParticleID()
 {
@@ -18,7 +19,7 @@ bool TestCut(const std::shared_ptr<TCutG>& cut, const double& x, const double& y
     return (cut) && cut->IsInside(x,y);
 }
 
-const ParticleTypeDatabase::Type* BasicParticleID::Identify(const std::shared_ptr<ant::Candidate>& cand) const
+const ParticleTypeDatabase::Type* BasicParticleID::Identify(const std::shared_ptr<Candidate>& cand) const
 {
     const bool hadronic =    TestCut(tof,  cand->ClusterEnergy(), cand->Time())
                   || TestCut(size, cand->ClusterEnergy(), cand->ClusterSize());
@@ -62,7 +63,7 @@ const ParticleTypeDatabase::Type* BasicParticleID::Identify(const std::shared_pt
     return nullptr;
 }
 
-std::shared_ptr<Particle> BasicParticleID::Process(std::shared_ptr<ant::Candidate>& cand) const
+std::shared_ptr<Particle> BasicParticleID::Process(std::shared_ptr<Candidate>& cand) const
 {
     auto type = Identify(cand);
     if(type !=nullptr) {

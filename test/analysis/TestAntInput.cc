@@ -66,11 +66,11 @@ void dotest() {
 
     cout << *event << endl;
 
-    auto antevent = ant::input::Converter::Convert(*event);
+    auto antevent = ant::analysis::input::Converter::Convert(*event);
 
     cout << antevent << endl;
 
-    const CandidateList& cand = antevent.Reconstructed().Candidates();
+    const analysis::data::CandidateList& cand = antevent.Reconstructed().Candidates();
 
     REQUIRE(cand.size() == 2);
     /// \todo Write more REQUIRE stuff here

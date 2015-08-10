@@ -8,6 +8,7 @@
 #define GTreeTrack_MAX 128
 
 namespace ant {
+namespace analysis {
 namespace input {
 
 class ParticleInput: public BaseInputModule {
@@ -30,5 +31,6 @@ public:
     Int_t           GeTCandidateIndex(const Int_t index)    const   {return trackIndex[index];}
 
 };
+}
 }
 }

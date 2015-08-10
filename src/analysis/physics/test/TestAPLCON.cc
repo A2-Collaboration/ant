@@ -14,6 +14,7 @@ using namespace std;
 using namespace ant;
 using namespace ant::analysis;
 using namespace ant::analysis::physics;
+using namespace ant::analysis::data;
 
 std::default_random_engine TestAPLCON::FitParticle::generator;
 
@@ -226,7 +227,7 @@ TestAPLCON::TestAPLCON(const mev_t energy_scale) :
 }
 
 
-void TestAPLCON::ProcessEvent(const ant::Event &event)
+void TestAPLCON::ProcessEvent(const Event &event)
 {
 
 

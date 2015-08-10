@@ -18,6 +18,8 @@ namespace ant {
 
 class TAntHeader;
 
+namespace analysis {
+
 class Physics {
 private:
     std::string name_;
@@ -26,25 +28,30 @@ protected:
 public:
     Physics(const std::string& name);
     virtual ~Physics() {}
-    virtual void ProcessEvent(const ant::Event& event) =0;
+    virtual void ProcessEvent(const data::Event& event) =0;
     virtual void Finish() =0;
     virtual void ShowResult() =0;
     std::string GetName() { return name_; }
 };
+
+
+namespace physics {
 
 class DebugPhysics: public Physics {
 public:
     DebugPhysics(const std::string& name="DebugPhysics"): Physics(name) {}
     virtual ~DebugPhysics() {}
 
-    virtual void ProcessEvent(const ant::Event& event);
+    virtual void ProcessEvent(const data::Event& event);
     virtual void Finish();
     virtual void ShowResult();
 };
 
+}
+
 class PhysicsManager {
 protected:
-    using physics_list_t = std::list< std::unique_ptr<ant::Physics> >;
+    using physics_list_t = std::list< std::unique_ptr<Physics> >;
 
     physics_list_t physics;
 
@@ -59,7 +66,7 @@ public:
               );
     }
 
-    void AddPhysics(std::unique_ptr<ant::Physics> pc) {
+    void AddPhysics(std::unique_ptr<Physics> pc) {
         if(pc==nullptr)
             return;
         physics.emplace_back(std::move(pc));
@@ -72,7 +79,7 @@ public:
                   );
 
 
-    void ProcessEvent(const ant::Event& event);
+    void ProcessEvent(const data::Event& event);
     void ShowResults();
 
 };
@@ -83,7 +90,7 @@ std::unique_ptr<Physics> physics_factory()
     return std::move(std_ext::make_unique<T>());
 }
 
-using physics_creator = std::function<std::unique_ptr<ant::Physics>()>;
+using physics_creator = std::function<std::unique_ptr<Physics>()>;
 
 class PhysicsRegistry
 {
@@ -94,7 +101,7 @@ private:
 public:
     static PhysicsRegistry& get();
 
-    static std::unique_ptr<ant::Physics> Create(const std::string& name);
+    static std::unique_ptr<Physics> Create(const std::string& name);
 
     void RegisterPhysics(physics_creator c, const std::string& name) {
         physics_creators[name] = c;
@@ -111,6 +118,7 @@ public:
 };
 
 #define AUTO_REGISTER_PHYSICS(physics, name) \
-    ant::PhysicsRegistration _physics_registration_ ## physics(ant::physics_factory<physics>,name);
+    ant::analysis::PhysicsRegistration _physics_registration_ ## physics(ant::analysis::physics_factory<physics>,name);
 
+}
 }

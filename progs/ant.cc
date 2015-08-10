@@ -157,13 +157,13 @@ int main(int argc, char** argv) {
     // we can finally we can create the available input readers
     // for the analysis
 
-    list< unique_ptr<input::DataReader> > readers;
+    list< unique_ptr<analysis::input::DataReader> > readers;
 
     if(unpacker) {
         // turn the unpacker into a input::DataReader
         auto reconstruct = cmd_u_disablerecon->isSet() ? nullptr : std_ext::make_unique<Reconstruct>();
         auto unpacker_reader =
-                std_ext::make_unique<input::AntReader>(
+                std_ext::make_unique<analysis::input::AntReader>(
                     move(unpacker),
                     move(reconstruct)
                     );
@@ -178,8 +178,8 @@ int main(int argc, char** argv) {
         readers.push_back(move(unpacker_reader));
     }
 
-    readers.push_back(std_ext::make_unique<input::PlutoReader>(rootfiles));
-    readers.push_back(std_ext::make_unique<input::GoatReader>(rootfiles));
+    readers.push_back(std_ext::make_unique<analysis::input::PlutoReader>(rootfiles));
+    readers.push_back(std_ext::make_unique<analysis::input::GoatReader>(rootfiles));
 
     // create the list of enabled calibrations here,
     // because now the readers (and underlying unpackers) did the work
@@ -230,10 +230,10 @@ int main(int argc, char** argv) {
     }
 
     // add the physics/calibrationphysics modules
-    PhysicsManager pm;
+    analysis::PhysicsManager pm;
     for(const auto& classname : cmd_physicsclasses->getValue()) {
         try {
-            pm.AddPhysics( PhysicsRegistry::Create(classname) );
+            pm.AddPhysics( analysis::PhysicsRegistry::Create(classname) );
             LOG(INFO) << "Activated physics class '" << classname << "'";
         } catch (...) {
             LOG(ERROR) << "Physics class '" << classname << "' is not found.";

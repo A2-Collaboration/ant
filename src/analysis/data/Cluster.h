@@ -5,7 +5,8 @@
 #include <list>
 
 namespace ant {
-
+namespace analysis {
+namespace data {
 
 class Cluster {
 public:
@@ -39,4 +40,6 @@ public:
 
 using ClusterList = std::vector<Cluster>;
 
+}
+}
 }

@@ -10,7 +10,7 @@ namespace ant {
 namespace analysis {
 namespace physics {
 
-class CandidatesAnalysis : public ant::Physics {
+class CandidatesAnalysis : public Physics {
 protected:
     TH1D* nCandidatesEvent = nullptr;
     TH1D* energy = nullptr;
@@ -22,9 +22,9 @@ protected:
 public:
     CandidatesAnalysis(const std::string& name="CandidatesAnalysis");
 
-    void ProcessEvent(const Event &event);
-    void Finish();
-    void ShowResult();
+    void ProcessEvent(const data::Event &event) override;
+    void Finish() override;
+    void ShowResult() override;
 };
 
 }

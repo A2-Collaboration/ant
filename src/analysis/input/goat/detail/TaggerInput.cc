@@ -1,12 +1,8 @@
 #include "TaggerInput.h"
 
-
 #include "TTree.h"
 
-using namespace ant;
-using namespace ant::input;
-
-
+using namespace ant::analysis::input;
 
 TaggerInput::TaggerInput()
 {

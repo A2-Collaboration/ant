@@ -12,6 +12,8 @@
 using namespace std;
 using namespace ant;
 using namespace ant::calibration;
+using namespace ant::analysis;
+using namespace ant::analysis::data;
 
 Time::Time(Detector_t::Type_t detectorType,
                Calibration::Converter::ptr_t converter,

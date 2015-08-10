@@ -20,6 +20,12 @@ namespace ant {
 class TEvent;
 class ReadTFiles;
 
+namespace analysis {
+
+namespace data {
+    class Event;
+}
+
 namespace input {
 
 
@@ -48,8 +54,9 @@ public:
 
     // DataReader interface
     virtual bool IsSource() override { return true; }
-    virtual bool ReadNextEvent(Event& event, TSlowControl& slowControl) override;
+    virtual bool ReadNextEvent(data::Event& event, TSlowControl& slowControl) override;
 };
 
+}
 }
 }

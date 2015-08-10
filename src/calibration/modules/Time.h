@@ -37,17 +37,17 @@ public:
     virtual std::vector<std::list<TID>> GetChangePoints() const override;
     void Update(std::size_t index, const TID&) override;
 
-    class ThePhysics : public Physics {
+    class ThePhysics : public analysis::Physics {
     public:
         using Physics::Physics;
 
-        virtual void ProcessEvent(const Event& event) override;
+        virtual void ProcessEvent(const analysis::data::Event& event) override;
         virtual void Finish() override;
         virtual void ShowResult() override;
     };
 
     // Physics_traits interface
-    virtual std::unique_ptr<Physics> GetPhysicsModule() override {
+    virtual std::unique_ptr<analysis::Physics> GetPhysicsModule() override {
         return std_ext::make_unique<ThePhysics>(GetName());
     }
 

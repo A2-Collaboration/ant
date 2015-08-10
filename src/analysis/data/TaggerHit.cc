@@ -1,6 +1,6 @@
 #include "TaggerHit.h"
 
-using namespace ant;
+using namespace ant::analysis::data;
 using namespace std;
 
 std::ostream &TaggerHit::Print(std::ostream &stream) const

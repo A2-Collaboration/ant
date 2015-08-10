@@ -14,6 +14,7 @@
 using namespace std;
 using namespace ant;
 using namespace ant::calibration;
+using namespace ant::analysis::data;
 
 TAPS_Energy::TAPS_Energy(std::shared_ptr<expconfig::detector::TAPS> taps,
         std::shared_ptr<DataManager> calmgr,
@@ -38,8 +39,8 @@ TAPS_Energy::ThePhysics::ThePhysics(const string& name, std::shared_ptr<expconfi
     Physics(name),
     taps_detector(taps)
 {
-    const BinSettings taps_channels(taps->GetNChannels());
-    const BinSettings energybins(1000);
+    const analysis::BinSettings taps_channels(taps->GetNChannels());
+    const analysis::BinSettings energybins(1000);
 
     ggIM = HistFac.makeTH2D("2 neutral IM (TAPS,CB)", "IM [MeV]", "#",
                             energybins, taps_channels, "ggIM");
@@ -91,7 +92,7 @@ void TAPS_Energy::ThePhysics::ShowResult()
     canvas(GetName()) << drawoption("colz") << ggIM << endc;
 }
 
-unique_ptr<Physics> TAPS_Energy::GetPhysicsModule()
+unique_ptr<analysis::Physics> TAPS_Energy::GetPhysicsModule()
 {
     return std_ext::make_unique<ThePhysics>(GetName(), taps_detector);
 }

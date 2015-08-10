@@ -14,7 +14,8 @@
 #include <map>
 
 namespace ant {
-
+namespace analysis {
+namespace data {
 
 class Event: public ant::printable_traits {
 public:
@@ -23,10 +24,10 @@ public:
 
         class PTypeLists: public ant::printable_traits {
         protected:
-            ant::ParticleList particles;
-            std::map<const ParticleTypeDatabase::Type*, ant::ParticleList> lists;
+            ParticleList particles;
+            std::map<const ant::ParticleTypeDatabase::Type*, ParticleList> lists;
 
-            static const ant::ParticleList empty;
+            static const ParticleList empty;
 
         public:
             void AddParticle(ParticlePtr&& particle) {
@@ -42,7 +43,7 @@ public:
 
             const ParticleList& GetAll() const { return particles; }
 
-            const ParticleList& Get(const ParticleTypeDatabase::Type& type) const {
+            const ParticleList& Get(const ant::ParticleTypeDatabase::Type& type) const {
                 auto entry = lists.find(&type);
                 if(entry == lists.end()) {
                     return empty;
@@ -99,5 +100,6 @@ public:
 
     std::ostream& Print(std::ostream& stream) const;
 };
-
+}
+}
 }

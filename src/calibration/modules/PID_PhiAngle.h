@@ -24,18 +24,18 @@ public:
     PID_PhiAngle(std::shared_ptr<expconfig::detector::PID>  pid);
     virtual ~PID_PhiAngle();
 
-    class ThePhysics : public Physics {
+    class ThePhysics : public analysis::Physics {
     protected:
         TH2* pid_cb_phi_corr;
     public:
         ThePhysics(const std::string& name, unsigned nChannels);
 
-        virtual void ProcessEvent(const Event& event) override;
+        virtual void ProcessEvent(const analysis::data::Event& event) override;
         virtual void Finish() override ;
         virtual void ShowResult() override;
     };
 
-    virtual std::unique_ptr<Physics> GetPhysicsModule() override;
+    virtual std::unique_ptr<analysis::Physics> GetPhysicsModule() override;
     virtual void GetGUIs(std::list<std::unique_ptr<calibration::gui::Manager_traits> >& guis) override {
         guis.clear();
     }

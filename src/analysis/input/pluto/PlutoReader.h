@@ -18,6 +18,12 @@ namespace ant {
 
 class ReadTFiles;
 
+namespace analysis {
+
+namespace data {
+    class Event;
+}
+
 namespace input {
 
 class TreeManager;
@@ -37,7 +43,7 @@ protected:
 
     Long64_t    current_entry = 0;
 
-    void CopyPluto(Event& event);
+    void CopyPluto(data::Event& event);
 
     PStaticData* pluto_database;
     const ParticleTypeDatabase::Type* GetType(const PParticle* p) const;
@@ -50,9 +56,10 @@ public:
 
     virtual bool IsSource() override { return false; }
 
-    virtual bool ReadNextEvent(Event& event, TSlowControl&) override;
+    virtual bool ReadNextEvent(data::Event& event, TSlowControl&) override;
 
 };
 
+}
 }
 }

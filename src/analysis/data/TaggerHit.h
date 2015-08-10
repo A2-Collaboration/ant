@@ -8,6 +8,8 @@
 #include "TLorentzVector.h"
 
 namespace ant {
+namespace analysis {
+namespace data {
 
 class TaggerHit: public ant::printable_traits {
 private:
@@ -41,4 +43,6 @@ public:
 using TaggerHitPtr   = std::shared_ptr<TaggerHit>;
 using TaggerHitList = std::vector<TaggerHitPtr>;
 
+}
+}
 }

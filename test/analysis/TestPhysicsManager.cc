@@ -41,9 +41,9 @@ void dotest_write(const string& filename1, const string& filename2)
     auto h1 = new TH1D("a","A",10,0,10);
     h1->Fill(2);
 
-    PhysicsManager pm;
+    analysis::PhysicsManager pm;
 
-    pm.AddPhysics<DebugPhysics>("aaaa");
+    pm.AddPhysics<analysis::physics::DebugPhysics>("aaaa");
 }
 
 void dotest_read(const string& filename1, const string& filename2)

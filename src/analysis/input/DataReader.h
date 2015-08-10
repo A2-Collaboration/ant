@@ -3,9 +3,13 @@
 #include <memory>
 
 namespace ant {
-
-class Event;
 class TSlowControl;
+
+namespace analysis {
+
+namespace data {
+class Event;
+}
 
 namespace input {
 
@@ -29,7 +33,9 @@ public:
 
     virtual bool IsSource() = 0;
     virtual bool HaveSlowControl() { return false; }
-    virtual bool ReadNextEvent(Event& event, TSlowControl& slowControl) = 0;
+    virtual bool ReadNextEvent(data::Event& event, TSlowControl& slowControl) = 0;
 };
 
-}} //
+}
+}
+}

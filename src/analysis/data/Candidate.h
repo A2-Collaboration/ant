@@ -10,6 +10,8 @@
 #include <vector>
 
 namespace ant {
+namespace analysis {
+namespace data {
 
 /**
  * @brief The Track class
@@ -84,4 +86,6 @@ public:
 using CandidatePtr  = std::shared_ptr<Candidate>;
 using CandidateList = std::vector<CandidatePtr>;
 
+}
+}
 }

@@ -5,6 +5,7 @@
 class TTree;
 
 namespace ant {
+namespace analysis {
 namespace input {
 
 class TreeRequestManager {
@@ -21,5 +22,6 @@ public:
     virtual void GetEntry() =0;
 
 };
+}
 }
 }

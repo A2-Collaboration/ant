@@ -12,8 +12,10 @@
 
 using namespace std;
 using namespace ant;
+using namespace ant::analysis;
+using namespace ant::analysis::physics;
 
-void DebugPhysics::ProcessEvent(const Event& event)
+void DebugPhysics::ProcessEvent(const data::Event& event)
 {
     VLOG(8) << event;
 }
@@ -85,7 +87,7 @@ void PhysicsManager::ReadFrom(
         if(nEvents>=maxevents)
             break;
 
-        Event event;
+        data::Event event;
         TSlowControl slowcontrol;
 
         if(source) {
@@ -126,7 +128,7 @@ void PhysicsManager::ReadFrom(
 
 
 
-void PhysicsManager::ProcessEvent(const Event &event)
+void PhysicsManager::ProcessEvent(const data::Event &event)
 {
     for( auto& m : physics ) {
 

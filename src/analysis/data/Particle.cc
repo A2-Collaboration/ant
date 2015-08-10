@@ -5,6 +5,7 @@ template <class T>
 T square(const T& a) { return a*a; }
 
 using namespace ant;
+using namespace ant::analysis::data;
 
 Particle::Particle(const ParticleTypeDatabase::Type &_type, mev_t _Ek, radian_t _theta, radian_t _phi) :
   type(&_type),

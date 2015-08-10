@@ -15,7 +15,7 @@
 
 
 using namespace std;
-using namespace ant;
+using namespace ant::analysis;
 
 
 int main(int argc, char** argv) {

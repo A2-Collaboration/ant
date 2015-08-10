@@ -11,6 +11,8 @@
 using namespace std;
 using namespace ant;
 using namespace ant::calibration;
+using namespace ant::analysis;
+using namespace ant::analysis::data;
 
 TAPSVeto_Energy::TAPSVeto_Energy(std::shared_ptr<DataManager> calmgr,
                                  Calibration::Converter::ptr_t converter,
@@ -73,7 +75,7 @@ void TAPSVeto_Energy::ThePhysics::ShowResult()
     canvas(GetName()) << drawoption("colz") << ggIM << endc;
 }
 
-unique_ptr<Physics> TAPSVeto_Energy::GetPhysicsModule()
+unique_ptr<analysis::Physics> TAPSVeto_Energy::GetPhysicsModule()
 {
     return std_ext::make_unique<ThePhysics>(GetName());
 }
