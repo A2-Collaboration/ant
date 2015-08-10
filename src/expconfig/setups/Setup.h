@@ -86,6 +86,10 @@ public:
         return detectors;
     }
 
+    virtual std::string GetPIDCutsDirectory() const override {
+        return std::string(ANT_PATH_DATABASE)+"/"+GetName()+"/cuts";
+    }
+
 protected:
     Setup() = default;
 
