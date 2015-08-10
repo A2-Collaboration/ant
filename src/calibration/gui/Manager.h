@@ -77,6 +77,8 @@ protected:
     };
     SignalConnection_t signalConnection;
 
+    bool DoInit();
+
 public:
     std::string SetupName;
 

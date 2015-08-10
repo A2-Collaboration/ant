@@ -99,6 +99,7 @@ void Manager::FillWorklistFromFiles()
     }
 }
 
+
 Manager::Manager(const std::vector<std::string>& inputfiles, unsigned avglength):
     buffer(avglength),
     state(),
@@ -118,27 +119,43 @@ bool Manager::input_file_t::operator <(const Manager::input_file_t& o) const {
     return range.Start() < o.range.Start();
 }
 
+bool Manager::DoInit()
+{
+    state.channel = 0;
+    state.it_buffer = buffer.begin();
+    state.it_file = input_files.begin();
+
+    if(module->GetNumberOfChannels()==0) {
+        LOG(ERROR) << "Module reports zero channels";
+        return false;
+    }
+
+    FillWorklistFromFiles();
+    if(buffer.Worklist().empty()) {
+        LOG(WARNING) << "Did not process anything";
+        return false;
+    }
+
+    module->InitGUI();;
+    for(CalCanvas* canvas : module->GetCanvases()) {
+        canvas->ConnectReturnFunc(signalConnection.receiver_class.c_str(),
+                                  signalConnection.receiver,
+                                  signalConnection.slot.c_str());
+        canvas->LinkGUIMode(mode.get());
+    }
+
+    state.is_init = true;
+    module->StartRange(buffer.Worklist().front());
+
+    return true;
+}
+
+
 bool Manager::Run()
 {
     if(!state.is_init) {
-        state.channel = 0;
-        state.it_buffer = buffer.begin();
-        state.it_file = input_files.begin();
-        FillWorklistFromFiles();
-        if(buffer.Worklist().empty()) {
-            LOG(WARNING) << "Did not process anything";
-            return false;
-        }
-        module->InitGUI();;
-        for(CalCanvas* canvas : module->GetCanvases()) {
-            canvas->ConnectReturnFunc(signalConnection.receiver_class.c_str(),
-                                      signalConnection.receiver,
-                                      signalConnection.slot.c_str());
-            canvas->LinkGUIMode(mode.get());
-        }
-
-        state.is_init = true;
-        module->StartRange(buffer.Worklist().front());
+       if(!DoInit())
+           return false;
     }
 
     VLOG(8) << "Worklist size " << buffer.Worklist().size();
@@ -200,8 +217,8 @@ bool Manager::Run()
         state.channel += mode->channelStep;
         if(state.channel<0)
             state.channel = 0;
-        else if(state.channel>(int)module->GetNumberOfChannels())
-            state.channel = module->GetNumberOfChannels();
+        else if(state.channel>=(int)module->GetNumberOfChannels())
+            state.channel = module->GetNumberOfChannels()-1;
     }
 
     // continue running by default
