@@ -94,6 +94,17 @@ public:
     std::shared_ptr<TH2D> GetSharedTH2(const std::string& name);
     std::shared_ptr<TH3D> GetSharedTH3(const std::string& name);
 
+    template<typename T>
+    std::shared_ptr<T>    GetSharedClone(const std::string& name) {
+        T* ptr = nullptr;
+        GetObject(name.c_str(), ptr);
+        if(ptr) {
+            return std::shared_ptr<T>(dynamic_cast<T*>(ptr->Clone()));
+        }
+
+        return nullptr;
+    }
+
 
     TList* GetListOfKeys() const
     {
