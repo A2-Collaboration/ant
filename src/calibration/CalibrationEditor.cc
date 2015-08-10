@@ -235,7 +235,7 @@ bool Editor::ExpandToMax(const string &calibrationID, uint32_t index)
 {
     if(!dman.Has(calibrationID))
         return false;
-    if (index > dman.DataMap.size())
+    if (index > dman.DataMap.at(calibrationID).size())
         return false;
 
     auto maxInterVal = GetMaxInt(calibrationID);

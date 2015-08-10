@@ -73,8 +73,15 @@ void ACECanvas::change_state(ACECanvas::state_t newstate)
     case state_t::base:
         cout << "Base Mode:" << endl
              << "  Keys in Canvas:" << endl
-             << "   *  r   remove Calibration steps" << endl
-             << "   *  c   cut out intervals of Calibration steps" << endl;
+             << "   *  e   expand Calibration steps" << endl
+             << "   *  c   cut out intervals of Calibration steps" << endl
+             << "   *  r   remove Calibration steps" << endl;
+        break;
+    case state_t::expand:
+        cout << "Expand Mode:" << endl
+             << "  Keys in Canvas:" << endl
+             << "   *  a   apply changes" << endl
+             << "   *  c   cancel" << endl;
         break;
     case state_t::remove:
         cout << "Remove Mode:" << endl
@@ -106,7 +113,16 @@ ACECanvas::ACECanvas(const string &FileName):
     loadFile(fileName);
 }
 
-void ACECanvas::removeAllinStepMemory()
+void ACECanvas::expandAllinIndexMemory()
+{
+    cout << endl << "Expanding:" << endl;
+    for (const auto& in: indexMemory)
+        if (ed.ExpandToMax(currentCalID,in))
+            cout << "  " << in << endl;
+    indexMemory.clear();
+    updateCalHist();
+}
+void ACECanvas::removeAllinIndexMemory()
 {
     cout << endl << "Removing:" << endl;
     for (const auto& in: indexMemory)
@@ -133,6 +149,9 @@ void ACECanvas::HandleKeypress(const char key)
     case state_t::base:
         switch (key)
         {
+        case 'e':
+            change_state(state_t::expand);
+            break;
         case 'r':
             change_state(state_t::remove);
             break;
@@ -143,12 +162,29 @@ void ACECanvas::HandleKeypress(const char key)
             break;
         }
         break;
+    case state_t::expand:
+        switch(key)
+        {
+        case 13:
+        case 'a':
+            expandAllinIndexMemory();
+            change_state(state_t::base);
+            break;
+        case 'c':
+            indexMemory.clear();
+            updateCalHist();
+            change_state(state_t::base);
+            break;
+        default:
+            break;
+        }
+        break;
     case state_t::remove:
         switch(key)
         {
         case 13:
         case 'a':
-            removeAllinStepMemory();
+            removeAllinIndexMemory();
             change_state(state_t::base);
             break;
         case 'c':
@@ -214,7 +250,7 @@ void ACECanvas::markInterval(Int_t y)
             updateCalHist();
             for (auto inInt = indexInterVal.Start(); inInt <= indexInterVal.Stop(); ++inInt)
                 fillLine(inInt);
-            cout << "   Calibration steps marked for remove:" << endl
+            cout << "   Calibration steps marked:" << endl
                  << "     [" << indexInterVal.Start() << ", " << indexInterVal.Stop() <<"]" << endl
                  << endl;
         }
@@ -231,22 +267,17 @@ void ACECanvas::markLine(Int_t y)
         {
             indexMemory.emplace(step);
             fillLine(step);
-//            for (Int_t i = minx; i < maxx; ++i )
-//                calHist->Fill(i-1,step-1,3);
         }
         else
         {
             indexMemory.erase(foundat);
             unFillLine(step);
-//            for (Int_t i = minx; i < maxx; ++i )
-//                calHist->Fill(i-1,step-1,-3);
         }
-        cout << "   Calibration steps marked for remove:" << endl;
+        cout << "   Calibration steps marked:" << endl;
         for (const auto& in: indexMemory)
             cout << in << endl;
         cout << endl;
     }
-//    auto bin = h->GetYaxis()->FindBin(y);
 }
 
 void ACECanvas::HandleInput(EEventType button, Int_t x, Int_t y)
@@ -255,6 +286,7 @@ void ACECanvas::HandleInput(EEventType button, Int_t x, Int_t y)
 
     switch (state)
     {
+    case state_t::expand:
     case state_t::remove:
         if (button == kButton1Down)
             markLine(y);

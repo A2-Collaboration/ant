@@ -55,11 +55,12 @@ private:
 
     void updateCalHist();
     void markLine(Int_t y);
-    void removeAllinStepMemory();
+    void removeAllinIndexMemory();
     void removeInterValFromMemory();
     void markInterval(Int_t y);
     void unFillLine(uint32_t lineNumber);
     void fillLine(uint32_t lineNumber);
+    void expandAllinIndexMemory();
 public:
     ACECanvas(const std::string& fileName);
 //    SaveToFile(const std::string& fileName);
