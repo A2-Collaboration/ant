@@ -125,8 +125,9 @@ bool Manager::DoInit()
     state.it_buffer = buffer.begin();
     state.it_file = input_files.begin();
 
-    if(module->GetNumberOfChannels()==0) {
-        LOG(ERROR) << "Module reports zero channels";
+    maxChannels = module->GetNumberOfChannels();
+    if(maxChannels==0) {
+        LOG(WARNING) << "Module reports zero channels, nothing to do then.";
         return false;
     }
 
@@ -160,8 +161,9 @@ bool Manager::Run()
 
     VLOG(8) << "Worklist size " << buffer.Worklist().size();
 
-    if(!state.stop_finish) {
-        if(!state.stop_fit) {
+
+    if(!state.breakpoint_finish && state.channel < maxChannels) {
+        if(!state.breakpoint_fit) {
             const string& title = std_ext::formatter() << "Channel=" << state.channel
                                                        << " " << buffer.Worklist().front();
             buffer.Average()->SetTitle(title.c_str());
@@ -171,29 +173,29 @@ bool Manager::Run()
             if(stop || mode->alwaysDisplayFit) {
                 VLOG(7) << "Open GUI...";
                 module->DisplayFit();
-                state.stop_fit = true;
+                state.breakpoint_fit = true;
                 return false;
             }
         }
         module->StoreFit(state.channel);
-        state.stop_fit = false;
+        state.breakpoint_fit = false;
     }
 
-    if(state.stop_finish
-       || (state.channel >= (int)module->GetNumberOfChannels() && mode->gotoNextRange))
+    if(state.breakpoint_finish
+       || (state.channel >= maxChannels && mode->gotoNextRange))
     {
 
-        if(!state.stop_finish) {
+        if(!state.breakpoint_finish) {
             VLOG(7) << "Finish module first";
             if(module->FinishRange()) {
                 VLOG(7) << "GUI Opened (finish range)";
-                state.stop_finish = true;
+                state.breakpoint_finish = true;
                 return false;
             }
         }
 
         module->StoreFinishRange(buffer.Worklist().front());
-        state.stop_finish = false;
+        state.breakpoint_finish = false;
         state.channel = 0;
 
         buffer.Worklist().pop();
@@ -217,7 +219,7 @@ bool Manager::Run()
         state.channel += mode->channelStep;
         if(state.channel<0)
             state.channel = 0;
-        else if(state.channel>=(int)module->GetNumberOfChannels())
+        else if(state.channel>=maxChannels && !mode->gotoNextRange)
             state.channel = module->GetNumberOfChannels()-1;
     }
 

@@ -48,8 +48,8 @@ protected:
     struct state_t {
         state_t() :
               is_init(false),
-              stop_fit(false),
-              stop_finish(false)
+              breakpoint_fit(false),
+              breakpoint_finish(false)
         {}
 
         std::list<input_file_t>::iterator it_file;
@@ -57,8 +57,8 @@ protected:
         int channel;
 
         bool is_init;
-        bool stop_fit;
-        bool stop_finish;
+        bool breakpoint_fit;
+        bool breakpoint_finish;
     };
     state_t state;
 
@@ -77,6 +77,7 @@ protected:
     };
     SignalConnection_t signalConnection;
 
+    int maxChannels;
     bool DoInit();
 
 public:
