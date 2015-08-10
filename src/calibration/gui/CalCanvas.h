@@ -51,6 +51,8 @@ protected:
     TRootCanvas* rootcanvas = nullptr;
     CalCanvasMode* gui_mode = nullptr;
 
+    void SetDefaults();
+
 public:
     CalCanvas(const std::string& name);
     virtual ~CalCanvas();

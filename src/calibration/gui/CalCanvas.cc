@@ -24,6 +24,7 @@ CalCanvas::~CalCanvas() {
 
 void CalCanvas::Show(TH1 *h, FitFunction* f) {
 
+    // empty UndoStack
     while(!UndoStack.empty()) {
         UndoStack.pop();
     }
@@ -31,8 +32,6 @@ void CalCanvas::Show(TH1 *h, FitFunction* f) {
     func = f;
     func->SetPoints(1000);
     hist = h;
-    f->SetDefaults(hist);
-    UndoPush();
 
     this->cd();
     h->Draw();
@@ -110,6 +109,9 @@ void CalCanvas::HandleKeypress(const char key)
     case 'i':
         UndoPush();
         break;
+    case 'd':
+        SetDefaults();
+        break;
     default:
         break;
     }
@@ -140,6 +142,16 @@ void CalCanvas::HandleKeypress(const char key)
         break;
     }
 
+}
+
+void CalCanvas::SetDefaults()
+{
+    if(func && hist) {
+        UndoPush();
+        func->SetDefaults(hist);
+        Modified();
+        Update();
+    }
 }
 
 void CalCanvas::ClearInidators() {
