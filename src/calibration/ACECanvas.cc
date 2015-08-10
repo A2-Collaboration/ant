@@ -75,7 +75,8 @@ void ACECanvas::change_state(ACECanvas::state_t newstate)
              << "  Keys in Canvas:" << endl
              << "   *  e   expand Calibration steps" << endl
              << "   *  c   cut out intervals of Calibration steps" << endl
-             << "   *  r   remove Calibration steps" << endl;
+             << "   *  r   remove Calibration steps" << endl
+             << "   *  v   reduce to valid Calibration steps" << endl;
         break;
     case state_t::expand:
         cout << "Expand Mode:" << endl
@@ -91,6 +92,13 @@ void ACECanvas::change_state(ACECanvas::state_t newstate)
         break;
     case state_t::cut:
         cout << "Cut interval Mode:" << endl
+             << "  Keys in Canvas:" << endl
+             << "   *  a   apply changes" << endl
+             << "   *  c   cancel" << endl;
+        break;
+    case state_t::reduceToValid:
+        markUnValid();
+        cout << "Reduce Mode:" << endl
              << "  Keys in Canvas:" << endl
              << "   *  a   apply changes" << endl
              << "   *  c   cancel" << endl;
@@ -158,6 +166,9 @@ void ACECanvas::HandleKeypress(const char key)
         case 'c':
             change_state(state_t::cut);
             break;
+        case 'v':
+            change_state(state_t::reduceToValid);
+            break;
         default:
             break;
         }
@@ -213,6 +224,23 @@ void ACECanvas::HandleKeypress(const char key)
             break;
         }
         break;
+    case state_t::reduceToValid:
+        switch(key)
+        {
+        case 13:
+        case 'a':
+            ed.ReduceToValid(currentCalID);
+            updateCalHist();
+            change_state(state_t::base);
+            break;
+        case 'c':
+            updateCalHist();
+            change_state(state_t::base);
+            break;
+        default:
+            break;
+        }
+        break;
     default:
         break;
     }
@@ -223,12 +251,26 @@ void ACECanvas::fillLine(uint32_t lineNumber)
 {
     for (Int_t i = 0; i < 100; ++i )
         calHist->Fill(i,lineNumber,3);
+//    update_modified();
 }
 
 void ACECanvas::unFillLine(uint32_t lineNumber)
 {
     for (Int_t i = 0; i < 100; ++i )
         calHist->Fill(i,lineNumber,-3);
+}
+
+void ACECanvas::markUnValid()
+{
+    auto valids = ed.GetAllValidRanges(currentCalID);
+    set<uint32_t> validset;
+    for (const auto v: valids)
+        validset.emplace(v.first);
+
+    for (uint32_t i = 0 ; i < ed.GetNumberOfSteps(currentCalID) ; ++i)
+        if ( validset.find(i) == validset.end())
+            fillLine(i);
+    update_modified();
 }
 
 void ACECanvas::markInterval(Int_t y)

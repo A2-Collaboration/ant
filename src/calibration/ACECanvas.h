@@ -27,6 +27,7 @@ private:
         remove,
         cut,
         expand,
+        reduceToValid,
         close
     };
 
@@ -61,6 +62,7 @@ private:
     void unFillLine(uint32_t lineNumber);
     void fillLine(uint32_t lineNumber);
     void expandAllinIndexMemory();
+    void markUnValid();
 public:
     ACECanvas(const std::string& fileName);
 //    SaveToFile(const std::string& fileName);
