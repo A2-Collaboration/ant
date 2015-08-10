@@ -41,6 +41,8 @@ private:
     interval<std::uint32_t> indexInterVal;
     bool intervalStartSet;
 
+    void update_modified();
+
     void makeCalHist();
 
     void change_state(state_t newstate);
@@ -56,6 +58,8 @@ private:
     void removeAllinStepMemory();
     void removeInterValFromMemory();
     void markInterval(Int_t y);
+    void unFillLine(uint32_t lineNumber);
+    void fillLine(uint32_t lineNumber);
 public:
     ACECanvas(const std::string& fileName);
 //    SaveToFile(const std::string& fileName);

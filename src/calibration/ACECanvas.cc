@@ -12,6 +12,12 @@ using namespace ant;
 using namespace std;
 
 
+void ACECanvas::update_modified()
+{
+    Modified();
+    Update();
+}
+
 void ACECanvas::makeCalHist()
 {
     calHist = new TH2D( (std_ext::formatter() << "hist-" << currentCalID).str().c_str(),
@@ -22,8 +28,7 @@ void ACECanvas::makeCalHist()
                         );
     calHist->SetXTitle("TID [%]");
     calHist->SetYTitle("Calibration Step");
-//    this->cd();
-//    calHist->Draw("col");
+    calHist->Draw("col");
 }
 
 void ant::ACECanvas::loadFile(const std::string& fileName)
@@ -47,14 +52,13 @@ void ant::ACECanvas::updateCalHist()
     calHist->Reset();
     for (const auto& ran: ed.GetAllRanges(currentCalID))
         for (int i = floor(ran.second.Start()); i < ceil(ran.second.Stop()) ; ++i)
-            calHist->SetBinContent(i,ran.first+1,2);
+            calHist->SetBinContent(i+1,ran.first+1,2);
 
     for (const auto& ran: ed.GetAllValidRanges(currentCalID))
         for (int i = floor(ran.second.Start()); i < ceil(ran.second.Stop()) ; ++i)
-            calHist->SetBinContent(i,ran.first+1,1);
+            calHist->SetBinContent(i+1,ran.first+1,1);
 
-    this->cd();
-    calHist->Draw("col");
+    update_modified();
 }
 
 //void ant::TACECanvas::SaveToFile(const std::string& fileName)
@@ -69,26 +73,25 @@ void ACECanvas::change_state(ACECanvas::state_t newstate)
     case state_t::base:
         cout << "Base Mode:" << endl
              << "  Keys in Canvas:" << endl
-             << "   *  r         remove Calibration steps" << endl
+             << "   *  r   remove Calibration steps" << endl
              << "   *  c   cut out intervals of Calibration steps" << endl;
         break;
     case state_t::remove:
         cout << "Remove Mode:" << endl
              << "  Keys in Canvas:" << endl
-             << "   *  <return>  remove selection" << endl
-             << "   *  <esc>     abort" << endl;
+             << "   *  a   apply changes" << endl
+             << "   *  c   cancel" << endl;
         break;
     case state_t::cut:
         cout << "Cut interval Mode:" << endl
              << "  Keys in Canvas:" << endl
-             << "   *  <return>  remove selection" << endl
-             << "   *  <esc>     abort" << endl;
+             << "   *  a   apply changes" << endl
+             << "   *  c   cancel" << endl;
         break;
     default:
         break;
     }
     cout << endl;
-
     state = newstate;
 }
 
@@ -107,20 +110,20 @@ void ACECanvas::removeAllinStepMemory()
 {
     cout << endl << "Removing:" << endl;
     for (const auto& in: indexMemory)
-        if (ed.Remove(currentCalID,in-1))
-            cout << "  " << in-1 << endl;
+        if (ed.Remove(currentCalID,in))
+            cout << "  " << in << endl;
     indexMemory.clear();
     updateCalHist();
-    this->Update();
 }
 void ACECanvas::removeInterValFromMemory()
 {
-    cout << endl << "Removing" << endl;
+    if (!intervalStartSet)
+        return;
+    cout << endl << "Removing:" << endl;
     if (ed.Remove(currentCalID,indexInterVal[0],indexInterVal[1]))
         cout << "  [" << indexInterVal[0] << ", " << indexInterVal[1] << "]" << endl;
     intervalStartSet = false;
     updateCalHist();
-    this->Update();
 }
 
 void ACECanvas::HandleKeypress(const char key)
@@ -144,13 +147,15 @@ void ACECanvas::HandleKeypress(const char key)
         switch(key)
         {
         case 13:
+        case 'a':
             removeAllinStepMemory();
             change_state(state_t::base);
             break;
-        case 27:
+        case 'c':
             indexMemory.clear();
             updateCalHist();
             change_state(state_t::base);
+            break;
         default:
             break;
         }
@@ -159,13 +164,15 @@ void ACECanvas::HandleKeypress(const char key)
         switch(key)
         {
         case 13:
+        case 'a':
             removeInterValFromMemory();
             change_state(state_t::base);
             break;
-        case 27:
+        case 'c':
             intervalStartSet = false;
             updateCalHist();
             change_state(state_t::base);
+            break;
         default:
             break;
         }
@@ -174,6 +181,18 @@ void ACECanvas::HandleKeypress(const char key)
         break;
     }
 
+}
+
+void ACECanvas::fillLine(uint32_t lineNumber)
+{
+    for (Int_t i = 0; i < 100; ++i )
+        calHist->Fill(i,lineNumber,3);
+}
+
+void ACECanvas::unFillLine(uint32_t lineNumber)
+{
+    for (Int_t i = 0; i < 100; ++i )
+        calHist->Fill(i,lineNumber,-3);
 }
 
 void ACECanvas::markInterval(Int_t y)
@@ -185,8 +204,7 @@ void ACECanvas::markInterval(Int_t y)
         if (!intervalStartSet)
         {
             indexInterVal.Start() = index;
-            for (Int_t i = 0; i < 100; ++i )
-                calHist->Fill(i,index,3);
+            fillLine(index);
             intervalStartSet = true;
         }
         else
@@ -195,11 +213,7 @@ void ACECanvas::markInterval(Int_t y)
             indexInterVal.MakeSane();
             updateCalHist();
             for (auto inInt = indexInterVal.Start(); inInt <= indexInterVal.Stop(); ++inInt)
-            {
-                for (Int_t i = 0; i < 100; ++i )
-                    calHist->Fill(i,inInt,3);
-            }
-            Update();
+                fillLine(inInt);
             cout << "   Calibration steps marked for remove:" << endl
                  << "     [" << indexInterVal.Start() << ", " << indexInterVal.Stop() <<"]" << endl
                  << endl;
@@ -211,23 +225,21 @@ void ACECanvas::markLine(Int_t y)
 {
     TH2* h = dynamic_cast<TH2*>(fClickSelected);
     if (h){
-        auto step = floor(AbsPixeltoY(y))+1;
-
-        Int_t minx = floor(ed.GetRange(currentCalID,step-1).second.Start());
-        Int_t maxx = ceil(ed.GetRange(currentCalID,step-1).second.Stop());
-
+        auto step = floor(AbsPixeltoY(y));
         auto foundat = indexMemory.find(step);
         if ( foundat == indexMemory.end() )
         {
             indexMemory.emplace(step);
-            for (Int_t i = minx; i < maxx; ++i )
-                calHist->Fill(i-1,step-1,3);
+            fillLine(step);
+//            for (Int_t i = minx; i < maxx; ++i )
+//                calHist->Fill(i-1,step-1,3);
         }
         else
         {
             indexMemory.erase(foundat);
-            for (Int_t i = minx; i < maxx; ++i )
-                calHist->Fill(i-1,step-1,-3);
+            unFillLine(step);
+//            for (Int_t i = minx; i < maxx; ++i )
+//                calHist->Fill(i-1,step-1,-3);
         }
         cout << "   Calibration steps marked for remove:" << endl;
         for (const auto& in: indexMemory)
