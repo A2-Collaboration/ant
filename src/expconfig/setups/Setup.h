@@ -6,9 +6,11 @@
 #include "unpacker/UnpackerAcqu.h"
 #include "unpacker/UnpackerA2Geant.h"
 
+#include "tree/THeaderInfo.h"
+
 #include "base/Paths.h"
 #include "base/std_ext.h"
-#include "tree/THeaderInfo.h"
+#include "base/Logger.h"
 
 // this header always includes all detectors and calibrations
 // for convinient access in the derived classes
@@ -143,6 +145,21 @@ protected:
             cfg->BuildMappings(hit_mappings, scaler_mappings);
             /// \todo check that the detectors do not add overlapping mappings
         }
+    }
+
+    void IgnoreDetectorChannel(Detector_t::Type_t type, unsigned channel) {
+        for(auto& detector : detectors) {
+            if(detector->Type == type) {
+                detector->SetIgnored(channel);
+                return;
+            }
+        }
+        LOG(WARNING) << "Setup " << GetName() << " ignored non-existing channel "
+                     << channel << " of detector " << Detector_t::ToString(type);
+    }
+    void IgnoreDetectorChannels(Detector_t::Type_t type, const std::vector<unsigned>& channels) {
+        for(unsigned channel : channels)
+            IgnoreDetectorChannel(type, channel);
     }
 
     std::list< std::shared_ptr<Detector_t> > detectors;
