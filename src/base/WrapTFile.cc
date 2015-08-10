@@ -9,7 +9,7 @@
 #include <stdexcept>
 #include <string>
 
-
+#include "TSystem.h"
 #include "TH1D.h"
 #include "TH2D.h"
 #include "TH3D.h"
@@ -43,17 +43,28 @@ WrapTFile::WrapTFile(const std::string& filename, mode_t access_mode, bool chang
         break;
     }
 
+    if(mode != mode_t::read) {
+        // recursively create the directory
+        stringstream ss_cmd;
+        ss_cmd << "mkdir -p " << gSystem->DirName(filename.c_str());
+        VLOG(5) << "Executed '" << ss_cmd.str() << "'' with code "
+                << gSystem->Exec(ss_cmd.str().c_str());
+    }
+
+    const auto prev_gErrorIgnoreLevel = gErrorIgnoreLevel;
+    gErrorIgnoreLevel = kError + 1;
+
     if ( !changeDirectory )
     {
-        const auto prev_gErrorIgnoreLevel = gErrorIgnoreLevel;
         const auto prev_Directory         = gDirectory;
-        gErrorIgnoreLevel = kError + 1;
         file = std_ext::make_unique<TFile>(filename.c_str(), root_mode.c_str());
         gDirectory = prev_Directory;
-        gErrorIgnoreLevel = prev_gErrorIgnoreLevel;
     }
     else
         file = std_ext::make_unique<TFile>(filename.c_str(), root_mode.c_str());
+
+    gErrorIgnoreLevel = prev_gErrorIgnoreLevel;
+
 
     if(!isOpen() || isZombie() )
     {

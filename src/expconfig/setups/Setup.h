@@ -162,6 +162,11 @@ protected:
             IgnoreDetectorChannel(type, channel);
     }
 
+    static std::shared_ptr<calibration::DataManager> CreateCalibrationDataManager(const std::string& setupname) {
+        std::string filename = std::string(ANT_PATH_DATABASE)+"/"+setupname+"/calibration.root";
+        return std::make_shared<calibration::DataManager>(filename);
+    }
+
     std::list< std::shared_ptr<Detector_t> > detectors;
     std::list< std::shared_ptr<ReconstructHook::Base> > reconstruct_hooks;
     std::list< std::shared_ptr<Calibration::BaseModule> > calibrations;

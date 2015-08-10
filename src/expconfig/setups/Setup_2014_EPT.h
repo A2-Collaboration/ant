@@ -11,7 +11,7 @@ class Setup_2014_EPT : public Setup
 public:
 
     Setup_2014_EPT(const string& name) {
-        auto calibrationManager = make_shared<calibration::DataManager>(name);
+        auto calibrationManager = CreateCalibrationDataManager(name);
 
         // setup the detectors of interest
         const auto trigger = make_shared<detector::Trigger_2014>();
