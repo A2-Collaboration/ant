@@ -9,12 +9,9 @@ namespace setup {
 class Setup_2014_07_EPT_Prod : public Setup_2014_EPT
 {
 public:
-    virtual std::string GetName() const override {
-        return "Setup_2014-07_EPT_Prod";
-    }
 
     Setup_2014_07_EPT_Prod()
-        : Setup_2014_EPT(GetName())
+        : Setup_2014_EPT("Setup_2014-07_EPT_Prod")
     {
         // empty elements
         IgnoreDetectorChannels(Detector_t::Type_t::CB, {203,265,267,549,565,586,607,677});

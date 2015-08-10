@@ -10,8 +10,9 @@ class Setup_2014_EPT : public Setup
 {
 public:
 
-    Setup_2014_EPT(const string& name) {
-        auto calibrationManager = CreateCalibrationDataManager(name);
+    Setup_2014_EPT(const string& name) :
+        Setup(name)
+    {
 
         // setup the detectors of interest
         const auto trigger = make_shared<detector::Trigger_2014>();
@@ -77,13 +78,13 @@ public:
                                           -0.05 // default gain
                                           );
 
-        AddCalibration<calibration::CB_Energy>(cb, calibrationManager, convert_GeSiCa_SADC );
+        AddCalibration<calibration::CB_Energy>(cb, calibrationDataManager, convert_GeSiCa_SADC );
 
-        AddCalibration<calibration::PID_Energy>(pid, calibrationManager, convert_MultiHit16bit );
+        AddCalibration<calibration::PID_Energy>(pid, calibrationDataManager, convert_MultiHit16bit );
 
-        AddCalibration<calibration::TAPS_Energy>(taps, calibrationManager, convert_MultiHit16bit );
+        AddCalibration<calibration::TAPS_Energy>(taps, calibrationDataManager, convert_MultiHit16bit );
 
-        AddCalibration<calibration::TAPSVeto_Energy>(calibrationManager, convert_MultiHit16bit);
+        AddCalibration<calibration::TAPSVeto_Energy>(calibrationDataManager, convert_MultiHit16bit);
 
         // enable TAPS shower correction, which is a hook running on list of clusters
         AddCalibration<calibration::TAPS_ShowerCorrection>();

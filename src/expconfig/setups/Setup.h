@@ -92,8 +92,17 @@ public:
         return std::string(ANT_PATH_DATABASE)+"/"+GetName()+"/cuts";
     }
 
+    std::string GetName() const override final {
+        return name_;
+    }
+
 protected:
-    Setup() = default;
+    Setup(const std::string& name) :
+        name_(name)
+    {
+        std::string filename = std::string(ANT_PATH_DATABASE)+"/"+GetName()+"/calibration.root";
+        calibrationDataManager = std::make_shared<calibration::DataManager>(filename);
+    }
 
     void AddDetector(const std::shared_ptr<Detector_t>& detector) {
         detectors.push_back(detector);
@@ -170,6 +179,10 @@ protected:
     std::list< std::shared_ptr<Detector_t> > detectors;
     std::list< std::shared_ptr<ReconstructHook::Base> > reconstruct_hooks;
     std::list< std::shared_ptr<Calibration::BaseModule> > calibrations;
+
+    std::shared_ptr<calibration::DataManager> calibrationDataManager;
+private:
+    const std::string name_;
 };
 
 }} // namespace ant::expconfig

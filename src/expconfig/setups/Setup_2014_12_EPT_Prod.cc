@@ -9,12 +9,9 @@ namespace setup {
 class Setup_2014_12_EPT_Prod : public Setup_2014_EPT
 {
 public:
-    virtual std::string GetName() const override {
-        return "Setup_2014-12_EPT_Prod";
-    }
 
     Setup_2014_12_EPT_Prod()
-        : Setup_2014_EPT(GetName())
+        : Setup_2014_EPT("Setup_2014-12_EPT_Prod")
     {
         /// \todo add ignored elements
     }

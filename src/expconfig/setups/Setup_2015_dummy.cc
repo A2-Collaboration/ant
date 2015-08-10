@@ -12,11 +12,8 @@ class Setup_2015_dummy :
         public Setup
 {
 public:
-    virtual std::string GetName() const override {
-        return "Setup_2015_dummy";
-    }
 
-    Setup_2015_dummy() {
+    Setup_2015_dummy() : Setup("Setup_2015_dummy") {
         // just CB at the moment...
         AddDetector<detector::CB>();
     }
