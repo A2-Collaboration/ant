@@ -100,6 +100,8 @@ int main(int argc, char** argv) {
     exec->Exec("firstcall");
     app->Run(kTRUE);
 
+    ExpConfig::Setup::Cleanup();
+    setup = nullptr;
     gui = nullptr;
     calibrationgui = nullptr;
     app = nullptr;

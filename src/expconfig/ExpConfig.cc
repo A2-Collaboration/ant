@@ -120,6 +120,12 @@ shared_ptr<ExpConfig::Setup> ExpConfig::Setup::GetLastFound()
     return lastSetupFound;
 }
 
+void ExpConfig::Setup::Cleanup()
+{
+    lastSetupFound = nullptr;
+    expconfig::SetupRegistry::get().destroy();
+}
+
 list<string> ExpConfig::Setup::GetNames() {
     list<string> names;
     for(auto setup : getAll()) {

@@ -40,6 +40,8 @@ public:
         static std::shared_ptr<Setup> Get(const std::string& name);
         static std::list<std::string> GetNames();
         static std::shared_ptr<Setup> GetLastFound();
+
+        static void Cleanup();
     private:
         static std::list< std::shared_ptr<Setup> > getAll();
     };
