@@ -1,10 +1,8 @@
+#include "SetupRegistry.h"
+
 #include "Setup.h"
 
 #include "base/Logger.h"
-
-#include <string>
-#include <vector>
-#include <stdexcept>
 
 using namespace ant::expconfig;
 
@@ -40,6 +38,11 @@ SetupRegistry::setups_t::iterator SetupRegistry::end()
 {
     init_setups();
     return setups.end();
+}
+
+void SetupRegistry::destroy()
+{
+    setups.clear();
 }
 
 SetupRegistration::SetupRegistration(setup_creator creator)
