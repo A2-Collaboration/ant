@@ -54,16 +54,6 @@ public:
         // factory methods to request the modules providing physics/GUI functionality
         virtual std::unique_ptr<Physics> GetPhysicsModule() =0;
         virtual void GetGUIs(std::list<std::unique_ptr<calibration::gui::Manager_traits> >& guis) =0;
-
-//        // globally used to construct histogram names relevant for calibration
-//        static std::string ConstructCalibHistName(const std::string& name,
-//                                                  const std::string& type_name) {
-//            return name+"_"+type_name;
-//        }
-//        static std::string ConstructFullCalibHistName(const std::string& name,
-//                                                      const std::string& type_name) {
-//            return name+"/"+ConstructCalibHistName(name, type_name);
-//        }
     };
 
     /**
