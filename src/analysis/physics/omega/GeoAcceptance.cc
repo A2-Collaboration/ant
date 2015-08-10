@@ -15,29 +15,30 @@
 using namespace std;
 using namespace ant;
 using namespace ant::analysis;
+using namespace ant::analysis::physics;
 
-analysis::GeoAcceptance::ParticleThetaPhiPlot::ParticleThetaPhiPlot(SmartHistFactory &factory, const string &title, const string &name,const BinSettings& thetabins,const BinSettings& phibins)
+GeoAcceptance::ParticleThetaPhiPlot::ParticleThetaPhiPlot(SmartHistFactory &factory, const string &title, const string &name,const BinSettings& thetabins,const BinSettings& phibins)
 {
     hist = factory.makeTH2D(title,"#theta [#circ]","#phi [#circ]",thetabins,phibins,name);
 }
 
-void analysis::GeoAcceptance::ParticleThetaPhiPlot::Fill(const ParticlePtr &p)
+void GeoAcceptance::ParticleThetaPhiPlot::Fill(const ParticlePtr &p)
 {
     hist->Fill(p->Theta()*TMath::RadToDeg(), p->Phi()*TMath::RadToDeg());
 }
 
-TObject *analysis::GeoAcceptance::ParticleThetaPhiPlot::GetObject()
+TObject *GeoAcceptance::ParticleThetaPhiPlot::GetObject()
 {
     return hist;
 }
 
-void analysis::GeoAcceptance::ParticleThetaPhiPlot::Draw(const string &option) const
+void GeoAcceptance::ParticleThetaPhiPlot::Draw(const string &option) const
 {
     hist->Draw(option.c_str());
 }
 
 
-analysis::GeoAcceptance::GeoAcceptance(const std::string& name):
+GeoAcceptance::GeoAcceptance(const std::string& name):
     Physics(name)
 {
     for( auto& emin : std::vector<double>({0.95,0.9,0.8,0})) {
@@ -47,11 +48,11 @@ analysis::GeoAcceptance::GeoAcceptance(const std::string& name):
     }
 }
 
-analysis::GeoAcceptance::~GeoAcceptance()
+GeoAcceptance::~GeoAcceptance()
 {
 }
 
-void analysis::GeoAcceptance::ProcessEvent(const Event &event)
+void GeoAcceptance::ProcessEvent(const Event &event)
 {
     for( auto& a : analyses ) {
         a.Fill(
@@ -61,13 +62,13 @@ void analysis::GeoAcceptance::ProcessEvent(const Event &event)
     }
 }
 
-void analysis::GeoAcceptance::Finish()
+void GeoAcceptance::Finish()
 {
 //    angle_regions_photons->Scale(1.0/angle_regions_photons->GetEntries());
  //   n_photons_lost->Scale(1.0/n_photons_lost->GetEntries());
 }
 
-void analysis::GeoAcceptance::ShowResult()
+void GeoAcceptance::ShowResult()
 {
     for( auto& a : analyses ) {
         a.ShowResult();
@@ -75,30 +76,30 @@ void analysis::GeoAcceptance::ShowResult()
 }
 
 
-analysis::GeoAcceptance::ParticleThetaPhiPlot3D::ParticleThetaPhiPlot3D(SmartHistFactory& factory, const string &title, const string &name):
+GeoAcceptance::ParticleThetaPhiPlot3D::ParticleThetaPhiPlot3D(SmartHistFactory& factory, const string &title, const string &name):
     hist(factory.makeTH3D(title, "x","y","z",BinSettings(200,-1,1),BinSettings(200,-1,1),BinSettings(200,-1,1),name)),
     n(0)
 {
 }
 
-void analysis::GeoAcceptance::ParticleThetaPhiPlot3D::Fill(const ParticlePtr& p)
+void GeoAcceptance::ParticleThetaPhiPlot3D::Fill(const ParticlePtr& p)
 {
         TVector3 v(p->Vect().Unit());
         hist->Fill(v.X(),v.Y(),v.Z());
 }
 
-TObject *analysis::GeoAcceptance::ParticleThetaPhiPlot3D::GetObject()
+TObject *GeoAcceptance::ParticleThetaPhiPlot3D::GetObject()
 {
     return hist;
 }
 
-void analysis::GeoAcceptance::ParticleThetaPhiPlot3D::Draw(const string &option) const
+void GeoAcceptance::ParticleThetaPhiPlot3D::Draw(const string &option) const
 {
     hist->Draw(option.c_str());
 }
 
 
-analysis::GeoAcceptance::AcceptanceAnalysis::AcceptanceAnalysis(SmartHistFactory& factory, const A2SimpleGeometry &geo_, const string &name_):
+GeoAcceptance::AcceptanceAnalysis::AcceptanceAnalysis(SmartHistFactory& factory, const A2SimpleGeometry &geo_, const string &name_):
     name(name_),
     HistFac(name,factory),
     geo(geo_),
@@ -125,7 +126,7 @@ void remove_low_energy(T& data, double min) {
               [min] (const element_type& m) { return (m.b->E()/m.a->E()) < min;}), data.end());
 }
 
-void analysis::GeoAcceptance::AcceptanceAnalysis::Fill(const ParticleList &mctrue, const ParticleList &reconstructed)
+void GeoAcceptance::AcceptanceAnalysis::Fill(const ParticleList &mctrue, const ParticleList &reconstructed)
 {
     if( mctrue.size() != 1)
         return;
@@ -170,7 +171,7 @@ void analysis::GeoAcceptance::AcceptanceAnalysis::Fill(const ParticleList &mctru
 
 }
 
-void analysis::GeoAcceptance::AcceptanceAnalysis::ShowResult()
+void GeoAcceptance::AcceptanceAnalysis::ShowResult()
 {
     canvas("GeoAcceptance: "+name)
             << drawoption("colz")

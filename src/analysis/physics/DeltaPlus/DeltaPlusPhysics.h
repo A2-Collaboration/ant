@@ -10,6 +10,7 @@ class TH1;
 
 namespace ant {
 namespace analysis {
+namespace physics {
 
 class DeltaPlusPhysics: public ant::Physics {
 
@@ -87,5 +88,6 @@ public:
     void ShowResult();
 };
 
+}
 }
 }

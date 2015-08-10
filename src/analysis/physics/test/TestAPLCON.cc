@@ -12,10 +12,12 @@
 
 using namespace std;
 using namespace ant;
+using namespace ant::analysis;
+using namespace ant::analysis::physics;
 
-std::default_random_engine ant::analysis::TestAPLCON::FitParticle::generator;
+std::default_random_engine TestAPLCON::FitParticle::generator;
 
-TLorentzVector analysis::TestAPLCON::FitParticle::Make(const std::vector<double> &EkThetaPhi, const Double_t m) {
+TLorentzVector TestAPLCON::FitParticle::Make(const std::vector<double> &EkThetaPhi, const Double_t m) {
     const double E = EkThetaPhi[0] + m;
     const Double_t p = sqrt( E*E - m*m );
     TVector3 pv(1,0,0);
@@ -24,7 +26,7 @@ TLorentzVector analysis::TestAPLCON::FitParticle::Make(const std::vector<double>
     return l;
 }
 
-void analysis::TestAPLCON::FitParticle::Smear() {
+void TestAPLCON::FitParticle::Smear() {
     // set the sigmas here,
     // then the fitter knows them as well (because they're linked)
 
@@ -47,7 +49,7 @@ void analysis::TestAPLCON::FitParticle::Smear() {
     Phi += gauss_Phi(generator);
 }
 
-void analysis::TestAPLCON::FillIM(TH1D *h, const std::vector<analysis::TestAPLCON::FitParticle> &photons) {
+void TestAPLCON::FillIM(TH1D *h, const std::vector<TestAPLCON::FitParticle> &photons) {
     TLorentzVector sum(0,0,0,0);
     for(const auto& p : photons) {
         sum += FitParticle::Make(p, ParticleTypeDatabase::Photon.Mass());
@@ -55,7 +57,7 @@ void analysis::TestAPLCON::FillIM(TH1D *h, const std::vector<analysis::TestAPLCO
     h->Fill(sum.M());
 }
 
-ant::analysis::TestAPLCON::TestAPLCON(const mev_t energy_scale) :
+TestAPLCON::TestAPLCON(const mev_t energy_scale) :
     Physics("TestAPLCON"),
     fitter("TestAPLCON"),
     photons(nPhotons)
@@ -224,7 +226,7 @@ ant::analysis::TestAPLCON::TestAPLCON(const mev_t energy_scale) :
 }
 
 
-void ant::analysis::TestAPLCON::ProcessEvent(const ant::Event &event)
+void TestAPLCON::ProcessEvent(const ant::Event &event)
 {
 
 
@@ -320,12 +322,12 @@ void ant::analysis::TestAPLCON::ProcessEvent(const ant::Event &event)
 
 }
 
-void ant::analysis::TestAPLCON::Finish()
+void TestAPLCON::Finish()
 {
 
 }
 
-void ant::analysis::TestAPLCON::ShowResult()
+void TestAPLCON::ShowResult()
 {
     canvas c("TestAPLCON: Overview");
     c << drawoption("colz") << banana

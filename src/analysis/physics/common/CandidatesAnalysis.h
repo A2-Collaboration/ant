@@ -8,6 +8,7 @@ class TH1D;
 
 namespace ant {
 namespace analysis {
+namespace physics {
 
 class CandidatesAnalysis : public ant::Physics {
 protected:
@@ -26,5 +27,6 @@ public:
     void ShowResult();
 };
 
+}
 }
 }

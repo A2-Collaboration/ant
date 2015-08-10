@@ -14,6 +14,7 @@
 
 using namespace std;
 using namespace ant;
+using namespace ant::analysis::physics;
 
 ParticleCombinatoricsTest::ParticleCombinatoricsTest(const string &name):
     Physics(name)

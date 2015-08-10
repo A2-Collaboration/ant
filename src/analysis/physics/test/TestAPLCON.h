@@ -22,6 +22,7 @@ std::vector<T> operator+(const std::vector<T>& v1, const std::vector<T>& v2) {
 
 namespace ant {
 namespace analysis {
+namespace physics {
 
 class TestAPLCON: public Physics {
 
@@ -116,5 +117,6 @@ public:
     void ShowResult();
 };
 
+}
 }
 }

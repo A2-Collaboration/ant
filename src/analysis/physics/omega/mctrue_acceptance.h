@@ -7,6 +7,7 @@
 
 namespace ant {
 namespace analysis {
+namespace physics {
 
 class MCTrueAcceptance: public ant::Physics {
 protected:
@@ -31,5 +32,5 @@ public:
 };
 
 }
-
+}
 }

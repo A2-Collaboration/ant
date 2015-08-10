@@ -14,6 +14,7 @@ class TH3D;
 
 namespace ant {
 namespace analysis {
+namespace physics {
 
 class OmegaBase: public Physics {
 
@@ -89,5 +90,6 @@ public:
 
 }
 }
+}
 
-std::string to_string(const ant::analysis::OmegaBase::DataMode& m);
+std::string to_string(const ant::analysis::physics::OmegaBase::DataMode& m);

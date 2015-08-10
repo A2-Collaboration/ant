@@ -13,7 +13,7 @@ class TH1D;
 
 namespace ant {
 namespace analysis {
-
+namespace physics {
 
 
 class GeoAcceptance: public ant::Physics {
@@ -85,5 +85,6 @@ public:
     void Finish();
     void ShowResult();
 };
+}
 }
 }

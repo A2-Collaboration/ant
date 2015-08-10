@@ -8,6 +8,7 @@
 using namespace std;
 using namespace ant;
 using namespace ant::analysis;
+using namespace ant::analysis::physics;
 
 
 CandidatesAnalysis::CandidatesAnalysis(const string &name):

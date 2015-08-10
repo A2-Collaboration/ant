@@ -5,9 +5,9 @@
 using namespace std;
 using namespace ant;
 using namespace ant::analysis;
+using namespace ant::analysis::physics;
 
-
-analysis::DataOverview::OverviewSet::OverviewSet(SmartHistFactory &factory, const string &title)
+DataOverview::OverviewSet::OverviewSet(SmartHistFactory &factory, const string &title)
 {
     SmartHistFactory myfac(title, factory);
 
@@ -23,7 +23,7 @@ analysis::DataOverview::OverviewSet::OverviewSet(SmartHistFactory &factory, cons
 
 }
 
-void analysis::DataOverview::OverviewSet::Fill(const Event::Data &dataset)
+void DataOverview::OverviewSet::Fill(const Event::Data &dataset)
 {
     for(auto& taggerhit : dataset.TaggerHits() ) {
         TaggerChannel.Fill(taggerhit->Channel());
@@ -41,27 +41,27 @@ void analysis::DataOverview::OverviewSet::Fill(const Event::Data &dataset)
 
 
 
-analysis::DataOverview::DataOverview(const string &name):
+DataOverview::DataOverview(const string &name):
     Physics(name),
     reconstructed(HistFac, "reconstructed"),
     mctrue(HistFac,"mctrue")
 {
 }
 
-void ant::analysis::DataOverview::ProcessEvent(const ant::Event &event)
+void DataOverview::ProcessEvent(const ant::Event &event)
 {
     reconstructed.Fill(event.Reconstructed());
     mctrue.Fill(event.MCTrue());
 }
 
 
-void ant::analysis::DataOverview::Finish()
+void DataOverview::Finish()
 {
 
 }
 
 
-void ant::analysis::DataOverview::ShowResult()
+void DataOverview::ShowResult()
 {
     canvas("DataOverview: Tagger")
             << reconstructed.TaggerChannel << mctrue.TaggerChannel

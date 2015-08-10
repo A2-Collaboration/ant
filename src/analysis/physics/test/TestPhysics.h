@@ -7,6 +7,9 @@
 #include <map>
 
 namespace ant {
+namespace analysis {
+namespace physics {
+
 class ParticleCombinatoricsTest: public ant::Physics {
 protected:
     SmartHist1<double> ggim;
@@ -26,4 +29,6 @@ public:
     virtual void ShowResult();
 };
 
+}
+}
 }

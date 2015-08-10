@@ -17,9 +17,9 @@
 using namespace std;
 using namespace ant;
 using namespace ant::analysis;
+using namespace ant::analysis::physics;
 
-
-void analysis::OmegaBase::ProcessEvent(const ant::Event &event)
+void OmegaBase::ProcessEvent(const ant::Event &event)
 {
     const auto& data = mode==DataMode::Reconstructed ? event.Reconstructed() : event.MCTrue();
     Analyse(data, event);

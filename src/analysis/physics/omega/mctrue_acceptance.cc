@@ -4,8 +4,9 @@
 using namespace std;
 using namespace ant;
 using namespace ant::analysis;
+using namespace ant::analysis::physics;
 
-analysis::MCTrueAcceptance::MCTrueAcceptance():
+MCTrueAcceptance::MCTrueAcceptance():
     Physics("McTrueAcceptance"), events_seen(0)
 {
     detect = HistFac.makeHist<std::string>("Geometric Acceptance (MC True)","Particle Type","% events | all particles found", BinSettings(0),"detection");
@@ -18,7 +19,7 @@ analysis::MCTrueAcceptance::MCTrueAcceptance():
     detect.GetRootHistogram()->Reset();
 }
 
-analysis::MCTrueAcceptance::det_hit_count_t analysis::MCTrueAcceptance::AllAccepted(const ParticleList& particles) {
+MCTrueAcceptance::det_hit_count_t MCTrueAcceptance::AllAccepted(const ParticleList& particles) {
     det_hit_count_t acc;
 
     for( auto& p : particles ) {
@@ -34,7 +35,7 @@ analysis::MCTrueAcceptance::det_hit_count_t analysis::MCTrueAcceptance::AllAccep
     return acc;
 }
 
-void ant::analysis::MCTrueAcceptance::ProcessEvent(const ant::Event &event)
+void MCTrueAcceptance::ProcessEvent(const Event &event)
 {
 
     for( auto& type : ParticleTypeDatabase::DetectableTypes() ) {
@@ -62,12 +63,12 @@ void ant::analysis::MCTrueAcceptance::ProcessEvent(const ant::Event &event)
 
 }
 
-void ant::analysis::MCTrueAcceptance::Finish()
+void MCTrueAcceptance::Finish()
 {
     detect.Scale(100.0/events_seen);
 }
 
-void ant::analysis::MCTrueAcceptance::ShowResult()
+void MCTrueAcceptance::ShowResult()
 {
     canvas("MCTrueAcceptance") << detect << endc;
 }

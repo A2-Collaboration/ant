@@ -7,6 +7,7 @@
 
 namespace ant {
 namespace analysis {
+namespace physics {
 
 class DataOverview : public ant::Physics {
 protected:
@@ -38,5 +39,6 @@ public:
     void ShowResult();
 };
 
+}
 }
 }
