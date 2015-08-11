@@ -1,7 +1,7 @@
 #include "catch.hpp"
 
 #include "tmpfile_t.h"
-#include "CalibrationDataManager.h"
+#include "DataManager.h"
 #include "TCalibrationData.h"
 #include "TDataRecord.h"
 

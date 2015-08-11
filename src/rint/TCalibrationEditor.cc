@@ -1,5 +1,5 @@
 #include "TCalibrationEditor.h"
-#include "calibration/CalibrationEditor.h"
+#include "calibration/Editor.h"
 
 #include <iostream>
 

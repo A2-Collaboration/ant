@@ -2,7 +2,7 @@
 #include "analysis/plot/HistogramFactories.h"
 #include "analysis/data/Event.h"
 #include "analysis/utils/combinatorics.h"
-#include "calibration/CalibrationDataManager.h"
+#include "calibration/DataManager.h"
 
 #include "tree/TDetectorRead.h"
 

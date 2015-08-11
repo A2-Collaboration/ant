@@ -36,7 +36,7 @@
 #include "calibration/converters/GeSiCa_SADC.h"
 #include "calibration/converters/ScalerFrequency.h"
 
-#include "calibration/CalibrationDataManager.h"
+#include "calibration/DataManager.h"
 
 #include <functional>
 

@@ -1,5 +1,5 @@
 #include "ACECanvas.h"
-#include "calibration/CalibrationEditor.h"
+#include "calibration/Editor.h"
 #include "TH2D.h"
 #include "TH2.h"
 

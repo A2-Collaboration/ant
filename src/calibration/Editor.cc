@@ -1,4 +1,4 @@
-#include "CalibrationEditor.h"
+#include "Editor.h"
 #include "base/std_ext.h"
 #include "tree/TCalibrationData.h"
 #include "base/interval.h"
