@@ -46,6 +46,7 @@ int main(int argc, char** argv) {
     TCLAP::CmdLine cmd("ant_gui", ' ', "0.1");
     auto cmd_verbose = cmd.add<TCLAP::ValueArg<int>>("v","verbose","Verbosity level (0..9)", false, 0,"level");
     auto cmd_calibration = cmd.add<TCLAP::ValueArg<string>>("c","calibration","Calibration GUI module name", true, "","modulename");
+    auto cmd_averagelength = cmd.add<TCLAP::ValueArg<int>>("a","average","Average length for moving window (zero sums everything up)", false, 0, "length");
     // unlabeled multi arg must be the last element added, and interprets everything as a input file
     auto cmd_inputfiles  = cmd.add<TCLAP::UnlabeledMultiArg<string>>("inputfiles","Ant files with histograms",true,"inputfiles");
     cmd.parse(argc, argv);
@@ -53,7 +54,10 @@ int main(int argc, char** argv) {
     if(cmd_verbose->isSet())
         el::Loggers::setVerboseLevel(cmd_verbose->getValue());
 
-    unique_ptr<Manager> gui = std_ext::make_unique<Manager>(cmd_inputfiles->getValue(), 5);
+    unique_ptr<Manager> gui = std_ext::make_unique<Manager>(
+                                  cmd_inputfiles->getValue(),
+                                  cmd_averagelength->getValue()
+                                  );
 
     // try to find the requested calibration modules
     // the gui manager already scanned the files and provides a hint
