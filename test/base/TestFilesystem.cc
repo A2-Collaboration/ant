@@ -29,7 +29,7 @@ void dotest() {
 
     REQUIRE_NOTHROW(files = filesystem::lsFiles(".",".tst"));
     REQUIRE(files.size()==1);
-    REQUIRE(files.front()==a.filename);
+    REQUIRE(files.front()==string("./"+a.filename));
 
 }
 

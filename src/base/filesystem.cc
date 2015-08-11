@@ -20,7 +20,7 @@ list<std::string> filesystem::lsFiles(const std::string& path, const std::string
         while ((file=(TSystemFile*)next())) {
             fname = file->GetName();
             if (!file->IsDirectory() && fname.EndsWith(extension.c_str())) {
-                filenames.emplace_back(fname);
+                filenames.emplace_back(path+"/"+fname);
             }
         }
     }
