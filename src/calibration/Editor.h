@@ -1,5 +1,6 @@
 #pragma once
 #include "analysis/plot/root_draw.h"
+#include "base/interval.h"
 #include "DataManager.h"
 
 #include <memory>
