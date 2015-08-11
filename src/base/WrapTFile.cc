@@ -110,8 +110,8 @@ WrapTFileOutput::WrapTFileOutput(const std::string& filename, mode_t access_mode
     // recursively create the directory
     stringstream ss_cmd;
     ss_cmd << "mkdir -p " << gSystem->DirName(filename.c_str());
-    VLOG(5) << "Executed '" << ss_cmd.str() << "' with code "
-            << gSystem->Exec(ss_cmd.str().c_str());
+    auto retval = gSystem->Exec(ss_cmd.str().c_str());
+    VLOG(5) << "Executed '" << ss_cmd.str() << "' with code " << retval;
 
 
     std::unique_ptr<TFile> file;
