@@ -70,9 +70,9 @@ void Manager::BuildInputFiles(const vector<string>& filenames)
 
 
 
-void Manager::FillWorklistFromFiles()
+void Manager::FillBufferFromFiles()
 {
-    while(buffer.Worklist().empty() && state.it_file != input_files.end()) {
+    while(buffer.Empty() && state.it_file != input_files.end()) {
         const input_file_t& file_input = *state.it_file;
         try
         {
@@ -95,7 +95,7 @@ void Manager::FillWorklistFromFiles()
 
     if(state.it_file == input_files.end()) {
         VLOG(7) << "Reached end of files, processing remaining buffer";
-        buffer.PushRestToWorklist();
+        buffer.Finish();
     }
 }
 
@@ -122,7 +122,6 @@ bool Manager::input_file_t::operator <(const Manager::input_file_t& o) const {
 bool Manager::DoInit()
 {
     state.channel = 0;
-    state.it_buffer = buffer.begin();
     state.it_file = input_files.begin();
 
     maxChannels = module->GetNumberOfChannels();
@@ -131,8 +130,8 @@ bool Manager::DoInit()
         return false;
     }
 
-    FillWorklistFromFiles();
-    if(buffer.Worklist().empty()) {
+    FillBufferFromFiles();
+    if(buffer.Empty()) {
         LOG(WARNING) << "Did not process anything";
         return false;
     }
@@ -146,7 +145,7 @@ bool Manager::DoInit()
     }
 
     state.is_init = true;
-    module->StartRange(buffer.Worklist().front());
+    module->StartRange(buffer.CurrentID());
 
     return true;
 }
@@ -159,16 +158,13 @@ bool Manager::Run()
            return false;
     }
 
-    VLOG(8) << "Worklist size " << buffer.Worklist().size();
-
-
     if(!state.breakpoint_finish && state.channel < maxChannels) {
         if(!state.breakpoint_fit) {
             const string& title = std_ext::formatter() << "Channel=" << state.channel
-                                                       << " " << buffer.Worklist().front();
-            buffer.Average()->SetTitle(title.c_str());
+                                                       << " " << buffer.CurrentID();
+            buffer.CurrentSum()->SetTitle(title.c_str());
 
-            const bool stop = module->DoFit(buffer.Average(), state.channel);
+            const bool stop = module->DoFit(buffer.CurrentSum(), state.channel);
 
             if(stop || mode->alwaysDisplayFit) {
                 VLOG(7) << "Open GUI...";
@@ -194,15 +190,15 @@ bool Manager::Run()
             }
         }
 
-        module->StoreFinishRange(buffer.Worklist().front());
+        module->StoreFinishRange(buffer.CurrentID());
         state.breakpoint_finish = false;
         state.channel = 0;
 
-        buffer.Worklist().pop();
+        buffer.GotoNextID();
 
         // try refilling the worklist
-        FillWorklistFromFiles();
-        if(buffer.Worklist().empty()) {
+        FillBufferFromFiles();
+        if(buffer.Empty()) {
             /// \todo give module a chance to do something again here???
             for(CalCanvas* canvas : module->GetCanvases()) {
                 canvas->Close();
@@ -211,7 +207,7 @@ bool Manager::Run()
             return false;
         }
 
-        module->StartRange(buffer.Worklist().front());
+        module->StartRange(buffer.CurrentID());
 
     }
     else

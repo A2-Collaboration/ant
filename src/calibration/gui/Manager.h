@@ -26,10 +26,8 @@ class Manager {
 
 protected:
 
-    using myBuffer_t = AvgBuffer<TH2D, interval<TID>>;
-
     std::shared_ptr<Manager_traits> module;
-    myBuffer_t buffer;
+    AvgBuffer<TH2D, interval<TID>> buffer;
 
     struct input_file_t {
 
@@ -53,7 +51,6 @@ protected:
         {}
 
         std::list<input_file_t>::iterator it_file;
-        myBuffer_t::const_iterator it_buffer;
         int channel;
 
         bool is_init;
@@ -67,7 +64,7 @@ protected:
 
     void BuildInputFiles(const std::vector<std::string>& filenames);
 
-    void FillWorklistFromFiles();
+    void FillBufferFromFiles();
 
     struct SignalConnection_t {
 
