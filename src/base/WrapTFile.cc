@@ -79,8 +79,12 @@ std::shared_ptr<TH3D> WrapTFile::GetSharedTH3(const string& name)
 
 //============================================================================================
 
-
-
+struct SavedDirectory_t {
+    TDirectory* dir;
+    SavedDirectory_t() : dir(gDirectory) {}
+    ~SavedDirectory_t() { if(dir) gDirectory = dir; }
+    void pop() { gDirectory = dir; dir = nullptr; }
+};
 
 WrapTFileOutput::WrapTFileOutput(const std::string& filename, mode_t access_mode, bool changeDirectory)
 {
@@ -103,20 +107,20 @@ WrapTFileOutput::WrapTFileOutput(const std::string& filename, mode_t access_mode
         break;
     }
 
-        // recursively create the directory
-        stringstream ss_cmd;
-        ss_cmd << "mkdir -p " << gSystem->DirName(filename.c_str());
-        VLOG(5) << "Executed '" << ss_cmd.str() << "' with code "
-                << gSystem->Exec(ss_cmd.str().c_str());
+    // recursively create the directory
+    stringstream ss_cmd;
+    ss_cmd << "mkdir -p " << gSystem->DirName(filename.c_str());
+    VLOG(5) << "Executed '" << ss_cmd.str() << "' with code "
+            << gSystem->Exec(ss_cmd.str().c_str());
 
 
     std::unique_ptr<TFile> file;
 
     if ( !changeDirectory )
     {
-        const auto prev_Directory = gDirectory;
+        SavedDirectory_t d;
         file = openFile(filename, root_mode);
-        gDirectory = prev_Directory;
+        d.pop();
     }
     else
         file = openFile(filename, root_mode);
@@ -158,9 +162,9 @@ WrapTFileInput::~WrapTFileInput()
 
 void WrapTFileInput::OpenFile(const string& filename)
 {
-    const auto prev_Directory = gDirectory;
+    SavedDirectory_t d;
     auto file = openFile(filename, "READ");
-    gDirectory = prev_Directory;
+    d.pop();
 
     files.emplace_back(std::move(file));
 }
