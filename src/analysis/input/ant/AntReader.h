@@ -18,7 +18,6 @@ class TTree;
 namespace ant {
 
 class TEvent;
-class ReadTFiles;
 
 namespace analysis {
 

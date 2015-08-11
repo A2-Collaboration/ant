@@ -16,7 +16,7 @@ class PParticle;
 
 namespace ant {
 
-class ReadTFiles;
+class WrapTFileInput;
 
 namespace analysis {
 
@@ -31,7 +31,7 @@ class TreeManager;
 class PlutoReader: public DataReader {
 protected:
 
-    std::shared_ptr<ReadTFiles>    files;
+    std::shared_ptr<WrapTFileInput>    files;
 
     TTree*          tree = nullptr;
     TClonesArray*   PlutoMCTrue = nullptr;
@@ -49,7 +49,7 @@ protected:
     const ParticleTypeDatabase::Type* GetType(const PParticle* p) const;
 
 public:
-    PlutoReader(const std::shared_ptr<ReadTFiles>& rootfiles);
+    PlutoReader(const std::shared_ptr<ant::WrapTFileInput>& rootfiles);
     virtual ~PlutoReader();
     PlutoReader(const PlutoReader&) = delete;
     PlutoReader& operator= (const PlutoReader&) = delete;

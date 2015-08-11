@@ -20,7 +20,7 @@ class TTree;
 
 namespace ant {
 
-class ReadTFiles;
+class WrapTFileInput;
 class UnpackerA2GeantConfig; // see below
 
 class UnpackerA2Geant : public Unpacker::Module
@@ -39,7 +39,7 @@ private:
     std::uint32_t ID_upper;
     std::uint32_t ID_lower;
 
-    std::unique_ptr<ReadTFiles> filemanager;
+    std::unique_ptr<WrapTFileInput> filemanager;
     TTree* geant;
 
     std::unique_ptr<THeaderInfo> headerInfo;

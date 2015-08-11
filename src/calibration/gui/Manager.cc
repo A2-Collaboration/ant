@@ -30,7 +30,8 @@ void Manager::BuildInputFiles(const vector<string>& filenames)
 
         try {
 
-            WrapTFile file(filename, WrapTFile::mode_t::read, false);
+            WrapTFileInput file;
+            file.OpenFile(filename);
 
             TAntHeader* header = nullptr;
             file.GetObject("AntHeader", header);
@@ -76,7 +77,8 @@ void Manager::FillBufferFromFiles()
         const input_file_t& file_input = *state.it_file;
         try
         {
-            WrapTFile file(file_input.filename, WrapTFile::mode_t::read, false);
+            WrapTFileInput file;
+            file.OpenFile(file_input.filename);
 
             auto hist = file.GetSharedTH2(module->GetHistogramName());
 

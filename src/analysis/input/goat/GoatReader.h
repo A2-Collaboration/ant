@@ -21,7 +21,7 @@ class PStaticData;
 
 namespace ant {
 
-class ReadTFiles;
+class WrapTFileInput;
 namespace analysis {
 namespace input {
 
@@ -47,7 +47,7 @@ protected:
         }
     };
 
-    std::shared_ptr<ReadTFiles>    files;
+    std::shared_ptr<WrapTFileInput>    files;
     std::unique_ptr<TreeManager>   trees;
 
 
@@ -91,7 +91,7 @@ protected:
     Long64_t  GetNEvents() const;
 
 public:
-    GoatReader(const std::shared_ptr<ReadTFiles>& rootfiles);
+    GoatReader(const std::shared_ptr<WrapTFileInput>& rootfiles);
     virtual ~GoatReader();
     GoatReader(const GoatReader&) = delete;
     GoatReader& operator= (const GoatReader&) = delete;

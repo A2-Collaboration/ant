@@ -22,7 +22,7 @@
 #include "base/WrapTFile.h"
 #include "base/Logger.h"
 #include "base/CmdLine.h"
-#include "base/ReadTFiles.h"
+#include "base/WrapTFile.h"
 
 #include "TRint.h"
 
@@ -79,13 +79,14 @@ int main(int argc, char** argv) {
     }
 
     // build the list of ROOT files first
-    auto rootfiles = make_shared<ReadTFiles>();
+    auto rootfiles = make_shared<WrapTFileInput>();
     for(const auto& inputfile : cmd_input->getValue()) {
         VLOG(5) << "ROOT File Manager: Looking at file " << inputfile;
-        if(rootfiles->OpenFile(inputfile))
-            LOG(INFO) << "Opened file '" << inputfile << "' as ROOT file";
-        else
-            VLOG(5) << "Could not add " << inputfile << " to ROOT file manager";
+        try {
+            rootfiles->OpenFile(inputfile);
+        } catch (const std::runtime_error& e) {
+            VLOG(5) << "Could not open ROOT file " << inputfile;
+        }
     }
 
     // then init the unpacker root input file manager
@@ -223,10 +224,10 @@ int main(int argc, char** argv) {
 
     // the real output file, create it here to get all
     // further ROOT objects into this output file
-    unique_ptr<WrapTFile> masterFile;
+    unique_ptr<WrapTFileOutput> masterFile;
     if(cmd_output->isSet()) {
-        masterFile = std_ext::make_unique<WrapTFile>(cmd_output->getValue(),
-                                                    WrapTFile::mode_t::recreate,
+        masterFile = std_ext::make_unique<WrapTFileOutput>(cmd_output->getValue(),
+                                                    WrapTFileOutput::mode_t::recreate,
                                                      true); // cd into masterFile upon creation
     }
 
@@ -254,7 +255,8 @@ int main(int argc, char** argv) {
 
     if(auto setup = ExpConfig::Setup::GetLastFound()) {
         try {
-            WrapTFile cuts(setup->GetPIDCutsDirectory()+"/cuts.root", WrapTFile::mode_t::read);
+            WrapTFileInput cuts;
+            cuts.OpenFile(setup->GetPIDCutsDirectory()+"/cuts.root");
             particleID->LoadFrom(cuts);
         } catch (const std::runtime_error& e) {
             LOG(INFO) << "Failed to load cuts: " << e.what();

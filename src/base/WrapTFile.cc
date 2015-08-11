@@ -17,81 +17,34 @@
 using namespace std;
 using namespace ant;
 
-WrapTFile::WrapTFile(const std::string& filename, mode_t access_mode, bool change_gDirectory):
-    mode(access_mode),
-    changeDirectory(change_gDirectory)
+std::unique_ptr<TFile> WrapTFile::openFile(const string& filename, const string mode)
 {
-
-    string root_mode;
-
-    switch (mode)
-    {
-    case mode_t::recreate:
-        root_mode = "RECREATE";
-        break;
-    case mode_t::create:
-        root_mode = "CREATE";
-        break;
-    case mode_t::update:
-        root_mode = "UPDATE";
-        break;
-    case mode_t::read:
-        root_mode = "READ";
-        break;
-    default:
-        root_mode = "RECREATE";
-        break;
-    }
-
-    if(mode != mode_t::read) {
-        // recursively create the directory
-        stringstream ss_cmd;
-        ss_cmd << "mkdir -p " << gSystem->DirName(filename.c_str());
-        VLOG(5) << "Executed '" << ss_cmd.str() << "' with code "
-                << gSystem->Exec(ss_cmd.str().c_str());
-    }
-
+    std::unique_ptr<TFile> file;
     const auto prev_gErrorIgnoreLevel = gErrorIgnoreLevel;
     gErrorIgnoreLevel = kError + 1;
 
-    if ( !changeDirectory )
-    {
-        const auto prev_Directory         = gDirectory;
-        file = std_ext::make_unique<TFile>(filename.c_str(), root_mode.c_str());
-        gDirectory = prev_Directory;
-    }
-    else
-        file = std_ext::make_unique<TFile>(filename.c_str(), root_mode.c_str());
+    file = std_ext::make_unique<TFile>(filename.c_str(), mode.c_str());
 
     gErrorIgnoreLevel = prev_gErrorIgnoreLevel;
 
-
-    if(!isOpen() || isZombie() )
+    if(!file->IsOpen() || file->IsZombie() )
     {
-        if ( mode == mode_t::read )
-            throw runtime_error(std_ext::formatter() << "Could not open " << filename << " for reading.");
-        else
-            throw std::runtime_error(string("Could not open TFile for writing at ")+filename);
+        throw std::runtime_error(string("Could not open TFile at ")+filename);
     }
 
-    VLOG(5) << "Opened file " << filename << " in " << root_mode << "-mode.";
+    return std::move(file);
 }
 
-bool WrapTFile::isOpen() const
+WrapTFile::WrapTFile()
 {
-    return file->IsOpen();
 }
 
-bool WrapTFile::isZombie() const
+WrapTFile::~WrapTFile()
 {
-    return file->IsZombie();
-}
-
-void WrapTFile::cd()
-{
-    if(!isOpen())
-        return;
-    file->cd();
+    for(auto& file : files) {
+        file->Close();
+        LOG(INFO) << "Closed file " << file->GetName();
+    }
 }
 
 std::shared_ptr<TH1D> WrapTFile::GetSharedTH1(const string& name)
@@ -121,21 +74,98 @@ std::shared_ptr<TH3D> WrapTFile::GetSharedTH3(const string& name)
     return std::shared_ptr<TH3D>(hist);
 }
 
-WrapTFile::~WrapTFile()
-{
-    if(!isOpen())
-        return;
 
-    if (mode == mode_t::read)
+
+
+//============================================================================================
+
+
+
+
+WrapTFileOutput::WrapTFileOutput(const std::string& filename, mode_t access_mode, bool changeDirectory)
+{
+
+    string root_mode;
+
+    switch (access_mode)
     {
-        file->Close();
-        LOG(INFO) << "Closed file " << file->GetName();
-        return;
+    case mode_t::recreate:
+        root_mode = "RECREATE";
+        break;
+    case mode_t::create:
+        root_mode = "CREATE";
+        break;
+    case mode_t::update:
+        root_mode = "UPDATE";
+        break;
+    default:
+        root_mode = "RECREATE";
+        break;
     }
 
-    VLOG(5) << "Syncing output file " << file->GetName();
-    file->Write();
-    file->Close();
-    LOG(INFO) << "Closed output file " << file->GetName();
+        // recursively create the directory
+        stringstream ss_cmd;
+        ss_cmd << "mkdir -p " << gSystem->DirName(filename.c_str());
+        VLOG(5) << "Executed '" << ss_cmd.str() << "' with code "
+                << gSystem->Exec(ss_cmd.str().c_str());
 
+
+    std::unique_ptr<TFile> file;
+
+    if ( !changeDirectory )
+    {
+        const auto prev_Directory = gDirectory;
+        file = openFile(filename, root_mode);
+        gDirectory = prev_Directory;
+    }
+    else
+        file = openFile(filename, root_mode);
+
+    files.emplace_back(move(file));
+
+    VLOG(5) << "Opened file " << filename << " in " << root_mode << "-mode.";
+}
+
+WrapTFileOutput::~WrapTFileOutput()
+{
+    VLOG(5) << "Syncing output file " <<  files.front()->GetName();
+    files.front()->Write();
+}
+
+void WrapTFileOutput::cd()
+{
+    files.front()->cd();
+}
+
+
+
+//============================================================================================
+
+
+
+WrapTFileInput::WrapTFileInput()
+{
+}
+
+WrapTFileInput::WrapTFileInput(const string& filename)
+{
+    OpenFile(filename);
+}
+
+WrapTFileInput::~WrapTFileInput()
+{
+}
+
+void WrapTFileInput::OpenFile(const string& filename)
+{
+    const auto prev_Directory = gDirectory;
+    auto file = openFile(filename, "READ");
+    gDirectory = prev_Directory;
+
+    files.emplace_back(std::move(file));
+}
+
+size_t WrapTFileInput::NumberOfFiles() const
+{
+    return files.size();
 }

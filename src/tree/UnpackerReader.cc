@@ -7,7 +7,7 @@
 #include "TSlowControl.h"
 
 
-#include "base/ReadTFiles.h"
+#include "base/WrapTFile.h"
 #include "base/Logger.h"
 
 #include <algorithm>
@@ -20,7 +20,7 @@ using namespace ant::tree;
 
 
 
-UnpackerReader::UnpackerReader(const std::shared_ptr<ReadTFiles>& rootfiles) :
+UnpackerReader::UnpackerReader(const std::shared_ptr<WrapTFileInput>& rootfiles) :
     files(rootfiles), // remember the shared_ptr to make sure it lives as long as this class
     treerecords(),
     isopen(false)

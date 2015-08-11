@@ -1,7 +1,7 @@
 #pragma once
 
 #include "unpacker/Unpacker.h" // for Unpacker::Reader interface
-#include "base/ReadTFiles.h"
+#include "base/WrapTFile.h"
 #include "TTree.h"
 
 #include <vector>
@@ -20,7 +20,7 @@ namespace tree {
 
 class UnpackerReader : public Unpacker::Reader {
 
-    std::shared_ptr<ReadTFiles> files;
+    std::shared_ptr<WrapTFileInput> files;
 
     TEvent* Event;
     TDetectorRead* DetectorRead;
@@ -75,7 +75,7 @@ class UnpackerReader : public Unpacker::Reader {
 
 public:
 
-    UnpackerReader(const std::shared_ptr<ReadTFiles>& rootfiles);
+    UnpackerReader(const std::shared_ptr<WrapTFileInput>& rootfiles);
     virtual ~UnpackerReader();
 
 

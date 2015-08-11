@@ -8,7 +8,7 @@
 
 #include "detail/PlutoWrapper.h"
 
-#include "base/ReadTFiles.h"
+#include "base/WrapTFile.h"
 #include "base/Logger.h"
 #include "base/std_ext.h"
 
@@ -22,7 +22,7 @@ using namespace ant::analysis::input;
 using namespace ant::analysis::data;
 using namespace std;
 
-PlutoReader::PlutoReader(const std::shared_ptr<ReadTFiles>& rootfiles):
+PlutoReader::PlutoReader(const std::shared_ptr<WrapTFileInput>& rootfiles):
     files(rootfiles)
 {
     /// \note the Pluto tree is really named just "data"

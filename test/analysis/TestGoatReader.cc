@@ -3,7 +3,7 @@
 #include "analysis/input/goat/GoatReader.h"
 #include "analysis/data/Event.h"
 
-#include "base/ReadTFiles.h"
+#include "base/WrapTFile.h"
 
 #include <iostream>
 
@@ -22,9 +22,9 @@ void dotest() {
 
     /// \todo Generate or read some Goat file?
 
-    auto filemanager = make_shared<ReadTFiles>();
-    filemanager->OpenFile("NOTTHEREYET");
-    ant::analysis::input::GoatReader g(filemanager);
+//    auto filemanager = make_shared<WrapTFileInput>();
+//    filemanager->OpenFile("NOTTHEREYET");
+//    ant::analysis::input::GoatReader g(filemanager);
 
 //    unsigned int n = 0;
 //    while(g.hasData() && (n++ < 10)) {

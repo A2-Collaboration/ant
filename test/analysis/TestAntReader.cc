@@ -14,7 +14,6 @@
 
 #include "base/WrapTFile.h"
 #include "base/tmpfile_t.h"
-#include "base/ReadTFiles.h"
 
 #include "TTree.h"
 
@@ -36,8 +35,7 @@ TEST_CASE("AntReader", "[analysis]") {
 void dotest() {
     tmpfile_t tmp;
     generateInputFile(tmp.filename);
-    auto filemanager = make_shared<ReadTFiles>();
-    filemanager->OpenFile(tmp.filename);
+    auto filemanager = make_shared<WrapTFileInput>(tmp.filename);
 
     /// \todo use new unpacker-based AntReader here
 }
@@ -48,7 +46,7 @@ void generateInputFile(const string& filename) {
     auto unpacker = Unpacker::Get(string(TEST_BLOBS_DIRECTORY)+"/Acqu_oneevent-big.dat.xz");
 
     // write some stuff to a ROOT tree
-    WrapTFile file(filename);
+    WrapTFileOutput file(filename,WrapTFileOutput::mode_t::recreate,true);
 
     TTree* treeEvent = new TTree("treeEvent", "treeEvent");
     TEvent* Event = new TEvent();

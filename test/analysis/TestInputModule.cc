@@ -7,7 +7,7 @@
 #include "analysis/input/goat/detail/ParticleInput.h"
 #include "analysis/input/goat/detail/TaggerInput.h"
 
-#include "base/ReadTFiles.h"
+#include "base/WrapTFile.h"
 
 #include "TTree.h"
 
@@ -27,11 +27,11 @@ TEST_CASE("InputModule", "[analysis]") {
 
 class MyTreeRequestMgr: public TreeRequestManager {
 protected:
-    ReadTFiles& m;
+    WrapTFileInput& m;
     TreeManager& t;
 
 public:
-    MyTreeRequestMgr(ReadTFiles& _m, TreeManager& _t):
+    MyTreeRequestMgr(WrapTFileInput& _m, TreeManager& _t):
         m(_m), t(_t) {}
 
     TTree *GetTree(const string &name) {
@@ -46,7 +46,7 @@ public:
 
 void dotest() {
 
-    ReadTFiles m;
+    WrapTFileInput m;
 
     /// \todo Open some reasonable file here
 
@@ -107,8 +107,5 @@ void dotest() {
         if (init7) cout << "Tagger hits: " << tagger.GetNTagged() << endl;
 
     }
-
-
-    m.CloseAll();
 
 }

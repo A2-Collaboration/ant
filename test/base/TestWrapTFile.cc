@@ -40,10 +40,10 @@ void writeFile(const std::string& filename) {
  * @param filename File to open
  */
 void readFile(const std::string& filename) {
-    std::unique_ptr<WrapTFile> file;
+    std::unique_ptr<WrapTFileInput> file = ant::std_ext::make_unique<ant::WrapTFileInput>();
     std::shared_ptr<TCutG> cut;
 
-    REQUIRE_NOTHROW( file = ant::std_ext::make_unique<ant::WrapTFile>(filename, WrapTFile::mode_t::read, false));
+    REQUIRE_NOTHROW( file->OpenFile(filename));
     REQUIRE_NOTHROW( cut = file->GetSharedClone<TCutG>("test"));
     REQUIRE(cut != nullptr);
     REQUIRE_NOTHROW(file=nullptr);

@@ -4,6 +4,7 @@
 #include <string>
 #include <list>
 
+#include "base/std_ext.h"
 //ROOT
 #include "TFile.h"
 #include "TDirectory.h"
@@ -16,46 +17,20 @@ class TH1D;
 class TH2D;
 class TH3D;
 
+
 namespace ant {
 
+
+
 class WrapTFile {
-
-public:
-    enum class mode_t
-    {
-        create,     //  create new file and open for writing, if it doesn't exist
-        recreate,   //  will overwrite any existing file
-        update,     //  open existing file for writing, if it doesn't exist create it
-        read        //  open file read only
-    };
-
 protected:
-    std::unique_ptr<TFile> file;
-    mode_t mode;
-    bool changeDirectory;
+    std::list<std::unique_ptr<TFile>> files;
 
-    bool isOpen() const;
-    bool isZombie() const;
+    std::unique_ptr<TFile> openFile(const std::string& filename, const std::string mode);
 
+    WrapTFile();
 
 public:
-
-    WrapTFile(const std::string& filename, mode_t access_mode = mode_t::recreate, bool change_gDirectory = false );
-    ///@todo is this required?? remove if possible
-    TFile* operator* () { return file.get(); }
-
-    void cd();
-
-    template<class T, typename... Args>
-    T* CreateInside(Args&&... args)
-    {
-        const auto prev_Directory = gDirectory;
-        cd();
-        T* object = new T(std::forward<Args>(args)...);
-        gDirectory = prev_Directory;
-
-        return object;
-    }
 
     /**
      * @brief GetListOf Generate a list with all Object in File of provided Type
@@ -66,28 +41,49 @@ public:
     {
         std::list<T*> theList;
 
-        TList* keys = GetListOfKeys();
+        for(auto& file : files) {
 
-        if(!keys)
-            return {};
+            TList* keys = file->GetListOfKeys();
 
-        T* objectPtr = nullptr;
-        TKey* key = nullptr;
-        TIter nextk(keys);
+            if(!keys)
+                return {};
 
-        while((key = (TKey*)nextk()))
-        {
-            objectPtr = dynamic_cast<T*>(key->ReadObj());
-            if ( !objectPtr )
-                continue;
-            theList.push_back(objectPtr);
+            T* objectPtr = nullptr;
+            TKey* key = nullptr;
+            TIter nextk(keys);
+
+            while((key = (TKey*)nextk()))
+            {
+                objectPtr = dynamic_cast<T*>(key->ReadObj());
+                if ( !objectPtr )
+                    continue;
+                theList.push_back(objectPtr);
+            }
         }
         return theList;
     }
 
     template <typename T>
-    void GetObject(const std::string& name, T*& obj) {
-        file->GetObject(name.c_str(), obj);
+    bool GetObject(const std::string& name, T*& ptr) {
+        ptr = nullptr;
+
+        std::string filename;
+
+        for(auto& file : files) {
+            T* ptr_ = nullptr;
+            file->GetObject(name.c_str(), ptr_);
+            if(ptr == nullptr && ptr_ != nullptr) {
+                ptr = ptr_;
+                filename = file->GetName();
+            }
+            else if(ptr != nullptr && ptr_ != nullptr) {
+                throw std::runtime_error(
+                            ant::std_ext::formatter()
+                            << "Found object " << name << " in "
+                            << filename << " and in " << file->GetName());
+            }
+        }
+        return ptr != nullptr;
     }
 
     std::shared_ptr<TH1D> GetSharedTH1(const std::string& name);
@@ -105,15 +101,52 @@ public:
         return nullptr;
     }
 
-
-    TList* GetListOfKeys() const
-    {
-        return file->GetListOfKeys();
-    }
-
-    ~WrapTFile();
+    virtual ~WrapTFile();
     WrapTFile(const WrapTFile&) = delete;
     WrapTFile& operator= (const WrapTFile&) = delete;
+};
+
+class WrapTFileOutput: public WrapTFile {
+public:
+    enum class mode_t
+    {
+        create,     //  create new file and open for writing, if it doesn't exist
+        recreate,   //  will overwrite any existing file
+        update      //  open existing file for writing, if it doesn't exist create it
+    };
+
+    WrapTFileOutput(const std::string& filename, mode_t Mode=mode_t::recreate, bool changeDirectory=false);
+    virtual ~WrapTFileOutput();
+
+    void cd();
+
+    template<class T, typename... Args>
+    T* CreateInside(Args&&... args)
+    {
+        const auto prev_Directory = gDirectory;
+        cd();
+        T* object = new T(std::forward<Args>(args)...);
+        gDirectory = prev_Directory;
+
+        return object;
+    }
+
+    WrapTFileOutput(const WrapTFileOutput&) = delete;
+    WrapTFileOutput& operator= (const WrapTFileOutput&) = delete;
+};
+
+class WrapTFileInput: public WrapTFile {
+public:
+    WrapTFileInput();
+    WrapTFileInput(const std::string& filename);
+    virtual ~WrapTFileInput();
+
+    void OpenFile(const std::string& filename);
+
+    std::size_t NumberOfFiles() const;
+
+    WrapTFileInput(const WrapTFileInput&) = delete;
+    WrapTFileInput& operator= (const WrapTFileInput&) = delete;
 };
 
 }

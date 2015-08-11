@@ -8,7 +8,7 @@
 
 #include "detail/TreeManager.h"
 
-#include "base/ReadTFiles.h"
+#include "base/WrapTFile.h"
 #include "base/Logger.h"
 #include "base/std_ext.h"
 
@@ -122,11 +122,11 @@ void GoatReader::CopyParticles(Event& event, ParticleInput& input_module,
 
 class MyTreeRequestMgr: public TreeRequestManager {
 protected:
-    ReadTFiles& m;
+    WrapTFileInput& m;
     TreeManager& t;
 
 public:
-    MyTreeRequestMgr(ReadTFiles& _m, TreeManager& _t):
+    MyTreeRequestMgr(WrapTFileInput& _m, TreeManager& _t):
         m(_m), t(_t) {}
 
     TTree *GetTree(const std::string &name) {
@@ -142,7 +142,7 @@ public:
 
 };
 
-GoatReader::GoatReader(const std::shared_ptr<ReadTFiles>& rootfiles):
+GoatReader::GoatReader(const std::shared_ptr<WrapTFileInput>& rootfiles):
     files(rootfiles),
     trees(std_ext::make_unique<TreeManager>())
 {

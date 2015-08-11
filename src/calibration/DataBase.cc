@@ -15,8 +15,8 @@ using namespace ant::calibration;
 bool DataBase::ReadData(const std::string& filename)
 {
     try {
-        WrapTFile dataFile(filename,
-                           WrapTFile::mode_t::read);
+        WrapTFileInput dataFile;
+        dataFile.OpenFile(filename);
 
         for( TTree* calibtree: dataFile.GetListOf<TTree>())
         {
@@ -38,8 +38,8 @@ bool DataBase::ReadData(const std::string& filename)
 
 void DataBase::WriteData(const std::string& filename) const
 {
-    WrapTFile file(filename,
-                   WrapTFile::mode_t::recreate);
+    WrapTFileOutput file(filename,
+                   WrapTFileOutput::mode_t::recreate);
     // loop over map and write a new tree for each calibrationID
     for (auto& calibration: DataMap)
     {

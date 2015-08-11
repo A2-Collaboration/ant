@@ -17,7 +17,6 @@ set(SRCS
   Tree.h
   root_printable.h
   WrapTFile.cc
-  ReadTFiles.cc
   mapped_vectors.h
   CmdLine.h
   Paths.h

@@ -6,7 +6,7 @@
 #include "tree/THeaderInfo.h"
 #include "tree/TDetectorRead.h"
 
-#include "base/ReadTFiles.h"
+#include "base/WrapTFile.h"
 #include "base/Logger.h"
 #include "base/std_ext.h"
 
@@ -24,9 +24,13 @@ UnpackerA2Geant::~UnpackerA2Geant() {}
 bool UnpackerA2Geant::OpenFile(const string& filename)
 {
     // open a root file, ignore error silently
-    filemanager = std_ext::make_unique<ReadTFiles>();
-    if(!filemanager->OpenFile(filename))
+    filemanager = std_ext::make_unique<WrapTFileInput>();
+
+    try {
+        filemanager->OpenFile(filename);
+    } catch (const std::runtime_error&) {
         return false;
+    }
 
     // setup the "expected" A2 geant tree
     if(!filemanager->GetObject("h12", geant))

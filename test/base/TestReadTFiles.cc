@@ -1,8 +1,6 @@
 #include "catch.hpp"
 #include "catch_config.h"
 
-#include "base/ReadTFiles.h"
-
 #include "unpacker/Unpacker.h"
 
 #include "tree/THeaderInfo.h"
@@ -28,7 +26,7 @@ TEST_CASE("AntReader", "[analysis]") {
 void dotest() {
 
     ant::tmpfile_t tmp;
-    ant::ReadTFiles m;
+    ant::WrapTFileInput m;
 
     generateInputFile(tmp.filename);
 
@@ -41,7 +39,6 @@ void dotest() {
     cout << "Found tree " << tree->GetName() << endl;
     REQUIRE(tree->GetEntries() == 1);
 
-    m.CloseAll();
 }
 
 
@@ -50,7 +47,7 @@ void generateInputFile(const string& filename) {
     auto unpacker = ant::Unpacker::Get(string(TEST_BLOBS_DIRECTORY)+"/Acqu_oneevent-small.dat.xz");
 
     // write some stuff to a ROOT tree
-    ant::WrapTFile file(filename);
+    ant::WrapTFileOutput file(filename);
     TTree* treeHeaderInfo = file.CreateInside<TTree>("treeHeaderInfo", "treeHeaderInfo");
     ant::THeaderInfo* HeaderInfo = file.CreateInside<ant::THeaderInfo>();
 
