@@ -322,7 +322,7 @@ int main(int argc, char** argv) {
         char** fake_argv=nullptr;
         TRint app("ant",&fake_argc,fake_argv,nullptr,0,true);
 
-        //make sure there is a style set. See bug #gStyle01 in doc/bugs
+        //make sure there is a style set. See https://github.com/A2-Collaboration-dev/ant/issues/2
         if(gStyle == nullptr) {
              gStyle = new TStyle();
         }
