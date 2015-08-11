@@ -124,8 +124,8 @@ unsigned CB_Energy::TheGUI::GetNumberOfChannels() const
 
 void CB_Energy::TheGUI::InitGUI()
 {
-    c_fit = new gui::CalCanvas(GetName()+": Fit");
-    c_overview = new gui::CalCanvas(GetName()+": Overview");
+    c_fit = new gui::CalCanvas("c_fit", GetName()+": Fit");
+    c_overview = new gui::CalCanvas("c_overview", GetName()+": Overview");
 }
 
 list<gui::CalCanvas*> CB_Energy::TheGUI::GetCanvases() const
@@ -137,24 +137,19 @@ bool CB_Energy::TheGUI::DoFit(TH1* hist, unsigned channel)
 {
     TH2* hist2 = dynamic_cast<TH2*>(hist);
 
-    if(hist2) {
-        projection = hist2->ProjectionX("",channel,channel+1);
+    projection = hist2->ProjectionX("",channel,channel+1);
 
-        func->SetDefaults(projection);
-        const auto it_fit_param = fitParameters.find(channel);
-        if(it_fit_param != fitParameters.end()) {
-            VLOG(5) << "Loading previous fit parameters for channel " << channel;
-            func->Load(it_fit_param->second);
-        }
+    func->SetDefaults(projection);
+    const auto it_fit_param = fitParameters.find(channel);
+    if(it_fit_param != fitParameters.end()) {
+        VLOG(5) << "Loading previous fit parameters for channel " << channel;
+        func->Load(it_fit_param->second);
+    }
 
-        func->Fit(projection);
+    func->Fit(projection);
 
-        if(channel==0) {
-            return true;
-        }
-
-    } else {
-        LOG(WARNING) << "Supplied Hist is not 2D";
+    if(channel==0) {
+        return true;
     }
 
     // do not show something

@@ -11,8 +11,8 @@
 using namespace ant::calibration::gui;
 
 
-CalCanvas::CalCanvas(const std::string &name):
-    TCanvas(name.c_str()) {
+CalCanvas::CalCanvas(const std::string &name, const std::string& title):
+    TCanvas(name.c_str(), title.c_str()) {
 
     rootcanvas = dynamic_cast<TRootCanvas*>(GetCanvasImp());
     rootcanvas->DontCallClose();

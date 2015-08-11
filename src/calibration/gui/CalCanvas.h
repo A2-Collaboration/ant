@@ -54,7 +54,7 @@ protected:
     void SetDefaults();
 
 public:
-    CalCanvas(const std::string& name);
+    CalCanvas(const std::string &name, const std::string& title);
     virtual ~CalCanvas();
 
     virtual void Show(TH1* h, FitFunction* f);

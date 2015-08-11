@@ -1,10 +1,7 @@
-
-#include "base/std_ext.h"
-
 #include "calibration/gui/Manager.h"
-
 #include "expconfig/ExpConfig.h"
 
+#include "base/std_ext.h"
 #include "base/Logger.h"
 #include "base/CmdLine.h"
 
