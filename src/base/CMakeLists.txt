@@ -12,6 +12,7 @@ set(SRCS
   printable.cc
   Logger.cc
   tmpfile_t.cc
+  filesystem.cc
   std_ext.h
   Format.h
   Tree.h
