@@ -2,13 +2,20 @@ include_directories(.)
 
 set(SRCS
     TCalibrationEditor.h
+    cbtaps_display/TH2CB.h
+    cbtaps_display/TH2TAPS.h
   )
 
 set(SRCS_EXTRA
     TCalibrationEditor.cc
+    cbtaps_display/TH2DrawTool.cc
+    cbtaps_display/TH2Crystals.cc
+    cbtaps_display/TH2CB.cc
+    cbtaps_display/TH2TAPS.cc
+    cbtaps_display/cb_numbering.h
   )
 
-set(ROOT_DICTIONARY "${CMAKE_CURRENT_BINARY_DIR}/G__tree.cc")
+set(ROOT_DICTIONARY "${CMAKE_CURRENT_BINARY_DIR}/G__rint.cc")
 ROOT_GENERATE_DICTIONARY("${SRCS}"
   "${CMAKE_CURRENT_SOURCE_DIR}/LinkDef.h"
   ${ROOT_DICTIONARY})

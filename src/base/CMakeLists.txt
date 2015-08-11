@@ -21,6 +21,7 @@ set(SRCS
   mapped_vectors.h
   CmdLine.h
   Paths.h
+  matrixstack.cc
   detail/easylogging++.h
   detail/format.cc
   detail/CmdLine.h
