@@ -63,6 +63,8 @@ int main(int argc, char** argv) {
     auto cmd_u_disablerecon  = cmd.add<TCLAP::SwitchArg>("","u_disablereconstruct","Unpacker: Disable Reconstruct (disables also all analysis)",false);
     auto cmd_u_writecal  = cmd.add<TCLAP::SwitchArg>("","u_writecalibrated","Unpacker: Output calibrated detector reads (only if Reconstruct found)",false);
 
+    auto cmd_p_disableParticleID  = cmd.add<TCLAP::SwitchArg>("","p_disableParticleID","Physics: Disable ParticleID",false);
+
 
 
     cmd.parse(argc, argv);
@@ -253,29 +255,35 @@ int main(int argc, char** argv) {
 
     // set up particle ID
 
-    auto particleID = std::make_shared<ant::analysis::utils::CBTAPSBasicParticleID>();
+    if(!cmd_p_disableParticleID->isSet()) {
 
-    if(auto setup = ExpConfig::Setup::GetLastFound()) {
-        try {
-            WrapTFileInput cuts;
-            VLOG(7) << "Looking for ParticleID cuts in " << setup->GetPIDCutsDirectory();
+        auto particleID = std::make_shared<ant::analysis::utils::CBTAPSBasicParticleID>();
 
-            for(auto& cutfile : filesystem::lsFiles(setup->GetPIDCutsDirectory(),".root")) {
-                try {
-                    cuts.OpenFile(cutfile);
-                } catch (const std::runtime_error&) {
-                    LOG(WARNING) << "Could not open " << cutfile;
+        if(auto setup = ExpConfig::Setup::GetLastFound()) {
+            try {
+                WrapTFileInput cuts;
+                VLOG(7) << "Looking for ParticleID cuts in " << setup->GetPIDCutsDirectory();
+
+                for(auto& cutfile : filesystem::lsFiles(setup->GetPIDCutsDirectory(),".root")) {
+                    try {
+                        cuts.OpenFile(cutfile);
+                    } catch (const std::runtime_error&) {
+                        LOG(WARNING) << "Could not open " << cutfile;
+                    }
                 }
+                particleID->LoadFrom(cuts);
+            } catch (const std::runtime_error& e) {
+                LOG(INFO) << "Failed to load cuts: " << e.what();
             }
-            particleID->LoadFrom(cuts);
-        } catch (const std::runtime_error& e) {
-            LOG(INFO) << "Failed to load cuts: " << e.what();
+        } else {
+            LOG(WARNING) << "No Setup found while loading ParticleID cuts.";
         }
-    } else {
-        LOG(WARNING) << "No Setup found while loading ParticleID cuts.";
-    }
 
-    pm.particleID = particleID;
+        pm.particleID = particleID;
+
+    } else {
+        LOG(INFO) << "ParticleID disabled by command line";
+    }
 
 
 
