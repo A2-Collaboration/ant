@@ -127,7 +127,12 @@ void CB_Energy::TheGUI::InitGUI()
 {
     c_fit = new gui::CalCanvas("c_fit", GetName()+": Fit");
     c_overview = new gui::CalCanvas("c_overview", GetName()+": Overview");
-    hist_cb = new TH2CB("hist_cb");
+    h_peaks = new TH1D("h_peaks","Peak positions",GetNumberOfChannels(),0,GetNumberOfChannels());
+    h_peaks->SetXTitle("Channel Number");
+    h_peaks->SetYTitle("Pi0 Peak / MeV");
+    h_relative = new TH1D("h_relative","Relative change from previous gains",GetNumberOfChannels(),0,GetNumberOfChannels());
+    h_relative->SetXTitle("Channel Number");
+    h_relative->SetYTitle("Relative change / %");
 }
 
 list<gui::CalCanvas*> CB_Energy::TheGUI::GetCanvases() const
@@ -142,30 +147,28 @@ CB_Energy::TheGUI::DoFitReturn_t CB_Energy::TheGUI::DoFit(TH1* hist, unsigned ch
 
     TH2* hist2 = dynamic_cast<TH2*>(hist);
 
-    projection = hist2->ProjectionX("",channel,channel+1);
+    h_projection = hist2->ProjectionX("",channel,channel+1);
 
-    func->SetDefaults(projection);
+    func->SetDefaults(h_projection);
     const auto it_fit_param = fitParameters.find(channel);
     if(it_fit_param != fitParameters.end()) {
         VLOG(5) << "Loading previous fit parameters for channel " << channel;
         func->Load(it_fit_param->second);
     }
 
-    func->Fit(projection);
+    func->Fit(h_projection);
 
     if(channel==0) {
         return DoFitReturn_t::Display;
     }
 
-    // do not show something
+    // do not show something, goto next channel
     return DoFitReturn_t::Next;
 }
 
 void CB_Energy::TheGUI::DisplayFit()
 {
-    c_fit->Show(projection, func.get());
-    c_overview->cd();
-    hist_cb->Draw();
+    c_fit->Show(h_projection, func.get());
 }
 
 void CB_Energy::TheGUI::StoreFit(unsigned channel)
@@ -182,29 +185,51 @@ void CB_Energy::TheGUI::StoreFit(unsigned channel)
 
     calibType.Values[channel] = newValue;
 
+    const double relative_change = 100*(newValue/oldValue-1);
+
     LOG(INFO) << "Stored Ch=" << channel << ": PeakPosition " << pi0peak
               << " MeV,  gain changed " << oldValue << " -> " << newValue
-              << " (" << 100*(newValue/oldValue-1) << " %)";
+              << " (" << relative_change << " %)";
 
 
     // don't forget the fit parameters
     fitParameters[channel] = func->Save();
+
+    h_peaks->Fill(channel, pi0peak);
+    h_relative->Fill(channel, relative_change);
+
+    c_fit->Clear();
+    c_fit->Update();
 }
 
 bool CB_Energy::TheGUI::FinishRange()
 {
-//    c_overview->Clear();
-//    c_overview->cd();
-//    TH1D* overview = new TH1D("Overview", "");
-//    c_overview->Draw();
+    c_overview->Divide(2,2);
 
-    LOG(INFO) << "FinishRange";
-    return false;
+    c_overview->cd(1);
+    h_peaks->SetStats(false);
+    h_peaks->Draw("P");
+    c_overview->cd(2);
+    TH2CB* h_peaks_cb = new TH2CB("h_peaks_cb",h_peaks->GetTitle());
+    h_peaks_cb->FillElements(*h_peaks);
+    h_peaks_cb->Draw("colz");
+
+    c_overview->cd(3);
+    h_relative->SetStats(false);
+    h_relative->Draw("P");
+    c_overview->cd(4);
+    TH2CB* h_relative_cb = new TH2CB("h_relative_cb",h_relative->GetTitle());
+    h_relative_cb->FillElements(*h_relative);
+    h_relative_cb->Draw("colz");
+
+    c_overview->Update();
+
+    return true;
 }
 
 void CB_Energy::TheGUI::StoreFinishRange(const interval<TID>& range)
 {
-    // c_overview->Close();
-
+    c_overview->Clear();
+    c_overview->Update();
     GUI_CalibType::StoreFinishRange(range);
 }

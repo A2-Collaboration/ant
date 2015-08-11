@@ -3,11 +3,7 @@
 #include "calibration/Calibration.h"
 #include "Energy.h"
 
-class TH1;
-
 namespace ant {
-
-class TH2CB;
 
 namespace expconfig {
 namespace detector {
@@ -42,10 +38,11 @@ public:
     protected:
         std::shared_ptr<expconfig::detector::CB> cb_detector;
         std::shared_ptr<gui::FitGausPol3> func;
-        TH1* projection = nullptr;
         gui::CalCanvas* c_fit;
         gui::CalCanvas* c_overview;
-        TH2CB* hist_cb;
+        TH1*  h_projection = nullptr;
+        TH1D* h_peaks = nullptr;
+        TH1D* h_relative = nullptr;
     };
 
     struct ThePhysics : analysis::Physics {

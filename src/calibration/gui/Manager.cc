@@ -161,15 +161,17 @@ bool Manager::Run()
     }
 
     if(!state.breakpoint_finish && state.channel < maxChannels) {
+        bool noskip = true;
         if(!state.breakpoint_fit) {
             const string& title = std_ext::formatter() << "Channel=" << state.channel
                                                        << " " << buffer.CurrentID();
             buffer.CurrentSum()->SetTitle(title.c_str());
 
             const auto ret = module->DoFit(buffer.CurrentSum(), state.channel);
+            noskip = ret != Manager_traits::DoFitReturn_t::Skip;
 
             if(ret == Manager_traits::DoFitReturn_t::Display
-               || (mode->alwaysDisplayFit && ret != Manager_traits::DoFitReturn_t::Skip)
+               || (mode->alwaysDisplayFit && noskip)
                ) {
                 VLOG(7) << "Open GUI...";
                 module->DisplayFit();
@@ -177,7 +179,8 @@ bool Manager::Run()
                 return false;
             }
         }
-        module->StoreFit(state.channel);
+        if(noskip)
+            module->StoreFit(state.channel);
         state.breakpoint_fit = false;
     }
 
