@@ -35,9 +35,8 @@ set(SRCS
     gui/FitGausPol3.cc
     gui/AvgBuffer.h
     detail/Helpers.h
-    gui/debug_GUIModule.cc
-	gui/ACECanvas.cc
-	gui/Dialogs.cc
+    gui/ACECanvas.cc
+    gui/Dialogs.cc
   )
 
 add_library(calibration ${SRCS})
