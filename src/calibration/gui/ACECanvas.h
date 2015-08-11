@@ -1,6 +1,6 @@
 #pragma once
 
-#include "CalibrationEditor.h"
+#include "calibration/CalibrationEditor.h"
 #include "base/interval.h"
 
 #include <string>

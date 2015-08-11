@@ -7,7 +7,6 @@ include_directories(
 
 
 set(SRCS
-	ACECanvas.cc
     CalibrationEditor.cc
     CalibrationDataManager.cc
     Calibration.cc
@@ -36,6 +35,7 @@ set(SRCS
     gui/AvgBuffer.h
     detail/Helpers.h
     gui/debug_GUIModule.cc
+	gui/ACECanvas.cc
 	gui/Dialogs.cc
   )
 
