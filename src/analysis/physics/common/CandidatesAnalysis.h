@@ -18,6 +18,8 @@ protected:
     TH1D* phi = nullptr;
     TH1D* ggIM = nullptr;
     TH1D* ttIM = nullptr;
+    TH2D* cbdEE = nullptr;
+    TH2D* tapsdEE = nullptr;
 
 public:
     CandidatesAnalysis(const std::string& name="CandidatesAnalysis");
