@@ -135,8 +135,11 @@ list<gui::CalCanvas*> CB_Energy::TheGUI::GetCanvases() const
     return {c_fit, c_overview};
 }
 
-bool CB_Energy::TheGUI::DoFit(TH1* hist, unsigned channel)
+CB_Energy::TheGUI::DoFitReturn_t CB_Energy::TheGUI::DoFit(TH1* hist, unsigned channel)
 {
+    if(cb_detector->IsIgnored(channel))
+        return DoFitReturn_t::Skip;
+
     TH2* hist2 = dynamic_cast<TH2*>(hist);
 
     projection = hist2->ProjectionX("",channel,channel+1);
@@ -151,11 +154,11 @@ bool CB_Energy::TheGUI::DoFit(TH1* hist, unsigned channel)
     func->Fit(projection);
 
     if(channel==0) {
-        return true;
+        return DoFitReturn_t::Display;
     }
 
     // do not show something
-    return false;
+    return DoFitReturn_t::Next;
 }
 
 void CB_Energy::TheGUI::DisplayFit()

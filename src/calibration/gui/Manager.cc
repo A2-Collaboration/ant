@@ -166,9 +166,11 @@ bool Manager::Run()
                                                        << " " << buffer.CurrentID();
             buffer.CurrentSum()->SetTitle(title.c_str());
 
-            const bool stop = module->DoFit(buffer.CurrentSum(), state.channel);
+            const auto ret = module->DoFit(buffer.CurrentSum(), state.channel);
 
-            if(stop || mode->alwaysDisplayFit) {
+            if(ret == Manager_traits::DoFitReturn_t::Display
+               || (mode->alwaysDisplayFit && ret != Manager_traits::DoFitReturn_t::Skip)
+               ) {
                 VLOG(7) << "Open GUI...";
                 module->DisplayFit();
                 state.breakpoint_fit = true;

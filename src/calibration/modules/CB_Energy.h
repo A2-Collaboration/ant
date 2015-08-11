@@ -34,7 +34,7 @@ public:
         virtual unsigned GetNumberOfChannels() const override;
         virtual void InitGUI() override;
         virtual std::list<gui::CalCanvas*> GetCanvases() const override;
-        virtual bool DoFit(TH1* hist, unsigned channel) override;
+        virtual DoFitReturn_t DoFit(TH1* hist, unsigned channel) override;
         virtual void DisplayFit() override;
         virtual void StoreFit(unsigned channel) override;
         virtual bool FinishRange() override;
