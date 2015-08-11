@@ -19,7 +19,7 @@ CalCanvas::CalCanvas(const std::string &name, const std::string& title):
 }
 
 CalCanvas::~CalCanvas() {
-    ClearInidators();
+    ClearIndicators();
 }
 
 void CalCanvas::Show(TH1 *h, FitFunction* f) {
@@ -38,9 +38,6 @@ void CalCanvas::Show(TH1 *h, FitFunction* f) {
     f->Draw();
 
     SetupGUI();
-
-    Modified();
-    Update();
 }
 
 void CalCanvas::UpdateMe() {
@@ -94,7 +91,7 @@ GUIIndicator *CalCanvas::MakeGUIElement(VirtualKnob &knob)
         //@todo Implement
         return MakeVerticalIndicatorLine(knob);
     }
-    return MakeVerticalIndicatorLine(knob);
+    return nullptr;
 }
 
 void CalCanvas::HandleKeypress(const char key)
@@ -154,7 +151,7 @@ void CalCanvas::SetDefaults()
     }
 }
 
-void CalCanvas::ClearInidators() {
+void CalCanvas::ClearIndicators() {
     for(auto& i : indicators) {
         delete i;
     }
@@ -163,17 +160,23 @@ void CalCanvas::ClearInidators() {
 
 void CalCanvas::SetupGUI() {
 
-    ClearInidators();
+    // the indicators need an updated canvas
+    // in order to figure out the right viewport
+    Modified();
+    Update();
+
+    ClearIndicators();
 
     for(auto& knob : func->getKnobs()) {
         auto gui = MakeGUIElement(*knob);
         indicators.emplace_back(gui);
     }
+
+    // afterwards we update to actually show
+    // the created indicators
+    Modified();
+    Update();
 }
-
-/* remove snaping guides when moving objects on the canvas */
-void CalCanvas::ShowGuidelines(TObject *, const Int_t, const char, const bool) {}
-
 
 void CalCanvas::Fit() {
     if(func && hist) {
@@ -182,6 +185,11 @@ void CalCanvas::Fit() {
         UndoPush();
 
         func->Fit(hist);
+
+        Modified();
+        Update();
+
+        UpdateMe();
 
         Modified();
         Update();
@@ -239,15 +247,13 @@ void CalCanvas::Execute(const char *method, const char *params, Int_t *error) {
 }
 
 void CalCanvas::Update() {
+    TCanvas::Update();
 
     auto p = getViewport();
     for(auto& i : indicators) {
         i->RangeUpdate(p);
         i->UpdateMe();
     }
-
-    TCanvas::Update();
-
 }
 
 void CalCanvas::HandleInput(EEventType button, Int_t x, Int_t y)

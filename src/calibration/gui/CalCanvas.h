@@ -33,7 +33,7 @@ struct CalCanvasMode {
 class CalCanvas : public TCanvas, public update_notify_traits {
 protected:
     Viewport getViewport();
-    void ClearInidators();
+    void ClearIndicators();
     void SetupGUI();
 
     GUIIndicator* MakeVerticalIndicatorLine(VirtualKnob& knob);
@@ -61,7 +61,6 @@ public:
 
     virtual void UpdateMe() override;
 
-    virtual void ShowGuidelines(TObject*, const Int_t, const char, const bool) override;
 
     virtual void Fit();
 
@@ -73,19 +72,21 @@ public:
 
     virtual void Execute(const char *method, const char *params, Int_t *error);
 
+
     virtual void Update() override;
-
-
-
 
     /**
      * @brief HandleInput: Override default to catch keyboard inputs
-     * @param button
-     * @param x
+     * @param button equals kKeyPress
+     * @param x the key char which was pressed
      * @param y
      */
     virtual void HandleInput(EEventType button, Int_t x, Int_t y) override;
 
+    /**
+     * @brief ShowGuidelines remove the snapping guidelines completely
+     */
+    virtual void ShowGuidelines(TObject*, const Int_t, const char, const bool) override {}
 };
 }
 }
