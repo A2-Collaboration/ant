@@ -2,6 +2,7 @@
 
 #include "calibration/Editor.h"
 #include "base/interval.h"
+#include "Dialogs.h"
 
 #include <string>
 #include <map>
@@ -43,7 +44,9 @@ namespace gui {
 
 
 
-class ACECanvas: public TCanvas
+class ACECanvas:
+        public TCanvas,
+        public DialogHandler_traits
 {
 private:
     enum class state_t
@@ -66,6 +69,8 @@ private:
 
     std::unique_ptr<ant::TextPad> display;
     TH2D*                         calHist;
+
+    ListQuery*                    selector;
 
     std::set<std::uint32_t> indexMemory;
     interval<std::uint32_t> indexInterVal;
@@ -99,6 +104,10 @@ private:
 public:
     ACECanvas(const std::string& fileName);
     virtual void HandleInput(EEventType button, Int_t x, Int_t y) override;
+
+    // DialogHandler_traits interface
+protected:
+    void captureReturnValue(Query* dialog, std::string& returnValue) override;
 };
 
 }

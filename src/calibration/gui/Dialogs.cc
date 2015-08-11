@@ -1,14 +1,33 @@
 #include "Dialogs.h"
 
 
+using namespace std;
 using namespace ant;
 using namespace ant::calibration::gui;
 
 
 
-
-ListQuery::ListQuery(const std::string& title, const std::string& text, const std::list<std::string>& items)
+void ListQuery::AddItem(const string& item)
 {
+    listBox->AddEntry(item.c_str(), listBox->GetNumberOfEntries());
+}
+
+void ListQuery::ClearItemList()
+{
+    listBox->RemoveAll();
+}
+
+void ListQuery::SetItemList(const list<string>& items)
+{
+    ClearItemList();
+    for (const auto& item: items)
+        AddItem(item);
+}
+
+ListQuery::ListQuery(DialogHandler_traits* theOwner, const string& title, const string& text, const list<string>& items):
+    Query(theOwner)
+{
+
     mainFrame = new TGMainFrame(gClient->GetRoot(),10,10,kVerticalFrame);
 
 
@@ -21,19 +40,20 @@ ListQuery::ListQuery(const std::string& title, const std::string& text, const st
     listBox   = new TGListBox(vFrame);
     vFrame->AddFrame(listBox,new TGLayoutHints(kLHintsTop|kLHintsLeft|kLHintsExpandX|kLHintsExpandY));
 
-    int i = 0;
+    btnCancel = new TGTextButton(vFrame,"&Cancel");
+    vFrame->AddFrame(btnCancel,new TGLayoutHints(kLHintsExpandX|kLHintsBottom|kLHintsLeft
+                                                 ,5,5,3,4));
+
+    btnOk = new TGTextButton(vFrame,"&Select");
+    vFrame->AddFrame(btnOk,new TGLayoutHints(kLHintsExpandX|kLHintsBottom|kLHintsRight
+                                             ,5,5,3,4));
+//    btnOk->Connect("Pressed()","ListQuery",this,"SendReturnValue()");
+//    Qexec* qex = new Qexec(this);
+    btnOk->Connect("Pressed()","TExec",this,"Exec(\"\")");
+
     for (const auto& item: items )
-        listBox->AddEntry(item.c_str(),++i);
+        AddItem(item);
 
-
-    hFrame    = new TGHorizontalFrame(mainFrame);
-    mainFrame->AddFrame(vFrame,new TGLayoutHints(kLHintsExpandX | kLHintsBottom));
-
-    btnCancel = new TGTextButton(hFrame,"&btnCancel");
-    hFrame->AddFrame(btnCancel,new TGLayoutHints(kLHintsExpandX,5,5,3,4));
-
-    btnOk     = new TGTextButton(hFrame,"&btnOk");
-    hFrame->AddFrame(btnOk,new TGLayoutHints(kLHintsExpandX,5,5,3,4));
 
     mainFrame->SetCleanup(kDeepCleanup);
 

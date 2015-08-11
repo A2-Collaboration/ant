@@ -16,7 +16,6 @@ int main() {
     TRint app("ACE",&i,nullptr);
 
     new ACECanvas("test.root");
-//    ListQuery("test","test text",{"a","b","c"});
 
     app.Run(kFALSE);
 

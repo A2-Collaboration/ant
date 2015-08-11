@@ -32,6 +32,7 @@ void ACECanvas::makeCalHist()
     calHist->SetXTitle("TID [%]");
     calHist->SetYTitle("Calibration Step");
     calHist->Draw("col");
+    calHist->SetStats(false);
 }
 
 void ACECanvas::loadFile(const std::string& fileName)
@@ -174,6 +175,7 @@ ACECanvas::ACECanvas(const string &FileName):
     fileName(FileName),
     currentCalID(),
     ed(),
+    selector(nullptr),
     intervalStartSet(false)
 {
     loadFile(fileName);
@@ -232,6 +234,9 @@ void ACECanvas::HandleKeypress(const char key)
             break;
         case 'v':
             change_state(state_t::reduceToValid);
+        case 't':
+            if (selector == nullptr)
+                selector = new ListQuery(this,"title","text",ed.GetListOfCalibrations());
             break;
         default:
             break;
@@ -426,6 +431,16 @@ void ACECanvas::HandleInput(EEventType button, Int_t x, Int_t y)
 
     if(button == kKeyPress)
         HandleKeypress(x);
+}
+
+void ACECanvas::captureReturnValue(Query* dialog, string& returnValue)
+{
+    if (dialog)
+        cout << endl
+             << "Changing Runset to " << returnValue << "." << endl;
+    currentCalID = returnValue;
+    makeCalHist();
+    updateCalHist();
 }
 
 //DEBUG
