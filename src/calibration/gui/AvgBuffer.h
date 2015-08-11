@@ -13,7 +13,7 @@ template <typename HistType, typename IDType>
 class AvgBuffer {
 public:
     struct buffer_entry {
-        buffer_entry(std::shared_ptr<HistType>& h, const IDType& ID): hist(h), id(ID) {}
+        buffer_entry(const std::shared_ptr<HistType>& h, const IDType& ID): hist(h), id(ID) {}
         std::shared_ptr<HistType> hist;
         IDType id;
     };
@@ -47,6 +47,23 @@ public:
             m_movingsum->Add(h.get(), 1.0);
         }
 
+        // special mode when m_max_size==0 (no moving sum required)
+        // just sum up the histograms, and only remember the ID span
+        if(m_max_size == 0) {
+            if(m_buffer.empty()) {
+                // we're just interested in the id
+                m_buffer.emplace_back(buffer_entry(nullptr, id));
+                midpos = m_buffer.begin();
+                startup_done = true; // for consistency
+            }
+            else {
+                // extend the existing id
+                m_buffer.front().id.Extend(id);
+            }
+            return;
+        }
+
+        // in normal mode, always add the item to the buffer
         m_buffer.emplace_back(buffer_entry(h, id));
 
         // check if max_size is reached
