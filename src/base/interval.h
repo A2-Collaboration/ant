@@ -127,17 +127,6 @@ public:
      */
     interval<T> operator/ ( const T& f ) const { interval<T> tmp(*this); return tmp /= f; }
 
-    void SetWidth(const T& width) {
-        const T center = Center();
-        Start() = center - width/2.0;
-        Stop() = center + width/2.0;
-    }
-
-    void SetCenter(const T& center) {
-        const T width = Length();
-        Start() = center - width/2.0;
-        Stop() = center + width/2.0;
-    }
 
     /**
      * @brief operator []: Access boundaries array-style
@@ -156,10 +145,39 @@ public:
         }
     }
 
+    bool operator == (const interval<T>& rhs) const {
+        return Start() == rhs.Start() && Stop() == rhs.Stop();
+    }
+
+    bool operator != (const interval<T>& rhs) const {
+        return !(*this == rhs);
+    }
+
+    void SetWidth(const T& width) {
+        const T center = Center();
+        Start() = center - width/2.0;
+        Stop() = center + width/2.0;
+    }
+
+    void SetCenter(const T& center) {
+        const T width = Length();
+        Start() = center - width/2.0;
+        Stop() = center + width/2.0;
+    }
+
     bool Contains( const T& x ) const { return _start <= x && _stop >= x; }
 
     bool Disjoint( const ant::interval<T>& i ) const {
         return (Stop() < i.Start()) || (i.Stop() < Start());
+    }
+
+    /**
+     * @brief Extend the interval if the given covers a larger range
+     * @param other another interval
+     */
+    void Extend(const interval<T>& other) {
+        Start() = std::min(Start(), other.Start());
+        Stop()  = std::max(Stop(),  other.Stop());
     }
 
     /**
@@ -169,12 +187,12 @@ public:
      */
     bool tryJoinWith(const ant::interval<T>& other) {
         if( ! Disjoint(other) ) {
-            Start() = std::min(Start(), other.Start());
-            Stop()  = std::max(Stop(),  other.Stop());
+            Extend(other);
             return true;
         }
         return false;
     }
+
 
     /**
      * @brief Make sure, start < stop
@@ -187,20 +205,6 @@ public:
     }
 
     bool IsSane() const { return _start <= _stop; }
-
-    // printable_traits interface
-    std::ostream &Print(std::ostream &stream) const {
-        stream << "[" << _start << ":" << _stop << "]";
-        return stream;
-    }
-
-    bool operator == (const interval<T>& rhs) const {
-        return Start() == rhs.Start() && Stop() == rhs.Stop();
-    }
-
-    bool operator != (const interval<T>& rhs) const {
-        return !(*this == rhs);
-    }
 
     static interval getMaxRange() {
         if(std::numeric_limits<T>::has_infinity) {
@@ -226,6 +230,12 @@ public:
         }
     }
 
+
+    // printable_traits interface
+    std::ostream &Print(std::ostream &stream) const {
+        stream << "[" << _start << ":" << _stop << "]";
+        return stream;
+    }
 };
 
 /**
