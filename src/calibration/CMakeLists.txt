@@ -7,6 +7,7 @@ include_directories(
 
 
 set(SRCS
+    Editor.cc
     DataBase.cc
     DataManager.cc
     Calibration.cc
