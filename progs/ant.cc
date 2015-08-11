@@ -26,6 +26,7 @@
 #include "base/filesystem.h"
 
 #include "TRint.h"
+#include "TStyle.h"
 
 #include <sstream>
 #include <string>
@@ -306,11 +307,18 @@ int main(int argc, char** argv) {
     VLOG(5) << "Added command line: " << header->CmdLine;
 
     if(!cmd_batchmode->isSet()) {
+
         if(masterFile != nullptr)
             LOG(INFO) << "Stopped running, but close ROOT properly to write data to disk.";
         int fake_argc=0;
         char** fake_argv=nullptr;
         TRint app("ant",&fake_argc,fake_argv,nullptr,0,true);
+
+        //make sure there is a style set. See bug #gStyle01 in doc/bugs
+        if(gStyle == nullptr) {
+             gStyle = new TStyle();
+        }
+
         pm.ShowResults();
         app.Run(kTRUE); // really important to return...
         masterFile = nullptr;   // and to destroy the master WrapTFile before TRint is destroyed
