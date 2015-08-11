@@ -1,7 +1,6 @@
 
 #include "base/std_ext.h"
 
-#include "calibration/gui/debug_GUIModule.h"
 #include "calibration/gui/Manager.h"
 
 #include "expconfig/ExpConfig.h"
