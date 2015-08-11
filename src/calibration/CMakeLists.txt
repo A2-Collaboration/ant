@@ -7,10 +7,10 @@ include_directories(
 
 
 set(SRCS
+    Calibration.h
     Editor.cc
     DataBase.cc
     DataManager.cc
-    Calibration.cc
     modules/Time.cc
     modules/Energy.cc
     modules/Scaler.cc
