@@ -318,6 +318,16 @@ UInt_t TH2CB::GetElementOfCrystal(const UInt_t crystal)
     }
 }
 
+TMarker*TH2CB::SetMarker(const UInt_t element)
+{
+    const Int_t bin = GetBinOfVBin(GetCrystalOfElement(element)+1);
+
+    if(bin>0)
+        return SetMarkerOnBin(bin-1);
+
+    return nullptr;
+}
+
 void TH2CB::SetElements(const TH2CB &h)
 {
     TH2Crystals::SetElements(h);

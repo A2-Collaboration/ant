@@ -4,6 +4,9 @@
 #include "TH2Poly.h"
 #include <string>
 
+class TMarker;
+class TGraph;
+
 namespace ant {
 
 /**
@@ -36,6 +39,10 @@ protected:
      * This method is efficient (use of iterators, interating once).
      */
     virtual void SetElements( const TH2Crystals& h);
+
+    TMarker* SetMarkerOnBin(Int_t bin);
+
+    void calcCOG(TGraph* g, double& x, double& y);
 
 public:
 
@@ -90,6 +97,8 @@ public:
      * @param value Value to set the elements to (default 0.0)
      */
     virtual void ResetElements( const Double_t value=0.0 );     //*MENU*
+
+    virtual TMarker* SetMarker(const UInt_t element);   //*MENU*
 
 };
 

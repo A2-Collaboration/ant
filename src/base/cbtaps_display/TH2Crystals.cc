@@ -1,6 +1,8 @@
 #include "TH2Crystals.h"
 #include "TDirectory.h"
 #include "TIterator.h"
+#include "TGraph.h"
+#include "TMarker.h"
 #include <iostream>
 
 using namespace ant;
@@ -49,6 +51,61 @@ void TH2Crystals::SetElements(const TH2Crystals &h)
         SetBinContentChanged(kTRUE);
     } else {
         cerr << "TH2Crystals::SetElements: Number of bins don't match: ( " << GetNumberOfBins() << " / " << h.GetNumberOfBins() << " )" << endl;
+    }
+}
+
+TMarker*TH2Crystals::SetMarkerOnBin(const Int_t bin)
+{
+    TList* bins = GetBins();
+    if(bin < bins->GetEntries()) {
+        TH2PolyBin* pbin = dynamic_cast<TH2PolyBin*>(bins->At(bin));
+        if(pbin) {
+            TGraph* g = dynamic_cast<TGraph*>(pbin->GetPolygon());
+            if(g) {
+                double x,y;
+                calcCOG(g,x,y);
+                return new TMarker(x,y,29);
+            }
+        }
+    }
+    return nullptr;
+}
+
+void TH2Crystals::calcCOG(TGraph* g, double& x, double& y)
+{
+    if(g->GetN()==0)
+        return;
+
+    // save first point
+    double first_x,first_y;
+    g->GetPoint(0,first_x,first_y);
+
+    x=first_x;
+    y=first_y;
+
+    // loop over all points
+    double px,py;
+    for(Int_t i=1; i<g->GetN();++i) {
+
+        g->GetPoint(i,px,py);
+
+        // and sum up
+        x+=px;
+        y+=py;
+    }
+
+    // if last point == first point (closed polygon): don't sum again/subtract
+    if(px==first_x && py == first_y) {
+        x -= px;
+        y -= py;
+
+        // calc average
+        x /= g->GetN()-1;
+        y /= g->GetN()-1;
+    } else {
+        // calc average
+        x /= g->GetN();
+        y /= g->GetN();
     }
 }
 
@@ -169,4 +226,9 @@ void TH2Crystals::ResetElements(const Double_t value)
        bin->SetContent(value);
     }
     SetBinContentChanged(kTRUE);
+}
+
+TMarker*TH2Crystals::SetMarker(const UInt_t element)
+{
+    return SetMarkerOnBin(element);
 }

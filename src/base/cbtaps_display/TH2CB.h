@@ -171,6 +171,8 @@ public:
      */
     Int_t GetNumberOfElements() const { return 720; }
 
+    virtual TMarker* SetMarker(const UInt_t element);
+
 };
 
 
