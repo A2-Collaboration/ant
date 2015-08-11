@@ -7,7 +7,6 @@ include_directories(
 
 
 set(SRCS
-	ListBox.cc
 	ACECanvas.cc
     CalibrationEditor.cc
     CalibrationDataManager.cc
@@ -37,6 +36,7 @@ set(SRCS
     gui/AvgBuffer.h
     detail/Helpers.h
     gui/debug_GUIModule.cc
+	gui/Dialogs.cc
   )
 
 add_library(calibration ${SRCS})
