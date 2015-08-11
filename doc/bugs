@@ -4,3 +4,8 @@ if a TCutG was loaded from a ROOT File before, as done for ParticleID.
 Although gStyle is valid before TRint is created.
 Fix: make sure gStyle is not null after creating the TRint instance.
 Although styles set in rootlogon.C don;t work anymore *arrgh*
+
+#matrixstack::vector01
+ant.cc crashes on exit when run in "gui"/non-batch mode.
+somehere in the destruction of matrixstack::vector. Probably
+together with TRint cleanups.
