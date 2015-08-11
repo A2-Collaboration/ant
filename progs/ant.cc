@@ -23,6 +23,7 @@
 #include "base/Logger.h"
 #include "base/CmdLine.h"
 #include "base/WrapTFile.h"
+#include "base/filesystem.h"
 
 #include "TRint.h"
 
@@ -256,11 +257,21 @@ int main(int argc, char** argv) {
     if(auto setup = ExpConfig::Setup::GetLastFound()) {
         try {
             WrapTFileInput cuts;
-            cuts.OpenFile(setup->GetPIDCutsDirectory()+"/cuts.root");
+            VLOG(7) << "Looking for ParticleID cuts in " << setup->GetPIDCutsDirectory();
+
+            for(auto& cutfile : filesystem::lsFiles(setup->GetPIDCutsDirectory(),".root")) {
+                try {
+                    cuts.OpenFile(cutfile);
+                } catch (const std::runtime_error&) {
+                    LOG(WARNING) << "Could not open " << cutfile;
+                }
+            }
             particleID->LoadFrom(cuts);
         } catch (const std::runtime_error& e) {
             LOG(INFO) << "Failed to load cuts: " << e.what();
         }
+    } else {
+        LOG(WARNING) << "No Setup found while loading ParticleID cuts.";
     }
 
     pm.particleID = particleID;
