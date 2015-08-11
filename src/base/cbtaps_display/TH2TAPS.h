@@ -6,8 +6,6 @@
 namespace ant {
 
 class TH2TAPS: public TH2Crystals {
-    ClassDef(TH2TAPS,1)
-
 protected:
 
     static TH2DrawTool::point_list MakeBaF2Shape();

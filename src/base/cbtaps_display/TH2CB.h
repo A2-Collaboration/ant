@@ -34,7 +34,6 @@
 namespace ant {
 
 class TH2CB: public TH2Crystals {
-    ClassDef(TH2CB,1)
 
 protected:
 
@@ -171,8 +170,6 @@ public:
      * @return Number of elements (720)
      */
     Int_t GetNumberOfElements() const { return 720; }
-
-
 
 };
 

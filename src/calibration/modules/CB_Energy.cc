@@ -11,6 +11,7 @@
 
 #include "tree/TDataRecord.h"
 
+#include "base/cbtaps_display/TH2CB.h"
 #include "base/Logger.h"
 
 #include <list>
@@ -126,6 +127,7 @@ void CB_Energy::TheGUI::InitGUI()
 {
     c_fit = new gui::CalCanvas("c_fit", GetName()+": Fit");
     c_overview = new gui::CalCanvas("c_overview", GetName()+": Overview");
+    hist_cb = new TH2CB("hist_cb");
 }
 
 list<gui::CalCanvas*> CB_Energy::TheGUI::GetCanvases() const
@@ -159,6 +161,8 @@ bool CB_Energy::TheGUI::DoFit(TH1* hist, unsigned channel)
 void CB_Energy::TheGUI::DisplayFit()
 {
     c_fit->Show(projection, func.get());
+    c_overview->cd();
+    hist_cb->Draw();
 }
 
 void CB_Energy::TheGUI::StoreFit(unsigned channel)

@@ -7,6 +7,8 @@ class TH1;
 
 namespace ant {
 
+class TH2CB;
+
 namespace expconfig {
 namespace detector {
 class CB;
@@ -43,6 +45,7 @@ public:
         TH1* projection = nullptr;
         gui::CalCanvas* c_fit;
         gui::CalCanvas* c_overview;
+        TH2CB* hist_cb;
     };
 
     struct ThePhysics : analysis::Physics {

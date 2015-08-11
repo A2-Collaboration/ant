@@ -11,6 +11,7 @@ set(SRCS
     Editor.cc
     DataBase.cc
     DataManager.cc
+    detail/Helpers.h
     modules/Time.cc
     modules/Energy.cc
     modules/Scaler.cc
@@ -34,7 +35,6 @@ set(SRCS
     gui/TF1Knobs.cc
     gui/FitGausPol3.cc
     gui/AvgBuffer.h
-    detail/Helpers.h
     gui/ACECanvas.cc
     gui/Dialogs.cc
   )
