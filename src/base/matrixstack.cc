@@ -152,24 +152,3 @@ matrixstack::Vector matrixstack::Vector::operator/(const double x)
     tmp/=x;
     return tmp;
 }
-
-std::ostream&ant::matrixstack::Vector::Print(std::ostream& stream) const
-{
-    for( Int_t m=0; m<GetNrows(); ++m ) {
-        stream << (*this)(m) << " ";
-    }
-    stream << "\n";
-    return stream;
-}
-
-std::ostream&matrixstack::Matrix::Print(std::ostream& stream) const
-{
-    for( Int_t n=0; n<GetNrows(); ++n ) {
-
-        for( Int_t m=0; m<GetNcols(); ++m ) {
-            stream << (*this)(n,m) << " ";
-        }
-        stream << "\n";
-    }
-    return stream;
-}

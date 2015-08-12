@@ -13,7 +13,7 @@ namespace ant {
 
 class matrixstack {
 public:
-    struct Vector : TVectorT<double>, printable_traits {
+    struct Vector : TVectorT<double> {
 
         Vector();
         Vector(const double x, const double y);
@@ -34,12 +34,10 @@ public:
         const double& Y() const { return (*this)(1); }
         double& Y() { return (*this)(1); }
 
-        virtual std::ostream& Print(std::ostream& stream) const override;
     };
 
-    struct Matrix : TMatrixT<double>, printable_traits {
+    struct Matrix : TMatrixT<double> {
         using TMatrixT<double>::TMatrixT;
-        virtual std::ostream& Print(std::ostream& stream) const override;
         virtual ~Matrix() {}
     };
 
