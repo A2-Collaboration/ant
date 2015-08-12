@@ -62,6 +62,19 @@ void PID_PhiAngle::ThePhysics::ProcessEvent(const Event& event)
         }
     }
 
+    // search the insane clusters for a PID hit,
+    // CB cluster always become a neutral candidate
+    for(const Cluster& cl : event.Reconstructed().InsaneClusters()) {
+        if(cl.Detector != Detector_t::Type_t::PID)
+            continue;
+        if(!isfinite(cl.Energy) || !isfinite(cl.Time))
+            continue;
+        // found more than one PID cluster
+        if(cluster_pid != nullptr)
+            return;
+        cluster_pid = addressof(cl);
+    }
+
     if(!isfinite(phi_cb) || cluster_pid == nullptr)
         return;
 
