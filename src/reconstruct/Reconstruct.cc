@@ -112,7 +112,7 @@ MemoryPool<TEvent>::Item Reconstruct::DoReconstruct(TDetectorRead& detectorRead)
     }
 
     // finally, do the candidate building
-    candidatebuilder->Build(move(sorted_clusters), event->Candidates);
+    candidatebuilder->Build(move(sorted_clusters), event->Candidates, event->InsaneClusters);
 
     // uncomment for debug purposes
     //cout << *event << endl;

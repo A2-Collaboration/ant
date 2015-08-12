@@ -120,7 +120,7 @@ void CandidateBuilder::Catchall(std::map<Detector_t::Type_t, std::list<TCluster>
     for(auto& cluster_list : sorted_clusters ) {
 
         const auto& detector_type = cluster_list.first;
-        const auto& clusters      = cluster_list.second;
+        auto& clusters      = cluster_list.second;
 
         if(option_allowSingleVetoClusters && (detector_type == Detector_t::Type_t::PID || detector_type == Detector_t::Type_t::TAPSVeto)) {
             for(auto& c : clusters) {
@@ -133,6 +133,7 @@ void CandidateBuilder::Catchall(std::map<Detector_t::Type_t, std::list<TCluster>
                             c.Energy
                             );
             }
+            clusters.clear();
         } else if(detector_type == Detector_t::Type_t::CB || detector_type == Detector_t::Type_t::TAPS) {
             for(auto& c : clusters) {
                 candidates.emplace_back(
@@ -144,6 +145,7 @@ void CandidateBuilder::Catchall(std::map<Detector_t::Type_t, std::list<TCluster>
                             0
                             );
             }
+            clusters.clear();
         } else if(detector_type == Detector_t::Type_t::MWPC0 || detector_type == Detector_t::Type_t::MWPC1 || detector_type == Detector_t::Type_t::Cherenkov) {
             for(auto& c : clusters) {
                 candidates.emplace_back(
@@ -156,6 +158,7 @@ void CandidateBuilder::Catchall(std::map<Detector_t::Type_t, std::list<TCluster>
                             c.Energy
                             );
             }
+            clusters.clear();
         }
     }
 }
@@ -189,7 +192,7 @@ CandidateBuilder::CandidateBuilder(const CandidateBuilder::sorted_detectors_t& s
 }
 
 void CandidateBuilder::Build(std::map<Detector_t::Type_t, std::list<TCluster> >&& sorted_clusters,
-                         TEvent::candidates_t& tracks)
+                         TEvent::candidates_t& tracks, std::vector<TCluster>& insane_clusters)
 {
 
     if(cb && pid)
@@ -198,8 +201,13 @@ void CandidateBuilder::Build(std::map<Detector_t::Type_t, std::list<TCluster> >&
     if(taps && tapsveto)
         Build_TAPS_Veto(sorted_clusters, tracks);
 
-
     Catchall(sorted_clusters, tracks);
 
+    // move the rest to insane clusters
+    for(auto& det_entry : sorted_clusters) {
+        for(auto& cluster : det_entry.second) {
+            insane_clusters.emplace_back(cluster);
+        }
+    }
 }
 

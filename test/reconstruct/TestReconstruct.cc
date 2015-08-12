@@ -89,9 +89,12 @@ struct ReconstructTester : Reconstruct_traits {
         }
 
         // finally, do the candidate building
-        r.candidatebuilder->Build(move(sorted_clusters), event->Candidates);
-        REQUIRE(!event->Candidates.empty());
-        REQUIRE(event->Candidates.size() <= n_clusters);
+        const auto insane_before = event->InsaneClusters.size();
+        r.candidatebuilder->Build(move(sorted_clusters), event->Candidates, event->InsaneClusters);
+
+        auto cands = event->Candidates.size();
+        const auto insane_after = event->InsaneClusters.size();
+        REQUIRE( cands + (insane_after-insane_before) <= n_clusters);
 
         return event;
     }
@@ -131,7 +134,7 @@ void dotest() {
 
     REQUIRE(nReads == 221);
     REQUIRE(nHits == 29418);
-    REQUIRE(nCandidates == 2418);
+    REQUIRE(nCandidates == 823);
 
 
 }
