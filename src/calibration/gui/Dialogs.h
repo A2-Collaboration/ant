@@ -15,41 +15,42 @@ namespace gui{
 
 class Query;
 
+
 class DialogHandler_traits
 {
 friend class Query;
 protected:
-    virtual void captureReturnValue(Query* dialog, std::string& returnValue)=0;
+    virtual void captureReturnValue(Query* dialog, std::vector<std::string>& returnValue)=0;
 };
 
 class Query: public TExec
 {
 protected:
     DialogHandler_traits* owner;
-    std::string returnValue;
+    std::vector<std::string> returnValue;
+    virtual void SetReturnValue()=0;
 public:
     Query(DialogHandler_traits* theOwner):
         owner(theOwner),
-        returnValue("testRetVal")
+        returnValue()
     {}
 //    void SendReturnValue() {owner->captureReturnValue(this,returnValue); }
-    virtual void Exec(const char* arg) override
-    {
-        owner->captureReturnValue(this,returnValue);//     owner->SendReturnValue();
-    }
-
+    virtual void Exec(const char* signal) override;
 };
+
 
 class ListQuery: public Query
 {
 protected:
     TGMainFrame*       mainFrame;
-
     TGVerticalFrame*   vFrame;
-    TGLabel*           label;
     TGListBox*         listBox;
-    TGTextButton*      btnCancel;
+    TGLabel*           label;
+//    TGTextButton*      btnCancel;
     TGTextButton*      btnOk;
+
+    std::vector<std::string> entryStrings;
+    void SetReturnValue() override;
 
 public:
     ListQuery(DialogHandler_traits* theOwner, const std::string& title, const std::string& text,const std::list<std::string>& items = {});
@@ -57,6 +58,8 @@ public:
     void SetItemList(const std::list<std::string>& items);
     void ClearItemList();
     void AddItem(const std::string& item);
+
+    // Query interface
 };
 
 }

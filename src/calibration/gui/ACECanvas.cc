@@ -46,10 +46,10 @@ void ACECanvas::loadFile(const std::string& fileName)
     cout << endl
          << "  Sucessfully opened file."<< endl;
 
-    loadCalibration();
+//    loadCalibration();
 
-    if (currentCalID.empty())
-        throw runtime_error("No calibration loaded, exiting... ");
+//    if (currentCalID.empty())
+//        throw runtime_error("No calibration loaded, exiting... ");
 
     change_state(state_t::base);
 }
@@ -107,26 +107,37 @@ void ACECanvas::saveToFile(const std::string& fileName)
     cout << endl << "Saved to File " << fileName << "." << endl;
 }
 
+void ACECanvas::resetCalibrationTo(const string& calID)
+{
+    currentCalID = calID;
+    intervalStartSet = false;
+    indexMemory.clear();
+    makeCalHist();
+    updateCalHist();
+}
+
 void ACECanvas::change_state(ACECanvas::state_t newstate)
 {
-    switch (newstate) {
     cout << endl
          << endl
          << "=====  Ant Calibration Editor  ========================" << endl
          << endl;
+    switch (newstate) {
+    case state_t::init:
+        cout << "Init: Choose Calibration" << endl;
+        resetCalibrationTo("testID");
+//        openQuery();
+        change_state(state_t::base);
+        break;
     case state_t::base:
         cout << "Base Mode:" << endl
              << "  Keys in Canvas:" << endl
              << "   *  e   Expand Calibration steps" << endl
              << "   *  c   Cut out intervals of Calibration steps" << endl
-//             << "   *  l   Load new CalibrationID" << endl
+             << "   *  l   open a load new CalibrationID dialog" << endl
              << "   *  r   Remove Calibration steps" << endl
              << "   *  s   Save Your changes" << endl
              << "   *  v   reduce to Valid Calibration steps" << endl;
-        break;
-    case state_t::loadID:
-        loadCalibration();
-        change_state(state_t::base);
         break;
     case state_t::save:
         cout << "Save all changes:" << endl
@@ -209,6 +220,10 @@ void ACECanvas::removeInterValFromMemory()
     intervalStartSet = false;
     updateCalHist();
 }
+void ACECanvas::openQuery()
+{
+    new ListQuery(this,"title","text",ed.GetListOfCalibrations());
+}
 
 void ACECanvas::HandleKeypress(const char key)
 {
@@ -220,9 +235,9 @@ void ACECanvas::HandleKeypress(const char key)
         case 'e':
             change_state(state_t::expand);
             break;
-//        case 'l':
-//            change_state(state_t::loadID);
-//            break;
+        case 'l':
+            openQuery();
+            break;
         case 's':
             change_state(state_t::save);
             break;
@@ -234,9 +249,6 @@ void ACECanvas::HandleKeypress(const char key)
             break;
         case 'v':
             change_state(state_t::reduceToValid);
-        case 't':
-            if (selector == nullptr)
-                selector = new ListQuery(this,"title","text",ed.GetListOfCalibrations());
             break;
         default:
             break;
@@ -433,14 +445,12 @@ void ACECanvas::HandleInput(EEventType button, Int_t x, Int_t y)
         HandleKeypress(x);
 }
 
-void ACECanvas::captureReturnValue(Query* dialog, string& returnValue)
+void ACECanvas::captureReturnValue(Query* dialog, std::vector<string>& returnValue)
 {
     if (dialog)
         cout << endl
-             << "Changing Runset to " << returnValue << "." << endl;
-    currentCalID = returnValue;
-    makeCalHist();
-    updateCalHist();
+             << "Changing Runset to " << returnValue.at(0) << "." << endl;
+    resetCalibrationTo(returnValue.at(0));
 }
 
 //DEBUG

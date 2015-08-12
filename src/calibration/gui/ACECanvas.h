@@ -101,13 +101,15 @@ private:
 
     void loadCalibration();
     void changeCalibrationID();
+    void openQuery();
+    void resetCalibrationTo(const std::string& calID);
 public:
     ACECanvas(const std::string& fileName);
     virtual void HandleInput(EEventType button, Int_t x, Int_t y) override;
 
     // DialogHandler_traits interface
 protected:
-    void captureReturnValue(Query* dialog, std::string& returnValue) override;
+    void captureReturnValue(Query* dialog, std::vector<std::string>& returnValue) override;
 };
 
 }
