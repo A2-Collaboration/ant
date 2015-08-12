@@ -73,6 +73,10 @@ int main(int argc, char** argv) {
     }
     RawFileReader::OutputPerformanceStats = 3;
 
+    int fake_argc=0;
+    char** fake_argv=nullptr;
+    TRint app("ant",&fake_argc,fake_argv,nullptr,0,true);
+
     // check if input files are readable
     for(const auto& inputfile : cmd_input->getValue()) {
         string errmsg;
@@ -318,14 +322,6 @@ int main(int argc, char** argv) {
 
         if(masterFile != nullptr)
             LOG(INFO) << "Stopped running, but close ROOT properly to write data to disk.";
-        int fake_argc=0;
-        char** fake_argv=nullptr;
-        TRint app("ant",&fake_argc,fake_argv,nullptr,0,true);
-
-        //make sure there is a style set. See https://github.com/A2-Collaboration-dev/ant/issues/2
-        if(gStyle == nullptr) {
-             gStyle = new TStyle();
-        }
 
         pm.ShowResults();
         app.Run(kTRUE); // really important to return...
