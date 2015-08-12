@@ -195,7 +195,7 @@ void Energy::GUI_CalibType::StartRange(const interval<TID>& range)
         LOG(INFO) << GetName() << ": Loaded previous values from database";
     }
     else {
-        LOG(INFO) << GetName() << ": No previous values found, built new gains for all channel from default gain";
+        LOG(INFO) << GetName() << ": No previous values found, built from default value";
     }
 
     // save a copy for comparison at finish stage
