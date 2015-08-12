@@ -1,8 +1,9 @@
 #include "CalCanvas.h"
 
-#include "FitFunction.h"
 #include "GUIElements.h"
 #include "base/Logger.h"
+
+#include "fitfunctions/FitFunction.h"
 
 #include "TF1.h"
 #include "TH1.h"

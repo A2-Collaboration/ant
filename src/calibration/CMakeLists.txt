@@ -27,16 +27,17 @@ set(SRCS
     converters/ScalerFrequency.cc
     gui/Manager.cc
     gui/Manager_traits.h
-    gui/BaseFunctions.cc
     gui/GUIbase.h
-    gui/FitFunction.cc
     gui/CalCanvas.cc
     gui/GUIElements.cc
-    gui/TF1Knobs.cc
-    gui/FitGausPol3.cc
     gui/AvgBuffer.h
     gui/ACECanvas.cc
     gui/Dialogs.cc
+    fitfunctions/BaseFunctions.cc
+    fitfunctions/TF1Knobs.cc
+    fitfunctions/FitFunction.cc
+    fitfunctions/FitGaus.cc
+    fitfunctions/FitGausPol3.cc
   )
 
 add_library(calibration ${SRCS})

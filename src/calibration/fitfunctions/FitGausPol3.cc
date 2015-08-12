@@ -1,11 +1,13 @@
 #include "FitGausPol3.h"
 
-#include "TF1.h"
-#include "TH1.h"
+
 #include "TF1Knobs.h"
 #include "BaseFunctions.h"
 
 #include "base/Logger.h"
+
+#include "TF1.h"
+#include "TH1.h"
 
 using namespace ant::calibration;
 

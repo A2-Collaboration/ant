@@ -1,6 +1,6 @@
 #pragma once
 
-#include "GUIbase.h"
+#include "gui/GUIbase.h"
 
 #include <string>
 

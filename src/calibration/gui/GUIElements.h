@@ -1,7 +1,6 @@
 #pragma once
 
 #include "calibration/gui/GUIbase.h"
-#include "calibration/gui/FitFunction.h"
 
 #include <memory>
 

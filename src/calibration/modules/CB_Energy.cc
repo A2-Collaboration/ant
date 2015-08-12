@@ -1,7 +1,7 @@
 #include "CB_Energy.h"
 
 #include "calibration/gui/CalCanvas.h"
-#include "calibration/gui/FitGausPol3.h"
+#include "calibration/fitfunctions/FitGausPol3.h"
 
 #include "analysis/plot/HistogramFactories.h"
 #include "analysis/data/Event.h"
