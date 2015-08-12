@@ -11,7 +11,6 @@ set(SRCS
     Editor.cc
     DataBase.cc
     DataManager.cc
-    detail/Helpers.h
     modules/Time.cc
     modules/Energy.cc
     modules/Scaler.cc

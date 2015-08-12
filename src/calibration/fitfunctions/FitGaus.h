@@ -23,7 +23,7 @@ namespace ant {
 namespace calibration {
 namespace gui {
 
-class FitFunctionGaus: public FitFunction {
+class FitGaus: public FitFunction {
 protected:
     TF1* func = nullptr;
 
@@ -40,9 +40,9 @@ protected:
     };
 
 public:
-    FitFunctionGaus();
+    FitGaus();
 
-    virtual ~FitFunctionGaus();
+    virtual ~FitGaus();
 
     virtual void Draw() override;
 

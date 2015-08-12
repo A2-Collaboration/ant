@@ -140,7 +140,7 @@ list<gui::CalCanvas*> CB_Energy::TheGUI::GetCanvases() const
     return {c_fit, c_overview};
 }
 
-CB_Energy::TheGUI::DoFitReturn_t CB_Energy::TheGUI::DoFit(TH1* hist, unsigned channel)
+gui::Manager_traits::DoFitReturn_t CB_Energy::TheGUI::DoFit(TH1* hist, unsigned channel)
 {
     if(cb_detector->IsIgnored(channel))
         return DoFitReturn_t::Skip;

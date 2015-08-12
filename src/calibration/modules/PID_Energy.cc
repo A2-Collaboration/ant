@@ -1,7 +1,6 @@
 #include "PID_Energy.h"
 #include "analysis/plot/HistogramFactories.h"
 #include "analysis/data/Event.h"
-#include "analysis/utils/combinatorics.h"
 
 #include "expconfig/detectors/PID.h"
 

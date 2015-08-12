@@ -14,7 +14,7 @@ using namespace ant;
 using namespace ant::calibration;
 using namespace ant::calibration::gui;
 
-FitFunctionGaus::FitFunctionGaus()
+FitGaus::FitGaus()
 {
     func = functions::gaus::getFT1();
     func->SetNpx(1000);
@@ -25,21 +25,21 @@ FitFunctionGaus::FitFunctionGaus()
     Addknob<KnobsTF1::RangeKnob>("Max", func, KnobsTF1::RangeKnob::RangeEndType::upper);
 }
 
-FitFunctionGaus::~FitFunctionGaus()
+FitGaus::~FitGaus()
 {
 }
 
-void FitFunctionGaus::Draw()
+void FitGaus::Draw()
 {
     func->Draw("same");
 }
 
-void FitFunctionGaus::Fit(TH1 *hist)
+void FitGaus::Fit(TH1 *hist)
 {
     hist->Fit(func,"RBQN");
 }
 
-void FitFunctionGaus::SetDefaults(TH1 *hist)
+void FitGaus::SetDefaults(TH1 *hist)
 {
     SetRange({0,400});
     if(hist) {
@@ -51,22 +51,22 @@ void FitFunctionGaus::SetDefaults(TH1 *hist)
     func->SetParameter(2,20);
 }
 
-void FitFunctionGaus::SetRange(ant::interval<double> i)
+void FitGaus::SetRange(ant::interval<double> i)
 {
     setRange(func, i);
 }
 
-ant::interval<double> FitFunctionGaus::GetRange() const
+ant::interval<double> FitGaus::GetRange() const
 {
     return getRange(func);
 }
 
-void FitFunctionGaus::SetPoints(int n)
+void FitGaus::SetPoints(int n)
 {
     func->SetNpx(n);
 }
 
-FitFunction::SavedState_t FitFunctionGaus::Save() const
+FitFunction::SavedState_t FitGaus::Save() const
 {
     std::vector<double> params;
 
@@ -75,7 +75,7 @@ FitFunction::SavedState_t FitFunctionGaus::Save() const
     return params;
 }
 
-void FitFunctionGaus::Load(const SavedState_t &data)
+void FitGaus::Load(const SavedState_t &data)
 {
     if(data.size() != std::size_t(2+func->GetNpar())) {
         LOG(WARNING) << "Can't load parametes";
@@ -88,23 +88,23 @@ void FitFunctionGaus::Load(const SavedState_t &data)
 
 }
 
-double FitFunctionGaus::GetPeakPosition() const
+double FitGaus::GetPeakPosition() const
 {
     return func->GetParameter(1);
 }
 
-FitFunctionGaus::MyWKnob::MyWKnob(const std::string &n, TF1 *Func):
+FitGaus::MyWKnob::MyWKnob(const std::string &n, TF1 *Func):
     VirtualKnob(n,{GUIElementDescription::GUI_Type::slider_vertical,kBlue,3}),
     func(Func)
 {
 }
 
-double FitFunctionGaus::MyWKnob::get() const
+double FitGaus::MyWKnob::get() const
 {
     return func->GetParameter(1) + func->GetParameter(2);
 }
 
-void FitFunctionGaus::MyWKnob::set(double a)
+void FitGaus::MyWKnob::set(double a)
 {
     auto v = a - func->GetParameter(1);
     func->SetParameter(2,v);

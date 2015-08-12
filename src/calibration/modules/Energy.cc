@@ -217,13 +217,11 @@ void Energy::GUI_CalibType::StoreFinishRange(const interval<TID>& range)
     std::vector<double>& values = calibType.Values;
 
     // fill data
-    cdata.Data.resize(0);
     for(unsigned ch=0;ch<values.size();ch++) {
         cdata.Data.emplace_back(ch, values[ch]);
     }
 
     // fill fit parameters (if any)
-    cdata.FitParameters.resize(0);
     for(const auto& it_map : fitParameters) {
         const unsigned ch = it_map.first;
         const vector<double>& params = it_map.second;
