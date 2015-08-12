@@ -13,6 +13,7 @@ namespace physics {
 class CandidatesAnalysis : public Physics {
 protected:
     TH1D* nCandidatesEvent = nullptr;
+    TH1D* CandMultiplicities = nullptr;
     TH1D* energy = nullptr;
     TH1D* theta = nullptr;
     TH1D* phi = nullptr;
@@ -20,6 +21,7 @@ protected:
     TH1D* ttIM = nullptr;
     TH2D* cbdEE = nullptr;
     TH2D* tapsdEE = nullptr;
+    TH1D* detectors = nullptr;
 
 public:
     CandidatesAnalysis(const std::string& name="CandidatesAnalysis");

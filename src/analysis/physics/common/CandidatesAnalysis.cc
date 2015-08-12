@@ -14,7 +14,13 @@ using namespace ant::analysis::data;
 CandidatesAnalysis::CandidatesAnalysis(const string &name):
     Physics(name)
 {
-    nCandidatesEvent = HistFac.makeTH1D("Candidates/Event","Candidates","",BinSettings(30),"nCand");
+    nCandidatesEvent = HistFac.makeTH1D("Candidates/Event","Candidates","",BinSettings(15),"nCand");
+    CandMultiplicities = HistFac.makeTH1D("Candidates Multi","","",BinSettings(15),"CandMult");
+
+    for(int i=1; i<CandMultiplicities->GetNbinsX(); ++i) {
+        CandMultiplicities->GetXaxis()->SetBinLabel(i,string(to_string(i-1)+"+").c_str());
+    }
+
     energy = HistFac.makeTH1D("Energy","E [MeV]","",BinSettings(1000),"energy");
     theta  = HistFac.makeTH1D("Theta","#theta [#circ]","",BinSettings(360,0,180),"theta");
     phi    = HistFac.makeTH1D("Phi","#phi [#circ]","",BinSettings(720,-180,180),"phi");
@@ -22,6 +28,7 @@ CandidatesAnalysis::CandidatesAnalysis(const string &name):
     ttIM         = HistFac.makeTH1D("2 Candidates IM","M [MeV]","",BinSettings(1000),"ttIM");
     cbdEE = HistFac.makeTH2D("CB dE-E","E_{CB} [MeV]","dE_{PID} [MeV]", BinSettings(1000),BinSettings(100,0,30),"cb_dEE");
     tapsdEE = HistFac.makeTH2D("TAPS dE-E","E_{TAPS} [MeV]","dE_{TAPSVeto} [MeV]", BinSettings(1000),BinSettings(100,0,30),"taps_dEE");
+    detectors = HistFac.makeTH1D("Detectors","","", BinSettings(1),"detectors");
 }
 
 void CandidatesAnalysis::ProcessEvent(const Event &event)
@@ -30,6 +37,10 @@ void CandidatesAnalysis::ProcessEvent(const Event &event)
 
     nCandidatesEvent->Fill(candidates.size());
 
+    for(size_t i=0; i<=candidates.size(); ++i) {
+        CandMultiplicities->Fill(i);
+    }
+
     CandidateList::const_iterator i = candidates.begin();
 
     while(i!=candidates.end()) {
@@ -37,6 +48,7 @@ void CandidatesAnalysis::ProcessEvent(const Event &event)
         energy->Fill((*i)->ClusterEnergy());
         theta->Fill((*i)->Theta()*TMath::RadToDeg());
         phi->Fill((*i)->Phi()*TMath::RadToDeg());
+        detectors->Fill(string(ci->Detector()).c_str(),1);
 
         if((*i)->ClusterEnergy()>20.0) {
 
@@ -77,9 +89,9 @@ void CandidatesAnalysis::ShowResult()
 {
     canvas("CandidatesAnalysis")
             << ggIM << energy << theta << phi
-            << nCandidatesEvent
+            << nCandidatesEvent << CandMultiplicities
             << drawoption("colz")
-            << cbdEE << tapsdEE
+            << cbdEE << tapsdEE << detectors
             << endc;
 }
 
