@@ -53,6 +53,7 @@ set(ANALYSIS_PHYSICS
   physics/common/DataOverview.cc
   physics/omega/mctrue_acceptance.cc
   physics/common/CandidatesAnalysis.cc
+  physics/common/ParticleIDCheck.cc
   )
 
 set(ANALYSIS_ALL
