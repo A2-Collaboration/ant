@@ -26,7 +26,7 @@
 #include "base/filesystem.h"
 
 #include "TRint.h"
-#include "TStyle.h"
+#include "TSystem.h"
 
 #include <sstream>
 #include <string>
@@ -39,13 +39,26 @@ using namespace std;
 using namespace ant;
 
 bool running = true;
-void myCrashHandler(int sig);
 string exec(const string& cmd);
 bool testopen(const string& filename, string& msg);
 
+class MyTInterruptHandler : public TSignalHandler {
+public:
+    MyTInterruptHandler() : TSignalHandler(kSigInterrupt, kFALSE) { }
+
+    Bool_t  Notify() {
+        if (fDelay) {
+            fDelay++;
+            return kTRUE;
+        }
+        running = false;
+        return kTRUE;
+    }
+};
+
+
 int main(int argc, char** argv) {
     SetupLogger();
-    el::Helpers::setCrashHandler(myCrashHandler);
 
     TCLAP::CmdLine cmd("ant", ' ', "0.1");
     auto cmd_verbose = cmd.add<TCLAP::ValueArg<int>>("v","verbose","Verbosity level (0..9)", false, 0,"level");
@@ -76,6 +89,11 @@ int main(int argc, char** argv) {
     int fake_argc=0;
     char** fake_argv=nullptr;
     TRint app("ant",&fake_argc,fake_argv,nullptr,0,true);
+    auto oldsig = app.GetSignalHandler();
+    oldsig->Remove();
+    auto mysig = new MyTInterruptHandler();
+    mysig->Add();
+    gSystem->AddSignalHandler(mysig);
 
     // check if input files are readable
     for(const auto& inputfile : cmd_input->getValue()) {
@@ -320,6 +338,11 @@ int main(int argc, char** argv) {
 
     if(!cmd_batchmode->isSet()) {
 
+        mysig->Remove();
+        oldsig->Add();
+        gSystem->AddSignalHandler(oldsig);
+        delete mysig;
+
         if(masterFile != nullptr)
             LOG(INFO) << "Stopped running, but close ROOT properly to write data to disk.";
 
@@ -358,12 +381,3 @@ string exec(const string& cmd) {
     return result;
 }
 
-void myCrashHandler(int sig) {
-    if(sig == SIGINT) {
-        LOG(INFO) << "Ctrl-C received, stop running...";
-        running = false;
-        return;
-    }
-    // FOLLOWING LINE IS ABSOLUTELY NEEDED AT THE END IN ORDER TO ABORT APPLICATION
-    el::Helpers::crashAbort(sig);
-}
