@@ -164,6 +164,7 @@ void WrapTFileInput::OpenFile(const string& filename)
 {
     SavedDirectory_t d;
     auto file = openFile(filename, "READ");
+    VLOG(5) << "Opened file " << filename << " for reading";
     d.pop();
 
     files.emplace_back(std::move(file));
