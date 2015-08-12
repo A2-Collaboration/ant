@@ -24,6 +24,14 @@ namespace reconstruct {
 
 class CandidateBuilder {
 protected:
+
+    /**
+     * @brief option_allowSingleVetoClusters: Make unmached Veto (PID/TAPSVeto) clusters into individual candidates.
+     *        To detect partiles that get stuck in the plastic scintillator.
+     * @todo Make this configurable via ant::expconfig.
+     */
+    bool option_allowSingleVetoClusters = false;
+
     std::shared_ptr<expconfig::detector::CB>  cb;
     std::shared_ptr<expconfig::detector::PID> pid;
     std::shared_ptr<expconfig::detector::TAPS> taps;

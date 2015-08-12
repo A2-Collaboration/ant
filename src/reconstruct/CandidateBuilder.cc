@@ -122,7 +122,7 @@ void CandidateBuilder::Catchall(std::map<Detector_t::Type_t, std::list<TCluster>
         const auto& detector_type = cluster_list.first;
         const auto& clusters      = cluster_list.second;
 
-        if(detector_type == Detector_t::Type_t::PID || detector_type == Detector_t::Type_t::TAPSVeto) {
+        if(option_allowSingleVetoClusters && (detector_type == Detector_t::Type_t::PID || detector_type == Detector_t::Type_t::TAPSVeto)) {
             for(auto& c : clusters) {
                 candidates.emplace_back(
                             0,
