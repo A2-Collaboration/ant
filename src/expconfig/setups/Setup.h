@@ -88,6 +88,27 @@ public:
         return detectors;
     }
 
+    virtual std::list< std::shared_ptr<Updateable_traits> > GetUpdateables() const override {
+        std::list< std::shared_ptr<Updateable_traits> > list;
+        for(const auto& hook : reconstruct_hooks) {
+            std_ext::AddToSharedPtrList<Updateable_traits, ReconstructHook::Base>(
+                        hook, list
+                        );
+        }
+        for(const auto& calib : calibrations) {
+            std_ext::AddToSharedPtrList<Updateable_traits, Calibration::BaseModule>(
+                        calib, list
+                        );
+        }
+        for(const auto& det : detectors) {
+            std_ext::AddToSharedPtrList<Updateable_traits, Detector_t>(
+                        det, list
+                        );
+        }
+        return list;
+    }
+
+
     virtual std::string GetPIDCutsDirectory() const override {
         return std::string(ANT_PATH_DATABASE)+"/"+GetName()+"/cuts";
     }

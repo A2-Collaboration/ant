@@ -53,6 +53,7 @@ public:
     public:
         virtual std::list< std::shared_ptr< ReconstructHook::Base > > GetReconstructHooks() const = 0;
         virtual std::list< std::shared_ptr< Detector_t > > GetDetectors() const = 0;
+        virtual std::list< std::shared_ptr< Updateable_traits> > GetUpdateables() const = 0;
 
         // for clustering, may be extended to config struct
         // (e.g. for position weighting options)

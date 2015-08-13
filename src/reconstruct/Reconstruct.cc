@@ -34,10 +34,6 @@ void Reconstruct::Initialize(const THeaderInfo& headerInfo)
 {
     const auto& config = ExpConfig::Reconstruct::Get(headerInfo);
 
-    // calibrations and detector may change their parameters
-    // during reconstruct, so we scan for those items
-    shared_ptr_list<Updateable_traits> updateables;
-
     // hooks are usually calibrations, which may also be updateable
     const shared_ptr_list<ReconstructHook::Base>& hooks = config->GetReconstructHooks();
     for(const auto& hook : hooks) {
@@ -45,17 +41,11 @@ void Reconstruct::Initialize(const THeaderInfo& headerInfo)
                 (hook, hooks_readhits);
         std_ext::AddToSharedPtrList<ReconstructHook::Clusters, ReconstructHook::Base>
                 (hook, hooks_clusters);
-        std_ext::AddToSharedPtrList<Updateable_traits, ReconstructHook::Base>
-                (hook, updateables);
     }
 
-    // detectors serve different purposes, ...
+    // put the detectors in a map for convinient access
     const shared_ptr_list<Detector_t>& detectors = config->GetDetectors();
     for(const auto& detector : detectors) {
-        // ... they may be updateable (think of the PID Phi angles)
-        std_ext::AddToSharedPtrList<Updateable_traits, Detector_t>
-                (detector, updateables);
-        // ... but also are needed in DoReconstruct
         auto ret = sorted_detectors.insert(make_pair(detector->Type, detector));
         if(!ret.second) {
             throw Exception("Reconstruct config provided detector list with two detectors of same type");
@@ -71,7 +61,7 @@ void Reconstruct::Initialize(const THeaderInfo& headerInfo)
 
     // init the updateable manager
     updateablemanager = std_ext::make_unique<UpdateableManager>(
-                            headerInfo.ID, move(updateables)
+                            headerInfo.ID, config->GetUpdateables()
                             );
 }
 
