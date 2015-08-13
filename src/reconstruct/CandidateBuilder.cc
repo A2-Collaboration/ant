@@ -57,6 +57,7 @@ void CandidateBuilder::Build_PID_CB(std::map<Detector_t::Type_t, std::list<TClus
                                 pid_cluster->Energy
                                 );
                     cb_cluster = cb_clusters.erase(cb_cluster);
+                    matched = true;
                 }
                 else {
                     ++cb_cluster;
@@ -114,6 +115,7 @@ void CandidateBuilder::Build_TAPS_Veto(std::map<Detector_t::Type_t, std::list<TC
                             veto->Energy
                             );
                 taps = taps_clusters.erase(taps);
+                matched = true;
             } else {
                 ++taps;
             }
