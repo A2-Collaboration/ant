@@ -205,8 +205,11 @@ CandidateBuilder::CandidateBuilder(const CandidateBuilder::sorted_detectors_t& s
 
 }
 
-void CandidateBuilder::Build(std::map<Detector_t::Type_t, std::list<TCluster> > sorted_clusters,
-                         TEvent::candidates_t& candidates, std::vector<TCluster>& insane_clusters)
+void CandidateBuilder::Build(
+        std::map<Detector_t::Type_t, std::list<TCluster> > sorted_clusters,
+        TEvent::candidates_t& candidates,
+        std::vector<TCluster>& insane_clusters
+        )
 {
 
     if(cb && pid)
