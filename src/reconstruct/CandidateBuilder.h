@@ -63,7 +63,7 @@ public:
     // with tracks built from the given sorted clusters
     /// \todo make this method abstract and create proper derived Candidate builders
     virtual void Build(std::map<Detector_t::Type_t, std::list<TCluster> > sorted_clusters,
-            TEvent::candidates_t& tracks,
+            TEvent::candidates_t& candidates,
             std::vector<TCluster>& insane_clusters
             );
 };
