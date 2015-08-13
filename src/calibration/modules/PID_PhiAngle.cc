@@ -9,6 +9,7 @@
 #include "base/std_ext.h"
 
 #include "TGraph.h"
+#include "TFitResult.h"
 
 #include <limits>
 #include <cmath>
@@ -78,10 +79,10 @@ void PID_PhiAngle::ThePhysics::ProcessEvent(const Event& event)
     if(!isfinite(phi_cb) || cluster_pid == nullptr)
         return;
 
-    phi_cb = std_ext::radian_to_degree(phi_cb);
+    const double phi_cb_degrees = std_ext::radian_to_degree(phi_cb);
 
-    pid_cb_phi_corr->Fill(phi_cb,     cluster_pid->CentralElement);
-    pid_cb_phi_corr->Fill(phi_cb+360, cluster_pid->CentralElement);
+    pid_cb_phi_corr->Fill(phi_cb_degrees,     cluster_pid->CentralElement);
+    pid_cb_phi_corr->Fill(phi_cb_degrees+360, cluster_pid->CentralElement);
 
 }
 
@@ -95,9 +96,12 @@ void PID_PhiAngle::ThePhysics::ShowResult()
     canvas(GetName()) << drawoption("colz") << pid_cb_phi_corr << endc;
 }
 
-PID_PhiAngle::PID_PhiAngle(shared_ptr<expconfig::detector::PID> pid) :
+PID_PhiAngle::PID_PhiAngle(
+        const std::shared_ptr<expconfig::detector::PID>& pid,
+        const std::shared_ptr<DataManager>& calmgr) :
     Module("PID_PhiAngle"),
-    pid_detector(pid)
+    pid_detector(pid),
+    calibrationManager(calmgr)
 {
 }
 
@@ -136,7 +140,8 @@ PID_PhiAngle::TheGUI::TheGUI(const string& basename,
                              const std::shared_ptr<expconfig::detector::PID>& pid) :
     gui::Manager_traits(basename),
     calibrationManager(calmgr),
-    pid_detector(pid)
+    pid_detector(pid),
+    func(make_shared<gui::FitGaus>())
 {
 }
 
@@ -219,6 +224,9 @@ void ant::calibration::PID_PhiAngle::TheGUI::StoreFit(unsigned channel)
     double newAngle = func->GetPeakPosition();
     if(newAngle>180.0)
         newAngle -= 360.0;
+    if(newAngle<0)
+        newAngle += 360.0;
+
 
     angles[channel] = newAngle;
 
@@ -234,15 +242,23 @@ void ant::calibration::PID_PhiAngle::TheGUI::StoreFit(unsigned channel)
 bool ant::calibration::PID_PhiAngle::TheGUI::FinishRange()
 {
    h_result = new TGraph(GetNumberOfChannels());
+   for(size_t ch=0;ch<GetNumberOfChannels();ch++)
+       h_result->SetPoint(ch, ch, angles[ch]);
+   TFitResultPtr r = h_result->Fit("pol1","QS");
+   phi_offset = r->Value(0);
+   LOG(INFO) << "Found Phi offset of first channel: " << phi_offset;
+
    h_result->SetTitle("Result");
    h_result->GetXaxis()->SetTitle("Channel number");
    h_result->GetYaxis()->SetTitle("CB Phi position / degrees");
-   for(size_t ch=0;ch<GetNumberOfChannels();ch++)
-       h_result->SetPoint(ch, ch, angles[ch]);
-   h_result->Fit("pol1","Q");
+   h_result->SetMarkerSize(2);
+   h_result->SetMarkerStyle(kMultiply);
 
    c_result->cd();
-   h_result->Draw();
+   h_result->Draw("AP");
+
+   c_result->Modified();
+   c_result->Update();
 
    return true;
 }
@@ -274,7 +290,19 @@ void ant::calibration::PID_PhiAngle::TheGUI::StoreFinishRange(const interval<TID
         cdata.FitParameters.emplace_back(ch, params);
     }
 
-    calibrationManager->Add(cdata);
+    TCalibrationData cdata_offset(
+                "Unknown", /// \todo get static information about author/comment?
+                "No Comment",
+                time(nullptr),
+                GetName(),
+                range.Start(),
+                range.Stop()
+                );
+    cdata_offset.Data.emplace_back(0, phi_offset);
 
-    LOG(INFO) << "Added TCalibrationData " << cdata;
+
+    calibrationManager->Add(cdata);
+    calibrationManager->Add(cdata_offset);
+    LOG(INFO) << "Added TCalibrationData: " << cdata;
+    LOG(INFO) << "Added TCalibrationData: " << cdata_offset;
 }

@@ -90,7 +90,7 @@ public:
         AddCalibration<calibration::TAPS_ShowerCorrection>();
 
         // the PID calibration is a physics module only
-        AddCalibration<calibration::PID_PhiAngle>(pid);
+        AddCalibration<calibration::PID_PhiAngle>(pid, calibrationDataManager);
 
     }
 

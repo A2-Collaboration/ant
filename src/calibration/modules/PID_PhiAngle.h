@@ -28,7 +28,9 @@ class FitGaus;
 class PID_PhiAngle : public Calibration::Module
 {
 public:
-    PID_PhiAngle(std::shared_ptr<expconfig::detector::PID>  pid);
+    PID_PhiAngle(const std::shared_ptr<expconfig::detector::PID>&  pid,
+            const std::shared_ptr<DataManager>& calmgr
+            );
     virtual ~PID_PhiAngle();
 
     class ThePhysics : public analysis::Physics {
@@ -58,6 +60,8 @@ public:
         std::vector<double> previousAngles;
         std::map< unsigned, std::vector<double> > fitParameters;
 
+        double phi_offset = std::numeric_limits<double>::quiet_NaN();
+
     public:
         TheGUI(const std::string& basename,
                const std::shared_ptr<DataManager>& calmgr,
@@ -85,8 +89,8 @@ public:
     virtual void Update(std::size_t index, const TID& id) override;
 
 protected:
-    std::shared_ptr<DataManager> calibrationManager;
     std::shared_ptr<expconfig::detector::PID> pid_detector;
+    std::shared_ptr<DataManager> calibrationManager;
 
 
 
