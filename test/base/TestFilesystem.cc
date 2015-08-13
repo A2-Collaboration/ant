@@ -22,14 +22,21 @@ TEST_CASE("Write WrapTfile", "[base]") {
 }
 
 void dotest() {
-    tmpfile_t a(".tst");
+    tmpfolder_t folder;
+    tmpfile_t a(folder, ".tst");
     a.write_testdata();
 
     list<string> files;
 
-    REQUIRE_NOTHROW(files = filesystem::lsFiles(".",".tst"));
+    REQUIRE_NOTHROW(files = filesystem::lsFiles(folder.foldername,".tst"));
     REQUIRE(files.size()==1);
-    REQUIRE(files.front()==string("./"+a.filename));
+    REQUIRE(files.front()==string(a.filename));
 
+
+    tmpfile_t b(folder, ".tst");
+    b.write_testdata();
+
+    REQUIRE_NOTHROW(files = filesystem::lsFiles(folder.foldername,".tst"));
+    REQUIRE(files.size()==2);
 }
 
