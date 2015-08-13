@@ -13,20 +13,12 @@
 
 namespace ant {
 
-/**
- * @brief A self-deleting tempfile.
- */
 struct tmpfile_t {
-    std::string filename;
-    std::vector<std::uint8_t> testdata;
-
-    /**
-     * @brief Construtor. Generates a temp filename of the from anttmpfile.XXXXXX" + extension
-     * @param extension optional file extension.
-     */
-    tmpfile_t(const std::string& extension="");
-    void write_testdata();
-    ~tmpfile_t();
+  std::string filename;
+  std::vector<std::uint8_t> testdata;
+  tmpfile_t();
+  void write_testdata();
+  ~tmpfile_t();
 };
 
 }
