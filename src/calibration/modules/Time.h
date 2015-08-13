@@ -9,6 +9,9 @@
 #include <memory>
 #include <limits>
 
+#include "TH1D.h"
+#include "TH2D.h"
+
 class TH1;
 
 namespace ant {
@@ -41,9 +44,14 @@ public:
     public:
         using Physics::Physics;
 
+		ThePhysics(const std::string& name, const std::string& histName);
         virtual void ProcessEvent(const analysis::data::Event& event) override;
         virtual void Finish() override;
         virtual void ShowResult() override;
+
+    protected:
+        TH1D* hTime;
+        TH2D* hOverView;
     };
 
     // Physics_traits interface

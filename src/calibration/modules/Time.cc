@@ -51,6 +51,14 @@ Time::Time(Detector_t::Type_t detectorType,
 }
 
 std::vector<std::list<TID> > Time::GetChangePoints() const {
+   // vector<list<TID>> changePointLists;
+
+//    for (const auto& calib_name: { Pedestals.Name, Gains.Name, Thresholds.Name, RelativeGains.Name}) {
+ //       changePointLists.push_back(calibrationManager->GetChangePoints(
+  //                                     GUI_CalibType::ConstructName(GetName(), calib_name)
+   //                                    )
+    //                               );
+  //  }
     return {};
 }
 
@@ -91,6 +99,16 @@ void Time::ApplyTo(const readhits_t& hits, extrahits_t&)
     }
 }
 
+Time::ThePhysics::ThePhysics(const string& name, const string& histName):
+//                             unsigned nChannels0):
+    Physics(name)
+{
+    hTime = HistFac.makeTH1D("Detectorname -Time",
+                             "time [ns]","#",
+                             BinSettings(200,-40,40),
+                             histName);
+
+}
 
 
 void ant::calibration::Time::ThePhysics::ProcessEvent(const Event& event)
