@@ -94,7 +94,8 @@ int main(int argc, char** argv) {
     gui->SetModule(calibrationgui);
 
     int fake_argc=0;
-    auto app = std_ext::make_unique<TRint>("ant-calib",&fake_argc,nullptr);
+    char** fake_argv=nullptr;
+    auto app = std_ext::make_unique<TRint>("ant-calib",&fake_argc,fake_argv);
 
     auto exec = std_ext::make_unique<MyExec>(gui.get(), app.get());
     exec->Exec("firstcall");

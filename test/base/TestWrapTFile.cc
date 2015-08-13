@@ -45,7 +45,7 @@ void readFile(const std::string& filename) {
 
     REQUIRE_NOTHROW( file->OpenFile(filename));
     REQUIRE_NOTHROW( cut = file->GetSharedClone<TCutG>("test"));
-    REQUIRE(cut != nullptr);
+    REQUIRE( (cut != nullptr) );
     REQUIRE_NOTHROW(file=nullptr);
     REQUIRE(cut->GetN() == 3);
 }

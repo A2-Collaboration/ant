@@ -27,7 +27,6 @@ AntReader::AntReader(
         std::unique_ptr<Reconstruct_traits> reconstruct
         ) :
     reader(move(unpacker_reader)),
-    writer(nullptr),
     reconstruct(move(reconstruct)),
     haveReconstruct(false),
     nEvents(0),

@@ -86,7 +86,8 @@ public:
     /**
      * @brief ShowGuidelines remove the snapping guidelines completely
      */
-    virtual void ShowGuidelines(TObject*, const Int_t, const char, const bool) override {}
+    // do not mark it override since older ROOT versions don't have this routine
+    virtual void ShowGuidelines(TObject*, const Int_t, const char, const bool) {}
 };
 }
 }
