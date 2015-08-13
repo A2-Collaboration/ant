@@ -41,14 +41,15 @@ void FitGaus::Fit(TH1 *hist)
 
 void FitGaus::SetDefaults(TH1 *hist)
 {
-    SetRange({0,400});
     if(hist) {
         func->SetParameter(0,hist->GetMaximum());
     } else {
-        func->SetParameter(0,1000);
+        func->SetParameter(0,100);
     }
-    func->SetParameter(1,135);
+    double max_pos = hist->GetXaxis()->GetBinCenter(hist->GetMaximumBin());
+    func->SetParameter(1,max_pos);
     func->SetParameter(2,20);
+    SetRange({max_pos-60, max_pos+60});
 }
 
 void FitGaus::SetRange(ant::interval<double> i)
