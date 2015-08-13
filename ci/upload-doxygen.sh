@@ -14,6 +14,7 @@ git clone -b gh-pages "${REPO_PATH}" --single-branch ${HTML_PATH}
 
 # rm all the files through git to prevent stale files.
 cd ${HTML_PATH}
+git reset --hard 7742183a2e40171ab3c3d4aaaf1f9cedde566b37
 git rm -rf .
 cd -
 
@@ -29,5 +30,5 @@ git add .
 git config user.name "${COMMIT_USER}"
 git config user.email "${COMMIT_EMAIL}"
 git commit -m "Automated documentation build for changeset ${CHANGESET}."
-git push origin gh-pages
+git push -f origin gh-pages
 cd -
