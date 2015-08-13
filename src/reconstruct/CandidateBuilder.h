@@ -62,7 +62,7 @@ public:
     // this method shall fill the TEvent reference
     // with tracks built from the given sorted clusters
     /// \todo make this method abstract and create proper derived Candidate builders
-    virtual void Build(std::map<Detector_t::Type_t, std::list<TCluster> >&& sorted_clusters,
+    virtual void Build(std::map<Detector_t::Type_t, std::list<TCluster> > sorted_clusters,
             TEvent::candidates_t& tracks,
             std::vector<TCluster>& insane_clusters
             );

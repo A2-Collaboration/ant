@@ -17,8 +17,14 @@ using namespace ant::expconfig;
 
 void CandidateBuilder::Build_PID_CB(std::map<Detector_t::Type_t, std::list<TCluster> >& sorted_clusters, TEvent::candidates_t& candidates)
 {
-    auto& cb_clusters  = sorted_clusters[Detector_t::Type_t::CB];
-    auto& pid_clusters = sorted_clusters[Detector_t::Type_t::PID];
+    auto it_cb_clusters = sorted_clusters.find(Detector_t::Type_t::CB);
+    if(it_cb_clusters == sorted_clusters.end())
+        return;
+    auto& cb_clusters  = it_cb_clusters->second;
+    auto it_pid_clusters = sorted_clusters.find(Detector_t::Type_t::PID);
+    if(it_pid_clusters == sorted_clusters.end())
+        return;
+    auto& pid_clusters  = it_pid_clusters->second;
 
     auto pid_cluster = pid_clusters.begin();
 
@@ -73,8 +79,14 @@ void CandidateBuilder::Build_PID_CB(std::map<Detector_t::Type_t, std::list<TClus
 
 void CandidateBuilder::Build_TAPS_Veto(std::map<Detector_t::Type_t, std::list<TCluster> >& sorted_clusters, TEvent::candidates_t& candidates)
 {
-    auto& veto_clusters = sorted_clusters[Detector_t::Type_t::TAPSVeto];
-    auto& taps_clusters = sorted_clusters[Detector_t::Type_t::TAPS];
+    auto it_taps_clusters = sorted_clusters.find(Detector_t::Type_t::TAPS);
+    if(it_taps_clusters == sorted_clusters.end())
+        return;
+    auto& taps_clusters  = it_taps_clusters->second;
+    auto it_veto_clusters = sorted_clusters.find(Detector_t::Type_t::TAPSVeto);
+    if(it_veto_clusters == sorted_clusters.end())
+        return;
+    auto& veto_clusters  = it_veto_clusters->second;
 
     const auto element_radius2 = std_ext::sqr(tapsveto->GetElementRadius());
 
@@ -191,17 +203,17 @@ CandidateBuilder::CandidateBuilder(const CandidateBuilder::sorted_detectors_t& s
 
 }
 
-void CandidateBuilder::Build(std::map<Detector_t::Type_t, std::list<TCluster> >&& sorted_clusters,
-                         TEvent::candidates_t& tracks, std::vector<TCluster>& insane_clusters)
+void CandidateBuilder::Build(std::map<Detector_t::Type_t, std::list<TCluster> > sorted_clusters,
+                         TEvent::candidates_t& candidates, std::vector<TCluster>& insane_clusters)
 {
 
     if(cb && pid)
-        Build_PID_CB(sorted_clusters, tracks);
+        Build_PID_CB(sorted_clusters, candidates);
 
     if(taps && tapsveto)
-        Build_TAPS_Veto(sorted_clusters, tracks);
+        Build_TAPS_Veto(sorted_clusters, candidates);
 
-    Catchall(sorted_clusters, tracks);
+    Catchall(sorted_clusters, candidates);
 
     // move the rest to insane clusters
     for(auto& det_entry : sorted_clusters) {
