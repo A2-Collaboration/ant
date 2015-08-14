@@ -15,17 +15,23 @@ public:
     {
 
         // setup the detectors of interest
-        const auto trigger = make_shared<detector::Trigger_2014>();
-        const bool cherenkovInstalled = false;
+        auto trigger = make_shared<detector::Trigger_2014>();
         AddDetector(trigger);
-        AddDetector<detector::EPT_2014>(GetElectronBeamEnergy());
+
+        auto EPT = make_shared<detector::EPT_2014>(GetElectronBeamEnergy());;
+        AddDetector(EPT);
+
         auto cb = make_shared<detector::CB>();
         AddDetector(cb);
+
         auto pid = make_shared<detector::PID_2014>();
         AddDetector(pid);
+
+        const bool cherenkovInstalled = false;
         auto taps = make_shared<detector::TAPS_2013>(cherenkovInstalled, false); // no Cherenkov, don't use sensitive channels
         AddDetector(taps);
-        AddDetector<detector::TAPSVeto_2014>(cherenkovInstalled); // no Cherenkov
+        auto tapsVeto = make_shared<detector::TAPSVeto_2014>(cherenkovInstalled); // no Cherenkov
+        AddDetector(tapsVeto);
 
 
         // then calibrations need some rawvalues to "physical" values converters
@@ -51,27 +57,27 @@ public:
                                             convert_ScalerFrequency_Beampolmon);
 
         // then we add the others, and link it to the converters
-        AddCalibration<calibration::Time>(Detector_t::Type_t::EPT,
+        AddCalibration<calibration::Time>(EPT,
                                           convert_CATCH_Tagger,
                                           -325 // default offset in ns
                                           );
-        AddCalibration<calibration::Time>(Detector_t::Type_t::CB,
+        AddCalibration<calibration::Time>(cb,
                                           convert_CATCH_CB,
                                           -325,      // default offset in ns
                                           interval<double>{-100, 100} // default time window cut in ns
                                           );
-        AddCalibration<calibration::Time>(Detector_t::Type_t::PID,
+        AddCalibration<calibration::Time>(pid,
                                           convert_CATCH_CB,
                                           -325,
                                           interval<double>{-500, 500} // default time window cut in ns
                                           );
-        AddCalibration<calibration::Time>(Detector_t::Type_t::TAPS,
+        AddCalibration<calibration::Time>(taps,
                                           convert_MultiHit16bit,
                                           -300, /// \todo different default for PbWO
                                           interval<double>{-500, 500},
                                           -0.100 /// \todo give measured time gains for BaF2
                                           );
-        AddCalibration<calibration::Time>(Detector_t::Type_t::TAPSVeto,
+        AddCalibration<calibration::Time>(tapsVeto,
                                           convert_MultiHit16bit,
                                           160,
                                           interval<double>{-1000, 1000}, /// \todo make this window smaller...

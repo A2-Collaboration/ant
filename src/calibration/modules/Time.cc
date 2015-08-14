@@ -15,7 +15,7 @@ using namespace ant::calibration;
 using namespace ant::analysis;
 using namespace ant::analysis::data;
 
-Time::Time(Detector_t::Type_t detectorType,
+Time::Time(const std::shared_ptr<Detector_t>& detector,
                Calibration::Converter::ptr_t converter,
         double defaultOffset,
         const interval<double>& timeWindow, // default {-inf, inf}
@@ -24,10 +24,10 @@ Time::Time(Detector_t::Type_t detectorType,
         ) :
     Calibration::Module(
         std_ext::formatter()
-        << Detector_t::ToString(detectorType)
+        << Detector_t::ToString(detector->Type)
         << "_Time"
            ),
-    DetectorType(detectorType),
+    Detector(detector),
     Converter(move(converter)),
     TimeWindow(timeWindow),
     DefaultOffset(defaultOffset),
@@ -68,7 +68,7 @@ void Time::Update(size_t index, const TID& id) {
 
 void Time::ApplyTo(const readhits_t& hits, extrahits_t&)
 {
-    const auto& dethits = hits.get_item(DetectorType);
+    const auto& dethits = hits.get_item(Detector->Type);
 
     // now calibrate the Times (ignore any other kind of hits)
     for(TDetectorReadHit* dethit : dethits) {
@@ -99,20 +99,29 @@ void Time::ApplyTo(const readhits_t& hits, extrahits_t&)
     }
 }
 
-Time::ThePhysics::ThePhysics(const string& name, const string& histName):
-//                             unsigned nChannels0):
-    Physics(name)
+Time::ThePhysics::ThePhysics(const string& name, const string& histName,
+                             const Detector_t::Type_t& detector,
+                             unsigned nchannels):
+    Physics(name),
+    detectorType(detector)
 {
-    hTime = HistFac.makeTH1D("Detectorname -Time",
-                             "time [ns]","#",
-                             BinSettings(200,-40,40),
-                             histName);
-
+    hTime = HistFac.makeTH2D("Detectorname - Time - Overview",
+                             "time [ns]",
+                             "Detectorname-channel",
+                             BinSettings(1000,-100,100),
+                             BinSettings(nchannels),
+                             histName
+                                 );
 }
 
 
 void ant::calibration::Time::ThePhysics::ProcessEvent(const Event& event)
 {
+    for ( const auto& cand: event.Reconstructed().Candidates())
+        for (const auto& cluster: cand->Clusters)
+            if (cluster.Detector == detectorType)
+                hTime->Fill(cluster.Time,cluster.CentralElement);
+
 }
 
 void ant::calibration::Time::ThePhysics::Finish()

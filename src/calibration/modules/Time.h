@@ -24,8 +24,7 @@ class Time :
 
 public:
 
-    Time(
-            Detector_t::Type_t DetectorType,
+    Time(const std::shared_ptr<Detector_t>& detector,
             Calibration::Converter::ptr_t converter,
             double defaultOffset,
             const interval<double>& timeWindow = {-std_ext::inf, std_ext::inf},
@@ -44,19 +43,21 @@ public:
     public:
         using Physics::Physics;
 
-		ThePhysics(const std::string& name, const std::string& histName);
+        ThePhysics(const std::string& name, const std::string& histName,
+                   const Detector_t::Type_t& detector,
+                   unsigned nchannels);
         virtual void ProcessEvent(const analysis::data::Event& event) override;
         virtual void Finish() override;
         virtual void ShowResult() override;
 
     protected:
-        TH1D* hTime;
-        TH2D* hOverView;
+        TH2D* hTime;
+        Detector_t::Type_t detectorType;
     };
 
     // Physics_traits interface
     virtual std::unique_ptr<analysis::Physics> GetPhysicsModule() override {
-        return std_ext::make_unique<ThePhysics>(GetName());
+        return std_ext::make_unique<ThePhysics>(GetName(), "Offsets", Detector->Type,Detector->GetNChannels());
     }
 
     virtual void GetGUIs(std::list<std::unique_ptr<calibration::gui::Manager_traits> >& guis) override {
@@ -65,7 +66,8 @@ public:
 
 protected:
 
-    const Detector_t::Type_t DetectorType;
+    std::shared_ptr<Detector_t> Detector;
+
     const Calibration::Converter::ptr_t Converter;
 
     const interval<double> TimeWindow;
