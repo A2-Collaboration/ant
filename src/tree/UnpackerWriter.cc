@@ -20,7 +20,7 @@ using namespace ant::tree;
 
 UnpackerWriter::UnpackerWriter(const string& outputfile)
 {
-    file = std_ext::make_unique<WrapTFileOutput>(outputfile);
+    file = std_ext::make_unique<WrapTFileOutput>(outputfile,WrapTFileOutput::mode_t::recreate, true);
     Event.Init();
     DetectorRead.Init();
     HeaderInfo.Init();
