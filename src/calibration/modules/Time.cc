@@ -3,7 +3,12 @@
 #include "analysis/data/Event.h"
 #include "analysis/utils/combinatorics.h"
 
+#include "calibration/gui/CalCanvas.h"
+
+#include "DataManager.h"
+
 #include "tree/TDetectorRead.h"
+#include "tree/TCalibrationData.h"
 
 #include "base/Logger.h"
 
@@ -100,26 +105,34 @@ void Time::ApplyTo(const readhits_t& hits, extrahits_t&)
 }
 
 Time::ThePhysics::ThePhysics(const string& name, const string& histName,
-                             const Detector_t::Type_t& detector,
-                             unsigned nchannels):
+                             const std::shared_ptr<Detector_t>& theDetector):
     Physics(name),
-    detectorType(detector)
+    detector(theDetector)
 {
-    hTime = HistFac.makeTH2D("Detectorname - Time - Overview",
-                             "time [ns]",
-                             "Detectorname-channel",
-                             BinSettings(1000,-100,100),
-                             BinSettings(nchannels),
-                             histName
-                                 );
+    string detectorName(Detector_t::ToString(detector->Type));
+    hTime = HistFac.makeTH2D( detectorName + string(" - Time"),
+                              "time [ns]",
+                              detectorName + "-channel",
+                              BinSettings(1000,-100,100),
+                              BinSettings(detector->GetNChannels()),
+                              histName
+                              );
 }
 
 
 void ant::calibration::Time::ThePhysics::ProcessEvent(const Event& event)
 {
+    //handle Tagger differently
+    if (detector->Type == Detector_t::Type_t::EPT)
+    {
+        for (const auto& tHit: TaggerHitList())
+            hTime->Fill(tHit->Time(),tHit->Channel());
+        return;
+    }
+
     for ( const auto& cand: event.Reconstructed().Candidates())
         for (const auto& cluster: cand->Clusters)
-            if (cluster.Detector == detectorType)
+            if (cluster.Detector == detector->Type)
                 hTime->Fill(cluster.Time,cluster.CentralElement);
 
 }
@@ -130,4 +143,158 @@ void ant::calibration::Time::ThePhysics::Finish()
 
 void ant::calibration::Time::ThePhysics::ShowResult()
 {
+    canvas(GetName())  << drawoption("colz") << hTime << endc;
+}
+
+
+Time::TheGUI::TheGUI(const string& name,
+                     const std::shared_ptr<Detector_t>& theDetector,
+                     const std::shared_ptr<DataManager>& cDataManager,
+                     double DefaultOffset,
+                     const std::vector<double>& Offsets
+                     ):
+    gui::Manager_traits(name),
+    detector(theDetector),
+    calmgr(cDataManager),
+    defaultOffset(DefaultOffset),
+    offsets(Offsets),
+    fitCanvas(nullptr),
+    times(nullptr)
+
+{}
+
+void Time::TheGUI::InitGUI()
+{
+    fitCanvas = new gui::CalCanvas("fitCanvas", GetName() + ": Fit");
+    overView  = new gui::CalCanvas("overView", GetName()+": Overview");
+
+    times = new TH1D("times","Times",
+                     GetNumberOfChannels(), 0 , GetNumberOfChannels());
+    times->SetXTitle("time [ns]");
+    times->SetYTitle("#");
+}
+
+void Time::TheGUI::StartRange(const interval<TID>& range)
+{
+    offsets.resize(GetNumberOfChannels(),defaultOffset);
+    TCalibrationData cdata;
+    if (calmgr->GetData(GetName(),range.Start(),cdata))
+    {
+        for (const TKeyValue<double>& entry: cdata.Data)
+            offsets[entry.Key] = entry.Value;
+        for (const TKeyValue<vector<double>>& entry: cdata.FitParameters)
+            fitParams.insert(make_pair(entry.Key,entry.Value));
+        LOG(INFO) << GetName() << ": Loaded previous values from database";
+    }
+    else
+        LOG(INFO) << GetName() << ": No previous values found, built from default value";
+
+    previousValues = offsets;
+}
+
+gui::Manager_traits::DoFitReturn_t Time::TheGUI::DoFit(TH1* hist, unsigned channel)
+{
+    if (detector->IsIgnored(channel))
+        return gui::Manager_traits::DoFitReturn_t::Skip;
+
+
+    TH2* hist2 = dynamic_cast<TH2*>(hist);
+
+    times = hist2->ProjectionX("",channel,channel+1);
+
+    fitFunction->SetDefaults(times);
+    const auto it_fit_param = fitParams.find(channel);
+    if(it_fit_param != fitParams.end()) {
+        VLOG(5) << "Loading previous fit parameters for channel " << channel;
+        fitFunction->Load(it_fit_param->second);
+    }
+
+    fitFunction->Fit(times);
+
+    if(channel==0) {
+        return DoFitReturn_t::Display;
+    }
+
+    // do not show something, goto next channel
+    return DoFitReturn_t::Next;
+
+}
+
+void Time::TheGUI::DisplayFit()
+{
+    fitCanvas->Show(times, fitFunction.get());
+}
+
+void Time::TheGUI::StoreFit(unsigned channel)
+{
+    const double oldValue = previousValues[channel];
+    /// \todo obtain convergenceFactor and pi0mass from config or database
+    const double convergenceFactor = 1.0;
+    const double timePeak = fitFunction->GetPeakPosition();
+
+    // apply convergenceFactor only to the desired procentual change of oldValue,
+    // given by (pi0mass/pi0peak - 1)
+    const double newValue = oldValue + convergenceFactor * (timePeak - oldValue);
+
+    offsets[channel] = newValue;
+
+    const double relative_change = 100*(newValue/oldValue-1);
+
+    LOG(INFO) << "Stored Ch=" << channel << ": PeakPosition " << timePeak
+              << " ns,  offset changed " << oldValue << " -> " << newValue
+              << " (" << relative_change << " %)";
+
+
+    // don't forget the fit parameters
+    fitParams[channel] = fitFunction->Save();
+
+    fitCanvas->Clear();
+    fitCanvas->Update();
+
+}
+
+bool Time::TheGUI::FinishRange()
+{
+//    Over->Divide(2,2);
+
+//    c_overview->cd(1);
+    times->SetStats(false);
+    times->Draw();
+
+    overView->Update();
+
+    return true;
+
+}
+
+void Time::TheGUI::StoreFinishRange(const interval<TID>& range)
+{
+    overView->Clear();
+    overView->Update();
+
+    TCalibrationData cdata(
+                "Unknown", /// \todo get static information about author/comment?
+                "No Comment",
+                time(nullptr),
+                GetName(),
+                range.Start(),
+                range.Stop()
+                );
+
+
+    // fill data
+    for(unsigned ch=0;ch<offsets.size();ch++) {
+        cdata.Data.emplace_back(ch, offsets[ch]);
+    }
+
+    // fill fit parameters (if any)
+    for(const auto& it_map : fitParams) {
+        const unsigned ch = it_map.first;
+        const vector<double>& params = it_map.second;
+        cdata.FitParameters.emplace_back(ch, params);
+    }
+
+    calmgr->Add(cdata);
+
+    LOG(INFO) << "Added TCalibrationData " << cdata;
 }

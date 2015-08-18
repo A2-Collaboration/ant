@@ -6,6 +6,8 @@
 #include "tree/TDataRecord.h" // for TKeyValue, TID
 #include "base/interval.h"
 
+#include "calibration/fitfunctions/FitGaus.h"
+
 #include <memory>
 #include <limits>
 
@@ -17,20 +19,62 @@ class TH1;
 namespace ant {
 namespace calibration {
 
+class DataManager;
+
 class Time :
         public Calibration::Module,
         public ReconstructHook::DetectorReadHits
 {
 
 public:
+    class TheGUI : public gui::Manager_traits
+    {
+
+
+    protected:
+        std::shared_ptr<Detector_t> detector;
+        std::shared_ptr<DataManager> calmgr;
+
+        const double defaultOffset;
+        std::vector<double> offsets;
+        std::map<unsigned,std::vector<double>> fitParams;
+
+        gui::CalCanvas* fitCanvas;
+        gui::CalCanvas* overView;
+        TH1*  times;
+
+        std::shared_ptr<gui::FitGaus> fitFunction;
+        std::vector<double> previousValues;
+
+        // Manager_traits interface
+    public:
+        TheGUI(const std::string& name,
+               const std::shared_ptr<Detector_t>& theDetector,
+               const std::shared_ptr<DataManager>& cDataManager,
+               double DefaultOffset,
+               const std::vector<double>& Offsets);
+
+        virtual std::string GetHistogramName() const override { return "Offsets";}
+        virtual unsigned GetNumberOfChannels() const override { return detector->GetNChannels();}
+        virtual void InitGUI() override;
+        virtual std::list<gui::CalCanvas*> GetCanvases() const override { return {fitCanvas, overView};}
+
+        virtual void StartRange(const interval<TID>& range) override;
+        virtual DoFitReturn_t DoFit(TH1* hist, unsigned channel) override;
+        virtual void DisplayFit() override;
+        virtual void StoreFit(unsigned channel) override;
+        virtual bool FinishRange() override;
+
+        virtual void StoreFinishRange(const interval<TID>& range) override;
+    };
 
     Time(const std::shared_ptr<Detector_t>& detector,
-            Calibration::Converter::ptr_t converter,
-            double defaultOffset,
-            const interval<double>& timeWindow = {-std_ext::inf, std_ext::inf},
-            double defaultGain = 1.0, // default gain is 1.0
-            const std::vector< TKeyValue<double> >& gains = {}
-            );
+         Calibration::Converter::ptr_t converter,
+         double defaultOffset,
+         const interval<double>& timeWindow = {-std_ext::inf, std_ext::inf},
+         double defaultGain = 1.0, // default gain is 1.0
+         const std::vector< TKeyValue<double> >& gains = {}
+                                                         );
 
     // ReconstructHook
     virtual void ApplyTo(const readhits_t& hits, extrahits_t&) override;
@@ -44,20 +88,19 @@ public:
         using Physics::Physics;
 
         ThePhysics(const std::string& name, const std::string& histName,
-                   const Detector_t::Type_t& detector,
-                   unsigned nchannels);
+                   const std::shared_ptr<Detector_t>& theDetector);
         virtual void ProcessEvent(const analysis::data::Event& event) override;
         virtual void Finish() override;
         virtual void ShowResult() override;
 
     protected:
         TH2D* hTime;
-        Detector_t::Type_t detectorType;
+        std::shared_ptr<Detector_t> detector;
     };
 
     // Physics_traits interface
     virtual std::unique_ptr<analysis::Physics> GetPhysicsModule() override {
-        return std_ext::make_unique<ThePhysics>(GetName(), "Offsets", Detector->Type,Detector->GetNChannels());
+        return std_ext::make_unique<ThePhysics>(GetName(), "Offsets", Detector);
     }
 
     virtual void GetGUIs(std::list<std::unique_ptr<calibration::gui::Manager_traits> >& guis) override {
