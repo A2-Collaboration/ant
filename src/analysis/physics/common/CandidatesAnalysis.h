@@ -20,7 +20,9 @@ protected:
     TH1D* ggIM = nullptr;
     TH1D* ttIM = nullptr;
     TH2D* cbdEE = nullptr;
+    TH2D* cbtof = nullptr;
     TH2D* tapsdEE = nullptr;
+    TH2D* tapstof = nullptr;
     TH1D* detectors = nullptr;
 
 public:

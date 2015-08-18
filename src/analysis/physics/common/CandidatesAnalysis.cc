@@ -27,7 +27,9 @@ CandidatesAnalysis::CandidatesAnalysis(const string &name):
     ggIM         = HistFac.makeTH1D("2 Neutral Candidates IM","M [MeV]","",BinSettings(1000),"ggIM");
     ttIM         = HistFac.makeTH1D("2 Candidates IM","M [MeV]","",BinSettings(1000),"ttIM");
     cbdEE = HistFac.makeTH2D("CB dE-E","E_{CB} [MeV]","dE_{PID} [MeV]", BinSettings(1000),BinSettings(100,0,30),"cb_dEE");
+    cbtof = HistFac.makeTH2D("CB ToF","t_{CB} [ns]","E_{CB} [MeV]", BinSettings(300,-15,15),BinSettings(1000),"cb_tof");
     tapsdEE = HistFac.makeTH2D("TAPS dE-E","E_{TAPS} [MeV]","dE_{TAPSVeto} [MeV]", BinSettings(1000),BinSettings(100,0,30),"taps_dEE");
+    tapstof = HistFac.makeTH2D("TAPS ToF","t_{TAPS} [ns]","E_{TAPS} [MeV]", BinSettings(300,-15,15),BinSettings(1000),"taps_tof");
     detectors = HistFac.makeTH1D("Detectors","","", BinSettings(1),"detectors");
 }
 
@@ -54,8 +56,10 @@ void CandidatesAnalysis::ProcessEvent(const Event &event)
 
             if(ci->Detector() & Detector_t::Any_t::CB) {
                 cbdEE->Fill(ci->ClusterEnergy(),ci->VetoEnergy());
+                cbtof->Fill(ci->Time(), ci->ClusterEnergy());
             } else if(ci->Detector() & Detector_t::Any_t::TAPS) {
                 tapsdEE->Fill(ci->ClusterEnergy(),ci->VetoEnergy());
+                tapstof->Fill(ci->Time(), ci->ClusterEnergy());
             }
 
             const Particle a(ParticleTypeDatabase::Photon,*i);
@@ -91,7 +95,7 @@ void CandidatesAnalysis::ShowResult()
             << ggIM << energy << theta << phi
             << nCandidatesEvent << CandMultiplicities
             << drawoption("colz")
-            << cbdEE << tapsdEE << detectors
+            << cbdEE << cbtof << tapsdEE << tapstof << detectors
             << endc;
 }
 
