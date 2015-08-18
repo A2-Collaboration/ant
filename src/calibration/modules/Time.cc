@@ -20,7 +20,7 @@ using namespace ant::calibration;
 using namespace ant::analysis;
 using namespace ant::analysis::data;
 
-Time::Time(const std::shared_ptr<Detector_t>& detector,
+Time::Time(const std::shared_ptr<Detector_t>& detector, const std::shared_ptr<DataManager>& CalibrationManager,
                Calibration::Converter::ptr_t converter,
         double defaultOffset,
         const interval<double>& timeWindow, // default {-inf, inf}
@@ -33,6 +33,7 @@ Time::Time(const std::shared_ptr<Detector_t>& detector,
         << "_Time"
            ),
     Detector(detector),
+    calibrationManager(CalibrationManager),
     Converter(move(converter)),
     TimeWindow(timeWindow),
     DefaultOffset(defaultOffset),
@@ -56,14 +57,12 @@ Time::Time(const std::shared_ptr<Detector_t>& detector,
 }
 
 std::vector<std::list<TID> > Time::GetChangePoints() const {
-   // vector<list<TID>> changePointLists;
+//    vector<list<TID>> changePointLists;
 
-//    for (const auto& calib_name: { Pedestals.Name, Gains.Name, Thresholds.Name, RelativeGains.Name}) {
- //       changePointLists.push_back(calibrationManager->GetChangePoints(
-  //                                     GUI_CalibType::ConstructName(GetName(), calib_name)
-   //                                    )
-    //                               );
-  //  }
+//    changePointLists.push_back(calibrationManager->GetChangePoints(
+//                                   "Calibr"
+//                                       )
+//                                   );
     return {};
 }
 
@@ -113,7 +112,7 @@ Time::ThePhysics::ThePhysics(const string& name, const string& histName,
     hTime = HistFac.makeTH2D( detectorName + string(" - Time"),
                               "time [ns]",
                               detectorName + "-channel",
-                              BinSettings(1000,-100,100),
+                              BinSettings(1000,-200,200),
                               BinSettings(detector->GetNChannels()),
                               histName
                               );
@@ -159,9 +158,11 @@ Time::TheGUI::TheGUI(const string& name,
     defaultOffset(DefaultOffset),
     offsets(Offsets),
     fitCanvas(nullptr),
-    times(nullptr)
+    times(nullptr),
+    fitFunction(new gui::FitGaus())
 
-{}
+{
+}
 
 void Time::TheGUI::InitGUI()
 {
@@ -169,9 +170,13 @@ void Time::TheGUI::InitGUI()
     overView  = new gui::CalCanvas("overView", GetName()+": Overview");
 
     times = new TH1D("times","Times",
-                     GetNumberOfChannels(), 0 , GetNumberOfChannels());
+                     1000, -300 ,300);
     times->SetXTitle("time [ns]");
     times->SetYTitle("#");
+    timePeaks = new TH1D("timePeaks","Time Peaks",
+                         GetNumberOfChannels(), 0, GetNumberOfChannels());
+    timePeaks->SetXTitle("Channel");
+    timePeaks->SetYTitle("Peak position [ns]");
 }
 
 void Time::TheGUI::StartRange(const interval<TID>& range)
@@ -232,8 +237,9 @@ void Time::TheGUI::StoreFit(unsigned channel)
     const double convergenceFactor = 1.0;
     const double timePeak = fitFunction->GetPeakPosition();
 
+    timePeaks->Fill(channel,timePeak);
+
     // apply convergenceFactor only to the desired procentual change of oldValue,
-    // given by (pi0mass/pi0peak - 1)
     const double newValue = oldValue + convergenceFactor * (timePeak - oldValue);
 
     offsets[channel] = newValue;
@@ -250,21 +256,17 @@ void Time::TheGUI::StoreFit(unsigned channel)
 
     fitCanvas->Clear();
     fitCanvas->Update();
-
 }
 
 bool Time::TheGUI::FinishRange()
 {
-//    Over->Divide(2,2);
-
-//    c_overview->cd(1);
-    times->SetStats(false);
-    times->Draw();
+    overView->cd();
+    timePeaks->SetStats(false);
+    timePeaks->Draw("P");
 
     overView->Update();
 
     return true;
-
 }
 
 void Time::TheGUI::StoreFinishRange(const interval<TID>& range)

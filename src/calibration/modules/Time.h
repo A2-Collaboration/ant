@@ -42,6 +42,7 @@ public:
         gui::CalCanvas* fitCanvas;
         gui::CalCanvas* overView;
         TH1*  times;
+        TH1*  timePeaks;
 
         std::shared_ptr<gui::FitGaus> fitFunction;
         std::vector<double> previousValues;
@@ -54,7 +55,7 @@ public:
                double DefaultOffset,
                const std::vector<double>& Offsets);
 
-        virtual std::string GetHistogramName() const override { return "Offsets";}
+        virtual std::string GetHistogramName() const override { return GetName()+"/Offsets";}
         virtual unsigned GetNumberOfChannels() const override { return detector->GetNChannels();}
         virtual void InitGUI() override;
         virtual std::list<gui::CalCanvas*> GetCanvases() const override { return {fitCanvas, overView};}
@@ -64,24 +65,8 @@ public:
         virtual void DisplayFit() override;
         virtual void StoreFit(unsigned channel) override;
         virtual bool FinishRange() override;
-
         virtual void StoreFinishRange(const interval<TID>& range) override;
     };
-
-    Time(const std::shared_ptr<Detector_t>& detector,
-         Calibration::Converter::ptr_t converter,
-         double defaultOffset,
-         const interval<double>& timeWindow = {-std_ext::inf, std_ext::inf},
-         double defaultGain = 1.0, // default gain is 1.0
-         const std::vector< TKeyValue<double> >& gains = {}
-                                                         );
-
-    // ReconstructHook
-    virtual void ApplyTo(const readhits_t& hits, extrahits_t&) override;
-
-    // Updateable_traits interface
-    virtual std::vector<std::list<TID>> GetChangePoints() const override;
-    void Update(std::size_t index, const TID&) override;
 
     class ThePhysics : public analysis::Physics {
     public:
@@ -98,18 +83,43 @@ public:
         std::shared_ptr<Detector_t> detector;
     };
 
+    Time(const std::shared_ptr<Detector_t>& detector,
+         const std::shared_ptr<DataManager>& CalibrationManager,
+         Calibration::Converter::ptr_t converter,
+         double defaultOffset,
+         const interval<double>& timeWindow = {-std_ext::inf, std_ext::inf},
+         double defaultGain = 1.0, // default gain is 1.0
+         const std::vector< TKeyValue<double> >& gains = {}
+                                                         );
+
+    // ReconstructHook
+    virtual void ApplyTo(const readhits_t& hits, extrahits_t&) override;
+
+    // Updateable_traits interface
+    virtual std::vector<std::list<TID>> GetChangePoints() const override;
+    void Update(std::size_t index, const TID&) override;
+
+
     // Physics_traits interface
     virtual std::unique_ptr<analysis::Physics> GetPhysicsModule() override {
         return std_ext::make_unique<ThePhysics>(GetName(), "Offsets", Detector);
     }
 
     virtual void GetGUIs(std::list<std::unique_ptr<calibration::gui::Manager_traits> >& guis) override {
-        guis.clear();
+        guis.emplace_back(std_ext::make_unique<TheGUI>(
+                              GetName(),
+                              Detector,
+                              calibrationManager,
+                              DefaultOffset,
+                              Offsets
+                              ));
     }
 
 protected:
 
     std::shared_ptr<Detector_t> Detector;
+
+    std::shared_ptr<DataManager> calibrationManager;
 
     const Calibration::Converter::ptr_t Converter;
 

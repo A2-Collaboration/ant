@@ -58,26 +58,31 @@ public:
 
         // then we add the others, and link it to the converters
         AddCalibration<calibration::Time>(EPT,
+                                          calibrationDataManager,
                                           convert_CATCH_Tagger,
                                           -325 // default offset in ns
                                           );
         AddCalibration<calibration::Time>(cb,
+                                          calibrationDataManager,
                                           convert_CATCH_CB,
                                           -325,      // default offset in ns
                                           interval<double>{-100, 100} // default time window cut in ns
                                           );
         AddCalibration<calibration::Time>(pid,
+                                          calibrationDataManager,
                                           convert_CATCH_CB,
                                           -325,
                                           interval<double>{-500, 500} // default time window cut in ns
                                           );
         AddCalibration<calibration::Time>(taps,
+                                          calibrationDataManager,
                                           convert_MultiHit16bit,
                                           -300, /// \todo different default for PbWO
                                           interval<double>{-500, 500},
                                           -0.100 /// \todo give measured time gains for BaF2
                                           );
         AddCalibration<calibration::Time>(tapsVeto,
+                                          calibrationDataManager,
                                           convert_MultiHit16bit,
                                           160,
                                           interval<double>{-1000, 1000}, /// \todo make this window smaller...
