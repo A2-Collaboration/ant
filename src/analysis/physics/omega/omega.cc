@@ -103,6 +103,7 @@ OmegaEtaG::perDecayhists_t OmegaEtaG::makePerDecayHists(const string &title)
     h.gg = HistFac.makeTH1D("2#gamma "+title,"2#gamma IM [MeV]","#",imbinning);
     h.ggg  = HistFac.makeTH1D("3#gamma "+title,"3#gamma IM [MeV]","",imbinning);
     h.mm = HistFac.makeTH1D("MM "+title,"MM [MeV]","",mmbinning);
+    h.angle_p = HistFac.makeTH1D(title+"Angle p rec/true","angle","",BinSettings(140,0,35));
 
     return h;
 }
@@ -182,10 +183,19 @@ void OmegaEtaG::Analyse(const Event::Data &data, const Event &event)
         if(h)
             h->ggg->Fill(gggIM);
 
+        const auto& mc_protons = event.MCTrue().Particles().Get(ParticleTypeDatabase::Proton);
+
+        const ParticlePtr mc_p = !mc_protons.empty() ? mc_protons.at(0) : shared_ptr<Particle>(nullptr);
+
         if(h) {
             for(auto& th : event.MCTrue().TaggerHits()) {
                 const TLorentzVector mm = th->PhotonBeam() + TLorentzVector(0, 0, 0, ParticleTypeDatabase::Proton.Mass()) - gggState;
                 h->mm->Fill(mm.M());
+
+                if(mc_p) {
+                    const auto angle = mc_p->Angle(mm.Vect());
+                    h->angle_p->Fill(angle * TMath::RadToDeg());
+                }
             }
         }
 
@@ -271,6 +281,7 @@ void OmegaEtaG::ShowResult()
     hstack stack("decays","gg");
     hstack stack2("ggg","ggg");
     hstack stack3("mm","mm");
+    hstack stack4("angle_p","angle_p");
 
     for(auto& hist:histlist) {
         hist->gg->SetFillColor(*cit);
@@ -280,11 +291,13 @@ void OmegaEtaG::ShowResult()
         stack << hist->gg;
         stack2 << hist->ggg;
         stack3 << hist->mm;
+        stack4 << hist->angle_p;
     }
 
     canvas("OmegaEtaG per Decay Results gg") << stack << endc;
     canvas("OmegaEtaG per Decay Results ggg") << stack2 << endc;
     canvas("OmegaEtaG per Decay Results mm") << drawoption("pads") << stack3 << endc;
+    canvas("OmegaEtaG per Decay Results Angle p") << drawoption("pads") << stack4 << endc;
 
 }
 
