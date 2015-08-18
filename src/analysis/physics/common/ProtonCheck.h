@@ -14,6 +14,7 @@ class ProtonCheck : public Physics {
 protected:
 
     TH2D* tof;
+    TH2D* tof_trueE;
     TH2D* dEE;
 
     TH2D* e_recov;

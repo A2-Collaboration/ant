@@ -16,10 +16,11 @@ ProtonCheck::ProtonCheck(const string &name):
     Physics(name)
 {
     const BinSettings e(1000);
-    const BinSettings t(1000,-50,50);
-    const BinSettings dE(1000,0,50);
+    const BinSettings t(300,-15,15);
+    const BinSettings dE(80,0,8);
     const BinSettings theta_bins(180,0,180);
     tof = HistFac.makeTH2D("Proton TOF TAPS","t [ns]","E [MeV]", t,e,"tof");
+    tof_trueE = HistFac.makeTH2D("Proton TOF TAPS (MCTrue Energy)","t [ns]","E_{true} [MeV]", t,e,"tof_true");
     dEE = HistFac.makeTH2D("Proton dEE TAPS","E [MeV]","dE [MeV]", e,dE,"dEE");
     cand_mult = HistFac.makeTH1D("Candidates / Event","# Candiadates/Event","#",BinSettings(20),"mult");
 
@@ -35,32 +36,26 @@ void ProtonCheck::ProcessEvent(const Event &event)
 
         if(protons.size()==1) {
             const auto& mctrue = protons.at(0);
-            cout << "true: " << mctrue->Theta() << endl;
 
-//            if(mctrue->Theta() < 20.0*TMath::DegToRad()) {
+            if(mctrue->Theta() < 20.0*TMath::DegToRad()) {
 
+                for(const auto& cand : event.Reconstructed().Candidates()) {
 
-
-            for(const auto& cand : event.Reconstructed().Candidates()) {
-                cout << "rec: " << cand->Theta() << endl;
-                if(cand->Detector() == Detector_t::Any_t::TAPS) {
-                    tof->Fill(cand->Time(), cand->ClusterEnergy());
-                    dEE->Fill(cand->ClusterEnergy(), cand->VetoEnergy());
-                    theta->Fill(cand->Theta()*TMath::RadToDeg());
-                    theta_corr->Fill(mctrue->Theta()*TMath::RadToDeg(), cand->Theta()*TMath::RadToDeg());
+                    if(cand->Detector() == Detector_t::Any_t::TAPS) {
+                        tof->Fill(cand->Time(), cand->ClusterEnergy());
+                        tof_trueE->Fill(cand->Time(), mctrue->Ek());
+                        dEE->Fill(cand->ClusterEnergy(), cand->VetoEnergy());
+                        theta->Fill(cand->Theta()*TMath::RadToDeg());
+                        theta_corr->Fill(mctrue->Theta()*TMath::RadToDeg(), cand->Theta()*TMath::RadToDeg());
+                    }
                 }
-//            }
 
-            cand_mult->Fill(event.Reconstructed().Candidates().size());
+                cand_mult->Fill(event.Reconstructed().Candidates().size());
+            }
+
         }
-        cout << "\n" << endl;
-        } else {
-            cout << "ERR" << endl;
-        }
-    } else
-        cout << "Err2" << endl;
 
-
+    }
 }
 
 
@@ -73,9 +68,9 @@ void ProtonCheck::Finish()
 void ProtonCheck::ShowResult()
 {
     canvas("ProtonCheck")
-            << cand_mult << theta
+            << cand_mult
             << drawoption("colz")
-            << tof << dEE << theta_corr << endc;
+            << tof << tof_trueE << dEE << theta_corr << endc;
 }
 
 
