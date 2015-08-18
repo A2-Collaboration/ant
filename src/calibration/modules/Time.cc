@@ -96,7 +96,10 @@ void Time::ApplyTo(const readhits_t& hits, extrahits_t&)
                 value -= Offsets[dethit->Channel];
 
             if(!TimeWindow.Contains(value))
+            {
+                VLOG(5) << "Skipping channel " << dethit->Channel << ", which is out of current time window.";
                 continue;
+            }
 
             dethit->Values.push_back(value);
         }
@@ -262,6 +265,7 @@ bool Time::TheGUI::FinishRange()
 {
     overView->cd();
     timePeaks->SetStats(false);
+    timePeaks->GetYaxis()->SetRangeUser(-60,60);
     timePeaks->Draw("P");
 
     overView->Update();

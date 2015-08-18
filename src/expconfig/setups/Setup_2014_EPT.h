@@ -66,7 +66,7 @@ public:
                                           calibrationDataManager,
                                           convert_CATCH_CB,
                                           -325,      // default offset in ns
-                                          interval<double>{-100, 100} // default time window cut in ns
+                                          interval<double>{-60, 60} // default time window cut in ns
                                           );
         AddCalibration<calibration::Time>(pid,
                                           calibrationDataManager,
