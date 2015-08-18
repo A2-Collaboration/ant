@@ -99,9 +99,13 @@ void PhysicsManager::ReadFrom(
 
         it_reader = readers.begin();
         while(it_reader != readers.end()) {
-            if(!(*it_reader)->ReadNextEvent(event, slowcontrol))
+
+            if(!(*it_reader)->ReadNextEvent(event, slowcontrol)) {
                 it_reader = readers.erase(it_reader);
-            ++it_reader;
+            }
+            else {
+                ++it_reader;
+            }
         }
 
         if(!source && readers.empty())
