@@ -16,6 +16,7 @@ set(SRCS
     modules/Scaler.cc
     modules/TAPS_ShowerCorrection.h
     modules/CB_Energy.cc
+    modules/CB_TimeWalk.cc
     modules/TAPS_Energy.cc
     modules/PID_Energy.cc
     modules/PID_PhiAngle.cc
