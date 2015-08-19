@@ -23,67 +23,41 @@ using namespace std;
 CB_TimeWalk::ThePhysics::ThePhysics(const string& name, unsigned nChannels) :
     Physics(name)
 {
-//    const BinSettings pid_channels(nChannels);
-//    const BinSettings phibins(1000, -180, 3*180);
-
-//    pid_cb_phi_corr = HistFac.makeTH2D("CB/PID Cluster/Channel Correlation", "CB Cluster Phi / degree", "#",
-//                                       phibins, pid_channels, "pid_cb_phi_corr");
+    h_timewalk = HistFac.makeTH3D(
+                     "CB TimeWalk",
+                     "Energy / MeV",
+                     "Time / ns",
+                     "Channel",
+                     BinSettings(1000,0,1000),
+                     BinSettings(500,-100,100),
+                     BinSettings(nChannels),
+                     "timewalk"
+                     );
 }
 
 void CB_TimeWalk::ThePhysics::ProcessEvent(const Event& event)
 {
-//    const auto& cands = event.Reconstructed().Candidates();
-
-//    // search for events with
-//    // one cluster in CB, one cluster in PID
-//    // ignore the matched candidates, since this is what
-//    // we want to calibrate
-
-//    const Cluster* cluster_pid = nullptr;
-//    double phi_cb = numeric_limits<double>::quiet_NaN();
-
-//    for(const auto& cand : cands) {
-
-//        auto cl_cb_  = cand->FindFirstCluster(Detector_t::Type_t::CB);
-
-//        if(cl_cb_ != nullptr) {
-//            // found more than one CB cluster
-//            if(isfinite(phi_cb))
-//                return;
-//            phi_cb = cand->Phi();
-//        }
-
-//        auto cl_pid_ = cand->FindFirstCluster(Detector_t::Type_t::PID);
-
-//        if(cl_pid_ != nullptr) {
-//            // found more than one pid cluster
-//            if(cluster_pid != nullptr)
-//                return;
-//            cluster_pid = cl_pid_;
-//        }
-//    }
-
-//    // search the insane clusters for a PID hit,
-//    // CB cluster always become a neutral candidate
-//    for(const Cluster& cl : event.Reconstructed().InsaneClusters()) {
-//        if(cl.Detector != Detector_t::Type_t::PID)
-//            continue;
-//        if(!isfinite(cl.Energy) || !isfinite(cl.Time))
-//            continue;
-//        // found more than one PID cluster
-//        if(cluster_pid != nullptr)
-//            return;
-//        cluster_pid = addressof(cl);
-//    }
-
-//    if(!isfinite(phi_cb) || cluster_pid == nullptr)
-//        return;
-
-//    const double phi_cb_degrees = std_ext::radian_to_degree(phi_cb);
-
-//    pid_cb_phi_corr->Fill(phi_cb_degrees,     cluster_pid->CentralElement);
-//    pid_cb_phi_corr->Fill(phi_cb_degrees+360, cluster_pid->CentralElement);
-
+    for(const auto& cand: event.Reconstructed().Candidates()) {
+        for(const Cluster& cluster: cand->Clusters) {
+            if(cluster.Detector != Detector_t::Type_t::CB)
+                continue;
+            for(const Cluster::Hit& hit : cluster.Hits) {
+                if(cluster.CentralElement != hit.Channel)
+                    continue;
+                // found the hit of the central element
+                double time = numeric_limits<double>::quiet_NaN();
+                double energy = numeric_limits<double>::quiet_NaN();
+                for(const Cluster::Hit::Datum& d : hit.Data) {
+                    if(d.Type == Channel_t::Type_t::Timing)
+                        time = d.Value;
+                    if(d.Type == Channel_t::Type_t::Integral)
+                        energy = d.Value;
+                }
+                h_timewalk->Fill(energy, time, hit.Channel);
+                return;
+            }
+        }
+    }
 }
 
 void CB_TimeWalk::ThePhysics::Finish()
@@ -93,7 +67,7 @@ void CB_TimeWalk::ThePhysics::Finish()
 
 void CB_TimeWalk::ThePhysics::ShowResult()
 {
-    //canvas(GetName()) << drawoption("colz") << pid_cb_phi_corr << endc;
+    canvas(GetName()) << drawoption("colz") << h_timewalk << endc;
 }
 
 CB_TimeWalk::CB_TimeWalk(

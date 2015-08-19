@@ -38,7 +38,8 @@ public:
 
     class ThePhysics : public analysis::Physics {
     protected:
-        TH2* CB_cb_phi_corr;
+        TH3D* h_timewalk;
+
     public:
         ThePhysics(const std::string& name, unsigned nChannels);
 
