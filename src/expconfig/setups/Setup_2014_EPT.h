@@ -103,6 +103,9 @@ public:
         // the PID calibration is a physics module only
         AddCalibration<calibration::PID_PhiAngle>(pid, calibrationDataManager);
 
+        // CB timing needs timewalk correction
+        AddCalibration<calibration::CB_TimeWalk>(cb, calibrationDataManager);
+
     }
 
     virtual double GetElectronBeamEnergy() const override {

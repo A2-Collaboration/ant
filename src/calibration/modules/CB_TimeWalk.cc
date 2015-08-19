@@ -11,6 +11,8 @@
 #include "TGraph.h"
 #include "TFitResult.h"
 
+#include <tree/TCluster.h>
+
 #include <limits>
 #include <cmath>
 
@@ -20,17 +22,18 @@ using namespace ant::analysis;
 using namespace ant::analysis::data;
 using namespace std;
 
-CB_TimeWalk::ThePhysics::ThePhysics(const string& name, unsigned nChannels) :
-    Physics(name)
+CB_TimeWalk::ThePhysics::ThePhysics(const string& name, const std::shared_ptr<expconfig::detector::CB>& cb) :
+    Physics(name),
+    cb_detector(cb)
 {
     h_timewalk = HistFac.makeTH3D(
                      "CB TimeWalk",
                      "Energy / MeV",
                      "Time / ns",
                      "Channel",
-                     BinSettings(1000,0,1000),
-                     BinSettings(500,-100,100),
-                     BinSettings(nChannels),
+                     BinSettings(400,0,1000),
+                     BinSettings(100,-100,100),
+                     BinSettings(cb_detector->GetNChannels()),
                      "timewalk"
                      );
 }
@@ -45,15 +48,15 @@ void CB_TimeWalk::ThePhysics::ProcessEvent(const Event& event)
                 if(cluster.CentralElement != hit.Channel)
                     continue;
                 // found the hit of the central element
+                // now search for its timing information
                 double time = numeric_limits<double>::quiet_NaN();
-                double energy = numeric_limits<double>::quiet_NaN();
                 for(const Cluster::Hit::Datum& d : hit.Data) {
-                    if(d.Type == Channel_t::Type_t::Timing)
-                        time = d.Value;
-                    if(d.Type == Channel_t::Type_t::Integral)
-                        energy = d.Value;
+                    if(d.Type != Channel_t::Type_t::Timing)
+                        continue;
+                    time = d.Value;
+                    break;
                 }
-                h_timewalk->Fill(energy, time, hit.Channel);
+                h_timewalk->Fill(cluster.Energy, time, hit.Channel);
                 return;
             }
         }
@@ -67,12 +70,25 @@ void CB_TimeWalk::ThePhysics::Finish()
 
 void CB_TimeWalk::ThePhysics::ShowResult()
 {
-    canvas(GetName()) << drawoption("colz") << h_timewalk << endc;
+    //canvas(GetName()) << drawoption("colz") << h_timewalk << endc;
+    canvas c(GetName());
+    c << drawoption("colz");
+    for(unsigned ch=0;ch<cb_detector->GetNChannels();ch++) {
+        if(cb_detector->IsIgnored(ch))
+            continue;
+        h_timewalk->GetZaxis()->SetRange(ch,ch+1);
+        stringstream ss_name;
+        ss_name << "Ch" << ch << "_yx";
+        c << h_timewalk->Project3D(ss_name.str().c_str());
+        if(ch>30)
+            break;
+    }
+    c << endc;
 }
 
 CB_TimeWalk::CB_TimeWalk(
-        const std::shared_ptr<expconfig::detector::CB>& cb,
-        const std::shared_ptr<DataManager>& calmgr) :
+        const shared_ptr<expconfig::detector::CB>& cb,
+        const shared_ptr<DataManager>& calmgr) :
     Module("CB_TimeWalk"),
     cb_detector(cb),
     calibrationManager(calmgr)
@@ -83,35 +99,54 @@ CB_TimeWalk::~CB_TimeWalk()
 {
 }
 
-std::unique_ptr<analysis::Physics> CB_TimeWalk::GetPhysicsModule() {
-    return std_ext::make_unique<ThePhysics>(GetName(), cb_detector->GetNChannels());
+void CB_TimeWalk::ApplyTo(clusters_t& sorted_clusters)
+{
+    if(timewalks.empty())
+        return;
+
+    // search for CB clusters
+    const auto it_sorted_clusters = sorted_clusters.find(Detector_t::Type_t::CB);
+    if(it_sorted_clusters == sorted_clusters.end())
+        return;
+
+    list< TCluster >& clusters = it_sorted_clusters->second;
+
+    for(TCluster& cluster : clusters) {
+        cluster.Time = timewalks[cluster.CentralElement].calc(cluster.Energy);
+    }
 }
 
-void CB_TimeWalk::GetGUIs(std::list<std::unique_ptr<gui::Manager_traits> >& guis) {
+unique_ptr<analysis::Physics> CB_TimeWalk::GetPhysicsModule() {
+    return std_ext::make_unique<ThePhysics>(GetName(), cb_detector);
+}
+
+void CB_TimeWalk::GetGUIs(list<unique_ptr<gui::Manager_traits> >& guis) {
     guis.emplace_back(std_ext::make_unique<TheGUI>(GetName(), calibrationManager, cb_detector));
 }
 
 
-std::vector<std::list<TID> > ant::calibration::CB_TimeWalk::GetChangePoints() const
+vector<list<TID> > CB_TimeWalk::GetChangePoints() const
 {
     return {calibrationManager->GetChangePoints(GetName())};
 }
 
-void ant::calibration::CB_TimeWalk::Update(size_t, const TID& id)
+void CB_TimeWalk::Update(size_t, const TID& id)
 {
-//    TCalibrationData cdata;
-//    if(!calibrationManager->GetData(GetName(), id, cdata))
-//        return;
-//    if(cdata.Data.size() != 1)
-//        return;
-//    const TKeyValue<double>& kv = cdata.Data.front();
-//    pid_detector->SetPhiOffset(kv.Value);
+    TCalibrationData cdata;
+    if(!calibrationManager->GetData(GetName(), id, cdata))
+        return;
+    if(cdata.FitParameters.size() != cb_detector->GetNChannels())
+        return;
+    timewalks.resize(0);
+    for(const TKeyValue<vector<double>>& kv : cdata.FitParameters) {
+        timewalks.emplace_back(kv);
+    }
 }
 
 
 CB_TimeWalk::TheGUI::TheGUI(const string& basename,
-                             const std::shared_ptr<DataManager>& calmgr,
-                             const std::shared_ptr<expconfig::detector::CB>& cb) :
+                             const shared_ptr<DataManager>& calmgr,
+                             const shared_ptr<expconfig::detector::CB>& cb) :
     gui::Manager_traits(basename),
     calibrationManager(calmgr),
     cb_detector(cb),
@@ -119,29 +154,29 @@ CB_TimeWalk::TheGUI::TheGUI(const string& basename,
 {
 }
 
-string ant::calibration::CB_TimeWalk::TheGUI::GetHistogramName() const
+string CB_TimeWalk::TheGUI::GetHistogramName() const
 {
-    return GetName()+"/pid_cb_phi_corr";
+    return GetName()+"/timewalk";
 }
 
-unsigned ant::calibration::CB_TimeWalk::TheGUI::GetNumberOfChannels() const
+unsigned CB_TimeWalk::TheGUI::GetNumberOfChannels() const
 {
     return cb_detector->GetNChannels();
 }
 
-void ant::calibration::CB_TimeWalk::TheGUI::InitGUI()
+void CB_TimeWalk::TheGUI::InitGUI()
 {
 //    c_singlechannel = new gui::CalCanvas("c_singlechannel", GetName()+": Single Channel");
 //    c_result = new gui::CalCanvas("c_result", GetName()+": Result");
 }
 
-std::list<gui::CalCanvas*> ant::calibration::CB_TimeWalk::TheGUI::GetCanvases() const
+list<gui::CalCanvas*> CB_TimeWalk::TheGUI::GetCanvases() const
 {
     //return {c_singlechannel, c_result};
     return {};
 }
 
-void ant::calibration::CB_TimeWalk::TheGUI::StartRange(const interval<TID>& range)
+void CB_TimeWalk::TheGUI::StartRange(const interval<TID>& range)
 {
 //    // ask the detector for some reasonable starting values
 //    angles.resize(GetNumberOfChannels());
@@ -168,7 +203,7 @@ void ant::calibration::CB_TimeWalk::TheGUI::StartRange(const interval<TID>& rang
 
 
 
-gui::Manager_traits::DoFitReturn_t ant::calibration::CB_TimeWalk::TheGUI::DoFit(TH1* hist, unsigned channel)
+gui::Manager_traits::DoFitReturn_t CB_TimeWalk::TheGUI::DoFit(TH1* hist, unsigned channel)
 {
 //    TH2* hist2 = dynamic_cast<TH2*>(hist);
 
@@ -187,12 +222,12 @@ gui::Manager_traits::DoFitReturn_t ant::calibration::CB_TimeWalk::TheGUI::DoFit(
     return DoFitReturn_t::Display;
 }
 
-void ant::calibration::CB_TimeWalk::TheGUI::DisplayFit()
+void CB_TimeWalk::TheGUI::DisplayFit()
 {
     //c_singlechannel->Show(h_projection, func.get());
 }
 
-void ant::calibration::CB_TimeWalk::TheGUI::StoreFit(unsigned channel)
+void CB_TimeWalk::TheGUI::StoreFit(unsigned channel)
 {
 //    const double oldAngle = previousAngles[channel];
 
@@ -214,7 +249,7 @@ void ant::calibration::CB_TimeWalk::TheGUI::StoreFit(unsigned channel)
 //    c_singlechannel->Update();
 }
 
-bool ant::calibration::CB_TimeWalk::TheGUI::FinishRange()
+bool CB_TimeWalk::TheGUI::FinishRange()
 {
 //   h_result = new TGraph(GetNumberOfChannels());
 //   for(size_t ch=0;ch<GetNumberOfChannels();ch++)
@@ -238,7 +273,7 @@ bool ant::calibration::CB_TimeWalk::TheGUI::FinishRange()
    return true;
 }
 
-void ant::calibration::CB_TimeWalk::TheGUI::StoreFinishRange(const interval<TID>& range)
+void CB_TimeWalk::TheGUI::StoreFinishRange(const interval<TID>& range)
 {
 //    delete h_result;
 //    c_result->Clear();
@@ -281,3 +316,4 @@ void ant::calibration::CB_TimeWalk::TheGUI::StoreFinishRange(const interval<TID>
 //    LOG(INFO) << "Added TCalibrationData: " << cdata;
 //    LOG(INFO) << "Added TCalibrationData: " << cdata_offset;
 }
+

@@ -25,6 +25,7 @@
 #include "calibration/modules/Time.h"
 #include "calibration/modules/Scaler.h"
 #include "calibration/modules/CB_Energy.h"
+#include "calibration/modules/CB_TimeWalk.h"
 #include "calibration/modules/PID_Energy.h"
 #include "calibration/modules/PID_PhiAngle.h"
 #include "calibration/modules/TAPS_Energy.h"
