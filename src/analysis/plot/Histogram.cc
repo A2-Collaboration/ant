@@ -69,7 +69,7 @@ TH3D *HistogramFactory::Make3D(const string &title,
 
     h->SetXTitle(xlabel.c_str());
     h->SetYTitle(ylabel.c_str());
-    h->SetYTitle(zlabel.c_str());
+    h->SetZTitle(zlabel.c_str());
 
     return h;
 }
