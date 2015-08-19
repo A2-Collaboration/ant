@@ -4,14 +4,7 @@
 
 class TGraph;
 
-namespace ant{
-namespace calibration{
-class DataManager;
-}
-}
-
 namespace ant {
-
 
 namespace expconfig {
 namespace detector {
@@ -19,6 +12,8 @@ class PID;
 }}
 
 namespace calibration {
+
+class DataManager;
 
 namespace gui {
 class FitGaus;
