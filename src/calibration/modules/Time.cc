@@ -127,7 +127,7 @@ void ant::calibration::Time::ThePhysics::ProcessEvent(const Event& event)
     //handle Tagger differently
     if (detector->Type == Detector_t::Type_t::EPT)
     {
-        for (const auto& tHit: TaggerHitList())
+        for (const auto& tHit: event.Reconstructed().TaggerHits())
             hTime->Fill(tHit->Time(),tHit->Channel());
         return;
     }
