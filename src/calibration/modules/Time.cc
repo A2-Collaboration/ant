@@ -115,7 +115,7 @@ Time::ThePhysics::ThePhysics(const string& name, const string& histName,
     hTime = HistFac.makeTH2D( detectorName + string(" - Time"),
                               "time [ns]",
                               detectorName + "-channel",
-                              BinSettings(1000,-200,200),
+                              BinSettings(1000,-400,400),
                               BinSettings(detector->GetNChannels()),
                               histName
                               );
@@ -153,14 +153,13 @@ Time::TheGUI::TheGUI(const string& name,
                      const std::shared_ptr<Detector_t>& theDetector,
                      const std::shared_ptr<DataManager>& cDataManager,
                      double DefaultOffset,
-                     const std::vector<double>& Offsets
-                     ):
+                     const std::vector<double>& Offsets):
     gui::Manager_traits(name),
     detector(theDetector),
     calmgr(cDataManager),
     defaultOffset(DefaultOffset),
     offsets(Offsets),
-    fitCanvas(nullptr),
+    theCanvas(nullptr),
     times(nullptr),
     fitFunction(new gui::FitGaus())
 
@@ -169,11 +168,11 @@ Time::TheGUI::TheGUI(const string& name,
 
 void Time::TheGUI::InitGUI()
 {
-    fitCanvas = new gui::CalCanvas("fitCanvas", GetName() + ": Fit");
-    overView  = new gui::CalCanvas("overView", GetName()+": Overview");
+    theCanvas = new gui::CalCanvas("fitCanvas", GetName() + ": Fit");
+//    overView  = new gui::CalCanvas("overView", GetName()+": Overview");
 
     times = new TH1D("times","Times",
-                     1000, -300 ,300);
+                     1000, -400 ,400);
     times->SetXTitle("time [ns]");
     times->SetYTitle("#");
     timePeaks = new TH1D("timePeaks","Time Peaks",
@@ -230,7 +229,7 @@ gui::Manager_traits::DoFitReturn_t Time::TheGUI::DoFit(TH1* hist, unsigned chann
 
 void Time::TheGUI::DisplayFit()
 {
-    fitCanvas->Show(times, fitFunction.get());
+    theCanvas->Show(times, fitFunction.get());
 }
 
 void Time::TheGUI::StoreFit(unsigned channel)
@@ -257,26 +256,28 @@ void Time::TheGUI::StoreFit(unsigned channel)
     // don't forget the fit parameters
     fitParams[channel] = fitFunction->Save();
 
-    fitCanvas->Clear();
-    fitCanvas->Update();
+    theCanvas->Clear();
+    theCanvas->Update();
 }
 
 bool Time::TheGUI::FinishRange()
 {
-    overView->cd();
+    theCanvas->Clear();
+    theCanvas->cd();
     timePeaks->SetStats(false);
-    timePeaks->GetYaxis()->SetRangeUser(-60,60);
+    timePeaks->SetMarkerStyle(20);
+
     timePeaks->Draw("P");
 
-    overView->Update();
+    theCanvas->Update();
 
     return true;
 }
 
 void Time::TheGUI::StoreFinishRange(const interval<TID>& range)
 {
-    overView->Clear();
-    overView->Update();
+    theCanvas->Clear();
+    theCanvas->Update();
 
     TCalibrationData cdata(
                 "Unknown", /// \todo get static information about author/comment?

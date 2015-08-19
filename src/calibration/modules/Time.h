@@ -39,10 +39,10 @@ public:
         std::vector<double> offsets;
         std::map<unsigned,std::vector<double>> fitParams;
 
-        gui::CalCanvas* fitCanvas;
-        gui::CalCanvas* overView;
+        gui::CalCanvas* theCanvas;
         TH1*  times;
         TH1*  timePeaks;
+//        TH2*  timesVSchannels;
 
         std::shared_ptr<gui::FitGaus> fitFunction;
         std::vector<double> previousValues;
@@ -53,12 +53,13 @@ public:
                const std::shared_ptr<Detector_t>& theDetector,
                const std::shared_ptr<DataManager>& cDataManager,
                double DefaultOffset,
-               const std::vector<double>& Offsets);
+               const std::vector<double>& Offsets
+               );
 
         virtual std::string GetHistogramName() const override { return GetName()+"/Offsets";}
         virtual unsigned GetNumberOfChannels() const override { return detector->GetNChannels();}
         virtual void InitGUI() override;
-        virtual std::list<gui::CalCanvas*> GetCanvases() const override { return {fitCanvas, overView};}
+        virtual std::list<gui::CalCanvas*> GetCanvases() const override { return {theCanvas};}
 
         virtual void StartRange(const interval<TID>& range) override;
         virtual DoFitReturn_t DoFit(TH1* hist, unsigned channel) override;
