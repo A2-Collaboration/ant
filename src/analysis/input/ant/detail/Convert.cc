@@ -78,9 +78,9 @@ shared_ptr<Candidate> Converter::Convert(const TCandidate &candidate)
 
 shared_ptr<TaggerHit> Converter::Convert(const TTaggerHit& taggerhit)
 {
-    ///@todo implement something for tagger channel
+    // careful for normal Tagger: only first electron is treated
     auto anttaggerhit = make_shared<TaggerHit>(
-                            0,
+                            taggerhit.Electrons.front().Key,
                             taggerhit.PhotonEnergy,
                             taggerhit.Time
                             );
