@@ -73,6 +73,12 @@ struct ReconstructTester : Reconstruct_traits {
         // single value with type Channel_t::Type_t
         Reconstruct::sorted_bydetectortype_t<AdaptorTClusterHit> sorted_clusterhits;
         r.BuildHits(sorted_clusterhits, event->Tagger);
+
+        // apply hooks which modify clusterhits
+        for(const auto& hook : r.hooks_clusterhits) {
+            hook->ApplyTo(sorted_clusterhits);
+        }
+
         size_t n_clusterhits = getTotalCount(sorted_clusterhits);
         REQUIRE(n_clusterhits + event->Tagger.Hits.size() <= n_readhits);
 

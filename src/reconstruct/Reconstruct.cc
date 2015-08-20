@@ -39,11 +39,13 @@ void Reconstruct::Initialize(const THeaderInfo& headerInfo)
     for(const auto& hook : hooks) {
         std_ext::AddToSharedPtrList<ReconstructHook::DetectorReadHits, ReconstructHook::Base>
                 (hook, hooks_readhits);
+        std_ext::AddToSharedPtrList<ReconstructHook::ClusterHits, ReconstructHook::Base>
+                (hook, hooks_clusterhits);
         std_ext::AddToSharedPtrList<ReconstructHook::Clusters, ReconstructHook::Base>
                 (hook, hooks_clusters);
     }
 
-    // put the detectors in a map for convinient access
+    // put the detectors in a map for convenient access
     const shared_ptr_list<Detector_t>& detectors = config->GetDetectors();
     for(const auto& detector : detectors) {
         auto ret = sorted_detectors.insert(make_pair(detector->Type, detector));
@@ -87,10 +89,15 @@ MemoryPool<TEvent>::Item Reconstruct::DoReconstruct(TDetectorRead& detectorRead)
     event->ID = detectorRead.ID;
 
     // do the hit matching, which builds the TClusterHit's
-    // we also extract the energy, which is always defined as a
-    // single value with type Channel_t::Type_t
+    // put into the AdaptorTClusterHit to track Energy/Timing information
+    // for subsequent clustering
     sorted_bydetectortype_t<AdaptorTClusterHit> sorted_clusterhits;
     BuildHits(sorted_clusterhits, event->Tagger);
+
+    // apply hooks which modify clusterhits
+    for(const auto& hook : hooks_clusterhits) {
+        hook->ApplyTo(sorted_clusterhits);
+    }
 
     // then build clusters (at least for calorimeters this is not trivial)
     sorted_bydetectortype_t<TCluster> sorted_clusters;

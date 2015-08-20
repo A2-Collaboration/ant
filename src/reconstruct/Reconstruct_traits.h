@@ -18,6 +18,9 @@ class TDetectorReadHit;
 class TEvent;
 class TCluster;
 
+namespace reconstruct {
+class AdaptorTClusterHit;
+}
 
 struct Reconstruct_traits {
     virtual ~Reconstruct_traits() = default;
@@ -41,6 +44,7 @@ struct ReconstructHook {
     public:
         using readhits_t = std_ext::mapped_vectors< Detector_t::Type_t, TDetectorReadHit* >;
         using extrahits_t = std::list< TDetectorReadHit >;
+        using clusterhits_t = std::map< Detector_t::Type_t, std::list< reconstruct::AdaptorTClusterHit > >;
         using clusters_t = std::map< Detector_t::Type_t, std::list< TCluster > >;
         virtual ~Base() = default;
     };
@@ -48,6 +52,11 @@ struct ReconstructHook {
     class DetectorReadHits : public Base {
     public:
         virtual void ApplyTo(const readhits_t& hits, extrahits_t& extrahits) = 0;
+    };
+
+    class ClusterHits : public Base {
+    public:
+        virtual void ApplyTo(clusterhits_t& clusterhits) = 0;
     };
 
     class Clusters : public Base {

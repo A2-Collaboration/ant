@@ -100,6 +100,7 @@ private:
     template<typename T>
     using shared_ptr_list = std::list< std::shared_ptr<T> >;
     shared_ptr_list<ReconstructHook::DetectorReadHits> hooks_readhits;
+    shared_ptr_list<ReconstructHook::ClusterHits>      hooks_clusterhits;
     shared_ptr_list<ReconstructHook::Clusters>         hooks_clusters;
 
 
