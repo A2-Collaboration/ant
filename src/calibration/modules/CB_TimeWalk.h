@@ -58,8 +58,10 @@ public:
         std::vector< std::shared_ptr<gui::FitTimewalk> >& timewalks;
         std::shared_ptr<gui::FitTimewalk> last_timewalk;
 
-        gui::CalCanvas* canvas;
+        gui::CalCanvas* c_fit;
+        gui::CalCanvas* c_extra;
         TH1D* means;
+        TH2D* proj;
 
     public:
         TheGUI(const std::string& basename,

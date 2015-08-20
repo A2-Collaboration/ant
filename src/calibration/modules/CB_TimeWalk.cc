@@ -181,12 +181,14 @@ unsigned CB_TimeWalk::TheGUI::GetNumberOfChannels() const
 
 void CB_TimeWalk::TheGUI::InitGUI()
 {
-    canvas = new gui::CalCanvas("canvas", GetName());
+    c_fit = new gui::CalCanvas("canvas_fit", GetName());
+    c_extra = new gui::CalCanvas("canvas_extra", GetName());
+
 }
 
 list<gui::CalCanvas*> CB_TimeWalk::TheGUI::GetCanvases() const
 {
-    return {canvas};
+    return {c_fit, c_extra};
 }
 
 void CB_TimeWalk::TheGUI::StartRange(const interval<TID>& range)
@@ -218,7 +220,7 @@ gui::Manager_traits::DoFitReturn_t CB_TimeWalk::TheGUI::DoFit(TH1* hist, unsigne
     h_timewalk->GetZaxis()->SetRange(ch,ch+1);
     stringstream ss_name;
     ss_name << "Ch" << ch << "_yx";
-    TH2* proj = dynamic_cast<TH2*>(h_timewalk->Project3D(ss_name.str().c_str()));
+    proj = dynamic_cast<TH2D*>(h_timewalk->Project3D(ss_name.str().c_str()));
     TObjArray aSlices;
     proj->FitSlicesY(nullptr, 0, -1, 0, "QNR", &aSlices);
     means = dynamic_cast<TH1D*>(aSlices.At(1)->Clone()); // important to use Clone here!
@@ -233,7 +235,10 @@ gui::Manager_traits::DoFitReturn_t CB_TimeWalk::TheGUI::DoFit(TH1* hist, unsigne
 
 void CB_TimeWalk::TheGUI::DisplayFit()
 {
-    canvas->Show(means, last_timewalk.get());
+    c_fit->Show(means, last_timewalk.get());
+
+    c_extra->cd();
+    proj->Draw("colz");
 }
 
 void CB_TimeWalk::TheGUI::StoreFit(unsigned channel)
@@ -242,8 +247,10 @@ void CB_TimeWalk::TheGUI::StoreFit(unsigned channel)
     // and since we use pointers, the item in timewalks is already updated
 
     LOG(INFO) << "Stored Ch=" << channel;
-    canvas->Clear();
-    canvas->Update();
+    c_fit->Clear();
+    c_fit->Update();
+    c_extra->Clear();
+    c_extra->Update();
 }
 
 bool CB_TimeWalk::TheGUI::FinishRange()
