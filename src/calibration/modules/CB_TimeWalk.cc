@@ -29,16 +29,29 @@ CB_TimeWalk::ThePhysics::ThePhysics(const string& name, const std::shared_ptr<ex
     Physics(name),
     cb_detector(cb)
 {
-    h_timewalk = HistFac.makeTH3D(
-                     "CB TimeWalk",
-                     "Energy / MeV",
-                     "Time / ns",
-                     "Channel",
-                     BinSettings(400,0,500),
-                     BinSettings(100,-100,100),
-                     BinSettings(cb_detector->GetNChannels()),
-                     "timewalk"
-                     );
+    BinSettings bins_energy(400,0,500);
+    BinSettings bins_channels(cb_detector->GetNChannels());
+
+    h_timewalk =
+            HistFac.makeTH3D(
+                "CB TimeWalk",
+                "Energy / MeV",
+                "Time / ns",
+                "Channel",
+                bins_energy,
+                BinSettings(100,-100,100),
+                bins_channels,
+                "timewalk"
+                );
+    h_timewalk_overview =
+            HistFac.makeTH2D(
+                "CB Timewalk Overview",
+                "Energy / MeV",
+                "Channel",
+                bins_energy,
+                bins_channels,
+                "timewalk_overview"
+                );
 }
 
 void CB_TimeWalk::ThePhysics::ProcessEvent(const Event& event)
@@ -71,10 +84,6 @@ void CB_TimeWalk::ThePhysics::Finish()
 
 void CB_TimeWalk::ThePhysics::ShowResult()
 {
-    canvas c(GetName());
-    c << drawoption("colz");
-    TH2* result = dynamic_cast<TH2*>(h_timewalk->Project3D("zx"));
-    result->Reset();
     for(unsigned ch=0;ch<cb_detector->GetNChannels();ch++) {
         if(cb_detector->IsIgnored(ch))
             continue;
@@ -87,11 +96,11 @@ void CB_TimeWalk::ThePhysics::ShowResult()
         proj->FitSlicesY(nullptr, 0, -1, 0, "QNR", &aSlices);
         TH1D* means = dynamic_cast<TH1D*>(aSlices.At(1));
         for(Int_t x=0;x<means->GetNbinsX()+1;x++) {
-            result->SetBinContent(x, ch+1, means->GetBinContent(x));
+            h_timewalk_overview->SetBinContent(x, ch+1, means->GetBinContent(x));
         }
+        delete proj;
     }
-    c << result;
-    c << endc;
+    canvas(GetName()) << drawoption("colz") << h_timewalk_overview << endc;
 }
 
 CB_TimeWalk::CB_TimeWalk(

@@ -42,6 +42,7 @@ public:
     protected:
         std::shared_ptr<expconfig::detector::CB> cb_detector;
         TH3D* h_timewalk;
+        TH2D* h_timewalk_overview;
 
     public:
         ThePhysics(const std::string& name, const std::shared_ptr<expconfig::detector::CB>& cb);
