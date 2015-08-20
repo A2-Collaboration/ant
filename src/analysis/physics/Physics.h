@@ -109,6 +109,8 @@ public:
 
     static std::unique_ptr<Physics> Create(const std::string& name);
 
+    std::vector<std::string> GetList() const;
+
     void RegisterPhysics(physics_creator c, const std::string& name) {
         physics_creators[name] = c;
     }

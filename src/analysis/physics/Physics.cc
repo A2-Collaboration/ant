@@ -175,6 +175,18 @@ std::unique_ptr<Physics> PhysicsRegistry::Create(const string& name)
 
 }
 
+std::vector<string> PhysicsRegistry::GetList() const
+{
+    std::vector<std::string> list(physics_creators.size());
+    list.resize(0);
+
+    for(const auto& entry : physics_creators) {
+        list.emplace_back(entry.first);
+    }
+
+    return list;
+}
+
 void PhysicsRegistry::PrintRegistry()
 {
     for(auto& entry : get().physics_creators) {
