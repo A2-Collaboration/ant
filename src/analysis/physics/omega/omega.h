@@ -72,6 +72,7 @@ protected:
         TH1D* ggg = nullptr;
         TH1D* mm = nullptr;
         TH1D* angle_p;
+        TH1D* angle_p_ggg;
     };
 
     perDecayhists_t makePerDecayHists(const std::string &title="");
