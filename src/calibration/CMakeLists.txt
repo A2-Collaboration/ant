@@ -38,6 +38,7 @@ set(SRCS
     fitfunctions/FitFunction.cc
     fitfunctions/FitGaus.cc
     fitfunctions/FitGausPol3.cc
+    fitfunctions/FitTimewalk.cc
   )
 
 add_library(calibration ${SRCS})
