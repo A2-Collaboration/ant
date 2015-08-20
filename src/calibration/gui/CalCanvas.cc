@@ -31,7 +31,6 @@ void CalCanvas::Show(TH1 *h, FitFunction* f) {
     }
 
     func = f;
-    func->SetPoints(1000);
     hist = h;
 
     this->cd();

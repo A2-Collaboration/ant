@@ -39,7 +39,6 @@ public:
 
     virtual void SetRange(ant::interval<double> i) override;
     virtual ant::interval<double> GetRange() const override;
-    virtual void SetPoints(int n) override;
 
     virtual SavedState_t Save() const override;
     virtual void Load(const SavedState_t &data) override;

@@ -39,6 +39,10 @@ ant::calibration::gui::FitGausPol3::FitGausPol3()
     combined->SetParName(5,"p_{2}");
     combined->SetParName(6,"p_{3}");
 
+    signal->SetNpx(1000);
+    bg->SetNpx(1000);
+    combined->SetNpx(1000);
+
     AddKnob<KnobsTF1::ParameterKnob>(combined->GetParName(0), combined, 0, GUIElementDescription::GUI_Type::slider_horizontal);
     AddKnob<KnobsTF1::ParameterKnob>(combined->GetParName(1), combined, 1, GUIElementDescription::GUI_Type::slider_vertical);
     AddKnob<KnobsTF1::ReferenceParameterKnob>(combined->GetParName(2), combined, 2, 1, GUIElementDescription::GUI_Type::slider_vertical);
@@ -99,13 +103,6 @@ ant::interval<double> ant::calibration::gui::FitGausPol3::GetRange() const
 void ant::calibration::gui::FitGausPol3::Sync()
 {
     sync();
-}
-
-void ant::calibration::gui::FitGausPol3::SetPoints(int n)
-{
-    signal->SetNpx(n);
-    bg->SetNpx(n);
-    combined->SetNpx(n);
 }
 
 std::vector<double> ant::calibration::gui::FitGausPol3::Save() const

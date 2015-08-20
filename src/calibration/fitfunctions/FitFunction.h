@@ -56,7 +56,6 @@ public:
     virtual void SetRange(ant::interval<double> i) =0;
     virtual ant::interval<double> GetRange() const =0;
     virtual void Sync() {}
-    virtual void SetPoints(int n) =0;
 
     virtual SavedState_t Save() const =0;
     virtual void Load(const std::vector<double>& data) =0;

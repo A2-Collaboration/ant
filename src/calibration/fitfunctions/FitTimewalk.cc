@@ -59,11 +59,6 @@ ant::interval<double> FitTimewalk::GetRange() const
     return getRange(func);
 }
 
-void FitTimewalk::SetPoints(int n)
-{
-    func->SetNpx(n);
-}
-
 FitFunction::SavedState_t FitTimewalk::Save() const
 {
     std::vector<double> params;

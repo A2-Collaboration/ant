@@ -62,11 +62,6 @@ ant::interval<double> FitGaus::GetRange() const
     return getRange(func);
 }
 
-void FitGaus::SetPoints(int n)
-{
-    func->SetNpx(n);
-}
-
 FitFunction::SavedState_t FitGaus::Save() const
 {
     std::vector<double> params;

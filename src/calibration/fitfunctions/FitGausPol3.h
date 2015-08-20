@@ -27,7 +27,6 @@ public:
     void SetRange(ant::interval<double> i);
     ant::interval<double> GetRange() const;
     virtual void Sync() override;
-    virtual void SetPoints(int n) override;
 
     std::vector<double> Save() const;
     void Load(const std::vector<double> &data);
