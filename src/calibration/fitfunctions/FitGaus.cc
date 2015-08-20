@@ -16,7 +16,7 @@ using namespace ant::calibration::gui;
 
 FitGaus::FitGaus()
 {
-    func = functions::gaus::getFT1();
+    func = functions::gaus::getTF1();
     func->SetNpx(1000);
     Addknob<KnobsTF1::ParameterKnob>("A",     func, 0, GUIElementDescription::GUI_Type::slider_horizontal, kBlue, 3);
     Addknob<KnobsTF1::ParameterKnob>("x_{0}", func, 1, GUIElementDescription::GUI_Type::slider_vertical,   kBlue, 3);

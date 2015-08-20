@@ -7,12 +7,17 @@ namespace calibration {
 namespace functions {
 
 struct helper {
-    static TF1* makeTF1(double (*fcn)(double *, double *), const unsigned n);
+    static TF1* makeTF1(double (*fcn)(double*, double*), const unsigned nParameters);
 };
 
 struct gaus {
-    static double fct(double *x, double *p);
-    static TF1* getFT1();
+    static double fct(double* x, double* p);
+    static TF1* getTF1();
+};
+
+struct timewalk {
+    static double fct(double* x, double* p);
+    static TF1* getTF1();
 };
 
 
@@ -45,7 +50,7 @@ struct pol {
 template <unsigned order>
 struct GausPol {
     static double fct(double *x, double *p) {
-        return ant::calibration::functions::gaus::fct(x, &p[0]) + pol<order>::fct(x,&p[3]);
+        return gaus::fct(x, &p[0]) + pol<order>::fct(x,&p[3]);
     }
 
     static TF1* getTF1() {

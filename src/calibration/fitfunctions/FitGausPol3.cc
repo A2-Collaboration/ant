@@ -21,7 +21,7 @@ void ant::calibration::gui::FitGausPol3::sync()
 
 ant::calibration::gui::FitGausPol3::FitGausPol3()
 {
-    signal = functions::gaus::getFT1();
+    signal = functions::gaus::getTF1();
     signal->SetLineColor(kRed);
 
     bg = functions::pol<3>::getTF1();
