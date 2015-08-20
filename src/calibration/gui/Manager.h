@@ -11,8 +11,7 @@
 #include <vector>
 #include <string>
 
-class TH1D;
-class TH2D;
+class TH1;
 class TFile;
 class TQObject;
 
@@ -27,7 +26,7 @@ class Manager {
 protected:
 
     std::shared_ptr<Manager_traits> module;
-    AvgBuffer<TH2D, interval<TID>> buffer;
+    AvgBuffer<TH1, interval<TID>> buffer;
 
     struct input_file_t {
 

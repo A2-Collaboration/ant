@@ -79,7 +79,7 @@ void Manager::FillBufferFromFiles()
             WrapTFileInput file;
             file.OpenFile(file_input.filename);
 
-            auto hist = file.GetSharedTH2(module->GetHistogramName());
+            auto hist = file.GetSharedHist(module->GetHistogramName());
 
             if(!hist) {
                 LOG(WARNING) << "Histogram " << module->GetHistogramName() << " not found in " << file_input.filename;

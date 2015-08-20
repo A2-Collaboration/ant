@@ -47,6 +47,15 @@ WrapTFile::~WrapTFile()
     }
 }
 
+std::shared_ptr<TH1> WrapTFile::GetSharedHist(const string& name)
+{
+    TH1* hist = nullptr;
+    GetObject(name, hist);
+    if(hist)
+        hist->SetDirectory(nullptr);
+    return std::shared_ptr<TH1>(hist);
+}
+
 std::shared_ptr<TH1D> WrapTFile::GetSharedTH1(const string& name)
 {
     TH1D* hist = nullptr;

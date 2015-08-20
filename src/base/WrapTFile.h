@@ -13,6 +13,7 @@
 #include "TCollection.h"
 #include "TKey.h"
 
+class TH1;
 class TH1D;
 class TH2D;
 class TH3D;
@@ -86,6 +87,7 @@ public:
         return ptr != nullptr;
     }
 
+    std::shared_ptr<TH1>  GetSharedHist(const std::string& name);
     std::shared_ptr<TH1D> GetSharedTH1(const std::string& name);
     std::shared_ptr<TH2D> GetSharedTH2(const std::string& name);
     std::shared_ptr<TH3D> GetSharedTH3(const std::string& name);
