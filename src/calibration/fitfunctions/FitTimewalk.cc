@@ -46,9 +46,12 @@ void FitTimewalk::SetDefaults(TH1*)
 {
     func->SetParameter(0,  -25);
     func->SetParameter(1,   55);
-    func->SetParameter(2,    5);
+    func->SetParameter(2,   -5);
     func->SetParameter(3, 0.15);
-    SetRange({5, 700});
+
+    func->SetParLimits(2, -100, 0);
+
+    SetRange({5, 400});
 }
 
 void FitTimewalk::SetRange(ant::interval<double> i)

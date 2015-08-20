@@ -34,7 +34,7 @@ CB_TimeWalk::ThePhysics::ThePhysics(const string& name, const std::shared_ptr<ex
                      "Energy / MeV",
                      "Time / ns",
                      "Channel",
-                     BinSettings(400,0,1000),
+                     BinSettings(400,0,500),
                      BinSettings(100,-100,100),
                      BinSettings(cb_detector->GetNChannels()),
                      "timewalk"
