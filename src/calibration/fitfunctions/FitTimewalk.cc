@@ -36,17 +36,13 @@ void FitTimewalk::Fit(TH1 *hist)
     hist->Fit(func,"RBQN");
 }
 
-void FitTimewalk::SetDefaults(TH1 *hist)
+void FitTimewalk::SetDefaults(TH1*)
 {
-    if(hist) {
-        func->SetParameter(0,hist->GetMaximum());
-    } else {
-        func->SetParameter(0,100);
-    }
-    double max_pos = hist->GetXaxis()->GetBinCenter(hist->GetMaximumBin());
-    func->SetParameter(1,max_pos);
-    func->SetParameter(2,20);
-    SetRange({max_pos-60, max_pos+60});
+    func->SetParameter(0,-25);
+    func->SetParameter(1,55);
+    func->SetParameter(2,-5);
+    func->SetParameter(3,0.15);
+    SetRange({5, 700});
 }
 
 void FitTimewalk::SetRange(ant::interval<double> i)
@@ -76,7 +72,6 @@ void FitTimewalk::Load(const SavedState_t &data)
     }
     SavedState_t::const_iterator pos = data.begin();
     loadTF1(pos, func);
-
     sync();
 }
 
