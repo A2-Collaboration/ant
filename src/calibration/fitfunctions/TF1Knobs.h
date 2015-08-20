@@ -11,6 +11,7 @@ namespace calibration {
 namespace gui {
 namespace KnobsTF1 {
 
+
 class ParameterKnob: public VirtualKnob {
 protected:
     TF1* func = nullptr;
@@ -23,6 +24,27 @@ public:
     virtual void set(double a) override;
 
 };
+
+class RangedParameterKnob : public ParameterKnob {
+public:
+    enum class ConstraintType {
+        lowerThanMin,
+        lowerThanMax,
+        higherThanMin,
+        higherThanMax
+    };
+
+protected:
+    const ConstraintType constraint_type;
+public:
+    RangedParameterKnob(
+            const std::string& n, TF1* Func, int par,
+            ConstraintType constraint_type_,
+            GUIElementDescription::GUI_Type gui_type, Color_t color=kBlue, double LineW=3);
+
+    virtual void set(double a) override;
+};
+
 
 class ReferenceParameterKnob: public VirtualKnob {
 protected:

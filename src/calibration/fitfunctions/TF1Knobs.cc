@@ -90,3 +90,40 @@ double ReferenceParameterKnob::reference() const
 {
     return func->GetParameter(ref_index);
 }
+
+
+RangedParameterKnob::RangedParameterKnob(const std::string& n, TF1* Func, int par,
+                                         RangedParameterKnob::ConstraintType constraint_type_,
+                                         GUIElementDescription::GUI_Type gui_type, Color_t color, double LineW) :
+ParameterKnob(n, Func, par, gui_type, color, LineW),
+  constraint_type(constraint_type_)
+{
+}
+
+void RangedParameterKnob::set(double a)
+{
+    double min, max;
+    func->GetRange(min, max);
+
+    switch(constraint_type) {
+    case ConstraintType::lowerThanMin:
+        if(min<a)
+            return;
+        break;
+    case ConstraintType::lowerThanMax:
+        if(max<a)
+            return;
+        break;
+    case ConstraintType::higherThanMax:
+        if(max>a)
+            return;
+        break;
+    case ConstraintType::higherThanMin:
+        if(min>a)
+            return;
+        break;
+    default:
+        return;
+    }
+    ParameterKnob::set(a);
+}
