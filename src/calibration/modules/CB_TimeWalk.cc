@@ -248,6 +248,8 @@ void CB_TimeWalk::TheGUI::DisplayFit()
 
     c_extra->cd();
     proj->Draw("colz");
+    c_extra->Modified();
+    c_extra->Update();
 }
 
 void CB_TimeWalk::TheGUI::StoreFit(unsigned channel)
