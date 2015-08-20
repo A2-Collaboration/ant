@@ -26,14 +26,21 @@ PlutoReader::PlutoReader(const std::shared_ptr<WrapTFileInput>& rootfiles):
     files(rootfiles)
 {
     /// \note the Pluto tree is really named just "data"
+    /// \note Yep.
     if(!files->GetObject("data", tree))
         return;
 
-    tree->SetBranchAddress("Particles",         &PlutoMCTrue);
+    VLOG(5) << "Found Pluto Data Tree";
+
+    auto res = tree->SetBranchAddress("Particles",         &PlutoMCTrue);
+    if(res != TTree::kMatch) LOG(ERROR) << "Could not access branch in PLuto tree";
+
     tree->SetBranchAddress("plutoID",           &plutoID);
     tree->SetBranchAddress("plutoRandomID", 	&plutoRandomID);
 
     pluto_database = makeStaticData();
+
+    LOG(INFO) << "Pluto input active";
 }
 
 PlutoReader::~PlutoReader() {}
