@@ -6,6 +6,8 @@
 
 #include "TF1.h"
 
+using namespace std;
+
 using namespace ant::calibration::functions;
 
 TF1* helper::makeTF1(double (*fct)(double *, double *), const unsigned nParameters)
@@ -25,7 +27,10 @@ TF1* gaus::getTF1()
 
 double timewalk::fct(double* x, double* p)
 {
-    return p[0] + p[1]/std::pow(x[0] + p[2], p[3]);
+    if(x[0]<=p[2])
+        return 0;
+
+    return p[0] + p[1]/std::pow(x[0] - p[2], p[3]);
 }
 
 TF1* timewalk::getTF1()

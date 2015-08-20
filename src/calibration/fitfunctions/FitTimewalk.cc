@@ -18,6 +18,10 @@ FitTimewalk::FitTimewalk()
 {
     func = functions::timewalk::getTF1();
     func->SetNpx(1000);
+    func->SetParName(2, "E_{0}");
+
+    AddKnob<KnobsTF1::ParameterKnob>(func->GetParName(2), func, 2, GUIElementDescription::GUI_Type::slider_vertical);
+
     AddKnob<KnobsTF1::RangeKnob>("Min", func, KnobsTF1::RangeKnob::RangeEndType::lower);
     AddKnob<KnobsTF1::RangeKnob>("Max", func, KnobsTF1::RangeKnob::RangeEndType::upper);
 }
@@ -38,10 +42,10 @@ void FitTimewalk::Fit(TH1 *hist)
 
 void FitTimewalk::SetDefaults(TH1*)
 {
-    func->SetParameter(0,-25);
-    func->SetParameter(1,55);
-    func->SetParameter(2,-5);
-    func->SetParameter(3,0.15);
+    func->SetParameter(0,  -25);
+    func->SetParameter(1,   55);
+    func->SetParameter(2,    5);
+    func->SetParameter(3, 0.15);
     SetRange({5, 700});
 }
 
