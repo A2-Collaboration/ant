@@ -47,19 +47,17 @@ void CB_TimeWalk::ThePhysics::ProcessEvent(const Event& event)
             if(cluster.Detector != Detector_t::Type_t::CB)
                 continue;
             for(const Cluster::Hit& hit : cluster.Hits) {
-                if(cluster.CentralElement != hit.Channel)
-                    continue;
                 // found the hit of the central element
                 // now search for its timing information
                 double time = numeric_limits<double>::quiet_NaN();
+                double energy = numeric_limits<double>::quiet_NaN();
                 for(const Cluster::Hit::Datum& d : hit.Data) {
-                    if(d.Type != Channel_t::Type_t::Timing)
-                        continue;
-                    time = d.Value;
-                    break;
+                    if(d.Type == Channel_t::Type_t::Timing)
+                        time = d.Value;
+                    if(d.Type == Channel_t::Type_t::Integral)
+                        energy = d.Value;
                 }
-                h_timewalk->Fill(cluster.Energy, time, hit.Channel);
-                return;
+                h_timewalk->Fill(energy, time, hit.Channel);
             }
         }
     }
