@@ -156,11 +156,9 @@ int main(int argc, char** argv) {
         }
         catch(Unpacker::Exception e) {
             VLOG(5) << "Unpacker: " << e.what();
-            unpacker = nullptr;
         }
         catch(RawFileReader::Exception e) {
             LOG(WARNING) << "Unpacker: Error opening file "<<inputfile<<": " << e.what();
-            unpacker = nullptr;
         }
         catch(ExpConfig::ExceptionNoConfig) {
             LOG(ERROR) << "The inputfile " << inputfile << " cannot be unpacked without a manually specified setupname. "
