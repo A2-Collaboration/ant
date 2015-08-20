@@ -2,7 +2,7 @@
 
 #include "DataManager.h"
 #include "gui/CalCanvas.h"
-#include "fitfunctions/FitGaus.h"
+#include "fitfunctions/FitTimewalk.h"
 
 #include "reconstruct/Clustering.h"
 
@@ -101,6 +101,10 @@ CB_TimeWalk::CB_TimeWalk(
     cb_detector(cb),
     calibrationManager(calmgr)
 {
+    for(unsigned ch=0;ch<cb_detector->GetNChannels();ch++) {
+        timewalks.emplace_back(make_shared<gui::FitTimewalk>());
+        timewalks.back()->SetDefaults(nullptr);
+    }
 }
 
 CB_TimeWalk::~CB_TimeWalk()
@@ -109,9 +113,6 @@ CB_TimeWalk::~CB_TimeWalk()
 
 void CB_TimeWalk::ApplyTo(clusterhits_t& sorted_clusterhits)
 {
-    if(timewalks.empty())
-        return;
-
     // search for CB clusters
     const auto it_sorted_clusterhits = sorted_clusterhits.find(Detector_t::Type_t::CB);
     if(it_sorted_clusterhits == sorted_clusterhits.end())
@@ -123,7 +124,7 @@ void CB_TimeWalk::ApplyTo(clusterhits_t& sorted_clusterhits)
 
     while(it_clusterhit != clusterhits.end()) {
         reconstruct::AdaptorTClusterHit& clusterhit = *it_clusterhit;
-        clusterhit.Time = timewalks[clusterhit.Hit->Channel].calc(clusterhit.Energy);
+        clusterhit.Time -= timewalks[clusterhit.Hit->Channel]->Eval(clusterhit.Energy);
         ++it_clusterhit;
     }
 }
@@ -133,7 +134,7 @@ unique_ptr<analysis::Physics> CB_TimeWalk::GetPhysicsModule() {
 }
 
 void CB_TimeWalk::GetGUIs(list<unique_ptr<gui::Manager_traits> >& guis) {
-    guis.emplace_back(std_ext::make_unique<TheGUI>(GetName(), calibrationManager, cb_detector));
+    guis.emplace_back(std_ext::make_unique<TheGUI>(GetName(), calibrationManager, cb_detector, timewalks));
 }
 
 
@@ -147,22 +148,24 @@ void CB_TimeWalk::Update(size_t, const TID& id)
     TCalibrationData cdata;
     if(!calibrationManager->GetData(GetName(), id, cdata))
         return;
-    if(cdata.FitParameters.size() != cb_detector->GetNChannels())
-        return;
-    timewalks.resize(0);
     for(const TKeyValue<vector<double>>& kv : cdata.FitParameters) {
-        timewalks.emplace_back(kv);
+        if(kv.Key>=timewalks.size()) {
+            LOG(ERROR) << "Ignoring too large key=" << kv.Key;
+            continue;
+        }
+        timewalks[kv.Key]->Load(kv.Value);
     }
 }
 
 
 CB_TimeWalk::TheGUI::TheGUI(const string& basename,
-                             const shared_ptr<DataManager>& calmgr,
-                             const shared_ptr<expconfig::detector::CB>& cb) :
+                            const shared_ptr<DataManager>& calmgr,
+                            const shared_ptr<expconfig::detector::CB>& cb,
+                            std::vector< std::shared_ptr<gui::FitTimewalk> >& timewalks_) :
     gui::Manager_traits(basename),
     calibrationManager(calmgr),
     cb_detector(cb),
-    func(make_shared<gui::FitGaus>())
+    timewalks(timewalks_)
 {
 }
 
@@ -178,57 +181,51 @@ unsigned CB_TimeWalk::TheGUI::GetNumberOfChannels() const
 
 void CB_TimeWalk::TheGUI::InitGUI()
 {
-//    c_singlechannel = new gui::CalCanvas("c_singlechannel", GetName()+": Single Channel");
-//    c_result = new gui::CalCanvas("c_result", GetName()+": Result");
+    canvas = new gui::CalCanvas("canvas", GetName());
 }
 
 list<gui::CalCanvas*> CB_TimeWalk::TheGUI::GetCanvases() const
 {
-    //return {c_singlechannel, c_result};
-    return {};
+    return {canvas};
 }
 
 void CB_TimeWalk::TheGUI::StartRange(const interval<TID>& range)
 {
-//    // ask the detector for some reasonable starting values
-//    angles.resize(GetNumberOfChannels());
-//    for(size_t ch=0;ch<GetNumberOfChannels();ch++)
-//        angles[ch] = std_ext::radian_to_degree(pid_detector->GetPosition(ch).Phi());
 
-//    TCalibrationData cdata;
-//    if(calibrationManager->GetData(GetName()+"/SingleChannels", range.Start(), cdata)) {
-//        for(const TKeyValue<double>& kv : cdata.Data) {
-//            angles[kv.Key] = kv.Value;
-//        }
-//        for(const TKeyValue<vector<double>>& kv : cdata.FitParameters) {
-//            fitParameters.insert(make_pair(kv.Key, kv.Value));
-//        }
-//        LOG(INFO) << GetName() << ": Loaded previous single channel positions from database";
-//    }
-//    else {
-//        LOG(INFO) << GetName() << ": No previous data found";
-//    }
-
-//    // save a copy for comparison at finish stage
-//    previousAngles = angles;
+    TCalibrationData cdata;
+    if(!calibrationManager->GetData(GetName(), range.Start(), cdata)) {
+        LOG(INFO) << " No previous data found";
+        return;
+    }
+    for(const TKeyValue<vector<double>>& kv : cdata.FitParameters) {
+        if(kv.Key>=timewalks.size()) {
+            LOG(ERROR) << "Ignoring too large key=" << kv.Key;
+            continue;
+        }
+        timewalks[kv.Key]->Load(kv.Value);
+    }
 }
 
 
 
-gui::Manager_traits::DoFitReturn_t CB_TimeWalk::TheGUI::DoFit(TH1* hist, unsigned channel)
+gui::Manager_traits::DoFitReturn_t CB_TimeWalk::TheGUI::DoFit(TH1* hist, unsigned ch)
 {
-//    TH2* hist2 = dynamic_cast<TH2*>(hist);
+    if(cb_detector->IsIgnored(ch))
+        return DoFitReturn_t::Skip;
 
-//    h_projection = hist2->ProjectionX("",channel,channel+1);
+    TH3* h_timewalk = dynamic_cast<TH3*>(hist);
 
-//    func->SetDefaults(h_projection);
-//    const auto it_fit_param = fitParameters.find(channel);
-//    if(it_fit_param != fitParameters.end()) {
-//        VLOG(5) << "Loading previous fit parameters for channel " << channel;
-//        func->Load(it_fit_param->second);
-//    }
+    h_timewalk->GetZaxis()->SetRange(ch,ch+1);
+    stringstream ss_name;
+    ss_name << "Ch" << ch << "_yx";
+    TH2* proj = dynamic_cast<TH2*>(h_timewalk->Project3D(ss_name.str().c_str()));
+    TObjArray aSlices;
+    proj->FitSlicesY(nullptr, 0, -1, 0, "QNR", &aSlices);
+    means = dynamic_cast<TH1D*>(aSlices.At(1)->Clone()); // important to use Clone here!
 
-//    func->Fit(h_projection);
+    timewalks[ch]->Fit(means);
+
+    last_timewalk = timewalks[ch]; // remember for display fit
 
     // always request display
     return DoFitReturn_t::Display;
@@ -236,96 +233,42 @@ gui::Manager_traits::DoFitReturn_t CB_TimeWalk::TheGUI::DoFit(TH1* hist, unsigne
 
 void CB_TimeWalk::TheGUI::DisplayFit()
 {
-    //c_singlechannel->Show(h_projection, func.get());
+    canvas->Show(means, last_timewalk.get());
 }
 
 void CB_TimeWalk::TheGUI::StoreFit(unsigned channel)
 {
-//    const double oldAngle = previousAngles[channel];
+    // the fit parameters contain the timewalk correction
+    // and since we use pointers, the item in timewalks is already updated
 
-//    double newAngle = func->GetPeakPosition();
-//    if(newAngle>180.0)
-//        newAngle -= 360.0;
-//    if(newAngle<0)
-//        newAngle += 360.0;
-
-
-//    angles[channel] = newAngle;
-
-//    LOG(INFO) << "Stored Ch=" << channel << ": Angle " << newAngle << " from " << oldAngle;
-
-//    // don't forget the fit parameters
-//    fitParameters[channel] = func->Save();
-
-//    c_singlechannel->Clear();
-//    c_singlechannel->Update();
+    LOG(INFO) << "Stored Ch=" << channel;
+    canvas->Clear();
+    canvas->Update();
 }
 
 bool CB_TimeWalk::TheGUI::FinishRange()
 {
-//   h_result = new TGraph(GetNumberOfChannels());
-//   for(size_t ch=0;ch<GetNumberOfChannels();ch++)
-//       h_result->SetPoint(ch, ch, angles[ch]);
-//   TFitResultPtr r = h_result->Fit("pol1","QS");
-//   phi_offset = r->Value(0);
-//   LOG(INFO) << "Found Phi offset of first channel: " << phi_offset;
-
-//   h_result->SetTitle("Result");
-//   h_result->GetXaxis()->SetTitle("Channel number");
-//   h_result->GetYaxis()->SetTitle("CB Phi position / degrees");
-//   h_result->SetMarkerSize(2);
-//   h_result->SetMarkerStyle(kMultiply);
-
-//   c_result->cd();
-//   h_result->Draw("AP");
-
-//   c_result->Modified();
-//   c_result->Update();
-
    return true;
 }
 
 void CB_TimeWalk::TheGUI::StoreFinishRange(const interval<TID>& range)
 {
-//    delete h_result;
-//    c_result->Clear();
-//    c_result->Update();
+    TCalibrationData cdata(
+                "Unknown", /// \todo get static information about author/comment?
+                "No Comment",
+                time(nullptr),
+                GetName(),
+                range.Start(),
+                range.Stop()
+                );
 
-//    TCalibrationData cdata(
-//                "Unknown", /// \todo get static information about author/comment?
-//                "No Comment",
-//                time(nullptr),
-//                GetName()+"/SingleChannels",
-//                range.Start(),
-//                range.Stop()
-//                );
+    // fill fit parameters
+    for(unsigned ch=0;ch<cb_detector->GetNChannels();ch++) {
+        const shared_ptr<gui::FitTimewalk>& func = timewalks[ch];
+        cdata.FitParameters.emplace_back(ch, func->Save());
+    }
 
-//    // fill data
-//    for(unsigned ch=0;ch<angles.size();ch++) {
-//        cdata.Data.emplace_back(ch, angles[ch]);
-//    }
-
-//    // fill fit parameters (if any)
-//    for(const auto& it_map : fitParameters) {
-//        const unsigned ch = it_map.first;
-//        const vector<double>& params = it_map.second;
-//        cdata.FitParameters.emplace_back(ch, params);
-//    }
-
-//    TCalibrationData cdata_offset(
-//                "Unknown", /// \todo get static information about author/comment?
-//                "No Comment",
-//                time(nullptr),
-//                GetName(),
-//                range.Start(),
-//                range.Stop()
-//                );
-//    cdata_offset.Data.emplace_back(0, phi_offset);
-
-
-//    calibrationManager->Add(cdata);
-//    calibrationManager->Add(cdata_offset);
-//    LOG(INFO) << "Added TCalibrationData: " << cdata;
-//    LOG(INFO) << "Added TCalibrationData: " << cdata_offset;
+    calibrationManager->Add(cdata);
+    LOG(INFO) << "Added TCalibrationData: " << cdata;
 }
 

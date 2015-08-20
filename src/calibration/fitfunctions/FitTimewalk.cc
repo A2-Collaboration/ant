@@ -75,4 +75,9 @@ void FitTimewalk::Load(const SavedState_t &data)
     sync();
 }
 
+double FitTimewalk::Eval(double energy)
+{
+    return func->Eval(energy);
+}
+
 

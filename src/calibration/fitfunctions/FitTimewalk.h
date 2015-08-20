@@ -42,6 +42,8 @@ public:
 
     virtual SavedState_t Save() const override;
     virtual void Load(const SavedState_t &data) override;
+
+    double Eval(double energy);
 };
 
 }

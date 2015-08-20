@@ -23,7 +23,7 @@ namespace calibration {
 class DataManager;
 
 namespace gui {
-class FitGaus;
+class FitTimewalk;
 }
 
 
@@ -55,22 +55,17 @@ public:
     protected:
         std::shared_ptr<DataManager> calibrationManager;
         std::shared_ptr<expconfig::detector::CB> cb_detector;
-        std::shared_ptr<gui::FitGaus> func;
+        std::vector< std::shared_ptr<gui::FitTimewalk> >& timewalks;
+        std::shared_ptr<gui::FitTimewalk> last_timewalk;
 
-//        gui::CalCanvas* c_singlechannel;
-//        gui::CalCanvas* c_result;
-
-//        TH1*  h_projection = nullptr;
-//        TGraph* h_result;
-
-        std::map< unsigned, std::vector<double> > fitParameters;
-
+        gui::CalCanvas* canvas;
+        TH1D* means;
 
     public:
         TheGUI(const std::string& basename,
                const std::shared_ptr<DataManager>& calmgr,
-               const std::shared_ptr<expconfig::detector::CB>& cb
-               );
+               const std::shared_ptr<expconfig::detector::CB>& cb,
+               std::vector<std::shared_ptr<gui::FitTimewalk> >& timewalks_);
 
         virtual std::string GetHistogramName() const override;
         virtual unsigned GetNumberOfChannels() const override;
@@ -78,7 +73,7 @@ public:
         virtual std::list<gui::CalCanvas*> GetCanvases() const;
 
         virtual void StartRange(const interval<TID>& range);
-        virtual DoFitReturn_t DoFit(TH1* hist, unsigned channel);
+        virtual DoFitReturn_t DoFit(TH1* hist, unsigned ch);
         virtual void DisplayFit();
         virtual void StoreFit(unsigned channel);
         virtual bool FinishRange();
@@ -95,32 +90,7 @@ public:
     virtual void Update(std::size_t index, const TID& id) override;
 
 protected:
-    struct timewalk_t {
-        double offset;
-        double scale;
-        double shift;
-        double exponent;
-        double calc(const double E) const {
-            return offset + scale/std::pow(E + shift, exponent);
-        }
-        TKeyValue<std::vector<double>> get() const {
-            return {1,{offset,scale,shift,exponent}};
-        }
-        timewalk_t(const TKeyValue<std::vector<double>>& kv) :
-            offset(kv.Value[0]),
-            scale(kv.Value[1]),
-            shift(kv.Value[2]),
-            exponent(kv.Value[3])
-        {}
-        timewalk_t() :
-            offset(0),
-            scale(1),
-            shift(0),
-            exponent(-1)
-        {}
-    };
-
-    std::vector<timewalk_t> timewalks;
+    std::vector< std::shared_ptr<gui::FitTimewalk> > timewalks;
 
     std::shared_ptr<expconfig::detector::CB> cb_detector;
     std::shared_ptr<DataManager> calibrationManager;
