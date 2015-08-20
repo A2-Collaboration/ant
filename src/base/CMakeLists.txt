@@ -53,6 +53,7 @@ set(SRCS
   detail/tclap/Visitor.h
   detail/tclap/XorHandler.h
   detail/tclap/ZshCompletionOutput.h
+  detail/tclap/ValuesConstraintExtra.h
 )
 
 set_source_files_properties(detail/format.cc
