@@ -44,7 +44,7 @@ protected:
 public:
     virtual ~FitFunction();
     virtual void Draw() =0;
-    knoblist_t& getKnobs() { return knobs; }
+    knoblist_t& GetKnobs() { return knobs; }
     virtual void Fit(TH1* hist) =0;
 
     /**

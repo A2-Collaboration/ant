@@ -167,7 +167,7 @@ void CalCanvas::SetupGUI() {
 
     ClearIndicators();
 
-    for(auto& knob : func->getKnobs()) {
+    for(auto& knob : func->GetKnobs()) {
         auto gui = MakeGUIElement(*knob);
         indicators.emplace_back(gui);
     }
