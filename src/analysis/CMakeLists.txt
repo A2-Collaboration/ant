@@ -47,6 +47,7 @@ set(ANALYSIS_INPUT
 set(ANALYSIS_PHYSICS
   physics/test/TestPhysics.cc
   physics/DeltaPlus/DeltaPlusPhysics.cc
+  physics/DeltaTreeGenerator/DeltaTreeGenerator.cc
   physics/omega/omega.cc
   physics/omega/GeoAcceptance.cc
   physics/test/TestAPLCON.cc
