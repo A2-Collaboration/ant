@@ -39,11 +39,11 @@ ant::calibration::gui::FitGausPol3::FitGausPol3()
     combined->SetParName(5,"p_{2}");
     combined->SetParName(6,"p_{3}");
 
-    Addknob<KnobsTF1::ParameterKnob>(combined->GetParName(0), combined, 0, GUIElementDescription::GUI_Type::slider_horizontal);
-    Addknob<KnobsTF1::ParameterKnob>(combined->GetParName(1), combined, 1, GUIElementDescription::GUI_Type::slider_vertical);
-    Addknob<KnobsTF1::ReferenceParameterKnob>(combined->GetParName(2), combined, 2, 1, GUIElementDescription::GUI_Type::slider_vertical);
-    Addknob<KnobsTF1::RangeKnob>("min",combined,KnobsTF1::RangeKnob::RangeEndType::lower);
-    Addknob<KnobsTF1::RangeKnob>("max",combined,KnobsTF1::RangeKnob::RangeEndType::upper);
+    AddKnob<KnobsTF1::ParameterKnob>(combined->GetParName(0), combined, 0, GUIElementDescription::GUI_Type::slider_horizontal);
+    AddKnob<KnobsTF1::ParameterKnob>(combined->GetParName(1), combined, 1, GUIElementDescription::GUI_Type::slider_vertical);
+    AddKnob<KnobsTF1::ReferenceParameterKnob>(combined->GetParName(2), combined, 2, 1, GUIElementDescription::GUI_Type::slider_vertical);
+    AddKnob<KnobsTF1::RangeKnob>("min",combined,KnobsTF1::RangeKnob::RangeEndType::lower);
+    AddKnob<KnobsTF1::RangeKnob>("max",combined,KnobsTF1::RangeKnob::RangeEndType::upper);
 }
 
 ant::calibration::gui::FitGausPol3::~FitGausPol3()

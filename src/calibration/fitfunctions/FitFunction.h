@@ -31,7 +31,7 @@ protected:
     knoblist_t knobs;
 
     template <typename T, typename ... Args_t>
-    void Addknob(Args_t&& ... args) {
+    void AddKnob(Args_t&& ... args) {
         knobs.emplace_back(std_ext::make_unique<T>(std::forward<Args_t>(args)...));
     }
 
