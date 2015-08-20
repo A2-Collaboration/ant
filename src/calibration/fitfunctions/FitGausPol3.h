@@ -31,7 +31,7 @@ public:
     std::vector<double> Save() const;
     void Load(const std::vector<double> &data);
 
-    virtual double GetPeakPosition() const override;
+    virtual double GetPeakPosition() const;
 
 };
 

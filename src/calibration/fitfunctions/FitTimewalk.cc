@@ -75,8 +75,4 @@ void FitTimewalk::Load(const SavedState_t &data)
     sync();
 }
 
-double FitTimewalk::GetPeakPosition() const
-{
-    return func->GetParameter(1);
-}
 

@@ -59,13 +59,6 @@ public:
 
     virtual SavedState_t Save() const =0;
     virtual void Load(const std::vector<double>& data) =0;
-
-    /**
-     * @brief Get the positon of the peak. "The Result"
-     * @return
-     */
-    virtual double GetPeakPosition() const =0;
-
 };
 
 
