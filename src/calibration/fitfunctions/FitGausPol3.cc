@@ -120,7 +120,7 @@ std::vector<double> ant::calibration::gui::FitGausPol3::Save() const
 void ant::calibration::gui::FitGausPol3::Load(const std::vector<double> &data)
 {
     if(data.size() != std::size_t(2+combined->GetNpar())) {
-        LOG(WARNING) << "Can't load parametes";
+        LOG(WARNING) << "Can't load parameters";
         return;
     }
 

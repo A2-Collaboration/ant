@@ -79,7 +79,7 @@ FitFunction::SavedState_t FitGaus::Save() const
 void FitGaus::Load(const SavedState_t &data)
 {
     if(data.size() != std::size_t(2+func->GetNpar())) {
-        LOG(WARNING) << "Can't load parametes";
+        LOG(WARNING) << "Can't load parameters";
         return;
     }
     SavedState_t::const_iterator pos = data.begin();
