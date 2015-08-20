@@ -22,6 +22,7 @@
 #include "base/WrapTFile.h"
 #include "base/Logger.h"
 #include "base/CmdLine.h"
+#include "base/detail/tclap/ValuesConstraintExtra.h"
 #include "base/WrapTFile.h"
 #include "base/filesystem.h"
 
@@ -33,6 +34,7 @@
 #include <chrono>
 #include <cstdio>
 #include <cerrno>
+
 
 
 using namespace std;
@@ -61,11 +63,18 @@ int main(int argc, char** argv) {
     SetupLogger();
 
     TCLAP::CmdLine cmd("ant", ' ', "0.1");
-    auto cmd_verbose = cmd.add<TCLAP::ValueArg<int>>("v","verbose","Verbosity level (0..9)", false, 0,"level");
+
+    auto cmd_verbose = cmd.add<TCLAP::ValueArg<int>>("v","verbose","Verbosity level (0..9)", false, 0,"int");
     auto cmd_input  = cmd.add<TCLAP::MultiArg<string>>("i","input","Input files",true,"filename");
-    auto cmd_setup  = cmd.add<TCLAP::ValueArg<string>>("s","setup","Choose setup manually by name",false,"","setupname");
+
+    TCLAP::ValuesConstraintExtra<decltype(ExpConfig::Setup::GetNames())> allowedsetupnames(ExpConfig::Setup::GetNames());
+    auto cmd_setup  = cmd.add<TCLAP::ValueArg<string>>("s","setup","Choose setup manually by name",false,"", &allowedsetupnames);
+
     auto cmd_maxevents = cmd.add<TCLAP::ValueArg<int>>("m","maxevents","Process only max events",false, 0, "maxevents");
-    auto cmd_physicsclasses  = cmd.add<TCLAP::MultiArg<string>>("p","physics","Physics class to run",false,"physics");
+
+    TCLAP::ValuesConstraintExtra<decltype(analysis::PhysicsRegistry::get().GetList())> allowedPhysics(analysis::PhysicsRegistry::get().GetList());
+    auto cmd_physicsclasses  = cmd.add<TCLAP::MultiArg<string>>("p","physics","Physics class to run", false, &allowedPhysics);
+
     auto cmd_output = cmd.add<TCLAP::ValueArg<string>>("o","output","Output file",false,"","filename");
     auto cmd_batchmode = cmd.add<TCLAP::SwitchArg>("b","batch","Run in batch mode (no ROOT shell afterwards)",false);
 
