@@ -12,6 +12,7 @@
 
 #include "TGraph.h"
 #include "TFitResult.h"
+#include "TObjArray.h"
 
 #include <tree/TCluster.h>
 
@@ -70,19 +71,26 @@ void CB_TimeWalk::ThePhysics::Finish()
 
 void CB_TimeWalk::ThePhysics::ShowResult()
 {
-    //canvas(GetName()) << drawoption("colz") << h_timewalk << endc;
     canvas c(GetName());
     c << drawoption("colz");
+    TH2* result = dynamic_cast<TH2*>(h_timewalk->Project3D("zx"));
+    result->Reset();
     for(unsigned ch=0;ch<cb_detector->GetNChannels();ch++) {
         if(cb_detector->IsIgnored(ch))
             continue;
+        LOG(INFO) << "Fitting Channel=" << ch;
         h_timewalk->GetZaxis()->SetRange(ch,ch+1);
         stringstream ss_name;
         ss_name << "Ch" << ch << "_yx";
-        c << h_timewalk->Project3D(ss_name.str().c_str());
-        if(ch>30)
-            break;
+        TH2* proj = dynamic_cast<TH2*>(h_timewalk->Project3D(ss_name.str().c_str()));
+        TObjArray aSlices;
+        proj->FitSlicesY(nullptr, 0, -1, 0, "QNR", &aSlices);
+        TH1D* means = dynamic_cast<TH1D*>(aSlices.At(1));
+        for(Int_t x=0;x<means->GetNbinsX()+1;x++) {
+            result->SetBinContent(x, ch+1, means->GetBinContent(x));
+        }
     }
+    c << result;
     c << endc;
 }
 
