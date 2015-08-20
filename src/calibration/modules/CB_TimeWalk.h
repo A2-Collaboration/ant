@@ -29,7 +29,7 @@ class FitGaus;
 
 class CB_TimeWalk :
         public Calibration::Module,
-        public ReconstructHook::Clusters
+        public ReconstructHook::ClusterHits
 {
 public:
     CB_TimeWalk(
@@ -88,7 +88,7 @@ public:
     virtual std::unique_ptr<analysis::Physics> GetPhysicsModule() override;
     virtual void GetGUIs(std::list<std::unique_ptr<calibration::gui::Manager_traits> >& guis) override;
 
-    virtual void ApplyTo(clusters_t& sorted_clusters) override;
+    virtual void ApplyTo(clusterhits_t& sorted_clusterhits) override;
 
     // Updateable_traits interface
     virtual std::vector<std::list<TID> > GetChangePoints() const override;

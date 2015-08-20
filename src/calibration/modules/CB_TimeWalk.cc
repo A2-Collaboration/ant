@@ -4,6 +4,8 @@
 #include "gui/CalCanvas.h"
 #include "fitfunctions/FitGaus.h"
 
+#include "reconstruct/Clustering.h"
+
 #include "expconfig/detectors/CB.h"
 #include "base/Logger.h"
 #include "base/std_ext.h"
@@ -99,20 +101,24 @@ CB_TimeWalk::~CB_TimeWalk()
 {
 }
 
-void CB_TimeWalk::ApplyTo(clusters_t& sorted_clusters)
+void CB_TimeWalk::ApplyTo(clusterhits_t& sorted_clusterhits)
 {
     if(timewalks.empty())
         return;
 
     // search for CB clusters
-    const auto it_sorted_clusters = sorted_clusters.find(Detector_t::Type_t::CB);
-    if(it_sorted_clusters == sorted_clusters.end())
+    const auto it_sorted_clusterhits = sorted_clusterhits.find(Detector_t::Type_t::CB);
+    if(it_sorted_clusterhits == sorted_clusterhits.end())
         return;
 
-    list< TCluster >& clusters = it_sorted_clusters->second;
+    list< reconstruct::AdaptorTClusterHit >& clusterhits = it_sorted_clusterhits->second;
 
-    for(TCluster& cluster : clusters) {
-        cluster.Time = timewalks[cluster.CentralElement].calc(cluster.Energy);
+    auto it_clusterhit = clusterhits.begin();
+
+    while(it_clusterhit != clusterhits.end()) {
+        reconstruct::AdaptorTClusterHit& clusterhit = *it_clusterhit;
+        clusterhit.Time = timewalks[clusterhit.Hit->Channel].calc(clusterhit.Energy);
+        ++it_clusterhit;
     }
 }
 
