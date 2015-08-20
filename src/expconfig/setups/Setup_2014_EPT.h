@@ -77,14 +77,14 @@ public:
         AddCalibration<calibration::Time>(taps,
                                           calibrationDataManager,
                                           convert_MultiHit16bit,
-                                          -300, /// \todo different default for PbWO
+                                          -170, /// \todo different default for PbWO
                                           interval<double>{-500, 500},
                                           -0.100 /// \todo give measured time gains for BaF2
                                           );
         AddCalibration<calibration::Time>(tapsVeto,
                                           calibrationDataManager,
                                           convert_MultiHit16bit,
-                                          160,
+                                          -100,
                                           interval<double>{-1000, 1000}, /// \todo make this window smaller...
                                           -0.05 // default gain
                                           );
