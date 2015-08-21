@@ -42,7 +42,9 @@ struct TSlowControl : TDataRecord
   enum class Type_t : std::uint8_t {
     AcquScaler, EpicsOneShot, EpicsScaler, EpicsTimer
   };
-  static const char* TypeToString(const Type_t&);
+  Type_t GetType() const {
+      return static_cast<Type_t>(Type);
+  }
   TSlowControl(TID id,
                Type_t type,
                std::time_t timestamp,
@@ -53,7 +55,7 @@ struct TSlowControl : TDataRecord
   {}
   virtual std::ostream& Print( std::ostream& s) const override {
     return s << "TSlowControl ID=" << ID
-             << " Type=" << static_cast<int>(Type)
+             << " Type=" << TypeToString()
              << " Timestamp='" << std_ext::ctime(Timestamp) << "'"
              << " Name='" << Name << "'"
              << " Description='" << Description << "'";
@@ -65,21 +67,18 @@ struct TSlowControl : TDataRecord
 };
 
 #ifndef __CINT__
-inline const char* TSlowControl::TypeToString(const TSlowControl::Type_t& level) {
-  switch(level) {
-  case Type_t::AcquScaler:
-    return "AcquScaler";
-  case Type_t::EpicsOneShot:
-    return "EpicsOneShort";
-  case Type_t::EpicsScaler:
-    return "EpicsScaler";
-  case Type_t::EpicsTimer:
-    return "EpicsTimer";
-  }
-  throw std::runtime_error("Not implemented");
-}
 inline const char* TSlowControl::TypeToString() const {
-  return TypeToString(static_cast<Type_t>(Type));
+    switch(GetType()) {
+    case Type_t::AcquScaler:
+      return "AcquScaler";
+    case Type_t::EpicsOneShot:
+      return "EpicsOneShot";
+    case Type_t::EpicsScaler:
+      return "EpicsScaler";
+    case Type_t::EpicsTimer:
+      return "EpicsTimer";
+    }
+    throw std::runtime_error("Not implemented");
 }
 #endif
 
