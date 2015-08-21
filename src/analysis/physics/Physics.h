@@ -1,8 +1,7 @@
 #pragma once
 
-#include "analysis/data/Event.h"
 #include "analysis/plot/HistogramFactories.h"
-#include "analysis/input/DataReader.h"
+#include "analysis/data/Event.h"
 
 #include "base/std_ext.h"
 
@@ -21,7 +20,11 @@ class TAntHeader;
 namespace analysis {
 
 namespace utils {
-    class ParticleID;
+class ParticleID;
+}
+
+namespace input {
+class DataReader;
 }
 
 class Physics {

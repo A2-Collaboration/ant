@@ -191,7 +191,7 @@ void PlutoReader::CopyPluto(Event& event)
 }
 
 
-bool PlutoReader::ReadNextEvent(Event& event, TSlowControl&)
+bool PlutoReader::ReadNextEvent(Event& event)
 {
     if(!tree)
         return false;

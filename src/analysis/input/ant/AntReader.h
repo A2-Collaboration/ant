@@ -53,7 +53,7 @@ public:
 
     // DataReader interface
     virtual bool IsSource() override { return true; }
-    virtual bool ReadNextEvent(data::Event& event, TSlowControl& slowControl) override;
+    virtual bool ReadNextEvent(data::Event& event) override;
 };
 
 }

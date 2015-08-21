@@ -58,7 +58,7 @@ void AntReader::EnableUnpackerWriter(
         LOG(INFO) << "Writing unpacker TEvents to " << outputfile;
 }
 
-bool AntReader::ReadNextEvent(Event& event, TSlowControl&)
+bool AntReader::ReadNextEvent(Event& event)
 {
     while(auto item = reader->NextItem()) {
         // we use ROOT's machinery to identify derived class types,

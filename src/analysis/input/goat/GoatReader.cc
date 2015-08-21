@@ -167,7 +167,7 @@ GoatReader::~GoatReader() {}
 bool GoatReader::IsSource() { return trees->GetEntries()>0; }
 
 
-bool GoatReader::ReadNextEvent(Event& event, TSlowControl&)
+bool GoatReader::ReadNextEvent(Event& event)
 {
     if(current_entry>=trees->GetEntries())
         return false;

@@ -32,10 +32,7 @@ public:
     };
 
     virtual bool IsSource() = 0;
-    virtual bool HaveSlowControl() { return false; }
-    virtual bool ReadNextEvent(data::Event& event, TSlowControl& slowControl) = 0;
+    virtual bool ReadNextEvent(data::Event& event) = 0;
 };
 
-}
-}
-}
+}}} // namespace ant::analysis::input

@@ -1,9 +1,12 @@
 #include "Physics.h"
-#include "base/Logger.h"
+
+#include "utils/ParticleID.h"
+#include "input/DataReader.h"
 
 #include "tree/TSlowControl.h"
 #include "tree/TAntHeader.h"
-#include "utils/ParticleID.h"
+#include "base/Logger.h"
+
 
 #include "TDirectory.h"
 
@@ -89,10 +92,9 @@ void PhysicsManager::ReadFrom(
             break;
 
         data::Event event;
-        TSlowControl slowcontrol;
 
         if(source) {
-            if(!source->ReadNextEvent(event, slowcontrol)) {
+            if(!source->ReadNextEvent(event)) {
                 break;
             }
         }
@@ -100,7 +102,7 @@ void PhysicsManager::ReadFrom(
         it_reader = readers.begin();
         while(it_reader != readers.end()) {
 
-            if(!(*it_reader)->ReadNextEvent(event, slowcontrol)) {
+            if(!(*it_reader)->ReadNextEvent(event)) {
                 it_reader = readers.erase(it_reader);
             }
             else {

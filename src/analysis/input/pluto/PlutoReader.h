@@ -56,7 +56,7 @@ public:
 
     virtual bool IsSource() override { return false; }
 
-    virtual bool ReadNextEvent(data::Event& event, TSlowControl&) override;
+    virtual bool ReadNextEvent(data::Event& event) override;
 
 };
 
