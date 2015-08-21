@@ -111,8 +111,9 @@ OmegaEtaG::perDecayhists_t OmegaEtaG::makePerDecayHists(const string &title)
     h.gg = HistFac.makeTH1D("2#gamma "+title,"2#gamma IM [MeV]","#",imbinning,pref+"gg");
     h.ggg  = HistFac.makeTH1D("3#gamma "+title,"3#gamma IM [MeV]","",imbinning,pref+"ggg");
     h.mm = HistFac.makeTH1D("MM "+title,"MM [MeV]","",mmbinning,pref+"mm");
-    h.angle_p = HistFac.makeTH1D(title+"Angle p rec/true","angle","",BinSettings(4*360,0,180),pref+"angle_p");
-    h.angle_p_ggg = HistFac.makeTH1D(title+"Angle p ggg","angle","",BinSettings(4*360,0,180),pref+"angle_p_ggg");
+    h.angle_p = HistFac.makeTH1D(title+"Angle p rec/true","angle [#circ]","",BinSettings(4*360,0,180),pref+"angle_p");
+    h.angle_p_ggg = HistFac.makeTH1D(title+"Angle p ggg","angle [#circ]","",BinSettings(4*360,0,180),pref+"angle_p_ggg");
+    h.p_phi_diff = HistFac.makeTH1D(title+"p phi diff","angle [#circ]","",BinSettings(4*360,-90,90),pref+"p_phi_diff");
 
     return h;
 }
@@ -213,6 +214,10 @@ void OmegaEtaG::Analyse(const Event::Data &data, const Event &event)
                     ggg_boost.Boost(-beam_target.BoostVector());
                     const auto angle_pggg = ggg_boost.Angle(mc_p_v.Vect());
                     h->angle_p_ggg->Fill(angle_pggg * TMath::RadToDeg());
+
+                    const auto p_phi_diff = TVector2::Phi_mpi_pi(mm.Phi() - mc_p_v.Phi());
+                    h->p_phi_diff->Fill(p_phi_diff);
+
                 }
             }
         }
@@ -301,6 +306,7 @@ void OmegaEtaG::ShowResult()
     hstack stack3("mm","mm");
     hstack stack4("angle_p","angle_p");
     hstack stack5("angle_pggg","angle_pggg");
+    hstack stack6("p_phi_diff","p_phi_diff");
 
     for(auto& hist:histlist) {
         hist->gg->SetFillColor(*cit);
@@ -312,6 +318,7 @@ void OmegaEtaG::ShowResult()
         stack3 << hist->mm;
         stack4 << hist->angle_p;
         stack5 << hist->angle_p_ggg;
+        stack6 << hist->p_phi_diff;
     }
 
     canvas("OmegaEtaG per Decay Results gg") << stack << endc;
@@ -319,7 +326,7 @@ void OmegaEtaG::ShowResult()
     canvas("OmegaEtaG per Decay Results mm") << drawoption("pads") << stack3 << endc;
     canvas("OmegaEtaG per Decay Results Angle p") << drawoption("pads") << stack4 << endc;
     canvas("OmegaEtaG per Decay Results Angle p ggg") << drawoption("pads") << stack5 << endc;
-
+    canvas("OmegaEtaG per Decay Resultsp phi diff") << drawoption("pads") << stack6 << endc;
 }
 
 
