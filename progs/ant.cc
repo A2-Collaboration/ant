@@ -5,6 +5,7 @@
 #include "analysis/input/goat/GoatReader.h"
 #include "analysis/input/pluto/PlutoReader.h"
 #include "analysis/utils/ParticleID.h"
+#include "analysis/physics/PhysicsManager.h"
 
 #include "expconfig/ExpConfig.h"
 

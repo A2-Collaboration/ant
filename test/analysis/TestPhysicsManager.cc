@@ -2,7 +2,7 @@
 
 #include "analysis/input/goat/GoatReader.h"
 #include "analysis/data/Event.h"
-#include "analysis/physics/Physics.h"
+#include "analysis/physics/PhysicsManager.h"
 #include "analysis/physics/common/DebugPhysics.h"
 
 #include "base/Logger.h"

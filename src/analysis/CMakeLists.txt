@@ -3,12 +3,10 @@ include_directories(
 )
 
 
-set(ANALYSIS_BASE
-  physics/Physics.cc
+set(ANALYSIS_UTILS
   utils/combinatorics.h
   utils/matcher.h
   A2GeoAcceptance.cc
-  input/DataReader.cc
   utils/ParticleID.cc
   utils/root-addons.cc
   )
@@ -30,6 +28,7 @@ set(ANALYSIS_DATASTRUCTURES
 )
 
 set(ANALYSIS_INPUT
+  input/DataReader.cc
   input/goat/detail/InputModule.cc
   input/goat/detail//TreeManager.cc
   input/goat/detail/TrackInput.cc
@@ -45,6 +44,8 @@ set(ANALYSIS_INPUT
 )
 
 set(ANALYSIS_PHYSICS
+  physics/Physics.cc
+  physics/PhysicsManager.cc
   physics/test/TestPhysics.cc
   physics/DeltaPlus/DeltaPlusPhysics.cc
   physics/DeltaTreeGenerator/DeltaTreeGenerator.cc
@@ -60,7 +61,7 @@ set(ANALYSIS_PHYSICS
   )
 
 set(ANALYSIS_ALL
-    ${ANALYSIS_BASE}
+    ${ANALYSIS_UTILS}
     ${ANALYSIS_PLOT}
     ${ANALYSIS_DATASTRUCTURES}
     ${ANALYSIS_INPUT}
