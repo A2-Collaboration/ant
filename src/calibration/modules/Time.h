@@ -6,7 +6,7 @@
 #include "tree/TDataRecord.h" // for TKeyValue, TID
 #include "base/interval.h"
 
-#include "calibration/fitfunctions/FitGaus.h"
+#include "calibration/fitfunctions/FitGausPol0.h"
 
 #include <memory>
 #include <limits>
@@ -44,7 +44,7 @@ public:
         TH1*  timePeaks;
 //        TH2*  timesVSchannels;
 
-        std::shared_ptr<gui::FitGaus> fitFunction;
+        std::shared_ptr<gui::FitGausPol0> fitFunction;
         std::vector<double> previousValues;
 
         // Manager_traits interface

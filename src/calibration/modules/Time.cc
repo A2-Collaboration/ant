@@ -157,7 +157,7 @@ Time::TheGUI::TheGUI(const string& name,
     offsets(Offsets),
     theCanvas(nullptr),
     times(nullptr),
-    fitFunction(new gui::FitGaus())
+    fitFunction(new gui::FitGausPol0())
 
 {
 }

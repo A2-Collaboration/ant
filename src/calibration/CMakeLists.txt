@@ -37,6 +37,7 @@ set(SRCS
     fitfunctions/TF1Knobs.cc
     fitfunctions/FitFunction.cc
     fitfunctions/FitGaus.cc
+    fitfunctions/FitGausPol0.cc
     fitfunctions/FitGausPol3.cc
     fitfunctions/FitTimewalk.cc
   )
