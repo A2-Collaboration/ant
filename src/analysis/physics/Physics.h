@@ -7,6 +7,7 @@
 
 #include <list>
 #include <string>
+#include <map>
 #include <memory>
 #include <functional>
 
@@ -19,11 +20,27 @@ class TAntHeader;
 
 namespace analysis {
 
+
+struct OptionsList {
+    std::map<std::string, std::string> options;
+
+    void SetOption(const std::string& str);
+
+    std::string GetOption(const std::string& key) const;
+
+};
+
+static OptionsList PhysicsOptions;
+
 class Physics {
 private:
     std::string name_;
+
 protected:
     SmartHistFactory HistFac;
+
+    const std::string GetOption(const std::string& key) const;
+
 public:
     Physics(const std::string& name);
     virtual ~Physics() {}

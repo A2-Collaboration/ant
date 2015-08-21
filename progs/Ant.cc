@@ -77,6 +77,8 @@ int main(int argc, char** argv) {
     auto cmd_physicsclasses  = cmd.add<TCLAP::MultiArg<string>>("p","physics","Physics class to run", false, &allowedPhysics);
 
     auto cmd_output = cmd.add<TCLAP::ValueArg<string>>("o","output","Output file",false,"","filename");
+    auto cmd_physicsOptions = cmd.add<TCLAP::MultiArg<string>>("O","options","Options for physics classes, key=value",false,"");
+
     auto cmd_batchmode = cmd.add<TCLAP::SwitchArg>("b","batch","Run in batch mode (no ROOT shell afterwards)",false);
 
     auto cmd_calibrations  = cmd.add<TCLAP::MultiArg<string>>("c","calibration","Calibration to run",false,"calibration");
@@ -267,6 +269,13 @@ int main(int argc, char** argv) {
 
     // add the physics/calibrationphysics modules
     analysis::PhysicsManager pm;
+
+    if(cmd_physicsOptions->isSet()) {
+        for(const auto& opt : cmd_physicsOptions->getValue()) {
+            analysis::PhysicsOptions.SetOption(opt);
+        }
+    }
+
     for(const auto& classname : cmd_physicsclasses->getValue()) {
         try {
             pm.AddPhysics( analysis::PhysicsRegistry::Create(classname) );

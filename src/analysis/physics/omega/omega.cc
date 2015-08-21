@@ -96,6 +96,12 @@ OmegaEtaG::OmegaEtaG(OmegaBase::DataMode m):
     ggg_omega_pi0oreta = HistFac.makeTH1D("3#gamma IM (#omega #rightarrow #pi^{0}/#eta)","3#gamma IM [MeV]","",imbinning,"ggg_omega_pi0oreta");
 
     steps = HistFac.makeTH1D("steps", "", "", BinSettings(10));
+
+    if(GetOption("OmegaEtaGMode") == "McTrue") {
+        m = OmegaBase::DataMode::MCTrue;
+    }
+
+    VLOG(8) << "mode option is " << GetOption("OmegaEtaGMode");
 }
 
 OmegaEtaG::perDecayhists_t OmegaEtaG::makePerDecayHists(const string &title)

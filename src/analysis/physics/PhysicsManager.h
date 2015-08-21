@@ -1,7 +1,6 @@
 #pragma once
 
 #include "Physics.h"
-
 #include "tree/TSlowControl.h"
 
 #include <queue>
@@ -60,8 +59,10 @@ public:
     }
 
     void AddPhysics(std::unique_ptr<Physics> pc) {
+
         if(pc==nullptr)
             return;
+
         physics.emplace_back(std::move(pc));
     }
 
@@ -74,7 +75,6 @@ public:
                   );
 
     void ShowResults();
-
 };
 
 }} // namespace ant::analysis
