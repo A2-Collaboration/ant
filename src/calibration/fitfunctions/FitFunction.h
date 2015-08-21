@@ -61,6 +61,13 @@ public:
     virtual void Load(const std::vector<double>& data) =0;
 };
 
+class PeakingFitFunktion: public FitFunction
+{
+public:
+    PeakingFitFunktion(): FitFunction(){}
+    virtual double GetPeakPosition() const =0;
+};
+
 
 }
 }

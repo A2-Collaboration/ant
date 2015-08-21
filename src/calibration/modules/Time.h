@@ -44,7 +44,7 @@ public:
         TH1*  timePeaks;
 //        TH2*  timesVSchannels;
 
-        std::shared_ptr<gui::FitGausPol0> fitFunction;
+        std::shared_ptr<gui::PeakingFitFunktion> fitFunction;
         std::vector<double> previousValues;
 
         // Manager_traits interface
@@ -53,8 +53,8 @@ public:
                const std::shared_ptr<Detector_t>& theDetector,
                const std::shared_ptr<DataManager>& cDataManager,
                double DefaultOffset,
-               const std::vector<double>& Offsets
-               );
+               const std::vector<double>& Offsets,
+               const std::shared_ptr<gui::PeakingFitFunktion> fitFunction);
 
         virtual std::string GetHistogramName() const override { return GetName()+"/Offsets";}
         virtual unsigned GetNumberOfChannels() const override { return detector->GetNChannels();}
@@ -88,10 +88,11 @@ public:
          const std::shared_ptr<DataManager>& CalibrationManager,
          Calibration::Converter::ptr_t converter,
          double defaultOffset,
+         std::shared_ptr<gui::PeakingFitFunktion> FitFunction,
          const interval<double>& timeWindow = {-std_ext::inf, std_ext::inf},
          double defaultGain = 1.0, // default gain is 1.0
          const std::vector< TKeyValue<double> >& gains = {}
-                                                         );
+         );
 
     // ReconstructHook
     virtual void ApplyTo(const readhits_t& hits, extrahits_t&) override;
@@ -112,7 +113,8 @@ public:
                               Detector,
                               calibrationManager,
                               DefaultOffset,
-                              Offsets
+                              Offsets,
+                              fitFunction
                               ));
     }
 
@@ -126,11 +128,14 @@ protected:
 
     const interval<double> TimeWindow;
 
+    std::shared_ptr<gui::PeakingFitFunktion> fitFunction;
+
     const double DefaultOffset;
     std::vector<double> Offsets;
 
     const double DefaultGain;
     std::vector<double> Gains;
+
 
 };
 

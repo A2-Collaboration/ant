@@ -21,12 +21,12 @@ using namespace ant::analysis;
 using namespace ant::analysis::data;
 
 Time::Time(const std::shared_ptr<Detector_t>& detector, const std::shared_ptr<DataManager>& CalibrationManager,
-               Calibration::Converter::ptr_t converter,
-        double defaultOffset,
-        const interval<double>& timeWindow, // default {-inf, inf}
-        const double defaultGain, // default gain is 1.0
-        const std::vector< TKeyValue<double> >& gains
-        ) :
+           Calibration::Converter::ptr_t converter,
+           double defaultOffset,
+           shared_ptr<gui::PeakingFitFunktion> FitFunction,
+           const interval<double>& timeWindow, // default {-inf, inf}
+           const double defaultGain, // default gain is 1.0
+           const std::vector< TKeyValue<double> >& gains) :
     Calibration::Module(
         std_ext::formatter()
         << Detector_t::ToString(detector->Type)
@@ -36,6 +36,7 @@ Time::Time(const std::shared_ptr<Detector_t>& detector, const std::shared_ptr<Da
     calibrationManager(CalibrationManager),
     Converter(move(converter)),
     TimeWindow(timeWindow),
+    fitFunction(FitFunction),
     DefaultOffset(defaultOffset),
     Offsets(),
     DefaultGain(defaultGain),
@@ -149,7 +150,8 @@ Time::TheGUI::TheGUI(const string& name,
                      const std::shared_ptr<Detector_t>& theDetector,
                      const std::shared_ptr<DataManager>& cDataManager,
                      double DefaultOffset,
-                     const std::vector<double>& Offsets):
+                     const std::vector<double>& Offsets,
+                     const shared_ptr<gui::PeakingFitFunktion> FitFunction):
     gui::Manager_traits(name),
     detector(theDetector),
     calmgr(cDataManager),
@@ -157,8 +159,7 @@ Time::TheGUI::TheGUI(const string& name,
     offsets(Offsets),
     theCanvas(nullptr),
     times(nullptr),
-    fitFunction(new gui::FitGausPol0())
-
+    fitFunction(FitFunction)
 {
 }
 

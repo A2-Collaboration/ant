@@ -23,7 +23,7 @@ namespace ant {
 namespace calibration {
 namespace gui {
 
-class FitGausPol0: public FitFunction {
+class FitGausPol0: public PeakingFitFunktion {
 protected:
     TF1* func = nullptr;
 
@@ -39,12 +39,12 @@ protected:
 
     };
 
-    class MyWKnob: public VirtualKnob {
+    class SigmaKnob: public VirtualKnob {
     protected:
         TF1* func = nullptr;
     public:
 
-        MyWKnob(const std::string& n, TF1* Func);
+        SigmaKnob(const std::string& n, TF1* Func);
 
         virtual double get() const override;
         virtual void set(double a) override;
@@ -67,7 +67,7 @@ public:
     virtual SavedState_t Save() const override;
     virtual void Load(const SavedState_t &data) override;
 
-    virtual double GetPeakPosition() const;
+    virtual double GetPeakPosition() const override;
 };
 
 }

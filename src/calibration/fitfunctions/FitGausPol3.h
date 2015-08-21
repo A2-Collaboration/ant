@@ -8,7 +8,7 @@ namespace ant {
 namespace calibration {
 namespace gui {
 
-class FitGausPol3: public FitFunction {
+class FitGausPol3: public PeakingFitFunktion {
 protected:
     TF1* signal;
     TF1* bg;
@@ -31,7 +31,7 @@ public:
     std::vector<double> Save() const;
     void Load(const std::vector<double> &data);
 
-    virtual double GetPeakPosition() const;
+    virtual double GetPeakPosition() const override;
 
 };
 

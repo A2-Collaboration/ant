@@ -23,7 +23,7 @@ namespace ant {
 namespace calibration {
 namespace gui {
 
-class FitGaus: public FitFunction {
+class FitGaus: public PeakingFitFunktion {
 protected:
     TF1* func = nullptr;
 
@@ -55,7 +55,7 @@ public:
     virtual SavedState_t Save() const override;
     virtual void Load(const SavedState_t &data) override;
 
-    virtual double GetPeakPosition() const;
+    virtual double GetPeakPosition() const override;
 };
 
 }

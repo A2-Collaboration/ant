@@ -20,7 +20,7 @@ FitGausPol0::FitGausPol0()
     func->SetNpx(1000);
     AddKnob<AmpKnop>("A",func);
     AddKnob<KnobsTF1::ParameterKnob>("x_{0}", func, 1, GUIElementDescription::GUI_Type::slider_vertical,   kBlue, 3);
-    AddKnob<MyWKnob>("#sigma",func);
+    AddKnob<SigmaKnob>("#sigma",func);
     AddKnob<KnobsTF1::ParameterKnob>("c",     func, 3, GUIElementDescription::GUI_Type::slider_horizontal, kRed, 3);
     AddKnob<KnobsTF1::RangeKnob>("Min", func, KnobsTF1::RangeKnob::RangeEndType::lower);
     AddKnob<KnobsTF1::RangeKnob>("Max", func, KnobsTF1::RangeKnob::RangeEndType::upper);
@@ -92,18 +92,18 @@ double FitGausPol0::GetPeakPosition() const
     return func->GetParameter(1);
 }
 
-FitGausPol0::MyWKnob::MyWKnob(const std::string &n, TF1 *Func):
+FitGausPol0::SigmaKnob::SigmaKnob(const std::string &n, TF1 *Func):
     VirtualKnob(n,{GUIElementDescription::GUI_Type::slider_vertical,kBlue,3}),
     func(Func)
 {
 }
 
-double FitGausPol0::MyWKnob::get() const
+double FitGausPol0::SigmaKnob::get() const
 {
     return func->GetParameter(1) + func->GetParameter(2);
 }
 
-void FitGausPol0::MyWKnob::set(double a)
+void FitGausPol0::SigmaKnob::set(double a)
 {
     auto v = a - func->GetParameter(1);
     func->SetParameter(2,v);

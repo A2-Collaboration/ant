@@ -32,6 +32,10 @@
 #include "calibration/modules/TAPS_ShowerCorrection.h"
 #include "calibration/modules/TAPSVeto_Energy.h"
 
+#include "calibration/fitfunctions/FitGaus.h"
+#include "calibration/fitfunctions/FitGausPol0.h"
+#include "calibration/fitfunctions/FitGausPol3.h"
+
 #include "calibration/converters/CATCH_TDC.h"
 #include "calibration/converters/MultiHit16bit.h"
 #include "calibration/converters/GeSiCa_SADC.h"

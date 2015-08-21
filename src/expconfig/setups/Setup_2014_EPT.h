@@ -60,24 +60,28 @@ public:
         AddCalibration<calibration::Time>(EPT,
                                           calibrationDataManager,
                                           convert_CATCH_Tagger,
-                                          -325 // default offset in ns
+                                          -325, // default offset in ns
+                                          std::make_shared<calibration::gui::FitGausPol0>()
                                           );
         AddCalibration<calibration::Time>(cb,
                                           calibrationDataManager,
                                           convert_CATCH_CB,
                                           -325,      // default offset in ns
+                                          std::make_shared<calibration::gui::FitGaus>(),
                                           interval<double>{-60, 60} // default time window cut in ns
                                           );
         AddCalibration<calibration::Time>(pid,
                                           calibrationDataManager,
                                           convert_CATCH_CB,
                                           -325,
+                                          std::make_shared<calibration::gui::FitGaus>(),
                                           interval<double>{-500, 500} // default time window cut in ns
                                           );
         AddCalibration<calibration::Time>(taps,
                                           calibrationDataManager,
                                           convert_MultiHit16bit,
                                           -170, /// \todo different default for PbWO
+                                          std::make_shared<calibration::gui::FitGausPol0>(),
                                           interval<double>{-500, 500},
                                           -0.100 /// \todo give measured time gains for BaF2
                                           );
@@ -85,6 +89,7 @@ public:
                                           calibrationDataManager,
                                           convert_MultiHit16bit,
                                           -100,
+                                          std::make_shared<calibration::gui::FitGausPol0>(),
                                           interval<double>{-1000, 1000}, /// \todo make this window smaller...
                                           -0.05 // default gain
                                           );
