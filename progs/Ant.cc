@@ -63,7 +63,7 @@ public:
 int main(int argc, char** argv) {
     SetupLogger();
 
-    TCLAP::CmdLine cmd("ant", ' ', "0.1");
+    TCLAP::CmdLine cmd("Ant", ' ', "0.1");
 
     auto cmd_verbose = cmd.add<TCLAP::ValueArg<int>>("v","verbose","Verbosity level (0..9)", false, 0,"int");
     auto cmd_input  = cmd.add<TCLAP::MultiArg<string>>("i","input","Input files",true,"filename");
@@ -98,7 +98,7 @@ int main(int argc, char** argv) {
 
     int fake_argc=0;
     char** fake_argv=nullptr;
-    TRint app("ant",&fake_argc,fake_argv,nullptr,0,true);
+    TRint app("Ant",&fake_argc,fake_argv,nullptr,0,true);
     auto oldsig = app.GetSignalHandler();
     oldsig->Remove();
     auto mysig = new MyTInterruptHandler();
