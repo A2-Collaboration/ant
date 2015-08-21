@@ -12,7 +12,7 @@ set(ANALYSIS_DATASTRUCTURES
 )
 
 set(ANALYSIS_INPUT
-  input/DataReader.cc
+  input/DataReader.h
   input/goat/detail/InputModule.cc
   input/goat/detail//TreeManager.cc
   input/goat/detail/TrackInput.cc
