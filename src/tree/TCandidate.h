@@ -1,5 +1,4 @@
-#ifndef ANT_TCandidate_H
-#define ANT_TCandidate_H
+#pragma once
 
 #include "TDataRecord.h"
 #include "TCluster.h"
@@ -59,5 +58,3 @@ struct TCandidate
 };
 
 }
-
-#endif // ANT_TCandidate_H

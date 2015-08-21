@@ -1,5 +1,4 @@
-#ifndef ANT_TCLUSTER_H
-#define ANT_TCLUSTER_H
+#pragma once
 
 #include "TDataRecord.h"
 
@@ -127,5 +126,3 @@ struct TCluster
 };
 
 }
-
-#endif // ANT_TCLUSTER_H

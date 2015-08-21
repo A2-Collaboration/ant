@@ -1,5 +1,4 @@
-#ifndef ANT_TCALIBRATIONDATA_H
-#define ANT_TCALIBRATIONDATA_H
+#pragma once
 
 #include "TDataRecord.h"
 
@@ -86,5 +85,3 @@ struct TCalibrationData
 };
 
 }
-
-#endif // ANT_TCALIBRATIONDATA_H

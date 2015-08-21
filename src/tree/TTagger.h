@@ -1,5 +1,4 @@
-#ifndef ANT_TREE_TAGGER_H
-#define ANT_TREE_TAGGER_H
+#pragma once
 
 #include "TDataRecord.h"
 #include "TTaggerHit.h"
@@ -40,5 +39,3 @@ struct TTagger
 };
 
 }
-
-#endif // ANT_TREE_TAGGER_H

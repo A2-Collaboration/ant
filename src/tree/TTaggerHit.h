@@ -1,5 +1,4 @@
-#ifndef ANT_TAGGERHIT_H
-#define ANT_TAGGERHIT_H
+#pragma once
 
 #include "TDataRecord.h"
 #include <vector>
@@ -40,5 +39,3 @@ struct TTaggerHit
 };
 
 }
-
-#endif // ANT_TAGGERHIT_H

@@ -1,5 +1,4 @@
-#ifndef ANT_TEVENT_H
-#define ANT_TEVENT_H
+#pragma once
 
 #include "TDataRecord.h"
 #include "TCandidate.h"
@@ -59,5 +58,3 @@ struct TEvent : TDataRecord
 };
 
 }
-
-#endif // ANT_TEVENT_H

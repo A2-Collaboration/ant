@@ -1,5 +1,4 @@
-#ifndef ANT_TDATARECORD_H
-#define ANT_TDATARECORD_H
+#pragma once
 
 #include "Rtypes.h"
 
@@ -187,6 +186,4 @@ struct TDataRecord
 
 
 } // namespace ant
-
-
-#endif // ANT_TDATARECORD_H
+#pragma once
