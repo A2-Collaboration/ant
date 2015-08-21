@@ -65,7 +65,7 @@ const ParticleTypeDatabase::Type* BasicParticleID::Identify(const std::shared_pt
     return nullptr;
 }
 
-std::shared_ptr<Particle> ParticleID::Process(std::shared_ptr<Candidate>& cand) const
+std::shared_ptr<Particle> ParticleID::Process(const std::shared_ptr<Candidate>& cand) const
 {
     auto type = Identify(cand);
     if(type !=nullptr) {

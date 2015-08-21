@@ -324,7 +324,7 @@ int main(int argc, char** argv) {
     TAntHeader* header = new TAntHeader();
 
     // this method does the hard work...
-    pm.ReadFrom(move(readers), maxevents, running, header);
+    pm.ReadFrom(move(readers), maxevents, running, *header);
 
     // add some more info about the current state
     if(auto setup = ExpConfig::Setup::GetLastFound()) {

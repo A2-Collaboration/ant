@@ -24,7 +24,7 @@ public:
 
     virtual const ParticleTypeDatabase::Type* Identify(const std::shared_ptr<data::Candidate>& cand) const =0;
 
-    virtual std::shared_ptr<ant::analysis::data::Particle> Process(std::shared_ptr<data::Candidate>& cand) const;
+    virtual std::shared_ptr<ant::analysis::data::Particle> Process(const std::shared_ptr<data::Candidate>& cand) const;
 };
 
 

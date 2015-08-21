@@ -43,10 +43,10 @@ bool PhysicsManager::InitReaders(PhysicsManager::readers_t readers_)
     return true;
 }
 
-bool PhysicsManager::TryReadEvent(data::Event& event)
+bool PhysicsManager::TryReadEvent(unique_ptr<data::Event>& event)
 {
     if(source) {
-        if(!source->ReadNextEvent(event)) {
+        if(!source->ReadNextEvent(*event)) {
             return false;
         }
     }
@@ -54,7 +54,7 @@ bool PhysicsManager::TryReadEvent(data::Event& event)
     auto it_reader = readers.begin();
     while(it_reader != readers.end()) {
 
-        if(!(*it_reader)->ReadNextEvent(event)) {
+        if(!(*it_reader)->ReadNextEvent(*event)) {
             it_reader = readers.erase(it_reader);
         }
         else {
@@ -65,13 +65,28 @@ bool PhysicsManager::TryReadEvent(data::Event& event)
     return source || !readers.empty();
 }
 
+void PhysicsManager::ProcessEventBuffer(bool& running, TAntHeader& header)
+{
+    while(!eventbuffer.empty()) {
+        if(!running)
+            return;
+        auto& event = eventbuffer.front();
+        auto& eventid = event->Reconstructed().TriggerInfos().EventID();
+        ProcessEvent(move(event));
+        eventbuffer.pop();
+        if(nEvents==0)
+            header.FirstID = eventid;
+        header.LastID = eventid;
+        nEvents++;
+    }
+}
 
 
-void PhysicsManager::ReadFrom(
-        std::list<std::unique_ptr<input::DataReader> > readers_,
+
+void PhysicsManager::ReadFrom(std::list<std::unique_ptr<input::DataReader> > readers_,
         long long maxevents,
         bool& running,
-        TAntHeader* header)
+        TAntHeader& header)
 {
     if(!InitReaders(move(readers_)))
         return;
@@ -83,34 +98,24 @@ void PhysicsManager::ReadFrom(
 
     chrono::time_point<std::chrono::system_clock> start, end;
     start = chrono::system_clock::now();
-    long long nEvents = 0;
 
-    TID& firstEventID = header->FirstID;
-    TID& lastEventID  = header->LastID;
     while(true) {
         if(!running)
             break;
         if(nEvents>=maxevents)
             break;
 
-        data::Event event;
-
-        if(!TryReadEvent(event))
+        auto event = std_ext::make_unique<data::Event>();
+        if(!TryReadEvent(event)) {
             break;
+        }
+        eventbuffer.emplace(move(event));
 
-        if(nEvents==0)
-            firstEventID = event.Reconstructed().TriggerInfos().EventID();
-
-        lastEventID = event.Reconstructed().TriggerInfos().EventID();
-
-        /// \todo make use of slowcontrol
-        ProcessEvent(event);
-
-        nEvents++;
+        ProcessEventBuffer(running, header);
     }
 
-    VLOG(5) << "First EventId processed: " << firstEventID;
-    VLOG(5) << "Last  EventId processed: " << lastEventID;
+    VLOG(5) << "First EventId processed: " << header.FirstID;
+    VLOG(5) << "Last  EventId processed: " << header.LastID;
 
     end = chrono::system_clock::now();
     chrono::duration<double> elapsed_seconds = end-start;
@@ -120,25 +125,22 @@ void PhysicsManager::ReadFrom(
 
 
 
-void PhysicsManager::ProcessEvent(data::Event &event)
+
+
+void PhysicsManager::ProcessEvent(unique_ptr<data::Event> event)
 {
     if(particleID) {
-
         // run particle ID for Reconstructed candidates
-        for(auto cand : event.Reconstructed().Candidates()) {
-
+        auto& reconstructed = event->Reconstructed();
+        for(const auto& cand : reconstructed.Candidates()) {
             auto particle = particleID->Process(cand);
-
             if(particle)
-                event.Reconstructed().Particles().AddParticle(
-                        particle);
+                reconstructed.Particles().AddParticle(particle);
         }
     }
 
-
     for( auto& m : physics ) {
-
-        m->ProcessEvent(event);
+        m->ProcessEvent(*event);
     }
 }
 

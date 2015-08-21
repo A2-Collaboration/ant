@@ -2,6 +2,10 @@
 
 #include "Physics.h"
 
+#include "tree/TSlowControl.h"
+
+#include <queue>
+
 namespace ant {
 
 class TAntHeader;
@@ -28,8 +32,17 @@ protected:
 
     readers_t readers;
     std::unique_ptr<input::DataReader> source;
+
     bool InitReaders(readers_t readers_);
-    bool TryReadEvent(data::Event& event);
+    bool TryReadEvent(std::unique_ptr<data::Event>& event);
+
+    std::map<TSlowControl::Key, std::queue<TSlowControl> > slowcontrol;
+
+    std::queue< std::unique_ptr<data::Event> > eventbuffer;
+
+    long long nEvents = 0;
+    void ProcessEventBuffer(bool& running, TAntHeader& header);
+    void ProcessEvent(std::unique_ptr<data::Event> event);
 
 public:
 
@@ -56,11 +69,9 @@ public:
     void ReadFrom(std::list<std::unique_ptr<input::DataReader> > readers_,
                   long long maxevents,
                   bool& running,
-                  TAntHeader* header
+                  TAntHeader& header
                   );
 
-
-    void ProcessEvent(data::Event& event);
     void ShowResults();
 
 };

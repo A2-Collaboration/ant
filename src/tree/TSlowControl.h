@@ -37,7 +37,6 @@ struct TSlowControl : TDataRecord
   const char* TypeToString() const;
 
 #ifndef __CINT__
-  /// \todo Maybe those types are bit too Acqu-like...?!
   enum class Type_t : std::uint8_t {
     AcquScaler, EpicsOneShot, EpicsScaler, EpicsTimer
   };
@@ -59,6 +58,24 @@ struct TSlowControl : TDataRecord
              << " Name='" << Name << "'"
              << " Description='" << Description << "'";
   }
+
+  struct Key {
+      Type_t Type;
+      std::string Name;
+      Key(Type_t type, const std::string& name) :
+          Type(type),
+          Name(name)
+      {}
+      Key(const TSlowControl& sc) : Key(sc.GetType(), sc.Name) {}
+      bool operator<(const Key& rhs) const {
+          return std::tie(Type, Name) < std::tie(rhs.Type, rhs.Name);
+      }
+  };
+
+  Key GetKey() {
+      return *this;
+  }
+
 #endif
 
   TSlowControl() : TDataRecord() {}
