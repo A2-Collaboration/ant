@@ -16,7 +16,7 @@ set(SRCS
   )
 
 set(SRCS_EXTRA
-  MemoryPool.cc
+  MemoryPool.h
   UnpackerReader.cc
   UnpackerWriter.cc
   TAntHeader.cc
