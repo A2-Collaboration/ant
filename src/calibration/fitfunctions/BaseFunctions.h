@@ -28,19 +28,19 @@ template <unsigned order>
 struct pol {
     static double fct(double* x, double* p) {
 
-        double res  = 0;
+        double res  = p[0];
         double mult = 1;
 
-        for(unsigned i=0; i<order; ++i) {
-            res += p[i] * mult;
+        for(unsigned i=1; i<=order; ++i) {
             mult *= x[0];
+            res += p[i] * mult;
         }
 
         return res;
     }
 
     static TF1* getTF1() {
-        return helper::makeTF1(pol<order>::fct,order);
+        return helper::makeTF1(pol<order>::fct,order+1);
     }
 };
 
@@ -54,7 +54,7 @@ struct GausPol {
     }
 
     static TF1* getTF1() {
-        return helper::makeTF1(GausPol<order>::fct,order+3);
+        return helper::makeTF1(GausPol<order>::fct,order+4); // gaus: 3 pramams, pol: order + 1
     }
 };
 
