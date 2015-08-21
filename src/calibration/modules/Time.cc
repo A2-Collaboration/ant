@@ -93,7 +93,7 @@ void Time::ApplyTo(const readhits_t& hits, extrahits_t&)
 
             if(!TimeWindow.Contains(value))
             {
-                VLOG(5) << "Skipping channel " << dethit->Channel << ", which is out of current time window.";
+                VLOG(9) << "Discarding hit in channel " << dethit->Channel << ", which is outside time window.";
                 continue;
             }
 
