@@ -16,37 +16,69 @@ using namespace ant::analysis;
 
 PhysicsManager::PhysicsManager() : physics() {}
 
-void PhysicsManager::ReadFrom(
-        list< unique_ptr<input::DataReader> > readers,
-        long long maxevents,
-        bool& running,
-        TAntHeader* header)
+PhysicsManager::~PhysicsManager() {}
+
+void PhysicsManager::SetParticleID(std::unique_ptr<utils::ParticleID> pid) {
+    particleID = move(pid);
+}
+
+bool PhysicsManager::InitReaders(PhysicsManager::readers_t readers_)
 {
-    if(readers.empty())
-        return;
-
-    if(physics.empty()) {
-        LOG(WARNING) << "No Analysis Instances activated. Will not analyse anything.";
-    }
-
+    readers = move(readers_);
 
     // figure out what set of readers we have
     // we expect maximum one source and several amends
-
-    unique_ptr<input::DataReader> source = nullptr;
     auto it_reader = readers.begin();
     while(it_reader != readers.end()) {
         if((*it_reader)->IsSource()) {
             if(source != nullptr) {
                 LOG(ERROR) << "Found more than one source for events, stop.";
-                return;
+                return false;
             }
             source = move(*it_reader);
             it_reader = readers.erase(it_reader);
         }
         ++it_reader;
     }
+    return true;
+}
 
+bool PhysicsManager::TryReadEvent(data::Event& event)
+{
+    if(source) {
+        if(!source->ReadNextEvent(event)) {
+            return false;
+        }
+    }
+
+    auto it_reader = readers.begin();
+    while(it_reader != readers.end()) {
+
+        if(!(*it_reader)->ReadNextEvent(event)) {
+            it_reader = readers.erase(it_reader);
+        }
+        else {
+            ++it_reader;
+        }
+    }
+
+    return source || !readers.empty();
+}
+
+
+
+void PhysicsManager::ReadFrom(
+        std::list<std::unique_ptr<input::DataReader> > readers_,
+        long long maxevents,
+        bool& running,
+        TAntHeader* header)
+{
+    if(!InitReaders(move(readers_)))
+        return;
+
+    if(physics.empty()) {
+        LOG(WARNING) << "No Analysis Instances activated. Will not analyse anything.";
+    }
 
 
     chrono::time_point<std::chrono::system_clock> start, end;
@@ -63,24 +95,7 @@ void PhysicsManager::ReadFrom(
 
         data::Event event;
 
-        if(source) {
-            if(!source->ReadNextEvent(event)) {
-                break;
-            }
-        }
-
-        it_reader = readers.begin();
-        while(it_reader != readers.end()) {
-
-            if(!(*it_reader)->ReadNextEvent(event)) {
-                it_reader = readers.erase(it_reader);
-            }
-            else {
-                ++it_reader;
-            }
-        }
-
-        if(!source && readers.empty())
+        if(!TryReadEvent(event))
             break;
 
         if(nEvents==0)

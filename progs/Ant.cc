@@ -287,7 +287,7 @@ int main(int argc, char** argv) {
 
     if(!cmd_p_disableParticleID->isSet()) {
 
-        auto particleID = std::make_shared<ant::analysis::utils::CBTAPSBasicParticleID>();
+        auto particleID = std_ext::make_unique<ant::analysis::utils::CBTAPSBasicParticleID>();
 
         if(auto setup = ExpConfig::Setup::GetLastFound()) {
             try {
@@ -309,7 +309,7 @@ int main(int argc, char** argv) {
             LOG(WARNING) << "No Setup found while loading ParticleID cuts.";
         }
 
-        pm.particleID = particleID;
+        pm.SetParticleID(move(particleID));
 
     } else {
         LOG(INFO) << "ParticleID disabled by command line";

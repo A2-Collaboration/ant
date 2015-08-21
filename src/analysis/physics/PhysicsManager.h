@@ -22,10 +22,20 @@ protected:
 
     physics_list_t physics;
 
+    std::unique_ptr<utils::ParticleID> particleID;
+
+    using readers_t = std::list< std::unique_ptr<input::DataReader> >;
+
+    readers_t readers;
+    std::unique_ptr<input::DataReader> source;
+    bool InitReaders(readers_t readers_);
+    bool TryReadEvent(data::Event& event);
+
 public:
-    std::shared_ptr<utils::ParticleID> particleID;
 
     PhysicsManager();
+    virtual ~PhysicsManager();
+
     template <typename T, typename ... args_t>
     void AddPhysics(args_t&&... args) {
         physics.push_back(
@@ -41,7 +51,9 @@ public:
         physics.emplace_back(std::move(pc));
     }
 
-    void ReadFrom(std::list< std::unique_ptr<input::DataReader> > readers,
+    void SetParticleID(std::unique_ptr<utils::ParticleID> pid);
+
+    void ReadFrom(std::list<std::unique_ptr<input::DataReader> > readers_,
                   long long maxevents,
                   bool& running,
                   TAntHeader* header
