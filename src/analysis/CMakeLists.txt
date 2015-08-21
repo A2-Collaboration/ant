@@ -56,6 +56,7 @@ set(ANALYSIS_PHYSICS
   physics/common/CandidatesAnalysis.cc
   physics/common/ParticleIDCheck.cc
   physics/common/ProtonCheck.cc
+  physics/common/DebugPhysics.cc
   )
 
 set(ANALYSIS_ALL

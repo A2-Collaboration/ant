@@ -41,21 +41,6 @@ public:
     std::string GetName() { return name_; }
 };
 
-
-namespace physics {
-
-class DebugPhysics: public Physics {
-public:
-    DebugPhysics(const std::string& name="DebugPhysics"): Physics(name) {}
-    virtual ~DebugPhysics() {}
-
-    virtual void ProcessEvent(const data::Event& event);
-    virtual void Finish();
-    virtual void ShowResult();
-};
-
-}
-
 class PhysicsManager {
 protected:
     using physics_list_t = std::list< std::unique_ptr<Physics> >;
@@ -131,5 +116,4 @@ public:
 #define AUTO_REGISTER_PHYSICS(physics, name) \
     ant::analysis::PhysicsRegistration _physics_registration_ ## physics(ant::analysis::physics_factory<physics>,name);
 
-}
-}
+}} // nammespace ant::analysis

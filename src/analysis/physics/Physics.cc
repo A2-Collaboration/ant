@@ -17,23 +17,6 @@
 using namespace std;
 using namespace ant;
 using namespace ant::analysis;
-using namespace ant::analysis::physics;
-
-void DebugPhysics::ProcessEvent(const data::Event& event)
-{
-    VLOG(8) << event;
-}
-
-void DebugPhysics::Finish()
-{
-    VLOG(8) << "Nop";
-}
-
-void DebugPhysics::ShowResult()
-{
-    VLOG(8) << "Nop";
-}
-
 
 Physics::Physics(const string &name):
     name_(name),
@@ -202,4 +185,3 @@ PhysicsRegistration::PhysicsRegistration(physics_creator c, const string& name)
     PhysicsRegistry::get().RegisterPhysics(c,name);
 }
 
-AUTO_REGISTER_PHYSICS(DebugPhysics, "DebugPhysics")
