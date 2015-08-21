@@ -57,13 +57,9 @@ Time::Time(const std::shared_ptr<Detector_t>& detector, const std::shared_ptr<Da
 }
 
 std::vector<std::list<TID> > Time::GetChangePoints() const {
-//    vector<list<TID>> changePointLists;
-
-//    changePointLists.push_back(calibrationManager->GetChangePoints(
-//                                   "Calibr"
-//                                       )
-//                                   );
-    return {};
+    vector<list<TID>> changePointLists;
+    changePointLists.emplace_back(calibrationManager->GetChangePoints(GetName()));    return {};
+    return changePointLists;
 }
 
 void Time::Update(size_t index, const TID& id) {
