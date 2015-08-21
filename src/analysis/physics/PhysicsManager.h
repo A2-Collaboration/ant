@@ -40,8 +40,9 @@ protected:
 
     std::queue< std::unique_ptr<data::Event> > eventbuffer;
 
-    long long nEvents = 0;
-    void ProcessEventBuffer(bool& running, TAntHeader& header);
+    long long nEventsProcessed = 0;
+
+    void ProcessEventBuffer(long long maxevents, bool& running, TAntHeader& header);
     void ProcessEvent(std::unique_ptr<data::Event> event);
 
 public:

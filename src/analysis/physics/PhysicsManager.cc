@@ -65,28 +65,42 @@ bool PhysicsManager::TryReadEvent(unique_ptr<data::Event>& event)
     return source || !readers.empty();
 }
 
-void PhysicsManager::ProcessEventBuffer(bool& running, TAntHeader& header)
+void PhysicsManager::ProcessEventBuffer(
+        long long maxevents,
+        bool& running,
+        TAntHeader& header
+        )
 {
+    // if running is already false,
+    // flush the buffer no matter what...
+    bool flush = !running;
+    if(flush)
+        VLOG(5) << "Flushing " << eventbuffer.size() << " events from eventbuffer";
     while(!eventbuffer.empty()) {
-        if(!running)
+        if(!running && !flush)
             return;
+        if(nEventsProcessed>=maxevents)
+            return;
+
         auto& event = eventbuffer.front();
         auto& eventid = event->Reconstructed().TriggerInfos().EventID();
         ProcessEvent(move(event));
         eventbuffer.pop();
-        if(nEvents==0)
+        if(nEventsProcessed==0)
             header.FirstID = eventid;
         header.LastID = eventid;
-        nEvents++;
+        nEventsProcessed++;
     }
 }
 
 
 
-void PhysicsManager::ReadFrom(std::list<std::unique_ptr<input::DataReader> > readers_,
+void PhysicsManager::ReadFrom(
+        std::list<std::unique_ptr<input::DataReader> > readers_,
         long long maxevents,
         bool& running,
-        TAntHeader& header)
+        TAntHeader& header
+        )
 {
     if(!InitReaders(move(readers_)))
         return;
@@ -99,19 +113,29 @@ void PhysicsManager::ReadFrom(std::list<std::unique_ptr<input::DataReader> > rea
     chrono::time_point<std::chrono::system_clock> start, end;
     start = chrono::system_clock::now();
 
+    bool finished_reading = false;
+    long long nEventsRead = 0;
     while(true) {
-        if(!running)
-            break;
-        if(nEvents>=maxevents)
+        if(finished_reading)
             break;
 
-        auto event = std_ext::make_unique<data::Event>();
-        if(!TryReadEvent(event)) {
-            break;
+        while(eventbuffer.size()<20000) {
+            if(!running || nEventsRead>=maxevents) {
+                VLOG(5) << "End of reading requested";
+                finished_reading = true;
+                break;
+            }
+            auto event = std_ext::make_unique<data::Event>();
+            if(!TryReadEvent(event)) {
+                VLOG(5) << "No more events to read, finish.";
+                finished_reading = true;
+                break;
+            }
+            eventbuffer.emplace(move(event));
+            nEventsRead++;
         }
-        eventbuffer.emplace(move(event));
 
-        ProcessEventBuffer(running, header);
+        ProcessEventBuffer(maxevents, running, header);
     }
 
     VLOG(5) << "First EventId processed: " << header.FirstID;
@@ -119,8 +143,8 @@ void PhysicsManager::ReadFrom(std::list<std::unique_ptr<input::DataReader> > rea
 
     end = chrono::system_clock::now();
     chrono::duration<double> elapsed_seconds = end-start;
-    LOG(INFO) << "Processed " << nEvents << " events, speed "
-              << nEvents/elapsed_seconds.count() << " Items/s";
+    LOG(INFO) << "Processed " << nEventsProcessed << " events, speed "
+              << nEventsProcessed/elapsed_seconds.count() << " Items/s";
 }
 
 
