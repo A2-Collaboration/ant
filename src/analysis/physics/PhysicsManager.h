@@ -36,7 +36,7 @@ protected:
     bool InitReaders(readers_t readers_);
     bool TryReadEvent(std::unique_ptr<data::Event>& event);
 
-    std::map<TSlowControl::Key, std::queue<TSlowControl> > slowcontrol;
+    std::map<TSlowControl::Key, std::queue< std::unique_ptr<TSlowControl> > > slowcontrol;
 
     std::queue< std::unique_ptr<data::Event> > eventbuffer;
 

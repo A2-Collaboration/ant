@@ -36,9 +36,10 @@ protected:
     bool haveReconstruct;
 
 
-    long long nEvents;
     bool writeUncalibrated;
     bool writeCalibrated;
+
+    std::unique_ptr<TSlowControl> buffered_slowcontrol;
 
 public:
     AntReader(std::unique_ptr<Unpacker::Reader> unpacker_reader,
@@ -54,6 +55,7 @@ public:
     // DataReader interface
     virtual bool IsSource() override { return true; }
     virtual bool ReadNextEvent(data::Event& event) override;
+    virtual std::unique_ptr<TSlowControl> ReadNextSlowControl() override;
 };
 
 }

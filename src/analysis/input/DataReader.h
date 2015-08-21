@@ -1,9 +1,10 @@
 #pragma once
 
+#include "tree/TSlowControl.h"
+
 #include <memory>
 
 namespace ant {
-class TSlowControl;
 
 namespace analysis {
 
@@ -33,6 +34,7 @@ public:
 
     virtual bool IsSource() = 0;
     virtual bool ReadNextEvent(data::Event& event) = 0;
+    virtual std::unique_ptr<TSlowControl> ReadNextSlowControl() { return nullptr; }
 };
 
 }}} // namespace ant::analysis::input

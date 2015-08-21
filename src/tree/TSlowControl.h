@@ -2,6 +2,10 @@
 
 #include "TDataRecord.h"
 
+#ifndef __CINT__
+#include "base/std_ext.h"
+#endif
+
 namespace ant {
 
 // a slow control record

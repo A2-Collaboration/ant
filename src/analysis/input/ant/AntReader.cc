@@ -8,6 +8,7 @@
 #include "tree/TEvent.h"
 #include "tree/THeaderInfo.h"
 #include "tree/TDetectorRead.h"
+#include "tree/TSlowControl.h"
 
 #include "base/std_ext.h"
 #include "base/Logger.h"
@@ -29,7 +30,6 @@ AntReader::AntReader(
     reader(move(unpacker_reader)),
     reconstruct(move(reconstruct)),
     haveReconstruct(false),
-    nEvents(0),
     writeUncalibrated(false),
     writeCalibrated(false)
 {
@@ -56,6 +56,11 @@ void AntReader::EnableUnpackerWriter(
         LOG(INFO) << "Write calibrated detectors (AFTER DoReconstruct) reads to " << outputfile;
     else
         LOG(INFO) << "Writing unpacker TEvents to " << outputfile;
+}
+
+unique_ptr<TSlowControl> AntReader::ReadNextSlowControl()
+{
+    return move(buffered_slowcontrol);
 }
 
 bool AntReader::ReadNextEvent(Event& event)
@@ -91,15 +96,21 @@ bool AntReader::ReadNextEvent(Event& event)
                 return true;
             }
 
-            nEvents++;
             // skip the writing of the detector read item
-            // because item is handled above
+            // because writing is already handled above
             continue;
         }
         else if(isA == TEvent::Class()) {
             const TEvent* tevent = reinterpret_cast<TEvent*>(item.get());
             event = Converter::Convert(*tevent);
+            // do not write TEvent's again to the file
             return true;
+        }
+        else if(isA == TSlowControl::Class()) {
+            if(writer)
+                writer->Fill(item.get());
+            buffered_slowcontrol = unique_ptr<TSlowControl>(reinterpret_cast<TSlowControl*>(item.release()));
+            return false;
         }
 
         // by default, we write the items to the file

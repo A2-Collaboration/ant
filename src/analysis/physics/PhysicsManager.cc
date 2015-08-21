@@ -45,24 +45,41 @@ bool PhysicsManager::InitReaders(PhysicsManager::readers_t readers_)
 
 bool PhysicsManager::TryReadEvent(unique_ptr<data::Event>& event)
 {
-    if(source) {
-        if(!source->ReadNextEvent(*event)) {
-            return false;
-        }
-    }
+    bool read_event = false;
 
-    auto it_reader = readers.begin();
-    while(it_reader != readers.end()) {
-
-        if(!(*it_reader)->ReadNextEvent(*event)) {
-            it_reader = readers.erase(it_reader);
+    while(!read_event) {
+        if(source) {
+            bool event_ok = source->ReadNextEvent(*event);
+            auto sc = source->ReadNextSlowControl();
+            if(!event_ok && !sc)
+                return false;
+            if(event_ok)
+                read_event = true;
+            if(sc)
+                slowcontrol[sc->GetKey()].emplace(move(sc));
         }
-        else {
+
+        auto it_reader = readers.begin();
+        while(it_reader != readers.end()) {
+            bool event_ok = (*it_reader)->ReadNextEvent(*event);
+            auto sc = (*it_reader)->ReadNextSlowControl();
+
+            if(!event_ok && !sc) {
+                it_reader = readers.erase(it_reader);
+                continue;
+            }
+
+            if(event_ok)
+                read_event = true;
+            if(sc)
+                slowcontrol[sc->GetKey()].emplace(move(sc));
             ++it_reader;
         }
-    }
 
-    return source || !readers.empty();
+        if(!source && readers.empty())
+            return false;
+    }
+    return true;
 }
 
 void PhysicsManager::ProcessEventBuffer(
