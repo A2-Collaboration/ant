@@ -38,7 +38,9 @@ bool PhysicsManager::InitReaders(PhysicsManager::readers_t readers_)
             source = move(*it_reader);
             it_reader = readers.erase(it_reader);
         }
-        ++it_reader;
+        else {
+            ++it_reader;
+        }
     }
     return true;
 }
