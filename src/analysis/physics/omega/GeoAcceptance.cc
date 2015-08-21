@@ -100,7 +100,7 @@ void GeoAcceptance::ParticleThetaPhiPlot3D::Draw(const string &option) const
 }
 
 
-GeoAcceptance::AcceptanceAnalysis::AcceptanceAnalysis(SmartHistFactory& factory, const A2SimpleGeometry &geo_, const string &name_):
+GeoAcceptance::AcceptanceAnalysis::AcceptanceAnalysis(SmartHistFactory& factory, const utils::A2SimpleGeometry &geo_, const string &name_):
     name(name_),
     HistFac(name,factory),
     geo(geo_),

@@ -6,7 +6,7 @@
 #include "analysis/plot/HistogramFactories.h"
 #include "analysis/plot/root_draw.h"
 
-#include "analysis/A2GeoAcceptance.h"
+#include "analysis/utils/A2GeoAcceptance.h"
 
 class TH3;
 class TH1D;
@@ -55,7 +55,7 @@ private:
     public:
         std::string name;
         SmartHistFactory HistFac;
-        const A2SimpleGeometry& geo;
+        const utils::A2SimpleGeometry& geo;
         ParticleThetaPhiPlot mctrue_pos;
         ParticleThetaPhiPlot matched_pos;
         ParticleThetaPhiPlot multimatched_pos;
@@ -69,12 +69,12 @@ private:
         double emin;
 
 
-        AcceptanceAnalysis(SmartHistFactory& factory, const A2SimpleGeometry& geo_, const std::string& name_);
+        AcceptanceAnalysis(SmartHistFactory& factory, const utils::A2SimpleGeometry& geo_, const std::string& name_);
         void Fill(const data::ParticleList& mctrue, const data::ParticleList& reconstructed);
         void ShowResult();
     };
 
-    A2SimpleGeometry geo;
+    utils::A2SimpleGeometry geo;
 
     std::list<AcceptanceAnalysis> analyses;
 

@@ -3,7 +3,7 @@
 #include "physics/Physics.h"
 #include "plot/SmartHist.h"
 
-#include "A2GeoAcceptance.h"
+#include "utils/A2GeoAcceptance.h"
 
 namespace ant {
 namespace analysis {
@@ -12,7 +12,7 @@ namespace physics {
 class MCTrueAcceptance: public Physics {
 protected:
     SmartHist1<std::string> detect;
-    A2SimpleGeometry geo;
+    utils::A2SimpleGeometry geo;
     unsigned int events_seen;
 
     struct det_hit_count_t {

@@ -1,6 +1,7 @@
 #include "A2GeoAcceptance.h"
 
 using namespace ant;
+using namespace ant::analysis::utils;
 
 A2SimpleGeometry::A2SimpleGeometry():
     cb_theta_region(23.0*TMath::DegToRad(), 155.0*TMath::DegToRad()),

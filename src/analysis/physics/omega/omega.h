@@ -2,7 +2,7 @@
 
 #include "analysis/physics/Physics.h"
 #include "analysis/plot/SmartHist.h"
-#include "analysis/A2GeoAcceptance.h"
+#include "analysis/utils/A2GeoAcceptance.h"
 
 #include "base/interval.h"
 
@@ -25,7 +25,7 @@ public:
     };
 
 protected:
-    A2SimpleGeometry geo;
+    utils::A2SimpleGeometry geo;
     double calcEnergySum(const data::ParticleList &particles) const;
     data::ParticleList getGeoAccepted(const data::ParticleList& p) const;
 

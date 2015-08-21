@@ -2,22 +2,6 @@ include_directories(
   .
 )
 
-
-set(ANALYSIS_UTILS
-  utils/combinatorics.h
-  utils/matcher.h
-  A2GeoAcceptance.cc
-  utils/ParticleID.cc
-  utils/root-addons.cc
-  )
-
-set(ANALYSIS_PLOT
-  plot/Histogram.cc
-  plot/root_draw.cc
-  plot/SmartHist.cc
-  plot/HistogramFactories.cc
-)
-
 set(ANALYSIS_DATASTRUCTURES
   data/Candidate.cc
   data/Particle.cc
@@ -60,12 +44,27 @@ set(ANALYSIS_PHYSICS
   physics/common/DebugPhysics.cc
   )
 
+set(ANALYSIS_PLOT
+  plot/Histogram.cc
+  plot/root_draw.cc
+  plot/SmartHist.cc
+  plot/HistogramFactories.cc
+)
+
+set(ANALYSIS_UTILS
+  utils/combinatorics.h
+  utils/matcher.h
+  utils/A2GeoAcceptance.cc
+  utils/ParticleID.cc
+  utils/root-addons.cc
+  )
+
 set(ANALYSIS_ALL
-    ${ANALYSIS_UTILS}
-    ${ANALYSIS_PLOT}
     ${ANALYSIS_DATASTRUCTURES}
     ${ANALYSIS_INPUT}
     ${ANALYSIS_PHYSICS}
+    ${ANALYSIS_PLOT}
+    ${ANALYSIS_UTILS}
 )
 
 add_library(analysis ${ANALYSIS_ALL})

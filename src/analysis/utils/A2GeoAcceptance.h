@@ -5,6 +5,9 @@
 #include "base/Detector_t.h"
 
 namespace ant {
+namespace analysis {
+namespace utils {
+
 
 class A2SimpleGeometry {
 protected:
@@ -24,4 +27,4 @@ public:
 
 };
 
-}
+}}} // namespace ant::analysis::utils
