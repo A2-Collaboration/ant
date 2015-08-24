@@ -45,6 +45,7 @@ public:
     //changes to db
     bool ReduceToValid(const std::string&  calibrationID);
     bool ExpandToMax(const std::string& calibrationID, std::uint32_t index);
+    bool ExpandToMaxOther(const std::string& sourceCalibrationID, const std::string& calibrationID, std::uint32_t index);
 
     //visualisation
     std::list<std::pair<std::uint32_t,IntervalD>> GetAllRanges(const std::string& calibrationID) const;

@@ -233,17 +233,7 @@ bool Editor::ReduceToValid(const string &calibrationID)
 
 bool Editor::ExpandToMax(const string &calibrationID, uint32_t index)
 {
-    if(!dman.Has(calibrationID))
-        return false;
-    if (index > dman.DataMap.at(calibrationID).size())
-        return false;
-
-    auto maxInterVal = GetMaxInt(calibrationID);
-    auto& theData = dman.DataMap.at(calibrationID).at(index);
-    theData.FirstID = maxInterVal.Start();
-    theData.LastID  = maxInterVal.Stop();
-
-    return true;
+    ExpandToMaxOther(calibrationID,calibrationID,index);
 }
 
 std::list<std::pair<uint32_t, IntervalD> > Editor::GetAllRanges(const string &calibrationID) const
@@ -334,4 +324,22 @@ interval<TID> Editor::GetMaxInt(const string &calibrationID) const
     interval<TID> tidint(TID(0,0),TID(0,0));
    getIDRange(calibrationID,tidint);
    return tidint;
+}
+
+
+bool ant::calibration::Editor::ExpandToMaxOther(const std::string &sourceCalibrationID, const std::string &calibrationID, uint32_t index)
+{
+    if(!dman.Has(calibrationID))
+        return false;
+    if(!dman.Has(sourceCalibrationID))
+        return false;
+    if (index > dman.DataMap.at(calibrationID).size())
+        return false;
+
+    auto maxInterVal = GetMaxInt(sourceCalibrationID);
+    auto& theData = dman.DataMap.at(calibrationID).at(index);
+    theData.FirstID = maxInterVal.Start();
+    theData.LastID  = maxInterVal.Stop();
+
+    return true;
 }
