@@ -31,8 +31,9 @@ protected:
 public:
     OptionsList(std::shared_ptr<const OptionsList> Parent=nullptr);
 
-    void SetOption(const std::string& str);
-    void SetOptions(const std::string& str);
+    void SetOption(const std::string& str, const std::string delim="=");
+    void SetOptions(const std::string& str, const std::string optdelim=",", const std::string valdelim="=");
+
     std::string GetOption(const std::string& key) const;
 
 };
