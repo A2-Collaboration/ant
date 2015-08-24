@@ -77,7 +77,9 @@ int main(int argc, char** argv) {
     auto cmd_physicsclasses  = cmd.add<TCLAP::MultiArg<string>>("p","physics","Physics class to run", false, &allowedPhysics);
 
     auto cmd_output = cmd.add<TCLAP::ValueArg<string>>("o","output","Output file",false,"","filename");
+
     auto cmd_physicsOptions = cmd.add<TCLAP::MultiArg<string>>("O","options","Options for physics classes, key=value",false,"");
+    auto cmd_physicsclasses_opt = cmd.add<TCLAP::MultiArg<string>>("P","physics-opt","Physics class to run, with optiosn: PhysicsClass:key=val,key=val", false, "");
 
     auto cmd_batchmode = cmd.add<TCLAP::SwitchArg>("b","batch","Run in batch mode (no ROOT shell afterwards)",false);
 
@@ -286,6 +288,32 @@ int main(int argc, char** argv) {
             return 1;
         }
     }
+
+    for(const auto& line : cmd_physicsclasses_opt->getValue()) {
+
+        auto colpos = line.find(":");
+
+        auto classname = line.substr(0,colpos);
+        auto optstr = line.substr(colpos+1,line.npos);
+        auto options = make_shared<analysis::OptionsList>(popts);
+        string::size_type p = 0;
+        string::size_type np = 0;
+
+        do {
+            np = optstr.find(",", p);
+            const auto o = optstr.substr(p,np);
+            options->SetOption(o);
+            p = np+1;
+        } while(np != optstr.npos);
+        try {
+            pm.AddPhysics( analysis::PhysicsRegistry::Create(classname, options) );
+            LOG(INFO) << "Activated physics class '" << classname << "'";
+        } catch (...) {
+            LOG(ERROR) << "Physics class '" << line << "' is not found.";
+            return 1;
+        }
+    }
+
 
     for(const auto& calibration : enabled_calibrations) {
         pm.AddPhysics(calibration->GetPhysicsModule());
