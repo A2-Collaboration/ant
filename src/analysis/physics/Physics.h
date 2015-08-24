@@ -5,6 +5,8 @@
 
 #include "base/std_ext.h"
 
+#include "analysis/physics/Slowcontrol.h"
+
 #include <list>
 #include <string>
 #include <map>
@@ -40,7 +42,7 @@ public:
 
 using PhysOptPtr = std::shared_ptr<const OptionsList>;
 
-class Physics {
+class Physics: public slowcontrol::Receiver {
 private:
     std::string name_;
     PhysOptPtr options;

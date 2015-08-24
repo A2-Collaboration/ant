@@ -42,6 +42,7 @@ set(ANALYSIS_PHYSICS
   physics/common/ParticleIDCheck.cc
   physics/common/ProtonCheck.cc
   physics/common/DebugPhysics.cc
+  physics/Slowcontrol.cc
   )
 
 set(ANALYSIS_PLOT

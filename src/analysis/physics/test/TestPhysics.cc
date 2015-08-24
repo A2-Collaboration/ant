@@ -19,7 +19,7 @@ using namespace ant::analysis::physics;
 using namespace ant::analysis::data;
 
 ParticleCombinatoricsTest::ParticleCombinatoricsTest(PhysOptPtr opts):
-    Physics("ParticleCombinatoricsTest", opts)
+    Physics("ParticleCombinatoricsTest", opts), live(this)
 {
     const BinSettings im_binning(100,0,250);
     const BinSettings energy_binning(100,0,250);
@@ -98,3 +98,5 @@ void ParticleCombinatoricsTest::ShowResult()
     cc2 << endc;
 
 }
+
+AUTO_REGISTER_PHYSICS(ParticleCombinatoricsTest,"ParticleCombinatoricsTest")

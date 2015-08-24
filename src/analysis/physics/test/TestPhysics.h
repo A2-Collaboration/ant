@@ -19,6 +19,8 @@ protected:
 
     std::map<const ant::ParticleTypeDatabase::Type*, SmartHist1<const data::ParticlePtr&>> EHists;
 
+    slowcontrol::Livetime live;
+
 
 public:
     ParticleCombinatoricsTest(PhysOptPtr opts);
