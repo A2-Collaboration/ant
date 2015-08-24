@@ -7,6 +7,10 @@ using namespace ant;
 using namespace ant::analysis;
 using namespace ant::analysis::physics;
 
+DebugPhysics::DebugPhysics(PhysOptPtr opts): Physics("DebugPhysics", opts) {}
+
+DebugPhysics::~DebugPhysics() {}
+
 void DebugPhysics::ProcessEvent(const data::Event& event)
 {
     VLOG(8) << event;

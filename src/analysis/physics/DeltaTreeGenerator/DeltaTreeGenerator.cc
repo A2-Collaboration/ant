@@ -21,8 +21,8 @@ using namespace ant::analysis::physics;
 using namespace ant::analysis::data;
 using namespace std;
 
-DeltaTreeGenerator::DeltaTreeGenerator(const string &name):
-    Physics(name)
+DeltaTreeGenerator::DeltaTreeGenerator(PhysOptPtr opts):
+    Physics("DeltaTreeGenerator:", opts)
 {
     cout << "DeltaTreeGenerator:" << endl;
 

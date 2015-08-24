@@ -62,8 +62,8 @@ string OmegaBase::GetDecayString(const ParticleList &particles)
     return s.str();
 }
 
-OmegaBase::OmegaBase(const string &name, OmegaBase::DataMode m):
-    Physics(name), mode(m)
+OmegaBase::OmegaBase(const string &name, PhysOptPtr opts):
+    Physics(name, opts), mode(DataMode::Reconstructed)
 {
 
 }
@@ -79,8 +79,8 @@ void OmegaBase::ShowResult()
 //======= Omega Eta Gamma =====================================================================
 
 
-OmegaEtaG::OmegaEtaG(OmegaBase::DataMode m):
-    OmegaBase("OmegaEtaG_"+to_string(m), m)
+OmegaEtaG::OmegaEtaG(PhysOptPtr opts):
+    OmegaBase("OmegaEtaG", opts)
 {
     ggg_gg     = HistFac.makeTH2D("3#gamma IM vs 2#gamma sub IM (signal only)","3#gamma IM [MeV]", "2#gamma sub IM [MeV]",imbinning,imbinning,"ggg_gg_omega");
     ggg_gg_bg  = HistFac.makeTH2D("3#gamma IM vs 2#gamma sub IM (background only)","3#gamma IM [MeV]", "2#gamma sub IM [MeV]",imbinning,imbinning,"ggg_gg_bg");
@@ -98,7 +98,7 @@ OmegaEtaG::OmegaEtaG(OmegaBase::DataMode m):
     steps = HistFac.makeTH1D("steps", "", "", BinSettings(10));
 
     if(GetOption("OmegaEtaGMode") == "McTrue") {
-        m = OmegaBase::DataMode::MCTrue;
+        mode = OmegaBase::DataMode::MCTrue;
     }
 
     VLOG(8) << "mode option is " << GetOption("OmegaEtaGMode");

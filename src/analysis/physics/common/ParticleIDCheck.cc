@@ -11,8 +11,8 @@ using namespace ant::analysis;
 using namespace ant::analysis::physics;
 using namespace ant::analysis::data;
 
-ParticleIDCheck::ParticleIDCheck(const string &name):
-    Physics(name),
+ParticleIDCheck::ParticleIDCheck(PhysOptPtr opts):
+    Physics("ParticleIDCheck", opts),
     mctrue(HistFac,"MCTrue"),
     rec(HistFac,"Rec")
 {

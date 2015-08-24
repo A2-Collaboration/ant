@@ -58,14 +58,14 @@ void TestAPLCON::FillIM(TH1D *h, const std::vector<TestAPLCON::FitParticle> &pho
     h->Fill(sum.M());
 }
 
-TestAPLCON::TestAPLCON(const mev_t energy_scale) :
-    Physics("TestAPLCON"),
+TestAPLCON::TestAPLCON(PhysOptPtr opts) :
+    Physics("TestAPLCON", opts),
     fitter("TestAPLCON"),
     photons(nPhotons)
 {
 
 
-    const BinSettings energy_bins(1000,0,energy_scale*1.6);
+    const BinSettings energy_bins(1000,0,1600);
     const BinSettings tagger_bins(2000,0.0,2000);
     const BinSettings ntaggerhits_bins(100);
     const BinSettings veto_bins(1000,0,10.0);

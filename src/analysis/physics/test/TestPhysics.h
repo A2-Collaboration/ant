@@ -21,7 +21,7 @@ protected:
 
 
 public:
-    ParticleCombinatoricsTest(const std::string& name="ParticleCombinatoricsTest");
+    ParticleCombinatoricsTest(PhysOptPtr opts);
     virtual ~ParticleCombinatoricsTest() {}
 
     virtual void ProcessEvent(const data::Event& event);

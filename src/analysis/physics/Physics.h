@@ -30,11 +30,12 @@ struct OptionsList {
 
 };
 
-static OptionsList PhysicsOptions;
+using PhysOptPtr = std::shared_ptr<const OptionsList>;
 
 class Physics {
 private:
     std::string name_;
+    PhysOptPtr options;
 
 protected:
     SmartHistFactory HistFac;
@@ -42,7 +43,7 @@ protected:
     const std::string GetOption(const std::string& key) const;
 
 public:
-    Physics(const std::string& name);
+    Physics(const std::string& name, PhysOptPtr opts=nullptr);
     virtual ~Physics() {}
     virtual void ProcessEvent(const data::Event& event) =0;
     virtual void Finish() =0;
@@ -51,12 +52,12 @@ public:
 };
 
 template<class T>
-std::unique_ptr<Physics> physics_factory()
+std::unique_ptr<Physics> physics_factory(PhysOptPtr opts)
 {
-    return std::move(std_ext::make_unique<T>());
+    return std::move(std_ext::make_unique<T>(opts));
 }
 
-using physics_creator = std::function<std::unique_ptr<Physics>()>;
+using physics_creator = std::function<std::unique_ptr<Physics>(PhysOptPtr)>;
 
 class PhysicsRegistry
 {
@@ -67,7 +68,7 @@ private:
 public:
     static PhysicsRegistry& get();
 
-    static std::unique_ptr<Physics> Create(const std::string& name);
+    static std::unique_ptr<Physics> Create(const std::string& name, PhysOptPtr opts);
 
     std::vector<std::string> GetList() const;
 

@@ -79,7 +79,7 @@ private:
     std::list<AcceptanceAnalysis> analyses;
 
 public:
-    GeoAcceptance(const std::string& name="GeoAcceptance");
+    GeoAcceptance(PhysOptPtr opts);
     virtual ~GeoAcceptance();
     void ProcessEvent(const data::Event &event);
     void Finish();

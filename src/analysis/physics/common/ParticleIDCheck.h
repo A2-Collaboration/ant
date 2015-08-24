@@ -23,7 +23,7 @@ protected:
     branch_hists rec;
 
 public:
-    ParticleIDCheck(const std::string& name="ParticleIDCheck");
+    ParticleIDCheck(PhysOptPtr opts);
 
     void ProcessEvent(const data::Event &event) override;
     void Finish() override;

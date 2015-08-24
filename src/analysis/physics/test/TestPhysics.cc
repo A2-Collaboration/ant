@@ -18,8 +18,8 @@ using namespace ant::analysis;
 using namespace ant::analysis::physics;
 using namespace ant::analysis::data;
 
-ParticleCombinatoricsTest::ParticleCombinatoricsTest(const string &name):
-    Physics(name)
+ParticleCombinatoricsTest::ParticleCombinatoricsTest(PhysOptPtr opts):
+    Physics("ParticleCombinatoricsTest", opts)
 {
     const BinSettings im_binning(100,0,250);
     const BinSettings energy_binning(100,0,250);

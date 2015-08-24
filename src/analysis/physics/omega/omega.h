@@ -36,7 +36,7 @@ protected:
     static std::string GetDecayString(const data::ParticleList& particles);
 
 public:
-    OmegaBase(const std::string &name, const DataMode m);
+    OmegaBase(const std::string &name, PhysOptPtr opts);
     virtual ~OmegaBase() = default;
 
     virtual void ProcessEvent(const data::Event& event) override;
@@ -86,7 +86,7 @@ protected:
     BinSettings mmbinning = BinSettings(1000, 400,1400);
 
 public:
-    OmegaEtaG(DataMode m=DataMode::Reconstructed);
+    OmegaEtaG(PhysOptPtr opts);
     virtual ~OmegaEtaG() = default;
     void ShowResult() override;
 };

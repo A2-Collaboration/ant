@@ -24,7 +24,7 @@ private:
     TH1D*  recgamma;
 
 public:
-    DeltaTreeGenerator(const std::string& name="DeltaTreeGenerator");
+    DeltaTreeGenerator(PhysOptPtr opts);
     virtual ~DeltaTreeGenerator() {}
 
     // Physics interface

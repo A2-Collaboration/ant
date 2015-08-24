@@ -11,8 +11,8 @@ using namespace ant::analysis;
 using namespace ant::analysis::physics;
 using namespace ant::analysis::data;
 
-CandidatesAnalysis::CandidatesAnalysis(const string &name):
-    Physics(name)
+CandidatesAnalysis::CandidatesAnalysis(PhysOptPtr opts):
+    Physics("CandidatesAnalysis",opts)
 {
     nCandidatesEvent = HistFac.makeTH1D("Candidates/Event","Candidates","",BinSettings(15),"nCand");
     CandMultiplicities = HistFac.makeTH1D("Candidates Multi","","",BinSettings(15),"CandMult");

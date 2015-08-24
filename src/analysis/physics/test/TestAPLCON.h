@@ -110,7 +110,7 @@ protected:
 
 
 public:
-    TestAPLCON(const mev_t energy_scale=1000.0);
+    TestAPLCON(PhysOptPtr opts);
     virtual ~TestAPLCON() {}
     void ProcessEvent(const data::Event &event) override;
     void Finish() override;

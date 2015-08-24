@@ -11,12 +11,16 @@ ant::analysis::OptionsList PhysicsOptions;
 
 const string Physics::GetOption(const string& key) const
 {
+    if(options) {
+        return options->GetOption(key);
+    }
 
-    return PhysicsOptions.GetOption(key);
+    return "";
 }
 
-Physics::Physics(const string &name):
+Physics::Physics(const string &name, PhysOptPtr opts):
     name_(name),
+    options(opts),
     HistFac(name)
 {}
 
@@ -26,9 +30,9 @@ PhysicsRegistry& PhysicsRegistry::get()
     return instance;
 }
 
-std::unique_ptr<Physics> PhysicsRegistry::Create(const string& name)
+std::unique_ptr<Physics> PhysicsRegistry::Create(const string& name, PhysOptPtr opts)
 {
-    return PhysicsRegistry::get().physics_creators.at(name)();
+    return PhysicsRegistry::get().physics_creators.at(name)(opts);
 }
 
 std::vector<string> PhysicsRegistry::GetList() const

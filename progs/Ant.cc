@@ -269,16 +269,17 @@ int main(int argc, char** argv) {
 
     // add the physics/calibrationphysics modules
     analysis::PhysicsManager pm;
+    std::shared_ptr<analysis::OptionsList> popts = make_shared<analysis::OptionsList>();
 
     if(cmd_physicsOptions->isSet()) {
         for(const auto& opt : cmd_physicsOptions->getValue()) {
-            analysis::PhysicsOptions.SetOption(opt);
+            popts->SetOption(opt);
         }
     }
 
     for(const auto& classname : cmd_physicsclasses->getValue()) {
         try {
-            pm.AddPhysics( analysis::PhysicsRegistry::Create(classname) );
+            pm.AddPhysics( analysis::PhysicsRegistry::Create(classname, popts) );
             LOG(INFO) << "Activated physics class '" << classname << "'";
         } catch (...) {
             LOG(ERROR) << "Physics class '" << classname << "' is not found.";
