@@ -44,7 +44,7 @@ void dotest_write(const string& filename1, const string& filename2)
 
     analysis::PhysicsManager pm;
 
-    pm.AddPhysics<analysis::physics::DebugPhysics>("aaaa");
+    pm.AddPhysics<analysis::physics::DebugPhysics>();
 }
 
 void dotest_read(const string& filename1, const string& filename2)

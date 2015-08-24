@@ -9,7 +9,7 @@ namespace physics {
 
 class DebugPhysics: public Physics {
 public:
-    DebugPhysics(PhysOptPtr opts);
+    DebugPhysics(PhysOptPtr opts=nullptr);
     virtual ~DebugPhysics();
 
     virtual void ProcessEvent(const data::Event& event);
