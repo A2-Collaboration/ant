@@ -13,7 +13,7 @@
 #include "TCanvas.h"
 #include "TTree.h"
 #include "TLorentzVector.h"
-#include <iostream>
+#include "base/Logger.h"
 
 using namespace ant;
 using namespace ant::analysis;
@@ -24,9 +24,9 @@ using namespace std;
 DeltaTreeGenerator::DeltaTreeGenerator(PhysOptPtr opts):
     Physics("DeltaTreeGenerator:", opts)
 {
-    cout << "DeltaTreeGenerator:" << endl;
+    VLOG(7) << "DeltaTreeGenerator:" << endl;
 
-    cout << "  Adding Photon-Tree" << endl;
+    VLOG(7) << "  Adding Photon-Tree" << endl;
     photonTree    = new TTree("photons","photons");
     reconstructed = new TClonesArray("TLorentzVector",1);
     mctrue        = new TClonesArray("TLorentzVector",1);
@@ -34,7 +34,7 @@ DeltaTreeGenerator::DeltaTreeGenerator(PhysOptPtr opts):
     photonTree->Branch("mctrue",addressof(mctrue));
 
 
-    cout << "  Adding Tagger-Histogram" << endl;
+    VLOG(7) << "  Adding Tagger-Histogram" << endl;
     taggerHits = HistFac.makeTH1D("Tagger Hits","Energy [MeV]","#",BinSettings(200,200,450));
     mcgamma = HistFac.makeTH1D("#gamma - MC true","# #gamma","#",BinSettings(8));
     recgamma = HistFac.makeTH1D("#gamma - reconstructed","# #gamma","#",BinSettings(8));
