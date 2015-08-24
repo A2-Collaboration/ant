@@ -54,7 +54,11 @@ protected:
     void SetDefaults();
 
 public:
-    CalCanvas(const std::string &name, const std::string& title);
+    CalCanvas(const std::string& name, const std::string& title);
+
+    CalCanvas(const std::string& name, Int_t winid) :
+        TCanvas(name.c_str(), 10, 10, winid) {}
+
     virtual ~CalCanvas();
 
     virtual void Show(TH1* h, FitFunction* f);

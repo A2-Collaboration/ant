@@ -1,3 +1,7 @@
+#include "base/std_ext.h"
+#include "calibration/gui/CalCanvas.h"
+#include "calibration/fitfunctions/FitGaus.h"
+
 #include "TCanvas.h"
 #include "TRint.h"
 #include "TGClient.h"
@@ -9,12 +13,14 @@
 #include "TRootEmbeddedCanvas.h"
 #include "KeySymbols.h"
 #include "TExec.h"
+#include "TH1D.h"
 
 #include <iostream>
 #include <functional>
 #include <memory>
 
 using namespace std;
+using namespace ant;
 
 class MyTextButton : public TGTextButton {
 
@@ -36,7 +42,7 @@ public:
     void SetAction(std::function<void()> action) {
         if(exec)
             return;
-        exec = std::unique_ptr<MyExec>(new MyExec(action));
+        exec = std_ext::make_unique<MyExec>(action);
         Connect("Clicked()", "TExec", exec.get(), "Exec(=\"\")");
     }
 };
@@ -44,7 +50,7 @@ public:
 class MyMainFrame : public TGMainFrame
 {
 private:
-    TRootEmbeddedCanvas  *fEcanvas;
+    calibration::gui::CalCanvas* canvas;
 public:
     MyMainFrame(const TGWindow *p,UInt_t w,UInt_t h);
     virtual Bool_t HandleKey(Event_t *event) override;
@@ -85,13 +91,11 @@ MyMainFrame::MyMainFrame(const TGWindow *p,UInt_t w,UInt_t h) :
     TGHorizontalFrame *hframe = new TGHorizontalFrame(this,200,40);
     MyTextButton *draw = new MyTextButton(hframe,"&Draw");
     draw->SetAction([this] () {
-        // Draws function graphics in randomly choosen interval
-        TF1 *f1 = new TF1("f1","sin(x)/x",0,gRandom->Rndm()*10);
-        f1->SetLineWidth(3);
-        f1->Draw();
-        TCanvas *fCanvas = fEcanvas->GetCanvas();
-        fCanvas->cd();
-        fCanvas->Update();
+        canvas->cd();
+        auto h = new TH1D("h","h",100,0,300);
+        auto f = new calibration::gui::FitGaus();
+        f->SetDefaults(nullptr); // using empty h is not meaningful for testing
+        canvas->Show(h, f);
     });
 
     hframe->AddFrame(draw, new TGLayoutHints(kLHintsCenterX,
@@ -103,9 +107,11 @@ MyMainFrame::MyMainFrame(const TGWindow *p,UInt_t w,UInt_t h) :
     AddFrame(hframe, new TGLayoutHints(kLHintsTop | kLHintsExpandX, 0, 0, 0, 0));
 
     // Create canvas widget
-    fEcanvas = new TRootEmbeddedCanvas("Ecanvas",this,200,200);
-    AddFrame(fEcanvas, new TGLayoutHints(kLHintsExpandX |
-                                                kLHintsExpandY, 10,10,10,10));
+    auto ecanvas = new TRootEmbeddedCanvas(0,this,200,200);
+    canvas = new calibration::gui::CalCanvas("calcanvas",ecanvas->GetCanvasWindowId());
+    ecanvas->AdoptCanvas(canvas);
+    AddFrame(ecanvas, new TGLayoutHints(kLHintsExpandX |
+                                        kLHintsExpandY, 10,10,10,10));
 
     // Set a name to the main frame
     SetWindowName("Simple Example");

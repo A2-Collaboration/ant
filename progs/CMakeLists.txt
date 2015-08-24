@@ -15,7 +15,7 @@ add_ant_executable(Ant-calib-editor)
 # temporary executables...
 
 add_executable(test_gui test_gui.cc)
-target_link_libraries(test_gui ${ROOT_LIBRARIES})
+target_link_libraries(test_gui ${ROOT_LIBRARIES} calibration)
 
 add_executable(test_display test_display.cc)
 target_link_libraries(test_display base)

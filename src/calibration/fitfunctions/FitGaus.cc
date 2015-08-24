@@ -47,7 +47,8 @@ void FitGaus::SetDefaults(TH1 *hist)
         func->SetParameter(1,max_pos);
         SetRange({max_pos-60, max_pos+60});
     } else {
-        func->SetParameter(0,100);
+        SetRange({0,200});
+        func->SetParameter(0,0.8);
         func->SetParameter(1,100);
     }
     func->SetParameter(2,20);
