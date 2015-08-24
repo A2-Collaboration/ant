@@ -32,6 +32,7 @@ public:
     OptionsList(std::shared_ptr<const OptionsList> Parent=nullptr);
 
     void SetOption(const std::string& str);
+    void SetOptions(const std::string& str);
     std::string GetOption(const std::string& key) const;
 
 };

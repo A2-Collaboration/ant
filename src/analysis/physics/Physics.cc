@@ -75,10 +75,22 @@ void OptionsList::SetOption(const string& str)
         const std::string key = str.substr(0, delimiter_pos);
         const std::string val = str.substr(delimiter_pos + delimiter.length(), str.npos);
         options.insert({key,val});
-        VLOG(9) << "Added Physics option " << key << " = " << val;
     } else {
         LOG(WARNING) << "Can't parse option string \"" << str << "\"";
     }
+}
+
+void OptionsList::SetOptions(const string& str)
+{
+    string::size_type p = 0;
+    string::size_type np = 0;
+
+    do {
+        np = str.find(",", p);
+        const auto o = str.substr(p,np);
+        SetOption(o);
+        p = np+1;
+    } while(np != str.npos);
 }
 
 string OptionsList::GetOption(const string& key) const

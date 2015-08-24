@@ -296,15 +296,7 @@ int main(int argc, char** argv) {
         auto classname = line.substr(0,colpos);
         auto optstr = line.substr(colpos+1,line.npos);
         auto options = make_shared<analysis::OptionsList>(popts);
-        string::size_type p = 0;
-        string::size_type np = 0;
-
-        do {
-            np = optstr.find(",", p);
-            const auto o = optstr.substr(p,np);
-            options->SetOption(o);
-            p = np+1;
-        } while(np != optstr.npos);
+        options->SetOptions(optstr);
         try {
             pm.AddPhysics( analysis::PhysicsRegistry::Create(classname, options) );
             LOG(INFO) << "Activated physics class '" << classname << "'";
