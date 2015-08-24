@@ -346,4 +346,77 @@ string to_string(const OmegaBase::DataMode &m)
 }
 
 
+
+
+OmegaMCTruePlots::PerChannel_t::PerChannel_t(const string& Title, SmartHistFactory& hf):
+    title(Title)
+{
+    proton_E_theta = hf.makeTH2D(Title,"E [MeV]","#theta [#circ]",BinSettings(1000),BinSettings(360,0,180));
+}
+
+void OmegaMCTruePlots::PerChannel_t::Show()
+{
+    canvas("Omega per Channel: "+title) << drawoption("colz") << proton_E_theta << endc;
+}
+
+void OmegaMCTruePlots::PerChannel_t::Fill(const Event::Data& d)
+{
+    const auto& protons = d.Particles().Get(ParticleTypeDatabase::Proton);
+    if(!protons.empty()) {
+        const auto& p = protons.at(0);
+        proton_E_theta->Fill(p->Ek(), p->Theta()*TMath::RadToDeg());
+    }
+}
+
+
+
+OmegaMCTruePlots::OmegaMCTruePlots(PhysOptPtr opts):
+    Physics("OmegaMCTruePlots", opts)
+{
+
+}
+
+void OmegaMCTruePlots::ProcessEvent(const Event& event)
+{
+    const auto& decaystring = OmegaBase::GetDecayString(event.MCTrue().Intermediates().GetAll());
+
+    auto e = channels.find(decaystring);
+
+    if(e == channels.end()) {
+        channels.insert({decaystring, PerChannel_t(decaystring,HistFac)});
+    }
+
+    e = channels.find(decaystring);
+    e->second.Fill(event.MCTrue());
+}
+
+void OmegaMCTruePlots::Finish()
+{
+
+}
+
+void OmegaMCTruePlots::ShowResult()
+{
+    canvas c("OmegaMCTrue p E Theta");
+    c << drawoption("colz");
+
+    list<TH2D*> hists;
+    for(auto& entry : channels) {
+        hists.push_back(entry.second.proton_E_theta);
+    }
+
+    hists.sort([](const TH2D* a, const TH2D* b) {return a->GetEntries() > b->GetEntries();});
+
+    int i=0;
+    for(auto& h : hists) {
+        c << h;
+        i++;
+        if(i>=9)
+            break;
+    }
+
+    c << endc;
+}
+
 AUTO_REGISTER_PHYSICS(OmegaEtaG, "OmegaEtaG")
+AUTO_REGISTER_PHYSICS(OmegaMCTruePlots, "OmegaMCTruePlots")

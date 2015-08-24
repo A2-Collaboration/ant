@@ -16,6 +16,27 @@ namespace ant {
 namespace analysis {
 namespace physics {
 
+class OmegaMCTruePlots: public Physics {
+public:
+    struct PerChannel_t {
+        std::string title;
+        TH2D* proton_E_theta = nullptr;
+
+        PerChannel_t(const std::string& Title, SmartHistFactory& hf);
+
+        void Show();
+        void Fill(const data::Event::Data& d);
+    };
+
+    std::map<std::string,PerChannel_t> channels;
+
+    OmegaMCTruePlots(PhysOptPtr opts);
+
+    void ProcessEvent(const data::Event& event);
+    void Finish();
+    void ShowResult();
+};
+
 class OmegaBase: public Physics {
 
 public:
@@ -33,7 +54,7 @@ protected:
 
     virtual void Analyse(const data::Event::Data& data, const data::Event& event) =0;
 
-    static std::string GetDecayString(const data::ParticleList& particles);
+
 
 public:
     OmegaBase(const std::string &name, PhysOptPtr opts);
@@ -43,6 +64,7 @@ public:
     void Finish() override;
     void ShowResult() override;
 
+    static std::string GetDecayString(const data::ParticleList& particles);
 };
 
 class OmegaEtaG: public OmegaBase {
