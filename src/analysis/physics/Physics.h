@@ -21,11 +21,17 @@ class TAntHeader;
 namespace analysis {
 
 
-struct OptionsList {
+class OptionsList {
+protected:
+
+    std::shared_ptr<const OptionsList> parent;
+
     std::map<std::string, std::string> options;
 
-    void SetOption(const std::string& str);
+public:
+    OptionsList(std::shared_ptr<const OptionsList> Parent=nullptr);
 
+    void SetOption(const std::string& str);
     std::string GetOption(const std::string& key) const;
 
 };

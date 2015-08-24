@@ -62,6 +62,11 @@ PhysicsRegistration::PhysicsRegistration(physics_creator c, const string& name)
 
 
 
+OptionsList::OptionsList(std::shared_ptr<const OptionsList> Parent):
+    parent(Parent)
+{
+}
+
 void OptionsList::SetOption(const string& str)
 {
     const std::string delimiter = "=";
@@ -81,6 +86,9 @@ string OptionsList::GetOption(const string& key) const
     const auto entry = options.find(key);
 
     if(entry == options.end()) {
+        if(parent) {
+            return parent->GetOption(key);
+        }
         return "";
     }
 
