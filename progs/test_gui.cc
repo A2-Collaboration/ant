@@ -1,11 +1,5 @@
 #include "TCanvas.h"
 #include "TRint.h"
-
-#include "iostream"
-//using namespace ant;
-using namespace std;
-
-
 #include "TGClient.h"
 #include "TCanvas.h"
 #include "TF1.h"
@@ -14,102 +8,122 @@ using namespace std;
 #include "TGFrame.h"
 #include "TRootEmbeddedCanvas.h"
 #include "KeySymbols.h"
+#include "TExec.h"
 
-class ExtMainFrame: public TGMainFrame
-{
-public:
-    ExtMainFrame(const TGWindow *p,UInt_t w,UInt_t h):
-        TGMainFrame(p,w,h)
-    {
-        BindKey(p, gVirtualX->KeysymToKeycode(kKey_Left),0);
-        AddInput(kKeyPressMask | kKeyReleaseMask);
-    }
-    virtual Bool_t HandleKey(Event_t *event) override
-    {
-        if (event->fType == kGKeyPress) {
-            char input[10];
-            UInt_t keysym;
+#include <iostream>
+#include <functional>
+#include <memory>
 
-            gVirtualX->LookupString(event, input, sizeof(input), keysym);
+using namespace std;
 
-            switch ((EKeySym)keysym) {
-            case kKey_Left:
-                cout << "pressed left arrow" << endl;
-                return kTRUE;
-            default:
-                cout << "Other key pressed" << endl;
-                break;
-            }
+class MyTextButton : public TGTextButton {
+
+    struct MyExec : TExec {
+        MyExec(std::function<void()> action_) : action(action_) {}
+        virtual void Exec(const char*) override {
+            action();
         }
-        return TGMainFrame::HandleKey(event);
+    private:
+        std::function<void()> action;
+    };
+    std::unique_ptr<MyExec> exec;
+
+public:
+    MyTextButton(const TGWindow *p, const std::string& label) :
+        TGTextButton(p, label.c_str())
+    {
+    }
+    void SetAction(std::function<void()> action) {
+        if(exec)
+            return;
+        exec = std::unique_ptr<MyExec>(new MyExec(action));
+        Connect("Clicked()", "TExec", exec.get(), "Exec(=\"\")");
     }
 };
 
-class MyMainFrame
+class MyMainFrame : public TGMainFrame
 {
-    private:
-        ExtMainFrame         *fMain;
-    //   TRootEmbeddedCanvas *fEcanvas;
+private:
+    TRootEmbeddedCanvas  *fEcanvas;
 public:
     MyMainFrame(const TGWindow *p,UInt_t w,UInt_t h);
+    virtual Bool_t HandleKey(Event_t *event) override;
     virtual ~MyMainFrame();
-    void DoDraw();
 };
 
-MyMainFrame::MyMainFrame(const TGWindow *p,UInt_t w,UInt_t h)
-{
-    // Create a main frame
-    fMain = new ExtMainFrame(p,w,h);
+Bool_t MyMainFrame::HandleKey(Event_t *event) {
 
-    // Create canvas widget
-    //fEcanvas = new TRootEmbeddedCanvas("Ecanvas",fMain,200,200);
-    //fMain->AddFrame(fEcanvas, new TGLayoutHints(kLHintsExpandX |
-    //kLHintsExpandY, 10,10,10,1));
-    // Create a horizontal frame widget with buttons
-    //TGHorizontalFrame *hframe = new TGHorizontalFrame(fMain,200,40);
-    //   TGTextButton *draw = new TGTextButton(hframe,"&Draw");
-    //   draw->Connect("Clicked()","MyMainFrame",this,"DoDraw()");
-    //   hframe->AddFrame(draw, new TGLayoutHints(kLHintsCenterX,
-    //                                            5,5,3,4));
-    //   TGTextButton *exit = new TGTextButton(hframe,"&Exit",
-    //                                "gApplication->Terminate(0)");
-    //   hframe->AddFrame(exit, new TGLayoutHints(kLHintsCenterX,
-    //                                            5,5,3,4));
-    //   fMain->AddFrame(hframe, new TGLayoutHints(kLHintsCenterX,
-    //                                             2,2,2,2));
+    if (event->fType == kGKeyPress) {
+        char input[10];
+        UInt_t keysym;
 
-    // Set a name to the main frame
-    fMain->SetWindowName("Simple Example");
+        gVirtualX->LookupString(event, input, sizeof(input), keysym);
 
-    // Map all subwindows of main frame
-    fMain->MapSubwindows();
-
-    // Map main frame
-    fMain->MapWindow();
-    //   DoDraw();
-}
-
-void MyMainFrame::DoDraw()
-{
-    // Draws function graphics in randomly choosen interval
-    //   TF1 *f1 = new TF1("f1","sin(x)/x",0,gRandom->Rndm()*10);
-    //   f1->SetLineWidth(3);
-    //   f1->Draw();
-    //   TCanvas *fCanvas = fEcanvas->GetCanvas();
-    //   fCanvas->cd();
-    //   fCanvas->Update();
+        switch ((EKeySym)keysym) {
+        case kKey_Left:
+            cout << "pressed left arrow" << endl;
+            return kTRUE;
+        default:
+            break;
+        }
+    }
+    return TGMainFrame::HandleKey(event);
 }
 
 MyMainFrame::~MyMainFrame()
 {
-    // Clean up used widgets: frames, buttons, layout hints
-    fMain->Cleanup();
-    delete fMain;
+    gApplication->Terminate(0);
+}
+
+MyMainFrame::MyMainFrame(const TGWindow *p,UInt_t w,UInt_t h) :
+    TGMainFrame(p, w, h)
+{
+    BindKey(GetParent(), gVirtualX->KeysymToKeycode(kKey_Left),0);
+    AddInput(kKeyPressMask | kKeyReleaseMask);
+
+    // Create a horizontal frame widget with buttons
+    TGHorizontalFrame *hframe = new TGHorizontalFrame(this,200,40);
+    MyTextButton *draw = new MyTextButton(hframe,"&Draw");
+    draw->SetAction([this] () {
+        // Draws function graphics in randomly choosen interval
+        TF1 *f1 = new TF1("f1","sin(x)/x",0,gRandom->Rndm()*10);
+        f1->SetLineWidth(3);
+        f1->Draw();
+        TCanvas *fCanvas = fEcanvas->GetCanvas();
+        fCanvas->cd();
+        fCanvas->Update();
+    });
+
+    hframe->AddFrame(draw, new TGLayoutHints(kLHintsCenterX,
+                                             5,5,3,4));
+    TGTextButton *exit = new TGTextButton(hframe,"&Exit",
+                                          "gApplication->Terminate(0)");
+    hframe->AddFrame(exit, new TGLayoutHints(kLHintsCenterX, 5,5,3,4));
+
+    AddFrame(hframe, new TGLayoutHints(kLHintsTop | kLHintsExpandX, 0, 0, 0, 0));
+
+    // Create canvas widget
+    fEcanvas = new TRootEmbeddedCanvas("Ecanvas",this,200,200);
+    AddFrame(fEcanvas, new TGLayoutHints(kLHintsExpandX |
+                                                kLHintsExpandY, 10,10,10,10));
+
+    // Set a name to the main frame
+    SetWindowName("Simple Example");
+
+    // Map all subwindows of main frame
+    MapSubwindows();
+
+    Resize(GetDefaultSize()); // this is used here to init layout algorithm
+
+    // Map main frame
+    MapWindow();
+    gVirtualX->SetInputFocus(GetId());
 }
 
 int main(int argc, char** argv)
 {
     TRint app("guitest",&argc,argv);
-    new MyMainFrame(gClient->GetRoot(),200,200);
-    app.Run(kFALSE);
+    // MainFram is destroyed on close!
+    new MyMainFrame(gClient->GetRoot(),400,400);
+    app.Run();
 }
