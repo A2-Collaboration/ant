@@ -9,6 +9,7 @@ set(ANALYSIS_DATASTRUCTURES
   data/TaggerHit.cc
   data/TriggerInfo.cc
   data/Cluster.cc
+  data/Slowcontrol.cc
 )
 
 set(ANALYSIS_INPUT
