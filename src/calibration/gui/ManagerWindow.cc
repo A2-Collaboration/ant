@@ -12,6 +12,8 @@
 #include "TGButton.h"
 #include "TGProgressBar.h"
 
+#include "base/Logger.h"
+
 using namespace std;
 
 namespace ant {
@@ -28,7 +30,8 @@ public:
     }
 };
 
-class TextButton : public TGTextButton {
+template<class theWidget>
+class ActionWidget : public theWidget {
     struct MyExec : TExec {
         MyExec(function<void()> action_) : action(action_) {}
         virtual void Exec(const char*) override {
@@ -40,15 +43,13 @@ class TextButton : public TGTextButton {
     unique_ptr<MyExec> exec;
 
 public:
-    TextButton(const TGWindow *p, const string& label) :
-        TGTextButton(p, label.c_str())
-    {
-    }
+    using theWidget::theWidget;
+
     void SetAction(function<void()> action) {
         if(exec)
             return;
         exec = std_ext::make_unique<MyExec>(action);
-        Connect("Clicked()", "TExec", exec.get(), "Exec(=\"\")");
+        TQObject::Connect("Clicked()", "TExec", exec.get(), "Exec(=\"\")");
     }
 };
 
@@ -58,40 +59,44 @@ void ManagerWindow::CreateToolbar(TGVerticalFrame* frame)
 
     TGHorizontalFrame* frm1 = new TGHorizontalFrame(frame,200,40);
 
-    TextButton* btn_prev = new TextButton(frm1,"Prev (b)");
+    auto btn_prev = new ActionWidget<TGTextButton>(frm1,"Prev (b)");
     keys[kKey_b] = btn_prev;
 
-    TextButton* btn_next = new TextButton(frm1,"Next (n)");
+    auto btn_next = new ActionWidget<TGTextButton>(frm1,"Next (n)");
     keys[kKey_n] = btn_next;
 
-    TextButton* btn_goto = new TextButton(frm1,"Goto");
+    auto btn_goto = new ActionWidget<TGTextButton>(frm1,"Goto");
 
     TGNumberEntry* numberentry = new TGNumberEntry(frm1, 0, 3, -1,
                                                    TGNumberFormat::kNESInteger,
                                                    TGNumberFormat::kNEANonNegative
                                                    );
 
-    TextButton* btn_finish = new TextButton(frm1,"Finish Slice");
+    auto btn_finish = new ActionWidget<TGTextButton>(frm1,"Finish Slice");
 
-    TGCheckButton* btn_autocontinue = new TGCheckButton(frm1,"AutoContinue");
+    auto btn_autocontinue = new ActionWidget<TGCheckButton>(frm1,"AutoContinue");
+    btn_autocontinue->SetAction([this, btn_autocontinue] () {
+        LOG(INFO) << btn_autocontinue->IsOn();
+        Mode.alwaysDisplayFit = btn_autocontinue->IsOn();
+    });
 
-    TGCheckButton* btn_showfit = new TGCheckButton(frm1,"Show each fit");
+    auto btn_showfit = new ActionWidget<TGCheckButton>(frm1,"Show each fit");
 
 
     // second row with fit specific commands
 
     TGHorizontalFrame* frm2 = new TGHorizontalFrame(frame,200,40);
 
-    TextButton* btn_fit = new TextButton(frm2,"Fit (f)");
+    auto btn_fit = new ActionWidget<TGTextButton>(frm2,"Fit (f)");
     keys[kKey_f] = btn_fit;
 
-    TextButton* btn_defaults = new TextButton(frm2,"SetDefaults (d)");
+    auto btn_defaults = new ActionWidget<TGTextButton>(frm2,"SetDefaults (d)");
     keys[kKey_d] = btn_defaults;
 
-    TextButton* btn_undopop = new TextButton(frm2,"Undo pop (u)");
+    auto btn_undopop = new ActionWidget<TGTextButton>(frm2,"Undo pop (u)");
     keys[kKey_u] = btn_undopop;
 
-    TextButton* btn_undopush = new TextButton(frm2,"Undo push (i)");
+    auto btn_undopush = new ActionWidget<TGTextButton>(frm2,"Undo push (i)");
     keys[kKey_i] = btn_undopush;
 
     auto layout_btn = new TGLayoutHints(kLHintsLeft,2,2,2,2);

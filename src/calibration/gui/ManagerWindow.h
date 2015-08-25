@@ -15,6 +15,18 @@ namespace gui {
 
 class CalCanvas;
 
+struct ManagerWindowMode {
+    ManagerWindowMode() :
+        gotoNextSlice(true),
+        alwaysDisplayFit(false),
+        channelStep(1)
+    {}
+
+    bool gotoNextSlice;
+    bool alwaysDisplayFit;
+    int  channelStep;
+};
+
 class ManagerWindow : public TGMainFrame
 {
 private:
@@ -28,6 +40,11 @@ public:
     virtual Bool_t HandleKey(Event_t *event) override;
     virtual ~ManagerWindow();
     gui::CalCanvas* AddCalCanvas(const std::string& name = "");
+
+    ManagerWindowMode Mode;
+
+    ManagerWindow(const ManagerWindow&) = delete;
+    ManagerWindow& operator=(const ManagerWindow&) = delete;
 };
 }
 }
