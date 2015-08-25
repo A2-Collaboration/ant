@@ -27,6 +27,7 @@ set(SRCS
     converters/ScalerFrequency.cc
     gui/Manager.cc
     gui/Manager_traits.h
+    gui/ManagerWindow.cc
     gui/GUIbase.h
     gui/CalCanvas.cc
     gui/GUIElements.cc
