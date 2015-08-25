@@ -22,9 +22,9 @@ public:
 };
 
 
-class GUIIndicator: public update_notify_traits {
+class Indicator: public update_notify_traits {
 public:
-    virtual ~GUIIndicator() = default;
+    virtual ~Indicator() = default;
 
     virtual void SetPosition(double p) =0;
     virtual double GetPosition() const =0;
@@ -32,39 +32,37 @@ public:
     virtual void RangeUpdate(const Viewport& p) =0;
 };
 
-struct GUIElementDescription {
+struct IndicatorProperties {
 
-    enum class GUI_Type {
+    enum class Type_t {
         slider_vertical,
-        slider_horizontal,
-        textbox
+        slider_horizontal
     };
 
-    GUIElementDescription(GUI_Type type, Color_t color, double lineWidth): Type(type), Color(color), LineWidth(lineWidth) {}
+    IndicatorProperties(Type_t type, Color_t color, double lineWidth): Type(type), Color(color), LineWidth(lineWidth) {}
 
-    GUI_Type Type;
+    Type_t Type;
     Color_t Color;
     double LineWidth;
 };
 
-class VirtualKnob {
+class IndicatorKnob {
 public:
 
     std::string name;
+    IndicatorProperties gui;
 
-    GUIElementDescription gui;
 
-
-    VirtualKnob(const std::string& name_, GUIElementDescription Gui):
+    IndicatorKnob(const std::string& name_, IndicatorProperties Gui):
         name(name_),
         gui(Gui)
     {}
 
     // no copies of knobs!
-    VirtualKnob(const VirtualKnob&) = delete;
-    VirtualKnob& operator=(const VirtualKnob&) = delete;
-    VirtualKnob(VirtualKnob&&) = delete;
-    VirtualKnob& operator=(VirtualKnob&&) = delete;
+    IndicatorKnob(const IndicatorKnob&) = delete;
+    IndicatorKnob& operator=(const IndicatorKnob&) = delete;
+    IndicatorKnob(IndicatorKnob&&) = delete;
+    IndicatorKnob& operator=(IndicatorKnob&&) = delete;
 
     virtual double get() const =0;
     virtual void set(double v) =0;

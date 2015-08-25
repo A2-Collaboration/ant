@@ -1,20 +1,18 @@
 #pragma once
 
 #include "FitFunction.h"
-
-#include "base/interval.h"
-#include "calibration/gui/GUIbase.h"
-
-#include <memory>
-
 #include "TF1Knobs.h"
 
-#include <list>
-#include <string>
+#include "base/interval.h"
 #include "base/std_ext.h"
 #include "base/interval.h"
 
 #include "Rtypes.h"
+
+#include <memory>
+#include <list>
+#include <string>
+
 
 class TH1;
 class TF1;

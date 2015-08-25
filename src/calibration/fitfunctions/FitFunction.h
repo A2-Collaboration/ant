@@ -1,7 +1,7 @@
 #pragma once
 
 #include "base/interval.h"
-#include "calibration/gui/GUIbase.h"
+#include "calibration/gui/Indicator_traits.h"
 
 #include <memory>
 
@@ -24,7 +24,7 @@ namespace gui {
 
 class FitFunction {
 public:
-    using knoblist_t = std::list<std::unique_ptr<VirtualKnob>>;
+    using knoblist_t = std::list<std::unique_ptr<IndicatorKnob>>;
     using SavedState_t = std::vector<double>;
 
 protected:

@@ -6,8 +6,8 @@ using namespace ant::calibration::gui;
 using namespace ant::calibration::gui::KnobsTF1;
 
 
-ParameterKnob::ParameterKnob(const std::string& n, TF1* Func, int par, GUIElementDescription::GUI_Type type, Color_t color, double LineW):
-    VirtualKnob(n,GUIElementDescription(type,color,LineW)),
+ParameterKnob::ParameterKnob(const std::string& n, TF1* Func, int par, IndicatorProperties::Type_t type, Color_t color, double LineW):
+    IndicatorKnob(n,IndicatorProperties(type,color,LineW)),
     func(Func),
     parameter_index(par)
 {
@@ -28,7 +28,7 @@ void ParameterKnob::set(double a)
 
 
 RangeKnob::RangeKnob(const std::string& Name, TF1* Func, RangeEndType Type, Color_t color, double LineW)
-    :VirtualKnob(Name,{GUIElementDescription::GUI_Type::slider_vertical,color,LineW}),
+    :IndicatorKnob(Name,{IndicatorProperties::Type_t::slider_vertical,color,LineW}),
       func(Func),
       type(Type)
 {
@@ -68,8 +68,8 @@ void RangeKnob::RangeKnob::set(double a)
     }
 }
 
-ReferenceParameterKnob::ReferenceParameterKnob(const std::string& Name, TF1* Func, int par, int reference, GUIElementDescription::GUI_Type type, Color_t color, double LineW):
-    VirtualKnob(Name,{type,color,LineW}),
+ReferenceParameterKnob::ReferenceParameterKnob(const std::string& Name, TF1* Func, int par, int reference, IndicatorProperties::Type_t type, Color_t color, double LineW):
+    IndicatorKnob(Name,{type,color,LineW}),
       func(Func),
       parameter_index(par),
       ref_index(reference)
@@ -94,7 +94,7 @@ double ReferenceParameterKnob::reference() const
 
 RangedParameterKnob::RangedParameterKnob(const std::string& n, TF1* Func, int par,
                                          RangedParameterKnob::ConstraintType constraint_type_,
-                                         GUIElementDescription::GUI_Type gui_type, Color_t color, double LineW) :
+                                         IndicatorProperties::Type_t gui_type, Color_t color, double LineW) :
 ParameterKnob(n, Func, par, gui_type, color, LineW),
   constraint_type(constraint_type_)
 {

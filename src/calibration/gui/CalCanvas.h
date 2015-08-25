@@ -1,6 +1,6 @@
 #pragma once
 
-#include "calibration/gui/GUIbase.h"
+#include "calibration/gui/Indicator_traits.h"
 #include "calibration/fitfunctions/FitFunction.h"
 
 #include <list>
@@ -37,11 +37,11 @@ protected:
     void ClearIndicators();
     void SetupGUI();
 
-    GUIIndicator* MakeVerticalIndicatorLine(VirtualKnob& knob);
-    GUIIndicator* MakeHorizontalIndicatorLine(VirtualKnob& knob);
-    GUIIndicator* MakeGUIElement(VirtualKnob& knob);
+    Indicator* MakeVerticalIndicatorLine(IndicatorKnob& knob);
+    Indicator* MakeHorizontalIndicatorLine(IndicatorKnob& knob);
+    Indicator* MakeGUIElement(IndicatorKnob& knob);
 
-    std::list<GUIIndicator*> indicators;
+    std::list<Indicator*> indicators;
     FitFunction* func = nullptr;
     TH1* hist = nullptr;
 

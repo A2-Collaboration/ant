@@ -43,9 +43,9 @@ ant::calibration::gui::FitGausPol3::FitGausPol3()
     bg->SetNpx(1000);
     combined->SetNpx(1000);
 
-    AddKnob<KnobsTF1::ParameterKnob>(combined->GetParName(0), combined, 0, GUIElementDescription::GUI_Type::slider_horizontal);
-    AddKnob<KnobsTF1::ParameterKnob>(combined->GetParName(1), combined, 1, GUIElementDescription::GUI_Type::slider_vertical);
-    AddKnob<KnobsTF1::ReferenceParameterKnob>(combined->GetParName(2), combined, 2, 1, GUIElementDescription::GUI_Type::slider_vertical);
+    AddKnob<KnobsTF1::ParameterKnob>(combined->GetParName(0), combined, 0, IndicatorProperties::Type_t::slider_horizontal);
+    AddKnob<KnobsTF1::ParameterKnob>(combined->GetParName(1), combined, 1, IndicatorProperties::Type_t::slider_vertical);
+    AddKnob<KnobsTF1::ReferenceParameterKnob>(combined->GetParName(2), combined, 2, 1, IndicatorProperties::Type_t::slider_vertical);
     AddKnob<KnobsTF1::RangeKnob>("min",combined,KnobsTF1::RangeKnob::RangeEndType::lower);
     AddKnob<KnobsTF1::RangeKnob>("max",combined,KnobsTF1::RangeKnob::RangeEndType::upper);
 }

@@ -22,7 +22,7 @@ FitTimewalk::FitTimewalk()
 
     AddKnob<KnobsTF1::RangedParameterKnob>(func->GetParName(2), func, 2,
                                            KnobsTF1::RangedParameterKnob::ConstraintType::lowerThanMin,
-                                           GUIElementDescription::GUI_Type::slider_vertical);
+                                           IndicatorProperties::Type_t::slider_vertical);
 
     AddKnob<KnobsTF1::RangeKnob>("Min", func, KnobsTF1::RangeKnob::RangeEndType::lower);
     AddKnob<KnobsTF1::RangeKnob>("Max", func, KnobsTF1::RangeKnob::RangeEndType::upper);

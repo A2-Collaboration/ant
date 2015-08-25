@@ -1,4 +1,4 @@
-#include "GUIElements.h"
+#include "Indicator.h"
 
 #include "TLatex.h"
 
@@ -14,15 +14,12 @@ public:
     virtual void Delete(Option_t*) override {}
 };
 
-
-
-
 void IndicatorLine::UpdateMe()
 {
     SetPosition(knob.get());
 }
 
-IndicatorLine::IndicatorLine(ant::calibration::gui::VirtualKnob &k): TLine(),
+IndicatorLine::IndicatorLine(ant::calibration::gui::IndicatorKnob &k): TLine(),
     knob(k),
     label(new UndeleteableTLatex(fX1,fY1,knob.name.c_str()))
 {
@@ -60,7 +57,7 @@ void VerticalIndicatorLine::updateLabel()
     label->SetTextAngle(90);
 }
 
-VerticalIndicatorLine::VerticalIndicatorLine(VirtualKnob &k):
+VerticalIndicatorLine::VerticalIndicatorLine(IndicatorKnob &k):
     IndicatorLine(k)
 {
     SetPosition(k.get());
@@ -95,7 +92,7 @@ void HorizontalIndicatorLine::updateLabel() {
     label->SetTextAngle(0);
 }
 
-HorizontalIndicatorLine::HorizontalIndicatorLine(VirtualKnob &k): IndicatorLine(k) { SetPosition(k.get()); updateLabel(); }
+HorizontalIndicatorLine::HorizontalIndicatorLine(IndicatorKnob &k): IndicatorLine(k) { SetPosition(k.get()); updateLabel(); }
 
 void HorizontalIndicatorLine::SetY1(Double_t y1) {fY1=y1;fY2=y1; updateLabel(); knob.set(y1); update_other();}
 

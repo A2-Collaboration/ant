@@ -19,9 +19,9 @@ FitGausPol0::FitGausPol0()
     func = functions::GausPol<0>::getTF1();
     func->SetNpx(1000);
     AddKnob<AmpKnop>("A",func);
-    AddKnob<KnobsTF1::ParameterKnob>("x_{0}", func, 1, GUIElementDescription::GUI_Type::slider_vertical,   kBlue, 3);
+    AddKnob<KnobsTF1::ParameterKnob>("x_{0}", func, 1, IndicatorProperties::Type_t::slider_vertical,   kBlue, 3);
     AddKnob<SigmaKnob>("#sigma",func);
-    AddKnob<KnobsTF1::ParameterKnob>("c",     func, 3, GUIElementDescription::GUI_Type::slider_horizontal, kRed, 3);
+    AddKnob<KnobsTF1::ParameterKnob>("c",     func, 3, IndicatorProperties::Type_t::slider_horizontal, kRed, 3);
     AddKnob<KnobsTF1::RangeKnob>("Min", func, KnobsTF1::RangeKnob::RangeEndType::lower);
     AddKnob<KnobsTF1::RangeKnob>("Max", func, KnobsTF1::RangeKnob::RangeEndType::upper);
 }
@@ -93,7 +93,7 @@ double FitGausPol0::GetPeakPosition() const
 }
 
 FitGausPol0::SigmaKnob::SigmaKnob(const std::string &n, TF1 *Func):
-    VirtualKnob(n,{GUIElementDescription::GUI_Type::slider_vertical,kBlue,3}),
+    IndicatorKnob(n,{IndicatorProperties::Type_t::slider_vertical,kBlue,3}),
     func(Func)
 {
 }
@@ -111,7 +111,7 @@ void FitGausPol0::SigmaKnob::set(double a)
 
 
 FitGausPol0::AmpKnop::AmpKnop(const std::string& name, TF1* Func):
-    VirtualKnob(name,{GUIElementDescription::GUI_Type::slider_horizontal,kBlue,3}),
+    IndicatorKnob(name,{IndicatorProperties::Type_t::slider_horizontal,kBlue,3}),
     func(Func)
 {
 

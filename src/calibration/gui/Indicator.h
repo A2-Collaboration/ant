@@ -1,6 +1,6 @@
 #pragma once
 
-#include "calibration/gui/GUIbase.h"
+#include "calibration/gui/Indicator_traits.h"
 
 #include <memory>
 
@@ -12,9 +12,9 @@ namespace ant {
 namespace calibration {
 namespace gui {
 
-class IndicatorLine: public TLine, public GUIIndicator {
+class IndicatorLine: public TLine, public Indicator {
 protected:
-    ant::calibration::gui::VirtualKnob& knob;
+    ant::calibration::gui::IndicatorKnob& knob;
 
     std::unique_ptr<TLatex> label;
 
@@ -26,7 +26,7 @@ protected:
     }
 
 public:
-    IndicatorLine(VirtualKnob& k);
+    IndicatorLine(IndicatorKnob& k);
     virtual ~IndicatorLine();
 
     virtual void UpdateMe() override;
@@ -48,7 +48,7 @@ protected:
     virtual void updateLabel() override;
 
 public:
-    VerticalIndicatorLine(VirtualKnob& k);
+    VerticalIndicatorLine(IndicatorKnob& k);
 
     virtual ~VerticalIndicatorLine() = default;
 
@@ -77,7 +77,7 @@ protected:
     virtual void updateLabel() override;
 
 public:
-    HorizontalIndicatorLine(VirtualKnob& k);
+    HorizontalIndicatorLine(IndicatorKnob& k);
 
     virtual ~HorizontalIndicatorLine() = default;
 

@@ -3,7 +3,7 @@
 #include "FitFunction.h"
 
 #include "base/interval.h"
-#include "calibration/gui/GUIbase.h"
+#include "calibration/gui/Indicator_traits.h"
 
 #include <memory>
 
@@ -27,7 +27,7 @@ class FitGaus: public PeakingFitFunktion {
 protected:
     TF1* func = nullptr;
 
-    class MyWKnob: public VirtualKnob {
+    class MyWKnob: public IndicatorKnob {
     protected:
         TF1* func = nullptr;
     public:

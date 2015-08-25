@@ -1,6 +1,6 @@
 #include "CalCanvas.h"
 
-#include "GUIElements.h"
+#include "Indicator.h"
 #include "base/Logger.h"
 
 #include "fitfunctions/FitFunction.h"
@@ -27,7 +27,7 @@ CalCanvas::~CalCanvas() {
     ClearIndicators();
 }
 
-void CalCanvas::Show(TH1 *h, FitFunction* f) {
+void CalCanvas::Show(TH1* h, FitFunction* f) {
 
     // empty UndoStack
     while(!UndoStack.empty()) {
@@ -58,7 +58,7 @@ Viewport CalCanvas::getViewport() {
     return p;
 }
 
-GUIIndicator *CalCanvas::MakeVerticalIndicatorLine(VirtualKnob &knob) {
+Indicator* CalCanvas::MakeVerticalIndicatorLine(IndicatorKnob &knob) {
 
     auto p = getViewport();
 
@@ -70,7 +70,7 @@ GUIIndicator *CalCanvas::MakeVerticalIndicatorLine(VirtualKnob &knob) {
     return tmp;
 }
 
-GUIIndicator *CalCanvas::MakeHorizontalIndicatorLine(VirtualKnob &knob) {
+Indicator* CalCanvas::MakeHorizontalIndicatorLine(IndicatorKnob &knob) {
 
     auto p = getViewport();
 
@@ -82,18 +82,15 @@ GUIIndicator *CalCanvas::MakeHorizontalIndicatorLine(VirtualKnob &knob) {
     return tmp;
 }
 
-GUIIndicator *CalCanvas::MakeGUIElement(VirtualKnob &knob)
+Indicator* CalCanvas::MakeGUIElement(IndicatorKnob &knob)
 {
     switch (knob.gui.Type) {
-    case GUIElementDescription::GUI_Type::slider_horizontal:
+    case IndicatorProperties::Type_t::slider_horizontal:
         return MakeHorizontalIndicatorLine(knob);
         break;
-    case GUIElementDescription::GUI_Type::slider_vertical:
+    case IndicatorProperties::Type_t::slider_vertical:
         return MakeVerticalIndicatorLine(knob);
         break;
-    case GUIElementDescription::GUI_Type::textbox:
-        //@todo Implement
-        return MakeVerticalIndicatorLine(knob);
     }
     return nullptr;
 }

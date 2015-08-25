@@ -18,8 +18,8 @@ FitGaus::FitGaus()
 {
     func = functions::gaus::getTF1();
     func->SetNpx(1000);
-    AddKnob<KnobsTF1::ParameterKnob>("A",     func, 0, GUIElementDescription::GUI_Type::slider_horizontal, kBlue, 3);
-    AddKnob<KnobsTF1::ParameterKnob>("x_{0}", func, 1, GUIElementDescription::GUI_Type::slider_vertical,   kBlue, 3);
+    AddKnob<KnobsTF1::ParameterKnob>("A",     func, 0, IndicatorProperties::Type_t::slider_horizontal, kBlue, 3);
+    AddKnob<KnobsTF1::ParameterKnob>("x_{0}", func, 1, IndicatorProperties::Type_t::slider_vertical,   kBlue, 3);
     AddKnob<MyWKnob>("#sigma",func);
     AddKnob<KnobsTF1::RangeKnob>("Min", func, KnobsTF1::RangeKnob::RangeEndType::lower);
     AddKnob<KnobsTF1::RangeKnob>("Max", func, KnobsTF1::RangeKnob::RangeEndType::upper);
@@ -92,7 +92,7 @@ double FitGaus::GetPeakPosition() const
 }
 
 FitGaus::MyWKnob::MyWKnob(const std::string &n, TF1 *Func):
-    VirtualKnob(n,{GUIElementDescription::GUI_Type::slider_vertical,kBlue,3}),
+    IndicatorKnob(n,{IndicatorProperties::Type_t::slider_vertical,kBlue,3}),
     func(Func)
 {
 }
