@@ -18,6 +18,7 @@
 #include "KeySymbols.h"
 #include "TExec.h"
 #include "TH1D.h"
+#include "TGStatusBar.h"
 
 #include <iostream>
 #include <functional>
@@ -57,6 +58,7 @@ class MyMainFrame : public TGMainFrame
 private:
     std::list<gui::CalCanvas*> canvases;
     TGHorizontalFrame* frame_canvases;
+    TGStatusBar* statusbar;
 public:
     MyMainFrame(const TGWindow *p,UInt_t w,UInt_t h);
     virtual Bool_t HandleKey(Event_t *event) override;
@@ -91,6 +93,7 @@ MyMainFrame::~MyMainFrame()
 gui::CalCanvas* MyMainFrame::AddCalCanvas(const string& name) {
     auto ecanvas = new TRootEmbeddedCanvas(0,frame_canvases,200,200);
     auto canvas = new gui::CalCanvas(name.c_str(),ecanvas->GetCanvasWindowId());
+    canvas->ConnectStatusBar(statusbar);
     ecanvas->AdoptCanvas(canvas);
     frame_canvases->AddFrame(ecanvas, new TGLayoutHints(kLHintsExpandY | kLHintsExpandX, 0,0,0,0));
     MapSubwindows();
@@ -117,19 +120,34 @@ MyMainFrame::MyMainFrame(const TGWindow *p,UInt_t w,UInt_t h) :
         auto f = new gui::FitGaus();
         f->SetDefaults(nullptr); // using empty h is not meaningful for testing
         canvas->Show(h, f);
+
+        auto canvas_display = AddCalCanvas();
+        canvas_display->cd();
+        auto cb = new TH2CB("","CB");
+        cb->Draw();
     });
 
-    frame_buttons->AddFrame(draw, new TGLayoutHints(kLHintsCenterX,
-                                             5,5,3,4));
+    auto button_layout = new TGLayoutHints(kLHintsLeft,5,5,3,4);
+
+    frame_buttons->AddFrame(draw, button_layout);
     TGTextButton* exit = new TGTextButton(frame_buttons,"&Exit",
                                           "gApplication->Terminate(0)");
-    frame_buttons->AddFrame(exit, new TGLayoutHints(kLHintsCenterX, 5,5,3,4));
+    frame_buttons->AddFrame(exit, button_layout);
 
     frame->AddFrame(frame_buttons, new TGLayoutHints(kLHintsTop | kLHintsExpandX, 0, 0, 0, 0));
 
     // Create frame for canvases
     frame_canvases = new TGHorizontalFrame(frame,200,40);
     frame->AddFrame(frame_canvases, new TGLayoutHints(kLHintsExpandY | kLHintsExpandX, 0, 0, 0, 0));
+
+    // Statusbar
+    // status bar
+    Int_t parts[] = {45, 15, 10, 30};
+    statusbar = new TGStatusBar(frame, 50, 10, kVerticalFrame);
+    statusbar->SetParts(parts, 4);
+    statusbar->Draw3DCorner(kFALSE);
+    frame->AddFrame(statusbar, new TGLayoutHints(kLHintsTop | kLHintsExpandX, 0, 0, 10, 0));
+
 
     AddFrame(frame, new TGLayoutHints(kLHintsExpandX | kLHintsExpandY, 0, 0, 0, 0));
 

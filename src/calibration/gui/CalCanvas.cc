@@ -8,7 +8,11 @@
 #include "TF1.h"
 #include "TH1.h"
 #include "TRootCanvas.h"
+#include "TGStatusBar.h"
 
+#include <sstream>
+
+using namespace std;
 using namespace ant::calibration::gui;
 
 
@@ -235,6 +239,11 @@ void CalCanvas::LinkGUIMode(CalCanvasMode* guimode_)
     gui_mode = guimode_;
 }
 
+void CalCanvas::ConnectStatusBar(TGStatusBar* statusbar_)
+{
+    statusbar = statusbar_;
+}
+
 void CalCanvas::Execute(const char *method, const char *params, Int_t *error) {
     std::string cmd(method);
     if(cmd == "Fit") {
@@ -262,6 +271,22 @@ void CalCanvas::HandleInput(EEventType button, Int_t x, Int_t y)
 
     if(button == kKeyPress)
         HandleKeypress(x);
+}
+
+void CalCanvas::ProcessedEvent(Int_t event, Int_t x, Int_t y, TObject* selected)
+{
+    if(statusbar) {
+        statusbar->SetText(selected->GetTitle(), 0);
+        statusbar->SetText(selected->GetName(),  1);
+        stringstream ss;
+        if(event == kKeyPress)
+           ss << (char)x;
+        else
+           ss << x << "," << y;
+        statusbar->SetText(ss.str().c_str(), 2);
+        statusbar->SetText(selected->GetObjectInfo(x,y), 3);
+    }
+    TCanvas::ProcessedEvent(event, x, y, selected);
 }
 
 

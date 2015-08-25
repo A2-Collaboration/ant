@@ -13,6 +13,7 @@
 
 class TH1;
 class TRootCanvas;
+class TGStatusBar;
 
 namespace ant {
 namespace calibration {
@@ -50,6 +51,7 @@ protected:
 
     TRootCanvas* rootcanvas = nullptr;
     CalCanvasMode* gui_mode = nullptr;
+    TGStatusBar* statusbar = nullptr;
 
     void SetDefaults();
 
@@ -74,8 +76,9 @@ public:
     virtual void ConnectReturnFunc(const char* receiver_class, void* receiver, const char* slot);
     virtual void LinkGUIMode(CalCanvasMode* guimode_);
 
-    virtual void Execute(const char *method, const char *params, Int_t *error);
+    virtual void ConnectStatusBar(TGStatusBar* statusbar_);
 
+    virtual void Execute(const char *method, const char *params, Int_t *error);
 
     virtual void Update() override;
 
@@ -92,6 +95,8 @@ public:
      */
     // do not mark it override since older ROOT versions don't have this routine
     virtual void ShowGuidelines(TObject*, const Int_t, const char, const bool) {}
+
+    virtual void ProcessedEvent(Int_t event, Int_t x, Int_t y, TObject *selected) override;
 };
 }
 }
