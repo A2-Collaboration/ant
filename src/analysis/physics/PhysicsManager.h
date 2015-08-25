@@ -2,6 +2,7 @@
 
 #include "Physics.h"
 #include "tree/TSlowControl.h"
+#include "Slowcontrol.h"
 
 #include <queue>
 
@@ -43,6 +44,8 @@ protected:
 
     void ProcessEventBuffer(long long maxevents, bool& running, TAntHeader& header);
     void ProcessEvent(std::unique_ptr<data::Event> event);
+
+    ant::analysis::slowcontrol::Distributor slowcontrolDistributor;
 
 public:
 

@@ -6,7 +6,7 @@ using namespace ant::analysis::slowcontrol;
 
 
 
-Variable::Variable(Receiver* receiver, const TSlowControl::Key& Key): key(Key)
+Variable::Variable(Receiver* receiver)
 {
     receiver->RequestSlowcontrol(this);
 }
@@ -18,7 +18,26 @@ void Receiver::RequestSlowcontrol(Variable* var)
 }
 
 
-Livetime::Livetime(Receiver* receiver):
-    Variable(receiver, TSlowControl::Key(TSlowControl::Type_t::EpicsScaler, "TRIG:TotalLivetime"))
+
+void Distributor::Register(Receiver& rec)
 {
+    for(auto& var : rec.GetRequestedSlowcontrols()) {
+
+        std::shared_ptr<DataGetter> getter = var->Getter();
+
+        for(const auto& key : getter->GetRequiredKeys() ) {
+            requestedKeys.insert(key);
+        }
+
+        getters.emplace_back(move(getter));
+    }
+
 }
+
+void Distributor::Process(double d)
+{
+    for(auto& getter : getters) {
+        getter->Process(d);
+    }
+}
+

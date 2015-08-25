@@ -128,6 +128,10 @@ void PhysicsManager::ReadFrom(
         LOG(WARNING) << "No Analysis Instances activated. Will not analyse anything.";
     }
 
+    for(auto& p : physics) {
+        slowcontrolDistributor.Register(*p);
+    }
+
 
     chrono::time_point<std::chrono::system_clock> start, end;
     start = chrono::system_clock::now();
@@ -181,6 +185,8 @@ void PhysicsManager::ProcessEvent(unique_ptr<data::Event> event)
                 reconstructed.Particles().AddParticle(particle);
         }
     }
+
+    slowcontrolDistributor.Process(5);
 
     for( auto& m : physics ) {
         m->ProcessEvent(*event);
