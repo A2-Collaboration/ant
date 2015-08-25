@@ -22,8 +22,9 @@ private:
     TGHorizontalFrame* frame_canvases;
     TGStatusBar* statusbar;
     std::map<EKeySym, TGTextButton*> keys;
+    void CreateToolbar(TGVerticalFrame* frame);
 public:
-    ManagerWindow(const TGWindow*p, UInt_t w, UInt_t h);
+    ManagerWindow(const TGWindow* p, UInt_t w, UInt_t h);
     virtual Bool_t HandleKey(Event_t *event) override;
     virtual ~ManagerWindow();
     gui::CalCanvas* AddCalCanvas(const std::string& name = "");

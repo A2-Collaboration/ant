@@ -4,17 +4,13 @@
 #include "CalCanvas.h"
 
 #include "TExec.h"
-#include "TGStatusBar.h"
 #include "TRootEmbeddedCanvas.h"
-#include "TGButton.h"
 #include "TApplication.h"
 
-// can be removed, just needed for testing
-
-#include "TH1D.h"
-#include "calibration/fitfunctions/FitGaus.h"
-#include "base/cbtaps_display/TH2CB.h"
-
+#include "TGNumberEntry.h"
+#include "TGStatusBar.h"
+#include "TGButton.h"
+#include "TGProgressBar.h"
 
 using namespace std;
 
@@ -56,6 +52,76 @@ public:
     }
 };
 
+void ManagerWindow::CreateToolbar(TGVerticalFrame* frame)
+{
+    // first row  with loop control commands
+
+    TGHorizontalFrame* frm1 = new TGHorizontalFrame(frame,200,40);
+
+    TextButton* btn_prev = new TextButton(frm1,"Prev (b)");
+    keys[kKey_b] = btn_prev;
+
+    TextButton* btn_next = new TextButton(frm1,"Next (n)");
+    keys[kKey_n] = btn_next;
+
+    TextButton* btn_goto = new TextButton(frm1,"Goto");
+
+    TGNumberEntry* numberentry = new TGNumberEntry(frm1, 0, 3, -1,
+                                                   TGNumberFormat::kNESInteger,
+                                                   TGNumberFormat::kNEANonNegative
+                                                   );
+
+    TextButton* btn_finish = new TextButton(frm1,"Finish Slice");
+
+    TGCheckButton* btn_autocontinue = new TGCheckButton(frm1,"AutoContinue");
+
+    TGCheckButton* btn_showfit = new TGCheckButton(frm1,"Show each fit");
+
+
+    // second row with fit specific commands
+
+    TGHorizontalFrame* frm2 = new TGHorizontalFrame(frame,200,40);
+
+    TextButton* btn_fit = new TextButton(frm2,"Fit (f)");
+    keys[kKey_f] = btn_fit;
+
+    TextButton* btn_defaults = new TextButton(frm2,"SetDefaults (d)");
+    keys[kKey_d] = btn_defaults;
+
+    TextButton* btn_undopop = new TextButton(frm2,"Undo pop (u)");
+    keys[kKey_u] = btn_undopop;
+
+    TextButton* btn_undopush = new TextButton(frm2,"Undo push (i)");
+    keys[kKey_i] = btn_undopush;
+
+    auto layout_btn = new TGLayoutHints(kLHintsLeft,2,2,2,2);
+    frm1->AddFrame(btn_prev, layout_btn);
+    frm1->AddFrame(btn_next, layout_btn);
+    frm1->AddFrame(btn_goto, layout_btn);
+    frm1->AddFrame(numberentry, layout_btn);
+    frm1->AddFrame(btn_finish, layout_btn);
+    frm1->AddFrame(btn_autocontinue, layout_btn);
+    frm1->AddFrame(btn_showfit, layout_btn);
+
+
+    frm2->AddFrame(btn_fit, layout_btn);
+    frm2->AddFrame(btn_defaults, layout_btn);
+    frm2->AddFrame(btn_undopop, layout_btn);
+    frm2->AddFrame(btn_undopush, layout_btn);
+
+
+    // some progress bars
+
+    TGHProgressBar* progress1 = new TGHProgressBar(frame);
+    TGHProgressBar* progress2 = new TGHProgressBar(frame);
+
+    auto layout_frm =  new TGLayoutHints(kLHintsTop | kLHintsExpandX, 0, 0, 0, 0);
+    frame->AddFrame(frm1, layout_frm);
+    frame->AddFrame(frm2, layout_frm);
+    frame->AddFrame(progress1, layout_frm);
+    frame->AddFrame(progress2, layout_frm);
+}
+
 ManagerWindow::ManagerWindow(const TGWindow* p, UInt_t w, UInt_t h) :
     TGMainFrame(p, w, h)
 {
@@ -63,32 +129,7 @@ ManagerWindow::ManagerWindow(const TGWindow* p, UInt_t w, UInt_t h) :
     TGVerticalFrame* frame = new TGVerticalFrame(this);
 
     // Create a horizontal frame widget with buttons
-    TGHorizontalFrame* frame_buttons = new TGHorizontalFrame(frame,200,40);
-    TextButton* draw = new TextButton(frame_buttons,"Draw");
-    draw->SetAction([this] () {
-        auto canvas = AddCalCanvas();
-        canvas->cd();
-        auto h = new TH1D("","h",100,0,300);
-        auto f = new FitGaus();
-        f->SetDefaults(nullptr); // using empty h is not meaningful for testing
-        canvas->Show(h, f);
-
-        auto canvas_display = AddCalCanvas();
-        canvas_display->cd();
-        auto cb = new TH2CB("","CB");
-        cb->Draw();
-    });
-    keys[kKey_d] = draw;
-
-    TextButton* exit = new TextButton(frame_buttons,"Exit");
-    exit->SetAction([] () {gApplication->Terminate(0);});
-    keys[kKey_e] = exit;
-
-    auto button_layout = new TGLayoutHints(kLHintsLeft,5,5,3,4);
-    frame_buttons->AddFrame(draw, button_layout);
-    frame_buttons->AddFrame(exit, button_layout);
-
-    frame->AddFrame(frame_buttons, new TGLayoutHints(kLHintsTop | kLHintsExpandX, 0, 0, 0, 0));
+    CreateToolbar(frame);
 
     // Create frame for canvases
     frame_canvases = new TGHorizontalFrame(frame,200,40);
@@ -107,7 +148,7 @@ ManagerWindow::ManagerWindow(const TGWindow* p, UInt_t w, UInt_t h) :
     AddInput(kKeyPressMask | kKeyReleaseMask);
 
     // Set a name to the main frame
-    SetWindowName("Simple Example");
+    SetWindowName("Ant-calib GUI");
 
     // Map all subwindows of main frame
     MapSubwindows();
