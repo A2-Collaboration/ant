@@ -1,6 +1,10 @@
-#include "base/std_ext.h"
+
 #include "calibration/gui/CalCanvas.h"
 #include "calibration/fitfunctions/FitGaus.h"
+
+#include "base/cbtaps_display/TH2CB.h"
+#include "base/std_ext.h"
+
 
 #include "TCanvas.h"
 #include "TRint.h"
@@ -21,6 +25,7 @@
 
 using namespace std;
 using namespace ant;
+using namespace ant::calibration;
 
 class MyTextButton : public TGTextButton {
 
@@ -50,11 +55,13 @@ public:
 class MyMainFrame : public TGMainFrame
 {
 private:
-    calibration::gui::CalCanvas* canvas;
+    std::list<gui::CalCanvas*> canvases;
+    TGHorizontalFrame* frame_canvases;
 public:
     MyMainFrame(const TGWindow *p,UInt_t w,UInt_t h);
     virtual Bool_t HandleKey(Event_t *event) override;
     virtual ~MyMainFrame();
+    gui::CalCanvas* AddCalCanvas(const std::string& name = "");
 };
 
 Bool_t MyMainFrame::HandleKey(Event_t *event) {
@@ -81,37 +88,50 @@ MyMainFrame::~MyMainFrame()
     gApplication->Terminate(0);
 }
 
+gui::CalCanvas* MyMainFrame::AddCalCanvas(const string& name) {
+    auto ecanvas = new TRootEmbeddedCanvas(0,frame_canvases,200,200);
+    auto canvas = new gui::CalCanvas(name.c_str(),ecanvas->GetCanvasWindowId());
+    ecanvas->AdoptCanvas(canvas);
+    frame_canvases->AddFrame(ecanvas, new TGLayoutHints(kLHintsExpandY | kLHintsExpandX, 0,0,0,0));
+    MapSubwindows();
+    Resize(GetDefaultSize());
+    MapWindow();
+    return canvas;
+}
+
 MyMainFrame::MyMainFrame(const TGWindow *p,UInt_t w,UInt_t h) :
     TGMainFrame(p, w, h)
 {
     BindKey(GetParent(), gVirtualX->KeysymToKeycode(kKey_Left),0);
     AddInput(kKeyPressMask | kKeyReleaseMask);
 
+    TGVerticalFrame* frame = new TGVerticalFrame(this);
+
     // Create a horizontal frame widget with buttons
-    TGHorizontalFrame *hframe = new TGHorizontalFrame(this,200,40);
-    MyTextButton *draw = new MyTextButton(hframe,"&Draw");
+    TGHorizontalFrame* frame_buttons = new TGHorizontalFrame(frame,200,40);
+    MyTextButton* draw = new MyTextButton(frame_buttons,"&Draw");
     draw->SetAction([this] () {
+        auto canvas = AddCalCanvas();
         canvas->cd();
-        auto h = new TH1D("h","h",100,0,300);
-        auto f = new calibration::gui::FitGaus();
+        auto h = new TH1D("","h",100,0,300);
+        auto f = new gui::FitGaus();
         f->SetDefaults(nullptr); // using empty h is not meaningful for testing
         canvas->Show(h, f);
     });
 
-    hframe->AddFrame(draw, new TGLayoutHints(kLHintsCenterX,
+    frame_buttons->AddFrame(draw, new TGLayoutHints(kLHintsCenterX,
                                              5,5,3,4));
-    TGTextButton *exit = new TGTextButton(hframe,"&Exit",
+    TGTextButton* exit = new TGTextButton(frame_buttons,"&Exit",
                                           "gApplication->Terminate(0)");
-    hframe->AddFrame(exit, new TGLayoutHints(kLHintsCenterX, 5,5,3,4));
+    frame_buttons->AddFrame(exit, new TGLayoutHints(kLHintsCenterX, 5,5,3,4));
 
-    AddFrame(hframe, new TGLayoutHints(kLHintsTop | kLHintsExpandX, 0, 0, 0, 0));
+    frame->AddFrame(frame_buttons, new TGLayoutHints(kLHintsTop | kLHintsExpandX, 0, 0, 0, 0));
 
-    // Create canvas widget
-    auto ecanvas = new TRootEmbeddedCanvas(0,this,200,200);
-    canvas = new calibration::gui::CalCanvas("calcanvas",ecanvas->GetCanvasWindowId());
-    ecanvas->AdoptCanvas(canvas);
-    AddFrame(ecanvas, new TGLayoutHints(kLHintsExpandX |
-                                        kLHintsExpandY, 10,10,10,10));
+    // Create frame for canvases
+    frame_canvases = new TGHorizontalFrame(frame,200,40);
+    frame->AddFrame(frame_canvases, new TGLayoutHints(kLHintsExpandY | kLHintsExpandX, 0, 0, 0, 0));
+
+    AddFrame(frame, new TGLayoutHints(kLHintsExpandX | kLHintsExpandY, 0, 0, 0, 0));
 
     // Set a name to the main frame
     SetWindowName("Simple Example");
