@@ -2,7 +2,7 @@
 
 #include "Physics.h"
 #include "tree/TSlowControl.h"
-#include "Slowcontrol.h"
+#include "analysis/physics/slowcontrol/Slowcontrol.h"
 
 #include <queue>
 

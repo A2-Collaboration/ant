@@ -17,6 +17,8 @@ void Receiver::RequestSlowcontrol(Variable* var)
     requested_slowcontrols.emplace_back(var);
 }
 
+std::list<Variable*> Receiver::GetRequestedSlowcontrols() const { return requested_slowcontrols; }
+
 
 
 void Distributor::Register(Receiver& rec)

@@ -19,7 +19,7 @@ using namespace ant::analysis::physics;
 using namespace ant::analysis::data;
 
 ParticleCombinatoricsTest::ParticleCombinatoricsTest(PhysOptPtr opts):
-    Physics("ParticleCombinatoricsTest", opts), live(this), pv(this,"BEAM:FaradayCup")
+    Physics("ParticleCombinatoricsTest", opts), LiveTime(this)
 {
     const BinSettings im_binning(100,0,250);
     const BinSettings energy_binning(100,0,250);
@@ -41,7 +41,7 @@ ParticleCombinatoricsTest::ParticleCombinatoricsTest(PhysOptPtr opts):
 void ParticleCombinatoricsTest::ProcessEvent(const Event &event)
 
 {
-    cout << live() << endl;
+    cout << LiveTime() << endl;
     const ParticleList& photons = event.Reconstructed().Particles().Get(ParticleTypeDatabase::Photon);
     const ParticleList& protons = event.Reconstructed().Particles().Get(ParticleTypeDatabase::Proton);
     const ParticleList& all = event.Reconstructed().Particles().GetAll();

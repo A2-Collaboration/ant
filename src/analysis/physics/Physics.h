@@ -5,7 +5,7 @@
 
 #include "base/std_ext.h"
 
-#include "analysis/physics/Slowcontrol.h"
+#include "analysis/physics/slowcontrol/Slowcontrol.h"
 
 #include <list>
 #include <string>

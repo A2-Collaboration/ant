@@ -4,6 +4,8 @@
 #include "plot/Histogram.h"
 #include "plot/SmartHist.h"
 
+#include "analysis/physics/slowcontrol/Epics.h"
+
 #include <map>
 
 namespace ant {
@@ -19,9 +21,7 @@ protected:
 
     std::map<const ant::ParticleTypeDatabase::Type*, SmartHist1<const data::ParticlePtr&>> EHists;
 
-    slowcontrol::Livetime live;
-    slowcontrol::EpicsPV pv;
-
+    slowcontrol::TotalLivetime LiveTime;
 
 public:
     ParticleCombinatoricsTest(PhysOptPtr opts);
