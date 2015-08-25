@@ -2,8 +2,6 @@
 
 #include "FitFunction.h"
 
-class TF1;
-
 namespace ant {
 namespace calibration {
 namespace gui {

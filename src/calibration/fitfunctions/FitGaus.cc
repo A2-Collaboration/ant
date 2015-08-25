@@ -2,7 +2,6 @@
 
 #include "base/interval.h"
 #include "base/Logger.h"
-#include "TF1Knobs.h"
 #include "BaseFunctions.h"
 
 #include "TF1.h"

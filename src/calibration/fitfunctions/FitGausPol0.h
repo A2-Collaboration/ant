@@ -2,23 +2,6 @@
 
 #include "FitFunction.h"
 
-#include "base/interval.h"
-#include "calibration/gui/Indicator_traits.h"
-
-#include <memory>
-
-#include "TF1Knobs.h"
-
-#include <list>
-#include <string>
-#include "base/std_ext.h"
-#include "base/interval.h"
-
-#include "Rtypes.h"
-
-class TH1;
-class TF1;
-
 namespace ant {
 namespace calibration {
 namespace gui {

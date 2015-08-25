@@ -1,18 +1,18 @@
 #pragma once
 
-#include "base/interval.h"
+#include "KnobsTF1.h"
 #include "calibration/gui/Indicator_traits.h"
 
-#include <memory>
-
-#include "TF1Knobs.h"
-
-#include <list>
-#include <string>
+#include "base/interval.h"
 #include "base/std_ext.h"
 #include "base/interval.h"
 
 #include "Rtypes.h"
+
+#include <memory>
+#include <list>
+#include <string>
+
 
 class TH1;
 class TF1;

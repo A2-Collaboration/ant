@@ -1,7 +1,6 @@
 #include "FitGausPol3.h"
 
 
-#include "TF1Knobs.h"
 #include "BaseFunctions.h"
 
 #include "base/Logger.h"

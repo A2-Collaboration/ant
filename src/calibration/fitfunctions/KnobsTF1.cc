@@ -1,4 +1,4 @@
-#include "TF1Knobs.h"
+#include "KnobsTF1.h"
 
 #include "TF1.h"
 

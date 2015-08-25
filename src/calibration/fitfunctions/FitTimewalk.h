@@ -1,21 +1,6 @@
 #pragma once
 
 #include "FitFunction.h"
-#include "TF1Knobs.h"
-
-#include "base/interval.h"
-#include "base/std_ext.h"
-#include "base/interval.h"
-
-#include "Rtypes.h"
-
-#include <memory>
-#include <list>
-#include <string>
-
-
-class TH1;
-class TF1;
 
 namespace ant {
 namespace calibration {

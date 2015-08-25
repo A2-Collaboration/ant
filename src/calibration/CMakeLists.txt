@@ -35,7 +35,7 @@ set(SRCS
     gui/ACECanvas.cc
     gui/Dialogs.cc
     fitfunctions/BaseFunctions.cc
-    fitfunctions/TF1Knobs.cc
+    fitfunctions/KnobsTF1.cc
     fitfunctions/FitFunction.cc
     fitfunctions/FitGaus.cc
     fitfunctions/FitGausPol0.cc
