@@ -23,6 +23,7 @@
 #include <iostream>
 #include <functional>
 #include <memory>
+#include <map>
 
 using namespace std;
 using namespace ant;
@@ -53,12 +54,23 @@ public:
     }
 };
 
+class MyEmbeddedCanvas : public TRootEmbeddedCanvas {
+public:
+     MyEmbeddedCanvas(const TGWindow *p = 0) :
+         TRootEmbeddedCanvas(0, p, 200, 200)
+     {
+         auto frame = (TGCompositeFrame*)fCanvasContainer;
+         frame->RemoveInput(kKeyPressMask | kKeyReleaseMask);
+     }
+};
+
 class MyMainFrame : public TGMainFrame
 {
 private:
     std::list<gui::CalCanvas*> canvases;
     TGHorizontalFrame* frame_canvases;
     TGStatusBar* statusbar;
+    std::map<EKeySym, TGTextButton*> keys;
 public:
     MyMainFrame(const TGWindow *p,UInt_t w,UInt_t h);
     virtual Bool_t HandleKey(Event_t *event) override;
@@ -71,15 +83,12 @@ Bool_t MyMainFrame::HandleKey(Event_t *event) {
     if (event->fType == kGKeyPress) {
         char input[10];
         UInt_t keysym;
-
         gVirtualX->LookupString(event, input, sizeof(input), keysym);
 
-        switch ((EKeySym)keysym) {
-        case kKey_Left:
-            cout << "pressed left arrow" << endl;
+        auto it_key = keys.find((EKeySym)keysym);
+        if(it_key != keys.end()) {
+            it_key->second->Clicked();
             return kTRUE;
-        default:
-            break;
         }
     }
     return TGMainFrame::HandleKey(event);
@@ -91,7 +100,7 @@ MyMainFrame::~MyMainFrame()
 }
 
 gui::CalCanvas* MyMainFrame::AddCalCanvas(const string& name) {
-    auto ecanvas = new TRootEmbeddedCanvas(0,frame_canvases,200,200);
+    auto ecanvas = new MyEmbeddedCanvas(frame_canvases);
     auto canvas = new gui::CalCanvas(name.c_str(),ecanvas->GetCanvasWindowId());
     canvas->ConnectStatusBar(statusbar);
     ecanvas->AdoptCanvas(canvas);
@@ -105,14 +114,12 @@ gui::CalCanvas* MyMainFrame::AddCalCanvas(const string& name) {
 MyMainFrame::MyMainFrame(const TGWindow *p,UInt_t w,UInt_t h) :
     TGMainFrame(p, w, h)
 {
-    BindKey(GetParent(), gVirtualX->KeysymToKeycode(kKey_Left),0);
-    AddInput(kKeyPressMask | kKeyReleaseMask);
 
     TGVerticalFrame* frame = new TGVerticalFrame(this);
 
     // Create a horizontal frame widget with buttons
     TGHorizontalFrame* frame_buttons = new TGHorizontalFrame(frame,200,40);
-    MyTextButton* draw = new MyTextButton(frame_buttons,"&Draw");
+    MyTextButton* draw = new MyTextButton(frame_buttons,"Draw");
     draw->SetAction([this] () {
         auto canvas = AddCalCanvas();
         canvas->cd();
@@ -126,12 +133,14 @@ MyMainFrame::MyMainFrame(const TGWindow *p,UInt_t w,UInt_t h) :
         auto cb = new TH2CB("","CB");
         cb->Draw();
     });
+    keys[kKey_d] = draw;
+
+    MyTextButton* exit = new MyTextButton(frame_buttons,"Exit");
+    exit->SetAction([] () {gApplication->Terminate(0);});
+    keys[kKey_e] = exit;
 
     auto button_layout = new TGLayoutHints(kLHintsLeft,5,5,3,4);
-
     frame_buttons->AddFrame(draw, button_layout);
-    TGTextButton* exit = new TGTextButton(frame_buttons,"&Exit",
-                                          "gApplication->Terminate(0)");
     frame_buttons->AddFrame(exit, button_layout);
 
     frame->AddFrame(frame_buttons, new TGLayoutHints(kLHintsTop | kLHintsExpandX, 0, 0, 0, 0));
@@ -141,7 +150,6 @@ MyMainFrame::MyMainFrame(const TGWindow *p,UInt_t w,UInt_t h) :
     frame->AddFrame(frame_canvases, new TGLayoutHints(kLHintsExpandY | kLHintsExpandX, 0, 0, 0, 0));
 
     // Statusbar
-    // status bar
     Int_t parts[] = {45, 15, 10, 30};
     statusbar = new TGStatusBar(frame, 50, 10, kVerticalFrame);
     statusbar->SetParts(parts, 4);
@@ -151,16 +159,17 @@ MyMainFrame::MyMainFrame(const TGWindow *p,UInt_t w,UInt_t h) :
 
     AddFrame(frame, new TGLayoutHints(kLHintsExpandX | kLHintsExpandY, 0, 0, 0, 0));
 
+    AddInput(kKeyPressMask | kKeyReleaseMask);
+
     // Set a name to the main frame
     SetWindowName("Simple Example");
 
     // Map all subwindows of main frame
     MapSubwindows();
-
     Resize(GetDefaultSize()); // this is used here to init layout algorithm
-
-    // Map main frame
     MapWindow();
+
+    // set focus
     gVirtualX->SetInputFocus(GetId());
 }
 
