@@ -14,6 +14,8 @@
 
 #include "base/Logger.h"
 
+#include <type_traits>
+
 using namespace std;
 
 namespace ant {
@@ -41,6 +43,7 @@ class ActionWidget : public theWidget {
         function<void()> action;
     };
     unique_ptr<MyExec> exec;
+    bool* ptr_flag = nullptr;
 
 public:
     using theWidget::theWidget;
@@ -51,6 +54,22 @@ public:
         exec = std_ext::make_unique<MyExec>(action);
         TQObject::Connect("Clicked()", "TExec", exec.get(), "Exec(=\"\")");
     }
+
+    void LinkFlag(bool& flag) {
+        static_assert(is_same<theWidget, TGCheckButton>::value, "LinkFlag only makes sense for check buttons");
+        ptr_flag = addressof(flag);
+        SetAction([this] () {
+            *this->ptr_flag = this->IsOn();
+        });
+        SetFlag(flag);
+    }
+
+    void SetFlag(bool flag) {
+        if(ptr_flag == nullptr)
+            return;
+        this->SetState(flag ? EButtonState::kButtonDown : EButtonState::kButtonUp);
+        *this->ptr_flag = flag;
+    }
 };
 
 void ManagerWindow::CreateToolbar(TGVerticalFrame* frame)
@@ -59,11 +78,27 @@ void ManagerWindow::CreateToolbar(TGVerticalFrame* frame)
 
     TGHorizontalFrame* frm1 = new TGHorizontalFrame(frame,200,40);
 
+    auto btn_autocontinue = new ActionWidget<TGCheckButton>(frm1,"AutoContinue");
+    btn_autocontinue->LinkFlag(Mode.autoContinue);
+
+    auto btn_showfit = new ActionWidget<TGCheckButton>(frm1,"Show each fit");
+    btn_showfit->LinkFlag(Mode.showEachFit);
+
     auto btn_prev = new ActionWidget<TGTextButton>(frm1,"Prev (b)");
     keys[kKey_b] = btn_prev;
+    btn_prev->SetAction([this, btn_autocontinue] () {
+        btn_autocontinue->SetFlag(false);
+        Mode.channelStep = -1;
+        Mode.gotoNextSlice = false;
+    });
 
     auto btn_next = new ActionWidget<TGTextButton>(frm1,"Next (n)");
     keys[kKey_n] = btn_next;
+    btn_next->SetAction([this, btn_autocontinue] () {
+        btn_autocontinue->SetFlag(false);
+        Mode.channelStep = 1;
+        Mode.gotoNextSlice = false;
+    });
 
     auto btn_goto = new ActionWidget<TGTextButton>(frm1,"Goto");
 
@@ -73,14 +108,13 @@ void ManagerWindow::CreateToolbar(TGVerticalFrame* frame)
                                                    );
 
     auto btn_finish = new ActionWidget<TGTextButton>(frm1,"Finish Slice");
-
-    auto btn_autocontinue = new ActionWidget<TGCheckButton>(frm1,"AutoContinue");
-    btn_autocontinue->SetAction([this, btn_autocontinue] () {
-        LOG(INFO) << btn_autocontinue->IsOn();
-        Mode.alwaysDisplayFit = btn_autocontinue->IsOn();
+    btn_finish->SetAction([this, btn_autocontinue] () {
+        btn_autocontinue->SetFlag(true);
+        Mode.channelStep = 1;
+        Mode.gotoNextSlice = true;
     });
 
-    auto btn_showfit = new ActionWidget<TGCheckButton>(frm1,"Show each fit");
+
 
 
     // second row with fit specific commands

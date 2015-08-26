@@ -14,16 +14,19 @@ namespace calibration {
 namespace gui {
 
 class CalCanvas;
+class Manager;
 
 struct ManagerWindowMode {
     ManagerWindowMode() :
         gotoNextSlice(true),
-        alwaysDisplayFit(false),
+        autoContinue(true),
+        showEachFit(true),
         channelStep(1)
     {}
 
     bool gotoNextSlice;
-    bool alwaysDisplayFit;
+    bool autoContinue;
+    bool showEachFit;
     int  channelStep;
 };
 
@@ -34,6 +37,7 @@ private:
     TGHorizontalFrame* frame_canvases;
     TGStatusBar* statusbar;
     std::map<EKeySym, TGTextButton*> keys;
+    Manager* manager;
     void CreateToolbar(TGVerticalFrame* frame);
 public:
     ManagerWindow(const TGWindow* p, UInt_t w, UInt_t h);
