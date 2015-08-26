@@ -189,11 +189,13 @@ Manager::RunReturn_t Manager::Run()
             window->SetProgress(state.slice, state.channel);
             if(state.breakpoint_finish) {
                 VLOG(7) << "Displaying finished range...";
+                window->SetFinishMode(true);
                 return RunReturn_t::Wait;
             }
         }
 
         module->StoreFinishRange(buffer.CurrentID());
+        window->SetFinishMode(false);
         state.breakpoint_finish = false;
         state.channel = 0;
 

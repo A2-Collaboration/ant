@@ -11,6 +11,7 @@
 
 class TGStatusBar;
 class TGHProgressBar;
+class TGWidget;
 
 namespace ant {
 namespace calibration {
@@ -45,6 +46,7 @@ private:
     TGHProgressBar* progress_channel = nullptr;
     TGHProgressBar* progress_slice = nullptr;
 
+    std::list<TGWidget*> nonfinish_widgets;
 
     std::map<EKeySym, TGTextButton*> keys;
     Manager* manager = nullptr;
@@ -64,6 +66,8 @@ public:
 
     void SetProgressMax(unsigned slices, unsigned channels);
     void SetProgress(unsigned slice, unsigned channel);
+
+    void SetFinishMode(bool flag);
 
     ManagerWindow(const ManagerWindow&) = delete;
     ManagerWindow& operator=(const ManagerWindow&) = delete;

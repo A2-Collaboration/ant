@@ -63,7 +63,7 @@ int main(int argc, char** argv) {
         }
     }
     if(calibrationgui == nullptr) {
-        LOG(INFO) << "Available calibrations GUIs (for setup '" << manager->SetupName << "''): "
+        LOG(INFO) << "Available calibrations GUIs (for setup '" << manager->SetupName << "'): "
                   << ss_calibrationguis.str();
         LOG(ERROR) << "No calibration GUI module found for given name '"
                    << calibrationguiname << "'";

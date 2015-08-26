@@ -119,7 +119,6 @@ void ManagerWindow::CreateToolbar(TGVerticalFrame* frame)
     auto btn_finish = new ActionWidget<TGTextButton>(frm1,"Finish Slice (space)");
     keys[kKey_Space] = btn_finish;
     btn_finish->SetAction([this, btn_autocontinue] () {
-        btn_autocontinue->SetFlag(true);
         Mode.channelStep = 1;
         Mode.gotoNextSlice = true;
         RunManager();
@@ -160,21 +159,26 @@ void ManagerWindow::CreateToolbar(TGVerticalFrame* frame)
     });
 
     // add them all together...
-
     auto layout_btn = new TGLayoutHints(kLHintsLeft,2,2,2,2);
-    frm1->AddFrame(btn_prev, layout_btn);
-    frm1->AddFrame(btn_next, layout_btn);
-    frm1->AddFrame(btn_goto, layout_btn);
-    frm1->AddFrame(entry_gotochannel, layout_btn);
+
+    auto add_nonfinish = [this, layout_btn] (TGHorizontalFrame* frm, TGWidget* widget) {
+        frm->AddFrame(dynamic_cast<TGFrame*>(widget), layout_btn);
+        nonfinish_widgets.push_back(widget);
+    };
+
+    add_nonfinish(frm1, btn_prev);
+    add_nonfinish(frm1, btn_next);
+    add_nonfinish(frm1, btn_goto);
+    add_nonfinish(frm1, entry_gotochannel);
     frm1->AddFrame(btn_finish, layout_btn);
     frm1->AddFrame(btn_autocontinue, layout_btn);
-    frm1->AddFrame(btn_showfit, layout_btn);
+    add_nonfinish(frm1, btn_showfit);
 
 
-    frm2->AddFrame(btn_fit, layout_btn);
-    frm2->AddFrame(btn_defaults, layout_btn);
-    frm2->AddFrame(btn_undopop, layout_btn);
-    frm2->AddFrame(btn_undopush, layout_btn);
+    add_nonfinish(frm2, btn_fit);
+    add_nonfinish(frm2, btn_defaults);
+    add_nonfinish(frm2, btn_undopop);
+    add_nonfinish(frm2, btn_undopush);
 
 
     // some progress bars
@@ -193,6 +197,8 @@ void ManagerWindow::CreateToolbar(TGVerticalFrame* frame)
     frame->AddFrame(frm2, layout_frm);
     frame->AddFrame(progress_channel, layout_frm);
     frame->AddFrame(progress_slice, layout_frm);
+
+
 }
 
 void ManagerWindow::UpdateLayout()
@@ -303,6 +309,21 @@ void ManagerWindow::SetProgress(unsigned slice, unsigned channel)
 
     progress_slice->SetPosition(slice);
     progress_channel->SetPosition(channel);
+}
+
+void ManagerWindow::SetFinishMode(bool flag)
+{
+    for(auto w : nonfinish_widgets) {
+        auto btn = dynamic_cast<TGButton*>(w);
+        if(btn != nullptr) {
+            btn->SetEnabled(!flag);
+            continue;
+        }
+        auto entry = dynamic_cast<TGTextEntry*>(w);
+        if(entry != nullptr) {
+            entry->SetEnabled(!flag);
+        }
+    }
 }
 
 ManagerWindow::~ManagerWindow()
