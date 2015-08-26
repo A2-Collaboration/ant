@@ -11,8 +11,3 @@ endmacro()
 add_ant_executable(Ant)
 add_ant_executable(Ant-calib)
 add_ant_executable(Ant-calib-editor)
-
-# temporary executables...
-
-add_executable(test_gui test_gui.cc)
-target_link_libraries(test_gui ${ROOT_LIBRARIES} calibration)

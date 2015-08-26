@@ -1,6 +1,6 @@
 #include "ManagerWindow.h"
 
-
+#include "Manager.h"
 #include "CalCanvas.h"
 
 #include "TExec.h"
@@ -90,6 +90,7 @@ void ManagerWindow::CreateToolbar(TGVerticalFrame* frame)
         btn_autocontinue->SetFlag(false);
         Mode.channelStep = -1;
         Mode.gotoNextSlice = false;
+        manager->Run();
     });
 
     auto btn_next = new ActionWidget<TGTextButton>(frm1,"Next (n)");
@@ -98,6 +99,7 @@ void ManagerWindow::CreateToolbar(TGVerticalFrame* frame)
         btn_autocontinue->SetFlag(false);
         Mode.channelStep = 1;
         Mode.gotoNextSlice = false;
+        manager->Run();
     });
 
     auto btn_goto = new ActionWidget<TGTextButton>(frm1,"Goto");
@@ -112,6 +114,7 @@ void ManagerWindow::CreateToolbar(TGVerticalFrame* frame)
         btn_autocontinue->SetFlag(true);
         Mode.channelStep = 1;
         Mode.gotoNextSlice = true;
+        manager->Run();
     });
 
     // second row with fit specific commands
@@ -186,8 +189,9 @@ void ManagerWindow::UpdateLayout()
     MapWindow();
 }
 
-ManagerWindow::ManagerWindow(const TGWindow* p, UInt_t w, UInt_t h) :
-    TGMainFrame(p, w, h)
+ManagerWindow::ManagerWindow(Manager* manager_) :
+    TGMainFrame(gClient->GetRoot(), 400, 400),
+    manager(manager_)
 {
 
     TGVerticalFrame* frame = new TGVerticalFrame(this);

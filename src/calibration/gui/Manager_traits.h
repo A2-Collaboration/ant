@@ -15,6 +15,12 @@ namespace gui {
 
 class CalCanvas;
 
+
+class ManagerWindow_traits {
+public:
+    virtual gui::CalCanvas* AddCalCanvas(const std::string& name = "") =0;
+};
+
 class Manager_traits {
 private:
     const std::string name;
@@ -29,6 +35,8 @@ public:
     virtual void InitGUI() =0;
     virtual std::list<CalCanvas*> GetCanvases() const =0;
 
+    virtual void InitCanvases(ManagerWindow_traits*) {}
+
     virtual void StartRange(const interval<TID>& range) =0;
 
     enum class DoFitReturn_t {
@@ -40,8 +48,8 @@ public:
 
     virtual bool FinishRange() =0;
     virtual void StoreFinishRange(const interval<TID>& range) =0;
-
 };
+
 
 }
 }

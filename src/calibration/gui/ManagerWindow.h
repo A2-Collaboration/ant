@@ -1,5 +1,7 @@
 #pragma once
 
+#include "Manager_traits.h"
+
 #include "TGFrame.h"
 #include "KeySymbols.h"
 
@@ -30,7 +32,7 @@ struct ManagerWindowMode {
     int  channelStep;
 };
 
-class ManagerWindow : public TGMainFrame
+class ManagerWindow : public TGMainFrame, public ManagerWindow_traits
 {
 private:
     std::list<CalCanvas*> canvases;
@@ -41,10 +43,10 @@ private:
     void CreateToolbar(TGVerticalFrame* frame);
     void UpdateLayout();
 public:
-    ManagerWindow(const TGWindow* p, UInt_t w, UInt_t h);
+    ManagerWindow(Manager* manager_);
     virtual Bool_t HandleKey(Event_t *event) override;
     virtual ~ManagerWindow();
-    gui::CalCanvas* AddCalCanvas(const std::string& name = "");
+    virtual gui::CalCanvas* AddCalCanvas(const std::string& name = "") override;
 
     ManagerWindowMode Mode;
 

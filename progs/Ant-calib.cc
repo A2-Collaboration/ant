@@ -1,4 +1,5 @@
 #include "calibration/gui/Manager.h"
+#include "calibration/gui/ManagerWindow.h"
 #include "expconfig/ExpConfig.h"
 
 #include "base/std_ext.h"
@@ -6,34 +7,12 @@
 #include "base/CmdLine.h"
 
 #include "TRint.h"
-#include "TExec.h"
 
 #include <iostream>
 
 using namespace std;
 using namespace ant;
-
 using namespace  ant::calibration::gui;
-
-struct MyExec : TExec {
-
-    const TRint* rint = nullptr;
-    Manager* gui;
-
-    MyExec(Manager* gui_, const TRint* Rint) :
-        rint(Rint),
-        gui(gui_)
-    {
-        gui->ConnectReturnFunc("TExec", this, "Exec(=\"\")");
-    }
-
-    virtual void Exec(const char* arg) override {
-        if(string(arg) != "firstcall" && !rint->IsRunning()) {
-            return;
-        }
-        while(gui->Run()) {}
-    }
-};
 
 int main(int argc, char** argv) {
     SetupLogger();
@@ -41,7 +20,7 @@ int main(int argc, char** argv) {
 
     TCLAP::CmdLine cmd("Ant-calib - Fit histograms and calculate new calibration parameters", ' ', "0.1");
     auto cmd_verbose = cmd.add<TCLAP::ValueArg<int>>("v","verbose","Verbosity level (0..9)", false, 0,"level");
-    auto cmd_calibration = cmd.add<TCLAP::ValueArg<string>>("c","calibration","Calibration GUI module name", true, "","modulename");
+    auto cmd_calibration = cmd.add<TCLAP::ValueArg<string>>("c","calibration","Calibration GUI module name", true, "","calibration");
     auto cmd_averagelength = cmd.add<TCLAP::ValueArg<int>>("a","average","Average length for moving window (zero sums everything up)", false, 0, "length");
     // unlabeled multi arg must be the last element added, and interprets everything as a input file
     auto cmd_inputfiles  = cmd.add<TCLAP::UnlabeledMultiArg<string>>("inputfiles","Ant files with histograms",true,"inputfiles");
@@ -50,7 +29,7 @@ int main(int argc, char** argv) {
     if(cmd_verbose->isSet())
         el::Loggers::setVerboseLevel(cmd_verbose->getValue());
 
-    unique_ptr<Manager> gui = std_ext::make_unique<Manager>(
+    unique_ptr<Manager> manager = std_ext::make_unique<Manager>(
                                   cmd_inputfiles->getValue(),
                                   cmd_averagelength->getValue()
                                   );
@@ -59,9 +38,9 @@ int main(int argc, char** argv) {
     // the gui manager already scanned the files and provides a hint
     // for the SetupName
 
-    auto setup = ExpConfig::Setup::Get(gui->SetupName);
+    auto setup = ExpConfig::Setup::Get(manager->SetupName);
     if(setup == nullptr) {
-        LOG(ERROR) << "Did not find setup instance for name '" << gui->SetupName << "' (extracted from given files)";
+        LOG(ERROR) << "Did not find setup instance for name '" << manager->SetupName << "' (extracted from input files)";
         return 1;
     }
 
@@ -84,27 +63,27 @@ int main(int argc, char** argv) {
         }
     }
     if(calibrationgui == nullptr) {
-        LOG(INFO) << "Available calibrations GUIs (for setup '" << gui->SetupName << "''): "
+        LOG(INFO) << "Available calibrations GUIs (for setup '" << manager->SetupName << "''): "
                   << ss_calibrationguis.str();
         LOG(ERROR) << "No calibration GUI module found for given name '"
                    << calibrationguiname << "'";
         return 1;
     }
 
-    gui->SetModule(calibrationgui);
+    manager->SetModule(calibrationgui);
 
     int fake_argc=0;
     char** fake_argv=nullptr;
     auto app = std_ext::make_unique<TRint>("Ant-calib",&fake_argc,fake_argv);
 
-    auto exec = std_ext::make_unique<MyExec>(gui.get(), app.get());
-    exec->Exec("firstcall");
+    auto window = std_ext::make_unique<ManagerWindow>(manager.get());
+
     app->Run(kTRUE);
 
     ExpConfig::Setup::Cleanup();
     setup = nullptr;
-    gui = nullptr;
+    window = nullptr;
+    manager = nullptr;
     calibrationgui = nullptr;
     app = nullptr;
-    exec = nullptr;
 }
