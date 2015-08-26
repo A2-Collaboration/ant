@@ -9,7 +9,7 @@ set(SRCS
   ParticleType.cc
   interval.h
   piecewise_interval.h
-  printable.cc
+  printable.h
   Logger.cc
   tmpfile_t.cc
   filesystem.cc

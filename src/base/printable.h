@@ -13,10 +13,12 @@ public:
 
 }
 
-std::ostream& operator<< (std::ostream& stream, const ant::printable_traits& printable);
+inline std::ostream& operator<< (std::ostream& stream, const ant::printable_traits& printable) {
+    return printable.Print(stream);
+}
 
 template<class T>
-std::ostream& operator<< (std::ostream& stream, const std::vector<T>& v)
+inline std::ostream& operator<< (std::ostream& stream, const std::vector<T>& v)
 {
     for (auto& entry: v)
     {
@@ -24,5 +26,3 @@ std::ostream& operator<< (std::ostream& stream, const std::vector<T>& v)
     }
     return stream;
 }
-
-//std::ostream& operator<< (std::ostream& stream, const ant::printable_traits* printable);
