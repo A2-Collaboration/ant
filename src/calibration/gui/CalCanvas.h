@@ -42,8 +42,7 @@ protected:
 public:
     CalCanvas(const std::string& name, const std::string& title);
 
-    CalCanvas(const std::string& name, Int_t winid) :
-        TCanvas(name.c_str(), 10, 10, winid) {}
+    CalCanvas(const std::string& name, Int_t winid);
 
     virtual ~CalCanvas();
 

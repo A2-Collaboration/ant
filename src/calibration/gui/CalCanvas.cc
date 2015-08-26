@@ -17,10 +17,17 @@ using namespace ant::calibration::gui;
 
 
 CalCanvas::CalCanvas(const std::string &name, const std::string& title):
-    TCanvas(name.c_str(), title.c_str()) {
+    TCanvas(name.c_str(), title.c_str())
+{
 
     rootcanvas = dynamic_cast<TRootCanvas*>(GetCanvasImp());
     rootcanvas->DontCallClose();
+}
+
+CalCanvas::CalCanvas(const string& name, Int_t winid) :
+    TCanvas(name.c_str(), 10, 10, winid)
+{
+
 }
 
 CalCanvas::~CalCanvas() {

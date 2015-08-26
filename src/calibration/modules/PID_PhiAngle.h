@@ -45,8 +45,7 @@ public:
         std::shared_ptr<expconfig::detector::PID> pid_detector;
         std::shared_ptr<gui::FitGaus> func;
 
-        gui::CalCanvas* c_singlechannel;
-        gui::CalCanvas* c_result;
+        gui::CalCanvas* canvas;
 
         TH1*  h_projection = nullptr;
         TGraph* h_result;

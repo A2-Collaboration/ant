@@ -118,12 +118,12 @@ void PID_PhiAngle::GetGUIs(std::list<std::unique_ptr<gui::Manager_traits> >& gui
 }
 
 
-std::vector<std::list<TID> > ant::calibration::PID_PhiAngle::GetChangePoints() const
+std::vector<std::list<TID> > PID_PhiAngle::GetChangePoints() const
 {
     return {calibrationManager->GetChangePoints(GetName())};
 }
 
-void ant::calibration::PID_PhiAngle::Update(size_t, const TID& id)
+void PID_PhiAngle::Update(size_t, const TID& id)
 {
     TCalibrationData cdata;
     if(!calibrationManager->GetData(GetName(), id, cdata))
@@ -145,23 +145,23 @@ PID_PhiAngle::TheGUI::TheGUI(const string& basename,
 {
 }
 
-string ant::calibration::PID_PhiAngle::TheGUI::GetHistogramName() const
+string PID_PhiAngle::TheGUI::GetHistogramName() const
 {
     return GetName()+"/pid_cb_phi_corr";
 }
 
-unsigned ant::calibration::PID_PhiAngle::TheGUI::GetNumberOfChannels() const
+unsigned PID_PhiAngle::TheGUI::GetNumberOfChannels() const
 {
     return pid_detector->GetNChannels();
 }
 
-void ant::calibration::PID_PhiAngle::TheGUI::InitGUI()
+void PID_PhiAngle::TheGUI::InitGUI()
 {
     //c_singlechannel = new gui::CalCanvas("c_singlechannel", GetName()+": Single Channel");
     //c_result = new gui::CalCanvas("c_result", GetName()+": Result");
 }
 
-std::list<gui::CalCanvas*> ant::calibration::PID_PhiAngle::TheGUI::GetCanvases() const
+std::list<gui::CalCanvas*> PID_PhiAngle::TheGUI::GetCanvases() const
 {
     //return {c_singlechannel, c_result};
     return {};
@@ -169,11 +169,10 @@ std::list<gui::CalCanvas*> ant::calibration::PID_PhiAngle::TheGUI::GetCanvases()
 
 void PID_PhiAngle::TheGUI::InitCanvases(gui::ManagerWindow_traits* window)
 {
-    c_singlechannel = window->AddCalCanvas("c_singlechannel");
-    c_result = window->AddCalCanvas("c_result");
+    canvas = window->AddCalCanvas();
 }
 
-void ant::calibration::PID_PhiAngle::TheGUI::StartRange(const interval<TID>& range)
+void PID_PhiAngle::TheGUI::StartRange(const interval<TID>& range)
 {
     // ask the detector for some reasonable starting values
     angles.resize(GetNumberOfChannels());
@@ -200,7 +199,7 @@ void ant::calibration::PID_PhiAngle::TheGUI::StartRange(const interval<TID>& ran
 
 
 
-gui::Manager_traits::DoFitReturn_t ant::calibration::PID_PhiAngle::TheGUI::DoFit(TH1* hist, unsigned channel)
+gui::Manager_traits::DoFitReturn_t PID_PhiAngle::TheGUI::DoFit(TH1* hist, unsigned channel)
 {
     TH2* hist2 = dynamic_cast<TH2*>(hist);
 
@@ -219,12 +218,12 @@ gui::Manager_traits::DoFitReturn_t ant::calibration::PID_PhiAngle::TheGUI::DoFit
     return DoFitReturn_t::Display;
 }
 
-void ant::calibration::PID_PhiAngle::TheGUI::DisplayFit()
+void PID_PhiAngle::TheGUI::DisplayFit()
 {
-    c_singlechannel->Show(h_projection, func.get());
+    canvas->Show(h_projection, func.get());
 }
 
-void ant::calibration::PID_PhiAngle::TheGUI::StoreFit(unsigned channel)
+void PID_PhiAngle::TheGUI::StoreFit(unsigned channel)
 {
     const double oldAngle = previousAngles[channel];
 
@@ -241,12 +240,9 @@ void ant::calibration::PID_PhiAngle::TheGUI::StoreFit(unsigned channel)
 
     // don't forget the fit parameters
     fitParameters[channel] = func->Save();
-
-    c_singlechannel->Clear();
-    c_singlechannel->Update();
 }
 
-bool ant::calibration::PID_PhiAngle::TheGUI::FinishRange()
+bool PID_PhiAngle::TheGUI::FinishRange()
 {
    h_result = new TGraph(GetNumberOfChannels());
    for(size_t ch=0;ch<GetNumberOfChannels();ch++)
@@ -261,20 +257,15 @@ bool ant::calibration::PID_PhiAngle::TheGUI::FinishRange()
    h_result->SetMarkerSize(2);
    h_result->SetMarkerStyle(kMultiply);
 
-   c_result->cd();
+   canvas->cd();
    h_result->Draw("AP");
-
-   c_result->Modified();
-   c_result->Update();
 
    return true;
 }
 
-void ant::calibration::PID_PhiAngle::TheGUI::StoreFinishRange(const interval<TID>& range)
+void PID_PhiAngle::TheGUI::StoreFinishRange(const interval<TID>& range)
 {
     delete h_result;
-    c_result->Clear();
-    c_result->Update();
 
     TCalibrationData cdata(
                 "Unknown", /// \todo get static information about author/comment?

@@ -25,7 +25,7 @@ namespace gui {
 class EmbeddedCanvas : public TRootEmbeddedCanvas {
 public:
     EmbeddedCanvas(const TGWindow *p = 0) :
-        TRootEmbeddedCanvas(0, p, 200, 200)
+        TRootEmbeddedCanvas(0, p, 400, 400) // only important place to set some width/height
     {
         auto frame = (TGCompositeFrame*)fCanvasContainer;
         frame->RemoveInput(kKeyPressMask | kKeyReleaseMask);
@@ -76,7 +76,7 @@ void ManagerWindow::CreateToolbar(TGVerticalFrame* frame)
 {
     // first row  with loop control commands
 
-    TGHorizontalFrame* frm1 = new TGHorizontalFrame(frame,200,40);
+    TGHorizontalFrame* frm1 = new TGHorizontalFrame(frame);
 
     auto btn_autocontinue = new ActionWidget<TGCheckButton>(frm1,"AutoContinue");
     btn_autocontinue->LinkFlag(Mode.autoContinue);
@@ -129,7 +129,7 @@ void ManagerWindow::CreateToolbar(TGVerticalFrame* frame)
     /// \todo Make those commands specific for one canvas if
     /// more than one fitfunction is displayed...?!
 
-    TGHorizontalFrame* frm2 = new TGHorizontalFrame(frame,200,40);
+    TGHorizontalFrame* frm2 = new TGHorizontalFrame(frame);
 
     auto btn_fit = new ActionWidget<TGTextButton>(frm2,"Fit (f)");
     keys[kKey_f] = btn_fit;
@@ -188,7 +188,7 @@ void ManagerWindow::CreateToolbar(TGVerticalFrame* frame)
     progress_channel = create_progressbar();
     progress_slice = create_progressbar();
 
-    auto layout_frm =  new TGLayoutHints(kLHintsTop | kLHintsExpandX, 0, 0, 0, 0);
+    auto layout_frm =  new TGLayoutHints(kLHintsTop | kLHintsExpandX);
     frame->AddFrame(frm1, layout_frm);
     frame->AddFrame(frm2, layout_frm);
     frame->AddFrame(progress_channel, layout_frm);
@@ -209,6 +209,8 @@ void ManagerWindow::RunManager()
     while(true) {
         auto ret = manager->Run();
         if(ret == Manager::RunReturn_t::Wait) {
+            for(auto canvas : canvases)
+                canvas->Update();
             break;
         }
         else if(ret == Manager::RunReturn_t::Exit) {
@@ -219,7 +221,7 @@ void ManagerWindow::RunManager()
 }
 
 ManagerWindow::ManagerWindow(Manager* manager_) :
-    TGMainFrame(gClient->GetRoot(), 400, 400),
+    TGMainFrame(gClient->GetRoot()),
     manager(manager_)
 {
     // Set a name to the main frame
@@ -231,17 +233,17 @@ ManagerWindow::ManagerWindow(Manager* manager_) :
     CreateToolbar(frame);
 
     // Create frame for canvases
-    frame_canvases = new TGHorizontalFrame(frame,200,40);
-    frame->AddFrame(frame_canvases, new TGLayoutHints(kLHintsExpandY | kLHintsExpandX, 0, 0, 0, 0));
+    frame_canvases = new TGHorizontalFrame(frame);
+    frame->AddFrame(frame_canvases, new TGLayoutHints(kLHintsExpandY | kLHintsExpandX));
 
     // Statusbar
     Int_t parts[] = {45, 15, 10, 30};
     statusbar = new TGStatusBar(frame, 50, 10, kVerticalFrame);
     statusbar->SetParts(parts, 4);
     statusbar->Draw3DCorner(kFALSE);
-    frame->AddFrame(statusbar, new TGLayoutHints(kLHintsTop | kLHintsExpandX, 0, 0, 10, 0));
+    frame->AddFrame(statusbar, new TGLayoutHints(kLHintsTop | kLHintsExpandX));
 
-    AddFrame(frame, new TGLayoutHints(kLHintsExpandX | kLHintsExpandY, 0, 0, 0, 0));
+    AddFrame(frame, new TGLayoutHints(kLHintsExpandX | kLHintsExpandY));
 
 
     AddInput(kKeyPressMask | kKeyReleaseMask);
@@ -251,9 +253,8 @@ ManagerWindow::ManagerWindow(Manager* manager_) :
     gVirtualX->SetInputFocus(GetId());
 
     // after everthing is setup,
-    // run the manager
+    // init the manager
     manager->InitGUI(this);
-    RunManager();
 }
 
 Bool_t ManagerWindow::HandleKey(Event_t* event) {
@@ -277,7 +278,7 @@ CalCanvas* ManagerWindow::AddCalCanvas(const string& name) {
     auto canvas = new gui::CalCanvas(name.c_str(),ecanvas->GetCanvasWindowId());
     canvas->ConnectStatusBar(statusbar);
     ecanvas->AdoptCanvas(canvas);
-    frame_canvases->AddFrame(ecanvas, new TGLayoutHints(kLHintsExpandY | kLHintsExpandX, 0,0,0,0));
+    frame_canvases->AddFrame(ecanvas, new TGLayoutHints(kLHintsExpandY | kLHintsExpandX));
     canvases.push_back(canvas);
     UpdateLayout();
     return canvas;
