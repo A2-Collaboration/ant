@@ -52,6 +52,7 @@ protected:
 
         std::list<input_file_t>::iterator it_file;
         int channel;
+        int slice;
 
         bool is_init;
         bool breakpoint_fit;
@@ -66,7 +67,7 @@ protected:
 
     void FillBufferFromFiles();
 
-    int maxChannels;
+    int nChannels;
     bool DoInit();
 
 public:
@@ -79,7 +80,11 @@ public:
     }
 
     void InitGUI(ManagerWindow* window_);
-    bool Run();
+
+    enum class RunReturn_t {
+        Continue, Wait, Exit
+    };
+    RunReturn_t Run();
 
     ~Manager();
 

@@ -121,10 +121,11 @@ void Manager::InitGUI(ManagerWindow* window_) {
 bool Manager::DoInit()
 {
     state.channel = 0;
+    state.slice = 0;
     state.it_file = input_files.begin();
 
-    maxChannels = module->GetNumberOfChannels();
-    if(maxChannels==0) {
+    nChannels = module->GetNumberOfChannels();
+    if(nChannels==0) {
         LOG(WARNING) << "Module reports zero channels, nothing to do then.";
         return false;
     }
@@ -138,20 +139,20 @@ bool Manager::DoInit()
     state.is_init = true;
     module->StartRange(buffer.CurrentID());
 
-    window->SetProgressMax(1, maxChannels);
+    window->SetProgressMax(input_files.size(), nChannels-1);
 
     return true;
 }
 
 
-bool Manager::Run()
+Manager::RunReturn_t Manager::Run()
 {
     if(!state.is_init) {
        if(!DoInit())
-           return false;
+           return RunReturn_t::Exit;
     }
 
-    if(!state.breakpoint_finish && state.channel < maxChannels) {
+    if(!state.breakpoint_finish && state.channel < nChannels) {
         bool noskip = true;
         if(!state.breakpoint_fit) {
             const string& title = std_ext::formatter() << "Channel=" << state.channel
@@ -167,7 +168,7 @@ bool Manager::Run()
                 VLOG(7) << "Displaying Fit...";
                 module->DisplayFit();
                 state.breakpoint_fit = true;
-                return false;
+                return RunReturn_t::Wait;
             }
         }
         if(noskip)
@@ -176,15 +177,16 @@ bool Manager::Run()
     }
 
     if(state.breakpoint_finish
-       || (state.channel >= maxChannels && window->Mode.gotoNextSlice))
+       || (state.channel >= nChannels && window->Mode.gotoNextSlice))
     {
-
         if(!state.breakpoint_finish) {
-            VLOG(7) << "Finish module first";
-            if(module->FinishRange()) {
+            VLOG(7) << "Finish module";
+            state.breakpoint_finish = module->FinishRange();
+            state.slice++;
+            window->SetProgress(state.slice, state.channel);
+            if(state.breakpoint_finish) {
                 VLOG(7) << "Displaying finished range...";
-                state.breakpoint_finish = true;
-                return false;
+                return RunReturn_t::Wait;
             }
         }
 
@@ -202,7 +204,7 @@ bool Manager::Run()
                 canvas->Close();
             }
             LOG(INFO) << "Finished processing whole buffer";
-            return false;
+            return RunReturn_t::Exit;
         }
 
         module->StartRange(buffer.CurrentID());
@@ -219,14 +221,14 @@ bool Manager::Run()
         }
         if(state.channel<0)
             state.channel = 0;
-        else if(state.channel>=maxChannels && !window->Mode.gotoNextSlice)
+        else if(state.channel>=nChannels && !window->Mode.gotoNextSlice)
             state.channel = module->GetNumberOfChannels()-1;
     }
 
-    window->SetProgress(0, state.channel);
+    window->SetProgress(state.slice, state.channel);
 
     // continue running by default
-    return true;
+    return RunReturn_t::Continue;
 }
 
 Manager::~Manager()

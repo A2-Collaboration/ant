@@ -116,7 +116,8 @@ void ManagerWindow::CreateToolbar(TGVerticalFrame* frame)
         RunManager();
     });
 
-    auto btn_finish = new ActionWidget<TGTextButton>(frm1,"Finish Slice");
+    auto btn_finish = new ActionWidget<TGTextButton>(frm1,"Finish Slice (space)");
+    keys[kKey_Space] = btn_finish;
     btn_finish->SetAction([this, btn_autocontinue] () {
         btn_autocontinue->SetFlag(true);
         Mode.channelStep = 1;
@@ -204,7 +205,17 @@ void ManagerWindow::UpdateLayout()
 
 void ManagerWindow::RunManager()
 {
-    while(manager->Run()) {}
+    /// \todo exit properly if running has completely finished?
+    while(true) {
+        auto ret = manager->Run();
+        if(ret == Manager::RunReturn_t::Wait) {
+            break;
+        }
+        else if(ret == Manager::RunReturn_t::Exit) {
+            gApplication->Terminate(0);
+            break;
+        }
+    }
 }
 
 ManagerWindow::ManagerWindow(Manager* manager_) :
@@ -274,8 +285,8 @@ CalCanvas* ManagerWindow::AddCalCanvas(const string& name) {
 
 void ManagerWindow::SetProgressMax(unsigned slices, unsigned channels)
 {
-    progress_slice->SetRange(0, slices-1);
-    progress_channel->SetRange(0, channels-1);
+    progress_slice->SetRange(0, slices);
+    progress_channel->SetRange(0, channels);
 }
 
 void ManagerWindow::SetProgress(unsigned slice, unsigned channel)
@@ -286,7 +297,6 @@ void ManagerWindow::SetProgress(unsigned slice, unsigned channel)
 
     progress_slice->SetPosition(slice);
     progress_channel->SetPosition(channel);
-
 }
 
 ManagerWindow::~ManagerWindow()
