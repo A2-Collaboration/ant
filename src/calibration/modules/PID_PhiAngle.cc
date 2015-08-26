@@ -215,7 +215,7 @@ gui::Manager_traits::DoFitReturn_t PID_PhiAngle::TheGUI::DoFit(TH1* hist, unsign
     func->Fit(h_projection);
 
     // always request display
-    return DoFitReturn_t::Display;
+    return DoFitReturn_t::Next;
 }
 
 void PID_PhiAngle::TheGUI::DisplayFit()

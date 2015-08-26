@@ -170,6 +170,9 @@ Manager::RunReturn_t Manager::Run()
                 state.breakpoint_fit = true;
                 return RunReturn_t::Wait;
             }
+            else if(window->Mode.showEachFit) {
+                module->DisplayFit();
+            }
         }
         if(noskip)
             module->StoreFit(state.channel);
