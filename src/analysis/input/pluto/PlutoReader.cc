@@ -164,7 +164,7 @@ void PlutoReader::CopyPluto(Event& event)
                     SetParticleRelations(AntParticles, AntParticle, search_result.first);
 
                 } else {  // BeamProton is not supposed to have a parent
-                    LOG(WARNING) << "Missing decay tree info for pluto particle";
+                    VLOG(7) << "Missing decay tree info for pluto particle";
                 }
 
                 VLOG(9) << "\n" << PlutoTable(PlutoParticles);
