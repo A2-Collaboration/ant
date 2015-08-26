@@ -19,6 +19,7 @@ class CalCanvas;
 class ManagerWindow_traits {
 public:
     virtual gui::CalCanvas* AddCalCanvas(const std::string& name = "") =0;
+    virtual void HideCalCanvas(gui::CalCanvas* canvas) =0;
 };
 
 class Manager_traits {
@@ -32,10 +33,8 @@ public:
 
     virtual std::string GetHistogramName() const =0;
     virtual unsigned GetNumberOfChannels() const =0;
-    virtual void InitGUI() =0;
-    virtual std::list<CalCanvas*> GetCanvases() const =0;
 
-    virtual void InitCanvases(gui::ManagerWindow_traits*) {}
+    virtual void InitCanvases(gui::ManagerWindow_traits* window) =0;
 
     virtual void StartRange(const interval<TID>& range) =0;
 

@@ -64,16 +64,14 @@ public:
 
         virtual std::string GetHistogramName() const override;
         virtual unsigned GetNumberOfChannels() const override;
-        virtual void InitGUI();
-        virtual std::list<gui::CalCanvas*> GetCanvases() const;
         virtual void InitCanvases(gui::ManagerWindow_traits*) override;
 
-        virtual void StartRange(const interval<TID>& range);
-        virtual DoFitReturn_t DoFit(TH1* hist, unsigned channel);
-        virtual void DisplayFit();
-        virtual void StoreFit(unsigned channel);
-        virtual bool FinishRange();
-        virtual void StoreFinishRange(const interval<TID>& range);
+        virtual void StartRange(const interval<TID>& range) override;
+        virtual DoFitReturn_t DoFit(TH1* hist, unsigned channel) override;
+        virtual void DisplayFit() override;
+        virtual void StoreFit(unsigned channel) override;
+        virtual bool FinishRange() override;
+        virtual void StoreFinishRange(const interval<TID>& range) override;
     }; // TheGUI
 
     virtual std::unique_ptr<analysis::Physics> GetPhysicsModule() override;

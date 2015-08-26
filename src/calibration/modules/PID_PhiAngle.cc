@@ -155,18 +155,6 @@ unsigned PID_PhiAngle::TheGUI::GetNumberOfChannels() const
     return pid_detector->GetNChannels();
 }
 
-void PID_PhiAngle::TheGUI::InitGUI()
-{
-    //c_singlechannel = new gui::CalCanvas("c_singlechannel", GetName()+": Single Channel");
-    //c_result = new gui::CalCanvas("c_result", GetName()+": Result");
-}
-
-std::list<gui::CalCanvas*> PID_PhiAngle::TheGUI::GetCanvases() const
-{
-    //return {c_singlechannel, c_result};
-    return {};
-}
-
 void PID_PhiAngle::TheGUI::InitCanvases(gui::ManagerWindow_traits* window)
 {
     canvas = window->AddCalCanvas();

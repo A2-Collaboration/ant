@@ -123,21 +123,15 @@ unsigned CB_Energy::TheGUI::GetNumberOfChannels() const
     return cb_detector->GetNChannels();
 }
 
-void CB_Energy::TheGUI::InitGUI()
+void CB_Energy::TheGUI::InitCanvases(gui::ManagerWindow_traits* window)
 {
-    c_fit = new gui::CalCanvas("c_fit", GetName()+": Fit");
-    c_overview = new gui::CalCanvas("c_overview", GetName()+": Overview");
+    canvas = window->AddCalCanvas();
     h_peaks = new TH1D("h_peaks","Peak positions",GetNumberOfChannels(),0,GetNumberOfChannels());
     h_peaks->SetXTitle("Channel Number");
     h_peaks->SetYTitle("Pi0 Peak / MeV");
     h_relative = new TH1D("h_relative","Relative change from previous gains",GetNumberOfChannels(),0,GetNumberOfChannels());
     h_relative->SetXTitle("Channel Number");
     h_relative->SetYTitle("Relative change / %");
-}
-
-list<gui::CalCanvas*> CB_Energy::TheGUI::GetCanvases() const
-{
-    return {c_fit, c_overview};
 }
 
 gui::Manager_traits::DoFitReturn_t CB_Energy::TheGUI::DoFit(TH1* hist, unsigned channel)
@@ -158,9 +152,7 @@ gui::Manager_traits::DoFitReturn_t CB_Energy::TheGUI::DoFit(TH1* hist, unsigned 
 
     func->Fit(h_projection);
 
-    if(channel==0) {
-        return DoFitReturn_t::Display;
-    }
+    /// \todo implement automatic stop if fit failed?
 
     // do not show something, goto next channel
     return DoFitReturn_t::Next;
@@ -168,7 +160,7 @@ gui::Manager_traits::DoFitReturn_t CB_Energy::TheGUI::DoFit(TH1* hist, unsigned 
 
 void CB_Energy::TheGUI::DisplayFit()
 {
-    c_fit->Show(h_projection, func.get());
+    canvas->Show(h_projection, func.get());
 }
 
 void CB_Energy::TheGUI::StoreFit(unsigned channel)
@@ -197,39 +189,34 @@ void CB_Energy::TheGUI::StoreFit(unsigned channel)
 
     h_peaks->Fill(channel, pi0peak);
     h_relative->Fill(channel, relative_change);
-
-    c_fit->Clear();
-    c_fit->Update();
 }
 
 bool CB_Energy::TheGUI::FinishRange()
 {
-    c_overview->Divide(2,2);
+    canvas->Clear();
+    canvas->Divide(2,2);
 
-    c_overview->cd(1);
+    canvas->cd(1);
     h_peaks->SetStats(false);
     h_peaks->Draw("P");
-    c_overview->cd(2);
+    canvas->cd(2);
     TH2CB* h_peaks_cb = new TH2CB("h_peaks_cb",h_peaks->GetTitle());
     h_peaks_cb->FillElements(*h_peaks);
     h_peaks_cb->Draw("colz");
 
-    c_overview->cd(3);
+    canvas->cd(3);
     h_relative->SetStats(false);
     h_relative->Draw("P");
-    c_overview->cd(4);
+    canvas->cd(4);
     TH2CB* h_relative_cb = new TH2CB("h_relative_cb",h_relative->GetTitle());
     h_relative_cb->FillElements(*h_relative);
     h_relative_cb->Draw("colz");
-
-    c_overview->Update();
 
     return true;
 }
 
 void CB_Energy::TheGUI::StoreFinishRange(const interval<TID>& range)
 {
-    c_overview->Clear();
-    c_overview->Update();
+    canvas->Clear();
     GUI_CalibType::StoreFinishRange(range);
 }

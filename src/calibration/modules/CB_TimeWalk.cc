@@ -188,16 +188,10 @@ unsigned CB_TimeWalk::TheGUI::GetNumberOfChannels() const
     return cb_detector->GetNChannels();
 }
 
-void CB_TimeWalk::TheGUI::InitGUI()
+void CB_TimeWalk::TheGUI::InitCanvases(gui::ManagerWindow_traits* window)
 {
-    c_fit = new gui::CalCanvas("canvas_fit", GetName());
-    c_extra = new gui::CalCanvas("canvas_extra", GetName());
-
-}
-
-list<gui::CalCanvas*> CB_TimeWalk::TheGUI::GetCanvases() const
-{
-    return {c_fit, c_extra};
+    c_fit = window->AddCalCanvas();
+    c_extra = window->AddCalCanvas();
 }
 
 void CB_TimeWalk::TheGUI::StartRange(const interval<TID>& range)
@@ -248,8 +242,6 @@ void CB_TimeWalk::TheGUI::DisplayFit()
 
     c_extra->cd();
     proj->Draw("colz");
-    c_extra->Modified();
-    c_extra->Update();
 }
 
 void CB_TimeWalk::TheGUI::StoreFit(unsigned channel)
@@ -258,15 +250,12 @@ void CB_TimeWalk::TheGUI::StoreFit(unsigned channel)
     // and since we use pointers, the item in timewalks is already updated
 
     LOG(INFO) << "Stored Ch=" << channel;
-    c_fit->Clear();
-    c_fit->Update();
-    c_extra->Clear();
-    c_extra->Update();
 }
 
 bool CB_TimeWalk::TheGUI::FinishRange()
 {
-   return true;
+    // don't request stop...
+    return false;
 }
 
 void CB_TimeWalk::TheGUI::StoreFinishRange(const interval<TID>& range)

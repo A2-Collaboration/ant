@@ -203,9 +203,6 @@ Manager::RunReturn_t Manager::Run()
         FillBufferFromFiles();
         if(buffer.Empty()) {
             /// \todo give module a chance to do something again here???
-            for(CalCanvas* canvas : module->GetCanvases()) {
-                canvas->Close();
-            }
             LOG(INFO) << "Finished processing whole buffer";
             return RunReturn_t::Exit;
         }

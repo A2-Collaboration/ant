@@ -163,11 +163,9 @@ Time::TheGUI::TheGUI(const string& name,
 {
 }
 
-void Time::TheGUI::InitGUI()
+void Time::TheGUI::InitCanvases(gui::ManagerWindow_traits* window)
 {
-    theCanvas = new gui::CalCanvas("fitCanvas", GetName() + ": Fit");
-//    overView  = new gui::CalCanvas("overView", GetName()+": Overview");
-
+    theCanvas = window->AddCalCanvas();
     times = new TH1D("times","Times",
                      1000, -400 ,400);
     times->SetXTitle("time [ns]");

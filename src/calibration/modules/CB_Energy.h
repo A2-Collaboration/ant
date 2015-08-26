@@ -28,8 +28,7 @@ public:
                const std::shared_ptr<expconfig::detector::CB>& cb);
 
         virtual unsigned GetNumberOfChannels() const override;
-        virtual void InitGUI() override;
-        virtual std::list<gui::CalCanvas*> GetCanvases() const override;
+        virtual void InitCanvases(gui::ManagerWindow_traits* window) override;
         virtual DoFitReturn_t DoFit(TH1* hist, unsigned channel) override;
         virtual void DisplayFit() override;
         virtual void StoreFit(unsigned channel) override;
@@ -38,8 +37,7 @@ public:
     protected:
         std::shared_ptr<expconfig::detector::CB> cb_detector;
         std::shared_ptr<gui::FitGausPol3> func;
-        gui::CalCanvas* c_fit;
-        gui::CalCanvas* c_overview;
+        gui::CalCanvas* canvas;
         TH1*  h_projection = nullptr;
         TH1D* h_peaks = nullptr;
         TH1D* h_relative = nullptr;
