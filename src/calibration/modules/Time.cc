@@ -189,9 +189,9 @@ void Time::TheGUI::StartRange(const interval<TID>& range)
         LOG(INFO) << GetName() << ": Loaded previous values from database";
     }
     else
-        LOG(INFO) << GetName() << ": No previous values found, built from default value";
+        LOG(INFO) << GetName() << ": No previous offsets found, built from default offset";
 
-    previousValues = offsets;
+    previousOffsets = offsets;
 }
 
 gui::Manager_traits::DoFitReturn_t Time::TheGUI::DoFit(TH1* hist, unsigned channel)
@@ -213,9 +213,7 @@ gui::Manager_traits::DoFitReturn_t Time::TheGUI::DoFit(TH1* hist, unsigned chann
 
     fitFunction->Fit(times);
 
-    if(channel==0) {
-        return DoFitReturn_t::Display;
-    }
+    /// \todo auto-stop if fit fails
 
     // do not show something, goto next channel
     return DoFitReturn_t::Next;
@@ -229,22 +227,21 @@ void Time::TheGUI::DisplayFit()
 
 void Time::TheGUI::StoreFit(unsigned channel)
 {
-    const double oldValue = previousValues[channel];
-    /// \todo obtain convergenceFactor and pi0mass from config or database
-    const double convergenceFactor = 1.0;
+    const double oldOffset = previousOffsets[channel];
     const double timePeak = fitFunction->GetPeakPosition();
 
     timePeaks->Fill(channel,timePeak);
 
-    // apply convergenceFactor only to the desired procentual change of oldValue,
-    const double newValue = oldValue + convergenceFactor * (timePeak - oldValue);
+    // the timePeak should be zero, so this gives directly
+    // the value to change the offset
+    const double newOffset = oldOffset - timePeak;
 
-    offsets[channel] = newValue;
+    offsets[channel] = newOffset;
 
-    const double relative_change = 100*(newValue/oldValue-1);
+    const double relative_change = 100*(newOffset/oldOffset-1);
 
     LOG(INFO) << "Stored Ch=" << channel << ": PeakPosition " << timePeak
-              << " ns,  offset changed " << oldValue << " -> " << newValue
+              << " ns,  offset changed " << oldOffset << " -> " << newOffset
               << " (" << relative_change << " %)";
 
 

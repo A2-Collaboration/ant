@@ -45,7 +45,7 @@ public:
 //        TH2*  timesVSchannels;
 
         std::shared_ptr<gui::PeakingFitFunktion> fitFunction;
-        std::vector<double> previousValues;
+        std::vector<double> previousOffsets;
 
         // Manager_traits interface
     public:
