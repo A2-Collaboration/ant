@@ -157,13 +157,20 @@ unsigned ant::calibration::PID_PhiAngle::TheGUI::GetNumberOfChannels() const
 
 void ant::calibration::PID_PhiAngle::TheGUI::InitGUI()
 {
-    c_singlechannel = new gui::CalCanvas("c_singlechannel", GetName()+": Single Channel");
-    c_result = new gui::CalCanvas("c_result", GetName()+": Result");
+    //c_singlechannel = new gui::CalCanvas("c_singlechannel", GetName()+": Single Channel");
+    //c_result = new gui::CalCanvas("c_result", GetName()+": Result");
 }
 
 std::list<gui::CalCanvas*> ant::calibration::PID_PhiAngle::TheGUI::GetCanvases() const
 {
-    return {c_singlechannel, c_result};
+    //return {c_singlechannel, c_result};
+    return {};
+}
+
+void PID_PhiAngle::TheGUI::InitCanvases(gui::ManagerWindow_traits* window)
+{
+    c_singlechannel = window->AddCalCanvas("c_singlechannel");
+    c_result = window->AddCalCanvas("c_result");
 }
 
 void ant::calibration::PID_PhiAngle::TheGUI::StartRange(const interval<TID>& range)

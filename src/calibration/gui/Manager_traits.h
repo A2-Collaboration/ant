@@ -35,7 +35,7 @@ public:
     virtual void InitGUI() =0;
     virtual std::list<CalCanvas*> GetCanvases() const =0;
 
-    virtual void InitCanvases(ManagerWindow_traits*) {}
+    virtual void InitCanvases(gui::ManagerWindow_traits*) {}
 
     virtual void StartRange(const interval<TID>& range) =0;
 

@@ -193,6 +193,8 @@ ManagerWindow::ManagerWindow(Manager* manager_) :
     TGMainFrame(gClient->GetRoot(), 400, 400),
     manager(manager_)
 {
+    // Set a name to the main frame
+    SetWindowName("Ant-calib GUI");
 
     TGVerticalFrame* frame = new TGVerticalFrame(this);
 
@@ -210,14 +212,12 @@ ManagerWindow::ManagerWindow(Manager* manager_) :
     statusbar->Draw3DCorner(kFALSE);
     frame->AddFrame(statusbar, new TGLayoutHints(kLHintsTop | kLHintsExpandX, 0, 0, 10, 0));
 
-
     AddFrame(frame, new TGLayoutHints(kLHintsExpandX | kLHintsExpandY, 0, 0, 0, 0));
 
+    // after everthing is setup,
+    manager->InitCanvases(this);
+
     AddInput(kKeyPressMask | kKeyReleaseMask);
-
-    // Set a name to the main frame
-    SetWindowName("Ant-calib GUI");
-
     UpdateLayout();
 
     // set focus

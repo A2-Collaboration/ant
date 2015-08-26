@@ -85,6 +85,10 @@ public:
         module = move(module_);
     }
 
+    virtual void InitCanvases(gui::ManagerWindow_traits* window) {
+        module->InitCanvases(window);
+    }
+
     virtual void ConnectReturnFunc(const char* receiver_class, void* receiver, const char* slot);
 
     virtual bool Run();

@@ -67,6 +67,7 @@ public:
         virtual unsigned GetNumberOfChannels() const override;
         virtual void InitGUI();
         virtual std::list<gui::CalCanvas*> GetCanvases() const;
+        virtual void InitCanvases(gui::ManagerWindow_traits*) override;
 
         virtual void StartRange(const interval<TID>& range);
         virtual DoFitReturn_t DoFit(TH1* hist, unsigned channel);
