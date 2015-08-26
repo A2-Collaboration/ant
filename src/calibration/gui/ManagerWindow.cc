@@ -90,7 +90,7 @@ void ManagerWindow::CreateToolbar(TGVerticalFrame* frame)
         btn_autocontinue->SetFlag(false);
         Mode.channelStep = -1;
         Mode.gotoNextSlice = false;
-        manager->Run();
+        RunManager();
     });
 
     auto btn_next = new ActionWidget<TGTextButton>(frm1,"Next (n)");
@@ -99,22 +99,29 @@ void ManagerWindow::CreateToolbar(TGVerticalFrame* frame)
         btn_autocontinue->SetFlag(false);
         Mode.channelStep = 1;
         Mode.gotoNextSlice = false;
-        manager->Run();
+        RunManager();
     });
 
-    auto btn_goto = new ActionWidget<TGTextButton>(frm1,"Goto");
 
-    TGNumberEntry* numberentry = new TGNumberEntry(frm1, 0, 3, -1,
-                                                   TGNumberFormat::kNESInteger,
-                                                   TGNumberFormat::kNEANonNegative
-                                                   );
+    auto entry_gotochannel = new TGNumberEntry(frm1, 0, 3, -1,
+                                               TGNumberFormat::kNESInteger,
+                                               TGNumberFormat::kNEANonNegative
+                                               );
+
+    auto btn_goto = new ActionWidget<TGTextButton>(frm1,"Goto");
+    btn_goto->SetAction([this, entry_gotochannel, btn_autocontinue] () {
+        btn_autocontinue->SetFlag(false);
+        Mode.gotoNextSlice = false;
+        Mode.requestChannel = entry_gotochannel->GetIntNumber();
+        RunManager();
+    });
 
     auto btn_finish = new ActionWidget<TGTextButton>(frm1,"Finish Slice");
     btn_finish->SetAction([this, btn_autocontinue] () {
         btn_autocontinue->SetFlag(true);
         Mode.channelStep = 1;
         Mode.gotoNextSlice = true;
-        manager->Run();
+        RunManager();
     });
 
     // second row with fit specific commands
@@ -157,7 +164,7 @@ void ManagerWindow::CreateToolbar(TGVerticalFrame* frame)
     frm1->AddFrame(btn_prev, layout_btn);
     frm1->AddFrame(btn_next, layout_btn);
     frm1->AddFrame(btn_goto, layout_btn);
-    frm1->AddFrame(numberentry, layout_btn);
+    frm1->AddFrame(entry_gotochannel, layout_btn);
     frm1->AddFrame(btn_finish, layout_btn);
     frm1->AddFrame(btn_autocontinue, layout_btn);
     frm1->AddFrame(btn_showfit, layout_btn);
@@ -171,14 +178,20 @@ void ManagerWindow::CreateToolbar(TGVerticalFrame* frame)
 
     // some progress bars
 
-    TGHProgressBar* progress1 = new TGHProgressBar(frame);
-    TGHProgressBar* progress2 = new TGHProgressBar(frame);
+    auto create_progressbar = [frame] () {
+        auto bar = new TGHProgressBar(frame);
+        bar->ShowPosition();
+        return bar;
+    };
+
+    progress_channel = create_progressbar();
+    progress_slice = create_progressbar();
 
     auto layout_frm =  new TGLayoutHints(kLHintsTop | kLHintsExpandX, 0, 0, 0, 0);
     frame->AddFrame(frm1, layout_frm);
     frame->AddFrame(frm2, layout_frm);
-    frame->AddFrame(progress1, layout_frm);
-    frame->AddFrame(progress2, layout_frm);
+    frame->AddFrame(progress_channel, layout_frm);
+    frame->AddFrame(progress_slice, layout_frm);
 }
 
 void ManagerWindow::UpdateLayout()
@@ -187,6 +200,11 @@ void ManagerWindow::UpdateLayout()
     MapSubwindows();
     Resize(GetDefaultSize()); // this is used here to init layout algorithm
     MapWindow();
+}
+
+void ManagerWindow::RunManager()
+{
+    while(manager->Run()) {}
 }
 
 ManagerWindow::ManagerWindow(Manager* manager_) :
@@ -214,15 +232,17 @@ ManagerWindow::ManagerWindow(Manager* manager_) :
 
     AddFrame(frame, new TGLayoutHints(kLHintsExpandX | kLHintsExpandY, 0, 0, 0, 0));
 
-    // after everthing is setup,
-    // create the
-    manager->InitGUI(this);
 
     AddInput(kKeyPressMask | kKeyReleaseMask);
     UpdateLayout();
 
     // set focus
     gVirtualX->SetInputFocus(GetId());
+
+    // after everthing is setup,
+    // run the manager
+    manager->InitGUI(this);
+    RunManager();
 }
 
 Bool_t ManagerWindow::HandleKey(Event_t* event) {
@@ -250,6 +270,23 @@ CalCanvas* ManagerWindow::AddCalCanvas(const string& name) {
     canvases.push_back(canvas);
     UpdateLayout();
     return canvas;
+}
+
+void ManagerWindow::SetProgressMax(unsigned slices, unsigned channels)
+{
+    progress_slice->SetRange(0, slices-1);
+    progress_channel->SetRange(0, channels-1);
+}
+
+void ManagerWindow::SetProgress(unsigned slice, unsigned channel)
+{
+    // reset fixes some superweird when going backwards...
+    progress_channel->Reset();
+    progress_slice->Reset();
+
+    progress_slice->SetPosition(slice);
+    progress_channel->SetPosition(channel);
+
 }
 
 ManagerWindow::~ManagerWindow()

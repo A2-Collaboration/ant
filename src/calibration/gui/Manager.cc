@@ -21,6 +21,9 @@ using namespace ant;
 using namespace ant::calibration;
 using namespace ant::calibration::gui;
 
+bool Manager::input_file_t::operator <(const Manager::input_file_t& o) const {
+    return range.Start() < o.range.Start();
+}
 
 void Manager::BuildInputFiles(const vector<string>& filenames)
 {
@@ -115,17 +118,6 @@ void Manager::InitGUI(ManagerWindow* window_) {
     module->InitCanvases(window);
 }
 
-void Manager::ConnectReturnFunc(const char* receiver_class, void* receiver, const char* slot)
-{
-    signalConnection.receiver_class = receiver_class;
-    signalConnection.receiver = receiver;
-    signalConnection.slot = slot;
-}
-
-bool Manager::input_file_t::operator <(const Manager::input_file_t& o) const {
-    return range.Start() < o.range.Start();
-}
-
 bool Manager::DoInit()
 {
     state.channel = 0;
@@ -145,6 +137,8 @@ bool Manager::DoInit()
 
     state.is_init = true;
     module->StartRange(buffer.CurrentID());
+
+    window->SetProgressMax(1, maxChannels);
 
     return true;
 }
@@ -170,7 +164,7 @@ bool Manager::Run()
             if(ret == Manager_traits::DoFitReturn_t::Display
                || (!window->Mode.autoContinue && noskip)
                ) {
-                VLOG(7) << "Open GUI...";
+                VLOG(7) << "Displaying Fit...";
                 module->DisplayFit();
                 state.breakpoint_fit = true;
                 return false;
@@ -188,7 +182,7 @@ bool Manager::Run()
         if(!state.breakpoint_finish) {
             VLOG(7) << "Finish module first";
             if(module->FinishRange()) {
-                VLOG(7) << "GUI Opened (finish range)";
+                VLOG(7) << "Displaying finished range...";
                 state.breakpoint_finish = true;
                 return false;
             }
@@ -216,12 +210,20 @@ bool Manager::Run()
     }
     else
     {
-        state.channel += window->Mode.channelStep;
+        if(window->Mode.requestChannel<0) {
+            state.channel += window->Mode.channelStep;
+        }
+        else {
+            state.channel = window->Mode.requestChannel;
+            window->Mode.requestChannel = -1; // request is handled...
+        }
         if(state.channel<0)
             state.channel = 0;
         else if(state.channel>=maxChannels && !window->Mode.gotoNextSlice)
             state.channel = module->GetNumberOfChannels()-1;
     }
+
+    window->SetProgress(0, state.channel);
 
     // continue running by default
     return true;

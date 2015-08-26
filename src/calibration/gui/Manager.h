@@ -66,14 +66,6 @@ protected:
 
     void FillBufferFromFiles();
 
-    struct SignalConnection_t {
-
-        std::string receiver_class;
-        void* receiver = nullptr;
-        std::string slot;
-    };
-    SignalConnection_t signalConnection;
-
     int maxChannels;
     bool DoInit();
 
@@ -82,17 +74,14 @@ public:
 
     Manager(const std::vector<std::string>& inputfiles, unsigned avglength);
 
-    virtual void SetModule(const std::shared_ptr<Manager_traits>& module_) {
+    void SetModule(const std::shared_ptr<Manager_traits>& module_) {
         module = move(module_);
     }
 
-    virtual void InitGUI(ManagerWindow* window_);
+    void InitGUI(ManagerWindow* window_);
+    bool Run();
 
-    virtual void ConnectReturnFunc(const char* receiver_class, void* receiver, const char* slot);
-
-    virtual bool Run();
-
-    virtual ~Manager();
+    ~Manager();
 
 };
 
