@@ -95,63 +95,6 @@ Indicator* CalCanvas::MakeGUIElement(IndicatorKnob &knob)
     return nullptr;
 }
 
-void CalCanvas::HandleKeypress(const char key)
-{
-    switch (key) {
-    case 'f':
-        Fit();
-        break;
-    case 'u':
-        UndoPop();
-        break;
-    case 'i':
-        UndoPush();
-        break;
-    case 'd':
-        SetDefaults();
-        break;
-    default:
-        break;
-    }
-
-    if(gui_mode==nullptr)
-        return;
-
-    switch (key) {
-    case '\r':
-        gui_mode->channelStep = 1;
-        gui_mode->alwaysDisplayFit = false;
-        gui_mode->gotoNextRange = true;
-        rootcanvas->Emit("CloseWindow()");
-        break;
-    case 'n':
-        gui_mode->channelStep = 1;
-        gui_mode->alwaysDisplayFit = true;
-        gui_mode->gotoNextRange = false;
-        rootcanvas->Emit("CloseWindow()");
-        break;
-    case 'b': // brevious item haha...
-        gui_mode->channelStep = -1;
-        gui_mode->alwaysDisplayFit = true;
-        gui_mode->gotoNextRange = false;
-        rootcanvas->Emit("CloseWindow()");
-        break;
-    default:
-        break;
-    }
-
-}
-
-void CalCanvas::SetDefaults()
-{
-    if(func && hist) {
-        UndoPush();
-        func->SetDefaults(hist);
-        Modified();
-        Update();
-    }
-}
-
 void CalCanvas::ClearIndicators() {
     for(auto& i : indicators) {
         delete i;
@@ -197,6 +140,16 @@ void CalCanvas::Fit() {
     }
 }
 
+void CalCanvas::SetDefaults()
+{
+    if(func && hist) {
+        UndoPush();
+        func->SetDefaults(hist);
+        Modified();
+        Update();
+    }
+}
+
 void CalCanvas::UndoPush()
 {
     if(func) {
@@ -226,32 +179,6 @@ void CalCanvas::UndoPop()
     }
 }
 
-void CalCanvas::ConnectReturnFunc(const char* receiver_class, void* receiver, const char* slot)
-{
-    rootcanvas->Connect("CloseWindow()", receiver_class, receiver, slot);
-}
-
-void CalCanvas::LinkGUIMode(CalCanvasMode* guimode_)
-{
-    gui_mode = guimode_;
-}
-
-void CalCanvas::ConnectStatusBar(TGStatusBar* statusbar_)
-{
-    statusbar = statusbar_;
-}
-
-void CalCanvas::Execute(const char *method, const char *params, Int_t *error) {
-    std::string cmd(method);
-    if(cmd == "Fit") {
-        Fit();
-    }
-    else
-    {
-        TCanvas::Execute(method,params,error);
-    }
-}
-
 void CalCanvas::Update() {
     TCanvas::Update();
 
@@ -262,12 +189,9 @@ void CalCanvas::Update() {
     }
 }
 
-void CalCanvas::HandleInput(EEventType button, Int_t x, Int_t y)
+void CalCanvas::ConnectStatusBar(TGStatusBar* statusbar_)
 {
-    TCanvas::HandleInput(button,x,y);
-
-    if(button == kKeyPress)
-        HandleKeypress(x);
+    statusbar = statusbar_;
 }
 
 void CalCanvas::ProcessedEvent(Int_t event, Int_t x, Int_t y, TObject* selected)

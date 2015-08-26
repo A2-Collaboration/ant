@@ -36,10 +36,10 @@ class ManagerWindow : public TGMainFrame, public ManagerWindow_traits
 {
 private:
     std::list<CalCanvas*> canvases;
-    TGHorizontalFrame* frame_canvases;
-    TGStatusBar* statusbar;
+    TGHorizontalFrame* frame_canvases = nullptr;
+    TGStatusBar* statusbar = nullptr;
     std::map<EKeySym, TGTextButton*> keys;
-    Manager* manager;
+    Manager* manager = nullptr;
     void CreateToolbar(TGVerticalFrame* frame);
     void UpdateLayout();
 public:

@@ -215,7 +215,8 @@ ManagerWindow::ManagerWindow(Manager* manager_) :
     AddFrame(frame, new TGLayoutHints(kLHintsExpandX | kLHintsExpandY, 0, 0, 0, 0));
 
     // after everthing is setup,
-    manager->InitCanvases(this);
+    // create the
+    manager->InitGUI(this);
 
     AddInput(kKeyPressMask | kKeyReleaseMask);
     UpdateLayout();

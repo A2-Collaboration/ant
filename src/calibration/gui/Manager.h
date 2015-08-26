@@ -20,6 +20,7 @@ namespace calibration {
 namespace gui {
 
 class CalCanvasMode;
+class ManagerWindow;
 
 class Manager {
 
@@ -59,7 +60,7 @@ protected:
     state_t state;
 
 
-    std::unique_ptr<CalCanvasMode> mode;
+    ManagerWindow* window = nullptr;
 
     void BuildInputFiles(const std::vector<std::string>& filenames);
 
@@ -85,9 +86,7 @@ public:
         module = move(module_);
     }
 
-    virtual void InitCanvases(gui::ManagerWindow_traits* window) {
-        module->InitCanvases(window);
-    }
+    virtual void InitGUI(ManagerWindow* window_);
 
     virtual void ConnectReturnFunc(const char* receiver_class, void* receiver, const char* slot);
 

@@ -1,5 +1,7 @@
 #include "Manager.h"
 
+#include "ManagerWindow.h"
+
 #include "calibration/gui/CalCanvas.h"
 
 #include "tree/TDataRecord.h"
@@ -103,10 +105,14 @@ void Manager::FillBufferFromFiles()
 
 Manager::Manager(const std::vector<std::string>& inputfiles, unsigned avglength):
     buffer(avglength),
-    state(),
-    mode(std_ext::make_unique<CalCanvasMode>())
+    state()
 {
     BuildInputFiles(inputfiles);
+}
+
+void Manager::InitGUI(ManagerWindow* window_) {
+    window = window_;
+    module->InitCanvases(window);
 }
 
 void Manager::ConnectReturnFunc(const char* receiver_class, void* receiver, const char* slot)
@@ -137,14 +143,6 @@ bool Manager::DoInit()
         return false;
     }
 
-    module->InitGUI();;
-    for(CalCanvas* canvas : module->GetCanvases()) {
-        canvas->ConnectReturnFunc(signalConnection.receiver_class.c_str(),
-                                  signalConnection.receiver,
-                                  signalConnection.slot.c_str());
-        canvas->LinkGUIMode(mode.get());
-    }
-
     state.is_init = true;
     module->StartRange(buffer.CurrentID());
 
@@ -170,7 +168,7 @@ bool Manager::Run()
             noskip = ret != Manager_traits::DoFitReturn_t::Skip;
 
             if(ret == Manager_traits::DoFitReturn_t::Display
-               || (mode->alwaysDisplayFit && noskip)
+               || (!window->Mode.autoContinue && noskip)
                ) {
                 VLOG(7) << "Open GUI...";
                 module->DisplayFit();
@@ -184,7 +182,7 @@ bool Manager::Run()
     }
 
     if(state.breakpoint_finish
-       || (state.channel >= maxChannels && mode->gotoNextRange))
+       || (state.channel >= maxChannels && window->Mode.gotoNextSlice))
     {
 
         if(!state.breakpoint_finish) {
@@ -218,10 +216,10 @@ bool Manager::Run()
     }
     else
     {
-        state.channel += mode->channelStep;
+        state.channel += window->Mode.channelStep;
         if(state.channel<0)
             state.channel = 0;
-        else if(state.channel>=maxChannels && !mode->gotoNextRange)
+        else if(state.channel>=maxChannels && !window->Mode.gotoNextSlice)
             state.channel = module->GetNumberOfChannels()-1;
     }
 
