@@ -74,16 +74,11 @@ int main(int argc, char** argv) {
 
     int fake_argc=0;
     char** fake_argv=nullptr;
-    auto app = std_ext::make_unique<TRint>("Ant-calib",&fake_argc,fake_argv);
-
-    auto window = std_ext::make_unique<ManagerWindow>(manager.get());
-
+    auto app = new TRint("Ant-calib",&fake_argc,fake_argv);
+    new ManagerWindow(manager.get());
     app->Run(kTRUE);
-
     ExpConfig::Setup::Cleanup();
     setup = nullptr;
-    window = nullptr;
     manager = nullptr;
     calibrationgui = nullptr;
-    app = nullptr;
 }
