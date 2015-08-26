@@ -114,24 +114,41 @@ void ManagerWindow::CreateToolbar(TGVerticalFrame* frame)
         Mode.gotoNextSlice = true;
     });
 
-
-
-
     // second row with fit specific commands
+    /// \todo Make those commands specific for one canvas if
+    /// more than one fitfunction is displayed...?!
 
     TGHorizontalFrame* frm2 = new TGHorizontalFrame(frame,200,40);
 
     auto btn_fit = new ActionWidget<TGTextButton>(frm2,"Fit (f)");
     keys[kKey_f] = btn_fit;
+    btn_fit->SetAction([this] () {
+        for(auto canvas : canvases)
+            canvas->Fit();
+    });
 
     auto btn_defaults = new ActionWidget<TGTextButton>(frm2,"SetDefaults (d)");
     keys[kKey_d] = btn_defaults;
+    btn_defaults->SetAction([this] () {
+        for(auto canvas : canvases)
+            canvas->SetDefaults();
+    });
 
     auto btn_undopop = new ActionWidget<TGTextButton>(frm2,"Undo pop (u)");
     keys[kKey_u] = btn_undopop;
+    btn_undopop->SetAction([this] () {
+        for(auto canvas : canvases)
+            canvas->UndoPop();
+    });
 
     auto btn_undopush = new ActionWidget<TGTextButton>(frm2,"Undo push (i)");
     keys[kKey_i] = btn_undopush;
+    btn_undopush->SetAction([this] () {
+        for(auto canvas : canvases)
+            canvas->UndoPush();
+    });
+
+    // add them all together...
 
     auto layout_btn = new TGLayoutHints(kLHintsLeft,2,2,2,2);
     frm1->AddFrame(btn_prev, layout_btn);
@@ -159,6 +176,14 @@ void ManagerWindow::CreateToolbar(TGVerticalFrame* frame)
     frame->AddFrame(frm2, layout_frm);
     frame->AddFrame(progress1, layout_frm);
     frame->AddFrame(progress2, layout_frm);
+}
+
+void ManagerWindow::UpdateLayout()
+{
+    // Map all subwindows of main frame
+    MapSubwindows();
+    Resize(GetDefaultSize()); // this is used here to init layout algorithm
+    MapWindow();
 }
 
 ManagerWindow::ManagerWindow(const TGWindow* p, UInt_t w, UInt_t h) :
@@ -189,10 +214,7 @@ ManagerWindow::ManagerWindow(const TGWindow* p, UInt_t w, UInt_t h) :
     // Set a name to the main frame
     SetWindowName("Ant-calib GUI");
 
-    // Map all subwindows of main frame
-    MapSubwindows();
-    Resize(GetDefaultSize()); // this is used here to init layout algorithm
-    MapWindow();
+    UpdateLayout();
 
     // set focus
     gVirtualX->SetInputFocus(GetId());
@@ -220,9 +242,8 @@ CalCanvas* ManagerWindow::AddCalCanvas(const string& name) {
     canvas->ConnectStatusBar(statusbar);
     ecanvas->AdoptCanvas(canvas);
     frame_canvases->AddFrame(ecanvas, new TGLayoutHints(kLHintsExpandY | kLHintsExpandX, 0,0,0,0));
-    MapSubwindows();
-    Resize(GetDefaultSize());
-    MapWindow();
+    canvases.push_back(canvas);
+    UpdateLayout();
     return canvas;
 }
 

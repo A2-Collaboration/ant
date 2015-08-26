@@ -53,7 +53,6 @@ protected:
     CalCanvasMode* gui_mode = nullptr;
     TGStatusBar* statusbar = nullptr;
 
-    void SetDefaults();
 
 public:
     CalCanvas(const std::string& name, const std::string& title);
@@ -69,7 +68,7 @@ public:
 
 
     virtual void Fit();
-
+    void SetDefaults();
     virtual void UndoPush();
     virtual void UndoPop();
 

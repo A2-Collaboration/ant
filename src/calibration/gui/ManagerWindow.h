@@ -39,6 +39,7 @@ private:
     std::map<EKeySym, TGTextButton*> keys;
     Manager* manager;
     void CreateToolbar(TGVerticalFrame* frame);
+    void UpdateLayout();
 public:
     ManagerWindow(const TGWindow* p, UInt_t w, UInt_t h);
     virtual Bool_t HandleKey(Event_t *event) override;
