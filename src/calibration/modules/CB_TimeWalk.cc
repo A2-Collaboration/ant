@@ -188,7 +188,7 @@ unsigned CB_TimeWalk::TheGUI::GetNumberOfChannels() const
     return cb_detector->GetNChannels();
 }
 
-void CB_TimeWalk::TheGUI::InitCanvases(gui::ManagerWindow_traits* window)
+void CB_TimeWalk::TheGUI::InitGUI(gui::ManagerWindow_traits* window)
 {
     c_fit = window->AddCalCanvas();
     c_extra = window->AddCalCanvas();

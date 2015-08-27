@@ -33,7 +33,7 @@ public:
     virtual std::string GetHistogramName() const =0;
     virtual unsigned GetNumberOfChannels() const =0;
 
-    virtual void InitCanvases(gui::ManagerWindow_traits* window) =0;
+    virtual void InitGUI(gui::ManagerWindow_traits* window) =0;
 
     virtual void StartRange(const interval<TID>& range) =0;
 

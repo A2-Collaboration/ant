@@ -72,7 +72,7 @@ public:
 
         virtual std::string GetHistogramName() const override;
         virtual unsigned GetNumberOfChannels() const override;
-        virtual void InitCanvases(gui::ManagerWindow_traits* window) override;
+        virtual void InitGUI(gui::ManagerWindow_traits* window) override;
 
 
         virtual void StartRange(const interval<TID>& range) override;

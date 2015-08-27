@@ -123,7 +123,7 @@ unsigned CB_Energy::TheGUI::GetNumberOfChannels() const
     return cb_detector->GetNChannels();
 }
 
-void CB_Energy::TheGUI::InitCanvases(gui::ManagerWindow_traits* window)
+void CB_Energy::TheGUI::InitGUI(gui::ManagerWindow_traits* window)
 {
     canvas = window->AddCalCanvas();
     h_peaks = new TH1D("h_peaks","Peak positions",GetNumberOfChannels(),0,GetNumberOfChannels());

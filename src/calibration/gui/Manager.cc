@@ -35,7 +35,7 @@ Manager::~Manager()
 
 void Manager::InitGUI(ManagerWindow* window_) {
     window = window_;
-    module->InitCanvases(window);
+    module->InitGUI(window);
 }
 
 

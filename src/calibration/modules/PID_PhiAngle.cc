@@ -155,7 +155,7 @@ unsigned PID_PhiAngle::TheGUI::GetNumberOfChannels() const
     return pid_detector->GetNChannels();
 }
 
-void PID_PhiAngle::TheGUI::InitCanvases(gui::ManagerWindow_traits* window)
+void PID_PhiAngle::TheGUI::InitGUI(gui::ManagerWindow_traits* window)
 {
     canvas = window->AddCalCanvas();
 }

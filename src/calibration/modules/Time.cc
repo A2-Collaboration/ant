@@ -163,7 +163,7 @@ Time::TheGUI::TheGUI(const string& name,
 {
 }
 
-void Time::TheGUI::InitCanvases(gui::ManagerWindow_traits* window)
+void Time::TheGUI::InitGUI(gui::ManagerWindow_traits* window)
 {
     theCanvas = window->AddCalCanvas();
     times = new TH1D("times","Times",

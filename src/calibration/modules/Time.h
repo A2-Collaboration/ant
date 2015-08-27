@@ -58,7 +58,7 @@ public:
 
         virtual std::string GetHistogramName() const override { return GetName()+"/Offsets";}
         virtual unsigned GetNumberOfChannels() const override { return detector->GetNChannels();}
-        virtual void InitCanvases(gui::ManagerWindow_traits* window) override;
+        virtual void InitGUI(gui::ManagerWindow_traits* window) override;
 
         virtual void StartRange(const interval<TID>& range) override;
         virtual DoFitReturn_t DoFit(TH1* hist, unsigned channel) override;
