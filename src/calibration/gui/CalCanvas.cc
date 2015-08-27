@@ -41,6 +41,11 @@ void CalCanvas::Show(TH1* h, FitFunction* f) {
         UndoStack.pop();
     }
 
+    // preserve x-axis
+    if(hist != nullptr) {
+        PreserveAxis(hist->GetXaxis(), h->GetXaxis());
+    }
+
     func = f;
     hist = h;
 
@@ -100,6 +105,17 @@ Indicator* CalCanvas::MakeGUIElement(IndicatorKnob &knob)
         break;
     }
     return nullptr;
+}
+
+void CalCanvas::PreserveAxis(TAxis* axis1, TAxis* axis2)
+{
+    Int_t binmin = axis1->GetFirst();
+    Int_t binmax = axis1->GetLast();
+    Float_t xmin = axis1->GetBinLowEdge(binmin);
+    Float_t xmax = axis1->GetBinLowEdge(binmax);
+    Int_t newmin = axis2->FindBin(xmin);
+    Int_t newmax = axis2->FindBin(xmax);
+    axis2->SetRange(newmin,newmax);
 }
 
 void CalCanvas::ClearIndicators() {

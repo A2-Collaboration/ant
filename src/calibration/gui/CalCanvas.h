@@ -14,6 +14,7 @@
 class TH1;
 class TRootCanvas;
 class TGStatusBar;
+class TAxis;
 
 namespace ant {
 namespace calibration {
@@ -38,6 +39,7 @@ protected:
     TRootCanvas* rootcanvas = nullptr;
     TGStatusBar* statusbar = nullptr;
 
+    void PreserveAxis(TAxis* axis1, TAxis* axis2);
 
 public:
     CalCanvas(const std::string& name, const std::string& title);
