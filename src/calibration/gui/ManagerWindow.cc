@@ -125,8 +125,7 @@ void ManagerWindow::CreateToolbar(TGVerticalFrame* frame)
 
     auto btn_prev = new ActionWidget<TGTextButton>(frm1,"Prev (b)");
     keys[kKey_b] = btn_prev;
-    btn_prev->SetAction([this, btn_autocontinue] () {
-        btn_autocontinue->SetFlag(false);
+    btn_prev->SetAction([this] () {
         Mode.channelStep = -1;
         Mode.gotoNextSlice = false;
         RunManager();
@@ -134,8 +133,7 @@ void ManagerWindow::CreateToolbar(TGVerticalFrame* frame)
 
     auto btn_next = new ActionWidget<TGTextButton>(frm1,"Next (n)");
     keys[kKey_n] = btn_next;
-    btn_next->SetAction([this, btn_autocontinue] () {
-        btn_autocontinue->SetFlag(false);
+    btn_next->SetAction([this] () {
         Mode.channelStep = 1;
         Mode.gotoNextSlice = false;
         RunManager();

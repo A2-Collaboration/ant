@@ -145,6 +145,16 @@ inline std::unique_ptr<To> static_cast_uptr(std::unique_ptr<From>&& ptr) {
   return std::unique_ptr<To>(static_cast<To*>(ptr.release()));
 }
 
+class execute_on_destroy {
+    std::function<void(void)> fct;
+public:
+    execute_on_destroy(std::function<void(void)> function) : fct(function) {}
+    ~execute_on_destroy() {
+        fct();
+    }
+};
+
+
 /**
  * @brief The formatter class
  *

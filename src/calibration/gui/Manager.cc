@@ -160,6 +160,12 @@ Manager::RunReturn_t Manager::Run()
            return RunReturn_t::Exit;
     }
 
+    // this statement is executed once the class goes out-of-scope
+    std_ext::execute_on_destroy setProgress([this] () {
+        window->SetProgress(state.slice, state.channel);
+    });
+
+
     if(!state.breakpoint_finish && state.channel < nChannels) {
         bool noskip = true;
         if(!state.breakpoint_fit) {
@@ -173,7 +179,6 @@ Manager::RunReturn_t Manager::Run()
                 VLOG(7) << "Displaying Fit...";
                 module->DisplayFit();
                 state.breakpoint_fit = true;
-                window->SetProgress(state.slice, state.channel);
                 return RunReturn_t::Wait;
             }
             else if(window->Mode.showEachFit) {
@@ -192,7 +197,6 @@ Manager::RunReturn_t Manager::Run()
             VLOG(7) << "Finish module";
             state.breakpoint_finish = module->FinishRange();
             state.slice++;
-            window->SetProgress(state.slice, state.channel);
             if(state.breakpoint_finish) {
                 VLOG(7) << "Displaying finished range...";
                 window->SetFinishMode(true);
@@ -220,6 +224,8 @@ Manager::RunReturn_t Manager::Run()
     }
     else
     {
+        // check if some specific channel is requested
+        // then set the channel appropiately
         if(window->Mode.requestChannel<0) {
             state.channel += window->Mode.channelStep;
         }
@@ -227,13 +233,18 @@ Manager::RunReturn_t Manager::Run()
             state.channel = window->Mode.requestChannel;
             window->Mode.requestChannel = -1; // request is handled...
         }
-        if(state.channel<0)
-            state.channel = 0;
-        else if(state.channel>=nChannels && !window->Mode.gotoNextSlice)
-            state.channel = module->GetNumberOfChannels()-1;
-    }
 
-    window->SetProgress(state.slice, state.channel);
+        // check if we run out of the range
+        // stop running if we do so
+        if(state.channel<0) {
+            state.channel = 0;
+            return RunReturn_t::Wait;
+        }
+        else if(state.channel>=nChannels && !window->Mode.gotoNextSlice) {
+            state.channel = module->GetNumberOfChannels()-1;
+            return RunReturn_t::Wait;
+        }
+    }
 
     // continue running by default
     return RunReturn_t::Continue;
