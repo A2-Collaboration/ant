@@ -21,6 +21,24 @@ using namespace ant;
 using namespace ant::calibration;
 using namespace ant::calibration::gui;
 
+Manager::Manager(const std::vector<std::string>& inputfiles, unsigned avglength):
+    buffer(avglength),
+    state()
+{
+    BuildInputFiles(inputfiles);
+}
+
+Manager::~Manager()
+{
+
+}
+
+void Manager::InitGUI(ManagerWindow* window_) {
+    window = window_;
+    module->InitCanvases(window);
+}
+
+
 bool Manager::input_file_t::operator <(const Manager::input_file_t& o) const {
     return range.Start() < o.range.Start();
 }
@@ -105,19 +123,6 @@ void Manager::FillBufferFromFiles()
     }
 }
 
-
-Manager::Manager(const std::vector<std::string>& inputfiles, unsigned avglength):
-    buffer(avglength),
-    state()
-{
-    BuildInputFiles(inputfiles);
-}
-
-void Manager::InitGUI(ManagerWindow* window_) {
-    window = window_;
-    module->InitCanvases(window);
-}
-
 bool Manager::DoInit()
 {
     state.channel = 0;
@@ -139,7 +144,10 @@ bool Manager::DoInit()
     state.is_init = true;
     module->StartRange(buffer.CurrentID());
 
-    window->SetProgressMax(input_files.size(), nChannels-1);
+    if(buffer.GetSumLength()==0)
+        window->SetProgressMax(1, nChannels-1);
+    else
+        window->SetProgressMax(input_files.size(), nChannels-1);
 
     return true;
 }
@@ -233,7 +241,4 @@ Manager::RunReturn_t Manager::Run()
     return RunReturn_t::Continue;
 }
 
-Manager::~Manager()
-{
 
-}

@@ -25,7 +25,7 @@ protected:
     shpBuffer           m_buffer;
     typename shpBuffer::const_iterator midpos;
 
-    std::size_t         m_max_size;
+    std::size_t         m_sum_length;
 
     std::unique_ptr<HistType> m_movingsum;
 
@@ -37,7 +37,7 @@ public:
 
     using const_iterator =  typename shpBuffer::const_iterator;
 
-    AvgBuffer(const std::size_t size):  midpos(m_buffer.begin()), m_max_size(size) {}
+    AvgBuffer(const std::size_t sum_length):  midpos(m_buffer.begin()), m_sum_length(sum_length) {}
 
     void Push(std::shared_ptr<HistType> h, const IDType& id)
     {
@@ -49,7 +49,7 @@ public:
 
         // special mode when m_max_size==0 (no moving sum required)
         // just sum up the histograms, and only remember the ID span
-        if(m_max_size == 0) {
+        if(m_sum_length == 0) {
             if(m_buffer.empty()) {
                 // we're just interested in the id
                 m_buffer.emplace_back(buffer_entry(nullptr, id));
@@ -67,10 +67,10 @@ public:
         m_buffer.emplace_back(buffer_entry(h, id));
 
         // check if max_size is reached
-        if(m_max_size <= m_buffer.size()) {
+        if(m_sum_length <= m_buffer.size()) {
             if(!startup_done) {
                 auto pos = m_buffer.begin();
-                for(unsigned i=0;i<m_max_size/2;++i) {
+                for(unsigned i=0;i<m_sum_length/2;++i) {
                     worklist.emplace(pos->id);
                     ++pos;
                 }
@@ -89,14 +89,14 @@ public:
 
 
         // pop elements from buffer
-        if(m_buffer.size() > m_max_size)
+        if(m_buffer.size() > m_sum_length)
         {
             const std::shared_ptr<HistType>& last = m_buffer.front().hist;
             m_movingsum->Add(last.get(), -1.0);
             m_buffer.pop_front();
         }
 
-        assert(m_buffer.size() <= m_max_size);
+        assert(m_buffer.size() <= m_sum_length);
     }
 
     void Finish() {
@@ -111,7 +111,7 @@ public:
     const IDType& CurrentID() const { return worklist.front(); }
     void GotoNextID() { worklist.pop(); }
     bool Empty() const {return worklist.empty(); }
-
+    std::size_t GetSumLength() const { return m_sum_length; }
 
 
 };
