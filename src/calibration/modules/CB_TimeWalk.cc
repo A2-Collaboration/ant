@@ -232,8 +232,7 @@ gui::Manager_traits::DoFitReturn_t CB_TimeWalk::TheGUI::DoFit(TH1* hist, unsigne
 
     last_timewalk = timewalks[ch]; // remember for display fit
 
-    // always request display
-    return DoFitReturn_t::Display;
+    return DoFitReturn_t::Next;
 }
 
 void CB_TimeWalk::TheGUI::DisplayFit()
