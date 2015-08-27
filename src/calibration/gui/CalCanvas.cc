@@ -9,6 +9,7 @@
 #include "TH1.h"
 #include "TRootCanvas.h"
 #include "TGStatusBar.h"
+#include "TExec.h"
 
 #include <sstream>
 
@@ -150,6 +151,18 @@ void CalCanvas::SetupGUI() {
     // the created indicators
     Modified();
     Update();
+
+    class ExecUpdate : public TExec {
+    protected:
+        CalCanvas* canvas = nullptr;
+    public:
+        ExecUpdate(CalCanvas* c) : canvas(c)        {}
+        virtual void Exec(const char*) override {
+            canvas->Update();
+        }
+    };
+
+    hist->GetListOfFunctions()->Add(new ExecUpdate(this));
 }
 
 void CalCanvas::Fit() {
