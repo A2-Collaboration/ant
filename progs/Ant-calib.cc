@@ -7,6 +7,7 @@
 #include "base/CmdLine.h"
 
 #include "TRint.h"
+#include "TROOT.h"
 
 #include <iostream>
 
@@ -22,6 +23,7 @@ int main(int argc, char** argv) {
     auto cmd_verbose = cmd.add<TCLAP::ValueArg<int>>("v","verbose","Verbosity level (0..9)", false, 0,"level");
     auto cmd_calibration = cmd.add<TCLAP::ValueArg<string>>("c","calibration","Calibration GUI module name", true, "","calibration");
     auto cmd_averagelength = cmd.add<TCLAP::ValueArg<int>>("a","average","Average length for moving window (zero sums everything up)", false, 0, "length");
+    auto cmd_batchmode = cmd.add<TCLAP::SwitchArg>("b","batch","Run in batch mode (no GUI, autosave)",false);
     // unlabeled multi arg must be the last element added, and interprets everything as a input file
     auto cmd_inputfiles  = cmd.add<TCLAP::UnlabeledMultiArg<string>>("inputfiles","Ant files with histograms",true,"inputfiles");
     cmd.parse(argc, argv);
@@ -75,6 +77,9 @@ int main(int argc, char** argv) {
     int fake_argc=0;
     char** fake_argv=nullptr;
     auto app = new TRint("Ant-calib",&fake_argc,fake_argv);
+    if(cmd_batchmode->isSet()) {
+        gROOT->SetBatch();
+    }
     new ManagerWindow(manager.get());
     app->Run(kTRUE);
     ExpConfig::Setup::Cleanup();

@@ -12,7 +12,7 @@
 #include "TGStatusBar.h"
 #include "TGButton.h"
 #include "TGProgressBar.h"
-
+#include "TROOT.h"
 
 #include "base/Logger.h"
 
@@ -247,7 +247,8 @@ void ManagerWindow::RunManager()
         if(ret == Manager::RunReturn_t::Wait) {
             for(auto canvas : canvases)
                 canvas->Update();
-            break;
+            if(!gROOT->IsBatch())
+                break;
         }
         else if(ret == Manager::RunReturn_t::Exit) {
             gApplication->Terminate(0);
@@ -261,6 +262,15 @@ ManagerWindow::ManagerWindow(Manager* manager_) :
     TGMainFrame(gClient->GetRoot()),
     manager(manager_)
 {
+    if(gROOT->IsBatch()) {
+        Mode.channelStep = 1;
+        Mode.gotoNextSlice = true;
+        Mode.autoContinue = true;
+        manager->InitGUI(this);
+        RunManager();
+        return;
+    }
+
     // Set a name to the main frame
     SetWindowName("Ant-calib GUI");
 
@@ -311,24 +321,43 @@ Bool_t ManagerWindow::HandleKey(Event_t* event) {
 }
 
 CalCanvas* ManagerWindow::AddCalCanvas(const string& name) {
-    auto ecanvas = new EmbeddedCanvas(frame_canvases);
-    auto canvas = new gui::CalCanvas(name.c_str(),ecanvas->GetCanvasWindowId());
-    canvas->ConnectStatusBar(statusbar);
-    ecanvas->AdoptCanvas(canvas);
-    frame_canvases->AddFrame(ecanvas, new TGLayoutHints(kLHintsExpandY | kLHintsExpandX));
+    gui::CalCanvas* canvas = nullptr;
+
+    stringstream canvas_name;
+    if(name.empty()) {
+        canvas_name << "CalCanvas_" << canvases.size();
+    }
+    else {
+        canvas_name << name;
+    }
+
+    if(gROOT->IsBatch()) {
+        canvas = new gui::CalCanvas(canvas_name.str());
+    }
+    else {
+        auto ecanvas = new EmbeddedCanvas(frame_canvases);
+        canvas = new gui::CalCanvas(canvas_name.str(), ecanvas->GetCanvasWindowId());
+        canvas->ConnectStatusBar(statusbar);
+        ecanvas->AdoptCanvas(canvas);
+        frame_canvases->AddFrame(ecanvas, new TGLayoutHints(kLHintsExpandY | kLHintsExpandX));
+        UpdateLayout();
+    }
     canvases.push_back(canvas);
-    UpdateLayout();
     return canvas;
 }
 
 void ManagerWindow::SetProgressMax(unsigned slices, unsigned channels)
 {
+    if(gROOT->IsBatch())
+        return;
     progress_slice->SetRange(0, slices);
     progress_channel->SetRange(0, channels);
 }
 
 void ManagerWindow::SetProgress(unsigned slice, unsigned channel)
 {
+    if(gROOT->IsBatch())
+        return;
     progress_slice->SetValue(slice);
     progress_channel->SetValue(channel);
 }
@@ -350,6 +379,7 @@ void ManagerWindow::SetFinishMode(bool flag)
 
 ManagerWindow::~ManagerWindow()
 {
+    // executed if window is closed
     gApplication->Terminate(0);
 }
 

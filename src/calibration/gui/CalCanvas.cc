@@ -16,11 +16,7 @@
 using namespace std;
 using namespace ant::calibration::gui;
 
-CalCanvas::CalCanvas(const string& name, Int_t winid) :
-    TCanvas(name.c_str(), 10, 10, winid)
-{
 
-}
 
 CalCanvas::~CalCanvas() {
     ClearIndicators();

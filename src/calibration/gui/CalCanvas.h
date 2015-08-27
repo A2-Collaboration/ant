@@ -41,8 +41,14 @@ protected:
     void PreserveAxis(TAxis* axis1, TAxis* axis2);
 
 public:
+    // constructor for simple canvas
+    CalCanvas(const std::string& name) :
+        TCanvas(name.c_str()) {}
+
+
     // constructor for embedded canvas
-    CalCanvas(const std::string& name, Int_t winid);
+    CalCanvas(const std::string& name, Int_t winid) :
+        TCanvas(name.c_str(), 10, 10, winid) {}
 
     virtual ~CalCanvas();
 
