@@ -90,12 +90,20 @@ public:
         Reset();  // reset fixes some superweird when going backwards...
         SetPosition(value);
 
-        stringstream ss_max;
-        ss_max << (unsigned)GetMax();
+
+        auto max = static_cast<unsigned>(GetMax());
+
         stringstream ss;
-        ss << label << " "
-           << setw(ss_max.str().size()) << setfill('0') << value
-           << "/" << ss_max.str();
+        if(value<=max) {
+            stringstream ss_max;
+            ss_max << max;
+            ss << label << " "
+               << setw(ss_max.str().size()) << setfill('0') << value
+               << "/" << ss_max.str();
+        }
+        else {
+            ss << "Finished " << label;
+        }
         // we misuse the format string...
         ShowPosition(true, false, ss.str().c_str());
     }
