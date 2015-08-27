@@ -213,7 +213,6 @@ void ManagerWindow::UpdateLayout()
 
 void ManagerWindow::RunManager()
 {
-    /// \todo exit properly if running has completely finished?
     while(true) {
         auto ret = manager->Run();
         if(ret == Manager::RunReturn_t::Wait) {
