@@ -6,11 +6,13 @@
 #include "TExec.h"
 #include "TRootEmbeddedCanvas.h"
 #include "TApplication.h"
+#include "TSystem.h"
 
 #include "TGNumberEntry.h"
 #include "TGStatusBar.h"
 #include "TGButton.h"
 #include "TGProgressBar.h"
+
 
 #include "base/Logger.h"
 
@@ -223,6 +225,7 @@ void ManagerWindow::RunManager()
             gApplication->Terminate(0);
             break;
         }
+        gSystem->ProcessEvents();
     }
 }
 
