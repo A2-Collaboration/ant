@@ -84,7 +84,12 @@ public:
     enum class RunReturn_t {
         Continue, Wait, Exit
     };
+
     RunReturn_t Run();
+    void GetProgress(unsigned& slice, unsigned& channel) {
+        slice = state.slice;
+        channel = state.channel;
+    }
 
     ~Manager();
 

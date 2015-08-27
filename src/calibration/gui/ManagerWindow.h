@@ -10,7 +10,6 @@
 #include <map>
 
 class TGStatusBar;
-class TGHProgressBar;
 class TGWidget;
 
 namespace ant {
@@ -19,6 +18,7 @@ namespace gui {
 
 class CalCanvas;
 class Manager;
+class ProgressBar;
 
 struct ManagerWindowMode {
     ManagerWindowMode() :
@@ -43,8 +43,8 @@ private:
     TGHorizontalFrame* frame_canvases = nullptr;
 
     TGStatusBar* statusbar = nullptr;
-    TGHProgressBar* progress_channel = nullptr;
-    TGHProgressBar* progress_slice = nullptr;
+    ProgressBar* progress_channel = nullptr;
+    ProgressBar* progress_slice = nullptr;
 
     std::list<TGWidget*> nonfinish_widgets;
 
@@ -55,6 +55,7 @@ private:
     void CreateToolbar(TGVerticalFrame* frame);
     void UpdateLayout();
     void RunManager();
+
 public:
     ManagerWindow(Manager* manager_);
     virtual Bool_t HandleKey(Event_t *event) override;

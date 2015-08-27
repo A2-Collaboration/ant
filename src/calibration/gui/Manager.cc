@@ -163,9 +163,6 @@ Manager::RunReturn_t Manager::Run()
     if(!state.breakpoint_finish && state.channel < nChannels) {
         bool noskip = true;
         if(!state.breakpoint_fit) {
-            const string& title = std_ext::formatter() << "Channel=" << state.channel
-                                                       << " " << buffer.CurrentID();
-            buffer.CurrentSum()->SetTitle(title.c_str());
 
             const auto ret = module->DoFit(buffer.CurrentSum(), state.channel);
             noskip = ret != Manager_traits::DoFitReturn_t::Skip;
@@ -176,6 +173,7 @@ Manager::RunReturn_t Manager::Run()
                 VLOG(7) << "Displaying Fit...";
                 module->DisplayFit();
                 state.breakpoint_fit = true;
+                window->SetProgress(state.slice, state.channel);
                 return RunReturn_t::Wait;
             }
             else if(window->Mode.showEachFit) {

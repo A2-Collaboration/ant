@@ -17,6 +17,8 @@
 #include "base/Logger.h"
 
 #include <type_traits>
+#include <sstream>
+#include <iomanip>
 
 using namespace std;
 
@@ -73,6 +75,33 @@ public:
         *this->ptr_flag = flag;
     }
 };
+
+class ProgressBar : public TGHProgressBar {
+    string label;
+public:
+    ProgressBar(const TGWindow* p, const string& label_) :
+        TGHProgressBar(p),
+        label(label_)
+    {
+        ShowPosition(true, false, label.c_str());
+    }
+
+    void SetValue(unsigned value) {
+        Reset();  // reset fixes some superweird when going backwards...
+        SetPosition(value);
+
+        stringstream ss_max;
+        ss_max << (unsigned)GetMax();
+        stringstream ss;
+        ss << label << " "
+           << setw(ss_max.str().size()) << setfill('0') << value
+           << "/" << ss_max.str();
+        // we misuse the format string...
+        ShowPosition(true, false, ss.str().c_str());
+    }
+
+};
+
 
 void ManagerWindow::CreateToolbar(TGVerticalFrame* frame)
 {
@@ -174,7 +203,7 @@ void ManagerWindow::CreateToolbar(TGVerticalFrame* frame)
     add_nonfinish(frm1, entry_gotochannel);
     frm1->AddFrame(btn_finish, layout_btn);
     frm1->AddFrame(btn_autocontinue, layout_btn);
-    add_nonfinish(frm1, btn_showfit);
+    frm1->AddFrame(btn_showfit, layout_btn);
 
 
     add_nonfinish(frm2, btn_fit);
@@ -184,15 +213,8 @@ void ManagerWindow::CreateToolbar(TGVerticalFrame* frame)
 
 
     // some progress bars
-
-    auto create_progressbar = [frame] () {
-        auto bar = new TGHProgressBar(frame);
-        bar->ShowPosition();
-        return bar;
-    };
-
-    progress_channel = create_progressbar();
-    progress_slice = create_progressbar();
+    progress_channel = new ProgressBar(frame, "Channel");
+    progress_slice = new ProgressBar(frame, "Slice");
 
     auto layout_frm =  new TGLayoutHints(kLHintsTop | kLHintsExpandX);
     frame->AddFrame(frm1, layout_frm);
@@ -215,6 +237,7 @@ void ManagerWindow::RunManager()
 {
     while(true) {
         auto ret = manager->Run();
+
         if(ret == Manager::RunReturn_t::Wait) {
             for(auto canvas : canvases)
                 canvas->Update();
@@ -300,12 +323,8 @@ void ManagerWindow::SetProgressMax(unsigned slices, unsigned channels)
 
 void ManagerWindow::SetProgress(unsigned slice, unsigned channel)
 {
-    // reset fixes some superweird when going backwards...
-    progress_channel->Reset();
-    progress_slice->Reset();
-
-    progress_slice->SetPosition(slice);
-    progress_channel->SetPosition(channel);
+    progress_slice->SetValue(slice);
+    progress_channel->SetValue(channel);
 }
 
 void ManagerWindow::SetFinishMode(bool flag)
