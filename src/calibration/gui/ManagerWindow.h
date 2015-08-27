@@ -60,7 +60,6 @@ public:
     virtual Bool_t HandleKey(Event_t *event) override;
     virtual ~ManagerWindow();
     virtual gui::CalCanvas* AddCalCanvas(const std::string& name = "") override;
-    virtual void HideCalCanvas(gui::CalCanvas* canvas) override;
 
     ManagerWindowMode Mode;
 

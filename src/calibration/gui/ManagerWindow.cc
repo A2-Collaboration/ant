@@ -290,11 +290,6 @@ CalCanvas* ManagerWindow::AddCalCanvas(const string& name) {
     return canvas;
 }
 
-void ManagerWindow::HideCalCanvas(CalCanvas* canvas)
-{
-    /// \todo implement
-}
-
 void ManagerWindow::SetProgressMax(unsigned slices, unsigned channels)
 {
     progress_slice->SetRange(0, slices);

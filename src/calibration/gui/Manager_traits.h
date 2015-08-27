@@ -19,7 +19,6 @@ class CalCanvas;
 class ManagerWindow_traits {
 public:
     virtual gui::CalCanvas* AddCalCanvas(const std::string& name = "") =0;
-    virtual void HideCalCanvas(gui::CalCanvas* canvas) =0;
 };
 
 class Manager_traits {
