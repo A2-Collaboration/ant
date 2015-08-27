@@ -125,7 +125,7 @@ void Manager::FillBufferFromFiles()
 
 bool Manager::DoInit()
 {
-    state.channel = 0;
+    state.channel = -1;
     state.slice = 0;
     state.it_file = input_files.begin();
 
@@ -166,7 +166,7 @@ Manager::RunReturn_t Manager::Run()
     });
 
 
-    if(!state.breakpoint_finish && state.channel < nChannels) {
+    if(!state.breakpoint_finish && state.channel < nChannels && state.channel >= 0) {
         bool noskip = true;
         if(!state.breakpoint_fit) {
 
@@ -238,11 +238,13 @@ Manager::RunReturn_t Manager::Run()
         // stop running if we do so
         if(state.channel<0) {
             state.channel = 0;
-            return RunReturn_t::Wait;
+            if(window->Mode.autoContinue)
+                return RunReturn_t::Wait;
         }
         else if(state.channel>=nChannels && !window->Mode.gotoNextSlice) {
             state.channel = module->GetNumberOfChannels()-1;
-            return RunReturn_t::Wait;
+            if(window->Mode.autoContinue)
+                return RunReturn_t::Wait;
         }
     }
 
