@@ -11,7 +11,7 @@
 #include <list>
 #include <limits>
 
-#include <cxxabi.h> /// \todo works only with GCC?
+#include <cxxabi.h>
 
 namespace ant {
 
