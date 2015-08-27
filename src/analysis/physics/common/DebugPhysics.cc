@@ -13,17 +13,17 @@ DebugPhysics::~DebugPhysics() {}
 
 void DebugPhysics::ProcessEvent(const data::Event& event)
 {
-    VLOG(8) << event;
+    LOG(INFO) << event;
 }
 
 void DebugPhysics::Finish()
 {
-    VLOG(8) << "Nop";
+    LOG(INFO) << "Nop";
 }
 
 void DebugPhysics::ShowResult()
 {
-    VLOG(8) << "Nop";
+    LOG(INFO) << "Nop";
 }
 
 AUTO_REGISTER_PHYSICS(DebugPhysics, "DebugPhysics")
