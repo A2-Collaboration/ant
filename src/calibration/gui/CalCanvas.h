@@ -36,14 +36,12 @@ protected:
 
     std::stack<FitFunction::SavedState_t> UndoStack;
 
-    TRootCanvas* rootcanvas = nullptr;
     TGStatusBar* statusbar = nullptr;
 
     void PreserveAxis(TAxis* axis1, TAxis* axis2);
 
 public:
-    CalCanvas(const std::string& name, const std::string& title);
-
+    // constructor for embedded canvas
     CalCanvas(const std::string& name, Int_t winid);
 
     virtual ~CalCanvas();
