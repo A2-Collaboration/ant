@@ -238,7 +238,7 @@ gui::Manager_traits::DoFitReturn_t CB_TimeWalk::TheGUI::DoFit(TH1* hist, unsigne
 
 void CB_TimeWalk::TheGUI::DisplayFit()
 {
-    c_fit->Show(means, last_timewalk.get());
+    c_fit->Show(means, last_timewalk.get(), true);
 
     c_extra->cd();
     proj->Draw("colz");

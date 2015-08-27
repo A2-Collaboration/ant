@@ -48,7 +48,7 @@ public:
 
     virtual ~CalCanvas();
 
-    virtual void Show(TH1* h, FitFunction* f);
+    virtual void Show(TH1* h, FitFunction* f, bool preserveYaxis = false);
 
     virtual void UpdateMe() override;
 

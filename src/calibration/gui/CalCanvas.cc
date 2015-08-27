@@ -34,24 +34,31 @@ CalCanvas::~CalCanvas() {
     ClearIndicators();
 }
 
-void CalCanvas::Show(TH1* h, FitFunction* f) {
+void CalCanvas::Show(TH1* h, FitFunction* f, bool preserveYaxis) {
 
     // empty UndoStack
     while(!UndoStack.empty()) {
         UndoStack.pop();
     }
 
-    // preserve x-axis
+    this->cd();
+    h->Draw();
+    f->Draw();
+
+    // preserve zoom state of axis
     if(hist != nullptr) {
         PreserveAxis(hist->GetXaxis(), h->GetXaxis());
+        if(preserveYaxis) {
+            // we cannot use PreserveAxis, since the Y axis is unbinned
+            // for a one-dimensional histogram...
+            Double_t ymin = hist->GetMinimum();
+            Double_t ymax = hist->GetMaximum();
+            h->SetAxisRange(ymin, ymax, "Y");
+        }
     }
 
     func = f;
     hist = h;
-
-    this->cd();
-    h->Draw();
-    f->Draw();
 
     SetupGUI();
 }
