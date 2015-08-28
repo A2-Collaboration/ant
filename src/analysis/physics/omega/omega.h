@@ -96,6 +96,8 @@ protected:
         TH1D* angle_p;
         TH1D* angle_p_ggg;
         TH1D* p_phi_diff;
+        TH2D* calc_proton_energy_theta;
+        TH2D* calc_proton_special;
     };
 
     perDecayhists_t makePerDecayHists(const std::string &title="");

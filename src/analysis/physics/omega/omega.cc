@@ -120,8 +120,16 @@ OmegaEtaG::perDecayhists_t OmegaEtaG::makePerDecayHists(const string &title)
     h.angle_p = HistFac.makeTH1D(title+"Angle p rec/true","angle [#circ]","",BinSettings(4*360,0,180),pref+"angle_p");
     h.angle_p_ggg = HistFac.makeTH1D(title+"Angle p ggg","angle [#circ]","",BinSettings(4*360,0,180),pref+"angle_p_ggg");
     h.p_phi_diff = HistFac.makeTH1D(title+"p phi diff","angle [#circ]","",BinSettings(4*360,-90,90),pref+"p_phi_diff");
+    h.calc_proton_energy_theta = HistFac.makeTH2D(title+" Calc Proton","E [MeV]","#Theta [#circ]",BinSettings(1000),BinSettings(360,0,180),pref+"calc_p");
+    h.calc_proton_special = HistFac.makeTH2D(title+" Calc Proton Special","E [MeV]","#Theta [#circ]",BinSettings(1000),BinSettings(360,0,180),pref+"calc_p_special");
 
     return h;
+}
+
+TLorentzVector Boost(const TLorentzVector& lv, const TVector3& boost) {
+    TLorentzVector b(lv);
+    b.Boost(boost);
+    return b;
 }
 
 void OmegaEtaG::Analyse(const Event::Data &data, const Event &event)
@@ -206,14 +214,22 @@ void OmegaEtaG::Analyse(const Event::Data &data, const Event &event)
         if(h) {
             for(auto& th : event.MCTrue().TaggerHits()) {
                 const TLorentzVector beam_target = th->PhotonBeam() + TLorentzVector(0, 0, 0, ParticleTypeDatabase::Proton.Mass());
-                TLorentzVector mm = beam_target - gggState;
-                mm.Boost(-beam_target.BoostVector());
+                const TLorentzVector mm = beam_target - gggState;
+                const TLorentzVector mm_boosted = Boost(mm,-beam_target.BoostVector());
+
+
+                h->calc_proton_energy_theta->Fill(mm.Energy()-ParticleTypeDatabase::Proton.Mass(), mm.Theta() * TMath::RadToDeg());
+
                 h->mm->Fill(mm.M());
 
                 if(mc_p) {
+
+                    const Particle p_special(ParticleTypeDatabase::Proton, mm.Energy()-ParticleTypeDatabase::Proton.Mass(), mc_p->Theta(), mc_p->Phi());
+                    h->calc_proton_special->Fill(p_special.Ek(), p_special.Theta()*TMath::RadToDeg());
+
                     TLorentzVector mc_p_v = TLorentzVector(*mc_p);
                     mc_p_v.Boost(-beam_target.BoostVector());
-                    const auto angle = mc_p_v.Angle(mm.Vect());
+                    const auto angle = mc_p_v.Angle(mm_boosted.Vect());
                     h->angle_p->Fill(angle * TMath::RadToDeg());
 
                     TLorentzVector ggg_boost = gggState;
@@ -221,7 +237,7 @@ void OmegaEtaG::Analyse(const Event::Data &data, const Event &event)
                     const auto angle_pggg = ggg_boost.Angle(mc_p_v.Vect());
                     h->angle_p_ggg->Fill(angle_pggg * TMath::RadToDeg());
 
-                    const auto p_phi_diff = TVector2::Phi_mpi_pi(mm.Phi() - mc_p_v.Phi());
+                    const auto p_phi_diff = TVector2::Phi_mpi_pi(mm_boosted.Phi() - mc_p_v.Phi());
                     h->p_phi_diff->Fill(p_phi_diff);
 
                 }
@@ -313,7 +329,12 @@ void OmegaEtaG::ShowResult()
     hstack stack4("angle_p","angle_p");
     hstack stack5("angle_pggg","angle_pggg");
     hstack stack6("p_phi_diff","p_phi_diff");
+    canvas c7("OmegaEtaG per decay Results calc p");
+    c7 << drawoption("colz");
+    canvas c8("OmegaEtaG per decay Results calc p special");
+    c8 << drawoption("colz");
 
+    int i=0;
     for(auto& hist:histlist) {
         hist->gg->SetFillColor(*cit);
         hist->ggg->SetFillColor(*cit);
@@ -325,6 +346,10 @@ void OmegaEtaG::ShowResult()
         stack4 << hist->angle_p;
         stack5 << hist->angle_p_ggg;
         stack6 << hist->p_phi_diff;
+        c7 << hist->calc_proton_energy_theta;
+        c8 << hist->calc_proton_special;
+        if(i++==9)
+            break;
     }
 
     canvas("OmegaEtaG per Decay Results gg") << stack << endc;
@@ -333,6 +358,8 @@ void OmegaEtaG::ShowResult()
     canvas("OmegaEtaG per Decay Results Angle p") << drawoption("pads") << stack4 << endc;
     canvas("OmegaEtaG per Decay Results Angle p ggg") << drawoption("pads") << stack5 << endc;
     canvas("OmegaEtaG per Decay Resultsp phi diff") << drawoption("pads") << stack6 << endc;
+    c7 << endc;
+    c8 << endc;
 }
 
 
