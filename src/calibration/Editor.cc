@@ -233,7 +233,7 @@ bool Editor::ReduceToValid(const string &calibrationID)
 
 bool Editor::ExpandToMax(const string &calibrationID, uint32_t index)
 {
-    ExpandToMaxOther(calibrationID,calibrationID,index);
+    return ExpandToMaxOther(calibrationID,calibrationID,index);
 }
 
 std::list<std::pair<uint32_t, IntervalD> > Editor::GetAllRanges(const string &calibrationID) const
