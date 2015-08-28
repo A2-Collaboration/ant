@@ -85,7 +85,7 @@ struct TSlowControl : TDataRecord
       }
   };
 
-  Key GetKey() {
+  Key GetKey() const {
       // use implicit conversion constructor
       return *this;
   }
