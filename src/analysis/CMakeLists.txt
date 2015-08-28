@@ -46,6 +46,7 @@ set(ANALYSIS_PHYSICS
   physics/slowcontrol/Slowcontrol.cc
   physics/slowcontrol/Epics.cc
   physics/common/ReconstructCheck.cc
+  physics/tpc/PhysicsStats.cc
   )
 
 set(ANALYSIS_PLOT
