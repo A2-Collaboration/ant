@@ -23,6 +23,7 @@ public:
 
     protected:
         TH2* ggIM = nullptr;
+        TH2* timing_cuts = nullptr;
         std::shared_ptr<expconfig::detector::TAPS> taps_detector;
 
     public:
