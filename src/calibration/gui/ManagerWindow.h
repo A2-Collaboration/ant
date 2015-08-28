@@ -54,6 +54,7 @@ private:
 
     void CreateToolbar(TGVerticalFrame* frame);
     void UpdateLayout();
+    bool running = false;
     void RunManager();
 
 public:

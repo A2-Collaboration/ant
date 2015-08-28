@@ -241,6 +241,9 @@ void ManagerWindow::UpdateLayout()
 
 void ManagerWindow::RunManager()
 {
+    if(running)
+        return;
+    running  = true;
     while(true) {
         auto ret = manager->Run();
 
@@ -256,6 +259,7 @@ void ManagerWindow::RunManager()
         }
         gSystem->ProcessEvents();
     }
+    running = false;
 }
 
 ManagerWindow::ManagerWindow(Manager* manager_) :
