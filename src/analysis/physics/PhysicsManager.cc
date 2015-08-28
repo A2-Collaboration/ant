@@ -130,9 +130,6 @@ void PhysicsManager::ReadFrom(
         LOG(WARNING) << "No Analysis Instances activated. Will not analyse anything.";
     }
 
-    for(auto& p : physics) {
-        slowcontrolDistributor.Register(*p);
-    }
 
     auto slkeys = RequestedKeys(slc);
 
@@ -193,8 +190,6 @@ void PhysicsManager::ProcessEvent(unique_ptr<data::Event> event)
                 reconstructed.Particles().AddParticle(particle);
         }
     }
-
-    slowcontrolDistributor.Process(5);
 
     for( auto& m : physics ) {
         m->ProcessEvent(*event);

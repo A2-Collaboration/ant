@@ -44,8 +44,6 @@ set(ANALYSIS_PHYSICS
   physics/common/ParticleIDCheck.cc
   physics/common/ProtonCheck.cc
   physics/common/DebugPhysics.cc
-  physics/slowcontrol/Slowcontrol.cc
-  physics/slowcontrol/Epics.cc
   physics/common/ReconstructCheck.cc
   physics/tpc/PhysicsStats.cc
   )

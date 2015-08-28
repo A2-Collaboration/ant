@@ -3,7 +3,6 @@
 #include "analysis/plot/HistogramFactories.h"
 #include "analysis/data/Event.h"
 
-#include "analysis/physics/slowcontrol/Slowcontrol.h"
 #include "analysis/data/Slowcontrol.h"
 
 #include <list>
@@ -41,7 +40,7 @@ public:
 
 using PhysOptPtr = std::shared_ptr<const OptionsList>;
 
-class Physics: public slowcontrol::Receiver {
+class Physics {
 private:
     std::string name_;
     PhysOptPtr options;
