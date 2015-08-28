@@ -74,6 +74,6 @@ export APLCONSYS=$CACHE/APLCON
 export PLUTOSYS=$CACHE/pluto
 
 mkdir build && cd build
-cmake -DCTEST_PARALLEL_JOBS=$NCPU -DCOVERALLS=On -DCMAKE_BUILD_TYPE=Debug ..
+cmake -DCTEST_PARALLEL_JOBS=$NCPU -DCOVERAGE=On ..
 make -j$NCPU
 make build_and_test

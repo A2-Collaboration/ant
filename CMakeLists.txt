@@ -12,9 +12,6 @@ endif()
 include(cmake/settings.cmake)
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake/Modules/")
 
-option(COVERALLS "Generate coveralls data" OFF)
-enable_testing() # already here for correct coveralls functionality
-
 message(STATUS "*** Build Type:      " ${CMAKE_BUILD_TYPE})
 message(STATUS "*** Compiler Flags:  " ${DEFAULT_COMPILE_FLAGS})
 message(STATUS "*** Install libs to: " ${LIBRARY_OUTPUT_PATH})
