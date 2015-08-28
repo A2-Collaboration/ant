@@ -54,11 +54,7 @@ void Trigger_2014::BuildMappings(std::vector<UnpackerAcquConfig::hit_mapping_t>&
     for(const scaler_mapping_t& scaler : reference_scalers) {
         scaler_mappings.push_back(scaler);
         // add again as DetectorRead item
-        scaler_mappings.emplace_back(
-                    scaler.LogicalChannel.DetectorType,
-                    scaler.LogicalChannel.Channel,
-                    scaler.RawChannels[0].RawChannel // only one channel assumed
-                    );
+        scaler_mappings.emplace_back(scaler.Entries);
     }
 
     // some interesting scalers, added as TSlowControl only

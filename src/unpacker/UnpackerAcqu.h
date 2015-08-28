@@ -81,31 +81,51 @@ public:
 
     // scalers in acqu can be handled as additional information
     // for a logical detector channel, or as TSlowControl items
-    struct scaler_mapping_t : mapping_t<std::uint32_t> {
+    struct scaler_mapping_t  {
         // if non-empty, scaler is converted to TSlowControl item
         std::string SlowControlName;
 
-        // provide constructors
+        // one named slowcontrol may have more than one
+        // data entry (for example tagger scaler for each channel)
+        struct entry_t : mapping_t<std::uint32_t> {
+            entry_t( Detector_t::Type_t detector,
+                     unsigned channel,
+                     std::uint32_t rawChannel) :
+                mapping_t(detector, Channel_t::Type_t::Scaler, channel, rawChannel)
+            {}
+        };
+        std::vector< entry_t > Entries;
+
+        // provide constructors for simple creation
+        scaler_mapping_t(
+                const std::string& slowControlName,
+                const std::vector< entry_t >& entries
+                ) :
+            SlowControlName(slowControlName),
+            Entries(entries)
+        {}
+
         scaler_mapping_t(
                 const std::string& slowControlName,
                 Detector_t::Type_t detector,
                 unsigned channel,
                 std::uint32_t rawChannel
                 ) :
-            mapping_t(detector, Channel_t::Type_t::Scaler, channel, rawChannel),
-            SlowControlName(slowControlName)
-        {
-            if(SlowControlName.empty())
-                throw std::runtime_error("Do not use this ctor with empty slowControlName");
-        }
+            scaler_mapping_t(slowControlName, {entry_t(detector, channel, rawChannel)})
+        {}
+
         scaler_mapping_t(
                 Detector_t::Type_t detector,
                 unsigned channel,
                 std::uint32_t rawChannel
                 ) :
-            mapping_t(detector, Channel_t::Type_t::Scaler, channel, rawChannel),
-            SlowControlName()
+            scaler_mapping_t("", detector, channel, rawChannel)
         {}
+
+        scaler_mapping_t(const std::vector< entry_t >& entries) :
+            scaler_mapping_t("", entries)
+        {}
+
     };
 
     virtual void BuildMappings(

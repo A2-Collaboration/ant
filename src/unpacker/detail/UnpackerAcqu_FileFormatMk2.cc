@@ -389,48 +389,47 @@ void acqu::FileFormatMk2::FillTDetectorRead(
     // since there might be added as TSlowControl items
     // instead of TDetectorRead Hit
     if(!scalers.empty()) {
-        for(const UnpackerAcquConfig::scaler_mapping_t& mapping : scaler_mappings) {
-            if(mapping.SlowControlName.empty()) {
+        for(const UnpackerAcquConfig::scaler_mapping_t& scaler_mapping : scaler_mappings) {
+            if(scaler_mapping.SlowControlName.empty()) {
                 // scaler should be handled as part of the TDetectorRead's Hits
-                // build the raw data
-                const auto& rawData = getRawData(mapping, scalers);
-                // add to TDetectorRead record if something was found
-                if(!rawData.empty())
-                    record->Hits.emplace_back(mapping.LogicalChannel, move(rawData));
+                for(const auto& mapping : scaler_mapping.Entries) {
+                    // build the raw data
+                    const auto& rawData = getRawData(mapping, scalers);
+                    // add to TDetectorRead record if something was found
+                    if(!rawData.empty())
+                        record->Hits.emplace_back(mapping.LogicalChannel, move(rawData));
+                }
             }
             else {
                 // this scaler should be handled as TSlowControl item
                 auto record_sc = std_ext::make_unique<TSlowControl>(
-                            TID(ID_upper, ID_lower),
-                            TSlowControl::Type_t::AcquScaler,
-                            0, /// \todo estimate some timestamp from ID_lower here?
-                            std_ext::formatter()
-                            << Detector_t::ToString(mapping.LogicalChannel.DetectorType)
-                            << "/"
-                            << mapping.SlowControlName,
-                            "" // spare the description
-                            );
+                                     TID(ID_upper, ID_lower),
+                                     TSlowControl::Type_t::AcquScaler,
+                                     0, /// \todo estimate some timestamp from ID_lower here?
+                                     scaler_mapping.SlowControlName,
+                                     "" // spare the description
+                                     );
 
                 // fill TSlowControl's payload
-                using RawChannel_t = UnpackerAcquConfig::RawChannel_t<uint32_t>;
-                for(const RawChannel_t& rawChannel : mapping.RawChannels) {
-                    const auto it_map = scalers.find(rawChannel.RawChannel);
-                    if(it_map==scalers.cend())
-                        continue;
-                    const std::vector<uint32_t>& values = it_map->second;
-                    // require strict > to prevent signed/unsigned ambiguity
-                    using payload_t = decltype(record_sc->Payload_Int);
-                    static_assert(sizeof(payload_t::value_type) > sizeof(uint32_t),
-                                  "Payload_Int not suitable for scaler value");
-                    // transform the scaler values to KeyValue entries
-                    // in TSlowControl's Payload_Int
-                    payload_t& payload = record_sc->Payload_Int;
-                    auto do_transform = [&mapping] (uint32_t value) {
-                        return TKeyValue<int64_t>{mapping.LogicalChannel.Channel, value};
-                    };
-                    payload.resize(values.size());
-                    transform(values.cbegin(), values.cend(),
-                              payload.begin(), do_transform);
+
+                for(const auto& mapping : scaler_mapping.Entries) {
+                    using RawChannel_t = UnpackerAcquConfig::RawChannel_t<uint32_t>;
+                    for(const RawChannel_t& rawChannel : mapping.RawChannels) {
+                        const auto it_map = scalers.find(rawChannel.RawChannel);
+                        if(it_map==scalers.cend())
+                            continue;
+                        const std::vector<uint32_t>& values = it_map->second;
+                        // require strict > to prevent signed/unsigned ambiguity
+                        using payload_t = decltype(record_sc->Payload_Int);
+                        static_assert(sizeof(payload_t::value_type) > sizeof(uint32_t),
+                                      "Payload_Int not suitable for scaler value");
+                        // transform the scaler values to KeyValue entries
+                        // in TSlowControl's Payload_Int
+                        payload_t& payload = record_sc->Payload_Int;
+                        for(const uint32_t& value : values) {
+                            payload.emplace_back(mapping.LogicalChannel.Channel, value);
+                        }
+                    }
                 }
 
                 fillQueue(queue, move(record_sc));
