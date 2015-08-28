@@ -3,6 +3,7 @@
 #include "Physics.h"
 #include "tree/TSlowControl.h"
 #include "analysis/physics/slowcontrol/Slowcontrol.h"
+#include "analysis/data/Slowcontrol.h"
 
 #include <queue>
 
@@ -47,6 +48,8 @@ protected:
 
     ant::analysis::slowcontrol::Distributor slowcontrolDistributor;
 
+    ant::analysis::data::Slowcontrol slc;
+
 public:
 
     PhysicsManager();
@@ -54,10 +57,10 @@ public:
 
     template <typename T, typename ... args_t>
     void AddPhysics(args_t&&... args) {
-        physics.push_back(
-              std_ext::make_unique<T>(
+       AddPhysics(
+              move(std_ext::make_unique<T>(
                 std::forward<args_t>(args)...
-                )
+                ))
               );
     }
 
@@ -66,6 +69,7 @@ public:
         if(pc==nullptr)
             return;
 
+        pc->Initialize(slc);
         physics.emplace_back(std::move(pc));
     }
 

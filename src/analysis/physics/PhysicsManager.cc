@@ -7,6 +7,8 @@
 #include "tree/TAntHeader.h"
 #include "base/Logger.h"
 
+#include "input/detail/SlowcontrolCreator.h"
+
 #include <iomanip>
 #include <chrono>
 
@@ -132,6 +134,12 @@ void PhysicsManager::ReadFrom(
         slowcontrolDistributor.Register(*p);
     }
 
+    auto slkeys = RequestedKeys(slc);
+
+    VLOG(7) << "Requested Slowcontrol keys";
+    for(const auto& key : slkeys) {
+        VLOG(7) << key;
+    }
 
     chrono::time_point<std::chrono::system_clock> start, end;
     start = chrono::system_clock::now();
