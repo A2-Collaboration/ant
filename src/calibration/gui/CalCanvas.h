@@ -7,6 +7,7 @@
 #include <memory>
 #include <string>
 #include <stack>
+#include <limits>
 
 #include "TCanvas.h"
 
@@ -38,7 +39,19 @@ protected:
 
     TGStatusBar* statusbar = nullptr;
 
-    void PreserveAxis(TAxis* axis1, TAxis* axis2);
+    struct axis_settings_t {
+        double x_min = std::numeric_limits<double>::quiet_NaN();
+        double x_max = std::numeric_limits<double>::quiet_NaN();
+        double y_min = std::numeric_limits<double>::quiet_NaN();
+        double y_max = std::numeric_limits<double>::quiet_NaN();
+        bool HaveX() const {
+            return std::isfinite(x_min) && std::isfinite(x_max);
+        }
+        bool HaveY() const {
+            return std::isfinite(y_min) && std::isfinite(y_max);
+        }
+    };
+    axis_settings_t axis_settings;
 
 public:
     // constructor for simple canvas
@@ -64,8 +77,7 @@ public:
 
 
     virtual void Update() override;
-
-
+    void Update(bool fromhist);
 
     /**
      * @brief ShowGuidelines remove the snapping guidelines completely

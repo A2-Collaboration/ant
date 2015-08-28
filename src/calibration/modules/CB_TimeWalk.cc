@@ -12,6 +12,7 @@
 #include "TGraph.h"
 #include "TFitResult.h"
 #include "TObjArray.h"
+#include "TDirectory.h"
 
 #include <tree/TCluster.h>
 
@@ -222,10 +223,9 @@ gui::Manager_traits::DoFitReturn_t CB_TimeWalk::TheGUI::DoFit(TH1* hist, unsigne
     h_timewalk->GetZaxis()->SetRange(ch,ch+1);
     stringstream ss_name;
     ss_name << "Ch" << ch << "_yx";
-    proj = dynamic_cast<TH2D*>(h_timewalk->Project3D(ss_name.str().c_str()));
-    TObjArray aSlices;
-    proj->FitSlicesY(nullptr, 0, -1, 0, "QNR", &aSlices);
-    means = dynamic_cast<TH1D*>(aSlices.At(1)->Clone()); // important to use Clone here!
+    proj = dynamic_cast<TH2D*>(h_timewalk->Project3D("yx"));
+    proj->FitSlicesY();
+    means = dynamic_cast<TH1D*>(gDirectory->Get("timewalk_yx_1"));
 
     timewalks[ch]->Fit(means);
 

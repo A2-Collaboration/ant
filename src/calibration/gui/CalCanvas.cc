@@ -29,21 +29,21 @@ void CalCanvas::Show(TH1* h, FitFunction* f, bool preserveYaxis) {
         UndoStack.pop();
     }
 
+    // restore zoom state of axis
+    if(axis_settings.HaveX()) {
+        TAxis* xaxis = h->GetXaxis();
+        xaxis->SetRange(xaxis->FindBin(axis_settings.x_min),
+                        xaxis->FindBin(axis_settings.x_max));
+    }
+    if(preserveYaxis && axis_settings.HaveY()) {
+        // we cannot use PreserveAxis, since the Y axis is unbinned
+        // for a one-dimensional histogram...
+        h->SetAxisRange(axis_settings.y_min, axis_settings.y_max, "Y");
+    }
+
     this->cd();
     h->Draw();
     f->Draw();
-
-    // preserve zoom state of axis
-    if(hist != nullptr) {
-        PreserveAxis(hist->GetXaxis(), h->GetXaxis());
-        if(preserveYaxis) {
-            // we cannot use PreserveAxis, since the Y axis is unbinned
-            // for a one-dimensional histogram...
-            Double_t ymin = hist->GetMinimum();
-            Double_t ymax = hist->GetMaximum();
-            h->SetAxisRange(ymin, ymax, "Y");
-        }
-    }
 
     func = f;
     hist = h;
@@ -102,17 +102,6 @@ Indicator* CalCanvas::MakeGUIElement(IndicatorKnob &knob)
     return nullptr;
 }
 
-void CalCanvas::PreserveAxis(TAxis* axis1, TAxis* axis2)
-{
-    Int_t binmin = axis1->GetFirst();
-    Int_t binmax = axis1->GetLast();
-    Float_t xmin = axis1->GetBinLowEdge(binmin);
-    Float_t xmax = axis1->GetBinLowEdge(binmax);
-    Int_t newmin = axis2->FindBin(xmin);
-    Int_t newmax = axis2->FindBin(xmax);
-    axis2->SetRange(newmin,newmax);
-}
-
 void CalCanvas::ClearIndicators() {
     for(auto& i : indicators) {
         delete i;
@@ -145,7 +134,7 @@ void CalCanvas::SetupGUI() {
     public:
         ExecUpdate(CalCanvas* c) : canvas(c)        {}
         virtual void Exec(const char*) override {
-            canvas->Update();
+            canvas->Update(true);
         }
     };
 
@@ -210,12 +199,26 @@ void CalCanvas::UndoPop()
 }
 
 void CalCanvas::Update() {
-    TCanvas::Update();
+    Update(false);
+}
 
+void CalCanvas::Update(bool fromhist)
+{
+    TCanvas::Update();
     auto p = getViewport();
     for(auto& i : indicators) {
         i->RangeUpdate(p);
         i->UpdateMe();
+    }
+
+    // remember the axis settings
+    if(fromhist && hist != nullptr) {
+        TAxis* xaxis = hist->GetXaxis();
+        axis_settings.x_min = xaxis->GetBinLowEdge(xaxis->GetFirst());
+        axis_settings.x_max = xaxis->GetBinLowEdge(xaxis->GetLast());
+
+        axis_settings.y_min = hist->GetMinimum();
+        axis_settings.y_max = hist->GetMaximum();
     }
 }
 
