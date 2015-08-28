@@ -48,6 +48,8 @@ struct TSlowControl : TDataRecord
   Type_t GetType() const {
       return static_cast<Type_t>(Type);
   }
+  static const char* type_to_string(Type_t type);
+
   TSlowControl(TID id,
                Type_t type,
                std::time_t timestamp,
@@ -64,7 +66,8 @@ struct TSlowControl : TDataRecord
              << " Description='" << Description << "'";
   }
 
-  struct Key {
+  struct Key  : printable_traits
+  {
       Type_t Type;
       std::string Name;
       Key(Type_t type, const std::string& name) :
@@ -75,9 +78,15 @@ struct TSlowControl : TDataRecord
       bool operator<(const Key& rhs) const {
           return std::tie(Type, Name) < std::tie(rhs.Type, rhs.Name);
       }
+
+      virtual std::ostream& Print( std::ostream& s) const override {
+          return s << "TSlowControl::Key Type=" << TSlowControl::type_to_string(Type)
+                   << " " << Name;
+      }
   };
 
   Key GetKey() {
+      // use implicit conversion constructor
       return *this;
   }
 
@@ -88,8 +97,13 @@ struct TSlowControl : TDataRecord
 };
 
 #ifndef __CINT__
+
 inline const char* TSlowControl::TypeToString() const {
-    switch(GetType()) {
+    return type_to_string(GetType());
+}
+
+inline const char* TSlowControl::type_to_string(Type_t type) {
+    switch(type) {
     case Type_t::AcquScaler:
       return "AcquScaler";
     case Type_t::EpicsOneShot:
