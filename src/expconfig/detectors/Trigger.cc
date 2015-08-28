@@ -1,7 +1,6 @@
 #include "Trigger.h"
 
 #include "tree/THeaderInfo.h"
-#include "base/std_ext.h"
 
 using namespace std;
 using namespace ant;

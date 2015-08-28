@@ -3,7 +3,6 @@
 #include "UnpackerA2Geant.h"
 
 #include "base/Logger.h"
-#include "base/std_ext.h"
 
 #include <algorithm>
 #include <iostream>

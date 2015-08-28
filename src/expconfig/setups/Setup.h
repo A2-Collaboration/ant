@@ -9,7 +9,6 @@
 #include "tree/THeaderInfo.h"
 
 #include "base/Paths.h"
-#include "base/std_ext.h"
 #include "base/Logger.h"
 
 // this header always includes all detectors and calibrations

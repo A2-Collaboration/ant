@@ -11,8 +11,6 @@
 #include "tree/THeaderInfo.h"
 #include "tree/TDetectorRead.h"
 
-#include "base/std_ext.h"
-
 using namespace std;
 using namespace ant;
 using namespace ant::reconstruct;

@@ -5,6 +5,7 @@
 #include "unpacker/UnpackerAcqu.h"
 #include "unpacker/UnpackerA2Geant.h"
 #include "base/Logger.h"
+#include "base/std_ext/misc.h"
 
 #include <type_traits>
 #include <list>

@@ -16,8 +16,6 @@
 #include "base/Logger.h"
 #include "RawFileReader.h"
 
-#include "base/std_ext.h"
-
 #include <algorithm>
 #include <exception>
 #include <list>

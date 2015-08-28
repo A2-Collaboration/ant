@@ -3,8 +3,6 @@
 #include "analysis/plot/HistogramFactories.h"
 #include "analysis/data/Event.h"
 
-#include "base/std_ext.h"
-
 #include "analysis/physics/slowcontrol/Slowcontrol.h"
 
 #include <list>

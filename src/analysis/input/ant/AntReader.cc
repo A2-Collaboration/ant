@@ -10,7 +10,6 @@
 #include "tree/TDetectorRead.h"
 #include "tree/TSlowControl.h"
 
-#include "base/std_ext.h"
 #include "base/Logger.h"
 
 #include "TTree.h"

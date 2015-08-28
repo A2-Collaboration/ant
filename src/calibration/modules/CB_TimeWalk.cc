@@ -8,7 +8,6 @@
 
 #include "expconfig/detectors/CB.h"
 #include "base/Logger.h"
-#include "base/std_ext.h"
 
 #include "TGraph.h"
 #include "TFitResult.h"

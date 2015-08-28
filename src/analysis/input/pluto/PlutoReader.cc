@@ -10,7 +10,6 @@
 
 #include "base/WrapTFile.h"
 #include "base/Logger.h"
-#include "base/std_ext.h"
 
 #include "TTree.h"
 #include "TClonesArray.h"

@@ -12,6 +12,9 @@
 
 #include "base/Logger.h"
 
+#include "TH1D.h"
+#include "TH2D.h"
+
 #include <cstdint>
 
 using namespace std;

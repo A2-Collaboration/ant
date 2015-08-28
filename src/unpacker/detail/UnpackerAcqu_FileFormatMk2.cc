@@ -11,7 +11,6 @@
 
 #include "RawFileReader.h"
 
-#include "base/std_ext.h"
 #include "base/Logger.h"
 
 using namespace std;

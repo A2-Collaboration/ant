@@ -13,7 +13,6 @@ set(SRCS
   Logger.cc
   tmpfile_t.cc
   filesystem.cc
-  std_ext.h
   Format.h
   Tree.h
   root_printable.h
@@ -22,6 +21,12 @@ set(SRCS
   CmdLine.h
   Paths.h
   matrixstack.cc
+  std_ext/math.h
+  std_ext/memory.h
+  std_ext/misc.h
+  std_ext/string.h
+  std_ext/time.h
+  std_ext/vector.h
   cbtaps_display/TH2DrawTool.cc
   cbtaps_display/TH2Crystals.cc
   cbtaps_display/TH2CB.cc

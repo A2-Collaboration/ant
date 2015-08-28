@@ -2,7 +2,7 @@
 #include "catch_config.h"
 
 #include "base/WrapTFile.h"
-#include "base/std_ext.h"
+#include "base/std_ext/memory.h"
 
 #include <cstdio>
 #include <memory>

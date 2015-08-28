@@ -1,6 +1,5 @@
 #include "TAPSVeto.h"
 #include <cassert>
-#include "base/std_ext.h"
 
 #include "tree/THeaderInfo.h"
 

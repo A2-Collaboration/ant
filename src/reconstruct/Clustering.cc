@@ -7,7 +7,6 @@
 #include "tree/TDetectorRead.h"
 
 #include "base/Logger.h"
-#include "base/std_ext.h"
 
 using namespace std;
 using namespace ant;

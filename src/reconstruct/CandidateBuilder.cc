@@ -5,7 +5,7 @@
 #include "expconfig/detectors/PID.h"
 #include "expconfig/detectors/TAPS.h"
 #include "expconfig/detectors/TAPSVeto.h"
-#include "base/std_ext.h"
+#include "base/std_ext/math.h"
 
 #include "TVector2.h"
 

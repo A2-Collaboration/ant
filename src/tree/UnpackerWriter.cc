@@ -9,7 +9,6 @@
 
 #include "base/WrapTFile.h"
 #include "base/Logger.h"
-#include "base/std_ext.h"
 
 #include <algorithm>
 

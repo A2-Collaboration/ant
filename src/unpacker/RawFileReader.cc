@@ -1,7 +1,7 @@
 #include "RawFileReader.h"
 
 #include "base/Logger.h"
-#include "base/std_ext.h"
+#include "base/std_ext/memory.h"
 
 #include <cstdio> // for BUFSIZ
 #include <cstring> // for strerror

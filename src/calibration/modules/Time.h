@@ -1,18 +1,19 @@
 #pragma once
 
 #include "calibration/Calibration.h"
-#include "base/Detector_t.h"
 
 #include "tree/TDataRecord.h" // for TKeyValue, TID
+
+#include "base/std_ext/math.h"
+#include "base/Detector_t.h"
 #include "base/interval.h"
 
 #include "calibration/fitfunctions/FitGausPol0.h"
 
-#include <memory>
-#include <limits>
 
-#include "TH1D.h"
-#include "TH2D.h"
+
+
+#include <memory>
 
 class TH1;
 

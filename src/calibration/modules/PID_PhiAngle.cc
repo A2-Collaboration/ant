@@ -6,7 +6,7 @@
 
 #include "expconfig/detectors/PID.h"
 #include "base/Logger.h"
-#include "base/std_ext.h"
+#include "base/std_ext/math.h"
 
 #include "TGraph.h"
 #include "TFitResult.h"

@@ -4,7 +4,7 @@
 #include "calibration/gui/Indicator_traits.h"
 
 #include "base/interval.h"
-#include "base/std_ext.h"
+#include "base/std_ext/memory.h"
 #include "base/interval.h"
 
 #include "Rtypes.h"

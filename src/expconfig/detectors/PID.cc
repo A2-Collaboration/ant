@@ -8,7 +8,7 @@
 
 
 #include "tree/THeaderInfo.h"
-#include "base/std_ext.h"
+#include "base/std_ext/math.h"
 #include "base/root_printable.h"
 
 #include <cassert>

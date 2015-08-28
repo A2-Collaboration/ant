@@ -48,7 +48,6 @@
 #include <algorithm>
 #include <stdlib.h> // Needed for exit(), which isn't defined in some envs.
 #include <memory>
-#include "base/std_ext.h"
 
 namespace TCLAP {
 

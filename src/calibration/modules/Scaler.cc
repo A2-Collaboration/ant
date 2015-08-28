@@ -1,8 +1,6 @@
 #include "Scaler.h"
 
 #include "tree/TDetectorRead.h"
-
-#include "base/std_ext.h"
 #include "base/Logger.h"
 
 using namespace std;

@@ -5,8 +5,6 @@
 
 #include "tree/TDataRecord.h"
 
-#include "base/std_ext.h"
-
 using namespace std;
 using namespace ant;
 using namespace ant::reconstruct;

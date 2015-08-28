@@ -1,8 +1,6 @@
 #include "BaseFunctions.h"
 
-#include "base/std_ext.h"
-
-#include <cmath>
+#include "base/std_ext/math.h"
 
 #include "TF1.h"
 

@@ -4,8 +4,6 @@
 #include <memory>
 #include <type_traits>
 
-#include "base/std_ext.h"
-
 namespace ant {
 namespace std_ext {
 

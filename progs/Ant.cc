@@ -19,7 +19,7 @@
 #include "tree/THeaderInfo.h"
 #include "tree/TAntHeader.h"
 
-#include "base/std_ext.h"
+#include "base/std_ext/vector.h"
 #include "base/WrapTFile.h"
 #include "base/Logger.h"
 #include "base/CmdLine.h"

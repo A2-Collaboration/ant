@@ -1,7 +1,7 @@
 #include "ACECanvas.h"
 
 #include "calibration/Editor.h"
-#include "base/std_ext.h"
+#include "base/std_ext/string.h"
 
 #include "TH2D.h"
 #include "TH2.h"

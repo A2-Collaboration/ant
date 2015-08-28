@@ -1,16 +1,17 @@
 #include "GoatReader.h"
 
-#include <string>
-#include <iostream>
-#include <memory>
-
-#include "TTree.h"
-
 #include "detail/TreeManager.h"
 
 #include "base/WrapTFile.h"
 #include "base/Logger.h"
-#include "base/std_ext.h"
+#include "base/std_ext/memory.h"
+
+#include "TTree.h"
+
+#include <string>
+#include <iostream>
+#include <memory>
+
 
 using namespace ant;
 using namespace ant::analysis;
