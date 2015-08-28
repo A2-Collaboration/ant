@@ -26,6 +26,7 @@ set(ANALYSIS_INPUT
   input/ant/AntReader.cc
   input/pluto/PlutoReader.cc
   input/pluto/detail/PlutoWrapper.cc
+  input/detail/SlowcontrolCreator.cc
 )
 
 set(ANALYSIS_PHYSICS
