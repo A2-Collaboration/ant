@@ -4,6 +4,7 @@
 #include "analysis/data/Event.h"
 
 #include "analysis/physics/slowcontrol/Slowcontrol.h"
+#include "analysis/data/Slowcontrol.h"
 
 #include <list>
 #include <string>
@@ -57,6 +58,8 @@ public:
     virtual void Finish() =0;
     virtual void ShowResult() =0;
     std::string GetName() { return name_; }
+
+    virtual void Initialize(data::Slowcontrol& slowcontrol);
 };
 
 template<class T>

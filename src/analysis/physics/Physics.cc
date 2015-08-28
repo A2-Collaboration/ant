@@ -24,6 +24,10 @@ Physics::Physics(const string &name, PhysOptPtr opts):
     HistFac(name)
 {}
 
+void Physics::Initialize(data::Slowcontrol&)
+{
+}
+
 PhysicsRegistry& PhysicsRegistry::get()
 {
     static PhysicsRegistry instance;

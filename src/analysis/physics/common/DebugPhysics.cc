@@ -26,4 +26,9 @@ void DebugPhysics::ShowResult()
     LOG(INFO) << "Nop";
 }
 
+void DebugPhysics::Initialize(data::Slowcontrol& slowcontrol)
+{
+    slowcontrol.FaradayCup.Request();
+}
+
 AUTO_REGISTER_PHYSICS(DebugPhysics, "DebugPhysics")

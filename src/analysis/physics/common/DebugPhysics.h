@@ -15,6 +15,7 @@ public:
     virtual void ProcessEvent(const data::Event& event);
     virtual void Finish();
     virtual void ShowResult();
+    virtual void Initialize(data::Slowcontrol &slowcontrol) override;
 };
 
 }}} // namespace ant::analysis::physics
