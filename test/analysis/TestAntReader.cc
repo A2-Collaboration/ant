@@ -7,6 +7,7 @@
 #include "tree/THeaderInfo.h"
 #include "tree/TDetectorRead.h"
 #include "tree/TEvent.h"
+#include "tree/UnpackerReader.h"
 
 #include "expconfig/ExpConfig.h"
 #include "unpacker/Unpacker.h"
@@ -22,57 +23,112 @@
 
 using namespace std;
 using namespace ant;
+using namespace ant::analysis;
 using namespace ant::analysis::input;
 
-void dotest();
-void generateInputFile(const std::string& filename);
+void dotest_read();
+void dotest_writeread(bool no_reconstruct, bool uncalibratedDetectorReads, bool calibratedDetectorReads);
 
-TEST_CASE("AntReader", "[analysis]") {
-    dotest();
+TEST_CASE("AntReader: Simply read", "[analysis]") {
+    dotest_read();
+}
+TEST_CASE("AntReader: Write and read", "[analysis]") {
+    dotest_writeread(false, false, false);
+}
+TEST_CASE("AntReader: Write and read with uncalibrated detectorreads", "[analysis]") {
+    dotest_writeread(false, true, false);
+}
+TEST_CASE("AntReader: Write and read with calibrated detectorreads", "[analysis]") {
+    dotest_writeread(false, false, true);
+}
+TEST_CASE("AntReader: Write and read (no reconstruct)", "[analysis]") {
+    dotest_writeread(true, false, false);
+}
+TEST_CASE("AntReader: Write and read with uncalibrated detectorreads (no reconstruct)", "[analysis]") {
+    dotest_writeread(true, true, false);
+}
+TEST_CASE("AntReader: Write and read with calibrated detectorreads (no reconstruct)", "[analysis]") {
+    dotest_writeread(true, false, true);
 }
 
+void drive_reader(unique_ptr<AntReader> unpacker_reader, bool no_events_expected = false) {
+    unsigned nEvents = 0;
+    unsigned nCandidates = 0;
+    unsigned nSlowControls = 0;
+    while(true) {
+        bool flag = false;
+        data::Event event;
 
-void dotest() {
-    tmpfile_t tmp;
-    generateInputFile(tmp.filename);
-    auto filemanager = make_shared<WrapTFileInput>(tmp.filename);
+        if(unpacker_reader->ReadNextEvent(event)) {
+            nEvents++;
+            nCandidates += event.Reconstructed().Candidates().size();
+            flag = true;
+        }
 
-    /// \todo use new unpacker-based AntReader here
+        auto slowcontrol = unpacker_reader->ReadNextSlowControl();
+        if(slowcontrol != nullptr) {
+            nSlowControls++;
+            flag = true;
+        }
+
+        if(!flag)
+            break;
+    }
+
+    if(no_events_expected) {
+        REQUIRE(nEvents==0);
+    }
+    else {
+        REQUIRE(nEvents==221);
+        REQUIRE(nSlowControls == 8);
+        REQUIRE(nCandidates == 820);
+    }
 }
 
+void dotest_read() {
+    auto unpacker = Unpacker::Get(string(TEST_BLOBS_DIRECTORY)+"/Acqu_oneevent-big.dat.xz");
+    auto reconstruct = std_ext::make_unique<Reconstruct>();
+    auto unpacker_reader = std_ext::make_unique<AntReader>(move(unpacker), move(reconstruct));
 
-void generateInputFile(const string& filename) {
+    REQUIRE(unpacker_reader->IsSource());
+
+    drive_reader(move(unpacker_reader));
+}
+
+void dotest_writeread(
+        bool no_reconstruct,
+        bool uncalibratedDetectorReads,
+        bool calibratedDetectorReads) {
+
+    // FIRST STAGE (OUTPUT)
 
     auto unpacker = Unpacker::Get(string(TEST_BLOBS_DIRECTORY)+"/Acqu_oneevent-big.dat.xz");
-
-    // write some stuff to a ROOT tree
-    WrapTFileOutput file(filename,WrapTFileOutput::mode_t::recreate,true);
-
-    TTree* treeEvent = new TTree("treeEvent", "treeEvent");
-    TEvent* Event = new TEvent();
-    treeEvent->Branch("Event", "ant::TEvent", &Event);
-
-
     auto reconstruct = std_ext::make_unique<Reconstruct>();
-    bool haveReconstruct = false;
+    auto unpacker_reader = std_ext::make_unique<AntReader>(move(unpacker), move(reconstruct));
 
-    while(auto item = unpacker->NextItem()) {
+    tmpfile_t output;
+    REQUIRE_THROWS_AS(unpacker_reader->EnableUnpackerWriter(output.filename, true, true), DataReader::Exception);
+    REQUIRE_NOTHROW(unpacker_reader->EnableUnpackerWriter(output.filename, uncalibratedDetectorReads, calibratedDetectorReads));
 
-        auto HeaderInfo = dynamic_cast<THeaderInfo*>(item.get());
-        if(HeaderInfo != nullptr) {
-            reconstruct->Initialize(*HeaderInfo);
-            haveReconstruct = true;
-            continue;
-        }
+    // drive the reader, generates the outputfile
+    drive_reader(move(unpacker_reader));
 
-        auto DetectorRead = dynamic_cast<TDetectorRead*>(item.get());
-        if(DetectorRead != nullptr) {
+    // SECOND STAGE (READ BACK)
 
-            if(haveReconstruct) {
-                auto event_ptr = reconstruct->DoReconstruct(*DetectorRead);
-                Event = event_ptr.get();
-                treeEvent->Fill();
-            }
-        }
-    }
+    unpacker_reader = nullptr;
+    auto rootfiles = make_shared<WrapTFileInput>();
+    REQUIRE_NOTHROW(rootfiles->OpenFile(output.filename));
+    auto unpackerFile = std_ext::make_unique<tree::UnpackerReader>(rootfiles);
+
+    REQUIRE(unpackerFile->OpenInput());
+
+    // construct another unpacker reader from the ROOT file
+    reconstruct = no_reconstruct ? nullptr : std_ext::make_unique<Reconstruct>();
+    unpacker_reader = std_ext::make_unique<AntReader>(move(unpackerFile), move(reconstruct));
+
+    // drive the reader again
+    // if we ran with no reconstruct in the second stage, we expect no events
+    // when reading detectorreads
+    bool no_events_expected = no_reconstruct && (uncalibratedDetectorReads || calibratedDetectorReads);
+    drive_reader(move(unpacker_reader), no_events_expected);
 }
