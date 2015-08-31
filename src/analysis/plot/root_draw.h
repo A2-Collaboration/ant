@@ -2,9 +2,12 @@
 
 #include <string>
 #include <list>
+#include <vector>
 #include <map>
 #include <memory>
 #include <functional>
+
+#include "Rtypes.h"
 
 class THStack;
 class TH1D;
@@ -185,5 +188,8 @@ public:
     void Draw(const std::string &option) const;
 };
 
+struct ColorPalette {
+    static const std::vector<Color_t> Colors;
+};
 
 }

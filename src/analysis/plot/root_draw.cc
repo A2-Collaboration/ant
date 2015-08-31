@@ -185,3 +185,4 @@ void hstack::Draw(const string &option) const
     stack->Draw(option.c_str());
 }
 
+const std::vector<Color_t> ant::ColorPalette::Colors = {kRed, kGreen, kBlue, kYellow, kMagenta, kCyan, kOrange, kPink+9, kSpring+10, kGray};
