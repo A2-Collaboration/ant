@@ -5,6 +5,7 @@
 
 #include <map>
 #include <stdexcept>
+#include <limits>
 
 using namespace std;
 using namespace ant;
@@ -20,3 +21,16 @@ void SlowcontrolRequestable::Request()
     requested = true;
 }
 
+
+
+template <> ant::analysis::data::ReqestableVariable<double>::ReqestableVariable():
+    data(std::numeric_limits<double>::quiet_NaN())
+{
+
+}
+
+template <> ant::analysis::data::ReqestableVariable<std::int64_t>::ReqestableVariable():
+    data(std::numeric_limits<int64_t>::lowest())
+{
+
+}
