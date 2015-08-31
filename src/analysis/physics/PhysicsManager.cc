@@ -104,8 +104,10 @@ void PhysicsManager::ProcessEventBuffer(
         return;
 
     while(!eventbuffer.empty()) {
+
         if(!running && !flush)
             return;
+
         if(nEventsProcessed>=maxevents)
             return;
 
@@ -178,7 +180,12 @@ void PhysicsManager::ReadFrom(
             nEventsRead++;
         }
 
-        ProcessEventBuffer(maxevents, running, header);
+        if(slowcontrol_mgr.isComplete()) {
+            VLOG(5) << "Slowcontrol set complete. Processing event buffer.";
+            ProcessEventBuffer(maxevents, running, header);
+        } else {
+            VLOG(5) << "Finished reading but slowcontrol block not complete. Dropping remaining " << eventbuffer.size() << " events.";
+        }
     }
 
     VLOG(5) << "First EventId processed: " << header.FirstID;

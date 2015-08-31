@@ -20,7 +20,7 @@ protected:
 
     TID minimal_in_buffer;
 
-    TID min(const TID& a, const TID& b);
+    static TID min(const TID& a, const TID& b);
 
 public:
     Manager() = default;
@@ -30,6 +30,8 @@ public:
     void ProcessSlowcontrol(std::unique_ptr<const TSlowControl> data);
 
     bool isComplete() const;
+
+    TID FindMinimalTID() const;
 
     TID UpdateSlowcontrolData(data::Slowcontrol& slc);
 
