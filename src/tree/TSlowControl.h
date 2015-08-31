@@ -15,12 +15,14 @@ struct TSlowControl : TDataRecord
 {
   TSlowControl(const TID& id,
                std::uint8_t type,
+               std::uint8_t validity,
                std::time_t timestamp,
                const std::string& name,
                const std::string& description
                ) :
     TDataRecord(id),
     Type(type),
+    Validity(validity),
     Timestamp(timestamp),
     Name(name),
     Description(description)
@@ -31,6 +33,7 @@ struct TSlowControl : TDataRecord
   }
 
   std::uint8_t Type;
+  std::uint8_t Validity;
   std::int64_t Timestamp;   // unix epoch, only meaningful for Epics data
   std::string  Name;
   std::string  Description;
@@ -40,8 +43,10 @@ struct TSlowControl : TDataRecord
   std::vector< TKeyValue<std::string> >  Payload_String;
 
   const char* TypeToString() const;
+  const char* ValidityToString() const;
 
 #ifndef __CINT__
+
   enum class Type_t : std::uint8_t {
     AcquScaler, EpicsOneShot, EpicsScaler, EpicsTimer
   };
@@ -50,12 +55,26 @@ struct TSlowControl : TDataRecord
   }
   static const char* type_to_string(Type_t type);
 
+  /**
+   * @brief The Validity_t enum determines if the slowcontrol item
+   * is valid for the upcoming or the previous events
+   */
+  enum class Validity_t : std::uint8_t {
+      Backward, Forward
+  };
+  Validity_t GetValidity() const {
+      return static_cast<Validity_t>(Validity);
+  }
+
   TSlowControl(TID id,
                Type_t type,
+               Validity_t validity,
                std::time_t timestamp,
                const std::string& name,
                const std::string& description) :
-    TSlowControl(id, static_cast<decltype(Type)>(type),
+    TSlowControl(id,
+                 static_cast<decltype(Type)>(type),
+                 static_cast<decltype(Type)>(validity),
                  timestamp, name, description)
   {}
   virtual std::ostream& Print( std::ostream& s) const override {
@@ -100,6 +119,16 @@ struct TSlowControl : TDataRecord
 
 inline const char* TSlowControl::TypeToString() const {
     return type_to_string(GetType());
+}
+
+inline const char* TSlowControl::ValidityToString() const {
+    switch(GetValidity()) {
+    case Validity_t::Backward:
+        return "Backward";
+    case Validity_t::Forward:
+        return "Forward";
+    }
+    throw std::runtime_error("Not implemented");
 }
 
 inline const char* TSlowControl::type_to_string(Type_t type) {

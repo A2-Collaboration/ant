@@ -405,6 +405,7 @@ void acqu::FileFormatMk2::FillTDetectorRead(
                 auto record_sc = std_ext::make_unique<TSlowControl>(
                                      TID(ID_upper, ID_lower),
                                      TSlowControl::Type_t::AcquScaler,
+                                     TSlowControl::Validity_t::Backward,
                                      0, /// \todo estimate some timestamp from ID_lower here?
                                      scaler_mapping.SlowControlName,
                                      "" // spare the description
@@ -689,24 +690,28 @@ void acqu::FileFormatMk2::HandleEPICSBuffer(
 
         // finally we can create the TSlowControl record
 
-        TSlowControl::Type_t record_type = TSlowControl::Type_t::EpicsOneShot;
+        auto record_type = TSlowControl::Type_t::EpicsOneShot;
+        auto validity = TSlowControl::Validity_t::Forward;
         stringstream description;
         if(hdr->period<0) {
             record_type = TSlowControl::Type_t::EpicsTimer;
+            validity = TSlowControl::Validity_t::Backward;
             description << "Period='" << -hdr->period << " ms'";
         }
         else if(hdr->period>0) {
             record_type = TSlowControl::Type_t::EpicsScaler;
+            validity = TSlowControl::Validity_t::Backward;
             description << "Period='" << hdr->period << " scalers'";
         }
 
         auto record = std_ext::make_unique<TSlowControl>(
-                    TID(ID_upper, ID_lower),
-                    record_type,
-                    hdr_timestamp,
-                    ch_Name,
-                    description.str()
-                    );
+                          TID(ID_upper, ID_lower),
+                          record_type,
+                          validity,
+                          hdr_timestamp,
+                          ch_Name,
+                          description.str()
+                          );
 
         // advance to the EPICS channel data (skip channel info header)
         advance(it_byte, chHdrBytes);
