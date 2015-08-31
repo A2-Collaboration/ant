@@ -164,7 +164,8 @@ void PhysicsManager::ReadFrom(
         if(finished_reading)
             break;
 
-        while(!slowcontrol_mgr.isComplete()) {
+        do
+        {
             if(!running || nEventsRead>=maxevents) {
                 VLOG(5) << "End of reading requested";
                 finished_reading = true;
@@ -179,6 +180,7 @@ void PhysicsManager::ReadFrom(
             eventbuffer.emplace(move(event));
             nEventsRead++;
         }
+        while(!slowcontrol_mgr.isComplete());
 
         if(slowcontrol_mgr.isComplete()) {
             VLOG(5) << "Slowcontrol set complete. Processing event buffer.";
