@@ -10,11 +10,14 @@
 #include <string>
 #include <iostream>
 #include "plot/SmartHist.h"
-#include <sstream>
 #include "TH3.h"
 #include "base/Logger.h"
 #include <algorithm>
 #include <iostream>
+
+#include "base/iterators.h"
+
+#include "utils/particle_tools.h"
 
 using namespace std;
 using namespace ant;
@@ -49,17 +52,6 @@ ParticleList OmegaBase::getGeoAccepted(const ParticleList &p) const
                 list.emplace_back(particle);
     }
     return list;
-}
-
-string OmegaBase::GetDecayString(const ParticleList &particles)
-{
-    stringstream s;
-    if(! particles.empty()) {
-        const auto& start = particles.front();
-        Particle::RecPrint(start, s);
-    }
-
-    return s.str();
 }
 
 OmegaBase::OmegaBase(const string &name, PhysOptPtr opts):
@@ -170,7 +162,7 @@ void OmegaEtaG::Analyse(const Event::Data &data, const Event &event)
 
     perDecayhists_t* h = nullptr;
 
-    const string decaystring = GetDecayString(event.MCTrue().Intermediates().GetAll());
+    const string decaystring = utils::ParticleTools::GetDecayString(event.MCTrue().Intermediates().GetAll());
 
     for( auto comb = utils::makeCombination(photons,3); !comb.Done(); ++comb) {
 
@@ -274,36 +266,6 @@ void OmegaEtaG::Analyse(const Event::Data &data, const Event &event)
 
 }
 
-template <typename T>
-class circit{
-protected:
-    T s;
-    T e;
-    T p;
-public:
-    circit(const T& start, const T& stop):s(start),e(stop),p(start) {}
-
-    void next() {
-        ++p;
-        if(p==e)
-            p=s;
-    }
-
-    void previous() {
-        if(p==s) {
-            p=e;
-        }
-        --p;
-    }
-
-    void Reset() {
-        p = s;
-    }
-
-    typename T::value_type operator *() { return *p; }
-
-};
-
 void OmegaEtaG::ShowResult()
 {
     canvas("OmegaEtaG Results")
@@ -320,8 +282,8 @@ void OmegaEtaG::ShowResult()
 
     histlist.sort( [] (const perDecayhists_t* h1, const perDecayhists_t* h2) -> bool {return h1->gg->GetEntries() > h2->gg->GetEntries();});
 
-    std::vector<Color_t> color = {kRed, kGreen, kBlue, kYellow, kMagenta, kCyan, kOrange, kPink+9, kSpring+10, kGray};
-    auto cit = circit<decltype(color.begin())>(color.begin(),color.end());
+
+    auto cit = getCirculatIterator(ColorPalette::Colors.begin(), ColorPalette::Colors.end());
 
     hstack stack("decays","gg");
     hstack stack2("ggg","ggg");
@@ -378,7 +340,7 @@ string to_string(const OmegaBase::DataMode &m)
 OmegaMCTruePlots::PerChannel_t::PerChannel_t(const string& Title, SmartHistFactory& hf):
     title(Title)
 {
-    proton_E_theta = hf.makeTH2D(Title,"E [MeV]","#theta [#circ]",BinSettings(1000),BinSettings(360,0,180));
+    proton_E_theta = hf.makeTH2D(title,"E [MeV]","#theta [#circ]",BinSettings(1000),BinSettings(360,0,180), title+"_e_theta");
 }
 
 void OmegaMCTruePlots::PerChannel_t::Show()
@@ -405,7 +367,7 @@ OmegaMCTruePlots::OmegaMCTruePlots(PhysOptPtr opts):
 
 void OmegaMCTruePlots::ProcessEvent(const Event& event)
 {
-    const auto& decaystring = OmegaBase::GetDecayString(event.MCTrue().Intermediates().GetAll());
+    const auto& decaystring =utils::ParticleTools::GetProductionChannelString(event.MCTrue().Intermediates().GetAll());
 
     auto e = channels.find(decaystring);
 

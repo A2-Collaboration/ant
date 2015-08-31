@@ -64,7 +64,7 @@ public:
     void Finish() override;
     void ShowResult() override;
 
-    static std::string GetDecayString(const data::ParticleList& particles);
+
 };
 
 class OmegaEtaG: public OmegaBase {
