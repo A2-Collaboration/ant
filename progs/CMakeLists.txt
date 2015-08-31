@@ -11,3 +11,9 @@ endmacro()
 add_ant_executable(Ant)
 add_ant_executable(Ant-calib)
 add_ant_executable(Ant-calib-editor)
+
+option(OmegaTools "Build Omega Tools" OFF)
+
+if(OmegaTools)
+    add_ant_executable(omega_histograms)
+endif()
