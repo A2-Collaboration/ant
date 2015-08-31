@@ -45,11 +45,24 @@ bool slowontrol::Manager::isComplete() const {
     return true;
 }
 
+TID slowontrol::Manager::FindMinimalTID() const
+{
+    TID minimal;
+
+    for(const auto& entry : slowcontrol) {
+        const buffer_t& buffer = entry.second;
+        const auto& slread = buffer.front();
+        minimal = min(minimal, slread->ID);
+    }
+
+    return minimal;
+}
+
 TID slowontrol::Manager::UpdateSlowcontrolData(data::Slowcontrol& slc)
 {
 
     if(isComplete()) {
-        auto validuntil = minimal_in_buffer;
+        auto validuntil = minimal_in_buffer.IsInvalid() ? FindMinimalTID() : minimal_in_buffer;
 
         minimal_in_buffer = TID();
 
