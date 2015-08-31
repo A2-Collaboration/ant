@@ -21,6 +21,7 @@ set(SRCS
   CmdLine.h
   Paths.h
   matrixstack.cc
+  iterators.h
   std_ext/math.h
   std_ext/memory.h
   std_ext/misc.h
