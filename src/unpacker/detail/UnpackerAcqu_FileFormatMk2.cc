@@ -697,7 +697,7 @@ void acqu::FileFormatMk2::HandleEPICSBuffer(
         }
         else if(hdr->period>0) {
             record_type = TSlowControl::Type_t::EpicsScaler;
-            description << "Period='" << hdr->period << " events'";
+            description << "Period='" << hdr->period << " scalers'";
         }
 
         auto record = std_ext::make_unique<TSlowControl>(
