@@ -61,6 +61,7 @@ set(ANALYSIS_UTILS
   utils/A2GeoAcceptance.cc
   utils/ParticleID.cc
   utils/root-addons.cc
+  utils/particle_tools.cc
   )
 
 set(ANALYSIS_ALL
