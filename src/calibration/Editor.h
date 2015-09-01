@@ -32,7 +32,7 @@ public:
     void SaveToFile(const std::string& fileName) const {dman.WriteToFile(fileName);}
 
     //Element Access
-    void Add(const TCalibrationData& cdata) {dman.AddCalibrationData(cdata);}
+    void Add(const TCalibrationData& cdata) {dman.AddItem(cdata);}
     bool Remove(const std::string& calibrationID, const std::uint32_t& index);
     bool Remove(const std::string& calibrationID,
                 const std::uint32_t& index1, const std::uint32_t& index2);

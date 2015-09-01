@@ -37,7 +37,7 @@ bool DataBase::ReadFromFile(const std::string& filename)
             for (Long64_t entry = 0; entry < calibtree->GetEntries(); ++entry)
             {
                 calibtree->GetEntry(entry);
-                dataMap[cdata->CalibrationID].push_back(*cdata); //emplace???
+                dataMap[cdata->CalibrationID].second.push_back(*cdata); //emplace???
             }
         }
         return true;
@@ -73,7 +73,7 @@ void DataBase::WriteToTree(WrapTFileOutput& file, const DataMap_t::value_type& c
     const TCalibrationData* cdataptr = nullptr;
     currentTree->Branch(cm_branchname.c_str(), std::addressof(cdataptr));
 
-    for(const auto& cdata : calibration.second) {
+    for(const auto& cdata : calibration.second.second) {
         cdataptr = std::addressof(cdata);
         currentTree->Fill();
     }
@@ -107,6 +107,9 @@ void DataBase::WriteToFolder(const string& folder) const
             LOG(WARNING) << "Found empty calibrationID, ignored.";
             continue;
         }
+        const bool modified = calibration.second.first;
+        if(!modified)
+            continue;
         auto pos = calibrationID.find_first_of('/');
         string filename = folder + "/" +
                           calibrationID.substr(0, pos)
@@ -134,7 +137,7 @@ void DataBase::WriteToFolder(const string& folder) const
 uint32_t DataBase::getDepth(const TID& tid, const string& calibrationID) const
 {
     uint32_t current_depth = 0;
-    auto& calibPairs = dataMap.at(calibrationID);
+    auto& calibPairs = dataMap.at(calibrationID).second;
 
     for(auto rit = calibPairs.rbegin(); rit != calibPairs.rend(); ++rit)
     {
@@ -153,7 +156,7 @@ uint32_t DataBase::GetNumberOfDataPoints(const string& calibrationID) const
     auto it = dataMap.find(calibrationID);
     if(it == dataMap.end())
         return 0;
-    return it->second.size();
+    return it->second.second.size();
 }
 
 const std::list<TID> DataBase::GetChangePoints(const string& calibrationID) const
@@ -164,7 +167,7 @@ const std::list<TID> DataBase::GetChangePoints(const string& calibrationID) cons
     uint32_t depth = 0;
     list<TID> ids;
 
-    auto& calibPairs = dataMap.at(calibrationID);
+    auto& calibPairs = dataMap.at(calibrationID).second;
 
     for(auto rit = calibPairs.rbegin(); rit != calibPairs.rend(); ++rit)
     {
@@ -183,6 +186,25 @@ const std::list<TID> DataBase::GetChangePoints(const string& calibrationID) cons
     ids.sort();
 
     return ids;
+}
+
+std::vector<TCalibrationData>& DataBase::ModifyItems(const string& calibrationID)
+{
+    auto& item = dataMap.at(calibrationID);
+    item.first = true;
+    return item.second;
+}
+
+const std::vector<TCalibrationData>& DataBase::GetItems(const string& calibrationID) const
+{
+    return dataMap.at(calibrationID).second;
+}
+
+void DataBase::AddItem(const TCalibrationData& cdata)
+{
+    auto& item  = dataMap[cdata.CalibrationID];
+    item.first = true;
+    return item.second.push_back(cdata);
 }
 
 

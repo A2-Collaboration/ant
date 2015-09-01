@@ -18,7 +18,7 @@ namespace calibration {
 class DataBase
 {
 public:
-    using DataMap_t = std::map<std::string,std::vector<ant::TCalibrationData>>;
+    using DataMap_t = std::map<std::string, std::pair<bool, std::vector<ant::TCalibrationData>>>;
 private:
     const std::string cm_treename_prefix;
     const std::string cm_branchname;
@@ -78,8 +78,10 @@ public:
     const std::list<TID> GetChangePoints(const std::string& calibrationID) const;
 
     const DataMap_t& DataMap() const { return dataMap; }
-    DataMap_t::mapped_type& ModifyItem(const std::string& calibrationID) { return dataMap.at(calibrationID); }
-    void AddCalibrationData(const TCalibrationData& cdata) { return dataMap[cdata.CalibrationID].push_back(cdata); }
+    std::vector<ant::TCalibrationData>& ModifyItems(const std::string& calibrationID);
+    const std::vector<ant::TCalibrationData>& GetItems(const std::string& calibrationID) const;
+
+    void AddItem(const TCalibrationData& cdata);
 
 
     DataBase();

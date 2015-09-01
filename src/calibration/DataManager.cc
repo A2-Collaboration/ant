@@ -32,7 +32,7 @@ void DataManager::Init()
 void DataManager::Add(const TCalibrationData& cdata)
 {
     Init();
-    dataBase->AddCalibrationData(cdata);
+    dataBase->AddItem(cdata);
     changedDataBase = true;
 }
 
@@ -45,7 +45,7 @@ bool DataManager::GetData(const string& calibrationID, const TID& eventID, TCali
         return false;
 
     //case two: calibration exists
-    const auto& calibPairs = dataBase->DataMap().at(calibrationID);
+    const auto& calibPairs = dataBase->GetItems(calibrationID);
     for(auto rit = calibPairs.rbegin(); rit != calibPairs.rend(); ++rit)
     {
         interval<TID> range(rit->FirstID,rit->LastID);
@@ -87,7 +87,7 @@ bool DataManager::GetLastEntry(const std::string& calibrationID, TCalibrationDat
     if (dataBase->DataMap().count(calibrationID) == 0)
         return false;
 
-    const auto& data = dataBase->DataMap().at(calibrationID);
+    const auto& data = dataBase->GetItems(calibrationID);
 
     cdata = data.back();
 
