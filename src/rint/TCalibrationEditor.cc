@@ -179,7 +179,7 @@ void TCalibrationEditor::AddSomeRandomData()
                              "testData",
                              time++,
                              "testID",
-                             TID(0,first),TID(0,last));
+                             TID(first),TID(last));
         tmp.Data.emplace_back(0,1);
         tmp.Data.emplace_back(1,2);
         return tmp;
