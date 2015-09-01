@@ -82,17 +82,15 @@ struct TID
     static_assert(static_cast<std::uint8_t>(Flags_t::Invalid) == 0, "Invalid flag should be first item in enum class");
 
     TID(
-            UInt_t upper,
-            UInt_t lower,
-            bool isMC = false
-            )
+            std::uint64_t value,
+            bool isMC = false)
         :
-          Value(lower),
+          Value(value),
           Flags(0)
     {
         Flags |= static_cast<decltype(Flags)>(isMC) << static_cast<std::uint8_t>(Flags_t::MC);
-        Value |= static_cast<decltype(Value)>(upper) << sizeof(std::uint32_t)*8;
     }
+    TID(std::uint64_t, int) = delete;
 
     bool IsInvalid() const {
         return Flags & (1 << static_cast<std::uint8_t>(Flags_t::Invalid));

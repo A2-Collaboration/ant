@@ -35,7 +35,7 @@ unsigned dotest_store(const string& filename)
                            "comment",
                            0,
                            "1",
-                           TID(0,0),TID(0,16)
+                           TID(0),TID(16)
                            );
     cdata.Data.emplace_back(0,1);
     cdata.Data.emplace_back(1,2);
@@ -49,7 +49,7 @@ unsigned dotest_store(const string& filename)
                                 cdata.Comment,
                                 time,
                                 cdata.CalibrationID,
-                                TID(0,first),TID(0,last));
+                                TID(first),TID(last));
         tmp.Data = cdata.Data;
         return tmp;
     };
@@ -104,45 +104,45 @@ void dotest_changes(const string& filename)
 //    REQUIRE(calibman.GetIDRange("1",idRange));
 //    REQUIRE( idRangeTEST == idRange);
 
-    calibman.GetData("1",TID(0,0),cdata);
+    calibman.GetData("1",TID(0),cdata);
     REQUIRE(cdata.TimeStamp == 0);
 
-    calibman.GetData("1",TID(0,1),cdata);
+    calibman.GetData("1",TID(1),cdata);
     REQUIRE(cdata.TimeStamp == 0);
 
-    calibman.GetData("1",TID(0,3),cdata);
+    calibman.GetData("1",TID(3),cdata);
     REQUIRE(cdata.TimeStamp == 3);
 
-    calibman.GetData("1",TID(0,4),cdata);
+    calibman.GetData("1",TID(4),cdata);
     REQUIRE(cdata.TimeStamp == 3);
 
-    calibman.GetData("1",TID(0,5),cdata);
+    calibman.GetData("1",TID(5),cdata);
     REQUIRE(cdata.TimeStamp == 4);
 
-    calibman.GetData("1",TID(0,14),cdata);
+    calibman.GetData("1",TID(14),cdata);
     REQUIRE(cdata.TimeStamp == 7);
 
-    REQUIRE_FALSE(calibman.GetData("1",TID(0,21),cdata));
+    REQUIRE_FALSE(calibman.GetData("1",TID(21),cdata));
 
-    calibman.GetData("1",TID(0,23),cdata);
+    calibman.GetData("1",TID(23),cdata);
     REQUIRE(cdata.TimeStamp == 6);
 
-    REQUIRE_FALSE(calibman.GetData("1",TID(0,29),cdata));
+    REQUIRE_FALSE(calibman.GetData("1",TID(29),cdata));
 
     auto genchange = calibman.GetChangePoints("1");
 
-    list<TID> manchange({TID(0,0),
-                           TID(0,2),
-                           TID(0,3),
-                           TID(0,5),
-                           TID(0,8),
-                           TID(0,9),
-                           TID(0,13),
-                           TID(0,14),
-                           TID(0,15),
-                           TID(0,21),
-                           TID(0,22),
-                           TID(0,25)
+    list<TID> manchange({TID(0),
+                           TID(2),
+                           TID(3),
+                           TID(5),
+                           TID(8),
+                           TID(9),
+                           TID(13),
+                           TID(14),
+                           TID(15),
+                           TID(21),
+                           TID(22),
+                           TID(25)
                           });
 
     REQUIRE(genchange.size() == manchange.size());

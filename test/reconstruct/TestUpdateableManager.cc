@@ -62,12 +62,12 @@ struct UpdateableItem :  Updateable_traits {
 
 // provide some points for testing
 const vector<TID> p = {
-    {0, 0},
-    {0, 1},
-    {1, 0},
-    {1, 1},
-    {1, 2},
-    {1, 3}
+    {0x00},
+    {0x01},
+    {0x10},
+    {0x11},
+    {0x12},
+    {0x13}
 };
 
 void dotest1()

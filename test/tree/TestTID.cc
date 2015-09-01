@@ -14,9 +14,9 @@ TEST_CASE("TID","[operators]")
 
 void dotest()
 {
-    TID a(0,0);
-    TID b(0,1);
-    TID c(0,0,true);
+    TID a(0);
+    TID b(1);
+    TID c(0,true);
 
     REQUIRE(a == a);
 

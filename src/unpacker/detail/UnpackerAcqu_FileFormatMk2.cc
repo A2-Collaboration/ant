@@ -223,7 +223,7 @@ bool acqu::FileFormatMk2::UnpackDataBuffer(UnpackerAcquFileFormat::queue_t& queu
             return false;
 
         // increment official unique event ID
-        ID_lower++;
+        ++id;
         nEventsInBuffer++;
     }
 
@@ -356,7 +356,7 @@ void acqu::FileFormatMk2::FillTDetectorRead(
     // build the TDetectorRead,
     // the order of its hits corresponds to the given mappings
 
-    auto record = std_ext::make_unique<TDetectorRead>(TID(ID_upper, ID_lower));
+    auto record = std_ext::make_unique<TDetectorRead>(id);
     record->Hits.reserve(2*hit_storage.size());
 
     for(const auto& it_hits : hit_storage) {
@@ -401,7 +401,7 @@ void acqu::FileFormatMk2::FillTDetectorRead(
             else {
                 // this scaler should be handled as TSlowControl item
                 auto record_sc = std_ext::make_unique<TSlowControl>(
-                                     TID(ID_upper, ID_lower),
+                                     id,
                                      TSlowControl::Type_t::AcquScaler,
                                      TSlowControl::Validity_t::Backward,
                                      0, /// \todo estimate some timestamp from ID_lower here?
@@ -552,12 +552,12 @@ void acqu::FileFormatMk2::HandleReadError(
 
     // build TUnpackerMessage record from error info
     auto record = std_ext::make_unique<TUnpackerMessage>(
-                TID(ID_upper, ID_lower),
-                TUnpackerMessage::Level_t::HardwareError,
-                std_ext::formatter()
-                << "Acqu HardwareError ModuleID={} (" << modname << ") "
-                << "Index={} ErrorCode={}"
-                );
+                      id,
+                      TUnpackerMessage::Level_t::HardwareError,
+                      std_ext::formatter()
+                      << "Acqu HardwareError ModuleID={} (" << modname << ") "
+                      << "Index={} ErrorCode={}"
+                      );
     record->Payload.push_back(err->fModID);
     record->Payload.push_back(err->fModIndex);
     record->Payload.push_back(err->fErrCode);
@@ -703,7 +703,7 @@ void acqu::FileFormatMk2::HandleEPICSBuffer(
         }
 
         auto record = std_ext::make_unique<TSlowControl>(
-                          TID(ID_upper, ID_lower),
+                          id,
                           record_type,
                           validity,
                           hdr_timestamp,

@@ -109,8 +109,7 @@ protected:
     };
 
     Info info;
-    std::uint32_t ID_upper; // upper part of UID, set by BuildTHeaderInfo
-    std::uint32_t ID_lower; // lower part, incremented by FillEvents
+    TID id;
     unsigned AcquID_last = 0;
 
     // we so some more effort for the hits,

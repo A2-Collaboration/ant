@@ -52,7 +52,7 @@ uint32_t Editor::GetNumberOfSteps(const string &calibrationID) const
 bool Editor::ShowHistory(const string& calibrationID) const
 {
 
-    interval<TID> maxInt(TID(0,0),TID(0,0));
+    interval<TID> maxInt(TID(0),TID(0)); /// \todo check if default constructor could also work here?
     if (!getIDRange(calibrationID,maxInt))
         return false;
 
@@ -183,7 +183,7 @@ bool Editor::Remove(const string &calibrationID, const uint32_t &index1, const u
 
 bool Editor::ShowValid(const string& calibrationID) const
 {
-    interval<TID> maxInt(TID(0,0),TID(0,0));
+    interval<TID> maxInt(TID(0),TID(0)); /// \todo check if default constructor could also work here?
     if (!getIDRange(calibrationID,maxInt))
     {
         return false;
@@ -321,7 +321,7 @@ std::list<std::pair<uint32_t, IntervalD> > Editor::GetAllValidRanges(const strin
 
 interval<TID> Editor::GetMaxInt(const string &calibrationID) const
 {
-    interval<TID> tidint(TID(0,0),TID(0,0));
+    interval<TID> tidint(TID(0),TID(0)); /// \todo check if default constructor could also work here?
    getIDRange(calibrationID,tidint);
    return tidint;
 }

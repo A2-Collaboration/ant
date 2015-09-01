@@ -70,14 +70,12 @@ bool UnpackerA2Geant::OpenFile(const string& filename)
     geant->SetBranchAddress("mc_evt_id",&mc_evt_id);
     geant->SetBranchAddress("mc_rnd_id",&mc_evt_id);
 
-    if(geant->GetEntries() >= numeric_limits<decltype(ID_lower)>::max()) {
+    if(geant->GetEntries() >= numeric_limits<std::uint32_t>::max()) {
         throw Exception("Tree file contains too many entries for building correct unique ID");
     }
 
-
-
-    ID_lower = 0; // also counts number of entries in TTree
-    ID_upper = geant->Hash(); /// \todo think of some better upper Id?
+    /// \todo think of some better upper Id?
+    id = std_ext::make_unique<TID>(static_cast<std::uint64_t>(geant->Hash()) << sizeof(std::uint32_t), true);
 
     // this unpacker has no chance to make a proper THeaderInfo
     // so we ask the ExpConfig if it has an idea...
@@ -85,7 +83,7 @@ bool UnpackerA2Geant::OpenFile(const string& filename)
         throw ExpConfig::ExceptionNoConfig("This unpacker requires a manually set setup name");
     }
     // build a bogus headerInfo and ask for config
-    headerInfo = std_ext::make_unique<THeaderInfo>(TID(ID_upper, ID_lower, true),
+    headerInfo = std_ext::make_unique<THeaderInfo>(*id,
                                                    ExpConfig::ManualSetupName);
     auto config = ExpConfig::Unpacker<UnpackerA2GeantConfig>::Get(*headerInfo);
 
@@ -110,7 +108,8 @@ bool UnpackerA2Geant::OpenFile(const string& filename)
 
 unique_ptr<TDataRecord> UnpackerA2Geant::NextItem() noexcept
 {
-    if(ID_lower>=geant->GetEntriesFast())
+    const std::uint32_t events = id->Value & 0xffffffff;
+    if(events>=geant->GetEntriesFast())
         return nullptr;
 
     // return the headerinfo as the very first item, afterwards,
@@ -119,10 +118,10 @@ unique_ptr<TDataRecord> UnpackerA2Geant::NextItem() noexcept
         return move(headerInfo);
     }
 
-    geant->GetEntry(ID_lower);
+    geant->GetEntry(events);
 
-    // start with an empty detector read, don't forget MC flag true
-    unique_ptr<TDetectorRead> detread = std_ext::make_unique<TDetectorRead>(TID(ID_upper, ID_lower, true));
+    // start with an empty detector read
+    unique_ptr<TDetectorRead> detread = std_ext::make_unique<TDetectorRead>(*id);
 
     const size_t n_total = fnhits+fnpart+fntaps+fnvtaps+fvhits;
 
@@ -216,7 +215,7 @@ unique_ptr<TDataRecord> UnpackerA2Geant::NextItem() noexcept
     }
 
 
-    ID_lower++;
+    ++(*id);
     return move(detread);
 }
 

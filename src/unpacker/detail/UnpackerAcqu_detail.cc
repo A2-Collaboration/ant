@@ -146,11 +146,8 @@ unique_ptr<THeaderInfo> acqu::FileFormatBase::BuildTHeaderInfo()
     if(timebits > 0x3fffffff) // 30bits maximum
         throw UnpackerAcqu::Exception("File was recorded later than ~2034");
 
-    ID_upper = static_cast<decltype(ID_upper)>(timestamp);
-    ID_lower = 0;
-
     // construct the unique ID, header record as lower ID=0
-    const TID id(ID_upper, ID_lower);
+    id = TID(static_cast<std::uint64_t>(timestamp) << sizeof(std::uint32_t));
 
 
     // build the genernal description
@@ -208,7 +205,7 @@ void acqu::FileFormatBase::LogMessage(
         ) const
 {
     auto record = std_ext::make_unique<TUnpackerMessage>(
-                TID(ID_upper, ID_lower),
+                id,
                 level,
                 msg
                 );
@@ -266,10 +263,10 @@ void acqu::FileFormatBase::FillEvents(queue_t& queue) noexcept
         }
         // always add an datadiscard info record
         auto record = std_ext::make_unique<TUnpackerMessage>(
-                    TID(ID_upper, ID_lower),
-                    TUnpackerMessage::Level_t::DataDiscard,
-                    "Discarded buffer number {}"
-                    );
+                          id,
+                          TUnpackerMessage::Level_t::DataDiscard,
+                          "Discarded buffer number {}"
+                          );
         record->Payload.push_back(unpackedBuffers);
         fillQueue(queue, move(record));
     }
