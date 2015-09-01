@@ -20,18 +20,18 @@ using namespace ant;
 using namespace ant::calibration;
 
 
-void DataManager::lazyInit()
+void DataManager::Init()
 {
     if ( dataBase == nullptr )
     {
         dataBase = std_ext::make_unique<DataBase>();
-        dataBase->ReadData(dataFileName);
+        dataBase->ReadFromFolder(calibrationDataFolder);
     }
 }
 
 void DataManager::Add(const TCalibrationData& data)
 {
-    lazyInit();
+    Init();
     dataBase->DataMap[data.CalibrationID].push_back(data);
     changedDataBase = true;
 }
@@ -39,7 +39,7 @@ void DataManager::Add(const TCalibrationData& data)
 
 bool DataManager::GetData(const string& calibrationID, const TID& eventID, TCalibrationData& cdata)
 {
-    lazyInit();
+    Init();
     //case one: calibration doesn't exist
     if ( dataBase->DataMap.count(calibrationID) == 0)
         return false;
@@ -63,19 +63,19 @@ bool DataManager::GetData(const string& calibrationID, const TID& eventID, TCali
 
 const list<TID> DataManager::GetChangePoints(const string& calibrationID)
 {
-    lazyInit();
+    Init();
     return dataBase->GetChangePoints(calibrationID);
 }
 
 uint32_t DataManager::GetNumberOfCalibrations()
 {
-    lazyInit();
+    Init();
     return dataBase->DataMap.size();
 }
 
 uint32_t DataManager::GetNumberOfDataPoints(const string& calibrationID)
 {
-    lazyInit();
+    Init();
     return dataBase->GetNumberOfDataPoints(calibrationID);
 }
 
@@ -83,7 +83,7 @@ uint32_t DataManager::GetNumberOfDataPoints(const string& calibrationID)
 
 bool DataManager::GetLastEntry(const std::string& calibrationID, TCalibrationData& cdata)
 {
-    lazyInit();
+    Init();
     if (dataBase->DataMap.count(calibrationID) == 0)
         return false;
 

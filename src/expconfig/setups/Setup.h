@@ -117,7 +117,7 @@ public:
         return std::string(ANT_PATH_DATABASE)+"/"+GetName()+"/cuts";
     }
 
-    std::string GetName() const override final {
+    virtual std::string GetName() const override final {
         return name_;
     }
 
@@ -125,8 +125,8 @@ protected:
     Setup(const std::string& name) :
         name_(name)
     {
-        std::string filename = std::string(ANT_PATH_DATABASE)+"/"+GetName()+"/calibration.root";
-        calibrationDataManager = std::make_shared<calibration::DataManager>(filename);
+        std::string calibrationDataFolder = std::string(ANT_PATH_DATABASE)+"/"+GetName()+"/calibration";
+        calibrationDataManager = std::make_shared<calibration::DataManager>(calibrationDataFolder);
     }
 
     void AddDetector(const std::shared_ptr<Detector_t>& detector) {

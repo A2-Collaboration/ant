@@ -19,10 +19,10 @@ void dotest_changes(const string& filename);
 
 TEST_CASE("CalibrationDataManager","[calibration]")
 {
-    tmpfile_t tmpfile;
-    auto ndata = dotest_store(tmpfile.filename);
-    dotest_load(tmpfile.filename,ndata);
-    dotest_changes(tmpfile.filename);
+    tmpfolder_t tmp;
+    auto ndata = dotest_store(tmp.foldername);
+    dotest_load(tmp.foldername,ndata);
+    dotest_changes(tmp.foldername);
 }
 
 unsigned dotest_store(const string& filename)

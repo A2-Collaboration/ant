@@ -8,15 +8,17 @@
 #include "tree/TCalibrationData.h"
 
 
-namespace ant
-{
-namespace calibration
-{
+namespace ant {
 
-using DataMap_t = std::map<std::string,std::vector<ant::TCalibrationData>>;
+class WrapTFileOutput;
+
+namespace calibration {
+
 
 class DataBase
 {
+public:
+    using DataMap_t = std::map<std::string,std::vector<ant::TCalibrationData>>;
 private:
     const std::string cm_treename_prefix;
     const std::string cm_branchname;
@@ -41,20 +43,41 @@ private:
         return (depth <= getDepth(tid,calibrationID));
     }
 
+    void WriteToTree(WrapTFileOutput& file,
+                     const DataMap_t::value_type& calibration) const;
 public:
-    bool ReadData(const std::string& filename);
-    void WriteData(const std::string& filename) const;
+    /**
+     * @brief ReadFromFile read all TCalibrationData trees from given filename
+     * @param filename given ROOT file
+     * @return true if successful
+     */
+    bool ReadFromFile(const std::string& filename);
+    /**
+     * @brief WriteToFile writes all data into given filename
+     * @param filename
+     */
+    void WriteToFile(const std::string& filename) const;
 
-    bool Has(const std::string& calibrationID) const{ return (DataMap.count(calibrationID) != 0);}
+    /**
+     * @brief ReadFromFolder open all *.root and read TCalibrationData from them
+     * @param folder
+     * @return true if successful
+     */
+    bool ReadFromFolder(const std::string& folder);
+    /**
+     * @brief WriteToFolder write data into separate files, given by TCalibrationData::CalibrationID
+     * @param folder where files will be created
+     */
+    void WriteToFolder(const std::string& folder) const;
+
+
+    bool Has(const std::string& calibrationID) const { return DataMap.count(calibrationID) != 0; }
     std::uint32_t GetNumberOfDataPoints(const std::string& calibrationID) const;
     const std::list<TID> GetChangePoints(const std::string& calibrationID) const;
 
 
     DataMap_t DataMap;
-    DataBase():
-        cm_treename_prefix("calibration-"),
-        cm_branchname("cdata")
-    {}
+    DataBase();
 };
 
 }//calibration

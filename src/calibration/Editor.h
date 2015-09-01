@@ -28,8 +28,8 @@ public:
     Editor(): dman(){}
 
     //File Operations
-    bool AddFromFile(const std::string& fileName) {return dman.ReadData(fileName); }
-    void SaveToFile(const std::string& fileName) const {dman.WriteData(fileName);}
+    bool AddFromFile(const std::string& fileName) {return dman.ReadFromFile(fileName); }
+    void SaveToFile(const std::string& fileName) const {dman.WriteToFile(fileName);}
 
     //Element Access
     void Add(const TCalibrationData& cdata) {dman.DataMap[cdata.CalibrationID].push_back(cdata);}
