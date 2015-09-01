@@ -133,7 +133,19 @@ unique_ptr<THeaderInfo> acqu::FileFormatBase::BuildTHeaderInfo()
     // based on the timestamp inside the file
     /// \todo make ID really unique due to daylight saving time...
 
+    unsigned upperbits = GetUpperBitsTID() & 0xf;
+
     const time_t timestamp = mktime(&info.Time); // convert to unix epoch
+    tm offset;
+    strptime("Jan 1 00:00:00 2000", "%b %d %T %Y", &offset);
+    offset.tm_isdst = 0;
+    const time_t timestamp_offset = mktime(&offset);
+    if(timestamp_offset > timestamp)
+        throw UnpackerAcqu::Exception("File was recorded earlier than 2000");
+    const time_t timebits = timestamp - timestamp_offset;
+    if(timebits > 0x3fffffff) // 30bits maximum
+        throw UnpackerAcqu::Exception("File was recorded later than ~2034");
+
     ID_upper = static_cast<decltype(ID_upper)>(timestamp);
     ID_lower = 0;
 
@@ -151,6 +163,42 @@ unique_ptr<THeaderInfo> acqu::FileFormatBase::BuildTHeaderInfo()
 
 
     return std_ext::make_unique<THeaderInfo>(id, timestamp, description.str(), info.RunNumber);
+}
+
+unsigned acqu::FileFormatBase::GetUpperBitsTID()
+{
+    // there's no other way than hardcode the runs
+    // recorded when the the MEST->MET transition occurred
+    const vector<pair<unsigned, unsigned>> upper_nibble_mest2met = {
+        {6592, 0x0},
+        {6593, 0x1},
+        {6594, 0x2},
+        {6595, 0x3},
+    };
+    // handle run in transition
+    if(std_ext::is_mest2met_transition(info.Time)) {
+        auto it = upper_nibble_mest2met.begin();
+        while(it != upper_nibble_mest2met.end()) {
+            if(it->first == info.RunNumber) {
+                return it->second;
+            }
+            ++it;
+        }
+        // not found...should be added than to list above
+        if(it == upper_nibble_mest2met.end()) {
+            throw UnpackerAcqu::Exception(
+                        std_ext::formatter()
+                        << "Cannot unpack file in MEST->MET transition "
+                        << "without additional information for RunNumber " << info.RunNumber);
+        }
+    }
+
+    // normal run
+
+    for(size_t i=0;i<upper_nibble_mest2met.size();i++) {
+
+    }
+
 }
 
 void acqu::FileFormatBase::LogMessage(
