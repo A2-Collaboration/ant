@@ -47,4 +47,23 @@ void dotest()
 
     //flags same after increment
     REQUIRE((++c).Flags == d.Flags);
+
+    // invalid
+    TID invalid;
+    REQUIRE(invalid.IsInvalid());
+    REQUIRE(invalid != invalid);
+    REQUIRE_FALSE(invalid < invalid);
+    REQUIRE_FALSE(invalid > invalid);
+    REQUIRE_FALSE(invalid <= invalid);
+    REQUIRE_FALSE(invalid >= invalid);
+    REQUIRE_FALSE(a == invalid);
+    REQUIRE_FALSE(invalid == a);
+    REQUIRE_FALSE(a < invalid);
+    REQUIRE_FALSE(a > invalid);
+    REQUIRE_FALSE(invalid < a);
+    REQUIRE_FALSE(invalid > a);
+    REQUIRE_FALSE(a <= invalid);
+    REQUIRE_FALSE(a >= invalid);
+    REQUIRE_FALSE(invalid <= a);
+    REQUIRE_FALSE(invalid >= a);
 }

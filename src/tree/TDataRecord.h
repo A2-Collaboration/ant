@@ -109,7 +109,7 @@ struct TID
 
     bool operator<(const TID& other) const
     {
-        if(IsInvalid())
+        if(IsInvalid() || other.IsInvalid())
             return false;
         if (Flags == other.Flags)
             return (Value < other.Value);
@@ -118,7 +118,7 @@ struct TID
 
     bool operator!=(const TID& other) const
     {
-        if(IsInvalid())
+        if(IsInvalid() || other.IsInvalid())
             return true;
         return *this < other || other < *this;
     }
