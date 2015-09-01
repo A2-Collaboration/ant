@@ -13,10 +13,10 @@ using namespace ant::calibration;
 
 bool Editor::getIDRange(const string& calibrationID, interval<TID>& IDinterval) const
 {
-    if (dman.DataMap.count(calibrationID) == 0)
+    if (dman.DataMap().count(calibrationID) == 0)
         return false;
 
-    auto& data = dman.DataMap.at(calibrationID);
+    auto& data = dman.DataMap().at(calibrationID);
 
     IDinterval.Start() = data.front().FirstID;
     IDinterval.Stop()  = data.front().LastID;
@@ -35,7 +35,7 @@ bool Editor::getIDRange(const string& calibrationID, interval<TID>& IDinterval) 
 std::list<string> Editor::GetListOfCalibrations() const
 {
     list<string> theList;
-    for (const auto& entry: dman.DataMap){
+    for (const auto& entry: dman.DataMap()){
         theList.emplace_back(entry.first);
     }
     return theList;
@@ -56,7 +56,7 @@ bool Editor::ShowHistory(const string& calibrationID) const
     if (!getIDRange(calibrationID,maxInt))
         return false;
 
-    auto& dVector = dman.DataMap.at(calibrationID);
+    auto& dVector = dman.DataMap().at(calibrationID);
     auto len = maxInt.Stop().Value - maxInt.Start().Value;
     auto first = maxInt.Start().Value;
 
@@ -112,7 +112,7 @@ vector<pair<uint32_t,TCalibrationData>> Editor::getValidData(const std::string& 
         return theList;
 
     auto changePoints = dman.GetChangePoints(calibrationID);
-    auto& dVector = dman.DataMap.at(calibrationID);
+    auto& dVector = dman.DataMap().at(calibrationID);
 
     for (const auto&  cp: changePoints)
     {
@@ -157,7 +157,7 @@ bool Editor::Remove(const string &calibrationID, const uint32_t &index)
     if (!dman.Has(calibrationID))
         return false;
 
-    auto& dVector = dman.DataMap.at(calibrationID);
+    auto& dVector = dman.ModifyItem(calibrationID);
     if (index >= dVector.size())
         return false;
     dVector.erase(dVector.begin()+index);
@@ -169,7 +169,7 @@ bool Editor::Remove(const string &calibrationID, const uint32_t &index1, const u
     if (!dman.Has(calibrationID))
         return false;
 
-    auto& dVector = dman.DataMap.at(calibrationID);
+    auto& dVector = dman.ModifyItem(calibrationID);
     if ((index1 >= dVector.size()) && (index2 >= dVector.size()))
         return false;
     if ( index1 > index2 )
@@ -224,7 +224,7 @@ bool Editor::ReduceToValid(const string &calibrationID)
 
    auto valids = getValidData(calibrationID);
 
-   dman.DataMap.at(calibrationID).clear();
+   dman.ModifyItem(calibrationID).clear();
    for (const auto& pair: valids)
        Add(pair.second);
 
@@ -244,7 +244,7 @@ std::list<std::pair<uint32_t, IntervalD> > Editor::GetAllRanges(const string &ca
 
     auto maxInt = GetMaxInt(calibrationID);
 
-    auto& dVector = dman.DataMap.at(calibrationID);
+    auto& dVector = dman.DataMap().at(calibrationID);
     auto len = maxInt.Stop().Value - maxInt.Start().Value;
     auto first = maxInt.Start().Value;
 
@@ -271,12 +271,12 @@ pair<uint32_t,IntervalD> Editor::GetRange(const string& calibrationID, uint32_t 
     pair<uint32_t,IntervalD> thePair;
     if (!dman.Has(calibrationID))
         return thePair;
-    if (index > dman.DataMap.at(calibrationID).size())
+    if (index > dman.DataMap().at(calibrationID).size())
         return thePair;
 
 
     auto maxInt = GetMaxInt(calibrationID);
-    auto cdata = dman.DataMap.at(calibrationID).at(index);
+    auto cdata = dman.DataMap().at(calibrationID).at(index);
 
     thePair.first = index;
 
@@ -333,11 +333,11 @@ bool ant::calibration::Editor::ExpandToMaxOther(const std::string &sourceCalibra
         return false;
     if(!dman.Has(sourceCalibrationID))
         return false;
-    if (index > dman.DataMap.at(calibrationID).size())
+    if (index > dman.DataMap().at(calibrationID).size())
         return false;
 
     auto maxInterVal = GetMaxInt(sourceCalibrationID);
-    auto& theData = dman.DataMap.at(calibrationID).at(index);
+    auto& theData = dman.ModifyItem(calibrationID).at(index);
     theData.FirstID = maxInterVal.Start();
     theData.LastID  = maxInterVal.Stop();
 

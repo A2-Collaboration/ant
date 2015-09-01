@@ -26,7 +26,7 @@ public:
     *  \param cdata   Reference to a TCalibrationData, data will be writter here
     *  \return true if valid data was found
     */
-    virtual void Add(const TCalibrationData& data) = 0;
+    virtual void Add(const TCalibrationData& cdata) = 0;
 
     virtual bool GetData(const std::string& calibrationID, const TID& eventID, TCalibrationData& cdata) = 0;
 
@@ -63,7 +63,7 @@ public:
     }
 
 
-    void Add(const TCalibrationData& data) override;
+    void Add(const TCalibrationData& cdata) override;
 
     bool GetData(const std::string& calibrationID, const TID& eventID, TCalibrationData& cdata) override;
 

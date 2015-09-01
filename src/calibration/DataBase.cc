@@ -37,7 +37,7 @@ bool DataBase::ReadFromFile(const std::string& filename)
             for (Long64_t entry = 0; entry < calibtree->GetEntries(); ++entry)
             {
                 calibtree->GetEntry(entry);
-                DataMap[cdata->CalibrationID].push_back(*cdata); //emplace???
+                dataMap[cdata->CalibrationID].push_back(*cdata); //emplace???
             }
         }
         return true;
@@ -85,7 +85,7 @@ void DataBase::WriteToFile(const std::string& filename) const
     WrapTFileOutput file(filename,
                          WrapTFileOutput::mode_t::recreate);
     // loop over map and write a new tree for each calibrationID
-    for(const auto& calibration: DataMap)
+    for(const auto& calibration: dataMap)
     {
         WriteToTree(file, calibration);
     }
@@ -100,7 +100,7 @@ void DataBase::WriteToFolder(const string& folder) const
     map<string, shared_ptr<WrapTFileOutput>> files_by_filename;
     map<string, shared_ptr<WrapTFileOutput>> files_by_id;
 
-    for(const auto& calibration : DataMap)
+    for(const auto& calibration : dataMap)
     {
         const string& calibrationID = calibration.first;
         if(calibrationID.empty()) {
@@ -127,14 +127,14 @@ void DataBase::WriteToFolder(const string& folder) const
 
     for(const auto& it_map : files_by_id)
     {
-        WriteToTree(*it_map.second, *DataMap.find(it_map.first));
+        WriteToTree(*it_map.second, *dataMap.find(it_map.first));
     }
 }
 
 uint32_t DataBase::getDepth(const TID& tid, const string& calibrationID) const
 {
     uint32_t current_depth = 0;
-    auto& calibPairs = DataMap.at(calibrationID);
+    auto& calibPairs = dataMap.at(calibrationID);
 
     for(auto rit = calibPairs.rbegin(); rit != calibPairs.rend(); ++rit)
     {
@@ -150,21 +150,21 @@ uint32_t DataBase::getDepth(const TID& tid, const string& calibrationID) const
 
 uint32_t DataBase::GetNumberOfDataPoints(const string& calibrationID) const
 {
-    auto it = DataMap.find(calibrationID);
-    if(it == DataMap.end())
+    auto it = dataMap.find(calibrationID);
+    if(it == dataMap.end())
         return 0;
     return it->second.size();
 }
 
 const std::list<TID> DataBase::GetChangePoints(const string& calibrationID) const
 {
-    if ( DataMap.count(calibrationID) == 0)
+    if ( dataMap.count(calibrationID) == 0)
         return {};
 
     uint32_t depth = 0;
     list<TID> ids;
 
-    auto& calibPairs = DataMap.at(calibrationID);
+    auto& calibPairs = dataMap.at(calibrationID);
 
     for(auto rit = calibPairs.rbegin(); rit != calibPairs.rend(); ++rit)
     {

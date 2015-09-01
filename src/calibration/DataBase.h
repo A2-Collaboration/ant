@@ -45,6 +45,8 @@ private:
 
     void WriteToTree(WrapTFileOutput& file,
                      const DataMap_t::value_type& calibration) const;
+    bool changed = false;
+    DataMap_t dataMap;
 public:
     /**
      * @brief ReadFromFile read all TCalibrationData trees from given filename
@@ -71,12 +73,15 @@ public:
     void WriteToFolder(const std::string& folder) const;
 
 
-    bool Has(const std::string& calibrationID) const { return DataMap.count(calibrationID) != 0; }
+    bool Has(const std::string& calibrationID) const { return dataMap.count(calibrationID) != 0; }
     std::uint32_t GetNumberOfDataPoints(const std::string& calibrationID) const;
     const std::list<TID> GetChangePoints(const std::string& calibrationID) const;
 
+    const DataMap_t& DataMap() const { return dataMap; }
+    DataMap_t::mapped_type& ModifyItem(const std::string& calibrationID) { return dataMap.at(calibrationID); }
+    void AddCalibrationData(const TCalibrationData& cdata) { return dataMap[cdata.CalibrationID].push_back(cdata); }
 
-    DataMap_t DataMap;
+
     DataBase();
 };
 
