@@ -150,14 +150,10 @@ uint32_t DataBase::getDepth(const TID& tid, const string& calibrationID) const
 
 uint32_t DataBase::GetNumberOfDataPoints(const string& calibrationID) const
 {
-    try
-    {
-        return DataMap.at(calibrationID).size();
-    }
-    catch (out_of_range)
-    {
+    auto it = DataMap.find(calibrationID);
+    if(it == DataMap.end())
         return 0;
-    }
+    return it->second.size();
 }
 
 const std::list<TID> DataBase::GetChangePoints(const string& calibrationID) const
