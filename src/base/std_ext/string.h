@@ -27,6 +27,26 @@ inline std::string string_sanitize(const char* in) {
 }
 
 /**
+ * @brief Remove all occurences of substr from str
+ * @param str String to modify
+ * @param substr substring to remove
+ */
+inline void removesubstr(std::string& str, const std::string& substr) {
+
+    std::string::size_type pos = 0;
+
+    while(true) {
+
+        pos = str.find(substr, pos);
+
+        if(pos == str.npos)
+            break;
+
+        str.erase(pos, substr.length());
+    }
+}
+
+/**
  * @brief The formatter class
  *
  * Used to create formatted strings with stringstream
