@@ -8,9 +8,9 @@
 #include "TH1D.h"
 #include "base/CmdLine.h"
 #include "TDirectory.h"
-#include "base/iterators.h"
 
-#include <algorithm>
+#include "base/iterators.h"
+#include "base/std_ext/string.h"
 
 using namespace ant;
 using namespace std;
@@ -43,28 +43,6 @@ std::list<T*> GetListOf(TDirectory* dir, Func func=[] (const string& name){retur
     return theList;
 }
 
-
-inline bool ends_with(std::string const & value, std::string const & ending)
-{
-    if (ending.size() > value.size()) return false;
-    return std::equal(ending.rbegin(), ending.rend(), value.rbegin());
-}
-
-void removesubstr(string& str, const string& sub) {
-
-    string::size_type pos = 0;
-
-    while(true) {
-
-        pos = str.find(sub, pos);
-
-        if(pos == str.npos)
-            break;
-
-        str.erase(pos,sub.length());
-    }
-}
-
 int main(int argc, char** argv) {
     SetupLogger();
 
@@ -90,7 +68,7 @@ int main(int argc, char** argv) {
 
     infiles.GetObject("OmegaEtaG",dir);
 
-    auto hists = GetListOf<TH1D>(dir, [] (const string& name) { return ends_with(name, "__gg");});
+    auto hists = GetListOf<TH1D>(dir, [] (const string& name) { return std_ext::string_ends_with(name, "__gg");});
 
     hists.sort([] (const TH1* a, const TH1* b) { return a->GetEntries() > b->GetEntries();});
 
@@ -104,7 +82,8 @@ int main(int argc, char** argv) {
 
         h->SetFillColor(*(cit++));
         string title(h->GetTitle());
-        removesubstr(title, "Pluto_dilepton ");
+        std_ext::removesubstr(title, "Pluto_dilepton ");
+        std_ext::removesubstr(title, "2#gamma ");
         h->SetTitle(title.c_str());
 
         gg_stack << h;
@@ -112,7 +91,10 @@ int main(int argc, char** argv) {
             break;
     }
 
-    canvas("gg im") << gg_stack << endc;
+    canvas c("gg im");
+    c << padoption::set(padoption_t::Legend) << gg_stack << endc;
+
+
 
     app.Run();
 
