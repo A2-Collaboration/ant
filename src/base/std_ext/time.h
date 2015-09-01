@@ -1,7 +1,8 @@
 #pragma once
 
-#include "string.h"
+#include "base/std_ext/string.h"
 
+#include <cstring>
 #include <ctime>
 
 
@@ -21,6 +22,11 @@ inline std::tm to_tm(const std::string& str, const std::string& fmt, bool fixdst
     return tm_str;
 }
 
+inline time_t to_time_t(const std::tm& tm_) {
+    tm tm_copy(tm_);
+    return std::mktime(std::addressof(tm_copy));
+}
+
 inline time_t to_time_t(const std::string& str, bool is_end) {
   // try to parse it as ISO standard format
   std::tm tm_str = to_tm(str, "%Y-%m-%d");
@@ -28,7 +34,7 @@ inline time_t to_time_t(const std::string& str, bool is_end) {
   tm_str.tm_sec = is_end ? 59 : 0;
   tm_str.tm_min = is_end ? 59 : 0;
   tm_str.tm_hour = is_end ? 23 : 0;
-  return mktime(&tm_str);
+  return std::mktime(std::addressof(tm_str));
 }
 
 inline bool time_before(const time_t& moment, const std::string& before) {

@@ -136,19 +136,16 @@ unique_ptr<THeaderInfo> acqu::FileFormatBase::BuildTHeaderInfo()
     unsigned upperbits = GetUpperBitsTID() & 0xf;
 
     const time_t timestamp = mktime(&info.Time); // convert to unix epoch
-    tm offset;
-    strptime("Jan 1 00:00:00 2000", "%b %d %T %Y", &offset);
-    offset.tm_isdst = 0;
-    const time_t timestamp_offset = mktime(&offset);
+    const time_t timestamp_offset = std_ext::to_time_t(std_ext::to_tm("Jan 1 00:00:00 2000", "%b %d %T %Y"));
     if(timestamp_offset > timestamp)
         throw UnpackerAcqu::Exception("File was recorded earlier than 2000");
     const time_t timebits = timestamp - timestamp_offset;
     if(timebits > 0x3fffffff) // 30bits maximum
         throw UnpackerAcqu::Exception("File was recorded later than ~2034");
 
-    // construct the unique ID, header record as lower ID=0
-    id = TID(static_cast<std::uint64_t>(timestamp) << sizeof(std::uint32_t));
-
+    // construct the unique ID
+    id = TID((static_cast<std::uint64_t>(upperbits) << 60) +
+             (static_cast<std::uint64_t>(timebits) << 30));
 
     // build the genernal description
     stringstream description;
@@ -191,11 +188,11 @@ unsigned acqu::FileFormatBase::GetUpperBitsTID()
     }
 
     // normal run
-
-    for(size_t i=0;i<upper_nibble_mest2met.size();i++) {
-
+    for(const auto& pair : upper_nibble_mest2met) {
+        if(info.RunNumber < pair.first)
+            return pair.second;
     }
-
+    return upper_nibble_mest2met.back().second;
 }
 
 void acqu::FileFormatBase::LogMessage(
