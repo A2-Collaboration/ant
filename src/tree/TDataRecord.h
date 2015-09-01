@@ -111,41 +111,38 @@ struct TID
 
     bool operator<(const TID& other) const
     {
+        if(IsInvalid())
+            return false;
         if (Flags == other.Flags)
             return (Value < other.Value);
         return (Flags < other.Flags);
     }
 
-    /// TODO: impelemnt all others using < operator
+    bool operator!=(const TID& other) const
+    {
+        if(IsInvalid())
+            return true;
+        return *this < other || other < *this;
+    }
+
     bool operator<=(const TID& other) const
     {
-        if (Flags == other.Flags)
-            return (Value <= other.Value);
-        return (Flags <= other.Flags);
+        return *this < other || *this == other;
     }
 
     bool operator>=(const TID& other) const
     {
-        if (Flags == other.Flags)
-            return (Value >= other.Value);
-        return (Flags >= other.Flags);
+        return *this > other || *this == other;
     }
 
     bool operator>(const TID& other) const
     {
-        if (Flags == other.Flags)
-            return (Value > other.Value);
-        return (Flags > other.Flags);
-    }
-
-    bool operator!=(const TID& other) const
-    {
-        return (Value != other.Value || Flags != other.Flags);
+        return other < *this;
     }
 
     bool operator==(const TID& other) const
     {
-        return (!(this->operator !=(other)));
+        return !(*this != other);
     }
 
     TID& operator++() {
