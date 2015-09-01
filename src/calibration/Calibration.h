@@ -33,7 +33,7 @@ public:
         virtual ~BaseModule() = default;
     protected:
         BaseModule(const std::string& name_) :
-            name(std::string("Calibration_")+name_)
+            name(name_)
         {}
     private:
         const std::string name;
