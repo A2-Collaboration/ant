@@ -43,6 +43,9 @@ std::list<T*> GetListOf(TDirectory* dir, Func func=[] (const string& name){retur
     return theList;
 }
 
+void ggStack(TDirectory* dir);
+void mmStack(TDirectory* dir);
+
 int main(int argc, char** argv) {
     SetupLogger();
 
@@ -68,6 +71,18 @@ int main(int argc, char** argv) {
 
     infiles.GetObject("OmegaEtaG",dir);
 
+
+    ggStack(dir);
+    mmStack(dir);
+
+    app.Run();
+
+
+    return 0;
+}
+
+
+void ggStack(TDirectory *dir) {
     auto hists = GetListOf<TH1D>(dir, [] (const string& name) { return std_ext::string_ends_with(name, "__gg");});
 
     hists.sort([] (const TH1* a, const TH1* b) { return a->GetEntries() > b->GetEntries();});
@@ -93,11 +108,34 @@ int main(int argc, char** argv) {
 
     canvas c("gg im");
     c << padoption::set(padoption_t::Legend) << gg_stack << endc;
+}
 
+void mmStack(TDirectory *dir) {
+    auto hists = GetListOf<TH1D>(dir, [] (const string& name) { return std_ext::string_ends_with(name, "__mm");});
 
+    hists.sort([] (const TH1* a, const TH1* b) { return a->GetEntries() > b->GetEntries();});
 
-    app.Run();
+    hstack gg_stack("MM");
 
+    const std::vector<Color_t> cols = {kRed, kGreen, kBlue, kMagenta, kCyan, kOrange, kPink+9, kSpring+10, kGray};
+    auto cit = getCirculatIterator(cols.begin(), cols.end());
 
-    return 0;
+    int i=0;
+    for(auto& h : hists) {
+
+        h->SetLineColor(*(cit++));
+        h->SetLineWidth(2);
+        string title(h->GetTitle());
+        std_ext::removesubstr(title, "Pluto_dilepton ");
+        std_ext::removesubstr(title, "MM ");
+        h->SetTitle(title.c_str());
+
+        gg_stack << h;
+        if(i == 3)
+            break;
+        ++i;
+    }
+
+    canvas c("mm");
+    c << padoption::set(padoption_t::Legend) << drawoption("nostack") << gg_stack << endc;
 }
