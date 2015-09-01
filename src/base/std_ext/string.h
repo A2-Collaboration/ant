@@ -7,6 +7,12 @@
 namespace ant {
 namespace std_ext {
 
+/**
+ * @brief Check if a string ends with a substr. For example useful for file extensions.
+ * @param value String to check
+ * @param ending Ending to check for
+ * @return true it value ends with ending
+ */
 inline bool string_ends_with(std::string const& value, std::string const& ending)
 {
     if (ending.size() > value.size()) return false;
