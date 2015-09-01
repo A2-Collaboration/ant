@@ -166,6 +166,8 @@ hstack::~hstack()
 hstack &hstack::operator<<(TH1D *hist)
 {
     stack->Add(hist, current_option.c_str());
+    xlabel = hist->GetXaxis()->GetTitle();
+    ylabel = hist->GetYaxis()->GetTitle();
     return *this;
 }
 
@@ -175,14 +177,17 @@ hstack &hstack::operator<<(const drawoption &c)
     return *this;
 }
 
-TObject *hstack::GetObject()
-{
-    return stack;
-}
-
 void hstack::Draw(const string &option) const
 {
     stack->Draw(option.c_str());
+
+    auto xaxis = stack->GetXaxis();
+    if(xaxis)
+        xaxis->SetTitle(xlabel.c_str());
+
+    auto yaxis = stack->GetYaxis();
+    if(yaxis)
+        yaxis->SetTitle(ylabel.c_str());
 }
 
 const std::vector<Color_t> ant::ColorPalette::Colors = {kRed, kGreen, kBlue, kYellow, kMagenta, kCyan, kOrange, kPink+9, kSpring+10, kGray};

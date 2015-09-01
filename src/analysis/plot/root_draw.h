@@ -162,30 +162,28 @@ public:
  * Wrapper for ROOT's THStack.
  * Overloads the << operator to add histograms to it, and of course
  * can be drawn the same way with the canvas class.
+ * The axis labels are always taken from the last histogram added.
  * @see ant::canvas
  *
- * When drawn, ant::canvas automatically builds the legend.
- *
- * @bug No axis lables. Because they have to be set *after* the THStack is drawn
- *  (https://root.cern.ch/root/html/THStack.html#THStack:GetXaxis).
- *  ant::canvas stores a list of TObjects and draws them alter all together, so there
- *  is no way hstack can set the title afterwards. :-(
  */
 class hstack: public root_drawable_traits {
 protected:
     THStack* stack;
     std::string current_option;
+    std::string xlabel;
+    std::string ylabel;
+
 public:
     hstack(const std::string& name, const std::string &title="");
     virtual ~hstack();
+
     hstack(const hstack&) = delete;
     hstack& operator= (const hstack&) = delete;
 
     virtual hstack &operator<< (TH1D* hist);
     virtual hstack &operator<< (const drawoption& c);
 
-    TObject *GetObject();
-    void Draw(const std::string &option) const;
+    void Draw(const std::string &option) const override;
 };
 
 struct ColorPalette {
