@@ -37,10 +37,8 @@ void acqu::FileFormatMk2::FillInfo(reader_t &reader, buffer_t &buffer, Info &inf
     // since std::get_time is missing :(
     //istringstream ss_time(h->fTime);
     //ss_time >> get_time(&info.Time,"%a %b %d %T %Y");
-    strptime(h->fTime, "%a %b %d %T %Y", &info.Time);
-    info.Time.tm_isdst = 0; // std::get_time does not set this, but mktime wants to know
 
-
+    info.Time = std_ext::to_tm(h->fTime, "%a %b %d %T %Y");
     info.Description = std_ext::string_sanitize(h->fDescription);
     info.RunNote = std_ext::string_sanitize(h->fRunNote);
     info.OutFile = std_ext::string_sanitize(h->fOutFile);
