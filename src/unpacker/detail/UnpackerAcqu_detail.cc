@@ -174,18 +174,15 @@ void acqu::FileFormatBase::LogMessage(
 
     switch(level) {
     case TUnpackerMessage::Level_t::Info:
-        LOG(INFO) << text;
+        VLOG(3) << text;
         break;
     case TUnpackerMessage::Level_t::Warn:
-        LOG(WARNING) << text;
+        VLOG(2) << text;
         break;
     case TUnpackerMessage::Level_t::DataError:
     case TUnpackerMessage::Level_t::HardwareError:
     case TUnpackerMessage::Level_t::DataDiscard:
-        // we treat unpacker error messages as
-        // warnings in log, since they are not fatal
-        // for further processing
-        LOG(WARNING) << text;
+        VLOG(1) << text;
         break;
     }
     fillQueue(queue, move(record));
