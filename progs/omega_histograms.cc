@@ -10,6 +10,8 @@
 #include "TDirectory.h"
 #include "base/iterators.h"
 
+#include <algorithm>
+
 using namespace ant;
 using namespace std;
 
@@ -46,6 +48,21 @@ inline bool ends_with(std::string const & value, std::string const & ending)
 {
     if (ending.size() > value.size()) return false;
     return std::equal(ending.rbegin(), ending.rend(), value.rbegin());
+}
+
+void removesubstr(string& str, const string& sub) {
+
+    string::size_type pos = 0;
+
+    while(true) {
+
+        pos = str.find(sub, pos);
+
+        if(pos == str.npos)
+            break;
+
+        str.erase(pos,sub.length());
+    }
 }
 
 int main(int argc, char** argv) {
@@ -86,9 +103,12 @@ int main(int argc, char** argv) {
     for(auto& h : hists) {
 
         h->SetFillColor(*(cit++));
+        string title(h->GetTitle());
+        removesubstr(title, "Pluto_dilepton ");
+        h->SetTitle(title.c_str());
 
         gg_stack << h;
-        if(i++>9)
+        if(i++ == 9)
             break;
     }
 
