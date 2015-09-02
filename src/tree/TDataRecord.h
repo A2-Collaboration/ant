@@ -100,10 +100,13 @@ struct TID
         if(IsInvalid())
             return s << "INVALID";
 
-        return s << std::hex << "(flags=0x" << Flags << ",0x"
-                 << std::setw(sizeof(decltype(Value))*2) << std::setfill('0')
-                 << Value
-                 << ")" << std::dec;
+        s << "(" << std::hex;
+        if(Flags)
+            s  << "flags=0x" << Flags << ",";
+        s << std::setw(sizeof(decltype(Value))*2) << std::setfill('0')
+          << Value;
+        s  << ")" << std::dec;
+        return s;
     }
 #endif
 
