@@ -138,8 +138,9 @@ void Energy::Update(size_t index, const TID& tid)
         if (calibration->Index == index)
         {
             TCalibrationData cdata;
-            if(calibrationManager->GetData(GUI_CalibType::ConstructName(GetName(), calibration->Name),
-                                           tid, cdata))
+            if(calibrationManager->GetData(
+                   GUI_CalibType::ConstructName(GetName(), calibration->Name),
+                   tid, cdata))
             {
                 calibration->Values.clear();
                 calibration->Values.reserve(cdata.Data.size());
@@ -147,8 +148,8 @@ void Energy::Update(size_t index, const TID& tid)
                     calibration->Values.push_back(val.Value);
             }
             else {
-                LOG(ERROR) << "Could not update calibration data for " << calibration->Name
-                             << "at changepoint TID=" << tid;
+                LOG(WARNING) << "No calibration data found for " << calibration->Name
+                             << " at changepoint TID=" << tid << ", using previous values";
             }
         }
     }
