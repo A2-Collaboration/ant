@@ -75,7 +75,7 @@ bool UnpackerA2Geant::OpenFile(const string& filename)
     }
 
     /// \todo think of some better upper Id?
-    id = std_ext::make_unique<TID>(static_cast<std::uint64_t>(geant->Hash()) << sizeof(std::uint32_t), true);
+    id = std_ext::make_unique<TID>(static_cast<std::uint64_t>(geant->Hash()) << 8*sizeof(std::uint32_t), true);
 
     // this unpacker has no chance to make a proper THeaderInfo
     // so we ask the ExpConfig if it has an idea...
