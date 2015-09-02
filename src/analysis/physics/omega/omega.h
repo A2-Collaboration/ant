@@ -87,7 +87,7 @@ protected:
 
     TH1D* steps;
 
-    IntervalD omega_range = IntervalD(740,820);
+    IntervalD omega_range = IntervalD(680,780);
 
     struct perDecayhists_t {
         TH1D* gg = nullptr;
