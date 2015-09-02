@@ -95,7 +95,8 @@ Cluster Converter::Convert(const TCluster& cluster)
                 cluster.Energy,
                 cluster.Time,
                 cluster.GetDetectorType(),
-                cluster.CentralElement
+                cluster.CentralElement,
+                cluster.Position
                 );
     for(const auto& hit : cluster.Hits) {
        Cluster::Hit anthit;
