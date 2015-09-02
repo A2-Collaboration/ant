@@ -184,7 +184,7 @@ void OmegaEtaG::Analyse(const Event::Data &data, const Event &event)
             ggg_omega_pi0oreta->Fill(gggIM);
         }
 
-        if(omega_range.Contains(gggIM) && h == nullptr) {
+        if( h == nullptr) {
 
             auto entry = gg_decays.find(decaystring);
             if(entry == gg_decays.end()) {
@@ -203,7 +203,7 @@ void OmegaEtaG::Analyse(const Event::Data &data, const Event &event)
 
         const ParticlePtr mc_p = !mc_protons.empty() ? mc_protons.at(0) : shared_ptr<Particle>(nullptr);
 
-        if(h) {
+        if(omega_range.Contains(gggIM) && h) {
             for(auto& th : event.MCTrue().TaggerHits()) {
                 const TLorentzVector beam_target = th->PhotonBeam() + TLorentzVector(0, 0, 0, ParticleTypeDatabase::Proton.Mass());
                 const TLorentzVector mm = beam_target - gggState;
