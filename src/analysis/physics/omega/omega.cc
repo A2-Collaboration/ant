@@ -256,7 +256,7 @@ void OmegaEtaG::Analyse(const Event::Data &data, const Event &event)
 
             ggg_gg_all->Fill(gggIM,ggIM);
 
-            if(h)
+            if(h && omega_range.Contains(gggIM))
                 h->gg->Fill(ggIM);
 
         }
