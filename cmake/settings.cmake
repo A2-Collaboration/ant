@@ -35,6 +35,11 @@ else()
   message(FATAL_ERROR "Non-gnu compiler not supported at the moment")
 endif()
 
+option(MARCH "Enable auto-detection of CPU specific optimizations" OFF)
+if(MARCH)
+    set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -march=native")
+endif()
+
 string(TOUPPER ${CMAKE_BUILD_TYPE} BUILD_TYPE)
 set(DEFAULT_COMPILE_FLAGS ${CMAKE_CXX_FLAGS_${BUILD_TYPE}})
 
