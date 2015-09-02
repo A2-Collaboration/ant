@@ -24,7 +24,16 @@ class AdaptorTClusterHit;
 
 struct Reconstruct_traits {
     virtual ~Reconstruct_traits() = default;
+    /**
+     * @brief Initialize called before first DoReconstruct() call
+     * @param headerInfo
+     */
     virtual void Initialize(const THeaderInfo& headerInfo) = 0;
+    /**
+     * @brief DoReconstruct shall convert the given TDetectorRead to TEvent
+     * @param detectorRead
+     * @return the reconstructed TEvent
+     */
     virtual MemoryPool<TEvent>::Item DoReconstruct(TDetectorRead& detectorRead) = 0;
 };
 
@@ -36,10 +45,13 @@ struct Reconstruct_traits {
  * physical quantities. However, the concept is more general and also regards
  * for example the TAPS Shower Correction as a reconstruct hook for clusters,
  * or some of the calibration/converters hook into the reconstruct in order to
- * find their reference timings or scalers.
+ * find their reference timings.
  *
  */
 struct ReconstructHook {
+    /**
+     * @brief The Base class just defines some useful types
+     */
     class Base {
     public:
         using readhits_t = std_ext::mapped_vectors< Detector_t::Type_t, TDetectorReadHit* >;
@@ -49,16 +61,25 @@ struct ReconstructHook {
         virtual ~Base() = default;
     };
 
+    /**
+     * @brief The DetectorReadHits class instances are applied before hit matching
+     */
     class DetectorReadHits : public Base {
     public:
         virtual void ApplyTo(const readhits_t& hits, extrahits_t& extrahits) = 0;
     };
 
+    /**
+     * @brief The ClusterHits class instances are applied before clustering and after hit matching
+     */
     class ClusterHits : public Base {
     public:
         virtual void ApplyTo(clusterhits_t& clusterhits) = 0;
     };
 
+    /**
+     * @brief The Clusters class instances are applied before candidate matching and after clustering
+     */
     class Clusters : public Base {
     public:
         virtual void ApplyTo(clusters_t& clusters) = 0;
@@ -67,13 +88,27 @@ struct ReconstructHook {
 
 
 /**
- * @brief The Updateable_traits class
- *
- * used by the UpdateableManager
+ * @brief The Updateable_traits class used by the UpdateableManager
  */
 class Updateable_traits {
 public:
+    /**
+     * @brief GetChangePoints builds (possibly unsorted) list of points
+     * when Updateable_traits::Update() should be called
+     * @return vectorized list of change points, index is given to Update()
+     */
     virtual std::vector<std::list<TID>> GetChangePoints() const = 0;
+    /**
+     * @brief UpdateOnFirstEvent corresponds to GetChangePoints() and forces
+     * an Update() on first event if boolean flag in vector is true
+     * @return vectorized list of flags, empty if disabled
+     */
+    virtual std::vector<bool> UpdateOnFirstEvent() const { return {}; }
+    /**
+     * @brief Update shall load new parameters for the upcoming event ids
+     * @param index of element in vector returned by GetChangePoints() or UpdateOnFirstEvent()
+     * @param id indicates moment of change
+     */
     virtual void Update(std::size_t index, const TID& id) = 0;
 };
 
