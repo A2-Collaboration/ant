@@ -27,9 +27,16 @@ UpdateableManager::UpdateableManager(
     map<TID, shared_ptr_list<Updateable_traits> > sorted_updateables;
     for(const shared_ptr<Updateable_traits>& updateable : updateables)
     {
-        std::vector<list<TID>> all_changePoints = updateable->GetChangePoints();
+        vector<list<TID>> all_changePoints = updateable->GetChangePoints();
+        vector<bool> updateOnFirstEvent = updateable->UpdateOnFirstEvent();
+        // if empty, we assume nothing should be updated on first event
+        if(updateOnFirstEvent.empty())
+            updateOnFirstEvent.resize(all_changePoints.size(), false);
+        // check if updateable returned consistent data,
+        // anything else is an implementation error
+        if(updateOnFirstEvent.size() != all_changePoints.size())
+            throw runtime_error("Inconsistent GetChangePoints/UpdateOnFirstEvent data found");
 
-        // no change points means the updateable is actually constant
 
         // the following extraction relies on the changepoints being sorted in time
         // we don't require the updateables to provide a sorted list
@@ -37,8 +44,14 @@ UpdateableManager::UpdateableManager(
         {
             auto& lst = all_changePoints[i];
 
+            if(updateOnFirstEvent[i])
+                lst.push_back(startPoint);
+
+            // no change points means the updateable is constant
             if (lst.empty())
                 continue;
+
+            // very important to get correct behaviour for following algorithm
             lst.sort();
 
             // scan the change points and build interesting_changePoints
