@@ -22,18 +22,16 @@ using namespace ant::calibration;
 
 void DataManager::Init()
 {
-    if ( dataBase == nullptr )
-    {
-        dataBase = std_ext::make_unique<DataBase>();
-        dataBase->ReadFromFolder(calibrationDataFolder);
-    }
+    if(dataBase)
+        return;
+    dataBase = std_ext::make_unique<DataBase>();
+    dataBase->ReadFromFolder(calibrationDataFolder);
 }
 
 void DataManager::Add(const TCalibrationData& cdata)
 {
     Init();
     dataBase->AddItem(cdata);
-    changedDataBase = true;
 }
 
 

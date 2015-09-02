@@ -49,7 +49,6 @@ class DataManager: public DataAccess
 private:
 
     std::string calibrationDataFolder;
-    bool changedDataBase;
     std::unique_ptr<DataBase> dataBase;
 
     void Init();
@@ -58,14 +57,13 @@ private:
 
 public:
     DataManager(const std::string& calibrationDataFolder_):
-        calibrationDataFolder(calibrationDataFolder_),
-        changedDataBase(false)
+        calibrationDataFolder(calibrationDataFolder_)
     {}
 
 
     ~DataManager()
     {
-        if (changedDataBase)
+        if(dataBase)
             dataBase->WriteToFolder(calibrationDataFolder);
     }
 
