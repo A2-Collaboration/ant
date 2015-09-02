@@ -41,7 +41,7 @@ bool DataManager::GetData(const string& calibrationID, const TID& eventID, TCali
 {
     Init();
     //case one: calibration doesn't exist
-    if ( dataBase->DataMap().count(calibrationID) == 0)
+    if (!dataBase->Has(calibrationID))
         return false;
 
     //case two: calibration exists
@@ -70,7 +70,7 @@ const list<TID> DataManager::GetChangePoints(const string& calibrationID)
 uint32_t DataManager::GetNumberOfCalibrations()
 {
     Init();
-    return dataBase->DataMap().size();
+    return dataBase->GetKeys().size();
 }
 
 uint32_t DataManager::GetNumberOfDataPoints(const string& calibrationID)
@@ -84,7 +84,7 @@ uint32_t DataManager::GetNumberOfDataPoints(const string& calibrationID)
 bool DataManager::GetLastEntry(const std::string& calibrationID, TCalibrationData& cdata)
 {
     Init();
-    if (dataBase->DataMap().count(calibrationID) == 0)
+    if (!dataBase->Has(calibrationID) == 0)
         return false;
 
     const auto& data = dataBase->GetItems(calibrationID);

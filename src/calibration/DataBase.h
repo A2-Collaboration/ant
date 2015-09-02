@@ -38,10 +38,7 @@ private:
      * @param depth    depth(distance from last calibration iteration) of given data point
      * @return valid or not
      */
-    bool isValid(const TID& tid, const std::string& calibrationID, const std::uint32_t& depth) const
-    {
-        return (depth <= getDepth(tid,calibrationID));
-    }
+    bool isValid(const TID& tid, const std::string& calibrationID, const std::uint32_t& depth) const;
 
     void WriteToTree(WrapTFileOutput& file,
                      const DataMap_t::value_type& calibration) const;
@@ -73,14 +70,14 @@ public:
     void WriteToFolder(const std::string& folder) const;
 
 
-    bool Has(const std::string& calibrationID) const { return dataMap.count(calibrationID) != 0; }
+    bool Has(const std::string& calibrationID) const;
+    std::list<std::string> GetKeys() const;
     std::uint32_t GetNumberOfDataPoints(const std::string& calibrationID) const;
     const std::list<TID> GetChangePoints(const std::string& calibrationID) const;
 
-    const DataMap_t& DataMap() const { return dataMap; }
+
     std::vector<ant::TCalibrationData>& ModifyItems(const std::string& calibrationID);
     const std::vector<ant::TCalibrationData>& GetItems(const std::string& calibrationID) const;
-
     void AddItem(const TCalibrationData& cdata);
 
 

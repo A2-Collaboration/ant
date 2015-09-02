@@ -134,6 +134,20 @@ void DataBase::WriteToFolder(const string& folder) const
     }
 }
 
+bool DataBase::Has(const string& calibrationID) const
+{
+    return dataMap.find(calibrationID) != dataMap.end();
+}
+
+std::list<string> DataBase::GetKeys() const
+{
+    list<string> keys;
+    for (const auto& entry: dataMap){
+        keys.emplace_back(entry.first);
+    }
+    return keys;
+}
+
 uint32_t DataBase::getDepth(const TID& tid, const string& calibrationID) const
 {
     uint32_t current_depth = 0;
@@ -149,6 +163,11 @@ uint32_t DataBase::getDepth(const TID& tid, const string& calibrationID) const
     return current_depth;
 }
 
+bool DataBase::isValid(const TID& tid, const string& calibrationID, const uint32_t& depth) const
+{
+    return (depth <= getDepth(tid,calibrationID));
+}
+
 
 
 uint32_t DataBase::GetNumberOfDataPoints(const string& calibrationID) const
@@ -161,13 +180,14 @@ uint32_t DataBase::GetNumberOfDataPoints(const string& calibrationID) const
 
 const std::list<TID> DataBase::GetChangePoints(const string& calibrationID) const
 {
-    if ( dataMap.count(calibrationID) == 0)
+    auto it_item = dataMap.find(calibrationID);
+    if(it_item == dataMap.end())
         return {};
+
+    auto& calibPairs = it_item->second.second;
 
     uint32_t depth = 0;
     list<TID> ids;
-
-    auto& calibPairs = dataMap.at(calibrationID).second;
 
     for(auto rit = calibPairs.rbegin(); rit != calibPairs.rend(); ++rit)
     {

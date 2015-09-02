@@ -13,7 +13,7 @@ using namespace ant::calibration;
 
 bool Editor::getIDRange(const string& calibrationID, interval<TID>& IDinterval) const
 {
-    if (dman.DataMap().count(calibrationID) == 0)
+    if (!dman.Has(calibrationID))
         return false;
 
     auto& data = dman.GetItems(calibrationID);
@@ -34,17 +34,11 @@ bool Editor::getIDRange(const string& calibrationID, interval<TID>& IDinterval) 
 
 std::list<string> Editor::GetListOfCalibrations() const
 {
-    list<string> theList;
-    for (const auto& entry: dman.DataMap()){
-        theList.emplace_back(entry.first);
-    }
-    return theList;
+    return dman.GetKeys();
 }
 
 uint32_t Editor::GetNumberOfSteps(const string &calibrationID) const
 {
-    if (!dman.Has(calibrationID))
-        return 0;
     return dman.GetNumberOfDataPoints(calibrationID);
 }
 
