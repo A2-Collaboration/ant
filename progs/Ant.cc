@@ -26,6 +26,7 @@
 #include "base/detail/tclap/ValuesConstraintExtra.h"
 #include "base/WrapTFile.h"
 #include "base/filesystem.h"
+#include "base/std_ext/system.h"
 
 #include "TRint.h"
 #include "TSystem.h"
@@ -35,7 +36,6 @@
 #include <chrono>
 #include <cstdio>
 #include <cerrno>
-
 
 
 using namespace std;
@@ -375,18 +375,23 @@ int main(int argc, char** argv) {
     VLOG(5) << "Added command line: " << header->CmdLine;
 
     if(!cmd_batchmode->isSet()) {
+        if(!std_ext::system::isInteractive()) {
+            LOG(INFO) << "No TTY attached. Not starting ROOT shell.";
+        } else {
 
-        mysig->Remove();
-        oldsig->Add();
-        gSystem->AddSignalHandler(oldsig);
-        delete mysig;
+            mysig->Remove();
+            oldsig->Add();
+            gSystem->AddSignalHandler(oldsig);
+            delete mysig;
 
-        if(masterFile != nullptr)
-            LOG(INFO) << "Stopped running, but close ROOT properly to write data to disk.";
+            if(masterFile != nullptr)
+                LOG(INFO) << "Stopped running, but close ROOT properly to write data to disk.";
 
-        pm.ShowResults();
-        app.Run(kTRUE); // really important to return...
-        masterFile = nullptr;   // and to destroy the master WrapTFile before TRint is destroyed
+            pm.ShowResults();
+            app.Run(kTRUE); // really important to return...
+            masterFile = nullptr;   // and to destroy the master WrapTFile before TRint is destroyed
+        }
+
     }
 
     return 0;
