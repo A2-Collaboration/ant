@@ -75,7 +75,7 @@ struct TID
 
     // you may append flags, but never remove or change order!
     enum class Flags_t : std::uint8_t {
-        Invalid, MC, Acqu, GoAT
+        Invalid, MC
     };
 
     // ensure correct init in default constructor
