@@ -54,7 +54,7 @@ public:
     Physics(const std::string& name, PhysOptPtr opts=nullptr);
     virtual ~Physics() {}
     virtual void ProcessEvent(const data::Event& event) =0;
-    virtual void Finish() =0;
+    virtual void Finish() {}
     virtual void ShowResult() =0;
     std::string GetName() { return name_; }
 
