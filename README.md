@@ -44,7 +44,7 @@ project.
     * [x] TAPS Energy
     * [x] Time offsets for PID/CB/TAPS/Tagger
     * [ ] Complete calibration cycle on blaster
-  * [ ] [Experiment configuration](src/expconfig/setup)
+  * [ ] [Experiment configuration](src/expconfig/setups)
     * [x] EPT 2014 beamtimes
     * [ ] Any normal tagger beamtime
     * [ ] Wire chamber
