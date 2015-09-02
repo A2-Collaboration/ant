@@ -18,7 +18,12 @@ namespace calibration {
 class DataBase
 {
 public:
-    using DataMap_t = std::map<std::string, std::pair<bool, std::vector<ant::TCalibrationData>>>;
+    struct mapped_value_t {
+        bool Modified;
+        std::vector<ant::TCalibrationData> Data;
+    };
+
+    using DataMap_t = std::map<std::string, mapped_value_t>;
 private:
     const std::string cm_treename_prefix;
     const std::string cm_branchname;
