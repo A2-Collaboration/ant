@@ -78,21 +78,3 @@ uint32_t DataManager::GetNumberOfDataPoints(const string& calibrationID)
     Init();
     return dataBase->GetNumberOfDataPoints(calibrationID);
 }
-
-
-
-bool DataManager::GetLastEntry(const std::string& calibrationID, TCalibrationData& cdata)
-{
-    Init();
-    if (!dataBase->Has(calibrationID) == 0)
-        return false;
-
-    const auto& data = dataBase->GetItems(calibrationID);
-
-    cdata = data.back();
-
-    return true;
-}
-
-
-

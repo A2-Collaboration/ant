@@ -31,8 +31,6 @@ public:
     virtual bool GetData(const std::string& calibrationID, const TID& eventID, TCalibrationData& cdata) = 0;
 
     virtual const std::list<TID> GetChangePoints(const std::string& calibrationID) = 0;
-
-    virtual bool GetLastEntry(const std::string& calibrationID, TCalibrationData& cdata) = 0;
 };
 
 
@@ -72,9 +70,6 @@ public:
     std::uint32_t GetNumberOfCalibrations();
 
     std::uint32_t GetNumberOfDataPoints(const std::string& calibrationID);
-
-
-    bool GetLastEntry(const std::string& calibrationID, TCalibrationData& cdata) override;
 
 };
 
