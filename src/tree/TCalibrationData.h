@@ -22,6 +22,7 @@ struct TCalibrationData
 
     std::string CalibrationID;
 
+    bool Extendable; // default is false
     TID FirstID;
     TID LastID;
 
@@ -31,40 +32,49 @@ struct TCalibrationData
     typedef TKeyValue<std::vector<double>> TFitParameters;
     std::vector<TFitParameters> FitParameters;
 
-
-
-    TCalibrationData(const std::string& calibrationID,const TID& first_id, const TID& last_id) :
-        Author(),
-        Comment(),
-        TimeStamp(),
+#ifndef __CINT__
+    TCalibrationData(const std::string& author,
+                     const std::string& comment,
+                     const std::time_t& time,
+                     const std::string& calibrationID,
+                     const TID& first_id,
+                     const TID& last_id
+                     ) :
+        Author(author),
+        Comment(comment),
+        TimeStamp(time),
         CalibrationID(calibrationID),
+        Extendable(false),
         FirstID(first_id),
         LastID(last_id),
         Data(),
         FitParameters()
     {}
 
-    //Constructors for readout from trees
-#ifndef __CINT__
-    TCalibrationData(const std::string& author, const std::string& comment,
-                     const std::time_t& time,
-                     const std::string& calibrationID, const TID& first_id,
-                     const TID& last_id
-                     ) :
-        Author   (author),
-        Comment  (comment),
-        TimeStamp(time),
-        CalibrationID  (calibrationID),
-        FirstID  (first_id),
-        LastID   (last_id),
+    // this constructor is used by some tests
+    TCalibrationData(const std::string& calibrationID,
+                     const TID& first_id,
+                     const TID& last_id,
+                     bool extendable = false) :
+        Author(),
+        Comment(),
+        TimeStamp(),
+        CalibrationID(calibrationID),
+        Extendable(extendable),
+        FirstID(first_id),
+        LastID(last_id),
         Data(),
         FitParameters()
     {}
 
     virtual std::ostream& Print( std::ostream& s) const override {
-        s << "TCalibrationData generated at " << std::asctime(std::localtime(&TimeStamp)) << std::endl
-          << "  CalibrationID:  " << CalibrationID << std::endl
-          << "  Valid for IDs:  [" << FirstID << ", " << LastID << "]" << std::endl;
+        s << "TCalibrationData:\n";
+        s << "  Generated at    " << std::asctime(std::localtime(&TimeStamp)); // no << '\n'; because asctime outputs this already
+        s << "  CalibrationID:  " << CalibrationID << '\n';
+        s << "  Valid for IDs:  [" << FirstID << ", " << LastID << "]";
+        if(Extendable)
+            s << " (extendable)";
+        s  << '\n';
         return s;
     }
 #endif
@@ -74,6 +84,7 @@ struct TCalibrationData
         Comment(),
         TimeStamp(),
         CalibrationID(),
+        Extendable(false),
         FirstID(),
         LastID(),
         Data(),
