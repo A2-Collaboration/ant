@@ -127,7 +127,7 @@ void PhysicsManager::ReadFrom(
         return;
 
     if(physics.empty()) {
-        LOG(WARNING) << "No Analysis Instances activated. Will not analyse anything.";
+        throw std::runtime_error("No Analysis Instances activated. Will not analyse anything.");
     }
 
 
