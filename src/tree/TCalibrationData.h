@@ -69,7 +69,7 @@ struct TCalibrationData
 
     virtual std::ostream& Print( std::ostream& s) const override {
         s << "TCalibrationData:\n";
-        s << "  Generated at    " << std::asctime(std::localtime(&TimeStamp)); // no << '\n'; because asctime outputs this already
+        s << "  Generated at    " << std_ext::to_iso8601(TimeStamp) << '\n';
         s << "  CalibrationID:  " << CalibrationID << '\n';
         s << "  Valid for IDs:  [" << FirstID << ", " << LastID << "]";
         if(Extendable)

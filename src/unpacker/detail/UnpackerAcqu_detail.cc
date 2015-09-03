@@ -129,23 +129,12 @@ acqu::FileFormatBase::~FileFormatBase()
 
 unique_ptr<THeaderInfo> acqu::FileFormatBase::BuildTHeaderInfo()
 {
-    // this unpacker has a constant ID_upper
-    // based on the timestamp inside the file
-    /// \todo make ID really unique due to daylight saving time...
-
-    unsigned upperbits = GetUpperBitsTID() & 0xf;
-
-    const time_t timestamp = mktime(&info.Time); // convert to unix epoch
-    const time_t timestamp_offset = std_ext::to_time_t(std_ext::to_tm("Jan 1 00:00:00 2000", "%b %d %T %Y"));
-    if(timestamp_offset > timestamp)
-        throw UnpackerAcqu::Exception("File was recorded earlier than 2000");
-    const time_t timebits = timestamp - timestamp_offset;
-    if(timebits > 0x3fffffff) // 30bits maximum
-        throw UnpackerAcqu::Exception("File was recorded later than ~2034");
+    // guessing the timestamp from the Acqu header
+    // is somewhat more involved...
+    const time_t timestamp = GetTimeStamp();
 
     // construct the unique ID
-    id = TID((static_cast<std::uint64_t>(upperbits) << 60) +
-             (static_cast<std::uint64_t>(timebits) << 30));
+    id = TID(timestamp, 0u);
 
     // build the genernal description
     stringstream description;
@@ -153,46 +142,47 @@ unique_ptr<THeaderInfo> acqu::FileFormatBase::BuildTHeaderInfo()
                 << "Number=" << info.RunNumber << " "
                 << "OutFile='" << info.OutFile << "' "
                 << "Description='"+info.Description+"' "
-                << "Note='"+info.RunNote+"' ";
-
+                << "Note='"+info.RunNote+"'";
 
     return std_ext::make_unique<THeaderInfo>(id, timestamp, description.str(), info.RunNumber);
 }
 
-unsigned acqu::FileFormatBase::GetUpperBitsTID()
+time_t acqu::FileFormatBase::GetTimeStamp()
 {
-    // there's no other way than hardcode the runs
-    // recorded when the the MEST->MET transition occurred
-    const vector<pair<unsigned, unsigned>> upper_nibble_mest2met = {
-        {6592, 0x0},
-        {6593, 0x1},
-        {6594, 0x2},
-        {6595, 0x3},
-    };
-    // handle run in transition
-    if(std_ext::is_mest2met_transition(info.Time)) {
-        auto it = upper_nibble_mest2met.begin();
-        while(it != upper_nibble_mest2met.end()) {
-            if(it->first == info.RunNumber) {
-                return it->second;
-            }
-            ++it;
-        }
-        // not found...should be added than to list above
-        if(it == upper_nibble_mest2met.end()) {
-            throw UnpackerAcqu::Exception(
-                        std_ext::formatter()
-                        << "Cannot unpack file in MEST->MET transition "
-                        << "without additional information for RunNumber " << info.RunNumber);
-        }
-    }
+    if(!std_ext::guess_dst(info.Time)) {
+        // there's no other way than hardcode the runs
+        // recorded when the the MEST->MET transition occurred
+        struct manual_dst_t {
+            int Year;
+            unsigned RunNumber;
+            unsigned DST;
+            manual_dst_t(unsigned year, unsigned run, unsigned dst) :
+                Year(year-1900), RunNumber(run), DST(dst) {}
+        };
 
-    // normal run
-    for(const auto& pair : upper_nibble_mest2met) {
-        if(info.RunNumber < pair.first)
-            return pair.second;
+        const vector<manual_dst_t> manual_dsts = {
+            {2014, 6592, 1},
+            {2014, 6593, 1},
+            {2014, 6594, 0},
+            {2014, 6596, 0},
+        };
+
+        bool found_item = false;
+        for(const manual_dst_t& item : manual_dsts) {
+            if(info.Time.tm_year != item.Year)
+                continue;
+            if(info.RunNumber != item.RunNumber)
+                continue;
+            found_item = true;
+            info.Time.tm_isdst = item.DST;
+        }
+        if(!found_item)
+            throw UnpackerAcqu::Exception(
+                    std_ext::formatter() <<
+                    "Run " << info.RunNumber << " at " << std_ext::to_iso8601(std_ext::to_time_t(info.Time))
+                    << " has unknown DST flag (not found in database)");
     }
-    return upper_nibble_mest2met.back().second;
+    return std_ext::to_time_t(info.Time);
 }
 
 void acqu::FileFormatBase::LogMessage(

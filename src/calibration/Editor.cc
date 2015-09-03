@@ -51,8 +51,8 @@ bool Editor::ShowHistory(const string& calibrationID) const
         return false;
 
     auto& dVector = dman.GetItems(calibrationID);
-    auto len = maxInt.Stop().Value - maxInt.Start().Value;
-    auto first = maxInt.Start().Value;
+    auto len = maxInt.Stop().Value() - maxInt.Start().Value();
+    auto first = maxInt.Start().Value();
 
     TH2D* hist = new TH2D( (std_ext::formatter() << "hist-" << calibrationID).str().c_str(),
                           (std_ext::formatter() << "History for " << calibrationID).str().c_str(),
@@ -69,8 +69,8 @@ bool Editor::ShowHistory(const string& calibrationID) const
     uint32_t step(0);
     for(const auto& cdata: dVector)
     {
-        unsigned min = (unsigned) (cdata.FirstID.Value - first) * 100 / len;
-        unsigned max = (unsigned) (cdata.LastID.Value - first) * 100 / len;
+        unsigned min = (unsigned) (cdata.FirstID.Value() - first) * 100 / len;
+        unsigned max = (unsigned) (cdata.LastID.Value() - first) * 100 / len;
 
         for ( auto i = min ; i <= max ; ++i)
         {
@@ -82,8 +82,8 @@ bool Editor::ShowHistory(const string& calibrationID) const
     auto valids = getValidData(calibrationID);
     for (const auto& vcdata: valids)
     {
-        unsigned min = (unsigned) (vcdata.second.FirstID.Value - first) * 100 / len;
-        unsigned max = (unsigned) (vcdata.second.LastID.Value - first) * 100 / len;
+        unsigned min = (unsigned) (vcdata.second.FirstID.Value() - first) * 100 / len;
+        unsigned max = (unsigned) (vcdata.second.LastID.Value() - first) * 100 / len;
 
         for ( auto i = min ; i <= max ; ++i)
         {
@@ -184,8 +184,8 @@ bool Editor::ShowValid(const string& calibrationID) const
     }
 
     auto dVector = getValidData(calibrationID);
-    auto len = maxInt.Stop().Value - maxInt.Start().Value;
-    auto first = maxInt.Start().Value;
+    auto len = maxInt.Stop().Value() - maxInt.Start().Value();
+    auto first = maxInt.Start().Value();
 
     TH2D* valid = new TH2D( (std_ext::formatter() << "val-" << calibrationID).str().c_str(),
                           (std_ext::formatter() << "Valid data for " << calibrationID).str().c_str(),
@@ -199,8 +199,8 @@ bool Editor::ShowValid(const string& calibrationID) const
 
     for(const auto& cdata: dVector)
     {
-        unsigned min = (unsigned) (cdata.second.FirstID.Value - first) * 100 / len;
-        unsigned max = (unsigned) (cdata.second.LastID.Value - first) * 100 / len;
+        unsigned min = (unsigned) (cdata.second.FirstID.Value() - first) * 100 / len;
+        unsigned max = (unsigned) (cdata.second.LastID.Value() - first) * 100 / len;
 
         for ( auto i = min ; i <= max ; ++i)
             valid->Fill(i,cdata.first);
@@ -239,15 +239,15 @@ std::list<std::pair<uint32_t, IntervalD> > Editor::GetAllRanges(const string &ca
     auto maxInt = GetMaxInt(calibrationID);
 
     auto& dVector = dman.GetItems(calibrationID);
-    auto len = maxInt.Stop().Value - maxInt.Start().Value;
-    auto first = maxInt.Start().Value;
+    auto len = maxInt.Stop().Value() - maxInt.Start().Value();
+    auto first = maxInt.Start().Value();
 
     //Fill ranges of calibration data
     uint32_t step(0);
     for(const auto& cdata: dVector)
     {
-        double min =  (cdata.FirstID.Value - first) * 100.0 / len;
-        double max =  (cdata.LastID.Value - first) * 100.0 / len;
+        double min =  (cdata.FirstID.Value() - first) * 100.0 / len;
+        double max =  (cdata.LastID.Value() - first) * 100.0 / len;
         IntervalD theInterval(min,max);
         pair<uint32_t,IntervalD> thePair;
         thePair.first = step;
@@ -274,10 +274,10 @@ pair<uint32_t,IntervalD> Editor::GetRange(const string& calibrationID, uint32_t 
 
     thePair.first = index;
 
-    auto len = maxInt.Stop().Value - maxInt.Start().Value;
-    auto first = maxInt.Start().Value;
-    double min =  (cdata.FirstID.Value - first) * 100.0 / len;
-    double max =  (cdata.LastID.Value - first) * 100.0 / len;
+    auto len = maxInt.Stop().Value() - maxInt.Start().Value();
+    auto first = maxInt.Start().Value();
+    double min =  (cdata.FirstID.Value() - first) * 100.0 / len;
+    double max =  (cdata.LastID.Value() - first) * 100.0 / len;
     IntervalD theInterval(min,max);
     thePair.second = theInterval;
 
@@ -294,14 +294,14 @@ std::list<std::pair<uint32_t, IntervalD> > Editor::GetAllValidRanges(const strin
     auto maxInt = GetMaxInt(calibrationID);
 
     auto dVector = getValidData(calibrationID);
-    auto len = maxInt.Stop().Value - maxInt.Start().Value;
-    auto first = maxInt.Start().Value;
+    auto len = maxInt.Stop().Value() - maxInt.Start().Value();
+    auto first = maxInt.Start().Value();
 
 
     for(const auto& cdata: dVector)
     {
-        double min =  (cdata.second.FirstID.Value - first) * 100.0 / len;
-        double max =  (cdata.second.LastID.Value - first) * 100.0 / len;
+        double min =  (cdata.second.FirstID.Value() - first) * 100.0 / len;
+        double max =  (cdata.second.LastID.Value() - first) * 100.0 / len;
 
         IntervalD theInterval(min,max);
         pair<uint32_t,IntervalD> thePair;

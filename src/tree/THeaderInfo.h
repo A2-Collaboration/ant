@@ -54,7 +54,7 @@ struct THeaderInfo : TDataRecord
   virtual std::ostream& Print( std::ostream& s) const override {
     s << "THeaderInfo ID=" << ID;
     if(SetupName.empty()) {
-        s << " Timestamp='" << std_ext::ctime(Timestamp) << "'"
+        s << " Timestamp='" << std_ext::to_iso8601(Timestamp) << "'"
           << " RunNumber=" << RunNumber
           << " Description='" << Description << "'";
     }

@@ -9,16 +9,16 @@
 namespace ant {
 namespace std_ext {
 
-inline std::string ctime(const time_t& time) {
-  // std::ctime returns some carriage return
-  return string_sanitize(std::ctime(std::addressof(time)));
+inline std::string to_iso8601(const time_t& time) {
+    char buf[sizeof "2011-10-08T07:07:09Z"];
+    strftime(buf, sizeof buf, "%Y-%m-%dT%H:%M:%SZ", gmtime(&time));
+    // std::ctime returns some carriage return
+    return buf;
 }
 
-inline std::tm to_tm(const std::string& str, const std::string& fmt, bool fixdst = true) {
+inline std::tm to_tm(const std::string& str, const std::string& fmt) {
     std::tm tm_str;
     strptime(str.c_str(), fmt.c_str(), std::addressof(tm_str));
-    if(fixdst)
-        tm_str.tm_isdst = 0;
     return tm_str;
 }
 
@@ -65,20 +65,21 @@ inline int get_day_of_week(int day, int month, int year) {
     return dayno;
 }
 
-inline bool is_mest2met_transition(const std::tm& time) {
-    // a sunday in october, between 2:00:00 and 2:59:59
-    if(time.tm_wday == 0 && time.tm_mon == 9
-       && time.tm_hour==2) {
-        // determine last sunday of month october
-        int lastsunday = 0;
-        for(int day=1;day<=31;day++) {
-            if(get_day_of_week(day, time.tm_mon, time.tm_year) == 0)
-                lastsunday = day;
-        }
-        if(time.tm_mday == lastsunday)
-            return true;
+inline bool guess_dst(std::tm& time) {
+    // try to use mktime to guess it
+    time.tm_isdst = -1;
+    std::mktime(std::addressof(time));
+    // but catch this one hour in october
+    // because it's implementation specific what happens then
+    if(time.tm_mon != 9 || time.tm_hour != 2)
+        return true;
+    // get last sunday in october
+    int lastsunday = 0;
+    for(int day=1;day<=31;day++) {
+        if(get_day_of_week(day, time.tm_mon, time.tm_year) == 0)
+            lastsunday = day;
     }
-    return false;
+    return time.tm_mday != lastsunday;
 }
 
 }} // namespace ant::std_ext

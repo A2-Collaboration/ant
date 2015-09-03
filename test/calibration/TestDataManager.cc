@@ -44,10 +44,10 @@ void dotest_extendable()
     auto check = [] (const TCalibrationData& c, const interval<TID>& i) {
         return c.FirstID == i.Start() && c.LastID == i.Stop();
     };
-    const interval<TID> i1(TID(4),  TID(6));
-    const interval<TID> i2(TID(9),  TID(10));
-    const interval<TID> i3(TID(12), TID(15));
-    const interval<TID> i4(TID(2),  TID(16));
+    const interval<TID> i1(TID(0,4u),  TID(0,6u));
+    const interval<TID> i2(TID(0,9u),  TID(0,10u));
+    const interval<TID> i3(TID(0,12u), TID(0,15u));
+    const interval<TID> i4(TID(0,2u),  TID(0,16u));
 
     // first simple test
     id = "1";
@@ -55,16 +55,16 @@ void dotest_extendable()
     calibman.Add(TCalibrationData(id, i2.Start(), i2.Stop(), true));
     calibman.Add(TCalibrationData(id, i3.Start(), i3.Stop(), true));
 
-    REQUIRE(calibman.GetData(id, TID(3), cdata));
+    REQUIRE(calibman.GetData(id, TID(0,3u), cdata));
     REQUIRE(check(cdata, i1));
 
-    REQUIRE(calibman.GetData(id, TID(7), cdata));
+    REQUIRE(calibman.GetData(id, TID(0,7u), cdata));
     REQUIRE(check(cdata, i2));
 
-    REQUIRE(calibman.GetData(id, TID(11), cdata));
+    REQUIRE(calibman.GetData(id, TID(0,11u), cdata));
     REQUIRE(check(cdata, i3));
 
-    REQUIRE(calibman.GetData(id, TID(16), cdata));
+    REQUIRE(calibman.GetData(id, TID(0,16u), cdata));
     REQUIRE(check(cdata, i3));
 
 
@@ -74,16 +74,16 @@ void dotest_extendable()
     calibman.Add(TCalibrationData(id, i2.Start(), i2.Stop(), true));
     calibman.Add(TCalibrationData(id, i3.Start(), i3.Stop(), true));
 
-    REQUIRE(calibman.GetData(id, TID(3), cdata));
+    REQUIRE(calibman.GetData(id, TID(0,3u), cdata));
     REQUIRE(check(cdata, i4));
 
-    REQUIRE(calibman.GetData(id, TID(1), cdata));
+    REQUIRE(calibman.GetData(id, TID(0,1u), cdata));
     REQUIRE(check(cdata, i4));
 
-    REQUIRE(calibman.GetData(id, TID(17), cdata));
+    REQUIRE(calibman.GetData(id, TID(0,17u), cdata));
     REQUIRE(check(cdata, i4));
 
-    REQUIRE(calibman.GetData(id, TID(9), cdata));
+    REQUIRE(calibman.GetData(id, TID(0,9u), cdata));
     REQUIRE(check(cdata, i2));
 }
 
@@ -97,7 +97,7 @@ unsigned dotest_store(const string& foldername)
                            "comment",
                            0,
                            "1",
-                           TID(0),TID(16)
+                           TID(0,0u),TID(0,16u)
                            );
     cdata.Data.emplace_back(0,1);
     cdata.Data.emplace_back(1,2);
@@ -111,7 +111,7 @@ unsigned dotest_store(const string& foldername)
                              cdata.Comment,
                              time,
                              cdata.CalibrationID,
-                             TID(first),TID(last)
+                             TID(0,first),TID(0,last)
                              );
         tmp.Data = cdata.Data;
         return tmp;
@@ -127,18 +127,18 @@ unsigned dotest_store(const string& foldername)
 
     cdata.CalibrationID = "2";
     cdata.TimeStamp++;
-    cdata.FirstID.Value = 2;
-    cdata.LastID.Value = 8;
+    cdata.FirstID.Lower = 2;
+    cdata.LastID.Lower = 8;
     calibman.Add(cdata);
 
     cdata.TimeStamp++;
-    cdata.FirstID.Value = 3;
-    cdata.LastID.Value = 6;
+    cdata.FirstID.Lower = 3;
+    cdata.LastID.Lower = 6;
     calibman.Add(cdata);
 
     cdata.TimeStamp++;
-    cdata.FirstID.Value = 5;
-    cdata.LastID.Value = 7;
+    cdata.FirstID.Lower = 5;
+    cdata.LastID.Lower = 7;
     calibman.Add(cdata);
 
     REQUIRE(calibman.GetNumberOfCalibrations() == 2);
@@ -167,45 +167,45 @@ void dotest_changes(const string& foldername)
     //    REQUIRE(calibman.GetIDRange("1",idRange));
     //    REQUIRE( idRangeTEST == idRange);
 
-    calibman.GetData("1",TID(0),cdata);
+    calibman.GetData("1",TID(0,0u),cdata);
     REQUIRE(cdata.TimeStamp == 0);
 
-    calibman.GetData("1",TID(1),cdata);
+    calibman.GetData("1",TID(0,1u),cdata);
     REQUIRE(cdata.TimeStamp == 0);
 
-    calibman.GetData("1",TID(3),cdata);
+    calibman.GetData("1",TID(0,3u),cdata);
     REQUIRE(cdata.TimeStamp == 3);
 
-    calibman.GetData("1",TID(4),cdata);
+    calibman.GetData("1",TID(0,4u),cdata);
     REQUIRE(cdata.TimeStamp == 3);
 
-    calibman.GetData("1",TID(5),cdata);
+    calibman.GetData("1",TID(0,5u),cdata);
     REQUIRE(cdata.TimeStamp == 4);
 
-    calibman.GetData("1",TID(14),cdata);
+    calibman.GetData("1",TID(0,14u),cdata);
     REQUIRE(cdata.TimeStamp == 7);
 
-    REQUIRE_FALSE(calibman.GetData("1",TID(21),cdata));
+    REQUIRE_FALSE(calibman.GetData("1",TID(0,21u),cdata));
 
-    calibman.GetData("1",TID(23),cdata);
+    calibman.GetData("1",TID(0,23u),cdata);
     REQUIRE(cdata.TimeStamp == 6);
 
-    REQUIRE_FALSE(calibman.GetData("1",TID(29),cdata));
+    REQUIRE_FALSE(calibman.GetData("1",TID(0,29u),cdata));
 
     auto genchange = calibman.GetChangePoints("1");
 
-    list<TID> manchange({TID(0),
-                         TID(2),
-                         TID(3),
-                         TID(5),
-                         TID(8),
-                         TID(9),
-                         TID(13),
-                         TID(14),
-                         TID(15),
-                         TID(21),
-                         TID(22),
-                         TID(25)
+    list<TID> manchange({TID(0,0u),
+                         TID(0,2u),
+                         TID(0,3u),
+                         TID(0,5u),
+                         TID(0,8u),
+                         TID(0,9u),
+                         TID(0,13u),
+                         TID(0,14u),
+                         TID(0,15u),
+                         TID(0,21u),
+                         TID(0,22u),
+                         TID(0,25u)
                         });
 
     REQUIRE(genchange.size() == manchange.size());

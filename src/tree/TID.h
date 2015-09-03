@@ -3,6 +3,7 @@
 #include "Rtypes.h"
 
 #ifdef __CINT__
+
 // simulate minimal cstdint for ROOTCINT
 namespace std {
 typedef UChar_t    uint8_t;
@@ -11,13 +12,19 @@ typedef ULong_t    uint64_t;
 typedef Short_t    int16_t;
 typedef Long_t     int64_t;
 }
+
 #else
+
+#include "base/printable.h"
+#include "base/std_ext/time.h"
+
 #include <type_traits>
-static_assert(std::is_same<ULong_t, std::uint64_t>::value, "Type size mismatch");
-static_assert(std::is_same<Long_t, std::int64_t>::value, "Type size mismatch");
+#include <tuple>
 #include <cstdint>
 #include <stdexcept>
-#include "base/printable.h"
+
+static_assert(std::is_same<ULong_t, std::uint64_t>::value, "Type size mismatch");
+static_assert(std::is_same<Long_t, std::int64_t>::value, "Type size mismatch");
 #endif // __CINT__
 
 #include <iomanip>
@@ -36,11 +43,10 @@ struct TID
 #endif
 {
 
-    TID() : Value(0), Flags(1) {} // set the invalid flag by default
-    virtual ~TID() {}
-
-    std::uint64_t Value;
     std::uint32_t Flags;
+    std::uint32_t Timestamp; // unix epoch
+    std::uint32_t Lower;     // usually event counter
+    std::uint32_t Reserved;  // unused
 
 #ifndef __CINT__
 
@@ -53,80 +59,94 @@ struct TID
     static_assert(static_cast<std::uint8_t>(Flags_t::Invalid) == 0, "Invalid flag should be first item in enum class");
 
     TID(
-            std::uint64_t value,
+            std::uint32_t timestamp,
+            std::uint32_t lower = 0,
             bool isMC = false)
         :
-          Value(value),
-          Flags(0)
+          Flags(0),
+          Timestamp(timestamp),
+          Lower(lower),
+          Reserved(0)
     {
         Flags |= static_cast<decltype(Flags)>(isMC) << static_cast<std::uint8_t>(Flags_t::MC);
     }
-    TID(std::uint64_t, int) = delete;
+    // prevent implicit conversion calls
+    TID(std::uint32_t, bool) = delete;
+    TID(std::uint32_t, std::uint32_t, int) = delete;
 
     bool IsInvalid() const {
         return Flags & (1 << static_cast<std::uint8_t>(Flags_t::Invalid));
+    }
+
+    std::uint64_t Value() const {
+        return (static_cast<std::uint64_t>(Timestamp) << 8*sizeof(std::uint32_t)) + Lower;
     }
 
     virtual std::ostream& Print( std::ostream& s) const override {
         if(IsInvalid())
             return s << "INVALID";
 
-        s << "(" << std::hex;
+        s << "(";
         if(Flags)
             s  << "flags=0x" << Flags << ",";
-        s << std::setw(sizeof(decltype(Value))*2) << std::setfill('0')
-          << Value;
-        s  << ")" << std::dec;
+        s << "'" << std_ext::to_iso8601(Timestamp) <<"',";
+        s << std::hex <<  std::setw(sizeof(decltype(Lower))*2) << std::setfill('0')
+          << "0x" << Lower << std::dec;
+        s  << ")" ;
         return s;
     }
-#endif
 
-    bool operator<(const TID& other) const
+    bool operator<(const TID& rhs) const
     {
-        if(IsInvalid() || other.IsInvalid())
+        if(IsInvalid() || rhs.IsInvalid())
             return false;
-        if (Flags == other.Flags)
-            return (Value < other.Value);
-        return (Flags < other.Flags);
+        auto make_tuple = [] (const TID& id) {
+            return std::tie(id.Flags, id.Timestamp, id.Lower);
+        };
+        return make_tuple(*this) < make_tuple(rhs);
     }
 
-    bool operator!=(const TID& other) const
+    bool operator!=(const TID& rhs) const
     {
-        if(IsInvalid() || other.IsInvalid())
+        if(IsInvalid() || rhs.IsInvalid())
             return true;
-        return *this < other || other < *this;
+        return *this < rhs || rhs < *this;
     }
 
-    bool operator<=(const TID& other) const
+    bool operator<=(const TID& rhs) const
     {
-        return *this < other || *this == other;
+        return *this < rhs || *this == rhs;
     }
 
-    bool operator>=(const TID& other) const
+    bool operator>=(const TID& rhs) const
     {
-        return *this > other || *this == other;
+        return *this > rhs || *this == rhs;
     }
 
-    bool operator>(const TID& other) const
+    bool operator>(const TID& rhs) const
     {
-        return other < *this;
+        return rhs < *this;
     }
 
-    bool operator==(const TID& other) const
+    bool operator==(const TID& rhs) const
     {
-        return !(*this != other);
+        return !(*this != rhs);
     }
 
     TID& operator++() {
-        ++Value;
+        ++Lower;
         return *this;
     }
 
     TID& operator--() {
-        --Value;
+        --Lower;
         return *this;
     }
 
+#endif
+
+    TID() : Flags(1), Timestamp(0), Lower(0), Reserved(0) {} // set the invalid flag by default
+    virtual ~TID() {}
     ClassDef(TID, ANT_UNPACKER_ROOT_VERSION)
 
 }; // TID

@@ -2,6 +2,8 @@
 
 #include "TDataRecord.h"
 
+#include <iostream>
+
 using namespace std;
 using namespace ant;
 
@@ -14,9 +16,13 @@ TEST_CASE("TID","[operators]")
 
 void dotest()
 {
-    TID a(0);
-    TID b(1);
-    TID c(0,true);
+    TID a(0, 0u);
+    TID b(0, 1u);
+    TID c(0, 0,true);
+
+    cout << a << endl;
+    cout << b << endl;
+    cout << c << endl;
 
     REQUIRE(a == a);
 
@@ -34,8 +40,8 @@ void dotest()
     // increment / decrement
     REQUIRE(++a == b);
     REQUIRE(--b != a);
-    REQUIRE(a.Value == 1);
-    REQUIRE(b.Value == 0);
+    REQUIRE(a.Lower == 1);
+    REQUIRE(b.Lower == 0);
 
     TID d;
 

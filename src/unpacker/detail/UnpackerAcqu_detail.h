@@ -78,7 +78,7 @@ private:
     signed trueRecordLength;
     unsigned unpackedBuffers;
     std::unique_ptr<THeaderInfo> BuildTHeaderInfo();
-    unsigned GetUpperBitsTID();
+    time_t GetTimeStamp();
 protected:
 
     using reader_t = decltype(reader);

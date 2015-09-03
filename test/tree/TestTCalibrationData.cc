@@ -26,14 +26,14 @@ void dotest()
     TFile f(tmpfile.filename.c_str(),"RECREATE");
 
     TTree* tree = new TTree("testtree","TCalibData Test Tree");
-    ant::TCalibrationData* cdata = new ant::TCalibrationData(tmpfile.filename,ant::TID(0,false),ant::TID(1,true));
+    ant::TCalibrationData* cdata = new ant::TCalibrationData(tmpfile.filename,ant::TID(0,0,false),ant::TID(0,1,true));
     tree->Branch("cdata",cdata);
 
     ant::TCalibrationData* cdata2 = new ant::TCalibrationData("Martin Wolfes", "Full initializer",
                                                               1234567890,
                                                               tmpfile.filename,
-                                                              ant::TID(1011,false),
-                                                              ant::TID(1213,true)
+                                                              ant::TID(0,1011,false),
+                                                              ant::TID(0,1213,true)
                                                               );
 
     cdata2->Data.emplace_back(1,1.);

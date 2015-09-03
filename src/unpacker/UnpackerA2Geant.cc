@@ -74,8 +74,11 @@ bool UnpackerA2Geant::OpenFile(const string& filename)
         throw Exception("Tree file contains too many entries for building correct unique ID");
     }
 
-    /// \todo think of some better upper Id?
-    id = std_ext::make_unique<TID>(static_cast<std::uint64_t>(geant->Hash()) << 8*sizeof(std::uint32_t), true);
+    /// \todo think of some better timestamp?
+    id = std_ext::make_unique<TID>(static_cast<std::uint32_t>(std::time(nullptr)),
+                                   0, // start with 0 as lower ID
+                                   true // mark as MC
+                                   );
 
     // this unpacker has no chance to make a proper THeaderInfo
     // so we ask the ExpConfig if it has an idea...
@@ -108,7 +111,7 @@ bool UnpackerA2Geant::OpenFile(const string& filename)
 
 unique_ptr<TDataRecord> UnpackerA2Geant::NextItem() noexcept
 {
-    const std::uint32_t events = id->Value & 0xffffffff;
+    const std::uint32_t events = id->Lower;
     if(events>=geant->GetEntriesFast())
         return nullptr;
 

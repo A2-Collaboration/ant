@@ -610,7 +610,6 @@ void acqu::FileFormatMk2::HandleEPICSBuffer(
     const string epicsModName = hdr->name;
     const size_t nChannels = hdr->nchan;
     const time_t hdr_timestamp = hdr->time;
-    //const string epicsTime = std_ext::ctime(hdr->time);
 
     if(epicsModName.length()>32) {
         LogMessage(queue,

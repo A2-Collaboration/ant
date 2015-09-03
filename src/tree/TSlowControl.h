@@ -80,7 +80,7 @@ struct TSlowControl : TDataRecord
   virtual std::ostream& Print( std::ostream& s) const override {
     return s << "TSlowControl ID=" << ID
              << " Type=" << TypeToString()
-             << " Timestamp='" << std_ext::ctime(Timestamp) << "'"
+             << " Timestamp='" << std_ext::to_iso8601(Timestamp) << "'"
              << " Name='" << Name << "'"
              << " Description='" << Description << "'";
   }
