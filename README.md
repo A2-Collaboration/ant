@@ -16,11 +16,11 @@ Please see also the automatically generated
 
 ## Dependencies
   * C++11 (gcc >4.8.2 should work)
-  * cmake
+  * cmake >2.8
   * doxygen (optional)
-  * [CERN ROOT5](https://root.cern.ch/)
+  * [CERN ROOT5](https://root.cern.ch/) (not ROOT6)
   * [PLUTO](https://www-hades.gsi.de/?q=pluto)
-  * [APLCON++](https://github.com/neiser/APLCON)
+  * [APLCON++](https://github.com/A2-Collaboration-dev/APLCON)
 
 # Contributing
 
