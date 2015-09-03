@@ -149,8 +149,8 @@ unique_ptr<TDataRecord> UnpackerA2Geant::NextItem() noexcept
 
     // fill PID Hits
     for(int i=0;i<fvhits;i++) {
-        /// \todo take care of reversed PID orientation
-        const unsigned ch = iveto[i]-1;
+        /// @todo Make PID channel mapping/rotation a Setup option?
+        const unsigned ch = (23 - (iveto[i]-1) + 11) % 24;
         const Detector_t::Type_t det = Detector_t::Type_t::PID;
         hits.emplace_back(
                     LogicalChannel_t{det, Channel_t::Type_t::Integral, ch},
