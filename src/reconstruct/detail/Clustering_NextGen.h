@@ -34,6 +34,10 @@ struct crystal_t  {
     {}
 };
 
+struct cluster_t : std::vector< crystal_t > {
+    using std::vector<crystal_t>::vector;
+};
+
 inline bool operator< (const crystal_t& lhs, const crystal_t& rhs){
     return lhs.Energy>rhs.Energy;
 }
@@ -44,7 +48,7 @@ struct bump_t {
     size_t MaxIndex; // index of highest weight
 };
 
-static double calc_total_energy(const std::vector< crystal_t >& cluster) {
+static double calc_total_energy(const cluster_t& cluster) {
     double energy = 0;
     for(const auto& crystal : cluster) {
         energy += crystal.Energy;
@@ -57,7 +61,7 @@ static double calc_energy_weight(const double energy, const double total_energy)
     return wgtE<0 ? 0 : wgtE;
 }
 
-static void calc_bump_weights(const std::vector<crystal_t>& cluster, bump_t& bump) {
+static void calc_bump_weights(const cluster_t& cluster, bump_t& bump) {
     double w_sum = 0;
     for(size_t i=0;i<cluster.size();i++) {
         double r = (bump.Position - cluster[i].Element->Position).Mag();
@@ -79,7 +83,7 @@ static void calc_bump_weights(const std::vector<crystal_t>& cluster, bump_t& bum
     bump.MaxIndex = i_max;
 }
 
-static void update_bump_position(const std::vector<crystal_t>& cluster, bump_t& bump) {
+static void update_bump_position(const cluster_t& cluster, bump_t& bump) {
     double bump_energy = 0;
     for(size_t i=0;i<cluster.size();i++) {
         bump_energy += bump.Weights[i] * cluster[i].Energy;
@@ -118,8 +122,8 @@ static bump_t merge_bumps(const std::vector<bump_t> bumps) {
     return bump;
 }
 
-static void split_cluster(const std::vector<crystal_t>& cluster,
-                          std::vector< std::vector<crystal_t> >& clusters) {
+static void split_cluster(const cluster_t& cluster,
+                          std::vector< cluster_t >& clusters) {
 
     // make Voting based on relative distance or energy difference
 
@@ -313,7 +317,7 @@ static void split_cluster(const std::vector<crystal_t>& cluster,
     // crystals are shared if they were claimed by more than one bump at the same neighbour iteration
 
     // first assign easy things and determine rough bump energy
-    std::vector< std::vector<crystal_t> > bump_clusters(bumps.size());
+    std::vector< cluster_t > bump_clusters(bumps.size());
     std::vector< double > bump_energies(bumps.size(), 0);
     for(size_t j=0;j<cluster.size();j++) {
         if(state[j].size()==1) {
@@ -327,7 +331,7 @@ static void split_cluster(const std::vector<crystal_t>& cluster,
     // then calc weighted bump_positions for those preliminary bumps
     std::vector<TVector3> bump_positions(bumps.size(), TVector3(0,0,0));
     for(size_t i=0; i<bump_clusters.size(); i++) {
-        std::vector<crystal_t> bump_cluster = bump_clusters[i];
+        cluster_t bump_cluster = bump_clusters[i];
         double w_sum = 0;
         for(size_t j=0;j<bump_cluster.size();j++) {
             double w = calc_energy_weight(bump_cluster[j].Energy, bump_energies[i]);
@@ -361,7 +365,7 @@ static void split_cluster(const std::vector<crystal_t>& cluster,
     }
 
     for(size_t i=0; i<bump_clusters.size(); i++) {
-        std::vector<crystal_t> bump_cluster = bump_clusters[i];
+        cluster_t bump_cluster = bump_clusters[i];
         // always sort before adding to clusters
         sort(bump_cluster.begin(), bump_cluster.end());
         clusters.push_back(bump_cluster);
@@ -369,12 +373,12 @@ static void split_cluster(const std::vector<crystal_t>& cluster,
 }
 
 static void build_cluster(std::list<crystal_t>& crystals,
-                          std::vector<crystal_t>& cluster) {
+                          cluster_t& cluster) {
     // first crystal has highest energy
     std::list<crystal_t>::iterator i = crystals.begin();
 
     // start with initial seed list
-    std::vector<crystal_t> seeds;
+    cluster_t seeds;
     seeds.push_back(*i);
 
     // save i in the current cluster
@@ -384,9 +388,9 @@ static void build_cluster(std::list<crystal_t>& crystals,
 
     while(seeds.size()>0) {
         // neighbours of all seeds are next seeds
-        std::vector<crystal_t> next_seeds;
+        cluster_t next_seeds;
 
-        for(std::vector<crystal_t>::iterator seed=seeds.begin(); seed != seeds.end(); seed++) {
+        for(auto seed=seeds.begin(); seed != seeds.end(); seed++) {
             // find intersection of neighbours and seed
             for(std::list<crystal_t>::iterator j = crystals.begin() ; j != crystals.end() ; ) {
                 bool foundNeighbour = false;
@@ -415,12 +419,12 @@ static void build_cluster(std::list<crystal_t>& crystals,
 
 static void do_clustering(
         std::list<crystal_t>& crystals,
-        std::vector< std::vector<crystal_t> >& clusters
+        std::vector< cluster_t >& clusters
         ) {
     crystals.sort();
 
     while(crystals.size()>0) {
-        std::vector<crystal_t> cluster;
+        cluster_t cluster;
         build_cluster(crystals, cluster); // already sorts "cluster" it by energy
         split_cluster(cluster, clusters);
     }

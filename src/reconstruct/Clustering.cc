@@ -55,7 +55,7 @@ void Clustering::Build(
     }
 
     // do the clustering (calls detail/Clustering_NextGen.h code)
-    vector< vector< clustering::crystal_t> > crystal_clusters;
+    vector< clustering::cluster_t > crystal_clusters;
     clustering::do_clustering(crystals, crystal_clusters);
 
     // now calculate some cluster properties,
