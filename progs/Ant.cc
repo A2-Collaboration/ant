@@ -74,7 +74,7 @@ int main(int argc, char** argv) {
     auto cmd_maxevents = cmd.add<TCLAP::ValueArg<int>>("m","maxevents","Process only max events",false, 0, "maxevents");
 
     TCLAP::ValuesConstraintExtra<decltype(analysis::PhysicsRegistry::get().GetList())> allowedPhysics(analysis::PhysicsRegistry::get().GetList());
-    auto cmd_physicsclasses  = cmd.add<TCLAP::MultiArg<string>>("p","physics","Physics class to run", true, &allowedPhysics);
+    auto cmd_physicsclasses  = cmd.add<TCLAP::MultiArg<string>>("p","physics","Physics class to run", false, &allowedPhysics);
 
     auto cmd_output = cmd.add<TCLAP::ValueArg<string>>("o","output","Output file",false,"","filename");
 
@@ -259,6 +259,10 @@ int main(int argc, char** argv) {
         }
     }
 
+    if(enabled_calibrations.size()+cmd_physicsclasses->getValue().size() == 0) {
+        LOG(ERROR) << "Please specify at least one physics module or enable at least one calibration";
+        return 1;
+    }
 
     // the real output file, create it here to get all
     // further ROOT objects into this output file
