@@ -23,6 +23,7 @@ protected:
     struct candidatesEvent_t: list_of_hists_t {
         TH1D* nPerEvent;
         TH2D* nPerEventPerE;
+        TH1D* splitPerEvent;
         candidatesEvent_t(SmartHistFactory& f, const std::string& prefix);
         void Fill(const data::ParticlePtr& mctrue, const data::CandidateList& cand);
 
