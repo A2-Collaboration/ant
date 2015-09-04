@@ -1,6 +1,6 @@
 #include "catch.hpp"
 
-#include "TDataRecord.h"
+#include "TID.h"
 
 #include <iostream>
 
