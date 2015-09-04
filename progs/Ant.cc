@@ -63,6 +63,27 @@ public:
 int main(int argc, char** argv) {
     SetupLogger();
 
+    const string arg1(argv[1]);
+
+    if(arg1 == "--list-calibrations") {
+        return 0;
+    }
+
+    if(arg1 == "--list-physics") {
+        for(const auto& name : analysis::PhysicsRegistry::get().GetList()) {
+            cout << name << endl;
+        }
+        return 0;
+    }
+
+    if(arg1 == "--list-setups") {
+        for(const auto& name : ExpConfig::Setup::GetNames()) {
+            cout << name << endl;
+        }
+        return 0;
+    }
+
+
     TCLAP::CmdLine cmd("Ant", ' ', "0.1");
 
     auto cmd_verbose = cmd.add<TCLAP::ValueArg<int>>("v","verbose","Verbosity level (0..9)", false, 0,"int");
@@ -99,6 +120,9 @@ int main(int argc, char** argv) {
         el::Loggers::setVerboseLevel(cmd_verbose->getValue());
     }
     RawFileReader::OutputPerformanceStats = 3;
+
+
+
 
     int fake_argc=0;
     char** fake_argv=nullptr;
