@@ -1,6 +1,6 @@
 _Ant() 
 {
-    local cur prev opts
+    local cur prev opts cmd
     COMPREPLY=()
     cur="${COMP_WORDS[COMP_CWORD]}"
     prev="${COMP_WORDS[COMP_CWORD-1]}"
@@ -8,8 +8,8 @@ _Ant()
     cmd="${COMP_WORDS[0]}"
 
     case "${prev}" in
-        -i|-o)
-            COMPREPLY=($(compgen -f ${cur}) )
+        -i|-o|--input)
+            _filedir '@(root|xz)'
             return 0
             ;;
 
@@ -28,11 +28,9 @@ _Ant()
             COMPREPLY=( $(compgen -W "${cals}" -- ${cur}) )
             return 0
             ;;
-        *)
-            ;;
     esac
 
-    opts="--help --version --batch --u_writeuncalibrated --u_disablereconstruct --u_writecalibrated --p_disableParticleID -i --input -s --setup -p --physics -o -v --verbose"
+    opts="--help --version --batch --u_writeuncalibrated --u_disablereconstruct --u_writecalibrated --p_disableParticleID -i --input -s --setup -p --physics -o --output -v --verbose -m --maxevents -O -c --calibration"
     if [[ ${cur} == * ]] ; then
         COMPREPLY=( $(compgen -W "${opts}" -- ${cur}) )
         return 0
