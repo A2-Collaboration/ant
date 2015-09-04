@@ -96,7 +96,7 @@ ReconstructCheck::candidatesEvent_t::candidatesEvent_t(SmartHistFactory& f, cons
     nPerEvent     = f.makeTH1D(prefix+" Candidates/Event", "Candidates/Event","",BinSettings(15),prefix+"candEvent");
     nPerEventPerE = f.makeTH2D(prefix+" Candidates/Event/Energy","MC True Energy [MeV]","Candidates/Event",BinSettings(1000),BinSettings(15),prefix+"candEventEnergy");
     splitPerEvent = f.makeTH1D(prefix+" Split Clusters/Event", "# split clusters/Event","",BinSettings(30),prefix+"splits");
-
+    splitPos      = f.makeTH2D(prefix+" Pos of split clusters","cos(#theta)","#phi",BinSettings(360,-1,1),BinSettings(360,-180,180),prefix+"splitpos");
 }
 
 void ReconstructCheck::candidatesEvent_t::Fill(const ParticlePtr& mctrue, const CandidateList& cand)
@@ -108,7 +108,10 @@ void ReconstructCheck::candidatesEvent_t::Fill(const ParticlePtr& mctrue, const 
 
     for(const CandidatePtr& c : cand) {
         for(const Cluster& cl : c->Clusters) {
-            if(cl.flags.isChecked(Cluster::Flag::Split)) ++nsplit;
+            if(cl.flags.isChecked(Cluster::Flag::Split)) {
+                ++nsplit;
+                splitPos->Fill(cos(mctrue->Theta()), mctrue->Phi()*TMath::RadToDeg());
+            }
         }
     }
     splitPerEvent->Fill(nsplit);
@@ -116,7 +119,7 @@ void ReconstructCheck::candidatesEvent_t::Fill(const ParticlePtr& mctrue, const 
 
 std::list<TH1*> ReconstructCheck::candidatesEvent_t::Hists()
 {
-    return {nPerEvent, nPerEventPerE, splitPerEvent};
+    return {nPerEvent, nPerEventPerE, splitPerEvent, splitPos};
 }
 
 AUTO_REGISTER_PHYSICS(ReconstructCheck, "ReconstructCheck")

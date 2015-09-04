@@ -24,6 +24,7 @@ protected:
         TH1D* nPerEvent;
         TH2D* nPerEventPerE;
         TH1D* splitPerEvent;
+        TH2D* splitPos;
         candidatesEvent_t(SmartHistFactory& f, const std::string& prefix);
         void Fill(const data::ParticlePtr& mctrue, const data::CandidateList& cand);
 
