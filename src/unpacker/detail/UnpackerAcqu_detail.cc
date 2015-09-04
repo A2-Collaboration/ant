@@ -14,6 +14,7 @@
 
 #include "expconfig/ExpConfig.h"
 #include "base/Logger.h"
+#include "base/std_ext/misc.h"
 #include "RawFileReader.h"
 
 #include <algorithm>
@@ -156,6 +157,16 @@ time_t acqu::FileFormatBase::GetTimeStamp()
     setenv("TZ", "Europe/Berlin", 1);
     tzset();
 
+    std_ext::execute_on_destroy restore_TZ([tz] () {
+        // restore TZ environment
+        if(tz)
+            setenv("TZ", tz, 1);
+        else
+            unsetenv("TZ");
+        tzset();
+    });
+
+
     if(!std_ext::guess_dst(info.Time)) {
         // there's no other way than hardcode the runs
         // recorded when the the MEST->MET transition occurred
@@ -189,12 +200,6 @@ time_t acqu::FileFormatBase::GetTimeStamp()
                     "Run " << info.RunNumber << " at " << std_ext::to_iso8601(std_ext::to_time_t(info.Time))
                     << " has unknown DST flag (not found in database)");
     }
-
-    if(tz)
-        setenv("TZ", tz, 1);
-    else
-        unsetenv("TZ");
-    tzset();
 
     return std_ext::to_time_t(info.Time);
 }
