@@ -21,6 +21,7 @@
 #include <list>
 #include <ctime>
 #include <iterator> // for std::next
+#include <cstdlib>
 
 using namespace std;
 using namespace ant;
@@ -149,6 +150,12 @@ unique_ptr<THeaderInfo> acqu::FileFormatBase::BuildTHeaderInfo()
 
 time_t acqu::FileFormatBase::GetTimeStamp()
 {
+    // the following calculation assumes
+    // Central Europe as timezone
+    const char* tz = getenv("TZ");
+    setenv("TZ", "Europe/Berlin", 1);
+    tzset();
+
     if(!std_ext::guess_dst(info.Time)) {
         // there's no other way than hardcode the runs
         // recorded when the the MEST->MET transition occurred
@@ -182,6 +189,13 @@ time_t acqu::FileFormatBase::GetTimeStamp()
                     "Run " << info.RunNumber << " at " << std_ext::to_iso8601(std_ext::to_time_t(info.Time))
                     << " has unknown DST flag (not found in database)");
     }
+
+    if(tz)
+        setenv("TZ", tz, 1);
+    else
+        unsetenv("TZ");
+    tzset();
+
     return std_ext::to_time_t(info.Time);
 }
 
