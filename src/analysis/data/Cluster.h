@@ -4,6 +4,7 @@
 
 #include <list>
 #include "TVector3.h"
+#include "base/enumfield.h"
 
 namespace ant {
 namespace analysis {
@@ -29,6 +30,13 @@ public:
     };
 
     std::list<Hit> Hits;
+
+    enum class Flag {
+        TouchesHole,
+        Split
+    };
+
+    ant::enumfield<Flag, std::int32_t> flags;
 
     Cluster(double E, double t, Detector_t::Any_t d, unsigned ch, TVector3 position):
         Energy(E),

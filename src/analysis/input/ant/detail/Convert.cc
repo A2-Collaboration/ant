@@ -98,6 +98,10 @@ Cluster Converter::Convert(const TCluster& cluster)
                 cluster.CentralElement,
                 cluster.Position
                 );
+
+    if(cluster.HasFlag(TCluster::Flags_t::Split)) cl.flags.Set(Cluster::Flag::Split);
+    if(cluster.HasFlag(TCluster::Flags_t::TouchesHole)) cl.flags.Set(Cluster::Flag::TouchesHole);
+
     for(const auto& hit : cluster.Hits) {
        Cluster::Hit anthit;
        anthit.Channel = hit.Channel;
