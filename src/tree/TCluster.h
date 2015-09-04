@@ -82,6 +82,7 @@ struct TCluster
   TVector3 Position;
   double Energy;
   double Time;
+  std::uint32_t Flags;
   std::uint8_t DetectorType;
   std::uint32_t CentralElement;
 
@@ -100,6 +101,7 @@ struct TCluster
     Position(pos),
     Energy(E),
     Time(t),
+    Flags(0),
     DetectorType(static_cast<std::uint8_t>(type)),
     CentralElement(central),
     Hits(hits)
@@ -114,13 +116,34 @@ struct TCluster
              << " Central Element=" << CentralElement
              << " Detector=" << Detector_t::ToString(GetDetectorType());
   }
+
+  // the cluster alorithm may set those flags
+  enum class Flags_t : std::uint8_t {
+      TouchesHole, Split
+  };
+
+  void SetFlag(Flags_t flag, bool set = true) {
+      const std::uint32_t mask = 1 << static_cast<std::uint8_t>(flag);
+      if(set) {
+          Flags |= mask;
+      }
+      else {
+          Flags &= ~mask;
+      }
+  }
+  bool HasFlag(Flags_t flag) const {
+      const std::uint32_t mask = 1 << static_cast<std::uint8_t>(flag);
+      return (Flags & mask) != 0;
+  }
+
+
 #endif
 
   bool isSane() const {
       return std::isfinite(Energy) && std::isfinite(Time);
   }
 
-  TCluster(): Position(), Energy(0.0), DetectorType(0), CentralElement(0) {}
+  TCluster(): Position(), Energy(0.0), Time(0.0), Flags(0), DetectorType(0), CentralElement(0) {}
   virtual ~TCluster() {}
   ClassDef(TCluster, ANT_UNPACKER_ROOT_VERSION)
 };
