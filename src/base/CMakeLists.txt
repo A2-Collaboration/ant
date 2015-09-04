@@ -22,6 +22,7 @@ set(SRCS
   Paths.h
   matrixstack.cc
   iterators.h
+  enumfield.h
   std_ext/math.h
   std_ext/memory.h
   std_ext/misc.h
