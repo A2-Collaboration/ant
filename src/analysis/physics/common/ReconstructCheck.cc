@@ -13,7 +13,8 @@ using namespace ant::analysis::physics;
 using namespace ant::analysis::data;
 
 ReconstructCheck::ReconstructCheck(PhysOptPtr opts):
-    Physics("ReconstructCheck",opts)
+    Physics("ReconstructCheck",opts),
+    nPerEvent(HistFac,"")
 {
     const BinSettings e(max(1000.0, atof(GetOption("Emax").c_str())));
     EnergyRec_cb = HistFac.makeTH2D("Energry Reconstruction CB","E_{true} [MeV]","E_{rec} [MeV]", e, e, "Energy_rec_cb");
@@ -36,6 +37,20 @@ void ReconstructCheck::ProcessEvent(const Event &event)
 
         }
 
+
+        nPerEvent.Fill(p, event.Reconstructed().Candidates());
+
+        auto entry = nPerEvent_type.find(&(p->Type()));
+        candidatesEvent_t* c = nullptr;
+        if(entry == nPerEvent_type.end()) {
+            auto pos = nPerEvent_type.insert(make_pair( &(p->Type()), candidatesEvent_t(HistFac,p->Type().Name())));
+            c = &(pos.first->second);
+        } else {
+            c = &(entry->second);
+        }
+
+        c->Fill(p,event.Reconstructed().Candidates());
+
     }
 }
 
@@ -45,13 +60,53 @@ void ReconstructCheck::Finish()
 
 }
 
+canvas& draw(canvas& c, const std::list<TH1*>& l) {
+    for(auto& h : l) {
+        c << h;
+    }
+    return c;
+}
 
 void ReconstructCheck::ShowResult()
 {
     canvas("ReconstructCheck")
             << drawoption("colz")
             << EnergyRec_cb << EnergyRec_taps << endc;
+
+    canvas candidates("Candidates");
+
+    candidates << drawoption("colz");
+
+    draw(candidates , nPerEvent.Hists());
+
+    if(nPerEvent_type.size() > 1) {
+        for(auto& e : nPerEvent_type) {
+            draw(candidates , e.second.Hists());
+        }
+    }
+
+    candidates << endc;
 }
 
+
+
+
+ReconstructCheck::candidatesEvent_t::candidatesEvent_t(SmartHistFactory& f, const string& prefix)
+{
+    nPerEvent     = f.makeTH1D(prefix+" Candidates/Event", "Candidates/Event","",BinSettings(15),prefix+"candEvent");
+    nPerEventPerE = f.makeTH2D(prefix+" Candidates/Event/Energy","MC True Energy [MeV]","Candidates/Event",BinSettings(1000),BinSettings(15),prefix+"candEventEnergy");
+
+}
+
+void ReconstructCheck::candidatesEvent_t::Fill(const ParticlePtr& mctrue, const CandidateList& cand)
+{
+    nPerEvent->Fill(cand.size());
+    nPerEventPerE->Fill(mctrue->Ek(), cand.size());
+}
+
+std::list<TH1*> ReconstructCheck::candidatesEvent_t::Hists()
+{
+    return {nPerEvent, nPerEventPerE};
+}
 
 AUTO_REGISTER_PHYSICS(ReconstructCheck, "ReconstructCheck")
