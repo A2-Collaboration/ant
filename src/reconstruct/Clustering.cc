@@ -64,7 +64,7 @@ void Clustering::Build(
     const auto it_threshold = cluster_thresholds.find(clusterdetector->Type);
     const double threshold = it_threshold == cluster_thresholds.cend() ? 0 : it_threshold->second;
 
-    for(const auto& cluster : crystal_clusters) {
+    for(const clustering::cluster_t& cluster : crystal_clusters) {
         const double cluster_energy = clustering::calc_total_energy(cluster);
 
         // discard low energetic clusters
@@ -95,7 +95,7 @@ void Clustering::Build(
             }
         }
         weightedPosition *= 1.0/weightedSum;
-        clusters.emplace_back(
+        TCluster the_cluster(
                     weightedPosition,
                     cluster_energy,
                     cluster_time,
@@ -103,6 +103,9 @@ void Clustering::Build(
                     cluster_max_channel,
                     clusterhits
                     );
+        if(cluster.Split)
+            the_cluster.SetFlag(TCluster::Flags_t::Split);
+        clusters.emplace_back(move(the_cluster));
     }
 }
 

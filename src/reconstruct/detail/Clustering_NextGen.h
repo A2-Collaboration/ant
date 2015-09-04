@@ -35,7 +35,9 @@ struct crystal_t  {
 };
 
 struct cluster_t : std::vector< crystal_t > {
+    // use constructors from base class
     using std::vector<crystal_t>::vector;
+    bool Split = false;
 };
 
 inline bool operator< (const crystal_t& lhs, const crystal_t& rhs){
@@ -365,10 +367,11 @@ static void split_cluster(const cluster_t& cluster,
     }
 
     for(size_t i=0; i<bump_clusters.size(); i++) {
-        cluster_t bump_cluster = bump_clusters[i];
+        cluster_t& bump_cluster = bump_clusters[i];
+        bump_cluster.Split = true;
         // always sort before adding to clusters
         sort(bump_cluster.begin(), bump_cluster.end());
-        clusters.push_back(bump_cluster);
+        clusters.emplace_back(move(bump_cluster));
     }
 }
 
