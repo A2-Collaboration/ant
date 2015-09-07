@@ -17,10 +17,16 @@ FitGausPol0::FitGausPol0()
 {
     func = functions::GausPol<0>::getTF1();
     func->SetNpx(1000);
-    AddKnob<AmpKnop>("A",func);
-    AddKnob<KnobsTF1::ParameterKnob>("x_{0}", func, 1, IndicatorProperties::Type_t::slider_vertical,   kBlue, 3);
-    AddKnob<SigmaKnob>("#sigma",func);
-    AddKnob<KnobsTF1::ParameterKnob>("c",     func, 3, IndicatorProperties::Type_t::slider_horizontal, kRed, 3);
+
+    func->SetParName(0,"A");
+    func->SetParName(1,"x_{0}");
+    func->SetParName(2,"#sigma");
+    func->SetParName(3,"offset");
+
+    AddKnob<KnobsTF1::ParameterKnob>(func->GetParName(0), func, 0, IndicatorProperties::Type_t::slider_horizontal);
+    AddKnob<KnobsTF1::ParameterKnob>(func->GetParName(1), func, 1, IndicatorProperties::Type_t::slider_vertical);
+    AddKnob<KnobsTF1::ReferenceParameterKnob>(func->GetParName(2), func, 2, 1, IndicatorProperties::Type_t::slider_vertical);
+    AddKnob<KnobsTF1::ParameterKnob>(func->GetParName(3), func, 3, IndicatorProperties::Type_t::slider_horizontal, kRed, 3);
     AddKnob<KnobsTF1::RangeKnob>("Min", func, KnobsTF1::RangeKnob::RangeEndType::lower);
     AddKnob<KnobsTF1::RangeKnob>("Max", func, KnobsTF1::RangeKnob::RangeEndType::upper);
 }
@@ -89,40 +95,4 @@ void FitGausPol0::Load(const SavedState_t &data)
 double FitGausPol0::GetPeakPosition() const
 {
     return func->GetParameter(1);
-}
-
-FitGausPol0::SigmaKnob::SigmaKnob(const std::string &n, TF1 *Func):
-    IndicatorKnob(n,{IndicatorProperties::Type_t::slider_vertical,kBlue,3}),
-    func(Func)
-{
-}
-
-double FitGausPol0::SigmaKnob::get() const
-{
-    return func->GetParameter(1) + func->GetParameter(2);
-}
-
-void FitGausPol0::SigmaKnob::set(double a)
-{
-    auto v = a - func->GetParameter(1);
-    func->SetParameter(2,v);
-}
-
-
-FitGausPol0::AmpKnop::AmpKnop(const std::string& name, TF1* Func):
-    IndicatorKnob(name,{IndicatorProperties::Type_t::slider_horizontal,kBlue,3}),
-    func(Func)
-{
-
-}
-
-double FitGausPol0::AmpKnop::get() const
-{
-    return func->GetParameter(0) + func->GetParameter(3);
-}
-
-void FitGausPol0::AmpKnop::set(double a)
-{
-    auto v = a - func->GetParameter(3);
-    func->SetParameter(0,v);
 }
