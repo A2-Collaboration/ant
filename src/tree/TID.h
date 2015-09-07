@@ -90,8 +90,8 @@ struct TID
         if(Flags)
             s  << "flags=0x" << Flags << ",";
         s << "'" << std_ext::to_iso8601(Timestamp) <<"',";
-        s << std::hex <<  std::setw(sizeof(decltype(Lower))*2) << std::setfill('0')
-          << "0x" << Lower << std::dec;
+        s << "0x" << std::hex <<  std::setw(sizeof(decltype(Lower))*2) << std::setfill('0')
+          << Lower << std::dec;
         s  << ")" ;
         return s;
     }
