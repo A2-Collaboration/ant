@@ -98,7 +98,7 @@ PReaction *A2Cocktail::makeReaction(const double& energy, const string &particle
     string reactionstring = "p " + particles;
 
     PReaction* reaction = new PReaction(energy,                         // beam momentum = photon engry
-                                        "g","p",                        // beam,target
+                                        strdup("g"),strdup("p"),        // beam,target
                                         strdup(reactionstring.c_str()),
                                         strdup(_outfileName.c_str()),   // output - filename
                                         _saveUnstable,0,1,0,            // pluto - flags
