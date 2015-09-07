@@ -33,7 +33,6 @@ public:
         virtual void DisplayFit() override;
         virtual void StoreFit(unsigned channel) override;
         virtual bool FinishRange() override;
-        virtual void StoreFinishRange(const interval<TID>& range) override;
     protected:
         std::shared_ptr<expconfig::detector::CB> cb_detector;
         std::shared_ptr<gui::FitGausPol3> func;

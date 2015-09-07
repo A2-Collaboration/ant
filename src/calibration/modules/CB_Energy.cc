@@ -160,6 +160,7 @@ gui::Manager_traits::DoFitReturn_t CB_Energy::TheGUI::DoFit(TH1* hist, unsigned 
 
 void CB_Energy::TheGUI::DisplayFit()
 {
+    canvas->Divide(1,1);
     canvas->Show(h_projection, func.get());
 }
 
@@ -193,7 +194,6 @@ void CB_Energy::TheGUI::StoreFit(unsigned channel)
 
 bool CB_Energy::TheGUI::FinishRange()
 {
-    canvas->Clear();
     canvas->Divide(2,2);
 
     canvas->cd(1);
@@ -215,8 +215,3 @@ bool CB_Energy::TheGUI::FinishRange()
     return true;
 }
 
-void CB_Energy::TheGUI::StoreFinishRange(const interval<TID>& range)
-{
-    canvas->Clear();
-    GUI_CalibType::StoreFinishRange(range);
-}
