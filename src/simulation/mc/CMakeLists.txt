@@ -1,9 +1,6 @@
-include_directories(
-	.
-	${CMAKE_CURRENT_BINARY_DIR}
-)
+include_directories(.)
 
-#set data file, parser and output for precompiled cocktail-database
+# set data file, parser and output for precompiled cocktail-database
 set(XSECTION_DATA      ${CMAKE_CURRENT_SOURCE_DIR}/xsections.dat)
 set(XSECTION_PARSER    ${CMAKE_CURRENT_SOURCE_DIR}/DecayParser.py)
 set(XSECTION_DATA_SRC  ${CMAKE_CURRENT_BINARY_DIR}/chgen.h)

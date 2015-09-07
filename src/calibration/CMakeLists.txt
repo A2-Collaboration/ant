@@ -1,10 +1,5 @@
-# analysis needs some more libraries
-
-include_directories(
-  .
-  ../analysis
-  )
-
+include_directories(.)
+include_directories(../analysis)
 
 set(SRCS
     Calibration.h

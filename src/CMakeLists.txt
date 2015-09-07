@@ -3,7 +3,10 @@
 # >>  #include "base/Logger.h"
 # but don't forget to link against
 # the corresponding library then
-include_directories(.)
+include_directories(${CMAKE_CURRENT_SOURCE_DIR})
+# for generated files by configure_file()
+include_directories(${CMAKE_CURRENT_BINARY_DIR})
+
 
 macro(add_ant_subdirectory name)
   message(STATUS "Configuring ${name}...")

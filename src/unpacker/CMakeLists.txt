@@ -1,7 +1,7 @@
+include_directories(.)
+
 find_package(LibLZMA REQUIRED)
 include_directories(${LIBLZMA_INCLUDE_DIRS})
-
-include_directories(.)
 
 set(SRCS
   RawFileReader.cc

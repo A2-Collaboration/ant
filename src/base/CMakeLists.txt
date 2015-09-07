@@ -1,5 +1,3 @@
-include_directories(.)
-
 set(ANT_PATH_DATABASE "${CMAKE_SOURCE_DIR}/database")
 configure_file(Paths.h.in Paths.h)
 

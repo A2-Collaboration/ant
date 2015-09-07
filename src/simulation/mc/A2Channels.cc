@@ -1,5 +1,5 @@
 #include "A2Channels.h"
-#include "chgen.h"
+#include "simulation/mc/chgen.h"
 
 #include <list>
 #include <iostream>

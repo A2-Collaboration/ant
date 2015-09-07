@@ -1,3 +1,5 @@
+include_directories(.)
+
 set(SRCS
   Reconstruct.h
   Reconstruct.cc
@@ -11,6 +13,5 @@ set(SRCS
   detail/Clustering_NextGen.h
   )
 
-include_directories(.)
 add_library(reconstruct ${SRCS})
 target_link_libraries(reconstruct base expconfig)
