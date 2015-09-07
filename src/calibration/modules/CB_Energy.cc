@@ -49,7 +49,8 @@ unique_ptr<analysis::Physics> CB_Energy::GetPhysicsModule()
                                             cb_detector->GetNChannels());
 }
 
-void CB_Energy::GetGUIs(list<unique_ptr<gui::Manager_traits> >& guis) {
+void CB_Energy::GetGUIs(list<unique_ptr<gui::Manager_traits> >& guis)
+{
     guis.emplace_back(std_ext::make_unique<TheGUI>(
                           GetName(),
                           Gains,
@@ -148,7 +149,7 @@ gui::Manager_traits::DoFitReturn_t CB_Energy::TheGUI::DoFit(TH1* hist, unsigned 
 
     /// \todo implement automatic stop if fit failed?
 
-    // do not show something, goto next channel
+    // goto next channel
     return DoFitReturn_t::Next;
 }
 
