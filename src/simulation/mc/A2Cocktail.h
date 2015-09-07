@@ -21,8 +21,8 @@
 #pragma GCC diagnostic ignored "-Weffc++"
 #pragma GCC diagnostic ignored "-Wwrite-strings"
 #pragma GCC diagnostic ignored "-Wunused-parameter"
-#include "PDecayManager.h"
 #include "PDecayChannel.h"
+#include "PDecayManager.h"
 #include "PReaction.h"
 #include "PParticle.h"
 #pragma GCC diagnostic pop
