@@ -1,11 +1,4 @@
-/**
- * @file A2channels.h
- * 
- *
- */
-
-#ifndef _A2CHANNELS_H
-#define _A2CHANNELS_H
+#pragma once
 
 #ifndef __CINT__
 
@@ -20,6 +13,14 @@
 
 // Pluto
 #include "PDecayChannel.h"
+
+
+namespace ant
+{
+namespace simulation
+{
+namespace mc
+{
 
 
 struct ParticleData{
@@ -72,6 +73,8 @@ public:
     }
 };
 
+}
+}
+}
 #endif 
 
-#endif 

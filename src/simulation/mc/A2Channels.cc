@@ -10,6 +10,7 @@
 #include "TH1D.h"
 
 using namespace std;
+using namespace ant::simulation::mc;
 
 
 double A2ChannelManager::Xsection(const string &name, const double Egamma) const

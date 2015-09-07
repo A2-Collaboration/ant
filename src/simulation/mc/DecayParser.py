@@ -76,6 +76,8 @@ def main():
         '',
         '#include "A2Channels.h"',
         '',
+        'using namespace ant::simulation::mc;',
+        '',
         'XsecList ' + functionName + '()',
         '{',
         '      ParticleData pdata;',

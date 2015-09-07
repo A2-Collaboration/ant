@@ -5,6 +5,7 @@
 #include "TH1D.h"
 
 using namespace std;
+using namespace ant::simulation::mc;
 
 
 void A2OldCocktail::_makeDecays() {

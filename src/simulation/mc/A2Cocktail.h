@@ -5,8 +5,7 @@
  *
  */
 
-#ifndef _A2COCKTAIL_H
-#define _A2COCKTAIL_H
+#pragma once
 
 #ifndef __CINT__
 
@@ -29,6 +28,13 @@
 #include "TF1.h"
 #include "TTree.h"
 #include "TRandom3.h"
+
+namespace ant
+{
+namespace simulation
+{
+namespace mc
+{
 
 
 class ManagedPlutoReaction{
@@ -104,7 +110,7 @@ public:
      */
     PReaction* GetRandomReaction() const;
 
-    virtual unsigned long Sample(const unsigned long &nevts) const;
+    virtual unsigned long Sample(const unsigned long &nevts) const override;
     virtual void Finish() const;
     //virtual ~A2Cocktail(){Finish();} maybe better, not sure yet
 };
@@ -113,6 +119,7 @@ public:
 /**
  * @brief The A2OldCocktail class generates MC events for a fixed energy, using the Pluto class PDecayManager
  */
+// @ Andi bitte nicht loeschen!!!!!
 class A2OldCocktail{
 private:
 
@@ -152,6 +159,10 @@ public:
 
 };
 
-#endif 
 
-#endif 
+} //mc
+} //simulation
+} //ant
+
+#endif // __CINT__
+
