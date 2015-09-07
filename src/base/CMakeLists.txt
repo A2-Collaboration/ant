@@ -1,4 +1,5 @@
 set(ANT_PATH_DATABASE "${CMAKE_SOURCE_DIR}/database")
+set(ANT_PATH_GITREPO  "${CMAKE_SOURCE_DIR}")
 configure_file(Paths.h.in Paths.h)
 
 set(SRCS
@@ -20,6 +21,7 @@ set(SRCS
   matrixstack.cc
   iterators.h
   enumfield.h
+  GitInfo.cc
   std_ext/math.h
   std_ext/memory.h
   std_ext/misc.h

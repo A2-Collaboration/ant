@@ -26,6 +26,8 @@
 #include "base/detail/tclap/ValuesConstraintExtra.h"
 #include "base/WrapTFile.h"
 #include "base/std_ext/system.h"
+#include "base/GitInfo.h"
+
 
 #include "TRint.h"
 #include "TSystem.h"
@@ -380,7 +382,7 @@ int main(int argc, char** argv) {
     if(auto setup = ExpConfig::Setup::GetLastFound()) {
         header->SetupName = setup->GetName();
     }
-    header->GitInfo = exec("git describe --always --dirty");
+    header->GitInfo = GitInfo::GetDescription();
     if(!header->GitInfo.empty()) {
         VLOG(5) << "Added git info: " << header->GitInfo;
     }

@@ -3,3 +3,4 @@
 // Cmake configure file for necessary source paths
 
 #cmakedefine ANT_PATH_DATABASE "@ANT_PATH_DATABASE@"
+#cmakedefine ANT_PATH_GITREPO  "@ANT_PATH_GITREPO@"
