@@ -22,6 +22,12 @@ struct system {
      */
     static std::list<std::string> lsFiles(const std::string& folder=".", const std::string& extension="");
 
+    /**
+     * @brief execute given cmd and return stdout (stderr is suppressed)
+     * @param cmd the command to execute
+     * @return stdout of cmd
+     */
+    static std::string exec(const std::string& cmd);
 };
 }
 }

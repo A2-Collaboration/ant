@@ -33,3 +33,19 @@ list<string> system::lsFiles(const string& folder, const string& extension)
     }
     return filenames;
 }
+
+string system::exec(const string& cmd)
+{
+    string cmd_silent = cmd + " 2>/dev/null";
+    FILE* pipe = popen(cmd_silent.c_str(), "r");
+    if (!pipe) return "";
+    char buffer[128];
+    std::string result = "";
+    while(!feof(pipe)) {
+        if(fgets(buffer, 128, pipe) != NULL)
+            result += buffer;
+    }
+    pclose(pipe);
+    result = std_ext::string_sanitize(result.c_str());
+    return result;
+}
