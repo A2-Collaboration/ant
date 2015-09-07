@@ -32,18 +32,11 @@
 
 #include <sstream>
 #include <string>
-#include <chrono>
-#include <cstdio>
-#include <cerrno>
-
 
 using namespace std;
 using namespace ant;
 
 bool running = true;
-string exec(const string& cmd);
-bool testopen(const string& filename, string& msg);
-
 class MyTInterruptHandler : public TSignalHandler {
 public:
     MyTInterruptHandler() : TSignalHandler(kSigInterrupt, kFALSE) { }
@@ -57,7 +50,6 @@ public:
         return kTRUE;
     }
 };
-
 
 int main(int argc, char** argv) {
     SetupLogger();
@@ -135,7 +127,7 @@ int main(int argc, char** argv) {
     // check if input files are readable
     for(const auto& inputfile : cmd_input->getValue()) {
         string errmsg;
-        if(!testopen(inputfile, errmsg)) {
+        if(!std_ext::system::testopen(inputfile, errmsg)) {
             LOG(ERROR) << "Cannot open inputfile '" << inputfile << "': " << errmsg;
             return 1;
         }
@@ -424,31 +416,3 @@ int main(int argc, char** argv) {
 
     return 0;
 }
-
-bool testopen(const string& filename, string& errmsg) {
-    /// \todo find some non-C'ish way of doing this?
-    FILE* fp = fopen(filename.c_str(),"r");
-    if(fp==NULL) {
-        errmsg = strerror(errno);
-        return false;
-    }
-    fclose(fp);
-    errmsg = "";
-    return true;
-}
-
-string exec(const string& cmd) {
-    string cmd_silent = cmd + string(" 2>/dev/null");
-    FILE* pipe = popen(cmd_silent.c_str(), "r");
-    if (!pipe) return "";
-    char buffer[128];
-    std::string result = "";
-    while(!feof(pipe)) {
-        if(fgets(buffer, 128, pipe) != NULL)
-            result += buffer;
-    }
-    pclose(pipe);
-    result = std_ext::string_sanitize(result.c_str());
-    return result;
-}
-

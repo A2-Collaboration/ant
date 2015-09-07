@@ -5,6 +5,7 @@
 #include <unistd.h>
 #include <dirent.h>
 #include <cstdio>
+#include <cstring>
 
 
 
@@ -48,4 +49,17 @@ string system::exec(const string& cmd)
     pclose(pipe);
     result = std_ext::string_sanitize(result.c_str());
     return result;
+}
+
+
+bool ant::std_ext::system::testopen(const std::string& filename, std::string errmsg)
+{
+    FILE* fp = fopen(filename.c_str(),"r");
+    if(fp==NULL) {
+        errmsg = strerror(errno);
+        return false;
+    }
+    fclose(fp);
+    errmsg = "";
+    return true;
 }

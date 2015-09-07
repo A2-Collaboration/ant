@@ -23,11 +23,22 @@ struct system {
     static std::list<std::string> lsFiles(const std::string& folder=".", const std::string& extension="");
 
     /**
+     * @brief testopen a given file
+     * @param filename to open as test
+     * @param errmsg non-empty if unsuccessful open
+     * @return true if file can be opened for reading
+     */
+    static bool testopen(const std::string& filename, std::string errmsg);
+
+
+    /**
      * @brief execute given cmd and return stdout (stderr is suppressed)
      * @param cmd the command to execute
      * @return stdout of cmd
      */
     static std::string exec(const std::string& cmd);
+
+
 };
 }
 }
