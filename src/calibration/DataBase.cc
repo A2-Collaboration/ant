@@ -4,11 +4,11 @@
 #include "base/interval.h"
 #include "base/Logger.h"
 
-#include "base/std_ext/misc.h"
+#include "base/std_ext/misc.h" // begins_with
+#include "base/std_ext/system.h"
 
 #include "TTree.h"
 
-#include <dirent.h>
 
 using namespace std;
 using namespace ant;
@@ -50,19 +50,13 @@ bool DataBase::ReadFromFile(const std::string& filename)
 
 bool DataBase::ReadFromFolder(const string& folder)
 {
-    // open all root files in that folder
-    DIR* dir = opendir (folder.c_str());
-    if(dir==nullptr)
-        return false;
-    dirent* ent;
-    while((ent = readdir(dir))) {
-        string filename = ent->d_name;
-        if(!std_ext::string_ends_with(filename,".root"))
-            continue;
-        ReadFromFile(folder+"/"+filename);
+    // read all root files in given folder
+    bool flag = false;
+    for(const auto& filename : std_ext::system::lsFiles(folder, ".root")) {
+        ReadFromFile(filename);
+        flag = true;
     }
-    closedir(dir);
-    return true;
+    return flag;
 }
 
 void DataBase::WriteToTree(WrapTFileOutput& file, const DataMap_t::value_type& calibration) const

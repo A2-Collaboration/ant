@@ -25,7 +25,6 @@
 #include "base/CmdLine.h"
 #include "base/detail/tclap/ValuesConstraintExtra.h"
 #include "base/WrapTFile.h"
-#include "base/filesystem.h"
 #include "base/std_ext/system.h"
 
 #include "TRint.h"
@@ -352,7 +351,8 @@ int main(int argc, char** argv) {
                 WrapTFileInput cuts;
                 VLOG(7) << "Looking for ParticleID cuts in " << setup->GetPIDCutsDirectory();
 
-                for(auto& cutfile : filesystem::lsFiles(setup->GetPIDCutsDirectory(),".root")) {
+                for(const auto& cutfile : std_ext::system::lsFiles(setup->GetPIDCutsDirectory(),".root"))
+                {
                     try {
                         cuts.OpenFile(cutfile);
                     } catch (const std::runtime_error&) {

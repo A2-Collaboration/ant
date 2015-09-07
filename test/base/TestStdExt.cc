@@ -4,6 +4,9 @@
 #include "base/std_ext/memory.h"
 #include "base/std_ext/string.h"
 #include "base/std_ext/vector.h"
+#include "base/std_ext/system.h"
+
+#include "base/tmpfile_t.h"
 
 #include <string>
 #include <memory>
@@ -22,19 +25,24 @@ unsigned MemtestDummy::n = 0;
 void TestMakeUnique();
 void TestString();
 void TestVector();
+void TestLsFiles();
 
-TEST_CASE("make_unique", "[base/stdext]") {
+TEST_CASE("make_unique", "[base/std_ext]") {
     TestMakeUnique();
 }
 
-TEST_CASE("string stuff", "[base/stdext") {
+TEST_CASE("string stuff", "[base/std_ext") {
     TestString();
 }
 
-TEST_CASE("vector stuff", "[base/stdext]") {
+TEST_CASE("vector stuff", "[base/std_ext]") {
     TestVector();
 }
 
+TEST_CASE("system lsFiles", "[base/std_ext]") {
+
+    TestLsFiles();
+}
 
 void TestMakeUnique() {
     std::unique_ptr<MemtestDummy> d;
@@ -75,4 +83,25 @@ void TestVector() {
 
     REQUIRE(std_ext::contains(t,3));
     REQUIRE_FALSE(std_ext::contains(t,8));
+}
+
+
+
+void TestLsFiles() {
+    tmpfolder_t folder;
+    tmpfile_t a(folder, ".tst");
+    a.write_testdata();
+
+    list<string> files;
+
+    REQUIRE_NOTHROW(files = std_ext::system::lsFiles(folder.foldername,".tst"));
+    REQUIRE(files.size()==1);
+    REQUIRE(files.front()==string(a.filename));
+
+
+    tmpfile_t b(folder, ".tst");
+    b.write_testdata();
+
+    REQUIRE_NOTHROW(files = std_ext::system::lsFiles(folder.foldername,".tst"));
+    REQUIRE(files.size()==2);
 }

@@ -10,7 +10,6 @@ set(SRCS
   printable.h
   Logger.cc
   tmpfile_t.cc
-  filesystem.cc
   Format.h
   Tree.h
   root_printable.h
