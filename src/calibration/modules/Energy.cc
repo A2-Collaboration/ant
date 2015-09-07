@@ -63,7 +63,7 @@ void Energy::ApplyTo(const readhits_t& hits, extrahits_t& extrahits)
 
         // prefer RawData if available
         if(!dethit->RawData.empty()) {
-            // the Converter is smart enough to account for reference Energys!
+            // convert to not-so-raw values (still not MeV scale)
             values = Converter->Convert(dethit->RawData);
 
             // for pedestal calibration, we insert extra hits here
@@ -77,7 +77,7 @@ void Energy::ApplyTo(const readhits_t& hits, extrahits_t& extrahits)
                         values
                         );
 
-            // apply pedestal/gain/threshold to each of the values (might be multihit)
+            // apply pedestal/gain to each of the values (might be multihit)
             for(double& value : values) {
                 if(Pedestals.Values.empty())
                     value -=Pedestals.DefaultValue;
