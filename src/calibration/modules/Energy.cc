@@ -161,10 +161,12 @@ Energy::~Energy()
 }
 
 Energy::GUI_CalibType::GUI_CalibType(const string& basename, CalibType& type,
-                                     const shared_ptr<DataManager>& calmgr) :
+                                     const shared_ptr<DataManager>& calmgr,
+                                     const shared_ptr<Detector_t>& detector_) :
     gui::Manager_traits(basename),
     calibType(type),
-    calibrationManager(calmgr)
+    calibrationManager(calmgr),
+    detector(detector_)
 {}
 
 string Energy::GUI_CalibType::GetName() const
@@ -177,6 +179,11 @@ string Energy::GUI_CalibType::GetName() const
 string Energy::GUI_CalibType::GetHistogramName() const
 {
     return GetName();
+}
+
+unsigned Energy::GUI_CalibType::GetNumberOfChannels() const
+{
+    return detector->GetNChannels();
 }
 
 void Energy::GUI_CalibType::StartRange(const interval<TID>& range)

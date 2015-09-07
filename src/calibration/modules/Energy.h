@@ -66,10 +66,14 @@ protected:
     struct GUI_CalibType : gui::Manager_traits {
         GUI_CalibType(const std::string& basename,
                       CalibType& type,
-                      const std::shared_ptr<DataManager>& calmgr);
+                      const std::shared_ptr<DataManager>& calmgr,
+                      const std::shared_ptr<Detector_t>& detector_
+                      );
 
         virtual std::string GetName() const override;
         virtual std::string GetHistogramName() const override;
+        virtual unsigned GetNumberOfChannels() const override;
+
         virtual void StartRange(const interval<TID>& range) override;
         virtual void StoreFinishRange(const interval<TID>& range) override;
 
@@ -80,6 +84,8 @@ protected:
     protected:
         CalibType& calibType;
         std::shared_ptr<DataManager> calibrationManager;
+        std::shared_ptr<Detector_t> detector;
+
         std::map< unsigned, std::vector<double> > fitParameters;
         std::vector<double> previousValues;
 

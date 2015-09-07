@@ -110,17 +110,11 @@ void CB_Energy::ThePhysics::ShowResult()
 CB_Energy::TheGUI::TheGUI(const string& basename,
                           CalibType& type,
                           const std::shared_ptr<DataManager>& calmgr,
-                          const std::shared_ptr<expconfig::detector::CB>& cb) :
-    GUI_CalibType(basename, type, calmgr),
-    cb_detector(cb),
+                          const std::shared_ptr<Detector_t>& detector) :
+    GUI_CalibType(basename, type, calmgr, detector),
     func(make_shared<gui::FitGausPol3>())
 {
 
-}
-
-unsigned CB_Energy::TheGUI::GetNumberOfChannels() const
-{
-    return cb_detector->GetNChannels();
 }
 
 void CB_Energy::TheGUI::InitGUI(gui::ManagerWindow_traits* window)
@@ -136,7 +130,7 @@ void CB_Energy::TheGUI::InitGUI(gui::ManagerWindow_traits* window)
 
 gui::Manager_traits::DoFitReturn_t CB_Energy::TheGUI::DoFit(TH1* hist, unsigned channel)
 {
-    if(cb_detector->IsIgnored(channel))
+    if(detector->IsIgnored(channel))
         return DoFitReturn_t::Skip;
 
     TH2* hist2 = dynamic_cast<TH2*>(hist);

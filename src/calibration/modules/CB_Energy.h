@@ -25,16 +25,14 @@ public:
         TheGUI(const std::string& basename,
                CalibType& type,
                const std::shared_ptr<DataManager>& calmgr,
-               const std::shared_ptr<expconfig::detector::CB>& cb);
+               const std::shared_ptr<Detector_t>& detector);
 
-        virtual unsigned GetNumberOfChannels() const override;
         virtual void InitGUI(gui::ManagerWindow_traits* window) override;
         virtual DoFitReturn_t DoFit(TH1* hist, unsigned channel) override;
         virtual void DisplayFit() override;
         virtual void StoreFit(unsigned channel) override;
         virtual bool FinishRange() override;
     protected:
-        std::shared_ptr<expconfig::detector::CB> cb_detector;
         std::shared_ptr<gui::FitGausPol3> func;
         gui::CalCanvas* canvas;
         TH1*  h_projection = nullptr;
