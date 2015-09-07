@@ -23,7 +23,7 @@ FitGausPol0::FitGausPol0()
     func->SetParName(2,"#sigma");
     func->SetParName(3,"offset");
 
-    AddKnob<KnobsTF1::ParameterKnob>(func->GetParName(0), func, 0, IndicatorProperties::Type_t::slider_horizontal);
+    AddKnob<KnobsTF1::ReferenceParameterKnob>(func->GetParName(0), func, 0, 3, IndicatorProperties::Type_t::slider_horizontal);
     AddKnob<KnobsTF1::ParameterKnob>(func->GetParName(1), func, 1, IndicatorProperties::Type_t::slider_vertical);
     AddKnob<KnobsTF1::ReferenceParameterKnob>(func->GetParName(2), func, 2, 1, IndicatorProperties::Type_t::slider_vertical);
     AddKnob<KnobsTF1::ParameterKnob>(func->GetParName(3), func, 3, IndicatorProperties::Type_t::slider_horizontal, kRed, 3);
