@@ -8,8 +8,8 @@ using namespace std;
 using namespace ant::simulation::mc;
 
 
-void A2OldCocktail::_makeDecays() {
-
+void A2OldCocktail::_makeDecays()
+{
     A2ChannelManager a2man;
     _primary_decays = a2man.GenerateDecays(_E);
 }
@@ -20,8 +20,6 @@ void A2OldCocktail::_makeDecays() {
 
 PReaction *A2Cocktail::GetRandomReaction() const
 {
-
-
     double rndEnergyBinValue = _rndEngine->Rndm() * _energyBins.back().AccProbability;
 
     for (auto& eBin: _energyBins)
@@ -37,7 +35,7 @@ PReaction *A2Cocktail::GetRandomReaction() const
             }
         }
     }
-    return NULL;
+    return nullptr;
 }
 
 void A2Cocktail::init(vector<string> filelist)
@@ -114,7 +112,6 @@ PReaction *A2Cocktail::makeReaction(const double& energy, const string &particle
             bulkdecay->SetTauMax(0.001);
             reaction->AddBulk(bulkdecay);
     }
-//    reaction->Print();
     return reaction;
 }
 

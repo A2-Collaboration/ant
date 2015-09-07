@@ -12,7 +12,15 @@
 #include "TH1.h"
 
 // Pluto
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wunused-local-typedefs"
+#pragma GCC diagnostic ignored "-Wvla"
+#pragma GCC diagnostic ignored "-Wignored-qualifiers"
+#pragma GCC diagnostic ignored "-Weffc++"
+#pragma GCC diagnostic ignored "-Wwrite-strings"
+#pragma GCC diagnostic ignored "-Wunused-parameter"
 #include "PDecayChannel.h"
+#pragma GCC diagnostic pop
 
 
 namespace ant
@@ -55,7 +63,7 @@ private:
      *
      *
      */
-    const bool ParseFile(const std::string& filename);
+    bool ParseFile(const std::string& filename);
 
 public:
     A2ChannelManager(std::vector<std::string> dataFiles = {});

@@ -14,12 +14,18 @@
 #include <string>
 #include <vector>
 
-// pluto++
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wunused-local-typedefs"
+#pragma GCC diagnostic ignored "-Wvla"
+#pragma GCC diagnostic ignored "-Wignored-qualifiers"
+#pragma GCC diagnostic ignored "-Weffc++"
 #pragma GCC diagnostic ignored "-Wwrite-strings"
+#pragma GCC diagnostic ignored "-Wunused-parameter"
 #include "PDecayManager.h"
 #include "PDecayChannel.h"
 #include "PReaction.h"
 #include "PParticle.h"
+#pragma GCC diagnostic pop
 
 #include "A2Channels.h"
 
@@ -28,6 +34,8 @@
 #include "TF1.h"
 #include "TTree.h"
 #include "TRandom3.h"
+
+
 
 namespace ant
 {
