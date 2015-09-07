@@ -213,10 +213,14 @@ void Energy::GUI_CalibType::StartRange(const interval<TID>& range)
 
 void Energy::GUI_CalibType::StoreFinishRange(const interval<TID>& range)
 {
+    // assume that all pedestals are measured in extra runs,
+    // which means their data extends over to normal runs
+    bool extendable = calibType.Name == "Pedestals";
     TCalibrationData cdata(
                 GetName(),
                 range.Start(),
-                range.Stop()
+                range.Stop(),
+                extendable
                 );
 
     std::vector<double>& values = calibType.Values;
