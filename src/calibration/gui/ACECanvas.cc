@@ -460,7 +460,6 @@ void ACECanvas::addSomeRandomData()
     auto makedata = [&time] (unsigned first, unsigned last)
     {
         TCalibrationData tmp("Wolfes",
-                             "testData",
                              time++,
                              "testID",
                              TID(first),TID(last));

@@ -257,7 +257,6 @@ void PID_PhiAngle::TheGUI::StoreFinishRange(const interval<TID>& range)
 
     TCalibrationData cdata(
                 "Unknown", /// \todo get static information about author/comment?
-                "No Comment",
                 time(nullptr),
                 GetName()+"/SingleChannels",
                 range.Start(),
@@ -278,7 +277,6 @@ void PID_PhiAngle::TheGUI::StoreFinishRange(const interval<TID>& range)
 
     TCalibrationData cdata_offset(
                 "Unknown", /// \todo get static information about author/comment?
-                "No Comment",
                 time(nullptr),
                 GetName(),
                 range.Start(),

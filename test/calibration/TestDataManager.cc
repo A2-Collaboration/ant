@@ -94,7 +94,6 @@ unsigned dotest_store(const string& foldername)
     DataManager calibman(foldername);
 
     TCalibrationData cdata("M",
-                           "comment",
                            0,
                            "1",
                            TID(0,0u),TID(0,16u)
@@ -108,7 +107,6 @@ unsigned dotest_store(const string& foldername)
     {
         ndata++;
         TCalibrationData tmp(cdata.Author,
-                             cdata.Comment,
                              time,
                              cdata.CalibrationID,
                              TID(0,first),TID(0,last)

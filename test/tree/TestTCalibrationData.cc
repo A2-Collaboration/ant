@@ -29,7 +29,7 @@ void dotest()
     ant::TCalibrationData* cdata = new ant::TCalibrationData(tmpfile.filename,ant::TID(0,0,false),ant::TID(0,1,true));
     tree->Branch("cdata",cdata);
 
-    ant::TCalibrationData* cdata2 = new ant::TCalibrationData("Martin Wolfes", "Full initializer",
+    ant::TCalibrationData* cdata2 = new ant::TCalibrationData("Martin Wolfes",
                                                               1234567890,
                                                               tmpfile.filename,
                                                               ant::TID(0,1011,false),
@@ -41,7 +41,6 @@ void dotest()
     tree->Branch("cdata2",cdata2);
 
     cdata->Author  = "Martin Wolfes";
-    cdata->Comment = "This is a test, [junk]";
 
 
     cdata->Data.emplace_back(1,2.1);

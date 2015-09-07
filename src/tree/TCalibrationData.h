@@ -16,7 +16,6 @@ struct TCalibrationData
         #endif
 {
     std::string Author;
-    std::string Comment;
 
     std::int64_t TimeStamp;
 
@@ -34,14 +33,12 @@ struct TCalibrationData
 
 #ifndef __CINT__
     TCalibrationData(const std::string& author,
-                     const std::string& comment,
                      const std::time_t& time,
                      const std::string& calibrationID,
                      const TID& first_id,
                      const TID& last_id
                      ) :
         Author(author),
-        Comment(comment),
         TimeStamp(time),
         CalibrationID(calibrationID),
         Extendable(false),
@@ -57,7 +54,6 @@ struct TCalibrationData
                      const TID& last_id,
                      bool extendable = false) :
         Author(),
-        Comment(),
         TimeStamp(),
         CalibrationID(calibrationID),
         Extendable(extendable),
@@ -69,7 +65,7 @@ struct TCalibrationData
 
     virtual std::ostream& Print( std::ostream& s) const override {
         s << "TCalibrationData:\n";
-        s << "  Generated at    " << std_ext::to_iso8601(TimeStamp) << '\n';
+        s << "  Generated at    " << std_ext::to_iso8601(TimeStamp) << " by " << Author << '\n';
         s << "  CalibrationID:  " << CalibrationID << '\n';
         s << "  Valid for IDs:  [" << FirstID << ", " << LastID << "]";
         if(Extendable)
@@ -81,7 +77,6 @@ struct TCalibrationData
 
     TCalibrationData() :
         Author(),
-        Comment(),
         TimeStamp(),
         CalibrationID(),
         Extendable(false),

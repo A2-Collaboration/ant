@@ -260,7 +260,6 @@ void CB_TimeWalk::TheGUI::StoreFinishRange(const interval<TID>& range)
 {
     TCalibrationData cdata(
                 "Unknown", /// \todo get static information about author/comment?
-                "No Comment",
                 time(nullptr),
                 GetName(),
                 range.Start(),
