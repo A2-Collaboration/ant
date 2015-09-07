@@ -256,8 +256,6 @@ void PID_PhiAngle::TheGUI::StoreFinishRange(const interval<TID>& range)
     delete h_result;
 
     TCalibrationData cdata(
-                "Unknown", /// \todo get static information about author/comment?
-                time(nullptr),
                 GetName()+"/SingleChannels",
                 range.Start(),
                 range.Stop()
@@ -276,8 +274,6 @@ void PID_PhiAngle::TheGUI::StoreFinishRange(const interval<TID>& range)
     }
 
     TCalibrationData cdata_offset(
-                "Unknown", /// \todo get static information about author/comment?
-                time(nullptr),
                 GetName(),
                 range.Start(),
                 range.Stop()

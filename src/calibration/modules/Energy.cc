@@ -214,8 +214,6 @@ void Energy::GUI_CalibType::StartRange(const interval<TID>& range)
 void Energy::GUI_CalibType::StoreFinishRange(const interval<TID>& range)
 {
     TCalibrationData cdata(
-                "Unknown", /// \todo get static information about author/comment?
-                time(nullptr),
                 GetName(),
                 range.Start(),
                 range.Stop()
@@ -237,5 +235,5 @@ void Energy::GUI_CalibType::StoreFinishRange(const interval<TID>& range)
 
     calibrationManager->Add(cdata);
 
-    LOG(INFO) << "Added TCalibrationData " << cdata;
+    LOG(INFO) << "Added " << cdata;
 }

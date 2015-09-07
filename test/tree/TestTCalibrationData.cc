@@ -29,9 +29,7 @@ void dotest()
     ant::TCalibrationData* cdata = new ant::TCalibrationData(tmpfile.filename,ant::TID(0,0,false),ant::TID(0,1,true));
     tree->Branch("cdata",cdata);
 
-    ant::TCalibrationData* cdata2 = new ant::TCalibrationData("Martin Wolfes",
-                                                              1234567890,
-                                                              tmpfile.filename,
+    ant::TCalibrationData* cdata2 = new ant::TCalibrationData(tmpfile.filename,
                                                               ant::TID(0,1011,false),
                                                               ant::TID(0,1213,true)
                                                               );

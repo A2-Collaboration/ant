@@ -275,8 +275,6 @@ void Time::TheGUI::StoreFinishRange(const interval<TID>& range)
     theCanvas->Update();
 
     TCalibrationData cdata(
-                "Unknown", /// \todo get static information about author/comment?
-                time(nullptr),
                 GetName(),
                 range.Start(),
                 range.Stop()
@@ -297,5 +295,5 @@ void Time::TheGUI::StoreFinishRange(const interval<TID>& range)
 
     calmgr->Add(cdata);
 
-    LOG(INFO) << "Added TCalibrationData " << cdata;
+    LOG(INFO) << "Added " << cdata;
 }

@@ -5,6 +5,10 @@
 #include <string>
 #include <ctime>
 
+#ifndef __CINT__
+#include "base/GitInfo.h"
+#endif
+
 #define ANT_CALIBRATION_DATA_VERSION 1
 
 namespace ant {
@@ -32,29 +36,13 @@ struct TCalibrationData
     std::vector<TFitParameters> FitParameters;
 
 #ifndef __CINT__
-    TCalibrationData(const std::string& author,
-                     const std::time_t& time,
-                     const std::string& calibrationID,
-                     const TID& first_id,
-                     const TID& last_id
-                     ) :
-        Author(author),
-        TimeStamp(time),
-        CalibrationID(calibrationID),
-        Extendable(false),
-        FirstID(first_id),
-        LastID(last_id),
-        Data(),
-        FitParameters()
-    {}
-
-    // this constructor is used by some tests
     TCalibrationData(const std::string& calibrationID,
                      const TID& first_id,
                      const TID& last_id,
-                     bool extendable = false) :
-        Author(),
-        TimeStamp(),
+                     bool extendable = false
+                     ) :
+        Author(GitInfo::GetUser()),
+        TimeStamp(std::time(nullptr)),
         CalibrationID(calibrationID),
         Extendable(extendable),
         FirstID(first_id),

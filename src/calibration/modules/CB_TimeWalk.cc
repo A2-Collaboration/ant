@@ -259,8 +259,6 @@ bool CB_TimeWalk::TheGUI::FinishRange()
 void CB_TimeWalk::TheGUI::StoreFinishRange(const interval<TID>& range)
 {
     TCalibrationData cdata(
-                "Unknown", /// \todo get static information about author/comment?
-                time(nullptr),
                 GetName(),
                 range.Start(),
                 range.Stop()

@@ -93,11 +93,10 @@ unsigned dotest_store(const string& foldername)
 
     DataManager calibman(foldername);
 
-    TCalibrationData cdata("M",
-                           0,
-                           "1",
+    TCalibrationData cdata("1",
                            TID(0,0u),TID(0,16u)
                            );
+    cdata.TimeStamp = 0;
     cdata.Data.emplace_back(0,1);
     cdata.Data.emplace_back(1,2);
     calibman.Add(cdata);
@@ -106,11 +105,11 @@ unsigned dotest_store(const string& foldername)
     auto mdata = [&cdata,&ndata] (unsigned first, unsigned last, unsigned time)
     {
         ndata++;
-        TCalibrationData tmp(cdata.Author,
-                             time,
-                             cdata.CalibrationID,
+        TCalibrationData tmp(cdata.CalibrationID,
                              TID(0,first),TID(0,last)
                              );
+        tmp.Author = cdata.Author;
+        tmp.TimeStamp = time;
         tmp.Data = cdata.Data;
         return tmp;
     };
