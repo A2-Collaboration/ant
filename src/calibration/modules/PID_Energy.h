@@ -14,6 +14,10 @@ class PID;
 
 namespace calibration {
 
+namespace gui {
+class FitGausPol0;
+}
+
 class PID_Energy : public Energy
 {
 
@@ -37,18 +41,33 @@ public:
         TH2* pedestals = nullptr;
 
     public:
-         ThePhysics(const std::string& name, unsigned nChannels);
+         ThePhysics(const std::string& name, const std::string& hist_name, unsigned nChannels);
 
         virtual void ProcessEvent(const analysis::data::Event& event) override;
         virtual void Finish() override;
         virtual void ShowResult() override;
-    };
+    }; // ThePhysics
 
+    struct TheGUI : GUI_CalibType {
+        TheGUI(const std::string& basename,
+               CalibType& type,
+               const std::shared_ptr<DataManager>& calmgr,
+               const std::shared_ptr<Detector_t>& detector);
+
+        virtual void InitGUI(gui::ManagerWindow_traits* window) override;
+        virtual DoFitReturn_t DoFit(TH1* hist, unsigned channel) override;
+        virtual void DisplayFit() override;
+        virtual void StoreFit(unsigned channel) override;
+        virtual bool FinishRange() override;
+    protected:
+        std::shared_ptr<gui::FitGausPol0> func;
+        gui::CalCanvas* canvas;
+        TH1*  h_projection = nullptr;
+
+    }; // TheGUI
 
     virtual std::unique_ptr<analysis::Physics> GetPhysicsModule();
-    virtual void GetGUIs(std::list<std::unique_ptr<calibration::gui::Manager_traits> >& guis) override {
-        guis.clear();
-    }
+    virtual void GetGUIs(std::list<std::unique_ptr<calibration::gui::Manager_traits> >& guis) override;
 
 protected:
     std::shared_ptr<expconfig::detector::PID> pid_detector;
