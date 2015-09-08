@@ -20,6 +20,7 @@ addons:
     - libxext-dev
     - liblzma-dev
     - graphviz
+    - libgsl0-dev
 
 cache:
   directories:

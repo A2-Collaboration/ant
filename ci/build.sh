@@ -3,7 +3,7 @@
 set -e
 
 CACHE=$HOME/cache
-CACHE_REV=$CACHE/.rev2
+CACHE_REV=$CACHE/.rev3
 NCPU=2
 
 pushd $PWD
@@ -52,7 +52,7 @@ else
     rm -rf $CACHE/root
     wget http://root.cern.ch/download/root_v5.34.32.source.tar.gz -O $CACHE/root.tar.gz
     tar -xf $CACHE/root.tar.gz -C $CACHE
-    cd $CACHE/root && ./configure --minimal && make -j$NCPU
+    cd $CACHE/root && ./configure && make -j$NCPU
     cd $CACHE/root && source ./bin/thisroot.sh
     rm $CACHE/root.tar.gz
 
