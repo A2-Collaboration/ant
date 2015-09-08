@@ -48,6 +48,40 @@ void mmStack(TDirectory* dir);
 void gggStack(TDirectory *dir);
 void nPhotons(TDirectory* dir);
 
+
+class StringColorManager {
+protected:
+    std::map<std::string, Color_t> used;
+    static const std::vector<Color_t> cols;
+
+public:
+
+    Color_t Get(const std::string& s) {
+        const auto entry = used.find(s);
+        if(entry == used.end()) {
+            const auto index = used.size() % cols.size();
+            const auto color = cols.at(index);
+            used.emplace(s,color);
+            return color;
+        } else {
+            return entry->second;
+        }
+    }
+
+    void PrintList() const {
+        for(const auto& entry : used) {
+            cout << entry.first << endl;
+        }
+    }
+
+};
+
+const std::vector<Color_t> StringColorManager::cols = {kRed, kGreen+1, kBlue, kMagenta, kCyan, kOrange, kPink+9, kSpring+10, kGray};
+
+StringColorManager colors;
+
+const static auto show_top_n = 5;
+
 int main(int argc, char** argv) {
     SetupLogger();
 
@@ -79,6 +113,8 @@ int main(int argc, char** argv) {
     gggStack(dir);
     nPhotons(dir);
 
+    colors.PrintList();
+
     app.Run();
 
 
@@ -91,27 +127,34 @@ void ggStack(TDirectory *dir) {
 
     hists.sort([] (const TH1* a, const TH1* b) { return a->GetEntries() > b->GetEntries();});
 
-    hstack gg_stack("2#gamma IM");
-
-    const std::vector<Color_t> cols = {kRed, kGreen, kBlue, kYellow, kMagenta, kCyan, kOrange, kPink+9, kSpring+10, kGray};
-    auto cit = getCirculatIterator(cols.begin(), cols.end());
+    hstack gg_stack("2#gamma IM", "2 #gamma invariant mass after #omega cut");
 
     int i=0;
+        TH1D* sum = nullptr;
     for(auto& h : hists) {
-
-        h->SetFillColor(*(cit++));
+        if(!sum) {
+           sum = (TH1D*)h->Clone();
+           sum->SetLineWidth(2);
+           sum->SetLineColor(kBlack);
+           sum->SetTitle("Sum");
+           gg_stack << sum;
+        } else {
+            sum->Add(h);
+        }
         string title(h->GetTitle());
         std_ext::removesubstr(title, "Pluto_dilepton ");
         std_ext::removesubstr(title, "2#gamma ");
         h->SetTitle(title.c_str());
+        h->SetLineWidth(2);
+        h->SetLineColor(colors.Get(title));
 
         gg_stack << h;
-        if(i++ == 9)
+        if(i++ == show_top_n)
             break;
     }
 
     canvas c("gg im");
-    c << padoption::set(padoption_t::Legend) << gg_stack << endc;
+    c << padoption::set(padoption_t::Legend) << drawoption("nostack")<< gg_stack << endc;
 }
 
 void mmStack(TDirectory *dir) {
@@ -121,27 +164,35 @@ void mmStack(TDirectory *dir) {
 
     hstack gg_stack("MM");
 
-    const std::vector<Color_t> cols = {kRed, kGreen, kBlue, kMagenta, kCyan, kOrange, kPink+9, kSpring+10, kGray};
-    auto cit = getCirculatIterator(cols.begin(), cols.end());
-
     int i=0;
+    TH1D* sum = nullptr;
     for(auto& h : hists) {
 
-        h->SetLineColor(*(cit++));
-        h->SetLineWidth(2);
+        if(!sum) {
+           sum = (TH1D*)h->Clone();
+           sum->SetLineWidth(2);
+           sum->SetLineColor(kBlack);
+           sum->SetTitle("Sum");
+           gg_stack << sum;
+        } else {
+            sum->Add(h);
+        }
         string title(h->GetTitle());
         std_ext::removesubstr(title, "Pluto_dilepton ");
         std_ext::removesubstr(title, "MM ");
         h->SetTitle(title.c_str());
+        h->SetLineWidth(2);
+        h->SetLineColor(colors.Get(title));
 
         gg_stack << h;
-        if(i == 3)
+        if(i == show_top_n)
             break;
         ++i;
     }
 
     canvas c("mm");
     c << padoption::set(padoption_t::Legend) << drawoption("nostack") << gg_stack << endc;
+
 }
 
 void gggStack(TDirectory *dir) {
@@ -149,27 +200,35 @@ void gggStack(TDirectory *dir) {
 
     hists.sort([] (const TH1* a, const TH1* b) { return a->GetEntries() > b->GetEntries();});
 
-    hstack ggg_stack("3#gamma IM");
-
-    const std::vector<Color_t> cols = {kRed, kGreen, kBlue, kYellow, kMagenta, kCyan, kOrange, kPink+9, kSpring+10, kGray};
-    auto cit = getCirculatIterator(cols.begin(), cols.end());
+    hstack ggg_stack("3#gamma IM", "3 #gamma invariant mass");
 
     int i=0;
+    TH1D* sum = nullptr;
     for(auto& h : hists) {
 
-        h->SetFillColor(*(cit++));
+        if(!sum) {
+           sum = (TH1D*)h->Clone();
+           sum->SetLineWidth(2);
+           sum->SetLineColor(kBlack);
+           sum->SetTitle("Sum");
+           ggg_stack << sum;
+        } else {
+            sum->Add(h);
+        }
         string title(h->GetTitle());
         std_ext::removesubstr(title, "Pluto_dilepton ");
         std_ext::removesubstr(title, "3#gamma ");
         h->SetTitle(title.c_str());
+        h->SetLineWidth(2);
+        h->SetLineColor(colors.Get(title));
 
         ggg_stack << h;
-        if(i++ == 9)
+        if(i++ == show_top_n)
             break;
     }
 
     canvas c("ggg im");
-    c << padoption::set(padoption_t::Legend) << ggg_stack << endc;
+    c << padoption::set(padoption_t::Legend) << drawoption("nostack") << ggg_stack << endc;
 }
 
 void nPhotons(TDirectory *dir) {
