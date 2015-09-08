@@ -254,7 +254,8 @@ void ManagerWindow::RunManager()
                 break;
         }
         else if(ret == Manager::RunReturn_t::Exit) {
-            gApplication->Terminate(0);
+            if(!gROOT->IsBatch())
+                gApplication->Terminate(0);
             break;
         }
         gSystem->ProcessEvents();

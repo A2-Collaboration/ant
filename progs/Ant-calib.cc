@@ -9,6 +9,7 @@
 #include "TROOT.h"
 
 #include <iostream>
+#include <cstring>
 
 using namespace std;
 using namespace ant;
@@ -73,8 +74,13 @@ int main(int argc, char** argv) {
 
     manager->SetModule(calibrationgui);
 
-    int fake_argc=0;
-    char** fake_argv=nullptr;
+    int fake_argc=1;
+    char* fake_argv[2];
+    fake_argv[0] = argv[0];
+    if(cmd_batchmode->isSet()) {
+        //const char* arg_quit = "-q";
+        fake_argv[fake_argc++] = strdup("-q");
+    }
     auto app = new TRint("Ant-calib",&fake_argc,fake_argv);
     if(cmd_batchmode->isSet()) {
         gROOT->SetBatch();
