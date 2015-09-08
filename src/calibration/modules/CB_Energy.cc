@@ -51,7 +51,7 @@ unique_ptr<analysis::Physics> CB_Energy::GetPhysicsModule()
 
 void CB_Energy::GetGUIs(list<unique_ptr<gui::Manager_traits> >& guis)
 {
-    guis.emplace_back(std_ext::make_unique<TheGUI>(
+    guis.emplace_back(std_ext::make_unique<GUI_Gains>(
                           GetName(),
                           Gains,
                           calibrationManager,
@@ -108,7 +108,7 @@ void CB_Energy::ThePhysics::ShowResult()
     canvas(GetName()) << drawoption("colz") << ggIM << endc;
 }
 
-CB_Energy::TheGUI::TheGUI(const string& basename,
+CB_Energy::GUI_Gains::GUI_Gains(const string& basename,
                           CalibType& type,
                           const std::shared_ptr<DataManager>& calmgr,
                           const std::shared_ptr<Detector_t>& detector) :
@@ -118,7 +118,7 @@ CB_Energy::TheGUI::TheGUI(const string& basename,
 
 }
 
-void CB_Energy::TheGUI::InitGUI(gui::ManagerWindow_traits* window)
+void CB_Energy::GUI_Gains::InitGUI(gui::ManagerWindow_traits* window)
 {
     canvas = window->AddCalCanvas();
     h_peaks = new TH1D("h_peaks","Peak positions",GetNumberOfChannels(),0,GetNumberOfChannels());
@@ -129,7 +129,7 @@ void CB_Energy::TheGUI::InitGUI(gui::ManagerWindow_traits* window)
     h_relative->SetYTitle("Relative change / %");
 }
 
-gui::Manager_traits::DoFitReturn_t CB_Energy::TheGUI::DoFit(TH1* hist, unsigned channel)
+gui::Manager_traits::DoFitReturn_t CB_Energy::GUI_Gains::DoFit(TH1* hist, unsigned channel)
 {
     if(detector->IsIgnored(channel))
         return DoFitReturn_t::Skip;
@@ -153,13 +153,13 @@ gui::Manager_traits::DoFitReturn_t CB_Energy::TheGUI::DoFit(TH1* hist, unsigned 
     return DoFitReturn_t::Next;
 }
 
-void CB_Energy::TheGUI::DisplayFit()
+void CB_Energy::GUI_Gains::DisplayFit()
 {
     canvas->Divide(1,1);
     canvas->Show(h_projection, func.get());
 }
 
-void CB_Energy::TheGUI::StoreFit(unsigned channel)
+void CB_Energy::GUI_Gains::StoreFit(unsigned channel)
 {
     const double oldValue = previousValues[channel];
     /// \todo obtain convergenceFactor and pi0mass from config or database
@@ -187,7 +187,7 @@ void CB_Energy::TheGUI::StoreFit(unsigned channel)
     h_relative->Fill(channel, relative_change);
 }
 
-bool CB_Energy::TheGUI::FinishRange()
+bool CB_Energy::GUI_Gains::FinishRange()
 {
     canvas->Divide(2,2);
 

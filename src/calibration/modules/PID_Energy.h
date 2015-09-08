@@ -48,8 +48,8 @@ public:
         virtual void ShowResult() override;
     }; // ThePhysics
 
-    struct TheGUI : GUI_CalibType {
-        TheGUI(const std::string& basename,
+    struct GUI_Pedestals : GUI_CalibType {
+        GUI_Pedestals(const std::string& basename,
                CalibType& type,
                const std::shared_ptr<DataManager>& calmgr,
                const std::shared_ptr<Detector_t>& detector);
@@ -66,7 +66,7 @@ public:
 
     }; // TheGUI
 
-    virtual std::unique_ptr<analysis::Physics> GetPhysicsModule();
+    virtual std::unique_ptr<analysis::Physics> GetPhysicsModule() override;
     virtual void GetGUIs(std::list<std::unique_ptr<calibration::gui::Manager_traits> >& guis) override;
 
 protected:

@@ -57,7 +57,7 @@ unique_ptr<analysis::Physics> PID_Energy::GetPhysicsModule()
 
 void PID_Energy::GetGUIs(std::list<std::unique_ptr<gui::Manager_traits> >& guis)
 {
-    guis.emplace_back(std_ext::make_unique<TheGUI>(
+    guis.emplace_back(std_ext::make_unique<GUI_Pedestals>(
                           GetName(),
                           Pedestals,
                           calibrationManager,
@@ -101,7 +101,7 @@ void PID_Energy::ThePhysics::ShowResult()
     canvas(GetName()) << drawoption("colz") << pedestals << endc;
 }
 
-PID_Energy::TheGUI::TheGUI(const string& basename,
+PID_Energy::GUI_Pedestals::GUI_Pedestals(const string& basename,
                           CalibType& type,
                           const std::shared_ptr<DataManager>& calmgr,
                           const std::shared_ptr<Detector_t>& detector) :
@@ -111,12 +111,12 @@ PID_Energy::TheGUI::TheGUI(const string& basename,
 
 }
 
-void PID_Energy::TheGUI::InitGUI(gui::ManagerWindow_traits* window)
+void PID_Energy::GUI_Pedestals::InitGUI(gui::ManagerWindow_traits* window)
 {
     canvas = window->AddCalCanvas();
 }
 
-gui::Manager_traits::DoFitReturn_t PID_Energy::TheGUI::DoFit(TH1* hist, unsigned channel)
+gui::Manager_traits::DoFitReturn_t PID_Energy::GUI_Pedestals::DoFit(TH1* hist, unsigned channel)
 {
     if(detector->IsIgnored(channel))
         return DoFitReturn_t::Skip;
@@ -140,12 +140,12 @@ gui::Manager_traits::DoFitReturn_t PID_Energy::TheGUI::DoFit(TH1* hist, unsigned
     return DoFitReturn_t::Next;
 }
 
-void PID_Energy::TheGUI::DisplayFit()
+void PID_Energy::GUI_Pedestals::DisplayFit()
 {
     canvas->Show(h_projection, func.get());
 }
 
-void PID_Energy::TheGUI::StoreFit(unsigned channel)
+void PID_Energy::GUI_Pedestals::StoreFit(unsigned channel)
 {
 
     const double oldValue = previousValues[channel];
@@ -164,7 +164,7 @@ void PID_Energy::TheGUI::StoreFit(unsigned channel)
     fitParameters[channel] = func->Save();
 }
 
-bool PID_Energy::TheGUI::FinishRange()
+bool PID_Energy::GUI_Pedestals::FinishRange()
 {
     return false;
 }
