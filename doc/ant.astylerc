@@ -1,6 +1,10 @@
 # ant code style
-# To be tested. not yet the same as in qt-creator
-#
+# please use version 2.05.1
+
+# run options: no backups, recursive
+--suffix=none
+--recursive
+--exclude=base/detail
 
 ## Brackets
 
@@ -12,7 +16,7 @@
 --attach-classes
 
 ## Indentation
---indent=spaces=2
+--indent=spaces=4
 --min-conditional-indent=0
 
 ## Pointers
@@ -21,12 +25,9 @@
 
 ## Parentheses
 --unpad-paren
---pad-header
 --pad-oper
 
 ## Blocks and Lines
+#--break-blocks
 --keep-one-line-blocks
---delete-empty-lines
---break-blocks
---fill-empty-lines
---max-code-length=80
+--max-code-length=120
