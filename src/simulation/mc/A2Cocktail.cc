@@ -2,6 +2,8 @@
 
 #include <iostream>
 
+#include "PlutoExtensions.h"
+
 #include "TH1D.h"
 
 #pragma GCC diagnostic push
@@ -154,6 +156,23 @@ PReaction *A2Cocktail::makeReaction(const double& energy, const string &particle
         reaction->AddBulk(bulkdecay);
     }
     return reaction;
+}
+
+A2Cocktail::A2Cocktail(const string& outfile,
+                       const double& Emin, const double& Emax,
+                       const unsigned int numEnergyBins,
+                       bool saveUnstable, bool doBulk,
+                       std::vector<string> filenames,
+                       const string& energyDistribution):
+    _outfileName(outfile),
+    _Emin(Emin), _Emax(Emax),
+    _numEnergyBins(numEnergyBins),
+    _saveUnstable(saveUnstable),
+    _doBulk(doBulk),
+    _energyFunction("beamEnergy",strdup(energyDistribution.c_str()),Emin,Emax)
+{
+    init(filenames);
+    UpdatePluteDataBase();
 }
 
 

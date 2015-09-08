@@ -92,18 +92,9 @@ public:
     A2Cocktail(const std::string& outfile,
                const double& Emin, const double& Emax,
                const unsigned int numEnergyBins,
-               bool saveUnstable = 0, const bool doBulk = 1,
+               bool saveUnstable = 0, bool doBulk = 1,
                std::vector<std::string> filenames = {},
-               const std::string& energyDistribution = "1.0 / x" ):
-        _outfileName(outfile),
-        _Emin(Emin), _Emax(Emax),
-        _numEnergyBins(numEnergyBins),
-        _saveUnstable(saveUnstable),
-        _doBulk(doBulk),
-        _energyFunction("beamEnergy",strdup(energyDistribution.c_str()),Emin,Emax)
-    {
-        init(filenames);
-    }
+               const std::string& energyDistribution = "1.0 / x" );
 
     /**
      * @brief getRandomReaction

@@ -8,6 +8,7 @@ set(XSECTION_DATA_SRC  ${CMAKE_CURRENT_BINARY_DIR}/chgen.h)
 set(SIMULATION_MC
   A2Channels.cc
   A2Cocktail.cc
+  PlutoExtensions.h
 )
 
 
