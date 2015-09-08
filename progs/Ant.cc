@@ -49,6 +49,7 @@ public:
             return kTRUE;
         }
         running = false;
+        cout << " >>> Interrupted! " << endl;
         return kTRUE;
     }
 };
