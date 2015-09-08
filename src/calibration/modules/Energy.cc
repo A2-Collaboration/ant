@@ -59,7 +59,7 @@ void Energy::ApplyTo(const readhits_t& hits, extrahits_t& extrahits)
         // Values might already be filled
         // (for example by previous calibration run, or A2Geant unpacker),
         // then we apply the threshold and the relative gain only
-        std::vector<double> values(0);
+        std::vector<double> values;
 
         // prefer RawData if available
         if(!dethit->RawData.empty()) {
@@ -68,21 +68,25 @@ void Energy::ApplyTo(const readhits_t& hits, extrahits_t& extrahits)
 
             // for pedestal calibration, we insert extra hits here
             // containing the raw values
-            extrahits.emplace_back(
-                        LogicalChannel_t{
-                            dethit->GetDetectorType(),
-                            Channel_t::Type_t::Pedestal,
-                            dethit->Channel
-                        },
-                        values
-                        );
+            if(NeedsPedestals()) {
+                extrahits.emplace_back(
+                            LogicalChannel_t{
+                                dethit->GetDetectorType(),
+                                Channel_t::Type_t::Pedestal,
+                                dethit->Channel
+                            },
+                            values
+                            );
+            }
 
             // apply pedestal/gain to each of the values (might be multihit)
             for(double& value : values) {
-                if(Pedestals.Values.empty())
-                    value -=Pedestals.DefaultValue;
-                else
-                    value -= Pedestals.Values[dethit->Channel];
+                if(NeedsPedestals()) {
+                    if(Pedestals.Values.empty())
+                        value -= Pedestals.DefaultValue;
+                    else
+                        value -= Pedestals.Values[dethit->Channel];
+                }
 
                 if(Gains.Values.empty())
                     value *= Gains.DefaultValue;

@@ -40,6 +40,12 @@ protected:
     virtual ~Energy();
 
     /**
+     * @brief NeedsPedestals can be overridden by base class to disable pedestal insertion
+     * @return true if pedestal values (no gain applied, unsubtracted) are needed
+     */
+    virtual bool NeedsPedestals() const { return true; }
+
+    /**
      * @brief The CalibType struct stores the data
      * for the Updateable interface and for the GUI
      */

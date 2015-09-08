@@ -67,6 +67,9 @@ public:
 
 protected:
     std::shared_ptr<expconfig::detector::CB> cb_detector;
+
+    // CB has online pedestal subtraction
+    virtual bool NeedsPedestals() const override { return false; }
 };
 
 }} // namespace ant::calibration
