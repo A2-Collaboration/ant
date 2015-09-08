@@ -57,24 +57,27 @@ public:
 int main(int argc, char** argv) {
     SetupLogger();
 
-    const string arg1(argv[1]);
+    // check for bash completion commands
+    if(argc == 2) {
+        const string arg1(argv[1]);
 
-    if(arg1 == "--list-calibrations") {
-        return 0;
-    }
-
-    if(arg1 == "--list-physics") {
-        for(const auto& name : analysis::PhysicsRegistry::get().GetList()) {
-            cout << name << endl;
+        if(arg1 == "--list-calibrations") {
+            return 0;
         }
-        return 0;
-    }
 
-    if(arg1 == "--list-setups") {
-        for(const auto& name : ExpConfig::Setup::GetNames()) {
-            cout << name << endl;
+        if(arg1 == "--list-physics") {
+            for(const auto& name : analysis::PhysicsRegistry::get().GetList()) {
+                cout << name << endl;
+            }
+            return 0;
         }
-        return 0;
+
+        if(arg1 == "--list-setups") {
+            for(const auto& name : ExpConfig::Setup::GetNames()) {
+                cout << name << endl;
+            }
+            return 0;
+        }
     }
 
 
