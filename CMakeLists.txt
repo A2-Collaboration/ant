@@ -40,3 +40,9 @@ include(cmake/doxygen.cmake)
 # create a rootlogon.C
 configure_file(cmake/rootlogon.C.in rootlogon.C)
 
+# link the AntSubmit file
+add_custom_target(link_AntSubmit ALL
+  COMMAND ${CMAKE_COMMAND} -E create_symlink
+  "${CMAKE_SOURCE_DIR}/extra/AntSubmit"
+  "${EXECUTABLE_OUTPUT_PATH}/AntSubmit"
+  )
