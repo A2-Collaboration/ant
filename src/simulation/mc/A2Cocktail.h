@@ -59,7 +59,8 @@ public:
 /**
  * @brief The A2Cocktail
  */
-class A2Cocktail: public ManagedPlutoReaction{
+class A2Cocktail: public ManagedPlutoReaction
+{
 private:
     /**
      * @brief The BinContent class is a container for all necessary information in each energy channel.
@@ -128,7 +129,8 @@ public:
  * @brief The A2OldCocktail class generates MC events for a fixed energy, using the Pluto class PDecayManager
  */
 // @ Andi bitte nicht loeschen!!!!!
-class A2OldCocktail{
+class A2OldCocktail
+{
 private:
 
     double _E;
@@ -159,7 +161,8 @@ public:
             _pdm->AddBulk(_bulkdecay);
         }
     }
-    int Sample(unsigned int n_evts, const std::string& ofile) {
+    int Sample(unsigned int n_evts, const std::string& ofile)
+    {
         return _pdm->Loop(n_evts,0,strdup(ofile.c_str()) ,_stable,0,1,0,1);
         //                                             ...,stable,obs,vertex,ascii,random)
         //                                                                   files  order

@@ -13,7 +13,8 @@
 using namespace std;
 using namespace ant::simulation::mc;
 
-int main( int argc, char** argv ) {
+int main( int argc, char** argv )
+{
 
     TCLAP::CmdLine cmd("Ant-cocktail - Pluto-based cocktail generator for A2-Physics", ' ', "0.1");
 
@@ -27,6 +28,7 @@ int main( int argc, char** argv ) {
     auto cmd_noUnstable = cmd.add<TCLAP::SwitchArg>        ("",  "no-unstable",   "disable Pluto-Bulk-Interface", false);
 
     auto cmd_dataFiles  = cmd.add<TCLAP::MultiArg<string>> ("",  "datafiles",     "Xsection-data-files",          false,       "inputfiles");
+
     cmd.parse(argc, argv);
 
     A2Cocktail cocktail(cmd_outfile->getValue(),
@@ -35,7 +37,8 @@ int main( int argc, char** argv ) {
                         !cmd_noUnstable->isSet(), !cmd_noBulk->isSet(),
                         cmd_dataFiles->getValue()
                         );
-    cout << cocktail.Sample(cmd_numEvents->getValue()) << endl;
+
+    cout << "Events with error: " << cocktail.Sample(cmd_numEvents->getValue()) << endl;
     cocktail.Finish();
 }
 

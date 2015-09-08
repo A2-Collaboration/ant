@@ -31,7 +31,8 @@ namespace mc
 {
 
 
-struct ParticleData{
+struct ParticleData
+{
     std::vector<double> Energies;
     std::vector<double> Xsections;
 } ;
@@ -39,7 +40,8 @@ struct ParticleData{
 // Cross-section-list is a collection of named Particle data
 using XsecList = std::map<std::string,ParticleData>;
 
-class A2ChannelManager {
+class A2ChannelManager
+{
 private:
     XsecList _XList;
 

@@ -107,10 +107,10 @@ PReaction *A2Cocktail::makeReaction(const double& energy, const string &particle
     // -- Init bulk-interface if needed ---
     if (_doBulk)
     {
-            PPlutoBulkDecay* bulkdecay = new PPlutoBulkDecay();
-            bulkdecay->SetRecursiveMode(1);
-            bulkdecay->SetTauMax(0.001);
-            reaction->AddBulk(bulkdecay);
+        PPlutoBulkDecay* bulkdecay = new PPlutoBulkDecay();
+        bulkdecay->SetRecursiveMode(1);
+        bulkdecay->SetTauMax(0.001);
+        reaction->AddBulk(bulkdecay);
     }
     return reaction;
 }
@@ -130,9 +130,9 @@ unsigned long A2Cocktail::Sample(const unsigned long &nevts) const
 
 void A2Cocktail::Finish() const
 {
-   if (_outfile)
-   {
-       _outfile->Write();
-       _outfile->Close();
-   }
+    if (_outfile)
+    {
+        _outfile->Write();
+        _outfile->Close();
+    }
 }
