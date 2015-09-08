@@ -4,14 +4,55 @@
 
 #include "TH1D.h"
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wunused-local-typedefs"
+#pragma GCC diagnostic ignored "-Wvla"
+#pragma GCC diagnostic ignored "-Wignored-qualifiers"
+#pragma GCC diagnostic ignored "-Weffc++"
+#pragma GCC diagnostic ignored "-Wwrite-strings"
+#pragma GCC diagnostic ignored "-Wunused-parameter"
+#include "PDecayManager.h"
+#include "PDecayChannel.h"
+#include "PReaction.h"
+#include "PParticle.h"
+#pragma GCC diagnostic pop
+
 using namespace std;
 using namespace ant::simulation::mc;
 
 
-void A2OldCocktail::_makeDecays()
+void FixedEnergyCocktail::_makeDecays()
 {
     A2ChannelManager a2man;
     _primary_decays = a2man.GenerateDecays(_E);
+}
+
+FixedEnergyCocktail::FixedEnergyCocktail(const string& outfile, double Emin, double Emax, bool bulk, bool stable):
+    _E(( Emin + Emax ) / 2.0),
+    _stable(stable),
+    ofile(outfile)
+{
+
+    _fusion = new PParticle( PParticle(1,_E) + PParticle(14));
+    _pdm = new PDecayManager();
+
+    _makeDecays();
+
+    _pdm->InitReaction(_fusion,_primary_decays);
+
+    if(bulk){
+        _bulkdecay = new PPlutoBulkDecay();
+        _bulkdecay->SetRecursiveMode(1);
+        _bulkdecay->SetTauMax(0.001);
+        _pdm->AddBulk(_bulkdecay);
+    }
+}
+
+unsigned long FixedEnergyCocktail::Sample(const unsigned long& nevts) const
+{
+    return _pdm->Loop(nevts,0,strdup(ofile.c_str()) ,_stable,0,1,0,1);
+    //                                             ...,stable,obs,vertex,ascii,random)
+    //                                                                   files  order
 }
 
 

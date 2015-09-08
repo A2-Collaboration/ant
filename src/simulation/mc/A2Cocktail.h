@@ -14,18 +14,6 @@
 #include <string>
 #include <vector>
 
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wunused-local-typedefs"
-#pragma GCC diagnostic ignored "-Wvla"
-#pragma GCC diagnostic ignored "-Wignored-qualifiers"
-#pragma GCC diagnostic ignored "-Weffc++"
-#pragma GCC diagnostic ignored "-Wwrite-strings"
-#pragma GCC diagnostic ignored "-Wunused-parameter"
-#include "PDecayChannel.h"
-#include "PDecayManager.h"
-#include "PReaction.h"
-#include "PParticle.h"
-#pragma GCC diagnostic pop
 
 #include "A2Channels.h"
 
@@ -35,7 +23,11 @@
 #include "TTree.h"
 #include "TRandom3.h"
 
-
+class PDecayManager;
+class PDecayChannel;
+class PReaction;
+class PParticle;
+class PPlutoBulkDecay;
 
 namespace ant
 {
@@ -129,12 +121,13 @@ public:
  * @brief The A2OldCocktail class generates MC events for a fixed energy, using the Pluto class PDecayManager
  */
 // @ Andi bitte nicht loeschen!!!!!
-class A2OldCocktail
+class FixedEnergyCocktail: public ManagedPlutoReaction
 {
 private:
 
     double _E;
     bool _stable;
+    std::string ofile;
 
     PDecayManager* _pdm;
     PParticle* _fusion;
@@ -144,29 +137,9 @@ private:
     void _makeDecays();
 
 public:
-    A2OldCocktail(double Emin, double Emax, bool bulk, bool stable):
-        _E(( Emin + Emax ) / 2.0), _stable(stable){
+    FixedEnergyCocktail(const std::string& outfile, double Emin, double Emax, bool bulk, bool stable);
 
-        _fusion = new PParticle( PParticle(1,_E) + PParticle(14));
-        _pdm = new PDecayManager();
-
-        _makeDecays();
-
-        _pdm->InitReaction(_fusion,_primary_decays);
-
-        if(bulk){
-            _bulkdecay = new PPlutoBulkDecay();
-            _bulkdecay->SetRecursiveMode(1);
-            _bulkdecay->SetTauMax(0.001);
-            _pdm->AddBulk(_bulkdecay);
-        }
-    }
-    int Sample(unsigned int n_evts, const std::string& ofile)
-    {
-        return _pdm->Loop(n_evts,0,strdup(ofile.c_str()) ,_stable,0,1,0,1);
-        //                                             ...,stable,obs,vertex,ascii,random)
-        //                                                                   files  order
-    }
+    virtual unsigned long Sample(const unsigned long& nevts) const override;
 
 };
 

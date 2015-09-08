@@ -40,9 +40,9 @@ def init():
 
 #=== generate code to initalize database:
 def genText(particle,numbers):
-    rstring = ''.join(['      pdata.Energies = vector<double> {\n         ',
+    rstring = ''.join(['      pdata.Energies = std::vector<double> {\n         ',
                        ', '.join(numbers[0]) + '\n      };\n',
-                       '      pdata.Xsections = vector<double> {\n         ',
+                       '      pdata.Xsections = std::vector<double> {\n         ',
                        ', '.join(numbers[1]) + '\n      };\n',
                        '      XList["'+particle+'"] = pdata;\n\n'])
     return rstring
@@ -75,13 +75,14 @@ def main():
         ' */',
         '',
         '#include "A2Channels.h"',
+        '#include <vector>',
         '',
-        'using namespace ant::simulation::mc;',
+#        'using namespace ant::simulation::mc;',
         '',
-        'XsecList ' + functionName + '()',
+        'ant::simulation::mc::XsecList ' + functionName + '()',
         '{',
-        '      ParticleData pdata;',
-        '      XsecList XList;',
+        '      ant::simulation::mc::ParticleData pdata;',
+        '      ant::simulation::mc::XsecList XList;',
         '',
         '' ] )
 
