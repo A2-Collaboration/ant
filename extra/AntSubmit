@@ -1,0 +1,196 @@
+#!/usr/bin/perl
+use strict;
+use warnings;
+use Getopt::Long;
+
+use Cwd qw(abs_path getcwd);
+use File::Path qw(rmtree mkpath);
+use File::Basename qw(basename);
+use Text::ParseWords;
+
+my $filelist = '-';             # default STDIN
+my $clean = 0;
+my $help = 0;
+my $cwd = getcwd;
+my $jobtag = 'Ant';
+my $QSUB_BIN = 'qsub';
+my $ANT_BIN = which('Ant');
+my $ANT_ARGS = '-b';
+
+# parse options
+Getopt::Long::Configure(qw(gnu_getopt));
+GetOptions(
+           'help|h' => \$help,
+           'clean|c' => \$clean,
+           'tag|t=s' => \$jobtag,
+           'filelist=s' => \$filelist
+          ) or print_help();
+if ($help) {
+  print_help();
+}
+
+# anything else to Ant
+for my $arg (@ARGV) {
+  $ANT_ARGS .= " $arg";
+}
+
+
+&main;
+
+sub main {
+  # check some things before submission
+  die "Ant not found in PATH=$ENV{PATH}" unless defined $ANT_BIN;
+
+  # read in additional Ant args
+  if (-f "Antrc") {
+    open(my $Antrc_fh, "<Antrc") or die "Can't open Antrc: $!";
+    while (my $line = <$Antrc_fh>) {
+      # remove leading and trailing whitespace
+      $line =~ s/^\s+//;
+      $line =~ s/\s+$//;
+      next if $line eq '';
+      next if $line =~ /^#/;
+      $ANT_ARGS .= " $line";
+    }
+    close $Antrc_fh;
+  }
+
+  # read in the filelist, check for more errors
+  open(my $filelist_fh, "<$filelist") or die "Can't open filelist $filelist: $!\n";
+  my $n = 0;
+  my @jobs;
+ line:
+  while (my $line = <$filelist_fh>) {
+    $n++;
+    # remove leading and trailing whitespace
+    $line =~ s/^\s+//;
+    $line =~ s/\s+$//;
+    my @inputfiles;
+    for my $inputfile (parse_line('\s+',0,$line)) {
+      unless(-f $inputfile) {
+        warn "Warning: Inputfile $inputfile does not exist, skipping.";
+        next line;
+      }
+      unless($inputfile =~ /\.(dat|dat\.xz|root)$/) {
+        warn "Warning: Inputfile $inputfile does not end with .dat[.xz] or .root, skipping.";
+        next line;
+      }
+      push(@inputfiles, $inputfile);
+    }
+
+    next line if @inputfiles==0;
+
+    my $runnumber = extract_runnumber($inputfiles[0]);
+    unless(defined $runnumber) {
+      # use line number by default
+      $runnumber = $n;
+    }
+    push(@jobs, {
+                 'inputfiles' => \@inputfiles,
+                 'jobnumber' => $runnumber,
+                 'basename' => basename($inputfiles[0])
+                }
+        );
+  }
+  close $filelist_fh;
+
+  my $total = scalar @jobs;
+  die "No jobs to be submitted, abort.\n" if $total==0;
+
+  # prepare output dirs
+  unless(-d 'root') {
+    mkpath(['root']) == 1 or die "Cannot create output folder root/ in current directory";
+  } else {
+    # TODO check for existing files, use $clean flag...
+  }
+
+  unless(-d 'log') {
+    mkpath(['log']) == 1 or die "Cannot create log folder log/ in current directory";
+  }
+
+  # finally submit the jobs
+  my $submitted = 0;
+  for my $job (@jobs) {
+    submit_job($job);
+    $submitted++;
+    printf("%-40s\r",sprintf("%04d/%04d = %03.0f %% submitted",$submitted,$total,100*$submitted/$total));
+  }
+  printf("%-40s\n", "Submitted $submitted jobs.");
+}
+
+sub extract_runnumber {
+  my $f = shift;
+  if ($f =~ /_(\d+?)\.dat/) {
+    return $1;
+  }
+  return undef;
+}
+
+sub which {
+  my $cmd = shift;
+  open(my $p, "which $cmd |") or die "Can't open which: $!";
+  my @lines = <$p>;
+  close $p;
+  my $exit_value = $? >> 8;
+  if ($exit_value != 0 || @lines != 1) {
+    return undef;
+  }
+  chomp $lines[0];
+  return $lines[0];
+}
+
+sub submit_job {
+  my $job = shift;
+  my $jobnumber = $job->{jobnumber};
+
+  my $basename = $job->{basename};
+  my $logfile = abs_path("log/$basename.log");
+  my $user = $ENV{USER};
+
+  my $ant_cmd = "$ANT_BIN $ANT_ARGS";
+
+  for my $inputfile (@{$job->{inputfiles}}) {
+    $inputfile = abs_path($inputfile);
+    $ant_cmd .= " -i '$inputfile'";
+  }
+  my $outputfile = abs_path("root/Ant_$basename.root");
+  $ant_cmd .= " -o '$outputfile'";
+
+  my $qsub_cmd = $QSUB_BIN;
+
+  $qsub_cmd .= " -N '$jobtag/$jobnumber'";
+
+  # mails when job aborts, begins, ends
+  #$qsub_cmd .= " -m a -m b -m e";
+  #$qsub_cmd .= " -M '$user\@kph.uni-mainz.de'";
+
+  # logging
+  $qsub_cmd .= " -j oe -o '$logfile'";
+
+  # misc stuff
+  $qsub_cmd .= " -z -q batch -V -l ncpus=1 -l walltime=2:00:00";
+
+  # open pipe to qsub
+  open(my $qsub_pipe, "| $qsub_cmd")
+    or die "Can't open pipe to $QSUB_BIN: $!";
+  print $qsub_pipe $ant_cmd;
+  close $qsub_pipe or die "Cannot close pipe to $QSUB_BIN";
+}
+
+
+
+sub print_help {
+  print <<__EOF;
+Usage: AntSubmit [--clean] [--tag jobtag] [--filelist filename] -- [optional Ant arguments]
+
+Submit jobs running Ant on files in read from STDIN (or from file list
+specified by --filelist), output goes to current directory.
+
+Options:
+
+  --clean     Recursively delete <outputdir> before submission.
+  --tag       Specify a custom job tag, default is Ant
+  --filelist  Read from file instead of STDIN
+__EOF
+  exit 255;
+}
