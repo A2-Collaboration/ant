@@ -205,7 +205,7 @@ gui::Manager_traits::DoFitReturn_t Time::TheGUI::DoFit(TH1* hist, unsigned chann
 
     TH2* hist2 = dynamic_cast<TH2*>(hist);
 
-    times = hist2->ProjectionX("",channel,channel+1);
+    times = hist2->ProjectionX("",channel+1,channel+1);
 
     fitFunction->SetDefaults(times);
     const auto it_fit_param = fitParams.find(channel);

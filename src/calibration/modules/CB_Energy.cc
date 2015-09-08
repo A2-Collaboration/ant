@@ -136,7 +136,7 @@ gui::Manager_traits::DoFitReturn_t CB_Energy::TheGUI::DoFit(TH1* hist, unsigned 
 
     TH2* hist2 = dynamic_cast<TH2*>(hist);
 
-    h_projection = hist2->ProjectionX("",channel,channel+1);
+    h_projection = hist2->ProjectionX("",channel+1,channel+1);
 
     func->SetDefaults(h_projection);
     const auto it_fit_param = fitParameters.find(channel);
