@@ -40,7 +40,7 @@ WrapTFile::~WrapTFile()
 {
     for(auto& file : files) {
         file->Close();
-        LOG(INFO) << "Closed file " << file->GetName();
+        VLOG(5) << "Closed file " << file->GetName();
     }
 }
 
@@ -138,7 +138,7 @@ WrapTFileOutput::WrapTFileOutput(const std::string& filename, mode_t access_mode
 
 WrapTFileOutput::~WrapTFileOutput()
 {
-    VLOG(5) << "Syncing output file " <<  files.front()->GetName();
+    LOG(INFO) << "Writing output file " <<  files.front()->GetName();
     files.front()->Write();
 }
 
