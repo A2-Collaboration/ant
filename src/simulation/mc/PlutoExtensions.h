@@ -16,6 +16,12 @@ namespace mc
 {
 
 
+/**
+ * @brief UpdatePluteDataBase:  Place your any additions to Pluto here.
+ *                              This function should be called at the
+ *        very beginnig when including any Pluto-Objects using the
+ *        Pluto-Database.
+ */
 void UpdatePluteDataBase()
 {
     PStaticData* sdata = makeStaticData();
@@ -37,9 +43,9 @@ void UpdatePluteDataBase()
 
 
     // newer Decay BRs for eta' (PDG particle listings)
-    sdata->SetDecayBR("eta'", "pi+,pi-,eta",    0.429,    0);
-    sdata->SetDecayBR("eta'", "rho0,g",         0.291,    0);
-    sdata->SetDecayBR("eta'", "eta,pi0,pi0",    0.222,    0);
+    sdata->SetDecayBR("eta'", "pi+,pi-,eta",    0.429,    0);   // Mode flag:   ( see Pluto-source)
+    sdata->SetDecayBR("eta'", "rho0,g",         0.291,    0);   // 0: Add the new b.r. to the existing ones + re-weighting
+    sdata->SetDecayBR("eta'", "eta,pi0,pi0",    0.222,    0);   // 1: No re-weighting (in this case br must be <1.)
     sdata->SetDecayBR("eta'", "w,g",            0.0275,   0);
     sdata->SetDecayBR("eta'", "g,g",            0.0220,   0);
     sdata->SetDecayBR("eta'", "pi0,pi0,pi0",    0.00214,  0);
