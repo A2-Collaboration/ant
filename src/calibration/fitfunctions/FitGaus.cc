@@ -47,15 +47,17 @@ void FitGaus::SetDefaults(TH1 *hist)
 {
     if(hist) {
         func->SetParameter(0,hist->GetMaximum());
-        double max_pos = hist->GetXaxis()->GetBinCenter(hist->GetMaximumBin());
+        const double max_pos = hist->GetXaxis()->GetBinCenter(hist->GetMaximumBin());
         func->SetParameter(1,max_pos);
-        SetRange({max_pos-60, max_pos+60});
+        const double sigma = hist->GetRMS();
+        func->SetParameter(2, sigma);
+        SetRange({max_pos-4*sigma, max_pos+4*sigma});
     } else {
         SetRange({0,200});
         func->SetParameter(0,0.8);
         func->SetParameter(1,100);
+        func->SetParameter(2,20);
     }
-    func->SetParameter(2,20);
 }
 
 void FitGaus::SetRange(ant::interval<double> i)
