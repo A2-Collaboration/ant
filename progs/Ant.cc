@@ -58,12 +58,8 @@ int main(int argc, char** argv) {
     SetupLogger();
 
     // check for bash completion commands
-    if(argc == 2) {
+    if(argc >= 2) {
         const string arg1(argv[1]);
-
-        if(arg1 == "--list-calibrations") {
-            return 0;
-        }
 
         if(arg1 == "--list-physics") {
             for(const auto& name : analysis::PhysicsRegistry::get().GetList()) {
@@ -78,8 +74,26 @@ int main(int argc, char** argv) {
             }
             return 0;
         }
-    }
 
+        if(arg1 == "--list-calibrations") {
+
+            if(argc == 3) {
+
+                const string setup_name(argv[2]);
+
+                ExpConfig::ManualSetupName = setup_name;
+                const auto setup = ExpConfig::Setup::GetLastFound();
+
+                if(setup) {
+                    for(const auto& calibration : setup->GetCalibrations()) {
+                        cout << calibration->GetName() << endl;
+                    }
+                }
+            }
+
+            return 0;
+        }
+    }
 
     TCLAP::CmdLine cmd("Ant", ' ', "0.1");
 

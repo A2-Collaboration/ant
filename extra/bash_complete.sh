@@ -23,9 +23,17 @@ _Ant()
             COMPREPLY=( $(compgen -W "${physics}" -- ${cur}) )
             return 0
             ;;
-        -c)
-            local cals=$( "${cmd}" --list-calibrations )
-            COMPREPLY=( $(compgen -W "${cals}" -- ${cur}) )
+        -c|--calibration)
+            for (( i = 0 ; i < ${#COMP_WORDS[@]}-1 ; i++ )); do
+                word=${COMP_WORDS[${i}]} 
+                case "${word}" in
+                    -s|--setup)
+                        local cals=$( "${cmd}" --list-calibrations ${COMP_WORDS[$((i+1))]} )
+                        COMPREPLY=( $(compgen -W "${cals}" -- ${cur}) )
+                        return 0
+                        ;;
+                esac
+            done
             return 0
             ;;
     esac
