@@ -4,6 +4,7 @@
 #include "analysis/utils/combinatorics.h"
 
 #include "calibration/gui/CalCanvas.h"
+#include "calibration/fitfunctions/FitFunction.h" // PeakingFitFunction
 
 #include "DataManager.h"
 

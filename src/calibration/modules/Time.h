@@ -8,11 +8,6 @@
 #include "base/Detector_t.h"
 #include "base/interval.h"
 
-#include "calibration/fitfunctions/FitGausPol0.h"
-
-
-
-
 #include <memory>
 
 class TH1;
@@ -21,6 +16,10 @@ namespace ant {
 namespace calibration {
 
 class DataManager;
+
+namespace gui {
+class PeakingFitFunktion;
+}
 
 class Time :
         public Calibration::Module,
@@ -43,12 +42,10 @@ public:
         gui::CalCanvas* theCanvas;
         TH1*  times;
         TH1*  timePeaks;
-//        TH2*  timesVSchannels;
 
         std::shared_ptr<gui::PeakingFitFunktion> fitFunction;
         std::vector<double> previousOffsets;
 
-        // Manager_traits interface
     public:
         TheGUI(const std::string& name,
                const std::shared_ptr<Detector_t>& theDetector,
