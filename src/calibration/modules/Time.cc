@@ -67,8 +67,21 @@ std::vector<std::list<TID> > Time::GetChangePoints() const {
     return changePointLists;
 }
 
-void Time::Update(size_t index, const TID& id) {
-    LOG(INFO) << GetName() << ": Update called for index " << index << " with TID=" << id;
+void Time::Update(size_t, const TID& id)
+{
+    TCalibrationData cdata;
+    if(calibrationManager->GetData(GetName(), id, cdata))
+    {
+        for (const auto& val: cdata.Data) {
+            if(Offsets.size()<val.Key+1)
+                Offsets.resize(val.Key+1);
+            Offsets[val.Key] = val.Value;
+        }
+    }
+    else {
+        LOG(WARNING) << "No calibration data found for offsets"
+                     << " at changepoint TID=" << id << ", using previous values";
+    }
 }
 
 void Time::ApplyTo(const readhits_t& hits, extrahits_t&)
@@ -123,7 +136,7 @@ Time::ThePhysics::ThePhysics(const string& name, const string& histName,
 }
 
 
-void ant::calibration::Time::ThePhysics::ProcessEvent(const Event& event)
+void Time::ThePhysics::ProcessEvent(const Event& event)
 {
     //handle Tagger differently
     if (detector->Type == Detector_t::Type_t::EPT)
@@ -140,11 +153,11 @@ void ant::calibration::Time::ThePhysics::ProcessEvent(const Event& event)
 
 }
 
-void ant::calibration::Time::ThePhysics::Finish()
+void Time::ThePhysics::Finish()
 {
 }
 
-void ant::calibration::Time::ThePhysics::ShowResult()
+void Time::ThePhysics::ShowResult()
 {
     canvas(GetName())  << drawoption("colz") << hTime << endc;
 }
