@@ -10,18 +10,6 @@ class FitGaus: public PeakingFitFunktion {
 protected:
     TF1* func = nullptr;
 
-    class MyWKnob: public IndicatorKnob {
-    protected:
-        TF1* func = nullptr;
-    public:
-
-        MyWKnob(const std::string& n, TF1* Func);
-
-        virtual double get() const override;
-        virtual void set(double a) override;
-
-    };
-
 public:
     FitGaus();
 
