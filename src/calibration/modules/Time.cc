@@ -251,7 +251,7 @@ void Time::TheGUI::StoreFit(unsigned channel)
 
     // the timePeak should be zero, so this gives directly
     // the value to change the offset
-    const double newOffset = oldOffset - timePeak;
+    const double newOffset = oldOffset + timePeak;
 
     offsets[channel] = newOffset;
 
