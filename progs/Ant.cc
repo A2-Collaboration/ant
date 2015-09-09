@@ -116,7 +116,9 @@ int main(int argc, char** argv) {
     if(cmd_verbose->isSet()) {
         el::Loggers::setVerboseLevel(cmd_verbose->getValue());
     }
-    RawFileReader::OutputPerformanceStats = 3;
+
+    if(std_ext::system::isInteractive())
+        RawFileReader::OutputPerformanceStats = 3;
 
 
 
