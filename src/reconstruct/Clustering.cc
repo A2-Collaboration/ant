@@ -62,7 +62,7 @@ void Clustering::Build(
     // and create TCluster out of it (if they pass the energy threshold)
 
     const auto it_threshold = cluster_thresholds.find(clusterdetector->Type);
-    const double threshold = it_threshold == cluster_thresholds.cend() ? 0 : it_threshold->second;
+    const double threshold = it_threshold == cluster_thresholds.cend() ? 20 : it_threshold->second;
 
     for(const clustering::cluster_t& cluster : crystal_clusters) {
         const double cluster_energy = clustering::calc_total_energy(cluster);
