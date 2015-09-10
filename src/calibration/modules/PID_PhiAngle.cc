@@ -187,7 +187,8 @@ void PID_PhiAngle::TheGUI::StartRange(const interval<TID>& range)
 
 
 
-gui::Manager_traits::DoFitReturn_t PID_PhiAngle::TheGUI::DoFit(TH1* hist, unsigned channel)
+gui::Manager_traits::DoFitReturn_t PID_PhiAngle::TheGUI::DoFit(TH1* hist, unsigned channel,
+                                                               const DoFitOptions_t& options)
 {
     TH2* hist2 = dynamic_cast<TH2*>(hist);
 
@@ -195,7 +196,8 @@ gui::Manager_traits::DoFitReturn_t PID_PhiAngle::TheGUI::DoFit(TH1* hist, unsign
 
     func->SetDefaults(h_projection);
     const auto it_fit_param = fitParameters.find(channel);
-    if(it_fit_param != fitParameters.end()) {
+    if(it_fit_param != fitParameters.end()
+       && !options.IgnorePreviousFitParameters) {
         VLOG(5) << "Loading previous fit parameters for channel " << channel;
         func->Load(it_fit_param->second);
     }

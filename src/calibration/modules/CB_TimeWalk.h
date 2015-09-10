@@ -76,7 +76,8 @@ public:
 
 
         virtual void StartRange(const interval<TID>& range) override;
-        virtual DoFitReturn_t DoFit(TH1* hist, unsigned ch) override;
+        virtual DoFitReturn_t DoFit(TH1* hist, unsigned ch,
+                                    const Manager_traits::DoFitOptions_t& options) override;
         virtual void DisplayFit() override;
         virtual void StoreFit(unsigned channel) override;
         virtual bool FinishRange() override;

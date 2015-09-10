@@ -214,7 +214,8 @@ void Time::TheGUI::StartRange(const interval<TID>& range)
     previousOffsets = offsets;
 }
 
-gui::Manager_traits::DoFitReturn_t Time::TheGUI::DoFit(TH1* hist, unsigned channel)
+gui::Manager_traits::DoFitReturn_t Time::TheGUI::DoFit(TH1* hist, unsigned channel,
+                                                       const Manager_traits::DoFitOptions_t& options)
 {
     if (detector->IsIgnored(channel))
         return gui::Manager_traits::DoFitReturn_t::Skip;
@@ -226,7 +227,8 @@ gui::Manager_traits::DoFitReturn_t Time::TheGUI::DoFit(TH1* hist, unsigned chann
 
     fitFunction->SetDefaults(times);
     const auto it_fit_param = fitParams.find(channel);
-    if(it_fit_param != fitParams.end()) {
+    if(it_fit_param != fitParams.end() &&
+       !options.IgnorePreviousFitParameters) {
         VLOG(5) << "Loading previous fit parameters for channel " << channel;
         fitFunction->Load(it_fit_param->second);
     }

@@ -28,7 +28,8 @@ public:
                const std::shared_ptr<Detector_t>& detector);
 
         virtual void InitGUI(gui::ManagerWindow_traits* window) override;
-        virtual DoFitReturn_t DoFit(TH1* hist, unsigned channel) override;
+        virtual DoFitReturn_t DoFit(TH1* hist, unsigned channel,
+                                    const Manager_traits::DoFitOptions_t& options) override;
         virtual void DisplayFit() override;
         virtual void StoreFit(unsigned channel) override;
         virtual bool FinishRange() override;

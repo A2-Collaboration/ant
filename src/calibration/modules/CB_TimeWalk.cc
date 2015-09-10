@@ -213,7 +213,8 @@ void CB_TimeWalk::TheGUI::StartRange(const interval<TID>& range)
 
 
 
-gui::Manager_traits::DoFitReturn_t CB_TimeWalk::TheGUI::DoFit(TH1* hist, unsigned ch)
+gui::Manager_traits::DoFitReturn_t CB_TimeWalk::TheGUI::DoFit(TH1* hist, unsigned ch,
+                                                              const DoFitOptions_t&)
 {
     if(cb_detector->IsIgnored(ch))
         return DoFitReturn_t::Skip;

@@ -150,7 +150,8 @@ void PID_Energy::GUI_Pedestals::InitGUI(gui::ManagerWindow_traits* window)
     canvas = window->AddCalCanvas();
 }
 
-gui::Manager_traits::DoFitReturn_t PID_Energy::GUI_Pedestals::DoFit(TH1* hist, unsigned channel)
+gui::Manager_traits::DoFitReturn_t PID_Energy::GUI_Pedestals::DoFit(TH1* hist, unsigned channel,
+                                                                    const Manager_traits::DoFitOptions_t& options)
 {
     if(detector->IsIgnored(channel))
         return DoFitReturn_t::Skip;
@@ -161,7 +162,8 @@ gui::Manager_traits::DoFitReturn_t PID_Energy::GUI_Pedestals::DoFit(TH1* hist, u
 
     func->SetDefaults(h_projection);
     const auto it_fit_param = fitParameters.find(channel);
-    if(it_fit_param != fitParameters.end()) {
+    if(it_fit_param != fitParameters.end()
+       && !options.IgnorePreviousFitParameters) {
         VLOG(5) << "Loading previous fit parameters for channel " << channel;
         func->Load(it_fit_param->second);
     }

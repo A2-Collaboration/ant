@@ -129,7 +129,8 @@ void CB_Energy::GUI_Gains::InitGUI(gui::ManagerWindow_traits* window)
     h_relative->SetYTitle("Relative change / %");
 }
 
-gui::Manager_traits::DoFitReturn_t CB_Energy::GUI_Gains::DoFit(TH1* hist, unsigned channel)
+gui::Manager_traits::DoFitReturn_t CB_Energy::GUI_Gains::DoFit(TH1* hist, unsigned channel,
+                                                               const Manager_traits::DoFitOptions_t& options)
 {
     if(detector->IsIgnored(channel))
         return DoFitReturn_t::Skip;
@@ -140,7 +141,8 @@ gui::Manager_traits::DoFitReturn_t CB_Energy::GUI_Gains::DoFit(TH1* hist, unsign
 
     func->SetDefaults(h_projection);
     const auto it_fit_param = fitParameters.find(channel);
-    if(it_fit_param != fitParameters.end()) {
+    if(it_fit_param != fitParameters.end()
+       && !options.IgnorePreviousFitParameters) {
         VLOG(5) << "Loading previous fit parameters for channel " << channel;
         func->Load(it_fit_param->second);
     }

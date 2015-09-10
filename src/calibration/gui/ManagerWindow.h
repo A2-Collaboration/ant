@@ -34,6 +34,8 @@ struct ManagerWindowMode {
     bool showEachFit;
     int  channelStep;
     int  requestChannel;
+
+    Manager_traits::DoFitOptions_t FitOptions;
 };
 
 class ManagerWindow : public TGMainFrame, public ManagerWindow_traits

@@ -170,7 +170,8 @@ Manager::RunReturn_t Manager::Run()
         bool noskip = true;
         if(!state.breakpoint_fit) {
 
-            const auto ret = module->DoFit(buffer.CurrentSum(), state.channel);
+            const auto ret = module->DoFit(buffer.CurrentSum(), state.channel,
+                                           window->Mode.FitOptions);
             noskip = ret != Manager_traits::DoFitReturn_t::Skip;
 
             if(ret == Manager_traits::DoFitReturn_t::Display
