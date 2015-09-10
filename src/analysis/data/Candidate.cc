@@ -5,7 +5,7 @@ using namespace ant::analysis::data;
 
 ostream& Candidate::Print(ostream &stream) const
 {
-    stream << "Track "
+    stream << "Candidate "
            << " ClusterEnergy=" << ClusterEnergy()
            << " Theta=" << Theta()
            << " Phi=" << Phi()
