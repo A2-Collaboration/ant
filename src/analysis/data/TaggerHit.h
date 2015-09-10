@@ -34,7 +34,7 @@ public:
     ns_t& Time() { return time; }
     const ns_t& Time() const { return time; }
 
-    TLorentzVector PhotonBeam() const { return std::move(TLorentzVector(0.0, 0.0, PhotonEnergy(), PhotonEnergy())); }
+    TLorentzVector PhotonBeam() const { return TLorentzVector(0.0, 0.0, PhotonEnergy(), PhotonEnergy()); }
 
 
     std::ostream &Print(std::ostream &stream) const;
