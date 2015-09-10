@@ -80,7 +80,8 @@ void Time::Update(size_t, const TID& id)
     }
     else {
         LOG(WARNING) << "No calibration data found for offsets"
-                     << " at changepoint TID=" << id << ", using previous values";
+                     << " at changepoint TID=" << id << ", using default values";
+        Offsets.resize(0);
     }
 }
 

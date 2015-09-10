@@ -156,7 +156,8 @@ void Energy::Update(size_t index, const TID& tid)
             }
             else {
                 LOG(WARNING) << "No calibration data found for " << calibration->Name
-                             << " at changepoint TID=" << tid << ", using previous values";
+                             << " at changepoint TID=" << tid << ", using default values";
+                calibration->Values.resize(0);
             }
         }
     }
