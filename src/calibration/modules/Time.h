@@ -18,7 +18,7 @@ namespace calibration {
 class DataManager;
 
 namespace gui {
-class PeakingFitFunktion;
+class PeakingFitFunction;
 }
 
 class Time :
@@ -43,7 +43,7 @@ public:
         TH1*  times;
         TH1*  timePeaks;
 
-        std::shared_ptr<gui::PeakingFitFunktion> fitFunction;
+        std::shared_ptr<gui::PeakingFitFunction> fitFunction;
         std::vector<double> previousOffsets;
 
     public:
@@ -52,7 +52,7 @@ public:
                const std::shared_ptr<DataManager>& cDataManager,
                double DefaultOffset,
                const std::vector<double>& Offsets,
-               const std::shared_ptr<gui::PeakingFitFunktion> fitFunction);
+               const std::shared_ptr<gui::PeakingFitFunction> fitFunction);
 
         virtual std::string GetHistogramName() const override { return GetName()+"/Offsets";}
         virtual unsigned GetNumberOfChannels() const override { return detector->GetNChannels();}
@@ -86,7 +86,7 @@ public:
          const std::shared_ptr<DataManager>& CalibrationManager,
          Calibration::Converter::ptr_t converter,
          double defaultOffset,
-         std::shared_ptr<gui::PeakingFitFunktion> FitFunction,
+         std::shared_ptr<gui::PeakingFitFunction> FitFunction,
          const interval<double>& timeWindow = {-std_ext::inf, std_ext::inf},
          double defaultGain = 1.0, // default gain is 1.0
          const std::vector< TKeyValue<double> >& gains = {}
@@ -126,7 +126,7 @@ protected:
 
     const interval<double> TimeWindow;
 
-    std::shared_ptr<gui::PeakingFitFunktion> fitFunction;
+    std::shared_ptr<gui::PeakingFitFunction> fitFunction;
 
     const double DefaultOffset;
     std::vector<double> Offsets;

@@ -6,7 +6,7 @@ namespace ant {
 namespace calibration {
 namespace gui {
 
-class FitGaus: public PeakingFitFunktion {
+class FitGaus: public PeakingFitFunction {
 protected:
     TF1* func = nullptr;
 

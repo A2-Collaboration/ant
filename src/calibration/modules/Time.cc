@@ -27,7 +27,7 @@ using namespace ant::analysis::data;
 Time::Time(const std::shared_ptr<Detector_t>& detector, const std::shared_ptr<DataManager>& CalibrationManager,
            Calibration::Converter::ptr_t converter,
            double defaultOffset,
-           shared_ptr<gui::PeakingFitFunktion> FitFunction,
+           shared_ptr<gui::PeakingFitFunction> FitFunction,
            const interval<double>& timeWindow, // default {-inf, inf}
            const double defaultGain, // default gain is 1.0
            const std::vector< TKeyValue<double> >& gains) :
@@ -171,7 +171,7 @@ Time::TheGUI::TheGUI(const string& name,
                      const std::shared_ptr<DataManager>& cDataManager,
                      double DefaultOffset,
                      const std::vector<double>& Offsets,
-                     const shared_ptr<gui::PeakingFitFunktion> FitFunction):
+                     const shared_ptr<gui::PeakingFitFunction> FitFunction):
     gui::Manager_traits(name),
     detector(theDetector),
     calmgr(cDataManager),
