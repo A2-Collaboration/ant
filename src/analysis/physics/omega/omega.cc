@@ -114,7 +114,7 @@ OmegaEtaG::perDecayhists_t OmegaEtaG::makePerDecayHists(const string &title)
     h.p_phi_diff = HistFac.makeTH1D(title+"p phi diff","angle [#circ]","",BinSettings(4*360,-90,90),pref+"p_phi_diff");
     h.calc_proton_energy_theta = HistFac.makeTH2D(title+" Calc Proton","E [MeV]","#Theta [#circ]",BinSettings(1000),BinSettings(360,0,180),pref+"calc_p");
     h.calc_proton_special = HistFac.makeTH2D(title+" Calc Proton Special","E [MeV]","#Theta [#circ]",BinSettings(1000),BinSettings(360,0,180),pref+"calc_p_special");
-
+    h.nCand = HistFac.makeTH1D(title+": # Photons","Photons/Event","",BinSettings(15),pref+"ncand");
     return h;
 }
 
@@ -131,6 +131,26 @@ void OmegaEtaG::Analyse(const Event::Data &data, const Event &event)
 
     const auto nPhotons = data.Particles().Get(ParticleTypeDatabase::Photon).size();
     const auto nProtons = data.Particles().Get(ParticleTypeDatabase::Proton).size();
+
+    perDecayhists_t* h = nullptr;
+
+    const string decaystring = utils::ParticleTools::GetDecayString(event.MCTrue().Intermediates().GetAll());
+
+    if( h == nullptr) {
+
+        auto entry = gg_decays.find(decaystring);
+        if(entry == gg_decays.end()) {
+            VLOG(9) << "Adding Histograms for " << decaystring;
+            gg_decays[decaystring] = makePerDecayHists(decaystring);
+            h = &(gg_decays[decaystring]);
+        } else {
+            h = &(entry->second);
+        }
+    }
+
+    if(h) {
+        h->nCand->Fill(nPhotons);
+    }
 
     if( nPhotons != 3 )    // require 3 photons
         return;
@@ -160,9 +180,7 @@ void OmegaEtaG::Analyse(const Event::Data &data, const Event &event)
     bool is_omega_decay = false;
     const ParticleTypeDatabase::Type* subtype = nullptr;
 
-    perDecayhists_t* h = nullptr;
 
-    const string decaystring = utils::ParticleTools::GetDecayString(event.MCTrue().Intermediates().GetAll());
 
     for( auto comb = utils::makeCombination(photons,3); !comb.Done(); ++comb) {
 
@@ -184,20 +202,11 @@ void OmegaEtaG::Analyse(const Event::Data &data, const Event &event)
             ggg_omega_pi0oreta->Fill(gggIM);
         }
 
-        if( h == nullptr) {
 
-            auto entry = gg_decays.find(decaystring);
-            if(entry == gg_decays.end()) {
-                VLOG(9) << "Adding Histograms for " << decaystring;
-                gg_decays[decaystring] = makePerDecayHists(decaystring);
-                h = &(gg_decays[decaystring]);
-            } else {
-                h = &(entry->second);
-            }
-        }
 
-        if(h)
+        if(h) {
             h->ggg->Fill(gggIM);
+        }
 
         const auto& mc_protons = event.MCTrue().Particles().Get(ParticleTypeDatabase::Proton);
 
