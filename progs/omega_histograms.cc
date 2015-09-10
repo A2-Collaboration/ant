@@ -46,6 +46,7 @@ std::list<T*> GetListOf(TDirectory* dir, Func func=[] (const string& name){retur
 void ggStack(TDirectory* dir);
 void mmStack(TDirectory* dir);
 void gggStack(TDirectory *dir);
+void nPhotons(TDirectory* dir);
 
 int main(int argc, char** argv) {
     SetupLogger();
@@ -76,6 +77,7 @@ int main(int argc, char** argv) {
     ggStack(dir);
     mmStack(dir);
     gggStack(dir);
+    nPhotons(dir);
 
     app.Run();
 
@@ -168,4 +170,32 @@ void gggStack(TDirectory *dir) {
 
     canvas c("ggg im");
     c << padoption::set(padoption_t::Legend) << ggg_stack << endc;
+}
+
+void nPhotons(TDirectory *dir) {
+    auto hists = GetListOf<TH1D>(dir, [] (const string& name) { return std_ext::string_ends_with(name, "__ncand");});
+
+    hists.sort([] (const TH1* a, const TH1* b) { return a->GetEntries() > b->GetEntries();});
+
+    hstack ggg_stack("ncand");
+
+    const std::vector<Color_t> cols = {kRed, kGreen, kBlue, kYellow, kMagenta, kCyan, kOrange, kPink+9, kSpring+10, kGray};
+    auto cit = getCirculatIterator(cols.begin(), cols.end());
+
+    int i=0;
+    for(auto& h : hists) {
+
+        h->SetLineColor(*(cit++));
+        string title(h->GetTitle());
+        std_ext::removesubstr(title, "Pluto_dilepton ");
+        std_ext::removesubstr(title, ": # Photons");
+        h->SetTitle(title.c_str());
+
+        ggg_stack << h;
+        if(i++ == 9)
+            break;
+    }
+
+    canvas c("n Photons");
+    c << padoption::set(padoption_t::Legend) << drawoption("nostack") << ggg_stack << endc;
 }
