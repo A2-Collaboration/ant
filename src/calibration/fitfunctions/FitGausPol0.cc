@@ -96,3 +96,8 @@ double FitGausPol0::GetPeakPosition() const
 {
     return func->GetParameter(1);
 }
+
+double FitGausPol0::GetPeakWidth() const
+{
+    return func->GetParameter(2);
+}

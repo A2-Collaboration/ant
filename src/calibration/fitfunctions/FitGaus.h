@@ -27,6 +27,8 @@ public:
     virtual void Load(const SavedState_t &data) override;
 
     virtual double GetPeakPosition() const override;
+    virtual double GetPeakWidth() const override;
+
 };
 
 }

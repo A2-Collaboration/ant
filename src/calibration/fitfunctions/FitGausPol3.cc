@@ -131,3 +131,8 @@ double ant::calibration::gui::FitGausPol3::GetPeakPosition() const
     return combined->GetParameter(1);
 }
 
+double gui::FitGausPol3::GetPeakWidth() const
+{
+    return combined->GetParameter(2);
+}
+

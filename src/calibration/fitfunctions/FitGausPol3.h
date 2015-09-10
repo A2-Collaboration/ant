@@ -30,6 +30,7 @@ public:
     void Load(const std::vector<double> &data);
 
     virtual double GetPeakPosition() const override;
+    virtual double GetPeakWidth() const override;
 
 };
 
