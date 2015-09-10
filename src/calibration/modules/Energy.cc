@@ -19,8 +19,6 @@ using namespace std;
 using namespace ant;
 using namespace ant::calibration;
 
-size_t Energy::CalibType::Instances = 0;
-
 Energy::Energy(Detector_t::Type_t detectorType,
                std::shared_ptr<DataManager> calmgr,
                Calibration::Converter::ptr_t converter,
@@ -36,7 +34,7 @@ Energy::Energy(Detector_t::Type_t detectorType,
     DetectorType(detectorType),
     calibrationManager(calmgr),
     Converter(move(converter)),
-    Pedestals(defaultPedestal,"Pedestals"),
+    Pedestals(defaultPedestal,"Pedestals", true),
     Gains(defaultGain,"Gains"),
     Thresholds(defaultThreshold,"Thresholds"),
     RelativeGains(defaultRelativeGain,"RelativeGains")
@@ -127,10 +125,10 @@ std::vector<std::list<TID> > Energy::GetChangePoints() const
 {
     vector<list<TID>> changePointLists;
 
-    for (const auto& calib_name: { Pedestals.Name, Gains.Name, Thresholds.Name, RelativeGains.Name}) {
+    for (auto calibration: AllCalibrations) {
         changePointLists.push_back(
                     calibrationManager->GetChangePoints(
-                        GUI_CalibType::ConstructName(GetName(), calib_name)
+                        GUI_CalibType::ConstructName(GetName(), calibration->Name)
                         )
                     );
     }
@@ -138,29 +136,34 @@ std::vector<std::list<TID> > Energy::GetChangePoints() const
 }
 void Energy::Update(size_t index, const TID& tid)
 {
-    for (auto calibration: {&Pedestals, &Gains, &Thresholds, &RelativeGains})
+    auto calibration = AllCalibrations[index];
+
+    TCalibrationData cdata;
+    if(calibrationManager->GetData(
+           GUI_CalibType::ConstructName(GetName(), calibration->Name),
+           tid, cdata))
     {
-        if (calibration->Index == index)
-        {
-            TCalibrationData cdata;
-            if(calibrationManager->GetData(
-                   GUI_CalibType::ConstructName(GetName(), calibration->Name),
-                   tid, cdata))
-            {
-                auto& values = calibration->Values;
-                for (const auto& val: cdata.Data) {
-                    if(values.size()<val.Key+1)
-                        values.resize(val.Key+1);
-                    values[val.Key] = val.Value;
-                }
-            }
-            else {
-                LOG(WARNING) << "No calibration data found for " << calibration->Name
-                             << " at changepoint TID=" << tid << ", using default values";
-                calibration->Values.resize(0);
-            }
+        auto& values = calibration->Values;
+        for (const auto& val: cdata.Data) {
+            if(values.size()<val.Key+1)
+                values.resize(val.Key+1);
+            values[val.Key] = val.Value;
         }
     }
+    else {
+        LOG(WARNING) << "No calibration data found for " << calibration->Name
+                     << " at changepoint TID=" << tid << ", using default values";
+        calibration->Values.resize(0);
+    }
+}
+
+std::vector<bool> Energy::UpdateOnFirstEvent() const
+{
+    std::vector<bool> ret;
+    for(auto calibration : AllCalibrations) {
+        ret.push_back(calibration->Extendable);
+    }
+    return ret;
 }
 
 Energy::~Energy()
@@ -221,14 +224,11 @@ void Energy::GUI_CalibType::StartRange(const interval<TID>& range)
 
 void Energy::GUI_CalibType::StoreFinishRange(const interval<TID>& range)
 {
-    // assume that all pedestals are measured in extra runs,
-    // which means their data extends over to normal runs
-    bool extendable = calibType.Name == "Pedestals";
     TCalibrationData cdata(
                 GetName(),
                 range.Start(),
                 range.Stop(),
-                extendable
+                calibType.Extendable
                 );
 
     std::vector<double>& values = calibType.Values;

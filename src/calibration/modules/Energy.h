@@ -27,6 +27,8 @@ public:
     // Updateable_traits interface
     virtual std::vector<std::list<TID>> GetChangePoints() const override;
     void Update(std::size_t index, const TID& tid) override;
+    virtual std::vector<bool> UpdateOnFirstEvent() const override;
+
 
 
 protected:
@@ -54,15 +56,13 @@ protected:
         const double        DefaultValue;
         std::vector<double> Values;
         const std::string   Name;
-        const std::size_t   Index;
-        CalibType(double defaultValue, const std::string& name):
+        bool Extendable;
+        CalibType(double defaultValue, const std::string& name, bool extendable = false):
             DefaultValue(defaultValue),
             Values(),
             Name(name),
-            Index(Instances++)
+            Extendable(extendable)
         {}
-    private:
-        static std::size_t Instances;
     }; // CalibType
 
     /**
@@ -107,6 +107,13 @@ protected:
     CalibType Gains;
     CalibType Thresholds;
     CalibType RelativeGains;
+
+    std::vector<CalibType*> AllCalibrations = {
+        std::addressof(Pedestals),
+        std::addressof(Gains),
+        std::addressof(Thresholds),
+        std::addressof(RelativeGains)
+    };
 
 };
 
