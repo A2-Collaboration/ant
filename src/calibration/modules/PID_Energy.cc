@@ -51,7 +51,6 @@ PID_Energy::~PID_Energy()
 unique_ptr<analysis::Physics> PID_Energy::GetPhysicsModule()
 {
     return std_ext::make_unique<ThePhysics>(GetName(),
-                                            Pedestals.Name,
                                             pid_detector->GetNChannels());
 }
 
@@ -66,13 +65,29 @@ void PID_Energy::GetGUIs(std::list<std::unique_ptr<gui::Manager_traits> >& guis)
 }
 
 PID_Energy::ThePhysics::ThePhysics(const string& name,
-                                   const string& hist_name,
                                    unsigned nChannels):
     Physics(name)
 {
     const BinSettings pid_channels(nChannels);
 
-    pedestals = HistFac.makeTH2D("PID Pedestals", "Raw ADC value", "#", BinSettings(300), pid_channels, hist_name);
+    h_pedestals = HistFac.makeTH2D(
+                      "PID Pedestals",
+                      "Raw ADC value",
+                      "#",
+                      BinSettings(300),
+                      pid_channels,
+                      "Pedestals");
+    h_bananas =
+            HistFac.makeTH3D(
+                "PID Bananas",
+                "CB Energy / MeV",
+                "PID Energy / MeV",
+                "Channel",
+                BinSettings(400,0,800),
+                BinSettings(100,0,30),
+                pid_channels,
+                "Bananas"
+                );
 }
 
 void PID_Energy::ThePhysics::ProcessEvent(const data::Event& event)
@@ -86,8 +101,24 @@ void PID_Energy::ThePhysics::ProcessEvent(const data::Event& event)
             for(const Cluster::Hit::Datum& datum : clusterhit.Data) {
                 if(datum.Type != Channel_t::Type_t::Pedestal)
                     continue;
-                pedestals->Fill(datum.Value, clusterhit.Channel);
+                h_pedestals->Fill(datum.Value, clusterhit.Channel);
             }
+        }
+    }
+
+    // bananas
+    for(const auto& candidate : event.Reconstructed().Candidates()) {
+        if(candidate->Clusters.size() != 2)
+            continue;
+        if(candidate->Detector() & Detector_t::Type_t::CB &&
+           candidate->Detector() & Detector_t::Type_t::PID
+           )
+        {
+            // search for PID cluster
+            auto pid_cluster = candidate->FindFirstCluster(Detector_t::Type_t::PID);
+            h_bananas->Fill(candidate->ClusterEnergy(),
+                            candidate->VetoEnergy(),
+                            pid_cluster->CentralElement);
         }
     }
 }
@@ -98,7 +129,10 @@ void PID_Energy::ThePhysics::Finish()
 
 void PID_Energy::ThePhysics::ShowResult()
 {
-    canvas(GetName()) << drawoption("colz") << pedestals << endc;
+    canvas(GetName())
+            << drawoption("colz") << h_pedestals
+            << drawoption("colz") << h_bananas->Project3D("zy")
+            << endc;
 }
 
 PID_Energy::GUI_Pedestals::GUI_Pedestals(const string& basename,

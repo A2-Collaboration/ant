@@ -38,10 +38,11 @@ public:
     class ThePhysics : public analysis::Physics {
 
     protected:
-        TH2* pedestals = nullptr;
+        TH2D* h_pedestals = nullptr;
+        TH3D* h_bananas = nullptr;
 
     public:
-         ThePhysics(const std::string& name, const std::string& hist_name, unsigned nChannels);
+         ThePhysics(const std::string& name, unsigned nChannels);
 
         virtual void ProcessEvent(const analysis::data::Event& event) override;
         virtual void Finish() override;
