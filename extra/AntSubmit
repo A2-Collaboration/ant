@@ -16,6 +16,8 @@ my $jobtag = 'Ant';
 my $QSUB_BIN = 'qsub';
 my $ANT_BIN = which('Ant');
 my $ANT_ARGS = '-b';
+my $LOG_DIR = 'log';
+my $OUT_DIR = 'root';
 
 # parse options
 Getopt::Long::Configure(qw(gnu_getopt));
@@ -53,6 +55,8 @@ sub main {
       $ANT_ARGS .= " $line";
     }
     close $Antrc_fh;
+  } elsif (@ARGV==0) {
+    die "No Antrc found and no additional arguments for Ant provided\n";
   }
 
   # read in the filelist, check for more errors
@@ -72,13 +76,16 @@ sub main {
         next line;
       }
       unless($inputfile =~ /\.(dat|dat\.xz|root)$/) {
-        warn "Warning: Inputfile $inputfile does not end with .dat[.xz] or .root, skipping.";
+        warn "Warning: Inputfile $inputfile does not end with .dat[.xz] or .root, skipping";
         next line;
       }
       push(@inputfiles, $inputfile);
     }
 
     next line if @inputfiles==0;
+
+
+    my $basename = basename($inputfiles[0]);
 
     my $runnumber = extract_runnumber($inputfiles[0]);
     unless(defined $runnumber) {
@@ -88,7 +95,8 @@ sub main {
     push(@jobs, {
                  'inputfiles' => \@inputfiles,
                  'jobnumber' => $runnumber,
-                 'basename' => basename($inputfiles[0])
+                 'logfile' => "$LOG_DIR/$basename",
+                 'outputfile' => "$OUT_DIR/Ant_$basename.root"
                 }
         );
   }
@@ -98,14 +106,36 @@ sub main {
   die "No jobs to be submitted, abort.\n" if $total==0;
 
   # prepare output dirs
-  unless(-d 'root') {
-    mkpath(['root']) == 1 or die "Cannot create output folder root/ in current directory";
+  unless(-d $OUT_DIR) {
+    mkpath([$OUT_DIR]) == 1 or die "Cannot create output folder '$OUT_DIR'";
   } else {
-    # TODO check for existing files, use $clean flag...
+    my $n_outfiles = 0;
+    my $n_logfiles = 0;
+    for my $job (@jobs) {
+      my $outputfile = $job->{outputfile};
+      if (-f $outputfile) {
+        if (!$clean) {
+          die "Outputfile $outputfile already exists. Use --clean?\n";
+        }
+        unlink $outputfile or die "Cannot delete file $outputfile: $!";
+        $n_outfiles++;
+      }
+      my $logfile = $job->{logfile};
+      if (-f $logfile) {
+        if (!$clean) {
+          die "Logfile $logfile already exists. Use --clean?\n";
+        }
+        unlink $logfile or die "Cannot delete file $logfile: $!";
+        $n_logfiles++;
+      }
+    }
+    if ($clean) {
+      printf("%04d/%04d output/logfiles cleaned\n", $n_outfiles, $n_logfiles);
+    }
   }
 
-  unless(-d 'log') {
-    mkpath(['log']) == 1 or die "Cannot create log folder log/ in current directory";
+  unless(-d $LOG_DIR) {
+    mkpath([$LOG_DIR]) == 1 or die "Cannot create log folder '$LOG_DIR'";
   }
 
   # finally submit the jobs
@@ -116,6 +146,8 @@ sub main {
     printf("%-40s\r",sprintf("%04d/%04d = %03.0f %% submitted",$submitted,$total,100*$submitted/$total));
   }
   printf("%-40s\n", "Submitted $submitted jobs.");
+
+  # TODO append some log statement about submission...
 }
 
 sub extract_runnumber {
@@ -143,8 +175,7 @@ sub submit_job {
   my $job = shift;
   my $jobnumber = $job->{jobnumber};
 
-  my $basename = $job->{basename};
-  my $logfile = abs_path("log/$basename.log");
+  my $logfile = abs_path($job->{logfile});
   my $user = $ENV{USER};
 
   my $ant_cmd = "$ANT_BIN $ANT_ARGS";
@@ -153,7 +184,7 @@ sub submit_job {
     $inputfile = abs_path($inputfile);
     $ant_cmd .= " -i '$inputfile'";
   }
-  my $outputfile = abs_path("root/Ant_$basename.root");
+  my $outputfile = abs_path($job->{outputfile});
   $ant_cmd .= " -o '$outputfile'";
 
   my $qsub_cmd = $QSUB_BIN;
