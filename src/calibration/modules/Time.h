@@ -79,6 +79,7 @@ public:
     protected:
         TH2D* hTime;
         std::shared_ptr<Detector_t> detector;
+        bool isTagger;
     };
 
     Time(const std::shared_ptr<Detector_t>& detector,

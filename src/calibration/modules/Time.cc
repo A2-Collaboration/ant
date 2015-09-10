@@ -133,20 +133,22 @@ Time::ThePhysics::ThePhysics(const string& name, const string& histName,
                               BinSettings(detector->GetNChannels()),
                               histName
                               );
+    // handle tagger differently
+    isTagger = dynamic_pointer_cast<TaggerDetector_t, Detector_t>(detector) != nullptr;
 }
 
 
 void Time::ThePhysics::ProcessEvent(const Event& event)
 {
     //handle Tagger differently
-    if (detector->Type == Detector_t::Type_t::EPT)
+    if(isTagger)
     {
         for (const auto& tHit: event.Reconstructed().TaggerHits())
             hTime->Fill(tHit->Time(),tHit->Channel());
         return;
     }
 
-    for ( const auto& cand: event.Reconstructed().Candidates())
+    for( const auto& cand: event.Reconstructed().Candidates())
         for (const auto& cluster: cand->Clusters)
             if (cluster.Detector == detector->Type)
                 hTime->Fill(cluster.Time,cluster.CentralElement);
