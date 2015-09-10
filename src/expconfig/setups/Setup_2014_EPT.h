@@ -131,7 +131,7 @@ public:
     }
 
     void BuildMappings(std::vector<hit_mapping_t>& hit_mappings,
-                       std::vector<scaler_mapping_t>& scaler_mappings) const
+                       std::vector<scaler_mapping_t>& scaler_mappings) const override
     {
         // build the mappings from the given detectors
         // that should provide sane and correct defaults

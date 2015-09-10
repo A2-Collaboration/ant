@@ -36,7 +36,7 @@ public:
     }
 
     void BuildMappings(std::vector<hit_mapping_t>& hit_mappings,
-                       std::vector<scaler_mapping_t>& scaler_mappings) const
+                       std::vector<scaler_mapping_t>& scaler_mappings) const override
     {
         Setup::BuildMappings(hit_mappings, scaler_mappings);
         // you may tweak the mapping at this location here
