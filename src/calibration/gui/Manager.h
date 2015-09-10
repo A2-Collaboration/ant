@@ -44,19 +44,13 @@ protected:
     std::list<input_file_t> input_files;
 
     struct state_t {
-        state_t() :
-              is_init(false),
-              breakpoint_fit(false),
-              breakpoint_finish(false)
-        {}
-
+        // set in DoInit()
         std::list<input_file_t>::iterator it_file;
         int channel;
         int slice;
 
-        bool is_init;
-        bool breakpoint_fit;
-        bool breakpoint_finish;
+        bool breakpoint_fit = false;
+        bool breakpoint_finish = false;
     };
     state_t state;
 
@@ -68,7 +62,6 @@ protected:
     void FillBufferFromFiles();
 
     int nChannels;
-    bool DoInit();
 
 public:
     std::string SetupName;
@@ -79,6 +72,7 @@ public:
         module = move(module_);
     }
 
+    bool DoInit();
     void InitGUI(ManagerWindow* window_);
 
     enum class RunReturn_t {

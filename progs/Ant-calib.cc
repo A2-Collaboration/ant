@@ -78,10 +78,15 @@ int main(int argc, char** argv) {
     char* fake_argv[2];
     fake_argv[0] = argv[0];
     if(cmd_batchmode->isSet()) {
-        //const char* arg_quit = "-q";
         fake_argv[fake_argc++] = strdup("-q");
     }
     auto app = new TRint("Ant-calib",&fake_argc,fake_argv);
+
+    if(!manager->DoInit()) {
+        LOG(ERROR) << "Cannot initialize the calibration. Check previous messages.";
+        return 1;
+    }
+
     if(cmd_batchmode->isSet()) {
         gROOT->SetBatch();
     }

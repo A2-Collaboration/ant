@@ -36,6 +36,11 @@ Manager::~Manager()
 void Manager::InitGUI(ManagerWindow* window_) {
     window = window_;
     module->InitGUI(window);
+
+    if(buffer.GetSumLength()==0)
+        window->SetProgressMax(1, nChannels-1);
+    else
+        window->SetProgressMax(input_files.size(), nChannels-1);
 }
 
 
@@ -141,25 +146,13 @@ bool Manager::DoInit()
         return false;
     }
 
-    state.is_init = true;
     module->StartRange(buffer.CurrentID());
-
-    if(buffer.GetSumLength()==0)
-        window->SetProgressMax(1, nChannels-1);
-    else
-        window->SetProgressMax(input_files.size(), nChannels-1);
-
     return true;
 }
 
 
 Manager::RunReturn_t Manager::Run()
 {
-    if(!state.is_init) {
-       if(!DoInit())
-           return RunReturn_t::Exit;
-    }
-
     // this statement is executed once the class goes out-of-scope
     std_ext::execute_on_destroy setProgress([this] () {
         window->SetProgress(state.slice, state.channel);
