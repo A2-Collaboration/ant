@@ -22,7 +22,7 @@ using namespace std;
 
 PID_PhiAngle::ThePhysics::ThePhysics(const string& name, unsigned nChannels) :
     Physics(name),
-    theta_range(40.0*TMath::RadToDeg(), 140*TMath::RadToDeg())
+    theta_range(40.0*TMath::DegToRad(), 140*TMath::DegToRad())
 {
     const BinSettings pid_channels(nChannels);
     const BinSettings phibins(1000, -180, 3*180);
