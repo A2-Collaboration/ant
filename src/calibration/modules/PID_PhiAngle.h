@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Calibration.h"
+#include "base/interval.h"
 
 class TGraph;
 
@@ -31,6 +32,7 @@ public:
     class ThePhysics : public analysis::Physics {
     protected:
         TH2* pid_cb_phi_corr;
+        const ant::interval<double> theta_range;
     public:
         ThePhysics(const std::string& name, unsigned nChannels);
 

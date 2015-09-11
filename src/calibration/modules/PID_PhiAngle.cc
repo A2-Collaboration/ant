@@ -21,7 +21,8 @@ using namespace ant::analysis::data;
 using namespace std;
 
 PID_PhiAngle::ThePhysics::ThePhysics(const string& name, unsigned nChannels) :
-    Physics(name)
+    Physics(name),
+    theta_range(40.0*TMath::RadToDeg(), 140*TMath::RadToDeg())
 {
     const BinSettings pid_channels(nChannels);
     const BinSettings phibins(1000, -180, 3*180);
@@ -43,6 +44,9 @@ void PID_PhiAngle::ThePhysics::ProcessEvent(const Event& event)
     double phi_cb = numeric_limits<double>::quiet_NaN();
 
     for(const auto& cand : cands) {
+
+        if(!theta_range.Contains(cand->Theta()))
+            continue;
 
         auto cl_cb_  = cand->FindFirstCluster(Detector_t::Type_t::CB);
 
