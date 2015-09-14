@@ -78,6 +78,10 @@ public:
                   );
 
     void ShowResults();
+
+    class Exception : public std::runtime_error {
+        using std::runtime_error::runtime_error; // use base class constructor
+    };
 };
 
 }} // namespace ant::analysis
