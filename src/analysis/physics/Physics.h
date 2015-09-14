@@ -64,7 +64,7 @@ public:
 template<class T>
 std::unique_ptr<Physics> physics_factory(PhysOptPtr opts)
 {
-    return std::move(std_ext::make_unique<T>(opts));
+    return std_ext::make_unique<T>(opts);
 }
 
 using physics_creator = std::function<std::unique_ptr<Physics>(PhysOptPtr)>;

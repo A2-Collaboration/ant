@@ -39,7 +39,7 @@ std::unique_ptr<TDataRecord> UnpackerAcqu::NextItem() noexcept
     // we also convert the unique_ptr here to some shared_ptr
     auto element = move(queue.front());
     queue.pop_front();
-    return move(element);
+    return element;
 }
 
 

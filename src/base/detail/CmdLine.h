@@ -224,7 +224,7 @@ private:
         std::unique_ptr<T> add(args_t&&... args) {
            std::unique_ptr<T> a(new T(std::forward<args_t>(args)...));
            add(*a);
-           return std::move(a);
+           return a;
         }
 
     /**

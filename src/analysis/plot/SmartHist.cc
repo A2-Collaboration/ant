@@ -12,5 +12,8 @@ SmartHist1<std::string> SmartHist1<std::string>::makeHist(
     const std::string& name,
     HistogramFactory& factory)
 {
-    return move(makeHist([] (const std::string& data) -> const char* { return data.c_str();}, title, xlabel, ylabel, bins, name, factory));
+    auto converter = [] (const std::string& data) -> const char* {
+        return data.c_str();
+    };
+    return makeHist(converter, title, xlabel, ylabel, bins, name, factory);
 }
