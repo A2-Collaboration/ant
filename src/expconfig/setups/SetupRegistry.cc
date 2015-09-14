@@ -23,7 +23,7 @@ SetupRegistry& SetupRegistry::get()
     return instance;
 }
 
-void SetupRegistry::add(setup_creator creator)
+void SetupRegistry::add(Creator creator)
 {
     setup_creators.push_back(creator);
 }
@@ -45,7 +45,7 @@ void SetupRegistry::destroy()
     setups.clear();
 }
 
-SetupRegistration::SetupRegistration(setup_creator creator)
+SetupRegistration::SetupRegistration(SetupRegistry::Creator creator)
 {
     SetupRegistry::get().add(creator);
 }
