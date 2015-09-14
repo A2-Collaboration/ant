@@ -18,6 +18,9 @@ class TSlowControl;
 
 namespace tree {
 
+/**
+ * @brief The UnpackerReader class reads synchronized data from
+ */
 class UnpackerReader : public Unpacker::Reader {
 
     std::shared_ptr<WrapTFileInput> files;

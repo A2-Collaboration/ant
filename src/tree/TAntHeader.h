@@ -8,6 +8,9 @@
 
 namespace ant {
 
+/**
+ * @brief The TAntHeader class holds information about the histogram file
+ */
 class TAntHeader: public TNamed {
 public:
     ant::TID FirstID;

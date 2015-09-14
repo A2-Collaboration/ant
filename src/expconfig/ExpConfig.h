@@ -1,5 +1,13 @@
 #pragma once
 
+/** @page expconfig Experimental configuration
+ *
+ * This part represents the experimental config, including the feature to
+ * automatically search and find an appropiate experimental config based on
+ * ant::THeaderInfo or on the name of a setup.
+ *
+ */
+
 #include "base/Detector_t.h"
 #include "reconstruct/Reconstruct_traits.h"
 #include "calibration/Calibration.h"

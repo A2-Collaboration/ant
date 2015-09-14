@@ -13,11 +13,14 @@
 
 namespace ant {
 
+/**
+ * @brief The TCalibrationData struct contains one calibration iteration
+ */
 #ifndef __CINT__
 struct TCalibrationData : printable_traits
-        #else
+#else
 struct TCalibrationData
-        #endif
+#endif
 {
     std::string Author;
 

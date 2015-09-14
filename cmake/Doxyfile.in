@@ -802,7 +802,6 @@ RECURSIVE              = YES
 # run.
 
 EXCLUDE                = doc \
-                         build \
                          src/base/detail
 
 # The EXCLUDE_SYMLINKS tag can be used to select whether or not files or
@@ -819,7 +818,9 @@ EXCLUDE_SYMLINKS       = NO
 # Note that the wildcards are matched against the file with absolute path, so to
 # exclude all test directories for example use the pattern */test/*
 
-EXCLUDE_PATTERNS       = @DOXYGEN_INPUT_DIR@/test/catch*
+EXCLUDE_PATTERNS       = @DOXYGEN_INPUT_DIR@/test/catch* \
+                         @DOXYGEN_INPUT_DIR@/build*
+                       
 
 # The EXCLUDE_SYMBOLS tag can be used to specify one or more symbol names
 # (namespaces, classes, functions, etc.) that should be excluded from the

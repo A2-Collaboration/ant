@@ -11,8 +11,8 @@ namespace ant {
 
 /**
  * @brief The RawFileReader class
- * Super-simple wrapper for reading binary files,
- * even if they are compressed :)
+ *
+ * Super-simple wrapper for reading binary files, even if they are compressed.
  * Possible IO errors are propagated as exceptions
  */
 class RawFileReader {
@@ -34,7 +34,7 @@ public:
     virtual ~RawFileReader();
 
     /**
-   * @brief open
+   * @brief open the given filename
    * @param filename
    * @param inbufsize
    *
@@ -75,7 +75,7 @@ public:
     }
 
     /**
-   * @brief eof
+   * @brief eof indicate end of file
    * @return true if last read went beyond end of file.
    *
    * Note that reading the exact number of bytes makes eof() stay false
@@ -103,13 +103,13 @@ private:
     static constexpr std::streamsize uint32_t_factor = sizeof(std::uint32_t)/sizeof(char);
 
     /**
-   * @brief The PlainBase class
-   *
-   * Plain and simple filereader, encapsulating an ifstream
-   * and providing a base class for the more complicated decompression classes
-   *
-   * Only the really needed methods are exported
-   */
+     * @brief The PlainBase class
+     *
+     * Plain and simple filereader, encapsulating an ifstream and providing a
+     * base class for the more complicated decompression classes
+     *
+     * \note Only the really needed methods are exported
+     */
     class PlainBase {
     public:
         explicit PlainBase(const std::string& filename)
@@ -159,13 +159,12 @@ private:
     }; // class RawFileReader::Plain
 
     /**
-   * @brief The XZ class
-   * Decompresses the bytes before giving them to the user
-   *
-   * Adapted from
-   * http://git.tukaani.org/?p=xz.git;a=blob_plain;f=doc/examples/02_decompress.c;hb=HEAD
-   *
-   */
+     * @brief The XZ class reads xz compressed files
+     *
+     * Decompresses the bytes before giving them to the user. Adapted from
+     * http://git.tukaani.org/?p=xz.git;a=blob_plain;f=doc/examples/02_decompress.c;hb=HEAD
+     *
+    */
     class XZ : public PlainBase {
     public:
 

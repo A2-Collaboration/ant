@@ -1,15 +1,6 @@
-/**
- * @file A2ocktail.h
- * @author Martin Wolfes
- * @date June 2015
- *
- */
-
 #pragma once
 
 #ifndef __CINT__
-
-
 
 #include <string>
 #include <vector>
