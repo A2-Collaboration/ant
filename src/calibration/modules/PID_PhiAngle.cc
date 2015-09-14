@@ -14,6 +14,8 @@
 #include <limits>
 #include <cmath>
 
+#include "TF1.h"
+
 using namespace ant;
 using namespace ant::calibration;
 using namespace ant::analysis;
@@ -139,14 +141,54 @@ void PID_PhiAngle::Update(size_t, const TID& id)
 }
 
 
+/**
+ * @brief The PID_PhiAngle::TheGUI::_FitGauss: override the SetDefaults for PID phi angle fits
+ */
+class PID_PhiAngle::TheGUI::_FitGauss: public gui::FitGaus {
+public:
+    using gui::FitGaus::FitGaus;
+
+    static constexpr const auto halfrange = 50.0;
+
+    virtual void SetDefaults(TH1 *hist) override {
+        if(hist) {
+
+            func->SetParameter(0,hist->GetMaximum());
+
+            double max_pos = hist->GetXaxis()->GetBinCenter(hist->GetMaximumBin());
+
+            if(max_pos < -180+halfrange)
+                max_pos += 360.0;
+
+            if(max_pos > 540-halfrange)
+                max_pos -= 360.0;
+
+            func->SetParameter(1,max_pos);
+            SetRange({max_pos-halfrange,max_pos+halfrange});
+
+         } else {
+            SetRange({0,200});
+            func->SetParameter(0,0.8);
+            func->SetParameter(1,100);
+        }
+        func->SetParameter(2,10.0);
+    }
+};
+
+
 PID_PhiAngle::TheGUI::TheGUI(const string& basename,
                              const std::shared_ptr<DataManager>& calmgr,
                              const std::shared_ptr<expconfig::detector::PID>& pid) :
     gui::Manager_traits(basename),
     calibrationManager(calmgr),
     pid_detector(pid),
-    func(make_shared<gui::FitGaus>())
+    func(make_shared<_FitGauss>())
 {
+}
+
+PID_PhiAngle::TheGUI::~TheGUI()
+{
+
 }
 
 string PID_PhiAngle::TheGUI::GetHistogramName() const
@@ -236,11 +278,35 @@ void PID_PhiAngle::TheGUI::StoreFit(unsigned channel)
     fitParameters[channel] = func->Save();
 }
 
+//double Pol1Wrap360(const double* x, const double* p) {
+//    const auto& offset = p[0];
+//    const auto& slope  = p[1];
+
+//    auto y = offset + slope*x[0];
+
+//    const int n = floor(y / 360.0);
+//    y -= n * 360.0;
+
+//    return y;
+//}
+
 bool PID_PhiAngle::TheGUI::FinishRange()
 {
    h_result = new TGraph(GetNumberOfChannels());
-   for(size_t ch=0;ch<GetNumberOfChannels();ch++)
-       h_result->SetPoint(ch, ch, angles[ch]);
+
+   for(size_t ch=0;ch<GetNumberOfChannels();ch++) {
+
+       auto angle = angles[ch];
+
+       // always make sure values increase (wrap around)
+       /// @todo what to do if slope is negative?
+       if(ch!=0)
+           while(angles[ch-1] > angle)
+               angle += 360.0;
+
+       h_result->SetPoint(ch, ch, angle);
+   }
+
    TFitResultPtr r = h_result->Fit("pol1","QS");
    phi_offset = r->Value(0);
    LOG(INFO) << "Found Phi offset of first channel: " << phi_offset;
@@ -292,3 +358,4 @@ void PID_PhiAngle::TheGUI::StoreFinishRange(const interval<TID>& range)
     LOG(INFO) << "Added TCalibrationData: " << cdata;
     LOG(INFO) << "Added TCalibrationData: " << cdata_offset;
 }
+

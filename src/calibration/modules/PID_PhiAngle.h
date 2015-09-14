@@ -45,7 +45,8 @@ public:
     protected:
         std::shared_ptr<DataManager> calibrationManager;
         std::shared_ptr<expconfig::detector::PID> pid_detector;
-        std::shared_ptr<gui::FitGaus> func;
+        class _FitGauss;
+        std::shared_ptr<_FitGauss> func;
 
         gui::CalCanvas* canvas;
 
@@ -63,6 +64,7 @@ public:
                const std::shared_ptr<DataManager>& calmgr,
                const std::shared_ptr<expconfig::detector::PID>& pid
                );
+        virtual ~TheGUI();
 
         virtual std::string GetHistogramName() const override;
         virtual unsigned GetNumberOfChannels() const override;
