@@ -47,6 +47,7 @@ public:
     bool ReduceToValid(const std::string&  calibrationID);
     bool ExpandToMax(const std::string& calibrationID, std::uint32_t index);
     bool ExpandToMaxOther(const std::string& sourceCalibrationID, const std::string& calibrationID, std::uint32_t index);
+    bool ModifyItem(const std::string& calibrationID, std::uint32_t index, ant::TCalibrationData& dataModifier);
 
     //visualisation
     std::list<std::pair<std::uint32_t,IntervalD>> GetAllRanges(const std::string& calibrationID) const;

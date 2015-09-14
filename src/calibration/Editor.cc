@@ -337,3 +337,16 @@ bool ant::calibration::Editor::ExpandToMaxOther(const std::string &sourceCalibra
 
     return true;
 }
+
+bool Editor::ModifyItem(const string& calibrationID, uint32_t index, TCalibrationData& dataModifier)
+{
+    if(!dman.Has(calibrationID))
+        return false;
+    if (index > dman.GetItems(calibrationID).size())
+        return false;
+
+   dataModifier = dman.ModifyItems(calibrationID).at(index);
+
+   return true;
+
+}
