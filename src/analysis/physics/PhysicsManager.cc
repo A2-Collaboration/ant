@@ -95,8 +95,8 @@ void PhysicsManager::ProcessEventBuffer(
     // if running is already false,
     // flush the buffer no matter what...
     bool flush = !running;
-//    if(flush)
-//        VLOG(5) << "Flushing " << eventbuffer.size() << " events from eventbuffer";
+    if(flush)
+        VLOG(5) << "Flushing " << eventbuffer.size() << " events from eventbuffer";
 
     TID runUntil = slowcontrol_mgr.UpdateSlowcontrolData(slowcontrol_data);
 
@@ -104,7 +104,7 @@ void PhysicsManager::ProcessEventBuffer(
         return;
 
     while(!eventbuffer.empty()) {
-
+        // running might change to false here in this loop
         if(!running && !flush)
             return;
 
@@ -177,6 +177,7 @@ void PhysicsManager::ReadFrom(
                 finished_reading = true;
                 break;
             }
+
             eventbuffer.emplace(move(event));
             nEventsRead++;
         }
