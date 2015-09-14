@@ -5,6 +5,8 @@
 #include <string>
 
 class TH1D;
+class TH2D;
+class TH3D;
 
 namespace ant {
 namespace analysis {
@@ -29,6 +31,7 @@ protected:
         void Fill(const data::ParticlePtr& mctrue, const data::CandidateList& cand);
 
         std::list<TH1*> Hists() override;
+        TH3D* multiplicity_map;
     };
 
     candidatesEvent_t nPerEvent;

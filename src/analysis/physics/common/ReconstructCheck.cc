@@ -97,10 +97,14 @@ ReconstructCheck::candidatesEvent_t::candidatesEvent_t(SmartHistFactory& f, cons
     nPerEventPerE = f.makeTH2D(prefix+" Candidates/Event/Energy","MC True Energy [MeV]","Candidates/Event",BinSettings(1000),BinSettings(15),prefix+"candEventEnergy");
     splitPerEvent = f.makeTH1D(prefix+" Split Clusters/Event", "# split clusters/Event","",BinSettings(30),prefix+"splits");
     splitPos      = f.makeTH2D(prefix+" Pos of split clusters","cos(#theta)","#phi",BinSettings(360,-1,1),BinSettings(360,-180,180),prefix+"splitpos");
+    multiplicity_map      = f.makeTH3D(prefix+" Multitplicity Map","cos(#theta_{True})","#phi_{True}","Mult",BinSettings(360,-1,1),BinSettings(360,-180,180),BinSettings(10),prefix+"mults");
 }
 
 void ReconstructCheck::candidatesEvent_t::Fill(const ParticlePtr& mctrue, const CandidateList& cand)
 {
+    const auto mc_phi = mctrue->Phi()*TMath::RadToDeg();
+    const auto mc_cos_theta = cos(mctrue->Theta());
+
     nPerEvent->Fill(cand.size());
     nPerEventPerE->Fill(mctrue->Ek(), cand.size());
 
@@ -110,16 +114,17 @@ void ReconstructCheck::candidatesEvent_t::Fill(const ParticlePtr& mctrue, const 
         for(const Cluster& cl : c->Clusters) {
             if(cl.flags.isChecked(Cluster::Flag::Split)) {
                 ++nsplit;
-                splitPos->Fill(cos(mctrue->Theta()), mctrue->Phi()*TMath::RadToDeg());
+                splitPos->Fill(mc_cos_theta, mc_phi);
             }
         }
     }
     splitPerEvent->Fill(nsplit);
+    multiplicity_map->Fill(mc_cos_theta, mc_phi, cand.size());
 }
 
 std::list<TH1*> ReconstructCheck::candidatesEvent_t::Hists()
 {
-    return {nPerEvent, nPerEventPerE, splitPerEvent, splitPos};
+    return {nPerEvent, nPerEventPerE, splitPerEvent, splitPos, multiplicity_map};
 }
 
 AUTO_REGISTER_PHYSICS(ReconstructCheck, "ReconstructCheck")
