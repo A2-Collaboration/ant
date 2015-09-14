@@ -8,6 +8,11 @@
 #include "TH1D.h"
 #include "base/CmdLine.h"
 #include "TDirectory.h"
+#include "TPad.h"
+#include "TLine.h"
+#include "base/interval.h"
+
+#include "analysis/physics/omega/omega.h"
 
 #include "base/iterators.h"
 #include "base/std_ext/string.h"
@@ -81,6 +86,22 @@ const std::vector<Color_t> StringColorManager::cols = {kRed, kGreen+1, kBlue, kM
 StringColorManager colors;
 
 const static auto show_top_n = 5;
+
+void DrawCutLines(TVirtualPad* pad, const ant::interval<double> x_cut) {
+    TVirtualPad* p = gPad;
+    pad->cd();
+    double x1,y1,x2,y2;
+    pad->GetRangeAxis(x1,y1,x2,y2);
+    TLine* l1 = new TLine(x_cut.Start(),y1,x_cut.Start(),y2);
+    l1->SetLineWidth(2);
+
+    TLine* l2 = new TLine(x_cut.Stop(),y1,x_cut.Stop(),y2);
+    l2->SetLineWidth(2);
+
+    l1->Draw("same");
+    l2->Draw("same");
+    p->cd();
+}
 
 int main(int argc, char** argv) {
     SetupLogger();
@@ -229,6 +250,7 @@ void gggStack(TDirectory *dir) {
 
     canvas c("ggg im");
     c << padoption::set(padoption_t::Legend) << drawoption("nostack") << ggg_stack << endc;
+    DrawCutLines(gPad, interval<double>(680,780));
 }
 
 void nPhotons(TDirectory *dir) {
