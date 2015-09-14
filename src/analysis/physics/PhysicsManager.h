@@ -3,8 +3,8 @@
 #include "Physics.h"
 #include "tree/TSlowControl.h"
 #include "analysis/data/Slowcontrol.h"
+#include "analysis/physics/SlowcontrolManager.h"
 
-#include <queue>
 
 namespace ant {
 
@@ -36,7 +36,8 @@ protected:
     bool InitReaders(readers_t readers_);
     bool TryReadEvent(std::unique_ptr<data::Event>& event);
 
-    std::map<TSlowControl::Key, std::queue< std::unique_ptr<TSlowControl> > > slowcontrol;
+    slowontrol::Manager slowcontrol_mgr;
+    data::Slowcontrol slowcontrol_data;
 
     std::queue< std::unique_ptr<data::Event> > eventbuffer;
 
@@ -44,9 +45,6 @@ protected:
 
     void ProcessEventBuffer(long long maxevents, bool& running, TAntHeader& header);
     void ProcessEvent(std::unique_ptr<data::Event> event);
-
-
-    ant::analysis::data::Slowcontrol slc;
 
 public:
 
@@ -67,7 +65,7 @@ public:
         if(pc==nullptr)
             return;
 
-        pc->Initialize(slc);
+        pc->Initialize(slowcontrol_data);
         physics.emplace_back(std::move(pc));
     }
 

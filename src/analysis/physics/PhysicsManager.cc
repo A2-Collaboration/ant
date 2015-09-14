@@ -60,7 +60,7 @@ bool PhysicsManager::TryReadEvent(unique_ptr<data::Event>& event)
             if(event_ok)
                 read_event = true;
             if(sc)
-                slowcontrol[sc->GetKey()].emplace(move(sc));
+               slowcontrol_mgr.ProcessSlowcontrol(move(sc));
         }
 
         auto it_reader = readers.begin();
@@ -76,7 +76,7 @@ bool PhysicsManager::TryReadEvent(unique_ptr<data::Event>& event)
             if(event_ok)
                 read_event = true;
             if(sc)
-                slowcontrol[sc->GetKey()].emplace(move(sc));
+                slowcontrol_mgr.ProcessSlowcontrol(move(sc));
             ++it_reader;
         }
 
@@ -95,16 +95,28 @@ void PhysicsManager::ProcessEventBuffer(
     // if running is already false,
     // flush the buffer no matter what...
     bool flush = !running;
-    if(flush)
-        VLOG(5) << "Flushing " << eventbuffer.size() << " events from eventbuffer";
+//    if(flush)
+//        VLOG(5) << "Flushing " << eventbuffer.size() << " events from eventbuffer";
+
+    TID runUntil = slowcontrol_mgr.UpdateSlowcontrolData(slowcontrol_data);
+
+    if(runUntil.IsInvalid())
+        return;
+
     while(!eventbuffer.empty()) {
+
         if(!running && !flush)
             return;
+
         if(nEventsProcessed>=maxevents)
             return;
 
         auto& event = eventbuffer.front();
         auto& eventid = event->Reconstructed().TriggerInfos().EventID();
+
+        if(eventid > runUntil)
+            break;
+
         ProcessEvent(move(event));
         eventbuffer.pop();
         if(nEventsProcessed==0)
@@ -131,12 +143,17 @@ void PhysicsManager::ReadFrom(
     }
 
 
-    auto slkeys = RequestedKeys(slc);
+
+    auto slkeys = RequestedKeys(slowcontrol_data);
 
     VLOG(7) << "Requested Slowcontrol keys";
     for(const auto& key : slkeys) {
         VLOG(7) << key;
     }
+
+    slowcontrol_mgr.SetRequiredKeys(slkeys);
+
+
 
     chrono::time_point<std::chrono::system_clock> start, end;
     start = chrono::system_clock::now();
@@ -147,7 +164,8 @@ void PhysicsManager::ReadFrom(
         if(finished_reading)
             break;
 
-        while(eventbuffer.size()<20000) {
+        do
+        {
             if(!running || nEventsRead>=maxevents) {
                 VLOG(5) << "End of reading requested";
                 finished_reading = true;
@@ -162,8 +180,14 @@ void PhysicsManager::ReadFrom(
             eventbuffer.emplace(move(event));
             nEventsRead++;
         }
+        while(!slowcontrol_mgr.isComplete());
 
-        ProcessEventBuffer(maxevents, running, header);
+        if(slowcontrol_mgr.isComplete()) {
+            VLOG(5) << "Slowcontrol set complete. Processing event buffer.";
+            ProcessEventBuffer(maxevents, running, header);
+        } else {
+            VLOG(5) << "Finished reading but slowcontrol block not complete. Dropping remaining " << eventbuffer.size() << " events.";
+        }
     }
 
     VLOG(5) << "First EventId processed: " << header.FirstID;
