@@ -139,7 +139,7 @@ void PhysicsManager::ReadFrom(
         return;
 
     if(physics.empty()) {
-        throw std::runtime_error("No Analysis Instances activated. Will not analyse anything.");
+        throw Exception("No Analysis Instances activated. Will not analyse anything.");
     }
 
 
@@ -176,6 +176,9 @@ void PhysicsManager::ReadFrom(
                 VLOG(5) << "No more events to read, finish.";
                 finished_reading = true;
                 break;
+            }
+            if(eventbuffer.size()>20000) {
+                throw Exception("SlowControl buffering reached maximum size without becoming complete.");
             }
 
             eventbuffer.emplace(move(event));
