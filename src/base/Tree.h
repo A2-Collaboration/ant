@@ -32,7 +32,7 @@ public:
     static snode_t makeNode(args_t&&... args) {
         auto n = std::shared_ptr<Tree>(new Tree(std::forward<args_t>(args)...));
         n->self = n;
-        return std::move(n);
+        return n;
     }
 
     bool isRoot() const { return partent.expired(); }
@@ -59,7 +59,7 @@ public:
         auto n = makeNode(std::forward<args_t>(args)...);
         n->partent = Self();
         daughters.emplace_back(n);
-        return std::move(n);
+        return n;
     }
 
     void setParent(snode_t& p) {

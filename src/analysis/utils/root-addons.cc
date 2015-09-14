@@ -14,7 +14,7 @@ std::shared_ptr<TCutG> root::makeTCutG(const std::string& name, const std::initi
         cut->SetPoint(i++,point.first, point.second);
     }
 
-    return move(cut);
+    return cut;
 
 }
 
@@ -27,6 +27,6 @@ std::shared_ptr<TGraph> root::makeTGraph(const std::initializer_list<std::pair<d
         cut->SetPoint(i++,point.first, point.second);
     }
 
-    return move(cut);
+    return cut;
 
 }
