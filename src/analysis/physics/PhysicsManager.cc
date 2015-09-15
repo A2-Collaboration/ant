@@ -100,7 +100,7 @@ void PhysicsManager::ProcessEventBuffer(
 
     TID runUntil = slowcontrol_mgr.UpdateSlowcontrolData(slowcontrol_data);
 
-    if(runUntil.IsInvalid())
+    if(slowcontrol_mgr.hasRequests() && runUntil.IsInvalid())
         return;
 
     while(!eventbuffer.empty()) {
@@ -114,7 +114,7 @@ void PhysicsManager::ProcessEventBuffer(
         auto& event = eventbuffer.front();
         auto& eventid = event->Reconstructed().TriggerInfos().EventID();
 
-        if(eventid > runUntil)
+        if(slowcontrol_mgr.hasRequests() && (eventid > runUntil))
             break;
 
         ProcessEvent(move(event));

@@ -29,6 +29,12 @@ public:
 
     void ProcessSlowcontrol(std::unique_ptr<const TSlowControl> data);
 
+    /**
+     * @brief check if at least one slow control variable has been requrested
+     * @return
+     */
+    bool hasRequests() const { return !slowcontrol.empty(); }
+
     bool isComplete() const;
 
     TID FindMinimalTID() const;
