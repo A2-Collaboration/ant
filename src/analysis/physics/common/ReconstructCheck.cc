@@ -86,31 +86,97 @@ void ReconstructCheck::ShowResult()
     }
 
     candidates << endc;
+
+    canvas splitanglesc("Split Angles");
+    hstack s("splitanglesstack");
+    for(auto h : nPerEvent.mult2_split_angles) {
+        s << (TH1D*)h;
+    }
+
+    splitanglesc << drawoption("nostack") << s << endc;
+
+    canvas c_pid("PID");
+    c_pid << nPerEvent.nCharged << drawoption("colz") << nPerEvent.cluserSize_CB << nPerEvent.cluserSize_TAPS << endc;
 }
 
+void LabelBins(TAxis* x) {
 
+    for(Int_t i=1; i<x->GetNbins(); ++i) {
+        x->SetBinLabel(i,to_string(int(x->GetBinLowEdge(i))).c_str());
+    }
+}
 
 
 ReconstructCheck::candidatesEvent_t::candidatesEvent_t(SmartHistFactory& f, const string& prefix)
 {
-    nPerEvent     = f.makeTH1D(prefix+" Candidates/Event", "Candidates/Event","",BinSettings(15),prefix+"candEvent");
-    nPerEventPerE = f.makeTH2D(prefix+" Candidates/Event/Energy","MC True Energy [MeV]","Candidates/Event",BinSettings(1000),BinSettings(15),prefix+"candEventEnergy");
-    splitPerEvent = f.makeTH1D(prefix+" Split Clusters/Event", "# split clusters/Event","",BinSettings(30),prefix+"splits");
-    splitPos      = f.makeTH2D(prefix+" Pos of split clusters","cos(#theta)","#phi",BinSettings(360,-1,1),BinSettings(360,-180,180),prefix+"splitpos");
+    const BinSettings energy(1000);
+    const BinSettings clusersize(19,1,19);
+
+    nPerEvent     = f.makeTH1D(prefix+" Candidates/Event", "Candidates/Event","",BinSettings(10),prefix+"candEvent");
+    LabelBins(nPerEvent->GetXaxis());
+
+    nPerEventPerE = f.makeTH2D(prefix+" Candidates/Event/Energy","MC True Energy [MeV]","Candidates/Event",BinSettings(1000),BinSettings(10),prefix+"candEventEnergy");
+    LabelBins(nPerEventPerE->GetYaxis());
+
+    splitPerEvent = f.makeTH1D(prefix+" Split-flagged Clusters/Event", "# split clusters/Event","",BinSettings(20),prefix+"splits");
+    LabelBins(splitPerEvent->GetXaxis());
+
+    splitPos      = f.makeTH2D(prefix+" Pos of split-flagged clusters","cos(#theta)","#phi",BinSettings(360,-1,1),BinSettings(360,-180,180),prefix+"splitpos");
+    splitPos->SetStats(false);
+
     multiplicity_map      = f.makeTH3D(prefix+" Multitplicity Map","cos(#theta_{True})","#phi_{True}","Mult",BinSettings(360,-1,1),BinSettings(360,-180,180),BinSettings(10),prefix+"mults");
+    multiplicity_map->SetStats(false);
+
+    mult2_split_angles.resize(3);
+    for(size_t i=0;i<mult2_split_angles.size();++i) {
+        mult2_split_angles[i] = f.makeTH1D(prefix+"Mult==2 cluster angle "+to_string(i),"#alpha [#circ]","",BinSettings(180,0,90),prefix+"mult2_"+to_string(i));
+    }
+
+    cluserSize_TAPS = f.makeTH2D(prefix+" Cluster Size TAPS","E_{True} [MeV]","Elements",energy, clusersize,prefix+"_clustersize_TAPS");
+    LabelBins(cluserSize_TAPS->GetYaxis());
+
+    cluserSize_CB   = f.makeTH2D(prefix+" Cluster Size CB",  "E_{True} [MeV]","Elements",energy, clusersize,prefix+"_clustersize_CB");
+    LabelBins(cluserSize_CB->GetYaxis());
+
+    nCharged        = f.makeTH1D(prefix+" N Charged", "# charged candidates", "", BinSettings(10),prefix+"_ncharged");
+
+}
+
+double angle(const data::Candidate& c1, const data::Candidate& c2) {
+    TVector3 v1(1,0,0);
+    v1.SetTheta(c1.Theta());
+    v1.SetPhi(c1.Phi());
+
+    TVector3 v2(1,0,0);
+    v2.SetTheta(c2.Theta());
+    v2.SetPhi(c2.Phi());
+
+    return v1.Angle(v2);
 }
 
 void ReconstructCheck::candidatesEvent_t::Fill(const ParticlePtr& mctrue, const CandidateList& cand)
 {
     const auto mc_phi = mctrue->Phi()*TMath::RadToDeg();
     const auto mc_cos_theta = cos(mctrue->Theta());
+    const auto mc_energy = mctrue->Ek();
 
     nPerEvent->Fill(cand.size());
     nPerEventPerE->Fill(mctrue->Ek(), cand.size());
 
     unsigned nsplit(0);
+    unsigned ncharged(0);
 
     for(const CandidatePtr& c : cand) {
+        if(c->VetoEnergy() > 0.0) {
+            ncharged++;
+        }
+
+        if(c->Detector() & Detector_t::Any_t::CB) {
+            cluserSize_CB->Fill(mc_energy, c->ClusterSize());
+        } else if(c->Detector() & Detector_t::Any_t::TAPS) {
+            cluserSize_TAPS->Fill(mc_energy, c->ClusterSize());
+        }
+
         for(const Cluster& cl : c->Clusters) {
             if(cl.flags.isChecked(Cluster::Flag::Split)) {
                 ++nsplit;
@@ -118,8 +184,16 @@ void ReconstructCheck::candidatesEvent_t::Fill(const ParticlePtr& mctrue, const 
             }
         }
     }
+    nCharged->Fill(ncharged);
     splitPerEvent->Fill(nsplit);
     multiplicity_map->Fill(mc_cos_theta, mc_phi, cand.size());
+
+    if(cand.size() == 2) {
+        if(nsplit<3) {
+            mult2_split_angles[nsplit]->Fill(angle(*cand.at(0), *cand.at(1))*TMath::RadToDeg());
+        }
+    }
+
 }
 
 std::list<TH1*> ReconstructCheck::candidatesEvent_t::Hists()
