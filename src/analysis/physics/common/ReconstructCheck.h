@@ -1,6 +1,7 @@
 #pragma once
 
 #include "analysis/physics/Physics.h"
+#include "data/Candidate.h"
 
 #include <string>
 
@@ -18,36 +19,36 @@ protected:
     TH2D* EnergyRec_cb;
     TH2D* EnergyRec_taps;
 
-    struct list_of_hists_t {
-        virtual std::list<TH1*> Hists() =0;
-    };
+    struct histgroup {
+        const std::string Prefix;
 
-    struct candidatesEvent_t: list_of_hists_t {
         TH1D* nPerEvent;
         TH2D* nPerEventPerE;
         TH1D* splitPerEvent;
         TH2D* splitPos;
-        candidatesEvent_t(SmartHistFactory& f, const std::string& prefix);
-        void Fill(const data::ParticlePtr& mctrue, const data::CandidateList& cand);
 
-        std::list<TH1*> Hists() override;
         TH3D* multiplicity_map;
 
-        std::vector<TH1*> mult2_split_angles;
+        std::vector<TH1D*> mult2_split_angles;
 
-        TH1D* nCharged_CB;
-        TH1D* nCharged_TAPS;
-        TH2D* cluserSize_TAPS;
-        TH2D* cluserSize_CB;
-        TH2D* dEE_TAPS;
-        TH2D* dEE_TAPS_true;
-        TH2D* dEE_CB;
-        TH2D* dEE_CB_true;
+        TH1D* nCharged;
+        TH2D* cluserSize;
+        TH2D* dEE;
+        TH2D* dEE_true;
         TH2D* posCharged;
+        TH1D* unmatched_veto;
+        TH2D* edge_flag_pos;
+
+        histgroup(SmartHistFactory& f, const std::string& prefix);
+        void Fill(const data::ParticlePtr& mctrue, const data::CandidateList& cand, const data::ClusterList& insane);
+        void ShowResult() const;
+        void Finish();
+
     };
 
-    candidatesEvent_t nPerEvent;
-    std::map<const ParticleTypeDatabase::Type*, candidatesEvent_t> nPerEvent_type;
+    histgroup cb_group;
+    histgroup taps_group;
+    histgroup all_group;
 
 public:
     ReconstructCheck(PhysOptPtr opts);
