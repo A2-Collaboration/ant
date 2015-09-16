@@ -1,5 +1,7 @@
 #include "Setup.h"
 
+#include "detectors/CB.h"
+
 #include <limits>
 
 using namespace std;

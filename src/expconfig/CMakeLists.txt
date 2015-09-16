@@ -7,9 +7,9 @@ set(SRCS
   )
 
 set(SRCS_SETUPS
-  setups/Setup.h
+  setups/Setup.cc
   setups/SetupRegistry.cc
-  setups/Setup_2014_EPT.h
+  setups/Setup_2014_EPT.cc
   setups/Setup_2014_07_EPT_Prod.cc
   setups/Setup_2014_10_EPT_Prod.cc
   setups/Setup_2014_12_EPT_Prod.cc
