@@ -52,11 +52,11 @@ std::list<std::shared_ptr<ant::Updateable_traits> > Setup::GetUpdateables() cons
     return list;
 }
 
-std::__cxx11::string Setup::GetPIDCutsDirectory() const {
+std::string Setup::GetPIDCutsDirectory() const {
     return std::string(ANT_PATH_DATABASE)+"/"+GetName()+"/cuts";
 }
 
-Setup::Setup(const std::__cxx11::string& name) :
+Setup::Setup(const std::string& name) :
     name_(name)
 {
     std::string calibrationDataFolder = std::string(ANT_PATH_DATABASE)+"/"+GetName()+"/calibration";
@@ -106,7 +106,7 @@ void Setup::IgnoreDetectorChannels(ant::Detector_t::Type_t type, const std::vect
         IgnoreDetectorChannel(type, channel);
 }
 
-std::shared_ptr<ant::calibration::DataManager> Setup::CreateCalibrationDataManager(const std::__cxx11::string& setupname) {
+std::shared_ptr<ant::calibration::DataManager> Setup::CreateCalibrationDataManager(const std::string& setupname) {
     std::string filename = std::string(ANT_PATH_DATABASE)+"/"+setupname+"/calibration.root";
     return std::make_shared<calibration::DataManager>(filename);
 }
