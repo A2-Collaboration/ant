@@ -127,6 +127,8 @@ ReconstructCheck::histgroup::histgroup(SmartHistFactory& f, const string& prefix
 
     edge_flag_pos = f.makeTH2D(prefix+" Edge flagged Clusters","cos(#theta_{True})","#phi_{True}", costheta,phi,prefix+"_edge_flag");
 
+    veto_cand_phi_diff = f.makeTH1D(prefix+" Angle unmatched Veto - Cand","# unmatched veto clusters","",BinSettings(6),prefix+"_unmatched_veto");
+
     energy_recov  = f.makeTH2D(prefix+" Energy Recovery","cos(#theta_{True})","#phi [#circ]",costheta,phi,prefix+"_Erecov");
     energy_recov->SetStats(false);
 

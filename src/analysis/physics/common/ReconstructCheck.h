@@ -39,6 +39,8 @@ protected:
         TH1D* unmatched_veto;
         TH2D* edge_flag_pos;
 
+        TH1D* veto_cand_phi_diff;
+
         TH2D* energy_recov_norm;
         TH2D* energy_recov;
 
