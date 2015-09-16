@@ -119,7 +119,8 @@ struct ReconstructTester : Reconstruct {
     {
         Reconstruct::Initialize(headerInfo);
         // replace the candidate builder with our tester
-        candidatebuilder = std_ext::make_unique<CandidateBuilderTester>(sorted_detectors);
+        const auto& config = ExpConfig::Reconstruct::Get(headerInfo);
+        candidatebuilder = std_ext::make_unique<CandidateBuilderTester>(sorted_detectors, config);
     }
 };
 }
