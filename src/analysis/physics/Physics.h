@@ -59,6 +59,9 @@ public:
     std::string GetName() { return name_; }
 
     virtual void Initialize(data::Slowcontrol& slowcontrol);
+
+    Physics(const Physics&) = delete;
+    Physics& operator=(const Physics&) = delete;
 };
 
 template<class T>
