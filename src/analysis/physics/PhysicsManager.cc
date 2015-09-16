@@ -194,6 +194,10 @@ void PhysicsManager::ReadFrom(
         }
     }
 
+    for(auto& pclass : physics) {
+        pclass->Finish();
+    }
+
     VLOG(5) << "First EventId processed: " << header.FirstID;
     VLOG(5) << "Last  EventId processed: " << header.LastID;
 
