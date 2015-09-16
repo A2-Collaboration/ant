@@ -35,7 +35,8 @@ protected:
 
         std::vector<TH1*> mult2_split_angles;
 
-        TH1D* nCharged;
+        TH1D* nCharged_CB;
+        TH1D* nCharged_TAPS;
         TH2D* cluserSize_TAPS;
         TH2D* cluserSize_CB;
         TH2D* dEE_TAPS;
