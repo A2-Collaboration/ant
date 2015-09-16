@@ -3,6 +3,7 @@
 #include "DataManager.h"
 #include "gui/CalCanvas.h"
 #include "fitfunctions/FitTimewalk.h"
+#include "tree/TCalibrationData.h"
 
 #include "reconstruct/Clustering.h"
 

@@ -3,6 +3,7 @@
 #include "analysis/data/Event.h"
 #include "analysis/utils/combinatorics.h"
 #include "calibration/DataManager.h"
+#include "tree/TCalibrationData.h"
 
 #include "tree/TDetectorRead.h"
 

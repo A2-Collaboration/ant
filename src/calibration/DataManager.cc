@@ -5,6 +5,9 @@
 #include "base/Logger.h"
 #include "base/std_ext/memory.h"
 #include "base/interval.h"
+#include "DataBase.h"
+#include "tree/TCalibrationData.h"
+#include "tree/TDataRecord.h"
 
 //ROOT
 #include "TTree.h"
@@ -26,6 +29,16 @@ void DataManager::Init()
         return;
     dataBase = std_ext::make_unique<DataBase>();
     dataBase->ReadFromFolder(calibrationDataFolder);
+}
+
+DataManager::DataManager(const string& calibrationDataFolder_):
+    calibrationDataFolder(calibrationDataFolder_)
+{}
+
+DataManager::~DataManager()
+{
+    if(dataBase)
+        dataBase->WriteToFolder(calibrationDataFolder);
 }
 
 void DataManager::Add(const TCalibrationData& cdata)

@@ -2,6 +2,7 @@
 #include "analysis/plot/root_draw.h"
 #include "base/interval.h"
 #include "DataManager.h"
+#include "DataBase.h"
 
 #include <memory>
 #include <string>

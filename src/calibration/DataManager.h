@@ -1,10 +1,5 @@
 #pragma once
 
-//ant
-#include "tree/TCalibrationData.h"
-#include "tree/TDataRecord.h"
-#include "DataBase.h"
-
 //std
 #include <list>
 #include <string>
@@ -13,8 +8,14 @@
 
 namespace ant
 {
+
+class TCalibrationData;
+class TID;
+
 namespace calibration
 {
+
+class DataBase;
 
 class DataAccess
 {
@@ -56,16 +57,10 @@ private:
 
 
 public:
-    DataManager(const std::string& calibrationDataFolder_):
-        calibrationDataFolder(calibrationDataFolder_)
-    {}
+    DataManager(const std::string& calibrationDataFolder_);
 
 
-    ~DataManager()
-    {
-        if(dataBase)
-            dataBase->WriteToFolder(calibrationDataFolder);
-    }
+    ~DataManager();
 
 
     void Add(const TCalibrationData& cdata) override;

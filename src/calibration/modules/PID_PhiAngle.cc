@@ -3,6 +3,7 @@
 #include "DataManager.h"
 #include "gui/CalCanvas.h"
 #include "fitfunctions/FitGaus.h"
+#include "tree/TCalibrationData.h"
 
 #include "expconfig/detectors/PID.h"
 #include "base/Logger.h"
