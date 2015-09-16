@@ -58,9 +58,16 @@ protected:
         bool Ignored;
     };
 
+    /**
+     * @brief Constructor
+     * @param elements_init
+     *
+     * The default PID offset angle is conposed of 15.476 degrees from Acqu, and 7.5 degrees empirical from MC studies.
+     *
+     */
     PID(const std::vector<Element_t>& elements_init) :
         Detector_t(Detector_t::Type_t::PID),
-        phi_offset0_degrees(15.476),
+        phi_offset0_degrees(15.476 + 7.5),
         elements(elements_init)
     {
         InitElements();
