@@ -39,7 +39,10 @@ protected:
         TH2D* cluserSize_TAPS;
         TH2D* cluserSize_CB;
         TH2D* dEE_TAPS;
+        TH2D* dEE_TAPS_true;
         TH2D* dEE_CB;
+        TH2D* dEE_CB_true;
+        TH2D* posCharged;
     };
 
     candidatesEvent_t nPerEvent;

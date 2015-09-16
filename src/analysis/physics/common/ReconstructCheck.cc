@@ -96,13 +96,18 @@ void ReconstructCheck::ShowResult()
     splitanglesc << drawoption("nostack") << s << endc;
 
     canvas c_pid("PID");
-    c_pid << nPerEvent.nCharged << drawoption("colz") << nPerEvent.cluserSize_CB << nPerEvent.cluserSize_TAPS << endc;
+    c_pid << nPerEvent.nCharged << drawoption("colz") << nPerEvent.cluserSize_CB << nPerEvent.cluserSize_TAPS
+          << nPerEvent.dEE_CB << nPerEvent.dEE_CB_true
+          << nPerEvent.dEE_TAPS << nPerEvent.dEE_TAPS_true
+          << nPerEvent.posCharged
+          << endc;
 }
 
 void LabelBins(TAxis* x) {
 
-    for(Int_t i=1; i<x->GetNbins(); ++i) {
-        x->SetBinLabel(i,to_string(int(x->GetBinLowEdge(i))).c_str());
+    for(Int_t i=1; i<=x->GetNbins(); ++i) {
+        const auto a = x->GetBinLowEdge(i);
+        x->SetBinLabel(i,to_string(int(a)).c_str());
     }
 }
 
@@ -110,21 +115,26 @@ void LabelBins(TAxis* x) {
 ReconstructCheck::candidatesEvent_t::candidatesEvent_t(SmartHistFactory& f, const string& prefix)
 {
     const BinSettings energy(1000);
-    const BinSettings clusersize(19,1,19);
+    const BinSettings vetoEnergy(100,0,25);
+    const BinSettings clusersize(19,1,20);
+    const BinSettings costheta(360,-1,1);
+    const BinSettings phi(360,-180,180);
 
     nPerEvent     = f.makeTH1D(prefix+" Candidates/Event", "Candidates/Event","",BinSettings(10),prefix+"candEvent");
     LabelBins(nPerEvent->GetXaxis());
+    nPerEvent->SetFillColor(kGray);
 
     nPerEventPerE = f.makeTH2D(prefix+" Candidates/Event/Energy","MC True Energy [MeV]","Candidates/Event",BinSettings(1000),BinSettings(10),prefix+"candEventEnergy");
     LabelBins(nPerEventPerE->GetYaxis());
 
     splitPerEvent = f.makeTH1D(prefix+" Split-flagged Clusters/Event", "# split clusters/Event","",BinSettings(20),prefix+"splits");
     LabelBins(splitPerEvent->GetXaxis());
+    splitPerEvent->SetFillColor(kGray);
 
-    splitPos      = f.makeTH2D(prefix+" Pos of split-flagged clusters","cos(#theta)","#phi",BinSettings(360,-1,1),BinSettings(360,-180,180),prefix+"splitpos");
+    splitPos      = f.makeTH2D(prefix+" Pos of split-flagged clusters","cos(#theta)","#phi",costheta,phi,prefix+"splitpos");
     splitPos->SetStats(false);
 
-    multiplicity_map      = f.makeTH3D(prefix+" Multitplicity Map","cos(#theta_{True})","#phi_{True}","Mult",BinSettings(360,-1,1),BinSettings(360,-180,180),BinSettings(10),prefix+"mults");
+    multiplicity_map      = f.makeTH3D(prefix+" Multitplicity Map","cos(#theta_{True})","#phi_{True}","Mult",costheta,phi,BinSettings(10),prefix+"mults");
     multiplicity_map->SetStats(false);
 
     mult2_split_angles.resize(3);
@@ -138,7 +148,18 @@ ReconstructCheck::candidatesEvent_t::candidatesEvent_t(SmartHistFactory& f, cons
     cluserSize_CB   = f.makeTH2D(prefix+" Cluster Size CB",  "E_{True} [MeV]","Elements",energy, clusersize,prefix+"_clustersize_CB");
     LabelBins(cluserSize_CB->GetYaxis());
 
-    nCharged        = f.makeTH1D(prefix+" N Charged", "# charged candidates", "", BinSettings(10),prefix+"_ncharged");
+
+    dEE_TAPS = f.makeTH2D(prefix+" dEE TAPS", "E [MeV]","VetoEnergy [MeV]",energy, vetoEnergy,prefix+"_dEE_TAPS");
+    dEE_TAPS_true = f.makeTH2D(prefix+" dEE TAPS (true E)", "E_{True} [MeV]","VetoEnergy [MeV]",energy, vetoEnergy,prefix+"_dEE_true_TAPS");
+
+    dEE_CB = f.makeTH2D(prefix+" dEE CB", "E [MeV]","VetoEnergy [MeV]",energy, vetoEnergy,prefix+"_dEE_CB");
+    dEE_CB_true = f.makeTH2D(prefix+" dEE CB (True E)", "E_{True} [MeV]","VetoEnergy [MeV]",energy, vetoEnergy,prefix+"_dEE_true_CB");
+
+    nCharged        = f.makeTH1D(prefix+" N Charged (VetoEnergy > 0)", "# charged candidates", "", BinSettings(10),prefix+"_ncharged");
+    LabelBins(nCharged->GetXaxis());
+    nCharged->SetFillColor(kGray);
+
+    posCharged = f.makeTH2D(prefix+"Position of charged Candidates","cos(#theta_{True})","#phi [#circ]",costheta,phi,prefix+"_posCharged");
 
 }
 
@@ -169,12 +190,17 @@ void ReconstructCheck::candidatesEvent_t::Fill(const ParticlePtr& mctrue, const 
     for(const CandidatePtr& c : cand) {
         if(c->VetoEnergy() > 0.0) {
             ncharged++;
+            posCharged->Fill(mc_cos_theta,mc_phi);
         }
 
         if(c->Detector() & Detector_t::Any_t::CB) {
             cluserSize_CB->Fill(mc_energy, c->ClusterSize());
+            dEE_CB->Fill(c->ClusterEnergy(), c->VetoEnergy());
+            dEE_CB_true->Fill(mc_energy, c->VetoEnergy());
         } else if(c->Detector() & Detector_t::Any_t::TAPS) {
             cluserSize_TAPS->Fill(mc_energy, c->ClusterSize());
+            dEE_TAPS->Fill(c->ClusterEnergy(), c->VetoEnergy());
+            dEE_TAPS_true->Fill(mc_energy, c->VetoEnergy());
         }
 
         for(const Cluster& cl : c->Clusters) {
