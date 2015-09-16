@@ -25,12 +25,32 @@ struct PID :
         return elements[channel].Ignored;
     }
 
+    /**
+     * @brief Get the phi angle covered by one PID element
+     * @return angle in radian
+     */
     virtual double dPhi(unsigned) const;
 
-    virtual void SetPhiOffset(double offset_degrees) {
-        phi_offset0_degrees = offset_degrees;
-        RotateElements();
-    }
+    /**
+     * @brief Set an absolute phi rotation angle
+     * @param offset_degrees angle in degrees
+     * @todo Change to use radian
+     */
+    virtual void SetPhiOffset(double offset_degrees);
+
+    /**
+     * @brief Get the current phi rotation angle
+     * @return angle in degrees
+     * @todo Change to return values in radian
+     */
+    virtual double GetPhiOffest() const;
+
+    /**
+     * @brief Apply a rotation in addition to the already existing phi offset
+     * @param offset The angle in degrees
+     * @todo Change offset to be in radian
+     */
+    virtual void RotateRelative(const double offset);
 
     // for UnpackerAcquConfig
     virtual void BuildMappings(

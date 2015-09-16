@@ -26,6 +26,19 @@ double PID::dPhi(unsigned) const {
     return 2 * M_PI / elements.size();
 }
 
+void PID::SetPhiOffset(double offset_degrees) {
+    phi_offset0_degrees = offset_degrees;
+    RotateElements();
+}
+
+double PID::GetPhiOffest() const {
+    return phi_offset0_degrees;
+}
+
+void PID::RotateRelative(const double offset) {
+    SetPhiOffset(GetPhiOffest() + offset);
+}
+
 void PID::BuildMappings(vector<UnpackerAcquConfig::hit_mapping_t>& hit_mappings,
                         vector<UnpackerAcquConfig::scaler_mapping_t>&) const
 {
