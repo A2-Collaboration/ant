@@ -1,6 +1,5 @@
 add_ant_test(StdExt)
 add_ant_test(Intervals)
 add_ant_test(Tree)
-add_ant_test(ReadTFiles unpacker)
-add_ant_test(WrapTFile)
+add_ant_test(WrapTFile unpacker)
 add_ant_test(Enumfield)
