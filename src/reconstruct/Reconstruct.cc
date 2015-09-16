@@ -57,7 +57,7 @@ void Reconstruct::Initialize(const THeaderInfo& headerInfo)
 
     // init the candidate builder
     /// \todo Make use of different candidate builders maybe?
-    candidatebuilder = std_ext::make_unique<CandidateBuilder>(sorted_detectors);
+    candidatebuilder = std_ext::make_unique<CandidateBuilder>(sorted_detectors, config);
 
     // init the updateable manager
     updateablemanager = std_ext::make_unique<UpdateableManager>(

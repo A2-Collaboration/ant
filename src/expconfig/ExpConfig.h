@@ -68,6 +68,14 @@ public:
         using cluster_thresholds_t = std::map<Detector_t::Type_t, double>;
         virtual cluster_thresholds_t  GetClusterThresholds() const = 0;
 
+        struct candidatebuilder_config_t {
+            /// @see ant::reconstruct::CandidateBuilder::PID_phi_epsilon
+            double PID_Phi_Epsilon = 0.0;
+            candidatebuilder_config_t() = default;
+        };
+
+        virtual candidatebuilder_config_t GetCandidateBuilderConfig() const { return candidatebuilder_config_t(); }
+
         // factory method to obtain such a type of config
         static std::shared_ptr<Reconstruct> Get(const THeaderInfo& header);
     };

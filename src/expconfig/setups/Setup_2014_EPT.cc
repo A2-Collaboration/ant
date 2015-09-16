@@ -1,5 +1,6 @@
 #include "Setup_2014_EPT.h"
 
+#include "base/std_ext/math.h"
 
 #include "detectors/Trigger.h"
 #include "detectors/CB.h"
@@ -160,4 +161,11 @@ void Setup_2014_EPT::BuildMappings(std::vector<ant::UnpackerAcquConfig::hit_mapp
 
     // now you may tweak the mapping at this location here
     // for example, ignore elements
+}
+
+ant::ExpConfig::Reconstruct::candidatebuilder_config_t Setup_2014_EPT::GetCandidateBuilderConfig() const
+{
+    candidatebuilder_config_t conf;
+    conf.PID_Phi_Epsilon = std_ext::degree_to_radian(2.0);
+    return conf;
 }

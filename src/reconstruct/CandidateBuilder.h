@@ -3,6 +3,7 @@
 #include "base/Detector_t.h"
 #include "tree/TCluster.h"
 #include "tree/TEvent.h"
+#include "expconfig/ExpConfig.h"
 
 #include <map>
 #include <list>
@@ -37,6 +38,8 @@ protected:
     std::shared_ptr<expconfig::detector::TAPS> taps;
     std::shared_ptr<expconfig::detector::TAPSVeto> tapsveto;
 
+    const ant::ExpConfig::Reconstruct::candidatebuilder_config_t config;
+
     void Build_PID_CB(
             std::map<Detector_t::Type_t, std::list< TCluster > >& sorted_clusters,
             TEvent::candidates_t& candidates
@@ -56,7 +59,7 @@ public:
 
     using sorted_detectors_t = std::map<Detector_t::Type_t, std::shared_ptr<Detector_t> >;
 
-    CandidateBuilder(const sorted_detectors_t& sorted_detectors);
+    CandidateBuilder(const sorted_detectors_t& sorted_detectors, const std::shared_ptr<ExpConfig::Reconstruct>& _config);
     virtual ~CandidateBuilder() = default;
 
     // this method shall fill the TEvent reference

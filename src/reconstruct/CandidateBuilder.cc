@@ -28,6 +28,8 @@ void CandidateBuilder::Build_PID_CB(std::map<Detector_t::Type_t, std::list<TClus
 
     auto pid_cluster = pid_clusters.begin();
 
+    const auto dphi_max = (pid->dPhi(pid_cluster->Hits.at(0).Channel) + config.PID_Phi_Epsilon) / 2.0;
+
     while(pid_cluster != pid_clusters.end()) {
 
         const auto pid_phi = pid_cluster->Position.Phi();
@@ -35,8 +37,6 @@ void CandidateBuilder::Build_PID_CB(std::map<Detector_t::Type_t, std::list<TClus
         if(pid_cluster->Hits.size() == 1) {
 
             bool matched = false;
-
-            const auto dphi_max = pid->dPhi(pid_cluster->Hits.at(0).Channel) / 2.0;
 
             auto cb_cluster = cb_clusters.begin();
 
@@ -177,7 +177,9 @@ void CandidateBuilder::Catchall(std::map<Detector_t::Type_t, std::list<TCluster>
     }
 }
 
-CandidateBuilder::CandidateBuilder(const CandidateBuilder::sorted_detectors_t& sorted_detectors) {
+CandidateBuilder::CandidateBuilder(const CandidateBuilder::sorted_detectors_t& sorted_detectors, const std::shared_ptr<ExpConfig::Reconstruct>& _config):
+    config(_config->GetCandidateBuilderConfig())
+{
 
     try {
         cb  = dynamic_pointer_cast<detector::CB>(sorted_detectors.at(Detector_t::Type_t::CB));
