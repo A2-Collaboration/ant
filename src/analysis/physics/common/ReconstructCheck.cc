@@ -7,6 +7,7 @@
 #include <cmath>
 #include <iostream>
 #include "base/Logger.h"
+#include "base/cbtaps_display/TH2TAPS.h"
 
 #include "base/std_ext/math.h"
 
@@ -18,9 +19,9 @@ using namespace ant::analysis::data;
 
 ReconstructCheck::ReconstructCheck(PhysOptPtr opts):
     Physics("ReconstructCheck",opts),
-    cb_group(HistFac, "CB"),
-    taps_group(HistFac,"TAPS"),
-    all_group(HistFac,"All")
+    cb_group(HistFac, "CB", histgroup::detectortype::CB),
+    taps_group(HistFac,"TAPS",histgroup::detectortype::TAPS),
+    all_group(HistFac,"All",histgroup::detectortype::All)
 {
     const BinSettings e(max(1000.0, atof(GetOption("Emax").c_str())));
     EnergyRec_cb = HistFac.makeTH2D("Energry Reconstruction CB","E_{true} [MeV]","E_{rec} [MeV]", e, e, "Energy_rec_cb");
@@ -67,9 +68,9 @@ void ReconstructCheck::Finish()
 
 void ReconstructCheck::ShowResult()
 {
-    for(auto& g : {cb_group, taps_group, all_group}) {
-        g.ShowResult();
-    }
+    cb_group.ShowResult();
+    taps_group.ShowResult();
+    all_group.ShowResult();
 }
 
 void LabelBins(TAxis* x) {
@@ -80,8 +81,22 @@ void LabelBins(TAxis* x) {
     }
 }
 
+std::unique_ptr<ReconstructCheck::PositionMap> ReconstructCheck::histgroup::makePosMap(SmartHistFactory& f, ReconstructCheck::histgroup::detectortype d, const string& name, const string title)
+{
+    std::unique_ptr<PositionMap> ptr;
+    switch (d) {
+    case detectortype::All:
+    case detectortype::CB:
+        ptr = std_ext::make_unique<PositionMapCB>(f,name,title);
+        break;
+    case detectortype::TAPS:
+        ptr = std_ext::make_unique<PositionMapTAPS>(f,name,title);
+    }
 
-ReconstructCheck::histgroup::histgroup(SmartHistFactory& f, const string& prefix): Prefix(prefix)
+    return move(ptr);
+}
+
+ReconstructCheck::histgroup::histgroup(SmartHistFactory& f, const string& prefix, detectortype d): Prefix(prefix)
 {
     const BinSettings energy(1000);
     const BinSettings vetoEnergy(100,0,25);
@@ -100,8 +115,8 @@ ReconstructCheck::histgroup::histgroup(SmartHistFactory& f, const string& prefix
     LabelBins(splitPerEvent->GetXaxis());
     splitPerEvent->SetFillColor(kGray);
 
-    splitPos      = f.makeTH2D(prefix+" Pos of split-flagged clusters","cos(#theta)","#phi",costheta,phi,prefix+"splitpos");
-    splitPos->SetStats(false);
+    splitPos = makePosMap(f,d, prefix+"_splitpos",prefix+" Pos of split-flagged clusters");
+    posCharged = makePosMap(f,d, prefix+"_chargedpos",prefix+" Pos of charged cands");
 
     multiplicity_map      = f.makeTH3D(prefix+" Multitplicity Map","cos(#theta_{True})","#phi_{True}","Mult",costheta,phi,BinSettings(10),prefix+"mults");
     multiplicity_map->SetStats(false);
@@ -121,21 +136,19 @@ ReconstructCheck::histgroup::histgroup(SmartHistFactory& f, const string& prefix
     LabelBins(nCharged->GetXaxis());
     nCharged->SetFillColor(kGray);
 
-    posCharged = f.makeTH2D(prefix+" Position of charged Candidates","cos(#theta_{True})","#phi [#circ]",costheta,phi,prefix+"_posCharged");
-
     unmatched_veto = f.makeTH1D(prefix+" Unmatched Veto Clusters","# unmatched veto clusters","",BinSettings(6),prefix+"_unmatched_veto");
     LabelBins(unmatched_veto->GetXaxis());
     unmatched_veto->SetFillColor(kGray);
 
     edge_flag_pos = f.makeTH2D(prefix+" Edge flagged Clusters","cos(#theta_{True})","#phi_{True}", costheta,phi,prefix+"_edge_flag");
 
-    veto_cand_phi_diff = f.makeTH1D(prefix+" Angle unmatched Veto - Cand","# unmatched veto clusters","",BinSettings(6),prefix+"_unmatched_veto");
+    veto_cand_phi_diff = f.makeTH1D(prefix+" Angle unmatched Veto - Cand","# unmatched veto clusters","",BinSettings(6),prefix+"_veto_cand_phi_diff");
 
-    energy_recov  = f.makeTH2D(prefix+" Energy Recovery Average","cos(#theta_{True})","#phi [#circ]",costheta,phi,prefix+"_Erecov");
-    energy_recov->SetStats(false);
+    energy_recov  = makePosMap(f,d,prefix+"_Erecov",prefix+" Energy Recovery Average");
+    energy_recov->maphist->SetStats(false);
 
-    energy_recov_norm  = f.makeTH2D(prefix+" Energy Recovery Average Normalization","cos(#theta_{True})","#phi [#circ]",costheta,phi,prefix+"_ErecovNorm");
-    energy_recov_norm->SetStats(false);
+    energy_recov_norm  = makePosMap(f,d,prefix+"_Erecov_norm",prefix+" Energy Recovery Average Norm");
+    energy_recov_norm->maphist->SetStats(false);
 }
 
 void ReconstructCheck::histgroup::ShowResult() const
@@ -146,11 +159,11 @@ void ReconstructCheck::histgroup::ShowResult() const
     canvas c(Prefix);
 
     c << drawoption("colz") << nPerEvent << nPerEventPerE << splitPerEvent
-      << splitPos << edge_flag_pos << multiplicity_map
-      << cluserSize << dEE << dEE_true <<nCharged << posCharged << unmatched_veto
+      << *splitPos << edge_flag_pos << multiplicity_map
+      << cluserSize << dEE << dEE_true << nCharged << *posCharged << unmatched_veto
       << drawoption("nostack") << padoption::set(padoption_t::Legend) << splitstack
       << padoption::unset(padoption_t::Legend)
-      << drawoption("colz") << energy_recov
+      << drawoption("colz") << *energy_recov
       << endc;
 }
 
@@ -164,7 +177,7 @@ void ReconstructCheck::histgroup::Finish()
     Norm(splitPerEvent);
     Norm(nCharged);
     Norm(unmatched_veto);
-    energy_recov->Divide(energy_recov_norm);
+    energy_recov->maphist->Divide(energy_recov_norm->maphist);
 }
 
 double angle(const data::Candidate& c1, const data::Candidate& c2) {
@@ -193,7 +206,8 @@ std::list<CandidatePtr> CandidatesByDetector(const Detector_t::Any_t& detector, 
 void ReconstructCheck::histgroup::Fill(const ParticlePtr& mctrue, const CandidateList& cand, const ClusterList& insane)
 {
     const auto mc_phi = mctrue->Phi()*TMath::RadToDeg();
-    const auto mc_cos_theta = cos(mctrue->Theta());
+    const auto mc_theta = mctrue->Theta();
+    const auto mc_cos_theta = cos(mc_theta);
     const auto mc_energy = mctrue->Ek();
 
 
@@ -206,7 +220,7 @@ void ReconstructCheck::histgroup::Fill(const ParticlePtr& mctrue, const Candidat
 
     for(const CandidatePtr& c : cand) {
         if(c->VetoEnergy() > 0.0) {
-            posCharged->Fill(mc_cos_theta,mc_phi);
+            posCharged->Fill(mc_theta,mc_phi);
         }
 
             cluserSize->Fill(mc_energy, c->ClusterSize());
@@ -220,7 +234,7 @@ void ReconstructCheck::histgroup::Fill(const ParticlePtr& mctrue, const Candidat
         for(const Cluster& cl : c->Clusters) {
             if(cl.flags.isChecked(Cluster::Flag::Split)) {
                 ++nsplit;
-                splitPos->Fill(mc_cos_theta, mc_phi);
+                splitPos->Fill(mc_theta, mc_phi);
 
             }
 
@@ -253,30 +267,30 @@ void ReconstructCheck::histgroup::Fill(const ParticlePtr& mctrue, const Candidat
     if(cand.size()==1) {
         const auto& c = cand.at(0);
         const auto rec = c->ClusterEnergy() / mc_energy;
-        energy_recov->Fill(mc_cos_theta, mc_phi, rec);
-        energy_recov_norm->Fill(mc_cos_theta,mc_phi);
+        energy_recov->Fill(mc_theta, mc_phi, rec);
+        energy_recov_norm->Fill(mc_theta,mc_phi);
     }
 
 }
 
 
 
-void ReconstructCheck::PositionMap::Fill(const double cos_theta, const double phi, const double v)
+void ReconstructCheck::PositionMapCB::Fill(const double theta, const double phi, const double v)
 {
-    map->Fill(cos_theta,phi,v);
+    maphist->Fill(cos(theta),phi,v);
 }
 
-void ReconstructCheck::PositionMap::draw(canvas &canv) const
+void ReconstructCheck::PositionMap::Draw(const string&) const
 {
-    canv << drawoption("colz") << map;
+    maphist->Draw("colz");
 }
 
-ReconstructCheck::PositionMap::PositionMap(SmartHistFactory &f, const string &name, const string &title)
+ReconstructCheck::PositionMapCB::PositionMapCB(SmartHistFactory &f, const string &name, const string &title)
 {
-    map = f.makeTH2D(title,"cos(#theta_{True})","#phi [#circ]",costheta,phi,name);
+    const BinSettings costheta(360,-1,1);
+    const BinSettings phi(360,-180,180);
+    maphist = f.makeTH2D(title,"cos(#theta_{True})","#phi [#circ]",costheta,phi,name);
 }
-
-
 
 ReconstructCheck::PositionMapTAPS::PositionMapTAPS(SmartHistFactory &f, const string &name, const string& title)
 {
@@ -285,13 +299,7 @@ ReconstructCheck::PositionMapTAPS::PositionMapTAPS(SmartHistFactory &f, const st
 
     const BinSettings bins(2*l/res,-l,l);
 
-    map = f.makeTH2D(title,"x","y",bins, bins, name);
-}
-
-void ReconstructCheck::PositionMapTAPS::draw(canvas &canv) const
-{
-    canv << drawoption("colz") << map;
-    ///@todo find a way to draw onto the same pad again and add a TAPS elements grid overlay
+    maphist = f.makeTH2D(title,"x","y",bins, bins, name);
 }
 
 void ReconstructCheck::PositionMapTAPS::Fill(const double theta, const double phi, const double v)
@@ -303,8 +311,15 @@ void ReconstructCheck::PositionMapTAPS::Fill(const double theta, const double ph
         const auto r = tan(theta) * tapsdist; //cm
         const auto x = r * cos(phi);
         const auto y = r * sin(phi);
-        map->Fill(x,y,v);
+        maphist->Fill(x,y,v);
     }
+}
+
+void ReconstructCheck::PositionMapTAPS::Draw(const string&) const
+{
+    maphist->Draw("colz");
+    auto taps = new TH2TAPS();
+    taps->Draw("same text");
 }
 
 AUTO_REGISTER_PHYSICS(ReconstructCheck, "ReconstructCheck")
