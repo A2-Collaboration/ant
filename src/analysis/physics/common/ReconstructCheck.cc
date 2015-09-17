@@ -127,6 +127,11 @@ ReconstructCheck::histgroup::histgroup(SmartHistFactory& f, const string& prefix
 
     edge_flag_pos = f.makeTH2D(prefix+" Edge flagged Clusters","cos(#theta_{True})","#phi_{True}", costheta,phi,prefix+"_edge_flag");
 
+    energy_recov  = f.makeTH2D(prefix+" Energy Recovery","cos(#theta_{True})","#phi [#circ]",costheta,phi,prefix+"_Erecov");
+    energy_recov->SetStats(false);
+
+    energy_recov_norm  = f.makeTH2D(prefix+" Energy Recovery Normalization","cos(#theta_{True})","#phi [#circ]",costheta,phi,prefix+"_ErecovNorm");
+    energy_recov_norm->SetStats(false);
 }
 
 void ReconstructCheck::histgroup::ShowResult() const
@@ -140,6 +145,8 @@ void ReconstructCheck::histgroup::ShowResult() const
       << splitPos << edge_flag_pos << multiplicity_map
       << cluserSize << dEE << dEE_true <<nCharged << posCharged << unmatched_veto
       << drawoption("nostack") << padoption::set(padoption_t::Legend) << splitstack
+      << padoption::unset(padoption_t::Legend)
+      << drawoption("colz") << energy_recov
       << endc;
 }
 
@@ -153,6 +160,7 @@ void ReconstructCheck::histgroup::Finish()
     Norm(splitPerEvent);
     Norm(nCharged);
     Norm(unmatched_veto);
+    energy_recov->Divide(energy_recov_norm);
 }
 
 double angle(const data::Candidate& c1, const data::Candidate& c2) {
@@ -236,6 +244,13 @@ void ReconstructCheck::histgroup::Fill(const ParticlePtr& mctrue, const Candidat
         if(nsplit<3) {
             mult2_split_angles[nsplit]->Fill(angle(*cand.at(0), *cand.at(1))*TMath::RadToDeg());
         }
+    }
+
+    if(cand.size()==1) {
+        const auto& c = cand.at(0);
+        const auto rec = c->ClusterEnergy() / mc_energy;
+        energy_recov->Fill(mc_cos_theta, mc_phi, rec);
+        energy_recov_norm->Fill(mc_cos_theta,mc_phi);
     }
 
 }

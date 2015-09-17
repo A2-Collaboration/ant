@@ -39,6 +39,9 @@ protected:
         TH1D* unmatched_veto;
         TH2D* edge_flag_pos;
 
+        TH2D* energy_recov_norm;
+        TH2D* energy_recov;
+
         histgroup(SmartHistFactory& f, const std::string& prefix);
         void Fill(const data::ParticlePtr& mctrue, const data::CandidateList& cand, const data::ClusterList& insane);
         void ShowResult() const;
