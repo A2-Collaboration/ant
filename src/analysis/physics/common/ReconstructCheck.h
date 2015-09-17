@@ -19,6 +19,25 @@ protected:
     TH2D* EnergyRec_cb;
     TH2D* EnergyRec_taps;
 
+    struct PositionMap {
+        TH2D* map;
+        virtual void Fill(const double cos_theta, const double phi, const double v=1.0);
+        virtual void draw(canvas& canv) const;
+
+        PositionMap(SmartHistFactory& f, const std::string& name, const std::string& title="");
+
+        virtual ~PositionMap() = default;
+
+        PositionMap(const PositionMap&) = delete;
+        PositionMap& operator =(const PositionMap&) =delete;
+    };
+
+    struct PositionMapTAPS : PositionMap {
+        PositionMapTAPS(SmartHistFactory& f, const std::string& name, const std::string &title="");
+        virtual void draw(canvas &canv) const override;
+        virtual void Fill(const double cos, const double phi, const double v) override;
+    };
+
     struct histgroup {
         const std::string Prefix;
 

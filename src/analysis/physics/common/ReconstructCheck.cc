@@ -8,6 +8,8 @@
 #include <iostream>
 #include "base/Logger.h"
 
+#include "base/std_ext/math.h"
+
 using namespace std;
 using namespace ant;
 using namespace ant::analysis;
@@ -129,10 +131,10 @@ ReconstructCheck::histgroup::histgroup(SmartHistFactory& f, const string& prefix
 
     veto_cand_phi_diff = f.makeTH1D(prefix+" Angle unmatched Veto - Cand","# unmatched veto clusters","",BinSettings(6),prefix+"_unmatched_veto");
 
-    energy_recov  = f.makeTH2D(prefix+" Energy Recovery","cos(#theta_{True})","#phi [#circ]",costheta,phi,prefix+"_Erecov");
+    energy_recov  = f.makeTH2D(prefix+" Energy Recovery Average","cos(#theta_{True})","#phi [#circ]",costheta,phi,prefix+"_Erecov");
     energy_recov->SetStats(false);
 
-    energy_recov_norm  = f.makeTH2D(prefix+" Energy Recovery Normalization","cos(#theta_{True})","#phi [#circ]",costheta,phi,prefix+"_ErecovNorm");
+    energy_recov_norm  = f.makeTH2D(prefix+" Energy Recovery Average Normalization","cos(#theta_{True})","#phi [#circ]",costheta,phi,prefix+"_ErecovNorm");
     energy_recov_norm->SetStats(false);
 }
 
@@ -255,6 +257,54 @@ void ReconstructCheck::histgroup::Fill(const ParticlePtr& mctrue, const Candidat
         energy_recov_norm->Fill(mc_cos_theta,mc_phi);
     }
 
+}
+
+
+
+void ReconstructCheck::PositionMap::Fill(const double cos_theta, const double phi, const double v)
+{
+    map->Fill(cos_theta,phi,v);
+}
+
+void ReconstructCheck::PositionMap::draw(canvas &canv) const
+{
+    canv << drawoption("colz") << map;
+}
+
+ReconstructCheck::PositionMap::PositionMap(SmartHistFactory &f, const string &name, const string &title)
+{
+    map = f.makeTH2D(title,"cos(#theta_{True})","#phi [#circ]",costheta,phi,name);
+}
+
+
+
+ReconstructCheck::PositionMapTAPS::PositionMapTAPS(SmartHistFactory &f, const string &name, const string& title)
+{
+    const auto l = 100.0; //cm
+    const auto res = .5; //cm
+
+    const BinSettings bins(2*l/res,-l,l);
+
+    map = f.makeTH2D(title,"x","y",bins, bins, name);
+}
+
+void ReconstructCheck::PositionMapTAPS::draw(canvas &canv) const
+{
+    canv << drawoption("colz") << map;
+    ///@todo find a way to draw onto the same pad again and add a TAPS elements grid overlay
+}
+
+void ReconstructCheck::PositionMapTAPS::Fill(const double theta, const double phi, const double v)
+{
+    constexpr const auto tapsdist = 145.0; //cm
+    constexpr const auto max_theta = std_ext::degree_to_radian(25.0);
+
+    if(theta < max_theta) {
+        const auto r = tan(theta) * tapsdist; //cm
+        const auto x = r * cos(phi);
+        const auto y = r * sin(phi);
+        map->Fill(x,y,v);
+    }
 }
 
 AUTO_REGISTER_PHYSICS(ReconstructCheck, "ReconstructCheck")
