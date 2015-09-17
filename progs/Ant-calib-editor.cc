@@ -1,27 +1,39 @@
-#include "calibration/gui/ACECanvas.h"
-#include "calibration/gui/Dialogs.h"
-#include <iostream>
+#include "calibration/gui/EditorWindow.h"
+
+#include "base/Logger.h"
+#include "base/CmdLine.h"
+
 #include "TRint.h"
+#include "TROOT.h"
+
+#include <iostream>
+#include <cstring>
 
 using namespace std;
 using namespace ant;
-using namespace ant::calibration::gui;
-
+using namespace  ant::calibration::gui;
 
 int main(int argc, char** argv) {
-//    SetupLogger();
+    SetupLogger();
 
-    int i = 0;
-    TRint app("ACE",&i,nullptr);
 
-    if (argc == 2)
-        new ACECanvas(argv[1]);
-    else
-    {
-        cerr << "Usage: " << argv[0] << " <calibration-file>" << endl;
-        return 1;
-    }
+    TCLAP::CmdLine cmd("Ant-calib-editor", ' ', "0.1");
+    auto cmd_verbose = cmd.add<TCLAP::ValueArg<int>>("v","verbose","Verbosity level (0..9)", false, 0,"level");
 
-    app.Run(kFALSE);
+    auto cmd_inputfiles  = cmd.add<TCLAP::UnlabeledMultiArg<string>>("inputfiles","Ant files with histograms",true,"inputfiles");
+    cmd.parse(argc, argv);
 
+    if(cmd_verbose->isSet())
+        el::Loggers::setVerboseLevel(cmd_verbose->getValue());
+
+
+
+    int fake_argc=1;
+    char* fake_argv[2];
+    fake_argv[0] = argv[0];
+    auto app = new TRint("Ant-calib",&fake_argc,fake_argv);
+
+
+    new EditorWindow();
+    app->Run(kTRUE);
 }

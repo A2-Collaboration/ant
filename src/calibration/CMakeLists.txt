@@ -24,6 +24,7 @@ set(SRCS
     gui/Manager.cc
     gui/Manager_traits.h
     gui/ManagerWindow.cc
+	gui/EditorWindow.cc
     gui/Indicator_traits.h
     gui/Indicator.cc
     gui/CalCanvas.cc
