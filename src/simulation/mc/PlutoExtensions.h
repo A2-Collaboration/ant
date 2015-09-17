@@ -8,6 +8,8 @@
 #include "PStaticData.h"
 #pragma GCC diagnostic pop
 
+#include "iostream"
+
 namespace ant
 {
 namespace simulation
@@ -26,6 +28,11 @@ void UpdatePluteDataBase()
 {
     PStaticData* sdata = makeStaticData();
 
+
+    std::cout << "=============================================" << endl;
+    std::cout << "omega before change:" << endl;
+    listParticle("w");
+
     // additional omega decays (from PDG Booklet 2014)
     sdata->AddDecay("w --> eta + g",        "w", "eta,g",           4.6E-4);
     sdata->AddDecay("w --> g + g + g",      "w", "g,g,g",           1.9E-4);    // upper limit
@@ -41,21 +48,30 @@ void UpdatePluteDataBase()
     sdata->AddDecay("w --> pi0 pi0",        "w", "pi0,pi0",         2.1E-4);    // upper limit
     sdata->AddDecay("w --> pi0 pi0 pi0",    "w", "pi0,pi0,pi0",     2.3E-4);    // upper limit
 
+    std::cout << "=============================================" << endl;
+    std::cout << "omega after change:" << endl;
+    listParticle("w");
 
+    std::cout << "=============================================" << endl;
+    std::cout << "eta' before change:" << endl;
+    listParticle("eta'");
     // newer Decay BRs for eta' (PDG particle listings)
-    sdata->SetDecayBR("eta'", "pi+,pi-,eta",    0.429,    0);   // Mode flag:   ( see Pluto-source)
-    sdata->SetDecayBR("eta'", "rho0,g",         0.291,    0);   // 0: Add the new b.r. to the existing ones + re-weighting
-    sdata->SetDecayBR("eta'", "eta,pi0,pi0",    0.222,    0);   // 1: No re-weighting (in this case br must be <1.)
-    sdata->SetDecayBR("eta'", "w,g",            0.0275,   0);
-    sdata->SetDecayBR("eta'", "g,g",            0.0220,   0);
-    sdata->SetDecayBR("eta'", "pi0,pi0,pi0",    0.00214,  0);
-    sdata->SetDecayBR("eta'", "dimuon,g",       0.000108, 0);
+    sdata->SetDecayBR("eta'", "pi+,pi-,eta",    0.429,    1);   // Mode flag:   ( see Pluto-source)
+    sdata->SetDecayBR("eta'", "rho0,g",         0.291,    1);   // 0: Add the new b.r. to the existing ones + re-weighting
+    sdata->SetDecayBR("eta'", "eta,pi0,pi0",    0.222,    1);   // 1: No re-weighting (in this case br must be <1.)
+    sdata->SetDecayBR("eta'", "w,g",            0.0275,   1);
+    sdata->SetDecayBR("eta'", "g,g",            0.0220,   1);
+    sdata->SetDecayBR("eta'", "pi0,pi0,pi0",    0.00214,  1);
+    sdata->SetDecayBR("eta'", "dimuon,g",       0.000108, 1);
 
     // new Decays from PDG
     sdata->AddDecay("eta' --> pi+ pi- mu+ mu-", "eta'", "pi+,pi-,mu+,mu-", 2.9E-5);     // upper limit
     sdata->AddDecay("eta' --> pi+ pi- pi0",     "eta'", "pi+,pi-,pi0",     3.8E-4);
     sdata->AddDecay("eta' --> pi+ pi- e+ e-",   "eta'", "pi+,pi-,e+,e-",   2.4E-3);
 
+    std::cout << "=============================================" << endl;
+    std::cout << "eta' after change:" << endl;
+    listParticle("eta'");
 }
 
 }
