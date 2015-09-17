@@ -72,14 +72,16 @@ bool DataManager::GetData(const string& calibrationID,
             cdata = *rit;
             return true;
         }
-        if(rit->Extendable) {
+        if(rit->Extendable
+           && rit->FirstID.Flags == eventID.Flags
+           && rit->LastID.Flags == eventID.Flags)
+        {
             forwards.emplace_back(rit->FirstID, addressof(*rit));
             backwards.emplace_back(rit->LastID, addressof(*rit));
         }
     }
 
     // case three: there were extendable calibration data
-    /// \todo should this also work with TID with different flags?!
     if(!forwards.empty() && !backwards.empty()) {
         // use stable_sort in case earlier added TCalibrationData has same TID start/stop
         auto forwards_comparer = [] (const extendable_item_t& a, const extendable_item_t& b) {

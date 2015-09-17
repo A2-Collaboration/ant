@@ -48,6 +48,8 @@ void dotest_extendable()
     const interval<TID> i2(TID(0,9u),  TID(0,10u));
     const interval<TID> i3(TID(0,12u), TID(0,15u));
     const interval<TID> i4(TID(0,2u),  TID(0,16u));
+    const interval<TID> i5(TID(0,2u,true),  TID(0,16u,true));
+
 
     // first simple test
     id = "1";
@@ -67,7 +69,7 @@ void dotest_extendable()
     REQUIRE(calibman.GetData(id, TID(0,16u), cdata));
     REQUIRE(check(cdata, i3));
 
-
+    // second test with large interval
     id = "2";
     calibman.Add(TCalibrationData(id, i4.Start(), i4.Stop(), true));
     calibman.Add(TCalibrationData(id, i1.Start(), i1.Stop(), true));
@@ -85,12 +87,30 @@ void dotest_extendable()
 
     REQUIRE(calibman.GetData(id, TID(0,9u), cdata));
     REQUIRE(check(cdata, i2));
+
+    // third test with MC flag
+    id = "3";
+    calibman.Add(TCalibrationData(id, i5.Start(), i5.Stop(), true));
+    calibman.Add(TCalibrationData(id, i1.Start(), i1.Stop(), true));
+    calibman.Add(TCalibrationData(id, i2.Start(), i2.Stop(), true));
+    calibman.Add(TCalibrationData(id, i3.Start(), i3.Stop(), true));
+
+    REQUIRE(calibman.GetData(id, TID(0,3u), cdata));
+    REQUIRE(check(cdata, i1));
+
+    REQUIRE(calibman.GetData(id, TID(0,7u), cdata));
+    REQUIRE(check(cdata, i2));
+
+    REQUIRE(calibman.GetData(id, TID(0,11u), cdata));
+    REQUIRE(check(cdata, i3));
+
+    REQUIRE(calibman.GetData(id, TID(0,16u), cdata));
+    REQUIRE(check(cdata, i3));
+
 }
 
 unsigned dotest_store(const string& foldername)
 {
-
-
     DataManager calibman(foldername);
 
     TCalibrationData cdata("1",
