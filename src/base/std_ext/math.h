@@ -8,15 +8,15 @@ namespace std_ext {
 
 constexpr double inf = std::numeric_limits<double>::infinity();
 
-inline double degree_to_radian(const double degree) {
+constexpr inline double degree_to_radian(const double degree) noexcept {
   return degree * M_PI / 180.0;
 }
-inline double radian_to_degree(const double radian) {
+constexpr inline double radian_to_degree(const double radian) noexcept {
   return radian * 180.0 / M_PI;
 }
 
 template <typename T>
-inline T sqr(const T& x) { return x*x; }
+constexpr inline T sqr(const T& x) noexcept { return x*x; }
 
 }} // namespace ant::std_ext
 
