@@ -294,12 +294,12 @@ ReconstructCheck::PositionMapCB::PositionMapCB(SmartHistFactory &f, const string
 
 ReconstructCheck::PositionMapTAPS::PositionMapTAPS(SmartHistFactory &f, const string &name, const string& title)
 {
-    const auto l = 100.0; //cm
-    const auto res = .5; //cm
+    const auto l   = 70.0; //cm
+    const auto res =   .5; //cm
 
     const BinSettings bins(2*l/res,-l,l);
 
-    maphist = f.makeTH2D(title,"x","y",bins, bins, name);
+    maphist = f.makeTH2D(title,"x [cm]","y [cm]",bins, bins, name);
 }
 
 void ReconstructCheck::PositionMapTAPS::Fill(const double theta, const double phi, const double v)
