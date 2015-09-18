@@ -58,88 +58,126 @@ public:
     }
 };
 
-int main(int argc, char** argv) {
-    SetupLogger();
+struct Configuration {
 
-    // check for bash completion commands
-    if(argc >= 2) {
+    template<typename T>
+    struct Option_t {
+        bool Set;
+        T Value;
+        Option_t() {}
+        Option_t(bool set, const T& value) :
+            Set(set), Value(value)
+        {}
+    };
+
+    vector<string> InputFiles;
+    Option_t<string> SetupName;
+    bool DisableReconstruction;
+    Option_t<string> UnpackerOutfile;
+    bool WriteUncalibrated;
+    bool WriteCalibrated;
+
+
+    bool Init(int argc, char** argv) {
+        SetupLogger();
+        if(CheckForBashCompletion(argc, argv))
+            return false;
+
+        TCLAP::CmdLine cmd("Ant", ' ', "0.1");
+
+        auto cmd_verbose = cmd.add<TCLAP::ValueArg<int>>("v","verbose","Verbosity level (0..9)", false, 0,"int");
+        auto cmd_input  = cmd.add<TCLAP::MultiArg<string>>("i","input","Input files",true,"filename");
+
+        TCLAP::ValuesConstraintExtra<decltype(ExpConfig::Setup::GetNames())> allowedsetupnames(ExpConfig::Setup::GetNames());
+        auto cmd_setup  = cmd.add<TCLAP::ValueArg<string>>("s","setup","Choose setup manually by name",false,"", &allowedsetupnames);
+
+        auto cmd_maxevents = cmd.add<TCLAP::ValueArg<int>>("m","maxevents","Process only max events",false, 0, "maxevents");
+
+        TCLAP::ValuesConstraintExtra<decltype(analysis::PhysicsRegistry::get().GetList())> allowedPhysics(analysis::PhysicsRegistry::get().GetList());
+        auto cmd_physicsclasses  = cmd.add<TCLAP::MultiArg<string>>("p","physics","Physics class to run", false, &allowedPhysics);
+
+        auto cmd_output = cmd.add<TCLAP::ValueArg<string>>("o","output","Output file",false,"","filename");
+
+        auto cmd_physicsOptions = cmd.add<TCLAP::MultiArg<string>>("O","options","Options for physics classes, key=value",false,"");
+        auto cmd_physicsclasses_opt = cmd.add<TCLAP::MultiArg<string>>("P","physics-opt","Physics class to run, with optiosn: PhysicsClass:key=val,key=val", false, "");
+
+        auto cmd_batchmode = cmd.add<TCLAP::SwitchArg>("b","batch","Run in batch mode (no ROOT shell afterwards)",false);
+
+        auto cmd_calibrations  = cmd.add<TCLAP::MultiArg<string>>("c","calibration","Calibration to run",false,"calibration");
+
+        auto cmd_unpackerout  = cmd.add<TCLAP::ValueArg<string>>("u","unpackerout","Unpacker output file",false,"","outputfile");
+        auto cmd_u_writeuncal  = cmd.add<TCLAP::SwitchArg>("","u_writeuncalibrated","Unpacker: Output UNcalibrated detector reads (before reconstruct)",false);
+        auto cmd_u_disablerecon  = cmd.add<TCLAP::SwitchArg>("","u_disablereconstruct","Unpacker: Disable Reconstruct (disables also all analysis)",false);
+        auto cmd_u_writecal  = cmd.add<TCLAP::SwitchArg>("","u_writecalibrated","Unpacker: Output calibrated detector reads (only if Reconstruct found)",false);
+
+        auto cmd_p_disableParticleID  = cmd.add<TCLAP::SwitchArg>("","p_disableParticleID","Physics: Disable ParticleID",false);
+
+
+        cmd.parse(argc, argv);
+        if(cmd_verbose->isSet()) {
+            el::Loggers::setVerboseLevel(cmd_verbose->getValue());
+        }
+
+        if(std_ext::system::isInteractive())
+            RawFileReader::OutputPerformanceStats = 3;
+
+        InputFiles = cmd_input->getValue();
+        SetupName = Option_t<string>(cmd_setup->isSet(), cmd_setup->getValue());
+        DisableReconstruction = cmd_u_disablerecon->isSet();
+        UnpackerOutfile = Option_t<string>(cmd_unpackerout->isSet(), cmd_unpackerout->getValue());
+        WriteUncalibrated = cmd_u_writeuncal->isSet();
+        WriteCalibrated = cmd_u_writecal->isSet();
+    }
+
+    bool CheckForBashCompletion(int argc, char** argv) {
+        if(argc<2)
+            return false;
+
         const string arg1(argv[1]);
 
         if(arg1 == "--list-physics") {
             for(const auto& name : analysis::PhysicsRegistry::get().GetList()) {
                 cout << name << endl;
             }
-            return 0;
+            return true;
         }
-
-        if(arg1 == "--list-setups") {
+        else if(arg1 == "--list-setups") {
             for(const auto& name : ExpConfig::Setup::GetNames()) {
                 cout << name << endl;
             }
-            return 0;
+            return true;
         }
+        else if(arg1 == "--list-calibrations") {
 
-        if(arg1 == "--list-calibrations") {
+            if(argc != 3)
+                return true;
 
-            if(argc == 3) {
+            const string setup_name(argv[2]);
 
-                const string setup_name(argv[2]);
+            ExpConfig::ManualSetupName = setup_name;
+            const auto setup = ExpConfig::Setup::GetLastFound();
 
-                ExpConfig::ManualSetupName = setup_name;
-                const auto setup = ExpConfig::Setup::GetLastFound();
-
-                if(setup) {
-                    for(const auto& calibration : setup->GetCalibrations()) {
-                        cout << calibration->GetName() << endl;
-                    }
+            if(setup) {
+                for(const auto& calibration : setup->GetCalibrations()) {
+                    cout << calibration->GetName() << endl;
                 }
             }
 
-            return 0;
+            return true;
         }
+
+        return false;
     }
-
-    TCLAP::CmdLine cmd("Ant", ' ', "0.1");
-
-    auto cmd_verbose = cmd.add<TCLAP::ValueArg<int>>("v","verbose","Verbosity level (0..9)", false, 0,"int");
-    auto cmd_input  = cmd.add<TCLAP::MultiArg<string>>("i","input","Input files",true,"filename");
-
-    TCLAP::ValuesConstraintExtra<decltype(ExpConfig::Setup::GetNames())> allowedsetupnames(ExpConfig::Setup::GetNames());
-    auto cmd_setup  = cmd.add<TCLAP::ValueArg<string>>("s","setup","Choose setup manually by name",false,"", &allowedsetupnames);
-
-    auto cmd_maxevents = cmd.add<TCLAP::ValueArg<int>>("m","maxevents","Process only max events",false, 0, "maxevents");
-
-    TCLAP::ValuesConstraintExtra<decltype(analysis::PhysicsRegistry::get().GetList())> allowedPhysics(analysis::PhysicsRegistry::get().GetList());
-    auto cmd_physicsclasses  = cmd.add<TCLAP::MultiArg<string>>("p","physics","Physics class to run", false, &allowedPhysics);
-
-    auto cmd_output = cmd.add<TCLAP::ValueArg<string>>("o","output","Output file",false,"","filename");
-
-    auto cmd_physicsOptions = cmd.add<TCLAP::MultiArg<string>>("O","options","Options for physics classes, key=value",false,"");
-    auto cmd_physicsclasses_opt = cmd.add<TCLAP::MultiArg<string>>("P","physics-opt","Physics class to run, with optiosn: PhysicsClass:key=val,key=val", false, "");
-
-    auto cmd_batchmode = cmd.add<TCLAP::SwitchArg>("b","batch","Run in batch mode (no ROOT shell afterwards)",false);
-
-    auto cmd_calibrations  = cmd.add<TCLAP::MultiArg<string>>("c","calibration","Calibration to run",false,"calibration");
-
-    auto cmd_unpackerout  = cmd.add<TCLAP::ValueArg<string>>("u","unpackerout","Unpacker output file",false,"","outputfile");
-    auto cmd_u_writeuncal  = cmd.add<TCLAP::SwitchArg>("","u_writeuncalibrated","Unpacker: Output UNcalibrated detector reads (before reconstruct)",false);
-    auto cmd_u_disablerecon  = cmd.add<TCLAP::SwitchArg>("","u_disablereconstruct","Unpacker: Disable Reconstruct (disables also all analysis)",false);
-    auto cmd_u_writecal  = cmd.add<TCLAP::SwitchArg>("","u_writecalibrated","Unpacker: Output calibrated detector reads (only if Reconstruct found)",false);
-
-    auto cmd_p_disableParticleID  = cmd.add<TCLAP::SwitchArg>("","p_disableParticleID","Physics: Disable ParticleID",false);
+};
 
 
 
-    cmd.parse(argc, argv);
-    if(cmd_verbose->isSet()) {
-        el::Loggers::setVerboseLevel(cmd_verbose->getValue());
-    }
-
-    if(std_ext::system::isInteractive())
-        RawFileReader::OutputPerformanceStats = 3;
+int main(int argc, char** argv) {
 
 
-
+    Configuration conf;
+    if(!conf.Init(argc, argv))
+        return 0;
 
     int fake_argc=0;
     char** fake_argv=nullptr;
@@ -151,7 +189,7 @@ int main(int argc, char** argv) {
     gSystem->AddSignalHandler(mysig);
 
     // check if input files are readable
-    for(const auto& inputfile : cmd_input->getValue()) {
+    for(const auto& inputfile : conf.InputFiles) {
         string errmsg;
         if(!std_ext::system::testopen(inputfile, errmsg)) {
             LOG(ERROR) << "Cannot open inputfile '" << inputfile << "': " << errmsg;
@@ -161,7 +199,7 @@ int main(int argc, char** argv) {
 
     // build the list of ROOT files first
     auto rootfiles = make_shared<WrapTFileInput>();
-    for(const auto& inputfile : cmd_input->getValue()) {
+    for(const auto& inputfile : conf.InputFiles) {
         VLOG(5) << "ROOT File Manager: Looking at file " << inputfile;
         try {
             rootfiles->OpenFile(inputfile);
@@ -187,8 +225,8 @@ int main(int argc, char** argv) {
     }
 
     // override the setup name from cmd line
-    if(cmd_setup->isSet()) {
-        ExpConfig::ManualSetupName = cmd_setup->getValue();
+    if(conf.SetupName.Set) {
+        ExpConfig::ManualSetupName = conf.SetupName.Value;
         if(ExpConfig::ManualSetupName.empty())
             LOG(INFO) << "Commandline override to auto-search for setup config (might fail)";
         else
@@ -198,7 +236,7 @@ int main(int argc, char** argv) {
 
     // now we can try to open the files with an unpacker
     std::unique_ptr<Unpacker::Reader> unpacker = nullptr;
-    for(const auto& inputfile : cmd_input->getValue()) {
+    for(const auto& inputfile : conf.InputFiles) {
         VLOG(5) << "Unpacker: Looking at file " << inputfile;
         try {
             auto unpacker_ = Unpacker::Get(inputfile);
@@ -217,7 +255,7 @@ int main(int argc, char** argv) {
         }
         catch(ExpConfig::ExceptionNoConfig) {
             LOG(ERROR) << "The inputfile " << inputfile << " cannot be unpacked without a manually specified setupname. "
-                       << "Consider using " << cmd_setup->longID();
+                       << "Consider using --setup";
             return 1;
         }
     }
@@ -242,18 +280,18 @@ int main(int argc, char** argv) {
 
     if(unpacker) {
         // turn the unpacker into a input::DataReader
-        auto reconstruct = cmd_u_disablerecon->isSet() ? nullptr : std_ext::make_unique<Reconstruct>();
+        auto reconstruct = conf.DisableReconstruction ? nullptr : std_ext::make_unique<Reconstruct>();
         auto unpacker_reader =
                 std_ext::make_unique<analysis::input::AntReader>(
                     move(unpacker),
                     move(reconstruct)
                     );
         // it may write stuff during the unpacker stage
-        if(cmd_unpackerout->isSet()) {
+        if(conf.UnpackerOutfile.Set) {
             unpacker_reader->EnableUnpackerWriter(
-                        cmd_unpackerout->getValue(),
-                        cmd_u_writeuncal->isSet(),
-                        cmd_u_writecal->isSet()
+                        conf.UnpackerOutfile.Value,
+                        conf.WriteUncalibrated,
+                        conf.WriteCalibrated
                         );
         }
         readers.push_back(move(unpacker_reader));
