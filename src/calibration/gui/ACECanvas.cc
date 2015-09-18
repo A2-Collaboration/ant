@@ -35,9 +35,9 @@ void ACECanvas::makeCalHist()
     calHist->SetStats(false);
 }
 
-void ACECanvas::loadFile(const std::string& fileName)
+void ACECanvas::loadFolder(const std::string& fileName)
 {
-    if ( !ed.AddFromFile(fileName) )
+    if ( !ed.AddFromFolder(fileName) )
         throw runtime_error(string("Could not file ")+fileName);
 
     if (ed.GetListOfCalibrations().size() == 0 )
@@ -189,7 +189,7 @@ ACECanvas::ACECanvas(const string &FileName):
     selector(nullptr),
     intervalStartSet(false)
 {
-    loadFile(fileName);
+    loadFolder(fileName);
 }
 
 void ACECanvas::expandAllinIndexMemory()

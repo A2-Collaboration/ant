@@ -79,7 +79,7 @@ private:
     void update_modified();
 
     void makeCalHist();
-    void loadFile(const std::string& fileName);
+    void loadFolder(const std::string& fileName);
 
     void change_state(state_t newstate);
 

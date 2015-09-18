@@ -1,17 +1,14 @@
 #include "EditorWindow.h"
 
-#include "Manager.h"
-#include "CalCanvas.h"
+#include "base/std_ext/memory.h"
 
 #include "TExec.h"
-#include "TRootEmbeddedCanvas.h"
 #include "TApplication.h"
 #include "TSystem.h"
 
 #include "TGNumberEntry.h"
 #include "TGStatusBar.h"
 #include "TGButton.h"
-#include "TGProgressBar.h"
 #include "TROOT.h"
 
 #include "base/Logger.h"
@@ -81,6 +78,13 @@ void EditorWindow::CreateToolbar(TGVerticalFrame* frame)
         cout << "prev" << endl;
     });
 
+    calibSelector = new MyComboBox(frm1);
+    calibSelector->SetList(editor.GetListOfCalibrations());
+    auto btn_select = new ActionWidget<TGTextButton>(frm1,"Select");
+    btn_select->SetAction([this] () {
+        cout <<  this->calibSelector->GetSelectedText() << endl;
+    });
+
     auto entry_gotochannel = new TGNumberEntry(frm1, 0, 3, -1,
                                                TGNumberFormat::kNESInteger,
                                                TGNumberFormat::kNEANonNegative
@@ -104,6 +108,8 @@ void EditorWindow::CreateToolbar(TGVerticalFrame* frame)
     };
 
     add_to_frame(frm1, btn_prev);
+    add_to_frame(frm1, btn_select);
+    add_to_frame(frm1, calibSelector);
     add_to_frame(frm1, btn_goto);
     add_to_frame(frm1, entry_gotochannel);
     frm1->AddFrame(btn_autocontinue, layout_btn);
@@ -121,11 +127,13 @@ void EditorWindow::UpdateLayout()
     MapWindow();
 }
 
-EditorWindow::EditorWindow() :
+EditorWindow::EditorWindow(const string& folder) :
     TGMainFrame(gClient->GetRoot())
 {
     // Set a name to the main frame
-    SetWindowName("Ant-calib Editor");
+    SetWindowName( (std_ext::formatter() << "Ant-calib Editor: " << folder).str().c_str() );
+
+    editor.AddFromFolder(folder);
 
     TGVerticalFrame* frame = new TGVerticalFrame(this);
 
@@ -163,6 +171,28 @@ EditorWindow::~EditorWindow()
 {
     // executed if window is closed
     gApplication->Terminate(0);
+}
+
+void EditorWindow::EditorCanvas::UpdateMe()
+{
+    Modified();
+    Update();
+}
+
+EditorWindow::MyComboBox::MyComboBox(const TGWindow* p, Int_t id, UInt_t options, Pixel_t back):
+    TGComboBox(p,id,options,back){}
+
+void EditorWindow::MyComboBox::SetList(const list<string>& items)
+{
+    int i = 0;
+    for (const auto& item: items)
+        AddEntry(item.c_str(),i++);
+}
+
+string EditorWindow::MyComboBox::GetSelectedText()
+{
+    TGTextLBEntry* tgl = (TGTextLBEntry*) GetSelectedEntry();
+    return string(tgl->GetText()->GetString());
 }
 
 

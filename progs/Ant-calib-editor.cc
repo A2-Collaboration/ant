@@ -20,7 +20,8 @@ int main(int argc, char** argv) {
     TCLAP::CmdLine cmd("Ant-calib-editor", ' ', "0.1");
     auto cmd_verbose = cmd.add<TCLAP::ValueArg<int>>("v","verbose","Verbosity level (0..9)", false, 0,"level");
 
-    auto cmd_inputfiles  = cmd.add<TCLAP::UnlabeledMultiArg<string>>("inputfiles","Ant files with histograms",true,"inputfiles");
+    auto cmd_inputfiles  = cmd.add<TCLAP::UnlabeledValueArg<string>>("directory","calibration directory",true,"","directory");
+
     cmd.parse(argc, argv);
 
     if(cmd_verbose->isSet())
@@ -33,7 +34,6 @@ int main(int argc, char** argv) {
     fake_argv[0] = argv[0];
     auto app = new TRint("Ant-calib",&fake_argc,fake_argv);
 
-
-    new EditorWindow();
+    new EditorWindow( cmd_inputfiles->getValue() );
     app->Run(kTRUE);
 }

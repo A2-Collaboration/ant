@@ -29,7 +29,8 @@ public:
     Editor(): dman(){}
 
     //File Operations
-    bool AddFromFile(const std::string& fileName) {return dman.ReadFromFile(fileName); }
+//    bool AddFromFile(const std::string& fileName) {return dman.ReadFromFile(fileName); }
+    bool AddFromFolder(const std::string& folderName) {return dman.ReadFromFolder(folderName); }
     void SaveToFile(const std::string& fileName) const {dman.WriteToFile(fileName);}
 
     //Element Access
