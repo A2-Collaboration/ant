@@ -65,12 +65,9 @@ public:
 
     class ThePhysics : public analysis::Physics {
     public:
-        using Physics::Physics;
-
         ThePhysics(const std::string& name, const std::string& histName,
                    const std::shared_ptr<Detector_t>& theDetector);
         virtual void ProcessEvent(const analysis::data::Event& event) override;
-        virtual void Finish() override;
         virtual void ShowResult() override;
 
     protected:

@@ -130,9 +130,9 @@ Time::ThePhysics::ThePhysics(const string& name, const string& histName,
     detector(theDetector)
 {
     string detectorName(Detector_t::ToString(detector->Type));
-    hTime = HistFac.makeTH2D( detectorName + string(" - Time"),
+    hTime = HistFac.makeTH2D(detectorName + string(" - Time"),
                               "time [ns]",
-                              detectorName + "-channel",
+                              detectorName + " channel",
                               BinSettings(1000,-400,400),
                               BinSettings(detector->GetNChannels()),
                               histName
@@ -157,10 +157,6 @@ void Time::ThePhysics::ProcessEvent(const Event& event)
             if (cluster.Detector == detector->Type)
                 hTime->Fill(cluster.Time,cluster.CentralElement);
 
-}
-
-void Time::ThePhysics::Finish()
-{
 }
 
 void Time::ThePhysics::ShowResult()
