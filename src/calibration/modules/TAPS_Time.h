@@ -21,6 +21,20 @@ public:
               Calibration::Converter::ptr_t converter,
               const interval<double>& timeWindow = {-std_ext::inf, std_ext::inf}
               );
+
+    class ThePhysics : public Time::ThePhysics {
+    public:
+        ThePhysics(const std::string& name, const std::string& histName,
+                   const std::shared_ptr<Detector_t>& theDetector);
+        virtual void ProcessEvent(const analysis::data::Event& event) override;
+        virtual void ShowResult() override;
+    protected:
+        TH2D* hTimeToTagger;
+    }; // ThePhysics
+
+    virtual std::unique_ptr<analysis::Physics> GetPhysicsModule() override;
+
+
 };
 
 }}  // namespace ant::calibration
