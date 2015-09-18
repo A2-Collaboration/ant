@@ -5,6 +5,8 @@
 
 #include "analysis/data/Slowcontrol.h"
 
+#include "base/OptionsList.h"
+
 #include <list>
 #include <string>
 #include <map>
@@ -19,24 +21,6 @@ namespace ant {
 class TAntHeader;
 
 namespace analysis {
-
-
-class OptionsList {
-protected:
-
-    std::shared_ptr<const OptionsList> parent;
-
-    std::map<std::string, std::string> options;
-
-public:
-    OptionsList(std::shared_ptr<const OptionsList> Parent=nullptr);
-
-    void SetOption(const std::string& str, const std::string delim="=");
-    void SetOptions(const std::string& str, const std::string optdelim=",", const std::string valdelim="=");
-
-    std::string GetOption(const std::string& key) const;
-
-};
 
 using PhysOptPtr = std::shared_ptr<const OptionsList>;
 

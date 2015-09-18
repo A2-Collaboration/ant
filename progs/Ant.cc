@@ -316,7 +316,7 @@ int main(int argc, char** argv) {
 
     // add the physics/calibrationphysics modules
     analysis::PhysicsManager pm;
-    std::shared_ptr<analysis::OptionsList> popts = make_shared<analysis::OptionsList>();
+    std::shared_ptr<OptionsList> popts = make_shared<OptionsList>();
 
     if(cmd_physicsOptions->isSet()) {
         for(const auto& opt : cmd_physicsOptions->getValue()) {
@@ -340,7 +340,7 @@ int main(int argc, char** argv) {
 
         auto classname = line.substr(0,colpos);
         auto optstr = line.substr(colpos+1,line.npos);
-        auto options = make_shared<analysis::OptionsList>(popts);
+        auto options = make_shared<OptionsList>(popts);
         options->SetOptions(optstr);
         try {
             pm.AddPhysics( analysis::PhysicsRegistry::Create(classname, options) );

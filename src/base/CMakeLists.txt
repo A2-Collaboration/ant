@@ -22,6 +22,7 @@ set(SRCS
   iterators.h
   enumfield.h
   GitInfo.cc
+  OptionsList.cc
   std_ext/math.h
   std_ext/memory.h
   std_ext/misc.h
