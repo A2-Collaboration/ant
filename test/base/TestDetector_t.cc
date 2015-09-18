@@ -9,7 +9,7 @@ using namespace std;
 
 void dotest();
 
-TEST_CASE("Detector_t", "[expconfig]") {
+TEST_CASE("Detector_t", "[base]") {
     dotest();
 }
 
