@@ -79,6 +79,17 @@ public:
         return nullptr;
     }
 
+    const Cluster* FindVetoCluster() {
+        if(VetoEnergy() > 0.0) {
+            for(const auto& cl : Clusters) {
+                if(cl.Detector & (Detector_t::Type_t::PID | Detector_t::Type_t::TAPSVeto)) {
+                    return std::addressof(cl);
+                }
+            }
+        }
+        return nullptr;
+    }
+
     virtual std::ostream& Print(std::ostream &stream) const override;
 
 };
