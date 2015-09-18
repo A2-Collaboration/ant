@@ -8,7 +8,7 @@
 #include <iostream>
 #include "base/Logger.h"
 #include "base/cbtaps_display/TH2TAPS.h"
-
+#include "expconfig/ExpConfig.h"
 #include "base/std_ext/math.h"
 
 using namespace std;
@@ -17,11 +17,13 @@ using namespace ant::analysis;
 using namespace ant::analysis::physics;
 using namespace ant::analysis::data;
 
+
 ReconstructCheck::ReconstructCheck(PhysOptPtr opts):
     Physics("ReconstructCheck",opts),
     cb_group(HistFac, "CB", histgroup::detectortype::CB),
     taps_group(HistFac,"TAPS",histgroup::detectortype::TAPS),
-    all_group(HistFac,"All",histgroup::detectortype::All)
+    all_group(HistFac,"All",histgroup::detectortype::All),
+    tapsveto(HistFac)
 {
     const BinSettings e(max(1000.0, atof(GetOption("Emax").c_str())));
     EnergyRec_cb = HistFac.makeTH2D("Energry Reconstruction CB","E_{true} [MeV]","E_{rec} [MeV]", e, e, "Energy_rec_cb");
@@ -54,6 +56,8 @@ void ReconstructCheck::ProcessEvent(const Event &event)
 
         all_group.Fill(mctrue_particle, event.Reconstructed().Candidates(), event.Reconstructed().InsaneClusters());
 
+        tapsveto.Fill(event.Reconstructed().Candidates(), event.Reconstructed().InsaneClusters());
+
     }
 }
 
@@ -63,6 +67,7 @@ void ReconstructCheck::Finish()
     cb_group.Finish();
     taps_group.Finish();
     all_group.Finish();
+    tapsveto.Finish();
     LOG(INFO) << "ReconstructCheck Finish";
 }
 
@@ -71,6 +76,7 @@ void ReconstructCheck::ShowResult()
     cb_group.ShowResult();
     taps_group.ShowResult();
     all_group.ShowResult();
+    tapsveto.ShowResult();
 }
 
 void LabelBins(TAxis* x) {
@@ -320,6 +326,49 @@ void ReconstructCheck::PositionMapTAPS::Draw(const string&) const
     maphist->Draw("colz");
     auto taps = new TH2TAPS();
     taps->Draw("same text");
+}
+
+
+
+ReconstructCheck::TAPSVetoMatch::TAPSVetoMatch(SmartHistFactory& f)
+{
+    vetoElement_dist = f.makeTH2D("Veto TAPS Cluster dist","Veto Element","Dist [cm]",BinSettings(348),BinSettings(100,0,20),"tapsveto_cluster_dist");
+}
+
+void ReconstructCheck::TAPSVetoMatch::ShowResult()
+{
+    canvas c("TAPS Veto");
+    c << vetoElement_dist << endc;
+}
+
+void ReconstructCheck::TAPSVetoMatch::Fill(const CandidateList& cands, const ClusterList& instane)
+{
+    using namespace ant::std_ext;
+
+    auto clusterLoop = [this] (const Cluster* vCluster, const CandidateList& cands) {
+        if(vCluster && vCluster->Detector & Detector_t::Type_t::TAPSVeto) {
+            for(const CandidatePtr& cCand : cands) {
+                const auto cCluster = cCand->FindCaloCluster();
+                if(cCluster && cCluster->Detector & Detector_t::Type_t::TAPS) {
+                    const auto dx = vCluster->pos.X() - cCluster->pos.X();
+                    const auto dy = vCluster->pos.Y() - cCluster->pos.Y();
+                    const auto d  = sqrt(sqr(dx)+sqr(dy));
+                    this->vetoElement_dist->Fill(vCluster->CentralElement, d);
+                }
+            }
+        }
+    };
+
+
+    for(const CandidatePtr& vCand : cands) {
+        const auto vCluster = vCand->FindVetoCluster();
+        clusterLoop(vCluster, cands);
+    }
+
+    for(const Cluster& iCluster : instane) {
+        clusterLoop(addressof(iCluster), cands);
+    }
+
 }
 
 AUTO_REGISTER_PHYSICS(ReconstructCheck, "ReconstructCheck")

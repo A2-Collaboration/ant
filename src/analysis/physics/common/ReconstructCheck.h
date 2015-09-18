@@ -87,9 +87,21 @@ protected:
 
     };
 
+    struct TAPSVetoMatch {
+        TH2D* vetoElement_dist;
+        TAPSVetoMatch(SmartHistFactory& f);
+        TAPSVetoMatch(const TAPSVetoMatch&) = delete;
+        TAPSVetoMatch& operator =(const TAPSVetoMatch&) = delete;
+
+        void ShowResult();
+        void Finish() {}
+        void Fill(const data::CandidateList& cands, const data::ClusterList& instane);
+    };
+
     histgroup cb_group;
     histgroup taps_group;
     histgroup all_group;
+    TAPSVetoMatch tapsveto;
 
 public:
     ReconstructCheck(PhysOptPtr opts);
