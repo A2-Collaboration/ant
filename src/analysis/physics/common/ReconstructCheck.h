@@ -68,6 +68,12 @@ protected:
 
         TH1D* veto_cand_phi_diff;
 
+        TH2D* energyinout;
+
+        TH2D* thetainout;
+        TH2D* phiinout;
+        TH2D* anglediff;
+
         std::unique_ptr<PositionMap> energy_recov_norm;
         std::unique_ptr<PositionMap> energy_recov;
 

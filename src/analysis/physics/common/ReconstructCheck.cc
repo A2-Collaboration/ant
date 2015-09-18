@@ -109,6 +109,8 @@ ReconstructCheck::histgroup::histgroup(SmartHistFactory& f, const string& prefix
     const BinSettings clusersize(19,1,20);
     const BinSettings costheta(360,-1,1);
     const BinSettings phi(360,-180,180);
+    const BinSettings theta = d == detectortype::TAPS ? BinSettings(50,0,25) : BinSettings(360,0,180);
+    const BinSettings thetadiff(100,-25,25);
 
     nPerEvent     = f.makeTH1D(prefix+" Candidates/Event", "Candidates/Event","",BinSettings(10),prefix+"candEvent");
     LabelBins(nPerEvent->GetXaxis());
@@ -150,11 +152,16 @@ ReconstructCheck::histgroup::histgroup(SmartHistFactory& f, const string& prefix
 
     veto_cand_phi_diff = f.makeTH1D(prefix+" Angle unmatched Veto - Cand","# unmatched veto clusters","",BinSettings(6),prefix+"_veto_cand_phi_diff");
 
+    energyinout = f.makeTH2D(prefix+" Energy","E_{True} [MeV]","E_{Rec} [MeV]",energy,energy,prefix+"_energy");
+    thetainout  = f.makeTH2D(prefix+" Theta Difference","#theta_{True} [#circ]","#theta_{Rec} [#circ]",theta,thetadiff,prefix+"_thetadiff");
+
     energy_recov  = makePosMap(f,d,prefix+"_Erecov",prefix+" Energy Recovery Average");
     energy_recov->maphist->SetStats(false);
 
     energy_recov_norm  = makePosMap(f,d,prefix+"_Erecov_norm",prefix+" Energy Recovery Average Norm");
     energy_recov_norm->maphist->SetStats(false);
+
+
 }
 
 void ReconstructCheck::histgroup::ShowResult() const
@@ -170,6 +177,8 @@ void ReconstructCheck::histgroup::ShowResult() const
       << drawoption("nostack") << padoption::set(padoption_t::Legend) << splitstack
       << padoption::unset(padoption_t::Legend)
       << drawoption("colz") << *energy_recov
+      << padoption::set(padoption_t::LogZ) << energyinout << padoption::unset(padoption_t::LogZ)
+      << thetainout
       << endc;
 }
 
@@ -275,6 +284,8 @@ void ReconstructCheck::histgroup::Fill(const ParticlePtr& mctrue, const Candidat
         const auto rec = c->ClusterEnergy() / mc_energy;
         energy_recov->Fill(mc_theta, mc_phi, rec);
         energy_recov_norm->Fill(mc_theta,mc_phi);
+        energyinout->Fill(mc_energy,c->ClusterEnergy());
+        thetainout->Fill(std_ext::radian_to_degree(mc_theta), std_ext::radian_to_degree(c->Theta() - mc_theta));
     }
 
 }
@@ -332,7 +343,9 @@ void ReconstructCheck::PositionMapTAPS::Draw(const string&) const
 
 ReconstructCheck::TAPSVetoMatch::TAPSVetoMatch(SmartHistFactory& f)
 {
-    vetoElement_dist = f.makeTH2D("Veto TAPS Cluster dist","Veto Element","Dist [cm]",BinSettings(348),BinSettings(100,0,20),"tapsveto_cluster_dist");
+    const auto nchannels = 384;
+
+    vetoElement_dist = f.makeTH2D("Veto TAPS Cluster dist","Veto Element","Dist [cm]",BinSettings(nchannels),BinSettings(100,0,20),"tapsveto_cluster_dist");
 }
 
 void ReconstructCheck::TAPSVetoMatch::ShowResult()
