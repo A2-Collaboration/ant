@@ -121,6 +121,18 @@ shared_ptr<ExpConfig::Setup> ExpConfig::Setup::GetLastFound()
     return lastSetupFound;
 }
 
+std::shared_ptr<Detector_t> ExpConfig::Setup::GetDetector(Detector_t::Type_t type)
+{
+    auto config = std::dynamic_pointer_cast<Reconstruct, Setup>(GetLastFound());
+    if(config == nullptr)
+        return nullptr;
+    for(const auto& detector : config->GetDetectors()) {
+        if(detector->Type == type)
+            return detector;
+    }
+    return nullptr;
+}
+
 void ExpConfig::Setup::Cleanup()
 {
     lastSetupFound = nullptr;

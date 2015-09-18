@@ -35,7 +35,7 @@ public:
         virtual bool Matches(const THeaderInfo& header) const = 0;
     };
 
-    // the ExpConfig::Module provides general information about the experiment
+    // the ExpConfig::Setup provides general information about the experiment
     class Setup : public virtual Base {
     public:
         virtual std::string GetName() const = 0;
@@ -49,6 +49,11 @@ public:
         static std::shared_ptr<Setup> Get(const std::string& name);
         static std::list<std::string> GetNames();
         static std::shared_ptr<Setup> GetLastFound();
+        static std::shared_ptr<Detector_t> GetDetector(Detector_t::Type_t type);
+
+        template<typename DetectorType>
+        static std::shared_ptr<DetectorType> GetDetector();
+
 
         static void Cleanup();
     private:
@@ -103,5 +108,19 @@ private:
     static std::shared_ptr<Setup> lastSetupFound;
 
 };
+
+template<typename DetectorType>
+std::shared_ptr<DetectorType> ExpConfig::Setup::GetDetector()
+{
+    auto config = std::dynamic_pointer_cast<Reconstruct, Setup>(GetLastFound());
+    if(config == nullptr)
+        return nullptr;
+    for(const auto& detector : config->GetDetectors()) {
+        auto detector_ = std::dynamic_pointer_cast<DetectorType, Detector_t>(detector);
+        if(detector_ != nullptr)
+            return detector_;
+    }
+    return nullptr;
+}
 
 } // namespace ant
