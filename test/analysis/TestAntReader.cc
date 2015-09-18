@@ -81,7 +81,7 @@ void drive_reader(unique_ptr<AntReader> unpacker_reader, bool no_events_expected
     else {
         REQUIRE(nEvents==221);
         REQUIRE(nSlowControls == 8);
-        REQUIRE(nCandidates == 820);
+        REQUIRE(nCandidates == 821);
     }
 }
 

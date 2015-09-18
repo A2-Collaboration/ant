@@ -97,5 +97,5 @@ void dotest()
     REQUIRE(physics->initCalled);
 
     REQUIRE(physics->seenEvents == expectedEvents);
-    REQUIRE(physics->seenCandidates == 820);
+    REQUIRE(physics->seenCandidates == 821);
 }
