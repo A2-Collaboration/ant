@@ -69,30 +69,17 @@ void EditorWindow::CreateToolbar(TGVerticalFrame* frame)
 
     TGHorizontalFrame* frm1 = new TGHorizontalFrame(frame);
 
-    auto btn_autocontinue = new ActionWidget<TGCheckButton>(frm1,"AutoContinue");
-    btn_autocontinue->LinkFlag(flag);
-
     auto btn_prev = new ActionWidget<TGTextButton>(frm1,"Prev (b)");
     keys[kKey_b] = btn_prev;
     btn_prev->SetAction([this] () {
         cout << "prev" << endl;
     });
 
-    calibSelector = new MyComboBox(frm1);
+    calibSelector = new MyComboBox(frm1,0);
     calibSelector->SetList(editor.GetListOfCalibrations());
     auto btn_select = new ActionWidget<TGTextButton>(frm1,"Select");
     btn_select->SetAction([this] () {
         cout <<  this->calibSelector->GetSelectedText() << endl;
-    });
-
-    auto entry_gotochannel = new TGNumberEntry(frm1, 0, 3, -1,
-                                               TGNumberFormat::kNESInteger,
-                                               TGNumberFormat::kNEANonNegative
-                                               );
-
-    auto btn_goto = new ActionWidget<TGTextButton>(frm1,"Goto");
-    btn_goto->SetAction([this, entry_gotochannel, btn_autocontinue] () {
-        cout <<  entry_gotochannel->GetIntNumber() << endl;
     });
 
     // second row with fit specific commands
@@ -101,18 +88,15 @@ void EditorWindow::CreateToolbar(TGVerticalFrame* frame)
 
 
     // add them all together...
-    auto layout_btn = new TGLayoutHints(kLHintsLeft,2,2,2,2);
+    auto layout_btn = new TGLayoutHints(kLHintsLeft|kLHintsExpandX|kLHintsExpandY,2,2,2,2);
 
     auto add_to_frame = [this, layout_btn] (TGHorizontalFrame* frm, TGWidget* widget) {
         frm->AddFrame(dynamic_cast<TGFrame*>(widget), layout_btn);
     };
 
-    add_to_frame(frm1, btn_prev);
-    add_to_frame(frm1, btn_select);
+    //add_to_frame(frm1, btn_prev);
     add_to_frame(frm1, calibSelector);
-    add_to_frame(frm1, btn_goto);
-    add_to_frame(frm1, entry_gotochannel);
-    frm1->AddFrame(btn_autocontinue, layout_btn);
+    add_to_frame(frm1, btn_select);
 
 
     auto layout_frm =  new TGLayoutHints(kLHintsTop | kLHintsExpandX);
