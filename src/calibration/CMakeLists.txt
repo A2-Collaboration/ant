@@ -16,6 +16,7 @@ set(SRCS
     modules/PID_Energy.cc
     modules/PID_PhiAngle.cc
     modules/TAPSVeto_Energy.cc
+    modules/TAPS_Time.cc
     converters/GeSiCa_SADC.h
     converters/CATCH_TDC.cc
     converters/MultiHit16bit.h

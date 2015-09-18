@@ -15,6 +15,7 @@
 #include "calibration/modules/CB_TimeWalk.h"
 #include "calibration/modules/PID_Energy.h"
 #include "calibration/modules/PID_PhiAngle.h"
+#include "calibration/modules/TAPS_Time.h"
 #include "calibration/modules/TAPS_Energy.h"
 #include "calibration/modules/TAPS_ShowerCorrection.h"
 #include "calibration/modules/TAPSVeto_Energy.h"
@@ -100,13 +101,10 @@ Setup_2014_EPT::Setup_2014_EPT(const string& name) :
                                       std::make_shared<calibration::gui::FitGaus>(),
                                       interval<double>{-500, 500} // default time window cut in ns
                                       );
-    AddCalibration<calibration::Time>(taps,
+    AddCalibration<calibration::TAPS_Time>(taps,
                                       calibrationDataManager,
                                       convert_MultiHit16bit,
-                                      -170, /// \todo different default for PbWO
-                                      std::make_shared<calibration::gui::FitGausPol0>(),
-                                      interval<double>{-500, 500},
-                                      -0.100 /// \todo give measured time gains for BaF2
+                                      interval<double>{-500, 500}
                                       );
     AddCalibration<calibration::Time>(tapsVeto,
                                       calibrationDataManager,
