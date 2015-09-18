@@ -29,8 +29,7 @@ Time::Time(const std::shared_ptr<Detector_t>& detector, const std::shared_ptr<Da
            double defaultOffset,
            shared_ptr<gui::PeakingFitFunction> FitFunction,
            const interval<double>& timeWindow, // default {-inf, inf}
-           const double defaultGain, // default gain is 1.0
-           const std::vector< TKeyValue<double> >& gains) :
+           const double defaultGain) :
     Calibration::Module(
         std_ext::formatter()
         << Detector_t::ToString(detector->Type)
@@ -41,24 +40,13 @@ Time::Time(const std::shared_ptr<Detector_t>& detector, const std::shared_ptr<Da
     Converter(move(converter)),
     TimeWindow(timeWindow),
     fitFunction(FitFunction),
-    DefaultOffset(defaultOffset),
+    DefaultOffsets(detector->GetNChannels(), defaultOffset),
     Offsets(),
-    DefaultGain(defaultGain),
+    DefaultGains(detector->GetNChannels(), defaultGain),
     Gains()
 {
     if(Converter==nullptr)
         throw std::runtime_error("Given converter should not be nullptr");
-
-    // fill a gain vector from given key-value pairs
-    // for faster access (if some are given at all)
-    if(gains.empty())
-        return;
-    unsigned maxkey = 0;
-    for(const auto& gain : gains)
-        maxkey = gain.Key>maxkey ? gain.Key : maxkey;
-    Gains.resize(maxkey+1, DefaultGain);
-    for(const auto& gain : gains)
-        Gains[gain.Key] = gain.Value;
 }
 
 std::vector<std::list<TID> > Time::GetChangePoints() const {
@@ -81,8 +69,23 @@ void Time::Update(size_t, const TID& id)
     else {
         LOG(WARNING) << "No calibration data found for offsets"
                      << " at changepoint TID=" << id << ", using default values";
-        Offsets.resize(0);
+        Offsets = DefaultOffsets;
     }
+}
+
+std::unique_ptr<Physics> Time::GetPhysicsModule() {
+    return std_ext::make_unique<ThePhysics>(GetName(), "Offsets", Detector);
+}
+
+void Time::GetGUIs(std::list<std::unique_ptr<gui::Manager_traits> >& guis) {
+    guis.emplace_back(std_ext::make_unique<TheGUI>(
+                          GetName(),
+                          Detector,
+                          calibrationManager,
+                          DefaultOffsets,
+                          Offsets,
+                          fitFunction
+                          ));
 }
 
 void Time::ApplyTo(const readhits_t& hits, extrahits_t&)
@@ -101,12 +104,12 @@ void Time::ApplyTo(const readhits_t& hits, extrahits_t&)
         // apply gain/offset to each of the values (might be multihit)
         for(double value : values) {
             if(Gains.empty())
-                value *= DefaultGain;
+                value *= DefaultGains[dethit->Channel];
             else
                 value *= Gains[dethit->Channel];
 
             if(Offsets.empty())
-                value -= DefaultOffset;
+                value -= DefaultOffsets[dethit->Channel];
             else
                 value -= Offsets[dethit->Channel];
 
@@ -169,18 +172,27 @@ void Time::ThePhysics::ShowResult()
 Time::TheGUI::TheGUI(const string& name,
                      const std::shared_ptr<Detector_t>& theDetector,
                      const std::shared_ptr<DataManager>& cDataManager,
-                     double DefaultOffset,
+                     const std::vector<double>& DefaultOffsets,
                      const std::vector<double>& Offsets,
                      const shared_ptr<gui::PeakingFitFunction> FitFunction):
     gui::Manager_traits(name),
     detector(theDetector),
     calmgr(cDataManager),
-    defaultOffset(DefaultOffset),
+    defaultOffsets(DefaultOffsets),
     offsets(Offsets),
     theCanvas(nullptr),
     times(nullptr),
     fitFunction(FitFunction)
 {
+}
+
+string Time::TheGUI::GetHistogramName() const {
+    return GetName()+"/Offsets";
+}
+
+unsigned Time::TheGUI::GetNumberOfChannels() const
+{
+    return detector->GetNChannels();
 }
 
 void Time::TheGUI::InitGUI(gui::ManagerWindow_traits* window)
@@ -198,19 +210,20 @@ void Time::TheGUI::InitGUI(gui::ManagerWindow_traits* window)
 
 void Time::TheGUI::StartRange(const interval<TID>& range)
 {
-    offsets.resize(GetNumberOfChannels(),defaultOffset);
+    offsets = defaultOffsets;
     TCalibrationData cdata;
     if (calmgr->GetData(GetName(),range.Start(),cdata))
     {
         for (const TKeyValue<double>& entry: cdata.Data)
             offsets[entry.Key] = entry.Value;
         for (const TKeyValue<vector<double>>& entry: cdata.FitParameters)
-            fitParams.insert(make_pair(entry.Key,entry.Value));
+            fitParams[entry.Key] = entry.Value;
         LOG(INFO) << GetName() << ": Loaded previous values from database";
     }
     else
         LOG(INFO) << GetName() << ": No previous offsets found, built from default offset";
 
+    // remember the previous offsets
     previousOffsets = offsets;
 }
 

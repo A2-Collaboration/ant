@@ -2,8 +2,6 @@
 
 #include "calibration/Calibration.h"
 
-#include "tree/TDataRecord.h" // for TKeyValue, TID
-
 #include "base/std_ext/math.h"
 #include "base/Detector_t.h"
 #include "base/interval.h"
@@ -29,13 +27,11 @@ class Time :
 public:
     class TheGUI : public gui::Manager_traits
     {
-
-
     protected:
         std::shared_ptr<Detector_t> detector;
         std::shared_ptr<DataManager> calmgr;
 
-        const double defaultOffset;
+        const std::vector<double> defaultOffsets;
         std::vector<double> offsets;
         std::map<unsigned,std::vector<double>> fitParams;
 
@@ -50,12 +46,12 @@ public:
         TheGUI(const std::string& name,
                const std::shared_ptr<Detector_t>& theDetector,
                const std::shared_ptr<DataManager>& cDataManager,
-               double DefaultOffset,
+               const std::vector<double>& DefaultOffsets,
                const std::vector<double>& Offsets,
                const std::shared_ptr<gui::PeakingFitFunction> fitFunction);
 
-        virtual std::string GetHistogramName() const override { return GetName()+"/Offsets";}
-        virtual unsigned GetNumberOfChannels() const override { return detector->GetNChannels();}
+        virtual std::string GetHistogramName() const override;
+        virtual unsigned GetNumberOfChannels() const override;
         virtual void InitGUI(gui::ManagerWindow_traits* window) override;
 
         virtual void StartRange(const interval<TID>& range) override;
@@ -65,7 +61,7 @@ public:
         virtual void StoreFit(unsigned channel) override;
         virtual bool FinishRange() override;
         virtual void StoreFinishRange(const interval<TID>& range) override;
-    };
+    }; // TheGUI
 
     class ThePhysics : public analysis::Physics {
     public:
@@ -81,7 +77,7 @@ public:
         TH2D* hTime;
         std::shared_ptr<Detector_t> detector;
         bool isTagger;
-    };
+    }; // ThePhysics
 
     Time(const std::shared_ptr<Detector_t>& detector,
          const std::shared_ptr<DataManager>& CalibrationManager,
@@ -89,8 +85,7 @@ public:
          double defaultOffset,
          std::shared_ptr<gui::PeakingFitFunction> FitFunction,
          const interval<double>& timeWindow = {-std_ext::inf, std_ext::inf},
-         double defaultGain = 1.0, // default gain is 1.0
-         const std::vector< TKeyValue<double> >& gains = {}
+         double defaultGain = 1.0 // default gain is 1.0
          );
 
     // ReconstructHook
@@ -102,20 +97,9 @@ public:
 
 
     // Physics_traits interface
-    virtual std::unique_ptr<analysis::Physics> GetPhysicsModule() override {
-        return std_ext::make_unique<ThePhysics>(GetName(), "Offsets", Detector);
-    }
+    virtual std::unique_ptr<analysis::Physics> GetPhysicsModule() override;
 
-    virtual void GetGUIs(std::list<std::unique_ptr<calibration::gui::Manager_traits> >& guis) override {
-        guis.emplace_back(std_ext::make_unique<TheGUI>(
-                              GetName(),
-                              Detector,
-                              calibrationManager,
-                              DefaultOffset,
-                              Offsets,
-                              fitFunction
-                              ));
-    }
+    virtual void GetGUIs(std::list<std::unique_ptr<calibration::gui::Manager_traits> >& guis) override;
 
 protected:
 
@@ -129,10 +113,10 @@ protected:
 
     std::shared_ptr<gui::PeakingFitFunction> fitFunction;
 
-    const double DefaultOffset;
+    std::vector<double> DefaultOffsets;
     std::vector<double> Offsets;
 
-    const double DefaultGain;
+    std::vector<double> DefaultGains;
     std::vector<double> Gains;
 
 
