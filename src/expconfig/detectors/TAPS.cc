@@ -105,7 +105,6 @@ unsigned TAPS::GetRing(const unsigned channel) const
 unsigned TAPS::GetHexChannel(const unsigned channel) const
 {
     constexpr unsigned HexElementsPerSector = NHexElements/NSectors;
-    constexpr unsigned PbWO4PerHex = 4;
 
     // no PbWO4s at all, so nothing to do
     if(BaF2_elements.size() == NHexElements && PbWO4_elements.size() == 0)
@@ -130,6 +129,21 @@ unsigned TAPS::GetHexChannel(const unsigned channel) const
         const unsigned BaF2_hexIndex = (channelFirstSector - PbWO4_elementsPerSector) + PbWO4_offset;
         return BaF2_hexIndex + channelSector * HexElementsPerSector;
     }
+}
+
+bool TAPS::IsPbWO4(const unsigned channel) const
+{
+    if(PbWO4_elements.empty())
+        return false;
+
+    const unsigned elementsPerSector = (BaF2_elements.size()+PbWO4_elements.size())/NSectors;
+
+    const unsigned channelFirstSector = channel % elementsPerSector;
+
+    const unsigned PbWO4_elementsPerSector = PbWO4_elements.size() / NSectors;
+    assert(PbWO4_elementsPerSector % PbWO4PerHex == 0);
+
+    return channelFirstSector < PbWO4_elementsPerSector;
 }
 
 void TAPS::InitClusterElements()

@@ -41,17 +41,41 @@ struct TAPS :
         return clusterelements[channel];
     }
 
+    /**
+     * @brief GetRing returns the ring number inside the hexagonal structure
+     * @param channel logical channel
+     */
     unsigned GetRing(const unsigned channel) const;
     /**
-     * @brief GetHexChannel returns the "usual" hexagonal channel as if PbWO4s were not present
+     * @brief GetHexChannel returns the "usual" hexagonal channel as if four PbWO4s were one BaF2 hexagon
      * @param channel logical channel
      */
     unsigned GetHexChannel(const unsigned channel) const;
 
+    /**
+     * @brief IsPbWO4 returns true if given logical channel is PbWO4 element
+     * @param channel logical channel
+     * @return true if given logical channel is PbWO4 element
+     * @note no boundary checks on channel performed
+     */
+    bool IsPbWO4(const unsigned channel) const;
+
+    /**
+     * @brief IsBaF2 returns true if given logical channel is BaF2 element
+     * @param channel logical channel
+     * @return true if given logical channel is BaF2 element
+     * @note no boundary checks on channel performed
+     */
+    bool IsBaF2(const unsigned channel) const {
+        return !IsPbWO4(channel);
+    }
+
 protected:
 
+    // those values never changed over TAPS lifetime?!
     static constexpr unsigned NHexElements = 384;
-    static constexpr unsigned NSectors = 6; // this never changed over TAPS lifetime
+    static constexpr unsigned NSectors = 6;
+    static constexpr unsigned PbWO4PerHex = 4;
 
     // TAPS has BaF2 elements and PbWO4 elements
 
