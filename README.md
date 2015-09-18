@@ -86,3 +86,13 @@ Have a look at those very nice projects, which are used here:
   * [Easylogging++](http://easylogging.muflihun.com/)
   * [Catch](https://github.com/philsquared/Catch) framework for unit-tests, test-driven development. See [the test/ subdirectory](test/).
   * [TCLAP - Templatized C++ Command Line Parser](http://tclap.sourceforge.net)
+
+
+## Troubleshooting
+
+  * If you're using gcc version 5.X and experiencing build errors within ROOT generated dictionary files (i.e. redeclaration of `struct __xfer_bufptrs`), please update to a more recent ROOT version. As of November 2015, you need to clone the git branch which includes the patches. To do so:
+    * get the source with `git clone -b v5-34-00-patches https://github.com/root-mirror/root.git`
+	* `cd` in the cloned directory
+	* create a new folder for the build process, e.g. `mkdir build_dir`
+	* `cd` in it and run `cmake .. && make -jN`, replace `N` with the number of threads which should be used
+    * set your `$ROOTSYS` accordingly
