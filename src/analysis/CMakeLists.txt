@@ -47,6 +47,7 @@ set(ANALYSIS_PHYSICS
   physics/common/ReconstructCheck.cc
   physics/tpc/PhysicsStats.cc
   physics/SlowcontrolManager.cc
+  physics/etaprime/etaprime_omega_gamma.cc
   )
 
 set(ANALYSIS_PLOT
