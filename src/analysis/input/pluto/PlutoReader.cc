@@ -96,7 +96,7 @@ std::pair<std::size_t,bool> FindParticleByID(const std::vector<const PParticle*>
 
 void SetParticleRelations(ParticleList list, ParticlePtr& particle, size_t parent_index) {
     ParticlePtr& parent = list.at(parent_index);
-    particle->Parents().emplace_back(parent);
+    particle->Parent() = parent;
     parent->Daughters().emplace_back(particle);
 }
 

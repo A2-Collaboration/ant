@@ -1,20 +1,15 @@
 #include "Particle.h"
-#include "TMath.h"
-
-template <class T>
-T square(const T& a) { return a*a; }
+#include "base/std_ext/math.h"
 
 using namespace ant;
 using namespace ant::analysis::data;
+using namespace ant::std_ext;
 
 Particle::Particle(const ParticleTypeDatabase::Type &_type, mev_t _Ek, radian_t _theta, radian_t _phi) :
-  type(&_type),
-  parents(),
-  daughters(),
-  candidates()
+  type(&_type)
 {
     const mev_t E = _Ek + type->Mass();
-    const mev_t p = sqrt( square(E) - square(type->Mass()) );
+    const mev_t p = sqrt( sqr(E) - sqr(type->Mass()) );
 
     //TODO: fix. This might be inefficeint...
 
@@ -29,7 +24,7 @@ void Particle::ChangeType(const ParticleTypeDatabase::Type &newtype)
 {
     // recalculate Lorentz vector
     const mev_t newE = Ek() + newtype.Mass();
-    const mev_t newP = sqrt( square(newE) - square(newtype.Mass()) );
+    const mev_t newP = sqrt( sqr(newE) - sqr(newtype.Mass()) );
 
     TVector3 pv = Vect();
     pv.SetMag(newP);

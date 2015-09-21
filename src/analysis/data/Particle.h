@@ -9,7 +9,7 @@
 #include <vector>
 #include <list>
 #include <iostream>
-
+#include <memory>
 
 namespace ant {
 namespace analysis {
@@ -19,6 +19,7 @@ class Particle;
 
 using ParticlePtr  = std::shared_ptr<Particle>;
 using ParticleList = std::vector<ParticlePtr>;
+using parentPtr = std::weak_ptr<Particle>;
 
 /**
  * @brief Base particle class
@@ -26,9 +27,9 @@ using ParticleList = std::vector<ParticlePtr>;
 class Particle: public TLorentzVector, public printable_traits {
 protected:
     const ant::ParticleTypeDatabase::Type* type;
-    ParticleList parents;
-    ParticleList daughters;
-    CandidateList candidates;
+    parentPtr parent = {};
+    ParticleList daughters = {};
+    CandidateList candidates = {};
 
 public:
 
@@ -36,10 +37,7 @@ public:
 
     Particle(const ParticleTypeDatabase::Type &_type, const TLorentzVector &_lorentzvector):
         TLorentzVector(_lorentzvector),
-        type(&_type),
-        parents(),
-        daughters(),
-        candidates()
+        type(&_type)
     {}
 
     Particle(const ParticleTypeDatabase::Type& _type, CandidatePtr candidate):
@@ -60,18 +58,18 @@ public:
     void SetLorentzVector( const TLorentzVector& lv ) { *((TLorentzVector*)this) = lv; }
 
 
-    bool hasParent() const { return daughters.size() != 0; }
-    ParticlePtr Partent() const { return parents.front(); }
-    ParticleList Parents() { return parents; }
-    const ParticleList Parents() const { return parents; }
+    bool hasParent() const noexcept { return parent.expired(); }
+    const parentPtr Parent() const noexcept { return parent; }
+    parentPtr Parent() noexcept { return parent; }
 
-    bool hasDaughters() const { return daughters.size() != 0; }
-    ParticleList& Daughters() { return daughters; }
-    const ParticleList& Daughters() const { return daughters; }
 
-    bool hasCandidates() const { return candidates.size() != 0; }
-    CandidateList& Candidates() { return candidates; }
-    const CandidateList& Candidates() const { return candidates; }
+    bool hasDaughters() const noexcept { return !daughters.empty(); }
+    ParticleList& Daughters() noexcept { return daughters; }
+    const ParticleList& Daughters() const noexcept { return daughters; }
+
+    bool hasCandidates() const noexcept { return !candidates.empty(); }
+    CandidateList& Candidates() noexcept { return candidates; }
+    const CandidateList& Candidates() const noexcept { return candidates; }
 
     virtual std::ostream& Print(std::ostream& stream) const;
 
