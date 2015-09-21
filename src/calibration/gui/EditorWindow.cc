@@ -12,10 +12,12 @@
 #include "TROOT.h"
 
 #include "base/Logger.h"
+#include "TH2D.h"
 
 #include <type_traits>
 #include <sstream>
 #include <iomanip>
+#include <TCanvas.h>
 
 using namespace std;
 
@@ -79,7 +81,8 @@ void EditorWindow::CreateToolbar(TGVerticalFrame* frame)
     calibSelector->SetList(editor.GetListOfCalibrations());
     auto btn_select = new ActionWidget<TGTextButton>(frm1,"Select");
     btn_select->SetAction([this] () {
-        cout <<  this->calibSelector->GetSelectedText() << endl;
+        currentCalID = this->calibSelector->GetSelectedText();
+        drawCalibration();
     });
 
     // second row with fit specific commands
@@ -111,6 +114,25 @@ void EditorWindow::UpdateLayout()
     MapWindow();
 }
 
+void EditorWindow::drawCalibration()
+{
+    ecanvas->cd();
+
+    calHist->Reset();
+
+    calHist->SetTitle(currentCalID.c_str());
+
+    for (const auto& ran: editor.GetAllRanges(currentCalID))
+        for (int i = floor(ran.second.Start()); i < ceil(ran.second.Stop()) ; ++i)
+            calHist->SetBinContent(i+1,ran.first+1,2);
+
+    for (const auto& ran: editor.GetAllValidRanges(currentCalID))
+        for (int i = floor(ran.second.Start()); i < ceil(ran.second.Stop()) ; ++i)
+            calHist->SetBinContent(i+1,ran.first+1,1);
+
+    ecanvas->UpdateMe();
+}
+
 EditorWindow::EditorWindow(const string& folder) :
     TGMainFrame(gClient->GetRoot())
 {
@@ -124,6 +146,13 @@ EditorWindow::EditorWindow(const string& folder) :
     // Create a horizontal frame widget with buttons
     CreateToolbar(frame);
 
+    frame_canvas = new TGHorizontalFrame(frame);
+    frame->AddFrame(frame_canvas, new TGLayoutHints(kLHintsExpandY | kLHintsExpandX));
+
+    ecanvas = new EditorCanvas(frame_canvas);
+    frame_canvas->AddFrame(ecanvas, new TGLayoutHints(kLHintsExpandY | kLHintsExpandX));
+    UpdateLayout();
+
     AddFrame(frame, new TGLayoutHints(kLHintsExpandX | kLHintsExpandY));
 
 
@@ -133,6 +162,16 @@ EditorWindow::EditorWindow(const string& folder) :
     // set focus
     gVirtualX->SetInputFocus(GetId());
 
+    calHist = new TH2D( "calHist",
+                         "Calibration Steps",
+                         100, 0, 100,
+                         10,//editor.GetNumberOfSteps(currentCalID),
+                         0,10// editor.GetNumberOfSteps(currentCalID)
+                        );
+    calHist->SetXTitle("TID [%]");
+    calHist->SetYTitle("Calibration Step");
+    calHist->Draw("col");
+    calHist->SetStats(false);
 }
 
 Bool_t EditorWindow::HandleKey(Event_t* event) {
@@ -159,8 +198,8 @@ EditorWindow::~EditorWindow()
 
 void EditorWindow::EditorCanvas::UpdateMe()
 {
-    Modified();
-    Update();
+    theCanvas->Modified();
+    theCanvas->Update();
 }
 
 EditorWindow::MyComboBox::MyComboBox(const TGWindow* p, Int_t id, UInt_t options, Pixel_t back):

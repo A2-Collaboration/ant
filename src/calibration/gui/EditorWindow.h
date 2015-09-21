@@ -7,6 +7,7 @@
 #include "KeySymbols.h"
 #include "TCanvas.h"
 #include "TGComboBox.h"
+#include "TRootEmbeddedCanvas.h"
 
 #include <functional>
 #include <vector>
@@ -24,11 +25,25 @@ class EditorWindow : public TGMainFrame
 {
 private:
 
-    class EditorCanvas : public TCanvas, public update_notify_traits
+    class EditorCanvas : public TRootEmbeddedCanvas,
+                           public update_notify_traits
     {
-        // update_notify_traits interface
+    protected:
+        TCanvas* theCanvas;
     public:
+        EditorCanvas(const TGWindow *p = 0) :
+            TRootEmbeddedCanvas(0, p, 400, 400) // only important place to set some width/height
+        {
+            auto frame = (TGCompositeFrame*)fCanvasContainer;
+            frame->RemoveInput(kKeyPressMask | kKeyReleaseMask);
+            theCanvas = new TCanvas("Editor",10,10, GetCanvasWindowId());
+            AdoptCanvas(theCanvas);
+        }
         virtual void UpdateMe() override;
+
+        virtual void cd(int subPad = 0){
+            theCanvas->cd(subPad);
+        }
     };
     class MyComboBox : public TGComboBox
     {
@@ -48,9 +63,17 @@ private:
     void UpdateLayout();
 
     MyComboBox* calibSelector;
+
+    EditorCanvas* ecanvas;
+    TGHorizontalFrame* frame_canvas = nullptr;
+
     ant::calibration::Editor editor;
 
-    bool flag;
+    std::string currentCalID;
+
+    TH2D* calHist;
+    void drawCalibration();
+
 
 public:
     EditorWindow(const std::string& folder);
