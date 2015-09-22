@@ -10,6 +10,7 @@
 #include <cmath>
 
 #include <iostream>
+#include "TStyle.h"
 
 using namespace ant;
 using namespace std;
@@ -24,9 +25,9 @@ EmbeddedEditorCanvas::EmbeddedEditorCanvas(const std::shared_ptr<calibration::Ed
     AdoptCanvas(theCanvas);
 }
 
-void EmbeddedEditorCanvas::selectUnvalid()
+void EmbeddedEditorCanvas::SelectInvalid()
 {
-    theCanvas->MarkUnValid();
+    theCanvas->MarkInvalid();
 }
 
 void EmbeddedEditorCanvas::SetCalID(const string& calID)
@@ -54,6 +55,7 @@ EditorCanvas::EditorCanvas(const std::shared_ptr<Editor>& editor, const string& 
     ed(editor)
 {
     SetCalID(calID);
+    calHist->GetZaxis()->SetRangeUser(1,4);
 }
 
 void EditorCanvas::SetCalID(const string& calID)
@@ -97,11 +99,11 @@ void EditorCanvas::updateCalHist()
     calHist->Reset();
     for (const auto& ran: ed->GetAllRanges(currentCalID))
         for (int i = floor(ran.second.Start()); i < ceil(ran.second.Stop()) ; ++i)
-            calHist->SetBinContent(i+1,ran.first+1,2);
+            calHist->SetBinContent(i+1,ran.first+1,1);
 
     for (const auto& ran: ed->GetAllValidRanges(currentCalID))
         for (int i = floor(ran.second.Start()); i < ceil(ran.second.Stop()) ; ++i)
-            calHist->SetBinContent(i+1,ran.first+1,1);
+            calHist->SetBinContent(i+1,ran.first+1,2);
 
     UpdateMe();
 }
@@ -119,18 +121,18 @@ void EditorCanvas::ResetCalibration()
 void EditorCanvas::fillLine(uint32_t lineNumber)
 {
     for (Int_t i = 0; i < 100; ++i )
-        calHist->Fill(i,lineNumber,3);
+        calHist->Fill(i,lineNumber,2);
 }
 
 void EditorCanvas::unFillLine(uint32_t lineNumber)
 {
     for (Int_t i = 0; i < 100; ++i )
-        calHist->Fill(i,lineNumber,-3);
+        calHist->Fill(i,lineNumber,-2);
 }
 
 
 
-void EditorCanvas::MarkUnValid()
+void EditorCanvas::MarkInvalid()
 {
     auto valids = ed->GetAllValidRanges(currentCalID);
     set<uint32_t> validset;
@@ -138,7 +140,7 @@ void EditorCanvas::MarkUnValid()
         validset.emplace(v.first);
 
     for (uint32_t i = 0 ; i < ed->GetNumberOfSteps(currentCalID) ; ++i)
-        if ( validset.find(i) == validset.end())
+        if ( validset.find(i) == validset.end() && indexMemory.find(i) == indexMemory.end() )
             markLine(i);
     UpdateMe();
 }

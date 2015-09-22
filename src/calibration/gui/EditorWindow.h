@@ -25,7 +25,6 @@ class EditorWindow : public TGMainFrame
 {
 private:
 
-
     class MyComboBox : public TGComboBox
     {
     public:
@@ -34,14 +33,13 @@ private:
               Pixel_t back = GetWhitePixel());
         void SetList(const std::list<std::string>& items);
         std::string GetSelectedText();
-
     };
-
 
     std::map<EKeySym, TGTextButton*> keys;
 
-    void CreateToolbar(TGVerticalFrame* frame);
-    void UpdateLayout();
+    void createSelector(TGVerticalFrame* frame);
+    void createToolbar(TGVerticalFrame* frame);
+    void updateLayout();
 
     MyComboBox* calibSelector;
 
@@ -53,6 +51,8 @@ private:
     std::string currentCalID;
 
     TH2D* calHist;
+
+    void deleteSelections();
 
 public:
     EditorWindow(const std::string& folder);

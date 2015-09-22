@@ -65,17 +65,9 @@ public:
     }
 };
 
-void EditorWindow::CreateToolbar(TGVerticalFrame* frame)
+void EditorWindow::createSelector(TGVerticalFrame* frame)
 {
-    // first row  with loop control commands
-
     TGHorizontalFrame* frm1 = new TGHorizontalFrame(frame);
-
-    auto btn_prev = new ActionWidget<TGTextButton>(frm1,"Prev (b)");
-    keys[kKey_b] = btn_prev;
-    btn_prev->SetAction([this] () {
-        cout << "prev" << endl;
-    });
 
     calibSelector = new MyComboBox(frm1,0);
     calibSelector->SetList(editor->GetListOfCalibrations());
@@ -85,11 +77,6 @@ void EditorWindow::CreateToolbar(TGVerticalFrame* frame)
         ecanvas->SetCalID(currentCalID);
     });
 
-    // second row with fit specific commands
-    /// \todo Make those commands specific for one canvas if
-    /// more than one fitfunction is displayed...?!
-
-
     // add them all together...
     auto layout_btn = new TGLayoutHints(kLHintsLeft|kLHintsExpandX|kLHintsExpandY,2,2,2,2);
 
@@ -97,21 +84,70 @@ void EditorWindow::CreateToolbar(TGVerticalFrame* frame)
         frm->AddFrame(dynamic_cast<TGFrame*>(widget), layout_btn);
     };
 
-    //add_to_frame(frm1, btn_prev);
     add_to_frame(frm1, calibSelector);
     add_to_frame(frm1, btn_select);
-
 
     auto layout_frm =  new TGLayoutHints(kLHintsTop | kLHintsExpandX);
     frame->AddFrame(frm1, layout_frm);
 }
 
-void EditorWindow::UpdateLayout()
+
+void EditorWindow::createToolbar(TGVerticalFrame* frame)
+{
+    TGHorizontalFrame* frm2 = new TGHorizontalFrame(frame);
+
+    auto btn_selectInValid = new ActionWidget<TGTextButton>(frm2,"Select invalid");
+    keys[kKey_s] = btn_selectInValid;
+    btn_selectInValid->SetAction([this] () {
+        this->ecanvas->SelectInvalid();
+    });
+
+
+    auto btn_clear = new ActionWidget<TGTextButton>(frm2,"Clear selection");
+    keys[kKey_c] = btn_clear;
+    btn_clear->SetAction([this] () {
+        this->ecanvas->clearSelections();
+    });
+
+    auto btn_edit = new ActionWidget<TGTextButton>(frm2,"Start Editor");
+    keys[kKey_e] = btn_edit;
+    btn_edit->SetAction([this] () {
+        cout << "TODO: Implement Editor!" << endl;
+    });
+
+    auto btn_delete = new ActionWidget<TGTextButton>(frm2,"Delete selection");
+    keys[kKey_d] = btn_delete;
+    btn_delete->SetAction([this] () {
+        this->deleteSelections();
+    });
+
+    // add them all together...
+    auto layout_btn = new TGLayoutHints(kLHintsLeft|kLHintsExpandX|kLHintsExpandY,2,2,2,2);
+    auto add_to_frame = [this, layout_btn] (TGHorizontalFrame* frm, TGWidget* widget) {
+        frm->AddFrame(dynamic_cast<TGFrame*>(widget), layout_btn);
+    };
+
+    add_to_frame(frm2, btn_selectInValid);
+    add_to_frame(frm2, btn_clear);
+    add_to_frame(frm2, btn_edit);
+    add_to_frame(frm2, btn_delete);
+
+    auto layout_frm =  new TGLayoutHints(kLHintsBottom | kLHintsExpandX);
+    frame->AddFrame(frm2, layout_frm);
+}
+
+void EditorWindow::updateLayout()
 {
     // Map all subwindows of main frame
     MapSubwindows();
     Resize(GetDefaultSize()); // this is used here to init layout algorithm
     MapWindow();
+}
+
+void EditorWindow::deleteSelections()
+{
+    for (const auto& i: ecanvas->GetSelected())
+        cout << "Delete: " << i << endl;
 }
 
 
@@ -128,34 +164,26 @@ EditorWindow::EditorWindow(const string& folder) :
     TGVerticalFrame* frame = new TGVerticalFrame(this);
 
     // Create a horizontal frame widget with buttons
-    CreateToolbar(frame);
+    createSelector(frame);
 
     frame_canvas = new TGHorizontalFrame(frame);
     frame->AddFrame(frame_canvas, new TGLayoutHints(kLHintsExpandY | kLHintsExpandX));
 
     ecanvas = new EmbeddedEditorCanvas(editor,currentCalID,frame_canvas);
     frame_canvas->AddFrame(ecanvas, new TGLayoutHints(kLHintsExpandY | kLHintsExpandX));
-    UpdateLayout();
+    updateLayout();
 
     AddFrame(frame, new TGLayoutHints(kLHintsExpandX | kLHintsExpandY));
 
+    createToolbar(frame);
+
 
     AddInput(kKeyPressMask | kKeyReleaseMask);
-    UpdateLayout();
+    updateLayout();
 
     // set focus
     gVirtualX->SetInputFocus(GetId());
 
-    calHist = new TH2D( "calHist",
-                         "Calibration Steps",
-                         100, 0, 100,
-                         10,//editor->GetNumberOfSteps(currentCalID),
-                         0,10// editor->GetNumberOfSteps(currentCalID)
-                        );
-    calHist->SetXTitle("TID [%]");
-    calHist->SetYTitle("Calibration Step");
-    calHist->Draw("col");
-    calHist->SetStats(false);
 }
 
 Bool_t EditorWindow::HandleKey(Event_t* event) {
