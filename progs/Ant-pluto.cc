@@ -4,12 +4,19 @@
 #include <algorithm>
 
 // pluto++
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wunused-local-typedefs"
+#pragma GCC diagnostic ignored "-Wvla"
+#pragma GCC diagnostic ignored "-Wignored-qualifiers"
+#pragma GCC diagnostic ignored "-Weffc++"
 #pragma GCC diagnostic ignored "-Wwrite-strings"
+#pragma GCC diagnostic ignored "-Wunused-parameter"
 #include "PParticle.h"
 #include "PBeamSmearing.h"
 #include "PReaction.h"
 #include "PPlutoBulkDecay.h"
 #include "PDataBase.h"
+#pragma GCC diagnostic pop
 
 // ROOT
 #include "TClonesArray.h"
