@@ -78,11 +78,11 @@ void EditorWindow::CreateToolbar(TGVerticalFrame* frame)
     });
 
     calibSelector = new MyComboBox(frm1,0);
-    calibSelector->SetList(editor.GetListOfCalibrations());
+    calibSelector->SetList(editor->GetListOfCalibrations());
     auto btn_select = new ActionWidget<TGTextButton>(frm1,"Select");
     btn_select->SetAction([this] () {
         currentCalID = this->calibSelector->GetSelectedText();
-        drawCalibration();
+        ecanvas->theCanvas->SetCalID(currentCalID);
     });
 
     // second row with fit specific commands
@@ -114,32 +114,16 @@ void EditorWindow::UpdateLayout()
     MapWindow();
 }
 
-void EditorWindow::drawCalibration()
-{
-    ecanvas->cd();
-
-    calHist->Reset();
-
-    calHist->SetTitle(currentCalID.c_str());
-
-    for (const auto& ran: editor.GetAllRanges(currentCalID))
-        for (int i = floor(ran.second.Start()); i < ceil(ran.second.Stop()) ; ++i)
-            calHist->SetBinContent(i+1,ran.first+1,2);
-
-    for (const auto& ran: editor.GetAllValidRanges(currentCalID))
-        for (int i = floor(ran.second.Start()); i < ceil(ran.second.Stop()) ; ++i)
-            calHist->SetBinContent(i+1,ran.first+1,1);
-
-    ecanvas->UpdateMe();
-}
 
 EditorWindow::EditorWindow(const string& folder) :
-    TGMainFrame(gClient->GetRoot())
+    TGMainFrame(gClient->GetRoot()),
+    editor(make_shared<ant::calibration::Editor>())
 {
     // Set a name to the main frame
     SetWindowName( (std_ext::formatter() << "Ant-calib Editor: " << folder).str().c_str() );
 
-    editor.AddFromFolder(folder);
+    editor->AddFromFolder(folder);
+    currentCalID = editor->GetListOfCalibrations().front();
 
     TGVerticalFrame* frame = new TGVerticalFrame(this);
 
@@ -149,7 +133,7 @@ EditorWindow::EditorWindow(const string& folder) :
     frame_canvas = new TGHorizontalFrame(frame);
     frame->AddFrame(frame_canvas, new TGLayoutHints(kLHintsExpandY | kLHintsExpandX));
 
-    ecanvas = new EditorCanvas(frame_canvas);
+    ecanvas = new EmbeddedEditorCanvas(editor,currentCalID,frame_canvas);
     frame_canvas->AddFrame(ecanvas, new TGLayoutHints(kLHintsExpandY | kLHintsExpandX));
     UpdateLayout();
 
@@ -165,8 +149,8 @@ EditorWindow::EditorWindow(const string& folder) :
     calHist = new TH2D( "calHist",
                          "Calibration Steps",
                          100, 0, 100,
-                         10,//editor.GetNumberOfSteps(currentCalID),
-                         0,10// editor.GetNumberOfSteps(currentCalID)
+                         10,//editor->GetNumberOfSteps(currentCalID),
+                         0,10// editor->GetNumberOfSteps(currentCalID)
                         );
     calHist->SetXTitle("TID [%]");
     calHist->SetYTitle("Calibration Step");
@@ -196,10 +180,9 @@ EditorWindow::~EditorWindow()
     gApplication->Terminate(0);
 }
 
-void EditorWindow::EditorCanvas::UpdateMe()
+void EditorWindow::EmbeddedEditorCanvas::UpdateMe()
 {
-    theCanvas->Modified();
-    theCanvas->Update();
+    theCanvas->UpdateMe();
 }
 
 EditorWindow::MyComboBox::MyComboBox(const TGWindow* p, Int_t id, UInt_t options, Pixel_t back):

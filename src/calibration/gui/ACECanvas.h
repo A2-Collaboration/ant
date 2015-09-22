@@ -104,7 +104,7 @@ private:
     void openQuery();
     void resetCalibrationTo(const std::string& calID);
 public:
-    ACECanvas(const std::string& fileName);
+    ACECanvas(const std::string& FileName);
     virtual void HandleInput(EEventType button, Int_t x, Int_t y) override;
 
     // DialogHandler_traits interface

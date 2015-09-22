@@ -1,7 +1,8 @@
 #pragma once
 
-#include "calibration/gui/Indicator_traits.h"
 #include "calibration/Editor.h"
+#include "calibration/gui/EditorCanvas.h"
+#include "calibration/gui/Indicator_traits.h"
 
 #include "TGFrame.h"
 #include "KeySymbols.h"
@@ -25,25 +26,21 @@ class EditorWindow : public TGMainFrame
 {
 private:
 
-    class EditorCanvas : public TRootEmbeddedCanvas,
-                           public update_notify_traits
+    class EmbeddedEditorCanvas : public TRootEmbeddedCanvas,
+            public update_notify_traits
     {
-    protected:
-        TCanvas* theCanvas;
     public:
-        EditorCanvas(const TGWindow *p = 0) :
+        EditorCanvas* theCanvas;
+        EmbeddedEditorCanvas(const std::shared_ptr<ant::calibration::Editor>& editor, const std::string& calID, const TGWindow *p = 0) :
             TRootEmbeddedCanvas(0, p, 400, 400) // only important place to set some width/height
         {
             auto frame = (TGCompositeFrame*)fCanvasContainer;
             frame->RemoveInput(kKeyPressMask | kKeyReleaseMask);
-            theCanvas = new TCanvas("Editor",10,10, GetCanvasWindowId());
+            theCanvas = new EditorCanvas(editor, calID, GetCanvasWindowId());
             AdoptCanvas(theCanvas);
         }
-        virtual void UpdateMe() override;
 
-        virtual void cd(int subPad = 0){
-            theCanvas->cd(subPad);
-        }
+        virtual void UpdateMe() override;
     };
     class MyComboBox : public TGComboBox
     {
@@ -64,16 +61,14 @@ private:
 
     MyComboBox* calibSelector;
 
-    EditorCanvas* ecanvas;
+    EmbeddedEditorCanvas* ecanvas;
     TGHorizontalFrame* frame_canvas = nullptr;
 
-    ant::calibration::Editor editor;
+    std::shared_ptr<ant::calibration::Editor> editor;
 
     std::string currentCalID;
 
     TH2D* calHist;
-    void drawCalibration();
-
 
 public:
     EditorWindow(const std::string& folder);
