@@ -117,8 +117,8 @@ int main( int argc, char** argv ) {
     ReadCmdline( argc, argv );
     PrintConfig();
 
-    PBeamSmearing *smear = new PBeamSmearing("beam_smear", "Beam smearing");
-    smear->SetReaction("g + p");
+    PBeamSmearing *smear = new PBeamSmearing(strdup("beam_smear"), strdup("Beam smearing"));
+    smear->SetReaction(strdup("g + p"));
 
     TF1* tagger_spectrum = new TF1("bremsstrahlung","(1.0/x)", Egmin, Egmax);
     smear->SetMomentumFunction( tagger_spectrum );
@@ -150,13 +150,11 @@ int main( int argc, char** argv ) {
     if( outfile.empty() )
         outfile = generateFilename();
 
-    // PReaction constructor requires non-const char*. so... make copies... ARGH!
-    char* rs = strdup(reactionString.c_str());
-    char* gf = strdup(outfile.c_str());
+    cout << "filename " << outfile << endl;
 
-    cout << "filename " << gf << endl;
-
-    PReaction* reaction = new PReaction(Egmax, "g", "p", rs, gf, saveIntermediate, 0, 0, 0);
+    PReaction* reaction = new PReaction(Egmax, strdup("g"), strdup("p"),
+                                        strdup(reactionString.c_str()), strdup(outfile.c_str()),
+                                        saveIntermediate, 0, 0, 0);
 
     if( enableBulk ) {
         PPlutoBulkDecay* p1 = new PPlutoBulkDecay();
@@ -170,9 +168,6 @@ int main( int argc, char** argv ) {
     reaction->Loop(numEvents);
 
     cout << "Simulation finished." << endl;
-
-    free(rs);
-    free(gf);
 
     // Do not delete the reaction, otherwise: infinite loop somewhere in ROOT...
     //delete reactrion;
