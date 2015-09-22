@@ -33,7 +33,7 @@ static Double_t Egmin = 1.450;  // beam energy, min Tagg Energy [GeV]
 static bool enableBulk = true;
 static bool saveIntermediate = true;
 static Int_t numEvents = 1000;
-static string reactonString = "p omega";
+static string reactionString = "p omega";
 static string prefix = "pluto_";
 static string suffix = "00";
 static string outfile = "";
@@ -49,11 +49,11 @@ inline Double_t thetaCrit() {
 }
 
 std::string generateFilename() {
-    std::stringstream s;
+    stringstream s;
     s << prefix;
 
-    string fixedName(reactonString);
-    std::replace( fixedName.begin(), fixedName.end(), ' ', '_');
+    string fixedName(reactionString);
+    replace( fixedName.begin(), fixedName.end(), ' ', '_');
     s << "-" << fixedName;
 
     if(enableBulk)
@@ -92,7 +92,7 @@ void ReadCmdline(int argc, char** argv ) {
 
 void PrintConfig() {
     cout << "\n\n Simulating " << numEvents << " events:\n\n";
-    cout << "  Reactrion:  g p --> " << reactonString << "\n\n";
+    cout << "  Reaction:  g p --> " << reactionString << "\n\n";
     cout << "  Photon Engery : " << Egmin << " to " << Egmax << " GeV\n\n";
     cout << "  Saving to " << generateFilename() << "\n\n";
     cout << "  saveIntermediate particles: ";
@@ -151,23 +151,23 @@ int main( int argc, char** argv ) {
         outfile = generateFilename();
 
     // PReaction constructor requires non-const char*. so... make copies... ARGH!
-    char* rs = strdup(reactonString.c_str());
+    char* rs = strdup(reactionString.c_str());
     char* gf = strdup(outfile.c_str());
 
     cout << "filename " << gf << endl;
 
-    PReaction* reactrion = new PReaction(Egmax, "g", "p", rs, gf, saveIntermediate, 0, 0, 0);
+    PReaction* reaction = new PReaction(Egmax, "g", "p", rs, gf, saveIntermediate, 0, 0, 0);
 
     if( enableBulk ) {
         PPlutoBulkDecay* p1 = new PPlutoBulkDecay();
         p1->SetRecursiveMode(1);
         p1->SetTauMax(0.001);
-        reactrion->AddBulk(p1);
+        reaction->AddBulk(p1);
     }
 
-    reactrion->Print();   //The "Print()" statement is optional
+    reaction->Print();   //The "Print()" statement is optional
 
-    reactrion->Loop(numEvents);
+    reaction->Loop(numEvents);
 
     cout << "Simulation finished." << endl;
 
