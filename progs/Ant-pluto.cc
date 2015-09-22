@@ -1,7 +1,4 @@
-#include <iostream>
-#include <string>
-#include <sstream>
-#include <algorithm>
+#include "base/CmdLine.h"
 
 // pluto++
 #pragma GCC diagnostic push
@@ -23,9 +20,10 @@
 #include "TMath.h"
 #include "TRandom.h"
 
-#include "anyoption.h"
-
-
+#include <iostream>
+#include <string>
+#include <sstream>
+#include <algorithm>
 
 using namespace std;
 
@@ -67,68 +65,29 @@ std::string generateFilename() {
 }
 
 void ReadCmdline(int argc, char** argv ) {
+    TCLAP::CmdLine cmd("Ant-pluto - Pluto single reaction generator for A2 Physics", ' ', "0.1");
 
-     AnyOption opt;
+    auto cmd_numEvents = cmd.add<TCLAP::ValueArg<int>>("N", "numEvents", "Number of generated events", false, numEvents, "nEvents");
+    auto cmd_saveIntermediate = cmd.add<TCLAP::SwitchArg>("", "saveIntermediate", "Save intermediate particles", saveIntermediate);
+    auto cmd_enableBulk = cmd.add<TCLAP::SwitchArg>("", "enableBulk", "Enable bulk decay of particles", enableBulk);
+    auto cmd_Emin = cmd.add<TCLAP::ValueArg<double>> ("", "Emin", "Minimal photon energy [GeV]", false, Egmin, "GeV");
+    auto cmd_Emax = cmd.add<TCLAP::ValueArg<double>> ("", "Emax", "Maximal photon energy [GeV]", false, Egmax, "GeV");
+    auto cmd_reaction = cmd.add<TCLAP::ValueArg<string>> ("", "reaction", "Reaction string in PLUTO notation", true, reactionString, "reaction");
+    auto cmd_prefix = cmd.add<TCLAP::ValueArg<string>> ("", "prefix", "Prefix for output file", false, prefix, "prefix");
+    auto cmd_suffix = cmd.add<TCLAP::ValueArg<string>> ("", "suffix", "Suffix for output file", false, suffix, "suffix");
+    auto cmd_outfile = cmd.add<TCLAP::ValueArg<string>> ("", "outfile", "Output file", false, outfile, "outfile");
 
-     opt.setVerbose();
-     opt.autoUsagePrint(true);
+    cmd.parse(argc, argv);
 
-     opt.addUsage(" --numEvents <n>           Number of events to simulate");
-     opt.addUsage(" --saveIntermediate        Save intermedite particles");
-     opt.addUsage(" --enableBulk              Enable bulk decay");
-
-     opt.addUsage(" --reaction                Reactoin String, PLUTO notation");
-     opt.addUsage(" --Emin                    Minimal photon energy [GeV]");
-     opt.addUsage(" --Emax                    Maximal photon energy [GeV]");
-
-     opt.addUsage(" --help -h");
-
-     opt.setOption("numEvents");
-
-     opt.setFlag("saveIntermediate");
-     opt.setFlag("enableBulk");
-     opt.setOption("Emin");
-     opt.setOption("Emax");
-     opt.setOption("prefix");
-     opt.setOption("suffix");
-     opt.setOption("reaction");
-     opt.setOption("Output");
-
-     opt.setFlag("help",'h');
-
- //    opt.processFile(CFG_FILE);
-
-     opt.processCommandArgs( argc, argv );
-
-     if( opt.getFlag('h') || opt.getValue("--help") ) {
-          opt.printUsage();
-          exit(0);
-     }
-
-     if ( opt.getValue("numEvents") )
-         numEvents = atoi(opt.getValue("numEvents"));
-
-     if ( opt.getValue("reaction") )
-         reactonString = opt.getValue("reaction");
-
-     if ( opt.getValue("prefix") )
-         prefix = opt.getValue("prefix");
-
-     if ( opt.getValue("suffix") )
-         suffix = opt.getValue("suffix");
-
-     if ( opt.getValue("Emin") )
-         Egmin = atof(opt.getValue("Emin"));
-
-     if ( opt.getValue("Emax") )
-         Egmax = atof(opt.getValue("Emax"));
-     if ( opt.getValue("Output") )
-         outfile = opt.getValue("Output");
-
-
-     saveIntermediate = ( NULL != opt.getValue("saveIntermediate") );
-     enableBulk = ( NULL != opt.getValue("enableBulk") );
-
+    numEvents = cmd_numEvents->getValue();
+    saveIntermediate = cmd_saveIntermediate->getValue();
+    enableBulk = cmd_enableBulk->getValue();
+    Egmax = cmd_Emax->getValue();
+    Egmin = cmd_Emin->getValue();
+    reactionString = cmd_reaction->getValue();
+    prefix = cmd_prefix->getValue();
+    suffix = cmd_suffix->getValue();
+    outfile = cmd_outfile->getValue();
 }
 
 void PrintConfig() {
