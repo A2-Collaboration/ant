@@ -16,7 +16,7 @@ EtapOmegaG::EtapOmegaG(PhysOptPtr opts) : Physics("EtapOmegaG", opts)
 
 void ant::analysis::physics::EtapOmegaG::ProcessEvent(const data::Event& event)
 {
-    const auto& data = event.MCTrue();
+    const auto& data = event.Reconstructed();
 
     const auto nParticles = data.Particles().GetAll().size();
     if(nParticles != 4 && nParticles != 5)
