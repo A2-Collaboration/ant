@@ -31,13 +31,31 @@ PlutoReader::PlutoReader(const std::shared_ptr<WrapTFileInput>& rootfiles):
 
     VLOG(5) << "Found Pluto Data Tree";
 
-    auto res = tree->SetBranchAddress("Particles",         &PlutoMCTrue);
+    const auto res = tree->SetBranchAddress("Particles",         &PlutoMCTrue);
     if(res != TTree::kMatch) LOG(ERROR) << "Could not access branch in PLuto tree";
 
-    tree->SetBranchAddress("plutoID",           &plutoID);
-    tree->SetBranchAddress("plutoRandomID", 	&plutoRandomID);
-
     pluto_database = makeStaticData();
+
+    if(files->GetObject("data_tid", tid_tree)) {
+
+        const auto res = tid_tree->SetBranchAddress("tid", &tid);
+
+        // switch TID reading off if not found
+        if(res != TTree::kMatch) {
+            tid_tree->ResetBranchAddresses();
+            tid_tree = nullptr;
+        } else {
+            if(tid_tree->GetEntries() != tree->GetEntries()) {
+                LOG(ERROR) << "Pluto Tree - TID Tree size missmatch!";
+                tid_tree->ResetBranchAddresses();
+                tid_tree = nullptr;
+            } else {
+                VLOG(3) << "TIDs found in pluto data";
+            }
+        }
+    } else {
+        VLOG(3) << "No TIDs found in pluto data";
+    }
 
     LOG(INFO) << "Pluto input active";
 }
@@ -199,6 +217,10 @@ bool PlutoReader::ReadNextEvent(Event& event)
         return false;
 
     tree->GetEntry(current_entry);
+
+    if(tid_tree) {
+        tid_tree->GetEntry(current_entry);
+    }
 
     CopyPluto(event);
 

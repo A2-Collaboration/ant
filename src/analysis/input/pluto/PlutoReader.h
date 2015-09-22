@@ -3,6 +3,7 @@
 #include "analysis/input/DataReader.h"
 #include "analysis/data/Event.h"
 
+
 #include <memory>
 #include <string>
 #include <list>
@@ -17,6 +18,7 @@ class PParticle;
 namespace ant {
 
 class WrapTFileInput;
+class TID;
 
 namespace analysis {
 
@@ -34,9 +36,9 @@ protected:
     std::shared_ptr<WrapTFileInput>    files;
 
     TTree*          tree = nullptr;
+    TTree*          tid_tree = nullptr;
     TClonesArray*   PlutoMCTrue = nullptr;
-    Long64_t        plutoID = 0;
-    Long64_t        plutoRandomID = 0;
+    TID*            tid = nullptr;
 
     using PParticleVector = std::vector<const PParticle*>;
     PParticleVector PlutoParticles;
