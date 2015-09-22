@@ -64,6 +64,12 @@ public:
         return theList;
     }
 
+    /**
+     * @brief Find TObject of type T and given name in the file(s).
+     * @param name Name of the object to get
+     * @param ptr  Reference where to store the pointer to the found object
+     * @return true if object was found, false otherwise
+     */
     template <typename T>
     bool GetObject(const std::string& name, T*& ptr) {
         ptr = nullptr;
