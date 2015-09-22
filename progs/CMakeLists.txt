@@ -12,6 +12,7 @@ add_ant_executable(Ant)
 add_ant_executable(Ant-calib)
 add_ant_executable(Ant-calib-editor)
 add_ant_executable(Ant-cocktail)
+add_ant_executable(Ant-pluto)
 add_ant_executable(Ant-chain)
 
 option(OmegaTools "Build Omega Tools" OFF)
