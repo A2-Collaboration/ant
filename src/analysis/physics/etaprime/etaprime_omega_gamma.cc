@@ -16,15 +16,19 @@ EtapOmegaG::EtapOmegaG(PhysOptPtr opts) : Physics("EtapOmegaG", opts)
 
 void ant::analysis::physics::EtapOmegaG::ProcessEvent(const data::Event& event)
 {
-    const auto& data = event.Reconstructed();
+    const auto& data = event.MCTrue();
+
+    const auto nParticles = data.Particles().GetAll().size();
+    if(nParticles != 4 && nParticles != 5)
+        return;
 
     const auto& photons = data.Particles().Get(ParticleTypeDatabase::Photon);
     const auto& protons = data.Particles().Get(ParticleTypeDatabase::Proton);
 
     const auto nPhotons = photons.size();
-    //const auto nProtons = protons.size();
+    const auto nProtons = protons.size();
 
-    if(nPhotons != 4)
+    if(nPhotons != 4 && nProtons+nPhotons != nParticles)
         return;
 
     TLorentzVector sum(0,0,0,0);
