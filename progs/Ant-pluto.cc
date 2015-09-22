@@ -1,4 +1,5 @@
 #include "base/CmdLine.h"
+#include "simulation/mc/PlutoExtensions.h"
 
 // pluto++
 #pragma GCC diagnostic push
@@ -130,22 +131,7 @@ int main( int argc, char** argv ) {
 
     makeDistributionManager()->Add(smear);
 
-    PStaticData* sdata = makeStaticData();
-
-    // additional omega decays (from PDG Booklet 2014)
-    sdata->AddDecay("w --> eta + g",        "w", "eta,g",           4.6E-4);
-    sdata->AddDecay("w --> g + g + g",      "w", "g,g,g",           1.9E-4);    // upper limit
-    sdata->AddDecay("w --> pi0 e+ e-",      "w", "pi0,e+,e-",       7.7E-4);
-    sdata->AddDecay("w --> pi0 mu+ mu-",    "w", "pi0,mu+,mu-",     1.3E-4);
-    sdata->AddDecay("w --> pi+ pi- pi0 pi0","w", "pi+,pi-,pi0,pi0", 2.0E-4);    // upper limit
-    sdata->AddDecay("w --> pi+ pi- pi+ pi-","w", "pi+,pi-,pi+,pi-", 1.0E-3);    // upper limit
-    sdata->AddDecay("w --> pi0 pi0 g",      "w", "pi0,pi0,g",       6.6E-5);
-    sdata->AddDecay("w --> eta pi0 g",      "w", "eta,pi0,g",       3.3E-5);    // upper limit
-
-    // Charge conjucation violating modes
-    sdata->AddDecay("w --> eta pi0",        "w", "eta,pi0",         2.1E-4);    // upper limit
-    sdata->AddDecay("w --> pi0 pi0",        "w", "pi0,pi0",         2.1E-4);    // upper limit
-    sdata->AddDecay("w --> pi0 pi0 pi0",    "w", "pi0,pi0,pi0",     2.3E-4);    // upper limit
+    ant::simulation::mc::UpdatePluteDataBase();
 
     if( outfile.empty() )
         outfile = generateFilename();
