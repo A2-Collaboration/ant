@@ -9,6 +9,7 @@ set(SIMULATION_MC
   A2Channels.cc
   A2Cocktail.cc
   PlutoExtensions.h
+  utils/PlutoTID.cc
 )
 
 
@@ -28,4 +29,6 @@ target_link_libraries( mc
   ${ROOT_LIBRARIES}
   ${PLUTO_LIBRARY}
   MathMore
+  base
+  tree
 )
