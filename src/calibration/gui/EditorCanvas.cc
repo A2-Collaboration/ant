@@ -6,6 +6,7 @@
 #include "TH2D.h"
 #include "TH2.h"
 
+#include <list>
 #include <cmath>
 
 #include <iostream>
@@ -14,6 +15,40 @@ using namespace ant;
 using namespace std;
 using namespace ant::calibration::gui;
 
+EmbeddedEditorCanvas::EmbeddedEditorCanvas(const std::shared_ptr<calibration::Editor>& editor, const string& calID, const TGWindow* p) :
+    TRootEmbeddedCanvas(0, p, 400, 400) // only important place to set some width/height
+{
+    auto frame = (TGCompositeFrame*)fCanvasContainer;
+    frame->RemoveInput(kKeyPressMask | kKeyReleaseMask);
+    theCanvas = new EditorCanvas(editor, calID, GetCanvasWindowId());
+    AdoptCanvas(theCanvas);
+}
+
+void EmbeddedEditorCanvas::selectUnvalid()
+{
+    theCanvas->MarkUnValid();
+}
+
+void EmbeddedEditorCanvas::SetCalID(const string& calID)
+{
+    theCanvas->SetCalID(calID);
+}
+
+std::list<uint32_t> EmbeddedEditorCanvas::GetSelected()
+{
+    return theCanvas->CreateSelectionList();
+}
+
+void EmbeddedEditorCanvas::clearSelections()
+{
+    theCanvas->ResetCalibration();
+}
+
+void EmbeddedEditorCanvas::UpdateMe()
+{
+    theCanvas->UpdateMe();
+
+}
 EditorCanvas::EditorCanvas(const std::shared_ptr<Editor>& editor, const string& calID, int winID ):
     TCanvas("Editor",10,10,winID),
     ed(editor)
@@ -41,6 +76,14 @@ void EditorCanvas::SetCalID(const string& calID)
     calHist->SetStats(false);
     updateCalHist();
     UpdateMe();
+}
+
+list<uint32_t> EditorCanvas::CreateSelectionList()
+{
+    list<uint32_t> theList;
+    for ( const auto theIndex: indexMemory)
+        theList.emplace_back(theIndex);
+    return theList;
 }
 
 void EditorCanvas::UpdateMe()
@@ -96,7 +139,7 @@ void EditorCanvas::MarkUnValid()
 
     for (uint32_t i = 0 ; i < ed->GetNumberOfSteps(currentCalID) ; ++i)
         if ( validset.find(i) == validset.end())
-            fillLine(i);
+            markLine(i);
     UpdateMe();
 }
 

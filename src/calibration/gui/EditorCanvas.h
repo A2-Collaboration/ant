@@ -16,6 +16,7 @@
 #include "TCanvas.h"
 #include "TPaveText.h"
 
+#include "TRootEmbeddedCanvas.h"
 
 class TH2D;
 
@@ -24,7 +25,24 @@ namespace ant {
 namespace calibration {
 namespace gui {
 
+class EditorCanvas;
 
+class EmbeddedEditorCanvas : public TRootEmbeddedCanvas,
+        public update_notify_traits
+{
+private:
+    EditorCanvas* theCanvas;
+
+public:
+    EmbeddedEditorCanvas(const std::shared_ptr<ant::calibration::Editor>& editor, const std::string& calID, const TGWindow *p = 0);
+
+    virtual void selectUnvalid();
+    virtual void SetCalID(const std::string& calID);
+    virtual std::list<std::uint32_t> GetSelected();
+    virtual void clearSelections();
+
+    virtual void UpdateMe() override;
+};
 
 
 class EditorCanvas:
@@ -54,6 +72,8 @@ private:
 public:
     EditorCanvas(const std::shared_ptr<Editor>& editor, const std::string& calID, int winID);
     void SetCalID(const std::string& calID);
+
+    std::list<std::uint32_t> CreateSelectionList();
 
     virtual void UpdateMe() override;
     void ResetCalibration();

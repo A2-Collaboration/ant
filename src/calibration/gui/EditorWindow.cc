@@ -82,7 +82,7 @@ void EditorWindow::CreateToolbar(TGVerticalFrame* frame)
     auto btn_select = new ActionWidget<TGTextButton>(frm1,"Select");
     btn_select->SetAction([this] () {
         currentCalID = this->calibSelector->GetSelectedText();
-        ecanvas->theCanvas->SetCalID(currentCalID);
+        ecanvas->SetCalID(currentCalID);
     });
 
     // second row with fit specific commands
@@ -180,10 +180,6 @@ EditorWindow::~EditorWindow()
     gApplication->Terminate(0);
 }
 
-void EditorWindow::EmbeddedEditorCanvas::UpdateMe()
-{
-    theCanvas->UpdateMe();
-}
 
 EditorWindow::MyComboBox::MyComboBox(const TGWindow* p, Int_t id, UInt_t options, Pixel_t back):
     TGComboBox(p,id,options,back){}
