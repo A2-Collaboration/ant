@@ -131,3 +131,23 @@ Have a look at those very nice projects, which are used here:
   * [Easylogging++](http://easylogging.muflihun.com/)
   * [Catch](https://github.com/philsquared/Catch) framework for unit-tests, test-driven development. See [the test/ subdirectory](test/).
   * [TCLAP - Templatized C++ Command Line Parser](http://tclap.sourceforge.net)
+
+## Quick How-TOs
+### Ant-pluto
+Ant-pluto is a frontend for Pluto for A2 physics (includes the Tagger).
+It can generate photoproduction and decays or shoot particles randomly in all directions.
+
+#### Example: Pluto Decay
+To use Pluto to simuale, for example, the omega ---> pi0 gamma do:
+```
+Ant-pluto --pluto --reaction "p omega [ pi0 g ]" --Emin 1400 --Emax 1600 --numEvents 10000 --saveIntermediate --enableBulk -v 2 -o sim.root
+```
+This will generate 10k events in the incident photon energy range 1400 MeV to 1600 MeV, saving unstable particles.
+The pi0 will decay into different channels according to the Pluto database.
+
+#### Example: Random Gun
+Shoot 1000 protons into TAPS, 1 proton/Event, 0 to 1 GeV
+```
+Ant-pluto --gun --numEvents 1000 --particle p --particles-event 1 --theta-max 25 --Emax 1000
+```
+
