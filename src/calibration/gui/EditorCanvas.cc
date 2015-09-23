@@ -55,7 +55,6 @@ EditorCanvas::EditorCanvas(const std::shared_ptr<Editor>& editor, const string& 
     ed(editor)
 {
     SetCalID(calID);
-    calHist->GetZaxis()->SetRangeUser(1,4);
 }
 
 void EditorCanvas::SetCalID(const string& calID)
@@ -76,6 +75,7 @@ void EditorCanvas::SetCalID(const string& calID)
     calHist->SetYTitle("Calibration Step");
     calHist->Draw("col");
     calHist->SetStats(false);
+    calHist->GetZaxis()->SetRangeUser(1,4);
     updateCalHist();
     UpdateMe();
 }
