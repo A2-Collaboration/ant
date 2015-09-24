@@ -36,15 +36,17 @@ private:
     };
 
     std::map<EKeySym, TGTextButton*> keys;
+
     TGTextButton* rootButton_delete;
     TGTextButton* rootButton_markInValid;
     TGTextButton* rootButton_StartEditor;
+
+    MyComboBox* calibSelector;
 
     void createSelector(TGVerticalFrame* frame);
     void createToolbar(TGVerticalFrame* frame);
     void updateLayout();
 
-    MyComboBox* calibSelector;
 
     EmbeddedEditorCanvas* ecanvas;
     TGHorizontalFrame* frame_canvas = nullptr;

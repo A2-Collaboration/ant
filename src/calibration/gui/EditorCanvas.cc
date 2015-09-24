@@ -72,28 +72,40 @@ EditorCanvas::EditorCanvas(const std::shared_ptr<Editor>& editor, const string& 
     flag_intervalStart_set(false),
     flag_data_editor(false)
 {
+
+
+    Int_t palette[5];
+    palette[0] = 0;
+    palette[1] = 32;
+    palette[2] = 38;
+    palette[3] = 46;
+    palette[4] = 42;
+    gStyle->SetPalette(5,palette);
+
     SetCalID(calID);
+
 }
 
 void EditorCanvas::SetCalID(const string& calID)
 {
     currentCalID = calID;
 
-    //        if ( !calHist == nullptr )
-    //           delete calHist;
+    auto nSteps = ed->GetNumberOfSteps(currentCalID);
 
     calHist = new TH2D( (std_ext::formatter() << "hist-" << currentCalID).str().c_str(),
                         (std_ext::formatter() << "History for " << currentCalID).str().c_str(),
                         100, 0, 100,
-                        ed->GetNumberOfSteps(currentCalID),
-                        0, ed->GetNumberOfSteps(currentCalID)
+                        nSteps,
+                        0, nSteps
                         );
-
     calHist->SetXTitle("TID [%]");
     calHist->SetYTitle("Calibration Step");
+    if ( nSteps < 50 )
+        calHist->GetYaxis()->SetNdivisions(nSteps);
     calHist->Draw("col");
     calHist->SetStats(false);
-    calHist->GetZaxis()->SetRangeUser(1,4);
+    calHist->GetZaxis()->SetRangeUser(0,4);
+
     ResetCalibration();
 }
 
@@ -121,11 +133,11 @@ void EditorCanvas::updateCalHist()
     calHist->Reset();
     for (const auto& ran: ed->GetAllRanges(currentCalID))
         for (int i = floor(ran.second.Start()); i < ceil(ran.second.Stop()) ; ++i)
-            calHist->SetBinContent(i+1,ran.first+1,1);
+            calHist->SetBinContent(i+1,ran.first+1,2);
 
     for (const auto& ran: ed->GetAllValidRanges(currentCalID))
         for (int i = floor(ran.second.Start()); i < ceil(ran.second.Stop()) ; ++i)
-            calHist->SetBinContent(i+1,ran.first+1,2);
+            calHist->SetBinContent(i+1,ran.first+1,1);
 
     calHist->Draw("col");
     UpdateMe();
@@ -166,17 +178,16 @@ void EditorCanvas::MarkInvalid()
 
     for (uint32_t i = 0 ; i < ed->GetNumberOfSteps(currentCalID) ; ++i)
         if ( validset.find(i) == validset.end() && indexMemory.find(i) == indexMemory.end() )
-            markLine(i);
+        {
+            indexMemory.emplace(i);
+            markLine(i+1);
+        }
     UpdateMe();
 }
 void EditorCanvas::applyDataChanges(TCalibrationData& theData)
 {
     for (auto i = 0; i < calDataHist->GetNbinsX() ; ++i)
-    {
-//        cout << " " << i << ":   " << theData.Data.at(i) << " -> "
-//             << calDataHist->GetBinContent(i+1) << endl;
         theData.Data.at(i).Value  = calDataHist->GetBinContent(i+1);
-    }
     ResetCalibration();
 }
 
@@ -238,9 +249,13 @@ void EditorCanvas::markInterval(Int_t y)
             indexInterVal.MakeSane();
             updateCalHist();
             for (auto inInt = indexInterVal.Start(); inInt <= indexInterVal.Stop(); ++inInt)
+            {
+                indexMemory.emplace(inInt);
                 fillLine(inInt);
+            }
         }
     }
+    UpdateMe();
 }
 
 void EditorCanvas::markLine(Int_t y)
@@ -260,6 +275,7 @@ void EditorCanvas::markLine(Int_t y)
             unFillLine(step);
         }
     }
+    UpdateMe();
 }
 
 void EditorCanvas::HandleInput(EEventType button, Int_t x, Int_t y)
@@ -270,7 +286,8 @@ void EditorCanvas::HandleInput(EEventType button, Int_t x, Int_t y)
     {
         if (button == kButton1Down)
             markLine(y);
-        if (button == kButton2Down)
-            markInterval(y);
+        //still buggy
+//        if (button == kButton3Down)
+//            markInterval(y);
     }
 }
