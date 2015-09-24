@@ -67,8 +67,6 @@ bool UnpackerA2Geant::OpenFile(const string& filename)
     geant->SetBranchAddress("mposy",mposy);
     geant->SetBranchAddress("mposz",mposz);
     geant->SetBranchAddress("emwpc",emwpc);
-    geant->SetBranchAddress("mc_evt_id",&mc_evt_id);
-    geant->SetBranchAddress("mc_rnd_id",&mc_evt_id);
 
     if(geant->GetEntries() >= numeric_limits<std::uint32_t>::max()) {
         throw Exception("Tree file contains too many entries for building correct unique ID");

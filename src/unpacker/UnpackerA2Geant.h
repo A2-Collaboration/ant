@@ -85,8 +85,6 @@ private:
     Float_t         mposy[GEANT_MAX_MWPCHITS] = {};
     Float_t         mposz[GEANT_MAX_MWPCHITS] = {};
     Float_t         emwpc[GEANT_MAX_MWPCHITS] = {};
-    Long64_t        mc_evt_id = -1;
-    Long64_t        mc_rnd_id = -1;
 };
 
 // we define some methods here which
