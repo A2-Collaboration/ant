@@ -57,7 +57,8 @@ private:
 
 
     TH2D*                         calHist;
-    TH2D*                         calDataHist;
+    TH1D*                         calDataHist;
+
 
     std::shared_ptr<Editor>       ed;
 
@@ -65,10 +66,16 @@ private:
 
     std::set<std::uint32_t> indexMemory;
     interval<std::uint32_t> indexInterVal;
+
     bool                    intervalStartSet;
+    bool                    flag_data_editor;
 
     void markInterval(Int_t y);
     void markLine(Int_t y);
+
+    void StartEditData(TCalibrationData& theData, std::uint32_t stepIndex);
+    void applyDataChanges(TCalibrationData& theData);
+
     void updateCalHist();
     void HandleKeypress(const char key);
 

@@ -6,6 +6,7 @@
 
 #include "TH2D.h"
 #include "TH2.h"
+#include "TROOT.h"
 
 #include <list>
 #include <cmath>
@@ -62,7 +63,9 @@ void EmbeddedEditorCanvas::UpdateMe()
 
 EditorCanvas::EditorCanvas(const std::shared_ptr<Editor>& editor, const string& calID, int winID ):
     TCanvas("Editor",10,10,winID),
-    ed(editor)
+    ed(editor),
+    intervalStartSet(false),
+    flag_data_editor(false)
 {
     SetCalID(calID);
 }
@@ -114,6 +117,7 @@ void EditorCanvas::updateCalHist()
         for (int i = floor(ran.second.Start()); i < ceil(ran.second.Stop()) ; ++i)
             calHist->SetBinContent(i+1,ran.first+1,2);
 
+    calHist->Draw("col");
     UpdateMe();
 }
 
@@ -121,6 +125,8 @@ void EditorCanvas::updateCalHist()
 void EditorCanvas::ResetCalibration()
 {
     intervalStartSet = false;
+    flag_data_editor = false;
+    gROOT->SetEditHistograms(kFALSE);
     indexMemory.clear();
     updateCalHist();
 }
@@ -153,18 +159,54 @@ void EditorCanvas::MarkInvalid()
             markLine(i);
     UpdateMe();
 }
+void EditorCanvas::applyDataChanges(TCalibrationData& theData)
+{
+    for (auto i = 0; i < calDataHist->GetNbinsX() ; ++i)
+    {
+//        cout << " " << i << ":   " << theData.Data.at(i) << " -> "
+//             << calDataHist->GetBinContent(i+1) << endl;
+        theData.Data.at(i).Value  = calDataHist->GetBinContent(i+1);
+    }
+    ResetCalibration();
+}
+
+void EditorCanvas::StartEditData(TCalibrationData& theData, uint32_t stepIndex)
+{
+    gROOT->SetEditHistograms(kTRUE);
+    calDataHist = new TH1D( (std_ext::formatter() << "hist-" << currentCalID
+                                                  << "-"<< stepIndex
+                             ).str().c_str(),
+                            (std_ext::formatter() << "Data for " << currentCalID
+                                                  << ", step " <<  stepIndex
+                             ).str().c_str(),
+                        theData.Data.size(), 0, theData.Data.size()
+                        );
+
+    for (const auto& entry: theData.Data)
+        calDataHist->SetBinContent(entry.Key+1,entry.Value);
+
+    calDataHist->SetStats(false);
+    calDataHist->SetMarkerStyle(20);
+    calDataHist->Draw("P");
+
+    UpdateMe();
+}
 
 bool EditorCanvas::EditData()
 {
-    TCalibrationData theData;
     if (indexMemory.size() != 1)
         return false;
-    if (!ed->ModifyItem(currentCalID,*(indexMemory.begin()),theData))
-        return false;
+    uint32_t stepIndex = *(indexMemory.begin());
+    TCalibrationData&  theData = ed->ModifyItem(currentCalID,stepIndex);
 
-    for (const auto& entry: theData.Data)
-        cout << entry;
+    if (flag_data_editor)
+    {
+        applyDataChanges(theData);
+        return true;
+    }
 
+    flag_data_editor = true;
+    StartEditData(theData, stepIndex);
     return true;
 }
 
@@ -187,9 +229,6 @@ void EditorCanvas::markInterval(Int_t y)
             updateCalHist();
             for (auto inInt = indexInterVal.Start(); inInt <= indexInterVal.Stop(); ++inInt)
                 fillLine(inInt);
-            cout << "   Calibration steps marked:" << endl
-                 << "     [" << indexInterVal.Start() << ", " << indexInterVal.Stop() <<"]" << endl
-                 << endl;
         }
     }
 }
@@ -210,10 +249,6 @@ void EditorCanvas::markLine(Int_t y)
             indexMemory.erase(foundat);
             unFillLine(step);
         }
-        cout << "   Calibration steps marked:" << endl;
-        for (const auto& in: indexMemory)
-            cout << in << endl;
-        cout << endl;
     }
 }
 
@@ -221,20 +256,11 @@ void EditorCanvas::HandleInput(EEventType button, Int_t x, Int_t y)
 {
     TCanvas::HandleInput(button,x,y);
 
-    //switch (state)
-    //{
-    //case state_t::expand:
-    //case state_t::remove:
-    if (button == kButton1Down)
-        markLine(y);
-//    break;
-//    case state_t::cut:
-//        if (button == kButton1Down)
-//            markInterval(y);
-//        break;
-//    default:
-//        break;
-//    }
-
-
+    if ( !flag_data_editor )
+    {
+        if (button == kButton1Down)
+            markLine(y);
+        if (button == kButton2Down)
+            markInterval(y);
+    }
 }

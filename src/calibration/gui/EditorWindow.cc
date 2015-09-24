@@ -103,7 +103,7 @@ void EditorWindow::createToolbar(TGVerticalFrame* frame)
     });
 
 
-    auto btn_clear = new ActionWidget<TGTextButton>(frm2,"Clear selection");
+    auto btn_clear = new ActionWidget<TGTextButton>(frm2,"Clear selection / go back");
     keys[kKey_c] = btn_clear;
     btn_clear->SetAction([this] () {
         this->ecanvas->clearSelections();
