@@ -95,6 +95,7 @@ void EditorWindow::createSelector(TGVerticalFrame* frame)
 void EditorWindow::createToolbar(TGVerticalFrame* frame)
 {
     TGHorizontalFrame* frm2 = new TGHorizontalFrame(frame);
+    TGHorizontalFrame* frm3 = new TGHorizontalFrame(frame);
 
     // TODO: there are bugs in EditorCanvas, disabled...
     auto btn_selectInValid = new ActionWidget<TGTextButton>(frm2,"Select invalid");
@@ -106,7 +107,7 @@ void EditorWindow::createToolbar(TGVerticalFrame* frame)
     });
 
 
-    auto btn_clear = new ActionWidget<TGTextButton>(frm2,"Clear selection / go back");
+    auto btn_clear = new ActionWidget<TGTextButton>(frm3,"Clear selection / go back");
     keys[kKey_c] = btn_clear;
     btn_clear->SetAction([this] () {
         this->ecanvas->clearSelections();
@@ -124,7 +125,12 @@ void EditorWindow::createToolbar(TGVerticalFrame* frame)
         this->deleteSelections();
     });
 
-    auto btn_saveQuit = new ActionWidget<TGTextButton>(frm2,"Save and Exit");
+    auto btn_Quit = new ActionWidget<TGTextButton>(frm3,"Exit without saving");
+    btn_Quit->SetAction([this] () {
+        gApplication->Terminate(0);
+    });
+    auto btn_saveQuit = new ActionWidget<TGTextButton>(frm3,"Save and Exit");
+
     btn_saveQuit->SetAction([this] () {
         this->editor->SaveToFolder(dataFolder);
         gApplication->Terminate(0);
@@ -137,13 +143,15 @@ void EditorWindow::createToolbar(TGVerticalFrame* frame)
         frm->AddFrame(dynamic_cast<TGFrame*>(widget), layout_btn);
     };
 
-    add_to_frame(frm2, btn_selectInValid);
-    add_to_frame(frm2, btn_clear);
+//    add_to_frame(frm2, btn_selectInValid);
+    add_to_frame(frm3, btn_clear);
     add_to_frame(frm2, btn_edit);
     add_to_frame(frm2, btn_delete);
-    add_to_frame(frm2, btn_saveQuit);
+    add_to_frame(frm3, btn_Quit);
+    add_to_frame(frm3, btn_saveQuit);
 
     auto layout_frm =  new TGLayoutHints(kLHintsBottom | kLHintsExpandX);
+    frame->AddFrame(frm3, layout_frm);
     frame->AddFrame(frm2, layout_frm);
 }
 
