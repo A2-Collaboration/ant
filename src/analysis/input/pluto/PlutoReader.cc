@@ -10,6 +10,7 @@
 
 #include "base/WrapTFile.h"
 #include "base/Logger.h"
+#include "base/std_ext/string.h"
 
 #include "TTree.h"
 #include "TClonesArray.h"
@@ -36,25 +37,24 @@ PlutoReader::PlutoReader(const std::shared_ptr<WrapTFileInput>& rootfiles):
 
     pluto_database = makeStaticData();
 
+    bool tid_found = false;
+    TTree* tid_tree = nullptr;
     if(files->GetObject("data_tid", tid_tree)) {
 
-        const auto res = tid_tree->SetBranchAddress("tid", &tid);
-
-        // switch TID reading off if not found
-        if(res != TTree::kMatch) {
-            tid_tree->ResetBranchAddresses();
-            tid_tree = nullptr;
-        } else {
-            if(tid_tree->GetEntries() != tree->GetEntries()) {
-                LOG(ERROR) << "Pluto Tree - TID Tree size missmatch!";
-                tid_tree->ResetBranchAddresses();
-                tid_tree = nullptr;
-            } else {
-                VLOG(3) << "TIDs found in pluto data";
-            }
+        if(tid_tree->GetEntries() != tree->GetEntries()) {
+            throw Exception("Pluto Tree / TID Tree size missmatch:");
         }
-    } else {
-        VLOG(3) << "No TIDs found in pluto data";
+
+        tree->AddFriend(tid_tree);
+
+        const auto res = tree->SetBranchAddress("tid", &tid);
+
+        if(res==TTree::kMatch)
+            tid_found = true;
+    }
+
+    if(!tid_found) {
+        tid = new TID();
     }
 
     LOG(INFO) << "Pluto input active";
@@ -204,6 +204,8 @@ void PlutoReader::CopyPluto(Event& event)
         }
     }
 
+    event.MCTrue().TriggerInfos().EventID() = *tid;
+
     /// \todo CBEsum/Multiplicity into TriggerInfo
 }
 
@@ -218,11 +220,14 @@ bool PlutoReader::ReadNextEvent(Event& event)
 
     tree->GetEntry(current_entry);
 
-    if(tid_tree) {
-        tid_tree->GetEntry(current_entry);
-    }
-
     CopyPluto(event);
+
+//    VLOG(8) << event.Reconstructed().TriggerInfos().EventID() << " " << event.MCTrue().TriggerInfos().EventID();
+
+    if(!event.Reconstructed().TriggerInfos().EventID().isSet(TID::Flags_t::AdHoc)) {
+        if(event.Reconstructed().TriggerInfos().EventID() != event.MCTrue().TriggerInfos().EventID())
+            throw Exception(std_ext::formatter() << "TID missmatch: " << event.Reconstructed().TriggerInfos().EventID() << " vs " << event.MCTrue().TriggerInfos().EventID());
+    }
 
     ++current_entry;
 

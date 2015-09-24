@@ -36,7 +36,6 @@ protected:
     std::shared_ptr<WrapTFileInput>    files;
 
     TTree*          tree = nullptr;
-    TTree*          tid_tree = nullptr;
     TClonesArray*   PlutoMCTrue = nullptr;
     TID*            tid = nullptr;
 
