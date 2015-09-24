@@ -1,9 +1,9 @@
 #include "physics/common/ParticleIDCheck.h"
-#include "plot/root_draw.h"
-#include "data/Particle.h"
-#include "TH1D.h"
-#include "TLorentzVector.h"
+
+#include "base/std_ext/math.h"
+
 #include <cmath>
+
 
 using namespace std;
 using namespace ant;
@@ -16,13 +16,48 @@ ParticleIDCheck::ParticleIDCheck(PhysOptPtr opts):
     mctrue(HistFac,"MCTrue"),
     rec(HistFac,"Rec")
 {
+    constexpr unsigned nPhiBins = 5;
+    constexpr unsigned nThetaBins = 5;
 
+    auto make_interval = [] (const double start, const double width) {
+        return interval<double>(start,start+width);
+    };
+
+    for(unsigned i=0;i<nPhiBins;i++) {
+        auto phi_range = make_interval(i*360.0/nPhiBins-180, 360.0/nPhiBins);
+        for(unsigned j=0;j<nThetaBins;j++) {
+            auto theta_range = make_interval(j*180.0/nThetaBins, 180.0/nThetaBins);
+
+            bananas.emplace_back(phi_range, theta_range,
+                                 HistFac.makeTH2D(std_ext::formatter()
+                                                  << "Phi="<< phi_range
+                                                  << "Theta="<< theta_range,
+                                                  "Calorimeter Energy / MeV",
+                                                  "Veto Energy / MeV",
+                                                  BinSettings(400, 0, 800),
+                                                  BinSettings(200, 0, 10)
+                                                  )
+                                 );
+        }
+    }
 }
 
 void ParticleIDCheck::ProcessEvent(const Event &event)
 {
     mctrue.Fill(event.MCTrue());
     rec.Fill(event.Reconstructed());
+
+    for(const auto& candidate : event.Reconstructed().Candidates()) {
+        for(const auto& banana : bananas) {
+            const auto& phi_range = std::get<0>(banana);
+            const auto& theta_range = std::get<1>(banana);
+            if(phi_range.Contains(std_ext::radian_to_degree(candidate->Phi())) &&
+               theta_range.Contains(std_ext::radian_to_degree(candidate->Theta()))) {
+                const auto& h = std::get<2>(banana);
+                h->Fill(candidate->ClusterEnergy(), candidate->VetoEnergy());
+            }
+        }
+    }
 }
 
 
@@ -37,6 +72,11 @@ void ParticleIDCheck::ShowResult()
     canvas("ParticleIDCheck")
             <<  mctrue.hist << rec.hist
             << endc;
+    canvas c_bananas("Veto Bananas");
+    for(const auto& banana : bananas) {
+        c_bananas << drawoption("colz") << std::get<2>(banana);
+    }
+    c_bananas << endc;
 }
 
 
@@ -56,6 +96,7 @@ void ParticleIDCheck::branch_hists::Fill(const Event::Data& data)
     for(auto& p: data.Particles().GetAll()) {
         hist->Fill(p->Type().PrintName().c_str(),1);
     }
+
 }
 
 AUTO_REGISTER_PHYSICS(ParticleIDCheck, "ParticleIDCheck")

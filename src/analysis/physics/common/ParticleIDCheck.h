@@ -1,6 +1,7 @@
 #pragma once
 
 #include "analysis/physics/Physics.h"
+#include "base/interval.h"
 
 #include <string>
 
@@ -21,6 +22,8 @@ protected:
 
     branch_hists mctrue;
     branch_hists rec;
+
+    std::vector< std::tuple<interval<double>,interval<double>,TH2D*> > bananas;
 
 public:
     ParticleIDCheck(PhysOptPtr opts);
