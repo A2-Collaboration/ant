@@ -36,10 +36,14 @@ private:
 public:
     EmbeddedEditorCanvas(const std::shared_ptr<ant::calibration::Editor>& editor, const std::string& calID, const TGWindow *p = 0);
 
+    /**
+     * @brief SelectInvalid
+     */
     virtual void SelectInvalid();
     virtual void SetCalID(const std::string& calID);
     virtual std::list<std::uint32_t> GetSelected();
     virtual void clearSelections();
+    virtual void EditSelection();
 
     virtual void UpdateMe() override;
 };
@@ -53,6 +57,8 @@ private:
 
 
     TH2D*                         calHist;
+    TH2D*                         calDataHist;
+
     std::shared_ptr<Editor>       ed;
 
     std::string             currentCalID;
@@ -78,6 +84,7 @@ public:
     virtual void UpdateMe() override;
     void ResetCalibration();
     void MarkInvalid();
+    bool EditData();
     void HandleInput(EEventType button, Int_t x, Int_t y) override;
 };
 

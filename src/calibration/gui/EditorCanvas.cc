@@ -2,6 +2,7 @@
 
 #include "calibration/Editor.h"
 #include "base/std_ext/string.h"
+#include "tree/TCalibrationData.h"
 
 #include "TH2D.h"
 #include "TH2.h"
@@ -45,11 +46,20 @@ void EmbeddedEditorCanvas::clearSelections()
     theCanvas->ResetCalibration();
 }
 
+void EmbeddedEditorCanvas::EditSelection()
+{
+    theCanvas->EditData();
+}
+
 void EmbeddedEditorCanvas::UpdateMe()
 {
     theCanvas->UpdateMe();
 
 }
+
+
+
+
 EditorCanvas::EditorCanvas(const std::shared_ptr<Editor>& editor, const string& calID, int winID ):
     TCanvas("Editor",10,10,winID),
     ed(editor)
@@ -76,8 +86,7 @@ void EditorCanvas::SetCalID(const string& calID)
     calHist->Draw("col");
     calHist->SetStats(false);
     calHist->GetZaxis()->SetRangeUser(1,4);
-    updateCalHist();
-    UpdateMe();
+    ResetCalibration();
 }
 
 list<uint32_t> EditorCanvas::CreateSelectionList()
@@ -143,6 +152,20 @@ void EditorCanvas::MarkInvalid()
         if ( validset.find(i) == validset.end() && indexMemory.find(i) == indexMemory.end() )
             markLine(i);
     UpdateMe();
+}
+
+bool EditorCanvas::EditData()
+{
+    TCalibrationData theData;
+    if (indexMemory.size() != 1)
+        return false;
+    if (!ed->ModifyItem(currentCalID,*(indexMemory.begin()),theData))
+        return false;
+
+    for (const auto& entry: theData.Data)
+        cout << entry;
+
+    return true;
 }
 
 void EditorCanvas::markInterval(Int_t y)

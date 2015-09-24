@@ -112,7 +112,7 @@ void EditorWindow::createToolbar(TGVerticalFrame* frame)
     auto btn_edit = new ActionWidget<TGTextButton>(frm2,"Start Editor");
     keys[kKey_e] = btn_edit;
     btn_edit->SetAction([this] () {
-        cout << "TODO: Implement Editor!" << endl;
+        this->ecanvas->EditSelection();
     });
 
     auto btn_delete = new ActionWidget<TGTextButton>(frm2,"Delete selection");
