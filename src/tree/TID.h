@@ -78,6 +78,10 @@ struct TID
         return Flags & (1 << static_cast<std::uint8_t>(Flags_t::Invalid));
     }
 
+    bool isSet(const Flags_t& flag) const {
+        return Flags & (1 << static_cast<std::uint8_t>(flag));
+    }
+
     std::uint64_t Value() const {
         return (static_cast<std::uint64_t>(Timestamp) << 8*sizeof(std::uint32_t)) + Lower;
     }
