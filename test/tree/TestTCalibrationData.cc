@@ -4,6 +4,7 @@
 
 #include "tree/TCalibrationData.h"
 //#include "tree/TDataRecord.h"
+#include "tree/TID.h"
 
 #include "TFile.h"
 #include "TTree.h"
@@ -26,12 +27,12 @@ void dotest()
     TFile f(tmpfile.filename.c_str(),"RECREATE");
 
     TTree* tree = new TTree("testtree","TCalibData Test Tree");
-    ant::TCalibrationData* cdata = new ant::TCalibrationData(tmpfile.filename,ant::TID(0,0,false),ant::TID(0,1,true));
+    ant::TCalibrationData* cdata = new ant::TCalibrationData(tmpfile.filename,ant::TID(0,0u),ant::TID(0,1u,{ant::TID::Flags_t::MC}));
     tree->Branch("cdata",cdata);
 
     ant::TCalibrationData* cdata2 = new ant::TCalibrationData(tmpfile.filename,
-                                                              ant::TID(0,1011,false),
-                                                              ant::TID(0,1213,true)
+                                                              ant::TID(0,1011u),
+                                                              ant::TID(0,1213u,{ant::TID::Flags_t::MC})
                                                               );
 
     cdata2->Data.emplace_back(1,1.);

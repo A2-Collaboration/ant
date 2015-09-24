@@ -18,7 +18,7 @@ void dotest()
 {
     TID a(0, 0u);
     TID b(0, 1u);
-    TID c(0, 0,true);
+    TID c(0, 0, {TID::Flags_t::MC});
 
     cout << a << endl;
     cout << b << endl;

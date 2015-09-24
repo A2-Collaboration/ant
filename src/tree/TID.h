@@ -61,15 +61,18 @@ struct TID
     TID(
             std::uint32_t timestamp,
             std::uint32_t lower = 0,
-            bool isMC = false)
+            const std::initializer_list<Flags_t> flags={})
         :
           Flags(0),
           Timestamp(timestamp),
           Lower(lower),
           Reserved(0)
     {
-        Flags |= static_cast<decltype(Flags)>(isMC) << static_cast<std::uint8_t>(Flags_t::MC);
+        for(const auto& f : flags) {
+            Flags |= 1 << static_cast<std::uint8_t>(f);
+        }
     }
+
     // prevent implicit conversion calls
     TID(std::uint32_t, bool) = delete;
     TID(std::uint32_t, std::uint32_t, int) = delete;

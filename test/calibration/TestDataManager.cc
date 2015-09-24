@@ -48,7 +48,7 @@ void dotest_extendable()
     const interval<TID> i2(TID(0,9u),  TID(0,10u));
     const interval<TID> i3(TID(0,12u), TID(0,15u));
     const interval<TID> i4(TID(0,2u),  TID(0,16u));
-    const interval<TID> i5(TID(0,2u,true),  TID(0,16u,true));
+    const interval<TID> i5(TID(0,2u,{TID::Flags_t::MC}),  TID(0,16u,{TID::Flags_t::MC}));
 
 
     // first simple test
