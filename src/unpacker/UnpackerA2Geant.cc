@@ -18,7 +18,9 @@ using namespace ant;
 
 UnpackerA2Geant::UnpackerA2Geant() {}
 
-UnpackerA2Geant::~UnpackerA2Geant() {}
+UnpackerA2Geant::~UnpackerA2Geant() {
+    delete id;
+}
 
 bool UnpackerA2Geant::OpenFile(const string& filename)
 {
@@ -68,15 +70,34 @@ bool UnpackerA2Geant::OpenFile(const string& filename)
     geant->SetBranchAddress("mposz",mposz);
     geant->SetBranchAddress("emwpc",emwpc);
 
+    TTree* tid_tree = nullptr;
+
+    if(filemanager->GetObject("h12_tid", tid_tree)) {
+        if(tid_tree->GetEntries() != geant->GetEntries()) {
+            throw Exception("Geant Tree and TID Tree size missmatch");
+        }
+
+        geant->AddFriend(tid_tree);
+        geant->SetBranchAddress("tid", &id);
+
+        tid_from_file = true;
+
+    } else {
+
+        tid_from_file = false;
+
+        /// \todo think of some better timestamp?
+        id = new TID(static_cast<std::uint32_t>(std::time(nullptr)),
+                                       0, // start with 0 as lower ID
+                                       std::initializer_list<TID::Flags_t>({TID::Flags_t::MC, TID::Flags_t::AdHoc}) // mark as MC
+                                       );
+    }
+
     if(geant->GetEntries() >= numeric_limits<std::uint32_t>::max()) {
         throw Exception("Tree file contains too many entries for building correct unique ID");
     }
 
-    /// \todo think of some better timestamp?
-    id = std_ext::make_unique<TID>(static_cast<std::uint32_t>(std::time(nullptr)),
-                                   0, // start with 0 as lower ID
-                                   true // mark as MC
-                                   );
+
 
     // this unpacker has no chance to make a proper THeaderInfo
     // so we ask the ExpConfig if it has an idea...
@@ -216,7 +237,9 @@ unique_ptr<TDataRecord> UnpackerA2Geant::NextItem() noexcept
     }
 
 
-    ++(*id);
+    if(!tid_from_file)
+        ++(*id);
+
     return move(detread);
 }
 

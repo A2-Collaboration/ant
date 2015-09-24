@@ -37,7 +37,7 @@ public:
     };
 
 private:
-    std::unique_ptr<TID> id;
+    TID* id = nullptr;
 
     std::unique_ptr<WrapTFileInput> filemanager;
     TTree* geant;
@@ -85,6 +85,8 @@ private:
     Float_t         mposy[GEANT_MAX_MWPCHITS] = {};
     Float_t         mposz[GEANT_MAX_MWPCHITS] = {};
     Float_t         emwpc[GEANT_MAX_MWPCHITS] = {};
+
+    bool tid_from_file = false;
 };
 
 // we define some methods here which
