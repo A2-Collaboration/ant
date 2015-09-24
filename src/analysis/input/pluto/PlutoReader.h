@@ -38,6 +38,7 @@ protected:
     TTree*          tree = nullptr;
     TClonesArray*   PlutoMCTrue = nullptr;
     TID*            tid = nullptr;
+    bool tid_from_file = false;
 
     using PParticleVector = std::vector<const PParticle*>;
     PParticleVector PlutoParticles;
