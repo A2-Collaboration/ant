@@ -96,8 +96,11 @@ void EditorWindow::createToolbar(TGVerticalFrame* frame)
 {
     TGHorizontalFrame* frm2 = new TGHorizontalFrame(frame);
 
+    // TODO: there are bugs in EditorCanvas, disabled...
     auto btn_selectInValid = new ActionWidget<TGTextButton>(frm2,"Select invalid");
     keys[kKey_s] = btn_selectInValid;
+    rootButton_markInValid = btn_selectInValid;
+    btn_selectInValid->SetEnabled(kFALSE);
     btn_selectInValid->SetAction([this] () {
         this->ecanvas->SelectInvalid();
     });
@@ -109,17 +112,24 @@ void EditorWindow::createToolbar(TGVerticalFrame* frame)
         this->ecanvas->clearSelections();
     });
 
-    auto btn_edit = new ActionWidget<TGTextButton>(frm2,"Start Editor");
-    keys[kKey_e] = btn_edit;
+    auto btn_edit = new ActionWidget<TGTextButton>(frm2,"start Editor / write data");
+    rootButton_StartEditor = btn_edit;
     btn_edit->SetAction([this] () {
         this->ecanvas->EditSelection();
     });
 
-    auto btn_delete = new ActionWidget<TGTextButton>(frm2,"Delete selection");
-    keys[kKey_d] = btn_delete;
+    auto btn_delete = new ActionWidget<TGTextButton>(frm2,"delete selection");
+    rootButton_delete = btn_delete;
     btn_delete->SetAction([this] () {
         this->deleteSelections();
     });
+
+    auto btn_saveQuit = new ActionWidget<TGTextButton>(frm2,"Save and Exit");
+    btn_saveQuit->SetAction([this] () {
+        this->editor->SaveToFolder(dataFolder);
+        gApplication->Terminate(0);
+    });
+
 
     // add them all together...
     auto layout_btn = new TGLayoutHints(kLHintsLeft|kLHintsExpandX|kLHintsExpandY,2,2,2,2);
@@ -131,6 +141,7 @@ void EditorWindow::createToolbar(TGVerticalFrame* frame)
     add_to_frame(frm2, btn_clear);
     add_to_frame(frm2, btn_edit);
     add_to_frame(frm2, btn_delete);
+    add_to_frame(frm2, btn_saveQuit);
 
     auto layout_frm =  new TGLayoutHints(kLHintsBottom | kLHintsExpandX);
     frame->AddFrame(frm2, layout_frm);
@@ -147,13 +158,31 @@ void EditorWindow::updateLayout()
 void EditorWindow::deleteSelections()
 {
     for (const auto& i: ecanvas->GetSelected())
-        cout << "Delete: " << i << endl;
+        editor->Remove(currentCalID,i);
+    // has to load current Calibration as new one, because size changed:
+    ecanvas->SetCalID(currentCalID);
 }
 
+void EditorWindow::disableButtons()
+{
+    rootButton_markInValid->SetEnabled(kTRUE);
+    if (ecanvas->InDataEditMode())
+        rootButton_markInValid->SetEnabled(kFALSE);
+
+    rootButton_delete->SetEnabled(kTRUE);
+    if ( ecanvas->GetSelected().size() > 0 && ecanvas->InDataEditMode())
+        rootButton_delete->SetEnabled(kFALSE);
+
+    rootButton_StartEditor->SetEnabled(kFALSE);
+    if ( ecanvas->GetSelected().size() == 1)
+        rootButton_StartEditor->SetEnabled(kTRUE);
+
+}
 
 EditorWindow::EditorWindow(const string& folder) :
     TGMainFrame(gClient->GetRoot()),
-    editor(make_shared<ant::calibration::Editor>())
+    editor(make_shared<ant::calibration::Editor>()),
+    dataFolder(folder)
 {
     // Set a name to the main frame
     SetWindowName( (std_ext::formatter() << "Ant-calib Editor: " << folder).str().c_str() );

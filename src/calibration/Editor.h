@@ -32,6 +32,7 @@ public:
 //    bool AddFromFile(const std::string& fileName) {return dman.ReadFromFile(fileName); }
     bool AddFromFolder(const std::string& folderName) {return dman.ReadFromFolder(folderName); }
     void SaveToFile(const std::string& fileName) const {dman.WriteToFile(fileName);}
+    void SaveToFolder(const std::string& folder) const {dman.WriteToFolder(folder);}
 
     //Element Access
     void Add(const TCalibrationData& cdata) {dman.AddItem(cdata);}

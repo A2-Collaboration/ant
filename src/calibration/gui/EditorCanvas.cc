@@ -37,7 +37,7 @@ void EmbeddedEditorCanvas::SetCalID(const string& calID)
     theCanvas->SetCalID(calID);
 }
 
-std::list<uint32_t> EmbeddedEditorCanvas::GetSelected()
+std::list<uint32_t> EmbeddedEditorCanvas::GetSelected() const
 {
     return theCanvas->CreateSelectionList();
 }
@@ -52,6 +52,11 @@ void EmbeddedEditorCanvas::EditSelection()
     theCanvas->EditData();
 }
 
+bool EmbeddedEditorCanvas::InDataEditMode() const
+{
+    return theCanvas->getDataEditorFlag();
+}
+
 void EmbeddedEditorCanvas::UpdateMe()
 {
     theCanvas->UpdateMe();
@@ -64,7 +69,7 @@ void EmbeddedEditorCanvas::UpdateMe()
 EditorCanvas::EditorCanvas(const std::shared_ptr<Editor>& editor, const string& calID, int winID ):
     TCanvas("Editor",10,10,winID),
     ed(editor),
-    intervalStartSet(false),
+    flag_intervalStart_set(false),
     flag_data_editor(false)
 {
     SetCalID(calID);
@@ -90,6 +95,11 @@ void EditorCanvas::SetCalID(const string& calID)
     calHist->SetStats(false);
     calHist->GetZaxis()->SetRangeUser(1,4);
     ResetCalibration();
+}
+
+bool EditorCanvas::getDataEditorFlag() const
+{
+    return flag_data_editor;
 }
 
 list<uint32_t> EditorCanvas::CreateSelectionList()
@@ -124,7 +134,7 @@ void EditorCanvas::updateCalHist()
 
 void EditorCanvas::ResetCalibration()
 {
-    intervalStartSet = false;
+    flag_intervalStart_set = false;
     flag_data_editor = false;
     gROOT->SetEditHistograms(kFALSE);
     indexMemory.clear();
@@ -216,11 +226,11 @@ void EditorCanvas::markInterval(Int_t y)
     if (h){
         auto index = floor(AbsPixeltoY(y));
 
-        if (!intervalStartSet)
+        if (!flag_intervalStart_set)
         {
             indexInterVal.Start() = index;
             fillLine(index);
-            intervalStartSet = true;
+            flag_intervalStart_set = true;
         }
         else
         {

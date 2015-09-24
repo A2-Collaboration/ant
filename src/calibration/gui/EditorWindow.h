@@ -36,6 +36,9 @@ private:
     };
 
     std::map<EKeySym, TGTextButton*> keys;
+    TGTextButton* rootButton_delete;
+    TGTextButton* rootButton_markInValid;
+    TGTextButton* rootButton_StartEditor;
 
     void createSelector(TGVerticalFrame* frame);
     void createToolbar(TGVerticalFrame* frame);
@@ -48,17 +51,20 @@ private:
 
     std::shared_ptr<ant::calibration::Editor> editor;
 
+    std::string dataFolder;
     std::string currentCalID;
 
     TH2D* calHist;
 
     void deleteSelections();
 
+    void disableButtons();
 public:
     EditorWindow(const std::string& folder);
-    virtual Bool_t HandleKey(Event_t *event) override;
-    virtual ~EditorWindow();
 
+    virtual Bool_t HandleKey(Event_t *event) override;
+
+    virtual ~EditorWindow();
     EditorWindow(const EditorWindow&) = delete;
     EditorWindow& operator=(const EditorWindow&) = delete;
 };

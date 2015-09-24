@@ -41,9 +41,10 @@ public:
      */
     virtual void SelectInvalid();
     virtual void SetCalID(const std::string& calID);
-    virtual std::list<std::uint32_t> GetSelected();
+    virtual std::list<std::uint32_t> GetSelected() const;
     virtual void clearSelections();
     virtual void EditSelection();
+    virtual bool InDataEditMode() const;
 
     virtual void UpdateMe() override;
 };
@@ -67,7 +68,7 @@ private:
     std::set<std::uint32_t> indexMemory;
     interval<std::uint32_t> indexInterVal;
 
-    bool                    intervalStartSet;
+    bool                    flag_intervalStart_set;
     bool                    flag_data_editor;
 
     void markInterval(Int_t y);
@@ -85,6 +86,8 @@ private:
 public:
     EditorCanvas(const std::shared_ptr<Editor>& editor, const std::string& calID, int winID);
     void SetCalID(const std::string& calID);
+
+    bool getDataEditorFlag() const;
 
     std::list<std::uint32_t> CreateSelectionList();
 
