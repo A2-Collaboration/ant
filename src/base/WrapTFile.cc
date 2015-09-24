@@ -7,6 +7,7 @@
 #include "TH1D.h"
 #include "TH2D.h"
 #include "TH3D.h"
+#include "Compression.h"
 
 #include <stdexcept>
 #include <string>
@@ -130,6 +131,9 @@ WrapTFileOutput::WrapTFileOutput(const std::string& filename, mode_t access_mode
     }
     else
         file = openFile(filename, root_mode);
+
+    file->SetCompressionAlgorithm(ROOT::kLZMA);
+    file->SetCompressionLevel(5);
 
     files.emplace_back(move(file));
 
