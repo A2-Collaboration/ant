@@ -52,6 +52,8 @@ private:
     static constexpr int GEANT_MAX_MWPCHITS = 400;
     static constexpr int GEANT_MAX_PART     = 100;
 
+    Long64_t current_entry = -1;
+
     // Brach memories
     Int_t           fnhits = 0;
     Int_t           fnpart = 0;

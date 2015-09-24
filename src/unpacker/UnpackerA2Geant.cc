@@ -130,8 +130,7 @@ bool UnpackerA2Geant::OpenFile(const string& filename)
 
 unique_ptr<TDataRecord> UnpackerA2Geant::NextItem() noexcept
 {
-    const std::uint32_t events = id->Lower;
-    if(events>=geant->GetEntriesFast())
+    if(current_entry>=geant->GetEntriesFast())
         return nullptr;
 
     // return the headerinfo as the very first item, afterwards,
@@ -140,7 +139,7 @@ unique_ptr<TDataRecord> UnpackerA2Geant::NextItem() noexcept
         return move(headerInfo);
     }
 
-    geant->GetEntry(events);
+    geant->GetEntry(++current_entry);
 
     // start with an empty detector read
     unique_ptr<TDetectorRead> detread = std_ext::make_unique<TDetectorRead>(*id);
