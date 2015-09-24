@@ -5,6 +5,9 @@
 #include "tree/TDataRecord.h"
 
 #include "TTree.h"
+#include "TRandom2.h"
+
+#include <ctime>
 
 using namespace std;
 using namespace ant;
@@ -20,6 +23,8 @@ bool CheckExists(WrapTFile& file, const std::string& name) {
 
 void PlutoTID::AddTID(const std::string &filename)
 {
+    const auto random_bits = 4;
+
     WrapTFileOutput file(filename, WrapTFileOutput::mode_t::update, true);
 
     if(CheckExists<TTree>(file, tidtree_name)) {
@@ -33,14 +38,24 @@ void PlutoTID::AddTID(const std::string &filename)
 
         TTree* data_tid = file.CreateInside<TTree>(tidtree_name.c_str(),"Ant-TID for pluto data");
 
-        TID tid(0, 0, true);
+        TID tid(std::time(nullptr), 0, {TID::Flags_t::MC});
 
         data_tid->Branch("tid",&tid);
 
         auto nEvents = data->GetEntries();
 
+        if(nEvents >= 1 << (sizeof(TID::Lower)*8 - random_bits)) {
+           throw std::runtime_error("Too many entries to fit into TID together with random bits.");
+        }
+
+        TRandom2 rng;
+        rng.SetSeed();
+
         for(decltype(nEvents) i=0; i<nEvents; ++i) {
-            ++tid;
+
+            unsigned r = floor(rng.Uniform(1 << random_bits));
+            tid.Lower = (i << random_bits) + r;
+
             data_tid->Fill();
         }
     } else {
