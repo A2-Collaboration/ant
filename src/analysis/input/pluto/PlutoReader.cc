@@ -227,8 +227,10 @@ bool PlutoReader::ReadNextEvent(Event& event)
 
     CopyPluto(event);
 
-    if(event.Reconstructed().TriggerInfos().EventID() != event.MCTrue().TriggerInfos().EventID())
-        throw Exception(std_ext::formatter() << "TID missmatch: " << event.Reconstructed().TriggerInfos().EventID() << " vs " << event.MCTrue().TriggerInfos().EventID());
+    if ( !event.Reconstructed().TriggerInfos().EventID().IsInvalid() &&
+         !event.MCTrue().TriggerInfos().EventID().IsInvalid() )
+        if(event.Reconstructed().TriggerInfos().EventID() != event.MCTrue().TriggerInfos().EventID())
+            throw Exception(std_ext::formatter() << "TID missmatch: " << event.Reconstructed().TriggerInfos().EventID() << " vs " << event.MCTrue().TriggerInfos().EventID());
 
     ++current_entry;
 
