@@ -123,11 +123,9 @@ ReconstructCheck::histgroup::histgroup(SmartHistFactory& f, const string& prefix
     LabelBins(splitPerEvent->GetXaxis());
     splitPerEvent->SetFillColor(kGray);
 
-    splitPos = makePosMap(f,d, prefix+"_splitpos",prefix+" Pos of split-flagged clusters");
+    splitPos = makePosMap(f,d, prefix+"_splitpos",prefix+" Pos Mult > 1");
+    splitFlagPos = makePosMap(f,d, prefix+"_splitflagpos",prefix+" Pos of split-flagged clusters");
     posCharged = makePosMap(f,d, prefix+"_chargedpos",prefix+" Pos of charged cands");
-
-    multiplicity_map      = f.makeTH3D(prefix+" Multitplicity Map","cos(#theta_{True})","#phi_{True}","Mult",costheta,phi,BinSettings(10),prefix+"mults");
-    multiplicity_map->SetStats(false);
 
     mult2_split_angles.resize(3);
     for(size_t i=0;i<mult2_split_angles.size();++i) {
@@ -147,8 +145,6 @@ ReconstructCheck::histgroup::histgroup(SmartHistFactory& f, const string& prefix
     unmatched_veto = f.makeTH1D(prefix+" Unmatched Veto Clusters","# unmatched veto clusters","",BinSettings(6),prefix+"_unmatched_veto");
     LabelBins(unmatched_veto->GetXaxis());
     unmatched_veto->SetFillColor(kGray);
-
-    edge_flag_pos = f.makeTH2D(prefix+" Edge flagged Clusters","cos(#theta_{True})","#phi_{True}", costheta,phi,prefix+"_edge_flag");
 
     veto_cand_phi_diff = f.makeTH1D(prefix+" Angle unmatched Veto - Cand","# unmatched veto clusters","",BinSettings(6),prefix+"_veto_cand_phi_diff");
 
@@ -172,7 +168,7 @@ void ReconstructCheck::histgroup::ShowResult() const
     canvas c(Prefix);
 
     c << drawoption("colz") << nPerEvent << nPerEventPerE << splitPerEvent
-      << *splitPos << edge_flag_pos << multiplicity_map
+      << *splitFlagPos << *splitPos
       << cluserSize << dEE << dEE_true << nCharged << *posCharged << unmatched_veto
       << drawoption("nostack") << padoption::set(padoption_t::Legend) << splitstack
       << padoption::unset(padoption_t::Legend)
@@ -249,12 +245,8 @@ void ReconstructCheck::histgroup::Fill(const ParticlePtr& mctrue, const Candidat
         for(const Cluster& cl : c->Clusters) {
             if(cl.flags.isChecked(Cluster::Flag::Split)) {
                 ++nsplit;
-                splitPos->Fill(mc_theta, mc_phi);
+                splitFlagPos->Fill(mc_theta, mc_phi);
 
-            }
-
-            if(cl.flags.isChecked(Cluster::Flag::TouchesHole)) {
-                edge_flag_pos->Fill(mc_cos_theta, mc_phi);
             }
         }
     }
@@ -271,7 +263,6 @@ void ReconstructCheck::histgroup::Fill(const ParticlePtr& mctrue, const Candidat
         nCharged->Fill(ncharged);
 
     splitPerEvent->Fill(nsplit);
-    multiplicity_map->Fill(mc_cos_theta, mc_phi, cand.size());
 
     if(cand.size() == 2) {
         if(nsplit<3) {
@@ -286,6 +277,8 @@ void ReconstructCheck::histgroup::Fill(const ParticlePtr& mctrue, const Candidat
         energy_recov_norm->Fill(mc_theta,mc_phi);
         energyinout->Fill(mc_energy,c->ClusterEnergy());
         thetainout->Fill(std_ext::radian_to_degree(mc_theta), std_ext::radian_to_degree(c->Theta() - mc_theta));
+    } else if( cand.size() > 1) {
+        splitPos->Fill(mc_theta,mc_phi);
     }
 
 }

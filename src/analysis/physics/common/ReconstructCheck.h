@@ -52,9 +52,8 @@ protected:
         TH1D* nPerEvent;
         TH2D* nPerEventPerE;
         TH1D* splitPerEvent;
+        std::unique_ptr<PositionMap> splitFlagPos;
         std::unique_ptr<PositionMap> splitPos;
-
-        TH3D* multiplicity_map;
 
         std::vector<TH1D*> mult2_split_angles;
 
@@ -64,8 +63,6 @@ protected:
         TH2D* dEE_true;
         std::unique_ptr<PositionMap> posCharged;
         TH1D* unmatched_veto;
-        TH2D* edge_flag_pos;
-
         TH1D* veto_cand_phi_diff;
 
         TH2D* energyinout;
