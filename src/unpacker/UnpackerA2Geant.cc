@@ -97,6 +97,7 @@ bool UnpackerA2Geant::OpenFile(const string& filename)
         throw Exception("Tree file contains too many entries for building correct unique ID");
     }
 
+    geant->GetEntry(0);
 
 
     // this unpacker has no chance to make a proper THeaderInfo
