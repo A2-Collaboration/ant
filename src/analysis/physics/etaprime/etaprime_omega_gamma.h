@@ -14,6 +14,9 @@ class EtapOmegaG : public Physics {
     BinSettings bins_im = BinSettings(1200);
 
     TH1D* gggg;
+    TH1D* ggg;
+    TH1D* gg;
+
 
 public:
     EtapOmegaG(PhysOptPtr opts);
