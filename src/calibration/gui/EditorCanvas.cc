@@ -1,5 +1,6 @@
 #include "EditorCanvas.h"
 
+#include "calibration/gui/EditorWindow.h"
 #include "calibration/Editor.h"
 #include "base/std_ext/string.h"
 #include "tree/TCalibrationData.h"
@@ -18,12 +19,12 @@ using namespace ant;
 using namespace std;
 using namespace ant::calibration::gui;
 
-EmbeddedEditorCanvas::EmbeddedEditorCanvas(const std::shared_ptr<calibration::Editor>& editor, const string& calID, const TGWindow* p) :
+EmbeddedEditorCanvas::EmbeddedEditorCanvas(EditorWindow* EditorWindow, const string& calID, const TGWindow* p) :
     TRootEmbeddedCanvas(0, p, 400, 400) // only important place to set some width/height
 {
     auto frame = (TGCompositeFrame*)fCanvasContainer;
     frame->RemoveInput(kKeyPressMask | kKeyReleaseMask);
-    theCanvas = new EditorCanvas(editor, calID, GetCanvasWindowId());
+    theCanvas = new EditorCanvas(EditorWindow, calID, GetCanvasWindowId());
     AdoptCanvas(theCanvas);
 }
 
@@ -66,9 +67,10 @@ void EmbeddedEditorCanvas::UpdateMe()
 
 
 
-EditorCanvas::EditorCanvas(const std::shared_ptr<Editor>& editor, const string& calID, int winID ):
+EditorCanvas::EditorCanvas(EditorWindow* EditorWindow, const string& calID, int winID ):
     TCanvas("Editor",10,10,winID),
-    ed(editor),
+    editorWindow(EditorWindow),
+    editor(EditorWindow->GetEditor()),
     flag_intervalStart_set(false),
     flag_data_editor(false)
 {
@@ -90,7 +92,7 @@ void EditorCanvas::SetCalID(const string& calID)
 {
     currentCalID = calID;
 
-    auto nSteps = ed->GetNumberOfSteps(currentCalID);
+    auto nSteps = editor->GetNumberOfSteps(currentCalID);
 
     calHist = new TH2D( (std_ext::formatter() << "hist-" << currentCalID).str().c_str(),
                         (std_ext::formatter() << "History for " << currentCalID).str().c_str(),
@@ -131,11 +133,11 @@ void EditorCanvas::UpdateMe()
 void EditorCanvas::updateCalHist()
 {
     calHist->Reset();
-    for (const auto& ran: ed->GetAllRanges(currentCalID))
+    for (const auto& ran: editor->GetAllRanges(currentCalID))
         for (int i = floor(ran.second.Start()); i < ceil(ran.second.Stop()) ; ++i)
             calHist->SetBinContent(i+1,ran.first+1,2);
 
-    for (const auto& ran: ed->GetAllValidRanges(currentCalID))
+    for (const auto& ran: editor->GetAllValidRanges(currentCalID))
         for (int i = floor(ran.second.Start()); i < ceil(ran.second.Stop()) ; ++i)
             calHist->SetBinContent(i+1,ran.first+1,1);
 
@@ -171,16 +173,17 @@ void EditorCanvas::unFillLine(uint32_t lineNumber)
 
 void EditorCanvas::MarkInvalid()
 {
-    auto valids = ed->GetAllValidRanges(currentCalID);
+    auto valids = editor->GetAllValidRanges(currentCalID);
     set<uint32_t> validset;
     for (const auto v: valids)
         validset.emplace(v.first);
 
-    for (uint32_t i = 0 ; i < ed->GetNumberOfSteps(currentCalID) ; ++i)
+    for (uint32_t i = 0 ; i < editor->GetNumberOfSteps(currentCalID) ; ++i)
         if ( validset.find(i) == validset.end() && indexMemory.find(i) == indexMemory.end() )
         {
+            cout << "added invalid line " << i << endl;
             indexMemory.emplace(i);
-            markLine(i+1);
+            fillLine(i);
         }
     UpdateMe();
 }
@@ -218,7 +221,7 @@ bool EditorCanvas::EditData()
     if (indexMemory.size() != 1)
         return false;
     uint32_t stepIndex = *(indexMemory.begin());
-    TCalibrationData&  theData = ed->ModifyItem(currentCalID,stepIndex);
+    TCalibrationData&  theData = editor->ModifyItem(currentCalID,stepIndex);
 
     if (flag_data_editor)
     {
@@ -276,6 +279,7 @@ void EditorCanvas::markLine(Int_t y)
         }
     }
     UpdateMe();
+    editorWindow->UpdateMe();
 }
 
 void EditorCanvas::HandleInput(EEventType button, Int_t x, Int_t y)

@@ -1,6 +1,7 @@
 #include "EditorWindow.h"
 
 #include "base/std_ext/memory.h"
+#include "calibration/gui/EditorCanvas.h"
 
 #include "TExec.h"
 #include "TApplication.h"
@@ -97,13 +98,13 @@ void EditorWindow::createToolbar(TGVerticalFrame* frame)
     TGHorizontalFrame* frm2 = new TGHorizontalFrame(frame);
     TGHorizontalFrame* frm3 = new TGHorizontalFrame(frame);
 
-    // TODO: there are bugs in EditorCanvas, disabled...
+    // TODO: there are bugs in EditorCanvas
     auto btn_selectInValid = new ActionWidget<TGTextButton>(frm2,"Select invalid");
     keys[kKey_s] = btn_selectInValid;
     rootButton_markInValid = btn_selectInValid;
-    btn_selectInValid->SetEnabled(kFALSE);
     btn_selectInValid->SetAction([this] () {
         this->ecanvas->SelectInvalid();
+        UpdateMe();
     });
 
 
@@ -111,6 +112,7 @@ void EditorWindow::createToolbar(TGVerticalFrame* frame)
     keys[kKey_c] = btn_clear;
     btn_clear->SetAction([this] () {
         this->ecanvas->clearSelections();
+        UpdateMe();
     });
 
     auto btn_edit = new ActionWidget<TGTextButton>(frm2,"start Editor / write data");
@@ -123,6 +125,7 @@ void EditorWindow::createToolbar(TGVerticalFrame* frame)
     rootButton_delete = btn_delete;
     btn_delete->SetAction([this] () {
         this->deleteSelections();
+        UpdateMe();
     });
 
     auto btn_Quit = new ActionWidget<TGTextButton>(frm3,"Exit without saving");
@@ -143,7 +146,7 @@ void EditorWindow::createToolbar(TGVerticalFrame* frame)
         frm->AddFrame(dynamic_cast<TGFrame*>(widget), layout_btn);
     };
 
-//    add_to_frame(frm2, btn_selectInValid);
+    add_to_frame(frm2, btn_selectInValid);
     add_to_frame(frm3, btn_clear);
     add_to_frame(frm2, btn_edit);
     add_to_frame(frm2, btn_delete);
@@ -178,7 +181,7 @@ void EditorWindow::disableButtons()
         rootButton_markInValid->SetEnabled(kFALSE);
 
     rootButton_delete->SetEnabled(kTRUE);
-    if ( ecanvas->GetSelected().size() > 0 && ecanvas->InDataEditMode())
+    if ( ecanvas->GetSelected().size() == 0 || ecanvas->InDataEditMode())
         rootButton_delete->SetEnabled(kFALSE);
 
     rootButton_StartEditor->SetEnabled(kFALSE);
@@ -206,7 +209,7 @@ EditorWindow::EditorWindow(const string& folder) :
     frame_canvas = new TGHorizontalFrame(frame);
     frame->AddFrame(frame_canvas, new TGLayoutHints(kLHintsExpandY | kLHintsExpandX));
 
-    ecanvas = new EmbeddedEditorCanvas(editor,currentCalID,frame_canvas);
+    ecanvas = new EmbeddedEditorCanvas(this,currentCalID,frame_canvas);
     frame_canvas->AddFrame(ecanvas, new TGLayoutHints(kLHintsExpandY | kLHintsExpandX));
     updateLayout();
 
@@ -216,7 +219,7 @@ EditorWindow::EditorWindow(const string& folder) :
 
 
     AddInput(kKeyPressMask | kKeyReleaseMask);
-    updateLayout();
+    UpdateMe();
 
     // set focus
     gVirtualX->SetInputFocus(GetId());
@@ -245,6 +248,8 @@ EditorWindow::~EditorWindow()
     gApplication->Terminate(0);
 }
 
+std::shared_ptr<Editor> EditorWindow::GetEditor() { return editor;}
+
 
 EditorWindow::MyComboBox::MyComboBox(const TGWindow* p, Int_t id, UInt_t options, Pixel_t back):
     TGComboBox(p,id,options,back){}
@@ -260,6 +265,12 @@ string EditorWindow::MyComboBox::GetSelectedText()
 {
     TGTextLBEntry* tgl = (TGTextLBEntry*) GetSelectedEntry();
     return string(tgl->GetText()->GetString());
+}
+
+void EditorWindow::UpdateMe()
+{
+    disableButtons();
+    updateLayout();
 }
 
 

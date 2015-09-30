@@ -26,6 +26,7 @@ namespace calibration {
 namespace gui {
 
 class EditorCanvas;
+class EditorWindow;
 
 class EmbeddedEditorCanvas : public TRootEmbeddedCanvas,
         public update_notify_traits
@@ -34,7 +35,7 @@ private:
     EditorCanvas* theCanvas;
 
 public:
-    EmbeddedEditorCanvas(const std::shared_ptr<ant::calibration::Editor>& editor, const std::string& calID, const TGWindow *p = 0);
+    EmbeddedEditorCanvas(EditorWindow* EditorWindow, const std::string& calID, const TGWindow *p = 0);
 
     /**
      * @brief SelectInvalid
@@ -61,7 +62,8 @@ private:
     TH1D*                         calDataHist;
 
 
-    std::shared_ptr<Editor>       ed;
+    EditorWindow*       editorWindow;
+    std::shared_ptr<ant::calibration::Editor> editor;
 
     std::string             currentCalID;
 
@@ -84,7 +86,7 @@ private:
     void fillLine(uint32_t lineNumber);
 
 public:
-    EditorCanvas(const std::shared_ptr<Editor>& editor, const std::string& calID, int winID);
+    EditorCanvas(EditorWindow* EditorWindow, const std::string& calID, int winID);
     void SetCalID(const std::string& calID);
 
     bool getDataEditorFlag() const;

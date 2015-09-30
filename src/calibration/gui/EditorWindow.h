@@ -1,7 +1,6 @@
 #pragma once
 
 #include "calibration/Editor.h"
-#include "calibration/gui/EditorCanvas.h"
 #include "calibration/gui/Indicator_traits.h"
 
 #include "TGFrame.h"
@@ -21,7 +20,11 @@ namespace ant {
 namespace calibration {
 namespace gui {
 
-class EditorWindow : public TGMainFrame
+class EmbeddedEditorCanvas;
+class EditorCanvas;
+
+class EditorWindow : public TGMainFrame,
+        public update_notify_traits
 {
 private:
 
@@ -69,7 +72,15 @@ public:
     virtual ~EditorWindow();
     EditorWindow(const EditorWindow&) = delete;
     EditorWindow& operator=(const EditorWindow&) = delete;
+
+    std::shared_ptr<ant::calibration::Editor> GetEditor();
+
+    // update_notify_traits interface
+public:
+    void UpdateMe() override;
 };
+
+
 }
 }
 }
