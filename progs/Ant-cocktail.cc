@@ -7,6 +7,7 @@
 #include "simulation/mc/A2Cocktail.h"
 
 #include "base/CmdLine.h"
+#include "base/std_ext/string.h"
 
 
 
@@ -20,19 +21,24 @@ int main( int argc, char** argv )
 
     auto cmd_outfile    = cmd.add<TCLAP::ValueArg<string>> ("o", "outfile",       "Data output file"            , true,    "", "filename");
     auto cmd_numEvents  = cmd.add<TCLAP::ValueArg<int>>    ("N", "numEvents",     "Number of generated events"  , true,     0, "# events");
-    auto cmd_numBins    = cmd.add<TCLAP::ValueArg<int>>    ("n", "numEnergyBins", "Number of taggerbins"        , false,   48, "# energy bins");
-    auto cmd_Emin       = cmd.add<TCLAP::ValueArg<double>> ("",  "Emin",          "Minimum Tagger energy"       , false, 1.42, "GeV");
-    auto cmd_Emax       = cmd.add<TCLAP::ValueArg<double>> ("",  "Emax",          "Maximum Tagger energy"       , false, 1.58, "GeV");
+    auto cmd_numBins    = cmd.add<TCLAP::ValueArg<int>>    ("n", "numEnergyBins", "Number of taggerbins"        , false,   47, "# energy bins");
+    auto cmd_Emin       = cmd.add<TCLAP::ValueArg<double>> ("",  "Emin",          "Minimum Tagger energy"       , false, 1420, "MeV");
+    auto cmd_Emax       = cmd.add<TCLAP::ValueArg<double>> ("",  "Emax",          "Maximum Tagger energy"       , false, 1580, "MeV");
 
     auto cmd_noBulk     = cmd.add<TCLAP::SwitchArg>        ("",  "no-bulk",       "disable Pluto-Bulk-Interface", false);
-    auto cmd_noUnstable = cmd.add<TCLAP::SwitchArg>        ("",  "no-unstable",   "disable Pluto-Bulk-Interface", false);
+    auto cmd_noUnstable = cmd.add<TCLAP::SwitchArg>        ("",  "no-unstable",   "don't save unstable particles", false);
 
     auto cmd_dataFiles  = cmd.add<TCLAP::MultiArg<string>> ("",  "datafiles",     "Xsection-data-files",          false,       "inputfiles");
 
     cmd.parse(argc, argv);
 
-    A2Cocktail cocktail(cmd_outfile->getValue(),
-                        cmd_Emin->getValue(), cmd_Emax->getValue(),
+    string outfile_clean(cmd_outfile->getValue());
+    if(ant::std_ext::string_ends_with(outfile_clean, ".root")) {
+        outfile_clean = outfile_clean.substr(0,outfile_clean.size()-5);
+    }
+
+    A2Cocktail cocktail(outfile_clean,
+                        cmd_Emin->getValue() / 1000.0, cmd_Emax->getValue() / 1000.0,  // Cocktailclass takes GeV
                         cmd_numBins->getValue(),
                         !cmd_noUnstable->isSet(), !cmd_noBulk->isSet(),
                         cmd_dataFiles->getValue()

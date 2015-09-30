@@ -80,6 +80,12 @@ private:
     PReaction* makeReaction(const double &energy, const std::string& particles) const;
 
 public:
+
+    /**
+     * @brief constuctor note: Provide Enegies in GeV
+     *
+     * @return pointer to randomly picked Pluto reaction from database
+     */
     A2Cocktail(const std::string& outfile,
                const double& Emin, const double& Emax,
                const unsigned int numEnergyBins,
