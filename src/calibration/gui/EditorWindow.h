@@ -45,7 +45,8 @@ private:
     TGTextButton* rootButton_markInValid;
     TGTextButton* rootButton_expandSelection;
     TGTextButton* rootButton_StartEditor;
-    TGHorizontalFrame* frmEd;
+    TGTextButton* rootButton_dublicateLast;
+    TGTextButton* rootButton_avg;
 
     MyComboBox* calibSelector;
 

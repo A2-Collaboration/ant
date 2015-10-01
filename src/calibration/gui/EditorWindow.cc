@@ -95,9 +95,9 @@ void EditorWindow::createSelector(TGVerticalFrame* frame)
 
 void EditorWindow::createToolbar(TGVerticalFrame* frame)
 {
-    frmEd = new TGHorizontalFrame(frame);
     TGHorizontalFrame* frm2 = new TGHorizontalFrame(frame);
     TGHorizontalFrame* frm3 = new TGHorizontalFrame(frame);
+    TGHorizontalFrame* frm4 = new TGHorizontalFrame(frame);
 
 
     auto btn_selectInValid = new ActionWidget<TGTextButton>(frm2,"Select invalid");
@@ -124,10 +124,24 @@ void EditorWindow::createToolbar(TGVerticalFrame* frame)
         UpdateMe();
     });
 
-    auto btn_edit = new ActionWidget<TGTextButton>(frm2,"start Editor / write data");
+    auto btn_edit = new ActionWidget<TGTextButton>(frm3,"start Editor / write data");
     rootButton_StartEditor = btn_edit;
     btn_edit->SetAction([this] () {
         this->ecanvas->EditSelection();
+    });
+
+    auto btn_dublicateLast = new ActionWidget<TGTextButton>(frm2,"dublicate last step");
+    rootButton_dublicateLast = btn_dublicateLast;
+    btn_dublicateLast->SetAction([this] () {
+        this->editor->DublicateLast(currentCalID);
+        this->ecanvas->SetCalID(currentCalID);
+        UpdateMe();
+    });
+
+    auto btn_avg = new ActionWidget<TGTextButton>(frm3,"AVG");
+    rootButton_avg = btn_avg;
+    btn_avg->SetAction([this] () {
+        this->ecanvas->SetToAverage();
     });
 
     auto btn_delete = new ActionWidget<TGTextButton>(frm2,"delete selection");
@@ -137,17 +151,17 @@ void EditorWindow::createToolbar(TGVerticalFrame* frame)
         UpdateMe();
     });
 
-    auto btn_save = new ActionWidget<TGTextButton>(frm3,"save database");
+    auto btn_save = new ActionWidget<TGTextButton>(frm4,"save database");
     btn_save->SetAction([this] () {
         this->editor->SaveToFolder(dataFolder);
     });
 
-    auto btn_Quit = new ActionWidget<TGTextButton>(frm3,"Exit without saving");
+    auto btn_Quit = new ActionWidget<TGTextButton>(frm4,"Exit without saving");
     btn_Quit->SetAction([this] () {
         gApplication->Terminate(0);
     });
 
-    auto btn_saveQuit = new ActionWidget<TGTextButton>(frm3,"Save and Exit");
+    auto btn_saveQuit = new ActionWidget<TGTextButton>(frm4,"Save and Exit");
     btn_saveQuit->SetAction([this] () {
         this->editor->SaveToFolder(dataFolder);
         gApplication->Terminate(0);
@@ -161,15 +175,18 @@ void EditorWindow::createToolbar(TGVerticalFrame* frame)
     };
 
     add_to_frame(frm2, btn_selectInValid);
-    add_to_frame(frm2, btn_edit);
+    add_to_frame(frm3, btn_edit);
     add_to_frame(frm2, btn_expandSelection);
     add_to_frame(frm2, btn_delete);
+    add_to_frame(frm2, btn_dublicateLast);
+    add_to_frame(frm3, btn_avg);
     add_to_frame(frm3, btn_clear);
-    add_to_frame(frm3, btn_save);
-    add_to_frame(frm3, btn_Quit);
-    add_to_frame(frm3, btn_saveQuit);
+    add_to_frame(frm4, btn_save);
+    add_to_frame(frm4, btn_Quit);
+    add_to_frame(frm4, btn_saveQuit);
 
     auto layout_frm =  new TGLayoutHints(kLHintsBottom | kLHintsExpandX);
+    frame->AddFrame(frm4, layout_frm);
     frame->AddFrame(frm3, layout_frm);
     frame->AddFrame(frm2, layout_frm);
 }
@@ -205,6 +222,10 @@ void EditorWindow::disableButtons()
     rootButton_StartEditor->SetEnabled(kFALSE);
     if ( ecanvas->GetSelected().size() == 1)
         rootButton_StartEditor->SetEnabled(kTRUE);
+
+    rootButton_dublicateLast->SetEnabled( ecanvas->GetSelected().size() == 0);
+
+    rootButton_avg->SetEnabled( ecanvas->InDataEditMode());
 
 }
 

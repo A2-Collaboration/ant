@@ -350,3 +350,9 @@ TCalibrationData& Editor::ModifyItem(const string& calibrationID, uint32_t index
    return dman.ModifyItems(calibrationID).at(index);
 
 }
+
+void Editor::DublicateLast(const string& calibrationID)
+{
+    auto& itemVector = dman.ModifyItems(calibrationID);
+    itemVector.push_back(itemVector.back());
+}

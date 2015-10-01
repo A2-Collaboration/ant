@@ -47,6 +47,7 @@ public:
     virtual void EditSelection();
     virtual void ExpandSelection();
     virtual bool InDataEditMode() const;
+    virtual void SetToAverage();
 
     virtual void UpdateMe() override;
 };
@@ -100,6 +101,7 @@ public:
     bool EditData();
     void ExpandSelection();
     void HandleInput(EEventType button, Int_t x, Int_t y) override;
+    void SetToAverage();
 };
 
 }

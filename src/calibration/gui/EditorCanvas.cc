@@ -63,6 +63,11 @@ bool EmbeddedEditorCanvas::InDataEditMode() const
     return theCanvas->getDataEditorFlag();
 }
 
+void EmbeddedEditorCanvas::SetToAverage()
+{
+    theCanvas->SetToAverage();
+}
+
 void EmbeddedEditorCanvas::UpdateMe()
 {
     theCanvas->UpdateMe();
@@ -306,4 +311,14 @@ void EditorCanvas::HandleInput(EEventType button, Int_t x, Int_t y)
 //        if (button == kButton3Down)
 //            markInterval(y);
     }
+}
+
+void EditorCanvas::SetToAverage()
+{
+    if (!flag_data_editor)
+        throw false;
+    auto avg = calDataHist->GetMean();
+    for ( int i = 1; i <= calDataHist->GetNbinsX(); ++i)
+        calDataHist->SetBinContent(i,avg);
+    UpdateMe();
 }
