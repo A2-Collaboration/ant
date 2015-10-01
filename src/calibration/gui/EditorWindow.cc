@@ -152,6 +152,7 @@ void EditorWindow::createToolbar(TGVerticalFrame* frame)
     });
 
     auto btn_save = new ActionWidget<TGTextButton>(frm4,"save database");
+    rootButton_save = btn_save;
     btn_save->SetAction([this] () {
         this->editor->SaveToFolder(dataFolder);
     });
@@ -162,6 +163,7 @@ void EditorWindow::createToolbar(TGVerticalFrame* frame)
     });
 
     auto btn_saveQuit = new ActionWidget<TGTextButton>(frm4,"Save and Exit");
+    rootButton_saveQuit = btn_saveQuit;
     btn_saveQuit->SetAction([this] () {
         this->editor->SaveToFolder(dataFolder);
         gApplication->Terminate(0);
@@ -226,6 +228,9 @@ void EditorWindow::disableButtons()
     rootButton_dublicateLast->SetEnabled( ecanvas->GetSelected().size() == 0);
 
     rootButton_avg->SetEnabled( ecanvas->InDataEditMode());
+
+    rootButton_save->SetEnabled( !ecanvas->InDataEditMode());
+    rootButton_saveQuit->SetEnabled( !ecanvas->InDataEditMode());
 
 }
 

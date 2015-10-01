@@ -47,6 +47,8 @@ private:
     TGTextButton* rootButton_StartEditor;
     TGTextButton* rootButton_dublicateLast;
     TGTextButton* rootButton_avg;
+    TGTextButton* rootButton_save;
+    TGTextButton* rootButton_saveQuit;
 
     MyComboBox* calibSelector;
 
