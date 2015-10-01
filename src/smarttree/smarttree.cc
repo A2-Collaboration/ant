@@ -1,6 +1,11 @@
 /**
  * @file smartttree.cc
  * @brief C++11 implementation ;-)
+ *
+ * @note When using TTree::Draw() histograms need to have a name when using bin specification:
+ *       "expression>>name(bins,min,max)".
+ *       if min == max, the range will be determined automatically by ROOT
+ *        https://root.cern.ch/doc/master/classTTree.html#ac4016b174665a086fe16695aad3356e2
  */
 
 #include "smarttree.h"
@@ -35,11 +40,13 @@ struct padstack {
 
 class DrawCanvas: public TCanvas {
 protected:
+    string name;
+    static unsigned n;
     string drawstring;
     string drawoption;
 
 public:
-    DrawCanvas(const string& dstring, const string& option): drawstring(dstring), drawoption(option) {}
+    DrawCanvas(const string& dstring, const string& option): name("__h"+to_string(n++)), drawstring(dstring), drawoption(option) {}
     virtual ~DrawCanvas() {}
 
     void Redraw(TTree& tree, const TCut& cut) {
@@ -49,16 +56,47 @@ public:
     }
 };
 
+unsigned DrawCanvas::n = 0;
+
 class DrawCanvas1D : public DrawCanvas {
+private:
+    string xExpr;
+
+    string makeDrawString(const string& expr, const int bins) {
+        return expr+">>"+name+"("+to_string(bins)+")";
+    }
+
 public:
-    DrawCanvas1D(const string& x): DrawCanvas(x,"") {}
+    DrawCanvas1D(const string& x, const int xbins=100): DrawCanvas("",""), xExpr(x) {
+        drawstring = makeDrawString(x,xbins);
+    }
+
+    void SetBinsX(const int xbins) {
+        drawstring = makeDrawString(xExpr, xbins);
+    }
+
     virtual ~DrawCanvas1D() {}
 };
 
 class DrawCanvas2D: public DrawCanvas {
+protected:
+    string xExpr;
+    string yExpr;
+
+    string makeDrawstring(const string& x, const string y, const int xbins, const int ybins) {
+        return y + ":" + x + ">>"+name+"(" + to_string(xbins) + ",-1,-1," + to_string(ybins) + ",-1,-1)";
+    }
+
 public:
-    DrawCanvas2D(const string& x, const string& y):
-        DrawCanvas(y+":"+x,"colz") {}
+    DrawCanvas2D(const string& x, const string& y, const int xbins=100, const int ybins=100):
+        DrawCanvas("","colz") {
+        drawstring = makeDrawstring(x,y,xbins,ybins);
+    }
+
+    void SetBins(const int x, const int y) {
+        drawstring = makeDrawstring(xExpr, yExpr, x, y);
+    }
+
     virtual ~DrawCanvas2D() {}
 };
 
@@ -89,8 +127,8 @@ protected:
 public:
     SmartTreeImpl(TTree *Tree): tree(Tree) {}
 
-    virtual void Draw(const string &x) override;
-    virtual void Draw(const string &x, const string& y) override;
+    virtual void Draw(const string &x, const int xbins=100) override;
+    virtual void Draw(const string &x, const string& y, const int xbins=100, const int ybins=100) override;
 
     virtual void SetRange(const string& branch, double min, double max) override;
     virtual void RemoveRange(const string& branch) override;
@@ -150,16 +188,16 @@ bool SmartTreeImpl::TestCut(const string &cut)
     return (res>=0);
 }
 
-void SmartTreeImpl::Draw(const string &x)
+void SmartTreeImpl::Draw(const string &x, const int xbins)
 {
-    auto canvas = new DrawCanvas1D(x);
+    auto canvas = new DrawCanvas1D(x,xbins);
     canvas->Redraw(*tree, buildCut());
     canvases.emplace_back(canvas);
 }
 
-void SmartTreeImpl::Draw(const string &x, const string& y)
+void SmartTreeImpl::Draw(const string &x, const string& y, const int xbins, const int ybins)
 {
-    auto canvas = new DrawCanvas2D(x,y);
+    auto canvas = new DrawCanvas2D(x,y,xbins, ybins);
     canvas->Redraw(*tree, buildCut());
     canvases.emplace_back(canvas);
 }
