@@ -226,11 +226,13 @@ bool EditorCanvas::EditData()
     if (flag_data_editor)
     {
         applyDataChanges(theData);
+        editorWindow->UpdateMe();
         return true;
     }
 
     flag_data_editor = true;
     StartEditData(theData, stepIndex);
+    editorWindow->UpdateMe();
     return true;
 }
 
