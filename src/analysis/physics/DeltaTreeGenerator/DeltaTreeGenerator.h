@@ -17,6 +17,7 @@ namespace physics {
 class DeltaTreeGenerator: public Physics {
 private:
     TTree* photonTree;
+    double taggerEnergy;
     TClonesArray* reconstructed;
     TClonesArray* mctrue;
     TH1D*  taggerHits;

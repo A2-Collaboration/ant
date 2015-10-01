@@ -22,7 +22,8 @@ using namespace ant::analysis::data;
 using namespace std;
 
 DeltaTreeGenerator::DeltaTreeGenerator(PhysOptPtr opts):
-    Physics("DeltaTreeGenerator:", opts)
+    Physics("DeltaTreeGenerator:", opts),
+    taggerEnergy(0)
 {
     VLOG(7) << "DeltaTreeGenerator:" << endl;
 
@@ -30,6 +31,7 @@ DeltaTreeGenerator::DeltaTreeGenerator(PhysOptPtr opts):
     photonTree    = new TTree("photons","photons");
     reconstructed = new TClonesArray("TLorentzVector",1);
     mctrue        = new TClonesArray("TLorentzVector",1);
+    photonTree->Branch("taggerEnergy",addressof(taggerEnergy));
     photonTree->Branch("reconstructed",addressof(reconstructed));
     photonTree->Branch("mctrue",addressof(mctrue));
 
@@ -73,10 +75,16 @@ void DeltaTreeGenerator::ProcessEvent(const Event &event)
                         mc_photons.at(i)->Pz(),
                         mc_photons.at(i)->E());
     }
-    photonTree->Fill();
 
+
+
+    // taggerHits should always have size on though
     for( const auto& taggerHit: event.MCTrue().TaggerHits())
-        taggerHits->Fill(taggerHit->PhotonEnergy());
+    {
+        taggerEnergy = taggerHit->PhotonEnergy();
+        taggerHits->Fill( taggerEnergy );
+    }
+    photonTree->Fill();
 }
 
 void DeltaTreeGenerator::Finish()
