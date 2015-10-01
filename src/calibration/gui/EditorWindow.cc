@@ -203,9 +203,13 @@ void EditorWindow::updateLayout()
 
 void EditorWindow::deleteSelections()
 {
-    for (const auto& i: ecanvas->GetSelected())
-        editor->Remove(currentCalID,i);
+    auto indexMemory = ecanvas->GetSelected();
+    indexMemory.sort();
+
+    for ( auto rit = indexMemory.rbegin(); rit != indexMemory.rend(); ++rit)
+        editor->Remove(currentCalID,*(rit));
     // has to load current Calibration as new one, because size changed:
+    // (this also empties the indexmemory on ecanvas)
     ecanvas->SetCalID(currentCalID);
 }
 
