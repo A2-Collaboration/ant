@@ -16,6 +16,7 @@
 #include <sstream>
 
 #include "base/interval.h"
+#include "base/std_ext/string.h"
 
 #include "TDirectory.h"
 
@@ -122,6 +123,15 @@ protected:
     bool autoUpdateEnabled = true;
     void AutoUpdate();
 
+    static bool isSane(const string& expr) {
+        if(std_ext::contains(expr,":")) {
+            cout << "Error in expression " << expr << "\n";
+            cout << "May not contain \":\". Use other Draw() command to specify more dimensions." << endl;
+            return false;
+        }
+        return true;
+    }
+
 
 
 public:
@@ -190,6 +200,9 @@ bool SmartTreeImpl::TestCut(const string &cut)
 
 void SmartTreeImpl::Draw(const string &x, const int xbins)
 {
+    if(!isSane(x)) {
+        return;
+    }
     auto canvas = new DrawCanvas1D(x,xbins);
     canvas->Redraw(*tree, buildCut());
     canvases.emplace_back(canvas);
@@ -197,6 +210,12 @@ void SmartTreeImpl::Draw(const string &x, const int xbins)
 
 void SmartTreeImpl::Draw(const string &x, const string& y, const int xbins, const int ybins)
 {
+    if(!isSane(x)) {
+        return;
+    }
+    if(!isSane(y)) {
+        return;
+    }
     auto canvas = new DrawCanvas2D(x,y,xbins, ybins);
     canvas->Redraw(*tree, buildCut());
     canvases.emplace_back(canvas);
