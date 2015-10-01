@@ -32,6 +32,10 @@ inline std::string string_sanitize(const char* in) {
   return s;
 }
 
+inline bool contains(const std::string& str, const std::string& needle) {
+    return str.find(needle) != str.npos;
+}
+
 /**
  * @brief Remove all occurences of substr from str
  * @param str String to modify
