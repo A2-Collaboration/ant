@@ -142,10 +142,10 @@ int main( int argc, char** argv ) {
     auto cmd_verbose   = cmd.add<TCLAP::ValueArg<int>>       ("v", "verbose","Verbosity level (0..9)", false, 0,"int");
 
     // reaction simulation options
-    auto cmd_usePluto = cmd.add<TCLAP::SwitchArg>        ("", "pluto", "Use pluto", false);
+//    auto cmd_usePluto = cmd.add<TCLAP::SwitchArg>        ("", "pluto", "Use pluto", false);
     auto cmd_reaction = cmd.add<TCLAP::ValueArg<string>> ("", "reaction", "Reaction string in PLUTO notation", false, "", "string (Pluto Rection)");
-    auto cmd_saveIntermediate = cmd.add<TCLAP::SwitchArg>("", "saveIntermediate", "Save intermediate particles", true);
-    auto cmd_enableBulk = cmd.add<TCLAP::SwitchArg>      ("", "enableBulk", "Enable bulk decay of particles", true);
+    auto cmd_noUnstable = cmd.add<TCLAP::SwitchArg>("", "no-unstable", "Don't unstable particles", false);
+    auto cmd_noBulk = cmd.add<TCLAP::SwitchArg>      ("", "no-bulk", "Disable bulk decay of particles", false);
 
     // random gun options
     auto cmd_useGun = cmd.add<TCLAP::SwitchArg>        ("", "gun", "Use random gun", false);
@@ -163,12 +163,12 @@ int main( int argc, char** argv ) {
         el::Loggers::setVerboseLevel(cmd_verbose->getValue());
     }
 
-    if(cmd_useGun->isSet() && cmd_usePluto->isSet()) {
+    if(cmd_useGun->isSet() && cmd_reaction->isSet()) {
         LOG(ERROR) << "Can't use Pluto and random gun at the same time!";
         return EXIT_FAILURE;
     }
 
-    if(!cmd_useGun->isSet() && !cmd_usePluto->isSet()) {
+    if(!cmd_useGun->isSet() && !cmd_reaction->isSet()) {
         LOG(ERROR) << "Require one of --pluto , --gun";
         return EXIT_FAILURE;
     }
@@ -186,11 +186,11 @@ int main( int argc, char** argv ) {
         gunaction->thetaMin   = degree_to_radian(cmd_thetaMin->getValue());
         gunaction->thetaMax   = degree_to_radian(cmd_thetaMax->getValue());
         action = move(gunaction);
-    } else if(cmd_usePluto->isSet()){
+    } else if(cmd_reaction->isSet()){
         auto plutoaction              = std_ext::make_unique<PlutoAction>();
         plutoaction->reaction         = cmd_reaction->getValue();
-        plutoaction->saveIntermediate = cmd_saveIntermediate->getValue();
-        plutoaction->enableBulk       = cmd_enableBulk->getValue();
+        plutoaction->saveIntermediate = !(cmd_noUnstable->getValue());
+        plutoaction->enableBulk       = !(cmd_noBulk->getValue());
         action = move(plutoaction);
     }
 
