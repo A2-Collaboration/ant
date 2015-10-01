@@ -53,6 +53,11 @@ void EmbeddedEditorCanvas::EditSelection()
     theCanvas->EditData();
 }
 
+void EmbeddedEditorCanvas::ExpandSelection()
+{
+    theCanvas->ExpandSelection();
+}
+
 bool EmbeddedEditorCanvas::InDataEditMode() const
 {
     return theCanvas->getDataEditorFlag();
@@ -181,7 +186,6 @@ void EditorCanvas::MarkInvalid()
     for (uint32_t i = 0 ; i < editor->GetNumberOfSteps(currentCalID) ; ++i)
         if ( validset.find(i) == validset.end() && indexMemory.find(i) == indexMemory.end() )
         {
-            cout << "added invalid line " << i << endl;
             indexMemory.emplace(i);
             fillLine(i);
         }
@@ -234,6 +238,12 @@ bool EditorCanvas::EditData()
     StartEditData(theData, stepIndex);
     editorWindow->UpdateMe();
     return true;
+}
+
+void EditorCanvas::ExpandSelection()
+{
+    for (const auto& in: indexMemory)
+        editor->ExpandToMax(currentCalID,in);
 }
 
 void EditorCanvas::markInterval(Int_t y)

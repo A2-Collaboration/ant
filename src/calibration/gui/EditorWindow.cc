@@ -95,10 +95,11 @@ void EditorWindow::createSelector(TGVerticalFrame* frame)
 
 void EditorWindow::createToolbar(TGVerticalFrame* frame)
 {
+    frmEd = new TGHorizontalFrame(frame);
     TGHorizontalFrame* frm2 = new TGHorizontalFrame(frame);
     TGHorizontalFrame* frm3 = new TGHorizontalFrame(frame);
 
-    // TODO: there are bugs in EditorCanvas
+
     auto btn_selectInValid = new ActionWidget<TGTextButton>(frm2,"Select invalid");
     keys[kKey_s] = btn_selectInValid;
     rootButton_markInValid = btn_selectInValid;
@@ -107,6 +108,14 @@ void EditorWindow::createToolbar(TGVerticalFrame* frame)
         UpdateMe();
     });
 
+    auto btn_expandSelection = new ActionWidget<TGTextButton>(frm2,"expand selection");
+    rootButton_expandSelection = btn_expandSelection;
+    btn_expandSelection->SetAction([this] ()
+    {
+        this->ecanvas->ExpandSelection();
+        this->ecanvas->clearSelections();
+        UpdateMe();
+    });
 
     auto btn_clear = new ActionWidget<TGTextButton>(frm3,"Clear selection / go back");
     keys[kKey_c] = btn_clear;
@@ -128,12 +137,17 @@ void EditorWindow::createToolbar(TGVerticalFrame* frame)
         UpdateMe();
     });
 
+    auto btn_save = new ActionWidget<TGTextButton>(frm3,"save database");
+    btn_save->SetAction([this] () {
+        this->editor->SaveToFolder(dataFolder);
+    });
+
     auto btn_Quit = new ActionWidget<TGTextButton>(frm3,"Exit without saving");
     btn_Quit->SetAction([this] () {
         gApplication->Terminate(0);
     });
-    auto btn_saveQuit = new ActionWidget<TGTextButton>(frm3,"Save and Exit");
 
+    auto btn_saveQuit = new ActionWidget<TGTextButton>(frm3,"Save and Exit");
     btn_saveQuit->SetAction([this] () {
         this->editor->SaveToFolder(dataFolder);
         gApplication->Terminate(0);
@@ -147,9 +161,11 @@ void EditorWindow::createToolbar(TGVerticalFrame* frame)
     };
 
     add_to_frame(frm2, btn_selectInValid);
-    add_to_frame(frm3, btn_clear);
     add_to_frame(frm2, btn_edit);
+    add_to_frame(frm2, btn_expandSelection);
     add_to_frame(frm2, btn_delete);
+    add_to_frame(frm3, btn_clear);
+    add_to_frame(frm3, btn_save);
     add_to_frame(frm3, btn_Quit);
     add_to_frame(frm3, btn_saveQuit);
 
@@ -179,6 +195,8 @@ void EditorWindow::disableButtons()
     rootButton_markInValid->SetEnabled(kTRUE);
     if (ecanvas->InDataEditMode())
         rootButton_markInValid->SetEnabled(kFALSE);
+
+    rootButton_expandSelection->SetEnabled(ecanvas->GetSelected().size() > 0);
 
     rootButton_delete->SetEnabled(kTRUE);
     if ( ecanvas->GetSelected().size() == 0 || ecanvas->InDataEditMode())

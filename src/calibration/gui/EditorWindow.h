@@ -40,9 +40,12 @@ private:
 
     std::map<EKeySym, TGTextButton*> keys;
 
+    // Widgets on frame which can  be switched on and off
     TGTextButton* rootButton_delete;
     TGTextButton* rootButton_markInValid;
+    TGTextButton* rootButton_expandSelection;
     TGTextButton* rootButton_StartEditor;
+    TGHorizontalFrame* frmEd;
 
     MyComboBox* calibSelector;
 

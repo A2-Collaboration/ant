@@ -45,6 +45,7 @@ public:
     virtual std::list<std::uint32_t> GetSelected() const;
     virtual void clearSelections();
     virtual void EditSelection();
+    virtual void ExpandSelection();
     virtual bool InDataEditMode() const;
 
     virtual void UpdateMe() override;
@@ -97,6 +98,7 @@ public:
     void ResetCalibration();
     void MarkInvalid();
     bool EditData();
+    void ExpandSelection();
     void HandleInput(EEventType button, Int_t x, Int_t y) override;
 };
 
