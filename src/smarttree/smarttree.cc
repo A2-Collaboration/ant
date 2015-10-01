@@ -19,6 +19,7 @@
 #include "base/std_ext/string.h"
 
 #include "TDirectory.h"
+#include "TROOT.h"
 
 #include "TTree.h"
 #include "TH1D.h"
@@ -47,7 +48,8 @@ protected:
     string drawoption;
 
 public:
-    DrawCanvas(const string& dstring, const string& option): name("__h"+to_string(n++)), drawstring(dstring), drawoption(option) {}
+    DrawCanvas(const string& dstring, const string& option): TCanvas(string("__c"+to_string(n)).c_str(),""),
+        name("__h"+to_string(n++)), drawstring(dstring), drawoption(option) {}
     virtual ~DrawCanvas() {}
 
     void Redraw(TTree& tree, const TCut& cut) {
@@ -118,7 +120,7 @@ protected:
     TCut buildCut() const;
     static void strAdd(ostream& stream, const string& branch, const interval<double>& i);
 
-    list<DrawCanvas*> canvases;
+    list<string> canvases;
 
     bool autoUpdateEnabled = true;
     void AutoUpdate();
@@ -205,7 +207,7 @@ void SmartTreeImpl::Draw(const string &x, const int xbins)
     }
     auto canvas = new DrawCanvas1D(x,xbins);
     canvas->Redraw(*tree, buildCut());
-    canvases.emplace_back(canvas);
+    canvases.emplace_back(canvas->GetName());
 }
 
 void SmartTreeImpl::Draw(const string &x, const string& y, const int xbins, const int ybins)
@@ -218,7 +220,7 @@ void SmartTreeImpl::Draw(const string &x, const string& y, const int xbins, cons
     }
     auto canvas = new DrawCanvas2D(x,y,xbins, ybins);
     canvas->Redraw(*tree, buildCut());
-    canvases.emplace_back(canvas);
+    canvases.emplace_back(canvas->GetName());
 }
 
 void SmartTreeImpl::SetRange(const string &branch, double min, double max)
@@ -265,8 +267,18 @@ void SmartTreeImpl::Update()
 
     PrintCuts();
 
-    for(auto canvas : canvases ) {
-        canvas->Redraw(*tree, cut);
+    auto i = canvases.begin();
+    while(i!=canvases.end()) {
+        const string& canvas = *i;
+        TObject* o = gROOT->FindObject(canvas.c_str());
+        DrawCanvas* c = dynamic_cast<DrawCanvas*>(o);
+        if(c) {
+            c->Redraw(*tree, cut);
+            ++i;
+        } else {
+            cout << "canvas " << canvas << " is gone" << endl;
+            i = canvases.erase(i);
+        }
     }
 }
 
