@@ -174,8 +174,14 @@ TCut SmartTreeImpl::buildCut() const
 
     }
 
+    first = true;
     for(const auto& cut : cuts) {
-        s << "(" << cut << ") ";
+        if(!first) {
+            s << "&&";
+        } else {
+              first = false;
+        }
+        s << "(" << cut << ")";
     }
 
     return TCut(s.str().c_str());
