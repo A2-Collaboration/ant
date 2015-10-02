@@ -3,12 +3,17 @@
 
 #include <string>
 
+#include "TNamed.h"
+#include "Rtypes.h"
 
 class TTree;
 
 namespace ant {
 
-class SmartTree {
+class SmartTree: public TNamed {
+protected:
+    SmartTree(const std::string& name): TNamed(name.c_str(), "") {}
+
 public:
     virtual ~SmartTree();
 
@@ -55,6 +60,8 @@ public:
     virtual void SetAutoUpdate(bool update=true) =0;
 
     static SmartTree* Create(TTree* tree);
+
+    ClassDef(SmartTree, 1)
 };
 
 }
