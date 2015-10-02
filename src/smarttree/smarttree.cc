@@ -50,6 +50,11 @@ string getRandomString() {
     return "_rr" + to_string(r);
 }
 
+template <typename T>
+T* GetObject(const string& name) {
+    return dynamic_cast<T*>(gROOT->FindObject(name.c_str()));
+}
+
 class DrawCanvas: public TCanvas {
 protected:
     string name;
@@ -223,7 +228,7 @@ bool SmartTreeImpl::TestCut(const string &cut)
     const string drawstr = ">>"+evlist_name;
     const auto res = tree->Draw(drawstr.c_str(), c);
     if(res>=0) {
-        TEventList* list  = dynamic_cast<TEventList*>(gROOT->FindObject(evlist_name.c_str()));
+        auto list = GetObject<TEventList>(evlist_name);
         if(list) {
             auto old_list = tree->GetEventList();
             tree->SetEventList(list);
@@ -307,8 +312,7 @@ void SmartTreeImpl::Update()
     auto i = canvases.cbegin();
     while(i!=canvases.cend()) {
         const string& canvas = *i;
-        TObject* o = gROOT->FindObject(canvas.c_str());
-        DrawCanvas* c = dynamic_cast<DrawCanvas*>(o);
+        auto c = GetObject<DrawCanvas>(canvas);
         if(c) {
             c->Redraw(*tree, cut);
             ++i;
