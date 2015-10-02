@@ -14,6 +14,7 @@
 #include <list>
 #include <iostream>
 #include <sstream>
+#include <iomanip>
 
 #include "base/interval.h"
 #include "base/std_ext/string.h"
@@ -27,6 +28,9 @@
 #include "TCut.h"
 #include "TAxis.h"
 #include "TCanvas.h"
+#include "TEventList.h"
+#include "TRandom.h"
+
 
 using namespace ant;
 using namespace std;
@@ -39,6 +43,12 @@ struct padstack {
             pad->cd();
     }
 };
+
+
+string getRandomString() {
+    const unsigned r = floor(gRandom->Uniform(0,99999999));
+    return "_rr" + to_string(r);
+}
 
 class DrawCanvas: public TCanvas {
 protected:
@@ -134,10 +144,17 @@ protected:
         return true;
     }
 
+    void RemoveEventList() {
+        auto list = tree->GetEventList();
+        tree->SetEventList(nullptr);
+        delete list;
+    }
 
 
 public:
-    SmartTreeImpl(TTree *Tree): tree(Tree) {}
+    SmartTreeImpl(TTree *Tree): tree(Tree) {
+//        tree->SetParallelUnzip();
+    }
 
     virtual void Draw(const string &x, const int xbins=100) override;
     virtual void Draw(const string &x, const string& y, const int xbins=100, const int ybins=100) override;
@@ -202,7 +219,19 @@ void SmartTreeImpl::AutoUpdate()
 bool SmartTreeImpl::TestCut(const string &cut)
 {
     const auto c = buildCut() + TCut(cut.c_str());
-    const auto res = tree->Draw("", c, "", 0);
+    const auto evlist_name = getRandomString();
+    const string drawstr = ">>"+evlist_name;
+    const auto res = tree->Draw(drawstr.c_str(), c);
+    if(res>=0) {
+        TEventList* list  = dynamic_cast<TEventList*>(gROOT->FindObject(evlist_name.c_str()));
+        if(list) {
+            auto old_list = tree->GetEventList();
+            tree->SetEventList(list);
+            delete old_list;
+            const auto perc = list->GetN()*100.0 / tree->GetEntries();
+            cout << "Event list set, " << list->GetN() << " entries (" << setprecision(4) << perc << "%)" << endl;
+        }
+    }
     return (res>=0);
 }
 
@@ -252,6 +281,8 @@ void SmartTreeImpl::SetRange(const string &branch, double min, double max)
 void SmartTreeImpl::RemoveRange(const string &branch)
 {
     range_cuts.erase(branch);
+    RemoveEventList();
+    TestCut("");
     AutoUpdate();
 }
 
@@ -292,6 +323,7 @@ void SmartTreeImpl::RemoveAllCuts()
 {
     range_cuts.clear();
     cuts.clear();
+    RemoveEventList();
     AutoUpdate();
 }
 
@@ -311,6 +343,8 @@ bool SmartTreeImpl::RemoveCut(const string &cut)
 
     if(pos != cuts.end()) {
         cuts.erase(pos);
+        tree->SetEventList(nullptr);
+        TestCut("");
         AutoUpdate();
         return true;
     }
