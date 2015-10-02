@@ -304,8 +304,8 @@ void SmartTreeImpl::Update()
 
     PrintCuts();
 
-    auto i = canvases.begin();
-    while(i!=canvases.end()) {
+    auto i = canvases.cbegin();
+    while(i!=canvases.cend()) {
         const string& canvas = *i;
         TObject* o = gROOT->FindObject(canvas.c_str());
         DrawCanvas* c = dynamic_cast<DrawCanvas*>(o);
