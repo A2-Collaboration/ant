@@ -203,6 +203,8 @@ public:
     virtual void SetAutoUpdate(bool update=true) override { autoUpdateEnabled = update; }
     virtual bool GetAutoUpdate() const override { return autoUpdateEnabled; }
 
+    virtual void CloseAll() override;
+
     virtual ~SmartTreeImpl() {}
 };
 
@@ -386,6 +388,16 @@ bool SmartTreeImpl::RemoveCut(const string &cut)
     }
     cout << "Cut " << cut << " not found" << endl;
     return false;
+}
+
+void SmartTreeImpl::CloseAll()
+{
+    for(const auto& canvas : canvases) {
+        auto c = GetObject<DrawCanvas>(canvas);
+        delete c;
+    }
+
+    canvases.clear();
 }
 
 

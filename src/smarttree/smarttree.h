@@ -59,6 +59,8 @@ public:
     virtual bool GetAutoUpdate() const =0;
     virtual void SetAutoUpdate(bool update=true) =0;
 
+    virtual void CloseAll() =0;
+
     static SmartTree* Create(TTree* tree);
 
     ClassDef(SmartTree, 1)
