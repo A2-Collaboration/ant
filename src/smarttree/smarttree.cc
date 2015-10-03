@@ -35,120 +35,15 @@
 using namespace ant;
 using namespace std;
 
-struct padstack {
-    TVirtualPad* pad = nullptr;
-    padstack(): pad(gPad) {}
-    ~padstack() {
-        if(pad)
-            pad->cd();
-    }
-};
-
-
-string getRandomString() {
-    const unsigned r = floor(gRandom->Uniform(0,99999999));
-    return "_rr" + to_string(r);
-}
-
-template <typename T>
-T* GetObject(const string& name) {
-    return dynamic_cast<T*>(gROOT->FindObject(name.c_str()));
-}
-
-class DrawCanvas: public TCanvas {
-protected:
-    string name;
-    string smartree_name;
-    static unsigned n;
-    string drawstring;
-    string drawoption;
-
-    struct Viewport {
-        interval<double> x = {0,0};
-        interval<double> y = {0,0};
-        Viewport() {}
-    };
-
-    Viewport getViewport() {
-        Viewport p;
-        GetRangeAxis(p.x.Start(),p.y.Start(),p.x.Stop(),p.y.Stop());
-        return p;
-    }
-
-    Viewport viewport;
-
-public:
-    DrawCanvas(const string& dstring, const string& option): TCanvas(string("__c"+to_string(n)).c_str(),""),
-        name("__h"+to_string(n++)), drawstring(dstring), drawoption(option) {}
-    virtual ~DrawCanvas() {}
-
-    void SetSmartTreeName(const string& n) { smartree_name = n; }
-
-    void Redraw(TTree& tree, const TCut& cut) {
-        padstack ps;
-        this->cd();
-        tree.Draw(drawstring.c_str(), cut, drawoption.c_str());
-        Modified();
-        Update();
-        viewport = getViewport();
-    }
-
-    void NotifyAxisChange(const string& expression, const interval<double>& range);
-
-};
-
-unsigned DrawCanvas::n = 0;
-
-class DrawCanvas1D : public DrawCanvas {
-private:
-    string xExpr;
-
-    string makeDrawString(const string& expr, const int bins) {
-        return expr+">>"+name+"("+to_string(bins)+")";
-    }
-
-    virtual void HandleInput(EEventType button, Int_t x, Int_t y) override;
-
-public:
-    DrawCanvas1D(const string& x, const int xbins=100): DrawCanvas("",""), xExpr(x) {
-        drawstring = makeDrawString(x,xbins);
-    }
-
-    void SetBinsX(const int xbins) {
-        drawstring = makeDrawString(xExpr, xbins);
-    }
-
-    virtual ~DrawCanvas1D() {}
-};
-
-class DrawCanvas2D: public DrawCanvas {
-protected:
-    string xExpr;
-    string yExpr;
-
-    string makeDrawstring(const string& x, const string y, const int xbins, const int ybins) {
-        return y + ":" + x + ">>"+name+"(" + to_string(xbins) + ",-1,-1," + to_string(ybins) + ",-1,-1)";
-    }
-
-public:
-    DrawCanvas2D(const string& x, const string& y, const int xbins=100, const int ybins=100):
-        DrawCanvas("","colz") {
-        drawstring = makeDrawstring(x,y,xbins,ybins);
-    }
-
-    void SetBins(const int x, const int y) {
-        drawstring = makeDrawstring(xExpr, yExpr, x, y);
-    }
-
-    virtual ~DrawCanvas2D() {}
-};
-
 class SmartTreeImpl: public SmartTree {
 protected:
-    TTree* tree;
+    mutable TTree* tree;
 
     map<std::string, interval<double>> range_cuts;
+    static const interval<double> noRange;
     list<string> cuts;
+
+    TCut cut;
 
     /**
      * @brief Test if a cut expression compliles
@@ -183,7 +78,6 @@ protected:
 
 public:
     SmartTreeImpl(TTree *Tree, const string& name): SmartTree(name), tree(Tree) {
-//        tree->SetParallelUnzip();
         gDirectory->Add(this);
     }
 
@@ -205,9 +99,144 @@ public:
 
     virtual void CloseAll() override;
 
+    virtual const interval<double>& GetRange(const string& expression) const {
+        const auto entry = range_cuts.find(expression);
+        if(entry == range_cuts.end()) {
+            return noRange;
+        }
+        return entry->second;
+    }
+
+    const TCut& GetCut() const { return cut; }
+
+    TTree& GetTree() const { return *tree; }
+
     virtual ~SmartTreeImpl() {}
 };
 
+struct padstack {
+    TVirtualPad* pad = nullptr;
+    padstack(): pad(gPad) {}
+    ~padstack() {
+        if(pad)
+            pad->cd();
+    }
+};
+
+
+string getRandomString() {
+    const unsigned r = floor(gRandom->Uniform(0,99999999));
+    return "_rr" + to_string(r);
+}
+
+template <typename T>
+T* GetObject(const string& name) {
+    return dynamic_cast<T*>(gROOT->FindObject(name.c_str()));
+}
+
+class DrawCanvas: public TCanvas {
+protected:
+    string name;
+    string smartree_name;
+    static unsigned n;
+    string drawoption;
+
+    struct Viewport {
+        interval<double> x = {0,0};
+        interval<double> y = {0,0};
+        Viewport() {}
+    };
+
+    Viewport getViewport() {
+        Viewport p;
+        GetRangeAxis(p.x.Start(),p.y.Start(),p.x.Stop(),p.y.Stop());
+        return p;
+    }
+
+    virtual string buildDrawString(const SmartTreeImpl& smt) const =0;
+
+public:
+    DrawCanvas(const string& option): TCanvas(string("__c"+to_string(n)).c_str(),""),
+        name("__h"+to_string(n++)), drawoption(option) {}
+    virtual ~DrawCanvas() {}
+
+    void SetSmartTreeName(const string& n) { smartree_name = n; }
+
+    void Redraw(const SmartTreeImpl& smt) {
+
+        padstack ps;
+        this->cd();
+
+        const auto ds = buildDrawString(smt);
+
+        cout << ds << endl;
+
+        smt.GetTree().Draw( ds.c_str(), smt.GetCut(), drawoption.c_str());
+
+        Modified();
+        Update();
+    }
+
+    void NotifyAxisChange(const string& expression, const interval<double>& range);
+
+};
+
+unsigned DrawCanvas::n = 0;
+
+class DrawCanvas1D : public DrawCanvas {
+private:
+    string xExpr;
+    int bins = 100;
+
+    string buildDrawString(const SmartTreeImpl& smt) const override {
+        const auto& xrange = smt.GetRange(xExpr);
+        return std_ext::formatter() << xExpr << ">>" << name
+                                    << "(" << bins  << "," << xrange.Start() << "," << xrange.Stop() << ")";
+    }
+
+    virtual void HandleInput(EEventType button, Int_t x, Int_t y) override;
+
+public:
+    DrawCanvas1D(const string& x, const int xbins=100): DrawCanvas(""), xExpr(x), bins(xbins) {}
+
+    void SetBinsX(const int xbins) {
+        bins = xbins;
+    }
+
+    virtual ~DrawCanvas1D() {}
+};
+
+class DrawCanvas2D: public DrawCanvas {
+protected:
+    string xExpr;
+    string yExpr;
+    int xbins;
+    int ybins;
+
+    string buildDrawString(const SmartTreeImpl& smt) const override {
+        const auto xrange = smt.GetRange(xExpr);
+        const auto yrange = smt.GetRange(yExpr);
+        return std_ext::formatter() << yExpr << ":" << xExpr << ">>" << name
+                                    << "(" << xbins  << "," << xrange.Start() << "," << xrange.Stop() << ","
+                                           << ybins  << "," << yrange.Start() << "," << yrange.Stop() << ")";
+    }
+
+    virtual void HandleInput(EEventType button, Int_t x, Int_t y) override;
+
+public:
+    DrawCanvas2D(const string& x, const string& y, const int xBins=100, const int yBins=100):
+        DrawCanvas("colz"), xExpr(x), yExpr(y), xbins(xBins), ybins(yBins) {}
+
+    void SetBins(const int x, const int y) {
+        xbins = x;
+        ybins = y;
+    }
+
+    virtual ~DrawCanvas2D() {}
+};
+
+
+const interval<double> SmartTreeImpl::noRange = {-1,-1};
 
 TCut SmartTreeImpl::buildCut() const
 {
@@ -252,7 +281,8 @@ void SmartTreeImpl::AutoUpdate()
 
 bool SmartTreeImpl::TestCut(const string &cut)
 {
-    const auto c = buildCut() + TCut(cut.c_str());
+    const auto c = GetCut() + TCut(cut.c_str());
+    cout << "Runngin gut " << c << endl;
     const auto evlist_name = getRandomString();
     const string drawstr = ">>"+evlist_name;
 
@@ -277,7 +307,7 @@ void SmartTreeImpl::Draw(const string &x, const int xbins)
         return;
     }
     auto canvas = new DrawCanvas1D(x,xbins);
-    canvas->Redraw(*tree, buildCut());
+    canvas->Redraw(*this);
     canvas->SetSmartTreeName(this->GetName());
     canvases.emplace_back(canvas->GetName());
 }
@@ -291,7 +321,7 @@ void SmartTreeImpl::Draw(const string &x, const string& y, const int xbins, cons
         return;
     }
     auto canvas = new DrawCanvas2D(x,y,xbins, ybins);
-    canvas->Redraw(*tree, buildCut());
+    canvas->Redraw(*this);
     canvas->SetSmartTreeName(this->GetName());
     canvases.emplace_back(canvas->GetName());
 }
@@ -322,6 +352,7 @@ void SmartTreeImpl::RemoveRange(const string &branch)
 {
     range_cuts.erase(branch);
     RemoveEventList();
+    cut = buildCut();
     TestCut("");
     AutoUpdate();
 }
@@ -340,7 +371,7 @@ void SmartTreeImpl::PrintCuts() const
 
 void SmartTreeImpl::Update()
 {
-    const auto cut = buildCut();
+    cut = buildCut();
 
     PrintCuts();
 
@@ -349,7 +380,7 @@ void SmartTreeImpl::Update()
         const string& canvas = *i;
         auto c = GetObject<DrawCanvas>(canvas);
         if(c) {
-            c->Redraw(*tree, cut);
+            c->Redraw(*this);
             ++i;
         } else {
             i = canvases.erase(i);
@@ -381,7 +412,8 @@ bool SmartTreeImpl::RemoveCut(const string &cut)
 
     if(pos != cuts.end()) {
         cuts.erase(pos);
-        tree->SetEventList(nullptr);
+        RemoveEventList();
+        this->cut = buildCut();
         TestCut("");
         AutoUpdate();
         return true;
@@ -435,6 +467,26 @@ void DrawCanvas1D::HandleInput(EEventType button, Int_t x, Int_t y)
         if(newViewPort.x != old.x) {
             cout << "Notify .." << endl;
             NotifyAxisChange(xExpr, newViewPort.x);
+        }
+    }
+}
+
+void DrawCanvas2D::HandleInput(EEventType button, Int_t x, Int_t y)
+{
+    const Viewport old = getViewport();  //remove again and handle in draw
+
+    TCanvas::HandleInput(button,x,y);
+
+    if(button ==kButton1Up) {
+
+        const Viewport newViewPort = getViewport();
+
+        if(newViewPort.x != old.x) {
+            NotifyAxisChange(xExpr, newViewPort.x);
+        }
+
+        if(newViewPort.y != old.y) {
+            NotifyAxisChange(yExpr, newViewPort.y);
         }
     }
 }
