@@ -254,12 +254,15 @@ TCut SmartTreeImpl::buildCut() const
 
     }
 
+    if(!cuts.empty() && !range_cuts.empty()) {
+        s << " && ";
+    }
     first = true;
     for(const auto& cut : cuts) {
         if(!first) {
             s << "&&";
         } else {
-              first = false;
+            first = false;
         }
         s << "(" << cut << ")";
     }
