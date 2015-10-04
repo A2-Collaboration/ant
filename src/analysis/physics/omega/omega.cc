@@ -15,6 +15,7 @@
 #include <algorithm>
 #include <iostream>
 
+#include "TTree.h"
 #include "base/iterators.h"
 
 #include "utils/particle_tools.h"
@@ -416,5 +417,66 @@ void OmegaMCTruePlots::ShowResult()
     c << endc;
 }
 
+
+
+OmegeMCTree::OmegeMCTree(PhysOptPtr opts): Physics("OmegaMCTree", opts) {
+    tree=new TTree("omegatree","omgega eta gamma MC true");
+    tree->Branch("p", &p);
+    tree->Branch("omega", &omega);
+}
+
+OmegeMCTree::~OmegeMCTree()
+{
+
+}
+
+void OmegeMCTree::ProcessEvent(const Event& event)
+{
+    const auto& photons = event.MCTrue().Particles().Get(ParticleTypeDatabase::Photon);
+    bool gamma1_used=false;
+    bool gamma2_used=false;
+    bool gamma3_used=false;
+    bool p_used=false;
+    for(const ParticlePtr& i : photons) {
+
+        if(const auto parent = i->Parent().lock()) {
+            if(parent->Type() == ParticleTypeDatabase::Eta) {
+                if(!gamma2_used) {
+                    gamma2=*i;
+                    eta=*i;
+                    gamma2_used=true;
+                } else {
+                    gamma3=*i;
+                    gamma3_used=true;
+                }
+            } else if(parent->Type() == ParticleTypeDatabase::Omega) {
+                gamma1=*i;
+                omega=*parent;
+                gamma1_used=true;
+            }
+        } else {
+            LOG(WARNING) << "Can't get paremnt";
+        }
+    }
+    const auto& protons = event.MCTrue().Particles().Get(ParticleTypeDatabase::Proton);
+    if(protons.size()==1) {
+        p = *protons.at(0);
+        p_used = true;
+    }
+
+    if(gamma1_used && gamma2_used && gamma3_used && p_used) {
+        tree->Fill();
+    } else {
+
+        LOG(WARNING) << "Not complete!";
+    }
+}
+
+void OmegeMCTree::ShowResult()
+{
+
+}
+
 AUTO_REGISTER_PHYSICS(OmegaEtaG, "OmegaEtaG")
 AUTO_REGISTER_PHYSICS(OmegaMCTruePlots, "OmegaMCTruePlots")
+AUTO_REGISTER_PHYSICS(OmegeMCTree, "OmegaMCTree")

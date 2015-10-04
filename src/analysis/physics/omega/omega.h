@@ -11,7 +11,7 @@
 class TH1D;
 class TH2D;
 class TH3D;
-
+class TTree;
 namespace ant {
 namespace analysis {
 namespace physics {
@@ -113,6 +113,27 @@ protected:
 public:
     OmegaEtaG(PhysOptPtr opts);
     virtual ~OmegaEtaG() = default;
+    void ShowResult() override;
+};
+
+
+
+class OmegeMCTree : public Physics {
+protected:
+    TTree* tree = nullptr;
+    TLorentzVector p;
+    TLorentzVector omega;
+    TLorentzVector eta;
+    TLorentzVector gamma1;
+    TLorentzVector gamma2;
+    TLorentzVector gamma3;
+
+public:
+
+    OmegeMCTree(PhysOptPtr opts);
+    virtual ~OmegeMCTree();
+
+    void ProcessEvent(const data::Event& event) override;
     void ShowResult() override;
 };
 
