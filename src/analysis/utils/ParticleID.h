@@ -28,6 +28,16 @@ public:
 };
 
 
+class SimpleParticleID: public ParticleID {
+public:
+    SimpleParticleID() {}
+    virtual ~SimpleParticleID() {}
+
+    virtual const ParticleTypeDatabase::Type* Identify(const std::shared_ptr<data::Candidate>& cand) const override;
+};
+
+
+
 class BasicParticleID: public ParticleID {
 public:
     BasicParticleID() {}

@@ -12,6 +12,14 @@ using namespace ant::analysis::utils;
 using namespace ant::analysis::data;
 
 
+const ParticleTypeDatabase::Type* SimpleParticleID::Identify(const shared_ptr<Candidate>& cand) const
+{
+    if(cand->VetoEnergy()>0.25)
+        return addressof(ParticleTypeDatabase::Proton);
+    else
+        return addressof(ParticleTypeDatabase::Photon);
+}
+
 BasicParticleID::~BasicParticleID()
 {
 
@@ -20,6 +28,8 @@ BasicParticleID::~BasicParticleID()
 bool TestCut(const std::shared_ptr<TCutG>& cut, const double& x, const double& y) {
     return (cut) && cut->IsInside(x,y);
 }
+
+
 
 const ParticleTypeDatabase::Type* BasicParticleID::Identify(const std::shared_ptr<Candidate>& cand) const
 {
