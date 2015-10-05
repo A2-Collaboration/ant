@@ -378,8 +378,8 @@ void SmartTreeImpl::Update()
 
     PrintCuts();
 
-    auto i = canvases.cbegin();
-    while(i!=canvases.cend()) {
+    auto i = canvases.begin();
+    while(i!=canvases.end()) {
         const string& canvas = *i;
         auto c = GetObject<DrawCanvas>(canvas);
         if(c) {
