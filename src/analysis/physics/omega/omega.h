@@ -121,12 +121,12 @@ public:
 class OmegeMCTree : public Physics {
 protected:
     TTree* tree = nullptr;
-    TLorentzVector p;
-    TLorentzVector omega;
-    TLorentzVector eta;
-    TLorentzVector gamma1;
-    TLorentzVector gamma2;
-    TLorentzVector gamma3;
+    TLorentzVector proton_vector;
+    TLorentzVector omega_vector;
+    TLorentzVector eta_vector;
+    TLorentzVector gamma1_vector;
+    TLorentzVector gamma2_vector;
+    TLorentzVector gamma3_vector;
 
 public:
 
@@ -135,6 +135,8 @@ public:
 
     void ProcessEvent(const data::Event& event) override;
     void ShowResult() override;
+    TLorentzVector getGamma1() const;
+    void setGamma1(const TLorentzVector& value);
 };
 
 }

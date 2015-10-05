@@ -1,4 +1,4 @@
-#include "omega.h"
+﻿#include "omega.h"
 #include "data/Particle.h"
 #include "data/Event.h"
 #include "TLorentzVector.h"
@@ -419,10 +419,24 @@ void OmegaMCTruePlots::ShowResult()
 
 
 
+TLorentzVector OmegeMCTree::getGamma1() const
+{
+    return gamma1_vector;
+}
+
+void OmegeMCTree::setGamma1(const TLorentzVector& value)
+{
+    gamma1_vector = value;
+}
+
 OmegeMCTree::OmegeMCTree(PhysOptPtr opts): Physics("OmegaMCTree", opts) {
     tree=new TTree("omegatree","omgega eta gamma MC true");
-    tree->Branch("p", &p);
-    tree->Branch("omega", &omega);
+    tree->Branch("p", &proton_vector);
+    tree->Branch("omega", &omega_vector);
+    tree->Branch("gamma1", &gamma1_vector);
+    tree->Branch("eta", &eta_vector);
+    tree->Branch("gamma2", &gamma2_vector);
+    tree->Branch("gamma3", &gamma3_vector);
 }
 
 OmegeMCTree::~OmegeMCTree()
@@ -432,43 +446,54 @@ OmegeMCTree::~OmegeMCTree()
 
 void OmegeMCTree::ProcessEvent(const Event& event)
 {
-    const auto& photons = event.MCTrue().Particles().Get(ParticleTypeDatabase::Photon);
-    bool gamma1_used=false;
-    bool gamma2_used=false;
-    bool gamma3_used=false;
-    bool p_used=false;
-    for(const ParticlePtr& i : photons) {
+    proton_vector.SetPxPyPzE(0,0,0,0);
+    omega_vector.SetPxPyPzE(0,0,0,0);
+    gamma1_vector.SetPxPyPzE(0,0,0,0);
+    eta_vector.SetPxPyPzE(0,0,0,0);
+    gamma2_vector.SetPxPyPzE(0,0,0,0);
+    gamma3_vector.SetPxPyPzE(0,0,0,0);
 
-        if(const auto parent = i->Parent().lock()) {
-            if(parent->Type() == ParticleTypeDatabase::Eta) {
-                if(!gamma2_used) {
-                    gamma2=*i;
-                    eta=*i;
-                    gamma2_used=true;
-                } else {
-                    gamma3=*i;
-                    gamma3_used=true;
+    const auto& bpl = event.MCTrue().Intermediates().Get(ParticleTypeDatabase::BeamProton);
+    if(bpl.size() == 1) {
+        const ParticlePtr& bp = bpl.at(0);
+
+        if(bp->Daughters().size() == 2) {
+            for(const auto& d : bp->Daughters()) {
+                if(d->Type() == ParticleTypeDatabase::Proton) {
+                    proton_vector = *d;
+                } else if(d->Type() == ParticleTypeDatabase::Omega) {
+                    omega_vector = *d;
+                    if(d->Daughters().size() ==2 ) {
+                        for(const ParticlePtr& e : d->Daughters()) {
+                            if(e->Type() == ParticleTypeDatabase::Eta) {
+                                eta_vector = *e;
+                                if(e->Daughters().size() == 2) {
+                                    for(const ParticlePtr& f : e->Daughters()) {
+                                        if(f->Type() == ParticleTypeDatabase::Photon) {
+                                            if(gamma2_vector.E() ==0) {
+                                                gamma2_vector = *f;
+                                            } else {
+                                                if(gamma3_vector.E()==0) {
+                                                    gamma3_vector = *f;
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            } else if(e->Type() == ParticleTypeDatabase::Photon) {
+                                gamma1_vector = *e;
+                            }
+                        }
+                    }
                 }
-            } else if(parent->Type() == ParticleTypeDatabase::Omega) {
-                gamma1=*i;
-                omega=*parent;
-                gamma1_used=true;
             }
-        } else {
-            LOG(WARNING) << "Can't get paremnt";
         }
-    }
-    const auto& protons = event.MCTrue().Particles().Get(ParticleTypeDatabase::Proton);
-    if(protons.size()==1) {
-        p = *protons.at(0);
-        p_used = true;
-    }
 
-    if(gamma1_used && gamma2_used && gamma3_used && p_used) {
-        tree->Fill();
-    } else {
-
-        LOG(WARNING) << "Not complete!";
+        if(omega_vector.E() != 0 && proton_vector.E() !=0 && gamma1_vector.E() !=0 && eta_vector.E() !=0 && gamma2_vector.E() !=0 && gamma3_vector.E() != 0) {
+            tree->Fill();
+        } else {
+            LOG(WARNING) << "not complete";
+        }
     }
 }
 
