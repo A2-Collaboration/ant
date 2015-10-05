@@ -154,6 +154,7 @@ protected:
     }
 
     virtual string buildDrawString(const SmartTreeImpl& smt) const =0;
+    virtual void postDraw() const =0;
 
 public:
     DrawCanvas(const string& option): TCanvas(string("__c"+to_string(n)).c_str(),""),
@@ -172,6 +173,8 @@ public:
         cout << ds << endl;
 
         smt.GetTree().Draw( ds.c_str(), smt.GetCut(), drawoption.c_str());
+
+        postDraw();
 
         Modified();
         Update();
@@ -195,6 +198,13 @@ private:
     }
 
     virtual void HandleInput(EEventType button, Int_t x, Int_t y) override;
+
+    virtual void postDraw() const override {
+        TH1* h = GetObject<TH1>(name);
+        if(h) {
+            h->SetXTitle(xExpr.c_str());
+        }
+    }
 
 public:
     DrawCanvas1D(const string& x, const int xbins=100): DrawCanvas(""), xExpr(x), bins(xbins) {}
@@ -222,6 +232,14 @@ protected:
     }
 
     virtual void HandleInput(EEventType button, Int_t x, Int_t y) override;
+
+    virtual void postDraw() const override {
+        TH2* h = GetObject<TH2>(name);
+        if(h) {
+            h->SetXTitle(xExpr.c_str());
+            h->SetYTitle(yExpr.c_str());
+        }
+    }
 
 public:
     DrawCanvas2D(const string& x, const string& y, const int xBins=100, const int yBins=100):
