@@ -132,13 +132,13 @@ ReconstructCheck::histgroup::histgroup(SmartHistFactory& f, const string& prefix
         mult2_split_angles[i] = f.makeTH1D(prefix+"Mult==2 cluster angle "+to_string(i),"#alpha [#circ]","",BinSettings(180,0,90),prefix+"mult2_"+to_string(i));
     }
 
-    cluserSize = f.makeTH2D(prefix+" Cluster Size TAPS","E_{True} [MeV]","Elements",energy, clusersize,prefix+"_clustersize");
+    cluserSize = f.makeTH2D(prefix+" Cluster Size","E_{True} [MeV]","Elements",energy, clusersize,prefix+"_clustersize");
     LabelBins(cluserSize->GetYaxis());
 
     dEE = f.makeTH2D(prefix+" dEE TAPS", "E [MeV]","VetoEnergy [MeV]",energy, vetoEnergy,prefix+"_dEE");
     dEE_true = f.makeTH2D(prefix+" dEE TAPS (true E)", "E_{True} [MeV]","VetoEnergy [MeV]",energy, vetoEnergy,prefix+"_dEE_true");
 
-    nCharged        = f.makeTH1D(prefix+" N Charged (VetoEnergy > 0) CB", "# charged candidates", "", BinSettings(10),prefix+"_ncharged");
+    nCharged        = f.makeTH1D(prefix+" N Charged (VetoEnergy > 0)", "# charged candidates", "", BinSettings(10),prefix+"_ncharged");
     LabelBins(nCharged->GetXaxis());
     nCharged->SetFillColor(kGray);
 
