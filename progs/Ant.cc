@@ -127,6 +127,7 @@ int main(int argc, char** argv) {
     auto cmd_u_writecal  = cmd.add<TCLAP::SwitchArg>("","u_writecalibrated","Unpacker: Output calibrated detector reads (only if Reconstruct found)",false);
 
     auto cmd_p_disableParticleID  = cmd.add<TCLAP::SwitchArg>("","p_disableParticleID","Physics: Disable ParticleID",false);
+    auto cmd_p_simpleParticleID  = cmd.add<TCLAP::SwitchArg>("","p_simpleParticleID","Physics: Use simple ParticleID (just protons/photons)",false);
 
 
 
@@ -362,29 +363,21 @@ int main(int argc, char** argv) {
 
     if(!cmd_p_disableParticleID->isSet()) {
 
-        auto particleID = std_ext::make_unique<ant::analysis::utils::CBTAPSBasicParticleID>();
+        unique_ptr<analysis::utils::ParticleID> particleID;
 
-        if(auto setup = ExpConfig::Setup::GetLastFound()) {
-            try {
-                WrapTFileInput cuts;
-                VLOG(7) << "Looking for ParticleID cuts in " << setup->GetPIDCutsDirectory();
-
-                for(const auto& cutfile : std_ext::system::lsFiles(setup->GetPIDCutsDirectory(),".root"))
-                {
-                    try {
-                        cuts.OpenFile(cutfile);
-                    } catch (const std::runtime_error&) {
-                        LOG(WARNING) << "Could not open " << cutfile;
-                    }
-                }
-                particleID->LoadFrom(cuts);
-            } catch (const std::runtime_error& e) {
-                LOG(INFO) << "Failed to load cuts: " << e.what();
-            }
-        } else {
-            LOG(WARNING) << "No Setup found while loading ParticleID cuts.";
+        if(cmd_p_simpleParticleID->isSet())
+        {
+            particleID = std_ext::make_unique<analysis::utils::SimpleParticleID>();
         }
-
+        else
+        {
+            if(auto setup = ExpConfig::Setup::GetLastFound()) {
+                particleID = std_ext::make_unique<analysis::utils::CBTAPSBasicParticleID>
+                             (setup->GetPIDCutsDirectory());
+            } else {
+                LOG(WARNING) << "No Setup found while loading ParticleID cuts.";
+            }
+        }
         pm.SetParticleID(move(particleID));
 
     } else {

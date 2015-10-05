@@ -58,13 +58,13 @@ class CBTAPSBasicParticleID: public ParticleID {
 protected:
     BasicParticleID cb;
     BasicParticleID taps;
+    virtual void LoadFrom(WrapTFile& file);
 
 public:
-    CBTAPSBasicParticleID() {}
+    CBTAPSBasicParticleID(const std::string& pidcutsdir);
     virtual ~CBTAPSBasicParticleID();
 
     virtual const ParticleTypeDatabase::Type* Identify(const std::shared_ptr<data::Candidate>& cand) const override;
-    virtual void LoadFrom(WrapTFile& file);
 };
 
 }

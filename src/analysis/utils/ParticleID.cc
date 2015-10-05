@@ -1,9 +1,15 @@
 #include "ParticleID.h"
+
 #include "data/Event.h"
 #include "data/Candidate.h"
 #include "data/Particle.h"
-#include "TCutG.h"
+
+#include "base/std_ext/system.h"
 #include "base/WrapTFile.h"
+#include "base/Logger.h"
+
+#include "TCutG.h"
+
 
 using namespace std;
 using namespace ant;
@@ -85,6 +91,26 @@ std::shared_ptr<Particle> ParticleID::Process(const std::shared_ptr<Candidate>& 
     return nullptr;
 }
 
+
+CBTAPSBasicParticleID::CBTAPSBasicParticleID(const std::string& pidcutsdir)
+{
+    try {
+        WrapTFileInput cuts;
+        VLOG(7) << "Looking for ParticleID cuts *.root in " << pidcutsdir;
+
+        for(const auto& cutfile : std_ext::system::lsFiles(pidcutsdir,".root"))
+        {
+            try {
+                cuts.OpenFile(cutfile);
+            } catch (const std::runtime_error&) {
+                LOG(WARNING) << "Could not open " << cutfile;
+            }
+        }
+        LoadFrom(cuts);
+    } catch (const std::runtime_error& e) {
+        LOG(INFO) << "Failed to load cuts: " << e.what();
+    }
+}
 
 CBTAPSBasicParticleID::~CBTAPSBasicParticleID()
 {
