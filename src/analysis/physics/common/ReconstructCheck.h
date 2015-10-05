@@ -74,6 +74,8 @@ protected:
         std::unique_ptr<PositionMap> energy_recov_norm;
         std::unique_ptr<PositionMap> energy_recov;
 
+        std::unique_ptr<PositionMap> input_positions;
+
         enum class detectortype {
             All, CB, TAPS
         };

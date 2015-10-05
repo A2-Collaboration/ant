@@ -157,6 +157,8 @@ ReconstructCheck::histgroup::histgroup(SmartHistFactory& f, const string& prefix
     energy_recov_norm  = makePosMap(f,d,prefix+"_Erecov_norm",prefix+" Energy Recovery Average Norm");
     energy_recov_norm->maphist->SetStats(false);
 
+    input_positions = makePosMap(f,d,prefix+"_input",prefix+" MC True Positions");
+
 
 }
 
@@ -174,7 +176,7 @@ void ReconstructCheck::histgroup::ShowResult() const
       << padoption::unset(padoption_t::Legend)
       << drawoption("colz") << *energy_recov
       << padoption::set(padoption_t::LogZ) << energyinout << padoption::unset(padoption_t::LogZ)
-      << thetainout
+      << thetainout << *input_positions
       << endc;
 }
 
@@ -220,6 +222,9 @@ void ReconstructCheck::histgroup::Fill(const ParticlePtr& mctrue, const Candidat
     const auto mc_theta = mctrue->Theta();
     const auto mc_cos_theta = cos(mc_theta);
     const auto mc_energy = mctrue->Ek();
+
+
+    input_positions->Fill(mc_theta, mc_phi);
 
 
     nPerEvent->Fill(cand.size());
