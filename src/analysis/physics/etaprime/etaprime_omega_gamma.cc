@@ -14,11 +14,7 @@ EtapOmegaG::EtapOmegaG(PhysOptPtr opts) : Physics("EtapOmegaG", opts)
     gg = HistFac.makeTH1D("gg","2#gamma IM / MeV","events",bins_im,"gg");
 }
 
-
-
-
-
-void ant::analysis::physics::EtapOmegaG::ProcessEvent(const data::Event& event)
+void EtapOmegaG::ProcessEvent(const data::Event& event)
 {
     const auto& data = event.Reconstructed();
 
@@ -38,33 +34,23 @@ void ant::analysis::physics::EtapOmegaG::ProcessEvent(const data::Event& event)
 
 
     // gamma combinatorics
+    auto fill_combinations = [] (TH1* h, unsigned multiplicity, const data::ParticleList& particles) {
+        for( auto comb = utils::makeCombination(particles,multiplicity); !comb.Done(); ++comb) {
+             TLorentzVector sum(0,0,0,0);
+             for(const auto& p : comb) {
+                 sum += *p;
+             }
+             h->Fill(sum.M());
+        }
+    };
 
-
-    for( auto gcomb = utils::makeCombination(photons,2); !gcomb.Done(); ++gcomb) {
-         TLorentzVector sum2(0,0,0,0);
-         for(const auto& photon : gcomb) {
-             sum2 += *photon;
-         }
-         gg->Fill(sum2.M());
-    }
-
-    for( auto gcomb = utils::makeCombination(photons,3); !gcomb.Done(); ++gcomb) {
-         TLorentzVector sum3(0,0,0,0);
-         for(const auto& photon : gcomb) {
-             sum3 += *photon;
-         }
-         ggg->Fill(sum3.M());
-    }
-
-    TLorentzVector sum4(0,0,0,0);
-    for(const auto& photon : photons) {
-        sum4 += *photon;
-    }
-    gggg->Fill(sum4.M());
+    fill_combinations(gg,   2, photons);
+    fill_combinations(ggg,  3, photons);
+    fill_combinations(gggg, 4, photons);
 
 }
 
-void ant::analysis::physics::EtapOmegaG::ShowResult()
+void EtapOmegaG::ShowResult()
 {
     canvas(GetName()) << gg << ggg << gggg << endc;
 }
