@@ -71,10 +71,11 @@ protected:
         TH2D* phiinout;
         TH2D* anglediff;
 
-        std::unique_ptr<PositionMap> energy_recov_norm;
+        std::unique_ptr<PositionMap> mult1_positions;
         std::unique_ptr<PositionMap> energy_recov;
 
         std::unique_ptr<PositionMap> input_positions;
+        std::unique_ptr<PositionMap> mult1_chargedPos;
 
         enum class detectortype {
             All, CB, TAPS

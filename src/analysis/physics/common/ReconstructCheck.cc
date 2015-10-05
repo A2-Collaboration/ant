@@ -154,10 +154,12 @@ ReconstructCheck::histgroup::histgroup(SmartHistFactory& f, const string& prefix
     energy_recov  = makePosMap(f,d,prefix+"_Erecov",prefix+" Energy Recovery Average");
     energy_recov->maphist->SetStats(false);
 
-    energy_recov_norm  = makePosMap(f,d,prefix+"_Erecov_norm",prefix+" Energy Recovery Average Norm");
-    energy_recov_norm->maphist->SetStats(false);
+    mult1_positions  = makePosMap(f,d,prefix+"_Erecov_norm",prefix+" Energy Recovery Average Norm");
+    mult1_positions->maphist->SetStats(false);
 
     input_positions = makePosMap(f,d,prefix+"_input",prefix+" MC True Positions");
+
+    mult1_chargedPos= makePosMap(f,d,prefix+"_mult1_chargedPos",prefix+"Mult==1 Charged Pos");
 
 
 }
@@ -176,7 +178,7 @@ void ReconstructCheck::histgroup::ShowResult() const
       << padoption::unset(padoption_t::Legend)
       << drawoption("colz") << *energy_recov
       << padoption::set(padoption_t::LogZ) << energyinout << padoption::unset(padoption_t::LogZ)
-      << thetainout << *input_positions
+      << thetainout << *input_positions << *mult1_chargedPos
       << endc;
 }
 
@@ -190,7 +192,8 @@ void ReconstructCheck::histgroup::Finish()
     Norm(splitPerEvent);
     Norm(nCharged);
     Norm(unmatched_veto);
-    energy_recov->maphist->Divide(energy_recov_norm->maphist);
+    energy_recov->maphist->Divide(mult1_positions->maphist);
+    mult1_chargedPos->maphist->Divide(mult1_positions->maphist);
 }
 
 double angle(const data::Candidate& c1, const data::Candidate& c2) {
@@ -279,9 +282,12 @@ void ReconstructCheck::histgroup::Fill(const ParticlePtr& mctrue, const Candidat
         const auto& c = cand.at(0);
         const auto rec = c->ClusterEnergy() / mc_energy;
         energy_recov->Fill(mc_theta, mc_phi, rec);
-        energy_recov_norm->Fill(mc_theta,mc_phi);
+        mult1_positions->Fill(mc_theta,mc_phi);
         energyinout->Fill(mc_energy,c->ClusterEnergy());
         thetainout->Fill(std_ext::radian_to_degree(mc_theta), std_ext::radian_to_degree(c->Theta() - mc_theta));
+        if(c->VetoEnergy()>0.0) {
+            mult1_chargedPos->Fill(mc_theta,mc_phi);
+        }
     } else if( cand.size() > 1) {
         splitPos->Fill(mc_theta,mc_phi);
     }
