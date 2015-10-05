@@ -52,13 +52,6 @@ PlutoReader::PlutoReader(const std::shared_ptr<WrapTFileInput>& rootfiles):
             tid_from_file = true;
     }
 
-    if(!tid_from_file) {
-        tid = new TID(static_cast<std::uint32_t>(std::time(nullptr)),
-                      0, // start with 0 as lower ID
-                      std::initializer_list<TID::Flags_t>({TID::Flags_t::MC, TID::Flags_t::AdHoc}) // mark as MC
-                      );
-    }
-
     LOG(INFO) << "Pluto input active";
 }
 
@@ -206,10 +199,13 @@ void PlutoReader::CopyPluto(Event& event)
         }
     }
 
+    if(!tid_from_file) {
+        tid = addressof(event.Reconstructed().TriggerInfos().EventID());
+    }
+
+
     event.MCTrue().TriggerInfos().EventID() = *tid;
 
-    if(!tid_from_file)
-        ++(*tid);
 
     /// \todo CBEsum/Multiplicity into TriggerInfo
 }
@@ -230,7 +226,7 @@ bool PlutoReader::ReadNextEvent(Event& event)
     if ( !event.Reconstructed().TriggerInfos().EventID().IsInvalid() &&
          !event.MCTrue().TriggerInfos().EventID().IsInvalid() )
         if(event.Reconstructed().TriggerInfos().EventID() != event.MCTrue().TriggerInfos().EventID())
-            throw Exception(std_ext::formatter() << "TID missmatch: " << event.Reconstructed().TriggerInfos().EventID() << " vs " << event.MCTrue().TriggerInfos().EventID());
+            throw Exception(std_ext::formatter() << "TID mismatch: " << event.Reconstructed().TriggerInfos().EventID() << " vs " << event.MCTrue().TriggerInfos().EventID());
 
     ++current_entry;
 
