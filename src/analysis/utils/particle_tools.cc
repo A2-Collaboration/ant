@@ -1,4 +1,8 @@
 #include "particle_tools.h"
+#include "combinatorics.h"
+
+#include "TH1.h"
+
 #include <sstream>
 
 using namespace ant::analysis;
@@ -46,4 +50,15 @@ const ParticlePtr utils::ParticleTools::FindParticle(const ant::ParticleTypeData
     }
 
     return nullptr;
+}
+
+void utils::ParticleTools::FillIMCombinations(TH1* h, unsigned n, const ParticleList& particles)
+{
+    for( auto comb = utils::makeCombination(particles,n); !comb.Done(); ++comb) {
+         TLorentzVector sum(0,0,0,0);
+         for(const auto& p : comb) {
+             sum += *p;
+         }
+         h->Fill(sum.M());
+    }
 }

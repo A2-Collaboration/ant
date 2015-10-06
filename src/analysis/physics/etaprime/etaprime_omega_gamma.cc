@@ -1,6 +1,6 @@
 #include "etaprime_omega_gamma.h"
 #include "plot/root_draw.h"
-#include "utils/combinatorics.h"
+#include "utils/particle_tools.h"
 #include "base/Logger.h"
 #include "base/std_ext/math.h"
 
@@ -52,22 +52,11 @@ void EtapOmegaG::ProcessEvent(const data::Event& event)
         return;
 
     // gamma combinatorics
-    auto fill_combinations = [] (TH1* h, unsigned multiplicity, const data::ParticleList& particles) {
-        for( auto comb = utils::makeCombination(particles,multiplicity); !comb.Done(); ++comb) {
-             TLorentzVector sum(0,0,0,0);
-             for(const auto& p : comb) {
-                 sum += *p;
-             }
-             h->Fill(sum.M());
-        }
-    };
+    utils::ParticleTools::FillIMCombinations(gg,   2, photons);
+    utils::ParticleTools::FillIMCombinations(ggg,  3, photons);
+    utils::ParticleTools::FillIMCombinations(gggg, 4, photons);
 
-    fill_combinations(gg,   2, photons);
-    fill_combinations(ggg,  3, photons);
-    fill_combinations(gggg, 4, photons);
-
-    // bottom-up assignment
-
+    // bottom-up assignment of photons
 
     struct result_t {
         double Chi2 = std::numeric_limits<double>::infinity();

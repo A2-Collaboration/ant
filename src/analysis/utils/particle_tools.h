@@ -3,6 +3,7 @@
 #include "analysis/data/Particle.h"
 #include <string>
 
+class TH1;
 
 namespace ant {
 namespace analysis {
@@ -34,6 +35,15 @@ struct ParticleTools {
      * @return The Particle found
      */
     static const ant::analysis::data::ParticlePtr FindParticle(const ant::ParticleTypeDatabase::Type& type, const data::ParticleList& particles);
+
+
+    /**
+     * @brief FillIMCombinations loops over all n tuples of given particles, builds sum and fills invariant mass
+     * @param h histogram to be filled with Fill(invariant mass)
+     * @param n multiplicity or number of particles drawn from particles
+     * @param particles list of particles
+     */
+    static void FillIMCombinations(TH1* h, unsigned n, const data::ParticleList& particles);
 };
 
 }
