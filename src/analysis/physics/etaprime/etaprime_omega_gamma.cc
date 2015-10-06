@@ -88,12 +88,14 @@ void EtapOmegaG::ProcessEvent(const data::Event& event)
     assert(photons.size() == 4);
     vector<unsigned> indices = {0,1,2,3};
     auto comparer = [] (unsigned a, unsigned b) {
-        if((a==0 && b==1) || (a==1 && b==1))
+        // make 0 and 1 look equal
+        if(a==0 && b==1)
             return false;
         return a<b;
     };
 
     do {
+        VLOG(9) << indices;
         // the i vector tells us what particle
         // should be used as daughter particle
         // 0,1 : from pi0
