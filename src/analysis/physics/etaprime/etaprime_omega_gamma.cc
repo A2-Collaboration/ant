@@ -22,8 +22,16 @@ EtapOmegaG::EtapOmegaG(PhysOptPtr opts) : Physics("EtapOmegaG", opts)
     IM_pi0 = HistFac.makeTH1D("Pi0","Pi0 IM / MeV","events",bins_im,"IM_pi0");
 
     Chi2_All = HistFac.makeTH1D("Chi2 all combinations","Chi2","",BinSettings(300,0,100),"Chi2_All");
-    Chi2_Min = HistFac.makeTH1D("Chi2 minimum","Chi2","",BinSettings(300,0,100),"Chi2_Min");
+    Chi2_Best = HistFac.makeTH1D("Chi2 best","Chi2","",BinSettings(300,0,100),"Chi2_Min");
 
+    Chi2_Single_All = HistFac.makeTH2D("Chi2 components all combinations","Name","Chi2",
+                                   BinSettings(3),
+                                   BinSettings(300,0,100),
+                                   "Chi2_Single_All");
+    Chi2_Single_Best = HistFac.makeTH2D("Chi2 components best","Name","Chi2",
+                                   BinSettings(3),
+                                   BinSettings(300,0,100),
+                                   "Chi2_Single_Best");
 }
 
 void EtapOmegaG::ProcessEvent(const data::Event& event)
@@ -59,16 +67,13 @@ void EtapOmegaG::ProcessEvent(const data::Event& event)
     fill_combinations(gggg, 4, photons);
 
     // bottom-up assignment
-    assert(photons.size() == 4);
-    vector<unsigned> indices = {0,1,2,3};
-    auto comparer = [] (unsigned a, unsigned b) {
-        if((a==0 && b==1) || (a==1 && b==1))
-            return false;
-        return a<b;
-    };
+
 
     struct result_t {
         double Chi2 = std::numeric_limits<double>::infinity();
+        double Chi2_Pi0;
+        double Chi2_Omega;
+        double Chi2_EtaPrime;
         data::ParticlePtr g_pi0_0;
         data::ParticlePtr g_pi0_1;
         data::ParticlePtr g_omega;
@@ -79,6 +84,14 @@ void EtapOmegaG::ProcessEvent(const data::Event& event)
     };
 
     result_t result; // best chi2
+
+    assert(photons.size() == 4);
+    vector<unsigned> indices = {0,1,2,3};
+    auto comparer = [] (unsigned a, unsigned b) {
+        if((a==0 && b==1) || (a==1 && b==1))
+            return false;
+        return a<b;
+    };
 
     do {
         // the i vector tells us what particle
@@ -91,20 +104,29 @@ void EtapOmegaG::ProcessEvent(const data::Event& event)
 
         for(unsigned i=0;i<indices.size();i++) {
             switch(indices[i]) {
-            case 0: tmp.g_pi0_0 = photons[i];
-            case 1: tmp.g_pi0_1 = photons[i];
-            case 2: tmp.g_omega = photons[i];
-            case 3: tmp.g_etap  = photons[i];
+            case 0: tmp.g_pi0_0 = photons[i]; break;
+            case 1: tmp.g_pi0_1 = photons[i]; break;
+            case 2: tmp.g_omega = photons[i]; break;
+            case 3: tmp.g_etap  = photons[i]; break;
             }
         }
 
-        tmp.Pi0 = *tmp.g_pi0_0 + *tmp.g_pi0_1;
+        tmp.Pi0 = *(tmp.g_pi0_0) + *(tmp.g_pi0_1);
+
         tmp.Omega = tmp.Pi0 + *tmp.g_omega;
         tmp.EtaPrime = tmp.Omega + *tmp.g_etap;
 
-        tmp.Chi2 = std_ext::sqr((tmp.Pi0.M() - ParticleTypeDatabase::Pi0.Mass()) / 20)
-                            + std_ext::sqr((tmp.Omega.M() - ParticleTypeDatabase::Omega.Mass()) / 30)
-                            + std_ext::sqr((tmp.EtaPrime.M() - ParticleTypeDatabase::EtaPrime.Mass()) / 40);
+        // means/sigma extracted from gg/ggg/gggg histograms
+        tmp.Chi2_Pi0 =  std_ext::sqr((tmp.Pi0.M() - 126) / 15);
+        tmp.Chi2_Omega = std_ext::sqr((tmp.Omega.M() - 735) / 32);
+        tmp.Chi2_EtaPrime = std_ext::sqr((tmp.EtaPrime.M() - 895) / 27);
+
+        Chi2_Single_All->Fill("Pi0",tmp.Chi2_Pi0, 1.0);
+        Chi2_Single_All->Fill("Omega",tmp.Chi2_Omega, 1.0);
+        Chi2_Single_All->Fill("EtaP",tmp.Chi2_EtaPrime, 1.0);
+
+
+        tmp.Chi2 = tmp.Chi2_Pi0 + tmp.Chi2_Omega + tmp.Chi2_EtaPrime;
 
         Chi2_All->Fill(tmp.Chi2);
 
@@ -113,12 +135,14 @@ void EtapOmegaG::ProcessEvent(const data::Event& event)
     }
     while(next_permutation(indices.begin(), indices.end(), comparer));
 
-    if(result.Chi2 > 4.5 && result.Chi2 < 10) {
-        IM_etap->Fill(result.EtaPrime.M());
-        IM_omega->Fill(result.Omega.M());
-        IM_pi0->Fill(result.Pi0.M());
-        Chi2_Min->Fill(result.Chi2);
-    }
+    IM_etap->Fill(result.EtaPrime.M());
+    IM_omega->Fill(result.Omega.M());
+    IM_pi0->Fill(result.Pi0.M());
+    Chi2_Best->Fill(result.Chi2);
+    Chi2_Single_Best->Fill("Pi0",result.Chi2_Pi0, 1.0);
+    Chi2_Single_Best->Fill("Omega",result.Chi2_Omega, 1.0);
+    Chi2_Single_Best->Fill("EtaP",result.Chi2_EtaPrime, 1.0);
+
 
 
 }
@@ -127,7 +151,8 @@ void EtapOmegaG::ShowResult()
 {
     canvas(GetName()) << gg << ggg << gggg
                       << IM_pi0 << IM_omega << IM_etap
-                      << Chi2_All << Chi2_Min
+                      << Chi2_All << Chi2_Best
+                      << drawoption("colz") << Chi2_Single_All << Chi2_Single_Best
                       << endc;
 }
 

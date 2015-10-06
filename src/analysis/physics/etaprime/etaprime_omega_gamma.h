@@ -22,7 +22,10 @@ class EtapOmegaG : public Physics {
     TH1D* IM_pi0;
 
     TH1D* Chi2_All;
-    TH1D* Chi2_Min;
+    TH1D* Chi2_Best;
+    TH2D* Chi2_Single_All;
+    TH2D* Chi2_Single_Best;
+
 
 public:
     EtapOmegaG(PhysOptPtr opts);
