@@ -14,6 +14,7 @@
 #include "base/Logger.h"
 #include <algorithm>
 #include <iostream>
+#include "base/std_ext/math.h"
 
 #include "TTree.h"
 #include "base/iterators.h"
@@ -25,6 +26,7 @@ using namespace ant;
 using namespace ant::analysis;
 using namespace ant::analysis::physics;
 using namespace ant::analysis::data;
+using namespace ant::std_ext;
 
 void OmegaBase::ProcessEvent(const Event &event)
 {
@@ -502,6 +504,159 @@ void OmegeMCTree::ShowResult()
 
 }
 
+
+template <typename it_type>
+TLorentzVector LVSum(it_type begin, it_type end) {
+    TLorentzVector v;
+
+    while(begin!=end) {
+        v += **begin;
+        ++begin;
+    }
+
+    return v;
+}
+
+template <typename it_type>
+double TimeAvg(it_type begin, it_type end) {
+    double v=0.0;
+
+    while(begin!=end) {
+        const ParticlePtr& p = *begin;
+        v += p->Candidates().at(0)->Time();
+        ++begin;
+    }
+
+    return v;
+}
+
+void OmegaEtaG2::Analyse(const Event::Data &data, const Event &event)
+{
+    const ParticleList& iphotons = data.Particles().Get(ParticleTypeDatabase::Photon);
+    const ParticleList& iprotons = (data_proton ? event.Reconstructed() : event.MCTrue()).Particles().Get(ParticleTypeDatabase::Proton);
+
+    if(iphotons.size() != 3)
+        return;
+
+    if(iprotons.size() != 1)
+        return;
+
+    const ParticleList protons = getGeoAccepted(iprotons);
+
+    if(protons.size() != 1)
+        return;
+
+    const ParticleList photons = getGeoAccepted(iphotons);
+
+    if(photons.size() != 3)
+        return;
+
+    const auto Esum = calcEnergySum2(data);
+
+    if(Esum < 550.0)
+        return;
+
+    const auto& proton = protons.at(0);
+
+    pEk    = proton->Ek();
+    pTheta = radian_to_degree(proton->Theta());
+    pPhi   = radian_to_degree(proton->Phi());
+    pTime  = data_proton ? proton->Candidates().at(0)->Time() : 0.0;
+
+    const TLorentzVector ggg = LVSum(photons.begin(), photons.end());
+    gggTime  = TimeAvg(photons.begin(), photons.end());
+    gggIM    = ggg.M();
+    gggTheta = radian_to_degree(ggg.Theta());
+    gggPhi   = radian_to_degree(ggg.Phi());
+
+    TLorentzVector gg;
+    int ngg=0;
+    for( auto comb = utils::makeCombination(photons,2); !comb.Done(); ++comb) {
+        gg.SetPtEtaPhiE(0,0,0,0);
+        auto i = comb.begin();
+        gg+=**i;
+        ++i;
+        gg+=**i;
+
+        ggIM[ngg++] = gg.M();
+    }
+
+    rf = -1; // TODO
+
+    for(const TaggerHitPtr& t : data_tagger?data.TaggerHits():event.MCTrue().TaggerHits()) {
+        tagch   = t->Channel();
+        tagtime = t->Time();
+
+        const TLorentzVector beam_target = t->PhotonBeam() + TLorentzVector(0, 0, 0, ParticleTypeDatabase::Proton.Mass());
+        const TLorentzVector missing = beam_target - ggg;
+
+        MM = missing.M();
+
+        tree->Fill();
+    }
+
+}
+
+double OmegaEtaG2::calcEnergySum2(const Event::Data &e) const
+{
+    double Sum = 0.0;
+
+    if(mode != DataMode::MCTrue) {
+        for(const auto& c : e.Candidates()) {
+            const auto d = geo.DetectorFromAngles(c->Theta(),c->Phi());
+            if( d & Detector_t::Any_t::CB) {
+                Sum += c->ClusterEnergy();
+            }
+
+        }
+    }
+
+    for(const auto& c : e.Particles().GetAll()) {
+        const auto d = geo.DetectorFromAngles(c->Theta(),c->Phi());
+        if( d & Detector_t::Any_t::CB) {
+            Sum += c->Ek();
+        }
+
+    }
+    return Sum;
+}
+
+OmegaEtaG2::OmegaEtaG2(PhysOptPtr opts):
+    OmegaBase("OmegaEtaG2", opts)
+{
+    if(opts->GetOption("Proton") == "MCTrue") {
+        data_proton = false;
+        LOG(INFO) << "Using proton from MCTrue";
+    };
+
+    if(opts->GetOption("Tagger") == "MCTrue") {
+        data_tagger = false;
+        LOG(INFO) << "Using Tagger from MCTrue";
+    };
+
+    if(opts->GetOption("ESum") != "") {
+        ESum_cut = atof(opts->GetOption("ESum").c_str());
+    }
+
+    tree = new TTree("omegaetag2","");
+
+    tree->Branch("pEk",     &pEk);
+    tree->Branch("pTheta",  &pTheta);
+    tree->Branch("pPhi",    &pPhi);
+    tree->Branch("gggIM",   &gggIM);
+    tree->Branch("ggIM",     ggIM, "ggIM[3]/D");
+    tree->Branch("MM",      &MM);
+    tree->Branch("tagch",   &tagch);
+    tree->Branch("tagtime", &tagtime);
+    tree->Branch("rf",      &rf);
+}
+
+OmegaEtaG2::~OmegaEtaG2()
+{
+
+}
+
 AUTO_REGISTER_PHYSICS(OmegaEtaG, "OmegaEtaG")
 AUTO_REGISTER_PHYSICS(OmegaMCTruePlots, "OmegaMCTruePlots")
 AUTO_REGISTER_PHYSICS(OmegeMCTree, "OmegaMCTree")
+AUTO_REGISTER_PHYSICS(OmegaEtaG2, "OmegaEtaG2")

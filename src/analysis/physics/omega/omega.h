@@ -139,6 +139,45 @@ public:
     void setGamma1(const TLorentzVector& value);
 };
 
+
+class OmegaEtaG2 : public OmegaBase {
+
+
+    // OmegaBase interface
+protected:
+    void Analyse(const data::Event::Data &data, const data::Event &event) override;
+
+    double pEk = {};
+    double pTheta = {};
+    double pPhi = {};
+    double pTime = {};
+
+    double gggIM = {};
+    double gggTheta = {};
+    double gggPhi = {};
+    double gggTime = {};
+
+    double ggIM[3] = {};
+    double MM = {};
+
+    int    tagch = -1;
+    double tagtime = {};
+
+    int    rf = -1;
+
+    TTree*  tree = nullptr;
+
+    bool data_proton = true;
+    bool data_tagger = true;
+    double ESum_cut = 550.0;
+
+    double calcEnergySum2(const data::Event::Data &e) const;
+public:
+    OmegaEtaG2(PhysOptPtr opts);
+    virtual ~OmegaEtaG2();
+
+};
+
 }
 }
 }
