@@ -92,7 +92,7 @@ public:
     /**
      * @brief Iterator over the elements of a combination. Used to iterate over the current combination.
      */
-    class const_iterator : public std::iterator<std::input_iterator_tag, T>
+    class const_iterator : public std::iterator<std::forward_iterator_tag, T>
     {
         index_list::const_iterator index;
         const KofNvector<T>& v;
@@ -138,8 +138,7 @@ public:
 
 template <typename T>
 KofNvector<T> makeCombination( const std::vector<T>& data, const unsigned int k) {
-    return std::move(KofNvector<T>(data,k));
+    return KofNvector<T>(data,k);
 }
-}
-}
-}
+
+}}} // namespace ant::analysis::utils
