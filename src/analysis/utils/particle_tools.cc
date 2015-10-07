@@ -20,6 +20,15 @@ string utils::ParticleTools::GetDecayString(const ParticleList& particles)
     return s.str();
 }
 
+string utils::ParticleTools::SanitizeDecayString(string decaystring)
+{
+    std::replace( decaystring.begin(), decaystring.end(), '[', '_');
+    std::replace( decaystring.begin(), decaystring.end(), ']', '_');
+    std::replace( decaystring.begin(), decaystring.end(), ' ', '_');
+    std::replace( decaystring.begin(), decaystring.end(), '#', '_');
+    return decaystring;
+}
+
 string utils::ParticleTools::GetProductionChannelString(const ParticleList& particles)
 {
     const auto p = FindParticle(ParticleTypeDatabase::BeamTarget, particles);

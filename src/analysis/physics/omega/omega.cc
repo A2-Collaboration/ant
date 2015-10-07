@@ -103,11 +103,7 @@ OmegaEtaG::perDecayhists_t OmegaEtaG::makePerDecayHists(const string &title)
 {
     perDecayhists_t h;
 
-    auto pref(title);
-    std::replace( pref.begin(), pref.end(), '[', '_');
-    std::replace( pref.begin(), pref.end(), ']', '_');
-    std::replace( pref.begin(), pref.end(), ' ', '_');
-    std::replace( pref.begin(), pref.end(), '#', '_');
+    auto pref = utils::ParticleTools::SanitizeDecayString(title);
 
     h.gg = HistFac.makeTH1D("2#gamma "+title,"2#gamma IM [MeV]","#",imbinning,pref+"gg");
     h.ggg  = HistFac.makeTH1D("3#gamma "+title,"3#gamma IM [MeV]","",imbinning,pref+"ggg");

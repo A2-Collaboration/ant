@@ -18,6 +18,14 @@ struct ParticleTools {
      */
     static std::string GetDecayString(const data::ParticleList& particles);
 
+    /**
+     * @brief SanitizeDecayString replaces all special characters by _
+     * @param decaystring input decaystring
+     * @return string suitable to be used as histogram name prefix
+     */
+    static std::string SanitizeDecayString(std::string decaystring);
+
+
     /** @brief Construct a string describing the production channel (e.g. gamma p -> p pi0 for pion production)
      *        Searches for a Beam+Target pseudo partcile and uses it
      *        and it's daughters to construct the string.
