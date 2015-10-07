@@ -137,7 +137,7 @@ void OmegaEtaG::Analyse(const Event::Data &data, const Event &event)
 
     perDecayhists_t* h = nullptr;
 
-    const string decaystring = utils::ParticleTools::GetDecayString(event.MCTrue().Intermediates().GetAll());
+    const string& decaystring = utils::ParticleTools::GetDecayString(event.MCTrue().Intermediates().GetAll());
 
     if( h == nullptr) {
 
