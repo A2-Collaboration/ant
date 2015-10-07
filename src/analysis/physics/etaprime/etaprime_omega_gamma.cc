@@ -22,25 +22,20 @@ EtapOmegaG::perDecayHists_t::perDecayHists_t(SmartHistFactory& HistFac, const st
 
     BinSettings bins_im(1200);
 
-    gggg = HistFac.makeTH1D(decaystring+": gggg","4#gamma IM / MeV","events",bins_im,pref+"_gggg");
-    ggg = HistFac.makeTH1D(decaystring+": ggg","3#gamma IM / MeV","events",bins_im,pref+"_ggg");
-    gg = HistFac.makeTH1D(decaystring+": gg","2#gamma IM / MeV","events",bins_im,pref+"_gg");
+    gggg = HistFac.makeTH1D(decaystring+": 4#gamma IM","4#gamma IM / MeV","events",bins_im,pref+"_gggg");
+    ggg = HistFac.makeTH1D(decaystring+": 3#gamma IM","3#gamma IM / MeV","events",bins_im,pref+"_ggg");
+    gg = HistFac.makeTH1D(decaystring+": 2#gamma IM","2#gamma IM / MeV","events",bins_im,pref+"_gg");
 
-    IM_etap = HistFac.makeTH1D(decaystring+": EtaPrime","EtaPrime IM / MeV","events",bins_im,pref+"_IM_etap");
-    IM_omega = HistFac.makeTH1D(decaystring+": Omega","Omega IM / MeV","events",bins_im,pref+"_IM_omega");
-    IM_pi0 = HistFac.makeTH1D(decaystring+": Pi0","Pi0 IM / MeV","events",bins_im,pref+"_IM_pi0");
+    IM_etap_omega = HistFac.makeTH2D(decaystring+": #eta' vs. #omega IM",
+                               "#eta' IM / MeV",
+                               "#omega IM / MeV",
+                               BinSettings(400, 600, 1200),
+                               BinSettings(400, 400, 1000),
+                               pref+"_IM_etap_omega");
+    IM_pi0 = HistFac.makeTH1D(decaystring+": #pi^{0}","#pi^{0} IM / MeV","events",BinSettings(300, 0, 400),pref+"_IM_pi0");
 
-    Chi2_All = HistFac.makeTH1D(decaystring+": Chi2 all combinations","Chi2","",BinSettings(300,0,100),pref+"_Chi2_All");
-    Chi2_Best = HistFac.makeTH1D(decaystring+": Chi2 best","Chi2","",BinSettings(300,0,100),pref+"_Chi2_Min");
-
-    Chi2_Single_All = HistFac.makeTH2D(decaystring+": Chi2 components all combinations","Name","Chi2",
-                                   BinSettings(3),
-                                   BinSettings(300,0,100),
-                                   pref+"_Chi2_Single_All");
-    Chi2_Single_Best = HistFac.makeTH2D(decaystring+": Chi2 components best","Name","Chi2",
-                                   BinSettings(3),
-                                   BinSettings(300,0,100),
-                                   pref+"_Chi2_Single_Best");
+    Chi2_All = HistFac.makeTH1D(decaystring+": #chi^{2} all","#chi^{2}","",BinSettings(300,0,100),pref+"_Chi2_All");
+    Chi2_Best = HistFac.makeTH1D(decaystring+": #chi^{2} minimal","#chi^{2}","",BinSettings(300,0,100),pref+"_Chi2_Min");
 }
 
 void EtapOmegaG::ProcessEvent(const data::Event& event)
@@ -81,9 +76,6 @@ void EtapOmegaG::ProcessEvent(const data::Event& event)
 
     struct result_t {
         double Chi2 = std::numeric_limits<double>::infinity();
-        double Chi2_Pi0;
-        double Chi2_Omega;
-        double Chi2_EtaPrime;
         data::ParticlePtr g_pi0_0;
         data::ParticlePtr g_pi0_1;
         data::ParticlePtr g_omega;
@@ -129,16 +121,11 @@ void EtapOmegaG::ProcessEvent(const data::Event& event)
         tmp.EtaPrime = tmp.Omega + *tmp.g_etap;
 
         // means/sigma extracted from gg/ggg/gggg histograms
-        tmp.Chi2_Pi0 =  std_ext::sqr((tmp.Pi0.M() - 126) / 15);
-        tmp.Chi2_Omega = std_ext::sqr((tmp.Omega.M() - 735) / 32);
-        tmp.Chi2_EtaPrime = std_ext::sqr((tmp.EtaPrime.M() - 895) / 27);
+        const auto Chi2_Pi0 =  std_ext::sqr((tmp.Pi0.M() - 126) / 15);
+        const auto Chi2_Omega = std_ext::sqr((tmp.Omega.M() - 735) / 32);
+        const auto Chi2_EtaPrime = std_ext::sqr((tmp.EtaPrime.M() - 895) / 27);
 
-        h.Chi2_Single_All->Fill("Pi0",tmp.Chi2_Pi0, 1.0);
-        h.Chi2_Single_All->Fill("Omega",tmp.Chi2_Omega, 1.0);
-        h.Chi2_Single_All->Fill("EtaP",tmp.Chi2_EtaPrime, 1.0);
-
-
-        tmp.Chi2 = tmp.Chi2_Pi0 + tmp.Chi2_Omega + tmp.Chi2_EtaPrime;
+        tmp.Chi2 = Chi2_Pi0 + Chi2_Omega + Chi2_EtaPrime;
 
         h.Chi2_All->Fill(tmp.Chi2);
 
@@ -148,13 +135,9 @@ void EtapOmegaG::ProcessEvent(const data::Event& event)
     while(next_permutation(indices.begin(), indices.end(), comparer));
 
     if(result.Chi2<10) {
-        h.IM_etap->Fill(result.EtaPrime.M());
-        h.IM_omega->Fill(result.Omega.M());
+        h.IM_etap_omega->Fill(result.EtaPrime.M(), result.Omega.M());
         h.IM_pi0->Fill(result.Pi0.M());
         h.Chi2_Best->Fill(result.Chi2);
-        h.Chi2_Single_Best->Fill("Pi0",result.Chi2_Pi0, 1.0);
-        h.Chi2_Single_Best->Fill("Omega",result.Chi2_Omega, 1.0);
-        h.Chi2_Single_Best->Fill("EtaP",result.Chi2_EtaPrime, 1.0);
     }
 }
 
@@ -164,10 +147,9 @@ void EtapOmegaG::ShowResult()
         canvas c(GetName()+": "+it_map.first);
         const perDecayHists_t& h = it_map.second;
         c << h.gg << h.ggg << h.gggg
-          << h.IM_pi0 << h.IM_omega << h.IM_etap
           << h.Chi2_All << h.Chi2_Best
-          << drawoption("colz") << h.Chi2_Single_All << h.Chi2_Single_Best;
-        c << endc;
+          << h.IM_pi0 << drawoption("colz") << h.IM_etap_omega
+          << endc;
     }
 }
 
