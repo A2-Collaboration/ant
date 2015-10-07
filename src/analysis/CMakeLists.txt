@@ -48,6 +48,7 @@ set(ANALYSIS_PHYSICS
   physics/tpc/PhysicsStats.cc
   physics/SlowcontrolManager.cc
   physics/etaprime/etaprime_omega_gamma.cc
+  physics/wolfes/etaprime-3pi0.cc
   )
 
 set(ANALYSIS_PLOT
