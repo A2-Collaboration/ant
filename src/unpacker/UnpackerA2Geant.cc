@@ -131,7 +131,7 @@ bool UnpackerA2Geant::OpenFile(const string& filename)
 
 unique_ptr<TDataRecord> UnpackerA2Geant::NextItem() noexcept
 {
-    if(current_entry>=geant->GetEntriesFast())
+    if(current_entry>=geant->GetEntriesFast()-1)
         return nullptr;
 
     // return the headerinfo as the very first item, afterwards,
