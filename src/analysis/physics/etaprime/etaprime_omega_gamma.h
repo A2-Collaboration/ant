@@ -11,20 +11,24 @@ namespace physics {
 
 class EtapOmegaG : public Physics {
 
-    BinSettings bins_im = BinSettings(1200);
+    struct perDecayHists_t {
+        TH1D* gggg;
+        TH1D* ggg;
+        TH1D* gg;
 
-    TH1D* gggg;
-    TH1D* ggg;
-    TH1D* gg;
+        TH1D* IM_etap;
+        TH1D* IM_omega;
+        TH1D* IM_pi0;
 
-    TH1D* IM_etap;
-    TH1D* IM_omega;
-    TH1D* IM_pi0;
+        TH1D* Chi2_All;
+        TH1D* Chi2_Best;
+        TH2D* Chi2_Single_All;
+        TH2D* Chi2_Single_Best;
 
-    TH1D* Chi2_All;
-    TH1D* Chi2_Best;
-    TH2D* Chi2_Single_All;
-    TH2D* Chi2_Single_Best;
+        perDecayHists_t(SmartHistFactory& HistFac, const std::string& decaystring);
+    };
+
+    std::map<std::string, perDecayHists_t> perDecayHists;
 
 
 public:
