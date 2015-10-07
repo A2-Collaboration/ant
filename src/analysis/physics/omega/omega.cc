@@ -644,6 +644,9 @@ OmegaEtaG2::OmegaEtaG2(PhysOptPtr opts):
     tree->Branch("pTheta",  &pTheta);
     tree->Branch("pPhi",    &pPhi);
     tree->Branch("gggIM",   &gggIM);
+    tree->Branch("gggTheta",&gggTheta);
+    tree->Branch("gggPhi",  &gggPhi);
+    tree->Branch("gggTime", &gggTime);
     tree->Branch("ggIM",     ggIM, "ggIM[3]/D");
     tree->Branch("MM",      &MM);
     tree->Branch("tagch",   &tagch);
