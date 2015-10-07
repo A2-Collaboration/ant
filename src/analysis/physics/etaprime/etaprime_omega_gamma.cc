@@ -144,8 +144,10 @@ void EtapOmegaG::ProcessEvent(const data::Event& event)
 void EtapOmegaG::ShowResult()
 {
     for(const auto& it_map : perDecayHists) {
-        canvas c(GetName()+": "+it_map.first);
         const perDecayHists_t& h = it_map.second;
+        if(h.IM_etap_omega->GetEntries()==0)
+            continue;
+        canvas c(GetName()+": "+it_map.first);
         c << h.gg << h.ggg << h.gggg
           << h.Chi2_All << h.Chi2_Best
           << h.IM_pi0 << drawoption("colz") << h.IM_etap_omega
