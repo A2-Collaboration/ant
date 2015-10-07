@@ -42,6 +42,7 @@ protected:
     map<std::string, interval<double>> range_cuts;
     static const interval<double> noRange;
     list<string> cuts;
+    bool cut_changed = true;
 
     TCut cut;
 
@@ -51,6 +52,8 @@ protected:
      * @return true=cut ok
      */
     bool TestCut(const string& cut);
+
+    void UpdateEventList();
 
     TCut buildCut() const;
     static void strAdd(ostream& stream, const string& branch, const interval<double>& i);
@@ -298,18 +301,27 @@ void SmartTreeImpl::strAdd(ostream &stream, const string &branch, const interval
 
 void SmartTreeImpl::AutoUpdate()
 {
-    if(autoUpdateEnabled)
+    if(autoUpdateEnabled) {
+
         Update();
+    }
 }
 
 bool SmartTreeImpl::TestCut(const string &cut)
 {
     const auto c = GetCut() + TCut(cut.c_str());
-    cout << "Runngin gut " << c << endl;
+
+    const auto res = tree->Draw("",c,"",0);
+
+    return (res>=0);
+}
+
+void SmartTreeImpl::UpdateEventList()
+{
     const auto evlist_name = getRandomString();
     const string drawstr = ">>"+evlist_name;
 
-    const auto res = tree->Draw(drawstr.c_str(), c);
+    const auto res = tree->Draw(drawstr.c_str(), cut);
 
     if(res>=0) {
         auto list = GetObject<TEventList>(evlist_name);
@@ -320,8 +332,9 @@ bool SmartTreeImpl::TestCut(const string &cut)
             const auto perc = list->GetN()*100.0 / tree->GetEntries();
             cout << "Event list set, " << list->GetN() << " entries (" << setprecision(4) << perc << "%)" << endl;
         }
+    } else {
+        cout << "Error updating event list" << endl;
     }
-    return (res>=0);
 }
 
 void SmartTreeImpl::Draw(const string &x, const int xbins)
@@ -365,6 +378,8 @@ void SmartTreeImpl::SetRange(const string &expression, const interval<double> &r
 
         if(TestCut(s.str())) {
             range_cuts[expression] = range;
+            cut_changed=true;
+            cut = buildCut();
         }
     }
 
@@ -375,8 +390,8 @@ void SmartTreeImpl::RemoveRange(const string &branch)
 {
     range_cuts.erase(branch);
     RemoveEventList();
+    cut_changed=true;
     cut = buildCut();
-    TestCut("");
     AutoUpdate();
 }
 
@@ -394,7 +409,10 @@ void SmartTreeImpl::PrintCuts() const
 
 void SmartTreeImpl::Update()
 {
-    cut = buildCut();
+    if(cut_changed) {
+        cut_changed = false;
+        UpdateEventList();
+    }
 
     PrintCuts();
 
@@ -423,6 +441,8 @@ bool SmartTreeImpl::AddCut(const string &cut)
 {
     if(TestCut(cut)) {
         cuts.emplace_back(cut);
+        cut_changed=true;
+        this->cut = buildCut();
         AutoUpdate();
         return true;
     }
@@ -436,8 +456,8 @@ bool SmartTreeImpl::RemoveCut(const string &cut)
     if(pos != cuts.end()) {
         cuts.erase(pos);
         RemoveEventList();
+        cut_changed=true;
         this->cut = buildCut();
-        TestCut("");
         AutoUpdate();
         return true;
     }
