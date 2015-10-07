@@ -2,9 +2,10 @@
 #include "plot/root_draw.h"
 #include "utils/combinatorics.h"
 #include "base/std_ext/math.h"
+#include "data/Particle.h"
 
 #include <algorithm>
-
+#include <cassert>
 
 using namespace std;
 using namespace ant::analysis;
@@ -54,43 +55,53 @@ void Etap3pi0::ProcessEvent(const data::Event& event)
     fill_combinations(h2g, 2, photons);
     fill_combinations(h6g, 6, photons);
 
-    struct pi0candidate
-    {
-        double chi2;
-        TLorentzVector V;
+    struct result_t {
+        double Chi2 = std::numeric_limits<double>::infinity();
+        vector<data::ParticlePtr> g_pi0;
+        vector<TLorentzVector> Pi0;
+        result_t() : g_pi0(6), Pi0(3) {}
     };
-    vector<pi0candidate> pi0List;
 
+    assert(photons.size() == 6);
+    vector<unsigned> indices = {0,1,2,3,4,5};
+    auto comparer = [] (unsigned a, unsigned b) {
+        // make 0/1 and 2/3 and 4/5 look equal
+        if(a==0 && b==1)
+            return false;
+        if(a==2 && b==3)
+            return false;
+        if(a==4 && b==5)
+            return false;
+        return a<b;
+    };
 
-    for ( auto g1 = 0 ; g1 < 5 ; ++g1)
-        for ( auto g2 = g1 + 1; g2 < 6 ; ++g2)
-        {
-            pi0candidate pc;
-            pc.V = *(photons.at(g1)) + *(photons.at(g2));
-            pc.chi2 = std_ext::sqr(pc.V.M() - ParticleTypeDatabase::Pi0.Mass() );
-            pi0List.push_back(pc);
+    result_t result; // best chi2
+
+    do {
+        // the indices vector tells us what particle
+        // should be used as daughter particle
+        // 0,1 : from first pi0
+        // 2,3 : from second pi0
+        // 4,5 : from third pi0
+
+        result_t tmp;
+
+        for(unsigned i=0;i<indices.size();i++) {
+            tmp.g_pi0[indices[i]] = photons[i];
         }
 
-    std::sort(pi0List.begin(),pi0List.end(),
-              [](const pi0candidate& a,
-                 const pi0candidate& b) -> bool
-                 {
-                     return a.chi2 < b.chi2;
-                 } );
-
-    for (const auto& pcan: pi0List)
-        IM_vs_chi2->Fill(pcan.V.M(),pcan.chi2);
+        tmp.Chi2 = 0;
+        for(unsigned i=0;i<tmp.Pi0.size();i++) {
+            tmp.Pi0[i] = *(tmp.g_pi0[2*i]) + *(tmp.g_pi0[2*i+1]);
+            tmp.Chi2 += std_ext::sqr((tmp.Pi0[i].M() - 126) / 15);
+        }
 
 
 
-    if (pi0List.size() < 3) return;
-    TLorentzVector etapV(0,0,0,0);
-    for (auto i = 0 ; i < 3 ; ++i)
-    {
-        IM_pi0->Fill(pi0List.at(i).V.M());
-        etapV += pi0List.at(i).V;
+        if(tmp.Chi2<result.Chi2)
+            result = move(tmp);
     }
-    IM_etap->Fill(etapV.M());
+    while(next_permutation(indices.begin(), indices.end(), comparer));
 
 }
 
