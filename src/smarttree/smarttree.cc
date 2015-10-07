@@ -134,7 +134,7 @@ T* GetObject(const string& name) {
     return dynamic_cast<T*>(gROOT->FindObject(name.c_str()));
 }
 
-class DrawCanvas: public TCanvas {
+class DrawCanvas: public ant::SmartTreeCanvas {
 protected:
     string name;
     string smartree_name;
@@ -157,7 +157,7 @@ protected:
     virtual void postDraw() const =0;
 
 public:
-    DrawCanvas(const string& option): TCanvas(string("__c"+to_string(n)).c_str(),""),
+    DrawCanvas(const string& option): SmartTreeCanvas("__c"+to_string(n),""),
         name("__h"+to_string(n++)), drawoption(option) {}
     virtual ~DrawCanvas() {}
 
@@ -179,6 +179,8 @@ public:
         Modified();
         Update();
     }
+
+    void Unlink() override;
 
     void NotifyAxisChange(const string& expression, const interval<double>& range);
 
@@ -463,8 +465,17 @@ SmartTree *SmartTree::Create(TTree *tree)
     return new SmartTreeImpl(tree, getRandomString());
 }
 
+void DrawCanvas::Unlink()
+{
+    SetName("");
+    smartree_name="";
+}
+
 void DrawCanvas::NotifyAxisChange(const string &expression, const interval<double> &range)
 {
+    if(smartree_name.empty())
+        return;
+
     auto st = GetObject<SmartTreeImpl>(smartree_name);
     if(!st) {
         cout << smartree_name << " not found" << endl;
@@ -510,4 +521,13 @@ void DrawCanvas2D::HandleInput(EEventType button, Int_t x, Int_t y)
             NotifyAxisChange(yExpr, newViewPort.y);
         }
     }
+}
+
+SmartTreeCanvas::SmartTreeCanvas(const string &name, const string &title):
+    TCanvas(name.c_str(), title.c_str())
+{}
+
+SmartTreeCanvas::~SmartTreeCanvas()
+{
+
 }

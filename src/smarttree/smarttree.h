@@ -5,10 +5,22 @@
 
 #include "TNamed.h"
 #include "Rtypes.h"
+#include "TCanvas.h"
 
 class TTree;
 
 namespace ant {
+
+class SmartTreeCanvas : public TCanvas {
+public:
+
+    SmartTreeCanvas(const std::string& name, const std::string& title);
+    virtual ~SmartTreeCanvas();
+
+    virtual void Unlink() =0;  //*MENU*
+
+    ClassDef(SmartTreeCanvas,1)
+};
 
 class SmartTree: public TNamed {
 protected:

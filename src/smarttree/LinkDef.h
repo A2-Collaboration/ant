@@ -9,6 +9,7 @@
 // templated classes need to have explicit type
 
 #pragma link C++ class ant::SmartTree+;
+#pragma link C++ class ant::SmartTreeCanvas+;
 
 #endif // __CINT__
 
