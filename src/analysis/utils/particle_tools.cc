@@ -22,11 +22,11 @@ string utils::ParticleTools::GetDecayString(const ParticleList& particles)
 
 string utils::ParticleTools::SanitizeDecayString(string decaystring)
 {
-    std::replace( decaystring.begin(), decaystring.end(), '[', '_');
-    std::replace( decaystring.begin(), decaystring.end(), ']', '_');
-    std::replace( decaystring.begin(), decaystring.end(), ' ', '_');
-    std::replace( decaystring.begin(), decaystring.end(), '#', '_');
-    return decaystring;
+    for(const auto c : {'(',')','[',']','{','}','^',' ','#'}) {
+        std::replace( decaystring.begin(), decaystring.end(), c, '_');
+    }
+    std::replace(decaystring.begin(), decaystring.end(), '\'', 'p');
+    return string("x")+decaystring;
 }
 
 string utils::ParticleTools::GetProductionChannelString(const ParticleList& particles)
