@@ -33,7 +33,9 @@ class TreeManager;
 class PlutoReader: public DataReader {
 protected:
 
-    std::shared_ptr<WrapTFileInput>    files;
+    std::shared_ptr<TaggerDetector_t> tagger;
+
+    std::shared_ptr<WrapTFileInput> files; // save pointer to keep extracted TTree pointers valid
 
     TTree*          tree = nullptr;
     TClonesArray*   PlutoMCTrue = nullptr;
@@ -51,7 +53,7 @@ protected:
     const ParticleTypeDatabase::Type* GetType(const PParticle* p) const;
 
 public:
-    PlutoReader(const std::shared_ptr<ant::WrapTFileInput>& rootfiles);
+    PlutoReader(const std::shared_ptr<ant::WrapTFileInput>& rootfiles, const std::shared_ptr<TaggerDetector_t> tagger_);
     virtual ~PlutoReader();
     PlutoReader(const PlutoReader&) = delete;
     PlutoReader& operator= (const PlutoReader&) = delete;

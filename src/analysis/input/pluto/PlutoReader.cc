@@ -22,11 +22,15 @@ using namespace ant::analysis::input;
 using namespace ant::analysis::data;
 using namespace std;
 
-PlutoReader::PlutoReader(const std::shared_ptr<WrapTFileInput>& rootfiles):
+PlutoReader::PlutoReader(const std::shared_ptr<WrapTFileInput>& rootfiles, const std::shared_ptr<TaggerDetector_t> tagger_) :
+    tagger(tagger_),
     files(rootfiles)
 {
+    if(!tagger) {
+        LOG(WARNING) << "Not generating MCTrue tagger hits since no tagger detector was provided";
+    }
+
     /// \note the Pluto tree is really named just "data"
-    /// \note Yep.
     if(!files->GetObject("data", tree))
         return;
 
@@ -186,9 +190,11 @@ void PlutoReader::CopyPluto(Event& event)
         // create a tagger hit corresponding to beam+parget particle
         if( AntParticle->Type() == ParticleTypeDatabase::BeamProton) {
             const double energy = AntParticle->E() - ParticleTypeDatabase::Proton.Mass();
-            const int channel = 0; //TODO: Get tagger channel from energy -> Tagger cfg
-            const double time = 0.0;
-            event.MCTrue().TaggerHits().emplace_back( TaggerHitPtr( new TaggerHit(channel, energy, time) ) );
+            unsigned channel = 0;
+            if(tagger && tagger->TryGetChannelFromPhoton(energy, channel)) {
+                const double time = 0.0; /// @todo handle non-prompt hits?
+                event.MCTrue().TaggerHits().emplace_back(make_shared<TaggerHit>(channel, energy, time));
+            }
         }
 
         // Add particle to event storage
@@ -214,7 +220,8 @@ void PlutoReader::CopyPluto(Event& event)
         }
     }
 
-    /// \todo CBEsum/Multiplicity into TriggerInfo
+    /// @note multiplicity is only known on reconstructed
+
 }
 
 
