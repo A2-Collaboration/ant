@@ -220,6 +220,15 @@ void PlutoReader::CopyPluto(Event& event)
         }
     }
 
+    // calculate energy sum based on direction of particle
+    double Esum = 0;
+    for(const ParticlePtr& particle : event.MCTrue().Particles().GetAll()) {
+        if(geometry.DetectorFromAngles(*particle) & Detector_t::Type_t::CB) {
+            Esum += particle->Ek();
+        }
+    }
+    triggerinfos.CBEenergySum() = Esum;
+
     /// @note multiplicity is only known on reconstructed
 
 }

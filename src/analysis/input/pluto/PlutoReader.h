@@ -3,6 +3,7 @@
 #include "analysis/input/DataReader.h"
 #include "analysis/data/Event.h"
 
+#include "analysis/utils/A2GeoAcceptance.h"
 
 #include <memory>
 #include <string>
@@ -32,6 +33,8 @@ class TreeManager;
 
 class PlutoReader: public DataReader {
 protected:
+
+    utils::A2SimpleGeometry geometry;
 
     std::shared_ptr<TaggerDetector_t> tagger;
 
