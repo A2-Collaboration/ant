@@ -55,7 +55,8 @@ void EtapOmegaG::ProcessEvent(const data::Event& event)
     if(nPhotons != 4 || nProtons != 1)
         return;
 
-
+    if(data.TriggerInfos().CBEenergySum() < 550)
+        return;
 
     const string& decaystring = utils::ParticleTools::GetDecayString(event.MCTrue().Intermediates().GetAll());
 
