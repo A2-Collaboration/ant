@@ -84,7 +84,6 @@ PReaction *A2Cocktail::GetRandomReaction() const
 void A2Cocktail::init(vector<string> filelist)
 {
     // helpers:
-    double dE = (_Emax - _Emin) / _numEnergyBins;
     double acc_E = 0;
     BinContent currentBin;
     A2ChannelManager a2man(filelist);
@@ -96,15 +95,13 @@ void A2Cocktail::init(vector<string> filelist)
     // -- Init root - random engine ---
     _rndEngine = new TRandom3(0);
 
-
-
-    for ( int i = 0 ; i < _numEnergyBins ; ++i)
+    for(double energy : _energies)
     {
         // -- Channel product names --
         currentBin.DecayProducts = a2man.GetChannels();
 
-        // -- Energy --
-        currentBin.Energy = _Emin + dE / 2.0 + i * dE;
+        // -- Energy in GeV --
+        currentBin.Energy = energy;
 
         // -- Statistics for Energy --
         //    p(E) = f(E) * totalXsection(E)
@@ -159,18 +156,17 @@ PReaction *A2Cocktail::makeReaction(const double& energy, const string &particle
 }
 
 A2Cocktail::A2Cocktail(const string& outfile,
-                       const double& Emin, const double& Emax,
-                       const unsigned int numEnergyBins,
+                       const std::vector<double>& energies,
                        bool saveUnstable, bool doBulk,
                        std::vector<string> filenames,
                        const string& energyDistribution):
     _outfileName(outfile),
-    _Emin(Emin), _Emax(Emax),
-    _numEnergyBins(numEnergyBins),
+    _energies(energies),
     _saveUnstable(saveUnstable),
-    _doBulk(doBulk),
-    _energyFunction("beamEnergy",strdup(energyDistribution.c_str()),Emin,Emax)
+    _doBulk(doBulk)
 {
+    sort(_energies.begin(), _energies.end());
+    _energyFunction = TF1("beamEnergy",energyDistribution.c_str(),_energies.front(),_energies.back());
     init(filenames);
     UpdatePluteDataBase();
 }

@@ -51,7 +51,7 @@ private:
      */
     class BinContent{
     public:
-        double Energy;
+        double Energy; // in GeV
         double AccProbability;
         std::vector<std::string> DecayProducts;
         std::vector<std::pair<double,PReaction*>> Channellist;
@@ -59,9 +59,7 @@ private:
 
     //-- Options ---
     std::string _outfileName;
-    double _Emin;
-    double _Emax;
-    double _numEnergyBins;
+    std::vector<double> _energies;
     bool _saveUnstable;
     bool _doBulk;
     TF1 _energyFunction;
@@ -87,8 +85,7 @@ public:
      * @return pointer to randomly picked Pluto reaction from database
      */
     A2Cocktail(const std::string& outfile,
-               const double& Emin, const double& Emax,
-               const unsigned int numEnergyBins,
+               const std::vector<double>& energies,
                bool saveUnstable = 0, bool doBulk = 1,
                std::vector<std::string> filenames = {},
                const std::string& energyDistribution = "1.0 / x" );
