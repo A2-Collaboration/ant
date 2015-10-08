@@ -124,7 +124,7 @@ void dotest_plutogeant()
     readers.emplace_back(std_ext::make_unique<input::AntReader>(move(unpacker), move(reconstruct)));
 
     auto plutofile = std::make_shared<WrapTFileInput>(string(TEST_BLOBS_DIRECTORY)+"/Pluto_with_TID.root");
-    readers.push_back(std_ext::make_unique<analysis::input::PlutoReader>(plutofile));
+    readers.push_back(std_ext::make_unique<analysis::input::PlutoReader>(plutofile, nullptr));
 
     bool running = true;
     TAntHeader header;
