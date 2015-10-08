@@ -564,6 +564,7 @@ void OmegaEtaG2::Analyse(const Event::Data &data, const Event &event)
     gggIM    = ggg.M();
     gggTheta = radian_to_degree(ggg.Theta());
     gggPhi   = radian_to_degree(ggg.Phi());
+    gggE     = ggg.E() - ParticleTypeDatabase::Omega.Mass();
 
     TLorentzVector gg;
     int ngg=0;
@@ -702,6 +703,7 @@ OmegaEtaG2::OmegaEtaG2(PhysOptPtr opts):
     tree->Branch("gggTheta",&gggTheta);
     tree->Branch("gggPhi",  &gggPhi);
     tree->Branch("gggTime", &gggTime);
+    tree->Branch("gggE",    &gggE);
     tree->Branch("ggIM",     ggIM, "ggIM[3]/D");
     tree->Branch("MM",      &MM);
     tree->Branch("tagch",   &tagch);

@@ -156,6 +156,7 @@ protected:
     double gggTheta = {};
     double gggPhi = {};
     double gggTime = {};
+    double gggE = {};
 
     double ggIM[3] = {};
     double MM = {};
