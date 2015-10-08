@@ -34,6 +34,9 @@ EtapOmegaG::perDecayHists_t::perDecayHists_t(SmartHistFactory& HistFac, const st
                                pref+"_IM_etap_omega");
     IM_pi0 = HistFac.makeTH1D(decaystring+": #pi^{0}","#pi^{0} IM / MeV","events",BinSettings(300, 0, 400),pref+"_IM_pi0");
 
+    MM = HistFac.makeTH1D(decaystring+": M_{miss}","M_{miss} / MeV","events",BinSettings(300, 600, 1300),pref+"_MM");
+
+
     Chi2_All = HistFac.makeTH1D(decaystring+": #chi^{2} all","#chi^{2}","",BinSettings(300,0,100),pref+"_Chi2_All");
     Chi2_Best = HistFac.makeTH1D(decaystring+": #chi^{2} minimal","#chi^{2}","",BinSettings(300,0,100),pref+"_Chi2_Min");
 }
@@ -147,13 +150,24 @@ void EtapOmegaG::ProcessEvent(const data::Event& event)
     }
     while(next_permutation(indices.begin(), indices.end(), comparer));
 
-    if(result.Chi2<10) {
-        steps->Fill("MinChi2<10",1);
-        h.IM_etap_omega->Fill(result.EtaPrime.M(), result.Omega.M());
-        h.IM_pi0->Fill(result.Pi0.M());
-        h.Chi2_Best->Fill(result.Chi2);
+    // photon assignment successful?
+    if(result.Chi2>10)
+        return;
+    steps->Fill("MinChi2<10",1);
+
+    h.IM_etap_omega->Fill(result.EtaPrime.M(), result.Omega.M());
+    h.IM_pi0->Fill(result.Pi0.M());
+    h.Chi2_Best->Fill(result.Chi2);
+
+    // use tagged photon
+    for(const auto& th : data.TaggerHits()) {
+        const TLorentzVector beam_target = th->PhotonBeam() + TLorentzVector(0, 0, 0, ParticleTypeDatabase::Proton.Mass());
+        const TLorentzVector mm = beam_target - result.EtaPrime;
+
+        h.MM->Fill(mm.M());
     }
 }
+
 
 void EtapOmegaG::Finish()
 {
@@ -171,6 +185,7 @@ void EtapOmegaG::ShowResult()
           << h.gg << h.ggg << h.gggg
           << h.Chi2_All << h.Chi2_Best
           << h.IM_pi0 << drawoption("colz") << h.IM_etap_omega
+          << h.MM
           << endc;
     }
 }
