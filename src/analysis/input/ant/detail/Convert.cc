@@ -44,8 +44,6 @@ Event Converter::Convert(const TEvent &event)
 
 shared_ptr<Candidate> Converter::Convert(const TCandidate &candidate)
 {
-    /// @todo implement cluster size
-    /// @todo add clusters to ant::Candidate
     std::shared_ptr<Candidate> antCandidate = make_shared<Candidate>(
                         candidate.Energy,
                         candidate.Theta,
