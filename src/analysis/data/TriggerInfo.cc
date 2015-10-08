@@ -13,8 +13,8 @@ ostream &TriggerInfo::Print(ostream& stream) const
 {
     stream << "TriggerInfo"
            << "(EventId=" << event_id
-           << " CB Energy Sum=" << cb_energy_sum
-           << " MeV Multipicity=" << cluster_multiplicity
+           << " CB Energy Sum=" << cb_energy_sum << " MeV"
+           << " Multipicity=" << cluster_multiplicity
            << ")";
     for(auto& error : errors) {
         stream << "\t" << error << "\n";

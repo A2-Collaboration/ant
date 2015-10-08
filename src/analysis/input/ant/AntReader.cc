@@ -111,6 +111,7 @@ bool AntReader::ReadNextEvent(Event& event)
             buffered_slowcontrol = unique_ptr<TSlowControl>(reinterpret_cast<TSlowControl*>(item.release()));
             return false;
         }
+        /// @todo handle TUnpackerMessage, especially DAQ errors might be of interest for the analysis
 
         // by default, we write the items to the file
         if(writer)
