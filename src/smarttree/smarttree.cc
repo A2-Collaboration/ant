@@ -35,42 +35,303 @@
 using namespace ant;
 using namespace std;
 
+
+
+string getRandomString() {
+    const unsigned r = floor(gRandom->Uniform(0,99999999));
+    return "_rr" + to_string(r);
+}
+
+template <typename T>
+T* GetObject(const string& name) {
+    return dynamic_cast<T*>(gROOT->FindObject(name.c_str()));
+}
+
+struct padstack {
+    TVirtualPad* pad = nullptr;
+
+    padstack() noexcept: pad(gPad) {}
+
+    ~padstack() {
+        if(pad)
+            pad->cd();
+    }
+};
+
+struct TitleReset {
+    string oldtitle;
+    TCanvas* obj;
+    TitleReset(TCanvas* n): oldtitle(n->GetTitle()), obj(n) {}
+    ~TitleReset() { obj->SetTitle("SDSD"); }
+};
+
+struct CutStream : stringstream {
+
+    using stringstream::stringstream;
+
+    CutStream& add(const string& s) {
+        if(tellp()!=0) {
+            *this << " && ";
+        }
+        *this << s;
+        return *this;
+    }
+};
+
+
+class CutManager {
+protected:
+    list<string> cuts;
+    string cut;
+
+    string buildCut() const;
+    void update();
+
+    friend ostream& operator<<(ostream& stream, const CutManager& cutmgr);
+
+
+public:
+    CutManager() = default;
+    virtual ~CutManager() = default;
+
+    void Add(const string& c);
+    void Remove(const string& c);
+    void Pop();
+    void RemoveAll();
+
+
+    const string& Cut() const { return cut; }
+
+
+};
+
+ostream& operator<<(ostream& stream, const CutManager& cutmgr) {
+    std::copy(cutmgr.cuts.cbegin(), cutmgr.cuts.cend(), std::ostream_iterator<string>(stream, "\n"));
+    return stream;
+}
+
+string CutManager::buildCut() const
+{
+    CutStream newcut;
+    for(const auto& c : cuts) {
+        newcut.add(c);
+    }
+
+    return newcut.str();
+}
+
+void CutManager::update()
+{
+    cut = buildCut();
+}
+
+void CutManager::Add(const string &c)
+{
+    cuts.emplace_back(c);
+    update();
+}
+
+void CutManager::Remove(const string &c)
+{
+    cuts.remove(c);
+    update();
+}
+
+void CutManager::Pop()
+{
+    if(!cuts.empty()) {
+        cuts.pop_back();
+        update();
+    }
+}
+
+void CutManager::RemoveAll()
+{
+    cuts.clear();
+    update();
+}
+
+class RangeManager {
+protected:
+    map<string, interval<double>> ranges;
+
+    static const interval<double> emptyRange;
+
+public:
+    RangeManager() = default;
+    virtual ~RangeManager() = default;
+
+    void Set(const string& expr, const interval<double> &range);
+    void Remove(const string& expr);
+    void RemoveAll();
+    const interval<double>& Get(const string& expr) const;
+
+};
+
+const interval<double> RangeManager::emptyRange(-1,-1);
+
+void RangeManager::Set(const string &expr, const interval<double> &range) {
+    ranges[expr] = range;
+}
+
+void RangeManager::Remove(const string &expr) {
+    ranges.erase(expr);
+}
+
+void RangeManager::RemoveAll() {
+    ranges.clear();
+}
+
+const interval<double>& RangeManager::Get(const string &expr) const
+{
+    const auto entry = ranges.find(expr);
+    if(entry == ranges.end()) {
+        return emptyRange;
+    }
+
+    return entry->second;
+}
+
+class DrawCanvas;
+
+class CanvasManager {
+protected:
+    list<string> canvas_names;
+
+    DrawCanvas* GetCanvas(const string& name) {
+        return GetObject<DrawCanvas>(name);
+    }
+
+public:
+    CanvasManager() = default;
+    virtual ~CanvasManager() = default;
+
+    template <typename T, typename... Args_t>
+    T* Add(Args_t&&... args) {
+        auto canvas = new T(std::forward<Args_t>(args)...);
+        auto name = getRandomString();
+        canvas->SetName(name.c_str());
+        canvas_names.emplace_back(move(name));
+        return canvas;
+    }
+
+    template <typename Func>
+    void Apply(Func f) {
+        for(auto it=canvas_names.begin(); it!=canvas_names.end(); ) {
+            auto canvas = GetCanvas(*it);
+            if(!canvas) {
+                it = canvas_names.erase(it);
+            } else {
+                f(canvas);
+                ++it;
+            }
+        }
+    }
+
+    bool empty() const noexcept { return canvas_names.empty(); }
+
+    void RemoveAll();
+    void Remove(const string& name);
+
+    DrawCanvas *AddByName(const string& name);
+};
+
+void CanvasManager::RemoveAll() {
+    canvas_names.clear();
+}
+
+void CanvasManager::Remove(const string &name)
+{
+    canvas_names.remove(name);
+}
+
+DrawCanvas* CanvasManager::AddByName(const string &name)
+{
+    auto canvas = GetObject<DrawCanvas>(name);
+    if(canvas)
+        canvas_names.emplace_back(name);
+    return canvas;
+}
+
+
+class EventListManager {
+protected:
+    struct state_t {
+        TCut cut;
+        Long64_t entries;
+        state_t(const TCut& c="", const Long64_t e=-1) noexcept: cut(c), entries(e) {}
+        ~state_t() = default;
+
+        bool operator == (const state_t& other) const noexcept {
+            return cut == other.cut && entries == other.entries;
+        }
+
+        bool operator != (const state_t& other) const noexcept {
+            return !(*this == other);
+        }
+    };
+
+    state_t last;
+
+public:
+    EventListManager() = default;
+    ~EventListManager() = default;
+
+    void Set(TTree& tree, const TCut &cut);
+    void Reset(TTree& tree);
+};
+
+void EventListManager::Set(TTree &tree, const TCut &cut)
+{
+    state_t s(cut, tree.GetEntries());
+
+    if(s != last) {
+        cout << "Updating EventList..." << flush;
+        auto old = tree.GetEventList();
+        tree.SetEventList(nullptr);
+        delete old;
+
+        if(cut != "") {
+            const auto name = getRandomString();
+            const auto drawcmd = ">>"+name;
+            tree.Draw(drawcmd.c_str(), cut);
+            auto list = GetObject<TEventList>(name);
+            if(list) {
+                tree.SetEventList(list);
+                last = s;
+                cout << "Done" << endl;
+            } else {
+                cerr << "Error finding TEventList " << name << endl;
+            }
+        } else {
+            cout <<" Done" << endl;
+        }
+    }
+}
+
+void EventListManager::Reset(TTree &tree) {
+    tree.SetEventList(nullptr);
+}
+
+
 class SmartTreeImpl: public SmartTree {
 protected:
+
     mutable TTree* tree;
 
-    map<std::string, interval<double>> range_cuts;
-    static const interval<double> noRange;
-    list<string> cuts;
-    bool cut_changed = true;
+    EventListManager evlmgr;
 
-    TCut cut;
+    CutManager cutmgr;
+    RangeManager rangemgr;
 
-    /**
-     * @brief Test if a cut expression compliles
-     * @param cut The cut expression
-     * @return true=cut ok
-     */
+    CanvasManager canvasmgr;
+
+
     bool TestCut(const string& cut);
 
-    void UpdateEventList();
-
-    TCut buildCut() const;
-    static void strAdd(ostream& stream, const string& branch, const interval<double>& i);
-
-    list<string> canvases;
-
-    bool autoUpdateEnabled = true;
+        bool autoUpdateEnabled = true;
     void AutoUpdate();
 
-    static bool isSane(const string& expr) {
-        if(std_ext::contains(expr,":")) {
-            cout << "Error in expression " << expr << "\n";
-            cout << "May not contain \":\". Use other Draw() command to specify more dimensions." << endl;
-            return false;
-        }
-        return true;
-    }
 
     void RemoveEventList() {
         auto list = tree->GetEventList();
@@ -89,13 +350,18 @@ public:
 
     virtual void SetRange(const string& branch, double min, double max) override;
     virtual void SetRange(const string& expression, const interval<double> &range);
-    virtual void RemoveRange(const string& branch) override;
+    virtual void RemoveRange(const string& expr) override;
     virtual void PrintCuts() const override;
     virtual void Update() override;
     virtual void RemoveAllCuts() override;
 
-    virtual bool AddCut(const string &cut) override;
+    virtual bool Cut(const string &cut) override;
     virtual bool RemoveCut(const string &cut) override;
+    virtual void UndoCut() override;
+    virtual void Limit(Long64_t n_entries=-1) override;
+
+
+    virtual TCut GetCut() const { return TCut(cutmgr.Cut().c_str()); }
 
     virtual void SetAutoUpdate(bool update=true) override { autoUpdateEnabled = update; }
     virtual bool GetAutoUpdate() const override { return autoUpdateEnabled; }
@@ -103,46 +369,28 @@ public:
     virtual void CloseAll() override;
 
     virtual const interval<double>& GetRange(const string& expression) const {
-        const auto entry = range_cuts.find(expression);
-        if(entry == range_cuts.end()) {
-            return noRange;
-        }
-        return entry->second;
+        return rangemgr.Get(expression);
     }
 
-    const TCut& GetCut() const { return cut; }
+    void UnlinkCanvas(const string& name);
+    void RelinkCanvas(const string& name);
 
     TTree& GetTree() const { return *tree; }
 
     virtual ~SmartTreeImpl() {}
 };
 
-struct padstack {
-    TVirtualPad* pad = nullptr;
-    padstack(): pad(gPad) {}
-    ~padstack() {
-        if(pad)
-            pad->cd();
-    }
-};
 
 
-string getRandomString() {
-    const unsigned r = floor(gRandom->Uniform(0,99999999));
-    return "_rr" + to_string(r);
-}
 
-template <typename T>
-T* GetObject(const string& name) {
-    return dynamic_cast<T*>(gROOT->FindObject(name.c_str()));
-}
 
 class DrawCanvas: public ant::SmartTreeCanvas {
 protected:
-    string name;
+    string histname;
     string smartree_name;
     static unsigned n;
     string drawoption;
+    string localcut;
 
     struct Viewport {
         interval<double> x = {0,0};
@@ -157,14 +405,17 @@ protected:
     }
 
     virtual string buildDrawString(const SmartTreeImpl& smt) const =0;
+    virtual string buildTitle() const =0;
     virtual void postDraw() const =0;
+
+    bool frozen = false;
 
 public:
     DrawCanvas(const string& option): SmartTreeCanvas("__c"+to_string(n),""),
-        name("__h"+to_string(n++)), drawoption(option) {}
+        histname("__h"+to_string(n++)), drawoption(option) {}
     virtual ~DrawCanvas() {}
 
-    void SetSmartTreeName(const string& n) { smartree_name = n; }
+    void SetSmartTreeName(const string& n) { smartree_name = n; SetTitle(buildTitle().c_str()); }
 
     void Redraw(const SmartTreeImpl& smt) {
 
@@ -175,7 +426,7 @@ public:
 
         cout << ds << endl;
 
-        smt.GetTree().Draw( ds.c_str(), smt.GetCut(), drawoption.c_str());
+        smt.GetTree().Draw( ds.c_str(), smt.GetCut() + TCut(localcut.c_str()), drawoption.c_str());
 
         postDraw();
 
@@ -183,9 +434,25 @@ public:
         Update();
     }
 
-    void Unlink() override;
+    virtual void SetFrozen(bool f=true) {
+        frozen = f;
+        auto st = GetObject<SmartTreeImpl>(smartree_name);
+        if(st) {
+            if(frozen) {
+                st->UnlinkCanvas(GetName());
+            } else {
+                st->RelinkCanvas(GetName());
+            }
+        }
+
+    }
+
+    virtual bool GetFrozen() const { return frozen; }
 
     void NotifyAxisChange(const string& expression, const interval<double>& range);
+
+    virtual void SetCut(const char* cut) { localcut = cut; }
+    virtual const char* GetCut() const { return localcut.c_str(); }
 
 };
 
@@ -198,17 +465,21 @@ private:
 
     string buildDrawString(const SmartTreeImpl& smt) const override {
         const auto& xrange = smt.GetRange(xExpr);
-        return std_ext::formatter() << xExpr << ">>" << name
+        return std_ext::formatter() << xExpr << ">>" << histname
                                     << "(" << bins  << "," << xrange.Start() << "," << xrange.Stop() << ")";
     }
 
     virtual void HandleInput(EEventType button, Int_t x, Int_t y) override;
 
     virtual void postDraw() const override {
-        TH1* h = GetObject<TH1>(name);
+        TH1* h = GetObject<TH1>(histname);
         if(h) {
             h->SetXTitle(xExpr.c_str());
         }
+    }
+
+    virtual string buildTitle() const override {
+        return xExpr + "  " + (GetFrozen() ? "[F]" : "   ");
     }
 
 public:
@@ -231,15 +502,19 @@ protected:
     string buildDrawString(const SmartTreeImpl& smt) const override {
         const auto xrange = smt.GetRange(xExpr);
         const auto yrange = smt.GetRange(yExpr);
-        return std_ext::formatter() << yExpr << ":" << xExpr << ">>" << name
+        return std_ext::formatter() << yExpr << ":" << xExpr << ">>" << histname
                                     << "(" << xbins  << "," << xrange.Start() << "," << xrange.Stop() << ","
                                            << ybins  << "," << yrange.Start() << "," << yrange.Stop() << ")";
+    }
+
+    virtual string buildTitle() const override {
+        return xExpr + " vs " + yExpr + "  " + (GetFrozen() ? "[F]" : "   ");
     }
 
     virtual void HandleInput(EEventType button, Int_t x, Int_t y) override;
 
     virtual void postDraw() const override {
-        TH2* h = GetObject<TH2>(name);
+        TH2* h = GetObject<TH2>(histname);
         if(h) {
             h->SetXTitle(xExpr.c_str());
             h->SetYTitle(yExpr.c_str());
@@ -258,47 +533,6 @@ public:
     virtual ~DrawCanvas2D() {}
 };
 
-
-const interval<double> SmartTreeImpl::noRange = {-1,-1};
-
-TCut SmartTreeImpl::buildCut() const
-{
-    stringstream s;
-    bool first(true);
-    for(const auto& cut : range_cuts) {
-
-        if(!first) {
-            s << "&& ";
-        } else {
-            first = false;
-        }
-
-        strAdd(s, cut.first, cut.second);
-
-    }
-
-    if(!cuts.empty() && !range_cuts.empty()) {
-        s << " && ";
-    }
-    first = true;
-    for(const auto& cut : cuts) {
-        if(!first) {
-            s << "&&";
-        } else {
-            first = false;
-        }
-        s << "(" << cut << ")";
-    }
-
-    return TCut(s.str().c_str());
-}
-
-void SmartTreeImpl::strAdd(ostream &stream, const string &branch, const interval<double> &i)
-{
-    stream <<  "(" << branch << ") >= " << i.Start() << " && "
-           <<  "(" << branch << ") <= " << i.Stop()  << " ";
-}
-
 void SmartTreeImpl::AutoUpdate()
 {
     if(autoUpdateEnabled) {
@@ -316,50 +550,24 @@ bool SmartTreeImpl::TestCut(const string &cut)
     return (res>=0);
 }
 
-void SmartTreeImpl::UpdateEventList()
-{
-    const auto evlist_name = getRandomString();
-    const string drawstr = ">>"+evlist_name;
-
-    const auto res = tree->Draw(drawstr.c_str(), cut);
-
-    if(res>=0) {
-        auto list = GetObject<TEventList>(evlist_name);
-        if(list) {
-            auto old_list = tree->GetEventList();
-            tree->SetEventList(list);
-            delete old_list;
-            const auto perc = list->GetN()*100.0 / tree->GetEntries();
-            cout << "Event list set, " << list->GetN() << " entries (" << setprecision(4) << perc << "%)" << endl;
-        }
-    } else {
-        cout << "Error updating event list" << endl;
-    }
-}
-
 void SmartTreeImpl::Draw(const string &x, const int xbins)
 {
-    if(!isSane(x)) {
-        return;
+    auto canvas = canvasmgr.Add<DrawCanvas1D>(x, xbins);
+    canvas->SetSmartTreeName(GetName());
+    if(autoUpdateEnabled) {
+        evlmgr.Set(*tree, GetCut());
+        canvas->Redraw(*this);
     }
-    auto canvas = new DrawCanvas1D(x,xbins);
-    canvas->Redraw(*this);
-    canvas->SetSmartTreeName(this->GetName());
-    canvases.emplace_back(canvas->GetName());
 }
 
 void SmartTreeImpl::Draw(const string &x, const string& y, const int xbins, const int ybins)
 {
-    if(!isSane(x)) {
-        return;
+    auto canvas = canvasmgr.Add<DrawCanvas2D>(x, y, xbins, ybins);
+    canvas->SetSmartTreeName(GetName());
+    if(autoUpdateEnabled) {
+        evlmgr.Set(*tree,GetCut());
+        canvas->Redraw(*this);
     }
-    if(!isSane(y)) {
-        return;
-    }
-    auto canvas = new DrawCanvas2D(x,y,xbins, ybins);
-    canvas->Redraw(*this);
-    canvas->SetSmartTreeName(this->GetName());
-    canvases.emplace_back(canvas->GetName());
 }
 
 void SmartTreeImpl::SetRange(const string &branch, double min, double max)
@@ -370,79 +578,52 @@ void SmartTreeImpl::SetRange(const string &branch, double min, double max)
 void SmartTreeImpl::SetRange(const string &expression, const interval<double> &range)
 {
     if((range.Start() == range.Stop()) || (range.Stop()<range.Start())) {
-        RemoveRange(expression);
+        rangemgr.Remove(expression);
     } else {
-
-        stringstream s;
-        strAdd(s, expression, range);
-
-        if(TestCut(s.str())) {
-            range_cuts[expression] = range;
-            cut_changed=true;
-            cut = buildCut();
-        }
+        //TODO: TestCut
+        rangemgr.Set(expression,range);
     }
 
     AutoUpdate();
 }
 
-void SmartTreeImpl::RemoveRange(const string &branch)
+void SmartTreeImpl::RemoveRange(const string &expr)
 {
-    range_cuts.erase(branch);
-    RemoveEventList();
-    cut_changed=true;
-    cut = buildCut();
+    rangemgr.Remove(expr);
     AutoUpdate();
 }
 
 void SmartTreeImpl::PrintCuts() const
 {
-    cout << "---- Active Cuts ----\n";
-    for(const auto& cutentry : range_cuts) {
-        cout << cutentry.first << ": " << cutentry.second << "\n";
-    }
-    for(const auto& cut : cuts) {
-        cout << cut << "\n";
-    }
-    cout << "---------------------" << endl;
+    cout << cutmgr << endl;
 }
 
 void SmartTreeImpl::Update()
 {
-    if(cut_changed) {
-        cut_changed = false;
-        UpdateEventList();
-    }
-
     PrintCuts();
 
-    auto i = canvases.begin();
-    while(i!=canvases.end()) {
-        const string& canvas = *i;
-        auto c = GetObject<DrawCanvas>(canvas);
-        if(c) {
+    if(!canvasmgr.empty()) {
+        evlmgr.Set(*tree, GetCut());
+
+
+
+        canvasmgr.Apply([this] (DrawCanvas* c) {
             c->Redraw(*this);
-            ++i;
-        } else {
-            i = canvases.erase(i);
-        }
+        });
     }
+
 }
 
 void SmartTreeImpl::RemoveAllCuts()
 {
-    range_cuts.clear();
-    cuts.clear();
-    RemoveEventList();
+    cutmgr.RemoveAll();
     AutoUpdate();
 }
 
-bool SmartTreeImpl::AddCut(const string &cut)
+bool SmartTreeImpl::Cut(const string &cut)
 {
     if(TestCut(cut)) {
-        cuts.emplace_back(cut);
-        cut_changed=true;
-        this->cut = buildCut();
+        cutmgr.Add(cut);
         AutoUpdate();
         return true;
     }
@@ -451,28 +632,47 @@ bool SmartTreeImpl::AddCut(const string &cut)
 
 bool SmartTreeImpl::RemoveCut(const string &cut)
 {
-    const auto pos = find(cuts.begin(), cuts.end(), cut);
+    //TODO: return something useful
+    cutmgr.Remove(cut);
+    return true;
+}
 
-    if(pos != cuts.end()) {
-        cuts.erase(pos);
-        RemoveEventList();
-        cut_changed=true;
-        this->cut = buildCut();
-        AutoUpdate();
-        return true;
+void SmartTreeImpl::UndoCut()
+{
+    cutmgr.Pop();
+    AutoUpdate();
+}
+
+void SmartTreeImpl::Limit(Long64_t n_entries)
+{
+    if(n_entries > tree->GetEntries()) {
+        n_entries = tree->GetEntries();
     }
-    cout << "Cut " << cut << " not found" << endl;
-    return false;
+
+    if(n_entries < -1) {
+        n_entries = -1;
+    }
+
+    tree->SetEntries(n_entries);
 }
 
 void SmartTreeImpl::CloseAll()
 {
-    for(const auto& canvas : canvases) {
-        auto c = GetObject<DrawCanvas>(canvas);
-        delete c;
-    }
+    canvasmgr.Apply([] (DrawCanvas* c) { delete c;});
+    canvasmgr.RemoveAll();
+}
 
-    canvases.clear();
+void SmartTreeImpl::UnlinkCanvas(const string &name)
+{
+    canvasmgr.Remove(name);
+}
+
+void SmartTreeImpl::RelinkCanvas(const string &name)
+{
+    auto canvas = canvasmgr.AddByName(name);
+    if(autoUpdateEnabled && canvas) {
+        canvas->Redraw(*this);
+    }
 }
 
 
@@ -483,12 +683,6 @@ SmartTree::~SmartTree()
 SmartTree *SmartTree::Create(TTree *tree)
 {
     return new SmartTreeImpl(tree, getRandomString());
-}
-
-void DrawCanvas::Unlink()
-{
-    SetName("");
-    smartree_name="";
 }
 
 void DrawCanvas::NotifyAxisChange(const string &expression, const interval<double> &range)

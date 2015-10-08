@@ -17,10 +17,19 @@ public:
     SmartTreeCanvas(const std::string& name, const std::string& title);
     virtual ~SmartTreeCanvas();
 
-    virtual void Unlink() =0;  //*MENU*
+    virtual void SetFrozen(bool f=true) =0;  //*TOGGLE* *GETTER=GetFrozen
+    virtual bool GetFrozen() const =0;
+
+    virtual void SetCut(const char* cut) =0; //*MENU* *GETTER=GetCut
+    virtual const char* GetCut() const =0;
 
     ClassDef(SmartTreeCanvas,1)
 };
+
+//class SmartTreeCanvas1D : public SmartTreeCanvas {
+//public:
+//    virtual void SetBinsX(UInt_t xbins) =0; //*MENU*
+//};
 
 class SmartTree: public TNamed {
 protected:
@@ -48,8 +57,10 @@ public:
 
 
 
-    virtual bool AddCut(const std::string& cut) =0;
+    virtual bool Cut(const std::string& cut) =0;
     virtual bool RemoveCut(const std::string& cut) =0;
+    virtual void UndoCut() =0;
+    virtual void Limit(Long64_t n_entries=-1) =0;
 
 
 
