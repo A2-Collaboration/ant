@@ -23,7 +23,7 @@ Etap3pi0::Etap3pi0(PhysOptPtr opts) : Physics("EtapOmegaG", opts)
     IM_etap    = HistFac.makeTH1D("EtaPrime","EtaPrime IM [MeV]","events",bs,"IM_etap");
     IM_pi0     = HistFac.makeTH1D("Pi0","Pi0 IM [MeV]","events",bs,"IM_pi0");
 
-    IM_vs_chi2 = HistFac.makeTH2D("#chi2","Pi0 candidate mass [MeV]","#chi2",bs,BinSettings(100));
+    IM_vs_chi2 = HistFac.makeTH2D("#chi2","Pi0 candidate mass [MeV]","#chi2",bs,BinSettings(200,0,10));
 
 }
 
@@ -77,13 +77,13 @@ void Etap3pi0::ProcessEvent(const data::Event& event)
 
     result_t result; // best chi2
 
+
     do {
         // the indices vector tells us what particle
         // should be used as daughter particle
         // 0,1 : from first pi0
         // 2,3 : from second pi0
         // 4,5 : from third pi0
-
         result_t tmp;
 
         for(unsigned i=0;i<indices.size();i++) {
@@ -95,13 +95,26 @@ void Etap3pi0::ProcessEvent(const data::Event& event)
             tmp.Pi0[i] = *(tmp.g_pi0[2*i]) + *(tmp.g_pi0[2*i+1]);
             tmp.Chi2 += std_ext::sqr((tmp.Pi0[i].M() - 126) / 15);
         }
-
-
+        for (const auto& p: tmp.Pi0 )
+        {
+            IM_pi0->Fill(p.M());
+        }
 
         if(tmp.Chi2<result.Chi2)
             result = move(tmp);
     }
     while(next_permutation(indices.begin(), indices.end(), comparer));
+
+    TLorentzVector etap(0,0,0,0);
+    for (const auto& p: result.Pi0 )
+    {
+        etap += p;
+    }
+    IM_etap->Fill(etap.M());
+    IM_vs_chi2->Fill(etap.M(),result.Chi2);
+
+
+
 
 }
 
