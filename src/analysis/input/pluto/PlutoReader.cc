@@ -199,13 +199,20 @@ void PlutoReader::CopyPluto(Event& event)
         }
     }
 
-    if(!tid_from_file) {
-        tid = addressof(event.Reconstructed().TriggerInfos().EventID());
+    auto& triggerinfos = event.MCTrue().TriggerInfos();
+
+    // use eventID from file if available
+    // also check if it matches with reconstructed TID
+    if(tid_from_file) {
+        triggerinfos.EventID() = *tid;
+
+        const auto& eventid_rec = event.Reconstructed().TriggerInfos().EventID();
+        if(!eventid_rec.IsInvalid() && eventid_rec != triggerinfos.EventID()) {
+            throw Exception(std_ext::formatter()
+                            << "TID mismatch: Reconstructed=" << eventid_rec
+                            << " not equal to MCTrue=" << event.MCTrue().TriggerInfos().EventID());
+        }
     }
-
-
-    event.MCTrue().TriggerInfos().EventID() = *tid;
-
 
     /// \todo CBEsum/Multiplicity into TriggerInfo
 }
@@ -222,11 +229,6 @@ bool PlutoReader::ReadNextEvent(Event& event)
     tree->GetEntry(current_entry);
 
     CopyPluto(event);
-
-    if ( !event.Reconstructed().TriggerInfos().EventID().IsInvalid() &&
-         !event.MCTrue().TriggerInfos().EventID().IsInvalid() )
-        if(event.Reconstructed().TriggerInfos().EventID() != event.MCTrue().TriggerInfos().EventID())
-            throw Exception(std_ext::formatter() << "TID mismatch: " << event.Reconstructed().TriggerInfos().EventID() << " vs " << event.MCTrue().TriggerInfos().EventID());
 
     ++current_entry;
 
