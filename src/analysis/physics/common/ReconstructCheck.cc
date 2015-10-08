@@ -223,7 +223,6 @@ void ReconstructCheck::histgroup::Fill(const ParticlePtr& mctrue, const Candidat
 {
     const auto mc_phi = mctrue->Phi()*TMath::RadToDeg();
     const auto mc_theta = mctrue->Theta();
-    const auto mc_cos_theta = cos(mc_theta);
     const auto mc_energy = mctrue->Ek();
 
 
