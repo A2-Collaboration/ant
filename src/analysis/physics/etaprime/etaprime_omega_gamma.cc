@@ -5,6 +5,7 @@
 #include "base/std_ext/math.h"
 
 #include <cassert>
+#include <numeric>
 
 using namespace std;
 using namespace ant::analysis;
@@ -34,11 +35,21 @@ EtapOmegaG::perDecayHists_t::perDecayHists_t(SmartHistFactory& HistFac, const st
                                pref+"_IM_etap_omega");
     IM_pi0 = HistFac.makeTH1D(decaystring+": #pi^{0}","#pi^{0} IM / MeV","events",BinSettings(300, 0, 400),pref+"_IM_pi0");
 
-    MM = HistFac.makeTH1D(decaystring+": M_{miss}","M_{miss} / MeV","events",BinSettings(300, 600, 1300),pref+"_MM");
-
+    BinSettings bins_mm(300, 600, 1300);
+    MM_gggg = HistFac.makeTH1D(decaystring+": M_{miss}","M_{miss} / MeV","events",bins_mm,pref+"_MM_gggg");
+    MM_etap = HistFac.makeTH1D(decaystring+": M_{miss}^{cut}","M_{miss} / MeV","events",bins_mm,pref+"_MM_etap");
 
     Chi2_All = HistFac.makeTH1D(decaystring+": #chi^{2} all","#chi^{2}","",BinSettings(300,0,100),pref+"_Chi2_All");
     Chi2_Best = HistFac.makeTH1D(decaystring+": #chi^{2} minimal","#chi^{2}","",BinSettings(300,0,100),pref+"_Chi2_Min");
+
+    Proton_ThetaPhi = HistFac.makeTH2D(decaystring+": p #delta(#theta-#phi)",
+                                       "#delta#theta / degree",
+                                       "#delta#phi / degree",
+                                       BinSettings(100, -10, 10),
+                                       BinSettings(100, -30, 30),
+                                       pref+"_Proton_ThetaPhi"
+                                       );
+    Proton_Energy = HistFac.makeTH1D(decaystring+": p #delta(E)","#deltaE / MeV","",BinSettings(400,-50,350),pref+"_Proton_Energy");
 }
 
 void EtapOmegaG::ProcessEvent(const data::Event& event)
@@ -67,6 +78,7 @@ void EtapOmegaG::ProcessEvent(const data::Event& event)
     if(nProtons != 1)
         return;
     steps->Fill("nProtons==1",1);
+    const data::ParticlePtr& proton = protons.front();
 
     if(data.TriggerInfos().CBEenergySum() < 550)
         return;
@@ -84,9 +96,23 @@ void EtapOmegaG::ProcessEvent(const data::Event& event)
     const perDecayHists_t& h = it_h->second;
 
     // gamma combinatorics
+    assert(photons.size() == 4);
     utils::ParticleTools::FillIMCombinations(h.gg,   2, photons);
     utils::ParticleTools::FillIMCombinations(h.ggg,  3, photons);
-    utils::ParticleTools::FillIMCombinations(h.gggg, 4, photons);
+
+    TLorentzVector photon_sum(0,0,0,0);
+    for(const auto& p : photons) {
+        photon_sum += *p;
+    }
+    h.gggg->Fill(photon_sum.M());
+
+    // use tagged photon
+    for(const auto& th : data.TaggerHits()) {
+        /// \todo make prompt/random cut
+        const TLorentzVector beam_target = th->PhotonBeam() + TLorentzVector(0, 0, 0, ParticleTypeDatabase::Proton.Mass());
+        const TLorentzVector mm = beam_target - photon_sum;
+        h.MM_gggg->Fill(mm.M());
+    }
 
     // bottom-up assignment of photons
 
@@ -161,10 +187,18 @@ void EtapOmegaG::ProcessEvent(const data::Event& event)
 
     // use tagged photon
     for(const auto& th : data.TaggerHits()) {
+        /// \todo make prompt/random cut
         const TLorentzVector beam_target = th->PhotonBeam() + TLorentzVector(0, 0, 0, ParticleTypeDatabase::Proton.Mass());
         const TLorentzVector mm = beam_target - result.EtaPrime;
+        h.MM_etap->Fill(mm.M());
 
-        h.MM->Fill(mm.M());
+        // don't assume we always have a proton...
+        if(proton) {
+            const double diff_Theta = mm.Theta() - proton->Theta();
+            const double diff_Phi = mm.Phi() - proton->Phi();
+            h.Proton_ThetaPhi->Fill(std_ext::radian_to_degree(diff_Theta), std_ext::radian_to_degree(diff_Phi));
+            h.Proton_Energy->Fill(mm.E() - proton->E());
+        }
     }
 }
 
@@ -182,10 +216,11 @@ void EtapOmegaG::ShowResult()
             continue;
         canvas c(GetName()+": "+it_map.first);
         c << steps
-          << h.gg << h.ggg << h.gggg
+          << h.gg << h.ggg << h.gggg << h.MM_gggg
           << h.Chi2_All << h.Chi2_Best
           << h.IM_pi0 << drawoption("colz") << h.IM_etap_omega
-          << h.MM
+          << h.MM_etap
+          << drawoption("colz") <<  h.Proton_ThetaPhi << h.Proton_Energy
           << endc;
     }
 }

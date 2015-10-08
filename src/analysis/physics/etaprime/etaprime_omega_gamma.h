@@ -21,7 +21,11 @@ class EtapOmegaG : public Physics {
         TH2D* IM_etap_omega;
         TH1D* IM_pi0;
 
-        TH1D* MM;
+        TH1D* MM_gggg;
+        TH1D* MM_etap;
+
+        TH2D* Proton_ThetaPhi;
+        TH1D* Proton_Energy;
 
         TH1D* Chi2_All;
         TH1D* Chi2_Best;
