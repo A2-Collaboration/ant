@@ -577,7 +577,7 @@ void OmegaEtaG2::Analyse(const Event::Data &data, const Event &event)
         ggIM[ngg++] = gg.M();
     }
 
-    rf = -1; // TODO
+    rf = static_cast<int>(identify(event));
 
     for(const TaggerHitPtr& t : data_tagger?data.TaggerHits():event.MCTrue().TaggerHits()) {
         tagch   = t->Channel();
@@ -615,6 +615,65 @@ double OmegaEtaG2::calcEnergySum2(const Event::Data &e) const
 
     }
     return Sum;
+}
+
+OmegaEtaG2::channel_type_t OmegaEtaG2::identify(const Event &event) const
+{
+    channel_type_t type = channel_type_t::Background;
+
+    bool proton=false;
+    bool omega=false;
+    bool etapi0=false;
+    bool gamma1=false;
+    bool gamma2=false;
+    bool gamma3=false;
+
+    const auto& bpl = event.MCTrue().Intermediates().Get(ParticleTypeDatabase::BeamProton);
+    if(bpl.size() == 1) {
+        const ParticlePtr& bp = bpl.at(0);
+
+        if(bp->Daughters().size() == 2) {
+            for(const auto& d : bp->Daughters()) {
+                if(d->Type() == ParticleTypeDatabase::Proton) {
+                    proton=true;
+                } else if(d->Type() == ParticleTypeDatabase::Omega) {
+                    omega=true;
+                    if(d->Daughters().size() ==2 ) {
+                        for(const ParticlePtr& e : d->Daughters()) {
+                            if(e->Type() == ParticleTypeDatabase::Eta || e->Type() == ParticleTypeDatabase::Pi0) {
+                                etapi0 = true;
+                                if(e->Type() == ParticleTypeDatabase::Eta) {
+                                    type = channel_type_t::Signal;
+                                } else {
+                                    type = channel_type_t::Reference;
+                                }
+                                if(e->Daughters().size() == 2) {
+                                    for(const ParticlePtr& f : e->Daughters()) {
+                                        if(f->Type() == ParticleTypeDatabase::Photon) {
+                                            if(!gamma2) {
+                                                gamma2=true;
+                                            } else {
+                                                if(!gamma3) {
+                                                    gamma3=true;
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            } else if(e->Type() == ParticleTypeDatabase::Photon) {
+                                gamma1 = true;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    if(!(proton&&omega&&etapi0&&gamma1&&gamma2&&gamma3))
+        type = channel_type_t::Background;
+
+    return type;
 }
 
 OmegaEtaG2::OmegaEtaG2(PhysOptPtr opts):

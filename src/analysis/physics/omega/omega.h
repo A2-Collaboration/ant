@@ -172,6 +172,15 @@ protected:
     double ESum_cut = 550.0;
 
     double calcEnergySum2(const data::Event::Data &e) const;
+
+    enum class channel_type_t {
+        Signal,
+        Reference,
+        Background
+    };
+
+    channel_type_t identify(const data::Event& event) const;
+
 public:
     OmegaEtaG2(PhysOptPtr opts);
     virtual ~OmegaEtaG2();
