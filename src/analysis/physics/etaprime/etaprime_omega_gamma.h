@@ -11,6 +11,8 @@ namespace physics {
 
 class EtapOmegaG : public Physics {
 
+    TH1D* steps;
+
     struct perDecayHists_t {
         TH1D* gggg;
         TH1D* ggg;
@@ -31,6 +33,7 @@ class EtapOmegaG : public Physics {
 public:
     EtapOmegaG(PhysOptPtr opts);
     virtual void ProcessEvent(const data::Event& event) override;
+    virtual void Finish() override;
     virtual void ShowResult() override;
 };
 

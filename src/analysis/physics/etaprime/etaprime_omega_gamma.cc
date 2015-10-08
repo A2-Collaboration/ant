@@ -13,7 +13,7 @@ using namespace ant::analysis::physics;
 
 EtapOmegaG::EtapOmegaG(PhysOptPtr opts) : Physics("EtapOmegaG", opts)
 {
-
+    steps = HistFac.makeTH1D("steps", "", "%", BinSettings(10));
 }
 
 EtapOmegaG::perDecayHists_t::perDecayHists_t(SmartHistFactory& HistFac, const string& decaystring)
@@ -43,8 +43,13 @@ void EtapOmegaG::ProcessEvent(const data::Event& event)
     const auto& data = event.Reconstructed();
 
     const auto nParticles = data.Particles().GetAll().size();
+
+    steps->Fill("Seen",1);
+
     if(nParticles != 5)
         return;
+
+    steps->Fill("nParticles==5",1);
 
     const auto& photons = data.Particles().Get(ParticleTypeDatabase::Photon);
     const auto& protons = data.Particles().Get(ParticleTypeDatabase::Proton);
@@ -52,11 +57,18 @@ void EtapOmegaG::ProcessEvent(const data::Event& event)
     const auto nPhotons = photons.size();
     const auto nProtons = protons.size();
 
-    if(nPhotons != 4 || nProtons != 1)
+    if(nPhotons != 4)
         return;
+    steps->Fill("nPhotons==4",1);
+
+    if(nProtons != 1)
+        return;
+    steps->Fill("nProtons==1",1);
 
     if(data.TriggerInfos().CBEenergySum() < 550)
         return;
+    steps->Fill("CBESum>550MeV",1);
+
 
     const string& decaystring = utils::ParticleTools::GetDecayString(event.MCTrue().Intermediates().GetAll());
 
@@ -136,10 +148,16 @@ void EtapOmegaG::ProcessEvent(const data::Event& event)
     while(next_permutation(indices.begin(), indices.end(), comparer));
 
     if(result.Chi2<10) {
+        steps->Fill("MinChi2<10",1);
         h.IM_etap_omega->Fill(result.EtaPrime.M(), result.Omega.M());
         h.IM_pi0->Fill(result.Pi0.M());
         h.Chi2_Best->Fill(result.Chi2);
     }
+}
+
+void EtapOmegaG::Finish()
+{
+    steps->Scale(100.0/steps->GetBinContent(1));
 }
 
 void EtapOmegaG::ShowResult()
@@ -149,7 +167,8 @@ void EtapOmegaG::ShowResult()
         if(h.IM_etap_omega->GetEntries()==0)
             continue;
         canvas c(GetName()+": "+it_map.first);
-        c << h.gg << h.ggg << h.gggg
+        c << steps
+          << h.gg << h.ggg << h.gggg
           << h.Chi2_All << h.Chi2_Best
           << h.IM_pi0 << drawoption("colz") << h.IM_etap_omega
           << endc;
