@@ -147,19 +147,38 @@ class OmegaEtaG2 : public OmegaBase {
 protected:
     void Analyse(const data::Event::Data &data, const data::Event &event) override;
 
-    double pEk = {};
-    double pTheta = {};
-    double pPhi = {};
+    struct ParticleVars {
+        double E;
+        double Theta;
+        double Phi;
+        double IM;
+        ParticleVars(const TLorentzVector& lv, const ParticleTypeDatabase::Type& type) noexcept;
+        ParticleVars(const data::Particle& p) noexcept;
+        ParticleVars(double e=0.0, double theta=0.0, double phi=0.0, double im=0.0) noexcept:
+            E(e), Theta(theta), Phi(phi), IM(im) {}
+        ParticleVars(const ParticleVars&) = default;
+        ParticleVars(ParticleVars&&) = default;
+        ParticleVars& operator=(const ParticleVars&) =default;
+        ParticleVars& operator=(ParticleVars&&) =default;
+        void SetBranches(TTree* tree, const std::string& name);
+    };
+
+
+    ParticleVars pbranch;
     double pTime = {};
 
-    double gggIM = {};
-    double gggTheta = {};
-    double gggPhi = {};
+    ParticleVars gggbranch;
     double gggTime = {};
-    double gggE = {};
 
     double ggIM[3] = {};
-    double MM = {};
+
+    ParticleVars calcp;
+
+    double angle_p_calcp = {};
+
+    ParticleVars g1branch;
+    ParticleVars g2branch;
+    ParticleVars g3branch;
 
     int    tagch = -1;
     double tagtime = {};
@@ -181,6 +200,20 @@ protected:
     };
 
     channel_type_t identify(const data::Event& event) const;
+
+
+
+    struct particleCuts_t {
+        interval<double> E_range = {0,1600};
+        interval<double> Theta_range = {0, 2*M_PI};
+
+        bool TestParticle(const data::Particle& p) const;
+    };
+
+    particleCuts_t photon_cut;
+    particleCuts_t proton_cut;
+
+        data::ParticleList FilterParticles(const data::ParticleList& list, const particleCuts_t& cuts) const;
 
 public:
     OmegaEtaG2(PhysOptPtr opts);

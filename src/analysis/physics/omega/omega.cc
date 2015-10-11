@@ -537,12 +537,12 @@ void OmegaEtaG2::Analyse(const Event::Data &data, const Event &event)
     if(iprotons.size() != 1)
         return;
 
-    const ParticleList protons = getGeoAccepted(iprotons);
+    const ParticleList protons = FilterParticles(getGeoAccepted(iprotons), proton_cut);
 
     if(protons.size() != 1)
         return;
 
-    const ParticleList photons = getGeoAccepted(iphotons);
+    const ParticleList photons = FilterParticles(getGeoAccepted(iphotons), photon_cut);
 
     if(photons.size() != 3)
         return;
@@ -554,17 +554,16 @@ void OmegaEtaG2::Analyse(const Event::Data &data, const Event &event)
 
     const auto& proton = protons.at(0);
 
-    pEk    = proton->Ek();
-    pTheta = radian_to_degree(proton->Theta());
-    pPhi   = radian_to_degree(proton->Phi());
+    pbranch = ParticleVars(*proton);
     pTime  = data_proton ? proton->Candidates().at(0)->Time() : 0.0;
 
-    const TLorentzVector ggg = LVSum(photons.begin(), photons.end());
+    const Particle ggg(ParticleTypeDatabase::Omega, LVSum(photons.begin(), photons.end()));
     gggTime  = TimeAvg(photons.begin(), photons.end());
-    gggIM    = ggg.M();
-    gggTheta = radian_to_degree(ggg.Theta());
-    gggPhi   = radian_to_degree(ggg.Phi());
-    gggE     = ggg.E() - ParticleTypeDatabase::Omega.Mass();
+    gggbranch = ParticleVars(ggg);
+
+    g1branch = ParticleVars(*photons.at(0));
+    g2branch = ParticleVars(*photons.at(1));
+    g3branch = ParticleVars(*photons.at(2));
 
     TLorentzVector gg;
     int ngg=0;
@@ -585,9 +584,11 @@ void OmegaEtaG2::Analyse(const Event::Data &data, const Event &event)
         tagtime = t->Time();
 
         const TLorentzVector beam_target = t->PhotonBeam() + TLorentzVector(0, 0, 0, ParticleTypeDatabase::Proton.Mass());
-        const TLorentzVector missing = beam_target - ggg;
+        const Particle missing(ParticleTypeDatabase::Proton, beam_target - ggg);
 
-        MM = missing.M();
+        calcp = ParticleVars(missing);
+
+        angle_p_calcp = radian_to_degree(missing.Angle(proton->Vect()));
 
         tree->Fill();
     }
@@ -677,6 +678,12 @@ OmegaEtaG2::channel_type_t OmegaEtaG2::identify(const Event &event) const
     return type;
 }
 
+ParticleList OmegaEtaG2::FilterParticles(const data::ParticleList& list, const particleCuts_t& cuts) const {
+    ParticleList olist;
+    copy_if(list.begin(), list.end(), olist.begin(), [cuts] (const ParticlePtr& p) { return cuts.TestParticle(*p);});
+    return olist;
+}
+
 OmegaEtaG2::OmegaEtaG2(PhysOptPtr opts):
     OmegaBase("OmegaEtaG2", opts)
 {
@@ -694,18 +701,31 @@ OmegaEtaG2::OmegaEtaG2(PhysOptPtr opts):
         ESum_cut = atof(opts->GetOption("ESum").c_str());
     }
 
+    proton_cut.E_range     = { 50,1000 };
+    proton_cut.Theta_range = degree_to_radian(interval<double>( 2, 45));
+
+    photon_cut.E_range     = { 0, 1600 };
+    photon_cut.Theta_range = degree_to_radian(interval<double>( 2, 160));
+
+
     tree = new TTree("omegaetag2","");
 
-    tree->Branch("pEk",     &pEk);
-    tree->Branch("pTheta",  &pTheta);
-    tree->Branch("pPhi",    &pPhi);
-    tree->Branch("gggIM",   &gggIM);
-    tree->Branch("gggTheta",&gggTheta);
-    tree->Branch("gggPhi",  &gggPhi);
+    pbranch.SetBranches(tree, "p");
+    tree->Branch("pTime", &pTime);
+
+    gggbranch.SetBranches(tree, "ggg");
     tree->Branch("gggTime", &gggTime);
-    tree->Branch("gggE",    &gggE);
+
+    tree->Branch("AnglePcP", &angle_p_calcp);
+
     tree->Branch("ggIM",     ggIM, "ggIM[3]/D");
-    tree->Branch("MM",      &MM);
+
+    calcp.SetBranches(tree,"calcp");
+
+    g1branch.SetBranches(tree, "g1");
+    g2branch.SetBranches(tree, "g2");
+    g3branch.SetBranches(tree, "g3");
+
     tree->Branch("tagch",   &tagch);
     tree->Branch("tagtime", &tagtime);
     tree->Branch("rf",      &rf);
@@ -714,6 +734,37 @@ OmegaEtaG2::OmegaEtaG2(PhysOptPtr opts):
 OmegaEtaG2::~OmegaEtaG2()
 {
 
+}
+
+OmegaEtaG2::ParticleVars::ParticleVars(const TLorentzVector& lv, const ParticleTypeDatabase::Type& type) noexcept
+{
+    IM    = lv.M();
+    Theta = radian_to_degree(lv.Theta());
+    Phi   = radian_to_degree(lv.Phi());
+    E     = lv.E() - type.Mass();
+}
+
+OmegaEtaG2::ParticleVars::ParticleVars(const Particle& p) noexcept
+{
+    IM    = p.M();
+    Theta = radian_to_degree(p.Theta());
+    Phi   = radian_to_degree(p.Phi());
+    E     = p.Ek();
+}
+
+void OmegaEtaG2::ParticleVars::SetBranches(TTree* tree, const string& name)
+{
+    tree->Branch((name+"IM").c_str(), &IM);
+    tree->Branch((name+"Theta").c_str(), &Theta);
+    tree->Branch((name+"Phi").c_str(),&Phi);
+    tree->Branch((name+"E").c_str(),  &E);
+}
+
+
+
+bool OmegaEtaG2::particleCuts_t::TestParticle(const Particle& p) const
+{
+    return E_range.Contains(p.Ek()) && Theta_range.Contains(p.Theta());
 }
 
 AUTO_REGISTER_PHYSICS(OmegaEtaG, "OmegaEtaG")
