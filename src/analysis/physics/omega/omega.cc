@@ -680,7 +680,12 @@ OmegaEtaG2::channel_type_t OmegaEtaG2::identify(const Event &event) const
 
 ParticleList OmegaEtaG2::FilterParticles(const data::ParticleList& list, const particleCuts_t& cuts) const {
     ParticleList olist;
-    copy_if(list.begin(), list.end(), olist.begin(), [cuts] (const ParticlePtr& p) { return cuts.TestParticle(*p);});
+    //copy_if(list.begin(), list.end(), olist.begin(), [cuts] (const ParticlePtr& p) { return cuts.TestParticle(*p);});
+    for(const auto& p : list) {
+        if(cuts.TestParticle(*p)) {
+            olist.emplace_back(p);
+        }
+    }
     return olist;
 }
 
