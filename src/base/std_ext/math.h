@@ -8,10 +8,13 @@ namespace std_ext {
 
 constexpr double inf = std::numeric_limits<double>::infinity();
 
-constexpr inline double degree_to_radian(const double degree) noexcept {
+template <typename T>
+constexpr inline T degree_to_radian(const T& degree) noexcept {
   return degree * M_PI / 180.0;
 }
-constexpr inline double radian_to_degree(const double radian) noexcept {
+
+template <typename T>
+constexpr inline T radian_to_degree(const T& radian) noexcept {
   return radian * 180.0 / M_PI;
 }
 
