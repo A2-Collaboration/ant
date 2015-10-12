@@ -7,12 +7,19 @@
 #include <algorithm>
 #include <cassert>
 
+#include "TTree.h"
+
 using namespace std;
+using namespace ant::std_ext;
 using namespace ant::analysis;
+using namespace ant::analysis::data;
 using namespace ant::analysis::physics;
 
 
-Etap3pi0::Etap3pi0(PhysOptPtr opts) : Physics("EtapOmegaG", opts)
+
+Etap3pi0::Etap3pi0(PhysOptPtr opts) :
+    Physics("EtapOmegaG", opts),
+      dataset(opts->GetOption("dataset"))
 {
     BinSettings bs = BinSettings(1600);
     hNgammaMC  = HistFac.makeTH1D("# gamma MC true","# #gamma","# events",BinSettings(8));
@@ -23,7 +30,15 @@ Etap3pi0::Etap3pi0(PhysOptPtr opts) : Physics("EtapOmegaG", opts)
     IM_etap    = HistFac.makeTH1D("EtaPrime","EtaPrime IM [MeV]","events",bs,"IM_etap");
     IM_pi0     = HistFac.makeTH1D("Pi0","Pi0 IM [MeV]","events",bs,"IM_pi0");
 
-    IM_vs_chi2 = HistFac.makeTH2D("#chi2","Pi0 candidate mass [MeV]","#chi2",bs,BinSettings(200,0,10));
+    tree       = new TTree("data","data");
+
+    for ( auto& pi0: p0cands)
+        pi0.SetBranches(tree,(dataset + "pi0cands"));
+    for ( auto& pi0: p0best)
+        pi0.SetBranches(tree,(dataset + "pi0best"));
+
+    MMproton.SetBranches(tree,(dataset + "MMproton"));
+    etaprime.SetBranches(tree,(dataset + "etaprime"));
 
 }
 
@@ -38,9 +53,6 @@ void Etap3pi0::ProcessEvent(const data::Event& event)
 
     hNgamma->Fill(photons.size());
     hNgammaMC->Fill(mcphotons.size());
-
-    if ( photons.size() != 6)
-        return;
 
     auto fill_combinations = [] (TH1* h, unsigned multiplicity, const data::ParticleList& particles) {
         for( auto comb = utils::makeCombination(particles,multiplicity); !comb.Done(); ++comb) {
@@ -111,7 +123,6 @@ void Etap3pi0::ProcessEvent(const data::Event& event)
         etap += p;
     }
     IM_etap->Fill(etap.M());
-    IM_vs_chi2->Fill(etap.M(),result.Chi2);
 
 
 
@@ -124,8 +135,32 @@ void Etap3pi0::ShowResult()
     canvas(GetName()) << h2g << h6g
                       << IM_pi0 << IM_etap
                       << hNgamma << hNgammaMC
+                      << falseNgamma
                       << endc;
 }
 
+Etap3pi0::ParticleVars::ParticleVars(const TLorentzVector& lv, const ParticleTypeDatabase::Type& type) noexcept
+{
+    IM    = lv.M();
+    Theta = radian_to_degree(lv.Theta());
+    Phi   = radian_to_degree(lv.Phi());
+    E     = lv.E() - type.Mass();
+}
+
+Etap3pi0::ParticleVars::ParticleVars(const Particle& p) noexcept
+{
+    IM    = p.M();
+    Theta = radian_to_degree(p.Theta());
+    Phi   = radian_to_degree(p.Phi());
+    E     = p.Ek();
+}
+
+void Etap3pi0::ParticleVars::SetBranches(TTree* tree, const string& name)
+{
+    tree->Branch((name+"IM").c_str(), &IM);
+    tree->Branch((name+"Theta").c_str(), &Theta);
+    tree->Branch((name+"Phi").c_str(),&Phi);
+    tree->Branch((name+"E").c_str(),  &E);
+}
 
 AUTO_REGISTER_PHYSICS(Etap3pi0, "Etap3pi0")
