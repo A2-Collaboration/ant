@@ -54,6 +54,9 @@ void Etap3pi0::ProcessEvent(const data::Event& event)
     hNgamma->Fill(photons.size());
     hNgammaMC->Fill(mcphotons.size());
 
+    if (photons.size() != 6)
+        return;
+
     auto fill_combinations = [] (TH1* h, unsigned multiplicity, const data::ParticleList& particles) {
         for( auto comb = utils::makeCombination(particles,multiplicity); !comb.Done(); ++comb) {
              TLorentzVector sum(0,0,0,0);
@@ -75,37 +78,46 @@ void Etap3pi0::ProcessEvent(const data::Event& event)
     };
 
     assert(photons.size() == 6);
-    vector<unsigned> indices = {0,1,2,3,4,5};
-    auto comparer = [] (unsigned a, unsigned b) {
-        // make 0/1 and 2/3 and 4/5 look equal
-        if(a==0 && b==1)
-            return false;
-        if(a==2 && b==3)
-            return false;
-        if(a==4 && b==5)
-            return false;
-        return a<b;
-    };
 
     result_t result; // best chi2
 
+    vector<vector<unsigned>> combinations = {
+        { 0, 1,  2, 3,  4, 5},
+        { 0, 1,  2, 4,  3, 5},
+        { 0, 1,  2, 5,  3, 4},
 
-    do {
-        // the indices vector tells us what particle
-        // should be used as daughter particle
-        // 0,1 : from first pi0
-        // 2,3 : from second pi0
-        // 4,5 : from third pi0
+        { 0, 2,  1, 3,  4, 5},
+        { 0, 2,  1, 4,  3, 5},
+        { 0, 2,  1, 5,  3, 4},
+
+        { 0, 3,  1, 2,  4, 5},
+        { 0, 3,  1, 4,  2, 5},
+        { 0, 3,  1, 5,  2, 4},
+
+        { 0, 4,  1, 2,  3, 5},
+        { 0, 4,  1, 3,  2, 5},
+        { 0, 4,  1, 5,  2, 3},
+
+        { 0, 5,  1, 2,  3, 4},
+        { 0, 5,  1, 3,  2, 4},
+        { 0, 5,  1, 4,  2, 3}
+    };
+
+
+    for ( const auto& indices: combinations)
+    {
+
         result_t tmp;
-
-        for(unsigned i=0;i<indices.size();i++) {
-            tmp.g_pi0[indices[i]] = photons[i];
-        }
-
         tmp.Chi2 = 0;
-        for(unsigned i=0;i<tmp.Pi0.size();i++) {
+
+        for(unsigned i=0;i<indices.size();i++)
+            tmp.g_pi0[indices[i]] = photons[i];
+
+
+        for(unsigned i=0;i<tmp.Pi0.size();i++)
+        {
             tmp.Pi0[i] = *(tmp.g_pi0[2*i]) + *(tmp.g_pi0[2*i+1]);
-            tmp.Chi2 += std_ext::sqr((tmp.Pi0[i].M() - 126) / 15);
+            tmp.Chi2 += std_ext::sqr((tmp.Pi0[i].M() - 126) / 15); // width and x0 from fit
         }
         for (const auto& p: tmp.Pi0 )
         {
@@ -115,7 +127,6 @@ void Etap3pi0::ProcessEvent(const data::Event& event)
         if(tmp.Chi2<result.Chi2)
             result = move(tmp);
     }
-    while(next_permutation(indices.begin(), indices.end(), comparer));
 
     TLorentzVector etap(0,0,0,0);
     for (const auto& p: result.Pi0 )
@@ -123,10 +134,6 @@ void Etap3pi0::ProcessEvent(const data::Event& event)
         etap += p;
     }
     IM_etap->Fill(etap.M());
-
-
-
-
 }
 
 
@@ -135,7 +142,6 @@ void Etap3pi0::ShowResult()
     canvas(GetName()) << h2g << h6g
                       << IM_pi0 << IM_etap
                       << hNgamma << hNgammaMC
-                      << falseNgamma
                       << endc;
 }
 
