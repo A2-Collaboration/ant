@@ -40,7 +40,7 @@ public:
     virtual void ProcessEvent(const data::Event& event) =0;
     virtual void Finish() {}
     virtual void ShowResult() =0;
-    std::string GetName() { return name_; }
+    std::string GetName() const { return name_; }
 
     virtual void Initialize(data::Slowcontrol& slowcontrol);
 
