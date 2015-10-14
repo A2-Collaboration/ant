@@ -40,14 +40,18 @@ protected:
     TH1D* IM_etap;
     TH1D* IM_pi0;
 
-    TH2D* falseNgamma;
+    TH2D* dalitz;
 
     TTree* tree;
 
-    std::vector<ParticleVars> p0cands;
-    std::vector<ParticleVars> p0best;
+    ParticleVars pi01;
+    ParticleVars pi02;
+    ParticleVars pi03;
     ParticleVars MMproton;
     ParticleVars etaprime;
+    double imsqrP12;
+    double imsqrP13;
+    double imsqrP23;
 
 
 public:

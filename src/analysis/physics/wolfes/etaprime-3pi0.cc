@@ -8,6 +8,7 @@
 #include <cassert>
 
 #include "TTree.h"
+#include "TCanvas.h"
 
 using namespace std;
 using namespace ant::std_ext;
@@ -30,15 +31,20 @@ Etap3pi0::Etap3pi0(PhysOptPtr opts) :
     IM_etap    = HistFac.makeTH1D("EtaPrime","EtaPrime IM [MeV]","events",bs,"IM_etap");
     IM_pi0     = HistFac.makeTH1D("Pi0","Pi0 IM [MeV]","events",bs,"IM_pi0");
 
+    dalitz     = HistFac.makeTH2D("dalitz","IM^{2}(#pi^{0} _{1} + #pi^{0} _{2}) [GeV^{2}]","IM^{2}(#pi^{0} _{1} + #pi^{0} _{3}) [GeV^{2}]",BinSettings(100,0,1000),BinSettings(100,0,1000));
+
     tree       = new TTree("data","data");
 
-    for ( auto& pi0: p0cands)
-        pi0.SetBranches(tree,(dataset + "pi0cands"));
-    for ( auto& pi0: p0best)
-        pi0.SetBranches(tree,(dataset + "pi0best"));
 
-    MMproton.SetBranches(tree,(dataset + "MMproton"));
-    etaprime.SetBranches(tree,(dataset + "etaprime"));
+    pi01.SetBranches(tree,"pi01");
+    pi02.SetBranches(tree,"pi02");
+    pi03.SetBranches(tree,"pi03");
+    MMproton.SetBranches(tree,"MMproton");
+    etaprime.SetBranches(tree,"etaprime");
+
+    tree->Branch("imsqr12",&imsqrP12);
+    tree->Branch("imsqr13",&imsqrP13);
+    tree->Branch("imsqr23",&imsqrP23);
 
 }
 
@@ -130,10 +136,33 @@ void Etap3pi0::ProcessEvent(const data::Event& event)
 
     TLorentzVector etap(0,0,0,0);
     for (const auto& p: result.Pi0 )
-    {
         etap += p;
+    pi01 = ParticleVars(result.Pi0[0],ParticleTypeDatabase::Pi0);
+    pi02 = ParticleVars(result.Pi0[1],ParticleTypeDatabase::Pi0);
+    pi03 = ParticleVars(result.Pi0[2],ParticleTypeDatabase::Pi0);
+    etaprime = ParticleVars(etap,ParticleTypeDatabase::EtaPrime);
+
+   TLorentzVector sum;
+   sum = result.Pi0[0] + result.Pi0[1];
+   imsqrP12 = sum.M2();
+
+   sum = result.Pi0[0] + result.Pi0[2];
+   imsqrP13 = sum.M2();
+
+   sum = result.Pi0[1] + result.Pi0[2];
+   imsqrP23 = sum.M2();
+
+    for(const auto& taggerhit : data.TaggerHits())
+    {
+        const TLorentzVector beam_target = taggerhit->PhotonBeam() + TLorentzVector(0, 0, 0, ParticleTypeDatabase::Proton.Mass());
+        const Particle missing(ParticleTypeDatabase::Proton, beam_target - etap);
+        MMproton = ParticleVars(missing);
     }
+
+    tree->Fill();
+
     IM_etap->Fill(etap.M());
+    dalitz->Fill(imsqrP12/1000.0,imsqrP13/1000.0);
 }
 
 
@@ -143,6 +172,7 @@ void Etap3pi0::ShowResult()
                       << IM_pi0 << IM_etap
                       << hNgamma << hNgammaMC
                       << endc;
+    canvas("Dalitz-Plots") << drawoption("colz") << dalitz << endc;
 }
 
 Etap3pi0::ParticleVars::ParticleVars(const TLorentzVector& lv, const ParticleTypeDatabase::Type& type) noexcept
