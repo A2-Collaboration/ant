@@ -11,6 +11,10 @@ class MCSmearing : public Physics {
 protected:
     TH3D* energies;
     TH3D* angles;
+    TH1D* IM;
+    TH1D* IM_2g;
+
+
 public:
     MCSmearing(PhysOptPtr opts=nullptr);
     virtual ~MCSmearing();
