@@ -15,6 +15,7 @@ add_ant_executable(Ant-cocktail)
 add_ant_executable(Ant-pluto)
 add_ant_executable(Ant-chain)
 add_ant_executable(Ant-addTID)
+add_ant_executable(Ant-info)
 
 option(OmegaTools "Build Omega Tools" OFF)
 
