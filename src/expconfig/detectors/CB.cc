@@ -8,9 +8,23 @@ using namespace std;
 using namespace ant;
 using namespace ant::expconfig::detector;
 
+CB::CB() : ClusterDetector_t(Detector_t::Type_t::CB) {
+    auto& holes = ignoredChannels;
+    std_ext::insertRange(holes,  26,  26);
+    std_ext::insertRange(holes,  29,  38);
+    std_ext::insertRange(holes,  40,  40);
+    std_ext::insertRange(holes, 311, 311);
+    std_ext::insertRange(holes, 315, 316);
+    std_ext::insertRange(holes, 318, 319);
+    std_ext::insertRange(holes, 353, 366);
+    std_ext::insertRange(holes, 400, 402);
+    std_ext::insertRange(holes, 405, 405);
+    std_ext::insertRange(holes, 408, 408);
+    std_ext::insertRange(holes, 679, 679);
+    std_ext::insertRange(holes, 681, 689);
+    std_ext::insertRange(holes, 691, 692);
 
-
-vector<unsigned> CB::ignoredChannels = CB::initHoles();
+}
 
 void CB::SetIgnored(unsigned channel) {
     ignoredChannels.push_back(channel);
@@ -44,27 +58,6 @@ void CB::BuildMappings(vector<UnpackerAcquConfig::hit_mapping_t> &hit_mappings,
     }
 
     assert(true_elements <= 672);
-}
-
-vector<unsigned> CB::initHoles() {
-    // hard-code the hole ranges here
-    // we even use insert range for single elements
-    // for the sake of code cleanness
-    vector<unsigned> holes;
-    std_ext::insertRange(holes,  26,  26);
-    std_ext::insertRange(holes,  29,  38);
-    std_ext::insertRange(holes,  40,  40);
-    std_ext::insertRange(holes, 311, 311);
-    std_ext::insertRange(holes, 315, 316);
-    std_ext::insertRange(holes, 318, 319);
-    std_ext::insertRange(holes, 353, 366);
-    std_ext::insertRange(holes, 400, 402);
-    std_ext::insertRange(holes, 405, 405);
-    std_ext::insertRange(holes, 408, 408);
-    std_ext::insertRange(holes, 679, 679);
-    std_ext::insertRange(holes, 681, 689);
-    std_ext::insertRange(holes, 691, 692);
-    return holes;
 }
 
 

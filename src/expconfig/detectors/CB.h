@@ -11,7 +11,7 @@ struct CB :
         UnpackerAcquConfig // CB knows how to be filled from Acqu data
 {
 
-    CB() : ClusterDetector_t(Detector_t::Type_t::CB) {}
+    CB();
 
     virtual TVector3 GetPosition(unsigned channel) const override {
         return elements[channel].Position;
@@ -59,9 +59,7 @@ protected:
         unsigned TDC;
     };
     static const std::vector<Element_t> elements;
-    static std::vector<unsigned> ignoredChannels;
-
-    static std::vector<unsigned> initHoles();
+    std::vector<unsigned> ignoredChannels;
 };
 
 
