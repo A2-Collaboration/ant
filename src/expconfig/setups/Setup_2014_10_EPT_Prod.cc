@@ -13,7 +13,10 @@ public:
     Setup_2014_10_EPT_Prod()
         : Setup_2014_EPT("Setup_2014-10_EPT_Prod")
     {
-        /// \todo add ignored elements
+        // see https://wwwa2.kph.uni-mainz.de/intern/daqwiki/analysis/beamtimes/2014-10-14
+        IgnoreDetectorChannels(Detector_t::Type_t::CB, {17,125,189,265,267,418,456,547,549,557,565,582,586,597,602,672,677,678,696});
+        IgnoreDetectorChannels(Detector_t::Type_t::TAPS, {127,137,138,145,218,346,356,357,364});
+        IgnoreDetectorChannels(Detector_t::Type_t::TAPSVeto, {6,287});
     }
 
 
