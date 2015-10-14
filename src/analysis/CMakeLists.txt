@@ -45,6 +45,7 @@ set(ANALYSIS_PHYSICS
   physics/common/ProtonCheck.cc
   physics/common/DebugPhysics.cc
   physics/common/ReconstructCheck.cc
+  physics/common/MCSmearing.cc
   physics/tpc/PhysicsStats.cc
   physics/SlowcontrolManager.cc
   physics/etaprime/etaprime_omega_gamma.cc
