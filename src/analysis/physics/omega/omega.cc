@@ -519,7 +519,7 @@ double TimeAvg(it_type begin, it_type end) {
 
     while(begin!=end) {
         const ParticlePtr& p = *begin;
-        v += p->Candidates().at(0)->Time();
+        v += p->Candidate()->Time();
         ++begin;
     }
 
@@ -555,7 +555,7 @@ void OmegaEtaG2::Analyse(const Event::Data &data, const Event &event)
     const auto& proton = protons.at(0);
 
     pbranch = ParticleVars(*proton);
-    pTime  = data_proton ? proton->Candidates().at(0)->Time() : 0.0;
+    pTime  = data_proton ? proton->Candidate()->Time() : 0.0;
 
     const Particle ggg(ParticleTypeDatabase::Omega, LVSum(photons.begin(), photons.end()));
     gggTime  = TimeAvg(photons.begin(), photons.end());

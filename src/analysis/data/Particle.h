@@ -29,20 +29,22 @@ protected:
     const ant::ParticleTypeDatabase::Type* type;
     parentPtr parent = {};
     ParticleList daughters = {};
-    CandidateList candidates = {};
+    CandidatePtr candidate;
 
 public:
 
-    Particle(const ant::ParticleTypeDatabase::Type& _type, ant::mev_t _Ek, ant::radian_t _theta, ant::radian_t _phi);
+    Particle(const ant::ParticleTypeDatabase::Type& _type,
+             ant::mev_t _Ek, ant::radian_t _theta, ant::radian_t _phi);
 
     Particle(const ParticleTypeDatabase::Type &_type, const TLorentzVector &_lorentzvector):
         TLorentzVector(_lorentzvector),
         type(&_type)
     {}
 
-    Particle(const ParticleTypeDatabase::Type& _type, CandidatePtr candidate):
-        Particle(_type,candidate->ClusterEnergy(),candidate->Theta(), candidate->Phi()) {
-        candidates.emplace_back(candidate);
+    Particle(const ParticleTypeDatabase::Type& _type, const CandidatePtr& candidate_):
+        Particle(_type,candidate_->ClusterEnergy(),candidate_->Theta(), candidate_->Phi())
+    {
+        candidate = candidate_;
     }
 
     Particle(const Particle&) = delete;
@@ -67,9 +69,9 @@ public:
     ParticleList& Daughters() noexcept { return daughters; }
     const ParticleList& Daughters() const noexcept { return daughters; }
 
-    bool hasCandidates() const noexcept { return !candidates.empty(); }
-    CandidateList& Candidates() noexcept { return candidates; }
-    const CandidateList& Candidates() const noexcept { return candidates; }
+    bool hasCandidate() const noexcept { return !candidate; }
+    CandidatePtr& Candidate() noexcept { return candidate; }
+    const CandidatePtr& Candidate() const noexcept { return candidate; }
 
     virtual std::ostream& Print(std::ostream& stream) const;
 

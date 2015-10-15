@@ -42,8 +42,8 @@ std::ostream &Particle::Print(std::ostream &stream) const
     stream << " E=" << E();
     stream << " Theta=" << Theta();
     stream << " Phi=" << Phi();
-    for( auto& candidate : candidates ) {
-        stream << "\t" << *candidate << "\n";
+    if(candidate) {
+        stream << " Candidate=" << *candidate << "\n";
     }
     return stream;
 }
