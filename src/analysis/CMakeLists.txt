@@ -50,6 +50,7 @@ set(ANALYSIS_PHYSICS
   physics/SlowcontrolManager.cc
   physics/etaprime/etaprime_omega_gamma.cc
   physics/wolfes/etaprime-3pi0.cc
+  physics/common/IMPlots.cc
   )
 
 set(ANALYSIS_PLOT
