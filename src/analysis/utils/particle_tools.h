@@ -16,7 +16,7 @@ struct ParticleTools {
      * @param particles
      * @return
      */
-    static std::string GetDecayString(const data::ParticleList& particles);
+    static std::string GetDecayString(const data::ParticleTree_t& particletree);
 
     /**
      * @brief SanitizeDecayString replaces all special characters by _
@@ -27,14 +27,10 @@ struct ParticleTools {
 
 
     /** @brief Construct a string describing the production channel (e.g. gamma p -> p pi0 for pion production)
-     *        Searches for a Beam+Target pseudo partcile and uses it
-     *        and it's daughters to construct the string.
-     *        "???" is returned if no Beam+Target particle is found.
-     *        This should normally be run on the Intermediates() particle list of MCTrue data.
-     * @param particles
+     * @param particle
      * @return
      */
-    static std::string GetProductionChannelString(const data::ParticleList& particles);
+    static std::string GetProductionChannelString(const data::ParticleTree_t& particletree);
 
     /**
      * @brief Find the first Particle of given type in particle list

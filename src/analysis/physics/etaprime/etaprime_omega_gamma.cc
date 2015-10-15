@@ -85,7 +85,7 @@ void EtapOmegaG::ProcessEvent(const data::Event& event)
     steps->Fill("CBESum>550MeV",1);
 
 
-    const string& decaystring = utils::ParticleTools::GetDecayString(event.MCTrue().Intermediates().GetAll());
+    const string& decaystring = utils::ParticleTools::GetDecayString(event.MCTrue().ParticleTree());
 
     // search map only once even on insert
     auto it_h = perDecayHists.lower_bound(decaystring);

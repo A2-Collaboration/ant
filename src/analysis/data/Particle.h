@@ -1,11 +1,14 @@
 #pragma once
 
+#include "analysis/data/Candidate.h"
+
 #include "base/printable.h"
 #include "base/types.h"
 #include "base/ParticleType.h"
-#include "analysis/data/Candidate.h"
+#include "base/Tree.h"
 
 #include "TLorentzVector.h"
+
 #include <vector>
 #include <list>
 #include <iostream>
@@ -17,9 +20,10 @@ namespace data {
 
 class Particle;
 
-using ParticlePtr  = std::shared_ptr<Particle>;
-using ParticleList = std::vector<ParticlePtr>;
-using parentPtr = std::weak_ptr<Particle>;
+using ParticlePtr    = std::shared_ptr<Particle>;
+using ParticleList   = std::vector<ParticlePtr>;
+using ParticleTree_t = std::shared_ptr<Tree<ParticlePtr>>;
+
 
 /**
  * @brief Base particle class

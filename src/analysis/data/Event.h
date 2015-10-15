@@ -24,8 +24,6 @@ public:
     class Data: public ant::printable_traits {
     public:
 
-        using ParticleTree_t = std::shared_ptr<Tree<ParticlePtr>>;
-
         class PTypeLists: public ant::printable_traits {
         protected:
             ParticleList particles;
@@ -55,7 +53,7 @@ public:
                 return entry->second;
             }
 
-            std::ostream &Print(std::ostream &stream) const;
+            std::ostream& Print(std::ostream& stream) const;
         };
 
     protected:

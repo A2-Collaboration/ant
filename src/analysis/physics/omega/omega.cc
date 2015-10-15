@@ -133,7 +133,7 @@ void OmegaEtaG::Analyse(const Event::Data &data, const Event &event)
 
     perDecayhists_t* h = nullptr;
 
-    const string& decaystring = utils::ParticleTools::GetDecayString(event.MCTrue().Intermediates().GetAll());
+    const string& decaystring = utils::ParticleTools::GetDecayString(event.MCTrue().ParticleTree());
 
     if( h == nullptr) {
 
@@ -375,7 +375,7 @@ OmegaMCTruePlots::OmegaMCTruePlots(PhysOptPtr opts):
 
 void OmegaMCTruePlots::ProcessEvent(const Event& event)
 {
-    const auto& decaystring =utils::ParticleTools::GetProductionChannelString(event.MCTrue().Intermediates().GetAll());
+    const auto& decaystring =utils::ParticleTools::GetProductionChannelString(event.MCTrue().ParticleTree());
 
     auto e = channels.find(decaystring);
 

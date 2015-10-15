@@ -111,12 +111,6 @@ std::pair<std::size_t,bool> FindParticleByID(const std::vector<const PParticle*>
 
 }
 
-void SetParticleRelations(ParticleList list, ParticlePtr& particle, size_t parent_index) {
-    ParticlePtr& parent = list.at(parent_index);
-//    particle->Parent() = parent;
-//    parent->Daughters().emplace_back(particle);
-}
-
 std::string PlutoTable(const std::vector<const PParticle*> particles) {
     stringstream s;
     int i=0;

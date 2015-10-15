@@ -1,6 +1,8 @@
 #include "particle_tools.h"
 #include "combinatorics.h"
 
+#include "base/Logger.h"
+
 #include "TH1.h"
 
 #include <sstream>
@@ -9,35 +11,30 @@ using namespace ant::analysis;
 using namespace ant::analysis::data;
 using namespace  std;
 
-string utils::ParticleTools::GetDecayString(const ParticleList& particles)
+string utils::ParticleTools::GetDecayString(const ParticleTree_t& particletree)
 {
-//    stringstream s;
-//    if(! particles.empty()) {
-//        const auto& start = particles.front();
-//        Particle::RecPrint(start, s);
-//    }
+    stringstream s;
 
-//    stream << p->Type().PrintName() << " ";
+    // the head is the beam particle
+    s << particletree->get()->Type().PrintName() << " #rightarrow ";
 
-//    if(! p->Daughters().empty()) {
+    // ignore level==0 since its the already handled beamparticle
+    size_t lastlevel = 1;
+    particletree->maplevel([&s, &lastlevel] (const shared_ptr<Particle> p, size_t level) {
+        if(level>0) {
+            if(lastlevel < level)
+                s << "[ ";
+            else if(lastlevel > level)
+                s << "] ";
+            s << p->Type().PrintName() << " ";
+            lastlevel = level;
+        }
+    });
 
-//        if(p->Type() == ParticleTypeDatabase::BeamTarget) {
-//            stream << "#rightarrow ";
-//            for(auto& d : p->Daughters()) {
-//                RecPrint(d, stream);
-//            }
-//            stream << " ";
-//        } else {
-//            stream << "[ ";
-//            for(auto& d : p->Daughters()) {
-//                RecPrint(d, stream);
-//            }
-//            stream << "] ";
-//        }
+    while(lastlevel-- > 1)
+        s << "] ";
 
-//    }
-
-//    return s.str();
+    return s.str();
 }
 
 string utils::ParticleTools::SanitizeDecayString(string decaystring)
@@ -46,26 +43,22 @@ string utils::ParticleTools::SanitizeDecayString(string decaystring)
         std::replace( decaystring.begin(), decaystring.end(), c, '_');
     }
     std::replace(decaystring.begin(), decaystring.end(), '\'', 'p');
+    std::replace(decaystring.begin(), decaystring.end(), '+', 'p');
+    std::replace(decaystring.begin(), decaystring.end(), '-', 'm');
     return string("x")+decaystring;
 }
 
-string utils::ParticleTools::GetProductionChannelString(const ParticleList& particles)
+string utils::ParticleTools::GetProductionChannelString(const data::ParticleTree_t& particletree)
 {
-    const auto p = FindParticle(ParticleTypeDatabase::BeamTarget, particles);
+    const auto& p = particletree->get();
 
     stringstream s;
 
-//    if(p) {
+    s << p->Type().PrintName() << " #rightarrow";
 
-//        s << p->Type().PrintName() << " #rightarrow";
-
-//        for(const auto& daughter : p->Daughters()) {
-//            s << " " << daughter->Type().PrintName();
-//        }
-
-//    } else {
-//        s << "???";
-//    }
+    for(const auto& daughter : particletree->Daughters()) {
+        s << " " << daughter->get()->Type().PrintName();
+    }
 
     return s.str();
 }
