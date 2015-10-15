@@ -45,7 +45,7 @@ CB_Energy::CB_Energy(std::shared_ptr<expconfig::detector::CB> cb,
 unique_ptr<analysis::Physics> CB_Energy::GetPhysicsModule()
 {
     return std_ext::make_unique<ThePhysics>(GetName(),
-                                            Gains.Name,
+                                            RelativeGains.Name,
                                             cb_detector->GetNChannels());
 }
 
@@ -53,7 +53,7 @@ void CB_Energy::GetGUIs(list<unique_ptr<gui::Manager_traits> >& guis)
 {
     guis.emplace_back(std_ext::make_unique<GUI_Gains>(
                           GetName(),
-                          Gains,
+                          RelativeGains,
                           calibrationManager,
                           cb_detector
                           ));
@@ -191,6 +191,7 @@ void CB_Energy::GUI_Gains::StoreFit(unsigned channel)
 
 bool CB_Energy::GUI_Gains::FinishRange()
 {
+    canvas->Clear();
     canvas->Divide(2,2);
 
     canvas->cd(1);
