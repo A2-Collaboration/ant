@@ -39,20 +39,16 @@ void Clustering::Build(
         list<TCluster>& clusters)
 {
     // clustering detector, so we need additional information
-    // to build the crystal_t
+    // to build the crystals_t
     list<clustering::crystal_t> crystals;
     for(const AdaptorTClusterHit& clusterhit : clusterhits) {
         const auto& hit = clusterhit.Hit;
         // ignore hits without energy information
         if(!isfinite(clusterhit.Energy))
             continue;
-        const ClusterDetector_t::Element_t* element = clusterdetector->GetClusterElement(hit->Channel);
-        // ignore hits below the energy threshold
-        if(element->EnergyThreshold>clusterhit.Energy)
-            continue;
         crystals.emplace_back(
                     clusterhit.Energy,
-                    element,
+                    clusterdetector->GetClusterElement(hit->Channel),
                     addressof(clusterhit)
                     );
 

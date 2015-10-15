@@ -116,17 +116,14 @@ struct ClusterDetector_t : Detector_t {
                 unsigned channel,
                 const TVector3& position,
                 const std::vector<unsigned>& neighbours,
-                double moliereRadius,
-                double energyThreshold
+                double moliereRadius
                 ) :
             Detector_t::Element_t(channel, position),
             Neighbours(neighbours),
-            MoliereRadius(moliereRadius),
-            EnergyThreshold(energyThreshold)
+            MoliereRadius(moliereRadius)
         {}
         std::vector<unsigned> Neighbours;
         double MoliereRadius;
-        double EnergyThreshold;
     };
 
     virtual const Element_t* GetClusterElement(unsigned channel) const = 0;
