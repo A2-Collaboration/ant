@@ -72,7 +72,9 @@ bool DataManager::GetData(const string& calibrationID,
             cdata = *rit;
             return true;
         }
-        if(rit->Extendable
+        const bool extendable = rit->Extendable
+                                || (rit->FirstID.isSet(TID::Flags_t::MC) && rit->FirstID.isSet(TID::Flags_t::MC));
+        if(extendable
            && rit->FirstID.Flags == eventID.Flags
            && rit->LastID.Flags == eventID.Flags)
         {
