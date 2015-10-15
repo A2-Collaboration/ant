@@ -32,9 +32,17 @@ public:
 };
 
 class endcanvas: public modifier {
-
+public:
+    endcanvas() {}
 };
+
 static const endcanvas endc;
+
+struct rowend : modifier {
+    rowend() {}
+};
+
+static const rowend endr;
 
 class drawoption: public modifier {
 protected:
@@ -105,6 +113,7 @@ protected:
     static unsigned int num;
 
     std::string name;
+    bool automode = true;
 
     TCanvas* create(const std::string& title="");
     TCanvas* find();
@@ -126,13 +135,18 @@ protected:
         std::tuple<
             std::unique_ptr<root_drawable_traits>,
             std::string,              // draw option
-            std::list<padoption_t>    // pad options
+            std::list<padoption_t>,    // pad options
+            bool // end of row
         >;
 
     std::list<ObjectOption> objs;
 
     std::string current_drawoption;
     std::list<padoption_t> current_padoptions;
+
+    static bool isMarker(const std::unique_ptr<root_drawable_traits>& t);
+
+    void DrawObjs(TCanvas* c, unsigned cols, unsigned rows);
 public:
 
     canvas(const std::string& title="");
@@ -145,6 +159,8 @@ public:
     virtual canvas& operator<< (TObject* hist);
 
     virtual canvas& operator<< (const endcanvas& c);
+
+    virtual canvas& operator<< (const rowend&);
 
     virtual canvas &operator<< (const drawoption& c);
 

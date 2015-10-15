@@ -11,6 +11,7 @@
 #include "THStack.h"
 #include <TVirtualPad.h>
 #include <algorithm>
+#include "base/std_ext/memory.h"
 
 using namespace ant;
 using namespace std;
@@ -49,6 +50,37 @@ TCanvas *ant::canvas::find()
         return create();
 }
 
+void canvas::DrawObjs(TCanvas* c, unsigned cols, unsigned rows)
+{
+    c->Divide(cols,rows);
+    int pad=1;
+    unsigned ninrow =0;
+    for(const auto& o : objs) {
+
+        if(get<3>(o)) {
+            pad+=(cols-ninrow);
+            ninrow=0;
+        } else {
+
+            TVirtualPad* vpad = c->cd(pad);
+            // draw the object
+            get<0>(o)->Draw(get<1>(o).c_str());
+            // set pad options
+            for(const auto& o_ : get<2>(o)) {
+                const auto& it = padoption::map_options.find(o_);
+                // silently ignore not implemented pad options
+                if(it == padoption::map_options.end())
+                    continue;
+                it->second(vpad);
+            }
+
+            ++pad;
+        }
+        ninrow++;
+    }
+}
+
+
 canvas::canvas(const string &title) :
   name(), objs(), current_drawoption(), current_padoptions()
 {
@@ -72,7 +104,7 @@ canvas &canvas::operator<<(root_drawable_traits &drawable)
 {
     std::unique_ptr<root_drawable_traits> c(new drawable_container<root_drawable_traits*>(&drawable)) ;
 
-    objs.emplace_back( move(c), current_drawoption, current_padoptions);
+    objs.emplace_back( move(c), current_drawoption, current_padoptions, false);
 
     return *this;
 }
@@ -81,7 +113,7 @@ canvas &canvas::operator<<(TObject *hist)
 {
     std::unique_ptr<root_drawable_traits> c(new drawable_container<TObject*>(hist)) ;
 
-    objs.emplace_back( move(c), current_drawoption, current_padoptions);
+    objs.emplace_back( move(c), current_drawoption, current_padoptions, false);
 
     return *this;
 }
@@ -96,25 +128,38 @@ canvas &canvas::operator<<(const endcanvas&)
 
     if(c) {
 
-        const int cols = ceil(sqrt(objs.size()));
-        const int rows = ceil((double)objs.size()/(double)cols);
+        unsigned cols =0;
+        unsigned rows =0;
 
-        c->Divide(cols,rows);
-        int pad=1;
-        for(const auto& o : objs) {
-            TVirtualPad* vpad = c->cd(pad++);
-            // draw the object
-            get<0>(o)->Draw(get<1>(o).c_str());
-            // set pad options
-            for(const auto& o_ : get<2>(o)) {
-                const auto& it = padoption::map_options.find(o_);
-                // silently ignore not implemented pad options
-                if(it == padoption::map_options.end())
-                    continue;
-                it->second(vpad);
+        if(automode) {
+
+            cols = ceil(sqrt(objs.size()));
+            rows = ceil((double)objs.size()/(double)cols);
+
+        } else {
+            unsigned ccols=0;
+            for(const auto& o : objs) {
+                if(get<3>(o)) {
+                    cols = max(ccols,cols);
+                    ccols=0;
+                    rows++;
+                } else {
+                    ccols++;
+                }
             }
         }
+        DrawObjs(c,cols,rows);
     }
+
+    return *this;
+}
+
+canvas&canvas::operator<<(const rowend&)
+{
+    std::unique_ptr<root_drawable_traits> c(new drawable_container<TObject*>(nullptr)) ;
+
+    objs.emplace_back( move(c), current_drawoption, current_padoptions, true);
+    automode = false;
     return *this;
 }
 
