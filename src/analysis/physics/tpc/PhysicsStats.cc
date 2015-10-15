@@ -2,6 +2,7 @@
 #include "data/Particle.h"
 #include "base/ParticleType.h"
 #include "plot/root_draw.h"
+#include "utils/particle_tools.h"
 #include <sstream>
 
 using namespace std;
@@ -16,21 +17,6 @@ TPC_PhysicsStats::TPC_PhysicsStats(PhysOptPtr& opts): Physics("TPC_PhysicsStats"
 
 }
 
-
-std::string ProdProcess(const ParticlePtr& beamtarget) {
-
-    stringstream s;
-
-//    if(beamtarget->Type() == ParticleTypeDatabase::BeamProton || beamtarget->Type() == ParticleTypeDatabase::BeamNeutron) {
-//        s << beamtarget->Type().PrintName() << " #rightarrow ";
-//        for(const auto& d : beamtarget->Daughters()) {
-//            s << " " << d->Type().PrintName();
-//        }
-//    }
-
-    return s.str();
-}
-
 bool containsCharged(const ParticleList& particles) {
     for(const auto& p : particles) {
         if(p->Type() == ParticleTypeDatabase::PiCharged || p->Type() == ParticleTypeDatabase::eCharged)
@@ -41,9 +27,9 @@ bool containsCharged(const ParticleList& particles) {
 
 void TPC_PhysicsStats::ProcessEvent(const Event& event)
 {
-    const auto& intermediates = event.MCTrue().Intermediates().GetAll();
-    if(!intermediates.empty()) {
-        const auto process = ProdProcess(intermediates.front());
+    const auto& particletree = event.MCTrue().ParticleTree();
+    if(particletree) {
+        const auto process = utils::ParticleTools::GetProductionChannelString(particletree);
         TH1D* h = nullptr;
 
         const auto entry = decay_angles.find(process);
