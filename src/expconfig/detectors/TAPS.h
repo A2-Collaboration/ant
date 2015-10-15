@@ -100,7 +100,9 @@ protected:
                 TVector3(pos_xy.X(), pos_xy.Y(), // z-component set by BuildClusterElements()
                          std::numeric_limits<double>::quiet_NaN()),
                 neighbours,
-                3.4 /// \todo use best value from S. Lohse diploma thesis?
+                /// \todo use best value from S. Lohse diploma thesis?
+                3.4, // Moliere radius
+                4.0  // Energy threshold
                 ),
             TAC(tac),
             LG(lg),
@@ -129,7 +131,9 @@ protected:
                 TVector3(pos_xy.X(), pos_xy.Y(), // z-component set by InitClusterElements()
                          std::numeric_limits<double>::quiet_NaN()),
                 neighbours,
-                2.2 /// \todo use best value from S. Lohse diploma thesis?
+                /// \todo use best value from S. Lohse diploma thesis?
+                2.2, // Moliere radius
+                1.0  // Energy threshold, original Acqu value was 0.1...?!
                 ),
             TDC(tdc),
             QDCH(qdch),

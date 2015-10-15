@@ -50,7 +50,9 @@ protected:
                 channel,
                 position,
                 neighbours,
-                4.8 /// \todo use best value from S. Lohse diploma thesis?
+                /// \todo use best value from S. Lohse diploma thesis?
+                4.8, // Moliere radius
+                2.0  // Energy threshold
                 ),
             ADC(adc),
             TDC(tdc)
