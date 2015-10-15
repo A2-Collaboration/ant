@@ -13,6 +13,7 @@ namespace utils
 struct PlutoTID {
 
     static const std::string tidtree_name;
+    static const std::string geant_tidtree_name;
 
     /**
      * @brief Add a TID Tree to a pluto generated ROOT file.
@@ -22,6 +23,8 @@ struct PlutoTID {
      * called "dataTID" for each entry in "data"
      */
     static void AddTID(const std::string& filename);
+
+    static void CopyTIDPlutoGeant(const std::string& pluto_filename, const std::string& geant_filename);
 };
 
 }

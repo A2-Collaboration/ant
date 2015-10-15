@@ -14,6 +14,7 @@ using namespace ant;
 using namespace ant::simulation::mc::utils;
 
 const string PlutoTID::tidtree_name("data_tid");
+const string PlutoTID::geant_tidtree_name("h12_tid");
 
 template <typename T>
 bool CheckExists(WrapTFile& file, const std::string& name) {
@@ -62,4 +63,23 @@ void PlutoTID::AddTID(const std::string &filename)
         LOG(WARNING) << "No pluto data Tree found";
     }
 
+}
+
+void PlutoTID::CopyTIDPlutoGeant(const string& pluto_filename, const string& geant_filename)
+{
+    WrapTFileInput input(pluto_filename);
+
+    TTree* intree = nullptr;
+    input.GetObject(tidtree_name,intree);
+
+    if(intree) {
+        WrapTFileOutput outfile(geant_filename,WrapTFileOutput::mode_t::update, true);
+        intree->SetBranchStatus("tid",1);
+        auto outtree = intree->CloneTree(-1,"fast SortBasketsByBranch");
+        outtree->SetName(geant_tidtree_name.c_str());
+        outtree->Write();
+
+    } else {
+        LOG(ERROR) << "TTree \"" << tidtree_name << "\" not found";
+    }
 }
