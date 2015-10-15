@@ -11,7 +11,7 @@ Particle::Particle(const ParticleTypeDatabase::Type &_type, mev_t _Ek, radian_t 
     const mev_t E = _Ek + type->Mass();
     const mev_t p = sqrt( sqr(E) - sqr(type->Mass()) );
 
-    //TODO: fix. This might be inefficeint...
+    /// \bug This might be inefficient...
 
     TVector3 pv(1,0,0);
 
@@ -46,29 +46,4 @@ std::ostream &Particle::Print(std::ostream &stream) const
         stream << " Candidate=" << *candidate << "\n";
     }
     return stream;
-}
-
-
-void Particle::RecPrint(const ParticlePtr &p, std::ostream &stream)
-{
-
-    stream << p->Type().PrintName() << " ";
-
-    if(! p->Daughters().empty()) {
-
-        if(p->Type() == ParticleTypeDatabase::BeamTarget) {
-            stream << "#rightarrow ";
-            for(auto& d : p->Daughters()) {
-                RecPrint(d, stream);
-            }
-            stream << " ";
-        } else {
-            stream << "[ ";
-            for(auto& d : p->Daughters()) {
-                RecPrint(d, stream);
-            }
-            stream << "] ";
-        }
-
-    }
 }

@@ -27,8 +27,6 @@ using parentPtr = std::weak_ptr<Particle>;
 class Particle: public TLorentzVector, public printable_traits {
 protected:
     const ant::ParticleTypeDatabase::Type* type;
-    parentPtr parent = {};
-    ParticleList daughters = {};
     CandidatePtr candidate;
 
 public:
@@ -59,16 +57,6 @@ public:
 
     void SetLorentzVector( const TLorentzVector& lv ) { *((TLorentzVector*)this) = lv; }
 
-
-    bool hasParent() const noexcept { return parent.expired(); }
-    const parentPtr Parent() const noexcept { return parent; }
-    parentPtr Parent() noexcept { return parent; }
-
-
-    bool hasDaughters() const noexcept { return !daughters.empty(); }
-    ParticleList& Daughters() noexcept { return daughters; }
-    const ParticleList& Daughters() const noexcept { return daughters; }
-
     bool hasCandidate() const noexcept { return !candidate; }
     CandidatePtr& Candidate() noexcept { return candidate; }
     const CandidatePtr& Candidate() const noexcept { return candidate; }
@@ -80,9 +68,6 @@ public:
     static double calcAngle( const ParticlePtr& p1, const ParticlePtr& p2 ) {
         return p1->Angle(p2->Vect());
     }
-
-    static void RecPrint(const ParticlePtr& p, std::ostream& stream=std::cout);
-
 };
 
 }

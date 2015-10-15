@@ -45,9 +45,6 @@ protected:
     TID*            tid = nullptr;
     bool tid_from_file = false;
 
-    using PParticleVector = std::vector<const PParticle*>;
-    PParticleVector PlutoParticles;
-
     Long64_t    current_entry = 0;
 
     void CopyPluto(data::Event& event);

@@ -451,48 +451,48 @@ void OmegeMCTree::ProcessEvent(const Event& event)
     gamma2_vector.SetPxPyPzE(0,0,0,0);
     gamma3_vector.SetPxPyPzE(0,0,0,0);
 
-    const auto& bpl = event.MCTrue().Intermediates().Get(ParticleTypeDatabase::BeamProton);
-    if(bpl.size() == 1) {
-        const ParticlePtr& bp = bpl.at(0);
+//    const auto& bpl = event.MCTrue().Intermediates().Get(ParticleTypeDatabase::BeamProton);
+//    if(bpl.size() == 1) {
+//        const ParticlePtr& bp = bpl.at(0);
 
-        if(bp->Daughters().size() == 2) {
-            for(const auto& d : bp->Daughters()) {
-                if(d->Type() == ParticleTypeDatabase::Proton) {
-                    proton_vector = *d;
-                } else if(d->Type() == ParticleTypeDatabase::Omega) {
-                    omega_vector = *d;
-                    if(d->Daughters().size() ==2 ) {
-                        for(const ParticlePtr& e : d->Daughters()) {
-                            if(e->Type() == ParticleTypeDatabase::Eta) {
-                                eta_vector = *e;
-                                if(e->Daughters().size() == 2) {
-                                    for(const ParticlePtr& f : e->Daughters()) {
-                                        if(f->Type() == ParticleTypeDatabase::Photon) {
-                                            if(gamma2_vector.E() ==0) {
-                                                gamma2_vector = *f;
-                                            } else {
-                                                if(gamma3_vector.E()==0) {
-                                                    gamma3_vector = *f;
-                                                }
-                                            }
-                                        }
-                                    }
-                                }
-                            } else if(e->Type() == ParticleTypeDatabase::Photon) {
-                                gamma1_vector = *e;
-                            }
-                        }
-                    }
-                }
-            }
-        }
+//        if(bp->Daughters().size() == 2) {
+//            for(const auto& d : bp->Daughters()) {
+//                if(d->Type() == ParticleTypeDatabase::Proton) {
+//                    proton_vector = *d;
+//                } else if(d->Type() == ParticleTypeDatabase::Omega) {
+//                    omega_vector = *d;
+//                    if(d->Daughters().size() ==2 ) {
+//                        for(const ParticlePtr& e : d->Daughters()) {
+//                            if(e->Type() == ParticleTypeDatabase::Eta) {
+//                                eta_vector = *e;
+//                                if(e->Daughters().size() == 2) {
+//                                    for(const ParticlePtr& f : e->Daughters()) {
+//                                        if(f->Type() == ParticleTypeDatabase::Photon) {
+//                                            if(gamma2_vector.E() ==0) {
+//                                                gamma2_vector = *f;
+//                                            } else {
+//                                                if(gamma3_vector.E()==0) {
+//                                                    gamma3_vector = *f;
+//                                                }
+//                                            }
+//                                        }
+//                                    }
+//                                }
+//                            } else if(e->Type() == ParticleTypeDatabase::Photon) {
+//                                gamma1_vector = *e;
+//                            }
+//                        }
+//                    }
+//                }
+//            }
+//        }
 
-        if(omega_vector.E() != 0 && proton_vector.E() !=0 && gamma1_vector.E() !=0 && eta_vector.E() !=0 && gamma2_vector.E() !=0 && gamma3_vector.E() != 0) {
-            tree->Fill();
-        } else {
-            LOG(WARNING) << "not complete";
-        }
-    }
+//        if(omega_vector.E() != 0 && proton_vector.E() !=0 && gamma1_vector.E() !=0 && eta_vector.E() !=0 && gamma2_vector.E() !=0 && gamma3_vector.E() != 0) {
+//            tree->Fill();
+//        } else {
+//            LOG(WARNING) << "not complete";
+//        }
+//    }
 }
 
 void OmegeMCTree::ShowResult()
@@ -631,46 +631,46 @@ OmegaEtaG2::channel_type_t OmegaEtaG2::identify(const Event &event) const
     bool gamma3=false;
 
     const auto& bpl = event.MCTrue().Intermediates().Get(ParticleTypeDatabase::BeamProton);
-    if(bpl.size() == 1) {
-        const ParticlePtr& bp = bpl.at(0);
+//    if(bpl.size() == 1) {
+//        const ParticlePtr& bp = bpl.at(0);
 
-        if(bp->Daughters().size() == 2) {
-            for(const auto& d : bp->Daughters()) {
-                if(d->Type() == ParticleTypeDatabase::Proton) {
-                    proton=true;
-                } else if(d->Type() == ParticleTypeDatabase::Omega) {
-                    omega=true;
-                    if(d->Daughters().size() ==2 ) {
-                        for(const ParticlePtr& e : d->Daughters()) {
-                            if(e->Type() == ParticleTypeDatabase::Eta || e->Type() == ParticleTypeDatabase::Pi0) {
-                                etapi0 = true;
-                                if(e->Type() == ParticleTypeDatabase::Eta) {
-                                    type = channel_type_t::Signal;
-                                } else {
-                                    type = channel_type_t::Reference;
-                                }
-                                if(e->Daughters().size() == 2) {
-                                    for(const ParticlePtr& f : e->Daughters()) {
-                                        if(f->Type() == ParticleTypeDatabase::Photon) {
-                                            if(!gamma2) {
-                                                gamma2=true;
-                                            } else {
-                                                if(!gamma3) {
-                                                    gamma3=true;
-                                                }
-                                            }
-                                        }
-                                    }
-                                }
-                            } else if(e->Type() == ParticleTypeDatabase::Photon) {
-                                gamma1 = true;
-                            }
-                        }
-                    }
-                }
-            }
-        }
-    }
+//        if(bp->Daughters().size() == 2) {
+//            for(const auto& d : bp->Daughters()) {
+//                if(d->Type() == ParticleTypeDatabase::Proton) {
+//                    proton=true;
+//                } else if(d->Type() == ParticleTypeDatabase::Omega) {
+//                    omega=true;
+//                    if(d->Daughters().size() ==2 ) {
+//                        for(const ParticlePtr& e : d->Daughters()) {
+//                            if(e->Type() == ParticleTypeDatabase::Eta || e->Type() == ParticleTypeDatabase::Pi0) {
+//                                etapi0 = true;
+//                                if(e->Type() == ParticleTypeDatabase::Eta) {
+//                                    type = channel_type_t::Signal;
+//                                } else {
+//                                    type = channel_type_t::Reference;
+//                                }
+//                                if(e->Daughters().size() == 2) {
+//                                    for(const ParticlePtr& f : e->Daughters()) {
+//                                        if(f->Type() == ParticleTypeDatabase::Photon) {
+//                                            if(!gamma2) {
+//                                                gamma2=true;
+//                                            } else {
+//                                                if(!gamma3) {
+//                                                    gamma3=true;
+//                                                }
+//                                            }
+//                                        }
+//                                    }
+//                                }
+//                            } else if(e->Type() == ParticleTypeDatabase::Photon) {
+//                                gamma1 = true;
+//                            }
+//                        }
+//                    }
+//                }
+//            }
+//        }
+//    }
 
     if(!(proton&&omega&&etapi0&&gamma1&&gamma2&&gamma3))
         type = channel_type_t::Background;

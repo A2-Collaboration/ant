@@ -113,8 +113,8 @@ std::pair<std::size_t,bool> FindParticleByID(const std::vector<const PParticle*>
 
 void SetParticleRelations(ParticleList list, ParticlePtr& particle, size_t parent_index) {
     ParticlePtr& parent = list.at(parent_index);
-    particle->Parent() = parent;
-    parent->Daughters().emplace_back(particle);
+//    particle->Parent() = parent;
+//    parent->Daughters().emplace_back(particle);
 }
 
 std::string PlutoTable(const std::vector<const PParticle*> particles) {
@@ -131,7 +131,7 @@ std::string PlutoTable(const std::vector<const PParticle*> particles) {
 void PlutoReader::CopyPluto(Event& event)
 {
     const Long64_t entries = PlutoMCTrue->GetEntries();
-    PlutoParticles.resize(0);
+    std::vector<const PParticle*> PlutoParticles;
     PlutoParticles.reserve(size_t(entries));
 
     for( Long64_t i=0; i < entries; ++i) {
@@ -143,53 +143,30 @@ void PlutoReader::CopyPluto(Event& event)
         }
     }
 
-    ParticleList AntParticles;
-    AntParticles.reserve(PlutoParticles.size());
+    using treenode_t = shared_ptr<Tree<ParticlePtr>>;
+
+    vector<treenode_t> FlatTree;
 
     // convert pluto particles to ant particles and place in buffer list
-    for( auto& p : PlutoParticles ) {
 
-        auto type = GetType(p);
-        TLorentzVector lv = *p;
+    for( auto& PlutoParticle : PlutoParticles ) {
+
+        // make an AntParticle out of it
+        auto type = GetType(PlutoParticle);
+        TLorentzVector lv = *PlutoParticle;
         lv *= 1000.0;   // convert to MeV
+        auto AntParticle = make_shared<Particle>(*type,lv);
 
-        AntParticles.emplace_back(new Particle(*type,lv));
-
-    }
-
-    // loop over both lists (pluto and ant particles)
-    for(size_t i=0; i<PlutoParticles.size(); ++i) {
-
-        const PParticle* PlutoParticle = PlutoParticles.at(i);
-        ParticlePtr      AntParticle = AntParticles.at(i);
-
-        // Set up tree relations (parent/daughter)
-        if(PlutoParticle->GetParentIndex() >= 0) {
-
-            if( size_t(PlutoParticle->GetParentIndex()) < AntParticles.size()) {
-                SetParticleRelations(AntParticles, AntParticle, PlutoParticle->GetParentIndex());
-            }
-
-        } else {
-            if( ! (AntParticle->Type() == ParticleTypeDatabase::BeamProton)) {
-
-                auto search_result = FindParticleByID(PlutoParticles, PlutoParticle->GetParentId());
-
-                if(search_result.second) {
-                    VLOG(7) << "Recovered missing pluto decay tree inforamtion.";
-                    SetParticleRelations(AntParticles, AntParticle, search_result.first);
-
-                } else {  // BeamProton is not supposed to have a parent
-                    VLOG(7) << "Missing decay tree info for pluto particle";
-                }
-
-                VLOG(9) << "\n" << PlutoTable(PlutoParticles);
-            }
+        // Add particle to event storage
+        if(PlutoParticle->GetDaughterIndex() == -1 ) { // final state
+            event.MCTrue().Particles().AddParticle(AntParticle);
+        } else { //intermediate
+            event.MCTrue().Intermediates().AddParticle(AntParticle);
         }
 
-        // create a tagger hit corresponding to beam+parget particle
-        if( AntParticle->Type() == ParticleTypeDatabase::BeamProton) {
-            const double energy = AntParticle->E() - ParticleTypeDatabase::Proton.Mass();
+        // Simulate some tagger hit
+        if( AntParticle->Type() == ParticleTypeDatabase::BeamTarget) {
+            const double energy = AntParticle->Ek();
             unsigned channel = 0;
             if(tagger && tagger->TryGetChannelFromPhoton(energy, channel)) {
                 const double time = 0.0; /// @todo handle non-prompt hits?
@@ -197,11 +174,48 @@ void PlutoReader::CopyPluto(Event& event)
             }
         }
 
-        // Add particle to event storage
-        if(PlutoParticle->GetDaughterIndex() == -1 ) { // final state
-            event.MCTrue().Particles().AddParticle(AntParticle);
-        } else { //intermediate
-            event.MCTrue().Intermediates().AddParticle(AntParticle);
+        // save it in list with same order as in PlutoParticles
+        FlatTree.emplace_back(Tree<ParticlePtr>::makeNode(AntParticle));
+
+    }
+
+    // build the particle tree
+
+    // loop over both lists (pluto and and the flat tree)
+    for(size_t i=0; i<PlutoParticles.size(); ++i) {
+
+        const PParticle* PlutoParticle = PlutoParticles.at(i);
+        shared_ptr<Tree<ParticlePtr>>&  TreeNode = FlatTree.at(i);
+
+        Int_t parent_index = PlutoParticle->GetParentIndex();
+
+        // Set up tree relations (parent/daughter)
+        if(parent_index >= 0 && size_t(parent_index) < FlatTree.size()) {
+
+            TreeNode->setParent(FlatTree.at(parent_index));
+
+        } else {
+
+            if( TreeNode->get()->Type() == ParticleTypeDatabase::BeamTarget) {
+                auto& headnode = event.MCTrue().ParticleTree();
+                if(headnode) {
+                    LOG(WARNING) << "Found more than one BeamTarget in MCTrue";
+                }
+                headnode = TreeNode;
+            }
+            else
+            {
+                auto search_result = FindParticleByID(PlutoParticles, PlutoParticle->GetParentId());
+
+                if(search_result.second) {
+                    VLOG(7) << "Recovered missing pluto decay tree inforamtion.";
+                    TreeNode->setParent(FlatTree.at(search_result.first));
+                } else {  // BeamProton is not supposed to have a parent
+                    VLOG(7) << "Missing decay tree info for pluto particle";
+                }
+
+                VLOG(9) << "\n" << PlutoTable(PlutoParticles);
+            }
         }
     }
 

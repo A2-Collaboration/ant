@@ -14,7 +14,7 @@ protected:
     using wnode_t    = std::weak_ptr<Tree>;
     using snodelist_t = std::list<snode_t>;
 
-    wnode_t partent;
+    wnode_t parent;
     wnode_t self;
     snodelist_t daughters;
 
@@ -35,7 +35,7 @@ public:
         return n;
     }
 
-    bool isRoot() const { return partent.expired(); }
+    bool isRoot() const { return parent.expired(); }
     bool isLeaf() const { return daughters.empty(); }
 
     T& operator*() { return data; }
@@ -43,21 +43,21 @@ public:
 
     const T& get() const { return data; }
 
-    snode_t GetParent() { return partent.lock(); }
+    snode_t GetParent() { return parent.lock(); }
     snode_t Self() { return self.lock(); }
     const snodelist_t& Daughters() const { return daughters; }
 
     void Unlink() {
         if(auto p = GetParent()) {
             p->remove_daughter(this);
-            partent.reset();
+            parent.reset();
         }
     }
 
     template <typename ... args_t>
     snode_t createDaughter(args_t&&... args) {
         auto n = makeNode(std::forward<args_t>(args)...);
-        n->partent = Self();
+        n->parent = Self();
         daughters.emplace_back(n);
         return n;
     }
@@ -65,8 +65,8 @@ public:
     void setParent(snode_t& p) {
         if(!isRoot())
             Unlink();
-        partent = p;
-        p->daughters.emplace_back(Self);
+        parent = p;
+        p->daughters.emplace_back(Self());
     }
 
     template <typename F>

@@ -21,12 +21,12 @@ std::string ProdProcess(const ParticlePtr& beamtarget) {
 
     stringstream s;
 
-    if(beamtarget->Type() == ParticleTypeDatabase::BeamProton || beamtarget->Type() == ParticleTypeDatabase::BeamNeutron) {
-        s << beamtarget->Type().PrintName() << " #rightarrow ";
-        for(const auto& d : beamtarget->Daughters()) {
-            s << " " << d->Type().PrintName();
-        }
-    }
+//    if(beamtarget->Type() == ParticleTypeDatabase::BeamProton || beamtarget->Type() == ParticleTypeDatabase::BeamNeutron) {
+//        s << beamtarget->Type().PrintName() << " #rightarrow ";
+//        for(const auto& d : beamtarget->Daughters()) {
+//            s << " " << d->Type().PrintName();
+//        }
+//    }
 
     return s.str();
 }

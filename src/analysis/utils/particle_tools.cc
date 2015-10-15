@@ -11,13 +11,33 @@ using namespace  std;
 
 string utils::ParticleTools::GetDecayString(const ParticleList& particles)
 {
-    stringstream s;
-    if(! particles.empty()) {
-        const auto& start = particles.front();
-        Particle::RecPrint(start, s);
-    }
+//    stringstream s;
+//    if(! particles.empty()) {
+//        const auto& start = particles.front();
+//        Particle::RecPrint(start, s);
+//    }
 
-    return s.str();
+//    stream << p->Type().PrintName() << " ";
+
+//    if(! p->Daughters().empty()) {
+
+//        if(p->Type() == ParticleTypeDatabase::BeamTarget) {
+//            stream << "#rightarrow ";
+//            for(auto& d : p->Daughters()) {
+//                RecPrint(d, stream);
+//            }
+//            stream << " ";
+//        } else {
+//            stream << "[ ";
+//            for(auto& d : p->Daughters()) {
+//                RecPrint(d, stream);
+//            }
+//            stream << "] ";
+//        }
+
+//    }
+
+//    return s.str();
 }
 
 string utils::ParticleTools::SanitizeDecayString(string decaystring)
@@ -35,17 +55,17 @@ string utils::ParticleTools::GetProductionChannelString(const ParticleList& part
 
     stringstream s;
 
-    if(p) {
+//    if(p) {
 
-        s << p->Type().PrintName() << " #rightarrow";
+//        s << p->Type().PrintName() << " #rightarrow";
 
-        for(const auto& daughter : p->Daughters()) {
-            s << " " << daughter->Type().PrintName();
-        }
+//        for(const auto& daughter : p->Daughters()) {
+//            s << " " << daughter->Type().PrintName();
+//        }
 
-    } else {
-        s << "???";
-    }
+//    } else {
+//        s << "???";
+//    }
 
     return s.str();
 }

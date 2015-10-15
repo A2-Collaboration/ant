@@ -8,6 +8,7 @@
 
 #include "base/types.h"
 #include "base/printable.h"
+#include "base/Tree.h"
 
 #include <vector>
 #include <memory>
@@ -17,10 +18,13 @@ namespace ant {
 namespace analysis {
 namespace data {
 
+
 class Event: public ant::printable_traits {
 public:
     class Data: public ant::printable_traits {
     public:
+
+        using ParticleTree_t = std::shared_ptr<Tree<ParticlePtr>>;
 
         class PTypeLists: public ant::printable_traits {
         protected:
@@ -54,9 +58,11 @@ public:
             std::ostream &Print(std::ostream &stream) const;
         };
 
+    protected:
 
         PTypeLists   particles;      // final state / reconstructred particles
         PTypeLists   intermediates;  // intermediate particles (if any)
+        ParticleTree_t particletree; // particle tree (if available)
 
         CandidateList  candidates;     // particle candidates (if any)
         TaggerHitList  taggerhits;     // tagger hits
@@ -71,6 +77,10 @@ public:
 
         const PTypeLists& Intermediates() const { return intermediates; }
               PTypeLists& Intermediates()       { return intermediates; }
+
+        const ParticleTree_t& ParticleTree() const { return particletree; }
+              ParticleTree_t& ParticleTree()       { return particletree; }
+
 
         const CandidateList& Candidates() const { return candidates; }
               CandidateList& Candidates()       { return candidates; }
