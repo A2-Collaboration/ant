@@ -169,7 +169,7 @@ void PlutoReader::CopyPluto(Event& event)
         }
 
         // save it in list with same order as in PlutoParticles
-        FlatTree.emplace_back(Tree<ParticlePtr>::makeNode(AntParticle));
+        FlatTree.emplace_back(Tree<ParticlePtr>::MakeNode(AntParticle));
 
     }
 
@@ -186,11 +186,11 @@ void PlutoReader::CopyPluto(Event& event)
         // Set up tree relations (parent/daughter)
         if(parent_index >= 0 && size_t(parent_index) < FlatTree.size()) {
 
-            TreeNode->setParent(FlatTree.at(parent_index));
+            TreeNode->SetParent(FlatTree.at(parent_index));
 
         } else {
 
-            if( TreeNode->get()->Type() == ParticleTypeDatabase::BeamTarget) {
+            if( TreeNode->Get()->Type() == ParticleTypeDatabase::BeamTarget) {
                 auto& headnode = event.MCTrue().ParticleTree();
                 if(headnode) {
                     LOG(WARNING) << "Found more than one BeamTarget in MCTrue";
@@ -203,7 +203,7 @@ void PlutoReader::CopyPluto(Event& event)
 
                 if(search_result.second) {
                     VLOG(7) << "Recovered missing pluto decay tree inforamtion.";
-                    TreeNode->setParent(FlatTree.at(search_result.first));
+                    TreeNode->SetParent(FlatTree.at(search_result.first));
                 } else {  // BeamProton is not supposed to have a parent
                     VLOG(7) << "Missing decay tree info for pluto particle";
                 }

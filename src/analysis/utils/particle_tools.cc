@@ -16,11 +16,11 @@ string utils::ParticleTools::GetDecayString(const ParticleTree_t& particletree)
     stringstream s;
 
     // the head is the beam particle
-    s << particletree->get()->Type().PrintName() << " #rightarrow ";
+    s << particletree->Get()->Type().PrintName() << " #rightarrow ";
 
     // ignore level==0 since its the already handled beamparticle
     size_t lastlevel = 1;
-    particletree->maplevel([&s, &lastlevel] (const shared_ptr<Particle> p, size_t level) {
+    particletree->Map_level([&s, &lastlevel] (const shared_ptr<Particle> p, size_t level) {
         if(level>0) {
             if(lastlevel < level)
                 s << "[ ";
@@ -50,14 +50,14 @@ string utils::ParticleTools::SanitizeDecayString(string decaystring)
 
 string utils::ParticleTools::GetProductionChannelString(const data::ParticleTree_t& particletree)
 {
-    const auto& p = particletree->get();
+    const auto& p = particletree->Get();
 
     stringstream s;
 
     s << p->Type().PrintName() << " #rightarrow";
 
     for(const auto& daughter : particletree->Daughters()) {
-        s << " " << daughter->get()->Type().PrintName();
+        s << " " << daughter->Get()->Type().PrintName();
     }
 
     return s.str();

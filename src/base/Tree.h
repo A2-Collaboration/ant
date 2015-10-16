@@ -6,7 +6,7 @@
 
 namespace ant {
 
-template <typename T>
+template<typename T>
 class Tree {
 protected:
     T data;
@@ -19,7 +19,7 @@ protected:
     wnode_t self;
     snodelist_t daughters;
 
-    void remove_daughter(Tree* t) {
+    void RemoveDaughter(Tree* t) {
         daughters.remove_if( [t] (snode_t& n) { return n.get() == t;});
     }
 
@@ -30,19 +30,19 @@ protected:
 public:
 
     template <typename ... args_t>
-    static snode_t makeNode(args_t&&... args) {
+    static snode_t MakeNode(args_t&&... args) {
         auto n = std::shared_ptr<Tree>(new Tree(std::forward<args_t>(args)...));
         n->self = n;
         return n;
     }
 
-    bool isRoot() const { return parent.expired(); }
-    bool isLeaf() const { return daughters.empty(); }
+    bool IsRoot() const { return parent.expired(); }
+    bool IsLeaf() const { return daughters.empty(); }
 
     T& operator*() { return data; }
     const T& operator *() const { return data; }
 
-    const T& get() const { return data; }
+    const T& Get() const { return data; }
 
     snode_t GetParent() { return parent.lock(); }
     snode_t Self() { return self.lock(); }
@@ -50,51 +50,51 @@ public:
 
     void Unlink() {
         if(auto p = GetParent()) {
-            p->remove_daughter(this);
+            p->RemoveDaughter(this);
             parent.reset();
         }
     }
 
     template <typename ... args_t>
-    snode_t createDaughter(args_t&&... args) {
-        auto n = makeNode(std::forward<args_t>(args)...);
+    snode_t CreateDaughter(args_t&&... args) {
+        auto n = MakeNode(std::forward<args_t>(args)...);
         n->parent = Self();
         daughters.emplace_back(n);
         return n;
     }
 
-    void setParent(snode_t& p) {
-        if(!isRoot())
+    void SetParent(snode_t& p) {
+        if(!IsRoot())
             Unlink();
         parent = p;
         p->daughters.emplace_back(Self());
     }
 
     template <typename F>
-    void map(F function) const {
-        function(get());
+    void Map(F function) const {
+        function(Get());
         for(auto& node: daughters) {
-            node->map(function);
+            node->Map(function);
         }
     }
 
     template <typename F>
-    void maplevel(F function, size_t level=0) const {
-        function(get(), level);
+    void Map_level(F function, size_t level=0) const {
+        function(Get(), level);
         for(auto& node: daughters) {
-            node->maplevel(function, level+1);
+            node->Map_level(function, level+1);
         }
     }
 
-    size_t size() const {
+    size_t Size() const {
         size_t s = 0;
-        map([&s] (const T&) { s++;});
+        Map([&s] (const T&) { s++;});
         return s;
     }
 
-    size_t depth() const {
+    size_t Depth() const {
         size_t d = 0;
-        maplevel([&d] (const T&, const size_t& level) {
+        Map_level([&d] (const T&, const size_t& level) {
             if(level>d) d=level;
         }
         );
@@ -102,10 +102,10 @@ public:
     }
 
     template<typename Compare>
-    void sort(Compare comp) {
+    void Sort(Compare comp) {
         // sort daughters first (depth-first recursion)
         std::for_each(daughters.begin(), daughters.end(),
-                      [comp] (snode_t d) { d->sort(comp); });
+                      [comp] (snode_t d) { d->Sort(comp); });
 
         // then sort daughters itself
         daughters.sort([comp] (snode_t a, snode_t b) {
@@ -133,4 +133,4 @@ public:
 
 };
 
-}
+} // namespace ant
