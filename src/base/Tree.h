@@ -8,6 +8,11 @@ namespace ant {
 
 template<typename T>
 class Tree {
+    // make Tree of different types friends
+    // needed for IsEqual()
+    template<typename>
+    friend class Tree;
+
 protected:
     T data;
 
@@ -18,7 +23,7 @@ protected:
     wnode_t parent;
     wnode_t self;
     snodelist_t daughters;
-    bool is_sorted;
+    bool is_sorted; // internal flag for IsEqual()
 
     void RemoveDaughter(Tree* t) {
         daughters.remove_if( [t] (snode_t& n) { return n.get() == t;});
@@ -105,8 +110,8 @@ public:
         return d +1;
     }
 
-    bool IsSorted() const {
-        return is_sorted;
+    void Sort() {
+        Sort(std::less<T>());
     }
 
     template<typename Compare>
@@ -142,7 +147,7 @@ public:
     }
 
     template<typename U, typename Compare>
-    bool IsEqual(const std::shared_ptr<Tree<U>>& other, Compare comp) {
+    bool IsEqual(const std::shared_ptr<Tree<U>>& other, Compare comp) const {
         // check daughters first (depth-first recursion)
         if(daughters.size() != other->daughters.size())
             return false;
@@ -153,7 +158,7 @@ public:
                 return false;
         }
 
-        if(!IsSorted() || !other->IsSorted())
+        if(!is_sorted || !other->is_sorted)
             throw std::runtime_error("Can only compare sorted trees to each other");
 
         return comp(data, other->data);

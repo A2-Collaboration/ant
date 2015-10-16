@@ -98,9 +98,7 @@ TEST_CASE("Tree: sort", "[base]") {
     auto a10 = a1->CreateDaughter(3);
     auto a11 = a1->CreateDaughter(3);
 
-    REQUIRE_FALSE(a->IsSorted());
     a->Sort(int_sorter);
-    REQUIRE(a->IsSorted());
 
     auto a0_ = a->Daughters().front();
     REQUIRE(**a0_ == 1);
