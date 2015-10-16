@@ -4,7 +4,7 @@
 #include <iostream>
 #include <memory>
 
-
+#include "utils/particle_tools.h"
 
 #include "detail/PlutoWrapper.h"
 
@@ -212,6 +212,10 @@ void PlutoReader::CopyPluto(Event& event)
             }
         }
     }
+
+    // for gun generated pluto things, there's no BeamTarget particle and thus no tree...
+    if(event.MCTrue().ParticleTree())
+        event.MCTrue().ParticleTree()->Sort(utils::ParticleTools::SortParticleByName);
 
     auto& triggerinfos = event.MCTrue().TriggerInfos();
 

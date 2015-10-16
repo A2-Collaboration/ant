@@ -48,6 +48,8 @@ struct ParticleTools {
      * @param particles list of particles
      */
     static void FillIMCombinations(TH1* h, unsigned n, const data::ParticleList& particles);
+
+    static bool SortByParticleName(const data::ParticlePtr& a, const data::ParticlePtr& b);
 };
 
 }

@@ -84,3 +84,8 @@ void utils::ParticleTools::FillIMCombinations(TH1* h, unsigned n, const Particle
          h->Fill(sum.M());
     }
 }
+
+bool utils::ParticleTools::SortByParticleName(const ParticlePtr& a, const ParticlePtr& b)
+{
+    return a->Type().Name() < b->Type().Name();
+}
