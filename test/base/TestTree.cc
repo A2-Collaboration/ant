@@ -81,23 +81,43 @@ TEST_CASE("Tree: depth", "[base]") {
 }
 
 TEST_CASE("Tree: sort", "[base]") {
+    auto int_sorter = [] (int a, int b) { return a<b; };
+
     auto a = Tree<int>::makeNode(1);
     auto a0 = a->createDaughter(2);
     auto a1 = a->createDaughter(1);
 
-    auto a00 = a0->createDaughter(3);
-    auto a01 = a0->createDaughter(3);
+    auto a00 = a0->createDaughter(2);
+    auto a01 = a0->createDaughter(2);
 
-    auto a10 = a1->createDaughter(2);
-    auto a11 = a1->createDaughter(2);
+    auto a10 = a1->createDaughter(3);
+    auto a11 = a1->createDaughter(3);
 
-    a->sort([] (int a, int b) { return a<b; });
+    a->sort(int_sorter);
 
-    auto b0 = a->Daughters().front();
-    REQUIRE(**b0 == 1);
+    auto a0_ = a->Daughters().front();
+    REQUIRE(**a0_ == 1);
 
-    auto b11 = a->Daughters().front()->Daughters().back();
-    REQUIRE(**b11 == 2);
+    auto a01_ = a->Daughters().front()->Daughters().back();
+    REQUIRE(**a01_ == 3);
 
+
+    auto b = Tree<int>::makeNode(1);
+    auto b0 = b->createDaughter(1);
+    auto b1 = b->createDaughter(1);
+
+    auto b00 = b0->createDaughter(3);
+    auto b01 = b0->createDaughter(3);
+
+    auto b10 = b1->createDaughter(2);
+    auto b11 = b1->createDaughter(2);
+
+    b->sort(int_sorter);
+
+    auto b0_ = b->Daughters().front();
+    REQUIRE(**b0_ == 1);
+
+    auto b00_ = b->Daughters().front()->Daughters().front();
+    REQUIRE(**b00_ == 2);
 }
 

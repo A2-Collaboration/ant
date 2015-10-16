@@ -103,13 +103,32 @@ public:
 
     template<typename Compare>
     void sort(Compare comp) {
+        // sort daughters first (depth-first recursion)
         std::for_each(daughters.begin(), daughters.end(),
                       [comp] (snode_t d) { d->sort(comp); });
 
+        // then sort daughters itself
         daughters.sort([comp] (snode_t a, snode_t b) {
-            return comp(a->data, b->data);
+            auto a_less_b = comp(a->data, b->data);
+            auto b_less_a = comp(b->data, a->data);
+            auto equal = !a_less_b && !b_less_a;
+            // sort by data first
+            if(!equal)
+                return a_less_b;
+            // if equal, have a look at the sorted daughters itself
+            if(a->daughters.size() != b->daughters.size())
+                return a->daughters.size() < b->daughters.size();
+            auto d_a = a->daughters.begin();
+            auto d_b = b->daughters.begin();
+            for(; d_a != a->daughters.end() && d_b != b->daughters.end(); ++d_a, ++d_b) {
+                auto d_a_less_b = comp((*d_a)->data, (*d_b)->data);
+                auto d_b_less_a = comp((*d_b)->data, (*d_a)->data);
+                auto d_equal = !d_a_less_b && !d_b_less_a;
+                if(!d_equal)
+                    return d_a_less_b;
+            }
+            return false;
         });
-
     }
 
 };
