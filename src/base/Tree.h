@@ -44,8 +44,8 @@ public:
 
     const T& Get() const { return data; }
 
-    snode_t GetParent() { return parent.lock(); }
-    snode_t Self() { return self.lock(); }
+    snode_t GetParent() const { return parent.lock(); }
+    snode_t Self() const { return self.lock(); }
     const snodelist_t& Daughters() const { return daughters; }
 
     void Unlink() {
