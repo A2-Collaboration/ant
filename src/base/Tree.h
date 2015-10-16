@@ -2,6 +2,7 @@
 
 #include <memory>
 #include <list>
+#include <algorithm>
 
 namespace ant {
 
@@ -93,11 +94,22 @@ public:
 
     size_t depth() const {
         size_t d = 0;
-        maplevel(
-                    [&d] (const T&, const size_t& level) {
-            if(level > d) {d=level;}}
-    );
+        maplevel([&d] (const T&, const size_t& level) {
+            if(level>d) d=level;
+        }
+        );
         return d +1;
+    }
+
+    template<typename Compare>
+    void sort(Compare comp) {
+        std::for_each(daughters.begin(), daughters.end(),
+                      [comp] (snode_t d) { d->sort(comp); });
+
+        daughters.sort([comp] (snode_t a, snode_t b) {
+            return comp(a->data, b->data);
+        });
+
     }
 
 };

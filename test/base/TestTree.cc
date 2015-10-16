@@ -21,20 +21,20 @@ TEST_CASE("Tree: Assignment", "[base]") {
 
 TEST_CASE("Tree: Parents", "[base]") {
     auto a = Tree<int>::makeNode(10);
-    REQUIRE(a->isLeaf() == true);
-    REQUIRE(a->isRoot() == true);
+    REQUIRE(a->isLeaf());
+    REQUIRE(a->isRoot());
 
     REQUIRE_NOTHROW(auto b = a->createDaughter(30);
-    REQUIRE(a->isLeaf() == false);
-    REQUIRE(a->isRoot() == true);
+    REQUIRE_FALSE(a->isLeaf());
+    REQUIRE(a->isRoot());
 
-    REQUIRE(b->isRoot()==false);
-    REQUIRE(b->isLeaf()==true);
+    REQUIRE_FALSE(b->isRoot());
+    REQUIRE(b->isLeaf());
 
     auto c = a->createDaughter(30);
     REQUIRE(**c==30);
-    REQUIRE(c->isRoot() == false);
-    REQUIRE(c->isLeaf() == true);
+    REQUIRE_FALSE(c->isRoot());
+    REQUIRE(c->isLeaf());
     REQUIRE(a->Daughters().size()==2);
     );
 
@@ -45,13 +45,13 @@ TEST_CASE("Tree: Unlink", "[base]") {
     auto b = a->createDaughter(20);
     auto c = b->createDaughter(30);
     auto d = b->createDaughter(35);
-    REQUIRE(a->isRoot() == true);
-    REQUIRE(a->isLeaf() == false);
-    REQUIRE(b->isLeaf() == false);
-    REQUIRE(b->isRoot() == false);
+    REQUIRE(a->isRoot());
+    REQUIRE_FALSE(a->isLeaf());
+    REQUIRE_FALSE(b->isLeaf());
+    REQUIRE_FALSE(b->isRoot());
     b->Unlink();
-    REQUIRE(b->isRoot() == true);
-    REQUIRE(a->isLeaf() == true);
+    REQUIRE(b->isRoot());
+    REQUIRE(a->isLeaf());
 }
 
 TEST_CASE("Tree: map", "[base]") {
@@ -59,7 +59,9 @@ TEST_CASE("Tree: map", "[base]") {
     auto b = a->createDaughter(20);
     auto c = b->createDaughter(30);
     auto d = b->createDaughter(35);
-    a->map([] (const int& i) { cout << i << endl;});
+    int sum = 0;
+    a->map([&sum] (int i) { sum += i;});
+    REQUIRE(sum == 95);
 }
 
 TEST_CASE("Tree: size", "[base]") {
@@ -77,3 +79,25 @@ TEST_CASE("Tree: depth", "[base]") {
     auto d = b->createDaughter(35);
     REQUIRE(a->depth() == 3);
 }
+
+TEST_CASE("Tree: sort", "[base]") {
+    auto a = Tree<int>::makeNode(1);
+    auto a0 = a->createDaughter(2);
+    auto a1 = a->createDaughter(1);
+
+    auto a00 = a0->createDaughter(3);
+    auto a01 = a0->createDaughter(3);
+
+    auto a10 = a1->createDaughter(2);
+    auto a11 = a1->createDaughter(2);
+
+    a->sort([] (int a, int b) { return a<b; });
+
+    auto b0 = a->Daughters().front();
+    REQUIRE(**b0 == 1);
+
+    auto b11 = a->Daughters().front()->Daughters().back();
+    REQUIRE(**b11 == 2);
+
+}
+
