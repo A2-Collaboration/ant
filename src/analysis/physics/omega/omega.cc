@@ -417,17 +417,17 @@ void OmegaMCTruePlots::ShowResult()
 
 
 
-TLorentzVector OmegeMCTree::getGamma1() const
+TLorentzVector OmegaMCTree::getGamma1() const
 {
     return gamma1_vector;
 }
 
-void OmegeMCTree::setGamma1(const TLorentzVector& value)
+void OmegaMCTree::setGamma1(const TLorentzVector& value)
 {
     gamma1_vector = value;
 }
 
-OmegeMCTree::OmegeMCTree(PhysOptPtr opts): Physics("OmegaMCTree", opts) {
+OmegaMCTree::OmegaMCTree(PhysOptPtr opts): Physics("OmegaMCTree", opts) {
     tree=new TTree("omegatree","omgega eta gamma MC true");
     tree->Branch("p", &proton_vector);
     tree->Branch("omega", &omega_vector);
@@ -437,65 +437,52 @@ OmegeMCTree::OmegeMCTree(PhysOptPtr opts): Physics("OmegaMCTree", opts) {
     tree->Branch("gamma3", &gamma3_vector);
 }
 
-OmegeMCTree::~OmegeMCTree()
+OmegaMCTree::~OmegaMCTree()
 {
 
 }
 
-void OmegeMCTree::ProcessEvent(const Event& event)
+void OmegaMCTree::ProcessEvent(const Event& event)
 {
-    proton_vector.SetPxPyPzE(0,0,0,0);
-    omega_vector.SetPxPyPzE(0,0,0,0);
-    gamma1_vector.SetPxPyPzE(0,0,0,0);
-    eta_vector.SetPxPyPzE(0,0,0,0);
-    gamma2_vector.SetPxPyPzE(0,0,0,0);
-    gamma3_vector.SetPxPyPzE(0,0,0,0);
+    struct TreeItem_t {
+        const ParticleTypeDatabase::Type& Type;
+        TLorentzVector* LorentzVector;
+        TreeItem_t(const ParticleTypeDatabase::Type& type,
+                   TLorentzVector* lv
+                   ) :
+            Type(type),
+            LorentzVector(lv)
+        {}
+        // this operator makes Tree::Sort work
+        bool operator<(const TreeItem_t& rhs) const {
+            return Type.Name() < rhs.Type.Name();
+        }
+    };
 
-//    const auto& bpl = event.MCTrue().Intermediates().Get(ParticleTypeDatabase::BeamProton);
-//    if(bpl.size() == 1) {
-//        const ParticlePtr& bp = bpl.at(0);
+    auto signal_tree = Tree<TreeItem_t>::MakeNode(ParticleTypeDatabase::BeamProton, nullptr);
+    signal_tree->CreateDaughter(ParticleTypeDatabase::Proton, &proton_vector);
+    auto omega = signal_tree->CreateDaughter(ParticleTypeDatabase::Omega, &omega_vector);
+    omega->CreateDaughter(ParticleTypeDatabase::Photon, &gamma1_vector);
+    auto eta = omega->CreateDaughter(ParticleTypeDatabase::Eta, &eta_vector);
+    eta->CreateDaughter(ParticleTypeDatabase::Photon, &gamma2_vector);
+    eta->CreateDaughter(ParticleTypeDatabase::Photon, &gamma3_vector);
 
-//        if(bp->Daughters().size() == 2) {
-//            for(const auto& d : bp->Daughters()) {
-//                if(d->Type() == ParticleTypeDatabase::Proton) {
-//                    proton_vector = *d;
-//                } else if(d->Type() == ParticleTypeDatabase::Omega) {
-//                    omega_vector = *d;
-//                    if(d->Daughters().size() ==2 ) {
-//                        for(const ParticlePtr& e : d->Daughters()) {
-//                            if(e->Type() == ParticleTypeDatabase::Eta) {
-//                                eta_vector = *e;
-//                                if(e->Daughters().size() == 2) {
-//                                    for(const ParticlePtr& f : e->Daughters()) {
-//                                        if(f->Type() == ParticleTypeDatabase::Photon) {
-//                                            if(gamma2_vector.E() ==0) {
-//                                                gamma2_vector = *f;
-//                                            } else {
-//                                                if(gamma3_vector.E()==0) {
-//                                                    gamma3_vector = *f;
-//                                                }
-//                                            }
-//                                        }
-//                                    }
-//                                }
-//                            } else if(e->Type() == ParticleTypeDatabase::Photon) {
-//                                gamma1_vector = *e;
-//                            }
-//                        }
-//                    }
-//                }
-//            }
-//        }
+    signal_tree->Sort();
 
-//        if(omega_vector.E() != 0 && proton_vector.E() !=0 && gamma1_vector.E() !=0 && eta_vector.E() !=0 && gamma2_vector.E() !=0 && gamma3_vector.E() != 0) {
-//            tree->Fill();
-//        } else {
-//            LOG(WARNING) << "not complete";
-//        }
-//    }
+    auto comparer = [] (const ParticlePtr& p, const TreeItem_t& item) {
+        if(p->Type().Name() == item.Type.Name()) {
+            if(item.LorentzVector)
+                *item.LorentzVector = *p;
+            return true;
+        }
+        return false;
+    };
+
+    if(event.MCTrue().ParticleTree()->IsEqual(signal_tree, comparer))
+        tree->Fill();
 }
 
-void OmegeMCTree::ShowResult()
+void OmegaMCTree::ShowResult()
 {
 
 }
@@ -621,61 +608,29 @@ double OmegaEtaG2::calcEnergySum2(const Event::Data &e) const
 
 OmegaEtaG2::channel_type_t OmegaEtaG2::identify(const Event &event) const
 {
-    channel_type_t type = channel_type_t::Background;
+    auto make_tree = [] (const ParticleTypeDatabase::Type& eta_or_pi) {
+        auto tree = Tree<const ParticleTypeDatabase::Type&>::MakeNode(ParticleTypeDatabase::BeamProton);
+        tree->CreateDaughter(ParticleTypeDatabase::Proton);
+        auto omega = tree->CreateDaughter(ParticleTypeDatabase::Omega);
+        omega->CreateDaughter(ParticleTypeDatabase::Photon);
+        auto etapi = omega->CreateDaughter(eta_or_pi);
+        etapi->CreateDaughter(ParticleTypeDatabase::Photon);
+        etapi->CreateDaughter(ParticleTypeDatabase::Photon);
+        tree->Sort(utils::ParticleTools::SortParticleTypeByName);
+        return tree;
+    };
 
-    bool proton=false;
-    bool omega=false;
-    bool etapi0=false;
-    bool gamma1=false;
-    bool gamma2=false;
-    bool gamma3=false;
+    auto signal_tree = make_tree(ParticleTypeDatabase::Eta);
+    auto reference_tree = make_tree(ParticleTypeDatabase::Pi0);
 
-    const auto& bpl = event.MCTrue().Intermediates().Get(ParticleTypeDatabase::BeamProton);
-//    if(bpl.size() == 1) {
-//        const ParticlePtr& bp = bpl.at(0);
+    auto particletree = event.MCTrue().ParticleTree();
 
-//        if(bp->Daughters().size() == 2) {
-//            for(const auto& d : bp->Daughters()) {
-//                if(d->Type() == ParticleTypeDatabase::Proton) {
-//                    proton=true;
-//                } else if(d->Type() == ParticleTypeDatabase::Omega) {
-//                    omega=true;
-//                    if(d->Daughters().size() ==2 ) {
-//                        for(const ParticlePtr& e : d->Daughters()) {
-//                            if(e->Type() == ParticleTypeDatabase::Eta || e->Type() == ParticleTypeDatabase::Pi0) {
-//                                etapi0 = true;
-//                                if(e->Type() == ParticleTypeDatabase::Eta) {
-//                                    type = channel_type_t::Signal;
-//                                } else {
-//                                    type = channel_type_t::Reference;
-//                                }
-//                                if(e->Daughters().size() == 2) {
-//                                    for(const ParticlePtr& f : e->Daughters()) {
-//                                        if(f->Type() == ParticleTypeDatabase::Photon) {
-//                                            if(!gamma2) {
-//                                                gamma2=true;
-//                                            } else {
-//                                                if(!gamma3) {
-//                                                    gamma3=true;
-//                                                }
-//                                            }
-//                                        }
-//                                    }
-//                                }
-//                            } else if(e->Type() == ParticleTypeDatabase::Photon) {
-//                                gamma1 = true;
-//                            }
-//                        }
-//                    }
-//                }
-//            }
-//        }
-//    }
-
-    if(!(proton&&omega&&etapi0&&gamma1&&gamma2&&gamma3))
-        type = channel_type_t::Background;
-
-    return type;
+    if(particletree->IsEqual(signal_tree, utils::ParticleTools::MatchByParticleName))
+        return channel_type_t::Signal;
+    else if(particletree->IsEqual(reference_tree, utils::ParticleTools::MatchByParticleName))
+        return channel_type_t::Reference;
+    else
+        return channel_type_t::Background;
 }
 
 ParticleList OmegaEtaG2::FilterParticles(const data::ParticleList& list, const particleCuts_t& cuts) const {
@@ -774,5 +729,5 @@ bool OmegaEtaG2::particleCuts_t::TestParticle(const Particle& p) const
 
 AUTO_REGISTER_PHYSICS(OmegaEtaG, "OmegaEtaG")
 AUTO_REGISTER_PHYSICS(OmegaMCTruePlots, "OmegaMCTruePlots")
-AUTO_REGISTER_PHYSICS(OmegeMCTree, "OmegaMCTree")
+AUTO_REGISTER_PHYSICS(OmegaMCTree, "OmegaMCTree")
 AUTO_REGISTER_PHYSICS(OmegaEtaG2, "OmegaEtaG2")

@@ -118,7 +118,7 @@ public:
 
 
 
-class OmegeMCTree : public Physics {
+class OmegaMCTree : public Physics {
 protected:
     TTree* tree = nullptr;
     TLorentzVector proton_vector;
@@ -130,8 +130,8 @@ protected:
 
 public:
 
-    OmegeMCTree(PhysOptPtr opts);
-    virtual ~OmegeMCTree();
+    OmegaMCTree(PhysOptPtr opts);
+    virtual ~OmegaMCTree();
 
     void ProcessEvent(const data::Event& event) override;
     void ShowResult() override;
