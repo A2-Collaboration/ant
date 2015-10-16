@@ -7,6 +7,13 @@ using namespace ant;
 
 TEST_CASE("Tree: Default ctor", "[base]") {
     REQUIRE_NOTHROW( auto a = Tree<int>::MakeNode(10); );
+
+    struct Object_t {
+        int A;
+        int B;
+        Object_t(int a, int b) : A(a), B(b) {}
+    };
+    REQUIRE_NOTHROW(auto b = Tree<Object_t>::MakeNode(3,4));
 }
 
 TEST_CASE("Tree: Assignment", "[base]") {
@@ -91,7 +98,9 @@ TEST_CASE("Tree: sort", "[base]") {
     auto a10 = a1->CreateDaughter(3);
     auto a11 = a1->CreateDaughter(3);
 
+    REQUIRE_FALSE(a->IsSorted());
     a->Sort(int_sorter);
+    REQUIRE(a->IsSorted());
 
     auto a0_ = a->Daughters().front();
     REQUIRE(**a0_ == 1);
@@ -119,3 +128,62 @@ TEST_CASE("Tree: sort", "[base]") {
     REQUIRE(**b00_ == 2);
 }
 
+TEST_CASE("Tree: compare", "[base]") {
+    auto a = Tree<int>::MakeNode(1);
+    auto a0 = a->CreateDaughter(1);
+    auto a1 = a->CreateDaughter(1);
+    a0->CreateDaughter(2);
+    a0->CreateDaughter(2);
+    a1->CreateDaughter(3);
+    a1->CreateDaughter(3);
+
+    auto b = Tree<int>::MakeNode(1);
+    auto b0 = b->CreateDaughter(1);
+    auto b1 = b->CreateDaughter(1);
+    b0->CreateDaughter(3);
+    b0->CreateDaughter(3);
+    b1->CreateDaughter(2);
+    b1->CreateDaughter(2);
+
+    auto int_comparer = [] (int a, int b) { return a==b; };
+    auto int_sorter = [] (int a, int b) { return a<b; };
+
+
+    REQUIRE_THROWS(a->IsEqual(b, int_comparer));
+    a->Sort(int_sorter);
+    REQUIRE_THROWS(a->IsEqual(b, int_comparer));
+    b->Sort(int_sorter);
+    REQUIRE_NOTHROW(a->IsEqual(b, int_comparer));
+
+
+    REQUIRE(a->IsEqual(b, int_comparer));
+
+    // check the number of calls of the comparer
+    size_t count = 0;
+    auto int_comparer_count = [&count] (int a, int b) {
+        count++;
+        return a == b;
+    };
+    REQUIRE(a->IsEqual(b, int_comparer_count));
+    REQUIRE(count == a->Size());
+
+
+    // modify the trees, check if sorted flag is unset
+    // which makes Compare() throw an exception
+
+    a0->CreateDaughter(1);
+    b1->CreateDaughter(1);
+    REQUIRE_THROWS(a->IsEqual(b, int_comparer));
+    a->Sort(int_sorter);
+    b->Sort(int_sorter);
+    REQUIRE_NOTHROW(a->IsEqual(b, int_comparer));
+    REQUIRE(a->IsEqual(b, int_comparer));
+
+
+    // make the trees unequal
+    a0->CreateDaughter(1);
+    b1->CreateDaughter(2);
+    a->Sort(int_sorter);
+    b->Sort(int_sorter);
+    REQUIRE_FALSE(a->IsEqual(b, int_comparer));
+}

@@ -18,20 +18,21 @@ protected:
     wnode_t parent;
     wnode_t self;
     snodelist_t daughters;
+    bool is_sorted;
 
     void RemoveDaughter(Tree* t) {
         daughters.remove_if( [t] (snode_t& n) { return n.get() == t;});
     }
 
 
-    Tree() {}
-    Tree(const T& data_): data(data_) {}
+    Tree(T&& data_) : data(data_), is_sorted(false) {}
 
 public:
 
     template <typename ... args_t>
     static snode_t MakeNode(args_t&&... args) {
-        auto n = std::shared_ptr<Tree>(new Tree(std::forward<args_t>(args)...));
+        // cannot use make_shared since protected constructor
+        auto n = std::shared_ptr<Tree>(new Tree(T(std::forward<args_t>(args)...)));
         n->self = n;
         return n;
     }
@@ -51,6 +52,7 @@ public:
     void Unlink() {
         if(auto p = GetParent()) {
             p->RemoveDaughter(this);
+            p->is_sorted = false;
             parent.reset();
         }
     }
@@ -60,6 +62,7 @@ public:
         auto n = MakeNode(std::forward<args_t>(args)...);
         n->parent = Self();
         daughters.emplace_back(n);
+        is_sorted = false;
         return n;
     }
 
@@ -67,6 +70,7 @@ public:
         if(!IsRoot())
             Unlink();
         parent = p;
+        p->is_sorted = false;
         p->daughters.emplace_back(Self());
     }
 
@@ -101,6 +105,10 @@ public:
         return d +1;
     }
 
+    bool IsSorted() const {
+        return is_sorted;
+    }
+
     template<typename Compare>
     void Sort(Compare comp) {
         // sort daughters first (depth-first recursion)
@@ -129,6 +137,26 @@ public:
             }
             return false;
         });
+
+        is_sorted = true;
+    }
+
+    template<typename U, typename Compare>
+    bool IsEqual(const std::shared_ptr<Tree<U>>& other, Compare comp) {
+        // check daughters first (depth-first recursion)
+        if(daughters.size() != other->daughters.size())
+            return false;
+        auto d = daughters.begin();
+        auto d_other = other->daughters.begin();
+        for(; d != daughters.end() && d_other != other->daughters.end(); ++d, ++d_other) {
+            if(!(*d)->IsEqual(*d_other, comp))
+                return false;
+        }
+
+        if(!IsSorted() || !other->IsSorted())
+            throw std::runtime_error("Can only compare sorted trees to each other");
+
+        return comp(data, other->data);
     }
 
 };
