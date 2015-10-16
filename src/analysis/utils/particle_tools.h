@@ -49,9 +49,15 @@ struct ParticleTools {
      */
     static void FillIMCombinations(TH1* h, unsigned n, const data::ParticleList& particles);
 
-    static bool SortByParticleName(const data::ParticlePtr& a, const data::ParticlePtr& b);
+    static bool SortParticleByName(const data::ParticlePtr& a, const data::ParticlePtr& b);
+
+    static bool SortParticleTypeByName(const ParticleTypeDatabase::Type& a, const ParticleTypeDatabase::Type& b);
+
+    static bool MatchByParticleName(const data::ParticlePtr& a, const ParticleTypeDatabase::Type& b);
+
 };
 
 }
 }
+
 }

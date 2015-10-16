@@ -85,7 +85,17 @@ void utils::ParticleTools::FillIMCombinations(TH1* h, unsigned n, const Particle
     }
 }
 
-bool utils::ParticleTools::SortByParticleName(const ParticlePtr& a, const ParticlePtr& b)
+bool utils::ParticleTools::SortParticleByName(const data::ParticlePtr& a, const data::ParticlePtr& b)
 {
     return a->Type().Name() < b->Type().Name();
+}
+
+bool utils::ParticleTools::SortParticleTypeByName(const ant::ParticleTypeDatabase::Type& a, const ant::ParticleTypeDatabase::Type& b)
+{
+    return a.Name() < b.Name();
+}
+
+bool utils::ParticleTools::MatchByParticleName(const data::ParticlePtr& a, const ant::ParticleTypeDatabase::Type& b)
+{
+    return a->Type().Name() == b.Name();
 }
