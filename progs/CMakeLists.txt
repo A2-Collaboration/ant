@@ -21,4 +21,5 @@ option(OmegaTools "Build Omega Tools" OFF)
 
 if(OmegaTools)
     add_ant_executable(omega_histograms)
+    add_ant_executable(omega_tree)
 endif()
