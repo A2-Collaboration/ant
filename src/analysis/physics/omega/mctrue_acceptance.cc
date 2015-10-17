@@ -36,8 +36,23 @@ MCTrueAcceptance::det_hit_count_t MCTrueAcceptance::AllAccepted(const ParticleLi
     return acc;
 }
 
+bool MCTrueAcceptance::alldetectable(const ParticleList &particles) const
+{
+    for(const auto& p : particles) {
+        if( Detector_t::Any_t::None == geo.DetectorFromAngles(p->Theta(), p->Phi()))
+            return false;
+    }
+    return true;
+}
+
 void MCTrueAcceptance::ProcessEvent(const Event &event)
 {
+
+    detect.Fill("Events", 1);
+
+    if(alldetectable(event.MCTrue().Particles().GetAll())) {
+        detect.Fill("All Detected",1);
+    }
 
     for( auto& type : ParticleTypeDatabase::DetectableTypes() ) {
 

@@ -23,6 +23,8 @@ protected:
 
     det_hit_count_t AllAccepted(const data::ParticleList& particles);
 
+    bool alldetectable(const data::ParticleList& particles) const;
+
 public:
     MCTrueAcceptance(PhysOptPtr opts);
 
