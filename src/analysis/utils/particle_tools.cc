@@ -6,6 +6,7 @@
 #include "TH1.h"
 
 #include <sstream>
+#include <cassert>
 
 using namespace ant::analysis;
 using namespace ant::analysis::data;
@@ -18,16 +19,18 @@ string utils::ParticleTools::GetDecayString(const ParticleTree_t& particletree)
     // the head is the beam particle
     s << particletree->Get()->Type().PrintName() << " #rightarrow ";
 
-    // ignore level==0 since its the already handled beamparticle
+    // ignore level==0 since it's the already handled beamparticle
     size_t lastlevel = 1;
     particletree->Map_level([&s, &lastlevel] (const shared_ptr<Particle> p, size_t level) {
         if(level>0) {
-            if(lastlevel < level)
-                s << "[ ";
-            else if(lastlevel > level)
-                s << "] ";
+            while(lastlevel<level) {
+                s << "[ "; lastlevel++;
+            }
+            while(lastlevel>level) {
+                s << "] "; lastlevel--;
+            }
+            assert(level == lastlevel);
             s << p->Type().PrintName() << " ";
-            lastlevel = level;
         }
     });
 
