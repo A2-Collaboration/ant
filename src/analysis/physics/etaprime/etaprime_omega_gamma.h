@@ -1,6 +1,8 @@
 #pragma once
 
 #include "analysis/physics/Physics.h"
+#include "utils/particle_tools.h"
+
 class TH1D;
 class TH2D;
 class TH3D;
@@ -11,9 +13,9 @@ namespace physics {
 
 class EtapOmegaG : public Physics {
 
-    TH1D* steps;
+    TH1D* sig_steps;
 
-    struct perDecayHists_t {
+    struct sig_perDecayHists_t {
         TH1D* gggg;
         TH1D* ggg;
         TH1D* gg;
@@ -30,10 +32,26 @@ class EtapOmegaG : public Physics {
         TH1D* Chi2_All;
         TH1D* Chi2_Best;
 
-        perDecayHists_t(SmartHistFactory& HistFac_parent, const std::string& decaystring);
+        sig_perDecayHists_t(SmartHistFactory& HistFac_parent, const std::string& decaystring);
     };
 
-    std::map<std::string, perDecayHists_t> perDecayHists;
+    std::map<std::string, sig_perDecayHists_t> sig_perDecayHists;
+
+    template<typename T>
+    T getHistogram(const data::ParticleTree_t& particletree, std::map<std::string, T>& perDecayHists) {
+        const std::string& decaystring = utils::ParticleTools::GetDecayString(particletree);
+        // search map only once even on insert
+        auto it_h = perDecayHists.lower_bound(decaystring);
+        if(it_h == perDecayHists.end() || perDecayHists.key_comp()(decaystring, it_h->first)) {
+            // decaystring does not exist
+            it_h = perDecayHists.emplace_hint(it_h, decaystring, T(HistFac, decaystring));
+        }
+        return it_h->second;
+    }
+
+    void ProcessSig(sig_perDecayHists_t h, const data::Event::Data& data);
+    void ProcessRef(const std::string& decaystring,
+                    const data::ParticlePtr& proton, const data::ParticleList& photons);
 
 
 public:

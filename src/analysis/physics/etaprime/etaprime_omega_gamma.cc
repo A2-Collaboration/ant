@@ -12,12 +12,14 @@ using namespace ant::analysis;
 using namespace ant::analysis::physics;
 
 
+
+
 EtapOmegaG::EtapOmegaG(PhysOptPtr opts) : Physics("EtapOmegaG", opts)
 {
-    steps = HistFac.makeTH1D("steps", "", "%", BinSettings(10),"steps");
+    sig_steps = HistFac.makeTH1D("steps", "", "%", BinSettings(10),"steps");
 }
 
-EtapOmegaG::perDecayHists_t::perDecayHists_t(SmartHistFactory& HistFac_parent, const string& decaystring)
+EtapOmegaG::sig_perDecayHists_t::sig_perDecayHists_t(SmartHistFactory& HistFac_parent, const string& decaystring)
 {
     auto directory_name = utils::ParticleTools::SanitizeDecayString(decaystring);
     SmartHistFactory HistFac(directory_name, HistFac_parent);
@@ -54,18 +56,27 @@ EtapOmegaG::perDecayHists_t::perDecayHists_t(SmartHistFactory& HistFac_parent, c
     Proton_Energy = HistFac.makeTH1D("p #delta(E)","#deltaE / MeV","",BinSettings(400,-50,350),"Proton_Energy");
 }
 
+
+
 void EtapOmegaG::ProcessEvent(const data::Event& event)
 {
     const auto& data = event.Reconstructed();
 
+
+    ProcessSig(getHistogram(event.MCTrue().ParticleTree(), sig_perDecayHists), data);
+}
+
+void EtapOmegaG::ProcessSig(sig_perDecayHists_t h,
+                            const data::Event::Data& data)
+{
     const auto nParticles = data.Particles().GetAll().size();
 
-    steps->Fill("Seen",1);
+    sig_steps->Fill("Seen",1);
 
     if(nParticles != 5)
         return;
 
-    steps->Fill("nParticles==5",1);
+    sig_steps->Fill("nParticles==5",1);
 
     const auto& photons = data.Particles().Get(ParticleTypeDatabase::Photon);
     const auto& protons = data.Particles().Get(ParticleTypeDatabase::Proton);
@@ -75,27 +86,16 @@ void EtapOmegaG::ProcessEvent(const data::Event& event)
 
     if(nPhotons != 4)
         return;
-    steps->Fill("nPhotons==4",1);
+    sig_steps->Fill("nPhotons==4",1);
 
     if(nProtons != 1)
         return;
-    steps->Fill("nProtons==1",1);
+    sig_steps->Fill("nProtons==1",1);
     const data::ParticlePtr& proton = protons.front();
 
     if(data.TriggerInfos().CBEenergySum() < 550)
         return;
-    steps->Fill("CBESum>550MeV",1);
-
-
-    const string& decaystring = utils::ParticleTools::GetDecayString(event.MCTrue().ParticleTree());
-
-    // search map only once even on insert
-    auto it_h = perDecayHists.lower_bound(decaystring);
-    if(it_h == perDecayHists.end() || perDecayHists.key_comp()(decaystring, it_h->first)) {
-        // decaystring does not exist
-        it_h = perDecayHists.emplace_hint(it_h, decaystring, perDecayHists_t(HistFac, decaystring));
-    }
-    const perDecayHists_t& h = it_h->second;
+    sig_steps->Fill("CBESum>550MeV",1);
 
     // gamma combinatorics
     assert(photons.size() == 4);
@@ -181,7 +181,7 @@ void EtapOmegaG::ProcessEvent(const data::Event& event)
     // photon assignment successful?
     if(result.Chi2>10)
         return;
-    steps->Fill("MinChi2<10",1);
+    sig_steps->Fill("MinChi2<10",1);
 
     h.IM_etap_omega->Fill(result.EtaPrime.M(), result.Omega.M());
     h.IM_pi0->Fill(result.Pi0.M());
@@ -207,17 +207,17 @@ void EtapOmegaG::ProcessEvent(const data::Event& event)
 
 void EtapOmegaG::Finish()
 {
-    steps->Scale(100.0/steps->GetBinContent(1));
+    //steps->Scale(100.0/steps->GetBinContent(1));
 }
 
 void EtapOmegaG::ShowResult()
 {
-    for(const auto& it_map : perDecayHists) {
-        const perDecayHists_t& h = it_map.second;
+    for(const auto& it_map : sig_perDecayHists) {
+        const sig_perDecayHists_t& h = it_map.second;
         if(h.IM_etap_omega->GetEntries()==0)
             continue;
         canvas c(GetName()+": "+it_map.first);
-        c << steps
+        c << sig_steps
           << h.gg << h.ggg << h.gggg << h.MM_gggg
           << h.Chi2_All << h.Chi2_Best
           << h.IM_pi0 << drawoption("colz") << h.IM_etap_omega
