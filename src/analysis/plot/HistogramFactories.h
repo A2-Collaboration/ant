@@ -24,12 +24,17 @@ private:
 
     HistogramFactory base_factory;
 
+    std::string title_prefix;
+
+    std::string MakeTitle(const std::string& title);
+
 
 public:
     SmartHistFactory(const std::string& directory_name, TDirectory* root=nullptr);
     SmartHistFactory(const std::string& directory_name, const SmartHistFactory &parent);
 
     void SetRootDir(TDirectory* root_dir=nullptr);
+    void SetTitlePrefix(const std::string& title_prefix_);
 
 
 
