@@ -30,7 +30,7 @@ class EtapOmegaG : public Physics {
         TH1D* Chi2_All;
         TH1D* Chi2_Best;
 
-        perDecayHists_t(SmartHistFactory& HistFac, const std::string& decaystring);
+        perDecayHists_t(SmartHistFactory& HistFac_parent, const std::string& decaystring);
     };
 
     std::map<std::string, perDecayHists_t> perDecayHists;

@@ -14,42 +14,44 @@ using namespace ant::analysis::physics;
 
 EtapOmegaG::EtapOmegaG(PhysOptPtr opts) : Physics("EtapOmegaG", opts)
 {
-    steps = HistFac.makeTH1D("steps", "", "%", BinSettings(10));
+    steps = HistFac.makeTH1D("steps", "", "%", BinSettings(10),"steps");
 }
 
-EtapOmegaG::perDecayHists_t::perDecayHists_t(SmartHistFactory& HistFac, const string& decaystring)
+EtapOmegaG::perDecayHists_t::perDecayHists_t(SmartHistFactory& HistFac_parent, const string& decaystring)
 {
-    auto pref = utils::ParticleTools::SanitizeDecayString(decaystring);
+    auto directory_name = utils::ParticleTools::SanitizeDecayString(decaystring);
+    SmartHistFactory HistFac(directory_name, HistFac_parent);
+    HistFac.SetTitlePrefix(decaystring);
 
     BinSettings bins_im(1200);
 
-    gggg = HistFac.makeTH1D(decaystring+": 4#gamma IM","4#gamma IM / MeV","events",bins_im,pref+"_gggg");
-    ggg = HistFac.makeTH1D(decaystring+": 3#gamma IM","3#gamma IM / MeV","events",bins_im,pref+"_ggg");
-    gg = HistFac.makeTH1D(decaystring+": 2#gamma IM","2#gamma IM / MeV","events",bins_im,pref+"_gg");
+    gggg = HistFac.makeTH1D("4#gamma IM","4#gamma IM / MeV","events",bins_im,"gggg");
+    ggg = HistFac.makeTH1D("3#gamma IM","3#gamma IM / MeV","events",bins_im,"ggg");
+    gg = HistFac.makeTH1D("2#gamma IM","2#gamma IM / MeV","events",bins_im,"gg");
 
-    IM_etap_omega = HistFac.makeTH2D(decaystring+": #eta' vs. #omega IM",
+    IM_etap_omega = HistFac.makeTH2D("#eta' vs. #omega IM",
                                "#eta' IM / MeV",
                                "#omega IM / MeV",
                                BinSettings(400, 600, 1200),
                                BinSettings(400, 400, 1000),
-                               pref+"_IM_etap_omega");
-    IM_pi0 = HistFac.makeTH1D(decaystring+": #pi^{0}","#pi^{0} IM / MeV","events",BinSettings(300, 0, 400),pref+"_IM_pi0");
+                               "IM_etap_omega");
+    IM_pi0 = HistFac.makeTH1D("#pi^{0}","#pi^{0} IM / MeV","events",BinSettings(300, 0, 400),"IM_pi0");
 
     BinSettings bins_mm(300, 600, 1300);
-    MM_gggg = HistFac.makeTH1D(decaystring+": M_{miss}","M_{miss} / MeV","events",bins_mm,pref+"_MM_gggg");
-    MM_etap = HistFac.makeTH1D(decaystring+": M_{miss}^{cut}","M_{miss} / MeV","events",bins_mm,pref+"_MM_etap");
+    MM_gggg = HistFac.makeTH1D("M_{miss}","M_{miss} / MeV","events",bins_mm,"MM_gggg");
+    MM_etap = HistFac.makeTH1D("M_{miss}^{cut}","M_{miss} / MeV","events",bins_mm,"MM_etap");
 
-    Chi2_All = HistFac.makeTH1D(decaystring+": #chi^{2} all","#chi^{2}","",BinSettings(300,0,100),pref+"_Chi2_All");
-    Chi2_Best = HistFac.makeTH1D(decaystring+": #chi^{2} minimal","#chi^{2}","",BinSettings(300,0,100),pref+"_Chi2_Min");
+    Chi2_All = HistFac.makeTH1D("#chi^{2} all","#chi^{2}","",BinSettings(300,0,100),"Chi2_All");
+    Chi2_Best = HistFac.makeTH1D("#chi^{2} minimal","#chi^{2}","",BinSettings(300,0,100),"Chi2_Min");
 
-    Proton_ThetaPhi = HistFac.makeTH2D(decaystring+": p #delta(#theta-#phi)",
+    Proton_ThetaPhi = HistFac.makeTH2D("p #delta(#theta-#phi)",
                                        "#delta#theta / degree",
                                        "#delta#phi / degree",
                                        BinSettings(100, -10, 10),
                                        BinSettings(100, -30, 30),
-                                       pref+"_Proton_ThetaPhi"
+                                       "Proton_ThetaPhi"
                                        );
-    Proton_Energy = HistFac.makeTH1D(decaystring+": p #delta(E)","#deltaE / MeV","",BinSettings(400,-50,350),pref+"_Proton_Energy");
+    Proton_Energy = HistFac.makeTH1D("p #delta(E)","#deltaE / MeV","",BinSettings(400,-50,350),"Proton_Energy");
 }
 
 void EtapOmegaG::ProcessEvent(const data::Event& event)
