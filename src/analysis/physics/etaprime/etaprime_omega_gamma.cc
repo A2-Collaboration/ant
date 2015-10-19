@@ -20,10 +20,12 @@ EtapOmegaG::EtapOmegaG(PhysOptPtr opts) : Physics("EtapOmegaG", opts)
     ref_steps = HistFac.makeTH1D("Steps: Reference channel", "", "#", BinSettings(10),"ref_steps");
 }
 
-EtapOmegaG::sig_perDecayHists_t::sig_perDecayHists_t(SmartHistFactory& HistFac_parent, const string& decaystring)
+EtapOmegaG::sig_perDecayHists_t::sig_perDecayHists_t(SmartHistFactory& HistFac_parent,
+                                                     const string& decaystring,
+                                                     const string& prefix)
 {
     auto directory_name = utils::ParticleTools::SanitizeDecayString(decaystring);
-    SmartHistFactory HistFac(directory_name, HistFac_parent);
+    SmartHistFactory HistFac(prefix+directory_name, HistFac_parent);
     HistFac.SetTitlePrefix(decaystring);
 
     BinSettings bins_im(1200);
@@ -59,10 +61,12 @@ EtapOmegaG::sig_perDecayHists_t::sig_perDecayHists_t(SmartHistFactory& HistFac_p
     Proton_Energy = HistFac.makeTH1D("p #delta(E)","#deltaE / MeV","",BinSettings(400,-50,350),"Proton_Energy");
 }
 
-EtapOmegaG::ref_perDecayHists_t::ref_perDecayHists_t(SmartHistFactory& HistFac_parent, const string& decaystring)
+EtapOmegaG::ref_perDecayHists_t::ref_perDecayHists_t(SmartHistFactory& HistFac_parent,
+                                                     const string& decaystring,
+                                                     const string& prefix)
 {
     auto directory_name = utils::ParticleTools::SanitizeDecayString(decaystring);
-    SmartHistFactory HistFac(directory_name, HistFac_parent);
+    SmartHistFactory HistFac(prefix+directory_name, HistFac_parent);
     HistFac.SetTitlePrefix(decaystring);
 
     BinSettings bins_im(1200);
@@ -132,7 +136,7 @@ void EtapOmegaG::ProcessSig(const data::ParticleTree_t& particletree,
         return;
     steps->Fill("CBESum>550MeV",1);
 
-    sig_perDecayHists_t& h = getHistogram(particletree, sig_perDecayHists);
+    sig_perDecayHists_t& h = getHistogram("sig_", particletree, sig_perDecayHists);
 
     // gamma combinatorics
     assert(photons.size() == 4);
@@ -286,7 +290,7 @@ void EtapOmegaG::ProcessRef(const data::ParticleTree_t& particletree,
         return;
     steps->Fill("CBESum>550MeV",1);
 
-    ref_perDecayHists_t& h = getHistogram(particletree, ref_perDecayHists);
+    ref_perDecayHists_t& h = getHistogram("ref_", particletree, ref_perDecayHists);
 
     // gamma combinatorics
     assert(photons.size() == 2);
