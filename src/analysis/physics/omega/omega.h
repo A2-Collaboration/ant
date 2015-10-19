@@ -3,7 +3,7 @@
 #include "analysis/physics/Physics.h"
 #include "analysis/plot/SmartHist.h"
 #include "analysis/utils/A2GeoAcceptance.h"
-
+#include "base/Tree.h"
 #include "base/interval.h"
 
 #include <map>
@@ -13,6 +13,7 @@ class TH2D;
 class TH3D;
 class TTree;
 namespace ant {
+
 namespace analysis {
 namespace physics {
 
@@ -162,6 +163,11 @@ protected:
         ParticleVars& operator=(ParticleVars&&) =default;
         void SetBranches(TTree* tree, const std::string& name);
     };
+
+    std::shared_ptr<ant::Tree<const ParticleTypeDatabase::Type&>> signal_tree;
+    std::shared_ptr<ant::Tree<const ParticleTypeDatabase::Type&>> reference_tree;
+
+    static std::shared_ptr<ant::Tree<const ParticleTypeDatabase::Type&>> make_tree(const ParticleTypeDatabase::Type& eta_or_pi);
 
 
     ParticleVars pbranch;

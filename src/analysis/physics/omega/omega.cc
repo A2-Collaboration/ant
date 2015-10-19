@@ -534,7 +534,7 @@ void OmegaEtaG2::Analyse(const Event::Data &data, const Event &event)
     if(photons.size() != 3)
         return;
 
-    const auto Esum = calcEnergySum2(data);
+    const auto Esum = data.TriggerInfos().CBEenergySum();
 
     if(Esum < 550.0)
         return;
@@ -582,46 +582,22 @@ void OmegaEtaG2::Analyse(const Event::Data &data, const Event &event)
 
 }
 
-double OmegaEtaG2::calcEnergySum2(const Event::Data &e) const
+std::shared_ptr<ant::Tree<const ParticleTypeDatabase::Type&> > OmegaEtaG2::make_tree(const ParticleTypeDatabase::Type& eta_or_pi)
 {
-    double Sum = 0.0;
-
-    if(mode != DataMode::MCTrue) {
-        for(const auto& c : e.Candidates()) {
-            const auto d = geo.DetectorFromAngles(c->Theta(),c->Phi());
-            if( d & Detector_t::Any_t::CB) {
-                Sum += c->ClusterEnergy();
-            }
-
-        }
-    }
-
-    for(const auto& c : e.Particles().GetAll()) {
-        const auto d = geo.DetectorFromAngles(c->Theta(),c->Phi());
-        if( d & Detector_t::Any_t::CB) {
-            Sum += c->Ek();
-        }
-
-    }
-    return Sum;
+    auto tree = Tree<const ParticleTypeDatabase::Type&>::MakeNode(ParticleTypeDatabase::BeamProton);
+    tree->CreateDaughter(ParticleTypeDatabase::Proton);
+    auto omega = tree->CreateDaughter(ParticleTypeDatabase::Omega);
+    omega->CreateDaughter(ParticleTypeDatabase::Photon);
+    auto etapi = omega->CreateDaughter(eta_or_pi);
+    etapi->CreateDaughter(ParticleTypeDatabase::Photon);
+    etapi->CreateDaughter(ParticleTypeDatabase::Photon);
+    tree->Sort(utils::ParticleTools::SortParticleTypeByName);
+    return tree;
 }
+
 
 OmegaEtaG2::channel_type_t OmegaEtaG2::identify(const Event &event) const
 {
-    auto make_tree = [] (const ParticleTypeDatabase::Type& eta_or_pi) {
-        auto tree = Tree<const ParticleTypeDatabase::Type&>::MakeNode(ParticleTypeDatabase::BeamProton);
-        tree->CreateDaughter(ParticleTypeDatabase::Proton);
-        auto omega = tree->CreateDaughter(ParticleTypeDatabase::Omega);
-        omega->CreateDaughter(ParticleTypeDatabase::Photon);
-        auto etapi = omega->CreateDaughter(eta_or_pi);
-        etapi->CreateDaughter(ParticleTypeDatabase::Photon);
-        etapi->CreateDaughter(ParticleTypeDatabase::Photon);
-        tree->Sort(utils::ParticleTools::SortParticleTypeByName);
-        return tree;
-    };
-
-    auto signal_tree = make_tree(ParticleTypeDatabase::Eta);
-    auto reference_tree = make_tree(ParticleTypeDatabase::Pi0);
 
     auto particletree = event.MCTrue().ParticleTree();
 
@@ -689,6 +665,9 @@ OmegaEtaG2::OmegaEtaG2(PhysOptPtr opts):
     tree->Branch("tagch",   &tagch);
     tree->Branch("tagtime", &tagtime);
     tree->Branch("rf",      &rf);
+
+    signal_tree = make_tree(ParticleTypeDatabase::Eta);
+    reference_tree = make_tree(ParticleTypeDatabase::Pi0);
 }
 
 OmegaEtaG2::~OmegaEtaG2()
