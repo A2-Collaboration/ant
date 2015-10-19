@@ -1,5 +1,6 @@
 #include "base/WrapTFile.h"
 #include "base/Logger.h"
+#include "base/std_ext/math.h"
 
 #include "TRint.h"
 #include "analysis/plot/root_draw.h"
@@ -13,6 +14,7 @@
 #include "TEventList.h"
 
 using namespace ant;
+using namespace ant::std_ext;
 using namespace ant::analysis;
 using namespace std;
 
@@ -87,12 +89,15 @@ int main(int argc, char** argv) {
 
     SmartHistFactory hf("omega_tree");
 
+    const BinSettings gggIMcalcPIMx(350,600,850);
+    const BinSettings gggIMcalcPIMy(350,850,1200);
+
     auto gggIM_calcpIM = hf.makeTH2D(
                 "3 #gamma IM vs calculated proton IM",
                 "3#gamma IM [MeV]",
                 "calculated proton IM [MeV]",
-                BinSettings(300,650,850),
-                BinSettings(300,900,1200)
+                gggIMcalcPIMx,
+                gggIMcalcPIMy
                 );
     const BinSettings bins_ggIM(900);
 
@@ -160,6 +165,18 @@ int main(int argc, char** argv) {
                 "",
                 bins_ggIM
                 );
+    const TVector2 center(735, 1025);
+
+    const BinSettings gggIMcalcpIMrotx(gggIMcalcPIMx.Bins(), interval<double>(gggIMcalcPIMx) - center.X());
+    const BinSettings gggIMcalcpIMroty(gggIMcalcPIMy.Bins(), interval<double>(gggIMcalcPIMy) - center.Y());
+
+    auto gggIM_calcpIM_rotated = hf.makeTH2D(
+                "3 #gamma IM vs calculated proton IM (45#circ)",
+                "x",
+                "y",
+                gggIMcalcpIMrotx,
+                gggIMcalcpIMroty
+                );
 
     const auto entries = eventlist ? eventlist->GetN() : tree->GetEntries();
 
@@ -174,6 +191,12 @@ int main(int argc, char** argv) {
         }
 
         gggIM_calcpIM->Fill(gggIM, calcpIM);
+
+        TVector2 x(gggIM, calcpIM);
+        x -= center;
+        auto r = x.Rotate(-degree_to_radian(45.0));
+
+        gggIM_calcpIM_rotated->Fill(r.X(),r.Y());
 
         FillggIM(h_ggIM, ggIM);
 
@@ -214,13 +237,18 @@ int main(int argc, char** argv) {
     TRint app("Ant",&fake_argc,fake_argv,nullptr,0,true);
 
     canvas c("Omega Tree");
-
     c << drawoption("colz")
       << gggIM_calcpIM
       << endc;
 
     if(cut1) cut1->Draw("same");
     if(cut2) cut2->Draw("same");
+
+    canvas cr("Omega Tree: Rotated");
+    cr << drawoption("colz")
+      << gggIM_calcpIM_rotated
+      << endc;
+
 
     canvas c_ggIM("Omega Tree: ggIM");
 
