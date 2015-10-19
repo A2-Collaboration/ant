@@ -16,7 +16,8 @@ using namespace ant::analysis::physics;
 
 EtapOmegaG::EtapOmegaG(PhysOptPtr opts) : Physics("EtapOmegaG", opts)
 {
-    sig_steps = HistFac.makeTH1D("steps", "", "%", BinSettings(10),"steps");
+    sig_steps = HistFac.makeTH1D("Steps: Signal channel", "", "#", BinSettings(10),"sig_steps");
+    ref_steps = HistFac.makeTH1D("Steps: Reference channel", "", "#", BinSettings(10),"ref_steps");
 }
 
 EtapOmegaG::sig_perDecayHists_t::sig_perDecayHists_t(SmartHistFactory& HistFac_parent, const string& decaystring)
@@ -30,6 +31,8 @@ EtapOmegaG::sig_perDecayHists_t::sig_perDecayHists_t(SmartHistFactory& HistFac_p
     gggg = HistFac.makeTH1D("4#gamma IM","4#gamma IM / MeV","events",bins_im,"gggg");
     ggg = HistFac.makeTH1D("3#gamma IM","3#gamma IM / MeV","events",bins_im,"ggg");
     gg = HistFac.makeTH1D("2#gamma IM","2#gamma IM / MeV","events",bins_im,"gg");
+
+    Proton_Copl = HistFac.makeTH1D("p Coplanarity","#delta#phi / degree","",BinSettings(400,-180,180),"Proton_Coplanarity");
 
     IM_etap_omega = HistFac.makeTH2D("#eta' vs. #omega IM",
                                "#eta' IM / MeV",
@@ -56,27 +59,55 @@ EtapOmegaG::sig_perDecayHists_t::sig_perDecayHists_t(SmartHistFactory& HistFac_p
     Proton_Energy = HistFac.makeTH1D("p #delta(E)","#deltaE / MeV","",BinSettings(400,-50,350),"Proton_Energy");
 }
 
+EtapOmegaG::ref_perDecayHists_t::ref_perDecayHists_t(SmartHistFactory& HistFac_parent, const string& decaystring)
+{
+    auto directory_name = utils::ParticleTools::SanitizeDecayString(decaystring);
+    SmartHistFactory HistFac(directory_name, HistFac_parent);
+    HistFac.SetTitlePrefix(decaystring);
 
+    BinSettings bins_im(1200);
+
+    gg = HistFac.makeTH1D("2#gamma IM","2#gamma IM / MeV","events",bins_im,"gg");
+
+    Proton_Copl = HistFac.makeTH1D("p Coplanarity","#delta#phi / degree","",BinSettings(400,-180,180),"Proton_Coplanarity");
+
+    IM_etap = HistFac.makeTH1D("#eta' IM","#eta' IM / MeV","events",BinSettings(300, 700, 1100),"IM_etap");
+
+    BinSettings bins_mm(300, 600, 1300);
+    MM_etap = HistFac.makeTH1D("M_{miss}","M_{miss} / MeV","events",bins_mm,"MM_etap");
+
+
+    Proton_ThetaPhi = HistFac.makeTH2D("p #delta(#theta-#phi)",
+                                       "#delta#theta / degree",
+                                       "#delta#phi / degree",
+                                       BinSettings(100, -10, 10),
+                                       BinSettings(100, -30, 30),
+                                       "Proton_ThetaPhi"
+                                       );
+    Proton_Energy = HistFac.makeTH1D("p #delta(E)","#deltaE / MeV","",BinSettings(400,-50,350),"Proton_Energy");
+}
 
 void EtapOmegaG::ProcessEvent(const data::Event& event)
 {
     const auto& data = event.Reconstructed();
 
-
-    ProcessSig(getHistogram(event.MCTrue().ParticleTree(), sig_perDecayHists), data);
+    ProcessRef(event.MCTrue().ParticleTree(), data);
+    ProcessSig(event.MCTrue().ParticleTree(), data);
 }
 
-void EtapOmegaG::ProcessSig(sig_perDecayHists_t h,
+void EtapOmegaG::ProcessSig(const data::ParticleTree_t& particletree,
                             const data::Event::Data& data)
 {
+    auto& steps = sig_steps;
+
     const auto nParticles = data.Particles().GetAll().size();
 
-    sig_steps->Fill("Seen",1);
+    steps->Fill("Seen",1);
 
     if(nParticles != 5)
         return;
 
-    sig_steps->Fill("nParticles==5",1);
+    steps->Fill("nParticles==5",1);
 
     const auto& photons = data.Particles().Get(ParticleTypeDatabase::Photon);
     const auto& protons = data.Particles().Get(ParticleTypeDatabase::Proton);
@@ -86,16 +117,22 @@ void EtapOmegaG::ProcessSig(sig_perDecayHists_t h,
 
     if(nPhotons != 4)
         return;
-    sig_steps->Fill("nPhotons==4",1);
+    steps->Fill("nPhotons==4",1);
 
     if(nProtons != 1)
         return;
-    sig_steps->Fill("nProtons==1",1);
+    steps->Fill("nProtons==1",1);
     const data::ParticlePtr& proton = protons.front();
+
+    if(!(proton->Candidate()->Detector() & Detector_t::Type_t::TAPS))
+        return;
+    steps->Fill("p in TAPS", 1);
 
     if(data.TriggerInfos().CBEenergySum() < 550)
         return;
-    sig_steps->Fill("CBESum>550MeV",1);
+    steps->Fill("CBESum>550MeV",1);
+
+    sig_perDecayHists_t& h = getHistogram(particletree, sig_perDecayHists);
 
     // gamma combinatorics
     assert(photons.size() == 4);
@@ -116,7 +153,15 @@ void EtapOmegaG::ProcessSig(sig_perDecayHists_t h,
         h.MM_gggg->Fill(mm.M());
     }
 
-    // bottom-up assignment of photons
+    // proton coplanarity
+    const double d_phi = std_ext::radian_to_degree(TVector2::Phi_mpi_pi(proton->Phi()-photon_sum.Phi() - M_PI ));
+    const interval<double> Proton_Copl_cut(-19, 19);
+    if(!Proton_Copl_cut.Contains(d_phi))
+        return;
+    steps->Fill("Copl p in 2#sigma",1);
+    h.Proton_Copl->Fill(d_phi);
+
+    // bottom-up assignment of photons using Chi2
 
     struct result_t {
         double Chi2 = std::numeric_limits<double>::infinity();
@@ -164,10 +209,9 @@ void EtapOmegaG::ProcessSig(sig_perDecayHists_t h,
         tmp.Omega = tmp.Pi0 + *tmp.g_omega;
         tmp.EtaPrime = tmp.Omega + *tmp.g_etap;
 
-        // means/sigma extracted from gg/ggg/gggg histograms
-        const auto Chi2_Pi0 =  std_ext::sqr((tmp.Pi0.M() - 126) / 15);
-        const auto Chi2_Omega = std_ext::sqr((tmp.Omega.M() - 735) / 32);
-        const auto Chi2_EtaPrime = std_ext::sqr((tmp.EtaPrime.M() - 895) / 27);
+        const auto Chi2_Pi0 =  std_ext::sqr((tmp.Pi0.M() - Pi0.Mean) / Pi0.Sigma);
+        const auto Chi2_Omega = std_ext::sqr((tmp.Omega.M() - Omega.Mean) / Omega.Sigma);
+        const auto Chi2_EtaPrime = std_ext::sqr((tmp.EtaPrime.M() - EtaPrime_sig.Mean) / EtaPrime_sig.Sigma);
 
         tmp.Chi2 = Chi2_Pi0 + Chi2_Omega + Chi2_EtaPrime;
 
@@ -181,7 +225,7 @@ void EtapOmegaG::ProcessSig(sig_perDecayHists_t h,
     // photon assignment successful?
     if(result.Chi2>10)
         return;
-    sig_steps->Fill("MinChi2<10",1);
+    steps->Fill("MinChi2<10",1);
 
     h.IM_etap_omega->Fill(result.EtaPrime.M(), result.Omega.M());
     h.IM_pi0->Fill(result.Pi0.M());
@@ -204,6 +248,90 @@ void EtapOmegaG::ProcessSig(sig_perDecayHists_t h,
     }
 }
 
+void EtapOmegaG::ProcessRef(const data::ParticleTree_t& particletree,
+                            const data::Event::Data& data)
+{
+    auto& steps = ref_steps;
+
+    const auto nParticles = data.Particles().GetAll().size();
+
+    steps->Fill("Seen",1);
+
+    if(nParticles != 3)
+        return;
+
+    steps->Fill("nParticles==3",1);
+
+    const auto& photons = data.Particles().Get(ParticleTypeDatabase::Photon);
+    const auto& protons = data.Particles().Get(ParticleTypeDatabase::Proton);
+
+    const auto nPhotons = photons.size();
+    const auto nProtons = protons.size();
+
+    if(nPhotons != 2)
+        return;
+    steps->Fill("nPhotons==2",1);
+
+    if(nProtons != 1)
+        return;
+    steps->Fill("nProtons==1",1);
+    const data::ParticlePtr& proton = protons.front();
+
+    if(!(proton->Candidate()->Detector() & Detector_t::Type_t::TAPS))
+        return;
+    steps->Fill("p in TAPS", 1);
+
+
+    if(data.TriggerInfos().CBEenergySum() < 550)
+        return;
+    steps->Fill("CBESum>550MeV",1);
+
+    ref_perDecayHists_t& h = getHistogram(particletree, ref_perDecayHists);
+
+    // gamma combinatorics
+    assert(photons.size() == 2);
+
+    TLorentzVector photon_sum(0,0,0,0);
+    for(const auto& p : photons) {
+        photon_sum += *p;
+    }
+    const double gg_im = photon_sum.M();
+    h.gg->Fill(gg_im);
+
+    // proton coplanarity
+    const double d_phi = std_ext::radian_to_degree(TVector2::Phi_mpi_pi(proton->Phi()-photon_sum.Phi() - M_PI ));
+    const interval<double> Proton_Copl_cut(-19, 19);
+    if(!Proton_Copl_cut.Contains(d_phi))
+        return;
+    steps->Fill("Copl p in 2#sigma",1);
+    h.Proton_Copl->Fill(d_phi);
+
+
+    const double sigma = 2*EtaPrime_ref.Sigma;
+    const interval<double> IM_etap_cut(EtaPrime_ref.Mean-sigma,EtaPrime_ref.Mean+sigma);
+
+    if(!IM_etap_cut.Contains(gg_im))
+        return;
+    steps->Fill("IM #eta' in 2#sigma",1);
+
+    h.IM_etap->Fill(photon_sum.M());
+
+    // use tagged photon
+    for(const auto& th : data.TaggerHits()) {
+        /// \todo make prompt/random cut
+        const TLorentzVector beam_target = th->PhotonBeam() + TLorentzVector(0, 0, 0, ParticleTypeDatabase::Proton.Mass());
+        const TLorentzVector mm = beam_target - photon_sum;
+        h.MM_etap->Fill(mm.M());
+        // don't assume we always have a proton...
+        if(proton) {
+            const double diff_Theta = mm.Theta() - proton->Theta();
+            const double diff_Phi = mm.Phi() - proton->Phi();
+            h.Proton_ThetaPhi->Fill(std_ext::radian_to_degree(diff_Theta), std_ext::radian_to_degree(diff_Phi));
+            h.Proton_Energy->Fill(mm.E() - proton->E());
+        }
+    }
+}
+
 
 void EtapOmegaG::Finish()
 {
@@ -212,17 +340,34 @@ void EtapOmegaG::Finish()
 
 void EtapOmegaG::ShowResult()
 {
+    canvas c_steps(GetName()+": Steps");
+    c_steps << sig_steps << ref_steps << endc;
+
     for(const auto& it_map : sig_perDecayHists) {
         const sig_perDecayHists_t& h = it_map.second;
         if(h.IM_etap_omega->GetEntries()==0)
             continue;
         canvas c(GetName()+": "+it_map.first);
-        c << sig_steps
-          << h.gg << h.ggg << h.gggg << h.MM_gggg
+        c << h.gg << h.ggg << h.gggg << h.MM_gggg
+          << h.Proton_Copl
           << h.Chi2_All << h.Chi2_Best
           << h.IM_pi0 << drawoption("colz") << h.IM_etap_omega
           << h.MM_etap
-          << drawoption("colz") <<  h.Proton_ThetaPhi << h.Proton_Energy
+          << drawoption("colz") <<  h.Proton_ThetaPhi
+          << h.Proton_Energy
+          << endc;
+    }
+
+    for(const auto& it_map : ref_perDecayHists) {
+        const ref_perDecayHists_t& h = it_map.second;
+        if(h.IM_etap->GetEntries()==0)
+            continue;
+        canvas c(GetName()+": "+it_map.first);
+        c << h.gg
+          << h.Proton_Copl << h.IM_etap
+          << h.MM_etap
+          << drawoption("colz") << h.Proton_ThetaPhi
+          << h.Proton_Energy
           << endc;
     }
 }
