@@ -459,7 +459,7 @@ void OmegaMCTree::ProcessEvent(const Event& event)
         }
     };
 
-    auto signal_tree = Tree<TreeItem_t>::MakeNode(ParticleTypeDatabase::BeamProton, nullptr);
+    auto signal_tree = Tree<TreeItem_t>::MakeNode(ParticleTypeDatabase::BeamProton, (TLorentzVector*) nullptr);
     signal_tree->CreateDaughter(ParticleTypeDatabase::Proton, &proton_vector);
     auto omega = signal_tree->CreateDaughter(ParticleTypeDatabase::Omega, &omega_vector);
     omega->CreateDaughter(ParticleTypeDatabase::Photon, &gamma1_vector);
