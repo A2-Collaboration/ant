@@ -176,6 +176,7 @@ void PlutoReader::CopyPluto(Event& event)
     // build the particle tree
 
     // loop over both lists (pluto and and the flat tree)
+    bool missing_decay_treeinfo = false;
     for(size_t i=0; i<PlutoParticles.size(); ++i) {
 
         const PParticle* PlutoParticle = PlutoParticles.at(i);
@@ -202,16 +203,17 @@ void PlutoReader::CopyPluto(Event& event)
                 auto search_result = FindParticleByID(PlutoParticles, PlutoParticle->GetParentId());
 
                 if(search_result.second) {
-                    VLOG(7) << "Recovered missing pluto decay tree inforamtion.";
+                    VLOG(7) << "Recovered missing pluto decay tree information.";
                     TreeNode->SetParent(FlatTree.at(search_result.first));
                 } else {  // BeamProton is not supposed to have a parent
-                    VLOG(7) << "Missing decay tree info for pluto particle";
+                    missing_decay_treeinfo = true;
                 }
 
-                VLOG(9) << "\n" << PlutoTable(PlutoParticles);
             }
         }
     }
+
+
 
     // for gun generated pluto things, there's no BeamTarget particle and thus no tree...
     if(event.MCTrue().ParticleTree())
@@ -243,6 +245,12 @@ void PlutoReader::CopyPluto(Event& event)
 
     /// @note multiplicity is only known on reconstructed
 
+    if(missing_decay_treeinfo && event.MCTrue().ParticleTree()) {
+        const auto& tid = !triggerinfos.EventID().IsInvalid() ? triggerinfos.EventID() : event.Reconstructed().TriggerInfos().EventID();
+        LOG(WARNING) << "Missing decay tree info for event " << tid;
+        VLOG(5)      << "Dumping Pluto particles:\n" << PlutoTable(PlutoParticles);
+        event.MCTrue().ParticleTree() = nullptr;
+    }
 }
 
 

@@ -444,6 +444,9 @@ OmegaMCTree::~OmegaMCTree()
 
 void OmegaMCTree::ProcessEvent(const Event& event)
 {
+    if(!event.MCTrue().ParticleTree())
+        return;
+
     struct TreeItem_t {
         const ParticleTypeDatabase::Type& Type;
         TLorentzVector* LorentzVector;
@@ -600,6 +603,9 @@ OmegaEtaG2::channel_type_t OmegaEtaG2::identify(const Event &event) const
 {
 
     auto particletree = event.MCTrue().ParticleTree();
+
+    if(!particletree)
+        return channel_type_t::Background;
 
     if(particletree->IsEqual(signal_tree, utils::ParticleTools::MatchByParticleName))
         return channel_type_t::Signal;

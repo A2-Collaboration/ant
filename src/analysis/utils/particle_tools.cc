@@ -14,6 +14,9 @@ using namespace  std;
 
 string utils::ParticleTools::GetDecayString(const ParticleTree_t& particletree)
 {
+    if(!particletree)
+        return "empty_unknown";
+
     stringstream s;
 
     // the head is the beam particle
@@ -53,6 +56,9 @@ string utils::ParticleTools::SanitizeDecayString(string decaystring)
 
 string utils::ParticleTools::GetProductionChannelString(const data::ParticleTree_t& particletree)
 {
+    if(!particletree)
+        return "empty_unknown";
+
     const auto& p = particletree->Get();
 
     stringstream s;
