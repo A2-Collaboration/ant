@@ -29,10 +29,14 @@ Etap3pi0::Etap3pi0(PhysOptPtr opts) :
     h2g        = HistFac.makeTH1D("2 #gamma","2#gamma IM [MeV]","#",bs,"gg");
     h6g        = HistFac.makeTH1D("6 #gamma","6#gamma IM [MeV]","#",bs,"gggggg");
 
-    ch_3pi0_IM_etap    = HistFac.makeTH1D("EtaPrime","EtaPrime IM [MeV]","events",bs,"IM_etap");
-    ch_3pi0_IM_pi0     = HistFac.makeTH1D("Pi0","Pi0 IM [MeV]","events",bs,"IM_pi0");
+    ch_3pi0_IM_etap    = HistFac.makeTH1D("EtaPrime (3pi0)","EtaPrime IM [MeV]","events",bs,"IM_etap");
+    ch_3pi0_IM_pi0     = HistFac.makeTH1D("Pi0 (3pi0)","Pi0 IM [MeV]","events",bs,"IM_pi0");
 
-    dalitz     = HistFac.makeTH2D("dalitz","IM^{2}(#pi^{0} _{1} + #pi^{0} _{2}) [GeV^{2}]","IM^{2}(#pi^{0} _{1} + #pi^{0} _{3}) [GeV^{2}]",BinSettings(100,0,1000),BinSettings(100,0,1000));
+    ch_eta2pi0_IM_etap    = HistFac.makeTH1D("EtaPrime (eta2pi0)","EtaPrime IM [MeV]","events",bs,"IM_etap");
+    ch_eta2pi0_IM_pions  = HistFac.makeTH1D("pions (eta2pi0)","Pi0 IM [MeV]","events",bs,"IM_pi0");
+    ch_eta2pi0_IM_etas  = HistFac.makeTH1D("etas (eta2pi0)","Pi0 IM [MeV]","events",bs,"IM_pi0");
+
+    //dalitz     = HistFac.makeTH2D("dalitz","IM^{2}(#pi^{0} _{1} + #pi^{0} _{2}) [GeV^{2}]","IM^{2}(#pi^{0} _{1} + #pi^{0} _{3}) [GeV^{2}]",BinSettings(100,0,1000),BinSettings(100,0,1000));
 
     tree       = new TTree("data","data");
 
@@ -72,7 +76,7 @@ void Etap3pi0::FillCrossChecks(const ParticleList& photons, const ParticleList& 
     fill_combinations(h6g, 6, photons);
 }
 
-Etap3pi0::result_t Etap3pi0::Make3pi0(const ParticleList& photons)
+Etap3pi0::result_t Etap3pi0::Make3pi0(const ParticleList& photons, const double chi2cut)
 {
     result_t result;
 
@@ -97,13 +101,64 @@ Etap3pi0::result_t Etap3pi0::Make3pi0(const ParticleList& photons)
             result = move(tmp);
     }
 
-    for (const auto& p: result.mesons )
+    if (result.Chi2 < chi2cut)
     {
-        ch_3pi0_IM_pi0->Fill(p.M());
+        result.success = true;
+        for (const auto& p: result.mesons )
+        {
+            ch_3pi0_IM_pi0->Fill(p.M());
+            result.etaprime += p;
+        }
+        ch_3pi0_IM_etap->Fill(result.etaprime.M());
     }
 
-    for (const auto& p: result.mesons )
-        result.etaprime += p;
+    return result;
+}
+
+Etap3pi0::result_t Etap3pi0::MakeEta2pi0(const ParticleList& photons, const double chi2cut)
+{
+    result_t result;
+    unsigned etafound(0);
+
+    for ( const auto& pairs: combinations)
+    {
+
+        result_t tmp;
+        tmp.Chi2 = 0;
+
+        for(unsigned i=0;i<pairs.size();i++)
+        {
+            tmp.g_final[pairs.at(i).first] = photons[2*i];
+            tmp.g_final[pairs.at(i).second] = photons[2*i+1];
+        }
+
+        for(unsigned i=0;i<tmp.mesons.size();i++)
+            tmp.mesons[i] = *(tmp.g_final[2*i]) + *(tmp.g_final[2*i+1]);
+
+        for (unsigned etaIndex = 0 ; etaIndex < tmp.mesons.size() ; ++etaIndex)
+        {
+            tmp.Chi2 =  std_ext::sqr((tmp.mesons[etaIndex].M() - 515.5) / 19.4);        // width and center from fit
+            tmp.Chi2 += std_ext::sqr((tmp.mesons[(etaIndex + 1) % 3].M() - 126) / 15);
+            tmp.Chi2 += std_ext::sqr((tmp.mesons[(etaIndex + 2) % 3].M() - 126) / 15);
+            if(tmp.Chi2<result.Chi2)
+            {
+                result = move(tmp);
+                etafound = etaIndex;
+            }
+        }
+
+    }
+
+    if (result.Chi2 < chi2cut)
+    {
+        result.success = true;
+        for (const auto& p: result.mesons )
+            result.etaprime += p;
+        ch_eta2pi0_IM_etas->Fill(result.mesons[etafound].M());
+        ch_eta2pi0_IM_pions->Fill(result.mesons[( etafound + 1 ) % 3].M());
+        ch_eta2pi0_IM_pions->Fill(result.mesons[( etafound + 2 ) % 3].M());
+        ch_eta2pi0_IM_etap->Fill(result.etaprime.M());
+    }
 
     return result;
 }
@@ -122,14 +177,15 @@ void Etap3pi0::ProcessEvent(const data::Event& event)
     if (photons.size() != 6 )
         return;
 
-    result_t result_3pi0 = Make3pi0(photons);
+    result_t result_3pi0    = Make3pi0(photons,3);
+    result_t result_eta2pi0 = MakeEta2pi0(photons,3);
 
     pi01     = ParticleVars(result_3pi0.mesons[0],ParticleTypeDatabase::Pi0);
     pi02     = ParticleVars(result_3pi0.mesons[1],ParticleTypeDatabase::Pi0);
     pi03     = ParticleVars(result_3pi0.mesons[2],ParticleTypeDatabase::Pi0);
-    etaprime = ParticleVars(result_3pi0.etaprime,ParticleTypeDatabase::EtaPrime);
+    etaprime = ParticleVars(result_3pi0.etaprime, ParticleTypeDatabase::EtaPrime);
 
-    ch_3pi0_IM_etap->Fill(result_3pi0.etaprime.M());
+
 
   //TLorentzVector sum;
   //sum = result.Pi0[0] + result.Pi0[1];
@@ -159,7 +215,8 @@ void Etap3pi0::ShowResult()
     canvas("Crosschecks")       << h2g << h6g
                                 << hNgamma << hNgammaMC
                                 << endc;
-    canvas("Invaraiant Masses") << ch_3pi0_IM_pi0 << ch_3pi0_IM_etap
+    canvas("Invaraiant Masses") << ch_eta2pi0_IM_pions << ch_eta2pi0_IM_etas << ch_eta2pi0_IM_etap
+                                << ch_3pi0_IM_pi0 << ch_3pi0_IM_etap
                                 //<< IM_proton << IM_mmproton
                                 << endc;
     /*

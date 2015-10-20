@@ -53,13 +53,14 @@ protected:
 
     struct result_t {
         double Chi2 = std::numeric_limits<double>::infinity();
+        bool success = false;
 
         std::vector<data::ParticlePtr> g_final;
         std::vector<TLorentzVector> mesons;
 
         TLorentzVector etaprime;
 
-        result_t() : g_final(6), mesons(3), etaprime(0,0,0,0){}
+        result_t() : g_final(6), mesons(3,TLorentzVector(0,0,0,0)), etaprime(0,0,0,0){}
     };
 
     std::string dataset;
@@ -73,7 +74,11 @@ protected:
     TH1D* ch_3pi0_IM_etap;
     TH1D* ch_3pi0_IM_pi0;
 
-    TH2D* dalitz;
+    TH1D* ch_eta2pi0_IM_etap;
+    TH1D* ch_eta2pi0_IM_pions;
+    TH1D* ch_eta2pi0_IM_etas;
+
+//    TH2D* dalitz;
 
     TTree* tree;
 
@@ -89,7 +94,11 @@ protected:
 
 
     void FillCrossChecks(const data::ParticleList& photons, const data::ParticleList& mcphotons);
-    Etap3pi0::result_t Make3pi0(const data::ParticleList& photons);
+
+    Etap3pi0::result_t Make3pi0(const data::ParticleList& photons, const double chi2cut);
+    Etap3pi0::result_t MakeEta2pi0(const data::ParticleList& photons, const double chi2cut);
+
+
 public:
     Etap3pi0(PhysOptPtr opts);
     virtual void ProcessEvent(const data::Event& event) override;
