@@ -555,6 +555,10 @@ void OmegaEtaG2::Analyse(const Event::Data &data, const Event &event)
     g2branch = ParticleVars(*photons.at(1));
     g3branch = ParticleVars(*photons.at(2));
 
+
+    Chi2_Omega = std_ext::sqr((gggbranch.IM - omega_peak.Mean) / omega_peak.Sigma);
+
+
     TLorentzVector gg;
     int ngg=0;
     for( auto comb = utils::makeCombination(photons,2); !comb.Done(); ++comb) {
@@ -564,7 +568,11 @@ void OmegaEtaG2::Analyse(const Event::Data &data, const Event &event)
         ++i;
         gg+=**i;
 
-        ggIM[ngg++] = gg.M();
+        ggIM[ngg] = gg.M();
+
+        Chi2_Pi0[ngg] =  std_ext::sqr((gg.M() - pi0_peak.Mean) / pi0_peak.Sigma);
+        Chi2_Eta[ngg] =  std_ext::sqr((gg.M() - eta_peak.Mean) / eta_peak.Sigma);
+        ++ngg;
     }
 
     rf = static_cast<int>(identify(event));
@@ -671,6 +679,10 @@ OmegaEtaG2::OmegaEtaG2(PhysOptPtr opts):
     tree->Branch("tagch",   &tagch);
     tree->Branch("tagtime", &tagtime);
     tree->Branch("rf",      &rf);
+
+    tree->Branch("chi2_omega",    &Chi2_Omega);
+    tree->Branch("chi2_eta[3]",    Chi2_Eta, "chi2_eta[3]/D");
+    tree->Branch("chi2_pi0[3]",    Chi2_Pi0, "chi2_pi0[3]/D");
 
     signal_tree = make_tree(ParticleTypeDatabase::Eta);
     reference_tree = make_tree(ParticleTypeDatabase::Pi0);

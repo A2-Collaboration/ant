@@ -219,7 +219,23 @@ protected:
     particleCuts_t photon_cut;
     particleCuts_t proton_cut;
 
-        data::ParticleList FilterParticles(const data::ParticleList& list, const particleCuts_t& cuts) const;
+    data::ParticleList FilterParticles(const data::ParticleList& list, const particleCuts_t& cuts) const;
+
+    struct expected_peak_t {
+        double Mean;
+        double Sigma;
+        expected_peak_t(double mean, double sigma) :
+            Mean(mean), Sigma(sigma) {}
+    };
+
+    const expected_peak_t omega_peak = {7.64266e+02, 3.29420e+01};
+    const expected_peak_t eta_peak   = {5.30815e+02, 2.93928e+01};
+    const expected_peak_t pi0_peak   = {1.31331e+02, 1.04835e+01};
+
+    double Chi2_Omega = 0.0;
+    double Chi2_Pi0[3] = {};
+    double Chi2_Eta[3] = {};
+
 
 public:
     OmegaEtaG2(PhysOptPtr opts);
