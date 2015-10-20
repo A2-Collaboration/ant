@@ -5,14 +5,14 @@
 
 #include "TMath.h"
 #include "TDirectory.h"
-#include "TH1D.h"
+#include "TTree.h"
 
 using namespace ant::analysis;
 using namespace ant::analysis::data;
 using namespace std;
 
 
-TDirectory *SmartHistFactory::begin_make_histogram()
+TDirectory *SmartHistFactory::goto_dir()
 {
     TDirectory* old = gDirectory;
     if(dir)
@@ -21,7 +21,7 @@ TDirectory *SmartHistFactory::begin_make_histogram()
     return old;
 }
 
-void SmartHistFactory::end_make_histogram(TDirectory* dir)
+void SmartHistFactory::restore_dir(TDirectory* dir)
 {
     if(dir)
         dir->cd();
@@ -63,18 +63,18 @@ SmartHistFactory::SmartHistFactory(const string &directory_name, TDirectory* roo
 TH1D *SmartHistFactory::makeTH1D(const string &title, const string &xlabel, const string &ylabel, const BinSettings &bins, const string &name)
 {
 
-    TDirectory* old = begin_make_histogram();
+    TDirectory* old = goto_dir();
     TH1D* r = base_factory.Make1D(MakeTitle(title),xlabel,ylabel,bins,name);
-    end_make_histogram(old);
+    restore_dir(old);
     return r;
 
 }
 
 TH2D *SmartHistFactory::makeTH2D(const string &title, const string &xlabel, const string &ylabel, const BinSettings &xbins, const BinSettings &ybins, const string &name)
 {
-    TDirectory* old = begin_make_histogram();
+    TDirectory* old = goto_dir();
     TH2D* r = base_factory.Make2D(MakeTitle(title),xlabel,ylabel,xbins,ybins,name);
-    end_make_histogram(old);
+    restore_dir(old);
     return r;
 }
 
@@ -87,10 +87,18 @@ TH3D *SmartHistFactory::makeTH3D(const string &title,
                                  const BinSettings &zbins,
                                  const string &name)
 {
-    TDirectory* old = begin_make_histogram();
+    TDirectory* old = goto_dir();
     TH3D* r = base_factory.Make3D(MakeTitle(title),xlabel,ylabel,zlabel,xbins,ybins,zbins,name);
-    end_make_histogram(old);
+    restore_dir(old);
     return r;
+}
+
+TTree*SmartHistFactory::makeTTree(const string& name)
+{
+    TDirectory* old = goto_dir();
+    TTree* t = new TTree(name.c_str(), name.c_str());
+    restore_dir(old);
+    return t;
 }
 
 SmartHist1<const ParticlePtr &> SmartHistFactory::InvariantMass(const string &title, const string &xlabel, const string &ylabel, BinSettings bins, const string &name)
@@ -128,9 +136,9 @@ SmartHist1<const ParticlePtr &> SmartHistFactory::KinEnergyPlot(const string &ti
 
 TH1D *SmartHistFactory::copyTH1D(TH1D *hist, const std::string& newname)
 {
-    TDirectory* old = begin_make_histogram();
+    TDirectory* old = goto_dir();
     TH1D* newhist = (TH1D*)hist->Clone(newname.c_str());
-    end_make_histogram(old);
+    restore_dir(old);
     return newhist;
 }
 

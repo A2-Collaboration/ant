@@ -10,6 +10,7 @@ class TDirectory;
 class TH1D;
 class TH2D;
 class TH3D;
+class TTree;
 
 namespace ant {
 namespace analysis {
@@ -19,8 +20,8 @@ private:
 
     TDirectory* dir;
 
-    TDirectory *begin_make_histogram();
-    void end_make_histogram(TDirectory* dir);
+    TDirectory *goto_dir();
+    void restore_dir(TDirectory* dir);
 
     HistogramFactory base_factory;
 
@@ -62,6 +63,8 @@ public:
             const BinSettings& zbins,
             const std::string& name="");
 
+    TTree* makeTTree(const std::string& name);
+
 
     // Predef smart hists
 
@@ -94,9 +97,9 @@ public:
             const std::string& ylabel,
             const BinSettings& bins,
             const std::string& name="") {
-        TDirectory* old = begin_make_histogram();
+        TDirectory* old = goto_dir();
             SmartHist1<T> r = SmartHist1<T>::makeHist(func,title,xlabel,ylabel,bins,name,base_factory);
-        end_make_histogram(old);
+        restore_dir(old);
         return std::move(r);
     }
 
@@ -107,9 +110,9 @@ public:
             const std::string& ylabel,
             const BinSettings& bins,
             const std::string& name="") {
-        TDirectory* old = begin_make_histogram();
+        TDirectory* old = goto_dir();
             SmartHist1<T> r = SmartHist1<T>::makeHist(title,xlabel,ylabel,bins,name,base_factory);
-        end_make_histogram(old);
+        restore_dir(old);
         return std::move(r);
     }
 
