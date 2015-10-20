@@ -20,6 +20,11 @@ EtapOmegaG::EtapOmegaG(PhysOptPtr opts) : Physics("EtapOmegaG", opts),
 {
     sig_steps = HistFac_sig.makeTH1D("Steps: Signal channel", "", "#", BinSettings(10),"sig_steps");
     ref_steps = HistFac_ref.makeTH1D("Steps: Reference channel", "", "#", BinSettings(10),"ref_steps");
+
+    treeSig = HistFac_sig.makeTTree("treeSig");
+    treeRef = HistFac_ref.makeTTree("treeRef");
+
+
 }
 
 EtapOmegaG::sig_perDecayHists_t::sig_perDecayHists_t(SmartHistFactory& HistFac_parent,

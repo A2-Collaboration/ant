@@ -30,6 +30,9 @@ class EtapOmegaG : public Physics {
     SmartHistFactory HistFac_sig;
     SmartHistFactory HistFac_ref;
 
+    TTree* treeSig;
+    TTree* treeRef;
+
     TH1D* sig_steps;
     TH1D* ref_steps;
 
