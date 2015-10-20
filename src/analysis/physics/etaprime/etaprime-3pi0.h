@@ -12,7 +12,30 @@ class Etap3pi0 : public Physics {
 
 protected:
 
-     struct ParticleVars {
+    const std::vector<std::vector<std::pair<unsigned,unsigned>>> combinations =
+    {
+        { {0, 1}, {2, 3}, {4, 5} },
+        { {0, 1}, {2, 4}, {3, 5} },
+        { {0, 1}, {2, 5}, {3, 4} },
+
+        { {0, 2}, {1, 3}, {4, 5} },
+        { {0, 2}, {1, 4}, {3, 5} },
+        { {0, 2}, {1, 5}, {3, 4} },
+
+        { {0, 3}, {1, 2}, {4, 5} },
+        { {0, 3}, {1, 4}, {2, 5} },
+        { {0, 3}, {1, 5}, {2, 4} },
+
+        { {0, 4}, {1, 2}, {3, 5} },
+        { {0, 4}, {1, 3}, {2, 5} },
+        { {0, 4}, {1, 5}, {2, 3} },
+
+        { {0, 5}, {1, 2}, {3, 4} },
+        { {0, 5}, {1, 3}, {2, 4} },
+        { {0, 5}, {1, 4}, {2, 3} }
+    };
+
+    struct ParticleVars {
         double E;
         double Theta;
         double Phi;
@@ -28,6 +51,16 @@ protected:
         void SetBranches(TTree* tree, const std::string& name);
     };
 
+    struct result_t {
+        double Chi2 = std::numeric_limits<double>::infinity();
+
+        std::vector<data::ParticlePtr> g_final;
+        std::vector<TLorentzVector> mesons;
+
+        TLorentzVector etaprime;
+
+        result_t() : g_final(6), mesons(3), etaprime(0,0,0,0){}
+    };
 
     std::string dataset;
 
@@ -37,8 +70,8 @@ protected:
     TH1D* h2g;
     TH1D* h6g;
 
-    TH1D* IM_etap;
-    TH1D* IM_pi0;
+    TH1D* ch_3pi0_IM_etap;
+    TH1D* ch_3pi0_IM_pi0;
 
     TH2D* dalitz;
 
@@ -54,6 +87,9 @@ protected:
     double imsqrP23;
 
 
+
+    void FillCrossChecks(const data::ParticleList& photons, const data::ParticleList& mcphotons);
+    Etap3pi0::result_t Make3pi0(const data::ParticleList& photons);
 public:
     Etap3pi0(PhysOptPtr opts);
     virtual void ProcessEvent(const data::Event& event) override;

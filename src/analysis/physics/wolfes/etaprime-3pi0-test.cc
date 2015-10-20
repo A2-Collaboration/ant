@@ -1,4 +1,4 @@
-#include "etaprime-3pi0.h"
+#include "etaprime-3pi0-test.h"
 #include "plot/root_draw.h"
 #include "utils/combinatorics.h"
 #include "base/std_ext/math.h"
@@ -18,7 +18,7 @@ using namespace ant::analysis::physics;
 
 
 
-Etap3pi0::Etap3pi0(PhysOptPtr opts) :
+Etap3pi0_test::Etap3pi0_test(PhysOptPtr opts) :
     Physics("EtapOmegaG", opts),
       dataset(opts->GetOption("dataset"))
 {
@@ -48,7 +48,7 @@ Etap3pi0::Etap3pi0(PhysOptPtr opts) :
 
 }
 
-void Etap3pi0::ProcessEvent(const data::Event& event)
+void Etap3pi0_test::ProcessEvent(const data::Event& event)
 {
     const auto& data   = event.Reconstructed();
     const auto& mcdata = event.MCTrue();
@@ -166,7 +166,7 @@ void Etap3pi0::ProcessEvent(const data::Event& event)
 }
 
 
-void Etap3pi0::ShowResult()
+void Etap3pi0_test::ShowResult()
 {
     canvas(GetName()) << h2g << h6g
                       << IM_pi0 << IM_etap
@@ -175,7 +175,7 @@ void Etap3pi0::ShowResult()
     canvas("Dalitz-Plots") << drawoption("colz") << dalitz << endc;
 }
 
-Etap3pi0::ParticleVars::ParticleVars(const TLorentzVector& lv, const ParticleTypeDatabase::Type& type) noexcept
+Etap3pi0_test::ParticleVars::ParticleVars(const TLorentzVector& lv, const ParticleTypeDatabase::Type& type) noexcept
 {
     IM    = lv.M();
     Theta = radian_to_degree(lv.Theta());
@@ -183,7 +183,7 @@ Etap3pi0::ParticleVars::ParticleVars(const TLorentzVector& lv, const ParticleTyp
     E     = lv.E() - type.Mass();
 }
 
-Etap3pi0::ParticleVars::ParticleVars(const Particle& p) noexcept
+Etap3pi0_test::ParticleVars::ParticleVars(const Particle& p) noexcept
 {
     IM    = p.M();
     Theta = radian_to_degree(p.Theta());
@@ -191,7 +191,7 @@ Etap3pi0::ParticleVars::ParticleVars(const Particle& p) noexcept
     E     = p.Ek();
 }
 
-void Etap3pi0::ParticleVars::SetBranches(TTree* tree, const string& name)
+void Etap3pi0_test::ParticleVars::SetBranches(TTree* tree, const string& name)
 {
     tree->Branch((name+"IM").c_str(), &IM);
     tree->Branch((name+"Theta").c_str(), &Theta);
@@ -199,4 +199,4 @@ void Etap3pi0::ParticleVars::SetBranches(TTree* tree, const string& name)
     tree->Branch((name+"E").c_str(),  &E);
 }
 
-AUTO_REGISTER_PHYSICS(Etap3pi0, "Etap3pi0")
+AUTO_REGISTER_PHYSICS(Etap3pi0_test, "Etap3pi0_test")
