@@ -6,6 +6,7 @@ set(SRCS
   types.cc
   Detector_t.cc
   ParticleType.cc
+  ParticleTypeTree.cc
   interval.h
   piecewise_interval.h
   printable.h

@@ -34,6 +34,8 @@ protected:
 
 public:
 
+    using type = T;
+
     template <typename ... args_t>
     static snode_t MakeNode(args_t&&... args) {
         // cannot use make_shared since protected constructor
