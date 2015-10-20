@@ -14,18 +14,19 @@ using namespace ant::analysis::physics;
 
 
 
-EtapOmegaG::EtapOmegaG(PhysOptPtr opts) : Physics("EtapOmegaG", opts)
+EtapOmegaG::EtapOmegaG(PhysOptPtr opts) : Physics("EtapOmegaG", opts),
+    HistFac_sig("Sig",HistFac),
+    HistFac_ref("Ref",HistFac)
 {
-    sig_steps = HistFac.makeTH1D("Steps: Signal channel", "", "#", BinSettings(10),"sig_steps");
-    ref_steps = HistFac.makeTH1D("Steps: Reference channel", "", "#", BinSettings(10),"ref_steps");
+    sig_steps = HistFac_sig.makeTH1D("Steps: Signal channel", "", "#", BinSettings(10),"sig_steps");
+    ref_steps = HistFac_ref.makeTH1D("Steps: Reference channel", "", "#", BinSettings(10),"ref_steps");
 }
 
 EtapOmegaG::sig_perDecayHists_t::sig_perDecayHists_t(SmartHistFactory& HistFac_parent,
-                                                     const string& decaystring,
-                                                     const string& prefix)
+                                                     const string& decaystring)
 {
     auto directory_name = utils::ParticleTools::SanitizeDecayString(decaystring);
-    SmartHistFactory HistFac(prefix+directory_name, HistFac_parent);
+    SmartHistFactory HistFac(directory_name, HistFac_parent);
     HistFac.SetTitlePrefix(decaystring);
 
     BinSettings bins_im(1200);
@@ -62,11 +63,10 @@ EtapOmegaG::sig_perDecayHists_t::sig_perDecayHists_t(SmartHistFactory& HistFac_p
 }
 
 EtapOmegaG::ref_perDecayHists_t::ref_perDecayHists_t(SmartHistFactory& HistFac_parent,
-                                                     const string& decaystring,
-                                                     const string& prefix)
+                                                     const string& decaystring)
 {
     auto directory_name = utils::ParticleTools::SanitizeDecayString(decaystring);
-    SmartHistFactory HistFac(prefix+directory_name, HistFac_parent);
+    SmartHistFactory HistFac(directory_name, HistFac_parent);
     HistFac.SetTitlePrefix(decaystring);
 
     BinSettings bins_im(1200);
@@ -97,6 +97,20 @@ void EtapOmegaG::ProcessEvent(const data::Event& event)
 
     ProcessRef(event.MCTrue().ParticleTree(), data);
     ProcessSig(event.MCTrue().ParticleTree(), data);
+}
+
+template<typename T>
+T& getHistogram(const data::ParticleTree_t& particletree,
+                std::map<std::string, T>& perDecayHists,
+                SmartHistFactory& HistFac) {
+    const std::string& decaystring = utils::ParticleTools::GetDecayString(particletree);
+    // search map only once even on insert
+    auto it_h = perDecayHists.lower_bound(decaystring);
+    if(it_h == perDecayHists.end() || perDecayHists.key_comp()(decaystring, it_h->first)) {
+        // decaystring does not exist
+        it_h = perDecayHists.emplace_hint(it_h, decaystring, T(HistFac, decaystring));
+    }
+    return it_h->second;
 }
 
 void EtapOmegaG::ProcessSig(const data::ParticleTree_t& particletree,
@@ -136,7 +150,7 @@ void EtapOmegaG::ProcessSig(const data::ParticleTree_t& particletree,
         return;
     steps->Fill("CBESum>550MeV",1);
 
-    sig_perDecayHists_t& h = getHistogram("sig_", particletree, sig_perDecayHists);
+    sig_perDecayHists_t& h = getHistogram(particletree, sig_perDecayHists, HistFac_sig);
 
     // gamma combinatorics
     assert(photons.size() == 4);
@@ -290,7 +304,7 @@ void EtapOmegaG::ProcessRef(const data::ParticleTree_t& particletree,
         return;
     steps->Fill("CBESum>550MeV",1);
 
-    ref_perDecayHists_t& h = getHistogram("ref_", particletree, ref_perDecayHists);
+    ref_perDecayHists_t& h = getHistogram(particletree, ref_perDecayHists, HistFac_ref);
 
     // gamma combinatorics
     assert(photons.size() == 2);

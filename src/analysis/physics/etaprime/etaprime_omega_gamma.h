@@ -27,6 +27,9 @@ class EtapOmegaG : public Physics {
     // extracted from gg histogram for reference channel
     const expected_peak_t EtaPrime_ref = {905, 29};
 
+    SmartHistFactory HistFac_sig;
+    SmartHistFactory HistFac_ref;
+
     TH1D* sig_steps;
     TH1D* ref_steps;
 
@@ -50,8 +53,7 @@ class EtapOmegaG : public Physics {
         TH1D* Chi2_All;
         TH1D* Chi2_Best;
 
-        sig_perDecayHists_t(SmartHistFactory& HistFac_parent, const std::string& decaystring,
-                            const std::string& prefix);
+        sig_perDecayHists_t(SmartHistFactory& HistFac_parent, const std::string& decaystring);
     };
 
     std::map<std::string, sig_perDecayHists_t> sig_perDecayHists;
@@ -72,25 +74,13 @@ class EtapOmegaG : public Physics {
             return IM_etap->GetEntries()>0;
         }
 
-        ref_perDecayHists_t(SmartHistFactory& HistFac_parent, const std::string& decaystring,
-                            const std::string& prefix);
+        ref_perDecayHists_t(SmartHistFactory& HistFac_parent, const std::string& decaystring);
     };
 
     std::map<std::string, ref_perDecayHists_t> ref_perDecayHists;
 
 
-    template<typename T>
-    T& getHistogram(const std::string& prefix,
-                    const data::ParticleTree_t& particletree, std::map<std::string, T>& perDecayHists) {
-        const std::string& decaystring = utils::ParticleTools::GetDecayString(particletree);
-        // search map only once even on insert
-        auto it_h = perDecayHists.lower_bound(decaystring);
-        if(it_h == perDecayHists.end() || perDecayHists.key_comp()(decaystring, it_h->first)) {
-            // decaystring does not exist
-            it_h = perDecayHists.emplace_hint(it_h, decaystring, T(HistFac, decaystring, prefix));
-        }
-        return it_h->second;
-    }
+
 
     void ProcessSig(const data::ParticleTree_t& particletree, const data::Event::Data& data);
     void ProcessRef(const data::ParticleTree_t& particletree, const data::Event::Data& data);
