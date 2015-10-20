@@ -123,6 +123,13 @@ public:
 
 };
 
+inline bool operator<(const ant::ParticleTypeDatabase::Type& a, const ant::ParticleTypeDatabase::Type& b)
+{
+    return a.Name() < b.Name();
 }
+
+}
+
+
 
 std::ostream& operator<< ( std::ostream& stream, const ant::ParticleTypeDatabase::Type& particle_type );

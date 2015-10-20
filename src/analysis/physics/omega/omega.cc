@@ -602,7 +602,7 @@ std::shared_ptr<ant::Tree<const ParticleTypeDatabase::Type&> > OmegaEtaG2::make_
     auto etapi = omega->CreateDaughter(eta_or_pi);
     etapi->CreateDaughter(ParticleTypeDatabase::Photon);
     etapi->CreateDaughter(ParticleTypeDatabase::Photon);
-    tree->Sort(utils::ParticleTools::SortParticleTypeByName);
+    tree->Sort();
     return tree;
 }
 

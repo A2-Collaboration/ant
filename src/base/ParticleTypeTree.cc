@@ -71,6 +71,11 @@ ParticleTypeTreeDatabase::database_t ParticleTypeTreeDatabase::CreateDatabase()
     database[Channel::EtaPrime_gOmega_ggPi0_4g] = make_EtaPrime_gOmega_ggPi0_4g();
 
 
+    // sort them all by default operator<
+    std::for_each(database.begin(), database.end(), [] (database_t::value_type& item) {
+        item.second->Sort();
+    });
+
     return database;
 }
 

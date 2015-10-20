@@ -99,11 +99,6 @@ bool utils::ParticleTools::SortParticleByName(const data::ParticlePtr& a, const 
     return a->Type().Name() < b->Type().Name();
 }
 
-bool utils::ParticleTools::SortParticleTypeByName(const ant::ParticleTypeDatabase::Type& a, const ant::ParticleTypeDatabase::Type& b)
-{
-    return a.Name() < b.Name();
-}
-
 bool utils::ParticleTools::MatchByParticleName(const data::ParticlePtr& a, const ant::ParticleTypeDatabase::Type& b)
 {
     return a->Type().Name() == b.Name();

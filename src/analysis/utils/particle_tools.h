@@ -51,8 +51,6 @@ struct ParticleTools {
 
     static bool SortParticleByName(const data::ParticlePtr& a, const data::ParticlePtr& b);
 
-    static bool SortParticleTypeByName(const ParticleTypeDatabase::Type& a, const ParticleTypeDatabase::Type& b);
-
     static bool MatchByParticleName(const data::ParticlePtr& a, const ParticleTypeDatabase::Type& b);
 
 };
