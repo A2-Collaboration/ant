@@ -76,7 +76,7 @@ void Etap3pi0::FillCrossChecks(const ParticleList& photons, const ParticleList& 
     fill_combinations(h6g, 6, photons);
 }
 
-Etap3pi0::result_t Etap3pi0::Make3pi0(const ParticleList& photons, const double chi2cut)
+Etap3pi0::result_t Etap3pi0::Make3pi0(const ParticleList& photons)
 {
     result_t result;
 
@@ -94,31 +94,27 @@ Etap3pi0::result_t Etap3pi0::Make3pi0(const ParticleList& photons, const double 
 
         for(unsigned i=0;i<tmp.mesons.size();i++)
         {
-            tmp.mesons[i] = *(tmp.g_final[2*i]) + *(tmp.g_final[2*i+1]);
-            tmp.Chi2 += std_ext::sqr((tmp.mesons[i].M() - 126) / 15); // width and center from fit
+            tmp.mesons[i] = make_shared<Particle>(ParticleTypeDatabase::Pi0, *(tmp.g_final[2*i]) + *(tmp.g_final[2*i+1]));
+            tmp.Chi2 += std_ext::sqr((tmp.mesons[i]->M() - 126) / 15); // width and center from fit
         }
         if(tmp.Chi2<result.Chi2)
             result = move(tmp);
     }
 
-    if (result.Chi2 < chi2cut)
+    result.success = true;
+    for (const auto& p: result.mesons )
     {
-        result.success = true;
-        for (const auto& p: result.mesons )
-        {
-            ch_3pi0_IM_pi0->Fill(p.M());
-            result.etaprime += p;
-        }
-        ch_3pi0_IM_etap->Fill(result.etaprime.M());
+//        ch_3pi0_IM_pi0->Fill(p->M());
+        result.etaprime += *p;
     }
+//    ch_3pi0_IM_etap->Fill(result.etaprime.M());
 
     return result;
 }
 
-Etap3pi0::result_t Etap3pi0::MakeEta2pi0(const ParticleList& photons, const double chi2cut)
+Etap3pi0::result_t Etap3pi0::MakeEta2pi0(const ParticleList& photons)
 {
     result_t result;
-    unsigned etafound(0);
 
     for ( const auto& pairs: combinations)
     {
@@ -132,33 +128,38 @@ Etap3pi0::result_t Etap3pi0::MakeEta2pi0(const ParticleList& photons, const doub
             tmp.g_final[pairs.at(i).second] = photons[2*i+1];
         }
 
-        for(unsigned i=0;i<tmp.mesons.size();i++)
-            tmp.mesons[i] = *(tmp.g_final[2*i]) + *(tmp.g_final[2*i+1]);
+//        for(unsigned i=0;i<tmp.mesons.size();i++)
+//            tmp.mesons[i] = *(tmp.g_final[2*i]) + *(tmp.g_final[2*i+1]);
 
         for (unsigned etaIndex = 0 ; etaIndex < tmp.mesons.size() ; ++etaIndex)
         {
-            tmp.Chi2 =  std_ext::sqr((tmp.mesons[etaIndex].M() - 515.5) / 19.4);        // width and center from fit
-            tmp.Chi2 += std_ext::sqr((tmp.mesons[(etaIndex + 1) % 3].M() - 126) / 15);
-            tmp.Chi2 += std_ext::sqr((tmp.mesons[(etaIndex + 2) % 3].M() - 126) / 15);
+            tmp.mesons[etaIndex] = make_shared<Particle>(ParticleTypeDatabase::Eta,*(tmp.g_final[2*etaIndex]) + *(tmp.g_final[2*etaIndex+1]));
+            tmp.Chi2 =  std_ext::sqr((tmp.mesons[etaIndex]->M() - 515.5) / 19.4);        // width and center from fit
+
+            unsigned piIndex = ( etaIndex + 1 ) % 3;
+            tmp.mesons[piIndex] = make_shared<Particle>(ParticleTypeDatabase::Pi0,*(tmp.g_final[2*piIndex]) + *(tmp.g_final[2*piIndex+1]));
+            tmp.Chi2 += std_ext::sqr((tmp.mesons[piIndex]->M() - 126) / 15);
+
+            piIndex = ( etaIndex + 2 ) % 3;
+            tmp.mesons[piIndex] = make_shared<Particle>(ParticleTypeDatabase::Pi0,*(tmp.g_final[2*piIndex]) + *(tmp.g_final[2*piIndex+1]));
+            tmp.Chi2 += std_ext::sqr((tmp.mesons[piIndex]->M() - 126) / 15);
+
             if(tmp.Chi2<result.Chi2)
-            {
                 result = move(tmp);
-                etafound = etaIndex;
-            }
         }
 
     }
 
-    if (result.Chi2 < chi2cut)
-    {
-        result.success = true;
-        for (const auto& p: result.mesons )
-            result.etaprime += p;
-        ch_eta2pi0_IM_etas->Fill(result.mesons[etafound].M());
-        ch_eta2pi0_IM_pions->Fill(result.mesons[( etafound + 1 ) % 3].M());
-        ch_eta2pi0_IM_pions->Fill(result.mesons[( etafound + 2 ) % 3].M());
-        ch_eta2pi0_IM_etap->Fill(result.etaprime.M());
-    }
+    result.success = true;
+    for (const auto& p: result.mesons )
+        result.etaprime += *p;
+
+    /*
+    ch_eta2pi0_IM_etas->Fill(result.mesons[etafound]->M());
+    ch_eta2pi0_IM_pions->Fill(result.mesons[( etafound + 1 ) % 3]->M());
+    ch_eta2pi0_IM_pions->Fill(result.mesons[( etafound + 2 ) % 3]->M());
+    ch_eta2pi0_IM_etap->Fill(result.etaprime.M());
+    */
 
     return result;
 }
@@ -177,13 +178,26 @@ void Etap3pi0::ProcessEvent(const data::Event& event)
     if (photons.size() != 6 )
         return;
 
-    result_t result_3pi0    = Make3pi0(photons,3);
-    result_t result_eta2pi0 = MakeEta2pi0(photons,3);
+    result_t result_3pi0    = Make3pi0(photons);
+    result_t result_eta2pi0 = MakeEta2pi0(photons);
 
-    pi01     = ParticleVars(result_3pi0.mesons[0],ParticleTypeDatabase::Pi0);
-    pi02     = ParticleVars(result_3pi0.mesons[1],ParticleTypeDatabase::Pi0);
-    pi03     = ParticleVars(result_3pi0.mesons[2],ParticleTypeDatabase::Pi0);
+    pi01     = ParticleVars(*(result_3pi0.mesons[0]));
+    pi02     = ParticleVars(*(result_3pi0.mesons[1]));
+    pi03     = ParticleVars(*(result_3pi0.mesons[2]));
     etaprime = ParticleVars(result_3pi0.etaprime, ParticleTypeDatabase::EtaPrime);
+
+    if (result_3pi0.Chi2 < 2)
+    {
+        result_3pi0.FillIm(ParticleTypeDatabase::Pi0, ch_3pi0_IM_pi0);
+        result_3pi0.FillImEtaPrime(ch_3pi0_IM_etap);
+    }
+
+    if (result_eta2pi0.Chi2 < 2)
+    {
+        result_eta2pi0.FillIm(ParticleTypeDatabase::Pi0, ch_eta2pi0_IM_pions);
+        result_eta2pi0.FillIm(ParticleTypeDatabase::Eta, ch_eta2pi0_IM_etas);
+        result_eta2pi0.FillImEtaPrime(ch_eta2pi0_IM_etap);
+    }
 
 
 
@@ -246,6 +260,22 @@ void Etap3pi0::ParticleVars::SetBranches(TTree* tree, const string& name)
     tree->Branch((name+"Theta").c_str(), &Theta);
     tree->Branch((name+"Phi").c_str(),&Phi);
     tree->Branch((name+"E").c_str(),  &E);
+}
+
+
+
+void Etap3pi0::result_t::FillIm(const ant::ParticleTypeDatabase::Type& type, TH1D* hist)
+{
+    for (const auto& meson: mesons)
+    {
+        if ( meson->Type() == type )
+            hist->Fill(meson->M());
+    }
+}
+
+void Etap3pi0::result_t::FillImEtaPrime(TH1D* hist)
+{
+    hist->Fill(etaprime.M());
 }
 
 AUTO_REGISTER_PHYSICS(Etap3pi0, "Etap3pi0")

@@ -56,11 +56,17 @@ protected:
         bool success = false;
 
         std::vector<data::ParticlePtr> g_final;
-        std::vector<TLorentzVector> mesons;
+        std::vector<data::ParticlePtr> mesons;
 
         TLorentzVector etaprime;
 
-        result_t() : g_final(6), mesons(3,TLorentzVector(0,0,0,0)), etaprime(0,0,0,0){}
+        result_t() : g_final(6), mesons(3), etaprime(0,0,0,0){}
+
+        void FillIm(const ParticleTypeDatabase::Type& type, TH1D* hist);
+        void FillImEtaPrime(TH1D* hist);
+
+        // void AddBranches();
+        // void FillHists();
     };
 
     std::string dataset;
@@ -95,8 +101,8 @@ protected:
 
     void FillCrossChecks(const data::ParticleList& photons, const data::ParticleList& mcphotons);
 
-    Etap3pi0::result_t Make3pi0(const data::ParticleList& photons, const double chi2cut);
-    Etap3pi0::result_t MakeEta2pi0(const data::ParticleList& photons, const double chi2cut);
+    Etap3pi0::result_t Make3pi0(const data::ParticleList& photons);
+    Etap3pi0::result_t MakeEta2pi0(const data::ParticleList& photons);
 
 
 public:
