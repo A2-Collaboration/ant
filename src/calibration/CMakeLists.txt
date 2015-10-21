@@ -24,13 +24,12 @@ set(SRCS
     gui/Manager.cc
     gui/Manager_traits.h
     gui/ManagerWindow.cc
-	gui/EditorCanvas.cc
-	gui/EditorWindow.cc
+    gui/EditorCanvas.cc
+    gui/EditorWindow.cc
     gui/Indicator_traits.h
     gui/Indicator.cc
     gui/CalCanvas.cc
     gui/AvgBuffer.h
-    gui/ACECanvas.cc
     gui/Dialogs.cc
     fitfunctions/BaseFunctions.cc
     fitfunctions/KnobsTF1.cc
