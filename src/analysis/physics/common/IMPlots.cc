@@ -65,4 +65,4 @@ IMPlots::hist_set::hist_set(const std::string& pref, SmartHistFactory& hf, std::
     }
 }
 
-AUTO_REGISTER_PHYSICS(IMPlots, "IMPlots")
+AUTO_REGISTER_PHYSICS(IMPlots)

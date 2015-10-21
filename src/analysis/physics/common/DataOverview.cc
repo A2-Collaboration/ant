@@ -80,5 +80,5 @@ void DataOverview::ShowResult()
             << endc;
 }
 
-AUTO_REGISTER_PHYSICS(DataOverview, "DataOverview")
+AUTO_REGISTER_PHYSICS(DataOverview)
 

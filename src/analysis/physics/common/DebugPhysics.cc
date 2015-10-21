@@ -73,5 +73,5 @@ void DebugPIDAlignment::ShowResult()
 
 }
 
-AUTO_REGISTER_PHYSICS(DebugPhysics, "DebugPhysics")
-AUTO_REGISTER_PHYSICS(DebugPIDAlignment, "DebugPIDAlignment")
+AUTO_REGISTER_PHYSICS(DebugPhysics)
+AUTO_REGISTER_PHYSICS(DebugPIDAlignment)

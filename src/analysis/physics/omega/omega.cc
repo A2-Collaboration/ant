@@ -724,7 +724,7 @@ bool OmegaEtaG2::particleCuts_t::TestParticle(const Particle& p) const
     return E_range.Contains(p.Ek()) && Theta_range.Contains(p.Theta());
 }
 
-AUTO_REGISTER_PHYSICS(OmegaEtaG, "OmegaEtaG")
-AUTO_REGISTER_PHYSICS(OmegaMCTruePlots, "OmegaMCTruePlots")
-AUTO_REGISTER_PHYSICS(OmegaMCTree, "OmegaMCTree")
-AUTO_REGISTER_PHYSICS(OmegaEtaG2, "OmegaEtaG2")
+AUTO_REGISTER_PHYSICS(OmegaEtaG)
+AUTO_REGISTER_PHYSICS(OmegaMCTruePlots)
+AUTO_REGISTER_PHYSICS(OmegaMCTree)
+AUTO_REGISTER_PHYSICS(OmegaEtaG2)

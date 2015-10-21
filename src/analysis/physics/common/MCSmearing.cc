@@ -96,4 +96,4 @@ void MCSmearing::ShowResult()
 }
 
 
-AUTO_REGISTER_PHYSICS(MCSmearing, "MCSmearing")
+AUTO_REGISTER_PHYSICS(MCSmearing)

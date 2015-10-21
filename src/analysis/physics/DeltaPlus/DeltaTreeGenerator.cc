@@ -96,4 +96,4 @@ void DeltaTreeGenerator::ShowResult()
     canvas("treegen") << taggerHits << mcgamma << recgamma << endc;
 }
 
-AUTO_REGISTER_PHYSICS(DeltaTreeGenerator, "DeltaTreeGenerator")
+AUTO_REGISTER_PHYSICS(DeltaTreeGenerator)

@@ -100,4 +100,4 @@ void ParticleCombinatoricsTest::ShowResult()
 
 }
 
-AUTO_REGISTER_PHYSICS(ParticleCombinatoricsTest,"ParticleCombinatoricsTest")
+AUTO_REGISTER_PHYSICS(ParticleCombinatoricsTest)

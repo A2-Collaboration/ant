@@ -99,4 +99,4 @@ void ParticleIDCheck::branch_hists::Fill(const Event::Data& data)
 
 }
 
-AUTO_REGISTER_PHYSICS(ParticleIDCheck, "ParticleIDCheck")
+AUTO_REGISTER_PHYSICS(ParticleIDCheck)

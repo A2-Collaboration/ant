@@ -387,4 +387,4 @@ void ReconstructCheck::TAPSVetoMatch::Fill(const CandidateList& cands, const Clu
 
 }
 
-AUTO_REGISTER_PHYSICS(ReconstructCheck, "ReconstructCheck")
+AUTO_REGISTER_PHYSICS(ReconstructCheck)

@@ -74,4 +74,4 @@ void ProtonCheck::ShowResult()
 }
 
 
-AUTO_REGISTER_PHYSICS(ProtonCheck, "ProtonCheck")
+AUTO_REGISTER_PHYSICS(ProtonCheck)

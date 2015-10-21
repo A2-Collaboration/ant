@@ -69,4 +69,4 @@ void TPC_PhysicsStats::ShowResult()
     c << endc;
 }
 
-AUTO_REGISTER_PHYSICS(TPC_PhysicsStats, "TPC_PhysicsStats")
+AUTO_REGISTER_PHYSICS(TPC_PhysicsStats)

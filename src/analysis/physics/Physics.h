@@ -58,22 +58,21 @@ using physics_creator = std::function<std::unique_ptr<Physics>(PhysOptPtr)>;
 
 class PhysicsRegistry
 {
+    friend class PhysicsRegistration;
+
 private:
     using physics_creators_t = std::map<std::string, physics_creator>;
     physics_creators_t physics_creators;
-
-public:
-    static PhysicsRegistry& get();
-
-    static std::unique_ptr<Physics> Create(const std::string& name, PhysOptPtr opts);
-
-    std::vector<std::string> GetList() const;
+    static PhysicsRegistry& get_instance();
 
     void RegisterPhysics(physics_creator c, const std::string& name) {
         physics_creators[name] = c;
     }
+public:
 
-    static void PrintRegistry();
+    static std::unique_ptr<Physics> Create(const std::string& name, PhysOptPtr opts);
+
+    static std::vector<std::string> GetList();
 
 };
 
@@ -83,7 +82,7 @@ public:
     PhysicsRegistration(physics_creator c, const std::string& name);
 };
 
-#define AUTO_REGISTER_PHYSICS(physics, name) \
-    ant::analysis::PhysicsRegistration _physics_registration_ ## physics(ant::analysis::physics_factory<physics>,name);
+#define AUTO_REGISTER_PHYSICS(physics) \
+    ant::analysis::PhysicsRegistration _physics_registration_ ## physics(ant::analysis::physics_factory<physics>, #physics);
 
 }} // nammespace ant::analysis

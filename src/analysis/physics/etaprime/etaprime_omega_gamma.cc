@@ -400,4 +400,4 @@ void EtapOmegaG::ShowResult()
 
 
 
-AUTO_REGISTER_PHYSICS(EtapOmegaG, "EtapOmegaG")
+AUTO_REGISTER_PHYSICS(EtapOmegaG)

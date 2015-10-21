@@ -188,4 +188,4 @@ void GeoAcceptance::AcceptanceAnalysis::ShowResult()
             << endc;
 }
 
-AUTO_REGISTER_PHYSICS(GeoAcceptance,"GeoAcceptance")
+AUTO_REGISTER_PHYSICS(GeoAcceptance)

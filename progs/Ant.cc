@@ -66,7 +66,7 @@ int main(int argc, char** argv) {
         const string arg1(argv[1]);
 
         if(arg1 == "--list-physics") {
-            for(const auto& name : analysis::PhysicsRegistry::get().GetList()) {
+            for(const auto& name : analysis::PhysicsRegistry::GetList()) {
                 cout << name << endl;
             }
             return 0;
@@ -109,7 +109,7 @@ int main(int argc, char** argv) {
 
     auto cmd_maxevents = cmd.add<TCLAP::ValueArg<int>>("m","maxevents","Process only max events",false, 0, "maxevents");
 
-    TCLAP::ValuesConstraintExtra<decltype(analysis::PhysicsRegistry::get().GetList())> allowedPhysics(analysis::PhysicsRegistry::get().GetList());
+    TCLAP::ValuesConstraintExtra<decltype(analysis::PhysicsRegistry::GetList())> allowedPhysics(analysis::PhysicsRegistry::GetList());
     auto cmd_physicsclasses  = cmd.add<TCLAP::MultiArg<string>>("p","physics","Physics class to run", false, &allowedPhysics);
 
     auto cmd_output = cmd.add<TCLAP::ValueArg<string>>("o","output","Output file",false,"","filename");

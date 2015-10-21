@@ -19,7 +19,7 @@ using namespace ant::analysis::physics;
 
 
 Etap3pi0_test::Etap3pi0_test(PhysOptPtr opts) :
-    Physics("EtapOmegaG", opts),
+    Physics("Etap3pi0_test", opts),
       dataset(opts->GetOption("dataset"))
 {
     BinSettings bs = BinSettings(1600);
@@ -199,4 +199,4 @@ void Etap3pi0_test::ParticleVars::SetBranches(TTree* tree, const string& name)
     tree->Branch((name+"E").c_str(),  &E);
 }
 
-AUTO_REGISTER_PHYSICS(Etap3pi0_test, "Etap3pi0_test")
+AUTO_REGISTER_PHYSICS(Etap3pi0_test)

@@ -89,4 +89,4 @@ void MCTrueAcceptance::ShowResult()
     canvas("MCTrueAcceptance") << detect << endc;
 }
 
-AUTO_REGISTER_PHYSICS(MCTrueAcceptance,"MCTrueAcceptance")
+AUTO_REGISTER_PHYSICS(MCTrueAcceptance)

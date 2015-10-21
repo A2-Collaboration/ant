@@ -99,4 +99,4 @@ void CandidatesAnalysis::ShowResult()
             << endc;
 }
 
-AUTO_REGISTER_PHYSICS(CandidatesAnalysis, "CandidatesAnalysis")
+AUTO_REGISTER_PHYSICS(CandidatesAnalysis)
