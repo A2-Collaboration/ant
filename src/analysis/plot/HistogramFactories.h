@@ -31,8 +31,8 @@ private:
 
 
 public:
-    SmartHistFactory(const std::string& directory_name, TDirectory* root=nullptr);
-    SmartHistFactory(const std::string& directory_name, const SmartHistFactory &parent);
+    SmartHistFactory(const std::string& directory_name, TDirectory* root=nullptr, const std::string& title_prefix_ = "");
+    SmartHistFactory(const std::string& directory_name, const SmartHistFactory &parent, const std::string& title_prefix_ = "");
 
     void SetRootDir(TDirectory* root_dir=nullptr);
     void SetTitlePrefix(const std::string& title_prefix_);

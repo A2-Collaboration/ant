@@ -34,8 +34,22 @@ string SmartHistFactory::MakeTitle(const string& title)
     return title_prefix+": "+title;
 }
 
-SmartHistFactory::SmartHistFactory(const string &directory_name, const SmartHistFactory& parent)
-  : dir(), base_factory()
+SmartHistFactory::SmartHistFactory(const string &directory_name, TDirectory* root, const string& title_prefix_)
+  : dir(), base_factory(), title_prefix(title_prefix_)
+{
+
+    if(!root)
+        root=gDirectory;
+
+    dir = root->mkdir(directory_name.c_str());
+
+    if(!dir)
+        dir=gDirectory;
+}
+
+
+SmartHistFactory::SmartHistFactory(const string &directory_name, const SmartHistFactory& parent, const string& title_prefix_)
+  : dir(), base_factory(), title_prefix(title_prefix_)
 {
     dir = parent.dir->mkdir(directory_name.c_str());
     if(!dir)
@@ -47,18 +61,6 @@ void SmartHistFactory::SetTitlePrefix(const string& title_prefix_)
     title_prefix = title_prefix_;
 }
 
-SmartHistFactory::SmartHistFactory(const string &directory_name, TDirectory* root)
-  : dir(), base_factory()
-{
-
-    if(!root)
-        root=gDirectory;
-
-    dir = root->mkdir(directory_name.c_str());
-
-    if(!dir)
-        dir=gDirectory;
-}
 
 TH1D *SmartHistFactory::makeTH1D(const string &title, const string &xlabel, const string &ylabel, const BinSettings &bins, const string &name)
 {
