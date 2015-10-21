@@ -7,6 +7,7 @@ using namespace ant;
 
 
 ParticleTypeTreeDatabase::database_t ParticleTypeTreeDatabase::database = ParticleTypeTreeDatabase::CreateDatabase();
+bool ParticleTypeTreeDatabase::is_sorted = false;
 
 void add_Type_2g(ParticleTypeTree& t, const ParticleTypeDatabase::Type& type) {
     auto d = t->CreateDaughter(type);
@@ -20,6 +21,15 @@ void add_Pi0_2g(ParticleTypeTree& t) {
 
 ParticleTypeTree ParticleTypeTreeDatabase::Get(ParticleTypeTreeDatabase::Channel channel)
 {
+    // hopefully, at this point the references are initialized
+    if(!is_sorted) {
+        // sort them all by default operator<
+        std::for_each(database.begin(), database.end(), [] (database_t::value_type& item) {
+            item.second->Sort();
+        });
+        is_sorted = true;
+    }
+
     auto it = database.find(channel);
     if(it == database.end())
         throw runtime_error("Did not find ParticleTypeTree for requested channel");
@@ -79,11 +89,7 @@ ParticleTypeTreeDatabase::database_t ParticleTypeTreeDatabase::CreateDatabase()
     };
     database[Channel::EtaPrime_gOmega_ggPi0_4g] = make_EtaPrime_gOmega_ggPi0_4g();
 
-
-    // sort them all by default operator<
-    std::for_each(database.begin(), database.end(), [] (database_t::value_type& item) {
-        item.second->Sort();
-    });
+    // do not sort them here, since references to ParticleTypeDatabase::Type's might not be initialized yet!
 
     return database;
 }

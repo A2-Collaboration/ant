@@ -29,6 +29,7 @@ public:
 protected:
     using database_t = std::map<Channel, ParticleTypeTree>;
     static database_t database;
+    static bool is_sorted;
 
     static database_t CreateDatabase();
 
