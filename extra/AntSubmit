@@ -7,6 +7,7 @@ use Cwd qw(abs_path getcwd);
 use File::Path qw(rmtree mkpath);
 use File::Basename qw(basename);
 use Text::ParseWords;
+use POSIX;
 
 my $filelist = '-';             # default STDIN
 my $clean = 0;
@@ -15,9 +16,10 @@ my $cwd = getcwd;
 my $jobtag = 'Ant';
 my $QSUB_BIN = 'qsub';
 my $ANT_BIN = which('Ant');
-my $ANT_ARGS = '-b';
+my $ANT_ARGS = '-b'; # ensure batch mode
 my $LOG_DIR = 'log';
 my $OUT_DIR = 'root';
+my $no_log = 0;
 
 # parse options
 Getopt::Long::Configure(qw(gnu_getopt));
@@ -25,17 +27,12 @@ GetOptions(
            'help|h' => \$help,
            'clean|c' => \$clean,
            'tag|t=s' => \$jobtag,
-           'filelist=s' => \$filelist
+           'filelist=s' => \$filelist,
+           'no_log' => $no_log
           ) or print_help();
 if ($help) {
   print_help();
 }
-
-# anything else to Ant
-for my $arg (@ARGV) {
-  $ANT_ARGS .= " $arg";
-}
-
 
 &main;
 
@@ -52,11 +49,18 @@ sub main {
       $line =~ s/\s+$//;
       next if $line eq '';
       next if $line =~ /^#/;
+      die "Argument $line in Antrc does not start with -" unless $line =~ /^\-/;
       $ANT_ARGS .= " $line";
     }
     close $Antrc_fh;
   } elsif (@ARGV==0) {
     die "No Antrc found and no additional arguments for Ant provided\n";
+  }
+
+  # any additional options to Ant
+  for my $arg (@ARGV) {
+    die "Optional argument '$arg' does not start with -" unless $arg =~ /^\-/;
+    $ANT_ARGS .= " $arg";
   }
 
   # read in the filelist, check for more errors
@@ -147,7 +151,13 @@ sub main {
   }
   printf("%-40s\n", "Submitted $submitted jobs.");
 
-  # TODO append some log statement about submission...
+  if($no_log) {
+    return;
+  }
+
+  open(my $fh_log, ">>AntSubmit.log") or die "Can't open AntSubmit.log: $!";
+  printf $fh_log "%s: %04d jobs with args '%s'\n", strftime('%Y-%m-%d %H:%M:%S',localtime), $submitted, $ANT_ARGS;
+  close $fh_log;
 }
 
 sub extract_runnumber {
