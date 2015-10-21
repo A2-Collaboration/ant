@@ -7,12 +7,15 @@
 
 #include <sstream>
 #include <cassert>
+#include <functional>
 
+using namespace std;
+using namespace ant;
 using namespace ant::analysis;
 using namespace ant::analysis::data;
-using namespace  std;
 
-string utils::ParticleTools::GetDecayString(const ParticleTree_t& particletree)
+template<typename T>
+string _GetDecayString(const shared_ptr<Tree<T>>& particletree, function<string(const T&)> to_string)
 {
     if(!particletree)
         return "empty_unknown";
@@ -20,11 +23,11 @@ string utils::ParticleTools::GetDecayString(const ParticleTree_t& particletree)
     stringstream s;
 
     // the head is the beam particle
-    s << particletree->Get()->Type().PrintName() << " #rightarrow ";
+    s << to_string(particletree->Get()) << " #rightarrow ";
 
     // ignore level==0 since it's the already handled beamparticle
     size_t lastlevel = 1;
-    particletree->Map_level([&s, &lastlevel] (const shared_ptr<Particle> p, size_t level) {
+    particletree->Map_level([&s, &lastlevel, to_string] (const T& p, size_t level) {
         if(level>0) {
             while(lastlevel<level) {
                 s << "[ "; lastlevel++;
@@ -33,7 +36,7 @@ string utils::ParticleTools::GetDecayString(const ParticleTree_t& particletree)
                 s << "] "; lastlevel--;
             }
             assert(level == lastlevel);
-            s << p->Type().PrintName() << " ";
+            s << to_string(p) << " ";
         }
     });
 
@@ -41,6 +44,18 @@ string utils::ParticleTools::GetDecayString(const ParticleTree_t& particletree)
         s << "] ";
 
     return s.str();
+}
+
+
+
+string utils::ParticleTools::GetDecayString(const ParticleTree_t& particletree)
+{
+    return _GetDecayString<ParticlePtr>(particletree, [] (const ParticlePtr& p) { return p->Type().PrintName(); });
+}
+
+string utils::ParticleTools::GetDecayString(const ParticleTypeTree& particletypetree)
+{
+    return _GetDecayString<const ParticleTypeDatabase::Type&>(particletypetree, [] (const ParticleTypeDatabase::Type& t) { return t.PrintName(); });
 }
 
 string utils::ParticleTools::SanitizeDecayString(string decaystring)

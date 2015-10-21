@@ -1,6 +1,8 @@
 #pragma once
 
 #include "analysis/data/Particle.h"
+#include "base/ParticleTypeTree.h"
+
 #include <string>
 
 class TH1;
@@ -17,6 +19,8 @@ struct ParticleTools {
      * @return
      */
     static std::string GetDecayString(const data::ParticleTree_t& particletree);
+
+    static std::string GetDecayString(const ParticleTypeTree& particletypetree);
 
     /**
      * @brief SanitizeDecayString replaces all special characters by _
