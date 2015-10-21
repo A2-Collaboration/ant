@@ -110,6 +110,7 @@ Etap3pi0::result_t Etap3pi0::Make3pi0(const ParticleList& photons)
     }
 //    ch_3pi0_IM_etap->Fill(result.etaprime.M());
 
+    result.Chi2_etaprime = std_ext::sqr( (result.etaprime.M() - 893.0) / 24.3);
     return result;
 }
 
@@ -133,6 +134,7 @@ Etap3pi0::result_t Etap3pi0::MakeMC3pi0(const Event::Data& mcEvt )
         }
         result.etaprime = *(etaprime.at(0));
     }
+    result.Chi2_etaprime = std_ext::sqr( (result.etaprime.M() - 893.0) / 24.3);
 
     return result;
 }
@@ -184,6 +186,7 @@ Etap3pi0::result_t Etap3pi0::MakeEta2pi0(const ParticleList& photons)
     ch_eta2pi0_IM_etap->Fill(result.etaprime.M());
     */
 
+    result.Chi2_etaprime = std_ext::sqr( (result.etaprime.M() - 893.0) / 24.3);
     return result;
 }
 
@@ -209,13 +212,13 @@ void Etap3pi0::ProcessEvent(const data::Event& event)
     pi03     = ParticleVars(*(result_3pi0.mesons[2].first));
     etaprime = ParticleVars(result_3pi0.etaprime, ParticleTypeDatabase::EtaPrime);
 
-    if (result_3pi0.Chi2 < 2)
+    if (result_3pi0.Chi2_etaprime < 2)
     {
         result_3pi0.FillIm(ParticleTypeDatabase::Pi0, ch_3pi0_IM_pi0);
         result_3pi0.FillImEtaPrime(ch_3pi0_IM_etap);
     }
 
-    if (result_eta2pi0.Chi2 < 2)
+    if (result_eta2pi0.Chi2_etaprime < 2)
     {
         result_eta2pi0.FillIm(ParticleTypeDatabase::Pi0, ch_eta2pi0_IM_pions);
         result_eta2pi0.FillIm(ParticleTypeDatabase::Eta, ch_eta2pi0_IM_etas);
@@ -227,7 +230,7 @@ void Etap3pi0::ProcessEvent(const data::Event& event)
 //    DalitzVars channel(result_mc);
 //    DalitzVars refecence(result_eta2pi0);
 
-    if (result_3pi0.Chi2 < 2 && result_3pi0.success)
+    if (result_3pi0.Chi2_etaprime < 2 && result_3pi0.success)
     {
         dalitz_xy->Fill(channel.x,channel.y);
         dalitz_z->Fill(channel.z);

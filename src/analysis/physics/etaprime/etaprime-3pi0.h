@@ -55,6 +55,7 @@ protected:
     using MesonCandidate = std::pair<data::ParticlePtr,double>;    // <particle,chi2>
     struct result_t {
         double Chi2 = std::numeric_limits<double>::infinity();
+        double Chi2_etaprime = std::numeric_limits<double>::infinity();
         bool success = false;
 
         std::vector<data::ParticlePtr> g_final;
