@@ -48,10 +48,10 @@ shared_ptr<T> ExpConfig::Get_(const THeaderInfo& header) {
     else {
         // go to automatic search mode in all registered setups
 
-        // make a copy of the list of registered configs
-        // they only need to implement the Matches(THeaderInfo&) methodd
-        auto& registry = expconfig::SetupRegistry::get();
-        std::list< std::shared_ptr<Setup> > modules(registry.begin(), registry.end());
+        std::list< std::shared_ptr<Setup> > modules;
+        for(auto setup_name : expconfig::SetupRegistry::GetNames()) {
+            modules.emplace_back(expconfig::SetupRegistry::GetSetup(setup_name));
+        }
 
         // remove the config if the config says it does not match
         modules.remove_if([&header] (const shared_ptr<Setup>& m) {
@@ -93,23 +93,11 @@ shared_ptr<ExpConfig::Setup> ExpConfig::Setup::Get(const THeaderInfo& header)
      return Get_<ExpConfig::Setup>(header);
 }
 
-list<shared_ptr<ExpConfig::Setup>> ExpConfig::Setup::getAll()
-{
-    auto& registry = expconfig::SetupRegistry::get();
-    std::list< std::shared_ptr<ExpConfig::Setup> > modules(registry.begin(), registry.end());
-    return modules;
-}
+
 
 shared_ptr<ExpConfig::Setup> ExpConfig::Setup::Get(const std::string& name)
 {
-    for(const auto& module : getAll()) {
-        if(module->GetName() == name) {
-            lastSetupFound = module;
-            return module;
-        }
-    }
-    // nothing found matching the name
-    return nullptr;
+    return expconfig::SetupRegistry::GetSetup(name);
 }
 
 shared_ptr<ExpConfig::Setup> ExpConfig::Setup::GetLastFound()
@@ -136,15 +124,11 @@ std::shared_ptr<Detector_t> ExpConfig::Setup::GetDetector(Detector_t::Type_t typ
 void ExpConfig::Setup::Cleanup()
 {
     lastSetupFound = nullptr;
-    expconfig::SetupRegistry::get().destroy();
+    expconfig::SetupRegistry::Destroy();
 }
 
-list<string> ExpConfig::Setup::GetNames() {
-    list<string> names;
-    for(auto setup : getAll()) {
-        names.push_back(setup->GetName());
-    }
-    return names;
+std::list<string> ExpConfig::Setup::GetNames() {
+    return expconfig::SetupRegistry::GetNames();
 }
 
 shared_ptr<ExpConfig::Reconstruct> ExpConfig::Reconstruct::Get(const THeaderInfo& header)

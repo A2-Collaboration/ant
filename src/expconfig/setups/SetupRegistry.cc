@@ -4,48 +4,50 @@
 
 #include "base/Logger.h"
 
+using namespace std;
 using namespace ant::expconfig;
 
-void SetupRegistry::init_setups()
-{
-    if(setups.size() == setup_creators.size())
-        return;
-    for(const auto& creator : setup_creators) {
-        const auto& setup = creator();
-        VLOG(9) << "Adding setup config " << setup->GetName() << " to registry";
-        setups.emplace_back(move(setup));
-    }
-}
-
-SetupRegistry& SetupRegistry::get()
+SetupRegistry& SetupRegistry::get_instance()
 {
     static SetupRegistry instance;
     return instance;
 }
 
-void SetupRegistry::add(Creator creator)
+shared_ptr<Setup> SetupRegistry::GetSetup(const string& name)
 {
-    setup_creators.push_back(creator);
+    auto& setups = get_instance().setups;
+    auto it_setup = setups.lower_bound(name);
+    if(it_setup == setups.end() || setups.key_comp()(name, it_setup->first)) {
+        // setup not created yet
+        auto& setup_creators = get_instance().setup_creators;
+        auto it_setupcreator = setup_creators.find(name);
+        if(it_setupcreator == setup_creators.end())
+            return nullptr;
+        it_setup = setups.emplace_hint(it_setup, name, it_setupcreator->second());
+    }
+    return it_setup->second;
 }
 
-SetupRegistry::setups_t::iterator SetupRegistry::begin()
+void SetupRegistry::RegisterSetup(Creator creator, string name)
 {
-    init_setups();
-    return setups.begin();
+    setup_creators[name] = creator;
 }
 
-SetupRegistry::setups_t::iterator SetupRegistry::end()
+void SetupRegistry::Destroy()
 {
-    init_setups();
-    return setups.end();
+    get_instance().setups.clear();
 }
 
-void SetupRegistry::destroy()
+list<string> SetupRegistry::GetNames()
 {
-    setups.clear();
+    list<string> list;
+    for(const auto& entry : get_instance().setup_creators) {
+        list.emplace_back(entry.first);
+    }
+    return list;
 }
 
-SetupRegistration::SetupRegistration(SetupRegistry::Creator creator)
+SetupRegistration::SetupRegistration(SetupRegistry::Creator creator, string name)
 {
-    SetupRegistry::get().add(creator);
+    SetupRegistry::get_instance().RegisterSetup(creator, name);
 }

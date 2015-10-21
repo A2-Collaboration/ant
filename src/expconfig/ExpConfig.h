@@ -56,8 +56,6 @@ public:
 
 
         static void Cleanup();
-    private:
-        static std::list< std::shared_ptr<Setup> > getAll();
     };
 
     // in order to run the Reconstruction,
