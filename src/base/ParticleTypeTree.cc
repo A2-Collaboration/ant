@@ -1,5 +1,6 @@
 #include "ParticleTypeTree.h"
 
+#include <stdexcept>
 
 using namespace std;
 using namespace ant;
@@ -15,6 +16,14 @@ void add_Type_2g(ParticleTypeTree& t, const ParticleTypeDatabase::Type& type) {
 
 void add_Pi0_2g(ParticleTypeTree& t) {
     add_Type_2g(t, ParticleTypeDatabase::Pi0);
+}
+
+ParticleTypeTree ParticleTypeTreeDatabase::Get(ParticleTypeTreeDatabase::Channel channel)
+{
+    auto it = database.find(channel);
+    if(it == database.end())
+        throw runtime_error("Did not find ParticleTypeTree for requested channel");
+    return it->second;
 }
 
 ParticleTypeTreeDatabase::database_t ParticleTypeTreeDatabase::CreateDatabase()
