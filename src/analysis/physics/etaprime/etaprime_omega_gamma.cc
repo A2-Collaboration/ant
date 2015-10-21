@@ -16,10 +16,10 @@ using namespace ant::analysis::physics;
 
 EtapOmegaG::EtapOmegaG(const std::string& name, PhysOptPtr opts) : Physics(name, opts),
     HistFac_sig("Sig",HistFac),
-    HistFac_ref("Ref",HistFac)
+    HistFac_ref("Ref",HistFac),
+    sig_hists(HistFac_sig),
+    ref_hists(HistFac_ref)
 {
-    sig_steps = HistFac_sig.makeTH1D("Steps: Signal channel", "", "#", BinSettings(10),"sig_steps");
-    ref_steps = HistFac_ref.makeTH1D("Steps: Reference channel", "", "#", BinSettings(10),"ref_steps");
 
     treeSig = HistFac_sig.makeTTree("treeSig");
     treeRef = HistFac_ref.makeTTree("treeRef");
@@ -68,6 +68,12 @@ EtapOmegaG::EtapOmegaG(const std::string& name, PhysOptPtr opts) : Physics(name,
                 ParticleTypeTreeDatabase::Get(ParticleTypeTreeDatabase::Channel::Direct1Pi0_2g)
                 );
     ref_perDecayHists.emplace_back("Ref_Bkg_Other", HistFac_ref);
+}
+
+EtapOmegaG::histogram_t::histogram_t(SmartHistFactory histFac)
+{
+    Steps = histFac.makeTH1D("Steps", "", "#", BinSettings(10),"steps");
+    MissedBkg = histFac.makeTH1D("Missed Bkg channels", "", "#", BinSettings(20),"missed_bkg");
 }
 
 EtapOmegaG::sig_perDecayHists_t::sig_perDecayHists_t(SmartHistFactory HistFac)
@@ -139,14 +145,19 @@ void EtapOmegaG::ProcessEvent(const data::Event& event)
 
 template<typename T>
 const T& getHistogram(const data::ParticleTree_t& particletree,
-                      const std::vector<EtapOmegaG::histogram_t<T>>& perDecayHists) {
+                      const std::vector<EtapOmegaG::perDecayHists_t<T>>& perDecayHists,
+                      bool& other
+                      ) {
     assert(!perDecayHists.empty());
+    other = true;
     if(!particletree)
         return perDecayHists.back().PerDecayHists;
     for(size_t i=0;i<perDecayHists.size()-1;i++) {
         auto& item = perDecayHists[i];
-        if(particletree->IsEqual(item.Tree, utils::ParticleTools::MatchByParticleName))
+        if(particletree->IsEqual(item.Tree, utils::ParticleTools::MatchByParticleName)) {
+            other = false;
             return item.PerDecayHists;
+        }
     }
     return perDecayHists.back().PerDecayHists;
 }
@@ -154,7 +165,7 @@ const T& getHistogram(const data::ParticleTree_t& particletree,
 void EtapOmegaG::ProcessSig(const data::ParticleTree_t& particletree,
                             const data::Event::Data& data)
 {
-    auto& steps = sig_steps;
+    auto& steps = sig_hists.Steps;
 
     const auto nParticles = data.Particles().GetAll().size();
 
@@ -188,7 +199,8 @@ void EtapOmegaG::ProcessSig(const data::ParticleTree_t& particletree,
         return;
     steps->Fill("CBESum>550MeV",1);
 
-    const sig_perDecayHists_t& h = getHistogram(particletree, sig_perDecayHists);
+    bool other_channel = false;
+    const sig_perDecayHists_t& h = getHistogram(particletree, sig_perDecayHists, other_channel);
 
     // gamma combinatorics
     assert(photons.size() == 4);
@@ -287,6 +299,11 @@ void EtapOmegaG::ProcessSig(const data::ParticleTree_t& particletree,
     h.IM_pi0->Fill(result.Pi0.M());
     h.Chi2_Best->Fill(result.Chi2);
 
+    // was this some unidentified channel?
+    if(other_channel) {
+        sig_hists.MissedBkg->Fill(utils::ParticleTools::GetDecayString(particletree).c_str(),1);
+    }
+
     // use tagged photon
     for(const auto& th : data.TaggerHits()) {
         /// \todo make prompt/random cut
@@ -307,7 +324,7 @@ void EtapOmegaG::ProcessSig(const data::ParticleTree_t& particletree,
 void EtapOmegaG::ProcessRef(const data::ParticleTree_t& particletree,
                             const data::Event::Data& data)
 {
-    auto& steps = ref_steps;
+    auto& steps = ref_hists.Steps;
 
     const auto nParticles = data.Particles().GetAll().size();
 
@@ -342,7 +359,8 @@ void EtapOmegaG::ProcessRef(const data::ParticleTree_t& particletree,
         return;
     steps->Fill("CBESum>550MeV",1);
 
-    const ref_perDecayHists_t& h = getHistogram(particletree, ref_perDecayHists);
+    bool other_channel = false;
+    const ref_perDecayHists_t& h = getHistogram(particletree, ref_perDecayHists, other_channel);
 
     // gamma combinatorics
     assert(photons.size() == 2);
@@ -372,6 +390,11 @@ void EtapOmegaG::ProcessRef(const data::ParticleTree_t& particletree,
 
     h.IM_etap->Fill(photon_sum.M());
 
+    // was this some unidentified channel?
+    if(other_channel) {
+        ref_hists.MissedBkg->Fill(utils::ParticleTools::GetDecayString(particletree).c_str(),1);
+    }
+
     // use tagged photon
     for(const auto& th : data.TaggerHits()) {
         /// \todo make prompt/random cut
@@ -391,13 +414,14 @@ void EtapOmegaG::ProcessRef(const data::ParticleTree_t& particletree,
 
 void EtapOmegaG::Finish()
 {
-    //steps->Scale(100.0/steps->GetBinContent(1));
 }
 
 void EtapOmegaG::ShowResult()
 {
     canvas c_steps(GetName()+": Steps");
-    c_steps << sig_steps << ref_steps << endc;
+    c_steps << sig_hists.Steps << sig_hists.MissedBkg
+            << ref_hists.Steps << ref_hists.MissedBkg
+            << endc;
 
     for(const auto& it : sig_perDecayHists) {
         const sig_perDecayHists_t& h = it.PerDecayHists;
@@ -427,6 +451,10 @@ void EtapOmegaG::ShowResult()
           << endc;
     }
 }
+
+
+
+
 
 
 

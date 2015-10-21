@@ -35,13 +35,22 @@ class EtapOmegaG : public Physics {
     TTree* treeSig;
     TTree* treeRef;
 
-    template<typename perDecayHists_t>
     struct histogram_t {
+        TH1D* Steps;
+        TH1D* MissedBkg;
+        histogram_t(SmartHistFactory histFac);
+    };
+
+    histogram_t sig_hists;
+    histogram_t ref_hists;
+
+    template<typename T>
+    struct perDecayHists_t {
         ParticleTypeTree Tree;
         std::string ShortName;
         std::string DecayString;
-        perDecayHists_t PerDecayHists;
-        histogram_t(const std::string& shortName,
+        T PerDecayHists;
+        perDecayHists_t(const std::string& shortName,
                     const SmartHistFactory& HistFac_parent,
                     ParticleTypeTree tree
                     ) :
@@ -50,17 +59,13 @@ class EtapOmegaG : public Physics {
             DecayString(utils::ParticleTools::GetDecayString(tree)),
             PerDecayHists(SmartHistFactory(ShortName, HistFac_parent, DecayString))
         {}
-        histogram_t(const std::string& shortName, const SmartHistFactory& HistFac_parent) :
+        perDecayHists_t(const std::string& shortName, const SmartHistFactory& HistFac_parent) :
             Tree(nullptr),
             ShortName(shortName),
             DecayString(shortName),
             PerDecayHists(SmartHistFactory(ShortName, HistFac_parent, DecayString))
         {}
     };
-
-    TH1D* sig_steps;
-    TH1D* ref_steps;
-
 
     struct sig_perDecayHists_t {
         TH1D* gggg;
@@ -84,7 +89,7 @@ class EtapOmegaG : public Physics {
         sig_perDecayHists_t(SmartHistFactory HistFac);
     };
 
-    std::vector<histogram_t<sig_perDecayHists_t>> sig_perDecayHists;
+    std::vector<perDecayHists_t<sig_perDecayHists_t>> sig_perDecayHists;
 
     struct ref_perDecayHists_t {
         TH1D* gg;
@@ -101,9 +106,7 @@ class EtapOmegaG : public Physics {
         ref_perDecayHists_t(SmartHistFactory HistFac);
     };
 
-    //std::map<std::string, ref_perDecayHists_t> ref_perDecayHists;
-
-    std::vector<histogram_t<ref_perDecayHists_t>> ref_perDecayHists;
+    std::vector<perDecayHists_t<ref_perDecayHists_t>> ref_perDecayHists;
 
 
 
