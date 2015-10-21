@@ -52,3 +52,13 @@ string OptionsList::GetOption(const string& key) const
     return entry->second;
 
 }
+
+bool OptionsList::IsFlagSet(const string& key) const
+{
+    string val = GetOption(key);
+    std::transform(val.begin(), val.end(), val.begin(), ::tolower);
+    if(val == "on" || val == "1" || val == "true" || val == "yes") {
+        return true;
+    }
+    return false;
+}

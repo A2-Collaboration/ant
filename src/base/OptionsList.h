@@ -20,6 +20,8 @@ public:
     void SetOptions(const std::string& str, const std::string optdelim=",", const std::string valdelim="=");
 
     std::string GetOption(const std::string& key) const;
+    bool IsFlagSet(const std::string& key) const;
+
 
 };
 
