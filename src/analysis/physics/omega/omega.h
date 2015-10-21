@@ -167,9 +167,6 @@ protected:
     std::shared_ptr<ant::Tree<const ParticleTypeDatabase::Type&>> signal_tree;
     std::shared_ptr<ant::Tree<const ParticleTypeDatabase::Type&>> reference_tree;
 
-    static std::shared_ptr<ant::Tree<const ParticleTypeDatabase::Type&>> make_tree(const ParticleTypeDatabase::Type& eta_or_pi);
-
-
     ParticleVars pbranch;
     double pTime = {};
 

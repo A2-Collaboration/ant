@@ -18,6 +18,7 @@
 
 #include "TTree.h"
 #include "base/iterators.h"
+#include "base/ParticleTypeTree.h"
 
 #include "utils/particle_tools.h"
 
@@ -593,20 +594,6 @@ void OmegaEtaG2::Analyse(const Event::Data &data, const Event &event)
 
 }
 
-std::shared_ptr<ant::Tree<const ParticleTypeDatabase::Type&> > OmegaEtaG2::make_tree(const ParticleTypeDatabase::Type& eta_or_pi)
-{
-    auto tree = Tree<const ParticleTypeDatabase::Type&>::MakeNode(ParticleTypeDatabase::BeamProton);
-    tree->CreateDaughter(ParticleTypeDatabase::Proton);
-    auto omega = tree->CreateDaughter(ParticleTypeDatabase::Omega);
-    omega->CreateDaughter(ParticleTypeDatabase::Photon);
-    auto etapi = omega->CreateDaughter(eta_or_pi);
-    etapi->CreateDaughter(ParticleTypeDatabase::Photon);
-    etapi->CreateDaughter(ParticleTypeDatabase::Photon);
-    tree->Sort();
-    return tree;
-}
-
-
 OmegaEtaG2::channel_type_t OmegaEtaG2::identify(const Event &event) const
 {
 
@@ -684,8 +671,8 @@ OmegaEtaG2::OmegaEtaG2(const std::string& name, PhysOptPtr opts):
     tree->Branch("chi2_eta[3]",    Chi2_Eta, "chi2_eta[3]/D");
     tree->Branch("chi2_pi0[3]",    Chi2_Pi0, "chi2_pi0[3]/D");
 
-    signal_tree = make_tree(ParticleTypeDatabase::Eta);
-    reference_tree = make_tree(ParticleTypeDatabase::Pi0);
+    signal_tree = ParticleTypeTreeDatabase::Get(ParticleTypeTreeDatabase::Channel::Omega_gEta_3g);
+    reference_tree = ParticleTypeTreeDatabase::Get(ParticleTypeTreeDatabase::Channel::Omega_gPi0_3g);
 }
 
 OmegaEtaG2::~OmegaEtaG2()
