@@ -55,7 +55,7 @@ protected:
 
 
 public:
-    Etap3pi0_test(PhysOptPtr opts);
+    Etap3pi0_test(const std::string& name, PhysOptPtr opts);
     virtual void ProcessEvent(const data::Event& event) override;
     virtual void ShowResult() override;
 };

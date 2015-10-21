@@ -12,7 +12,7 @@ using namespace ant::analysis::physics;
 using namespace ant::analysis::data;
 
 
-TPC_PhysicsStats::TPC_PhysicsStats(PhysOptPtr& opts): Physics("TPC_PhysicsStats", opts)
+TPC_PhysicsStats::TPC_PhysicsStats(const std::string& name, PhysOptPtr& opts): Physics(name, opts)
 {
 
 }

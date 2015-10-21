@@ -14,7 +14,7 @@ using namespace ant::analysis::physics;
 
 
 
-EtapOmegaG::EtapOmegaG(PhysOptPtr opts) : Physics("EtapOmegaG", opts),
+EtapOmegaG::EtapOmegaG(const std::string& name, PhysOptPtr opts) : Physics(name, opts),
     HistFac_sig("Sig",HistFac),
     HistFac_ref("Ref",HistFac)
 {

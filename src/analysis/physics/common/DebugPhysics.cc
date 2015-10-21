@@ -8,7 +8,7 @@ using namespace ant;
 using namespace ant::analysis;
 using namespace ant::analysis::physics;
 
-DebugPhysics::DebugPhysics(PhysOptPtr opts): Physics("DebugPhysics", opts) {}
+DebugPhysics::DebugPhysics(const std::string& name, PhysOptPtr opts): Physics(name, opts) {}
 
 DebugPhysics::~DebugPhysics() {}
 
@@ -34,8 +34,8 @@ void DebugPhysics::Initialize(data::Slowcontrol& slowcontrol)
 
 
 
-DebugPIDAlignment::DebugPIDAlignment(PhysOptPtr opts):
-    Physics("DebugPIDAlignment", opts)
+DebugPIDAlignment::DebugPIDAlignment(const std::string& name, PhysOptPtr opts):
+    Physics(name, opts)
 {
     const BinSettings bins(360,-180,180);
     angles = HistFac.makeTH2D("PID Phi angles","MCTrue #phi","Rec #phi",bins,bins);

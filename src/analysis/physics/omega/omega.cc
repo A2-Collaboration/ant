@@ -74,8 +74,8 @@ void OmegaBase::ShowResult()
 //======= Omega Eta Gamma =====================================================================
 
 
-OmegaEtaG::OmegaEtaG(PhysOptPtr opts):
-    OmegaBase("OmegaEtaG", opts)
+OmegaEtaG::OmegaEtaG(const std::string& name, PhysOptPtr opts):
+    OmegaBase(name, opts)
 {
     ggg_gg     = HistFac.makeTH2D("3#gamma IM vs 2#gamma sub IM (signal only)","3#gamma IM [MeV]", "2#gamma sub IM [MeV]",imbinning,imbinning,"ggg_gg_omega");
     ggg_gg_bg  = HistFac.makeTH2D("3#gamma IM vs 2#gamma sub IM (background only)","3#gamma IM [MeV]", "2#gamma sub IM [MeV]",imbinning,imbinning,"ggg_gg_bg");
@@ -367,8 +367,8 @@ void OmegaMCTruePlots::PerChannel_t::Fill(const Event::Data& d)
 
 
 
-OmegaMCTruePlots::OmegaMCTruePlots(PhysOptPtr opts):
-    Physics("OmegaMCTruePlots", opts)
+OmegaMCTruePlots::OmegaMCTruePlots(const std::string& name, PhysOptPtr opts):
+    Physics(name, opts)
 {
 
 }
@@ -427,7 +427,7 @@ void OmegaMCTree::setGamma1(const TLorentzVector& value)
     gamma1_vector = value;
 }
 
-OmegaMCTree::OmegaMCTree(PhysOptPtr opts): Physics("OmegaMCTree", opts) {
+OmegaMCTree::OmegaMCTree(const std::string& name, PhysOptPtr opts): Physics(name, opts) {
     tree=new TTree("omegatree","omgega eta gamma MC true");
     tree->Branch("p", &proton_vector);
     tree->Branch("omega", &omega_vector);
@@ -634,8 +634,8 @@ ParticleList OmegaEtaG2::FilterParticles(const data::ParticleList& list, const p
     return olist;
 }
 
-OmegaEtaG2::OmegaEtaG2(PhysOptPtr opts):
-    OmegaBase("OmegaEtaG2", opts)
+OmegaEtaG2::OmegaEtaG2(const std::string& name, PhysOptPtr opts):
+    OmegaBase(name, opts)
 {
     if(opts->GetOption("Proton") == "MCTrue") {
         data_proton = false;

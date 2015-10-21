@@ -6,7 +6,7 @@ using namespace ant::analysis;
 using namespace ant::analysis::physics;
 using namespace std;
 
-IMPlots::IMPlots(PhysOptPtr opts): Physics("IMPlots", opts),
+IMPlots::IMPlots(const std::string& name, PhysOptPtr opts): Physics(name, opts),
 //  cb("CB",HistFac),
 //  taps("TAPS", HistFac),
   all("All", HistFac)

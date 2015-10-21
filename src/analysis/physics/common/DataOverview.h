@@ -32,7 +32,7 @@ protected:
     OverviewSet mctrue;
 
 public:
-    DataOverview(PhysOptPtr opts);
+    DataOverview(const std::string& name, PhysOptPtr opts);
 
     void ProcessEvent(const data::Event &event);
     void Finish();

@@ -18,8 +18,8 @@ using namespace ant::analysis::physics;
 
 
 
-Etap3pi0::Etap3pi0(PhysOptPtr opts) :
-    Physics("EtapOmegaG", opts),
+Etap3pi0::Etap3pi0(const std::string& name, PhysOptPtr opts) :
+    Physics(name, opts),
       dataset(opts->GetOption("dataset"))
 {
     BinSettings bs = BinSettings(1200);
@@ -338,4 +338,4 @@ Etap3pi0::DalitzVars::DalitzVars(Etap3pi0::result_t r)
 
 }
 
-AUTO_REGISTER_PHYSICS(Etap3pi0, "Etap3pi0")
+AUTO_REGISTER_PHYSICS(Etap3pi0)

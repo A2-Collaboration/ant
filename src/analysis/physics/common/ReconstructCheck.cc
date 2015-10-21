@@ -18,8 +18,8 @@ using namespace ant::analysis::physics;
 using namespace ant::analysis::data;
 
 
-ReconstructCheck::ReconstructCheck(PhysOptPtr opts):
-    Physics("ReconstructCheck",opts),
+ReconstructCheck::ReconstructCheck(const std::string& name, PhysOptPtr opts):
+    Physics(name,opts),
     cb_group(HistFac, "CB", histgroup::detectortype::CB),
     taps_group(HistFac,"TAPS",histgroup::detectortype::TAPS),
     all_group(HistFac,"All",histgroup::detectortype::All),

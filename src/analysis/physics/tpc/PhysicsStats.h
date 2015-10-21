@@ -18,7 +18,7 @@ protected:
     std::map<std::string, TH1D*> decay_angles;
 
 public:
-    TPC_PhysicsStats(PhysOptPtr& opts);
+    TPC_PhysicsStats(const std::string& name, PhysOptPtr& opts);
     void ProcessEvent(const data::Event& event);
     void Finish();
     void ShowResult();

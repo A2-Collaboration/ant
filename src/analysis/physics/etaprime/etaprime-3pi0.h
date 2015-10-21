@@ -127,7 +127,7 @@ protected:
 
     Etap3pi0::result_t MakeMC3pi0(const data::Event::Data &mcEvt);
 public:
-    Etap3pi0(PhysOptPtr opts);
+    Etap3pi0(const std::string& name, PhysOptPtr opts);
     virtual void ProcessEvent(const data::Event& event) override;
     virtual void ShowResult() override;
 };

@@ -9,7 +9,7 @@ namespace physics {
 
 class DebugPhysics: public Physics {
 public:
-    DebugPhysics(PhysOptPtr opts=nullptr);
+    DebugPhysics(const std::string& name, PhysOptPtr opts=nullptr);
     virtual ~DebugPhysics();
 
     virtual void ProcessEvent(const data::Event& event);
@@ -22,7 +22,7 @@ class DebugPIDAlignment: public Physics {
 protected:
     TH2D* angles = nullptr;
 public:
-    DebugPIDAlignment(PhysOptPtr opts=nullptr);
+    DebugPIDAlignment(const std::string& name, PhysOptPtr opts=nullptr);
     virtual ~DebugPIDAlignment();
 
     virtual void ProcessEvent(const data::Event& event) override;

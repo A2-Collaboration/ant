@@ -90,7 +90,7 @@ class EtapOmegaG : public Physics {
 
 
 public:
-    EtapOmegaG(PhysOptPtr opts);
+    EtapOmegaG(const std::string& name, PhysOptPtr opts);
     virtual void ProcessEvent(const data::Event& event) override;
     virtual void Finish() override;
     virtual void ShowResult() override;

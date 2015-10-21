@@ -42,8 +42,8 @@ void DataOverview::OverviewSet::Fill(const Event::Data &dataset)
 
 
 
-DataOverview::DataOverview(PhysOptPtr opts):
-    Physics("DataOverview", opts),
+DataOverview::DataOverview(const std::string& name, PhysOptPtr opts):
+    Physics(name, opts),
     reconstructed(HistFac, "reconstructed"),
     mctrue(HistFac,"mctrue")
 {

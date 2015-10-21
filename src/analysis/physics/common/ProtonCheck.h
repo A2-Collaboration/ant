@@ -25,7 +25,7 @@ protected:
     TH2D* theta_corr;
 
 public:
-    ProtonCheck(PhysOptPtr opts);
+    ProtonCheck(const std::string& name, PhysOptPtr opts);
 
     void ProcessEvent(const data::Event &event) override;
     void Finish() override;

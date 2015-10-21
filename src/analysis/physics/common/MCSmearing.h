@@ -16,7 +16,7 @@ protected:
 
 
 public:
-    MCSmearing(PhysOptPtr opts=nullptr);
+    MCSmearing(const std::string& name, PhysOptPtr opts=nullptr);
     virtual ~MCSmearing();
 
     virtual void ProcessEvent(const data::Event& event) override;

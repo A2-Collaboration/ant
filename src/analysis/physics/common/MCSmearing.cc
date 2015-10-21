@@ -11,7 +11,7 @@ using namespace ant;
 using namespace ant::analysis;
 using namespace ant::analysis::physics;
 
-MCSmearing::MCSmearing(PhysOptPtr opts) : Physics("MCSmearing", opts)
+MCSmearing::MCSmearing(const std::string& name, PhysOptPtr opts) : Physics(name, opts)
 {
     BinSettings bins_energies(50, 0, 1000);
     BinSettings bins_theta(50, 0, 180);

@@ -31,7 +31,7 @@ public:
 
     std::map<std::string,PerChannel_t> channels;
 
-    OmegaMCTruePlots(PhysOptPtr opts);
+    OmegaMCTruePlots(const std::string& name, PhysOptPtr opts);
 
     void ProcessEvent(const data::Event& event);
     void Finish();
@@ -112,7 +112,7 @@ protected:
     BinSettings mmbinning = BinSettings(1000, 400,1400);
 
 public:
-    OmegaEtaG(PhysOptPtr opts);
+    OmegaEtaG(const std::string& name, PhysOptPtr opts);
     virtual ~OmegaEtaG() = default;
     void ShowResult() override;
 };
@@ -131,7 +131,7 @@ protected:
 
 public:
 
-    OmegaMCTree(PhysOptPtr opts);
+    OmegaMCTree(const std::string& name, PhysOptPtr opts);
     virtual ~OmegaMCTree();
 
     void ProcessEvent(const data::Event& event) override;
@@ -238,7 +238,7 @@ protected:
 
 
 public:
-    OmegaEtaG2(PhysOptPtr opts);
+    OmegaEtaG2(const std::string& name, PhysOptPtr opts);
     virtual ~OmegaEtaG2();
 
 };

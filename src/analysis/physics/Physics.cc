@@ -36,7 +36,7 @@ PhysicsRegistry& PhysicsRegistry::get_instance()
 
 std::unique_ptr<Physics> PhysicsRegistry::Create(const string& name, PhysOptPtr opts)
 {
-    auto physics = PhysicsRegistry::get_instance().physics_creators.at(name)(opts);
+    auto physics = PhysicsRegistry::get_instance().physics_creators.at(name)(name, opts);
     if(physics->GetName() != name)
         throw std::runtime_error(std_ext::formatter()
                                  << "Physics name " << name << " does not match GetName() " << physics->GetName());

@@ -21,7 +21,7 @@ public:
     hist_set all;
 
 public:
-    IMPlots(PhysOptPtr opts);
+    IMPlots(const std::string& name, PhysOptPtr opts);
 
     void ProcessEvent(const data::Event &event) override;
     void ShowResult() override;

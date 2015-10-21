@@ -26,7 +26,7 @@ protected:
     TH1D* detectors = nullptr;
 
 public:
-    CandidatesAnalysis(PhysOptPtr opts);
+    CandidatesAnalysis(const std::string& name,PhysOptPtr opts);
 
     void ProcessEvent(const data::Event &event) override;
     void Finish() override;

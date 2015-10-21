@@ -48,13 +48,9 @@ public:
     Physics& operator=(const Physics&) = delete;
 };
 
-template<class T>
-std::unique_ptr<Physics> physics_factory(PhysOptPtr opts)
-{
-    return std_ext::make_unique<T>(opts);
-}
 
-using physics_creator = std::function<std::unique_ptr<Physics>(PhysOptPtr)>;
+
+using physics_creator = std::function<std::unique_ptr<Physics>(const std::string&, PhysOptPtr)>;
 
 class PhysicsRegistry
 {
@@ -81,6 +77,12 @@ class PhysicsRegistration
 public:
     PhysicsRegistration(physics_creator c, const std::string& name);
 };
+
+template<class T>
+std::unique_ptr<Physics> physics_factory(const std::string& name, PhysOptPtr opts)
+{
+    return std_ext::make_unique<T>(name, opts);
+}
 
 #define AUTO_REGISTER_PHYSICS(physics) \
     ant::analysis::PhysicsRegistration _physics_registration_ ## physics(ant::analysis::physics_factory<physics>, #physics);

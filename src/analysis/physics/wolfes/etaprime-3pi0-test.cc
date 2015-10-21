@@ -18,8 +18,8 @@ using namespace ant::analysis::physics;
 
 
 
-Etap3pi0_test::Etap3pi0_test(PhysOptPtr opts) :
-    Physics("Etap3pi0_test", opts),
+Etap3pi0_test::Etap3pi0_test(const std::string& name, PhysOptPtr opts) :
+    Physics(name, opts),
       dataset(opts->GetOption("dataset"))
 {
     BinSettings bs = BinSettings(1600);
