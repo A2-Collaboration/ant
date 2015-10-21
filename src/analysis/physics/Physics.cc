@@ -9,12 +9,11 @@ using namespace std;
 using namespace ant;
 using namespace ant::analysis;
 
-const string Physics::GetOption(const string& key) const
+string Physics::GetOption(const string& key) const
 {
     if(options) {
         return options->GetOption(key);
     }
-
     return "";
 }
 

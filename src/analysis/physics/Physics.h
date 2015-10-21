@@ -32,7 +32,7 @@ private:
 protected:
     SmartHistFactory HistFac;
 
-    const std::string GetOption(const std::string& key) const;
+    std::string GetOption(const std::string& key) const;
 
 public:
     Physics(const std::string& name, PhysOptPtr opts=nullptr);
