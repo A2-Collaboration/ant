@@ -10,8 +10,8 @@ class Setup_2014_10_EPT_Prod : public Setup_2014_EPT
 {
 public:
 
-    Setup_2014_10_EPT_Prod()
-        : Setup_2014_EPT("Setup_2014-10_EPT_Prod")
+    Setup_2014_10_EPT_Prod(const std::string& name)
+        : Setup_2014_EPT(name)
     {
         // see https://wwwa2.kph.uni-mainz.de/intern/daqwiki/analysis/beamtimes/2014-10-14
         IgnoreDetectorChannels(Detector_t::Type_t::CB, {17,125,189,265,267,418,456,547,549,557,565,582,586,597,602,672,677,678,696});

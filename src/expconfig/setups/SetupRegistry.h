@@ -21,7 +21,7 @@ class SetupRegistry
 friend class SetupRegistration;
 
 private:
-    using Creator = std::function<std::shared_ptr<Setup>()>;
+    using Creator = std::function<std::shared_ptr<Setup>(const std::string& name)>;
     using setup_creators_t = std::map<std::string, Creator>;
     using setups_t = std::map<std::string, std::shared_ptr<Setup> >;
     setup_creators_t setup_creators;
@@ -44,7 +44,13 @@ public:
     SetupRegistration(SetupRegistry::Creator, std::string);
 };
 
+template<class T>
+std::shared_ptr<Setup> setup_factory(const std::string& name)
+{
+    return std::make_shared<T>(name);
+}
+
 #define AUTO_REGISTER_SETUP(setup) \
-    SetupRegistration _setup_registration_ ## setup(std::make_shared<setup>, #setup);
+    SetupRegistration _setup_registration_ ## setup(ant::expconfig::setup_factory<setup>, #setup);
 
 }} // namespace ant::expconfig

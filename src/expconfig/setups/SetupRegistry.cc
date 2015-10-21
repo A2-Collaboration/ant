@@ -23,7 +23,7 @@ shared_ptr<Setup> SetupRegistry::GetSetup(const string& name)
         auto it_setupcreator = setup_creators.find(name);
         if(it_setupcreator == setup_creators.end())
             return nullptr;
-        it_setup = setups.emplace_hint(it_setup, name, it_setupcreator->second());
+        it_setup = setups.emplace_hint(it_setup, name, it_setupcreator->second(name));
     }
     return it_setup->second;
 }
