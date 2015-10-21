@@ -51,13 +51,14 @@ protected:
         void SetBranches(TTree* tree, const std::string& name);
     };
 
+
+    using MesonCandidate = std::pair<data::ParticlePtr,double>;    // <particle,chi2>
     struct result_t {
         double Chi2 = std::numeric_limits<double>::infinity();
         bool success = false;
 
         std::vector<data::ParticlePtr> g_final;
-        std::vector<data::ParticlePtr> mesons;
-
+        std::vector<MesonCandidate> mesons;
         TLorentzVector etaprime;
 
         result_t() : g_final(6), mesons(3), etaprime(0,0,0,0){}

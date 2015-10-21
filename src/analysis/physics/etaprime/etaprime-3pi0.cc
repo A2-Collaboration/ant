@@ -94,8 +94,8 @@ Etap3pi0::result_t Etap3pi0::Make3pi0(const ParticleList& photons)
 
         for(unsigned i=0;i<tmp.mesons.size();i++)
         {
-            tmp.mesons[i] = make_shared<Particle>(ParticleTypeDatabase::Pi0, *(tmp.g_final[2*i]) + *(tmp.g_final[2*i+1]));
-            tmp.Chi2 += std_ext::sqr((tmp.mesons[i]->M() - 126) / 15); // width and center from fit
+            tmp.mesons[i].first = make_shared<Particle>(ParticleTypeDatabase::Pi0, *(tmp.g_final[2*i]) + *(tmp.g_final[2*i+1]));
+            tmp.Chi2 += std_ext::sqr((tmp.mesons[i].first->M() - 126) / 15); // width and center from fit
         }
         if(tmp.Chi2<result.Chi2)
             result = move(tmp);
@@ -105,7 +105,7 @@ Etap3pi0::result_t Etap3pi0::Make3pi0(const ParticleList& photons)
     for (const auto& p: result.mesons )
     {
 //        ch_3pi0_IM_pi0->Fill(p->M());
-        result.etaprime += *p;
+        result.etaprime += *(p.first);
     }
 //    ch_3pi0_IM_etap->Fill(result.etaprime.M());
 
@@ -128,21 +128,19 @@ Etap3pi0::result_t Etap3pi0::MakeEta2pi0(const ParticleList& photons)
             tmp.g_final[pairs.at(i).second] = photons[2*i+1];
         }
 
-//        for(unsigned i=0;i<tmp.mesons.size();i++)
-//            tmp.mesons[i] = *(tmp.g_final[2*i]) + *(tmp.g_final[2*i+1]);
 
         for (unsigned etaIndex = 0 ; etaIndex < tmp.mesons.size() ; ++etaIndex)
         {
-            tmp.mesons[etaIndex] = make_shared<Particle>(ParticleTypeDatabase::Eta,*(tmp.g_final[2*etaIndex]) + *(tmp.g_final[2*etaIndex+1]));
-            tmp.Chi2 =  std_ext::sqr((tmp.mesons[etaIndex]->M() - 515.5) / 19.4);        // width and center from fit
+            tmp.mesons[etaIndex].first = make_shared<Particle>(ParticleTypeDatabase::Eta,*(tmp.g_final[2*etaIndex]) + *(tmp.g_final[2*etaIndex+1]));
+            tmp.Chi2 =  std_ext::sqr((tmp.mesons[etaIndex].first->M() - 515.5) / 19.4);        // width and center from fit
 
             unsigned piIndex = ( etaIndex + 1 ) % 3;
-            tmp.mesons[piIndex] = make_shared<Particle>(ParticleTypeDatabase::Pi0,*(tmp.g_final[2*piIndex]) + *(tmp.g_final[2*piIndex+1]));
-            tmp.Chi2 += std_ext::sqr((tmp.mesons[piIndex]->M() - 126) / 15);
+            tmp.mesons[piIndex].first = make_shared<Particle>(ParticleTypeDatabase::Pi0,*(tmp.g_final[2*piIndex]) + *(tmp.g_final[2*piIndex+1]));
+            tmp.Chi2 += std_ext::sqr((tmp.mesons[piIndex].first->M() - 126) / 15);
 
             piIndex = ( etaIndex + 2 ) % 3;
-            tmp.mesons[piIndex] = make_shared<Particle>(ParticleTypeDatabase::Pi0,*(tmp.g_final[2*piIndex]) + *(tmp.g_final[2*piIndex+1]));
-            tmp.Chi2 += std_ext::sqr((tmp.mesons[piIndex]->M() - 126) / 15);
+            tmp.mesons[piIndex].first = make_shared<Particle>(ParticleTypeDatabase::Pi0,*(tmp.g_final[2*piIndex]) + *(tmp.g_final[2*piIndex+1]));
+            tmp.Chi2 += std_ext::sqr((tmp.mesons[piIndex].first->M() - 126) / 15);
 
             if(tmp.Chi2<result.Chi2)
                 result = move(tmp);
@@ -152,7 +150,7 @@ Etap3pi0::result_t Etap3pi0::MakeEta2pi0(const ParticleList& photons)
 
     result.success = true;
     for (const auto& p: result.mesons )
-        result.etaprime += *p;
+        result.etaprime += *(p.first);
 
     /*
     ch_eta2pi0_IM_etas->Fill(result.mesons[etafound]->M());
@@ -181,9 +179,9 @@ void Etap3pi0::ProcessEvent(const data::Event& event)
     result_t result_3pi0    = Make3pi0(photons);
     result_t result_eta2pi0 = MakeEta2pi0(photons);
 
-    pi01     = ParticleVars(*(result_3pi0.mesons[0]));
-    pi02     = ParticleVars(*(result_3pi0.mesons[1]));
-    pi03     = ParticleVars(*(result_3pi0.mesons[2]));
+    pi01     = ParticleVars(*(result_3pi0.mesons[0].first));
+    pi02     = ParticleVars(*(result_3pi0.mesons[1].first));
+    pi03     = ParticleVars(*(result_3pi0.mesons[2].first));
     etaprime = ParticleVars(result_3pi0.etaprime, ParticleTypeDatabase::EtaPrime);
 
     if (result_3pi0.Chi2 < 2)
@@ -268,8 +266,8 @@ void Etap3pi0::result_t::FillIm(const ant::ParticleTypeDatabase::Type& type, TH1
 {
     for (const auto& meson: mesons)
     {
-        if ( meson->Type() == type )
-            hist->Fill(meson->M());
+        if ( meson.first->Type() == type )
+            hist->Fill(meson.first->M());
     }
 }
 
