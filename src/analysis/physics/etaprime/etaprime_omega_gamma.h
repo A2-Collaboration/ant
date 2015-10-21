@@ -3,6 +3,8 @@
 #include "analysis/physics/Physics.h"
 #include "utils/particle_tools.h"
 
+#include "base/ParticleTypeTree.h"
+
 class TH1D;
 class TH2D;
 class TH3D;
@@ -33,6 +35,29 @@ class EtapOmegaG : public Physics {
     TTree* treeSig;
     TTree* treeRef;
 
+    template<typename perDecayHists_t>
+    struct histogram_t {
+        ParticleTypeTree Tree;
+        std::string ShortName;
+        std::string DecayString;
+        perDecayHists_t PerDecayHists;
+        histogram_t(const std::string& shortName,
+                    const SmartHistFactory& HistFac_parent,
+                    ParticleTypeTree tree
+                    ) :
+            Tree(tree),
+            ShortName(shortName),
+            DecayString(utils::ParticleTools::GetDecayString(tree)),
+            PerDecayHists(SmartHistFactory(ShortName, HistFac_parent, DecayString))
+        {}
+        histogram_t(const std::string& shortName, const SmartHistFactory& HistFac_parent) :
+            Tree(nullptr),
+            ShortName(shortName),
+            DecayString(shortName),
+            PerDecayHists(SmartHistFactory(ShortName, HistFac_parent, DecayString))
+        {}
+    };
+
     TH1D* sig_steps;
     TH1D* ref_steps;
 
@@ -56,10 +81,10 @@ class EtapOmegaG : public Physics {
         TH1D* Chi2_All;
         TH1D* Chi2_Best;
 
-        sig_perDecayHists_t(SmartHistFactory& HistFac_parent, const std::string& decaystring);
+        sig_perDecayHists_t(SmartHistFactory HistFac);
     };
 
-    std::map<std::string, sig_perDecayHists_t> sig_perDecayHists;
+    std::vector<histogram_t<sig_perDecayHists_t>> sig_perDecayHists;
 
     struct ref_perDecayHists_t {
         TH1D* gg;
@@ -73,15 +98,12 @@ class EtapOmegaG : public Physics {
 
         TH1D* Proton_Copl;
 
-        bool IsRelevant() const {
-            return IM_etap->GetEntries()>0;
-        }
-
-        ref_perDecayHists_t(SmartHistFactory& HistFac_parent, const std::string& decaystring);
+        ref_perDecayHists_t(SmartHistFactory HistFac);
     };
 
-    std::map<std::string, ref_perDecayHists_t> ref_perDecayHists;
+    //std::map<std::string, ref_perDecayHists_t> ref_perDecayHists;
 
+    std::vector<histogram_t<ref_perDecayHists_t>> ref_perDecayHists;
 
 
 

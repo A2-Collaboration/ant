@@ -24,16 +24,54 @@ EtapOmegaG::EtapOmegaG(const std::string& name, PhysOptPtr opts) : Physics(name,
     treeSig = HistFac_sig.makeTTree("treeSig");
     treeRef = HistFac_ref.makeTTree("treeRef");
 
+    sig_perDecayHists.emplace_back(
+                "Signal",
+                HistFac_sig,
+                ParticleTypeTreeDatabase::Get(ParticleTypeTreeDatabase::Channel::EtaPrime_gOmega_ggPi0_4g)
+                );
+    sig_perDecayHists.emplace_back(
+                "Sig_Bkg_2pi0",
+                HistFac_sig,
+                ParticleTypeTreeDatabase::Get(ParticleTypeTreeDatabase::Channel::Direct2Pi0_4g)
+                );
+    sig_perDecayHists.emplace_back(
+                "Sig_Bkg_3pi0",
+                HistFac_sig,
+                ParticleTypeTreeDatabase::Get(ParticleTypeTreeDatabase::Channel::Direct3Pi0_6g)
+                );
+    sig_perDecayHists.emplace_back(
+                "Sig_Bkg_OmegaPi0g",
+                HistFac_sig,
+                ParticleTypeTreeDatabase::Get(ParticleTypeTreeDatabase::Channel::Omega_gPi0_3g)
+                );
+    sig_perDecayHists.emplace_back(
+                "Sig_Bkg_1pi0",
+                HistFac_sig,
+                ParticleTypeTreeDatabase::Get(ParticleTypeTreeDatabase::Channel::Direct1Pi0_2g)
+                );
+    sig_perDecayHists.emplace_back("Signal_Bkg_Other", HistFac_sig);
 
+
+    ref_perDecayHists.emplace_back(
+                "Reference",
+                HistFac_ref,
+                ParticleTypeTreeDatabase::Get(ParticleTypeTreeDatabase::Channel::EtaPrime_2g)
+                );
+    ref_perDecayHists.emplace_back(
+                "Ref_Bkg_2pi0",
+                HistFac_ref,
+                ParticleTypeTreeDatabase::Get(ParticleTypeTreeDatabase::Channel::Direct2Pi0_4g)
+                );
+    ref_perDecayHists.emplace_back(
+                "Ref_Bkg_1pi0",
+                HistFac_ref,
+                ParticleTypeTreeDatabase::Get(ParticleTypeTreeDatabase::Channel::Direct1Pi0_2g)
+                );
+    ref_perDecayHists.emplace_back("Ref_Bkg_Other", HistFac_ref);
 }
 
-EtapOmegaG::sig_perDecayHists_t::sig_perDecayHists_t(SmartHistFactory& HistFac_parent,
-                                                     const string& decaystring)
+EtapOmegaG::sig_perDecayHists_t::sig_perDecayHists_t(SmartHistFactory HistFac)
 {
-    auto directory_name = utils::ParticleTools::SanitizeDecayString(decaystring);
-    SmartHistFactory HistFac(directory_name, HistFac_parent);
-    HistFac.SetTitlePrefix(decaystring);
-
     BinSettings bins_im(1200);
 
     gggg = HistFac.makeTH1D("4#gamma IM","4#gamma IM / MeV","events",bins_im,"gggg");
@@ -67,13 +105,8 @@ EtapOmegaG::sig_perDecayHists_t::sig_perDecayHists_t(SmartHistFactory& HistFac_p
     Proton_Energy = HistFac.makeTH1D("p #delta(E)","#deltaE / MeV","",BinSettings(400,-50,350),"Proton_Energy");
 }
 
-EtapOmegaG::ref_perDecayHists_t::ref_perDecayHists_t(SmartHistFactory& HistFac_parent,
-                                                     const string& decaystring)
+EtapOmegaG::ref_perDecayHists_t::ref_perDecayHists_t(SmartHistFactory HistFac)
 {
-    auto directory_name = utils::ParticleTools::SanitizeDecayString(decaystring);
-    SmartHistFactory HistFac(directory_name, HistFac_parent);
-    HistFac.SetTitlePrefix(decaystring);
-
     BinSettings bins_im(1200);
 
     gg = HistFac.makeTH1D("2#gamma IM","2#gamma IM / MeV","events",bins_im,"gg");
@@ -105,17 +138,17 @@ void EtapOmegaG::ProcessEvent(const data::Event& event)
 }
 
 template<typename T>
-T& getHistogram(const data::ParticleTree_t& particletree,
-                std::map<std::string, T>& perDecayHists,
-                SmartHistFactory& HistFac) {
-    const std::string& decaystring = utils::ParticleTools::GetDecayString(particletree);
-    // search map only once even on insert
-    auto it_h = perDecayHists.lower_bound(decaystring);
-    if(it_h == perDecayHists.end() || perDecayHists.key_comp()(decaystring, it_h->first)) {
-        // decaystring does not exist
-        it_h = perDecayHists.emplace_hint(it_h, decaystring, T(HistFac, decaystring));
+const T& getHistogram(const data::ParticleTree_t& particletree,
+                      const std::vector<EtapOmegaG::histogram_t<T>>& perDecayHists) {
+    assert(!perDecayHists.empty());
+    if(!particletree)
+        return perDecayHists.back().PerDecayHists;
+    for(size_t i=0;i<perDecayHists.size()-1;i++) {
+        auto& item = perDecayHists[i];
+        if(particletree->IsEqual(item.Tree, utils::ParticleTools::MatchByParticleName))
+            return item.PerDecayHists;
     }
-    return it_h->second;
+    return perDecayHists.back().PerDecayHists;
 }
 
 void EtapOmegaG::ProcessSig(const data::ParticleTree_t& particletree,
@@ -155,7 +188,7 @@ void EtapOmegaG::ProcessSig(const data::ParticleTree_t& particletree,
         return;
     steps->Fill("CBESum>550MeV",1);
 
-    sig_perDecayHists_t& h = getHistogram(particletree, sig_perDecayHists, HistFac_sig);
+    const sig_perDecayHists_t& h = getHistogram(particletree, sig_perDecayHists);
 
     // gamma combinatorics
     assert(photons.size() == 4);
@@ -309,7 +342,7 @@ void EtapOmegaG::ProcessRef(const data::ParticleTree_t& particletree,
         return;
     steps->Fill("CBESum>550MeV",1);
 
-    ref_perDecayHists_t& h = getHistogram(particletree, ref_perDecayHists, HistFac_ref);
+    const ref_perDecayHists_t& h = getHistogram(particletree, ref_perDecayHists);
 
     // gamma combinatorics
     assert(photons.size() == 2);
@@ -366,11 +399,11 @@ void EtapOmegaG::ShowResult()
     canvas c_steps(GetName()+": Steps");
     c_steps << sig_steps << ref_steps << endc;
 
-    for(const auto& it_map : sig_perDecayHists) {
-        const sig_perDecayHists_t& h = it_map.second;
+    for(const auto& it : sig_perDecayHists) {
+        const sig_perDecayHists_t& h = it.PerDecayHists;
         if(h.IM_etap_omega->GetEntries()==0)
             continue;
-        canvas c(GetName()+": "+it_map.first);
+        canvas c(GetName()+": "+it.ShortName);
         c << h.gg << h.ggg << h.gggg << h.MM_gggg
           << h.Proton_Copl
           << h.Chi2_All << h.Chi2_Best
@@ -381,11 +414,11 @@ void EtapOmegaG::ShowResult()
           << endc;
     }
 
-    for(const auto& it_map : ref_perDecayHists) {
-        const ref_perDecayHists_t& h = it_map.second;
+    for(const auto& it : ref_perDecayHists) {
+        const ref_perDecayHists_t& h = it.PerDecayHists;
         if(h.IM_etap->GetEntries()==0)
             continue;
-        canvas c(GetName()+": "+it_map.first);
+        canvas c(GetName()+": "+it.ShortName);
         c << h.gg
           << h.Proton_Copl << h.IM_etap
           << h.MM_etap
