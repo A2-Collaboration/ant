@@ -72,6 +72,14 @@ std::string Setup::GetOption(const std::string& key) const
     return "";
 }
 
+bool Setup::IsFlagSet(const std::string& key) const
+{
+    if(options) {
+        return options->IsFlagSet(key);
+    }
+    return false;
+}
+
 bool Setup::Matches(const ant::THeaderInfo& header) const {
     // check that all detectors match
     for(const auto& detector : detectors) {

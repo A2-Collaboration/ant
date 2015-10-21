@@ -60,6 +60,7 @@ protected:
     Setup(const std::string& name, SetupOptPtr opt);
 
     std::string GetOption(const std::string& key) const;
+    bool IsFlagSet(const std::string& key) const;
 
     void AddDetector(const std::shared_ptr<Detector_t>& detector) {
         detectors.push_back(detector);

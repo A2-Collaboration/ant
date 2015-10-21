@@ -12,6 +12,7 @@
 #include "analysis/physics/PhysicsManager.h"
 
 #include "expconfig/ExpConfig.h"
+#include "expconfig/setups/SetupRegistry.h"
 
 #include "unpacker/Unpacker.h"
 #include "unpacker/RawFileReader.h"
@@ -106,6 +107,7 @@ int main(int argc, char** argv) {
 
     TCLAP::ValuesConstraintExtra<decltype(ExpConfig::Setup::GetNames())> allowedsetupnames(ExpConfig::Setup::GetNames());
     auto cmd_setup  = cmd.add<TCLAP::ValueArg<string>>("s","setup","Choose setup manually by name",false,"", &allowedsetupnames);
+    auto cmd_setupOptions = cmd.add<TCLAP::MultiArg<string>>("S","setup_options","Options for setup, key=value",false,"");
 
     auto cmd_maxevents = cmd.add<TCLAP::ValueArg<int>>("m","maxevents","Process only max events",false, 0, "maxevents");
 
@@ -114,8 +116,8 @@ int main(int argc, char** argv) {
 
     auto cmd_output = cmd.add<TCLAP::ValueArg<string>>("o","output","Output file",false,"","filename");
 
-    auto cmd_physicsOptions = cmd.add<TCLAP::MultiArg<string>>("O","options","Options for physics classes, key=value",false,"");
-    auto cmd_physicsclasses_opt = cmd.add<TCLAP::MultiArg<string>>("P","physics-opt","Physics class to run, with optiosn: PhysicsClass:key=val,key=val", false, "");
+    auto cmd_physicsOptions = cmd.add<TCLAP::MultiArg<string>>("O","options","Options for all physics classes, key=value",false,"");
+    auto cmd_physicsclasses_opt = cmd.add<TCLAP::MultiArg<string>>("P","physics-opt","Physics class to run, with options: PhysicsClass:key=val,key=val", false, "");
 
     auto cmd_batchmode = cmd.add<TCLAP::SwitchArg>("b","batch","Run in batch mode (no ROOT shell afterwards)",false);
 
@@ -159,6 +161,16 @@ int main(int argc, char** argv) {
             return 1;
         }
     }
+
+    // parse the setup options and tell the registry
+    std::shared_ptr<OptionsList> setup_opts = make_shared<OptionsList>();
+    if(cmd_setupOptions->isSet()) {
+        for(const auto& opt : cmd_setupOptions->getValue()) {
+            setup_opts->SetOption(opt);
+        }
+        ant::expconfig::SetupRegistry::SetSetupOptions(setup_opts);
+    }
+
 
     // build the list of ROOT files first
     auto rootfiles = make_shared<WrapTFileInput>();

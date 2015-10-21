@@ -41,6 +41,7 @@ private:
 public:
     static std::shared_ptr<Setup> GetSetup(const std::string& name);
     static std::list<std::string> GetNames();
+    static void SetSetupOptions(SetupOptPtr opt);
     static void Destroy();
 };
 

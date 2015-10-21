@@ -65,6 +65,13 @@ list<string> SetupRegistry::GetNames()
     return list;
 }
 
+void SetupRegistry::SetSetupOptions(SetupOptPtr opt)
+{
+    if(!get_instance().setups.empty())
+        throw runtime_error("Set SetupOptions before any setups have been created");
+    get_instance().options = opt;
+}
+
 SetupRegistration::SetupRegistration(SetupRegistry::Creator creator, string name)
 {
     SetupRegistry::get_instance().RegisterSetup(creator, name);

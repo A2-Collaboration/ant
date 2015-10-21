@@ -1,5 +1,7 @@
 #include "Setup_2014_EPT.h"
 
+#include "base/Logger.h"
+
 using namespace std;
 
 namespace ant {
@@ -13,12 +15,17 @@ public:
     Setup_2014_07_EPT_Prod(const std::string& name, SetupOptPtr opt)
         : Setup_2014_EPT(name, opt)
     {
-        // empty elements
-        IgnoreDetectorChannels(Detector_t::Type_t::CB, {203,265,267,549,565,586,607,677});
-        // inverted timewalk spectrum
-        IgnoreDetectorChannels(Detector_t::Type_t::CB, {17,582,672,678,696});
-        // misc reasons (e.g. bad timewalk spectrum)
-        IgnoreDetectorChannels(Detector_t::Type_t::CB, {41,125,418,547,602});
+        if(!IsFlagSet("IncludeBadElements")) {
+            // empty elements
+            IgnoreDetectorChannels(Detector_t::Type_t::CB, {203,265,267,549,565,586,607,677});
+            // inverted timewalk spectrum
+            IgnoreDetectorChannels(Detector_t::Type_t::CB, {17,582,672,678,696});
+            // misc reasons (e.g. bad timewalk spectrum)
+            IgnoreDetectorChannels(Detector_t::Type_t::CB, {41,125,418,547,602});
+        }
+        else {
+            LOG(WARNING) << "DO NOT ignore bad elements";
+        }
     }
 
 
