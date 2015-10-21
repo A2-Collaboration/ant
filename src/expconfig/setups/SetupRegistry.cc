@@ -3,6 +3,9 @@
 #include "Setup.h"
 
 #include "base/Logger.h"
+#include "base/std_ext/string.h"
+
+#include <stdexcept>
 
 using namespace std;
 using namespace ant::expconfig;
@@ -23,7 +26,12 @@ shared_ptr<Setup> SetupRegistry::GetSetup(const string& name)
         auto it_setupcreator = setup_creators.find(name);
         if(it_setupcreator == setup_creators.end())
             return nullptr;
-        it_setup = setups.emplace_hint(it_setup, name, it_setupcreator->second(name));
+        // found creator
+        auto setup = it_setupcreator->second(name);
+        if(setup->GetName() != name)
+            throw std::runtime_error(std_ext::formatter()
+                                     << "Setup name " << name << " does not match GetName() " << setup->GetName());
+        it_setup = setups.emplace_hint(it_setup, name, setup);
     }
     return it_setup->second;
 }
