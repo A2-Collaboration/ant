@@ -15,7 +15,7 @@ class Setup_2015_dummy :
 {
 public:
 
-    Setup_2015_dummy(const std::string& name) : Setup(name) {
+    Setup_2015_dummy(const std::string& name, SetupOptPtr opt) : Setup(name, opt) {
         // just CB at the moment...
         AddDetector<detector::CB>();
     }

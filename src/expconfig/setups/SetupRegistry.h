@@ -6,7 +6,12 @@
 #include <functional>
 
 namespace ant {
+
+class OptionsList;
+
 namespace expconfig {
+
+using SetupOptPtr = std::shared_ptr<const OptionsList>;
 
 class Setup;
 
@@ -21,14 +26,18 @@ class SetupRegistry
 friend class SetupRegistration;
 
 private:
-    using Creator = std::function<std::shared_ptr<Setup>(const std::string& name)>;
+    using Creator = std::function<std::shared_ptr<Setup>(const std::string& name, SetupOptPtr)>;
     using setup_creators_t = std::map<std::string, Creator>;
     using setups_t = std::map<std::string, std::shared_ptr<Setup> >;
     setup_creators_t setup_creators;
     setups_t setups;
+    SetupOptPtr options;
+
     void RegisterSetup(Creator, std::string);
-    SetupRegistry() {}
     static SetupRegistry& get_instance();
+
+    SetupRegistry();
+    ~SetupRegistry();
 public:
     static std::shared_ptr<Setup> GetSetup(const std::string& name);
     static std::list<std::string> GetNames();
@@ -45,9 +54,9 @@ public:
 };
 
 template<class T>
-std::shared_ptr<Setup> setup_factory(const std::string& name)
+std::shared_ptr<Setup> setup_factory(const std::string& name, SetupOptPtr opt)
 {
-    return std::make_shared<T>(name);
+    return std::make_shared<T>(name, opt);
 }
 
 #define AUTO_REGISTER_SETUP(setup) \

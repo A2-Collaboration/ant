@@ -27,7 +27,7 @@ shared_ptr<Setup> SetupRegistry::GetSetup(const string& name)
         if(it_setupcreator == setup_creators.end())
             return nullptr;
         // found creator
-        auto setup = it_setupcreator->second(name);
+        auto setup = it_setupcreator->second(name, get_instance().options);
         if(setup->GetName() != name)
             throw std::runtime_error(std_ext::formatter()
                                      << "Setup name " << name << " does not match GetName() " << setup->GetName());
@@ -39,6 +39,16 @@ shared_ptr<Setup> SetupRegistry::GetSetup(const string& name)
 void SetupRegistry::RegisterSetup(Creator creator, string name)
 {
     setup_creators[name] = creator;
+}
+
+SetupRegistry::SetupRegistry() : options(make_shared<const OptionsList>())
+{
+
+}
+
+SetupRegistry::~SetupRegistry()
+{
+
 }
 
 void SetupRegistry::Destroy()

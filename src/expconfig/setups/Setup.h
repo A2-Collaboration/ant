@@ -18,6 +18,8 @@
 namespace ant {
 namespace expconfig {
 
+using SetupOptPtr = std::shared_ptr<const OptionsList>;
+
 
 /**
  * @brief The Setup class serves as a base class for all known beamtime setup configurations
@@ -32,6 +34,10 @@ class Setup :
         public UnpackerAcquConfig,
         public UnpackerA2GeantConfig
 {
+private:
+    const std::string name_;
+    SetupOptPtr options;
+
 public:
     virtual std::list< std::shared_ptr< Calibration::PhysicsModule> > GetCalibrations() const override;
 
@@ -51,7 +57,9 @@ public:
     }
 
 protected:
-    Setup(const std::string& name);
+    Setup(const std::string& name, SetupOptPtr opt);
+
+    std::string GetOption(const std::string& key) const;
 
     void AddDetector(const std::shared_ptr<Detector_t>& detector) {
         detectors.push_back(detector);
@@ -92,8 +100,7 @@ protected:
     std::list< std::shared_ptr<Calibration::BaseModule> > calibrations;
 
     std::shared_ptr<calibration::DataManager> calibrationDataManager;
-private:
-    const std::string name_;
+
 };
 
 }} // namespace ant::expconfig

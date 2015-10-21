@@ -10,8 +10,8 @@ class Setup_2014_07_EPT_Prod : public Setup_2014_EPT
 {
 public:
 
-    Setup_2014_07_EPT_Prod(const std::string& name)
-        : Setup_2014_EPT(name)
+    Setup_2014_07_EPT_Prod(const std::string& name, SetupOptPtr opt)
+        : Setup_2014_EPT(name, opt)
     {
         // empty elements
         IgnoreDetectorChannels(Detector_t::Type_t::CB, {203,265,267,549,565,586,607,677});
