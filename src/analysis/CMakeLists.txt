@@ -34,7 +34,7 @@ set(ANALYSIS_PHYSICS
   physics/PhysicsManager.cc
   physics/test/TestPhysics.cc
   physics/DeltaPlus/DeltaPlusPhysics.cc
-  physics/DeltaTreeGenerator/DeltaTreeGenerator.cc
+  physics/DeltaPlus/DeltaTreeGenerator.cc
   physics/omega/omega.cc
   physics/omega/GeoAcceptance.cc
   physics/test/TestAPLCON.cc
