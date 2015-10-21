@@ -70,6 +70,22 @@ protected:
         // void FillHists();
     };
 
+    struct DalitzVars
+    {
+        double TMean;
+
+        double s1;
+        double s2;
+        double s3;
+
+        double x;
+        double y;
+
+        double z;
+
+        DalitzVars(result_t r);
+    };
+
     std::string dataset;
 
     TH1D* hNgamma;
@@ -85,7 +101,9 @@ protected:
     TH1D* ch_eta2pi0_IM_pions;
     TH1D* ch_eta2pi0_IM_etas;
 
-//    TH2D* dalitz;
+    TH1D* dalitz_z;
+
+    TH2D* dalitz_xy;
 
     TTree* tree;
 
@@ -106,6 +124,7 @@ protected:
     Etap3pi0::result_t MakeEta2pi0(const data::ParticleList& photons);
 
 
+    Etap3pi0::result_t MakeMC3pi0(const data::Event::Data &mcEvt);
 public:
     Etap3pi0(PhysOptPtr opts);
     virtual void ProcessEvent(const data::Event& event) override;

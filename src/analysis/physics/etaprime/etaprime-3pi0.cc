@@ -36,7 +36,8 @@ Etap3pi0::Etap3pi0(PhysOptPtr opts) :
     ch_eta2pi0_IM_pions  = HistFac.makeTH1D("pions (eta2pi0)","Pi0 IM [MeV]","events",bs,"IM_pi0");
     ch_eta2pi0_IM_etas  = HistFac.makeTH1D("etas (eta2pi0)","Pi0 IM [MeV]","events",bs,"IM_pi0");
 
-    //dalitz     = HistFac.makeTH2D("dalitz","IM^{2}(#pi^{0} _{1} + #pi^{0} _{2}) [GeV^{2}]","IM^{2}(#pi^{0} _{1} + #pi^{0} _{3}) [GeV^{2}]",BinSettings(100,0,1000),BinSettings(100,0,1000));
+    dalitz_xy     = HistFac.makeTH2D("dalitz","x","y",BinSettings(100,0,0),BinSettings(100,0,0));
+    dalitz_z      = HistFac.makeTH1D("dalitz - radial","z = x^{2} + y^{2}","#",BinSettings(100,0,0));
 
     tree       = new TTree("data","data");
 
@@ -108,6 +109,30 @@ Etap3pi0::result_t Etap3pi0::Make3pi0(const ParticleList& photons)
         result.etaprime += *(p.first);
     }
 //    ch_3pi0_IM_etap->Fill(result.etaprime.M());
+
+    return result;
+}
+
+Etap3pi0::result_t Etap3pi0::MakeMC3pi0(const Event::Data& mcEvt )
+{
+    result_t result;
+
+    result.Chi2 = 0;
+
+    const auto& pions = mcEvt.Particles().Get(ParticleTypeDatabase::Pi0);
+    const auto& etaprime = mcEvt.Particles().Get(ParticleTypeDatabase::EtaPrime);
+
+    result.success = ( pions.size() == 3) && (etaprime.size() == 1 );
+
+    if (result.success)
+    {
+        for ( unsigned i = 0 ; i < 3 ; ++i)
+        {
+            result.mesons[i].first = pions.at(i);
+            result.mesons[i].second = 0;
+        }
+        result.etaprime = *(etaprime.at(0));
+    }
 
     return result;
 }
@@ -197,6 +222,17 @@ void Etap3pi0::ProcessEvent(const data::Event& event)
         result_eta2pi0.FillImEtaPrime(ch_eta2pi0_IM_etap);
     }
 
+//    result_t result_mc = MakeMC3pi0(mcdata);
+    DalitzVars channel(result_3pi0);
+//    DalitzVars channel(result_mc);
+//    DalitzVars refecence(result_eta2pi0);
+
+    if (result_3pi0.Chi2 < 2 && result_3pi0.success)
+    {
+        dalitz_xy->Fill(channel.x,channel.y);
+        dalitz_z->Fill(channel.z);
+    }
+
 
 
   //TLorentzVector sum;
@@ -231,9 +267,7 @@ void Etap3pi0::ShowResult()
                                 << ch_3pi0_IM_pi0 << ch_3pi0_IM_etap
                                 //<< IM_proton << IM_mmproton
                                 << endc;
-    /*
-    canvas("Dalitz-Plots") << drawoption("colz") << dalitz << endc;
-    */
+    canvas("Dalitz-Plots") << dalitz_z << drawoption("colz") << dalitz_xy << endc;
 }
 
 Etap3pi0::ParticleVars::ParticleVars(const TLorentzVector& lv, const ParticleTypeDatabase::Type& type) noexcept
@@ -274,6 +308,31 @@ void Etap3pi0::result_t::FillIm(const ant::ParticleTypeDatabase::Type& type, TH1
 void Etap3pi0::result_t::FillImEtaPrime(TH1D* hist)
 {
     hist->Fill(etaprime.M());
+}
+
+
+
+Etap3pi0::DalitzVars::DalitzVars(Etap3pi0::result_t r)
+{
+    s1 = (r.etaprime - *(r.mesons[0].first)).M2();
+    s2 = (r.etaprime - *(r.mesons[1].first)).M2();
+    s3 = (r.etaprime - *(r.mesons[2].first)).M2();
+
+//    TMean = r.etaprime.M();
+    for (const auto& meson: r.mesons)
+        TMean -= meson.first->M();
+    TMean = TMean / 3.0;
+
+    x = ( r.mesons[0].first->Ek() - r.mesons[1].first->Ek() ) / ( TMath::Sqrt(3) * TMean);
+
+    y = 0;
+    for (const auto& meson: r.mesons)
+        y += meson.first->M();
+    y = y / ( 3 * r.etaprime.M());
+    y = (y * r.mesons[2].first->Ek() / TMean) - 1;
+
+    z = std_ext::sqr(x) + std_ext::sqr(y);
+
 }
 
 AUTO_REGISTER_PHYSICS(Etap3pi0, "Etap3pi0")
