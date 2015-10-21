@@ -12,8 +12,15 @@ using namespace ant;
 using namespace std;
 
 void getdetector();
+void getlastfound();
+
+TEST_CASE("ExpConfig GetLastFound", "[expconfig]") {
+    ExpConfig::Setup::Cleanup();
+    getlastfound();
+}
 
 TEST_CASE("ExpConfig GetDetector", "[expconfig]") {
+    ExpConfig::Setup::Cleanup();
     getdetector();
 }
 
@@ -36,4 +43,10 @@ void getdetector() {
     REQUIRE_NOTHROW(Unpacker::Get(string(TEST_BLOBS_DIRECTORY)+"/Acqu_oneevent-small.dat.xz"));
     auto tagger_notthere = ExpConfig::Setup::GetDetector<TaggerDetector_t>();
     REQUIRE(tagger_notthere == nullptr);
+}
+
+void getlastfound() {
+    REQUIRE(ExpConfig::Setup::GetLastFound() == nullptr);
+    ExpConfig::Setup::ManualName = "Setup_2014_07_EPT_Prod";
+    REQUIRE(ExpConfig::Setup::GetLastFound() != nullptr);
 }

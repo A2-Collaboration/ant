@@ -117,7 +117,7 @@ void dotest_plutogeant()
     pm.AddPhysics<TestPhysics>();
 
     // make some meaningful input for the physics manager
-    ant::ExpConfig::ManualSetupName = "Setup_2014_07_EPT_Prod";
+    ant::ExpConfig::Setup::ManualName = "Setup_2014_07_EPT_Prod";
     auto unpacker = Unpacker::Get(string(TEST_BLOBS_DIRECTORY)+"/Geant_with_TID.root");
     auto reconstruct = std_ext::make_unique<Reconstruct>();
     list< unique_ptr<analysis::input::DataReader> > readers;

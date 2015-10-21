@@ -85,7 +85,7 @@ int main(int argc, char** argv) {
 
                 const string setup_name(argv[2]);
 
-                ExpConfig::ManualSetupName = setup_name;
+                ExpConfig::Setup::ManualName = setup_name;
                 const auto setup = ExpConfig::Setup::GetLastFound();
 
                 if(setup) {
@@ -181,19 +181,19 @@ int main(int argc, char** argv) {
         if(unpackerFile->GetUniqueHeaderInfo(headerInfo)) {
             VLOG(5) << "Found unique header info " << headerInfo;
             if(!headerInfo.SetupName.empty()) {
-                ExpConfig::ManualSetupName = headerInfo.SetupName;
-                LOG(INFO) << "Using header info to manually set the setup name to " << ExpConfig::ManualSetupName;
+                ExpConfig::Setup::ManualName = headerInfo.SetupName;
+                LOG(INFO) << "Using header info to manually set the setup name to " << ExpConfig::Setup::ManualName;
             }
         }
     }
 
     // override the setup name from cmd line
     if(cmd_setup->isSet()) {
-        ExpConfig::ManualSetupName = cmd_setup->getValue();
-        if(ExpConfig::ManualSetupName.empty())
+        ExpConfig::Setup::ManualName = cmd_setup->getValue();
+        if(ExpConfig::Setup::ManualName.empty())
             LOG(INFO) << "Commandline override to auto-search for setup config (might fail)";
         else
-            LOG(INFO) << "Commandline override setup name to '" << ExpConfig::ManualSetupName << "'";
+            LOG(INFO) << "Commandline override setup name to '" << ExpConfig::Setup::ManualName << "'";
     }
 
 

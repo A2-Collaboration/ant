@@ -26,7 +26,6 @@ class ExpConfig
 {
 public:
 
-    static std::string ManualSetupName;
 
     // all configs have a common base and should match via THeaderInfo
     class Base {
@@ -38,6 +37,8 @@ public:
     // the ExpConfig::Setup provides general information about the experiment
     class Setup : public virtual Base {
     public:
+        static std::string ManualName;
+
         virtual std::string GetName() const = 0;
         virtual double GetElectronBeamEnergy() const = 0;
         virtual std::list< std::shared_ptr< Calibration::PhysicsModule> > GetCalibrations() const = 0;
@@ -54,8 +55,10 @@ public:
         template<typename DetectorType>
         static std::shared_ptr<DetectorType> GetDetector();
 
-
         static void Cleanup();
+    private:
+        friend class ExpConfig;
+        static std::shared_ptr<Setup> lastFound;
     };
 
     // in order to run the Reconstruction,
@@ -103,8 +106,6 @@ public:
 private:
     template<typename T>
     static std::shared_ptr<T> Get_(const THeaderInfo& header);
-    static std::shared_ptr<Setup> lastSetupFound;
-
 };
 
 template<typename DetectorType>

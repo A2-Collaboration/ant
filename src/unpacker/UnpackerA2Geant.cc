@@ -102,12 +102,13 @@ bool UnpackerA2Geant::OpenFile(const string& filename)
 
     // this unpacker has no chance to make a proper THeaderInfo
     // so we ask the ExpConfig if it has an idea...
-    if(ExpConfig::ManualSetupName.empty()) {
+    const auto& manualName = ExpConfig::Setup::ManualName;
+    if(manualName.empty()) {
         throw ExpConfig::ExceptionNoConfig("This unpacker requires a manually set setup name");
     }
     // build a bogus headerInfo and ask for config
     headerInfo = std_ext::make_unique<THeaderInfo>(*id,
-                                                   ExpConfig::ManualSetupName);
+                                                   manualName);
     auto config = ExpConfig::Unpacker<UnpackerA2GeantConfig>::Get(*headerInfo);
 
     // find some taggerdetectors

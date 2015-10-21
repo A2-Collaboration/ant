@@ -57,7 +57,7 @@ int main( int argc, char** argv )
             return 1;
         }
 
-        ExpConfig::ManualSetupName = cmd_setup->getValue();
+        ExpConfig::Setup::ManualName = cmd_setup->getValue();
         auto setup = ExpConfig::Setup::GetLastFound();
         if(auto tagger = setup->GetDetector<TaggerDetector_t>()) {
             for(unsigned ch=0;ch<tagger->GetNChannels();ch++) {
