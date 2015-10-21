@@ -84,6 +84,13 @@ EtapOmegaG::sig_perDecayHists_t::sig_perDecayHists_t(SmartHistFactory HistFac)
     ggg = HistFac.makeTH1D("3#gamma IM","3#gamma IM / MeV","events",bins_im,"ggg");
     gg = HistFac.makeTH1D("2#gamma IM","2#gamma IM / MeV","events",bins_im,"gg");
 
+    IM_gg_gg = HistFac.makeTH2D("IM 2#gamma vs. 2#gamma (Goldhaber plot)",
+                                "2#gamma IM / MeV", "2#gamma IM / MeV",
+                                BinSettings(400, 0, 800),
+                                BinSettings(400, 0, 800),
+                                "IM_gg_gg"
+                                );
+
     Proton_Copl = HistFac.makeTH1D("p Coplanarity","#delta#phi / degree","",BinSettings(400,-180,180),"Proton_Coplanarity");
 
     IM_etap_omega = HistFac.makeTH2D("#eta' vs. #omega IM",
@@ -299,6 +306,14 @@ void EtapOmegaG::ProcessSig(const data::ParticleTree_t& particletree,
     h.IM_pi0->Fill(result.Pi0.M());
     h.Chi2_Best->Fill(result.Chi2);
 
+    // fill Goldhaber plot
+    for(auto i : std::initializer_list<std::vector<unsigned>>({{0,1,2,3},{0,2,1,3},{0,3,1,2}})) {
+        auto& p = photons;
+        h.IM_gg_gg->Fill((*p[i[0]]+*p[i[1]]).M(), (*p[i[2]]+*p[i[3]]).M());
+    }
+
+    //h.IM_gg_gg->Fill(  );
+
     // was this some unidentified channel?
     if(other_channel) {
         sig_hists.MissedBkg->Fill(utils::ParticleTools::GetDecayString(particletree).c_str(),1);
@@ -431,7 +446,9 @@ void EtapOmegaG::ShowResult()
         c << h.gg << h.ggg << h.gggg << h.MM_gggg
           << h.Proton_Copl
           << h.Chi2_All << h.Chi2_Best
-          << h.IM_pi0 << drawoption("colz") << h.IM_etap_omega
+          << h.IM_pi0
+          << drawoption("colz") << h.IM_etap_omega
+          << drawoption("colz") << h.IM_gg_gg
           << h.MM_etap
           << drawoption("colz") <<  h.Proton_ThetaPhi
           << h.Proton_Energy

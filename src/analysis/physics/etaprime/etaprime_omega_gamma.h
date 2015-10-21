@@ -72,10 +72,13 @@ class EtapOmegaG : public Physics {
         TH1D* ggg;
         TH1D* gg;
 
+        TH2D* IM_gg_gg; // Goldhaber plot
+
         TH1D* Proton_Copl;
 
         TH2D* IM_etap_omega;
         TH1D* IM_pi0;
+
 
         TH1D* MM_gggg;
         TH1D* MM_etap;
