@@ -23,7 +23,6 @@ ParticleVars::ParticleVars(const TLorentzVector& lv, const ParticleTypeDatabase:
     Theta = std_ext::radian_to_degree(lv.Theta());
     Phi   = std_ext::radian_to_degree(lv.Phi());
     E     = lv.E() - type.Mass();
-    LV    = lv;
 }
 
 ParticleVars::ParticleVars(const Particle& p) noexcept
@@ -32,7 +31,6 @@ ParticleVars::ParticleVars(const Particle& p) noexcept
     Theta = std_ext::radian_to_degree(p.Theta());
     Phi   = std_ext::radian_to_degree(p.Phi());
     E     = p.Ek();
-    LV    = p;
 }
 
 void ParticleVars::SetBranches(TTree* tree, const string& prefix)
@@ -41,7 +39,6 @@ void ParticleVars::SetBranches(TTree* tree, const string& prefix)
     tree->Branch((prefix+"_Theta").c_str(), &Theta);
     tree->Branch((prefix+"_Phi").c_str(),&Phi);
     tree->Branch((prefix+"_E").c_str(),  &E);
-    tree->Branch((prefix+"_LV").c_str(), &LV);
 }
 
 

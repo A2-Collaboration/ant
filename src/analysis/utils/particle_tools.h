@@ -19,7 +19,6 @@ struct ParticleVars {
     double Theta;
     double Phi;
     double IM;
-    TLorentzVector LV;
 
     ParticleVars(const TLorentzVector& lv, const ParticleTypeDatabase::Type& type) noexcept;
     ParticleVars(const data::Particle& p) noexcept;
