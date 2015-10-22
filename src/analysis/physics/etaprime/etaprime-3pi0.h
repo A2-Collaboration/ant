@@ -12,6 +12,17 @@ class Etap3pi0 : public Physics {
 
 protected:
 
+   // =======================   constants =====================================================
+
+    const double IM_mean_etaprime = 906.0;
+    const double IM_sigma_etaprime = 26.3;
+
+    const double IM_mean_eta = 515.5;
+    const double IM_sigma_eta = 19.4;
+
+    const double IM_mean_pi0 = 126.0;
+    const double IM_sigma_pi0 = 15.0;
+
     const std::vector<std::vector<std::pair<unsigned,unsigned>>> combinations =
     {
         { {0, 1}, {2, 3}, {4, 5} },
@@ -35,39 +46,23 @@ protected:
         { {0, 5}, {1, 4}, {2, 3} }
     };
 
-    struct ParticleVars {
-        double E;
-        double Theta;
-        double Phi;
-        double IM;
-        ParticleVars(const TLorentzVector& lv, const ParticleTypeDatabase::Type& type) noexcept;
-        ParticleVars(const data::Particle& p) noexcept;
-        ParticleVars(double e=0.0, double theta=0.0, double phi=0.0, double im=0.0) noexcept:
-            E(e), Theta(theta), Phi(phi), IM(im) {}
-        ParticleVars(const ParticleVars&) = default;
-        ParticleVars(ParticleVars&&) = default;
-        ParticleVars& operator=(const ParticleVars&) =default;
-        ParticleVars& operator=(ParticleVars&&) =default;
-        void SetBranches(TTree* tree, const std::string& name);
-    };
-
+   // =======================   structs   =====================================================
 
     using MesonCandidate = std::pair<data::ParticlePtr,double>;    // <particle,chi2>
+
     struct result_t {
         double Chi2_intermediate = std::numeric_limits<double>::infinity();
-        double Chi2_etaprime     = std::numeric_limits<double>::infinity();
+        double Chi2_mother       = std::numeric_limits<double>::infinity();
 
         bool success = false;
 
         std::vector<data::ParticlePtr> g_final;
         std::vector<MesonCandidate> mesons;
 
-        TLorentzVector etaprime;
+        TLorentzVector mother;
 
-        result_t() : g_final(6), mesons(3), etaprime(0,0,0,0){}
+        result_t() : g_final(6), mesons(3), mother(0,0,0,0){}
 
-        void FillIm(const ParticleTypeDatabase::Type& type, TH1D* hist);
-        void FillImEtaPrime(TH1D* hist);
 
         // void AddBranches();
         // void FillHists();
@@ -89,12 +84,13 @@ protected:
         DalitzVars(result_t r);
     };
 
+   // =======================   datastorage  ==================================================
 
     std::string dataset;
 
+    // xchecks
     TH1D* hNgamma;
     TH1D* hNgammaMC;
-
     TH1D* h2g;
     TH1D* h6g;
 
@@ -110,26 +106,14 @@ protected:
     TH1D* dalitz_z;
     TH2D* dalitz_xy;
 
-    TTree* tree;
-
-    ParticleVars pi01;
-    ParticleVars pi02;
-    ParticleVars pi03;
-    ParticleVars MMproton;
-    ParticleVars etaprime;
-    double imsqrP12;
-    double imsqrP13;
-    double imsqrP23;
-
-
-
     void FillCrossChecks(const data::ParticleList& photons, const data::ParticleList& mcphotons);
 
     Etap3pi0::result_t Make3pi0(const data::ParticleList& photons);
     Etap3pi0::result_t MakeEta2pi0(const data::ParticleList& photons);
-
-
     Etap3pi0::result_t MakeMC3pi0(const data::Event::Data &mcEvt);
+
+    void FillIm(const Etap3pi0::result_t& result, const ParticleTypeDatabase::Type& type, TH1D* hist);
+    void FillImEtaPrime(const Etap3pi0::result_t& result, TH1D* hist);
 public:
     Etap3pi0(const std::string& name, PhysOptPtr opts);
     virtual void ProcessEvent(const data::Event& event) override;
