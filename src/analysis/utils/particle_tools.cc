@@ -37,11 +37,11 @@ ParticleVars::ParticleVars(const Particle& p) noexcept
 
 void ParticleVars::SetBranches(TTree* tree, const string& prefix)
 {
-    tree->Branch((prefix+"IM").c_str(), &IM);
-    tree->Branch((prefix+"Theta").c_str(), &Theta);
-    tree->Branch((prefix+"Phi").c_str(),&Phi);
-    tree->Branch((prefix+"E").c_str(),  &E);
-    tree->Branch((prefix+"LV").c_str(), &LV);
+    tree->Branch((prefix+"_IM").c_str(), &IM);
+    tree->Branch((prefix+"_Theta").c_str(), &Theta);
+    tree->Branch((prefix+"_Phi").c_str(),&Phi);
+    tree->Branch((prefix+"_E").c_str(),  &E);
+    tree->Branch((prefix+"_LV").c_str(), &LV);
 }
 
 
