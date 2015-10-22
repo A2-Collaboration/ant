@@ -49,6 +49,26 @@ EtapOmegaG::EtapOmegaG(const std::string& name, PhysOptPtr opts) : Physics(name,
                 HistFac_sig,
                 ParticleTypeTreeDatabase::Get(ParticleTypeTreeDatabase::Channel::Direct1Pi0_2g)
                 );
+    sig_perDecayHists.emplace_back(
+                "Sig_Bkg_Etap_Eta2Pi0",
+                HistFac_sig,
+                ParticleTypeTreeDatabase::Get(ParticleTypeTreeDatabase::Channel::EtaPrime_2Pi0Eta_6g)
+                );
+    sig_perDecayHists.emplace_back(
+                "Sig_Bkg_Etap_Eta2Pi0",
+                HistFac_sig,
+                ParticleTypeTreeDatabase::Get(ParticleTypeTreeDatabase::Channel::EtaPrime_2Pi0Eta_6g)
+                );
+    sig_perDecayHists.emplace_back(
+                "Sig_Bkg_2pi0_1Dalitz",
+                HistFac_sig,
+                ParticleTypeTreeDatabase::Get(ParticleTypeTreeDatabase::Channel::Direct2Pi0_2ggEpEm)
+                );
+    sig_perDecayHists.emplace_back(
+                "Sig_Bkg_3pi0_1Dalitz",
+                HistFac_sig,
+                ParticleTypeTreeDatabase::Get(ParticleTypeTreeDatabase::Channel::Direct3Pi0_4ggEpEm)
+                );
     sig_perDecayHists.emplace_back("Signal_Bkg_Other", HistFac_sig);
 
 
