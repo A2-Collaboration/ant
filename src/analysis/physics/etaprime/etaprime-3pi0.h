@@ -54,12 +54,14 @@ protected:
 
     using MesonCandidate = std::pair<data::ParticlePtr,double>;    // <particle,chi2>
     struct result_t {
-        double Chi2 = std::numeric_limits<double>::infinity();
-        double Chi2_etaprime = std::numeric_limits<double>::infinity();
+        double Chi2_intermediate = std::numeric_limits<double>::infinity();
+        double Chi2_etaprime     = std::numeric_limits<double>::infinity();
+
         bool success = false;
 
         std::vector<data::ParticlePtr> g_final;
         std::vector<MesonCandidate> mesons;
+
         TLorentzVector etaprime;
 
         result_t() : g_final(6), mesons(3), etaprime(0,0,0,0){}
@@ -87,6 +89,7 @@ protected:
         DalitzVars(result_t r);
     };
 
+
     std::string dataset;
 
     TH1D* hNgamma;
@@ -102,8 +105,9 @@ protected:
     TH1D* ch_eta2pi0_IM_pions;
     TH1D* ch_eta2pi0_IM_etas;
 
+    TH1D* mcdalitz_z;
+    TH2D* mcdalitz_xy;
     TH1D* dalitz_z;
-
     TH2D* dalitz_xy;
 
     TTree* tree;

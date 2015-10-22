@@ -36,7 +36,10 @@ Etap3pi0::Etap3pi0(const std::string& name, PhysOptPtr opts) :
     ch_eta2pi0_IM_pions  = HistFac.makeTH1D("pions (eta2pi0)","Pi0 IM [MeV]","events",bs,"ch_eta2pi0_IM_pions");
     ch_eta2pi0_IM_etas  = HistFac.makeTH1D("etas (eta2pi0)","Pi0 IM [MeV]","events",bs,"ch_eta2pi0_IM_etas");
 
-    dalitz_xy     = HistFac.makeTH2D("dalitz","x","y",BinSettings(100,0,0),BinSettings(100,0,0));
+    mcdalitz_xy     = HistFac.makeTH2D("dalitz mc","s1","s3",BinSettings(100,0,0),BinSettings(100,0,0));
+    mcdalitz_z      = HistFac.makeTH1D("dalitz - radial mc","z = x^{2} + y^{2}","#",BinSettings(100,0,0));
+
+    dalitz_xy     = HistFac.makeTH2D("dalitz","s1","s3",BinSettings(100,0,0),BinSettings(100,0,0));
     dalitz_z      = HistFac.makeTH1D("dalitz - radial","z = x^{2} + y^{2}","#",BinSettings(100,0,0));
 
     tree       = new TTree("data","data");
@@ -85,7 +88,7 @@ Etap3pi0::result_t Etap3pi0::Make3pi0(const ParticleList& photons)
     {
 
         result_t tmp;
-        tmp.Chi2 = 0;
+        tmp.Chi2_intermediate = 0;
 
         for(unsigned i=0;i<pairs.size();i++)
         {
@@ -96,19 +99,17 @@ Etap3pi0::result_t Etap3pi0::Make3pi0(const ParticleList& photons)
         for(unsigned i=0;i<tmp.mesons.size();i++)
         {
             tmp.mesons[i].first = make_shared<Particle>(ParticleTypeDatabase::Pi0, *(tmp.g_final[2*i]) + *(tmp.g_final[2*i+1]));
-            tmp.Chi2 += std_ext::sqr((tmp.mesons[i].first->M() - 126) / 15); // width and center from fit
+            tmp.Chi2_intermediate += std_ext::sqr((tmp.mesons[i].first->M() - 126) / 15); // width and center from fit
         }
-        if(tmp.Chi2<result.Chi2)
+        if(tmp.Chi2_intermediate<result.Chi2_intermediate)
             result = move(tmp);
     }
 
     result.success = true;
     for (const auto& p: result.mesons )
     {
-//        ch_3pi0_IM_pi0->Fill(p->M());
         result.etaprime += *(p.first);
     }
-//    ch_3pi0_IM_etap->Fill(result.etaprime.M());
 
     result.Chi2_etaprime = std_ext::sqr( (result.etaprime.M() - 893.0) / 24.3);
     return result;
@@ -118,10 +119,11 @@ Etap3pi0::result_t Etap3pi0::MakeMC3pi0(const Event::Data& mcEvt )
 {
     result_t result;
 
-    result.Chi2 = 0;
+    result.Chi2_intermediate = 0;
+    result.Chi2_etaprime = 0;
 
-    const auto& pions = mcEvt.Particles().Get(ParticleTypeDatabase::Pi0);
-    const auto& etaprime = mcEvt.Particles().Get(ParticleTypeDatabase::EtaPrime);
+    const auto& pions = mcEvt.Intermediates().Get(ParticleTypeDatabase::Pi0);
+    const auto& etaprime = mcEvt.Intermediates().Get(ParticleTypeDatabase::EtaPrime);
 
     result.success = ( pions.size() == 3) && (etaprime.size() == 1 );
 
@@ -134,7 +136,6 @@ Etap3pi0::result_t Etap3pi0::MakeMC3pi0(const Event::Data& mcEvt )
         }
         result.etaprime = *(etaprime.at(0));
     }
-    result.Chi2_etaprime = std_ext::sqr( (result.etaprime.M() - 893.0) / 24.3);
 
     return result;
 }
@@ -147,7 +148,7 @@ Etap3pi0::result_t Etap3pi0::MakeEta2pi0(const ParticleList& photons)
     {
 
         result_t tmp;
-        tmp.Chi2 = 0;
+        tmp.Chi2_intermediate = 0;
 
         for(unsigned i=0;i<pairs.size();i++)
         {
@@ -159,17 +160,17 @@ Etap3pi0::result_t Etap3pi0::MakeEta2pi0(const ParticleList& photons)
         for (unsigned etaIndex = 0 ; etaIndex < tmp.mesons.size() ; ++etaIndex)
         {
             tmp.mesons[etaIndex].first = make_shared<Particle>(ParticleTypeDatabase::Eta,*(tmp.g_final[2*etaIndex]) + *(tmp.g_final[2*etaIndex+1]));
-            tmp.Chi2 =  std_ext::sqr((tmp.mesons[etaIndex].first->M() - 515.5) / 19.4);        // width and center from fit
+            tmp.Chi2_intermediate =  std_ext::sqr((tmp.mesons[etaIndex].first->M() - 515.5) / 19.4);        // width and center from fit
 
             unsigned piIndex = ( etaIndex + 1 ) % 3;
             tmp.mesons[piIndex].first = make_shared<Particle>(ParticleTypeDatabase::Pi0,*(tmp.g_final[2*piIndex]) + *(tmp.g_final[2*piIndex+1]));
-            tmp.Chi2 += std_ext::sqr((tmp.mesons[piIndex].first->M() - 126) / 15);
+            tmp.Chi2_intermediate += std_ext::sqr((tmp.mesons[piIndex].first->M() - 126) / 15);
 
             piIndex = ( etaIndex + 2 ) % 3;
             tmp.mesons[piIndex].first = make_shared<Particle>(ParticleTypeDatabase::Pi0,*(tmp.g_final[2*piIndex]) + *(tmp.g_final[2*piIndex+1]));
-            tmp.Chi2 += std_ext::sqr((tmp.mesons[piIndex].first->M() - 126) / 15);
+            tmp.Chi2_intermediate += std_ext::sqr((tmp.mesons[piIndex].first->M() - 126) / 15);
 
-            if(tmp.Chi2<result.Chi2)
+            if(tmp.Chi2_intermediate<result.Chi2_intermediate)
                 result = move(tmp);
         }
 
@@ -179,14 +180,7 @@ Etap3pi0::result_t Etap3pi0::MakeEta2pi0(const ParticleList& photons)
     for (const auto& p: result.mesons )
         result.etaprime += *(p.first);
 
-    /*
-    ch_eta2pi0_IM_etas->Fill(result.mesons[etafound]->M());
-    ch_eta2pi0_IM_pions->Fill(result.mesons[( etafound + 1 ) % 3]->M());
-    ch_eta2pi0_IM_pions->Fill(result.mesons[( etafound + 2 ) % 3]->M());
-    ch_eta2pi0_IM_etap->Fill(result.etaprime.M());
-    */
-
-    result.Chi2_etaprime = std_ext::sqr( (result.etaprime.M() - 893.0) / 24.3);
+    result.Chi2_etaprime = std_ext::sqr( (result.etaprime.M() - 906.0) / 26.3);
     return result;
 }
 
@@ -212,29 +206,37 @@ void Etap3pi0::ProcessEvent(const data::Event& event)
     pi03     = ParticleVars(*(result_3pi0.mesons[2].first));
     etaprime = ParticleVars(result_3pi0.etaprime, ParticleTypeDatabase::EtaPrime);
 
-    if (result_3pi0.Chi2_etaprime < 2)
+    const double chi2cut(3);
+
+    if (result_3pi0.Chi2_etaprime < chi2cut)
     {
         result_3pi0.FillIm(ParticleTypeDatabase::Pi0, ch_3pi0_IM_pi0);
         result_3pi0.FillImEtaPrime(ch_3pi0_IM_etap);
     }
 
-    if (result_eta2pi0.Chi2_etaprime < 2)
+    if (result_eta2pi0.Chi2_etaprime < chi2cut)
     {
         result_eta2pi0.FillIm(ParticleTypeDatabase::Pi0, ch_eta2pi0_IM_pions);
         result_eta2pi0.FillIm(ParticleTypeDatabase::Eta, ch_eta2pi0_IM_etas);
         result_eta2pi0.FillImEtaPrime(ch_eta2pi0_IM_etap);
     }
 
-//    result_t result_mc = MakeMC3pi0(mcdata);
-    DalitzVars channel(result_3pi0);
-//    DalitzVars channel(result_mc);
-//    DalitzVars refecence(result_eta2pi0);
-
-    if (result_3pi0.Chi2_etaprime < 2 && result_3pi0.success)
+    result_t result_mc = MakeMC3pi0(mcdata);
+    if (result_mc.Chi2_etaprime < chi2cut && result_mc.success)
     {
-        dalitz_xy->Fill(channel.x,channel.y);
+        DalitzVars channel(result_mc);
+        mcdalitz_xy->Fill(channel.s1,channel.s3);
+        mcdalitz_z->Fill(channel.z);
+    }
+    if (result_3pi0.Chi2_etaprime < chi2cut && result_3pi0.success)
+    {
+        DalitzVars channel(result_3pi0);
+        dalitz_xy->Fill(channel.s1,channel.s3);
         dalitz_z->Fill(channel.z);
     }
+//    DalitzVars channel(result_3pi0);
+//    DalitzVars refecence(result_eta2pi0);
+
 
 
 
@@ -270,7 +272,8 @@ void Etap3pi0::ShowResult()
                                 << ch_3pi0_IM_pi0 << ch_3pi0_IM_etap
                                 //<< IM_proton << IM_mmproton
                                 << endc;
-    canvas("Dalitz-Plots") << dalitz_z << drawoption("colz") << dalitz_xy << endc;
+    canvas("Dalitz-Plots")     // << dalitz_z << mcdalitz_z << drawoption("colz")
+                                << dalitz_xy << mcdalitz_xy << endc;
 }
 
 Etap3pi0::ParticleVars::ParticleVars(const TLorentzVector& lv, const ParticleTypeDatabase::Type& type) noexcept
