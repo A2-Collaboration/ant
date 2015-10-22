@@ -132,8 +132,8 @@ WrapTFileOutput::WrapTFileOutput(const std::string& filename, mode_t access_mode
     else
         file = openFile(filename, root_mode);
 
-    file->SetCompressionAlgorithm(ROOT::kLZMA);
-    file->SetCompressionLevel(5);
+    //file->SetCompressionAlgorithm(ROOT::kLZMA);
+    //file->SetCompressionLevel(5);
 
     files.emplace_back(move(file));
 
