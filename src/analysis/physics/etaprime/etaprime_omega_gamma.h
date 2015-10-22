@@ -29,16 +29,13 @@ class EtapOmegaG : public Physics {
     // extracted from gg histogram for reference channel
     const expected_peak_t EtaPrime_ref = {905, 29};
 
-    SmartHistFactory HistFac_sig;
-    SmartHistFactory HistFac_ref;
-
-    TTree* treeSig;
-    TTree* treeRef;
+    SmartHistFactory sig_HistFac;
+    SmartHistFactory ref_HistFac;
 
     struct histogram_t {
         TH1D* Steps;
         TH1D* MissedBkg;
-        histogram_t(SmartHistFactory histFac);
+        histogram_t(SmartHistFactory HistFac);
     };
 
     histogram_t sig_hists;
@@ -68,6 +65,8 @@ class EtapOmegaG : public Physics {
     };
 
     struct sig_perDecayHists_t {
+        TH1D* Steps;
+
         TH1D* gggg;
         TH1D* ggg;
         TH1D* gg;
@@ -95,6 +94,8 @@ class EtapOmegaG : public Physics {
     std::vector<perDecayHists_t<sig_perDecayHists_t>> sig_perDecayHists;
 
     struct ref_perDecayHists_t {
+        TH1D* Steps;
+
         TH1D* gg;
 
         TH2D* Proton_ThetaPhi;
@@ -111,6 +112,38 @@ class EtapOmegaG : public Physics {
 
     std::vector<perDecayHists_t<ref_perDecayHists_t>> ref_perDecayHists;
 
+    struct sig_TTree_t {
+        sig_TTree_t(TTree* tree) : Tree(tree) {}
+
+        TTree* Tree;
+        int MCTrueIndex = -1;
+
+        utils::ParticleVars Proton;
+        utils::ParticleVars ProtonTrue;
+
+        double Chi2;
+        utils::ParticleVars g_Pi0_0;
+        utils::ParticleVars g_Pi0_1;
+        utils::ParticleVars g_Omega;
+        utils::ParticleVars g_EtaPrime;
+        utils::ParticleVars Pi0;
+        utils::ParticleVars Omega;
+        utils::ParticleVars EtaPrime;
+
+        void SetBranches();
+    };
+    sig_TTree_t sig_TTree;
+
+    struct ref_TTree_t {
+        ref_TTree_t(TTree* tree) : Tree(tree) {}
+        TTree* Tree;
+        int MCTrueIndex = -1;
+
+        utils::ParticleVars Proton;
+
+        void SetBranches();
+    };
+    ref_TTree_t ref_TTree;
 
 
     void ProcessSig(const data::ParticleTree_t& particletree, const data::Event::Data& data);

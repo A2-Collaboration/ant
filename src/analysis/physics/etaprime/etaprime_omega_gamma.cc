@@ -7,6 +7,8 @@
 #include <cassert>
 #include <numeric>
 
+#include <TTree.h>
+
 using namespace std;
 using namespace ant::analysis;
 using namespace ant::analysis::physics;
@@ -15,84 +17,87 @@ using namespace ant::analysis::physics;
 
 
 EtapOmegaG::EtapOmegaG(const std::string& name, PhysOptPtr opts) : Physics(name, opts),
-    HistFac_sig("Sig",HistFac),
-    HistFac_ref("Ref",HistFac),
-    sig_hists(HistFac_sig),
-    ref_hists(HistFac_ref)
+    sig_HistFac("Sig",HistFac),
+    ref_HistFac("Ref",HistFac),
+    sig_hists(sig_HistFac),
+    ref_hists(ref_HistFac),
+    sig_TTree(sig_HistFac.makeTTree("tree")),
+    ref_TTree(ref_HistFac.makeTTree("tree"))
 {
-
-    treeSig = HistFac_sig.makeTTree("treeSig");
-    treeRef = HistFac_ref.makeTTree("treeRef");
+    sig_TTree.SetBranches();
+    ref_TTree.SetBranches();
 
     sig_perDecayHists.emplace_back(
                 "Signal",
-                HistFac_sig,
+                sig_HistFac,
                 ParticleTypeTreeDatabase::Get(ParticleTypeTreeDatabase::Channel::EtaPrime_gOmega_ggPi0_4g)
                 );
     sig_perDecayHists.emplace_back(
                 "Sig_Bkg_2pi0",
-                HistFac_sig,
+                sig_HistFac,
                 ParticleTypeTreeDatabase::Get(ParticleTypeTreeDatabase::Channel::Direct2Pi0_4g)
                 );
     sig_perDecayHists.emplace_back(
                 "Sig_Bkg_3pi0",
-                HistFac_sig,
+                sig_HistFac,
                 ParticleTypeTreeDatabase::Get(ParticleTypeTreeDatabase::Channel::Direct3Pi0_6g)
                 );
     sig_perDecayHists.emplace_back(
                 "Sig_Bkg_OmegaPi0g",
-                HistFac_sig,
+                sig_HistFac,
                 ParticleTypeTreeDatabase::Get(ParticleTypeTreeDatabase::Channel::Omega_gPi0_3g)
                 );
     sig_perDecayHists.emplace_back(
                 "Sig_Bkg_1pi0",
-                HistFac_sig,
+                sig_HistFac,
                 ParticleTypeTreeDatabase::Get(ParticleTypeTreeDatabase::Channel::Direct1Pi0_2g)
                 );
     sig_perDecayHists.emplace_back(
                 "Sig_Bkg_Etap_Eta2Pi0",
-                HistFac_sig,
+                sig_HistFac,
                 ParticleTypeTreeDatabase::Get(ParticleTypeTreeDatabase::Channel::EtaPrime_2Pi0Eta_6g)
                 );
     sig_perDecayHists.emplace_back(
                 "Sig_Bkg_2pi0_1Dalitz",
-                HistFac_sig,
+                sig_HistFac,
                 ParticleTypeTreeDatabase::Get(ParticleTypeTreeDatabase::Channel::Direct2Pi0_2ggEpEm)
                 );
     sig_perDecayHists.emplace_back(
                 "Sig_Bkg_3pi0_1Dalitz",
-                HistFac_sig,
+                sig_HistFac,
                 ParticleTypeTreeDatabase::Get(ParticleTypeTreeDatabase::Channel::Direct3Pi0_4ggEpEm)
                 );
-    sig_perDecayHists.emplace_back("Signal_Bkg_Other", HistFac_sig);
+    sig_perDecayHists.emplace_back("Signal_Bkg_Other", sig_HistFac);
 
 
     ref_perDecayHists.emplace_back(
                 "Reference",
-                HistFac_ref,
+                ref_HistFac,
                 ParticleTypeTreeDatabase::Get(ParticleTypeTreeDatabase::Channel::EtaPrime_2g)
                 );
     ref_perDecayHists.emplace_back(
                 "Ref_Bkg_2pi0",
-                HistFac_ref,
+                ref_HistFac,
                 ParticleTypeTreeDatabase::Get(ParticleTypeTreeDatabase::Channel::Direct2Pi0_4g)
                 );
     ref_perDecayHists.emplace_back(
                 "Ref_Bkg_1pi0",
-                HistFac_ref,
+                ref_HistFac,
                 ParticleTypeTreeDatabase::Get(ParticleTypeTreeDatabase::Channel::Direct1Pi0_2g)
                 );
-    ref_perDecayHists.emplace_back("Ref_Bkg_Other", HistFac_ref);
+    ref_perDecayHists.emplace_back("Ref_Bkg_Other", ref_HistFac);
 }
 
-EtapOmegaG::histogram_t::histogram_t(SmartHistFactory histFac)
+EtapOmegaG::histogram_t::histogram_t(SmartHistFactory HistFac)
 {
-    Steps = histFac.makeTH1D("Steps", "", "#", BinSettings(10),"steps");
-    MissedBkg = histFac.makeTH1D("Missed Bkg channels", "", "#", BinSettings(20),"missed_bkg");
+    Steps = HistFac.makeTH1D("Steps", "", "#", BinSettings(10),"steps");
+    MissedBkg = HistFac.makeTH1D("Missed Bkg channels", "", "#", BinSettings(20),"missed_bkg");
 }
 
 EtapOmegaG::sig_perDecayHists_t::sig_perDecayHists_t(SmartHistFactory HistFac)
 {
+    Steps = HistFac.makeTH1D("Steps", "", "#", BinSettings(10),"steps");
+
     BinSettings bins_im(1200);
 
     gggg = HistFac.makeTH1D("4#gamma IM","4#gamma IM / MeV","events",bins_im,"gggg");
@@ -135,6 +140,8 @@ EtapOmegaG::sig_perDecayHists_t::sig_perDecayHists_t(SmartHistFactory HistFac)
 
 EtapOmegaG::ref_perDecayHists_t::ref_perDecayHists_t(SmartHistFactory HistFac)
 {
+    Steps = HistFac.makeTH1D("Steps", "", "#", BinSettings(10),"steps");
+
     BinSettings bins_im(1200);
 
     gg = HistFac.makeTH1D("2#gamma IM","2#gamma IM / MeV","events",bins_im,"gg");
@@ -157,6 +164,32 @@ EtapOmegaG::ref_perDecayHists_t::ref_perDecayHists_t(SmartHistFactory HistFac)
     Proton_Energy = HistFac.makeTH1D("p #delta(E)","#deltaE / MeV","",BinSettings(400,-50,350),"Proton_Energy");
 }
 
+void EtapOmegaG::sig_TTree_t::SetBranches()
+{
+    Tree->Branch("MCTrueIndex", &MCTrueIndex);
+
+    Proton.SetBranches(Tree, "Proton");
+    ProtonTrue.SetBranches(Tree, "ProtonTrue");
+
+    Tree->Branch("Chi2", &Chi2);
+
+    g_Pi0_0.SetBranches(Tree, "g_Pi0_0");
+    g_Pi0_1.SetBranches(Tree, "g_Pi0_1");
+    g_Omega.SetBranches(Tree, "g_Omega");
+    g_EtaPrime.SetBranches(Tree, "g_EtaPrime");
+
+    Pi0.SetBranches(Tree,"Pi0");
+    Omega.SetBranches(Tree, "Omega");
+    EtaPrime.SetBranches(Tree, "EtaPrime");
+}
+
+void EtapOmegaG::ref_TTree_t::SetBranches()
+{
+    Tree->Branch("MCTrueIndex", &MCTrueIndex);
+
+    Proton.SetBranches(Tree, "Proton");
+}
+
 void EtapOmegaG::ProcessEvent(const data::Event& event)
 {
     const auto& data = event.Reconstructed();
@@ -168,16 +201,16 @@ void EtapOmegaG::ProcessEvent(const data::Event& event)
 template<typename T>
 const T& getHistogram(const data::ParticleTree_t& particletree,
                       const std::vector<EtapOmegaG::perDecayHists_t<T>>& perDecayHists,
-                      bool& other
+                      int& index
                       ) {
     assert(!perDecayHists.empty());
-    other = true;
+    index = perDecayHists.size()-1;
     if(!particletree)
         return perDecayHists.back().PerDecayHists;
     for(size_t i=0;i<perDecayHists.size()-1;i++) {
         auto& item = perDecayHists[i];
         if(particletree->IsEqual(item.Tree, utils::ParticleTools::MatchByParticleName)) {
-            other = false;
+            index = i;
             return item.PerDecayHists;
         }
     }
@@ -187,7 +220,7 @@ const T& getHistogram(const data::ParticleTree_t& particletree,
 void EtapOmegaG::ProcessSig(const data::ParticleTree_t& particletree,
                             const data::Event::Data& data)
 {
-    auto& steps = sig_hists.Steps;
+    TH1D* steps = sig_hists.Steps;
 
     const auto nParticles = data.Particles().GetAll().size();
 
@@ -221,8 +254,10 @@ void EtapOmegaG::ProcessSig(const data::ParticleTree_t& particletree,
         return;
     steps->Fill("CBESum>550MeV",1);
 
-    bool other_channel = false;
-    const sig_perDecayHists_t& h = getHistogram(particletree, sig_perDecayHists, other_channel);
+    const sig_perDecayHists_t& h = getHistogram(particletree, sig_perDecayHists, sig_TTree.MCTrueIndex);
+    const bool other_channel = (unsigned)sig_TTree.MCTrueIndex == sig_perDecayHists.size()-1;
+    steps = h.Steps;
+    steps->Fill("Seen",1);
 
     // gamma combinatorics
     assert(photons.size() == 4);
@@ -250,6 +285,24 @@ void EtapOmegaG::ProcessSig(const data::ParticleTree_t& particletree,
         return;
     steps->Fill("Copl p in 2#sigma",1);
     h.Proton_Copl->Fill(d_phi);
+
+    // fill Goldhaber plot and make cut
+    bool is_pi0pi0 = false;
+    const double sigma = 2*Pi0.Sigma;
+    const interval<double> IM_pi0_cut(Pi0.Mean-sigma,Pi0.Mean+sigma);
+
+    for(auto i : std::initializer_list<std::vector<unsigned>>({{0,1,2,3},{0,2,1,3},{0,3,1,2}})) {
+        auto& p = photons;
+        const TLorentzVector pair1(*p[i[0]]+*p[i[1]]);
+        const TLorentzVector pair2(*p[i[2]]+*p[i[3]]);
+        h.IM_gg_gg->Fill(pair1.M(), pair2.M());
+        if(   IM_pi0_cut.Contains(pair1.M())
+           && IM_pi0_cut.Contains(pair2.M()))
+            is_pi0pi0 = true;
+    }
+    if(is_pi0pi0)
+        return;
+    steps->Fill("Not #pi^{0}#pi^{0}",1);
 
     // bottom-up assignment of photons using Chi2
 
@@ -313,21 +366,13 @@ void EtapOmegaG::ProcessSig(const data::ParticleTree_t& particletree,
     while(next_permutation(indices.begin(), indices.end(), comparer));
 
     // photon assignment successful?
-    if(result.Chi2>10)
+    if(result.Chi2>=10)
         return;
     steps->Fill("MinChi2<10",1);
 
     h.IM_etap_omega->Fill(result.EtaPrime.M(), result.Omega.M());
     h.IM_pi0->Fill(result.Pi0.M());
     h.Chi2_Best->Fill(result.Chi2);
-
-    // fill Goldhaber plot
-    for(auto i : std::initializer_list<std::vector<unsigned>>({{0,1,2,3},{0,2,1,3},{0,3,1,2}})) {
-        auto& p = photons;
-        h.IM_gg_gg->Fill((*p[i[0]]+*p[i[1]]).M(), (*p[i[2]]+*p[i[3]]).M());
-    }
-
-    //h.IM_gg_gg->Fill(  );
 
     // was this some unidentified channel?
     if(other_channel) {
@@ -349,12 +394,36 @@ void EtapOmegaG::ProcessSig(const data::ParticleTree_t& particletree,
             h.Proton_Energy->Fill(mm.E() - proton->E());
         }
     }
+
+    // fill tree
+    sig_TTree.Proton = *proton;
+    sig_TTree.ProtonTrue.Clear();
+    if(particletree) {
+        for(auto d : particletree->Daughters()) {
+            data::ParticlePtr p = d->Get();
+            if(p->Type() == ParticleTypeDatabase::Proton) {
+                sig_TTree.ProtonTrue = *p;
+            }
+        }
+    }
+
+    sig_TTree.Chi2 = result.Chi2;
+    sig_TTree.g_Pi0_0 = *result.g_pi0_0;
+    sig_TTree.g_Pi0_1 = *result.g_pi0_1;
+    sig_TTree.g_Omega = *result.g_omega;
+    sig_TTree.g_EtaPrime = *result.g_etap;
+
+    sig_TTree.Pi0 = utils::ParticleVars(result.Pi0, ParticleTypeDatabase::Pi0);
+    sig_TTree.Omega = utils::ParticleVars(result.Omega, ParticleTypeDatabase::Omega);
+    sig_TTree.EtaPrime = utils::ParticleVars(result.EtaPrime, ParticleTypeDatabase::EtaPrime);
+
+    sig_TTree.Tree->Fill();
 }
 
 void EtapOmegaG::ProcessRef(const data::ParticleTree_t& particletree,
                             const data::Event::Data& data)
 {
-    auto& steps = ref_hists.Steps;
+    TH1D* steps = ref_hists.Steps;
 
     const auto nParticles = data.Particles().GetAll().size();
 
@@ -389,8 +458,11 @@ void EtapOmegaG::ProcessRef(const data::ParticleTree_t& particletree,
         return;
     steps->Fill("CBESum>550MeV",1);
 
-    bool other_channel = false;
-    const ref_perDecayHists_t& h = getHistogram(particletree, ref_perDecayHists, other_channel);
+    const ref_perDecayHists_t& h = getHistogram(particletree, ref_perDecayHists, ref_TTree.MCTrueIndex);
+    const bool other_channel = (unsigned)ref_TTree.MCTrueIndex == ref_perDecayHists.size()-1;
+    steps = h.Steps;
+    steps->Fill("Seen",1);
+
 
     // gamma combinatorics
     assert(photons.size() == 2);
@@ -439,6 +511,11 @@ void EtapOmegaG::ProcessRef(const data::ParticleTree_t& particletree,
             h.Proton_Energy->Fill(mm.E() - proton->E());
         }
     }
+
+    // fill tree
+    ref_TTree.Proton = *proton;
+
+    ref_TTree.Tree->Fill();
 }
 
 
@@ -458,12 +535,14 @@ void EtapOmegaG::ShowResult()
         if(h.IM_etap_omega->GetEntries()==0)
             continue;
         canvas c(GetName()+": "+it.ShortName);
-        c << h.gg << h.ggg << h.gggg << h.MM_gggg
+        c << h.Steps
+          << h.gg << h.ggg << h.gggg
+          << h.MM_gggg
           << h.Proton_Copl
+          << drawoption("colz") << h.IM_gg_gg
           << h.Chi2_All << h.Chi2_Best
           << h.IM_pi0
           << drawoption("colz") << h.IM_etap_omega
-          << drawoption("colz") << h.IM_gg_gg
           << h.MM_etap
           << drawoption("colz") <<  h.Proton_ThetaPhi
           << h.Proton_Energy
@@ -475,7 +554,8 @@ void EtapOmegaG::ShowResult()
         if(h.IM_etap->GetEntries()==0)
             continue;
         canvas c(GetName()+": "+it.ShortName);
-        c << h.gg
+        c << h.Steps
+          << h.gg
           << h.Proton_Copl << h.IM_etap
           << h.MM_etap
           << drawoption("colz") << h.Proton_ThetaPhi
@@ -483,10 +563,6 @@ void EtapOmegaG::ShowResult()
           << endc;
     }
 }
-
-
-
-
 
 
 
