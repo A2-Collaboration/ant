@@ -29,6 +29,7 @@ struct ParticleVars {
     ParticleVars& operator=(const ParticleVars&) =default;
     ParticleVars& operator=(ParticleVars&&) =default;
     virtual void SetBranches(TTree* tree, const std::string& prefix);
+    virtual void Clear();
 };
 
 struct ParticleTools {

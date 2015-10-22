@@ -10,6 +10,7 @@
 #include <sstream>
 #include <cassert>
 #include <functional>
+#include <limits>
 
 using namespace std;
 using namespace ant;
@@ -39,6 +40,14 @@ void ParticleVars::SetBranches(TTree* tree, const string& prefix)
     tree->Branch((prefix+"_Theta").c_str(), &Theta);
     tree->Branch((prefix+"_Phi").c_str(),&Phi);
     tree->Branch((prefix+"_E").c_str(),  &E);
+}
+
+void ParticleVars::Clear()
+{
+    IM = numeric_limits<double>::quiet_NaN();
+    Theta = numeric_limits<double>::quiet_NaN();
+    Phi = numeric_limits<double>::quiet_NaN();
+    E = numeric_limits<double>::quiet_NaN();
 }
 
 
