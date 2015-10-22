@@ -114,6 +114,7 @@ std::pair<std::size_t,bool> FindParticleByID(const std::vector<const PParticle*>
 std::string PlutoTable(const std::vector<const PParticle*> particles) {
     stringstream s;
     int i=0;
+    s << "Index\tParticleName\tParentIndex\tNameOfParent\t|\tDaughterIndex\n";
     for(auto& p : particles ) {
         const PParticle* pl = p;
         s << i++ << "\t" << GetParticleName(p) << "\t" << p->GetParentIndex() << "\t" << GetParticleName(pl->GetParentId()) << "\t|\t" <<  p->GetDaughterIndex() << "\t" <<  endl;
@@ -128,13 +129,16 @@ void PlutoReader::CopyPluto(Event& event)
     std::vector<const PParticle*> PlutoParticles;
     PlutoParticles.reserve(size_t(entries));
 
+    std::vector<size_t> dilepton_indices;
+
     for( Long64_t i=0; i < entries; ++i) {
 
-        const PParticle* const particle = dynamic_cast<const PParticle*>((*PlutoMCTrue)[i]);
+        const PParticle* particle = dynamic_cast<const PParticle*>((*PlutoMCTrue)[i]);
 
-        if(particle) {
-            PlutoParticles.push_back(particle);
-        }
+        // ignore those weird dilepton particles
+        if(particle->ID() == pluto_database->GetParticleID("dilepton"))
+            dilepton_indices.push_back(i);
+        PlutoParticles.push_back(particle);
     }
 
     using treenode_t = shared_ptr<Tree<ParticlePtr>>;
@@ -216,9 +220,21 @@ void PlutoReader::CopyPluto(Event& event)
 
 
     // for gun generated pluto things, there's no BeamTarget particle and thus no tree...
-    if(event.MCTrue().ParticleTree())
+    if(event.MCTrue().ParticleTree()) {
+        // remove articifial Pluto_dilepton particles,
+        // this assumes that a dilepton never
+        // is a parent of a dilepton
+        for(auto i : dilepton_indices) {
+            ParticleTree_t& dilepton = FlatTree[i];
+            while(!dilepton->Daughters().empty()) {
+                auto& d =  dilepton->Daughters().front();
+                d->SetParent(dilepton->GetParent());
+            }
+            dilepton->Unlink();
+        }
         event.MCTrue().ParticleTree()->Sort(utils::ParticleTools::SortParticleByName);
 
+    }
     auto& triggerinfos = event.MCTrue().TriggerInfos();
 
     // use eventID from file if available
@@ -245,11 +261,18 @@ void PlutoReader::CopyPluto(Event& event)
 
     /// @note multiplicity is only known on reconstructed
 
+    // dump some information about the conversion
+
     if(missing_decay_treeinfo && event.MCTrue().ParticleTree()) {
         const auto& tid = !triggerinfos.EventID().IsInvalid() ? triggerinfos.EventID() : event.Reconstructed().TriggerInfos().EventID();
         LOG(WARNING) << "Missing decay tree info for event " << tid;
         VLOG(5)      << "Dumping Pluto particles:\n" << PlutoTable(PlutoParticles);
         event.MCTrue().ParticleTree() = nullptr;
+    }
+
+    if(!dilepton_indices.empty()) {
+        VLOG(5) << "Particle tree cleaned from dileptons: " << utils::ParticleTools::GetDecayString(event.MCTrue().ParticleTree());
+        VLOG(5) << "Dumping Pluto particles:\n" << PlutoTable(PlutoParticles);
     }
 }
 
