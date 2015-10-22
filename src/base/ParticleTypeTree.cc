@@ -19,6 +19,13 @@ void add_Pi0_2g(ParticleTypeTree& t) {
     add_Type_2g(t, ParticleTypeDatabase::Pi0);
 }
 
+void add_Pi0_gEpEm(ParticleTypeTree& t) {
+    auto d = t->CreateDaughter(ParticleTypeDatabase::Pi0);
+    d->CreateDaughter(ParticleTypeDatabase::Photon);
+    d->CreateDaughter(ParticleTypeDatabase::ePlus);
+    d->CreateDaughter(ParticleTypeDatabase::eMinus);
+}
+
 ParticleTypeTree ParticleTypeTreeDatabase::Get(ParticleTypeTreeDatabase::Channel channel)
 {
     // hopefully, at this point the references are initialized
@@ -51,6 +58,16 @@ ParticleTypeTreeDatabase::database_t ParticleTypeTreeDatabase::CreateDatabase()
     add_Pi0_2g(database[Channel::Direct3Pi0_6g]);
     add_Pi0_2g(database[Channel::Direct3Pi0_6g]);
     add_Pi0_2g(database[Channel::Direct3Pi0_6g]);
+
+    database[Channel::Direct2Pi0_2ggEpEm] = GetBaseTree();
+    add_Pi0_2g(database[Channel::Direct2Pi0_2ggEpEm]);
+    add_Pi0_gEpEm(database[Channel::Direct2Pi0_2ggEpEm]);
+
+    database[Channel::Direct3Pi0_4ggEpEm] = GetBaseTree();
+    add_Pi0_2g(database[Channel::Direct3Pi0_4ggEpEm]);
+    add_Pi0_2g(database[Channel::Direct3Pi0_4ggEpEm]);
+    add_Pi0_gEpEm(database[Channel::Direct3Pi0_4ggEpEm]);
+
 
     auto make_Omega_gPseudoscalar_3g = [] (const ParticleTypeDatabase::Type& etapi_type) {
         auto t = GetBaseTree();
