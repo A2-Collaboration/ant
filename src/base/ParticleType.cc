@@ -119,5 +119,5 @@ ParticleTypeDatabase::PIDMap_t ParticleTypeDatabase::pluto_pid_map = [] () {
     m[53] = &ParticleTypeDatabase::EtaPrime;
     m[52] = &ParticleTypeDatabase::Omega;
     m[14001] = &ParticleTypeDatabase::BeamProton;
-    return std::move(m);
+    return m;
 }();

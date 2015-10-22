@@ -73,7 +73,7 @@ public:
         return n;
     }
 
-    void SetParent(snode_t& p) {
+    void SetParent(const snode_t& p) {
         if(!IsRoot())
             Unlink();
         parent = p;
