@@ -55,11 +55,6 @@ EtapOmegaG::EtapOmegaG(const std::string& name, PhysOptPtr opts) : Physics(name,
                 ParticleTypeTreeDatabase::Get(ParticleTypeTreeDatabase::Channel::EtaPrime_2Pi0Eta_6g)
                 );
     sig_perDecayHists.emplace_back(
-                "Sig_Bkg_Etap_Eta2Pi0",
-                HistFac_sig,
-                ParticleTypeTreeDatabase::Get(ParticleTypeTreeDatabase::Channel::EtaPrime_2Pi0Eta_6g)
-                );
-    sig_perDecayHists.emplace_back(
                 "Sig_Bkg_2pi0_1Dalitz",
                 HistFac_sig,
                 ParticleTypeTreeDatabase::Get(ParticleTypeTreeDatabase::Channel::Direct2Pi0_2ggEpEm)
