@@ -2,8 +2,10 @@
 #include "combinatorics.h"
 
 #include "base/Logger.h"
+#include "base/std_ext/math.h"
 
 #include "TH1.h"
+#include "TTree.h"
 
 #include <sstream>
 #include <cassert>
@@ -13,6 +15,35 @@ using namespace std;
 using namespace ant;
 using namespace ant::analysis;
 using namespace ant::analysis::data;
+using namespace ant::analysis::utils;
+
+ParticleVars::ParticleVars(const TLorentzVector& lv, const ParticleTypeDatabase::Type& type) noexcept
+{
+    IM    = lv.M();
+    Theta = std_ext::radian_to_degree(lv.Theta());
+    Phi   = std_ext::radian_to_degree(lv.Phi());
+    E     = lv.E() - type.Mass();
+    LV    = lv;
+}
+
+ParticleVars::ParticleVars(const Particle& p) noexcept
+{
+    IM    = p.M();
+    Theta = std_ext::radian_to_degree(p.Theta());
+    Phi   = std_ext::radian_to_degree(p.Phi());
+    E     = p.Ek();
+    LV    = p;
+}
+
+void ParticleVars::SetBranches(TTree* tree, const string& prefix)
+{
+    tree->Branch((prefix+"IM").c_str(), &IM);
+    tree->Branch((prefix+"Theta").c_str(), &Theta);
+    tree->Branch((prefix+"Phi").c_str(),&Phi);
+    tree->Branch((prefix+"E").c_str(),  &E);
+    tree->Branch((prefix+"LV").c_str(), &LV);
+}
+
 
 template<typename T>
 string _GetDecayString(const shared_ptr<Tree<T>>& particletree, function<string(const T&)> to_string)
@@ -48,17 +79,17 @@ string _GetDecayString(const shared_ptr<Tree<T>>& particletree, function<string(
 
 
 
-string utils::ParticleTools::GetDecayString(const ParticleTree_t& particletree)
+string ParticleTools::GetDecayString(const ParticleTree_t& particletree)
 {
     return _GetDecayString<ParticlePtr>(particletree, [] (const ParticlePtr& p) { return p->Type().PrintName(); });
 }
 
-string utils::ParticleTools::GetDecayString(const ParticleTypeTree& particletypetree)
+string ParticleTools::GetDecayString(const ParticleTypeTree& particletypetree)
 {
     return _GetDecayString<const ParticleTypeDatabase::Type&>(particletypetree, [] (const ParticleTypeDatabase::Type& t) { return t.PrintName(); });
 }
 
-string utils::ParticleTools::SanitizeDecayString(string decaystring)
+string ParticleTools::SanitizeDecayString(string decaystring)
 {
     for(const auto c : {'(',')','[',']','{','}','^',' ','#'}) {
         std::replace( decaystring.begin(), decaystring.end(), c, '_');
@@ -69,7 +100,7 @@ string utils::ParticleTools::SanitizeDecayString(string decaystring)
     return string("x")+decaystring;
 }
 
-string utils::ParticleTools::GetProductionChannelString(const data::ParticleTree_t& particletree)
+string ParticleTools::GetProductionChannelString(const data::ParticleTree_t& particletree)
 {
     if(!particletree)
         return "empty_unknown";
@@ -87,7 +118,7 @@ string utils::ParticleTools::GetProductionChannelString(const data::ParticleTree
     return s.str();
 }
 
-const ParticlePtr utils::ParticleTools::FindParticle(const ant::ParticleTypeDatabase::Type& type, const ParticleList& particles)
+const ParticlePtr ParticleTools::FindParticle(const ant::ParticleTypeDatabase::Type& type, const ParticleList& particles)
 {
     for(const auto& p : particles) {
         if(p->Type() == type) {
@@ -98,9 +129,9 @@ const ParticlePtr utils::ParticleTools::FindParticle(const ant::ParticleTypeData
     return nullptr;
 }
 
-void utils::ParticleTools::FillIMCombinations(TH1* h, unsigned n, const ParticleList& particles)
+void ParticleTools::FillIMCombinations(TH1* h, unsigned n, const ParticleList& particles)
 {
-    for( auto comb = utils::makeCombination(particles,n); !comb.Done(); ++comb) {
+    for( auto comb = makeCombination(particles,n); !comb.Done(); ++comb) {
          TLorentzVector sum(0,0,0,0);
          for(const auto& p : comb) {
              sum += *p;
@@ -109,12 +140,12 @@ void utils::ParticleTools::FillIMCombinations(TH1* h, unsigned n, const Particle
     }
 }
 
-bool utils::ParticleTools::SortParticleByName(const data::ParticlePtr& a, const data::ParticlePtr& b)
+bool ParticleTools::SortParticleByName(const data::ParticlePtr& a, const data::ParticlePtr& b)
 {
     return a->Type().Name() < b->Type().Name();
 }
 
-bool utils::ParticleTools::MatchByParticleName(const data::ParticlePtr& a, const ant::ParticleTypeDatabase::Type& b)
+bool ParticleTools::MatchByParticleName(const data::ParticlePtr& a, const ant::ParticleTypeDatabase::Type& b)
 {
     return a->Type().Name() == b.Name();
 }

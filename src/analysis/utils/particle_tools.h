@@ -5,11 +5,32 @@
 
 #include <string>
 
+#include "TLorentzVector.h"
+
 class TH1;
+class TTree;
 
 namespace ant {
 namespace analysis {
 namespace utils {
+
+struct ParticleVars {
+    double E;
+    double Theta;
+    double Phi;
+    double IM;
+    TLorentzVector LV;
+
+    ParticleVars(const TLorentzVector& lv, const ParticleTypeDatabase::Type& type) noexcept;
+    ParticleVars(const data::Particle& p) noexcept;
+    ParticleVars(double e=0.0, double theta=0.0, double phi=0.0, double im=0.0) noexcept:
+        E(e), Theta(theta), Phi(phi), IM(im) {}
+    ParticleVars(const ParticleVars&) = default;
+    ParticleVars(ParticleVars&&) = default;
+    ParticleVars& operator=(const ParticleVars&) =default;
+    ParticleVars& operator=(ParticleVars&&) =default;
+    virtual void SetBranches(TTree* tree, const std::string& prefix);
+};
 
 struct ParticleTools {
 
