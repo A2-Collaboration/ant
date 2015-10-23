@@ -247,6 +247,10 @@ void EtapOmegaG::ProcessSig(const data::ParticleTree_t& particletree,
 
     steps->Fill("Seen",1);
 
+    if(data.TriggerInfos().CBEenergySum() <= 550)
+        return;
+    steps->Fill("CBESum>550MeV",1);
+
     if(nParticles != 5)
         return;
 
@@ -271,9 +275,7 @@ void EtapOmegaG::ProcessSig(const data::ParticleTree_t& particletree,
         return;
     steps->Fill("p in TAPS", 1);
 
-    if(data.TriggerInfos().CBEenergySum() < 550)
-        return;
-    steps->Fill("CBESum>550MeV",1);
+
 
     const sig_perDecayHists_t& h = getHistogram(particletree, sig_perDecayHists, sig_TTree.MCTrueIndex);
     const bool other_channel = (unsigned)sig_TTree.MCTrueIndex == sig_perDecayHists.size()-1;
@@ -464,6 +466,10 @@ void EtapOmegaG::ProcessRef(const data::ParticleTree_t& particletree,
 
     steps->Fill("Seen",1);
 
+    if(data.TriggerInfos().CBEenergySum() <= 550)
+        return;
+    steps->Fill("CBESum>550MeV",1);
+
     if(nParticles != 3)
         return;
 
@@ -489,9 +495,7 @@ void EtapOmegaG::ProcessRef(const data::ParticleTree_t& particletree,
     steps->Fill("p in TAPS", 1);
 
 
-    if(data.TriggerInfos().CBEenergySum() < 550)
-        return;
-    steps->Fill("CBESum>550MeV",1);
+
 
     const ref_perDecayHists_t& h = getHistogram(particletree, ref_perDecayHists, ref_TTree.MCTrueIndex);
     const bool other_channel = (unsigned)ref_TTree.MCTrueIndex == ref_perDecayHists.size()-1;
