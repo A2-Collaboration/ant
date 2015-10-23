@@ -36,6 +36,8 @@ void dotest() {
         // those tests are specific enough...
         if(string(location) == "TDirectory::Append")
             histogram_overwrite_detected = true;
+        if(string(location) == "TDirectoryFile::Append")
+            histogram_overwrite_detected = true;
         if(string(location) == "TDirectoryFile::mkdir")
             duplicate_mkdir_detected = true;
         DefaultErrorHandler(level, abort, location, msg);
