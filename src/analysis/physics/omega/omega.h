@@ -5,6 +5,7 @@
 #include "analysis/utils/A2GeoAcceptance.h"
 #include "base/Tree.h"
 #include "base/interval.h"
+#include "analysis/utils/particle_tools.h"
 
 #include <map>
 
@@ -148,40 +149,34 @@ class OmegaEtaG2 : public OmegaBase {
 protected:
     void Analyse(const data::Event::Data &data, const data::Event &event) override;
 
-    struct ParticleVars {
-        double E;
-        double Theta;
-        double Phi;
-        double IM;
-        ParticleVars(const TLorentzVector& lv, const ParticleTypeDatabase::Type& type) noexcept;
-        ParticleVars(const data::Particle& p) noexcept;
-        ParticleVars(double e=0.0, double theta=0.0, double phi=0.0, double im=0.0) noexcept:
-            E(e), Theta(theta), Phi(phi), IM(im) {}
-        ParticleVars(const ParticleVars&) = default;
-        ParticleVars(ParticleVars&&) = default;
-        ParticleVars& operator=(const ParticleVars&) =default;
-        ParticleVars& operator=(ParticleVars&&) =default;
-        void SetBranches(TTree* tree, const std::string& name);
+    struct mParticleVars : ant::analysis::utils::ParticleVars {
+        double matchAngle = -1.0;
+
+        virtual void SetBranches(TTree* tree, const std::string& name) override;
+
+        using ParticleVars::ParticleVars;
+
+        virtual ~mParticleVars() {}
     };
 
     std::shared_ptr<ant::Tree<const ParticleTypeDatabase::Type&>> signal_tree;
     std::shared_ptr<ant::Tree<const ParticleTypeDatabase::Type&>> reference_tree;
 
-    ParticleVars pbranch;
+    analysis::utils::ParticleVars pbranch;
     double pTime = {};
 
-    ParticleVars gggbranch;
+    analysis::utils::ParticleVars gggbranch;
     double gggTime = {};
 
     double ggIM[3] = {};
 
-    ParticleVars calcp;
+    analysis::utils::ParticleVars calcp;
 
     double angle_p_calcp = {};
 
-    ParticleVars g1branch;
-    ParticleVars g2branch;
-    ParticleVars g3branch;
+    mParticleVars g1branch;
+    mParticleVars g2branch;
+    mParticleVars g3branch;
 
     int    tagch = -1;
     double tagtime = {};
@@ -232,6 +227,10 @@ protected:
     double Chi2_Omega = 0.0;
     double Chi2_Pi0[3] = {};
     double Chi2_Eta[3] = {};
+    char   bestEtaIn = 0;
+    char   bestPi0In = 0;
+
+    double EgOmegaSys[3] = {};
 
 
 public:

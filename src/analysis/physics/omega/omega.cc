@@ -21,6 +21,7 @@
 #include "base/ParticleTypeTree.h"
 
 #include "utils/particle_tools.h"
+#include "utils/matcher.h"
 
 using namespace std;
 using namespace ant;
@@ -517,6 +518,27 @@ double TimeAvg(it_type begin, it_type end) {
     return v;
 }
 
+TLorentzVector boost(const TLorentzVector& lv, const TVector3& boot) {
+    TLorentzVector v(lv);
+    v.Boost(boot);
+    return v;
+}
+
+struct chi2_highscore_t {
+
+    double chi2  = std::numeric_limits<double>::infinity();
+    int    index = -1;
+
+    chi2_highscore_t() {};
+
+    void Put(const double newchi2, const int newindex) {
+        if(newchi2 < chi2) {
+            chi2 = newchi2;
+            index = newindex;
+        }
+    }
+};
+
 void OmegaEtaG2::Analyse(const Event::Data &data, const Event &event)
 {
     const ParticleList& iphotons = data.Particles().Get(ParticleTypeDatabase::Photon);
@@ -545,51 +567,75 @@ void OmegaEtaG2::Analyse(const Event::Data &data, const Event &event)
 
     const auto& proton = protons.at(0);
 
-    pbranch = ParticleVars(*proton);
+    const auto& mctrue_photons = event.MCTrue().Particles().Get(ParticleTypeDatabase::Photon);
+    rf = static_cast<int>(identify(event));
+
+    pbranch = mParticleVars(*proton);
     pTime  = data_proton ? proton->Candidate()->Time() : 0.0;
 
     const Particle ggg(ParticleTypeDatabase::Omega, LVSum(photons.begin(), photons.end()));
     gggTime  = TimeAvg(photons.begin(), photons.end());
-    gggbranch = ParticleVars(ggg);
+    gggbranch = mParticleVars(ggg);
 
-    g1branch = ParticleVars(*photons.at(0));
-    g2branch = ParticleVars(*photons.at(1));
-    g3branch = ParticleVars(*photons.at(2));
+    g1branch = mParticleVars(*photons.at(0));
+    g2branch = mParticleVars(*photons.at(1));
+    g3branch = mParticleVars(*photons.at(2));
 
+    const TVector3 gggBoost = -ggg.BoostVector();
 
     Chi2_Omega = std_ext::sqr((gggbranch.IM - omega_peak.Mean) / omega_peak.Sigma);
 
+//    auto matchFct = [] (const ParticlePtr& p1, const ParticlePtr& p2) { return p1->Angle(p2->Vect()); };
 
-    TLorentzVector gg;
-    int ngg=0;
-    for( auto comb = utils::makeCombination(photons,2); !comb.Done(); ++comb) {
-        gg.SetPtEtaPhiE(0,0,0,0);
-        auto i = comb.begin();
-        gg+=**i;
-        ++i;
-        gg+=**i;
+//    const auto matched = utils::match1to1(photons, mctrue_photons, matchFct, {0, degree_to_radian(50.0)});
 
-        ggIM[ngg] = gg.M();
-
-        Chi2_Pi0[ngg] =  std_ext::sqr((gg.M() - pi0_peak.Mean) / pi0_peak.Sigma);
-        Chi2_Eta[ngg] =  std_ext::sqr((gg.M() - eta_peak.Mean) / eta_peak.Sigma);
-        ++ngg;
-    }
-
-    rf = static_cast<int>(identify(event));
 
     for(const TaggerHitPtr& t : data_tagger?data.TaggerHits():event.MCTrue().TaggerHits()) {
+
         tagch   = t->Channel();
         tagtime = t->Time();
 
         const TLorentzVector beam_target = t->PhotonBeam() + TLorentzVector(0, 0, 0, ParticleTypeDatabase::Proton.Mass());
         const Particle missing(ParticleTypeDatabase::Proton, beam_target - ggg);
 
-        calcp = ParticleVars(missing);
+        calcp = analysis::utils::ParticleVars(missing);
 
         angle_p_calcp = radian_to_degree(missing.Angle(proton->Vect()));
 
+        int combindex = 0;
+
+        chi2_highscore_t best_eta;
+        chi2_highscore_t best_pi0;
+
+        const vector<vector<size_t>> combs = {{0,1,2},{0,2,1},{1,2,0}};
+        for(const auto& comb : combs) {
+            const auto& g1 = photons.at(comb[0]);
+            const auto& g2 = photons.at(comb[1]);
+            const auto& g3 = photons.at(comb[2]);
+
+            const TLorentzVector gg = *g1 + *g2;
+
+            ggIM[combindex] = gg.M();
+
+            Chi2_Pi0[combindex] =  std_ext::sqr((ggIM[combindex] - pi0_peak.Mean) / pi0_peak.Sigma);
+            Chi2_Eta[combindex] =  std_ext::sqr((ggIM[combindex] - eta_peak.Mean) / eta_peak.Sigma);
+
+            const TLorentzVector g3_boosted = boost(*g3, gggBoost);
+
+            EgOmegaSys[combindex] = g3_boosted.E();
+
+            best_eta.Put(Chi2_Eta[combindex], combindex);
+            best_pi0.Put(Chi2_Pi0[combindex], combindex);
+
+            ++combindex;
+
+        }
+
+        bestEtaIn = best_eta.index;
+        bestPi0In = best_pi0.index;
+
         tree->Fill();
+
     }
 
 }
@@ -668,8 +714,11 @@ OmegaEtaG2::OmegaEtaG2(const std::string& name, PhysOptPtr opts):
     tree->Branch("rf",      &rf);
 
     tree->Branch("chi2_omega",    &Chi2_Omega);
-    tree->Branch("chi2_eta[3]",    Chi2_Eta, "chi2_eta[3]/D");
-    tree->Branch("chi2_pi0[3]",    Chi2_Pi0, "chi2_pi0[3]/D");
+    tree->Branch("chi2_eta[3]",      Chi2_Eta,"chi2_eta[3]/D");
+    tree->Branch("chi2_pi0[3]",      Chi2_Pi0,"chi2_pi0[3]/D");
+    tree->Branch("EgOmegaSys[3]",    EgOmegaSys,"EgOmegaSys[3]/D");
+    tree->Branch("bestEta", &bestEtaIn);
+    tree->Branch("bestPi0", &bestPi0In);
 
     signal_tree = ParticleTypeTreeDatabase::Get(ParticleTypeTreeDatabase::Channel::Omega_gEta_3g);
     reference_tree = ParticleTypeTreeDatabase::Get(ParticleTypeTreeDatabase::Channel::Omega_gPi0_3g);
@@ -680,28 +729,10 @@ OmegaEtaG2::~OmegaEtaG2()
 
 }
 
-OmegaEtaG2::ParticleVars::ParticleVars(const TLorentzVector& lv, const ParticleTypeDatabase::Type& type) noexcept
+void OmegaEtaG2::mParticleVars::SetBranches(TTree* tree, const string& name)
 {
-    IM    = lv.M();
-    Theta = radian_to_degree(lv.Theta());
-    Phi   = radian_to_degree(lv.Phi());
-    E     = lv.E() - type.Mass();
-}
-
-OmegaEtaG2::ParticleVars::ParticleVars(const Particle& p) noexcept
-{
-    IM    = p.M();
-    Theta = radian_to_degree(p.Theta());
-    Phi   = radian_to_degree(p.Phi());
-    E     = p.Ek();
-}
-
-void OmegaEtaG2::ParticleVars::SetBranches(TTree* tree, const string& name)
-{
-    tree->Branch((name+"IM").c_str(), &IM);
-    tree->Branch((name+"Theta").c_str(), &Theta);
-    tree->Branch((name+"Phi").c_str(),&Phi);
-    tree->Branch((name+"E").c_str(),  &E);
+    tree->Branch((name+"matchAngle").c_str(), &matchAngle);
+    ParticleVars::SetBranches(tree,name);
 }
 
 
