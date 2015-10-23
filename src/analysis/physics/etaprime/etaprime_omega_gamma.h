@@ -84,6 +84,8 @@ class EtapOmegaG : public Physics {
         TH1D* Chi2_All;
         TH1D* Chi2_Best;
 
+        TH1D* g_EtaPrime_E;
+
         sig_perDecayHists_t(SmartHistFactory HistFac);
     };
 

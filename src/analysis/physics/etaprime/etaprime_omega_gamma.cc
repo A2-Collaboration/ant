@@ -128,6 +128,7 @@ EtapOmegaG::sig_perDecayHists_t::sig_perDecayHists_t(SmartHistFactory HistFac)
     Chi2_All = HistFac.makeTH1D("#chi^{2} all","#chi^{2}","",BinSettings(300,0,100),"Chi2_All");
     Chi2_Best = HistFac.makeTH1D("#chi^{2} minimal","#chi^{2}","",BinSettings(300,0,12),"Chi2_Min");
 
+    g_EtaPrime_E = HistFac.makeTH1D("#eta' #gamma energy boosted","E / MeV","#",BinSettings(500,0,300),"g_EtaPrime_E");
 }
 
 EtapOmegaG::ref_perDecayHists_t::ref_perDecayHists_t(SmartHistFactory HistFac)
@@ -362,6 +363,14 @@ void EtapOmegaG::ProcessSig(const data::ParticleTree_t& particletree,
         return;
     steps->Fill("MinChi2<10",1);
 
+    // boost the eta' photon into rest system of the eta'
+    // should be monoenergetic there
+    TLorentzVector g_etap_boosted(*result.g_etap);
+    g_etap_boosted.Boost(-photon_sum.BoostVector());
+
+    h.g_EtaPrime_E->Fill(g_etap_boosted.E());
+
+
     h.IM_etap_omega->Fill(result.EtaPrime.M(), result.Omega.M());
     h.IM_pi0->Fill(result.Pi0.M());
     h.Chi2_Best->Fill(result.Chi2);
@@ -524,6 +533,7 @@ void EtapOmegaG::ShowResult()
           << h.MM_gggg
           << h.Proton_Copl
           << drawoption("colz") << h.IM_gg_gg
+          << h.g_EtaPrime_E
           << h.Chi2_All << h.Chi2_Best
           << h.IM_pi0
           << drawoption("colz") << h.IM_etap_omega
