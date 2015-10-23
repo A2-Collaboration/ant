@@ -68,6 +68,9 @@ ParticleTypeTreeDatabase::database_t ParticleTypeTreeDatabase::CreateDatabase()
     add_Pi0_2g(database[Channel::Direct3Pi0_4ggEpEm]);
     add_Pi0_gEpEm(database[Channel::Direct3Pi0_4ggEpEm]);
 
+    database[Channel::DirectPi0Eta_4g] = GetBaseTree();
+    add_Pi0_2g(database[Channel::DirectPi0Eta_4g]);
+    add_Type_2g(database[Channel::DirectPi0Eta_4g], ParticleTypeDatabase::Eta);
 
     auto make_Omega_gPseudoscalar_3g = [] (const ParticleTypeDatabase::Type& etapi_type) {
         auto t = GetBaseTree();

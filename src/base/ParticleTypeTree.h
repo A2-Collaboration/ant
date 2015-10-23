@@ -17,6 +17,7 @@ public:
         Direct1Pi0_2g,
         Direct2Pi0_2ggEpEm,
         Direct3Pi0_4ggEpEm,
+        DirectPi0Eta_4g,
         Omega_gEta_3g,
         Omega_gPi0_3g,
         EtaPrime_2g,
