@@ -3,6 +3,7 @@
 #include "utils/combinatorics.h"
 #include "base/std_ext/math.h"
 #include "data/Particle.h"
+#include "utils/particle_tools.h"
 
 #include <algorithm>
 #include <cassert>
@@ -41,6 +42,8 @@ Etap3pi0::Etap3pi0(const std::string& name, PhysOptPtr opts) :
 
     dalitz_xy     = HistFac.makeTH2D("dalitz","s1","s3",BinSettings(100,0,0),BinSettings(100,0,0));
     dalitz_z      = HistFac.makeTH1D("dalitz - radial","z = x^{2} + y^{2}","#",BinSettings(100,0,0));
+
+    h6photonEvents =   HistFac.makeTH1D("6 #gamma events", "", "#", BinSettings(15),"6gEvt");
 
 }
 
@@ -185,20 +188,22 @@ void Etap3pi0::ProcessEvent(const data::Event& event)
     if (photons.size() != 6 )
         return;
 
+
+
     result_t result_3pi0    = Make3pi0(photons);
     result_t result_eta2pi0 = MakeEta2pi0(photons);
     result_t result_mc      = MakeMC3pi0(mcdata);
 
-
     const double chi2cut(3);
 
-    if (result_3pi0.Chi2_mother < chi2cut && result_3pi0.Chi2_intermediate < chi2cut)
+    if (result_3pi0.chi2() < chi2cut )
     {
         FillIm(result_3pi0, ParticleTypeDatabase::Pi0, ch_3pi0_IM_pi0);
         FillImEtaPrime(result_3pi0,ch_3pi0_IM_etap);
+        h6photonEvents->Fill(utils::ParticleTools::GetDecayString(mcdata.ParticleTree()).c_str(),1);
     }
 
-    if (result_eta2pi0.Chi2_mother < chi2cut && result_eta2pi0.Chi2_intermediate < chi2cut)
+    if (result_eta2pi0.chi2() < chi2cut)
     {
         FillIm(result_eta2pi0, ParticleTypeDatabase::Pi0, ch_eta2pi0_IM_pions);
         FillIm(result_eta2pi0, ParticleTypeDatabase::Eta, ch_eta2pi0_IM_etas);
@@ -208,13 +213,13 @@ void Etap3pi0::ProcessEvent(const data::Event& event)
     if ( result_mc.success)
     {
         DalitzVars channel(result_mc);
-        mcdalitz_xy->Fill(channel.s1,channel.s3);
+        mcdalitz_xy->Fill(channel.x,channel.y);
         mcdalitz_z->Fill(channel.z);
     }
-    if (result_3pi0.Chi2_mother < chi2cut && result_3pi0.Chi2_intermediate < chi2cut )
+    if (result_3pi0.chi2() < chi2cut)
     {
         DalitzVars channel(result_3pi0);
-        dalitz_xy->Fill(channel.s1,channel.s3);
+        dalitz_xy->Fill(channel.x,channel.y);
         dalitz_z->Fill(channel.z);
     }
 
@@ -225,6 +230,9 @@ void Etap3pi0::ShowResult()
 {
     canvas("Crosschecks")       << h2g << h6g
                                 << hNgamma << hNgammaMC
+                                << endc;
+
+    canvas("channels")          << h6photonEvents
                                 << endc;
 
     canvas("Invaraiant Masses") << ch_eta2pi0_IM_pions << ch_eta2pi0_IM_etas << ch_eta2pi0_IM_etap
@@ -258,17 +266,18 @@ Etap3pi0::DalitzVars::DalitzVars(Etap3pi0::result_t r)
     s2 = (r.mother - *(r.mesons[1].first)).M2();
     s3 = (r.mother - *(r.mesons[2].first)).M2();
 
-//    TMean = r.etaprime.M();
+    TMean = 0;
     for (const auto& meson: r.mesons)
-        TMean -= meson.first->M();
+        TMean += meson.first->Ek();
     TMean = TMean / 3.0;
 
     x = ( r.mesons[0].first->Ek() - r.mesons[1].first->Ek() ) / ( TMath::Sqrt(3) * TMean);
 
-    y = 0;
-    for (const auto& meson: r.mesons)
-        y += meson.first->M();
-    y = y / ( 3 * r.mother.M());
+//    y = 0;
+//    for (const auto& meson: r.mesons)
+//        y += meson.first->M();
+//    y = y / ( 3 * r.mother.M());
+    y = 1;
     y = (y * r.mesons[2].first->Ek() / TMean) - 1;
 
     z = std_ext::sqr(x) + std_ext::sqr(y);

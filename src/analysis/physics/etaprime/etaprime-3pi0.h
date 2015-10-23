@@ -53,6 +53,7 @@ protected:
     struct result_t {
         double Chi2_intermediate = std::numeric_limits<double>::infinity();
         double Chi2_mother       = std::numeric_limits<double>::infinity();
+        double chi2() const { return Chi2_mother + Chi2_intermediate; }
 
         bool success = false;
 
@@ -62,10 +63,6 @@ protected:
         TLorentzVector mother;
 
         result_t() : g_final(6), mesons(3), mother(0,0,0,0){}
-
-
-        // void AddBranches();
-        // void FillHists();
     };
 
     struct DalitzVars
@@ -93,6 +90,7 @@ protected:
     TH1D* hNgammaMC;
     TH1D* h2g;
     TH1D* h6g;
+    TH1D* h6photonEvents;
 
     TH1D* ch_3pi0_IM_etap;
     TH1D* ch_3pi0_IM_pi0;
