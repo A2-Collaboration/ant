@@ -229,6 +229,8 @@ protected:
     double Chi2_Eta[3] = {};
     char   bestEtaIn = 0;
     char   bestPi0In = 0;
+    char   bestChiIn = 0;
+    char   bestHyp   = 0; // 1== Eta, 2==Pi0, 0==??
 
     double EgOmegaSys[3] = {};
 

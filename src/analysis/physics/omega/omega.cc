@@ -634,6 +634,14 @@ void OmegaEtaG2::Analyse(const Event::Data &data, const Event &event)
         bestEtaIn = best_eta.index;
         bestPi0In = best_pi0.index;
 
+        if(best_eta.chi2 < best_pi0.chi2) {
+            bestChiIn = best_eta.chi2;
+            bestHyp = 1;
+        } else {
+            bestChiIn = best_pi0.chi2;
+            bestHyp = 2;
+        }
+
         tree->Fill();
 
     }
@@ -719,6 +727,8 @@ OmegaEtaG2::OmegaEtaG2(const std::string& name, PhysOptPtr opts):
     tree->Branch("EgOmegaSys[3]",    EgOmegaSys,"EgOmegaSys[3]/D");
     tree->Branch("bestEta", &bestEtaIn);
     tree->Branch("bestPi0", &bestPi0In);
+    tree->Branch("bestChi", &bestChiIn);
+    tree->Branch("bestHyp", &bestHyp);
 
     signal_tree = ParticleTypeTreeDatabase::Get(ParticleTypeTreeDatabase::Channel::Omega_gEta_3g);
     reference_tree = ParticleTypeTreeDatabase::Get(ParticleTypeTreeDatabase::Channel::Omega_gPi0_3g);
