@@ -113,17 +113,24 @@ EtapOmegaG::sig_perDecayHists_t::sig_perDecayHists_t(SmartHistFactory HistFac)
 {
     Steps = HistFac.makeTH1D("Steps", "", "#", BinSettings(10),"steps");
 
-    BinSettings bins_im(1200);
+    const BinSettings bins_im(1200);
 
     gggg = HistFac.makeTH1D("4#gamma IM","4#gamma IM / MeV","events",bins_im,"gggg");
     ggg = HistFac.makeTH1D("3#gamma IM","3#gamma IM / MeV","events",bins_im,"ggg");
     gg = HistFac.makeTH1D("2#gamma IM","2#gamma IM / MeV","events",bins_im,"gg");
 
+    const BinSettings bins_goldhaber(400, 0, 800);
+    const string axislabel_goldhaber("2#gamma IM / MeV");
+
     IM_gg_gg = HistFac.makeTH2D("IM 2#gamma vs. 2#gamma (Goldhaber plot)",
-                                "2#gamma IM / MeV", "2#gamma IM / MeV",
-                                BinSettings(400, 0, 800),
-                                BinSettings(400, 0, 800),
+                                axislabel_goldhaber, axislabel_goldhaber,
+                                bins_goldhaber, bins_goldhaber,
                                 "IM_gg_gg"
+                                );
+    IM_gg_gg_cut = HistFac.makeTH2D("IM 2#gamma vs. 2#gamma after cut",
+                                axislabel_goldhaber, axislabel_goldhaber,
+                                bins_goldhaber, bins_goldhaber,
+                                "IM_gg_gg_cut"
                                 );
 
     Proton_Copl = HistFac.makeTH1D<TH1Dcut>("p Coplanarity","#delta#phi / degree","",BinSettings(400,-180,180),"Proton_Coplanarity");
@@ -316,7 +323,8 @@ void EtapOmegaG::ProcessSig(const data::ParticleTree_t& particletree,
     const auto IM_pi0_cut = Pi0.makeCutInterval();
     const auto IM_eta_cut = Eta.makeCutInterval();
 
-    for(auto i : std::initializer_list<std::vector<unsigned>>({{0,1,2,3},{0,2,1,3},{0,3,1,2}})) {
+    auto goldhaber_comb = std::vector<std::vector<unsigned>>({{0,1,2,3},{0,2,1,3},{0,3,1,2}});
+    for(auto i : goldhaber_comb) {
         auto& p = photons;
         const TLorentzVector pair1(*p[i[0]]+*p[i[1]]);
         const TLorentzVector pair2(*p[i[2]]+*p[i[3]]);
@@ -338,6 +346,13 @@ void EtapOmegaG::ProcessSig(const data::ParticleTree_t& particletree,
     if(is_pi0eta)
         return;
     steps->Fill("Not #pi^{0}#eta",1);
+
+    for(auto i : goldhaber_comb) {
+        auto& p = photons;
+        const TLorentzVector pair1(*p[i[0]]+*p[i[1]]);
+        const TLorentzVector pair2(*p[i[2]]+*p[i[3]]);
+        h.IM_gg_gg_cut->Fill(pair1.M(), pair2.M());
+    }
 
 
     // bottom-up assignment of photons using Chi2
@@ -581,6 +596,7 @@ void EtapOmegaG::ShowResult()
           << h.MM_gggg
           << h.Proton_Copl
           << drawoption("colz") << h.IM_gg_gg
+          << drawoption("colz") << h.IM_gg_gg_cut
           << h.g_EtaPrime_E
           << h.Chi2_All << h.Chi2_Best
           << h.IM_pi0
