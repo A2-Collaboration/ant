@@ -128,14 +128,6 @@ EtapOmegaG::sig_perDecayHists_t::sig_perDecayHists_t(SmartHistFactory HistFac)
     Chi2_All = HistFac.makeTH1D("#chi^{2} all","#chi^{2}","",BinSettings(300,0,100),"Chi2_All");
     Chi2_Best = HistFac.makeTH1D("#chi^{2} minimal","#chi^{2}","",BinSettings(300,0,12),"Chi2_Min");
 
-    Proton_ThetaPhi = HistFac.makeTH2D("p #delta(#theta-#phi)",
-                                       "#delta#theta / degree",
-                                       "#delta#phi / degree",
-                                       BinSettings(100, -10, 10),
-                                       BinSettings(100, -30, 30),
-                                       "Proton_ThetaPhi"
-                                       );
-    Proton_Energy = HistFac.makeTH1D("p #delta(E)","#deltaE / MeV","",BinSettings(400,-50,350),"Proton_Energy");
 }
 
 EtapOmegaG::ref_perDecayHists_t::ref_perDecayHists_t(SmartHistFactory HistFac)
@@ -385,14 +377,6 @@ void EtapOmegaG::ProcessSig(const data::ParticleTree_t& particletree,
         const TLorentzVector beam_target = th->PhotonBeam() + TLorentzVector(0, 0, 0, ParticleTypeDatabase::Proton.Mass());
         const TLorentzVector mm = beam_target - result.EtaPrime;
         h.MM_etap->Fill(mm.M());
-
-        // don't assume we always have a proton...
-        if(proton) {
-            const double diff_Theta = mm.Theta() - proton->Theta();
-            const double diff_Phi = mm.Phi() - proton->Phi();
-            h.Proton_ThetaPhi->Fill(std_ext::radian_to_degree(diff_Theta), std_ext::radian_to_degree(diff_Phi));
-            h.Proton_Energy->Fill(mm.E() - proton->E());
-        }
     }
 
     // fill tree
@@ -544,8 +528,6 @@ void EtapOmegaG::ShowResult()
           << h.IM_pi0
           << drawoption("colz") << h.IM_etap_omega
           << h.MM_etap
-          << drawoption("colz") <<  h.Proton_ThetaPhi
-          << h.Proton_Energy
           << endc;
     }
 
