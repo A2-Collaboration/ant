@@ -26,13 +26,21 @@ EtapOmegaG::EtapOmegaG(const std::string& name, PhysOptPtr opts) : Physics(name,
     sig_TTree(sig_HistFac.makeTTree("tree")),
     ref_TTree(ref_HistFac.makeTTree("tree"))
 {
+    h_TotalEvents = HistFac.makeTH1D("Total Events", "", "#", BinSettings(5),"h_TotalEvents");
+    h_TotalEvents->Fill("Total",0);
+    h_TotalEvents->Fill("Signal",0);
+    h_TotalEvents->Fill("Reference",0);
+
     sig_TTree.SetBranches();
     ref_TTree.SetBranches();
+
+    treeSignal = ParticleTypeTreeDatabase::Get(ParticleTypeTreeDatabase::Channel::EtaPrime_gOmega_ggPi0_4g);
+    treeReference = ParticleTypeTreeDatabase::Get(ParticleTypeTreeDatabase::Channel::EtaPrime_2g);
 
     sig_perDecayHists.emplace_back(
                 "Signal",
                 sig_HistFac,
-                ParticleTypeTreeDatabase::Get(ParticleTypeTreeDatabase::Channel::EtaPrime_gOmega_ggPi0_4g)
+                treeSignal
                 );
     sig_perDecayHists.emplace_back(
                 "Sig_Bkg_2pi0",
@@ -80,7 +88,7 @@ EtapOmegaG::EtapOmegaG(const std::string& name, PhysOptPtr opts) : Physics(name,
     ref_perDecayHists.emplace_back(
                 "Reference",
                 ref_HistFac,
-                ParticleTypeTreeDatabase::Get(ParticleTypeTreeDatabase::Channel::EtaPrime_2g)
+                treeReference
                 );
     ref_perDecayHists.emplace_back(
                 "Ref_Bkg_2pi0",
@@ -195,8 +203,20 @@ void EtapOmegaG::ProcessEvent(const data::Event& event)
 {
     const auto& data = event.Reconstructed();
 
-    ProcessRef(event.MCTrue().ParticleTree(), data);
-    ProcessSig(event.MCTrue().ParticleTree(), data);
+    auto& particletree = event.MCTrue().ParticleTree();
+
+    ProcessRef(particletree, data);
+    ProcessSig(particletree, data);
+
+    h_TotalEvents->Fill("Total",1);
+    if(particletree) {
+        if(particletree->IsEqual(treeSignal, utils::ParticleTools::MatchByParticleName)) {
+            h_TotalEvents->Fill("Signal",1);
+        }
+        else if(particletree->IsEqual(treeReference, utils::ParticleTools::MatchByParticleName)) {
+            h_TotalEvents->Fill("Reference",1);
+        }
+    }
 }
 
 template<typename T>
@@ -290,8 +310,9 @@ void EtapOmegaG::ProcessSig(const data::ParticleTree_t& particletree,
 
     // fill Goldhaber plot and make cut
     bool is_pi0pi0 = false;
-    const double sigma = 2*Pi0.Sigma;
-    const interval<double> IM_pi0_cut(Pi0.Mean-sigma,Pi0.Mean+sigma);
+    bool is_pi0eta = false;
+    const auto IM_pi0_cut = Pi0.makeCutInterval();
+    const auto IM_eta_cut = Eta.makeCutInterval();
 
     for(auto i : std::initializer_list<std::vector<unsigned>>({{0,1,2,3},{0,2,1,3},{0,3,1,2}})) {
         auto& p = photons;
@@ -301,10 +322,21 @@ void EtapOmegaG::ProcessSig(const data::ParticleTree_t& particletree,
         if(   IM_pi0_cut.Contains(pair1.M())
            && IM_pi0_cut.Contains(pair2.M()))
             is_pi0pi0 = true;
+        if(   IM_eta_cut.Contains(pair1.M())
+           && IM_pi0_cut.Contains(pair2.M()))
+            is_pi0eta = true;
+        if(   IM_pi0_cut.Contains(pair1.M())
+           && IM_eta_cut.Contains(pair2.M()))
+            is_pi0eta = true;
     }
     if(is_pi0pi0)
         return;
     steps->Fill("Not #pi^{0}#pi^{0}",1);
+
+    if(is_pi0eta)
+        return;
+    steps->Fill("Not #pi^{0}#eta",1);
+
 
     // bottom-up assignment of photons using Chi2
 
@@ -528,8 +560,10 @@ void EtapOmegaG::Finish()
 
 void EtapOmegaG::ShowResult()
 {
-    canvas c_steps(GetName()+": Steps");
-    c_steps << sig_hists.Steps << sig_hists.MissedBkg
+    canvas c_steps(GetName()+": Overview");
+    c_steps << h_TotalEvents
+            << sig_hists.Steps << sig_hists.MissedBkg
+            << h_TotalEvents // draw it 2x to maintain layout...
             << ref_hists.Steps << ref_hists.MissedBkg
             << endc;
 

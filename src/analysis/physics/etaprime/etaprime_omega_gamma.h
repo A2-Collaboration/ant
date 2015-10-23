@@ -20,17 +20,27 @@ class EtapOmegaG : public Physics {
         double Sigma;
         expected_peak_t(double mean, double sigma) :
             Mean(mean), Sigma(sigma) {}
+        interval<double> makeCutInterval(unsigned nSigma=2) const {
+            return {Mean-nSigma*Sigma,Mean+nSigma*Sigma};
+        }
     };
 
     // means/sigma extracted from gg/ggg/gggg histograms for signal channel
     const expected_peak_t Pi0 = {126, 15};
+    const expected_peak_t Eta = {515, 18};
     const expected_peak_t Omega = {735, 32};
     const expected_peak_t EtaPrime_sig = {895, 27};
     // extracted from gg histogram for reference channel
     const expected_peak_t EtaPrime_ref = {905, 29};
 
+    ParticleTypeTree treeSignal;
+    ParticleTypeTree treeReference;
+
+
     SmartHistFactory sig_HistFac;
     SmartHistFactory ref_HistFac;
+
+    TH1D* h_TotalEvents;
 
     struct histogram_t {
         TH1D* Steps;
