@@ -1,6 +1,9 @@
 #pragma once
 
 #include "analysis/physics/Physics.h"
+
+#include <APLCON.hpp>
+
 class TH1D;
 class TTree;
 
@@ -12,7 +15,7 @@ class Etap3pi0 : public Physics {
 
 protected:
 
-   // =======================   constants =====================================================
+    // =======================   constants =====================================================
 
     const double IM_mean_etaprime = 906.0;
     const double IM_sigma_etaprime = 26.3;
@@ -46,7 +49,39 @@ protected:
         { {0, 5}, {1, 4}, {2, 3} }
     };
 
-   // =======================   structs   =====================================================
+    // =======================   aplcon    =====================================================
+
+
+    struct KinFitter
+    {
+
+        struct kinVector
+        {
+            double Ek;
+            double Theta;
+            double Phi;
+            std::vector<double*> Adresses()
+            {
+                return { std::addressof(Ek),
+                         std::addressof(Theta),
+                         std::addressof(Phi)};
+            }
+        };
+
+        APLCON aplcon;
+
+        double EgammaBeam;
+        double SigmaEgammaBeam;
+        kinVector ProtonTAPS;
+        kinVector SigmaProtonTAPS;
+        std::vector<kinVector> Photons;
+        std::vector<kinVector> SigmaPhotons;
+
+        KinFitter();
+    };
+
+
+    // =======================   structs   =====================================================
 
     using MesonCandidate = std::pair<data::ParticlePtr,double>;    // <particle,chi2>
 
@@ -81,7 +116,7 @@ protected:
         DalitzVars(result_t r);
     };
 
-   // =======================   datastorage  ==================================================
+    // =======================   datastorage  ==================================================
 
     std::string dataset;
 
@@ -105,6 +140,7 @@ protected:
     TH2D* dalitz_xy;
 
     void FillCrossChecks(const data::ParticleList& photons, const data::ParticleList& mcphotons);
+
 
     Etap3pi0::result_t Make3pi0(const data::ParticleList& photons);
     Etap3pi0::result_t MakeEta2pi0(const data::ParticleList& photons);

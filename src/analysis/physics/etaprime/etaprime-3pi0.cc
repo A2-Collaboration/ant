@@ -284,4 +284,27 @@ Etap3pi0::DalitzVars::DalitzVars(Etap3pi0::result_t r)
 
 }
 
+
+
+Etap3pi0::KinFitter::KinFitter():
+    aplcon("Kinfitter"),
+    Photons(6),
+    SigmaPhotons(6)
+{
+    aplcon.LinkVariable("EBEAM",
+                        { addressof(EgammaBeam) },
+                        { addressof(SigmaEgammaBeam) });
+    aplcon.LinkVariable("ProtonTAPS",
+                        ProtonTAPS.Adresses(),
+                        SigmaProtonTAPS.Adresses());
+
+    assert(Photons.size() == SigmaPhotons.size());
+    for ( unsigned i = 0; i < Photons.size(); ++i)
+    {
+        aplcon.LinkVariable(formatter() << "Photon" << i,
+                            Photons.at(i).Adresses(),
+                            SigmaPhotons.at(i).Adresses());
+    }
+}
+
 AUTO_REGISTER_PHYSICS(Etap3pi0)
