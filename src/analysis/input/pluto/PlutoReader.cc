@@ -56,7 +56,7 @@ PlutoReader::PlutoReader(const std::shared_ptr<WrapTFileInput>& rootfiles, const
             tid_from_file = true;
     }
 
-    LOG(INFO) << "Pluto input active";
+    LOG(INFO) << "MCTrue input active, " << (tid_from_file ? "with" : " WITHOUT") << " TID match check";
 }
 
 PlutoReader::~PlutoReader() {}

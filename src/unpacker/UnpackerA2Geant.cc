@@ -125,7 +125,9 @@ bool UnpackerA2Geant::OpenFile(const string& filename)
 
 
     LOG(INFO) << "Successfully opened '" << filename
-              << "' with " << geant->GetEntries() << " entries";
+              << "' with " << geant->GetEntries() << " entries, "
+              << (tid_from_file ? "with" : " WITHOUT") << " TID match check";
+
 
     return true;
 }
