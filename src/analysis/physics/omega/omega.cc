@@ -691,7 +691,7 @@ OmegaEtaG2::OmegaEtaG2(const std::string& name, PhysOptPtr opts):
     photon_cut.Theta_range = degree_to_radian(interval<double>( 2, 160));
 
 
-    tree = new TTree("omegaetag2","");
+    tree = HistFac.makeTTree("tree");
 
     pbranch.SetBranches(tree, "p");
     tree->Branch("pTime", &pTime);
