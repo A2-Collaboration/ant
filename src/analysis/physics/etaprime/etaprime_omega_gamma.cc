@@ -4,6 +4,8 @@
 #include "base/Logger.h"
 #include "base/std_ext/math.h"
 
+#include "plot/TH1Dcut.h"
+
 #include <cassert>
 #include <numeric>
 
@@ -116,7 +118,7 @@ EtapOmegaG::sig_perDecayHists_t::sig_perDecayHists_t(SmartHistFactory HistFac)
                                 "IM_gg_gg"
                                 );
 
-    Proton_Copl = HistFac.makeTH1D("p Coplanarity","#delta#phi / degree","",BinSettings(400,-180,180),"Proton_Coplanarity");
+    Proton_Copl = HistFac.makeTH1D<TH1Dcut>("p Coplanarity","#delta#phi / degree","",BinSettings(400,-180,180),"Proton_Coplanarity");
 
     IM_etap_omega = HistFac.makeTH2D("#eta' vs. #omega IM",
                                "#eta' IM / MeV",

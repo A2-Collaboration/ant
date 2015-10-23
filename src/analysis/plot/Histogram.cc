@@ -32,15 +32,8 @@ UInt_t HistogramFactory::GetNextHistnum()
 HistogramFactory* HistogramFactory::instance = new HistogramFactory();
 
 
-TH1D *HistogramFactory::Make1D(const string &title, const string &xlabel, const string &ylabel, const BinSettings& bins, const string &name)
-{
+//TH1D* HistogramFactory::Make1D(const string &title, const string &xlabel, const string &ylabel, const BinSettings& bins, const string &name)
 
-    TH1D* h = new TH1D( GetNextHistName(name).c_str(), title.c_str(), bins.Bins(), bins.Start(), bins.Stop());
-    h->SetXTitle(xlabel.c_str());
-    h->SetYTitle(ylabel.c_str());
-    h->SetLineColor(GetNextColor());
-    return h;
-}
 
 TH2D *HistogramFactory::Make2D(const std::string& title, const std::string& xlabel, const std::string& ylabel, const BinSettings& xbins, const BinSettings& ybins, const string &name)
 {

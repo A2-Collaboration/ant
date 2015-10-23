@@ -60,7 +60,16 @@ public:
      * @param name optional name. If "", a number will be inserted
      * @return A pointer to the new histogram
      */
-    TH1D* Make1D (const std::string& title, const std::string& xlabel, const std::string& ylabel, const BinSettings& bins=BinSettings(100,0,100), const std::string& name="");
+    template<class Hist = TH1D>
+    Hist* Make1D (const std::string& title, const std::string& xlabel, const std::string& ylabel, const BinSettings& bins=BinSettings(100,0,100), const std::string& name="")
+    {
+
+        Hist* h = new Hist( GetNextHistName(name).c_str(), title.c_str(), bins.Bins(), bins.Start(), bins.Stop());
+        h->SetXTitle(xlabel.c_str());
+        h->SetYTitle(ylabel.c_str());
+        h->SetLineColor(GetNextColor());
+        return h;
+    }
 
     /**
      * @brief Make a new 2D histogram

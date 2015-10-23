@@ -60,6 +60,7 @@ set(ANALYSIS_PLOT
   plot/root_draw.cc
   plot/SmartHist.cc
   plot/HistogramFactories.cc
+  plot/TH1Dcut.cc
 )
 
 set(ANALYSIS_UTILS

@@ -38,13 +38,20 @@ public:
     void SetTitlePrefix(const std::string& title_prefix_);
 
 
-
-    TH1D* makeTH1D(
+    template<class Hist = TH1D>
+    Hist* makeTH1D(
             const std::string& title,
             const std::string& xlabel,
             const std::string& ylabel,
             const BinSettings& bins,
-            const std::string& name="");
+            const std::string& name="")
+    {
+
+        TDirectory* old = goto_dir();
+        Hist* r = base_factory.Make1D<Hist>(MakeTitle(title),xlabel,ylabel,bins,name);
+        restore_dir(old);
+        return r;
+    }
 
     TH2D* makeTH2D(
             const std::string& title,

@@ -62,15 +62,7 @@ void SmartHistFactory::SetTitlePrefix(const string& title_prefix_)
 }
 
 
-TH1D *SmartHistFactory::makeTH1D(const string &title, const string &xlabel, const string &ylabel, const BinSettings &bins, const string &name)
-{
 
-    TDirectory* old = goto_dir();
-    TH1D* r = base_factory.Make1D(MakeTitle(title),xlabel,ylabel,bins,name);
-    restore_dir(old);
-    return r;
-
-}
 
 TH2D *SmartHistFactory::makeTH2D(const string &title, const string &xlabel, const string &ylabel, const BinSettings &xbins, const BinSettings &ybins, const string &name)
 {
