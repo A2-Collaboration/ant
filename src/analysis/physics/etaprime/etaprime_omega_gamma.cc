@@ -38,6 +38,11 @@ EtapOmegaG::EtapOmegaG(const std::string& name, PhysOptPtr opts) : Physics(name,
                 ParticleTypeTreeDatabase::Get(ParticleTypeTreeDatabase::Channel::Direct2Pi0_4g)
                 );
     sig_perDecayHists.emplace_back(
+                "Sig_Bkg_pi0eta",
+                sig_HistFac,
+                ParticleTypeTreeDatabase::Get(ParticleTypeTreeDatabase::Channel::DirectPi0Eta_4g)
+                );
+    sig_perDecayHists.emplace_back(
                 "Sig_Bkg_3pi0",
                 sig_HistFac,
                 ParticleTypeTreeDatabase::Get(ParticleTypeTreeDatabase::Channel::Direct3Pi0_6g)
@@ -128,7 +133,7 @@ EtapOmegaG::sig_perDecayHists_t::sig_perDecayHists_t(SmartHistFactory HistFac)
     Chi2_All = HistFac.makeTH1D("#chi^{2} all","#chi^{2}","",BinSettings(300,0,100),"Chi2_All");
     Chi2_Best = HistFac.makeTH1D("#chi^{2} minimal","#chi^{2}","",BinSettings(300,0,12),"Chi2_Min");
 
-    g_EtaPrime_E = HistFac.makeTH1D("#eta' #gamma energy boosted","E / MeV","#",BinSettings(500,0,300),"g_EtaPrime_E");
+    g_EtaPrime_E = HistFac.makeTH1D("#gamma^{#eta'} E in #eta'","E / MeV","#",BinSettings(500,0,300),"g_EtaPrime_E");
 }
 
 EtapOmegaG::ref_perDecayHists_t::ref_perDecayHists_t(SmartHistFactory HistFac)
@@ -170,6 +175,7 @@ void EtapOmegaG::sig_TTree_t::SetBranches()
     g_Pi0_1.SetBranches(Tree, "g_Pi0_1");
     g_Omega.SetBranches(Tree, "g_Omega");
     g_EtaPrime.SetBranches(Tree, "g_EtaPrime");
+    g_EtaPrime_Boosted.SetBranches(Tree, "g_EtaPrime_Boosted");
 
     Pi0.SetBranches(Tree,"Pi0");
     Omega.SetBranches(Tree, "Omega");
@@ -273,11 +279,12 @@ void EtapOmegaG::ProcessSig(const data::ParticleTree_t& particletree,
 
     // proton coplanarity
     const double d_phi = std_ext::radian_to_degree(TVector2::Phi_mpi_pi(proton->Phi()-photon_sum.Phi() - M_PI ));
+    h.Proton_Copl->Fill(d_phi);
+
     const interval<double> Proton_Copl_cut(-19, 19);
     if(!Proton_Copl_cut.Contains(d_phi))
         return;
     steps->Fill("Copl p in 2#sigma",1);
-    h.Proton_Copl->Fill(d_phi);
 
     // fill Goldhaber plot and make cut
     bool is_pi0pi0 = false;
@@ -359,6 +366,7 @@ void EtapOmegaG::ProcessSig(const data::ParticleTree_t& particletree,
     while(next_permutation(indices.begin(), indices.end(), comparer));
 
     // photon assignment successful?
+    h.Chi2_Best->Fill(result.Chi2);
     if(result.Chi2>=10)
         return;
     steps->Fill("MinChi2<10",1);
@@ -370,10 +378,8 @@ void EtapOmegaG::ProcessSig(const data::ParticleTree_t& particletree,
 
     h.g_EtaPrime_E->Fill(g_etap_boosted.E());
 
-
     h.IM_etap_omega->Fill(result.EtaPrime.M(), result.Omega.M());
     h.IM_pi0->Fill(result.Pi0.M());
-    h.Chi2_Best->Fill(result.Chi2);
 
     // was this some unidentified channel?
     if(other_channel) {
@@ -405,6 +411,8 @@ void EtapOmegaG::ProcessSig(const data::ParticleTree_t& particletree,
     sig_TTree.g_Pi0_1 = *result.g_pi0_1;
     sig_TTree.g_Omega = *result.g_omega;
     sig_TTree.g_EtaPrime = *result.g_etap;
+    sig_TTree.g_EtaPrime_Boosted = utils::ParticleVars(g_etap_boosted, ParticleTypeDatabase::Photon);
+
 
     sig_TTree.Pi0 = utils::ParticleVars(result.Pi0, ParticleTypeDatabase::Pi0);
     sig_TTree.Omega = utils::ParticleVars(result.Omega, ParticleTypeDatabase::Omega);

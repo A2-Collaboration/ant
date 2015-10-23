@@ -124,6 +124,7 @@ class EtapOmegaG : public Physics {
         utils::ParticleVars g_Pi0_1;
         utils::ParticleVars g_Omega;
         utils::ParticleVars g_EtaPrime;
+        utils::ParticleVars g_EtaPrime_Boosted;
         utils::ParticleVars Pi0;
         utils::ParticleVars Omega;
         utils::ParticleVars EtaPrime;
