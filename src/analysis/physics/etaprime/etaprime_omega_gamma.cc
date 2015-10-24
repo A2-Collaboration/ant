@@ -28,6 +28,7 @@ EtapOmegaG::EtapOmegaG(const std::string& name, PhysOptPtr opts) : Physics(name,
 {
     h_TotalEvents = HistFac.makeTH1D("Total Events", "", "#", BinSettings(5),"h_TotalEvents");
     h_TotalEvents->Fill("Total",0);
+    h_TotalEvents->Fill("#eta'", 0);
     h_TotalEvents->Fill("Signal",0);
     h_TotalEvents->Fill("Reference",0);
 
@@ -217,12 +218,22 @@ void EtapOmegaG::ProcessEvent(const data::Event& event)
 
     h_TotalEvents->Fill("Total",1);
     if(particletree) {
-        if(particletree->IsEqual(treeSignal, utils::ParticleTools::MatchByParticleName)) {
-            h_TotalEvents->Fill("Signal",1);
+        // note: this might also match to g p -> eta' eta' p,
+        // but this is kinematically forbidden...
+        if(utils::ParticleTools::FindParticle(ParticleTypeDatabase::EtaPrime, particletree, 1)) {
+
+            h_TotalEvents->Fill("#eta'", 1);
+
+            if(particletree->IsEqual(treeSignal, utils::ParticleTools::MatchByParticleName)) {
+                h_TotalEvents->Fill("Signal",1);
+            }
+            else if(particletree->IsEqual(treeReference, utils::ParticleTools::MatchByParticleName)) {
+                h_TotalEvents->Fill("Reference",1);
+            }
         }
-        else if(particletree->IsEqual(treeReference, utils::ParticleTools::MatchByParticleName)) {
-            h_TotalEvents->Fill("Reference",1);
-        }
+
+
+
     }
 }
 
@@ -447,14 +458,11 @@ void EtapOmegaG::ProcessSig(const data::ParticleTree_t& particletree,
 
     // fill tree
     sig_TTree.Proton = *proton;
-    sig_TTree.ProtonTrue.Clear();
-    if(particletree) {
-        for(auto d : particletree->Daughters()) {
-            data::ParticlePtr p = d->Get();
-            if(p->Type() == ParticleTypeDatabase::Proton) {
-                sig_TTree.ProtonTrue = *p;
-            }
-        }
+    if(auto protonTrue = utils::ParticleTools::FindParticle(ParticleTypeDatabase::Proton, particletree, 1)) {
+        sig_TTree.ProtonTrue = *protonTrue;
+    }
+    else {
+        sig_TTree.ProtonTrue.Clear();
     }
 
     sig_TTree.Chi2 = result.Chi2;
@@ -530,21 +538,19 @@ void EtapOmegaG::ProcessRef(const data::ParticleTree_t& particletree,
 
     // proton coplanarity
     const double d_phi = std_ext::radian_to_degree(TVector2::Phi_mpi_pi(proton->Phi()-photon_sum.Phi() - M_PI ));
+    h.Proton_Copl->Fill(d_phi);
     const interval<double> Proton_Copl_cut(-19, 19);
     if(!Proton_Copl_cut.Contains(d_phi))
         return;
     steps->Fill("Copl p in 2#sigma",1);
-    h.Proton_Copl->Fill(d_phi);
 
+    auto IM_etap_cut = EtaPrime_ref.makeCutInterval();
 
-    const double sigma = 2*EtaPrime_ref.Sigma;
-    const interval<double> IM_etap_cut(EtaPrime_ref.Mean-sigma,EtaPrime_ref.Mean+sigma);
-
+    h.IM_etap->Fill(photon_sum.M());
     if(!IM_etap_cut.Contains(gg_im))
         return;
     steps->Fill("IM #eta' in 2#sigma",1);
 
-    h.IM_etap->Fill(photon_sum.M());
 
     // was this some unidentified channel?
     if(other_channel) {
