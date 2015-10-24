@@ -63,7 +63,9 @@ struct ParticleTools {
      * @param particles List to search in
      * @return The Particle found
      */
-    static const ant::analysis::data::ParticlePtr FindParticle(const ant::ParticleTypeDatabase::Type& type, const data::ParticleList& particles);
+    static const data::ParticlePtr FindParticle(const ParticleTypeDatabase::Type& type, const data::ParticleList& particles);
+
+    static const data::ParticlePtr FindParticle(const ParticleTypeDatabase::Type& type, const data::ParticleTree_t& particletree, size_t maxlevel);
 
 
     /**

@@ -135,6 +135,21 @@ const ParticlePtr ParticleTools::FindParticle(const ant::ParticleTypeDatabase::T
     return nullptr;
 }
 
+const ParticlePtr ParticleTools::FindParticle(const ParticleTypeDatabase::Type& type,
+                                              const ParticleTree_t& particletree,
+                                              size_t maxlevel)
+{
+    if(!particletree)
+        return nullptr;
+    ParticlePtr p_found = nullptr;
+    particletree->Map_level([&type, &p_found, maxlevel] (const ParticlePtr& p, size_t level) {
+        if(level <= maxlevel && !p_found && p->Type() == type) {
+            p_found = p;
+        }
+    });
+    return p_found;
+}
+
 void ParticleTools::FillIMCombinations(TH1* h, unsigned n, const ParticleList& particles)
 {
     for( auto comb = makeCombination(particles,n); !comb.Done(); ++comb) {
