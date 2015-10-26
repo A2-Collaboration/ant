@@ -64,7 +64,7 @@ protected:
         TaggerDetector_t(
             Detector_t::Type_t::EPT,
             beamEnergy,
-            2.0 // electronEnergyWidth
+            3.2 // electronEnergyWidth
             ),
         elements(elements_init)
     {
