@@ -25,7 +25,7 @@ public:
      * @param width the width
      * @return an interval that spans symmetrically around center with given width
      */
-    static interval CenterWidth( const T center, const T width) {
+    constexpr static interval CenterWidth( const T center, const T width) {
         return std::move( interval(center - width/2.0, center + width/2.0));
     }
 
