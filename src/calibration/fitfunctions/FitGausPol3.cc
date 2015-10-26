@@ -65,7 +65,7 @@ void ant::calibration::gui::FitGausPol3::Draw()
 
 void ant::calibration::gui::FitGausPol3::Fit(TH1* hist)
 {
-    hist->Fit(combined, "RBQN");
+    FitFunction::doFit(hist, combined);
     sync();
 }
 

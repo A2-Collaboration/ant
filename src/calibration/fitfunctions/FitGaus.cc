@@ -40,7 +40,7 @@ void FitGaus::Draw()
 
 void FitGaus::Fit(TH1 *hist)
 {
-    hist->Fit(func,"RBQN");
+    FitFunction::doFit(hist, func);
 }
 
 void FitGaus::SetDefaults(TH1 *hist)

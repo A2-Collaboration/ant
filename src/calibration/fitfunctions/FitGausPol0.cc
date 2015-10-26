@@ -42,7 +42,7 @@ void FitGausPol0::Draw()
 
 void FitGausPol0::Fit(TH1 *hist)
 {
-    hist->Fit(func,"RBQN");
+    FitFunction::doFit(hist, func);
 }
 
 void FitGausPol0::SetDefaults(TH1 *hist)

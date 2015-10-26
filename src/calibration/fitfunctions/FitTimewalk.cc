@@ -38,7 +38,7 @@ void FitTimewalk::Draw()
 
 void FitTimewalk::Fit(TH1 *hist)
 {
-    hist->Fit(func,"RBQN");
+    FitFunction::doFit(hist, func);
 }
 
 void FitTimewalk::SetDefaults(TH1*)
