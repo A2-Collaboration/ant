@@ -249,6 +249,4 @@ void Energy::GUI_CalibType::StoreFinishRange(const interval<TID>& range)
     }
 
     calibrationManager->Add(cdata);
-
-    LOG(INFO) << "Added " << cdata;
 }

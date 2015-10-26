@@ -24,7 +24,7 @@ public:
      * @brief Add the given calibration data to the database
      * @param cdata
      */
-    virtual void Add(TCalibrationData cdata) = 0;
+    virtual void Add(const TCalibrationData& cdata) = 0;
 
     /**
     *  \brief GetData Query the calibration database for specific TID
@@ -64,7 +64,7 @@ public:
     ~DataManager();
 
 
-    void Add(TCalibrationData cdata) override;
+    void Add(const TCalibrationData& cdata) override;
 
     bool GetData(const std::string& calibrationID, const TID& eventID, TCalibrationData& cdata) override;
 

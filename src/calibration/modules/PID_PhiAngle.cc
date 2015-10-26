@@ -356,7 +356,5 @@ void PID_PhiAngle::TheGUI::StoreFinishRange(const interval<TID>& range)
 
     calibrationManager->Add(cdata);
     calibrationManager->Add(cdata_offset);
-    LOG(INFO) << "Added TCalibrationData: " << cdata;
-    LOG(INFO) << "Added TCalibrationData: " << cdata_offset;
 }
 

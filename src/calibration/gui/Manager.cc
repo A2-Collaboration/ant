@@ -94,6 +94,12 @@ void Manager::BuildInputFiles(const vector<string>& filenames)
     LOG(INFO) << "Loaded " << input_files.size()
               << " files from " << filenames.size() << " provided filenames ("
               << 100*(double)input_files.size()/filenames.size() << " %)";
+    if(!input_files.empty()) {
+        LOG(INFO) << "Files TID range from "
+                  << input_files.front().range.Start()
+                  << " to "
+                  << input_files.back().range.Stop();
+    }
 }
 
 

@@ -322,6 +322,4 @@ void Time::TheGUI::StoreFinishRange(const interval<TID>& range)
     }
 
     calmgr->Add(cdata);
-
-    LOG(INFO) << "Added " << cdata;
 }

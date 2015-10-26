@@ -273,6 +273,5 @@ void CB_TimeWalk::TheGUI::StoreFinishRange(const interval<TID>& range)
     }
 
     calibrationManager->Add(cdata);
-    LOG(INFO) << "Added TCalibrationData: " << cdata;
 }
 

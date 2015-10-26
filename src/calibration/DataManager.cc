@@ -42,12 +42,18 @@ DataManager::~DataManager()
         dataBase->WriteToFolder(calibrationDataFolder);
 }
 
-void DataManager::Add(TCalibrationData cdata)
+void DataManager::Add(const TCalibrationData& cdata)
 {
     Init();
-    if(extendable)
-        cdata.Extendable = true;
-    dataBase->AddItem(cdata);
+    // explicitly copy the given object
+    // to modify its extendable flag
+    auto cdata_ = cdata;
+    if(extendable) {
+        VLOG(3) << "Flagged given TCalibrationData as extendable";
+        cdata_.Extendable = true;
+    }
+    dataBase->AddItem(cdata_);
+    LOG(INFO) << "Added " << cdata_;
 }
 
 
