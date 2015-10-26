@@ -6,6 +6,7 @@
 #include "base/Tree.h"
 #include "base/interval.h"
 #include "analysis/utils/particle_tools.h"
+#include "base/std_ext/math.h"
 
 #include <map>
 
@@ -234,6 +235,10 @@ protected:
     char     bestHyp   = 0; // 1== Eta, 2==Pi0, 0==??
 
     double EgOmegaSys[3] = {};
+
+    TH1D* steps;
+
+    const interval<double> complcut = std_ext::degree_to_radian(interval<double>::CenterWidth(180,30));
 
 
 public:

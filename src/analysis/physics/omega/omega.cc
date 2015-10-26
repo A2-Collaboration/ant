@@ -544,11 +544,21 @@ void OmegaEtaG2::Analyse(const Event::Data &data, const Event &event)
     const ParticleList& iphotons = data.Particles().Get(ParticleTypeDatabase::Photon);
     const ParticleList& iprotons = (data_proton ? event.Reconstructed() : event.MCTrue()).Particles().Get(ParticleTypeDatabase::Proton);
 
+    steps->Fill("0 Events seen", 1);
+
+    const auto Esum = data.TriggerInfos().CBEenergySum();
+
+    if(Esum < 550.0)
+        return;
+
+    steps->Fill("1 CBEsum", 1);
+
     if(iphotons.size() != 3)
         return;
 
     if(iprotons.size() != 1)
         return;
+
 
     const ParticleList protons = FilterParticles(getGeoAccepted(iprotons), proton_cut);
 
@@ -560,14 +570,13 @@ void OmegaEtaG2::Analyse(const Event::Data &data, const Event &event)
     if(photons.size() != 3)
         return;
 
-    const auto Esum = data.TriggerInfos().CBEenergySum();
-
-    if(Esum < 550.0)
-        return;
+    steps->Fill("2 nPhotons nProtons", 1);
 
     const auto& proton = protons.at(0);
 
-    const auto& mctrue_photons = event.MCTrue().Particles().Get(ParticleTypeDatabase::Photon);
+
+
+    //const auto& mctrue_photons = event.MCTrue().Particles().Get(ParticleTypeDatabase::Photon);
     rf = static_cast<int>(identify(event));
 
     pbranch = mParticleVars(*proton);
@@ -577,6 +586,14 @@ void OmegaEtaG2::Analyse(const Event::Data &data, const Event &event)
     gggTime  = TimeAvg(photons.begin(), photons.end());
     gggbranch = mParticleVars(ggg);
 
+
+    const auto compl_angle = fabs(TVector2::Phi_mpi_pi(proton->Phi() - ggg.Phi()));
+
+    if(!complcut.Contains(compl_angle))
+        return;
+
+    steps->Fill("3 Coplanarity", 1);
+
     g1branch = mParticleVars(*photons.at(0));
     g2branch = mParticleVars(*photons.at(1));
     g3branch = mParticleVars(*photons.at(2));
@@ -585,9 +602,7 @@ void OmegaEtaG2::Analyse(const Event::Data &data, const Event &event)
 
     Chi2_Omega = std_ext::sqr((gggbranch.IM - omega_peak.Mean) / omega_peak.Sigma);
 
-//    auto matchFct = [] (const ParticlePtr& p1, const ParticlePtr& p2) { return p1->Angle(p2->Vect()); };
 
-//    const auto matched = utils::match1to1(photons, mctrue_photons, matchFct, {0, degree_to_radian(50.0)});
 
 
     for(const TaggerHitPtr& t : data_tagger?data.TaggerHits():event.MCTrue().TaggerHits()) {
@@ -732,6 +747,10 @@ OmegaEtaG2::OmegaEtaG2(const std::string& name, PhysOptPtr opts):
 
     signal_tree = ParticleTypeTreeDatabase::Get(ParticleTypeTreeDatabase::Channel::Omega_gEta_3g);
     reference_tree = ParticleTypeTreeDatabase::Get(ParticleTypeTreeDatabase::Channel::Omega_gPi0_3g);
+
+    steps = HistFac.makeTH1D("Steps","Step","Events passed",BinSettings(14),"steps");
+
+
 }
 
 OmegaEtaG2::~OmegaEtaG2()
