@@ -52,36 +52,76 @@ protected:
     // =======================   aplcon    =====================================================
 
 
-    struct KinFitter
+    class KinFitter
     {
 
+    private:
         struct kinVector
         {
+            const std::string Name;
+            const unsigned nPhotons = 6;
+
             double Ek;
             double Theta;
             double Phi;
+
+            double sEk;
+            double sTheta;
+            double sPhi;
+
+            double energySmear(const double& E) const;
+
             std::vector<double*> Adresses()
             {
                 return { std::addressof(Ek),
                          std::addressof(Theta),
                          std::addressof(Phi)};
             }
+            std::vector<double*> Adresses_Sigma()
+            {
+                return { std::addressof(sEk),
+                         std::addressof(sTheta),
+                         std::addressof(sPhi)};
+            }
+
+            void SetEkThetaPhi(double ek, double theta, double phi);
+
+            kinVector(const std::string& name): Name(name) {}
         };
+
+        double taggerSmear( const double& E) const;
+        TLorentzVector GetVector(const std::vector<double>& EkThetaPhi, const double m) const;
 
         APLCON aplcon;
 
-        double EgammaBeam;
-        double SigmaEgammaBeam;
+        std::pair<double,double> EgammaBeam;
+        const std::string egammaName = "EBEAM";
         kinVector ProtonTAPS;
-        kinVector SigmaProtonTAPS;
         std::vector<kinVector> Photons;
-        std::vector<kinVector> SigmaPhotons;
 
-        KinFitter();
+        const double IM_Mother;
+
+    public:
+        KinFitter(const ParticleTypeDatabase::Type& motherParticle = ParticleTypeDatabase::EtaPrime);
+
+        void SetEgammaBeam(const double& ebeam);
+        void SetProtonTAPS(const data::ParticlePtr& proton);
+        void SetPhotons(const std::vector<data::ParticlePtr>& photons);
+
+        APLCON::Result_t DoFit() { return aplcon.DoFit(); }
     };
 
 
     // =======================   structs   =====================================================
+
+    enum class filterType {
+        Chi2,
+        KinFit,
+        ProtonInTaps,
+        ProtonTOF
+    };
+
+
 
     using MesonCandidate = std::pair<data::ParticlePtr,double>;    // <particle,chi2>
 
@@ -120,12 +160,19 @@ protected:
 
     std::string dataset;
 
+    KinFitter fitToEtaPrime;
+    APLCON::Result_t result_fitToEtaPrime;
+
     // xchecks
     TH1D* hNgamma;
     TH1D* hNgammaMC;
     TH1D* h2g;
     TH1D* h6g;
     TH1D* h6photonEvents;
+
+    TH1D* hNTagger;
+    TH1D* hNProtons;
+    TH1D* hProtonCandidateAngles;
 
     TH1D* ch_3pi0_IM_etap;
     TH1D* ch_3pi0_IM_pi0;

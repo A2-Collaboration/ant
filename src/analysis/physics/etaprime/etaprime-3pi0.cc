@@ -30,6 +30,10 @@ Etap3pi0::Etap3pi0(const std::string& name, PhysOptPtr opts) :
     h2g        = HistFac.makeTH1D("2 #gamma","2#gamma IM [MeV]","#",bs,"gg");
     h6g        = HistFac.makeTH1D("6 #gamma","6#gamma IM [MeV]","#",bs,"gggggg");
 
+    hNTagger   = HistFac.makeTH1D("# Taggerhits","#","",BinSettings(3));
+    hNProtons  = HistFac.makeTH1D("# Protons",   "#","",BinSettings(6));
+    hProtonCandidateAngles = HistFac.makeTH1D("Proton Candidate Angles", "#Theta [#circ]","#",BinSettings(180));
+
     ch_3pi0_IM_etap    = HistFac.makeTH1D("EtaPrime (3pi0)","EtaPrime IM [MeV]","events",bs,"ch_3pi0_IM_etap");
     ch_3pi0_IM_pi0     = HistFac.makeTH1D("Pi0 (3pi0)","Pi0 IM [MeV]","events",bs,"ch_3pi0_IM_pi0");
 
@@ -180,14 +184,40 @@ void Etap3pi0::ProcessEvent(const data::Event& event)
     const auto& data   = event.Reconstructed();
     const auto& mcdata = event.MCTrue();
 
-    const auto& photons   = data.Particles().Get(ParticleTypeDatabase::Photon);
+    const auto& photons            = data.Particles().Get(ParticleTypeDatabase::Photon);
+    const auto& protonCandidates   = data.Particles().Get(ParticleTypeDatabase::Proton);
+    vector<ParticlePtr> protons;
+
     const auto& mcphotons = mcdata.Particles().Get(ParticleTypeDatabase::Photon);
 
     FillCrossChecks(photons,mcphotons);
+    hNTagger->Fill(data.TaggerHits().size());
+
+    // we need a tagger hit
+    if (data.TaggerHits().size() != 1)
+        return;
+
+    // only take proton if in TAPS and only select single
+    for ( const auto& pcandidate: protonCandidates)
+    {
+        double thetaAngle = pcandidate->Theta() * TMath::RadToDeg() ;
+        hProtonCandidateAngles->Fill(thetaAngle);
+        if ( thetaAngle < 20)
+            protons.push_back(pcandidate);
+    }
+    hNProtons->Fill(protons.size());
+    if (protons.size() != 1)
+        return;
+
 
     if (photons.size() != 6 )
         return;
 
+    fitToEtaPrime.SetEgammaBeam(data.TaggerHits().at(0)->PhotonEnergy());
+    fitToEtaPrime.SetProtonTAPS(protons.at(0));
+    fitToEtaPrime.SetPhotons(photons);
+
+    result_fitToEtaPrime = fitToEtaPrime.DoFit();
 
 
     result_t result_3pi0    = Make3pi0(photons);
@@ -230,6 +260,7 @@ void Etap3pi0::ShowResult()
 {
     canvas("Crosschecks")       << h2g << h6g
                                 << hNgamma << hNgammaMC
+                                << hNTagger << hNProtons << hProtonCandidateAngles
                                 << endc;
 
     canvas("channels")          << h6photonEvents
@@ -286,25 +317,126 @@ Etap3pi0::DalitzVars::DalitzVars(Etap3pi0::result_t r)
 
 
 
-Etap3pi0::KinFitter::KinFitter():
-    aplcon("Kinfitter"),
-    Photons(6),
-    SigmaPhotons(6)
+double Etap3pi0::KinFitter::kinVector::energySmear(const double& E) const
 {
-    aplcon.LinkVariable("EBEAM",
-                        { addressof(EgammaBeam) },
-                        { addressof(SigmaEgammaBeam) });
-    aplcon.LinkVariable("ProtonTAPS",
-                        ProtonTAPS.Adresses(),
-                        SigmaProtonTAPS.Adresses());
+    return  0.02 * E * std::pow(E,-0.36);
+}
 
-    assert(Photons.size() == SigmaPhotons.size());
-    for ( unsigned i = 0; i < Photons.size(); ++i)
+void Etap3pi0::KinFitter::kinVector::SetEkThetaPhi(double ek, double theta, double phi)
+{
+    Ek     = ek;
+    Theta  = theta;
+    Phi    = phi;
+    sEk    = energySmear(ek);
+    sTheta = 2.5 * TMath::DegToRad();
+    if ( Theta > 20 * TMath::DegToRad() && Theta < 160 * TMath::DegToRad())
     {
-        aplcon.LinkVariable(formatter() << "Photon" << i,
-                            Photons.at(i).Adresses(),
-                            SigmaPhotons.at(i).Adresses());
+        sPhi = sTheta / std::sin(Theta);
     }
+    else
+    {
+        sPhi = 1 * TMath::DegToRad();
+    }
+}
+
+TLorentzVector Etap3pi0::KinFitter::GetVector(const vector<double>& EkThetaPhi, const double m) const
+{
+    TLorentzVector lv;
+    const double E = sqrt(std_ext::sqr(EkThetaPhi[0] + m) - std_ext::sqr(m));
+
+    lv.SetE(E);
+    lv.SetTheta(EkThetaPhi[1]);
+    lv.SetPhi(EkThetaPhi[2]);
+
+    return lv;
+}
+
+void Etap3pi0::KinFitter::SetEgammaBeam(const double& ebeam)
+{
+    EgammaBeam.first = ebeam;
+    EgammaBeam.second = taggerSmear(ebeam);
+}
+
+void Etap3pi0::KinFitter::SetProtonTAPS(const data::ParticlePtr& proton)
+{
+    ProtonTAPS.SetEkThetaPhi(proton->Ek(),proton->Theta(),proton->Phi());
+}
+
+void Etap3pi0::KinFitter::SetPhotons(const std::vector<ParticlePtr>& photons)
+{
+    assert(Photons.size() == photons.size());
+
+    for ( unsigned i = 0 ; i < Photons.size() ; ++ i)
+        Photons.at(i).SetEkThetaPhi(
+                    photons.at(i)->Ek(),
+                    photons.at(i)->Theta(),
+                    photons.at(i)->Phi());
+}
+
+double Etap3pi0::KinFitter::taggerSmear(const double& E) const
+{
+    return  0.02 * E * std::pow(E,-0.36);
+}
+
+Etap3pi0::KinFitter::KinFitter(const ParticleTypeDatabase::Type& motherParticle):
+    aplcon("Kinfitter_photons"),
+    ProtonTAPS("ProtonTAPS"),
+    Photons({kinVector("Photon0"),
+             kinVector("Photon1"),
+             kinVector("Photon2"),
+             kinVector("Photon3"),
+             kinVector("Photon4"),
+             kinVector("Photon5")}),
+    IM_Mother(motherParticle.Mass())
+{
+
+    aplcon.LinkVariable(egammaName,
+                        { addressof(EgammaBeam.first) },
+                        { addressof(EgammaBeam.second)});
+    aplcon.LinkVariable(ProtonTAPS.Name,
+                        ProtonTAPS.Adresses(),
+                        ProtonTAPS.Adresses_Sigma());
+
+    vector<string> namesLInv      = { egammaName, ProtonTAPS.Name };
+    vector<string> namesEtapMass;
+
+    for ( auto& photon: Photons)
+    {
+        aplcon.LinkVariable(photon.Name,
+                            photon.Adresses(),
+                            photon.Adresses_Sigma());
+        namesLInv.push_back(photon.Name);
+        namesEtapMass.push_back(photon.Name);
+    }
+
+    auto LorentzInvariance = [this] (const vector<vector<double>> values)
+    {
+        //  Beam-LV:
+        TLorentzVector constraint(0,0,values.at(0)[0],ParticleTypeDatabase::Proton.Mass());
+        constraint = constraint - this->GetVector(values[1],ParticleTypeDatabase::Proton.Mass());
+        for ( unsigned i = 0 ; i < 6 ; ++ i)
+            constraint = constraint - this->GetVector(values[i + 2],0);
+        return vector<double>(
+               { constraint.X(),
+                 constraint.Y(),
+                 constraint.Z(),
+                 constraint.Z()  } );
+    };
+
+    aplcon.AddConstraint("LInv",namesLInv,LorentzInvariance);
+
+    auto etapMass = [this] ( const vector<vector<double>> values )
+    {
+        TLorentzVector SumPhotons(0,0,0,0);
+        for ( unsigned i = 0 ; i < 6 ; ++ i)
+            SumPhotons = SumPhotons + this->GetVector(values[i],0);
+
+        return SumPhotons.M2() - std_ext::sqr(IM_Mother);
+
+    };
+
+    aplcon.AddConstraint("etapMass",namesEtapMass,etapMass);
+
 }
 
 AUTO_REGISTER_PHYSICS(Etap3pi0)
