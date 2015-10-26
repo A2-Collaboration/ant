@@ -17,7 +17,7 @@ public:
     {
         if(!IsFlagSet("IncludeBadElements")) {
             // empty elements
-            IgnoreDetectorChannels(Detector_t::Type_t::CB, {203,265,267,549,565,586,607,677});
+            IgnoreDetectorChannels(Detector_t::Type_t::CB, {203,265,267,479,549,565,586,607,677});
             // inverted timewalk spectrum
             IgnoreDetectorChannels(Detector_t::Type_t::CB, {17,582,672,678,696});
             // misc reasons (e.g. bad timewalk spectrum)
