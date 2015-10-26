@@ -185,8 +185,8 @@ void CB_Energy::GUI_Gains::StoreFit(unsigned channel)
     // don't forget the fit parameters
     fitParameters[channel] = func->Save();
 
-    h_peaks->Fill(channel, pi0peak);
-    h_relative->Fill(channel, relative_change);
+    h_peaks->SetBinContent(channel+1, pi0peak);
+    h_relative->SetBinContent(channel+1, relative_change);
 }
 
 bool CB_Energy::GUI_Gains::FinishRange()

@@ -261,7 +261,7 @@ void Time::TheGUI::StoreFit(unsigned channel)
     const double oldOffset = previousOffsets[channel];
     const double timePeak = fitFunction->GetPeakPosition();
 
-    timePeaks->Fill(channel,timePeak);
+    timePeaks->SetBinContent(channel+1,timePeak);
 
     // the timePeak should be zero, so this gives directly
     // the value to change the offset
