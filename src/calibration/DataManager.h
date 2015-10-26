@@ -24,7 +24,7 @@ public:
      * @brief Add the given calibration data to the database
      * @param cdata
      */
-    virtual void Add(const TCalibrationData& cdata) = 0;
+    virtual void Add(TCalibrationData cdata) = 0;
 
     /**
     *  \brief GetData Query the calibration database for specific TID
@@ -51,6 +51,7 @@ private:
 
     std::string calibrationDataFolder;
     std::unique_ptr<DataBase> dataBase;
+    bool extendable;
 
     void Init();
 
@@ -63,7 +64,7 @@ public:
     ~DataManager();
 
 
-    void Add(const TCalibrationData& cdata) override;
+    void Add(TCalibrationData cdata) override;
 
     bool GetData(const std::string& calibrationID, const TID& eventID, TCalibrationData& cdata) override;
 
@@ -72,6 +73,8 @@ public:
     std::uint32_t GetNumberOfCalibrations();
 
     std::uint32_t GetNumberOfDataPoints(const std::string& calibrationID);
+
+    void SetExtendable() { extendable = true; }
 
 };
 

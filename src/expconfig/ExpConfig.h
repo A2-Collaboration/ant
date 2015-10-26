@@ -21,6 +21,9 @@ namespace ant {
 
 class THeaderInfo;
 class Updateable_traits;
+namespace calibration {
+class DataManager;
+}
 
 class ExpConfig
 {
@@ -43,8 +46,9 @@ public:
         virtual double GetElectronBeamEnergy() const = 0;
         virtual std::list< std::shared_ptr< Calibration::PhysicsModule> > GetCalibrations() const = 0;
         virtual std::string GetPIDCutsDirectory() const = 0;
+        virtual std::shared_ptr<calibration::DataManager> GetCalibrationDataManager() const = 0;
 
-        // you may obtain such an Expconfig::Module via headerInfo, name,
+        // you may obtain such an Expconfig::Setup via headerInfo, name,
         // get all of them, or the last found one
         static std::shared_ptr<Setup> Get(const THeaderInfo& header);
         static std::shared_ptr<Setup> Get(const std::string& name);

@@ -218,7 +218,7 @@ void DataBase::AddItem(const TCalibrationData& cdata)
     // create the vector if not there yet
     auto& item  = dataMap[cdata.CalibrationID];
     item.Modified = true;
-    return item.Data.push_back(cdata);
+    item.Data.push_back(cdata);
 }
 
 

@@ -1,5 +1,6 @@
 #include "calibration/gui/Manager.h"
 #include "calibration/gui/ManagerWindow.h"
+#include "calibration/DataManager.h"
 #include "expconfig/ExpConfig.h"
 
 #include "base/Logger.h"
@@ -24,12 +25,18 @@ int main(int argc, char** argv) {
     auto cmd_calibration = cmd.add<TCLAP::ValueArg<string>>("c","calibration","Calibration GUI module name", true, "","calibration");
     auto cmd_averagelength = cmd.add<TCLAP::ValueArg<int>>("a","average","Average length for moving window (zero sums everything up)", false, 0, "length");
     auto cmd_batchmode = cmd.add<TCLAP::SwitchArg>("b","batch","Run in batch mode (no GUI, autosave)",false);
+    auto cmd_extendable = cmd.add<TCLAP::SwitchArg>("","extendable","Mark created TCalibrationData as extendable",false);
     // unlabeled multi arg must be the last element added, and interprets everything as a input file
     auto cmd_inputfiles  = cmd.add<TCLAP::UnlabeledMultiArg<string>>("inputfiles","Ant files with histograms",true,"inputfiles");
     cmd.parse(argc, argv);
 
     if(cmd_verbose->isSet())
         el::Loggers::setVerboseLevel(cmd_verbose->getValue());
+
+    if(cmd_extendable->getValue() && cmd_averagelength->getValue()>0) {
+        LOG(ERROR) << "Flagging extendable and using moving window makes no sense";
+        return 1;
+    }
 
     unique_ptr<Manager> manager = std_ext::make_unique<Manager>(
                                   cmd_inputfiles->getValue(),
@@ -70,6 +77,10 @@ int main(int argc, char** argv) {
         LOG(ERROR) << "No calibration GUI module found for given name '"
                    << calibrationguiname << "'";
         return 1;
+    }
+
+    if(cmd_extendable->getValue()) {
+        setup->GetCalibrationDataManager()->SetExtendable();
     }
 
     manager->SetModule(calibrationgui);

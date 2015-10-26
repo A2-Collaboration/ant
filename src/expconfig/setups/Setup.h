@@ -52,6 +52,10 @@ public:
 
     virtual std::string GetPIDCutsDirectory() const override;
 
+    virtual std::shared_ptr<calibration::DataManager> GetCalibrationDataManager() const override final {
+        return calibrationDataManager;
+    }
+
     virtual std::string GetName() const override final {
         return name_;
     }

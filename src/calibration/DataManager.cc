@@ -32,7 +32,8 @@ void DataManager::Init()
 }
 
 DataManager::DataManager(const string& calibrationDataFolder_):
-    calibrationDataFolder(calibrationDataFolder_)
+    calibrationDataFolder(calibrationDataFolder_),
+    extendable(false)
 {}
 
 DataManager::~DataManager()
@@ -41,9 +42,11 @@ DataManager::~DataManager()
         dataBase->WriteToFolder(calibrationDataFolder);
 }
 
-void DataManager::Add(const TCalibrationData& cdata)
+void DataManager::Add(TCalibrationData cdata)
 {
     Init();
+    if(extendable)
+        cdata.Extendable = true;
     dataBase->AddItem(cdata);
 }
 
