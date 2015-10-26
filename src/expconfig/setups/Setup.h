@@ -94,8 +94,6 @@ protected:
     void IgnoreDetectorChannel(Detector_t::Type_t type, unsigned channel);
     void IgnoreDetectorChannels(Detector_t::Type_t type, const std::vector<unsigned>& channels);
 
-    static std::shared_ptr<calibration::DataManager> CreateCalibrationDataManager(const std::string& setupname);
-
     std::list< std::shared_ptr<Detector_t> > detectors;
     std::list< std::shared_ptr<ReconstructHook::Base> > reconstruct_hooks;
     std::list< std::shared_ptr<Calibration::BaseModule> > calibrations;

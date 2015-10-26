@@ -122,9 +122,3 @@ void Setup::IgnoreDetectorChannels(ant::Detector_t::Type_t type, const std::vect
     for(unsigned channel : channels)
         IgnoreDetectorChannel(type, channel);
 }
-
-std::shared_ptr<ant::calibration::DataManager> Setup::CreateCalibrationDataManager(const std::string& setupname) {
-    std::string filename = std::string(ANT_PATH_DATABASE)+"/"+setupname+"/calibration.root";
-    return std::make_shared<calibration::DataManager>(filename);
-}
-
