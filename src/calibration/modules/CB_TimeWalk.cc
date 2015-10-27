@@ -138,7 +138,7 @@ void CB_TimeWalk::ApplyTo(clusterhits_t& sorted_clusterhits)
         // do timewalk correction
         clusterhit.Time -= timewalks[clusterhit.Hit->Channel]->Eval(clusterhit.Energy);
         // get rid of clusterhit if outside timewindow
-        if(!TimeWindow.Contains(clusterhit.Time))
+        if(std::isfinite(clusterhit.Time) && !TimeWindow.Contains(clusterhit.Time))
             it_clusterhit = clusterhits.erase(it_clusterhit);
         else
             ++it_clusterhit;
