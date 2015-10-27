@@ -34,7 +34,8 @@ class CB_TimeWalk :
 public:
     CB_TimeWalk(
             const std::shared_ptr<expconfig::detector::CB>& cb,
-            const std::shared_ptr<DataManager>& calmgr
+            const std::shared_ptr<DataManager>& calmgr,
+            const interval<double>& timeWindow
             );
     virtual ~CB_TimeWalk();
 
@@ -99,9 +100,7 @@ protected:
     std::shared_ptr<expconfig::detector::CB> cb_detector;
     std::shared_ptr<DataManager> calibrationManager;
 
-
-
-
+    const interval<double> TimeWindow;
 
 };
 

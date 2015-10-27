@@ -88,14 +88,15 @@ Setup_2014_EPT::Setup_2014_EPT(const string& name, SetupOptPtr opt) :
                                       calibrationDataManager,
                                       convert_CATCH_Tagger,
                                       -325, // default offset in ns
-                                      std::make_shared<calibration::gui::FitGausPol0>()
+                                      std::make_shared<calibration::gui::FitGausPol0>(),
+                                      timecuts ? interval<double>{-100, 100} : no_timecut
                                       );
     AddCalibration<calibration::Time>(cb,
                                       calibrationDataManager,
                                       convert_CATCH_CB,
                                       -325,      // default offset in ns
                                       std::make_shared<calibration::gui::FitGaus>(),
-                                      timecuts ? interval<double>{-10, 80} : no_timecut
+                                      timecuts ? interval<double>{-10, 100} : no_timecut
                                       );
     AddCalibration<calibration::Time>(pid,
                                       calibrationDataManager,
@@ -133,7 +134,8 @@ Setup_2014_EPT::Setup_2014_EPT(const string& name, SetupOptPtr opt) :
     AddCalibration<calibration::PID_PhiAngle>(pid, calibrationDataManager);
 
     // CB timing needs timewalk correction
-    AddCalibration<calibration::CB_TimeWalk>(cb, calibrationDataManager);
+    AddCalibration<calibration::CB_TimeWalk>(cb, calibrationDataManager,
+                                             timecuts ? interval<double>{-5, 10} : no_timecut);
 
 }
 

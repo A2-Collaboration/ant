@@ -138,7 +138,9 @@ public:
         AddCalibration<calibration::PID_PhiAngle>(pid, calibrationDataManager);
 
         // CB timing needs timewalk correction
-        AddCalibration<calibration::CB_TimeWalk>(cb, calibrationDataManager);
+        AddCalibration<calibration::CB_TimeWalk>(cb,
+                                                 calibrationDataManager,
+                                                 interval<double>{-std_ext::inf, std_ext::inf});
     }
 
     virtual double GetElectronBeamEnergy() const override {

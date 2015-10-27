@@ -104,12 +104,13 @@ void CB_TimeWalk::ThePhysics::ShowResult()
     canvas(GetName()) << drawoption("colz") << h_timewalk_overview << endc;
 }
 
-CB_TimeWalk::CB_TimeWalk(
-        const shared_ptr<expconfig::detector::CB>& cb,
-        const shared_ptr<DataManager>& calmgr) :
+CB_TimeWalk::CB_TimeWalk(const shared_ptr<expconfig::detector::CB>& cb,
+        const shared_ptr<DataManager>& calmgr,
+                         const interval<double>& timeWindow) :
     Module("CB_TimeWalk"),
     cb_detector(cb),
-    calibrationManager(calmgr)
+    calibrationManager(calmgr),
+    TimeWindow(timeWindow)
 {
     for(unsigned ch=0;ch<cb_detector->GetNChannels();ch++) {
         timewalks.emplace_back(make_shared<gui::FitTimewalk>());
@@ -134,8 +135,13 @@ void CB_TimeWalk::ApplyTo(clusterhits_t& sorted_clusterhits)
 
     while(it_clusterhit != clusterhits.end()) {
         reconstruct::AdaptorTClusterHit& clusterhit = *it_clusterhit;
+        // do timewalk correction
         clusterhit.Time -= timewalks[clusterhit.Hit->Channel]->Eval(clusterhit.Energy);
-        ++it_clusterhit;
+        // get rid of clusterhit if outside timewindow
+        if(!TimeWindow.Contains(clusterhit.Time))
+            it_clusterhit = clusterhits.erase(it_clusterhit);
+        else
+            ++it_clusterhit;
     }
 }
 
