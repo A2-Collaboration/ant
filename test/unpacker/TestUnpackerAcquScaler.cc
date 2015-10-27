@@ -2,6 +2,7 @@
 #include "catch_config.h"
 
 #include "Unpacker.h"
+#include "expconfig/ExpConfig.h"
 
 #include "tree/THeaderInfo.h"
 #include "tree/TDetectorRead.h"
@@ -20,6 +21,7 @@ TEST_CASE("Test UnpackerAcqu: Scaler block", "[unpacker]") {
 }
 
 void dotest() {
+    ant::ExpConfig::Setup::ManualName = "Setup_Test";
     auto unpacker = ant::Unpacker::Get(string(TEST_BLOBS_DIRECTORY)+"/Acqu_scalerblock.dat.xz");
 
     unsigned nSlowControls = 0;
@@ -47,6 +49,6 @@ void dotest() {
 
     REQUIRE(nSlowControls == 15);
     REQUIRE(nReads == 211);
-    REQUIRE(nHits == 27904);
+    REQUIRE(nHits == 28456);
     REQUIRE(taggerScalerBlockFound);
 }

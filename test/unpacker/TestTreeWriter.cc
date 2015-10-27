@@ -2,6 +2,7 @@
 #include "catch_config.h"
 
 #include "Unpacker.h"
+#include "expconfig/ExpConfig.h"
 
 #include "tree/THeaderInfo.h"
 #include "tree/TUnpackerMessage.h"
@@ -49,6 +50,7 @@ void dotest(Long64_t expectedEntries) {
 
     ant::tmpfile_t tmpfile;
 
+    ant::ExpConfig::Setup::ManualName = "Setup_Test";
     auto unpacker = ant::Unpacker::Get(string(TEST_BLOBS_DIRECTORY)+"/Acqu_oneevent-big.dat.xz");
 
     // write some stuff to a ROOT tree

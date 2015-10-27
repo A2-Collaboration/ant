@@ -109,6 +109,8 @@ struct ReconstructTester : Reconstruct_traits {
 
 
 void dotest() {
+    ExpConfig::Setup::ManualName = "Setup_Test";
+
     auto unpacker = Unpacker::Get(string(TEST_BLOBS_DIRECTORY)+"/Acqu_oneevent-big.dat.xz");
 
     // instead of the usual reconstruct, we use our tester
@@ -139,8 +141,8 @@ void dotest() {
     }
 
     REQUIRE(nReads == 221);
-    REQUIRE(nHits == 29418);
-    REQUIRE(nCandidates == 821);
+    REQUIRE(nHits == 30039);
+    REQUIRE(nCandidates == 809);
 
 
 }

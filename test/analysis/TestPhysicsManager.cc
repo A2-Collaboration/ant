@@ -88,6 +88,7 @@ void dotest_raw()
     pm.AddPhysics<TestPhysics>();
 
     // make some meaningful input for the physics manager
+    ant::ExpConfig::Setup::ManualName = "Setup_Test";
     auto unpacker = Unpacker::Get(string(TEST_BLOBS_DIRECTORY)+"/Acqu_oneevent-big.dat.xz");
     auto reconstruct = std_ext::make_unique<Reconstruct>();
     list< unique_ptr<analysis::input::DataReader> > readers;
@@ -108,7 +109,7 @@ void dotest_raw()
     REQUIRE(physics->initCalled);
 
     REQUIRE(physics->seenEvents == expectedEvents);
-    REQUIRE(physics->seenCandidates == 821);
+    REQUIRE(physics->seenCandidates == 809);
 }
 
 void dotest_plutogeant()
@@ -117,7 +118,7 @@ void dotest_plutogeant()
     pm.AddPhysics<TestPhysics>();
 
     // make some meaningful input for the physics manager
-    ant::ExpConfig::Setup::ManualName = "Setup_2014_07_EPT_Prod";
+    ant::ExpConfig::Setup::ManualName = "Setup_Test";
     auto unpacker = Unpacker::Get(string(TEST_BLOBS_DIRECTORY)+"/Geant_with_TID.root");
     auto reconstruct = std_ext::make_unique<Reconstruct>();
     list< unique_ptr<analysis::input::DataReader> > readers;

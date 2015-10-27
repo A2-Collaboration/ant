@@ -8,6 +8,7 @@
 #include "tree/THeaderInfo.h"
 
 #include "unpacker/Unpacker.h"
+#include "expconfig/ExpConfig.h"
 
 #include "TH1D.h"
 #include "TTree.h"
@@ -61,7 +62,7 @@ void dotest_rw() {
 }
 
 void generateInputFile(const string& filename) {
-
+    ant::ExpConfig::Setup::ManualName = "Setup_Test";
     auto unpacker = ant::Unpacker::Get(string(TEST_BLOBS_DIRECTORY)+"/Acqu_oneevent-small.dat.xz");
 
     // write some stuff to a ROOT tree

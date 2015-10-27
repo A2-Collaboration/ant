@@ -25,6 +25,7 @@ TEST_CASE("ExpConfig GetDetector", "[expconfig]") {
 }
 
 void getdetector() {
+    ExpConfig::Setup::ManualName = "Setup_Test";
     REQUIRE_NOTHROW(Unpacker::Get(string(TEST_BLOBS_DIRECTORY)+"/Acqu_oneevent-big.dat.xz"));
 
     auto tagger = ExpConfig::Setup::GetDetector<TaggerDetector_t>();
@@ -38,15 +39,10 @@ void getdetector() {
 
     auto ladder = ExpConfig::Setup::GetDetector(Detector_t::Type_t::Tagger);
     REQUIRE(ladder.get() == nullptr);
-
-    // switch to another setup
-    REQUIRE_NOTHROW(Unpacker::Get(string(TEST_BLOBS_DIRECTORY)+"/Acqu_oneevent-small.dat.xz"));
-    auto tagger_notthere = ExpConfig::Setup::GetDetector<TaggerDetector_t>();
-    REQUIRE(tagger_notthere.get() == nullptr);
 }
 
 void getlastfound() {
     REQUIRE(ExpConfig::Setup::GetLastFound().get() == nullptr);
-    ExpConfig::Setup::ManualName = "Setup_2014_07_EPT_Prod";
+    ExpConfig::Setup::ManualName = "Setup_Test";
     REQUIRE(ExpConfig::Setup::GetLastFound().get() != nullptr);
 }

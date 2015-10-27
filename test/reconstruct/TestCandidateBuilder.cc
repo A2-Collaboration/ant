@@ -127,6 +127,7 @@ struct ReconstructTester : Reconstruct {
 
 
 void dotest() {
+    ant::ExpConfig::Setup::ManualName = "Setup_Test";
     auto unpacker = Unpacker::Get(string(TEST_BLOBS_DIRECTORY)+"/Acqu_oneevent-big.dat.xz");
 
     // instead of the usual reconstruct, we use our tester

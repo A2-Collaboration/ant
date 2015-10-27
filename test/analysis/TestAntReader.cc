@@ -81,11 +81,12 @@ void drive_reader(unique_ptr<AntReader> unpacker_reader, bool no_events_expected
     else {
         REQUIRE(nEvents==221);
         REQUIRE(nSlowControls == 8);
-        REQUIRE(nCandidates == 821);
+        REQUIRE(nCandidates == 809);
     }
 }
 
 void dotest_read() {
+    ant::ExpConfig::Setup::ManualName = "Setup_Test";
     auto unpacker = Unpacker::Get(string(TEST_BLOBS_DIRECTORY)+"/Acqu_oneevent-big.dat.xz");
     auto reconstruct = std_ext::make_unique<Reconstruct>();
     auto unpacker_reader = std_ext::make_unique<AntReader>(move(unpacker), move(reconstruct));
@@ -101,7 +102,7 @@ void dotest_writeread(
         bool calibratedDetectorReads) {
 
     // FIRST STAGE (OUTPUT)
-
+    ant::ExpConfig::Setup::ManualName = "Setup_Test";
     auto unpacker = Unpacker::Get(string(TEST_BLOBS_DIRECTORY)+"/Acqu_oneevent-big.dat.xz");
     auto reconstruct = std_ext::make_unique<Reconstruct>();
     auto unpacker_reader = std_ext::make_unique<AntReader>(move(unpacker), move(reconstruct));

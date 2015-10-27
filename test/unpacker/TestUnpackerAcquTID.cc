@@ -2,6 +2,7 @@
 #include "catch_config.h"
 
 #include "Unpacker.h"
+#include "expconfig/ExpConfig.h"
 
 #include "tree/THeaderInfo.h"
 #include "tree/TDetectorRead.h"
@@ -20,6 +21,7 @@ TEST_CASE("Test UnpackerAcqu: TID", "[unpacker]") {
 }
 
 THeaderInfo GetHeaderInfo(const string& filename) {
+    ExpConfig::Setup::ManualName = "Setup_Test";
     auto unpacker = ant::Unpacker::Get(filename);
 
     while(auto item = unpacker->NextItem()) {
