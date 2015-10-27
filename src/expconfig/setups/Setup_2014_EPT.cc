@@ -116,7 +116,7 @@ Setup_2014_EPT::Setup_2014_EPT(const string& name, SetupOptPtr opt) :
                                       convert_MultiHit16bit,
                                       -100,
                                       std::make_shared<calibration::gui::FitGausPol0>(),
-                                      timecuts ? interval<double>{-10, 10} : no_timecut,
+                                      timecuts ? interval<double>{-7, 7} : no_timecut,
                                       -0.05 // default gain
                                       );
 
