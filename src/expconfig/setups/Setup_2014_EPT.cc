@@ -77,6 +77,9 @@ Setup_2014_EPT::Setup_2014_EPT(const string& name, SetupOptPtr opt) :
     // also the ScalerFrequency needs a reference
     AddHook(convert_ScalerFrequency_Beampolmon);
 
+    bool timecuts = !IsFlagSet("DisableTimecuts");
+    interval<double> no_timecut(-std_ext::inf, std_ext::inf);
+
     AddCalibration<calibration::Scaler>(Detector_t::Type_t::EPT,
                                         convert_ScalerFrequency_Beampolmon);
 
@@ -92,26 +95,26 @@ Setup_2014_EPT::Setup_2014_EPT(const string& name, SetupOptPtr opt) :
                                       convert_CATCH_CB,
                                       -325,      // default offset in ns
                                       std::make_shared<calibration::gui::FitGaus>(),
-                                      interval<double>{-60, 60} // default time window cut in ns
+                                      timecuts ? interval<double>{-10, 80} : no_timecut
                                       );
     AddCalibration<calibration::Time>(pid,
                                       calibrationDataManager,
                                       convert_CATCH_CB,
                                       -325,
                                       std::make_shared<calibration::gui::FitGaus>(),
-                                      interval<double>{-500, 500} // default time window cut in ns
+                                      timecuts ? interval<double>{-10, 10} : no_timecut
                                       );
     AddCalibration<calibration::TAPS_Time>(taps,
-                                      calibrationDataManager,
-                                      convert_MultiHit16bit,
-                                      interval<double>{-500, 500}
-                                      );
+                                           calibrationDataManager,
+                                           convert_MultiHit16bit,
+                                           timecuts ? interval<double>{-10, 20} : no_timecut
+                                           );
     AddCalibration<calibration::Time>(tapsVeto,
                                       calibrationDataManager,
                                       convert_MultiHit16bit,
                                       -100,
                                       std::make_shared<calibration::gui::FitGausPol0>(),
-                                      interval<double>{-1000, 1000}, /// \todo make this window smaller...
+                                      timecuts ? interval<double>{-10, 10} : no_timecut,
                                       -0.05 // default gain
                                       );
 
