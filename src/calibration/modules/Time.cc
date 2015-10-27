@@ -38,7 +38,7 @@ Time::Time(const std::shared_ptr<Detector_t>& detector, const std::shared_ptr<Da
     Detector(detector),
     calibrationManager(CalibrationManager),
     Converter(move(converter)),
-    TimeWindow(timeWindow),
+    TimeWindows(detector->GetNChannels(), timeWindow),
     fitFunction(FitFunction),
     DefaultOffsets(detector->GetNChannels(), defaultOffset),
     Offsets(),
@@ -113,7 +113,7 @@ void Time::ApplyTo(const readhits_t& hits, extrahits_t&)
             else
                 value -= Offsets[dethit->Channel];
 
-            if(!TimeWindow.Contains(value))
+            if(!TimeWindows[dethit->Channel].Contains(value))
             {
                 VLOG(9) << "Discarding hit in channel " << dethit->Channel << ", which is outside time window.";
                 continue;

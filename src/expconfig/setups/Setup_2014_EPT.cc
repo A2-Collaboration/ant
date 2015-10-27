@@ -103,12 +103,13 @@ Setup_2014_EPT::Setup_2014_EPT(const string& name, SetupOptPtr opt) :
                                       convert_CATCH_CB,
                                       -325,
                                       std::make_shared<calibration::gui::FitGaus>(),
-                                      timecuts ? interval<double>{-10, 10} : no_timecut
+                                      timecuts ? interval<double>{-7, 7} : no_timecut
                                       );
     AddCalibration<calibration::TAPS_Time>(taps,
                                            calibrationDataManager,
                                            convert_MultiHit16bit,
-                                           timecuts ? interval<double>{-10, 20} : no_timecut
+                                           timecuts ? interval<double>{-10, 10} : no_timecut, // for BaF2
+                                           timecuts ? interval<double>{-20, 20} : no_timecut  // for PbWO4
                                            );
     AddCalibration<calibration::Time>(tapsVeto,
                                       calibrationDataManager,

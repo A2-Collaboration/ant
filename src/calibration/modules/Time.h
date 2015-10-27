@@ -106,7 +106,7 @@ protected:
 
     const Calibration::Converter::ptr_t Converter;
 
-    const interval<double> TimeWindow;
+    std::vector<interval<double>> TimeWindows;
 
     std::shared_ptr<gui::PeakingFitFunction> fitFunction;
 

@@ -19,8 +19,8 @@ public:
     TAPS_Time(std::shared_ptr<expconfig::detector::TAPS> taps,
               std::shared_ptr<DataManager> calmgr,
               Calibration::Converter::ptr_t converter,
-              const interval<double>& timeWindow = {-std_ext::inf, std_ext::inf}
-              );
+              const interval<double>& timeWindow_BaF2 = {-std_ext::inf, std_ext::inf},
+              const interval<double>& timeWindow_PbWO4 = {-std_ext::inf, std_ext::inf});
 
     class ThePhysics : public Time::ThePhysics {
     public:
