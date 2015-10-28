@@ -21,6 +21,8 @@ public:
 
     void Draw() override;
     void Fit(TH1* hist) override;
+    void FitSignal(TH1* hist) override;
+    void FitBackground(TH1* hist) override;
     virtual void SetDefaults(TH1 *hist) override;
     void SetRange(ant::interval<double> i) override;
     ant::interval<double> GetRange() const override;

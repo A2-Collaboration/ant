@@ -5,9 +5,12 @@
 
 #include "base/Logger.h"
 
+#include "base/TF1Ext.h"
+
 #include "TF1.h"
 #include "TH1.h"
 
+using namespace std;
 using namespace ant::calibration;
 
 void ant::calibration::gui::FitGausPol3::sync()
@@ -69,6 +72,24 @@ void ant::calibration::gui::FitGausPol3::Fit(TH1* hist)
 {
     FitFunction::doFit(hist, combined);
     sync();
+}
+
+void gui::FitGausPol3::FitBackground(TH1* hist)
+{
+    const auto fixedPars = {0,1,2};
+    FixParameters(combined, fixedPars);
+    FitFunction::doFit(hist, combined);
+    sync();
+    UnFixParameters(combined, fixedPars);
+}
+
+void gui::FitGausPol3::FitSignal(TH1* hist)
+{
+    const auto fixedPars = {3,4,5,6};
+    FixParameters(combined, fixedPars);
+    FitFunction::doFit(hist, combined);
+    sync();
+    UnFixParameters(combined, fixedPars);
 }
 
 void ant::calibration::gui::FitGausPol3::SetDefaults(TH1 *hist)
