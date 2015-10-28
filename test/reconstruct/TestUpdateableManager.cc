@@ -15,7 +15,6 @@ void dotest2();
 void dotest3();
 void dotest4();
 void dotest5();
-void dotest6();
 
 
 TEST_CASE("UpdateableManager: No updates at all", "[reconstruct]") {
@@ -38,31 +37,21 @@ TEST_CASE("UpdateableManager: Unallowed things", "[reconstruct]") {
     dotest5();
 }
 
-TEST_CASE("UpdateableManager: Update on first event", "[reconstruct]") {
-    dotest6();
-}
-
 // implement some testable Updateable item
 struct UpdateableItem :  Updateable_traits {
 
     const vector<list<TID>> ChangePoints;
-    const bool updateOnFirstEvent;
     vector<vector<TID>> UpdatePoints;
 
 
-    UpdateableItem(vector<list<TID>> changePoints, bool updateOnFirstEvent_ = false) :
+    UpdateableItem(vector<list<TID>> changePoints) :
         ChangePoints(changePoints),
-        updateOnFirstEvent(updateOnFirstEvent_),
         UpdatePoints(changePoints.size())
     {}
 
     vector<list<TID>> GetChangePoints() const override
     {
         return ChangePoints;
-    }
-
-    vector<bool> UpdateOnFirstEvent() const override {
-        return vector<bool>(ChangePoints.size(), updateOnFirstEvent);
     }
 
     void Update(size_t index, const TID& id) override
@@ -133,7 +122,7 @@ void dotest3() {
 
     REQUIRE(item->UpdatePoints.size() == 1);
     REQUIRE(item->UpdatePoints.at(0).size() == 2);
-    REQUIRE(p[1] == item->UpdatePoints.at(0)[0]);
+    REQUIRE(p[2] == item->UpdatePoints.at(0)[0]);
     REQUIRE(p[3] == item->UpdatePoints.at(0)[1]);
 }
 
@@ -152,7 +141,7 @@ void dotest4() {
 
     REQUIRE(item->UpdatePoints.size() == 1);
     REQUIRE(item->UpdatePoints.at(0).size() == 3);
-    REQUIRE(p[1] == item->UpdatePoints.at(0)[0]);
+    REQUIRE(p[2] == item->UpdatePoints.at(0)[0]);
     REQUIRE(p[3] == item->UpdatePoints.at(0)[1]);
     REQUIRE(p[5] == item->UpdatePoints.at(0)[2]);
 }
@@ -167,24 +156,6 @@ void dotest5() {
 
     UpdateableManager manager(p[2], updateables);
     manager.UpdateParameters(p[4]);
-    manager.UpdateParameters(p[4]);
-
-    REQUIRE(item->UpdatePoints.size() == 1);
-    REQUIRE(item->UpdatePoints.at(0).size() == 2);
-    REQUIRE(p[1] == item->UpdatePoints.at(0)[0]);
-    REQUIRE(p[3] == item->UpdatePoints.at(0)[1]);
-}
-
-void dotest6() {
-    const shared_ptr<UpdateableItem>& item =
-            make_shared<UpdateableItem>(
-                vector<list<TID>>{{p[3]}}, true);
-
-    list< shared_ptr<Updateable_traits> > updateables;
-    updateables.push_back(item);
-
-    UpdateableManager manager(p[2], updateables);
-    manager.UpdateParameters(p[2]);
     manager.UpdateParameters(p[4]);
 
     REQUIRE(item->UpdatePoints.size() == 1);

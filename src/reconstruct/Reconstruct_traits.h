@@ -99,12 +99,6 @@ public:
      */
     virtual std::vector<std::list<TID>> GetChangePoints() const = 0;
     /**
-     * @brief UpdateOnFirstEvent corresponds to GetChangePoints() and forces
-     * an Update() on first event if boolean flag in vector is true
-     * @return vectorized list of flags, empty if disabled
-     */
-    virtual std::vector<bool> UpdateOnFirstEvent() const { return {}; }
-    /**
      * @brief Update shall load new parameters for the upcoming event ids
      * @param index of element in vector returned by GetChangePoints() or UpdateOnFirstEvent()
      * @param id indicates moment of change

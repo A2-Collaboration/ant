@@ -44,6 +44,10 @@ Energy::Energy(Detector_t::Type_t detectorType,
         throw std::runtime_error("Given converter should not be nullptr");
 }
 
+Energy::~Energy()
+{
+}
+
 void Energy::ApplyTo(const readhits_t& hits, extrahits_t& extrahits)
 {
     const auto& dethits = hits.get_item(DetectorType);
@@ -158,20 +162,6 @@ void Energy::Update(size_t index, const TID& tid)
                 << " at changepoint TID=" << tid << ", using default values";
         calibration->Values.resize(0);
     }
-}
-
-std::vector<bool> Energy::UpdateOnFirstEvent() const
-{
-    std::vector<bool> ret;
-    for(auto calibration : AllCalibrations) {
-        ret.push_back(calibration->Extendable);
-    }
-    return ret;
-}
-
-Energy::~Energy()
-{
-
 }
 
 Energy::GUI_CalibType::GUI_CalibType(const string& basename, CalibType& type,
