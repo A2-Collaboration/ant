@@ -65,7 +65,7 @@ public:
 class PeakingFitFunction: public FitFunction
 {
 public:
-    PeakingFitFunction(): FitFunction(){}
+    PeakingFitFunction();
     virtual double GetPeakPosition() const =0;
     virtual double GetPeakWidth() const =0;
 };

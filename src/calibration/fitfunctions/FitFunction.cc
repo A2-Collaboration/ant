@@ -56,3 +56,5 @@ void FitFunction::loadTF1(SavedState_t::const_iterator &data_pos, TF1 *func)
 FitFunction::~FitFunction()
 {}
 
+
+PeakingFitFunction::PeakingFitFunction(): FitFunction(){}
