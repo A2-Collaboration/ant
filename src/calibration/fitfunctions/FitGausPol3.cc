@@ -31,8 +31,10 @@ ant::calibration::gui::FitGausPol3::FitGausPol3()
 
     SetRange(ant::interval<double>(100,250));
     combined->SetParName(0,"A");
+    combined->SetParLimits(0, 0.0, 1E+12);
     combined->SetParName(1,"x_{0}");
     combined->SetParName(2,"#sigma");
+    combined->SetParLimits(2, 0.0, 1E+12);
     combined->SetParName(3,"p_{0}");
     combined->SetParName(4,"p_{1}");
     combined->SetParName(5,"p_{2}");
@@ -92,6 +94,8 @@ void ant::calibration::gui::FitGausPol3::SetRange(ant::interval<double> i)
     setRange(combined, i);
     setRange(signal, i);
     setRange(bg, i);
+    // x_0 peak position must be in range
+    combined->SetParLimits(1, i.Start(), i.Stop());
 }
 
 ant::interval<double> ant::calibration::gui::FitGausPol3::GetRange() const
