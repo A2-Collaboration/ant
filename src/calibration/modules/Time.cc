@@ -67,9 +67,9 @@ void Time::Update(size_t, const TID& id)
         }
     }
     else {
-        LOG(WARNING) << "No calibration data found for offsets"
+        LOG_IF(!Offsets.empty(), WARNING) << "No calibration data found for offsets"
                      << " at changepoint TID=" << id << ", using default values";
-        Offsets = DefaultOffsets;
+        Offsets.resize(0);
     }
 }
 

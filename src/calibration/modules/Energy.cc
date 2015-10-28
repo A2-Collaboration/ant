@@ -156,8 +156,7 @@ void Energy::Update(size_t index, const TID& tid)
         }
     }
     else {
-
-        LOG_IF(!AllCalibrations[index]->Extendable, WARNING)
+        LOG_IF(!calibration->Values.empty(), WARNING)
                 << "No calibration data found for " << calibration->Name
                 << " at changepoint TID=" << tid << ", using default values";
         calibration->Values.resize(0);
