@@ -66,7 +66,7 @@ void TAPSVeto_Energy::ThePhysics::ProcessEvent(const Event& event)
     // pedestals (maybe also better from InsaneClusters as for CB_PID?)
     for(const auto& candidate : cands) {
         for(const Cluster& cluster : candidate->Clusters) {
-            if(!(cluster.Detector & Detector_t::Type_t::TAPS))
+            if(!(cluster.Detector & Detector_t::Type_t::TAPSVeto))
                 continue;
             for(const Cluster::Hit& clusterhit : cluster.Hits) {
                 for(const Cluster::Hit::Datum& datum : clusterhit.Data) {
