@@ -39,7 +39,7 @@ Energy::Energy(Detector_t::Type_t detectorType,
     DetectorType(detectorType),
     calibrationManager(calmgr),
     Converter(move(converter)),
-    Pedestals(defaultPedestal,"Pedestals", true),
+    Pedestals(defaultPedestal,"Pedestals", true), // pedestals are always extendable
     Gains(defaultGain,"Gains"),
     Thresholds(defaultThreshold,"Thresholds"),
     RelativeGains(defaultRelativeGain,"RelativeGains")

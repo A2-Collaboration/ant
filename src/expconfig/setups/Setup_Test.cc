@@ -129,7 +129,7 @@ public:
 
         AddCalibration<calibration::TAPS_Energy>(taps, calibrationDataManager, convert_MultiHit16bit );
 
-        AddCalibration<calibration::TAPSVeto_Energy>(calibrationDataManager, convert_MultiHit16bit);
+        AddCalibration<calibration::TAPSVeto_Energy>(tapsVeto, calibrationDataManager, convert_MultiHit16bit);
 
         // enable TAPS shower correction, which is a hook running on list of clusters
         AddCalibration<calibration::TAPS_ShowerCorrection>();

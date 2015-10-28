@@ -104,3 +104,13 @@ unique_ptr<analysis::Physics> TAPS_Energy::GetPhysicsModule()
 {
     return std_ext::make_unique<ThePhysics>(GetName(), taps_detector);
 }
+
+void TAPS_Energy::GetGUIs(std::list<std::unique_ptr<gui::Manager_traits> >& guis)
+{
+    guis.emplace_back(std_ext::make_unique<GUI_Pedestals>(
+                          GetName(),
+                          Pedestals,
+                          calibrationManager,
+                          taps_detector
+                          ));
+}

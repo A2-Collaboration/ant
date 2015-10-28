@@ -5,6 +5,8 @@
 
 #include "tree/TDataRecord.h"
 
+#include "expconfig/detectors/TAPSVeto.h"
+
 #include <list>
 
 
@@ -14,7 +16,8 @@ using namespace ant::calibration;
 using namespace ant::analysis;
 using namespace ant::analysis::data;
 
-TAPSVeto_Energy::TAPSVeto_Energy(std::shared_ptr<DataManager> calmgr,
+TAPSVeto_Energy::TAPSVeto_Energy(std::shared_ptr<expconfig::detector::TAPSVeto> tapsveto,
+                                 std::shared_ptr<DataManager> calmgr,
                                  Calibration::Converter::ptr_t converter,
                                  double defaultPedestal,
                                  double defaultGain,
@@ -26,7 +29,8 @@ TAPSVeto_Energy::TAPSVeto_Energy(std::shared_ptr<DataManager> calmgr,
            defaultPedestal,
            defaultGain,
            defaultThreshold,
-           defaultRelativeGain)
+           defaultRelativeGain),
+    tapsveto_detector(tapsveto)
 {
 
 }
@@ -78,4 +82,13 @@ void TAPSVeto_Energy::ThePhysics::ShowResult()
 unique_ptr<analysis::Physics> TAPSVeto_Energy::GetPhysicsModule()
 {
     return std_ext::make_unique<ThePhysics>(GetName());
+}
+
+void TAPSVeto_Energy::GetGUIs(std::list<std::unique_ptr<gui::Manager_traits> >& guis) {
+    guis.emplace_back(std_ext::make_unique<GUI_Pedestals>(
+                          GetName(),
+                          Pedestals,
+                          calibrationManager,
+                          tapsveto_detector
+                          ));
 }
