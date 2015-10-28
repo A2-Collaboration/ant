@@ -1,10 +1,14 @@
 #include "Energy.h"
+
+#include "calibration/DataManager.h"
+#include "calibration/fitfunctions/FitGausPol0.h"
+#include "calibration/gui/CalCanvas.h"
+
 #include "analysis/plot/HistogramFactories.h"
 #include "analysis/data/Event.h"
 #include "analysis/utils/combinatorics.h"
-#include "calibration/DataManager.h"
-#include "tree/TCalibrationData.h"
 
+#include "tree/TCalibrationData.h"
 #include "tree/TDetectorRead.h"
 
 #include "base/Logger.h"
@@ -238,4 +242,74 @@ void Energy::GUI_CalibType::StoreFinishRange(const interval<TID>& range)
     }
 
     calibrationManager->Add(cdata);
+}
+
+Energy::GUI_Pedestals::GUI_Pedestals(const string& basename,
+                          CalibType& type,
+                          const std::shared_ptr<DataManager>& calmgr,
+                          const std::shared_ptr<Detector_t>& detector) :
+    GUI_CalibType(basename, type, calmgr, detector),
+    func(make_shared<gui::FitGausPol0>())
+{
+
+}
+
+void Energy::GUI_Pedestals::InitGUI(gui::ManagerWindow_traits* window)
+{
+    canvas = window->AddCalCanvas();
+}
+
+gui::Manager_traits::DoFitReturn_t Energy::GUI_Pedestals::DoFit(TH1* hist, unsigned channel,
+                                                                    const Manager_traits::DoFitOptions_t& options)
+{
+    if(detector->IsIgnored(channel))
+        return DoFitReturn_t::Skip;
+
+    TH2* hist2 = dynamic_cast<TH2*>(hist);
+
+    h_projection = hist2->ProjectionX("",channel+1,channel+1);
+
+    func->SetDefaults(h_projection);
+    const auto it_fit_param = fitParameters.find(channel);
+    if(it_fit_param != fitParameters.end()
+       && !options.IgnorePreviousFitParameters) {
+        VLOG(5) << "Loading previous fit parameters for channel " << channel;
+        func->Load(it_fit_param->second);
+    }
+
+    func->Fit(h_projection);
+
+    /// \todo implement automatic stop if fit failed?
+
+    // goto next channel
+    return DoFitReturn_t::Next;
+}
+
+void Energy::GUI_Pedestals::DisplayFit()
+{
+    canvas->Show(h_projection, func.get());
+}
+
+void Energy::GUI_Pedestals::StoreFit(unsigned channel)
+{
+
+    const double oldValue = previousValues[channel];
+    const double newValue = func->GetPeakPosition();
+
+    calibType.Values[channel] = newValue;
+
+    const double relative_change = 100*(newValue/oldValue-1);
+
+    LOG(INFO) << "Stored Ch=" << channel << ":  "
+              <<" Pedestal changed " << oldValue << " -> " << newValue
+              << " (" << relative_change << " %)";
+
+
+    // don't forget the fit parameters
+    fitParameters[channel] = func->Save();
+}
+
+bool Energy::GUI_Pedestals::FinishRange()
+{
+    return false;
 }

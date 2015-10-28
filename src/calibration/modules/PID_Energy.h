@@ -14,9 +14,7 @@ class PID;
 
 namespace calibration {
 
-namespace gui {
-class FitGausPol0;
-}
+
 
 class PID_Energy : public Energy
 {
@@ -49,24 +47,6 @@ public:
         virtual void ShowResult() override;
     }; // ThePhysics
 
-    struct GUI_Pedestals : GUI_CalibType {
-        GUI_Pedestals(const std::string& basename,
-               CalibType& type,
-               const std::shared_ptr<DataManager>& calmgr,
-               const std::shared_ptr<Detector_t>& detector);
-
-        virtual void InitGUI(gui::ManagerWindow_traits* window) override;
-        virtual DoFitReturn_t DoFit(TH1* hist, unsigned channel,
-                                    const Manager_traits::DoFitOptions_t& options) override;
-        virtual void DisplayFit() override;
-        virtual void StoreFit(unsigned channel) override;
-        virtual bool FinishRange() override;
-    protected:
-        std::shared_ptr<gui::FitGausPol0> func;
-        gui::CalCanvas* canvas;
-        TH1*  h_projection = nullptr;
-
-    }; // TheGUI
 
     virtual std::unique_ptr<analysis::Physics> GetPhysicsModule() override;
     virtual void GetGUIs(std::list<std::unique_ptr<calibration::gui::Manager_traits> >& guis) override;
