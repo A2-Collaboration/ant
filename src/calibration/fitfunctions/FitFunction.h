@@ -47,6 +47,8 @@ public:
     virtual void Draw() =0;
     knoblist_t& GetKnobs() { return knobs; }
     virtual void Fit(TH1* hist) =0;
+    virtual void FitSignal(TH1*) {}
+    virtual void FitBackground(TH1*) {}
 
     /**
      * @brief Set/Calcualte default parameter values. The hist that will be fitted later is given to allow adaptions
@@ -60,6 +62,7 @@ public:
 
     virtual SavedState_t Save() const =0;
     virtual void Load(const std::vector<double>& data) =0;
+
 };
 
 class PeakingFitFunction: public FitFunction

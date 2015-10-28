@@ -141,13 +141,23 @@ void CalCanvas::SetupGUI() {
     hist->GetListOfFunctions()->Add(new ExecUpdate(this));
 }
 
-void CalCanvas::Fit() {
+void CalCanvas::Fit(const FitType_t type) {
     if(func && hist) {
         VLOG(3) << "Refitting";
 
         UndoPush();
 
-        func->Fit(hist);
+        switch (type) {
+            case FitType_t::Total:
+                func->Fit(hist);
+                break;
+            case FitType_t::Signal:
+                func->FitSignal(hist);
+                break;
+            case FitType_t::Background:
+                func->FitBackground(hist);
+                break;
+        }
 
         Modified();
         Update();

@@ -69,8 +69,13 @@ public:
 
     virtual void UpdateMe() override;
 
+    enum class FitType_t {
+        Total,
+        Signal,
+        Background
+    };
 
-    virtual void Fit();
+    virtual void Fit(const FitType_t type=FitType_t::Total);
     void SetDefaults();
     virtual void UndoPush();
     virtual void UndoPop();

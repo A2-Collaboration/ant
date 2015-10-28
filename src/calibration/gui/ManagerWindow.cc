@@ -174,6 +174,20 @@ void ManagerWindow::CreateToolbar(TGVerticalFrame* frame)
             canvas->Fit();
     });
 
+    auto btn_fitsignal = new ActionWidget<TGTextButton>(frm2,"Fit Signal (s)");
+    keys[kKey_s] = btn_fitsignal;
+    btn_fitsignal->SetAction([this] () {
+        for(auto canvas : canvases)
+            canvas->Fit(CalCanvas::FitType_t::Signal);
+    });
+
+    auto btn_fitbackground = new ActionWidget<TGTextButton>(frm2,"Fit Background (B)");
+    keys[kKey_B] = btn_fitbackground;
+    btn_fitbackground->SetAction([this] () {
+        for(auto canvas : canvases)
+            canvas->Fit(CalCanvas::FitType_t::Background);
+    });
+
     auto btn_defaults = new ActionWidget<TGTextButton>(frm2,"SetDefaults (d)");
     keys[kKey_d] = btn_defaults;
     btn_defaults->SetAction([this] () {
@@ -216,6 +230,8 @@ void ManagerWindow::CreateToolbar(TGVerticalFrame* frame)
 
 
     add_nonfinish(frm2, btn_fit);
+    add_nonfinish(frm2, btn_fitsignal);
+    add_nonfinish(frm2, btn_fitbackground);
     add_nonfinish(frm2, btn_defaults);
     add_nonfinish(frm2, btn_undopop);
     add_nonfinish(frm2, btn_undopush);
