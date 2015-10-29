@@ -68,10 +68,10 @@ struct CandidateBuilderTester : CandidateBuilder {
 
     using CandidateBuilder::CandidateBuilder; // use base class constructors
 
-    virtual void Build(std::map<Detector_t::Type_t, std::list<TCluster> > sorted_clusters,
+    virtual void BuildCandidates(std::map<Detector_t::Type_t, std::list<TCluster> > sorted_clusters,
             TEvent::candidates_t& candidates,
             std::vector<TCluster>& all_clusters
-            ) {
+            ) override {
 
         counts_t before;
         counts_t after;
@@ -93,24 +93,36 @@ struct CandidateBuilderTester : CandidateBuilder {
 
 
         before = getCounts(sorted_clusters, candidates, all_clusters);
-
         Catchall(sorted_clusters, candidates, all_clusters);
-
-        /// \todo rework handling
-        // move the rest to all clusters
-        for(auto& det_entry : sorted_clusters) {
-            for(auto& cluster : det_entry.second) {
-                all_clusters.emplace_back(cluster);
-            }
-        }
-        sorted_clusters.clear();
-
         after = getCounts(sorted_clusters, candidates, all_clusters);
         diff = after - before;
+        REQUIRE(diff.candidateclusters + diff.clusters == 0);
+    }
 
-        REQUIRE(diff.candidateclusters == diff.candidates);
-        REQUIRE(diff.allclusters + diff.candidateclusters + diff.clusters == 0);
+    virtual void Build(std::map<Detector_t::Type_t, std::list<TCluster> > sorted_clusters,
+            TEvent::candidates_t& candidates,
+            std::vector<TCluster>& all_clusters
+            ) override {
+        counts_t before;
+        counts_t after;
+        counts_t diff;
 
+        before = getCounts(sorted_clusters, candidates, all_clusters);
+        REQUIRE(before.allclusters==0);
+        REQUIRE(before.candidateclusters==0);
+        REQUIRE(before.candidates==0);
+        REQUIRE(before.clusters>0);
+        CandidateBuilder::Build(sorted_clusters, candidates, all_clusters);
+        after = getCounts(sorted_clusters, candidates, all_clusters);
+        REQUIRE(after.allclusters - after.candidateclusters == before.clusters);
+        // examine unmatched flag clusters
+        size_t unmatched_clusters = 0;
+        for(auto cluster : all_clusters) {
+            if(cluster.HasFlag(TCluster::Flags_t::Unmatched))
+                unmatched_clusters++;
+        }
+        REQUIRE(unmatched_clusters>0);
+        REQUIRE(all_clusters.size() - unmatched_clusters == after.candidateclusters);
     }
 };
 

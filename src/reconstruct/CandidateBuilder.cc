@@ -15,6 +15,39 @@ using namespace std;
 using namespace ant::reconstruct;
 using namespace ant::expconfig;
 
+CandidateBuilder::CandidateBuilder(
+        const CandidateBuilder::sorted_detectors_t& sorted_detectors,
+        const std::shared_ptr<ExpConfig::Reconstruct>& _config
+        ) :
+    config(_config->GetCandidateBuilderConfig())
+{
+
+    try {
+        cb  = dynamic_pointer_cast<detector::CB>(sorted_detectors.at(Detector_t::Type_t::CB));
+    } catch (...) {
+        VLOG(3) << "Detector CB not initialized";
+    }
+
+    try {
+        pid = dynamic_pointer_cast<detector::PID>(sorted_detectors.at(Detector_t::Type_t::PID));
+    } catch (...) {
+        VLOG(3) << "Detector PID not initialized";
+    }
+
+    try {
+        taps = dynamic_pointer_cast<detector::TAPS>(sorted_detectors.at(Detector_t::Type_t::TAPS));
+    } catch (...) {
+        VLOG(3) << "Detector TAPS not initialized";
+    }
+
+    try {
+        tapsveto = dynamic_pointer_cast<detector::TAPSVeto>(sorted_detectors.at(Detector_t::Type_t::TAPSVeto));
+    } catch (...) {
+        VLOG(3) << "Detector TAPSVeto not initialized";
+    }
+
+}
+
 void CandidateBuilder::Build_PID_CB(std::map<Detector_t::Type_t, std::list<TCluster> >& sorted_clusters,
                                     TEvent::candidates_t& candidates,
                                     std::vector<TCluster>& all_clusters)
@@ -202,37 +235,24 @@ void CandidateBuilder::Catchall(std::map<Detector_t::Type_t, std::list<TCluster>
     }
 }
 
-CandidateBuilder::CandidateBuilder(
-        const CandidateBuilder::sorted_detectors_t& sorted_detectors,
-        const std::shared_ptr<ExpConfig::Reconstruct>& _config
-        ) :
-    config(_config->GetCandidateBuilderConfig())
+
+
+
+
+void CandidateBuilder::BuildCandidates(
+        std::map<Detector_t::Type_t, std::list<TCluster> > sorted_clusters,
+        TEvent::candidates_t& candidates,
+        std::vector<TCluster>& all_clusters
+        )
 {
+    // build candidates
+    if(cb && pid)
+        Build_PID_CB(sorted_clusters, candidates, all_clusters);
 
-    try {
-        cb  = dynamic_pointer_cast<detector::CB>(sorted_detectors.at(Detector_t::Type_t::CB));
-    } catch (...) {
-        VLOG(3) << "Detector CB not initialized";
-    }
+    if(taps && tapsveto)
+        Build_TAPS_Veto(sorted_clusters, candidates, all_clusters);
 
-    try {
-        pid = dynamic_pointer_cast<detector::PID>(sorted_detectors.at(Detector_t::Type_t::PID));
-    } catch (...) {
-        VLOG(3) << "Detector PID not initialized";
-    }
-
-    try {
-        taps = dynamic_pointer_cast<detector::TAPS>(sorted_detectors.at(Detector_t::Type_t::TAPS));
-    } catch (...) {
-        VLOG(3) << "Detector TAPS not initialized";
-    }
-
-    try {
-        tapsveto = dynamic_pointer_cast<detector::TAPSVeto>(sorted_detectors.at(Detector_t::Type_t::TAPSVeto));
-    } catch (...) {
-        VLOG(3) << "Detector TAPSVeto not initialized";
-    }
-
+    Catchall(sorted_clusters, candidates, all_clusters);
 }
 
 void CandidateBuilder::Build(
@@ -267,14 +287,7 @@ void CandidateBuilder::Build(
         }
     }
 
-    // build candidates
-    if(cb && pid)
-        Build_PID_CB(sorted_clusters, candidates, all_clusters);
-
-    if(taps && tapsveto)
-        Build_TAPS_Veto(sorted_clusters, candidates, all_clusters);
-
-    Catchall(sorted_clusters, candidates, all_clusters);
+    BuildCandidates(sorted_clusters, candidates, all_clusters);
 
     // add remaining unmatched clusters to all_clusters with Unmatched flag set
     for(auto& det_entry : sorted_clusters) {
