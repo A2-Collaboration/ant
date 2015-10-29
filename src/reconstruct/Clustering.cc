@@ -44,14 +44,24 @@ void Clustering::Build(
     for(const AdaptorTClusterHit& clusterhit : clusterhits) {
         const auto& hit = clusterhit.Hit;
         // ignore hits without energy information
-        if(!isfinite(clusterhit.Energy))
+        if(!isfinite(clusterhit.Energy)) {
+            // we're not allowed to throw anything away
+            // so add some strange single hit cluster with no energy information here
+            clusters.emplace_back(
+                        clusterdetector->GetPosition(hit->Channel),
+                        clusterhit.Energy,
+                        clusterhit.Time,
+                        clusterdetector->Type,
+                        hit->Channel,
+                        vector<TClusterHit>{*hit}
+                        );
             continue;
+        }
         crystals.emplace_back(
                     clusterhit.Energy,
                     clusterdetector->GetClusterElement(hit->Channel),
                     addressof(clusterhit)
                     );
-
     }
 
     // do the clustering (calls detail/Clustering_NextGen.h code)
