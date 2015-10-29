@@ -63,17 +63,16 @@ void TAPSVeto_Energy::ThePhysics::ProcessEvent(const Event& event)
 {
     const auto& cands = event.Reconstructed().Candidates();
 
-    // pedestals (maybe also better from InsaneClusters as for CB_PID?)
-    for(const auto& candidate : cands) {
-        for(const Cluster& cluster : candidate->Clusters) {
-            if(!(cluster.Detector & Detector_t::Type_t::TAPSVeto))
-                continue;
-            for(const Cluster::Hit& clusterhit : cluster.Hits) {
-                for(const Cluster::Hit::Datum& datum : clusterhit.Data) {
-                    if(datum.Type != Channel_t::Type_t::Pedestal)
-                        continue;
-                    h_pedestals->Fill(datum.Value, clusterhit.Channel);
-                }
+    // pedestals
+    for(const Cluster& cluster : event.Reconstructed().AllClusters()) {
+        if(!(cluster.Detector & Detector_t::Type_t::TAPSVeto))
+            continue;
+        for(const Cluster::Hit& clusterhit : cluster.Hits) {
+            /// \todo check for timing hit?
+            for(const Cluster::Hit::Datum& datum : clusterhit.Data) {
+                if(datum.Type != Channel_t::Type_t::Pedestal)
+                    continue;
+                h_pedestals->Fill(datum.Value, clusterhit.Channel);
             }
         }
     }

@@ -34,7 +34,7 @@ Event Converter::Convert(const TEvent &event)
 
     Copy(event.Candidates,     antevent.Reconstructed().Candidates());
     Copy(event.Tagger.Hits,    antevent.Reconstructed().TaggerHits());
-    Copy(event.InsaneClusters, antevent.Reconstructed().InsaneClusters());
+    Copy(event.AllClusters, antevent.Reconstructed().AllClusters());
 
     /// @todo The multiplicity is a much harder business, see acqu/root/src/TA2BasePhysics.cc
     /// the code there might only apply to the old trigger system before 2012

@@ -62,10 +62,9 @@ private:
             const std::vector<TDetectorReadHit*>& readhits,
             TTagger& event_tagger);
 
-    void BuildClusters(
-            sorted_bydetectortype_t<reconstruct::AdaptorTClusterHit>&& sorted_clusterhits,
+    void BuildClusters(sorted_bydetectortype_t<reconstruct::AdaptorTClusterHit>&& sorted_clusterhits,
             sorted_bydetectortype_t<TCluster>& sorted_clusters,
-                       std::vector<TCluster>& insane_clusters
+            std::vector<TCluster>& all_clusters
             );
 
 

@@ -65,7 +65,7 @@ public:
         CandidateList  candidates;     // particle candidates (if any)
         TaggerHitList  taggerhits;     // tagger hits
         TriggerInfo    triggerinfo;
-        ClusterList    insaneclusters;
+        ClusterList    allclusters;
 
 
     public:
@@ -89,8 +89,8 @@ public:
         const TriggerInfo& TriggerInfos() const { return triggerinfo; }
               TriggerInfo& TriggerInfos()       { return triggerinfo; }
 
-        const ClusterList& InsaneClusters() const { return insaneclusters; }
-              ClusterList& InsaneClusters()       { return insaneclusters; }
+        const ClusterList& AllClusters() const { return allclusters; }
+              ClusterList& AllClusters()       { return allclusters; }
 
 
               std::ostream& Print(std::ostream& stream) const;

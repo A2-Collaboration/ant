@@ -82,7 +82,7 @@ struct ReconstructTester : Reconstruct_traits {
 
         // then build clusters (at least for calorimeters this is not trivial)
         Reconstruct::sorted_bydetectortype_t<TCluster> sorted_clusters;
-        r.BuildClusters(move(sorted_clusterhits), sorted_clusters, event->InsaneClusters);
+        r.BuildClusters(move(sorted_clusterhits), sorted_clusters, event->AllClusters);
         size_t n_clusters = getTotalCount(sorted_clusters);
         REQUIRE(n_clusters>0);
         REQUIRE(n_clusters <= n_clusterhits);
@@ -93,14 +93,15 @@ struct ReconstructTester : Reconstruct_traits {
         }
 
         // finally, do the candidate building
-        const auto n_insane_before = event->InsaneClusters.size();
-        r.candidatebuilder->Build(move(sorted_clusters), event->Candidates, event->InsaneClusters);
+        /// \todo rework all clusters handling
+        const auto n_all_before = event->AllClusters.size();
+        r.candidatebuilder->Build(move(sorted_clusters), event->Candidates, event->AllClusters);
 
         size_t n_candidates = event->Candidates.size();
-        const auto n_insane_after = event->InsaneClusters.size();
-        REQUIRE(n_insane_after>=n_insane_before);
-        const auto n_insane_added = n_insane_after - n_insane_before;
-        REQUIRE(n_candidates + n_insane_added <= n_clusters);
+        const auto n_all_after = event->AllClusters.size();
+        REQUIRE(n_all_after>=n_all_before);
+        const auto n_all_added = n_all_after - n_all_before;
+        REQUIRE(n_candidates + n_all_added <= n_clusters);
 
         return event;
     }

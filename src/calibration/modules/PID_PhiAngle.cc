@@ -70,9 +70,8 @@ void PID_PhiAngle::ThePhysics::ProcessEvent(const Event& event)
         }
     }
 
-    // search the insane clusters for a PID hit,
-    // CB cluster always become a neutral candidate
-    for(const Cluster& cl : event.Reconstructed().InsaneClusters()) {
+    /// \todo search all clusters, leave candidates alone
+    for(const Cluster& cl : event.Reconstructed().AllClusters()) {
         if(cl.Detector != Detector_t::Type_t::PID)
             continue;
         if(!isfinite(cl.Energy) || !isfinite(cl.Time))

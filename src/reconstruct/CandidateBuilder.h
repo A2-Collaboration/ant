@@ -67,7 +67,7 @@ public:
     /// \todo make this method abstract and create proper derived Candidate builders
     virtual void Build(std::map<Detector_t::Type_t, std::list<TCluster> > sorted_clusters,
             TEvent::candidates_t& candidates,
-            std::vector<TCluster>& insane_clusters
+            std::vector<TCluster>& all_clusters
             );
 };
 

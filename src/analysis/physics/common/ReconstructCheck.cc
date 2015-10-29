@@ -47,16 +47,16 @@ void ReconstructCheck::ProcessEvent(const Event &event)
         const auto common_detector = GetCommonDetector(event.Reconstructed().Candidates());
 
         if(common_detector & Detector_t::Any_t::CB) {
-            cb_group.Fill(mctrue_particle, event.Reconstructed().Candidates(), event.Reconstructed().InsaneClusters());
+            cb_group.Fill(mctrue_particle, event.Reconstructed().Candidates(), event.Reconstructed().AllClusters());
         }
 
         if(common_detector & Detector_t::Any_t::TAPS) {
-            taps_group.Fill(mctrue_particle, event.Reconstructed().Candidates(), event.Reconstructed().InsaneClusters());
+            taps_group.Fill(mctrue_particle, event.Reconstructed().Candidates(), event.Reconstructed().AllClusters());
         }
 
-        all_group.Fill(mctrue_particle, event.Reconstructed().Candidates(), event.Reconstructed().InsaneClusters());
+        all_group.Fill(mctrue_particle, event.Reconstructed().Candidates(), event.Reconstructed().AllClusters());
 
-        tapsveto.Fill(event.Reconstructed().Candidates(), event.Reconstructed().InsaneClusters());
+        tapsveto.Fill(event.Reconstructed().Candidates(), event.Reconstructed().AllClusters());
 
     }
 }
@@ -219,7 +219,7 @@ std::list<CandidatePtr> CandidatesByDetector(const Detector_t::Any_t& detector, 
 }
 
 
-void ReconstructCheck::histgroup::Fill(const ParticlePtr& mctrue, const CandidateList& cand, const ClusterList& insane)
+void ReconstructCheck::histgroup::Fill(const ParticlePtr& mctrue, const CandidateList& cand, const ClusterList& all_clusters)
 {
     const auto mc_phi = mctrue->Phi()*TMath::RadToDeg();
     const auto mc_theta = mctrue->Theta();
@@ -259,7 +259,7 @@ void ReconstructCheck::histgroup::Fill(const ParticlePtr& mctrue, const Candidat
     }
 
     unsigned nunmatched_veto(0);
-    for(const Cluster& ic : insane) {
+    for(const Cluster& ic : all_clusters) {
         if(ic.Detector & Detector_t::Any_t::Veto) {
             nunmatched_veto++;
         }

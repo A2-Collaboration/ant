@@ -99,7 +99,7 @@ MemoryPool<TEvent>::Item Reconstruct::DoReconstruct(TDetectorRead& detectorRead)
 
     // then build clusters (at least for calorimeters this is not trivial)
     sorted_bydetectortype_t<TCluster> sorted_clusters;
-    BuildClusters(move(sorted_clusterhits), sorted_clusters, event->InsaneClusters);
+    BuildClusters(move(sorted_clusterhits), sorted_clusters, event->AllClusters);
 
     // apply hooks which modify clusters
     for(const auto& hook : hooks_clusters) {
@@ -107,7 +107,7 @@ MemoryPool<TEvent>::Item Reconstruct::DoReconstruct(TDetectorRead& detectorRead)
     }
 
     // finally, do the candidate building
-    candidatebuilder->Build(move(sorted_clusters), event->Candidates, event->InsaneClusters);
+    candidatebuilder->Build(move(sorted_clusters), event->Candidates, event->AllClusters);
 
     // uncomment for debug purposes
     //cout << *event << endl;
@@ -268,10 +268,9 @@ void Reconstruct::HandleTagger(const shared_ptr<TaggerDetector_t>& taggerdetecto
     }
 }
 
-void Reconstruct::BuildClusters(
-        sorted_bydetectortype_t<AdaptorTClusterHit>&& sorted_clusterhits,
+void Reconstruct::BuildClusters(sorted_bydetectortype_t<AdaptorTClusterHit>&& sorted_clusterhits,
         sorted_bydetectortype_t<TCluster>& sorted_clusters,
-        std::vector<TCluster>& insane_clusters)
+        std::vector<TCluster>& all_clusters)
 {
     auto insert_hint = sorted_clusters.begin();
 
@@ -312,18 +311,17 @@ void Reconstruct::BuildClusters(
 
         auto c = clusters.begin();
         while (c!=clusters.end()) {
-            if(! c->isSane()) {
-                insane_clusters.emplace_back(std::move(*c));
+            if(!c->isSane()) {
+                all_clusters.emplace_back(std::move(*c));
                 c = clusters.erase(c);
             } else {
                 ++c;
             }
         }
 
+        // insert the clusters
         if(clusters.empty())
             continue;
-
-        // insert the clusters
         insert_hint =
                 sorted_clusters.insert(insert_hint,
                                        make_pair(detectortype, move(clusters)));

@@ -59,7 +59,7 @@ void DebugPIDAlignment::ProcessEvent(const data::Event& event)
             }
         }
 
-        for(const data::Cluster& c : event.Reconstructed().InsaneClusters()) {
+        for(const data::Cluster& c : event.Reconstructed().AllClusters()) {
             if(c.Detector == Detector_t::Type_t::PID) {
                 angles->Fill(mctrue_phi, c.pos.Phi()* TMath::RadToDeg());
             }

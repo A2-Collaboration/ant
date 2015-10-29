@@ -90,11 +90,12 @@ PID_Energy::ThePhysics::ThePhysics(const string& name,
 void PID_Energy::ThePhysics::ProcessEvent(const data::Event& event)
 {
 
-    // pedestals, best determined from insane clusters (that is no timing hit seen)
-    for(const Cluster& cluster : event.Reconstructed().InsaneClusters()) {
+    // pedestals, best determined from clusters with energy information only
+    for(const Cluster& cluster : event.Reconstructed().AllClusters()) {
         if(!(cluster.Detector & Detector_t::Type_t::PID))
             continue;
         for(const Cluster::Hit& clusterhit : cluster.Hits) {
+            /// \todo check for timing hit?
             for(const Cluster::Hit::Datum& datum : clusterhit.Data) {
                 if(datum.Type != Channel_t::Type_t::Pedestal)
                     continue;

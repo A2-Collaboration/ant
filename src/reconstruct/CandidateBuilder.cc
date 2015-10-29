@@ -210,7 +210,7 @@ CandidateBuilder::CandidateBuilder(const CandidateBuilder::sorted_detectors_t& s
 void CandidateBuilder::Build(
         std::map<Detector_t::Type_t, std::list<TCluster> > sorted_clusters,
         TEvent::candidates_t& candidates,
-        std::vector<TCluster>& insane_clusters
+        std::vector<TCluster>& all_clusters
         )
 {
 
@@ -222,10 +222,10 @@ void CandidateBuilder::Build(
 
     Catchall(sorted_clusters, candidates);
 
-    // move the rest to insane clusters
+    /// \todo flag clusters
     for(auto& det_entry : sorted_clusters) {
         for(auto& cluster : det_entry.second) {
-            insane_clusters.emplace_back(cluster);
+            all_clusters.emplace_back(cluster);
         }
     }
 }

@@ -18,12 +18,12 @@ struct TEvent : TDataRecord
     std::vector<ant::TCandidate> Candidates;
     TTagger Tagger;
     typedef std::vector<ant::TCluster> clusters_t;
-    std::vector<ant::TCluster> InsaneClusters;
+    std::vector<ant::TCluster> AllClusters;
 
     void Clear() {
         Candidates.resize(0);
         Tagger.Clear();
-        InsaneClusters.resize(0);
+        AllClusters.resize(0);
     }
 
 #ifndef __CINT__
