@@ -90,6 +90,8 @@ const char*ant::Channel_t::ToString(const Type_t& type)
         return "Timing";
     case Channel_t::Type_t::Pedestal:
         return "Pedestal";
+    case Channel_t::Type_t::PedestalShort:
+        return "PedestalShort";
     }
     throw std::runtime_error("Not implemented");
 }

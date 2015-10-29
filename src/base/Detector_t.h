@@ -93,8 +93,9 @@ struct Channel_t {
     enum class Type_t : std::uint8_t {
         Timing,
         Integral, IntegralShort,
+        Pedestal, PedestalShort,
         IntegralAlternate, IntegralShortAlternate,
-        BitPattern, Scaler, Pedestal, Counter
+        BitPattern, Scaler, Counter
     };
     static bool IsIntegral(const Type_t& t);
     static const char* ToString(const Type_t& type);
