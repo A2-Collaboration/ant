@@ -23,10 +23,15 @@ void CandidateBuilder::Build_PID_CB(std::map<Detector_t::Type_t, std::list<TClus
     if(it_cb_clusters == sorted_clusters.end())
         return;
     auto& cb_clusters  = it_cb_clusters->second;
+    if(cb_clusters.empty())
+        return;
+
     auto it_pid_clusters = sorted_clusters.find(Detector_t::Type_t::PID);
     if(it_pid_clusters == sorted_clusters.end())
         return;
     auto& pid_clusters  = it_pid_clusters->second;
+    if(pid_clusters.empty())
+        return;
 
     auto pid_cluster = pid_clusters.begin();
 
@@ -90,10 +95,15 @@ void CandidateBuilder::Build_TAPS_Veto(std::map<Detector_t::Type_t, std::list<TC
     if(it_taps_clusters == sorted_clusters.end())
         return;
     auto& taps_clusters  = it_taps_clusters->second;
+    if(taps_clusters.empty())
+        return;
+
     auto it_veto_clusters = sorted_clusters.find(Detector_t::Type_t::TAPSVeto);
     if(it_veto_clusters == sorted_clusters.end())
         return;
     auto& veto_clusters  = it_veto_clusters->second;
+    if(veto_clusters.empty())
+        return;
 
     const auto element_radius2 = std_ext::sqr(tapsveto->GetElementRadius());
 

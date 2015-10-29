@@ -93,15 +93,25 @@ struct ReconstructTester : Reconstruct_traits {
         }
 
         // finally, do the candidate building
-        /// \todo rework all clusters handling
         const auto n_all_before = event->AllClusters.size();
         r.candidatebuilder->Build(move(sorted_clusters), event->Candidates, event->AllClusters);
 
-        size_t n_candidates = event->Candidates.size();
         const auto n_all_after = event->AllClusters.size();
         REQUIRE(n_all_after>=n_all_before);
         const auto n_all_added = n_all_after - n_all_before;
-        REQUIRE(n_candidates + n_all_added <= n_clusters);
+        REQUIRE(n_all_added == n_clusters);
+
+        bool matched_clusters = false;
+        for(auto cluster : event->AllClusters) {
+            if(!cluster.HasFlag(TCluster::Flags_t::Unmatched)) {
+                matched_clusters = true;
+                break;
+            }
+        }
+        if(matched_clusters) {
+            const size_t n_candidates = event->Candidates.size();
+            REQUIRE(n_candidates>0);
+        }
 
         return event;
     }
