@@ -75,9 +75,9 @@ struct TDetectorReadHit
 
         if(!RawData.empty()) {
             std::ostringstream s_rawdata;
-            s_rawdata << std::hex << std::uppercase << std::setfill( '0' );
-            for(int c : RawData) {
-                s_rawdata << std::setw( 2 ) << c;
+            s_rawdata << std::hex << std::uppercase << std::setfill('0');
+            for(auto i = RawData.rbegin(); i != RawData.rend(); i++) {
+                s_rawdata << std::setw(2) << static_cast<int>(*i);
             }
             s << " RawData=0x" << s_rawdata.str();
         }
