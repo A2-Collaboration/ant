@@ -541,6 +541,27 @@ struct chi2_highscore_t {
 
 void OmegaEtaG2::Analyse(const Event::Data &data, const Event &event)
 {
+
+    const auto& particletree = event.MCTrue().ParticleTree();
+
+    if(particletree) {
+
+        if(utils::ParticleTools::FindParticle(ParticleTypeDatabase::Omega, particletree, 1)) {
+
+            h_TotalEvents->Fill("#omega", 1);
+
+            if(particletree->IsEqual(signal_tree, utils::ParticleTools::MatchByParticleName)) {
+                h_TotalEvents->Fill("Signal",1);
+            }
+            else if(particletree->IsEqual(reference_tree, utils::ParticleTools::MatchByParticleName)) {
+                h_TotalEvents->Fill("Reference",1);
+            }
+        }
+
+
+
+    }
+
     const ParticleList& iphotons = data.Particles().Get(ParticleTypeDatabase::Photon);
     const ParticleList& iprotons = (data_proton ? event.Reconstructed() : event.MCTrue()).Particles().Get(ParticleTypeDatabase::Proton);
 
@@ -749,6 +770,8 @@ OmegaEtaG2::OmegaEtaG2(const std::string& name, PhysOptPtr opts):
     reference_tree = ParticleTypeTreeDatabase::Get(ParticleTypeTreeDatabase::Channel::Omega_gPi0_3g);
 
     steps = HistFac.makeTH1D("Steps","Step","Events passed",BinSettings(14),"steps");
+
+    h_TotalEvents = HistFac.makeTH1D("TotalEvents","","",BinSettings(3),"TotalEvents");
 
 
 }

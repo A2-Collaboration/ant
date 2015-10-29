@@ -240,6 +240,8 @@ protected:
 
     const interval<double> complcut = std_ext::degree_to_radian(interval<double>::CenterWidth(180,30));
 
+    TH1D* h_TotalEvents;
+
 
 public:
     OmegaEtaG2(const std::string& name, PhysOptPtr opts);
