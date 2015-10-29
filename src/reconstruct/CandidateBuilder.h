@@ -42,17 +42,20 @@ protected:
 
     void Build_PID_CB(
             std::map<Detector_t::Type_t, std::list< TCluster > >& sorted_clusters,
-            TEvent::candidates_t& candidates
+            TEvent::candidates_t& candidates,
+            std::vector<TCluster>& all_clusters
             );
 
     void Build_TAPS_Veto(
             std::map<Detector_t::Type_t, std::list< TCluster > >& sorted_clusters,
-            TEvent::candidates_t& candidates
+            TEvent::candidates_t& candidates,
+            std::vector<TCluster>& all_clusters
             );
 
     void Catchall(
             std::map<Detector_t::Type_t, std::list< TCluster > >& sorted_clusters,
-            TEvent::candidates_t& candidates
+            TEvent::candidates_t& candidates,
+            std::vector<TCluster>& all_clusters
             );
 
 public:

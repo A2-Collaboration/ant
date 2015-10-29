@@ -79,14 +79,14 @@ struct CandidateBuilderTester : CandidateBuilder {
 
         before = getCounts(sorted_clusters, candidates, all_clusters);
         if(cb && pid)
-            Build_PID_CB(sorted_clusters, candidates);
+            Build_PID_CB(sorted_clusters, candidates, all_clusters);
         after = getCounts(sorted_clusters, candidates, all_clusters);
         diff = after - before;
         REQUIRE(diff.candidateclusters + diff.clusters == 0);
 
         before = getCounts(sorted_clusters, candidates, all_clusters);
         if(taps && tapsveto)
-            Build_TAPS_Veto(sorted_clusters, candidates);
+            Build_TAPS_Veto(sorted_clusters, candidates, all_clusters);
         after = getCounts(sorted_clusters, candidates, all_clusters);
         diff = after - before;
         REQUIRE(diff.candidateclusters + diff.clusters == 0);
@@ -94,7 +94,7 @@ struct CandidateBuilderTester : CandidateBuilder {
 
         before = getCounts(sorted_clusters, candidates, all_clusters);
 
-        Catchall(sorted_clusters, candidates);
+        Catchall(sorted_clusters, candidates, all_clusters);
 
         /// \todo rework handling
         // move the rest to all clusters

@@ -15,7 +15,9 @@ using namespace std;
 using namespace ant::reconstruct;
 using namespace ant::expconfig;
 
-void CandidateBuilder::Build_PID_CB(std::map<Detector_t::Type_t, std::list<TCluster> >& sorted_clusters, TEvent::candidates_t& candidates)
+void CandidateBuilder::Build_PID_CB(std::map<Detector_t::Type_t, std::list<TCluster> >& sorted_clusters,
+                                    TEvent::candidates_t& candidates,
+                                    std::vector<TCluster>& all_clusters)
 {
     auto it_cb_clusters = sorted_clusters.find(Detector_t::Type_t::CB);
     if(it_cb_clusters == sorted_clusters.end())
@@ -46,7 +48,7 @@ void CandidateBuilder::Build_PID_CB(std::map<Detector_t::Type_t, std::list<TClus
                 // calculate phi angle difference.
                 // Phi_mpi_pi() takes care of wrap-arounds at 180/-180 deg
                 const auto dphi = fabs(TVector2::Phi_mpi_pi(cb_phi - pid_phi));
-                if(  dphi < dphi_max ) { // match!
+                if(dphi < dphi_max ) { // match!
 
                     candidates.emplace_back(
                                 cb_cluster->Energy,
@@ -56,6 +58,7 @@ void CandidateBuilder::Build_PID_CB(std::map<Detector_t::Type_t, std::list<TClus
                                 std::vector<TCluster>{*cb_cluster, *pid_cluster},
                                 pid_cluster->Energy
                                 );
+                    all_clusters.emplace_back(*cb_cluster);
                     cb_cluster = cb_clusters.erase(cb_cluster);
                     matched = true;
                 }
@@ -65,6 +68,7 @@ void CandidateBuilder::Build_PID_CB(std::map<Detector_t::Type_t, std::list<TClus
             }
 
             if(matched) {
+                all_clusters.emplace_back(*pid_cluster);
                 pid_cluster = pid_clusters.erase(pid_cluster);
             } else {
                 ++pid_cluster;
@@ -78,7 +82,9 @@ void CandidateBuilder::Build_PID_CB(std::map<Detector_t::Type_t, std::list<TClus
     }
 }
 
-void CandidateBuilder::Build_TAPS_Veto(std::map<Detector_t::Type_t, std::list<TCluster> >& sorted_clusters, TEvent::candidates_t& candidates)
+void CandidateBuilder::Build_TAPS_Veto(std::map<Detector_t::Type_t, std::list<TCluster> >& sorted_clusters,
+                                       TEvent::candidates_t& candidates,
+                                       std::vector<TCluster>& all_clusters)
 {
     auto it_taps_clusters = sorted_clusters.find(Detector_t::Type_t::TAPS);
     if(it_taps_clusters == sorted_clusters.end())
@@ -91,52 +97,57 @@ void CandidateBuilder::Build_TAPS_Veto(std::map<Detector_t::Type_t, std::list<TC
 
     const auto element_radius2 = std_ext::sqr(tapsveto->GetElementRadius());
 
-    auto veto = veto_clusters.begin();
-    while(veto != veto_clusters.end()) {
+    auto veto_cluster = veto_clusters.begin();
+    while(veto_cluster != veto_clusters.end()) {
 
         bool matched = false;
 
-        const TVector3& vpos = veto->Position;
+        const TVector3& vpos = veto_cluster->Position;
 
-        auto taps = taps_clusters.begin();
+        auto taps_cluster = taps_clusters.begin();
 
-        while(taps != taps_clusters.end()) {
+        while(taps_cluster != taps_clusters.end()) {
 
-            const TVector3& tpos = taps->Position;
+            const TVector3& tpos = taps_cluster->Position;
             const TVector3 d = tpos - vpos;
 
             if( d.XYvector().Mod() < element_radius2 ) {
                 candidates.emplace_back(
-                            taps->Energy,
-                            taps->Time,
-                            taps->Position.Theta(),
-                            taps->Position.Phi(),
-                            std::vector<TCluster>{*taps, *veto},
-                            veto->Energy
+                            taps_cluster->Energy,
+                            taps_cluster->Time,
+                            taps_cluster->Position.Theta(),
+                            taps_cluster->Position.Phi(),
+                            std::vector<TCluster>{*taps_cluster, *veto_cluster},
+                            veto_cluster->Energy
                             );
-                taps = taps_clusters.erase(taps);
+                all_clusters.emplace_back(*taps_cluster);
+                taps_cluster = taps_clusters.erase(taps_cluster);
                 matched = true;
             } else {
-                ++taps;
+                ++taps_cluster;
             }
         }
 
         if(matched) {
-            veto = veto_clusters.erase(veto);
+            all_clusters.emplace_back(*veto_cluster);
+            veto_cluster = veto_clusters.erase(veto_cluster);
         } else {
-            ++veto;
+            ++veto_cluster;
         }
     }
 }
 
-void CandidateBuilder::Catchall(std::map<Detector_t::Type_t, std::list<TCluster> >& sorted_clusters, TEvent::candidates_t& candidates)
+void CandidateBuilder::Catchall(std::map<Detector_t::Type_t, std::list<TCluster> >& sorted_clusters,
+                                TEvent::candidates_t& candidates,
+                                std::vector<TCluster>& all_clusters)
 {
     for(auto& cluster_list : sorted_clusters ) {
 
         const auto& detector_type = cluster_list.first;
         auto& clusters      = cluster_list.second;
 
-        if(option_allowSingleVetoClusters && (detector_type == Detector_t::Type_t::PID || detector_type == Detector_t::Type_t::TAPSVeto)) {
+        if(option_allowSingleVetoClusters &&
+           (detector_type == Detector_t::Type_t::PID || detector_type == Detector_t::Type_t::TAPSVeto)) {
             for(auto& c : clusters) {
                 candidates.emplace_back(
                             0,
@@ -146,6 +157,7 @@ void CandidateBuilder::Catchall(std::map<Detector_t::Type_t, std::list<TCluster>
                             std::vector<TCluster>{c},
                             c.Energy
                             );
+                all_clusters.emplace_back(move(c));
             }
             clusters.clear();
         } else if(detector_type == Detector_t::Type_t::CB || detector_type == Detector_t::Type_t::TAPS) {
@@ -158,9 +170,11 @@ void CandidateBuilder::Catchall(std::map<Detector_t::Type_t, std::list<TCluster>
                             std::vector<TCluster>{c},
                             0
                             );
+                all_clusters.emplace_back(move(c));
             }
             clusters.clear();
-        } else if(detector_type == Detector_t::Type_t::MWPC0 || detector_type == Detector_t::Type_t::MWPC1 || detector_type == Detector_t::Type_t::Cherenkov) {
+        } else if(detector_type == Detector_t::Type_t::MWPC0 || detector_type == Detector_t::Type_t::MWPC1
+                  || detector_type == Detector_t::Type_t::Cherenkov) {
             for(auto& c : clusters) {
                 candidates.emplace_back(
                             0,
@@ -171,13 +185,17 @@ void CandidateBuilder::Catchall(std::map<Detector_t::Type_t, std::list<TCluster>
                             0,
                             c.Energy
                             );
+                all_clusters.emplace_back(move(c));
             }
             clusters.clear();
         }
     }
 }
 
-CandidateBuilder::CandidateBuilder(const CandidateBuilder::sorted_detectors_t& sorted_detectors, const std::shared_ptr<ExpConfig::Reconstruct>& _config):
+CandidateBuilder::CandidateBuilder(
+        const CandidateBuilder::sorted_detectors_t& sorted_detectors,
+        const std::shared_ptr<ExpConfig::Reconstruct>& _config
+        ) :
     config(_config->GetCandidateBuilderConfig())
 {
 
@@ -213,14 +231,13 @@ void CandidateBuilder::Build(
         std::vector<TCluster>& all_clusters
         )
 {
-
     if(cb && pid)
-        Build_PID_CB(sorted_clusters, candidates);
+        Build_PID_CB(sorted_clusters, candidates, all_clusters);
 
     if(taps && tapsveto)
-        Build_TAPS_Veto(sorted_clusters, candidates);
+        Build_TAPS_Veto(sorted_clusters, candidates, all_clusters);
 
-    Catchall(sorted_clusters, candidates);
+    Catchall(sorted_clusters, candidates, all_clusters);
 
     /// \todo flag clusters
     for(auto& det_entry : sorted_clusters) {
