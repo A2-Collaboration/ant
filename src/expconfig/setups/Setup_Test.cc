@@ -148,13 +148,6 @@ public:
         return numeric_limits<double>::quiet_NaN();
     }
 
-    virtual cluster_thresholds_t GetClusterThresholds() const override {
-        return {
-            {Detector_t::Type_t::CB,   15}, // in MeV
-            {Detector_t::Type_t::TAPS, 20}, // in MeV
-        };
-    }
-
     bool Matches(const THeaderInfo&) const override {
         // Setup must be manually selected (for test cases)
         // via ExpConfig::Setup::ManualName

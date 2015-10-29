@@ -14,8 +14,6 @@ public:
 
     virtual double GetElectronBeamEnergy() const override;
 
-    virtual cluster_thresholds_t GetClusterThresholds() const override;
-
     bool Matches(const THeaderInfo& header) const override;
 
     void BuildMappings(std::vector<hit_mapping_t>& hit_mappings,

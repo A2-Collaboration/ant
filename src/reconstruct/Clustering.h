@@ -40,8 +40,6 @@ public:
                std::list<TCluster>& clusters
                );
     virtual ~Clustering() = default;
-protected:
-    ExpConfig::Reconstruct::cluster_thresholds_t cluster_thresholds;
 };
 
 

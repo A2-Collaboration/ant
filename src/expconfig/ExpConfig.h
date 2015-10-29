@@ -73,14 +73,11 @@ public:
         virtual std::list< std::shared_ptr< Detector_t > > GetDetectors() const = 0;
         virtual std::list< std::shared_ptr< Updateable_traits> > GetUpdateables() const = 0;
 
-        // for clustering, may be extended to config struct
-        // (e.g. for position weighting options)
-        using cluster_thresholds_t = std::map<Detector_t::Type_t, double>;
-        virtual cluster_thresholds_t  GetClusterThresholds() const = 0;
-
         struct candidatebuilder_config_t {
             /// @see ant::reconstruct::CandidateBuilder::PID_phi_epsilon
-            double PID_Phi_Epsilon = 0.0;
+            double PID_Phi_Epsilon = 0.0;      // in Rad
+            double CB_ClusterThreshold = 15;   // in MeV
+            double TAPS_ClusterThreshold = 20; // in MeV
             candidatebuilder_config_t() = default;
         };
 

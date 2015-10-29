@@ -144,13 +144,6 @@ double Setup_2014_EPT::GetElectronBeamEnergy() const {
     return 1604.0;
 }
 
-ant::ExpConfig::Reconstruct::cluster_thresholds_t Setup_2014_EPT::GetClusterThresholds() const {
-    return {
-        {Detector_t::Type_t::CB,   15}, // in MeV
-        {Detector_t::Type_t::TAPS, 20}, // in MeV
-    };
-}
-
 bool Setup_2014_EPT::Matches(const ant::THeaderInfo& header) const {
     if(!Setup::Matches(header))
         return false;
@@ -171,5 +164,7 @@ ant::ExpConfig::Reconstruct::candidatebuilder_config_t Setup_2014_EPT::GetCandid
 {
     candidatebuilder_config_t conf;
     conf.PID_Phi_Epsilon = std_ext::degree_to_radian(2.0);
+    conf.CB_ClusterThreshold = 15;
+    conf.TAPS_ClusterThreshold = 20;
     return conf;
 }
