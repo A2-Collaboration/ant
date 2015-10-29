@@ -42,8 +42,8 @@ void Clustering::Build(
     list<clustering::crystal_t> crystals;
     for(const AdaptorTClusterHit& clusterhit : clusterhits) {
         const auto& hit = clusterhit.Hit;
-        // ignore hits without energy information
-        if(!isfinite(clusterhit.Energy)) {
+        // ignore hits without energy or time information
+        if(!isfinite(clusterhit.Energy) || !isfinite(clusterhit.Time)) {
             // we're not allowed to throw anything away
             // so add some strange single hit cluster with no energy information here
             clusters.emplace_back(
@@ -68,7 +68,7 @@ void Clustering::Build(
     clustering::do_clustering(crystals, crystal_clusters);
 
     // now calculate some cluster properties,
-    // and create TCluster out of it (if they pass the energy threshold)
+    // and create TCluster out of it
 
     for(const clustering::cluster_t& cluster : crystal_clusters) {
         const double cluster_energy = clustering::calc_total_energy(cluster);

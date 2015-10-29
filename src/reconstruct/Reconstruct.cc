@@ -309,11 +309,13 @@ void Reconstruct::BuildClusters(sorted_bydetectortype_t<AdaptorTClusterHit>&& so
             }
         }
 
-        // insert the clusters
-        assert(!clusters.empty());
-        insert_hint =
-                sorted_clusters.insert(insert_hint,
-                                       make_pair(detectortype, move(clusters)));
+        // insert the clusters (if any)
+        if(!clusterhits.empty()) {
+            assert(!clusters.empty());
+            insert_hint =
+                    sorted_clusters.insert(insert_hint,
+                                           make_pair(detectortype, move(clusters)));
+        }
     }
 }
 

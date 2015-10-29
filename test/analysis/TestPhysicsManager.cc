@@ -109,7 +109,7 @@ void dotest_raw()
     REQUIRE(physics->initCalled);
 
     REQUIRE(physics->seenEvents == expectedEvents);
-    REQUIRE(physics->seenCandidates == 809);
+    REQUIRE(physics->seenCandidates == 822);
 }
 
 void dotest_plutogeant()

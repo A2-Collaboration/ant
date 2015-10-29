@@ -154,7 +154,7 @@ void dotest() {
 
     REQUIRE(nReads == 221);
     REQUIRE(nHits == 30039);
-    REQUIRE(nCandidates == 809);
+    REQUIRE(nCandidates == 822);
 
 
 }
