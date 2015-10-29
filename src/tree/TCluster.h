@@ -119,7 +119,7 @@ struct TCluster
 
   // the cluster alorithm may set those flags
   enum class Flags_t : std::uint8_t {
-      TouchesHole, Split
+      TouchesHole, Split, Unmatched
   };
 
   void SetFlag(Flags_t flag, bool set = true) {

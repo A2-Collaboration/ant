@@ -58,7 +58,7 @@ void CandidateBuilder::Build_PID_CB(std::map<Detector_t::Type_t, std::list<TClus
                                 std::vector<TCluster>{*cb_cluster, *pid_cluster},
                                 pid_cluster->Energy
                                 );
-                    all_clusters.emplace_back(*cb_cluster);
+                    all_clusters.emplace_back(move(*cb_cluster));
                     cb_cluster = cb_clusters.erase(cb_cluster);
                     matched = true;
                 }
@@ -68,7 +68,7 @@ void CandidateBuilder::Build_PID_CB(std::map<Detector_t::Type_t, std::list<TClus
             }
 
             if(matched) {
-                all_clusters.emplace_back(*pid_cluster);
+                all_clusters.emplace_back(move(*pid_cluster));
                 pid_cluster = pid_clusters.erase(pid_cluster);
             } else {
                 ++pid_cluster;
@@ -120,7 +120,7 @@ void CandidateBuilder::Build_TAPS_Veto(std::map<Detector_t::Type_t, std::list<TC
                             std::vector<TCluster>{*taps_cluster, *veto_cluster},
                             veto_cluster->Energy
                             );
-                all_clusters.emplace_back(*taps_cluster);
+                all_clusters.emplace_back(move(*taps_cluster));
                 taps_cluster = taps_clusters.erase(taps_cluster);
                 matched = true;
             } else {
@@ -129,7 +129,7 @@ void CandidateBuilder::Build_TAPS_Veto(std::map<Detector_t::Type_t, std::list<TC
         }
 
         if(matched) {
-            all_clusters.emplace_back(*veto_cluster);
+            all_clusters.emplace_back(move(*veto_cluster));
             veto_cluster = veto_clusters.erase(veto_cluster);
         } else {
             ++veto_cluster;
@@ -231,6 +231,33 @@ void CandidateBuilder::Build(
         std::vector<TCluster>& all_clusters
         )
 {
+    // search for clusters which are not sane or don't pass thresholds
+    // add them to all_clusters with unmatched flag set
+    for(auto& det_entry : sorted_clusters) {
+        auto detectortype = det_entry.first;
+        auto& clusters = det_entry.second;
+        auto it_cluster = clusters.begin();
+        while(it_cluster != clusters.end()) {
+            double threshold = 0.0;
+            if(detectortype == Detector_t::Type_t::CB)
+                threshold = config.CB_ClusterThreshold;
+            if(detectortype == Detector_t::Type_t::TAPS)
+                threshold = config.TAPS_ClusterThreshold;
+
+            // do not remove clusters which are sane and pass the thresholds
+            if(it_cluster->isSane() && it_cluster->Energy > threshold) {
+                ++it_cluster;
+                continue;
+            }
+
+
+            it_cluster->SetFlag(TCluster::Flags_t::Unmatched);
+            all_clusters.emplace_back(move(*it_cluster));
+            it_cluster = clusters.erase(it_cluster);
+        }
+    }
+
+    // build candidates
     if(cb && pid)
         Build_PID_CB(sorted_clusters, candidates, all_clusters);
 
@@ -239,10 +266,11 @@ void CandidateBuilder::Build(
 
     Catchall(sorted_clusters, candidates, all_clusters);
 
-    /// \todo flag clusters
+    // add remaining unmatched clusters to all_clusters with Unmatched flag set
     for(auto& det_entry : sorted_clusters) {
         for(auto& cluster : det_entry.second) {
-            all_clusters.emplace_back(cluster);
+            cluster.SetFlag(TCluster::Flags_t::Unmatched);
+            all_clusters.emplace_back(move(cluster));
         }
     }
 }
