@@ -17,6 +17,7 @@
 #include <iostream>
 #include <iterator>
 #include <limits>
+#include <cassert>
 
 using namespace std;
 using namespace ant;
@@ -99,7 +100,7 @@ MemoryPool<TEvent>::Item Reconstruct::DoReconstruct(TDetectorRead& detectorRead)
 
     // then build clusters (at least for calorimeters this is not trivial)
     sorted_bydetectortype_t<TCluster> sorted_clusters;
-    BuildClusters(move(sorted_clusterhits), sorted_clusters, event->AllClusters);
+    BuildClusters(move(sorted_clusterhits), sorted_clusters);
 
     // apply hooks which modify clusters
     for(const auto& hook : hooks_clusters) {
@@ -269,8 +270,7 @@ void Reconstruct::HandleTagger(const shared_ptr<TaggerDetector_t>& taggerdetecto
 }
 
 void Reconstruct::BuildClusters(sorted_bydetectortype_t<AdaptorTClusterHit>&& sorted_clusterhits,
-        sorted_bydetectortype_t<TCluster>& sorted_clusters,
-        std::vector<TCluster>& all_clusters)
+        sorted_bydetectortype_t<TCluster>& sorted_clusters)
 {
     auto insert_hint = sorted_clusters.begin();
 
@@ -309,19 +309,8 @@ void Reconstruct::BuildClusters(sorted_bydetectortype_t<AdaptorTClusterHit>&& so
             }
         }
 
-        auto c = clusters.begin();
-        while (c!=clusters.end()) {
-            if(!c->isSane()) {
-                all_clusters.emplace_back(std::move(*c));
-                c = clusters.erase(c);
-            } else {
-                ++c;
-            }
-        }
-
         // insert the clusters
-        if(clusters.empty())
-            continue;
+        assert(!clusters.empty());
         insert_hint =
                 sorted_clusters.insert(insert_hint,
                                        make_pair(detectortype, move(clusters)));
