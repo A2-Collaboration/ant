@@ -68,7 +68,7 @@ struct CandidateBuilderTester : CandidateBuilder {
 
     using CandidateBuilder::CandidateBuilder; // use base class constructors
 
-    virtual void BuildCandidates(std::map<Detector_t::Type_t, std::list<TCluster> > sorted_clusters,
+    virtual void BuildCandidates(std::map<Detector_t::Type_t, std::list<TCluster> >& sorted_clusters,
             TEvent::candidates_t& candidates,
             std::vector<TCluster>& all_clusters
             ) override {
@@ -105,7 +105,6 @@ struct CandidateBuilderTester : CandidateBuilder {
             ) override {
         counts_t before;
         counts_t after;
-        counts_t diff;
 
         before = getCounts(sorted_clusters, candidates, all_clusters);
         REQUIRE(before.allclusters==0);
@@ -114,7 +113,8 @@ struct CandidateBuilderTester : CandidateBuilder {
         REQUIRE(before.clusters>0);
         CandidateBuilder::Build(sorted_clusters, candidates, all_clusters);
         after = getCounts(sorted_clusters, candidates, all_clusters);
-        REQUIRE(after.allclusters - after.candidateclusters == before.clusters);
+        REQUIRE(before.clusters == after.allclusters);
+
         // examine unmatched flag clusters
         size_t unmatched_clusters = 0;
         for(auto cluster : all_clusters) {

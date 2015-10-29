@@ -59,7 +59,7 @@ protected:
             );
 
     virtual void BuildCandidates(
-            std::map<Detector_t::Type_t, std::list<TCluster> > sorted_clusters,
+            std::map<Detector_t::Type_t, std::list<TCluster> >& sorted_clusters,
             TEvent::candidates_t& candidates,
             std::vector<TCluster>& all_clusters);
 

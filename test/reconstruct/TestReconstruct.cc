@@ -94,6 +94,7 @@ struct ReconstructTester : Reconstruct_traits {
 
         // finally, do the candidate building
         const auto n_all_before = event->AllClusters.size();
+        REQUIRE(n_all_before==0);
         r.candidatebuilder->Build(move(sorted_clusters), event->Candidates, event->AllClusters);
 
         const auto n_all_after = event->AllClusters.size();
