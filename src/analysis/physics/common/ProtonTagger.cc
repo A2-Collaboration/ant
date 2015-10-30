@@ -73,6 +73,7 @@ void ProtonTagger::ProcessEvent(const data::Event& event)
                 b_Size = p->ClusterSize();
                 b_E    = p->ClusterEnergy();
                 b_veto = p->VetoEnergy();
+                b_Time = p->Time();
 
                 b_angle = radian_to_degree(mm.Angle(*p));
 
