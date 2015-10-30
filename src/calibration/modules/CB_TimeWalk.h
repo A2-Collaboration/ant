@@ -93,6 +93,8 @@ public:
     // Updateable_traits interface
     virtual std::vector<std::list<TID> > GetChangePoints() const override;
     virtual void Update(std::size_t index, const TID& id) override;
+    void UpdatedTIDFlags(const TID& id) override;
+
 
 protected:
     std::vector< std::shared_ptr<gui::FitTimewalk> > timewalks;
@@ -101,6 +103,7 @@ protected:
     std::shared_ptr<DataManager> calibrationManager;
 
     const interval<double> TimeWindow;
+    bool IsMC = false;
 
 };
 

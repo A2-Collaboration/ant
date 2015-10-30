@@ -124,6 +124,9 @@ CB_TimeWalk::~CB_TimeWalk()
 
 void CB_TimeWalk::ApplyTo(clusterhits_t& sorted_clusterhits)
 {
+    if(IsMC)
+        return;
+
     // search for CB clusters
     const auto it_sorted_clusterhits = sorted_clusterhits.find(Detector_t::Type_t::CB);
     if(it_sorted_clusterhits == sorted_clusterhits.end())
@@ -171,6 +174,11 @@ void CB_TimeWalk::Update(size_t, const TID& id)
         }
         timewalks[kv.Key]->Load(kv.Value);
     }
+}
+
+void CB_TimeWalk::UpdatedTIDFlags(const TID& id)
+{
+    IsMC = id.isSet(TID::Flags_t::MC);
 }
 
 
