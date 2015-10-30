@@ -73,6 +73,11 @@ void Time::Update(size_t, const TID& id)
     }
 }
 
+void Time::UpdatedTIDFlags(const TID& id)
+{
+    IsMC = id.isSet(TID::Flags_t::MC);
+}
+
 std::unique_ptr<Physics> Time::GetPhysicsModule() {
     return std_ext::make_unique<ThePhysics>(GetName(), "Offsets", Detector);
 }
@@ -90,6 +95,9 @@ void Time::GetGUIs(std::list<std::unique_ptr<gui::Manager_traits> >& guis) {
 
 void Time::ApplyTo(const readhits_t& hits, extrahits_t&)
 {
+    if(IsMC)
+        return;
+
     const auto& dethits = hits.get_item(Detector->Type);
 
     // now calibrate the Times (ignore any other kind of hits)

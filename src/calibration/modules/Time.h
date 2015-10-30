@@ -91,6 +91,7 @@ public:
     // Updateable_traits interface
     virtual std::vector<std::list<TID>> GetChangePoints() const override;
     void Update(std::size_t index, const TID&) override;
+    void UpdatedTIDFlags(const TID& id) override;
 
 
     // Physics_traits interface
@@ -116,7 +117,7 @@ protected:
     std::vector<double> DefaultGains;
     std::vector<double> Gains;
 
-
+    bool IsMC = false;
 };
 
 }}  // namespace ant::calibration
