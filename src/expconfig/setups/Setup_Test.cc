@@ -17,6 +17,7 @@
 #include "calibration/modules/PID_PhiAngle.h"
 #include "calibration/modules/TAPS_Time.h"
 #include "calibration/modules/TAPS_Energy.h"
+#include "calibration/modules/TAPS_ShortEnergy.h"
 #include "calibration/modules/TAPS_ShowerCorrection.h"
 #include "calibration/modules/TAPSVeto_Energy.h"
 
@@ -128,6 +129,8 @@ public:
         AddCalibration<calibration::PID_Energy>(pid, calibrationDataManager, convert_MultiHit16bit );
 
         AddCalibration<calibration::TAPS_Energy>(taps, calibrationDataManager, convert_MultiHit16bit );
+
+        AddCalibration<calibration::TAPS_ShortEnergy>(taps, calibrationDataManager, convert_MultiHit16bit );
 
         AddCalibration<calibration::TAPSVeto_Energy>(tapsVeto, calibrationDataManager, convert_MultiHit16bit);
 

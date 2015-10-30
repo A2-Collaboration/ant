@@ -40,7 +40,9 @@ protected:
            double defaultPedestal,
            double defaultGain,
            double defaultThreshold,
-           double defaultRelativeGain);
+           double defaultRelativeGain,
+           Channel_t::Type_t channelType = Channel_t::Type_t::Integral
+           );
     virtual ~Energy();
 
     /**
@@ -121,6 +123,7 @@ protected:
 
 
     const Detector_t::Type_t DetectorType;
+    const Channel_t::Type_t ChannelType; // can be Integral or IntegralShort
 
     std::shared_ptr<DataManager> calibrationManager;
 

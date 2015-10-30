@@ -30,13 +30,17 @@ Energy::Energy(Detector_t::Type_t detectorType,
                double defaultPedestal,
                double defaultGain,
                double defaultThreshold,
-               double defaultRelativeGain) :
+               double defaultRelativeGain,
+               Channel_t::Type_t channelType) :
     Calibration::Module(
         std_ext::formatter()
         << Detector_t::ToString(detectorType)
-        << "_Energy"
+        << "_"
+        << ( channelType == Channel_t::Type_t::IntegralShort ? "Short" : "" )
+        << "Energy"
            ),
     DetectorType(detectorType),
+    ChannelType(channelType),
     calibrationManager(calmgr),
     Converter(move(converter)),
     Pedestals(defaultPedestal,"Pedestals", true), // pedestals are always extendable
@@ -58,7 +62,7 @@ void Energy::ApplyTo(const readhits_t& hits, extrahits_t& extrahits)
 
     // now calibrate the Energies (ignore any other kind of hits)
     for(TDetectorReadHit* dethit : dethits) {
-        if(dethit->GetChannelType() != Channel_t::Type_t::Integral)
+        if(dethit->GetChannelType() != ChannelType)
             continue;
 
 
@@ -79,7 +83,8 @@ void Energy::ApplyTo(const readhits_t& hits, extrahits_t& extrahits)
                 extrahits.emplace_back(
                             LogicalChannel_t{
                                 dethit->GetDetectorType(),
-                                Channel_t::Type_t::Pedestal,
+                                ChannelType == Channel_t::Type_t::IntegralShort ?
+                                Channel_t::Type_t::PedestalShort : Channel_t::Type_t::Pedestal,
                                 dethit->Channel
                             },
                             values

@@ -13,6 +13,7 @@ set(SRCS
     modules/CB_Energy.cc
     modules/CB_TimeWalk.cc
     modules/TAPS_Energy.cc
+    modules/TAPS_ShortEnergy.cc
     modules/PID_Energy.cc
     modules/PID_PhiAngle.cc
     modules/TAPSVeto_Energy.cc
