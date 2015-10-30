@@ -15,10 +15,11 @@ using namespace ant;
 using namespace ant::reconstruct;
 
 
-UpdateableManager::UpdateableManager(
-        const TID& startPoint,
-        const std::list<std::shared_ptr<Updateable_traits> >& updateables
-        )
+UpdateableManager::UpdateableManager(const TID& startPoint,
+        const std::list<std::shared_ptr<Updateable_traits> >& updateables_
+        ) :
+    updateables(updateables_),
+    lastFlagsSeen(startPoint)
 {
 
     // ask each updateable for its update points and
@@ -27,6 +28,9 @@ UpdateableManager::UpdateableManager(
     map<TID, shared_ptr_list<Updateable_traits> > sorted_updateables;
     for(const shared_ptr<Updateable_traits>& updateable : updateables)
     {
+        // tell TID
+        updateable->UpdatedTIDFlags(startPoint);
+
         vector<list<TID>> all_changePoints = updateable->GetChangePoints();
 
         // the following extraction relies on the changepoints being sorted in time
@@ -87,6 +91,12 @@ UpdateableManager::UpdateableManager(
 
 void UpdateableManager::UpdateParameters(const TID& currentPoint)
 {
+    if(currentPoint.Flags != lastFlagsSeen.Flags) {
+        for(auto updateable : updateables)
+            updateable->UpdatedTIDFlags(currentPoint);
+        lastFlagsSeen = currentPoint;
+    }
+
     // it might be that the current point lies far in the future
     // so calling Update() more than once is necessary
     while(!changePoints.empty() && changePoints.front().first <= currentPoint) {

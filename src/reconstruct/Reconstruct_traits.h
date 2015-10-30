@@ -104,6 +104,11 @@ public:
      * @param id indicates moment of change
      */
     virtual void Update(std::size_t index, const TID& id) = 0;
+    /**
+     * @brief UpdatedTIDFlags called when processed event has some different flags in TID
+     * @param id the ID with some different Flags field
+     */
+    virtual void UpdatedTIDFlags(const TID&) {}
 };
 
 } // namespace ant
