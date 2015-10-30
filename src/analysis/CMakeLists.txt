@@ -53,6 +53,7 @@ set(ANALYSIS_PHYSICS
   physics/etaprime/mctrue_3pi0.cc
   physics/wolfes/etaprime-3pi0-test.cc
   physics/common/IMPlots.cc
+  physics/common/ProtonTagger.cc
   )
 
 set(ANALYSIS_PLOT
