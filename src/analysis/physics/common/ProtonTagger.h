@@ -13,9 +13,8 @@ namespace physics {
 class ProtonTagger : public Physics {
 public:
 
-    //const interval<double> pi0_cut = interval<double>::CenterWidth(ParticleTypeDatabase::Pi0.Mass(),    10.0);
-    const interval<double> pi0_cut   = interval<double>::CenterWidth(126, 10);
-    const interval<double> mm_cut  = interval<double>::CenterWidth(1025, 50.0);
+    const interval<double> pi0_cut = interval<double>::CenterWidth(ParticleTypeDatabase::Pi0.Mass(),    10.0);
+    const interval<double> mm_cut  = interval<double>::CenterWidth(ParticleTypeDatabase::Proton.Mass(), 50.0);
 
     TH2D* tof = nullptr;
     TH2D* dEE = nullptr;
