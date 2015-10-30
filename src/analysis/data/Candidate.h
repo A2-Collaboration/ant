@@ -4,6 +4,7 @@
 #include "base/types.h"
 #include "base/Detector_t.h"
 #include "analysis/data/Cluster.h"
+#include "TVector3.h"
 
 #include <ostream>
 #include <memory>
@@ -60,6 +61,7 @@ public:
     Detector_t::Any_t Detector() const { return detector; }
     mev_t VetoEnergy() const { return vetoEnergy; }
     mev_t TrackerEnergy() const { return trackerEnergy; }
+    operator TVector3 () const   { TVector3 p; p.SetMagThetaPhi(1.0, Theta(), Phi()); return p; }
 
     const Cluster* FindFirstCluster(Detector_t::Any_t detector) {
         for(const auto& cl : Clusters) {
