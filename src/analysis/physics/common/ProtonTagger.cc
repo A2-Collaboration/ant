@@ -1,6 +1,8 @@
 #include "ProtonTagger.h"
 #include "base/std_ext/math.h"
 
+#include "TTree.h"
+
 using namespace ant;
 using namespace ant::std_ext;
 using namespace ant::analysis;
@@ -11,20 +13,18 @@ using namespace std;
 ProtonTagger::ProtonTagger(const string& name, PhysOptPtr opts):
     Physics(name, opts)
 {
-    const BinSettings binE(1000);
-    const BinSettings binVeto(20,0,20);
-    const BinSettings binT(1000,-20,20);
-    const BinSettings binMM(1000, 500, 1500);
-    const BinSettings binAngle(180,0,90.0);
 
-    tof  = HistFac.makeTH2D("ToF", "Time [ns]", "Energy [MeV]", binT, binE, "tof");
-    dEE  = HistFac.makeTH2D("dEE", "Energy [MeV]", "Veto Energy [MeV]", binE, binVeto, "dEE");
-    cls  = HistFac.makeTH2D("Cluster Size", "Energy [MeV]", "ClusterSize", binE, BinSettings(20), "clusterSize");
+    tree = HistFac.makeTTree("tree");
 
-
-    ggIM = HistFac.makeTH1D("2#gamma IM (CB)", "2#gamma IM [MeV]", "", binE, "ggIM");
-    MM_after_cut = HistFac.makeTH1D("MM of 2#gamma (CB)", "MM [MeV]", "", binMM, "MM");
-    angle = HistFac.makeTH1D("Angle", "[#circ]", "", binAngle, "angle");
+    tree->Branch("tagTime", &b_tagTime);
+    tree->Branch("tagCh",   &b_tagCh);
+    tree->Branch("ggIM",    &b_ggIM);
+    tree->Branch("MM",      &b_MM);
+    tree->Branch("angle",   &b_angle);
+    tree->Branch("time",    &b_Time);
+    tree->Branch("E",       &b_E);
+    tree->Branch("veto",    &b_veto);
+    tree->Branch("size",    &b_Size);
 }
 
 void ProtonTagger::ProcessEvent(const data::Event& event)
@@ -40,6 +40,8 @@ void ProtonTagger::ProcessEvent(const data::Event& event)
     if(taps_hits.size() != 1)
         return;
 
+
+
     data::ParticleList cb_photons;
 
     for(const auto& p : event.Reconstructed().Particles().Get(ParticleTypeDatabase::Photon)) {
@@ -54,37 +56,35 @@ void ProtonTagger::ProcessEvent(const data::Event& event)
 
 
     const TLorentzVector gg = *cb_photons.at(0) + *cb_photons.at(1);
-    ggIM->Fill(gg.M());
-
-    if(!pi0_cut.Contains(gg.M()))
-        return;
+    b_ggIM = gg.M();
 
     const TLorentzVector target(0,0,0,ParticleTypeDatabase::Proton.Mass());
 
     for(const auto& t : event.Reconstructed().TaggerHits()) {
+
+        b_tagTime = t->Time();
+        b_tagCh   = t->Channel();
+
         const TLorentzVector mm = t->PhotonBeam() + target - gg;
-        MM_after_cut->Fill(mm.M());
-        if(mm_cut.Contains(mm.M())) {
+
+        b_MM = mm.M();
+
             for(const auto& p : taps_hits) {
+                b_Size = p->ClusterSize();
+                b_E    = p->ClusterEnergy();
+                b_veto = p->VetoEnergy();
 
-                const auto a = radian_to_degree(mm.Angle(*p));
+                b_angle = radian_to_degree(mm.Angle(*p));
 
-                angle->Fill(a);
+                tree->Fill();
 
-                if(a < 10.0) {
-                    tof->Fill(p->Time(), p->ClusterEnergy());
-                    dEE->Fill(p->ClusterEnergy(), p->VetoEnergy());
-                    cls->Fill(p->ClusterEnergy(), p->ClusterSize());
-                }
             }
-        }
     }
 
 }
 
 void ProtonTagger::ShowResult()
 {
-    canvas("Proton Tagger") << drawoption("colz") << tof << dEE << cls << ggIM << MM_after_cut << angle << endc;
 
 }
 

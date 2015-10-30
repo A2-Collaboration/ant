@@ -13,16 +13,17 @@ namespace physics {
 class ProtonTagger : public Physics {
 public:
 
-    const interval<double> pi0_cut = interval<double>::CenterWidth(ParticleTypeDatabase::Pi0.Mass(),    10.0);
-    const interval<double> mm_cut  = interval<double>::CenterWidth(ParticleTypeDatabase::Proton.Mass(), 50.0);
+    TTree* tree = nullptr;
 
-    TH2D* tof = nullptr;
-    TH2D* dEE = nullptr;
-    TH2D* cls = nullptr;
-
-    TH1D* ggIM = nullptr;
-    TH1D* MM_after_cut = nullptr;
-    TH1D* angle = nullptr;
+    double    b_tagTime = 0.0;
+    unsigned  b_tagCh   = 0;
+    double    b_ggIM    = 0.0;
+    double    b_MM      = 0.0;
+    double    b_angle   = 0.0;
+    double    b_Time    = 0.0;
+    double    b_E       = 0.0;
+    double    b_veto    = 0.0;
+    unsigned  b_Size    = 0;
 
 
     ProtonTagger(const std::string& name, PhysOptPtr opts);
