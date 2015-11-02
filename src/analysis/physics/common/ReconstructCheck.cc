@@ -10,6 +10,8 @@
 #include "base/cbtaps_display/TH2TAPS.h"
 #include "expconfig/ExpConfig.h"
 #include "base/std_ext/math.h"
+#include "TTree.h"
+
 
 using namespace std;
 using namespace ant;
@@ -28,6 +30,25 @@ ReconstructCheck::ReconstructCheck(const std::string& name, PhysOptPtr opts):
     const BinSettings e(max(1000.0, atof(GetOption("Emax").c_str())));
     EnergyRec_cb = HistFac.makeTH2D("Energry Reconstruction CB","E_{true} [MeV]","E_{rec} [MeV]", e, e, "Energy_rec_cb");
     EnergyRec_taps = HistFac.makeTH2D("Energry Reconstruction TAPS","E_{true} [MeV]","E_{rec} [MeV]", e, e, "Energy_rec_taps");
+
+    if(opts->GetOption("Mult1Only") == "Yes") {
+        LOG(INFO) << "Using multiplicity == 1 events only";
+        mult1_only = true;
+    }
+
+    tree = HistFac.makeTTree("tree");
+    tree->Branch("mult", &b_mult);
+    tree->Branch("tE",   &b_tE);
+    tree->Branch("tTheta",   &b_tTheta);
+    tree->Branch("tPhi",   &b_tPhi);
+    tree->Branch("rE",   &b_rE);
+    tree->Branch("rTheta",   &b_rTheta);
+    tree->Branch("rPhi",   &b_rPhi);
+    tree->Branch("rVeto",   &b_rVeto);
+    tree->Branch("rTime",   &b_rTime);
+    tree->Branch("rSize",   &b_rSize);
+    tree->Branch("rCal",      &b_Cal);
+
 }
 
 Detector_t::Any_t GetCommonDetector(const CandidateList& cands) {
@@ -41,6 +62,9 @@ Detector_t::Any_t GetCommonDetector(const CandidateList& cands) {
 void ReconstructCheck::ProcessEvent(const Event &event)
 {
     if(event.MCTrue().Particles().GetAll().size() == 1) {
+
+        if(mult1_only && event.Reconstructed().Candidates().size() > 1)
+            return;
 
         const auto& mctrue_particle = event.MCTrue().Particles().GetAll().at(0);
 
@@ -57,6 +81,33 @@ void ReconstructCheck::ProcessEvent(const Event &event)
         all_group.Fill(mctrue_particle, event.Reconstructed().Candidates(), event.Reconstructed().AllClusters());
 
         tapsveto.Fill(event.Reconstructed().Candidates(), event.Reconstructed().AllClusters());
+
+
+
+        b_mult = unsigned(event.Reconstructed().Candidates().size());
+
+        b_tE     = mctrue_particle->Ek();
+        b_tTheta = std_ext::radian_to_degree(mctrue_particle->Theta());
+        b_tPhi   = std_ext::radian_to_degree(mctrue_particle->Phi());
+
+        for(const auto& c : event.Reconstructed().Candidates()) {
+            b_rE     = c->ClusterEnergy();
+            b_rTheta = std_ext::radian_to_degree(c->Theta());
+            b_rPhi   = std_ext::radian_to_degree(c->Phi());
+            b_rVeto  = c->VetoEnergy();
+            b_rTime  = c->Time();
+            b_rSize  = c->ClusterSize();
+            if(c->Detector() & Detector_t::Any_t::CB)
+                b_Cal    = 1;
+            else if(c->Detector() & Detector_t::Any_t::TAPS)
+                b_Cal    = 2;
+            else
+                b_Cal    = 0;
+
+            tree->Fill();
+        }
+
+
 
     }
 }
@@ -104,8 +155,8 @@ std::unique_ptr<ReconstructCheck::PositionMap> ReconstructCheck::histgroup::make
 
 ReconstructCheck::histgroup::histgroup(SmartHistFactory& f, const string& prefix, detectortype d): Prefix(prefix)
 {
-    const BinSettings energy(1000);
-    const BinSettings vetoEnergy(100,0,25);
+    const BinSettings energy(1600);
+    const BinSettings vetoEnergy(100,0,10);
     const BinSettings clusersize(19,1,20);
     const BinSettings costheta(360,-1,1);
     const BinSettings phi(360,-180,180);
@@ -132,8 +183,11 @@ ReconstructCheck::histgroup::histgroup(SmartHistFactory& f, const string& prefix
         mult2_split_angles[i] = f.makeTH1D(prefix+"Mult==2 cluster angle "+to_string(i),"#alpha [#circ]","",BinSettings(180,0,90),prefix+"mult2_"+to_string(i));
     }
 
-    cluserSize = f.makeTH2D(prefix+" Cluster Size","E_{True} [MeV]","Elements",energy, clusersize,prefix+"_clustersize");
+    cluserSize = f.makeTH2D(prefix+" Cluster Size","E [MeV]","Elements",energy, clusersize,prefix+"_clustersize");
     LabelBins(cluserSize->GetYaxis());
+
+    cluserSize_true = f.makeTH2D(prefix+" Cluster Size","E_{True} [MeV]","Elements",energy, clusersize,prefix+"_clustersize_true");
+    LabelBins(cluserSize_true->GetYaxis());
 
     dEE = f.makeTH2D(prefix+" dEE TAPS", "E [MeV]","VetoEnergy [MeV]",energy, vetoEnergy,prefix+"_dEE");
     dEE_true = f.makeTH2D(prefix+" dEE TAPS (true E)", "E_{True} [MeV]","VetoEnergy [MeV]",energy, vetoEnergy,prefix+"_dEE_true");
@@ -173,7 +227,7 @@ void ReconstructCheck::histgroup::ShowResult() const
 
     c << drawoption("colz") << nPerEvent << nPerEventPerE << splitPerEvent
       << *splitFlagPos << *splitPos
-      << cluserSize << dEE << dEE_true << nCharged << *posCharged << unmatched_veto
+      << cluserSize << cluserSize_true << dEE << dEE_true << nCharged << *posCharged << unmatched_veto
       << drawoption("nostack") << padoption::set(padoption_t::Legend) << splitstack
       << padoption::unset(padoption_t::Legend)
       << drawoption("colz") << *energy_recov
@@ -241,7 +295,8 @@ void ReconstructCheck::histgroup::Fill(const ParticlePtr& mctrue, const Candidat
             posCharged->Fill(mc_theta,mc_phi);
         }
 
-            cluserSize->Fill(mc_energy, c->ClusterSize());
+            cluserSize->Fill(c->ClusterEnergy(), c->ClusterSize());
+            cluserSize_true->Fill(mc_energy, c->ClusterSize());
             dEE->Fill(c->ClusterEnergy(), c->VetoEnergy());
             dEE_true->Fill(mc_energy, c->VetoEnergy());
 
