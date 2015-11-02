@@ -23,3 +23,9 @@ if(OmegaTools)
     add_ant_executable(omega_histograms)
     add_ant_executable(omega_tree)
 endif()
+
+option(SimpleTools "Simple Tools" OFF)
+
+if(SimpleTools)
+    add_ant_executable(show_cocktail_database)
+endif()
