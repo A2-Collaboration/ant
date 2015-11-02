@@ -105,7 +105,7 @@ void ant::calibration::gui::FitGausPol3::SetDefaults(TH1 *hist)
 
     combined->SetParLimits(1, 115, 140);
     combined->SetParLimits(2, 5, 50);
-    combined->FixParameter(6, 0);
+   // combined->FixParameter(6, 0);
 
     sync();
 }
