@@ -29,6 +29,7 @@
 
     new TCanvas();
     TH1F* h_mm = (TH1F*) h_mm_prompt->Clone();
+    h_mm->SetName("h_mm");
     h_mm->Add(h_mm_random,-ratio);
     h_mm->Draw();
 
@@ -44,6 +45,7 @@
 
     new TCanvas();
     TH1F* h_angle = (TH1F*) h_angle_p->Clone();
+    h_angle-SetName("h_angle");
     h_angle->Add(h_angle_r,-ratio);
     h_angle->Draw();
 
@@ -59,6 +61,7 @@
 
     new TCanvas();
     TH2F* h_tof = (TH2F*) h_tof_p->Clone();
+    h_tof->SetName("h_tof");
     h_tof->Add(h_tof_r,-ratio);
     h_tof->Draw("colz");
 
