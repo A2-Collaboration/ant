@@ -25,6 +25,18 @@ ProtonTagger::ProtonTagger(const string& name, PhysOptPtr opts):
     tree->Branch("E",       &b_E);
     tree->Branch("veto",    &b_veto);
     tree->Branch("size",    &b_Size);
+    tree->Branch("cbtime",  &b_cbtime);
+}
+
+template <typename T>
+double TimeAverage(const std::initializer_list<const T> cands) {
+    double time   = 0.0;
+    double energy = 0.0;
+    for(const auto& c : cands) {
+        time += c->Time() * c->ClusterEnergy();
+        energy += c->ClusterEnergy();
+    }
+    return time / energy;
 }
 
 void ProtonTagger::ProcessEvent(const data::Event& event)
@@ -56,7 +68,9 @@ void ProtonTagger::ProcessEvent(const data::Event& event)
 
 
     const TLorentzVector gg = *cb_photons.at(0) + *cb_photons.at(1);
-    b_ggIM = gg.M();
+    b_ggIM   = gg.M();
+
+    b_cbtime = TimeAverage({cb_photons.at(0)->Candidate(),cb_photons.at(1)->Candidate()});
 
     const TLorentzVector target(0,0,0,ParticleTypeDatabase::Proton.Mass());
 

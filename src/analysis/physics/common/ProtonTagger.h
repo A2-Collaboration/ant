@@ -24,6 +24,7 @@ public:
     double    b_E       = 0.0;
     double    b_veto    = 0.0;
     unsigned  b_Size    = 0;
+    double    b_cbtime  = 0.0;
 
 
     ProtonTagger(const std::string& name, PhysOptPtr opts);
