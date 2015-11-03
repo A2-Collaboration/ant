@@ -25,36 +25,45 @@ Etap3pi0::Etap3pi0(const std::string& name, PhysOptPtr opts) :
 {
     BinSettings bs = BinSettings(1200);
 
-    hNgammaMC  = HistFac.makeTH1D("# gamma MC true","# #gamma","# events",BinSettings(14));
-    hNgamma    = HistFac.makeTH1D("# gamma","# #gamma","# events",BinSettings(14));
-    h2g        = HistFac.makeTH1D("2 #gamma","2#gamma IM [MeV]","#",bs,"gg");
-    h6g        = HistFac.makeTH1D("6 #gamma","6#gamma IM [MeV]","#",bs,"gggggg");
+    // no cat
+    hProtonCandidateAngles = HistFac.makeTH1D("Proton Candidate Angles", "#Theta [#circ]", "#", BinSettings(180));
 
-    hNTagger   = HistFac.makeTH1D("# Taggerhits","#","",BinSettings(3));
-    hNProtons  = HistFac.makeTH1D("# Protons",   "#","",BinSettings(6));
-    hProtonCandidateAngles = HistFac.makeTH1D("Proton Candidate Angles", "#Theta [#circ]","#",BinSettings(180));
+    // crosschecks
+    xc_NgammaMC  = HistFac.makeTH1D("# gamma MC true","# #gamma","# events",BinSettings(14));
+    xc_Ngamma    = HistFac.makeTH1D("# gamma","# #gamma","# events",BinSettings(14));
+    xc_IM_2g     = HistFac.makeTH1D("2 #gamma","2#gamma IM [MeV]","#",bs,"gg");
+    xc_IM_6g     = HistFac.makeTH1D("6 #gamma","6#gamma IM [MeV]","#",bs,"gggggg");
 
-    ch_3pi0_IM_etap    = HistFac.makeTH1D("EtaPrime (3pi0)","EtaPrime IM [MeV]","events",bs,"ch_3pi0_IM_etap");
-    ch_3pi0_IM_pi0     = HistFac.makeTH1D("Pi0 (3pi0)","Pi0 IM [MeV]","events",bs,"ch_3pi0_IM_pi0");
+    xc_NTagger   = HistFac.makeTH1D("# Taggerhits","#","",BinSettings(3));
+    xc_NProtons  = HistFac.makeTH1D("# Protons",   "#","",BinSettings(6));
 
-    ch_eta2pi0_IM_etap    = HistFac.makeTH1D("EtaPrime (eta2pi0)","EtaPrime IM [MeV]","events",bs,"ch_eta2pi0_IM_etap");
-    ch_eta2pi0_IM_pions  = HistFac.makeTH1D("pions (eta2pi0)","Pi0 IM [MeV]","events",bs,"ch_eta2pi0_IM_pions");
-    ch_eta2pi0_IM_etas  = HistFac.makeTH1D("etas (eta2pi0)","Pi0 IM [MeV]","events",bs,"ch_eta2pi0_IM_etas");
 
+    //signal: eta' --> 3 pi0
+    signal_IM_etap    = HistFac.makeTH1D("EtaPrime (3pi0)","EtaPrime IM [MeV]","events",bs,"ch_3pi0_IM_etap");
+    signal_IM_pi0     = HistFac.makeTH1D("Pi0 (3pi0)","Pi0 IM [MeV]","events",bs,"ch_3pi0_IM_pi0");
+
+    //reference: eta' --> eta 2 pi0
+    ref_IM_etap    = HistFac.makeTH1D("EtaPrime (eta2pi0)","EtaPrime IM [MeV]","events",bs,"ch_eta2pi0_IM_etap");
+    ref_IM_pions  = HistFac.makeTH1D("pions (eta2pi0)","Pi0 IM [MeV]","events",bs,"ch_eta2pi0_IM_pions");
+    ref_IM_etas  = HistFac.makeTH1D("etas (eta2pi0)","Pi0 IM [MeV]","events",bs,"ch_eta2pi0_IM_etas");
+
+    //daitz
     mcdalitz_xy     = HistFac.makeTH2D("dalitz mc","s1","s3",BinSettings(100,0,0),BinSettings(100,0,0));
     mcdalitz_z      = HistFac.makeTH1D("dalitz - radial mc","z = x^{2} + y^{2}","#",BinSettings(100,0,0));
-
     dalitz_xy     = HistFac.makeTH2D("dalitz","s1","s3",BinSettings(100,0,0),BinSettings(100,0,0));
     dalitz_z      = HistFac.makeTH1D("dalitz - radial","z = x^{2} + y^{2}","#",BinSettings(100,0,0));
 
-    h6photonEvents =   HistFac.makeTH1D("6 #gamma events", "", "#", BinSettings(15),"6gEvt");
+    //channel analysis
+    channels_nocut              =   HistFac.makeTH1D("6 #gamma, no cut", "", "#", BinSettings(15),"6gEvt");
+    channels_signal_chi2        =   HistFac.makeTH1D("6 #gamma, #chi^{2} cut", "", "#", BinSettings(15),"6gEvt");
+    channels_ref_chi2           =   HistFac.makeTH1D("6 #gamma, #chi^{2} cut", "", "#", BinSettings(15),"6gEvt");
 
 }
 
 void Etap3pi0::FillCrossChecks(const ParticleList& photons, const ParticleList& mcphotons)
 {
-    hNgamma->Fill(photons.size());
-    hNgammaMC->Fill(mcphotons.size());
+    xc_Ngamma->Fill(photons.size());
+    xc_NgammaMC->Fill(mcphotons.size());
 
     if (photons.size() != 6)
         return;
@@ -70,8 +79,8 @@ void Etap3pi0::FillCrossChecks(const ParticleList& photons, const ParticleList& 
     };
 
 
-    fill_combinations(h2g, 2, photons);
-    fill_combinations(h6g, 6, photons);
+    fill_combinations(xc_IM_2g, 2, photons);
+    fill_combinations(xc_IM_6g, 6, photons);
 }
 
 Etap3pi0::result_t Etap3pi0::Make3pi0(const ParticleList& photons)
@@ -178,6 +187,14 @@ Etap3pi0::result_t Etap3pi0::MakeEta2pi0(const ParticleList& photons)
     return result;
 }
 
+bool Etap3pi0::MakeMCProton(const data::Event::Data& mcdata, ParticlePtr& proton)
+{
+   const auto& protonlist = mcdata.Particles().Get(ParticleTypeDatabase::Proton);
+   if (protonlist.size() != 1)
+       return false;
+   proton = protonlist.at(0);
+   return true;
+}
 
 void Etap3pi0::ProcessEvent(const data::Event& event)
 {
@@ -186,17 +203,25 @@ void Etap3pi0::ProcessEvent(const data::Event& event)
 
     const auto& photons            = data.Particles().Get(ParticleTypeDatabase::Photon);
     const auto& protonCandidates   = data.Particles().Get(ParticleTypeDatabase::Proton);
-    vector<ParticlePtr> protons;
+
+    ParticlePtr mcproton;
+    if (!MakeMCProton(mcdata,mcproton))
+        return;
+
 
     const auto& mcphotons = mcdata.Particles().Get(ParticleTypeDatabase::Photon);
 
     FillCrossChecks(photons,mcphotons);
-    hNTagger->Fill(data.TaggerHits().size());
+    xc_NTagger->Fill(data.TaggerHits().size());
+
+    if (photons.size() != 6 )
+        return;
+    channels_nocut->Fill(utils::ParticleTools::GetDecayString(mcdata.ParticleTree()).c_str(),1);
 
     // we need a tagger hit
     if (data.TaggerHits().size() != 1)
         return;
-
+    vector<ParticlePtr> protons;
     // only take proton if in TAPS and only select single
     for ( const auto& pcandidate: protonCandidates)
     {
@@ -205,16 +230,15 @@ void Etap3pi0::ProcessEvent(const data::Event& event)
         if ( thetaAngle < 20)
             protons.push_back(pcandidate);
     }
-    hNProtons->Fill(protons.size());
-    if (protons.size() != 1)
+    xc_NProtons->Fill(protons.size());
+    if (protons.size() == 0)
         return;
 
 
-    if (photons.size() != 6 )
-        return;
 
     fitToEtaPrime.SetEgammaBeam(data.TaggerHits().at(0)->PhotonEnergy());
-    fitToEtaPrime.SetProtonTAPS(protons.at(0));
+//    fitToEtaPrime.SetProtonTAPS(protons.at(0));
+    fitToEtaPrime.SetProtonTAPS(mcproton);
     fitToEtaPrime.SetPhotons(photons);
 
     result_fitToEtaPrime = fitToEtaPrime.DoFit();
@@ -224,20 +248,21 @@ void Etap3pi0::ProcessEvent(const data::Event& event)
     result_t result_eta2pi0 = MakeEta2pi0(photons);
     result_t result_mc      = MakeMC3pi0(mcdata);
 
-    const double chi2cut(3);
+    const double chi2cut(10);
 
     if (result_3pi0.chi2() < chi2cut )
     {
-        FillIm(result_3pi0, ParticleTypeDatabase::Pi0, ch_3pi0_IM_pi0);
-        FillImEtaPrime(result_3pi0,ch_3pi0_IM_etap);
-        h6photonEvents->Fill(utils::ParticleTools::GetDecayString(mcdata.ParticleTree()).c_str(),1);
+        FillIm(result_3pi0, ParticleTypeDatabase::Pi0, signal_IM_pi0);
+        FillImEtaPrime(result_3pi0,signal_IM_etap);
+        channels_signal_chi2->Fill(utils::ParticleTools::GetDecayString(mcdata.ParticleTree()).c_str(),1);
     }
 
     if (result_eta2pi0.chi2() < chi2cut)
     {
-        FillIm(result_eta2pi0, ParticleTypeDatabase::Pi0, ch_eta2pi0_IM_pions);
-        FillIm(result_eta2pi0, ParticleTypeDatabase::Eta, ch_eta2pi0_IM_etas);
-        FillImEtaPrime(result_eta2pi0, ch_eta2pi0_IM_etap);
+        FillIm(result_eta2pi0, ParticleTypeDatabase::Pi0, ref_IM_pions);
+        FillIm(result_eta2pi0, ParticleTypeDatabase::Eta, ref_IM_etas);
+        FillImEtaPrime(result_eta2pi0, ref_IM_etap);
+        channels_ref_chi2->Fill(utils::ParticleTools::GetDecayString(mcdata.ParticleTree()).c_str(),1);
     }
 
     if ( result_mc.success)
@@ -258,16 +283,17 @@ void Etap3pi0::ProcessEvent(const data::Event& event)
 
 void Etap3pi0::ShowResult()
 {
-    canvas("Crosschecks")       << h2g << h6g
-                                << hNgamma << hNgammaMC
-                                << hNTagger << hNProtons << hProtonCandidateAngles
+    canvas("Crosschecks")       << xc_IM_2g << xc_IM_6g
+                                << xc_Ngamma << xc_NgammaMC
+                                << xc_NTagger << xc_NProtons// << hProtonCandidateAngles
                                 << endc;
 
-    canvas("channels")          << h6photonEvents
+    canvas("channels")          << channels_nocut << channels_signal_chi2
+                                << channels_ref_chi2
                                 << endc;
 
-    canvas("Invaraiant Masses") << ch_eta2pi0_IM_pions << ch_eta2pi0_IM_etas << ch_eta2pi0_IM_etap
-                                << ch_3pi0_IM_pi0 << ch_3pi0_IM_etap
+    canvas("Invaraiant Masses") << ref_IM_pions << ref_IM_etas << ref_IM_etap
+                                << signal_IM_pi0 << signal_IM_etap
                                 << endc;
 
     canvas("Dalitz-Plots")      << drawoption("colz") << dalitz_xy << mcdalitz_xy << endc;

@@ -164,22 +164,25 @@ protected:
     APLCON::Result_t result_fitToEtaPrime;
 
     // xchecks
-    TH1D* hNgamma;
-    TH1D* hNgammaMC;
-    TH1D* h2g;
-    TH1D* h6g;
-    TH1D* h6photonEvents;
+    TH1D* xc_Ngamma;
+    TH1D* xc_NgammaMC;
+    TH1D* xc_IM_2g;
+    TH1D* xc_IM_6g;
 
-    TH1D* hNTagger;
-    TH1D* hNProtons;
+    TH1D* channels_nocut;
+    TH1D* channels_signal_chi2;
+    TH1D* channels_ref_chi2;
+
+    TH1D* xc_NTagger;
+    TH1D* xc_NProtons;
     TH1D* hProtonCandidateAngles;
 
-    TH1D* ch_3pi0_IM_etap;
-    TH1D* ch_3pi0_IM_pi0;
+    TH1D* signal_IM_etap;
+    TH1D* signal_IM_pi0;
 
-    TH1D* ch_eta2pi0_IM_etap;
-    TH1D* ch_eta2pi0_IM_pions;
-    TH1D* ch_eta2pi0_IM_etas;
+    TH1D* ref_IM_etap;
+    TH1D* ref_IM_pions;
+    TH1D* ref_IM_etas;
 
     TH1D* mcdalitz_z;
     TH2D* mcdalitz_xy;
@@ -188,6 +191,7 @@ protected:
 
     void FillCrossChecks(const data::ParticleList& photons, const data::ParticleList& mcphotons);
 
+    bool MakeMCProton(const data::Event::Data& mcdata, data::ParticlePtr& proton);
 
     Etap3pi0::result_t Make3pi0(const data::ParticleList& photons);
     Etap3pi0::result_t MakeEta2pi0(const data::ParticleList& photons);
