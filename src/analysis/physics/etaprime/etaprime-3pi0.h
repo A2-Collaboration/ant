@@ -17,7 +17,7 @@ protected:
 
     // =======================   constants =====================================================
 
-    const double IM_mean_etaprime = 906.0;
+    const double IM_mean_etaprime = 895.0;
     const double IM_sigma_etaprime = 26.3;
 
     const double IM_mean_eta = 515.5;
@@ -95,13 +95,17 @@ protected:
         APLCON aplcon;
 
         std::pair<double,double> EgammaBeam;
-        const std::string egammaName = "EBEAM";
         kinVector ProtonTAPS;
         std::vector<kinVector> Photons;
 
         const double IM_Mother;
 
     public:
+        const std::string egammaName = "EBEAM";
+
+
+
+
         KinFitter(const ParticleTypeDatabase::Type& motherParticle = ParticleTypeDatabase::EtaPrime);
 
         void SetEgammaBeam(const double& ebeam);
@@ -114,12 +118,6 @@ protected:
 
     // =======================   structs   =====================================================
 
-    enum class filterType {
-        Chi2,
-        KinFit,
-        ProtonInTaps,
-        ProtonTOF
-    };
 
 
 
@@ -163,31 +161,26 @@ protected:
     KinFitter fitToEtaPrime;
     APLCON::Result_t result_fitToEtaPrime;
 
-    // xchecks
-    TH1D* xc_Ngamma;
-    TH1D* xc_NgammaMC;
-    TH1D* xc_IM_2g;
-    TH1D* xc_IM_6g;
+    enum class filterType {
+        Chi2,
+        KinFit,
+        ProtonInTaps,
+        ProtonTOF
+    };
 
-    TH1D* channels_nocut;
-    TH1D* channels_signal_chi2;
-    TH1D* channels_ref_chi2;
+    //histograms
+    std::map<std::string,std::map<std::string,TH1*>> hists;
+    void AddHist1D(const std::string& category, const std::string& hname,
+                   const std::string& title,
+                   const std::string& xlabel, const std::string& ylabel,
+                   const BinSettings& bins);
+    void AddHist2D(const std::string& category, const std::string& hname,
+                   const std::string& title,
+                   const std::string& xlabel, const std::string& ylabel,
+                   const BinSettings& xbins, const BinSettings& ybins);
 
-    TH1D* xc_NTagger;
-    TH1D* xc_NProtons;
-    TH1D* hProtonCandidateAngles;
 
-    TH1D* signal_IM_etap;
-    TH1D* signal_IM_pi0;
 
-    TH1D* ref_IM_etap;
-    TH1D* ref_IM_pions;
-    TH1D* ref_IM_etas;
-
-    TH1D* mcdalitz_z;
-    TH2D* mcdalitz_xy;
-    TH1D* dalitz_z;
-    TH2D* dalitz_xy;
 
     void FillCrossChecks(const data::ParticleList& photons, const data::ParticleList& mcphotons);
 

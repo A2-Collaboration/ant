@@ -7,6 +7,7 @@
 
 #include <algorithm>
 #include <cassert>
+#include <chrono>
 
 #include "TTree.h"
 #include "TCanvas.h"
@@ -23,47 +24,64 @@ Etap3pi0::Etap3pi0(const std::string& name, PhysOptPtr opts) :
     Physics(name, opts),
       dataset(opts->GetOption("dataset"))
 {
-    BinSettings bs = BinSettings(1200);
+    BinSettings bs_im = BinSettings(1200);
+    string cat("hist");
 
-    // no cat
-    hProtonCandidateAngles = HistFac.makeTH1D("Proton Candidate Angles", "#Theta [#circ]", "#", BinSettings(180));
-
-    // crosschecks
-    xc_NgammaMC  = HistFac.makeTH1D("# gamma MC true","# #gamma","# events",BinSettings(14));
-    xc_Ngamma    = HistFac.makeTH1D("# gamma","# #gamma","# events",BinSettings(14));
-    xc_IM_2g     = HistFac.makeTH1D("2 #gamma","2#gamma IM [MeV]","#",bs,"gg");
-    xc_IM_6g     = HistFac.makeTH1D("6 #gamma","6#gamma IM [MeV]","#",bs,"gggggg");
-
-    xc_NTagger   = HistFac.makeTH1D("# Taggerhits","#","",BinSettings(3));
-    xc_NProtons  = HistFac.makeTH1D("# Protons",   "#","",BinSettings(6));
+    // no category
+    AddHist1D(cat,"ProtonCandidateAngles",          "Proton Candidate Angles", "#Theta [#circ]", "#", BinSettings(180));
 
 
-    //signal: eta' --> 3 pi0
-    signal_IM_etap    = HistFac.makeTH1D("EtaPrime (3pi0)","EtaPrime IM [MeV]","events",bs,"ch_3pi0_IM_etap");
-    signal_IM_pi0     = HistFac.makeTH1D("Pi0 (3pi0)","Pi0 IM [MeV]","events",bs,"ch_3pi0_IM_pi0");
+    cat = "xc";             // crosschecks
+    AddHist1D(cat, "NgammaMC", "# gamma MC true","# #gamma","# events",BinSettings(14));
+    AddHist1D(cat, "Ngamma"  , "# gamma","# #gamma","# events",BinSettings(14));
+    AddHist1D(cat, "IM_2g"   , "2 #gamma","2#gamma IM [MeV]","#",bs_im);
+    AddHist1D(cat, "IM_6g"   , "6 #gamma","6#gamma IM [MeV]","#",bs_im);
 
-    //reference: eta' --> eta 2 pi0
-    ref_IM_etap    = HistFac.makeTH1D("EtaPrime (eta2pi0)","EtaPrime IM [MeV]","events",bs,"ch_eta2pi0_IM_etap");
-    ref_IM_pions  = HistFac.makeTH1D("pions (eta2pi0)","Pi0 IM [MeV]","events",bs,"ch_eta2pi0_IM_pions");
-    ref_IM_etas  = HistFac.makeTH1D("etas (eta2pi0)","Pi0 IM [MeV]","events",bs,"ch_eta2pi0_IM_etas");
+    AddHist1D(cat, "NTagger" , "# Taggerhits","#","",BinSettings(3));
+    AddHist1D(cat, "NProtons", "# Protons",   "#","",BinSettings(6));
 
-    //daitz
-    mcdalitz_xy     = HistFac.makeTH2D("dalitz mc","s1","s3",BinSettings(100,0,0),BinSettings(100,0,0));
-    mcdalitz_z      = HistFac.makeTH1D("dalitz - radial mc","z = x^{2} + y^{2}","#",BinSettings(100,0,0));
-    dalitz_xy     = HistFac.makeTH2D("dalitz","s1","s3",BinSettings(100,0,0),BinSettings(100,0,0));
-    dalitz_z      = HistFac.makeTH1D("dalitz - radial","z = x^{2} + y^{2}","#",BinSettings(100,0,0));
+    cat = "chi2s";
+    AddHist1D(cat,"signal_pi0","#chi^{2} of pi0 candidates (signal)","chi^{2}","#",BinSettings(500,0,50));
+    AddHist1D(cat,"signal_intermediate","#chi^{2} for selection (signal)","chi^{2}","#",BinSettings(100,0,5));
+    AddHist1D(cat,"signal_etaprime","#chi^{2} for #eta' (signal)","chi^{2}","#",BinSettings(100,0,5));
 
-    //channel analysis
-    channels_nocut              =   HistFac.makeTH1D("6 #gamma, no cut", "", "#", BinSettings(15),"6gEvt");
-    channels_signal_chi2        =   HistFac.makeTH1D("6 #gamma, #chi^{2} cut", "", "#", BinSettings(15),"6gEvt");
-    channels_ref_chi2           =   HistFac.makeTH1D("6 #gamma, #chi^{2} cut", "", "#", BinSettings(15),"6gEvt");
+    cat = "kinfit";
+    AddHist1D(cat,"signal_niter","","# iterations","#",BinSettings(100,0,5));
+    AddHist1D(cat,"signal_chi2","#chi^{2} for kinfit (signal)","chi^{2}","#",BinSettings(100,0,5));
+    AddHist1D(cat,"signal_egamma_before", "Photon Energy before (signal)", "E_{#gamma} before [MeV] (signal)","#",BinSettings(100,0,5));
+    AddHist1D(cat,"signal_egamma_after", "Photon Energy after (signal)", "E_{#gamma} after [MeV] ","#",BinSettings(100,0,5));
+
+
+    cat = "signal";         //signal: eta' --> 3 pi0
+    AddHist1D(cat,"IM_etap"    , "EtaPrime (3pi0)","EtaPrime IM [MeV]","events",bs_im);
+    AddHist1D(cat,"IM_pi0"     , "Pi0 (3pi0)","Pi0 IM [MeV]","events",bs_im);
+
+
+    cat = "ref";            //reference: eta' --> eta 2 pi0
+    AddHist1D(cat,"IM_etap"  , "EtaPrime (eta2pi0)","EtaPrime IM [MeV]","events",bs_im);
+    AddHist1D(cat,"IM_pions" , "pions (eta2pi0)","Pi0 IM [MeV]","events",bs_im);
+    AddHist1D(cat,"IM_etas"  , "etas (eta2pi0)","Pi0 IM [MeV]","events",bs_im);
+
+    cat = "dalitz";
+    AddHist2D(cat, "mc_xy", "dalitz mc","s1","s3",BinSettings(100,0,0),BinSettings(100,0,0));
+    AddHist1D(cat, "mc_z",  "dalitz - radial mc","z = x^{2} + y^{2}","#",BinSettings(100,0,0));
+    AddHist2D(cat, "xy",    "dalitz","s1","s3",BinSettings(100,0,0),BinSettings(100,0,0));
+    AddHist1D(cat, "z",     "dalitz - radial","z = x^{2} + y^{2}","#",BinSettings(100,0,0));
+
+    cat = "steps";
+    AddHist1D(cat, "evcount", "events after steps", "", "# events", BinSettings(5));
+
+    cat = "channels";
+    AddHist1D(cat,"nocut",              "6 #gamma, no cut", "", "#", BinSettings(15));
+    AddHist1D(cat,"signal_chi2",        "6 #gamma, #chi^{2} cut", "", "#", BinSettings(15));
+    AddHist1D(cat,"ref_chi2",           "6 #gamma, #chi^{2} cut", "", "#", BinSettings(15));
 
 }
 
 void Etap3pi0::FillCrossChecks(const ParticleList& photons, const ParticleList& mcphotons)
 {
-    xc_Ngamma->Fill(photons.size());
-    xc_NgammaMC->Fill(mcphotons.size());
+    hists.at("xc").at("Ngamma")->Fill(photons.size());
+    hists.at("xc").at("NgammaMC")->Fill(mcphotons.size());
 
     if (photons.size() != 6)
         return;
@@ -79,14 +97,18 @@ void Etap3pi0::FillCrossChecks(const ParticleList& photons, const ParticleList& 
     };
 
 
-    fill_combinations(xc_IM_2g, 2, photons);
-    fill_combinations(xc_IM_6g, 6, photons);
+    fill_combinations(hists.at("xc").at("IM_2g"), 2, photons);
+    fill_combinations(hists.at("xc").at("IM_6g"), 6, photons);
 }
 
 Etap3pi0::result_t Etap3pi0::Make3pi0(const ParticleList& photons)
 {
     result_t result;
 
+    const double pi0Chi2Cut = 3;
+    const double chi2IntermediateCut = 3;
+
+    bool found = false;
     for ( const auto& pairs: combinations)
     {
 
@@ -99,22 +121,42 @@ Etap3pi0::result_t Etap3pi0::Make3pi0(const ParticleList& photons)
             tmp.g_final[pairs.at(i).second] = photons[2*i+1];
         }
 
+        bool skip_comination = false;
         for(unsigned i=0;i<tmp.mesons.size();i++)
         {
-            tmp.mesons[i].first = make_shared<Particle>(ParticleTypeDatabase::Pi0, *(tmp.g_final[2*i]) + *(tmp.g_final[2*i+1]));
-            tmp.Chi2_intermediate += std_ext::sqr((tmp.mesons[i].first->M() - 126) / 15); // width and center from fit
+            auto pi0candidate = make_shared<Particle>(ParticleTypeDatabase::Pi0, *(tmp.g_final[2*i]) + *(tmp.g_final[2*i+1]));
+            double chi2 = std_ext::sqr((pi0candidate->M() - 126) / 15); // width and center from fit
+            hists.at("chi2s").at("signal_pi0")->Fill(chi2);
+            if ( chi2 > pi0Chi2Cut )
+            {
+                skip_comination = true;
+                break;
+            }
+            tmp.mesons[i].first = pi0candidate;
+            tmp.Chi2_intermediate += chi2;
         }
-        if(tmp.Chi2_intermediate<result.Chi2_intermediate)
-            result = move(tmp);
+        if (!skip_comination)
+        {
+            if(tmp.Chi2_intermediate<result.Chi2_intermediate)
+            {
+                result = move(tmp);
+                hists.at("chi2s").at("signal_intermediate")->Fill(result.Chi2_intermediate);
+                found = true;
+            }
+        }
     }
 
-    result.success = true;
-    for (const auto& p: result.mesons )
+    result.success = (result.Chi2_intermediate < chi2IntermediateCut);
+    if (found)
     {
-        result.mother += *(p.first);
-    }
+        for (const auto& p: result.mesons )
+        {
+            result.mother += *(p.first);
+        }
 
-    result.Chi2_mother = std_ext::sqr( (result.mother.M() - 893.0) / 24.3);
+        result.Chi2_mother = std_ext::sqr( (result.mother.M() - 893.0) / 24.3);
+        hists.at("chi2s").at("signal_etaprime")->Fill(result.Chi2_mother);
+    }
     return result;
 }
 
@@ -204,35 +246,39 @@ void Etap3pi0::ProcessEvent(const data::Event& event)
     const auto& photons            = data.Particles().Get(ParticleTypeDatabase::Photon);
     const auto& protonCandidates   = data.Particles().Get(ParticleTypeDatabase::Proton);
 
+    hists.at("steps").at("evcount")->Fill("all",1);
     ParticlePtr mcproton;
     if (!MakeMCProton(mcdata,mcproton))
         return;
+    hists.at("steps").at("evcount")->Fill("req. mc proton",1);
 
 
     const auto& mcphotons = mcdata.Particles().Get(ParticleTypeDatabase::Photon);
 
     FillCrossChecks(photons,mcphotons);
-    xc_NTagger->Fill(data.TaggerHits().size());
+    hists.at("xc").at("NTagger")->Fill(data.TaggerHits().size());
 
     if (photons.size() != 6 )
         return;
-    channels_nocut->Fill(utils::ParticleTools::GetDecayString(mcdata.ParticleTree()).c_str(),1);
+    hists.at("steps").at("evcount")->Fill("req. 6 #gamma",1);
+    hists.at("channels").at("nocut")->Fill(utils::ParticleTools::GetDecayString(mcdata.ParticleTree()).c_str(),1);
 
     // we need a tagger hit
     if (data.TaggerHits().size() != 1)
         return;
+    hists.at("steps").at("evcount")->Fill("req. 1 tagger hit",1);
     vector<ParticlePtr> protons;
     // only take proton if in TAPS and only select single
     for ( const auto& pcandidate: protonCandidates)
     {
         double thetaAngle = pcandidate->Theta() * TMath::RadToDeg() ;
-        hProtonCandidateAngles->Fill(thetaAngle);
+        hists.at("hist").at("ProtonCandidateAngles")->Fill(thetaAngle);
         if ( thetaAngle < 20)
             protons.push_back(pcandidate);
     }
-    xc_NProtons->Fill(protons.size());
+    hists.at("xc").at("NProtons")->Fill(protons.size());
     if (protons.size() == 0)
-        return;
+        hists.at("steps").at("evcount")->Fill("req. 1 proton",1);
 
 
 
@@ -248,34 +294,43 @@ void Etap3pi0::ProcessEvent(const data::Event& event)
     result_t result_eta2pi0 = MakeEta2pi0(photons);
     result_t result_mc      = MakeMC3pi0(mcdata);
 
+
+
     const double chi2cut(10);
 
     if (result_3pi0.chi2() < chi2cut )
     {
-        FillIm(result_3pi0, ParticleTypeDatabase::Pi0, signal_IM_pi0);
-        FillImEtaPrime(result_3pi0,signal_IM_etap);
-        channels_signal_chi2->Fill(utils::ParticleTools::GetDecayString(mcdata.ParticleTree()).c_str(),1);
+        FillIm(result_3pi0, ParticleTypeDatabase::Pi0, (TH1D*) hists.at("signal").at("IM_pi0"));
+        FillImEtaPrime(result_3pi0,(TH1D*)hists.at("signal").at("IM_etap"));
+        hists.at("channels").at("signal_chi2")->Fill(utils::ParticleTools::GetDecayString(mcdata.ParticleTree()).c_str(),1);
+        hists.at("steps").at("evcount")->Fill("#chi^{2} cut signal",1);
     }
 
     if (result_eta2pi0.chi2() < chi2cut)
     {
-        FillIm(result_eta2pi0, ParticleTypeDatabase::Pi0, ref_IM_pions);
-        FillIm(result_eta2pi0, ParticleTypeDatabase::Eta, ref_IM_etas);
-        FillImEtaPrime(result_eta2pi0, ref_IM_etap);
-        channels_ref_chi2->Fill(utils::ParticleTools::GetDecayString(mcdata.ParticleTree()).c_str(),1);
+        FillIm(result_eta2pi0, ParticleTypeDatabase::Pi0,(TH1D*) hists.at("ref").at("IM_pions"));
+        FillIm(result_eta2pi0, ParticleTypeDatabase::Eta,(TH1D*) hists.at("ref").at("IM_etas"));
+        FillImEtaPrime(result_eta2pi0,(TH1D*) hists.at("ref").at("IM_etap"));
+        hists.at("channels").at("ref_chi2")->Fill(utils::ParticleTools::GetDecayString(mcdata.ParticleTree()).c_str(),1);
+        hists.at("steps").at("evcount")->Fill("#chi^{2} cut reference",1);
+        hists.at("kinfit").at("signal_chi2")->Fill(result_fitToEtaPrime.ChiSquare);
+        hists.at("kinfit").at("signal_niter")->Fill(result_fitToEtaPrime.NIterations);
+        auto& kinfitvars = result_fitToEtaPrime.Variables;
+        hists.at("kinfit").at("signal_egamma_before")->Fill(kinfitvars.at(fitToEtaPrime.egammaName).Value.Before);
+        hists.at("kinfit").at("signal_egamma_after")->Fill(kinfitvars.at(fitToEtaPrime.egammaName).Value.After);
     }
 
     if ( result_mc.success)
     {
         DalitzVars channel(result_mc);
-        mcdalitz_xy->Fill(channel.x,channel.y);
-        mcdalitz_z->Fill(channel.z);
+        hists.at("dalitz").at("mc_xy")->Fill(channel.s1,channel.s3);
+        hists.at("dalitz").at("mc_z")->Fill(channel.z);
     }
     if (result_3pi0.chi2() < chi2cut)
     {
         DalitzVars channel(result_3pi0);
-        dalitz_xy->Fill(channel.x,channel.y);
-        dalitz_z->Fill(channel.z);
+        hists.at("dalitz").at("xy")->Fill(channel.s1,channel.s3);
+        hists.at("dalitz").at("z")->Fill(channel.z);
     }
 
 }
@@ -283,20 +338,16 @@ void Etap3pi0::ProcessEvent(const data::Event& event)
 
 void Etap3pi0::ShowResult()
 {
-    canvas("Crosschecks")       << xc_IM_2g << xc_IM_6g
-                                << xc_Ngamma << xc_NgammaMC
-                                << xc_NTagger << xc_NProtons// << hProtonCandidateAngles
-                                << endc;
+    for (auto& category: hists)
+    {
+        canvas c(category.first);
+        for (auto& h: category.second)
+            c << h.second;
+        c << endc;
+    }
 
-    canvas("channels")          << channels_nocut << channels_signal_chi2
-                                << channels_ref_chi2
-                                << endc;
+    canvas("Dalitz-Plots")      << drawoption("colz") << hists.at("dalitz").at("xy") << hists.at("dalitz").at("mc_xy") << endc;
 
-    canvas("Invaraiant Masses") << ref_IM_pions << ref_IM_etas << ref_IM_etap
-                                << signal_IM_pi0 << signal_IM_etap
-                                << endc;
-
-    canvas("Dalitz-Plots")      << drawoption("colz") << dalitz_xy << mcdalitz_xy << endc;
 }
 
 
@@ -402,6 +453,24 @@ void Etap3pi0::KinFitter::SetPhotons(const std::vector<ParticlePtr>& photons)
 double Etap3pi0::KinFitter::taggerSmear(const double& E) const
 {
     return  0.02 * E * std::pow(E,-0.36);
+}
+
+void Etap3pi0::AddHist1D(
+        const std::string& category, const std::string& hname,
+        const std::string& title,
+        const std::string& xlabel, const std::string& ylabel,
+        const BinSettings& bins
+        )
+{
+    hists[category][hname] = HistFac.makeTH1D(title,xlabel,ylabel,bins,(category + string("_") + hname));
+}
+
+void Etap3pi0::AddHist2D(const string& category, const string& hname,
+                         const string& title,
+                         const string& xlabel, const string& ylabel,
+                         const BinSettings& xbins, const BinSettings& ybins)
+{
+    hists[category][hname] = HistFac.makeTH2D(title,xlabel,ylabel,xbins,ybins,(category + string("_") + hname));
 }
 
 Etap3pi0::KinFitter::KinFitter(const ParticleTypeDatabase::Type& motherParticle):
