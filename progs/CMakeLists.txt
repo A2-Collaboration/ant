@@ -17,6 +17,7 @@ add_ant_executable(Ant-chain)
 add_ant_executable(Ant-addTID)
 add_ant_executable(Ant-info)
 
+
 option(OmegaTools "Build Omega Tools" OFF)
 
 if(OmegaTools)
@@ -28,4 +29,10 @@ option(SimpleTools "Simple Tools" OFF)
 
 if(SimpleTools)
     add_ant_executable(show_cocktail_database)
+endif()
+
+option(XmasCB "Crystal Ball Christmas ornaments" OFF)
+
+if(XmasCB)
+    add_ant_executable(XmasCB)
 endif()

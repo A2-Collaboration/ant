@@ -18,6 +18,8 @@ class TH2Crystals: public TH2Poly {
 protected:
     typedef matrixstack::Vector vec;
 
+    bool draw_glue_pads = false;
+
     /**
      * @brief Add the content of another TH2Crystal object, if number of bins match
      * @param h The other TH2Crystals object

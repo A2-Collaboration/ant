@@ -45,6 +45,8 @@ protected:
     static const std::vector<Int_t> binmap;         // maps vbin to bin
     static const std::vector<Int_t> Make_binmap();
 
+    bool draw_glue_pads = false;
+
 public:
     TH2CB( const std::string& name="", const std::string& title="" );
     virtual ~TH2CB() {}
