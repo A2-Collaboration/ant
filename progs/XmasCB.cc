@@ -3,6 +3,7 @@
 #include "base/CmdLine.h"
 #include "base/cbtaps_display/TH2CB.h"
 #include "TCanvas.h"
+#include "TH1D.h"
 
 using namespace std;
 using namespace ant;
@@ -19,11 +20,11 @@ int main(int argc, char** argv) {
 
     const int w_px = 1024;
 
-    TH2CB* cb = new TH2CB("cb","");
+    TH2CB* cb = new TH2CB("cb","", true);
     cb->SetTitle("");
 
     TCanvas* c = new TCanvas("ccb","CB");
-    c->SetMargin(0,0,0,0);
+    //c->SetMargin(0,0,0,0);
 
     const double x1 = cb->GetXaxis()->GetXmin();
     const double x2 = cb->GetXaxis()->GetXmax();
@@ -34,11 +35,14 @@ int main(int argc, char** argv) {
 
     c->SetCanvasSize(w_px, unsigned(w_px/ratio));
     c->cd();
-    cb->Draw("col");
+    cb->SetElement(0,1);
+    cb->SetElement(719,2);
+    cb->Draw("");
 
-    TH2CB* grid = new TH2CB("grid");
-    grid->SetTitle("");
-    grid->Draw("same");
+
+//    TH2CB* grid = new TH2CB("grid");
+//    grid->SetTitle("");
+//    grid->Draw("same");
 
 
     app.Run();

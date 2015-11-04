@@ -48,7 +48,7 @@ protected:
     bool draw_glue_pads = false;
 
 public:
-    TH2CB( const std::string& name="", const std::string& title="" );
+    TH2CB( const std::string& name="", const std::string& title="", bool glue_pads=false);
     virtual ~TH2CB() {}
 
     static Int_t GetBinOfMMC(const UChar_t major, const UChar_t minor, const UChar_t crystal);

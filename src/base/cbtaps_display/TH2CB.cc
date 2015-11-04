@@ -21,7 +21,7 @@ void TH2CB::Build()
 
     std::set<Int_t>::const_iterator nexthole = bins_in_holes.begin();
     Int_t vbins=0;
-
+    tool.PushMatrix();
     tool.PushMatrix();
     for(int i=0;i<4;++i) {
 
@@ -47,6 +47,8 @@ void TH2CB::Build()
         tool.Translate(b);
         tool.Scale(-1,-1);
     }
+
+
 
     SetStats(kFALSE);
     GetXaxis()->SetTickLength(0);
@@ -85,6 +87,52 @@ void TH2CB::Build()
             }
 
         }
+    }
+
+    tool.PopMatrix();
+
+    // hacked in Glue pads for Xmas ball
+    if(draw_glue_pads) {
+        const auto ma = (TH2DrawTool::Vector)a*(1/6.0);
+        const auto mb = (TH2DrawTool::Vector)b*(1/6.0);
+        const auto mc = ma-mb;
+
+        TH2DrawTool::point_list glue(4);
+        glue.at(0) = TH2DrawTool::Vector(0.0, 0.0);
+        glue.at(1) = ma;
+        glue.at(2) = glue.at(1)+(TH2DrawTool::Vector)mc*4.0;
+        glue.at(3) = glue.at(2)+(TH2DrawTool::Vector)(mc-mb);
+
+        tool.PushMatrix();
+            tool.Translate(b);
+            tool.Translate((TH2DrawTool::Vector)a*-1);
+            tool.PushMatrix();
+            for(int i=0;i<5;++i) {
+                tool.Draw(glue);
+                tool.FinishShape();
+                if(i!=4)tool.Translate(a);
+            }
+            tool.Translate((TH2DrawTool::Vector)mc*6.0);
+            tool.Draw(glue);
+            tool.FinishShape();
+            tool.Translate(a);
+            tool.PopMatrix();
+
+        tool.PopMatrix();
+
+        tool.PushMatrix();
+            tool.Translate((TH2DrawTool::Vector)mc*6.0);
+            tool.Translate((TH2DrawTool::Vector)b*-1);
+            tool.Scale(1,-1);
+            tool.PushMatrix();
+            for(int i=0;i<5;++i) {
+                tool.Draw(glue);
+                tool.FinishShape();
+                tool.Translate(a);
+            }
+            tool.PopMatrix();
+
+        tool.PopMatrix();
     }
 
 }
@@ -135,7 +183,8 @@ void TH2CB::MakeLevel(TH2DrawTool &c, const UInt_t n, set<Int_t>::const_iterator
 
 
 
-TH2CB::TH2CB(const string &name, const string &title): TH2Crystals(name,title)
+TH2CB::TH2CB(const string &name, const string &title, bool glue_pads): TH2Crystals(name,title),
+  draw_glue_pads(glue_pads)
 {
     Build();
 }
