@@ -41,9 +41,14 @@ Etap3pi0::Etap3pi0(const std::string& name, PhysOptPtr opts) :
     AddHist1D(cat, "NProtons", "# Protons",   "#","",BinSettings(6));
 
     cat = "chi2s";
-    AddHist1D(cat,"signal_pi0","#chi^{2} of pi0 candidates (signal)","chi^{2}","#",BinSettings(500,0,50));
+    AddHist1D(cat,"signal_pi0","#chi^{2} of #pi{0} candidates (signal)","chi^{2}","#",BinSettings(500,0,50));
     AddHist1D(cat,"signal_intermediate","#chi^{2} for selection (signal)","chi^{2}","#",BinSettings(100,0,5));
     AddHist1D(cat,"signal_etaprime","#chi^{2} for #eta' (signal)","chi^{2}","#",BinSettings(100,0,5));
+
+    AddHist1D(cat,"ref_pi0","#chi^{2} of #pi^{0} candidates (reference)","chi^{2}","#",BinSettings(500,0,50));
+    AddHist1D(cat,"ref_eta","#chi^{2} of #eta candidates (reference)","chi^{2}","#",BinSettings(500,0,50));
+    AddHist1D(cat,"ref_intermediate","#chi^{2} for selection (reference)","chi^{2}","#",BinSettings(100,0,5));
+    AddHist1D(cat,"ref_etaprime","#chi^{2} for #eta' (reference)","chi^{2}","#",BinSettings(100,0,5));
 
     cat = "kinfit";
     AddHist1D(cat,"signal_niter","","# iterations","#",BinSettings(100,0,5));
@@ -73,9 +78,13 @@ Etap3pi0::Etap3pi0(const std::string& name, PhysOptPtr opts) :
 
     cat = "channels";
     AddHist1D(cat,"nocut",              "6 #gamma, no cut", "", "#", BinSettings(15));
-    AddHist1D(cat,"signal_chi2",        "6 #gamma, #chi^{2} cut", "", "#", BinSettings(15));
-    AddHist1D(cat,"ref_chi2",           "6 #gamma, #chi^{2} cut", "", "#", BinSettings(15));
+    AddHist1D(cat,"signal_chi2",        "6 #gamma, #chi^{2} cut (signal)", "", "#", BinSettings(15));
+    AddHist1D(cat,"ref_chi2",           "6 #gamma, #chi^{2} cut (reference)", "", "#", BinSettings(15));
+    AddHist1D(cat,"mc_true",            "mc true for signal, ref, bkg", "", "#", BinSettings(15));
 
+    signal_tree = ParticleTypeTreeDatabase::Get(ParticleTypeTreeDatabase::Channel::EtaPrime_3Pi0_6g);
+    reference_tree = ParticleTypeTreeDatabase::Get(ParticleTypeTreeDatabase::Channel::EtaPrime_2Pi0Eta_6g);
+    bkg_tree = ParticleTypeTreeDatabase::Get(ParticleTypeTreeDatabase::Channel::Direct3Pi0_6g);
 }
 
 void Etap3pi0::FillCrossChecks(const ParticleList& photons, const ParticleList& mcphotons)
@@ -101,12 +110,37 @@ void Etap3pi0::FillCrossChecks(const ParticleList& photons, const ParticleList& 
     fill_combinations(hists.at("xc").at("IM_6g"), 6, photons);
 }
 
+
+Etap3pi0::result_t Etap3pi0::MakeMC3pi0(const Event::Data& mcEvt )
+{
+    result_t result;
+
+    result.Chi2_intermediate = 0;
+    result.Chi2_mother = 0;
+
+    const auto& pions = mcEvt.Intermediates().Get(ParticleTypeDatabase::Pi0);
+    const auto& etaprime = mcEvt.Intermediates().Get(ParticleTypeDatabase::EtaPrime);
+
+    result.success = ( pions.size() == 3) && (etaprime.size() == 1 );
+
+    if (result.success)
+    {
+        for ( unsigned i = 0 ; i < 3 ; ++i)
+        {
+            result.mesons[i].first = pions.at(i);
+            result.mesons[i].second = 0;
+        }
+        result.mother = *(etaprime.at(0));
+    }
+
+    return result;
+}
+
 Etap3pi0::result_t Etap3pi0::Make3pi0(const ParticleList& photons)
 {
     result_t result;
 
     const double pi0Chi2Cut = 3;
-    const double chi2IntermediateCut = 3;
 
     bool found = false;
     for ( const auto& pairs: combinations)
@@ -140,15 +174,15 @@ Etap3pi0::result_t Etap3pi0::Make3pi0(const ParticleList& photons)
             if(tmp.Chi2_intermediate<result.Chi2_intermediate)
             {
                 result = move(tmp);
-                hists.at("chi2s").at("signal_intermediate")->Fill(result.Chi2_intermediate);
                 found = true;
             }
         }
     }
 
-    result.success = (result.Chi2_intermediate < chi2IntermediateCut);
+    result.success = found;
     if (found)
     {
+        hists.at("chi2s").at("signal_intermediate")->Fill(result.Chi2_intermediate);
         for (const auto& p: result.mesons )
         {
             result.mother += *(p.first);
@@ -159,35 +193,12 @@ Etap3pi0::result_t Etap3pi0::Make3pi0(const ParticleList& photons)
     }
     return result;
 }
-
-Etap3pi0::result_t Etap3pi0::MakeMC3pi0(const Event::Data& mcEvt )
-{
-    result_t result;
-
-    result.Chi2_intermediate = 0;
-    result.Chi2_mother = 0;
-
-    const auto& pions = mcEvt.Intermediates().Get(ParticleTypeDatabase::Pi0);
-    const auto& etaprime = mcEvt.Intermediates().Get(ParticleTypeDatabase::EtaPrime);
-
-    result.success = ( pions.size() == 3) && (etaprime.size() == 1 );
-
-    if (result.success)
-    {
-        for ( unsigned i = 0 ; i < 3 ; ++i)
-        {
-            result.mesons[i].first = pions.at(i);
-            result.mesons[i].second = 0;
-        }
-        result.mother = *(etaprime.at(0));
-    }
-
-    return result;
-}
-
 Etap3pi0::result_t Etap3pi0::MakeEta2pi0(const ParticleList& photons)
 {
     result_t result;
+    const double pi0Chi2cut = 3;
+    const double etaChi2cut = 3;
+    bool found = false;
 
     for ( const auto& pairs: combinations)
     {
@@ -204,28 +215,57 @@ Etap3pi0::result_t Etap3pi0::MakeEta2pi0(const ParticleList& photons)
 
         for (unsigned etaIndex = 0 ; etaIndex < tmp.mesons.size() ; ++etaIndex)
         {
-            tmp.mesons[etaIndex].first = make_shared<Particle>(ParticleTypeDatabase::Eta,*(tmp.g_final[2*etaIndex]) + *(tmp.g_final[2*etaIndex+1]));
-            tmp.Chi2_intermediate =  std_ext::sqr((tmp.mesons[etaIndex].first->M() - 515.5) / 19.4);        // width and center from fit
+            unsigned etacount = 0;
+            unsigned picount = 0;
 
-            unsigned piIndex = ( etaIndex + 1 ) % 3;
-            tmp.mesons[piIndex].first = make_shared<Particle>(ParticleTypeDatabase::Pi0,*(tmp.g_final[2*piIndex]) + *(tmp.g_final[2*piIndex+1]));
-            tmp.Chi2_intermediate += std_ext::sqr((tmp.mesons[piIndex].first->M() - 126) / 15);
+            auto etacandidate = make_shared<Particle>(ParticleTypeDatabase::Eta,*(tmp.g_final[2*etaIndex]) + *(tmp.g_final[2*etaIndex+1]));
+            double chi2eta    = std_ext::sqr((etacandidate->M() - 515.5) / 19.4);        // width and center from fit
+            hists.at("chi2s").at("ref_eta")->Fill(chi2eta);
+            if ( chi2eta < etaChi2cut)
+                etacount++;
 
-            piIndex = ( etaIndex + 2 ) % 3;
-            tmp.mesons[piIndex].first = make_shared<Particle>(ParticleTypeDatabase::Pi0,*(tmp.g_final[2*piIndex]) + *(tmp.g_final[2*piIndex+1]));
-            tmp.Chi2_intermediate += std_ext::sqr((tmp.mesons[piIndex].first->M() - 126) / 15);
+            unsigned pi1Index = ( etaIndex + 1 ) % 3;
+            auto pi1candidate = make_shared<Particle>(ParticleTypeDatabase::Pi0,*(tmp.g_final[2*pi1Index]) + *(tmp.g_final[2*pi1Index+1]));
+            double chipi1     = std_ext::sqr((pi1candidate->M() - 126) / 15);
+            hists.at("chi2s").at("ref_pi0")->Fill(chipi1);
+            if ( chipi1 < pi0Chi2cut )
+                picount++;
 
-            if(tmp.Chi2_intermediate<result.Chi2_intermediate)
-                result = move(tmp);
+            unsigned pi2Index = ( etaIndex + 2 ) % 3;
+            auto pi2candidate =  make_shared<Particle>(ParticleTypeDatabase::Pi0,*(tmp.g_final[2*pi2Index]) + *(tmp.g_final[2*pi2Index+1]));
+            double chipi2     =  std_ext::sqr((pi2candidate->M() - 126) / 15);
+            hists.at("chi2s").at("ref_pi0")->Fill(chipi2);
+            if (chipi2 < pi0Chi2cut)
+                picount++;
+
+            if ( picount == 2 && etacount == 1 )
+            {
+                found = true;
+                tmp.mesons[etaIndex].first = etacandidate;
+                tmp.Chi2_intermediate =  chi2eta;
+                tmp.mesons[pi1Index].first = pi1candidate;
+                tmp.Chi2_intermediate += chipi1;
+                tmp.mesons[pi2Index].first = pi2candidate;
+                tmp.Chi2_intermediate += chipi2;
+
+                if(tmp.Chi2_intermediate<result.Chi2_intermediate)
+                    result = move(tmp);
+            }
         }
 
     }
 
-    result.success = true;
-    for (const auto& p: result.mesons )
-        result.mother += *(p.first);
 
-    result.Chi2_mother = std_ext::sqr( (result.mother.M() - 906.0) / 26.3);
+    result.success  = found;
+    if (found)
+    {
+        hists.at("chi2s").at("ref_intermediate")->Fill(result.Chi2_intermediate);
+        for (const auto& p: result.mesons )
+            result.mother += *(p.first);
+
+        result.Chi2_mother = std_ext::sqr( (result.mother.M() - 906.0) / 26.3);
+        hists.at("chi2s").at("ref_etaprime")->Fill(result.Chi2_mother);
+    }
     return result;
 }
 
@@ -242,6 +282,16 @@ void Etap3pi0::ProcessEvent(const data::Event& event)
 {
     const auto& data   = event.Reconstructed();
     const auto& mcdata = event.MCTrue();
+
+    if ( mcdata.ParticleTree() )
+    {
+        if (mcdata.ParticleTree()->IsEqual(signal_tree, utils::ParticleTools::MatchByParticleName))
+            hists.at("channels").at("mc_true")->Fill(utils::ParticleTools::GetDecayString(mcdata.ParticleTree()).c_str(),1);
+        if (mcdata.ParticleTree()->IsEqual(reference_tree, utils::ParticleTools::MatchByParticleName))
+            hists.at("channels").at("mc_true")->Fill(utils::ParticleTools::GetDecayString(mcdata.ParticleTree()).c_str(),1);
+        if (mcdata.ParticleTree()->IsEqual(bkg_tree, utils::ParticleTools::MatchByParticleName))
+            hists.at("channels").at("mc_true")->Fill(utils::ParticleTools::GetDecayString(mcdata.ParticleTree()).c_str(),1);
+    }
 
     const auto& photons            = data.Particles().Get(ParticleTypeDatabase::Photon);
     const auto& protonCandidates   = data.Particles().Get(ParticleTypeDatabase::Proton);
@@ -296,7 +346,7 @@ void Etap3pi0::ProcessEvent(const data::Event& event)
 
 
 
-    const double chi2cut(10);
+    const double chi2cut(3);
 
     if (result_3pi0.chi2() < chi2cut )
     {
@@ -304,6 +354,12 @@ void Etap3pi0::ProcessEvent(const data::Event& event)
         FillImEtaPrime(result_3pi0,(TH1D*)hists.at("signal").at("IM_etap"));
         hists.at("channels").at("signal_chi2")->Fill(utils::ParticleTools::GetDecayString(mcdata.ParticleTree()).c_str(),1);
         hists.at("steps").at("evcount")->Fill("#chi^{2} cut signal",1);
+
+        hists.at("kinfit").at("signal_chi2")->Fill(result_fitToEtaPrime.ChiSquare);
+        hists.at("kinfit").at("signal_niter")->Fill(result_fitToEtaPrime.NIterations);
+        auto& kinfitvars = result_fitToEtaPrime.Variables;
+        hists.at("kinfit").at("signal_egamma_before")->Fill(kinfitvars.at(fitToEtaPrime.egammaName).Value.Before);
+        hists.at("kinfit").at("signal_egamma_after")->Fill(kinfitvars.at(fitToEtaPrime.egammaName).Value.After);
     }
 
     if (result_eta2pi0.chi2() < chi2cut)
@@ -313,11 +369,6 @@ void Etap3pi0::ProcessEvent(const data::Event& event)
         FillImEtaPrime(result_eta2pi0,(TH1D*) hists.at("ref").at("IM_etap"));
         hists.at("channels").at("ref_chi2")->Fill(utils::ParticleTools::GetDecayString(mcdata.ParticleTree()).c_str(),1);
         hists.at("steps").at("evcount")->Fill("#chi^{2} cut reference",1);
-        hists.at("kinfit").at("signal_chi2")->Fill(result_fitToEtaPrime.ChiSquare);
-        hists.at("kinfit").at("signal_niter")->Fill(result_fitToEtaPrime.NIterations);
-        auto& kinfitvars = result_fitToEtaPrime.Variables;
-        hists.at("kinfit").at("signal_egamma_before")->Fill(kinfitvars.at(fitToEtaPrime.egammaName).Value.Before);
-        hists.at("kinfit").at("signal_egamma_after")->Fill(kinfitvars.at(fitToEtaPrime.egammaName).Value.After);
     }
 
     if ( result_mc.success)
@@ -347,7 +398,6 @@ void Etap3pi0::ShowResult()
     }
 
     canvas("Dalitz-Plots")      << drawoption("colz") << hists.at("dalitz").at("xy") << hists.at("dalitz").at("mc_xy") << endc;
-
 }
 
 

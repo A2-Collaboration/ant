@@ -26,6 +26,10 @@ protected:
     const double IM_mean_pi0 = 126.0;
     const double IM_sigma_pi0 = 15.0;
 
+    std::shared_ptr<ant::Tree<const ParticleTypeDatabase::Type&>> signal_tree;
+    std::shared_ptr<ant::Tree<const ParticleTypeDatabase::Type&>> reference_tree;
+    std::shared_ptr<ant::Tree<const ParticleTypeDatabase::Type&>> bkg_tree;
+
     const std::vector<std::vector<std::pair<unsigned,unsigned>>> combinations =
     {
         { {0, 1}, {2, 3}, {4, 5} },
