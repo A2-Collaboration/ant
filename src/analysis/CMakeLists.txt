@@ -54,6 +54,7 @@ set(ANALYSIS_PHYSICS
   physics/wolfes/etaprime-3pi0-test.cc
   physics/common/IMPlots.cc
   physics/common/ProtonTagger.cc
+  physics/common/ExtractTimings.cc
   )
 
 set(ANALYSIS_PLOT
