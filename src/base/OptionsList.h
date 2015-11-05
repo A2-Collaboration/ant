@@ -22,7 +22,22 @@ public:
     std::string GetOption(const std::string& key) const;
     bool IsFlagSet(const std::string& key) const;
 
+    template <typename T>
+    T Get(const std::string& key, const T& def_value) const {
+        const auto& v = GetOption(key);
+        if(v.empty()) {
+            return def_value;
+        }
+        return T(v);
+    }
+
 
 };
+
+template<>
+double OptionsList::Get<double>(const std::string& key, const double& def_value) const;
+
+template<>
+int OptionsList::Get<int>(const std::string& key, const int& def_value) const;
 
 }
