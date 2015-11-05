@@ -28,7 +28,18 @@ Etap3pi0::Etap3pi0(const std::string& name, PhysOptPtr opts) :
     string cat("hist");
 
     // no category
+    cat = "proton";
     AddHist1D(cat,"ProtonCandidateAngles",          "Proton Candidate Angles", "#Theta [#circ]", "#", BinSettings(180));
+    AddHist1D(cat,"mcProtonAngles",                 "MC Proton Angles", "#Theta [#circ]", "#", BinSettings(180));
+
+
+    cat = "P";
+    AddHist2D(cat, "all", "All", "#Theta [#circ]","E [MeV]",BinSettings(360,0,180),bs_im);
+    AddHist2D(cat, "gamma_all", "All #gamma", "#Theta [#circ]","E [MeV]",BinSettings(360,0,180),bs_im);
+    AddHist2D(cat, "gamma_6", "All 6 #gamma", "#Theta [#circ]","E [MeV]",BinSettings(360,0,180),bs_im);
+    AddHist2D(cat, "gamma_signal", "signal 6 #gamma", "#Theta [#circ]","E [MeV]",BinSettings(360,0,180),bs_im);
+    AddHist2D(cat, "gamma_ref", "reference 6 #gamma", "#Theta [#circ]","E [MeV]",BinSettings(360,0,180),bs_im);
+
 
 
     cat = "xc";             // crosschecks
@@ -50,11 +61,13 @@ Etap3pi0::Etap3pi0(const std::string& name, PhysOptPtr opts) :
     AddHist1D(cat,"ref_intermediate","#chi^{2} for selection (reference)","chi^{2}","#",BinSettings(100,0,5));
     AddHist1D(cat,"ref_etaprime","#chi^{2} for #eta' (reference)","chi^{2}","#",BinSettings(100,0,5));
 
+    /*
     cat = "kinfit";
     AddHist1D(cat,"signal_niter","","# iterations","#",BinSettings(100,0,5));
     AddHist1D(cat,"signal_chi2","#chi^{2} for kinfit (signal)","chi^{2}","#",BinSettings(100,0,5));
     AddHist1D(cat,"signal_egamma_before", "Photon Energy before (signal)", "E_{#gamma} before [MeV] (signal)","#",BinSettings(100,0,5));
     AddHist1D(cat,"signal_egamma_after", "Photon Energy after (signal)", "E_{#gamma} after [MeV] ","#",BinSettings(100,0,5));
+    */
 
 
     cat = "signal";         //signal: eta' --> 3 pi0
@@ -80,7 +93,7 @@ Etap3pi0::Etap3pi0(const std::string& name, PhysOptPtr opts) :
     AddHist1D(cat,"nocut",              "6 #gamma, no cut", "", "#", BinSettings(15));
     AddHist1D(cat,"signal_chi2",        "6 #gamma, #chi^{2} cut (signal)", "", "#", BinSettings(15));
     AddHist1D(cat,"ref_chi2",           "6 #gamma, #chi^{2} cut (reference)", "", "#", BinSettings(15));
-    AddHist1D(cat,"mc_true",            "mc true for signal, ref, bkg", "", "#", BinSettings(15));
+    AddHist1D(cat,"mc_true",            "mc true for signal, ref, bkg", "", "#", BinSettings(3));
 
     signal_tree = ParticleTypeTreeDatabase::Get(ParticleTypeTreeDatabase::Channel::EtaPrime_3Pi0_6g);
     reference_tree = ParticleTypeTreeDatabase::Get(ParticleTypeTreeDatabase::Channel::EtaPrime_2Pi0Eta_6g);
@@ -293,14 +306,29 @@ void Etap3pi0::ProcessEvent(const data::Event& event)
             hists.at("channels").at("mc_true")->Fill(utils::ParticleTools::GetDecayString(mcdata.ParticleTree()).c_str(),1);
     }
 
+    for (const auto& p: data.Particles().GetAll())
+        hists["P"]["all"]->Fill(p->Theta()*TMath::RadToDeg(),p->Ek());
+
     const auto& photons            = data.Particles().Get(ParticleTypeDatabase::Photon);
     const auto& protonCandidates   = data.Particles().Get(ParticleTypeDatabase::Proton);
+    const auto& mcprotons          = mcdata.Particles().Get(ParticleTypeDatabase::Proton);
+
+    for (const auto& ph: photons)
+        hists["P"]["gamma_all"]->Fill(ph->Theta()*TMath::RadToDeg(),ph->Ek());
 
     hists.at("steps").at("evcount")->Fill("all",1);
-    ParticlePtr mcproton;
-    if (!MakeMCProton(mcdata,mcproton))
+
+    // MC Proton
+    if (mcprotons.size() != 1)
         return;
     hists.at("steps").at("evcount")->Fill("req. mc proton",1);
+
+    auto mcproton = mcprotons.at(0);
+    hists.at("proton").at("mcProtonAngles")->Fill(mcproton->Theta() * TMath::DegToRad());
+    if (mcproton->Theta() * TMath::DegToRad() > 20 )
+        return;
+    hists.at("steps").at("evcount")->Fill("mc proton angle < 20",1);
+
 
 
     const auto& mcphotons = mcdata.Particles().Get(ParticleTypeDatabase::Photon);
@@ -310,6 +338,10 @@ void Etap3pi0::ProcessEvent(const data::Event& event)
 
     if (photons.size() != 6 )
         return;
+
+    for (const auto& ph: photons)
+        hists["P"]["gamma_6"]->Fill(ph->Theta()*TMath::RadToDeg(),ph->Ek());
+
     hists.at("steps").at("evcount")->Fill("req. 6 #gamma",1);
     hists.at("channels").at("nocut")->Fill(utils::ParticleTools::GetDecayString(mcdata.ParticleTree()).c_str(),1);
 
@@ -322,22 +354,27 @@ void Etap3pi0::ProcessEvent(const data::Event& event)
     for ( const auto& pcandidate: protonCandidates)
     {
         double thetaAngle = pcandidate->Theta() * TMath::RadToDeg() ;
-        hists.at("hist").at("ProtonCandidateAngles")->Fill(thetaAngle);
+        hists.at("proton").at("ProtonCandidateAngles")->Fill(thetaAngle);
         if ( thetaAngle < 20)
+        {
             protons.push_back(pcandidate);
+            continue;
+        }
+        return;
     }
+    hists.at("steps").at("evcount")->Fill("proton angle < 20",1);
     hists.at("xc").at("NProtons")->Fill(protons.size());
     if (protons.size() == 0)
         hists.at("steps").at("evcount")->Fill("req. 1 proton",1);
 
 
 
-    fitToEtaPrime.SetEgammaBeam(data.TaggerHits().at(0)->PhotonEnergy());
+    //fitToEtaPrime.SetEgammaBeam(data.TaggerHits().at(0)->PhotonEnergy());
 //    fitToEtaPrime.SetProtonTAPS(protons.at(0));
-    fitToEtaPrime.SetProtonTAPS(mcproton);
-    fitToEtaPrime.SetPhotons(photons);
+    //fitToEtaPrime.SetProtonTAPS(mcproton);
+    //fitToEtaPrime.SetPhotons(photons);
 
-    result_fitToEtaPrime = fitToEtaPrime.DoFit();
+    //result_fitToEtaPrime = fitToEtaPrime.DoFit();
 
 
     result_t result_3pi0    = Make3pi0(photons);
@@ -355,11 +392,15 @@ void Etap3pi0::ProcessEvent(const data::Event& event)
         hists.at("channels").at("signal_chi2")->Fill(utils::ParticleTools::GetDecayString(mcdata.ParticleTree()).c_str(),1);
         hists.at("steps").at("evcount")->Fill("#chi^{2} cut signal",1);
 
+        /*
         hists.at("kinfit").at("signal_chi2")->Fill(result_fitToEtaPrime.ChiSquare);
         hists.at("kinfit").at("signal_niter")->Fill(result_fitToEtaPrime.NIterations);
         auto& kinfitvars = result_fitToEtaPrime.Variables;
         hists.at("kinfit").at("signal_egamma_before")->Fill(kinfitvars.at(fitToEtaPrime.egammaName).Value.Before);
         hists.at("kinfit").at("signal_egamma_after")->Fill(kinfitvars.at(fitToEtaPrime.egammaName).Value.After);
+        */
+        for (const auto& ph: photons)
+            hists["P"]["gamma_signal"]->Fill(ph->Theta()*TMath::RadToDeg(),ph->Ek());
     }
 
     if (result_eta2pi0.chi2() < chi2cut)
@@ -369,6 +410,8 @@ void Etap3pi0::ProcessEvent(const data::Event& event)
         FillImEtaPrime(result_eta2pi0,(TH1D*) hists.at("ref").at("IM_etap"));
         hists.at("channels").at("ref_chi2")->Fill(utils::ParticleTools::GetDecayString(mcdata.ParticleTree()).c_str(),1);
         hists.at("steps").at("evcount")->Fill("#chi^{2} cut reference",1);
+        for (const auto& ph: photons)
+            hists["P"]["gamma_ref"]->Fill(ph->Theta()*TMath::RadToDeg(),ph->Ek());
     }
 
     if ( result_mc.success)
