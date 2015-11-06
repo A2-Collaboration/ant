@@ -325,7 +325,7 @@ void Etap3pi0::ProcessEvent(const data::Event& event)
 
     auto mcproton = mcprotons.at(0);
     hists.at("proton").at("mcProtonAngles")->Fill(mcproton->Theta() * TMath::RadToDeg());
-    if (mcproton->Theta() * TMath::DegToRad() > 20 )
+    if (mcproton->Theta() * TMath::RadToDeg() > 20 )
         return;
     hists.at("steps").at("evcount")->Fill("mc proton angle < 20",1);
 
