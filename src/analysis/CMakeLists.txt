@@ -72,6 +72,7 @@ set(ANALYSIS_UTILS
   utils/ParticleID.cc
   utils/root-addons.cc
   utils/particle_tools.cc
+  utils/TimeSmearingHack.cc
   )
 
 set(ANALYSIS_ALL
