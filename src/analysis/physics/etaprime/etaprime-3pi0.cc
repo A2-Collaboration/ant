@@ -349,8 +349,9 @@ void Etap3pi0::ProcessEvent(const data::Event& event)
     if (data.TaggerHits().size() != 1)
         return;
     hists.at("steps").at("evcount")->Fill("req. 1 tagger hit",1);
-    vector<ParticlePtr> protons;
+    //vector<ParticlePtr> protons;
     // only take proton if in TAPS and only select single
+    /*
     for ( const auto& pcandidate: protonCandidates)
     {
         double thetaAngle = pcandidate->Theta() * TMath::RadToDeg() ;
@@ -360,12 +361,13 @@ void Etap3pi0::ProcessEvent(const data::Event& event)
             protons.push_back(pcandidate);
             continue;
         }
-        return;
+        //return;
     }
-    hists.at("steps").at("evcount")->Fill("proton angle < 20",1);
-    hists.at("xc").at("NProtons")->Fill(protons.size());
-    if (protons.size() == 0)
-        hists.at("steps").at("evcount")->Fill("req. 1 proton",1);
+    */
+//    hists.at("steps").at("evcount")->Fill("proton angle < 20",1);
+    hists.at("xc").at("NProtons")->Fill(protonCandidates.size());
+    //if (protons.size() == 0)
+        //hists.at("steps").at("evcount")->Fill("req. 1 proton",1);
 
 
 
