@@ -2,6 +2,7 @@
 
 #include "analysis/physics/Physics.h"
 #include "data/Candidate.h"
+#include "utils/TimeSmearingHack.h"
 
 #include <string>
 
@@ -109,6 +110,8 @@ protected:
     histgroup taps_group;
     histgroup all_group;
     TAPSVetoMatch tapsveto;
+
+    utils::TimeSmearingHack timesmear;
 
 
     bool mult1_only = false;

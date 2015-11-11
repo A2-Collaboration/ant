@@ -49,6 +49,8 @@ ReconstructCheck::ReconstructCheck(const std::string& name, PhysOptPtr opts):
     tree->Branch("rSize",   &b_rSize);
     tree->Branch("rCal",      &b_Cal);
 
+    timesmear.smearing_enabled = true;
+
 }
 
 Detector_t::Any_t GetCommonDetector(const CandidateList& cands) {
@@ -95,7 +97,7 @@ void ReconstructCheck::ProcessEvent(const Event &event)
             b_rTheta = std_ext::radian_to_degree(c->Theta());
             b_rPhi   = std_ext::radian_to_degree(c->Phi());
             b_rVeto  = c->VetoEnergy();
-            b_rTime  = c->Time();
+            b_rTime  = timesmear.GetTime(c);
             b_rSize  = c->ClusterSize();
             if(c->Detector() & Detector_t::Any_t::CB)
                 b_Cal    = 1;
