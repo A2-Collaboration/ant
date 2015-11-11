@@ -26,6 +26,9 @@ protected:
     const double IM_mean_pi0 = 126.0;
     const double IM_sigma_pi0 = 15.0;
 
+
+    const double copl_opening_sigma = 7.80;
+
     std::shared_ptr<ant::Tree<const ParticleTypeDatabase::Type&>> signal_tree;
     std::shared_ptr<ant::Tree<const ParticleTypeDatabase::Type&>> reference_tree;
     std::shared_ptr<ant::Tree<const ParticleTypeDatabase::Type&>> bkg_tree;
