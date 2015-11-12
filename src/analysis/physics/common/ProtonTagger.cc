@@ -6,6 +6,7 @@
 using namespace ant;
 using namespace ant::std_ext;
 using namespace ant::analysis;
+using namespace ant::analysis::data;
 using namespace ant::analysis::physics;
 using namespace std;
 
@@ -26,6 +27,8 @@ ProtonTagger::ProtonTagger(const string& name, PhysOptPtr opts):
     tree->Branch("veto",    &b_veto);
     tree->Branch("size",    &b_Size);
     tree->Branch("cbtime",  &b_cbtime);
+    tree->Branch("Eshort",  &b_Eshort);
+    tree->Branch("EshortCentral",  &b_EshortCentral);
 }
 
 template <typename T>
@@ -90,6 +93,26 @@ void ProtonTagger::ProcessEvent(const data::Event& event)
                 b_Time = p->Time();
 
                 b_angle = radian_to_degree(mm.Angle(*p));
+
+                const auto& cluster = p->FindCaloCluster();
+
+                b_Eshort = 0.0;
+                b_EshortCentral = 0.0;
+
+                if(cluster) {
+                    for(const Cluster::Hit& clusterhit : cluster->Hits) {
+                        for(const Cluster::Hit::Datum& datum : clusterhit.Data) {
+
+                            if(datum.Type != Channel_t::Type_t::PedestalShort)
+                                continue;
+
+                            b_Eshort += datum.Value;
+                            if(clusterhit.Channel == cluster->CentralElement) {
+                                b_EshortCentral = datum.Value;
+                            }
+                        }
+                    }
+                }
 
                 tree->Fill();
 
