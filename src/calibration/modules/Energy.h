@@ -16,7 +16,7 @@ namespace calibration {
 class DataManager;
 
 namespace gui {
-class FitGausPol0;
+class PeakingFitFunction;
 }
 
 
@@ -115,7 +115,7 @@ protected:
         virtual void StoreFit(unsigned channel) override;
         virtual bool FinishRange() override;
     protected:
-        std::shared_ptr<gui::FitGausPol0> func;
+        std::shared_ptr<gui::PeakingFitFunction> func;
         gui::CalCanvas* canvas;
         TH1*  h_projection = nullptr;
 
