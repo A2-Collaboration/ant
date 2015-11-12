@@ -31,6 +31,7 @@ public:
 
 
         TH2D* h_pedestals = nullptr;
+        TH2D* h_rel_gamma = nullptr;
 
         std::shared_ptr<expconfig::detector::TAPS> taps_detector;
 

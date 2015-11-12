@@ -50,6 +50,14 @@ TAPS_ShortEnergy::ThePhysics::ThePhysics(const string& name, shared_ptr<expconfi
                       BinSettings(300),
                       taps_channels,
                       "Pedestals");
+
+    h_rel_gamma = HistFac.makeTH2D(
+                      "TAPS E_{S} / E_{L}",
+                      "rel",
+                      "#",
+                      BinSettings(400,-10,10),
+                      taps_channels,
+                      "relative");
 }
 
 void TAPS_ShortEnergy::ThePhysics::ProcessEvent(const Event& event)
@@ -62,10 +70,35 @@ void TAPS_ShortEnergy::ThePhysics::ProcessEvent(const Event& event)
             /// \todo check for timing hit?
             /// \todo check for trigger pattern?
             for(const Cluster::Hit::Datum& datum : clusterhit.Data) {
+
                 if(datum.Type != Channel_t::Type_t::PedestalShort)
                     continue;
                 h_pedestals->Fill(datum.Value, clusterhit.Channel);
+
             }
+        }
+    }
+
+    for(const auto& c : event.Reconstructed().Candidates()) {
+        if(c->VetoEnergy() < 0.5) {
+            const auto& cluster = c->FindCaloCluster();
+
+            if(cluster)
+                for(const Cluster::Hit& clusterhit : cluster->Hits) {
+
+                    if(clusterhit.Channel == cluster->CentralElement) {
+                        double central_e = 0.0;
+                        for(const Cluster::Hit::Datum& datum : clusterhit.Data) {
+
+                            if(datum.Type == Channel_t::Type_t::Integral)
+                                central_e = datum.Value;
+
+                            if(datum.Type == Channel_t::Type_t::IntegralShort)
+                                h_rel_gamma->Fill(datum.Value / central_e, clusterhit.Channel);
+
+                        }
+                    }
+                }
         }
     }
 }
@@ -76,7 +109,7 @@ void TAPS_ShortEnergy::ThePhysics::Finish()
 
 void TAPS_ShortEnergy::ThePhysics::ShowResult()
 {
-    canvas(GetName()) << drawoption("colz") << h_pedestals
+    canvas(GetName()) << drawoption("colz") << h_pedestals << h_rel_gamma
                       << endc;
 }
 
