@@ -31,7 +31,8 @@ CandidatesAnalysis::CandidatesAnalysis(const std::string& name, PhysOptPtr opts)
     tapsdEE = HistFac.makeTH2D("TAPS dE-E","E_{TAPS} [MeV]","dE_{TAPSVeto} [MeV]", BinSettings(1000),BinSettings(100,0,30),"taps_dEE");
     tapstof = HistFac.makeTH2D("TAPS ToF","t_{TAPS} [ns]","E_{TAPS} [MeV]", BinSettings(300,-15,15),BinSettings(1000),"taps_tof");
     detectors = HistFac.makeTH1D("Detectors","","", BinSettings(1),"detectors");
-    psa = HistFac.makeTH2D("TAPS PSA","E_{long} [MeV]","E_{short} [MeV]", BinSettings(1000),BinSettings(1000),"psa");
+    psa = HistFac.makeTH2D("TAPS PSA (Charged)","E_{long} [MeV]","E_{short} [MeV]", BinSettings(1000),BinSettings(1000),"psa");
+    psa_all = HistFac.makeTH2D("TAPS PSA","E_{long} [MeV]","E_{short} [MeV]", BinSettings(1000),BinSettings(1000),"psa_all");
 }
 
 void CandidatesAnalysis::ProcessEvent(const Event &event)
@@ -78,9 +79,13 @@ void CandidatesAnalysis::ProcessEvent(const Event &event)
                                 if(datum.Type == Channel_t::Type_t::Integral)
                                     central_e = datum.Value;
 
-                                if(datum.Type == Channel_t::Type_t::IntegralShort)
-                                    psa->Fill(central_e, datum.Value);
+                                if(datum.Type == Channel_t::Type_t::IntegralShort) {
 
+                                    if(ci->VetoEnergy()<0.5)
+                                        psa->Fill(central_e, datum.Value);
+
+                                    psa_all->Fill(central_e, datum.Value);
+                                }
                             }
                         }
                     }
