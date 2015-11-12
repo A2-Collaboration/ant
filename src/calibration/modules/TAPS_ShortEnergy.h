@@ -17,11 +17,19 @@ namespace calibration {
 class TAPS_ShortEnergy : public Energy
 {
 
+    struct SGGUI_Pedestals : ant::calibration::Energy::GUI_Pedestals {
+        SGGUI_Pedestals(const std::string& basename,
+               CalibType& type,
+               const std::shared_ptr<DataManager>& calmgr,
+               const std::shared_ptr<Detector_t>& detector);
+    };
 
 public:
     class ThePhysics : public analysis::Physics {
 
     protected:
+
+
         TH2D* h_pedestals = nullptr;
 
         std::shared_ptr<expconfig::detector::TAPS> taps_detector;
@@ -47,6 +55,8 @@ public:
     virtual std::unique_ptr<analysis::Physics> GetPhysicsModule() override;
     virtual void GetGUIs(std::list<std::unique_ptr<calibration::gui::Manager_traits> >& guis) override;
 protected:
+
+
     std::shared_ptr<expconfig::detector::TAPS> taps_detector;
 };
 
