@@ -13,18 +13,43 @@ class TAPS;
 }}
 
 namespace calibration {
+namespace gui {
+class PeakingFitFunction;
+}
 
 class TAPS_ShortEnergy : public Energy
 {
 
     struct SGGUI_Pedestals : ant::calibration::Energy::GUI_Pedestals {
         SGGUI_Pedestals(const std::string& basename,
-               CalibType& type,
-               const std::shared_ptr<DataManager>& calmgr,
-               const std::shared_ptr<Detector_t>& detector);
+                        CalibType& type,
+                        const std::shared_ptr<DataManager>& calmgr,
+                        const std::shared_ptr<Detector_t>& detector);
     };
 
 public:
+
+    struct GUI_Gains : GUI_CalibType {
+        GUI_Gains(const std::string& basename,
+                  CalibType& type,
+                  const std::shared_ptr<DataManager>& calmgr,
+                  const std::shared_ptr<Detector_t>& detector);
+        virtual ~GUI_Gains();
+
+        virtual void InitGUI(gui::ManagerWindow_traits* window) override;
+        virtual DoFitReturn_t DoFit(TH1* hist, unsigned channel,
+                                    const Manager_traits::DoFitOptions_t& options) override;
+        virtual void DisplayFit() override;
+        virtual void StoreFit(unsigned channel) override;
+        virtual bool FinishRange() override;
+    protected:
+        std::shared_ptr<gui::PeakingFitFunction> func;
+        gui::CalCanvas* canvas;
+        TH1*  h_projection = nullptr;
+        TH1D* h_peaks = nullptr;
+        TH1D* h_relative = nullptr;
+    };
+
     class ThePhysics : public analysis::Physics {
 
     protected:
@@ -36,6 +61,9 @@ public:
         std::shared_ptr<expconfig::detector::TAPS> taps_detector;
 
     public:
+
+
+
         ThePhysics(const std::string& name,
                    std::shared_ptr<expconfig::detector::TAPS> taps);
 

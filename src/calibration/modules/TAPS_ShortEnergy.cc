@@ -2,11 +2,14 @@
 #include "TF1.h"
 #include "expconfig/detectors/TAPS.h"
 #include "calibration/fitfunctions/FitLandau.h"
+#include "calibration/fitfunctions/FitGaus.h"
 #include "analysis/plot/HistogramFactories.h"
 #include "analysis/data/Event.h"
 #include "analysis/utils/combinatorics.h"
-
+#include "calibration/gui/CalCanvas.h"
 #include "tree/TDataRecord.h"
+#include "base/Logger.h"
+#include "base/cbtaps_display/TH2TAPS.h"
 
 #include <list>
 #include <cmath>
@@ -57,7 +60,7 @@ TAPS_ShortEnergy::ThePhysics::ThePhysics(const string& name, shared_ptr<expconfi
                       "#",
                       BinSettings(400,-10,10),
                       taps_channels,
-                      "relative");
+                      "RelativeGains");
 }
 
 void TAPS_ShortEnergy::ThePhysics::ProcessEvent(const Event& event)
@@ -128,10 +131,15 @@ void TAPS_ShortEnergy::GetGUIs(std::list<std::unique_ptr<gui::Manager_traits> >&
                           calibrationManager,
                           taps_detector
                           ));
+    guis.emplace_back(std_ext::make_unique<GUI_Gains>(
+                          GetName(),
+                          RelativeGains,
+                          calibrationManager,
+                          taps_detector
+                          ));
 }
 
-// sigma = 3
-// A  =
+
 struct myLandau : public gui::FitLandau {
     using FitLandau::FitLandau;
 
@@ -164,4 +172,118 @@ TAPS_ShortEnergy::SGGUI_Pedestals::SGGUI_Pedestals(
 {
     func = make_shared<myLandau>();
     //TODO: subclass fitLandau with specific settings
+}
+
+
+
+
+TAPS_ShortEnergy::GUI_Gains::GUI_Gains(const string& basename,
+                          CalibType& type,
+                          const std::shared_ptr<DataManager>& calmgr,
+                          const std::shared_ptr<Detector_t>& detector) :
+    GUI_CalibType(basename, type, calmgr, detector),
+    func(make_shared<gui::FitGaus>())
+{
+
+}
+
+TAPS_ShortEnergy::GUI_Gains::~GUI_Gains()
+{
+
+}
+
+void TAPS_ShortEnergy::GUI_Gains::InitGUI(gui::ManagerWindow_traits* window)
+{
+    canvas = window->AddCalCanvas();
+    h_peaks = new TH1D("h_peaks","Peak positions",GetNumberOfChannels(),0,GetNumberOfChannels());
+    h_peaks->SetXTitle("Channel Number");
+    h_peaks->SetYTitle("Peak");
+    h_relative = new TH1D("h_relative","Relative change from previous gains",GetNumberOfChannels(),0,GetNumberOfChannels());
+    h_relative->SetXTitle("Channel Number");
+    h_relative->SetYTitle("Relative change / %");
+}
+
+gui::Manager_traits::DoFitReturn_t TAPS_ShortEnergy::GUI_Gains::DoFit(TH1* hist, unsigned channel,
+                                                               const Manager_traits::DoFitOptions_t& options)
+{
+    if(detector->IsIgnored(channel))
+        return DoFitReturn_t::Skip;
+
+    TH2* hist2 = dynamic_cast<TH2*>(hist);
+
+    h_projection = hist2->ProjectionX("",channel+1,channel+1);
+
+    func->SetDefaults(h_projection);
+    func->SetRange(interval<double>(-1,3));
+    const auto it_fit_param = fitParameters.find(channel);
+    if(it_fit_param != fitParameters.end()
+       && !options.IgnorePreviousFitParameters) {
+        VLOG(5) << "Loading previous fit parameters for channel " << channel;
+        func->Load(it_fit_param->second);
+    }
+
+    func->Fit(h_projection);
+
+    /// \todo implement automatic stop if fit failed?
+
+    // goto next channel
+    return DoFitReturn_t::Next;
+}
+
+void TAPS_ShortEnergy::GUI_Gains::DisplayFit()
+{
+    canvas->Divide(1,1);
+    canvas->Show(h_projection, func.get());
+}
+
+void TAPS_ShortEnergy::GUI_Gains::StoreFit(unsigned channel)
+{
+    const double oldValue = previousValues[channel];
+
+    const double convergenceFactor = 1.0;
+    const double target_pos = 1.0;
+    const double peak = func->GetPeakPosition();
+
+    // apply convergenceFactor only to the desired procentual change of oldValue,
+    // given by (pi0mass/pi0peak - 1)
+    const double newValue = oldValue + oldValue * convergenceFactor * (target_pos/peak - 1);
+
+    calibType.Values[channel] = newValue;
+
+    const double relative_change = 100*(newValue/oldValue-1);
+
+    LOG(INFO) << "Stored Ch=" << channel << ": PeakPosition " << peak
+              << ", gain changed " << oldValue << " -> " << newValue
+              << " (" << relative_change << " %)";
+
+
+    // don't forget the fit parameters
+    fitParameters[channel] = func->Save();
+
+    h_peaks->SetBinContent(channel+1, peak);
+    h_relative->SetBinContent(channel+1, relative_change);
+}
+
+bool TAPS_ShortEnergy::GUI_Gains::FinishRange()
+{
+    canvas->Clear();
+    canvas->Divide(2,2);
+
+    canvas->cd(1);
+    h_peaks->SetStats(false);
+    h_peaks->Draw("P");
+    canvas->cd(2);
+    TH2TAPS* h_peaks_taps = new TH2TAPS("h_peaks_taps",h_peaks->GetTitle());
+    h_peaks_taps->FillElements(*h_peaks);
+    h_peaks_taps->Draw("colz");
+
+    canvas->cd(3);
+    h_relative->SetStats(false);
+    h_relative->Draw("P");
+    canvas->cd(4);
+    TH2TAPS* h_relative_taps = new TH2TAPS("h_relative_cb",h_relative->GetTitle());
+    h_relative_taps->FillElements(*h_relative);
+    h_relative_taps->Draw("colz");
+
+    return true;
 }
