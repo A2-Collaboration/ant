@@ -31,6 +31,7 @@ CandidatesAnalysis::CandidatesAnalysis(const std::string& name, PhysOptPtr opts)
     tapsdEE = HistFac.makeTH2D("TAPS dE-E","E_{TAPS} [MeV]","dE_{TAPSVeto} [MeV]", BinSettings(1000),BinSettings(100,0,30),"taps_dEE");
     tapstof = HistFac.makeTH2D("TAPS ToF","t_{TAPS} [ns]","E_{TAPS} [MeV]", BinSettings(300,-15,15),BinSettings(1000),"taps_tof");
     detectors = HistFac.makeTH1D("Detectors","","", BinSettings(1),"detectors");
+    psa = HistFac.makeTH2D("TAPS PSA","E_{long} [MeV]","E_{short} [MeV]", BinSettings(1000),BinSettings(1000),"psa");
 }
 
 void CandidatesAnalysis::ProcessEvent(const Event &event)
@@ -60,6 +61,29 @@ void CandidatesAnalysis::ProcessEvent(const Event &event)
             } else if(ci->Detector() & Detector_t::Any_t::TAPS) {
                 tapsdEE->Fill(ci->ClusterEnergy(),ci->VetoEnergy());
                 tapstof->Fill(ci->Time(), ci->ClusterEnergy());
+
+
+                // extract shot gate stuff
+                ///@todo: implement shortgate in clusters to make this tirvial
+
+                const auto& cluster = ci->FindCaloCluster();
+
+                if(cluster)
+                    for(const Cluster::Hit& clusterhit : cluster->Hits) {
+
+                        if(clusterhit.Channel == cluster->CentralElement) {
+                            double central_e = 0.0;
+                            for(const Cluster::Hit::Datum& datum : clusterhit.Data) {
+
+                                if(datum.Type == Channel_t::Type_t::Integral)
+                                    central_e = datum.Value;
+
+                                if(datum.Type == Channel_t::Type_t::IntegralShort)
+                                    psa->Fill(central_e, datum.Value);
+
+                            }
+                        }
+                    }
             }
 
             const Particle a(ParticleTypeDatabase::Photon,*i);

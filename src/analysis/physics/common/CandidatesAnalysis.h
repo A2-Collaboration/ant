@@ -24,6 +24,7 @@ protected:
     TH2D* tapsdEE = nullptr;
     TH2D* tapstof = nullptr;
     TH1D* detectors = nullptr;
+    TH2D* psa = nullptr;
 
 public:
     CandidatesAnalysis(const std::string& name,PhysOptPtr opts);
