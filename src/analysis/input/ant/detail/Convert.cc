@@ -107,6 +107,7 @@ Cluster Converter::Convert(const TCluster& cluster)
 
     Cluster cl(
                 cluster.Energy,
+                0.0,
                 cluster.Time,
                 cluster.GetDetectorType(),
                 cluster.CentralElement,
@@ -116,14 +117,25 @@ Cluster Converter::Convert(const TCluster& cluster)
     if(cluster.HasFlag(TCluster::Flags_t::Split)) cl.flags.Set(Cluster::Flag::Split);
     if(cluster.HasFlag(TCluster::Flags_t::TouchesHole)) cl.flags.Set(Cluster::Flag::TouchesHole);
 
+    double eshort = 0.0;
     for(const auto& hit : cluster.Hits) {
        Cluster::Hit anthit;
        anthit.Channel = hit.Channel;
        for(const auto& datum : hit.Data) {
            anthit.Data.emplace_back(static_cast<Channel_t::Type_t>(datum.Type), datum.Value);
+
+           // sum up short energy
+           ///@todo implement short Energy in TCluster?
+           if(static_cast<Channel_t::Type_t>(datum.Type) == Channel_t::Type_t::IntegralShort) {
+               eshort += datum.Value;
+           }
+
        }
        cl.Hits.emplace_back(move(anthit));
     }
+
+    cl.ShortEnergy = eshort;
+
     return cl;
 }
 

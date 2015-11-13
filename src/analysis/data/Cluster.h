@@ -12,8 +12,9 @@ namespace data {
 
 class Cluster {
 public:
-    double Energy = 0.0;
-    double Time = 0.0;
+    double Energy      = 0.0;
+    double ShortEnergy = 0.0;
+    double Time        = 0.0;
     TVector3 pos;
     Detector_t::Any_t Detector = Detector_t::Any_t::None;
     unsigned CentralElement = 0;
@@ -38,14 +39,19 @@ public:
 
     ant::enumfield<Flag, std::int32_t> flags;
 
-    Cluster(double E, double t, Detector_t::Any_t d, unsigned ch, TVector3 position):
+    Cluster(double E, double ShortE, double t, Detector_t::Any_t d, unsigned ch, TVector3 position):
         Energy(E),
+        ShortEnergy(ShortE),
         Time(t),
         pos(position),
         Detector(d),
         CentralElement(ch),
         Hits()
     {}
+
+
+    double GetPSARadius() const;
+    double GetPSAAngle() const;
 
 };
 
