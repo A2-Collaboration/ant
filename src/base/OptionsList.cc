@@ -85,3 +85,19 @@ int ant::OptionsList::Get<int>(const string& key, const int& def_value) const
     }
     return std::atoi(v.c_str());
 }
+
+template<>
+bool ant::OptionsList::Get<bool>(const string& key, const bool& def_value) const
+{
+    const auto& v = GetOption(key);
+
+    if(v=="On" || v=="ON" || v=="Yes" || v=="yes" || v=="YES") {
+        return true;
+    }
+
+    if(v=="Off" || v=="OFF" || v=="No" || v=="NO" || v=="no") {
+        return false;
+    }
+
+    return def_value;
+}

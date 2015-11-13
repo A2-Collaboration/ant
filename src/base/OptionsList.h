@@ -40,4 +40,7 @@ double OptionsList::Get<double>(const std::string& key, const double& def_value)
 template<>
 int OptionsList::Get<int>(const std::string& key, const int& def_value) const;
 
+template<>
+bool OptionsList::Get<bool>(const std::string& key, const bool& def_value) const;
+
 }
