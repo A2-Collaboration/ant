@@ -11,11 +11,13 @@ using namespace ant::analysis::data;
 using namespace std;
 
 XMasCB::XMasCB(const std::string& name, PhysOptPtr opts):
-    Physics("XMasCB", opts)
+    Physics("XMasCB", opts),
+    ext(opts->Get<string>("FileType", "pdf")),
+    w_px(opts->Get<int>("x_px", 1024))
 {
-    hist = std_ext::make_unique<TH2CB>("","");
+    hist = std_ext::make_unique<TH2CB>("", "", opts->Get<bool>("GluePads", true));
+    hist->SetTitle("");
     c    = new TCanvas("xmascb", "XMasCB");
-    ext  = opts->Get<string>("FileType", "pdf");
 }
 
 XMasCB::~XMasCB()
@@ -39,6 +41,16 @@ void XMasCB::ProcessEvent(const Event& event)
 
     c->cd();
     c->SetLogz();
+    c->SetMargin(0,0,0,0);
+
+    const double x1 = hist->GetXaxis()->GetXmin();
+    const double x2 = hist->GetXaxis()->GetXmax();
+    const double y1 = hist->GetYaxis()->GetXmin();
+    const double y2 = hist->GetYaxis()->GetXmax();
+
+    const double ratio = (x2-x1)/(y2-y1);
+
+    c->SetCanvasSize(w_px, unsigned(w_px/ratio));
 
     hist->Draw("col");
 

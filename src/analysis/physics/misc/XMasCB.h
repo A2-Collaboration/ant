@@ -19,6 +19,7 @@ protected:
     TCanvas* c = nullptr;
     unsigned n = 0;
     std::string ext;
+    const int w_px;
 
 
 public:
