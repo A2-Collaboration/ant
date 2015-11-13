@@ -27,7 +27,6 @@ Etap3pi0::Etap3pi0(const std::string& name, PhysOptPtr opts) :
     BinSettings bs_im = BinSettings(1200);
     string cat("hist");
 
-    // no category
     cat = "proton";
     AddHist1D(cat,"ProtonCandidateAngles",          "Proton Candidate Angles", "#Theta [#circ]", "#", BinSettings(180));
     AddHist1D(cat,"mcProtonAngles",                 "MC Proton Angles", "#Theta [#circ]", "#", BinSettings(180));
@@ -75,12 +74,16 @@ Etap3pi0::Etap3pi0(const std::string& name, PhysOptPtr opts) :
     AddHist1D(cat,"IM_pi0"     , "Pi0 (3pi0)","Pi0 IM [MeV]","events",bs_im);
     AddHist1D(cat,"etapAngles" ,"Phi-Opening #eta' #leftrightarrow p"     , "#Delta#phi [#circ]","#",BinSettings(360));
     AddHist1D(cat,"etapAnglesAll" ,"Phi-Opening #eta' #leftrightarrow p full"     , "#Delta#phi [#circ]","#",BinSettings(360));
+    AddHist1D(cat,"IM_etap_nocut"  , "EtaPrime (eta2pi0)","EtaPrime IM [MeV]","events",bs_im);
 
 
     cat = "ref";            //reference: eta' --> eta 2 pi0
     AddHist1D(cat,"IM_etap"  , "EtaPrime (eta2pi0)","EtaPrime IM [MeV]","events",bs_im);
     AddHist1D(cat,"IM_pions" , "pions (eta2pi0)","Pi0 IM [MeV]","events",bs_im);
+    AddHist1D(cat,"etapAngles" ,"Phi-Opening #eta' #leftrightarrow p"     , "#Delta#phi [#circ]","#",BinSettings(360));
     AddHist1D(cat,"IM_etas"  , "etas (eta2pi0)","Pi0 IM [MeV]","events",bs_im);
+    AddHist1D(cat,"IM_etap_nocut"  , "EtaPrime (eta2pi0)","EtaPrime IM [MeV]","events",bs_im);
+
 
     cat = "dalitz";
     AddHist2D(cat, "mc_xy", "dalitz mc","s1","s3",BinSettings(100,0,0),BinSettings(100,0,0));
@@ -88,19 +91,43 @@ Etap3pi0::Etap3pi0(const std::string& name, PhysOptPtr opts) :
     AddHist2D(cat, "xy",    "dalitz","s1","s3",BinSettings(100,0,0),BinSettings(100,0,0));
     AddHist1D(cat, "z",     "dalitz - radial","z = x^{2} + y^{2}","#",BinSettings(100,0,0));
 
+
     cat = "steps";
-    AddHist1D(cat, "evcount", "events after steps", "", "# events", BinSettings(5));
+    BinSettings steps_bins(550,100,1200);
+    AddHist1D(cat, "evcount"              , "events after steps", "", "# events", BinSettings(5));
+    AddHist1D(cat,"IM_base"               , "all #gamma","IM [MeV]","events",BinSettings(600,0,1200));
+    AddHist1D(cat,"IM_6g"                 , "6 #gamma","IM [MeV]","events",steps_bins);
+    AddHist1D(cat,"IM_sig"                , "6 #gamma, signal","IM [MeV]","events",steps_bins);
+    AddHist1D(cat,"IM_ch2_sig"            , "6 #gamma,#chi^{2} signal","IM [MeV]","events",steps_bins);
+    AddHist1D(cat,"IM_ch2_sig_protonAngle", "6 #gamma,#chi^{2} signal, p - angle","IM [MeV]","events",steps_bins);
+    AddHist1D(cat,"IM_ch2_sig_copl"       , "6 #gamma,#chi^{2} signal, p - angle, copl","IM [MeV]","events",steps_bins);
+    AddHist1D(cat,"IM_ref"                , "6 #gamma, reference","IM [MeV]","events",steps_bins);
+    AddHist1D(cat,"IM_ch2_ref"            , "6 #gamma,#chi^{2} reference","IM [MeV]","events",steps_bins);
+    AddHist1D(cat,"IM_ch2_ref_protonAngle", "6 #gamma,#chi^{2} reference, p - angle","IM [MeV]","events",steps_bins);
+    AddHist1D(cat,"IM_ch2_ref_copl"       , "6 #gamma,#chi^{2} reference, p - angle, copl","IM [MeV]","events",steps_bins);
+    AddHist1D(cat,"IM_bkg"                , "6 #gamma, #chi^{2} background","IM [MeV]","events",steps_bins);
+    AddHist1D(cat,"IM_bkg_protonAngle"    , "6 #gamma,#bkg, p - angle","IM [MeV]","events",steps_bins);
+    AddHist1D(cat,"IM_bkg_copl"           , "6 #gamma,#bkg, p - angle, copl","IM [MeV]","events",steps_bins);
 
     cat = "channels";
     AddHist1D(cat,"nocut",              "6 #gamma, no cut", "", "#", BinSettings(15));
     AddHist1D(cat,"signal_chi2",        "6 #gamma, #chi^{2} cut (signal)", "", "#", BinSettings(15));
     AddHist1D(cat,"signal_chi2_copl",   "6 #gamma, #chi^{2}, copl (signal)", "", "#", BinSettings(15));
     AddHist1D(cat,"ref_chi2",           "6 #gamma, #chi^{2} cut (reference)", "", "#", BinSettings(15));
+    AddHist1D(cat,"ref_chi2_copl",      "6 #gamma, #chi^{2}, copl (reference)", "", "#", BinSettings(15));
     AddHist1D(cat,"mc_true",            "mc true for signal, ref, bkg", "", "#", BinSettings(3));
 
     signal_tree = ParticleTypeTreeDatabase::Get(ParticleTypeTreeDatabase::Channel::EtaPrime_3Pi0_6g);
     reference_tree = ParticleTypeTreeDatabase::Get(ParticleTypeTreeDatabase::Channel::EtaPrime_2Pi0Eta_6g);
     bkg_tree = ParticleTypeTreeDatabase::Get(ParticleTypeTreeDatabase::Channel::Direct3Pi0_6g);
+}
+
+TLorentzVector Etap3pi0::MakeLoretzSum(const ParticleList& particles)
+{
+    TLorentzVector lorenzTemp(0,0,0,0);
+    for (const auto& prat: particles)
+        lorenzTemp+=*(prat);
+    return lorenzTemp;
 }
 
 void Etap3pi0::FillCrossChecks(const ParticleList& photons, const ParticleList& mcphotons)
@@ -329,9 +356,6 @@ void Etap3pi0::ProcessEvent(const data::Event& event)
 
     auto mcproton = mcprotons.at(0);
     hists.at("proton").at("mcProtonAngles")->Fill(mcproton->Theta() * TMath::RadToDeg());
-    if (mcproton->Theta() * TMath::RadToDeg() > 20 )
-        return;
-    hists.at("steps").at("evcount")->Fill("mc proton angle < 20",1);
 
 
 
@@ -340,8 +364,13 @@ void Etap3pi0::ProcessEvent(const data::Event& event)
     FillCrossChecks(photons,mcphotons);
     hists.at("xc").at("NTagger")->Fill(data.TaggerHits().size());
 
+    hists.at("steps").at("IM_base")->Fill(MakeLoretzSum(photons).M());
+
+
     if (photons.size() != 6 )
         return;
+
+    hists.at("steps").at("IM_6g")->Fill(MakeLoretzSum(photons).M());
 
     for (const auto& ph: photons)
         hists["P"]["gamma_6"]->Fill(ph->Theta()*TMath::RadToDeg(),ph->Ek());
@@ -387,12 +416,27 @@ void Etap3pi0::ProcessEvent(const data::Event& event)
     result_t result_eta2pi0 = MakeEta2pi0(photons);
     result_t result_mc      = MakeMC3pi0(mcdata);
 
+    if (mcproton->Theta() * TMath::RadToDeg() > 20 )
+        hists.at("steps").at("evcount")->Fill("mc proton angle < 20",1);
+
+    hists["steps"]["IM_sig"]->Fill(result_3pi0.mother.M());
+    hists["steps"]["IM_ref"]->Fill(result_eta2pi0.mother.M());
+    hists["steps"]["IM_bkg"]->Fill(result_3pi0.mother.M());
+
+    double dphi_b = TMath::RadToDeg() *(result_3pi0.mother.Phi() - mcproton->Phi());
+    if (mcproton->Theta() * TMath::RadToDeg() < 20 )
+    {
+        hists["steps"]["IM_bkg_protonAngle"]->Fill(result_3pi0.mother.M());
+        if ( dphi_b < 2 * copl_opening_sigma )
+            hists["steps"]["IM_bkg_copl"]->Fill(result_3pi0.mother.M());
+    }
 
 
     const double chi2cut(3);
 
     if (result_3pi0.chi2() < chi2cut )
     {
+        hists["steps"]["IM_ch2_sig"]->Fill(result_3pi0.mother.M());
         FillIm(result_3pi0, ParticleTypeDatabase::Pi0, (TH1D*) hists.at("signal").at("IM_pi0"));
         FillImEtaPrime(result_3pi0,(TH1D*)hists.at("signal").at("IM_etap"));
         hists.at("channels").at("signal_chi2")->Fill(utils::ParticleTools::GetDecayString(mcdata.ParticleTree()).c_str(),1);
@@ -402,10 +446,15 @@ void Etap3pi0::ProcessEvent(const data::Event& event)
 
         hists.at("signal").at("etapAngles")->Fill(dphi);
 
-        if ( dphi < 2 * copl_opening_sigma )
+        if (mcproton->Theta() * TMath::RadToDeg() < 20 )
         {
-            hists.at("steps").at("evcount")->Fill("#chi^{2}(sig) + copl.",1);
-            hists.at("channels").at("signal_chi2_copl")->Fill(utils::ParticleTools::GetDecayString(mcdata.ParticleTree()).c_str(),1);
+            hists["steps"]["IM_ch2_sig_protonAngle"]->Fill(result_3pi0.mother.M());
+            if ( dphi < 2 * copl_opening_sigma )
+            {
+                hists["steps"]["IM_ch2_sig_copl"]->Fill(result_3pi0.mother.M());
+                hists.at("steps").at("evcount")->Fill("#chi^{2}(sig) + copl.",1);
+                hists.at("channels").at("signal_chi2_copl")->Fill(utils::ParticleTools::GetDecayString(mcdata.ParticleTree()).c_str(),1);
+            }
         }
 
         /*
@@ -422,11 +471,28 @@ void Etap3pi0::ProcessEvent(const data::Event& event)
 
     if (result_eta2pi0.chi2() < chi2cut)
     {
+        hists["steps"]["IM_ch2_ref"]->Fill(result_eta2pi0.mother.M());
         FillIm(result_eta2pi0, ParticleTypeDatabase::Pi0,(TH1D*) hists.at("ref").at("IM_pions"));
         FillIm(result_eta2pi0, ParticleTypeDatabase::Eta,(TH1D*) hists.at("ref").at("IM_etas"));
         FillImEtaPrime(result_eta2pi0,(TH1D*) hists.at("ref").at("IM_etap"));
         hists.at("channels").at("ref_chi2")->Fill(utils::ParticleTools::GetDecayString(mcdata.ParticleTree()).c_str(),1);
         hists.at("steps").at("evcount")->Fill("#chi^{2} cut reference",1);
+
+        double dphi = TMath::RadToDeg() *(result_eta2pi0.mother.Phi() - mcproton->Phi());
+
+        hists.at("ref").at("etapAngles")->Fill(dphi);
+
+        if (mcproton->Theta() * TMath::RadToDeg() < 20 )
+        {
+            hists["steps"]["IM_ch2_ref_protonAngle"]->Fill(result_eta2pi0.mother.M());
+            if ( dphi < 2 * copl_opening_sigma )
+            {
+                hists["steps"]["IM_ch2_ref_copl"]->Fill(result_eta2pi0.mother.M());
+                hists.at("steps").at("evcount")->Fill("#chi^{2}(ref) + copl.",1);
+                hists.at("channels").at("ref_chi2_copl")->Fill(utils::ParticleTools::GetDecayString(mcdata.ParticleTree()).c_str(),1);
+            }
+        }
+
         for (const auto& ph: photons)
             hists["P"]["gamma_ref"]->Fill(ph->Theta()*TMath::RadToDeg(),ph->Ek());
     }
@@ -437,27 +503,37 @@ void Etap3pi0::ProcessEvent(const data::Event& event)
         hists.at("dalitz").at("mc_xy")->Fill(channel.s1,channel.s3);
         hists.at("dalitz").at("mc_z")->Fill(channel.z);
     }
-    if (result_3pi0.chi2() < chi2cut)
+    if (result_eta2pi0.chi2() < chi2cut)
     {
-        DalitzVars channel(result_3pi0);
+        DalitzVars channel(result_eta2pi0);
         hists.at("dalitz").at("xy")->Fill(channel.s1,channel.s3);
         hists.at("dalitz").at("z")->Fill(channel.z);
     }
 
 }
 
+void Etap3pi0::Finish()
+{
+    if (dataset == "bkg")
+    {
+        cout << "Scaling background!!!" << endl;
+        for (const auto& hcat: hists)
+            for (const auto& hist: hcat.second)
+                hist.second->Scale(62.0);
+    }
+}
+
 
 void Etap3pi0::ShowResult()
 {
-    for (auto& category: hists)
+    vector<string> cats = { "xc", "signal", "ref", "steps", "channels", "dalitz" };
+    for (auto& category: cats)
     {
-        canvas c(category.first);
-        for (auto& h: category.second)
+        canvas c(category);
+        for (auto h: hists.at(category))
             c << h.second;
         c << endc;
     }
-
-    canvas("Dalitz-Plots")      << drawoption("colz") << hists.at("dalitz").at("xy") << hists.at("dalitz").at("mc_xy") << endc;
 }
 
 
