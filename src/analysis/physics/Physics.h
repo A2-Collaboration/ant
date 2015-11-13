@@ -39,7 +39,7 @@ public:
     virtual ~Physics() {}
     virtual void ProcessEvent(const data::Event& event) =0;
     virtual void Finish() {}
-    virtual void ShowResult() =0;
+    virtual void ShowResult() {}
     std::string GetName() const { return name_; }
 
     virtual void Initialize(data::Slowcontrol& slowcontrol);
