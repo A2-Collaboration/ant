@@ -55,6 +55,7 @@ set(ANALYSIS_PHYSICS
   physics/common/IMPlots.cc
   physics/common/ProtonTagger.cc
   physics/common/ExtractTimings.cc
+  physics/misc/XMasCB.cc
   )
 
 set(ANALYSIS_PLOT
