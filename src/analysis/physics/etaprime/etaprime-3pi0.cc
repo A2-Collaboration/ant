@@ -73,7 +73,7 @@ Etap3pi0::Etap3pi0(const std::string& name, PhysOptPtr opts) :
     AddHist1D(cat,"IM_etap"    , "EtaPrime (3pi0)","EtaPrime IM [MeV]","events",bs_im);
     AddHist1D(cat,"IM_pi0"     , "Pi0 (3pi0)","Pi0 IM [MeV]","events",bs_im);
     AddHist1D(cat,"etapAngles" ,"Phi-Opening #eta' #leftrightarrow p"     , "#Delta#phi [#circ]","#",BinSettings(360));
-    AddHist1D(cat,"etapAnglesAll" ,"Phi-Opening #eta' #leftrightarrow p full"     , "#Delta#phi [#circ]","#",BinSettings(360));
+    AddHist1D(cat,"pionangles" ,"#pi^{0} angles in #eta' restframe"     , "#alpha [#circ]","#",BinSettings(360));
     AddHist1D(cat,"IM_etap_nocut"  , "EtaPrime (eta2pi0)","EtaPrime IM [MeV]","events",bs_im);
 
 
@@ -464,6 +464,18 @@ void Etap3pi0::ProcessEvent(const data::Event& event)
         hists.at("kinfit").at("signal_egamma_before")->Fill(kinfitvars.at(fitToEtaPrime.egammaName).Value.Before);
         hists.at("kinfit").at("signal_egamma_after")->Fill(kinfitvars.at(fitToEtaPrime.egammaName).Value.After);
         */
+
+        TVector3 boostV(0,0,0);
+        boostV -= result_3pi0.mother.BoostVector();
+
+        for (const auto& pion: result_3pi0.mesons)
+        {
+            TLorentzVector lp = *(pion.first);
+            lp.Boost( boostV);
+
+            hists["signal"]["pionangles"]->Fill(TMath::RadToDeg() * result_3pi0.mother.Angle(lp.Vect()));
+//            hists["signal"]["pionangles"]->Fill(lp.Theta() * TMath::RadToDeg());
+        }
 
         for (const auto& ph: photons)
             hists["P"]["gamma_signal"]->Fill(ph->Theta()*TMath::RadToDeg(),ph->Ek());
