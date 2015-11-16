@@ -37,7 +37,9 @@ public:
 
     protected:
         TH2D* h_pedestals = nullptr;
+        TH3D* h_pedestals_timing = nullptr;
         TH3D* h_bananas = nullptr;
+        TH3D* h_bananas_raw = nullptr;
 
     public:
          ThePhysics(const std::string& name, unsigned nChannels);
