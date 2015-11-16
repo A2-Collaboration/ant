@@ -678,6 +678,14 @@ void OmegaEtaG2::Analyse(const Event::Data &data, const Event &event)
             bestHyp = 2;
         }
 
+        fitter.SetEgammaBeam(t->PhotonEnergy());
+        fitter.SetProton(proton);
+        fitter.SetPhotons(photons);
+
+        auto fitres = fitter.DoFit();
+
+        kinfit_chi2 = fitres.ChiSquare;
+
         tree->Fill();
 
     }
@@ -765,6 +773,7 @@ OmegaEtaG2::OmegaEtaG2(const std::string& name, PhysOptPtr opts):
     tree->Branch("ibestPi0", &bestPi0In);
     tree->Branch("bestChi",  &bestChi);
     tree->Branch("fbestHyp",  &bestHyp);
+    tree->Branch("kinfit_chi2", &kinfit_chi2);
 
     signal_tree = ParticleTypeTreeDatabase::Get(ParticleTypeTreeDatabase::Channel::Omega_gEta_3g);
     reference_tree = ParticleTypeTreeDatabase::Get(ParticleTypeTreeDatabase::Channel::Omega_gPi0_3g);

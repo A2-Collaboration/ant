@@ -8,6 +8,8 @@
 #include "analysis/utils/particle_tools.h"
 #include "base/std_ext/math.h"
 
+#include "kinFit.h"
+
 #include <map>
 
 class TH1D;
@@ -241,6 +243,9 @@ protected:
     const interval<double> complcut = std_ext::degree_to_radian(interval<double>::CenterWidth(180,30));
 
     TH1D* h_TotalEvents;
+
+    KinFitter fitter;
+    double kinfit_chi2 = 0;
 
 
 public:
