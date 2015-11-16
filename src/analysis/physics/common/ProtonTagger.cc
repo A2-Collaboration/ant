@@ -48,7 +48,7 @@ void ProtonTagger::ProcessEvent(const data::Event& event)
     data::CandidateList taps_hits;
 
     for(const auto& p : event.Reconstructed().Candidates()) {
-        if(p->Detector() & Detector_t::Any_t::TAPS) {
+        if((p->Detector() & Detector_t::Any_t::TAPS) && p->ClusterEnergy() > 50.0) {
             taps_hits.emplace_back(p);
         }
     }
@@ -60,7 +60,7 @@ void ProtonTagger::ProcessEvent(const data::Event& event)
     data::ParticleList cb_photons;
 
     for(const auto& p : event.Reconstructed().Particles().Get(ParticleTypeDatabase::Photon)) {
-        if(p->Candidate() && p->Candidate()->Detector() & Detector_t::Any_t::CB) {
+        if((p->Candidate() && p->Candidate()->Detector() & Detector_t::Any_t::CB) && p->Energy() > 50.0) {
             cb_photons.emplace_back(p);
         }
     }
