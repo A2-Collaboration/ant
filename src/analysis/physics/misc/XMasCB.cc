@@ -15,8 +15,12 @@ XMasCB::XMasCB(const std::string& name, PhysOptPtr opts):
     ext(opts->Get<string>("FileType", "pdf")),
     w_px(opts->Get<int>("x_px", 1024))
 {
-    hist = std_ext::make_unique<TH2CB>("", "", opts->Get<bool>("GluePads", true));
+    hist = std_ext::make_unique<TH2CB>("", "", false);
     hist->SetTitle("");
+
+    grid = std_ext::make_unique<TH2CB>("", "", opts->Get<bool>("GluePads", true));
+    grid->SetTitle("");
+
     c    = new TCanvas("xmascb", "XMasCB");
 }
 
@@ -53,6 +57,7 @@ void XMasCB::ProcessEvent(const Event& event)
     c->SetCanvasSize(w_px, unsigned(w_px/ratio));
 
     hist->Draw("col");
+    grid->Draw("text same");
 
     std_ext::formatter f;
     f << "xmas_cb_" << n++ << "." << ext;

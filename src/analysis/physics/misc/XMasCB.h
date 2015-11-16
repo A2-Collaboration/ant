@@ -16,6 +16,7 @@ class XMasCB : public Physics {
 protected:
 
     std::unique_ptr<TH2CB> hist = nullptr;
+    std::unique_ptr<TH2CB> grid = nullptr;
     TCanvas* c = nullptr;
     unsigned n = 0;
     std::string ext;
