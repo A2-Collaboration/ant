@@ -37,9 +37,17 @@ public:
 
     protected:
         TH2D* h_pedestals = nullptr;
-        TH3D* h_pedestals_timing = nullptr;
-        TH3D* h_bananas = nullptr;
-        TH3D* h_bananas_raw = nullptr;
+
+        struct PerChannel_t {
+            TH2D* PedestalTiming = nullptr;
+            TH1D* PedestalNoTiming = nullptr;
+            TH2D* Banana = nullptr;
+            TH2D* BananaRaw = nullptr;
+            TH3D* BananaTiming = nullptr;
+            PerChannel_t(analysis::SmartHistFactory HistFac);
+        };
+
+        std::vector<PerChannel_t> h_perChannel;
 
     public:
          ThePhysics(const std::string& name, unsigned nChannels);

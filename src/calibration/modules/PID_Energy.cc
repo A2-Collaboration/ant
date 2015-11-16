@@ -67,7 +67,7 @@ PID_Energy::ThePhysics::ThePhysics(const string& name,
 {
     const BinSettings pid_channels(nChannels);
     const BinSettings pid_rawvalues(300);
-    const BinSettings cb_energy(400,0,800);
+
 
     h_pedestals = HistFac.makeTH2D(
                       "PID Pedestals",
@@ -76,39 +76,69 @@ PID_Energy::ThePhysics::ThePhysics(const string& name,
                       pid_rawvalues,
                       pid_channels,
                       "Pedestals");
-    h_pedestals_timing = HistFac.makeTH3D(
-                             "PID Pedestals",
-                             "Raw ADC value",
-                             "Timing / ns",
-                             "#",
-                             pid_rawvalues,
-                             BinSettings(100, -50, 50),
-                             pid_channels,
-                             "Pedestals_timing");
 
-    h_bananas =
-            HistFac.makeTH3D(
-                "PID Bananas",
-                "CB Energy / MeV",
-                "PID Energy / MeV",
-                "Channel",
-                cb_energy,
-                BinSettings(100,0,30),
-                pid_channels,
-                "Bananas"
+    for(unsigned ch=0;ch<nChannels;ch++) {
+        stringstream ss;
+        ss << "Ch" << ch;
+        h_perChannel.push_back(
+                    PerChannel_t(SmartHistFactory(ss.str(), HistFac, ss.str())));
+    }
+
+}
+
+PID_Energy::ThePhysics::PerChannel_t::PerChannel_t(SmartHistFactory HistFac)
+{
+    const BinSettings cb_energy(200,0,800);
+    const BinSettings pid_timing(100,-100,100);
+    const BinSettings pid_rawvalues(300);
+    const BinSettings pid_energy(50,0,30);
+
+    PedestalTiming = HistFac.makeTH2D(
+                         "PID Pedestals Timing",
+                         "Timing / ns",
+                         "Raw ADC value",
+                         pid_timing,
+                         pid_rawvalues,
+                         "PedestalTiming");
+
+    PedestalNoTiming = HistFac.makeTH1D(
+                           "PID Pedestals No Timing",
+                           "Raw ADC value",
+                           "#",
+                           pid_rawvalues,
+                           "PedestalNoTiming");
+
+    Banana = HistFac.makeTH2D(
+                 "PID Banana",
+                 "CB Energy / MeV",
+                 "PID Energy / MeV",
+                 cb_energy,
+                 pid_energy,
+                 "Banana"
                 );
-    h_bananas_raw =
-            HistFac.makeTH3D(
-                "PID Bananas Raw",
+
+    BananaRaw = HistFac.makeTH2D(
+                "PID Banana Raw",
                 "CB Energy / MeV",
                 "PID ADC Value",
-                "Channel",
-                BinSettings(400,0,800),
+                cb_energy,
                 pid_rawvalues,
-                pid_channels,
-                "Bananas_raw"
+                "BananaRaw"
                 );
+
+    BananaTiming = HistFac.makeTH3D(
+                       "PID Banana Timing",
+                       "CB Energy / MeV",
+                       "PID Energy / MeV",
+                       "PID Timing / ns",
+                       cb_energy,
+                       pid_energy,
+                       pid_timing,
+                       "BananaTiming"
+                       );
+
 }
+
 
 void PID_Energy::ThePhysics::ProcessEvent(const data::Event& event)
 {
@@ -120,12 +150,14 @@ void PID_Energy::ThePhysics::ProcessEvent(const data::Event& event)
         // only consider one cluster PID hits
         if(cluster.Hits.size() != 1)
             continue;
-        const Cluster::Hit& clusterhit = cluster.Hits.front();
+        const Cluster::Hit& pidhit = cluster.Hits.front();
+
+        PerChannel_t& h = h_perChannel[pidhit.Channel];
 
         double pedestal = numeric_limits<double>::quiet_NaN();
         double timing = numeric_limits<double>::quiet_NaN();
 
-        for(const Cluster::Hit::Datum& datum : clusterhit.Data) {
+        for(const Cluster::Hit::Datum& datum : pidhit.Data) {
             if(datum.Type == Channel_t::Type_t::Pedestal) {
                 pedestal = datum.Value;
             }
@@ -134,8 +166,16 @@ void PID_Energy::ThePhysics::ProcessEvent(const data::Event& event)
             }
         }
 
-        h_pedestals->Fill(pedestal, clusterhit.Channel);
-        h_pedestals_timing->Fill(pedestal, timing, clusterhit.Channel);
+        if(!std::isfinite(pedestal))
+            continue;
+
+
+        h_pedestals->Fill(pedestal, pidhit.Channel);
+
+        if(std::isfinite(timing))
+            h.PedestalTiming->Fill(timing, pedestal);
+        else
+            h.PedestalNoTiming->Fill(pedestal);
 
     }
 
@@ -152,21 +192,29 @@ void PID_Energy::ThePhysics::ProcessEvent(const data::Event& event)
         // search for PID cluster
         auto pid_cluster = candidate->FindFirstCluster(Detector_t::Type_t::PID);
 
+        PerChannel_t& h = h_perChannel[pid_cluster->CentralElement];
+
         // fill the banana
-        h_bananas->Fill(candidate->ClusterEnergy(),
-                        candidate->VetoEnergy(),
-                        pid_cluster->CentralElement);
+        h.Banana->Fill(candidate->ClusterEnergy(),
+                       candidate->VetoEnergy());
 
 
+        double pedestal = numeric_limits<double>::quiet_NaN();
+        double timing = numeric_limits<double>::quiet_NaN();
         for(const Cluster::Hit& pidhit : pid_cluster->Hits) {
             for(const Cluster::Hit::Datum& datum : pidhit.Data) {
-                if(datum.Type != Channel_t::Type_t::Pedestal)
-                    continue;
-                h_bananas_raw->Fill(candidate->ClusterEnergy(),
-                                    datum.Value,
-                                    pid_cluster->CentralElement);
+                if(datum.Type == Channel_t::Type_t::Pedestal) {
+                    pedestal = datum.Value;
+                }
+                if(datum.Type == Channel_t::Type_t::Timing) {
+                    timing = datum.Value;
+                }
             }
         }
+
+        h.BananaRaw->Fill(candidate->ClusterEnergy(), pedestal);
+        h.BananaTiming->Fill(candidate->ClusterEnergy(), candidate->VetoEnergy(), timing);
+
     }
 }
 
@@ -178,10 +226,10 @@ void PID_Energy::ThePhysics::ShowResult()
 {
     canvas(GetName())
             << drawoption("colz") << h_pedestals
-            << drawoption("colz") << h_pedestals_timing->Project3D("zy")
-            << drawoption("colz") << h_bananas->Project3D("zy")
-            << drawoption("colz") << h_bananas_raw->Project3D("zy")
             << endc;
 }
+
+
+
 
 
