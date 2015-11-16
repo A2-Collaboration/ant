@@ -11,7 +11,7 @@ using namespace ant::analysis::data;
 using namespace std;
 
 XMasCB::XMasCB(const std::string& name, PhysOptPtr opts):
-    Physics("XMasCB", opts),
+    Physics(name, opts),
     ext(opts->Get<string>("FileType", "pdf")),
     w_px(opts->Get<int>("x_px", 1024))
 {
