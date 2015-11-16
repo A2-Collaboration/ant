@@ -45,7 +45,7 @@
 
     new TCanvas();
     TH1F* h_angle = (TH1F*) h_angle_p->Clone();
-    h_angle-SetName("h_angle");
+    h_angle->SetName("h_angle");
     h_angle->Add(h_angle_r,-ratio);
     h_angle->Draw();
 
