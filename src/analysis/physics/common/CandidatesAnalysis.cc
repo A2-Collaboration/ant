@@ -4,6 +4,7 @@
 #include "TH1D.h"
 #include "TLorentzVector.h"
 #include <cmath>
+#include "base/std_ext/math.h"
 
 using namespace std;
 using namespace ant;
@@ -33,6 +34,7 @@ CandidatesAnalysis::CandidatesAnalysis(const std::string& name, PhysOptPtr opts)
     detectors = HistFac.makeTH1D("Detectors","","", BinSettings(1),"detectors");
     psa = HistFac.makeTH2D("TAPS PSA (Charged)","E_{long} [MeV]","E_{short} [MeV]", BinSettings(1000),BinSettings(1000),"psa");
     psa_all = HistFac.makeTH2D("TAPS PSA","E_{long} [MeV]","E_{short} [MeV]", BinSettings(1000),BinSettings(1000),"psa_all");
+    psa_all_angles = HistFac.makeTH2D("TAPS PSA","#phi [#circ]","r", BinSettings(160,45-20,45+20),BinSettings(250,0,500),"psa_all_angles");
 }
 
 void CandidatesAnalysis::ProcessEvent(const Event &event)
@@ -70,6 +72,9 @@ void CandidatesAnalysis::ProcessEvent(const Event &event)
                 const auto& cluster = ci->FindCaloCluster();
 
                 if(cluster)
+
+                    psa_all_angles->Fill(std_ext::radian_to_degree(cluster->GetPSAAngle()), cluster->GetPSARadius());
+
                     for(const Cluster::Hit& clusterhit : cluster->Hits) {
 
                         if(clusterhit.Channel == cluster->CentralElement) {
@@ -85,6 +90,7 @@ void CandidatesAnalysis::ProcessEvent(const Event &event)
                                         psa->Fill(central_e, datum.Value);
 
                                     psa_all->Fill(central_e, datum.Value);
+
                                 }
                             }
                         }
