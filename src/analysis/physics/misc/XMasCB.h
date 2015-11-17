@@ -19,6 +19,9 @@ protected:
     std::unique_ptr<TH2CB> grid = nullptr;
     TCanvas* c = nullptr;
     unsigned n = 0;
+    unsigned m = 0;
+
+    unsigned skipevents = 0;
     std::string ext;
     const int w_px;
 

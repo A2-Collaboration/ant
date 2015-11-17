@@ -22,6 +22,8 @@ XMasCB::XMasCB(const std::string& name, PhysOptPtr opts):
     grid->SetTitle("");
 
     c    = new TCanvas("xmascb", "XMasCB");
+
+    skipevents = opts->Get<unsigned>("Skip", 0);
 }
 
 XMasCB::~XMasCB()
@@ -29,11 +31,30 @@ XMasCB::~XMasCB()
 
 void XMasCB::ProcessEvent(const Event& event)
 {
+    if(m++<skipevents)
+        return;
+
+//    unsigned charged = 0;
+//    for(const auto& c : event.Reconstructed().Candidates()) {
+//        if(c->VetoEnergy() > .5) {
+//            ++charged;
+//        }
+//    }
+
+//    if(charged >1)
+//        return;
+
+//    if(event.Reconstructed().TriggerInfos().CBEenergySum() < 600)
+//        return;
+
     hist->ResetElements(0.0);
 
-    for(const auto& c : event.Reconstructed().AllClusters()) {
-        if(c.Detector & Detector_t::Type_t::CB) {
-            for(const auto& hit : c.Hits) {
+    for(const auto& c : event.Reconstructed().Candidates()) {
+
+        if(c->Detector() & Detector_t::Type_t::CB) {
+            const auto& cluster  = c->FindCaloCluster();
+
+            for(const auto& hit : cluster->Hits) {
                 for(const auto& datum : hit.Data) {
                     if(datum.Type == Channel_t::Type_t::Integral) {
                         hist->SetElement(hit.Channel, hist->GetElement(hit.Channel)+datum.Value);
@@ -75,7 +96,7 @@ void XMasCB::ProcessEvent(const Event& event)
 
     Double_t Length[Number] = { 0.00, 0.10, 0.4, 0.75, 1.00 }; //where the single colors sit between 0 and 1
     Int_t nb=50;
-    TColor::CreateGradientColorTable(Number,Length,Red,Green,Blue,nb);
+    TColor::CreateGradientColorTable(Number,Length,Red,Green,Blue, UInt_t(nb));
     hist->SetContour(nb);
 
     const double x1 = hist->GetXaxis()->GetXmin();
@@ -85,7 +106,7 @@ void XMasCB::ProcessEvent(const Event& event)
 
     const double ratio = (x2-x1)/(y2-y1);
 
-    c->SetCanvasSize(w_px, unsigned(w_px/ratio));
+    c->SetCanvasSize(UInt_t(w_px), unsigned(w_px/ratio));
 
     hist->Draw("col");
     grid->Draw("text same");
