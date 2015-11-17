@@ -3,7 +3,6 @@
 #include "base/std_ext/memory.h"
 #include "base/std_ext/string.h"
 #include "TCanvas.h"
-#include "TStyle.h"
 
 using namespace ant;
 using namespace ant::analysis::physics;
@@ -43,30 +42,34 @@ void XMasCB::ProcessEvent(const Event& event)
     c->cd();
     c->SetLogz();
     c->SetMargin(0,0,0,0);
-    //gStyle->SetPalette(1);
-    //hist->SetContour(n);
 
-    // comment: this color palette has three colors, therefore the arrays for red,
-    // green and blue have three entries. The first entry in *every* array combined
-    // describes the first color of the palette. So if you want red as first color,
-    // the first entry of red has to be 1, of green and blue 0. Rather unintuitive,
-    // but at least it works.
-    const Int_t Number = 3;
+    // The first entry in *every* array combined describes the first color of the palette.
+    // So if you want red as first color, the first entry of red has to be 1,
+    // of green and blue 0. Rather unintuitive, but at least it works.
 
-    //gelb-grün-blau
+    const Int_t Number = 5; // number of colors
+
+    //yellow green blue
 //    Double_t Red[Number]    = { 1, 0.27, 0.0};
 //    Double_t Green[Number]  = { 0.82, 0.86, 0.44};
 //    Double_t Blue[Number]   = { 0.34, 0.26, 0.87};
-    //gelb-rot-violett
+
+    //yellow red violet
 //    Double_t Red[Number]    = { 1, 0.77, 0.53};
 //    Double_t Green[Number]  = { 0.8, 0.16, 0.03};
 //    Double_t Blue[Number]   = { 0.23, 0.06, 0.91};
-    //hellblau-magenta-orange
-    Double_t Red[Number]    = { 0.56, 0.9, 1};
-    Double_t Green[Number]  = { 0.66, 0.02, 0.65};
-    Double_t Blue[Number]   = { 1, 0.44, 0};
 
-    Double_t Length[Number] = { 0.00, 0.10, 1.00 };
+    //blue red orange
+//    Double_t Red[Number]    = { 0.56, 0.9, 1};
+//    Double_t Green[Number]  = { 0.66, 0.02, 0.65};
+//    Double_t Blue[Number]   = { 1, 0.44, 0};
+
+    //blue red orange yellow green
+    Double_t Red[Number]    = { 0.56, 0.9, 1, 1, 0};
+    Double_t Green[Number]  = { 0.66, 0.02, 0.65, 1, 1};
+    Double_t Blue[Number]   = { 1, 0.44, 0, 0, 0};
+
+    Double_t Length[Number] = { 0.00, 0.10, 0.4, 0.75, 1.00 }; //where the single colors sit between 0 and 1
     Int_t nb=50;
     TColor::CreateGradientColorTable(Number,Length,Red,Green,Blue,nb);
     hist->SetContour(nb);
