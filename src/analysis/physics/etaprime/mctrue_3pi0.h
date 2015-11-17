@@ -15,9 +15,37 @@ namespace physics {
 class McTrue3Pi0 : public Physics {
 
 protected:
+
+    const std::vector<std::vector<unsigned>> combinations =
+    {
+        { 0, 1, 2, 3, 4, 5 },
+        { 0, 1, 2, 4, 3, 5 },
+        { 0, 1, 2, 5, 3, 4 },
+
+        { 0, 2, 1, 3, 4, 5 },
+        { 0, 2, 1, 4, 3, 5 },
+        { 0, 2, 1, 5, 3, 4 },
+
+        { 0, 3, 1, 2, 4, 5 },
+        { 0, 3, 1, 4, 2, 5 },
+        { 0, 3, 1, 5, 2, 4 },
+
+        { 0, 4, 1, 2, 3, 5 },
+        { 0, 4, 1, 3, 2, 5 },
+        { 0, 4, 1, 5, 2, 3 },
+
+        { 0, 5, 1, 2, 3, 4 },
+        { 0, 5, 1, 3, 2, 4 },
+        { 0, 5, 1, 4, 2, 3 }
+    };
+
     ant::analysis::utils::ParticleVars proton;
     std::vector<ant::analysis::utils::ParticleVars> pi0s;
+    std::vector<ant::analysis::utils::ParticleVars> gammas;
 
+    std::vector<double> GetAllPhotonAngles(const data::ParticleList& photons) const;
+
+    TH1D* hAngle;
     TTree* mcTrue;
 
 public:
