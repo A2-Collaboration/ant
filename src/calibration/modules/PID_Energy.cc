@@ -88,10 +88,10 @@ PID_Energy::ThePhysics::ThePhysics(const string& name,
 
 PID_Energy::ThePhysics::PerChannel_t::PerChannel_t(SmartHistFactory HistFac)
 {
-    const BinSettings cb_energy(200,0,800);
-    const BinSettings pid_timing(100,-100,100);
+    const BinSettings cb_energy(400,0,800);
+    const BinSettings pid_timing(300,-300,700);
     const BinSettings pid_rawvalues(300);
-    const BinSettings pid_energy(50,0,30);
+    const BinSettings pid_energy(150,0,30);
 
     PedestalTiming = HistFac.makeTH2D(
                          "PID Pedestals Timing",
@@ -122,21 +122,24 @@ PID_Energy::ThePhysics::PerChannel_t::PerChannel_t(SmartHistFactory HistFac)
                 "CB Energy / MeV",
                 "PID ADC Value",
                 cb_energy,
-                pid_rawvalues,
+                BinSettings(300,0,2000),
                 "BananaRaw"
                 );
 
-    BananaTiming = HistFac.makeTH3D(
-                       "PID Banana Timing",
-                       "CB Energy / MeV",
-                       "PID Energy / MeV",
-                       "PID Timing / ns",
-                       cb_energy,
-                       pid_energy,
-                       pid_timing,
-                       "BananaTiming"
-                       );
+//    BananaTiming = HistFac.makeTH3D(
+//                       "PID Banana Timing",
+//                       "CB Energy / MeV",
+//                       "PID Energy / MeV",
+//                       "PID Timing / ns",
+//                       cb_energy,
+//                       pid_energy,
+//                       pid_timing,
+//                       "BananaTiming"
+//                       );
 
+
+    TDCMultiplicity = HistFac.makeTH1D("PID TDC Multiplicity", "nHits", "#", BinSettings(10), "TDCMultiplicity");
+    QDCMultiplicity = HistFac.makeTH1D("PID QDC Multiplicity", "nHits", "#", BinSettings(10), "QDCMultiplicity");
 }
 
 
@@ -157,18 +160,28 @@ void PID_Energy::ThePhysics::ProcessEvent(const data::Event& event)
         double pedestal = numeric_limits<double>::quiet_NaN();
         double timing = numeric_limits<double>::quiet_NaN();
 
+        unsigned nPedestals = 0;
+        unsigned nTimings = 0;
         for(const Cluster::Hit::Datum& datum : pidhit.Data) {
             if(datum.Type == Channel_t::Type_t::Pedestal) {
                 pedestal = datum.Value;
+                nPedestals++;
             }
             if(datum.Type == Channel_t::Type_t::Timing) {
                 timing = datum.Value;
+                nTimings++;
             }
         }
 
+        h.QDCMultiplicity->Fill(nPedestals);
+        h.TDCMultiplicity->Fill(nTimings);
+
         if(!std::isfinite(pedestal))
             continue;
-
+        if(nPedestals > 1)
+            continue;
+        if(nTimings > 1)
+            continue;
 
         h_pedestals->Fill(pedestal, pidhit.Channel);
 
@@ -200,20 +213,20 @@ void PID_Energy::ThePhysics::ProcessEvent(const data::Event& event)
 
 
         double pedestal = numeric_limits<double>::quiet_NaN();
-        double timing = numeric_limits<double>::quiet_NaN();
+        //double timing = numeric_limits<double>::quiet_NaN();
         for(const Cluster::Hit& pidhit : pid_cluster->Hits) {
             for(const Cluster::Hit::Datum& datum : pidhit.Data) {
                 if(datum.Type == Channel_t::Type_t::Pedestal) {
                     pedestal = datum.Value;
                 }
-                if(datum.Type == Channel_t::Type_t::Timing) {
-                    timing = datum.Value;
-                }
+//                if(datum.Type == Channel_t::Type_t::Timing) {
+//                    timing = datum.Value;
+//                }
             }
         }
 
         h.BananaRaw->Fill(candidate->ClusterEnergy(), pedestal);
-        h.BananaTiming->Fill(candidate->ClusterEnergy(), candidate->VetoEnergy(), timing);
+        //h.BananaTiming->Fill(candidate->ClusterEnergy(), candidate->VetoEnergy(), timing);
 
     }
 }

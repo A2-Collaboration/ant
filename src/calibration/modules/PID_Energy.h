@@ -43,7 +43,9 @@ public:
             TH1D* PedestalNoTiming = nullptr;
             TH2D* Banana = nullptr;
             TH2D* BananaRaw = nullptr;
-            TH3D* BananaTiming = nullptr;
+            TH1D* TDCMultiplicity;
+            TH1D* QDCMultiplicity;
+            //TH3D* BananaTiming = nullptr;
             PerChannel_t(analysis::SmartHistFactory HistFac);
         };
 
