@@ -41,6 +41,9 @@ template<>
 int OptionsList::Get<int>(const std::string& key, const int& def_value) const;
 
 template<>
+unsigned OptionsList::Get<unsigned>(const std::string& key, const unsigned& def_value) const;
+
+template<>
 bool OptionsList::Get<bool>(const std::string& key, const bool& def_value) const;
 
 }

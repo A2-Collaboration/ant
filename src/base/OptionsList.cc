@@ -87,6 +87,16 @@ int ant::OptionsList::Get<int>(const string& key, const int& def_value) const
 }
 
 template<>
+unsigned ant::OptionsList::Get<unsigned>(const string& key, const unsigned& def_value) const
+{
+    const auto& v = GetOption(key);
+    if(v.empty()) {
+        return def_value;
+    }
+    return unsigned(std::atol(v.c_str()));
+}
+
+template<>
 bool ant::OptionsList::Get<bool>(const string& key, const bool& def_value) const
 {
     const auto& v = GetOption(key);
