@@ -140,12 +140,15 @@ gui::Manager_traits::DoFitReturn_t CB_Energy::GUI_Gains::DoFit(TH1* hist, unsign
     h_projection = hist2->ProjectionX("",channel+1,channel+1);
 
     func->SetDefaults(h_projection);
-    func->SetRange(interval<double>(50.0,200));
+    func->SetRange(interval<double>(20,200));
     const auto it_fit_param = fitParameters.find(channel);
     if(it_fit_param != fitParameters.end()
        && !options.IgnorePreviousFitParameters) {
         VLOG(5) << "Loading previous fit parameters for channel " << channel;
         func->Load(it_fit_param->second);
+    }
+    else {
+        func->FitBackground(h_projection);
     }
 
     func->Fit(h_projection);

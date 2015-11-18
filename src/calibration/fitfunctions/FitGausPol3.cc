@@ -96,7 +96,9 @@ void ant::calibration::gui::FitGausPol3::SetDefaults(TH1 *hist)
 {
     // defaults for taps baf2
     combined->SetParameter(0, hist->GetMaximum());
-    combined->SetParameter(1, 135);
+    const double max_pos = hist->GetXaxis()->GetBinCenter(hist->GetMaximumBin());
+    combined->SetParameter(1,max_pos);
+
     combined->SetParameter(2, 8);
     combined->SetParameter(3, 1);
     combined->SetParameter(4, 1);
