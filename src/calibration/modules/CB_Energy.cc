@@ -115,7 +115,6 @@ CB_Energy::GUI_Gains::GUI_Gains(const string& basename,
     GUI_CalibType(basename, type, calmgr, detector),
     func(make_shared<gui::FitGausPol3>())
 {
-
 }
 
 void CB_Energy::GUI_Gains::InitGUI(gui::ManagerWindow_traits* window)
@@ -152,8 +151,12 @@ gui::Manager_traits::DoFitReturn_t CB_Energy::GUI_Gains::DoFit(TH1* hist, unsign
     }
 
     func->Fit(h_projection);
+    LOG(INFO) << "Chi2/dof = " << func->Chi2NDF();
 
     /// \todo implement automatic stop if fit failed?
+    if(func->Chi2NDF() > 10.0) {
+        return DoFitReturn_t::Display;
+    }
 
     // goto next channel
     return DoFitReturn_t::Next;
