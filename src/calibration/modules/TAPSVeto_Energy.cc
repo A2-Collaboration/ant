@@ -5,6 +5,8 @@
 
 #include "tree/TDataRecord.h"
 
+#include "calibration/fitfunctions/FitLandau.h"
+
 #include "expconfig/detectors/TAPSVeto.h"
 
 #include <list>
@@ -117,6 +119,7 @@ void TAPSVeto_Energy::GetGUIs(std::list<std::unique_ptr<gui::Manager_traits> >& 
                           GetName(),
                           Pedestals,
                           calibrationManager,
-                          tapsveto_detector
+                          tapsveto_detector,
+                          make_shared<gui::FitLandau>()
                           ));
 }

@@ -45,18 +45,17 @@ void FitLandau::Fit(TH1 *hist)
 
 void FitLandau::SetDefaults(TH1 *hist)
 {
+    func->SetParameter(2, 3.0);
+    SetRange({0, 200});
+
     if(hist) {
-        func->SetParameter(0, hist->GetMaximum());
+        func->SetParameter(0, hist->GetMaximum()/3.0);
         const double max_pos = hist->GetXaxis()->GetBinCenter(hist->GetMaximumBin());
         func->SetParameter(1,max_pos);
-        const double sigma = hist->GetRMS();
-        func->SetParameter(2, sigma);
-        SetRange({max_pos-4*sigma, max_pos+4*sigma});
+
     } else {
-        SetRange({0,200});
-        func->SetParameter(0,0.8);
+        func->SetParameter(0,1000);
         func->SetParameter(1,100);
-        func->SetParameter(2,20);
     }
 }
 

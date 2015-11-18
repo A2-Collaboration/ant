@@ -121,15 +121,14 @@ unique_ptr<analysis::Physics> TAPS_ShortEnergy::GetPhysicsModule()
     return std_ext::make_unique<ThePhysics>(GetName(), taps_detector);
 }
 
-
-
 void TAPS_ShortEnergy::GetGUIs(std::list<std::unique_ptr<gui::Manager_traits> >& guis)
 {
-    guis.emplace_back(std_ext::make_unique<SGGUI_Pedestals>(
+    guis.emplace_back(std_ext::make_unique<GUI_Pedestals>(
                           GetName(),
                           Pedestals,
                           calibrationManager,
-                          taps_detector
+                          taps_detector,
+                          make_shared<gui::FitLandau>()
                           ));
     guis.emplace_back(std_ext::make_unique<GUI_Gains>(
                           GetName(),
@@ -138,43 +137,6 @@ void TAPS_ShortEnergy::GetGUIs(std::list<std::unique_ptr<gui::Manager_traits> >&
                           taps_detector
                           ));
 }
-
-
-struct myLandau : public gui::FitLandau {
-    using FitLandau::FitLandau;
-
-    virtual void SetDefaults(TH1* hist) override {
-        func->SetParameter(2, 3.0);
-        SetRange({0, 200});
-
-        if(hist) {
-            func->SetParameter(0, hist->GetMaximum()/3.0);
-            const double max_pos = hist->GetXaxis()->GetBinCenter(hist->GetMaximumBin());
-            func->SetParameter(1,max_pos);
-
-        } else {
-            func->SetParameter(0,1000);
-            func->SetParameter(1,100);
-        }
-    }
-
-    virtual ~myLandau();
-};
-
-myLandau::~myLandau() {}
-
-TAPS_ShortEnergy::SGGUI_Pedestals::SGGUI_Pedestals(
-        const string& basename,
-        Energy::CalibType& type,
-        const std::shared_ptr<DataManager>& calmgr,
-        const std::shared_ptr<Detector_t>& detector):
-    Energy::GUI_Pedestals::GUI_Pedestals(basename, type, calmgr, detector)
-{
-    func = make_shared<myLandau>();
-    //TODO: subclass fitLandau with specific settings
-}
-
-
 
 
 TAPS_ShortEnergy::GUI_Gains::GUI_Gains(const string& basename,

@@ -3,6 +3,8 @@
 #include "analysis/plot/HistogramFactories.h"
 #include "analysis/data/Event.h"
 
+#include "calibration/fitfunctions/FitGaus.h"
+
 #include "expconfig/detectors/PID.h"
 
 #include "tree/TDataRecord.h"
@@ -57,7 +59,8 @@ void PID_Energy::GetGUIs(std::list<std::unique_ptr<gui::Manager_traits> >& guis)
                           GetName(),
                           Pedestals,
                           calibrationManager,
-                          pid_detector
+                          pid_detector,
+                          make_shared<gui::FitGaus>()
                           ));
 }
 

@@ -1,7 +1,6 @@
 #include "Energy.h"
 
 #include "calibration/DataManager.h"
-#include "calibration/fitfunctions/FitGausPol0.h"
 #include "calibration/gui/CalCanvas.h"
 
 #include "analysis/plot/HistogramFactories.h"
@@ -249,12 +248,14 @@ void Energy::GUI_CalibType::StoreFinishRange(const interval<TID>& range)
     calibrationManager->Add(cdata);
 }
 
-Energy::GUI_Pedestals::GUI_Pedestals(const string& basename,
-                          CalibType& type,
-                          const std::shared_ptr<DataManager>& calmgr,
-                          const std::shared_ptr<Detector_t>& detector) :
+Energy::GUI_Pedestals::GUI_Pedestals(
+        const string& basename,
+        CalibType& type,
+        const std::shared_ptr<DataManager>& calmgr,
+        const std::shared_ptr<Detector_t>& detector,
+        shared_ptr<gui::PeakingFitFunction> fitfunction) :
     GUI_CalibType(basename, type, calmgr, detector),
-    func(make_shared<gui::FitGausPol0>())
+    func(fitfunction)
 {
 
 }

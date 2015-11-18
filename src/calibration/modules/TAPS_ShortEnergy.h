@@ -20,13 +20,6 @@ class PeakingFitFunction;
 class TAPS_ShortEnergy : public Energy
 {
 
-    struct SGGUI_Pedestals : ant::calibration::Energy::GUI_Pedestals {
-        SGGUI_Pedestals(const std::string& basename,
-                        CalibType& type,
-                        const std::shared_ptr<DataManager>& calmgr,
-                        const std::shared_ptr<Detector_t>& detector);
-    };
-
 public:
 
     struct GUI_Gains : GUI_CalibType {

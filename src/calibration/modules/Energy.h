@@ -104,9 +104,10 @@ protected:
 
     struct GUI_Pedestals : GUI_CalibType {
         GUI_Pedestals(const std::string& basename,
-               CalibType& type,
-               const std::shared_ptr<DataManager>& calmgr,
-               const std::shared_ptr<Detector_t>& detector);
+                      CalibType& type,
+                      const std::shared_ptr<DataManager>& calmgr,
+                      const std::shared_ptr<Detector_t>& detector,
+                      std::shared_ptr<gui::PeakingFitFunction> fitfunction);
 
         virtual void InitGUI(gui::ManagerWindow_traits* window) override;
         virtual DoFitReturn_t DoFit(TH1* hist, unsigned channel,

@@ -6,6 +6,8 @@
 #include "analysis/data/Event.h"
 #include "analysis/utils/combinatorics.h"
 
+#include "calibration/fitfunctions/FitLandau.h"
+
 #include "tree/TDataRecord.h"
 
 #include <list>
@@ -138,6 +140,7 @@ void TAPS_Energy::GetGUIs(std::list<std::unique_ptr<gui::Manager_traits> >& guis
                           GetName(),
                           Pedestals,
                           calibrationManager,
-                          taps_detector
+                          taps_detector,
+                          make_shared<gui::FitLandau>()
                           ));
 }
