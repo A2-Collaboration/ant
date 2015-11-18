@@ -10,7 +10,6 @@ class FitGausPol3: public PeakingFitFunction {
 protected:
     TF1* signal;
     TF1* bg;
-    TF1* combined;
 
     void sync();
 

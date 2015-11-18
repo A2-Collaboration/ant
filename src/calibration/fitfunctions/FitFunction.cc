@@ -56,5 +56,20 @@ void FitFunction::loadTF1(SavedState_t::const_iterator &data_pos, TF1 *func)
 FitFunction::~FitFunction()
 {}
 
+double FitFunction::Chi2NDF() const
+{
+    return Chi2() / NDF();
+}
+
+double FitFunction::Chi2() const
+{
+    return func->GetChisquare();
+}
+
+double FitFunction::NDF() const
+{
+    return func->GetNDF();
+}
+
 
 PeakingFitFunction::PeakingFitFunction(): FitFunction(){}

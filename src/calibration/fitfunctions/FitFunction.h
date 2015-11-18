@@ -28,6 +28,7 @@ public:
     using SavedState_t = std::vector<double>;
 
 protected:
+    TF1* func = nullptr;
     knoblist_t knobs;
 
     template <typename T, typename ... Args_t>
@@ -62,6 +63,10 @@ public:
 
     virtual SavedState_t Save() const =0;
     virtual void Load(const std::vector<double>& data) =0;
+
+    virtual double Chi2NDF() const;
+    virtual double Chi2() const;
+    virtual double NDF() const;
 
 };
 

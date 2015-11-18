@@ -7,8 +7,6 @@ namespace calibration {
 namespace gui {
 
 class FitLandau: public PeakingFitFunction {
-protected:
-    TF1* func = nullptr;
 
 public:
     FitLandau();
@@ -28,7 +26,6 @@ public:
 
     virtual double GetPeakPosition() const override;
     virtual double GetPeakWidth() const override;
-
 };
 
 }

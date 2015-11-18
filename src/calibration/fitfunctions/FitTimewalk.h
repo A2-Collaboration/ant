@@ -7,8 +7,6 @@ namespace calibration {
 namespace gui {
 
 class FitTimewalk: public FitFunction {
-protected:
-    TF1* func = nullptr;
 
 public:
     FitTimewalk();
@@ -27,6 +25,7 @@ public:
     virtual void Load(const SavedState_t &data) override;
 
     double Eval(double energy);
+
 };
 
 }

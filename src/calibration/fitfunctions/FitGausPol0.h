@@ -7,8 +7,6 @@ namespace calibration {
 namespace gui {
 
 class FitGausPol0: public PeakingFitFunction {
-protected:
-    TF1* func = nullptr;
 
 public:
     FitGausPol0();
