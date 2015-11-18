@@ -32,7 +32,7 @@ void FitFunction::doFit(TH1* hist, TF1* func, size_t repeat)
     // sometimes, the fit does not converge after first call
     // is this a bug in ROOT?
     for(size_t i=0;i<repeat+1;i++)
-        hist->Fit(func,"RBQN");
+        hist->Fit(func,"RBQNM");
 }
 
 void FitFunction::saveTF1(const TF1 *func, SavedState_t &out)
