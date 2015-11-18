@@ -26,7 +26,7 @@ public:
         GUI_Gains(const std::string& basename,
                   CalibType& type,
                   const std::shared_ptr<DataManager>& calmgr,
-                  const std::shared_ptr<Detector_t>& detector);
+                  const std::shared_ptr<expconfig::detector::TAPS>& taps);
         virtual ~GUI_Gains();
 
         virtual void InitGUI(gui::ManagerWindow_traits* window) override;
@@ -41,6 +41,20 @@ public:
         TH1*  h_projection = nullptr;
         TH1D* h_peaks = nullptr;
         TH1D* h_relative = nullptr;
+
+        std::shared_ptr<expconfig::detector::TAPS> taps_detector;
+    };
+
+    struct GUI_Pedestals : Energy::GUI_Pedestals {
+        GUI_Pedestals(const std::string& basename,
+                      CalibType& type,
+                      const std::shared_ptr<DataManager>& calmgr,
+                      const std::shared_ptr<expconfig::detector::TAPS>& taps,
+                      std::shared_ptr<gui::PeakingFitFunction> fitfunction);
+        virtual DoFitReturn_t DoFit(TH1* hist, unsigned channel,
+                                    const Manager_traits::DoFitOptions_t& options) override;
+    protected:
+        std::shared_ptr<expconfig::detector::TAPS> taps_detector;
     };
 
     class ThePhysics : public analysis::Physics {

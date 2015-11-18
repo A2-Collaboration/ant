@@ -145,9 +145,10 @@ void TAPS_ShortEnergy::GetGUIs(std::list<std::unique_ptr<gui::Manager_traits> >&
 TAPS_ShortEnergy::GUI_Gains::GUI_Gains(const string& basename,
                           CalibType& type,
                           const std::shared_ptr<DataManager>& calmgr,
-                          const std::shared_ptr<Detector_t>& detector) :
-    GUI_CalibType(basename, type, calmgr, detector),
-    func(make_shared<gui::FitGaus>())
+                          const std::shared_ptr<expconfig::detector::TAPS>& taps) :
+    GUI_CalibType(basename, type, calmgr, taps),
+    func(make_shared<gui::FitGaus>()),
+    taps_detector(taps)
 {
 
 }
@@ -171,7 +172,7 @@ void TAPS_ShortEnergy::GUI_Gains::InitGUI(gui::ManagerWindow_traits* window)
 gui::Manager_traits::DoFitReturn_t TAPS_ShortEnergy::GUI_Gains::DoFit(TH1* hist, unsigned channel,
                                                                const Manager_traits::DoFitOptions_t& options)
 {
-    if(detector->IsIgnored(channel))
+    if(detector->IsIgnored(channel) || taps_detector->IsPbWO4(channel))
         return DoFitReturn_t::Skip;
 
     TH2* hist2 = dynamic_cast<TH2*>(hist);
@@ -251,4 +252,22 @@ bool TAPS_ShortEnergy::GUI_Gains::FinishRange()
     h_relative_taps->Draw("colz");
 
     return true;
+}
+
+
+TAPS_ShortEnergy::GUI_Pedestals::GUI_Pedestals(const string& basename,
+                                               Energy::CalibType& type,
+                                               const std::shared_ptr<DataManager>& calmgr,
+                                               const std::shared_ptr<expconfig::detector::TAPS>& taps,
+                                               std::shared_ptr<gui::PeakingFitFunction> fitfunction) :
+    Energy::GUI_Pedestals(basename, type, calmgr, taps, fitfunction),
+    taps_detector(taps)
+{
+}
+
+gui::Manager_traits::DoFitReturn_t TAPS_ShortEnergy::GUI_Pedestals::DoFit(TH1* hist, unsigned channel, const gui::Manager_traits::DoFitOptions_t& options)
+{
+    if(taps_detector->IsPbWO4(channel))
+        return DoFitReturn_t::Skip;
+    return Energy::GUI_Pedestals::DoFit(hist, channel, options);
 }
