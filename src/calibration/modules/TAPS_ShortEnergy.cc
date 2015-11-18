@@ -90,16 +90,19 @@ void TAPS_ShortEnergy::ThePhysics::ProcessEvent(const Event& event)
                 for(const Cluster::Hit& clusterhit : cluster->Hits) {
 
                     if(clusterhit.Channel == cluster->CentralElement) {
-                        double central_e = 0.0;
+                        double central_e = numeric_limits<double>::quiet_NaN();
+                        double short_e = numeric_limits<double>::quiet_NaN();
                         for(const Cluster::Hit::Datum& datum : clusterhit.Data) {
 
                             if(datum.Type == Channel_t::Type_t::Integral)
                                 central_e = datum.Value;
 
                             if(datum.Type == Channel_t::Type_t::IntegralShort)
-                                h_rel_gamma->Fill(datum.Value / central_e, clusterhit.Channel);
-
+                                short_e = datum.Value;
                         }
+
+                        h_rel_gamma->Fill(short_e / central_e, clusterhit.Channel);
+
                     }
                 }
         }
