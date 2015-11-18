@@ -181,7 +181,7 @@ Manager::RunReturn_t Manager::Run()
                 state.breakpoint_fit = true;
                 return RunReturn_t::Wait;
             }
-            else if(window->Mode.showEachFit) {
+            else if(window->Mode.showEachFit && noskip) {
                 module->DisplayFit();
             }
         }
