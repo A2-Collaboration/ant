@@ -154,7 +154,7 @@ gui::Manager_traits::DoFitReturn_t CB_Energy::GUI_Gains::DoFit(TH1* hist, unsign
     LOG(INFO) << "Chi2/dof = " << func->Chi2NDF();
 
     /// \todo implement automatic stop if fit failed?
-    if(func->Chi2NDF() > 10.0) {
+    if(func->Chi2NDF() > 5.0) {
         return DoFitReturn_t::Display;
     }
 
