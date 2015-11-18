@@ -159,6 +159,8 @@ void CalCanvas::Fit(const FitType_t type) {
                 break;
         }
 
+        LOG(INFO) << "Chi2/dof = " << func->Chi2NDF();
+
         Modified();
         Update();
 
