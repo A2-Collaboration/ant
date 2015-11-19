@@ -70,7 +70,7 @@ void ant::calibration::gui::FitGausPol3::Draw()
 
 void ant::calibration::gui::FitGausPol3::Fit(TH1* hist)
 {
-    FitFunction::doFit(hist, func, 4);
+    FitFunction::doFit(hist, func);
     sync();
 }
 

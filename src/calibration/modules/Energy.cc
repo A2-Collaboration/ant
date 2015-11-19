@@ -283,7 +283,8 @@ gui::Manager_traits::DoFitReturn_t Energy::GUI_Pedestals::DoFit(TH1* hist, unsig
         func->Load(it_fit_param->second);
     }
 
-    func->Fit(h_projection);
+    for(size_t i=0;i<5;i++)
+        func->Fit(h_projection);
 
     /// \todo implement automatic stop if fit failed?
 

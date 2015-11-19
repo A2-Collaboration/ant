@@ -250,7 +250,8 @@ gui::Manager_traits::DoFitReturn_t Time::TheGUI::DoFit(TH1* hist, unsigned chann
         fitFunction->Load(it_fit_param->second);
     }
 
-    fitFunction->Fit(times);
+    for(size_t i=0;i<5;i++)
+        fitFunction->Fit(times);
 
     /// \todo auto-stop if fit fails
 

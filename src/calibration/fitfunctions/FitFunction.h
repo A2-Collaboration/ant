@@ -38,7 +38,7 @@ protected:
 
     static ant::interval<double> getRange(const TF1* func);
     static void setRange(TF1* func, const ant::interval<double>& i);
-    static void doFit(TH1* hist, TF1* func, size_t repeat = 2);
+    static void doFit(TH1* hist, TF1* func);
 
     static void saveTF1(const TF1* func, SavedState_t& out);
     static void loadTF1(SavedState_t::const_iterator& data_pos, TF1* func);

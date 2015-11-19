@@ -248,7 +248,8 @@ gui::Manager_traits::DoFitReturn_t PID_PhiAngle::TheGUI::DoFit(TH1* hist, unsign
         func->Load(it_fit_param->second);
     }
 
-    func->Fit(h_projection);
+    for(size_t i=0;i<5;i++)
+        func->Fit(h_projection);
 
     // always request display
     return DoFitReturn_t::Next;

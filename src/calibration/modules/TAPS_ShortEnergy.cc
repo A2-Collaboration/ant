@@ -188,7 +188,8 @@ gui::Manager_traits::DoFitReturn_t TAPS_ShortEnergy::GUI_Gains::DoFit(TH1* hist,
         func->Load(it_fit_param->second);
     }
 
-    func->Fit(h_projection);
+    for(size_t i=0;i<5;i++)
+        func->Fit(h_projection);
 
     /// \todo implement automatic stop if fit failed?
 
