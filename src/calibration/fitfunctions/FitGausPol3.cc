@@ -70,7 +70,7 @@ void ant::calibration::gui::FitGausPol3::Draw()
 
 void ant::calibration::gui::FitGausPol3::Fit(TH1* hist)
 {
-    FitFunction::doFit(hist, func);
+    FitFunction::doFit(hist, func, 4);
     sync();
 }
 
@@ -94,9 +94,10 @@ void gui::FitGausPol3::FitSignal(TH1* hist)
 
 void ant::calibration::gui::FitGausPol3::SetDefaults(TH1 *hist)
 {
-    // defaults for taps baf2
+    // defaults for taps baf2?
     func->SetParameter(0, hist->GetMaximum());
-    func->SetParameter(1, 135);
+    const double max_pos = hist->GetXaxis()->GetBinCenter(hist->GetMaximumBin());
+    func->SetParameter(1,max_pos);
     func->SetParameter(2, 8);
     func->SetParameter(3, 1);
     func->SetParameter(4, 1);
