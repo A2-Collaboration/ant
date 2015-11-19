@@ -150,16 +150,20 @@ gui::Manager_traits::DoFitReturn_t CB_Energy::GUI_Gains::DoFit(TH1* hist, unsign
         func->FitBackground(h_projection);
     }
 
-    func->Fit(h_projection);
-    LOG(INFO) << "Chi2/dof = " << func->Chi2NDF();
-
-    /// \todo implement automatic stop if fit failed?
-    if(func->Chi2NDF() > 5.0) {
-        return DoFitReturn_t::Display;
+    size_t retries = 5;
+    do {
+        func->Fit(h_projection);
+        VLOG(5) << "Chi2/dof = " << func->Chi2NDF();
+        if(func->Chi2NDF() < 6.0) {
+            return DoFitReturn_t::Next;
+        }
+        retries--;
     }
+    while(retries>0);
 
-    // goto next channel
-    return DoFitReturn_t::Next;
+    // reached maximum retries without good chi2
+    LOG(INFO) << "Chi2/dof = " << func->Chi2NDF();
+    return DoFitReturn_t::Display;
 }
 
 void CB_Energy::GUI_Gains::DisplayFit()
