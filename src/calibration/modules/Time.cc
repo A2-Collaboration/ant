@@ -250,13 +250,20 @@ gui::Manager_traits::DoFitReturn_t Time::TheGUI::DoFit(TH1* hist, unsigned chann
         fitFunction->Load(it_fit_param->second);
     }
 
-    for(size_t i=0;i<5;i++)
+    size_t retries = 5;
+    do {
         fitFunction->Fit(times);
+        VLOG(5) << "Chi2/dof = " << fitFunction->Chi2NDF();
+        if(fitFunction->Chi2NDF() < 3000.0) {
+            return DoFitReturn_t::Next;
+        }
+        retries--;
+    }
+    while(retries>0);
 
-    /// \todo auto-stop if fit fails
-
-    // do not show something, goto next channel
-    return DoFitReturn_t::Next;
+    // reached maximum retries without good chi2
+    LOG(INFO) << "Chi2/dof = " << fitFunction->Chi2NDF();
+    return DoFitReturn_t::Display;
 
 }
 
