@@ -14,11 +14,35 @@ class TAPS;
 
 namespace calibration {
 
+namespace gui {
+class FitGausPol3;
+}
+
+
 class TAPS_Energy : public Energy
 {
 
 
 public:
+    struct GUI_Gains : GUI_CalibType {
+        GUI_Gains(const std::string& basename,
+               CalibType& type,
+               const std::shared_ptr<DataManager>& calmgr,
+               const std::shared_ptr<Detector_t>& detector);
+
+        virtual void InitGUI(gui::ManagerWindow_traits* window) override;
+        virtual DoFitReturn_t DoFit(TH1* hist, unsigned channel) override;
+        virtual void DisplayFit() override;
+        virtual void StoreFit(unsigned channel) override;
+        virtual bool FinishSlice() override;
+    protected:
+        std::shared_ptr<gui::FitGausPol3> func;
+        gui::CalCanvas* canvas;
+        TH1*  h_projection = nullptr;
+        TH1D* h_peaks = nullptr;
+        TH1D* h_relative = nullptr;
+    };
+
     class ThePhysics : public analysis::Physics {
 
     protected:
@@ -29,6 +53,7 @@ public:
         std::shared_ptr<expconfig::detector::TAPS> taps_detector;
 
     public:
+
         ThePhysics(const std::string& name,
                    std::shared_ptr<expconfig::detector::TAPS> taps);
 
