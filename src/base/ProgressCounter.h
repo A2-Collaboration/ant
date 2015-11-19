@@ -28,6 +28,7 @@ public:
 
 };
 
+std::ostream& operator<<(std::ostream& stream, const ant::ProgressCounter& counter);
+
 }
 
-std::ostream& operator<<(std::ostream& stream, const ant::ProgressCounter& counter);

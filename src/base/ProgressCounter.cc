@@ -63,9 +63,12 @@ double ProgressCounter::SecondsLeft() const
     return sec_emaining;
 }
 
+namespace ant {
 
 ostream&operator<<(ostream& stream, const ProgressCounter& counter)
 {
     stream << setw(2) << std::setprecision(4) << counter.PercentDone() << " % done, ETA: " << TimeToStr(unsigned(counter.SecondsLeft()));
     return stream;
+}
+
 }

@@ -5,6 +5,8 @@
 
 #include "base/ParticleTypeTree.h"
 
+#include <cassert>
+
 class TH1D;
 class TH2D;
 class TH3D;
@@ -160,6 +162,25 @@ class EtapOmegaG : public Physics {
     void ProcessSig(const data::ParticleTree_t& particletree, const data::Event::Data& data);
     void ProcessRef(const data::ParticleTree_t& particletree, const data::Event::Data& data);
 
+
+    template<typename T>
+    const T& getHistogram(const data::ParticleTree_t& particletree,
+                          const std::vector<EtapOmegaG::perDecayHists_t<T>>& perDecayHists,
+                          int& index
+                          ) {
+        assert(!perDecayHists.empty());
+        index = perDecayHists.size()-1;
+        if(!particletree)
+            return perDecayHists.back().PerDecayHists;
+        for(size_t i=0;i<perDecayHists.size()-1;i++) {
+            auto& item = perDecayHists[i];
+            if(particletree->IsEqual(item.Tree, utils::ParticleTools::MatchByParticleName)) {
+                index = i;
+                return item.PerDecayHists;
+            }
+        }
+        return perDecayHists.back().PerDecayHists;
+    }
 
 public:
     EtapOmegaG(const std::string& name, PhysOptPtr opts);

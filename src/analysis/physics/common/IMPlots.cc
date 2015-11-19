@@ -40,12 +40,16 @@ void IMPlots::ProcessEvent(const data::Event& event)
     }
 }
 
+namespace ant {
+
 canvas& operator<<(canvas& c, const IMPlots::hist_set& s) {
     for(auto& h : s.m) {
         c << h;
     }
     c << endr;
     return c;
+}
+
 }
 
 void IMPlots::ShowResult()

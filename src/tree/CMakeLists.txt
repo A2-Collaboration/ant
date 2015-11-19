@@ -28,8 +28,13 @@ ROOT_GENERATE_DICTIONARY("${SRCS}"
   "${CMAKE_CURRENT_SOURCE_DIR}/LinkDef.h"
   ${ROOT_DICTIONARY})
 list(APPEND SRCS ${ROOT_DICTIONARY})
+
 set_source_files_properties(${ROOT_DICTIONARY} PROPERTIES COMPILE_FLAGS
   "-DANT_TREE_ENABLE_COPY_CTOR -Wno-effc++")
+if(CMAKE_CXX_COMPILER_ID MATCHES "Clang")
+  set_source_files_properties(${ROOT_DICTIONARY} PROPERTIES COMPILE_FLAGS
+  "-DANT_TREE_ENABLE_COPY_CTOR -Wno-effc++ -DR__ACCESS_IN_SYMBOL")
+endif()
 
 add_library(tree ${SRCS} ${SRCS_EXTRA})
 target_link_libraries(tree base ${ROOT_LIBRARIES})

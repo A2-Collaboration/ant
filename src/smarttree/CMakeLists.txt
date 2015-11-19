@@ -14,7 +14,11 @@ ROOT_GENERATE_DICTIONARY("${SRCS}"
   ${ROOT_DICTIONARY})
 list(APPEND SRCS ${ROOT_DICTIONARY})
 set_source_files_properties(${ROOT_DICTIONARY} PROPERTIES COMPILE_FLAGS
-  "-DANT_TREE_ENABLE_COPY_CTOR -Wno-effc++")
+  "-Wno-effc++")
+if(CMAKE_CXX_COMPILER_ID MATCHES "Clang")
+  set_source_files_properties(${ROOT_DICTIONARY} PROPERTIES COMPILE_FLAGS
+  "-Wno-effc++ -DR__ACCESS_IN_SYMBOL")
+endif()
 
 add_library(smarttree ${SRCS} ${SRCS_EXTRA})
 target_link_libraries(smarttree base ${ROOT_LIBRARIES})
