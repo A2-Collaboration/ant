@@ -123,6 +123,9 @@ void ManagerWindow::CreateToolbar(TGVerticalFrame* frame)
     auto btn_showfit = new ActionWidget<TGCheckButton>(frm1,"Show each fit");
     btn_showfit->LinkFlag(Mode.showEachFit);
 
+    auto btn_autofinish = new ActionWidget<TGCheckButton>(frm1,"AutoFinish");
+    btn_autofinish->LinkFlag(Mode.autoFinish);
+
     auto btn_prev = new ActionWidget<TGTextButton>(frm1,"Prev (b)");
     keys[kKey_b] = btn_prev;
     btn_prev->SetAction([this] () {
@@ -226,6 +229,7 @@ void ManagerWindow::CreateToolbar(TGVerticalFrame* frame)
     add_nonfinish(frm1, entry_gotochannel);
     frm1->AddFrame(btn_finish, layout_btn);
     frm1->AddFrame(btn_autocontinue, layout_btn);
+    frm1->AddFrame(btn_autofinish, layout_btn);
     frm1->AddFrame(btn_showfit, layout_btn);
 
 

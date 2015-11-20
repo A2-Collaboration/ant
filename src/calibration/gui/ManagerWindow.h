@@ -24,6 +24,7 @@ struct ManagerWindowMode {
     ManagerWindowMode() :
         gotoNextSlice(true),
         autoContinue(true),
+        autoFinish(false),
         showEachFit(true),
         channelStep(1),
         requestChannel(-1)
@@ -31,6 +32,7 @@ struct ManagerWindowMode {
 
     bool gotoNextSlice;
     bool autoContinue;
+    bool autoFinish;
     bool showEachFit;
     int  channelStep;
     int  requestChannel;

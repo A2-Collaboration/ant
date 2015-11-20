@@ -197,7 +197,7 @@ Manager::RunReturn_t Manager::Run()
             VLOG(7) << "Finish module";
             state.breakpoint_finish = module->FinishRange();
             state.slice++;
-            if(state.breakpoint_finish) {
+            if(!window->Mode.autoFinish && state.breakpoint_finish) {
                 VLOG(7) << "Displaying finished range...";
                 window->SetFinishMode(true);
                 return RunReturn_t::Wait;
