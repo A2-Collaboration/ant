@@ -713,7 +713,7 @@ Etap3pi0::KinFitter::KinFitter(const ParticleTypeDatabase::Type& motherParticle)
                { constraint.X(),
                  constraint.Y(),
                  constraint.Z(),
-                 constraint.Z()  } );
+                 constraint.T()  } );
     };
 
     aplcon.AddConstraint("LInv",namesLInv,LorentzInvariance);
