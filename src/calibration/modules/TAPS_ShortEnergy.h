@@ -30,8 +30,7 @@ public:
         virtual ~GUI_Gains();
 
         virtual void InitGUI(gui::ManagerWindow_traits* window) override;
-        virtual DoFitReturn_t DoFit(TH1* hist, unsigned channel,
-                                    const CalibModule_traits::DoFitOptions_t& options) override;
+        virtual DoFitReturn_t DoFit(TH1* hist, unsigned channel) override;
         virtual void DisplayFit() override;
         virtual void StoreFit(unsigned channel) override;
         virtual bool FinishSlice() override;
@@ -51,8 +50,7 @@ public:
                       const std::shared_ptr<DataManager>& calmgr,
                       const std::shared_ptr<expconfig::detector::TAPS>& taps,
                       std::shared_ptr<gui::PeakingFitFunction> fitfunction);
-        virtual DoFitReturn_t DoFit(TH1* hist, unsigned channel,
-                                    const CalibModule_traits::DoFitOptions_t& options) override;
+        virtual DoFitReturn_t DoFit(TH1* hist, unsigned channel) override;
     protected:
         std::shared_ptr<expconfig::detector::TAPS> taps_detector;
     };

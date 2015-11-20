@@ -77,8 +77,7 @@ public:
 
 
         virtual void StartSlice(const interval<TID>& range) override;
-        virtual DoFitReturn_t DoFit(TH1* hist, unsigned ch,
-                                    const CalibModule_traits::DoFitOptions_t& options) override;
+        virtual DoFitReturn_t DoFit(TH1* hist, unsigned ch) override;
         virtual void DisplayFit() override;
         virtual void StoreFit(unsigned channel) override;
         virtual bool FinishSlice() override;

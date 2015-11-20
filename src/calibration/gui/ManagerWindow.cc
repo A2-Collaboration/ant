@@ -212,9 +212,6 @@ void ManagerWindow::CreateToolbar(TGVerticalFrame* frame)
             canvas->UndoPush();
     });
 
-    auto btn_nopreviousparams = new ActionWidget<TGCheckButton>(frm2,"Ignore previous params");
-    btn_nopreviousparams->LinkFlag(Mode.FitOptions.IgnorePreviousFitParameters);
-
     // add them all together...
     auto layout_btn = new TGLayoutHints(kLHintsLeft,2,2,2,2);
 
@@ -239,7 +236,6 @@ void ManagerWindow::CreateToolbar(TGVerticalFrame* frame)
     add_nonfinish(frm2, btn_defaults);
     add_nonfinish(frm2, btn_undopop);
     add_nonfinish(frm2, btn_undopush);
-    add_nonfinish(frm2, btn_nopreviousparams);
 
     // some progress bars
     progress_channel = new ProgressBar(frame, "Channel");

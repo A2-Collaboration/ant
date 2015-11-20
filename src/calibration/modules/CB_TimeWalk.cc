@@ -228,8 +228,7 @@ void CB_TimeWalk::TheGUI::StartSlice(const interval<TID>& range)
 
 
 
-gui::CalibModule_traits::DoFitReturn_t CB_TimeWalk::TheGUI::DoFit(TH1* hist, unsigned ch,
-                                                              const DoFitOptions_t&)
+gui::CalibModule_traits::DoFitReturn_t CB_TimeWalk::TheGUI::DoFit(TH1* hist, unsigned ch)
 {
     if(cb_detector->IsIgnored(ch))
         return DoFitReturn_t::Skip;

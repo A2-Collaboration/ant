@@ -119,6 +119,8 @@ CB_Energy::GUI_Gains::GUI_Gains(const string& basename,
 
 void CB_Energy::GUI_Gains::InitGUI(gui::ManagerWindow_traits* window)
 {
+    GUI_CalibType::InitGUI(window);
+
     canvas = window->AddCalCanvas();
     h_peaks = new TH1D("h_peaks","Peak positions",GetNumberOfChannels(),0,GetNumberOfChannels());
     h_peaks->SetXTitle("Channel Number");
@@ -128,8 +130,7 @@ void CB_Energy::GUI_Gains::InitGUI(gui::ManagerWindow_traits* window)
     h_relative->SetYTitle("Relative change / %");
 }
 
-gui::CalibModule_traits::DoFitReturn_t CB_Energy::GUI_Gains::DoFit(TH1* hist, unsigned channel,
-                                                               const CalibModule_traits::DoFitOptions_t& options)
+gui::CalibModule_traits::DoFitReturn_t CB_Energy::GUI_Gains::DoFit(TH1* hist, unsigned channel)
 {
     if(detector->IsIgnored(channel))
         return DoFitReturn_t::Skip;
@@ -141,8 +142,7 @@ gui::CalibModule_traits::DoFitReturn_t CB_Energy::GUI_Gains::DoFit(TH1* hist, un
     func->SetDefaults(h_projection);
     func->SetRange(interval<double>(20,200));
     const auto it_fit_param = fitParameters.find(channel);
-    if(it_fit_param != fitParameters.end()
-       && !options.IgnorePreviousFitParameters) {
+    if(it_fit_param != fitParameters.end() && !IgnorePreviousFitParameters) {
         VLOG(5) << "Loading previous fit parameters for channel " << channel;
         func->Load(it_fit_param->second);
     }

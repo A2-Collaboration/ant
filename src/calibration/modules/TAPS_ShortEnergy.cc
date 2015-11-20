@@ -160,6 +160,8 @@ TAPS_ShortEnergy::GUI_Gains::~GUI_Gains()
 
 void TAPS_ShortEnergy::GUI_Gains::InitGUI(gui::ManagerWindow_traits* window)
 {
+    GUI_CalibType::InitGUI(window);
+
     canvas = window->AddCalCanvas();
     h_peaks = new TH1D("h_peaks","Peak positions",GetNumberOfChannels(),0,GetNumberOfChannels());
     h_peaks->SetXTitle("Channel Number");
@@ -169,8 +171,7 @@ void TAPS_ShortEnergy::GUI_Gains::InitGUI(gui::ManagerWindow_traits* window)
     h_relative->SetYTitle("Relative change / %");
 }
 
-gui::CalibModule_traits::DoFitReturn_t TAPS_ShortEnergy::GUI_Gains::DoFit(TH1* hist, unsigned channel,
-                                                               const CalibModule_traits::DoFitOptions_t& options)
+gui::CalibModule_traits::DoFitReturn_t TAPS_ShortEnergy::GUI_Gains::DoFit(TH1* hist, unsigned channel)
 {
     if(detector->IsIgnored(channel) || taps_detector->IsPbWO4(channel))
         return DoFitReturn_t::Skip;
@@ -183,7 +184,7 @@ gui::CalibModule_traits::DoFitReturn_t TAPS_ShortEnergy::GUI_Gains::DoFit(TH1* h
     func->SetRange(interval<double>(-1,3));
     const auto it_fit_param = fitParameters.find(channel);
     if(it_fit_param != fitParameters.end()
-       && !options.IgnorePreviousFitParameters) {
+       && !IgnorePreviousFitParameters) {
         VLOG(5) << "Loading previous fit parameters for channel " << channel;
         func->Load(it_fit_param->second);
     }
@@ -266,9 +267,9 @@ TAPS_ShortEnergy::GUI_Pedestals::GUI_Pedestals(const string& basename,
 {
 }
 
-gui::CalibModule_traits::DoFitReturn_t TAPS_ShortEnergy::GUI_Pedestals::DoFit(TH1* hist, unsigned channel, const gui::CalibModule_traits::DoFitOptions_t& options)
+gui::CalibModule_traits::DoFitReturn_t TAPS_ShortEnergy::GUI_Pedestals::DoFit(TH1* hist, unsigned channel)
 {
     if(taps_detector->IsPbWO4(channel))
         return DoFitReturn_t::Skip;
-    return Energy::GUI_Pedestals::DoFit(hist, channel, options);
+    return Energy::GUI_Pedestals::DoFit(hist, channel);
 }

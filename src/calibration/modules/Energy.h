@@ -84,6 +84,8 @@ protected:
         virtual std::string GetHistogramName() const override;
         virtual unsigned GetNumberOfChannels() const override;
 
+        virtual void InitGUI(gui::ManagerWindow_traits* window);
+
         virtual void StartSlice(const interval<TID>& range) override;
         virtual void StoreFinishSlice(const interval<TID>& range) override;
 
@@ -99,6 +101,7 @@ protected:
         std::map< unsigned, std::vector<double> > fitParameters;
         std::vector<double> previousValues;
 
+        bool IgnorePreviousFitParameters = false;
     }; // GUI_CalibType
 
 
@@ -110,8 +113,7 @@ protected:
                       std::shared_ptr<gui::PeakingFitFunction> fitfunction);
 
         virtual void InitGUI(gui::ManagerWindow_traits* window) override;
-        virtual DoFitReturn_t DoFit(TH1* hist, unsigned channel,
-                                    const CalibModule_traits::DoFitOptions_t& options) override;
+        virtual DoFitReturn_t DoFit(TH1* hist, unsigned channel) override;
         virtual void DisplayFit() override;
         virtual void StoreFit(unsigned channel) override;
         virtual bool FinishSlice() override;

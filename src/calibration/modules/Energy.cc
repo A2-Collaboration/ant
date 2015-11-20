@@ -197,6 +197,10 @@ unsigned Energy::GUI_CalibType::GetNumberOfChannels() const
     return detector->GetNChannels();
 }
 
+void Energy::GUI_CalibType::InitGUI(gui::ManagerWindow_traits* window) {
+    window->AddCheckBox("Ignore prev fit params", IgnorePreviousFitParameters);
+}
+
 void Energy::GUI_CalibType::StartSlice(const interval<TID>& range)
 {
     // always make sure the values are large enough
@@ -262,11 +266,11 @@ Energy::GUI_Pedestals::GUI_Pedestals(
 
 void Energy::GUI_Pedestals::InitGUI(gui::ManagerWindow_traits* window)
 {
+    GUI_CalibType::InitGUI(window);
     canvas = window->AddCalCanvas();
 }
 
-gui::CalibModule_traits::DoFitReturn_t Energy::GUI_Pedestals::DoFit(TH1* hist, unsigned channel,
-                                                                    const CalibModule_traits::DoFitOptions_t& options)
+gui::CalibModule_traits::DoFitReturn_t Energy::GUI_Pedestals::DoFit(TH1* hist, unsigned channel)
 {
     if(detector->IsIgnored(channel))
         return DoFitReturn_t::Skip;
@@ -277,8 +281,7 @@ gui::CalibModule_traits::DoFitReturn_t Energy::GUI_Pedestals::DoFit(TH1* hist, u
 
     func->SetDefaults(h_projection);
     const auto it_fit_param = fitParameters.find(channel);
-    if(it_fit_param != fitParameters.end()
-       && !options.IgnorePreviousFitParameters) {
+    if(it_fit_param != fitParameters.end() && !IgnorePreviousFitParameters) {
         VLOG(5) << "Loading previous fit parameters for channel " << channel;
         func->Load(it_fit_param->second);
     }

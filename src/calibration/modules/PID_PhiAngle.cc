@@ -203,6 +203,7 @@ unsigned PID_PhiAngle::TheGUI::GetNumberOfChannels() const
 
 void PID_PhiAngle::TheGUI::InitGUI(gui::ManagerWindow_traits* window)
 {
+    window->AddCheckBox("Ignore prev fit params", IgnorePreviousFitParameters);
     canvas = window->AddCalCanvas();
 }
 
@@ -233,8 +234,7 @@ void PID_PhiAngle::TheGUI::StartSlice(const interval<TID>& range)
 
 
 
-gui::CalibModule_traits::DoFitReturn_t PID_PhiAngle::TheGUI::DoFit(TH1* hist, unsigned channel,
-                                                               const DoFitOptions_t& options)
+gui::CalibModule_traits::DoFitReturn_t PID_PhiAngle::TheGUI::DoFit(TH1* hist, unsigned channel)
 {
     TH2* hist2 = dynamic_cast<TH2*>(hist);
 
@@ -242,8 +242,7 @@ gui::CalibModule_traits::DoFitReturn_t PID_PhiAngle::TheGUI::DoFit(TH1* hist, un
 
     func->SetDefaults(h_projection);
     const auto it_fit_param = fitParameters.find(channel);
-    if(it_fit_param != fitParameters.end()
-       && !options.IgnorePreviousFitParameters) {
+    if(it_fit_param != fitParameters.end() && !IgnorePreviousFitParameters) {
         VLOG(5) << "Loading previous fit parameters for channel " << channel;
         func->Load(it_fit_param->second);
     }

@@ -201,6 +201,8 @@ unsigned Time::TheGUI::GetNumberOfChannels() const
 
 void Time::TheGUI::InitGUI(gui::ManagerWindow_traits* window)
 {
+    window->AddCheckBox("Ignore prev fit params", IgnorePreviousFitParameters);
+
     theCanvas = window->AddCalCanvas();
     times = new TH1D("times","Times",
                      1000, -400 ,400);
@@ -231,8 +233,7 @@ void Time::TheGUI::StartSlice(const interval<TID>& range)
     previousOffsets = offsets;
 }
 
-gui::CalibModule_traits::DoFitReturn_t Time::TheGUI::DoFit(TH1* hist, unsigned channel,
-                                                       const CalibModule_traits::DoFitOptions_t& options)
+gui::CalibModule_traits::DoFitReturn_t Time::TheGUI::DoFit(TH1* hist, unsigned channel)
 {
     if (detector->IsIgnored(channel))
         return gui::CalibModule_traits::DoFitReturn_t::Skip;
@@ -244,8 +245,7 @@ gui::CalibModule_traits::DoFitReturn_t Time::TheGUI::DoFit(TH1* hist, unsigned c
 
     fitFunction->SetDefaults(times);
     const auto it_fit_param = fitParams.find(channel);
-    if(it_fit_param != fitParams.end() &&
-       !options.IgnorePreviousFitParameters) {
+    if(it_fit_param != fitParams.end() && !IgnorePreviousFitParameters) {
         VLOG(5) << "Loading previous fit parameters for channel " << channel;
         fitFunction->Load(it_fit_param->second);
     }

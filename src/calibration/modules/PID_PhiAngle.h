@@ -59,6 +59,7 @@ public:
 
         double phi_offset = std::numeric_limits<double>::quiet_NaN();
 
+        bool IgnorePreviousFitParameters = false;
     public:
         TheGUI(const std::string& basename,
                const std::shared_ptr<DataManager>& calmgr,
@@ -71,8 +72,7 @@ public:
         virtual void InitGUI(gui::ManagerWindow_traits*) override;
 
         virtual void StartSlice(const interval<TID>& range) override;
-        virtual DoFitReturn_t DoFit(TH1* hist, unsigned channel,
-                                    const CalibModule_traits::DoFitOptions_t& options) override;
+        virtual DoFitReturn_t DoFit(TH1* hist, unsigned channel) override;
         virtual void DisplayFit() override;
         virtual void StoreFit(unsigned channel) override;
         virtual bool FinishSlice() override;
