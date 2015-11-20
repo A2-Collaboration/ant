@@ -152,7 +152,7 @@ unique_ptr<analysis::Physics> CB_TimeWalk::GetPhysicsModule() {
     return std_ext::make_unique<ThePhysics>(GetName(), cb_detector);
 }
 
-void CB_TimeWalk::GetGUIs(list<unique_ptr<gui::Manager_traits> >& guis) {
+void CB_TimeWalk::GetGUIs(list<unique_ptr<gui::CalibModule_traits> >& guis) {
     guis.emplace_back(std_ext::make_unique<TheGUI>(GetName(), calibrationManager, cb_detector, timewalks));
 }
 
@@ -186,7 +186,7 @@ CB_TimeWalk::TheGUI::TheGUI(const string& basename,
                             const shared_ptr<DataManager>& calmgr,
                             const shared_ptr<expconfig::detector::CB>& cb,
                             std::vector< std::shared_ptr<gui::FitTimewalk> >& timewalks_) :
-    gui::Manager_traits(basename),
+    gui::CalibModule_traits(basename),
     calibrationManager(calmgr),
     cb_detector(cb),
     timewalks(timewalks_)
@@ -228,7 +228,7 @@ void CB_TimeWalk::TheGUI::StartSlice(const interval<TID>& range)
 
 
 
-gui::Manager_traits::DoFitReturn_t CB_TimeWalk::TheGUI::DoFit(TH1* hist, unsigned ch,
+gui::CalibModule_traits::DoFitReturn_t CB_TimeWalk::TheGUI::DoFit(TH1* hist, unsigned ch,
                                                               const DoFitOptions_t&)
 {
     if(cb_detector->IsIgnored(ch))

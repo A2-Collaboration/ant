@@ -171,9 +171,9 @@ Manager::RunReturn_t Manager::Run()
 
             const auto ret = module->DoFit(buffer.CurrentSum(), state.channel,
                                            window->Mode.FitOptions);
-            noskip = ret != Manager_traits::DoFitReturn_t::Skip;
+            noskip = ret != CalibModule_traits::DoFitReturn_t::Skip;
 
-            if(ret == Manager_traits::DoFitReturn_t::Display
+            if(ret == CalibModule_traits::DoFitReturn_t::Display
                || (!window->Mode.autoContinue && noskip)
                ) {
                 VLOG(7) << "Displaying Fit...";

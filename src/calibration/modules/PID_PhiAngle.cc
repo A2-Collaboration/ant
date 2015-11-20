@@ -119,7 +119,7 @@ std::unique_ptr<analysis::Physics> PID_PhiAngle::GetPhysicsModule() {
     return std_ext::make_unique<ThePhysics>(GetName(), pid_detector->GetNChannels());
 }
 
-void PID_PhiAngle::GetGUIs(std::list<std::unique_ptr<gui::Manager_traits> >& guis) {
+void PID_PhiAngle::GetGUIs(std::list<std::unique_ptr<gui::CalibModule_traits> >& guis) {
     guis.emplace_back(std_ext::make_unique<TheGUI>(GetName(), calibrationManager, pid_detector));
 }
 
@@ -179,7 +179,7 @@ public:
 PID_PhiAngle::TheGUI::TheGUI(const string& basename,
                              const std::shared_ptr<DataManager>& calmgr,
                              const std::shared_ptr<expconfig::detector::PID>& pid) :
-    gui::Manager_traits(basename),
+    gui::CalibModule_traits(basename),
     calibrationManager(calmgr),
     pid_detector(pid),
     func(make_shared<_FitGauss>())
@@ -233,7 +233,7 @@ void PID_PhiAngle::TheGUI::StartSlice(const interval<TID>& range)
 
 
 
-gui::Manager_traits::DoFitReturn_t PID_PhiAngle::TheGUI::DoFit(TH1* hist, unsigned channel,
+gui::CalibModule_traits::DoFitReturn_t PID_PhiAngle::TheGUI::DoFit(TH1* hist, unsigned channel,
                                                                const DoFitOptions_t& options)
 {
     TH2* hist2 = dynamic_cast<TH2*>(hist);

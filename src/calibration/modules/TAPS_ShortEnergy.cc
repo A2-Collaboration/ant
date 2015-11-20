@@ -124,7 +124,7 @@ unique_ptr<analysis::Physics> TAPS_ShortEnergy::GetPhysicsModule()
     return std_ext::make_unique<ThePhysics>(GetName(), taps_detector);
 }
 
-void TAPS_ShortEnergy::GetGUIs(std::list<std::unique_ptr<gui::Manager_traits> >& guis)
+void TAPS_ShortEnergy::GetGUIs(std::list<std::unique_ptr<gui::CalibModule_traits> >& guis)
 {
     guis.emplace_back(std_ext::make_unique<GUI_Pedestals>(
                           GetName(),
@@ -169,8 +169,8 @@ void TAPS_ShortEnergy::GUI_Gains::InitGUI(gui::ManagerWindow_traits* window)
     h_relative->SetYTitle("Relative change / %");
 }
 
-gui::Manager_traits::DoFitReturn_t TAPS_ShortEnergy::GUI_Gains::DoFit(TH1* hist, unsigned channel,
-                                                               const Manager_traits::DoFitOptions_t& options)
+gui::CalibModule_traits::DoFitReturn_t TAPS_ShortEnergy::GUI_Gains::DoFit(TH1* hist, unsigned channel,
+                                                               const CalibModule_traits::DoFitOptions_t& options)
 {
     if(detector->IsIgnored(channel) || taps_detector->IsPbWO4(channel))
         return DoFitReturn_t::Skip;
@@ -266,7 +266,7 @@ TAPS_ShortEnergy::GUI_Pedestals::GUI_Pedestals(const string& basename,
 {
 }
 
-gui::Manager_traits::DoFitReturn_t TAPS_ShortEnergy::GUI_Pedestals::DoFit(TH1* hist, unsigned channel, const gui::Manager_traits::DoFitOptions_t& options)
+gui::CalibModule_traits::DoFitReturn_t TAPS_ShortEnergy::GUI_Pedestals::DoFit(TH1* hist, unsigned channel, const gui::CalibModule_traits::DoFitOptions_t& options)
 {
     if(taps_detector->IsPbWO4(channel))
         return DoFitReturn_t::Skip;

@@ -55,9 +55,9 @@ int main(int argc, char** argv) {
 
     string calibrationguiname = cmd_calibration->getValue();
     stringstream ss_calibrationguis;
-    shared_ptr<Manager_traits> calibrationgui = nullptr;
+    shared_ptr<CalibModule_traits> calibrationgui = nullptr;
     for(const auto& calibration : setup->GetCalibrations()) {
-        list< unique_ptr<Manager_traits> > guimodules;
+        list< unique_ptr<CalibModule_traits> > guimodules;
         calibration->GetGUIs(guimodules);
         for(auto& guimodule : guimodules) {
             ss_calibrationguis << guimodule->GetName() << " ";

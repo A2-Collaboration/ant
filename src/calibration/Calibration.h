@@ -51,7 +51,7 @@ public:
     public:
         // factory methods to request the modules providing physics/GUI functionality
         virtual std::unique_ptr<analysis::Physics> GetPhysicsModule() =0;
-        virtual void GetGUIs(std::list<std::unique_ptr<calibration::gui::Manager_traits> >& guis) =0;
+        virtual void GetGUIs(std::list<std::unique_ptr<calibration::gui::CalibModule_traits> >& guis) =0;
     };
 
     /**

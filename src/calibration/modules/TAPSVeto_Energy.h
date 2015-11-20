@@ -42,7 +42,7 @@ public:
                     double defaultRelativeGain = 1.0);
 
     virtual std::unique_ptr<analysis::Physics> GetPhysicsModule() override;
-    virtual void GetGUIs(std::list<std::unique_ptr<calibration::gui::Manager_traits> >& guis) override;
+    virtual void GetGUIs(std::list<std::unique_ptr<calibration::gui::CalibModule_traits> >& guis) override;
 
 protected:
     std::shared_ptr<expconfig::detector::TAPSVeto> tapsveto_detector;

@@ -82,7 +82,7 @@ std::unique_ptr<Physics> Time::GetPhysicsModule() {
     return std_ext::make_unique<ThePhysics>(GetName(), "Offsets", Detector);
 }
 
-void Time::GetGUIs(std::list<std::unique_ptr<gui::Manager_traits> >& guis) {
+void Time::GetGUIs(std::list<std::unique_ptr<gui::CalibModule_traits> >& guis) {
     guis.emplace_back(std_ext::make_unique<TheGUI>(
                           GetName(),
                           Detector,
@@ -179,7 +179,7 @@ Time::TheGUI::TheGUI(const string& name,
                      const std::vector<double>& DefaultOffsets,
                      const std::vector<double>& Offsets,
                      const shared_ptr<gui::PeakingFitFunction> FitFunction):
-    gui::Manager_traits(name),
+    gui::CalibModule_traits(name),
     detector(theDetector),
     calmgr(cDataManager),
     defaultOffsets(DefaultOffsets),
@@ -231,11 +231,11 @@ void Time::TheGUI::StartSlice(const interval<TID>& range)
     previousOffsets = offsets;
 }
 
-gui::Manager_traits::DoFitReturn_t Time::TheGUI::DoFit(TH1* hist, unsigned channel,
-                                                       const Manager_traits::DoFitOptions_t& options)
+gui::CalibModule_traits::DoFitReturn_t Time::TheGUI::DoFit(TH1* hist, unsigned channel,
+                                                       const CalibModule_traits::DoFitOptions_t& options)
 {
     if (detector->IsIgnored(channel))
-        return gui::Manager_traits::DoFitReturn_t::Skip;
+        return gui::CalibModule_traits::DoFitReturn_t::Skip;
 
 
     TH2* hist2 = dynamic_cast<TH2*>(hist);

@@ -53,7 +53,7 @@ public:
         virtual void ShowResult() override;
     }; // ThePhysics
 
-    class TheGUI : public gui::Manager_traits {
+    class TheGUI : public gui::CalibModule_traits {
     protected:
         std::shared_ptr<DataManager> calibrationManager;
         std::shared_ptr<expconfig::detector::CB> cb_detector;
@@ -78,7 +78,7 @@ public:
 
         virtual void StartSlice(const interval<TID>& range) override;
         virtual DoFitReturn_t DoFit(TH1* hist, unsigned ch,
-                                    const Manager_traits::DoFitOptions_t& options) override;
+                                    const CalibModule_traits::DoFitOptions_t& options) override;
         virtual void DisplayFit() override;
         virtual void StoreFit(unsigned channel) override;
         virtual bool FinishSlice() override;
@@ -86,7 +86,7 @@ public:
     }; // TheGUI
 
     virtual std::unique_ptr<analysis::Physics> GetPhysicsModule() override;
-    virtual void GetGUIs(std::list<std::unique_ptr<calibration::gui::Manager_traits> >& guis) override;
+    virtual void GetGUIs(std::list<std::unique_ptr<calibration::gui::CalibModule_traits> >& guis) override;
 
     virtual void ApplyTo(clusterhits_t& sorted_clusterhits) override;
 

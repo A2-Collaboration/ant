@@ -73,7 +73,7 @@ protected:
      * @brief The GUI_CalibType struct is an abstract base class for
      * handling the data storage for a provided CalibType
      */
-    struct GUI_CalibType : gui::Manager_traits {
+    struct GUI_CalibType : gui::CalibModule_traits {
         GUI_CalibType(const std::string& basename,
                       CalibType& type,
                       const std::shared_ptr<DataManager>& calmgr,
@@ -111,7 +111,7 @@ protected:
 
         virtual void InitGUI(gui::ManagerWindow_traits* window) override;
         virtual DoFitReturn_t DoFit(TH1* hist, unsigned channel,
-                                    const Manager_traits::DoFitOptions_t& options) override;
+                                    const CalibModule_traits::DoFitOptions_t& options) override;
         virtual void DisplayFit() override;
         virtual void StoreFit(unsigned channel) override;
         virtual bool FinishSlice() override;

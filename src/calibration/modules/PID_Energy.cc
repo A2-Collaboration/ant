@@ -53,7 +53,7 @@ unique_ptr<analysis::Physics> PID_Energy::GetPhysicsModule()
                                             pid_detector->GetNChannels());
 }
 
-void PID_Energy::GetGUIs(std::list<std::unique_ptr<gui::Manager_traits> >& guis)
+void PID_Energy::GetGUIs(std::list<std::unique_ptr<gui::CalibModule_traits> >& guis)
 {
     guis.emplace_back(std_ext::make_unique<GUI_Pedestals>(
                           GetName(),

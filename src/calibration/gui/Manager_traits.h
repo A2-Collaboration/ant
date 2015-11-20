@@ -22,13 +22,13 @@ public:
     virtual void AddCheckBox(const std::string& label, bool& flag) =0;
 };
 
-class Manager_traits {
+class CalibModule_traits {
 private:
     const std::string name;
 public:
-    Manager_traits(const std::string& name_) :
+    CalibModule_traits(const std::string& name_) :
         name(name_) {}
-    virtual ~Manager_traits() {}
+    virtual ~CalibModule_traits() {}
     virtual std::string GetName() const { return name; }
 
     virtual std::string GetHistogramName() const =0;
@@ -45,7 +45,7 @@ public:
         bool IgnorePreviousFitParameters = false;
     };
     virtual DoFitReturn_t DoFit(TH1* hist, unsigned channel,
-                                const Manager_traits::DoFitOptions_t& options) =0;
+                                const CalibModule_traits::DoFitOptions_t& options) =0;
     virtual void DisplayFit() =0;
     virtual void StoreFit(unsigned channel) =0;
 

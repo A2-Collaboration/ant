@@ -26,7 +26,7 @@ class Manager {
 
 protected:
 
-    std::shared_ptr<Manager_traits> module;
+    std::shared_ptr<CalibModule_traits> module;
     AvgBuffer<TH1, interval<TID>> buffer;
 
     struct input_file_t {
@@ -68,7 +68,7 @@ public:
 
     Manager(const std::vector<std::string>& inputfiles, unsigned avglength);
 
-    void SetModule(const std::shared_ptr<Manager_traits>& module_) {
+    void SetModule(const std::shared_ptr<CalibModule_traits>& module_) {
         module = move(module_);
     }
 

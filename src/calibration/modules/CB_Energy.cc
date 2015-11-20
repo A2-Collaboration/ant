@@ -49,7 +49,7 @@ unique_ptr<analysis::Physics> CB_Energy::GetPhysicsModule()
                                             cb_detector->GetNChannels());
 }
 
-void CB_Energy::GetGUIs(list<unique_ptr<gui::Manager_traits> >& guis)
+void CB_Energy::GetGUIs(list<unique_ptr<gui::CalibModule_traits> >& guis)
 {
     guis.emplace_back(std_ext::make_unique<GUI_Gains>(
                           GetName(),
@@ -128,8 +128,8 @@ void CB_Energy::GUI_Gains::InitGUI(gui::ManagerWindow_traits* window)
     h_relative->SetYTitle("Relative change / %");
 }
 
-gui::Manager_traits::DoFitReturn_t CB_Energy::GUI_Gains::DoFit(TH1* hist, unsigned channel,
-                                                               const Manager_traits::DoFitOptions_t& options)
+gui::CalibModule_traits::DoFitReturn_t CB_Energy::GUI_Gains::DoFit(TH1* hist, unsigned channel,
+                                                               const CalibModule_traits::DoFitOptions_t& options)
 {
     if(detector->IsIgnored(channel))
         return DoFitReturn_t::Skip;

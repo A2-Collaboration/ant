@@ -114,7 +114,7 @@ unique_ptr<analysis::Physics> TAPSVeto_Energy::GetPhysicsModule()
     return std_ext::make_unique<ThePhysics>(GetName(), tapsveto_detector->GetNChannels());
 }
 
-void TAPSVeto_Energy::GetGUIs(std::list<std::unique_ptr<gui::Manager_traits> >& guis) {
+void TAPSVeto_Energy::GetGUIs(std::list<std::unique_ptr<gui::CalibModule_traits> >& guis) {
     guis.emplace_back(std_ext::make_unique<GUI_Pedestals>(
                           GetName(),
                           Pedestals,

@@ -31,7 +31,7 @@ public:
 
         virtual void InitGUI(gui::ManagerWindow_traits* window) override;
         virtual DoFitReturn_t DoFit(TH1* hist, unsigned channel,
-                                    const Manager_traits::DoFitOptions_t& options) override;
+                                    const CalibModule_traits::DoFitOptions_t& options) override;
         virtual void DisplayFit() override;
         virtual void StoreFit(unsigned channel) override;
         virtual bool FinishSlice() override;
@@ -52,7 +52,7 @@ public:
                       const std::shared_ptr<expconfig::detector::TAPS>& taps,
                       std::shared_ptr<gui::PeakingFitFunction> fitfunction);
         virtual DoFitReturn_t DoFit(TH1* hist, unsigned channel,
-                                    const Manager_traits::DoFitOptions_t& options) override;
+                                    const CalibModule_traits::DoFitOptions_t& options) override;
     protected:
         std::shared_ptr<expconfig::detector::TAPS> taps_detector;
     };
@@ -89,7 +89,7 @@ public:
             double defaultRelativeGain = 1.0);
 
     virtual std::unique_ptr<analysis::Physics> GetPhysicsModule() override;
-    virtual void GetGUIs(std::list<std::unique_ptr<calibration::gui::Manager_traits> >& guis) override;
+    virtual void GetGUIs(std::list<std::unique_ptr<calibration::gui::CalibModule_traits> >& guis) override;
 protected:
 
 

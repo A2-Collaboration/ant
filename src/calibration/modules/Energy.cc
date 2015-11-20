@@ -174,7 +174,7 @@ void Energy::Update(size_t index, const TID& tid)
 Energy::GUI_CalibType::GUI_CalibType(const string& basename, CalibType& type,
                                      const shared_ptr<DataManager>& calmgr,
                                      const shared_ptr<Detector_t>& detector_) :
-    gui::Manager_traits(basename),
+    gui::CalibModule_traits(basename),
     calibType(type),
     calibrationManager(calmgr),
     detector(detector_)
@@ -184,7 +184,7 @@ string Energy::GUI_CalibType::GetName() const
 {
     // serves as the CalibrationID for the manager,
     // and as the histogram name
-    return ConstructName(Manager_traits::GetName(), calibType.Name);
+    return ConstructName(CalibModule_traits::GetName(), calibType.Name);
 }
 
 string Energy::GUI_CalibType::GetHistogramName() const
@@ -265,8 +265,8 @@ void Energy::GUI_Pedestals::InitGUI(gui::ManagerWindow_traits* window)
     canvas = window->AddCalCanvas();
 }
 
-gui::Manager_traits::DoFitReturn_t Energy::GUI_Pedestals::DoFit(TH1* hist, unsigned channel,
-                                                                    const Manager_traits::DoFitOptions_t& options)
+gui::CalibModule_traits::DoFitReturn_t Energy::GUI_Pedestals::DoFit(TH1* hist, unsigned channel,
+                                                                    const CalibModule_traits::DoFitOptions_t& options)
 {
     if(detector->IsIgnored(channel))
         return DoFitReturn_t::Skip;
