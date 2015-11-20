@@ -19,6 +19,7 @@ class CalCanvas;
 class ManagerWindow_traits {
 public:
     virtual gui::CalCanvas* AddCalCanvas(const std::string& name = "") =0;
+    virtual void AddCheckBox(const std::string& label, bool& flag) =0;
 };
 
 class Manager_traits {

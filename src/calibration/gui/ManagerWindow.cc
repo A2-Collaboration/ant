@@ -251,7 +251,10 @@ void ManagerWindow::CreateToolbar(TGVerticalFrame* frame)
     frame->AddFrame(progress_channel, layout_frm);
     frame->AddFrame(progress_slice, layout_frm);
 
-
+    // for now, just use the frm2 as some place for
+    // the extra check buttons
+    // from the modules
+    frame_extraflags = frm2;
 }
 
 void ManagerWindow::UpdateLayout()
@@ -320,9 +323,8 @@ ManagerWindow::ManagerWindow(Manager* manager_) :
 
     AddFrame(frame, new TGLayoutHints(kLHintsExpandX | kLHintsExpandY));
 
-
     AddInput(kKeyPressMask | kKeyReleaseMask);
-    UpdateLayout();
+
 
     // set focus
     gVirtualX->SetInputFocus(GetId());
@@ -330,6 +332,10 @@ ManagerWindow::ManagerWindow(Manager* manager_) :
     // after everthing is setup,
     // init the manager
     manager->InitGUI(this);
+
+    // InitGUI might have called AddCheckBox or similar
+    // so update their layout as very last step
+    UpdateLayout();
 }
 
 Bool_t ManagerWindow::HandleKey(Event_t* event) {
@@ -372,6 +378,13 @@ CalCanvas* ManagerWindow::AddCalCanvas(const string& name) {
     }
     canvases.push_back(canvas);
     return canvas;
+}
+
+void ManagerWindow::AddCheckBox(const string& label, bool& flag)
+{
+    auto btn = new ActionWidget<TGCheckButton>(frame_extraflags, label.c_str());
+    btn->LinkFlag(flag);
+    frame_extraflags->AddFrame(btn, new TGLayoutHints(kLHintsLeft,2,2,2,2));
 }
 
 void ManagerWindow::SetProgressMax(unsigned slices, unsigned channels)

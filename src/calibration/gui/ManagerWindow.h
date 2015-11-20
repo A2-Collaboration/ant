@@ -45,6 +45,7 @@ class ManagerWindow : public TGMainFrame, public ManagerWindow_traits
 private:
     std::list<CalCanvas*> canvases;
     TGHorizontalFrame* frame_canvases = nullptr;
+    TGHorizontalFrame* frame_extraflags = nullptr;
 
     TGStatusBar* statusbar = nullptr;
     ProgressBar* progress_channel = nullptr;
@@ -66,6 +67,7 @@ public:
     virtual Bool_t HandleKey(Event_t *event) override;
     virtual ~ManagerWindow();
     virtual gui::CalCanvas* AddCalCanvas(const std::string& name = "") override;
+    virtual void AddCheckBox(const std::string &label, bool &flag) override;
 
     ManagerWindowMode Mode;
 
