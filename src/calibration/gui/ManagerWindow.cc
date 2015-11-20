@@ -378,6 +378,8 @@ CalCanvas* ManagerWindow::AddCalCanvas(const string& name) {
 
 void ManagerWindow::AddCheckBox(const string& label, bool& flag)
 {
+    if(gROOT->IsBatch())
+        return;
     auto btn = new ActionWidget<TGCheckButton>(frame_extraflags, label.c_str());
     btn->LinkFlag(flag);
     frame_extraflags->AddFrame(btn, new TGLayoutHints(kLHintsLeft,2,2,2,2));
