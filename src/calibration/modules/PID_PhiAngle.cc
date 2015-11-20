@@ -206,7 +206,7 @@ void PID_PhiAngle::TheGUI::InitGUI(gui::ManagerWindow_traits* window)
     canvas = window->AddCalCanvas();
 }
 
-void PID_PhiAngle::TheGUI::StartRange(const interval<TID>& range)
+void PID_PhiAngle::TheGUI::StartSlice(const interval<TID>& range)
 {
     // ask the detector for some reasonable starting values
     angles.resize(GetNumberOfChannels());
@@ -291,7 +291,7 @@ void PID_PhiAngle::TheGUI::StoreFit(unsigned channel)
 //    return y;
 //}
 
-bool PID_PhiAngle::TheGUI::FinishRange()
+bool PID_PhiAngle::TheGUI::FinishSlice()
 {
    h_result = new TGraph(GetNumberOfChannels());
 
@@ -324,7 +324,7 @@ bool PID_PhiAngle::TheGUI::FinishRange()
    return true;
 }
 
-void PID_PhiAngle::TheGUI::StoreFinishRange(const interval<TID>& range)
+void PID_PhiAngle::TheGUI::StoreFinishSlice(const interval<TID>& range)
 {
     delete h_result;
 

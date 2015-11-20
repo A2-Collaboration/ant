@@ -152,7 +152,7 @@ bool Manager::DoInit()
         return false;
     }
 
-    module->StartRange(buffer.CurrentID());
+    module->StartSlice(buffer.CurrentID());
     return true;
 }
 
@@ -195,7 +195,7 @@ Manager::RunReturn_t Manager::Run()
     {
         if(!state.breakpoint_finish) {
             VLOG(7) << "Finish module";
-            state.breakpoint_finish = module->FinishRange();
+            state.breakpoint_finish = module->FinishSlice();
             state.slice++;
             if(!window->Mode.autoFinish && state.breakpoint_finish) {
                 VLOG(7) << "Displaying finished range...";
@@ -204,7 +204,7 @@ Manager::RunReturn_t Manager::Run()
             }
         }
 
-        module->StoreFinishRange(buffer.CurrentID());
+        module->StoreFinishSlice(buffer.CurrentID());
         window->SetFinishMode(false);
         state.breakpoint_finish = false;
         state.channel = 0;
@@ -219,7 +219,7 @@ Manager::RunReturn_t Manager::Run()
             return RunReturn_t::Exit;
         }
 
-        module->StartRange(buffer.CurrentID());
+        module->StartSlice(buffer.CurrentID());
 
     }
     else

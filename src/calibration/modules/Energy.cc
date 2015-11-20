@@ -197,7 +197,7 @@ unsigned Energy::GUI_CalibType::GetNumberOfChannels() const
     return detector->GetNChannels();
 }
 
-void Energy::GUI_CalibType::StartRange(const interval<TID>& range)
+void Energy::GUI_CalibType::StartSlice(const interval<TID>& range)
 {
     // always make sure the values are large enough
     std::vector<double>& values = calibType.Values;
@@ -222,7 +222,7 @@ void Energy::GUI_CalibType::StartRange(const interval<TID>& range)
 
 }
 
-void Energy::GUI_CalibType::StoreFinishRange(const interval<TID>& range)
+void Energy::GUI_CalibType::StoreFinishSlice(const interval<TID>& range)
 {
     TCalibrationData cdata(
                 GetName(),
@@ -316,7 +316,7 @@ void Energy::GUI_Pedestals::StoreFit(unsigned channel)
     fitParameters[channel] = func->Save();
 }
 
-bool Energy::GUI_Pedestals::FinishRange()
+bool Energy::GUI_Pedestals::FinishSlice()
 {
     return false;
 }

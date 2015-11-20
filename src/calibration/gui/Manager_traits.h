@@ -35,7 +35,7 @@ public:
 
     virtual void InitGUI(gui::ManagerWindow_traits* window) =0;
 
-    virtual void StartRange(const interval<TID>& range) =0;
+    virtual void StartSlice(const interval<TID>& range) =0;
 
     enum class DoFitReturn_t {
         Next, Display, Skip
@@ -48,8 +48,8 @@ public:
     virtual void DisplayFit() =0;
     virtual void StoreFit(unsigned channel) =0;
 
-    virtual bool FinishRange() =0;
-    virtual void StoreFinishRange(const interval<TID>& range) =0;
+    virtual bool FinishSlice() =0;
+    virtual void StoreFinishSlice(const interval<TID>& range) =0;
 };
 
 

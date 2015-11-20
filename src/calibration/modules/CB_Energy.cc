@@ -200,7 +200,7 @@ void CB_Energy::GUI_Gains::StoreFit(unsigned channel)
     h_relative->SetBinContent(channel+1, relative_change);
 }
 
-bool CB_Energy::GUI_Gains::FinishRange()
+bool CB_Energy::GUI_Gains::FinishSlice()
 {
     canvas->Clear();
     canvas->Divide(2,2);

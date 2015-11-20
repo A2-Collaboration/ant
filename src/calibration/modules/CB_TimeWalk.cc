@@ -209,7 +209,7 @@ void CB_TimeWalk::TheGUI::InitGUI(gui::ManagerWindow_traits* window)
     c_extra = window->AddCalCanvas();
 }
 
-void CB_TimeWalk::TheGUI::StartRange(const interval<TID>& range)
+void CB_TimeWalk::TheGUI::StartSlice(const interval<TID>& range)
 {
 
     TCalibrationData cdata;
@@ -266,13 +266,13 @@ void CB_TimeWalk::TheGUI::StoreFit(unsigned channel)
     LOG(INFO) << "Stored Ch=" << channel;
 }
 
-bool CB_TimeWalk::TheGUI::FinishRange()
+bool CB_TimeWalk::TheGUI::FinishSlice()
 {
     // don't request stop...
     return false;
 }
 
-void CB_TimeWalk::TheGUI::StoreFinishRange(const interval<TID>& range)
+void CB_TimeWalk::TheGUI::StoreFinishSlice(const interval<TID>& range)
 {
     TCalibrationData cdata(
                 GetName(),

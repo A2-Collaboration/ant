@@ -212,7 +212,7 @@ void Time::TheGUI::InitGUI(gui::ManagerWindow_traits* window)
     timePeaks->SetYTitle("Peak position [ns]");
 }
 
-void Time::TheGUI::StartRange(const interval<TID>& range)
+void Time::TheGUI::StartSlice(const interval<TID>& range)
 {
     offsets = defaultOffsets;
     TCalibrationData cdata;
@@ -299,7 +299,7 @@ void Time::TheGUI::StoreFit(unsigned channel)
     theCanvas->Update();
 }
 
-bool Time::TheGUI::FinishRange()
+bool Time::TheGUI::FinishSlice()
 {
     theCanvas->Clear();
     theCanvas->cd();
@@ -313,7 +313,7 @@ bool Time::TheGUI::FinishRange()
     return true;
 }
 
-void Time::TheGUI::StoreFinishRange(const interval<TID>& range)
+void Time::TheGUI::StoreFinishSlice(const interval<TID>& range)
 {
     theCanvas->Clear();
     theCanvas->Update();

@@ -231,7 +231,7 @@ void TAPS_ShortEnergy::GUI_Gains::StoreFit(unsigned channel)
     h_relative->SetBinContent(channel+1, relative_change);
 }
 
-bool TAPS_ShortEnergy::GUI_Gains::FinishRange()
+bool TAPS_ShortEnergy::GUI_Gains::FinishSlice()
 {
     canvas->Clear();
     canvas->Divide(2,2);

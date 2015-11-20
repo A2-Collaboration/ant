@@ -84,8 +84,8 @@ protected:
         virtual std::string GetHistogramName() const override;
         virtual unsigned GetNumberOfChannels() const override;
 
-        virtual void StartRange(const interval<TID>& range) override;
-        virtual void StoreFinishRange(const interval<TID>& range) override;
+        virtual void StartSlice(const interval<TID>& range) override;
+        virtual void StoreFinishSlice(const interval<TID>& range) override;
 
         static std::string ConstructName(const std::string& basename, const std::string& type_name) {
             return basename+"/"+type_name;
@@ -114,7 +114,7 @@ protected:
                                     const Manager_traits::DoFitOptions_t& options) override;
         virtual void DisplayFit() override;
         virtual void StoreFit(unsigned channel) override;
-        virtual bool FinishRange() override;
+        virtual bool FinishSlice() override;
     protected:
         std::shared_ptr<gui::PeakingFitFunction> func;
         gui::CalCanvas* canvas;

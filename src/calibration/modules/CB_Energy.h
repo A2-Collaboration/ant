@@ -32,7 +32,7 @@ public:
                                     const Manager_traits::DoFitOptions_t& options) override;
         virtual void DisplayFit() override;
         virtual void StoreFit(unsigned channel) override;
-        virtual bool FinishRange() override;
+        virtual bool FinishSlice() override;
     protected:
         std::shared_ptr<gui::FitGausPol3> func;
         gui::CalCanvas* canvas;

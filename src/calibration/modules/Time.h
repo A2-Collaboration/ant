@@ -54,13 +54,13 @@ public:
         virtual unsigned GetNumberOfChannels() const override;
         virtual void InitGUI(gui::ManagerWindow_traits* window) override;
 
-        virtual void StartRange(const interval<TID>& range) override;
+        virtual void StartSlice(const interval<TID>& range) override;
         virtual DoFitReturn_t DoFit(TH1* hist, unsigned channel,
                                     const Manager_traits::DoFitOptions_t& options) override;
         virtual void DisplayFit() override;
         virtual void StoreFit(unsigned channel) override;
-        virtual bool FinishRange() override;
-        virtual void StoreFinishRange(const interval<TID>& range) override;
+        virtual bool FinishSlice() override;
+        virtual void StoreFinishSlice(const interval<TID>& range) override;
     }; // TheGUI
 
     class ThePhysics : public analysis::Physics {
