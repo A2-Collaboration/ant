@@ -199,6 +199,7 @@ unsigned Energy::GUI_CalibType::GetNumberOfChannels() const
 
 void Energy::GUI_CalibType::InitGUI(gui::ManagerWindow_traits* window) {
     window->AddCheckBox("Ignore prev fit params", IgnorePreviousFitParameters);
+    window->AddCheckBox("Use params from prev slice", UsePreviousSliceParams);
 }
 
 void Energy::GUI_CalibType::StartSlice(const interval<TID>& range)
@@ -212,10 +213,17 @@ void Energy::GUI_CalibType::StartSlice(const interval<TID>& range)
         for(const TKeyValue<double>& kv : cdata.Data) {
             values[kv.Key] = kv.Value;
         }
-        for(const TKeyValue<vector<double>>& kv : cdata.FitParameters) {
-            fitParameters.insert(make_pair(kv.Key, kv.Value));
-        }
         LOG(INFO) << GetName() << ": Loaded previous values from database";
+
+        if(fitParameters.empty() || !UsePreviousSliceParams) {
+            for(const TKeyValue<vector<double>>& kv : cdata.FitParameters) {
+                fitParameters.insert(make_pair(kv.Key, kv.Value));
+            }
+            LOG(INFO) << GetName() << ": Loaded previous fit parameter from database";
+        }
+        else if(!fitParameters.empty()) {
+            LOG(INFO) << GetName() << ": Using fit parameters from previous slice";
+        }
     }
     else {
         LOG(INFO) << GetName() << ": No previous values found, built from default value";

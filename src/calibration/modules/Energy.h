@@ -102,6 +102,7 @@ protected:
         std::vector<double> previousValues;
 
         bool IgnorePreviousFitParameters = false;
+        bool UsePreviousSliceParams = false;
     }; // GUI_CalibType
 
 
