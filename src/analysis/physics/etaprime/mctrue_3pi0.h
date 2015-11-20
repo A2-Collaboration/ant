@@ -41,6 +41,7 @@ protected:
 
     ant::analysis::utils::ParticleVars proton;
     std::vector<ant::analysis::utils::ParticleVars> pi0s;
+    std::vector<double> popens;
     std::vector<ant::analysis::utils::ParticleVars> gammas;
 
     std::vector<double> GetAllPhotonAngles(const data::ParticleList& photons) const;

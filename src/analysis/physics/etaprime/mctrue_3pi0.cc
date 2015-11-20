@@ -20,13 +20,15 @@ using namespace ant::analysis::physics;
 std::vector<double> McTrue3Pi0::GetAllPhotonAngles(const ParticleList& photons) const
 {
     vector<double> angles((photons.size() * (photons.size() - 1)) / 2);
+    unsigned index = 0;
     for ( unsigned i = 0 ; i < photons.size() ; ++i )
         for ( unsigned j = i + 1 ; j < photons.size() ; ++j)
         {
             TVector3 ph_i(photons.at(i)->Vect());
             TVector3 ph_j(photons.at(j)->Vect());
 
-            angles.push_back(ph_i.Angle(ph_j));
+            angles.at(index) = ph_i.Angle(ph_j);
+            index++;
         }
     return angles;
 }
@@ -34,6 +36,7 @@ std::vector<double> McTrue3Pi0::GetAllPhotonAngles(const ParticleList& photons) 
 McTrue3Pi0::McTrue3Pi0(const std::string& name, PhysOptPtr opts) :
     Physics(name, opts),
     pi0s(3),
+    popens(3),
     gammas(6)
 {
     mcTrue = HistFac.makeTTree("mcTrue");
@@ -43,8 +46,11 @@ McTrue3Pi0::McTrue3Pi0(const std::string& name, PhysOptPtr opts) :
         pi0s.at(i).SetBranches(mcTrue,formatter() << "pi0_" << i );
     for (int i = 0 ; i < 6 ; ++i)
         gammas.at(i).SetBranches(mcTrue,formatter() << "gamma_" << i );
+    mcTrue->Branch("p0open",addressof(popens.at(0)));
+    mcTrue->Branch("p1open",addressof(popens.at(1)));
+    mcTrue->Branch("p2open",addressof(popens.at(2)));
 
-    hAngle = HistFac.makeTH1D("Photon Angles","#alpha [#circ]","#",BinSettings(100,0,30));
+    hAngle = HistFac.makeTH1D("Photon Angles","#alpha [#circ]","#",BinSettings(180));
 }
 
 
@@ -60,7 +66,10 @@ void McTrue3Pi0::ProcessEvent(const data::Event& event)
     {
         proton = ParticleVars(*(protons.at(0)));
         for (int i = 0 ; i < 3 ; ++i)
+        {
             pi0s.at(i) = ParticleVars(*(pions.at(i)));
+            popens.at(i) = photons.at(2*i)->Vect().Angle(photons.at(2*i+1)->Vect()) * TMath::RadToDeg();
+        }
         for (int i = 0 ; i < 6 ; ++i)
             gammas.at(i) = ParticleVars(*photons.at(i));
     }
