@@ -1,5 +1,6 @@
 #include "physics/common/DataOverview.h"
 #include "plot/root_draw.h"
+#include "expconfig/ExpConfig.h"
 
 
 using namespace std;
@@ -80,5 +81,75 @@ void DataOverview::ShowResult()
             << endc;
 }
 
+
+
+TaggerOverview::TaggerOverview(const string &name, PhysOptPtr opts):
+    Physics(name, opts)
+{
+    const BinSettings bins_hits(50);
+    const BinSettings bins_energy(200, 1400, 1600);
+    const BinSettings bins_channels(47);
+    const BinSettings bins_times(1000,-50,50);
+
+//    const auto setup = ExpConfig::Setup::GetLastFound();
+//    const auto tagger = setup ? setup->GetDetector<TaggerDetector_t>() : nullptr;
+
+//    if(!tagger) {
+//        throw std::runtime_error("No Tagger in Setup!");
+//    }
+
+//    const BinSettings bins_channels(tagger->GetNChannels());
+
+//    const auto Emin   = tagger->GetPhotonEnergy(0);
+//    const auto Emax   = tagger->GetPhotonEnergy(tagger->GetNChannels()-1);
+//    const auto width  = (Emax - Emin)/tagger->GetNChannels();
+
+//    const BinSettings bins_energy(tagger->GetNChannels(), Emin-width/2, Emax+width/2);
+
+    nHitsEvent = HistFac.makeTH1D("Tagger Hits / Enent", "# Hits/Event",   "",     bins_hits,    "TaggerHitsPerEvent");
+    nHitsEvent->SetFillColor(kRed);
+
+    Channels   = HistFac.makeTH1D("Tagger Channels hit", "Channel Number", "Hits", bins_channels," TaggerChannels");
+    Channels->SetFillColor(kYellow);
+
+    Energies   = HistFac.makeTH1D("Tagged Photon Energies", "E_{#gamma,tag} [MeV]", "", bins_energy, "TaggedEnergies");
+    Energies->SetFillColor(kBlue);
+
+    Times      = HistFac.makeTH1D("Tagger Hit Times", "Time [ns]", "", bins_times, "TaggedTimes");
+    Times->SetFillColor(kGreen);
+
+    channel_correlation = HistFac.makeTH2D("Tagger Channel Correlation","Channel", "Channel", bins_channels, bins_channels, "ChannelCorreleation");
+}
+
+void TaggerOverview::ProcessEvent(const Event &event)
+{
+    const auto taggerhits = event.Reconstructed().TaggerHits();
+    for(auto hit=taggerhits.cbegin(); hit!=taggerhits.cend(); ++hit) {
+        Channels->Fill((*hit)->Channel());
+        Energies->Fill((*hit)->PhotonEnergy());
+        Times->Fill((*hit)->Time());
+
+        for(auto hit2 = next(hit); hit2!=taggerhits.cend(); ++hit2) {
+            channel_correlation->Fill((*hit)->Channel(), (*hit2)->Channel());
+            channel_correlation->Fill((*hit2)->Channel(), (*hit)->Channel());
+        }
+    }
+    nHitsEvent->Fill(event.Reconstructed().TaggerHits().size());
+}
+
+void TaggerOverview::ShowResult()
+{
+    canvas(this->GetName())
+            << nHitsEvent
+            << Channels
+            << Energies
+            << Times
+            << drawoption("colz") << channel_correlation
+            << endc;
+
+}
+
+
 AUTO_REGISTER_PHYSICS(DataOverview)
+AUTO_REGISTER_PHYSICS(TaggerOverview)
 

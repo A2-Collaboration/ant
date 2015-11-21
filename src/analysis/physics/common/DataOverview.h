@@ -39,6 +39,22 @@ public:
     void ShowResult();
 };
 
+class TaggerOverview : public Physics {
+protected:
+    TH1D* nHitsEvent = nullptr;
+    TH1D* Channels   = nullptr;
+    TH1D* Energies   = nullptr;
+    TH1D* Times      = nullptr;
+
+    TH2D* channel_correlation = nullptr;
+
+public:
+    TaggerOverview(const std::string& name, PhysOptPtr opts);
+
+    void ProcessEvent(const data::Event &event) override;
+    void ShowResult() override;
+};
+
 }
 }
 }
