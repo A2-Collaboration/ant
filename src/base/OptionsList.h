@@ -22,6 +22,8 @@ public:
     std::string GetOption(const std::string& key) const;
     bool IsFlagSet(const std::string& key) const;
 
+    std::string Flatten() const;
+
     template <typename T>
     T Get(const std::string& key, const T& def_value) const {
         const auto& v = GetOption(key);

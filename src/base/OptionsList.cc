@@ -64,6 +64,22 @@ bool OptionsList::IsFlagSet(const string& key) const
     return false;
 }
 
+string OptionsList::Flatten() const
+{
+    auto strptrcmp = [] (const string* s1, const string* s2) { return *s1 == *s2; };
+    std::map<const string*, const string*, decltype (strptrcmp)> m(strptrcmp);
+
+    for(const auto& entry : options) {
+        m[addressof(entry.first)] = addressof(entry.second);
+    }
+
+    stringstream s;
+    for(const auto& e : m) {
+        s << *e.first << "=" << *e.second <<":";
+    }
+    return s.str();
+}
+
 template<>
 double ant::OptionsList::Get<double>(const string& key, const double& def_value) const
 {
