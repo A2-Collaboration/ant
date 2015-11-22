@@ -1,7 +1,7 @@
 #include "physics/common/DataOverview.h"
 #include "plot/root_draw.h"
 #include "expconfig/ExpConfig.h"
-
+#include <cassert>
 
 using namespace std;
 using namespace ant;
@@ -9,88 +9,9 @@ using namespace ant::analysis;
 using namespace ant::analysis::physics;
 using namespace ant::analysis::data;
 
-DataOverview::OverviewSet::OverviewSet(SmartHistFactory &factory, const string &title)
-{
-    SmartHistFactory myfac(title, factory);
-
-    TaggerChannel = myfac.makeHist<int>("Tagger Channel ("+title+")","Channel","",BinSettings(400),"taggerchannel");
-    PhotonEnergy  = myfac.makeHist<double>("Tagger Spectrum (Photon Energy) ("+title+")","E_{Beam} [MeV]","",BinSettings(2000),"taggerspectrum");
-    TaggedTime    = myfac.makeHist<double>("Tagged Time ("+title+")","t [ns]","",BinSettings(1000,-100,100),"taggedtime");
-
-    nParticles    = myfac.makeHist<int>("Number of particles/event ("+title+")","Particles/Event","",BinSettings(16),"nParticles");
-    ParticleTypes = myfac.makeHist<string>("Particle Types ("+title+")","Particle Type","#",BinSettings(1),"ParticleTypes");
-
-    CBEnergySum   = myfac.makeHist<double>("CB Energy Sum ("+title+")","E_{CB} [MeV]","",BinSettings(1600),"CBEsum");
-
-
-}
-
-void DataOverview::OverviewSet::Fill(const Event::Data &dataset)
-{
-    for(auto& taggerhit : dataset.TaggerHits() ) {
-        TaggerChannel.Fill(taggerhit->Channel());
-        PhotonEnergy.Fill(taggerhit->PhotonEnergy());
-        TaggedTime.Fill(taggerhit->Time());
-    }
-
-    nParticles.Fill(dataset.Particles().GetAll().size());
-    for(auto& particle : dataset.Particles().GetAll()) {
-        ParticleTypes.Fill(particle->Type().PrintName());
-    }
-
-    CBEnergySum.Fill(dataset.TriggerInfos().CBEenergySum());
-}
-
-
-
-DataOverview::DataOverview(const std::string& name, PhysOptPtr opts):
-    Physics(name, opts),
-    reconstructed(HistFac, "reconstructed"),
-    mctrue(HistFac,"mctrue")
-{
-}
-
-void DataOverview::ProcessEvent(const Event &event)
-{
-    reconstructed.Fill(event.Reconstructed());
-    mctrue.Fill(event.MCTrue());
-}
-
-
-void DataOverview::Finish()
-{
-
-}
-
-
-void DataOverview::ShowResult()
-{
-    canvas("DataOverview: Tagger")
-            << reconstructed.TaggerChannel << mctrue.TaggerChannel
-            << reconstructed.TaggedTime    << mctrue.TaggedTime
-            << reconstructed.PhotonEnergy  << mctrue.PhotonEnergy
-            << endc;
-
-    canvas("DataOverview: Particle Stats")
-            << reconstructed.nParticles    << mctrue.nParticles
-            << reconstructed.ParticleTypes << mctrue.ParticleTypes
-            << endc;
-
-    canvas("DataOverview: TriggerInfo")
-            << reconstructed.CBEnergySum   << mctrue.CBEnergySum
-            << endc;
-}
-
-
-
-
-
 TaggerOverview::TaggerOverview(const string &name, PhysOptPtr opts):
     DataOverviewBase(name, opts)
 {
-
-
-
     const BinSettings bins_hits(50);
     const BinSettings bins_energy(200, 1400, 1600);
     const BinSettings bins_channels(47);
@@ -124,6 +45,10 @@ TaggerOverview::TaggerOverview(const string &name, PhysOptPtr opts):
     Times->SetFillColor(kGreen);
 
     channel_correlation = HistFac.makeTH2D("Tagger Channel Correlation","Channel", "Channel", bins_channels, bins_channels, "ChannelCorreleation");
+}
+
+TaggerOverview::~TaggerOverview()
+{
 }
 
 void TaggerOverview::ProcessEvent(const Event &event)
@@ -178,6 +103,104 @@ string DataOverviewBase::GetMode() const
         return "MCTrue";
 }
 
-AUTO_REGISTER_PHYSICS(DataOverview)
+const Event::Data &DataOverviewBase::GetBranch(const Event &event) const
+{
+   return (mode == Mode::Reconstructed) ? event.Reconstructed() : event.MCTrue();
+}
+
+
+TriggerOverview::TriggerOverview(const string &name, PhysOptPtr opts):
+    DataOverviewBase(name, opts)
+{
+    const BinSettings bins_errors(100);
+    const BinSettings bins_multiplicity(10);
+    const BinSettings bins_energy(1600);
+
+    CBESum       = HistFac.makeTH1D("CB Energy Sum",  "CB Energy Sum [MeV]", "", bins_energy,      "CBESum");
+    Multiplicity = HistFac.makeTH1D("Multiplicity",   "# Hits",              "", bins_multiplicity,"Multiplicity");
+    nErrorsEvent = HistFac.makeTH1D("Errors / Event", "# errors",            "", bins_errors,      "nErrrorsEvent");
+}
+
+TriggerOverview::~TriggerOverview()
+{}
+
+void TriggerOverview::ProcessEvent(const Event &event)
+{
+    const auto TriggerInfo = GetBranch(event).TriggerInfos();
+
+    CBESum->Fill(TriggerInfo.CBEenergySum());
+    Multiplicity->Fill(TriggerInfo.Multiplicity());
+    nErrorsEvent->Fill(TriggerInfo.Errors().size());
+}
+
+void TriggerOverview::ShowResult()
+{
+    canvas(this->GetName()+" "+GetMode())
+            << CBESum
+            << Multiplicity
+            << nErrorsEvent
+            << endc;
+}
+
+
+
+void ParticleOverview::SetBinLabels(TH1D *hist, const ParticleTypeDatabase::TypeList_t &types)
+{
+    assert(int(types.size()) <= hist->GetNbinsX());
+    int i=1;
+    for(const auto& type : types) {
+        hist->GetXaxis()->SetBinLabel(i++, type->PrintName().c_str());
+    }
+}
+
+ParticleOverview::ParticleOverview(const string &name, PhysOptPtr opts):
+    DataOverviewBase(name, opts)
+{
+    const BinSettings bins_particles(15);
+
+    nParticles    = HistFac.makeTH1D("Particles / Event", "# Particles", "", bins_particles, "nParticles");
+    particleTypes = HistFac.makeTH1D("Particle Types",    "Type",        "", BinSettings(unsigned(ParticleTypeDatabase::DetectableTypes().size())), "ParticleTypes");
+    SetBinLabels(particleTypes, ParticleTypeDatabase::DetectableTypes());
+
+    for(const ParticleTypeDatabase::Type* type : ParticleTypeDatabase::DetectableTypes()) {
+        nType[type] = HistFac.makeTH1D(type->PrintName() + " / Event", "# Particles", "", bins_particles, type->PrintName());
+    }
+}
+
+ParticleOverview::~ParticleOverview()
+{
+
+}
+
+void ParticleOverview::ProcessEvent(const Event &event)
+{
+    const auto& particles = GetBranch(event).Particles().GetAll();
+    nParticles->Fill(particles.size());
+
+    for(const auto& p : particles) {
+        particleTypes->Fill(p->Type().PrintName().c_str(), 1.0);
+    }
+
+    for(const ParticleTypeDatabase::Type* type : ParticleTypeDatabase::DetectableTypes()) {
+        nType[type]->Fill(GetBranch(event).Particles().Get(*type).size());
+    }
+}
+
+void ParticleOverview::ShowResult()
+{
+    canvas c(GetName());
+
+    c << nParticles
+      << particleTypes;
+
+    for(const auto& entry : nType) {
+        c<< entry.second;
+    }
+
+    c  << endc;
+}
+
+AUTO_REGISTER_PHYSICS(ParticleOverview)
 AUTO_REGISTER_PHYSICS(TaggerOverview)
+AUTO_REGISTER_PHYSICS(TriggerOverview)
 

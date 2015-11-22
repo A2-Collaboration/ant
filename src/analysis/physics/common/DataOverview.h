@@ -9,49 +9,39 @@ namespace ant {
 namespace analysis {
 namespace physics {
 
+
+/**
+ * @brief Base class for DataOverview physics
+ *
+ * Options:
+ *    Mode = [ MCTrue | Reconstructed ] : Analyse mc true or reconstructed data branch.
+ *         The default is "Reconstructed".
+ */
 class DataOverviewBase : public Physics {
 protected:
 
     enum class Mode { MCTrue, Reconstructed };
 
     Mode mode = Mode::Reconstructed;
+
+    /**
+     * @brief Get a string representation of the current mode
+     * @return "MCTrue" or "Reconstructed"
+     */
     std::string GetMode() const;
+
+    const data::Event::Data& GetBranch(const data::Event& event) const;
 
 public:
     DataOverviewBase(const std::string& name, PhysOptPtr opts);
     virtual ~DataOverviewBase();
 };
 
-class DataOverview : public Physics {
-protected:
-    class OverviewSet {
-    public:
-        SmartHist1<int> TaggerChannel;
-        SmartHist1<double> PhotonEnergy;
-        SmartHist1<double> TaggedTime;
-
-        SmartHist1<int> nParticles;
-
-        SmartHist1<double> CBEnergySum;
-
-        SmartHist1<std::string> ParticleTypes;
-
-        OverviewSet(SmartHistFactory& factory, const std::string& title);
-
-        void Fill(const data::Event::Data& dataset);
-    };
-
-    OverviewSet reconstructed;
-    OverviewSet mctrue;
-
-public:
-    DataOverview(const std::string& name, PhysOptPtr opts);
-
-    void ProcessEvent(const data::Event &event);
-    void Finish();
-    void ShowResult();
-};
-
+/**
+ * @brief Physics class to show Tagger related infos
+ *
+ *  See class DataOverview for available options
+ */
 class TaggerOverview : public DataOverviewBase {
 protected:
     TH1D* nHitsEvent = nullptr;
@@ -63,6 +53,44 @@ protected:
 
 public:
     TaggerOverview(const std::string& name, PhysOptPtr opts);
+    virtual ~TaggerOverview();
+
+    void ProcessEvent(const data::Event &event) override;
+    void ShowResult() override;
+};
+
+/**
+  * @brief Physics class to show Trigger and general event infos
+  *
+  * See class DataOverview for available options
+  */
+class TriggerOverview : public DataOverviewBase {
+protected:
+    TH1D* CBESum       = nullptr;
+    TH1D* Multiplicity = nullptr;
+    TH1D* nErrorsEvent = nullptr;
+    ///@todo Add histograms for Error Codes and ModuleIDs ?
+
+public:
+    TriggerOverview(const std::string& name, PhysOptPtr opts);
+    virtual ~TriggerOverview();
+
+    void ProcessEvent(const data::Event &event) override;
+    void ShowResult() override;
+};
+
+class ParticleOverview: public DataOverviewBase {
+protected:
+    TH1D* nParticles    = nullptr;
+    TH1D* particleTypes = nullptr;
+
+    std::map<const ParticleTypeDatabase::Type*, TH1D*> nType;
+
+    static void SetBinLabels(TH1D* hist, const ParticleTypeDatabase::TypeList_t& types);
+
+public:
+    ParticleOverview(const std::string& name, PhysOptPtr opts);
+    virtual ~ParticleOverview();
 
     void ProcessEvent(const data::Event &event) override;
     void ShowResult() override;
