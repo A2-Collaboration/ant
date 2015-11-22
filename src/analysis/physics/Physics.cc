@@ -21,7 +21,9 @@ Physics::Physics(const string &name, PhysOptPtr opts):
     name_(name),
     options(opts),
     HistFac(name)
-{}
+{
+    HistFac.SetDirDescription(opts->Flatten());
+}
 
 void Physics::Initialize(data::Slowcontrol&)
 {
