@@ -34,17 +34,41 @@ string SmartHistFactory::MakeTitle(const string& title)
     return title_prefix+": "+title;
 }
 
-SmartHistFactory::SmartHistFactory(const string &directory_name, TDirectory* root, const string& title_prefix_)
-  : dir(), base_factory(), title_prefix(title_prefix_)
+TDirectory *SmartHistFactory::mkDirNumbered(const string &name, TDirectory *rootdir)
+{
+    TDirectory* dir = nullptr;
+
+    unsigned n=0;
+    do {
+        const string dn = (n!=0) ? name+to_string(n) : name;
+        ++n;
+
+        rootdir->GetObject(dn.c_str(), dir);
+
+        if(!dir) {
+
+            dir = rootdir->mkdir(dn.c_str());
+
+            if(!dir)
+                throw("Can't create output directory \"" + dn +"\"");
+        } else {
+            dir = nullptr;
+        }
+
+    } while(dir==nullptr);
+
+    return dir;
+}
+
+SmartHistFactory::SmartHistFactory(const string &directory_name, TDirectory* root, const string& title_prefix_):
+    title_prefix(title_prefix_)
 {
 
     if(!root)
         root=gDirectory;
 
-    dir = root->mkdir(directory_name.c_str());
+    dir = mkDirNumbered(directory_name, root);
 
-    if(!dir)
-        dir=gDirectory;
 }
 
 
@@ -59,6 +83,11 @@ SmartHistFactory::SmartHistFactory(const string &directory_name, const SmartHist
 void SmartHistFactory::SetTitlePrefix(const string& title_prefix_)
 {
     title_prefix = title_prefix_;
+}
+
+void SmartHistFactory::SetDirDescription(const string &desc)
+{
+    dir->SetTitle(desc.c_str());
 }
 
 

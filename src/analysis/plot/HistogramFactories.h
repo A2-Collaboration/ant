@@ -18,9 +18,9 @@ namespace analysis {
 class SmartHistFactory {
 private:
 
-    TDirectory* dir;
+    TDirectory* dir = nullptr;
 
-    TDirectory *goto_dir();
+    TDirectory* goto_dir();
     void restore_dir(TDirectory* dir);
 
     HistogramFactory base_factory;
@@ -29,6 +29,14 @@ private:
 
     std::string MakeTitle(const std::string& title);
 
+    /**
+     * @brief create a new TDirectory. If a TDirectory already exists, append a number (1, 2, 3, ...) at the end
+     * @param name Name of the directory to create
+     * @param rootdir where to create
+     * @return new created directory
+     */
+    static TDirectory* mkDirNumbered(const std::string& name, TDirectory* rootdir);
+
 
 public:
     SmartHistFactory(const std::string& directory_name, TDirectory* root=nullptr, const std::string& title_prefix_ = "");
@@ -36,6 +44,7 @@ public:
 
     void SetRootDir(TDirectory* root_dir=nullptr);
     void SetTitlePrefix(const std::string& title_prefix_);
+    void SetDirDescription(const std::string& desc);
 
 
     template<class Hist = TH1D>
