@@ -48,6 +48,12 @@ protected:
 
     TH2D* channel_correlation = nullptr;
 
+    enum class Mode { MCTrue, Reconstructed };
+
+    Mode mode = Mode::Reconstructed;
+
+    std::string GetMode() const;
+
 public:
     TaggerOverview(const std::string& name, PhysOptPtr opts);
 

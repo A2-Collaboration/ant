@@ -83,9 +83,25 @@ void DataOverview::ShowResult()
 
 
 
+string TaggerOverview::GetMode() const
+{
+    if(mode == Mode::Reconstructed) {
+        return "Reconstructed";
+    } else
+        return "MCTrue";
+}
+
 TaggerOverview::TaggerOverview(const string &name, PhysOptPtr opts):
     Physics(name, opts)
 {
+
+    if(opts->GetOption("Mode") == "Reconstructed")
+        mode = Mode::Reconstructed;
+    else if(opts->GetOption("Mode") == "MCTrue")
+        mode = Mode::MCTrue;
+
+    HistFac.SetTitlePrefix(GetMode());
+
     const BinSettings bins_hits(50);
     const BinSettings bins_energy(200, 1400, 1600);
     const BinSettings bins_channels(47);
@@ -106,16 +122,16 @@ TaggerOverview::TaggerOverview(const string &name, PhysOptPtr opts):
 
 //    const BinSettings bins_energy(tagger->GetNChannels(), Emin-width/2, Emax+width/2);
 
-    nHitsEvent = HistFac.makeTH1D("Tagger Hits / Enent", "# Hits/Event",   "",     bins_hits,    "TaggerHitsPerEvent");
+    nHitsEvent = HistFac.makeTH1D("Tagger Hits / Enent ", "# Hits/Event",   "",     bins_hits,    "TaggerHitsPerEvent");
     nHitsEvent->SetFillColor(kRed);
 
-    Channels   = HistFac.makeTH1D("Tagger Channels hit", "Channel Number", "Hits", bins_channels," TaggerChannels");
+    Channels   = HistFac.makeTH1D("Tagger Channels hit ", "Channel Number", "Hits", bins_channels," TaggerChannels");
     Channels->SetFillColor(kYellow);
 
-    Energies   = HistFac.makeTH1D("Tagged Photon Energies", "E_{#gamma,tag} [MeV]", "", bins_energy, "TaggedEnergies");
+    Energies   = HistFac.makeTH1D("Tagged Photon Energies ", "E_{#gamma,tag} [MeV]", "", bins_energy, "TaggedEnergies");
     Energies->SetFillColor(kBlue);
 
-    Times      = HistFac.makeTH1D("Tagger Hit Times", "Time [ns]", "", bins_times, "TaggedTimes");
+    Times      = HistFac.makeTH1D("Tagger Hit Times ", "Time [ns]", "", bins_times, "TaggedTimes");
     Times->SetFillColor(kGreen);
 
     channel_correlation = HistFac.makeTH2D("Tagger Channel Correlation","Channel", "Channel", bins_channels, bins_channels, "ChannelCorreleation");
@@ -123,7 +139,8 @@ TaggerOverview::TaggerOverview(const string &name, PhysOptPtr opts):
 
 void TaggerOverview::ProcessEvent(const Event &event)
 {
-    const auto taggerhits = event.Reconstructed().TaggerHits();
+    const auto taggerhits = (mode == Mode::Reconstructed) ? event.Reconstructed().TaggerHits() : event.MCTrue().TaggerHits();
+
     for(auto hit=taggerhits.cbegin(); hit!=taggerhits.cend(); ++hit) {
         Channels->Fill((*hit)->Channel());
         Energies->Fill((*hit)->PhotonEnergy());
@@ -134,12 +151,12 @@ void TaggerOverview::ProcessEvent(const Event &event)
             channel_correlation->Fill((*hit2)->Channel(), (*hit)->Channel());
         }
     }
-    nHitsEvent->Fill(event.Reconstructed().TaggerHits().size());
+    nHitsEvent->Fill(taggerhits.size());
 }
 
 void TaggerOverview::ShowResult()
 {
-    canvas(this->GetName())
+    canvas(this->GetName()+" "+GetMode())
             << nHitsEvent
             << Channels
             << Energies
