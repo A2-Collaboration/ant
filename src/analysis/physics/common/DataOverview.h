@@ -9,6 +9,19 @@ namespace ant {
 namespace analysis {
 namespace physics {
 
+class DataOverviewBase : public Physics {
+protected:
+
+    enum class Mode { MCTrue, Reconstructed };
+
+    Mode mode = Mode::Reconstructed;
+    std::string GetMode() const;
+
+public:
+    DataOverviewBase(const std::string& name, PhysOptPtr opts);
+    virtual ~DataOverviewBase();
+};
+
 class DataOverview : public Physics {
 protected:
     class OverviewSet {
@@ -39,7 +52,7 @@ public:
     void ShowResult();
 };
 
-class TaggerOverview : public Physics {
+class TaggerOverview : public DataOverviewBase {
 protected:
     TH1D* nHitsEvent = nullptr;
     TH1D* Channels   = nullptr;
@@ -47,12 +60,6 @@ protected:
     TH1D* Times      = nullptr;
 
     TH2D* channel_correlation = nullptr;
-
-    enum class Mode { MCTrue, Reconstructed };
-
-    Mode mode = Mode::Reconstructed;
-
-    std::string GetMode() const;
 
 public:
     TaggerOverview(const std::string& name, PhysOptPtr opts);

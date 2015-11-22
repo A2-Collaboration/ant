@@ -83,24 +83,13 @@ void DataOverview::ShowResult()
 
 
 
-string TaggerOverview::GetMode() const
-{
-    if(mode == Mode::Reconstructed) {
-        return "Reconstructed";
-    } else
-        return "MCTrue";
-}
+
 
 TaggerOverview::TaggerOverview(const string &name, PhysOptPtr opts):
-    Physics(name, opts)
+    DataOverviewBase(name, opts)
 {
 
-    if(opts->GetOption("Mode") == "Reconstructed")
-        mode = Mode::Reconstructed;
-    else if(opts->GetOption("Mode") == "MCTrue")
-        mode = Mode::MCTrue;
 
-    HistFac.SetTitlePrefix(GetMode());
 
     const BinSettings bins_hits(50);
     const BinSettings bins_energy(200, 1400, 1600);
@@ -166,6 +155,28 @@ void TaggerOverview::ShowResult()
 
 }
 
+
+DataOverviewBase::DataOverviewBase(const string &name, PhysOptPtr opts):
+    Physics(name, opts)
+{
+    if(opts->GetOption("Mode") == "Reconstructed")
+        mode = Mode::Reconstructed;
+    else if(opts->GetOption("Mode") == "MCTrue")
+        mode = Mode::MCTrue;
+
+    HistFac.SetTitlePrefix(GetMode());
+}
+
+DataOverviewBase::~DataOverviewBase()
+{}
+
+string DataOverviewBase::GetMode() const
+{
+    if(mode == Mode::Reconstructed) {
+        return "Reconstructed";
+    } else
+        return "MCTrue";
+}
 
 AUTO_REGISTER_PHYSICS(DataOverview)
 AUTO_REGISTER_PHYSICS(TaggerOverview)
