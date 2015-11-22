@@ -316,7 +316,9 @@ int main(int argc, char** argv) {
         }
     }
 
-    if(enabled_calibrations.size()+cmd_physicsclasses->getValue().size() == 0) {
+    if( enabled_calibrations.size()
+            +cmd_physicsclasses->getValue().size()
+            +cmd_physicsclasses_opt->getValue().size() == 0) {
         LOG(ERROR) << "Please specify at least one physics module or enable at least one calibration";
         return 1;
     }
