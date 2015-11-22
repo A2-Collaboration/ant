@@ -24,6 +24,19 @@ public:
 
     virtual ~TAntHeader();
 
+    /**
+     * @brief Print AntHeader inforamtion
+     * @note This is an override of the ROOT method. All options are ignored.
+     * @see Print()
+     */
+    virtual void Print(Option_t*) const;
+
+    /**
+     * @brief Print AntHeader information
+     * @note Does the same as the other print method. This is jut for convenience (no arguments).
+     */
+    virtual void Print() const; //*MENU*
+
 
     ClassDef(TAntHeader, ANT_UNPACKER_ROOT_VERSION)
 };
