@@ -4,12 +4,52 @@
 #include "base/std_ext/math.h"
 #include "TVector3.h"
 #include <cassert>
+#include "base/ParticleType.h"
 
 using namespace std;
 using namespace ant::std_ext;
 using namespace ant;
 
 
+
+double KinFitter::EnergyResolution(const analysis::data::ParticlePtr& p) const
+{
+    if(p->Candidate()) {
+        if(p->Candidate()->Detector() & Detector_t::Type_t::CB) {
+
+            return fct_GlobalEResolution(p->Ek());
+
+        } if(p->Candidate()->Detector() & Detector_t::Type_t::TAPS) {
+
+            return fct_GlobalEResolution(p->Ek()); ///@todo check TAPS energy resolution fct
+        }
+    } else {
+        throw runtime_error("Particle without candidate!");
+    }
+    return 0.0;
+}
+
+double KinFitter::ThetaResolution(const analysis::data::ParticlePtr&) const
+{
+    return degree_to_radian(2.5);
+}
+
+double KinFitter::PhiResolution(const analysis::data::ParticlePtr& p) const
+{
+    if(p->Candidate()) {
+        if(p->Candidate()->Detector() & Detector_t::Type_t::CB) {
+
+            return p->Candidate()->Theta() / std::sin(p->Candidate()->Theta());
+
+        } if(p->Candidate()->Detector() & Detector_t::Type_t::TAPS) {   ///@todo check TAPS Theta resolution
+
+            return p->Candidate()->Theta() / std::sin(p->Candidate()->Theta());
+        }
+    } else {
+        throw runtime_error("Particle without candidate!");
+    }
+    return 0.0;
+}
 
 TLorentzVector KinFitter::GetVector(const std::vector<double>& EkThetaPhi, const double m)
 {
@@ -20,24 +60,34 @@ TLorentzVector KinFitter::GetVector(const std::vector<double>& EkThetaPhi, const
 
     TVector3 pv(1,0,0);
 
-    pv.SetMagThetaPhi(p,EkThetaPhi[1],EkThetaPhi[2]);
+    pv.SetMagThetaPhi(p, EkThetaPhi[1], EkThetaPhi[2]);
 
     return TLorentzVector(pv,E);
+}
+
+double KinFitter::fct_GlobalEResolution(double E)
+{
+    return  0.02 * E * std::pow(E,-0.36);
+}
+
+double KinFitter::fct_TaggerEGausSigma(double)
+{
+    return  3.0/sqrt(12.0);
 }
 
 KinFitter::KinFitter():
     aplcon(make_unique<APLCON>("OmegaFitter"))
 {
 
-    aplcon->LinkVariable(egammaName,
-                        { addressof(EgammaBeam.first) },
-                        { addressof(EgammaBeam.second)});
+    aplcon->LinkVariable(Beam.name,
+                        { Beam.Adresses() },
+                        { Beam.Adresses_Sigma()});
 
     aplcon->LinkVariable(Proton.Name,
                         Proton.Adresses(),
                         Proton.Adresses_Sigma());
 
-    vector<string> namesLInv      = { egammaName, Proton.Name };
+    vector<string> namesLInv      = { Beam.name, Proton.Name };
 
     for ( auto& photon: Photons)
     {
@@ -56,7 +106,10 @@ KinFitter::KinFitter():
         const auto& proton = values[1];
 
         //  Beam-LV:
-        TLorentzVector constraint(0, 0, Ebeam, ParticleTypeDatabase::Proton.Mass() + Ebeam);
+        const TLorentzVector beam(0, 0, Ebeam, Ebeam);
+        const TLorentzVector tg(0,0,0,ParticleTypeDatabase::Proton.Mass());
+
+        TLorentzVector constraint = tg + beam;
 
         constraint -= KinFitter::GetVector(proton, ParticleTypeDatabase::Proton.Mass());
 
@@ -76,53 +129,47 @@ KinFitter::KinFitter():
 
 void KinFitter::SetEgammaBeam(const double &ebeam)
 {
-    EgammaBeam.first = ebeam;
-    EgammaBeam.second = taggerSmear(ebeam);
+    Beam.E     = ebeam;
+    Beam.Sigma = fct_TaggerEGausSigma(ebeam);
 }
 
 void KinFitter::SetProton(const analysis::data::ParticlePtr &proton)
 {
-    Proton.SetEkThetaPhi(proton->Ek(),proton->Theta(),proton->Phi());
+    Proton.Ek    = proton->Ek();
+    Proton.sEk   = 0.0; // unmeasured
+
+    Proton.Theta  = proton->Theta();
+//    Proton.sTheta = ...
+
+    Proton.Phi   = proton->Phi();
+    Proton.sPhi  = degree_to_radian(1.0);
+
 }
 
-void KinFitter::SetPhotons(const std::vector<analysis::data::ParticlePtr> &photons)
+void KinFitter::SetPhotons(const std::vector<analysis::data::ParticlePtr> &photons_data)
 {
-    assert(Photons.size() == photons.size());
+    assert(Photons.size() == photons_data.size());
 
-    for ( unsigned i = 0 ; i < Photons.size() ; ++ i)
-        Photons.at(i).SetEkThetaPhi(
-                    photons.at(i)->Ek(),
-                    photons.at(i)->Theta(),
-                    photons.at(i)->Phi());
+    for ( unsigned i = 0 ; i < Photons.size() ; ++ i) {
+        auto& photon = Photons.at(i);
+        auto& data   = photons_data.at(i);
+
+        photon.Ek  = data->Ek();
+        photon.sEk = EnergyResolution(data);
+
+        photon.Theta  = data->Theta();
+        photon.sTheta = ThetaResolution(data);
+
+        photon.Phi  = data->Phi();
+        photon.sPhi = PhiResolution(data);
+    }
 }
 
 APLCON::Result_t KinFitter::DoFit() { return aplcon->DoFit(); }
 
-double KinFitter::kinVector::energySmear(const double &E) const
-{
-    return  0.02 * E * std::pow(E,-0.36);
-}
 
-double KinFitter::taggerSmear(const double &E) const
+KinFitter::PhotonBeamVector::PhotonBeamVector(const string& Name):
+    name(Name)
 {
-    return  0.02 * E * std::pow(E,-0.36);
-}
-
-void KinFitter::kinVector::SetEkThetaPhi(double ek, double theta, double phi)
-{
-    this->Ek = ek;
-    this->Theta = theta;
-    this->Phi = phi;
-
-    this->sEk = energySmear(ek);
-    sTheta = 2.5 * TMath::DegToRad();
-    if ( Theta > 20 * TMath::DegToRad() && Theta < 160 * TMath::DegToRad())
-    {
-        sPhi = sTheta / std::sin(Theta);
-    }
-    else
-    {
-        sPhi = 1 * TMath::DegToRad();
-    }
 
 }

@@ -19,9 +19,6 @@ class KinFitter
 private:
     struct kinVector
     {
-        const std::string Name;
-        const unsigned nPhotons = 6;
-
         double Ek;
         double Theta;
         double Phi;
@@ -30,8 +27,9 @@ private:
         double sTheta;
         double sPhi;
 
-        double energySmear(const double& E) const;
-        double taggerSmear(const double& E) const;
+        const std::string Name;
+
+        double EnergyResolution(const double& E) const;
 
         std::vector<double*> Adresses()
         {
@@ -46,29 +44,56 @@ private:
                      std::addressof(sPhi)};
         }
 
-        void SetEkThetaPhi(double ek, double theta, double phi);
-
         kinVector(const std::string& name): Name(name) {}
     };
 
-    double taggerSmear(const double& E) const;
+    struct PhotonBeamVector {
+        double E     = 0.0;
+        double Sigma = 0.0;
+
+        const std::string name;
+
+        PhotonBeamVector(const std::string& Name);
+
+        std::vector<double*> Adresses()
+        {
+            return { std::addressof(E) };
+        }
+
+        std::vector<double*> Adresses_Sigma()
+        {
+            return { std::addressof(Sigma)};
+        }
+
+    };
+
+    static constexpr auto nGamma = 3;
+    std::vector<kinVector> Photons = {
+         kinVector("Photon1"),
+         kinVector("Photon2"),
+         kinVector("Photon3")};
+
+    kinVector Proton = kinVector("Proton");
+
+    PhotonBeamVector Beam = PhotonBeamVector("Beam");
+
+    double EnergyResolution(const ant::analysis::data::ParticlePtr& p) const;
+    double ThetaResolution(const ant::analysis::data::ParticlePtr& p) const;
+    double PhiResolution(const ant::analysis::data::ParticlePtr& p) const;
+
     static TLorentzVector GetVector(const std::vector<double>& EkThetaPhi, const double m);
 
     std::unique_ptr<APLCON> aplcon;
 
-    static constexpr auto nGamma = 3;
 
-    std::pair<double,double> EgammaBeam;
+    static double fct_GlobalEResolution(double E);
+    static double fct_TaggerEGausSigma(double E);
 
-    kinVector Proton = kinVector("Proton");
 
-    std::vector<kinVector> Photons = {
-        kinVector("Photon1"),
-         kinVector("Photon2"),
-         kinVector("Photon3")};
+
+
 
 public:
-    const std::string egammaName = "EBEAM";
 
     KinFitter();
 

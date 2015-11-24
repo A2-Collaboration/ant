@@ -238,6 +238,10 @@ protected:
 
     double EgOmegaSys[3] = {};
 
+    double kinfit_chi2 = 0;
+    bool   b_fitok = false;
+    unsigned b_fitIterations = 0;
+
     TH1D* steps;
 
     const interval<double> complcut = std_ext::degree_to_radian(interval<double>::CenterWidth(180,30));
@@ -245,12 +249,17 @@ protected:
     TH1D* h_TotalEvents;
 
     KinFitter fitter;
-    double kinfit_chi2 = 0;
+
+    std::map<std::string, TH1D*> pulls;
+    const std::map<short, std::string> component = {{0, "Energy"}, {1, "Theta"}, {2, "Phi"}};
+    const BinSettings pull_bins = BinSettings(201, -10, 10);
 
 
 public:
     OmegaEtaG2(const std::string& name, PhysOptPtr opts);
     virtual ~OmegaEtaG2();
+
+    virtual void ShowResult() override;
 
 };
 

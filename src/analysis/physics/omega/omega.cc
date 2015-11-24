@@ -23,6 +23,10 @@
 #include "utils/particle_tools.h"
 #include "utils/matcher.h"
 
+#include "APLCON.hpp"
+
+#include "TCanvas.h"
+
 using namespace std;
 using namespace ant;
 using namespace ant::analysis;
@@ -684,7 +688,34 @@ void OmegaEtaG2::Analyse(const Event::Data &data, const Event &event)
 
         auto fitres = fitter.DoFit();
 
-        kinfit_chi2 = fitres.ChiSquare;
+        if(fitres.Status == APLCON::Result_Status_t::Success) {
+
+            for(const auto& it_map : fitres.Variables) {
+                const string& varname = it_map.first;
+                const APLCON::Result_Variable_t& var = it_map.second;
+                auto it_pull = pulls.find(varname);
+                TH1D* h_pull;
+                if(it_pull == pulls.end()) {
+                    // not found so far, create the histogram on-the-fly
+                    stringstream title;
+                    title << "Pull " << var.PristineName << " " << component.at(var.Index);
+                    h_pull = HistFac.makeTH1D(title.str(),
+                                               "Pull", "#",
+                                               pull_bins,
+                                               "pull_"+varname);
+                    pulls[varname] = h_pull;
+                }
+                else {
+                    h_pull = it_pull->second;
+                }
+                h_pull->Fill(var.Pull);
+            }
+        }
+
+        b_fitok = (fitres.Status == APLCON::Result_Status_t::Success);
+
+        kinfit_chi2 = fitres.ChiSquare / fitres.NDoF;
+        b_fitIterations = unsigned(fitres.NIterations);
 
         tree->Fill();
 
@@ -774,6 +805,8 @@ OmegaEtaG2::OmegaEtaG2(const std::string& name, PhysOptPtr opts):
     tree->Branch("bestChi",  &bestChi);
     tree->Branch("fbestHyp",  &bestHyp);
     tree->Branch("kinfit_chi2", &kinfit_chi2);
+    tree->Branch("fitok",   &b_fitok);
+    tree->Branch("fitIterations",   &b_fitIterations);
 
     signal_tree = ParticleTypeTreeDatabase::Get(ParticleTypeTreeDatabase::Channel::Omega_gEta_3g);
     reference_tree = ParticleTypeTreeDatabase::Get(ParticleTypeTreeDatabase::Channel::Omega_gPi0_3g);
@@ -788,6 +821,12 @@ OmegaEtaG2::OmegaEtaG2(const std::string& name, PhysOptPtr opts):
 OmegaEtaG2::~OmegaEtaG2()
 {
 
+}
+
+void OmegaEtaG2::ShowResult()
+{
+    new TCanvas();
+    tree->Draw("kinfit_chi2>>(5000,0,50)");
 }
 
 void OmegaEtaG2::mParticleVars::SetBranches(TTree* tree, const string& name)
