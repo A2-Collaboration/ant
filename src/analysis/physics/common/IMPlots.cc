@@ -1,8 +1,11 @@
 #include "IMPlots.h"
 #include "utils/combinatorics.h"
 
+#include "TH1D.h"
+#include "TTree.h"
 using namespace ant;
 using namespace ant::analysis;
+using namespace ant::analysis::data;
 using namespace ant::analysis::physics;
 using namespace std;
 
@@ -65,4 +68,66 @@ IMPlots::hist_set::hist_set(const std::string& pref, SmartHistFactory& hf, std::
     }
 }
 
+
+
+Symmetric2Gamma::Symmetric2Gamma(const string& name, PhysOptPtr opts):
+    Physics(name, opts)
+{
+    const BinSettings im(1600);
+    h_symIM = HistFac.makeTH1D("2 #gamma IM, symmectic #gamma energies ("+to_string(perc*100)+"% Window)", "IM [MeV]", "", im, "symmetric2gamma");
+
+    tree    = HistFac.makeTTree("tree");
+
+    tree->Branch("IM",     &b_IM);
+    tree->Branch("E",      &b_E);
+    tree->Branch("E1",     &b_E1);
+    tree->Branch("E2",     &b_E2);
+    tree->Branch("Theta1", &b_theta1);
+    tree->Branch("Phi1",   &b_phi1);
+    tree->Branch("Theta2", &b_theta2);
+    tree->Branch("Phi2",   &b_phi2);
+
+}
+
+Symmetric2Gamma::~Symmetric2Gamma()
+{}
+
+void Symmetric2Gamma::ProcessEvent(const data::Event& event)
+{
+    const auto& photons = event.Reconstructed().Particles().Get(ParticleTypeDatabase::Photon);
+    for( auto comb = utils::makeCombination(photons,2); !comb.Done(); ++comb) {
+        const ParticlePtr& g1 = comb.at(0);
+        const ParticlePtr& g2 = comb.at(1);
+
+        const auto Eavg = (g1->Ek()+ g2->Ek()) / 2.0;
+        if(fabs(g1->Ek() - Eavg) < perc * Eavg) {
+            const TLorentzVector sum = sumlv(comb.begin(), comb.end());
+
+            b_IM = sum.M();
+            b_E  = Eavg;
+
+            b_E1     = g1->Ek();
+            b_theta1 = g1->Theta();
+            b_phi1   = g1->Phi();
+
+            b_E2     = g2->Ek();
+            b_theta2 = g2->Theta();
+            b_phi2   = g2->Phi();
+
+            tree->Fill();
+
+            h_symIM->Fill(sum.M());
+        }
+    }
+
+}
+
+void Symmetric2Gamma::ShowResult()
+{
+    canvas(GetName())
+            << h_symIM
+            << endc;
+}
+
 AUTO_REGISTER_PHYSICS(IMPlots)
+AUTO_REGISTER_PHYSICS(Symmetric2Gamma)
