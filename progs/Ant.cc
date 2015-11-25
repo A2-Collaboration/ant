@@ -401,6 +401,8 @@ int main(int argc, char** argv) {
         LOG(INFO) << "ParticleID disabled by command line";
     }
 
+    // porgress messages only when running interactively
+    pm.EnableProgressUpdates(std_ext::system::isInteractive());
 
 
     // create some variables for running
