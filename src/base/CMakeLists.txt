@@ -32,6 +32,7 @@ set(SRCS
   std_ext/time.h
   std_ext/vector.h
   std_ext/system.cc
+  std_ext/convert.h
   cbtaps_display/TH2DrawTool.cc
   cbtaps_display/TH2Crystals.cc
   cbtaps_display/TH2CB.cc
