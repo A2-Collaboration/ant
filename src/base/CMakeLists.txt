@@ -24,6 +24,7 @@ set(SRCS
   enumfield.h
   GitInfo.cc
   OptionsList.cc
+  ProgressCounter.cc
   std_ext/math.h
   std_ext/memory.h
   std_ext/misc.h
