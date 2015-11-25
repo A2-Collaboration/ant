@@ -46,6 +46,8 @@ protected:
     void ProcessEventBuffer(long long maxevents, bool& running, TAntHeader& header);
     void ProcessEvent(std::unique_ptr<data::Event> event);
 
+    bool progressUpdates = true;
+
 public:
 
     PhysicsManager();
@@ -82,6 +84,8 @@ public:
     class Exception : public std::runtime_error {
         using std::runtime_error::runtime_error; // use base class constructor
     };
+
+    void EnableProgressUpdates(bool updates=false);
 };
 
 }} // namespace ant::analysis
