@@ -56,6 +56,8 @@ public:
     virtual bool IsSource() override { return true; }
     virtual bool ReadNextEvent(data::Event& event) override;
     virtual std::unique_ptr<TSlowControl> ReadNextSlowControl() override;
+
+    double PercentDone() const override;
 };
 
 }

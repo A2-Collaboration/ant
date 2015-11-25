@@ -54,6 +54,8 @@ public:
 
     virtual ~UnpackerAcquFileFormat();
 
+    virtual double PercentDone() const =0;
+
 protected:
     virtual size_t SizeOfHeader() const = 0;
     virtual bool InspectHeader(const std::vector<uint32_t>& buffer) const = 0;
@@ -71,6 +73,8 @@ namespace acqu {
 class FileFormatBase : public UnpackerAcquFileFormat {
 public:
     virtual ~FileFormatBase();
+
+    virtual double PercentDone() const;
 
 private:
     std::unique_ptr<RawFileReader> reader;

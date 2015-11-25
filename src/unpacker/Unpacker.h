@@ -43,6 +43,7 @@ public:
     public:
         virtual ~Reader() = default;
         virtual std::unique_ptr<TDataRecord> NextItem() noexcept = 0;
+        virtual double PercentDone() const = 0;
     };
 
     /**

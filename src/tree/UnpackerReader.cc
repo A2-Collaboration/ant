@@ -28,6 +28,11 @@ UnpackerReader::UnpackerReader(const std::shared_ptr<WrapTFileInput>& rootfiles)
 
 UnpackerReader::~UnpackerReader() {}
 
+double UnpackerReader::PercentDone() const
+{
+    return double(entries_read)/double(total_entries);
+}
+
 bool UnpackerReader::OpenInput() {
     // the order here determines the order of NextItem()
     // if the TID is equal
@@ -78,5 +83,6 @@ std::unique_ptr<TDataRecord> UnpackerReader::NextItem() noexcept {
         // so remove it from the available treerecords
         treerecords.erase(it_treerecord);
     }
+    ++entries_read;
     return record;
 }

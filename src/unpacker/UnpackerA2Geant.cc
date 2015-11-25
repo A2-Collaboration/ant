@@ -246,4 +246,9 @@ unique_ptr<TDataRecord> UnpackerA2Geant::NextItem() noexcept
     return move(detread);
 }
 
+double UnpackerA2Geant::PercentDone() const
+{
+    return double(current_entry) / double(geant->GetEntries());
+}
+
 

@@ -190,3 +190,8 @@ bool GoatReader::ReadNextEvent(Event& event)
     ++current_entry;
     return true;
 }
+
+double GoatReader::PercentDone() const
+{
+    return double(current_entry)/double(trees->GetEntries());
+}

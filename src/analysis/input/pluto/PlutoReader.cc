@@ -293,3 +293,8 @@ bool PlutoReader::ReadNextEvent(Event& event)
 
     return true;
 }
+
+double PlutoReader::PercentDone() const
+{
+    return double(current_entry) / double(tree->GetEntries());
+}

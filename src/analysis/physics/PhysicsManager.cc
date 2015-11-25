@@ -9,8 +9,10 @@
 
 #include "input/detail/SlowcontrolCreator.h"
 
+#include "base/ProgressCounter.h"
+
 #include <iomanip>
-#include <chrono>
+
 
 using namespace std;
 using namespace ant;
@@ -160,6 +162,8 @@ void PhysicsManager::ReadFrom(
 
     bool finished_reading = false;
     long long nEventsRead = 0;
+
+    ProgressCounter progress;
     while(true) {
         if(finished_reading)
             break;
@@ -183,6 +187,11 @@ void PhysicsManager::ReadFrom(
 
             eventbuffer.emplace(move(event));
             nEventsRead++;
+
+            if(progress.Update(source->PercentDone())) {
+                LOG(INFO) << progress;
+            }
+
         }
         while(!slowcontrol_mgr.isComplete());
 

@@ -20,7 +20,7 @@ namespace input {
  * Data input modules read MC/Detector data from somewhere.
  * Examples:
  *  * goat file reader
- *  * new ant data foramt reader
+ *  * new ant data format reader
  */
 class DataReader {
 public:
@@ -35,6 +35,8 @@ public:
     virtual bool IsSource() = 0;
     virtual bool ReadNextEvent(data::Event& event) = 0;
     virtual std::unique_ptr<TSlowControl> ReadNextSlowControl() { return nullptr; }
+
+    virtual double PercentDone() const =0;
 };
 
 }}} // namespace ant::analysis::input

@@ -19,6 +19,14 @@ double RawFileReader::OutputPerformanceStats = numeric_limits<double>::quiet_NaN
 
 ant::RawFileReader::~RawFileReader() {}
 
+double RawFileReader::PercentDone() const
+{
+    const auto compressed   = p->gcount_compressed();
+    const auto total_size   = p->filesize_remaining();
+
+    return double((compressed >= -1) ? compressed : p->gcount()) / double(total_size);
+}
+
 void RawFileReader::open(const string &filename, const size_t inbufsize) {
     // open it as plain raw file
     ifstream file(filename.c_str());
@@ -64,23 +72,11 @@ void RawFileReader::HandlePerformanceStats()
                                / elapsed_seconds.count();
     const double bytes_per_s_uncompressed = performanceBytesRead/elapsed_seconds.count();
 
-    double seconds_left = p->filesize_remaining() / bytes_per_s;
-    const int hours_left = seconds_left / 3600;
-    seconds_left -= hours_left * 3600;
-    const int mins_left = seconds_left / 60;
-    seconds_left -= mins_left * 60;
-    std::stringstream ss_ETA;
-    if(hours_left>0)
-        ss_ETA << hours_left << ":";
-    if(mins_left>0)
-        ss_ETA << setw(2) << setfill('0') << mins_left << ":";
-    ss_ETA << setw(2) << setfill('0') << static_cast<int>(seconds_left);
-
     if(performanceBytesRead_compressed<0) {
-        LOG(INFO) << "Reading file with " << std::fixed << setprecision(3) << bytes_per_s_uncompressed/(1<<20) << " MB/s, ETA: " << ss_ETA.str();
+        LOG(INFO) << "Reading file with " << std::fixed << setprecision(3) << bytes_per_s_uncompressed/(1<<20);
     }
     else {
-        LOG(INFO) << "Reading compressed file     with " << std::fixed << setprecision(3) << bytes_per_s/(1<<20) << " MB/s, ETA: " << ss_ETA.str();
+        LOG(INFO) << "Reading compressed file     with " << std::fixed << setprecision(3) << bytes_per_s/(1<<20) << " MB/s";
         LOG(INFO) << "Reading uncompressed stream with " << std::fixed << setprecision(3) << bytes_per_s_uncompressed/(1<<20) << " MB/s";
         LOG(INFO) << "File compression ratio:          " << std::fixed << setprecision(2) << 100*bytes_per_s/bytes_per_s_uncompressed << " %";
     }

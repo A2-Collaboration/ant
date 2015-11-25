@@ -62,6 +62,11 @@ unique_ptr<TSlowControl> AntReader::ReadNextSlowControl()
     return move(buffered_slowcontrol);
 }
 
+double AntReader::PercentDone() const
+{
+    return reader->PercentDone();
+}
+
 bool AntReader::ReadNextEvent(Event& event)
 {
     while(auto item = reader->NextItem()) {

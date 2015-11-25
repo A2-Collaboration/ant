@@ -2,6 +2,7 @@
 
 #include "unpacker/Unpacker.h" // for Unpacker::Reader interface
 #include "base/WrapTFile.h"
+#include "base/std_ext/convert.h"
 #include "TTree.h"
 
 #include <vector>
@@ -30,6 +31,9 @@ class UnpackerReader : public Unpacker::Reader {
     THeaderInfo* HeaderInfo;
     TUnpackerMessage* UnpackerMessage;
     TSlowControl* SlowControl;
+
+    unsigned long long entries_read  =0;
+    unsigned long long total_entries =0;
 
     struct treerecord_t {
         TDataRecord** Record;
@@ -73,6 +77,7 @@ class UnpackerReader : public Unpacker::Reader {
                     );
         ptr = new T();
         tree->GetEntry(0);
+        total_entries += std_ext::clipNegative<decltype(total_entries)>(tree->GetEntries());
         return true;
     }
 
@@ -80,6 +85,8 @@ public:
 
     UnpackerReader(const std::shared_ptr<WrapTFileInput>& rootfiles);
     virtual ~UnpackerReader();
+
+    double PercentDone() const override;
 
 
 

@@ -36,6 +36,8 @@ public:
         using Unpacker::Exception::Exception; // use base class constructor
     };
 
+    double PercentDone() const;
+
 private:
     TID* id = nullptr;
 
@@ -89,6 +91,8 @@ private:
     Float_t         emwpc[GEANT_MAX_MWPCHITS] = {};
 
     bool tid_from_file = false;
+
+
 };
 
 // we define some methods here which

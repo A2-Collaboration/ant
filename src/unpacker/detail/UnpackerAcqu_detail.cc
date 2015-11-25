@@ -129,6 +129,11 @@ acqu::FileFormatBase::~FileFormatBase()
 
 }
 
+double acqu::FileFormatBase::PercentDone() const
+{
+    return reader->PercentDone();
+}
+
 unique_ptr<THeaderInfo> acqu::FileFormatBase::BuildTHeaderInfo()
 {
     // guessing the timestamp from the Acqu header

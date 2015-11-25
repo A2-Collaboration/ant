@@ -62,6 +62,7 @@ public:
 
     virtual bool ReadNextEvent(data::Event& event) override;
 
+    double PercentDone() const override;
 };
 
 }

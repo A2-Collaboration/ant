@@ -12,6 +12,11 @@ using namespace ant;
 UnpackerAcqu::UnpackerAcqu() {}
 UnpackerAcqu::~UnpackerAcqu() {}
 
+double UnpackerAcqu::PercentDone() const
+{
+    return file->PercentDone();
+}
+
 bool UnpackerAcqu::OpenFile(const std::string &filename)
 {
     // this might also throw an exception if something

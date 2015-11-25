@@ -29,6 +29,8 @@ public:
 
     virtual ~UnpackerAcqu();
 
+    double PercentDone() const;
+
 private:
     std::list< std::unique_ptr<TDataRecord> > queue; // std::list supports splice
     std::unique_ptr<UnpackerAcquFileFormat> file;

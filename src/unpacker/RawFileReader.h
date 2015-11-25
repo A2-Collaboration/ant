@@ -33,6 +33,8 @@ public:
 
     virtual ~RawFileReader();
 
+    double PercentDone() const;
+
     /**
    * @brief open the given filename
    * @param filename
