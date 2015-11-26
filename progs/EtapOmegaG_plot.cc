@@ -22,7 +22,8 @@ using namespace std;
 template<class T, typename Func>
 void GetListOf(TDirectory* dir,
                std::list<T*>& list,
-               Func match=[] (const string&){return true;})
+               Func match=[] (const string&, size_t){return true;},
+               size_t level = 0)
 {
     TList* keys = dir->GetListOfKeys();
 
@@ -38,12 +39,12 @@ void GetListOf(TDirectory* dir,
         const std::string classname(key->GetClassName());
 
         if(classname == "TDirectoryFile") {
-            GetListOf(dynamic_cast<TDirectoryFile*>(key->ReadObj()), list, match);
+            GetListOf(dynamic_cast<TDirectoryFile*>(key->ReadObj()), list, match, level+1);
             continue;
         }
 
         const auto& name = key->GetName();
-        if(match(name)) {
+        if(match(name, level)) {
             objectPtr = dynamic_cast<T*>(key->ReadObj());
             if ( !objectPtr )
                 continue;
@@ -52,7 +53,10 @@ void GetListOf(TDirectory* dir,
     }
 }
 
-void do_stack(TDirectory* dir);
+void do_Sum_Signal_Bkg(TDirectory* dir,
+                       const string& hname, const string& htitle,
+                       const unsigned rebin = 1,
+                       const bool bkgdetail = false);
 
 class StringColorManager {
 protected:
@@ -73,6 +77,10 @@ public:
         }
     }
 
+    void Clear() {
+        used.clear();
+    }
+
     void PrintList() const {
         for(const auto& entry : used) {
             cout << entry.first << endl;
@@ -81,7 +89,7 @@ public:
 
 };
 
-const std::vector<Color_t> StringColorManager::cols = {kRed, kGreen+1, kBlue, kMagenta, kCyan, kOrange, kPink+9, kSpring+10, kGray};
+const std::vector<Color_t> StringColorManager::cols = {kBlack, kRed, kGreen+1, kBlue, kMagenta, kCyan, kOrange, kPink+9, kSpring+10, kGray+1, kTeal, kGray};
 
 StringColorManager colors;
 
@@ -100,14 +108,28 @@ int main(int argc, char** argv) {
 
     TFile* file = new TFile(cmd_file->getValue().c_str());
 
-    TDirectory* dir = file->GetDirectory("EtapOmegaG/Sig");
+    TDirectory* dir = nullptr;
+
+    dir = file->GetDirectory("EtapOmegaG/Sig");
     if(dir == nullptr) {
         LOG(ERROR) << "Directory not found in file";
         return 1;
     }
 
 
-    do_stack(dir);
+    do_Sum_Signal_Bkg(dir, "Chi2_Min", "#chi^{2} Minimum", 4);
+    do_Sum_Signal_Bkg(dir, "g_EtaPrime_E", "E_{#gamma} in #eta' frame", 4);
+    do_Sum_Signal_Bkg(dir, "g_EtaPrime_E", "E_{#gamma} in #eta' frame", 4, true);
+    do_Sum_Signal_Bkg(dir, "steps", "Cut efficiencies", 1, true);
+
+    colors.Clear();
+    dir = file->GetDirectory("EtapOmegaG/Ref");
+    if(dir == nullptr) {
+        LOG(ERROR) << "Directory not found in file";
+        return 1;
+    }
+    do_Sum_Signal_Bkg(dir, "IM_etap", "2#gamma IM", 2);
+    do_Sum_Signal_Bkg(dir, "IM_etap", "2#gamma IM", 2, true);
 
     colors.PrintList();
 
@@ -116,41 +138,58 @@ int main(int argc, char** argv) {
     return 0;
 }
 
+TH1D* MakeSum(std::list<TH1D*>::const_iterator start,
+              std::list<TH1D*>::const_iterator stop,
+              const std::string& title = "Sum")
+{
+    TH1D* sum = reinterpret_cast<TH1D*>((*(start++))->Clone());
+    sum->SetTitle(title.c_str());
+    sum->SetLineColor(colors.Get(sum->GetTitle()));
+    for(auto it = start; it != stop; it++)
+        sum->Add(*it);
+    return sum;
+}
 
-void do_stack(TDirectory *dir) {
+void sanitize_title(TH1D* h) {
+    string title(h->GetTitle());
+    title = title.substr(0, title.find(':'));
+    h->SetTitle(title.c_str());
+}
+
+void do_Sum_Signal_Bkg(TDirectory *dir,
+                       const std::string& hname,
+                       const std::string& htitle,
+                       const unsigned rebin,
+                       const bool bkgdetail
+                       ) {
     std::list<TH1D*> hists;
-    GetListOf(dir, hists, [] (const string& name) { return name == "Chi2_Min";});
-
-    //hists.sort([] (const TH1* a, const TH1* b) { return a->GetEntries() > b->GetEntries();});
-
-    //hists.resize(5);
-
-    hstack gg_stack("2#gamma IM", "2 #gamma invariant mass after #omega cut");
-
-    TH1D* sum = nullptr;
-    for(auto& h : hists) {
-        h->Rebin(4);
-        if(!sum) {
-           sum = (TH1D*)h->Clone();
-           sum->SetLineWidth(2);
-           sum->SetLineColor(kBlack);
-           sum->SetTitle("Sum");
-           gg_stack << sum;
-        } else {
-            sum->Add(h);
-        }
-        string title(h->GetTitle());
-        std_ext::removesubstr(title, "Pluto_dilepton ");
-        std_ext::removesubstr(title, "2#gamma ");
-        h->SetTitle(title.c_str());
+    GetListOf(dir, hists, [hname] (const string& name, size_t level) { return name == hname && level>0;});
+    for(TH1D* h : hists) {
+        if(rebin>1)
+            h->Rebin(rebin);
         h->SetLineWidth(2);
-        h->SetLineColor(colors.Get(title));
-
-        gg_stack << h;
     }
 
-    canvas c("gg im");
-    c << padoption::set(padoption_t::Legend) << drawoption("nostack")<< gg_stack << endc;
+    hstack mystack(hname,htitle);
+
+    // assume that hists are ordered, first one is signal,
+    // the rest are background channels
+    mystack << MakeSum(hists.begin(), hists.end(), "Sum");
+    mystack << MakeSum(hists.begin(), std::next(hists.begin()), "Signal");
+    if(bkgdetail) {
+        for(auto it = std::next(hists.begin()); it != hists.end(); it++) {
+            TH1D* h = *it;
+            sanitize_title(h);
+            h->SetLineColor(colors.Get(h->GetTitle()));
+            mystack << h;
+        }
+    }
+    else {
+        mystack << MakeSum(std::next(hists.begin()), hists.end(), "Background");
+    }
+
+    canvas c("c_"+hname+(bkgdetail ? "_detail" : ""));
+    c << padoption::set(padoption_t::Legend) << drawoption("nostack") << mystack << endc;
 }
 
 
