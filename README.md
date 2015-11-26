@@ -31,7 +31,7 @@ you need to install the [APLCON C++ wrapper](https://github.com/A2-Collaboration
 The easiest way is to clone the repository relative to your ant directory at `../APLCON`.
 This way CMake will automatically detect it.
 
-#### APLCON++
+### APLCON++
 
 To build APLCON++, clone the respository with
 
@@ -43,7 +43,7 @@ and `cd` to the created APLCON directory. Create a build directory and run cmake
 
 Finally run `make` to build the needed libraries.
 
-#### ant
+### ant
 
 Now you should be able to compile the ant framework.
 Therefore clone this respository, either directly from
@@ -81,7 +81,17 @@ project.
     * one line between groups
     * each group ordered alphabetically
 
-## Development Status
+## Library organization
+
+Due to the fact that calibration modules are also analyses, and
+analyses should not know anything about detectors anymore (data
+structures should be such that you work with high-level data), the
+linking of (solid arrows) and the include (dashed arrows) looks like this:
+
+<img src="doc/library-dependencies.png">
+
+## Development
+
   * [x] Unpacker for Acqu Mk2 data
   * [x] Unpacker for a2geant data
   * [ ] [Calibration modules](src/calibration/modules):
@@ -132,7 +142,8 @@ Have a look at those very nice projects, which are used here:
   * [Catch](https://github.com/philsquared/Catch) framework for unit-tests, test-driven development. See [the test/ subdirectory](test/).
   * [TCLAP - Templatized C++ Command Line Parser](http://tclap.sourceforge.net)
 
-## Quick How-TOs
+## Quick start guides
+
 ### Ant-pluto
 Ant-pluto is a frontend for Pluto for A2 physics (includes the Tagger).
 It can generate photoproduction and decays or shoot particles randomly in all directions.
