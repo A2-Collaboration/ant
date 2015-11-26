@@ -36,3 +36,9 @@ option(XmasCB "Crystal Ball Christmas ornaments" OFF)
 if(XmasCB)
     add_ant_executable(XmasCB)
 endif()
+
+option(EtapOmegaG "Build EtaPrime Omega Gamma tools" OFF)
+
+if(EtapOmegaG)
+    add_ant_executable(EtapOmegaG_plot)
+endif()
