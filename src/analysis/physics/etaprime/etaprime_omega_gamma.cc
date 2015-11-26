@@ -97,6 +97,11 @@ EtapOmegaG::EtapOmegaG(const std::string& name, PhysOptPtr opts) : Physics(name,
                 ParticleTypeTreeDatabase::Get(ParticleTypeTreeDatabase::Channel::Direct2Pi0_4g)
                 );
     ref_perDecayHists.emplace_back(
+                "Ref_Bkg_pi0eta",
+                ref_HistFac,
+                ParticleTypeTreeDatabase::Get(ParticleTypeTreeDatabase::Channel::DirectPi0Eta_4g)
+                );
+    ref_perDecayHists.emplace_back(
                 "Ref_Bkg_1pi0",
                 ref_HistFac,
                 ParticleTypeTreeDatabase::Get(ParticleTypeTreeDatabase::Channel::Direct1Pi0_2g)
