@@ -38,6 +38,8 @@ public:
         TH1*  h_projection = nullptr;
         TH1D* h_peaks = nullptr;
         TH1D* h_relative = nullptr;
+
+        double AutoStopOnChi2 = 6;
     };
 
     struct ThePhysics : analysis::Physics {

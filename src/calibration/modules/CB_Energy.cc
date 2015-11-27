@@ -121,6 +121,8 @@ void CB_Energy::GUI_Gains::InitGUI(gui::ManagerWindow_traits* window)
 {
     GUI_CalibType::InitGUI(window);
 
+    window->AddNumberEntry("Chi2/NDF limit for autostop", AutoStopOnChi2);
+
     canvas = window->AddCalCanvas();
     h_peaks = new TH1D("h_peaks","Peak positions",GetNumberOfChannels(),0,GetNumberOfChannels());
     h_peaks->SetXTitle("Channel Number");
@@ -154,7 +156,7 @@ gui::CalibModule_traits::DoFitReturn_t CB_Energy::GUI_Gains::DoFit(TH1* hist, un
     do {
         func->Fit(h_projection);
         VLOG(5) << "Chi2/dof = " << func->Chi2NDF();
-        if(func->Chi2NDF() < 6.0) {
+        if(func->Chi2NDF() < AutoStopOnChi2) {
             return DoFitReturn_t::Next;
         }
         retries--;
