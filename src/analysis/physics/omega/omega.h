@@ -254,6 +254,8 @@ protected:
     const std::map<short, std::string> component = {{0, "Energy"}, {1, "Theta"}, {2, "Phi"}};
     const BinSettings pull_bins = BinSettings(201, -10, 10);
 
+    const interval<double> taggerWindow = { -30.0, 30.0 };
+
 
 public:
     OmegaEtaG2(const std::string& name, PhysOptPtr opts);

@@ -632,6 +632,9 @@ void OmegaEtaG2::Analyse(const Event::Data &data, const Event &event)
 
     for(const TaggerHitPtr& t : data_tagger?data.TaggerHits():event.MCTrue().TaggerHits()) {
 
+        if(!taggerWindow.Contains(t->Time()))
+            continue;
+
         tagch   = t->Channel();
         tagtime = t->Time();
 
