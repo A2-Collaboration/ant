@@ -1,10 +1,16 @@
 #include "kinFit.h"
-#include <APLCON.hpp>
+
 #include "base/std_ext/memory.h"
 #include "base/std_ext/math.h"
-#include "TVector3.h"
-#include <cassert>
 #include "base/ParticleType.h"
+
+
+#include <cassert>
+
+#include <APLCON.hpp>
+
+#include "TTree.h"
+#include "TVector3.h"
 
 using namespace std;
 using namespace ant::std_ext;
@@ -76,24 +82,26 @@ double KinFitter::fct_TaggerEGausSigma(double)
 }
 
 KinFitter::KinFitter():
-    aplcon(make_unique<APLCON>("OmegaFitter"))
+    aplcon(make_unique<APLCON>("EPB"))
 {
 
     aplcon->LinkVariable(Beam.name,
                         { Beam.Adresses() },
-                        { Beam.Adresses_Sigma()});
+                        { Beam.Adresses_Sigma() });
 
     aplcon->LinkVariable(Proton.Name,
-                        Proton.Adresses(),
-                        Proton.Adresses_Sigma());
+                         Proton.Addresses(),
+                         Proton.Addresses_Sigma(),
+                         Proton.Addresses_Pulls());
 
     vector<string> namesLInv      = { Beam.name, Proton.Name };
 
     for ( auto& photon: Photons)
     {
         aplcon->LinkVariable(photon.Name,
-                            photon.Adresses(),
-                            photon.Adresses_Sigma());
+                             photon.Addresses(),
+                             photon.Addresses_Sigma(),
+                             photon.Addresses_Pulls());
 
         namesLInv.push_back(photon.Name);
     }
@@ -136,15 +144,16 @@ void KinFitter::SetEgammaBeam(const double &ebeam)
 void KinFitter::SetProton(const analysis::data::ParticlePtr &proton)
 {
     Proton.Ek    = proton->Ek();
-    Proton.sEk   = 0.0; // unmeasured
+    Proton.sigmaEk   = 0.0; // unmeasured
 
     Proton.Theta  = proton->Theta();
-//    Proton.sTheta = ...
+    Proton.sigmaTheta = ThetaResolution(proton)*5.0;
 
     Proton.Phi   = proton->Phi();
-    Proton.sPhi  = degree_to_radian(1.0);
+    Proton.sigmaPhi  = PhiResolution(proton)*5.0;
 
 }
+
 
 void KinFitter::SetPhotons(const std::vector<analysis::data::ParticlePtr> &photons_data)
 {
@@ -155,21 +164,55 @@ void KinFitter::SetPhotons(const std::vector<analysis::data::ParticlePtr> &photo
         auto& data   = photons_data.at(i);
 
         photon.Ek  = data->Ek();
-        photon.sEk = EnergyResolution(data);
+        photon.sigmaEk = EnergyResolution(data);
 
         photon.Theta  = data->Theta();
-        photon.sTheta = ThetaResolution(data);
+        photon.sigmaTheta = ThetaResolution(data);
 
         photon.Phi  = data->Phi();
-        photon.sPhi = PhiResolution(data);
+        photon.sigmaPhi = PhiResolution(data);
     }
 }
 
-APLCON::Result_t KinFitter::DoFit() { return aplcon->DoFit(); }
+APLCON::Result_t KinFitter::DoFit() {
+
+    const auto res = aplcon->DoFit();
+
+    result_chi2ndof    = res.ChiSquare / res.NDoF;
+    result_iterations  = res.NIterations;
+    result_status      = static_cast<int>(res.Status);
+    result_probability = res.Probability;
+
+    return res;
+}
+
+void KinFitter::SetupBranches(TTree* tree)
+{
+    Proton.SetupBranches(tree, aplcon->GetName());
+    for(auto& p : Photons) {
+        p.SetupBranches(tree, aplcon->GetName());
+    }
+
+    tree->Branch((aplcon->GetName()+"_chi2dof").c_str(),     &result_chi2ndof);
+    tree->Branch((aplcon->GetName()+"_iterations").c_str(),  &result_iterations);
+    tree->Branch((aplcon->GetName()+"_status").c_str(),      &result_status);
+    tree->Branch((aplcon->GetName()+"_probability").c_str(), &result_probability);
+}
 
 
 KinFitter::PhotonBeamVector::PhotonBeamVector(const string& Name):
     name(Name)
 {
+
+}
+
+void KinFitter::kinVector::SetupBranches(TTree* tree, const string& prefix)
+{
+    tree->Branch((prefix+"_"+Name+"_Ek_pull").c_str(),     addressof(pullEk));
+    tree->Branch((prefix+"_"+Name+"_Theta_pull").c_str(),  addressof(pullTheta));
+    tree->Branch((prefix+"_"+Name+"_Phi_pull").c_str(),    addressof(pullPhi));
+    tree->Branch((prefix+"_"+Name+"_Ek_sigma").c_str(),    addressof(sigmaEk));
+    tree->Branch((prefix+"_"+Name+"_Theta_sigma").c_str(), addressof(sigmaTheta));
+    tree->Branch((prefix+"_"+Name+"_Phi_sigma").c_str(),   addressof(sigmaPhi));
 
 }

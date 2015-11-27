@@ -807,9 +807,8 @@ OmegaEtaG2::OmegaEtaG2(const std::string& name, PhysOptPtr opts):
     tree->Branch("ibestPi0", &bestPi0In);
     tree->Branch("bestChi",  &bestChi);
     tree->Branch("fbestHyp",  &bestHyp);
-    tree->Branch("kinfit_chi2", &kinfit_chi2);
-    tree->Branch("fitok",   &b_fitok);
-    tree->Branch("fitIterations",   &b_fitIterations);
+
+    fitter.SetupBranches(tree);
 
     signal_tree = ParticleTypeTreeDatabase::Get(ParticleTypeTreeDatabase::Channel::Omega_gEta_3g);
     reference_tree = ParticleTypeTreeDatabase::Get(ParticleTypeTreeDatabase::Channel::Omega_gPi0_3g);

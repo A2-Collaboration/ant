@@ -12,6 +12,7 @@
 #include "APLCON.hpp"
 
 class APLCON;
+class TTree;
 
 class KinFitter
 {
@@ -19,32 +20,45 @@ class KinFitter
 private:
     struct kinVector
     {
-        double Ek;
-        double Theta;
-        double Phi;
+        double Ek            = 0.0;
+        double Theta         = 0.0;
+        double Phi           = 0.0;
 
-        double sEk;
-        double sTheta;
-        double sPhi;
+        double sigmaEk       = 0.0;
+        double sigmaTheta    = 0.0;
+        double sigmaPhi      = 0.0;
+
+        double pullEk        = 0.0;
+        double pullTheta     = 0.0;
+        double pullPhi       = 0.0;
 
         const std::string Name;
 
         double EnergyResolution(const double& E) const;
 
-        std::vector<double*> Adresses()
+        std::vector<double*> Addresses()
         {
             return { std::addressof(Ek),
                      std::addressof(Theta),
                      std::addressof(Phi)};
         }
-        std::vector<double*> Adresses_Sigma()
+        std::vector<double*> Addresses_Sigma()
         {
-            return { std::addressof(sEk),
-                     std::addressof(sTheta),
-                     std::addressof(sPhi)};
+            return { std::addressof(sigmaEk),
+                     std::addressof(sigmaTheta),
+                     std::addressof(sigmaPhi)};
+        }
+
+        std::vector<double*> Addresses_Pulls()
+        {
+            return { std::addressof(pullEk),
+                     std::addressof(pullTheta),
+                     std::addressof(pullPhi)};
         }
 
         kinVector(const std::string& name): Name(name) {}
+
+        void SetupBranches(TTree* tree, const std::string& prefix);
     };
 
     struct PhotonBeamVector {
@@ -84,6 +98,10 @@ private:
     static TLorentzVector GetVector(const std::vector<double>& EkThetaPhi, const double m);
 
     std::unique_ptr<APLCON> aplcon;
+    double result_chi2ndof       =  0.0;
+    int result_iterations        =  0;
+    int result_status            = -1;
+    double result_probability    =  0.0;
 
 
     static double fct_GlobalEResolution(double E);
@@ -102,4 +120,6 @@ public:
     void SetPhotons(const std::vector<ant::analysis::data::ParticlePtr>& photons);
 
     APLCON::Result_t DoFit();
+
+    void SetupBranches(TTree* tree);
 };
