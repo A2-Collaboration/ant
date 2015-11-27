@@ -244,13 +244,16 @@ void ManagerWindow::CreateToolbar(TGVerticalFrame* frame)
     auto layout_frm =  new TGLayoutHints(kLHintsTop | kLHintsExpandX);
     frame->AddFrame(frm1, layout_frm);
     frame->AddFrame(frm2, layout_frm);
+
+    // add some third row for extra buttons from the
+    // module
+    frame_extraflags = new TGHorizontalFrame(frame);
+    frame->AddFrame(frame_extraflags, layout_frm);
+
     frame->AddFrame(progress_channel, layout_frm);
     frame->AddFrame(progress_slice, layout_frm);
 
-    // for now, just use the frm2 as some place for
-    // the extra check buttons
-    // from the modules
-    frame_extraflags = frm2;
+
 }
 
 void ManagerWindow::UpdateLayout()
