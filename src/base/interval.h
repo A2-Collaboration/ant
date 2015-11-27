@@ -236,6 +236,20 @@ public:
         stream << "[" << _start << ":" << _stop << "]";
         return stream;
     }
+
+    /**
+     * @brief Clip x to be inside the interval
+     * @param x
+     * @return
+     */
+    T Clip(const T& x) const {
+        if(x>Stop())
+            return Stop();
+        else if(x<Start())
+            return Start();
+        else
+            return x;
+    }
 };
 
 /**
