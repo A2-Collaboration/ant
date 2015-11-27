@@ -88,7 +88,7 @@ void FitGaus::Load(const SavedState_t &data)
     SavedState_t::const_iterator pos = data.begin();
     loadTF1(pos, func);
 
-    sync();
+    Sync();
 
 }
 

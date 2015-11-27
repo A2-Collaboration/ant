@@ -11,9 +11,6 @@ protected:
     TF1* signal;
     TF1* bg;
 
-    void sync();
-
-
 public:
     FitGausPol3();
     virtual ~FitGausPol3();

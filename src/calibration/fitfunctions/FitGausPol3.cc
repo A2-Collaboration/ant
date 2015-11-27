@@ -13,7 +13,7 @@
 using namespace std;
 using namespace ant::calibration;
 
-void ant::calibration::gui::FitGausPol3::sync()
+void ant::calibration::gui::FitGausPol3::Sync()
 {
     signal->SetParameters(&(func->GetParameters()[0]));
     bg->SetParameters(    &(func->GetParameters()[3]));
@@ -71,7 +71,7 @@ void ant::calibration::gui::FitGausPol3::Draw()
 void ant::calibration::gui::FitGausPol3::Fit(TH1* hist)
 {
     FitFunction::doFit(hist, func);
-    sync();
+    Sync();
 }
 
 void gui::FitGausPol3::FitBackground(TH1* hist)
@@ -79,7 +79,7 @@ void gui::FitGausPol3::FitBackground(TH1* hist)
     const auto fixedPars = {0,1,2};
     FixParameters(func, fixedPars);
     FitFunction::doFit(hist, func);
-    sync();
+    Sync();
     UnFixParameters(func, fixedPars);
 }
 
@@ -88,7 +88,7 @@ void gui::FitGausPol3::FitSignal(TH1* hist)
     const auto fixedPars = {3,4,5,6};
     FixParameters(func, fixedPars);
     FitFunction::doFit(hist, func);
-    sync();
+    Sync();
     UnFixParameters(func, fixedPars);
 }
 
@@ -113,7 +113,7 @@ void ant::calibration::gui::FitGausPol3::SetDefaults(TH1 *hist)
     func->SetParameter(5, 1);
     func->SetParameter(6, 0.1);
 
-    sync();
+    Sync();
 }
 
 void ant::calibration::gui::FitGausPol3::SetRange(ant::interval<double> i)
@@ -128,11 +128,6 @@ void ant::calibration::gui::FitGausPol3::SetRange(ant::interval<double> i)
 ant::interval<double> ant::calibration::gui::FitGausPol3::GetRange() const
 {
     return getRange(func);
-}
-
-void ant::calibration::gui::FitGausPol3::Sync()
-{
-    sync();
 }
 
 std::vector<double> ant::calibration::gui::FitGausPol3::Save() const
@@ -154,7 +149,7 @@ void ant::calibration::gui::FitGausPol3::Load(const std::vector<double> &data)
     SavedState_t::const_iterator p = data.begin();
     loadTF1(p, func);
     SetRange(getRange(func));
-    sync();
+    Sync();
 }
 
 double ant::calibration::gui::FitGausPol3::GetPeakPosition() const
