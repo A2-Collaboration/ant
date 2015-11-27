@@ -36,31 +36,32 @@ public:
     }
 };
 
-template<class theWidget>
-class ActionWidget : public theWidget {
-    struct MyExec : TExec {
-        MyExec(function<void()> action_) : action(action_) {}
-        virtual void Exec(const char*) override {
-            action();
-        }
-    private:
-        function<void()> action;
-    };
-    unique_ptr<MyExec> exec;
+struct LambdaExec : TExec {
+    LambdaExec(function<void()> action_) : action(action_) {}
+    virtual void Exec(const char*) override {
+        action();
+    }
+private:
+    function<void()> action;
+};
+
+template<class theButton>
+class ActionButton : public theButton {
+    unique_ptr<LambdaExec> exec;
     bool* ptr_flag = nullptr;
 
 public:
-    using theWidget::theWidget;
+    using theButton::theButton;
 
     void SetAction(function<void()> action) {
         if(exec)
             return;
-        exec = std_ext::make_unique<MyExec>(action);
-        TQObject::Connect("Clicked()", "TExec", exec.get(), "Exec(=\"\")");
+        exec = std_ext::make_unique<LambdaExec>(action);
+        this->Connect("Clicked()", "TExec", exec.get(), "Exec(=\"\")");
     }
 
     void LinkFlag(bool& flag) {
-        static_assert(is_same<theWidget, TGCheckButton>::value, "LinkFlag only makes sense for check buttons");
+        static_assert(is_same<theButton, TGCheckButton>::value, "LinkFlag only makes sense for check buttons");
         ptr_flag = addressof(flag);
         SetAction([this] () {
             *this->ptr_flag = this->IsOn();
@@ -73,6 +74,23 @@ public:
             return;
         this->SetState(flag ? EButtonState::kButtonDown : EButtonState::kButtonUp);
         *this->ptr_flag = flag;
+    }
+};
+
+class ActionEntry : public TGNumberEntry {
+    unique_ptr<LambdaExec> exec;
+    double* ptr_number;
+public:
+    using TGNumberEntry::TGNumberEntry;
+
+    void LinkNumber(double& number) {
+        this->SetNumber(number);
+        ptr_number = addressof(number);
+        exec = std_ext::make_unique<LambdaExec>([this] () {
+            *ptr_number = this->GetNumber();
+        });
+        this->Connect("ValueSet(Long_t)", "TExec", exec.get(), "Exec(=\"\")");
+        this->Connect("ValueChanged(Long_t)", "TExec", exec.get(), "Exec(=\"\")");
     }
 };
 
@@ -117,16 +135,16 @@ void ManagerWindow::CreateToolbar(TGVerticalFrame* frame)
 
     TGHorizontalFrame* frm1 = new TGHorizontalFrame(frame);
 
-    auto btn_autocontinue = new ActionWidget<TGCheckButton>(frm1,"AutoContinue");
+    auto btn_autocontinue = new ActionButton<TGCheckButton>(frm1,"AutoContinue");
     btn_autocontinue->LinkFlag(Mode.autoContinue);
 
-    auto btn_showfit = new ActionWidget<TGCheckButton>(frm1,"Show each fit");
+    auto btn_showfit = new ActionButton<TGCheckButton>(frm1,"Show each fit");
     btn_showfit->LinkFlag(Mode.showEachFit);
 
-    auto btn_autofinish = new ActionWidget<TGCheckButton>(frm1,"AutoFinish");
+    auto btn_autofinish = new ActionButton<TGCheckButton>(frm1,"AutoFinish");
     btn_autofinish->LinkFlag(Mode.autoFinish);
 
-    auto btn_prev = new ActionWidget<TGTextButton>(frm1,"Prev (b)");
+    auto btn_prev = new ActionButton<TGTextButton>(frm1,"Prev (b)");
     keys[kKey_b] = btn_prev;
     btn_prev->SetAction([this] () {
         Mode.channelStep = -1;
@@ -134,7 +152,7 @@ void ManagerWindow::CreateToolbar(TGVerticalFrame* frame)
         RunManager();
     });
 
-    auto btn_next = new ActionWidget<TGTextButton>(frm1,"Next (n)");
+    auto btn_next = new ActionButton<TGTextButton>(frm1,"Next (n)");
     keys[kKey_n] = btn_next;
     btn_next->SetAction([this] () {
         Mode.channelStep = 1;
@@ -148,7 +166,7 @@ void ManagerWindow::CreateToolbar(TGVerticalFrame* frame)
                                                TGNumberFormat::kNEANonNegative
                                                );
 
-    auto btn_goto = new ActionWidget<TGTextButton>(frm1,"Goto");
+    auto btn_goto = new ActionButton<TGTextButton>(frm1,"Goto");
     btn_goto->SetAction([this, entry_gotochannel, btn_autocontinue] () {
         btn_autocontinue->SetFlag(false);
         Mode.gotoNextSlice = false;
@@ -156,7 +174,7 @@ void ManagerWindow::CreateToolbar(TGVerticalFrame* frame)
         RunManager();
     });
 
-    auto btn_finish = new ActionWidget<TGTextButton>(frm1,"Finish Slice (space)");
+    auto btn_finish = new ActionButton<TGTextButton>(frm1,"Finish Slice (space)");
     keys[kKey_Space] = btn_finish;
     btn_finish->SetAction([this, btn_autocontinue] () {
         Mode.channelStep = 1;
@@ -170,42 +188,42 @@ void ManagerWindow::CreateToolbar(TGVerticalFrame* frame)
 
     TGHorizontalFrame* frm2 = new TGHorizontalFrame(frame);
 
-    auto btn_fit = new ActionWidget<TGTextButton>(frm2,"Fit (f)");
+    auto btn_fit = new ActionButton<TGTextButton>(frm2,"Fit (f)");
     keys[kKey_f] = btn_fit;
     btn_fit->SetAction([this] () {
         for(auto canvas : canvases)
             canvas->Fit();
     });
 
-    auto btn_fitsignal = new ActionWidget<TGTextButton>(frm2,"Fit Signal (s)");
+    auto btn_fitsignal = new ActionButton<TGTextButton>(frm2,"Fit Signal (s)");
     keys[kKey_s] = btn_fitsignal;
     btn_fitsignal->SetAction([this] () {
         for(auto canvas : canvases)
             canvas->Fit(CalCanvas::FitType_t::Signal);
     });
 
-    auto btn_fitbackground = new ActionWidget<TGTextButton>(frm2,"Fit Background (B)");
+    auto btn_fitbackground = new ActionButton<TGTextButton>(frm2,"Fit Background (B)");
     keys[kKey_B] = btn_fitbackground;
     btn_fitbackground->SetAction([this] () {
         for(auto canvas : canvases)
             canvas->Fit(CalCanvas::FitType_t::Background);
     });
 
-    auto btn_defaults = new ActionWidget<TGTextButton>(frm2,"SetDefaults (d)");
+    auto btn_defaults = new ActionButton<TGTextButton>(frm2,"SetDefaults (d)");
     keys[kKey_d] = btn_defaults;
     btn_defaults->SetAction([this] () {
         for(auto canvas : canvases)
             canvas->SetDefaults();
     });
 
-    auto btn_undopop = new ActionWidget<TGTextButton>(frm2,"Undo pop (u)");
+    auto btn_undopop = new ActionButton<TGTextButton>(frm2,"Undo pop (u)");
     keys[kKey_u] = btn_undopop;
     btn_undopop->SetAction([this] () {
         for(auto canvas : canvases)
             canvas->UndoPop();
     });
 
-    auto btn_undopush = new ActionWidget<TGTextButton>(frm2,"Undo push (i)");
+    auto btn_undopush = new ActionButton<TGTextButton>(frm2,"Undo push (i)");
     keys[kKey_i] = btn_undopush;
     btn_undopush->SetAction([this] () {
         for(auto canvas : canvases)
@@ -383,9 +401,21 @@ void ManagerWindow::AddCheckBox(const string& label, bool& flag)
 {
     if(gROOT->IsBatch())
         return;
-    auto btn = new ActionWidget<TGCheckButton>(frame_extraflags, label.c_str());
+    auto btn = new ActionButton<TGCheckButton>(frame_extraflags, label.c_str());
     btn->LinkFlag(flag);
     frame_extraflags->AddFrame(btn, new TGLayoutHints(kLHintsLeft,2,2,2,2));
+}
+
+void ManagerWindow::AddNumberEntry(const string& label, double& number)
+{
+    if(gROOT->IsBatch())
+        return;
+    auto entry = new ActionEntry(frame_extraflags);
+    entry->GetNumberEntry()->SetToolTipText(label.c_str(), 100);
+    entry->LinkNumber(number);
+
+
+    frame_extraflags->AddFrame(entry, new TGLayoutHints(kLHintsLeft,2,2,2,2));
 }
 
 void ManagerWindow::SetProgressMax(unsigned slices, unsigned channels)

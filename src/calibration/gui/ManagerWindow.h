@@ -65,7 +65,8 @@ public:
     virtual Bool_t HandleKey(Event_t *event) override;
     virtual ~ManagerWindow();
     virtual gui::CalCanvas* AddCalCanvas(const std::string& name = "") override;
-    virtual void AddCheckBox(const std::string &label, bool &flag) override;
+    virtual void AddCheckBox(const std::string &label, bool& flag) override;
+    virtual void AddNumberEntry(const std::string &label, double& number) override;
 
     ManagerWindowMode Mode;
 
