@@ -30,7 +30,14 @@ double KinFitter::EnergyResolution(const analysis::data::ParticlePtr& p) const
             return fct_GlobalEResolution(p->Ek()); ///@todo check TAPS energy resolution fct
         }
     } else {
-        throw runtime_error("Particle without candidate!");
+        if(p->Theta() < degree_to_radian(20.0) ) {
+
+            return fct_GlobalEResolution(p->Ek());
+
+        } else {   ///@todo check TAPS Theta resolution
+
+            return fct_GlobalEResolution(p->Ek()); ///@todo check TAPS energy resolution fct
+        }
     }
     return 0.0;
 }
@@ -52,7 +59,14 @@ double KinFitter::PhiResolution(const analysis::data::ParticlePtr& p) const
             return p->Candidate()->Theta() / std::sin(p->Candidate()->Theta());
         }
     } else {
-        throw runtime_error("Particle without candidate!");
+        if(p->Theta() < degree_to_radian(20.0) ) {
+
+            return p->Theta() / std::sin(p->Theta());
+
+        } else {   ///@todo check TAPS Theta resolution
+
+            return p->Theta() / std::sin(p->Theta());
+        }
     }
     return 0.0;
 }
