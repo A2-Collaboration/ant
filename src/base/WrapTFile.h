@@ -139,6 +139,11 @@ public:
         return object;
     }
 
+    template <typename T>
+    int WriteObject(T* obj, const std::string& name) {
+        return files.front()->WriteObject(obj, name.c_str());
+    }
+
     WrapTFileOutput(const WrapTFileOutput&) = delete;
     WrapTFileOutput& operator= (const WrapTFileOutput&) = delete;
 };
