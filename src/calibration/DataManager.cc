@@ -5,7 +5,6 @@
 #include "base/Logger.h"
 #include "base/std_ext/memory.h"
 #include "base/interval.h"
-#include "DataBase.h"
 #include "tree/TCalibrationData.h"
 #include "tree/TDataRecord.h"
 
@@ -27,19 +26,12 @@ void DataManager::Init()
 {
     if(dataBase)
         return;
-    dataBase = std_ext::make_unique<DataBase>();
-    dataBase->ReadFromFolder(calibrationDataFolder);
+    dataBase = std_ext::make_unique<DataBase>(calibrationDataFolder);
 }
 
 DataManager::DataManager(const string& calibrationDataFolder_):
     calibrationDataFolder(calibrationDataFolder_)
 {}
-
-DataManager::~DataManager()
-{
-    if(dataBase)
-        dataBase->WriteToFolder(calibrationDataFolder);
-}
 
 void DataManager::Add(const TCalibrationData& cdata, DataBase::mode_t addMode)
 {
@@ -59,12 +51,6 @@ bool DataManager::GetData(const string& calibrationID,
                           const TID& eventID, TCalibrationData& cdata, TID& nextChangePoint)
 {
     Init();
-    // case one: calibration doesn't exist at all
-    if (!dataBase->Has(calibrationID))
-        return false;
-
-    // case two: eventID lies inside data, then return it
-
     return dataBase->GetItem(calibrationID,eventID,cdata,nextChangePoint);
 }
 

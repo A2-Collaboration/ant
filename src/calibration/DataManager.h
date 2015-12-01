@@ -1,12 +1,11 @@
 #pragma once
 
+#include "DataBase.h"
+
 //std
 #include <list>
 #include <string>
 #include <memory>
-
-#include "calibration/DataBase.h"
-
 
 namespace ant
 {
@@ -16,7 +15,6 @@ class TID;
 
 namespace calibration
 {
-
 
 class DataAccess
 {
@@ -48,8 +46,6 @@ private:
     std::unique_ptr<DataBase> dataBase;
 
     void Init();
-
-
 
 public:
     DataManager(const std::string& calibrationDataFolder_);
