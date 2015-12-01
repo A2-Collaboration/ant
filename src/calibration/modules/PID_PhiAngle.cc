@@ -213,7 +213,7 @@ void PID_PhiAngle::TheGUI::StartSlice(const interval<TID>& range)
 
     TCalibrationData cdata;
     // TODO
-    if(calibrationManager->GetData(GetName()+"/SingleChannels", range.Start(), cdata)) {
+    if(calibrationManager->GetData(GetName()+"_SingleChannels", range.Start(), cdata)) {
         for(const TKeyValue<double>& kv : cdata.Data) {
             angles[kv.Key] = kv.Value;
         }
@@ -326,7 +326,7 @@ void PID_PhiAngle::TheGUI::StoreFinishSlice(const interval<TID>& range)
     delete h_result;
 
     TCalibrationData cdata(
-                GetName()+"/SingleChannels",
+                GetName()+"_SingleChannels",
                 range.Start(),
                 range.Stop()
                 );
