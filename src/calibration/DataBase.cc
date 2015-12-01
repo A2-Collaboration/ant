@@ -201,24 +201,21 @@ const std::list<TID> DataBase::GetChangePoints(const string& calibrationID) cons
     return ids;
 }
 
-std::vector<TCalibrationData>& DataBase::ModifyItems(const string& calibrationID)
+bool DataBase::ModifyItem(const string& calibrationID, const TID& currentPoint, TCalibrationData& theData, TID& nextChangePoint)
 {
-    auto& item = dataMap.at(calibrationID);
-    item.Modified = true;
-    return item.Data;
+//    auto& item = dataMap.at(calibrationID);
+//    item.Modified = true;
+    return true;
 }
 
-const std::vector<TCalibrationData>& DataBase::GetItems(const string& calibrationID) const
+bool DataBase::GetItem(const string& calibrationID, const TID& currentPoint, TCalibrationData& theData, TID& nextChangePoint) const
 {
-    return dataMap.at(calibrationID).Data;
+//    return dataMap.at(calibrationID).Data;
+    return true;
 }
 
-void DataBase::AddItem(const TCalibrationData& cdata)
+void DataBase::AddItem(const TCalibrationData& cdata, mode_t mode)
 {
-    // create the vector if not there yet
-    auto& item  = dataMap[cdata.CalibrationID];
-    item.Modified = true;
-    item.Data.push_back(cdata);
 }
 
 

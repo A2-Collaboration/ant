@@ -255,7 +255,8 @@ void Energy::GUI_CalibType::StoreFinishSlice(const interval<TID>& range)
         cdata.FitParameters.emplace_back(ch, params);
     }
 
-    calibrationManager->Add(cdata);
+    //TODO: choose add mode
+    calibrationManager->Add(cdata,DataBase::mode_t::AsDefault);
 }
 
 Energy::GUI_Pedestals::GUI_Pedestals(

@@ -50,6 +50,13 @@ private:
     bool changed = false;
     DataMap_t dataMap;
 public:
+    enum class mode_t
+    {
+        AsDefault,
+        RightOpen,
+        StrictRange
+    };
+
     /**
      * @brief ReadFromFile read all TCalibrationData trees from given filename
      * @param filename given ROOT file
@@ -81,9 +88,10 @@ public:
     const std::list<TID> GetChangePoints(const std::string& calibrationID) const;
 
 
-    std::vector<ant::TCalibrationData>& ModifyItems(const std::string& calibrationID);
-    const std::vector<ant::TCalibrationData>& GetItems(const std::string& calibrationID) const;
-    void AddItem(const TCalibrationData& cdata);
+    bool ModifyItem(const std::string& calibrationID, const TID& currentPoint,TCalibrationData& theData, TID& nextChangePoint);
+    bool GetItem   (const std::string& calibrationID, const TID& currentPoint,TCalibrationData& theData, TID& nextChangePoint) const;
+
+    void AddItem(const TCalibrationData& cdata, mode_t mode);
 
 
     DataBase();

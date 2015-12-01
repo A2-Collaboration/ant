@@ -212,6 +212,7 @@ void PID_PhiAngle::TheGUI::StartSlice(const interval<TID>& range)
         angles[ch] = std_ext::radian_to_degree(pid_detector->GetPosition(ch).Phi());
 
     TCalibrationData cdata;
+    // TODO
     if(calibrationManager->GetData(GetName()+"/SingleChannels", range.Start(), cdata)) {
         for(const TKeyValue<double>& kv : cdata.Data) {
             angles[kv.Key] = kv.Value;
@@ -350,7 +351,8 @@ void PID_PhiAngle::TheGUI::StoreFinishSlice(const interval<TID>& range)
     cdata_offset.Data.emplace_back(0, phi_offset);
 
 
-    calibrationManager->Add(cdata);
-    calibrationManager->Add(cdata_offset);
+    //TODO
+    calibrationManager->Add(cdata,DataBase::mode_t::AsDefault);
+    calibrationManager->Add(cdata_offset,DataBase::mode_t::AsDefault);
 }
 

@@ -336,5 +336,6 @@ void Time::TheGUI::StoreFinishSlice(const interval<TID>& range)
         cdata.FitParameters.emplace_back(ch, params);
     }
 
-    calmgr->Add(cdata);
+    // TODO: choose mode
+    calmgr->Add(cdata,DataBase::mode_t::AsDefault);
 }

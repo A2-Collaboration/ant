@@ -41,16 +41,21 @@ DataManager::~DataManager()
         dataBase->WriteToFolder(calibrationDataFolder);
 }
 
-void DataManager::Add(const TCalibrationData& cdata)
+void DataManager::Add(const TCalibrationData& cdata, DataBase::mode_t addMode)
 {
     Init();
-    dataBase->AddItem(cdata);
+    dataBase->AddItem(cdata, addMode);
     LOG(INFO) << "Added " << cdata;
+}
+
+bool DataManager::GetData(const string& calibrationID, const TID& eventID, TCalibrationData& cdata)
+{
+
 }
 
 
 bool DataManager::GetData(const string& calibrationID,
-                          const TID& eventID, TCalibrationData& cdata)
+                          const TID& eventID, TCalibrationData& cdata, TID& nexChangePoint)
 {
     Init();
     // case one: calibration doesn't exist at all
@@ -59,20 +64,7 @@ bool DataManager::GetData(const string& calibrationID,
 
     // case two: eventID lies inside data, then return it
 
-    const auto& calibPairs = dataBase->GetItems(calibrationID);
-    for(auto rit = calibPairs.rbegin(); rit != calibPairs.rend(); ++rit)
-    {
-        interval<TID> range(rit->FirstID, rit->LastID);
-        if (range.Contains(eventID))
-        {
-            cdata = *rit;
-            return true;
-        }
-
-    }
-
-    // case three: TID not covered by anything
-    return false;
+    return dataBase->GetItem(calibrationID,eventID,cdata,nexChangePoint);
 }
 
 
