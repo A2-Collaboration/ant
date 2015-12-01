@@ -93,7 +93,7 @@ struct ReconstructHook {
 struct Updateable_traits {
 
     struct Item {
-        virtual void Load(const TID& currPoint, TID& validUntil) =0;
+        virtual void Load(const TID& currPoint, TID& nextChangePoint) =0;
     };
 
     using UpdateableItemPtr = std::shared_ptr<Updateable_traits::Item>;

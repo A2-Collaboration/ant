@@ -32,17 +32,17 @@ public:
 
 private:
     struct queue_item_t {
-        TID ValidUntil;
+        TID NextChangePoint;
         Updateable_traits::UpdateableItemPtr Item;
-        queue_item_t(const TID& validUntil,
+        queue_item_t(const TID& nextChangePoint,
                      const Updateable_traits::UpdateableItemPtr& item) :
-            ValidUntil(validUntil),
+            NextChangePoint(nextChangePoint),
             Item(item)
         {}
         bool operator<(const queue_item_t& other) const {
-            // invert ordering such that item with earliest TID
+            // invert ordering such that item with earliest change point
             // comes first in priority queue
-            return other.ValidUntil < ValidUntil;
+            return other.NextChangePoint < NextChangePoint;
         }
     };
 

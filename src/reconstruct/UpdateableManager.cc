@@ -46,7 +46,7 @@ void UpdateableManager::UpdateParameters(const TID& currentPoint)
 
     // it might be that the current point lies far in the future
     // so calling Load more than once might be necessary
-   while(!queue.empty() && queue.top().ValidUntil < currentPoint) {
+   while(!queue.empty() && queue.top().NextChangePoint < currentPoint) {
        DoQueueLoad(currentPoint, queue.top().Item);
        queue.pop();
    }
@@ -55,13 +55,13 @@ void UpdateableManager::UpdateParameters(const TID& currentPoint)
 void UpdateableManager::DoQueueLoad(const TID& currPoint,
                                          Updateable_traits::UpdateableItemPtr item)
 {
-    TID validUntil;
-    item->Load(currPoint, validUntil);
-    if(validUntil.IsInvalid())
+    TID nextChangePoint;
+    item->Load(currPoint, nextChangePoint);
+    if(nextChangePoint.IsInvalid())
         return;
-    if(validUntil < currPoint) {
-        LOG(WARNING) << "UpdateableItem returned validity into the past";
+    if(nextChangePoint <= currPoint) {
+        LOG(WARNING) << "UpdateableItem returned NextChangePoint not pointing to the future";
         return;
     }
-    queue.emplace(validUntil, item);
+    queue.emplace(nextChangePoint, item);
 }
