@@ -147,7 +147,7 @@ std::list<Updateable_traits::Loader_t> Energy::GetLoaders() const
             TCalibrationData cdata;
             if(calibrationManager->GetData(
                    GUI_CalibType::ConstructName(GetName(), calibration->Name),
-                   currPoint, cdata))
+                   currPoint, cdata, nextChangePoint))
             {
                 auto& values = calibration->Values;
                 for (const auto& val: cdata.Data) {

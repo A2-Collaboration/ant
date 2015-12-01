@@ -164,7 +164,7 @@ std::list<Updateable_traits::Loader_t> CB_TimeWalk::GetLoaders() const
     return {
         [this] (const TID& currPoint, TID& nextChangePoint) {
             TCalibrationData cdata;
-            if(!calibrationManager->GetData(GetName(), currPoint, cdata))
+            if(!calibrationManager->GetData(GetName(), currPoint, cdata, nextChangePoint))
                 return;
             for(const TKeyValue<vector<double>>& kv : cdata.FitParameters) {
                 if(kv.Key>=timewalks.size()) {

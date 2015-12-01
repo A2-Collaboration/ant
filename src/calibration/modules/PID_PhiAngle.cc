@@ -128,7 +128,7 @@ std::list<Updateable_traits::Loader_t> PID_PhiAngle::GetLoaders() const
     return {
         [this] (const TID& currPoint, TID& nextChangePoint) {
             TCalibrationData cdata;
-            if(!calibrationManager->GetData(GetName(), currPoint, cdata))
+            if(!calibrationManager->GetData(GetName(), currPoint, cdata, nextChangePoint))
                 return;
             if(cdata.Data.size() != 1)
                 return;

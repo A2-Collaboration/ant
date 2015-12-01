@@ -54,7 +54,7 @@ std::list<Updateable_traits::Loader_t> Time::GetLoaders() const
     return {
       [this] (const TID& currPoint, TID& nextChangePoint) {
             TCalibrationData cdata;
-            if(calibrationManager->GetData(GetName(), currPoint, cdata))
+            if(calibrationManager->GetData(GetName(), currPoint, cdata, nextChangePoint))
             {
                 for (const auto& val: cdata.Data) {
                     if(Offsets.size()<val.Key+1)
