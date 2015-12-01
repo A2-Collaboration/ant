@@ -19,7 +19,6 @@ using namespace ant::calibration;
 unsigned dotest_store(const string& foldername);
 void dotest_load(const string& foldername, unsigned ndata);
 void dotest_changes(const string& foldername);
-void dotest_extendable();
 
 TEST_CASE("CalibrationDataManager: Save/Load","[calibration]")
 {
@@ -27,86 +26,6 @@ TEST_CASE("CalibrationDataManager: Save/Load","[calibration]")
     auto ndata = dotest_store(tmp.foldername);
     dotest_load(tmp.foldername,ndata);
     dotest_changes(tmp.foldername);
-}
-
-TEST_CASE("CalibrationDataManager: Extendable","[calibration]")
-{
-    dotest_extendable();
-}
-
-void dotest_extendable()
-{
-    // some commonly used variables
-    tmpfolder_t tmp;
-    TCalibrationData cdata;
-    string id;
-    DataManager calibman(tmp.foldername);
-    auto check = [] (const TCalibrationData& c, const interval<TID>& i) {
-        return c.FirstID == i.Start() && c.LastID == i.Stop();
-    };
-    const interval<TID> i1(TID(0,4u),  TID(0,6u));
-    const interval<TID> i2(TID(0,9u),  TID(0,10u));
-    const interval<TID> i3(TID(0,12u), TID(0,15u));
-    const interval<TID> i4(TID(0,2u),  TID(0,16u));
-    const interval<TID> i5(TID(0,2u,{TID::Flags_t::MC}),  TID(0,16u,{TID::Flags_t::MC}));
-
-
-    // first simple test
-    id = "1";
-    calibman.Add(TCalibrationData(id, i1.Start(), i1.Stop(), true));
-    calibman.Add(TCalibrationData(id, i2.Start(), i2.Stop(), true));
-    calibman.Add(TCalibrationData(id, i3.Start(), i3.Stop(), true));
-
-    REQUIRE(calibman.GetData(id, TID(0,3u), cdata));
-    REQUIRE(check(cdata, i1));
-
-    REQUIRE(calibman.GetData(id, TID(0,7u), cdata));
-    REQUIRE(check(cdata, i2));
-
-    REQUIRE(calibman.GetData(id, TID(0,11u), cdata));
-    REQUIRE(check(cdata, i3));
-
-    REQUIRE(calibman.GetData(id, TID(0,16u), cdata));
-    REQUIRE(check(cdata, i3));
-
-    // second test with large interval
-    id = "2";
-    calibman.Add(TCalibrationData(id, i4.Start(), i4.Stop(), true));
-    calibman.Add(TCalibrationData(id, i1.Start(), i1.Stop(), true));
-    calibman.Add(TCalibrationData(id, i2.Start(), i2.Stop(), true));
-    calibman.Add(TCalibrationData(id, i3.Start(), i3.Stop(), true));
-
-    REQUIRE(calibman.GetData(id, TID(0,3u), cdata));
-    REQUIRE(check(cdata, i4));
-
-    REQUIRE(calibman.GetData(id, TID(0,1u), cdata));
-    REQUIRE(check(cdata, i4));
-
-    REQUIRE(calibman.GetData(id, TID(0,17u), cdata));
-    REQUIRE(check(cdata, i4));
-
-    REQUIRE(calibman.GetData(id, TID(0,9u), cdata));
-    REQUIRE(check(cdata, i2));
-
-    // third test with MC flag
-    id = "3";
-    calibman.Add(TCalibrationData(id, i5.Start(), i5.Stop(), true));
-    calibman.Add(TCalibrationData(id, i1.Start(), i1.Stop(), true));
-    calibman.Add(TCalibrationData(id, i2.Start(), i2.Stop(), true));
-    calibman.Add(TCalibrationData(id, i3.Start(), i3.Stop(), true));
-
-    REQUIRE(calibman.GetData(id, TID(0,3u), cdata));
-    REQUIRE(check(cdata, i1));
-
-    REQUIRE(calibman.GetData(id, TID(0,7u), cdata));
-    REQUIRE(check(cdata, i2));
-
-    REQUIRE(calibman.GetData(id, TID(0,11u), cdata));
-    REQUIRE(check(cdata, i3));
-
-    REQUIRE(calibman.GetData(id, TID(0,16u), cdata));
-    REQUIRE(check(cdata, i3));
-
 }
 
 unsigned dotest_store(const string& foldername)

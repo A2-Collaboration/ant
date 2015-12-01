@@ -60,12 +60,10 @@ protected:
         const double        DefaultValue;
         std::vector<double> Values;
         const std::string   Name;
-        bool Extendable;
-        CalibType(double defaultValue, const std::string& name, bool extendable = false):
+        CalibType(double defaultValue, const std::string& name):
             DefaultValue(defaultValue),
             Values(),
-            Name(name),
-            Extendable(extendable)
+            Name(name)
         {}
     }; // CalibType
 

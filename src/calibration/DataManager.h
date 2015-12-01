@@ -51,7 +51,6 @@ private:
 
     std::string calibrationDataFolder;
     std::unique_ptr<DataBase> dataBase;
-    bool extendable;
 
     void Init();
 
@@ -73,8 +72,6 @@ public:
     std::uint32_t GetNumberOfCalibrations();
 
     std::uint32_t GetNumberOfDataPoints(const std::string& calibrationID);
-
-    void SetExtendable() { extendable = true; }
 
 };
 

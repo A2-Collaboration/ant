@@ -28,7 +28,7 @@ struct TCalibrationData
 
     std::string CalibrationID;
 
-    bool Extendable; // default is false
+    bool Extendable; // OBSOLETE
     TID FirstID;
     TID LastID;
 
@@ -41,13 +41,11 @@ struct TCalibrationData
 #ifndef __CINT__
     TCalibrationData(const std::string& calibrationID,
                      const TID& first_id,
-                     const TID& last_id,
-                     bool extendable = false
+                     const TID& last_id
                      ) :
         Author(GitInfo::GetUser()),
         TimeStamp(std::time(nullptr)),
         CalibrationID(calibrationID),
-        Extendable(extendable),
         FirstID(first_id),
         LastID(last_id),
         Data(),
@@ -59,8 +57,6 @@ struct TCalibrationData
         s << "  Generated at    " << std_ext::to_iso8601(TimeStamp) << " by " << Author << '\n';
         s << "  CalibrationID:  " << CalibrationID << '\n';
         s << "  Valid for IDs:  [" << FirstID << ", " << LastID << "]";
-        if(Extendable)
-            s << " (extendable)";
         s  << '\n';
         return s;
     }
@@ -70,7 +66,6 @@ struct TCalibrationData
         Author(),
         TimeStamp(),
         CalibrationID(),
-        Extendable(false),
         FirstID(),
         LastID(),
         Data(),

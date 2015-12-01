@@ -42,7 +42,7 @@ Energy::Energy(Detector_t::Type_t detectorType,
     ChannelType(channelType),
     calibrationManager(calmgr),
     Converter(move(converter)),
-    Pedestals(defaultPedestal,"Pedestals", true), // pedestals are always extendable
+    Pedestals(defaultPedestal,"Pedestals"),
     Gains(defaultGain,"Gains"),
     Thresholds(defaultThreshold,"Thresholds"),
     RelativeGains(defaultRelativeGain,"RelativeGains")
@@ -239,8 +239,7 @@ void Energy::GUI_CalibType::StoreFinishSlice(const interval<TID>& range)
     TCalibrationData cdata(
                 GetName(),
                 range.Start(),
-                range.Stop(),
-                calibType.Extendable
+                range.Stop()
                 );
 
     std::vector<double>& values = calibType.Values;
