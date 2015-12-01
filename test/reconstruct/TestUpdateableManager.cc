@@ -15,6 +15,7 @@ void dotest2();
 void dotest3();
 void dotest4();
 void dotest5();
+void dotest6();
 
 
 TEST_CASE("UpdateableManager: No updates at all", "[reconstruct]") {
@@ -35,6 +36,10 @@ TEST_CASE("UpdateableManager: Multiple updates", "[reconstruct]") {
 
 TEST_CASE("UpdateableManager: Unallowed things", "[reconstruct]") {
     dotest5();
+}
+
+TEST_CASE("UpdateableManager: Complex items", "[reconstruct]") {
+    dotest6();
 }
 
 // implement some testable Updateable item
@@ -186,4 +191,29 @@ void dotest5() {
     REQUIRE(item->UpdatePoints.at(0).size() == 2);
     REQUIRE(p[2] == item->UpdatePoints.at(0)[0]);
     REQUIRE(p[3] == item->UpdatePoints.at(0)[1]);
+}
+
+void dotest6() {
+    const shared_ptr<UpdateableItem>& item =
+            make_shared<UpdateableItem>(
+                vector<list<TID>>{
+                    {p[0], p[1], p[2], p[3], p[4], p[5]},
+                    {p[0], p[1], p[3]}
+                });
+
+    list< shared_ptr<Updateable_traits> > updateables;
+    updateables.push_back(item);
+
+    UpdateableManager manager(p[0], updateables);
+    manager.UpdateParameters(p[4]);
+    manager.UpdateParameters(p.back());
+
+    REQUIRE(item->UpdatePoints.size() == 2);
+
+    REQUIRE(item->UpdatePoints.at(0).size() == 6);
+    REQUIRE(item->UpdatePoints.at(1).size() == 3);
+    REQUIRE(p[5] == item->UpdatePoints.at(0)[5]);
+    REQUIRE(p[3] == item->UpdatePoints.at(1)[2]);
+
+
 }
