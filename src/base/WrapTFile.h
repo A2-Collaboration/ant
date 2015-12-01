@@ -99,14 +99,22 @@ public:
     std::shared_ptr<TH3D> GetSharedTH3(const std::string& name);
 
     template<typename T>
-    std::shared_ptr<T>    GetSharedClone(const std::string& name) {
+    std::shared_ptr<T>  GetSharedClone(const std::string& name) {
         T* ptr = nullptr;
-        GetObject(name.c_str(), ptr);
-        if(ptr) {
+        if(GetObject(name.c_str(), ptr)) {
             return std::shared_ptr<T>(dynamic_cast<T*>(ptr->Clone()));
         }
-
         return nullptr;
+    }
+
+    template<typename T>
+    bool GetObjectClone(const std::string& name, T& object) {
+        T* ptr = nullptr;
+        if(GetObject(name.c_str(), ptr)) {
+            object = std::move(*ptr);
+            return true;
+        }
+        return false;
     }
 
     virtual ~WrapTFile();
