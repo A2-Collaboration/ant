@@ -19,6 +19,18 @@ inline bool string_ends_with(std::string const& value, std::string const& ending
     return std::equal(ending.rbegin(), ending.rend(), value.rbegin());
 }
 
+inline bool string_starts_with(std::string const& value, std::string const& beginning)
+{
+    if (beginning.size() > value.size()) return false;
+    return std::equal(beginning.begin(), beginning.end(), value.begin());
+}
+
+
+/**
+ * @brief string_sanitize removes nasty whitespace from string
+ * @param in
+ * @return
+ */
 inline std::string string_sanitize(const char* in) {
   std::string s(in);
   const std::string& whitespace = " \t\f\v\n\r";
