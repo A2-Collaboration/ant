@@ -3,7 +3,6 @@ include_directories(../analysis)
 
 set(SRCS
     Calibration.h
-    Editor.cc
     DataBase.cc
     DataManager.cc
     modules/Time.cc
@@ -25,8 +24,6 @@ set(SRCS
     gui/Manager.cc
     gui/Manager_traits.h
     gui/ManagerWindow.cc
-    gui/EditorCanvas.cc
-    gui/EditorWindow.cc
     gui/Indicator_traits.h
     gui/Indicator.cc
     gui/CalCanvas.cc
