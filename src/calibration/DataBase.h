@@ -8,6 +8,7 @@
 
 #include <set>
 #include <list>
+#include <stdexcept>
 
 namespace ant {
 
@@ -25,28 +26,27 @@ protected:
 
     struct Range_t {
         interval<TID> Range;
-        std::string Filename;
+        std::string FolderPath;
         bool operator<(const Range_t& other) const {
             return Range.Start() < other.Range.Start();
         }
         Range_t(const TID& tid) : Range(tid, TID()) {}
     };
 
-    std::set<Range_t> getRanges(const std::string& calibrationID) const;
+    std::set<Range_t> getDataRanges(const std::string& calibrationID) const;
 
     bool loadFile(const std::string& filename, TCalibrationData& cdata) const;
+    bool writeFile(const std::string& folder, const TCalibrationData& cdata) const;
 
 public:
-    enum class mode_t
-    {
-        AsDefault,
-        RightOpen,
-        StrictRange
+
+
+    class Exception : public std::runtime_error {
+        using std::runtime_error::runtime_error; // use base class constructor
     };
 
-    //bool Has(const std::string& calibrationID) const;
-    std::list<std::string> GetKeys() const;
-    std::uint32_t GetNumberOfDataItems(const std::string& calibrationID) const;
+    std::list<std::string> GetCalibrationIDs() const;
+    size_t GetNumberOfCalibrationData(const std::string& calibrationID) const;
 
 
     bool GetItem(const std::string& calibrationID,
@@ -54,6 +54,12 @@ public:
                  TCalibrationData& theData,
                  TID& nextChangePoint) const;
 
+    enum class mode_t
+    {
+        AsDefault,
+        RightOpen,
+        StrictRange
+    };
     void AddItem(const TCalibrationData& cdata, mode_t mode);
 
 

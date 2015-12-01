@@ -78,8 +78,8 @@ unsigned dotest_store(const string& foldername)
     calibman.Add(cdata, DataBase::mode_t::AsDefault);
 
     REQUIRE(calibman.GetNumberOfCalibrationIDs() == 2);
-    REQUIRE(calibman.GetNumberOfDataItems("1") == ndata);
-    REQUIRE(calibman.GetNumberOfDataItems("2") == 3);
+    REQUIRE(calibman.GetNumberOfCalibrationData("1") == ndata);
+    REQUIRE(calibman.GetNumberOfCalibrationData("2") == 3);
 
     return ndata;
 }
@@ -88,8 +88,8 @@ void dotest_load(const string &foldername,unsigned ndata)
 {
     DataManager calibman(foldername);
     REQUIRE(calibman.GetNumberOfCalibrationIDs() == 2);
-    REQUIRE(calibman.GetNumberOfDataItems("1") == ndata);
-    REQUIRE(calibman.GetNumberOfDataItems("2") == 3);
+    REQUIRE(calibman.GetNumberOfCalibrationData("1") == ndata);
+    REQUIRE(calibman.GetNumberOfCalibrationData("2") == 3);
 }
 
 void dotest_changes(const string& foldername)

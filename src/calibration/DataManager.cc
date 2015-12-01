@@ -54,14 +54,14 @@ bool DataManager::GetData(const string& calibrationID,
     return dataBase->GetItem(calibrationID,eventID,cdata,nextChangePoint);
 }
 
-uint32_t DataManager::GetNumberOfCalibrationIDs()
+size_t DataManager::GetNumberOfCalibrationIDs()
 {
     Init();
-    return dataBase->GetKeys().size();
+    return dataBase->GetCalibrationIDs().size();
 }
 
-uint32_t DataManager::GetNumberOfDataItems(const string& calibrationID)
+size_t DataManager::GetNumberOfCalibrationData(const string& calibrationID)
 {
     Init();
-    return dataBase->GetNumberOfDataItems(calibrationID);
+    return dataBase->GetNumberOfCalibrationData(calibrationID);
 }

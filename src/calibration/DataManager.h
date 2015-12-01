@@ -52,12 +52,17 @@ public:
 
     void Add(const TCalibrationData& cdata, DataBase::mode_t addMode) override;
 
-    bool GetData(const std::string& calibrationID, const TID& eventID, TCalibrationData& cdata) override;
-    bool GetData(const std::string& calibrationID, const TID& eventID, TCalibrationData& cdata, TID& nextChangePoint);
+    bool GetData(const std::string& calibrationID,
+                 const TID& eventID,
+                 TCalibrationData& cdata) override;
+    bool GetData(const std::string& calibrationID,
+                 const TID& eventID,
+                 TCalibrationData& cdata,
+                 TID& nextChangePoint);
 
-    std::uint32_t GetNumberOfCalibrationIDs();
-
-    std::uint32_t GetNumberOfDataItems(const std::string& calibrationID);
+    // the following methods are only useful for test cases
+    std::size_t GetNumberOfCalibrationIDs();
+    std::size_t GetNumberOfCalibrationData(const std::string& calibrationID);
 
 };
 
