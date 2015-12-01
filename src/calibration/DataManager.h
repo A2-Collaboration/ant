@@ -77,7 +77,7 @@ public:
     void Add(const TCalibrationData& cdata, DataBase::mode_t addMode) override;
 
     bool GetData(const std::string& calibrationID, const TID& eventID, TCalibrationData& cdata) override;
-    bool GetData(const std::string& calibrationID, const TID& eventID, TCalibrationData& cdata, TID& nexChangePoint) override;
+    bool GetData(const std::string& calibrationID, const TID& eventID, TCalibrationData& cdata, TID& nextChangePoint) override;
 
     const std::list<TID> GetChangePoints(const std::string& calibrationID) override;
 

@@ -50,12 +50,13 @@ void DataManager::Add(const TCalibrationData& cdata, DataBase::mode_t addMode)
 
 bool DataManager::GetData(const string& calibrationID, const TID& eventID, TCalibrationData& cdata)
 {
-
+    TID dummy;
+    return GetData(calibrationID, eventID, cdata, dummy);
 }
 
 
 bool DataManager::GetData(const string& calibrationID,
-                          const TID& eventID, TCalibrationData& cdata, TID& nexChangePoint)
+                          const TID& eventID, TCalibrationData& cdata, TID& nextChangePoint)
 {
     Init();
     // case one: calibration doesn't exist at all
@@ -64,7 +65,7 @@ bool DataManager::GetData(const string& calibrationID,
 
     // case two: eventID lies inside data, then return it
 
-    return dataBase->GetItem(calibrationID,eventID,cdata,nexChangePoint);
+    return dataBase->GetItem(calibrationID,eventID,cdata,nextChangePoint);
 }
 
 
