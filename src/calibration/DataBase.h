@@ -87,7 +87,6 @@ public:
     std::uint32_t GetNumberOfDataPoints(const std::string& calibrationID) const;
 
 
-    bool ModifyItem(const std::string& calibrationID, const TID& currentPoint,TCalibrationData& theData, TID& nextChangePoint);
     bool GetItem   (const std::string& calibrationID, const TID& currentPoint,TCalibrationData& theData, TID& nextChangePoint) const;
 
     void AddItem(const TCalibrationData& cdata, mode_t mode);

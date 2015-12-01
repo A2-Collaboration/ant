@@ -171,13 +171,6 @@ uint32_t DataBase::GetNumberOfDataPoints(const string& calibrationID) const
     return it->second.Data.size();
 }
 
-bool DataBase::ModifyItem(const string& calibrationID, const TID& currentPoint, TCalibrationData& theData, TID& nextChangePoint)
-{
-//    auto& item = dataMap.at(calibrationID);
-//    item.Modified = true;
-    return true;
-}
-
 bool DataBase::GetItem(const string& calibrationID, const TID& currentPoint, TCalibrationData& theData, TID& nextChangePoint) const
 {
 //    return dataMap.at(calibrationID).Data;
