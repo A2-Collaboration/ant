@@ -41,7 +41,7 @@ TEST_CASE("UpdateableManager: Unallowed things", "[reconstruct]") {
 struct UpdateableItem :  Updateable_traits {
 
     const vector<list<TID>> ChangePoints;
-    vector<vector<TID>> UpdatePoints;
+    mutable vector<vector<TID>> UpdatePoints;
 
 
     UpdateableItem(vector<list<TID>> changePoints) :
@@ -51,7 +51,35 @@ struct UpdateableItem :  Updateable_traits {
 
     virtual std::list<UpdateableItemPtr> GetItems() const override
     {
+        std::list<UpdateableItemPtr> items;
 
+        struct Wrapper : Item {
+
+            list<TID> ChangePoints;
+            vector<TID>& UpdatePoints;
+
+            virtual void Load(const TID& currPoint, TID& nextChangePoint) override {
+                UpdatePoints.push_back(currPoint);
+                for(auto tid : ChangePoints) {
+                    if(tid > currPoint) {
+                        nextChangePoint = tid;
+                        break;
+                    }
+                }
+            }
+
+            Wrapper(const list<TID>& changePoints, vector<TID>& updatePoints) :
+                ChangePoints(changePoints),
+                UpdatePoints(updatePoints)
+            {
+                ChangePoints.sort();
+            }
+        };
+
+        for(size_t i=0; i<ChangePoints.size();i++)
+            items.emplace_back(make_shared<Wrapper>(ChangePoints[i], UpdatePoints[i]));
+
+        return items;
     }
 
 };
@@ -102,7 +130,7 @@ void dotest2()
     manager.UpdateParameters(p[3]);
 
     REQUIRE(item->UpdatePoints.size() == 1);
-    REQUIRE(p[3] == item->UpdatePoints.at(0)[0]);
+    REQUIRE(p[3] == item->UpdatePoints.at(0).at(0));
 }
 
 void dotest3() {

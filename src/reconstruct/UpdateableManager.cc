@@ -46,8 +46,8 @@ void UpdateableManager::UpdateParameters(const TID& currentPoint)
 
     // it might be that the current point lies far in the future
     // so calling Load more than once might be necessary
-   while(!queue.empty() && queue.top().NextChangePoint < currentPoint) {
-       DoQueueLoad(currentPoint, queue.top().Item);
+   while(!queue.empty() && queue.top().NextChangePoint <= currentPoint) {
+       DoQueueLoad(queue.top().NextChangePoint, queue.top().Item);
        queue.pop();
    }
 }
