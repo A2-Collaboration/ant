@@ -96,10 +96,10 @@ bool DataBase::writeFile(const string& folder, const TCalibrationData& cdata) co
         auto pos_dot = rootfile.rfind('.');
         if(pos_dot == string::npos)
             continue;
-        stringstream numstr(rootfile.substr(pos_slash, pos_dot-pos_slash));
+        stringstream numstr(rootfile.substr(pos_slash+1, pos_dot-pos_slash-1));
         size_t num;
-        if(numstr >> num && num>maxnum)
-            maxnum = num;
+        if(numstr >> num && num>=maxnum)
+            maxnum = num+1;
     }
 
     string filename(formatter() << setw(4) << setfill('0') << maxnum << ".root");
@@ -147,14 +147,15 @@ bool DataBase::GetItem(const string& calibrationID,
 
 void DataBase::AddItem(const TCalibrationData& cdata, mode_t mode)
 {
+    // some checks
     if(cdata.FirstID.isSet(TID::Flags_t::MC) ^ cdata.LastID.isSet(TID::Flags_t::MC))
         throw Exception("Inconsistent flags for FirstID/LastID");
-
 
     auto& calibrationID = cdata.CalibrationID;
     if(calibrationID.empty())
         throw Exception("Provided CalibrationID is empty string");
 
+    // handle MC
     if(cdata.FirstID.isSet(TID::Flags_t::MC))
     {
         writeFile(calibrationDataFolder+"/"+calibrationID+"/MC", cdata);
