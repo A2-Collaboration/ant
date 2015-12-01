@@ -38,7 +38,7 @@ unsigned dotest_store(const string& foldername)
     cdata.TimeStamp = 0;
     cdata.Data.emplace_back(0,1);
     cdata.Data.emplace_back(1,2);
-    calibman.Add(cdata);
+    calibman.Add(cdata,  DataBase::mode_t::AsDefault);
     unsigned ndata(1);
 
     auto mdata = [&cdata,&ndata] (unsigned first, unsigned last, unsigned time)
@@ -53,29 +53,29 @@ unsigned dotest_store(const string& foldername)
         return tmp;
     };
 
-    calibman.Add(mdata( 4,  4, 1));
-    calibman.Add(mdata( 2,  8, 2));
-    calibman.Add(mdata( 3,  6, 3));
-    calibman.Add(mdata( 5,  7, 4));
-    calibman.Add(mdata(13, 20, 5));
-    calibman.Add(mdata(22, 24, 6));
-    calibman.Add(mdata(14, 14, 7));
+    calibman.Add(mdata( 4,  4, 1), DataBase::mode_t::AsDefault);
+    calibman.Add(mdata( 2,  8, 2), DataBase::mode_t::AsDefault);
+    calibman.Add(mdata( 3,  6, 3), DataBase::mode_t::AsDefault);
+    calibman.Add(mdata( 5,  7, 4), DataBase::mode_t::AsDefault);
+    calibman.Add(mdata(13, 20, 5), DataBase::mode_t::AsDefault);
+    calibman.Add(mdata(22, 24, 6), DataBase::mode_t::AsDefault);
+    calibman.Add(mdata(14, 14, 7), DataBase::mode_t::AsDefault);
 
     cdata.CalibrationID = "2";
     cdata.TimeStamp++;
     cdata.FirstID.Lower = 2;
     cdata.LastID.Lower = 8;
-    calibman.Add(cdata);
+    calibman.Add(cdata, DataBase::mode_t::AsDefault);
 
     cdata.TimeStamp++;
     cdata.FirstID.Lower = 3;
     cdata.LastID.Lower = 6;
-    calibman.Add(cdata);
+    calibman.Add(cdata, DataBase::mode_t::AsDefault);
 
     cdata.TimeStamp++;
     cdata.FirstID.Lower = 5;
     cdata.LastID.Lower = 7;
-    calibman.Add(cdata);
+    calibman.Add(cdata, DataBase::mode_t::AsDefault);
 
     REQUIRE(calibman.GetNumberOfCalibrations() == 2);
     REQUIRE(calibman.GetNumberOfDataPoints("1") == ndata);
