@@ -17,6 +17,7 @@ using namespace ant::calibration;
 DataBase::DataBase(const string calibrationDataFolder_):
     calibrationDataFolder(calibrationDataFolder_)
 {
+
 }
 
 //bool DataBase::ReadFromFile(const std::string& filename)
@@ -125,10 +126,12 @@ DataBase::DataBase(const string calibrationDataFolder_):
 //    }
 //}
 
-bool DataBase::Has(const string& calibrationID) const
-{
-    //return dataMap.find(calibrationID) != dataMap.end();
-}
+//bool DataBase::Has(const string& calibrationID) const
+//{
+//    //return dataMap.find(calibrationID) != dataMap.end();
+//}
+
+
 
 std::list<string> DataBase::GetKeys() const
 {
@@ -161,7 +164,7 @@ std::list<string> DataBase::GetKeys() const
 
 
 
-uint32_t DataBase::GetNumberOfDataPoints(const string& calibrationID) const
+uint32_t DataBase::GetNumberOfDataItems(const string& calibrationID) const
 {
 //    auto it = dataMap.find(calibrationID);
 //    if(it == dataMap.end())
@@ -169,14 +172,53 @@ uint32_t DataBase::GetNumberOfDataPoints(const string& calibrationID) const
 //    return it->second.Data.size();
 }
 
-bool DataBase::GetItem(const string& calibrationID, const TID& currentPoint, TCalibrationData& theData, TID& nextChangePoint) const
+std::set<DataBase::Range_t> DataBase::getRanges(const string& calibrationID) const
 {
-//    return dataMap.at(calibrationID).Data;
-    return true;
+    set<Range_t> ranges;
+    for(auto rangedir : std_ext::system::lsFiles(calibrationDataFolder+"/"+calibrationID+"/DataRanges")) {
+        /// \todo parse folder names
+        cout << rangedir << endl;
+    }
+    return ranges;
+}
+
+bool DataBase::loadFile(const string& filename, TCalibrationData& cdata) const
+{
+    WrapTFileInput dataFile;
+    try {
+        dataFile.OpenFile(filename);
+    }
+    catch(...) {
+        VLOG(5) << "Cannot open file for reading: " << filename;
+        return false;
+    }
+    return dataFile.GetObjectClone("cdata", cdata);
+}
+
+bool DataBase::GetItem(const string& calibrationID,
+                       const TID& currentPoint,
+                       TCalibrationData& theData,
+                       TID& nextChangePoint) const
+{
+    // try to find it in the ranges
+    const auto ranges = getRanges(calibrationID);
+    const auto it = ranges.find(currentPoint);
+    /// \todo correctly consider ranges, watch out for default data ranges...
+
+    // not found in ranges, so try default data
+    if(loadFile(calibrationDataFolder+"/"+calibrationID+"/DataDefault/current", theData)) {
+        /// \todo figure out the nextChangePoint
+        VLOG(5) << "Loaded default data for " << calibrationID << " for changepoint " << currentPoint;
+        return true;
+    }
+
+    // nothing found at all
+    return false;
 }
 
 void DataBase::AddItem(const TCalibrationData& cdata, mode_t mode)
 {
+
 }
 
 

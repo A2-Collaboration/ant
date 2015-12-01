@@ -50,18 +50,14 @@ private:
 public:
     DataManager(const std::string& calibrationDataFolder_);
 
-
-    ~DataManager();
-
-
     void Add(const TCalibrationData& cdata, DataBase::mode_t addMode) override;
 
     bool GetData(const std::string& calibrationID, const TID& eventID, TCalibrationData& cdata) override;
     bool GetData(const std::string& calibrationID, const TID& eventID, TCalibrationData& cdata, TID& nextChangePoint);
 
-    std::uint32_t GetNumberOfCalibrations();
+    std::uint32_t GetNumberOfCalibrationIDs();
 
-    std::uint32_t GetNumberOfDataPoints(const std::string& calibrationID);
+    std::uint32_t GetNumberOfDataItems(const std::string& calibrationID);
 
 };
 

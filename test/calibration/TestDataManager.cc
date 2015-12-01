@@ -77,9 +77,9 @@ unsigned dotest_store(const string& foldername)
     cdata.LastID.Lower = 7;
     calibman.Add(cdata, DataBase::mode_t::AsDefault);
 
-    REQUIRE(calibman.GetNumberOfCalibrations() == 2);
-    REQUIRE(calibman.GetNumberOfDataPoints("1") == ndata);
-    REQUIRE(calibman.GetNumberOfDataPoints("2") == 3);
+    REQUIRE(calibman.GetNumberOfCalibrationIDs() == 2);
+    REQUIRE(calibman.GetNumberOfDataItems("1") == ndata);
+    REQUIRE(calibman.GetNumberOfDataItems("2") == 3);
 
     return ndata;
 }
@@ -87,9 +87,9 @@ unsigned dotest_store(const string& foldername)
 void dotest_load(const string &foldername,unsigned ndata)
 {
     DataManager calibman(foldername);
-    REQUIRE(calibman.GetNumberOfCalibrations() == 2);
-    REQUIRE(calibman.GetNumberOfDataPoints("1") == ndata);
-    REQUIRE(calibman.GetNumberOfDataPoints("2") == 3);
+    REQUIRE(calibman.GetNumberOfCalibrationIDs() == 2);
+    REQUIRE(calibman.GetNumberOfDataItems("1") == ndata);
+    REQUIRE(calibman.GetNumberOfDataItems("2") == 3);
 }
 
 void dotest_changes(const string& foldername)
@@ -127,33 +127,4 @@ void dotest_changes(const string& foldername)
     REQUIRE(cdata.TimeStamp == 6);
 
     REQUIRE_FALSE(calibman.GetData("1",TID(0,29u),cdata));
-
-    auto genchange = calibman.GetChangePoints("1");
-
-    list<TID> manchange({TID(0,0u),
-                         TID(0,2u),
-                         TID(0,3u),
-                         TID(0,5u),
-                         TID(0,8u),
-                         TID(0,9u),
-                         TID(0,13u),
-                         TID(0,14u),
-                         TID(0,15u),
-                         TID(0,21u),
-                         TID(0,22u),
-                         TID(0,25u)
-                        });
-
-    REQUIRE(genchange.size() == manchange.size());
-
-    auto itg = genchange.begin();
-    auto itm = manchange.begin();
-
-    while (itg != genchange.end())
-    {
-        REQUIRE(*itg == *itm);
-        itg++;
-        itm++;
-    }
-
 }
