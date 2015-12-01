@@ -111,7 +111,7 @@ protected:
     std::shared_ptr<gui::PeakingFitFunction> fitFunction;
 
     std::vector<double> DefaultOffsets;
-    std::vector<double> Offsets;
+    mutable std::vector<double> Offsets;
 
     std::vector<double> DefaultGains;
     std::vector<double> Gains;

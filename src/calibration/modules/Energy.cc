@@ -141,7 +141,9 @@ std::list<Updateable_traits::Loader_t> Energy::GetLoaders() const
 
     for(auto calibration : AllCalibrations) {
 
-        auto loader = [this, calibration] (const TID& currPoint, TID& nextChangePoint) {
+        auto loader = [this, calibration]
+                      (const TID& currPoint, TID& nextChangePoint)
+        {
             TCalibrationData cdata;
             if(calibrationManager->GetData(
                    GUI_CalibType::ConstructName(GetName(), calibration->Name),
@@ -167,43 +169,6 @@ std::list<Updateable_traits::Loader_t> Energy::GetLoaders() const
 
     return loaders;
 }
-
-//std::vector<std::list<TID> > Energy::GetChangePoints() const
-//{
-//    vector<list<TID>> changePointLists;
-
-//    for (auto calibration: AllCalibrations) {
-//        changePointLists.push_back(
-//                    calibrationManager->GetChangePoints(
-//                        GUI_CalibType::ConstructName(GetName(), calibration->Name)
-//                        )
-//                    );
-//    }
-//    return changePointLists;
-//}
-//void Energy::Update(size_t index, const TID& tid)
-//{
-//    auto calibration = AllCalibrations[index];
-
-//    TCalibrationData cdata;
-//    if(calibrationManager->GetData(
-//           GUI_CalibType::ConstructName(GetName(), calibration->Name),
-//           tid, cdata))
-//    {
-//        auto& values = calibration->Values;
-//        for (const auto& val: cdata.Data) {
-//            if(values.size()<val.Key+1)
-//                values.resize(val.Key+1);
-//            values[val.Key] = val.Value;
-//        }
-//    }
-//    else {
-//        LOG_IF(!calibration->Values.empty(), WARNING)
-//                << "No calibration data found for " << calibration->Name
-//                << " at changepoint TID=" << tid << ", using default values";
-//        calibration->Values.resize(0);
-//    }
-//}
 
 Energy::GUI_CalibType::GUI_CalibType(const string& basename, CalibType& type,
                                      const shared_ptr<DataManager>& calmgr,

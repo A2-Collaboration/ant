@@ -125,26 +125,18 @@ void PID_PhiAngle::GetGUIs(std::list<std::unique_ptr<gui::CalibModule_traits> >&
 
 std::list<Updateable_traits::Loader_t> PID_PhiAngle::GetLoaders() const
 {
-
+    return {
+        [this] (const TID& currPoint, TID& nextChangePoint) {
+            TCalibrationData cdata;
+            if(!calibrationManager->GetData(GetName(), currPoint, cdata))
+                return;
+            if(cdata.Data.size() != 1)
+                return;
+            const TKeyValue<double>& kv = cdata.Data.front();
+            pid_detector->SetPhiOffset(kv.Value);
+        }
+    };
 }
-
-
-//std::vector<std::list<TID> > PID_PhiAngle::GetChangePoints() const
-//{
-//    return {calibrationManager->GetChangePoints(GetName())};
-//}
-
-//void PID_PhiAngle::Update(size_t, const TID& id)
-//{
-//    TCalibrationData cdata;
-//    if(!calibrationManager->GetData(GetName(), id, cdata))
-//        return;
-//    if(cdata.Data.size() != 1)
-//        return;
-//    const TKeyValue<double>& kv = cdata.Data.front();
-//    pid_detector->SetPhiOffset(kv.Value);
-//}
-
 
 /**
  * @brief The PID_PhiAngle::TheGUI::_FitGauss: override the SetDefaults for PID phi angle fits

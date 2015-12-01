@@ -51,34 +51,26 @@ Time::Time(const std::shared_ptr<Detector_t>& detector, const std::shared_ptr<Da
 
 std::list<Updateable_traits::Loader_t> Time::GetLoaders() const
 {
-
+    return {
+      [this] (const TID& currPoint, TID& nextChangePoint) {
+            TCalibrationData cdata;
+            if(calibrationManager->GetData(GetName(), currPoint, cdata))
+            {
+                for (const auto& val: cdata.Data) {
+                    if(Offsets.size()<val.Key+1)
+                        Offsets.resize(val.Key+1);
+                    Offsets[val.Key] = val.Value;
+                }
+            }
+            else {
+                LOG_IF(!Offsets.empty(), WARNING) << "No calibration data found for offsets"
+                                                  << " at changepoint TID="
+                                                  << currPoint << ", using default values";
+                Offsets.resize(0);
+            }
+        }
+    };
 }
-
-//std::vector<std::list<TID> > Time::GetChangePoints() const {
-//    vector<list<TID>> changePointLists;
-//    changePointLists.emplace_back(calibrationManager->GetChangePoints(GetName()));
-//    return changePointLists;
-//}
-
-//void Time::Update(size_t, const TID& id)
-//{
-//    TCalibrationData cdata;
-//    if(calibrationManager->GetData(GetName(), id, cdata))
-//    {
-//        for (const auto& val: cdata.Data) {
-//            if(Offsets.size()<val.Key+1)
-//                Offsets.resize(val.Key+1);
-//            Offsets[val.Key] = val.Value;
-//        }
-//    }
-//    else {
-//        LOG_IF(!Offsets.empty(), WARNING) << "No calibration data found for offsets"
-//                     << " at changepoint TID=" << id << ", using default values";
-//        Offsets.resize(0);
-//    }
-//}
-
-
 
 void Time::UpdatedTIDFlags(const TID& id)
 {

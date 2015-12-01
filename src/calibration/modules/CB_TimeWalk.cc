@@ -161,33 +161,26 @@ void CB_TimeWalk::GetGUIs(list<unique_ptr<gui::CalibModule_traits> >& guis) {
 
 std::list<Updateable_traits::Loader_t> CB_TimeWalk::GetLoaders() const
 {
-
+    return {
+        [this] (const TID& currPoint, TID& nextChangePoint) {
+            TCalibrationData cdata;
+            if(!calibrationManager->GetData(GetName(), currPoint, cdata))
+                return;
+            for(const TKeyValue<vector<double>>& kv : cdata.FitParameters) {
+                if(kv.Key>=timewalks.size()) {
+                    LOG(ERROR) << "Ignoring too large key=" << kv.Key;
+                    continue;
+                }
+                timewalks[kv.Key]->Load(kv.Value);
+            }
+        }
+    };
 }
-
-//vector<list<TID> > CB_TimeWalk::GetChangePoints() const
-//{
-//    return {calibrationManager->GetChangePoints(GetName())};
-//}
-
-//void CB_TimeWalk::Update(size_t, const TID& id)
-//{
-//    TCalibrationData cdata;
-//    if(!calibrationManager->GetData(GetName(), id, cdata))
-//        return;
-//    for(const TKeyValue<vector<double>>& kv : cdata.FitParameters) {
-//        if(kv.Key>=timewalks.size()) {
-//            LOG(ERROR) << "Ignoring too large key=" << kv.Key;
-//            continue;
-//        }
-//        timewalks[kv.Key]->Load(kv.Value);
-//    }
-//}
 
 void CB_TimeWalk::UpdatedTIDFlags(const TID& id)
 {
     IsMC = id.isSet(TID::Flags_t::MC);
 }
-
 
 CB_TimeWalk::TheGUI::TheGUI(const string& basename,
                             const shared_ptr<DataManager>& calmgr,
