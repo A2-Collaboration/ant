@@ -90,20 +90,16 @@ struct ReconstructHook {
 /**
  * @brief The Updateable_traits class used by the UpdateableManager
  */
-class Updateable_traits {
-public:
-    /**
-     * @brief GetChangePoints builds (possibly unsorted) list of points
-     * when Updateable_traits::Update() should be called
-     * @return vectorized list of change points, index is given to Update()
-     */
-    virtual std::vector<std::list<TID>> GetChangePoints() const = 0;
-    /**
-     * @brief Update shall load new parameters for the upcoming event ids
-     * @param index of element in vector returned by GetChangePoints() or UpdateOnFirstEvent()
-     * @param id indicates moment of change
-     */
-    virtual void Update(std::size_t index, const TID& id) = 0;
+struct Updateable_traits {
+
+    struct Item {
+        virtual void Load(const TID& currPoint, TID& validUntil) =0;
+    };
+
+    using UpdateableItemPtr = std::shared_ptr<Updateable_traits::Item>;
+
+    virtual std::list<UpdateableItemPtr> GetItems() const = 0;
+
     /**
      * @brief UpdatedTIDFlags called when processed event has some different flags in TID
      * @param id the ID with some different Flags field

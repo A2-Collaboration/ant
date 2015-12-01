@@ -49,15 +49,11 @@ struct UpdateableItem :  Updateable_traits {
         UpdatePoints(changePoints.size())
     {}
 
-    vector<list<TID>> GetChangePoints() const override
+    virtual std::list<UpdateableItemPtr> GetItems() const override
     {
-        return ChangePoints;
+
     }
 
-    void Update(size_t index, const TID& id) override
-    {
-        UpdatePoints[index].push_back(id);
-    }
 };
 
 // provide some points for testing

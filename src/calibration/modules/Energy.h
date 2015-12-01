@@ -30,8 +30,7 @@ public:
     virtual void ApplyTo(const readhits_t& hits, extrahits_t& extrahits) override;
 
     // Updateable_traits interface
-    virtual std::vector<std::list<TID>> GetChangePoints() const override;
-    void Update(std::size_t index, const TID& tid) override;
+    virtual std::list<UpdateableItemPtr> GetItems() const override;
 
 protected:
     Energy(Detector_t::Type_t detectorType,

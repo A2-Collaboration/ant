@@ -148,6 +148,8 @@ void CB_TimeWalk::ApplyTo(clusterhits_t& sorted_clusterhits)
     }
 }
 
+
+
 unique_ptr<analysis::Physics> CB_TimeWalk::GetPhysicsModule() {
     return std_ext::make_unique<ThePhysics>(GetName(), cb_detector);
 }
@@ -157,24 +159,29 @@ void CB_TimeWalk::GetGUIs(list<unique_ptr<gui::CalibModule_traits> >& guis) {
 }
 
 
-vector<list<TID> > CB_TimeWalk::GetChangePoints() const
+std::list<Updateable_traits::UpdateableItemPtr> CB_TimeWalk::GetItems() const
 {
-    return {calibrationManager->GetChangePoints(GetName())};
+
 }
 
-void CB_TimeWalk::Update(size_t, const TID& id)
-{
-    TCalibrationData cdata;
-    if(!calibrationManager->GetData(GetName(), id, cdata))
-        return;
-    for(const TKeyValue<vector<double>>& kv : cdata.FitParameters) {
-        if(kv.Key>=timewalks.size()) {
-            LOG(ERROR) << "Ignoring too large key=" << kv.Key;
-            continue;
-        }
-        timewalks[kv.Key]->Load(kv.Value);
-    }
-}
+//vector<list<TID> > CB_TimeWalk::GetChangePoints() const
+//{
+//    return {calibrationManager->GetChangePoints(GetName())};
+//}
+
+//void CB_TimeWalk::Update(size_t, const TID& id)
+//{
+//    TCalibrationData cdata;
+//    if(!calibrationManager->GetData(GetName(), id, cdata))
+//        return;
+//    for(const TKeyValue<vector<double>>& kv : cdata.FitParameters) {
+//        if(kv.Key>=timewalks.size()) {
+//            LOG(ERROR) << "Ignoring too large key=" << kv.Key;
+//            continue;
+//        }
+//        timewalks[kv.Key]->Load(kv.Value);
+//    }
+//}
 
 void CB_TimeWalk::UpdatedTIDFlags(const TID& id)
 {
