@@ -85,7 +85,6 @@ public:
     bool Has(const std::string& calibrationID) const;
     std::list<std::string> GetKeys() const;
     std::uint32_t GetNumberOfDataPoints(const std::string& calibrationID) const;
-    const std::list<TID> GetChangePoints(const std::string& calibrationID) const;
 
 
     bool ModifyItem(const std::string& calibrationID, const TID& currentPoint,TCalibrationData& theData, TID& nextChangePoint);

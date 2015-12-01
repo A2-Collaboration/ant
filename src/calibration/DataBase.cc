@@ -171,36 +171,6 @@ uint32_t DataBase::GetNumberOfDataPoints(const string& calibrationID) const
     return it->second.Data.size();
 }
 
-const std::list<TID> DataBase::GetChangePoints(const string& calibrationID) const
-{
-    auto it_item = dataMap.find(calibrationID);
-    if(it_item == dataMap.end())
-        return {};
-
-    auto& calibPairs = it_item->second.Data;
-
-    uint32_t depth = 0;
-    list<TID> ids;
-
-    for(auto rit = calibPairs.rbegin(); rit != calibPairs.rend(); ++rit)
-    {
-        //changepoint is one after the last element;
-        auto inclastID(rit->LastID);
-        ++inclastID;
-
-        if (isValid(rit->FirstID,calibrationID,depth) )
-            ids.push_back(rit->FirstID);
-        if (isValid(inclastID,calibrationID,depth) )
-            ids.push_back(inclastID);
-
-        depth++;
-    }
-
-    ids.sort();
-
-    return ids;
-}
-
 bool DataBase::ModifyItem(const string& calibrationID, const TID& currentPoint, TCalibrationData& theData, TID& nextChangePoint)
 {
 //    auto& item = dataMap.at(calibrationID);

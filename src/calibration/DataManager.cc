@@ -68,13 +68,6 @@ bool DataManager::GetData(const string& calibrationID,
     return dataBase->GetItem(calibrationID,eventID,cdata,nextChangePoint);
 }
 
-
-const list<TID> DataManager::GetChangePoints(const string& calibrationID)
-{
-    Init();
-    return dataBase->GetChangePoints(calibrationID);
-}
-
 uint32_t DataManager::GetNumberOfCalibrations()
 {
     Init();
