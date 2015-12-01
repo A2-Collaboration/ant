@@ -82,7 +82,7 @@ protected:
         virtual std::string GetHistogramName() const override;
         virtual unsigned GetNumberOfChannels() const override;
 
-        virtual void InitGUI(gui::ManagerWindow_traits* window);
+        virtual void InitGUI(gui::ManagerWindow_traits* window) override;
 
         virtual void StartSlice(const interval<TID>& range) override;
         virtual void StoreFinishSlice(const interval<TID>& range) override;
