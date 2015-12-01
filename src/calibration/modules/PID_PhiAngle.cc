@@ -123,7 +123,7 @@ void PID_PhiAngle::GetGUIs(std::list<std::unique_ptr<gui::CalibModule_traits> >&
     guis.emplace_back(std_ext::make_unique<TheGUI>(GetName(), calibrationManager, pid_detector));
 }
 
-std::list<Updateable_traits::UpdateableItemPtr> PID_PhiAngle::GetItems() const
+std::list<Updateable_traits::Loader_t> PID_PhiAngle::GetLoaders() const
 {
 
 }

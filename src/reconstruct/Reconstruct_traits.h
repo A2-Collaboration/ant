@@ -8,6 +8,7 @@
 #include <memory>
 #include <map>
 #include <list>
+#include <functional>
 
 namespace ant {
 
@@ -92,13 +93,9 @@ struct ReconstructHook {
  */
 struct Updateable_traits {
 
-    struct Item {
-        virtual void Load(const TID& currPoint, TID& nextChangePoint) =0;
-    };
+    using Loader_t = std::function<void(const TID& currPoint, TID& nextChangePoint)>;
 
-    using UpdateableItemPtr = std::shared_ptr<Updateable_traits::Item>;
-
-    virtual std::list<UpdateableItemPtr> GetItems() const = 0;
+    virtual std::list<Loader_t> GetLoaders() const = 0;
 
     /**
      * @brief UpdatedTIDFlags called when processed event has some different flags in TID

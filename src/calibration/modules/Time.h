@@ -89,7 +89,7 @@ public:
     virtual void ApplyTo(const readhits_t& hits, extrahits_t&) override;
 
     // Updateable_traits interface
-    virtual std::list<UpdateableItemPtr> GetItems() const override;
+    virtual std::list<Loader_t> GetLoaders() const override;
     void UpdatedTIDFlags(const TID& id) override;
 
 

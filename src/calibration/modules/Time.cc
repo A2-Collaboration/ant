@@ -49,7 +49,7 @@ Time::Time(const std::shared_ptr<Detector_t>& detector, const std::shared_ptr<Da
         throw std::runtime_error("Given converter should not be nullptr");
 }
 
-std::list<Updateable_traits::UpdateableItemPtr> Time::GetItems() const
+std::list<Updateable_traits::Loader_t> Time::GetLoaders() const
 {
 
 }

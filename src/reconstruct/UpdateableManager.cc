@@ -30,7 +30,7 @@ UpdateableManager::UpdateableManager(const TID& startPoint,
         updateable->UpdatedTIDFlags(startPoint);
 
         // build queue from first call to Load
-        for(auto item : updateable->GetItems()) {
+        for(auto item : updateable->GetLoaders()) {
             DoQueueLoad(startPoint, item);
         }
     }
@@ -53,15 +53,15 @@ void UpdateableManager::UpdateParameters(const TID& currentPoint)
 }
 
 void UpdateableManager::DoQueueLoad(const TID& currPoint,
-                                         Updateable_traits::UpdateableItemPtr item)
+                                    Updateable_traits::Loader_t loader)
 {
     TID nextChangePoint;
-    item->Load(currPoint, nextChangePoint);
+    loader(currPoint, nextChangePoint);
     if(nextChangePoint.IsInvalid())
         return;
     if(nextChangePoint <= currPoint) {
         LOG(WARNING) << "UpdateableItem returned NextChangePoint not pointing to the future";
         return;
     }
-    queue.emplace(nextChangePoint, item);
+    queue.emplace(nextChangePoint, loader);
 }

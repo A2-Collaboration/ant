@@ -90,7 +90,7 @@ public:
     virtual void ApplyTo(clusterhits_t& sorted_clusterhits) override;
 
     // Updateable_traits interface
-    virtual std::list<UpdateableItemPtr> GetItems() const override;
+    virtual std::list<Loader_t> GetLoaders() const override;
     void UpdatedTIDFlags(const TID& id) override;
 
 

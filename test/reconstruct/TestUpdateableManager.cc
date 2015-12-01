@@ -54,37 +54,27 @@ struct UpdateableItem :  Updateable_traits {
         UpdatePoints(changePoints.size())
     {}
 
-    virtual std::list<UpdateableItemPtr> GetItems() const override
+    virtual std::list<Loader_t> GetLoaders() const override
     {
-        std::list<UpdateableItemPtr> items;
+        std::list<Loader_t> loaders;
 
-        struct Wrapper : Item {
-
-            list<TID> ChangePoints;
-            vector<TID>& UpdatePoints;
-
-            virtual void Load(const TID& currPoint, TID& nextChangePoint) override {
-                UpdatePoints.push_back(currPoint);
-                for(auto tid : ChangePoints) {
+        for(size_t i=0; i<ChangePoints.size();i++) {
+            auto loader =
+                    [i, this]
+                    (const TID& currPoint, TID& nextChangePoint) {
+                UpdatePoints[i].push_back(currPoint);
+                for(auto tid : ChangePoints[i]) {
                     if(tid > currPoint) {
                         nextChangePoint = tid;
                         break;
                     }
                 }
-            }
+            };
 
-            Wrapper(const list<TID>& changePoints, vector<TID>& updatePoints) :
-                ChangePoints(changePoints),
-                UpdatePoints(updatePoints)
-            {
-                ChangePoints.sort();
-            }
-        };
+            loaders.emplace_back(loader);
+        }
 
-        for(size_t i=0; i<ChangePoints.size();i++)
-            items.emplace_back(make_shared<Wrapper>(ChangePoints[i], UpdatePoints[i]));
-
-        return items;
+        return loaders;
     }
 
 };

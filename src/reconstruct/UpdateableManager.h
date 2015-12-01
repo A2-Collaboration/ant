@@ -33,9 +33,9 @@ public:
 private:
     struct queue_item_t {
         TID NextChangePoint;
-        Updateable_traits::UpdateableItemPtr Item;
+        Updateable_traits::Loader_t Item;
         queue_item_t(const TID& nextChangePoint,
-                     const Updateable_traits::UpdateableItemPtr& item) :
+                     Updateable_traits::Loader_t item) :
             NextChangePoint(nextChangePoint),
             Item(item)
         {}
@@ -52,7 +52,7 @@ private:
     TID lastFlagsSeen;
 
     void DoQueueLoad(const TID& currPoint,
-                          Updateable_traits::UpdateableItemPtr item);
+                     Updateable_traits::Loader_t loader);
 };
 
 

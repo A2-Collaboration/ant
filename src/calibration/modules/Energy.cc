@@ -134,9 +134,38 @@ void Energy::ApplyTo(const readhits_t& hits, extrahits_t& extrahits)
     }
 }
 
-std::list<Updateable_traits::UpdateableItemPtr> Energy::GetItems() const
+std::list<Updateable_traits::Loader_t> Energy::GetLoaders() const
 {
 
+    std::list<Updateable_traits::Loader_t> loaders;
+
+    for(auto calibration : AllCalibrations) {
+
+        auto loader = [this, calibration] (const TID& currPoint, TID& nextChangePoint) {
+            TCalibrationData cdata;
+            if(calibrationManager->GetData(
+                   GUI_CalibType::ConstructName(GetName(), calibration->Name),
+                   currPoint, cdata))
+            {
+                auto& values = calibration->Values;
+                for (const auto& val: cdata.Data) {
+                    if(values.size()<val.Key+1)
+                        values.resize(val.Key+1);
+                    values[val.Key] = val.Value;
+                }
+            }
+            else {
+                LOG_IF(!calibration->Values.empty(), WARNING)
+                        << "No calibration data found for " << calibration->Name
+                        << " at changepoint TID=" << currPoint << ", using default values";
+                calibration->Values.resize(0);
+            }
+        };
+
+        loaders.emplace_back(loader);
+    }
+
+    return loaders;
 }
 
 //std::vector<std::list<TID> > Energy::GetChangePoints() const
