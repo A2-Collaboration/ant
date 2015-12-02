@@ -119,9 +119,6 @@ bool DataBase::GetItem(const string& calibrationID,
     // try to find it in the DataRanges
     // the following needs the ranges to be sorted after their
     auto ranges = getDataRanges(calibrationID);
-    ranges.sort([] (const Range_t& a, const Range_t& b) {
-        return a.Start() < b.Start();
-    });
 
     auto it_range = find_if(ranges.begin(), ranges.end(),
                             [currentPoint] (const Range_t& r) {
@@ -146,9 +143,7 @@ bool DataBase::GetItem(const string& calibrationID,
     // check if there's a range coming up at some point
     // that means even if this method returns false,
     // the nextChangePoint is correctly set
-    ranges.sort([] (const Range_t& a, const Range_t& b) {
-        return a.Start() < b.Start();
-    });
+    ranges.sort();
     it_range = find_if(ranges.begin(), ranges.end(),
                        [currentPoint] (const Range_t& r) {
         return currentPoint < r.Start();
@@ -168,7 +163,7 @@ bool DataBase::GetItem(const string& calibrationID,
 
 void DataBase::AddItem(const TCalibrationData& cdata, Calibration::AddMode_t mode)
 {
-    // some checks
+    // some general checks
     if(cdata.FirstID.isSet(TID::Flags_t::MC) ^ cdata.LastID.isSet(TID::Flags_t::MC))
         throw Exception("Inconsistent flags for FirstID/LastID");
 
@@ -191,18 +186,10 @@ void DataBase::AddItem(const TCalibrationData& cdata, Calibration::AddMode_t mod
         break;
     }
     case Calibration::AddMode_t::StrictRange: {
-        if(cdata.FirstID.IsInvalid())
-            throw Exception("FirstID cannot be invalid");
-        if(cdata.LastID.IsInvalid())
-            throw Exception("LastID cannot be invalid");
-        if(cdata.LastID < cdata.FirstID)
-            throw Exception("LastID<FirstID cannot be");
         handleStrictRange(cdata);
         break;
     }
     case Calibration::AddMode_t::RightOpen: {
-        if(cdata.FirstID.IsInvalid())
-            throw Exception("FirstID cannot be invalid");
         handleRightOpen(cdata);
         break;
     }
@@ -212,50 +199,96 @@ void DataBase::AddItem(const TCalibrationData& cdata, Calibration::AddMode_t mod
 
 void DataBase::handleStrictRange(const TCalibrationData& cdata) const
 {
+    if(cdata.FirstID.IsInvalid())
+        throw Exception("FirstID cannot be invalid");
+    if(cdata.LastID.IsInvalid())
+        throw Exception("LastID cannot be invalid");
+    if(cdata.LastID < cdata.FirstID)
+        throw Exception("LastID<FirstID cannot be");
+
     const auto& calibrationID = cdata.CalibrationID;
     const interval<TID> range(cdata.FirstID, cdata.LastID);
 
-    // check if range already exists
+    // check if range already exists (ranges don't need to be sorted for this)
     const auto ranges = getDataRanges(calibrationID);
-    for(const auto r : ranges) {
-        if(!r.Disjoint(range)) {
-            // if range overlaps, then they must exactly match
-            if(r == range) {
-                writeFile(r.FolderPath, cdata);
-                return;
-            }
-            // anything else is not allowed right now
-            throw Exception("Given TCalibrationData range conflicts with existing database entry.");
-        }
-    }
-
-    // not there, then create new folder for it
-
-    writeFile(makeRangeFolder(calibrationID, range), cdata);
-}
-
-void DataBase::handleRightOpen(const TCalibrationData& cdata) const
-{
-    const auto& calibrationID = cdata.CalibrationID;
-    // LastID of cdata is simpy ignored
-    const auto currentPoint = cdata.FirstID;
-    interval<TID> range(currentPoint, TID());
-
-    // scan the ranges
-    const auto ranges = getDataRanges(calibrationID);
-    auto it_range = find_if(ranges.begin(), ranges.end(),
-                            [currentPoint] (const Range_t& r) {
-        if(r.Stop().IsInvalid())
-            return r.Start() < currentPoint;
-        return r.Contains(currentPoint);
+    const auto it_range = find_if(ranges.begin(), ranges.end(),
+                                  [range] (const Range_t& r) {
+        return !r.Disjoint(range);
     });
 
-    // conflicts is easy
+    // given range is disjoint with all existing ones,
+    // then just add this range
     if(it_range == ranges.end()) {
         writeFile(makeRangeFolder(calibrationID, range), cdata);
         return;
     }
 
+    // if range overlaps, then they must exactly match
+    if(*it_range == range) {
+        writeFile(it_range->FolderPath, cdata);
+        return;
+    }
+
+    // anything else is not allowed right now
+    throw Exception("Given TCalibrationData range conflicts with existing database entry.");
+}
+
+void DataBase::handleRightOpen(const TCalibrationData& cdata) const
+{
+    if(cdata.FirstID.IsInvalid())
+        throw Exception("FirstID cannot be invalid");
+
+    const auto& calibrationID = cdata.CalibrationID;
+    // LastID of cdata is simply ignored
+    const auto startPoint = cdata.FirstID;
+    interval<TID> range(startPoint, TID());
+
+    // scan the ranges for conflicts
+    auto ranges = getDataRanges(calibrationID);
+    ranges.sort();
+    auto it_conflict = find_if(ranges.begin(), ranges.end(),
+                            [startPoint] (const Range_t& r) {
+        // two half-open intervals always conflict
+        if(r.Stop().IsInvalid())
+            return true;
+        // conflict if startPoint is before or equal the stop of existing interval
+        return startPoint <= r.Stop();
+    });
+
+    if(it_conflict != ranges.end()) {
+
+        // handle conflicts depending on where the given startPoint is
+
+        if(startPoint == it_conflict->Start()) {
+            // add to existing
+            writeFile(it_conflict->FolderPath, cdata);
+            return;
+        }
+        else if(startPoint > it_conflict->Start()) {
+            // shrink existing by renaming folder
+            it_conflict->Stop() = startPoint;
+            --(it_conflict->Stop());
+            const auto& newfolder = makeRangeFolder(calibrationID, *it_conflict);
+            system::exec(formatter() << "mv " << it_conflict->FolderPath
+                         << " " << newfolder);
+
+            // search if new data has some stop
+            // important that ranges were sorted by start
+            ++it_conflict;
+            if(it_conflict != ranges.end()) {
+                range.Stop() = it_conflict->Start();
+                --range.Stop();
+            }
+        }
+        else if(startPoint < it_conflict->Start()) {
+            // shrink new data
+            range.Stop() = it_conflict->Start();
+            --range.Stop();
+        }
+
+    }
+
+    writeFile(makeRangeFolder(calibrationID, range), cdata);
 }
 
 string DataBase::makeTIDString(const TID& tid) const

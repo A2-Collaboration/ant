@@ -185,7 +185,7 @@ unsigned dotest_store(const string& foldername)
     REQUIRE(calibman.GetNumberOfCalibrationData("2") == 3);
     REQUIRE(calibman.GetNumberOfCalibrationData("3") == 3);
     REQUIRE(calibman.GetNumberOfCalibrationData("4") == 12);
-    //REQUIRE(calibman.GetNumberOfCalibrationData("5") == 4);
+    REQUIRE(calibman.GetNumberOfCalibrationData("5") == 4);
 
 
     return ndata;
@@ -199,7 +199,7 @@ void dotest_load(const string &foldername,unsigned ndata)
     REQUIRE(calibman.GetNumberOfCalibrationData("2") == 3);
     REQUIRE(calibman.GetNumberOfCalibrationData("3") == 3);
     REQUIRE(calibman.GetNumberOfCalibrationData("4") == 12);
-    //REQUIRE(calibman.GetNumberOfCalibrationData("5") == 4);
+    REQUIRE(calibman.GetNumberOfCalibrationData("5") == 4);
 }
 
 void dotest_changes(const string& foldername)

@@ -27,6 +27,9 @@ protected:
     struct Range_t : interval<TID> {
         std::string FolderPath;
         using interval<TID>::interval;
+        bool operator<(const Range_t& other) const {
+            return Start() < other.Start();
+        }
         Range_t(const interval<TID> tidRange, const std::string& folderPath) :
             interval<TID>(tidRange),
             FolderPath(folderPath)
