@@ -36,7 +36,7 @@ public:
 
     circit operator++(int) {circit tmp(*this); operator++(); return tmp; }
 
-    constexpr typename T::value_type operator *() { return *pos; }
+    constexpr typename T::value_type operator *() const { return *pos; }
 
 };
 
