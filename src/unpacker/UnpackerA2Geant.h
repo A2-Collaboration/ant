@@ -36,7 +36,7 @@ public:
         using Unpacker::Exception::Exception; // use base class constructor
     };
 
-    double PercentDone() const;
+    virtual double PercentDone() const override;
 
 private:
     TID* id = nullptr;

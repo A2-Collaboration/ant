@@ -12,9 +12,9 @@ public:
     DebugPhysics(const std::string& name, PhysOptPtr opts=nullptr);
     virtual ~DebugPhysics();
 
-    virtual void ProcessEvent(const data::Event& event);
-    virtual void Finish();
-    virtual void ShowResult();
+    virtual void ProcessEvent(const data::Event& event) override;
+    virtual void Finish() override;
+    virtual void ShowResult() override;
     virtual void Initialize(data::Slowcontrol &slowcontrol) override;
 };
 

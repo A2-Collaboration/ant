@@ -186,7 +186,7 @@ private:
             return gcount_;
         }
 
-        virtual std::streamsize gcount_compressed() const {
+        virtual std::streamsize gcount_compressed() const override {
             return gcount_compressed_;
         }
 

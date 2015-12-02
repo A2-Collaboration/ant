@@ -86,9 +86,17 @@ public:
 
     /**
      * @brief ShowGuidelines remove the snapping guidelines completely
+     * @note  do not mark it override since older ROOT versions don't have this routine
      */
-    // do not mark it override since older ROOT versions don't have this routine
+
+#ifdef __clang__
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Winconsistent-missing-override"
+#endif
     virtual void ShowGuidelines(TObject*, const Int_t, const char, const bool) {}
+#ifdef __clang__
+#pragma clang diagnostic pop
+#endif
 
     virtual void ConnectStatusBar(TGStatusBar* statusbar_);
     virtual void ProcessedEvent(Int_t event, Int_t x, Int_t y, TObject *selected) override;

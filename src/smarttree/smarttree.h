@@ -38,6 +38,7 @@ protected:
 public:
     virtual ~SmartTree();
 
+    using TObject::Draw;
     virtual void Draw(const std::string& xepression, const int xbins=100) =0;
     virtual void Draw(const std::string& xexpression, const std::string& yexpression, const int xbins=100, const int ybins=100) =0;
 

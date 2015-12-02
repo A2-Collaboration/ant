@@ -74,7 +74,7 @@ class FileFormatBase : public UnpackerAcquFileFormat {
 public:
     virtual ~FileFormatBase();
 
-    virtual double PercentDone() const;
+    virtual double PercentDone() const override;
 
 private:
     std::unique_ptr<RawFileReader> reader;

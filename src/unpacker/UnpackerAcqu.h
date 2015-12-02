@@ -29,7 +29,7 @@ public:
 
     virtual ~UnpackerAcqu();
 
-    double PercentDone() const;
+    virtual double PercentDone() const override;
 
 private:
     std::list< std::unique_ptr<TDataRecord> > queue; // std::list supports splice

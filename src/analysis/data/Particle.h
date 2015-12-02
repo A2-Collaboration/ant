@@ -65,6 +65,7 @@ public:
     CandidatePtr& Candidate() noexcept { return candidate; }
     const CandidatePtr& Candidate() const noexcept { return candidate; }
 
+    using TLorentzVector::Print;
     virtual std::ostream& Print(std::ostream& stream) const;
 
     using TLorentzVector::Angle;

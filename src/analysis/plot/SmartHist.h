@@ -109,10 +109,10 @@ public:
         return *this;
     }
 
-    virtual void Fill(const double& data, const double weight=1.0) {
-        if(histogram)
-            histogram->Fill(data, weight);
-    }
+//    virtual void Fill(const double& data, const double weight=1.0) {
+//        if(histogram)
+//            histogram->Fill(data, weight);
+//    }
 
     TH1D* GetRootHistogram() { return histogram; }
 
