@@ -83,6 +83,19 @@ inline void removesubstr(std::string& str, const std::string& substr) {
     }
 }
 
+inline std::string basename(const std::string& filenamepath) {
+
+    auto pos = filenamepath.find_last_of("/");
+
+    if(pos==filenamepath.npos) {
+        return filenamepath;
+    } else {
+        return filenamepath.substr(pos,filenamepath.size()-pos);
+    }
+
+
+}
+
 /**
  * @brief The formatter class
  *
