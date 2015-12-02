@@ -18,15 +18,15 @@ using namespace ant;
 using namespace ant::std_ext;
 using namespace ant::calibration;
 
-DataBase::DataBase(const string calibrationDataFolder_):
-    calibrationDataFolder(calibrationDataFolder_)
+DataBase::DataBase(const string& calibrationDataFolder):
+    Layout(calibrationDataFolder)
 {
 
 }
 
 std::list<string> DataBase::GetCalibrationIDs() const
 {
-    return system::lsFiles(calibrationDataFolder,"",true,true);
+    return system::lsFiles(Layout.CalibrationDataFolder,"",true,true);
 }
 
 size_t DataBase::GetNumberOfCalibrationData(const string& calibrationID) const
@@ -37,18 +37,18 @@ size_t DataBase::GetNumberOfCalibrationData(const string& calibrationID) const
 
     // count the number of .root files in MC, DataDefault and DataRanges
     size_t total = 0;
-    total += count_rootfiles(calibrationDataFolder+"/"+calibrationID+"/MC");
-    total += count_rootfiles(calibrationDataFolder+"/"+calibrationID+"/DataDefault");
-    for(auto range : getDataRanges(calibrationID)) {
+    total += count_rootfiles(Layout.GetFolder(calibrationID, OnDiskLayout::Type_t::MC));
+    total += count_rootfiles(Layout.GetFolder(calibrationID, OnDiskLayout::Type_t::DataDefault));
+    for(auto range : Layout.GetDataRanges(calibrationID)) {
         total += count_rootfiles(range.FolderPath);
     }
     return total;
 }
 
-std::list<DataBase::Range_t> DataBase::getDataRanges(const string& calibrationID) const
+std::list<DataBase::OnDiskLayout::Range_t> DataBase::OnDiskLayout::GetDataRanges(const string& calibrationID) const
 {
     list<Range_t> ranges;
-    for(auto daydir : system::lsFiles(calibrationDataFolder+"/"+calibrationID+"/DataRanges","",true)) {
+    for(auto daydir : system::lsFiles(GetFolder(calibrationID, Type_t::DataRanges),"",true)) {
         for(auto tidRangeDir : system::lsFiles(daydir, "", true, true)) {
             auto tidRange = parseTIDRange(tidRangeDir);
             ranges.emplace_back(tidRange, daydir+"/"+tidRangeDir);
@@ -70,7 +70,7 @@ bool DataBase::loadFile(const string& filename, TCalibrationData& cdata) const
     return dataFile.GetObjectClone("cdata", cdata);
 }
 
-bool DataBase::writeFile(const string& folder, const TCalibrationData& cdata) const
+bool DataBase::writeToFolder(const string& folder, const TCalibrationData& cdata) const
 {
     // ensure the folder is there
     system::exec(formatter() << "mkdir -p " << folder);
@@ -101,7 +101,6 @@ bool DataBase::writeFile(const string& folder, const TCalibrationData& cdata) co
     }
 
     return true;
-
 }
 
 bool DataBase::GetItem(const string& calibrationID,
@@ -113,15 +112,15 @@ bool DataBase::GetItem(const string& calibrationID,
 
     // handle MC
     if(currentPoint.isSet(TID::Flags_t::MC)) {
-        return loadFile(calibrationDataFolder+"/"+calibrationID+"/MC/current", theData);
+        return loadFile(Layout.GetCurrentFile(calibrationID, OnDiskLayout::Type_t::MC), theData);
     }
 
     // try to find it in the DataRanges
     // the following needs the ranges to be sorted after their
-    auto ranges = getDataRanges(calibrationID);
+    auto ranges = Layout.GetDataRanges(calibrationID);
 
     auto it_range = find_if(ranges.begin(), ranges.end(),
-                            [currentPoint] (const Range_t& r) {
+                            [currentPoint] (const OnDiskLayout::Range_t& r) {
         if(r.Stop().IsInvalid())
             return r.Start() < currentPoint;
         return r.Contains(currentPoint);
@@ -145,14 +144,14 @@ bool DataBase::GetItem(const string& calibrationID,
     // the nextChangePoint is correctly set
     ranges.sort();
     it_range = find_if(ranges.begin(), ranges.end(),
-                       [currentPoint] (const Range_t& r) {
+                       [currentPoint] (const OnDiskLayout::Range_t& r) {
         return currentPoint < r.Start();
     });
     if(it_range != ranges.end())
         nextChangePoint = it_range->Start();
 
     // not found in ranges, so try default data
-    if(loadFile(calibrationDataFolder+"/"+calibrationID+"/DataDefault/current", theData)) {
+    if(loadFile(Layout.GetCurrentFile(calibrationID, OnDiskLayout::Type_t::DataDefault), theData)) {
         VLOG(5) << "Loaded default data for " << calibrationID << " for changepoint " << currentPoint;
         return true;
     }
@@ -174,7 +173,7 @@ void DataBase::AddItem(const TCalibrationData& cdata, Calibration::AddMode_t mod
     // handle MC
     if(cdata.FirstID.isSet(TID::Flags_t::MC))
     {
-        writeFile(calibrationDataFolder+"/"+calibrationID+"/MC", cdata);
+        writeToFolder(Layout.GetFolder(calibrationID, OnDiskLayout::Type_t::MC), cdata);
         return;
     }
 
@@ -182,7 +181,7 @@ void DataBase::AddItem(const TCalibrationData& cdata, Calibration::AddMode_t mod
 
     switch(mode) {
     case Calibration::AddMode_t::AsDefault: {
-        writeFile(calibrationDataFolder+"/"+calibrationID+"/DataDefault", cdata);
+        writeToFolder(Layout.GetFolder(calibrationID, OnDiskLayout::Type_t::DataDefault), cdata);
         break;
     }
     case Calibration::AddMode_t::StrictRange: {
@@ -210,9 +209,9 @@ void DataBase::handleStrictRange(const TCalibrationData& cdata) const
     const interval<TID> range(cdata.FirstID, cdata.LastID);
 
     // check if range already exists (ranges don't need to be sorted for this)
-    const auto ranges = getDataRanges(calibrationID);
+    const auto ranges = Layout.GetDataRanges(calibrationID);
     const auto it_range = find_if(ranges.begin(), ranges.end(),
-                                  [range] (const Range_t& r) {
+                                  [range] (const OnDiskLayout::Range_t& r) {
         return !r.Disjoint(range);
     });
 
@@ -226,7 +225,7 @@ void DataBase::handleStrictRange(const TCalibrationData& cdata) const
         }
     }
 
-    writeFile(makeRangeFolder(calibrationID, range), cdata);
+    writeToFolder(Layout.GetRangeFolder(calibrationID, range), cdata);
 }
 
 void DataBase::handleRightOpen(const TCalibrationData& cdata) const
@@ -240,10 +239,10 @@ void DataBase::handleRightOpen(const TCalibrationData& cdata) const
     interval<TID> range(startPoint, TID());
 
     // scan the ranges for conflicts
-    auto ranges = getDataRanges(calibrationID);
+    auto ranges = Layout.GetDataRanges(calibrationID);
     ranges.sort();
     auto it_conflict = find_if(ranges.begin(), ranges.end(),
-                            [startPoint] (const Range_t& r) {
+                            [startPoint] (const OnDiskLayout::Range_t& r) {
         // two half-open intervals always conflict
         if(r.Stop().IsInvalid())
             return true;
@@ -263,7 +262,7 @@ void DataBase::handleRightOpen(const TCalibrationData& cdata) const
             // shrink existing by renaming folder
             it_conflict->Stop() = startPoint;
             --(it_conflict->Stop());
-            const auto& newfolder = makeRangeFolder(calibrationID, *it_conflict);
+            const auto& newfolder = Layout.GetRangeFolder(calibrationID, *it_conflict);
             system::exec(formatter() << "mv " << it_conflict->FolderPath
                          << " " << newfolder);
 
@@ -283,26 +282,10 @@ void DataBase::handleRightOpen(const TCalibrationData& cdata) const
 
     }
 
-    writeFile(makeRangeFolder(calibrationID, range), cdata);
+    writeToFolder(Layout.GetRangeFolder(calibrationID, range), cdata);
 }
 
-string DataBase::makeTIDString(const TID& tid) const
-{
-    if(tid.IsInvalid())
-        return "OPEN";
-    // cannot use std_ext::to_iso8601 since
-    // only underscores are allowed in string
-    // note that the T is important for some use cases
-    char buf[sizeof "2011_10_08T07_07_09Z"];
-    time_t time = tid.Timestamp;
-    strftime(buf, sizeof buf, "%Y_%m_%dT%H_%M_%SZ", gmtime(addressof(time)));
-    // add the lower ID
-    stringstream ss;
-    ss << buf << "_0x" << hex << setw(8) << setfill('0') << tid.Lower;
-    return ss.str();
-}
-
-interval<TID> DataBase::parseTIDRange(const string& tidRangeStr) const
+interval<TID> DataBase::OnDiskLayout::parseTIDRange(const string& tidRangeStr) const
 {
     auto pos_dash = tidRangeStr.find('-');
     if(pos_dash == string::npos)
@@ -347,11 +330,48 @@ interval<TID> DataBase::parseTIDRange(const string& tidRangeStr) const
     return {parseTIDStr(startStr), parseTIDStr(stopStr)};
 }
 
-string DataBase::makeRangeFolder(const string& calibrationID, const interval<TID>& range) const
+string DataBase::OnDiskLayout::GetRangeFolder(const string& calibrationID, const interval<TID>& range) const
 {
     const string& start = makeTIDString(range.Start());
     const string& stop = makeTIDString(range.Stop());
     const string& day = start.substr(0, start.find('T'));
-    return calibrationDataFolder+"/"+calibrationID+"/DataRanges/"+day+"/"+start+"-"+stop;
+    return GetFolder(calibrationID, Type_t::DataRanges)+"/"+day+"/"+start+"-"+stop;
 }
 
+string DataBase::OnDiskLayout::makeTIDString(const TID& tid) const
+{
+    if(tid.IsInvalid())
+        return "OPEN";
+    // cannot use std_ext::to_iso8601 since
+    // only underscores are allowed in string
+    // note that the T is important for some use cases
+    char buf[sizeof "2011_10_08T07_07_09Z"];
+    time_t time = tid.Timestamp;
+    strftime(buf, sizeof buf, "%Y_%m_%dT%H_%M_%SZ", gmtime(addressof(time)));
+    // add the lower ID
+    stringstream ss;
+    ss << buf << "_0x" << hex << setw(8) << setfill('0') << tid.Lower;
+    return ss.str();
+}
+
+string DataBase::OnDiskLayout::GetFolder(const string& calibrationID, DataBase::OnDiskLayout::Type_t type) const
+{
+    switch(type) {
+    case Type_t::DataDefault: return CalibrationDataFolder+"/"+calibrationID+"/DataDefault";
+    case Type_t::DataRanges: return CalibrationDataFolder+"/"+calibrationID+"/DataRanges";
+    case Type_t::MC: return CalibrationDataFolder+"/"+calibrationID+"/MC";
+    }
+    throw runtime_error("Invalid folder type provided.");
+}
+
+string DataBase::OnDiskLayout::GetCurrentFile(const string& calibrationID, DataBase::OnDiskLayout::Type_t type) const
+{
+    switch(type) {
+    case Type_t::DataDefault:
+    case Type_t::MC:
+        return GetFolder(calibrationID, type)+"/current";
+    default:
+        throw runtime_error("Invalid folder type provided.");
+    }
+
+}
