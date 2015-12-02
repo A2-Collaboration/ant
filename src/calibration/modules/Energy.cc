@@ -42,7 +42,7 @@ Energy::Energy(Detector_t::Type_t detectorType,
     ChannelType(channelType),
     calibrationManager(calmgr),
     Converter(move(converter)),
-    Pedestals(defaultPedestal,"Pedestals", true), // pedestals are always extendable
+    Pedestals(defaultPedestal,"Pedestals"),
     Gains(defaultGain,"Gains"),
     Thresholds(defaultThreshold,"Thresholds"),
     RelativeGains(defaultRelativeGain,"RelativeGains")
@@ -134,62 +134,62 @@ void Energy::ApplyTo(const readhits_t& hits, extrahits_t& extrahits)
     }
 }
 
-std::vector<std::list<TID> > Energy::GetChangePoints() const
+std::list<Updateable_traits::Loader_t> Energy::GetLoaders() const
 {
-    vector<list<TID>> changePointLists;
 
-    for (auto calibration: AllCalibrations) {
-        changePointLists.push_back(
-                    calibrationManager->GetChangePoints(
-                        GUI_CalibType::ConstructName(GetName(), calibration->Name)
-                        )
-                    );
-    }
-    return changePointLists;
-}
-void Energy::Update(size_t index, const TID& tid)
-{
-    auto calibration = AllCalibrations[index];
+    std::list<Updateable_traits::Loader_t> loaders;
 
-    TCalibrationData cdata;
-    if(calibrationManager->GetData(
-           GUI_CalibType::ConstructName(GetName(), calibration->Name),
-           tid, cdata))
-    {
-        auto& values = calibration->Values;
-        for (const auto& val: cdata.Data) {
-            if(values.size()<val.Key+1)
-                values.resize(val.Key+1);
-            values[val.Key] = val.Value;
-        }
+    for(auto calibration : AllCalibrations) {
+
+        auto loader = [this, calibration]
+                      (const TID& currPoint, TID& nextChangePoint)
+        {
+            TCalibrationData cdata;
+            if(calibrationManager->GetData(
+                   GetName()+"_"+ calibration->Name,
+                   currPoint, cdata, nextChangePoint))
+            {
+                auto& values = calibration->Values;
+                for (const auto& val: cdata.Data) {
+                    if(values.size()<val.Key+1)
+                        values.resize(val.Key+1);
+                    values[val.Key] = val.Value;
+                }
+            }
+            else {
+                LOG_IF(!calibration->Values.empty(), WARNING)
+                        << "No calibration data found for " << calibration->Name
+                        << " at changepoint TID=" << currPoint << ", using default values";
+                calibration->Values.resize(0);
+            }
+        };
+
+        loaders.emplace_back(loader);
     }
-    else {
-        LOG_IF(!calibration->Values.empty(), WARNING)
-                << "No calibration data found for " << calibration->Name
-                << " at changepoint TID=" << tid << ", using default values";
-        calibration->Values.resize(0);
-    }
+
+    return loaders;
 }
 
 Energy::GUI_CalibType::GUI_CalibType(const string& basename, CalibType& type,
                                      const shared_ptr<DataManager>& calmgr,
-                                     const shared_ptr<Detector_t>& detector_) :
+                                     const shared_ptr<Detector_t>& detector_, Calibration::AddMode_t mode) :
     gui::CalibModule_traits(basename),
     calibType(type),
     calibrationManager(calmgr),
-    detector(detector_)
+    detector(detector_),
+    addMode(mode)
 {}
 
 string Energy::GUI_CalibType::GetName() const
 {
     // serves as the CalibrationID for the manager,
     // and as the histogram name
-    return ConstructName(CalibModule_traits::GetName(), calibType.Name);
+    return CalibModule_traits::GetName()+"_"+calibType.Name;
 }
 
 string Energy::GUI_CalibType::GetHistogramName() const
 {
-    return GetName();
+    return CalibModule_traits::GetName()+"/"+calibType.Name;
 }
 
 unsigned Energy::GUI_CalibType::GetNumberOfChannels() const
@@ -239,8 +239,7 @@ void Energy::GUI_CalibType::StoreFinishSlice(const interval<TID>& range)
     TCalibrationData cdata(
                 GetName(),
                 range.Start(),
-                range.Stop(),
-                calibType.Extendable
+                range.Stop()
                 );
 
     std::vector<double>& values = calibType.Values;
@@ -257,7 +256,7 @@ void Energy::GUI_CalibType::StoreFinishSlice(const interval<TID>& range)
         cdata.FitParameters.emplace_back(ch, params);
     }
 
-    calibrationManager->Add(cdata);
+    calibrationManager->Add(cdata, addMode);
 }
 
 Energy::GUI_Pedestals::GUI_Pedestals(
@@ -266,7 +265,7 @@ Energy::GUI_Pedestals::GUI_Pedestals(
         const std::shared_ptr<DataManager>& calmgr,
         const std::shared_ptr<Detector_t>& detector,
         shared_ptr<gui::PeakingFitFunction> fitfunction) :
-    GUI_CalibType(basename, type, calmgr, detector),
+    GUI_CalibType(basename, type, calmgr, detector, Calibration::AddMode_t::RightOpen),
     func(fitfunction)
 {
 

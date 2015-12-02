@@ -17,10 +17,10 @@ int main(int argc, char** argv) {
     SetupLogger();
 
 
-    TCLAP::CmdLine cmd("Ant-calib-editor", ' ', "0.1");
+    TCLAP::CmdLine cmd("Ant-calib-viewer", ' ', "0.1");
     auto cmd_verbose = cmd.add<TCLAP::ValueArg<int>>("v","verbose","Verbosity level (0..9)", false, 0,"level");
 
-    auto cmd_inputfiles  = cmd.add<TCLAP::UnlabeledValueArg<string>>("directory","calibration directory",true,"","directory");
+    auto cmd_inputfiles  = cmd.add<TCLAP::UnlabeledValueArg<string>>("file","calibration file",true,"","file");
 
     cmd.parse(argc, argv);
 

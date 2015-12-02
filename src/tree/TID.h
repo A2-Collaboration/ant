@@ -141,11 +141,15 @@ struct TID
     }
 
     TID& operator++() {
+        if(Lower == std::numeric_limits<decltype(Lower)>::max())
+            ++Timestamp;
         ++Lower;
         return *this;
     }
 
     TID& operator--() {
+        if(Lower == std::numeric_limits<decltype(Lower)>::min())
+            --Timestamp;
         --Lower;
         return *this;
     }

@@ -1,10 +1,11 @@
 #pragma once
 
+#include "Calibration.h"
+
 //std
 #include <list>
 #include <string>
 #include <memory>
-
 
 namespace ant
 {
@@ -15,8 +16,6 @@ class TID;
 namespace calibration
 {
 
-class DataBase;
-
 class DataAccess
 {
 public:
@@ -24,7 +23,7 @@ public:
      * @brief Add the given calibration data to the database
      * @param cdata
      */
-    virtual void Add(const TCalibrationData& cdata) = 0;
+    virtual void Add(const TCalibrationData& cdata, Calibration::AddMode_t addMode) = 0;
 
     /**
     *  \brief GetData Query the calibration database for specific TID
@@ -35,46 +34,42 @@ public:
     */
     virtual bool GetData(const std::string& calibrationID, const TID& eventID, TCalibrationData& cdata) = 0;
 
-    /**
-     * @brief GetChangePoints obtains the IDs where the data should be changed
-     * @param calibrationID the calibration identifier
-     * @return list of change points (possibly unsorted)
-     */
-    virtual const std::list<TID> GetChangePoints(const std::string& calibrationID) = 0;
 };
 
+class DataBase;
 
-class DataManager: public DataAccess
+class DataManager : public DataAccess
 {
 
 private:
 
     std::string calibrationDataFolder;
     std::unique_ptr<DataBase> dataBase;
-    bool extendable;
 
     void Init();
 
-
+    bool override_as_default = false;
 
 public:
     DataManager(const std::string& calibrationDataFolder_);
+    virtual ~DataManager();
 
+    void Add(const TCalibrationData& cdata, Calibration::AddMode_t addMode) override;
 
-    ~DataManager();
+    bool GetData(const std::string& calibrationID,
+                 const TID& eventID,
+                 TCalibrationData& cdata) override;
+    bool GetData(const std::string& calibrationID,
+                 const TID& eventID,
+                 TCalibrationData& cdata,
+                 TID& nextChangePoint);
 
+    // the following methods are only useful for test cases
+    std::size_t GetNumberOfCalibrationIDs();
+    std::size_t GetNumberOfCalibrationData(const std::string& calibrationID);
 
-    void Add(const TCalibrationData& cdata) override;
-
-    bool GetData(const std::string& calibrationID, const TID& eventID, TCalibrationData& cdata) override;
-
-    const std::list<TID> GetChangePoints(const std::string& calibrationID) override;
-
-    std::uint32_t GetNumberOfCalibrations();
-
-    std::uint32_t GetNumberOfDataPoints(const std::string& calibrationID);
-
-    void SetExtendable() { extendable = true; }
+    bool GetOverrideToDefault() const;
+    void SetOverrideToDefault(bool v);
 
 };
 

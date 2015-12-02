@@ -90,8 +90,7 @@ public:
     virtual void ApplyTo(clusterhits_t& sorted_clusterhits) override;
 
     // Updateable_traits interface
-    virtual std::vector<std::list<TID> > GetChangePoints() const override;
-    virtual void Update(std::size_t index, const TID& id) override;
+    virtual std::list<Loader_t> GetLoaders() const override;
     void UpdatedTIDFlags(const TID& id) override;
 
 

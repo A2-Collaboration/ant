@@ -20,7 +20,10 @@ struct system {
      * @param extension File extension to look for. all files if empty.
      * @return a list of all filenames with path prepended
      */
-    static std::list<std::string> lsFiles(const std::string& folder=".", const std::string& extension="");
+    static std::list<std::string> lsFiles(const std::string& folder=".",
+                                          const std::string& extension="",
+                                          bool ignoreDotDirs=false,
+                                          bool doNotPrependFolder=false);
 
     /**
      * @brief testopen a given file

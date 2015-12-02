@@ -89,8 +89,7 @@ public:
     virtual void ApplyTo(const readhits_t& hits, extrahits_t&) override;
 
     // Updateable_traits interface
-    virtual std::vector<std::list<TID>> GetChangePoints() const override;
-    void Update(std::size_t index, const TID&) override;
+    virtual std::list<Loader_t> GetLoaders() const override;
     void UpdatedTIDFlags(const TID& id) override;
 
 
@@ -112,7 +111,7 @@ protected:
     std::shared_ptr<gui::PeakingFitFunction> fitFunction;
 
     std::vector<double> DefaultOffsets;
-    std::vector<double> Offsets;
+    mutable std::vector<double> Offsets;
 
     std::vector<double> DefaultGains;
     std::vector<double> Gains;

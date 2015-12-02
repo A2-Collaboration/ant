@@ -25,6 +25,21 @@ inline bool string_starts_with(std::string const& value, std::string const& begi
     return std::equal(beginning.begin(), beginning.end(), value.begin());
 }
 
+/**
+ * @brief replace a substring
+ * @param subject is modified
+ * @param search
+ * @param replace
+ */
+inline void replace(std::string& subject, const std::string& search,
+                          const std::string& replace) {
+    size_t pos = 0;
+    while((pos = subject.find(search, pos)) != std::string::npos) {
+         subject.replace(pos, search.length(), replace);
+         pos += replace.length();
+    }
+}
+
 
 /**
  * @brief string_sanitize removes nasty whitespace from string

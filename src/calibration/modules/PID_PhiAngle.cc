@@ -123,23 +123,20 @@ void PID_PhiAngle::GetGUIs(std::list<std::unique_ptr<gui::CalibModule_traits> >&
     guis.emplace_back(std_ext::make_unique<TheGUI>(GetName(), calibrationManager, pid_detector));
 }
 
-
-std::vector<std::list<TID> > PID_PhiAngle::GetChangePoints() const
+std::list<Updateable_traits::Loader_t> PID_PhiAngle::GetLoaders() const
 {
-    return {calibrationManager->GetChangePoints(GetName())};
+    return {
+        [this] (const TID& currPoint, TID& nextChangePoint) {
+            TCalibrationData cdata;
+            if(!calibrationManager->GetData(GetName(), currPoint, cdata, nextChangePoint))
+                return;
+            if(cdata.Data.size() != 1)
+                return;
+            const TKeyValue<double>& kv = cdata.Data.front();
+            pid_detector->SetPhiOffset(kv.Value);
+        }
+    };
 }
-
-void PID_PhiAngle::Update(size_t, const TID& id)
-{
-    TCalibrationData cdata;
-    if(!calibrationManager->GetData(GetName(), id, cdata))
-        return;
-    if(cdata.Data.size() != 1)
-        return;
-    const TKeyValue<double>& kv = cdata.Data.front();
-    pid_detector->SetPhiOffset(kv.Value);
-}
-
 
 /**
  * @brief The PID_PhiAngle::TheGUI::_FitGauss: override the SetDefaults for PID phi angle fits
@@ -215,7 +212,8 @@ void PID_PhiAngle::TheGUI::StartSlice(const interval<TID>& range)
         angles[ch] = std_ext::radian_to_degree(pid_detector->GetPosition(ch).Phi());
 
     TCalibrationData cdata;
-    if(calibrationManager->GetData(GetName()+"/SingleChannels", range.Start(), cdata)) {
+    // TODO
+    if(calibrationManager->GetData(GetName()+"_SingleChannels", range.Start(), cdata)) {
         for(const TKeyValue<double>& kv : cdata.Data) {
             angles[kv.Key] = kv.Value;
         }
@@ -328,7 +326,7 @@ void PID_PhiAngle::TheGUI::StoreFinishSlice(const interval<TID>& range)
     delete h_result;
 
     TCalibrationData cdata(
-                GetName()+"/SingleChannels",
+                GetName()+"_SingleChannels",
                 range.Start(),
                 range.Stop()
                 );
@@ -352,8 +350,7 @@ void PID_PhiAngle::TheGUI::StoreFinishSlice(const interval<TID>& range)
                 );
     cdata_offset.Data.emplace_back(0, phi_offset);
 
-
-    calibrationManager->Add(cdata);
-    calibrationManager->Add(cdata_offset);
+    calibrationManager->Add(cdata, Calibration::AddMode_t::StrictRange);
+    calibrationManager->Add(cdata_offset, Calibration::AddMode_t::StrictRange);
 }
 

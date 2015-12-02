@@ -17,7 +17,9 @@ bool system::isInteractive()
     return isatty(fileno(stdin));
 }
 
-list<string> system::lsFiles(const string& folder, const string& extension)
+list<string> system::lsFiles(const string& folder, const string& extension,
+                             bool ignoreDotDirs,
+                             bool doNotPrependFolder)
 {
     list<string> filenames;
 
@@ -28,7 +30,9 @@ list<string> system::lsFiles(const string& folder, const string& extension)
             string filename = ent->d_name;
             if(!std_ext::string_ends_with(filename,extension))
                 continue;
-            filenames.emplace_back(folder+"/"+filename);
+            if(ignoreDotDirs && (filename == "." || filename == ".."))
+                continue;
+            filenames.emplace_back(doNotPrependFolder ? filename : folder+"/"+filename);
         }
         closedir(dir);
     }

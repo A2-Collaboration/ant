@@ -1,8 +1,9 @@
 #pragma once
 
 #include <algorithm>
-#include <cxxabi.h>
+#include <functional>
 
+#include <cxxabi.h>
 
 namespace ant {
 namespace std_ext {

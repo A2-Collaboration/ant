@@ -30,8 +30,7 @@ public:
     virtual void ApplyTo(const readhits_t& hits, extrahits_t& extrahits) override;
 
     // Updateable_traits interface
-    virtual std::vector<std::list<TID>> GetChangePoints() const override;
-    void Update(std::size_t index, const TID& tid) override;
+    virtual std::list<Loader_t> GetLoaders() const override;
 
 protected:
     Energy(Detector_t::Type_t detectorType,
@@ -60,12 +59,10 @@ protected:
         const double        DefaultValue;
         std::vector<double> Values;
         const std::string   Name;
-        bool Extendable;
-        CalibType(double defaultValue, const std::string& name, bool extendable = false):
+        CalibType(double defaultValue, const std::string& name):
             DefaultValue(defaultValue),
             Values(),
-            Name(name),
-            Extendable(extendable)
+            Name(name)
         {}
     }; // CalibType
 
@@ -77,21 +74,18 @@ protected:
         GUI_CalibType(const std::string& basename,
                       CalibType& type,
                       const std::shared_ptr<DataManager>& calmgr,
-                      const std::shared_ptr<Detector_t>& detector_
+                      const std::shared_ptr<Detector_t>& detector_,
+                      Calibration::AddMode_t mode = Calibration::AddMode_t::StrictRange
                       );
 
         virtual std::string GetName() const override;
         virtual std::string GetHistogramName() const override;
         virtual unsigned GetNumberOfChannels() const override;
 
-        virtual void InitGUI(gui::ManagerWindow_traits* window);
+        virtual void InitGUI(gui::ManagerWindow_traits* window) override;
 
         virtual void StartSlice(const interval<TID>& range) override;
         virtual void StoreFinishSlice(const interval<TID>& range) override;
-
-        static std::string ConstructName(const std::string& basename, const std::string& type_name) {
-            return basename+"/"+type_name;
-        }
 
     protected:
         CalibType& calibType;
@@ -103,6 +97,8 @@ protected:
 
         bool IgnorePreviousFitParameters = false;
         bool UsePreviousSliceParams = false;
+
+        Calibration::AddMode_t addMode;
     }; // GUI_CalibType
 
 

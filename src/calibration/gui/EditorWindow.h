@@ -28,31 +28,13 @@ class EditorWindow : public TGMainFrame,
 {
 private:
 
-    class MyComboBox : public TGComboBox
-    {
-    public:
-        MyComboBox(const TGWindow *p = 0, Int_t id = -1,
-              UInt_t options = kHorizontalFrame | kSunkenFrame | kDoubleBorder,
-              Pixel_t back = GetWhitePixel());
-        void SetList(const std::list<std::string>& items);
-        std::string GetSelectedText();
-    };
-
+    std::shared_ptr<ant::calibration::Editor> editor;
     std::map<EKeySym, TGTextButton*> keys;
 
-    // Widgets on frame which can  be switched on and off
-    TGTextButton* rootButton_delete;
-    TGTextButton* rootButton_markInValid;
-    TGTextButton* rootButton_expandSelection;
-    TGTextButton* rootButton_StartEditor;
-    TGTextButton* rootButton_dublicateLast;
     TGTextButton* rootButton_avg;
-    TGTextButton* rootButton_save;
+    TGTextButton* rootButton_reset;
     TGTextButton* rootButton_saveQuit;
 
-    MyComboBox* calibSelector;
-
-    void createSelector(TGVerticalFrame* frame);
     void createToolbar(TGVerticalFrame* frame);
     void updateLayout();
 
@@ -60,18 +42,9 @@ private:
     EmbeddedEditorCanvas* ecanvas;
     TGHorizontalFrame* frame_canvas = nullptr;
 
-    std::shared_ptr<ant::calibration::Editor> editor;
 
-    std::string dataFolder;
-    std::string currentCalID;
-
-    TH2D* calHist;
-
-    void deleteSelections();
-
-    void disableButtons();
 public:
-    EditorWindow(const std::string& folder);
+    EditorWindow(const std::string& filename);
 
     virtual Bool_t HandleKey(Event_t *event) override;
 

@@ -2,12 +2,14 @@
 
 #include "tree/TID.h"
 
+#include "Reconstruct_traits.h"
+
+#include <queue>
 #include <list>
 #include <memory>
 
 namespace ant {
 
-class Updateable_traits;
 
 namespace reconstruct {
 
@@ -29,13 +31,28 @@ public:
     void UpdateParameters(const TID& currentPoint);
 
 private:
-    template<typename T>
-    using shared_ptr_list = std::list< std::pair<std::size_t,std::shared_ptr<T>> >;
+    struct queue_item_t {
+        TID NextChangePoint;
+        Updateable_traits::Loader_t Item;
+        queue_item_t(const TID& nextChangePoint,
+                     Updateable_traits::Loader_t item) :
+            NextChangePoint(nextChangePoint),
+            Item(item)
+        {}
+        bool operator<(const queue_item_t& other) const {
+            // invert ordering such that item with earliest change point
+            // comes first in priority queue
+            return other.NextChangePoint < NextChangePoint;
+        }
+    };
 
-    std::list< std::pair< TID, shared_ptr_list<Updateable_traits> > > changePoints;
-    const std::list< std::shared_ptr<Updateable_traits> > updateables;
+    std::priority_queue<queue_item_t> queue;
 
+    std::list< std::shared_ptr<Updateable_traits> > updateables;
     TID lastFlagsSeen;
+
+    void DoQueueLoad(const TID& currPoint,
+                     Updateable_traits::Loader_t loader);
 };
 
 

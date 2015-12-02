@@ -83,8 +83,7 @@ public:
     virtual void GetGUIs(std::list<std::unique_ptr<calibration::gui::CalibModule_traits> >& guis) override;
 
     // Updateable_traits interface
-    virtual std::vector<std::list<TID> > GetChangePoints() const override;
-    virtual void Update(std::size_t index, const TID& id) override;
+    virtual std::list<Loader_t> GetLoaders() const override;
 
 protected:
     std::shared_ptr<expconfig::detector::PID> pid_detector;

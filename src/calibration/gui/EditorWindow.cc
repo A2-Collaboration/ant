@@ -1,5 +1,6 @@
 #include "EditorWindow.h"
 
+#include "base/std_ext/string.h"
 #include "base/std_ext/memory.h"
 #include "calibration/gui/EditorCanvas.h"
 
@@ -66,106 +67,31 @@ public:
     }
 };
 
-void EditorWindow::createSelector(TGVerticalFrame* frame)
-{
-    TGHorizontalFrame* frm1 = new TGHorizontalFrame(frame);
-
-    calibSelector = new MyComboBox(frm1,0);
-    calibSelector->SetList(editor->GetListOfCalibrations());
-    auto btn_select = new ActionWidget<TGTextButton>(frm1,"Select");
-    btn_select->SetAction([this] () {
-        currentCalID = this->calibSelector->GetSelectedText();
-        ecanvas->SetCalID(currentCalID);
-    });
-
-    // add them all together...
-    auto layout_btn = new TGLayoutHints(kLHintsLeft|kLHintsExpandX|kLHintsExpandY,2,2,2,2);
-
-    auto add_to_frame = [this, layout_btn] (TGHorizontalFrame* frm, TGWidget* widget) {
-        frm->AddFrame(dynamic_cast<TGFrame*>(widget), layout_btn);
-    };
-
-    add_to_frame(frm1, calibSelector);
-    add_to_frame(frm1, btn_select);
-
-    auto layout_frm =  new TGLayoutHints(kLHintsTop | kLHintsExpandX);
-    frame->AddFrame(frm1, layout_frm);
-}
-
 
 void EditorWindow::createToolbar(TGVerticalFrame* frame)
 {
     TGHorizontalFrame* frm2 = new TGHorizontalFrame(frame);
-    TGHorizontalFrame* frm3 = new TGHorizontalFrame(frame);
-    TGHorizontalFrame* frm4 = new TGHorizontalFrame(frame);
 
 
-    auto btn_selectInValid = new ActionWidget<TGTextButton>(frm2,"Select invalid");
-    keys[kKey_s] = btn_selectInValid;
-    rootButton_markInValid = btn_selectInValid;
-    btn_selectInValid->SetAction([this] () {
-        this->ecanvas->SelectInvalid();
-        UpdateMe();
+
+
+    auto btn_reset = new ActionWidget<TGTextButton>(frm2,"Reset");
+    rootButton_reset = btn_reset;
+    btn_reset->SetAction([this] () {
+        this->ecanvas->ResetData();
     });
 
-    auto btn_expandSelection = new ActionWidget<TGTextButton>(frm2,"expand selection");
-    rootButton_expandSelection = btn_expandSelection;
-    btn_expandSelection->SetAction([this] ()
-    {
-        this->ecanvas->ExpandSelection();
-        this->ecanvas->clearSelections();
-        UpdateMe();
-    });
-
-    auto btn_clear = new ActionWidget<TGTextButton>(frm3,"Clear selection / go back");
-    keys[kKey_c] = btn_clear;
-    btn_clear->SetAction([this] () {
-        this->ecanvas->clearSelections();
-        UpdateMe();
-    });
-
-    auto btn_edit = new ActionWidget<TGTextButton>(frm3,"start Editor / write data");
-    rootButton_StartEditor = btn_edit;
-    btn_edit->SetAction([this] () {
-        this->ecanvas->EditSelection();
-    });
-
-    auto btn_dublicateLast = new ActionWidget<TGTextButton>(frm2,"dublicate last step");
-    rootButton_dublicateLast = btn_dublicateLast;
-    btn_dublicateLast->SetAction([this] () {
-        this->editor->DublicateLast(currentCalID);
-        this->ecanvas->SetCalID(currentCalID);
-        UpdateMe();
-    });
-
-    auto btn_avg = new ActionWidget<TGTextButton>(frm3,"AVG");
+    auto btn_avg = new ActionWidget<TGTextButton>(frm2,"AVG");
     rootButton_avg = btn_avg;
     btn_avg->SetAction([this] () {
         this->ecanvas->SetToAverage();
     });
 
-    auto btn_delete = new ActionWidget<TGTextButton>(frm2,"delete selection");
-    rootButton_delete = btn_delete;
-    btn_delete->SetAction([this] () {
-        this->deleteSelections();
-        UpdateMe();
-    });
 
-    auto btn_save = new ActionWidget<TGTextButton>(frm4,"save database");
-    rootButton_save = btn_save;
-    btn_save->SetAction([this] () {
-        this->editor->SaveToFolder(dataFolder);
-    });
-
-    auto btn_Quit = new ActionWidget<TGTextButton>(frm4,"Exit without saving");
-    btn_Quit->SetAction([this] () {
-        gApplication->Terminate(0);
-    });
-
-    auto btn_saveQuit = new ActionWidget<TGTextButton>(frm4,"Save and Exit");
+    auto btn_saveQuit = new ActionWidget<TGTextButton>(frm2,"Save and Exit");
     rootButton_saveQuit = btn_saveQuit;
     btn_saveQuit->SetAction([this] () {
-        this->editor->SaveToFolder(dataFolder);
+        ecanvas->ApplyChanges();
         gApplication->Terminate(0);
     });
 
@@ -176,20 +102,11 @@ void EditorWindow::createToolbar(TGVerticalFrame* frame)
         frm->AddFrame(dynamic_cast<TGFrame*>(widget), layout_btn);
     };
 
-    add_to_frame(frm2, btn_selectInValid);
-    add_to_frame(frm3, btn_edit);
-    add_to_frame(frm2, btn_expandSelection);
-    add_to_frame(frm2, btn_delete);
-    add_to_frame(frm2, btn_dublicateLast);
-    add_to_frame(frm3, btn_avg);
-    add_to_frame(frm3, btn_clear);
-    add_to_frame(frm4, btn_save);
-    add_to_frame(frm4, btn_Quit);
-    add_to_frame(frm4, btn_saveQuit);
+    add_to_frame(frm2, btn_avg);
+    add_to_frame(frm2, btn_reset);
+    add_to_frame(frm2, btn_saveQuit);
 
     auto layout_frm =  new TGLayoutHints(kLHintsBottom | kLHintsExpandX);
-    frame->AddFrame(frm4, layout_frm);
-    frame->AddFrame(frm3, layout_frm);
     frame->AddFrame(frm2, layout_frm);
 }
 
@@ -201,63 +118,21 @@ void EditorWindow::updateLayout()
     MapWindow();
 }
 
-void EditorWindow::deleteSelections()
-{
-    auto indexMemory = ecanvas->GetSelected();
-    indexMemory.sort();
-
-    for ( auto rit = indexMemory.rbegin(); rit != indexMemory.rend(); ++rit)
-        editor->Remove(currentCalID,*(rit));
-    // has to load current Calibration as new one, because size changed:
-    // (this also empties the indexmemory on ecanvas)
-    ecanvas->SetCalID(currentCalID);
-}
-
-void EditorWindow::disableButtons()
-{
-    rootButton_markInValid->SetEnabled(kTRUE);
-    if (ecanvas->InDataEditMode())
-        rootButton_markInValid->SetEnabled(kFALSE);
-
-    rootButton_expandSelection->SetEnabled(ecanvas->GetSelected().size() > 0);
-
-    rootButton_delete->SetEnabled(kTRUE);
-    if ( ecanvas->GetSelected().size() == 0 || ecanvas->InDataEditMode())
-        rootButton_delete->SetEnabled(kFALSE);
-
-    rootButton_StartEditor->SetEnabled(kFALSE);
-    if ( ecanvas->GetSelected().size() == 1)
-        rootButton_StartEditor->SetEnabled(kTRUE);
-
-    rootButton_dublicateLast->SetEnabled( ecanvas->GetSelected().size() == 0);
-
-    rootButton_avg->SetEnabled( ecanvas->InDataEditMode());
-
-    rootButton_save->SetEnabled( !ecanvas->InDataEditMode());
-    rootButton_saveQuit->SetEnabled( !ecanvas->InDataEditMode());
-
-}
-
-EditorWindow::EditorWindow(const string& folder) :
+EditorWindow::EditorWindow(const string& filename) :
     TGMainFrame(gClient->GetRoot()),
-    editor(make_shared<ant::calibration::Editor>()),
-    dataFolder(folder)
+    editor(make_shared<ant::calibration::Editor>(filename))
 {
     // Set a name to the main frame
-    SetWindowName( (std_ext::formatter() << "Ant-calib Editor: " << folder).str().c_str() );
-
-    editor->AddFromFolder(folder);
-    currentCalID = editor->GetListOfCalibrations().front();
+    SetWindowName( (std_ext::formatter() << "Ant-calib Editor: " << filename).str().c_str() );
 
     TGVerticalFrame* frame = new TGVerticalFrame(this);
 
     // Create a horizontal frame widget with buttons
-    createSelector(frame);
 
     frame_canvas = new TGHorizontalFrame(frame);
     frame->AddFrame(frame_canvas, new TGLayoutHints(kLHintsExpandY | kLHintsExpandX));
 
-    ecanvas = new EmbeddedEditorCanvas(this,currentCalID,frame_canvas);
+    ecanvas = new EmbeddedEditorCanvas(this,frame_canvas);
     frame_canvas->AddFrame(ecanvas, new TGLayoutHints(kLHintsExpandY | kLHintsExpandX));
     updateLayout();
 
@@ -268,6 +143,7 @@ EditorWindow::EditorWindow(const string& folder) :
 
     AddInput(kKeyPressMask | kKeyReleaseMask);
     UpdateMe();
+    ecanvas->EditSelection();
 
     // set focus
     gVirtualX->SetInputFocus(GetId());
@@ -299,25 +175,9 @@ EditorWindow::~EditorWindow()
 std::shared_ptr<Editor> EditorWindow::GetEditor() { return editor;}
 
 
-EditorWindow::MyComboBox::MyComboBox(const TGWindow* p, Int_t id, UInt_t options, Pixel_t back):
-    TGComboBox(p,id,options,back){}
-
-void EditorWindow::MyComboBox::SetList(const list<string>& items)
-{
-    int i = 0;
-    for (const auto& item: items)
-        AddEntry(item.c_str(),i++);
-}
-
-string EditorWindow::MyComboBox::GetSelectedText()
-{
-    TGTextLBEntry* tgl = (TGTextLBEntry*) GetSelectedEntry();
-    return string(tgl->GetText()->GetString());
-}
 
 void EditorWindow::UpdateMe()
 {
-    disableButtons();
     updateLayout();
 }
 
