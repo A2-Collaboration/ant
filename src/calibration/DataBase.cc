@@ -166,7 +166,7 @@ bool DataBase::GetItem(const string& calibrationID,
     return false;
 }
 
-void DataBase::AddItem(const TCalibrationData& cdata, mode_t mode)
+void DataBase::AddItem(const TCalibrationData& cdata, Calibration::AddMode_t mode)
 {
     // some checks
     if(cdata.FirstID.isSet(TID::Flags_t::MC) ^ cdata.LastID.isSet(TID::Flags_t::MC))
@@ -186,11 +186,11 @@ void DataBase::AddItem(const TCalibrationData& cdata, mode_t mode)
     // non-MC business
 
     switch(mode) {
-    case mode_t::AsDefault: {
+    case Calibration::AddMode_t::AsDefault: {
         writeFile(calibrationDataFolder+"/"+calibrationID+"/DataDefault", cdata);
         break;
     }
-    case mode_t::StrictRange: {
+    case Calibration::AddMode_t::StrictRange: {
         if(cdata.FirstID.IsInvalid())
             throw Exception("FirstID cannot be invalid");
         if(cdata.LastID.IsInvalid())
@@ -200,7 +200,7 @@ void DataBase::AddItem(const TCalibrationData& cdata, mode_t mode)
         handleStrictRange(cdata);
         break;
     }
-    case mode_t::RightOpen: {
+    case Calibration::AddMode_t::RightOpen: {
         if(cdata.FirstID.IsInvalid())
             throw Exception("FirstID cannot be invalid");
         handleRightOpen(cdata);

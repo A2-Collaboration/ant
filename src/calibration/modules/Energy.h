@@ -74,7 +74,8 @@ protected:
         GUI_CalibType(const std::string& basename,
                       CalibType& type,
                       const std::shared_ptr<DataManager>& calmgr,
-                      const std::shared_ptr<Detector_t>& detector_
+                      const std::shared_ptr<Detector_t>& detector_,
+                      Calibration::AddMode_t mode = Calibration::AddMode_t::StrictRange
                       );
 
         virtual std::string GetName() const override;
@@ -86,10 +87,6 @@ protected:
         virtual void StartSlice(const interval<TID>& range) override;
         virtual void StoreFinishSlice(const interval<TID>& range) override;
 
-        static std::string ConstructName(const std::string& basename, const std::string& type_name) {
-            return basename+"_"+type_name;
-        }
-
     protected:
         CalibType& calibType;
         std::shared_ptr<DataManager> calibrationManager;
@@ -100,6 +97,8 @@ protected:
 
         bool IgnorePreviousFitParameters = false;
         bool UsePreviousSliceParams = false;
+
+        Calibration::AddMode_t addMode;
     }; // GUI_CalibType
 
 

@@ -11,6 +11,13 @@ namespace ant {
 class Calibration {
 public:
 
+    enum class AddMode_t
+    {
+        AsDefault,
+        RightOpen,
+        StrictRange
+    };
+
     /**
      * @brief The Converter struct handles the transition from raw bytes
      * to somewhat meaningful values (not necessarily with physically meaningful units)

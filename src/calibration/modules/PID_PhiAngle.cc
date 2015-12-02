@@ -350,9 +350,7 @@ void PID_PhiAngle::TheGUI::StoreFinishSlice(const interval<TID>& range)
                 );
     cdata_offset.Data.emplace_back(0, phi_offset);
 
-
-    //TODO
-    calibrationManager->Add(cdata,DataBase::mode_t::AsDefault);
-    calibrationManager->Add(cdata_offset,DataBase::mode_t::AsDefault);
+    calibrationManager->Add(cdata, Calibration::AddMode_t::StrictRange);
+    calibrationManager->Add(cdata_offset, Calibration::AddMode_t::StrictRange);
 }
 

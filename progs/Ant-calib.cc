@@ -25,7 +25,7 @@ int main(int argc, char** argv) {
     auto cmd_calibration = cmd.add<TCLAP::ValueArg<string>>("c","calibration","Calibration GUI module name", true, "","calibration");
     auto cmd_averagelength = cmd.add<TCLAP::ValueArg<int>>("a","average","Average length for moving window (zero sums everything up)", false, 0, "length");
     auto cmd_batchmode = cmd.add<TCLAP::SwitchArg>("b","batch","Run in batch mode (no GUI, autosave)",false);
-//    auto cmd_default = cmd.add<TCLAP::SwitchArg>("","default","Put created TCalibrationData to default range",false);
+    auto cmd_default = cmd.add<TCLAP::SwitchArg>("","default","Put created TCalibrationData to default range",false);
     // unlabeled multi arg must be the last element added, and interprets everything as a input file
     auto cmd_inputfiles  = cmd.add<TCLAP::UnlabeledMultiArg<string>>("inputfiles","Ant files with histograms",true,"inputfiles");
     cmd.parse(argc, argv);
@@ -51,6 +51,10 @@ int main(int argc, char** argv) {
     if(setup == nullptr) {
         LOG(ERROR) << "Did not find setup instance for name '" << manager->SetupName << "' (extracted from input files)";
         return 1;
+    }
+
+    if(cmd_default->isSet()) {
+        setup->GetCalibrationDataManager()->SetOverrideToDefault(true);
     }
 
     string calibrationguiname = cmd_calibration->getValue();

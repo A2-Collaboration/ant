@@ -23,7 +23,7 @@ public:
      * @brief Add the given calibration data to the database
      * @param cdata
      */
-    virtual void Add(const TCalibrationData& cdata, DataBase::mode_t addMode) = 0;
+    virtual void Add(const TCalibrationData& cdata, Calibration::AddMode_t addMode) = 0;
 
     /**
     *  \brief GetData Query the calibration database for specific TID
@@ -47,10 +47,12 @@ private:
 
     void Init();
 
+    bool override_as_default = false;
+
 public:
     DataManager(const std::string& calibrationDataFolder_);
 
-    void Add(const TCalibrationData& cdata, DataBase::mode_t addMode) override;
+    void Add(const TCalibrationData& cdata, Calibration::AddMode_t addMode) override;
 
     bool GetData(const std::string& calibrationID,
                  const TID& eventID,
@@ -63,6 +65,9 @@ public:
     // the following methods are only useful for test cases
     std::size_t GetNumberOfCalibrationIDs();
     std::size_t GetNumberOfCalibrationData(const std::string& calibrationID);
+
+    bool GetOverrideToDefault() const;
+    void SetOverrideToDefault(bool v);
 
 };
 

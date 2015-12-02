@@ -33,8 +33,13 @@ DataManager::DataManager(const string& calibrationDataFolder_):
     calibrationDataFolder(calibrationDataFolder_)
 {}
 
-void DataManager::Add(const TCalibrationData& cdata, DataBase::mode_t addMode)
+void DataManager::Add(const TCalibrationData& cdata, Calibration::AddMode_t addMode)
 {
+    if(override_as_default) {
+        addMode = Calibration::AddMode_t::AsDefault;
+        LOG(INFO) << "Setting Database Add-Mode to Default";
+    }
+
     Init();
     dataBase->AddItem(cdata, addMode);
     LOG(INFO) << "Added " << cdata;
@@ -64,4 +69,14 @@ size_t DataManager::GetNumberOfCalibrationData(const string& calibrationID)
 {
     Init();
     return dataBase->GetNumberOfCalibrationData(calibrationID);
+}
+
+bool DataManager::GetOverrideToDefault() const
+{
+    return override_as_default;
+}
+
+void DataManager::SetOverrideToDefault(bool v)
+{
+    override_as_default = v;
 }

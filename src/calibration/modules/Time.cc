@@ -337,5 +337,5 @@ void Time::TheGUI::StoreFinishSlice(const interval<TID>& range)
     }
 
     // TODO: choose mode
-    calmgr->Add(cdata,DataBase::mode_t::AsDefault);
+    calmgr->Add(cdata, Calibration::AddMode_t::AsDefault);
 }

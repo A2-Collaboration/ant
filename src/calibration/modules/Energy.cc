@@ -146,7 +146,7 @@ std::list<Updateable_traits::Loader_t> Energy::GetLoaders() const
         {
             TCalibrationData cdata;
             if(calibrationManager->GetData(
-                   GUI_CalibType::ConstructName(GetName(), calibration->Name),
+                   GetName()+"_"+ calibration->Name,
                    currPoint, cdata, nextChangePoint))
             {
                 auto& values = calibration->Values;
@@ -172,23 +172,24 @@ std::list<Updateable_traits::Loader_t> Energy::GetLoaders() const
 
 Energy::GUI_CalibType::GUI_CalibType(const string& basename, CalibType& type,
                                      const shared_ptr<DataManager>& calmgr,
-                                     const shared_ptr<Detector_t>& detector_) :
+                                     const shared_ptr<Detector_t>& detector_, Calibration::AddMode_t mode) :
     gui::CalibModule_traits(basename),
     calibType(type),
     calibrationManager(calmgr),
-    detector(detector_)
+    detector(detector_),
+    addMode(mode)
 {}
 
 string Energy::GUI_CalibType::GetName() const
 {
     // serves as the CalibrationID for the manager,
     // and as the histogram name
-    return ConstructName(CalibModule_traits::GetName(), calibType.Name);
+    return CalibModule_traits::GetName()+"_"+calibType.Name;
 }
 
 string Energy::GUI_CalibType::GetHistogramName() const
 {
-    return GetName();
+    return CalibModule_traits::GetName()+"/"+calibType.Name;
 }
 
 unsigned Energy::GUI_CalibType::GetNumberOfChannels() const
@@ -255,8 +256,7 @@ void Energy::GUI_CalibType::StoreFinishSlice(const interval<TID>& range)
         cdata.FitParameters.emplace_back(ch, params);
     }
 
-    //TODO: choose add mode
-    calibrationManager->Add(cdata,DataBase::mode_t::AsDefault);
+    calibrationManager->Add(cdata, addMode);
 }
 
 Energy::GUI_Pedestals::GUI_Pedestals(
@@ -265,7 +265,7 @@ Energy::GUI_Pedestals::GUI_Pedestals(
         const std::shared_ptr<DataManager>& calmgr,
         const std::shared_ptr<Detector_t>& detector,
         shared_ptr<gui::PeakingFitFunction> fitfunction) :
-    GUI_CalibType(basename, type, calmgr, detector),
+    GUI_CalibType(basename, type, calmgr, detector, Calibration::AddMode_t::RightOpen),
     func(fitfunction)
 {
 

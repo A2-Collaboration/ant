@@ -4,7 +4,7 @@
 #include "tree/TDataRecord.h"
 #include "tree/TCalibrationData.h"
 #include "base/interval.h"
-
+#include "Calibration.h"
 
 #include <set>
 #include <list>
@@ -60,13 +60,7 @@ public:
                  TCalibrationData& theData,
                  TID& nextChangePoint) const;
 
-    enum class mode_t
-    {
-        AsDefault,
-        RightOpen,
-        StrictRange
-    };
-    void AddItem(const TCalibrationData& cdata, mode_t mode);
+    void AddItem(const TCalibrationData& cdata, Calibration::AddMode_t mode);
 
 
     DataBase(const std::string calibrationDataFolder_);
