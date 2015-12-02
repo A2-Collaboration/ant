@@ -76,10 +76,7 @@ void convert(string setupfolder) {
     LOG(INFO) << "Converting " << setupfolder;
     const string base_dir(setupfolder+"/calibration");
 
-    for(auto treefile : std_ext::system::lsFiles(base_dir)) {
-
-        if(!std_ext::string_ends_with(treefile, ".root"))
-            continue;
+    for(auto treefile : std_ext::system::lsFiles(base_dir, ".root")) {
 
         LOG(INFO) << "Opening " << treefile;
 
