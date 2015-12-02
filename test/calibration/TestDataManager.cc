@@ -152,17 +152,51 @@ unsigned dotest_store(const string& foldername)
     cdata.LastID.Lower = 8;
     calibman.Add(cdata, Calibration::AddMode_t::AsDefault);
 
+    cdata.TimeStamp++;
     cdata.FirstID.Timestamp = 10;
     cdata.FirstID.Lower = 0;
     calibman.Add(cdata, Calibration::AddMode_t::RightOpen);
 
+    cdata.TimeStamp++;
     cdata.FirstID.Timestamp = 20;
     cdata.FirstID.Lower = 10;
     calibman.Add(cdata, Calibration::AddMode_t::RightOpen);
 
+    cdata.TimeStamp++;
     cdata.FirstID.Timestamp = 5;
     cdata.FirstID.Lower = 0;
     calibman.Add(cdata, Calibration::AddMode_t::RightOpen);
+
+
+    // test RightOpen intervals more complicated
+    cdata.CalibrationID = "6";
+    cdata.TimeStamp = 0;
+    cdata.FirstID.Timestamp = 10;
+    cdata.FirstID.Lower = 0;
+    calibman.Add(cdata, Calibration::AddMode_t::RightOpen);
+
+    cdata.TimeStamp++;
+    cdata.FirstID.Timestamp = 20;
+    cdata.FirstID.Lower = 10;
+    calibman.Add(cdata, Calibration::AddMode_t::RightOpen);
+
+    cdata.TimeStamp++;
+    cdata.FirstID.Timestamp = 5;
+    cdata.FirstID.Lower = 0;
+    calibman.Add(cdata, Calibration::AddMode_t::RightOpen);
+
+    cdata.TimeStamp++;
+    cdata.FirstID.Timestamp = 10;
+    cdata.FirstID.Lower = 0;
+    calibman.Add(cdata, Calibration::AddMode_t::RightOpen);
+
+    cdata.TimeStamp++;
+    cdata.FirstID.Timestamp = 5;
+    cdata.FirstID.Lower = 0;
+    cdata.LastID.Timestamp = 9;
+    cdata.LastID.Lower = 0xffffffff;
+    calibman.Add(cdata, Calibration::AddMode_t::StrictRange);
+
 
 
     // some not allowed things
@@ -181,12 +215,14 @@ unsigned dotest_store(const string& foldername)
                       DataBase::Exception);
 
     // check status
-    REQUIRE(calibman.GetNumberOfCalibrationIDs() == 5);
+    REQUIRE(calibman.GetNumberOfCalibrationIDs() == 6);
     REQUIRE(calibman.GetNumberOfCalibrationData("1") == ndata);
     REQUIRE(calibman.GetNumberOfCalibrationData("2") == 3);
     REQUIRE(calibman.GetNumberOfCalibrationData("3") == 3);
     REQUIRE(calibman.GetNumberOfCalibrationData("4") == 12);
     REQUIRE(calibman.GetNumberOfCalibrationData("5") == 4);
+    REQUIRE(calibman.GetNumberOfCalibrationData("6") == 5);
+
 
 
     return ndata;
@@ -195,12 +231,13 @@ unsigned dotest_store(const string& foldername)
 void dotest_load(const string &foldername,unsigned ndata)
 {
     DataManager calibman(foldername);
-    REQUIRE(calibman.GetNumberOfCalibrationIDs() == 5);
+    REQUIRE(calibman.GetNumberOfCalibrationIDs() == 6);
     REQUIRE(calibman.GetNumberOfCalibrationData("1") == ndata);
     REQUIRE(calibman.GetNumberOfCalibrationData("2") == 3);
     REQUIRE(calibman.GetNumberOfCalibrationData("3") == 3);
     REQUIRE(calibman.GetNumberOfCalibrationData("4") == 12);
     REQUIRE(calibman.GetNumberOfCalibrationData("5") == 4);
+    REQUIRE(calibman.GetNumberOfCalibrationData("6") == 5);
 }
 
 void dotest_changes(const string& foldername)
@@ -272,4 +309,36 @@ void dotest_changes(const string& foldername)
 
     REQUIRE(calibman.GetData("4",TID(200000,2u),cdata));
     REQUIRE(cdata.TimeStamp == 11);
+
+    // test 5
+    REQUIRE(calibman.GetData("5",TID(0,2u),cdata,nextChangePoint));
+    REQUIRE(cdata.TimeStamp == 0);
+    REQUIRE(nextChangePoint == TID(5,0u));
+
+    REQUIRE(calibman.GetData("5",TID(5,0u),cdata,nextChangePoint));
+    REQUIRE(cdata.TimeStamp == 3);
+    REQUIRE(nextChangePoint == TID(10,0u));
+
+    REQUIRE(calibman.GetData("5",TID(10,0u),cdata,nextChangePoint));
+    REQUIRE(cdata.TimeStamp == 1);
+    REQUIRE(nextChangePoint == TID(20,10u));
+
+    REQUIRE(calibman.GetData("5",TID(20,10u),cdata,nextChangePoint));
+    REQUIRE(cdata.TimeStamp == 0);
+    REQUIRE(nextChangePoint.IsInvalid());
+
+    // test 6
+    REQUIRE_FALSE(calibman.GetData("6",TID(0,2u),cdata,nextChangePoint));
+
+    REQUIRE(calibman.GetData("6",TID(5,10u),cdata,nextChangePoint));
+    REQUIRE(cdata.TimeStamp == 4);
+    REQUIRE(nextChangePoint == TID(10,0u));
+
+    REQUIRE(calibman.GetData("6",TID(10,0u),cdata,nextChangePoint));
+    REQUIRE(cdata.TimeStamp == 3);
+    REQUIRE(nextChangePoint == TID(20,10u));
+
+    REQUIRE(calibman.GetData("6",TID(20,20u),cdata,nextChangePoint));
+    REQUIRE(cdata.TimeStamp == 1);
+    REQUIRE(nextChangePoint.IsInvalid());
 }

@@ -218,19 +218,15 @@ void DataBase::handleStrictRange(const TCalibrationData& cdata) const
 
     // given range is disjoint with all existing ones,
     // then just add this range
-    if(it_range == ranges.end()) {
-        writeFile(makeRangeFolder(calibrationID, range), cdata);
-        return;
+    if(it_range != ranges.end()) {
+        // if range overlaps, then they must exactly match
+        // anything else is not allowed right now
+        if(*it_range != range) {
+            throw Exception("Given TCalibrationData range conflicts with existing database entry.");
+        }
     }
 
-    // if range overlaps, then they must exactly match
-    if(*it_range == range) {
-        writeFile(it_range->FolderPath, cdata);
-        return;
-    }
-
-    // anything else is not allowed right now
-    throw Exception("Given TCalibrationData range conflicts with existing database entry.");
+    writeFile(makeRangeFolder(calibrationID, range), cdata);
 }
 
 void DataBase::handleRightOpen(const TCalibrationData& cdata) const
@@ -261,8 +257,7 @@ void DataBase::handleRightOpen(const TCalibrationData& cdata) const
 
         if(startPoint == it_conflict->Start()) {
             // add to existing
-            writeFile(it_conflict->FolderPath, cdata);
-            return;
+           range = *it_conflict;
         }
         else if(startPoint > it_conflict->Start()) {
             // shrink existing by renaming folder
