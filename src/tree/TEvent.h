@@ -53,8 +53,14 @@ struct TEvent : TDataRecord
 
     TEvent() : TDataRecord(), Candidates(), Tagger() {}
     virtual ~TEvent() {}
+#ifdef __clang__
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Winconsistent-missing-override"
+#endif
     ClassDef(TEvent, ANT_UNPACKER_ROOT_VERSION)
-
+#ifdef __clang__
+#pragma clang diagnostic pop
+#endif
 };
 
 }

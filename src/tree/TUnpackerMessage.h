@@ -49,7 +49,14 @@ struct TUnpackerMessage : TDataRecord
 #endif
 
   TUnpackerMessage() : TDataRecord() {}
+#ifdef __clang__
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Winconsistent-missing-override"
+#endif
   ClassDef(TUnpackerMessage, ANT_UNPACKER_ROOT_VERSION)
+#ifdef __clang__
+#pragma clang diagnostic pop
+#endif
 };
 
 #ifndef __CINT__
