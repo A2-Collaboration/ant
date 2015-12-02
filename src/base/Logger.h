@@ -6,10 +6,15 @@
 #define ELPP_NO_DEFAULT_LOG_FILE
 
 #pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Weffc++"
-#include "detail/easylogging++.h"
-#pragma GCC diagnostic pop
+#pragma clang diagnostic push
 
+#pragma GCC diagnostic ignored "-Weffc++"
+#pragma clang diagnostic ignored "-Wpessimizing-move"
+
+#include "detail/easylogging++.h"
+
+#pragma GCC diagnostic pop
+#pragma clang diagnostic pop
 
 void SetupLogger(int argc, char* argv[]);
 void SetupLogger();

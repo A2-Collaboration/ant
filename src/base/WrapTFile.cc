@@ -30,7 +30,7 @@ std::unique_ptr<TFile> WrapTFile::openFile(const string& filename, const string 
         throw std::runtime_error(string("Could not open TFile at ")+filename);
     }
 
-    return std::move(file);
+    return file;
 }
 
 WrapTFile::WrapTFile()

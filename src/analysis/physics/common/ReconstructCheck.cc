@@ -152,7 +152,7 @@ std::unique_ptr<ReconstructCheck::PositionMap> ReconstructCheck::histgroup::make
         ptr = std_ext::make_unique<PositionMapTAPS>(f,name,title);
     }
 
-    return move(ptr);
+    return ptr;
 }
 
 ReconstructCheck::histgroup::histgroup(SmartHistFactory& f, const string& prefix, detectortype d): Prefix(prefix)
