@@ -53,33 +53,95 @@ unsigned dotest_store(const string& foldername)
         return tmp;
     };
 
-    calibman.Add(mdata( 4,  4, 1), DataBase::mode_t::AsDefault);
-    calibman.Add(mdata( 2,  8, 2), DataBase::mode_t::AsDefault);
-    calibman.Add(mdata( 3,  6, 3), DataBase::mode_t::AsDefault);
-    calibman.Add(mdata( 5,  7, 4), DataBase::mode_t::AsDefault);
-    calibman.Add(mdata(13, 20, 5), DataBase::mode_t::AsDefault);
-    calibman.Add(mdata(22, 24, 6), DataBase::mode_t::AsDefault);
-    calibman.Add(mdata(14, 14, 7), DataBase::mode_t::AsDefault);
+    calibman.Add(mdata( 4,  4, 1), DataBase::mode_t::StrictRange);
+    REQUIRE_THROWS_AS(calibman.Add(mdata( 2,  8, 2), DataBase::mode_t::StrictRange), DataBase::Exception);
+    REQUIRE_THROWS_AS(calibman.Add(mdata( 3,  6, 3), DataBase::mode_t::StrictRange), DataBase::Exception);
+    calibman.Add(mdata( 5,  7, 4), DataBase::mode_t::StrictRange);
+    calibman.Add(mdata(13, 20, 5), DataBase::mode_t::StrictRange);
+    calibman.Add(mdata(22, 24, 6), DataBase::mode_t::StrictRange);
+    REQUIRE_THROWS_AS(calibman.Add(mdata(14, 14, 7), DataBase::mode_t::StrictRange), DataBase::Exception);
 
+    // three times the Add failed above
+    ndata -= 3;
+
+    // make some simpler second calibration without defaults
     cdata.CalibrationID = "2";
+    cdata.TimeStamp = 0;
+    cdata.FirstID.Lower = 1;
+    cdata.LastID.Lower = 1;
+    calibman.Add(cdata, DataBase::mode_t::StrictRange);
+
     cdata.TimeStamp++;
+    cdata.FirstID.Lower = 3;
+    cdata.LastID.Lower = 6;
+    calibman.Add(cdata, DataBase::mode_t::StrictRange);
+
+    cdata.TimeStamp++;
+    cdata.FirstID.Lower = 7;
+    cdata.LastID.Lower = 7;
+    calibman.Add(cdata, DataBase::mode_t::StrictRange);
+
+    // make something with more complicated time ranges
+    cdata.CalibrationID = "3";
+    cdata.TimeStamp = 0;
     cdata.FirstID.Lower = 2;
     cdata.LastID.Lower = 8;
     calibman.Add(cdata, DataBase::mode_t::AsDefault);
 
     cdata.TimeStamp++;
-    cdata.FirstID.Lower = 3;
-    cdata.LastID.Lower = 6;
+    cdata.FirstID.Lower = 0;
+    cdata.LastID.Lower = 1;
+    calibman.Add(cdata, DataBase::mode_t::StrictRange);
+
+    cdata.TimeStamp++;
+    cdata.FirstID.Timestamp = 12302193;
+    cdata.FirstID.Lower = 2;
+    cdata.LastID.Timestamp = cdata.FirstID.Timestamp;
+    cdata.LastID.Lower = 3;
+    calibman.Add(cdata, DataBase::mode_t::StrictRange);
+
+    // add things multiple times
+    cdata.CalibrationID = "4";
+    cdata.TimeStamp = 0;
+    cdata.FirstID.Lower = 2;
+    cdata.LastID.Lower = 8;
+    calibman.Add(cdata, DataBase::mode_t::AsDefault);
+    cdata.TimeStamp++;
+    calibman.Add(cdata, DataBase::mode_t::AsDefault);
+    cdata.TimeStamp++;
+    calibman.Add(cdata, DataBase::mode_t::AsDefault);
+    cdata.TimeStamp++;
+    calibman.Add(cdata, DataBase::mode_t::AsDefault);
+    cdata.TimeStamp++;
     calibman.Add(cdata, DataBase::mode_t::AsDefault);
 
     cdata.TimeStamp++;
-    cdata.FirstID.Lower = 5;
-    cdata.LastID.Lower = 7;
-    calibman.Add(cdata, DataBase::mode_t::AsDefault);
+    cdata.FirstID.Lower = 0;
+    cdata.LastID.Lower = 1;
+    calibman.Add(cdata, DataBase::mode_t::StrictRange);
+    cdata.TimeStamp++;
+    calibman.Add(cdata, DataBase::mode_t::StrictRange);
+    cdata.TimeStamp++;
+    calibman.Add(cdata, DataBase::mode_t::StrictRange);
 
-    REQUIRE(calibman.GetNumberOfCalibrationIDs() == 2);
+    cdata.TimeStamp++;
+    cdata.FirstID.Timestamp = 12302193;
+    cdata.FirstID.Lower = 2;
+    cdata.LastID.Timestamp = cdata.FirstID.Timestamp;
+    cdata.LastID.Lower = 3;
+    calibman.Add(cdata, DataBase::mode_t::StrictRange);
+    cdata.TimeStamp++;
+    calibman.Add(cdata, DataBase::mode_t::StrictRange);
+    cdata.TimeStamp++;
+    calibman.Add(cdata, DataBase::mode_t::StrictRange);
+    cdata.TimeStamp++;
+    calibman.Add(cdata, DataBase::mode_t::StrictRange);
+
+    REQUIRE(calibman.GetNumberOfCalibrationIDs() == 4);
     REQUIRE(calibman.GetNumberOfCalibrationData("1") == ndata);
     REQUIRE(calibman.GetNumberOfCalibrationData("2") == 3);
+    REQUIRE(calibman.GetNumberOfCalibrationData("3") == 3);
+    REQUIRE(calibman.GetNumberOfCalibrationData("4") == 12);
 
     return ndata;
 }
@@ -87,9 +149,11 @@ unsigned dotest_store(const string& foldername)
 void dotest_load(const string &foldername,unsigned ndata)
 {
     DataManager calibman(foldername);
-    REQUIRE(calibman.GetNumberOfCalibrationIDs() == 2);
+    REQUIRE(calibman.GetNumberOfCalibrationIDs() == 4);
     REQUIRE(calibman.GetNumberOfCalibrationData("1") == ndata);
     REQUIRE(calibman.GetNumberOfCalibrationData("2") == 3);
+    REQUIRE(calibman.GetNumberOfCalibrationData("3") == 3);
+    REQUIRE(calibman.GetNumberOfCalibrationData("4") == 12);
 }
 
 void dotest_changes(const string& foldername)
@@ -97,34 +161,33 @@ void dotest_changes(const string& foldername)
     DataManager calibman(foldername);
 
     TCalibrationData cdata;
-    //    interval<TID> idRangeTEST(TID(0,0),TID(0,24));
-    //    interval<TID> idRange(TID(1,1),TID(1,1));
 
-    //    REQUIRE(calibman.GetIDRange("1",idRange));
-    //    REQUIRE( idRangeTEST == idRange);
-
-    calibman.GetData("1",TID(0,0u),cdata);
+    calibman.GetData("1", TID(0,0u), cdata);
     REQUIRE(cdata.TimeStamp == 0);
 
     calibman.GetData("1",TID(0,1u),cdata);
     REQUIRE(cdata.TimeStamp == 0);
 
     calibman.GetData("1",TID(0,3u),cdata);
-    REQUIRE(cdata.TimeStamp == 3);
+    REQUIRE(cdata.TimeStamp == 0);
 
     calibman.GetData("1",TID(0,4u),cdata);
-    REQUIRE(cdata.TimeStamp == 3);
+    REQUIRE(cdata.TimeStamp == 1);
 
     calibman.GetData("1",TID(0,5u),cdata);
     REQUIRE(cdata.TimeStamp == 4);
 
     calibman.GetData("1",TID(0,14u),cdata);
-    REQUIRE(cdata.TimeStamp == 7);
+    REQUIRE(cdata.TimeStamp == 5);
 
-    REQUIRE_FALSE(calibman.GetData("1",TID(0,21u),cdata));
+    calibman.GetData("1",TID(0,21u),cdata);
+    REQUIRE(cdata.TimeStamp == 0);
 
     calibman.GetData("1",TID(0,23u),cdata);
     REQUIRE(cdata.TimeStamp == 6);
 
-    REQUIRE_FALSE(calibman.GetData("1",TID(0,29u),cdata));
+    calibman.GetData("1",TID(0,26u),cdata);
+    REQUIRE(cdata.TimeStamp == 0);
+
+
 }

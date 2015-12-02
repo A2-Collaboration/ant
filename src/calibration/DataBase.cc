@@ -45,13 +45,13 @@ size_t DataBase::GetNumberOfCalibrationData(const string& calibrationID) const
     return total;
 }
 
-std::set<DataBase::Range_t> DataBase::getDataRanges(const string& calibrationID) const
+std::list<DataBase::Range_t> DataBase::getDataRanges(const string& calibrationID) const
 {
-    set<Range_t> ranges;
+    list<Range_t> ranges;
     for(auto daydir : system::lsFiles(calibrationDataFolder+"/"+calibrationID+"/DataRanges","",true)) {
         for(auto tidRangeDir : system::lsFiles(daydir, "", true, true)) {
             auto tidRange = parseTIDRange(tidRangeDir);
-            ranges.emplace(tidRange, daydir+"/"+tidRangeDir);
+            ranges.emplace_back(tidRange, daydir+"/"+tidRangeDir);
         }
     }
     return ranges;
@@ -118,8 +118,20 @@ bool DataBase::GetItem(const string& calibrationID,
 
     // try to find it in the DataRanges
     const auto ranges = getDataRanges(calibrationID);
-    const auto it = ranges.find(currentPoint);
-    /// \todo correctly consider ranges, watch out for default data ranges...
+    const auto it_range = find_if(ranges.begin(), ranges.end(),
+                                  [currentPoint] (const Range_t& r) {
+        return r.Contains(currentPoint);
+    });
+
+    if(it_range != ranges.end()) {
+        if(loadFile(it_range->FolderPath+"/current", theData)) {
+            VLOG(5) << "Loaded data for " << calibrationID << " for changepoint " << currentPoint << " from " << it_range->FolderPath;
+            return true;
+        }
+        else {
+            LOG(WARNING) << "Cannot load data from " << it_range->FolderPath;
+        }
+    }
 
     // not found in ranges, so try default data
     if(loadFile(calibrationDataFolder+"/"+calibrationID+"/DataDefault/current", theData)) {

@@ -26,18 +26,14 @@ protected:
 
     struct Range_t : interval<TID> {
         std::string FolderPath;
-        bool operator<(const Range_t& other) const {
-            return Start() < other.Start();
-        }
         using interval<TID>::interval;
-        Range_t(const TID& tid) : interval<TID>(tid, TID()) {}
         Range_t(const interval<TID> tidRange, const std::string& folderPath) :
             interval<TID>(tidRange),
             FolderPath(folderPath)
         {}
     };
 
-    std::set<Range_t> getDataRanges(const std::string& calibrationID) const;
+    std::list<Range_t> getDataRanges(const std::string& calibrationID) const;
 
     bool loadFile(const std::string& filename, TCalibrationData& cdata) const;
     bool writeFile(const std::string& folder, const TCalibrationData& cdata) const;
