@@ -104,28 +104,37 @@ bool DataBase::writeFile(const string& folder, const TCalibrationData& cdata) co
 
 }
 
-
-
 bool DataBase::GetItem(const string& calibrationID,
                        const TID& currentPoint,
                        TCalibrationData& theData,
                        TID& nextChangePoint) const
 {
+    nextChangePoint = TID();
+
     // handle MC
     if(currentPoint.isSet(TID::Flags_t::MC)) {
         return loadFile(calibrationDataFolder+"/"+calibrationID+"/MC/current", theData);
     }
 
     // try to find it in the DataRanges
-    const auto ranges = getDataRanges(calibrationID);
-    const auto it_range = find_if(ranges.begin(), ranges.end(),
-                                  [currentPoint] (const Range_t& r) {
+    // the following needs the ranges to be sorted after their
+    auto ranges = getDataRanges(calibrationID);
+    ranges.sort([] (const Range_t& a, const Range_t& b) {
+        return a.Start() < b.Start();
+    });
+
+    auto it_range = find_if(ranges.begin(), ranges.end(),
+                            [currentPoint] (const Range_t& r) {
+        /// \todo handle right open intervals
         return r.Contains(currentPoint);
     });
 
     if(it_range != ranges.end()) {
         if(loadFile(it_range->FolderPath+"/current", theData)) {
             VLOG(5) << "Loaded data for " << calibrationID << " for changepoint " << currentPoint << " from " << it_range->FolderPath;
+            // next change point is given by found range
+            nextChangePoint = it_range->Stop();
+            ++nextChangePoint;
             return true;
         }
         else {
@@ -133,9 +142,21 @@ bool DataBase::GetItem(const string& calibrationID,
         }
     }
 
+    // check if there's a range coming up at some point
+    // that means even if this method returns false,
+    // the nextChangePoint is correctly set
+    ranges.sort([] (const Range_t& a, const Range_t& b) {
+        return a.Start() < b.Start();
+    });
+    it_range = find_if(ranges.begin(), ranges.end(),
+                       [currentPoint] (const Range_t& r) {
+        return currentPoint < r.Start();
+    });
+    if(it_range != ranges.end())
+        nextChangePoint = it_range->Start();
+
     // not found in ranges, so try default data
     if(loadFile(calibrationDataFolder+"/"+calibrationID+"/DataDefault/current", theData)) {
-        /// \todo figure out the nextChangePoint
         VLOG(5) << "Loaded default data for " << calibrationID << " for changepoint " << currentPoint;
         return true;
     }

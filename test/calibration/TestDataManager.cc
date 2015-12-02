@@ -90,11 +90,11 @@ unsigned dotest_store(const string& foldername)
 
     cdata.TimeStamp++;
     cdata.FirstID.Lower = 0;
-    cdata.LastID.Lower = 1;
+    cdata.LastID.Lower = 0xffffffff;
     calibman.Add(cdata, DataBase::mode_t::StrictRange);
 
     cdata.TimeStamp++;
-    cdata.FirstID.Timestamp = 12302193;
+    cdata.FirstID.Timestamp = 100000;
     cdata.FirstID.Lower = 2;
     cdata.LastID.Timestamp = cdata.FirstID.Timestamp;
     cdata.LastID.Lower = 3;
@@ -161,33 +161,58 @@ void dotest_changes(const string& foldername)
     DataManager calibman(foldername);
 
     TCalibrationData cdata;
+    TID nextChangePoint;
 
-    calibman.GetData("1", TID(0,0u), cdata);
+    // test 1
+
+    REQUIRE(calibman.GetData("1", TID(0,0u), cdata));
     REQUIRE(cdata.TimeStamp == 0);
 
-    calibman.GetData("1",TID(0,1u),cdata);
+    REQUIRE(calibman.GetData("1",TID(0,1u),cdata));
     REQUIRE(cdata.TimeStamp == 0);
 
-    calibman.GetData("1",TID(0,3u),cdata);
+    REQUIRE(calibman.GetData("1",TID(0,3u),cdata));
     REQUIRE(cdata.TimeStamp == 0);
 
-    calibman.GetData("1",TID(0,4u),cdata);
+    REQUIRE(calibman.GetData("1",TID(0,4u),cdata));
     REQUIRE(cdata.TimeStamp == 1);
 
-    calibman.GetData("1",TID(0,5u),cdata);
+    REQUIRE(calibman.GetData("1",TID(0,5u),cdata));
     REQUIRE(cdata.TimeStamp == 4);
 
-    calibman.GetData("1",TID(0,14u),cdata);
+    REQUIRE(calibman.GetData("1",TID(0,14u),cdata));
     REQUIRE(cdata.TimeStamp == 5);
 
-    calibman.GetData("1",TID(0,21u),cdata);
+    REQUIRE(calibman.GetData("1",TID(0,21u),cdata));
     REQUIRE(cdata.TimeStamp == 0);
 
-    calibman.GetData("1",TID(0,23u),cdata);
+    REQUIRE(calibman.GetData("1",TID(0,23u),cdata));
     REQUIRE(cdata.TimeStamp == 6);
 
-    calibman.GetData("1",TID(0,26u),cdata);
+    REQUIRE(calibman.GetData("1",TID(0,26u),cdata));
     REQUIRE(cdata.TimeStamp == 0);
 
+    REQUIRE(calibman.GetData("1",TID(0,0u),cdata,nextChangePoint));
+    REQUIRE(cdata.TimeStamp == 0);
+    REQUIRE(nextChangePoint == TID(0,4u));
 
+    // test 2
+    REQUIRE_FALSE(calibman.GetData("2",TID(0,0u),cdata,nextChangePoint));
+    REQUIRE(nextChangePoint == TID(0,1u));
+
+    REQUIRE(calibman.GetData("2",TID(0,7u),cdata,nextChangePoint));
+    REQUIRE(cdata.TimeStamp == 2);
+    REQUIRE_FALSE(nextChangePoint.IsInvalid());
+    REQUIRE(nextChangePoint == TID(0,8u));
+
+    REQUIRE_FALSE(calibman.GetData("2",TID(0,10u),cdata,nextChangePoint));
+    REQUIRE(nextChangePoint.IsInvalid());
+
+     // test 3
+    REQUIRE(calibman.GetData("3",TID(0,0u),cdata,nextChangePoint));
+    REQUIRE(cdata.TimeStamp == 1);
+    REQUIRE(nextChangePoint == TID(1, 0u)); // check "overflow" of TID
+
+    REQUIRE(calibman.GetData("3",TID(100000,2u),cdata,nextChangePoint));
+    REQUIRE(cdata.TimeStamp == 2);
 }
