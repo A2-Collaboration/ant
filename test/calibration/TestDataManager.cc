@@ -1,6 +1,7 @@
 #include "catch.hpp"
 
 #include "DataManager.h"
+#include "DataBase.h"
 
 #include "tree/TCalibrationData.h"
 #include "tree/TDataRecord.h"
@@ -38,7 +39,7 @@ unsigned dotest_store(const string& foldername)
     cdata.TimeStamp = 0;
     cdata.Data.emplace_back(0,1);
     cdata.Data.emplace_back(1,2);
-    calibman.Add(cdata,  DataBase::mode_t::AsDefault);
+    calibman.Add(cdata,  Calibration::AddMode_t::AsDefault);
     unsigned ndata(1);
 
     auto mdata = [&cdata,&ndata] (unsigned first, unsigned last, unsigned time)
@@ -53,15 +54,15 @@ unsigned dotest_store(const string& foldername)
         return tmp;
     };
 
-    calibman.Add(mdata( 4,  4, 1), DataBase::mode_t::StrictRange);
-    REQUIRE_THROWS_AS(calibman.Add(mdata( 2,  8, 2), DataBase::mode_t::StrictRange),
+    calibman.Add(mdata( 4,  4, 1), Calibration::AddMode_t::StrictRange);
+    REQUIRE_THROWS_AS(calibman.Add(mdata( 2,  8, 2), Calibration::AddMode_t::StrictRange),
                       DataBase::Exception);
-    REQUIRE_THROWS_AS(calibman.Add(mdata( 3,  6, 3), DataBase::mode_t::StrictRange),
+    REQUIRE_THROWS_AS(calibman.Add(mdata( 3,  6, 3), Calibration::AddMode_t::StrictRange),
                       DataBase::Exception);
-    calibman.Add(mdata( 5,  7, 4), DataBase::mode_t::StrictRange);
-    calibman.Add(mdata(13, 20, 5), DataBase::mode_t::StrictRange);
-    calibman.Add(mdata(22, 24, 6), DataBase::mode_t::StrictRange);
-    REQUIRE_THROWS_AS(calibman.Add(mdata(14, 14, 7), DataBase::mode_t::StrictRange),
+    calibman.Add(mdata( 5,  7, 4), Calibration::AddMode_t::StrictRange);
+    calibman.Add(mdata(13, 20, 5), Calibration::AddMode_t::StrictRange);
+    calibman.Add(mdata(22, 24, 6), Calibration::AddMode_t::StrictRange);
+    REQUIRE_THROWS_AS(calibman.Add(mdata(14, 14, 7), Calibration::AddMode_t::StrictRange),
                       DataBase::Exception);
 
     // three times the Add failed above
@@ -72,36 +73,36 @@ unsigned dotest_store(const string& foldername)
     cdata.TimeStamp = 0;
     cdata.FirstID.Lower = 1;
     cdata.LastID.Lower = 1;
-    calibman.Add(cdata, DataBase::mode_t::StrictRange);
+    calibman.Add(cdata, Calibration::AddMode_t::StrictRange);
 
     cdata.TimeStamp++;
     cdata.FirstID.Lower = 3;
     cdata.LastID.Lower = 6;
-    calibman.Add(cdata, DataBase::mode_t::StrictRange);
+    calibman.Add(cdata, Calibration::AddMode_t::StrictRange);
 
     cdata.TimeStamp++;
     cdata.FirstID.Lower = 7;
     cdata.LastID.Lower = 7;
-    calibman.Add(cdata, DataBase::mode_t::StrictRange);
+    calibman.Add(cdata, Calibration::AddMode_t::StrictRange);
 
     // make something with more complicated time ranges
     cdata.CalibrationID = "3";
     cdata.TimeStamp = 0;
     cdata.FirstID.Lower = 2;
     cdata.LastID.Lower = 8;
-    calibman.Add(cdata, DataBase::mode_t::AsDefault);
+    calibman.Add(cdata, Calibration::AddMode_t::AsDefault);
 
     cdata.TimeStamp++;
     cdata.FirstID.Lower = 0;
     cdata.LastID.Lower = 0xffffffff;
-    calibman.Add(cdata, DataBase::mode_t::StrictRange);
+    calibman.Add(cdata, Calibration::AddMode_t::StrictRange);
 
     cdata.TimeStamp++;
     cdata.FirstID.Timestamp = 100000;
     cdata.FirstID.Lower = 2;
     cdata.LastID.Timestamp = cdata.FirstID.Timestamp;
     cdata.LastID.Lower = 3;
-    calibman.Add(cdata, DataBase::mode_t::StrictRange);
+    calibman.Add(cdata, Calibration::AddMode_t::StrictRange);
 
     // add things multiple times
     cdata.CalibrationID = "4";
@@ -110,37 +111,37 @@ unsigned dotest_store(const string& foldername)
     cdata.FirstID.Lower = 2;
     cdata.LastID.Timestamp = cdata.FirstID.Timestamp;
     cdata.LastID.Lower = 8;
-    calibman.Add(cdata, DataBase::mode_t::AsDefault);
+    calibman.Add(cdata, Calibration::AddMode_t::AsDefault);
     cdata.TimeStamp++;
-    calibman.Add(cdata, DataBase::mode_t::AsDefault);
+    calibman.Add(cdata, Calibration::AddMode_t::AsDefault);
     cdata.TimeStamp++;
-    calibman.Add(cdata, DataBase::mode_t::AsDefault);
+    calibman.Add(cdata, Calibration::AddMode_t::AsDefault);
     cdata.TimeStamp++;
-    calibman.Add(cdata, DataBase::mode_t::AsDefault);
+    calibman.Add(cdata, Calibration::AddMode_t::AsDefault);
     cdata.TimeStamp++;
-    calibman.Add(cdata, DataBase::mode_t::AsDefault);
+    calibman.Add(cdata, Calibration::AddMode_t::AsDefault);
 
     cdata.TimeStamp++;
     cdata.FirstID.Lower = 0;
     cdata.LastID.Lower = 1;
-    calibman.Add(cdata, DataBase::mode_t::StrictRange);
+    calibman.Add(cdata, Calibration::AddMode_t::StrictRange);
     cdata.TimeStamp++;
-    calibman.Add(cdata, DataBase::mode_t::StrictRange);
+    calibman.Add(cdata, Calibration::AddMode_t::StrictRange);
     cdata.TimeStamp++;
-    calibman.Add(cdata, DataBase::mode_t::StrictRange);
+    calibman.Add(cdata, Calibration::AddMode_t::StrictRange);
 
     cdata.TimeStamp++;
     cdata.FirstID.Timestamp = 200000;
     cdata.FirstID.Lower = 2;
     cdata.LastID.Timestamp = cdata.FirstID.Timestamp;
     cdata.LastID.Lower = 3;
-    calibman.Add(cdata, DataBase::mode_t::StrictRange);
+    calibman.Add(cdata, Calibration::AddMode_t::StrictRange);
     cdata.TimeStamp++;
-    calibman.Add(cdata, DataBase::mode_t::StrictRange);
+    calibman.Add(cdata, Calibration::AddMode_t::StrictRange);
     cdata.TimeStamp++;
-    calibman.Add(cdata, DataBase::mode_t::StrictRange);
+    calibman.Add(cdata, Calibration::AddMode_t::StrictRange);
     cdata.TimeStamp++;
-    calibman.Add(cdata, DataBase::mode_t::StrictRange);
+    calibman.Add(cdata, Calibration::AddMode_t::StrictRange);
 
     // test RightOpen intervals
     cdata.CalibrationID = "5";
@@ -149,34 +150,34 @@ unsigned dotest_store(const string& foldername)
     cdata.FirstID.Lower = 2;
     cdata.LastID.Timestamp = cdata.FirstID.Timestamp;
     cdata.LastID.Lower = 8;
-    calibman.Add(cdata, DataBase::mode_t::AsDefault);
+    calibman.Add(cdata, Calibration::AddMode_t::AsDefault);
 
     cdata.FirstID.Timestamp = 10;
     cdata.FirstID.Lower = 0;
-    calibman.Add(cdata, DataBase::mode_t::RightOpen);
+    calibman.Add(cdata, Calibration::AddMode_t::RightOpen);
 
     cdata.FirstID.Timestamp = 20;
     cdata.FirstID.Lower = 10;
-    calibman.Add(cdata, DataBase::mode_t::RightOpen);
+    calibman.Add(cdata, Calibration::AddMode_t::RightOpen);
 
     cdata.FirstID.Timestamp = 5;
     cdata.FirstID.Lower = 0;
-    calibman.Add(cdata, DataBase::mode_t::RightOpen);
+    calibman.Add(cdata, Calibration::AddMode_t::RightOpen);
 
 
     // some not allowed things
     cdata.FirstID = TID();
-    REQUIRE_THROWS_AS(calibman.Add(cdata, DataBase::mode_t::StrictRange),
+    REQUIRE_THROWS_AS(calibman.Add(cdata, Calibration::AddMode_t::StrictRange),
                       DataBase::Exception);
-    REQUIRE_THROWS_AS(calibman.Add(cdata, DataBase::mode_t::RightOpen),
+    REQUIRE_THROWS_AS(calibman.Add(cdata, Calibration::AddMode_t::RightOpen),
                       DataBase::Exception);
     cdata.FirstID = TID(0,0u);
     cdata.LastID = TID();
-    REQUIRE_THROWS_AS(calibman.Add(cdata, DataBase::mode_t::StrictRange),
+    REQUIRE_THROWS_AS(calibman.Add(cdata, Calibration::AddMode_t::StrictRange),
                       DataBase::Exception);
     cdata.FirstID = TID(0,10u);
     cdata.LastID = TID(0,0u);
-    REQUIRE_THROWS_AS(calibman.Add(cdata, DataBase::mode_t::StrictRange),
+    REQUIRE_THROWS_AS(calibman.Add(cdata, Calibration::AddMode_t::StrictRange),
                       DataBase::Exception);
 
     // check status

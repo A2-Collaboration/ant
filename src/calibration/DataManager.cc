@@ -1,6 +1,7 @@
 #include "DataManager.h"
 
 //ant
+#include "DataBase.h"
 #include "base/WrapTFile.h"
 #include "base/Logger.h"
 #include "base/std_ext/memory.h"
@@ -32,6 +33,11 @@ void DataManager::Init()
 DataManager::DataManager(const string& calibrationDataFolder_):
     calibrationDataFolder(calibrationDataFolder_)
 {}
+
+DataManager::~DataManager()
+{
+
+}
 
 void DataManager::Add(const TCalibrationData& cdata, Calibration::AddMode_t addMode)
 {

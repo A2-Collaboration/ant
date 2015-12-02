@@ -1,6 +1,6 @@
 #pragma once
 
-#include "DataBase.h"
+#include "Calibration.h"
 
 //std
 #include <list>
@@ -36,6 +36,7 @@ public:
 
 };
 
+class DataBase;
 
 class DataManager : public DataAccess
 {
@@ -51,6 +52,7 @@ private:
 
 public:
     DataManager(const std::string& calibrationDataFolder_);
+    virtual ~DataManager();
 
     void Add(const TCalibrationData& cdata, Calibration::AddMode_t addMode) override;
 
