@@ -1,0 +1,112 @@
+#include "EditorCanvas.h"
+
+#include "calibration/gui/EditorWindow.h"
+#include "calibration/Editor.h"
+#include "base/std_ext/string.h"
+#include "tree/TCalibrationData.h"
+
+#include "TH2D.h"
+#include "TH2.h"
+#include "TROOT.h"
+
+#include <list>
+#include <cmath>
+
+#include <iostream>
+#include "TStyle.h"
+
+using namespace ant;
+using namespace std;
+using namespace ant::calibration::gui;
+
+EmbeddedEditorCanvas::EmbeddedEditorCanvas(EditorWindow* EditorWindow, const TGWindow* p) :
+    TRootEmbeddedCanvas(0, p, 400, 400) // only important place to set some width/height
+{
+    auto frame = (TGCompositeFrame*)fCanvasContainer;
+    frame->RemoveInput(kKeyPressMask | kKeyReleaseMask);
+    theCanvas = new EditorCanvas(EditorWindow, GetCanvasWindowId());
+    AdoptCanvas(theCanvas);
+}
+
+void EmbeddedEditorCanvas::EditSelection()
+{
+    theCanvas->StartEditData();
+}
+
+void EmbeddedEditorCanvas::SetToAverage()
+{
+    theCanvas->SetToAverage();
+}
+
+void EmbeddedEditorCanvas::UpdateMe()
+{
+    theCanvas->UpdateMe();
+}
+
+
+
+
+EditorCanvas::EditorCanvas(EditorWindow* EditorWindow, int winID ):
+    TCanvas("Editor",10,10,winID),
+    editorWindow(EditorWindow),
+    editor(EditorWindow->GetEditor())
+{}
+
+void EditorCanvas::UpdateMe()
+{
+    Modified();
+    Update();
+}
+
+
+
+/*
+void EditorCanvas::ResetCalibration()
+{
+    flag_intervalStart_set = false;
+    flag_data_editor = false;
+    gROOT->SetEditHistograms(kFALSE);
+    indexMemory.clear();
+    updateCalHist();
+}
+*/
+
+void EditorCanvas::applyDataChanges()
+{
+    for (auto i = 0; i < calDataHist->GetNbinsX() ; ++i)
+        editor->cdata->Data.at(i).Value  = calDataHist->GetBinContent(i+1);
+    editor->Save();
+}
+
+void EditorCanvas::StartEditData()
+{
+    gROOT->SetEditHistograms(kTRUE);
+    calDataHist = new TH1D( (std_ext::formatter() << "hist-" << editor->cdata->CalibrationID
+                             ).str().c_str(),
+                            (std_ext::formatter() << "Data for " << editor->cdata->CalibrationID
+                             ).str().c_str(),
+                        editor->cdata->Data.size(), 0, editor->cdata->Data.size()
+                        );
+
+    for (const auto& entry: editor->cdata->Data)
+        calDataHist->SetBinContent(entry.Key+1,entry.Value);
+
+    calDataHist->SetStats(false);
+    calDataHist->SetMarkerStyle(20);
+    calDataHist->Draw("P");
+
+    UpdateMe();
+}
+
+void EditorCanvas::HandleInput(EEventType button, Int_t x, Int_t y)
+{
+    TCanvas::HandleInput(button,x,y);
+}
+
+void EditorCanvas::SetToAverage()
+{
+    auto avg = calDataHist->GetMean();
+    for ( int i = 1; i <= calDataHist->GetNbinsX(); ++i)
+        calDataHist->SetBinContent(i,avg);
+    UpdateMe();
+}
