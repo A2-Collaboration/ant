@@ -188,7 +188,7 @@ void PhysicsManager::ReadFrom(
             eventbuffer.emplace(move(event));
             nEventsRead++;
 
-            if(progressUpdates && progress.Update(source->PercentDone())) {
+            if(progressUpdates && source && progress.Update(source->PercentDone())) {
                 LOG(INFO) << progress;
             }
 
