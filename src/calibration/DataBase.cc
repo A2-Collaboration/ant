@@ -125,7 +125,8 @@ bool DataBase::GetItem(const string& calibrationID,
 
     auto it_range = find_if(ranges.begin(), ranges.end(),
                             [currentPoint] (const Range_t& r) {
-        /// \todo handle right open intervals
+        if(r.Stop().IsInvalid())
+            return r.Start() < currentPoint;
         return r.Contains(currentPoint);
     });
 
@@ -211,9 +212,8 @@ void DataBase::AddItem(const TCalibrationData& cdata, mode_t mode)
 
 void DataBase::handleStrictRange(const TCalibrationData& cdata) const
 {
-    auto& calibrationID = cdata.CalibrationID;
-
-    interval<TID> range(cdata.FirstID, cdata.LastID);
+    const auto& calibrationID = cdata.CalibrationID;
+    const interval<TID> range(cdata.FirstID, cdata.LastID);
 
     // check if range already exists
     const auto ranges = getDataRanges(calibrationID);
@@ -230,23 +230,38 @@ void DataBase::handleStrictRange(const TCalibrationData& cdata) const
     }
 
     // not there, then create new folder for it
-    const string& start = makeTIDString(range.Start());
-    const string& stop = makeTIDString(range.Stop());
-    const string& day = start.substr(0, start.find('T'));
-    string folder(calibrationDataFolder+"/"+calibrationID+"/DataRanges/"+day+"/"+start+"-"+stop);
 
-    writeFile(folder, cdata);
+    writeFile(makeRangeFolder(calibrationID, range), cdata);
 }
 
 void DataBase::handleRightOpen(const TCalibrationData& cdata) const
 {
-    /// \todo Implement
+    const auto& calibrationID = cdata.CalibrationID;
+    // LastID of cdata is simpy ignored
+    const auto currentPoint = cdata.FirstID;
+    interval<TID> range(currentPoint, TID());
+
+    // scan the ranges
+    const auto ranges = getDataRanges(calibrationID);
+    auto it_range = find_if(ranges.begin(), ranges.end(),
+                            [currentPoint] (const Range_t& r) {
+        if(r.Stop().IsInvalid())
+            return r.Start() < currentPoint;
+        return r.Contains(currentPoint);
+    });
+
+    // conflicts is easy
+    if(it_range == ranges.end()) {
+        writeFile(makeRangeFolder(calibrationID, range), cdata);
+        return;
+    }
+
 }
 
 string DataBase::makeTIDString(const TID& tid) const
 {
     if(tid.IsInvalid())
-        return "INVALID";
+        return "OPEN";
     // cannot use std_ext::to_iso8601 since
     // only underscores are allowed in string
     // note that the T is important for some use cases
@@ -268,7 +283,7 @@ interval<TID> DataBase::parseTIDRange(const string& tidRangeStr) const
     auto stopStr = tidRangeStr.substr(pos_dash+1);
 
     auto parseTIDStr = [] (const string& str) {
-        if(str == "INVALID")
+        if(str == "OPEN")
             return TID();
         if(str.size() != 31)
             return TID();
@@ -302,5 +317,13 @@ interval<TID> DataBase::parseTIDRange(const string& tidRangeStr) const
     };
 
     return {parseTIDStr(startStr), parseTIDStr(stopStr)};
+}
+
+string DataBase::makeRangeFolder(const string& calibrationID, const interval<TID>& range) const
+{
+    const string& start = makeTIDString(range.Start());
+    const string& stop = makeTIDString(range.Stop());
+    const string& day = start.substr(0, start.find('T'));
+    return calibrationDataFolder+"/"+calibrationID+"/DataRanges/"+day+"/"+start+"-"+stop;
 }
 

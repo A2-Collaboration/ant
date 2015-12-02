@@ -43,6 +43,7 @@ protected:
 
     std::string makeTIDString(const TID& time) const;
     interval<TID> parseTIDRange(const std::string& tidRangeStr) const;
+    std::string makeRangeFolder(const std::string& calibrationID, const interval<TID>& range) const;
 public:
 
 

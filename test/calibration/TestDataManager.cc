@@ -54,12 +54,15 @@ unsigned dotest_store(const string& foldername)
     };
 
     calibman.Add(mdata( 4,  4, 1), DataBase::mode_t::StrictRange);
-    REQUIRE_THROWS_AS(calibman.Add(mdata( 2,  8, 2), DataBase::mode_t::StrictRange), DataBase::Exception);
-    REQUIRE_THROWS_AS(calibman.Add(mdata( 3,  6, 3), DataBase::mode_t::StrictRange), DataBase::Exception);
+    REQUIRE_THROWS_AS(calibman.Add(mdata( 2,  8, 2), DataBase::mode_t::StrictRange),
+                      DataBase::Exception);
+    REQUIRE_THROWS_AS(calibman.Add(mdata( 3,  6, 3), DataBase::mode_t::StrictRange),
+                      DataBase::Exception);
     calibman.Add(mdata( 5,  7, 4), DataBase::mode_t::StrictRange);
     calibman.Add(mdata(13, 20, 5), DataBase::mode_t::StrictRange);
     calibman.Add(mdata(22, 24, 6), DataBase::mode_t::StrictRange);
-    REQUIRE_THROWS_AS(calibman.Add(mdata(14, 14, 7), DataBase::mode_t::StrictRange), DataBase::Exception);
+    REQUIRE_THROWS_AS(calibman.Add(mdata(14, 14, 7), DataBase::mode_t::StrictRange),
+                      DataBase::Exception);
 
     // three times the Add failed above
     ndata -= 3;
@@ -139,11 +142,51 @@ unsigned dotest_store(const string& foldername)
     cdata.TimeStamp++;
     calibman.Add(cdata, DataBase::mode_t::StrictRange);
 
-    REQUIRE(calibman.GetNumberOfCalibrationIDs() == 4);
+    // test RightOpen intervals
+    cdata.CalibrationID = "5";
+    cdata.TimeStamp = 0;
+    cdata.FirstID.Timestamp = 0;
+    cdata.FirstID.Lower = 2;
+    cdata.LastID.Timestamp = cdata.FirstID.Timestamp;
+    cdata.LastID.Lower = 8;
+    calibman.Add(cdata, DataBase::mode_t::AsDefault);
+
+    cdata.FirstID.Timestamp = 10;
+    cdata.FirstID.Lower = 0;
+    calibman.Add(cdata, DataBase::mode_t::RightOpen);
+
+    cdata.FirstID.Timestamp = 20;
+    cdata.FirstID.Lower = 10;
+    calibman.Add(cdata, DataBase::mode_t::RightOpen);
+
+    cdata.FirstID.Timestamp = 5;
+    cdata.FirstID.Lower = 0;
+    calibman.Add(cdata, DataBase::mode_t::RightOpen);
+
+
+    // some not allowed things
+    cdata.FirstID = TID();
+    REQUIRE_THROWS_AS(calibman.Add(cdata, DataBase::mode_t::StrictRange),
+                      DataBase::Exception);
+    REQUIRE_THROWS_AS(calibman.Add(cdata, DataBase::mode_t::RightOpen),
+                      DataBase::Exception);
+    cdata.FirstID = TID(0,0u);
+    cdata.LastID = TID();
+    REQUIRE_THROWS_AS(calibman.Add(cdata, DataBase::mode_t::StrictRange),
+                      DataBase::Exception);
+    cdata.FirstID = TID(0,10u);
+    cdata.LastID = TID(0,0u);
+    REQUIRE_THROWS_AS(calibman.Add(cdata, DataBase::mode_t::StrictRange),
+                      DataBase::Exception);
+
+    // check status
+    REQUIRE(calibman.GetNumberOfCalibrationIDs() == 5);
     REQUIRE(calibman.GetNumberOfCalibrationData("1") == ndata);
     REQUIRE(calibman.GetNumberOfCalibrationData("2") == 3);
     REQUIRE(calibman.GetNumberOfCalibrationData("3") == 3);
     REQUIRE(calibman.GetNumberOfCalibrationData("4") == 12);
+    //REQUIRE(calibman.GetNumberOfCalibrationData("5") == 4);
+
 
     return ndata;
 }
@@ -151,11 +194,12 @@ unsigned dotest_store(const string& foldername)
 void dotest_load(const string &foldername,unsigned ndata)
 {
     DataManager calibman(foldername);
-    REQUIRE(calibman.GetNumberOfCalibrationIDs() == 4);
+    REQUIRE(calibman.GetNumberOfCalibrationIDs() == 5);
     REQUIRE(calibman.GetNumberOfCalibrationData("1") == ndata);
     REQUIRE(calibman.GetNumberOfCalibrationData("2") == 3);
     REQUIRE(calibman.GetNumberOfCalibrationData("3") == 3);
     REQUIRE(calibman.GetNumberOfCalibrationData("4") == 12);
+    //REQUIRE(calibman.GetNumberOfCalibrationData("5") == 4);
 }
 
 void dotest_changes(const string& foldername)
@@ -227,5 +271,4 @@ void dotest_changes(const string& foldername)
 
     REQUIRE(calibman.GetData("4",TID(200000,2u),cdata));
     REQUIRE(cdata.TimeStamp == 11);
-
 }
