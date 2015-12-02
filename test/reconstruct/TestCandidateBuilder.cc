@@ -122,7 +122,7 @@ struct CandidateBuilderTester : CandidateBuilder {
                 unmatched_clusters++;
         }
         REQUIRE(unmatched_clusters>0);
-        REQUIRE(all_clusters.size() - unmatched_clusters == after.candidateclusters);
+        REQUIRE(all_clusters.size() - unmatched_clusters == (unsigned)after.candidateclusters);
     }
 };
 

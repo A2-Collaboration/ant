@@ -43,10 +43,12 @@ public:
         using std::runtime_error::runtime_error; // use base class constructor
     };
 
-private:
-
     template<typename T>
     using sorted_bydetectortype_t = std::map<Detector_t::Type_t, std::list< T > >;
+
+private:
+
+
 
     using sorted_readhits_t = ReconstructHook::Base::readhits_t;
     sorted_readhits_t sorted_readhits;
