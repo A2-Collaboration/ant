@@ -3,7 +3,7 @@ set(ANT_PATH_GITREPO  "${CMAKE_SOURCE_DIR}")
 configure_file(Paths.h.in Paths.h)
 
 set(SRCS
-  types.cc
+  types.h
   Detector_t.cc
   ParticleType.cc
   ParticleTypeTree.cc
