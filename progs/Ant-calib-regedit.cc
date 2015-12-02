@@ -5,6 +5,7 @@
 #include "base/std_ext/string.h"
 #include "base/WrapTFile.h"
 #include "tree/TCalibrationData.h"
+#include "tree/TAntHeader.h"
 
 #include "TTree.h"
 
@@ -15,6 +16,7 @@ using namespace ant::std_ext;
 using namespace std;
 
 void convert(string setupfolder);
+void build_index(const std::vector<string>& files);
 
 int main(int argc, char** argv) {
     SetupLogger();
@@ -23,7 +25,10 @@ int main(int argc, char** argv) {
     TCLAP::CmdLine cmd("Ant-calib-regedit - manage calib database on-disk format", ' ', "0.1");
     auto cmd_verbose = cmd.add<TCLAP::ValueArg<int>>("v","verbose","Verbosity level (0..9)", false, 0,"level");
 
-    auto cmd_mode_convert = cmd.add<TCLAP::SwitchArg>("","convert","Convert old database in given setup folders (needs already created structure)", false);
+    TCLAP::SwitchArg cmd_mode_convert("","convert","Convert old database in given setup folders (needs already created structure)", false);
+    TCLAP::SwitchArg cmd_mode_index("","index","Build Data File TID Ranges index from Ant files", false);
+
+    cmd.xorAdd(cmd_mode_convert, cmd_mode_index);
 
     auto cmd_givenstrings  = cmd.add<TCLAP::UnlabeledMultiArg<string>>("inputfiles","Ant files with histograms",true,"inputfiles");
 
@@ -32,12 +37,16 @@ int main(int argc, char** argv) {
     if(cmd_verbose->isSet())
         el::Loggers::setVerboseLevel(cmd_verbose->getValue());
 
-    if(cmd_mode_convert->isSet()) {
+    if(cmd_mode_convert.isSet()) {
         if(cmd_givenstrings->getValue().empty())
             LOG(ERROR) << "No input folders given!";
 
         for(auto setupfolder : cmd_givenstrings->getValue())
             convert(setupfolder);
+    }
+
+    if(cmd_mode_index.isSet()) {
+        build_index(cmd_givenstrings->getValue());
     }
 }
 
@@ -104,5 +113,38 @@ void convert(string setupfolder) {
             }
         }
 
+    }
+}
+
+void build_index(const std::vector<string>& files) {
+    WrapTFileOutput outf("index.root");
+
+    TTree* tree = outf.CreateInside<TTree>("index", "Run file index");
+
+    TID start;
+    TID end;
+    string b_file;
+
+    tree->Branch("start", &start);
+    tree->Branch("end",   &end);
+    tree->Branch("file",  &b_file);
+
+
+    for(const auto& file : files) {
+
+        WrapTFileInput f(file);
+
+        TAntHeader* header(nullptr);
+        f.GetObject("AntHeader", header);
+
+        if(header) {
+            start = header->FirstID;
+            end   = header->LastID;
+            b_file = file;
+            tree->Fill();
+            LOG(INFO) << "Added " << file << ": " << start << " - " << end;
+        } else {
+            LOG(ERROR) << "No AntHeader in " << file;
+        }
     }
 }
