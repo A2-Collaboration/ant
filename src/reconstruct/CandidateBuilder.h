@@ -13,10 +13,10 @@ namespace ant {
 
 namespace expconfig {
 namespace detector {
-class CB;
-class PID;
-class TAPS;
-class TAPSVeto;
+struct CB;
+struct PID;
+struct TAPS;
+struct TAPSVeto;
 }
 }
 

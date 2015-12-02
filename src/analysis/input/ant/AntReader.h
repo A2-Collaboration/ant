@@ -17,7 +17,7 @@ class TTree;
 
 namespace ant {
 
-class TEvent;
+struct TEvent;
 
 namespace analysis {
 

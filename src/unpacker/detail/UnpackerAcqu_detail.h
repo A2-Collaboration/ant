@@ -21,8 +21,8 @@ namespace ant {
  * Base class for file access management of acqu files
  */
 class RawFileReader;
-class TDataRecord;
-class THeaderInfo;
+struct TDataRecord;
+struct THeaderInfo;
 
 class UnpackerAcquFileFormat {
 public:

@@ -7,15 +7,15 @@
 
 namespace ant {
 
-class TEvent;
-class THeaderInfo;
-class TDetectorRead;
-class TCluster;
-class TTagger;
+struct TEvent;
+struct THeaderInfo;
+struct TDetectorRead;
+struct TCluster;
+struct TTagger;
 
 namespace reconstruct {
 class CandidateBuilder;
-class AdaptorTClusterHit;
+struct AdaptorTClusterHit;
 class Clustering;
 class UpdateableManager;
 }
@@ -23,7 +23,7 @@ class UpdateableManager;
 class Reconstruct : public Reconstruct_traits {
     // used in test/reconstruct/TestReconstruct.cc
     // to test the private methods interplay
-    friend class ReconstructTester;
+    friend struct ReconstructTester;
 
 public:
     Reconstruct();

@@ -13,11 +13,11 @@
 
 namespace ant {
 
-class TEvent;
-class TDetectorRead;
-class THeaderInfo;
-class TUnpackerMessage;
-class TSlowControl;
+struct TEvent;
+struct TDetectorRead;
+struct THeaderInfo;
+struct TUnpackerMessage;
+struct TSlowControl;
 class WrapTFile;
 
 namespace tree {

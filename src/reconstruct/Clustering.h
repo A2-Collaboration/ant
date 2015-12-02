@@ -8,11 +8,11 @@
 
 namespace ant {
 
-class ClusterDetector_t;
-class TDetectorReadHit;
-class TCluster;
-class TClusterHit;
-class TClusterHitDatum;
+struct ClusterDetector_t;
+struct TDetectorReadHit;
+struct TCluster;
+struct TClusterHit;
+struct TClusterHitDatum;
 
 namespace reconstruct {
 

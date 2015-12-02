@@ -7,7 +7,7 @@ namespace ant {
 
 namespace expconfig {
 namespace detector {
-class TAPS;
+struct TAPS;
 }}
 
 namespace calibration {

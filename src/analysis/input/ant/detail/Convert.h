@@ -4,10 +4,10 @@
 
 namespace ant {
 
-class TEvent;
-class TCandidate;
-class TTaggerHit;
-class TCluster;
+struct TEvent;
+struct TCandidate;
+struct TTaggerHit;
+struct TCluster;
 
 namespace analysis {
 

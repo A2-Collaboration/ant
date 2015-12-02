@@ -10,8 +10,8 @@
 namespace ant
 {
 
-class TCalibrationData;
-class TID;
+struct TCalibrationData;
+struct TID;
 
 namespace calibration
 {

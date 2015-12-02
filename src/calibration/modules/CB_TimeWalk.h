@@ -15,7 +15,7 @@ namespace ant {
 
 namespace expconfig {
 namespace detector {
-class CB;
+struct CB;
 }}
 
 namespace calibration {

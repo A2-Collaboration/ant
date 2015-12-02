@@ -22,7 +22,7 @@
 
 namespace ant {
 
-class TDataRecord;
+struct TDataRecord;
 
 /**
  * @brief The Unpacker class encapsulates the interface for unpacking raw data

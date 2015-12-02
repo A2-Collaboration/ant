@@ -12,15 +12,15 @@
 
 namespace ant {
 
-class TID;
-class THeaderInfo;
-class TDetectorRead;
-class TDetectorReadHit;
-class TEvent;
-class TCluster;
+struct TID;
+struct THeaderInfo;
+struct TDetectorRead;
+struct TDetectorReadHit;
+struct TEvent;
+struct TCluster;
 
 namespace reconstruct {
-class AdaptorTClusterHit;
+struct AdaptorTClusterHit;
 }
 
 struct Reconstruct_traits {

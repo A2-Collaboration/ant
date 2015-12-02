@@ -19,8 +19,8 @@
 
 namespace ant {
 
-class THeaderInfo;
-class Updateable_traits;
+struct THeaderInfo;
+struct Updateable_traits;
 namespace calibration {
 class DataManager;
 }

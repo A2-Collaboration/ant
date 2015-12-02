@@ -9,7 +9,7 @@ namespace ant {
 
 namespace expconfig {
 namespace detector {
-class PID;
+struct PID;
 }}
 
 namespace calibration {

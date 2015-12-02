@@ -14,7 +14,7 @@
 namespace ant {
 namespace reconstruct {
 
-class AdaptorTClusterHit;
+struct AdaptorTClusterHit;
 
 namespace clustering {
 

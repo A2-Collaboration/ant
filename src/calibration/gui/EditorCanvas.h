@@ -21,7 +21,9 @@ class TH2D;
 
 
 namespace ant {
-class TCalibrationData;
+
+struct TCalibrationData;
+
 namespace calibration {
 namespace gui {
 

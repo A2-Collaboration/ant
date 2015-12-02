@@ -20,7 +20,7 @@ class TTree;
 
 namespace ant {
 
-class TID;
+struct TID;
 class WrapTFileInput;
 class UnpackerA2GeantConfig; // see below
 

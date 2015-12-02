@@ -128,7 +128,7 @@ public:
             return *(storage_ptr->at(to_integral(*it_key)));
         }
     private:
-        friend class mapped_vectors;
+        friend struct mapped_vectors;
 
         using storage_ptr_t = typename mapped_vectors::storage_t;
         using it_key_t = typename keys_t::const_iterator;

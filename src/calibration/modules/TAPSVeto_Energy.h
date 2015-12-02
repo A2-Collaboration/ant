@@ -9,7 +9,7 @@ namespace ant {
 
 namespace expconfig {
 namespace detector {
-class TAPSVeto;
+struct TAPSVeto;
 }}
 
 namespace calibration {

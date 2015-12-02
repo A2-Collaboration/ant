@@ -19,7 +19,7 @@ class PParticle;
 namespace ant {
 
 class WrapTFileInput;
-class TID;
+struct TID;
 
 namespace analysis {
 

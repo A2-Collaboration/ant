@@ -12,7 +12,7 @@ template<class T>
 struct MemoryPool {
 
     class Item {
-        friend class MemoryPool;
+        friend struct MemoryPool;
         MemoryPool* const pool;
         std::unique_ptr<T> ptr;
         Item(MemoryPool* pool_, std::unique_ptr<T> ptr_) :
