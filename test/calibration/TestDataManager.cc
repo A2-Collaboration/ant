@@ -103,7 +103,9 @@ unsigned dotest_store(const string& foldername)
     // add things multiple times
     cdata.CalibrationID = "4";
     cdata.TimeStamp = 0;
+    cdata.FirstID.Timestamp = 0;
     cdata.FirstID.Lower = 2;
+    cdata.LastID.Timestamp = cdata.FirstID.Timestamp;
     cdata.LastID.Lower = 8;
     calibman.Add(cdata, DataBase::mode_t::AsDefault);
     cdata.TimeStamp++;
@@ -125,7 +127,7 @@ unsigned dotest_store(const string& foldername)
     calibman.Add(cdata, DataBase::mode_t::StrictRange);
 
     cdata.TimeStamp++;
-    cdata.FirstID.Timestamp = 12302193;
+    cdata.FirstID.Timestamp = 200000;
     cdata.FirstID.Lower = 2;
     cdata.LastID.Timestamp = cdata.FirstID.Timestamp;
     cdata.LastID.Lower = 3;
@@ -215,4 +217,15 @@ void dotest_changes(const string& foldername)
 
     REQUIRE(calibman.GetData("3",TID(100000,2u),cdata,nextChangePoint));
     REQUIRE(cdata.TimeStamp == 2);
+
+    // test 4
+    REQUIRE(calibman.GetData("4",TID(0,2u),cdata));
+    REQUIRE(cdata.TimeStamp == 4);
+
+    REQUIRE(calibman.GetData("4",TID(0,0u),cdata));
+    REQUIRE(cdata.TimeStamp == 7);
+
+    REQUIRE(calibman.GetData("4",TID(200000,2u),cdata));
+    REQUIRE(cdata.TimeStamp == 11);
+
 }
