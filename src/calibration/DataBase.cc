@@ -6,9 +6,12 @@
 
 #include "base/std_ext/system.h"
 #include "base/std_ext/string.h"
+#include "base/std_ext/time.h"
+#include "base/std_ext/misc.h"
 
 #include <sstream>
 #include <iomanip>
+#include <ctime>
 
 using namespace std;
 using namespace ant;
@@ -23,28 +26,13 @@ DataBase::DataBase(const string calibrationDataFolder_):
 
 std::list<string> DataBase::GetCalibrationIDs() const
 {
-    list<string> ids;
-    for(auto folder : system::lsFiles(calibrationDataFolder)) {
-        auto pos_slash = folder.rfind('/');
-        if(pos_slash != string::npos)
-            folder = folder.substr(pos_slash+1);
-        if(folder == ".." || folder == ".")
-            continue;
-        ids.emplace_back(folder);
-    }
-    return ids;
+    return system::lsFiles(calibrationDataFolder,"",true,true);
 }
 
 size_t DataBase::GetNumberOfCalibrationData(const string& calibrationID) const
 {
     auto count_rootfiles = [] (const string& folder) {
-        size_t n = 0;
-        for(auto rootfile : system::lsFiles(folder)) {
-            if(!string_ends_with(rootfile, ".root"))
-                continue;
-            n++;
-        }
-        return n;
+        return system::lsFiles(folder, ".root").size();
     };
 
     // count the number of .root files in MC, DataDefault and DataRanges
@@ -60,9 +48,11 @@ size_t DataBase::GetNumberOfCalibrationData(const string& calibrationID) const
 std::set<DataBase::Range_t> DataBase::getDataRanges(const string& calibrationID) const
 {
     set<Range_t> ranges;
-    for(auto rangedir : system::lsFiles(calibrationDataFolder+"/"+calibrationID+"/DataRanges")) {
-        /// \todo parse folder names
-        cout << rangedir << endl;
+    for(auto daydir : system::lsFiles(calibrationDataFolder+"/"+calibrationID+"/DataRanges","",true)) {
+        for(auto tidRangeDir : system::lsFiles(daydir, "", true, true)) {
+            auto tidRange = parseTIDRange(tidRangeDir);
+            ranges.emplace(tidRange, daydir+"/"+tidRangeDir);
+        }
     }
     return ranges;
 }
@@ -87,16 +77,11 @@ bool DataBase::writeFile(const string& folder, const TCalibrationData& cdata) co
 
     // get the highest numbered root file in it
     size_t maxnum = 0;
-    for(auto rootfile : system::lsFiles(folder)) {
-        if(!string_ends_with(rootfile, ".root"))
-            continue;
-        auto pos_slash = rootfile.rfind('/');
-        if(pos_slash == string::npos)
-            continue;
+    for(auto rootfile : system::lsFiles(folder, ".root",true,true)) {
         auto pos_dot = rootfile.rfind('.');
         if(pos_dot == string::npos)
             continue;
-        stringstream numstr(rootfile.substr(pos_slash+1, pos_dot-pos_slash-1));
+        stringstream numstr(rootfile.substr(0, pos_dot));
         size_t num;
         if(numstr >> num && num>=maxnum)
             maxnum = num+1;
@@ -118,6 +103,8 @@ bool DataBase::writeFile(const string& folder, const TCalibrationData& cdata) co
     return true;
 
 }
+
+
 
 bool DataBase::GetItem(const string& calibrationID,
                        const TID& currentPoint,
@@ -172,18 +159,115 @@ void DataBase::AddItem(const TCalibrationData& cdata, mode_t mode)
     case mode_t::StrictRange: {
         if(cdata.FirstID.IsInvalid())
             throw Exception("FirstID cannot be invalid");
-        /// \todo Implement
+        if(cdata.LastID.IsInvalid())
+            throw Exception("LastID cannot be invalid");
+        if(cdata.LastID < cdata.FirstID)
+            throw Exception("LastID<FirstID cannot be");
+        handleStrictRange(cdata);
         break;
     }
     case mode_t::RightOpen: {
         if(cdata.FirstID.IsInvalid())
             throw Exception("FirstID cannot be invalid");
-        /// \todo Implement
+        handleRightOpen(cdata);
         break;
     }
     } // end switch
 
 }
 
+void DataBase::handleStrictRange(const TCalibrationData& cdata) const
+{
+    auto& calibrationID = cdata.CalibrationID;
 
+    interval<TID> range(cdata.FirstID, cdata.LastID);
+
+    // check if range already exists
+    const auto ranges = getDataRanges(calibrationID);
+    for(const auto r : ranges) {
+        if(!r.Disjoint(range)) {
+            // if range overlaps, then they must exactly match
+            if(r == range) {
+                writeFile(r.FolderPath, cdata);
+                return;
+            }
+            // anything else is not allowed right now
+            throw Exception("Given TCalibrationData range conflicts with existing database entry.");
+        }
+    }
+
+    // not there, then create new folder for it
+    const string& start = makeTIDString(range.Start());
+    const string& stop = makeTIDString(range.Stop());
+    const string& day = start.substr(0, start.find('T'));
+    string folder(calibrationDataFolder+"/"+calibrationID+"/DataRanges/"+day+"/"+start+"-"+stop);
+
+    writeFile(folder, cdata);
+}
+
+void DataBase::handleRightOpen(const TCalibrationData& cdata) const
+{
+    /// \todo Implement
+}
+
+string DataBase::makeTIDString(const TID& tid) const
+{
+    if(tid.IsInvalid())
+        return "INVALID";
+    // cannot use std_ext::to_iso8601 since
+    // only underscores are allowed in string
+    // note that the T is important for some use cases
+    char buf[sizeof "2011_10_08T07_07_09Z"];
+    time_t time = tid.Timestamp;
+    strftime(buf, sizeof buf, "%Y_%m_%dT%H_%M_%SZ", gmtime(addressof(time)));
+    // add the lower ID
+    stringstream ss;
+    ss << buf << "_0x" << hex << setw(8) << setfill('0') << tid.Lower;
+    return ss.str();
+}
+
+interval<TID> DataBase::parseTIDRange(const string& tidRangeStr) const
+{
+    auto pos_dash = tidRangeStr.find('-');
+    if(pos_dash == string::npos)
+        return interval<TID>();
+    auto startStr = tidRangeStr.substr(0,pos_dash);
+    auto stopStr = tidRangeStr.substr(pos_dash+1);
+
+    auto parseTIDStr = [] (const string& str) {
+        if(str == "INVALID")
+            return TID();
+        if(str.size() != 31)
+            return TID();
+        if(str.substr(20,3) != "_0x")
+            return TID();
+
+        // the following calculation assumes
+        // UTC as timezone
+        const char* tz = getenv("TZ");
+        setenv("TZ", "UTC", 1);
+        tzset();
+
+        std_ext::execute_on_destroy restore_TZ([tz] () {
+            // restore TZ environment
+            if(tz)
+                setenv("TZ", tz, 1);
+            else
+                unsetenv("TZ");
+            tzset();
+        });
+        auto timestr = str.substr(0, 20);
+        time_t timestamp = to_time_t(to_tm(timestr, "%Y_%m_%dT%H_%M_%SZ"));
+
+        stringstream lowerstr;
+        lowerstr << hex << str.substr(23); // skip leading 0x
+        std::uint32_t lower;
+        if(!(lowerstr >> lower))
+            return TID();
+
+        return TID(timestamp, lower);
+    };
+
+    return {parseTIDStr(startStr), parseTIDStr(stopStr)};
+}
 
