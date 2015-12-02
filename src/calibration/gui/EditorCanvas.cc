@@ -38,6 +38,16 @@ void EmbeddedEditorCanvas::SetToAverage()
     theCanvas->SetToAverage();
 }
 
+void EmbeddedEditorCanvas::ResetData()
+{
+    theCanvas->ResetCalibration();
+}
+
+void EmbeddedEditorCanvas::ApplyChanges()
+{
+    theCanvas->ApplyDataChanges();
+}
+
 void EmbeddedEditorCanvas::UpdateMe()
 {
     theCanvas->UpdateMe();
@@ -60,35 +70,30 @@ void EditorCanvas::UpdateMe()
 
 
 
-/*
 void EditorCanvas::ResetCalibration()
 {
-    flag_intervalStart_set = false;
-    flag_data_editor = false;
-    gROOT->SetEditHistograms(kFALSE);
-    indexMemory.clear();
-    updateCalHist();
+    editor->ResetData();
+    StartEditData();
 }
-*/
 
-void EditorCanvas::applyDataChanges()
+void EditorCanvas::ApplyDataChanges()
 {
     for (auto i = 0; i < calDataHist->GetNbinsX() ; ++i)
-        editor->cdata->Data.at(i).Value  = calDataHist->GetBinContent(i+1);
+        editor->cdata.Data.at(i).Value  = calDataHist->GetBinContent(i+1);
     editor->Save();
 }
 
 void EditorCanvas::StartEditData()
 {
     gROOT->SetEditHistograms(kTRUE);
-    calDataHist = new TH1D( (std_ext::formatter() << "hist-" << editor->cdata->CalibrationID
+    calDataHist = new TH1D( (std_ext::formatter() << "hist-" << editor->cdata.CalibrationID
                              ).str().c_str(),
-                            (std_ext::formatter() << "Data for " << editor->cdata->CalibrationID
+                            (std_ext::formatter() << "Data for " << editor->cdata.CalibrationID
                              ).str().c_str(),
-                        editor->cdata->Data.size(), 0, editor->cdata->Data.size()
+                        editor->cdata.Data.size(), 0, editor->cdata.Data.size()
                         );
 
-    for (const auto& entry: editor->cdata->Data)
+    for (const auto& entry: editor->cdata.Data)
         calDataHist->SetBinContent(entry.Key+1,entry.Value);
 
     calDataHist->SetStats(false);
@@ -105,8 +110,14 @@ void EditorCanvas::HandleInput(EEventType button, Int_t x, Int_t y)
 
 void EditorCanvas::SetToAverage()
 {
-    auto avg = calDataHist->GetMean();
+    double mean = 0;
     for ( int i = 1; i <= calDataHist->GetNbinsX(); ++i)
-        calDataHist->SetBinContent(i,avg);
+        mean += calDataHist->GetBinContent(i);
+
+    mean = 1.0 * mean / calDataHist->GetNbinsX();
+
+    for ( int i = 1; i <= calDataHist->GetNbinsX(); ++i)
+        calDataHist->SetBinContent(i,mean);
+
     UpdateMe();
 }

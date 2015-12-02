@@ -32,6 +32,7 @@ private:
     std::map<EKeySym, TGTextButton*> keys;
 
     TGTextButton* rootButton_avg;
+    TGTextButton* rootButton_reset;
     TGTextButton* rootButton_saveQuit;
 
     void createToolbar(TGVerticalFrame* frame);
@@ -41,9 +42,6 @@ private:
     EmbeddedEditorCanvas* ecanvas;
     TGHorizontalFrame* frame_canvas = nullptr;
 
-
-
-    TH2D* calHist;
 
 public:
     EditorWindow(const std::string& filename);

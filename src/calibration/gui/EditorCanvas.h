@@ -1,7 +1,6 @@
 #pragma once
 
 #include "calibration/Editor.h"
-#include "base/interval.h"
 #include "Dialogs.h"
 
 #include <string>
@@ -40,6 +39,8 @@ public:
 
     virtual void EditSelection();
     virtual void SetToAverage();
+    virtual void ResetData();
+    virtual void ApplyChanges();
 
     virtual void UpdateMe() override;
 };
@@ -56,7 +57,6 @@ private:
     EditorWindow*       editorWindow;
     std::shared_ptr<ant::calibration::Editor> editor;
 
-    void applyDataChanges();
 
     void HandleKeypress(const char key);
 
@@ -65,7 +65,8 @@ public:
 
     virtual void UpdateMe() override;
 
-//    void ResetCalibration();
+    void ApplyDataChanges();
+    void ResetCalibration();
     void StartEditData();
     void SetToAverage();
 

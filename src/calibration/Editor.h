@@ -1,36 +1,27 @@
 #pragma once
-#include "analysis/plot/root_draw.h"
-#include "base/interval.h"
 
-#include <memory>
+#include "tree/TCalibrationData.h"
 #include <string>
-#include <vector>
+#include <memory>
 
 class TH2D;
 
 namespace ant
 {
-
-class TCalibrationData;
-
 namespace calibration
 {
 
-class Editor
+struct Editor
 {
-
-private:
     const std::string filename;
-
-public:
-    std::shared_ptr<ant::TCalibrationData> cdata;
-
+    ant::TCalibrationData cdata;
 
     Editor( const std::string& fileName);
 
-    //File Operations
-    void Save() const;
+    void ResetData();
 
+    void Save() const;
+    void SaveAs(const std::string& currentFileName) const;
 };
 
 }

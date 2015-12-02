@@ -71,29 +71,27 @@ public:
 void EditorWindow::createToolbar(TGVerticalFrame* frame)
 {
     TGHorizontalFrame* frm2 = new TGHorizontalFrame(frame);
-    TGHorizontalFrame* frm3 = new TGHorizontalFrame(frame);
-    TGHorizontalFrame* frm4 = new TGHorizontalFrame(frame);
 
 
 
 
-//    auto btn_edit = new ActionWidget<TGTextButton>(frm3,"start Editor / write data");
-//    rootButton_StartEditor = btn_edit;
-//    btn_edit->SetAction([this] () {
-//        this->ecanvas->EditSelection();
-//    });
+    auto btn_reset = new ActionWidget<TGTextButton>(frm2,"Reset");
+    rootButton_reset = btn_reset;
+    btn_reset->SetAction([this] () {
+        this->ecanvas->ResetData();
+    });
 
-    auto btn_avg = new ActionWidget<TGTextButton>(frm3,"AVG");
+    auto btn_avg = new ActionWidget<TGTextButton>(frm2,"AVG");
     rootButton_avg = btn_avg;
     btn_avg->SetAction([this] () {
         this->ecanvas->SetToAverage();
     });
 
 
-    auto btn_saveQuit = new ActionWidget<TGTextButton>(frm4,"Save and Exit");
+    auto btn_saveQuit = new ActionWidget<TGTextButton>(frm2,"Save and Exit");
     rootButton_saveQuit = btn_saveQuit;
     btn_saveQuit->SetAction([this] () {
-        this->editor->Save();
+        ecanvas->ApplyChanges();
         gApplication->Terminate(0);
     });
 
@@ -104,12 +102,11 @@ void EditorWindow::createToolbar(TGVerticalFrame* frame)
         frm->AddFrame(dynamic_cast<TGFrame*>(widget), layout_btn);
     };
 
-    add_to_frame(frm3, btn_avg);
-    add_to_frame(frm4, btn_saveQuit);
+    add_to_frame(frm2, btn_avg);
+    add_to_frame(frm2, btn_reset);
+    add_to_frame(frm2, btn_saveQuit);
 
     auto layout_frm =  new TGLayoutHints(kLHintsBottom | kLHintsExpandX);
-    frame->AddFrame(frm4, layout_frm);
-    frame->AddFrame(frm3, layout_frm);
     frame->AddFrame(frm2, layout_frm);
 }
 
@@ -127,8 +124,6 @@ EditorWindow::EditorWindow(const string& filename) :
 {
     // Set a name to the main frame
     SetWindowName( (std_ext::formatter() << "Ant-calib Editor: " << filename).str().c_str() );
-
-//    editor->AddFromFolder(filename);
 
     TGVerticalFrame* frame = new TGVerticalFrame(this);
 
@@ -148,6 +143,7 @@ EditorWindow::EditorWindow(const string& filename) :
 
     AddInput(kKeyPressMask | kKeyReleaseMask);
     UpdateMe();
+    ecanvas->EditSelection();
 
     // set focus
     gVirtualX->SetInputFocus(GetId());
