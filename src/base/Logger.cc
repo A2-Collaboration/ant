@@ -8,6 +8,7 @@ void SetupLogger(int argc, char* argv[]) {
 }
 
 void SetupLogger() {
+    el::Loggers::addFlag(el::LoggingFlag::ColoredTerminalOutput);
     el::Configurations loggerConf;
     loggerConf.setToDefault();
     loggerConf.setGlobally(el::ConfigurationType::Format, "%datetime [%level] %fbase:%line : %msg");
