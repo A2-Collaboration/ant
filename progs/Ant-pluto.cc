@@ -36,11 +36,21 @@
 #pragma GCC diagnostic ignored "-Weffc++"
 #pragma GCC diagnostic ignored "-Wwrite-strings"
 #pragma GCC diagnostic ignored "-Wunused-parameter"
+
+#ifdef __clang__
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wvla-extension"
+#endif
+
 #include "PParticle.h"
 #include "PBeamSmearing.h"
 #include "PReaction.h"
 #include "PPlutoBulkDecay.h"
 #include "PDataBase.h"
+
+#ifdef __clang__
+#pragma clang diagnostic pop
+#endif
 #pragma GCC diagnostic pop
 
 // ROOT
