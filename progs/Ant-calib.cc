@@ -33,10 +33,10 @@ int main(int argc, char** argv) {
     if(cmd_verbose->isSet())
         el::Loggers::setVerboseLevel(cmd_verbose->getValue());
 
-//    if(cmd_default->getValue() && cmd_averagelength->getValue()>0) {
-//        LOG(ERROR) << "Default and using moving window leading to ranged values makes no sense";
-//        return 1;
-//    }
+    if(cmd_default->getValue() && cmd_averagelength->getValue()>0) {
+        LOG(ERROR) << "Default and using moving window leading to ranged values makes no sense";
+        return 1;
+    }
 
     unique_ptr<Manager> manager = std_ext::make_unique<Manager>(
                                   cmd_inputfiles->getValue(),
