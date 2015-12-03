@@ -91,7 +91,7 @@ int main(int argc, char** argv) {
     if(cmd_batchmode->isSet()) {
         fake_argv[fake_argc++] = strdup("-q");
     }
-    auto app = new TRint("Ant-calib",&fake_argc,fake_argv);
+    auto app = new TRint("Ant-calib",&fake_argc,fake_argv,nullptr,0,true);
 
     if(!manager->DoInit()) {
         LOG(ERROR) << "Cannot initialize the calibration. Check previous messages.";
