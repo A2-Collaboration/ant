@@ -130,6 +130,9 @@ void CB_Energy::GUI_Gains::InitGUI(gui::ManagerWindow_traits* window)
     h_relative = new TH1D("h_relative","Relative change from previous gains",GetNumberOfChannels(),0,GetNumberOfChannels());
     h_relative->SetXTitle("Channel Number");
     h_relative->SetYTitle("Relative change / %");
+
+    h_relative_cb = new TH2CB("h_relative_cb",h_relative->GetTitle());
+    h_peaks_cb = new TH2CB("h_peaks_cb",h_peaks->GetTitle());
 }
 
 gui::CalibModule_traits::DoFitReturn_t CB_Energy::GUI_Gains::DoFit(TH1* hist, unsigned channel)
@@ -224,7 +227,6 @@ bool CB_Energy::GUI_Gains::FinishSlice()
     h_peaks->SetStats(false);
     h_peaks->Draw("P");
     canvas->cd(2);
-    TH2CB* h_peaks_cb = new TH2CB("h_peaks_cb",h_peaks->GetTitle());
     h_peaks_cb->FillElements(*h_peaks);
     h_peaks_cb->Draw("colz");
 
@@ -232,7 +234,6 @@ bool CB_Energy::GUI_Gains::FinishSlice()
     h_relative->SetStats(false);
     h_relative->Draw("P");
     canvas->cd(4);
-    TH2CB* h_relative_cb = new TH2CB("h_relative_cb",h_relative->GetTitle());
     h_relative_cb->FillElements(*h_relative);
     h_relative_cb->Draw("colz");
 

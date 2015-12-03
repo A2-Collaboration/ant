@@ -5,6 +5,8 @@
 
 namespace ant {
 
+class TH2CB;
+
 namespace expconfig {
 namespace detector {
 struct CB;
@@ -38,6 +40,9 @@ public:
         TH1*  h_projection = nullptr;
         TH1D* h_peaks = nullptr;
         TH1D* h_relative = nullptr;
+
+        TH2CB* h_peaks_cb = nullptr;
+        TH2CB* h_relative_cb = nullptr;
 
         double AutoStopOnChi2 = 6;
     };
