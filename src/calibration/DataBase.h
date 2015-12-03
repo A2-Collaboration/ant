@@ -27,16 +27,15 @@ public:
         using std::runtime_error::runtime_error; // use base class constructor
     };
 
-    std::list<std::string> GetCalibrationIDs() const;
-    size_t GetNumberOfCalibrationData(const std::string& calibrationID) const;
-
-
     bool GetItem(const std::string& calibrationID,
                  const TID& currentPoint,
                  TCalibrationData& theData,
                  TID& nextChangePoint) const;
 
     void AddItem(const TCalibrationData& cdata, Calibration::AddMode_t mode);
+
+    std::list<std::string> GetCalibrationIDs() const;
+    size_t GetNumberOfCalibrationData(const std::string& calibrationID) const;
 
     struct OnDiskLayout {
 
@@ -70,6 +69,8 @@ public:
         std::string makeTIDString(const TID& tid) const;
         interval<TID> parseTIDRange(const std::string& tidRangeStr) const;
     };
+
+
 
 protected:
     OnDiskLayout Layout;

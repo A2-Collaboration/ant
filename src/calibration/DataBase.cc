@@ -24,92 +24,6 @@ DataBase::DataBase(const string& calibrationDataFolder):
 
 }
 
-std::list<string> DataBase::GetCalibrationIDs() const
-{
-    return system::lsFiles(Layout.CalibrationDataFolder,"",true,true);
-}
-
-size_t DataBase::GetNumberOfCalibrationData(const string& calibrationID) const
-{
-    auto count_rootfiles = [] (const string& folder) {
-        return system::lsFiles(folder, ".root").size();
-    };
-
-    // count the number of .root files in MC, DataDefault and DataRanges
-    size_t total = 0;
-    total += count_rootfiles(Layout.GetFolder(calibrationID, OnDiskLayout::Type_t::MC));
-    total += count_rootfiles(Layout.GetFolder(calibrationID, OnDiskLayout::Type_t::DataDefault));
-    for(auto range : Layout.GetDataRanges(calibrationID)) {
-        total += count_rootfiles(range.FolderPath);
-    }
-    return total;
-}
-
-std::list<DataBase::OnDiskLayout::Range_t> DataBase::OnDiskLayout::GetDataRanges(const string& calibrationID) const
-{
-    list<Range_t> ranges;
-    for(auto daydir : system::lsFiles(GetFolder(calibrationID, Type_t::DataRanges),"",true)) {
-        for(auto tidRangeDir : system::lsFiles(daydir, "", true, true)) {
-            auto tidRange = parseTIDRange(tidRangeDir);
-            ranges.emplace_back(tidRange, daydir+"/"+tidRangeDir);
-        }
-    }
-    return ranges;
-}
-
-bool DataBase::loadFile(const string& filename, TCalibrationData& cdata) const
-{
-    string errmsg;
-    if(!system::testopen(filename, errmsg)) {
-        VLOG(8) << "Cannot open " << filename << ": " << errmsg;
-        return false;
-    }
-
-
-    try {
-        WrapTFileInput dataFile;
-        dataFile.OpenFile(filename);
-        return dataFile.GetObjectClone("cdata", cdata);
-    }
-    catch(...) {
-        LOG(WARNING) << "Cannot load object cdata from " << filename;
-        return false;
-    }
-}
-
-bool DataBase::writeToFolder(const string& folder, const TCalibrationData& cdata) const
-{
-    // ensure the folder is there
-    system::exec(formatter() << "mkdir -p " << folder);
-
-    // get the highest numbered root file in it
-    size_t maxnum = 0;
-    for(auto rootfile : system::lsFiles(folder, ".root",true,true)) {
-        auto pos_dot = rootfile.rfind('.');
-        if(pos_dot == string::npos)
-            continue;
-        stringstream numstr(rootfile.substr(0, pos_dot));
-        size_t num;
-        if(numstr >> num && num>=maxnum)
-            maxnum = num+1;
-    }
-
-    string filename(formatter() << setw(4) << setfill('0') << maxnum << ".root");
-
-    try {
-        WrapTFileOutput outfile(folder+"/"+filename);
-        auto nbytes = outfile.WriteObject(addressof(cdata), "cdata");
-        // update the symlink
-        system::exec(formatter() << "cd " << folder << " && ln -s -T -f " << filename << " current");
-        VLOG(5) << "Wrote TCalibrationData with " << nbytes << " bytes to " << filename;
-    }
-    catch(...) {
-        return false;
-    }
-
-    return true;
-}
-
 bool DataBase::GetItem(const string& calibrationID,
                        const TID& currentPoint,
                        TCalibrationData& theData,
@@ -292,6 +206,138 @@ void DataBase::handleRightOpen(const TCalibrationData& cdata) const
     writeToFolder(Layout.GetRangeFolder(calibrationID, range), cdata);
 }
 
+std::list<string> DataBase::GetCalibrationIDs() const
+{
+    return system::lsFiles(Layout.CalibrationDataFolder,"",true,true);
+}
+
+size_t DataBase::GetNumberOfCalibrationData(const string& calibrationID) const
+{
+    auto count_rootfiles = [] (const string& folder) {
+        return system::lsFiles(folder, ".root").size();
+    };
+
+    // count the number of .root files in MC, DataDefault and DataRanges
+    size_t total = 0;
+    total += count_rootfiles(Layout.GetFolder(calibrationID, OnDiskLayout::Type_t::MC));
+    total += count_rootfiles(Layout.GetFolder(calibrationID, OnDiskLayout::Type_t::DataDefault));
+    for(auto range : Layout.GetDataRanges(calibrationID)) {
+        total += count_rootfiles(range.FolderPath);
+    }
+    return total;
+}
+
+bool DataBase::loadFile(const string& filename, TCalibrationData& cdata) const
+{
+    string errmsg;
+    if(!system::testopen(filename, errmsg)) {
+        VLOG(8) << "Cannot open " << filename << ": " << errmsg;
+        return false;
+    }
+
+
+    try {
+        WrapTFileInput dataFile;
+        dataFile.OpenFile(filename);
+        return dataFile.GetObjectClone("cdata", cdata);
+    }
+    catch(...) {
+        LOG(WARNING) << "Cannot load object cdata from " << filename;
+        return false;
+    }
+}
+
+bool DataBase::writeToFolder(const string& folder, const TCalibrationData& cdata) const
+{
+    // ensure the folder is there
+    system::exec(formatter() << "mkdir -p " << folder);
+
+    // get the highest numbered root file in it
+    size_t maxnum = 0;
+    for(auto rootfile : system::lsFiles(folder, ".root",true,true)) {
+        auto pos_dot = rootfile.rfind('.');
+        if(pos_dot == string::npos)
+            continue;
+        stringstream numstr(rootfile.substr(0, pos_dot));
+        size_t num;
+        if(numstr >> num && num>=maxnum)
+            maxnum = num+1;
+    }
+
+    string filename(formatter() << setw(4) << setfill('0') << maxnum << ".root");
+
+    try {
+        WrapTFileOutput outfile(folder+"/"+filename);
+        auto nbytes = outfile.WriteObject(addressof(cdata), "cdata");
+        // update the symlink
+        system::exec(formatter() << "cd " << folder << " && ln -s -T -f " << filename << " current");
+        VLOG(5) << "Wrote TCalibrationData with " << nbytes << " bytes to " << filename;
+    }
+    catch(...) {
+        return false;
+    }
+
+    return true;
+}
+
+string DataBase::OnDiskLayout::GetRangeFolder(const string& calibrationID, const interval<TID>& range) const
+{
+    const string& start = makeTIDString(range.Start());
+    const string& stop = makeTIDString(range.Stop());
+    const string& day = start.substr(0, start.find('T'));
+    return GetFolder(calibrationID, Type_t::DataRanges)+"/"+day+"/"+start+"-"+stop;
+}
+
+std::list<DataBase::OnDiskLayout::Range_t> DataBase::OnDiskLayout::GetDataRanges(const string& calibrationID) const
+{
+    list<Range_t> ranges;
+    for(auto daydir : system::lsFiles(GetFolder(calibrationID, Type_t::DataRanges),"",true)) {
+        for(auto tidRangeDir : system::lsFiles(daydir, "", true, true)) {
+            auto tidRange = parseTIDRange(tidRangeDir);
+            ranges.emplace_back(tidRange, daydir+"/"+tidRangeDir);
+        }
+    }
+    return ranges;
+}
+
+string DataBase::OnDiskLayout::GetFolder(const string& calibrationID, DataBase::OnDiskLayout::Type_t type) const
+{
+    switch(type) {
+    case Type_t::DataDefault: return CalibrationDataFolder+"/"+calibrationID+"/DataDefault";
+    case Type_t::DataRanges: return CalibrationDataFolder+"/"+calibrationID+"/DataRanges";
+    case Type_t::MC: return CalibrationDataFolder+"/"+calibrationID+"/MC";
+    }
+    throw runtime_error("Invalid folder type provided.");
+}
+
+string DataBase::OnDiskLayout::GetCurrentFile(const string& calibrationID, DataBase::OnDiskLayout::Type_t type) const
+{
+    switch(type) {
+    case Type_t::DataDefault:
+    case Type_t::MC:
+        return GetFolder(calibrationID, type)+"/current";
+    default:
+        throw runtime_error("Invalid folder type provided.");
+    }
+
+}
+
+string DataBase::OnDiskLayout::makeTIDString(const TID& tid) const
+{
+    if(tid.IsInvalid())
+        return "OPEN";
+    // cannot use std_ext::to_iso8601 since
+    // only underscores are allowed in string
+    // note that the T is important for some use cases
+    char buf[sizeof "2011_10_08T07_07_09Z"];
+    time_t time = tid.Timestamp;
+    strftime(buf, sizeof buf, "%Y_%m_%dT%H_%M_%SZ", gmtime(addressof(time)));
+    // add the lower ID
+    stringstream ss;
+    ss << buf << "_0x" << hex << setw(8) << setfill('0') << tid.Lower;
+    return ss.str();
+}
+
 interval<TID> DataBase::OnDiskLayout::parseTIDRange(const string& tidRangeStr) const
 {
     auto pos_dash = tidRangeStr.find('-');
@@ -335,50 +381,4 @@ interval<TID> DataBase::OnDiskLayout::parseTIDRange(const string& tidRangeStr) c
     };
 
     return {parseTIDStr(startStr), parseTIDStr(stopStr)};
-}
-
-string DataBase::OnDiskLayout::GetRangeFolder(const string& calibrationID, const interval<TID>& range) const
-{
-    const string& start = makeTIDString(range.Start());
-    const string& stop = makeTIDString(range.Stop());
-    const string& day = start.substr(0, start.find('T'));
-    return GetFolder(calibrationID, Type_t::DataRanges)+"/"+day+"/"+start+"-"+stop;
-}
-
-string DataBase::OnDiskLayout::makeTIDString(const TID& tid) const
-{
-    if(tid.IsInvalid())
-        return "OPEN";
-    // cannot use std_ext::to_iso8601 since
-    // only underscores are allowed in string
-    // note that the T is important for some use cases
-    char buf[sizeof "2011_10_08T07_07_09Z"];
-    time_t time = tid.Timestamp;
-    strftime(buf, sizeof buf, "%Y_%m_%dT%H_%M_%SZ", gmtime(addressof(time)));
-    // add the lower ID
-    stringstream ss;
-    ss << buf << "_0x" << hex << setw(8) << setfill('0') << tid.Lower;
-    return ss.str();
-}
-
-string DataBase::OnDiskLayout::GetFolder(const string& calibrationID, DataBase::OnDiskLayout::Type_t type) const
-{
-    switch(type) {
-    case Type_t::DataDefault: return CalibrationDataFolder+"/"+calibrationID+"/DataDefault";
-    case Type_t::DataRanges: return CalibrationDataFolder+"/"+calibrationID+"/DataRanges";
-    case Type_t::MC: return CalibrationDataFolder+"/"+calibrationID+"/MC";
-    }
-    throw runtime_error("Invalid folder type provided.");
-}
-
-string DataBase::OnDiskLayout::GetCurrentFile(const string& calibrationID, DataBase::OnDiskLayout::Type_t type) const
-{
-    switch(type) {
-    case Type_t::DataDefault:
-    case Type_t::MC:
-        return GetFolder(calibrationID, type)+"/current";
-    default:
-        throw runtime_error("Invalid folder type provided.");
-    }
-
 }
