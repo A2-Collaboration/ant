@@ -2,7 +2,6 @@
 
 #include "tree/TCalibrationData.h"
 #include <string>
-#include <memory>
 
 class TH2D;
 

@@ -1,23 +1,16 @@
 #pragma once
 
 #include "calibration/Editor.h"
-#include "Dialogs.h"
 
-#include <string>
-#include <map>
-#include <set>
 #include <functional>
 #include "Rtypes.h"
 #include "analysis/plot/root_draw.h"
 #include "calibration/gui/Indicator_traits.h"
-#include "calibration/Editor.h"
 
 #include "TCanvas.h"
-#include "TPaveText.h"
-
 #include "TRootEmbeddedCanvas.h"
 
-class TH2D;
+class TH1D;
 
 
 namespace ant {
@@ -25,6 +18,9 @@ namespace ant {
 struct TCalibrationData;
 
 namespace calibration {
+
+struct Editor;
+
 namespace gui {
 
 class EditorCanvas;
@@ -54,9 +50,9 @@ class EditorCanvas:
 {
 private:
 
-    TH1D*                         calDataHist;
+    TH1D*          calDataHist;
+    EditorWindow*  editorWindow;
 
-    EditorWindow*       editorWindow;
     std::shared_ptr<ant::calibration::Editor> editor;
 
 

@@ -8,18 +8,14 @@
 #include "TApplication.h"
 #include "TSystem.h"
 
-#include "TGNumberEntry.h"
-#include "TGStatusBar.h"
 #include "TGButton.h"
 #include "TROOT.h"
 
 #include "base/Logger.h"
-#include "TH2D.h"
 
 #include <type_traits>
 #include <sstream>
 #include <iomanip>
-#include <TCanvas.h>
 
 using namespace std;
 

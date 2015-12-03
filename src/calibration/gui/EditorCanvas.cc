@@ -1,19 +1,14 @@
 #include "EditorCanvas.h"
 
-#include "calibration/gui/EditorWindow.h"
 #include "calibration/Editor.h"
+#include "calibration/gui/EditorWindow.h"
 #include "base/std_ext/string.h"
-#include "tree/TCalibrationData.h"
 
-#include "TH2D.h"
-#include "TH2.h"
+#include "TH1D.h"
 #include "TROOT.h"
 
-#include <list>
-#include <cmath>
 
 #include <iostream>
-#include "TStyle.h"
 
 using namespace ant;
 using namespace std;

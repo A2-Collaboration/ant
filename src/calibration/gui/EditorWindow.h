@@ -6,13 +6,10 @@
 #include "TGFrame.h"
 #include "KeySymbols.h"
 #include "TCanvas.h"
-#include "TGComboBox.h"
 
-#include <functional>
-#include <vector>
-#include <list>
 #include <map>
 #include <string>
+#include <memory>
 
 
 
