@@ -38,9 +38,9 @@ void Manager::InitGUI(ManagerWindow* window_) {
     module->InitGUI(window);
 
     if(buffer.GetSumLength()==0)
-        window->SetProgressMax(0, nChannels-1);
+        window->SetProgressMax(1, nChannels-1);
     else
-        window->SetProgressMax(input_files.size()-1, nChannels-1);
+        window->SetProgressMax(input_files.size(), nChannels-1);
 }
 
 
