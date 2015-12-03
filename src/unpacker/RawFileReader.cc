@@ -21,10 +21,7 @@ ant::RawFileReader::~RawFileReader() {}
 
 double RawFileReader::PercentDone() const
 {
-    const auto compressed   = p->gcount_compressed();
-    const auto total_size   = p->filesize_remaining();
-
-    return double((compressed >= -1) ? compressed : p->gcount()) / double(total_size);
+    return double(p->pos()) / double(p->filesize_total());
 }
 
 void RawFileReader::open(const string &filename, const size_t inbufsize) {

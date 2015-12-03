@@ -154,6 +154,12 @@ private:
             return filesize - gcount_total;
         }
 
+        virtual std::streamsize filesize_total() const {
+            return filesize;
+        }
+
+        virtual std::streamsize pos() const { return gcount_total; }
+
     private:
         std::ifstream file;
         std::streamsize filesize;
