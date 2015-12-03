@@ -227,14 +227,14 @@ bool CB_Energy::GUI_Gains::FinishSlice()
     h_peaks->SetStats(false);
     h_peaks->Draw("P");
     canvas->cd(2);
-    h_peaks_cb->FillElements(*h_peaks);
+    h_peaks_cb->SetElements(*h_peaks);
     h_peaks_cb->Draw("colz");
 
     canvas->cd(3);
     h_relative->SetStats(false);
     h_relative->Draw("P");
     canvas->cd(4);
-    h_relative_cb->FillElements(*h_relative);
+    h_relative_cb->SetElements(*h_relative);
     h_relative_cb->Draw("colz");
 
     return true;
