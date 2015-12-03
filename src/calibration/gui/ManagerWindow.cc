@@ -202,8 +202,8 @@ void ManagerWindow::CreateToolbar(TGVerticalFrame* frame)
             canvas->Fit(CalCanvas::FitType_t::Signal);
     });
 
-    auto btn_fitbackground = new ActionButton<TGTextButton>(frm2,"Fit Background (B)");
-    keys[kKey_B] = btn_fitbackground;
+    auto btn_fitbackground = new ActionButton<TGTextButton>(frm2,"Fit Background (a)");
+    keys[kKey_a] = btn_fitbackground;
     btn_fitbackground->SetAction([this] () {
         for(auto canvas : canvases)
             canvas->Fit(CalCanvas::FitType_t::Background);
