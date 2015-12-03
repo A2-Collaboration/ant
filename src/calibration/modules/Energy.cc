@@ -217,7 +217,7 @@ void Energy::GUI_CalibType::StartSlice(const interval<TID>& range)
 
         if(fitParameters.empty() || !UsePreviousSliceParams) {
             for(const TKeyValue<vector<double>>& kv : cdata.FitParameters) {
-                fitParameters.insert(make_pair(kv.Key, kv.Value));
+                fitParameters[kv.Key] = kv.Value;
             }
             LOG(INFO) << GetName() << ": Loaded previous fit parameter from database";
         }
