@@ -1,6 +1,7 @@
 #include "WrapTFile.h"
 
 #include "std_ext/memory.h"
+#include "std_ext/misc.h"
 #include "Logger.h"
 
 #include "TSystem.h"
@@ -17,17 +18,21 @@ using namespace ant;
 
 std::unique_ptr<TFile> WrapTFile::openFile(const string& filename, const string mode)
 {
-    std::unique_ptr<TFile> file;
-    const auto prev_gErrorIgnoreLevel = gErrorIgnoreLevel;
-    gErrorIgnoreLevel = kError + 1;
+    auto errorhandler = GetErrorHandler();
+    std_ext::execute_on_destroy restore_error_handler([errorhandler] () {
+        SetErrorHandler(errorhandler);
+    });
+    SetErrorHandler([] (
+                    int, Bool_t, const char *location, const char *msg) {
+        throw std::runtime_error(std_ext::formatter() << "Could not open TFile: "
+                                 << location << ": " << msg);
+    });
 
-    file = std_ext::make_unique<TFile>(filename.c_str(), mode.c_str());
+    auto file = std_ext::make_unique<TFile>(filename.c_str(), mode.c_str());
 
-    gErrorIgnoreLevel = prev_gErrorIgnoreLevel;
-
-    if(!file->IsOpen() || file->IsZombie() )
+    if(!file->IsOpen() || file->IsZombie())
     {
-        throw std::runtime_error(string("Could not open TFile at ")+filename);
+        throw std::runtime_error("Could not open TFile at "+filename);
     }
 
     return file;
