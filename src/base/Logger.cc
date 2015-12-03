@@ -27,6 +27,10 @@ void SetupLogger() {
                     int level, Bool_t, const char *location,
                     const char *msg) {
         // Bool_t is abort, not used for now...
+
+        if (level < gErrorIgnoreLevel)
+           return;
+
         stringstream ss;
         ss << "ROOT<" << location << ">: " << msg;
         if(level < kInfo) { LOG(INFO) << ss.str(); }
