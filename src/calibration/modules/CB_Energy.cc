@@ -152,16 +152,29 @@ gui::CalibModule_traits::DoFitReturn_t CB_Energy::GUI_Gains::DoFit(TH1* hist, un
         func->FitBackground(h_projection);
     }
 
-    size_t retries = 5;
-    do {
-        func->Fit(h_projection);
-        VLOG(5) << "Chi2/dof = " << func->Chi2NDF();
-        if(func->Chi2NDF() < AutoStopOnChi2) {
-            return DoFitReturn_t::Next;
+    auto fit_loop = [this] (size_t retries) {
+        do {
+            func->Fit(h_projection);
+            VLOG(5) << "Chi2/dof = " << func->Chi2NDF();
+            if(func->Chi2NDF() < AutoStopOnChi2) {
+                return true;
+            }
+            retries--;
         }
-        retries--;
-    }
-    while(retries>0);
+        while(retries>0);
+        return false;
+    };
+
+    if(fit_loop(5))
+        return DoFitReturn_t::Next;
+
+    // try with defaults and background fit
+    func->SetDefaults(h_projection);
+    func->FitBackground(h_projection);
+
+    if(fit_loop(5))
+        return DoFitReturn_t::Next;
+
 
     // reached maximum retries without good chi2
     LOG(INFO) << "Chi2/dof = " << func->Chi2NDF();
