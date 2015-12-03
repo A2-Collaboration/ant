@@ -47,7 +47,8 @@ protected:
         // set in DoInit()
         std::list<input_file_t>::iterator it_file;
         int channel;
-        int slice;
+        unsigned slice;
+        bool oneslice = false;
 
         bool breakpoint_fit = false;
         bool breakpoint_finish = false;
@@ -72,7 +73,7 @@ public:
         module = move(module_);
     }
 
-    bool DoInit();
+    bool DoInit(int gotoSlice);
     void InitGUI(ManagerWindow* window_);
 
     enum class RunReturn_t {
@@ -80,10 +81,10 @@ public:
     };
 
     RunReturn_t Run();
-    void GetProgress(unsigned& slice, unsigned& channel) {
-        slice = state.slice;
-        channel = state.channel;
-    }
+//    void GetProgress(unsigned& slice, unsigned& channel) {
+//        slice = state.slice;
+//        channel = state.channel;
+//    }
 
     ~Manager();
 

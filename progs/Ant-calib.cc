@@ -23,7 +23,8 @@ int main(int argc, char** argv) {
     TCLAP::CmdLine cmd("Ant-calib - Fit histograms and calculate new calibration parameters", ' ', "0.1");
     auto cmd_verbose = cmd.add<TCLAP::ValueArg<int>>("v","verbose","Verbosity level (0..9)", false, 0,"level");
     auto cmd_calibration = cmd.add<TCLAP::ValueArg<string>>("c","calibration","Calibration GUI module name", true, "","calibration");
-    auto cmd_averagelength = cmd.add<TCLAP::ValueArg<int>>("a","average","Average length for moving window (zero sums everything up)", false, 0, "length");
+    auto cmd_averagelength = cmd.add<TCLAP::ValueArg<unsigned>>("a","average","Average length for moving window (zero sums everything up)", false, 0, "length");
+    auto cmd_gotoslice = cmd.add<TCLAP::ValueArg<unsigned>>("","gotoslice","Directly skip to specified slice", false, 0, "slice");
     auto cmd_batchmode = cmd.add<TCLAP::SwitchArg>("b","batch","Run in batch mode (no GUI, autosave)",false);
     auto cmd_default = cmd.add<TCLAP::SwitchArg>("","default","Put created TCalibrationData to default range",false);
     // unlabeled multi arg must be the last element added, and interprets everything as a input file
@@ -38,10 +39,15 @@ int main(int argc, char** argv) {
         return 1;
     }
 
-    unique_ptr<Manager> manager = std_ext::make_unique<Manager>(
-                                  cmd_inputfiles->getValue(),
-                                  cmd_averagelength->getValue()
-                                  );
+    if(cmd_gotoslice->isSet() && cmd_averagelength->getValue()==0) {
+        LOG(ERROR) << "Goto slice without averaging makes no sense";
+        return 1;
+    }
+
+    auto manager = std_ext::make_unique<Manager>(
+                       cmd_inputfiles->getValue(),
+                       cmd_averagelength->getValue()
+                       );
 
     // try to find the requested calibration modules
     // the gui manager already scanned the files and provides a hint
@@ -93,7 +99,9 @@ int main(int argc, char** argv) {
     }
     auto app = new TRint("Ant-calib",&fake_argc,fake_argv,nullptr,0,true);
 
-    if(!manager->DoInit()) {
+    int gotoslice = cmd_gotoslice->isSet() ? cmd_gotoslice->getValue() : -1;
+
+    if(!manager->DoInit(gotoslice)) {
         LOG(ERROR) << "Cannot initialize the calibration. Check previous messages.";
         return 1;
     }

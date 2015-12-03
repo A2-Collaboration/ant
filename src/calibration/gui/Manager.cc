@@ -38,9 +38,9 @@ void Manager::InitGUI(ManagerWindow* window_) {
     module->InitGUI(window);
 
     if(buffer.GetSumLength()==0)
-        window->SetProgressMax(1, nChannels-1);
+        window->SetProgressMax(0, nChannels-1);
     else
-        window->SetProgressMax(input_files.size(), nChannels-1);
+        window->SetProgressMax(input_files.size()-1, nChannels-1);
 }
 
 
@@ -118,6 +118,7 @@ void Manager::FillBufferFromFiles()
             if(!hist) {
                 LOG(WARNING) << "Histogram " << module->GetHistogramName() << " not found in " << file_input.filename;
             } else {
+                LOG(INFO) << "Buffer filled with " << file_input.filename;
                 buffer.Push(hist, file_input.range);
             }
 
@@ -134,22 +135,45 @@ void Manager::FillBufferFromFiles()
     }
 }
 
-bool Manager::DoInit()
+bool Manager::DoInit(int gotoSlice_)
 {
+    // use the sign of gotoSlice_ to detect if gotoSlice
+    // is active at all
+    unsigned gotoSlice = 0;
+    if(gotoSlice_ >= 0) {
+        gotoSlice = gotoSlice_;
+        state.oneslice = true;
+    }
+
+    if(state.oneslice && gotoSlice>=input_files.size()) {
+        LOG(ERROR) << "Requested slice " << gotoSlice << " not smaller than number of input files " << input_files.size();
+        return false;
+    }
+
     state.channel = -1;
     state.slice = 0;
     state.it_file = input_files.begin();
 
     nChannels = module->GetNumberOfChannels();
     if(nChannels==0) {
-        LOG(WARNING) << "Module reports zero channels, nothing to do then.";
+        LOG(ERROR) << "Module reports zero channels, nothing to do then.";
         return false;
     }
 
     FillBufferFromFiles();
     if(buffer.Empty()) {
-        LOG(WARNING) << "Did not process anything";
+        LOG(ERROR) << "Could not initially fill the buffer from given files";
         return false;
+    }
+
+    while(state.slice < gotoSlice) {
+        state.slice++;
+        buffer.GotoNextID();
+        FillBufferFromFiles();
+        if(buffer.Empty()) {
+            LOG(ERROR) << "Could not move buffer to slice " << gotoSlice << ", stopped at " << state.slice;
+            return false;
+        }
     }
 
     module->StartSlice(buffer.CurrentID());
@@ -195,19 +219,23 @@ Manager::RunReturn_t Manager::Run()
         if(!state.breakpoint_finish) {
             VLOG(7) << "Finish module";
             state.breakpoint_finish = module->FinishSlice();
-            state.slice++;
             if(!window->Mode.autoFinish && state.breakpoint_finish) {
                 VLOG(7) << "Displaying finished range...";
                 window->SetFinishMode(true);
                 return RunReturn_t::Wait;
             }
         }
-
         module->StoreFinishSlice(buffer.CurrentID());
         window->SetFinishMode(false);
+
+        if(state.oneslice) {
+            LOG(INFO) << "Finished processing this one slice";
+            return RunReturn_t::Exit;
+        }
+
         state.breakpoint_finish = false;
         state.channel = 0;
-
+        state.slice++;
         buffer.GotoNextID();
 
         // try refilling the worklist
