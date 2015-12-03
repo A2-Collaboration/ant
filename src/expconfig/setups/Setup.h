@@ -36,7 +36,6 @@ class Setup :
 {
 private:
     const std::string name_;
-    SetupOptPtr options;
 
 public:
     virtual std::list< std::shared_ptr< Calibration::PhysicsModule> > GetCalibrations() const override;
@@ -61,10 +60,9 @@ public:
     }
 
 protected:
-    Setup(const std::string& name, SetupOptPtr opt);
+    SetupOptPtr Options;
 
-    std::string GetOption(const std::string& key) const;
-    bool IsFlagSet(const std::string& key) const;
+    Setup(const std::string& name, SetupOptPtr opt);
 
     void AddDetector(const std::shared_ptr<Detector_t>& detector) {
         detectors.push_back(detector);

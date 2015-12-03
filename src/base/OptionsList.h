@@ -3,6 +3,7 @@
 #include <string>
 #include <memory>
 #include <map>
+#include <sstream>
 
 namespace ant {
 
@@ -12,6 +13,7 @@ protected:
     std::shared_ptr<const OptionsList> parent;
 
     std::map<std::string, std::string> options;
+    std::string GetOption(const std::string& key) const;
 
 public:
     OptionsList(std::shared_ptr<const OptionsList> Parent=nullptr);
@@ -19,31 +21,19 @@ public:
     void SetOption(const std::string& str, const std::string delim="=");
     void SetOptions(const std::string& str, const std::string optdelim=",", const std::string valdelim="=");
 
-    std::string GetOption(const std::string& key) const;
-    bool IsFlagSet(const std::string& key) const;
-
     std::string Flatten() const;
 
     template <typename T>
-    T Get(const std::string& key, const T& def_value) const {
+    T Get(const std::string& key, const T& def_value = T()) const {
         const auto& v = GetOption(key);
-        if(v.empty()) {
-            return def_value;
+        std::stringstream ss(GetOption(key));
+        T ret;
+        if(ss >> ret) {
+            return ret;
         }
-        return T(v);
+        return def_value;
     }
-
-
 };
-
-template<>
-double OptionsList::Get<double>(const std::string& key, const double& def_value) const;
-
-template<>
-int OptionsList::Get<int>(const std::string& key, const int& def_value) const;
-
-template<>
-unsigned OptionsList::Get<unsigned>(const std::string& key, const unsigned& def_value) const;
 
 template<>
 bool OptionsList::Get<bool>(const std::string& key, const bool& def_value) const;

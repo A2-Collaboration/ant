@@ -98,11 +98,11 @@ OmegaEtaG::OmegaEtaG(const std::string& name, PhysOptPtr opts):
 
     steps = HistFac.makeTH1D("steps", "", "", BinSettings(10));
 
-    if(GetOption("OmegaEtaGMode") == "McTrue") {
+    if(Options->Get<string>("OmegaEtaGMode") == "McTrue") {
         mode = OmegaBase::DataMode::MCTrue;
     }
 
-    VLOG(8) << "mode option is " << GetOption("OmegaEtaGMode");
+    VLOG(8) << "mode option is " << Options->Get<string>("OmegaEtaGMode");
 }
 
 OmegaEtaG::perDecayhists_t OmegaEtaG::makePerDecayHists(const string &title)
@@ -756,19 +756,17 @@ ParticleList OmegaEtaG2::FilterParticles(const data::ParticleList& list, const p
 OmegaEtaG2::OmegaEtaG2(const std::string& name, PhysOptPtr opts):
     OmegaBase(name, opts)
 {
-    if(opts->GetOption("Proton") == "MCTrue") {
+    if(Options->Get<string>("Proton") == "MCTrue") {
         data_proton = false;
         LOG(INFO) << "Using proton from MCTrue";
     };
 
-    if(opts->GetOption("Tagger") == "MCTrue") {
+    if(Options->Get<string>("Tagger") == "MCTrue") {
         data_tagger = false;
         LOG(INFO) << "Using Tagger from MCTrue";
     };
 
-    if(opts->GetOption("ESum") != "") {
-        ESum_cut = atof(opts->GetOption("ESum").c_str());
-    }
+    ESum_cut = Options->Get<double>("ESum", ESum_cut);
 
     proton_cut.E_range     = { 50,1000 };
     proton_cut.Theta_range = degree_to_radian(interval<double>( 2, 45));

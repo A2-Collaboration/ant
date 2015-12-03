@@ -58,26 +58,10 @@ std::string Setup::GetPIDCutsDirectory() const {
 
 Setup::Setup(const std::string& name, SetupOptPtr opt) :
     name_(name),
-    options(opt)
+    Options(opt)
 {
     std::string calibrationDataFolder = std::string(ANT_PATH_DATABASE)+"/"+GetName()+"/calibration";
     calibrationDataManager = std::make_shared<calibration::DataManager>(calibrationDataFolder);
-}
-
-std::string Setup::GetOption(const std::string& key) const
-{
-    if(options) {
-        return options->GetOption(key);
-    }
-    return "";
-}
-
-bool Setup::IsFlagSet(const std::string& key) const
-{
-    if(options) {
-        return options->IsFlagSet(key);
-    }
-    return false;
 }
 
 bool Setup::Matches(const ant::THeaderInfo& header) const {

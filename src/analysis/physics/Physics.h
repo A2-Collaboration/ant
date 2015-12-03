@@ -27,12 +27,10 @@ using PhysOptPtr = std::shared_ptr<const OptionsList>;
 class Physics {
 private:
     std::string name_;
-    PhysOptPtr options;
 
 protected:
     SmartHistFactory HistFac;
-
-    std::string GetOption(const std::string& key) const;
+    const PhysOptPtr Options;
 
 public:
     Physics(const std::string& name, PhysOptPtr opts=nullptr);

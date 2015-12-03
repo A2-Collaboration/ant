@@ -33,8 +33,8 @@ void dotest1() {
     REQUIRE_NOTHROW(opts = std::make_shared<OptionsList>());
     REQUIRE_NOTHROW(opts->SetOption("key=val"));
 
-    REQUIRE(opts->GetOption("key")  == string("val"));
-    REQUIRE(opts->GetOption("key2") == string(""));
+    REQUIRE(opts->Get<string>("key")  == "val");
+    REQUIRE(opts->Get<string>("key2") == "");
 }
 
 void dotest2() {
@@ -45,13 +45,13 @@ void dotest2() {
     REQUIRE_NOTHROW(opts2 = std::make_shared<OptionsList>(opts));
 
     REQUIRE_NOTHROW(opts2->SetOption("key4=val4"));    // own option
-    REQUIRE(opts2->GetOption("key4") == string("val4"));
+    REQUIRE(opts2->Get<string>("key4") == "val4");
 
-    REQUIRE(opts2->GetOption("key")  == string("val")); // from parent
-    REQUIRE(opts2->GetOption("key2") == string(""));    // from parent
+    REQUIRE(opts2->Get<string>("key")  == "val"); // from parent
+    REQUIRE(opts2->Get<string>("key2") == "");    // from parent
 
     REQUIRE_NOTHROW(opts2->SetOption("key2=val2"));     // overwrite parent
-    REQUIRE(opts2->GetOption("key2") == string("val2"));
+    REQUIRE(opts2->Get<string>("key2") == "val2");
 }
 
 void dotest3() {
@@ -62,10 +62,10 @@ void dotest3() {
     opts->SetOption("flag4=truE");
     opts->SetOption("flag5=no");
     opts->SetOption("flag6=YES");
-    REQUIRE(opts->IsFlagSet("flag1"));
-    REQUIRE(opts->IsFlagSet("flag2"));
-    REQUIRE(opts->IsFlagSet("flag3"));
-    REQUIRE(opts->IsFlagSet("flag4"));
-    REQUIRE_FALSE(opts->IsFlagSet("flag5"));
-    REQUIRE(opts->IsFlagSet("flag6"));
+    REQUIRE(opts->Get<bool>("flag1"));
+    REQUIRE(opts->Get<bool>("flag2"));
+    REQUIRE(opts->Get<bool>("flag3"));
+    REQUIRE(opts->Get<bool>("flag4"));
+    REQUIRE_FALSE(opts->Get<bool>("flag5"));
+    REQUIRE(opts->Get<bool>("flag6"));
 }

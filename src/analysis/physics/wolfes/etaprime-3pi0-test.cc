@@ -20,7 +20,7 @@ using namespace ant::analysis::physics;
 
 Etap3pi0_test::Etap3pi0_test(const std::string& name, PhysOptPtr opts) :
     Physics(name, opts),
-      dataset(opts->GetOption("dataset"))
+    dataset(Options->Get<string>("dataset"))
 {
     BinSettings bs = BinSettings(1600);
     hNgammaMC  = HistFac.makeTH1D("# gamma MC true","# #gamma","# events",BinSettings(8));

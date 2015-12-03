@@ -80,7 +80,7 @@ Setup_2014_EPT::Setup_2014_EPT(const string& name, SetupOptPtr opt) :
     // also the ScalerFrequency needs a reference
     AddHook(convert_ScalerFrequency_Beampolmon);
 
-    bool timecuts = !IsFlagSet("DisableTimecuts");
+    bool timecuts = !Options->Get<bool>("DisableTimecuts");
     interval<double> no_timecut(-std_ext::inf, std_ext::inf);
 
     AddCalibration<calibration::Scaler>(Detector_t::Type_t::EPT,

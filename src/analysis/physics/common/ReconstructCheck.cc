@@ -27,11 +27,11 @@ ReconstructCheck::ReconstructCheck(const std::string& name, PhysOptPtr opts):
     all_group(HistFac,"All",histgroup::detectortype::All),
     tapsveto(HistFac)
 {
-    const BinSettings e(max(1000.0, atof(GetOption("Emax").c_str())));
+    const BinSettings e(max(1000.0, Options->Get<double>("Emax")));
     EnergyRec_cb = HistFac.makeTH2D("Energry Reconstruction CB","E_{true} [MeV]","E_{rec} [MeV]", e, e, "Energy_rec_cb");
     EnergyRec_taps = HistFac.makeTH2D("Energry Reconstruction TAPS","E_{true} [MeV]","E_{rec} [MeV]", e, e, "Energy_rec_taps");
 
-    if(opts->GetOption("Mult1Only") == "Yes") {
+    if(Options->Get<bool>("Mult1Only",false)) {
         LOG(INFO) << "Using multiplicity == 1 events only";
         mult1_only = true;
     }

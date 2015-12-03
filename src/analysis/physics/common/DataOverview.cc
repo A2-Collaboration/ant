@@ -84,9 +84,9 @@ void TaggerOverview::ShowResult()
 DataOverviewBase::DataOverviewBase(const string &name, PhysOptPtr opts):
     Physics(name, opts)
 {
-    if(opts->GetOption("Mode") == "Reconstructed")
+    if(opts->Get<string>("Mode") == "Reconstructed")
         mode = Mode::Reconstructed;
-    else if(opts->GetOption("Mode") == "MCTrue")
+    else if(opts->Get<string>("Mode") == "MCTrue")
         mode = Mode::MCTrue;
 
     HistFac.SetTitlePrefix(GetMode());

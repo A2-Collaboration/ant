@@ -9,18 +9,10 @@ using namespace std;
 using namespace ant;
 using namespace ant::analysis;
 
-string Physics::GetOption(const string& key) const
-{
-    if(options) {
-        return options->GetOption(key);
-    }
-    return "";
-}
-
 Physics::Physics(const string &name, PhysOptPtr opts):
     name_(name),
-    options(opts),
-    HistFac(name)
+    HistFac(name),
+    Options(opts)
 {
     if(opts)
         HistFac.SetDirDescription(opts->Flatten());

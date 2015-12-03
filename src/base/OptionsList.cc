@@ -54,16 +54,6 @@ string OptionsList::GetOption(const string& key) const
 
 }
 
-bool OptionsList::IsFlagSet(const string& key) const
-{
-    string val = GetOption(key);
-    std::transform(val.begin(), val.end(), val.begin(), ::tolower);
-    if(val == "on" || val == "1" || val == "true" || val == "yes") {
-        return true;
-    }
-    return false;
-}
-
 string OptionsList::Flatten() const
 {
     auto strptrcmp = [] (const string* s1, const string* s2) { return *s1 == *s2; };
@@ -81,47 +71,16 @@ string OptionsList::Flatten() const
 }
 
 template<>
-double ant::OptionsList::Get<double>(const string& key, const double& def_value) const
-{
-
-    const auto& v = GetOption(key);
-    if(v.empty()) {
-        return def_value;
-    }
-    return std::atof(v.c_str());
-
-}
-
-template<>
-int ant::OptionsList::Get<int>(const string& key, const int& def_value) const
-{
-    const auto& v = GetOption(key);
-    if(v.empty()) {
-        return def_value;
-    }
-    return std::atoi(v.c_str());
-}
-
-template<>
-unsigned ant::OptionsList::Get<unsigned>(const string& key, const unsigned& def_value) const
-{
-    const auto& v = GetOption(key);
-    if(v.empty()) {
-        return def_value;
-    }
-    return unsigned(std::atol(v.c_str()));
-}
-
-template<>
 bool ant::OptionsList::Get<bool>(const string& key, const bool& def_value) const
 {
-    const auto& v = GetOption(key);
+    auto v = GetOption(key);
+    std::transform(v.begin(), v.end(), v.begin(), ::tolower);
 
-    if(v=="On" || v=="ON" || v=="Yes" || v=="yes" || v=="YES") {
+    if(v=="on" || v=="yes" || v=="true" || v=="1") {
         return true;
     }
 
-    if(v=="Off" || v=="OFF" || v=="No" || v=="NO" || v=="no") {
+    if(v=="off" || v=="no" || v=="false" || v=="0") {
         return false;
     }
 

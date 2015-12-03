@@ -22,7 +22,7 @@ using namespace ant::analysis::physics;
 
 Etap3pi0::Etap3pi0(const std::string& name, PhysOptPtr opts) :
     Physics(name, opts),
-      dataset(opts->GetOption("dataset"))
+    dataset(Options->Get<string>("dataset"))
 {
     BinSettings bs_im = BinSettings(1200);
     string cat("hist");
