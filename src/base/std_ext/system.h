@@ -31,7 +31,7 @@ struct system {
      * @param errmsg non-empty if unsuccessful open
      * @return true if file can be opened for reading
      */
-    static bool testopen(const std::string& filename, std::string errmsg);
+    static bool testopen(const std::string& filename, std::string& errmsg);
 
 
     /**

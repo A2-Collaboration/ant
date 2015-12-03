@@ -56,7 +56,7 @@ string system::exec(const string& cmd)
 }
 
 
-bool ant::std_ext::system::testopen(const std::string& filename, std::string errmsg)
+bool ant::std_ext::system::testopen(const std::string& filename, std::string& errmsg)
 {
     FILE* fp = fopen(filename.c_str(),"r");
     if(fp==NULL) {
