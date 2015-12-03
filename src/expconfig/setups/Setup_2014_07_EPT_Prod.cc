@@ -22,6 +22,8 @@ public:
             IgnoreDetectorChannels(Detector_t::Type_t::CB, {17,582,672,678,696});
             // misc reasons (e.g. bad timewalk spectrum)
             IgnoreDetectorChannels(Detector_t::Type_t::CB, {41,125,418,547,602});
+            // missing partially
+            IgnoreDetectorChannels(Detector_t::Type_t::CB, {554});
 
             // no pi0 peak visible in 1CB 1TAPS hist
             IgnoreDetectorChannels(Detector_t::Type_t::TAPS, {2,73,127,137,138,145,200,218,283,291,356,357,364});
