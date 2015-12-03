@@ -59,15 +59,22 @@ std::list<DataBase::OnDiskLayout::Range_t> DataBase::OnDiskLayout::GetDataRanges
 
 bool DataBase::loadFile(const string& filename, TCalibrationData& cdata) const
 {
-    WrapTFileInput dataFile;
-    try {
-        dataFile.OpenFile(filename);
-    }
-    catch(...) {
-        VLOG(5) << "Cannot open file for reading: " << filename;
+    string errmsg;
+    if(!system::testopen(filename, errmsg)) {
+        VLOG(8) << "Cannot open " << filename << ": " << errmsg;
         return false;
     }
-    return dataFile.GetObjectClone("cdata", cdata);
+
+
+    try {
+        WrapTFileInput dataFile;
+        dataFile.OpenFile(filename);
+        return dataFile.GetObjectClone("cdata", cdata);
+    }
+    catch(...) {
+        LOG(WARNING) << "Cannot load object cdata from " << filename;
+        return false;
+    }
 }
 
 bool DataBase::writeToFolder(const string& folder, const TCalibrationData& cdata) const
@@ -128,7 +135,7 @@ bool DataBase::GetItem(const string& calibrationID,
 
     if(it_range != ranges.end()) {
         if(loadFile(it_range->FolderPath+"/current", theData)) {
-            VLOG(5) << "Loaded data for " << calibrationID << " for changepoint " << currentPoint << " from " << it_range->FolderPath;
+            LOG(INFO) << "Loaded data for " << calibrationID << " for changepoint " << currentPoint << " from " << it_range->FolderPath;
             // next change point is given by found range
             nextChangePoint = it_range->Stop();
             ++nextChangePoint;
@@ -152,7 +159,7 @@ bool DataBase::GetItem(const string& calibrationID,
 
     // not found in ranges, so try default data
     if(loadFile(Layout.GetCurrentFile(calibrationID, OnDiskLayout::Type_t::DataDefault), theData)) {
-        VLOG(5) << "Loaded default data for " << calibrationID << " for changepoint " << currentPoint;
+        LOG(INFO) << "Loaded default data for " << calibrationID << " for changepoint " << currentPoint;
         return true;
     }
 
