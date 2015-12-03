@@ -336,6 +336,5 @@ void Time::TheGUI::StoreFinishSlice(const interval<TID>& range)
         cdata.FitParameters.emplace_back(ch, params);
     }
 
-    // TODO: choose mode
-    calmgr->Add(cdata, Calibration::AddMode_t::AsDefault);
+    calmgr->Add(cdata, Calibration::AddMode_t::StrictRange);
 }
