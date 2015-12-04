@@ -99,7 +99,7 @@ void A2Cocktail::init(vector<string> filelist)
     A2ChannelManager a2man(filelist);
 
     // -- Init outputfile and Tree --
-    _outfile = new TFile(strdup(string(_outfileName + ".root").c_str()),"recreate");
+    _outfile = new TFile(string(_outfileName + ".root").c_str(),"recreate");
     _data = new TTree("data","Event data");
 
     // -- Init root - random engine ---
