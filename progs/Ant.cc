@@ -144,8 +144,13 @@ int main(int argc, char** argv) {
 
 
 
-    int fake_argc=0;
-    char** fake_argv=nullptr;
+
+    int fake_argc=1;
+    char* fake_argv[2];
+    fake_argv[0] = argv[0];
+    if(cmd_batchmode->isSet()) {
+        fake_argv[fake_argc++] = strdup("-b");
+    }
     TRint app("Ant",&fake_argc,fake_argv,nullptr,0,true);
     auto oldsig = app.GetSignalHandler();
     oldsig->Remove();
@@ -435,7 +440,8 @@ int main(int argc, char** argv) {
     if(!cmd_batchmode->isSet()) {
         if(!std_ext::system::isInteractive()) {
             LOG(INFO) << "No TTY attached. Not starting ROOT shell.";
-        } else {
+        }
+        else {
 
             mysig->Remove();
             oldsig->Add();
