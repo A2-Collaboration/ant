@@ -24,7 +24,8 @@ struct Detector_t : printable_traits {
         Trigger,
         Tagger, TaggerMicro, EPT, Moeller, PairSpec,
         CB, PID, MWPC0, MWPC1,
-        TAPS, TAPSVeto, Cherenkov
+        TAPS, TAPSVeto, Cherenkov,
+        Raw
     };
 
     // Any_t represents a collection of detectors
@@ -95,7 +96,8 @@ struct Channel_t {
         Integral, IntegralShort,
         Pedestal, PedestalShort,
         IntegralAlternate, IntegralShortAlternate,
-        BitPattern, Scaler, Counter
+        BitPattern, Scaler, Counter,
+        Raw
     };
     static bool IsIntegral(const Type_t& t);
     static const char* ToString(const Type_t& type);

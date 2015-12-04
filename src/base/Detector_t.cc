@@ -57,6 +57,8 @@ const char*ant::Detector_t::ToString(const Type_t& type)
         return "TAPSVeto";
     case Detector_t::Type_t::Trigger:
         return "Trigger";
+    case Detector_t::Type_t::Raw:
+        return "Raw";
     }
     throw std::runtime_error("Not implemented");
 }
@@ -69,7 +71,7 @@ ant::Detector_t::Any_t::operator std::string() const {
 }
 
 
-const char*ant::Channel_t::ToString(const Type_t& type)
+const char* ant::Channel_t::ToString(const Type_t& type)
 {
     switch(type) {
     case Channel_t::Type_t::BitPattern:
@@ -92,6 +94,8 @@ const char*ant::Channel_t::ToString(const Type_t& type)
         return "Pedestal";
     case Channel_t::Type_t::PedestalShort:
         return "PedestalShort";
+    case Channel_t::Type_t::Raw:
+        return "Raw";
     }
     throw std::runtime_error("Not implemented");
 }
