@@ -13,7 +13,10 @@ class PiecewiseInterval : public std::vector<interval<T>>, public printable_trai
 
 public:
 
-    using std::vector<ant::interval<T>>::vector;
+    using interval_t = ant::interval<T>;
+
+    // ctor
+    using std::vector<interval_t>::vector;
 
     /**
      * @brief Test if any interval contains x
@@ -80,8 +83,6 @@ public:
 
     friend std::istream& operator>>(std::istream& out, PiecewiseInterval<T>& t)
     {
-        // try
-
         out >> std::ws;
         if(out.peek() == '[')
             out.ignore();
@@ -97,6 +98,14 @@ public:
             out.clear();
 
         return out;
+    }
+
+    T Area() const {
+        T sum = 0.0;
+        for(const auto& i: *this) {
+            sum += i.Length();
+        }
+        return sum;
     }
 };
 
