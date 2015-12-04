@@ -5,6 +5,8 @@
 #include <list>
 
 #include "base/std_ext/string.h"
+#include "base/std_ext/misc.h"
+
 //ROOT
 #include "TFile.h"
 #include "TDirectory.h"
@@ -139,10 +141,15 @@ public:
     template<class T, typename... Args>
     T* CreateInside(Args&&... args)
     {
+
         const auto prev_Directory = gDirectory;
+        std_ext::execute_on_destroy restoreDir(
+                    [prev_Directory] () {
+            gDirectory = prev_Directory;
+        });
+
         cd();
         T* object = new T(std::forward<Args>(args)...);
-        gDirectory = prev_Directory;
 
         return object;
     }
