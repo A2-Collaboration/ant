@@ -25,7 +25,6 @@ public:
 
     template <typename T>
     T Get(const std::string& key, const T& def_value = T()) const {
-        const auto& v = GetOption(key);
         std::stringstream ss(GetOption(key));
         T ret;
         if(ss >> ret) {
