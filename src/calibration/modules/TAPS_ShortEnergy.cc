@@ -9,7 +9,7 @@
 #include "calibration/gui/CalCanvas.h"
 #include "tree/TDataRecord.h"
 #include "base/Logger.h"
-#include "base/cbtaps_display/TH2TAPS.h"
+#include "root-addons/cbtaps_display/TH2TAPS.h"
 
 #include <list>
 #include <cmath>

@@ -1,6 +1,7 @@
-#pragma once
+#ifndef TH2CRYSTALS_H
+#define TH2CRYSTALS_H
 
-#include "base/matrixstack.h"
+
 #include "TH2Poly.h"
 #include <string>
 
@@ -16,7 +17,6 @@ namespace ant {
 class TH2Crystals: public TH2Poly {
 
 protected:
-    typedef matrixstack::Vector vec;
 
     bool draw_glue_pads = false;
 
@@ -106,3 +106,4 @@ public:
 
 }
 
+#endif

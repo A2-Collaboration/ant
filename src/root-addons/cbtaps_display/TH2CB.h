@@ -1,10 +1,9 @@
-#pragma once
+#ifndef TH2CB_H
+#define TH2CB_H
 
 #include <set>
 #include <vector>
 #include <string>
-
-#include "base/matrixstack.h"
 
 #include "TH2Crystals.h"
 
@@ -179,3 +178,5 @@ public:
 
 
 }
+
+#endif

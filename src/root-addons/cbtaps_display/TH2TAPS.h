@@ -1,4 +1,5 @@
-#pragma once
+#ifndef TH2TAPS_H
+#define TH2TAPS_H
 
 #include "TH2DrawTool.h"
 #include "TH2Crystals.h"
@@ -34,3 +35,4 @@ public:
 
 }
 
+#endif

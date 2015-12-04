@@ -7,7 +7,7 @@
 #include <cmath>
 #include <iostream>
 #include "base/Logger.h"
-#include "base/cbtaps_display/TH2TAPS.h"
+#include "root-addons/cbtaps_display/TH2TAPS.h"
 #include "expconfig/ExpConfig.h"
 #include "base/std_ext/math.h"
 #include "TTree.h"

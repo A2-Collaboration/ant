@@ -1,7 +1,7 @@
 #include "base/Logger.h"
 #include "TRint.h"
 #include "base/CmdLine.h"
-#include "base/cbtaps_display/TH2CB.h"
+#include "root-addons/cbtaps_display/TH2CB.h"
 #include "TCanvas.h"
 #include "TH1D.h"
 

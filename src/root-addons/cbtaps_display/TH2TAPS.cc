@@ -7,6 +7,8 @@
 using namespace std;
 using namespace ant;
 
+using vec = ant::matrixstack::Vector;
+
 TH2TAPS::TH2TAPS(const string &name, const string &title): TH2Crystals(name,title)
 {
     Build();

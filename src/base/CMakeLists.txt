@@ -33,11 +33,6 @@ set(SRCS
   std_ext/vector.h
   std_ext/system.cc
   std_ext/convert.h
-  cbtaps_display/TH2DrawTool.cc
-  cbtaps_display/TH2Crystals.cc
-  cbtaps_display/TH2CB.cc
-  cbtaps_display/TH2TAPS.cc
-  cbtaps_display/cb_numbering.h
   detail/easylogging++.h
   detail/format.cc
   detail/CmdLine.h

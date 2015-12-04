@@ -1,5 +1,5 @@
 #include "XMasCB.h"
-#include "base/cbtaps_display/TH2CB.h"
+#include "root-addons/cbtaps_display/TH2CB.h"
 #include "base/std_ext/memory.h"
 #include "base/std_ext/string.h"
 #include "TCanvas.h"

@@ -1,4 +1,5 @@
-#pragma once
+#ifndef TH2DRAWTOOL_H
+#define TH2DRAWTOOL_H
 
 #include "base/matrixstack.h"
 #include <vector>
@@ -30,3 +31,5 @@ public:
 };
 
 }
+
+#endif

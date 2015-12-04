@@ -12,7 +12,7 @@
 
 #include "tree/TDataRecord.h"
 
-#include "base/cbtaps_display/TH2TAPS.h"
+#include "root-addons/cbtaps_display/TH2TAPS.h"
 #include "base/Logger.h"
 
 #include <list>

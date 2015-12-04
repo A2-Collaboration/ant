@@ -11,7 +11,7 @@
 
 #include "tree/TDataRecord.h"
 
-#include "base/cbtaps_display/TH2CB.h"
+#include "root-addons/cbtaps_display/TH2CB.h"
 #include "base/Logger.h"
 
 #include <list>

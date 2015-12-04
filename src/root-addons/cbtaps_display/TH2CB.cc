@@ -3,12 +3,16 @@
 #include "Rtypes.h"
 #include "TGraph.h"
 
+#include "base/matrixstack.h"
+
 #include "cb_numbering.h"
 
 #include <iostream>
 
 using namespace std;
 using namespace ant;
+
+using vec = ant::matrixstack::Vector;
 
 void TH2CB::Build()
 {
