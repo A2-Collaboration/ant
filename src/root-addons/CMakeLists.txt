@@ -1,1 +1,2 @@
+add_ant_subdirectory(analysis_codes)
 add_ant_subdirectory(smarttree)
