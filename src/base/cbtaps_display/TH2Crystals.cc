@@ -54,7 +54,7 @@ void TH2Crystals::SetElements(const TH2Crystals &h)
     }
 }
 
-TMarker*TH2Crystals::SetMarkerOnBin(const Int_t bin)
+TMarker* TH2Crystals::SetMarkerOnBin(const Int_t bin)
 {
     TList* bins = GetBins();
     if(bin < bins->GetEntries()) {
@@ -73,8 +73,11 @@ TMarker*TH2Crystals::SetMarkerOnBin(const Int_t bin)
 
 void TH2Crystals::calcCOG(TGraph* g, double& x, double& y)
 {
-    if(g->GetN()==0)
+    if(g->GetN()==0) {
+        x = std::numeric_limits<double>::quiet_NaN();
+        y = std::numeric_limits<double>::quiet_NaN();
         return;
+    }
 
     // save first point
     double first_x,first_y;
@@ -84,7 +87,7 @@ void TH2Crystals::calcCOG(TGraph* g, double& x, double& y)
     y=first_y;
 
     // loop over all points
-    double px,py;
+    double px = 0.0, py = 0.0;
     for(Int_t i=1; i<g->GetN();++i) {
 
         g->GetPoint(i,px,py);
