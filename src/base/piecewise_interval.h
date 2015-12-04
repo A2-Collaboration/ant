@@ -2,17 +2,18 @@
 
 #include "interval.h"
 #include "printable.h"
-#include <list>
+
+#include <vector>
 
 namespace ant {
 
 template <typename T>
-class PiecewiseInterval: public std::list<ant::interval<T>>, public ant::printable_traits
+class PiecewiseInterval : public std::vector<interval<T>>, public printable_traits
 {
 
 public:
 
-    using std::list<ant::interval<T>>::list;
+    using std::vector<ant::interval<T>>::vector;
 
     /**
      * @brief Test if any interval contains x
@@ -68,13 +69,34 @@ public:
         return i==this->end() && j==rhs.end();
     }
 
-    std::ostream &Print(std::ostream &stream) const {
+    std::ostream& Print(std::ostream& stream) const {
         stream << "[";
         for(const auto& i : *this) {
             stream << i;
         }
         stream << "]";
         return stream;
+    }
+
+    friend std::istream& operator>>(std::istream& out, PiecewiseInterval<T>& t)
+    {
+        // try
+
+        out >> std::ws;
+        if(out.peek() == '[')
+            out.ignore();
+        t.resize(0);
+
+        interval<T> in;
+        while(out.peek() != EOF && out >> in) {
+            t.push_back(in);
+            if(out.peek() == ';')
+                out.ignore();
+        }
+        if(!t.empty())
+            out.clear();
+
+        return out;
     }
 };
 

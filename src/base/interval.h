@@ -1,10 +1,12 @@
 #pragma once
 
-#include <algorithm>
-#include <stdexcept>
 #include "printable.h"
 #include "types.h"
+
+#include <algorithm>
+#include <stdexcept>
 #include <limits>
+#include <istream>
 
 namespace ant {
 
@@ -232,9 +234,39 @@ public:
 
 
     // printable_traits interface
-    std::ostream &Print(std::ostream &stream) const {
+    std::ostream& Print(std::ostream& stream) const {
         stream << "[" << _start << ":" << _stop << "]";
         return stream;
+    }
+
+    // the >> operator parses stringified versions
+    friend std::istream& operator>>(std::istream& out, interval<T>& t)
+    {
+        // skip leading whitespace
+        out >> std::ws;
+        // skip leading [
+        if(out.peek() == '[') {
+            out.ignore();
+        }
+        // read Start
+        if(out >> t.Start()) {
+            // maybe read stop?
+            if(out.peek() == ':' || out.peek() == '-') {
+                out.ignore();
+                out >> t.Stop();
+            }
+            else {
+                t.Stop() = t.Start();
+            }
+            // optionally have closing ]
+            // do not mark EOF as error
+            auto nextchar = out.peek();
+            if(nextchar == ']')
+                out.ignore();
+            else if(nextchar == EOF)
+                out.clear();
+        }
+        return out;
     }
 
     /**
