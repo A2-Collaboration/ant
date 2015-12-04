@@ -284,7 +284,7 @@ gui::CalibModule_traits::DoFitReturn_t Energy::GUI_Pedestals::DoFit(TH1* hist, u
 
     TH2* hist2 = dynamic_cast<TH2*>(hist);
 
-    h_projection = hist2->ProjectionX("",channel+1,channel+1);
+    h_projection = hist2->ProjectionX("h_projection",channel+1,channel+1);
 
     func->SetDefaults(h_projection);
     const auto it_fit_param = fitParameters.find(channel);

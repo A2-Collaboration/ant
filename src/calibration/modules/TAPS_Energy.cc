@@ -189,7 +189,7 @@ gui::CalibModule_traits::DoFitReturn_t TAPS_Energy::GUI_Gains::DoFit(TH1* hist, 
 
     TH2* hist2 = dynamic_cast<TH2*>(hist);
 
-    h_projection = hist2->ProjectionX("",channel+1,channel+1);
+    h_projection = hist2->ProjectionX("h_projection",channel+1,channel+1);
 
     func->SetDefaults(h_projection);
     func->SetRange(interval<double>(80,250));
