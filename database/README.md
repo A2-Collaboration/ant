@@ -5,8 +5,10 @@ This folder is left blank and the corresponding .gitignore ensures
 this. Every user should create symlinks where he wants the database
 files to be stored. Those symlinks could look like this:
 
+```
    Setup_2014_07_EPT_Prod -> ../../ant-database/Setup_2014_07_EPT_Prod
-   
+```
+
 Then ../../ant-database is outside of this repository and can, for
 example, be stored on blaster and sshfs'd to your local machine.
 
