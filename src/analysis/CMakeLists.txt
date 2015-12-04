@@ -65,6 +65,7 @@ set(ANALYSIS_PLOT
   plot/SmartHist.cc
   plot/HistogramFactories.cc
   plot/TH1Dcut.cc
+  plot/PromptRandomHist.cc
 )
 
 set(ANALYSIS_UTILS
