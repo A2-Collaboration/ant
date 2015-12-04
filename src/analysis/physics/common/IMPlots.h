@@ -1,6 +1,7 @@
 #pragma once
 
 #include "analysis/physics/Physics.h"
+#include "plot/PromptRandomHist.h"
 #include <vector>
 
 class TH1D;
@@ -12,17 +13,14 @@ namespace physics {
 
 class IMPlots : public Physics {
 public:
-    struct hist_set {
-        std::vector<TH1D*> m;
-        void Fill(unsigned ngamma, double mm);
-        hist_set(const std::string& pref, SmartHistFactory& hf, std::size_t n=8);
-        unsigned MinNGamma() const noexcept { return 2;}
-        unsigned MaxNGamma() const noexcept { return unsigned(m.size())+2; }
-    };
 
-//    hist_set cb;
-//    hist_set taps;
-    hist_set all;
+    PromptRandom::Switch prs;
+    std::vector<PromptRandom::Hist1> m;
+    unsigned MinNGamma() const noexcept { return 2;}
+    unsigned MaxNGamma() const noexcept { return unsigned(m.size())+2; }
+
+
+
 
 public:
     IMPlots(const std::string& name, PhysOptPtr opts);

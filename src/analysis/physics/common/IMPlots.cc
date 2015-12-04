@@ -1,5 +1,6 @@
 #include "IMPlots.h"
 #include "utils/combinatorics.h"
+#include "base/Logger.h"
 
 #include "TH1D.h"
 #include "TTree.h"
@@ -10,11 +11,19 @@ using namespace ant::analysis::data;
 using namespace ant::analysis::physics;
 using namespace std;
 
-IMPlots::IMPlots(const std::string& name, PhysOptPtr opts): Physics(name, opts),
-//  cb("CB",HistFac),
-//  taps("TAPS", HistFac),
-  all("All", HistFac)
+IMPlots::IMPlots(const std::string& name, PhysOptPtr opts):
+    Physics(name, opts),
+    m(8,{prs})
 {
+    prs.AddPromptRange({-2.5,2.5});
+    prs.AddRandomRange({-15,-5});
+    prs.AddRandomRange({  5,15});
+    HistFac.SetTitlePrefix("aa");
+
+    LOG(INFO) << "Promt Random Ratio = " << prs.Ratio();
+    for(size_t i=0; i<m.size();++i) {
+        m.at(i).MakeHistograms(HistFac,"IM_"+to_string(i+2),to_string(i+2)+" #gamma IM",BinSettings(1200),"IM [MeV]","");
+    }
 }
 
 template <typename iter>
@@ -32,47 +41,28 @@ void IMPlots::ProcessEvent(const data::Event& event)
 {
     const auto& photons = event.Reconstructed().Particles().Get(ParticleTypeDatabase::Photon);
 
-    for(unsigned n = all.MinNGamma(); n<all.MaxNGamma(); ++n) {
+    for(unsigned n = MinNGamma(); n<MaxNGamma(); ++n) {
         for( auto comb = utils::makeCombination(photons,n); !comb.Done(); ++comb) {
             const TLorentzVector sum = sumlv(comb.begin(), comb.end());
-            all.Fill(n,sum.M());
-        }
-    }
-}
-
-namespace ant {
-
-canvas& operator<<(canvas& c, const IMPlots::hist_set& s) {
-    for(auto& h : s.m) {
-        c << h;
-    }
-    c << endr;
-    return c;
-}
-
+                for(const auto& h : event.Reconstructed().TaggerHits()) {
+                    prs.SetTaggerHit(h->Time());
+                    m.at(n - MinNGamma()).Fill(sum.M());
+                }
+            }
+       }
 }
 
 void IMPlots::ShowResult()
 {
-    canvas c("IMPlots");
-    c << all << endc;
-}
+    canvas c(GetName());
 
-void IMPlots::hist_set::Fill(unsigned ngamma, double mm)
-{
-    m.at(ngamma-2)->Fill(mm);
-}
+    for(auto& h : m) {
 
-IMPlots::hist_set::hist_set(const std::string& pref, SmartHistFactory& hf, std::size_t n):
-    m(n-2)
-{
-    const BinSettings im(1600);
-
-    for(size_t i=0;i <n-2; ++i) {
-        m[i] = hf.makeTH1D(pref + " " + to_string(i+2) + " #gamma IM", "IM [MeV]", "", im, pref+"_"+to_string(i+2));
+        c << h.subtracted;
     }
-}
 
+    c<< endc;
+}
 
 
 Symmetric2Gamma::Symmetric2Gamma(const string& name, PhysOptPtr opts):
