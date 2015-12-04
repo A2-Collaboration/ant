@@ -63,6 +63,7 @@ public:
                 FolderPath(folderPath)
             {}
         };
+        std::string GetCurrentFile(const Range_t& range) const;
         std::list<Range_t> GetDataRanges(const std::string& calibrationID) const;
 
     protected:

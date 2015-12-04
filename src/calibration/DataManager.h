@@ -65,6 +65,7 @@ public:
                  TID& nextChangePoint);
 
     // the following methods are only useful for test cases
+    std::list<std::string> GetCalibrationIDs();
     std::size_t GetNumberOfCalibrationIDs();
     std::size_t GetNumberOfCalibrationData(const std::string& calibrationID);
 

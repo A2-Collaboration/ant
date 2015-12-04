@@ -288,6 +288,11 @@ string DataBase::OnDiskLayout::GetRangeFolder(const string& calibrationID, const
     return GetFolder(calibrationID, Type_t::DataRanges)+"/"+day+"/"+start+"-"+stop;
 }
 
+string DataBase::OnDiskLayout::GetCurrentFile(const DataBase::OnDiskLayout::Range_t& range) const
+{
+    return range.FolderPath + "/current";
+}
+
 std::list<DataBase::OnDiskLayout::Range_t> DataBase::OnDiskLayout::GetDataRanges(const string& calibrationID) const
 {
     list<Range_t> ranges;

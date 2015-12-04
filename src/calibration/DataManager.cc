@@ -86,3 +86,9 @@ void DataManager::SetOverrideToDefault(bool v)
 {
     override_as_default = v;
 }
+
+list<string> ant::calibration::DataManager::GetCalibrationIDs()
+{
+    Init();
+    return dataBase->GetCalibrationIDs();
+}
