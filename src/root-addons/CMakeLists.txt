@@ -1,0 +1,1 @@
+add_ant_subdirectory(smarttree)
