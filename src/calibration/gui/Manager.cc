@@ -208,8 +208,13 @@ Manager::RunReturn_t Manager::Run()
                 module->DisplayFit();
             }
         }
-        if(noskip)
+        if(noskip && !window->Mode.skipStoreFit) {
             module->StoreFit(state.channel);
+        }
+        else if(noskip) {
+            LOG(INFO) << "Did not store fit result for channel " << state.channel;
+        }
+        window->Mode.skipStoreFit = false;
         state.breakpoint_fit = false;
     }
 

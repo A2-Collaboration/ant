@@ -26,6 +26,7 @@ struct ManagerWindowMode {
         autoContinue(true),
         autoFinish(false),
         showEachFit(true),
+        skipStoreFit(false),
         channelStep(1),
         requestChannel(-1)
     {}
@@ -34,6 +35,7 @@ struct ManagerWindowMode {
     bool autoContinue;
     bool autoFinish;
     bool showEachFit;
+    bool skipStoreFit;
     int  channelStep;
     int  requestChannel;
 };

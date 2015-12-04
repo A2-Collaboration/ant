@@ -160,6 +160,13 @@ void ManagerWindow::CreateToolbar(TGVerticalFrame* frame)
         RunManager();
     });
 
+    auto btn_skip = new ActionButton<TGTextButton>(frm1,"Skip (m)");
+    keys[kKey_m] = btn_skip;
+    btn_skip->SetAction([this] () {
+        Mode.skipStoreFit = true;
+        RunManager();
+    });
+
 
     auto entry_gotochannel = new TGNumberEntry(frm1, 0, 3, -1,
                                                TGNumberFormat::kNESInteger,
@@ -240,6 +247,7 @@ void ManagerWindow::CreateToolbar(TGVerticalFrame* frame)
 
     add_nonfinish(frm1, btn_prev);
     add_nonfinish(frm1, btn_next);
+    add_nonfinish(frm1, btn_skip);
     add_nonfinish(frm1, btn_goto);
     add_nonfinish(frm1, entry_gotochannel);
     frm1->AddFrame(btn_finish, layout_btn);
