@@ -12,8 +12,6 @@
 #include "TLine.h"
 #include "base/interval.h"
 
-#include "analysis/physics/omega/omega.h"
-
 #include "base/iterators.h"
 #include "base/std_ext/string.h"
 
