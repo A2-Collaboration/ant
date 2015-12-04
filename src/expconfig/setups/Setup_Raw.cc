@@ -44,7 +44,7 @@ public:
 
         for(interval<unsigned> ADC_range : ADC_ranges) {
             if(!ADC_range.IsSane()) {
-                LOG(WARNING) << "Skipping invalid ADC range " << ADC_range;
+                LOG(WARNING) << "Skipping invalid Acqu ADC range " << ADC_range;
                 continue;
             }
             for(unsigned adc = ADC_range.Start(); adc <= ADC_range.Stop(); adc++) {
@@ -55,6 +55,7 @@ public:
                             adc
                             );
             }
+            LOG(INFO) << "Added Acqu ADC range " << ADC_range;
         }
 
     }
