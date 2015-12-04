@@ -9,15 +9,17 @@ macro(add_ant_executable name)
 endmacro()
 
 add_ant_executable(Ant)
-add_ant_executable(Ant-calib)
-add_ant_executable(Ant-cocktail)
 add_ant_executable(Ant-pluto)
-add_ant_executable(Ant-chain)
-add_ant_executable(Ant-addTID)
-add_ant_executable(Ant-info)
+add_ant_executable(Ant-cocktail)
+
+add_ant_executable(Ant-calib)
 add_ant_executable(Ant-calib-regedit)
 add_ant_executable(Ant-calib-editor)
 add_ant_executable(Ant-calib-viewer)
+
+add_ant_executable(Ant-chain)
+add_ant_executable(Ant-addTID)
+add_ant_executable(Ant-info)
 
 option(OmegaTools "Build Omega Tools" OFF)
 
