@@ -22,8 +22,6 @@ public:
     Setup_Raw(const std::string& name, SetupOptPtr opt) : Setup(name, opt)
     {
         ADC_ranges = Options->Get<decltype(ADC_ranges)>("AcquADC");
-        if(ADC_ranges.empty())
-            LOG(ERROR) << "No Acqu ADC numbers supplied. Won't write anything.";
     }
 
     virtual double GetElectronBeamEnergy() const override {
@@ -40,7 +38,7 @@ public:
                        std::vector<scaler_mapping_t>&) const override
     {
         // create a 1:1 mapping to LogicalChannels
-        // the Detector is set to "Raw"
+        // the Detector/ChannelType is set to "Raw"
 
         for(interval<unsigned> ADC_range : ADC_ranges) {
             if(!ADC_range.IsSane()) {
