@@ -29,8 +29,6 @@ namespace data {
 
 namespace input {
 
-class TreeManager;
-
 class PlutoReader: public DataReader {
 protected:
 

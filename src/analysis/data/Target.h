@@ -12,19 +12,13 @@ namespace ant {
 namespace analysis {
 namespace data {
 
-class Target_t : public printable_traits {
-protected:
+struct Target_t : printable_traits {
 
-    TVector3 vertex;
-
-public:
-
-    Target_t( const TVector3& vertex_ = TVector3()):
-        vertex(vertex_)
+    Target_t( const TVector3& vertex = TVector3()):
+        Vertex(vertex)
     {}
 
-    TVector3  Vertex() const { return vertex; }
-    TVector3& Vertex()       { return vertex; }
+    TVector3 Vertex;
 
     std::ostream& Print(std::ostream& stream) const;
 };

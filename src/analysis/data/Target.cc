@@ -9,7 +9,7 @@ using namespace std;
 ostream& Target_t::Print(ostream& stream) const
 {
     stream << "Target"
-           << "(Vertex=" << vertex
+           << "(Vertex=" << Vertex
            << ")";
     return stream;
 }

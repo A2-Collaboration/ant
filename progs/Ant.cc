@@ -8,6 +8,7 @@
 #include "analysis/input/ant/AntReader.h"
 #include "analysis/input/goat/GoatReader.h"
 #include "analysis/input/pluto/PlutoReader.h"
+#include "analysis/input/geant/GeantReader.h"
 #include "analysis/utils/ParticleID.h"
 #include "analysis/physics/PhysicsManager.h"
 
@@ -283,6 +284,8 @@ int main(int argc, char** argv) {
 
     readers.push_back(std_ext::make_unique<analysis::input::PlutoReader>(rootfiles, tagger));
     readers.push_back(std_ext::make_unique<analysis::input::GoatReader>(rootfiles));
+    readers.push_back(std_ext::make_unique<analysis::input::GeantReader>(rootfiles));
+
 
     // create the list of enabled calibrations here,
     // because now the readers (and underlying unpackers) did the work
