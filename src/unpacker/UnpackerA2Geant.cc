@@ -25,16 +25,16 @@ UnpackerA2Geant::~UnpackerA2Geant() {
 bool UnpackerA2Geant::OpenFile(const string& filename)
 {
     // open a root file, ignore error silently
-    filemanager = std_ext::make_unique<WrapTFileInput>();
+    inputfile = std_ext::make_unique<WrapTFileInput>();
 
     try {
-        filemanager->OpenFile(filename);
+        inputfile->OpenFile(filename);
     } catch (const std::runtime_error&) {
         return false;
     }
 
     // setup the "expected" A2 geant tree
-    if(!filemanager->GetObject("h12", geant))
+    if(!inputfile->GetObject("h12", geant))
         return false;
 
     geant->SetBranchAddress("nhits",&fnhits);
@@ -72,7 +72,7 @@ bool UnpackerA2Geant::OpenFile(const string& filename)
 
     TTree* tid_tree = nullptr;
 
-    if(filemanager->GetObject("h12_tid", tid_tree)) {
+    if(inputfile->GetObject("h12_tid", tid_tree)) {
         if(tid_tree->GetEntries() != geant->GetEntries()) {
             throw Exception("Geant Tree and TID Tree size missmatch");
         }

@@ -41,7 +41,7 @@ public:
 private:
     TID* id = nullptr;
 
-    std::unique_ptr<WrapTFileInput> filemanager;
+    std::unique_ptr<WrapTFileInput> inputfile;
     TTree* geant;
 
     std::unique_ptr<THeaderInfo> headerInfo;
