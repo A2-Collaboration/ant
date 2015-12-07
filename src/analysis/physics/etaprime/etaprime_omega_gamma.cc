@@ -214,9 +214,9 @@ void EtapOmegaG::ref_TTree_t::SetBranches()
 
 void EtapOmegaG::ProcessEvent(const data::Event& event)
 {
-    const auto& data = event.Reconstructed();
+    const auto& data = event.Reconstructed;
 
-    auto& particletree = event.MCTrue().ParticleTree();
+    auto& particletree = event.MCTrue.ParticleTree;
 
     ProcessRef(particletree, data);
     ProcessSig(particletree, data);
@@ -247,11 +247,11 @@ void EtapOmegaG::ProcessSig(const data::ParticleTree_t& particletree,
 {
     TH1D* steps = sig_hists.Steps;
 
-    const auto nParticles = data.Particles().GetAll().size();
+    const auto nParticles = data.Particles.GetAll().size();
 
     steps->Fill("Seen",1);
 
-    if(data.TriggerInfos().CBEenergySum() <= 550)
+    if(data.Trigger.CBEnergySum <= 550)
         return;
     steps->Fill("CBESum>550MeV",1);
 
@@ -259,8 +259,8 @@ void EtapOmegaG::ProcessSig(const data::ParticleTree_t& particletree,
         return;
     steps->Fill("nParticles==5",1);
 
-    const auto& photons = data.Particles().Get(ParticleTypeDatabase::Photon);
-    const auto& protons = data.Particles().Get(ParticleTypeDatabase::Proton);
+    const auto& photons = data.Particles.Get(ParticleTypeDatabase::Photon);
+    const auto& protons = data.Particles.Get(ParticleTypeDatabase::Proton);
 
     const auto nPhotons = photons.size();
     const auto nProtons = protons.size();
@@ -295,7 +295,7 @@ void EtapOmegaG::ProcessSig(const data::ParticleTree_t& particletree,
     h.gggg->Fill(photon_sum.M());
 
     // use tagged photon
-    for(const auto& th : data.TaggerHits()) {
+    for(const auto& th : data.TaggerHits) {
         /// \todo make prompt/random cut
         const TLorentzVector beam_target = th->PhotonBeam() + TLorentzVector(0, 0, 0, ParticleTypeDatabase::Proton.Mass());
         const TLorentzVector mm = beam_target - photon_sum;
@@ -432,7 +432,7 @@ void EtapOmegaG::ProcessSig(const data::ParticleTree_t& particletree,
     }
 
     // use tagged photon
-    for(const auto& th : data.TaggerHits()) {
+    for(const auto& th : data.TaggerHits) {
         /// \todo make prompt/random cut
         const TLorentzVector beam_target = th->PhotonBeam() + TLorentzVector(0, 0, 0, ParticleTypeDatabase::Proton.Mass());
         const TLorentzVector mm = beam_target - result.EtaPrime;
@@ -468,11 +468,11 @@ void EtapOmegaG::ProcessRef(const data::ParticleTree_t& particletree,
 {
     TH1D* steps = ref_hists.Steps;
 
-    const auto nParticles = data.Particles().GetAll().size();
+    const auto nParticles = data.Particles.GetAll().size();
 
     steps->Fill("Seen",1);
 
-    if(data.TriggerInfos().CBEenergySum() <= 550)
+    if(data.Trigger.CBEnergySum <= 550)
         return;
     steps->Fill("CBESum>550MeV",1);
 
@@ -480,8 +480,8 @@ void EtapOmegaG::ProcessRef(const data::ParticleTree_t& particletree,
         return;
     steps->Fill("nParticles==3",1);
 
-    const auto& photons = data.Particles().Get(ParticleTypeDatabase::Photon);
-    const auto& protons = data.Particles().Get(ParticleTypeDatabase::Proton);
+    const auto& photons = data.Particles.Get(ParticleTypeDatabase::Photon);
+    const auto& protons = data.Particles.Get(ParticleTypeDatabase::Proton);
 
     const auto nPhotons = photons.size();
     const auto nProtons = protons.size();
@@ -537,7 +537,7 @@ void EtapOmegaG::ProcessRef(const data::ParticleTree_t& particletree,
     }
 
     // use tagged photon
-    for(const auto& th : data.TaggerHits()) {
+    for(const auto& th : data.TaggerHits) {
         /// \todo make prompt/random cut
         const TLorentzVector beam_target = th->PhotonBeam() + TLorentzVector(0, 0, 0, ParticleTypeDatabase::Proton.Mass());
         const TLorentzVector mm = beam_target - photon_sum;

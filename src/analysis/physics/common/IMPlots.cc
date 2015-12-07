@@ -39,12 +39,12 @@ TLorentzVector sumlv(iter start, iter end) {
 
 void IMPlots::ProcessEvent(const data::Event& event)
 {
-    const auto& photons = event.Reconstructed().Particles().Get(ParticleTypeDatabase::Photon);
+    const auto& photons = event.Reconstructed.Particles.Get(ParticleTypeDatabase::Photon);
 
     for(unsigned n = MinNGamma(); n<MaxNGamma(); ++n) {
         for( auto comb = utils::makeCombination(photons,n); !comb.Done(); ++comb) {
             const TLorentzVector sum = sumlv(comb.begin(), comb.end());
-                for(const auto& h : event.Reconstructed().TaggerHits()) {
+                for(const auto& h : event.Reconstructed.TaggerHits) {
                     prs.SetTaggerHit(h->Time());
                     m.at(n - MinNGamma()).Fill(sum.M());
                 }
@@ -89,7 +89,7 @@ Symmetric2Gamma::~Symmetric2Gamma()
 
 void Symmetric2Gamma::ProcessEvent(const data::Event& event)
 {
-    const auto& photons = event.Reconstructed().Particles().Get(ParticleTypeDatabase::Photon);
+    const auto& photons = event.Reconstructed.Particles.Get(ParticleTypeDatabase::Photon);
     for( auto comb = utils::makeCombination(photons,2); !comb.Done(); ++comb) {
         const ParticlePtr& g1 = comb.at(0);
         const ParticlePtr& g2 = comb.at(1);

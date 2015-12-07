@@ -66,7 +66,7 @@ TAPS_ShortEnergy::ThePhysics::ThePhysics(const string& name, shared_ptr<expconfi
 void TAPS_ShortEnergy::ThePhysics::ProcessEvent(const Event& event)
 {
     // pedestals
-    for(const Cluster& cluster : event.Reconstructed().AllClusters()) {
+    for(const Cluster& cluster : event.Reconstructed.AllClusters) {
         if(!(cluster.Detector & Detector_t::Type_t::TAPS))
             continue;
         for(const Cluster::Hit& clusterhit : cluster.Hits) {
@@ -82,7 +82,7 @@ void TAPS_ShortEnergy::ThePhysics::ProcessEvent(const Event& event)
         }
     }
 
-    for(const auto& c : event.Reconstructed().Candidates()) {
+    for(const auto& c : event.Reconstructed.Candidates) {
         if(c->VetoEnergy() < 0.5) {
             const auto& cluster = c->FindCaloCluster();
 

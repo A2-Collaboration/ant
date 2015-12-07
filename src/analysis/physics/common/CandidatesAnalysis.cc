@@ -39,7 +39,7 @@ CandidatesAnalysis::CandidatesAnalysis(const std::string& name, PhysOptPtr opts)
 
 void CandidatesAnalysis::ProcessEvent(const Event &event)
 {
-    const auto& candidates = event.Reconstructed().Candidates();
+    const auto& candidates = event.Reconstructed.Candidates;
 
     nCandidatesEvent->Fill(candidates.size());
 

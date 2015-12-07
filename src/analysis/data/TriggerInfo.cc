@@ -5,18 +5,18 @@ using namespace std;
 
 ostream& DAQError::Print(ostream& stream) const
 {
-    stream << "DAQError(Module ID=" << module_id << " ModuleIndex=" << module_index << " ErrorCode=" << error << ")";
+    stream << "DAQError(Module ID=" << ModuleID << " ModuleIndex=" << ModuleIndex << " ErrorCode=" << ErrorCode << ")";
     return stream;
 }
 
 ostream &TriggerInfo::Print(ostream& stream) const
 {
     stream << "TriggerInfo"
-           << "(EventId=" << event_id
-           << " CB Energy Sum=" << cb_energy_sum << " MeV"
-           << " Multipicity=" << cluster_multiplicity
+           << "(EventID=" << EventID
+           << " CB Energy Sum=" << CBEnergySum << " MeV"
+           << " Multipicity=" << ClusterMultiplicity
            << ")";
-    for(auto& error : errors) {
+    for(auto& error : Errors) {
         stream << "\t" << error << "\n";
     }
     return stream;

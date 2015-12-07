@@ -63,10 +63,10 @@ TAPSVeto_Energy::ThePhysics::ThePhysics(const string& name, unsigned nChannels):
 
 void TAPSVeto_Energy::ThePhysics::ProcessEvent(const Event& event)
 {
-    const auto& cands = event.Reconstructed().Candidates();
+    const auto& cands = event.Reconstructed.Candidates;
 
     // pedestals
-    for(const Cluster& cluster : event.Reconstructed().AllClusters()) {
+    for(const Cluster& cluster : event.Reconstructed.AllClusters) {
         if(!(cluster.Detector & Detector_t::Type_t::TAPSVeto))
             continue;
         for(const Cluster::Hit& clusterhit : cluster.Hits) {

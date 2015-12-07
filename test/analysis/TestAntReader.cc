@@ -61,7 +61,7 @@ void drive_reader(unique_ptr<AntReader> unpacker_reader, bool no_events_expected
 
         if(unpacker_reader->ReadNextEvent(event)) {
             nEvents++;
-            nCandidates += event.Reconstructed().Candidates().size();
+            nCandidates += event.Reconstructed.Candidates.size();
             flag = true;
         }
 

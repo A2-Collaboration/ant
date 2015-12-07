@@ -52,8 +52,8 @@ struct TestPhysics : Physics
     virtual void ProcessEvent(const data::Event& event) override
     {
         seenEvents++;
-        seenCandidates += event.Reconstructed().Candidates().size();
-        seenMCTrue += event.MCTrue().Particles().GetAll().size();
+        seenCandidates += event.Reconstructed.Candidates.size();
+        seenMCTrue += event.MCTrue.Particles.GetAll().size();
     }
     virtual void Finish() override
     {

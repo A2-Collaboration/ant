@@ -32,9 +32,9 @@ Event Converter::Convert(const TEvent &event)
 {
     Event antevent;
 
-    Copy(event.Candidates,     antevent.Reconstructed().Candidates());
-    Copy(event.Tagger.Hits,    antevent.Reconstructed().TaggerHits());
-    Copy(event.AllClusters, antevent.Reconstructed().AllClusters());
+    Copy(event.Candidates,  antevent.Reconstructed.Candidates);
+    Copy(event.Tagger.Hits, antevent.Reconstructed.TaggerHits);
+    Copy(event.AllClusters, antevent.Reconstructed.AllClusters);
 
     /// @todo The multiplicity is a much harder business, see acqu/root/src/TA2BasePhysics.cc
     /// the code there might only apply to the old trigger system before 2012
@@ -50,9 +50,9 @@ Event Converter::Convert(const TEvent &event)
         }
     }
 
-    auto& triggerinfos = antevent.Reconstructed().TriggerInfos();
-    triggerinfos.EventID() = event.ID;
-    triggerinfos.CBEenergySum() = Esum;
+    auto& triggerinfos = antevent.Reconstructed.Trigger;
+    triggerinfos.EventID = event.ID;
+    triggerinfos.CBEnergySum = Esum;
 
     return antevent;
 }

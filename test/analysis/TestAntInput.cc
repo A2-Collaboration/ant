@@ -70,7 +70,7 @@ void dotest() {
 
     cout << antevent << endl;
 
-    const analysis::data::CandidateList& cand = antevent.Reconstructed().Candidates();
+    const analysis::data::CandidateList& cand = antevent.Reconstructed.Candidates;
 
     REQUIRE(cand.size() == 2);
     /// \todo Write more REQUIRE stuff here

@@ -36,7 +36,7 @@ PID_PhiAngle::ThePhysics::ThePhysics(const string& name, unsigned nChannels) :
 
 void PID_PhiAngle::ThePhysics::ProcessEvent(const Event& event)
 {
-    const auto& cands = event.Reconstructed().Candidates();
+    const auto& cands = event.Reconstructed.Candidates;
 
     // search for events with
     // one cluster in CB, one cluster in PID
@@ -71,7 +71,7 @@ void PID_PhiAngle::ThePhysics::ProcessEvent(const Event& event)
     }
 
     /// \todo search all clusters, leave candidates alone
-    for(const Cluster& cl : event.Reconstructed().AllClusters()) {
+    for(const Cluster& cl : event.Reconstructed.AllClusters) {
         if(cl.Detector != Detector_t::Type_t::PID)
             continue;
         if(!isfinite(cl.Energy) || !isfinite(cl.Time))

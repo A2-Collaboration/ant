@@ -67,10 +67,10 @@ TAPS_Energy::ThePhysics::ThePhysics(const string& name, shared_ptr<expconfig::de
 
 void TAPS_Energy::ThePhysics::ProcessEvent(const Event& event)
 {
-    const auto& cands = event.Reconstructed().Candidates();
+    const auto& cands = event.Reconstructed.Candidates;
 
     // pedestals
-    for(const Cluster& cluster : event.Reconstructed().AllClusters()) {
+    for(const Cluster& cluster : event.Reconstructed.AllClusters) {
         if(!(cluster.Detector & Detector_t::Type_t::TAPS))
             continue;
         for(const Cluster::Hit& clusterhit : cluster.Hits) {
@@ -182,9 +182,9 @@ void TAPS_Energy::GUI_Gains::InitGUI(gui::ManagerWindow_traits* window)
     h_relative = new TH1D("h_relative","Relative change from previous gains",GetNumberOfChannels(),0,GetNumberOfChannels());
     h_relative->SetXTitle("Channel Number");
     h_relative->SetYTitle("Relative change / %");
-    
+
     h_relative_taps = new TH2TAPS("h_relative_taps",h_relative->GetTitle());
-    h_peaks_taps = new TH2TAPS("h_peaks_taps",h_peaks->GetTitle());    
+    h_peaks_taps = new TH2TAPS("h_peaks_taps",h_peaks->GetTitle());
 }
 
 gui::CalibModule_traits::DoFitReturn_t TAPS_Energy::GUI_Gains::DoFit(TH1* hist, unsigned channel)

@@ -56,11 +56,11 @@ McTrue3Pi0::McTrue3Pi0(const std::string& name, PhysOptPtr opts) :
 
 void McTrue3Pi0::ProcessEvent(const data::Event& event)
 {
-    const auto& mcdata = event.MCTrue();
+    const auto& mcdata = event.MCTrue;
 
-    const auto& pions  = mcdata.Intermediates().Get(ParticleTypeDatabase::Pi0);
-    const auto& protons = mcdata.Particles().Get(ParticleTypeDatabase::Proton);
-    const auto& photons = mcdata.Particles().Get(ParticleTypeDatabase::Photon);
+    const auto& pions  = mcdata.Intermediates.Get(ParticleTypeDatabase::Pi0);
+    const auto& protons = mcdata.Particles.Get(ParticleTypeDatabase::Proton);
+    const auto& photons = mcdata.Particles.Get(ParticleTypeDatabase::Photon);
 
     if (pions.size() == 3 && protons.size() == 1 && photons.size() == 6)
     {

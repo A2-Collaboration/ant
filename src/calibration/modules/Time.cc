@@ -151,15 +151,15 @@ Time::ThePhysics::ThePhysics(const string& name, const string& histName,
 
 void Time::ThePhysics::ProcessEvent(const Event& event)
 {
-    //handle Tagger differently
+    // handle Tagger differently
     if(isTagger)
     {
-        for (const auto& tHit: event.Reconstructed().TaggerHits())
+        for (const auto& tHit: event.Reconstructed.TaggerHits)
             hTime->Fill(tHit->Time(),tHit->Channel());
         return;
     }
 
-    for( const auto& cand: event.Reconstructed().Candidates())
+    for( const auto& cand: event.Reconstructed.Candidates)
         for (const auto& cluster: cand->Clusters)
             if (cluster.Detector == detector->Type)
                 hTime->Fill(cluster.Time,cluster.CentralElement);

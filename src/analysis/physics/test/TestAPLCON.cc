@@ -231,30 +231,30 @@ void TestAPLCON::ProcessEvent(const Event &event)
 {
 
 
-    for(auto& cand : event.Reconstructed().Candidates()) {
+    for(auto& cand : event.Reconstructed.Candidates) {
         banana->Fill(cand->ClusterEnergy(), cand->VetoEnergy());
     }
 
-    for(auto& particle : event.Reconstructed().Particles().GetAll()) {
+    for(auto& particle : event.Reconstructed.Particles.GetAll()) {
         particles->Fill(particle->Type().PrintName().c_str(), 1);
     }
 
-    ntagged->Fill(event.Reconstructed().TaggerHits().size());
+    ntagged->Fill(event.Reconstructed.TaggerHits.size());
 
-    cbesum->Fill(event.Reconstructed().TriggerInfos().CBEenergySum());
+    cbesum->Fill(event.Reconstructed.Trigger.CBEnergySum);
 
     for( auto& t : ParticleTypeDatabase::DetectableTypes() ) {
         try {
-            numParticleType.at(t)->Fill(event.Reconstructed().Particles().Get(*t).size());
+            numParticleType.at(t)->Fill(event.Reconstructed.Particles.Get(*t).size());
         } catch (...) {}
     }
 
-    for(const auto& taggerhit : event.MCTrue().TaggerHits()) {
+    for(const auto& taggerhit : event.MCTrue.TaggerHits) {
         tagger->Fill(taggerhit->PhotonEnergy());
 
         // find the photons and one proton
         size_t foundPhotons = 0;
-        for(const auto& p : event.MCTrue().Particles().GetAll()) {
+        for(const auto& p : event.MCTrue.Particles.GetAll()) {
             if(p->Type() == ParticleTypeDatabase::Proton) {
                 proton.SetFromVector(*p);
             }

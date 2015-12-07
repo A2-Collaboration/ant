@@ -32,10 +32,10 @@ T inc(T x) {
 
 void ExtractTimings::ProcessEvent(const data::Event& event)
 {
-    const auto& photons = event.Reconstructed().Particles().Get(ParticleTypeDatabase::Photon);
+    const auto& photons = event.Reconstructed.Particles.Get(ParticleTypeDatabase::Photon);
 
     // EPT-CB and EPT-TAPS
-    for(const auto& th : event.Reconstructed().TaggerHits()) {
+    for(const auto& th : event.Reconstructed.TaggerHits) {
 
         EPT->Fill(th->Time());
 

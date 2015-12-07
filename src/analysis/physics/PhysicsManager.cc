@@ -114,7 +114,7 @@ void PhysicsManager::ProcessEventBuffer(
             return;
 
         auto& event = eventbuffer.front();
-        auto& eventid = event->Reconstructed().TriggerInfos().EventID();
+        auto& eventid = event->Reconstructed.Trigger.EventID;
 
         if(slowcontrol_mgr.hasRequests() && (eventid > runUntil))
             break;
@@ -224,11 +224,11 @@ void PhysicsManager::ProcessEvent(unique_ptr<data::Event> event)
 {
     if(particleID) {
         // run particle ID for Reconstructed candidates
-        auto& reconstructed = event->Reconstructed();
-        for(const auto& cand : reconstructed.Candidates()) {
+        auto& reconstructed = event->Reconstructed;
+        for(const auto& cand : reconstructed.Candidates) {
             auto particle = particleID->Process(cand);
             if(particle)
-                reconstructed.Particles().AddParticle(particle);
+                reconstructed.Particles.AddParticle(particle);
         }
     }
 

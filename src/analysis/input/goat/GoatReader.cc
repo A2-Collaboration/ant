@@ -49,7 +49,7 @@ Detector_t::Any_t IntToDetector_t(const int& a) {
 void GoatReader::CopyTagger(Event& event)
 {
     for( Int_t i=0; i<tagger.GetNTagged(); ++i) {
-        event.Reconstructed().TaggerHits().emplace_back(
+        event.Reconstructed.TaggerHits.emplace_back(
                     TaggerHitPtr(new TaggerHit(
                                      tagger.GetTaggedChannel(i),
                                      tagger.GetTaggedEnergy(i),
@@ -60,13 +60,13 @@ void GoatReader::CopyTagger(Event& event)
 
 void GoatReader::CopyTrigger(Event& event)
 {
-    TriggerInfo& ti = event.Reconstructed().TriggerInfos();
+    TriggerInfo& ti = event.Reconstructed.Trigger;
 
-    ti.CBEenergySum() = trigger.GetEnergySum();
-    ti.Multiplicity() = trigger.GetMultiplicity();
+    ti.CBEnergySum = trigger.GetEnergySum();
+    ti.ClusterMultiplicity = trigger.GetMultiplicity();
 
     for( int err=0; err < trigger.GetNErrors(); ++err) {
-        ti.Errors().emplace_back(
+        ti.Errors.emplace_back(
                     DAQError(
                         trigger.GetErrorModuleID()[err],
                         trigger.GetErrorModuleIndex()[err],
@@ -88,7 +88,7 @@ void GoatReader::CopyTracks(Event& event)
 {
     for(Int_t i=0; i< tracks.GetNTracks(); ++i) {
 
-        event.Reconstructed().Candidates().emplace_back(
+        event.Reconstructed.Candidates.emplace_back(
                     CandidatePtr( new Candidate(
                                   tracks.GetClusterEnergy(i),
                                   tracks.GetTheta(i),
@@ -112,9 +112,9 @@ void GoatReader::CopyParticles(Event& event, ParticleInput& input_module,
         if(trackIndex == -1) {
             cerr << "No Track for this particle!!" << endl;
         } else {
-            const auto& track = event.Reconstructed().Candidates().at(trackIndex);
+            const auto& track = event.Reconstructed.Candidates.at(trackIndex);
 
-            event.Reconstructed().Particles().AddParticle(
+            event.Reconstructed.Particles.AddParticle(
                     std::make_shared<Particle>(type,track));
         }
 

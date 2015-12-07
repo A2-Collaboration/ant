@@ -13,9 +13,9 @@ std::ostream &Event::Print(std::ostream &stream) const
     stream << "----- Event ---------------------------------\n";
 
     stream << "== Reconstructed ==\n";
-    stream << reconstructed << '\n';
+    stream << Reconstructed << '\n';
     stream << "== MC True ==\n";
-    stream << mctrue << '\n';
+    stream << MCTrue << '\n';
 
     stream << "---------------------------------------------\n";
 
@@ -27,22 +27,22 @@ std::ostream &Event::Print(std::ostream &stream) const
 std::ostream &Event::Data::Print(std::ostream &stream) const
 {
     stream << "-- Particles --\n";
-    stream << particles << "\n";
+    stream << Particles << "\n";
     stream << "-- Intermediates --\n";
-    stream << intermediates << "\n";
+    stream << Intermediates << "\n";
 
     stream << "-- Candidates --\n";
-    for( auto& candidate : candidates ) {
+    for( auto& candidate : Candidates ) {
         stream << *candidate << '\n';
     }
 
     stream << "-- Tagger --\n";
-    for( auto& taggerhit : taggerhits ) {
+    for( auto& taggerhit : TaggerHits ) {
         stream << *taggerhit << '\n';
     }
 
     stream << "-- Trigger --\n";
-    cout << triggerinfo << "\n";
+    cout << Trigger << "\n";
 
     return stream;
 

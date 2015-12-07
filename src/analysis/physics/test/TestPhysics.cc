@@ -42,9 +42,9 @@ void ParticleCombinatoricsTest::ProcessEvent(const Event &event)
 
 {
 
-    const ParticleList& photons = event.Reconstructed().Particles().Get(ParticleTypeDatabase::Photon);
-    const ParticleList& protons = event.Reconstructed().Particles().Get(ParticleTypeDatabase::Proton);
-    const ParticleList& all = event.Reconstructed().Particles().GetAll();
+    const ParticleList& photons = event.Reconstructed.Particles.Get(ParticleTypeDatabase::Photon);
+    const ParticleList& protons = event.Reconstructed.Particles.Get(ParticleTypeDatabase::Proton);
+    const ParticleList& all = event.Reconstructed.Particles.GetAll();
 
     for( auto& particle : all ) {
 

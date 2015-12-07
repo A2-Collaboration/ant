@@ -161,8 +161,8 @@ Etap3pi0::result_t Etap3pi0::MakeMC3pi0(const Event::Data& mcEvt )
     result.Chi2_intermediate = 0;
     result.Chi2_mother = 0;
 
-    const auto& pions = mcEvt.Intermediates().Get(ParticleTypeDatabase::Pi0);
-    const auto& etaprime = mcEvt.Intermediates().Get(ParticleTypeDatabase::EtaPrime);
+    const auto& pions = mcEvt.Intermediates.Get(ParticleTypeDatabase::Pi0);
+    const auto& etaprime = mcEvt.Intermediates.Get(ParticleTypeDatabase::EtaPrime);
 
     result.success = ( pions.size() == 3) && (etaprime.size() == 1 );
 
@@ -314,7 +314,7 @@ Etap3pi0::result_t Etap3pi0::MakeEta2pi0(const ParticleList& photons)
 
 bool Etap3pi0::MakeMCProton(const data::Event::Data& mcdata, ParticlePtr& proton)
 {
-   const auto& protonlist = mcdata.Particles().Get(ParticleTypeDatabase::Proton);
+   const auto& protonlist = mcdata.Particles.Get(ParticleTypeDatabase::Proton);
    if (protonlist.size() != 1)
        return false;
    proton = protonlist.at(0);
@@ -323,26 +323,26 @@ bool Etap3pi0::MakeMCProton(const data::Event::Data& mcdata, ParticlePtr& proton
 
 void Etap3pi0::ProcessEvent(const data::Event& event)
 {
-    const auto& data   = event.Reconstructed();
-    const auto& mcdata = event.MCTrue();
+    const auto& data   = event.Reconstructed;
+    const auto& mcdata = event.MCTrue;
 
 
-    if ( mcdata.ParticleTree() )
+    if ( mcdata.ParticleTree )
     {
-        if (mcdata.ParticleTree()->IsEqual(signal_tree, utils::ParticleTools::MatchByParticleName))
-            hists.at("channels").at("mc_true")->Fill(utils::ParticleTools::GetDecayString(mcdata.ParticleTree()).c_str(),1);
-        if (mcdata.ParticleTree()->IsEqual(reference_tree, utils::ParticleTools::MatchByParticleName))
-            hists.at("channels").at("mc_true")->Fill(utils::ParticleTools::GetDecayString(mcdata.ParticleTree()).c_str(),1);
-        if (mcdata.ParticleTree()->IsEqual(bkg_tree, utils::ParticleTools::MatchByParticleName))
-            hists.at("channels").at("mc_true")->Fill(utils::ParticleTools::GetDecayString(mcdata.ParticleTree()).c_str(),1);
+        if (mcdata.ParticleTree->IsEqual(signal_tree, utils::ParticleTools::MatchByParticleName))
+            hists.at("channels").at("mc_true")->Fill(utils::ParticleTools::GetDecayString(mcdata.ParticleTree).c_str(),1);
+        if (mcdata.ParticleTree->IsEqual(reference_tree, utils::ParticleTools::MatchByParticleName))
+            hists.at("channels").at("mc_true")->Fill(utils::ParticleTools::GetDecayString(mcdata.ParticleTree).c_str(),1);
+        if (mcdata.ParticleTree->IsEqual(bkg_tree, utils::ParticleTools::MatchByParticleName))
+            hists.at("channels").at("mc_true")->Fill(utils::ParticleTools::GetDecayString(mcdata.ParticleTree).c_str(),1);
     }
 
-    for (const auto& p: data.Particles().GetAll())
+    for (const auto& p: data.Particles.GetAll())
         hists["P"]["all"]->Fill(p->Theta()*TMath::RadToDeg(),p->Ek());
 
-    const auto& photons            = data.Particles().Get(ParticleTypeDatabase::Photon);
-    const auto& protonCandidates   = data.Particles().Get(ParticleTypeDatabase::Proton);
-    const auto& mcprotons          = mcdata.Particles().Get(ParticleTypeDatabase::Proton);
+    const auto& photons            = data.Particles.Get(ParticleTypeDatabase::Photon);
+    const auto& protonCandidates   = data.Particles.Get(ParticleTypeDatabase::Proton);
+    const auto& mcprotons          = mcdata.Particles.Get(ParticleTypeDatabase::Proton);
 
     for (const auto& ph: photons)
         hists["P"]["gamma_all"]->Fill(ph->Theta()*TMath::RadToDeg(),ph->Ek());
@@ -359,10 +359,10 @@ void Etap3pi0::ProcessEvent(const data::Event& event)
 
 
 
-    const auto& mcphotons = mcdata.Particles().Get(ParticleTypeDatabase::Photon);
+    const auto& mcphotons = mcdata.Particles.Get(ParticleTypeDatabase::Photon);
 
     FillCrossChecks(photons,mcphotons);
-    hists.at("xc").at("NTagger")->Fill(data.TaggerHits().size());
+    hists.at("xc").at("NTagger")->Fill(data.TaggerHits.size());
 
     hists.at("steps").at("IM_base")->Fill(MakeLoretzSum(photons).M());
 
@@ -376,10 +376,10 @@ void Etap3pi0::ProcessEvent(const data::Event& event)
         hists["P"]["gamma_6"]->Fill(ph->Theta()*TMath::RadToDeg(),ph->Ek());
 
     hists.at("steps").at("evcount")->Fill("req. 6 #gamma",1);
-    hists.at("channels").at("nocut")->Fill(utils::ParticleTools::GetDecayString(mcdata.ParticleTree()).c_str(),1);
+    hists.at("channels").at("nocut")->Fill(utils::ParticleTools::GetDecayString(mcdata.ParticleTree).c_str(),1);
 
     // we need a tagger hit
-    if (data.TaggerHits().size() != 1)
+    if (data.TaggerHits.size() != 1)
         return;
     hists.at("steps").at("evcount")->Fill("req. 1 tagger hit",1);
     //vector<ParticlePtr> protons;
@@ -439,7 +439,7 @@ void Etap3pi0::ProcessEvent(const data::Event& event)
         hists["steps"]["IM_ch2_sig"]->Fill(result_3pi0.mother.M());
         FillIm(result_3pi0, ParticleTypeDatabase::Pi0, (TH1D*) hists.at("signal").at("IM_pi0"));
         FillImEtaPrime(result_3pi0,(TH1D*)hists.at("signal").at("IM_etap"));
-        hists.at("channels").at("signal_chi2")->Fill(utils::ParticleTools::GetDecayString(mcdata.ParticleTree()).c_str(),1);
+        hists.at("channels").at("signal_chi2")->Fill(utils::ParticleTools::GetDecayString(mcdata.ParticleTree).c_str(),1);
         hists.at("steps").at("evcount")->Fill("#chi^{2} cut signal",1);
 
         double dphi = TMath::RadToDeg() *(result_3pi0.mother.Phi() - mcproton->Phi());
@@ -453,7 +453,7 @@ void Etap3pi0::ProcessEvent(const data::Event& event)
             {
                 hists["steps"]["IM_ch2_sig_copl"]->Fill(result_3pi0.mother.M());
                 hists.at("steps").at("evcount")->Fill("#chi^{2}(sig) + copl.",1);
-                hists.at("channels").at("signal_chi2_copl")->Fill(utils::ParticleTools::GetDecayString(mcdata.ParticleTree()).c_str(),1);
+                hists.at("channels").at("signal_chi2_copl")->Fill(utils::ParticleTools::GetDecayString(mcdata.ParticleTree).c_str(),1);
             }
         }
 
@@ -487,7 +487,7 @@ void Etap3pi0::ProcessEvent(const data::Event& event)
         FillIm(result_eta2pi0, ParticleTypeDatabase::Pi0,(TH1D*) hists.at("ref").at("IM_pions"));
         FillIm(result_eta2pi0, ParticleTypeDatabase::Eta,(TH1D*) hists.at("ref").at("IM_etas"));
         FillImEtaPrime(result_eta2pi0,(TH1D*) hists.at("ref").at("IM_etap"));
-        hists.at("channels").at("ref_chi2")->Fill(utils::ParticleTools::GetDecayString(mcdata.ParticleTree()).c_str(),1);
+        hists.at("channels").at("ref_chi2")->Fill(utils::ParticleTools::GetDecayString(mcdata.ParticleTree).c_str(),1);
         hists.at("steps").at("evcount")->Fill("#chi^{2} cut reference",1);
 
         double dphi = TMath::RadToDeg() *(result_eta2pi0.mother.Phi() - mcproton->Phi());
@@ -501,7 +501,7 @@ void Etap3pi0::ProcessEvent(const data::Event& event)
             {
                 hists["steps"]["IM_ch2_ref_copl"]->Fill(result_eta2pi0.mother.M());
                 hists.at("steps").at("evcount")->Fill("#chi^{2}(ref) + copl.",1);
-                hists.at("channels").at("ref_chi2_copl")->Fill(utils::ParticleTools::GetDecayString(mcdata.ParticleTree()).c_str(),1);
+                hists.at("channels").at("ref_chi2_copl")->Fill(utils::ParticleTools::GetDecayString(mcdata.ParticleTree).c_str(),1);
             }
         }
 

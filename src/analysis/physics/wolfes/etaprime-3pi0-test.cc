@@ -50,12 +50,12 @@ Etap3pi0_test::Etap3pi0_test(const std::string& name, PhysOptPtr opts) :
 
 void Etap3pi0_test::ProcessEvent(const data::Event& event)
 {
-    const auto& data   = event.Reconstructed();
-    const auto& mcdata = event.MCTrue();
+    const auto& data   = event.Reconstructed;
+    const auto& mcdata = event.MCTrue;
 
 
-    const auto& photons   = data.Particles().Get(ParticleTypeDatabase::Photon);
-    const auto& mcphotons = mcdata.Particles().Get(ParticleTypeDatabase::Photon);
+    const auto& photons   = data.Particles.Get(ParticleTypeDatabase::Photon);
+    const auto& mcphotons = mcdata.Particles.Get(ParticleTypeDatabase::Photon);
 
     hNgamma->Fill(photons.size());
     hNgammaMC->Fill(mcphotons.size());
@@ -152,7 +152,7 @@ void Etap3pi0_test::ProcessEvent(const data::Event& event)
    sum = result.Pi0[1] + result.Pi0[2];
    imsqrP23 = sum.M2();
 
-    for(const auto& taggerhit : data.TaggerHits())
+    for(const auto& taggerhit : data.TaggerHits)
     {
         const TLorentzVector beam_target = taggerhit->PhotonBeam() + TLorentzVector(0, 0, 0, ParticleTypeDatabase::Proton.Mass());
         const Particle missing(ParticleTypeDatabase::Proton, beam_target - etap);

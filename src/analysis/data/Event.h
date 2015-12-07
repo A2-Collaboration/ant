@@ -1,6 +1,5 @@
 #pragma once
 
-
 #include "Particle.h"
 #include "Candidate.h"
 #include "TaggerHit.h"
@@ -19,19 +18,12 @@ namespace analysis {
 namespace data {
 
 
-class Event: public ant::printable_traits {
-public:
-    class Data: public ant::printable_traits {
-    public:
+struct Event : printable_traits {
 
-        class PTypeLists: public ant::printable_traits {
-        protected:
-            ParticleList particles;
-            std::map<const ant::ParticleTypeDatabase::Type*, ParticleList> lists;
+    struct Data : printable_traits {
 
-            static const ParticleList empty;
+        struct PTypeLists : printable_traits {
 
-        public:
             void AddParticle(ParticlePtr&& particle) {
                 lists[&particle->Type()].emplace_back(particle);
                 particles.emplace_back(particle);
@@ -41,7 +33,6 @@ public:
                 lists[&particle->Type()].emplace_back(particle);
                 particles.emplace_back(particle);
             }
-
 
             const ParticleList& GetAll() const { return particles; }
 
@@ -53,61 +44,35 @@ public:
                 return entry->second;
             }
 
+            virtual ~PTypeLists() {}
             std::ostream& Print(std::ostream& stream) const;
-        };
 
-    protected:
+        protected:
+            ParticleList particles;
+            std::map<const ant::ParticleTypeDatabase::Type*, ParticleList> lists;
 
-        PTypeLists   particles;      // final state / reconstructred particles
-        PTypeLists   intermediates;  // intermediate particles (if any)
-        ParticleTree_t particletree; // particle tree (if available)
-
-        CandidateList  candidates;     // particle candidates (if any)
-        TaggerHitList  taggerhits;     // tagger hits
-        TriggerInfo    triggerinfo;
-        ClusterList    allclusters;
+            static const ParticleList empty;
+        }; // PTypeLists
 
 
-    public:
+        PTypeLists     Particles;      // final state / reconstructred particles
+        PTypeLists     Intermediates;  // intermediate particles (if any)
+        ParticleTree_t ParticleTree;   // particle tree (if available)
 
-        const PTypeLists& Particles() const { return particles; }
-              PTypeLists& Particles()       { return particles; }
+        CandidateList  Candidates;     // particle candidates (if any)
+        TaggerHitList  TaggerHits;     // tagger hits
+        TriggerInfo    Trigger;
+        ClusterList    AllClusters;
 
-        const PTypeLists& Intermediates() const { return intermediates; }
-              PTypeLists& Intermediates()       { return intermediates; }
+        virtual ~Data() {}
+        std::ostream& Print(std::ostream& stream) const;
+    }; // Data
 
-        const ParticleTree_t& ParticleTree() const { return particletree; }
-              ParticleTree_t& ParticleTree()       { return particletree; }
+    Data    Reconstructed;
+    Data    MCTrue;
 
-
-        const CandidateList& Candidates() const { return candidates; }
-              CandidateList& Candidates()       { return candidates; }
-
-        const TaggerHitList& TaggerHits() const { return taggerhits; }
-              TaggerHitList& TaggerHits()       { return taggerhits; }
-
-        const TriggerInfo& TriggerInfos() const { return triggerinfo; }
-              TriggerInfo& TriggerInfos()       { return triggerinfo; }
-
-        const ClusterList& AllClusters() const { return allclusters; }
-              ClusterList& AllClusters()       { return allclusters; }
-
-
-              std::ostream& Print(std::ostream& stream) const;
-    }; // class Data
-
-protected:
-    Data    reconstructed;
-    Data    mctrue;
-public:
-    const Data& Reconstructed() const { return reconstructed; }
-          Data& Reconstructed()       { return reconstructed; }
-
-    const Data& MCTrue() const { return mctrue; }
-          Data& MCTrue()       { return mctrue; }
-
+    virtual ~Event() {}
     std::ostream& Print(std::ostream& stream) const;
 };
-}
-}
-}
+
+}}} // namespace ant::analysis::data

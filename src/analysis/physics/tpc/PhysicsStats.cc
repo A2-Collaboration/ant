@@ -27,7 +27,7 @@ bool containsCharged(const ParticleList& particles) {
 
 void TPC_PhysicsStats::ProcessEvent(const Event& event)
 {
-    const auto& particletree = event.MCTrue().ParticleTree();
+    const auto& particletree = event.MCTrue.ParticleTree;
     if(particletree) {
         const auto process = utils::ParticleTools::GetProductionChannelString(particletree);
         TH1D* h = nullptr;
@@ -41,7 +41,7 @@ void TPC_PhysicsStats::ProcessEvent(const Event& event)
             h = entry->second;
         }
 
-        const auto& particles = event.MCTrue().Particles().GetAll();
+        const auto& particles = event.MCTrue.Particles.GetAll();
         if(containsCharged(particles)) {
 
             for(const ParticlePtr& p : particles) {

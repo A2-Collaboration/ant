@@ -49,7 +49,7 @@ void XMasCB::ProcessEvent(const Event& event)
 
     hist->ResetElements(0.0);
 
-    for(const auto& c : event.Reconstructed().Candidates()) {
+    for(const auto& c : event.Reconstructed.Candidates) {
 
         if(c->Detector() & Detector_t::Type_t::CB) {
             const auto& cluster  = c->FindCaloCluster();

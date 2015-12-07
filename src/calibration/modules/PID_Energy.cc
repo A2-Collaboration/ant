@@ -149,7 +149,7 @@ PID_Energy::ThePhysics::PerChannel_t::PerChannel_t(SmartHistFactory HistFac)
 void PID_Energy::ThePhysics::ProcessEvent(const data::Event& event)
 {
     // pedestals, best determined from clusters with energy information only
-    for(const Cluster& cluster : event.Reconstructed().AllClusters()) {
+    for(const Cluster& cluster : event.Reconstructed.AllClusters) {
         if(!(cluster.Detector & Detector_t::Type_t::PID))
             continue;
 
@@ -196,7 +196,7 @@ void PID_Energy::ThePhysics::ProcessEvent(const data::Event& event)
     }
 
     // bananas
-    for(const auto& candidate : event.Reconstructed().Candidates()) {
+    for(const auto& candidate : event.Reconstructed.Candidates) {
         // only candidates with one cluster in CB and one cluster in PID
         if(candidate->Clusters.size() != 2)
             continue;

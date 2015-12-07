@@ -53,7 +53,7 @@ TaggerOverview::~TaggerOverview()
 
 void TaggerOverview::ProcessEvent(const Event &event)
 {
-    const auto taggerhits = (mode == Mode::Reconstructed) ? event.Reconstructed().TaggerHits() : event.MCTrue().TaggerHits();
+    const auto taggerhits = (mode == Mode::Reconstructed) ? event.Reconstructed.TaggerHits : event.MCTrue.TaggerHits;
 
     for(auto hit=taggerhits.cbegin(); hit!=taggerhits.cend(); ++hit) {
         Channels->Fill((*hit)->Channel());
@@ -105,7 +105,7 @@ string DataOverviewBase::GetMode() const
 
 const Event::Data &DataOverviewBase::GetBranch(const Event &event) const
 {
-   return (mode == Mode::Reconstructed) ? event.Reconstructed() : event.MCTrue();
+   return (mode == Mode::Reconstructed) ? event.Reconstructed : event.MCTrue;
 }
 
 
@@ -126,11 +126,11 @@ TriggerOverview::~TriggerOverview()
 
 void TriggerOverview::ProcessEvent(const Event &event)
 {
-    const auto TriggerInfo = GetBranch(event).TriggerInfos();
+    const auto& trigger = GetBranch(event).Trigger;
 
-    CBESum->Fill(TriggerInfo.CBEenergySum());
-    Multiplicity->Fill(TriggerInfo.Multiplicity());
-    nErrorsEvent->Fill(TriggerInfo.Errors().size());
+    CBESum->Fill(trigger.CBEnergySum);
+    Multiplicity->Fill(trigger.ClusterMultiplicity);
+    nErrorsEvent->Fill(trigger.Errors.size());
 }
 
 void TriggerOverview::ShowResult()
@@ -174,7 +174,7 @@ ParticleOverview::~ParticleOverview()
 
 void ParticleOverview::ProcessEvent(const Event &event)
 {
-    const auto& particles = GetBranch(event).Particles().GetAll();
+    const auto& particles = GetBranch(event).Particles.GetAll();
     nParticles->Fill(particles.size());
 
     for(const auto& p : particles) {
@@ -182,7 +182,7 @@ void ParticleOverview::ProcessEvent(const Event &event)
     }
 
     for(const ParticleTypeDatabase::Type* type : ParticleTypeDatabase::DetectableTypes()) {
-        nType[type]->Fill(GetBranch(event).Particles().Get(*type).size());
+        nType[type]->Fill(GetBranch(event).Particles.Get(*type).size());
     }
 }
 

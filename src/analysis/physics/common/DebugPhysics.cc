@@ -48,10 +48,10 @@ DebugPIDAlignment::~DebugPIDAlignment()
 
 void DebugPIDAlignment::ProcessEvent(const data::Event& event)
 {
-    if(event.MCTrue().Particles().GetAll().size() == 1) {
-        const auto mctrue_phi = event.MCTrue().Particles().GetAll().front()->Phi() * TMath::RadToDeg();
+    if(event.MCTrue.Particles.GetAll().size() == 1) {
+        const auto mctrue_phi = event.MCTrue.Particles.GetAll().front()->Phi() * TMath::RadToDeg();
 
-        for(const data::CandidatePtr& cand : event.Reconstructed().Candidates()) {
+        for(const data::CandidatePtr& cand : event.Reconstructed.Candidates) {
             for(const data::Cluster& c : cand->Clusters) {
                 if(c.Detector == Detector_t::Type_t::PID) {
                     angles->Fill(mctrue_phi, c.pos.Phi()* TMath::RadToDeg());
@@ -59,7 +59,7 @@ void DebugPIDAlignment::ProcessEvent(const data::Event& event)
             }
         }
 
-        for(const data::Cluster& c : event.Reconstructed().AllClusters()) {
+        for(const data::Cluster& c : event.Reconstructed.AllClusters) {
             if(c.Detector == Detector_t::Type_t::PID) {
                 angles->Fill(mctrue_phi, c.pos.Phi()* TMath::RadToDeg());
             }

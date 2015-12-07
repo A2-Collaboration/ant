@@ -57,8 +57,8 @@ void GeoAcceptance::ProcessEvent(const Event &event)
 {
     for( auto& a : analyses ) {
         a.Fill(
-                event.MCTrue().Particles().Get(ParticleTypeDatabase::Photon),
-                event.Reconstructed().Particles().Get(ParticleTypeDatabase::Photon)
+                event.MCTrue.Particles.Get(ParticleTypeDatabase::Photon),
+                event.Reconstructed.Particles.Get(ParticleTypeDatabase::Photon)
                 );
     }
 }

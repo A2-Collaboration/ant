@@ -57,7 +57,7 @@ CB_TimeWalk::ThePhysics::ThePhysics(const string& name, const std::shared_ptr<ex
 
 void CB_TimeWalk::ThePhysics::ProcessEvent(const Event& event)
 {
-    for(const auto& cand: event.Reconstructed().Candidates()) {
+    for(const auto& cand: event.Reconstructed.Candidates) {
         for(const Cluster& cluster: cand->Clusters) {
             if(cluster.Detector != Detector_t::Type_t::CB)
                 continue;

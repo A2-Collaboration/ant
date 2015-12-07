@@ -63,36 +63,36 @@ Detector_t::Any_t GetCommonDetector(const CandidateList& cands) {
 
 void ReconstructCheck::ProcessEvent(const Event &event)
 {
-    if(event.MCTrue().Particles().GetAll().size() == 1) {
+    if(event.MCTrue.Particles.GetAll().size() == 1) {
 
-        if(mult1_only && event.Reconstructed().Candidates().size() > 1)
+        if(mult1_only && event.Reconstructed.Candidates.size() > 1)
             return;
 
-        const auto& mctrue_particle = event.MCTrue().Particles().GetAll().at(0);
+        const auto& mctrue_particle = event.MCTrue.Particles.GetAll().at(0);
 
-        const auto common_detector = GetCommonDetector(event.Reconstructed().Candidates());
+        const auto common_detector = GetCommonDetector(event.Reconstructed.Candidates);
 
         if(common_detector & Detector_t::Any_t::CB) {
-            cb_group.Fill(mctrue_particle, event.Reconstructed().Candidates(), event.Reconstructed().AllClusters());
+            cb_group.Fill(mctrue_particle, event.Reconstructed.Candidates, event.Reconstructed.AllClusters);
         }
 
         if(common_detector & Detector_t::Any_t::TAPS) {
-            taps_group.Fill(mctrue_particle, event.Reconstructed().Candidates(), event.Reconstructed().AllClusters());
+            taps_group.Fill(mctrue_particle, event.Reconstructed.Candidates, event.Reconstructed.AllClusters);
         }
 
-        all_group.Fill(mctrue_particle, event.Reconstructed().Candidates(), event.Reconstructed().AllClusters());
+        all_group.Fill(mctrue_particle, event.Reconstructed.Candidates, event.Reconstructed.AllClusters);
 
-        tapsveto.Fill(event.Reconstructed().Candidates(), event.Reconstructed().AllClusters());
+        tapsveto.Fill(event.Reconstructed.Candidates, event.Reconstructed.AllClusters);
 
 
 
-        b_mult = unsigned(event.Reconstructed().Candidates().size());
+        b_mult = unsigned(event.Reconstructed.Candidates.size());
 
         b_tE     = mctrue_particle->Ek();
         b_tTheta = std_ext::radian_to_degree(mctrue_particle->Theta());
         b_tPhi   = std_ext::radian_to_degree(mctrue_particle->Phi());
 
-        for(const auto& c : event.Reconstructed().Candidates()) {
+        for(const auto& c : event.Reconstructed.Candidates) {
             b_rE     = c->ClusterEnergy();
             b_rTheta = std_ext::radian_to_degree(c->Theta());
             b_rPhi   = std_ext::radian_to_degree(c->Phi());
