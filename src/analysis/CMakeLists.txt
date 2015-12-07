@@ -10,6 +10,7 @@ set(ANALYSIS_DATASTRUCTURES
   data/TriggerInfo.cc
   data/Cluster.cc
   data/Slowcontrol.cc
+  data/Target.cc
 )
 
 set(ANALYSIS_INPUT
