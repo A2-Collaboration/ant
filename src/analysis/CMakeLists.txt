@@ -7,7 +7,7 @@ set(ANALYSIS_DATASTRUCTURES
   data/Particle.cc
   data/Event.cc
   data/TaggerHit.cc
-  data/TriggerInfo.cc
+  data/Trigger.cc
   data/Cluster.cc
   data/Slowcontrol.cc
   data/Target.cc

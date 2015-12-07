@@ -59,7 +59,7 @@ void GoatReader::CopyTagger(Event& event)
 
 void GoatReader::CopyTrigger(Event& event)
 {
-    TriggerInfo& ti = event.Reconstructed.Trigger;
+    Trigger_t& ti = event.Reconstructed.Trigger;
 
     ti.CBEnergySum = trigger.GetEnergySum();
     ti.ClusterMultiplicity = trigger.GetMultiplicity();

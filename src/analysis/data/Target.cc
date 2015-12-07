@@ -6,7 +6,7 @@ using namespace ant::analysis::data;
 using namespace std;
 
 
-ostream& Target::Print(ostream& stream) const
+ostream& Target_t::Print(ostream& stream) const
 {
     stream << "Target"
            << "(Vertex=" << vertex

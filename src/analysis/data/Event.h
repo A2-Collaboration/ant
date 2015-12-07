@@ -3,7 +3,8 @@
 #include "Particle.h"
 #include "Candidate.h"
 #include "TaggerHit.h"
-#include "TriggerInfo.h"
+#include "Trigger.h"
+#include "Target.h"
 
 #include "base/types.h"
 #include "base/printable.h"
@@ -61,7 +62,8 @@ struct Event : printable_traits {
 
         CandidateList  Candidates;     // particle candidates (if any)
         TaggerHitList  TaggerHits;     // tagger hits
-        TriggerInfo    Trigger;
+        Trigger_t      Trigger;
+        Target_t       Target;
         ClusterList    AllClusters;
 
         virtual ~Data() = default;

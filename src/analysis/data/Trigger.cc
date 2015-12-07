@@ -1,4 +1,4 @@
-#include "TriggerInfo.h"
+#include "Trigger.h"
 
 using namespace ant::analysis::data;
 using namespace std;
@@ -9,9 +9,9 @@ ostream& DAQError::Print(ostream& stream) const
     return stream;
 }
 
-ostream &TriggerInfo::Print(ostream& stream) const
+ostream& Trigger_t::Print(ostream& stream) const
 {
-    stream << "TriggerInfo"
+    stream << "Trigger"
            << "(EventID=" << EventID
            << " CB Energy Sum=" << CBEnergySum << " MeV"
            << " Multipicity=" << ClusterMultiplicity

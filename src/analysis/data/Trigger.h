@@ -28,14 +28,14 @@ struct DAQError : printable_traits {
 
 
 
-struct TriggerInfo :  printable_traits {
+struct Trigger_t :  printable_traits {
     mev_t           CBEnergySum;
     unsigned int    ClusterMultiplicity;
     TID             EventID;
 
     std::list<DAQError>     Errors;
 
-    TriggerInfo( mev_t CBESum=0.0,
+    Trigger_t( mev_t CBESum=0.0,
                  unsigned int multiplicity=0,
                  const TID& eventID = TID()):
         CBEnergySum(CBESum),
@@ -44,7 +44,7 @@ struct TriggerInfo :  printable_traits {
         Errors()
     {}
 
-    virtual ~TriggerInfo() {}
+    virtual ~Trigger_t() {}
 
     std::ostream& Print(std::ostream& stream) const;
 };

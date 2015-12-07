@@ -12,14 +12,14 @@ namespace ant {
 namespace analysis {
 namespace data {
 
-class Target : public printable_traits {
+class Target_t : public printable_traits {
 protected:
 
     TVector3 vertex;
 
 public:
 
-    Target( const TVector3& vertex_ = TVector3()):
+    Target_t( const TVector3& vertex_ = TVector3()):
         vertex(vertex_)
     {}
 
