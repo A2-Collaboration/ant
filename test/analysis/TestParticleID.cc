@@ -17,11 +17,11 @@ using namespace ant::analysis::data;
 using namespace ant::analysis::utils;
 
 bool dEEtest(const std::shared_ptr<Candidate>& cand, const std::shared_ptr<TCutG>& cut) {
-    return cut->IsInside(cand->ClusterEnergy(), cand->VetoEnergy());
+    return cut->IsInside(cand->ClusterEnergy, cand->VetoEnergy);
 }
 
 bool toftest(const std::shared_ptr<Candidate>& cand, const std::shared_ptr<TCutG>& cut) {
-    return cut->IsInside(cand->ClusterEnergy(), cand->Time());
+    return cut->IsInside(cand->ClusterEnergy, cand->Time);
 }
 
 void test_makeTCutG();

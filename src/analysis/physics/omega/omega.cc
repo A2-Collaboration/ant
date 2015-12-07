@@ -219,7 +219,7 @@ void OmegaEtaG::Analyse(const Event::Data &data, const Event &event)
 
         if(omega_range.Contains(gggIM) && h) {
             for(auto& th : event.MCTrue.TaggerHits) {
-                const TLorentzVector beam_target = th->PhotonBeam() + TLorentzVector(0, 0, 0, ParticleTypeDatabase::Proton.Mass());
+                const TLorentzVector beam_target = th.GetPhotonBeam() + TLorentzVector(0, 0, 0, ParticleTypeDatabase::Proton.Mass());
                 const TLorentzVector mm = beam_target - gggState;
                 const TLorentzVector mm_boosted = Boost(mm,-beam_target.BoostVector());
 
@@ -515,7 +515,7 @@ double TimeAvg(it_type begin, it_type end) {
 
     while(begin!=end) {
         const ParticlePtr& p = *begin;
-        v += p->Candidate()->Time();
+        v += p->Candidate->Time;
         ++begin;
     }
 
@@ -605,7 +605,7 @@ void OmegaEtaG2::Analyse(const Event::Data &data, const Event &event)
     rf = static_cast<int>(identify(event));
 
     pbranch = mParticleVars(*proton);
-    pTime  = data_proton ? proton->Candidate()->Time() : 0.0;
+    pTime  = data_proton ? proton->Candidate->Time : 0.0;
 
     const Particle ggg(ParticleTypeDatabase::Omega, LVSum(photons.begin(), photons.end()));
     gggTime  = TimeAvg(photons.begin(), photons.end());
@@ -630,15 +630,15 @@ void OmegaEtaG2::Analyse(const Event::Data &data, const Event &event)
 
 
 
-    for(const TaggerHitPtr& t : data_tagger?data.TaggerHits:event.MCTrue.TaggerHits) {
+    for(const TaggerHit& t : data_tagger?data.TaggerHits:event.MCTrue.TaggerHits) {
 
-        if(!taggerWindow.Contains(t->Time()))
+        if(!taggerWindow.Contains(t.Time))
             continue;
 
-        tagch   = t->Channel();
-        tagtime = t->Time();
+        tagch   = t.Channel;
+        tagtime = t.Time;
 
-        const TLorentzVector beam_target = t->PhotonBeam() + TLorentzVector(0, 0, 0, ParticleTypeDatabase::Proton.Mass());
+        const TLorentzVector beam_target = t.GetPhotonBeam() + TLorentzVector(0, 0, 0, ParticleTypeDatabase::Proton.Mass());
         const Particle missing(ParticleTypeDatabase::Proton, beam_target - ggg);
 
         calcp = analysis::utils::ParticleVars(missing);
@@ -685,7 +685,7 @@ void OmegaEtaG2::Analyse(const Event::Data &data, const Event &event)
             bestHyp = 2;
         }
 
-        fitter.SetEgammaBeam(t->PhotonEnergy());
+        fitter.SetEgammaBeam(t.PhotonEnergy);
         fitter.SetProton(proton);
         fitter.SetPhotons(photons);
 

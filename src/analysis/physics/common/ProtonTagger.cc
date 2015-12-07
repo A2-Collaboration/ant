@@ -36,8 +36,8 @@ double TimeAverage(const std::initializer_list<const T> cands) {
     double time   = 0.0;
     double energy = 0.0;
     for(const auto& c : cands) {
-        time += c->Time() * c->ClusterEnergy();
-        energy += c->ClusterEnergy();
+        time += c->Time * c->ClusterEnergy;
+        energy += c->ClusterEnergy;
     }
     return time / energy;
 }
@@ -48,7 +48,7 @@ void ProtonTagger::ProcessEvent(const data::Event& event)
     data::CandidateList taps_hits;
 
     for(const auto& p : event.Reconstructed.Candidates) {
-        if((p->Detector() & Detector_t::Any_t::TAPS) && p->ClusterEnergy() > 50.0) {
+        if((p->Detector & Detector_t::Any_t::TAPS) && p->ClusterEnergy > 50.0) {
             taps_hits.emplace_back(p);
         }
     }
@@ -60,7 +60,7 @@ void ProtonTagger::ProcessEvent(const data::Event& event)
     data::ParticleList cb_photons;
 
     for(const auto& p : event.Reconstructed.Particles.Get(ParticleTypeDatabase::Photon)) {
-        if((p->Candidate() && p->Candidate()->Detector() & Detector_t::Any_t::CB) && p->Energy() > 50.0) {
+        if((p->Candidate && p->Candidate->Detector & Detector_t::Any_t::CB) && p->Energy() > 50.0) {
             cb_photons.emplace_back(p);
         }
     }
@@ -73,24 +73,24 @@ void ProtonTagger::ProcessEvent(const data::Event& event)
     const TLorentzVector gg = *cb_photons.at(0) + *cb_photons.at(1);
     b_ggIM   = gg.M();
 
-    b_cbtime = TimeAverage({cb_photons.at(0)->Candidate(),cb_photons.at(1)->Candidate()});
+    b_cbtime = TimeAverage({cb_photons.at(0)->Candidate,cb_photons.at(1)->Candidate});
 
     const TLorentzVector target(0,0,0,ParticleTypeDatabase::Proton.Mass());
 
     for(const auto& t : event.Reconstructed.TaggerHits) {
 
-        b_tagTime = t->Time();
-        b_tagCh   = t->Channel();
+        b_tagTime = t.Time;
+        b_tagCh   = t.Channel;
 
-        const TLorentzVector mm = t->PhotonBeam() + target - gg;
+        const TLorentzVector mm = t.GetPhotonBeam() + target - gg;
 
         b_MM = mm.M();
 
             for(const auto& p : taps_hits) {
-                b_Size = p->ClusterSize();
-                b_E    = p->ClusterEnergy();
-                b_veto = p->VetoEnergy();
-                b_Time = p->Time();
+                b_Size = p->ClusterSize;
+                b_E    = p->ClusterEnergy;
+                b_veto = p->VetoEnergy;
+                b_Time = p->Time;
 
                 b_angle = radian_to_degree(mm.Angle(*p));
 

@@ -75,11 +75,11 @@ void dotest() {
     REQUIRE(cand.size() == 2);
     /// \todo Write more REQUIRE stuff here
 
-    REQUIRE(cand.at(0)->ClusterSize()==2);
-    REQUIRE(cand.at(1)->ClusterSize()==0);
+    REQUIRE(cand.at(0)->ClusterSize==2);
+    REQUIRE(cand.at(1)->ClusterSize==0);
 
-    REQUIRE(cand.at(0)->Detector()==(Detector_t::Type_t::CB | Detector_t::Type_t::PID));
-    REQUIRE(cand.at(1)->Detector()==(Detector_t::Type_t::TAPS | Detector_t::Type_t::TAPSVeto));
+    REQUIRE(cand.at(0)->Detector==(Detector_t::Type_t::CB | Detector_t::Type_t::PID));
+    REQUIRE(cand.at(1)->Detector==(Detector_t::Type_t::TAPS | Detector_t::Type_t::TAPSVeto));
 
 }
 

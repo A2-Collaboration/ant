@@ -155,7 +155,7 @@ void Time::ThePhysics::ProcessEvent(const Event& event)
     if(isTagger)
     {
         for (const auto& tHit: event.Reconstructed.TaggerHits)
-            hTime->Fill(tHit->Time(),tHit->Channel());
+            hTime->Fill(tHit.Time,tHit.Channel);
         return;
     }
 

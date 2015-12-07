@@ -232,7 +232,7 @@ void TestAPLCON::ProcessEvent(const Event &event)
 
 
     for(auto& cand : event.Reconstructed.Candidates) {
-        banana->Fill(cand->ClusterEnergy(), cand->VetoEnergy());
+        banana->Fill(cand->ClusterEnergy, cand->VetoEnergy);
     }
 
     for(auto& particle : event.Reconstructed.Particles.GetAll()) {
@@ -250,7 +250,7 @@ void TestAPLCON::ProcessEvent(const Event &event)
     }
 
     for(const auto& taggerhit : event.MCTrue.TaggerHits) {
-        tagger->Fill(taggerhit->PhotonEnergy());
+        tagger->Fill(taggerhit.PhotonEnergy);
 
         // find the photons and one proton
         size_t foundPhotons = 0;
@@ -266,7 +266,7 @@ void TestAPLCON::ProcessEvent(const Event &event)
         if(foundPhotons != nPhotons)
             continue;
 
-        beam.SetFromVector(taggerhit->PhotonBeam());
+        beam.SetFromVector(taggerhit.GetPhotonBeam());
 
         FillIM(im_true, photons);
 

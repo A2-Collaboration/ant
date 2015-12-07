@@ -35,7 +35,7 @@ struct TimeSmearingHack {
      * @param taggerhit
      * @return time p - time taggerhit
      */
-    double CalculateTimeDifference(const data::CandidatePtr& p , const data::TaggerHitPtr& taggerhit) const;
+    double CalculateTimeDifference(const data::CandidatePtr& p , const data::TaggerHit& taggerhit) const;
 
     /**
      * @brief Get the Time inforamtion from a candidate, smeared if enabeld

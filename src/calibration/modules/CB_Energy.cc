@@ -80,9 +80,9 @@ void CB_Energy::ThePhysics::ProcessEvent(const Event& event)
         const CandidatePtr& p1 = comb.at(0);
         const CandidatePtr& p2 = comb.at(1);
 
-        if(p1->VetoEnergy()==0 && p2->VetoEnergy()==0
-           && (p1->Detector() & Detector_t::Type_t::CB)
-           && (p2->Detector() & Detector_t::Type_t::CB)) {
+        if(p1->VetoEnergy==0 && p2->VetoEnergy==0
+           && (p1->Detector & Detector_t::Type_t::CB)
+           && (p2->Detector & Detector_t::Type_t::CB)) {
             const Particle a(ParticleTypeDatabase::Photon,comb.at(0));
             const Particle b(ParticleTypeDatabase::Photon,comb.at(1));
             const TLorentzVector gg = a + b;

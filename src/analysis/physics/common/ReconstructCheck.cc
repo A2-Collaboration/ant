@@ -56,7 +56,7 @@ ReconstructCheck::ReconstructCheck(const std::string& name, PhysOptPtr opts):
 Detector_t::Any_t GetCommonDetector(const CandidateList& cands) {
     Detector_t::Any_t common_detetctor = Detector_t::Any_t::None;
     for(const auto& cand : cands) {
-        common_detetctor |= cand->Detector();
+        common_detetctor |= cand->Detector;
     }
     return common_detetctor;
 }
@@ -93,15 +93,15 @@ void ReconstructCheck::ProcessEvent(const Event &event)
         b_tPhi   = std_ext::radian_to_degree(mctrue_particle->Phi());
 
         for(const auto& c : event.Reconstructed.Candidates) {
-            b_rE     = c->ClusterEnergy();
-            b_rTheta = std_ext::radian_to_degree(c->Theta());
-            b_rPhi   = std_ext::radian_to_degree(c->Phi());
-            b_rVeto  = c->VetoEnergy();
+            b_rE     = c->ClusterEnergy;
+            b_rTheta = std_ext::radian_to_degree(c->Theta);
+            b_rPhi   = std_ext::radian_to_degree(c->Phi);
+            b_rVeto  = c->VetoEnergy;
             b_rTime  = timesmear.GetTime(c);
-            b_rSize  = c->ClusterSize();
-            if(c->Detector() & Detector_t::Any_t::CB)
+            b_rSize  = c->ClusterSize;
+            if(c->Detector & Detector_t::Any_t::CB)
                 b_Cal    = 1;
-            else if(c->Detector() & Detector_t::Any_t::TAPS)
+            else if(c->Detector & Detector_t::Any_t::TAPS)
                 b_Cal    = 2;
             else
                 b_Cal    = 0;
@@ -254,12 +254,12 @@ void ReconstructCheck::histgroup::Finish()
 
 double angle(const data::Candidate& c1, const data::Candidate& c2) {
     TVector3 v1(1,0,0);
-    v1.SetTheta(c1.Theta());
-    v1.SetPhi(c1.Phi());
+    v1.SetTheta(c1.Theta);
+    v1.SetPhi(c1.Phi);
 
     TVector3 v2(1,0,0);
-    v2.SetTheta(c2.Theta());
-    v2.SetPhi(c2.Phi());
+    v2.SetTheta(c2.Theta);
+    v2.SetPhi(c2.Phi);
 
     return v1.Angle(v2);
 }
@@ -267,7 +267,7 @@ double angle(const data::Candidate& c1, const data::Candidate& c2) {
 std::list<CandidatePtr> CandidatesByDetector(const Detector_t::Any_t& detector, const CandidateList& candidates) {
     std::list<CandidatePtr> cands;
     for(const auto& c : candidates) {
-        if(c->Detector() & detector) {
+        if(c->Detector & detector) {
             cands.emplace_back(c);
         }
     }
@@ -293,16 +293,16 @@ void ReconstructCheck::histgroup::Fill(const ParticlePtr& mctrue, const Candidat
     unsigned ncharged(0);
 
     for(const CandidatePtr& c : cand) {
-        if(c->VetoEnergy() > 0.0) {
+        if(c->VetoEnergy > 0.0) {
             posCharged->Fill(mc_theta,mc_phi);
         }
 
-            cluserSize->Fill(c->ClusterEnergy(), c->ClusterSize());
-            cluserSize_true->Fill(mc_energy, c->ClusterSize());
-            dEE->Fill(c->ClusterEnergy(), c->VetoEnergy());
-            dEE_true->Fill(mc_energy, c->VetoEnergy());
+            cluserSize->Fill(c->ClusterEnergy, c->ClusterSize);
+            cluserSize_true->Fill(mc_energy, c->ClusterSize);
+            dEE->Fill(c->ClusterEnergy, c->VetoEnergy);
+            dEE_true->Fill(mc_energy, c->VetoEnergy);
 
-            if(c->VetoEnergy() > 0.0)
+            if(c->VetoEnergy > 0.0)
                 ncharged++;
             ++n;
 
@@ -336,12 +336,12 @@ void ReconstructCheck::histgroup::Fill(const ParticlePtr& mctrue, const Candidat
 
     if(cand.size()==1) {
         const auto& c = cand.at(0);
-        const auto rec = c->ClusterEnergy() / mc_energy;
+        const auto rec = c->ClusterEnergy / mc_energy;
         energy_recov->Fill(mc_theta, mc_phi, rec);
         mult1_positions->Fill(mc_theta,mc_phi);
-        energyinout->Fill(mc_energy,c->ClusterEnergy());
-        thetainout->Fill(std_ext::radian_to_degree(mc_theta), std_ext::radian_to_degree(c->Theta() - mc_theta));
-        if(c->VetoEnergy()>0.0) {
+        energyinout->Fill(mc_energy,c->ClusterEnergy);
+        thetainout->Fill(std_ext::radian_to_degree(mc_theta), std_ext::radian_to_degree(c->Theta - mc_theta));
+        if(c->VetoEnergy>0.0) {
             mult1_chargedPos->Fill(mc_theta,mc_phi);
         }
     } else if( cand.size() > 1) {

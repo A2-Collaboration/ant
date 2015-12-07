@@ -83,14 +83,14 @@ void TAPSVeto_Energy::ThePhysics::ProcessEvent(const Event& event)
     for(const auto& candidate : cands) {
         if(candidate->Clusters.size() != 2)
             continue;
-        if(candidate->Detector() & Detector_t::Type_t::TAPS &&
-           candidate->Detector() & Detector_t::Type_t::TAPSVeto
+        if(candidate->Detector & Detector_t::Type_t::TAPS &&
+           candidate->Detector & Detector_t::Type_t::TAPSVeto
            )
         {
             // search for TAPSVeto cluster
             auto tapsveto_cluster = candidate->FindFirstCluster(Detector_t::Type_t::TAPSVeto);
-            h_bananas->Fill(candidate->ClusterEnergy(),
-                            candidate->VetoEnergy(),
+            h_bananas->Fill(candidate->ClusterEnergy,
+                            candidate->VetoEnergy,
                             tapsveto_cluster->CentralElement);
         }
     }

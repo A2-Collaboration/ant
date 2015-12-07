@@ -11,37 +11,23 @@ namespace ant {
 namespace analysis {
 namespace data {
 
-class TaggerHit: public ant::printable_traits {
-private:
-    index_t channel;
-    mev_t   photon_energy;
-    ns_t  time;
+struct TaggerHit : printable_traits {
+    index_t Channel;
+    mev_t   PhotonEnergy;
+    ns_t    Time;
 
-public:
-    TaggerHit(const index_t& _channel=0, const mev_t& _photon_energy=0.0, const ns_t& _time=0.0):
-        channel(_channel),
-        photon_energy(_photon_energy),
-        time(_time) {}
+    TaggerHit(const index_t& channel=0, const mev_t& photon_energy=0.0, const ns_t& time=0.0):
+        Channel(channel),
+        PhotonEnergy(photon_energy),
+        Time(time) {}
 
-    virtual ~TaggerHit() {}
+    TLorentzVector GetPhotonBeam() const { return TLorentzVector(0.0, 0.0, PhotonEnergy, PhotonEnergy); }
 
-    index_t& Channel() { return channel; }
-    const index_t& Channel() const { return channel; }
-
-    mev_t& PhotonEnergy() { return photon_energy; }
-    const mev_t& PhotonEnergy() const { return photon_energy; }
-
-    ns_t& Time() { return time; }
-    const ns_t& Time() const { return time; }
-
-    TLorentzVector PhotonBeam() const { return TLorentzVector(0.0, 0.0, PhotonEnergy(), PhotonEnergy()); }
-
-
+    virtual ~TaggerHit() = default;
     std::ostream &Print(std::ostream &stream) const;
 };
 
-using TaggerHitPtr   = std::shared_ptr<TaggerHit>;
-using TaggerHitList = std::vector<TaggerHitPtr>;
+using TaggerHitList = std::vector<TaggerHit>;
 
 }
 }

@@ -50,11 +50,10 @@ void GoatReader::CopyTagger(Event& event)
 {
     for( Int_t i=0; i<tagger.GetNTagged(); ++i) {
         event.Reconstructed.TaggerHits.emplace_back(
-                    TaggerHitPtr(new TaggerHit(
-                                     tagger.GetTaggedChannel(i),
-                                     tagger.GetTaggedEnergy(i),
-                                     tagger.GetTaggedTime(i))
-                                 ));
+                    tagger.GetTaggedChannel(i),
+                    tagger.GetTaggedEnergy(i),
+                    tagger.GetTaggedTime(i)
+                    );
     }
 }
 

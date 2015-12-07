@@ -48,7 +48,7 @@ void PID_PhiAngle::ThePhysics::ProcessEvent(const Event& event)
 
     for(const auto& cand : cands) {
 
-        if(!theta_range.Contains(cand->Theta()))
+        if(!theta_range.Contains(cand->Theta))
             continue;
 
         auto cl_cb_  = cand->FindFirstCluster(Detector_t::Type_t::CB);
@@ -57,7 +57,7 @@ void PID_PhiAngle::ThePhysics::ProcessEvent(const Event& event)
             // found more than one CB cluster
             if(isfinite(phi_cb))
                 return;
-            phi_cb = cand->Phi();
+            phi_cb = cand->Phi;
         }
 
         auto cl_pid_ = cand->FindFirstCluster(Detector_t::Type_t::PID);

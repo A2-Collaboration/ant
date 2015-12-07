@@ -200,8 +200,8 @@ void PID_Energy::ThePhysics::ProcessEvent(const data::Event& event)
         // only candidates with one cluster in CB and one cluster in PID
         if(candidate->Clusters.size() != 2)
             continue;
-        const bool cb_and_pid = candidate->Detector() & Detector_t::Type_t::CB &&
-                                candidate->Detector() & Detector_t::Type_t::PID;
+        const bool cb_and_pid = candidate->Detector & Detector_t::Type_t::CB &&
+                                candidate->Detector & Detector_t::Type_t::PID;
         if(!cb_and_pid)
             continue;
 
@@ -211,8 +211,8 @@ void PID_Energy::ThePhysics::ProcessEvent(const data::Event& event)
         PerChannel_t& h = h_perChannel[pid_cluster->CentralElement];
 
         // fill the banana
-        h.Banana->Fill(candidate->ClusterEnergy(),
-                       candidate->VetoEnergy());
+        h.Banana->Fill(candidate->ClusterEnergy,
+                       candidate->VetoEnergy);
 
 
         double pedestal = numeric_limits<double>::quiet_NaN();
@@ -228,7 +228,7 @@ void PID_Energy::ThePhysics::ProcessEvent(const data::Event& event)
             }
         }
 
-        h.BananaRaw->Fill(candidate->ClusterEnergy(), pedestal);
+        h.BananaRaw->Fill(candidate->ClusterEnergy, pedestal);
         //h.BananaTiming->Fill(candidate->ClusterEnergy(), candidate->VetoEnergy(), timing);
 
     }

@@ -20,7 +20,7 @@ using namespace ant::analysis::data;
 
 const ParticleTypeDatabase::Type* SimpleParticleID::Identify(const shared_ptr<Candidate>& cand) const
 {
-    if(cand->VetoEnergy()>0.25)
+    if(cand->VetoEnergy>0.25)
         return addressof(ParticleTypeDatabase::Proton);
     else
         return addressof(ParticleTypeDatabase::Photon);
@@ -39,12 +39,12 @@ bool TestCut(const std::shared_ptr<TCutG>& cut, const double& x, const double& y
 
 const ParticleTypeDatabase::Type* BasicParticleID::Identify(const std::shared_ptr<Candidate>& cand) const
 {
-    const bool hadronic =    TestCut(tof,  cand->ClusterEnergy(), cand->Time())
-                  || TestCut(size, cand->ClusterEnergy(), cand->ClusterSize());
+    const bool hadronic =    TestCut(tof,  cand->ClusterEnergy, cand->Time)
+                  || TestCut(size, cand->ClusterEnergy, cand->ClusterSize);
 
     const bool hadronic_enabled = (tof) || (size);
 
-    const bool charged = cand->VetoEnergy() > 0.0;
+    const bool charged = cand->VetoEnergy > 0.0;
 
 
 
@@ -60,19 +60,19 @@ const ParticleTypeDatabase::Type* BasicParticleID::Identify(const std::shared_pt
 
         if(
            (hadronic_enabled && hadronic)
-           || (TestCut(dEE_proton, cand->ClusterEnergy(), cand->VetoEnergy()))
+           || (TestCut(dEE_proton, cand->ClusterEnergy, cand->VetoEnergy))
            ) {
             return addressof(ParticleTypeDatabase::Proton);
         }
 
         if(
-           TestCut(dEE_pion, cand->ClusterEnergy(), cand->VetoEnergy())
+           TestCut(dEE_pion, cand->ClusterEnergy, cand->VetoEnergy)
            ) {
             return addressof(ParticleTypeDatabase::PiCharged);
         }
 
         if(
-           TestCut(dEE_electron, cand->ClusterEnergy(), cand->VetoEnergy())
+           TestCut(dEE_electron, cand->ClusterEnergy, cand->VetoEnergy)
            ) {
             return addressof(ParticleTypeDatabase::eCharged);
         }
@@ -119,9 +119,9 @@ CBTAPSBasicParticleID::~CBTAPSBasicParticleID()
 
 const ParticleTypeDatabase::Type* CBTAPSBasicParticleID::Identify(const std::shared_ptr<data::Candidate>& cand) const
 {
-    if(cand->Detector() & Detector_t::Any_t::CB) {
+    if(cand->Detector & Detector_t::Any_t::CB) {
         return cb.Identify(cand);
-    } else if(cand->Detector() & Detector_t::Any_t::TAPS) {
+    } else if(cand->Detector & Detector_t::Any_t::TAPS) {
         return taps.Identify(cand);
     }
 

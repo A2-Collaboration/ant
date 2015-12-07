@@ -5,7 +5,7 @@ using namespace ant;
 using namespace ant::analysis::data;
 using namespace ant::std_ext;
 
-Particle::Particle(const ParticleTypeDatabase::Type &_type, mev_t _Ek, radian_t _theta, radian_t _phi) :
+Particle::Particle(const ParticleTypeDatabase::Type& _type, mev_t _Ek, radian_t _theta, radian_t _phi) :
   type(&_type)
 {
     const mev_t E = _Ek + type->Mass();
@@ -17,10 +17,10 @@ Particle::Particle(const ParticleTypeDatabase::Type &_type, mev_t _Ek, radian_t 
 
     pv.SetMagThetaPhi(p,_theta,_phi);
 
-    SetLorentzVector(TLorentzVector(pv, E));
+    *(reinterpret_cast<TLorentzVector*>(this)) = TLorentzVector(pv, E);
 }
 
-void Particle::ChangeType(const ParticleTypeDatabase::Type &newtype)
+void Particle::ChangeType(const ParticleTypeDatabase::Type& newtype)
 {
     // recalculate Lorentz vector
     const mev_t newE = Ek() + newtype.Mass();
@@ -42,8 +42,8 @@ std::ostream &Particle::Print(std::ostream &stream) const
     stream << " E=" << E();
     stream << " Theta=" << Theta();
     stream << " Phi=" << Phi();
-    if(candidate) {
-        stream << " Candidate=" << *candidate << "\n";
+    if(Candidate) {
+        stream << " Candidate=" << *Candidate << "\n";
     }
     return stream;
 }

@@ -32,7 +32,7 @@ struct Converter {
 
     static std::shared_ptr<data::Candidate> Convert(const TCandidate& candidate);
 
-    static std::shared_ptr<data::TaggerHit> Convert(const TTaggerHit& taggerhit);
+    static data::TaggerHit Convert(const TTaggerHit& taggerhit);
 
     static data::Cluster Convert(const TCluster& cluster);
 

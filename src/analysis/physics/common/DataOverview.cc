@@ -56,13 +56,13 @@ void TaggerOverview::ProcessEvent(const Event &event)
     const auto taggerhits = (mode == Mode::Reconstructed) ? event.Reconstructed.TaggerHits : event.MCTrue.TaggerHits;
 
     for(auto hit=taggerhits.cbegin(); hit!=taggerhits.cend(); ++hit) {
-        Channels->Fill((*hit)->Channel());
-        Energies->Fill((*hit)->PhotonEnergy());
-        Times->Fill((*hit)->Time());
+        Channels->Fill(hit->Channel);
+        Energies->Fill(hit->PhotonEnergy);
+        Times->Fill(hit->Time);
 
         for(auto hit2 = next(hit); hit2!=taggerhits.cend(); ++hit2) {
-            channel_correlation->Fill((*hit)->Channel(), (*hit2)->Channel());
-            channel_correlation->Fill((*hit2)->Channel(), (*hit)->Channel());
+            channel_correlation->Fill(hit->Channel, hit2->Channel);
+            channel_correlation->Fill(hit2->Channel, hit->Channel);
         }
     }
     nHitsEvent->Fill(taggerhits.size());

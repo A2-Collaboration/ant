@@ -142,7 +142,7 @@ void GeoAcceptance::AcceptanceAnalysis::Fill(const ParticleList &mctrue, const P
 
     mctrue_pos.Fill(input);
 
-    auto matched = utils::match1to1(mctrue, reconstructed, Particle::calcAngle, IntervalD(0.0, 20.0*TMath::DegToRad()));
+    auto matched = utils::match1to1(mctrue, reconstructed, Particle::CalcAngle, IntervalD(0.0, 20.0*TMath::DegToRad()));
     remove_low_energy(matched, emin);
 
     if( matched.size() ==0 ) {

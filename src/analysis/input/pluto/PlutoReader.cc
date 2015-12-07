@@ -168,7 +168,7 @@ void PlutoReader::CopyPluto(Event& event)
             unsigned channel = 0;
             if(tagger && tagger->TryGetChannelFromPhoton(energy, channel)) {
                 const double time = 0.0; /// @todo handle non-prompt hits?
-                event.MCTrue.TaggerHits.emplace_back(make_shared<TaggerHit>(channel, energy, time));
+                event.MCTrue.TaggerHits.emplace_back(channel, energy, time);
             }
         }
 

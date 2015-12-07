@@ -72,7 +72,7 @@ void TAPS_Time::ThePhysics::ProcessEvent(const Event& event)
             if(cluster.Detector != detector->Type)
                 continue;
             for(const auto& taggerhit : event.Reconstructed.TaggerHits) {
-                const double relative_time = cluster.Time - taggerhit->Time();
+                const double relative_time = cluster.Time - taggerhit.Time;
                 hTimeToTagger->Fill(relative_time, cluster.CentralElement);
             }
         }

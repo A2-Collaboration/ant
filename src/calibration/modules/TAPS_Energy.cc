@@ -90,10 +90,10 @@ void TAPS_Energy::ThePhysics::ProcessEvent(const Event& event)
         const CandidatePtr& cand1 = comb.at(0);
         const CandidatePtr& cand2 = comb.at(1);
 
-        if(cand1->VetoEnergy()==0 && cand2->VetoEnergy()==0) {
+        if(cand1->VetoEnergy==0 && cand2->VetoEnergy==0) {
 
             //require exactly 1 CB and 1 TAPS
-            const auto dets = (cand1->Detector() & CBTAPS) ^ (cand2->Detector() & CBTAPS);
+            const auto dets = (cand1->Detector & CBTAPS) ^ (cand2->Detector & CBTAPS);
 
             if(dets & CBTAPS) {
                 const Particle a(ParticleTypeDatabase::Photon,comb.at(0));
@@ -102,7 +102,7 @@ void TAPS_Energy::ThePhysics::ProcessEvent(const Event& event)
 
 
                 // Find the one that was in TAPS
-                auto cand_taps = cand1->Detector() & Detector_t::Type_t::TAPS ? cand1 : cand2;
+                auto cand_taps = cand1->Detector & Detector_t::Type_t::TAPS ? cand1 : cand2;
                 auto cl_taps = cand_taps->FindCaloCluster();
                 if(cl_taps) {
                     const unsigned ch = cl_taps->CentralElement;
@@ -110,11 +110,11 @@ void TAPS_Energy::ThePhysics::ProcessEvent(const Event& event)
 
                     // fill in IM only if ring>4 or if timecut is passed
                     double weight = -1.0;
-                    if(ring > 4 || fabs(cand_taps->Time()) < 2.5) {
+                    if(ring > 4 || fabs(cand_taps->Time) < 2.5) {
                         weight = 1.0;
                         ggIM->Fill(gg.M(),ch);
                     }
-                    timing_cuts->Fill(cand_taps->Time(), ch, weight);
+                    timing_cuts->Fill(cand_taps->Time, ch, weight);
                 }
             }
         }

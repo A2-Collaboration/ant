@@ -154,7 +154,7 @@ void Etap3pi0_test::ProcessEvent(const data::Event& event)
 
     for(const auto& taggerhit : data.TaggerHits)
     {
-        const TLorentzVector beam_target = taggerhit->PhotonBeam() + TLorentzVector(0, 0, 0, ParticleTypeDatabase::Proton.Mass());
+        const TLorentzVector beam_target = taggerhit.GetPhotonBeam() + TLorentzVector(0, 0, 0, ParticleTypeDatabase::Proton.Mass());
         const Particle missing(ParticleTypeDatabase::Proton, beam_target - etap);
         MMproton = ParticleVars(missing);
     }

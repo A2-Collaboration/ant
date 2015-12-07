@@ -5,6 +5,6 @@ using namespace std;
 
 std::ostream &TaggerHit::Print(std::ostream &stream) const
 {
-    stream << "TaggerHit: Channel=" << channel << " PhotonEnergy=" << photon_energy << " MeV  Time=" << time << "ns";
+    stream << "TaggerHit: Channel=" << Channel << " PhotonEnergy=" << PhotonEnergy << " MeV  Time=" << Time << "ns";
     return stream;
 }

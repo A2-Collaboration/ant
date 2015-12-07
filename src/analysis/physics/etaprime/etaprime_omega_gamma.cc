@@ -279,7 +279,7 @@ void EtapOmegaG::ProcessSig(const data::ParticleTree_t& particletree,
     steps = h.Steps;
     steps->Fill("Seen",1);
 
-    if(!(proton->Candidate()->Detector() & Detector_t::Type_t::TAPS))
+    if(!(proton->Candidate->Detector & Detector_t::Type_t::TAPS))
         return;
     steps->Fill("p in TAPS", 1);
 
@@ -297,7 +297,7 @@ void EtapOmegaG::ProcessSig(const data::ParticleTree_t& particletree,
     // use tagged photon
     for(const auto& th : data.TaggerHits) {
         /// \todo make prompt/random cut
-        const TLorentzVector beam_target = th->PhotonBeam() + TLorentzVector(0, 0, 0, ParticleTypeDatabase::Proton.Mass());
+        const TLorentzVector beam_target = th.GetPhotonBeam() + TLorentzVector(0, 0, 0, ParticleTypeDatabase::Proton.Mass());
         const TLorentzVector mm = beam_target - photon_sum;
         h.MM_gggg->Fill(mm.M());
     }
@@ -434,7 +434,7 @@ void EtapOmegaG::ProcessSig(const data::ParticleTree_t& particletree,
     // use tagged photon
     for(const auto& th : data.TaggerHits) {
         /// \todo make prompt/random cut
-        const TLorentzVector beam_target = th->PhotonBeam() + TLorentzVector(0, 0, 0, ParticleTypeDatabase::Proton.Mass());
+        const TLorentzVector beam_target = th.GetPhotonBeam() + TLorentzVector(0, 0, 0, ParticleTypeDatabase::Proton.Mass());
         const TLorentzVector mm = beam_target - result.EtaPrime;
         h.MM_etap->Fill(mm.M());
     }
@@ -501,7 +501,7 @@ void EtapOmegaG::ProcessRef(const data::ParticleTree_t& particletree,
     steps = h.Steps;
     steps->Fill("Seen",1);
 
-    if(!(proton->Candidate()->Detector() & Detector_t::Type_t::TAPS))
+    if(!(proton->Candidate->Detector & Detector_t::Type_t::TAPS))
         return;
     steps->Fill("p in TAPS", 1);
 
@@ -539,7 +539,7 @@ void EtapOmegaG::ProcessRef(const data::ParticleTree_t& particletree,
     // use tagged photon
     for(const auto& th : data.TaggerHits) {
         /// \todo make prompt/random cut
-        const TLorentzVector beam_target = th->PhotonBeam() + TLorentzVector(0, 0, 0, ParticleTypeDatabase::Proton.Mass());
+        const TLorentzVector beam_target = th.GetPhotonBeam() + TLorentzVector(0, 0, 0, ParticleTypeDatabase::Proton.Mass());
         const TLorentzVector mm = beam_target - photon_sum;
         h.MM_etap->Fill(mm.M());
         // don't assume we always have a proton...

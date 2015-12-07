@@ -81,24 +81,22 @@ shared_ptr<Candidate> Converter::Convert(const TCandidate &candidate)
         det |= antCluster.Detector;
 
         if(cluster.GetDetectorType() == Detector_t::Type_t::CB || cluster.GetDetectorType() == Detector_t::Type_t::TAPS) {
-            antCandidate->clusterSize = cluster.Hits.size();
+            antCandidate->ClusterSize = cluster.Hits.size();
         }
     }
 
-    antCandidate->detector    = det;
+    antCandidate->Detector = det;
 
     return antCandidate;
 }
 
-shared_ptr<TaggerHit> Converter::Convert(const TTaggerHit& taggerhit)
+TaggerHit Converter::Convert(const TTaggerHit& taggerhit)
 {
-    // careful for normal Tagger: only first electron is treated
-    auto anttaggerhit = make_shared<TaggerHit>(
-                            taggerhit.Electrons.front().Key,
-                            taggerhit.PhotonEnergy,
-                            taggerhit.Time
-                            );
-    return anttaggerhit;
+    return TaggerHit(
+                taggerhit.Electrons.front().Key, /// @bug only first electron is treated
+                taggerhit.PhotonEnergy,
+                taggerhit.Time
+                );
 }
 
 

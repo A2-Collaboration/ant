@@ -51,7 +51,7 @@ void XMasCB::ProcessEvent(const Event& event)
 
     for(const auto& c : event.Reconstructed.Candidates) {
 
-        if(c->Detector() & Detector_t::Type_t::CB) {
+        if(c->Detector & Detector_t::Type_t::CB) {
             const auto& cluster  = c->FindCaloCluster();
 
             for(const auto& hit : cluster->Hits) {

@@ -44,7 +44,7 @@ struct Event : printable_traits {
                 return entry->second;
             }
 
-            virtual ~PTypeLists() {}
+            virtual ~PTypeLists() = default;
             std::ostream& Print(std::ostream& stream) const;
 
         protected:
@@ -64,14 +64,14 @@ struct Event : printable_traits {
         TriggerInfo    Trigger;
         ClusterList    AllClusters;
 
-        virtual ~Data() {}
+        virtual ~Data() = default;
         std::ostream& Print(std::ostream& stream) const;
     }; // Data
 
     Data    Reconstructed;
     Data    MCTrue;
 
-    virtual ~Event() {}
+    virtual ~Event() = default;
     std::ostream& Print(std::ostream& stream) const;
 };
 

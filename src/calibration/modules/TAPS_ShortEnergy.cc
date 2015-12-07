@@ -83,7 +83,7 @@ void TAPS_ShortEnergy::ThePhysics::ProcessEvent(const Event& event)
     }
 
     for(const auto& c : event.Reconstructed.Candidates) {
-        if(c->VetoEnergy() < 0.5) {
+        if(c->VetoEnergy < 0.5) {
             const auto& cluster = c->FindCaloCluster();
 
             if(cluster)

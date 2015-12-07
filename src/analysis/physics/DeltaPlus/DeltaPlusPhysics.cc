@@ -48,15 +48,15 @@ void DeltaPlusPhysics::ProcessEvent(const Event &event)
     }
 
     for( auto& track : event.Reconstructed.Candidates ) {
-        prompt["pid"]->Fill(track->ClusterEnergy(), track->VetoEnergy());
+        prompt["pid"]->Fill(track->ClusterEnergy, track->VetoEnergy);
     }
 
-    for( auto& taggerhit : event.Reconstructed.TaggerHits) {
+    for(const auto& taggerhit : event.Reconstructed.TaggerHits) {
         bool isPrompt = false;
 
-        if( prompt_window.Contains(taggerhit->Time()) ) {
+        if( prompt_window.Contains(taggerhit.Time) ) {
             isPrompt = true;
-        } else if( random_window.Contains(taggerhit->Time())) {
+        } else if( random_window.Contains(taggerhit.Time)) {
             isPrompt = false;
         } else
             continue;
@@ -65,8 +65,8 @@ void DeltaPlusPhysics::ProcessEvent(const Event &event)
 
         // some basic histograms
         h["nPart"]->Fill(event.Reconstructed.Particles.GetAll().size());
-        h["tag_energy"]->Fill(taggerhit->PhotonEnergy());
-        h["tag_time"]->Fill(taggerhit->Time());
+        h["tag_energy"]->Fill(taggerhit.PhotonEnergy);
+        h["tag_time"]->Fill(taggerhit.Time);
 
 
         if(photons.size() == 2) {
@@ -77,7 +77,7 @@ void DeltaPlusPhysics::ProcessEvent(const Event &event)
                 h["pi0angle_noboost"]->Fill(pi0.Theta());
 
                 // construct beam photon 4-vector and, using this, the delta restframe
-                const TLorentzVector beam(0, 0, taggerhit->PhotonEnergy(), taggerhit->PhotonEnergy());
+                const TLorentzVector beam(0, 0, taggerhit.PhotonEnergy, taggerhit.PhotonEnergy);
                 const TLorentzVector delta_beam(beam + target);
                 const TVector3 boost = -(delta_beam.BoostVector());
 

@@ -15,53 +15,42 @@ namespace analysis {
 namespace data {
 
 /**
- * @brief The Track class
- * Representation of GoAT information, with emphasis on
- * physical particle information, not on detector information!
+ * @brief The Candidate class
  */
-class Candidate: public ant::printable_traits
+struct Candidate : printable_traits
 {
-public:
-    mev_t clusterEnergy;
-    radian_t theta;
-    radian_t phi;
-    ns_t time;
-    clustersize_t clusterSize;
-    Detector_t::Any_t detector;
-    mev_t vetoEnergy;
-    mev_t trackerEnergy;
+
+    mev_t ClusterEnergy;
+    radian_t Theta;
+    radian_t Phi;
+    ns_t Time;
+    clustersize_t ClusterSize;
+    Detector_t::Any_t Detector;
+    mev_t VetoEnergy;
+    mev_t TrackerEnergy;
 
     ClusterList Clusters;
 
-    Candidate(const mev_t& _clusterEnergy,
-          const radian_t& _theta,
-          const radian_t& _phi,
-          const ns_t& _time,
-          const clustersize_t& _clusterSize,
-          const Detector_t::Any_t& _detector,
-          const mev_t& _vetoEnergy,
-          const mev_t& _trackerEnergy
+    Candidate(const mev_t& clusterEnergy,
+          const radian_t& theta,
+          const radian_t& phi,
+          const ns_t& time,
+          const clustersize_t& clusterSize,
+          const Detector_t::Any_t& detector,
+          const mev_t& vetoEnergy,
+          const mev_t& trackerEnergy
           ) :
-        clusterEnergy(_clusterEnergy),
-        theta(_theta),
-        phi(_phi),
-        time(_time),
-        clusterSize(_clusterSize),
-        detector(_detector),
-        vetoEnergy(_vetoEnergy),
-        trackerEnergy(_trackerEnergy)
+        ClusterEnergy(clusterEnergy),
+        Theta(theta),
+        Phi(phi),
+        Time(time),
+        ClusterSize(clusterSize),
+        Detector(detector),
+        VetoEnergy(vetoEnergy),
+        TrackerEnergy(trackerEnergy)
     {}
 
-
-    mev_t ClusterEnergy() const { return clusterEnergy; }
-    radian_t Theta() const { return theta; }
-    radian_t Phi() const { return phi; }
-    ns_t Time() const { return time; }
-    clustersize_t ClusterSize() const { return clusterSize; }
-    Detector_t::Any_t Detector() const { return detector; }
-    mev_t VetoEnergy() const { return vetoEnergy; }
-    mev_t TrackerEnergy() const { return trackerEnergy; }
-    operator TVector3 () const   { TVector3 p; p.SetMagThetaPhi(1.0, Theta(), Phi()); return p; }
+    operator TVector3() const { TVector3 p; p.SetMagThetaPhi(1.0, Theta, Phi); return p; }
 
     const Cluster* FindFirstCluster(Detector_t::Any_t detector) {
         for(const auto& cl : Clusters) {
@@ -82,7 +71,7 @@ public:
     }
 
     const Cluster* FindVetoCluster() {
-        if(VetoEnergy() > 0.0) {
+        if(VetoEnergy > 0.0) {
             for(const auto& cl : Clusters) {
                 if(cl.Detector & (Detector_t::Type_t::PID | Detector_t::Type_t::TAPSVeto)) {
                     return std::addressof(cl);
@@ -92,6 +81,7 @@ public:
         return nullptr;
     }
 
+    virtual ~Candidate() = default;
     virtual std::ostream& Print(std::ostream &stream) const override;
 
 };

@@ -37,15 +37,15 @@ void ExtractTimings::ProcessEvent(const data::Event& event)
     // EPT-CB and EPT-TAPS
     for(const auto& th : event.Reconstructed.TaggerHits) {
 
-        EPT->Fill(th->Time());
+        EPT->Fill(th.Time);
 
         for(const auto& p : photons) {
 
-            if(p->Candidate()) {
-                if(p->Candidate()->Detector() & Detector_t::Type_t::CB) {
-                    EPT_CB->Fill(th->Time() - p->Candidate()->Time());
-                } else if(p->Candidate()->Detector() & Detector_t::Type_t::TAPS) {
-                    EPT_TAPS->Fill(th->Time() - p->Candidate()->Time());
+            if(p->Candidate) {
+                if(p->Candidate->Detector & Detector_t::Type_t::CB) {
+                    EPT_CB->Fill(th.Time - p->Candidate->Time);
+                } else if(p->Candidate->Detector & Detector_t::Type_t::TAPS) {
+                    EPT_TAPS->Fill(th.Time - p->Candidate->Time);
                 }
 
             }
@@ -57,12 +57,12 @@ void ExtractTimings::ProcessEvent(const data::Event& event)
 
         const auto& pi = *i;
 
-        if(pi->Candidate()) {
+        if(pi->Candidate) {
 
-            if(pi->Candidate()->Detector() & Detector_t::Type_t::CB) {
-                CB->Fill(pi->Candidate()->Time());
-            } else if(pi->Candidate()->Detector() & Detector_t::Type_t::TAPS) {
-                TAPS->Fill(pi->Candidate()->Time());
+            if(pi->Candidate->Detector & Detector_t::Type_t::CB) {
+                CB->Fill(pi->Candidate->Time);
+            } else if(pi->Candidate->Detector & Detector_t::Type_t::TAPS) {
+                TAPS->Fill(pi->Candidate->Time);
             }
 
             for(auto j = inc(i); j != photons.cend(); ++j) {
@@ -70,13 +70,13 @@ void ExtractTimings::ProcessEvent(const data::Event& event)
                 const auto& pj = *j;
 
                 // CB-TAPS
-                if(pj->Candidate()) {
-                    if((pi->Candidate()->Detector() & Detector_t::Type_t::CB && pj->Candidate()->Detector() & Detector_t::Type_t::TAPS)
-                       || (pi->Candidate()->Detector() & Detector_t::Type_t::TAPS && pj->Candidate()->Detector() & Detector_t::Type_t::CB) ) {
+                if(pj->Candidate) {
+                    if((pi->Candidate->Detector & Detector_t::Type_t::CB && pj->Candidate->Detector & Detector_t::Type_t::TAPS)
+                       || (pi->Candidate->Detector & Detector_t::Type_t::TAPS && pj->Candidate->Detector & Detector_t::Type_t::CB) ) {
 
-                        double td = pi->Candidate()->Time() - pj->Candidate()->Time();
+                        double td = pi->Candidate->Time - pj->Candidate->Time;
 
-                        if(pi->Candidate()->Detector() & Detector_t::Type_t::TAPS) {
+                        if(pi->Candidate->Detector & Detector_t::Type_t::TAPS) {
                             td *= -1.0;
                         }
 
@@ -84,12 +84,12 @@ void ExtractTimings::ProcessEvent(const data::Event& event)
                     }
                 }
 
-                if(pi->Candidate()->Detector() & Detector_t::Type_t::CB && pj->Candidate()->Detector() & Detector_t::Type_t::CB) {
-                    CB_CB->Fill(pi->Candidate()->Time() - pj->Candidate()->Time());
+                if(pi->Candidate->Detector & Detector_t::Type_t::CB && pj->Candidate->Detector & Detector_t::Type_t::CB) {
+                    CB_CB->Fill(pi->Candidate->Time - pj->Candidate->Time);
                 }
 
-                if(pi->Candidate()->Detector() & Detector_t::Type_t::TAPS && pj->Candidate()->Detector() & Detector_t::Type_t::TAPS) {
-                    TAPS_TAPS->Fill(pi->Candidate()->Time() - pj->Candidate()->Time());
+                if(pi->Candidate->Detector & Detector_t::Type_t::TAPS && pj->Candidate->Detector & Detector_t::Type_t::TAPS) {
+                    TAPS_TAPS->Fill(pi->Candidate->Time - pj->Candidate->Time);
                 }
 
             }

@@ -53,8 +53,8 @@ void physics::ExtractResolutions::ProcessEvent(const data::Event& event)
             const auto& mcp = mcparticles.front();
             const auto& rep = recparticles.front();
 
-            if(rep->Candidate() && rep->Candidate()->Detector() == det) {
-                const auto& c = rep->Candidate()->FindCaloCluster();
+            if(rep->Candidate && rep->Candidate->Detector == det) {
+                const auto& c = rep->Candidate->FindCaloCluster();
                 if(c) {
                     b_E     = rep->Ek() - mcp->Ek();
                     b_Theta = rep->Theta() - mcp->Theta();

@@ -38,7 +38,7 @@ std::ostream &Event::Data::Print(std::ostream &stream) const
 
     stream << "-- Tagger --\n";
     for( auto& taggerhit : TaggerHits ) {
-        stream << *taggerhit << '\n';
+        stream << taggerhit << '\n';
     }
 
     stream << "-- Trigger --\n";

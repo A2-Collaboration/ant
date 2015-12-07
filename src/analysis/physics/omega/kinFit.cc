@@ -20,12 +20,12 @@ using namespace ant;
 
 double KinFitter::EnergyResolution(const analysis::data::ParticlePtr& p) const
 {
-    if(p->Candidate()) {
-        if(p->Candidate()->Detector() & Detector_t::Type_t::CB) {
+    if(p->Candidate) {
+        if(p->Candidate->Detector & Detector_t::Type_t::CB) {
 
             return fct_GlobalEResolution(p->Ek());
 
-        } if(p->Candidate()->Detector() & Detector_t::Type_t::TAPS) {
+        } if(p->Candidate->Detector & Detector_t::Type_t::TAPS) {
 
             return fct_GlobalEResolution(p->Ek()); ///@todo check TAPS energy resolution fct
         }
@@ -49,14 +49,14 @@ double KinFitter::ThetaResolution(const analysis::data::ParticlePtr&) const
 
 double KinFitter::PhiResolution(const analysis::data::ParticlePtr& p) const
 {
-    if(p->Candidate()) {
-        if(p->Candidate()->Detector() & Detector_t::Type_t::CB) {
+    if(p->Candidate) {
+        if(p->Candidate->Detector & Detector_t::Type_t::CB) {
 
-            return p->Candidate()->Theta() / std::sin(p->Candidate()->Theta());
+            return p->Candidate->Theta / std::sin(p->Candidate->Theta);
 
-        } if(p->Candidate()->Detector() & Detector_t::Type_t::TAPS) {   ///@todo check TAPS Theta resolution
+        } if(p->Candidate->Detector & Detector_t::Type_t::TAPS) {   ///@todo check TAPS Theta resolution
 
-            return p->Candidate()->Theta() / std::sin(p->Candidate()->Theta());
+            return p->Candidate->Theta / std::sin(p->Candidate->Theta);
         }
     } else {
         if(p->Theta() < degree_to_radian(20.0) ) {

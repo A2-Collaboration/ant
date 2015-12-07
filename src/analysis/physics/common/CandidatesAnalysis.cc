@@ -51,19 +51,19 @@ void CandidatesAnalysis::ProcessEvent(const Event &event)
 
     while(i!=candidates.end()) {
         const CandidatePtr& ci = *i;
-        energy->Fill((*i)->ClusterEnergy());
-        theta->Fill((*i)->Theta()*TMath::RadToDeg());
-        phi->Fill((*i)->Phi()*TMath::RadToDeg());
-        detectors->Fill(string(ci->Detector()).c_str(),1);
+        energy->Fill((*i)->ClusterEnergy);
+        theta->Fill((*i)->Theta*TMath::RadToDeg());
+        phi->Fill((*i)->Phi*TMath::RadToDeg());
+        detectors->Fill(string(ci->Detector).c_str(),1);
 
-        if((*i)->ClusterEnergy()>20.0) {
+        if((*i)->ClusterEnergy>20.0) {
 
-            if(ci->Detector() & Detector_t::Any_t::CB) {
-                cbdEE->Fill(ci->ClusterEnergy(),ci->VetoEnergy());
-                cbtof->Fill(ci->Time(), ci->ClusterEnergy());
-            } else if(ci->Detector() & Detector_t::Any_t::TAPS) {
-                tapsdEE->Fill(ci->ClusterEnergy(),ci->VetoEnergy());
-                tapstof->Fill(ci->Time(), ci->ClusterEnergy());
+            if(ci->Detector & Detector_t::Any_t::CB) {
+                cbdEE->Fill(ci->ClusterEnergy,ci->VetoEnergy);
+                cbtof->Fill(ci->Time, ci->ClusterEnergy);
+            } else if(ci->Detector & Detector_t::Any_t::TAPS) {
+                tapsdEE->Fill(ci->ClusterEnergy,ci->VetoEnergy);
+                tapstof->Fill(ci->Time, ci->ClusterEnergy);
 
 
                 // extract shot gate stuff
@@ -86,7 +86,7 @@ void CandidatesAnalysis::ProcessEvent(const Event &event)
 
                                 if(datum.Type == Channel_t::Type_t::IntegralShort) {
 
-                                    if(ci->VetoEnergy()<0.5)
+                                    if(ci->VetoEnergy<0.5)
                                         psa->Fill(central_e, datum.Value);
 
                                     psa_all->Fill(central_e, datum.Value);
@@ -101,11 +101,11 @@ void CandidatesAnalysis::ProcessEvent(const Event &event)
             CandidateList::const_iterator j = i;
             ++j;
             while(j!=candidates.end()) {
-                if((*i)->ClusterEnergy()>20.0) {
+                if((*i)->ClusterEnergy>20.0) {
                     const Particle b(ParticleTypeDatabase::Photon,*j);
                     const TLorentzVector s = a + b;
 
-                    if((*i)->VetoEnergy()==0 && (*j)->VetoEnergy()==0)
+                    if((*i)->VetoEnergy==0 && (*j)->VetoEnergy==0)
                         ggIM->Fill(s.M());
 
                     ttIM->Fill(s.M());
