@@ -3,9 +3,9 @@
 #include "calibration/Calibration.h"
 #include "Energy.h"
 
-class TH1;
-
 namespace ant {
+
+class TH2TAPS;
 
 namespace expconfig {
 namespace detector {
@@ -41,6 +41,9 @@ public:
         TH1*  h_projection = nullptr;
         TH1D* h_peaks = nullptr;
         TH1D* h_relative = nullptr;
+        
+        TH2TAPS* h_peaks_taps = nullptr;
+        TH2TAPS* h_relative_taps = nullptr;
 
         double AutoStopOnChi2 = 6;
     };
