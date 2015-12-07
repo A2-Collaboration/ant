@@ -39,8 +39,6 @@ public:
 
 /**
  * @brief Physics class to show Tagger related infos
- *
- *  See class DataOverview for available options
  */
 class TaggerOverview : public DataOverviewBase {
 protected:
@@ -61,8 +59,6 @@ public:
 
 /**
   * @brief Physics class to show Trigger and general event infos
-  *
-  * See class DataOverview for available options
   */
 class TriggerOverview : public DataOverviewBase {
 protected:
@@ -79,6 +75,25 @@ public:
     void ShowResult() override;
 };
 
+/**
+ * @brief The ParticleOverview class shows particle type occurences
+ */
+class TargetOverview : public DataOverviewBase {
+protected:
+    TH2D* VertexXY;
+    TH1D* VertexZ;
+
+public:
+    TargetOverview(const std::string& name, PhysOptPtr opts);
+    virtual ~TargetOverview();
+
+    void ProcessEvent(const data::Event &event) override;
+    void ShowResult() override;
+};
+
+/**
+ * @brief The ParticleOverview class shows particle type occurences
+ */
 class ParticleOverview: public DataOverviewBase {
 protected:
     TH1D* nParticles    = nullptr;
@@ -95,6 +110,8 @@ public:
     void ProcessEvent(const data::Event &event) override;
     void ShowResult() override;
 };
+
+
 
 }
 }

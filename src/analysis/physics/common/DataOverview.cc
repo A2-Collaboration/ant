@@ -142,9 +142,37 @@ void TriggerOverview::ShowResult()
             << endc;
 }
 
+TargetOverview::TargetOverview(const string& name, PhysOptPtr opts):
+    DataOverviewBase(name, opts)
+{
+    VertexXY = HistFac.makeTH2D("Vertex XY","X/cm","Y/cm",
+                                BinSettings(100,-5,5), BinSettings(100,-5,5),
+                                "VertexXY");
+    VertexZ = HistFac.makeTH1D("Vertex Z","Z/cm","#",
+                               BinSettings(400,-10,10),
+                               "VertexZ");
+}
+
+TargetOverview::~TargetOverview()
+{}
+
+void TargetOverview::ProcessEvent(const Event& event)
+{
+    const auto& target = GetBranch(event).Target;
+    VertexXY->Fill(target.Vertex.X(), target.Vertex.Y());
+    VertexZ->Fill(target.Vertex.Z());
+}
+
+void TargetOverview::ShowResult()
+{
+    canvas(this->GetName()+" "+GetMode())
+            << drawoption("colz") << VertexXY
+            << VertexZ
+            << endc;
+}
 
 
-void ParticleOverview::SetBinLabels(TH1D *hist, const ParticleTypeDatabase::TypeList_t &types)
+void ParticleOverview::SetBinLabels(TH1D *hist, const ParticleTypeDatabase::TypeList_t& types)
 {
     assert(int(types.size()) <= hist->GetNbinsX());
     int i=1;
@@ -203,4 +231,5 @@ void ParticleOverview::ShowResult()
 AUTO_REGISTER_PHYSICS(ParticleOverview)
 AUTO_REGISTER_PHYSICS(TaggerOverview)
 AUTO_REGISTER_PHYSICS(TriggerOverview)
+AUTO_REGISTER_PHYSICS(TargetOverview)
 
