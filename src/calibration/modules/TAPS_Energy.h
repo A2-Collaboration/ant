@@ -41,7 +41,7 @@ public:
         TH1*  h_projection = nullptr;
         TH1D* h_peaks = nullptr;
         TH1D* h_relative = nullptr;
-        
+
         TH2TAPS* h_peaks_taps = nullptr;
         TH2TAPS* h_relative_taps = nullptr;
 
@@ -52,7 +52,6 @@ public:
 
     protected:
         TH2D* ggIM = nullptr;
-        TH2D* timing_cuts = nullptr;
         TH2D* h_pedestals = nullptr;
 
         std::shared_ptr<expconfig::detector::TAPS> taps_detector;
