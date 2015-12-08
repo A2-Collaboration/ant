@@ -3,12 +3,14 @@ include_directories(.)
 set(DICT_HEADERS
     symmetric_pi0.h
     OmegaEtaG.h
+    ExtractResolutions.h
   )
 
 set(SRCS
     symmetric_pi0.cc
     OmegaEtaG.cc
     TreeTools.cc
+    ExtractResolutions.cc
   )
 
 set(ROOT_DICTIONARY "${CMAKE_CURRENT_BINARY_DIR}/G__tree.cc")
@@ -24,4 +26,4 @@ if(CMAKE_CXX_COMPILER_ID MATCHES "Clang")
 endif()
 
 add_library(analysis_codes ${SRCS} ${DICT_HEADERS})
-target_link_libraries(analysis_codes base ${ROOT_LIBRARIES})
+target_link_libraries(analysis_codes base analysis cbtaps_display ${ROOT_LIBRARIES})

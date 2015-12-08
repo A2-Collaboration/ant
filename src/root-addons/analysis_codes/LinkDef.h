@@ -9,6 +9,7 @@
 // templated classes need to have explicit type
 
 #pragma link C++ class SymmetricPi0+;
+#pragma link C++ class ExtractResolutions+;
 
 #endif // __CINT__
 
