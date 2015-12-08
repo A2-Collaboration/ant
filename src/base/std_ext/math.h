@@ -7,6 +7,7 @@ namespace ant {
 namespace std_ext {
 
 constexpr double inf = std::numeric_limits<double>::infinity();
+constexpr double NaN = std::numeric_limits<double>::quiet_NaN();
 
 template <typename T>
 constexpr inline T degree_to_radian(const T& degree) noexcept {
