@@ -6,6 +6,9 @@
 #include <string>
 
 namespace ant {
+
+class TH2CB;
+
 namespace analysis {
 namespace physics {
 
@@ -67,6 +70,8 @@ protected:
     TH1D* nErrorsEvent = nullptr;
     ///@todo Add histograms for Error Codes and ModuleIDs ?
 
+    TH2CB* oneclusterevents = nullptr;
+
 public:
     TriggerOverview(const std::string& name, PhysOptPtr opts);
     virtual ~TriggerOverview();
@@ -76,7 +81,7 @@ public:
 };
 
 /**
- * @brief The ParticleOverview class shows particle type occurences
+ * @brief The TargetOverview class shows target information
  */
 class TargetOverview : public DataOverviewBase {
 protected:

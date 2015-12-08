@@ -1,6 +1,8 @@
 #include "physics/common/DataOverview.h"
 #include "plot/root_draw.h"
 #include "expconfig/ExpConfig.h"
+#include "root-addons/cbtaps_display/TH2CB.h"
+
 #include <cassert>
 
 using namespace std;
@@ -119,6 +121,8 @@ TriggerOverview::TriggerOverview(const string &name, PhysOptPtr opts):
     CBESum       = HistFac.makeTH1D("CB Energy Sum",  "CB Energy Sum [MeV]", "", bins_energy,      "CBESum");
     Multiplicity = HistFac.makeTH1D("Multiplicity",   "# Hits",              "", bins_multiplicity,"Multiplicity");
     nErrorsEvent = HistFac.makeTH1D("Errors / Event", "# errors",            "", bins_errors,      "nErrrorsEvent");
+
+    oneclusterevents = new TH2CB("oneclusterevents","One Cluster Events");
 }
 
 TriggerOverview::~TriggerOverview()
@@ -131,6 +135,26 @@ void TriggerOverview::ProcessEvent(const Event &event)
     CBESum->Fill(trigger.CBEnergySum);
     Multiplicity->Fill(trigger.ClusterMultiplicity);
     nErrorsEvent->Fill(trigger.Errors.size());
+
+
+    // always run on Reconstructed
+    CandidatePtr cb_cand = nullptr;
+    for(const CandidatePtr& cand : event.Reconstructed.Candidates) {
+        if(cand->Detector & Detector_t::Type_t::CB) {
+            // ignore events with more than 1 CB candidate
+            if(cb_cand != nullptr) {
+                return;
+            }
+            cb_cand = cand;
+        }
+    }
+
+    if(!cb_cand)
+        return;
+
+    auto cb_cluster = cb_cand->FindCaloCluster();
+    if(trigger.CBEnergySum>400)
+        oneclusterevents->FillElement(cb_cluster->CentralElement, 1.0);
 }
 
 void TriggerOverview::ShowResult()
@@ -139,6 +163,7 @@ void TriggerOverview::ShowResult()
             << CBESum
             << Multiplicity
             << nErrorsEvent
+            << drawoption("colz") << oneclusterevents
             << endc;
 }
 
