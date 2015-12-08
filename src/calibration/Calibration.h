@@ -1,6 +1,5 @@
 #pragma once
 
-#include "analysis/physics/Physics.h"
 #include "reconstruct/Reconstruct_traits.h"
 #include "calibration/gui/Manager_traits.h"
 
@@ -57,7 +56,9 @@ public:
         using BaseModule::BaseModule; // constructors from base class
     public:
         // factory methods to request the modules providing physics/GUI functionality
-        virtual std::unique_ptr<analysis::Physics> GetPhysicsModule() =0;
+        virtual std::vector<std::string> GetPhysicsModules() const =0;
+        // GetGUIs cannot be const since returned Calib GUI Module might modify contents
+        // managed by the module itself
         virtual void GetGUIs(std::list<std::unique_ptr<calibration::gui::CalibModule_traits> >& guis) =0;
     };
 

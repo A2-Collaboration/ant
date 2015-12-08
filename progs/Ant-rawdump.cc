@@ -11,6 +11,7 @@
 #include "base/std_ext/system.h"
 #include "base/CmdLine.h"
 #include "base/Logger.h"
+#include "base/OptionsList.h"
 
 #include "TTree.h"
 

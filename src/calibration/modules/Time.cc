@@ -77,8 +77,8 @@ void Time::UpdatedTIDFlags(const TID& id)
     IsMC = id.isSet(TID::Flags_t::MC);
 }
 
-std::unique_ptr<Physics> Time::GetPhysicsModule() {
-    return std_ext::make_unique<ThePhysics>(GetName(), "Offsets", Detector);
+vector<string> Time::GetPhysicsModules() const {
+    return {};
 }
 
 void Time::GetGUIs(std::list<std::unique_ptr<gui::CalibModule_traits> >& guis) {
@@ -131,45 +131,45 @@ void Time::ApplyTo(const readhits_t& hits, extrahits_t&)
     }
 }
 
-Time::ThePhysics::ThePhysics(const string& name, const string& histName,
-                             const std::shared_ptr<Detector_t>& theDetector):
-    Physics(name),
-    detector(theDetector)
-{
-    string detectorName(Detector_t::ToString(detector->Type));
-    hTime = HistFac.makeTH2D(detectorName + string(" - Time"),
-                              "time [ns]",
-                              detectorName + " channel",
-                              BinSettings(1000,-400,400),
-                              BinSettings(detector->GetNChannels()),
-                              histName
-                              );
-    // handle tagger differently
-    isTagger = dynamic_pointer_cast<TaggerDetector_t, Detector_t>(detector) != nullptr;
-}
+//Time::ThePhysics::ThePhysics(const string& name, const string& histName,
+//                             const std::shared_ptr<Detector_t>& theDetector):
+//    Physics(name),
+//    detector(theDetector)
+//{
+//    string detectorName(Detector_t::ToString(detector->Type));
+//    hTime = HistFac.makeTH2D(detectorName + string(" - Time"),
+//                              "time [ns]",
+//                              detectorName + " channel",
+//                              BinSettings(1000,-400,400),
+//                              BinSettings(detector->GetNChannels()),
+//                              histName
+//                              );
+//    // handle tagger differently
+//    isTagger = dynamic_pointer_cast<TaggerDetector_t, Detector_t>(detector) != nullptr;
+//}
 
 
-void Time::ThePhysics::ProcessEvent(const Event& event)
-{
-    // handle Tagger differently
-    if(isTagger)
-    {
-        for (const auto& tHit: event.Reconstructed.TaggerHits)
-            hTime->Fill(tHit.Time,tHit.Channel);
-        return;
-    }
+//void Time::ThePhysics::ProcessEvent(const Event& event)
+//{
+//    // handle Tagger differently
+//    if(isTagger)
+//    {
+//        for (const auto& tHit: event.Reconstructed.TaggerHits)
+//            hTime->Fill(tHit.Time,tHit.Channel);
+//        return;
+//    }
 
-    for( const auto& cand: event.Reconstructed.Candidates)
-        for (const auto& cluster: cand->Clusters)
-            if (cluster.Detector == detector->Type)
-                hTime->Fill(cluster.Time,cluster.CentralElement);
+//    for( const auto& cand: event.Reconstructed.Candidates)
+//        for (const auto& cluster: cand->Clusters)
+//            if (cluster.Detector == detector->Type)
+//                hTime->Fill(cluster.Time,cluster.CentralElement);
 
-}
+//}
 
-void Time::ThePhysics::ShowResult()
-{
-    canvas(GetName())  << drawoption("colz") << hTime << endc;
-}
+//void Time::ThePhysics::ShowResult()
+//{
+//    canvas(GetName())  << drawoption("colz") << hTime << endc;
+//}
 
 
 Time::TheGUI::TheGUI(const string& name,

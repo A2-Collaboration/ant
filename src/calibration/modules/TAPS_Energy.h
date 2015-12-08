@@ -3,6 +3,8 @@
 #include "calibration/Calibration.h"
 #include "Energy.h"
 
+class TH1D;
+
 namespace ant {
 
 class TH2TAPS;
@@ -41,31 +43,31 @@ public:
         TH1*  h_projection = nullptr;
         TH1D* h_peaks = nullptr;
         TH1D* h_relative = nullptr;
-        
+
         TH2TAPS* h_peaks_taps = nullptr;
         TH2TAPS* h_relative_taps = nullptr;
 
         double AutoStopOnChi2 = 6;
     };
 
-    class ThePhysics : public analysis::Physics {
+//    class ThePhysics : public analysis::Physics {
 
-    protected:
-        TH2D* ggIM = nullptr;
-        TH2D* timing_cuts = nullptr;
-        TH2D* h_pedestals = nullptr;
+//    protected:
+//        TH2D* ggIM = nullptr;
+//        TH2D* timing_cuts = nullptr;
+//        TH2D* h_pedestals = nullptr;
 
-        std::shared_ptr<expconfig::detector::TAPS> taps_detector;
+//        std::shared_ptr<expconfig::detector::TAPS> taps_detector;
 
-    public:
+//    public:
 
-        ThePhysics(const std::string& name,
-                   std::shared_ptr<expconfig::detector::TAPS> taps);
+//        ThePhysics(const std::string& name,
+//                   std::shared_ptr<expconfig::detector::TAPS> taps);
 
-        virtual void ProcessEvent(const analysis::data::Event& event) override;
-        virtual void Finish() override;
-        virtual void ShowResult() override;
-    };
+//        virtual void ProcessEvent(const analysis::data::Event& event) override;
+//        virtual void Finish() override;
+//        virtual void ShowResult() override;
+//    };
 
     TAPS_Energy(
             std::shared_ptr<expconfig::detector::TAPS> taps,
@@ -76,7 +78,7 @@ public:
             double defaultThreshold = 1,
             double defaultRelativeGain = 1.0);
 
-    virtual std::unique_ptr<analysis::Physics> GetPhysicsModule() override;
+    virtual std::vector<std::string> GetPhysicsModules() const override;
     virtual void GetGUIs(std::list<std::unique_ptr<calibration::gui::CalibModule_traits> >& guis) override;
 protected:
     std::shared_ptr<expconfig::detector::TAPS> taps_detector;

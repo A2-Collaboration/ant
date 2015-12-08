@@ -11,8 +11,6 @@
 using namespace std;
 using namespace ant;
 using namespace ant::calibration;
-using namespace ant::analysis;
-using namespace ant::analysis::data;
 
 TAPS_Time::TAPS_Time(shared_ptr<expconfig::detector::TAPS> taps,
            shared_ptr<DataManager> calmgr,
@@ -42,45 +40,45 @@ TAPS_Time::TAPS_Time(shared_ptr<expconfig::detector::TAPS> taps,
     }
 }
 
-std::unique_ptr<Physics> TAPS_Time::GetPhysicsModule()
+std::vector<std::string> TAPS_Time::GetPhysicsModules() const
 {
-    return std_ext::make_unique<ThePhysics>(GetName(), "Offsets", Detector);
+    return {};
 }
 
 
-TAPS_Time::ThePhysics::ThePhysics(const string& name,
-                                  const string& histName,
-                                  const std::shared_ptr<Detector_t>& theDetector) :
-    Time::ThePhysics(name, histName, theDetector)
-{
-    string detectorName(Detector_t::ToString(detector->Type));
-    hTimeToTagger = HistFac.makeTH2D(
-                        detectorName + string(" - Time relative to tagger"),
-                        "time [ns]",
-                        detectorName + " channel",
-                        BinSettings(2000,-1500,1500),
-                        BinSettings(detector->GetNChannels()),
-                        "hTimeToTagger"
-                        );
-}
+//TAPS_Time::ThePhysics::ThePhysics(const string& name,
+//                                  const string& histName,
+//                                  const std::shared_ptr<Detector_t>& theDetector) :
+//    Time::ThePhysics(name, histName, theDetector)
+//{
+//    string detectorName(Detector_t::ToString(detector->Type));
+//    hTimeToTagger = HistFac.makeTH2D(
+//                        detectorName + string(" - Time relative to tagger"),
+//                        "time [ns]",
+//                        detectorName + " channel",
+//                        BinSettings(2000,-1500,1500),
+//                        BinSettings(detector->GetNChannels()),
+//                        "hTimeToTagger"
+//                        );
+//}
 
-void TAPS_Time::ThePhysics::ProcessEvent(const Event& event)
-{
-    Time::ThePhysics::ProcessEvent(event);
-    for(const auto& cand : event.Reconstructed.Candidates) {
-        for(const auto& cluster: cand->Clusters) {
-            if(cluster.Detector != detector->Type)
-                continue;
-            for(const auto& taggerhit : event.Reconstructed.TaggerHits) {
-                const double relative_time = cluster.Time - taggerhit.Time;
-                hTimeToTagger->Fill(relative_time, cluster.CentralElement);
-            }
-        }
-    }
-}
+//void TAPS_Time::ThePhysics::ProcessEvent(const Event& event)
+//{
+//    Time::ThePhysics::ProcessEvent(event);
+//    for(const auto& cand : event.Reconstructed.Candidates) {
+//        for(const auto& cluster: cand->Clusters) {
+//            if(cluster.Detector != detector->Type)
+//                continue;
+//            for(const auto& taggerhit : event.Reconstructed.TaggerHits) {
+//                const double relative_time = cluster.Time - taggerhit.Time;
+//                hTimeToTagger->Fill(relative_time, cluster.CentralElement);
+//            }
+//        }
+//    }
+//}
 
-void TAPS_Time::ThePhysics::ShowResult()
-{
-    Time::ThePhysics::ShowResult();
-    canvas(GetName()+" to Tagger")  << drawoption("colz") << hTimeToTagger << endc;
-}
+//void TAPS_Time::ThePhysics::ShowResult()
+//{
+//    Time::ThePhysics::ShowResult();
+//    canvas(GetName()+" to Tagger")  << drawoption("colz") << hTimeToTagger << endc;
+//}

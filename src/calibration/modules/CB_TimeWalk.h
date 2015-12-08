@@ -3,6 +3,8 @@
 #include "Calibration.h"
 
 class TGraph;
+class TH1D;
+class TH2D;
 
 namespace ant{
 namespace calibration{
@@ -39,19 +41,19 @@ public:
             );
     virtual ~CB_TimeWalk();
 
-    class ThePhysics : public analysis::Physics {
-    protected:
-        std::shared_ptr<expconfig::detector::CB> cb_detector;
-        TH3D* h_timewalk;
-        TH2D* h_timewalk_overview;
+//    class ThePhysics : public analysis::Physics {
+//    protected:
+//        std::shared_ptr<expconfig::detector::CB> cb_detector;
+//        TH3D* h_timewalk;
+//        TH2D* h_timewalk_overview;
 
-    public:
-        ThePhysics(const std::string& name, const std::shared_ptr<expconfig::detector::CB>& cb);
+//    public:
+//        ThePhysics(const std::string& name, const std::shared_ptr<expconfig::detector::CB>& cb);
 
-        virtual void ProcessEvent(const analysis::data::Event& event) override;
-        virtual void Finish() override ;
-        virtual void ShowResult() override;
-    }; // ThePhysics
+//        virtual void ProcessEvent(const analysis::data::Event& event) override;
+//        virtual void Finish() override ;
+//        virtual void ShowResult() override;
+//    }; // ThePhysics
 
     class TheGUI : public gui::CalibModule_traits {
     protected:
@@ -84,7 +86,7 @@ public:
         virtual void StoreFinishSlice(const interval<TID>& range) override;
     }; // TheGUI
 
-    virtual std::unique_ptr<analysis::Physics> GetPhysicsModule() override;
+    virtual std::vector<std::string> GetPhysicsModules() const override;
     virtual void GetGUIs(std::list<std::unique_ptr<calibration::gui::CalibModule_traits> >& guis) override;
 
     virtual void ApplyTo(clusterhits_t& sorted_clusterhits) override;

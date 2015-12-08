@@ -4,6 +4,7 @@
 #include "Energy.h"
 
 class TH1;
+class TH1D;
 
 namespace ant {
 
@@ -55,27 +56,27 @@ public:
         std::shared_ptr<expconfig::detector::TAPS> taps_detector;
     };
 
-    class ThePhysics : public analysis::Physics {
+//    class ThePhysics : public analysis::Physics {
 
-    protected:
-
-
-        TH2D* h_pedestals = nullptr;
-        TH2D* h_rel_gamma = nullptr;
-
-        std::shared_ptr<expconfig::detector::TAPS> taps_detector;
-
-    public:
+//    protected:
 
 
+//        TH2D* h_pedestals = nullptr;
+//        TH2D* h_rel_gamma = nullptr;
 
-        ThePhysics(const std::string& name,
-                   std::shared_ptr<expconfig::detector::TAPS> taps);
+//        std::shared_ptr<expconfig::detector::TAPS> taps_detector;
 
-        virtual void ProcessEvent(const analysis::data::Event& event) override;
-        virtual void Finish() override;
-        virtual void ShowResult() override;
-    };
+//    public:
+
+
+
+//        ThePhysics(const std::string& name,
+//                   std::shared_ptr<expconfig::detector::TAPS> taps);
+
+//        virtual void ProcessEvent(const analysis::data::Event& event) override;
+//        virtual void Finish() override;
+//        virtual void ShowResult() override;
+//    };
 
     TAPS_ShortEnergy(
             std::shared_ptr<expconfig::detector::TAPS> taps,
@@ -86,7 +87,7 @@ public:
             double defaultThreshold = 0,
             double defaultRelativeGain = 1.0);
 
-    virtual std::unique_ptr<analysis::Physics> GetPhysicsModule() override;
+    virtual std::vector<std::string> GetPhysicsModules() const override;
     virtual void GetGUIs(std::list<std::unique_ptr<calibration::gui::CalibModule_traits> >& guis) override;
 protected:
 

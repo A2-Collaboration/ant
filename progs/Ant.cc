@@ -355,7 +355,7 @@ int main(int argc, char** argv) {
             pm.AddPhysics( analysis::PhysicsRegistry::Create(classname, popts) );
             LOG(INFO) << "Activated physics class '" << classname << "'";
         } catch (...) {
-            LOG(ERROR) << "Physics class '" << classname << "' is not found.";
+            LOG(ERROR) << "Physics class '" << classname << "' not found";
             return 1;
         }
     }
@@ -372,17 +372,31 @@ int main(int argc, char** argv) {
             pm.AddPhysics( analysis::PhysicsRegistry::Create(classname, options) );
             LOG(INFO) << "Activated physics class '" << classname << "'";
         } catch (...) {
-            LOG(ERROR) << "Physics class '" << line << "' is not found.";
+            LOG(ERROR) << "Physics class '" << line << "' not found";
             return 1;
         }
     }
 
 
     for(const auto& calibration : enabled_calibrations) {
-        pm.AddPhysics(calibration->GetPhysicsModule());
+        const auto& physicsclasses = calibration->GetPhysicsModules();
+        if(physicsclasses.empty()) {
+            // this is actually more an implementation error...
+            LOG(ERROR) << "Calibration '" << calibration->GetName() << "' did not specify any physics classes";
+            return 1;
+        }
+        for(const std::string classname : physicsclasses) {
+            try {
+                pm.AddPhysics( analysis::PhysicsRegistry::Create(classname, popts) );
+                LOG(INFO) << "Activated physics class '" << classname << "'";
+            } catch (...) {
+                LOG(ERROR) << "Physics class '" << classname << "' requested by calibration '"
+                           << calibration->GetName()
+                           << "' not found";
+                return 1;
+            }
+        }
     }
-
-
 
     // set up particle ID
 
