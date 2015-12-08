@@ -3,6 +3,7 @@
 #include "base/types.h"
 #include "base/printable.h"
 #include "tree/TDataRecord.h"
+#include "base/std_ext/math.h"
 
 #include "TVector3.h"
 #include <list>
@@ -14,7 +15,7 @@ namespace data {
 
 struct Target_t : printable_traits {
 
-    Target_t( const TVector3& vertex = TVector3()):
+    Target_t(const TVector3& vertex = TVector3(std_ext::NaN, std_ext::NaN, std_ext::NaN)):
         Vertex(vertex)
     {}
 
