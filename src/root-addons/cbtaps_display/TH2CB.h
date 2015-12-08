@@ -7,7 +7,6 @@
 
 #include "TH2Crystals.h"
 
-#include "TH2DrawTool.h"
 #include "TH2Poly.h"
 #include "Rtypes.h"
 
@@ -32,17 +31,14 @@
 
 namespace ant {
 
+class TH2DrawTool;
+
 class TH2CB: public TH2Crystals {
 
 protected:
 
     virtual void Build();
     void MakeLevel(TH2DrawTool& c, const UInt_t n, std::set<Int_t>::const_iterator& nexthole, Int_t& vbins);
-
-    static const TH2DrawTool::point_list shape;    // shape of a crystal
-    static const std::set<Int_t> bins_in_holes;     // vbin numbers in holes
-    static const std::vector<Int_t> binmap;         // maps vbin to bin
-    static const std::vector<Int_t> Make_binmap();
 
     bool draw_glue_pads = false;
 
@@ -173,6 +169,8 @@ public:
     Int_t GetNumberOfElements() const { return 720; }
 
     virtual TMarker* SetMarker(const UInt_t element);
+
+    ClassDef(TH2CB,2);
 
 };
 

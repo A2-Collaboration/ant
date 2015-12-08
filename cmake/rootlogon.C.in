@@ -1,4 +1,7 @@
 {
     if(gSystem->Load("@LIBRARY_OUTPUT_PATH@/libtree.so") == 0)
     	cout << "Ant tree-library successfully loaded" << endl;
+
+    if(gSystem->Load("@LIBRARY_OUTPUT_PATH@/libcbtaps_display.so") == 0)
+    	cout << "Ant cb-taps-display-library successfully loaded" << endl;
 }

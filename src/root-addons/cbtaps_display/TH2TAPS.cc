@@ -3,11 +3,23 @@
 #include "TH2Poly.h"
 #include "TGraph.h"
 #include "TString.h"
+#include "TH2DrawTool.h"
 
 using namespace std;
 using namespace ant;
 
 using vec = ant::matrixstack::Vector;
+
+
+static TH2DrawTool::point_list MakeBaF2Shape();
+static TH2DrawTool::point_list MakePbWO4Shape();
+
+const Double_t b = 3.0;   // half distance of parallels of BaF2 in cm
+const Double_t a = b*2/TMath::Sqrt(3); // edge length of BaF2 in cm
+
+
+static const TH2DrawTool::point_list baf2_shape = MakeBaF2Shape();
+static const TH2DrawTool::point_list pbwo4_shape = MakePbWO4Shape();
 
 TH2TAPS::TH2TAPS(const string &name, const string &title): TH2Crystals(name,title)
 {
@@ -24,7 +36,7 @@ void TH2TAPS::SetElements(const TH2TAPS &h)
     TH2Crystals::SetElements(h);
 }
 
-TH2DrawTool::point_list TH2TAPS::MakeBaF2Shape()
+TH2DrawTool::point_list MakeBaF2Shape()
 {
     matrixstack s;
     TH2DrawTool::point_list shape(7);
@@ -40,7 +52,7 @@ TH2DrawTool::point_list TH2TAPS::MakeBaF2Shape()
     return shape;
 }
 
-TH2DrawTool::point_list TH2TAPS::MakePbWO4Shape()
+TH2DrawTool::point_list MakePbWO4Shape()
 {
     TH2DrawTool::point_list shape(5);
 
@@ -55,9 +67,9 @@ TH2DrawTool::point_list TH2TAPS::MakePbWO4Shape()
 
 void TH2TAPS::DrawShape(TH2DrawTool& c, bool isBaF2) {
     if(isBaF2)
-        c.Draw(TH2TAPS::baf2_shape);
+        c.Draw(baf2_shape);
     else
-        c.Draw(TH2TAPS::pbwo4_shape);
+        c.Draw(pbwo4_shape);
     c.FinishShape();
 
     // FinishShape adds the bin, so we get it here again
@@ -134,11 +146,3 @@ void TH2TAPS::Build() {
     SetYTitle("y [cm]");
 
 }
-
-const Double_t TH2TAPS::b = 3.0;   // half distance of parallels of BaF2 in cm
-const Double_t TH2TAPS::a = TH2TAPS::b*2/TMath::Sqrt(3); // edge length of BaF2 in cm
-
-const TH2DrawTool::point_list TH2TAPS::baf2_shape = TH2TAPS::MakeBaF2Shape();
-const TH2DrawTool::point_list TH2TAPS::pbwo4_shape = TH2TAPS::MakePbWO4Shape();
-
-

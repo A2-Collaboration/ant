@@ -2,7 +2,7 @@
 #include "TText.h"
 #include "Rtypes.h"
 #include "TGraph.h"
-
+#include "TH2DrawTool.h"
 #include "base/matrixstack.h"
 
 #include "cb_numbering.h"
@@ -13,6 +13,20 @@ using namespace std;
 using namespace ant;
 
 using vec = ant::matrixstack::Vector;
+
+const TH2DrawTool::point_list MakeTriangle();
+const std::set<Int_t> MakeListOfBinsInholes();
+const std::vector<Int_t> Make_binmap();
+//void MakeLevel(TH2DrawTool &c, const UInt_t n, set<Int_t>::const_iterator &nexthole, Int_t& vbins);
+
+
+// to be called in this order. List of holes has to be build before the bin map can be created.
+static const TH2DrawTool::point_list shape = MakeTriangle();    // shape of a crystal
+const std::set<Int_t> bins_in_holes = MakeListOfBinsInholes();
+const std::vector<Int_t> binmap = Make_binmap();
+
+
+
 
 void TH2CB::Build()
 {
@@ -141,7 +155,7 @@ void TH2CB::Build()
 
 }
 
-void TH2CB::MakeLevel(TH2DrawTool &c, const UInt_t n, set<Int_t>::const_iterator &nexthole, Int_t& vbins)
+void TH2CB::MakeLevel(TH2DrawTool& c, const UInt_t n, set<Int_t>::const_iterator &nexthole, Int_t& vbins)
 {
 
     const vec& a(shape.at(1));
@@ -486,7 +500,7 @@ const std::set<Int_t> MakeListOfBinsInholes() {
     return list;
 }
 
-const std::vector<Int_t> TH2CB::Make_binmap()
+const std::vector<Int_t> Make_binmap()
 {
     std::vector<Int_t> map(721);
 
@@ -496,10 +510,10 @@ const std::vector<Int_t> TH2CB::Make_binmap()
         for( int minor=1;minor<=4;++minor) {
             for( int crystal=1;crystal<=9;++crystal) {
 
-                Int_t vbin = GetVBinOfMMC(major,minor,crystal);
+                Int_t vbin = TH2CB::GetVBinOfMMC(major,minor,crystal);
 
 
-                if( IsInHole(vbin) ) {
+                if( TH2CB::IsInHole(vbin) ) {
                     map[vbin] = -5;
                 } else {
                     map[vbin] = bin++;
@@ -511,7 +525,4 @@ const std::vector<Int_t> TH2CB::Make_binmap()
     return map;
 }
 
-// to be called in this order. List of holes has to be build before the bin map can be created.
-const TH2DrawTool::point_list TH2CB::shape = MakeTriangle();
-const std::set<Int_t> TH2CB::bins_in_holes = MakeListOfBinsInholes();
-const std::vector<Int_t> TH2CB::binmap = TH2CB::Make_binmap();
+

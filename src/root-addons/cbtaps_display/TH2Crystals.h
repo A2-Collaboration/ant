@@ -102,6 +102,8 @@ public:
 
     virtual TMarker* SetMarker(const UInt_t element);   //*MENU*
 
+    ClassDef(TH2Crystals,2);
+
 };
 
 }
