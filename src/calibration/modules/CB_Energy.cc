@@ -144,6 +144,10 @@ gui::CalibModule_traits::DoFitReturn_t CB_Energy::GUI_Gains::DoFit(TH1* hist, un
 
     h_projection = hist2->ProjectionX("h_projection",channel+1,channel+1);
 
+    // stop at empty histograms
+    if(h_projection->GetEntries()==0)
+        return DoFitReturn_t::Display;
+
     func->SetDefaults(h_projection);
     func->SetRange(interval<double>(20,200));
     const auto it_fit_param = fitParameters.find(channel);
