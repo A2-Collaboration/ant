@@ -26,7 +26,7 @@ public:
             IgnoreDetectorChannels(Detector_t::Type_t::CB, {554});
 
             // no pi0 peak visible in 1CB 1TAPS hist
-            IgnoreDetectorChannels(Detector_t::Type_t::TAPS, {2,73,127,137,138,145,200,218,283,291,356,357,364});
+            // IgnoreDetectorChannels(Detector_t::Type_t::TAPS, {2,73,127,137,138,145,200,218,283,291,356,357,364});
 
             // no nice timing peak
             IgnoreDetectorChannels(Detector_t::Type_t::TAPSVeto, {6, 64, 128, 192, 287, 321, 337, 349});
