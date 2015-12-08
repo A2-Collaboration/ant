@@ -97,5 +97,6 @@ target_link_libraries(analysis
   ${APLCON_LIBRARY}
   base
   tree
+  expconfig
   cbtaps_display
   )
