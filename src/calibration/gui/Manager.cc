@@ -53,6 +53,8 @@ void Manager::BuildInputFiles(const vector<string>& filenames)
     if(filenames.empty())
         return;
 
+    string GitState = "";
+
     for(const auto& filename : filenames) {
 
         try {
@@ -66,6 +68,14 @@ void Manager::BuildInputFiles(const vector<string>& filenames)
             if(!header) {
                 LOG(WARNING) << "No TAntHeader found in " << filename;
                 continue;
+            }
+
+            if(GitState.empty()) {
+                GitState = header->GitInfo;
+            } else {
+                if(GitState != header->GitInfo) {
+                    LOG(WARNING) << " Git Info differs for " << filename << ": \"" << header->GitInfo << "\", expected \"" << GitState << "\"";
+                }
             }
 
             if(SetupName.empty()) {
