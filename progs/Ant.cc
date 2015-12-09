@@ -367,7 +367,7 @@ int main(int argc, char** argv) {
         options->SetOptions(optstr);
         try {
             pm.AddPhysics( analysis::PhysicsRegistry::Create(classname, options) );
-            LOG(INFO) << "Activated physics class '" << classname << "'";
+            LOG(INFO) << "Activated physics class '" << classname << "' with options " << optstr;
         } catch (...) {
             LOG(ERROR) << "Physics class '" << line << "' not found";
             return 1;
