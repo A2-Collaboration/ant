@@ -50,12 +50,11 @@ void dotest() {
     ExpConfig::Setup::ManualName = "Setup_Test";
 
     // create all available physics classes
-    std::shared_ptr<OptionsList> popts = make_shared<OptionsList>();
     for(auto name : PhysicsRegistry::GetList()) {
         histogram_overwrite_detected = false;
         duplicate_mkdir_detected = false;
         INFO(name);
-        REQUIRE_NOTHROW(PhysicsRegistry::Create(name, popts));
+        REQUIRE_NOTHROW(PhysicsRegistry::Create(name));
         REQUIRE_FALSE(histogram_overwrite_detected);
         REQUIRE_FALSE(duplicate_mkdir_detected);
     }

@@ -33,7 +33,7 @@ protected:
     const PhysOptPtr Options;
 
 public:
-    Physics(const std::string& name, PhysOptPtr opts=nullptr);
+    Physics(const std::string& name, PhysOptPtr opts);
     virtual ~Physics() {}
     virtual void ProcessEvent(const data::Event& event) =0;
     virtual void Finish() {}
@@ -64,7 +64,7 @@ private:
     }
 public:
 
-    static std::unique_ptr<Physics> Create(const std::string& name, PhysOptPtr opts);
+    static std::unique_ptr<Physics> Create(const std::string& name, PhysOptPtr opts = std::make_shared<OptionsList>());
 
     static std::vector<std::string> GetList();
 
