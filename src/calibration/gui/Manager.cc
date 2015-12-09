@@ -53,7 +53,7 @@ void Manager::BuildInputFiles(const vector<string>& filenames)
     if(filenames.empty())
         return;
 
-    string GitState = "";
+    shared_ptr<TAntHeader> last_header;
 
     for(const auto& filename : filenames) {
 
@@ -62,31 +62,19 @@ void Manager::BuildInputFiles(const vector<string>& filenames)
             WrapTFileInput file;
             file.OpenFile(filename);
 
-            TAntHeader* header = nullptr;
-            file.GetObject("AntHeader", header);
+            auto header = file.GetSharedClone<TAntHeader>("AntHeader");
 
             if(!header) {
                 LOG(WARNING) << "No TAntHeader found in " << filename;
                 continue;
             }
 
-            if(GitState.empty()) {
-                GitState = header->GitInfo;
-            } else {
-                if(GitState != header->GitInfo) {
-                    LOG(WARNING) << " Git Info differs for " << filename << ": \"" << header->GitInfo << "\", expected \"" << GitState << "\"";
-                }
-            }
-
-            if(SetupName.empty()) {
-                SetupName = header->SetupName;
-            }
-            else if(SetupName != header->SetupName) {
-                LOG(WARNING) << "Previously found setup name '" << SetupName
-                             << "' does not match '" << header->SetupName << "' of file "
-                             << filename;
+            if(last_header && !last_header->IsCompatible(*header)) {
+                LOG(WARNING) << *header << " not compatible to " << *last_header;
+                LOG(WARNING) << "Skipping " << filename;
                 continue;
             }
+            last_header = header;
 
             auto range = interval<TID>(header->FirstID, header->LastID);
             if(!range.IsSane()) {
@@ -99,6 +87,9 @@ void Manager::BuildInputFiles(const vector<string>& filenames)
             LOG(WARNING) << "Can't open " << filename << " " << e.what();
         }
     }
+
+    if(last_header)
+        SetupName = last_header->SetupName;
 
     input_files.sort();
     LOG(INFO) << "Loaded " << input_files.size()

@@ -15,6 +15,8 @@
 #include "expconfig/ExpConfig.h"
 #include "expconfig/setups/SetupRegistry.h"
 
+#include "calibration/DataManager.h"
+
 #include "unpacker/Unpacker.h"
 #include "unpacker/RawFileReader.h"
 
@@ -33,7 +35,6 @@
 #include "base/WrapTFile.h"
 #include "base/std_ext/system.h"
 #include "base/GitInfo.h"
-
 
 #include "TRint.h"
 #include "TSystem.h"
@@ -436,8 +437,14 @@ int main(int argc, char** argv) {
     // add some more info about the current state
     if(auto setup = ExpConfig::Setup::GetLastFound()) {
         header->SetupName = setup->GetName();
+        if(auto calmgr = setup->GetCalibrationDataManager()) {
+            GitInfo gitinfo_db(calmgr->GetCalibrationDataFolder());
+            header->GitInfoDatabase = gitinfo_db.GetDescription();
+        }
     }
-    header->GitInfo = GitInfo::GetDescription();
+    GitInfo gitinfo;
+    header->GitInfo = gitinfo.GetDescription();
+
     if(!header->GitInfo.empty()) {
         VLOG(5) << "Added git info: " << header->GitInfo;
     }

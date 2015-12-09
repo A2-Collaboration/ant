@@ -87,6 +87,11 @@ void DataManager::SetOverrideToDefault(bool v)
     override_as_default = v;
 }
 
+string DataManager::GetCalibrationDataFolder() const
+{
+    return calibrationDataFolder;
+}
+
 list<string> ant::calibration::DataManager::GetCalibrationIDs()
 {
     Init();

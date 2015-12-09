@@ -43,14 +43,17 @@ struct TCalibrationData
                      const TID& first_id,
                      const TID& last_id
                      ) :
-        Author(GitInfo::GetUser()),
+        Author(),
         TimeStamp(std::time(nullptr)),
         CalibrationID(calibrationID),
         FirstID(first_id),
         LastID(last_id),
         Data(),
         FitParameters()
-    {}
+    {
+        GitInfo info;
+        Author = info.GetUser();
+    }
 
     virtual std::ostream& Print( std::ostream& s) const override {
         s << "TCalibrationData:\n";

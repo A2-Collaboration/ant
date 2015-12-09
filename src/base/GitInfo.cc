@@ -1,14 +1,21 @@
 #include "GitInfo.h"
 
-#include "base/Paths.h"
 #include "std_ext/system.h"
 #include "std_ext/string.h"
+
+#include "base/Paths.h"
 
 #include <cstdio>
 #include <sstream>
 
 using namespace std;
 using namespace ant;
+
+GitInfo::GitInfo(const string& repofolder_) :
+    repofolder(repofolder_.empty() ? ANT_PATH_GITREPO : repofolder_)
+{
+
+}
 
 string GitInfo::GetUser()
 {
@@ -26,9 +33,11 @@ string GitInfo::GetDescription()
     return exec_git("describe --always --dirty");
 }
 
+
+
 string GitInfo::exec_git(const string& args)
 {
     stringstream ss_cmd;
-    ss_cmd << "cd " << ANT_PATH_GITREPO << " && git " << args;
+    ss_cmd << "cd " << repofolder << " && git " << args;
     return std_ext::system::exec(ss_cmd.str());
 }

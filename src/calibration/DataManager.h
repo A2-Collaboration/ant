@@ -43,7 +43,7 @@ class DataManager : public DataAccess
 
 private:
 
-    std::string calibrationDataFolder;
+    const std::string calibrationDataFolder;
     std::unique_ptr<DataBase> dataBase;
 
     void Init();
@@ -71,6 +71,8 @@ public:
 
     bool GetOverrideToDefault() const;
     void SetOverrideToDefault(bool v);
+
+    std::string GetCalibrationDataFolder() const;
 
 };
 

@@ -32,7 +32,7 @@ static_assert(std::is_same<Long_t, std::int64_t>::value, "Type size mismatch");
 
 // if we want to change something
 // of the data format defined by the ant::T* classes
-#define ANT_UNPACKER_ROOT_VERSION 1
+#define ANT_UNPACKER_ROOT_VERSION 2
 
 namespace ant {
 
