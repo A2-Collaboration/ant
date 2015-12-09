@@ -17,8 +17,8 @@ using namespace ant::analysis::physics;
 using namespace ant::analysis::data;
 using namespace std;
 
-DeltaPlusPhysics::DeltaPlusPhysics(PhysOptPtr opts):
-    Physics("DeltaPlusPhysics", opts),
+DeltaPlusPhysics::DeltaPlusPhysics(const string& name, PhysOptPtr opts):
+    Physics(name, opts),
     prompt("DeltaPlus_prompt"),
     random("DeltaPlus_random"),
     diff("DeltaPlus_diff"),
@@ -250,3 +250,5 @@ void DeltaPlusPhysics::Histogm::AddScaled(const DeltaPlusPhysics::Histogm &h2, c
         i->second->Add(h2.h.at(i->first),f);
     }
 }
+
+AUTO_REGISTER_PHYSICS(DeltaPlusPhysics)
