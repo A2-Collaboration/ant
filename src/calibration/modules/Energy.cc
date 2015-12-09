@@ -43,9 +43,9 @@ Energy::Energy(Detector_t::Type_t detectorType,
     calibrationManager(calmgr),
     Converter(move(converter)),
     Pedestals(defaultPedestal,"Pedestals"),
-    Gains(defaultGain,"Gains"),
+    Gains(defaultGain,"Gains", "ggIM"),
     Thresholds(defaultThreshold,"Thresholds"),
-    RelativeGains(defaultRelativeGain,"RelativeGains")
+    RelativeGains(defaultRelativeGain,"RelativeGains", "ggIM")
 {
     if(Converter==nullptr)
         throw std::runtime_error("Given converter should not be nullptr");
@@ -172,7 +172,8 @@ std::list<Updateable_traits::Loader_t> Energy::GetLoaders() const
 
 Energy::GUI_CalibType::GUI_CalibType(const string& basename, CalibType& type,
                                      const shared_ptr<DataManager>& calmgr,
-                                     const shared_ptr<Detector_t>& detector_, Calibration::AddMode_t mode) :
+                                     const shared_ptr<Detector_t>& detector_,
+                                     Calibration::AddMode_t mode) :
     gui::CalibModule_traits(basename),
     calibType(type),
     calibrationManager(calmgr),
@@ -182,14 +183,14 @@ Energy::GUI_CalibType::GUI_CalibType(const string& basename, CalibType& type,
 
 string Energy::GUI_CalibType::GetName() const
 {
-    // serves as the CalibrationID for the manager,
-    // and as the histogram name
+    // serves as the CalibrationID for the manager
     return CalibModule_traits::GetName()+"_"+calibType.Name;
 }
 
 string Energy::GUI_CalibType::GetHistogramName() const
 {
-    return CalibModule_traits::GetName()+"/"+calibType.Name;
+    // histogram name created by the specified Physics class
+    return CalibModule_traits::GetName()+"/"+calibType.HistogramName;
 }
 
 unsigned Energy::GUI_CalibType::GetNumberOfChannels() const
