@@ -37,8 +37,7 @@ void getdetector() {
     REQUIRE(cb.get() != nullptr);
     REQUIRE(cb->GetNChannels() == 720);
 
-    auto ladder = ExpConfig::Setup::GetDetector(Detector_t::Type_t::Tagger);
-    REQUIRE(ladder.get() == nullptr);
+    REQUIRE_THROWS_AS(ExpConfig::Setup::GetDetector(Detector_t::Type_t::Tagger), ExpConfig::Exception);
 }
 
 void getlastfound() {
