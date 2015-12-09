@@ -32,6 +32,16 @@ void checkcalibration(std::shared_ptr< Calibration::PhysicsModule> calibration) 
         REQUIRE_NOTHROW(ant::analysis::PhysicsRegistry::Create(physicsname));
     }
 
+    list<unique_ptr<gui::CalibModule_traits> > guis;
+    calibration->GetGUIs(guis);
+    REQUIRE_FALSE(guis.empty());
+
+    for(const auto& gui : guis) {
+        auto histname = gui->GetHistogramName();
+        INFO("GUI="+gui->GetName()+" Histogram="+histname)
+        TH1* h;
+        REQUIRE(outputfile.GetObject<TH1>(histname, h));
+    }
 
 }
 

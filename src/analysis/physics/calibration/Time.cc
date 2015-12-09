@@ -20,7 +20,7 @@ Time::Time(const Detector_t::Type_t& detectorType,
                              detectorName + " channel",
                              BinSettings(1000,-400,400),
                              BinSettings(detector->GetNChannels()),
-                             "hTime"
+                             "Time"
                              );
     hTimeToTagger = HistFac.makeTH2D(
                         detectorName + string(" - Time relative to tagger"),
