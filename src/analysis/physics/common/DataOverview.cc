@@ -12,25 +12,16 @@ using namespace ant::analysis::data;
 TaggerOverview::TaggerOverview(const string &name, PhysOptPtr opts):
     DataOverviewBase(name, opts)
 {
+
+    const auto tagger = ExpConfig::Setup::GetDetector<TaggerDetector_t>();
+    const auto Emin   = tagger->GetPhotonEnergy(0);
+    const auto Emax   = tagger->GetPhotonEnergy(tagger->GetNChannels()-1);
+    const auto width  = (Emax - Emin)/tagger->GetNChannels();
+
     const BinSettings bins_hits(50);
-    const BinSettings bins_energy(200, 1400, 1600);
-    const BinSettings bins_channels(47);
+    const BinSettings bins_energy(tagger->GetNChannels(), Emin-width/2, Emax+width/2);
+    const BinSettings bins_channels(tagger->GetNChannels());
     const BinSettings bins_times(1000,-50,50);
-
-//    const auto setup = ExpConfig::Setup::GetLastFound();
-//    const auto tagger = setup ? setup->GetDetector<TaggerDetector_t>() : nullptr;
-
-//    if(!tagger) {
-//        throw std::runtime_error("No Tagger in Setup!");
-//    }
-
-//    const BinSettings bins_channels(tagger->GetNChannels());
-
-//    const auto Emin   = tagger->GetPhotonEnergy(0);
-//    const auto Emax   = tagger->GetPhotonEnergy(tagger->GetNChannels()-1);
-//    const auto width  = (Emax - Emin)/tagger->GetNChannels();
-
-//    const BinSettings bins_energy(tagger->GetNChannels(), Emin-width/2, Emax+width/2);
 
     nHitsEvent = HistFac.makeTH1D("Tagger Hits / Enent ", "# Hits/Event",   "",     bins_hits,    "TaggerHitsPerEvent");
     nHitsEvent->SetFillColor(kRed);

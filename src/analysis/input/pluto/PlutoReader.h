@@ -51,7 +51,7 @@ protected:
     const ParticleTypeDatabase::Type* GetType(const PParticle* p) const;
 
 public:
-    PlutoReader(const std::shared_ptr<ant::WrapTFileInput>& rootfiles, const std::shared_ptr<TaggerDetector_t> tagger_);
+    PlutoReader(const std::shared_ptr<ant::WrapTFileInput>& rootfiles);
     virtual ~PlutoReader();
     PlutoReader(const PlutoReader&) = delete;
     PlutoReader& operator= (const PlutoReader&) = delete;

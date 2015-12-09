@@ -278,11 +278,7 @@ int main(int argc, char** argv) {
         readers.push_back(move(unpacker_reader));
     }
 
-    // the unpackers might have figured out what setup to use...
-    auto setup = ExpConfig::Setup::GetLastFound();
-    auto tagger = setup ? setup->GetDetector<TaggerDetector_t>() : nullptr;
-
-    readers.push_back(std_ext::make_unique<analysis::input::PlutoReader>(rootfiles, tagger));
+    readers.push_back(std_ext::make_unique<analysis::input::PlutoReader>(rootfiles));
     readers.push_back(std_ext::make_unique<analysis::input::GoatReader>(rootfiles));
     readers.push_back(std_ext::make_unique<analysis::input::GeantReader>(rootfiles));
 
@@ -292,6 +288,7 @@ int main(int argc, char** argv) {
     // of finding the config, so that we can simply ask the ExpConfig now
     list<shared_ptr<Calibration::PhysicsModule>> enabled_calibrations;
     if(cmd_calibrations->isSet()) {
+        auto setup = ExpConfig::Setup::GetLastFound();
         if(setup==nullptr) {
             stringstream ss_setups;
             for(auto name : ExpConfig::Setup::GetNames()) {
