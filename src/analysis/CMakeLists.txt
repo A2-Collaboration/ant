@@ -63,6 +63,17 @@ set(ANALYSIS_PHYSICS
   physics/common/ExtractResolutions.cc
   )
 
+set(ANALYSIS_PHYSICS_CALIBRATION
+  physics/calibration/Time.cc
+  physics/calibration/CB_Energy.cc
+  physics/calibration/CB_TimeWalk.cc
+  physics/calibration/TAPS_Energy.cc
+  physics/calibration/TAPS_ShortEnergy.cc
+  physics/calibration/PID_Energy.cc
+  physics/calibration/PID_PhiAngle.cc
+  physics/calibration/TAPSVeto_Energy.cc
+)
+
 set(ANALYSIS_PLOT
   plot/Histogram.cc
   plot/root_draw.cc
@@ -86,6 +97,7 @@ set(ANALYSIS_ALL
     ${ANALYSIS_DATASTRUCTURES}
     ${ANALYSIS_INPUT}
     ${ANALYSIS_PHYSICS}
+    ${ANALYSIS_PHYSICS_CALIBRATION}
     ${ANALYSIS_PLOT}
     ${ANALYSIS_UTILS}
 )
