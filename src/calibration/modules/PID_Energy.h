@@ -32,35 +32,6 @@ public:
 
     virtual ~PID_Energy();
 
-
-//    class ThePhysics : public analysis::Physics {
-
-//    protected:
-//        TH2D* h_pedestals = nullptr;
-
-//        struct PerChannel_t {
-//            TH2D* PedestalTiming = nullptr;
-//            TH1D* PedestalNoTiming = nullptr;
-//            TH2D* Banana = nullptr;
-//            TH2D* BananaRaw = nullptr;
-//            TH1D* TDCMultiplicity;
-//            TH1D* QDCMultiplicity;
-//            //TH3D* BananaTiming = nullptr;
-//            PerChannel_t(analysis::SmartHistFactory HistFac);
-//        };
-
-//        std::vector<PerChannel_t> h_perChannel;
-
-//    public:
-//         ThePhysics(const std::string& name, unsigned nChannels);
-
-//        virtual void ProcessEvent(const analysis::data::Event& event) override;
-//        virtual void Finish() override;
-//        virtual void ShowResult() override;
-//    }; // ThePhysics
-
-
-    virtual std::vector<std::string> GetPhysicsModules() const override;
     virtual void GetGUIs(std::list<std::unique_ptr<calibration::gui::CalibModule_traits> >& guis) override;
 
 protected:

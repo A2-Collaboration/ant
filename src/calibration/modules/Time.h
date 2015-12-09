@@ -63,19 +63,6 @@ public:
         virtual void StoreFinishSlice(const interval<TID>& range) override;
     }; // TheGUI
 
-//    class ThePhysics : public analysis::Physics {
-//    public:
-//        ThePhysics(const std::string& name, const std::string& histName,
-//                   const std::shared_ptr<Detector_t>& theDetector);
-//        virtual void ProcessEvent(const analysis::data::Event& event) override;
-//        virtual void ShowResult() override;
-
-//    protected:
-//        TH2D* hTime;
-//        std::shared_ptr<Detector_t> detector;
-//        bool isTagger;
-//    }; // ThePhysics
-
     Time(const std::shared_ptr<Detector_t>& detector,
          const std::shared_ptr<DataManager>& CalibrationManager,
          Calibration::Converter::ptr_t converter,
@@ -91,10 +78,6 @@ public:
     // Updateable_traits interface
     virtual std::list<Loader_t> GetLoaders() const override;
     void UpdatedTIDFlags(const TID& id) override;
-
-
-    // Physics_traits interface
-    virtual std::vector<std::string> GetPhysicsModules() const override;
 
     virtual void GetGUIs(std::list<std::unique_ptr<calibration::gui::CalibModule_traits> >& guis) override;
 

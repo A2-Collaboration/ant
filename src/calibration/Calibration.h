@@ -56,7 +56,11 @@ public:
         using BaseModule::BaseModule; // constructors from base class
     public:
         // factory methods to request the modules providing physics/GUI functionality
-        virtual std::vector<std::string> GetPhysicsModules() const =0;
+        virtual std::vector<std::string> GetPhysicsModules() const {
+            // usually there's a physics class with identical name
+            // of the calibration module
+            return {GetName()};
+        }
         // GetGUIs cannot be const since returned Calib GUI Module might modify contents
         // managed by the module itself
         virtual void GetGUIs(std::list<std::unique_ptr<calibration::gui::CalibModule_traits> >& guis) =0;

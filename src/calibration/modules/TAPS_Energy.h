@@ -37,6 +37,7 @@ public:
         virtual void DisplayFit() override;
         virtual void StoreFit(unsigned channel) override;
         virtual bool FinishSlice() override;
+
     protected:
         std::shared_ptr<gui::FitGausPol3> func;
         gui::CalCanvas* canvas;
@@ -50,25 +51,6 @@ public:
         double AutoStopOnChi2 = 6;
     };
 
-//    class ThePhysics : public analysis::Physics {
-
-//    protected:
-//        TH2D* ggIM = nullptr;
-//        TH2D* timing_cuts = nullptr;
-//        TH2D* h_pedestals = nullptr;
-
-//        std::shared_ptr<expconfig::detector::TAPS> taps_detector;
-
-//    public:
-
-//        ThePhysics(const std::string& name,
-//                   std::shared_ptr<expconfig::detector::TAPS> taps);
-
-//        virtual void ProcessEvent(const analysis::data::Event& event) override;
-//        virtual void Finish() override;
-//        virtual void ShowResult() override;
-//    };
-
     TAPS_Energy(
             std::shared_ptr<expconfig::detector::TAPS> taps,
             std::shared_ptr<DataManager> calmgr,
@@ -78,7 +60,6 @@ public:
             double defaultThreshold = 1,
             double defaultRelativeGain = 1.0);
 
-    virtual std::vector<std::string> GetPhysicsModules() const override;
     virtual void GetGUIs(std::list<std::unique_ptr<calibration::gui::CalibModule_traits> >& guis) override;
 protected:
     std::shared_ptr<expconfig::detector::TAPS> taps_detector;
