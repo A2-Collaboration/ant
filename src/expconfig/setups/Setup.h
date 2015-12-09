@@ -11,6 +11,7 @@
 #include "calibration/Calibration.h"
 #include "calibration/DataManager.h"
 
+#include "base/OptionsList.h"
 
 #include <functional>
 #include <string>

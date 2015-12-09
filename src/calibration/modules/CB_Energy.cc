@@ -42,13 +42,6 @@ CB_Energy::CB_Energy(std::shared_ptr<expconfig::detector::CB> cb,
 
 }
 
-unique_ptr<analysis::Physics> CB_Energy::GetPhysicsModule()
-{
-    return std_ext::make_unique<ThePhysics>(GetName(),
-                                            RelativeGains.Name,
-                                            cb_detector->GetNChannels());
-}
-
 void CB_Energy::GetGUIs(list<unique_ptr<gui::CalibModule_traits> >& guis)
 {
     guis.emplace_back(std_ext::make_unique<GUI_Gains>(
@@ -57,55 +50,6 @@ void CB_Energy::GetGUIs(list<unique_ptr<gui::CalibModule_traits> >& guis)
                           calibrationManager,
                           cb_detector
                           ));
-}
-
-
-CB_Energy::ThePhysics::ThePhysics(const string& name,
-                                  const string& hist_name,
-                                  unsigned nChannels):
-    Physics(name)
-{
-    const BinSettings cb_channels(nChannels);
-    const BinSettings energybins(1000);
-
-    ggIM = HistFac.makeTH2D("2 neutral IM (CB,CB)", "IM [MeV]", "#",
-                            energybins, cb_channels, hist_name);
-}
-
-void CB_Energy::ThePhysics::ProcessEvent(const Event& event)
-{
-    const auto& cands = event.Reconstructed.Candidates;
-
-    for( auto comb = analysis::utils::makeCombination(cands,2); !comb.Done(); ++comb ) {
-        const CandidatePtr& p1 = comb.at(0);
-        const CandidatePtr& p2 = comb.at(1);
-
-        if(p1->VetoEnergy==0 && p2->VetoEnergy==0
-           && (p1->Detector & Detector_t::Type_t::CB)
-           && (p2->Detector & Detector_t::Type_t::CB)) {
-            const Particle a(ParticleTypeDatabase::Photon,comb.at(0));
-            const Particle b(ParticleTypeDatabase::Photon,comb.at(1));
-            const TLorentzVector gg = a + b;
-
-            auto cl1 = p1->FindCaloCluster();
-            if(cl1)
-                ggIM->Fill(gg.M(),cl1->CentralElement);
-
-            auto cl2 = p2->FindCaloCluster();
-            if(cl2)
-                ggIM->Fill(gg.M(),cl2->CentralElement);
-        }
-    }
-}
-
-void CB_Energy::ThePhysics::Finish()
-{
-
-}
-
-void CB_Energy::ThePhysics::ShowResult()
-{
-    canvas(GetName()) << drawoption("colz") << ggIM << endc;
 }
 
 CB_Energy::GUI_Gains::GUI_Gains(const string& basename,

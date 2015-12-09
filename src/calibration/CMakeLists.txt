@@ -44,4 +44,4 @@ set(SRCS
   )
 
 add_library(calibration ${SRCS})
-target_link_libraries(calibration base analysis expconfig-detectors cbtaps_display)
+target_link_libraries(calibration base tree expconfig-detectors cbtaps_display)

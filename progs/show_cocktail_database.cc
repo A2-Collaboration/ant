@@ -54,15 +54,15 @@ int main( int argc, char** argv )
             return 1;
         }
 
-        ExpConfig::Setup::ManualName = cmd_setup->getValue();
-        auto setup = ExpConfig::Setup::GetLastFound();
-        if(auto tagger = setup->GetDetector<TaggerDetector_t>()) {
+        try {
+            ExpConfig::Setup::ManualName = cmd_setup->getValue();
+            auto tagger = ExpConfig::Setup::GetDetector<TaggerDetector_t>();
             for(unsigned ch=0;ch<tagger->GetNChannels();ch++) {
                 energies.push_back(tagger->GetPhotonEnergy(ch)*MeVtoGeV); // convert to GeV!
             }
         }
-        else {
-            LOG(ERROR) << "Specified setup did not provide tagger detector";
+        catch(ExpConfig::Exception e) {
+            LOG(ERROR) << "Specified setup '" << ExpConfig::Setup::ManualName << "' did not provide a tagger: " << e.what();
             return 1;
         }
     }

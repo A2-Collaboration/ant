@@ -3,6 +3,8 @@
 #include "calibration/Calibration.h"
 #include "Energy.h"
 
+class TH1D;
+
 namespace ant {
 
 class TH2CB;
@@ -47,18 +49,6 @@ public:
         double AutoStopOnChi2 = 6;
     };
 
-    struct ThePhysics : analysis::Physics {
-
-        ThePhysics(const std::string& name, const std::string& hist_name, unsigned nChannels);
-
-        virtual void ProcessEvent(const analysis::data::Event& event) override;
-        virtual void Finish() override;
-        virtual void ShowResult() override;
-
-    protected:
-        TH2* ggIM = nullptr;
-    };
-
     CB_Energy(
             std::shared_ptr<expconfig::detector::CB> cb,
             std::shared_ptr<DataManager> calmgr,
@@ -68,7 +58,6 @@ public:
             double defaultThreshold = 2,
             double defaultRelativeGain = 1.0);
 
-    virtual std::unique_ptr<analysis::Physics> GetPhysicsModule() override;
     virtual void GetGUIs(std::list<std::unique_ptr<gui::CalibModule_traits> >& guis) override;
 
 

@@ -29,18 +29,6 @@ public:
             );
     virtual ~PID_PhiAngle();
 
-    class ThePhysics : public analysis::Physics {
-    protected:
-        TH2* pid_cb_phi_corr;
-        const ant::interval<double> theta_range;
-    public:
-        ThePhysics(const std::string& name, unsigned nChannels);
-
-        virtual void ProcessEvent(const analysis::data::Event& event) override;
-        virtual void Finish() override ;
-        virtual void ShowResult() override;
-    }; // ThePhysics
-
     class TheGUI : public gui::CalibModule_traits {
     protected:
         std::shared_ptr<DataManager> calibrationManager;
@@ -79,7 +67,6 @@ public:
         virtual void StoreFinishSlice(const interval<TID>& range) override;
     }; // TheGUI
 
-    virtual std::unique_ptr<analysis::Physics> GetPhysicsModule() override;
     virtual void GetGUIs(std::list<std::unique_ptr<calibration::gui::CalibModule_traits> >& guis) override;
 
     // Updateable_traits interface

@@ -15,6 +15,8 @@
 #include "TTree.h"
 #include "TClonesArray.h"
 
+#include "expconfig/ExpConfig.h"
+
 
 using namespace ant;
 using namespace ant::analysis;
@@ -22,12 +24,14 @@ using namespace ant::analysis::input;
 using namespace ant::analysis::data;
 using namespace std;
 
-PlutoReader::PlutoReader(const std::shared_ptr<WrapTFileInput>& rootfiles, const std::shared_ptr<TaggerDetector_t> tagger_) :
-    tagger(tagger_),
+PlutoReader::PlutoReader(const std::shared_ptr<WrapTFileInput>& rootfiles) :
     files(rootfiles)
 {
-    if(!tagger) {
-        LOG(WARNING) << "Not generating MCTrue tagger hits since no tagger detector was provided";
+    try {
+        tagger = ExpConfig::Setup::GetDetector<TaggerDetector_t>();
+    }
+    catch(ExpConfig::Exception e) {
+        LOG(WARNING) << "Not generating MCTrue tagger hits since no tagger detector was found: " << e.what();
     }
 
     /// \note the Pluto tree is really named just "data"

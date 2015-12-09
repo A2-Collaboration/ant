@@ -83,12 +83,15 @@ project.
 
 ## Library organization
 
-Due to the fact that calibration modules are also analyses, and
-analyses should not know anything about detectors anymore (data
-structures should be such that you work with high-level data), the
-linking of (solid arrows) and the include (dashed arrows) looks like this:
+The calibration modules specify physics classes, usually below
+`src/analysis/physics/calibration`, which produce the histograms used
+in the GUI part of the module. Furthermore, the analysis classes can
+access all information organized in `expconfig`.
 
 <img src="doc/library-dependencies.png">
+
+The solid arrows mean "links to", whereas the dashed arrows means
+"includes only".
 
 ## Development
 

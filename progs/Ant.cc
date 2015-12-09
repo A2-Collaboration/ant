@@ -278,11 +278,7 @@ int main(int argc, char** argv) {
         readers.push_back(move(unpacker_reader));
     }
 
-    // the unpackers might have figured out what setup to use...
-    auto setup = ExpConfig::Setup::GetLastFound();
-    auto tagger = setup ? setup->GetDetector<TaggerDetector_t>() : nullptr;
-
-    readers.push_back(std_ext::make_unique<analysis::input::PlutoReader>(rootfiles, tagger));
+    readers.push_back(std_ext::make_unique<analysis::input::PlutoReader>(rootfiles));
     readers.push_back(std_ext::make_unique<analysis::input::GoatReader>(rootfiles));
     readers.push_back(std_ext::make_unique<analysis::input::GeantReader>(rootfiles));
 
@@ -292,6 +288,7 @@ int main(int argc, char** argv) {
     // of finding the config, so that we can simply ask the ExpConfig now
     list<shared_ptr<Calibration::PhysicsModule>> enabled_calibrations;
     if(cmd_calibrations->isSet()) {
+        auto setup = ExpConfig::Setup::GetLastFound();
         if(setup==nullptr) {
             stringstream ss_setups;
             for(auto name : ExpConfig::Setup::GetNames()) {
@@ -355,7 +352,7 @@ int main(int argc, char** argv) {
             pm.AddPhysics( analysis::PhysicsRegistry::Create(classname, popts) );
             LOG(INFO) << "Activated physics class '" << classname << "'";
         } catch (...) {
-            LOG(ERROR) << "Physics class '" << classname << "' is not found.";
+            LOG(ERROR) << "Physics class '" << classname << "' not found";
             return 1;
         }
     }
@@ -370,19 +367,33 @@ int main(int argc, char** argv) {
         options->SetOptions(optstr);
         try {
             pm.AddPhysics( analysis::PhysicsRegistry::Create(classname, options) );
-            LOG(INFO) << "Activated physics class '" << classname << "'";
+            LOG(INFO) << "Activated physics class '" << classname << "' with options " << optstr;
         } catch (...) {
-            LOG(ERROR) << "Physics class '" << line << "' is not found.";
+            LOG(ERROR) << "Physics class '" << line << "' not found";
             return 1;
         }
     }
 
 
     for(const auto& calibration : enabled_calibrations) {
-        pm.AddPhysics(calibration->GetPhysicsModule());
+        const auto& physicsclasses = calibration->GetPhysicsModules();
+        if(physicsclasses.empty()) {
+            // this is actually more an implementation error...
+            LOG(ERROR) << "Calibration '" << calibration->GetName() << "' did not specify any physics classes";
+            return 1;
+        }
+        for(const std::string classname : physicsclasses) {
+            try {
+                pm.AddPhysics( analysis::PhysicsRegistry::Create(classname, popts) );
+                LOG(INFO) << "Activated physics class '" << classname << "'";
+            } catch (...) {
+                LOG(ERROR) << "Physics class '" << classname << "' requested by calibration '"
+                           << calibration->GetName()
+                           << "' not found";
+                return 1;
+            }
+        }
     }
-
-
 
     // set up particle ID
 

@@ -16,5 +16,8 @@ set(SRCS
 )
 
 add_library(unpacker ${SRCS})
-target_link_libraries(unpacker base tree expconfig ${LIBLZMA_LIBRARY})
+target_link_libraries(unpacker expconfig tree base
+ ${PLUTO_LIBRARY}  # Pluto is needed for Geant root files including copied TID information
+ ${LIBLZMA_LIBRARY}
+)
 

@@ -13,6 +13,12 @@ using namespace std;
 
 void getdetector();
 void getlastfound();
+void getall();
+
+TEST_CASE("ExpConfig Get (all)", "[expconfig]") {
+    ExpConfig::Setup::Cleanup();
+    getall();
+}
 
 TEST_CASE("ExpConfig GetLastFound", "[expconfig]") {
     ExpConfig::Setup::Cleanup();
@@ -22,6 +28,14 @@ TEST_CASE("ExpConfig GetLastFound", "[expconfig]") {
 TEST_CASE("ExpConfig GetDetector", "[expconfig]") {
     ExpConfig::Setup::Cleanup();
     getdetector();
+}
+
+void getall() {
+    auto setupnames = ExpConfig::Setup::GetNames();
+    REQUIRE(setupnames.size() == 5);
+    for(auto setupname : setupnames) {
+        REQUIRE(ExpConfig::Setup::Get(setupname) != nullptr);
+    }
 }
 
 void getdetector() {
@@ -37,8 +51,7 @@ void getdetector() {
     REQUIRE(cb.get() != nullptr);
     REQUIRE(cb->GetNChannels() == 720);
 
-    auto ladder = ExpConfig::Setup::GetDetector(Detector_t::Type_t::Tagger);
-    REQUIRE(ladder.get() == nullptr);
+    REQUIRE_THROWS_AS(ExpConfig::Setup::GetDetector(Detector_t::Type_t::Tagger), ExpConfig::Exception);
 }
 
 void getlastfound() {

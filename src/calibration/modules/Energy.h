@@ -59,10 +59,15 @@ protected:
         const double        DefaultValue;
         std::vector<double> Values;
         const std::string   Name;
-        CalibType(double defaultValue, const std::string& name):
+        const std::string   HistogramName;
+        CalibType(double defaultValue, const std::string& name) :
+            CalibType(defaultValue, name, name)
+        {}
+        CalibType(double defaultValue, const std::string& name, const std::string& histname) :
             DefaultValue(defaultValue),
             Values(),
-            Name(name)
+            Name(name),
+            HistogramName(histname)
         {}
     }; // CalibType
 
