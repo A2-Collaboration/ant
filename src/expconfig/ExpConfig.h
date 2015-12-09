@@ -114,13 +114,13 @@ std::shared_ptr<DetectorType> ExpConfig::Setup::GetDetector()
 {
     auto config = std::dynamic_pointer_cast<Reconstruct, Setup>(GetLastFound());
     if(config == nullptr)
-        return nullptr;
+        throw ExceptionNoConfig("Could not find setup to search for required detector");
     for(const auto& detector : config->GetDetectors()) {
         auto detector_ = std::dynamic_pointer_cast<DetectorType, Detector_t>(detector);
         if(detector_ != nullptr)
             return detector_;
     }
-    return nullptr;
+    throw Exception("Could not find detector in given setup");
 }
 
 } // namespace ant

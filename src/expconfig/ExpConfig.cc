@@ -114,12 +114,12 @@ std::shared_ptr<Detector_t> ExpConfig::Setup::GetDetector(Detector_t::Type_t typ
 {
     auto config = std::dynamic_pointer_cast<Reconstruct, Setup>(GetLastFound());
     if(config == nullptr)
-        return nullptr;
+        throw ExceptionNoConfig("Could not find setup to search for required detector");
     for(const auto& detector : config->GetDetectors()) {
         if(detector->Type == type)
             return detector;
     }
-    return nullptr;
+    throw Exception("Could not find detector in given setup");
 }
 
 void ExpConfig::Setup::Cleanup()
