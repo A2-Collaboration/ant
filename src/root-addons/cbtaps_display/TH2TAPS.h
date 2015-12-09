@@ -1,5 +1,4 @@
-#ifndef TH2TAPS_H
-#define TH2TAPS_H
+#pragma once
 
 #include "TH2Crystals.h"
 
@@ -24,9 +23,7 @@ public:
     virtual void FillElements( const TH2TAPS& h);
     virtual void SetElements( const TH2TAPS& h);
 
-    ClassDef(TH2TAPS,2);
+    ClassDef(TH2TAPS,2)
 };
 
 }
-
-#endif

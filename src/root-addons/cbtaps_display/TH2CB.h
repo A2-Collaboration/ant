@@ -1,5 +1,4 @@
-#ifndef TH2CB_H
-#define TH2CB_H
+#pragma once
 
 #include <set>
 #include <vector>
@@ -170,11 +169,9 @@ public:
 
     virtual TMarker* SetMarker(const UInt_t element);
 
-    ClassDef(TH2CB,2);
+    ClassDef(TH2CB,2)
 
 };
 
 
 }
-
-#endif

@@ -1,5 +1,4 @@
-#ifndef TH2CRYSTALS_H
-#define TH2CRYSTALS_H
+#pragma once
 
 
 #include "TH2Poly.h"
@@ -102,10 +101,8 @@ public:
 
     virtual TMarker* SetMarker(const UInt_t element);   //*MENU*
 
-    ClassDef(TH2Crystals,2);
+    ClassDef(TH2Crystals,2)
 
 };
 
 }
-
-#endif
