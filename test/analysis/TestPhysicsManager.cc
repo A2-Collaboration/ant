@@ -47,7 +47,7 @@ struct TestPhysics : Physics
     unsigned seenMCTrue = 0;
 
 
-    TestPhysics() : Physics("TestPhysics") {}
+    TestPhysics() : Physics("TestPhysics", nullptr) {}
 
     virtual void ProcessEvent(const data::Event& event) override
     {
