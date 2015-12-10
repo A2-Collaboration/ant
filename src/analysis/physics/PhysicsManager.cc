@@ -18,12 +18,21 @@ using namespace std;
 using namespace ant;
 using namespace ant::analysis;
 
-PhysicsManager::PhysicsManager() : physics() {}
+PhysicsManager::PhysicsManager(volatile bool* running_) :
+    physics(),
+    running(running_)
+{}
 
 PhysicsManager::~PhysicsManager() {}
 
 void PhysicsManager::SetParticleID(std::unique_ptr<utils::ParticleID> pid) {
     particleID = move(pid);
+}
+
+void PhysicsManager::SetAntHeader(TAntHeader& header)
+{
+    header.FirstID = firstID;
+    header.LastID = lastID;
 }
 
 bool PhysicsManager::InitReaders(PhysicsManager::readers_t readers_)
@@ -88,11 +97,7 @@ bool PhysicsManager::TryReadEvent(unique_ptr<data::Event>& event)
     return true;
 }
 
-void PhysicsManager::ProcessEventBuffer(
-        long long maxevents,
-        bool& running,
-        TAntHeader& header
-        )
+void PhysicsManager::ProcessEventBuffer(long long maxevents)
 {
     // if running is already false,
     // flush the buffer no matter what...
@@ -122,8 +127,8 @@ void PhysicsManager::ProcessEventBuffer(
         ProcessEvent(move(event));
         eventbuffer.pop();
         if(nEventsProcessed==0)
-            header.FirstID = eventid;
-        header.LastID = eventid;
+            firstID = eventid;
+        lastID = eventid;
         nEventsProcessed++;
     }
 }
@@ -131,11 +136,8 @@ void PhysicsManager::ProcessEventBuffer(
 
 
 void PhysicsManager::ReadFrom(
-        std::list<std::unique_ptr<input::DataReader> > readers_,
-        long long maxevents,
-        bool& running,
-        TAntHeader& header
-        )
+        list<unique_ptr<input::DataReader> > readers_,
+        long long maxevents)
 {
     if(!InitReaders(move(readers_)))
         return;
@@ -197,7 +199,7 @@ void PhysicsManager::ReadFrom(
 
         if(slowcontrol_mgr.isComplete()) {
             VLOG(5) << "Slowcontrol set complete. Processing event buffer.";
-            ProcessEventBuffer(maxevents, running, header);
+            ProcessEventBuffer(maxevents);
         } else {
             VLOG(5) << "Finished reading but slowcontrol block not complete. Dropping remaining " << eventbuffer.size() << " events.";
         }
@@ -207,8 +209,9 @@ void PhysicsManager::ReadFrom(
         pclass->Finish();
     }
 
-    VLOG(5) << "First EventId processed: " << header.FirstID;
-    VLOG(5) << "Last  EventId processed: " << header.LastID;
+    VLOG(5) << "First EventId processed: " << firstID;
+    VLOG(5) << "Last  EventId processed: " << lastID;
+
 
     end = chrono::system_clock::now();
     chrono::duration<double> elapsed_seconds = end-start;

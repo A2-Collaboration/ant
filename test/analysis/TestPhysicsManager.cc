@@ -93,9 +93,9 @@ void dotest_raw()
     auto reconstruct = std_ext::make_unique<Reconstruct>();
     list< unique_ptr<analysis::input::DataReader> > readers;
     readers.emplace_back(std_ext::make_unique<input::AntReader>(move(unpacker), move(reconstruct)));
-    bool running = true;
+    pm.ReadFrom(move(readers), numeric_limits<long long>::max());
     TAntHeader header;
-    pm.ReadFrom(move(readers), numeric_limits<long long>::max(), running, header);
+    pm.SetAntHeader(header);
 
     const std::uint32_t timestamp = 1408221194;
     const unsigned expectedEvents = 221;
@@ -127,9 +127,7 @@ void dotest_plutogeant()
     auto plutofile = std::make_shared<WrapTFileInput>(string(TEST_BLOBS_DIRECTORY)+"/Pluto_with_TID.root");
     readers.push_back(std_ext::make_unique<analysis::input::PlutoReader>(plutofile));
 
-    bool running = true;
-    TAntHeader header;
-    pm.ReadFrom(move(readers), numeric_limits<long long>::max(), running, header);
+    pm.ReadFrom(move(readers), numeric_limits<long long>::max());
 
     std::shared_ptr<TestPhysics> physics = pm.GetTestPhysicsModule();
 

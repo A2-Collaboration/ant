@@ -29,7 +29,6 @@ protected:
     std::unique_ptr<utils::ParticleID> particleID;
 
     using readers_t = std::list< std::unique_ptr<input::DataReader> >;
-
     readers_t readers;
     std::unique_ptr<input::DataReader> source;
 
@@ -43,14 +42,31 @@ protected:
 
     long long nEventsProcessed = 0;
 
-    void ProcessEventBuffer(long long maxevents, bool& running, TAntHeader& header);
+    void ProcessEventBuffer(long long maxevents);
     void ProcessEvent(std::unique_ptr<data::Event> event);
 
     bool progressUpdates = true;
 
+
+
+    struct running_t {
+        running_t(volatile bool* running_) :
+            running(running_) {}
+        explicit operator bool() {
+            if(running != nullptr)
+                return *running;
+            return true;
+        }
+    private:
+        volatile bool* running = nullptr;
+    };
+    running_t running;
+    TID firstID;
+    TID lastID;
+
 public:
 
-    PhysicsManager();
+    PhysicsManager(volatile bool* running_ = nullptr);
     virtual ~PhysicsManager();
 
     template <typename T, typename ... args_t>
@@ -73,10 +89,11 @@ public:
 
     void SetParticleID(std::unique_ptr<utils::ParticleID> pid);
 
+    void SetAntHeader(TAntHeader& header);
+
+
     void ReadFrom(std::list<std::unique_ptr<input::DataReader> > readers_,
-                  long long maxevents,
-                  bool& running,
-                  TAntHeader& header
+                  long long maxevents
                   );
 
     void ShowResults();

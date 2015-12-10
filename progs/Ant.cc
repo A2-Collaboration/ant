@@ -45,7 +45,8 @@
 using namespace std;
 using namespace ant;
 
-bool running = true;
+volatile bool running = true;
+
 class MyTInterruptHandler : public TSignalHandler {
 public:
     MyTInterruptHandler() : TSignalHandler(kSigInterrupt, kFALSE) { }
@@ -339,7 +340,7 @@ int main(int argc, char** argv) {
     }
 
     // add the physics/calibrationphysics modules
-    analysis::PhysicsManager pm;
+    analysis::PhysicsManager pm(addressof(running));
     std::shared_ptr<OptionsList> popts = make_shared<OptionsList>();
 
     if(cmd_physicsOptions->isSet()) {
@@ -421,19 +422,21 @@ int main(int argc, char** argv) {
         LOG(INFO) << "ParticleID disabled by command line";
     }
 
-    // porgress messages only when running interactively
+    // progress messages only when running interactively
     pm.EnableProgressUpdates(std_ext::system::isInteractive());
-
 
     // create some variables for running
     long long maxevents = cmd_maxevents->isSet()
             ? cmd_maxevents->getValue()
             :  numeric_limits<long long>::max();
-    TAntHeader* header = new TAntHeader();
-    gDirectory->Add(header);
+
 
     // this method does the hard work...
-    pm.ReadFrom(move(readers), maxevents, running, *header);
+    pm.ReadFrom(move(readers), maxevents);
+
+    TAntHeader* header = new TAntHeader();
+    gDirectory->Add(header);
+    pm.SetAntHeader(*header);
 
     // add some more info about the current state
     if(auto setup = ExpConfig::Setup::GetLastFound()) {
