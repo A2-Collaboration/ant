@@ -167,9 +167,9 @@ public:
      */
     Int_t GetNumberOfElements() const { return 720; }
 
-    virtual TMarker* SetMarker(const UInt_t element);
+    virtual TMarker* CreateMarker(UInt_t element) override; // *MENU*
 
-    ClassDef(TH2CB,2)
+    ClassDef(TH2CB,ANT_CBTAPS_DISPLAY_VERSION)
 
 };
 

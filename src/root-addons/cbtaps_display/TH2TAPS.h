@@ -23,7 +23,7 @@ public:
     virtual void FillElements( const TH2TAPS& h);
     virtual void SetElements( const TH2TAPS& h);
 
-    ClassDef(TH2TAPS,2)
+    ClassDef(TH2TAPS,ANT_CBTAPS_DISPLAY_VERSION)
 };
 
 }

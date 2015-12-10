@@ -385,7 +385,7 @@ UInt_t TH2CB::GetElementOfCrystal(const UInt_t crystal)
     }
 }
 
-TMarker*TH2CB::SetMarker(const UInt_t element)
+TMarker* TH2CB::CreateMarker(UInt_t element)
 {
     const Int_t bin = GetBinOfVBin(GetCrystalOfElement(element)+1);
 

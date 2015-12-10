@@ -1,8 +1,16 @@
 #pragma once
 
-
+#include "Rtypes.h"
 #include "TH2Poly.h"
+
 #include <string>
+
+// disable the override keyword
+#ifdef __CINT__
+#define override
+#endif
+
+#define ANT_CBTAPS_DISPLAY_VERSION 2
 
 class TMarker;
 class TGraph;
@@ -10,7 +18,7 @@ class TGraph;
 namespace ant {
 
 /**
- * @brief Base class for A2 Calorimeter display calsses.
+ * @brief Base class for A2 Calorimeter display classes.
  */
 
 class TH2Crystals: public TH2Poly {
@@ -43,7 +51,13 @@ protected:
 
     TMarker* SetMarkerOnBin(Int_t bin);
 
-    void calcCOG(TGraph* g, double& x, double& y);
+    /**
+     * @brief calcCOG calculates center of gravity
+     * @param g
+     * @param x
+     * @param y
+     */
+    void calcCOG(TGraph* g, double& x, double& y) const;
 
 public:
 
@@ -97,12 +111,16 @@ public:
      * @brief Reset Elements (clear everything)
      * @param value Value to set the elements to (default 0.0)
      */
-    virtual void ResetElements( const Double_t value=0.0 );     //*MENU*
+    virtual void ResetElements( const Double_t value=0.0 ); //*MENU*
 
-    virtual TMarker* SetMarker(const UInt_t element);   //*MENU*
+    /**
+     * @brief CreateMarker creates marker at given element
+     * @param element
+     * @return
+     */
+    virtual TMarker* CreateMarker(UInt_t element); // *MENU*
 
-    ClassDef(TH2Crystals,2)
-
+    ClassDef(TH2Crystals,ANT_CBTAPS_DISPLAY_VERSION)
 };
 
 }
