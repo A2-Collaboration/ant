@@ -70,14 +70,16 @@ protected:
     TH1D* nErrorsEvent = nullptr;
     ///@todo Add histograms for Error Codes and ModuleIDs ?
 
-    TH2CB* oneclusterevents = nullptr;
-    TH2D*  oneclusterevents_thetaphi = nullptr;
+    TH2CB* triggereff = nullptr;
+    TH2D*  triggereff_thetaphi = nullptr;
+    TH1D*  triggereff_proj;
 
 public:
     TriggerOverview(const std::string& name, PhysOptPtr opts);
     virtual ~TriggerOverview();
 
     void ProcessEvent(const data::Event &event) override;
+    void Finish() override;
     void ShowResult() override;
 };
 

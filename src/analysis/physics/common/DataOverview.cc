@@ -2,6 +2,10 @@
 #include "plot/root_draw.h"
 #include "expconfig/ExpConfig.h"
 #include "root-addons/cbtaps_display/TH2CB.h"
+#include "utils/combinatorics.h"
+#include "base/Logger.h"
+
+#include "TF1.h"
 
 #include <cassert>
 
@@ -114,21 +118,21 @@ TriggerOverview::TriggerOverview(const string &name, PhysOptPtr opts):
     nErrorsEvent = HistFac.makeTH1D("Errors / Event", "# errors",            "", bins_errors,      "nErrrorsEvent");
 
 
-    oneclusterevents = HistFac.make<TH2CB>("oneclusterevents","One Cluster Events");
+    triggereff = HistFac.make<TH2CB>("triggereff","Trigger Efficiency");
 
     auto cb_detector = ExpConfig::Setup::GetDetector(Detector_t::Type_t::CB);
     for(unsigned ch=0;ch<cb_detector->GetNChannels();ch++) {
         if(cb_detector->IsIgnored(ch)) {
-            oneclusterevents->CreateMarker(ch);
+            triggereff->CreateMarker(ch);
         }
     }
 
-    oneclusterevents_thetaphi = HistFac.makeTH2D("Once Cluster Events Theta/Phi",
+    triggereff_thetaphi = HistFac.makeTH2D("Trigger Efficiency Theta/Phi",
                                                  "#theta / #circ",
                                                  "#phi / #circ",
                                                  BinSettings(100,0,180),
                                                  BinSettings(150,-180,180),
-                                                 "oneclusterevents_thetaphi");
+                                                 "triggereff_thetaphi");
 }
 
 TriggerOverview::~TriggerOverview()
@@ -144,26 +148,73 @@ void TriggerOverview::ProcessEvent(const Event &event)
 
 
     // always run on Reconstructed
-    CandidatePtr cb_cand = nullptr;
-    for(const CandidatePtr& cand : event.Reconstructed.Candidates) {
-        if(cand->Detector & Detector_t::Type_t::CB) {
-            // ignore events with more than 1 CB candidate
-            if(cb_cand != nullptr) {
-                return;
+    const auto& cands = event.Reconstructed.Candidates;
+
+    for( auto comb = analysis::utils::makeCombination(cands,2); !comb.Done(); ++comb ) {
+        const CandidatePtr& p1 = comb.at(0);
+        const CandidatePtr& p2 = comb.at(1);
+
+        if(p1->VetoEnergy<0.25 && p2->VetoEnergy<0.25
+           && (p1->Detector & Detector_t::Type_t::CB)
+           && (p2->Detector & Detector_t::Type_t::CB)) {
+            const Particle a(ParticleTypeDatabase::Photon,comb.at(0));
+            const Particle b(ParticleTypeDatabase::Photon,comb.at(1));
+            const TLorentzVector gg = a + b;
+
+            auto cl1 = p1->FindCaloCluster();
+            auto cl2 = p2->FindCaloCluster();
+            const auto im = gg.M();
+            if(im > 125 && im < 145) {
+                triggereff->FillElement(cl1->CentralElement, 1.0);
+                triggereff->FillElement(cl2->CentralElement, 1.0);
+                triggereff_thetaphi->Fill(cl1->Position.Theta()*TMath::RadToDeg(),
+                                          cl1->Position.Phi()*TMath::RadToDeg());
+                triggereff_thetaphi->Fill(cl2->Position.Theta()*TMath::RadToDeg(),
+                                          cl2->Position.Phi()*TMath::RadToDeg());
             }
-            cb_cand = cand;
+        }
+    }
+}
+
+void TriggerOverview::Finish()
+{
+    auto& h = triggereff_thetaphi;
+    auto& h_proj = triggereff_proj;
+    h_proj = h->ProjectionX("triggereff_proj");
+    h_proj->Fit("pol1","","",30,155);
+    TF1* func = h_proj->GetFunction("pol1");
+
+    for(Int_t binx=0;binx<h->GetNbinsX()+1;binx++) {
+        const auto theta = h->GetXaxis()->GetBinCenter(binx);
+        const double corrfactor = func->Eval(theta) / func->Eval(90);
+        for(Int_t biny=0;biny<h->GetNbinsY()+1;biny++) {
+            if(corrfactor<0.1) {
+                h->SetBinContent(binx, biny, 0);
+                continue;
+            }
+            auto val = h->GetBinContent(binx, biny);
+            h->SetBinContent(binx, biny, val/corrfactor);
         }
     }
 
-    if(!cb_cand)
-        return;
+    auto cb = ExpConfig::Setup::GetDetector(Detector_t::Type_t::CB);
 
-    auto cb_cluster = cb_cand->FindCaloCluster();
-    if(trigger.CBEnergySum>400) {
-        oneclusterevents->FillElement(cb_cluster->CentralElement, 1.0);
-        oneclusterevents_thetaphi->Fill(cb_cluster->Position.Theta()*TMath::RadToDeg(),
-                                        cb_cluster->Position.Phi()*TMath::RadToDeg());
+    for(unsigned ch=0;ch<cb->GetNChannels();ch++) {
+        if(cb->IsIgnored(ch))
+            continue;
+        const auto pos = cb->GetPosition(ch);
+        const auto theta = pos.Theta()*TMath::RadToDeg();
+        const double corrfactor = func->Eval(theta) / func->Eval(90);
+        if(corrfactor<0.1) {
+            triggereff->SetElement(ch, 0);
+            continue;
+        }
+        auto val = triggereff->GetElement(ch);
+        triggereff->SetElement(ch, val/corrfactor);
     }
+
+    delete h_proj;
+    h_proj = h->ProjectionX("triggereff_proj");
 }
 
 void TriggerOverview::ShowResult()
@@ -172,8 +223,9 @@ void TriggerOverview::ShowResult()
             << CBESum
             << Multiplicity
             << nErrorsEvent
-            << drawoption("colz") << oneclusterevents
-            << drawoption("colz") << oneclusterevents_thetaphi
+            << drawoption("colz") << triggereff
+            << drawoption("colz") << triggereff_thetaphi
+            << triggereff_proj
             << endc;
 }
 
