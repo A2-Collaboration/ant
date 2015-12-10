@@ -430,6 +430,7 @@ int main(int argc, char** argv) {
             ? cmd_maxevents->getValue()
             :  numeric_limits<long long>::max();
     TAntHeader* header = new TAntHeader();
+    gDirectory->Add(header);
 
     // this method does the hard work...
     pm.ReadFrom(move(readers), maxevents, running, *header);

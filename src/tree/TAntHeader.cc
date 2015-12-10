@@ -10,7 +10,6 @@ using namespace ant;
 
 TAntHeader::TAntHeader(const std::string& title):
     TNamed("AntHeader", title.c_str()) {
-    gDirectory->Add(this);
 }
 
 TAntHeader::~TAntHeader()
