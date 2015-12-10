@@ -6,6 +6,7 @@
 #include "base/Logger.h"
 #include "base/CmdLine.h"
 
+#include "TROOT.h"
 #include "TRint.h"
 
 #include <iostream>
@@ -45,13 +46,12 @@ int main(int argc, char** argv) {
 
     // create TRint app early in order to have valid gStyle pointer...
     int fake_argc=1;
-    char* fake_argv[3];
+    char* fake_argv[2];
     fake_argv[0] = argv[0];
     if(cmd_batchmode->isSet()) {
         fake_argv[fake_argc++] = strdup("-q");
-        fake_argv[fake_argc++] = strdup("-b");
     }
-    TRint app("Ant-calib",&fake_argc,fake_argv,nullptr,0,true);
+    auto app = new TRint("Ant-calib",&fake_argc,fake_argv,nullptr,0,true);
 
 
     auto manager = std_ext::make_unique<Manager>(
@@ -101,8 +101,6 @@ int main(int argc, char** argv) {
 
     manager->SetModule(calibrationgui);
 
-
-
     int gotoslice = cmd_gotoslice->isSet() ? cmd_gotoslice->getValue() : -1;
 
     if(!manager->DoInit(gotoslice)) {
@@ -110,8 +108,12 @@ int main(int argc, char** argv) {
         return 1;
     }
 
+    if(cmd_batchmode->isSet()) {
+        gROOT->SetBatch();
+    }
+
     new ManagerWindow(manager.get());
-    app.Run(kTRUE);
+    app->Run(kTRUE);
     ExpConfig::Setup::Cleanup();
     setup = nullptr;
     manager = nullptr;
