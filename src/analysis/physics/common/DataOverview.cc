@@ -113,7 +113,8 @@ TriggerOverview::TriggerOverview(const string &name, PhysOptPtr opts):
     Multiplicity = HistFac.makeTH1D("Multiplicity",   "# Hits",              "", bins_multiplicity,"Multiplicity");
     nErrorsEvent = HistFac.makeTH1D("Errors / Event", "# errors",            "", bins_errors,      "nErrrorsEvent");
 
-    oneclusterevents = new TH2CB("oneclusterevents","One Cluster Events");
+
+    oneclusterevents = HistFac.make<TH2CB>("oneclusterevents","One Cluster Events");
 
     auto cb_detector = ExpConfig::Setup::GetDetector(Detector_t::Type_t::CB);
     for(unsigned ch=0;ch<cb_detector->GetNChannels();ch++) {

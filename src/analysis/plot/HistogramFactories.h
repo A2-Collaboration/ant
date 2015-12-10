@@ -81,6 +81,13 @@ public:
 
     TTree* makeTTree(const std::string& name);
 
+    template<class T, typename... Args>
+    T* make(Args&&... args) {
+        TDirectory* old = goto_dir();
+        auto t = new T(std::forward<Args>(args)...);
+        restore_dir(old);
+        return t;
+    }
 
     // Predef smart hists
 
