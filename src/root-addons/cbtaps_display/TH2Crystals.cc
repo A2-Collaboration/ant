@@ -56,7 +56,7 @@ void TH2Crystals::SetElements(const TH2Crystals &h)
     }
 }
 
-TMarker* TH2Crystals::SetMarkerOnBin(const Int_t bin)
+void TH2Crystals::SetMarkerOnBin(const Int_t bin)
 {
     if(bin < fBins->GetEntries()) {
         TH2PolyBin* pbin = dynamic_cast<TH2PolyBin*>(fBins->At(bin));
@@ -65,14 +65,20 @@ TMarker* TH2Crystals::SetMarkerOnBin(const Int_t bin)
             if(g) {
                 double x,y;
                 calcCOG(g,x,y);
-                auto marker = new TMarker(x,y,29);
-                GetListOfFunctions()->Add(marker);
+
+                auto marker1 = new TMarker(x,y,kFullStar);
+                marker1->SetMarkerColor(kBlack);
+                GetListOfFunctions()->Add(marker1);
+
+                auto marker2 = new TMarker(x,y,kOpenStar);
+                marker2->SetMarkerColor(kWhite);
+                GetListOfFunctions()->Add(marker2);
+
+                // this triggers a draw...
                 SetBinContentChanged(kTRUE);
-                return marker;
             }
         }
     }
-    return nullptr;
 }
 
 void TH2Crystals::calcCOG(TGraph* g, double& x, double& y) const
@@ -235,7 +241,7 @@ void TH2Crystals::ResetElements(const Double_t value)
     SetBinContentChanged(kTRUE);
 }
 
-TMarker* TH2Crystals::CreateMarker(const UInt_t element)
+void TH2Crystals::CreateMarker(const UInt_t element)
 {
-    return SetMarkerOnBin(element);
+    SetMarkerOnBin(element);
 }

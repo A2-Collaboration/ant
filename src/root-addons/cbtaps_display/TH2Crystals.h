@@ -49,7 +49,7 @@ protected:
      */
     virtual void SetElements( const TH2Crystals& h);
 
-    TMarker* SetMarkerOnBin(Int_t bin);
+    void SetMarkerOnBin(Int_t bin);
 
     /**
      * @brief calcCOG calculates center of gravity
@@ -118,7 +118,7 @@ public:
      * @param element
      * @return
      */
-    virtual TMarker* CreateMarker(UInt_t element); // *MENU*
+    virtual void CreateMarker(UInt_t element); // *MENU*
 
     ClassDef(TH2Crystals,ANT_CBTAPS_DISPLAY_VERSION)
 };
