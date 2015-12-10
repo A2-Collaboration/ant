@@ -119,7 +119,8 @@ void Manager::FillBufferFromFiles()
             if(!hist) {
                 LOG(WARNING) << "Histogram " << module->GetHistogramName() << " not found in " << file_input.filename;
             } else {
-                LOG(INFO) << "Buffer filled with " << file_input.filename;
+                LOG(INFO) << "Buffer filled with " << file_input.filename
+                          << " (left: " << std::distance(state.it_file, input_files.end())-1 << ")";
                 buffer.Push(hist, file_input.range);
             }
 
