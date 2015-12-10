@@ -110,11 +110,11 @@ sub main {
   die "No jobs to be submitted, abort.\n" if $total==0;
 
   # prepare output dirs
+
   unless(-d $OUT_DIR) {
     mkpath([$OUT_DIR]) == 1 or die "Cannot create output folder '$OUT_DIR'";
   } else {
     my $n_outfiles = 0;
-    my $n_logfiles = 0;
     for my $job (@jobs) {
       my $outputfile = $job->{outputfile};
       if (-f $outputfile) {
@@ -124,6 +124,17 @@ sub main {
         unlink $outputfile or die "Cannot delete file $outputfile: $!";
         $n_outfiles++;
       }
+    }
+    if ($clean) {
+      printf("%04d outfiles cleaned\n", $n_outfiles);
+    }
+  }
+
+  unless(-d $LOG_DIR) {
+    mkpath([$LOG_DIR]) == 1 or die "Cannot create log folder '$LOG_DIR'";
+  } else {
+    my $n_logfiles = 0;
+    for my $job (@jobs) {
       my $logfile = $job->{logfile};
       if (-f $logfile) {
         if (!$clean) {
@@ -134,12 +145,8 @@ sub main {
       }
     }
     if ($clean) {
-      printf("%04d/%04d output/logfiles cleaned\n", $n_outfiles, $n_logfiles);
+      printf("%04d logfiles cleaned\n", $n_logfiles);
     }
-  }
-
-  unless(-d $LOG_DIR) {
-    mkpath([$LOG_DIR]) == 1 or die "Cannot create log folder '$LOG_DIR'";
   }
 
   # finally submit the jobs
