@@ -456,7 +456,7 @@ int main(int argc, char** argv) {
     header->WorkingDir = pwd;
     free(pwd);
     VLOG(5) << "Added working directory: " << header->WorkingDir;
-    while(--argc>0) {
+    while(--argc>=0) {
         header->CmdLine += *argv++;
         header->CmdLine += " ";
     }
