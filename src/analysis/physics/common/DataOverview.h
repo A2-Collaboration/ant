@@ -71,6 +71,7 @@ protected:
     ///@todo Add histograms for Error Codes and ModuleIDs ?
 
     TH2CB* oneclusterevents = nullptr;
+    TH2D*  oneclusterevents_thetaphi = nullptr;
 
 public:
     TriggerOverview(const std::string& name, PhysOptPtr opts);

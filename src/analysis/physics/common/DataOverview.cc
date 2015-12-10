@@ -105,7 +105,7 @@ const Event::Data &DataOverviewBase::GetBranch(const Event &event) const
 TriggerOverview::TriggerOverview(const string &name, PhysOptPtr opts):
     DataOverviewBase(name, opts)
 {
-    const BinSettings bins_errors(100);
+    const BinSettings bins_errors(30);
     const BinSettings bins_multiplicity(10);
     const BinSettings bins_energy(1600);
 
@@ -122,6 +122,13 @@ TriggerOverview::TriggerOverview(const string &name, PhysOptPtr opts):
             oneclusterevents->CreateMarker(ch);
         }
     }
+
+    oneclusterevents_thetaphi = HistFac.makeTH2D("Once Cluster Events Theta/Phi",
+                                                 "#theta / #circ",
+                                                 "#phi / #circ",
+                                                 BinSettings(100,0,180),
+                                                 BinSettings(150,-180,180),
+                                                 "oneclusterevents_thetaphi");
 }
 
 TriggerOverview::~TriggerOverview()
@@ -152,8 +159,11 @@ void TriggerOverview::ProcessEvent(const Event &event)
         return;
 
     auto cb_cluster = cb_cand->FindCaloCluster();
-    if(trigger.CBEnergySum>400)
+    if(trigger.CBEnergySum>400) {
         oneclusterevents->FillElement(cb_cluster->CentralElement, 1.0);
+        oneclusterevents_thetaphi->Fill(cb_cluster->Position.Theta()*TMath::RadToDeg(),
+                                        cb_cluster->Position.Phi()*TMath::RadToDeg());
+    }
 }
 
 void TriggerOverview::ShowResult()
@@ -163,6 +173,7 @@ void TriggerOverview::ShowResult()
             << Multiplicity
             << nErrorsEvent
             << drawoption("colz") << oneclusterevents
+            << drawoption("colz") << oneclusterevents_thetaphi
             << endc;
 }
 
