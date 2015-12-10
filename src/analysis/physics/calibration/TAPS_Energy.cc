@@ -23,8 +23,12 @@ TAPS_Energy::TAPS_Energy(const string& name, analysis::PhysOptPtr opts) :
 
     ggIM = HistFac.makeTH2D("2 neutral IM (TAPS,CB)", "IM [MeV]", "#",
                             energybins, taps_channels, "ggIM");
+    ggIM_mult = HistFac.makeTH3D("IM (TAPS,CB) mult",
+                                 "IM [MeV]", "Channel", "Multiplicity",
+                                 energybins, taps_channels, BinSettings(10),
+                                 "ggIM_mult");
 
-    timing_cuts = HistFac.makeTH2D("Check timing cuts", "IM [MeV]", "#",
+    timing_cuts = HistFac.makeTH2D("Check timing cuts", "Time [ns]", "#",
                                    timebins, taps_channels, "timing_cuts");
 
     h_pedestals = HistFac.makeTH2D(
@@ -55,7 +59,6 @@ void TAPS_Energy::ProcessEvent(const Event& event)
         }
     }
 
-    const auto CBTAPS = Detector_t::Type_t::CB | Detector_t::Type_t::TAPS;
 
     for( auto comb = analysis::utils::makeCombination(cands,2); !comb.Done(); ++comb ) {
         const CandidatePtr& cand1 = comb.at(0);
@@ -64,6 +67,7 @@ void TAPS_Energy::ProcessEvent(const Event& event)
         if(cand1->VetoEnergy==0 && cand2->VetoEnergy==0) {
 
             //require exactly 1 CB and 1 TAPS
+            const auto CBTAPS = Detector_t::Type_t::CB | Detector_t::Type_t::TAPS;
             const auto dets = (cand1->Detector & CBTAPS) ^ (cand2->Detector & CBTAPS);
 
             if(dets & CBTAPS) {
@@ -90,6 +94,41 @@ void TAPS_Energy::ProcessEvent(const Event& event)
             }
         }
     }
+
+    // collect neutral candidates
+    CandidateList cb_candidates;
+    CandidateList taps_candidates;
+
+    for(const CandidatePtr& cand : event.Reconstructed.Candidates)
+    {
+        if((cand->Detector & Detector_t::Type_t::TAPS)
+           && cand->VetoEnergy < 1.0)
+        {
+            auto taps_cluster = cand->FindCaloCluster();
+            const unsigned ch = taps_cluster->CentralElement;
+            const unsigned ring = taps_detector->GetRing(ch);
+            if(ring > 4 || fabs(cand->Time) < 2.5)
+                taps_candidates.emplace_back(move(cand));
+        }
+        else if((cand->Detector & Detector_t::Type_t::CB)
+                && cand->VetoEnergy < 0.25)
+        {
+            cb_candidates.emplace_back(move(cand));
+        }
+    }
+
+    const auto nNeutrals = taps_candidates.size() + cb_candidates.size();
+
+    for(const CandidatePtr& taps_cand : taps_candidates) {
+        auto taps_cluster = taps_cand->FindCaloCluster();
+        const unsigned ch = taps_cluster->CentralElement;
+        for(const CandidatePtr& cb_cand : cb_candidates) {
+
+            const TLorentzVector& gg = Particle(ParticleTypeDatabase::Photon, taps_cand)
+                                       + Particle(ParticleTypeDatabase::Photon, cb_cand);
+            ggIM_mult->Fill(gg.M(), ch, nNeutrals);
+        }
+    }
 }
 
 void TAPS_Energy::ShowResult()
@@ -98,6 +137,15 @@ void TAPS_Energy::ShowResult()
                       << drawoption("colz") << timing_cuts
                       << drawoption("colz") << h_pedestals
                       << endc;
+    canvas c_proj(GetName()+" Multiplicities");
+    for(unsigned n=2;n<=10;n++) {
+        ggIM_mult->GetZaxis()->SetRange(n,n+1);
+        stringstream ss_name;
+        ss_name << "Mult_" << n << "_yx";
+        TH2* proj = dynamic_cast<TH2*>(ggIM_mult->Project3D(ss_name.str().c_str()));
+        c_proj << drawoption("colz") << proj;
+    }
+    c_proj << endc;
 }
 
 AUTO_REGISTER_PHYSICS(TAPS_Energy)

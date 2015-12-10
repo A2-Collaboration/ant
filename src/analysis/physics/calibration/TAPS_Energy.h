@@ -16,6 +16,7 @@ class TAPS_Energy : public Physics {
 
 protected:
     TH2D* ggIM = nullptr;
+    TH3D* ggIM_mult = nullptr;
     TH2D* timing_cuts = nullptr;
     TH2D* h_pedestals = nullptr;
 
