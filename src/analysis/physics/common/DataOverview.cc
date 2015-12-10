@@ -118,21 +118,14 @@ TriggerOverview::TriggerOverview(const string &name, PhysOptPtr opts):
     nErrorsEvent = HistFac.makeTH1D("Errors / Event", "# errors",            "", bins_errors,      "nErrrorsEvent");
 
 
-    triggereff = HistFac.make<TH2CB>("triggereff","Trigger Efficiency");
-
     auto cb_detector = ExpConfig::Setup::GetDetector(Detector_t::Type_t::CB);
-    for(unsigned ch=0;ch<cb_detector->GetNChannels();ch++) {
-        if(cb_detector->IsIgnored(ch)) {
-            triggereff->CreateMarker(ch);
-        }
-    }
 
-    triggereff_thetaphi = HistFac.makeTH2D("Trigger Efficiency Theta/Phi",
-                                                 "#theta / #circ",
-                                                 "#phi / #circ",
-                                                 BinSettings(100,0,180),
-                                                 BinSettings(150,-180,180),
-                                                 "triggereff_thetaphi");
+    CBESum_perCh = HistFac.makeTH2D("CBEsum vs. CB channel",
+                                    "CBEsum / MeV",
+                                    "Channel",
+                                    bins_energy,
+                                    BinSettings(cb_detector->GetNChannels()),
+                                    "CBESum_perCh");
 }
 
 TriggerOverview::~TriggerOverview()
@@ -140,37 +133,17 @@ TriggerOverview::~TriggerOverview()
 
 void TriggerOverview::ProcessEvent(const Event &event)
 {
-    const auto& trigger = GetBranch(event).Trigger;
+    const auto& branch =  GetBranch(event);
+    const auto& trigger = branch.Trigger;
 
     CBESum->Fill(trigger.CBEnergySum);
     Multiplicity->Fill(trigger.ClusterMultiplicity);
     nErrorsEvent->Fill(trigger.Errors.size());
 
-
-    // always run on Reconstructed
-    const auto& cands = event.Reconstructed.Candidates;
-
-    for( auto comb = analysis::utils::makeCombination(cands,2); !comb.Done(); ++comb ) {
-        const CandidatePtr& p1 = comb.at(0);
-        const CandidatePtr& p2 = comb.at(1);
-
-        if(p1->VetoEnergy<0.25 && p2->VetoEnergy<0.25
-           && (p1->Detector & Detector_t::Type_t::CB)
-           && (p2->Detector & Detector_t::Type_t::CB)) {
-            const Particle a(ParticleTypeDatabase::Photon,comb.at(0));
-            const Particle b(ParticleTypeDatabase::Photon,comb.at(1));
-            const TLorentzVector gg = a + b;
-
-            auto cl1 = p1->FindCaloCluster();
-            auto cl2 = p2->FindCaloCluster();
-            const auto im = gg.M();
-            if(im > 125 && im < 145) {
-                triggereff->FillElement(cl1->CentralElement, 1.0);
-                triggereff->FillElement(cl2->CentralElement, 1.0);
-                triggereff_thetaphi->Fill(cl1->Position.Theta()*TMath::RadToDeg(),
-                                          cl1->Position.Phi()*TMath::RadToDeg());
-                triggereff_thetaphi->Fill(cl2->Position.Theta()*TMath::RadToDeg(),
-                                          cl2->Position.Phi()*TMath::RadToDeg());
+    for(const Cluster& cluster : branch.AllClusters) {
+        if(cluster.Detector & Detector_t::Any_t::CB) {
+            for(const Cluster::Hit& hit : cluster.Hits) {
+                CBESum_perCh->Fill(trigger.CBEnergySum, hit.Channel);
             }
         }
     }
@@ -178,43 +151,7 @@ void TriggerOverview::ProcessEvent(const Event &event)
 
 void TriggerOverview::Finish()
 {
-    auto& h = triggereff_thetaphi;
-    auto& h_proj = triggereff_proj;
-    h_proj = h->ProjectionX("triggereff_proj");
-    h_proj->Fit("pol1","","",30,155);
-    TF1* func = h_proj->GetFunction("pol1");
 
-    for(Int_t binx=0;binx<h->GetNbinsX()+1;binx++) {
-        const auto theta = h->GetXaxis()->GetBinCenter(binx);
-        const double corrfactor = func->Eval(theta) / func->Eval(90);
-        for(Int_t biny=0;biny<h->GetNbinsY()+1;biny++) {
-            if(corrfactor<0.1) {
-                h->SetBinContent(binx, biny, 0);
-                continue;
-            }
-            auto val = h->GetBinContent(binx, biny);
-            h->SetBinContent(binx, biny, val/corrfactor);
-        }
-    }
-
-    auto cb = ExpConfig::Setup::GetDetector(Detector_t::Type_t::CB);
-
-    for(unsigned ch=0;ch<cb->GetNChannels();ch++) {
-        if(cb->IsIgnored(ch))
-            continue;
-        const auto pos = cb->GetPosition(ch);
-        const auto theta = pos.Theta()*TMath::RadToDeg();
-        const double corrfactor = func->Eval(theta) / func->Eval(90);
-        if(corrfactor<0.1) {
-            triggereff->SetElement(ch, 0);
-            continue;
-        }
-        auto val = triggereff->GetElement(ch);
-        triggereff->SetElement(ch, val/corrfactor);
-    }
-
-    delete h_proj;
-    h_proj = h->ProjectionX("triggereff_proj");
 }
 
 void TriggerOverview::ShowResult()
@@ -223,9 +160,7 @@ void TriggerOverview::ShowResult()
             << CBESum
             << Multiplicity
             << nErrorsEvent
-            << drawoption("colz") << triggereff
-            << drawoption("colz") << triggereff_thetaphi
-            << triggereff_proj
+            << drawoption("colz") << CBESum_perCh
             << endc;
 }
 
