@@ -114,14 +114,16 @@ public:
         return *this;
     }
 
-    std::string str() const         { return stream_.str(); }
-    operator std::string () const   { return stream_.str(); }
+    std::string str() const { return stream_.str(); }
+
+    operator std::string () const { return stream_.str(); }
+
+    formatter(const formatter &) = delete;
+    formatter & operator = (formatter &) = delete;
 
 private:
     std::stringstream stream_;
 
-    formatter(const formatter &);
-    formatter & operator = (formatter &);
 };
 
 }} // namespace ant::std_ext
