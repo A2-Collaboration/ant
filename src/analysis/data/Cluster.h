@@ -15,7 +15,7 @@ public:
     double Energy      = 0.0;
     double ShortEnergy = 0.0;
     double Time        = 0.0;
-    TVector3 pos;
+    TVector3 Position;
     Detector_t::Any_t Detector = Detector_t::Any_t::None;
     unsigned CentralElement = 0;
 
@@ -43,7 +43,7 @@ public:
         Energy(E),
         ShortEnergy(ShortE),
         Time(t),
-        pos(position),
+        Position(position),
         Detector(d),
         CentralElement(ch),
         Hits()
