@@ -36,17 +36,17 @@ Event Converter::Convert(const TEvent &event)
     Copy(event.Tagger.Hits, antevent.Reconstructed.TaggerHits);
     Copy(event.AllClusters, antevent.Reconstructed.AllClusters);
 
+    // calcuclate some trigger stuff
+
     /// @todo The multiplicity is a much harder business, see acqu/root/src/TA2BasePhysics.cc
     /// the code there might only apply to the old trigger system before 2012
     /// so it might be best to implement such algorithms with some nicely designed interface into the
     /// pseudo-detector Trigger in expconfig/detectors
 
     double Esum = 0.0;
-    for(const TCandidate& candidate : event.Candidates) {
-        for(const TCluster& cluster: candidate.Clusters) {
-            if(cluster.GetDetectorType() == Detector_t::Type_t::CB) {
-                Esum += cluster.Energy;
-            }
+    for(const TCluster& cluster: event.AllClusters) {
+        if(cluster.GetDetectorType() == Detector_t::Type_t::CB) {
+            Esum += cluster.Energy;
         }
     }
 
