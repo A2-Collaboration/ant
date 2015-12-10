@@ -114,6 +114,13 @@ TriggerOverview::TriggerOverview(const string &name, PhysOptPtr opts):
     nErrorsEvent = HistFac.makeTH1D("Errors / Event", "# errors",            "", bins_errors,      "nErrrorsEvent");
 
     oneclusterevents = new TH2CB("oneclusterevents","One Cluster Events");
+
+    auto cb_detector = ExpConfig::Setup::GetDetector(Detector_t::Type_t::CB);
+    for(unsigned ch=0;ch<cb_detector->GetNChannels();ch++) {
+        if(cb_detector->IsIgnored(ch)) {
+            oneclusterevents->CreateMarker(ch);
+        }
+    }
 }
 
 TriggerOverview::~TriggerOverview()
