@@ -323,8 +323,8 @@ void EtapOmegaG::ProcessSig(const data::ParticleTree_t& particletree,
         const TLorentzVector pair1(*p[i[0]]+*p[i[1]]);
         const TLorentzVector pair2(*p[i[2]]+*p[i[3]]);
         h.IM_gg_gg->Fill(pair1.M(), pair2.M());
-        if(   IM_pi0_cut.Contains(pair1.M())
-           && IM_pi0_cut.Contains(pair2.M()))
+        if(   IM_pi0_cut.Stop() > pair1.M()
+           && IM_pi0_cut.Stop() > pair2.M())
             is_pi0pi0 = true;
         if(   IM_eta_cut.Contains(pair1.M())
            && IM_pi0_cut.Contains(pair2.M()))
@@ -335,7 +335,7 @@ void EtapOmegaG::ProcessSig(const data::ParticleTree_t& particletree,
     }
     if(is_pi0pi0)
         return;
-    steps->Fill("Not #pi^{0}#pi^{0}",1);
+    steps->Fill("Not <#pi^{0}#pi^{0}",1);
 
     if(is_pi0eta)
         return;
@@ -412,9 +412,11 @@ void EtapOmegaG::ProcessSig(const data::ParticleTree_t& particletree,
 
     // photon assignment successful?
     h.Chi2_Best->Fill(result.Chi2);
-    if(result.Chi2>=10)
+    const double Chi2cut = 6;
+    if(result.Chi2>=Chi2cut)
         return;
-    steps->Fill("MinChi2<10",1);
+    const string Chi2cut_desc(std_ext::formatter() << "MinChi2<" << Chi2cut);
+    steps->Fill(Chi2cut_desc.c_str(),1);
 
     // boost the eta' photon into rest system of the eta'
     // should be monoenergetic there
