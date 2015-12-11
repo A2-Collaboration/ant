@@ -10,8 +10,7 @@ namespace ant {
 namespace analysis {
 namespace data {
 
-class Cluster {
-public:
+struct Cluster {
     double Energy      = 0.0;
     double ShortEnergy = 0.0;
     double Time        = 0.0;

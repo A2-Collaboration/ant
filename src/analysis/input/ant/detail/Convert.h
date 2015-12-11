@@ -12,10 +12,10 @@ struct TCluster;
 namespace analysis {
 
 namespace data {
-    class Cluster;
-    class Event;
-    class Candidate;
-    class TaggerHit;
+    struct Cluster;
+    struct Event;
+    struct Candidate;
+    struct TaggerHit;
 }
 
 namespace input {

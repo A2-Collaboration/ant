@@ -13,6 +13,9 @@ typedef Short_t    int16_t;
 typedef Long_t     int64_t;
 }
 
+// disable the override keyword
+#define override
+
 #else
 
 #include "base/printable.h"

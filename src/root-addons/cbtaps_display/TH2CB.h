@@ -74,7 +74,7 @@ public:
     /**
      * @brief Fill in the element numbers. Crystal numers are mapped to element numbers.
      */
-    void FillElementNumbers();     //*MENU*
+    void FillElementNumbers() override;     //*MENU*
 
     /**
      * @brief Fill a hit pattern (unmapped), only containing existing crystals
@@ -125,7 +125,7 @@ public:
      * @param element Element number [0..720]
      * @return Content of the crystal, 0 if is inside a hole
      */
-    virtual Double_t GetElement(const UInt_t element) const;
+    virtual Double_t GetElement(const UInt_t element) const override;
 
     /**
      * @brief Set the value of an element (mapped)
@@ -133,7 +133,7 @@ public:
      * @param value Value to set it it
      * @see SetCrystal720()
      */
-    virtual void SetElement(const UInt_t element, Double_t value);
+    virtual void SetElement(const UInt_t element, Double_t value) override; 
 
     /**
      * @brief Fill a hit pattern (mapped), ordered by element numers
@@ -141,10 +141,10 @@ public:
      * @see FillCrystals720()
      * @see FillCrystals672()
      */
-    virtual void SetElements( const std::vector<Double_t>& pattern );
-    virtual void SetElements( const TH1& h );
+    virtual void SetElements(const std::vector<Double_t>& pattern) override;
+    virtual void SetElements(const TH1& h) override;
 
-    virtual void FillElements( const TH1& h );
+    virtual void FillElements(const TH1& h) override;
 
     /**
      * @brief Get the crystal number for an element number
@@ -165,12 +165,18 @@ public:
      *        Crystal Ball also counts crystal positions that are in the hole regions, so there are element indices that do not have a crystal.
      * @return Number of elements (720)
      */
-    Int_t GetNumberOfElements() const { return 720; }
+    Int_t GetNumberOfElements() const override { return 720; }
 
     virtual void CreateMarker(UInt_t element) override; // *MENU*
-
+    
+#ifdef __clang__
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Winconsistent-missing-override"
+#endif
     ClassDef(TH2CB,ANT_CBTAPS_DISPLAY_VERSION)
-
+#ifdef __clang__
+#pragma clang diagnostic pop
+#endif
 };
 
 

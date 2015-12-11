@@ -22,7 +22,7 @@ struct TEvent;
 namespace analysis {
 
 namespace data {
-    class Event;
+    struct Event;
 }
 
 namespace input {

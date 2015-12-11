@@ -18,7 +18,7 @@ namespace ant {
 namespace analysis {
 namespace data {
 
-class Particle;
+struct Particle;
 
 using ParticlePtr    = std::shared_ptr<Particle>;
 using ParticleList   = std::vector<ParticlePtr>;
@@ -28,13 +28,10 @@ using ParticleTree_t = std::shared_ptr<Tree<ParticlePtr>>;
 /**
  * @brief Base particle class
  */
-class Particle : public TLorentzVector, public printable_traits {
-protected:
-    const ant::ParticleTypeDatabase::Type* type;
-
-public:
+struct Particle : TLorentzVector, printable_traits {
 
     CandidatePtr Candidate;
+    const ParticleTypeDatabase::Type& Type() const { return *type; }
 
     Particle(const ant::ParticleTypeDatabase::Type& _type,
              ant::mev_t _Ek, ant::radian_t _theta, ant::radian_t _phi);
@@ -50,7 +47,6 @@ public:
         Candidate = candidate;
     }
 
-    const ParticleTypeDatabase::Type& Type() const { return *type; }
 
     mev_t Ek() const { return E() - type->Mass(); }
 
@@ -67,6 +63,9 @@ public:
     Particle(const Particle&) = delete;
     Particle& operator= (const Particle&) = delete;
     virtual ~Particle() = default;
+    
+protected:
+    const ant::ParticleTypeDatabase::Type* type;
 };
 
 }

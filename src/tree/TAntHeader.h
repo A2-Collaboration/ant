@@ -40,11 +40,18 @@ struct TAntHeader : TNamed
 #endif
 
     // for convenience when used within ROOT shell
-    virtual void Print(Option_t*) const;
+    virtual void Print(Option_t*) const override;
     virtual void Print() const; //*MENU*
 
     virtual ~TAntHeader();
+#ifdef __clang__
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Winconsistent-missing-override"
+#endif
     ClassDef(TAntHeader, ANT_UNPACKER_ROOT_VERSION)
+#ifdef __clang__
+#pragma clang diagnostic pop
+#endif
 };
 
 }

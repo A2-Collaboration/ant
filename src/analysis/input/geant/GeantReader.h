@@ -19,7 +19,7 @@ struct TID;
 namespace analysis {
 
 namespace data {
-    class Event;
+    struct Event;
 }
 
 namespace input {

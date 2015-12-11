@@ -12,8 +12,8 @@ class WrapTFile;
 namespace analysis {
 
 namespace data {
-    class Candidate;
-    class Particle;
+    struct Candidate;
+    struct Particle;
 }
 
 namespace utils {

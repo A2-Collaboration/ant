@@ -18,7 +18,7 @@ class TDirectory;
 
 namespace ant {
 
-class TAntHeader;
+struct TAntHeader;
 
 namespace analysis {
 
