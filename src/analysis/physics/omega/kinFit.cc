@@ -4,13 +4,16 @@
 #include "base/std_ext/math.h"
 #include "base/ParticleType.h"
 
-
+#include "base/WrapTFile.h"
 #include <cassert>
+#include "expconfig/ExpConfig.h"
 
 #include <APLCON.hpp>
 
 #include "TTree.h"
 #include "TVector3.h"
+#include "TH1D.h"
+#include "TF1.h"
 
 using namespace std;
 using namespace ant::std_ext;
@@ -42,9 +45,21 @@ double KinFitter::EnergyResolution(const analysis::data::ParticlePtr& p) const
     return 0.0;
 }
 
-double KinFitter::ThetaResolution(const analysis::data::ParticlePtr&) const
+double KinFitter::ThetaResolution(const analysis::data::ParticlePtr& p) const
 {
-    return degree_to_radian(2.5);
+    if(p->Candidate) {
+        if(p->Candidate->Detector & Detector_t::Type_t::CB) {
+
+            return cb_sigma_theta.GetSigma(p->Candidate->FindCaloCluster()->CentralElement, p->Ek());
+
+        } if(p->Candidate->Detector & Detector_t::Type_t::TAPS) {   ///@todo check TAPS Theta resolution
+             return degree_to_radian(2.5);
+            //return taps_sigma_theta.GetSigma(p->Candidate->FindCaloCluster()->CentralElement, p->Ek());
+        }
+    } else {
+        return degree_to_radian(2.5);
+    }
+    return 0.0;
 }
 
 double KinFitter::PhiResolution(const analysis::data::ParticlePtr& p) const
@@ -52,11 +67,11 @@ double KinFitter::PhiResolution(const analysis::data::ParticlePtr& p) const
     if(p->Candidate) {
         if(p->Candidate->Detector & Detector_t::Type_t::CB) {
 
-            return p->Candidate->Theta / std::sin(p->Candidate->Theta);
+            return cb_sigma_phi.GetSigma(p->Candidate->FindCaloCluster()->CentralElement, p->Ek());
 
         } if(p->Candidate->Detector & Detector_t::Type_t::TAPS) {   ///@todo check TAPS Theta resolution
-
-            return p->Candidate->Theta / std::sin(p->Candidate->Theta);
+            return p->Theta() / std::sin(p->Theta());
+            //return taps_sigma_phi.GetSigma(p->Candidate->FindCaloCluster()->CentralElement, p->Ek());
         }
     } else {
         if(p->Theta() < degree_to_radian(20.0) ) {
@@ -95,8 +110,8 @@ double KinFitter::fct_TaggerEGausSigma(double)
     return  3.0/sqrt(12.0);
 }
 
-KinFitter::KinFitter():
-    aplcon(make_unique<APLCON>("EPB"))
+KinFitter::KinFitter(const std::string& name):
+    aplcon(make_unique<APLCON>(name))
 {
 
     aplcon->LinkVariable(Beam.name,
@@ -200,17 +215,48 @@ APLCON::Result_t KinFitter::DoFit() {
     return res;
 }
 
-void KinFitter::SetupBranches(TTree* tree)
+void KinFitter::SetupBranches(TTree* tree, string branch_prefix)
 {
-    Proton.SetupBranches(tree, aplcon->GetName());
+    if(branch_prefix.empty())
+        branch_prefix = aplcon->GetName();
+
+    Proton.SetupBranches(tree, branch_prefix);
     for(auto& p : Photons) {
-        p.SetupBranches(tree, aplcon->GetName());
+        p.SetupBranches(tree, branch_prefix);
     }
 
-    tree->Branch((aplcon->GetName()+"_chi2dof").c_str(),     &result_chi2ndof);
-    tree->Branch((aplcon->GetName()+"_iterations").c_str(),  &result_iterations);
-    tree->Branch((aplcon->GetName()+"_status").c_str(),      &result_status);
-    tree->Branch((aplcon->GetName()+"_probability").c_str(), &result_probability);
+    tree->Branch((branch_prefix+"_chi2dof").c_str(),     &result_chi2ndof);
+    tree->Branch((branch_prefix+"_iterations").c_str(),  &result_iterations);
+    tree->Branch((branch_prefix+"_status").c_str(),      &result_status);
+    tree->Branch((branch_prefix+"_probability").c_str(), &result_probability);
+}
+
+void KinFitter::LoadSigmaData(const string& filename)
+{
+    const auto& setup = ant::ExpConfig::Setup::GetLastFound();
+    if(!setup)
+        throw std::runtime_error("No Setup found!");
+
+
+    WrapTFileInput f(filename);
+
+    const auto& CB = setup->GetDetector(Detector_t::Type_t::CB);
+    if(!CB)
+        throw std::runtime_error("No CB detector defined in setup");
+
+    const auto nCB = CB->GetNChannels();
+
+    const auto& TAPS = setup->GetDetector(Detector_t::Type_t::TAPS);
+    if(!TAPS)
+        throw std::runtime_error("No TAPS detector defined in setup");
+
+    const auto nTAPS = TAPS->GetNChannels();
+
+    cb_sigma_theta.Load(f, "cb_sigma_theta", int(nCB));
+    cb_sigma_phi.Load(  f, "cb_sigma_phi",   int(nCB));
+
+//    taps_sigma_theta.Load(f, "taps_sigma_theta", int(nTAPS));
+//    taps_sigma_phi.Load(  f, "taps_sigma_phi",   int(nTAPS));
 }
 
 
@@ -228,5 +274,59 @@ void KinFitter::kinVector::SetupBranches(TTree* tree, const string& prefix)
     tree->Branch((prefix+"_"+Name+"_Ek_sigma").c_str(),    addressof(sigmaEk));
     tree->Branch((prefix+"_"+Name+"_Theta_sigma").c_str(), addressof(sigmaTheta));
     tree->Branch((prefix+"_"+Name+"_Phi_sigma").c_str(),   addressof(sigmaPhi));
+
+}
+
+double KinFitter::angular_sigma::GetSigma(const unsigned element, const double E) const
+{
+    const double vp0 = p0->GetBinContent(int(element));
+    const double vp1 = p1->GetBinContent(int(element));
+    const double vp2 = p2->GetBinContent(int(element));
+
+    return f(E, vp0, vp1, vp2);
+
+}
+
+double KinFitter::angular_sigma::f(const double x, const double p0, const double p1, const double p2) noexcept
+{
+    //return p0*exp(p1*x)+p2;
+    return exp(p0 + p1*x) + p2;
+}
+
+double KinFitter::angular_sigma::f_root(const double* x, const double* p) noexcept
+{
+    return f(x[0], p[0], p[1], p[2]);
+}
+
+TF1* KinFitter::angular_sigma::GetTF1(const std::string& name)
+{
+    return new TF1(name.c_str(), f_root, 0, 1600, 3);
+}
+
+KinFitter::angular_sigma::~angular_sigma()
+{}
+
+void KinFitter::angular_sigma::Load(WrapTFile& f, const string& prefix, const int bins)
+{
+    p0 = LoadHist(f, prefix+"_p0", bins);
+    p1 = LoadHist(f, prefix+"_p1", bins);
+    p2 = LoadHist(f, prefix+"_p2", bins);
+}
+
+KinFitter::angular_sigma::Hist KinFitter::angular_sigma::LoadHist(WrapTFile& f, const string& name, const int bins)
+{
+    auto h = f.GetSharedHist<TH1D>(name);
+
+    if(!h)
+        throw std::runtime_error("Could not load histogram " + name);
+
+    if(h->GetNbinsX() != bins)
+        throw std::runtime_error(formatter() << "TH1D " << name << " has wrong number of bins: " << h->GetNbinsX()  << ", expected: " << bins);
+
+    return h;
+}
+
+KinFitter::angular_sigma::angular_sigma()
+{
 
 }

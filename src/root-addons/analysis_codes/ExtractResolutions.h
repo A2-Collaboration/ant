@@ -17,6 +17,7 @@ public:
     static void AnalyseECB(TTree* tree);
 
     static TF1* LogNormal();
+    static TF1* SigmaFit();
 };
 
 #endif

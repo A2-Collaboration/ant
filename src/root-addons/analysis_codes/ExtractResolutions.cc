@@ -18,6 +18,8 @@
 #include <cmath>
 #include "analysis/plot/root_draw.h"
 
+#include "analysis/physics/omega/kinFit.h"
+
 using namespace std;
 using namespace ant;
 using namespace ant::std_ext;
@@ -63,9 +65,9 @@ void ExtractResolutions::AnalyseThetaCB(TTree* tree)
 
 
     TH1D* h_global_sigma = new TH1D("cb_theta_global_sigma", "Global #Delta #theta, cb", nElements, 0, nElements);
-    TH1D* h_theta_fit_p0   = new TH1D("cb_theta_fit_p0", "Fit #sigma #theta, p0, cb", nElements, 0, nElements);
-    TH1D* h_theta_fit_p1   = new TH1D("cb_theta_fit_p1", "Fit #sigma #theta, p1, cb", nElements, 0, nElements);
-    TH1D* h_theta_fit_p2   = new TH1D("cb_theta_fit_p2", "Fit #sigma #theta, p2, cb", nElements, 0, nElements);
+    TH1D* h_theta_fit_p0   = new TH1D("cb_sigma_theta_p0", "Fit #sigma #theta, p0, cb", nElements, 0, nElements);
+    TH1D* h_theta_fit_p1   = new TH1D("cb_sigma_theta_p1", "Fit #sigma #theta, p1, cb", nElements, 0, nElements);
+    TH1D* h_theta_fit_p2   = new TH1D("cb_sigma_theta_p2", "Fit #sigma #theta, p2, cb", nElements, 0, nElements);
 
     for(int e=0; e<int(nElements); ++e) {
         h->GetXaxis()->SetRange(e,e+1);
@@ -83,7 +85,7 @@ void ExtractResolutions::AnalyseThetaCB(TTree* tree)
         gDirectory->GetObject(Form("CB_theta_%d_zy_2",e), h_sigma);
         h_sigma->SetTitle(Form("#Delta #theta, fitted, CB, Element %d",e));
 
-        TF1* thetaE = new TF1(Form("thetaE_%d",e),"expo+pol0(2)", 0, 1600);
+        TF1* thetaE = KinFitter::angular_sigma::GetTF1("thetaE");
         h_sigma->Fit(thetaE,"MRQ");
 
         TH1* p1 = proj->ProjectionY(Form("CB_theta_%d_proj",e),0,-1);
@@ -173,9 +175,9 @@ void ExtractResolutions::AnalysePhiCB(TTree* tree)
 
 
     TH1D* h_global_sigma = new TH1D("cb_phi_global_sigma", "Global #Delta #phi, cb", nElements, 0, nElements);
-    TH1D* h_phi_fit_p0   = new TH1D("cb_phi_fit_p0", "Fit #sigma #phi, p0, cb", nElements, 0, nElements);
-    TH1D* h_phi_fit_p1   = new TH1D("cb_phi_fit_p1", "Fit #sigma #phi, p1, cb", nElements, 0, nElements);
-    TH1D* h_phi_fit_p2   = new TH1D("cb_phi_fit_p2", "Fit #sigma #phi, p2, cb", nElements, 0, nElements);
+    TH1D* h_phi_fit_p0   = new TH1D("cb_sigma_phi_p0", "Fit #sigma #phi, p0, cb", nElements, 0, nElements);
+    TH1D* h_phi_fit_p1   = new TH1D("cb_sigma_phi_p1", "Fit #sigma #phi, p1, cb", nElements, 0, nElements);
+    TH1D* h_phi_fit_p2   = new TH1D("cb_sigma_phi_p2", "Fit #sigma #phi, p2, cb", nElements, 0, nElements);
 
     for(int e=0; e<int(nElements); ++e) {
         h->GetXaxis()->SetRange(e,e+1);
@@ -193,7 +195,7 @@ void ExtractResolutions::AnalysePhiCB(TTree* tree)
         gDirectory->GetObject(Form("CB_phi_%d_zy_2",e), h_sigma);
         h_sigma->SetTitle(Form("#Delta #phi, fitted, CB, Element %d",e));
 
-        TF1* phiE = new TF1(Form("phiE_%d",e),"expo+pol0(2)", 0, 1600);
+        TF1* phiE = KinFitter::angular_sigma::GetTF1("phiE");
         h_sigma->Fit(phiE,"MRQ");
 
         TH1* p1 = proj->ProjectionY(Form("CB_phi_%d_proj",e),0,-1);
@@ -295,4 +297,9 @@ void ExtractResolutions::AnalyseECB(TTree* tree)
 TF1*ExtractResolutions::LogNormal()
 {
     return new TF1("lognormal", LogNormalPDF, 0, 10, 3);
+}
+
+TF1*ExtractResolutions::SigmaFit()
+{
+    return KinFitter::angular_sigma::GetTF1();
 }

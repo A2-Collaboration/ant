@@ -24,7 +24,8 @@
 #include "utils/matcher.h"
 
 #include "APLCON.hpp"
-
+#include "expconfig/ExpConfig.h"
+#include "base/WrapTFile.h"
 #include "TCanvas.h"
 
 using namespace std;
@@ -754,8 +755,14 @@ ParticleList OmegaEtaG2::FilterParticles(const data::ParticleList& list, const p
 }
 
 OmegaEtaG2::OmegaEtaG2(const std::string& name, PhysOptPtr opts):
-    OmegaBase(name, opts)
+    OmegaBase(name, opts), fitter("OmegaEtaG2")
 {
+    const auto setup = ant::ExpConfig::Setup::GetLastFound();
+
+    if(!setup) {
+        throw std::runtime_error("No Setup found");
+    }
+
     if(Options->Get<string>("Proton") == "MCTrue") {
         data_proton = false;
         LOG(INFO) << "Using proton from MCTrue";
@@ -806,7 +813,10 @@ OmegaEtaG2::OmegaEtaG2(const std::string& name, PhysOptPtr opts):
     tree->Branch("bestChi",  &bestChi);
     tree->Branch("fbestHyp",  &bestHyp);
 
-    fitter.SetupBranches(tree);
+    // set up kin fitter
+    fitter.SetupBranches(tree, "EPB");
+
+    fitter.LoadSigmaData(setup->GetPhysicsFilesDirectory()+"/FitterSigmas.root");
 
     signal_tree = ParticleTypeTreeDatabase::Get(ParticleTypeTreeDatabase::Channel::Omega_gEta_3g);
     reference_tree = ParticleTypeTreeDatabase::Get(ParticleTypeTreeDatabase::Channel::Omega_gPi0_3g);
