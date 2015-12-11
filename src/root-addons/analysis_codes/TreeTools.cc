@@ -3,6 +3,7 @@
 #include "TTree.h"
 #include "TH1.h"
 #include "TH2.h"
+#include "TH3.h"
 #include "TCut.h"
 #include "TDirectory.h"
 
@@ -28,7 +29,7 @@ TH2*Draw(TTree* tree, const string& formula, const TCut& cut, const int xbins, c
     return h;
 }
 
-TH3*Draw(TTree* tree, const string& formula, const TCut& cut, const ant::analysis::BinSettings& xbins, const ant::analysis::BinSettings& ybins, const ant::analysis::BinSettings& zbins)
+TH3* Draw(TTree* tree, const string& formula, const TCut& cut, const ant::analysis::BinSettings& xbins, const ant::analysis::BinSettings& ybins, const ant::analysis::BinSettings& zbins)
 {
     static unsigned n = 0;
     const char* hname = Form("h3d_%d", n++);
@@ -42,7 +43,7 @@ TH3*Draw(TTree* tree, const string& formula, const TCut& cut, const ant::analysi
                     ybins.Bins(), ybins.Start(), ybins.Stop(),
                     zbins.Bins(), zbins.Start(), zbins.Stop()
                     )
-                ,cut,"colz");
+                ,cut);
     TH3* h = NULL;
     gDirectory->GetObject(hname, h);
     return h;
