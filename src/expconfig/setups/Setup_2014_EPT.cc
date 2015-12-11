@@ -20,6 +20,7 @@
 #include "calibration/modules/TAPS_ShortEnergy.h"
 #include "calibration/modules/TAPS_ShowerCorrection.h"
 #include "calibration/modules/TAPSVeto_Energy.h"
+#include "calibration/modules/TAPSVeto_Time.h"
 
 #include "calibration/modules/MCEnergySmearing.h"
 
@@ -126,14 +127,13 @@ Setup_2014_EPT::Setup_2014_EPT(const string& name, SetupOptPtr opt) :
                                            timecuts ? interval<double>{-10, 10} : no_timecut, // for BaF2
                                            timecuts ? interval<double>{-20, 20} : no_timecut  // for PbWO4
                                            );
-    AddCalibration<calibration::Time>(tapsVeto,
-                                      calibrationDataManager,
-                                      convert_MultiHit16bit,
-                                      -100,
-                                      std::make_shared<calibration::gui::FitGausPol0>(),
-                                      timecuts ? interval<double>{-7, 7} : no_timecut,
-                                      -0.05 // default gain
-                                      );
+    AddCalibration<calibration::TAPSVeto_Time>(tapsVeto,
+                                               calibrationDataManager,
+                                               convert_MultiHit16bit,   // for BaF2
+                                               convert_V1190_TAPSPbWO4, // for PbWO4
+                                               timecuts ? interval<double>{-7, 7} : no_timecut,
+                                               timecuts ? interval<double>{-7, 7} : no_timecut
+                                               );
 
     AddCalibration<calibration::CB_Energy>(cb, calibrationDataManager, convert_GeSiCa_SADC );
 

@@ -88,6 +88,20 @@ void TAPSVeto::InitElements()
 
 }
 
+bool TAPSVeto::IsPbWO4(const unsigned channel) const
+{
+    if(PbWO4_elements.empty())
+        return false;
+
+    const unsigned elementsPerSector = (BaF2_elements.size()+PbWO4_elements.size())/NSectors;
+
+    const unsigned channelFirstSector = channel % elementsPerSector;
+
+    const unsigned PbWO4_elementsPerSector = PbWO4_elements.size() / NSectors;
+
+    return channelFirstSector < PbWO4_elementsPerSector;
+}
+
 bool TAPSVeto_2013::Matches(const THeaderInfo &headerInfo) const
 {
     return std_ext::time_between(headerInfo.Timestamp, "2013-11-01", "2013-31-12");

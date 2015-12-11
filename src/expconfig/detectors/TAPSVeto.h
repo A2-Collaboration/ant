@@ -24,11 +24,6 @@ struct TAPSVeto :
         return elements[channel]->Ignored;
     }
 
-    virtual bool Matches(const THeaderInfo&) const override {
-        // always match, since TAPSVeto never changed over A2's lifetime
-        return true;
-    }
-
     // for UnpackerAcquConfig
     virtual void BuildMappings(
             std::vector<hit_mapping_t>&,
@@ -41,7 +36,11 @@ struct TAPSVeto :
      */
     double GetElementRadius() const { return 7.0; }
 
+    bool IsPbWO4(const unsigned channel) const;
+
 protected:
+
+    static constexpr unsigned NSectors = 6;
 
     struct TAPSVeto_Element_t : Detector_t::Element_t {
         using Detector_t::Element_t::Element_t;

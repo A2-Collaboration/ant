@@ -20,6 +20,8 @@
 #include "calibration/modules/TAPS_ShortEnergy.h"
 #include "calibration/modules/TAPS_ShowerCorrection.h"
 #include "calibration/modules/TAPSVeto_Energy.h"
+#include "calibration/modules/TAPSVeto_Time.h"
+
 
 #include "calibration/fitfunctions/FitGaus.h"
 #include "calibration/fitfunctions/FitGausPol0.h"
@@ -129,14 +131,13 @@ public:
                                                interval<double>{-500, 500}, // for BaF2
                                                interval<double>{-500, 500}  // for PbWO4
                                                );
-        AddCalibration<calibration::Time>(tapsVeto,
-                                          calibrationDataManager,
-                                          convert_MultiHit16bit,
-                                          -100,
-                                          std::make_shared<calibration::gui::FitGausPol0>(),
-                                          interval<double>{-1000, 1000}, /// \todo make this window smaller...
-                                          -0.05 // default gain
-                                          );
+        AddCalibration<calibration::TAPSVeto_Time>(tapsVeto,
+                                                   calibrationDataManager,
+                                                   convert_MultiHit16bit,   // for BaF2
+                                                   convert_V1190_TAPSPbWO4, // for PbWO4
+                                                   interval<double>{-1000, 1000},
+                                                   interval<double>{-1000, 1000}
+                                                   );
 
         AddCalibration<calibration::CB_Energy>(cb, calibrationDataManager, convert_GeSiCa_SADC );
 
