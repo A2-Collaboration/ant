@@ -39,18 +39,13 @@ namespace physics {
 class ExtractResolutions : public Physics {
 public:
 
-    TH2D* E_offset      = nullptr;
-    TH2D* E_sigma       = nullptr;
-    TH2D* Theta_offset  = nullptr;
-    TH2D* Theta_sigma   = nullptr;
-    TH2D* Phi_offset    = nullptr;
-    TH2D* Phi_sigma     = nullptr;
-    TTree* tree         = nullptr;
+    double   b_DE      = {};
+    double   b_DTheta  = {};
+    double   b_DPhi    = {};
+    unsigned b_Element = {};
+    double   b_E       = {};
 
-    double b_E = 0;
-    double b_Theta = 0;
-    double b_Phi = 0;
-    unsigned b_Element = 0;
+    TTree* tree = nullptr;
 
     Detector_t::Type_t det = Detector_t::Type_t::CB;
 
