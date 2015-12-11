@@ -87,7 +87,7 @@ protected:
 
     std::shared_ptr<DataManager> calibrationManager;
 
-    const Calibration::Converter::ptr_t Converter;
+    std::vector<Calibration::Converter::ptr_t> Converters;
 
     std::vector<interval<double>> TimeWindows;
 

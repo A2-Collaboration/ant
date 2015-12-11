@@ -37,7 +37,7 @@ Time::Time(const std::shared_ptr<Detector_t>& detector, const std::shared_ptr<Da
            ),
     Detector(detector),
     calibrationManager(CalibrationManager),
-    Converter(move(converter)),
+    Converters(detector->GetNChannels(), converter),
     TimeWindows(detector->GetNChannels(), timeWindow),
     fitFunction(FitFunction),
     DefaultOffsets(detector->GetNChannels(), defaultOffset),
@@ -45,7 +45,7 @@ Time::Time(const std::shared_ptr<Detector_t>& detector, const std::shared_ptr<Da
     DefaultGains(detector->GetNChannels(), defaultGain),
     Gains()
 {
-    if(Converter==nullptr)
+    if(converter==nullptr)
         throw std::runtime_error("Given converter should not be nullptr");
 }
 
@@ -101,7 +101,7 @@ void Time::ApplyTo(const readhits_t& hits, extrahits_t&)
             continue;
 
         // the Converter is smart enough to account for reference Times!
-        const auto& values = Converter->Convert(dethit->RawData);
+        const auto& values = Converters[dethit->Channel]->Convert(dethit->RawData);
         dethit->Values.reserve(values.size());
 
         // apply gain/offset to each of the values (might be multihit)
