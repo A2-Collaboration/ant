@@ -27,3 +27,23 @@ TH2*Draw(TTree* tree, const string& formula, const TCut& cut, const int xbins, c
     gDirectory->GetObject(hname, h);
     return h;
 }
+
+TH3*Draw(TTree* tree, const string& formula, const TCut& cut, const ant::analysis::BinSettings& xbins, const ant::analysis::BinSettings& ybins, const ant::analysis::BinSettings& zbins)
+{
+    static unsigned n = 0;
+    const char* hname = Form("h3d_%d", n++);
+
+    tree->Draw(
+                Form(
+                    "%s>>%s(%d,%lf,%lf,%d,%lf,%lf,%d,%lf,%lf)",
+                    formula.c_str(),
+                    hname,
+                    xbins.Bins(), xbins.Start(), xbins.Stop(),
+                    ybins.Bins(), ybins.Start(), ybins.Stop(),
+                    zbins.Bins(), zbins.Start(), zbins.Stop()
+                    )
+                ,cut,"colz");
+    TH3* h = NULL;
+    gDirectory->GetObject(hname, h);
+    return h;
+}
