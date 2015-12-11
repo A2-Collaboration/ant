@@ -1,17 +1,22 @@
 #include "plot/root_draw.h"
+#include "base/std_ext/memory.h"
+#include "base/std_ext/string.h"
+#include "base/Logger.h"
+
 #include "TH1D.h"
 #include "TH2D.h"
 #include "TObject.h"
 #include "TNamed.h"
 #include "TCanvas.h"
 #include "TROOT.h"
+#include "THStack.h"
+#include "TVirtualPad.h"
+
 #include <iostream>
 #include <sstream>
 #include <iomanip>
-#include "THStack.h"
-#include <TVirtualPad.h>
 #include <algorithm>
-#include "base/std_ext/memory.h"
+
 
 using namespace ant;
 using namespace std;
@@ -25,29 +30,38 @@ const padoption::map_options_t padoption::map_options =
 };
 
 
-unsigned int ant::canvas::num = 0;
+unsigned int canvas::num = 0;
 
-const ant::endcanvas endc;
+const endcanvas ant::endc;
+const endrow ant::endr;
+const samepad_t ant::samepad;
 
-TCanvas *ant::canvas::create(const string& title)
+
+canvas::canvas(const string& title) :
+  name(), pads(), current_drawoption(), current_padoptions()
 {
-    stringstream s;
-    s << "_canvas_" << setfill('0') << setw(3) << num++;
-    name = s.str();
+    CreateTCanvas(title);
+}
 
-    TCanvas* c = new TCanvas(name.c_str(), title.c_str());
-    return c;
+canvas::~canvas()
+{
+}
+
+TCanvas* canvas::CreateTCanvas(const string& title)
+{
+    name = std_ext::formatter() << "_canvas_" << setfill('0') << setw(3) << num++;
+    return new TCanvas(name.c_str(), title.c_str());
 }
 
 
-TCanvas *ant::canvas::find()
+TCanvas* canvas::FindTCanvas()
 {
     TObject* o = gROOT->FindObjectAny(name.c_str());
     TCanvas* c = dynamic_cast<TCanvas*>(o);
     if(c)
         return c;
     else
-        return create();
+        return CreateTCanvas();
 }
 
 void canvas::DrawObjs(TCanvas* c, unsigned cols, unsigned rows)
@@ -55,19 +69,21 @@ void canvas::DrawObjs(TCanvas* c, unsigned cols, unsigned rows)
     c->Divide(cols,rows);
     int pad=1;
     unsigned ninrow =0;
-    for(const auto& o : objs) {
+    for(const pad_t& p : pads) {
 
-        if(get<3>(o)) {
-            pad+=(cols-ninrow);
-            ninrow=0;
+        if(p.DrawableItems.empty()) {
+            pad += (cols-ninrow);
+            ninrow = 0;
         } else {
 
             TVirtualPad* vpad = c->cd(pad);
-            // draw the object
-            get<0>(o)->Draw(get<1>(o).c_str());
+            // draw the objects
+            for(const auto& item : p.DrawableItems) {
+                item.Drawable->Draw(item.Option);
+            }
             // set pad options
-            for(const auto& o_ : get<2>(o)) {
-                const auto& it = padoption::map_options.find(o_);
+            for(const auto& option : p.PadOptions) {
+                const auto& it = padoption::map_options.find(option);
                 // silently ignore not implemented pad options
                 if(it == padoption::map_options.end())
                     continue;
@@ -80,51 +96,84 @@ void canvas::DrawObjs(TCanvas* c, unsigned cols, unsigned rows)
     }
 }
 
-
-canvas::canvas(const string &title) :
-  name(), objs(), current_drawoption(), current_padoptions()
-{
-    create(title);
-}
-
-canvas::~canvas()
-{
-
-}
-
 void canvas::cd()
 {
-    TCanvas* c = find();
+    TCanvas* c = FindTCanvas();
     if(c) {
         c->cd();
     }
 }
 
-canvas &canvas::operator<<(root_drawable_traits &drawable)
+
+void canvas::AddDrawable(std::unique_ptr<root_drawable_traits> drawable)
 {
-    std::unique_ptr<root_drawable_traits> c(new drawable_container<root_drawable_traits*>(&drawable)) ;
+    if(!addobject || pads.empty()) {
+        pads.emplace_back(current_padoptions);
+    }
+    pads.back().DrawableItems.emplace_back(move(drawable), current_drawoption);
 
-    objs.emplace_back( move(c), current_drawoption, current_padoptions, false);
+    addobject = false;
+}
 
+canvas& canvas::operator<<(root_drawable_traits& drawable)
+{
+    using container_t = drawable_container<root_drawable_traits*>;
+    AddDrawable(std_ext::make_unique<container_t>(addressof(drawable)));
     return *this;
 }
 
-canvas &canvas::operator<<(TObject *hist)
+canvas& canvas::operator<<(TObject* hist)
 {
-    std::unique_ptr<root_drawable_traits> c(new drawable_container<TObject*>(hist)) ;
-
-    objs.emplace_back( move(c), current_drawoption, current_padoptions, false);
-
+    using container_t = drawable_container<TObject*>;
+    AddDrawable(std_ext::make_unique<container_t>(hist));
     return *this;
 }
 
-canvas &canvas::operator<<(const endcanvas&)
+
+canvas& canvas::operator<<(const endrow&)
 {
-    if(objs.empty()) {
+    // just an empty pad indicates the end of the row
+    pads.emplace_back();
+    automode = false;
+    return *this;
+}
+
+canvas& canvas::operator<<(const samepad_t&)
+{
+    addobject = true;
+    return *this;
+}
+
+canvas& canvas::operator<<(const drawoption& c)
+{
+    current_drawoption = c.Option();
+    return *this;
+}
+
+canvas& canvas::operator<<(const padoption::set& c)
+{
+    const auto& o = c.Option();
+    auto it = std::find(current_padoptions.begin(), current_padoptions.end(), o);
+    if(it == current_padoptions.end()) {
+        current_padoptions.emplace_back(o);
+    }
+    return *this;
+}
+
+canvas& canvas::operator<<(const padoption::unset& c)
+{
+    const auto& o = c.Option();
+    current_padoptions.remove(o);
+    return *this;
+}
+
+canvas& canvas::operator<<(const endcanvas&)
+{
+    if(pads.empty()) {
         return *this;
     }
 
-    TCanvas* c = find();
+    TCanvas* c = FindTCanvas();
 
     if(c) {
 
@@ -133,13 +182,13 @@ canvas &canvas::operator<<(const endcanvas&)
 
         if(automode) {
 
-            cols = ceil(sqrt(objs.size()));
-            rows = ceil((double)objs.size()/(double)cols);
+            cols = ceil(sqrt(pads.size()));
+            rows = ceil((double)pads.size()/(double)cols);
 
         } else {
             unsigned ccols=0;
-            for(const auto& o : objs) {
-                if(get<3>(o)) {
+            for(const auto& o : pads) {
+                if(o.DrawableItems.empty()) {
                     cols = max(ccols,cols);
                     ccols=0;
                     rows++;
@@ -154,53 +203,19 @@ canvas &canvas::operator<<(const endcanvas&)
     return *this;
 }
 
-canvas&canvas::operator<<(const rowend&)
+canvas& canvas::operator>>(const string& filename)
 {
-    std::unique_ptr<root_drawable_traits> c(new drawable_container<TObject*>(nullptr)) ;
-
-    objs.emplace_back( move(c), current_drawoption, current_padoptions, true);
-    automode = false;
-    return *this;
-}
-
-canvas &canvas::operator<<(const drawoption &c)
-{
-    current_drawoption = c.Option();
-    return *this;
-}
-
-canvas &canvas::operator<<(const padoption::set &c)
-{
-    const auto& o = c.Option();
-    auto it = std::find(current_padoptions.begin(), current_padoptions.end(), o);
-    if(it == current_padoptions.end()) {
-        current_padoptions.emplace_back(o);
-    }
-    return *this;
-}
-
-canvas &canvas::operator<<(const padoption::unset &c)
-{
-    const auto& o = c.Option();
-    current_padoptions.remove(o);
-    return *this;
-}
-
-
-canvas &canvas::operator>>(const string &filename)
-{
-    TCanvas* c = find();
+    TCanvas* c = FindTCanvas();
     if(c) {
         c->SaveAs(filename.c_str());
     }
     return *this;
 }
 
+//************ hstack* ***********
 
-//************ hstack ************
 
-
-hstack::hstack(const string &name, const std::string &title):
+hstack::hstack(const string& name, const std::string& title):
     stack(new THStack(name.c_str(),title.c_str())),
     current_option("")
 {}
@@ -208,7 +223,7 @@ hstack::hstack(const string &name, const std::string &title):
 hstack::~hstack()
 {}
 
-hstack &hstack::operator<<(TH1D *hist)
+hstack& hstack::operator<<(TH1D* hist)
 {
     stack->Add(hist, current_option.c_str());
     xlabel = hist->GetXaxis()->GetTitle();
@@ -216,13 +231,13 @@ hstack &hstack::operator<<(TH1D *hist)
     return *this;
 }
 
-hstack &hstack::operator<<(const drawoption &c)
+hstack& hstack::operator<<(const drawoption& c)
 {
     current_option = c.Option();
     return *this;
 }
 
-void hstack::Draw(const string &option) const
+void hstack::Draw(const string& option) const
 {
     stack->Draw(option.c_str());
 
@@ -235,4 +250,4 @@ void hstack::Draw(const string &option) const
         yaxis->SetTitle(ylabel.c_str());
 }
 
-const std::vector<Color_t> ant::ColorPalette::Colors = {kRed, kGreen, kBlue, kYellow, kMagenta, kCyan, kOrange, kPink+9, kSpring+10, kGray};
+const std::vector<Color_t> ColorPalette::Colors = {kRed, kGreen, kBlue, kYellow, kMagenta, kCyan, kOrange, kPink+9, kSpring+10, kGray};

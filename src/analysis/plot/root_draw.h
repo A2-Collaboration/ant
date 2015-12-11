@@ -19,32 +19,28 @@ namespace ant {
 
 class canvas;
 
-class root_drawable_traits {
-    friend class ant::canvas;
-public:
+struct root_drawable_traits {
     virtual void Draw(const std::string& option) const =0;
     virtual ~root_drawable_traits() = default;
 };
 
-class modifier {
-public:
+struct modifier {
   virtual ~modifier() = default;
 };
 
-class endcanvas: public modifier {
-public:
-    endcanvas() {}
-};
+struct endcanvas : modifier {};
 
-static const endcanvas endc;
+extern const endcanvas endc;
 
-struct rowend : modifier {
-    rowend() {}
-};
+struct endrow : modifier {};
 
-static const rowend endr;
+extern const endrow endr;
 
-class drawoption: public modifier {
+class samepad_t : public modifier {};
+
+extern const samepad_t samepad;
+
+class drawoption : public modifier {
 protected:
     std::string option;
 public:
@@ -91,7 +87,6 @@ public:
 
 };
 
-
 /**
  * @brief The canvas class
  *
@@ -114,32 +109,46 @@ protected:
 
     std::string name;
     bool automode = true;
+    bool addobject = false;
 
-    TCanvas* create(const std::string& title="");
-    TCanvas* find();
+    TCanvas* CreateTCanvas(const std::string& title="");
+    TCanvas* FindTCanvas();
 
     template<typename T>
-    class drawable_container: public ant::root_drawable_traits {
-        public:
-            T obj;
+    struct drawable_container :  root_drawable_traits {
+        T Object;
 
-            drawable_container(T o): obj(o) {}
-            void Draw(const std::string &option) const {
-                obj->Draw(option.c_str());
-            }
+        drawable_container(T object) :
+            Object(object)  {}
+
+        void Draw(const std::string& option) const {
+            Object->Draw(option.c_str());
+        }
+
         drawable_container(const drawable_container&) = delete;
         drawable_container& operator= (const drawable_container&) = delete;
     };
 
-    using ObjectOption =
-        std::tuple<
-            std::unique_ptr<root_drawable_traits>,
-            std::string,              // draw option
-            std::list<padoption_t>,    // pad options
-            bool // end of row
-        >;
+    struct DrawableItem {
+        std::unique_ptr<root_drawable_traits> Drawable;
+        std::string Option;
+        DrawableItem(std::unique_ptr<root_drawable_traits> drawable,
+                     const std::string& option) :
+            Drawable(move(drawable)),
+            Option(option)
+        {}
+    };
 
-    std::list<ObjectOption> objs;
+
+    struct pad_t  {
+        std::list<DrawableItem> DrawableItems;     // objects to draw on pad (empty indicates end row)
+        using PadOptions_t = std::list<padoption_t>;
+        PadOptions_t PadOptions; // pad options
+        pad_t(const PadOptions_t& options) : PadOptions(options) {}
+        pad_t() {}
+    };
+
+    std::list<pad_t> pads;
 
     std::string current_drawoption;
     std::list<padoption_t> current_padoptions;
@@ -147,6 +156,7 @@ protected:
     static bool isMarker(const std::unique_ptr<root_drawable_traits>& t);
 
     void DrawObjs(TCanvas* c, unsigned cols, unsigned rows);
+    void AddDrawable(std::unique_ptr<root_drawable_traits> drawable);
 public:
 
     canvas(const std::string& title="");
@@ -160,15 +170,17 @@ public:
 
     virtual canvas& operator<< (const endcanvas& c);
 
-    virtual canvas& operator<< (const rowend&);
+    virtual canvas& operator<< (const endrow&);
 
-    virtual canvas &operator<< (const drawoption& c);
+    virtual canvas& operator<< (const samepad_t&);
 
-    virtual canvas &operator<< (const padoption::set& c);
+    virtual canvas& operator<< (const drawoption& c);
 
-    virtual canvas &operator<< (const padoption::unset& c);
+    virtual canvas& operator<< (const padoption::set& c);
 
-    virtual canvas &operator>> (const std::string& filename);
+    virtual canvas& operator<< (const padoption::unset& c);
+
+    virtual canvas& operator>> (const std::string& filename);
 
 };
 
@@ -190,16 +202,16 @@ protected:
     std::string ylabel;
 
 public:
-    hstack(const std::string& name, const std::string &title="");
+    hstack(const std::string& name, const std::string& title="");
     virtual ~hstack();
 
     hstack(const hstack&) = delete;
     hstack& operator= (const hstack&) = delete;
 
-    virtual hstack &operator<< (TH1D* hist);
-    virtual hstack &operator<< (const drawoption& c);
+    virtual hstack& operator<< (TH1D* hist);
+    virtual hstack& operator<< (const drawoption& c);
 
-    void Draw(const std::string &option) const override;
+    void Draw(const std::string& option) const override;
 };
 
 struct ColorPalette {
