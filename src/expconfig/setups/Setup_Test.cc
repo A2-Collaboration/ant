@@ -81,14 +81,20 @@ public:
                                            calibration::converter::MultiHit16bitReference::CATCH_TDC_Gain
                                            );
         const auto& convert_GeSiCa_SADC = make_shared<calibration::converter::GeSiCa_SADC>();
+        const auto& convert_V1190_TAPSPbWO4 =  make_shared<calibration::converter::MultiHit16bitReference>(
+                                                   trigger->Reference_V1190_TAPSPbWO4,
+                                                   calibration::converter::MultiHit16bitReference::V1190_TDC_Gain
+                                                   );
+
         const auto& convert_ScalerFrequency_Beampolmon
                 = make_shared<calibration::converter::ScalerFrequency>(trigger->Scaler_Beampolmon_1MHz);
 
         // the order of the reconstruct hooks is important
-        // add both CATCH converters first,
+        // add both CATCH converters and the V1190 first,
         // since they need to scan the detector read for their reference hit
         AddHook(convert_CATCH_Tagger);
         AddHook(convert_CATCH_CB);
+        AddHook(convert_V1190_TAPSPbWO4);
         // also the ScalerFrequency needs a reference
         AddHook(convert_ScalerFrequency_Beampolmon);
 
@@ -117,10 +123,12 @@ public:
                                           interval<double>{-500, 500} // default time window cut in ns
                                           );
         AddCalibration<calibration::TAPS_Time>(taps,
-                                          calibrationDataManager,
-                                          convert_MultiHit16bit,
-                                          interval<double>{-500, 500}
-                                          );
+                                               calibrationDataManager,
+                                               convert_MultiHit16bit,
+                                               convert_V1190_TAPSPbWO4,
+                                               interval<double>{-500, 500}, // for BaF2
+                                               interval<double>{-500, 500}  // for PbWO4
+                                               );
         AddCalibration<calibration::Time>(tapsVeto,
                                           calibrationDataManager,
                                           convert_MultiHit16bit,

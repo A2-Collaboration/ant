@@ -75,14 +75,19 @@ Setup_2014_EPT::Setup_2014_EPT(const string& name, SetupOptPtr opt) :
                                        calibration::converter::MultiHit16bitReference::CATCH_TDC_Gain
                                        );
     const auto& convert_GeSiCa_SADC = make_shared<calibration::converter::GeSiCa_SADC>();
+    const auto& convert_V1190_TAPSPbWO4 =  make_shared<calibration::converter::MultiHit16bitReference>(
+                                               trigger->Reference_V1190_TAPSPbWO4,
+                                               calibration::converter::MultiHit16bitReference::V1190_TDC_Gain
+                                               );
     const auto& convert_ScalerFrequency_Beampolmon
             = make_shared<calibration::converter::ScalerFrequency>(trigger->Scaler_Beampolmon_1MHz);
 
     // the order of the reconstruct hooks is important
-    // add both CATCH converters first,
+    // add both CATCH converters and the V1190 first,
     // since they need to scan the detector read for their reference hit
     AddHook(convert_CATCH_Tagger);
     AddHook(convert_CATCH_CB);
+    AddHook(convert_V1190_TAPSPbWO4);
     // also the ScalerFrequency needs a reference
     AddHook(convert_ScalerFrequency_Beampolmon);
 
@@ -116,7 +121,8 @@ Setup_2014_EPT::Setup_2014_EPT(const string& name, SetupOptPtr opt) :
                                       );
     AddCalibration<calibration::TAPS_Time>(taps,
                                            calibrationDataManager,
-                                           convert_MultiHit16bit,
+                                           convert_MultiHit16bit,   // for BaF2
+                                           convert_V1190_TAPSPbWO4, // for PbWO4
                                            timecuts ? interval<double>{-10, 10} : no_timecut, // for BaF2
                                            timecuts ? interval<double>{-20, 20} : no_timecut  // for PbWO4
                                            );
