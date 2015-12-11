@@ -10,6 +10,7 @@
 
 #pragma link C++ class SymmetricPi0+;
 #pragma link C++ class ExtractResolutions+;
+#pragma link C++ class CBESum_Check+;
 
 #endif // __CINT__
 

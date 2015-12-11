@@ -4,6 +4,7 @@ set(DICT_HEADERS
     symmetric_pi0.h
     OmegaEtaG.h
     ExtractResolutions.h
+    CBESum_Check.h
   )
 
 set(SRCS
@@ -11,9 +12,10 @@ set(SRCS
     OmegaEtaG.cc
     TreeTools.cc
     ExtractResolutions.cc
+    CBESum_Check.cc
   )
 
-set(ROOT_DICTIONARY "${CMAKE_CURRENT_BINARY_DIR}/G__tree.cc")
+set(ROOT_DICTIONARY "${CMAKE_CURRENT_BINARY_DIR}/G__analysis_codes.cc")
 ROOT_GENERATE_DICTIONARY("${DICT_HEADERS}"
   "${CMAKE_CURRENT_SOURCE_DIR}/LinkDef.h"
   ${ROOT_DICTIONARY})
