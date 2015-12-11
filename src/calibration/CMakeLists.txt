@@ -19,8 +19,8 @@ set(SRCS
     modules/TAPSVeto_Energy.cc
     modules/TAPS_Time.cc
     converters/GeSiCa_SADC.h
-    converters/CATCH_TDC.cc
     converters/MultiHit16bit.h
+    converters/MultiHit16bitReference.cc
     converters/ScalerFrequency.cc
     gui/Manager.cc
     gui/Manager_traits.h

@@ -1,4 +1,4 @@
-#include "CATCH_TDC.h"
+#include "MultiHit16bitReference.h"
 
 #include "tree/TDetectorRead.h"
 
@@ -6,7 +6,11 @@ using namespace std;
 using namespace ant;
 using namespace ant::calibration;
 
-void converter::CATCH_TDC::ApplyTo(const readhits_t& hits, extrahits_t&) {
+const double converter::MultiHit16bitReference::CATCH_TDC_Gain = 0.1171;
+const double converter::MultiHit16bitReference::V1190_TDC_Gain = 0.1;
+
+
+void converter::MultiHit16bitReference::ApplyTo(const readhits_t& hits, extrahits_t&) {
     ReferenceTiming = numeric_limits<double>::quiet_NaN();
 
     // search for reference timing
@@ -20,7 +24,7 @@ void converter::CATCH_TDC::ApplyTo(const readhits_t& hits, extrahits_t&) {
     if(it_refhit == refhits.end())
         return;
     // use the same converter for the reference hit
-    const vector<double> refhit_timings = ConvertWithFactorAndOffset((*it_refhit)->RawData, CATCH_to_nanoseconds, 0);
+    const vector<double> refhit_timings = ConvertWithFactorAndOffset((*it_refhit)->RawData, Gain, 0);
     // expect exactly one reference hit
     if(refhit_timings.size() != 1)
         return;

@@ -25,8 +25,8 @@
 #include "calibration/fitfunctions/FitGausPol0.h"
 #include "calibration/fitfunctions/FitGausPol3.h"
 
-#include "calibration/converters/CATCH_TDC.h"
 #include "calibration/converters/MultiHit16bit.h"
+#include "calibration/converters/MultiHit16bitReference.h"
 #include "calibration/converters/GeSiCa_SADC.h"
 #include "calibration/converters/ScalerFrequency.h"
 
@@ -72,8 +72,14 @@ public:
         // to 16bit signed values
         /// \todo check if 16bit signed is correct for all those detectors
         const auto& convert_MultiHit16bit = make_shared<calibration::converter::MultiHit16bit>();
-        const auto& convert_CATCH_Tagger = make_shared<calibration::converter::CATCH_TDC>(trigger->Reference_CATCH_TaggerCrate);
-        const auto& convert_CATCH_CB = make_shared<calibration::converter::CATCH_TDC>(trigger->Reference_CATCH_CBCrate);
+        const auto& convert_CATCH_Tagger = make_shared<calibration::converter::MultiHit16bitReference>(
+                                               trigger->Reference_CATCH_TaggerCrate,
+                                               calibration::converter::MultiHit16bitReference::CATCH_TDC_Gain
+                                               );
+        const auto& convert_CATCH_CB = make_shared<calibration::converter::MultiHit16bitReference>(
+                                           trigger->Reference_CATCH_CBCrate,
+                                           calibration::converter::MultiHit16bitReference::CATCH_TDC_Gain
+                                           );
         const auto& convert_GeSiCa_SADC = make_shared<calibration::converter::GeSiCa_SADC>();
         const auto& convert_ScalerFrequency_Beampolmon
                 = make_shared<calibration::converter::ScalerFrequency>(trigger->Scaler_Beampolmon_1MHz);
