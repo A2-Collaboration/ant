@@ -50,45 +50,6 @@ WrapTFile::~WrapTFile()
     }
 }
 
-std::shared_ptr<TH1> WrapTFile::GetSharedHist(const string& name)
-{
-    TH1* hist = nullptr;
-    GetObject(name, hist);
-    if(hist)
-        hist->SetDirectory(nullptr);
-    return std::shared_ptr<TH1>(hist);
-}
-
-std::shared_ptr<TH1D> WrapTFile::GetSharedTH1(const string& name)
-{
-    TH1D* hist = nullptr;
-    GetObject(name, hist);
-    if(hist)
-        hist->SetDirectory(nullptr);
-    return std::shared_ptr<TH1D>(hist);
-}
-
-std::shared_ptr<TH2D> WrapTFile::GetSharedTH2(const string& name)
-{
-    TH2D* hist = nullptr;
-    GetObject(name, hist);
-    if(hist)
-        hist->SetDirectory(nullptr);
-    return std::shared_ptr<TH2D>(hist);
-}
-
-std::shared_ptr<TH3D> WrapTFile::GetSharedTH3(const string& name)
-{
-    TH3D* hist = nullptr;
-    GetObject(name, hist);
-    if(hist)
-        hist->SetDirectory(nullptr);
-    return std::shared_ptr<TH3D>(hist);
-}
-
-
-
-
 //============================================================================================
 
 struct SavedDirectory_t {

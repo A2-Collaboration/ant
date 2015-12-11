@@ -73,7 +73,7 @@ public:
      * @return true if object was found, false otherwise
      */
     template <typename T>
-    bool GetObject(const std::string& name, T*& ptr) {
+    bool GetObject(const std::string& name, T*& ptr) const {
         ptr = nullptr;
 
         std::string filename;
@@ -95,10 +95,15 @@ public:
         return ptr != nullptr;
     }
 
-    std::shared_ptr<TH1>  GetSharedHist(const std::string& name);
-    std::shared_ptr<TH1D> GetSharedTH1(const std::string& name);
-    std::shared_ptr<TH2D> GetSharedTH2(const std::string& name);
-    std::shared_ptr<TH3D> GetSharedTH3(const std::string& name);
+    template<typename Hist>
+    std::shared_ptr<Hist>  GetSharedHist(const std::string& name) const {
+        Hist* hist = nullptr;
+        GetObject(name, hist);
+        if(hist)
+            hist->SetDirectory(nullptr);
+        return std::shared_ptr<Hist>(hist);
+    }
+
 
     template<typename T>
     std::shared_ptr<T>  GetSharedClone(const std::string& name) {
