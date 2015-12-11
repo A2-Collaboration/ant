@@ -54,7 +54,7 @@ struct UpdateableItem :  Updateable_traits {
         UpdatePoints(changePoints.size())
     {}
 
-    virtual std::list<Loader_t> GetLoaders() const override
+    virtual std::list<Loader_t> GetLoaders() override
     {
         std::list<Loader_t> loaders;
 

@@ -76,7 +76,7 @@ public:
     virtual void ApplyTo(const readhits_t& hits, extrahits_t&) override;
 
     // Updateable_traits interface
-    virtual std::list<Loader_t> GetLoaders() const override;
+    virtual std::list<Loader_t> GetLoaders() override;
     void UpdatedTIDFlags(const TID& id) override;
 
     virtual void GetGUIs(std::list<std::unique_ptr<calibration::gui::CalibModule_traits> >& guis) override;
@@ -94,7 +94,7 @@ protected:
     std::shared_ptr<gui::PeakingFitFunction> fitFunction;
 
     std::vector<double> DefaultOffsets;
-    mutable std::vector<double> Offsets;
+    std::vector<double> Offsets;
 
     std::vector<double> DefaultGains;
     std::vector<double> Gains;

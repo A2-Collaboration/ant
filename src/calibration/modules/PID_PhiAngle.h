@@ -70,7 +70,7 @@ public:
     virtual void GetGUIs(std::list<std::unique_ptr<calibration::gui::CalibModule_traits> >& guis) override;
 
     // Updateable_traits interface
-    virtual std::list<Loader_t> GetLoaders() const override;
+    virtual std::list<Loader_t> GetLoaders() override;
 
 protected:
     std::shared_ptr<expconfig::detector::PID> pid_detector;

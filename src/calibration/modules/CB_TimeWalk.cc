@@ -77,7 +77,7 @@ void CB_TimeWalk::GetGUIs(list<unique_ptr<gui::CalibModule_traits> >& guis) {
 }
 
 
-std::list<Updateable_traits::Loader_t> CB_TimeWalk::GetLoaders() const
+std::list<Updateable_traits::Loader_t> CB_TimeWalk::GetLoaders()
 {
     return {
         [this] (const TID& currPoint, TID& nextChangePoint) {

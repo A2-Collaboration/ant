@@ -95,7 +95,7 @@ struct Updateable_traits {
 
     using Loader_t = std::function<void(const TID& currPoint, TID& nextChangePoint)>;
 
-    virtual std::list<Loader_t> GetLoaders() const = 0;
+    virtual std::list<Loader_t> GetLoaders() = 0;
 
     /**
      * @brief UpdatedTIDFlags called when processed event has some different flags in TID

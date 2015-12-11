@@ -134,7 +134,7 @@ void Energy::ApplyTo(const readhits_t& hits, extrahits_t& extrahits)
     }
 }
 
-std::list<Updateable_traits::Loader_t> Energy::GetLoaders() const
+std::list<Updateable_traits::Loader_t> Energy::GetLoaders()
 {
 
     std::list<Updateable_traits::Loader_t> loaders;

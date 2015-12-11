@@ -30,7 +30,7 @@ public:
     virtual void ApplyTo(const readhits_t& hits, extrahits_t& extrahits) override;
 
     // Updateable_traits interface
-    virtual std::list<Loader_t> GetLoaders() const override;
+    virtual std::list<Loader_t> GetLoaders() override;
 
 protected:
     Energy(Detector_t::Type_t detectorType,
