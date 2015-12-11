@@ -33,6 +33,14 @@ void Trigger_2014::BuildMappings(std::vector<UnpackerAcquConfig::hit_mapping_t>&
     // call base method for mappings which have never changed over the years
     Trigger::BuildMappings(hit_mappings, scaler_mappings);
 
+    // The PbWO4 timings also have some reference,
+    // but they are quite new...
+    /// \todo check when those V1190 modules actually were installed
+    hit_mappings.emplace_back(
+                Reference_V1190_TAPSPbWO4,
+                29192
+                );
+
     std::list<scaler_mapping_t> reference_scalers;
 
     reference_scalers.emplace_back(

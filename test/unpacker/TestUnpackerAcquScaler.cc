@@ -49,6 +49,6 @@ void dotest() {
 
     REQUIRE(nSlowControls == 15);
     REQUIRE(nReads == 211);
-    REQUIRE(nHits == 28456);
+    REQUIRE(nHits == 28667);
     REQUIRE(taggerScalerBlockFound);
 }
