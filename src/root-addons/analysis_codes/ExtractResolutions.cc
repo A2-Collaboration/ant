@@ -118,27 +118,28 @@ void ExtractResolutions::AnalyseThetaCB(TTree* tree)
     }
 
 
-    TH2CB* cb = new TH2CB("theta_sigmas", "#sigma #theta, global, CB");
-    cb->SetZTitle("#sigma_{#theta} [rad]");
-    cb->SetElements(*h_global_sigma);
+    TH2CB* h_cb_global = new TH2CB("theta_sigmas", "#sigma #theta, global, CB");
+    h_cb_global->SetZTitle("#sigma_{#theta} [rad]");
+    h_cb_global->SetElements(*h_global_sigma);
 
-    TH2CB* cba = new TH2CB("theta_sigma_p0", "#sigma #theta P0");
-    cba->SetZTitle("p0");
-    cba->SetElements(*h_theta_fit_p0);
+    TH2CB* h_cb_p0 = new TH2CB("theta_sigma_p0", "#sigma #theta P0");
+    h_cb_p0->SetZTitle("p0");
+    h_cb_p0->SetElements(*h_theta_fit_p0);
 
-    TH2CB* cbb = new TH2CB("theta_sigma_p1", "#sigma #theta P1");
-    cbb->SetZTitle("p1");
-    cbb->SetElements(*h_theta_fit_p1);
+    TH2CB* h_cb_p1 = new TH2CB("theta_sigma_p1", "#sigma #theta P1");
+    h_cb_p1->SetZTitle("p1");
+    h_cb_p1->SetElements(*h_theta_fit_p1);
 
-    TH2CB* cbc = new TH2CB("theta_sigma_p2", "#sigma #theta P2");
-    cbc->SetZTitle("p2");
-    cbc->SetElements(*h_theta_fit_p2);
+    TH2CB* h_cb_p2 = new TH2CB("theta_sigma_p2", "#sigma #theta P2");
+    h_cb_p2->SetZTitle("p2");
+    h_cb_p2->SetElements(*h_theta_fit_p2);
 
     canvas("Sigma Theta CB")
-            << cb
-            << cba
-            << cbb
-            << cbc
+            << drawoption("colz")
+            << h_cb_global
+            << h_cb_p0
+            << h_cb_p1
+            << h_cb_p2
             << endc;
 
 }
@@ -227,27 +228,28 @@ void ExtractResolutions::AnalysePhiCB(TTree* tree)
     }
 
 
-    TH2CB* cb = new TH2CB("phi_sigmas", "#sigma #phi, global, CB");
-    cb->SetZTitle("#sigma_{#phi} [rad]");
-    cb->SetElements(*h_global_sigma);
+    TH2CB* h_cb_global = new TH2CB("phi_sigmas", "#sigma #phi, global, CB");
+    h_cb_global->SetZTitle("#sigma_{#phi} [rad]");
+    h_cb_global->SetElements(*h_global_sigma);
 
-    TH2CB* cba = new TH2CB("phi_sigma_p0", "#sigma #phi P0");
-    cba->SetZTitle("p0");
-    cba->SetElements(*h_phi_fit_p0);
+    TH2CB* h_cb_p0 = new TH2CB("phi_sigma_p0", "#sigma #phi P0");
+    h_cb_p0->SetZTitle("p0");
+    h_cb_p0->SetElements(*h_phi_fit_p0);
 
-    TH2CB* cbb = new TH2CB("phi_sigma_p1", "#sigma #phi P1");
-    cbb->SetZTitle("p1");
-    cbb->SetElements(*h_phi_fit_p1);
+    TH2CB* h_cb_p1 = new TH2CB("phi_sigma_p1", "#sigma #phi P1");
+    h_cb_p1->SetZTitle("p1");
+    h_cb_p1->SetElements(*h_phi_fit_p1);
 
-    TH2CB* cbc = new TH2CB("phi_sigma_p2", "#sigma #phi P2");
-    cbc->SetZTitle("p2");
-    cbc->SetElements(*h_phi_fit_p2);
+    TH2CB* h_cb_p2 = new TH2CB("phi_sigma_p2", "#sigma #phi P2");
+    h_cb_p2->SetZTitle("p2");
+    h_cb_p2->SetElements(*h_phi_fit_p2);
 
     canvas("Sigma Phi CB")
-            << cb
-            << cba
-            << cbb
-            << cbc
+            << drawoption("colz")
+            << h_cb_global
+            << h_cb_p0
+            << h_cb_p1
+            << h_cb_p2
             << endc;
 
 }
