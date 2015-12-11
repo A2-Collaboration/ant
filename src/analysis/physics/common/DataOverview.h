@@ -71,6 +71,7 @@ protected:
     ///@todo Add histograms for Error Codes and ModuleIDs ?
 
     TH2D* CBESum_perCh = nullptr;
+    TH2D* E_perCh = nullptr;
 
 public:
     TriggerOverview(const std::string& name, PhysOptPtr opts);

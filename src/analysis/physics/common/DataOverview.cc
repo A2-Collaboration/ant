@@ -126,6 +126,12 @@ TriggerOverview::TriggerOverview(const string &name, PhysOptPtr opts):
                                     bins_energy,
                                     BinSettings(cb_detector->GetNChannels()),
                                     "CBESum_perCh");
+    E_perCh = HistFac.makeTH2D("E vs. CB channel",
+                               "E / MeV",
+                               "Channel",
+                               bins_energy,
+                               BinSettings(cb_detector->GetNChannels()),
+                               "E_perCh");
 }
 
 TriggerOverview::~TriggerOverview()
@@ -143,7 +149,13 @@ void TriggerOverview::ProcessEvent(const Event &event)
     for(const Cluster& cluster : branch.AllClusters) {
         if(cluster.Detector & Detector_t::Any_t::CB) {
             for(const Cluster::Hit& hit : cluster.Hits) {
-                CBESum_perCh->Fill(trigger.CBEnergySum, hit.Channel);
+                for(const Cluster::Hit::Datum datum : hit.Data) {
+                    if(datum.Type == Channel_t::Type_t::Integral) {
+                        CBESum_perCh->Fill(trigger.CBEnergySum, hit.Channel);
+                        E_perCh->Fill(datum.Value, hit.Channel);
+                        break;
+                    }
+                }
             }
         }
     }
@@ -161,6 +173,7 @@ void TriggerOverview::ShowResult()
             << Multiplicity
             << nErrorsEvent
             << drawoption("colz") << CBESum_perCh
+            << E_perCh
             << endc;
 }
 
