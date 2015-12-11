@@ -28,15 +28,17 @@ void CBESum_Check::AnalyseHist(TH2D* h)
             continue;
         }
         TH1D* h_proj = h->ProjectionX("h_proj",ch+1,ch+1);
-        //cout << h_proj->GetMean() << endl;
         auto mean =  h_proj->GetMean();
         minmax.Extend(mean);
         cb->SetElement(ch,mean);
     }
     cb->GetZaxis()->SetRangeUser(minmax.Start(),minmax.Stop());
     canvas c;
-    c << drawoption("colz") << h
-      << drawoption("colz") << cb;
+    c << drawoption("colz") << padoption::set(padoption_t::LogZ) << h
+      << padoption::unset(padoption_t::LogZ)
+      << drawoption("colz") << cb
+      << samepad
+      << drawoption("sametext") << new TH2CB();
     c << endc;
 }
 
