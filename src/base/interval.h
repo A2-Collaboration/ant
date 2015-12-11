@@ -178,8 +178,17 @@ public:
      * @param other another interval
      */
     void Extend(const interval<T>& other) {
-        Start() = std::min(Start(), other.Start());
-        Stop()  = std::max(Stop(),  other.Stop());
+        Start() = std::min(other.Start(), Start());
+        Stop()  = std::max(other.Stop(),  Stop());
+    }
+
+    /**
+     * @brief Extend the interval if the given covers a larger range
+     * @param other another interval
+     */
+    void Extend(const T& other) {
+        Start() = std::min(other, Start());
+        Stop()  = std::max(other, Stop());
     }
 
     /**
