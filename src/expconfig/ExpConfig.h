@@ -46,6 +46,7 @@ public:
         virtual double GetElectronBeamEnergy() const = 0;
         virtual std::list< std::shared_ptr< Calibration::PhysicsModule> > GetCalibrations() const = 0;
         virtual std::string GetPIDCutsDirectory() const = 0;
+        virtual std::string GetPhysicsFilesDirectory() const = 0;
         virtual std::shared_ptr<calibration::DataManager> GetCalibrationDataManager() const = 0;
 
         // you may obtain such an Expconfig::Setup via headerInfo, name,

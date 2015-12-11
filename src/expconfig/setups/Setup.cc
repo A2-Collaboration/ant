@@ -56,6 +56,11 @@ std::string Setup::GetPIDCutsDirectory() const {
     return std::string(ANT_PATH_DATABASE)+"/"+GetName()+"/cuts";
 }
 
+std::string Setup::GetPhysicsFilesDirectory() const
+{
+    return std::string(ANT_PATH_DATABASE)+"/"+GetName()+"/physics_files";
+}
+
 Setup::Setup(const std::string& name, SetupOptPtr opt) :
     name_(name),
     Options(opt)
