@@ -230,10 +230,9 @@ void ReconstructCheck::histgroup::ShowResult() const
     c << drawoption("colz") << nPerEvent << nPerEventPerE << splitPerEvent
       << *splitFlagPos << *splitPos
       << cluserSize << cluserSize_true << dEE << dEE_true << nCharged << *posCharged << unmatched_veto
-      << drawoption("nostack") << padoption::set(padoption_t::Legend) << splitstack
-      << padoption::unset(padoption_t::Legend)
+      << drawoption("nostack") << padoption::Legend << splitstack
       << drawoption("colz") << *energy_recov
-      << padoption::set(padoption_t::LogZ) << energyinout << padoption::unset(padoption_t::LogZ)
+      << padoption::LogZ << energyinout
       << thetainout << *input_positions << *mult1_chargedPos
       << endc;
 }

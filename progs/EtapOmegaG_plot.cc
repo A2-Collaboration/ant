@@ -189,7 +189,7 @@ void do_Sum_Signal_Bkg(TDirectory *dir,
     }
 
     canvas c("c_"+hname+(bkgdetail ? "_detail" : ""));
-    c << padoption::set(padoption_t::Legend) << drawoption("nostack") << mystack << endc;
+    c << padoption::Legend << drawoption("nostack") << mystack << endc;
 }
 
 

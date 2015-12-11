@@ -129,7 +129,7 @@ int main( int argc, char** argv )
     c << endc;
 
 
-    canvas("total") << drawoption("nostack") << padoption::set(padoption_t::Legend) << padoption::set(padoption_t::LogY)
+    canvas("total") << drawoption("nostack") << padoption::Legend << padoption::LogY
                     << sumplot << endc;
 
     app->Run(kTRUE);

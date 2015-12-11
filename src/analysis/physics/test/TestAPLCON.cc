@@ -332,13 +332,11 @@ void TestAPLCON::ShowResult()
 {
     canvas c("TestAPLCON: Overview");
     c << drawoption("colz") << banana
-      << padoption::set(padoption_t::Legend)
-      << particles
-      << padoption::unset(padoption_t::Legend)
+      << padoption::Legend << particles
       << tagger << ntagged << cbesum << endc;
 
     canvas c_pulls("TestAPLCON: Pulls");
-    c_pulls << padoption::set(padoption_t::LogY);
+    c_pulls << padoption::enable(padoption::LogY);
     for( auto& p : pulls ) {
         c_pulls << p.second;
     }

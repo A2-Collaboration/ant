@@ -34,11 +34,12 @@ void CBESum_Check::AnalyseHist(TH2D* h)
     }
     cb->GetZaxis()->SetRangeUser(minmax.Start(),minmax.Stop());
     canvas c;
-    c << drawoption("colz") << padoption::set(padoption_t::LogZ) << h
-      << padoption::unset(padoption_t::LogZ)
+    c << drawoption("colz")
+      << padoption::LogZ
+      << h
       << drawoption("colz") << cb
       << samepad
-      << drawoption("sametext") << new TH2CB();
-    c << endc;
+      << drawoption("text") << new TH2CB()
+      << endc;
 }
 

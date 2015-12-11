@@ -24,67 +24,54 @@ struct root_drawable_traits {
     virtual ~root_drawable_traits() = default;
 };
 
-struct modifier {
-  virtual ~modifier() = default;
-};
+struct canvas_modifier {};
 
-struct endcanvas : modifier {};
+struct endcanvas : canvas_modifier {};
 
 extern const endcanvas endc;
 
-struct endrow : modifier {};
+struct endrow : canvas_modifier {};
 
 extern const endrow endr;
 
-class samepad_t : public modifier {};
+struct samepad_t : canvas_modifier {};
 
 extern const samepad_t samepad;
 
-class drawoption : public modifier {
+struct drawoption : canvas_modifier {
+    drawoption(const std::string& opt=""): option(opt) {}
+    const std::string& Option() const { return option; }
 protected:
     std::string option;
-public:
-    drawoption(const std::string& opt=""): option(opt) {}
-    virtual ~drawoption() {}
-    const std::string& Option() const { return option; }
 };
 
-enum class padoption_t {
-    LogX, LogY, LogZ,
-    Legend
-};
+using padmodifier_t = std::function<void(TVirtualPad*)>;
 
-class padoption: public modifier {
-
-public:
-
-    using map_options_t = std::map<padoption_t, std::function<void(TVirtualPad*)> >;
-    static const map_options_t map_options;
+struct padoption : canvas_modifier, padmodifier_t {
 
 protected:
-    class base {
-    protected:
-        padoption_t option;
-    public:
-        base(const padoption_t& _option) : option(_option) {}
-
-        const padoption_t& Option() const { return option; }
+    struct permanent {
+        permanent(const padmodifier_t& m) : Modifier(std::addressof(m)) {}
+        const padmodifier_t* Modifier;
     };
+
+    using padmodifier_t::padmodifier_t;
 
 public:
 
-    class set : public base {
-    public:
-        set(const padoption_t& option) : base(option) {}
+    static const padoption Legend;
+    static const padoption LogX;
+    static const padoption LogY;
+    static const padoption LogZ;
+
+
+    struct enable : permanent {
+        using permanent::permanent;
     };
 
-    class unset : public base {
-    public:
-        unset(const padoption_t& option) : base(option) {}
+    struct disable : permanent {
+        using permanent::permanent;
     };
-
-    virtual ~padoption() {}
-
 };
 
 /**
@@ -142,7 +129,7 @@ protected:
 
     struct pad_t  {
         std::list<DrawableItem> DrawableItems;     // objects to draw on pad (empty indicates end row)
-        using PadOptions_t = std::list<padoption_t>;
+        using PadOptions_t = std::list<const padmodifier_t*>;
         PadOptions_t PadOptions; // pad options
         pad_t(const PadOptions_t& options) : PadOptions(options) {}
         pad_t() {}
@@ -151,12 +138,13 @@ protected:
     std::list<pad_t> pads;
 
     std::string current_drawoption;
-    std::list<padoption_t> current_padoptions;
+    std::list<const padmodifier_t*> global_padoptions;
+    std::list<const padmodifier_t*> onetime_padoptions;
 
-    static bool isMarker(const std::unique_ptr<root_drawable_traits>& t);
 
     void DrawObjs(TCanvas* c, unsigned cols, unsigned rows);
     void AddDrawable(std::unique_ptr<root_drawable_traits> drawable);
+
 public:
 
     canvas(const std::string& title="");
@@ -176,9 +164,11 @@ public:
 
     virtual canvas& operator<< (const drawoption& c);
 
-    virtual canvas& operator<< (const padoption::set& c);
+    virtual canvas& operator<< (const padoption& c);
 
-    virtual canvas& operator<< (const padoption::unset& c);
+    virtual canvas& operator<< (const padoption::enable& c);
+
+    virtual canvas& operator<< (const padoption::disable& c);
 
     virtual canvas& operator>> (const std::string& filename);
 

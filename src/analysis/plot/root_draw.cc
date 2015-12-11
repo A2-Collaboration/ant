@@ -21,14 +21,18 @@
 using namespace ant;
 using namespace std;
 
-const padoption::map_options_t padoption::map_options =
-{
-    {padoption_t::Legend, [] (TVirtualPad* p) {p->BuildLegend();} },
-    {padoption_t::LogX, [] (TVirtualPad* p) {p->SetLogx();} },
-    {padoption_t::LogY, [] (TVirtualPad* p) {p->SetLogy();} },
-    {padoption_t::LogZ, [] (TVirtualPad* p) {p->SetLogz();} },
-};
+//const padoption::map_options_t padoption::map_options =
+//{
+//    {padoption_t::Legend, [] (TVirtualPad* p) {p->BuildLegend();} },
+//    {padoption_t::LogX, [] (TVirtualPad* p) {p->SetLogx();} },
+//    {padoption_t::LogY, [] (TVirtualPad* p) {p->SetLogy();} },
+//    {padoption_t::LogZ, [] (TVirtualPad* p) {p->SetLogz();} },
+//};
 
+const padoption padoption::Legend = [] (TVirtualPad* p) {p->BuildLegend();};
+const padoption padoption::LogX = [] (TVirtualPad* p) {p->SetLogx();};
+const padoption padoption::LogY = [] (TVirtualPad* p) {p->SetLogy();};
+const padoption padoption::LogZ = [] (TVirtualPad* p) {p->SetLogz();};
 
 unsigned int canvas::num = 0;
 
@@ -38,7 +42,7 @@ const samepad_t ant::samepad;
 
 
 canvas::canvas(const string& title) :
-  name(), pads(), current_drawoption(), current_padoptions()
+  name(), pads(), current_drawoption(), global_padoptions()
 {
     CreateTCanvas(title);
 }
@@ -83,11 +87,8 @@ void canvas::DrawObjs(TCanvas* c, unsigned cols, unsigned rows)
             }
             // set pad options
             for(const auto& option : p.PadOptions) {
-                const auto& it = padoption::map_options.find(option);
-                // silently ignore not implemented pad options
-                if(it == padoption::map_options.end())
-                    continue;
-                it->second(vpad);
+
+                (*option)(vpad);
             }
 
             ++pad;
@@ -107,11 +108,19 @@ void canvas::cd()
 
 void canvas::AddDrawable(std::unique_ptr<root_drawable_traits> drawable)
 {
+    onetime_padoptions.insert(onetime_padoptions.end(),
+                              global_padoptions.begin(),
+                              global_padoptions.end());
+    string drawoption = current_drawoption;
     if(!addobject || pads.empty()) {
-        pads.emplace_back(current_padoptions);
+        pads.emplace_back(onetime_padoptions);
     }
-    pads.back().DrawableItems.emplace_back(move(drawable), current_drawoption);
+    else {
+        drawoption += "same";
+    }
+    pads.back().DrawableItems.emplace_back(move(drawable), drawoption);
 
+    onetime_padoptions.clear();
     addobject = false;
 }
 
@@ -150,20 +159,22 @@ canvas& canvas::operator<<(const drawoption& c)
     return *this;
 }
 
-canvas& canvas::operator<<(const padoption::set& c)
+canvas&canvas::operator<<(const padoption& c)
 {
-    const auto& o = c.Option();
-    auto it = std::find(current_padoptions.begin(), current_padoptions.end(), o);
-    if(it == current_padoptions.end()) {
-        current_padoptions.emplace_back(o);
-    }
+    onetime_padoptions.emplace_back(std::addressof(c));
     return *this;
 }
 
-canvas& canvas::operator<<(const padoption::unset& c)
+canvas& canvas::operator<<(const padoption::enable& c)
 {
-    const auto& o = c.Option();
-    current_padoptions.remove(o);
+
+    global_padoptions.emplace_back(c.Modifier);
+    return *this;
+}
+
+canvas& canvas::operator<<(const padoption::disable& c)
+{
+    global_padoptions.remove(c.Modifier);
     return *this;
 }
 
