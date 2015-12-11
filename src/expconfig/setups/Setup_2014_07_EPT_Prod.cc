@@ -29,7 +29,7 @@ public:
             // IgnoreDetectorChannels(Detector_t::Type_t::TAPS, {2,73,127,137,138,145,200,218,283,291,356,357,364});
 
             // no nice timing peak
-            IgnoreDetectorChannels(Detector_t::Type_t::TAPSVeto, {6, 64, 128, 192, 287, 321, 337, 349});
+            //IgnoreDetectorChannels(Detector_t::Type_t::TAPSVeto, {6, 64, 128, 192, 287, 321, 337, 349});
         }
         else {
             LOG(WARNING) << "DO NOT ignore bad elements";
