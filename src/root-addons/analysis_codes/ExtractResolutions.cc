@@ -107,17 +107,17 @@ void ExtractResolutions::AnalysePhiCB(TTree* tree)
 
 void ExtractResolutions::AnalyseECB(TTree* tree)
 {
-    const interval<double> range = {-.2,.2};
+    const interval<double> range = {-120,0};
     const unsigned nElements = 720;
 
     new TCanvas();
-    auto h = Draw(tree, "E:Element",TCut(""), int(nElements), 0, nElements, 80, range.Start(), range.Stop());
+    auto h = Draw(tree, "E:Element",TCut(""), int(nElements), 0, nElements, 120, range.Start(), range.Stop());
     h->SetXTitle("Element");
-    h->SetYTitle("#Delta #phi [rad]");
+    h->SetYTitle("#Delta E [MeV]");
     h->SetZTitle("# Particles");
 
-    TH2CB* cb = new TH2CB("phi_sigmas", "phi sigmas");
-    cb->SetZTitle("#sigma_{#phi} [rad]");
+    TH2CB* cb = new TH2CB("E_sigmas", "E sigmas");
+    cb->SetZTitle("#sigma_{E} [MeV]");
 
     TF1* f = new TF1("f", "gaus", range.Start(), range.Stop());
 
@@ -128,9 +128,9 @@ void ExtractResolutions::AnalyseECB(TTree* tree)
         f->SetParameter(1, 0);
         f->SetParameter(2,.1);
         TH1* pr;
-        pr = h->ProjectionY(Form("Phi_Element_%d",i), i, i+1);
+        pr = h->ProjectionY(Form("E_Element_%d",i), i, i+1);
         pr->SetTitle(Form("Element %d", i));
-        pr->SetXTitle("#Delta #phi [rad]");
+        pr->SetXTitle("#Delta E [MeV]");
         pr->Draw();
         pr->Fit(f, "RQ");
         cb->SetElement(i, f->GetParameter(2));
