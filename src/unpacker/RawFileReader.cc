@@ -73,9 +73,13 @@ void RawFileReader::HandlePerformanceStats()
         LOG(INFO) << "Reading file with " << std::fixed << setprecision(3) << bytes_per_s_uncompressed/(1<<20);
     }
     else {
-        LOG(INFO) << "Reading compressed file     with " << std::fixed << setprecision(3) << bytes_per_s/(1<<20) << " MB/s";
-        LOG(INFO) << "Reading uncompressed stream with " << std::fixed << setprecision(3) << bytes_per_s_uncompressed/(1<<20) << " MB/s";
-        LOG(INFO) << "File compression ratio:          " << std::fixed << setprecision(2) << 100*bytes_per_s/bytes_per_s_uncompressed << " %";
+        LOG(INFO) << "Reading compressed/uncompressed file with "
+                  << std::fixed << setprecision(3) << bytes_per_s/(1<<20)
+                  << "/"
+                  << std::fixed << setprecision(3) << bytes_per_s_uncompressed/(1<<20)
+                  << " MB/s, ratio="
+                  << std::fixed << setprecision(2) << 100*bytes_per_s/bytes_per_s_uncompressed
+                  << " %";
     }
 
     // reset counters
