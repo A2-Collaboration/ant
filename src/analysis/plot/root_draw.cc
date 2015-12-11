@@ -21,14 +21,6 @@
 using namespace ant;
 using namespace std;
 
-//const padoption::map_options_t padoption::map_options =
-//{
-//    {padoption_t::Legend, [] (TVirtualPad* p) {p->BuildLegend();} },
-//    {padoption_t::LogX, [] (TVirtualPad* p) {p->SetLogx();} },
-//    {padoption_t::LogY, [] (TVirtualPad* p) {p->SetLogy();} },
-//    {padoption_t::LogZ, [] (TVirtualPad* p) {p->SetLogz();} },
-//};
-
 const padoption padoption::Legend = [] (TVirtualPad* p) {p->BuildLegend();};
 const padoption padoption::LogX = [] (TVirtualPad* p) {p->SetLogx();};
 const padoption padoption::LogY = [] (TVirtualPad* p) {p->SetLogy();};
@@ -36,9 +28,9 @@ const padoption padoption::LogZ = [] (TVirtualPad* p) {p->SetLogz();};
 
 unsigned int canvas::num = 0;
 
-const endcanvas ant::endc;
-const endrow ant::endr;
-const samepad_t ant::samepad;
+const endcanvas ant::endc = endcanvas();
+const endrow ant::endr = endrow();
+const samepad_t ant::samepad = samepad_t();
 
 
 canvas::canvas(const string& title) :
