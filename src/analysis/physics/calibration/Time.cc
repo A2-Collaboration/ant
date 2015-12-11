@@ -18,7 +18,7 @@ Time::Time(const Detector_t::Type_t& detectorType,
     hTime = HistFac.makeTH2D(detectorName + string(" - Time"),
                              "time [ns]",
                              detectorName + " channel",
-                             BinSettings(1000,-400,400),
+                             BinSettings(2000,-400,400),
                              BinSettings(detector->GetNChannels()),
                              "Time"
                              );
@@ -93,14 +93,14 @@ AUTO_REGISTER_PHYSICS(PID_Time)
 
 struct TAPS_Time : Time {
     TAPS_Time(const std::string& name, PhysOptPtr opts) :
-        Time(Detector_t::Type_t::PID, name, opts)
+        Time(Detector_t::Type_t::TAPS, name, opts)
     {}
 };
 AUTO_REGISTER_PHYSICS(TAPS_Time)
 
 struct TAPSVeto_Time : Time {
     TAPSVeto_Time(const std::string& name, PhysOptPtr opts) :
-        Time(Detector_t::Type_t::PID, name, opts)
+        Time(Detector_t::Type_t::TAPSVeto, name, opts)
     {}
 };
 AUTO_REGISTER_PHYSICS(TAPSVeto_Time)
