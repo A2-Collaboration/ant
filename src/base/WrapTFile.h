@@ -106,7 +106,7 @@ public:
 
 
     template<typename T>
-    std::shared_ptr<T>  GetSharedClone(const std::string& name) {
+    std::shared_ptr<T>  GetSharedClone(const std::string& name) const {
         T* ptr = nullptr;
         if(GetObject(name.c_str(), ptr)) {
             return std::shared_ptr<T>(dynamic_cast<T*>(ptr->Clone()));
@@ -115,7 +115,7 @@ public:
     }
 
     template<typename T>
-    bool GetObjectClone(const std::string& name, T& object) {
+    bool GetObjectClone(const std::string& name, T& object) const {
         T* ptr = nullptr;
         if(GetObject(name.c_str(), ptr)) {
             object = std::move(*ptr);
