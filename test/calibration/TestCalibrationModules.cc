@@ -37,10 +37,8 @@ void checkcalibration(std::shared_ptr< Calibration::PhysicsModule> calibration) 
     REQUIRE_FALSE(guis.empty());
 
     for(const auto& gui : guis) {
-        auto histname = gui->GetHistogramName();
-        INFO("GUI="+gui->GetName()+" Histogram="+histname)
-        TH1* h;
-        REQUIRE(outputfile.GetObject<TH1>(histname, h));
+        INFO("GUI="+gui->GetName())
+        REQUIRE(gui->GetHistogram(outputfile) != nullptr);
     }
 
 }

@@ -59,7 +59,7 @@ public:
                const std::shared_ptr<expconfig::detector::CB>& cb,
                std::vector<std::shared_ptr<gui::FitTimewalk> >& timewalks_);
 
-        virtual std::string GetHistogramName() const override;
+        virtual std::shared_ptr<TH1> GetHistogram(const WrapTFile& file) const override;
         virtual unsigned GetNumberOfChannels() const override;
         virtual void InitGUI(gui::ManagerWindow_traits* window) override;
 

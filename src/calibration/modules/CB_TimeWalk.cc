@@ -111,9 +111,9 @@ CB_TimeWalk::TheGUI::TheGUI(const string& basename,
 {
 }
 
-string CB_TimeWalk::TheGUI::GetHistogramName() const
+shared_ptr<TH1> CB_TimeWalk::TheGUI::GetHistogram(const WrapTFile& file) const
 {
-    return GetName()+"/timewalk";
+    return file.GetSharedHist<TH1>(GetName()+"/timewalk");
 }
 
 unsigned CB_TimeWalk::TheGUI::GetNumberOfChannels() const

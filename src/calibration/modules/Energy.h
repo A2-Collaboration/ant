@@ -84,7 +84,7 @@ protected:
                       );
 
         virtual std::string GetName() const override;
-        virtual std::string GetHistogramName() const override;
+        virtual std::shared_ptr<TH1> GetHistogram(const WrapTFile& file) const override;
         virtual unsigned GetNumberOfChannels() const override;
 
         virtual void InitGUI(gui::ManagerWindow_traits* window) override;

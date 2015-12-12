@@ -2,9 +2,11 @@
 
 #include "base/interval.h"
 #include "tree/THeaderInfo.h"
+#include "base/WrapTFile.h"
 
 #include <string>
 #include <list>
+#include <memory>
 
 class TH1;
 class TQObject;
@@ -14,7 +16,6 @@ namespace calibration {
 namespace gui {
 
 class CalCanvas;
-
 
 class ManagerWindow_traits {
 public:
@@ -32,7 +33,7 @@ public:
     virtual ~CalibModule_traits() {}
     virtual std::string GetName() const { return name; }
 
-    virtual std::string GetHistogramName() const =0;
+    virtual std::shared_ptr<TH1> GetHistogram(const WrapTFile& file) const =0;
     virtual unsigned GetNumberOfChannels() const =0;
 
     virtual void InitGUI(gui::ManagerWindow_traits* window) =0;

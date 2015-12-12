@@ -105,9 +105,9 @@ PID_PhiAngle::TheGUI::~TheGUI()
 
 }
 
-string PID_PhiAngle::TheGUI::GetHistogramName() const
+shared_ptr<TH1> PID_PhiAngle::TheGUI::GetHistogram(const WrapTFile& file) const
 {
-    return GetName()+"/pid_cb_phi_corr";
+    return file.GetSharedHist<TH1>(GetName()+"/pid_cb_phi_corr");
 }
 
 unsigned PID_PhiAngle::TheGUI::GetNumberOfChannels() const

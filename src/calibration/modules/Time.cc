@@ -144,8 +144,8 @@ Time::TheGUI::TheGUI(const string& name,
 {
 }
 
-string Time::TheGUI::GetHistogramName() const {
-    return GetName()+"/Time";
+shared_ptr<TH1> Time::TheGUI::GetHistogram(const WrapTFile& file) const {
+    return file.GetSharedHist<TH1>(GetName()+"/Time");
 }
 
 unsigned Time::TheGUI::GetNumberOfChannels() const
