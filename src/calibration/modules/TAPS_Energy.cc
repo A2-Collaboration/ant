@@ -89,6 +89,19 @@ void TAPS_Energy::GUI_Gains::InitGUI(gui::ManagerWindow_traits* window)
     h_peaks_taps = new TH2TAPS("h_peaks_taps",h_peaks->GetTitle());
 }
 
+shared_ptr<TH1> TAPS_Energy::GUI_Gains::GetHistogram(const WrapTFile& file) const
+{
+    TH3D* ggIM_mult;
+    if(file.GetObject(CalibModule_traits::GetName()+"/ggIM_mult", ggIM_mult)) {
+        ggIM_mult->GetZaxis()->SetRangeUser(6,10);
+        // pay attention to the ROOT ownership business
+        TH2D* proj = dynamic_cast<TH2D*>(ggIM_mult->Project3D("yx")->Clone());
+        proj->SetDirectory(nullptr);
+        return shared_ptr<TH1>(proj);
+    }
+    return nullptr;
+}
+
 gui::CalibModule_traits::DoFitReturn_t TAPS_Energy::GUI_Gains::DoFit(TH1* hist, unsigned channel)
 {
     if(detector->IsIgnored(channel))
