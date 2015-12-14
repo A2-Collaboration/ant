@@ -30,7 +30,20 @@ PhysicsRegistry& PhysicsRegistry::get_instance()
 
 std::unique_ptr<Physics> PhysicsRegistry::Create(const string& name, PhysOptPtr opts)
 {
-    auto physics = PhysicsRegistry::get_instance().physics_creators.at(name)(name, opts);
+    auto creator = PhysicsRegistry::get_instance().physics_creators.find(name);
+
+    if(creator == PhysicsRegistry::get_instance().physics_creators.end())
+        throw std::runtime_error("Physics class " + name + " not found");
+
+    std::unique_ptr<Physics> physics;
+
+    try {
+        physics = creator->second(name, opts);
+    } catch (const std::exception& e) {
+        LOG(ERROR) << "Error while constructing physics class " << name << " Exception: " << e.what();
+        throw std::runtime_error("Error while constructing physics class");
+    }
+
     if(physics->GetName() != name)
         throw std::runtime_error(std_ext::formatter()
                                  << "Physics name " << name << " does not match GetName() " << physics->GetName());

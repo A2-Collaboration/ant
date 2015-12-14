@@ -354,7 +354,7 @@ int main(int argc, char** argv) {
             pm.AddPhysics( analysis::PhysicsRegistry::Create(classname, popts) );
             LOG(INFO) << "Activated physics class '" << classname << "'";
         } catch (...) {
-            LOG(ERROR) << "Physics class '" << classname << "' not found";
+            LOG(ERROR) << "Could not activate physics class";
             return 1;
         }
     }
