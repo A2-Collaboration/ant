@@ -5,6 +5,7 @@ set(DICT_HEADERS
     OmegaEtaG.h
     ExtractResolutions.h
     CBESum_Check.h
+    TAPSEnergy_Check.h
   )
 
 set(SRCS
@@ -13,6 +14,7 @@ set(SRCS
     TreeTools.cc
     ExtractResolutions.cc
     CBESum_Check.cc
+    TAPSEnergy_Check.cc
   )
 
 set(ROOT_DICTIONARY "${CMAKE_CURRENT_BINARY_DIR}/G__analysis_codes.cc")

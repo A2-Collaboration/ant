@@ -11,6 +11,7 @@
 #pragma link C++ class SymmetricPi0+;
 #pragma link C++ class ExtractResolutions+;
 #pragma link C++ class CBESum_Check+;
+#pragma link C++ class TAPSEnergy_Check+;
 
 #endif // __CINT__
 

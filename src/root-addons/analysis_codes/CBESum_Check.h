@@ -1,9 +1,9 @@
 #pragma once
 
-class TH2D;
+class TFile;
 
 struct CBESum_Check {
 
-    static void AnalyseHist(TH2D* h_CBEsum, TH2D* h_E);
+    static void Analyse(TFile* file);
 
 };

@@ -1,11 +1,13 @@
 #include "CBESum_Check.h"
 
-#include "TH2D.h"
 #include "root-addons/cbtaps_display/TH2CB.h"
 #include "expconfig/ExpConfig.h"
 #include "analysis/plot/root_draw.h"
 #include "base/interval.h"
 #include "base/std_ext/math.h"
+
+#include "TFile.h"
+#include "TH2D.h"
 
 #include <iostream>
 
@@ -36,8 +38,10 @@ TH2CB* makeMeanHist(TH2D* h, interval<double> range) {
     return cb;
 }
 
-void CBESum_Check::AnalyseHist(TH2D* h_CBEsum, TH2D* h_E)
+void CBESum_Check::Analyse(TFile* file)
 {
+    TH2D* h_CBEsum = dynamic_cast<TH2D*>(file->Get("TriggerOverview/CBESum_perCh"));
+    TH2D* h_E = dynamic_cast<TH2D*>(file->Get("TriggerOverview/E_perCh"));
     auto cb_CBEsum = makeMeanHist(h_CBEsum, {400, 700});
     auto cb_E = makeMeanHist(h_E, {0, 1000});
 
