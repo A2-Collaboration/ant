@@ -173,7 +173,7 @@ void ggStack(TDirectory *dir) {
     }
 
     canvas c("gg im");
-    c << padoption::set(padoption_t::Legend) << drawoption("nostack")<< gg_stack << endc;
+    c << padoption::Legend << drawoption("nostack")<< gg_stack << endc;
 }
 
 void mmStack(TDirectory *dir) {
@@ -210,7 +210,7 @@ void mmStack(TDirectory *dir) {
     }
 
     canvas c("mm");
-    c << padoption::set(padoption_t::Legend) << drawoption("nostack") << gg_stack << endc;
+    c << padoption::Legend << drawoption("nostack") << gg_stack << endc;
 
 }
 
@@ -247,7 +247,7 @@ void gggStack(TDirectory *dir) {
     }
 
     canvas c("ggg im");
-    c << padoption::set(padoption_t::Legend) << drawoption("nostack") << ggg_stack << endc;
+    c << padoption::Legend << drawoption("nostack") << ggg_stack << endc;
     DrawCutLines(gPad, interval<double>(680,780));
 }
 
@@ -276,5 +276,5 @@ void nPhotons(TDirectory *dir) {
     }
 
     canvas c("n Photons");
-    c << padoption::set(padoption_t::Legend) << drawoption("nostack") << ggg_stack << endc;
+    c << padoption::Legend << drawoption("nostack") << ggg_stack << endc;
 }
