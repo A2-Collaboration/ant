@@ -111,9 +111,14 @@ double KinFitter::fct_TaggerEGausSigma(double)
     return  3.0/sqrt(12.0);
 }
 
-KinFitter::KinFitter(const std::string& name):
+KinFitter::KinFitter(const std::string& name, unsigned numGammas):
     aplcon(make_unique<APLCON>(name))
 {
+
+    Photons.reserve(numGammas);
+    for(unsigned i=0; i<numGammas;++i) {
+        Photons.emplace_back(kinVector("Photon"+to_string(i)));
+    }
 
     aplcon->LinkVariable(Beam.name,
                         { Beam.Adresses() },
@@ -151,7 +156,8 @@ KinFitter::KinFitter(const std::string& name):
 
         constraint -= KinFitter::GetVector(proton, ParticleTypeDatabase::Proton.Mass());
 
-        for ( unsigned photon = 0 ; photon < 3 ; ++ photon)
+        const auto s = values.size();
+        for ( unsigned photon = 0 ; photon < s-2 ; ++ photon)
             constraint -= KinFitter::GetVector(values[photon + 2], 0.0);
 
         return vector<double>(

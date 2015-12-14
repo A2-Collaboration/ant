@@ -87,11 +87,7 @@ private:
 
     };
 
-    static constexpr auto nGamma = 3;
-    std::vector<kinVector> Photons = {
-         kinVector("Photon1"),
-         kinVector("Photon2"),
-         kinVector("Photon3")};
+    std::vector<kinVector> Photons;
 
     kinVector Proton = kinVector("Proton");
 
@@ -142,7 +138,7 @@ public:
     angular_sigma taps_sigma_theta;
     angular_sigma taps_sigma_phi;
 
-    KinFitter(const std::string& name);
+    KinFitter(const std::string& name, unsigned numGammas);
 
     void SetEgammaBeam(const double& ebeam);
     void SetProton(const ant::analysis::data::ParticlePtr& proton);

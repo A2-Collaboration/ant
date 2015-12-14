@@ -755,7 +755,7 @@ ParticleList OmegaEtaG2::FilterParticles(const data::ParticleList& list, const p
 }
 
 OmegaEtaG2::OmegaEtaG2(const std::string& name, PhysOptPtr opts):
-    OmegaBase(name, opts), fitter("OmegaEtaG2")
+    OmegaBase(name, opts), fitter("OmegaEtaG2", 3)
 {
     const auto setup = ant::ExpConfig::Setup::GetLastFound();
 
