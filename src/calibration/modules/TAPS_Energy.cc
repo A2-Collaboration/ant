@@ -93,7 +93,7 @@ shared_ptr<TH1> TAPS_Energy::GUI_Gains::GetHistogram(const WrapTFile& file) cons
 {
     TH3D* ggIM_mult;
     if(file.GetObject(CalibModule_traits::GetName()+"/ggIM_mult", ggIM_mult)) {
-        ggIM_mult->GetZaxis()->SetRangeUser(6,10);
+        ggIM_mult->GetZaxis()->SetRangeUser(2,3);
         // pay attention to the ROOT ownership business
         TH2D* proj = dynamic_cast<TH2D*>(ggIM_mult->Project3D("yx")->Clone());
         proj->SetDirectory(nullptr);
