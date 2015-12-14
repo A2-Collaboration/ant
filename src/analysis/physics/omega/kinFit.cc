@@ -102,7 +102,8 @@ TLorentzVector KinFitter::GetVector(const std::vector<double>& EkThetaPhi, const
 
 double KinFitter::fct_GlobalEResolution(double E)
 {
-    return  0.02 * E * std::pow(E,-0.36);
+ //   return  0.02 * E * std::pow(E,-0.36);
+    return 1.07134e-02 * E; // roughly extracted
 }
 
 double KinFitter::fct_TaggerEGausSigma(double)
