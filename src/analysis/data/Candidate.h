@@ -52,7 +52,7 @@ struct Candidate : printable_traits
 
     operator TVector3() const { TVector3 p; p.SetMagThetaPhi(1.0, Theta, Phi); return p; }
 
-    const Cluster* FindFirstCluster(Detector_t::Any_t detector) {
+    const Cluster* FindFirstCluster(Detector_t::Any_t detector) const {
         for(const auto& cl : Clusters) {
             if(cl.Detector & detector) {
                 return std::addressof(cl);
@@ -61,7 +61,7 @@ struct Candidate : printable_traits
         return nullptr;
     }
 
-    const Cluster* FindCaloCluster() {
+    const Cluster* FindCaloCluster() const {
         for(const auto& cl : Clusters) {
             if(cl.Detector & (Detector_t::Type_t::CB | Detector_t::Type_t::TAPS)) {
                 return std::addressof(cl);
@@ -70,7 +70,7 @@ struct Candidate : printable_traits
         return nullptr;
     }
 
-    const Cluster* FindVetoCluster() {
+    const Cluster* FindVetoCluster() const {
         if(VetoEnergy > 0.0) {
             for(const auto& cl : Clusters) {
                 if(cl.Detector & (Detector_t::Type_t::PID | Detector_t::Type_t::TAPSVeto)) {
