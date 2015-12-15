@@ -1,9 +1,5 @@
 #pragma once
 
-#include <memory>
-#include <string>
-#include <list>
-
 #include "base/std_ext/string.h"
 #include "base/std_ext/misc.h"
 
@@ -14,6 +10,11 @@
 #include "TList.h"
 #include "TCollection.h"
 #include "TKey.h"
+
+#include <memory>
+#include <string>
+#include <list>
+#include <stdexcept>
 
 class TH1;
 class TH1D;
@@ -123,6 +124,10 @@ public:
         }
         return false;
     }
+
+    struct Exception : std::runtime_error {
+        using std::runtime_error::runtime_error;
+    };
 
     virtual ~WrapTFile();
     WrapTFile(const WrapTFile&) = delete;

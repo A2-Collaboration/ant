@@ -16,23 +16,29 @@
 using namespace std;
 using namespace ant;
 
+bool warningDetected;
+ErrorHandlerFunc_t prevErrorHandler;
+
 std::unique_ptr<TFile> WrapTFile::openFile(const string& filename, const string mode)
 {
-    auto errorhandler = GetErrorHandler();
-    std_ext::execute_on_destroy restore_error_handler([errorhandler] () {
-        SetErrorHandler(errorhandler);
+    prevErrorHandler = GetErrorHandler();
+    std_ext::execute_on_destroy restore_error_handler([] () {
+        SetErrorHandler(prevErrorHandler);
     });
-    SetErrorHandler([] (
-                    int, Bool_t, const char *location, const char *msg) {
-        throw std::runtime_error(std_ext::formatter() << "Could not open TFile: "
-                                 << location << ": " << msg);
+    warningDetected = false;
+    SetErrorHandler([] (int level, Bool_t abort, const char* location, const char* msg) {
+        warningDetected = true;
+        prevErrorHandler(level, abort, location, msg);
     });
 
     auto file = std_ext::make_unique<TFile>(filename.c_str(), mode.c_str());
 
-    if(!file->IsOpen() || file->IsZombie())
-    {
-        throw std::runtime_error("Could not open TFile at "+filename);
+    if(!file->IsOpen() || file->IsZombie()) {
+        throw Exception("Could not open TFile at "+filename);
+    }
+
+    if(warningDetected) {
+        throw Exception("Warning detected when opening "+filename);
     }
 
     return file;
