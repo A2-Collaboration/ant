@@ -62,8 +62,10 @@ struct Particle : TLorentzVector, printable_traits {
 
     Particle(const Particle&) = delete;
     Particle& operator= (const Particle&) = delete;
+    Particle(Particle&&) = default;
+    Particle& operator= (Particle&&) = default;
     virtual ~Particle() = default;
-    
+
 protected:
     const ant::ParticleTypeDatabase::Type* type;
 };
