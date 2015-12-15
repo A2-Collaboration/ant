@@ -22,6 +22,23 @@ protected:
 
     std::shared_ptr<expconfig::detector::TAPS> taps_detector;
 
+
+    struct tree_data_t {
+        std::vector<double> Ek;
+        std::vector<double> Theta;
+        std::vector<double> Phi;
+        std::vector<double> VetoE;
+        std::vector<double> Time;
+        std::vector<unsigned> Channel;
+        void Setup(const std::string& prefix, TTree* tree);
+        void Clear();
+        void Fill(const data::Candidate& cand);
+    };
+
+    TTree* cands_tree;
+    tree_data_t cands_CB;
+    tree_data_t cands_TAPS;
+
 public:
 
     TAPS_Energy(const std::string& name, PhysOptPtr opts);

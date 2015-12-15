@@ -2,8 +2,12 @@
 
 #include "utils/combinatorics.h"
 
+#include "base/std_ext/vector.h"
+
 #include "expconfig/ExpConfig.h"
 #include "expconfig/detectors/TAPS.h"
+
+#include "TTree.h"
 
 using namespace std;
 using namespace ant;
@@ -38,6 +42,10 @@ TAPS_Energy::TAPS_Energy(const string& name, analysis::PhysOptPtr opts) :
                       BinSettings(300),
                       taps_channels,
                       "Pedestals");
+
+    cands_tree = HistFac.makeTTree("cands_tree");
+    cands_CB.Setup("CB", cands_tree);
+    cands_TAPS.Setup("TAPS", cands_tree);
 }
 
 void TAPS_Energy::ProcessEvent(const Event& event)
@@ -129,6 +137,36 @@ void TAPS_Energy::ProcessEvent(const Event& event)
             ggIM_mult->Fill(gg.M(), ch, nNeutrals);
         }
     }
+
+    // fill some tree
+    cands_TAPS.Clear();
+    cands_CB.Clear();
+    bool interesting_event = false;
+    const vector<unsigned> interesting_channels = {31, 0, 1, 2, 15};
+    for(const CandidatePtr& cand : event.Reconstructed.Candidates) {
+        // find interesting TAPS clusters
+        if(cand->Detector & Detector_t::Type_t::TAPS) {
+            auto taps_cluster = cand->FindCaloCluster();
+            if(std_ext::contains(interesting_channels, taps_cluster->CentralElement)) {
+                cands_TAPS.Fill(*cand);
+                interesting_event = true;
+            }
+        }
+    }
+
+    if(interesting_event) {
+        bool CB_seen = false;
+        for(const CandidatePtr& cand : event.Reconstructed.Candidates) {
+            if(cand->Detector & Detector_t::Type_t::CB)
+            {
+                cands_CB.Fill(*cand);
+                CB_seen = true;
+            }
+        }
+        if(CB_seen)
+            cands_tree->Fill();
+    }
+
 }
 
 void TAPS_Energy::ShowResult()
@@ -146,6 +184,40 @@ void TAPS_Energy::ShowResult()
         c_proj << drawoption("colz") << proj;
     }
     c_proj << endc;
+}
+
+
+
+void TAPS_Energy::tree_data_t::Setup(const string& prefix, TTree* tree)
+{
+    tree->Branch((prefix + "_Ek").c_str(),      &Ek);
+    tree->Branch((prefix + "_Theta").c_str(),   &Theta);
+    tree->Branch((prefix + "_Phi").c_str(),     &Phi);
+    tree->Branch((prefix + "_VetoE").c_str(),   &VetoE);
+    tree->Branch((prefix + "_Time").c_str(),    &Time);
+    tree->Branch((prefix + "_Channel").c_str(), &Channel);
+
+}
+
+void TAPS_Energy::tree_data_t::Clear()
+{
+    Ek.resize(0);
+    Theta.resize(0);
+    Phi.resize(0);
+    VetoE.resize(0);
+    Time.resize(0);
+    Channel.resize(0);
+}
+
+void TAPS_Energy::tree_data_t::Fill(const Candidate& cand)
+{
+    Ek.push_back(cand.ClusterEnergy);
+    Theta.push_back(cand.Theta);
+    Phi.push_back(cand.Phi);
+    VetoE.push_back(cand.VetoEnergy);
+    Time.push_back(cand.Time);
+    auto cl = cand.FindCaloCluster();
+    Channel.push_back(cl->CentralElement);
 }
 
 AUTO_REGISTER_PHYSICS(TAPS_Energy)
