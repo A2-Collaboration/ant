@@ -72,12 +72,12 @@ void TAPS_Energy::ProcessEvent(const Event& event)
         }
     }
 
-
+    // invariant mass of two photons
     for( auto comb = analysis::utils::makeCombination(cands,2); !comb.Done(); ++comb ) {
         const CandidatePtr& cand1 = comb.at(0);
         const CandidatePtr& cand2 = comb.at(1);
 
-        if(cand1->VetoEnergy==0 && cand2->VetoEnergy==0) {
+        if(cand1->VetoEnergy<0.5 && cand2->VetoEnergy<0.5) {
 
             //require exactly 1 CB and 1 TAPS
             const auto CBTAPS = Detector_t::Type_t::CB | Detector_t::Type_t::TAPS;
@@ -98,7 +98,7 @@ void TAPS_Energy::ProcessEvent(const Event& event)
 
                     // fill in IM only if ring>4 or if timecut is passed
                     double weight = -1.0;
-                    if(ring > 4 || fabs(cand_taps->Time) < 2.5) {
+                    if(ring > 4 || fabs(cand_taps->Time) < 5) {
                         weight = 1.0;
                         ggIM->Fill(gg.M(),ch);
                     }
