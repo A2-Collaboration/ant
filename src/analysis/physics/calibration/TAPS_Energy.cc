@@ -27,10 +27,7 @@ TAPS_Energy::TAPS_Energy(const string& name, analysis::PhysOptPtr opts) :
 
     ggIM = HistFac.makeTH2D("2 neutral IM (TAPS,CB)", "IM [MeV]", "#",
                             energybins, taps_channels, "ggIM");
-    ggIM_mult = HistFac.makeTH3D("IM (TAPS,CB) mult",
-                                 "IM [MeV]", "Channel", "Multiplicity",
-                                 energybins, taps_channels, BinSettings(10),
-                                 "ggIM_mult");
+
 
     timing_cuts = HistFac.makeTH2D("Check timing cuts", "Time [ns]", "#",
                                    timebins, taps_channels, "timing_cuts");
@@ -42,6 +39,14 @@ TAPS_Energy::TAPS_Energy(const string& name, analysis::PhysOptPtr opts) :
                       BinSettings(300),
                       taps_channels,
                       "Pedestals");
+
+    if(!opts->Get<bool>("TAPS_Energy_Advanced"))
+        return;
+
+    ggIM_mult = HistFac.makeTH3D("IM (TAPS,CB) mult",
+                                 "IM [MeV]", "Channel", "Multiplicity",
+                                 energybins, taps_channels, BinSettings(10),
+                                 "ggIM_mult");
 
     cands_tree = HistFac.makeTTree("cands_tree");
     cands_CB.Setup("CB", cands_tree);
@@ -103,70 +108,73 @@ void TAPS_Energy::ProcessEvent(const Event& event)
         }
     }
 
-    // collect neutral candidates
-    CandidateList cb_candidates;
-    CandidateList taps_candidates;
+    if(ggIM_mult != nullptr) {
+        // collect neutral candidates
+        CandidateList cb_candidates;
+        CandidateList taps_candidates;
 
-    for(const CandidatePtr& cand : event.Reconstructed.Candidates)
-    {
-        if((cand->Detector & Detector_t::Type_t::TAPS)
-           && cand->VetoEnergy < 1.0)
+        for(const CandidatePtr& cand : event.Reconstructed.Candidates)
         {
-            auto taps_cluster = cand->FindCaloCluster();
-            const unsigned ch = taps_cluster->CentralElement;
-            const unsigned ring = taps_detector->GetRing(ch);
-            if(ring > 4 || fabs(cand->Time) < 2.5)
-                taps_candidates.emplace_back(move(cand));
-        }
-        else if((cand->Detector & Detector_t::Type_t::CB)
-                && cand->VetoEnergy < 0.25)
-        {
-            cb_candidates.emplace_back(move(cand));
-        }
-    }
-
-    const auto nNeutrals = taps_candidates.size() + cb_candidates.size();
-
-    for(const CandidatePtr& taps_cand : taps_candidates) {
-        auto taps_cluster = taps_cand->FindCaloCluster();
-        const unsigned ch = taps_cluster->CentralElement;
-        for(const CandidatePtr& cb_cand : cb_candidates) {
-
-            const TLorentzVector& gg = Particle(ParticleTypeDatabase::Photon, taps_cand)
-                                       + Particle(ParticleTypeDatabase::Photon, cb_cand);
-            ggIM_mult->Fill(gg.M(), ch, nNeutrals);
-        }
-    }
-
-    // fill some tree
-    cands_TAPS.Clear();
-    cands_CB.Clear();
-    bool interesting_event = false;
-    const vector<unsigned> interesting_channels = {31, 0, 1, 2, 15};
-    for(const CandidatePtr& cand : event.Reconstructed.Candidates) {
-        // find interesting TAPS clusters
-        if(cand->Detector & Detector_t::Type_t::TAPS) {
-            auto taps_cluster = cand->FindCaloCluster();
-            if(std_ext::contains(interesting_channels, taps_cluster->CentralElement)) {
-                cands_TAPS.Fill(*cand);
-                interesting_event = true;
-            }
-        }
-    }
-
-    if(interesting_event) {
-        bool CB_seen = false;
-        for(const CandidatePtr& cand : event.Reconstructed.Candidates) {
-            if(cand->Detector & Detector_t::Type_t::CB)
+            if((cand->Detector & Detector_t::Type_t::TAPS)
+               && cand->VetoEnergy < 1.0)
             {
-                cands_CB.Fill(*cand);
-                CB_seen = true;
+                auto taps_cluster = cand->FindCaloCluster();
+                const unsigned ch = taps_cluster->CentralElement;
+                const unsigned ring = taps_detector->GetRing(ch);
+                if(ring > 4 || fabs(cand->Time) < 2.5)
+                    taps_candidates.emplace_back(move(cand));
+            }
+            else if((cand->Detector & Detector_t::Type_t::CB)
+                    && cand->VetoEnergy < 0.25)
+            {
+                cb_candidates.emplace_back(move(cand));
             }
         }
-        if(CB_seen)
-            cands_tree->Fill();
+
+        const auto nNeutrals = taps_candidates.size() + cb_candidates.size();
+
+        for(const CandidatePtr& taps_cand : taps_candidates) {
+            auto taps_cluster = taps_cand->FindCaloCluster();
+            const unsigned ch = taps_cluster->CentralElement;
+            for(const CandidatePtr& cb_cand : cb_candidates) {
+
+                const TLorentzVector& gg = Particle(ParticleTypeDatabase::Photon, taps_cand)
+                                           + Particle(ParticleTypeDatabase::Photon, cb_cand);
+                ggIM_mult->Fill(gg.M(), ch, nNeutrals);
+            }
+        }
     }
 
+    if(cands_tree != nullptr) {
+        // fill some tree
+        cands_TAPS.Clear();
+        cands_CB.Clear();
+        bool interesting_event = false;
+        const vector<unsigned> interesting_channels = {31, 0, 1, 2, 15};
+        for(const CandidatePtr& cand : event.Reconstructed.Candidates) {
+            // find interesting TAPS clusters
+            if(cand->Detector & Detector_t::Type_t::TAPS) {
+                auto taps_cluster = cand->FindCaloCluster();
+                if(std_ext::contains(interesting_channels, taps_cluster->CentralElement)) {
+                    cands_TAPS.Fill(*cand);
+                    interesting_event = true;
+                }
+            }
+        }
+
+        if(interesting_event) {
+            bool CB_seen = false;
+            for(const CandidatePtr& cand : event.Reconstructed.Candidates) {
+                if(cand->Detector & Detector_t::Type_t::CB)
+                {
+                    cands_CB.Fill(*cand);
+                    CB_seen = true;
+                }
+            }
+            if(CB_seen)
+                cands_tree->Fill();
+        }
+    }
 }
 
 void TAPS_Energy::ShowResult()
@@ -175,15 +183,17 @@ void TAPS_Energy::ShowResult()
                       << drawoption("colz") << timing_cuts
                       << drawoption("colz") << h_pedestals
                       << endc;
-    canvas c_proj(GetName()+" Multiplicities");
-    for(unsigned n=2;n<=10;n++) {
-        ggIM_mult->GetZaxis()->SetRange(n,n+1);
-        stringstream ss_name;
-        ss_name << "Mult_" << n << "_yx";
-        TH2* proj = dynamic_cast<TH2*>(ggIM_mult->Project3D(ss_name.str().c_str()));
-        c_proj << drawoption("colz") << proj;
+    if(ggIM_mult) {
+        canvas c_proj(GetName()+" Multiplicities");
+        for(unsigned n=2;n<=10;n++) {
+            ggIM_mult->GetZaxis()->SetRange(n,n+1);
+            stringstream ss_name;
+            ss_name << "Mult_" << n << "_yx";
+            TH2* proj = dynamic_cast<TH2*>(ggIM_mult->Project3D(ss_name.str().c_str()));
+            c_proj << drawoption("colz") << proj;
+        }
+        c_proj << endc;
     }
-    c_proj << endc;
 }
 
 

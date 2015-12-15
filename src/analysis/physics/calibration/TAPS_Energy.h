@@ -22,7 +22,6 @@ protected:
 
     std::shared_ptr<expconfig::detector::TAPS> taps_detector;
 
-
     struct tree_data_t {
         std::vector<double> Ek;
         std::vector<double> Theta;
@@ -35,7 +34,7 @@ protected:
         void Fill(const data::Candidate& cand);
     };
 
-    TTree* cands_tree;
+    TTree* cands_tree = nullptr;
     tree_data_t cands_CB;
     tree_data_t cands_TAPS;
 
