@@ -16,29 +16,27 @@
 using namespace std;
 using namespace ant;
 
-bool warningDetected;
-ErrorHandlerFunc_t prevErrorHandler;
+bool warningDetected; // need that ugly global variable for ROOT's error handler
 
 std::unique_ptr<TFile> WrapTFile::openFile(const string& filename, const string mode)
 {
-    prevErrorHandler = GetErrorHandler();
-    std_ext::execute_on_destroy restore_error_handler([] () {
+    auto prevErrorHandler = GetErrorHandler();
+    std_ext::execute_on_destroy restore_error_handler([prevErrorHandler] () {
         SetErrorHandler(prevErrorHandler);
     });
     warningDetected = false;
-    SetErrorHandler([] (int level, Bool_t abort, const char* location, const char* msg) {
+    SetErrorHandler([] (int, Bool_t, const char*, const char*) {
         warningDetected = true;
-        prevErrorHandler(level, abort, location, msg);
     });
 
     auto file = std_ext::make_unique<TFile>(filename.c_str(), mode.c_str());
 
     if(!file->IsOpen() || file->IsZombie()) {
-        throw Exception("Could not open TFile at "+filename);
+        throw Exception("Could not properly open TFile at "+filename);
     }
 
     if(warningDetected) {
-        throw Exception("Warning detected when opening "+filename);
+        throw Exception("Warning(s) detected when opening "+filename);
     }
 
     return file;
