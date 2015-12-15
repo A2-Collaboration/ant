@@ -54,11 +54,23 @@ void dotest() {
         histogram_overwrite_detected = false;
         duplicate_mkdir_detected = false;
         INFO(name);
-        REQUIRE_NOTHROW(PhysicsRegistry::Create(name));
-        REQUIRE_FALSE(histogram_overwrite_detected);
-        REQUIRE_FALSE(duplicate_mkdir_detected);
-    }
+        try {
+            PhysicsRegistry::Create(name);
+            REQUIRE_FALSE(histogram_overwrite_detected);
+            REQUIRE_FALSE(duplicate_mkdir_detected);
+        }
+        catch(PhysicsRegistry::Exception e) {
+            FAIL(string("Physics Registry error: ")+e.what());
+        }
+        catch(WrapTFile::Exception) {
+            // ignore silently if Physics classes can't load some files...
+        }
+        catch(...) {
+            FAIL("Unexpected exception");
+        }
 
+    }
     // write the file
     REQUIRE_NOTHROW(outfile = nullptr);
+
 }
