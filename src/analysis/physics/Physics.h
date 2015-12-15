@@ -68,6 +68,10 @@ public:
 
     static std::vector<std::string> GetList();
 
+    struct Exception : std::runtime_error {
+        using std::runtime_error::runtime_error;
+    };
+
 };
 
 class PhysicsRegistration
