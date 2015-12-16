@@ -112,7 +112,7 @@ int main(int argc, char** argv) {
     auto cmd_setup  = cmd.add<TCLAP::ValueArg<string>>("s","setup","Choose setup manually by name",false,"", &allowedsetupnames);
     auto cmd_setupOptions = cmd.add<TCLAP::MultiArg<string>>("S","setup_options","Options for setup, key=value",false,"");
 
-    auto cmd_maxevents = cmd.add<TCLAP::ValueArg<int>>("m","maxevents","Process only max events",false, 0, "maxevents");
+    auto cmd_maxevents = cmd.add<TCLAP::MultiArg<int>>("m","maxevents","Process only max events",false,"maxevents");
 
     TCLAP::ValuesConstraintExtra<decltype(analysis::PhysicsRegistry::GetList())> allowedPhysics(analysis::PhysicsRegistry::GetList());
     auto cmd_physicsclasses  = cmd.add<TCLAP::MultiArg<string>>("p","physics","Physics class to run", false, &allowedPhysics);
@@ -122,7 +122,7 @@ int main(int argc, char** argv) {
     auto cmd_physicsOptions = cmd.add<TCLAP::MultiArg<string>>("O","options","Options for all physics classes, key=value",false,"");
     auto cmd_physicsclasses_opt = cmd.add<TCLAP::MultiArg<string>>("P","physics-opt","Physics class to run, with options: PhysicsClass:key=val,key=val", false, "");
 
-    auto cmd_batchmode = cmd.add<TCLAP::SwitchArg>("b","batch","Run in batch mode (no ROOT shell afterwards)",false);
+    auto cmd_batchmode = cmd.add<TCLAP::MultiSwitchArg>("b","batch","Run in batch mode (no ROOT shell afterwards)",false);
 
     auto cmd_calibrations  = cmd.add<TCLAP::MultiArg<string>>("c","calibration","Calibration to run",false,"calibration");
 
@@ -427,7 +427,7 @@ int main(int argc, char** argv) {
 
     // create some variables for running
     long long maxevents = cmd_maxevents->isSet()
-            ? cmd_maxevents->getValue()
+            ? cmd_maxevents->getValue().back()
             :  numeric_limits<long long>::max();
 
 
