@@ -29,7 +29,7 @@ TAPSVeto_Energy::TAPSVeto_Energy(const string& name, analysis::PhysOptPtr opts) 
                 "TAPSVeto Energy / MeV",
                 "Channel",
                 BinSettings(400,0,800),
-                BinSettings(200,0,15),
+                BinSettings(200,0,18),
                 tapsveto_channels,
                 "Bananas"
                 );

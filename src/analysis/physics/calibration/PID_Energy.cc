@@ -32,7 +32,7 @@ PID_Energy::PID_Energy(const string& name, analysis::PhysOptPtr opts) :
                 "PID Energy / MeV",
                 "Channel",
                 BinSettings(400,0,800),
-                BinSettings(200,0,15),
+                BinSettings(200,0,18),
                 pid_channels,
                 "Bananas"
                 );
