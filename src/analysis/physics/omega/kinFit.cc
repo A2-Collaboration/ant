@@ -26,20 +26,20 @@ double KinFitter::EnergyResolution(const analysis::data::ParticlePtr& p) const
     if(p->Candidate) {
         if(p->Candidate->Detector & Detector_t::Type_t::CB) {
 
-            return fct_GlobalEResolution(p->Ek());
+            return 1.07134e-02 * p->Ek();
 
         } if(p->Candidate->Detector & Detector_t::Type_t::TAPS) {
 
-            return fct_GlobalEResolution(p->Ek()); ///@todo check TAPS energy resolution fct
+            return 3.5E-2 * p->Ek();
         }
     } else {
         if(p->Theta() < degree_to_radian(20.0) ) {
 
-            return fct_GlobalEResolution(p->Ek());
+            return 1.07134e-02 * p->Ek();
 
-        } else {   ///@todo check TAPS Theta resolution
+        } else {
 
-            return fct_GlobalEResolution(p->Ek()); ///@todo check TAPS energy resolution fct
+            return 3.5E-2 * p->Ek();
         }
     }
     return 0.0;
