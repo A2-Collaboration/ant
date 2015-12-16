@@ -13,6 +13,7 @@
 #include "TH3.h"
 #include "TDirectory.h"
 #include "root-addons/cbtaps_display/TH2CB.h"
+#include "root-addons/cbtaps_display/TH2TAPS.h"
 #include "base/std_ext/math.h"
 #include "TF1.h"
 #include <cmath>
@@ -24,6 +25,8 @@ using namespace std;
 using namespace ant;
 using namespace ant::std_ext;
 using namespace ant::analysis;
+
+void Analyse(TTree* tree, const unsigned nElements, const string& branch, const string& detname, const BinSettings energy_bins, const BinSettings vbins);
 
 double LogNormalPDF(const double* X, const double* p) {
 
@@ -38,222 +41,12 @@ double LogNormalPDF(const double* X, const double* p) {
 
 void ExtractResolutions::AnalyseThetaCB(TTree* tree)
 {
-
-    const unsigned nElements = 720;
-    const BinSettings xbins(nElements, 0, nElements);
-    const BinSettings ybins(16,     0.0, 1600.0);
-    const BinSettings zbins(80,    -0.2,    0.2);
-
-
-    TCanvas* c = new TCanvas();
-    auto h = Draw(tree, "Theta:tE:Element", TCut(""), xbins, ybins, zbins);
-    h->SetXTitle("Element");
-    h->SetZTitle("#Delta #theta [rad]");
-    h->SetYTitle("E [MeV]");
-    h->SetName("CB_theta");
-
-    TF1* f = new TF1("f", "gaus", zbins.Start(), zbins.Stop());
-    f->SetParameter(0, 1);
-    f->SetParameter(1, 0);
-    f->SetParameter(2,.1);
-
-
-
-    TCanvas* fits = new TCanvas();
-    bool first = true;
-    c->cd();
-
-
-    TH1D* h_global_sigma = new TH1D("cb_theta_global_sigma", "Global #Delta #theta, cb", nElements, 0, nElements);
-    TH1D* h_theta_fit_p0   = new TH1D("cb_sigma_theta_p0", "Fit #sigma #theta, p0, cb", nElements, 0, nElements);
-    TH1D* h_theta_fit_p1   = new TH1D("cb_sigma_theta_p1", "Fit #sigma #theta, p1, cb", nElements, 0, nElements);
-    TH1D* h_theta_fit_p2   = new TH1D("cb_sigma_theta_p2", "Fit #sigma #theta, p2, cb", nElements, 0, nElements);
-
-    for(int e=0; e<int(nElements); ++e) {
-        h->GetXaxis()->SetRange(e,e+1);
-
-        const string projcmd = to_string(e)+"_zy";
-
-        TH2* proj = dynamic_cast<TH2*>(h->Project3D(projcmd.c_str()));
-        proj->SetTitle(Form("#Delta #theta, CB, Element %d",e));
-        proj->Draw("colz");
-
-        proj->FitSlicesY(f,0,-1,0,"QNR");
-
-        TH1D* h_sigma = nullptr;
-
-        gDirectory->GetObject(Form("CB_theta_%d_zy_2",e), h_sigma);
-        h_sigma->SetTitle(Form("#Delta #theta, fitted, CB, Element %d",e));
-
-        TF1* thetaE = KinFitter::angular_sigma::GetTF1("thetaE");
-        h_sigma->Fit(thetaE,"MRQ");
-
-        TH1* p1 = proj->ProjectionY(Form("CB_theta_%d_proj",e),0,-1);
-        TF1* p1f = new TF1("", "gaus", zbins.Start(), zbins.Stop());
-        p1f->SetParameter(0, 1);
-        p1f->SetParameter(1, 0);
-        p1f->SetParameter(2,.1);
-        p1->SetTitle(Form("#Delta #theta, global, CB, Element %d",e));
-        p1->Fit(p1f,"QNR");
-
-        cout << "Element " << e << ":  Global sigma="<< p1f->GetParameter(2) <<", E-Fitted: "
-             << thetaE->GetParameter(0) << " "
-             << thetaE->GetParameter(1) << " "
-             << thetaE->GetParameter(2)
-             << " Chi2/dof=" << thetaE->GetChisquare()/thetaE->GetNDF() << endl;
-
-        h_global_sigma->SetBinContent(e+1,p1f->GetParameter(2));
-        h_theta_fit_p0->SetBinContent(e+1, thetaE->GetParameter(0));
-        h_theta_fit_p1->SetBinContent(e+1, thetaE->GetParameter(1));
-        h_theta_fit_p2->SetBinContent(e+1, thetaE->GetParameter(2));
-
-        fits->cd();
-        if(first) {
-            thetaE->Draw();
-            first=false;
-        } else {
-            thetaE->Draw("same");
-        }
-        c->cd();
-
-
-    }
-
-
-    TH2CB* h_cb_global = new TH2CB("theta_sigmas", "#sigma #theta, global, CB");
-    h_cb_global->SetZTitle("#sigma_{#theta} [rad]");
-    h_cb_global->SetElements(*h_global_sigma);
-
-    TH2CB* h_cb_p0 = new TH2CB("theta_sigma_p0", "#sigma #theta P0");
-    h_cb_p0->SetZTitle("p0");
-    h_cb_p0->SetElements(*h_theta_fit_p0);
-
-    TH2CB* h_cb_p1 = new TH2CB("theta_sigma_p1", "#sigma #theta P1");
-    h_cb_p1->SetZTitle("p1");
-    h_cb_p1->SetElements(*h_theta_fit_p1);
-
-    TH2CB* h_cb_p2 = new TH2CB("theta_sigma_p2", "#sigma #theta P2");
-    h_cb_p2->SetZTitle("p2");
-    h_cb_p2->SetElements(*h_theta_fit_p2);
-
-    canvas("Sigma Theta CB")
-            << drawoption("colz")
-            << h_cb_global
-            << h_cb_p0
-            << h_cb_p1
-            << h_cb_p2
-            << endc;
-
+    Analyse(tree, 720, "Phi", "CB", BinSettings(16,0,1600), BinSettings(80,-.2,.2));
 }
 
 void ExtractResolutions::AnalysePhiCB(TTree* tree)
 {
-
-    const unsigned nElements = 720;
-    const BinSettings xbins(nElements, 0, nElements);
-    const BinSettings ybins(16,     0.0, 1600.0);
-    const BinSettings zbins(80,    -0.2,    0.2);
-
-
-    TCanvas* c = new TCanvas();
-    auto h = Draw(tree, "Phi:tE:Element", TCut(""), xbins, ybins, zbins);
-    h->SetXTitle("Element");
-    h->SetZTitle("#Delta #phi [rad]");
-    h->SetYTitle("E [MeV]");
-    h->SetName("CB_phi");
-
-    TF1* f = new TF1("f", "gaus", zbins.Start(), zbins.Stop());
-    f->SetParameter(0, 1);
-    f->SetParameter(1, 0);
-    f->SetParameter(2,.1);
-
-
-
-    TCanvas* fits = new TCanvas();
-    bool first = true;
-    c->cd();
-
-
-    TH1D* h_global_sigma = new TH1D("cb_phi_global_sigma", "Global #Delta #phi, cb", nElements, 0, nElements);
-    TH1D* h_phi_fit_p0   = new TH1D("cb_sigma_phi_p0", "Fit #sigma #phi, p0, cb", nElements, 0, nElements);
-    TH1D* h_phi_fit_p1   = new TH1D("cb_sigma_phi_p1", "Fit #sigma #phi, p1, cb", nElements, 0, nElements);
-    TH1D* h_phi_fit_p2   = new TH1D("cb_sigma_phi_p2", "Fit #sigma #phi, p2, cb", nElements, 0, nElements);
-
-    for(int e=0; e<int(nElements); ++e) {
-        h->GetXaxis()->SetRange(e,e+1);
-
-        const string projcmd = to_string(e)+"_zy";
-
-        TH2* proj = dynamic_cast<TH2*>(h->Project3D(projcmd.c_str()));
-        proj->SetTitle(Form("#Delta #phi, CB, Element %d",e));
-        proj->Draw("colz");
-
-        proj->FitSlicesY(f,0,-1,0,"QNR");
-
-        TH1D* h_sigma = nullptr;
-
-        gDirectory->GetObject(Form("CB_phi_%d_zy_2",e), h_sigma);
-        h_sigma->SetTitle(Form("#Delta #phi, fitted, CB, Element %d",e));
-
-        TF1* phiE = KinFitter::angular_sigma::GetTF1("phiE");
-        h_sigma->Fit(phiE,"MRQ");
-
-        TH1* p1 = proj->ProjectionY(Form("CB_phi_%d_proj",e),0,-1);
-        TF1* p1f = new TF1("", "gaus", zbins.Start(), zbins.Stop());
-        p1f->SetParameter(0, 1);
-        p1f->SetParameter(1, 0);
-        p1f->SetParameter(2,.1);
-        p1->SetTitle(Form("#Delta #phi, global, CB, Element %d",e));
-        p1->Fit(p1f,"QNR");
-
-        cout << "Element " << e << ":  Global sigma="<< p1f->GetParameter(2) <<", E-Fitted: "
-             << phiE->GetParameter(0) << " "
-             << phiE->GetParameter(1) << " "
-             << phiE->GetParameter(2)
-             << " Chi2/dof=" << phiE->GetChisquare()/phiE->GetNDF() << endl;
-
-        h_global_sigma->SetBinContent(e+1,p1f->GetParameter(2));
-        h_phi_fit_p0->SetBinContent(e+1, phiE->GetParameter(0));
-        h_phi_fit_p1->SetBinContent(e+1, phiE->GetParameter(1));
-        h_phi_fit_p2->SetBinContent(e+1, phiE->GetParameter(2));
-
-        fits->cd();
-        if(first) {
-            phiE->Draw();
-            first=false;
-        } else {
-            phiE->Draw("same");
-        }
-        c->cd();
-
-
-    }
-
-
-    TH2CB* h_cb_global = new TH2CB("phi_sigmas", "#sigma #phi, global, CB");
-    h_cb_global->SetZTitle("#sigma_{#phi} [rad]");
-    h_cb_global->SetElements(*h_global_sigma);
-
-    TH2CB* h_cb_p0 = new TH2CB("phi_sigma_p0", "#sigma #phi P0");
-    h_cb_p0->SetZTitle("p0");
-    h_cb_p0->SetElements(*h_phi_fit_p0);
-
-    TH2CB* h_cb_p1 = new TH2CB("phi_sigma_p1", "#sigma #phi P1");
-    h_cb_p1->SetZTitle("p1");
-    h_cb_p1->SetElements(*h_phi_fit_p1);
-
-    TH2CB* h_cb_p2 = new TH2CB("phi_sigma_p2", "#sigma #phi P2");
-    h_cb_p2->SetZTitle("p2");
-    h_cb_p2->SetElements(*h_phi_fit_p2);
-
-    canvas("Sigma Phi CB")
-            << drawoption("colz")
-            << h_cb_global
-            << h_cb_p0
-            << h_cb_p1
-            << h_cb_p2
-            << endc;
-
+    Analyse(tree, 720, "Phi", "CB", BinSettings(16,0,1600), BinSettings(80,-.2,.2));
 }
 
 void ExtractResolutions::AnalyseECB(TTree* tree)
@@ -302,4 +95,130 @@ TF1*ExtractResolutions::LogNormal()
 TF1*ExtractResolutions::SigmaFit()
 {
     return KinFitter::angular_sigma::GetTF1();
+}
+
+void ExtractResolutions::AnalyseThetaTAPS(TTree* tree) {
+    Analyse(tree, 438, "Theta", "TAPS", BinSettings(16,0,1600), BinSettings(80,-.2,.2));
+}
+
+void ExtractResolutions::AnalysePhiTAPS(TTree* tree) {
+    Analyse(tree, 438, "Phi", "TAPS", BinSettings(16,0,1600), BinSettings(80,-.5,.5));
+}
+
+void Analyse(TTree* tree, const unsigned nElements, const string& branch, const string& detname, const BinSettings energy_bins, const BinSettings vbins)
+{
+    const BinSettings xbins(nElements, 0, nElements);
+
+    TCanvas* c = new TCanvas();
+    auto h = Draw(tree, Form("%s:tE:Element", branch.c_str()), TCut(""), xbins, energy_bins, vbins);
+    h->SetXTitle("Element");
+    h->SetZTitle(Form("#Delta %s [rad]",branch.c_str()));
+    h->SetYTitle("E [MeV]");
+    h->SetName(Form("%s_%s", detname.c_str(), branch.c_str()));
+
+    TF1* f = new TF1("f", "gaus", vbins.Start(), vbins.Stop());
+    f->SetParameter(0, 1);
+    f->SetParameter(1, 0);
+    f->SetParameter(2,.1);
+
+
+
+    TCanvas* fits = new TCanvas();
+    bool first = true;
+    c->cd();
+
+
+    TH1D* h_global_sigma = new TH1D(Form("%s_%s_global_sigma",    detname.c_str(), branch.c_str()), "Global #Delta #theta, taps",  int(nElements), 0, nElements);
+    TH1D* h_fit_p0       = new TH1D(Form("%s_%s_global_sigma_p0", detname.c_str(), branch.c_str()), "Fit #sigma #theta, p0, taps", int(nElements), 0, nElements);
+    TH1D* h_fit_p1       = new TH1D(Form("%s_%s_global_sigma_p1", detname.c_str(), branch.c_str()), "Fit #sigma #theta, p1, taps", int(nElements), 0, nElements);
+    TH1D* h_fit_p2       = new TH1D(Form("%s_%s_global_sigma_p2", detname.c_str(), branch.c_str()), "Fit #sigma #theta, p2, taps", int(nElements), 0, nElements);
+
+    for(int e=0; e<int(nElements); ++e) {
+        h->GetXaxis()->SetRange(e,e+1);
+
+        const string projcmd = to_string(e)+"_zy";
+
+        TH2* proj = dynamic_cast<TH2*>(h->Project3D(projcmd.c_str()));
+        proj->SetTitle(Form("#Delta %s, %s, Element %d", branch.c_str(), detname.c_str(),e));
+        proj->Draw("colz");
+
+        proj->FitSlicesY(f,0,-1,0,"QNR");
+
+        TH1D* h_sigma = nullptr;
+
+        gDirectory->GetObject(Form("%s_%s_%d_zy_2", detname.c_str(),branch.c_str(),e), h_sigma);
+        h_sigma->SetTitle(Form("#Delta %s, fitted, %s, Element %d",branch.c_str(), detname.c_str(),e));
+
+        TF1* fe = KinFitter::angular_sigma::GetTF1(Form("f_%s_%s_%d",detname.c_str(),branch.c_str(), e));
+        h_sigma->Fit(fe,"MRQ");
+
+        TH1* p1 = proj->ProjectionY(Form("%s_%s_%d_proj",detname.c_str(),branch.c_str(),e),0,-1);
+        TF1* p1f = new TF1("", "gaus", vbins.Start(), vbins.Stop());
+        p1f->SetParameter(0, 1);
+        p1f->SetParameter(1, 0);
+        p1f->SetParameter(2,.1);
+        p1->SetTitle(Form("#Delta %s, global, %s, Element %d",branch.c_str(), detname.c_str(),e));
+        p1->Fit(p1f,"QNR");
+
+        cout << "Element " << e << ":  Global sigma="<< p1f->GetParameter(2) <<", E-Fitted: "
+             << fe->GetParameter(0) << " "
+             << fe->GetParameter(1) << " "
+             << fe->GetParameter(2)
+             << " Chi2/dof=" << fe->GetChisquare()/fe->GetNDF() << endl;
+
+        h_global_sigma->SetBinContent(e+1,p1f->GetParameter(2));
+        h_fit_p0->SetBinContent(e+1, fe->GetParameter(0));
+        h_fit_p1->SetBinContent(e+1, fe->GetParameter(1));
+        h_fit_p2->SetBinContent(e+1, fe->GetParameter(2));
+
+        fits->cd();
+        if(first) {
+            fe->Draw();
+            first=false;
+        } else {
+            fe->Draw("same");
+        }
+        c->cd();
+
+
+    }
+
+
+    TH2Crystals* h_global = nullptr;
+    TH2Crystals* h_p0 = nullptr;
+    TH2Crystals* h_p1 = nullptr;
+    TH2Crystals* h_p2 = nullptr;
+
+    if(detname == "CB") {
+        h_global = new TH2CB(Form("%s_sigmas",    branch.c_str()), Form("#sigma %s, global, %s", branch.c_str(), detname.c_str()));
+        h_p0     = new TH2CB(Form("%s_sigmas_p0", branch.c_str()), Form("%s sigmas p0", branch.c_str()));
+        h_p1     = new TH2CB(Form("%s_sigmas_p1", branch.c_str()), Form("%s sigmas p1", branch.c_str()));
+        h_p2     = new TH2CB(Form("%s_sigmas_p2", branch.c_str()), Form("%s sigmas p2", branch.c_str()));
+    } else if (detname == "TAPS") {
+        h_global = new TH2TAPS(Form("%s_sigmas",    branch.c_str()), Form("#sigma %s, global, %s", branch.c_str(), detname.c_str()));
+        h_p0     = new TH2TAPS(Form("%s_sigmas_p0", branch.c_str()), Form("%s sigmas p0", branch.c_str()));
+        h_p1     = new TH2TAPS(Form("%s_sigmas_p1", branch.c_str()), Form("%s sigmas p1", branch.c_str()));
+        h_p2     = new TH2TAPS(Form("%s_sigmas_p2", branch.c_str()), Form("%s sigmas p2", branch.c_str()));
+    }
+
+    h_global->SetZTitle(Form("#sigma %s [rad]", branch.c_str()));
+    h_global->SetElements(*h_global_sigma);
+
+    h_p0->SetZTitle("p0");
+    h_p0->SetElements(*h_fit_p0);
+
+    h_p1->SetZTitle("p1");
+    h_p1->SetElements(*h_fit_p1);
+
+    h_p2->SetZTitle("p2");
+    h_p2->SetElements(*h_fit_p2);
+
+    canvas("Sigma "+branch+" "+detname)
+            << drawoption("colz")
+            << h_global
+            << h_p0
+            << h_p1
+            << h_p2
+            << endc;
+
 }

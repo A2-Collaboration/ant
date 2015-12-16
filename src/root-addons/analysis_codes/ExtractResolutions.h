@@ -16,6 +16,10 @@ public:
     static void AnalysePhiCB(TTree* tree);
     static void AnalyseECB(TTree* tree);
 
+    static void AnalyseThetaTAPS(TTree* tree);
+    static void AnalysePhiTAPS(TTree* tree);
+//    static void AnalyseETAPS(TTree* tree);
+
     static TF1* LogNormal();
     static TF1* SigmaFit();
 };
