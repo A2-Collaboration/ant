@@ -153,7 +153,7 @@ gui::CalibModule_traits::DoFitReturn_t CB_TimeWalk::TheGUI::DoFit(TH1* hist, uns
 
     TH3* h_timewalk = dynamic_cast<TH3*>(hist);
 
-    h_timewalk->GetZaxis()->SetRange(ch,ch+1);
+    h_timewalk->GetZaxis()->SetRange(ch+1,ch+1);
     stringstream ss_name;
     ss_name << "Ch" << ch << "_yx";
     proj = dynamic_cast<TH2D*>(h_timewalk->Project3D("yx"));
