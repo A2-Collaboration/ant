@@ -2,6 +2,7 @@
 
 #include "calibration/DataManager.h"
 #include "calibration/gui/CalCanvas.h"
+#include "calibration/fitfunctions/FitGausPol1.h"
 
 #include "analysis/plot/HistogramFactories.h"
 #include "analysis/data/Event.h"
@@ -11,6 +12,8 @@
 #include "tree/TDetectorRead.h"
 
 #include "base/Logger.h"
+
+#include "TF1.h"
 
 #include <cstdint>
 #include <ctime>
@@ -332,11 +335,33 @@ bool Energy::GUI_Pedestals::FinishSlice()
     return false;
 }
 
+struct FitProtonPeak : gui::FitGausPol1 {
+    virtual void SetDefaults(TH1 *hist) override {
+
+        // amplitude
+        func->SetParameter(0, 0.5*hist->GetMaximum());
+
+        // x0
+        func->SetParameter(1, 8);
+
+        // sigma
+        func->SetParameter(2, 1.5);
+
+        // pol1
+        func->SetParameter(3, 0.1*hist->GetMaximum());
+        func->SetParameter(4, 0);
+
+        Sync();
+    }
+
+};
+
 Energy::GUI_Banana::GUI_Banana(const string& basename,
                                  Energy::CalibType& type,
                                  const std::shared_ptr<DataManager>& calmgr,
                                  const std::shared_ptr<Detector_t>& detector) :
-    GUI_CalibType(basename, type, calmgr, detector)
+    GUI_CalibType(basename, type, calmgr, detector),
+    func(make_shared<FitProtonPeak>())
 {
 
 }
@@ -358,27 +383,77 @@ gui::CalibModule_traits::DoFitReturn_t Energy::GUI_Banana::DoFit(TH1* hist, unsi
         return DoFitReturn_t::Skip;
 
     TH3* h_bananas = dynamic_cast<TH3*>(hist);
+    h_bananas->GetZaxis()->SetRange(ch+1,ch+1);
+    banana = dynamic_cast<TH2D*>(h_bananas->Project3D("yx"));
+    auto xaxis = banana->GetXaxis();
+    h_projection = dynamic_cast<TH1D*>(banana->ProjectionY(
+                                           "_py",
+                                           xaxis->FindFixBin(130),
+                                           xaxis->FindFixBin(150)
+                                           )
+                                       );
 
-    h_bananas->GetZaxis()->SetRange(ch,ch+1);
+    // stop at empty histograms
+    if(h_projection->GetEntries()==0)
+        return DoFitReturn_t::Display;
 
-    proj = dynamic_cast<TH2D*>(h_bananas->Project3D("yx"));
-    means = dynamic_cast<TH1D*>(proj->ProjectionY());
+    func->SetRange(interval<double>(5,13));
+    func->SetDefaults(h_projection);
+    const auto it_fit_param = fitParameters.find(ch);
+    if(it_fit_param != fitParameters.end() && !IgnorePreviousFitParameters) {
+        VLOG(5) << "Loading previous fit parameters for channel " << ch;
+        func->Load(it_fit_param->second);
+    }
 
-    return DoFitReturn_t::Next;
+    auto fit_loop = [this] (size_t retries) {
+        do {
+            func->Fit(h_projection);
+            VLOG(5) << "Chi2/dof = " << func->Chi2NDF();
+            if(func->Chi2NDF() < AutoStopOnChi2) {
+                return true;
+            }
+            retries--;
+        }
+        while(retries>0);
+        return false;
+    };
+
+    if(fit_loop(5))
+        return DoFitReturn_t::Next;
+
+    // reached maximum retries without good chi2
+    LOG(INFO) << "Chi2/dof = " << func->Chi2NDF();
+    return DoFitReturn_t::Display;
 }
 
 void Energy::GUI_Banana::DisplayFit()
 {
-    c_fit->cd();
-    means->Draw();
+    c_fit->Show(h_projection, func.get());
 
     c_extra->cd();
-    proj->Draw("colz");
+    banana->Draw("colz");
 }
 
 void Energy::GUI_Banana::StoreFit(unsigned channel)
 {
+    const double oldValue = previousValues[channel];
+    /// \todo obtain convergenceFactor and pi0mass from config or database
+    const double protonMC = 8.0;
+    const double protonpeak = func->GetPeakPosition();
 
+    const double newValue = oldValue * protonMC/protonpeak;
+
+    calibType.Values[channel] = newValue;
+
+    const double relative_change = 100*(newValue/oldValue-1);
+
+    LOG(INFO) << "Stored Ch=" << channel << ": ProtonPeak " << protonpeak
+              << " MeV,  gain changed " << oldValue << " -> " << newValue
+              << " (" << relative_change << " %)";
+
+
+    // don't forget the fit parameters
+    fitParameters[channel] = func->Save();
 }
 
 bool Energy::GUI_Banana::FinishSlice()

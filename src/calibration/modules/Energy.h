@@ -141,11 +141,14 @@ protected:
         virtual bool FinishSlice() override;
 
     protected:
+        std::shared_ptr<gui::PeakingFitFunction> func;
 
         gui::CalCanvas* c_fit;
         gui::CalCanvas* c_extra;
-        TH1D* means;
-        TH2D* proj;
+        TH1D* h_projection;
+        TH2D* banana;
+
+        double AutoStopOnChi2 = 6;
     }; // GUI_Banana
 
 
