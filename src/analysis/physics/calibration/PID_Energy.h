@@ -10,6 +10,7 @@ class PID_Energy : public Physics {
 
 protected:
     TH2D* h_pedestals = nullptr;
+    TH3D* h_bananas = nullptr;
 
     struct PerChannel_t {
         TH2D* PedestalTiming = nullptr;

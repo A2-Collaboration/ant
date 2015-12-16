@@ -25,6 +25,18 @@ PID_Energy::PID_Energy(const string& name, analysis::PhysOptPtr opts) :
                       pid_channels,
                       "Pedestals");
 
+    h_bananas =
+            HistFac.makeTH3D(
+                "PID Bananas",
+                "CB Energy / MeV",
+                "PID Energy / MeV",
+                "Channel",
+                BinSettings(400,0,800),
+                BinSettings(100,0,30),
+                pid_channels,
+                "Bananas"
+                );
+
     for(unsigned ch=0;ch<nChannels;ch++) {
         stringstream ss;
         ss << "Ch" << ch;
@@ -138,7 +150,8 @@ void PID_Energy::ProcessEvent(const Event& event)
 
     }
 
-    // bananas
+
+    // bananas per channel histograms
     for(const auto& candidate : event.Reconstructed.Candidates) {
         // only candidates with one cluster in CB and one cluster in PID
         if(candidate->Clusters.size() != 2)
@@ -151,6 +164,11 @@ void PID_Energy::ProcessEvent(const Event& event)
         // search for PID cluster
         auto pid_cluster = candidate->FindFirstCluster(Detector_t::Type_t::PID);
 
+        h_bananas->Fill(candidate->ClusterEnergy,
+                        candidate->VetoEnergy,
+                        pid_cluster->CentralElement);
+
+        // per channel histograms
         PerChannel_t& h = h_perChannel[pid_cluster->CentralElement];
 
         // fill the banana
