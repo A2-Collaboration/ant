@@ -45,4 +45,10 @@ void TAPSVeto_Energy::GetGUIs(std::list<std::unique_ptr<gui::CalibModule_traits>
                           tapsveto_detector,
                           make_shared<gui::FitLandau>()
                           ));
+    guis.emplace_back(std_ext::make_unique<GUI_Banana>(
+                          GetName(),
+                          RelativeGains,
+                          calibrationManager,
+                          tapsveto_detector
+                          ));
 }

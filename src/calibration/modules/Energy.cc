@@ -331,3 +331,58 @@ bool Energy::GUI_Pedestals::FinishSlice()
 {
     return false;
 }
+
+Energy::GUI_Banana::GUI_Banana(const string& basename,
+                                 Energy::CalibType& type,
+                                 const std::shared_ptr<DataManager>& calmgr,
+                                 const std::shared_ptr<Detector_t>& detector) :
+    GUI_CalibType(basename, type, calmgr, detector)
+{
+
+}
+
+std::shared_ptr<TH1> Energy::GUI_Banana::GetHistogram(const WrapTFile& file) const
+{
+    return file.GetSharedHist<TH1>(CalibModule_traits::GetName()+"/Bananas");
+}
+
+void Energy::GUI_Banana::InitGUI(gui::ManagerWindow_traits* window)
+{
+    c_fit = window->AddCalCanvas();
+    c_extra = window->AddCalCanvas();
+}
+
+gui::CalibModule_traits::DoFitReturn_t Energy::GUI_Banana::DoFit(TH1* hist, unsigned ch)
+{
+    if(detector->IsIgnored(ch))
+        return DoFitReturn_t::Skip;
+
+    TH3* h_bananas = dynamic_cast<TH3*>(hist);
+
+    h_bananas->GetZaxis()->SetRange(ch,ch+1);
+
+    proj = dynamic_cast<TH2D*>(h_bananas->Project3D("yx"));
+    means = dynamic_cast<TH1D*>(proj->ProjectionY());
+
+    return DoFitReturn_t::Next;
+}
+
+void Energy::GUI_Banana::DisplayFit()
+{
+    c_fit->cd();
+    means->Draw();
+
+    c_extra->cd();
+    proj->Draw("colz");
+}
+
+void Energy::GUI_Banana::StoreFit(unsigned channel)
+{
+
+}
+
+bool Energy::GUI_Banana::FinishSlice()
+{
+    // don't request stop...
+    return false;
+}

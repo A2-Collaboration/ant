@@ -126,6 +126,28 @@ protected:
 
     }; // GUI_Pedestals
 
+    struct GUI_Banana : GUI_CalibType {
+        GUI_Banana(const std::string& basename,
+               CalibType& type,
+               const std::shared_ptr<DataManager>& calmgr,
+               const std::shared_ptr<Detector_t>& detector);
+
+        virtual std::shared_ptr<TH1> GetHistogram(const WrapTFile& file) const override;
+        virtual void InitGUI(gui::ManagerWindow_traits* window) override;
+
+        virtual DoFitReturn_t DoFit(TH1* hist, unsigned ch) override;
+        virtual void DisplayFit() override;
+        virtual void StoreFit(unsigned channel) override;
+        virtual bool FinishSlice() override;
+
+    protected:
+
+        gui::CalCanvas* c_fit;
+        gui::CalCanvas* c_extra;
+        TH1D* means;
+        TH2D* proj;
+    }; // GUI_Banana
+
 
     const Detector_t::Type_t DetectorType;
     const Channel_t::Type_t ChannelType; // can be Integral or IntegralShort

@@ -1,5 +1,7 @@
 #include "PID_Energy.h"
 
+#include "gui/CalCanvas.h"
+
 #include "analysis/plot/HistogramFactories.h"
 #include "analysis/data/Event.h"
 
@@ -56,4 +58,14 @@ void PID_Energy::GetGUIs(std::list<std::unique_ptr<gui::CalibModule_traits> >& g
                           pid_detector,
                           make_shared<gui::FitGaus>()
                           ));
+    guis.emplace_back(std_ext::make_unique<GUI_Banana>(
+                          GetName(),
+                          RelativeGains,
+                          calibrationManager,
+                          pid_detector
+                          ));
+
 }
+
+
+
