@@ -16,7 +16,7 @@ my $cwd = getcwd;
 my $jobtag = 'Ant';
 my $QSUB_BIN = 'qsub';
 my $ANT_BIN = which('Ant');
-my $ANT_ARGS = '-b'; # ensure batch mode
+my $ANT_ARGS = '-b';            # ensure batch mode
 my $LOG_DIR = 'log';
 my $OUT_DIR = 'root';
 my $no_log = 0;
@@ -109,8 +109,8 @@ sub main {
   my $total = scalar @jobs;
   die "No jobs to be submitted, abort.\n" if $total==0;
 
-  # prepare output dirs
 
+  # prepare and check output dir
   unless(-d $OUT_DIR) {
     mkpath([$OUT_DIR]) == 1 or die "Cannot create output folder '$OUT_DIR'";
   } else {
@@ -130,6 +130,7 @@ sub main {
     }
   }
 
+  # prepare and check log dir
   unless(-d $LOG_DIR) {
     mkpath([$LOG_DIR]) == 1 or die "Cannot create log folder '$LOG_DIR'";
   } else {
@@ -149,16 +150,41 @@ sub main {
     }
   }
 
+  # create items from jobs
+  my @submissions;
+  for my $job (@jobs) {
+    push(@submissions, create_submission($job));
+  }
+
+  # test the first job
+  my $ant_cmd_test = $submissions[0]->[1];
+  $ant_cmd_test .= ' -m 1 -b';
+  print "Testing the first job locally...\n";
+  open my $testpipe, "$ant_cmd_test |" or die "error running '$ant_cmd_test': $!";
+  my @outputlines = <$testpipe>;
+  close $testpipe;
+  my $exitcode = $? >> 8;
+  my $ant_outputfile_test = $jobs[0]->{outputfile};
+  if ($exitcode != 0) {
+    unlink $ant_outputfile_test;
+    die "The test execution of '$ant_cmd_test' returned with non-zero exit code $exitcode:\n".join('',@outputlines);
+  }
+
+  unless(-f $ant_outputfile_test) {
+    die "The test execution of '$ant_cmd_test' did not create the outputfile '$ant_outputfile_test'";
+  }
+  unlink $ant_outputfile_test;
+
   # finally submit the jobs
   my $submitted = 0;
-  for my $job (@jobs) {
-    submit_job($job);
+  for my $sub (@submissions) {
+    submit_job($sub);
     $submitted++;
     printf("%-40s\r",sprintf("%04d/%04d = %03.0f %% submitted",$submitted,$total,100*$submitted/$total));
   }
   printf("%-40s\n", "Submitted $submitted jobs.");
 
-  if($no_log) {
+  if ($no_log) {
     return;
   }
 
@@ -188,7 +214,7 @@ sub which {
   return $lines[0];
 }
 
-sub submit_job {
+sub create_submission {
   my $job = shift;
   my $jobnumber = $job->{jobnumber};
 
@@ -208,16 +234,23 @@ sub submit_job {
 
   $qsub_cmd .= " -N '$jobtag/$jobnumber'";
 
-  # mails when job aborts, begins, ends
-  #$qsub_cmd .= " -m a -m b -m e";
-  #$qsub_cmd .= " -M '$user\@kph.uni-mainz.de'";
+  # mails when job aborts
+  $qsub_cmd .= " -m a";         # begin -m b, ends -m e
+  $qsub_cmd .= " -M '$user\@kph.uni-mainz.de'";
 
-  # logging
+  # logging: combine STDERR and STDOUT
   $qsub_cmd .= " -j oe -o '$logfile'";
 
-  # misc stuff
+  # misc stuff: batch quque, -V take over environment, walltime...
   $qsub_cmd .= " -z -q batch -V -l ncpus=1 -l walltime=2:00:00";
 
+  return [$qsub_cmd, $ant_cmd];
+}
+
+sub submit_job {
+  my $submission = shift;
+  my $qsub_cmd = $submission->[0];
+  my $ant_cmd = $submission->[1];
   # open pipe to qsub
   open(my $qsub_pipe, "| $qsub_cmd")
     or die "Can't open pipe to $QSUB_BIN: $!";
@@ -239,6 +272,7 @@ Options:
   --clean     Recursively delete <outputdir> before submission.
   --tag       Specify a custom job tag, default is Ant
   --filelist  Read from file instead of STDIN
+  --no_log    Do not write submission into AntSubmit.log
 __EOF
   exit 255;
 }
