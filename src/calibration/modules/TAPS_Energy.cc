@@ -210,14 +210,14 @@ bool TAPS_Energy::GUI_Gains::FinishSlice()
     h_peaks->SetStats(false);
     h_peaks->Draw("P");
     canvas->cd(2);
-    h_peaks_taps->FillElements(*h_peaks);
+    h_peaks_taps->SetElements(*h_peaks);
     h_peaks_taps->Draw("colz");
 
     canvas->cd(3);
     h_relative->SetStats(false);
     h_relative->Draw("P");
     canvas->cd(4);
-    h_relative_taps->FillElements(*h_relative);
+    h_relative_taps->SetElements(*h_relative);
     h_relative_taps->Draw("colz");
 
     return true;
