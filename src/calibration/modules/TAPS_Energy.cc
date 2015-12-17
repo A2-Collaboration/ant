@@ -15,6 +15,8 @@
 #include "root-addons/cbtaps_display/TH2TAPS.h"
 #include "base/Logger.h"
 
+#include "TF1.h"
+
 #include <list>
 #include <cmath>
 
@@ -62,12 +64,36 @@ void TAPS_Energy::GetGUIs(std::list<std::unique_ptr<gui::CalibModule_traits> >& 
                           ));
 }
 
+struct FitTAPS_Energy : gui::FitGausPol3 {
+    virtual void SetDefaults(TH1 *hist) override
+    {
+        // Amplitude
+        func->SetParameter(0, 0.5*hist->GetMaximum());
+
+        // x0
+        auto range = GetRange();
+        func->SetParameter(1, 135);
+        func->SetParLimits(1, range.Start(), range.Stop());
+
+        // sigma
+        func->SetParameter(2, 12);
+        func->SetParLimits(2, 5, 50);
+
+        func->SetParameter(3, 0.3*hist->GetMaximum());
+        func->SetParameter(4, 0);
+        func->SetParameter(5, 0);
+        func->SetParameter(6, 0);
+
+        Sync();
+    }
+};
+
 TAPS_Energy::GUI_Gains::GUI_Gains(const string& basename,
                           CalibType& type,
                           const std::shared_ptr<DataManager>& calmgr,
                           const std::shared_ptr<Detector_t>& detector) :
     GUI_CalibType(basename, type, calmgr, detector),
-    func(make_shared<gui::FitGausPol3>())
+    func(make_shared<FitTAPS_Energy>())
 {
 }
 
