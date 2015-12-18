@@ -148,6 +148,8 @@ protected:
         TH1D* h_projection;
         TH2D* banana;
 
+        TH1D* h_relative = nullptr;
+
         double AutoStopOnChi2 = 6;
     }; // GUI_Banana
 

@@ -373,8 +373,16 @@ std::shared_ptr<TH1> Energy::GUI_Banana::GetHistogram(const WrapTFile& file) con
 
 void Energy::GUI_Banana::InitGUI(gui::ManagerWindow_traits* window)
 {
+    GUI_CalibType::InitGUI(window);
+    window->AddNumberEntry("Chi2/NDF limit for autostop", AutoStopOnChi2);
+
     c_fit = window->AddCalCanvas();
     c_extra = window->AddCalCanvas();
+
+
+    h_relative = new TH1D("h_relative","Relative change from previous gains",GetNumberOfChannels(),0,GetNumberOfChannels());
+    h_relative->SetXTitle("Channel Number");
+    h_relative->SetYTitle("Relative change / %");
 }
 
 gui::CalibModule_traits::DoFitReturn_t Energy::GUI_Banana::DoFit(TH1* hist, unsigned ch)
@@ -454,10 +462,19 @@ void Energy::GUI_Banana::StoreFit(unsigned channel)
 
     // don't forget the fit parameters
     fitParameters[channel] = func->Save();
+
+    h_relative->SetBinContent(channel+1, relative_change);
+
 }
 
 bool Energy::GUI_Banana::FinishSlice()
 {
-    // don't request stop...
-    return false;
+    c_extra->Clear();
+    c_fit->Clear();
+
+    c_fit->cd();
+    h_relative->SetStats(false);
+    h_relative->Draw("P");
+
+    return true;
 }
