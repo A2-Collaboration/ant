@@ -1,5 +1,5 @@
 include_directories(
-  ../src
+  ${CMAKE_SOURCE_DIR}/src
   )
 
 macro(add_ant_executable name)
