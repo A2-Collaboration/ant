@@ -19,11 +19,14 @@
 
 #include "expconfig/ExpConfig.h"
 
+#include "tree/TCalibrationData.h"
+
 #include "TH1.h"
 #include "TH1D.h"
 #include "TH2D.h"
 #include "TRint.h"
 #include "TStyle.h"
+#include "TGraph.h"
 
 
 using namespace std;
@@ -31,6 +34,8 @@ using namespace ant;
 using namespace ant::calibration;
 
 void show_2d(const string& dbfolder, const string& calibID);
+void show_time(const string& dbfolder, const string& calibID);
+
 
 int main(int argc, char** argv)
 {
@@ -74,7 +79,7 @@ int main(int argc, char** argv)
     string calibrationID = cmd_calibration->getValue();
     auto folders = std_ext::system::lsFiles(dbfolder+"/"+calibrationID,"",true,false);
     if(folders.empty()) {
-        LOG(ERROR) << "Calibration ID '" << calibrationID << "' does not seem to exist in " << dbfolder;
+        LOG(ERROR) << "Calibration ID '" << calibrationID << "' does not exist in " << dbfolder;
         return 1;
     }
 
@@ -84,15 +89,15 @@ int main(int argc, char** argv)
     auto app = new TRint("Ant-calib-viewer",&fake_argc,fake_argv,nullptr,0,true);
 
     if(cmd_mode_show_2d.isSet()) {
-        show_2d(dbfolder, cmd_calibration->getValue());
+        show_2d(dbfolder, calibrationID);
     }
 
     if(cmd_mode_show_convergence.isSet()) {
-
+        LOG(INFO) << "Not implemented yet";
     }
 
     if(cmd_mode_show_time.isSet()) {
-
+        show_time(dbfolder, calibrationID);
     }
 
     app->Run(kTRUE);
@@ -106,6 +111,45 @@ void GetData(const DataBase::OnDiskLayout& onDiskDB,
 {
     WrapTFileInput wfi(onDiskDB.GetCurrentFile(range));
     wfi.GetObjectClone("cdata",dataBuffer);
+}
+
+void show_time(const string& dbfolder, const string& calibID)
+{
+    TCalibrationData dataBuffer;
+    DataBase::OnDiskLayout onDiskDB(dbfolder);
+
+
+    auto points_x = new std::vector<double>();
+    auto points_y = new std::vector<double>();
+
+    auto ranges = onDiskDB.GetDataRanges(calibID);
+
+    unsigned i = 0;
+    for (const auto& range: ranges)
+    {
+        GetData(onDiskDB, range, dataBuffer);
+
+
+        const double length = dataBuffer.Data.size();
+        const double span = 0.7;
+        unsigned j = 0;
+        for(const TCalibrationData::Entry& entry: dataBuffer.Data) {
+            const double x = i + span*(double)j/length - span/2;
+            points_x->push_back(x);
+            points_y->push_back(entry.Value);
+            j++;
+        }
+
+        i++;
+    }
+
+    auto graph = new TGraph(points_x->size(), points_x->data(), points_y->data());
+    graph->SetTitle(calibID.c_str());
+    graph->GetXaxis()->SetTitle("Range");
+    graph->GetYaxis()->SetTitle("Value");
+    canvas c("view");
+    c << drawoption("AP") << graph << endc;
+
 }
 
 void show_2d(const string& dbfolder, const string& calibID)
