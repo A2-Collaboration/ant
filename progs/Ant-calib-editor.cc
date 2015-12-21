@@ -30,7 +30,7 @@ int main(int argc, char** argv) {
 
 
     int fake_argc=1;
-    char* fake_argv[2];
+    char* fake_argv[1];
     fake_argv[0] = argv[0];
     auto app = new TRint("Ant-calib",&fake_argc,fake_argv);
 
