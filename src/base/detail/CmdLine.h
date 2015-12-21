@@ -240,7 +240,7 @@ private:
      * add does not need to be called.
      * \param xors - List of Args to be added and xor'd.
      */
-    void xorAdd( std::vector<Arg*>& xors );
+    void xorAdd(const std::vector<Arg*>& xors );
 
     /**
      * Parses the command line.
@@ -398,11 +398,11 @@ inline void CmdLine::_constructor()
   deleteOnExit(v);
 }
 
-inline void CmdLine::xorAdd( std::vector<Arg*>& ors )
+inline void CmdLine::xorAdd(const std::vector<Arg*>& ors )
 {
   _xorHandler.add( ors );
 
-  for (ArgVectorIterator it = ors.begin(); it != ors.end(); it++)
+  for (auto it = ors.begin(); it != ors.end(); it++)
   {
     (*it)->forceRequired();
     (*it)->setRequireLabel( "OR required" );
@@ -412,10 +412,7 @@ inline void CmdLine::xorAdd( std::vector<Arg*>& ors )
 
 inline void CmdLine::xorAdd( Arg& a, Arg& b )
 {
-  std::vector<Arg*> ors;
-  ors.push_back( &a );
-  ors.push_back( &b );
-  xorAdd( ors );
+  xorAdd({&a, &b});
 }
 
 inline void CmdLine::add( Arg& a )

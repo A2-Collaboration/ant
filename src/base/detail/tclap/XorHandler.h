@@ -55,7 +55,7 @@ class XorHandler
      * Add a list of Arg*'s that will be orred together.
      * \param ors - list of Arg* that will be xor'd.
      */
-    void add( std::vector<Arg*>& ors );
+    void add(const std::vector<Arg*>& ors );
 
     /**
      * Checks whether the specified Arg is in one of the xor lists and
@@ -92,7 +92,7 @@ class XorHandler
 //////////////////////////////////////////////////////////////////////
 //BEGIN XOR.cpp
 //////////////////////////////////////////////////////////////////////
-inline void XorHandler::add( std::vector<Arg*>& ors )
+inline void XorHandler::add(const std::vector<Arg*>& ors )
 {
   _orList.push_back( ors );
 }
