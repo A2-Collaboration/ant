@@ -11,14 +11,13 @@ namespace gui {
 
 template <typename HistType, typename IDType>
 class AvgBuffer {
-public:
+protected:
+
     struct buffer_entry {
         buffer_entry(const std::shared_ptr<HistType>& h, const IDType& ID): hist(h), id(ID) {}
         std::shared_ptr<HistType> hist;
         IDType id;
     };
-
-protected:
 
     using shpBuffer = std::list<buffer_entry>;
 
