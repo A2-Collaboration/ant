@@ -8,6 +8,8 @@
 #include "base/std_ext/string.h"
 #include "base/std_ext/time.h"
 #include "base/std_ext/misc.h"
+#include "base/std_ext/math.h"
+
 
 #include <sstream>
 #include <iomanip>
@@ -347,7 +349,7 @@ interval<TID> DataBase::OnDiskLayout::parseTIDRange(const string& tidRangeStr) c
 {
     auto pos_dash = tidRangeStr.find('-');
     if(pos_dash == string::npos)
-        return interval<TID>();
+        return interval<TID>(TID(), TID());
     auto startStr = tidRangeStr.substr(0,pos_dash);
     auto stopStr = tidRangeStr.substr(pos_dash+1);
 

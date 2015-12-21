@@ -170,8 +170,11 @@ public:
 
 const interval<double> RangeManager::emptyRange(-1,-1);
 
-void RangeManager::Set(const string &expr, const interval<double> &range) {
-    ranges[expr] = range;
+void RangeManager::Set(const string& expr, const interval<double>& range) {
+    auto it = ranges.insert(make_pair(expr,range));
+    if(!it.second) {
+        it.first->second = range;
+    }
 }
 
 void RangeManager::Remove(const string &expr) {

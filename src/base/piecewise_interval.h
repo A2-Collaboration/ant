@@ -86,9 +86,9 @@ public:
         out >> std::ws;
         if(out.peek() == '[')
             out.ignore();
-        t.resize(0);
+        t.clear();
 
-        interval<T> in;
+        interval<T> in({}, {});
         while(out.peek() != EOF && out >> in) {
             t.push_back(in);
             if(out.peek() == ';')

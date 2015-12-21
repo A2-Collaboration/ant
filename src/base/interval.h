@@ -19,7 +19,7 @@ protected:
     T _stop;
 
 public:
-    constexpr interval( const T& start=0.0, const T& stop=0.0 ) noexcept : _start(start), _stop(stop) {}
+    constexpr interval(const T& start, const T& stop) noexcept : _start(start), _stop(stop) {}
 
     /**
      * @brief Factory Function: Create interval from center and widht
@@ -312,6 +312,6 @@ ant::interval<T> intersect(const ant::interval<T> a, const ant::interval<T> b) {
                     std::min(a.Stop(), b.Stop())
                     );
     }
-    return ant::interval<T>();
+    return ant::interval<T>({}, {});
 }
 

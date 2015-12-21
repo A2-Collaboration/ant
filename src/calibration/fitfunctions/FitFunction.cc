@@ -4,6 +4,7 @@
 
 #include "base/interval.h"
 #include "base/Logger.h"
+#include "base/std_ext/math.h"
 
 #include "TF1.h"
 #include "TH1.h"
@@ -17,7 +18,7 @@ using namespace ant::calibration::gui;
 
 ant::interval<double> FitFunction::getRange(const TF1* func)
 {
-    interval<double> i;
+    interval<double> i(std_ext::NaN, std_ext::NaN);
     func->GetRange(i.Start(), i.Stop());
     return i;
 }

@@ -1,6 +1,7 @@
 #include "catch.hpp"
 #include "base/piecewise_interval.h"
 #include "base/interval.h"
+#include "base/std_ext/math.h"
 #include <iostream>
 #include <sstream>
 
@@ -8,7 +9,6 @@ using namespace std;
 using namespace ant;
 
 TEST_CASE("Interval: Default ctor", "[base]") {
-    REQUIRE_NOTHROW( interval<int> a; );
     REQUIRE_NOTHROW( interval<int> a(0,10); );
 }
 
@@ -30,7 +30,7 @@ TEST_CASE("Interval: Inersect", "[base]") {
 }
 
 TEST_CASE("Interval: Parse from string", "[base]") {
-    interval<double> a;
+    interval<double> a(std_ext::NaN, std_ext::NaN);
     stringstream ss_a;
     ss_a << "[7.3:6.9]";
     REQUIRE(ss_a >> a);
@@ -39,31 +39,31 @@ TEST_CASE("Interval: Parse from string", "[base]") {
 
     stringstream ss_b;
     ss_b << a;
-    interval<double> b;
+    interval<double> b(std_ext::NaN, std_ext::NaN);
     REQUIRE(ss_b >> b);
     REQUIRE(b == a);
 
     stringstream ss_c;
     ss_c << "5.6:2.1 [4.3:6.9]";
-    interval<double> c1;
+    interval<double> c1(std_ext::NaN, std_ext::NaN);
     REQUIRE(ss_c >> c1);
     REQUIRE(c1.Start() == Approx(5.6));
     REQUIRE(c1.Stop() == Approx(2.1));
-    interval<double> c2;
+    interval<double> c2(std_ext::NaN, std_ext::NaN);
     REQUIRE(ss_c >> c2);
     REQUIRE(c2.Start() == Approx(4.3));
     REQUIRE(c2.Stop() == Approx(6.9));
 
     stringstream ss_d;
     ss_d << "456";
-    interval<int> d1;
+    interval<int> d1(0,0);
     REQUIRE(ss_d >> d1);
     REQUIRE(d1.Start() == 456);
     REQUIRE(d1.Stop() == 456);
 
     stringstream ss_e;
     ss_e << "6.7:23.1";
-    interval<double> e;
+    interval<double> e(std_ext::NaN, std_ext::NaN);
     REQUIRE(ss_e >> e);
     REQUIRE(e.Start() == Approx(6.7));
     REQUIRE(e.Stop() == Approx(23.1));
