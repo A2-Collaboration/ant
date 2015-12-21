@@ -32,8 +32,8 @@ struct TCalibrationData
     TID FirstID;
     TID LastID;
 
-    typedef TKeyValue<double> TCalibrationEntry;
-    std::vector<TCalibrationEntry> Data;
+    typedef TKeyValue<double> Entry;
+    std::vector<Entry> Data;
 
     typedef TKeyValue<std::vector<double>> TFitParameters;
     std::vector<TFitParameters> FitParameters;
