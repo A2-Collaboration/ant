@@ -69,10 +69,11 @@ struct FitTAPS_Energy : gui::FitGausPol3 {
     {
         // Amplitude
         func->SetParameter(0, 0.5*hist->GetMaximum());
+        func->SetParLimits(0, 0, hist->GetMaximum());
 
         // x0
         auto range = GetRange();
-        func->SetParameter(1, 135);
+        func->SetParameter(1, range.Clip(135.0));
         func->SetParLimits(1, range.Start(), range.Stop());
 
         // sigma
