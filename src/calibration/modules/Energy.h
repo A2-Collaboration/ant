@@ -56,10 +56,15 @@ protected:
      */
     struct CalibType
     {
+        // see also implementation of Get method
         const double        DefaultValue;
-        std::vector<double> Values;
+        std::vector<double> DefaultValues; // if empty, channel-independent DefaultValue is used
+        std::vector<double> Values;        // if empty, channel-dependent DefaultValues[ch] is used
         const std::string   Name;
         const std::string   HistogramName;
+
+        double Get(unsigned channel) const;
+
         CalibType(double defaultValue, const std::string& name) :
             CalibType(defaultValue, name, name)
         {}

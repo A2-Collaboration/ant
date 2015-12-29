@@ -45,10 +45,10 @@ Energy::Energy(Detector_t::Type_t detectorType,
     ChannelType(channelType),
     calibrationManager(calmgr),
     Converter(move(converter)),
-    Pedestals(defaultPedestal,"Pedestals"),
-    Gains(defaultGain,"Gains", "ggIM"),
-    Thresholds(defaultThreshold,"Thresholds"),
-    RelativeGains(defaultRelativeGain,"RelativeGains", "ggIM")
+    Pedestals(defaultPedestal, "Pedestals"),
+    Gains(defaultGain, "Gains", "ggIM"),
+    Thresholds(defaultThreshold, "Thresholds"),
+    RelativeGains(defaultRelativeGain, "RelativeGains", "ggIM")
 {
     if(Converter==nullptr)
         throw std::runtime_error("Given converter should not be nullptr");
@@ -96,16 +96,9 @@ void Energy::ApplyTo(const readhits_t& hits, extrahits_t& extrahits)
             // apply pedestal/gain to each of the values (might be multihit)
             for(double& value : values) {
                 if(NeedsPedestals()) {
-                    if(Pedestals.Values.empty())
-                        value -= Pedestals.DefaultValue;
-                    else
-                        value -= Pedestals.Values[dethit->Channel];
+                    value -= Pedestals.Get(dethit->Channel);
                 }
-
-                if(Gains.Values.empty())
-                    value *= Gains.DefaultValue;
-                else
-                    value *= Gains.Values[dethit->Channel];
+                value *= Gains.Get(dethit->Channel);
             }
 
         }
@@ -119,14 +112,9 @@ void Energy::ApplyTo(const readhits_t& hits, extrahits_t& extrahits)
         dethit->Values.reserve(values.size());
 
         for(double value : values) {
-            if(RelativeGains.Values.empty())
-                value *= RelativeGains.DefaultValue;
-            else
-                value *= RelativeGains.Values[dethit->Channel];
+            value *= RelativeGains.Get(dethit->Channel);
 
-            const double threshold = Thresholds.Values.empty()
-                                     ? Thresholds.DefaultValue
-                                     : Thresholds.Values[dethit->Channel];
+            const double threshold = Thresholds.Get(dethit->Channel);
             if(value<threshold)
                 continue;
 
@@ -134,6 +122,20 @@ void Energy::ApplyTo(const readhits_t& hits, extrahits_t& extrahits)
             dethit->Values.push_back(value);
         }
 
+    }
+}
+
+double Energy::CalibType::Get(unsigned channel) const {
+    if(Values.empty()) {
+        if(DefaultValues.empty()) {
+            return DefaultValue;
+        }
+        else {
+            return DefaultValues[channel];
+        }
+    }
+    else {
+        return Values[channel];
     }
 }
 
