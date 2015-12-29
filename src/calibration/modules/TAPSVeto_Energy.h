@@ -24,7 +24,8 @@ public:
                     std::shared_ptr<DataManager> calmgr,
                     Calibration::Converter::ptr_t converter,
                     double defaultPedestal = 100,
-                    double defaultGain = 0.010,
+                    double defaultGain_BaF2 = 0.010,
+                    double defaultGain_PbWO4 = 0.050,
                     double defaultThreshold = 0.1,
                     double defaultRelativeGain = 1.0);
 
