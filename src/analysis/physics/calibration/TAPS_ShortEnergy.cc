@@ -30,7 +30,7 @@ TAPS_ShortEnergy::TAPS_ShortEnergy(const string& name, analysis::PhysOptPtr opts
                       "#",
                       BinSettings(400,-10,10),
                       taps_channels,
-                      "RelativeGains");
+                      "rel_gamma");
 }
 
 void TAPS_ShortEnergy::ProcessEvent(const Event& event)

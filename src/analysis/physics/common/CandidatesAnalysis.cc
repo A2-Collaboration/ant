@@ -66,8 +66,7 @@ void CandidatesAnalysis::ProcessEvent(const Event &event)
                 tapstof->Fill(ci->Time, ci->ClusterEnergy);
 
 
-                // extract shot gate stuff
-                ///@todo: implement shortgate in clusters to make this tirvial
+                // extract short gate stuff
 
                 const auto& cluster = ci->FindCaloCluster();
 
@@ -129,8 +128,11 @@ void CandidatesAnalysis::ShowResult()
     canvas("CandidatesAnalysis")
             << ggIM << energy << theta << phi
             << nCandidatesEvent << CandMultiplicities
+            << detectors
             << drawoption("colz")
-            << cbdEE << cbtof << tapsdEE << tapstof << detectors
+            << cbdEE << cbtof
+            << tapsdEE << tapstof
+            << psa << psa_all << psa_all_angles
             << endc;
 }
 
