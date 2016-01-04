@@ -36,8 +36,8 @@ set(ANALYSIS_PHYSICS
   physics/Physics.cc
   physics/PhysicsManager.cc
   physics/test/TestPhysics.cc
-  physics/DeltaPlus/DeltaPlusPhysics.cc
-  physics/DeltaPlus/DeltaTreeGenerator.cc
+  physics/pi0/DeltaPlusPhysics.cc
+  physics/pi0/DeltaTreeGenerator.cc
   physics/omega/omega.cc
   physics/omega/kinFit.cc
   physics/omega/GeoAcceptance.cc
