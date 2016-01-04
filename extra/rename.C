@@ -1,6 +1,11 @@
-// use this macro with root as follows:
-// root Ant_CBTaggTAPS_5711.dat.xz.root 'rename.C("TAPS_ShortEnergy/RelativeGains","TAPS_ShortEnergy/rel_gamma")'
-// mind the shell-escaping of the arguments to rename.C (usually single quotes do the job)
+// Use this macro with root as follows:
+//
+// root Ant_CBTaggTAPS_5711.dat.xz.root 'rename.C("TAPS_ShortEnergy/RelativeGains","rel_gamma")'
+//
+// Mind the shell-escaping of the arguments to rename.C (usually single quotes do the job)
+//
+// Batch processing can be done with xargs, for example:
+// ls | xargs -P4 -n1 -i root -b -l {} '~/a2/ant/extra/rename.C("TAPS_ShortEnergy/RelativeGains","rel_gamma")'
 
 void rename(const char* oldname, const char* newname)
 {
