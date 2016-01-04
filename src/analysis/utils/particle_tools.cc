@@ -152,12 +152,17 @@ const ParticlePtr ParticleTools::FindParticle(const ParticleTypeDatabase::Type& 
 
 void ParticleTools::FillIMCombinations(TH1* h, unsigned n, const ParticleList& particles)
 {
+    FillIMCombinations([h] (double x) {h->Fill(x);}, n, particles);
+}
+
+void ParticleTools::FillIMCombinations(std::function<void(double)> filler, unsigned n, const ParticleList& particles)
+{
     for( auto comb = makeCombination(particles,n); !comb.Done(); ++comb) {
          TLorentzVector sum(0,0,0,0);
          for(const auto& p : comb) {
              sum += *p;
          }
-         h->Fill(sum.M());
+         filler(sum.M());
     }
 }
 
