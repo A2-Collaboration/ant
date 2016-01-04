@@ -11,6 +11,7 @@ use POSIX;
 
 my $filelist = '-';             # default STDIN
 my $clean = 0;
+my $backup = 0;
 my $help = 0;
 my $cwd = getcwd;
 my $jobtag = 'Ant';
@@ -20,18 +21,26 @@ my $ANT_ARGS = '-b';            # ensure batch mode
 my $LOG_DIR = 'log';
 my $OUT_DIR = 'root';
 my $no_log = 0;
+my $no_test = 0;
 
 # parse options
 Getopt::Long::Configure(qw(gnu_getopt));
 GetOptions(
            'help|h' => \$help,
            'clean|c' => \$clean,
+           'backup|b' => \$backup,
            'tag|t=s' => \$jobtag,
            'filelist=s' => \$filelist,
-           'no_log' => $no_log
+           'no_log' => \$no_log,
+           'no_test' => \$no_test
           ) or print_help();
 if ($help) {
   print_help();
+}
+
+my $timestampstr = strftime('%Y-%m-%d-%H-%M-%S',localtime);
+if ($clean && $backup) {
+  die "Requesting --clean and --backup at once makes no sense\n";
 }
 
 &main;
@@ -109,46 +118,8 @@ sub main {
   my $total = scalar @jobs;
   die "No jobs to be submitted, abort.\n" if $total==0;
 
-
-  # prepare and check output dir
-  unless(-d $OUT_DIR) {
-    mkpath([$OUT_DIR]) == 1 or die "Cannot create output folder '$OUT_DIR'";
-  } else {
-    my $n_outfiles = 0;
-    for my $job (@jobs) {
-      my $outputfile = $job->{outputfile};
-      if (-f $outputfile) {
-        if (!$clean) {
-          die "Outputfile $outputfile already exists. Use --clean?\n";
-        }
-        unlink $outputfile or die "Cannot delete file $outputfile: $!";
-        $n_outfiles++;
-      }
-    }
-    if ($clean) {
-      printf("%04d outfiles cleaned\n", $n_outfiles);
-    }
-  }
-
-  # prepare and check log dir
-  unless(-d $LOG_DIR) {
-    mkpath([$LOG_DIR]) == 1 or die "Cannot create log folder '$LOG_DIR'";
-  } else {
-    my $n_logfiles = 0;
-    for my $job (@jobs) {
-      my $logfile = $job->{logfile};
-      if (-f $logfile) {
-        if (!$clean) {
-          die "Logfile $logfile already exists. Use --clean?\n";
-        }
-        unlink $logfile or die "Cannot delete file $logfile: $!";
-        $n_logfiles++;
-      }
-    }
-    if ($clean) {
-      printf("%04d logfiles cleaned\n", $n_logfiles);
-    }
-  }
+  prepare_dir('outputfile', $OUT_DIR, \@jobs);
+  prepare_dir('logfile',    $LOG_DIR, \@jobs);
 
   # create items from jobs
   my @submissions;
@@ -157,23 +128,26 @@ sub main {
   }
 
   # test the first job
-  my $ant_cmd_test = $submissions[0]->[1];
-  $ant_cmd_test .= ' -m 1 -b';
-  print "Testing the first job locally...\n";
-  open my $testpipe, "$ant_cmd_test |" or die "error running '$ant_cmd_test': $!";
-  my @outputlines = <$testpipe>;
-  close $testpipe;
-  my $exitcode = $? >> 8;
-  my $ant_outputfile_test = $jobs[0]->{outputfile};
-  if ($exitcode != 0) {
-    unlink $ant_outputfile_test;
-    die "The test execution of '$ant_cmd_test' returned with non-zero exit code $exitcode:\n".join('',@outputlines);
-  }
+  if (!$no_test) {
 
-  unless(-f $ant_outputfile_test) {
-    die "The test execution of '$ant_cmd_test' did not create the outputfile '$ant_outputfile_test'";
+    my $ant_cmd_test = $submissions[0]->[1];
+    $ant_cmd_test .= ' -m 1 -b';
+    print "Testing the first job locally...\n";
+    open my $testpipe, "$ant_cmd_test |" or die "error running '$ant_cmd_test': $!";
+    my @outputlines = <$testpipe>;
+    close $testpipe;
+    my $exitcode = $? >> 8;
+    my $ant_outputfile_test = $jobs[0]->{outputfile};
+    if ($exitcode != 0) {
+      unlink $ant_outputfile_test;
+      die "The test execution of '$ant_cmd_test' returned with non-zero exit code $exitcode:\n".join('',@outputlines);
+    }
+
+    unless(-f $ant_outputfile_test) {
+      die "The test execution of '$ant_cmd_test' did not create the outputfile '$ant_outputfile_test'";
+    }
+    unlink $ant_outputfile_test;
   }
-  unlink $ant_outputfile_test;
 
   # finally submit the jobs
   my $submitted = 0;
@@ -189,8 +163,55 @@ sub main {
   }
 
   open(my $fh_log, ">>AntSubmit.log") or die "Can't open AntSubmit.log: $!";
-  printf $fh_log "%s: %04d jobs with args '%s'\n", strftime('%Y-%m-%d %H:%M:%S',localtime), $submitted, $ANT_ARGS;
+  printf $fh_log "%s: %04d jobs with args '%s'\n", $timestampstr, $submitted, $ANT_ARGS;
   close $fh_log;
+}
+
+sub prepare_dir {
+  my $tag = shift;
+  my $dir = shift;
+  my @jobs = @{shift()};
+
+
+  
+  unless(-d $dir) {
+    mkpath([$dir]) == 1 or die "Cannot create folder '$dir'";
+  } else {
+
+    my $backupdir = $dir.'_'.$timestampstr;
+    if ($backup) {
+      if (-d $backupdir) {
+        die "Backupdir '$backupdir' already exists";
+      }
+      mkpath([$backupdir]) == 1 or die "Cannot create folder '$backupdir'";
+    }
+    
+    my $n_files = 0;
+    for my $job (@jobs) {
+      my $file = $job->{$tag};
+      if (-f $file) {
+        if($clean) {
+          unlink $file or die "Cannot delete file $file: $!";
+        }
+        elsif($backup) {
+          my $basename = basename($file);
+          my $backupfile = "$backupdir/$basename";
+          rename $file,$backupfile or die "Cannot move $file to $backupfile: $!";
+        }
+        else {
+          die "File $file already exists. Use --clean or --backup?\n";
+        }
+        $n_files++;
+      }
+    }
+    if ($clean) {
+      printf("%04d %s cleaned\n", $n_files, $tag.'s', );
+    }
+    elsif($backup) {
+      printf("%04d %s backuped to %s\n", $n_files, $tag.'s', $backupdir);
+    }
+  }
+
 }
 
 sub extract_runnumber {
@@ -262,14 +283,15 @@ sub submit_job {
 
 sub print_help {
   print <<__EOF;
-Usage: AntSubmit [--clean] [--tag jobtag] [--filelist filename] -- [optional Ant arguments]
+Usage: AntSubmit [--clean|--backup] [--tag jobtag] [--filelist filename] -- [optional Ant arguments]
 
 Submit jobs running Ant on files in read from STDIN (or from file list
 specified by --filelist), output goes to current directory.
 
 Options:
 
-  --clean     Recursively delete <outputdir> before submission.
+  --clean     Delete <outputdir> (and logs) before submission.
+  --backup    Rename <outputdir> (and logs) to timestamped folder before submission.
   --tag       Specify a custom job tag, default is Ant
   --filelist  Read from file instead of STDIN
   --no_log    Do not write submission into AntSubmit.log
