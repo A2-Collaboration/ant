@@ -67,7 +67,7 @@ struct Hist1 {
 
     const Switch& d;
 
-    Hist1(const Switch& D):
+    Hist1(Switch& D):
         d(D) {}
 
     void MakeHistograms(SmartHistFactory& factory,
@@ -97,7 +97,7 @@ struct Hist2 {
 
     const Switch& d;
 
-    Hist2(const Switch& D):
+    Hist2(Switch& D):
         d(D) {}
 
     void MakeHistograms(SmartHistFactory& factory,
