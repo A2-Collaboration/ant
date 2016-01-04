@@ -1,28 +1,27 @@
+// use this macro with root as follows:
+// root Ant_CBTaggTAPS_5711.dat.xz.root 'rename.C("TAPS_ShortEnergy/RelativeGains","TAPS_ShortEnergy/rel_gamma")'
+// mind the shell-escaping of the arguments to rename.C (usually single quotes do the job)
+
+void rename(const char* oldname, const char* newname)
 {
-    _file0->ReOpen("UPDATE");
-    
-    TDirectory* d = NULL;
+	_file0->ReOpen("UPDATE");
 
-    gDirectory->GetObject("TAPS_Energy", d);
+	TObject* o = _file0->Get(oldname);
+	if(!o) {
+		cerr << "Object '" << oldname << "' not found in _file0" << endl;
+		exit(1);
+	}
 
-    if(!d) {
-        cout << "TAPS_Energy not found";
-        exit(2);
-    }
+	TNamed* n = dynamic_cast<TNamed*>(o);
+	if(!n) {
+		cerr << "Object '" << oldname << "' does not derive from TNamed" << endl;
+		exit(1);
+	}
 
-    d->cd();
+	// this simply adds another TKey (I guess),
+	// the object is still there with its old name
+	n->SetName(newname);
+	_file0->Write();
 
-    TH2* h_mm = NULL;
-    h_mm = d->GetObject("ggIM",h_mm);
-
-    if(h_mm) {
-        h_mm->SetName("RelativeGains");
-    }
-    else
-        cout << "ggIM not found" << endl;
-
-    _file0->Write();
-
-   exit(0);
-
+	exit(0);
 }
