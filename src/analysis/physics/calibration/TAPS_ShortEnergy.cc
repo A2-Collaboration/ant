@@ -28,7 +28,7 @@ TAPS_ShortEnergy::TAPS_ShortEnergy(const string& name, analysis::PhysOptPtr opts
                       "TAPS E_{S} / E_{L}",
                       "rel",
                       "#",
-                      BinSettings(400,-10,10),
+                      BinSettings(400,0,4),
                       taps_channels,
                       "rel_gamma");
 }
