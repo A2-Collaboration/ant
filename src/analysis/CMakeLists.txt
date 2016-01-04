@@ -55,7 +55,6 @@ set(ANALYSIS_PHYSICS
   physics/etaprime/etaprime_omega_gamma.cc
   physics/etaprime/etaprime-3pi0.cc
   physics/etaprime/mctrue_3pi0.cc
-  physics/wolfes/etaprime-3pi0-test.cc
   physics/common/IMPlots.cc
   physics/common/ProtonTagger.cc
   physics/common/ExtractTimings.cc
