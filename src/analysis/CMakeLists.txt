@@ -60,6 +60,7 @@ set(ANALYSIS_PHYSICS
   physics/common/ExtractTimings.cc
   physics/misc/XMasCB.cc
   physics/common/ExtractResolutions.cc
+  physics/pi0/JustPi0.cc
   )
 
 set(ANALYSIS_PHYSICS_CALIBRATION
