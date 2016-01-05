@@ -73,7 +73,7 @@ SmartHistFactory::SmartHistFactory(const string &directory_name, TDirectory* roo
 
 
 SmartHistFactory::SmartHistFactory(const string &directory_name, const SmartHistFactory& parent, const string& title_prefix_)
-  : dir(), base_factory(), title_prefix(title_prefix_)
+  : dir(), base_factory(), title_prefix(parent.title_prefix.empty() ? title_prefix_ : parent.title_prefix+": "+title_prefix_)
 {
     dir = parent.dir->mkdir(directory_name.c_str());
     if(!dir)
