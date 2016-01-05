@@ -158,7 +158,7 @@ KinFitter::KinFitter(const std::string& name, unsigned numGammas):
 
         const auto s = values.size();
         for ( unsigned photon = 0 ; photon < s-2 ; ++ photon)
-            constraint -= KinFitter::GetVector(values[photon + 2], 0.0);
+            constraint -= KinFitter::GetVector(values[photon + 2], ParticleTypeDatabase::Photon.Mass());
 
         return vector<double>(
                { constraint.X(),
