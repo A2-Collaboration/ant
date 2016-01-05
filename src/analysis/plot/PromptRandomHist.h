@@ -40,10 +40,12 @@ public:
     Switch() {}
     Switch(std::initializer_list<interval_t> p, std::initializer_list<interval_t> r);
 
+    // Since Switch and Hist1/2 are loosely bound
+    // we do not allow moves/copies after Switch was created
     Switch(const Switch&) = delete;
     Switch& operator=(Switch&) = delete;
-    Switch(Switch&&) = default;
-    Switch& operator=(Switch&&) = default;
+    Switch(Switch&&) = delete;
+    Switch& operator=(Switch&&) = delete;
 
 
 
