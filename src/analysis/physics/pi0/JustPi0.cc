@@ -16,10 +16,37 @@ using namespace std;
 
 
 JustPi0::JustPi0(const string& name, PhysOptPtr opts) :
-    Physics(name, opts),
+    Physics(name, opts)
+{
+    for(unsigned mult=1;mult<=3;mult++) {
+        multiPi0.emplace_back(HistFac, mult);
+    }
+}
+
+void JustPi0::ProcessEvent(const Event& event)
+{
+    const auto& data = event.Reconstructed;
+    for(auto& m : multiPi0)
+        m.ProcessData(data);
+}
+
+void JustPi0::ShowResult()
+{
+    for(auto& m : multiPi0)
+        m.ShowResult();
+}
+
+
+
+
+JustPi0::MultiPi0::MultiPi0(SmartHistFactory& histFac, unsigned nPi0) :
+    multiplicity(nPi0),
     h_missingmass(promptrandom),
     IM_2g(promptrandom)
 {
+    std::string multiplicity_str = std_ext::formatter() << multiplicity << "Pi0";
+    SmartHistFactory HistFac(multiplicity_str, histFac, multiplicity_str);
+
     promptrandom.AddPromptRange({-2.5,2.5});
     promptrandom.AddRandomRange({-50,-5});
     promptrandom.AddRandomRange({  5,50});
@@ -28,14 +55,11 @@ JustPi0::JustPi0(const string& name, PhysOptPtr opts) :
 
     h_missingmass.MakeHistograms(HistFac, "h_missingmass","Missing Mass",BinSettings(400,400, 1400),"MM / MeV","#");
     IM_2g.MakeHistograms(HistFac, "IM_2g","Invariant Mass 2#gamma",BinSettings(500,0,700),"IM / MeV","#");
-
 }
 
-void JustPi0::ProcessEvent(const Event& event)
+void JustPi0::MultiPi0::ProcessData(const Event::Data& data)
 {
-    const auto& data = event.Reconstructed;
-
-    const auto nPhotons_expected = 2;
+    const auto nPhotons_expected = multiplicity*2;
 
     steps->Fill("Seen",1);
 
@@ -93,18 +117,15 @@ void JustPi0::ProcessEvent(const Event& event)
 
 
     }
-
-
 }
 
-void JustPi0::ShowResult()
+void JustPi0::MultiPi0::ShowResult()
 {
-    canvas(GetName())
+    canvas(std_ext::formatter() << "JustPi0: " << multiplicity << "Pi0")
             << steps
             << h_missingmass.subtracted
             << IM_2g.subtracted
             << endc;
 }
-
 
 AUTO_REGISTER_PHYSICS(JustPi0)

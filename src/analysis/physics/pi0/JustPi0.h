@@ -11,14 +11,23 @@ namespace physics {
 
 class JustPi0 : public Physics {
 protected:
-    TH1D* steps;
 
+    struct MultiPi0 {
+        MultiPi0(SmartHistFactory& histFac, unsigned nPi0);
 
-    PromptRandom::Switch promptrandom;
-    PromptRandom::Hist1  h_missingmass;
-    PromptRandom::Hist1  IM_2g;
+        void ProcessData(const data::Event::Data& data);
+        void ShowResult();
 
+    protected:
+        const unsigned multiplicity;
 
+        TH1D* steps;
+        PromptRandom::Switch promptrandom;
+        PromptRandom::Hist1  h_missingmass;
+        PromptRandom::Hist1  IM_2g;
+    };
+
+    std::vector<MultiPi0> multiPi0;
 
 public:
     JustPi0(const std::string& name, PhysOptPtr opts);
