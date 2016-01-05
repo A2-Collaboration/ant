@@ -95,9 +95,9 @@ private:
 
     PhotonBeamVector Beam = PhotonBeamVector("Beam");
 
-    double EnergyResolution(const ant::analysis::data::ParticlePtr& p) const;
-    double ThetaResolution(const ant::analysis::data::ParticlePtr& p) const;
-    double PhiResolution(const ant::analysis::data::ParticlePtr& p) const;
+    double EnergyResolution(const data::ParticlePtr& p) const;
+    double ThetaResolution(const data::ParticlePtr& p) const;
+    double PhiResolution(const data::ParticlePtr& p) const;
 
     static TLorentzVector GetVector(const std::vector<double>& EkThetaPhi, const double m);
 
@@ -143,8 +143,11 @@ public:
     KinFitter(const std::string& name, unsigned numGammas);
 
     void SetEgammaBeam(const double& ebeam);
-    void SetProton(const ant::analysis::data::ParticlePtr& proton);
-    void SetPhotons(const std::vector<ant::analysis::data::ParticlePtr>& photons);
+    void SetProton(const data::ParticlePtr& proton);
+    void SetPhotons(const data::ParticleList& photons);
+
+    data::ParticlePtr GetFittedProton() const;
+    data::ParticleList GetFittedPhotons() const;
 
     APLCON::Result_t DoFit();
 

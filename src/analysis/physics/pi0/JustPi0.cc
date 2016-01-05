@@ -2,6 +2,8 @@
 
 #include "utils/particle_tools.h"
 
+#include "expconfig/ExpConfig.h"
+
 #include "TH1D.h"
 
 #include <memory>
@@ -41,8 +43,12 @@ void JustPi0::ShowResult()
 
 JustPi0::MultiPi0::MultiPi0(SmartHistFactory& histFac, unsigned nPi0) :
     multiplicity(nPi0),
+    fitter(std_ext::formatter() << multiplicity << "Pi0", 2*multiplicity),
     h_missingmass(promptrandom),
-    IM_2g(promptrandom)
+    h_fitprobability(promptrandom),
+    IM_2g_byMM(promptrandom),
+    IM_2g_byFit(promptrandom),
+    IM_2g_fitted(promptrandom)
 {
     std::string multiplicity_str = std_ext::formatter() << multiplicity << "Pi0";
     SmartHistFactory HistFac(multiplicity_str, histFac, multiplicity_str);
@@ -53,8 +59,21 @@ JustPi0::MultiPi0::MultiPi0(SmartHistFactory& histFac, unsigned nPi0) :
 
     steps = HistFac.makeTH1D("Steps","","#",BinSettings(10),"steps");
 
+    Proton_Coplanarity = HistFac.makeTH1D("p Coplanarity","#delta#phi / degree","",BinSettings(400,-180,180),"Proton_Coplanarity");
+
+
     h_missingmass.MakeHistograms(HistFac, "h_missingmass","Missing Mass",BinSettings(400,400, 1400),"MM / MeV","#");
-    IM_2g.MakeHistograms(HistFac, "IM_2g","Invariant Mass 2#gamma",BinSettings(500,0,700),"IM / MeV","#");
+    h_fitprobability.MakeHistograms(HistFac, "fit_probability","KinFitter probability",BinSettings(150,0,1),"p","#");
+
+    BinSettings bins_IM(500,0,700);
+
+    IM_2g_byMM.MakeHistograms(HistFac, "IM_2g_byMM","IM 2#gamma by MM",bins_IM,"IM / MeV","#");
+    IM_2g_byFit.MakeHistograms(HistFac, "IM_2g_byFit","IM 2#gamma by Fit",bins_IM,"IM / MeV","#");
+    IM_2g_fitted.MakeHistograms(HistFac, "IM_2g_fitted","IM 2#gamma fitted",bins_IM,"IM / MeV","#");
+
+
+    const auto setup = ant::ExpConfig::Setup::GetLastFound();
+    fitter.LoadSigmaData(setup->GetPhysicsFilesDirectory()+"/FitterSigmas.root");
 }
 
 void JustPi0::MultiPi0::ProcessData(const Event::Data& data)
@@ -97,19 +116,52 @@ void JustPi0::MultiPi0::ProcessData(const Event::Data& data)
             photon_sum += *p;
         }
 
+        // proton coplanarity
+        const double d_phi = std_ext::radian_to_degree(TVector2::Phi_mpi_pi(proton->Phi()-photon_sum.Phi() - M_PI ));
+        Proton_Coplanarity->Fill(d_phi);
+
+        const interval<double> Proton_Copl_cut(-19, 19);
+        if(!Proton_Copl_cut.Contains(d_phi))
+            continue;
+        const string copl_str = std_ext::formatter() << "Copl p in " << Proton_Copl_cut;
+        steps->Fill(copl_str.c_str(),1);
+
         for(const TaggerHit& taggerhit : data.TaggerHits) {
+            steps->Fill("Seen taggerhits",1.0);
+
             promptrandom.SetTaggerHit(taggerhit.Time);
             if(promptrandom.State() == PromptRandom::Case::Outside)
                 continue;
 
+            // simple missing mass cut
             const TLorentzVector beam_target = taggerhit.GetPhotonBeam() + TLorentzVector(0, 0, 0, ParticleTypeDatabase::Proton.Mass());
             const TLorentzVector v_mm = beam_target - photon_sum;
             const double mm = v_mm.M();
-            h_missingmass.Fill(mm);
 
-            if(mm>850 && mm<1000) {
-                steps->Fill("MM",1.0);
-                utils::ParticleTools::FillIMCombinations([this] (double x) {IM_2g.Fill(x);},  2, photons);
+            h_missingmass.Fill(mm);
+            const interval<double> MM_cut(850, 1000);
+            if(MM_cut.Contains(mm)) {
+                const string MM_str = std_ext::formatter() << "MM in " << MM_cut;
+                steps->Fill(MM_str.c_str(),1.0);
+                utils::ParticleTools::FillIMCombinations([this] (double x) {IM_2g_byMM.Fill(x);},  2, photons);
+            }
+
+            // more sophisticated fitter
+            fitter.SetEgammaBeam(taggerhit.PhotonEnergy);
+            fitter.SetProton(proton);
+            fitter.SetPhotons(photons);
+            auto fit_result = fitter.DoFit();
+
+            if(fit_result.Status == APLCON::Result_Status_t::Success) {
+                steps->Fill("Fit OK",1.0);
+                h_fitprobability.Fill(fit_result.Probability);
+                const interval<double> fitprob_cut(0.8, 1);
+                if(fitprob_cut.Contains(fit_result.Probability)) {
+                    const string fitprob_str = std_ext::formatter() << "Fit p in " << fitprob_cut;
+                    steps->Fill(fitprob_str.c_str(), 1.0);
+                    utils::ParticleTools::FillIMCombinations([this] (double x) {IM_2g_byFit.Fill(x);},  2, photons);
+                    utils::ParticleTools::FillIMCombinations([this] (double x) {IM_2g_fitted.Fill(x);},  2, fitter.GetFittedPhotons());
+                }
 
             }
 
@@ -123,8 +175,12 @@ void JustPi0::MultiPi0::ShowResult()
 {
     canvas(std_ext::formatter() << "JustPi0: " << multiplicity << "Pi0")
             << steps
+            << Proton_Coplanarity
             << h_missingmass.subtracted
-            << IM_2g.subtracted
+            << IM_2g_byMM.subtracted
+            << h_fitprobability.subtracted
+            << IM_2g_byFit.subtracted
+            << IM_2g_fitted.subtracted
             << endc;
 }
 

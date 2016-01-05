@@ -18,6 +18,7 @@
 using namespace std;
 using namespace ant;
 using namespace ant::std_ext;
+using namespace ant::analysis;
 using namespace ant::analysis::utils;
 
 
@@ -189,6 +190,22 @@ void KinFitter::SetProton(const analysis::data::ParticlePtr &proton)
     Proton.sigmaPhi  = PhiResolution(proton)*5.0;
 
 }
+
+data::ParticlePtr KinFitter::GetFittedProton() const
+{
+    return make_shared<data::Particle>(ParticleTypeDatabase::Proton, Proton.Ek, Proton.Theta, Proton.Phi);
+}
+
+data::ParticleList KinFitter::GetFittedPhotons() const
+{
+    data::ParticleList photons;
+    for(const auto& photon : Photons) {
+        photons.emplace_back(make_shared<data::Particle>(ParticleTypeDatabase::Photon,
+                                                         photon.Ek, photon.Theta, photon.Phi));
+    }
+    return photons;
+}
+
 
 
 void KinFitter::SetPhotons(const std::vector<analysis::data::ParticlePtr> &photons_data)

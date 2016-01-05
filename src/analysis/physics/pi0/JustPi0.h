@@ -2,6 +2,7 @@
 
 #include "physics/Physics.h"
 #include "plot/PromptRandomHist.h"
+#include "utils/KinFitter.h"
 
 class TH1D;
 
@@ -19,12 +20,21 @@ protected:
         void ShowResult();
 
     protected:
+
         const unsigned multiplicity;
 
+        utils::KinFitter fitter;
+
         TH1D* steps;
+        TH1D* Proton_Coplanarity;
         PromptRandom::Switch promptrandom;
-        PromptRandom::Hist1  h_missingmass;
-        PromptRandom::Hist1  IM_2g;
+
+        PromptRandom::Hist1 h_missingmass;
+        PromptRandom::Hist1 h_fitprobability;
+        PromptRandom::Hist1 IM_2g_byMM;
+        PromptRandom::Hist1 IM_2g_byFit;
+        PromptRandom::Hist1 IM_2g_fitted;
+
     };
 
     std::vector<std::unique_ptr<MultiPi0>> multiPi0;
