@@ -40,6 +40,13 @@ public:
     Switch() {}
     Switch(std::initializer_list<interval_t> p, std::initializer_list<interval_t> r);
 
+    Switch(const Switch&) = delete;
+    Switch& operator=(Switch&) = delete;
+    Switch(Switch&&) = default;
+    Switch& operator=(Switch&&) = default;
+
+
+
     /**
      * @brief
      * @return
