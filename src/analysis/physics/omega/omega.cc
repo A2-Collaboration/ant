@@ -27,6 +27,9 @@
 #include "expconfig/ExpConfig.h"
 #include "base/WrapTFile.h"
 #include "TCanvas.h"
+#include <cassert>
+
+#include "utils/matcher.h"
 
 using namespace std;
 using namespace ant;
@@ -544,6 +547,25 @@ struct chi2_highscore_t {
     }
 };
 
+
+//std::list< scored_match<typename List1::value_type, typename List2::value_type> >
+
+template <typename T>
+const T& FindMatched(const std::list<utils::scored_match<T,T>>& l, const T& f) {
+    for( const auto& i : l ) {
+        if( i.a == f) {
+            return i.b;
+        }
+    }
+    throw false;
+}
+
+
+double IM(const ParticlePtr& p1, const ParticlePtr& p2) {
+    return (TLorentzVector(*p1)+TLorentzVector(*p2)).M();
+}
+
+
 void OmegaEtaG2::Analyse(const Event::Data &data, const Event &event)
 {
 
@@ -562,7 +584,6 @@ void OmegaEtaG2::Analyse(const Event::Data &data, const Event &event)
                 h_TotalEvents->Fill("Reference",1);
             }
         }
-
 
 
     }
@@ -721,6 +742,61 @@ void OmegaEtaG2::Analyse(const Event::Data &data, const Event &event)
         kinfit_chi2 = fitres.ChiSquare / fitres.NDoF;
         b_fitIterations = unsigned(fitres.NIterations);
 
+
+
+        data::ParticleList rec_photons(3);
+        data::ParticleList true_photons(3);
+
+        if(particletree && (rf==0 || rf ==1)) {
+            particletree->Map_level([&true_photons] (const ParticlePtr& p, const size_t& level) {
+
+                if(p->Type() == ParticleTypeDatabase::Photon) {
+
+                    if(level==2) {
+                        assert(true_photons[0]==nullptr);
+                        true_photons[0] = p;
+
+                    } else if(level == 3) {
+
+                        if(!true_photons[1]) {
+                            true_photons[1] = p;
+                        } else {
+                            assert(true_photons[2]==nullptr);
+                            true_photons[2] = p;
+                        }
+                    }
+                }
+            });
+
+            assert(true_photons[0]!=nullptr);
+            assert(true_photons[1]!=nullptr);
+            assert(true_photons[2]!=nullptr);
+
+            const auto matched  = utils::match1to1(true_photons, photons, [] (const ParticlePtr& p1, const ParticlePtr& p2) {
+                return p1->Angle(p2->Vect());
+            }, {0.0, degree_to_radian(15.0)});
+
+            if(matched.size() ==3) {
+
+                rec_photons[0] = FindMatched(matched, true_photons[0]);
+                rec_photons[1] = FindMatched(matched, true_photons[1]);
+                rec_photons[2] = FindMatched(matched, true_photons[2]);
+
+                assert(rec_photons[0]!=nullptr);
+                assert(rec_photons[1]!=nullptr);
+                assert(rec_photons[2]!=nullptr);
+
+                ggIM_real->Fill(IM(rec_photons[1], rec_photons[2]));
+
+                ggIM_comb->Fill(IM(rec_photons[0], rec_photons[1]));
+                ggIM_comb->Fill(IM(rec_photons[0], rec_photons[2]));
+            }
+
+        }
+
+
+
+
         tree->Fill();
 
     }
@@ -818,13 +894,15 @@ OmegaEtaG2::OmegaEtaG2(const std::string& name, PhysOptPtr opts):
 
     fitter.LoadSigmaData(setup->GetPhysicsFilesDirectory()+"/FitterSigmas.root");
 
-    signal_tree = ParticleTypeTreeDatabase::Get(ParticleTypeTreeDatabase::Channel::Omega_gEta_3g);
+    signal_tree    = ParticleTypeTreeDatabase::Get(ParticleTypeTreeDatabase::Channel::Omega_gEta_3g);
     reference_tree = ParticleTypeTreeDatabase::Get(ParticleTypeTreeDatabase::Channel::Omega_gPi0_3g);
 
     steps = HistFac.makeTH1D("Steps","Step","Events passed",BinSettings(14),"steps");
 
     h_TotalEvents = HistFac.makeTH1D("TotalEvents","","",BinSettings(3),"TotalEvents");
 
+    ggIM_real = HistFac.makeTH1D("2#gamma IM, correct combinations", "2#gamma IM [MeV]", "", BinSettings(1000), "ggIM_real");
+    ggIM_comb = HistFac.makeTH1D("2#gamma IM, wrong combinations",   "2#gamma IM [MeV]", "", BinSettings(1000), "ggIM_comb");
 
 }
 

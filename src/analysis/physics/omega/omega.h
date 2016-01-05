@@ -256,6 +256,9 @@ protected:
 
     const interval<double> taggerWindow = { -30.0, 30.0 };
 
+    TH1D* ggIM_real = nullptr;
+    TH1D* ggIM_comb = nullptr;
+
 
 public:
     OmegaEtaG2(const std::string& name, PhysOptPtr opts);
