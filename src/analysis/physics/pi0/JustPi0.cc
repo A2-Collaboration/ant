@@ -18,8 +18,8 @@ using namespace std;
 JustPi0::JustPi0(const string& name, PhysOptPtr opts) :
     Physics(name, opts)
 {
-    for(unsigned mult=1;mult<=3;mult++) {
-        multiPi0.emplace_back(HistFac, mult);
+    for(unsigned mult=1;mult<=opts->Get<unsigned>("nPi0",1);mult++) {
+        multiPi0.emplace_back(std_ext::make_unique<MultiPi0>(HistFac, mult));
     }
 }
 
@@ -27,13 +27,13 @@ void JustPi0::ProcessEvent(const Event& event)
 {
     const auto& data = event.Reconstructed;
     for(auto& m : multiPi0)
-        m.ProcessData(data);
+        m->ProcessData(data);
 }
 
 void JustPi0::ShowResult()
 {
     for(auto& m : multiPi0)
-        m.ShowResult();
+        m->ShowResult();
 }
 
 

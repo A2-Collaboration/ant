@@ -27,7 +27,7 @@ protected:
         PromptRandom::Hist1  IM_2g;
     };
 
-    std::vector<MultiPi0> multiPi0;
+    std::vector<std::unique_ptr<MultiPi0>> multiPi0;
 
 public:
     JustPi0(const std::string& name, PhysOptPtr opts);
