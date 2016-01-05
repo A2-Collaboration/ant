@@ -3,6 +3,8 @@
 #include "plot/SmartHist.h"
 #include "data/Particle.h"
 
+#include "base/std_ext/string.h"
+
 #include "TMath.h"
 #include "TDirectory.h"
 #include "TTree.h"
@@ -31,7 +33,7 @@ string SmartHistFactory::MakeTitle(const string& title)
 {
     if(title_prefix.empty())
         return title;
-    return title_prefix+": "+title;
+    return std_ext::formatter() << title_prefix << ": " << title;
 }
 
 TDirectory *SmartHistFactory::mkDirNumbered(const string &name, TDirectory *rootdir)
@@ -72,8 +74,14 @@ SmartHistFactory::SmartHistFactory(const string &directory_name, TDirectory* roo
 }
 
 
-SmartHistFactory::SmartHistFactory(const string &directory_name, const SmartHistFactory& parent, const string& title_prefix_)
-  : dir(), base_factory(), title_prefix(parent.title_prefix.empty() ? title_prefix_ : parent.title_prefix+": "+title_prefix_)
+SmartHistFactory::SmartHistFactory(const string& directory_name, const SmartHistFactory& parent, const string& title_prefix_)
+  : dir(), base_factory(),
+    title_prefix
+    (
+        parent.title_prefix.empty() ?
+            title_prefix_ :
+            std_ext::formatter() << parent.title_prefix << ": " << title_prefix_
+    )
 {
     dir = parent.dir->mkdir(directory_name.c_str());
     if(!dir)
