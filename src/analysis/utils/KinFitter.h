@@ -11,14 +11,16 @@
 
 #include "APLCON.hpp"
 
-class APLCON;
 class TTree;
 class TH1D;
 class TF1;
 
 namespace ant {
+
 class WrapTFile;
-}
+
+namespace analysis {
+namespace utils {
 
 class KinFitter
 {
@@ -150,3 +152,5 @@ public:
 
     void LoadSigmaData(const std::string& filename);
 };
+
+}}} // namespace ant::analysis::utils

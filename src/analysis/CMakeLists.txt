@@ -39,7 +39,6 @@ set(ANALYSIS_PHYSICS
   physics/pi0/DeltaPlusPhysics.cc
   physics/pi0/DeltaTreeGenerator.cc
   physics/omega/omega.cc
-  physics/omega/kinFit.cc
   physics/omega/GeoAcceptance.cc
   physics/test/TestAPLCON.cc
   physics/common/DataOverview.cc
@@ -91,6 +90,7 @@ set(ANALYSIS_UTILS
   utils/root-addons.cc
   utils/particle_tools.cc
   utils/TimeSmearingHack.cc
+  utils/KinFitter.cc
   )
 
 set(ANALYSIS_ALL

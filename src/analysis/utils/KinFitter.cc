@@ -1,4 +1,4 @@
-#include "kinFit.h"
+#include "KinFitter.h"
 
 #include "base/std_ext/memory.h"
 #include "base/std_ext/math.h"
@@ -16,9 +16,9 @@
 #include "TF1.h"
 
 using namespace std;
-using namespace ant::std_ext;
 using namespace ant;
-
+using namespace ant::std_ext;
+using namespace ant::analysis::utils;
 
 
 double KinFitter::EnergyResolution(const analysis::data::ParticlePtr& p) const

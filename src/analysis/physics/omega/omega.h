@@ -8,7 +8,7 @@
 #include "analysis/utils/particle_tools.h"
 #include "base/std_ext/math.h"
 
-#include "kinFit.h"
+#include "analysis/utils/KinFitter.h"
 
 #include <map>
 
@@ -248,7 +248,7 @@ protected:
 
     TH1D* h_TotalEvents;
 
-    KinFitter fitter;
+    utils::KinFitter fitter;
 
     std::map<std::string, TH1D*> pulls;
     const std::map<short, std::string> component = {{0, "Energy"}, {1, "Theta"}, {2, "Phi"}};
