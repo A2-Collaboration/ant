@@ -51,7 +51,7 @@ JustPi0::MultiPi0::MultiPi0(SmartHistFactory& histFac, unsigned nPi0) :
     IM_2g_byFit(promptrandom),
     IM_2g_fitted(promptrandom)
 {
-    std::string multiplicity_str = std_ext::formatter() << multiplicity << "Pi0";
+    std::string multiplicity_str = std_ext::formatter() << "m" << multiplicity << "Pi0";
     SmartHistFactory HistFac(multiplicity_str, histFac, multiplicity_str);
 
     promptrandom.AddPromptRange({-2.5,2.5});
@@ -77,6 +77,10 @@ JustPi0::MultiPi0::MultiPi0(SmartHistFactory& histFac, unsigned nPi0) :
     fitter.LoadSigmaData(setup->GetPhysicsFilesDirectory()+"/FitterSigmas.root");
 
     tree = HistFac.makeTTree("tree");
+
+    tree->Branch("Tagg_W", addressof(Tagg_W));
+    tree->Branch("Tagg_Ch", addressof(Tagg_Ch));
+    tree->Branch("Tagg_E", addressof(Tagg_E));
 
     tree->Branch("BestFitProbability",addressof(BestFitProbability));
     tree->Branch("Proton",addressof(Proton));
@@ -180,6 +184,10 @@ void JustPi0::MultiPi0::ProcessData(const Event::Data& data)
                     utils::ParticleTools::FillIMCombinations([this] (double x) {IM_2g_fitted.Fill(x);},  2, fitter.GetFittedPhotons());
 
                     if(!isfinite(BestFitProbability) || fit_result.Probability > BestFitProbability) {
+                        Tagg_E  = taggerhit.PhotonEnergy;
+                        Tagg_Ch = taggerhit.Channel;
+                        Tagg_W  = promptrandom.FillWeight();
+
                         Photons.resize(0);
                         for(auto photon : photons)
                             Photons.emplace_back(*photon->Candidate);

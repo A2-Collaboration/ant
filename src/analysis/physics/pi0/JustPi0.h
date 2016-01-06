@@ -26,6 +26,9 @@ protected:
         utils::KinFitter fitter;
 
         TTree* tree;
+        double   Tagg_W;  // tagger prompt/random weight for subtraction
+        unsigned Tagg_Ch; // tagger channel
+        double   Tagg_E;  // tagger energy
         double BestFitProbability;
         TCandidate Proton;
         std::vector<TCandidate> Photons;
