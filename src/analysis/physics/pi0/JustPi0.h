@@ -25,6 +25,11 @@ protected:
 
         utils::KinFitter fitter;
 
+        TTree* tree;
+        double BestFitProbability;
+        TCandidate Proton;
+        std::vector<TCandidate> Photons;
+
         TH1D* steps;
         TH1D* Proton_Coplanarity;
         PromptRandom::Switch promptrandom;

@@ -5,6 +5,7 @@
 #include "expconfig/ExpConfig.h"
 
 #include "TH1D.h"
+#include "TTree.h"
 
 #include <memory>
 #include <cassert>
@@ -74,6 +75,13 @@ JustPi0::MultiPi0::MultiPi0(SmartHistFactory& histFac, unsigned nPi0) :
 
     const auto setup = ant::ExpConfig::Setup::GetLastFound();
     fitter.LoadSigmaData(setup->GetPhysicsFilesDirectory()+"/FitterSigmas.root");
+
+    tree = HistFac.makeTTree("tree");
+
+    tree->Branch("BestFitProbability",addressof(BestFitProbability));
+    tree->Branch("Proton",addressof(Proton));
+    tree->Branch("Photons",addressof(Photons));
+
 }
 
 void JustPi0::MultiPi0::ProcessData(const Event::Data& data)
@@ -99,9 +107,12 @@ void JustPi0::MultiPi0::ProcessData(const Event::Data& data)
 
     // use any candidate as proton, and do the analysis (ignore ParticleID stuff)
 
+    BestFitProbability = std::numeric_limits<double>::quiet_NaN();
+
     for(auto i_proton=cands.begin();i_proton!=cands.end();i_proton++) {
 
         const auto proton = std::make_shared<Particle>(ParticleTypeDatabase::Proton, *i_proton);
+        Proton = **i_proton;
         std::vector<ParticlePtr> photons;
         for(auto i_photon=cands.begin();i_photon!=cands.end();i_photon++) {
             if(i_photon == i_proton)
@@ -161,13 +172,23 @@ void JustPi0::MultiPi0::ProcessData(const Event::Data& data)
                     steps->Fill(fitprob_str.c_str(), 1.0);
                     utils::ParticleTools::FillIMCombinations([this] (double x) {IM_2g_byFit.Fill(x);},  2, photons);
                     utils::ParticleTools::FillIMCombinations([this] (double x) {IM_2g_fitted.Fill(x);},  2, fitter.GetFittedPhotons());
+
+                    if(!isfinite(BestFitProbability) || fit_result.Probability > BestFitProbability) {
+                        Photons.resize(0);
+                        for(auto photon : photons)
+                            Photons.emplace_back(*photon->Candidate);
+                        Proton = *proton->Candidate;
+                        BestFitProbability = fit_result.Probability;
+                    }
                 }
 
             }
 
         }
+    }
 
-
+    if(isfinite(BestFitProbability)) {
+        tree->Fill();
     }
 }
 
