@@ -101,12 +101,6 @@ TLorentzVector KinFitter::GetVector(const std::vector<double>& EkThetaPhi, const
     return TLorentzVector(pv,E);
 }
 
-double KinFitter::fct_GlobalEResolution(double E)
-{
- //   return  0.02 * E * std::pow(E,-0.36);
-    return 1.07134e-02 * E; // roughly extracted
-}
-
 double KinFitter::fct_TaggerEGausSigma(double)
 {
     return  3.0/sqrt(12.0);
@@ -180,14 +174,14 @@ void KinFitter::SetEgammaBeam(const double &ebeam)
 
 void KinFitter::SetProton(const analysis::data::ParticlePtr &proton)
 {
-    Proton.Ek    = proton->Ek();
-    Proton.sigmaEk   = 0.0; // unmeasured
+    Proton.Ek         = proton->Ek();
+    Proton.sigmaEk    = 0.0; // unmeasured
 
-    Proton.Theta  = proton->Theta();
-    Proton.sigmaTheta = ThetaResolution(proton)*5.0;
+    Proton.Theta      = proton->Theta();
+    Proton.sigmaTheta = degree_to_radian(5.5);
 
-    Proton.Phi   = proton->Phi();
-    Proton.sigmaPhi  = PhiResolution(proton)*5.0;
+    Proton.Phi        = proton->Phi();
+    Proton.sigmaPhi   = degree_to_radian(5.3);
 
 }
 

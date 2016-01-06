@@ -107,8 +107,6 @@ private:
     int result_status            = -1;
     double result_probability    =  0.0;
 
-
-    static double fct_GlobalEResolution(double E);
     static double fct_TaggerEGausSigma(double E);
 
 public:
