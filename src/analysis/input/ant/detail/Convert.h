@@ -28,9 +28,6 @@ struct Converter {
     static data::CandidatePtr Convert(const TCandidate& candidate);
 
     static data::TaggerHit Convert(const TTaggerHit& taggerhit);
-
-    //static data::Cluster Convert(const TCluster& cluster);
-
 };
 
 
