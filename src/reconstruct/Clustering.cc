@@ -79,6 +79,7 @@ void Clustering::Build(
         double   cluster_time        = numeric_limits<double>::quiet_NaN();
         double   cluster_maxenergy   = 0;
         unsigned cluster_max_channel = 0;
+        double   cluster_shortenergy = numeric_limits<double>::quiet_NaN();
 
         std::vector<TClusterHit> clusterhits;
         clusterhits.reserve(cluster.size());
@@ -92,6 +93,13 @@ void Clustering::Build(
                 cluster_time = crystal.Hit->Time;
                 cluster_maxenergy = crystal.Energy;
                 cluster_max_channel = crystal.Element->Channel;
+                // search for short energy
+                for(const TClusterHitDatum& datum : crystal.Hit->Hit->Data) {
+                    if(datum.GetType() == Channel_t::Type_t::IntegralShort) {
+                        cluster_shortenergy = datum.Value;
+                        break;
+                    }
+                }
             }
         }
         weightedPosition *= 1.0/weightedSum;
@@ -103,6 +111,8 @@ void Clustering::Build(
                     cluster_max_channel,
                     clusterhits
                     );
+        if(isfinite(cluster_shortenergy))
+            the_cluster.ShortEnergy = cluster_shortenergy;
         if(cluster.Split)
             the_cluster.SetFlag(TCluster::Flags_t::Split);
         clusters.emplace_back(move(the_cluster));
