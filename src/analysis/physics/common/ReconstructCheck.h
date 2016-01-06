@@ -1,7 +1,6 @@
 #pragma once
 
 #include "analysis/physics/Physics.h"
-#include "data/Candidate.h"
 #include "utils/TimeSmearingHack.h"
 
 #include <string>
@@ -86,7 +85,7 @@ protected:
         std::unique_ptr<PositionMap> makePosMap(SmartHistFactory& f, detectortype d, const std::string& name, const std::string title="");
 
         histgroup(SmartHistFactory& f, const std::string& prefix, detectortype d=detectortype::All);
-        void Fill(const data::ParticlePtr& mctrue, const data::CandidateList& cand, const data::ClusterList& all_clusters);
+        void Fill(const data::ParticlePtr& mctrue, const data::CandidateList & cand, const data::ClusterList& all_clusters);
         void ShowResult() const;
         void Finish();
 

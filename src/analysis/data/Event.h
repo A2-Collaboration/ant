@@ -1,7 +1,6 @@
 #pragma once
 
 #include "Particle.h"
-#include "Candidate.h"
 #include "TaggerHit.h"
 #include "Trigger.h"
 #include "Target.h"
@@ -18,6 +17,7 @@ namespace ant {
 namespace analysis {
 namespace data {
 
+using ClusterList = std::vector<TCluster>;
 
 struct Event : printable_traits {
 

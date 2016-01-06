@@ -1,6 +1,6 @@
 #pragma once
 
-#include "analysis/data/Candidate.h"
+#include "data/Event.h"
 
 #include <memory>
 
@@ -12,12 +12,6 @@ struct TTaggerHit;
 struct TCluster;
 
 namespace analysis {
-
-namespace data {
-    struct Cluster;
-    struct Event;
-    struct TaggerHit;
-}
 
 namespace input {
 

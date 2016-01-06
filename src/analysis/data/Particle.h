@@ -1,6 +1,6 @@
 #pragma once
 
-#include "analysis/data/Candidate.h"
+#include "tree/TCandidate.h"
 
 #include "base/printable.h"
 #include "base/types.h"
@@ -20,6 +20,8 @@ namespace data {
 
 struct Particle;
 
+using CandidatePtr = std::shared_ptr<TCandidate>;
+using CandidateList = std::vector<CandidatePtr>;
 using ParticlePtr    = std::shared_ptr<Particle>;
 using ParticleList   = std::vector<ParticlePtr>;
 using ParticleTree_t = std::shared_ptr<Tree<ParticlePtr>>;

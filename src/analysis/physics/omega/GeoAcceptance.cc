@@ -1,6 +1,5 @@
 #include "GeoAcceptance.h"
 #include "data/Particle.h"
-#include "data/Candidate.h"
 #include "utils/combinatorics.h"
 #include "utils/matcher.h"
 #include "plot/root_draw.h"

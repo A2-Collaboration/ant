@@ -1,6 +1,5 @@
 #pragma once
 
-#include "analysis/data/Candidate.h"
 #include "analysis/data/Particle.h"
 
 #include "base/ParticleType.h"

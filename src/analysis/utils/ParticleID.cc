@@ -1,7 +1,6 @@
 #include "ParticleID.h"
 
 #include "data/Event.h"
-#include "data/Candidate.h"
 #include "data/Particle.h"
 
 #include "base/std_ext/system.h"

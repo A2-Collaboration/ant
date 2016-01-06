@@ -47,7 +47,7 @@ void CandidatesAnalysis::ProcessEvent(const Event &event)
         CandMultiplicities->Fill(i);
     }
 
-    CandidateList::const_iterator i = candidates.begin();
+    auto i = candidates.begin();
 
     while(i!=candidates.end()) {
         const CandidatePtr& ci = *i;
@@ -97,7 +97,7 @@ void CandidatesAnalysis::ProcessEvent(const Event &event)
             }
 
             const Particle a(ParticleTypeDatabase::Photon,*i);
-            CandidateList::const_iterator j = i;
+            auto j = i;
             ++j;
             while(j!=candidates.end()) {
                 if((*i)->CaloEnergy>20.0) {

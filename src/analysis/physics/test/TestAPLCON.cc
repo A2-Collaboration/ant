@@ -1,6 +1,5 @@
 #include "TestAPLCON.h"
 #include "data/Particle.h"
-#include "data/Candidate.h"
 #include "plot/root_draw.h"
 #include <string>
 #include "utils/combinatorics.h"

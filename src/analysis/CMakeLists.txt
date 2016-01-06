@@ -3,12 +3,10 @@ include_directories(
 )
 
 set(ANALYSIS_DATASTRUCTURES
-  data/Candidate.cc
   data/Particle.cc
   data/Event.cc
   data/TaggerHit.cc
   data/Trigger.cc
-  data/Cluster.cc
   data/Slowcontrol.cc
   data/Target.cc
 )

@@ -1,6 +1,6 @@
 #pragma once
 
-#include "data/Candidate.h"
+#include "data/Particle.h"
 #include "data/TaggerHit.h"
 
 namespace ant {
