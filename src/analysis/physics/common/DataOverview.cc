@@ -147,7 +147,7 @@ void TriggerOverview::ProcessEvent(const Event &event)
     nErrorsEvent->Fill(trigger.Errors.size());
 
     for(const Cluster& cluster : branch.AllClusters) {
-        if(cluster.Detector & Detector_t::Any_t::CB) {
+        if(cluster.Detector & Detector_t::Any_t::CB_Apparatus) {
             for(const Cluster::Hit& hit : cluster.Hits) {
                 for(const Cluster::Hit::Datum datum : hit.Data) {
                     if(datum.Type == Channel_t::Type_t::Integral) {

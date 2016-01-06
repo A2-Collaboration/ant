@@ -41,7 +41,7 @@ void ProtonCheck::ProcessEvent(const Event &event)
 
                 for(const auto& cand : event.Reconstructed.Candidates) {
 
-                    if(cand->Detector == Detector_t::Any_t::TAPS) {
+                    if(cand->Detector == Detector_t::Any_t::TAPS_Apparatus) {
                         tof->Fill(cand->Time, cand->ClusterEnergy);
                         tof_trueE->Fill(cand->Time, mctrue->Ek());
                         dEE->Fill(cand->ClusterEnergy, cand->VetoEnergy);

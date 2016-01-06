@@ -119,9 +119,9 @@ CBTAPSBasicParticleID::~CBTAPSBasicParticleID()
 
 const ParticleTypeDatabase::Type* CBTAPSBasicParticleID::Identify(const CandidatePtr& cand) const
 {
-    if(cand->Detector & Detector_t::Any_t::CB) {
+    if(cand->Detector & Detector_t::Any_t::CB_Apparatus) {
         return cb.Identify(cand);
-    } else if(cand->Detector & Detector_t::Any_t::TAPS) {
+    } else if(cand->Detector & Detector_t::Any_t::TAPS_Apparatus) {
         return taps.Identify(cand);
     }
 

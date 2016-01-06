@@ -58,10 +58,10 @@ void CandidatesAnalysis::ProcessEvent(const Event &event)
 
         if((*i)->ClusterEnergy>20.0) {
 
-            if(ci->Detector & Detector_t::Any_t::CB) {
+            if(ci->Detector & Detector_t::Any_t::CB_Apparatus) {
                 cbdEE->Fill(ci->ClusterEnergy,ci->VetoEnergy);
                 cbtof->Fill(ci->Time, ci->ClusterEnergy);
-            } else if(ci->Detector & Detector_t::Any_t::TAPS) {
+            } else if(ci->Detector & Detector_t::Any_t::TAPS_Apparatus) {
                 tapsdEE->Fill(ci->ClusterEnergy,ci->VetoEnergy);
                 tapstof->Fill(ci->Time, ci->ClusterEnergy);
 

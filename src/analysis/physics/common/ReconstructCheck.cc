@@ -72,11 +72,11 @@ void ReconstructCheck::ProcessEvent(const Event &event)
 
         const auto common_detector = GetCommonDetector(event.Reconstructed.Candidates);
 
-        if(common_detector & Detector_t::Any_t::CB) {
+        if(common_detector & Detector_t::Any_t::CB_Apparatus) {
             cb_group.Fill(mctrue_particle, event.Reconstructed.Candidates, event.Reconstructed.AllClusters);
         }
 
-        if(common_detector & Detector_t::Any_t::TAPS) {
+        if(common_detector & Detector_t::Any_t::TAPS_Apparatus) {
             taps_group.Fill(mctrue_particle, event.Reconstructed.Candidates, event.Reconstructed.AllClusters);
         }
 
@@ -99,9 +99,9 @@ void ReconstructCheck::ProcessEvent(const Event &event)
             b_rVeto  = c->VetoEnergy;
             b_rTime  = timesmear.GetTime(c);
             b_rSize  = c->ClusterSize;
-            if(c->Detector & Detector_t::Any_t::CB)
+            if(c->Detector & Detector_t::Any_t::CB_Apparatus)
                 b_Cal    = 1;
-            else if(c->Detector & Detector_t::Any_t::TAPS)
+            else if(c->Detector & Detector_t::Any_t::TAPS_Apparatus)
                 b_Cal    = 2;
             else
                 b_Cal    = 0;

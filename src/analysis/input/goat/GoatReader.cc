@@ -32,7 +32,7 @@ Detector_t::Any_t IntToDetector_t(const int& a) {
         d |= Detector_t::Type_t::PID;
     }
     if(a & TrackInput::DETECTOR_MWPC) {
-        d |= Detector_t::Any_t::MWPC;
+        d |= Detector_t::Any_t::Tracker;
     }
     if(a & TrackInput::DETECTOR_BaF2) {
         d |= Detector_t::Type_t::TAPS;

@@ -5,9 +5,9 @@
 using namespace ant;
 
 const Detector_t::Any_t Detector_t::Any_t::None(0);
-const Detector_t::Any_t Detector_t::Any_t::MWPC(Type_t::MWPC0 | Type_t::MWPC1);
-const Detector_t::Any_t Detector_t::Any_t::CB(Detector_t::Any_t::MWPC | Type_t::PID | Type_t::CB );
-const Detector_t::Any_t Detector_t::Any_t::TAPS(Type_t::TAPS | Type_t::TAPSVeto);
+const Detector_t::Any_t Detector_t::Any_t::Tracker(Type_t::MWPC0 | Type_t::MWPC1);
+const Detector_t::Any_t Detector_t::Any_t::CB_Apparatus(Detector_t::Any_t::Tracker | Type_t::PID | Type_t::CB );
+const Detector_t::Any_t Detector_t::Any_t::TAPS_Apparatus(Type_t::TAPS | Type_t::TAPSVeto);
 const Detector_t::Any_t Detector_t::Any_t::Veto(Type_t::PID | Type_t::TAPSVeto);
 
 
