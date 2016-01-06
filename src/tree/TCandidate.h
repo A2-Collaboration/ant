@@ -14,47 +14,47 @@ namespace ant {
 
 #ifndef __CINT__
 struct TCandidate: ant::printable_traits
-#else
+        #else
 struct TCandidate
-#endif
+        #endif
 {
-  double Energy;
-  double Time;
-  double Theta;
-  double Phi;
-  double VetoEnergy;
-  double TrackerEnergy;
+    double Time;
+    double Energy;
+    double Theta;
+    double Phi;
+    double VetoEnergy;
+    double TrackerEnergy;
 
-  std::vector<TCluster> Clusters;
+    std::vector<TCluster> Clusters;
 
 #ifndef __CINT__
-  TCandidate(
-      double E,
-      double t,
-      double theta,
-      double phi,
-      const std::vector<TCluster>& clusters = {},
-      double vetoE = 0.0,
-      double trackerE = 0.0
-      ) :
-    Energy(E),
-    Time(t),
-    Theta(theta),
-    Phi(phi),
-    VetoEnergy(vetoE),
-    TrackerEnergy(trackerE),
-    Clusters(clusters)
-  {}
+    TCandidate(
+            double E,
+            double t,
+            double theta,
+            double phi,
+            const std::vector<TCluster>& clusters = {},
+            double vetoE = 0.0,
+            double trackerE = 0.0
+                              ) :
+        Energy(E),
+        Time(t),
+        Theta(theta),
+        Phi(phi),
+        VetoEnergy(vetoE),
+        TrackerEnergy(trackerE),
+        Clusters(clusters)
+    {}
 
 
-  virtual std::ostream& Print( std::ostream& s) const override {
-    return s << "TCandidate: " << Clusters.size() << " clusters, Energy=" << Energy << " Theta=" << Theta <<", Phi=" << Phi << " VetoEnergy=" << VetoEnergy << " TrackerEnergy=" << TrackerEnergy;
-  }
+    virtual std::ostream& Print( std::ostream& s) const override {
+        return s << "TCandidate: " << Clusters.size() << " clusters, Energy=" << Energy << " Theta=" << Theta <<", Phi=" << Phi << " VetoEnergy=" << VetoEnergy << " TrackerEnergy=" << TrackerEnergy;
+    }
 #endif
 
-  TCandidate() {}
-  virtual ~TCandidate() {}
-  ClassDef(TCandidate, ANT_UNPACKER_ROOT_VERSION)
+    TCandidate() {}
+    virtual ~TCandidate() {}
+    ClassDef(TCandidate, ANT_UNPACKER_ROOT_VERSION)
 };
 
 }
