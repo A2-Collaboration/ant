@@ -30,7 +30,7 @@ struct Detector_t : printable_traits {
 
     // Any_t represents a collection of detectors
     struct Any_t : printable_traits {
-        friend class TCandidate; // Any_t ROOT-ified as internal bitfield
+        friend struct TCandidate; // Any_t ROOT-ified as internal bitfield
         static const Any_t None;
         static const Any_t Tracker; // i.e. MWPC
         static const Any_t CB_Apparatus;
