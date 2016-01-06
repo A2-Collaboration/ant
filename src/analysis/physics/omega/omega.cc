@@ -667,6 +667,9 @@ void OmegaEtaG2::Analyse(const Event::Data &data, const Event &event)
 
         angle_p_calcp = radian_to_degree(missing.Angle(proton->Vect()));
 
+        if(angle_p_calcp > 15.0)
+            continue;
+
         int combindex = 0;
 
         chi2_highscore_t best_eta;
