@@ -57,10 +57,36 @@ struct TCandidate
         Clusters(clusters)
     {}
 
+    operator TVector3() const { TVector3 p; p.SetMagThetaPhi(1.0, Theta, Phi); return p; }
+
+    const TCluster* FindFirstCluster(Detector_t::Any_t detector) const {
+        for(const auto& cl : Clusters) {
+            if(cl.GetDetectorType() & detector) {
+                return std::addressof(cl);
+            }
+        }
+        return nullptr;
+    }
+
+    const TCluster* FindCaloCluster() const {
+        return FindFirstCluster(Detector_t::Type_t::CB | Detector_t::Type_t::TAPS);
+    }
+
+    const TCluster* FindVetoCluster() const {
+        if(VetoEnergy == 0.0)
+            return nullptr;
+        return FindFirstCluster(Detector_t::Type_t::PID | Detector_t::Type_t::TAPSVeto);
+    }
+
+    Detector_t::Any_t GetDetector() const {
+        return Detector_t::Any_t(Detector);
+    }
 
     virtual std::ostream& Print( std::ostream& s) const override {
         return s << "TCandidate: " << Clusters.size() << " clusters, CaloEnergy=" << CaloEnergy << " Theta=" << Theta <<", Phi=" << Phi << " VetoEnergy=" << VetoEnergy << " TrackerEnergy=" << TrackerEnergy;
     }
+
+
 #endif
 
     TCandidate() {}
