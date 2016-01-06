@@ -128,6 +128,7 @@ void JustPi0::MultiPi0::ProcessData(const Event::Data& data)
         }
 
         // proton coplanarity
+
         const double d_phi = std_ext::radian_to_degree(TVector2::Phi_mpi_pi(proton->Phi()-photon_sum.Phi() - M_PI ));
         Proton_Coplanarity->Fill(d_phi);
 
@@ -146,16 +147,21 @@ void JustPi0::MultiPi0::ProcessData(const Event::Data& data)
 
             // simple missing mass cut
             const TLorentzVector beam_target = taggerhit.GetPhotonBeam() + TLorentzVector(0, 0, 0, ParticleTypeDatabase::Proton.Mass());
-            const TLorentzVector v_mm = beam_target - photon_sum;
-            const double mm = v_mm.M();
+            const TLorentzVector missing = beam_target - photon_sum;
+            const double missing_mass = missing.M();
 
-            h_missingmass.Fill(mm);
+            h_missingmass.Fill(missing_mass);
             const interval<double> MM_cut(850, 1000);
-            if(MM_cut.Contains(mm)) {
+            if(MM_cut.Contains(missing_mass)) {
                 const string MM_str = std_ext::formatter() << "MM in " << MM_cut;
                 steps->Fill(MM_str.c_str(),1.0);
                 utils::ParticleTools::FillIMCombinations([this] (double x) {IM_2g_byMM.Fill(x);},  2, photons);
             }
+
+            auto angle_p_calcp = std_ext::radian_to_degree(missing.Angle(proton->Vect()));
+            if(angle_p_calcp > 15.0)
+                continue;
+            steps->Fill("p angle < 15.0#circ", 1.0);
 
             // more sophisticated fitter
             fitter.SetEgammaBeam(taggerhit.PhotonEnergy);
