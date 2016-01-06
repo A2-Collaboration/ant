@@ -40,13 +40,13 @@ void TAPSVeto_Energy::ProcessEvent(const Event& event)
     const auto& cands = event.Reconstructed.Candidates;
 
     // pedestals
-    for(const Cluster& cluster : event.Reconstructed.AllClusters) {
-        if(!(cluster.Detector & Detector_t::Type_t::TAPSVeto))
+    for(const TCluster& cluster : event.Reconstructed.AllClusters) {
+        if(cluster.GetDetectorType() != Detector_t::Type_t::TAPSVeto)
             continue;
-        for(const Cluster::Hit& clusterhit : cluster.Hits) {
+        for(const TClusterHit& clusterhit : cluster.Hits) {
             /// \todo check for timing hit?
-            for(const Cluster::Hit::Datum& datum : clusterhit.Data) {
-                if(datum.Type != Channel_t::Type_t::Pedestal)
+            for(const TClusterHitDatum& datum : clusterhit.Data) {
+                if(datum.GetType() != Channel_t::Type_t::Pedestal)
                     continue;
                 h_pedestals->Fill(datum.Value, clusterhit.Channel);
             }
@@ -57,13 +57,13 @@ void TAPSVeto_Energy::ProcessEvent(const Event& event)
     for(const auto& candidate : cands) {
         if(candidate->Clusters.size() != 2)
             continue;
-        if(candidate->Detector & Detector_t::Type_t::TAPS &&
-           candidate->Detector & Detector_t::Type_t::TAPSVeto
+        if(candidate->GetDetector() & Detector_t::Type_t::TAPS &&
+           candidate->GetDetector() & Detector_t::Type_t::TAPSVeto
            )
         {
             // search for TAPSVeto cluster
             auto tapsveto_cluster = candidate->FindFirstCluster(Detector_t::Type_t::TAPSVeto);
-            h_bananas->Fill(candidate->ClusterEnergy,
+            h_bananas->Fill(candidate->CaloEnergy,
                             candidate->VetoEnergy,
                             tapsveto_cluster->CentralElement);
         }

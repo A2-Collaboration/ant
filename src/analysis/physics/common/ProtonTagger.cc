@@ -36,8 +36,8 @@ double TimeAverage(const std::initializer_list<const T> cands) {
     double time   = 0.0;
     double energy = 0.0;
     for(const auto& c : cands) {
-        time += c->Time * c->ClusterEnergy;
-        energy += c->ClusterEnergy;
+        time += c->Time * c->CaloEnergy;
+        energy += c->CaloEnergy;
     }
     return time / energy;
 }
@@ -48,7 +48,7 @@ void ProtonTagger::ProcessEvent(const data::Event& event)
     data::CandidateList taps_hits;
 
     for(const auto& p : event.Reconstructed.Candidates) {
-        if((p->Detector & Detector_t::Any_t::TAPS_Apparatus) && p->ClusterEnergy > 50.0) {
+        if((p->GetDetector() & Detector_t::Any_t::TAPS_Apparatus) && p->CaloEnergy > 50.0) {
             taps_hits.emplace_back(p);
         }
     }
@@ -60,7 +60,7 @@ void ProtonTagger::ProcessEvent(const data::Event& event)
     data::ParticleList cb_photons;
 
     for(const auto& p : event.Reconstructed.Particles.Get(ParticleTypeDatabase::Photon)) {
-        if((p->Candidate && p->Candidate->Detector & Detector_t::Any_t::CB_Apparatus) && p->Energy() > 50.0) {
+        if((p->Candidate && p->Candidate->GetDetector() & Detector_t::Any_t::CB_Apparatus) && p->Energy() > 50.0) {
             cb_photons.emplace_back(p);
         }
     }
@@ -88,7 +88,7 @@ void ProtonTagger::ProcessEvent(const data::Event& event)
 
             for(const auto& p : taps_hits) {
                 b_Size = p->ClusterSize;
-                b_E    = p->ClusterEnergy;
+                b_E    = p->CaloEnergy;
                 b_veto = p->VetoEnergy;
                 b_Time = p->Time;
 
@@ -100,10 +100,10 @@ void ProtonTagger::ProcessEvent(const data::Event& event)
                 b_EshortCentral = 0.0;
 
                 if(cluster) {
-                    for(const Cluster::Hit& clusterhit : cluster->Hits) {
-                        for(const Cluster::Hit::Datum& datum : clusterhit.Data) {
+                    for(const TClusterHit& clusterhit : cluster->Hits) {
+                        for(const TClusterHitDatum& datum : clusterhit.Data) {
 
-                            if(datum.Type != Channel_t::Type_t::PedestalShort)
+                            if(datum.GetType() != Channel_t::Type_t::PedestalShort)
                                 continue;
 
                             b_Eshort += datum.Value;

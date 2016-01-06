@@ -47,8 +47,8 @@ void DeltaPlusPhysics::ProcessEvent(const Event &event)
 
     }
 
-    for( auto& track : event.Reconstructed.Candidates ) {
-        prompt["pid"]->Fill(track->ClusterEnergy, track->VetoEnergy);
+    for(const auto& cand : event.Reconstructed.Candidates ) {
+        prompt["pid"]->Fill(cand->CaloEnergy, cand->VetoEnergy);
     }
 
     for(const auto& taggerhit : event.Reconstructed.TaggerHits) {

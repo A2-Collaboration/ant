@@ -17,11 +17,11 @@ using namespace ant::analysis::data;
 using namespace ant::analysis::utils;
 
 bool dEEtest(const CandidatePtr& cand, const std::shared_ptr<TCutG>& cut) {
-    return cut->IsInside(cand->ClusterEnergy, cand->VetoEnergy);
+    return cut->IsInside(cand->CaloEnergy, cand->VetoEnergy);
 }
 
 bool toftest(const CandidatePtr& cand, const std::shared_ptr<TCutG>& cut) {
-    return cut->IsInside(cand->ClusterEnergy, cand->Time);
+    return cut->IsInside(cand->CaloEnergy, cand->Time);
 }
 
 void test_makeTCutG();
@@ -167,23 +167,28 @@ testdata::testdata()
     dEE_proton = root::makeTCutG("proton",{{50,4},{300,4},{51,16}});
     tofcut = root::makeTCutG("tof",{{0,5},{400,5},{400,15},{0,15}});
 
+    auto make_candidate = [] (double caloE, double time, double vetoE) {
+        return std::make_shared<TCandidate>(Detector_t::Type_t::CB,
+                                            caloE, 0, 0, time, 0, vetoE, 0, std::vector<TCluster>{});
+    };
+
     //create particles and make sure they fulfill their respective cuts
-    gamma     = std::make_shared<Candidate>(100,0,0, 0,10,Detector_t::Type_t::CB, 0, 0);
+    gamma     = make_candidate(100, 0, 0);
     assert(!dEEtest(gamma, dEE_proton));
     assert(!dEEtest(gamma, dEE_electron));
     assert(!toftest(gamma, tofcut));
 
-    neutron   = std::make_shared<Candidate>(100,0,0,10, 2,Detector_t::Type_t::CB, 0, 0);
+    neutron   = make_candidate(100, 10, 0);
     assert(toftest(neutron,tofcut));
     assert(!dEEtest(neutron,dEE_proton));
     assert(!dEEtest(neutron,dEE_electron));
 
-    proton    = std::make_shared<Candidate>(100,0,0,10, 2,Detector_t::Type_t::CB,10,10);
+    proton    = make_candidate(100, 10, 10);
     assert(toftest(proton,tofcut));
     assert(dEEtest(proton,dEE_proton));
     assert(!dEEtest(proton,dEE_electron));
 
-    electron  = std::make_shared<Candidate>(100,0,0, 2, 2,Detector_t::Type_t::CB,2.1,10);
+    electron  = make_candidate(100, 2, 2.1);
     assert(!toftest(electron,tofcut));
     assert(!dEEtest(electron,dEE_proton));
     assert(dEEtest(electron,dEE_electron));

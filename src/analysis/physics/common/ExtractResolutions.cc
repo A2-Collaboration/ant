@@ -40,7 +40,7 @@ void physics::ExtractResolutions::ProcessEvent(const data::Event& event)
             const auto& mcp = mcparticles.front();
             const auto& rep = recparticles.front();
 
-            if(rep->Candidate && rep->Candidate->Detector == det) {
+            if(rep->Candidate && rep->Candidate->GetDetector() == det) {
                 const auto& c = rep->Candidate->FindCaloCluster();
                 if(c) {
 

@@ -146,11 +146,11 @@ void TriggerOverview::ProcessEvent(const Event &event)
     Multiplicity->Fill(trigger.ClusterMultiplicity);
     nErrorsEvent->Fill(trigger.Errors.size());
 
-    for(const Cluster& cluster : branch.AllClusters) {
-        if(cluster.Detector & Detector_t::Any_t::CB_Apparatus) {
-            for(const Cluster::Hit& hit : cluster.Hits) {
-                for(const Cluster::Hit::Datum datum : hit.Data) {
-                    if(datum.Type == Channel_t::Type_t::Integral) {
+    for(const TCluster& cluster : branch.AllClusters) {
+        if(cluster.GetDetectorType() == Detector_t::Type_t::CB) {
+            for(const TClusterHit& hit : cluster.Hits) {
+                for(const TClusterHitDatum datum : hit.Data) {
+                    if(datum.GetType() == Channel_t::Type_t::Integral) {
                         CBESum_perCh->Fill(trigger.CBEnergySum, hit.Channel);
                         E_perCh->Fill(datum.Value, hit.Channel);
                         break;

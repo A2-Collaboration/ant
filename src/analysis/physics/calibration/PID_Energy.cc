@@ -104,14 +104,14 @@ PID_Energy::PerChannel_t::PerChannel_t(SmartHistFactory HistFac)
 void PID_Energy::ProcessEvent(const Event& event)
 {
     // pedestals, best determined from clusters with energy information only
-    for(const Cluster& cluster : event.Reconstructed.AllClusters) {
-        if(!(cluster.Detector & Detector_t::Type_t::PID))
+    for(const TCluster& cluster : event.Reconstructed.AllClusters) {
+        if(cluster.GetDetectorType() != Detector_t::Type_t::PID)
             continue;
 
         // only consider one cluster PID hits
         if(cluster.Hits.size() != 1)
             continue;
-        const Cluster::Hit& pidhit = cluster.Hits.front();
+        const TClusterHit& pidhit = cluster.Hits.front();
 
         PerChannel_t& h = h_perChannel[pidhit.Channel];
 
@@ -120,12 +120,12 @@ void PID_Energy::ProcessEvent(const Event& event)
 
         unsigned nPedestals = 0;
         unsigned nTimings = 0;
-        for(const Cluster::Hit::Datum& datum : pidhit.Data) {
-            if(datum.Type == Channel_t::Type_t::Pedestal) {
+        for(const TClusterHitDatum& datum : pidhit.Data) {
+            if(datum.GetType() == Channel_t::Type_t::Pedestal) {
                 pedestal = datum.Value;
                 nPedestals++;
             }
-            if(datum.Type == Channel_t::Type_t::Timing) {
+            if(datum.GetType() == Channel_t::Type_t::Timing) {
                 timing = datum.Value;
                 nTimings++;
             }
@@ -156,15 +156,15 @@ void PID_Energy::ProcessEvent(const Event& event)
         // only candidates with one cluster in CB and one cluster in PID
         if(candidate->Clusters.size() != 2)
             continue;
-        const bool cb_and_pid = candidate->Detector & Detector_t::Type_t::CB &&
-                                candidate->Detector & Detector_t::Type_t::PID;
+        const bool cb_and_pid = candidate->GetDetector() & Detector_t::Type_t::CB &&
+                                candidate->GetDetector() & Detector_t::Type_t::PID;
         if(!cb_and_pid)
             continue;
 
         // search for PID cluster
         auto pid_cluster = candidate->FindFirstCluster(Detector_t::Type_t::PID);
 
-        h_bananas->Fill(candidate->ClusterEnergy,
+        h_bananas->Fill(candidate->CaloEnergy,
                         candidate->VetoEnergy,
                         pid_cluster->CentralElement);
 
@@ -172,15 +172,15 @@ void PID_Energy::ProcessEvent(const Event& event)
         PerChannel_t& h = h_perChannel[pid_cluster->CentralElement];
 
         // fill the banana
-        h.Banana->Fill(candidate->ClusterEnergy,
+        h.Banana->Fill(candidate->CaloEnergy,
                        candidate->VetoEnergy);
 
 
         double pedestal = numeric_limits<double>::quiet_NaN();
         //double timing = numeric_limits<double>::quiet_NaN();
-        for(const Cluster::Hit& pidhit : pid_cluster->Hits) {
-            for(const Cluster::Hit::Datum& datum : pidhit.Data) {
-                if(datum.Type == Channel_t::Type_t::Pedestal) {
+        for(const TClusterHit& pidhit : pid_cluster->Hits) {
+            for(const TClusterHitDatum& datum : pidhit.Data) {
+                if(datum.GetType() == Channel_t::Type_t::Pedestal) {
                     pedestal = datum.Value;
                 }
                 //                if(datum.Type == Channel_t::Type_t::Timing) {
@@ -189,7 +189,7 @@ void PID_Energy::ProcessEvent(const Event& event)
             }
         }
 
-        h.BananaRaw->Fill(candidate->ClusterEnergy, pedestal);
+        h.BananaRaw->Fill(candidate->CaloEnergy, pedestal);
         //h.BananaTiming->Fill(candidate->ClusterEnergy(), candidate->VetoEnergy(), timing);
 
     }

@@ -56,7 +56,7 @@ ReconstructCheck::ReconstructCheck(const std::string& name, PhysOptPtr opts):
 Detector_t::Any_t GetCommonDetector(const CandidateList& cands) {
     Detector_t::Any_t common_detetctor = Detector_t::Any_t::None;
     for(const auto& cand : cands) {
-        common_detetctor |= cand->Detector;
+        common_detetctor |= cand->GetDetector();
     }
     return common_detetctor;
 }
@@ -93,15 +93,15 @@ void ReconstructCheck::ProcessEvent(const Event &event)
         b_tPhi   = std_ext::radian_to_degree(mctrue_particle->Phi());
 
         for(const auto& c : event.Reconstructed.Candidates) {
-            b_rE     = c->ClusterEnergy;
+            b_rE     = c->CaloEnergy;
             b_rTheta = std_ext::radian_to_degree(c->Theta);
             b_rPhi   = std_ext::radian_to_degree(c->Phi);
             b_rVeto  = c->VetoEnergy;
             b_rTime  = timesmear.GetTime(c);
             b_rSize  = c->ClusterSize;
-            if(c->Detector & Detector_t::Any_t::CB_Apparatus)
+            if(c->GetDetector() & Detector_t::Any_t::CB_Apparatus)
                 b_Cal    = 1;
-            else if(c->Detector & Detector_t::Any_t::TAPS_Apparatus)
+            else if(c->GetDetector() & Detector_t::Any_t::TAPS_Apparatus)
                 b_Cal    = 2;
             else
                 b_Cal    = 0;
@@ -251,7 +251,7 @@ void ReconstructCheck::histgroup::Finish()
     mult1_chargedPos->maphist->Divide(mult1_positions->maphist);
 }
 
-double angle(const data::Candidate& c1, const data::Candidate& c2) {
+double angle(const TCandidate& c1, const TCandidate& c2) {
     TVector3 v1(1,0,0);
     v1.SetTheta(c1.Theta);
     v1.SetPhi(c1.Phi);
@@ -266,7 +266,7 @@ double angle(const data::Candidate& c1, const data::Candidate& c2) {
 std::list<CandidatePtr> CandidatesByDetector(const Detector_t::Any_t& detector, const CandidateList& candidates) {
     std::list<CandidatePtr> cands;
     for(const auto& c : candidates) {
-        if(c->Detector & detector) {
+        if(c->GetDetector() & detector) {
             cands.emplace_back(c);
         }
     }
@@ -296,17 +296,17 @@ void ReconstructCheck::histgroup::Fill(const ParticlePtr& mctrue, const Candidat
             posCharged->Fill(mc_theta,mc_phi);
         }
 
-            cluserSize->Fill(c->ClusterEnergy, c->ClusterSize);
+            cluserSize->Fill(c->CaloEnergy, c->ClusterSize);
             cluserSize_true->Fill(mc_energy, c->ClusterSize);
-            dEE->Fill(c->ClusterEnergy, c->VetoEnergy);
+            dEE->Fill(c->CaloEnergy, c->VetoEnergy);
             dEE_true->Fill(mc_energy, c->VetoEnergy);
 
             if(c->VetoEnergy > 0.0)
                 ncharged++;
             ++n;
 
-        for(const Cluster& cl : c->Clusters) {
-            if(cl.flags.isChecked(Cluster::Flag::Split)) {
+        for(const TCluster& cl : c->Clusters) {
+            if(cl.HasFlag(TCluster::Flags_t::Split)) {
                 ++nsplit;
                 splitFlagPos->Fill(mc_theta, mc_phi);
 
@@ -315,8 +315,8 @@ void ReconstructCheck::histgroup::Fill(const ParticlePtr& mctrue, const Candidat
     }
 
     unsigned nunmatched_veto(0);
-    for(const Cluster& ic : all_clusters) {
-        if(ic.Detector & Detector_t::Any_t::Veto) {
+    for(const TCluster& ic : all_clusters) {
+        if(ic.GetDetectorType() & Detector_t::Any_t::Veto) {
             nunmatched_veto++;
         }
     }
@@ -335,10 +335,10 @@ void ReconstructCheck::histgroup::Fill(const ParticlePtr& mctrue, const Candidat
 
     if(cand.size()==1) {
         const auto& c = cand.at(0);
-        const auto rec = c->ClusterEnergy / mc_energy;
+        const auto rec = c->CaloEnergy / mc_energy;
         energy_recov->Fill(mc_theta, mc_phi, rec);
         mult1_positions->Fill(mc_theta,mc_phi);
-        energyinout->Fill(mc_energy,c->ClusterEnergy);
+        energyinout->Fill(mc_energy,c->CaloEnergy);
         thetainout->Fill(std_ext::radian_to_degree(mc_theta), std_ext::radian_to_degree(c->Theta - mc_theta));
         if(c->VetoEnergy>0.0) {
             mult1_chargedPos->Fill(mc_theta,mc_phi);
@@ -417,11 +417,11 @@ void ReconstructCheck::TAPSVetoMatch::Fill(const CandidateList& cands, const Clu
 {
     using namespace ant::std_ext;
 
-    auto clusterLoop = [this] (const Cluster* vCluster, const CandidateList& cands) {
-        if(vCluster && vCluster->Detector & Detector_t::Type_t::TAPSVeto) {
+    auto clusterLoop = [this] (const TCluster* vCluster, const CandidateList& cands) {
+        if(vCluster && vCluster->GetDetectorType() & Detector_t::Type_t::TAPSVeto) {
             for(const CandidatePtr& cCand : cands) {
                 const auto cCluster = cCand->FindCaloCluster();
-                if(cCluster && cCluster->Detector & Detector_t::Type_t::TAPS) {
+                if(cCluster && cCluster->GetDetectorType() == Detector_t::Type_t::TAPS) {
                     const auto dx = vCluster->Position.X() - cCluster->Position.X();
                     const auto dy = vCluster->Position.Y() - cCluster->Position.Y();
                     const auto d  = sqrt(sqr(dx)+sqr(dy));
@@ -437,7 +437,7 @@ void ReconstructCheck::TAPSVetoMatch::Fill(const CandidateList& cands, const Clu
         clusterLoop(vCluster, cands);
     }
 
-    for(const Cluster& iCluster : instane) {
+    for(const TCluster& iCluster : instane) {
         clusterLoop(addressof(iCluster), cands);
     }
 

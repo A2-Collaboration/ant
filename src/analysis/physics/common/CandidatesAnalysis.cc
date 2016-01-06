@@ -51,19 +51,19 @@ void CandidatesAnalysis::ProcessEvent(const Event &event)
 
     while(i!=candidates.end()) {
         const CandidatePtr& ci = *i;
-        energy->Fill((*i)->ClusterEnergy);
+        energy->Fill((*i)->CaloEnergy);
         theta->Fill((*i)->Theta*TMath::RadToDeg());
         phi->Fill((*i)->Phi*TMath::RadToDeg());
-        detectors->Fill(string(ci->Detector).c_str(),1);
+        detectors->Fill(string(ci->GetDetector()).c_str(),1);
 
-        if((*i)->ClusterEnergy>20.0) {
+        if((*i)->CaloEnergy>20.0) {
 
-            if(ci->Detector & Detector_t::Any_t::CB_Apparatus) {
-                cbdEE->Fill(ci->ClusterEnergy,ci->VetoEnergy);
-                cbtof->Fill(ci->Time, ci->ClusterEnergy);
-            } else if(ci->Detector & Detector_t::Any_t::TAPS_Apparatus) {
-                tapsdEE->Fill(ci->ClusterEnergy,ci->VetoEnergy);
-                tapstof->Fill(ci->Time, ci->ClusterEnergy);
+            if(ci->GetDetector() & Detector_t::Any_t::CB_Apparatus) {
+                cbdEE->Fill(ci->CaloEnergy,ci->VetoEnergy);
+                cbtof->Fill(ci->Time, ci->CaloEnergy);
+            } else if(ci->GetDetector() & Detector_t::Any_t::TAPS_Apparatus) {
+                tapsdEE->Fill(ci->CaloEnergy,ci->VetoEnergy);
+                tapstof->Fill(ci->Time, ci->CaloEnergy);
 
 
                 // extract short gate stuff
@@ -74,16 +74,16 @@ void CandidatesAnalysis::ProcessEvent(const Event &event)
 
                     psa_all_angles->Fill(std_ext::radian_to_degree(cluster->GetPSAAngle()), cluster->GetPSARadius());
 
-                    for(const Cluster::Hit& clusterhit : cluster->Hits) {
+                    for(const TClusterHit& clusterhit : cluster->Hits) {
 
                         if(clusterhit.Channel == cluster->CentralElement) {
                             double central_e = 0.0;
-                            for(const Cluster::Hit::Datum& datum : clusterhit.Data) {
+                            for(const TClusterHitDatum& datum : clusterhit.Data) {
 
-                                if(datum.Type == Channel_t::Type_t::Integral)
+                                if(datum.GetType() == Channel_t::Type_t::Integral)
                                     central_e = datum.Value;
 
-                                if(datum.Type == Channel_t::Type_t::IntegralShort) {
+                                if(datum.GetType() == Channel_t::Type_t::IntegralShort) {
 
                                     if(ci->VetoEnergy<0.5)
                                         psa->Fill(central_e, datum.Value);
@@ -100,7 +100,7 @@ void CandidatesAnalysis::ProcessEvent(const Event &event)
             CandidateList::const_iterator j = i;
             ++j;
             while(j!=candidates.end()) {
-                if((*i)->ClusterEnergy>20.0) {
+                if((*i)->CaloEnergy>20.0) {
                     const Particle b(ParticleTypeDatabase::Photon,*j);
                     const TLorentzVector s = a + b;
 

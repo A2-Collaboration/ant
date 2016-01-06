@@ -36,15 +36,15 @@ TAPS_ShortEnergy::TAPS_ShortEnergy(const string& name, analysis::PhysOptPtr opts
 void TAPS_ShortEnergy::ProcessEvent(const Event& event)
 {
     // pedestals
-    for(const Cluster& cluster : event.Reconstructed.AllClusters) {
-        if(!(cluster.Detector & Detector_t::Type_t::TAPS))
+    for(const TCluster& cluster : event.Reconstructed.AllClusters) {
+        if(!(cluster.GetDetectorType() == Detector_t::Type_t::TAPS))
             continue;
-        for(const Cluster::Hit& clusterhit : cluster.Hits) {
+        for(const TClusterHit& clusterhit : cluster.Hits) {
             /// \todo check for timing hit?
             /// \todo check for trigger pattern?
-            for(const Cluster::Hit::Datum& datum : clusterhit.Data) {
+            for(const TClusterHitDatum& datum : clusterhit.Data) {
 
-                if(datum.Type != Channel_t::Type_t::PedestalShort)
+                if(datum.GetType() != Channel_t::Type_t::PedestalShort)
                     continue;
                 h_pedestals->Fill(datum.Value, clusterhit.Channel);
 
@@ -57,17 +57,17 @@ void TAPS_ShortEnergy::ProcessEvent(const Event& event)
             const auto& cluster = c->FindCaloCluster();
 
             if(cluster)
-                for(const Cluster::Hit& clusterhit : cluster->Hits) {
+                for(const TClusterHit& clusterhit : cluster->Hits) {
 
                     if(clusterhit.Channel == cluster->CentralElement) {
                         double central_e = numeric_limits<double>::quiet_NaN();
                         double short_e = numeric_limits<double>::quiet_NaN();
-                        for(const Cluster::Hit::Datum& datum : clusterhit.Data) {
+                        for(const TClusterHitDatum& datum : clusterhit.Data) {
 
-                            if(datum.Type == Channel_t::Type_t::Integral)
+                            if(datum.GetType() == Channel_t::Type_t::Integral)
                                 central_e = datum.Value;
 
-                            if(datum.Type == Channel_t::Type_t::IntegralShort)
+                            if(datum.GetType() == Channel_t::Type_t::IntegralShort)
                                 short_e = datum.Value;
                         }
 

@@ -54,7 +54,7 @@ void ParticleIDCheck::ProcessEvent(const Event &event)
             if(phi_range.Contains(std_ext::radian_to_degree(candidate->Phi)) &&
                theta_range.Contains(std_ext::radian_to_degree(candidate->Theta))) {
                 const auto& h = std::get<2>(banana);
-                h->Fill(candidate->ClusterEnergy, candidate->VetoEnergy);
+                h->Fill(candidate->CaloEnergy, candidate->VetoEnergy);
             }
         }
     }

@@ -25,11 +25,11 @@ using namespace ant::analysis::utils;
 double KinFitter::EnergyResolution(const analysis::data::ParticlePtr& p) const
 {
     if(p->Candidate) {
-        if(p->Candidate->Detector & Detector_t::Type_t::CB) {
+        if(p->Candidate->GetDetector() & Detector_t::Type_t::CB) {
 
             return 1.07134e-02 * p->Ek();
 
-        } if(p->Candidate->Detector & Detector_t::Type_t::TAPS) {
+        } if(p->Candidate->GetDetector() & Detector_t::Type_t::TAPS) {
 
             return 3.5E-2 * p->Ek();
         }
@@ -49,11 +49,11 @@ double KinFitter::EnergyResolution(const analysis::data::ParticlePtr& p) const
 double KinFitter::ThetaResolution(const analysis::data::ParticlePtr& p) const
 {
     if(p->Candidate) {
-        if(p->Candidate->Detector & Detector_t::Type_t::CB) {
+        if(p->Candidate->GetDetector() & Detector_t::Type_t::CB) {
 
             return cb_sigma_theta.GetSigma(p->Candidate->FindCaloCluster()->CentralElement, p->Ek());
 
-        } if(p->Candidate->Detector & Detector_t::Type_t::TAPS) {   ///@todo check TAPS Theta resolution
+        } if(p->Candidate->GetDetector() & Detector_t::Type_t::TAPS) {   ///@todo check TAPS Theta resolution
              return degree_to_radian(2.5);
             //return taps_sigma_theta.GetSigma(p->Candidate->FindCaloCluster()->CentralElement, p->Ek());
         }
@@ -66,11 +66,11 @@ double KinFitter::ThetaResolution(const analysis::data::ParticlePtr& p) const
 double KinFitter::PhiResolution(const analysis::data::ParticlePtr& p) const
 {
     if(p->Candidate) {
-        if(p->Candidate->Detector & Detector_t::Type_t::CB) {
+        if(p->Candidate->GetDetector() & Detector_t::Type_t::CB) {
 
             return cb_sigma_phi.GetSigma(p->Candidate->FindCaloCluster()->CentralElement, p->Ek());
 
-        } if(p->Candidate->Detector & Detector_t::Type_t::TAPS) {   ///@todo check TAPS Theta resolution
+        } if(p->Candidate->GetDetector() & Detector_t::Type_t::TAPS) {   ///@todo check TAPS Theta resolution
             return p->Theta() / std::sin(p->Theta());
             //return taps_sigma_phi.GetSigma(p->Candidate->FindCaloCluster()->CentralElement, p->Ek());
         }

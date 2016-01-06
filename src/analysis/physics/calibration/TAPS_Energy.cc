@@ -58,14 +58,14 @@ void TAPS_Energy::ProcessEvent(const Event& event)
     const auto& cands = event.Reconstructed.Candidates;
 
     // pedestals
-    for(const Cluster& cluster : event.Reconstructed.AllClusters) {
-        if(!(cluster.Detector & Detector_t::Type_t::TAPS))
+    for(const TCluster& cluster : event.Reconstructed.AllClusters) {
+        if(cluster.GetDetectorType() != Detector_t::Type_t::TAPS)
             continue;
-        for(const Cluster::Hit& clusterhit : cluster.Hits) {
+        for(const TClusterHit& clusterhit : cluster.Hits) {
             /// \todo check for timing hit?
             /// \todo check for trigger pattern?
-            for(const Cluster::Hit::Datum& datum : clusterhit.Data) {
-                if(datum.Type != Channel_t::Type_t::Pedestal)
+            for(const TClusterHitDatum& datum : clusterhit.Data) {
+                if(datum.GetType() != Channel_t::Type_t::Pedestal)
                     continue;
                 h_pedestals->Fill(datum.Value, clusterhit.Channel);
             }
@@ -81,7 +81,7 @@ void TAPS_Energy::ProcessEvent(const Event& event)
 
             //require exactly 1 CB and 1 TAPS
             const auto CBTAPS = Detector_t::Type_t::CB | Detector_t::Type_t::TAPS;
-            const auto dets = (cand1->Detector & CBTAPS) ^ (cand2->Detector & CBTAPS);
+            const auto dets = (cand1->GetDetector() & CBTAPS) ^ (cand2->GetDetector() & CBTAPS);
 
             if(dets & CBTAPS) {
                 const Particle a(ParticleTypeDatabase::Photon,comb.at(0));
@@ -90,7 +90,7 @@ void TAPS_Energy::ProcessEvent(const Event& event)
 
 
                 // Find the one that was in TAPS
-                auto cand_taps = cand1->Detector & Detector_t::Type_t::TAPS ? cand1 : cand2;
+                auto cand_taps = cand1->GetDetector() & Detector_t::Type_t::TAPS ? cand1 : cand2;
                 auto cl_taps = cand_taps->FindCaloCluster();
                 if(cl_taps) {
                     const unsigned ch = cl_taps->CentralElement;
@@ -115,7 +115,7 @@ void TAPS_Energy::ProcessEvent(const Event& event)
 
         for(const CandidatePtr& cand : event.Reconstructed.Candidates)
         {
-            if((cand->Detector & Detector_t::Type_t::TAPS)
+            if((cand->GetDetector() & Detector_t::Type_t::TAPS)
                && cand->VetoEnergy < 1.0)
             {
                 auto taps_cluster = cand->FindCaloCluster();
@@ -124,7 +124,7 @@ void TAPS_Energy::ProcessEvent(const Event& event)
                 if(ring > 4 || fabs(cand->Time) < 2.5)
                     taps_candidates.emplace_back(move(cand));
             }
-            else if((cand->Detector & Detector_t::Type_t::CB)
+            else if((cand->GetDetector() & Detector_t::Type_t::CB)
                     && cand->VetoEnergy < 0.25)
             {
                 cb_candidates.emplace_back(move(cand));
@@ -153,7 +153,7 @@ void TAPS_Energy::ProcessEvent(const Event& event)
         const vector<unsigned> interesting_channels = {31, 0, 1, 2, 15};
         for(const CandidatePtr& cand : event.Reconstructed.Candidates) {
             // find interesting TAPS clusters
-            if(cand->Detector & Detector_t::Type_t::TAPS) {
+            if(cand->GetDetector() & Detector_t::Type_t::TAPS) {
                 auto taps_cluster = cand->FindCaloCluster();
                 if(std_ext::contains(interesting_channels, taps_cluster->CentralElement)) {
                     cands_TAPS.Fill(*cand);
@@ -165,7 +165,7 @@ void TAPS_Energy::ProcessEvent(const Event& event)
         if(interesting_event) {
             bool CB_seen = false;
             for(const CandidatePtr& cand : event.Reconstructed.Candidates) {
-                if(cand->Detector & Detector_t::Type_t::CB)
+                if(cand->GetDetector() & Detector_t::Type_t::CB)
                 {
                     cands_CB.Fill(*cand);
                     CB_seen = true;
@@ -219,9 +219,9 @@ void TAPS_Energy::tree_data_t::Clear()
     Channel.resize(0);
 }
 
-void TAPS_Energy::tree_data_t::Fill(const Candidate& cand)
+void TAPS_Energy::tree_data_t::Fill(const TCandidate& cand)
 {
-    Ek.push_back(cand.ClusterEnergy);
+    Ek.push_back(cand.CaloEnergy);
     Theta.push_back(cand.Theta);
     Phi.push_back(cand.Phi);
     VetoE.push_back(cand.VetoEnergy);

@@ -232,7 +232,7 @@ void TestAPLCON::ProcessEvent(const Event &event)
 
 
     for(auto& cand : event.Reconstructed.Candidates) {
-        banana->Fill(cand->ClusterEnergy, cand->VetoEnergy);
+        banana->Fill(cand->CaloEnergy, cand->VetoEnergy);
     }
 
     for(auto& particle : event.Reconstructed.Particles.GetAll()) {

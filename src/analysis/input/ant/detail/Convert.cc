@@ -28,13 +28,13 @@ void Copy(const Cont1& from, Cont2& to) {
     }
 }
 
-Event Converter::Convert(const TEvent &event)
+Event Converter::Convert(const TEvent& event)
 {
     Event antevent;
 
     Copy(event.Candidates,  antevent.Reconstructed.Candidates);
     Copy(event.Tagger.Hits, antevent.Reconstructed.TaggerHits);
-    Copy(event.AllClusters, antevent.Reconstructed.AllClusters);
+    antevent.Reconstructed.AllClusters = event.AllClusters;
 
     // calcuclate some trigger stuff
 
@@ -60,80 +60,53 @@ Event Converter::Convert(const TEvent &event)
 
 CandidatePtr Converter::Convert(const TCandidate& candidate)
 {
-    std::shared_ptr<Candidate> antCandidate = make_shared<Candidate>(
-                        candidate.CaloEnergy,
-                        candidate.Theta,
-                        candidate.Phi,
-                        candidate.Time,
-                        0,
-                        Detector_t::Any_t::None,
-                        candidate.VetoEnergy,
-                        candidate.TrackerEnergy
-                        );
-
-    auto det = Detector_t::Any_t::None;
-
-    for(const TCluster& cluster: candidate.Clusters) {
-
-        antCandidate->Clusters.emplace_back( Convert(cluster) );
-        const auto& antCluster = antCandidate->Clusters.back();
-
-        det |= antCluster.Detector;
-
-        if(cluster.GetDetectorType() == Detector_t::Type_t::CB || cluster.GetDetectorType() == Detector_t::Type_t::TAPS) {
-            antCandidate->ClusterSize = cluster.Hits.size();
-        }
-    }
-
-    antCandidate->Detector = det;
-
-    return antCandidate;
+    return std::make_shared<TCandidate>(candidate);
 }
 
 TaggerHit Converter::Convert(const TTaggerHit& taggerhit)
 {
     return TaggerHit(
-                taggerhit.Electrons.front().Key, /// @bug only first electron is treated
+                taggerhit.Electrons.front().Key, /// @bug only first tagger electron is considered
                 taggerhit.PhotonEnergy,
                 taggerhit.Time
                 );
 }
 
 
-Cluster Converter::Convert(const TCluster& cluster)
-{
+//Cluster Converter::Convert(const TCluster& cluster)
+//{
 
-    Cluster cl(
-                cluster.Energy,
-                0.0,
-                cluster.Time,
-                cluster.GetDetectorType(),
-                cluster.CentralElement,
-                cluster.Position
-                );
+//    Cluster cl(
+//                cluster.Energy,
+//                0.0,
+//                cluster.Time,
+//                cluster.GetDetectorType(),
+//                cluster.CentralElement,
+//                cluster.Position
+//                );
 
-    if(cluster.HasFlag(TCluster::Flags_t::Split)) cl.flags.Set(Cluster::Flag::Split);
-    if(cluster.HasFlag(TCluster::Flags_t::TouchesHole)) cl.flags.Set(Cluster::Flag::TouchesHole);
+//    if(cluster.HasFlag(TCluster::Flags_t::Split)) cl.flags.Set(Cluster::Flag::Split);
+//    if(cluster.HasFlag(TCluster::Flags_t::TouchesHole)) cl.flags.Set(Cluster::Flag::TouchesHole);
 
-    double eshort = 0.0;
-    for(const auto& hit : cluster.Hits) {
-       Cluster::Hit anthit;
-       anthit.Channel = hit.Channel;
-       for(const auto& datum : hit.Data) {
-           anthit.Data.emplace_back(static_cast<Channel_t::Type_t>(datum.Type), datum.Value);
+//    double eshort = 0.0;
+//    for(const auto& hit : cluster.Hits) {
+//       Cluster::Hit anthit;
+//       anthit.Channel = hit.Channel;
+//       for(const auto& datum : hit.Data) {
+//           anthit.Data.emplace_back(static_cast<Channel_t::Type_t>(datum.Type), datum.Value);
 
-           // sum up short energy
-           ///@todo implement short Energy in TCluster?
-           if(static_cast<Channel_t::Type_t>(datum.Type) == Channel_t::Type_t::IntegralShort) {
-               eshort += datum.Value;
-           }
+//           // sum up short energy
+//           ///@todo implement short Energy in TCluster?
+//           if(static_cast<Channel_t::Type_t>(datum.Type) == Channel_t::Type_t::IntegralShort) {
+//               eshort += datum.Value;
+//           }
 
-       }
-       cl.Hits.emplace_back(move(anthit));
-    }
+//       }
+//       cl.Hits.emplace_back(move(anthit));
+//    }
 
-    cl.ShortEnergy = eshort;
+//    cl.ShortEnergy = eshort;
 
-    return cl;
-}
+//    return cl;
+//}
 

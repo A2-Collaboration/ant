@@ -39,8 +39,8 @@ bool TestCut(const std::shared_ptr<TCutG>& cut, const double& x, const double& y
 
 const ParticleTypeDatabase::Type* BasicParticleID::Identify(const CandidatePtr& cand) const
 {
-    const bool hadronic =    TestCut(tof,  cand->ClusterEnergy, cand->Time)
-                  || TestCut(size, cand->ClusterEnergy, cand->ClusterSize);
+    const bool hadronic =    TestCut(tof,  cand->CaloEnergy, cand->Time)
+                  || TestCut(size, cand->CaloEnergy, cand->ClusterSize);
 
     const bool hadronic_enabled = (tof) || (size);
 
@@ -60,19 +60,19 @@ const ParticleTypeDatabase::Type* BasicParticleID::Identify(const CandidatePtr& 
 
         if(
            (hadronic_enabled && hadronic)
-           || (TestCut(dEE_proton, cand->ClusterEnergy, cand->VetoEnergy))
+           || (TestCut(dEE_proton, cand->CaloEnergy, cand->VetoEnergy))
            ) {
             return addressof(ParticleTypeDatabase::Proton);
         }
 
         if(
-           TestCut(dEE_pion, cand->ClusterEnergy, cand->VetoEnergy)
+           TestCut(dEE_pion, cand->CaloEnergy, cand->VetoEnergy)
            ) {
             return addressof(ParticleTypeDatabase::PiCharged);
         }
 
         if(
-           TestCut(dEE_electron, cand->ClusterEnergy, cand->VetoEnergy)
+           TestCut(dEE_electron, cand->CaloEnergy, cand->VetoEnergy)
            ) {
             return addressof(ParticleTypeDatabase::eCharged);
         }
@@ -119,9 +119,9 @@ CBTAPSBasicParticleID::~CBTAPSBasicParticleID()
 
 const ParticleTypeDatabase::Type* CBTAPSBasicParticleID::Identify(const CandidatePtr& cand) const
 {
-    if(cand->Detector & Detector_t::Any_t::CB_Apparatus) {
+    if(cand->GetDetector() & Detector_t::Any_t::CB_Apparatus) {
         return cb.Identify(cand);
-    } else if(cand->Detector & Detector_t::Any_t::TAPS_Apparatus) {
+    } else if(cand->GetDetector() & Detector_t::Any_t::TAPS_Apparatus) {
         return taps.Identify(cand);
     }
 

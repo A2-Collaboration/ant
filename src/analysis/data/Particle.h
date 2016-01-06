@@ -42,7 +42,7 @@ struct Particle : TLorentzVector, printable_traits {
     {}
 
     Particle(const ParticleTypeDatabase::Type& _type, const CandidatePtr& candidate):
-        Particle(_type, candidate->ClusterEnergy, candidate->Theta, candidate->Phi)
+        Particle(_type, candidate->CaloEnergy, candidate->Theta, candidate->Phi)
     {
         Candidate = candidate;
     }

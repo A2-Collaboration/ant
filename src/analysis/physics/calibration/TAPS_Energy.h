@@ -31,7 +31,7 @@ protected:
         std::vector<unsigned> Channel;
         void Setup(const std::string& prefix, TTree* tree);
         void Clear();
-        void Fill(const data::Candidate& cand);
+        void Fill(const TCandidate& cand);
     };
 
     TTree* cands_tree = nullptr;

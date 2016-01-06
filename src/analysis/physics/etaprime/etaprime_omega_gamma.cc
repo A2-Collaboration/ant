@@ -279,7 +279,7 @@ void EtapOmegaG::ProcessSig(const data::ParticleTree_t& particletree,
     steps = h.Steps;
     steps->Fill("Seen",1);
 
-    if(!(proton->Candidate->Detector & Detector_t::Type_t::TAPS))
+    if(!(proton->Candidate->GetDetector() & Detector_t::Type_t::TAPS))
         return;
     steps->Fill("p in TAPS", 1);
 
@@ -503,7 +503,7 @@ void EtapOmegaG::ProcessRef(const data::ParticleTree_t& particletree,
     steps = h.Steps;
     steps->Fill("Seen",1);
 
-    if(!(proton->Candidate->Detector & Detector_t::Type_t::TAPS))
+    if(!(proton->Candidate->GetDetector() & Detector_t::Type_t::TAPS))
         return;
     steps->Fill("p in TAPS", 1);
 

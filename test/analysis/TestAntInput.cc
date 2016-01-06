@@ -23,7 +23,7 @@ void dotest() {
     //======= Candidate 1 =============
 
     event->Candidates.push_back(
-          TCandidate(Detector_t::Type_t::CB | Detector_t::Type_t::PID, 200,2,2,1,0,0,0,{})
+          TCandidate(Detector_t::Type_t::CB | Detector_t::Type_t::PID, 200,2,2,1,2,0,0,{})
           );
 
     event->Candidates.back().Clusters.push_back(
@@ -78,8 +78,8 @@ void dotest() {
     REQUIRE(cand.at(0)->ClusterSize==2);
     REQUIRE(cand.at(1)->ClusterSize==0);
 
-    REQUIRE(cand.at(0)->Detector==(Detector_t::Type_t::CB | Detector_t::Type_t::PID));
-    REQUIRE(cand.at(1)->Detector==(Detector_t::Type_t::TAPS | Detector_t::Type_t::TAPSVeto));
+    REQUIRE(cand.at(0)->GetDetector()==(Detector_t::Type_t::CB | Detector_t::Type_t::PID));
+    REQUIRE(cand.at(1)->GetDetector()==(Detector_t::Type_t::TAPS | Detector_t::Type_t::TAPSVeto));
 
 }
 

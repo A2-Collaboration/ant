@@ -86,18 +86,19 @@ clustersize_t GoatReader::MapClusterSize(const int& size) {
 void GoatReader::CopyTracks(Event& event)
 {
     for(Int_t i=0; i< tracks.GetNTracks(); ++i) {
-
         event.Reconstructed.Candidates.emplace_back(
-                    CandidatePtr( new Candidate(
-                                  tracks.GetClusterEnergy(i),
-                                  tracks.GetTheta(i),
-                                  tracks.GetPhi(i),
-                                  tracks.GetTime(i),
-                                  MapClusterSize(tracks.GetClusterSize(i)),
-                                  IntToDetector_t(tracks.GetDetectors(i)),
-                                  tracks.GetVetoEnergy(i),
-                                  tracks.GetMWPC0Energy(i)+tracks.GetMWPC1Energy(i)
-                                  )));
+                    make_shared<TCandidate>(
+                        IntToDetector_t(tracks.GetDetectors(i)),
+                        tracks.GetClusterEnergy(i),
+                        tracks.GetTheta(i),
+                        tracks.GetPhi(i),
+                        tracks.GetTime(i),
+                        MapClusterSize(tracks.GetClusterSize(i)),
+                        tracks.GetVetoEnergy(i),
+                        tracks.GetMWPC0Energy(i)+tracks.GetMWPC1Energy(i),
+                        std::vector<TCluster>{} // GoAT does not provide clusters
+                        )
+                    );
     }
 }
 

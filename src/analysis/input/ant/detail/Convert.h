@@ -35,7 +35,7 @@ struct Converter {
 
     static data::TaggerHit Convert(const TTaggerHit& taggerhit);
 
-    static data::Cluster Convert(const TCluster& cluster);
+    //static data::Cluster Convert(const TCluster& cluster);
 
 };
 

@@ -45,18 +45,18 @@ CB_TimeWalk::CB_TimeWalk(const string& name, analysis::PhysOptPtr opts) :
 void CB_TimeWalk::ProcessEvent(const analysis::data::Event& event)
 {
     for(const auto& cand: event.Reconstructed.Candidates) {
-        for(const Cluster& cluster: cand->Clusters) {
-            if(cluster.Detector != Detector_t::Type_t::CB)
+        for(const TCluster& cluster: cand->Clusters) {
+            if(cluster.GetDetectorType() != Detector_t::Type_t::CB)
                 continue;
-            for(const Cluster::Hit& hit : cluster.Hits) {
+            for(const TClusterHit& hit : cluster.Hits) {
                 // found the hit of the central element
                 // now search for its timing information
                 double time = numeric_limits<double>::quiet_NaN();
                 double energy = numeric_limits<double>::quiet_NaN();
-                for(const Cluster::Hit::Datum& d : hit.Data) {
-                    if(d.Type == Channel_t::Type_t::Timing)
+                for(const TClusterHitDatum& d : hit.Data) {
+                    if(d.GetType() == Channel_t::Type_t::Timing)
                         time = d.Value;
-                    if(d.Type == Channel_t::Type_t::Integral)
+                    if(d.GetType() == Channel_t::Type_t::Integral)
                         energy = d.Value;
                 }
                 h_timewalk->Fill(energy, time, hit.Channel);

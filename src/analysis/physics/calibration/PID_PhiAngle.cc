@@ -29,7 +29,7 @@ void PID_PhiAngle::ProcessEvent(const Event& event)
     // ignore the matched candidates, since this is what
     // we want to calibrate
 
-    const Cluster* cluster_pid = nullptr;
+    const TCluster* cluster_pid = nullptr;
     double phi_cb = numeric_limits<double>::quiet_NaN();
 
     for(const auto& cand : cands) {
@@ -57,8 +57,8 @@ void PID_PhiAngle::ProcessEvent(const Event& event)
     }
 
     /// \todo search all clusters, leave candidates alone
-    for(const Cluster& cl : event.Reconstructed.AllClusters) {
-        if(cl.Detector != Detector_t::Type_t::PID)
+    for(const TCluster& cl : event.Reconstructed.AllClusters) {
+        if(cl.GetDetectorType() != Detector_t::Type_t::PID)
             continue;
         if(!isfinite(cl.Energy) || !isfinite(cl.Time))
             continue;

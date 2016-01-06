@@ -47,7 +47,7 @@ void Time::ProcessEvent(const Event& event)
 
     for(const auto& cand: event.Reconstructed.Candidates) {
         for(const auto& cluster: cand->Clusters) {
-            if(cluster.Detector != DetectorType)
+            if(cluster.GetDetectorType() != DetectorType)
                 continue;
             hTime->Fill(cluster.Time,cluster.CentralElement);
             for(const auto& taggerhit : event.Reconstructed.TaggerHits) {
