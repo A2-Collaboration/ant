@@ -16,11 +16,11 @@ using namespace ant;
 using namespace ant::analysis::data;
 using namespace ant::analysis::utils;
 
-bool dEEtest(const std::shared_ptr<Candidate>& cand, const std::shared_ptr<TCutG>& cut) {
+bool dEEtest(const CandidatePtr& cand, const std::shared_ptr<TCutG>& cut) {
     return cut->IsInside(cand->ClusterEnergy, cand->VetoEnergy);
 }
 
-bool toftest(const std::shared_ptr<Candidate>& cand, const std::shared_ptr<TCutG>& cut) {
+bool toftest(const CandidatePtr& cand, const std::shared_ptr<TCutG>& cut) {
     return cut->IsInside(cand->ClusterEnergy, cand->Time);
 }
 
@@ -45,10 +45,10 @@ struct testdata {
     std::shared_ptr<TCutG> dEE_proton;
     std::shared_ptr<TCutG> tofcut;
 
-    std::shared_ptr<Candidate> gamma;
-    std::shared_ptr<Candidate> neutron;
-    std::shared_ptr<Candidate> proton;
-    std::shared_ptr<Candidate> electron;
+    CandidatePtr gamma;
+    CandidatePtr neutron;
+    CandidatePtr proton;
+    CandidatePtr electron;
 };
 
 const testdata data;

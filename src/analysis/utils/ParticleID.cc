@@ -18,7 +18,7 @@ using namespace ant::analysis::utils;
 using namespace ant::analysis::data;
 
 
-const ParticleTypeDatabase::Type* SimpleParticleID::Identify(const shared_ptr<Candidate>& cand) const
+const ParticleTypeDatabase::Type* SimpleParticleID::Identify(const CandidatePtr& cand) const
 {
     if(cand->VetoEnergy>0.25)
         return addressof(ParticleTypeDatabase::Proton);
@@ -37,7 +37,7 @@ bool TestCut(const std::shared_ptr<TCutG>& cut, const double& x, const double& y
 
 
 
-const ParticleTypeDatabase::Type* BasicParticleID::Identify(const std::shared_ptr<Candidate>& cand) const
+const ParticleTypeDatabase::Type* BasicParticleID::Identify(const CandidatePtr& cand) const
 {
     const bool hadronic =    TestCut(tof,  cand->ClusterEnergy, cand->Time)
                   || TestCut(size, cand->ClusterEnergy, cand->ClusterSize);
@@ -81,7 +81,7 @@ const ParticleTypeDatabase::Type* BasicParticleID::Identify(const std::shared_pt
     return nullptr;
 }
 
-std::shared_ptr<Particle> ParticleID::Process(const std::shared_ptr<Candidate>& cand) const
+std::shared_ptr<Particle> ParticleID::Process(const CandidatePtr& cand) const
 {
     auto type = Identify(cand);
     if(type !=nullptr) {
@@ -117,7 +117,7 @@ CBTAPSBasicParticleID::~CBTAPSBasicParticleID()
 
 }
 
-const ParticleTypeDatabase::Type* CBTAPSBasicParticleID::Identify(const std::shared_ptr<data::Candidate>& cand) const
+const ParticleTypeDatabase::Type* CBTAPSBasicParticleID::Identify(const CandidatePtr& cand) const
 {
     if(cand->Detector & Detector_t::Any_t::CB) {
         return cb.Identify(cand);

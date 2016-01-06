@@ -1,5 +1,8 @@
 #pragma once
 
+#include "analysis/data/Candidate.h"
+#include "analysis/data/Particle.h"
+
 #include "base/ParticleType.h"
 
 #include <memory>
@@ -11,10 +14,6 @@ namespace ant {
 class WrapTFile;
 namespace analysis {
 
-namespace data {
-    struct Candidate;
-    struct Particle;
-}
 
 namespace utils {
 
@@ -22,9 +21,9 @@ class ParticleID {
 public:
     virtual ~ParticleID() {}
 
-    virtual const ParticleTypeDatabase::Type* Identify(const std::shared_ptr<data::Candidate>& cand) const =0;
+    virtual const ParticleTypeDatabase::Type* Identify(const data::CandidatePtr& cand) const =0;
 
-    virtual std::shared_ptr<ant::analysis::data::Particle> Process(const std::shared_ptr<data::Candidate>& cand) const;
+    virtual data::ParticlePtr Process(const data::CandidatePtr& cand) const;
 };
 
 
@@ -33,7 +32,7 @@ public:
     SimpleParticleID() {}
     virtual ~SimpleParticleID() {}
 
-    virtual const ParticleTypeDatabase::Type* Identify(const std::shared_ptr<data::Candidate>& cand) const override;
+    virtual const ParticleTypeDatabase::Type* Identify(const data::CandidatePtr& cand) const override;
 };
 
 
@@ -51,7 +50,7 @@ public:
 
     std::shared_ptr<TCutG> size;
 
-    virtual const ParticleTypeDatabase::Type* Identify(const std::shared_ptr<data::Candidate>& cand) const override;
+    virtual const ParticleTypeDatabase::Type* Identify(const data::CandidatePtr& cand) const override;
 };
 
 class CBTAPSBasicParticleID: public ParticleID {
@@ -64,7 +63,7 @@ public:
     CBTAPSBasicParticleID(const std::string& pidcutsdir);
     virtual ~CBTAPSBasicParticleID();
 
-    virtual const ParticleTypeDatabase::Type* Identify(const std::shared_ptr<data::Candidate>& cand) const override;
+    virtual const ParticleTypeDatabase::Type* Identify(const data::CandidatePtr& cand) const override;
 };
 
 }

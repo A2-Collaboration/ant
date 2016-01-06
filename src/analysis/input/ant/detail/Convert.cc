@@ -58,7 +58,7 @@ Event Converter::Convert(const TEvent &event)
 }
 
 
-shared_ptr<Candidate> Converter::Convert(const TCandidate &candidate)
+CandidatePtr Converter::Convert(const TCandidate& candidate)
 {
     std::shared_ptr<Candidate> antCandidate = make_shared<Candidate>(
                         candidate.Energy,

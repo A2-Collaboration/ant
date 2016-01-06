@@ -1,5 +1,7 @@
 #pragma once
 
+#include "analysis/data/Candidate.h"
+
 #include <memory>
 
 namespace ant {
@@ -14,7 +16,6 @@ namespace analysis {
 namespace data {
     struct Cluster;
     struct Event;
-    struct Candidate;
     struct TaggerHit;
 }
 
@@ -30,7 +31,7 @@ struct Converter {
 
     static data::Event Convert(const TEvent& event);
 
-    static std::shared_ptr<data::Candidate> Convert(const TCandidate& candidate);
+    static data::CandidatePtr Convert(const TCandidate& candidate);
 
     static data::TaggerHit Convert(const TTaggerHit& taggerhit);
 
