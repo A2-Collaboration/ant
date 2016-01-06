@@ -61,6 +61,10 @@ set(SRCS
   detail/tclap/ZshCompletionOutput.h
   detail/tclap/ValuesConstraintExtra.h
   TF1Ext.h
+  math_functions/Faddeeva.cc
+  math_functions/Faddeeva.h
+  math_functions/voigtian.h
+  math_functions/voigtian.cc
 )
 
 set_source_files_properties(detail/format.cc
