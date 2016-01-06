@@ -83,7 +83,10 @@ struct TCandidate
     }
 
     virtual std::ostream& Print( std::ostream& s) const override {
-        return s << "TCandidate: " << Clusters.size() << " clusters, CaloEnergy=" << CaloEnergy << " Theta=" << Theta <<", Phi=" << Phi << " VetoEnergy=" << VetoEnergy << " TrackerEnergy=" << TrackerEnergy;
+        return s << "TCandidate: " << Clusters.size() << " clusters, CaloEnergy=" << CaloEnergy
+                 << " Theta=" << Theta <<", Phi=" << Phi
+                 << " ClusterSize=" << ClusterSize << " Time=" << Time
+                 << " VetoEnergy=" << VetoEnergy << " TrackerEnergy=" << TrackerEnergy;
     }
 
 
