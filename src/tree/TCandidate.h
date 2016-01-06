@@ -2,10 +2,14 @@
 
 #include "TDataRecord.h"
 #include "TCluster.h"
+
+
 #include <TVector3.h>
+
 #include <vector>
 
 #ifndef __CINT__
+#include "base/Detector_t.h"
 #include <iomanip>
 #include <sstream>
 #endif
@@ -14,14 +18,17 @@ namespace ant {
 
 #ifndef __CINT__
 struct TCandidate: ant::printable_traits
-        #else
+#else
 struct TCandidate
-        #endif
+#endif
 {
-    double Time;
-    double Energy;
+    std::uint64_t Detector;
+    double CaloEnergy;
     double Theta;
     double Phi;
+    double Time;
+    std::uint16_t ClusterSize;
+
     double VetoEnergy;
     double TrackerEnergy;
 
@@ -29,18 +36,22 @@ struct TCandidate
 
 #ifndef __CINT__
     TCandidate(
-            double E,
-            double t,
+            Detector_t::Any_t detector,
+            double caloE,
             double theta,
             double phi,
-            const std::vector<TCluster>& clusters = {},
-            double vetoE = 0.0,
-            double trackerE = 0.0
-                              ) :
-        Energy(E),
-        Time(t),
+            double time,
+            unsigned clusterSize,
+            double vetoE,
+            double trackerE,
+            const std::vector<TCluster>& clusters
+            ) :
+        Detector(detector.bitfield),
+        CaloEnergy(caloE),
         Theta(theta),
         Phi(phi),
+        Time(time),
+        ClusterSize(clusterSize),
         VetoEnergy(vetoE),
         TrackerEnergy(trackerE),
         Clusters(clusters)
@@ -48,7 +59,7 @@ struct TCandidate
 
 
     virtual std::ostream& Print( std::ostream& s) const override {
-        return s << "TCandidate: " << Clusters.size() << " clusters, Energy=" << Energy << " Theta=" << Theta <<", Phi=" << Phi << " VetoEnergy=" << VetoEnergy << " TrackerEnergy=" << TrackerEnergy;
+        return s << "TCandidate: " << Clusters.size() << " clusters, CaloEnergy=" << CaloEnergy << " Theta=" << Theta <<", Phi=" << Phi << " VetoEnergy=" << VetoEnergy << " TrackerEnergy=" << TrackerEnergy;
     }
 #endif
 

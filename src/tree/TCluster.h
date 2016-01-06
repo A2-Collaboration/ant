@@ -38,9 +38,9 @@ struct TClusterHitDatum
 
 #ifndef __CINT__
 struct TClusterHit: public ant::printable_traits
-        #else
+#else
 struct TClusterHit
-        #endif
+#endif
 {
     std::uint32_t Channel;
     std::vector<TClusterHitDatum> Data;
@@ -74,9 +74,9 @@ struct TClusterHit
 
 #ifndef __CINT__
 struct TCluster: public ant::printable_traits
-        #else
+#else
 struct TCluster
-        #endif
+#endif
 {
 
     TVector3 Position;

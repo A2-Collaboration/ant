@@ -18,55 +18,55 @@ TEST_CASE("AntInput", "[analysis]") {
 
 void dotest() {
 
-    ant::TEvent* event = new ant::TEvent();
+    TEvent* event = new TEvent();
 
     //======= Candidate 1 =============
 
     event->Candidates.push_back(
-          ant::TCandidate(200,1,2,2,{})
+          TCandidate(Detector_t::Type_t::CB | Detector_t::Type_t::PID, 200,2,2,1,0,0,0,{})
           );
 
     event->Candidates.back().Clusters.push_back(
-          ant::TCluster(TVector3(25,0,0), 270, -260, ant::Detector_t::Type_t::CB,0)
+          TCluster(TVector3(25,0,0), 270, -260, Detector_t::Type_t::CB,0)
           );
 
 
     event->Candidates.back().Clusters.back().Hits.push_back(
-          ant::TClusterHit(110, {
-                             {ant::Channel_t::Type_t::Integral, 150}, // MeV
-                             {ant::Channel_t::Type_t::Timing, -290}   // ns
+          TClusterHit(110, {
+                             {Channel_t::Type_t::Integral, 150}, // MeV
+                             {Channel_t::Type_t::Timing, -290}   // ns
                            })
           );
 
     event->Candidates.back().Clusters.back().Hits.push_back(
-          ant::TClusterHit(220, {
-                             {ant::Channel_t::Type_t::Integral, 120}, // MeV
-                             {ant::Channel_t::Type_t::Timing, -280}   // ns
+          TClusterHit(220, {
+                             {Channel_t::Type_t::Integral, 120}, // MeV
+                             {Channel_t::Type_t::Timing, -280}   // ns
                            })
           );
 
     event->Candidates.back().Clusters.push_back(
-          ant::TCluster(TVector3(10,0,0), 5, -260, ant::Detector_t::Type_t::PID,0)
+          TCluster(TVector3(10,0,0), 5, -260, Detector_t::Type_t::PID,0)
           );
 
     event->Candidates.back().Clusters.back().Hits.push_back(
-          ant::TClusterHit(20, {{ant::Channel_t::Type_t::Integral, 4}})
+          TClusterHit(20, {{Channel_t::Type_t::Integral, 4}})
           );
 
     //======= Candidate 2 =============
     event->Candidates.push_back(
-          ant::TCandidate(300,0.5,2,3)
+                TCandidate(Detector_t::Type_t::TAPS | Detector_t::Type_t::TAPSVeto, 300,2,3,0.5,0,0,0,{})
           );
     event->Candidates.back().Clusters.push_back(
-          ant::TCluster(TVector3(25,10,0),300, -160, ant::Detector_t::Type_t::TAPS,0)
+          TCluster(TVector3(25,10,0),300, -160, Detector_t::Type_t::TAPS,0)
           );
     event->Candidates.back().Clusters.push_back(
-          ant::TCluster(TVector3(10,1,0),5,-150, ant::Detector_t::Type_t::TAPSVeto,0)
+          TCluster(TVector3(10,1,0),5,-150, Detector_t::Type_t::TAPSVeto,0)
           );
 
     cout << *event << endl;
 
-    auto antevent = ant::analysis::input::Converter::Convert(*event);
+    auto antevent = analysis::input::Converter::Convert(*event);
 
     cout << antevent << endl;
 

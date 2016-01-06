@@ -89,12 +89,15 @@ void CandidateBuilder::Build_PID_CB(std::map<Detector_t::Type_t, std::list<TClus
                 if(dphi < dphi_max ) { // match!
 
                     candidates.emplace_back(
+                                Detector_t::Type_t::CB | Detector_t::Type_t::PID,
                                 cb_cluster->Energy,
-                                cb_cluster->Time,
                                 cb_cluster->Position.Theta(),
                                 cb_cluster->Position.Phi(),
-                                std::vector<TCluster>{*cb_cluster, *pid_cluster},
-                                pid_cluster->Energy
+                                cb_cluster->Time,
+                                cb_cluster->Hits.size(),
+                                pid_cluster->Energy,
+                                numeric_limits<double>::quiet_NaN(), // no tracker information
+                                std::vector<TCluster>{*cb_cluster, *pid_cluster}
                                 );
                     all_clusters.emplace_back(move(*cb_cluster));
                     cb_cluster = cb_clusters.erase(cb_cluster);
@@ -156,12 +159,15 @@ void CandidateBuilder::Build_TAPS_Veto(std::map<Detector_t::Type_t, std::list<TC
 
             if( d.XYvector().Mod() < element_radius2 ) {
                 candidates.emplace_back(
+                            Detector_t::Type_t::TAPS | Detector_t::Type_t::TAPSVeto,
                             taps_cluster->Energy,
-                            taps_cluster->Time,
                             taps_cluster->Position.Theta(),
                             taps_cluster->Position.Phi(),
-                            std::vector<TCluster>{*taps_cluster, *veto_cluster},
-                            veto_cluster->Energy
+                            taps_cluster->Time,
+                            taps_cluster->Hits.size(),
+                            veto_cluster->Energy,
+                            numeric_limits<double>::quiet_NaN(), // no tracker information
+                            std::vector<TCluster>{*taps_cluster, *veto_cluster}
                             );
                 all_clusters.emplace_back(move(*taps_cluster));
                 taps_cluster = taps_clusters.erase(taps_cluster);
@@ -193,12 +199,15 @@ void CandidateBuilder::Catchall(std::map<Detector_t::Type_t, std::list<TCluster>
            (detector_type == Detector_t::Type_t::PID || detector_type == Detector_t::Type_t::TAPSVeto)) {
             for(auto& c : clusters) {
                 candidates.emplace_back(
-                            0,
-                            c.Time,
+                            detector_type,
+                            0, // no energy in calo
                             c.Position.Theta(),
                             c.Position.Phi(),
-                            std::vector<TCluster>{c},
-                            c.Energy
+                            c.Time,
+                            1, // cluster size
+                            c.Energy,
+                            numeric_limits<double>::quiet_NaN(), // no tracker information
+                            std::vector<TCluster>{c}
                             );
                 all_clusters.emplace_back(move(c));
             }
@@ -206,27 +215,34 @@ void CandidateBuilder::Catchall(std::map<Detector_t::Type_t, std::list<TCluster>
         } else if(detector_type == Detector_t::Type_t::CB || detector_type == Detector_t::Type_t::TAPS) {
             for(auto& c : clusters) {
                 candidates.emplace_back(
+                            detector_type,
                             c.Energy,
-                            c.Time,
                             c.Position.Theta(),
                             c.Position.Phi(),
-                            std::vector<TCluster>{c},
-                            0
+                            c.Time,
+                            c.Hits.size(),
+                            0, // no energy in Veto
+                            numeric_limits<double>::quiet_NaN(), // no tracker information
+                            std::vector<TCluster>{c}
                             );
                 all_clusters.emplace_back(move(c));
             }
             clusters.clear();
         } else if(detector_type == Detector_t::Type_t::MWPC0 || detector_type == Detector_t::Type_t::MWPC1
                   || detector_type == Detector_t::Type_t::Cherenkov) {
+            /// @todo Think about Cherenkov's role more closely, tracker energy looks wrong...
+            /// @todo Implement MWPC matching...
             for(auto& c : clusters) {
                 candidates.emplace_back(
-                            0,
-                            c.Time,
+                            detector_type,
+                            0,        // no energy in calo
                             c.Position.Theta(),
                             c.Position.Phi(),
-                            std::vector<TCluster>{c},
-                            0,
-                            c.Energy
+                            c.Time,
+                            1,        // cluster size
+                            0,        // no energy in veto
+                            c.Energy, // tracker energy (not meaningful for cherenkov clusters)
+                            std::vector<TCluster>{c}
                             );
                 all_clusters.emplace_back(move(c));
             }
