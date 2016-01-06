@@ -12,6 +12,7 @@
 #include <sstream>
 #include "base/root_printable.h"
 #include "base/Detector_t.h"
+#include "base/std_ext/math.h"
 #endif
 
 namespace ant {
@@ -78,13 +79,13 @@ struct TCluster: public ant::printable_traits
 struct TCluster
 #endif
 {
-
-    TVector3 Position;
     double Energy;
     double Time;
-    std::uint32_t Flags;
+    TVector3 Position;
     std::uint8_t DetectorType;
     std::uint32_t CentralElement;
+    std::uint32_t Flags;
+    double ShortEnergy;
 
     std::vector<TClusterHit> Hits;
 
@@ -97,13 +98,14 @@ struct TCluster
             const Detector_t::Type_t& type,
             const unsigned central,
             const std::vector<TClusterHit>& hits = {}
-                                                   ):
-        Position(pos),
+            ) :
         Energy(E),
         Time(t),
-        Flags(0),
+        Position(pos),
         DetectorType(static_cast<std::uint8_t>(type)),
         CentralElement(central),
+        Flags(0),
+        ShortEnergy(std_ext::NaN),
         Hits(hits)
     {}
 
@@ -112,7 +114,8 @@ struct TCluster
     }
 
     virtual std::ostream& Print( std::ostream& s) const override {
-        return s << "TCluster: " << Hits.size() << " hits @" << Position <<", Energy=" << Energy
+        return s << "TCluster: " << Hits.size() << " hits @" << Position
+                 << ", Energy=" << Energy << " ShortEnergy=" << ShortEnergy
                  << " Central Element=" << CentralElement
                  << " Detector=" << Detector_t::ToString(GetDetectorType());
     }
@@ -136,6 +139,14 @@ struct TCluster
         return (Flags & mask) != 0;
     }
 
+    double GetPSARadius() const {
+        using namespace ant::std_ext;
+        return std::sqrt(sqr(Energy) + sqr(ShortEnergy));
+
+    }
+    double GetPSAAngle() const {
+        return std::atan2(ShortEnergy, Energy);
+    }
 
 #endif
 
@@ -143,8 +154,8 @@ struct TCluster
         return std::isfinite(Energy) && std::isfinite(Time);
     }
 
-    TCluster(): Position(), Energy(0.0), Time(0.0), Flags(0), DetectorType(0), CentralElement(0) {}
-    virtual ~TCluster() {}
+    TCluster() : Energy(), Time(), Position(), DetectorType(), CentralElement(), Flags(), ShortEnergy() {}
+    virtual ~TCluster()  {}
     ClassDef(TCluster, ANT_UNPACKER_ROOT_VERSION)
 };
 
