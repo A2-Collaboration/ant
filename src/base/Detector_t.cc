@@ -11,7 +11,7 @@ const Detector_t::Any_t Detector_t::Any_t::TAPS(Type_t::TAPS | Type_t::TAPSVeto)
 const Detector_t::Any_t Detector_t::Any_t::Veto(Type_t::PID | Type_t::TAPSVeto);
 
 
-std::ostream&ant::Detector_t::Any_t::Print(std::ostream& stream) const  {
+std::ostream& ant::Detector_t::Any_t::Print(std::ostream& stream) const  {
     typename std::underlying_type<Type_t>::type i = 0;
     decltype(bitfield) temp  = 1;
     while(temp<=bitfield) {
@@ -28,7 +28,7 @@ std::ostream&ant::Detector_t::Any_t::Print(std::ostream& stream) const  {
 }
 
 
-const char*ant::Detector_t::ToString(const Type_t& type)
+const char* ant::Detector_t::ToString(const Type_t& type)
 {
     switch(type) {
     case Detector_t::Type_t::CB :
