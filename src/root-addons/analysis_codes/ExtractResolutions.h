@@ -22,6 +22,7 @@ public:
 
     static TF1* LogNormal();
     static TF1* SigmaFit();
+    static TF1* Voigtian();
 };
 
 #endif

@@ -18,6 +18,7 @@
 #include "TF1.h"
 #include <cmath>
 #include "analysis/plot/root_draw.h"
+#include "base/math_functions/voigtian.h"
 
 #include "analysis/utils/KinFitter.h"
 
@@ -95,6 +96,11 @@ TF1*ExtractResolutions::LogNormal()
 TF1*ExtractResolutions::SigmaFit()
 {
     return utils::KinFitter::angular_sigma::GetTF1();
+}
+
+TF1*ExtractResolutions::Voigtian()
+{
+    return ant::math::voigtian::GetTF1();
 }
 
 void ExtractResolutions::AnalyseThetaTAPS(TTree* tree) {
