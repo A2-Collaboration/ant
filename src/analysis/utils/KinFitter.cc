@@ -324,7 +324,11 @@ double KinFitter::angular_sigma::f_root(const double* x, const double* p) noexce
 
 TF1* KinFitter::angular_sigma::GetTF1(const std::string& name)
 {
-    return new TF1(name.c_str(), f_root, 0, 1600, 3);
+    auto f = new TF1(name.c_str(), f_root, 0, 1600, 3);
+    f->SetParName(0, "#alpha");
+    f->SetParName(1, "#beta");
+    f->SetParName(2, "Offset");
+    return f;
 }
 
 KinFitter::angular_sigma::~angular_sigma()
