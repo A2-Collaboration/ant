@@ -14,11 +14,11 @@ namespace ant {
 
 struct TEvent : TDataRecord
 {
-    typedef std::vector<ant::TCandidate> candidates_t;
-    std::vector<ant::TCandidate> Candidates;
+    typedef std::vector<TCandidate> candidates_t;
+    std::vector<TCandidate> Candidates;
     TTagger Tagger;
-    typedef std::vector<ant::TCluster> clusters_t;
-    std::vector<ant::TCluster> AllClusters;
+    typedef std::vector<TCluster> clusters_t;
+    std::vector<TCluster> AllClusters;
 
     void Clear() {
         Candidates.resize(0);
