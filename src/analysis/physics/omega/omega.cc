@@ -903,8 +903,8 @@ OmegaEtaG2::~OmegaEtaG2()
 
 void OmegaEtaG2::ShowResult()
 {
-    new TCanvas();
-    tree->Draw("kinfit_chi2>>(5000,0,50)");
+//    new TCanvas();
+//    tree->Draw("kinfit_chi2>>(5000,0,50)");
 }
 
 void OmegaEtaG2::mParticleVars::SetBranches(TTree* tree, const string& name)
