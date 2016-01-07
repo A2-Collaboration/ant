@@ -22,6 +22,8 @@ my $LOG_DIR = 'log';
 my $OUT_DIR = 'root';
 my $no_log = 0;
 my $no_test = 0;
+my $queue = 'batch';
+my $walltime = '3:00:00';
 
 # parse options
 Getopt::Long::Configure(qw(gnu_getopt));
@@ -32,7 +34,9 @@ GetOptions(
            'tag|t=s' => \$jobtag,
            'filelist=s' => \$filelist,
            'no_log' => \$no_log,
-           'no_test' => \$no_test
+           'no_test' => \$no_test,
+           'queue=s' => \$queue,
+           'walltime=s' => \$walltime
           ) or print_help();
 if ($help) {
   print_help();
@@ -263,7 +267,7 @@ sub create_submission {
   $qsub_cmd .= " -j oe -o '$logfile'";
 
   # misc stuff: batch quque, -V take over environment, walltime...
-  $qsub_cmd .= " -z -q batch -V -l ncpus=1 -l walltime=2:00:00";
+  $qsub_cmd .= " -z -q $queue -V -l ncpus=1 -l walltime=$walltime";
 
   return [$qsub_cmd, $ant_cmd];
 }
@@ -295,6 +299,8 @@ Options:
   --tag       Specify a custom job tag, default is Ant
   --filelist  Read from file instead of STDIN
   --no_log    Do not write submission into AntSubmit.log
+  --queue     Set job queue (default: 'batch')
+  --walltime  Set walltime (default: 3:00:00)
 __EOF
   exit 255;
 }
