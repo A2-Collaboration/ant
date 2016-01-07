@@ -54,8 +54,8 @@ double KinFitter::ThetaResolution(const analysis::data::ParticlePtr& p) const
             return cb_sigma_theta.GetSigma(p->Candidate->FindCaloCluster()->CentralElement, p->Ek());
 
         } if(p->Candidate->GetDetector() & Detector_t::Type_t::TAPS) {   ///@todo check TAPS Theta resolution
-             return degree_to_radian(2.5);
-            //return taps_sigma_theta.GetSigma(p->Candidate->FindCaloCluster()->CentralElement, p->Ek());
+             //return degree_to_radian(2.5);
+            return taps_sigma_theta.GetSigma(p->Candidate->FindCaloCluster()->CentralElement, p->Ek());
         }
     } else {
         return degree_to_radian(2.5);
@@ -71,8 +71,8 @@ double KinFitter::PhiResolution(const analysis::data::ParticlePtr& p) const
             return cb_sigma_phi.GetSigma(p->Candidate->FindCaloCluster()->CentralElement, p->Ek());
 
         } if(p->Candidate->GetDetector() & Detector_t::Type_t::TAPS) {   ///@todo check TAPS Theta resolution
-            return p->Theta() / std::sin(p->Theta());
-            //return taps_sigma_phi.GetSigma(p->Candidate->FindCaloCluster()->CentralElement, p->Ek());
+            //return p->Theta() / std::sin(p->Theta());
+            return taps_sigma_phi.GetSigma(p->Candidate->FindCaloCluster()->CentralElement, p->Ek());
         }
     } else {
         if(p->Theta() < degree_to_radian(20.0) ) {
@@ -270,11 +270,11 @@ void KinFitter::LoadSigmaData(const string& filename)
 
     const auto nTAPS = TAPS->GetNChannels();
 
-    cb_sigma_theta.Load(f, "cb_sigma_theta", int(nCB));
-    cb_sigma_phi.Load(  f, "cb_sigma_phi",   int(nCB));
+    cb_sigma_theta.Load(f, "CB_sigma_Theta", int(nCB));
+    cb_sigma_phi.Load(  f, "CB_sigma_Phi",   int(nCB));
 
-//    taps_sigma_theta.Load(f, "taps_sigma_theta", int(nTAPS));
-//    taps_sigma_phi.Load(  f, "taps_sigma_phi",   int(nTAPS));
+    taps_sigma_theta.Load(f, "TAPS_sigma_Theta", int(nTAPS));
+    taps_sigma_phi.Load(  f, "TAPS_sigma_Phi",   int(nTAPS));
 }
 
 
