@@ -22,6 +22,10 @@
 
 #include "analysis/utils/KinFitter.h"
 
+#include "analysis/plot/HistogramFactories.h"
+#include "base/std_ext/string.h"
+#include "base/WrapTFile.h"
+
 using namespace std;
 using namespace ant;
 using namespace ant::std_ext;
@@ -42,7 +46,7 @@ double LogNormalPDF(const double* X, const double* p) {
 
 void ExtractResolutions::AnalyseThetaCB(TTree* tree)
 {
-    Analyse(tree, 720, "Phi", "CB", BinSettings(16,0,1600), BinSettings(80,-.2,.2));
+    Analyse(tree, 720, "Theta", "CB", BinSettings(16,0,1600), BinSettings(80,-.2,.2));
 }
 
 void ExtractResolutions::AnalysePhiCB(TTree* tree)
@@ -111,9 +115,37 @@ void ExtractResolutions::AnalysePhiTAPS(TTree* tree) {
     Analyse(tree, 438, "Phi", "TAPS", BinSettings(16,0,1600), BinSettings(80,-.5,.5));
 }
 
+
+void ExtractResolutions::AnalyseGlobalPhi(TTree* tree, double range)
+{
+    new TCanvas();
+    auto h = Draw(tree, "Phi*TMath::RadToDeg()", "", 2*int(range)*10, -range, range);
+    h->SetXTitle("#Delta#phi [#circ]");
+    h->SetTitle("#Delta Phi, global");
+
+    h->Fit("gaus");
+}
+
+void ExtractResolutions::AnalyseGlobalTheta(TTree* tree, double range)
+{
+    new TCanvas();
+    auto h = Draw(tree, "Theta*TMath::RadToDeg()", "", 2*int(range)*10, -range, range);
+    h->SetXTitle("#Delta#theta [#circ]");
+    h->SetTitle("#Delta Theta, global");
+
+    h->Fit("gaus");
+}
+
+void SaveAsName(TNamed* obj) {
+    obj->SaveAs(Form("%s.root", obj->GetName()));
+}
+
 void Analyse(TTree* tree, const unsigned nElements, const string& branch, const string& detname, const BinSettings energy_bins, const BinSettings vbins)
 {
+
+
     const BinSettings xbins(nElements, 0, nElements);
+
 
     TCanvas* c = new TCanvas();
     auto h = Draw(tree, Form("%s:tE:Element", branch.c_str()), TCut(""), xbins, energy_bins, vbins);
@@ -134,10 +166,17 @@ void Analyse(TTree* tree, const unsigned nElements, const string& branch, const 
     c->cd();
 
 
-    TH1D* h_global_sigma = new TH1D(Form("%s_%s_global_sigma",    detname.c_str(), branch.c_str()), "Global #Delta #theta, taps",  int(nElements), 0, nElements);
-    TH1D* h_fit_p0       = new TH1D(Form("%s_%s_global_sigma_p0", detname.c_str(), branch.c_str()), "Fit #sigma #theta, p0, taps", int(nElements), 0, nElements);
-    TH1D* h_fit_p1       = new TH1D(Form("%s_%s_global_sigma_p1", detname.c_str(), branch.c_str()), "Fit #sigma #theta, p1, taps", int(nElements), 0, nElements);
-    TH1D* h_fit_p2       = new TH1D(Form("%s_%s_global_sigma_p2", detname.c_str(), branch.c_str()), "Fit #sigma #theta, p2, taps", int(nElements), 0, nElements);
+    TH1D* h_global_sigma = new TH1D(Form("%s_sigma_%s",    detname.c_str(), branch.c_str()), Form("Global #Delta #theta, %s",detname.c_str()),  int(nElements), 0, nElements);
+          h_global_sigma->SetXTitle("Element Number");
+
+    TH1D* h_fit_p0       = new TH1D(Form("%s_sigma_%s_p0", detname.c_str(), branch.c_str()), Form("Fit #sigma %s, %s, p0", detname.c_str(), branch.c_str()), int(nElements), 0, nElements);
+          h_fit_p0->SetXTitle("Element Number");
+
+    TH1D* h_fit_p1       = new TH1D(Form("%s_sigma_%s_p1", detname.c_str(), branch.c_str()), Form("Fit #sigma %s, %s, p1", detname.c_str(), branch.c_str()), int(nElements), 0, nElements);
+          h_fit_p1->SetXTitle("Element Number");
+
+    TH1D* h_fit_p2       = new TH1D(Form("%s_sigma_%s_p2", detname.c_str(), branch.c_str()), Form("Fit #sigma %s, %s, p2", detname.c_str(), branch.c_str()), int(nElements), 0, nElements);
+          h_fit_p2->SetXTitle("Element Number");
 
     for(int e=0; e<int(nElements); ++e) {
         h->GetXaxis()->SetRange(e,e+1);
@@ -218,6 +257,11 @@ void Analyse(TTree* tree, const unsigned nElements, const string& branch, const 
 
     h_p2->SetZTitle("p2");
     h_p2->SetElements(*h_fit_p2);
+
+    SaveAsName(h_global_sigma);
+    SaveAsName(h_fit_p0);
+    SaveAsName(h_fit_p1);
+    SaveAsName(h_fit_p2);
 
     canvas("Sigma "+branch+" "+detname)
             << drawoption("colz")
