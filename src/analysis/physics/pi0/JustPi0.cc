@@ -1,6 +1,7 @@
 #include "JustPi0.h"
 
 #include "utils/particle_tools.h"
+#include "utils/matcher.h"
 
 #include "expconfig/ExpConfig.h"
 
@@ -30,7 +31,7 @@ void JustPi0::ProcessEvent(const Event& event)
 {
     const auto& data = event.Reconstructed;
     for(auto& m : multiPi0)
-        m->ProcessData(data);
+        m->ProcessData(data, event.MCTrue.ParticleTree);
 }
 
 void JustPi0::ShowResult()
@@ -58,9 +59,10 @@ JustPi0::MultiPi0::MultiPi0(SmartHistFactory& histFac, unsigned nPi0) :
     promptrandom.AddRandomRange({-50,-5});
     promptrandom.AddRandomRange({  5,50});
 
-    steps = HistFac.makeTH1D("Steps","","#",BinSettings(10),"steps");
+    steps = HistFac.makeTH1D("Steps","","#",BinSettings(15),"steps");
 
     Proton_Coplanarity = HistFac.makeTH1D("p Coplanarity","#delta#phi / degree","",BinSettings(400,-180,180),"Proton_Coplanarity");
+    Proton_Angle_True = HistFac.makeTH1D("p Angle to true-matched Rec Proton","#delta#alpha / degree","",BinSettings(400,0,50),"Proton_Angle_True");
 
 
     h_missingmass.MakeHistograms(HistFac, "h_missingmass","Missing Mass",BinSettings(400,400, 1400),"MM / MeV","#");
@@ -86,9 +88,18 @@ JustPi0::MultiPi0::MultiPi0(SmartHistFactory& histFac, unsigned nPi0) :
     tree->Branch("Proton",addressof(Proton));
     tree->Branch("Photons",addressof(Photons));
 
+    if(multiplicity==1) {
+        directPi0 = ParticleTypeTreeDatabase::Get(ParticleTypeTreeDatabase::Channel::Direct1Pi0_2g);
+    }
+    else if(multiplicity==2) {
+        directPi0 = ParticleTypeTreeDatabase::Get(ParticleTypeTreeDatabase::Channel::Direct2Pi0_4g);
+    }
+    else if(multiplicity==3) {
+        directPi0 = ParticleTypeTreeDatabase::Get(ParticleTypeTreeDatabase::Channel::Direct3Pi0_6g);
+    }
 }
 
-void JustPi0::MultiPi0::ProcessData(const Event::Data& data)
+void JustPi0::MultiPi0::ProcessData(const Event::Data& data, const ParticleTree_t& ptree)
 {
     const auto nPhotons_expected = multiplicity*2;
 
@@ -141,6 +152,8 @@ void JustPi0::MultiPi0::ProcessData(const Event::Data& data)
             continue;
         const string copl_str = std_ext::formatter() << "Copl p in " << Proton_Copl_cut;
         steps->Fill(copl_str.c_str(),1);
+
+        // iterate over proton candidates
 
         for(const TaggerHit& taggerhit : data.TaggerHits) {
             steps->Fill("Seen taggerhits",1.0);
@@ -203,6 +216,32 @@ void JustPi0::MultiPi0::ProcessData(const Event::Data& data)
 
     if(isfinite(BestFitProbability)) {
         tree->Fill();
+
+        if(ptree && directPi0 &&
+           ptree->IsEqual(directPi0, utils::ParticleTools::MatchByParticleName)) {
+            // check if MCTrue matches the found proton
+            steps->Fill("Found DirectPi0", 1.0);
+            auto true_proton = utils::ParticleTools::FindParticle(ParticleTypeDatabase::Proton, ptree, 1);
+            const auto matched  = utils::match1to1(std::list<ParticlePtr>{true_proton},
+                                                   cands,
+                                                   [] (const ParticlePtr& p1, const CandidatePtr& p2) {
+                return p1->Angle(*p2);
+            }, {0.0, std_ext::degree_to_radian(15.0)});
+            auto rec_proton = utils::FindMatched(matched, true_proton);
+            if(rec_proton) {
+                steps->Fill("p matched", 1.0);
+                const auto angle = std_ext::radian_to_degree(TVector3(Proton).Angle(*rec_proton));
+                Proton_Angle_True->Fill(angle);
+                if(angle < 0.01)
+                    steps->Fill("p correct", 1.0);
+                else
+                    steps->Fill("p incorrect", 1.0);
+            }
+            else {
+                steps->Fill("p unmatched", 1.0);
+            }
+
+        }
     }
 }
 
@@ -216,6 +255,7 @@ void JustPi0::MultiPi0::ShowResult()
             << h_fitprobability.subtracted
             << IM_2g_byFit.subtracted
             << IM_2g_fitted.subtracted
+            << Proton_Angle_True
             << endc;
 }
 

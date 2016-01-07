@@ -3,6 +3,7 @@
 #include "physics/Physics.h"
 #include "plot/PromptRandomHist.h"
 #include "utils/KinFitter.h"
+#include "base/ParticleTypeTree.h"
 
 class TH1D;
 
@@ -16,12 +17,13 @@ protected:
     struct MultiPi0 {
         MultiPi0(SmartHistFactory& histFac, unsigned nPi0);
 
-        void ProcessData(const data::Event::Data& data);
+        void ProcessData(const data::Event::Data& data, const data::ParticleTree_t& ptree);
         void ShowResult();
 
     protected:
 
         const unsigned multiplicity;
+        ParticleTypeTree directPi0;
 
         utils::KinFitter fitter;
 
@@ -35,6 +37,7 @@ protected:
 
         TH1D* steps;
         TH1D* Proton_Coplanarity;
+        TH1D* Proton_Angle_True;
         PromptRandom::Switch promptrandom;
 
         PromptRandom::Hist1 h_missingmass;
