@@ -46,7 +46,7 @@ void physics::ExtractResolutions::ProcessEvent(const data::Event& event)
 
                     b_DE      = rep->Ek() - mcp->Ek();
                     b_DTheta  = rep->Theta() - mcp->Theta();
-                    b_DPhi    = rep->Phi() - mcp->Phi();
+                    b_DPhi    = TVector2::Phi_mpi_pi(rep->Phi() - mcp->Phi());
                     b_Element = c->CentralElement;
                     b_E       = mcp->Ek();
 
