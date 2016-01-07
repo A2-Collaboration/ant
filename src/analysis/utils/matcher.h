@@ -96,6 +96,15 @@ std::list< scored_match<typename List1::value_type, typename List2::value_type> 
 
     return scores;
 }
+
+template <typename T1, typename T2>
+T2 FindMatched(const std::list<utils::scored_match<T1,T2>>& l, const T1& f) {
+    for( const auto& i : l ) {
+        if( i.a == f) {
+            return i.b;
+        }
+    }
+    return T2();
 }
-}
-}
+
+}}} // namespace ant::analysis::utils

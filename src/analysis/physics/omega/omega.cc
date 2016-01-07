@@ -548,19 +548,6 @@ struct chi2_highscore_t {
 };
 
 
-//std::list< scored_match<typename List1::value_type, typename List2::value_type> >
-
-template <typename T>
-const T& FindMatched(const std::list<utils::scored_match<T,T>>& l, const T& f) {
-    for( const auto& i : l ) {
-        if( i.a == f) {
-            return i.b;
-        }
-    }
-    throw false;
-}
-
-
 double IM(const ParticlePtr& p1, const ParticlePtr& p2) {
     return (TLorentzVector(*p1)+TLorentzVector(*p2)).M();
 }
@@ -781,9 +768,9 @@ void OmegaEtaG2::Analyse(const Event::Data &data, const Event &event)
 
             if(matched.size() ==3) {
 
-                rec_photons[0] = FindMatched(matched, true_photons[0]);
-                rec_photons[1] = FindMatched(matched, true_photons[1]);
-                rec_photons[2] = FindMatched(matched, true_photons[2]);
+                rec_photons[0] = utils::FindMatched(matched, true_photons[0]);
+                rec_photons[1] = utils::FindMatched(matched, true_photons[1]);
+                rec_photons[2] = utils::FindMatched(matched, true_photons[2]);
 
                 assert(rec_photons[0]!=nullptr);
                 assert(rec_photons[1]!=nullptr);
