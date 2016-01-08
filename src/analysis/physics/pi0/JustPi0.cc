@@ -222,15 +222,27 @@ void JustPi0::MultiPi0::ProcessData(const Event::Data& data, const ParticleTree_
             // check if MCTrue matches the found proton
             steps->Fill("Found DirectPi0", 1.0);
             auto true_proton = utils::ParticleTools::FindParticle(ParticleTypeDatabase::Proton, ptree, 1);
-            const auto matched  = utils::match1to1(std::list<ParticlePtr>{true_proton},
-                                                   cands,
-                                                   [] (const ParticlePtr& p1, const CandidatePtr& p2) {
-                return p1->Angle(*p2);
-            }, {0.0, std_ext::degree_to_radian(15.0)});
-            auto rec_proton = utils::FindMatched(matched, true_proton);
-            if(rec_proton) {
+            auto true_photons = utils::ParticleTools::FindParticles(ParticleTypeDatabase::Photon, ptree);
+
+            auto mymatcher = [&cands] (const std::vector<ParticlePtr> true_particles) {
+                return utils::match1to1(true_particles,
+                                        cands,
+                                        [] (const ParticlePtr& p1, const CandidatePtr& p2) {
+                    return p1->Angle(*p2);
+                }, {0.0, std_ext::degree_to_radian(15.0)});
+            };
+
+            const auto match_protononly  = mymatcher({true_proton});
+            vector<ParticlePtr> true_all(true_photons);
+            true_all.push_back(true_proton);
+            const auto match_all = mymatcher(true_all);
+
+            auto rec_true_proton_single = utils::FindMatched(match_protononly, true_proton);
+            auto rec_true_proton_all = utils::FindMatched(match_all, true_proton);
+
+            if(rec_true_proton_all) {
                 steps->Fill("p matched", 1.0);
-                const auto angle = std_ext::radian_to_degree(TVector3(Proton).Angle(*rec_proton));
+                const auto angle = std_ext::radian_to_degree(TVector3(Proton).Angle(*rec_true_proton_all));
                 Proton_Angle_True->Fill(angle);
                 if(angle < 0.01)
                     steps->Fill("p correct", 1.0);
