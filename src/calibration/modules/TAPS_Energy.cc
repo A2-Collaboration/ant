@@ -126,7 +126,7 @@ gui::CalibModule_traits::DoFitReturn_t TAPS_Energy::GUI_Gains::DoFit(TH1* hist, 
     h_projection = hist2->ProjectionX("h_projection",channel+1,channel+1);
 
     // stop at empty histograms
-    if(h_projection->GetEntries()==0)
+    if(h_projection->GetEntries() < 1.0)
         return DoFitReturn_t::Display;
 
     func->SetDefaults(h_projection);
@@ -140,14 +140,21 @@ gui::CalibModule_traits::DoFitReturn_t TAPS_Energy::GUI_Gains::DoFit(TH1* hist, 
         func->FitBackground(h_projection);
     }
 
+
     auto fit_loop = [this] (size_t retries) {
+
+        const auto diff_at_side = .01;
+
         do {
             func->Fit(h_projection);
             VLOG(5) << "Chi2/dof = " << func->Chi2NDF();
-            if(func->Chi2NDF() < AutoStopOnChi2) {
+            if(    (func->Chi2NDF() < AutoStopOnChi2)
+                &&  func->EndsMatch(diff_at_side)
+                ) {
                 return true;
             }
-            retries--;
+
+             retries--;
         }
         while(retries>0);
         return false;
@@ -164,7 +171,8 @@ gui::CalibModule_traits::DoFitReturn_t TAPS_Energy::GUI_Gains::DoFit(TH1* hist, 
         return DoFitReturn_t::Next;
 
     // reached maximum retries without good chi2
-    LOG(INFO) << "Chi2/dof = " << func->Chi2NDF();
+    const auto range = func->GetRange();
+    LOG(INFO) << "Chi2/dof = " << func->Chi2NDF() << " SBR_low = " << func->SignalToBackground(range.Start()) << " SBR_high = " << func->SignalToBackground(range.Stop());
     return DoFitReturn_t::Display;
 }
 
