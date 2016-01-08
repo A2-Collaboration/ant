@@ -121,6 +121,13 @@ public:
      * @return (Signal + Background) / Background
      */
     virtual double SignalToBackground(const double x) const;
+
+    /**
+     * @brief Check if Background and Total function have the same value at the range borders
+     * @param relative_epsilon maximum allowed relative difference (total/background)
+     * @return true if functions are equal withing limits at the range borders
+     */
+    virtual bool   EndsMatch(const double relative_epsilon) const;
 };
 
 
