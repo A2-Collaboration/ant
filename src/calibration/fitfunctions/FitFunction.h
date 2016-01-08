@@ -61,21 +61,65 @@ public:
     virtual ant::interval<double> GetRange() const =0;
     virtual void Sync() {}
 
+    /**
+     * @brief Save the current fit parameters to a vector. Can then later be loaded again using Load()
+     * @return vector containing all parameters. Internal format (meaning of each double and the size of the vector) is up to the implementation of each function.
+     */
     virtual SavedState_t Save() const =0;
+
+    /**
+     * @brief Load fit parameters from a vector.
+     *   Useful to load previously used ones
+     * @param data vector containing the values. Internal format (meaning of each double and the size of the vector) is up to the implementation of each function.
+     * @see Save()
+     */
     virtual void Load(const std::vector<double>& data) =0;
 
+    /**
+     * @brief Get the reduced chi^2 (=chi^2/ndf) of last fit
+     * @return
+     */
     virtual double Chi2NDF() const;
+
+    /**
+     * @brief Get the Chi^2 of last fit
+     * @return chi^2
+     */
     virtual double Chi2() const;
+
+    /**
+     * @brief Get the Number of degrees of freedom of last fit
+     * @return ndf
+     */
     virtual double NDF() const;
 
 };
 
+/**
+ * @brief Fit functions describing peak shapes, like Gaus or Loretnz with optional background function
+ */
 class PeakingFitFunction: public FitFunction
 {
 public:
     PeakingFitFunction();
+
+    /**
+     * @brief Get the Position of the peak
+     * @return x_max
+     */
     virtual double GetPeakPosition() const =0;
+
+    /**
+     * @brief Get the Peak Width
+     * @return width
+     */
     virtual double GetPeakWidth() const =0;
+
+    /**
+     * @brief Signal To Background
+     * @param x Position to evaluate
+     * @return (Signal + Background) / Background
+     */
     virtual double SignalToBackground(const double x) const;
 };
 
