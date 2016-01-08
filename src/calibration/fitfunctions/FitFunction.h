@@ -76,6 +76,7 @@ public:
     PeakingFitFunction();
     virtual double GetPeakPosition() const =0;
     virtual double GetPeakWidth() const =0;
+    virtual double SignalToBackground(const double x) const;
 };
 
 

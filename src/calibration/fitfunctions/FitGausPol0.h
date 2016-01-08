@@ -27,6 +27,7 @@ public:
     virtual double GetPeakPosition() const override;
     virtual double GetPeakWidth() const override;
 
+    double SignalToBackground(const double x) const override;
 };
 
 }

@@ -155,3 +155,8 @@ double gui::FitGausPol1::GetPeakWidth() const
     return func->GetParameter(2);
 }
 
+double gui::FitGausPol1::SignalToBackground(const double x) const
+{
+    return func->Eval(x) / bg->Eval(x);
+}
+

@@ -69,5 +69,9 @@ double FitFunction::NDF() const
     return func->GetNDF();
 }
 
-
 PeakingFitFunction::PeakingFitFunction(): FitFunction(){}
+
+double PeakingFitFunction::SignalToBackground(const double x) const
+{
+    return func->Eval(x);
+}
