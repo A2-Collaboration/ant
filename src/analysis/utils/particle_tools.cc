@@ -150,6 +150,19 @@ const ParticlePtr ParticleTools::FindParticle(const ParticleTypeDatabase::Type& 
     return p_found;
 }
 
+const ParticleList ParticleTools::FindParticles(const ParticleTypeDatabase::Type& type, const ParticleTree_t& particletree, size_t maxlevel)
+{
+    ParticleList list;
+    if(!particletree)
+        return list;
+    particletree->Map_level([&type, &list, maxlevel] (const ParticlePtr& p, size_t level) {
+        if(level <= maxlevel && p->Type() == type) {
+            list.push_back(p);
+        }
+    });
+    return list;
+}
+
 void ParticleTools::FillIMCombinations(TH1* h, unsigned n, const ParticleList& particles)
 {
     FillIMCombinations([h] (double x) {h->Fill(x);}, n, particles);

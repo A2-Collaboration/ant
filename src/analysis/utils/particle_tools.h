@@ -67,6 +67,9 @@ struct ParticleTools {
 
     static const data::ParticlePtr FindParticle(const ParticleTypeDatabase::Type& type, const data::ParticleTree_t& particletree, size_t maxlevel);
 
+    static const data::ParticleList FindParticles(const ParticleTypeDatabase::Type& type, const data::ParticleTree_t& particletree,
+                                                  size_t maxlevel = std::numeric_limits<size_t>::max());
+
 
     /**
      * @brief FillIMCombinations loops over all n tuples of given particles, builds sum and fills invariant mass
