@@ -31,9 +31,13 @@ protected:
         double   Tagg_W;  // tagger prompt/random weight for subtraction
         unsigned Tagg_Ch; // tagger channel
         double   Tagg_E;  // tagger energy
-        double BestFitProbability;
+
         TCandidate Proton;
+        TCandidate ProtonMCTrue;
+        unsigned ProtonMCTrueMatches;
+
         std::vector<TCandidate> Photons;
+
 
         TH1D* steps;
         TH1D* Proton_Coplanarity;

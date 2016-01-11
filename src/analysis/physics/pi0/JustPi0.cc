@@ -84,9 +84,12 @@ JustPi0::MultiPi0::MultiPi0(SmartHistFactory& histFac, unsigned nPi0) :
     tree->Branch("Tagg_Ch", addressof(Tagg_Ch));
     tree->Branch("Tagg_E", addressof(Tagg_E));
 
-    tree->Branch("BestFitProbability",addressof(BestFitProbability));
     tree->Branch("Proton",addressof(Proton));
+    tree->Branch("ProtonMCTrue",addressof(ProtonMCTrue));
+    tree->Branch("ProtonMCTrueMatches",addressof(ProtonMCTrueMatches));
     tree->Branch("Photons",addressof(Photons));
+
+    fitter.SetupBranches(tree, "Fit");
 
     if(multiplicity==1) {
         directPi0 = ParticleTypeTreeDatabase::Get(ParticleTypeTreeDatabase::Channel::Direct1Pi0_2g);
@@ -119,15 +122,36 @@ void JustPi0::MultiPi0::ProcessData(const Event::Data& data, const ParticleTree_
     std::string nCandidates_cutstr = std_ext::formatter() << "nCandidates==" << nCandidates_expected;
     steps->Fill(nCandidates_cutstr.c_str(),1);
 
+    // do some MCTrue matching if feasible
+    CandidatePtr proton_mctrue_match = nullptr;
+    if(ptree && directPi0 &&
+       ptree->IsEqual(directPi0, utils::ParticleTools::MatchByParticleName)) {
+        // check if MCTrue matches the found proton
+        steps->Fill("Found DirectPi0", 1.0);
+        auto true_proton = utils::ParticleTools::FindParticle(ParticleTypeDatabase::Proton, ptree, 1);
+        auto true_photons = utils::ParticleTools::FindParticles(ParticleTypeDatabase::Photon, ptree);
+
+        auto mymatcher = [&cands] (const std::vector<ParticlePtr> true_particles) {
+            return utils::match1to1(true_particles,
+                                    cands,
+                                    [] (const ParticlePtr& p1, const CandidatePtr& p2) {
+                return p1->Angle(*p2);
+            }, {0.0, std_ext::degree_to_radian(15.0)});
+        };
+
+        vector<ParticlePtr> true_all(true_photons);
+        true_all.push_back(true_proton);
+        const auto match_all = mymatcher(true_all);
+
+        proton_mctrue_match = utils::FindMatched(match_all, true_proton);
+    }
+
 
     // use any candidate as proton, and do the analysis (ignore ParticleID stuff)
-
-    BestFitProbability = std::numeric_limits<double>::quiet_NaN();
 
     for(auto i_proton=cands.begin();i_proton!=cands.end();i_proton++) {
 
         const auto proton = std::make_shared<Particle>(ParticleTypeDatabase::Proton, *i_proton);
-        Proton = **i_proton;
         std::vector<ParticlePtr> photons;
         for(auto i_photon=cands.begin();i_photon!=cands.end();i_photon++) {
             if(i_photon == i_proton)
@@ -153,7 +177,7 @@ void JustPi0::MultiPi0::ProcessData(const Event::Data& data, const ParticleTree_
         const string copl_str = std_ext::formatter() << "Copl p in " << Proton_Copl_cut;
         steps->Fill(copl_str.c_str(),1);
 
-        // iterate over proton candidates
+        // iterate over tagger hits
 
         for(const TaggerHit& taggerhit : data.TaggerHits) {
             steps->Fill("Seen taggerhits",1.0);
@@ -195,64 +219,22 @@ void JustPi0::MultiPi0::ProcessData(const Event::Data& data, const ParticleTree_
                     steps->Fill(fitprob_str.c_str(), 1.0);
                     utils::ParticleTools::FillIMCombinations([this] (double x) {IM_2g_byFit.Fill(x);},  2, photons);
                     utils::ParticleTools::FillIMCombinations([this] (double x) {IM_2g_fitted.Fill(x);},  2, fitter.GetFittedPhotons());
-
-                    if(!isfinite(BestFitProbability) || fit_result.Probability > BestFitProbability) {
-                        Tagg_E  = taggerhit.PhotonEnergy;
-                        Tagg_Ch = taggerhit.Channel;
-                        Tagg_W  = promptrandom.FillWeight();
-
-                        Photons.resize(0);
-                        for(auto photon : photons)
-                            Photons.emplace_back(*photon->Candidate);
-                        Proton = *proton->Candidate;
-                        BestFitProbability = fit_result.Probability;
-                    }
                 }
-
             }
 
-        }
-    }
+            Tagg_E  = taggerhit.PhotonEnergy;
+            Tagg_Ch = taggerhit.Channel;
+            Tagg_W  = promptrandom.FillWeight();
 
-    if(isfinite(BestFitProbability)) {
-        tree->Fill();
+            Photons.resize(0);
+            for(auto photon : photons)
+                Photons.emplace_back(*photon->Candidate);
+            Proton = *proton->Candidate;
+            ProtonMCTrueMatches = proton->Candidate.get() == proton_mctrue_match.get();
+            if(proton_mctrue_match)
+                ProtonMCTrue = *proton_mctrue_match;
 
-        if(ptree && directPi0 &&
-           ptree->IsEqual(directPi0, utils::ParticleTools::MatchByParticleName)) {
-            // check if MCTrue matches the found proton
-            steps->Fill("Found DirectPi0", 1.0);
-            auto true_proton = utils::ParticleTools::FindParticle(ParticleTypeDatabase::Proton, ptree, 1);
-            auto true_photons = utils::ParticleTools::FindParticles(ParticleTypeDatabase::Photon, ptree);
-
-            auto mymatcher = [&cands] (const std::vector<ParticlePtr> true_particles) {
-                return utils::match1to1(true_particles,
-                                        cands,
-                                        [] (const ParticlePtr& p1, const CandidatePtr& p2) {
-                    return p1->Angle(*p2);
-                }, {0.0, std_ext::degree_to_radian(15.0)});
-            };
-
-            const auto match_protononly  = mymatcher({true_proton});
-            vector<ParticlePtr> true_all(true_photons);
-            true_all.push_back(true_proton);
-            const auto match_all = mymatcher(true_all);
-
-            auto rec_true_proton_single = utils::FindMatched(match_protononly, true_proton);
-            auto rec_true_proton_all = utils::FindMatched(match_all, true_proton);
-
-            if(rec_true_proton_all) {
-                steps->Fill("p matched", 1.0);
-                const auto angle = std_ext::radian_to_degree(TVector3(Proton).Angle(*rec_true_proton_all));
-                Proton_Angle_True->Fill(angle);
-                if(angle < 0.01)
-                    steps->Fill("p correct", 1.0);
-                else
-                    steps->Fill("p incorrect", 1.0);
-            }
-            else {
-                steps->Fill("p unmatched", 1.0);
-            }
-
+            tree->Fill();
         }
     }
 }
