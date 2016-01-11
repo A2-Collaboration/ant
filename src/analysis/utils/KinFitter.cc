@@ -7,7 +7,7 @@
 #include "base/WrapTFile.h"
 #include <cassert>
 #include "expconfig/ExpConfig.h"
-
+#include "base/Logger.h"
 #include <APLCON.hpp>
 
 #include "TTree.h"
@@ -24,66 +24,59 @@ using namespace ant::analysis::utils;
 
 double KinFitter::EnergyResolution(const analysis::data::ParticlePtr& p) const
 {
-    if(p->Candidate) {
-        if(p->Candidate->GetDetector() & Detector_t::Type_t::CB) {
+    assert(p->Candidate!=nullptr);
 
-            return 1.07134e-02 * p->Ek();
+    if(p->Candidate->GetDetector() & Detector_t::Type_t::CB) {
 
-        } if(p->Candidate->GetDetector() & Detector_t::Type_t::TAPS) {
+        return 1.07134e-02 * p->Ek();
 
-            return 3.5E-2 * p->Ek();
-        }
+    } else if(p->Candidate->GetDetector() & Detector_t::Type_t::TAPS) {
+
+        return 3.5E-2 * p->Ek();
+
     } else {
-        if(p->Theta() < degree_to_radian(20.0) ) {
-
-            return 1.07134e-02 * p->Ek();
-
-        } else {
-
-            return 3.5E-2 * p->Ek();
-        }
+        LOG(WARNING) << "Photon not in (CB,TAPS?)";
     }
+
+
     return 0.0;
 }
 
 double KinFitter::ThetaResolution(const analysis::data::ParticlePtr& p) const
 {
-    if(p->Candidate) {
-        if(p->Candidate->GetDetector() & Detector_t::Type_t::CB) {
+    assert(p->Candidate!=nullptr);
 
-            return cb_sigma_theta.GetSigma(p->Candidate->FindCaloCluster()->CentralElement, p->Ek());
+    if(p->Candidate->GetDetector() & Detector_t::Type_t::CB) {
 
-        } if(p->Candidate->GetDetector() & Detector_t::Type_t::TAPS) {   ///@todo check TAPS Theta resolution
-             //return degree_to_radian(2.5);
-            return taps_sigma_theta.GetSigma(p->Candidate->FindCaloCluster()->CentralElement, p->Ek());
-        }
+        return cb_sigma_theta.GetSigma(p->Candidate->FindCaloCluster()->CentralElement, p->Ek());
+
+    } if(p->Candidate->GetDetector() & Detector_t::Type_t::TAPS) {
+
+        return taps_sigma_theta.GetSigma(p->Candidate->FindCaloCluster()->CentralElement, p->Ek());
+
     } else {
-        return degree_to_radian(2.5);
+        LOG(WARNING) << "Photon not in (CB,TAPS?)";
     }
+
     return 0.0;
 }
 
 double KinFitter::PhiResolution(const analysis::data::ParticlePtr& p) const
 {
-    if(p->Candidate) {
-        if(p->Candidate->GetDetector() & Detector_t::Type_t::CB) {
+    assert(p->Candidate!=nullptr);
 
-            return cb_sigma_phi.GetSigma(p->Candidate->FindCaloCluster()->CentralElement, p->Ek());
+    if(p->Candidate->GetDetector() & Detector_t::Type_t::CB) {
 
-        } if(p->Candidate->GetDetector() & Detector_t::Type_t::TAPS) {   ///@todo check TAPS Theta resolution
-            //return p->Theta() / std::sin(p->Theta());
-            return taps_sigma_phi.GetSigma(p->Candidate->FindCaloCluster()->CentralElement, p->Ek());
-        }
+        return cb_sigma_phi.GetSigma(p->Candidate->FindCaloCluster()->CentralElement, p->Ek());
+
+    } else if(p->Candidate->GetDetector() & Detector_t::Type_t::TAPS) {
+
+        return taps_sigma_phi.GetSigma(p->Candidate->FindCaloCluster()->CentralElement, p->Ek());
+
     } else {
-        if(p->Theta() < degree_to_radian(20.0) ) {
-
-            return p->Theta() / std::sin(p->Theta());
-
-        } else {   ///@todo check TAPS Theta resolution
-
-            return p->Theta() / std::sin(p->Theta());
-        }
+        LOG(WARNING) << "Photon not in (CB,TAPS?)";
     }
+
     return 0.0;
 }
 
@@ -178,10 +171,19 @@ void KinFitter::SetProton(const analysis::data::ParticlePtr &proton)
     Proton.sigmaEk    = 0.0; // unmeasured
 
     Proton.Theta      = proton->Theta();
-    Proton.sigmaTheta = degree_to_radian(5.5);
-
     Proton.Phi        = proton->Phi();
-    Proton.sigmaPhi   = degree_to_radian(5.3);
+
+    assert(proton->Candidate!=nullptr);
+
+    if(proton->Candidate->GetDetector() & Detector_t::Type_t::CB) {
+        Proton.sigmaTheta = degree_to_radian(5.43);
+        Proton.sigmaPhi   = degree_to_radian(5.31);
+    } else if(proton->Candidate->GetDetector() & Detector_t::Type_t::TAPS) {
+        Proton.sigmaTheta = degree_to_radian(2.89);
+        Proton.sigmaPhi   = degree_to_radian(4.45);
+    } else {
+        LOG(WARNING) << "Proton is not in (CB,TAPS)?";
+    }
 
 }
 
