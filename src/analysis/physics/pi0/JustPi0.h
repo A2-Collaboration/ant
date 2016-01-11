@@ -15,7 +15,7 @@ class JustPi0 : public Physics {
 protected:
 
     struct MultiPi0 {
-        MultiPi0(SmartHistFactory& histFac, unsigned nPi0);
+        MultiPi0(SmartHistFactory& histFac, unsigned nPi0, bool nofitandnotree = false);
 
         void ProcessData(const data::Event::Data& data, const data::ParticleTree_t& ptree);
         void ShowResult();
@@ -23,6 +23,7 @@ protected:
     protected:
 
         const unsigned multiplicity;
+        const bool skipfit;
         ParticleTypeTree directPi0;
 
         utils::KinFitter fitter;

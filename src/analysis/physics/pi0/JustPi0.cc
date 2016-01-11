@@ -23,7 +23,7 @@ JustPi0::JustPi0(const string& name, PhysOptPtr opts) :
     Physics(name, opts)
 {
     for(unsigned mult=1;mult<=opts->Get<unsigned>("nPi0",1);mult++) {
-        multiPi0.emplace_back(std_ext::make_unique<MultiPi0>(HistFac, mult));
+        multiPi0.emplace_back(std_ext::make_unique<MultiPi0>(HistFac, mult, opts->Get<bool>("SkipFitAndTree", false)));
     }
 }
 
@@ -43,8 +43,9 @@ void JustPi0::ShowResult()
 
 
 
-JustPi0::MultiPi0::MultiPi0(SmartHistFactory& histFac, unsigned nPi0) :
+JustPi0::MultiPi0::MultiPi0(SmartHistFactory& histFac, unsigned nPi0, bool nofitandnotree) :
     multiplicity(nPi0),
+    skipfit(nofitandnotree),
     fitter(std_ext::formatter() << multiplicity << "Pi0", 2*multiplicity),
     h_missingmass(promptrandom),
     h_fitprobability(promptrandom),
@@ -68,7 +69,7 @@ JustPi0::MultiPi0::MultiPi0(SmartHistFactory& histFac, unsigned nPi0) :
     h_missingmass.MakeHistograms(HistFac, "h_missingmass","Missing Mass",BinSettings(400,400, 1400),"MM / MeV","#");
     h_fitprobability.MakeHistograms(HistFac, "fit_probability","KinFitter probability",BinSettings(150,0,1),"p","#");
 
-    BinSettings bins_IM(500,0,700);
+    BinSettings bins_IM(1400,0,1400);
 
     IM_2g_byMM.MakeHistograms(HistFac, "IM_2g_byMM","IM 2#gamma by MM",bins_IM,"IM / MeV","#");
     IM_2g_byFit.MakeHistograms(HistFac, "IM_2g_byFit","IM 2#gamma by Fit",bins_IM,"IM / MeV","#");
@@ -198,6 +199,9 @@ void JustPi0::MultiPi0::ProcessData(const Event::Data& data, const ParticleTree_
                 steps->Fill(MM_str.c_str(),1.0);
                 utils::ParticleTools::FillIMCombinations([this] (double x) {IM_2g_byMM.Fill(x);},  2, photons);
             }
+
+            if(skipfit)
+                continue;
 
             auto angle_p_calcp = std_ext::radian_to_degree(missing.Angle(proton->Vect()));
             if(angle_p_calcp > 15.0)
