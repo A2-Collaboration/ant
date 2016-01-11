@@ -286,13 +286,15 @@ KinFitter::PhotonBeamVector::PhotonBeamVector(const string& Name):
 
 void KinFitter::kinVector::SetupBranches(TTree* tree, const string& prefix)
 {
+    tree->Branch((prefix+"_"+Name+"_Ek").c_str(),     addressof(Ek));
+    tree->Branch((prefix+"_"+Name+"_Theta").c_str(),  addressof(Theta));
+    tree->Branch((prefix+"_"+Name+"_Phi").c_str(),    addressof(Phi));
     tree->Branch((prefix+"_"+Name+"_Ek_pull").c_str(),     addressof(pullEk));
     tree->Branch((prefix+"_"+Name+"_Theta_pull").c_str(),  addressof(pullTheta));
     tree->Branch((prefix+"_"+Name+"_Phi_pull").c_str(),    addressof(pullPhi));
     tree->Branch((prefix+"_"+Name+"_Ek_sigma").c_str(),    addressof(sigmaEk));
     tree->Branch((prefix+"_"+Name+"_Theta_sigma").c_str(), addressof(sigmaTheta));
     tree->Branch((prefix+"_"+Name+"_Phi_sigma").c_str(),   addressof(sigmaPhi));
-
 }
 
 double KinFitter::angular_sigma::GetSigma(const unsigned element, const double E) const
