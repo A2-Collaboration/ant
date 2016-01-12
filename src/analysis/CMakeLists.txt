@@ -58,6 +58,7 @@ set(ANALYSIS_PHYSICS
   physics/misc/XMasCB.cc
   physics/common/ExtractResolutions.cc
   physics/pi0/JustPi0.cc
+  physics/common/ProtonTAPS.cc
   )
 
 set(ANALYSIS_PHYSICS_CALIBRATION
