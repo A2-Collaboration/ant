@@ -11,6 +11,8 @@
 
 #include "APLCON.hpp"
 
+#include <stdexcept>
+
 class TTree;
 class TH1D;
 class TF1;
@@ -152,6 +154,10 @@ public:
     void SetupBranches(TTree* tree, std::string branch_prefix="");
 
     void LoadSigmaData(const std::string& filename);
+
+    struct Exception : std::runtime_error {
+        using std::runtime_error::runtime_error;
+    };
 };
 
 }}} // namespace ant::analysis::utils

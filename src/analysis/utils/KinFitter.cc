@@ -109,8 +109,8 @@ KinFitter::KinFitter(const std::string& name, unsigned numGammas):
     }
 
     aplcon->LinkVariable(Beam.name,
-                        { Beam.Adresses() },
-                        { Beam.Adresses_Sigma() });
+                         Beam.Adresses() ,
+                         Beam.Adresses_Sigma() );
 
     aplcon->LinkVariable(Proton.Name,
                          Proton.Addresses(),
@@ -129,7 +129,7 @@ KinFitter::KinFitter(const std::string& name, unsigned numGammas):
         namesLInv.push_back(photon.Name);
     }
 
-    auto LorentzInvariance = [] (const vector<vector<double>> values)
+    auto LorentzInvariance = [] (const vector<vector<double>>& values)
     {
         // beam    TLorentzVector(0.0, 0.0, PhotonEnergy(), PhotonEnergy());
         // target  TLorentzVector(0.0, 0.0, 0.0, ParticleTypeDatabase::Proton.Mass())
@@ -206,7 +206,8 @@ data::ParticleList KinFitter::GetFittedPhotons() const
 
 void KinFitter::SetPhotons(const std::vector<analysis::data::ParticlePtr> &photons_data)
 {
-    assert(Photons.size() == photons_data.size());
+    if(Photons.size() != photons_data.size())
+        throw Exception("Given number of photons does not match configured fitter");
 
     for ( unsigned i = 0 ; i < Photons.size() ; ++ i) {
         auto& photon = Photons.at(i);
