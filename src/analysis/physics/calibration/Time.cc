@@ -15,7 +15,7 @@ Time::Time(const Detector_t::Type_t& detectorType,
 {
     auto detector = ExpConfig::Setup::GetDetector(DetectorType);
     string detectorName(Detector_t::ToString(DetectorType));
-    hTime = HistFac.makeTH2D(detectorName + string(" - Time"),
+    hTime = HistFac.makeTH2D(detectorName + " - Time",
                              "time [ns]",
                              detectorName + " channel",
                              BinSettings(2000,-400,400),
@@ -23,13 +23,18 @@ Time::Time(const Detector_t::Type_t& detectorType,
                              "Time"
                              );
     hTimeToTagger = HistFac.makeTH2D(
-                        detectorName + string(" - Time relative to tagger"),
+                        detectorName + " - Time relative to tagger",
                         "time [ns]",
                         detectorName + " channel",
                         BinSettings(2000,-1500,1500),
                         BinSettings(detector->GetNChannels()),
                         "hTimeToTagger"
                         );
+    hTimeAvg = HistFac.makeTH1D(detectorName + " - Energy-averaged time",
+                                "time [ns]",
+                                "#",
+                                BinSettings(500,-15,15),
+                                "hTimeAvg");
 
     // handle tagger differently
     isTagger = dynamic_pointer_cast<TaggerDetector_t, Detector_t>(detector) != nullptr;
@@ -45,17 +50,22 @@ void Time::ProcessEvent(const Event& event)
         return;
     }
 
+    double sumE = 0.0;
+    double timeE = 0.0;
     for(const auto& cand: event.Reconstructed.Candidates) {
-        for(const auto& cluster: cand->Clusters) {
+        for(const TCluster& cluster: cand->Clusters) {
             if(cluster.GetDetectorType() != DetectorType)
                 continue;
             hTime->Fill(cluster.Time,cluster.CentralElement);
+            sumE += cluster.Energy;
+            timeE += cluster.Energy*cluster.Time;
             for(const auto& taggerhit : event.Reconstructed.TaggerHits) {
                 const double relative_time = cluster.Time - taggerhit.Time;
                 hTimeToTagger->Fill(relative_time, cluster.CentralElement);
             }
         }
     }
+    hTimeAvg->Fill(timeE/sumE);
 }
 
 void Time::ShowResult()
@@ -63,6 +73,7 @@ void Time::ShowResult()
     canvas(GetName())
             << drawoption("colz") << hTime
             << drawoption("colz") << hTimeToTagger
+            << hTimeAvg
             << endc;
 }
 

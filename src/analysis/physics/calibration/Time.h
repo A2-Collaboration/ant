@@ -12,6 +12,7 @@ protected:
 
     TH2D* hTime;
     TH2D* hTimeToTagger;
+    TH1D* hTimeAvg;
 
     const Detector_t::Type_t DetectorType;
     bool isTagger;
