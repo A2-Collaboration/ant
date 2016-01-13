@@ -75,7 +75,7 @@ void ProtonTAPS::ProcessEvent(const data::Event& event)
 
 void ProtonTAPS::ShowResult()
 {
-    tree->Draw("Proton.CaloEnergy:(Proton.Time-CBAvgTime)/cos(Proton.Theta)","nCB>2 && CBAvgVetoE < 0.25","colz");
+    tree->Draw("Proton.CaloEnergy:(Proton.Time-CBAvgTime)","nCB>2 && CBAvgVetoE < 0.25","colz");
 }
 
 AUTO_REGISTER_PHYSICS(ProtonTAPS)
