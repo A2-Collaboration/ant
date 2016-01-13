@@ -113,14 +113,24 @@ bool UnpackerA2Geant::OpenFile(const string& filename)
 
     // find some taggerdetectors
     // needed to create proper tagger hits from incoming photons
-    for(const auto& detector : config->GetDetectors()) {
+    for(const shared_ptr<Detector_t>& detector : config->GetDetectors()) {
         std_ext::AddToSharedPtrList<TaggerDetector_t, Detector_t>(
                     detector, taggerdetectors
                     );
+        /// \todo check for multiply defined detectors...
+        if(detector->Type == Detector_t::Type_t::CB)
+            cb_detector = detector;
+        if(detector->Type == Detector_t::Type_t::PID)
+            pid_detector = detector;
+        if(detector->Type == Detector_t::Type_t::TAPS)
+            taps_detector = detector;
+        if(detector->Type == Detector_t::Type_t::TAPSVeto)
+            tapsveto_detector = detector;
     }
 
     if(taggerdetectors.empty())
         LOG(WARNING) << "No tagger detector found in config, there will be no taggerhits generated";
+
 
 
 
@@ -161,6 +171,8 @@ unique_ptr<TDataRecord> UnpackerA2Geant::NextItem() noexcept
     // fill CB Hits
     for(int i=0;i<fnhits;i++) {
         const unsigned ch = icryst[i]; // no -1 here!
+        if(cb_detector->IsIgnored(ch))
+            continue;
         const Detector_t::Type_t det = Detector_t::Type_t::CB;
         hits.emplace_back(
                     LogicalChannel_t{det, Channel_t::Type_t::Integral, ch},
@@ -176,6 +188,8 @@ unique_ptr<TDataRecord> UnpackerA2Geant::NextItem() noexcept
     for(int i=0;i<fvhits;i++) {
         /// @todo Make PID channel mapping/rotation a Setup option?
         const unsigned ch = (23 - (iveto[i]-1) + 11) % 24;
+        if(pid_detector->IsIgnored(ch))
+            continue;
         const Detector_t::Type_t det = Detector_t::Type_t::PID;
         hits.emplace_back(
                     LogicalChannel_t{det, Channel_t::Type_t::Integral, ch},
@@ -190,6 +204,8 @@ unique_ptr<TDataRecord> UnpackerA2Geant::NextItem() noexcept
     // fill TAPS Hits
     for(int i=0;i<fntaps;i++) {
         const unsigned ch = ictaps[i]-1;
+        if(taps_detector->IsIgnored(ch))
+            continue;
         const Detector_t::Type_t det = Detector_t::Type_t::TAPS;
         hits.emplace_back(
                     LogicalChannel_t{det, Channel_t::Type_t::Integral, ch},
@@ -212,6 +228,8 @@ unique_ptr<TDataRecord> UnpackerA2Geant::NextItem() noexcept
         if(ivtaps[i]==0)
             throw Exception("TAPS Veto index should start counting with 1");
         const unsigned ch = ivtaps[i]-1;
+        if(tapsveto_detector->IsIgnored(ch))
+            continue;
         const Detector_t::Type_t det = Detector_t::Type_t::TAPSVeto;
         hits.emplace_back(
                     LogicalChannel_t{det, Channel_t::Type_t::Integral, ch},
@@ -231,6 +249,8 @@ unique_ptr<TDataRecord> UnpackerA2Geant::NextItem() noexcept
         // could the photon have been detected?
         unsigned ch;
         if(!tagger->TryGetChannelFromPhoton(photon_energy, ch))
+            continue;
+        if(tagger->IsIgnored(ch))
             continue;
         /// \todo create some random hits here?
         hits.emplace_back(
