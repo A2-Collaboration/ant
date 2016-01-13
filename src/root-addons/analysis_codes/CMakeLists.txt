@@ -6,6 +6,7 @@ set(DICT_HEADERS
     ExtractResolutions.h
     CBESum_Check.h
     TAPSEnergy_Check.h
+    DetectorPlots.h
   )
 
 set(SRCS
@@ -15,6 +16,7 @@ set(SRCS
     ExtractResolutions.cc
     CBESum_Check.cc
     TAPSEnergy_Check.cc
+    DetectorPlots.cc
   )
 
 set(ROOT_DICTIONARY "${CMAKE_CURRENT_BINARY_DIR}/G__analysis_codes.cc")

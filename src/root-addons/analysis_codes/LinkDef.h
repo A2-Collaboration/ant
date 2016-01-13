@@ -12,6 +12,7 @@
 #pragma link C++ class ExtractResolutions+;
 #pragma link C++ class CBESum_Check+;
 #pragma link C++ class TAPSEnergy_Check+;
+#pragma link C++ class DetectorPlots+;
 
 #endif // __CINT__
 
