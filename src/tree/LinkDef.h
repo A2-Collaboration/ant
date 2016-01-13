@@ -32,5 +32,7 @@
 
 #pragma link C++ class ant::TAntHeader+;
 
+#pragma link C++ class std::vector<TLorentzVector>+;
+
 #endif // __CINT__
 

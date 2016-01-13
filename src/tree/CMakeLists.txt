@@ -14,6 +14,7 @@ set(SRCS
   TTaggerHit.h
   TCalibrationData.h
   TAntHeader.h
+  ${ROOT_INCLUDE_DIR}/TLorentzVector.h
   )
 
 set(SRCS_EXTRA
