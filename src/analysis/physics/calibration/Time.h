@@ -11,6 +11,7 @@ class Time : public Physics {
 protected:
 
     TH2D* hTime;
+    TH2D* hTimeToCBAvg;
     TH2D* hTimeToTagger;
     TH1D* hTimeAvg;
 

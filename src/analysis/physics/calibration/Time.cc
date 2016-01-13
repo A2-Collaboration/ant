@@ -22,6 +22,13 @@ Time::Time(const Detector_t::Type_t& detectorType,
                              BinSettings(detector->GetNChannels()),
                              "Time"
                              );
+    hTimeToCBAvg = HistFac.makeTH2D(detectorName + " - Time relative to CB energy-weigted average",
+                             "time [ns]",
+                             detectorName + " channel",
+                             BinSettings(2000,-400,400),
+                             BinSettings(detector->GetNChannels()),
+                             "hTimeToCBAvg"
+                             );
     hTimeToTagger = HistFac.makeTH2D(
                         detectorName + " - Time relative to tagger",
                         "time [ns]",
@@ -45,8 +52,24 @@ void Time::ProcessEvent(const Event& event)
     // handle Tagger differently
     if(isTagger)
     {
-        for (const auto& tHit: event.Reconstructed.TaggerHits)
-            hTime->Fill(tHit.Time,tHit.Channel);
+        double sumE = 0.0;
+        double timeE = 0.0;
+        for(const auto& cand: event.Reconstructed.Candidates) {
+            for(const TCluster& cluster: cand->Clusters) {
+                if(cluster.GetDetectorType() != Detector_t::Type_t::CB)
+                    continue;
+                sumE += cluster.Energy;
+                timeE += cluster.Energy*cluster.Time;
+            }
+        }
+        const double CBTimeAvg = timeE / sumE;
+        hTimeAvg->Fill(CBTimeAvg);
+
+        for (const auto& tHit: event.Reconstructed.TaggerHits) {
+            hTime->Fill(tHit.Time, tHit.Channel);
+            hTimeToCBAvg->Fill(tHit.Time - CBTimeAvg, tHit.Channel);
+        }
+
         return;
     }
 
@@ -74,6 +97,7 @@ void Time::ShowResult()
             << drawoption("colz") << hTime
             << drawoption("colz") << hTimeToTagger
             << hTimeAvg
+            << drawoption("colz") << hTimeToCBAvg
             << endc;
 }
 
