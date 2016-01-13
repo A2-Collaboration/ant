@@ -18,6 +18,8 @@ using namespace std;
 EtapProton::EtapProton(const string& name, PhysOptPtr opts):
     Physics(name, opts)
 {
+    multiplicities = opts->Get<decltype(multiplicities)>("PhotonMulti");
+
     promptrandom.AddPromptRange({-2.5,1.5}); // slight offset due to CBAvgTime reference
     promptrandom.AddRandomRange({-50,-10});  // just ensure to be way off prompt peak
     promptrandom.AddRandomRange({  10,50});
@@ -25,37 +27,47 @@ EtapProton::EtapProton(const string& name, PhysOptPtr opts):
     tree = HistFac.makeTTree("tree");
 
 
-    tree->Branch("nCB",    &b_nCB);
-    tree->Branch("nTAPS",  &b_nTAPS);
-    tree->Branch("CBAvgTime", &b_CBAvgTime);
-    tree->Branch("CBAvgVetoE", &b_CBAvgVetoE);
+    tree->Branch("nCB",        &b_nCB);
+    tree->Branch("nTAPS",      &b_nTAPS);
+    tree->Branch("CBAvgTime",  &b_CBAvgTime);
+    tree->Branch("CBSumVetoE", &b_CBSumVetoE);
 
-    tree->Branch("Proton", &b_Proton);
-    tree->Branch("Photons", &b_Photons);
-    tree->Branch("PhotonSum", &b_PhotonSum);
+    tree->Branch("Proton",     &b_Proton);
+    tree->Branch("Photons",    &b_Photons);
+    tree->Branch("PhotonSum",  &b_PhotonSum);
     tree->Branch("ProtonCopl", &b_ProtonCopl);
 
-    tree->Branch("BestChi2", &b_BestChi2);
-    tree->Branch("TaggW",  &b_TaggW);
+    tree->Branch("BestChi2",  &b_BestChi2);
+    tree->Branch("NGoodFits", &b_NGoodFits); // number of good fits
+    tree->Branch("NFitIterations", &b_NFitIterations); // number of good fits
+
+    tree->Branch("TaggW",  &b_TaggW); // prompt/random weight
     tree->Branch("TaggE",  &b_TaggE);
     tree->Branch("TaggT",  &b_TaggT);
     tree->Branch("TaggCh", &b_TaggCh);
+    tree->Branch("TaggN",  &b_TaggN); // number of hits
 
-    tree->Branch("FittedProton", &b_FittedProton);
-    tree->Branch("FittedPhotons", &b_FittedPhotons);
-    tree->Branch("FittedPhotonSum", &b_FittedPhotonSum);
+
+    tree->Branch("FittedProton",     &b_FittedProton);
+    tree->Branch("FittedPhotons",    &b_FittedPhotons);
+    tree->Branch("FittedPhotonSum",  &b_FittedPhotonSum);
     tree->Branch("FittedProtonCopl", &b_FittedProtonCopl);
 
     // prepare fitters for all multiplicities
-    const auto setup = ant::ExpConfig::Setup::GetLastFound();
-    for(unsigned mult=1;mult<=11;mult++) {
-        auto fitter = std_ext::make_unique<utils::KinFitter>(
-                          std_ext::formatter() << GetName() << mult,
-                          mult
-                          );
-        fitter->LoadSigmaData(setup->GetPhysicsFilesDirectory()+"/FitterSigmas.root");
-        fitters.emplace_back(move(fitter));
+    auto enclosing = multiplicities.EnclosingInterval();
+    if(enclosing.IsSane() && enclosing.Start()>=1) {
+        fitters.resize(enclosing.Stop());
+        const auto setup = ant::ExpConfig::Setup::GetLastFound();
+        for(unsigned mult=enclosing.Start();mult<=enclosing.Stop();mult++) {
+            auto fitter = std_ext::make_unique<utils::KinFitter>(
+                              std_ext::formatter() << GetName() << mult,
+                              mult
+                              );
+            fitter->LoadSigmaData(setup->GetPhysicsFilesDirectory()+"/FitterSigmas.root");
+            fitters[mult-1] = move(fitter);
+        }
     }
+
 }
 
 template <typename T>
@@ -76,14 +88,14 @@ void EtapProton::ProcessEvent(const data::Event& event)
     data::CandidateList cands_taps;
     data::CandidateList cands_cb;
 
-    b_CBAvgVetoE = 0;
+    b_CBSumVetoE = 0;
     for(const auto& p : cands) {
         if(p->GetDetector() & Detector_t::Any_t::TAPS_Apparatus) {
             cands_taps.emplace_back(p);
         }
         else if(p->GetDetector() & Detector_t::Any_t::CB_Apparatus) {
             cands_cb.emplace_back(p);
-            b_CBAvgVetoE += p->VetoEnergy;
+            b_CBSumVetoE += p->VetoEnergy;
         }
     }
     b_nTAPS = cands_taps.size();
@@ -94,7 +106,9 @@ void EtapProton::ProcessEvent(const data::Event& event)
     b_CBAvgTime = TimeAverage(cands_cb);
     if(!isfinite(b_CBAvgTime))
         return;
-    b_CBAvgVetoE /= b_nCB;
+
+    if(b_CBSumVetoE > 2)
+        return;
 
     // find the proton candidate in TAPS, ie. the slowest cluster in TAPS
     /// \todo this could be improved with some proper beta calculation,
@@ -123,7 +137,7 @@ void EtapProton::ProcessEvent(const data::Event& event)
 
     assert(photons.size() == cands.size()-1);
 
-    if(photons.size()==0)
+    if(photons.size()==0 || !multiplicities.Contains(photons.size()))
         return;
 
     b_PhotonSum.SetPxPyPzE(0,0,0,0);
@@ -141,10 +155,14 @@ void EtapProton::ProcessEvent(const data::Event& event)
         return;
     auto& fitter = *fitters[photons.size()-1];
     b_BestChi2 = std::numeric_limits<double>::quiet_NaN();
+    b_TaggN = 0;
+    b_NGoodFits = 0;
+    b_NFitIterations = 0;
     for(const data::TaggerHit& taggerhit : event.Reconstructed.TaggerHits) {
         promptrandom.SetTaggerHit(taggerhit.Time - b_CBAvgTime);
         if(promptrandom.State() == PromptRandom::Case::Outside)
             continue;
+        b_TaggN++;
 
         // simple missing mass cut
         const TLorentzVector beam_target = taggerhit.GetPhotonBeam() + TLorentzVector(0, 0, 0, ParticleTypeDatabase::Proton.Mass());
@@ -163,10 +181,13 @@ void EtapProton::ProcessEvent(const data::Event& event)
 
         if(fit_result.Status != APLCON::Result_Status_t::Success)
             continue;
+        b_NGoodFits++;
+
 
         // only update stuff if better chi2 found
         if(!isfinite(b_BestChi2) || b_BestChi2 > fit_result.ChiSquare) {
             b_BestChi2 = fit_result.ChiSquare;
+            b_NFitIterations = fit_result.NIterations;
 
             b_TaggW = promptrandom.FillWeight();
             b_TaggE = taggerhit.PhotonEnergy;
@@ -191,14 +212,12 @@ void EtapProton::ProcessEvent(const data::Event& event)
 
     }
 
-    // ignore events without successful fit
-    if(isfinite(b_BestChi2))
-        tree->Fill();
+    tree->Fill();
 }
 
 void EtapProton::ShowResult()
 {
-    tree->Draw("FittedPhotonSum.M()","BestChi2<300 && CBAvgVetoE<0.25 && @Photons.size()==2");
+    tree->Draw("FittedPhotonSum.M()","BestChi2<300 && @Photons.size()==2");
 }
 
 AUTO_REGISTER_PHYSICS(EtapProton)

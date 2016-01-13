@@ -15,12 +15,14 @@ namespace physics {
 class EtapProton : public Physics {
 public:
 
+    PiecewiseInterval<unsigned> multiplicities;
+
     TTree* tree = nullptr;
 
     unsigned  b_nCB = 0;
     unsigned  b_nTAPS = 0;
     double    b_CBAvgTime  = 0.0;
-    double    b_CBAvgVetoE  = 0.0;
+    double    b_CBSumVetoE  = 0.0;
 
     TCandidate b_Proton;
     std::vector<TCandidate> b_Photons;
@@ -31,10 +33,13 @@ public:
 
     std::vector<std::unique_ptr<utils::KinFitter>> fitters;
     double b_BestChi2;
+    unsigned b_NGoodFits;
+    unsigned b_NFitIterations;
     double b_TaggW;
     double b_TaggE;
     double b_TaggT;
     unsigned b_TaggCh;
+    unsigned b_TaggN;
 
     TLorentzVector b_FittedProton;
     std::vector<TLorentzVector> b_FittedPhotons;
