@@ -44,15 +44,24 @@ Event Converter::Convert(const TEvent& event)
     /// pseudo-detector Trigger in expconfig/detectors
 
     double Esum = 0.0;
+    double TimeEsum = 0.0;
+    double TimeE = 0.0;
     for(const TCluster& cluster : antevent.Reconstructed.AllClusters) {
         if(cluster.GetDetectorType() == Detector_t::Type_t::CB) {
-            Esum += cluster.Energy;
+            if(isfinite(cluster.Energy)) {
+                Esum += cluster.Energy;
+                if(isfinite(cluster.Time)) {
+                    TimeEsum += cluster.Energy;
+                    TimeE += cluster.Energy*cluster.Time;
+                }
+            }
         }
     }
 
     auto& triggerinfos = antevent.Reconstructed.Trigger;
     triggerinfos.EventID = event.ID;
     triggerinfos.CBEnergySum = Esum;
+    triggerinfos.CBTiming = TimeE/TimeEsum;
 
     return antevent;
 }

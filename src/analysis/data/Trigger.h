@@ -32,6 +32,7 @@ struct Trigger_t :  printable_traits {
     mev_t           CBEnergySum;
     unsigned int    ClusterMultiplicity;
     TID             EventID;
+    ns_t            CBTiming;
 
     std::list<DAQError>     Errors;
 
