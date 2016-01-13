@@ -70,17 +70,6 @@ EtapProton::EtapProton(const string& name, PhysOptPtr opts):
 
 }
 
-template <typename T>
-double TimeAverage(const T& cands) {
-    double time   = 0.0;
-    double energy = 0.0;
-    for(const auto& c : cands) {
-        time += c->Time * c->CaloEnergy;
-        energy += c->CaloEnergy;
-    }
-    return time / energy;
-}
-
 void EtapProton::ProcessEvent(const data::Event& event)
 {
 
@@ -103,7 +92,7 @@ void EtapProton::ProcessEvent(const data::Event& event)
         return;
 
     b_nCB = cands_cb.size();
-    b_CBAvgTime = TimeAverage(cands_cb);
+    b_CBAvgTime = event.Reconstructed.Trigger.CBTiming;
     if(!isfinite(b_CBAvgTime))
         return;
 
