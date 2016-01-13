@@ -53,6 +53,22 @@ public:
         }
     }
 
+    interval_t EnclosingInterval() {
+        if(this->empty())
+            return interval_t({},{});
+
+        auto min_start =  [] (const interval_t& a, const interval_t& b) {
+            return a.Start() < b.Start();
+        };
+        auto min = std::min_element(this->begin(), this->end(), min_start);
+        auto max_stop =  [] (const interval_t& a, const interval_t& b) {
+            return a.Stop() < b.Stop();
+        };
+        auto max = std::max_element(this->begin(), this->end(), max_stop);
+
+        return {min->Start(), max->Stop()};
+    }
+
     /**
      * @brief Check equality.
      * Two PiecewiseIntervals are equal if they contain exactly the same intervals
