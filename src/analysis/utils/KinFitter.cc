@@ -99,9 +99,11 @@ double KinFitter::fct_TaggerEGausSigma(double)
     return  3.0/sqrt(12.0);
 }
 
-KinFitter::KinFitter(const std::string& name, unsigned numGammas):
-    aplcon(make_unique<APLCON>(name))
+KinFitter::KinFitter(const std::string& name, unsigned numGammas)
 {
+    APLCON::Fit_Settings_t settings = APLCON::Fit_Settings_t::Default;
+    settings.MaxIterations = 100;
+    aplcon = make_unique<APLCON>(name, settings);
 
     Photons.reserve(numGammas);
     for(unsigned i=0; i<numGammas;++i) {
