@@ -7,6 +7,7 @@
 #include "expconfig/ExpConfig.h"
 #include "expconfig/detectors/TAPS.h"
 
+
 #include "TTree.h"
 
 using namespace std;
@@ -39,6 +40,9 @@ TAPS_Energy::TAPS_Energy(const string& name, analysis::PhysOptPtr opts) :
                       BinSettings(300),
                       taps_channels,
                       "Pedestals");
+
+    h_tapsdisplay = HistFac.make<TH2TAPS>("h_tapsdisplay","Number of entries");
+
 
     if(!opts->Get<bool>("TAPS_Energy_Advanced"))
         return;
@@ -179,9 +183,12 @@ void TAPS_Energy::ProcessEvent(const Event& event)
 
 void TAPS_Energy::ShowResult()
 {
+    h_tapsdisplay->SetElements(*ggIM->ProjectionY());
+
     canvas(GetName()) << drawoption("colz") << ggIM
                       << drawoption("colz") << timing_cuts
                       << drawoption("colz") << h_pedestals
+                      << h_tapsdisplay
                       << endc;
     if(ggIM_mult) {
         canvas c_proj(GetName()+" Multiplicities");

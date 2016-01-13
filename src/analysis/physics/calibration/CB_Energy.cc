@@ -20,6 +20,7 @@ CB_Energy::CB_Energy(const string& name, analysis::PhysOptPtr opts) :
 
     ggIM = HistFac.makeTH2D("2 neutral IM (CB,CB)", "IM [MeV]", "#",
                             energybins, cb_channels, "ggIM");
+    h_cbdisplay = HistFac.make<TH2CB>("h_cbdisplay","Number of entries");
 }
 
 void CB_Energy::ProcessEvent(const analysis::data::Event& event)
@@ -50,7 +51,10 @@ void CB_Energy::ProcessEvent(const analysis::data::Event& event)
 
 void CB_Energy::ShowResult()
 {
-    canvas(GetName()) << drawoption("colz") << ggIM << endc;
+    h_cbdisplay->SetElements(*ggIM->ProjectionY());
+    canvas(GetName()) << drawoption("colz") << ggIM
+                      << h_cbdisplay
+                      << endc;
 }
 
 AUTO_REGISTER_PHYSICS(CB_Energy)

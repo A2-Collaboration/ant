@@ -2,6 +2,8 @@
 
 #include "analysis/physics/Physics.h"
 
+#include "root-addons/cbtaps_display/TH2CB.h"
+
 namespace ant {
 namespace analysis {
 namespace physics {
@@ -10,6 +12,7 @@ class CB_Energy : public Physics {
 
 protected:
     TH2* ggIM = nullptr;
+    TH2CB* h_cbdisplay = nullptr;
 
 public:
 

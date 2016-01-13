@@ -2,6 +2,9 @@
 
 #include "analysis/physics/Physics.h"
 
+#include "root-addons/cbtaps_display/TH2TAPS.h"
+
+
 namespace ant {
 
 namespace expconfig {
@@ -19,6 +22,7 @@ protected:
     TH3D* ggIM_mult = nullptr;
     TH2D* timing_cuts = nullptr;
     TH2D* h_pedestals = nullptr;
+    TH2TAPS* h_tapsdisplay = nullptr;
 
     std::shared_ptr<expconfig::detector::TAPS> taps_detector;
 
