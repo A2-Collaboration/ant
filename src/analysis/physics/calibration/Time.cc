@@ -22,12 +22,12 @@ Time::Time(const Detector_t::Type_t& detectorType,
                              BinSettings(detector->GetNChannels()),
                              "Time"
                              );
-    hTimeToCBAvg = HistFac.makeTH2D(detectorName + " - Time relative to CB energy-weigted average",
+    hTimeToCBTrigger = HistFac.makeTH2D(detectorName + " - Time relative to CB Trigger",
                              "time [ns]",
                              detectorName + " channel",
-                             BinSettings(2000,-400,400),
+                             BinSettings(1000,-50,50),
                              BinSettings(detector->GetNChannels()),
-                             "hTimeToCBAvg"
+                             "Time_ToF" // for TAPS_ToF offsets..
                              );
     hTimeToTagger = HistFac.makeTH2D(
                         detectorName + " - Time relative to tagger",
@@ -37,11 +37,11 @@ Time::Time(const Detector_t::Type_t& detectorType,
                         BinSettings(detector->GetNChannels()),
                         "hTimeToTagger"
                         );
-    hTimeAvg = HistFac.makeTH1D(detectorName + " - Energy-averaged time",
+    hCBTriggerTiming = HistFac.makeTH1D(detectorName + " - Energy-averaged time",
                                 "time [ns]",
                                 "#",
                                 BinSettings(500,-15,15),
-                                "hTimeAvg");
+                                "hCBTriggerTiming");
 
     // handle tagger differently
     isTagger = dynamic_pointer_cast<TaggerDetector_t, Detector_t>(detector) != nullptr;
@@ -49,46 +49,31 @@ Time::Time(const Detector_t::Type_t& detectorType,
 
 void Time::ProcessEvent(const Event& event)
 {
+    const double CBTimeAvg = event.Reconstructed.Trigger.CBTiming;
+    hCBTriggerTiming->Fill(CBTimeAvg);
+
     // handle Tagger differently
     if(isTagger)
     {
-        double sumE = 0.0;
-        double timeE = 0.0;
-        for(const auto& cand: event.Reconstructed.Candidates) {
-            for(const TCluster& cluster: cand->Clusters) {
-                if(cluster.GetDetectorType() != Detector_t::Type_t::CB)
-                    continue;
-                sumE += cluster.Energy;
-                timeE += cluster.Energy*cluster.Time;
-            }
-        }
-        const double CBTimeAvg = timeE / sumE;
-        hTimeAvg->Fill(CBTimeAvg);
-
         for (const auto& tHit: event.Reconstructed.TaggerHits) {
             hTime->Fill(tHit.Time, tHit.Channel);
-            hTimeToCBAvg->Fill(tHit.Time - CBTimeAvg, tHit.Channel);
+            hTimeToCBTrigger->Fill(tHit.Time - CBTimeAvg, tHit.Channel);
         }
-
         return;
     }
 
-    double sumE = 0.0;
-    double timeE = 0.0;
     for(const auto& cand: event.Reconstructed.Candidates) {
         for(const TCluster& cluster: cand->Clusters) {
             if(cluster.GetDetectorType() != DetectorType)
                 continue;
-            hTime->Fill(cluster.Time,cluster.CentralElement);
-            sumE += cluster.Energy;
-            timeE += cluster.Energy*cluster.Time;
+            hTime->Fill(cluster.Time, cluster.CentralElement);
+            hTimeToCBTrigger->Fill(cluster.Time - CBTimeAvg, cluster.CentralElement);
             for(const auto& taggerhit : event.Reconstructed.TaggerHits) {
                 const double relative_time = cluster.Time - taggerhit.Time;
                 hTimeToTagger->Fill(relative_time, cluster.CentralElement);
             }
         }
     }
-    hTimeAvg->Fill(timeE/sumE);
 }
 
 void Time::ShowResult()
@@ -96,8 +81,8 @@ void Time::ShowResult()
     canvas(GetName())
             << drawoption("colz") << hTime
             << drawoption("colz") << hTimeToTagger
-            << hTimeAvg
-            << drawoption("colz") << hTimeToCBAvg
+            << hCBTriggerTiming
+            << drawoption("colz") << hTimeToCBTrigger
             << endc;
 }
 

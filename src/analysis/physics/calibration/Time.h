@@ -11,9 +11,9 @@ class Time : public Physics {
 protected:
 
     TH2D* hTime;
-    TH2D* hTimeToCBAvg;
+    TH2D* hTimeToCBTrigger;
     TH2D* hTimeToTagger;
-    TH1D* hTimeAvg;
+    TH1D* hCBTriggerTiming;
 
     const Detector_t::Type_t DetectorType;
     bool isTagger;
