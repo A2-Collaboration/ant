@@ -73,12 +73,12 @@ PeakingFitFunction::PeakingFitFunction(): FitFunction(){}
 
 double PeakingFitFunction::SignalToBackground(const double x) const
 {
-    return func->Eval(x);
+    return std::abs(func->Eval(x));
 }
 
 bool PeakingFitFunction::EndsMatch(const double relative_epsilon) const
 {
     const auto range = GetRange();
-    return      SignalToBackground(range.Start()) -1.0 < relative_epsilon
-            &&  SignalToBackground(range.Stop())  -1.0 < relative_epsilon;
+    return      std::abs(SignalToBackground(range.Start())) < relative_epsilon
+            &&  std::abs(SignalToBackground(range.Stop()) ) < relative_epsilon;
 }

@@ -104,5 +104,8 @@ double FitGausPol0::GetPeakWidth() const
 
 double FitGausPol0::SignalToBackground(const double x) const
 {
-    return func->Eval(x) / func->GetParameter(3);
+    const auto s = func->Eval(x);
+    const auto b = func->GetParameter(3);
+
+    return (s-b)/(s+b);
 }

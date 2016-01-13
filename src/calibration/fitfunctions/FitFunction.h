@@ -118,7 +118,7 @@ public:
     /**
      * @brief Signal To Background
      * @param x Position to evaluate
-     * @return (Signal + Background) / Background
+     * @return (Signal + Background) / (Signal - Background)
      */
     virtual double SignalToBackground(const double x) const;
 
