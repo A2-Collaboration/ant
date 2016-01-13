@@ -24,7 +24,9 @@ physics::ExtractResolutions::ExtractResolutions(const std::string& name, PhysOpt
     tree->Branch("Theta",   &b_DTheta);
     tree->Branch("Phi",     &b_DPhi);
     tree->Branch("Element", &b_Element);
-    tree->Branch("tE",      &b_E);
+    tree->Branch("tE",      &b_trueE);
+    tree->Branch("tDir",    &b_trueDir);
+    tree->Branch("rDir",    &b_recDir);
 }
 
 void physics::ExtractResolutions::ProcessEvent(const data::Event& event)
@@ -40,15 +42,18 @@ void physics::ExtractResolutions::ProcessEvent(const data::Event& event)
             const auto& mcp = mcparticles.front();
             const auto& rep = recparticles.front();
 
-            if(rep->Candidate && rep->Candidate->GetDetector() == det) {
+            if(rep->Candidate && (rep->Candidate->GetDetector() & det)) {
                 const auto& c = rep->Candidate->FindCaloCluster();
                 if(c) {
 
                     b_DE      = rep->Ek() - mcp->Ek();
                     b_DTheta  = rep->Theta() - mcp->Theta();
                     b_DPhi    = TVector2::Phi_mpi_pi(rep->Phi() - mcp->Phi());
+                    b_recDir  = rep->Vect();
+
                     b_Element = c->CentralElement;
-                    b_E       = mcp->Ek();
+                    b_trueE       = mcp->Ek();
+                    b_trueDir     = mcp->Vect();
 
                     tree->Fill();
                 }

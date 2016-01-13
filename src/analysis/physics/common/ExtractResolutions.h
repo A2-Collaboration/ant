@@ -43,7 +43,9 @@ public:
     double   b_DTheta  = {};
     double   b_DPhi    = {};
     unsigned b_Element = {};
-    double   b_E       = {};
+    double   b_trueE   = {};
+    TVector3 b_trueDir = {};
+    TVector3 b_recDir  = {};
 
     TTree* tree = nullptr;
 
