@@ -58,6 +58,7 @@ void CB::BuildMappings(vector<UnpackerAcquConfig::hit_mapping_t> &hit_mappings,
     }
 
     assert(true_elements <= 672);
+    assert(true_elements == GetNChannels() - ignoredChannels.size());
 }
 
 
