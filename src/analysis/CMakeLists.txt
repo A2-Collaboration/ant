@@ -59,6 +59,7 @@ set(ANALYSIS_PHYSICS
   physics/common/ExtractResolutions.cc
   physics/pi0/JustPi0.cc
   physics/common/ProtonTAPS.cc
+  physics/etaprime/etaprime_proton.cc
   )
 
 set(ANALYSIS_PHYSICS_CALIBRATION
