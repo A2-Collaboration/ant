@@ -13,6 +13,7 @@
 #pragma link C++ class CBESum_Check+;
 #pragma link C++ class TAPSEnergy_Check+;
 #pragma link C++ class DetectorPlots+;
+#pragma link C++ class BrowseHistogramsCanvas+;
 
 #endif // __CINT__
 

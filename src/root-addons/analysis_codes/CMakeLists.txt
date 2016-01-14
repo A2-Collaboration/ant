@@ -7,6 +7,7 @@ set(DICT_HEADERS
     CBESum_Check.h
     TAPSEnergy_Check.h
     DetectorPlots.h
+    BrowseHistograms.h
   )
 
 set(SRCS
@@ -17,6 +18,7 @@ set(SRCS
     CBESum_Check.cc
     TAPSEnergy_Check.cc
     DetectorPlots.cc
+    BrowseHistograms.cc
   )
 
 set(ROOT_DICTIONARY "${CMAKE_CURRENT_BINARY_DIR}/G__analysis_codes.cc")
