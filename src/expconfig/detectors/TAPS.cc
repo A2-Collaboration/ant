@@ -15,6 +15,11 @@ using namespace ant;
 using namespace ant::expconfig::detector;
 
 
+double TAPS::GetZPosition() const
+{
+    return CherenkovInstalled ? 174.2 : 145.7;
+}
+
 void TAPS::BuildMappings(
         vector<UnpackerAcquConfig::hit_mapping_t>& hit_mappings,
         vector<UnpackerAcquConfig::scaler_mapping_t>&) const
@@ -166,7 +171,7 @@ void TAPS::InitClusterElements()
     // apply the z-position depending on Cherenkov
     // and build the clusterelements
     // we assume that the channel elements are consecutive
-    const double zpos = CherenkovInstalled ? 174.2 : 145.7;
+    const double zpos = GetZPosition();
     for(auto& baf2 : BaF2_elements) {
         baf2.Position.SetZ(zpos);
         clusterelements[baf2.Channel] = addressof(baf2);

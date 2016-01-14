@@ -31,6 +31,8 @@ struct TAPS :
         return clusterelements[channel]->Ignored;
     }
 
+    virtual double GetZPosition() const;
+
     // for UnpackerAcquConfig
     virtual void BuildMappings(
             std::vector<hit_mapping_t>&,
