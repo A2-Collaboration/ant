@@ -60,6 +60,7 @@ set(ANALYSIS_PHYSICS
   physics/pi0/JustPi0.cc
   physics/common/ProtonTAPS.cc
   physics/etaprime/etaprime_proton.cc
+  physics/common/EventDisplayTree.cc
   )
 
 set(ANALYSIS_PHYSICS_CALIBRATION
