@@ -14,6 +14,7 @@
 
 class TMarker;
 class TGraph;
+class TVector2;
 
 namespace ant {
 
@@ -119,6 +120,8 @@ public:
      * @return
      */
     virtual void CreateMarker(UInt_t element); // *MENU*
+
+    virtual void CreateMarker(const TVector2& p, const int m1, const int m2);
 
     ClassDef(TH2Crystals,ANT_CBTAPS_DISPLAY_VERSION)
 };

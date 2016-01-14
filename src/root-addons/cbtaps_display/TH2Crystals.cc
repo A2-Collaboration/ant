@@ -66,16 +66,7 @@ void TH2Crystals::SetMarkerOnBin(const Int_t bin)
                 double x,y;
                 calcCOG(g,x,y);
 
-                auto marker1 = new TMarker(x,y,kFullStar);
-                marker1->SetMarkerColor(kBlack);
-                GetListOfFunctions()->Add(marker1);
-
-                auto marker2 = new TMarker(x,y,kOpenStar);
-                marker2->SetMarkerColor(kWhite);
-                GetListOfFunctions()->Add(marker2);
-
-                // this triggers a draw...
-                SetBinContentChanged(kTRUE);
+                CreateMarker(TVector2(x,y), kFullStar, kStar);
             }
         }
     }
@@ -244,4 +235,18 @@ void TH2Crystals::ResetElements(const Double_t value)
 void TH2Crystals::CreateMarker(const UInt_t element)
 {
     SetMarkerOnBin(element);
+}
+
+void TH2Crystals::CreateMarker(const TVector2& p, const int m1, const int m2)
+{
+    auto marker1 = new TMarker(p.X(), p.Y(), m1);
+    marker1->SetMarkerColor(kBlack);
+    GetListOfFunctions()->Add(marker1);
+
+    auto marker2 = new TMarker(p.X(), p.Y(), m2);
+    marker2->SetMarkerColor(kWhite);
+    GetListOfFunctions()->Add(marker2);
+
+    // this triggers a draw...
+    SetBinContentChanged(kTRUE);
 }
