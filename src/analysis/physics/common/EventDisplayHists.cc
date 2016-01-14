@@ -1,4 +1,4 @@
-#include "EventDisplayTree.h"
+#include "EventDisplayHists.h"
 
 #include "base/std_ext/memory.h"
 #include "base/std_ext/string.h"
@@ -18,7 +18,7 @@ using namespace ant::analysis::physics;
 using namespace std;
 
 
-EventDisplayTree::EventDisplayTree(const string& name, ant::analysis::PhysOptPtr opts):
+EventDisplayHists::EventDisplayHists(const string& name, ant::analysis::PhysOptPtr opts):
     Physics(name, opts),
     taps_cands(12)
 {
@@ -40,10 +40,10 @@ EventDisplayTree::EventDisplayTree(const string& name, ant::analysis::PhysOptPtr
         throw std::runtime_error("TAPS detector not found");
 }
 
-EventDisplayTree::~EventDisplayTree()
+EventDisplayHists::~EventDisplayHists()
 {}
 
-void EventDisplayTree::ProcessEvent(const analysis::data::Event& event)
+void EventDisplayHists::ProcessEvent(const analysis::data::Event& event)
 {
 
     const auto& candidates = event.Reconstructed.Candidates;
@@ -92,4 +92,4 @@ void EventDisplayTree::ProcessEvent(const analysis::data::Event& event)
 }
 
 
-AUTO_REGISTER_PHYSICS(EventDisplayTree)
+AUTO_REGISTER_PHYSICS(EventDisplayHists)

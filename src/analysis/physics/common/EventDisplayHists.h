@@ -11,7 +11,7 @@ namespace ant {
 namespace analysis {
 namespace physics {
 
-class EventDisplayTree : public Physics {
+class EventDisplayHists : public Physics {
 protected:
     unsigned n = 0;
 
@@ -23,8 +23,8 @@ protected:
     std::vector<data::CandidatePtr> taps_cands;
 
 public:
-    EventDisplayTree(const std::string& name, PhysOptPtr opts);
-    virtual ~EventDisplayTree();
+    EventDisplayHists(const std::string& name, PhysOptPtr opts);
+    virtual ~EventDisplayHists();
 
     void ProcessEvent(const data::Event &event) override;
 };
