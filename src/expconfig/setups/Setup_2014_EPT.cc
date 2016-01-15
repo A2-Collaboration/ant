@@ -19,6 +19,7 @@
 #include "calibration/modules/TAPS_Energy.h"
 #include "calibration/modules/TAPS_ShortEnergy.h"
 #include "calibration/modules/TAPS_ShowerCorrection.h"
+#include "calibration/modules/TAPS_ToF.h"
 #include "calibration/modules/TAPSVeto_Energy.h"
 #include "calibration/modules/TAPSVeto_Time.h"
 
@@ -147,6 +148,9 @@ Setup_2014_EPT::Setup_2014_EPT(const string& name, SetupOptPtr opt) :
 
     // enable TAPS shower correction, which is a hook running on list of clusters
     AddCalibration<calibration::TAPS_ShowerCorrection>();
+
+    // add ToF timing to TAPS clusters
+    AddCalibration<calibration::TAPS_ToF>(taps, calibrationDataManager);
 
     // the PID calibration is a physics module only
     AddCalibration<calibration::PID_PhiAngle>(pid, calibrationDataManager);
