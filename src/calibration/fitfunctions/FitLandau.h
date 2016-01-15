@@ -8,6 +8,10 @@ namespace gui {
 
 class FitLandau: public PeakingFitFunction {
 
+    using transformation_t = std::function<double(double, TF1*)>;
+    transformation_t MPV_trafo;
+    transformation_t MPV_trafo_inverse;
+
 public:
     FitLandau();
 

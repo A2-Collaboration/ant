@@ -19,11 +19,26 @@ FitLandau::FitLandau()
     func->SetNpx(1000);
 
     func->SetParName(0,"A");
-    func->SetParName(1,"MPV");
+    func->SetParName(1,"MPV"); // most probable value
     func->SetParName(2,"#sigma");
 
     AddKnob<KnobsTF1::ParameterKnob>(func->GetParName(0), func, 0, IndicatorProperties::Type_t::slider_horizontal);
-    AddKnob<KnobsTF1::ParameterKnob>(func->GetParName(1), func, 1, IndicatorProperties::Type_t::slider_vertical);
+
+    // this ensure the 100% correct position of the most probable value,
+    // see https://root.cern.ch/root/html524/TMath.html#TMath:Landau
+    MPV_trafo = [] (double a, TF1* f) { return a - f->GetParameter(2)*0.22278; };
+    MPV_trafo_inverse = [] (double a, TF1* f) { return a + f->GetParameter(2)*0.22278; };
+    struct MPVKnob : KnobsTF1::TransformedParameterKnob {
+        MPVKnob(TF1* Func, transformation_t trafo, transformation_t trafo_inverse) :
+            TransformedParameterKnob(Func->GetParName(1), Func, 1,
+                                     trafo,
+                                     trafo_inverse,
+                                     IndicatorProperties::Type_t::slider_vertical
+                                     )
+        {}
+    };
+    AddKnob<MPVKnob>(func, MPV_trafo, MPV_trafo_inverse);
+
     AddKnob<KnobsTF1::ReferenceParameterKnob>(func->GetParName(2), func, 2, 1, IndicatorProperties::Type_t::slider_vertical);
     AddKnob<KnobsTF1::RangeKnob>("Min", func, KnobsTF1::RangeKnob::RangeEndType::lower);
     AddKnob<KnobsTF1::RangeKnob>("Max", func, KnobsTF1::RangeKnob::RangeEndType::upper);
@@ -93,7 +108,7 @@ void FitLandau::Load(const SavedState_t &data)
 
 double FitLandau::GetPeakPosition() const
 {
-    return func->GetParameter(1);
+    return MPV_trafo(func->GetParameter(1), func);
 }
 
 double FitLandau::GetPeakWidth() const
