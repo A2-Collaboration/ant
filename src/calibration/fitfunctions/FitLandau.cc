@@ -22,7 +22,16 @@ FitLandau::FitLandau()
     func->SetParName(1,"MPV"); // most probable value
     func->SetParName(2,"#sigma");
 
-    AddKnob<KnobsTF1::ParameterKnob>(func->GetParName(0), func, 0, IndicatorProperties::Type_t::slider_horizontal);
+    struct AmplitudeKnob : KnobsTF1::TransformedParameterKnob {
+        AmplitudeKnob(TF1* Func) :
+            TransformedParameterKnob(Func->GetParName(0), Func, 0,
+                                     [] (double a, TF1*) { return a/5.5; },
+                                     [] (double a, TF1*) { return a*5.5; },
+                                     IndicatorProperties::Type_t::slider_horizontal
+                                     )
+        {}
+    };
+    AddKnob<AmplitudeKnob>(func);
 
     // this ensure the 100% correct position of the most probable value,
     // see https://root.cern.ch/root/html524/TMath.html#TMath:Landau
