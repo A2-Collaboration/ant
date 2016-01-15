@@ -6,8 +6,8 @@ using namespace ant::calibration::gui;
 using namespace ant::calibration::gui::KnobsTF1;
 
 
-ParameterKnob::ParameterKnob(const std::string& n, TF1* Func, int par, IndicatorProperties::Type_t type, Color_t color, double LineW):
-    IndicatorKnob(n,IndicatorProperties(type,color,LineW)),
+ParameterKnob::ParameterKnob(const std::string& name, TF1* Func, int par, IndicatorProperties::Type_t type, Color_t color, double LineW):
+    IndicatorKnob(name,IndicatorProperties(type,color,LineW)),
     func(Func),
     parameter_index(par)
 {
@@ -68,11 +68,11 @@ void RangeKnob::RangeKnob::set(double a)
     }
 }
 
-ReferenceParameterKnob::ReferenceParameterKnob(const std::string& Name, TF1* Func, int par, int reference, IndicatorProperties::Type_t type, Color_t color, double LineW):
-    IndicatorKnob(Name,{type,color,LineW}),
-      func(Func),
-      parameter_index(par),
-      ref_index(reference)
+ReferenceParameterKnob::ReferenceParameterKnob(const std::string& Name, TF1* Func,
+                                               int par, int reference,
+                                               IndicatorProperties::Type_t type, Color_t color, double LineW):
+    ParameterKnob(Name,Func,par,type,color,LineW),
+    ref_index(reference)
 {
 }
 

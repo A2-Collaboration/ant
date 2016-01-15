@@ -12,13 +12,14 @@ namespace gui {
 namespace KnobsTF1 {
 
 
-class ParameterKnob: public IndicatorKnob {
+class ParameterKnob : public IndicatorKnob {
 protected:
     TF1* func = nullptr;
     const int parameter_index = 0;
 public:
 
-    ParameterKnob(const std::string& n, TF1* Func, int par, IndicatorProperties::Type_t type, Color_t color=kBlue, double LineW=3);
+    ParameterKnob(const std::string& n, TF1* Func, int par,
+                  IndicatorProperties::Type_t type, Color_t color=kBlue, double LineW=3);
 
     virtual double get() const override;
     virtual void set(double a) override;
@@ -46,14 +47,13 @@ public:
 };
 
 
-class ReferenceParameterKnob: public IndicatorKnob {
+class ReferenceParameterKnob : public ParameterKnob {
 protected:
-    TF1* func = nullptr;
-    const int parameter_index = 0;
     const int ref_index = 0;
 public:
 
-    ReferenceParameterKnob(const std::string& Name, TF1* Func, int par, int reference, IndicatorProperties::Type_t type, Color_t color=kBlue, double LineW=3);
+    ReferenceParameterKnob(const std::string& Name, TF1* Func, int par, int reference,
+                           IndicatorProperties::Type_t type, Color_t color=kBlue, double LineW=3);
 
     virtual double get() const override;
     virtual void set(double a) override;
