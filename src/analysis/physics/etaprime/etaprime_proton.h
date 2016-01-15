@@ -4,6 +4,7 @@
 #include "base/interval.h"
 #include "plot/PromptRandomHist.h"
 #include "utils/KinFitter.h"
+#include "expconfig/detectors/TAPS.h"
 
 class TH1D;
 class TH2D;
@@ -13,8 +14,8 @@ namespace analysis {
 namespace physics {
 
 class EtapProton : public Physics {
-public:
 
+protected:
     PiecewiseInterval<unsigned> multiplicities;
 
     TTree* tree = nullptr;
@@ -28,6 +29,7 @@ public:
     std::vector<TCandidate> b_Photons;
     TLorentzVector b_PhotonSum;
     double b_ProtonCopl;
+    double b_ProtonBeta;
 
     PromptRandom::Switch promptrandom;
 
@@ -45,6 +47,10 @@ public:
     std::vector<TLorentzVector> b_FittedPhotons;
     TLorentzVector b_FittedPhotonSum;
     double b_FittedProtonCopl;
+
+    std::shared_ptr<expconfig::detector::TAPS> taps_detector;
+
+public:
 
     EtapProton(const std::string& name, PhysOptPtr opts);
 

@@ -18,7 +18,7 @@ using namespace std;
 EtapProton::EtapProton(const string& name, PhysOptPtr opts):
     Physics(name, opts)
 {
-    multiplicities = opts->Get<decltype(multiplicities)>("PhotonMulti");
+    multiplicities = opts->Get<decltype(multiplicities)>("PhotonMulti",{{2,2},{4,4},{6,6}});
 
     promptrandom.AddPromptRange({-2.5,1.5}); // slight offset due to CBAvgTime reference
     promptrandom.AddRandomRange({-50,-10});  // just ensure to be way off prompt peak
@@ -36,6 +36,8 @@ EtapProton::EtapProton(const string& name, PhysOptPtr opts):
     tree->Branch("Photons",    &b_Photons);
     tree->Branch("PhotonSum",  &b_PhotonSum);
     tree->Branch("ProtonCopl", &b_ProtonCopl);
+    tree->Branch("ProtonBeta", &b_ProtonBeta);
+
 
     tree->Branch("BestChi2",  &b_BestChi2);
     tree->Branch("NGoodFits", &b_NGoodFits); // number of good fits
@@ -68,6 +70,7 @@ EtapProton::EtapProton(const string& name, PhysOptPtr opts):
         }
     }
 
+    taps_detector = ExpConfig::Setup::GetDetector<expconfig::detector::TAPS>();
 }
 
 void EtapProton::ProcessEvent(const data::Event& event)
@@ -99,18 +102,24 @@ void EtapProton::ProcessEvent(const data::Event& event)
     if(b_CBSumVetoE > 2)
         return;
 
-    // find the proton candidate in TAPS, ie. the slowest cluster in TAPS
-    /// \todo this could be improved with some proper beta calculation,
-    /// but that needs precise TAPS timing offsets for each element:
-    ///
-    /// beta = s / (s + c*dt*cos(theta))
-    ///
-    /// dt = 0 if particle is photon (that's crucial!)
-    b_Proton.Time = numeric_limits<double>::quiet_NaN();
+    // find the proton candidate in TAPS, ie. the lowest beta=v/c in TAPS
+    b_ProtonBeta = numeric_limits<double>::quiet_NaN();
     data::ParticlePtr proton;
     for(const CandidatePtr& cand_taps : cands_taps) {
-        if(!isfinite(b_Proton.Time) || b_Proton.Time < cand_taps->Time) {
+        // calculate the beta = v/c of the particle from time of flight
+        // note that the time of flight is only correct if the correct reference time
+        // is used...
+        auto taps_cluster = cand_taps->FindCaloCluster();
+        const double dt = taps_detector->GetTimeOfFlight(taps_cluster->Time, taps_cluster->CentralElement,
+                                                          event.Reconstructed.Trigger.CBTiming);
+        const double s = taps_detector->GetZPosition();
+        constexpr double c = 30; // velocity of light in cm/ns
+
+        const double beta = s / (s + c * dt * cos(cand_taps->Theta));
+
+        if(!isfinite(b_ProtonBeta) || b_ProtonBeta > beta) {
             b_Proton = *cand_taps;
+            b_ProtonBeta = beta;
             proton = make_shared<Particle>(ParticleTypeDatabase::Proton, cand_taps);
         }
     }
