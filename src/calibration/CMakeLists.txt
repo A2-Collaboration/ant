@@ -43,6 +43,7 @@ set(SRCS
     fitfunctions/FitGausPol3.cc
     fitfunctions/FitTimewalk.cc
     fitfunctions/FitLandau.cc
+    fitfunctions/FitLandauPol0.cc
     modules/MCEnergySmearing.cc
   )
 

@@ -1,7 +1,7 @@
 #include "TAPS_ToF.h"
 
 #include "calibration/gui/CalCanvas.h"
-#include "fitfunctions/FitLandau.h"
+#include "fitfunctions/FitLandauPol0.h"
 
 #include "DataManager.h"
 
@@ -54,33 +54,13 @@ void TAPS_ToF::GetGUIs(std::list<std::unique_ptr<gui::CalibModule_traits> >& gui
                           ));
 }
 
-struct FitTimingPeak : gui::FitLandau {
-    virtual void SetDefaults(TH1 *hist) override {
-
-        func->SetParameter(2, 3.0);
-        SetRange({-10, 10});
-
-        if(hist) {
-            func->SetParameter(0, hist->GetMaximum()/3.0);
-            const double max_pos = hist->GetXaxis()->GetBinCenter(hist->GetMaximumBin());
-            func->SetParameter(1,max_pos);
-
-        } else {
-            func->SetParameter(0,1000);
-            func->SetParameter(1,0);
-        }
-    }
-
-};
-
-
 TAPS_ToF::TheGUI::TheGUI(const string& name,
                          const std::shared_ptr<Detector_t>& detector_,
                          const std::shared_ptr<DataManager>& cDataManager) :
     gui::CalibModule_traits(name),
     detector(detector_),
     calmgr(cDataManager),
-    fitFunction(make_shared<FitTimingPeak>())
+    fitFunction(make_shared<gui::FitLandauPol0>())
 {
 }
 
