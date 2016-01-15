@@ -10,31 +10,30 @@ using namespace ant::analysis::physics;
 Time::Time(const Detector_t::Type_t& detectorType,
            const string& name, analysis::PhysOptPtr opts)
     :
-      Physics(name, opts),
-      DetectorType(detectorType)
+      Physics(name, opts)
 {
-    auto detector = ExpConfig::Setup::GetDetector(DetectorType);
-    string detectorName(Detector_t::ToString(DetectorType));
+    Detector = ExpConfig::Setup::GetDetector(detectorType);
+    string detectorName(Detector_t::ToString(Detector->Type));
     hTime = HistFac.makeTH2D(detectorName + " - Time",
                              "time [ns]",
                              detectorName + " channel",
                              BinSettings(2000,-400,400),
-                             BinSettings(detector->GetNChannels()),
+                             BinSettings(Detector->GetNChannels()),
                              "Time"
                              );
-    hTimeToCBTrigger = HistFac.makeTH2D(detectorName + " - Time relative to CB Trigger",
+    hTimeToF = HistFac.makeTH2D(detectorName + " - Time for ToF",
                              "time [ns]",
                              detectorName + " channel",
                              BinSettings(1000,-50,50),
-                             BinSettings(detector->GetNChannels()),
-                             "Time_ToF" // for TAPS_ToF offsets..
+                             BinSettings(Detector->GetNChannels()),
+                             "Time_ToF" // for TAPS_ToF offsets...
                              );
     hTimeToTagger = HistFac.makeTH2D(
                         detectorName + " - Time relative to tagger",
                         "time [ns]",
                         detectorName + " channel",
                         BinSettings(2000,-1500,1500),
-                        BinSettings(detector->GetNChannels()),
+                        BinSettings(Detector->GetNChannels()),
                         "hTimeToTagger"
                         );
     hCBTriggerTiming = HistFac.makeTH1D(detectorName + " - Energy-averaged time",
@@ -44,7 +43,8 @@ Time::Time(const Detector_t::Type_t& detectorType,
                                 "hCBTriggerTiming");
 
     // handle tagger differently
-    isTagger = dynamic_pointer_cast<TaggerDetector_t, Detector_t>(detector) != nullptr;
+    isTagger = dynamic_pointer_cast<TaggerDetector_t, Detector_t>(Detector) != nullptr;
+
 }
 
 void Time::ProcessEvent(const Event& event)
@@ -57,17 +57,20 @@ void Time::ProcessEvent(const Event& event)
     {
         for (const auto& tHit: event.Reconstructed.TaggerHits) {
             hTime->Fill(tHit.Time, tHit.Channel);
-            hTimeToCBTrigger->Fill(tHit.Time - CBTimeAvg, tHit.Channel);
+            hTimeToF->Fill(tHit.Time - CBTimeAvg, tHit.Channel);
         }
         return;
     }
 
     for(const auto& cand: event.Reconstructed.Candidates) {
         for(const TCluster& cluster: cand->Clusters) {
-            if(cluster.GetDetectorType() != DetectorType)
+            if(cluster.GetDetectorType() != Detector->Type)
                 continue;
             hTime->Fill(cluster.Time, cluster.CentralElement);
-            hTimeToCBTrigger->Fill(cluster.Time - CBTimeAvg, cluster.CentralElement);
+            const double tof = Detector->GetTimeOfFlight(cluster.Time,
+                                                         cluster.CentralElement,
+                                                         CBTimeAvg);
+            hTimeToF->Fill(tof, cluster.CentralElement);
             for(const auto& taggerhit : event.Reconstructed.TaggerHits) {
                 const double relative_time = cluster.Time - taggerhit.Time;
                 hTimeToTagger->Fill(relative_time, cluster.CentralElement);
@@ -82,7 +85,7 @@ void Time::ShowResult()
             << drawoption("colz") << hTime
             << drawoption("colz") << hTimeToTagger
             << hCBTriggerTiming
-            << drawoption("colz") << hTimeToCBTrigger
+            << drawoption("colz") << hTimeToF
             << endc;
 }
 

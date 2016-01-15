@@ -11,12 +11,12 @@ class Time : public Physics {
 protected:
 
     TH2D* hTime;
-    TH2D* hTimeToCBTrigger;
+    TH2D* hTimeToF;
     TH2D* hTimeToTagger;
     TH1D* hCBTriggerTiming;
 
-    const Detector_t::Type_t DetectorType;
     bool isTagger;
+    std::shared_ptr<Detector_t> Detector;
 
 public:
 
