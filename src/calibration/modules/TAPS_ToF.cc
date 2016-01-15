@@ -54,6 +54,10 @@ void TAPS_ToF::GetGUIs(std::list<std::unique_ptr<gui::CalibModule_traits> >& gui
                           ));
 }
 
+std::vector<string> TAPS_ToF::GetPhysicsModules() const {
+    return {"TAPS_Time"}; // use Time_ToF histogram from there
+}
+
 TAPS_ToF::TheGUI::TheGUI(const string& name,
                          const std::shared_ptr<Detector_t>& detector_,
                          const std::shared_ptr<DataManager>& cDataManager) :

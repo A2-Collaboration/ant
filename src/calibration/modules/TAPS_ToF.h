@@ -71,6 +71,7 @@ public:
     virtual std::list<Loader_t> GetLoaders() override;
 
     virtual void GetGUIs(std::list<std::unique_ptr<calibration::gui::CalibModule_traits> >& guis) override;
+    virtual std::vector<std::string> GetPhysicsModules() const;
 
 protected:
     std::shared_ptr<expconfig::detector::TAPS> Detector;
