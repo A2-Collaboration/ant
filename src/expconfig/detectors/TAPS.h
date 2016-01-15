@@ -36,16 +36,21 @@ struct TAPS :
     }
 
     /**
-     * @brief GetTimeOfFlight
-     * @param clustertime
-     * @param channel
+     * @brief GetTimeOfFlight returns the time of flight in nanoseconds,
+     *  is 0 ns for photons (if correctly calibrated!)
+     * @param clustertime time of cluster in detector
+     * @param channel central element
      * @param trigger_reftime usually given by trigger, e.g. energy-averaged CB timing
-     * @return
+     * @return time in nanoseconds
      */
     virtual double GetTimeOfFlight(double clustertime, unsigned channel, double trigger_reftime) const override {
         return clustertime - clusterelements[channel]->ToFOffset - trigger_reftime;
     }
 
+    /**
+     * @brief GetZPosition distance of front face from center of target
+     * @return distance in centimeters
+     */
     virtual double GetZPosition() const;
 
     // for UnpackerAcquConfig
