@@ -31,6 +31,21 @@ struct TAPS :
         return clusterelements[channel]->Ignored;
     }
 
+    void SetToFOffset(unsigned channel, double value) {
+        clusterelements[channel]->ToFOffset = value;
+    }
+
+    /**
+     * @brief GetTimeOfFlight
+     * @param clustertime
+     * @param channel
+     * @param trigger_reftime usually given by trigger, e.g. energy-averaged CB timing
+     * @return
+     */
+    virtual double GetTimeOfFlight(double clustertime, unsigned channel, double trigger_reftime) const override {
+        return clustertime - clusterelements[channel]->ToFOffset - trigger_reftime;
+    }
+
     virtual double GetZPosition() const;
 
     // for UnpackerAcquConfig
@@ -84,6 +99,7 @@ protected:
     struct TAPS_Element_t : ClusterDetector_t::Element_t {
         using ClusterDetector_t::Element_t::Element_t;
         bool Ignored = false;
+        double ToFOffset = 0;
     };
 
     struct BaF2_Element_t : TAPS_Element_t {
