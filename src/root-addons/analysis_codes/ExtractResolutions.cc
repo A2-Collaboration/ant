@@ -169,8 +169,11 @@ void Analyse(TTree* tree, const unsigned nElements, const string& branch, const 
     TH1D* h_global_sigma = new TH1D(Form("%s_sigma_%s",    detname.c_str(), branch.c_str()), Form("Global #Delta #theta, %s",detname.c_str()),  int(nElements), 0, nElements);
           h_global_sigma->SetXTitle("Element Number");
 
+    TH1D* h_global_mean = new TH1D(Form("%s_mean_%s",    detname.c_str(), branch.c_str()), Form("Global #Delta #theta mean, %s",detname.c_str()),  int(nElements), 0, nElements);
+          h_global_mean->SetXTitle("Element Number");
+
     TH1D* h_fit_p0       = new TH1D(Form("%s_sigma_%s_p0", detname.c_str(), branch.c_str()), Form("Fit #sigma %s, %s, p0", detname.c_str(), branch.c_str()), int(nElements), 0, nElements);
-          h_fit_p0->SetXTitle("Element Number");
+    h_fit_p0->SetXTitle("Element Number");
 
     TH1D* h_fit_p1       = new TH1D(Form("%s_sigma_%s_p1", detname.c_str(), branch.c_str()), Form("Fit #sigma %s, %s, p1", detname.c_str(), branch.c_str()), int(nElements), 0, nElements);
           h_fit_p1->SetXTitle("Element Number");
@@ -212,6 +215,7 @@ void Analyse(TTree* tree, const unsigned nElements, const string& branch, const 
              << " Chi2/dof=" << fe->GetChisquare()/fe->GetNDF() << endl;
 
         h_global_sigma->SetBinContent(e+1,p1f->GetParameter(2));
+        h_global_mean->SetBinContent(e+1,p1f->GetParameter(1));
         h_fit_p0->SetBinContent(e+1, fe->GetParameter(0));
         h_fit_p1->SetBinContent(e+1, fe->GetParameter(1));
         h_fit_p2->SetBinContent(e+1, fe->GetParameter(2));
