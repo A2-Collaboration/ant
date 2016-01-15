@@ -3,6 +3,7 @@
 #include "calibration/gui/Indicator_traits.h"
 
 #include <string>
+#include <functional>
 
 class TF1;
 
@@ -18,7 +19,7 @@ protected:
     const int parameter_index = 0;
 public:
 
-    ParameterKnob(const std::string& n, TF1* Func, int par,
+    ParameterKnob(const std::string& Name, TF1* Func, int par,
                   IndicatorProperties::Type_t type, Color_t color=kBlue, double LineW=3);
 
     virtual double get() const override;
@@ -39,26 +40,35 @@ protected:
     const ConstraintType constraint_type;
 public:
     RangedParameterKnob(
-            const std::string& n, TF1* Func, int par,
+            const std::string& Name, TF1* Func, int par,
             ConstraintType constraint_type_,
             IndicatorProperties::Type_t gui_type, Color_t color=kBlue, double LineW=3);
 
     virtual void set(double a) override;
 };
 
+class TransformedParameterKnob : public ParameterKnob {
+public:
+    using transformation_t = std::function<double(double, TF1*)>;
 
-class ReferenceParameterKnob : public ParameterKnob {
+    TransformedParameterKnob(const std::string& Name, TF1* Func, int par,
+                             transformation_t trafo,
+                             transformation_t trafo_inverse,
+                             IndicatorProperties::Type_t type, Color_t color=kBlue, double LineW=3);
+
+    virtual double get() const override;
+    virtual void set(double a) override;
 protected:
-    const int ref_index = 0;
+    const transformation_t transformation;
+    const transformation_t transformation_inverse;
+};
+
+class ReferenceParameterKnob : public TransformedParameterKnob {
+
 public:
 
     ReferenceParameterKnob(const std::string& Name, TF1* Func, int par, int reference,
                            IndicatorProperties::Type_t type, Color_t color=kBlue, double LineW=3);
-
-    virtual double get() const override;
-    virtual void set(double a) override;
-    virtual double reference() const override;
-
 };
 
 class RangeKnob: public IndicatorKnob {
