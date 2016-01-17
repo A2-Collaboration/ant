@@ -37,6 +37,7 @@ EtapProton::EtapProton(const string& name, PhysOptPtr opts):
     tree->Branch("PhotonSum",  &b_PhotonSum);
     tree->Branch("ProtonCopl", &b_ProtonCopl);
     tree->Branch("ProtonBeta", &b_ProtonBeta);
+    tree->Branch("ProtonToF", &b_ProtonToF);
 
 
     tree->Branch("BestChi2",  &b_BestChi2);
@@ -120,6 +121,7 @@ void EtapProton::ProcessEvent(const data::Event& event)
         if(!isfinite(b_ProtonBeta) || b_ProtonBeta > beta) {
             b_Proton = *cand_taps;
             b_ProtonBeta = beta;
+            b_ProtonToF = dt;
             proton = make_shared<Particle>(ParticleTypeDatabase::Proton, cand_taps);
         }
     }

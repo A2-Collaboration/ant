@@ -30,6 +30,7 @@ protected:
     TLorentzVector b_PhotonSum;
     double b_ProtonCopl;
     double b_ProtonBeta;
+    double b_ProtonToF;
 
     PromptRandom::Switch promptrandom;
 
