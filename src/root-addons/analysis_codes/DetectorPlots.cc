@@ -2,6 +2,7 @@
 #include "../cbtaps_display/TH2CB.h"
 #include "../cbtaps_display/TH2TAPS.h"
 #include "expconfig/ExpConfig.h"
+#include "expconfig/detectors/CB.h"
 #include "base/std_ext/math.h"
 #include <iostream>
 
@@ -158,6 +159,40 @@ void DetectorPlots::PlotCBPhi(const string& setup_name)
     grid->Draw("same text");
 }
 
+void DetectorPlots::PlotCBIgnored(const string& setup_name)
+{
+    ExpConfig::Setup::ManualName = setup_name;
+
+    const auto setup = ExpConfig::Setup::GetLastFound();
+    if(!setup) {
+        cerr << "Setup \"" << setup_name << "\" not found!" << endl;
+        return;
+    }
+    const auto det = setup->GetDetector<expconfig::detector::CB>();
+    if(!det) {
+        cerr << "No CB detector definied in Setup!" << endl;
+        return;
+    }
+
+    auto cb   = new TH2CB();
+    unsigned total = 0;
+    for(unsigned ch=0;ch<det->GetNChannels();ch++) {
+        if(det->IsIgnored(ch) && !det->IsHole(ch)) {
+            cb->SetElement(ch, 1.0);
+            total++;
+        }
+    }
+    cout << "CB total ignored: " << total << endl;
+
+
+    auto grid = new TH2CB();
+    grid->FillElementNumbers();
+
+    new TCanvas();
+    cb->Draw("col");
+    grid->Draw("same text");
+}
+
 void DetectorPlots::PlotTAPSTheta(const string& setup_name)
 {
     new TCanvas();
@@ -180,5 +215,39 @@ void DetectorPlots::PlotTAPSPhi(const string& setup_name)
     grid->FillElementNumbers();
 
     taps->Draw("colz");
+    grid->Draw("same text");
+}
+
+void DetectorPlots::PlotTAPSIgnored(const string& setup_name)
+{
+
+    ExpConfig::Setup::ManualName = setup_name;
+
+    const auto setup = ExpConfig::Setup::GetLastFound();
+    if(!setup) {
+        cerr << "Setup \"" << setup_name << "\" not found!" << endl;
+        return;
+    }
+    const auto det = setup->GetDetector(Detector_t::Type_t::TAPS);
+    if(!det) {
+        cerr << "No TAPS detector definied in Setup!" << endl;
+        return;
+    }
+
+    auto taps   = new TH2TAPS();
+    unsigned total = 0;
+    for(unsigned ch=0;ch<det->GetNChannels();ch++) {
+        if(det->IsIgnored(ch)) {
+            taps->SetElement(ch, 1.0);
+            total++;
+        }
+    }
+    cout << "TAPS total ignored: " << total << endl;
+
+    auto grid = new TH2TAPS();
+    grid->FillElementNumbers();
+
+    new TCanvas();
+    taps->Draw("col");
     grid->Draw("same text");
 }
