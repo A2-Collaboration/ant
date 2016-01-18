@@ -23,7 +23,8 @@ CB::CB() : ClusterDetector_t(Detector_t::Type_t::CB) {
     std_ext::insertRange(holes, 679, 679);
     std_ext::insertRange(holes, 681, 689);
     std_ext::insertRange(holes, 691, 692);
-
+    for(auto hole : holes)
+        elements[hole].IsHole = true;
 }
 
 void CB::SetIgnored(unsigned channel) {
@@ -32,6 +33,11 @@ void CB::SetIgnored(unsigned channel) {
 
 bool CB::IsIgnored(unsigned channel) const {
     return std_ext::contains(ignoredChannels, channel);
+}
+
+bool CB::IsHole(unsigned channel) const
+{
+    return elements[channel].IsHole;
 }
 
 void CB::BuildMappings(vector<UnpackerAcquConfig::hit_mapping_t> &hit_mappings,

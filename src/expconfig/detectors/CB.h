@@ -21,6 +21,7 @@ struct CB :
     }
     virtual void SetIgnored(unsigned channel) override;
     virtual bool IsIgnored(unsigned channel) const override;
+    virtual bool IsHole(unsigned channel) const;
 
     virtual bool Matches(const THeaderInfo&) const override {
         // always match, since CB never changed over A2's lifetime
@@ -53,12 +54,14 @@ protected:
                 4.8 /// \todo use best value from S. Lohse diploma thesis?
                 ),
             ADC(adc),
-            TDC(tdc)
+            TDC(tdc),
+            IsHole(false)
         {}
         unsigned ADC;
         unsigned TDC;
+        bool IsHole;
     };
-    static const std::vector<Element_t> elements;
+    static std::vector<Element_t> elements;
     std::vector<unsigned> ignoredChannels;
 };
 
