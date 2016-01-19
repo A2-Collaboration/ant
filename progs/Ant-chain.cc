@@ -10,6 +10,7 @@
 #include "base/Logger.h"
 #include "base/CmdLine.h"
 #include "base/WrapTFile.h"
+#include "base/std_ext/string.h"
 
 //ROOT
 #include "TDirectory.h"
@@ -19,25 +20,31 @@
 //stl
 #include <string>
 #include <list>
+#include <functional>
 
 using namespace std;
 using namespace ant;
 
-list<string> GetTreeNames(const std::vector<string> filenames) {
-
-    list<string> chains;
-
-    if(filenames.size() > 0) {
-        WrapTFileInput testfile(filenames.at(0));
-
-        const auto trees = testfile.GetListOf<TTree>();
-
-        for(const auto tree : trees) {
-            LOG(INFO) << "Found TTree " << tree->GetName();
-            chains.emplace_back(string(tree->GetName()));
-        }
+template<typename T>
+string get_path(T* dir) {
+    if(dir && dir->GetMotherDir()) {
+        auto prev = get_path(dir->GetMotherDir());
+        return std_ext::formatter() << prev << (prev.empty() ? "" : "/") << dir->GetName();
     }
+    else {
+        return "";
+    }
+}
 
+set<string> GetTreeNames(const std::vector<string> filenames) {
+    set<string> chains; // we use a set to avoid adding the TTree more than once
+    if(filenames.size() > 0) {
+        WrapTFileInput firstfile(filenames.front());
+        firstfile.Traverse([&chains] (TKey* key) {
+            if(string(key->GetClassName()) == "TTree")
+                chains.insert(get_path(key));
+        });
+    }
     return chains;
 }
 
@@ -59,6 +66,10 @@ int main(int argc, char** argv) {
         const auto& inputs = cmd_inputfiles->getValue();
 
         const auto chain_names = GetTreeNames(inputs);
+        if(chain_names.empty()) {
+            LOG(ERROR) << "No TTree found in first input file";
+            return EXIT_FAILURE;
+        }
 
         WrapTFileOutput outfile(cmd_output->getValue(),
                                 WrapTFileOutput::mode_t::recreate,
@@ -80,10 +91,10 @@ int main(int argc, char** argv) {
             LOG(INFO) << "Added " << file;
         }
 
-        LOG(INFO) << "Done";
         for(auto chain : chains) {
             LOG(INFO) << chain->GetName() << ": " << chain->GetEntries() << " Entries";
         }
+        LOG(INFO) << "Remember to use 'TChain* chain = gDirectory->GetKey(\"EtapProton/tree\")->ReadObj()' for TChain from nested TTrees";
 
     }
 
