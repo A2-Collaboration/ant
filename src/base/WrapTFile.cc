@@ -9,6 +9,7 @@
 #include "TH2D.h"
 #include "TH3D.h"
 #include "Compression.h"
+#include "TClass.h"
 
 #include <stdexcept>
 #include <string>
@@ -44,6 +45,33 @@ std::unique_ptr<TFile> WrapTFile::openFile(const string& filename, const string 
 
 WrapTFile::WrapTFile()
 {
+}
+
+void traverse_dir(TDirectory* dir, std::function<void (TKey*)> func) {
+
+    TList* keys = dir->GetListOfKeys();
+    if(!keys)
+        return;
+
+    TIter nextk(keys);
+    TKey* key;
+    while((key = (TKey*)nextk()))
+    {
+        TClass *classPtr = TClass::GetClass(key->GetClassName());
+        if(classPtr->InheritsFrom(TDirectory::Class())) {
+            auto subdir = dynamic_cast<TDirectory*>(key->ReadObj());
+            if(subdir)
+                traverse_dir(subdir, func);
+            continue;
+        }
+        func(key);
+    }
+}
+
+void WrapTFile::Traverse(std::function<void (TKey*)> func) {
+    for(auto& file : files) {
+        traverse_dir(file.get(), func);
+    }
 }
 
 WrapTFile::~WrapTFile()

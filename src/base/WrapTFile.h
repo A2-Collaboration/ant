@@ -15,6 +15,7 @@
 #include <string>
 #include <list>
 #include <stdexcept>
+#include <functional>
 
 class TH1;
 class TH1D;
@@ -29,12 +30,16 @@ namespace ant {
 class WrapTFile {
 protected:
     std::list<std::unique_ptr<TFile>> files;
-
     std::unique_ptr<TFile> openFile(const std::string& filename, const std::string mode);
-
-    WrapTFile();
-
+    WrapTFile(); // cannot be directly constructed, use WrapTFileInput or WrapTFileOutput
 public:
+
+    /**
+     * @brief Traverse applies given function to each leaf in the tree of TDirectory
+     * @param func use TKey to inspect anything of that object
+     * @note A TKey may exist more than once under the same name but with different cycle number
+     */
+    void Traverse(std::function<void(TKey*)> func);
 
     /**
      * @brief GetListOf Generate a list with all Object in File of provided Type
