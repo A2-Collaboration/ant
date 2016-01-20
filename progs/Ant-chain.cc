@@ -11,6 +11,7 @@
 #include "base/CmdLine.h"
 #include "base/WrapTFile.h"
 #include "base/std_ext/string.h"
+#include "base/std_ext/system.h"
 
 //ROOT
 #include "TDirectory.h"
@@ -83,7 +84,8 @@ int main(int argc, char** argv) {
 
         for(const auto& file : inputs) {
             for(auto chain : chains) {
-                const auto res = chain->AddFile(file.c_str());
+                const auto absFile = std_ext::system::absolutePath(file);
+                const auto res = chain->AddFile(absFile.c_str());
                 if(res != 1) {
                     LOG(WARNING) << "Problem with " <<chain->GetName() << " and file " << file << " (" << res << ")";
                 }
