@@ -6,6 +6,7 @@
 #include <dirent.h>
 #include <cstdio>
 #include <cstring>
+#include <stdexcept>
 
 
 
@@ -53,6 +54,24 @@ string system::exec(const string& cmd)
     pclose(pipe);
     result = std_ext::string_sanitize(result.c_str());
     return result;
+}
+
+string system::absolutePath(const string& path, string cwd)
+{
+    if(path.empty())
+        return "";
+
+    if(path[0] == '/')
+        return path;
+
+    if(cwd.empty()) {
+        char buf[PATH_MAX];
+        if(getcwd(buf,sizeof(buf)) == NULL)
+            throw runtime_error("Cannot get current working dir");
+        cwd = buf;
+    }
+
+    return cwd+"/"+path;
 }
 
 

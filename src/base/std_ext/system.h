@@ -41,6 +41,14 @@ struct system {
      */
     static std::string exec(const std::string& cmd);
 
+    /**
+     * @brief absolutePath returns the absolute path of relative path w.r.t. given cwd
+     * @param path relative path
+     * @param cwd if empty, the current working dir is used
+     * @return absolute path
+     */
+    static std::string absolutePath(const std::string& path, std::string cwd = "");
+
 
 };
 }
