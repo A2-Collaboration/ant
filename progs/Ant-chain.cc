@@ -95,8 +95,9 @@ int main(int argc, char** argv) {
 
         for(auto chain : chains) {
             LOG(INFO) << chain->GetName() << ": " << chain->GetEntries() << " Entries";
+            if(std_ext::contains(chain->GetName(), "/"))
+                LOG(INFO) << "Remember to use 'TTree* tree = gDirectory->GetKey(\"" << chain->GetName() << "\")->ReadObj()'";
         }
-        LOG(INFO) << "Remember to use 'TChain* chain = gDirectory->GetKey(\"EtapProton/tree\")->ReadObj()' for TChain from nested TTrees";
 
     }
 
