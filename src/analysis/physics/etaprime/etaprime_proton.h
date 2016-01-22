@@ -18,6 +18,8 @@ class EtapProton : public Physics {
 protected:
     PiecewiseInterval<unsigned> multiplicities;
 
+    TH1D* steps;
+
     TTree* tree = nullptr;
 
     unsigned  b_nCB = 0;

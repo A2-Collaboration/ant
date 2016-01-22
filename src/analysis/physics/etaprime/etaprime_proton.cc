@@ -20,6 +20,8 @@ EtapProton::EtapProton(const string& name, PhysOptPtr opts):
 {
     multiplicities = opts->Get<decltype(multiplicities)>("PhotonMulti",{{2,2},{4,4},{6,6}});
 
+    steps = HistFac.makeTH1D("Steps","","",BinSettings(10),"steps");
+
     promptrandom.AddPromptRange({-2.5,1.5}); // slight offset due to CBAvgTime reference
     promptrandom.AddRandomRange({-50,-10});  // just ensure to be way off prompt peak
     promptrandom.AddRandomRange({  10,50});
@@ -76,6 +78,7 @@ EtapProton::EtapProton(const string& name, PhysOptPtr opts):
 
 void EtapProton::ProcessEvent(const data::Event& event)
 {
+    steps->Fill("Seen",1.0);
 
     const auto& cands = event.Reconstructed.Candidates;
     data::CandidateList cands_taps;
@@ -94,14 +97,14 @@ void EtapProton::ProcessEvent(const data::Event& event)
     b_nTAPS = cands_taps.size();
     if(b_nTAPS == 0)
         return;
+    steps->Fill("nTAPS>0",1.0);
 
     b_nCB = cands_cb.size();
     b_CBAvgTime = event.Reconstructed.Trigger.CBTiming;
     if(!isfinite(b_CBAvgTime))
         return;
+    steps->Fill("CBAvgTime ok",1.0);
 
-    if(b_CBSumVetoE > 2)
-        return;
 
     // find the proton candidate in TAPS, ie. the lowest beta=v/c in TAPS
     b_ProtonBeta = numeric_limits<double>::quiet_NaN();
@@ -139,6 +142,7 @@ void EtapProton::ProcessEvent(const data::Event& event)
 
     if(photons.size()==0 || !multiplicities.Contains(photons.size()))
         return;
+    steps->Fill("Multiplicity ok",1.0);
 
     b_PhotonSum.SetPxPyPzE(0,0,0,0);
     b_Photons.resize(0);
@@ -155,9 +159,13 @@ void EtapProton::ProcessEvent(const data::Event& event)
         return;
     auto& fitter = *fitters[photons.size()-1];
     b_BestChi2 = std::numeric_limits<double>::quiet_NaN();
+    b_TaggW = std::numeric_limits<double>::quiet_NaN();
+    b_TaggT = std::numeric_limits<double>::quiet_NaN();
+    b_TaggE = std::numeric_limits<double>::quiet_NaN();
     b_TaggN = 0;
     b_NGoodFits = 0;
     b_NFitIterations = 0;
+    b_FittedProtonCopl = std::numeric_limits<double>::quiet_NaN();
     for(const data::TaggerHit& taggerhit : event.Reconstructed.TaggerHits) {
         promptrandom.SetTaggerHit(taggerhit.Time - b_CBAvgTime);
         if(promptrandom.State() == PromptRandom::Case::Outside)
@@ -207,10 +215,12 @@ void EtapProton::ProcessEvent(const data::Event& event)
             }
 
             b_FittedProtonCopl = std_ext::radian_to_degree(TVector2::Phi_mpi_pi(fitted_proton->Phi() - b_FittedPhotonSum.Phi() - M_PI ));
-
         }
 
     }
+
+    if(isfinite(b_BestChi2))
+        steps->Fill("KinFit ok",1.0);
 
     tree->Fill();
 }
