@@ -160,9 +160,7 @@ void EtapProton::ProcessEvent(const data::Event& event)
     b_ProtonCopl = std_ext::radian_to_degree(TVector2::Phi_mpi_pi(proton->Phi() - b_PhotonSum.Phi() - M_PI ));
 
     // find the taggerhit with the best E-p conservation Chi2
-    if(photons.size()>fitters.size())
-        return;
-    utils::KinFitter& fitter = *fitters[photons.size()-1];
+    utils::KinFitter& fitter = *fitters.at(photons.size()-1);
     b_BestChi2 = std::numeric_limits<double>::quiet_NaN();
     b_TaggW = std::numeric_limits<double>::quiet_NaN();
     b_TaggT = std::numeric_limits<double>::quiet_NaN();
