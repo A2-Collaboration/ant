@@ -19,6 +19,10 @@ EtapProton::EtapProton(const string& name, PhysOptPtr opts):
     Physics(name, opts)
 {
     multiplicities = opts->Get<decltype(multiplicities)>("PhotonMulti",{{2,2},{4,4},{6,6}});
+    auto enclosing = multiplicities.EnclosingInterval();
+    if(!enclosing.IsSane() || enclosing.Start()<1)
+        throw runtime_error("Given photon multiplicities not sane");
+
 
     steps = HistFac.makeTH1D("Steps","","",BinSettings(10),"steps");
 
@@ -27,7 +31,6 @@ EtapProton::EtapProton(const string& name, PhysOptPtr opts):
     promptrandom.AddRandomRange({  10,50});
 
     tree = HistFac.makeTTree("tree");
-
 
     tree->Branch("nCB",        &b_nCB);
     tree->Branch("nTAPS",      &b_nTAPS);
@@ -39,7 +42,7 @@ EtapProton::EtapProton(const string& name, PhysOptPtr opts):
     tree->Branch("PhotonSum",  &b_PhotonSum);
     tree->Branch("ProtonCopl", &b_ProtonCopl);
     tree->Branch("ProtonBeta", &b_ProtonBeta);
-    tree->Branch("ProtonToF", &b_ProtonToF);
+    tree->Branch("ProtonToF",  &b_ProtonToF);
 
 
     tree->Branch("BestChi2",  &b_BestChi2);
@@ -53,26 +56,28 @@ EtapProton::EtapProton(const string& name, PhysOptPtr opts):
     tree->Branch("TaggN",  &b_TaggN); // number of hits
 
 
+    tree->Branch("FittedTaggE",      &b_FittedTaggE);
     tree->Branch("FittedProton",     &b_FittedProton);
     tree->Branch("FittedPhotons",    &b_FittedPhotons);
     tree->Branch("FittedPhotonSum",  &b_FittedPhotonSum);
     tree->Branch("FittedProtonCopl", &b_FittedProtonCopl);
 
     // prepare fitters for all multiplicities
-    auto enclosing = multiplicities.EnclosingInterval();
-    if(enclosing.IsSane() && enclosing.Start()>=1) {
-        fitters.resize(enclosing.Stop());
-        const auto setup = ant::ExpConfig::Setup::GetLastFound();
-        for(unsigned mult=enclosing.Start();mult<=enclosing.Stop();mult++) {
-            auto fitter = std_ext::make_unique<utils::KinFitter>(
-                              std_ext::formatter() << GetName() << mult,
-                              mult
-                              );
-            fitter->LoadSigmaData(setup->GetPhysicsFilesDirectory()+"/FitterSigmas.root");
-            fitters[mult-1] = move(fitter);
-        }
+    fitters.resize(enclosing.Stop());
+    const auto setup = ant::ExpConfig::Setup::GetLastFound();
+    for(unsigned mult=enclosing.Start();mult<=enclosing.Stop();mult++) {
+        if(!multiplicities.Contains(mult))
+            continue;
+        auto fitter = std_ext::make_unique<utils::KinFitter>(
+                          std_ext::formatter() << "FitMult" << mult,
+                          mult
+                          );
+        fitter->LoadSigmaData(setup->GetPhysicsFilesDirectory()+"/FitterSigmas.root");
+        fitter->SetupBranches(tree);
+        fitters[mult-1] = move(fitter);
     }
 
+    // needed for calculating ToF
     taps_detector = ExpConfig::Setup::GetDetector<expconfig::detector::TAPS>();
 }
 
@@ -157,11 +162,12 @@ void EtapProton::ProcessEvent(const data::Event& event)
     // find the taggerhit with the best E-p conservation Chi2
     if(photons.size()>fitters.size())
         return;
-    auto& fitter = *fitters[photons.size()-1];
+    utils::KinFitter& fitter = *fitters[photons.size()-1];
     b_BestChi2 = std::numeric_limits<double>::quiet_NaN();
     b_TaggW = std::numeric_limits<double>::quiet_NaN();
     b_TaggT = std::numeric_limits<double>::quiet_NaN();
     b_TaggE = std::numeric_limits<double>::quiet_NaN();
+    b_FittedTaggE = std::numeric_limits<double>::quiet_NaN();
     b_TaggN = 0;
     b_NGoodFits = 0;
     b_NFitIterations = 0;
@@ -201,6 +207,8 @@ void EtapProton::ProcessEvent(const data::Event& event)
             b_TaggE = taggerhit.PhotonEnergy;
             b_TaggT = taggerhit.Time;
             b_TaggCh = taggerhit.Channel;
+
+            b_FittedTaggE = fitter.GetFittedBeamE();
 
             auto fitted_photons = fitter.GetFittedPhotons();
             auto fitted_proton = fitter.GetFittedProton();

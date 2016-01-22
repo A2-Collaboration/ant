@@ -46,6 +46,7 @@ protected:
     unsigned b_TaggCh;
     unsigned b_TaggN;
 
+    double b_FittedTaggE;
     TLorentzVector b_FittedProton;
     std::vector<TLorentzVector> b_FittedPhotons;
     TLorentzVector b_FittedPhotonSum;
