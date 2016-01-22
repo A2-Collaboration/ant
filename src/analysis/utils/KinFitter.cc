@@ -204,6 +204,11 @@ data::ParticleList KinFitter::GetFittedPhotons() const
     return photons;
 }
 
+double KinFitter::GetFittedBeamE() const
+{
+    return Beam.E;
+}
+
 
 
 void KinFitter::SetPhotons(const std::vector<analysis::data::ParticlePtr> &photons_data)

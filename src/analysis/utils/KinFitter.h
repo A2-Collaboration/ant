@@ -148,6 +148,7 @@ public:
 
     data::ParticlePtr GetFittedProton() const;
     data::ParticleList GetFittedPhotons() const;
+    double GetFittedBeamE() const;
 
     APLCON::Result_t DoFit();
 
