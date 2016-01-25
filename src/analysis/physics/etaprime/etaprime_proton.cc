@@ -162,7 +162,7 @@ void EtapProton::ProcessEvent(const data::Event& event)
     // find the taggerhit with the best E-p conservation Chi2
     utils::KinFitter& fitter = *fitters.at(photons.size()-1);
     b_BestChi2 = std::numeric_limits<double>::quiet_NaN();
-    b_TaggW = std::numeric_limits<double>::quiet_NaN();
+    b_TaggW = 0; // ROOT does not work properly if weights are NaN
     b_TaggT = std::numeric_limits<double>::quiet_NaN();
     b_TaggE = std::numeric_limits<double>::quiet_NaN();
     b_FittedTaggE = std::numeric_limits<double>::quiet_NaN();
