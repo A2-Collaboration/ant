@@ -18,7 +18,7 @@ public:
         IgnoreDetectorChannels(Detector_t::Type_t::TAPS, {2, 73, 127, 137, 138, 144, 145, 146, 147, 200, 218, 220, 222, 283, 291, 346, 353, 356, 357, 363, 364, 368, 437});
 
         // Not enough statistics for runbyrun "-a 20"
-        IgnoreDetectorChannels(Detector_t::Type_t::TAPS, {0,64,72,75,139,210,217,284,295,358,419});
+        IgnoreDetectorChannels(Detector_t::Type_t::TAPS, {0,64,72,75,139,210,217,273,284,295,358,419});
 
         IgnoreDetectorChannels(Detector_t::Type_t::TAPSVeto, {6,64,128,192,256,263,287,321,337,349});
     }
