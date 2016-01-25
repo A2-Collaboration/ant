@@ -44,16 +44,15 @@ EtapProton::EtapProton(const string& name, PhysOptPtr opts):
     tree->Branch("ProtonBeta", &b_ProtonBeta);
     tree->Branch("ProtonToF",  &b_ProtonToF);
 
-
-    tree->Branch("BestChi2",  &b_BestChi2);
-    tree->Branch("NGoodFits", &b_NGoodFits); // number of good fits
+    tree->Branch("FitStatus",  &b_FitStatus);
+    tree->Branch("FitChi2",  &b_FitChi2);
     tree->Branch("NFitIterations", &b_NFitIterations); // number of good fits
 
     tree->Branch("TaggW",  &b_TaggW); // prompt/random weight
     tree->Branch("TaggE",  &b_TaggE);
     tree->Branch("TaggT",  &b_TaggT);
     tree->Branch("TaggCh", &b_TaggCh);
-    tree->Branch("TaggN",  &b_TaggN); // number of hits
+    tree->Branch("Missing", &b_Missing);
 
 
     tree->Branch("FittedTaggE",      &b_FittedTaggE);
@@ -161,29 +160,21 @@ void EtapProton::ProcessEvent(const data::Event& event)
 
     // find the taggerhit with the best E-p conservation Chi2
     utils::KinFitter& fitter = *fitters.at(photons.size()-1);
-    b_BestChi2 = std::numeric_limits<double>::quiet_NaN();
-    b_TaggW = 0; // ROOT does not work properly if weights are NaN
-    b_TaggT = std::numeric_limits<double>::quiet_NaN();
-    b_TaggE = std::numeric_limits<double>::quiet_NaN();
-    b_FittedTaggE = std::numeric_limits<double>::quiet_NaN();
-    b_TaggN = 0;
-    b_NGoodFits = 0;
-    b_NFitIterations = 0;
-    b_FittedProtonCopl = std::numeric_limits<double>::quiet_NaN();
+
+    bool kinFit_ok = false;
     for(const data::TaggerHit& taggerhit : event.Reconstructed.TaggerHits) {
         promptrandom.SetTaggerHit(taggerhit.Time - b_CBAvgTime);
         if(promptrandom.State() == PromptRandom::Case::Outside)
             continue;
-        b_TaggN++;
 
         // simple missing mass cut
         const TLorentzVector beam_target = taggerhit.GetPhotonBeam() + TLorentzVector(0, 0, 0, ParticleTypeDatabase::Proton.Mass());
-        const TLorentzVector missing = beam_target - b_PhotonSum;
+        b_Missing = beam_target - b_PhotonSum;
 
-        // skip tagger hits which don't match found proton
-        const double angle_p_calcp = std_ext::radian_to_degree(missing.Angle(proton->Vect()));
-        if(angle_p_calcp > 15.0)
-            continue;
+        b_TaggW = promptrandom.FillWeight();
+        b_TaggE = taggerhit.PhotonEnergy;
+        b_TaggT = taggerhit.Time;
+        b_TaggCh = taggerhit.Channel;
 
         // do kinfit
         fitter.SetEgammaBeam(taggerhit.PhotonEnergy);
@@ -191,20 +182,21 @@ void EtapProton::ProcessEvent(const data::Event& event)
         fitter.SetPhotons(photons);
         auto fit_result = fitter.DoFit();
 
-        if(fit_result.Status != APLCON::Result_Status_t::Success)
-            continue;
-        b_NGoodFits++;
 
+        b_FitStatus = static_cast<unsigned>(fit_result.Status);
+        b_FitChi2 = numeric_limits<double>::quiet_NaN();
+        b_NFitIterations = 0;
+        b_FittedTaggE = numeric_limits<double>::quiet_NaN();
+        b_FittedPhotonSum.SetPxPyPzE(0,0,0,0);
+        b_FittedPhotons.resize(0);
+        b_FittedProton.SetPxPyPzE(0,0,0,0);
+        b_FittedProtonCopl = numeric_limits<double>::quiet_NaN();
 
-        // only update stuff if better chi2 found
-        if(!isfinite(b_BestChi2) || b_BestChi2 > fit_result.ChiSquare) {
-            b_BestChi2 = fit_result.ChiSquare;
+        if(fit_result.Status == APLCON::Result_Status_t::Success) {
+            kinFit_ok = true;
+
+            b_FitChi2 = fit_result.ChiSquare;
             b_NFitIterations = fit_result.NIterations;
-
-            b_TaggW = promptrandom.FillWeight();
-            b_TaggE = taggerhit.PhotonEnergy;
-            b_TaggT = taggerhit.Time;
-            b_TaggCh = taggerhit.Channel;
 
             b_FittedTaggE = fitter.GetFittedBeamE();
 
@@ -213,27 +205,24 @@ void EtapProton::ProcessEvent(const data::Event& event)
 
             b_FittedProton = *fitted_proton;
 
-            b_FittedPhotonSum.SetPxPyPzE(0,0,0,0);
-            b_FittedPhotons.resize(0);
             for(const auto& p : fitted_photons) {
-               b_FittedPhotonSum += *p;
-               b_FittedPhotons.emplace_back(*p);
+                b_FittedPhotonSum += *p;
+                b_FittedPhotons.emplace_back(*p);
             }
 
-            b_FittedProtonCopl = std_ext::radian_to_degree(TVector2::Phi_mpi_pi(fitted_proton->Phi() - b_FittedPhotonSum.Phi() - M_PI ));
+            b_FittedProtonCopl = std_ext::radian_to_degree(TVector2::Phi_mpi_pi(b_FittedProton.Phi() - b_FittedPhotonSum.Phi() - M_PI ));
         }
 
+        tree->Fill();
     }
 
-    if(isfinite(b_BestChi2))
+    if(kinFit_ok)
         steps->Fill("KinFit ok",1.0);
-
-    tree->Fill();
 }
 
 void EtapProton::ShowResult()
 {
-    tree->Draw("FittedPhotonSum.M()","BestChi2<300 && @Photons.size()==2");
+    tree->Draw("FittedPhotonSum.M()","FitChi2<300 && nTAPS+nCB==3");
 }
 
 AUTO_REGISTER_PHYSICS(EtapProton)

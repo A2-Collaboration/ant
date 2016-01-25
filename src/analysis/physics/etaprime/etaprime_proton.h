@@ -37,14 +37,15 @@ protected:
     PromptRandom::Switch promptrandom;
 
     std::vector<std::unique_ptr<utils::KinFitter>> fitters;
-    double b_BestChi2;
-    unsigned b_NGoodFits;
+    double b_FitChi2;
+    unsigned b_FitStatus;
     unsigned b_NFitIterations;
     double b_TaggW;
     double b_TaggE;
     double b_TaggT;
     unsigned b_TaggCh;
-    unsigned b_TaggN;
+    TLorentzVector b_Missing;
+
 
     double b_FittedTaggE;
     TLorentzVector b_FittedProton;
