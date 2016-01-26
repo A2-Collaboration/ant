@@ -111,7 +111,7 @@ Setup_2014_EPT::Setup_2014_EPT(const string& name, SetupOptPtr opt) :
                                       calibrationDataManager,
                                       convert_CATCH_CB,
                                       -325,      // default offset in ns
-                                      std::make_shared<calibration::gui::FitGaus>(),
+                                      std::make_shared<calibration::gui::CBPeakFunction>(),
                                       timecuts ? interval<double>{-10, 100} : no_timecut
                                       );
     AddCalibration<calibration::Time>(pid,

@@ -1,6 +1,7 @@
 #pragma once
 
 #include "calibration/Calibration.h"
+#include "fitfunctions/FitGaus.h"
 
 #include "base/std_ext/math.h"
 #include "base/Detector_t.h"
@@ -17,6 +18,13 @@ class DataManager;
 
 namespace gui {
 class PeakingFitFunction;
+class CBPeakFunction: public FitGaus
+{
+public:
+    using FitGaus::FitGaus;
+    virtual  void SetDefaults(TH1 *hist) override;
+};
+
 }
 
 class Time :

@@ -15,6 +15,7 @@
 
 #include "TH1D.h"
 #include "TH2D.h"
+#include "TF1.h"
 
 #include <cstdint>
 
@@ -292,4 +293,22 @@ void Time::TheGUI::StoreFinishSlice(const interval<TID>& range)
     }
 
     calmgr->Add(cdata, Calibration::AddMode_t::StrictRange);
+}
+
+void gui::CBPeakFunction::SetDefaults(TH1* hist)
+{
+    if(hist) {
+        func->SetParameter(0,hist->GetMaximum());
+        const double max_pos = hist->GetXaxis()->GetBinCenter(hist->GetMaximumBin());
+        func->SetParameter(1,max_pos);
+        const double sigma = 2;
+        func->SetParameter(2, sigma);
+        SetRange({max_pos-40*sigma, max_pos+40*sigma});
+    } else {
+        SetRange({0,200});
+        func->SetParameter(0,0.8);
+        func->SetParameter(1,100);
+        func->SetParameter(2,20);
+    }
+
 }
