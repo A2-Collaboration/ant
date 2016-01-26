@@ -9,6 +9,8 @@
 #include "base/std_ext/math.h"
 
 #include "analysis/utils/KinFitter.h"
+#include "base/interval.h"
+#include "analysis/plot/PromptRandomHist.h"
 
 #include <map>
 
@@ -79,7 +81,6 @@ protected:
     TH2D* ggg_gg;
     TH2D* ggg_gg_bg;    // if not from omega decay
     TH2D* ggg_gg_all;
-
     //TH1D* gg_bg;        // if from omega but not pi0 or eta decay
 
     TH1D* ggg;
@@ -152,69 +153,69 @@ class OmegaEtaG2 : public OmegaBase {
 protected:
     void Analyse(const data::Event::Data &data, const data::Event &event) override;
 
-    struct mParticleVars : ant::analysis::utils::ParticleVars {
-        double matchAngle = -1.0;
 
-        virtual void SetBranches(TTree* tree, const std::string& name) override;
-
-        using ParticleVars::ParticleVars;
-
-        virtual ~mParticleVars() {}
+    enum SigBgFlag_t {
+        flagSignal = 0,
+        flagReference,
+        flagBackground
     };
+
+    SigBgFlag_t identify(const data::Event &event) const;
+
 
     std::shared_ptr<ant::Tree<const ParticleTypeDatabase::Type&>> signal_tree;
     std::shared_ptr<ant::Tree<const ParticleTypeDatabase::Type&>> reference_tree;
 
-    analysis::utils::ParticleVars pbranch;
-    double pTime = {};
 
-    analysis::utils::ParticleVars gggbranch;
-    double gggTime = {};
-
-    double ggIM[3] = {};
-
-    analysis::utils::ParticleVars calcp;
-
-    double angle_p_calcp = {};
-
-    mParticleVars g1branch;
-    mParticleVars g2branch;
-    mParticleVars g3branch;
-
-    int    tagch = -1;
-    double tagtime = {};
-
-    int    rf = -1;
+    //======== Tree ===============================================================
 
     TTree*  tree = nullptr;
 
+    analysis::utils::ParticleVars b_g1;
+    analysis::utils::ParticleVars b_g2;
+    analysis::utils::ParticleVars b_g3;
+    analysis::utils::ParticleVars b_p;
+    analysis::utils::ParticleVars b_ggg;
+    analysis::utils::ParticleVars b_mmvector;
+
+    double b_pTime   = {};
+    double b_gggTime = {};
+    double b_ggIM[3] = {};
+
+    double b_copl_angle = 0.0;
+    double b_p_mm_angle = 0.0;
+
+    int    b_TagCh     = -1;
+    double b_TagTime   = 0.0;
+    double b_TagW      = 0.0;
+
+
+    int       b_SigBgFlag = flagSignal;
+
+    double b_ggIM_real    = {};
+    double b_ggIM_comb[2] = {};
+
+    double b_BachelorE[3] = {};
+
+
+    double kinfit_chi2       = 0.0;
+    bool   b_fitok           = false;
+    unsigned b_fitIterations = 0;
+
+
+    //======== Settings ===========================================================
+
     bool data_proton = true;
     bool data_tagger = true;
-    double ESum_cut = 550.0;
+
+    double cut_ESum = 550.0;
+    double cut_Copl = std_ext::degree_to_radian(15.0);
+
+    interval<double> photon_E_cb   = { 50.0,1600.0};
+    interval<double> photon_E_taps = {200.0,1600.0};
+    interval<double> proton_theta  = std_ext::degree_to_radian(interval<double>({0.0, 45.0}));
 
     double calcEnergySum2(const data::Event::Data &e) const;
-
-    enum class channel_type_t {
-        Signal,
-        Reference,
-        Background
-    };
-
-    channel_type_t identify(const data::Event& event) const;
-
-
-
-    struct particleCuts_t {
-        interval<double> E_range = {0,1600};
-        interval<double> Theta_range = {0, 2*M_PI};
-
-        bool TestParticle(const data::Particle& p) const;
-    };
-
-    particleCuts_t photon_cut;
-    particleCuts_t proton_cut;
-
-    data::ParticleList FilterParticles(const data::ParticleList& list, const particleCuts_t& cuts) const;
 
     struct expected_peak_t {
         double Mean;
@@ -227,47 +228,29 @@ protected:
     const expected_peak_t eta_peak   = {5.30815e+02, 2.93928e+01};
     const expected_peak_t pi0_peak   = {1.31331e+02, 1.04835e+01};
 
-    double Chi2_Omega = 0.0;
-    double Chi2_Pi0[3] = {};
-    double Chi2_Eta[3] = {};
-    char   bestEtaIn = 0;
-    char   bestPi0In = 0;
-
-    double   bestChi = 0;
-    char     bestHyp   = 0; // 1== Eta, 2==Pi0, 0==??
-
-    double EgOmegaSys[3] = {};
-
-    double kinfit_chi2 = 0;
-    bool   b_fitok = false;
-    unsigned b_fitIterations = 0;
 
     TH1D* steps;
 
-    const interval<double> complcut = std_ext::degree_to_radian(interval<double>::CenterWidth(180,30));
-
     TH1D* h_TotalEvents;
 
-    utils::KinFitter fitter;
-
     std::map<std::string, TH1D*> pulls;
+
     const std::map<short, std::string> component = {{0, "Energy"}, {1, "Theta"}, {2, "Phi"}};
     const BinSettings pull_bins = BinSettings(201, -10, 10);
 
-    const interval<double> taggerWindow = { -30.0, 30.0 };
 
-    TH1D* ggIM_real = nullptr;
-    TH1D* ggIM_comb = nullptr;
+    ant::analysis::PromptRandom::Switch promptrandom;
+    utils::KinFitter fitter;
 
-    double b_ggIM_real    = {};
-    double b_ggIM_comb[2] = {};
+    bool AcceptedPhoton(const data::ParticlePtr& photon);
+    bool AcceptedProton(const data::ParticlePtr& proton);
 
+    data::ParticleList FilterPhotons(const data::ParticleList& list);
+    data::ParticleList FilterProtons(const data::ParticleList& list);
 
 public:
     OmegaEtaG2(const std::string& name, PhysOptPtr opts);
     virtual ~OmegaEtaG2();
-
-    virtual void ShowResult() override;
 
 };
 
