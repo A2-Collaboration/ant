@@ -259,6 +259,9 @@ protected:
     TH1D* ggIM_real = nullptr;
     TH1D* ggIM_comb = nullptr;
 
+    double b_ggIM_real    = {};
+    double b_ggIM_comb[2] = {};
+
 
 public:
     OmegaEtaG2(const std::string& name, PhysOptPtr opts);

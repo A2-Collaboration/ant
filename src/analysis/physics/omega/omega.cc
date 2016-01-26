@@ -555,6 +555,9 @@ double IM(const ParticlePtr& p1, const ParticlePtr& p2) {
 
 void OmegaEtaG2::Analyse(const Event::Data &data, const Event &event)
 {
+    b_ggIM_real    = std::numeric_limits<double>::quiet_NaN();
+    b_ggIM_comb[0] = std::numeric_limits<double>::quiet_NaN();
+    b_ggIM_comb[1] = std::numeric_limits<double>::quiet_NaN();
 
     const auto& particletree = event.MCTrue.ParticleTree;
 
@@ -776,15 +779,17 @@ void OmegaEtaG2::Analyse(const Event::Data &data, const Event &event)
                 assert(rec_photons[1]!=nullptr);
                 assert(rec_photons[2]!=nullptr);
 
-                ggIM_real->Fill(IM(rec_photons[1], rec_photons[2]));
+                b_ggIM_real = IM(rec_photons[1], rec_photons[2]);
+                ggIM_real->Fill(b_ggIM_real);
 
-                ggIM_comb->Fill(IM(rec_photons[0], rec_photons[1]));
-                ggIM_comb->Fill(IM(rec_photons[0], rec_photons[2]));
+                b_ggIM_comb[0] = IM(rec_photons[0], rec_photons[1]);
+                ggIM_comb->Fill(b_ggIM_comb[0]);
+
+                b_ggIM_comb[1] = IM(rec_photons[0], rec_photons[2]);
+                ggIM_comb->Fill(b_ggIM_comb[1]);
             }
 
         }
-
-
 
 
         tree->Fill();
@@ -878,6 +883,8 @@ OmegaEtaG2::OmegaEtaG2(const std::string& name, PhysOptPtr opts):
     tree->Branch("ibestPi0", &bestPi0In);
     tree->Branch("bestChi",  &bestChi);
     tree->Branch("fbestHyp",  &bestHyp);
+    tree->Branch("ggIM_real",   &b_ggIM_real);
+    tree->Branch("ggIM_comb[2]", b_ggIM_comb, "ggIM_comb[2]/D");
 
     // set up kin fitter
     fitter.SetupBranches(tree, "EPB");
