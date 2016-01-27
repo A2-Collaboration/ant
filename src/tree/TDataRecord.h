@@ -61,4 +61,3 @@ struct TDataRecord
 
 
 } // namespace ant
-#pragma once
