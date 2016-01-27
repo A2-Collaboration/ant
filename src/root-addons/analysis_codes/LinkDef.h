@@ -15,5 +15,10 @@
 #pragma link C++ class DetectorPlots+;
 #pragma link C++ class BrowseHistogramsCanvas+;
 
+#pragma link C++ class TestClass+;
+#pragma link C++ class std::vector<TestClass*>+;
+#pragma link C++ class TestClassContainer+;
+#pragma link C++ class PtrTest+;
+
 #endif // __CINT__
 
