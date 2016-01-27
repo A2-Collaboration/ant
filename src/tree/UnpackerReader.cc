@@ -2,7 +2,6 @@
 
 #include "TEvent.h"
 #include "TDetectorRead.h"
-#include "THeaderInfo.h"
 #include "TUnpackerMessage.h"
 #include "TSlowControl.h"
 
@@ -36,8 +35,6 @@ double UnpackerReader::PercentDone() const
 bool UnpackerReader::OpenInput() {
     // the order here determines the order of NextItem()
     // if the TID is equal
-    if(!SetupBranch("HeaderInfo", HeaderInfo))
-        return false;
     if(!SetupBranch("UnpackerMessage", UnpackerMessage))
         return false;
     if(!SetupBranch("SlowControl", SlowControl))
@@ -49,21 +46,6 @@ bool UnpackerReader::OpenInput() {
 
     isopen = true;
     return true;
-}
-
-bool UnpackerReader::GetUniqueHeaderInfo(THeaderInfo& headerInfo) {
-    for(const treerecord_t& treerecord : treerecords) {
-        const TDataRecord& rec = treerecord.GetRecord();
-        if(rec.IsA() == THeaderInfo::Class()) {
-            TTree* tree = treerecord.Tree;
-            if(tree->GetEntries() != 1)
-                return false;
-            tree->GetEntry(0);
-            headerInfo = *HeaderInfo;
-            return true;
-        }
-    }
-    return false;
 }
 
 std::unique_ptr<TDataRecord> UnpackerReader::NextItem() noexcept {

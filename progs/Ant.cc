@@ -24,7 +24,6 @@
 
 #include "tree/UnpackerReader.h"
 #include "tree/UnpackerWriter.h"
-#include "tree/THeaderInfo.h"
 #include "tree/TAntHeader.h"
 
 #include "base/std_ext/vector.h"
@@ -194,18 +193,7 @@ int main(int argc, char** argv) {
     // then init the unpacker root input file manager
     auto unpackerFile = std_ext::make_unique<tree::UnpackerReader>(rootfiles);
 
-    // search for header info?
-    if(unpackerFile->OpenInput()) {
-        LOG(INFO) << "Found complete set of input ROOT trees for unpacker";
-        THeaderInfo headerInfo;
-        if(unpackerFile->GetUniqueHeaderInfo(headerInfo)) {
-            VLOG(5) << "Found unique header info " << headerInfo;
-            if(!headerInfo.SetupName.empty()) {
-                ExpConfig::Setup::ManualName = headerInfo.SetupName;
-                LOG(INFO) << "Using header info to manually set the setup name to " << ExpConfig::Setup::ManualName;
-            }
-        }
-    }
+    /// \todo use AntHeader's setupname to manually set it here...
 
     // override the setup name from cmd line
     if(cmd_setup->isSet()) {

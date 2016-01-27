@@ -8,7 +8,6 @@
 
 #include "unpacker/Unpacker.h"
 
-#include "tree/THeaderInfo.h"
 #include "tree/TDetectorRead.h"
 
 using namespace std;
@@ -37,14 +36,14 @@ namespace ant {
 struct ReconstructTester : Reconstruct_traits {
     Reconstruct r;
 
-    void Initialize(const THeaderInfo& headerInfo) override
-    {
-        r.Initialize(headerInfo);
-    }
-
     MemoryPool<TEvent>::Item DoReconstruct(TDetectorRead& detectorRead) override
     {
         /// \todo Improve requirements
+
+        if(!r.initialized) {
+            r.Initialize(detectorRead.ID);
+        }
+        REQUIRE(r.initialized);
 
         // update the updateables :)
         r.updateablemanager->UpdateParameters(detectorRead.ID);
@@ -126,7 +125,7 @@ void dotest() {
     auto unpacker = Unpacker::Get(string(TEST_BLOBS_DIRECTORY)+"/Acqu_oneevent-big.dat.xz");
 
     // instead of the usual reconstruct, we use our tester
-    unique_ptr<ReconstructTester> reconstruct;
+    ReconstructTester reconstruct;
 
     unsigned nReads = 0;
     unsigned nHits = 0;
@@ -134,21 +133,12 @@ void dotest() {
 
     while(auto item = unpacker->NextItem()) {
 
-        auto HeaderInfo = dynamic_cast<THeaderInfo*>(item.get());
-        if(HeaderInfo != nullptr) {
-            reconstruct = std_ext::make_unique<ReconstructTester>();
-            reconstruct->Initialize(*HeaderInfo);
-            continue;
-        }
-
         auto DetectorRead = dynamic_cast<TDetectorRead*>(item.get());
         if(DetectorRead != nullptr) {
             nReads++;
             nHits += DetectorRead->Hits.size();
-            if(reconstruct) {
-                auto event = reconstruct->DoReconstruct(*DetectorRead);
-                nCandidates += event->Candidates.size();
-            }
+            auto event = reconstruct.DoReconstruct(*DetectorRead);
+            nCandidates += event->Candidates.size();
         }
     }
 

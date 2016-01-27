@@ -93,7 +93,6 @@ public:
     bool OpenInput();
     bool IsOpen() const { return isopen; }
 
-    bool GetUniqueHeaderInfo(THeaderInfo& headerInfo);
     virtual std::unique_ptr<TDataRecord> NextItem() noexcept override;
 
 };

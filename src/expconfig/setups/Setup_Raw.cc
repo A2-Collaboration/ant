@@ -28,7 +28,7 @@ public:
         return numeric_limits<double>::quiet_NaN();
     }
 
-    bool Matches(const THeaderInfo&) const override {
+    bool Matches(const TID&) const override {
         // Setup must be manually selected
         // via command line
         return false;

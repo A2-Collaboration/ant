@@ -4,7 +4,7 @@
  *
  * This part represents the experimental config, including the feature to
  * automatically search and find an appropiate experimental config based on
- * ant::THeaderInfo or on the name of a setup.
+ * ant::TID or on the name of a setup.
  *
  */
 
@@ -19,7 +19,7 @@
 
 namespace ant {
 
-struct THeaderInfo;
+struct TID;
 struct Updateable_traits;
 namespace calibration {
 class DataManager;
@@ -30,11 +30,11 @@ class ExpConfig
 public:
 
 
-    // all configs have a common base and should match via THeaderInfo
+    // all configs have a common base and should match via TID
     class Base {
     public:
         virtual ~Base() = default;
-        virtual bool Matches(const THeaderInfo& header) const = 0;
+        virtual bool Matches(const TID& header) const = 0;
     };
 
     // the ExpConfig::Setup provides general information about the experiment
@@ -51,7 +51,7 @@ public:
 
         // you may obtain such an Expconfig::Setup via headerInfo, name,
         // get all of them, or the last found one
-        static std::shared_ptr<Setup> Get(const THeaderInfo& header);
+        static std::shared_ptr<Setup> Get(const TID& header);
         static std::shared_ptr<Setup> Get(const std::string& name);
         static std::list<std::string> GetNames();
         static std::shared_ptr<Setup> GetLastFound();
@@ -85,7 +85,7 @@ public:
         virtual candidatebuilder_config_t GetCandidateBuilderConfig() const { return candidatebuilder_config_t(); }
 
         // factory method to obtain such a type of config
-        static std::shared_ptr<Reconstruct> Get(const THeaderInfo& header);
+        static std::shared_ptr<Reconstruct> Get(const TID& header);
     };
 
     // each unpacker has its own config,
@@ -93,7 +93,7 @@ public:
     template<class T>
     class Unpacker : public virtual Base {
     public:
-        static std::shared_ptr<T> Get(const THeaderInfo& header);
+        static std::shared_ptr<T> Get(const TID& header);
     };
 
     class Exception : public std::runtime_error {
@@ -107,7 +107,7 @@ public:
 
 private:
     template<typename T>
-    static std::shared_ptr<T> Get_(const THeaderInfo& header);
+    static std::shared_ptr<T> Get_(const TID& header);
 };
 
 template<typename DetectorType>

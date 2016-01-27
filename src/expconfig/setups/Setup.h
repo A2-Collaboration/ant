@@ -6,7 +6,7 @@
 #include "unpacker/UnpackerAcqu.h"
 #include "unpacker/UnpackerA2Geant.h"
 
-#include "tree/THeaderInfo.h"
+#include "tree/TID.h"
 
 #include "calibration/Calibration.h"
 #include "calibration/DataManager.h"
@@ -90,7 +90,7 @@ protected:
         AddCalibration(std::make_shared<T>(std::forward<Args>(args)...));
     }
 
-    bool Matches(const THeaderInfo& header) const override;
+    bool Matches(const TID& tid) const override;
 
     void BuildMappings(std::vector<hit_mapping_t>& hit_mappings,
                        std::vector<scaler_mapping_t>& scaler_mappings) const override;

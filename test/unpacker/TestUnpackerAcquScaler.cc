@@ -4,7 +4,6 @@
 #include "Unpacker.h"
 #include "expconfig/ExpConfig.h"
 
-#include "tree/THeaderInfo.h"
 #include "tree/TDetectorRead.h"
 #include "tree/TSlowControl.h"
 

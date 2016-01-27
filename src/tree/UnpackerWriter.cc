@@ -2,7 +2,6 @@
 
 #include "TEvent.h"
 #include "TDetectorRead.h"
-#include "THeaderInfo.h"
 #include "TUnpackerMessage.h"
 #include "TSlowControl.h"
 
@@ -22,7 +21,6 @@ UnpackerWriter::UnpackerWriter(const string& outputfile)
     file = std_ext::make_unique<WrapTFileOutput>(outputfile,WrapTFileOutput::mode_t::recreate, true);
     Event.Init();
     DetectorRead.Init();
-    HeaderInfo.Init();
     UnpackerMessage.Init();
     SlowControl.Init();
 }
@@ -34,8 +32,6 @@ void UnpackerWriter::Fill(TDataRecord* record) noexcept
    if(Event.TryFill(record))
        return;
    if(DetectorRead.TryFill(record))
-       return;
-   if(HeaderInfo.TryFill(record))
        return;
    if(UnpackerMessage.TryFill(record))
        return;

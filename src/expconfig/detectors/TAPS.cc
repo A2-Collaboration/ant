@@ -4,7 +4,7 @@
 #include "detail/TAPS_2013_PbWO4_elements.h"
 
 
-#include "tree/THeaderInfo.h"
+#include "tree/TID.h"
 #include "base/interval.h"
 
 #include <iostream>
@@ -190,8 +190,8 @@ void TAPS::InitClusterElements()
     }
 }
 
-bool TAPS_2013::Matches(const THeaderInfo& headerInfo) const {
-    return std_ext::time_after(headerInfo.Timestamp, "2013-11-01");
+bool TAPS_2013::Matches(const TID& tid) const {
+    return std_ext::time_after(tid.Timestamp, "2013-11-01");
 }
 
 

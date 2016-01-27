@@ -3,7 +3,6 @@
 #include "expconfig/ExpConfig.h"
 
 
-#include "tree/THeaderInfo.h"
 #include "tree/TDetectorRead.h"
 
 #include "base/WrapTFile.h"
@@ -74,7 +73,7 @@ bool UnpackerA2Geant::OpenFile(const string& filename)
 
     if(inputfile->GetObject("h12_tid", tid_tree)) {
         if(tid_tree->GetEntries() != geant->GetEntries()) {
-            throw Exception("Geant Tree and TID Tree size missmatch");
+            throw Exception("Geant Tree and TID Tree size mismatch");
         }
 
         geant->AddFriend(tid_tree);
@@ -106,10 +105,8 @@ bool UnpackerA2Geant::OpenFile(const string& filename)
     if(manualName.empty()) {
         throw ExpConfig::ExceptionNoConfig("This unpacker requires a manually set setup name");
     }
-    // build a bogus headerInfo and ask for config
-    headerInfo = std_ext::make_unique<THeaderInfo>(*id,
-                                                   manualName);
-    auto config = ExpConfig::Unpacker<UnpackerA2GeantConfig>::Get(*headerInfo);
+    // actually the given id does not matter since ManualName is set...
+    auto config = ExpConfig::Unpacker<UnpackerA2GeantConfig>::Get(*id);
 
     // find some taggerdetectors
     // needed to create proper tagger hits from incoming photons
@@ -146,12 +143,6 @@ unique_ptr<TDataRecord> UnpackerA2Geant::NextItem() noexcept
 {
     if(current_entry>=geant->GetEntriesFast()-1)
         return nullptr;
-
-    // return the headerinfo as the very first item, afterwards,
-    // we can forget about the headerInfo...
-    if(headerInfo != nullptr) {
-        return move(headerInfo);
-    }
 
     geant->GetEntry(++current_entry);
 

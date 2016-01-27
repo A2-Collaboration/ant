@@ -69,13 +69,13 @@ Setup::Setup(const std::string& name, SetupOptPtr opt) :
     calibrationDataManager = std::make_shared<calibration::DataManager>(calibrationDataFolder);
 }
 
-bool Setup::Matches(const ant::THeaderInfo& header) const {
+bool Setup::Matches(const ant::TID& tid) const {
     // check that all detectors match
     for(const auto& detector : detectors) {
         const auto& ptr = std::dynamic_pointer_cast<ExpConfig::Base, Detector_t>(detector);
         if(ptr == nullptr)
             continue;
-        if(!ptr->Matches(header))
+        if(!ptr->Matches(tid))
             return false;
     }
     return true;

@@ -166,7 +166,7 @@ public:
         return numeric_limits<double>::quiet_NaN();
     }
 
-    bool Matches(const THeaderInfo&) const override {
+    bool Matches(const TID&) const override {
         // Setup must be manually selected (for test cases)
         // via ExpConfig::Setup::ManualName
         return false;

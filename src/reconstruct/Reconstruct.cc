@@ -8,7 +8,6 @@
 
 #include "tree/TDataRecord.h"
 #include "tree/TDetectorRead.h"
-#include "tree/THeaderInfo.h"
 #include "tree/TEvent.h"
 
 #include "base/Logger.h"
@@ -29,9 +28,9 @@ Reconstruct::Reconstruct() {}
 // makes forward declaration work properly
 Reconstruct::~Reconstruct() {}
 
-void Reconstruct::Initialize(const THeaderInfo& headerInfo)
+void Reconstruct::Initialize(const TID& tid)
 {
-    const auto& config = ExpConfig::Reconstruct::Get(headerInfo);
+    const auto& config = ExpConfig::Reconstruct::Get(tid);
 
     // hooks are usually calibrations, which may also be updateable
     const shared_ptr_list<ReconstructHook::Base>& hooks = config->GetReconstructHooks();
@@ -62,12 +61,18 @@ void Reconstruct::Initialize(const THeaderInfo& headerInfo)
 
     // init the updateable manager
     updateablemanager = std_ext::make_unique<UpdateableManager>(
-                            headerInfo.ID, config->GetUpdateables()
+                            tid, config->GetUpdateables()
                             );
+
+    initialized = true;
 }
 
 MemoryPool<TEvent>::Item Reconstruct::DoReconstruct(TDetectorRead& detectorRead)
 {
+    if(!initialized) {
+        Initialize(detectorRead.ID);
+    }
+
     // update the updateables :)
     updateablemanager->UpdateParameters(detectorRead.ID);
 

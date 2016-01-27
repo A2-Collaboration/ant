@@ -4,7 +4,6 @@
 #include "Unpacker.h"
 #include "expconfig/ExpConfig.h"
 
-#include "tree/THeaderInfo.h"
 #include "tree/TUnpackerMessage.h"
 #include "tree/TSlowControl.h"
 #include "tree/TDetectorRead.h"
@@ -26,10 +25,6 @@ using namespace std;
 
 template<typename T>
 void dotest(Long64_t expectedEntries);
-
-TEST_CASE("Test TreeWriter: ant::THeaderInfo", "[unpacker]") {
-    dotest<ant::THeaderInfo>(1);
-}
 
 TEST_CASE("Test TreeWriter: ant::TSlowControl", "[unpacker]") {
     dotest<ant::TSlowControl>(8);

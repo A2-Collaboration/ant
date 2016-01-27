@@ -2,7 +2,7 @@
 
 #include "detail/EPT_2014_elements.h"
 
-#include "tree/THeaderInfo.h"
+#include "tree/TID.h"
 
 #include <limits>
 #include <cassert>
@@ -14,8 +14,8 @@ using namespace ant::expconfig::detector;
 
 
 
-bool EPT_2014::Matches(const THeaderInfo &headerInfo) const {
-    return std_ext::time_between(headerInfo.Timestamp,
+bool EPT_2014::Matches(const TID& tid) const {
+    return std_ext::time_between(tid.Timestamp,
                                  "2014-07-01", "2014-12-31");
 }
 

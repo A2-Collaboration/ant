@@ -6,7 +6,6 @@
 
 #include "tree/UnpackerWriter.h"
 #include "tree/TEvent.h"
-#include "tree/THeaderInfo.h"
 #include "tree/TDetectorRead.h"
 #include "tree/TSlowControl.h"
 
@@ -28,7 +27,6 @@ AntReader::AntReader(
         ) :
     reader(move(unpacker_reader)),
     reconstruct(move(reconstruct)),
-    haveReconstruct(false),
     writeUncalibrated(false),
     writeCalibrated(false)
 {
@@ -74,21 +72,13 @@ bool AntReader::ReadNextEvent(Event& event)
         // because it's much faster than dynamic_cast (but also potentially unsafe)
         const TClass* isA = item->IsA();
 
-        if(isA == THeaderInfo::Class()) {
-            const THeaderInfo* headerInfo = reinterpret_cast<THeaderInfo*>(item.get());
-            if(reconstruct) {
-                reconstruct->Initialize(*headerInfo);
-                haveReconstruct = true;
-                LOG(INFO) << "Found THeaderInfo in unpacker datastream, initialized Reconstruct";
-            }
-        }
-        else if(isA == TDetectorRead::Class()) {
+        if(isA == TDetectorRead::Class()) {
             TDetectorRead* detread = reinterpret_cast<TDetectorRead*>(item.get());
 
             if(writer && writeUncalibrated)
                 writer->Fill(item.get());
 
-            if(haveReconstruct) {
+            if(reconstruct) {
                 MemoryPool<TEvent>::Item tevent = reconstruct->DoReconstruct(*detread);
                 event = Converter::Convert(*tevent);
                 if(writer) {

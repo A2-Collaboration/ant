@@ -25,7 +25,6 @@
 #pragma link C++ class ant::TTagger+;
 #pragma link C++ class ant::TEvent+;
 
-#pragma link C++ class ant::THeaderInfo+;
 #pragma link C++ class ant::TSlowControl+;
 #pragma link C++ class ant::TUnpackerMessage+;
 #pragma link C++ class ant::TCalibrationData+;

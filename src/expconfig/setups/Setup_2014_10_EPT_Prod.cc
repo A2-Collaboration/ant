@@ -24,10 +24,10 @@ public:
     }
 
 
-    bool Matches(const THeaderInfo& header) const override {
-        if(!Setup_2014_EPT::Matches(header))
+    bool Matches(const TID& tid) const override {
+        if(!Setup_2014_EPT::Matches(tid))
             return false;
-        if(!std_ext::time_between(header.Timestamp, "2014-10-14", "2014-11-03"))
+        if(!std_ext::time_between(tid.Timestamp, "2014-10-14", "2014-11-03"))
             return false;
         return true;
     }

@@ -33,8 +33,6 @@ protected:
     std::unique_ptr<Unpacker::Reader> reader;
     std::unique_ptr<tree::UnpackerWriter> writer;
     std::unique_ptr<Reconstruct_traits> reconstruct;
-    bool haveReconstruct;
-
 
     bool writeUncalibrated;
     bool writeCalibrated;

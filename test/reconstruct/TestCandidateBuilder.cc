@@ -8,7 +8,6 @@
 
 #include "unpacker/Unpacker.h"
 
-#include "tree/THeaderInfo.h"
 #include "tree/TDetectorRead.h"
 
 using namespace std;
@@ -128,11 +127,11 @@ struct CandidateBuilderTester : CandidateBuilder {
 
 struct ReconstructTester : Reconstruct {
 
-    virtual void Initialize(const THeaderInfo& headerInfo) override
+    virtual void Initialize(const TID& tid) override
     {
-        Reconstruct::Initialize(headerInfo);
+        Reconstruct::Initialize(tid);
         // replace the candidate builder with our tester
-        const auto& config = ExpConfig::Reconstruct::Get(headerInfo);
+        const auto& config = ExpConfig::Reconstruct::Get(tid);
         candidatebuilder = std_ext::make_unique<CandidateBuilderTester>(sorted_detectors, config);
     }
 };
@@ -151,13 +150,6 @@ void dotest() {
     unsigned nCandidates = 0;
 
     while(auto item = unpacker->NextItem()) {
-
-        auto HeaderInfo = dynamic_cast<THeaderInfo*>(item.get());
-        if(HeaderInfo != nullptr) {
-            reconstruct = std_ext::make_unique<ReconstructTester>();
-            reconstruct->Initialize(*HeaderInfo);
-            continue;
-        }
 
         auto DetectorRead = dynamic_cast<TDetectorRead*>(item.get());
         if(DetectorRead != nullptr) {

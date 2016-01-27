@@ -15,7 +15,6 @@ namespace ant {
 
 struct TEvent;
 struct TDetectorRead;
-struct THeaderInfo;
 struct TUnpackerMessage;
 struct TSlowControl;
 class WrapTFile;
@@ -66,7 +65,6 @@ class UnpackerWriter {
 
     treerecord_t<TEvent> Event;
     treerecord_t<TDetectorRead> DetectorRead;
-    treerecord_t<THeaderInfo> HeaderInfo;
     treerecord_t<TUnpackerMessage> UnpackerMessage;
     treerecord_t<TSlowControl> SlowControl;
 

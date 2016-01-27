@@ -28,11 +28,6 @@ class Reconstruct : public Reconstruct_traits {
 public:
     Reconstruct();
 
-    // You can only use the reconstruct machinery
-    // if it's able to find its config. For this, it needs the
-    // some THeaderInfo object
-    virtual void Initialize(const THeaderInfo& headerInfo) override;
-
     // this method converts a TDetectorRead
     // into a calibrated TEvent
     virtual MemoryPool<TEvent>::Item DoReconstruct(TDetectorRead& detectorRead) override;
@@ -48,7 +43,8 @@ public:
 
 private:
 
-
+    bool initialized = false;
+    virtual void Initialize(const TID& tid);
 
     using sorted_readhits_t = ReconstructHook::Base::readhits_t;
     sorted_readhits_t sorted_readhits;

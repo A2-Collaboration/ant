@@ -13,7 +13,6 @@
 namespace ant {
 
 struct TID;
-struct THeaderInfo;
 struct TDetectorRead;
 struct TDetectorReadHit;
 struct TEvent;
@@ -24,18 +23,14 @@ struct AdaptorTClusterHit;
 }
 
 struct Reconstruct_traits {
-    virtual ~Reconstruct_traits() = default;
-    /**
-     * @brief Initialize called before first DoReconstruct() call
-     * @param headerInfo
-     */
-    virtual void Initialize(const THeaderInfo& headerInfo) = 0;
     /**
      * @brief DoReconstruct shall convert the given TDetectorRead to TEvent
      * @param detectorRead
      * @return the reconstructed TEvent
      */
     virtual MemoryPool<TEvent>::Item DoReconstruct(TDetectorRead& detectorRead) = 0;
+
+    virtual ~Reconstruct_traits() = default;
 };
 
 /**

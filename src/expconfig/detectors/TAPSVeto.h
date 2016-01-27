@@ -125,7 +125,7 @@ struct TAPSVeto_2013 : TAPSVeto {
                  BaF2_elements_init, PbWO4_elements_init)
     {}
 
-    virtual bool Matches(const THeaderInfo& headerInfo) const override;
+    virtual bool Matches(const TID& tid) const override;
 
 protected:
     TAPSVeto_2013(
@@ -148,7 +148,7 @@ struct TAPSVeto_2014 : TAPSVeto_2013 {
         TAPSVeto_2013(cherenkovInstalled, BaF2_elements_init)
     {}
 
-    virtual bool Matches(const THeaderInfo& headerInfo) const override;
+    virtual bool Matches(const TID& tid) const override;
 
 private:
     const static std::vector<BaF2_Element_t>  BaF2_elements_init;

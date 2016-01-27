@@ -4,7 +4,6 @@
 #include "UnpackerAcqu_legacy.h"
 #include "UnpackerAcqu_templates.h"
 
-#include "tree/THeaderInfo.h"
 #include "tree/TUnpackerMessage.h"
 #include "tree/TSlowControl.h"
 #include "tree/TDetectorRead.h"

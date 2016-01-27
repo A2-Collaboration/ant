@@ -5,7 +5,6 @@
 #include "base/tmpfile_t.h"
 #include "base/std_ext/memory.h"
 
-#include "tree/THeaderInfo.h"
 
 #include "unpacker/Unpacker.h"
 #include "expconfig/ExpConfig.h"
@@ -18,8 +17,6 @@ using namespace ant;
 
 void dotest_rw();
 void dotest_r();
-void generateInputFile(const std::string& filename);
-
 
 TEST_CASE("WrapTFileInput", "[base]") {
     dotest_r();
@@ -30,18 +27,8 @@ TEST_CASE("WrapTFileOutput", "[base]") {
 }
 
 void dotest_r() {
-    ant::tmpfile_t tmp;
-    ant::WrapTFileInput m;
-
-    generateInputFile(tmp.filename);
-
-    m.OpenFile(tmp.filename);
-
-    TTree* tree = nullptr;
-
-    REQUIRE( m.GetObject("treeHeaderInfo", tree));
-    REQUIRE(tree != nullptr);
-    REQUIRE(tree->GetEntries() == 1);
+    /// \todo write some WrapTFileInput tests...
+    /// create ROOT file manually, then inspect it with WrapTFileInput
 }
 
 
@@ -61,23 +48,4 @@ void dotest_rw() {
     REQUIRE(infile.GetListOf<TH1D>().size() == 2);
 }
 
-void generateInputFile(const string& filename) {
-    ant::ExpConfig::Setup::ManualName = "Setup_Test";
-    auto unpacker = ant::Unpacker::Get(string(TEST_BLOBS_DIRECTORY)+"/Acqu_oneevent-small.dat.xz");
-
-    // write some stuff to a ROOT tree
-    ant::WrapTFileOutput file(filename);
-    TTree* treeHeaderInfo = file.CreateInside<TTree>("treeHeaderInfo", "treeHeaderInfo");
-    ant::THeaderInfo* HeaderInfo = file.CreateInside<ant::THeaderInfo>();
-
-    treeHeaderInfo->Branch("THeaderInfo", "ant::THeaderInfo", &HeaderInfo);
-
-    while(auto item = unpacker->NextItem()) {
-        HeaderInfo = dynamic_cast<ant::THeaderInfo*>(item.get());
-        if(HeaderInfo != nullptr) {
-            treeHeaderInfo->Fill();
-            break;
-        }
-    }
-}
 

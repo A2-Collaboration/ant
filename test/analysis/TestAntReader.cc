@@ -4,7 +4,6 @@
 #include "analysis/input/ant/AntReader.h"
 #include "analysis/data/Event.h"
 
-#include "tree/THeaderInfo.h"
 #include "tree/TDetectorRead.h"
 #include "tree/TEvent.h"
 #include "tree/UnpackerReader.h"

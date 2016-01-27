@@ -170,8 +170,8 @@ double Setup_2014_EPT::GetElectronBeamEnergy() const {
     return 1604.0;
 }
 
-bool Setup_2014_EPT::Matches(const ant::THeaderInfo& header) const {
-    if(!Setup::Matches(header))
+bool Setup_2014_EPT::Matches(const ant::TID& tid) const {
+    if(!Setup::Matches(tid))
         return false;
     return true;
 }

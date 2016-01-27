@@ -81,7 +81,6 @@ private:
     std::vector<std::uint32_t> buffer;
     signed trueRecordLength;
     unsigned unpackedBuffers;
-    std::unique_ptr<THeaderInfo> BuildTHeaderInfo();
     time_t GetTimeStamp();
 protected:
 

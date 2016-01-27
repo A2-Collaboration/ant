@@ -8,8 +8,8 @@
 
 
 #include "tree/TDataRecord.h"
-#include "tree/THeaderInfo.h"
 #include "tree/TSlowControl.h"
+#include "tree/TDetectorRead.h"
 
 
 #include "expconfig/ExpConfig.h"
@@ -95,13 +95,15 @@ void acqu::FileFormatBase::FillHeader(queue_t& queue)
     // let child class fill the info
     FillInfo(reader, buffer, info);
 
-    auto headerInfo = BuildTHeaderInfo();
+    // guessing the timestamp from the Acqu header
+    // is somewhat more involved...
+    const time_t timestamp = GetTimeStamp();
 
-    // try to find some config with the headerInfo
-    auto config = ExpConfig::Unpacker<UnpackerAcquConfig>::Get(*headerInfo);
+    // construct the unique ID
+    id = TID(timestamp, 0u);
 
-    // then enqueue the header info
-    fillQueue<THeaderInfo>(queue, move(headerInfo));
+    // try to find some config with the id
+    auto config = ExpConfig::Unpacker<UnpackerAcquConfig>::Get(id);
 
     // now try to fill the first data buffer
     FillFirstDataBuffer(queue, reader, buffer);
@@ -132,26 +134,6 @@ acqu::FileFormatBase::~FileFormatBase()
 double acqu::FileFormatBase::PercentDone() const
 {
     return reader->PercentDone();
-}
-
-unique_ptr<THeaderInfo> acqu::FileFormatBase::BuildTHeaderInfo()
-{
-    // guessing the timestamp from the Acqu header
-    // is somewhat more involved...
-    const time_t timestamp = GetTimeStamp();
-
-    // construct the unique ID
-    id = TID(timestamp, 0u);
-
-    // build the genernal description
-    stringstream description;
-    description << "AcquData "
-                << "Number=" << info.RunNumber << " "
-                << "OutFile='" << info.OutFile << "' "
-                << "Description='"+info.Description+"' "
-                << "Note='"+info.RunNote+"'";
-
-    return std_ext::make_unique<THeaderInfo>(id, timestamp, description.str(), info.RunNumber);
 }
 
 time_t acqu::FileFormatBase::GetTimeStamp()
@@ -252,8 +234,14 @@ void acqu::FileFormatBase::FillEvents(queue_t& queue) noexcept
 
     // we use the buffer as some state-variable
     // if the buffer is already empty now, there is nothing more to read
-    if(buffer.empty())
+    if(buffer.empty()) {
+        if(unpackedBuffers==0) {
+            // this was a file with headers only, then add at least an empty detector read to the queue
+            auto record = std_ext::make_unique<TDetectorRead>(id);
+            fillQueue(queue, move(record));
+        }
         return;
+    }
 
     // start parsing the filled buffer
     // however, we fill a temporary queue first

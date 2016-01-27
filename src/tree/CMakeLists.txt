@@ -3,7 +3,6 @@ include_directories(.)
 set(SRCS
   TID.h
   TDataRecord.h
-  THeaderInfo.h
   TDetectorRead.h
   TSlowControl.h
   TUnpackerMessage.h
