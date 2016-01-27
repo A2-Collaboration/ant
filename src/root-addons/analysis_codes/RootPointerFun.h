@@ -4,9 +4,12 @@
 #include <vector>
 #include <string>
 
+/**
+ * @brief A test class that has a pointer to another object
+ */
 class TestClass {
 public:
-    TestClass* ptr;  //||
+    TestClass* ptr;
 
     const std::string name;
 
@@ -15,6 +18,9 @@ public:
     void Print() const;
 };
 
+/**
+ * @brief A container of TestClass objects. gets written to a TTree.
+ */
 class TestClassContainer {
 public:
     std::vector<TestClass*> data1;
@@ -28,8 +34,19 @@ public:
 
 };
 
+/**
+ * @brief The PtrTest struct - functions to be called from ROOT
+ */
 struct PtrTest {
+
+    /**
+     * @brief Generate a test structure out of TestClass and TestClassContainers and write it to a TTree
+     */
     static void Write();
+
+    /**
+     * @brief Read back what Write() produced
+     */
     static void Read();
 };
 

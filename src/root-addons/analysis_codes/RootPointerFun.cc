@@ -60,10 +60,13 @@ void PtrTest::Write()
     c->data2.push_back(new TestClass("a2"));
     c->data2.push_back(new TestClass("b2"));
     c->data2.push_back(new TestClass("c2"));
+    c->data2.push_back(new TestClass("d2"));
 
-    c->data2.at(0)->ptr=c->data1.at(0);
-    c->data2.at(1)->ptr=c->data1.at(2);
-    c->data2.at(2)->ptr=c->data1.at(2);
+    c->data2.at(0)->ptr=c->data1.at(0); // cross-vector ref, single
+    c->data2.at(1)->ptr=c->data1.at(2); // cross-vector ref, double
+    c->data2.at(2)->ptr=c->data1.at(2); // cross-vector ref, double
+
+    c->data2.at(3)->ptr=c->data2.at(0); // in-vector ref
 
     cout << "Generated structure:" << endl;
     c->Print();
