@@ -14,6 +14,7 @@
 #pragma link C++ class TAPSEnergy_Check+;
 #pragma link C++ class DetectorPlots+;
 #pragma link C++ class BrowseHistogramsCanvas+;
+#pragma link C++ class OmegaEtaG+;
 
 #pragma link C++ class TestClass+;
 #pragma link C++ class std::vector<TestClass*>+;
