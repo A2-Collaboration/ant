@@ -9,6 +9,7 @@
 #include <vector>
 #include <iomanip>
 #include <sstream>
+#include <memory>
 
 
 namespace ant {
@@ -25,7 +26,7 @@ struct TCandidate : printable_traits
     double VetoEnergy;
     double TrackerEnergy;
 
-    std::vector<TCluster> Clusters;
+    std::vector<TClusterPtr> Clusters;
 
     TCandidate(
             Detector_t::Any_t detector,
@@ -36,7 +37,7 @@ struct TCandidate : printable_traits
             unsigned clusterSize,
             double vetoE,
             double trackerE,
-            const std::vector<TCluster>& clusters
+            const std::vector<TClusterPtr>& clusters
             ) :
         Detector(detector),
         CaloEnergy(caloE),
@@ -49,25 +50,28 @@ struct TCandidate : printable_traits
         Clusters(clusters)
     {}
 
+    template<class Archive>
+    void serialize(Archive& archive) {
+        archive(Detector, CaloEnergy, Theta, Phi, Time, ClusterSize, VetoEnergy, TrackerEnergy, Clusters);
+    }
+
     operator TVector3() const { TVector3 p; p.SetMagThetaPhi(1.0, Theta, Phi); return p; }
 
-    const TCluster* FindFirstCluster(Detector_t::Any_t detector) const {
+    TClusterPtr FindFirstCluster(Detector_t::Any_t detector) const {
         for(const auto& cl : Clusters) {
-            if(cl.GetDetectorType() & detector) {
-                return std::addressof(cl);
+            if(cl->DetectorType & detector) {
+                return cl;
             }
         }
         return nullptr;
     }
 
-    const TCluster* FindCaloCluster() const {
+    TClusterPtr FindCaloCluster() const {
         return FindFirstCluster(Detector_t::Type_t::CB | Detector_t::Type_t::TAPS);
     }
 
-    const TCluster* FindVetoCluster() const {
-        if(VetoEnergy == 0.0)
-            return nullptr;
-        return FindFirstCluster(Detector_t::Type_t::PID | Detector_t::Type_t::TAPSVeto);
+    TClusterPtr FindVetoCluster() const {
+        return FindFirstCluster(Detector_t::Any_t::Veto);
     }
 
     virtual std::ostream& Print( std::ostream& s) const override {
@@ -77,10 +81,10 @@ struct TCandidate : printable_traits
                  << " VetoEnergy=" << VetoEnergy << " TrackerEnergy=" << TrackerEnergy;
     }
 
-
-
     TCandidate() : Detector(Detector_t::Any_t::None) {}
     virtual ~TCandidate() {}
 };
+
+using TCandidatePtr = std::shared_ptr<TCandidate>;
 
 }

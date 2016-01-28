@@ -10,6 +10,7 @@
 #include <cmath>
 #include <iomanip>
 #include <sstream>
+#include <memory>
 
 
 namespace ant {
@@ -73,7 +74,7 @@ struct TCluster : printable_traits
     double Energy;
     double Time;
     TVector3 Position;
-    std::uint8_t DetectorType;
+    Detector_t::Type_t DetectorType;
     std::uint32_t CentralElement;
     std::uint32_t Flags;
     double ShortEnergy;
@@ -92,7 +93,7 @@ struct TCluster : printable_traits
         Energy(E),
         Time(t),
         Position(pos),
-        DetectorType(static_cast<std::uint8_t>(type)),
+        DetectorType(type),
         CentralElement(central),
         Flags(0),
         ShortEnergy(std_ext::NaN),
@@ -115,15 +116,11 @@ struct TCluster : printable_traits
                 DetectorType, CentralElement, Flags, ShortEnergy, Hits);
     }
 
-    Detector_t::Type_t GetDetectorType() const {
-        return static_cast<Detector_t::Type_t>(DetectorType);
-    }
-
     virtual std::ostream& Print( std::ostream& s) const override {
         return s << "TCluster: " << Hits.size() << " hits @" << Position
                  << ", Energy=" << Energy << " ShortEnergy=" << ShortEnergy
                  << " Central Element=" << CentralElement
-                 << " Detector=" << Detector_t::ToString(GetDetectorType());
+                 << " Detector=" << Detector_t::ToString(DetectorType);
     }
 
     // the cluster alorithm may set those flags
@@ -163,6 +160,8 @@ struct TCluster : printable_traits
         DetectorType(), CentralElement(), Flags(), ShortEnergy() {}
     virtual ~TCluster() {}
 };
+
+using TClusterPtr = std::shared_ptr<TCluster>;
 
 }
 

@@ -33,7 +33,6 @@ struct TEventData
 {
     TEventData(const TID& id) : ID(id) {}
 
-
     // we have a custom Streamer method, so mark all
     // members visible to ROOTcint as transient with comment //!
     TID ID;                               //!
@@ -42,12 +41,12 @@ struct TEventData
 
 #ifndef __CINT__
 
-    std::vector<std::shared_ptr<TCluster>>   Clusters;
-    std::vector<std::shared_ptr<TCandidate>> Candidates;
+    std::vector<TClusterPtr>   Clusters;
+    std::vector<TCandidatePtr> Candidates;
 
     template<class Archive>
     void serialize(Archive& archive) {
-        archive(Clusters);
+        archive(Clusters, Candidates);
     }
 
     virtual std::ostream& Print(std::ostream& s) const override;
