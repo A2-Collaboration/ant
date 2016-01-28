@@ -32,8 +32,9 @@ struct Detector_t : printable_traits {
     struct Any_t : printable_traits {
         static const Any_t None;
         static const Any_t Tracker; // i.e. MWPC
-        static const Any_t CB_Apparatus;
-        static const Any_t TAPS_Apparatus;
+        static const Any_t CB_Apparatus; // i.e. PID, MWPC, CB
+        static const Any_t TAPS_Apparatus; // i.e. TAPS, TAPSVeto
+        static const Any_t Calo; // i.e. CB or TAPS calorimeter
         static const Any_t Veto; // i.e. PID or TAPSVeto
 
         Any_t(const Type_t& type);
