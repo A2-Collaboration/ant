@@ -582,7 +582,7 @@ void OmegaEtaG2::Analyse(const Event::Data &data, const Event &event)
 
     const auto Esum = data.Trigger.CBEnergySum;
 
-    if(Esum < 550.0)
+    if(Esum <  cut_ESum)
         return;
 
     steps->Fill("1 CBEsum", 1);
