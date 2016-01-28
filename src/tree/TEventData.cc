@@ -27,6 +27,7 @@ void TEventData::Streamer(TBuffer& R__b) {
     if (R__b.IsReading()) {
 
         ID.Streamer(R__b);
+        DetectorHits.Streamer(R__b);
         Tagger.Streamer(R__b);
 
         string s;
@@ -39,7 +40,9 @@ void TEventData::Streamer(TBuffer& R__b) {
     } else {
 
         ID.Streamer(R__b);
+        DetectorHits.Streamer(R__b);
         Tagger.Streamer(R__b);
+
 
         cereal::PortableBinaryOutputArchive ar(ss);
         ar(*this);

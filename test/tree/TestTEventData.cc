@@ -32,6 +32,11 @@ void dotest() {
   tree->Branch(branchname.c_str(), eventdata);
 
   eventdata->ID = TID(10);
+
+  eventdata->DetectorHits.emplace_back();
+  eventdata->DetectorHits.emplace_back();
+  eventdata->DetectorHits.emplace_back();
+
   auto cluster1 = make_shared<TCluster>(TVector3(1,2,3),
                                        100, 0.5,
                                        Detector_t::Type_t::CB,
@@ -48,6 +53,9 @@ void dotest() {
   eventdata->Clusters.emplace_back(cluster1);
   eventdata->Clusters.emplace_back(cluster1);
   eventdata->Clusters.emplace_back(cluster2);
+
+
+
 
 
 
@@ -80,6 +88,9 @@ void dotest() {
   cout << *readback << endl;
 
   REQUIRE(readback->ID == TID(10));
+
+  REQUIRE(readback->DetectorHits.size() == 3);
+
   REQUIRE(readback->Clusters.size() == 4);
   REQUIRE(readback->Clusters.back()->Position == TVector3(1,2,3));
   REQUIRE(readback->Clusters.back()->Hits.size() == 1);
