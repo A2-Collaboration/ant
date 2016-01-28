@@ -515,15 +515,17 @@ TLorentzVector LVSum(it_type begin, it_type end) {
 
 template <typename it_type>
 double TimeAvg(it_type begin, it_type end) {
-    double v=0.0;
+    double t    = 0.0;
+    double Esum = 0.0;
 
     while(begin!=end) {
         const ParticlePtr& p = *begin;
-        v += p->Candidate->Time;
+        t += p->Candidate->Time * p->Candidate->CaloEnergy;
+        Esum += p->Candidate->CaloEnergy;
         ++begin;
     }
 
-    return v;
+    return t / Esum;
 }
 
 TLorentzVector boost(const TLorentzVector& lv, const TVector3& boot) {
@@ -613,10 +615,30 @@ void OmegaEtaG2::Analyse(const Event::Data &data, const Event &event)
     b_SigBgFlag = identify(event);
 
     b_p = analysis::utils::ParticleVars(*proton);
-    b_pTime  = data_proton ? proton->Candidate->Time : 0.0;
+    b_pTime       = data_proton ? proton->Candidate->Time : numeric_limits<double>::quiet_NaN();
+
+    b_p_PSA_Angle = numeric_limits<double>::quiet_NaN();
+    b_p_PSA_R     = numeric_limits<double>::quiet_NaN();
+    b_p_detector  = 0;
+
+    if(proton->Candidate) {
+
+        if(proton->Candidate->GetDetector() & Detector_t::Type_t::TAPS) {
+            b_p_detector = 2;
+            const auto& cluster = proton->Candidate->FindCaloCluster();
+            if(cluster) {
+                b_p_PSA_Angle = std_ext::radian_to_degree(cluster->GetPSAAngle());
+                b_p_PSA_R     = cluster->GetPSARadius();
+            }
+        } else if(proton->Candidate->GetDetector() & Detector_t::Type_t::CB) {
+            b_p_detector = 1;
+        }
+
+    }
+
 
     const Particle ggg(ParticleTypeDatabase::Omega, LVSum(photons.begin(), photons.end()));
-    b_gggTime  = TimeAvg(photons.begin(), photons.end());  //todo: use andis
+    b_gggTime  = TimeAvg(photons.begin(), photons.end());
     b_ggg      = analysis::utils::ParticleVars(ggg);
 
 
@@ -870,7 +892,10 @@ OmegaEtaG2::OmegaEtaG2(const std::string& name, PhysOptPtr opts):
     tree = HistFac.makeTTree("tree");
 
     b_p.SetBranches(tree, "p");
-    tree->Branch("p_Time", &b_pTime);
+    tree->Branch("p_Time",      &b_pTime);
+    tree->Branch("p_PSA_R",     &b_p_PSA_R);
+    tree->Branch("p_PSA_Angle", &b_p_PSA_Angle);
+    tree->Branch("p_detector",  &b_p_detector);
 
     b_ggg.SetBranches(tree, "ggg");
     tree->Branch("ggg_Time", &b_gggTime);
@@ -886,16 +911,17 @@ OmegaEtaG2::OmegaEtaG2(const std::string& name, PhysOptPtr opts):
     b_g3.SetBranches(tree, "g3");
 
     tree->Branch("TagCh",   &b_TagCh);
+    tree->Branch("TagE",    &b_TagE);
     tree->Branch("TagTime", &b_TagTime);
     tree->Branch("TagW",    &b_TagW);
 
-    tree->Branch("SigBgFlag",      &b_SigBgFlag);
+    tree->Branch("SigBgFlag",       &b_SigBgFlag);
 
-    tree->Branch("EgOmegaSys[3]",     b_BachelorE,"EgOmegaSys[3]/D");
+    tree->Branch("BachelorE[3]",     b_BachelorE,"EgOmegaSys[3]/D");
     tree->Branch("ggIM_real",       &b_ggIM_real);
     tree->Branch("ggIM_comb[2]",     b_ggIM_comb, "ggIM_comb[2]/D");
 
-    tree->Branch("CBAvgTime",      &b_CBAvgTime);
+    tree->Branch("CBAvgTime",       &b_CBAvgTime);
 
     // set up kin fitter
     fitter.SetupBranches(tree, "EPB");

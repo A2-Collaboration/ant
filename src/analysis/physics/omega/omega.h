@@ -179,6 +179,10 @@ protected:
     analysis::utils::ParticleVars b_mmvector;
 
     double b_pTime   = {};
+    double b_p_PSA_R     = 0.0;
+    double b_p_PSA_Angle = 0.0;
+    unsigned  b_p_detector = 0;
+
     double b_gggTime = {};
     double b_ggIM[3] = {};
 
