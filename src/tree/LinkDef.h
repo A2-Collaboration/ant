@@ -23,7 +23,7 @@
 #pragma link C++ class ant::TCandidate+;
 #pragma link C++ class ant::TTaggerHit+;
 #pragma link C++ class ant::TTagger+;
-#pragma link C++ class ant::TEventData+;
+#pragma link C++ class ant::TEventData-; // has its own Streamer implementation
 #pragma link C++ class ant::TEvent+;
 
 #pragma link C++ class ant::TSlowControl+;
