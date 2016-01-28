@@ -2,8 +2,6 @@
 
 #include "TID.h"
 #include "TDetectorRead.h"
-#include "TCluster.h"
-#include "TCandidate.h"
 #include "TTagger.h"
 #include "TSlowControl.h"
 
@@ -13,6 +11,8 @@
 #include <ctime>
 
 #ifndef __CINT__
+#include "TCandidate.h"
+#include "TCluster.h"
 #include <memory>
 #endif
 
@@ -29,13 +29,16 @@ struct TEventData
     TEventData(const TID& id) : ID(id) {}
     virtual ~TEventData() {}
 
-    TID ID;         //!
-    TTagger Tagger; //!
+    // we have a custom Streamer method, so mark all
+    // members visible to ROOTcint as transient with comment //!
+    TID ID;                               //!
+    TTagger Tagger;                       //!
+    std::vector<TDetectorReadHit> Hits;   //!
 
 #ifndef __CINT__
 
     std::vector<std::shared_ptr<TCluster>>   Clusters;
-    //std::vector<std::shared_ptr<TCandidate>> Candidates;
+    std::vector<std::shared_ptr<TCandidate>> Candidates;
 
     template<class Archive>
     void serialize(Archive& archive) {

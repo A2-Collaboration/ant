@@ -7,8 +7,6 @@ set(SRCS
   TSlowControl.h
   TUnpackerMessage.h
   TEvent.h
-  TCluster.h
-  TCandidate.h
   TTagger.h
   TTaggerHit.h
   TCalibrationData.h
@@ -21,6 +19,8 @@ set(SRCS_EXTRA
   MemoryPool.h
   UnpackerReader.cc
   UnpackerWriter.cc
+  TCluster.h
+  TCandidate.h
   TAntHeader.cc
   TEventData.cc
   )

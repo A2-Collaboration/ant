@@ -1,28 +1,21 @@
 #pragma once
 
-#include "TDataRecord.h"
 #include "TCluster.h"
 
+#include "base/Detector_t.h"
 
 #include <TVector3.h>
 
 #include <vector>
-
-#ifndef __CINT__
-#include "base/Detector_t.h"
 #include <iomanip>
 #include <sstream>
-#endif
+
 
 namespace ant {
 
-#ifndef __CINT__
-struct TCandidate: ant::printable_traits
-#else
-struct TCandidate
-#endif
+struct TCandidate : printable_traits
 {
-    std::uint64_t Detector;
+    Detector_t::Any_t Detector;
     double CaloEnergy;
     double Theta;
     double Phi;
@@ -34,7 +27,6 @@ struct TCandidate
 
     std::vector<TCluster> Clusters;
 
-#ifndef __CINT__
     TCandidate(
             Detector_t::Any_t detector,
             double caloE,
@@ -46,7 +38,7 @@ struct TCandidate
             double trackerE,
             const std::vector<TCluster>& clusters
             ) :
-        Detector(detector.bitfield),
+        Detector(detector),
         CaloEnergy(caloE),
         Theta(theta),
         Phi(phi),
@@ -78,10 +70,6 @@ struct TCandidate
         return FindFirstCluster(Detector_t::Type_t::PID | Detector_t::Type_t::TAPSVeto);
     }
 
-    Detector_t::Any_t GetDetector() const {
-        return Detector_t::Any_t(Detector);
-    }
-
     virtual std::ostream& Print( std::ostream& s) const override {
         return s << "TCandidate: " << Clusters.size() << " clusters, CaloEnergy=" << CaloEnergy
                  << " Theta=" << Theta <<", Phi=" << Phi
@@ -90,11 +78,9 @@ struct TCandidate
     }
 
 
-#endif
 
-    TCandidate() {}
+    TCandidate() : Detector(Detector_t::Any_t::None) {}
     virtual ~TCandidate() {}
-    ClassDef(TCandidate, ANT_UNPACKER_ROOT_VERSION)
 };
 
 }

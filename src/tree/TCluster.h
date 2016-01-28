@@ -1,19 +1,16 @@
 #pragma once
 
-#include "TDataRecord.h"
-
-
-#include <TVector3.h>
-#include <vector>
-#include <cmath>
-
-#ifndef __CINT__
-#include <iomanip>
-#include <sstream>
 #include "base/root_printable.h"
 #include "base/Detector_t.h"
 #include "base/std_ext/math.h"
-#endif
+
+#include "TVector3.h"
+
+#include <vector>
+#include <cmath>
+#include <iomanip>
+#include <sstream>
+
 
 namespace ant {
 
@@ -22,7 +19,6 @@ struct TClusterHitDatum
     std::uint8_t Type;
     double Value;
 
-#ifndef __CINT__
     TClusterHitDatum(Channel_t::Type_t type, double value) :
         Type(static_cast<std::uint8_t>(type)),
         Value(value)
@@ -36,23 +32,15 @@ struct TClusterHitDatum
     Channel_t::Type_t GetType() const {
         return static_cast<Channel_t::Type_t>(Type);
     }
-#endif
 
     TClusterHitDatum() {}
-    virtual ~TClusterHitDatum() {}
-    ClassDef(TClusterHitDatum, ANT_UNPACKER_ROOT_VERSION)
 };
 
-#ifndef __CINT__
 struct TClusterHit : printable_traits
-#else
-struct TClusterHit
-#endif
 {
     std::uint32_t Channel;
     std::vector<TClusterHitDatum> Data;
 
-#ifndef __CINT__
 
     TClusterHit(unsigned channel,
                 const std::vector<TClusterHitDatum>& data):
@@ -75,19 +63,12 @@ struct TClusterHit
         }
         return s;
     }
-#endif
 
     TClusterHit() {}
     virtual ~TClusterHit() {}
-    ClassDef(TClusterHit, ANT_UNPACKER_ROOT_VERSION)
-
 };
 
-#ifndef __CINT__
 struct TCluster : printable_traits
-#else
-struct TCluster
-#endif
 {
     double Energy;
     double Time;
@@ -99,7 +80,6 @@ struct TCluster
 
     std::vector<TClusterHit> Hits;
 
-#ifndef __CINT__
 
     TCluster(
             const TVector3& pos,
@@ -174,8 +154,6 @@ struct TCluster
         return std::atan2(ShortEnergy, Energy);
     }
 
-#endif
-
     bool isSane() const {
         return std::isfinite(Energy) && std::isfinite(Time);
     }
@@ -183,8 +161,7 @@ struct TCluster
     TCluster() : Energy(), Time(),
         Position(),
         DetectorType(), CentralElement(), Flags(), ShortEnergy() {}
-    virtual ~TCluster()  {}
-    ClassDef(TCluster, ANT_UNPACKER_ROOT_VERSION)
+    virtual ~TCluster() {}
 };
 
 }
