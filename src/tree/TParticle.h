@@ -68,7 +68,7 @@ struct TParticle : TLorentzVector, printable_traits {
         double px,py,pz,e;
         archive(Candidate, px, py, pz, e);
         SetPxPyPzE(px,py,pz,e);
-        type = std::addressof(ParticleTypeDatabase::types[uid]);
+        type = std::addressof(ParticleTypeDatabase::types.at(uid));
     }
 
     TParticle(const TParticle&) = delete;
@@ -80,7 +80,7 @@ struct TParticle : TLorentzVector, printable_traits {
     virtual ~TParticle() = default;
 
 protected:
-    mutable const ParticleTypeDatabase::Type* type;
+    const ParticleTypeDatabase::Type* type;
 };
 
 }
