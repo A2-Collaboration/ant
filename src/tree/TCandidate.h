@@ -14,6 +14,10 @@
 
 namespace ant {
 
+struct TCandidate;
+
+using TCandidatePtr = std::shared_ptr<TCandidate>;
+
 struct TCandidate : printable_traits
 {
     Detector_t::Any_t Detector;
@@ -85,6 +89,5 @@ struct TCandidate : printable_traits
     virtual ~TCandidate() {}
 };
 
-using TCandidatePtr = std::shared_ptr<TCandidate>;
 
 }

@@ -15,6 +15,10 @@
 
 namespace ant {
 
+struct TCluster; // defined at very end of file...
+
+using TClusterPtr = std::shared_ptr<TCluster>;
+
 struct TClusterHitDatum
 {
     std::uint8_t Type;
@@ -160,8 +164,6 @@ struct TCluster : printable_traits
         DetectorType(), CentralElement(), Flags(), ShortEnergy() {}
     virtual ~TCluster() {}
 };
-
-using TClusterPtr = std::shared_ptr<TCluster>;
 
 }
 
