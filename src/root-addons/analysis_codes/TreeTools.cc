@@ -48,3 +48,21 @@ TH3* Draw(TTree* tree, const string& formula, const TCut& cut, const ant::analys
     gDirectory->GetObject(hname, h);
     return h;
 }
+
+TH1*Draw(TTree* tree, const string& formula, const TCut& cut, const string& xtitle, const string& ytitle, const ant::analysis::BinSettings& xbins)
+{
+    auto h = Draw(tree, formula, cut, int(xbins.Bins()), xbins.Start(), xbins.Stop());
+    h->SetXTitle(xtitle.c_str());
+    h->SetYTitle(ytitle.c_str());
+
+    return h;
+}
+
+TH2*Draw(TTree* tree, const string& formula, const TCut& cut, const string& xtitle, const string& ytitle, const ant::analysis::BinSettings& xbins, const ant::analysis::BinSettings& ybins)
+{
+    auto h = Draw(tree, formula, cut, int(xbins.Bins()), xbins.Start(), xbins.Stop(), int(ybins.Bins()), ybins.Start(), ybins.Stop());
+    h->SetXTitle(xtitle.c_str());
+    h->SetYTitle(ytitle.c_str());
+
+    return h;
+}
