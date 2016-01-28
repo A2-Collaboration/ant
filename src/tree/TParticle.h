@@ -59,14 +59,14 @@ struct TParticle : TLorentzVector, printable_traits {
 
     template<class Archive>
     void save(Archive& archive) const {
-        archive(Candidate, Px(), Py(), Pz(), E());
+        archive(Candidate, type->UID, Px(), Py(), Pz(), E());
     }
 
     template<class Archive>
     void load(Archive& archive) {
         unsigned uid;
         double px,py,pz,e;
-        archive(Candidate, px, py, pz, e);
+        archive(Candidate, uid, px, py, pz, e);
         SetPxPyPzE(px,py,pz,e);
         type = std::addressof(ParticleTypeDatabase::types.at(uid));
     }

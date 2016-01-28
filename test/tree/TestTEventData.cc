@@ -71,7 +71,7 @@ void dotest() {
 
   eventdata->Candidates.emplace_back(candidate1);
 
-  auto particle1 = make_shared<TParticle>();
+  auto particle1 = make_shared<TParticle>(ParticleTypeDatabase::Photon, candidate1);
 
   eventdata->Particles.emplace_back(particle1);
 
@@ -119,7 +119,8 @@ void dotest() {
 
   REQUIRE(readback->Clusters.at(0) == readback->Candidates.at(0)->Clusters.at(1));
 
-
+  REQUIRE(readback->Particles.at(0)->Type() == ParticleTypeDatabase::Photon);
+  REQUIRE(readback->Particles.at(0)->Candidate == readback->Candidates.at(0));
 
 
 }
