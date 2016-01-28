@@ -28,7 +28,6 @@ class UnpackerReader : public Unpacker::Reader {
 
     TEvent* Event;
     TDetectorRead* DetectorRead;
-    THeaderInfo* HeaderInfo;
     TUnpackerMessage* UnpackerMessage;
     TSlowControl* SlowControl;
 

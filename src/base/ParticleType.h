@@ -12,14 +12,14 @@ namespace ant {
 
 class ParticleTypeDatabase {
 
-    friend class TParticle;
+    friend struct TParticle;
 
 public:
 
     class Type {
 
         friend class ParticleTypeDatabase;
-        friend class TParticle;
+        friend struct TParticle;
 
     protected:
         unsigned UID; // used by TParticle for serialization
