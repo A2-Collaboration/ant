@@ -86,9 +86,18 @@ clustersize_t GoatReader::MapClusterSize(const int& size) {
 void GoatReader::CopyTracks(Event& event)
 {
     for(Int_t i=0; i< tracks.GetNTracks(); ++i) {
+
+        const auto det = IntToDetector_t(tracks.GetDetectors(i));
+
+        Detector_t::Type_t d = Detector_t::Type_t::CB;
+
+        if(det & Detector_t::Type_t::TAPS) {
+            d = Detector_t::Type_t::TAPS;
+        }
+
         event.Reconstructed.Candidates.emplace_back(
                     make_shared<TCandidate>(
-                        IntToDetector_t(tracks.GetDetectors(i)),
+                        det,
                         tracks.GetClusterEnergy(i),
                         tracks.GetTheta(i),
                         tracks.GetPhi(i),
@@ -96,7 +105,8 @@ void GoatReader::CopyTracks(Event& event)
                         MapClusterSize(tracks.GetClusterSize(i)),
                         tracks.GetVetoEnergy(i),
                         tracks.GetMWPC0Energy(i)+tracks.GetMWPC1Energy(i),
-                        std::vector<TCluster>{} // GoAT does not provide clusters
+                        std::vector<TCluster>{ TCluster(TVector3(),tracks.GetClusterEnergy(i),tracks.GetTime(i),d,0)
+                        }
                         )
                     );
     }
