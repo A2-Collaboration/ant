@@ -633,15 +633,20 @@ void OmegaEtaG2::Analyse(const Event::Data &data, const Event &event)
 
     const TVector3 gggBoost = -ggg.BoostVector();
 
+    b_CBAvgTime = event.Reconstructed.Trigger.CBTiming;
+    if(!isfinite(b_CBAvgTime))
+        return;
+
 
     for(const TaggerHit& t : data_tagger ? data.TaggerHits : event.MCTrue.TaggerHits) {
 
-        promptrandom.SetTaggerHit(t.Time);
+        promptrandom.SetTaggerHit(t.Time - b_CBAvgTime);
 
         if(promptrandom.State() == PromptRandom::Case::Outside)
             continue;
 
         b_TagW    = promptrandom.FillWeight();
+        b_TagE    = t.PhotonEnergy;
         b_TagCh   = unsigned(t.Channel);
         b_TagTime = t.Time;
 
@@ -889,6 +894,8 @@ OmegaEtaG2::OmegaEtaG2(const std::string& name, PhysOptPtr opts):
     tree->Branch("EgOmegaSys[3]",     b_BachelorE,"EgOmegaSys[3]/D");
     tree->Branch("ggIM_real",       &b_ggIM_real);
     tree->Branch("ggIM_comb[2]",     b_ggIM_comb, "ggIM_comb[2]/D");
+
+    tree->Branch("CBAvgTime",      &b_CBAvgTime);
 
     // set up kin fitter
     fitter.SetupBranches(tree, "EPB");

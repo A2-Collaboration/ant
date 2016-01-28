@@ -187,6 +187,7 @@ protected:
 
     int    b_TagCh     = -1;
     double b_TagTime   = 0.0;
+    double b_TagE      = 0.0;
     double b_TagW      = 0.0;
 
 
@@ -196,6 +197,8 @@ protected:
     double b_ggIM_comb[2] = {};
 
     double b_BachelorE[3] = {};
+
+    double b_CBAvgTime = 0.0;
 
 
     double kinfit_chi2       = 0.0;
