@@ -13,6 +13,7 @@ set(SRCS
   TTaggerHit.h
   TCalibrationData.h
   TAntHeader.h
+  TEventData.h
   ${ROOT_INCLUDE_DIR}/TLorentzVector.h
   )
 
@@ -21,6 +22,7 @@ set(SRCS_EXTRA
   UnpackerReader.cc
   UnpackerWriter.cc
   TAntHeader.cc
+  TEventData.cc
   )
 
 set(ROOT_DICTIONARY "${CMAKE_CURRENT_BINARY_DIR}/G__tree.cc")
