@@ -11,6 +11,11 @@
 #include <iomanip>
 #include <ctime>
 
+#ifndef __CINT__
+#include <memory>
+#endif
+
+
 namespace ant {
 
 #ifndef __CINT__
@@ -25,8 +30,10 @@ struct TEventData
 
     TID ID;
     std::vector<TDetectorReadHit> DetectorHits;
-    std::vector<TCluster>         Clusters;
-    std::vector<TCandidate>       Candidates;
+#ifndef __CINT__
+    std::vector<std::shared_ptr<TCluster>>   Clusters;
+    std::vector<std::shared_ptr<TCandidate>> Candidates;
+#endif
 
     // Particles, ParticleTree
 
@@ -34,7 +41,7 @@ struct TEventData
 
 
 #ifndef __CINT__
-    virtual std::ostream& Print( std::ostream& s) const override;
+    virtual std::ostream& Print(std::ostream& s) const override;
 #endif
 
     ClassDef(TEventData, ANT_UNPACKER_ROOT_VERSION)

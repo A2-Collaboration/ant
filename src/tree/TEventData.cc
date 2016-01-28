@@ -1,6 +1,8 @@
 #include "TEventData.h"
 #include "TClass.h"
 
+#include "base/cereal/cereal.hpp"
+
 using namespace std;
 using namespace ant;
 
