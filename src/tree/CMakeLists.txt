@@ -21,8 +21,9 @@ set(SRCS_EXTRA
   UnpackerWriter.cc
   TCluster.h
   TCandidate.h
-  TAntHeader.cc
+  TParticle.cc
   TEventData.cc
+  TAntHeader.cc
   )
 
 set(ROOT_DICTIONARY "${CMAKE_CURRENT_BINARY_DIR}/G__tree.cc")

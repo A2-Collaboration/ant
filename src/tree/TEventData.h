@@ -11,8 +11,9 @@
 #include <ctime>
 
 #ifndef __CINT__
-#include "TCandidate.h"
 #include "TCluster.h"
+#include "TCandidate.h"
+#include "TParticle.h"
 #include <memory>
 #endif
 
@@ -43,10 +44,12 @@ struct TEventData
 
     std::vector<TClusterPtr>   Clusters;
     std::vector<TCandidatePtr> Candidates;
+    std::vector<TParticlePtr>  Particles; // final state, or identified from reconstructed candidates
+
 
     template<class Archive>
     void serialize(Archive& archive) {
-        archive(Clusters, Candidates);
+        archive(Clusters, Candidates, Particles);
     }
 
     virtual std::ostream& Print(std::ostream& s) const override;

@@ -60,16 +60,20 @@ void dotest() {
   eventdata->Clusters.emplace_back(cluster3);
 
 
+  auto candidate1 = make_shared<TCandidate>(
+                        Detector_t::Any_t::CB_Apparatus,
+                        200,
+                        0.0, 0.0, 0.0, // theta/phi/time
+                        2, // cluster size
+                        2.0, 0.0, // veto/tracker
+                        vector<TClusterPtr>{cluster2, cluster1}
+                        );
 
-  eventdata->Candidates.emplace_back(make_shared<TCandidate>(
-                                         Detector_t::Any_t::CB_Apparatus,
-                                         200,
-                                         0.0, 0.0, 0.0, // theta/phi/time
-                                         2, // cluster size
-                                         2.0, 0.0, // veto/tracker
-                                         vector<TClusterPtr>{cluster2, cluster1}
-                                         ));
+  eventdata->Candidates.emplace_back(candidate1);
 
+  auto particle1 = make_shared<TParticle>();
+
+  eventdata->Particles.emplace_back(particle1);
 
 
 
