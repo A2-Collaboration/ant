@@ -27,6 +27,12 @@ struct TClusterHitDatum
         Type(static_cast<std::uint8_t>(type)),
         Value(value)
     {}
+
+    template<class Archive>
+    void serialize(Archive& archive) {
+        archive(Type, Value);
+    }
+
     Channel_t::Type_t GetType() const {
         return static_cast<Channel_t::Type_t>(Type);
     }
@@ -38,7 +44,7 @@ struct TClusterHitDatum
 };
 
 #ifndef __CINT__
-struct TClusterHit: public ant::printable_traits
+struct TClusterHit : printable_traits
 #else
 struct TClusterHit
 #endif
@@ -57,6 +63,11 @@ struct TClusterHit
 
     }
 
+    template<class Archive>
+    void serialize(Archive& archive) {
+        archive(Channel, Data);
+    }
+
     virtual std::ostream& Print( std::ostream& s) const override {
         s << "TClusterHit Ch=" << Channel << ": ";
         for(auto& datum : Data) {
@@ -72,9 +83,8 @@ struct TClusterHit
 
 };
 
-
 #ifndef __CINT__
-struct TCluster: public ant::printable_traits
+struct TCluster : printable_traits
 #else
 struct TCluster
 #endif
@@ -108,6 +118,11 @@ struct TCluster
         ShortEnergy(std_ext::NaN),
         Hits(hits)
     {}
+
+    template<class Archive>
+    void serialize(Archive& archive) {
+        archive(Energy, Time, Position, DetectorType, CentralElement, Flags, ShortEnergy, Hits);
+    }
 
     Detector_t::Type_t GetDetectorType() const {
         return static_cast<Detector_t::Type_t>(DetectorType);
@@ -154,9 +169,12 @@ struct TCluster
         return std::isfinite(Energy) && std::isfinite(Time);
     }
 
-    TCluster() : Energy(), Time(), Position(), DetectorType(), CentralElement(), Flags(), ShortEnergy() {}
+    TCluster() : Energy(), Time(),
+        Position(),
+        DetectorType(), CentralElement(), Flags(), ShortEnergy() {}
     virtual ~TCluster()  {}
     ClassDef(TCluster, ANT_UNPACKER_ROOT_VERSION)
 };
 
 }
+

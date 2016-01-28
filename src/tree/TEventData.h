@@ -5,6 +5,7 @@
 #include "TCluster.h"
 #include "TCandidate.h"
 #include "TTagger.h"
+#include "TSlowControl.h"
 
 #include "Rtypes.h"
 
@@ -28,19 +29,19 @@ struct TEventData
     TEventData(const TID& id) : ID(id) {}
     virtual ~TEventData() {}
 
-    TID ID;
-    std::vector<TDetectorReadHit> DetectorHits;
+    TID ID;         //!
+    TTagger Tagger; //!
+
 #ifndef __CINT__
+
     std::vector<std::shared_ptr<TCluster>>   Clusters;
-    std::vector<std::shared_ptr<TCandidate>> Candidates;
-#endif
+    //std::vector<std::shared_ptr<TCandidate>> Candidates;
 
-    // Particles, ParticleTree
+    template<class Archive>
+    void serialize(Archive& archive) {
+        archive(Clusters);
+    }
 
-    TTagger Tagger;
-
-
-#ifndef __CINT__
     virtual std::ostream& Print(std::ostream& s) const override;
 #endif
 
@@ -50,3 +51,22 @@ struct TEventData
 
 
 } // namespace ant
+
+
+#ifndef __CINT__
+template<class Archive>
+void save(Archive& archive,
+          const TVector3& m)
+{
+    archive(m.X(),m.Y(),m.Z());
+}
+
+template<class Archive>
+void load(Archive& archive,
+          TVector3& m)
+{
+    double x, y, z;
+    archive(x,y,z);
+    m.SetXYZ(x,y,z);
+}
+#endif
