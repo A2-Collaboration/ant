@@ -21,8 +21,10 @@ public:
         IgnoreDetectorChannel(Detector_t::Type_t::CB, 418); /// odd time spectrum
         IgnoreDetectorChannel(Detector_t::Type_t::CB, 549); /// no entries
         IgnoreDetectorChannel(Detector_t::Type_t::CB, 557); /// double peak in time
+        IgnoreDetectorChannel(Detector_t::Type_t::CB, 565); /// no entries
         IgnoreDetectorChannel(Detector_t::Type_t::CB, 582); /// odd time [walk]
         IgnoreDetectorChannel(Detector_t::Type_t::CB, 586); /// few entries
+        IgnoreDetectorChannel(Detector_t::Type_t::CB, 597); /// no entries
         IgnoreDetectorChannel(Detector_t::Type_t::CB, 602); /// odd time walk
         IgnoreDetectorChannel(Detector_t::Type_t::CB, 672); /// odd time walk
         IgnoreDetectorChannel(Detector_t::Type_t::CB, 677); /// few entries
@@ -30,9 +32,9 @@ public:
         IgnoreDetectorChannel(Detector_t::Type_t::CB, 679); /// no entries
         IgnoreDetectorChannel(Detector_t::Type_t::CB, 696); /// odd time walk
 
-        IgnoreDetectorChannels(Detector_t::Type_t::TAPSVeto, {36,41,195,203,242,243,254,256,288,292,307,337,349,356,                /// few stat
-                                                             128,129,130,287,320,                                                   /// noise
-                                                             192,263,321});                                                         /// empty
+        //IgnoreDetectorChannels(Detector_t::Type_t::TAPSVeto, {36,41,195,203,242,243,254,256,288,292,307,337,349,356,                /// few stat
+                                                             //128,129,130,287,320,                                                   /// noise
+                                                             //192,263,321});                                                         /// empty
     }
 
 
