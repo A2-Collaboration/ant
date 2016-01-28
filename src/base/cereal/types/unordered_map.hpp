@@ -30,7 +30,7 @@
 #ifndef CEREAL_TYPES_UNORDERED_MAP_HPP_
 #define CEREAL_TYPES_UNORDERED_MAP_HPP_
 
-#include <cereal/cereal.hpp>
+#include <base/cereal/cereal.hpp>
 #include <unordered_map>
 
 namespace cereal

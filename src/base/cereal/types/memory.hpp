@@ -30,7 +30,7 @@
 #ifndef CEREAL_TYPES_SHARED_PTR_HPP_
 #define CEREAL_TYPES_SHARED_PTR_HPP_
 
-#include <cereal/cereal.hpp>
+#include <base/cereal/cereal.hpp>
 #include <memory>
 #include <cstring>
 

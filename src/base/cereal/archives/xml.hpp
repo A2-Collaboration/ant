@@ -28,12 +28,12 @@
 */
 #ifndef CEREAL_ARCHIVES_XML_HPP_
 #define CEREAL_ARCHIVES_XML_HPP_
-#include <cereal/cereal.hpp>
-#include <cereal/details/util.hpp>
+#include <base/cereal/cereal.hpp>
+#include <base/cereal/details/util.hpp>
 
-#include <cereal/external/rapidxml/rapidxml.hpp>
-#include <cereal/external/rapidxml/rapidxml_print.hpp>
-#include <cereal/external/base64.hpp>
+#include <base/cereal/external/rapidxml/rapidxml.hpp>
+#include <base/cereal/external/rapidxml/rapidxml_print.hpp>
+#include <base/cereal/external/base64.hpp>
 
 #include <sstream>
 #include <stack>

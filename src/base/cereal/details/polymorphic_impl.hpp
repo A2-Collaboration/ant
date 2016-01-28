@@ -44,9 +44,9 @@
 #ifndef CEREAL_DETAILS_POLYMORPHIC_IMPL_HPP_
 #define CEREAL_DETAILS_POLYMORPHIC_IMPL_HPP_
 
-#include <cereal/details/static_object.hpp>
-#include <cereal/types/memory.hpp>
-#include <cereal/types/string.hpp>
+#include <base/cereal/details/static_object.hpp>
+#include <base/cereal/types/memory.hpp>
+#include <base/cereal/types/string.hpp>
 #include <functional>
 #include <typeindex>
 #include <map>
