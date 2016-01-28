@@ -120,8 +120,19 @@ struct TCluster
     {}
 
     template<class Archive>
-    void serialize(Archive& archive) {
-        archive(Energy, Time, Position, DetectorType, CentralElement, Flags, ShortEnergy, Hits);
+    void load(Archive& archive) {
+        double x,y,z;
+        archive(Energy, Time,
+                x, y, z,
+                DetectorType, CentralElement, Flags, ShortEnergy, Hits);
+        Position.SetXYZ(x,y,z);
+    }
+
+    template<class Archive>
+    void save(Archive& archive) const {
+        archive(Energy, Time,
+                Position.X(), Position.Y(), Position.Z(),
+                DetectorType, CentralElement, Flags, ShortEnergy, Hits);
     }
 
     Detector_t::Type_t GetDetectorType() const {

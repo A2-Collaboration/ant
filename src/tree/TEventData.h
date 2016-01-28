@@ -51,22 +51,3 @@ struct TEventData
 
 
 } // namespace ant
-
-
-#ifndef __CINT__
-template<class Archive>
-void save(Archive& archive,
-          const TVector3& m)
-{
-    archive(m.X(),m.Y(),m.Z());
-}
-
-template<class Archive>
-void load(Archive& archive,
-          TVector3& m)
-{
-    double x, y, z;
-    archive(x,y,z);
-    m.SetXYZ(x,y,z);
-}
-#endif

@@ -7,6 +7,8 @@
 #include "base/cereal/archives/portable_binary.hpp"
 
 
+#include "base/Logger.h"
+
 #include <sstream>
 
 #include <iostream>
@@ -29,7 +31,7 @@ void TEventData::Streamer(TBuffer& R__b) {
 
         string s;
         R__b.ReadStdString(s);
-        cout << "Read  " << s.length() << " bytes" << endl;
+        VLOG(9) << "Read  " << s.length() << " bytes" << endl;
         ss << s;
         cereal::PortableBinaryInputArchive ar(ss);
         ar(*this);
@@ -42,7 +44,7 @@ void TEventData::Streamer(TBuffer& R__b) {
         cereal::PortableBinaryOutputArchive ar(ss);
         ar(*this);
         const auto& str = ss.str();
-        cout << "Wrote " << str.length() << " bytes" << endl;
+        VLOG(9) << "Wrote " << str.length() << " bytes" << endl;
         R__b.WriteStdString(str);
     }
 }
