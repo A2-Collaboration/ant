@@ -29,9 +29,10 @@ private:
     bool SearchFirstDataBuffer(reader_t& reader, buffer_t& buffer, size_t offset);
     void UnpackEvent(queue_t& queue, it_t& it, const it_t& it_endbuffer, bool& good) noexcept;
     void FillDetectorReadHits(std::vector<TDetectorReadHit>& hits) const noexcept;
-    void HandleScalerBuffer(std::vector<TSlowControl>& slowcontrols,
+    void HandleScalerBuffer(scalers_t& scalers,
                             it_t& it, const it_t& it_end, bool& good,
                             std::vector<TDAQError>& errors) noexcept;
+    void FillSlowControls(const scalers_t& scalers, std::vector<TSlowControl>& slowcontrols) noexcept;
     void HandleDAQError(std::vector<TDAQError>& errors,
                         it_t& it, const it_t& it_end, bool& good) noexcept;
     void HandleEPICSBuffer(std::vector<TSlowControl>& slowcontrols, it_t& it, const it_t& it_end, bool& good) noexcept;

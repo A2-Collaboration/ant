@@ -289,6 +289,9 @@ void acqu::FileFormatMk2::UnpackEvent(
     TEvent::DataPtr& eventdata = queue.back()->Reconstructed;
 
     hit_storage.clear();
+    // there might be more than one scaler block in each event, so
+    // so collect them first in this map
+    scalers_t scalers;
     while(it != it_endbuffer && *it != acqu::EEndEvent) {
         // note that the Handle* methods move the iterator
         // themselves and set good to true if nothing went wrong
@@ -301,9 +304,10 @@ void acqu::FileFormatMk2::UnpackEvent(
             HandleEPICSBuffer(eventdata->SlowControls, it, it_endevent, good);
             break;
         case acqu::EScalerBuffer:
-            // Scaler read in this event, add them as slow control items
+            // Scaler read in this event
+            // there might also be some error buffers in between, args...
             HandleScalerBuffer(
-                        eventdata->SlowControls,
+                        scalers,
                         it, it_endevent, good,
                         eventdata->Trigger.DAQErrors);
             break;
@@ -343,6 +347,7 @@ void acqu::FileFormatMk2::UnpackEvent(
 
     // hit_storage is member variable for better memory allocation performance
     FillDetectorReadHits(eventdata->DetectorReadHits);
+    FillSlowControls(scalers, eventdata->SlowControls);
 
     it++; // go to start word of next event (if any)
 }
@@ -384,7 +389,7 @@ void acqu::FileFormatMk2::FillDetectorReadHits(vector<TDetectorReadHit>& hits) c
 }
 
 void acqu::FileFormatMk2::HandleScalerBuffer(
-        std::vector<TSlowControl>& slowcontrols,
+        scalers_t& scalers,
         it_t& it, const it_t& it_end,
         bool& good,
         std::vector<TDAQError>& errors
@@ -423,7 +428,6 @@ void acqu::FileFormatMk2::HandleScalerBuffer(
     it++; // skip the length word now
 
     // fill simple scalers map
-    scalers_t scalers;
     while(it != it_endscaler) {
         // within a scaler block, there might be error blocks
         if(*it == acqu::EReadError) {
@@ -452,12 +456,14 @@ void acqu::FileFormatMk2::HandleScalerBuffer(
     // already checked above with it_endscaler
     it++;
 
-    if(scalers.empty()) {
-        // maybe that should be more like a warning...?
-        LogMessage(TUnpackerMessage::Level_t::DataError,
-                   "Scaler block contains no scaler values at all");
+    good = true;
+}
+
+void acqu::FileFormatMk2::FillSlowControls(const scalers_t& scalers,
+                                           vector<TSlowControl>& slowcontrols) noexcept
+{
+    if(scalers.empty())
         return;
-    }
 
     // create slowcontrol items according to mapping
 
@@ -496,8 +502,6 @@ void acqu::FileFormatMk2::HandleScalerBuffer(
 
         VLOG(9) << sc;
     }
-
-    good = true;
 }
 
 void acqu::FileFormatMk2::HandleDAQError(std::vector<TDAQError>& errors,
