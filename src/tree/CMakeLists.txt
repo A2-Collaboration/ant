@@ -18,7 +18,6 @@ set(SRCS
   TCluster.h
   TCandidate.h
   TParticle.cc
-  TEventData.h
   TEvent.cc
   TAntHeader.cc
   )

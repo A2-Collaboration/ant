@@ -19,6 +19,7 @@ using namespace ant;
 
 void TEvent::Streamer(TBuffer& R__b) {
 
+    /// \todo create streambuf class from TBuffer to improve performance?
     stringstream ss;
 
     if (R__b.IsReading()) {
@@ -46,4 +47,8 @@ ostream& TEvent::Print(ostream& s) const {
     if(MCTrue)
         s << "=== MCTrue:\n" << *MCTrue;
     return s;
+}
+
+ostream& TEvent::Data::Print(ostream& s) const {
+    return s << "    ID=" << ID;
 }

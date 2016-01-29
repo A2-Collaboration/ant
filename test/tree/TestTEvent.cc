@@ -31,7 +31,7 @@ void dotest() {
 
   tree->Branch(branchname.c_str(), event);
 
-  event->Reconstructed = make_shared<TEventData>();
+  event->Reconstructed = make_shared<TEvent::Data>();
   auto& eventdata = event->Reconstructed;
 
   eventdata->ID = TID(10);
