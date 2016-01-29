@@ -2,15 +2,6 @@ include_directories(
   .
 )
 
-set(ANALYSIS_DATASTRUCTURES
-  data/Particle.cc
-  data/Event.cc
-  data/TaggerHit.cc
-  data/Trigger.cc
-  data/Slowcontrol.cc
-  data/Target.cc
-)
-
 set(ANALYSIS_INPUT
   input/DataReader.h
   input/goat/detail/InputModule.cc
@@ -95,7 +86,6 @@ set(ANALYSIS_UTILS
   )
 
 set(ANALYSIS_ALL
-    ${ANALYSIS_DATASTRUCTURES}
     ${ANALYSIS_INPUT}
     ${ANALYSIS_PHYSICS}
     ${ANALYSIS_PHYSICS_CALIBRATION}
