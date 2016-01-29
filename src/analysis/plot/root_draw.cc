@@ -226,7 +226,7 @@ hstack::hstack(const string& name, const std::string& title):
 hstack::~hstack()
 {}
 
-hstack& hstack::operator<<(TH1D* hist)
+hstack& hstack::operator<<(TH1* hist)
 {
     stack->Add(hist, current_option.c_str());
     xlabel = hist->GetXaxis()->GetTitle();

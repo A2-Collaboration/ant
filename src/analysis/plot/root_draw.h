@@ -10,6 +10,7 @@
 #include "Rtypes.h"
 
 class THStack;
+class TH1;
 class TH1D;
 class TCanvas;
 class TObject;
@@ -198,7 +199,7 @@ public:
     hstack(const hstack&) = delete;
     hstack& operator= (const hstack&) = delete;
 
-    virtual hstack& operator<< (TH1D* hist);
+    virtual hstack& operator<< (TH1* hist);
     virtual hstack& operator<< (const drawoption& c);
 
     void Draw(const std::string& option) const override;
