@@ -4,7 +4,7 @@
 #include "Unpacker.h"
 #include "expconfig/ExpConfig.h"
 
-#include "tree/TDataRecord.h"
+#include "tree/TEvent.h"
 
 #include <iostream>
 #include <string>
@@ -22,11 +22,11 @@ TID GetFirstID(const string& filename) {
     ExpConfig::Setup::ManualName = "Setup_Test";
     auto unpacker = ant::Unpacker::Get(filename);
 
-    auto firstitem = unpacker->NextItem();
-    if(firstitem == nullptr)
-        throw runtime_error(string("Didn't get first item from ")+filename);
+    auto firstevent = unpacker->NextEvent();
+    if(firstevent == nullptr)
+        throw runtime_error(string("Didn't get first event from ")+filename);
 
-    return firstitem->ID;
+    return firstevent->Reconstructed->ID;
 }
 
 void dotest() {

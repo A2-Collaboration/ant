@@ -224,7 +224,9 @@ void acqu::FileFormatBase::FillEvents(queue_t& queue) noexcept
     // we use the buffer as some state-variable
     // if the buffer is already empty now, there is nothing more to read
     if(buffer.empty()) {
-        if(!messages.empty()) {
+        // still issue some TEvent if there are messages left or
+        // it's the very first buffer now, then the data consisted of header-only data
+        if(!messages.empty() || unpackedBuffers==0) {
             queue.emplace_back(TEvent::MakeReconstructed(id));
             AppendMessagesToEvent(queue.back());
         }
