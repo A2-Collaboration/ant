@@ -12,13 +12,11 @@
 #pragma link C++ class ant::TKeyValue<std::string>+;
 #pragma link C++ class ant::TKeyValue<double>+;
 #pragma link C++ class ant::TKeyValue<std::vector<double>>+;
+
 #pragma link C++ class ant::TID+;
-#pragma link C++ class ant::TDataRecord+;
 
-#pragma link C++ class ant::TEvent-; // has its own Streamer implementation
+#pragma link C++ class ant::TEvent-; // has its own Streamer implementation with cereal
 
-#pragma link C++ class ant::TSlowControl+;
-#pragma link C++ class ant::TUnpackerMessage+;
 #pragma link C++ class ant::TCalibrationData+;
 
 #pragma link C++ class ant::TAntHeader+;
