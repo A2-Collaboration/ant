@@ -52,7 +52,7 @@ void acqu::FileFormatMk2::FillInfo(reader_t &reader, buffer_t &buffer, Info &inf
     static_assert(sizeof(acqu::ModuleInfoMk2_t) % sizeof(buffer_t::value_type) == 0,
                   "ModuleInfoMk2_t is not aligned to buffer");
     constexpr size_t infoSize = 1 + // dont't forget the 32bit start marker
-            sizeof(acqu::AcquMk2Info_t)/4; // division by four is ok since static_assert'ed
+                                sizeof(acqu::AcquMk2Info_t)/4; // division by four is ok since static_assert'ed
     constexpr size_t moduleSize = sizeof(acqu::ModuleInfoMk2_t)/4;
     const size_t totalSize =
             infoSize +
@@ -100,17 +100,17 @@ void acqu::FileFormatMk2::FillInfo(reader_t &reader, buffer_t &buffer, Info &inf
             << totalScalers << " channels";
 }
 
-void acqu::FileFormatMk2::FillFirstDataBuffer(queue_t& queue, reader_t& reader, buffer_t& buffer) const
+void acqu::FileFormatMk2::FillFirstDataBuffer(reader_t& reader, buffer_t& buffer)
 {
     // finally search for the Mk2Header, this also
     // fills the buffer correctly with the first Mk2DataBuffer (if available)
 
     // first search at 0x8000 bytes
-    if(SearchFirstDataBuffer(queue, reader, buffer, 0x8000))
+    if(SearchFirstDataBuffer(reader, buffer, 0x8000))
         return;
 
     // then search at 10*0x8000 bytes
-    if(SearchFirstDataBuffer(queue, reader, buffer, 10*0x8000))
+    if(SearchFirstDataBuffer(reader, buffer, 10*0x8000))
         return;
 
     // else fail
@@ -118,9 +118,8 @@ void acqu::FileFormatMk2::FillFirstDataBuffer(queue_t& queue, reader_t& reader, 
 }
 
 
-bool acqu::FileFormatMk2::SearchFirstDataBuffer(queue_t& queue,
-                                                reader_t& reader, buffer_t& buffer,
-                                                size_t offset) const
+bool acqu::FileFormatMk2::SearchFirstDataBuffer(reader_t& reader, buffer_t& buffer,
+                                                size_t offset)
 {
     VLOG(9) << "Searching first Mk2 buffer at offset 0x"
             << hex << offset << dec;
@@ -151,8 +150,7 @@ bool acqu::FileFormatMk2::SearchFirstDataBuffer(queue_t& queue,
 
     // check header info, emit message if there's a problem
     if(info.RecordLength != offset) {
-        LogMessage(queue,
-                   TUnpackerMessage::Level_t::Warn,
+        LogMessage(TUnpackerMessage::Level_t::Warn,
                    std_ext::formatter()
                    << "Record length in header 0x" << hex << info.RecordLength
                    << " does not match true file record length 0x" << offset << dec
@@ -192,8 +190,7 @@ bool acqu::FileFormatMk2::UnpackDataBuffer(UnpackerAcquFileFormat::queue_t& queu
 
     // check header word
     if(*it != acqu::EMk2DataBuff) {
-        LogMessage(queue,
-                   TUnpackerMessage::Level_t::DataError,
+        LogMessage(TUnpackerMessage::Level_t::DataError,
                    std_ext::formatter() <<
                    "Buffer starts with unexpected header word 0x" << hex << *it << dec
                    );
@@ -218,6 +215,8 @@ bool acqu::FileFormatMk2::UnpackDataBuffer(UnpackerAcquFileFormat::queue_t& queu
         UnpackEvent(queue, it, it_endbuffer, good);
         if(!good)
             return false;
+        // append the messages to some successfully unpacked event
+        AppendMessagesToEvent(queue.back());
 
         // increment official unique event ID
         ++id;
@@ -232,8 +231,7 @@ bool acqu::FileFormatMk2::UnpackDataBuffer(UnpackerAcquFileFormat::queue_t& queu
         // but there's no way to detect this properly, since
         // acqu::EEndEvent == acqu::EBufferEnd (grrrrr)
         if(*next(it,-1) == acqu::EEndEvent) {
-            LogMessage(queue,
-                       TUnpackerMessage::Level_t::Info,
+            LogMessage(TUnpackerMessage::Level_t::Info,
                        std_ext::formatter()
                        << "Buffer was exactly filled with " << nEventsInBuffer
                        << " events, no buffer endmarker present"
@@ -241,8 +239,7 @@ bool acqu::FileFormatMk2::UnpackDataBuffer(UnpackerAcquFileFormat::queue_t& queu
             return true;
         }
 
-        LogMessage(queue,
-                   TUnpackerMessage::Level_t::DataError,
+        LogMessage(TUnpackerMessage::Level_t::DataError,
                    std_ext::formatter()
                    << "Buffer did not have proper end buffer marker:"
                    << "  1. lastword=0x" << hex << setw(8) << setfill('0') << *next(it,-1)
@@ -256,15 +253,17 @@ bool acqu::FileFormatMk2::UnpackDataBuffer(UnpackerAcquFileFormat::queue_t& queu
 }
 
 void acqu::FileFormatMk2::UnpackEvent(
-        queue_t &queue, it_t &it, const it_t &it_endbuffer, bool &good) noexcept
+        queue_t& queue,
+        it_t& it, const it_t& it_endbuffer,
+        bool& good
+        ) noexcept
 {
     // extract and check eventLength
     const unsigned eventLength = *it/sizeof(decltype(*it));
 
     const auto it_endevent = next(it, eventLength);
     if(it_endevent == it_endbuffer) {
-        LogMessage(queue,
-                   TUnpackerMessage::Level_t::DataError,
+        LogMessage(TUnpackerMessage::Level_t::DataError,
                    std_ext::formatter() <<
                    "Event with size 0x" << eventLength
                    << " too big to fit in buffer of remaining size "
@@ -273,8 +272,7 @@ void acqu::FileFormatMk2::UnpackEvent(
         return;
     }
     if(*it_endevent != acqu::EEndEvent) {
-        LogMessage(queue,
-                   TUnpackerMessage::Level_t::DataError,
+        LogMessage(TUnpackerMessage::Level_t::DataError,
                    std_ext::formatter() <<
                    "At designated end of event, found unexpected word 0x"
                    << hex << *it_endevent << dec
@@ -284,10 +282,13 @@ void acqu::FileFormatMk2::UnpackEvent(
     it++;
 
     // now work on one event inside buffer
+
     /// \todo Scan mappings if there's an ADC channel defined which mimicks those blocks
 
+    queue.emplace_back(TEvent::MakeReconstructed(id));
+    TEvent::DataPtr& eventdata = queue.back()->Reconstructed;
+
     hit_storage.clear();
-    scalers_t scalers;
     while(it != it_endbuffer && *it != acqu::EEndEvent) {
         // note that the Handle* methods move the iterator
         // themselves and set good to true if nothing went wrong
@@ -297,15 +298,18 @@ void acqu::FileFormatMk2::UnpackEvent(
         switch(*it) {
         case acqu::EEPICSBuffer:
             // EPICS buffer
-            HandleEPICSBuffer(queue, it, it_endevent, good);
+            HandleEPICSBuffer(eventdata->SlowControls, it, it_endevent, good);
             break;
         case acqu::EScalerBuffer:
-            // Scaler read in this event, fill the scalers map
-            HandleScalerBuffer(queue, it, it_endevent, good, scalers);
+            // Scaler read in this event, add them as slow control items
+            HandleScalerBuffer(
+                        eventdata->SlowControls,
+                        it, it_endevent, good,
+                        eventdata->Trigger.DAQErrors);
             break;
         case acqu::EReadError:
             // read error block, some hardware-related information
-            HandleReadError(queue, it, it_endevent, good);
+            HandleDAQError(eventdata->Trigger.DAQErrors, it, it_endevent, good);
             break;
         default:
             // unfortunately, normal hits don't have a marker
@@ -313,8 +317,7 @@ void acqu::FileFormatMk2::UnpackEvent(
             /// \todo Implement better handling of malformed event buffers
             static_assert(sizeof(acqu::AcquBlock_t) <= sizeof(decltype(*it)),
                           "acqu::AcquBlock_t does not fit into word of buffer");
-            const acqu::AcquBlock_t* acqu_hit =
-                    reinterpret_cast<const acqu::AcquBlock_t*>(addressof(*it));
+            auto acqu_hit = reinterpret_cast<const acqu::AcquBlock_t*>(addressof(*it));
             // during a buffer, hits can come in any order,
             // and multiple hits with the same ID can happen
             hit_storage.add_item(acqu_hit->id, acqu_hit->adc);
@@ -331,30 +334,23 @@ void acqu::FileFormatMk2::UnpackEvent(
 
     // check proper EEndEvent
     if(it == it_endbuffer) {
-        LogMessage(queue,
-                   TUnpackerMessage::Level_t::DataError,
+        LogMessage(TUnpackerMessage::Level_t::DataError,
                    std_ext::formatter() <<
                    "While unpacking event, found premature end of buffer."
                    );
         return;
     }
 
-    // hit_storage is member variable for faster computation
-    FillTDetectorRead(queue, scalers);
+    // hit_storage is member variable for better memory allocation performance
+    FillDetectorReadHits(eventdata->DetectorReadHits);
 
-    it++; // go to next event (if any)
+    it++; // go to start word of next event (if any)
 }
 
-void acqu::FileFormatMk2::FillTDetectorRead(
-        queue_t &queue,
-        const scalers_t& scalers
-        ) const noexcept
+void acqu::FileFormatMk2::FillDetectorReadHits(vector<TDetectorReadHit>& hits) const noexcept
 {
-    // build the TDetectorRead,
-    // the order of its hits corresponds to the given mappings
-
-    auto record = std_ext::make_unique<TDetectorRead>(id);
-    record->Hits.reserve(2*hit_storage.size());
+    // the order of hits corresponds to the given mappings
+    hits.reserve(2*hit_storage.size());
 
     for(const auto& it_hits : hit_storage) {
         const uint16_t& ch = it_hits.first;
@@ -376,84 +372,29 @@ void acqu::FileFormatMk2::FillTDetectorRead(
             std::copy(values.begin(), values.end(),
                       reinterpret_cast<uint16_t*>(std::addressof(rawData[0])));
 
-            record->Hits.emplace_back(mapping->LogicalChannel, move(rawData));
+            hits.emplace_back(mapping->LogicalChannel, move(rawData));
         }
     }
 
-    // scalers are bit more complicated to add,
-    // since there might be added as TSlowControl items
-    // instead of TDetectorRead Hit
-    if(!scalers.empty()) {
-        for(const UnpackerAcquConfig::scaler_mapping_t& scaler_mapping : scaler_mappings) {
-            if(scaler_mapping.SlowControlName.empty()) {
-                // scaler should be handled as part of the TDetectorRead's Hits
-                for(const auto& mapping : scaler_mapping.Entries) {
-                    // build the raw data
-                    const auto& rawData = getRawData(mapping, scalers);
-                    // add to TDetectorRead record if something was found
-                    if(!rawData.empty())
-                        record->Hits.emplace_back(mapping.LogicalChannel, move(rawData));
-                }
-            }
-            else {
-                // this scaler should be handled as TSlowControl item
-                auto record_sc = std_ext::make_unique<TSlowControl>(
-                                     id,
-                                     TSlowControl::Type_t::AcquScaler,
-                                     TSlowControl::Validity_t::Backward,
-                                     0, /// \todo estimate some timestamp from ID_lower here?
-                                     scaler_mapping.SlowControlName,
-                                     "" // spare the description
-                                     );
-
-                // fill TSlowControl's payload
-
-                for(const auto& mapping : scaler_mapping.Entries) {
-                    using RawChannel_t = UnpackerAcquConfig::RawChannel_t<uint32_t>;
-                    for(const RawChannel_t& rawChannel : mapping.RawChannels) {
-                        const auto it_map = scalers.find(rawChannel.RawChannel);
-                        if(it_map==scalers.cend())
-                            continue;
-                        const std::vector<uint32_t>& values = it_map->second;
-                        // require strict > to prevent signed/unsigned ambiguity
-                        using payload_t = decltype(record_sc->Payload_Int);
-                        static_assert(sizeof(payload_t::value_type) > sizeof(uint32_t),
-                                      "Payload_Int not suitable for scaler value");
-                        // transform the scaler values to KeyValue entries
-                        // in TSlowControl's Payload_Int
-                        payload_t& payload = record_sc->Payload_Int;
-                        for(const uint32_t& value : values) {
-                            payload.emplace_back(mapping.LogicalChannel.Channel, value);
-                        }
-                    }
-                }
-
-                fillQueue(queue, move(record_sc));
-            }
-        }
-    }
-
-    if(record->Hits.empty()) {
+    if(hits.empty()) {
         /// \todo Improve message, maybe add TUnpackerMessage then?
         LOG(WARNING) << "Found event with no hits at all";
     }
 
-    fillQueue(queue, move(record));
 }
 
 void acqu::FileFormatMk2::HandleScalerBuffer(
-        queue_t &queue,
+        std::vector<TSlowControl>& slowcontrols,
         it_t& it, const it_t& it_end,
         bool& good,
-        scalers_t& scalers
-        ) const noexcept
+        std::vector<TDAQError>& errors
+        ) noexcept
 {
     // ignore Scaler buffer marker
     it++;
 
     if(it==it_end) {
-        LogMessage(queue,
-                   TUnpackerMessage::Level_t::DataError,
+        LogMessage(TUnpackerMessage::Level_t::DataError,
                    "Acqu ScalerBlock only start marker found"
                    );
         return;
@@ -463,9 +404,8 @@ void acqu::FileFormatMk2::HandleScalerBuffer(
     const int scalerLength = *it;
     constexpr int wordsize = sizeof(decltype(*it));
     if(scalerLength % wordsize != 0
-            || distance(it,it_end)<scalerLength/wordsize) {
-        LogMessage(queue,
-                   TUnpackerMessage::Level_t::DataError,
+       || distance(it,it_end)<scalerLength/wordsize) {
+        LogMessage(TUnpackerMessage::Level_t::DataError,
                    "Acqu ScalerBlock length invalid"
                    );
         return;
@@ -473,33 +413,37 @@ void acqu::FileFormatMk2::HandleScalerBuffer(
 
     const auto it_endscaler = next(it, scalerLength/wordsize);
     if(*it_endscaler != acqu::EScalerBuffer) {
-        LogMessage(queue,
-                   TUnpackerMessage::Level_t::DataError,
+        LogMessage(TUnpackerMessage::Level_t::DataError,
                    std_ext::formatter()
                    << "Acqu ScalerBlock did not have proper end marker: "
-
+                   << hex << "0x" << *it_endscaler
                    );
         return;
     }
     it++; // skip the length word now
 
+    // fill simple scalers map
+    scalers_t scalers;
     while(it != it_endscaler) {
         // within a scaler block, there might be error blocks
         if(*it == acqu::EReadError) {
-            HandleReadError(queue, it, it_end, good);
+            HandleDAQError(errors, it, it_end, good);
             if(!good)
                 return;
+            good = false;
         }
-        //
+
+        // check if enough space left
         if(distance(it, it_endscaler) < 2) {
-            LogMessage(queue,
-                       TUnpackerMessage::Level_t::DataError,
+            LogMessage(TUnpackerMessage::Level_t::DataError,
                        "Acqu ScalerBlock contains malformed scaler read"
                        );
             return;
         }
+
         const uint32_t index = *it++;
         const uint32_t value = *it++;
+
         scalers[index].push_back(value);
     }
 
@@ -508,13 +452,57 @@ void acqu::FileFormatMk2::HandleScalerBuffer(
     // already checked above with it_endscaler
     it++;
 
+    if(scalers.empty()) {
+        // maybe that should be more like a warning...?
+        LogMessage(TUnpackerMessage::Level_t::DataError,
+                   "Scaler block contains no scaler values at all");
+        return;
+    }
+
+    // create slowcontrol items according to mapping
+
+    for(const UnpackerAcquConfig::scaler_mapping_t& scaler_mapping : scaler_mappings) {
+
+        slowcontrols.emplace_back(
+                    TSlowControl::Type_t::AcquScaler,
+                    TSlowControl::Validity_t::Backward,
+                    0, /// \todo estimate some timestamp from ID_lower here?
+                    scaler_mapping.SlowControlName,
+                    "" // spare the description
+                    );
+        auto& sc = slowcontrols.back();
+
+        // fill TSlowControl's payload
+
+        for(const auto& mapping : scaler_mapping.Entries) {
+            using RawChannel_t = UnpackerAcquConfig::RawChannel_t<uint32_t>;
+            for(const RawChannel_t& rawChannel : mapping.RawChannels) {
+                const auto it_map = scalers.find(rawChannel.RawChannel);
+                if(it_map==scalers.cend())
+                    continue;
+                const std::vector<uint32_t>& values = it_map->second;
+                // require strict > to prevent signed/unsigned ambiguity
+                using payload_t = decltype(sc.Payload_Int);
+                static_assert(sizeof(payload_t::value_type) > sizeof(uint32_t),
+                              "Payload_Int not suitable for scaler value");
+                // transform the scaler values to KeyValue entries
+                // in TSlowControl's Payload_Int
+                payload_t& payload = sc.Payload_Int;
+                for(const uint32_t& value : values) {
+                    payload.emplace_back(mapping.LogicalChannel.Channel, value);
+                }
+            }
+        }
+
+        VLOG(9) << sc;
+    }
+
     good = true;
 }
 
-void acqu::FileFormatMk2::HandleReadError(
-        UnpackerAcquFileFormat::queue_t &queue,
-        it_t& it, const it_t& it_end,
-        bool& good) const noexcept
+void acqu::FileFormatMk2::HandleDAQError(std::vector<TDAQError>& errors,
+                                         it_t& it, const it_t& it_end,
+                                         bool& good) noexcept
 {
     // is there enough space in the event at all?
     static_assert(sizeof(acqu::ReadErrorMk2_t) % sizeof(decltype(*it)) == 0,
@@ -522,8 +510,7 @@ void acqu::FileFormatMk2::HandleReadError(
     constexpr int wordsize = sizeof(acqu::ReadErrorMk2_t)/sizeof(decltype(*it));
 
     if(distance(it, it_end)<wordsize) {
-        LogMessage(queue,
-                   TUnpackerMessage::Level_t::DataError,
+        LogMessage(TUnpackerMessage::Level_t::DataError,
                    "acqu::ReadErrorMk2_t block not completely present in buffer"
                    );
         return;
@@ -535,8 +522,7 @@ void acqu::FileFormatMk2::HandleReadError(
 
     // check for trailer word
     if(err->fTrailer != acqu::EReadError) {
-        LogMessage(queue,
-                   TUnpackerMessage::Level_t::DataError,
+        LogMessage(TUnpackerMessage::Level_t::DataError,
                    "Acqu ErrorBlock does not end with expected trailer word"
                    );
         return;
@@ -545,32 +531,21 @@ void acqu::FileFormatMk2::HandleReadError(
     // lookup the module name
     auto it_modname = acqu::ModuleIDToString.find(err->fModID);
     const string& modname = it_modname == acqu::ModuleIDToString.cend()
-            ? "UNKNOWN" : it_modname->second;
+                            ? "UNKNOWN" : it_modname->second;
 
-    // build TUnpackerMessage record from error info
-    auto record = std_ext::make_unique<TUnpackerMessage>(
-                      id,
-                      TUnpackerMessage::Level_t::HardwareError,
-                      std_ext::formatter()
-                      << "Acqu HardwareError ModuleID={} (" << modname << ") "
-                      << "Index={} ErrorCode={}"
-                      );
-    record->Payload.push_back(err->fModID);
-    record->Payload.push_back(err->fModIndex);
-    record->Payload.push_back(err->fErrCode);
+    errors.emplace_back(err->fModID, err->fModIndex, err->fErrCode, modname);
 
-    VLOG_N_TIMES(1000, 2) << *record;
+    VLOG_N_TIMES(1000, 2) << errors.back();
 
-    fillQueue(queue, move(record));
     advance(it, wordsize);
     good = true;
 }
 
 void acqu::FileFormatMk2::HandleEPICSBuffer(
-        queue_t &queue,
+        std::vector<TSlowControl>& slowcontrols,
         it_t& it, const it_t& it_end,
         bool& good
-        ) const noexcept
+        ) noexcept
 {
     // ignore EPICS buffer marker
     it++;
@@ -582,8 +557,7 @@ void acqu::FileFormatMk2::HandleEPICSBuffer(
     constexpr int headerWordsize = sizeof(acqu::EpicsHeaderInfo_t)/wordbytes;
 
     if(distance(it, it_end)<headerWordsize) {
-        LogMessage(queue,
-                   TUnpackerMessage::Level_t::DataError,
+        LogMessage(TUnpackerMessage::Level_t::DataError,
                    "acqu::EpicsHeaderInfo_t header not completely present in buffer"
                    );
         return;
@@ -597,8 +571,7 @@ void acqu::FileFormatMk2::HandleEPICSBuffer(
     // hdr->len aka epicsTotalWords
     // is the maximum size of the EPICS data including the info header
     if(hdr->len % wordbytes != 0) {
-        LogMessage(queue,
-                   TUnpackerMessage::Level_t::DataError,
+        LogMessage(TUnpackerMessage::Level_t::DataError,
                    "EPICS data not word aligned"
                    );
         return;
@@ -609,15 +582,13 @@ void acqu::FileFormatMk2::HandleEPICSBuffer(
     const time_t hdr_timestamp = hdr->time;
 
     if(epicsModName.length()>32) {
-        LogMessage(queue,
-                   TUnpackerMessage::Level_t::DataError,
+        LogMessage(TUnpackerMessage::Level_t::DataError,
                    "acqu::EpicsHeaderInfo_t header has malformed module name"
                    );
         return;
     }
     if(distance(it, it_end)<epicsTotalWords) {
-        LogMessage(queue,
-                   TUnpackerMessage::Level_t::DataError,
+        LogMessage(TUnpackerMessage::Level_t::DataError,
                    "EPICS data not completely present in buffer"
                    );
         return;
@@ -641,8 +612,7 @@ void acqu::FileFormatMk2::HandleEPICSBuffer(
     for(size_t i=0; i<nChannels; i++) {
         constexpr int chHdrBytes = sizeof(acqu::EpicsChannelInfo_t);
         if(distance(it_byte, bytes.cend()) < chHdrBytes) {
-            LogMessage(queue,
-                       TUnpackerMessage::Level_t::DataError,
+            LogMessage(TUnpackerMessage::Level_t::DataError,
                        "EPICS channel header not completely present in buffer"
                        );
             return;
@@ -652,8 +622,7 @@ void acqu::FileFormatMk2::HandleEPICSBuffer(
                 reinterpret_cast<const acqu::EpicsChannelInfo_t*>(addressof(*it_byte));
 
         if(distance(it_byte, bytes.cend()) < ch->bytes) {
-            LogMessage(queue,
-                       TUnpackerMessage::Level_t::DataError,
+            LogMessage(TUnpackerMessage::Level_t::DataError,
                        "EPICS channel payload not completely present in buffer"
                        );
             return;
@@ -661,8 +630,7 @@ void acqu::FileFormatMk2::HandleEPICSBuffer(
 
         auto it_map = map_EpicsTypes.find(ch->type);
         if(it_map == map_EpicsTypes.cend()) {
-            LogMessage(queue,
-                       TUnpackerMessage::Level_t::DataError,
+            LogMessage(TUnpackerMessage::Level_t::DataError,
                        "EPICS channel type unknown"
                        );
             return;
@@ -675,8 +643,7 @@ void acqu::FileFormatMk2::HandleEPICSBuffer(
 
         // another size check for the channel payload
         if(ch->bytes != chHdrBytes + ch_nElements * ch_typesize) {
-            LogMessage(queue,
-                       TUnpackerMessage::Level_t::DataError,
+            LogMessage(TUnpackerMessage::Level_t::DataError,
                        "EPICS channel payload size inconsistent"
                        );
             return;
@@ -698,14 +665,14 @@ void acqu::FileFormatMk2::HandleEPICSBuffer(
             description << "Period='" << hdr->period << " scalers'";
         }
 
-        auto record = std_ext::make_unique<TSlowControl>(
-                          id,
-                          record_type,
-                          validity,
-                          hdr_timestamp,
-                          ch_Name,
-                          description.str()
-                          );
+        slowcontrols.emplace_back(
+                    record_type,
+                    validity,
+                    hdr_timestamp,
+                    ch_Name,
+                    description.str()
+                    );
+        auto& sc = slowcontrols.back();
 
         // advance to the EPICS channel data (skip channel info header)
         advance(it_byte, chHdrBytes);
@@ -716,28 +683,28 @@ void acqu::FileFormatMk2::HandleEPICSBuffer(
         for(unsigned elem=0;elem<(unsigned)ch_nElements;elem++) {
             switch(ch_datatype) {
             case acqu::EpicsDataTypes_t::BYTE:
-                record->Payload_Int.emplace_back(elem, *it_byte);
+                sc.Payload_Int.emplace_back(elem, *it_byte);
                 break;
             case acqu::EpicsDataTypes_t::SHORT: {
                 const int16_t* value = reinterpret_cast<const int16_t*>(addressof(*it_byte));
-                record->Payload_Int.emplace_back(elem, *value);
+                sc.Payload_Int.emplace_back(elem, *value);
                 break;
             }
             case acqu::EpicsDataTypes_t::LONG: {
                 const int64_t* value = reinterpret_cast<const int64_t*>(addressof(*it_byte));
-                record->Payload_Int.emplace_back(elem, *value);
+                sc.Payload_Int.emplace_back(elem, *value);
                 break;
             }
             case acqu::EpicsDataTypes_t::FLOAT: {
                 static_assert(sizeof(float)==4,"Float should be 4 bytes long");
                 const float* value = reinterpret_cast<const float*>(addressof(*it_byte));
-                record->Payload_Float.emplace_back(elem, *value);
+                sc.Payload_Float.emplace_back(elem, *value);
                 break;
             }
             case acqu::EpicsDataTypes_t::DOUBLE: {
                 static_assert(sizeof(double)==8,"Float should be 8 bytes long");
                 const double* value = reinterpret_cast<const double*>(addressof(*it_byte));
-                record->Payload_Float.emplace_back(elem, *value);
+                sc.Payload_Float.emplace_back(elem, *value);
                 break;
             }
             case acqu::EpicsDataTypes_t::STRING: {
@@ -745,13 +712,12 @@ void acqu::FileFormatMk2::HandleEPICSBuffer(
                 // interpret as string
                 const string value_str(value);
                 if((signed)value_str.length()>=ch_typesize) {
-                    LogMessage(queue,
-                               TUnpackerMessage::Level_t::DataError,
+                    LogMessage(TUnpackerMessage::Level_t::DataError,
                                "EPICS channel string data too long (no terminating \\0?)"
                                );
                     return;
                 }
-                record->Payload_String.emplace_back(elem, value);
+                sc.Payload_String.emplace_back(elem, value);
                 break;
             }
             default:
@@ -762,10 +728,7 @@ void acqu::FileFormatMk2::HandleEPICSBuffer(
             advance(it_byte, ch_typesize);
         }
 
-        VLOG(9) << *record;
-
-        // enqueue the nicely created EPICS slowcontrol record
-        fillQueue(queue, move(record));
+        VLOG(9) << sc;
 
     } // end channel loop
 

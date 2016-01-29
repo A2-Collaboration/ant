@@ -1,6 +1,6 @@
 #pragma once
 
-#include "tree/TUnpackerMessage.h" // TUnpackerMessage::Level_t
+#include "tree/TUnpackerMessage.h"
 #include "UnpackerAcqu.h" // UnpackerAcquConfig
 
 #include "base/mapped_vectors.h"
@@ -31,15 +31,11 @@ public:
     /**
       * @brief Get a suitable instance for the given filename
       * @param filename the file to read
-      * @param queue for possible ant::T* messages during setup
       * @return the instance, or nullptr if nothing found
       *
       * Throws exception if something unusual is encountered.
       */
-    static std::unique_ptr<UnpackerAcquFileFormat> Get(
-            const std::string& filename,
-            queue_t& queue
-            );
+    static std::unique_ptr<UnpackerAcquFileFormat> Get(const std::string& filename);
 
     /**
       * @brief FillEvents fills the given queue with more TEvent items (if any left)
@@ -56,7 +52,6 @@ protected:
     virtual bool InspectHeader(const std::vector<uint32_t>& buffer) const = 0;
     virtual void Setup(std::unique_ptr<RawFileReader>&& reader_,
                        std::vector<std::uint32_t>&& buffer_) = 0;
-    virtual void FillHeader(queue_t& queue) = 0;
 };
 
 // the derived file format classes
@@ -73,7 +68,8 @@ public:
 
 private:
     std::unique_ptr<RawFileReader> reader;
-    std::vector<std::uint32_t> buffer;
+    std::vector<std::uint32_t>     buffer;
+    std::vector<TUnpackerMessage>  messages;
     signed trueRecordLength;
     unsigned unpackedBuffers;
     time_t GetTimeStamp();
@@ -123,15 +119,16 @@ protected:
 
     // this class already implements some stuff
     void Setup(reader_t&& reader_, buffer_t&& buffer_) override;
-    void FillHeader(queue_t& queue) override;
     void FillEvents(queue_t& queue) noexcept override;
-    void LogMessage(queue_t& queue,
-                    TUnpackerMessage::Level_t level,
-                    const std::string &msg) const;
+
+    // unpacker messages handling
+    void LogMessage(TUnpackerMessage::Level_t level,
+                    const std::string& msg);
+    void AppendMessagesToEvent(std::unique_ptr<TEvent>& event);
 
     // Mk1/Mk2 specific methods
     virtual void FillInfo(reader_t& reader, buffer_t& buffer, Info& info) const = 0;
-    virtual void FillFirstDataBuffer(queue_t& queue, reader_t& reader, buffer_t& buffer) const = 0;
+    virtual void FillFirstDataBuffer(reader_t& reader, buffer_t& buffer) = 0;
     virtual bool UnpackDataBuffer(queue_t &queue, it_t& it, const it_t& it_endbuffer) noexcept = 0;
 
 };

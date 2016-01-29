@@ -28,8 +28,7 @@ using namespace ant::unpacker;
 
 
 unique_ptr<UnpackerAcquFileFormat>
-UnpackerAcquFileFormat::Get(const string &filename,
-                            queue_t &queue)
+UnpackerAcquFileFormat::Get(const string& filename)
 {
     // make a list of all available acqu file format classes
     using format_t = unique_ptr<UnpackerAcquFileFormat>;
@@ -75,7 +74,6 @@ UnpackerAcquFileFormat::Get(const string &filename,
     // also fill some header-like events into the queue
     const format_t& format = formats.back();
     format->Setup(move(reader), move(buffer));
-    format->FillHeader(queue);
 
     // return the UnpackerAcquFormat instance
     return move(formats.back());
@@ -86,10 +84,7 @@ UnpackerAcquFileFormat::~UnpackerAcquFileFormat() {}
 void acqu::FileFormatBase::Setup(reader_t &&reader_, buffer_t &&buffer_) {
     reader = move(reader_);
     buffer = move(buffer_);
-}
 
-void acqu::FileFormatBase::FillHeader(queue_t& queue)
-{
     // let child class fill the info
     FillInfo(reader, buffer, info);
 
@@ -104,7 +99,7 @@ void acqu::FileFormatBase::FillHeader(queue_t& queue)
     auto config = ExpConfig::Unpacker<UnpackerAcquConfig>::Get(id);
 
     // now try to fill the first data buffer
-    FillFirstDataBuffer(queue, reader, buffer);
+    FillFirstDataBuffer(reader, buffer);
     unpackedBuffers = 0; // not yet unpacked
 
     // remember the record length size
@@ -122,6 +117,7 @@ void acqu::FileFormatBase::FillHeader(queue_t& queue)
             hit_mappings_ptr[ch].push_back(addressof(hit_mapping));
         }
     }
+
 }
 
 acqu::FileFormatBase::~FileFormatBase()
@@ -190,54 +186,46 @@ time_t acqu::FileFormatBase::GetTimeStamp()
 }
 
 void acqu::FileFormatBase::LogMessage(
-        UnpackerAcquFileFormat::queue_t &queue,
         TUnpackerMessage::Level_t level,
         const string& msg
-        ) const
+        )
 {
-    auto record = std_ext::make_unique<TUnpackerMessage>(
-                id,
-                level,
-                msg
-                );
 
-    stringstream ss_text;
+    messages.emplace_back(level, msg);
 
-    ss_text << "Buffer n=" << unpackedBuffers
-            << " [TUnpackerMessage] " << record->Message ;
-
-    const string& text = ss_text.str();
-
+    unsigned levelnum = 1;
     switch(level) {
     case TUnpackerMessage::Level_t::Info:
-        VLOG(3) << text;
+        levelnum = 3;
         break;
     case TUnpackerMessage::Level_t::Warn:
-        VLOG(2) << text;
+        levelnum = 2;
         break;
-    case TUnpackerMessage::Level_t::DataError:
-    case TUnpackerMessage::Level_t::HardwareError:
-    case TUnpackerMessage::Level_t::DataDiscard:
-        VLOG(1) << text;
+    default:
         break;
     }
-    fillQueue(queue, move(record));
+
+    VLOG(levelnum) << "Buffer n=" << unpackedBuffers
+                   << " [TUnpackerMessage] " << messages.back().Message ;
+
+}
+
+void acqu::FileFormatBase::AppendMessagesToEvent(std::unique_ptr<TEvent>& event)
+{
+    event->Reconstructed->UnpackerMessages = move(messages);
 }
 
 
 void acqu::FileFormatBase::FillEvents(queue_t& queue) noexcept
 {
-    // this method never throws exceptions, but just adds TUnpackerMessage to queue
+    // this method never throws exceptions, but just adds TUnpackerMessage to event
     // if something strange while unpacking is encountered
 
     // we use the buffer as some state-variable
     // if the buffer is already empty now, there is nothing more to read
     if(buffer.empty()) {
-        if(unpackedBuffers==0) {
-            // this was a file with headers only, then add at least an empty detector read to the queue
-            auto record = std_ext::make_unique<TDetectorRead>(id);
-            fillQueue(queue, move(record));
-        }
+        queue.emplace_back(TEvent::MakeReconstructed(id));
+        queue.back()->Reconstructed->UnpackerMessages = move(messages);
         return;
     }
 
@@ -249,23 +237,16 @@ void acqu::FileFormatBase::FillEvents(queue_t& queue) noexcept
         // handle errors on buffer scale
         LOG(WARNING) << "Error while unpacking buffer n=" << unpackedBuffers
                      << ", discarding all unpacked data from buffer.";
-        // add the last item in the queue (if any), which should be a TUnpackerMessage instance
-        if(!queue_buffer.empty()) {
-            const auto& lastItem = queue.back();
-            auto ptr = dynamic_cast<const TUnpackerMessage*>(lastItem.get());
-            if(ptr != nullptr) {
-                queue.splice(queue.end(), move(queue_buffer),
-                             next(queue_buffer.end(),-1), queue_buffer.end());
-            }
-        }
-        // always add an datadiscard info record
-        auto record = std_ext::make_unique<TUnpackerMessage>(
-                          id,
-                          TUnpackerMessage::Level_t::DataDiscard,
-                          "Discarded buffer number {}"
-                          );
-        record->Payload.push_back(unpackedBuffers);
-        fillQueue(queue, move(record));
+
+        // add an datadiscard message to an empty event
+        messages.emplace_back(
+                    TUnpackerMessage::Level_t::DataDiscard,
+                    "Discarded buffer number {}"
+                    );
+        messages.back().Payload.push_back(unpackedBuffers);
+
+        queue.emplace_back(TEvent::MakeReconstructed(id));
+        AppendMessagesToEvent(queue.back());
     }
     else {
         // successful, so add all to output
@@ -284,8 +265,7 @@ void acqu::FileFormatBase::FillEvents(queue_t& queue) noexcept
     }
     catch(ant::RawFileReader::Exception e) {
         // clear buffer if there was a problem when reading
-        LogMessage(queue,
-                   TUnpackerMessage::Level_t::DataError,
+        LogMessage(TUnpackerMessage::Level_t::DataError,
                    std_ext::formatter()
                    << "Error while reading input: " << e.what());
         buffer.clear();
@@ -295,14 +275,12 @@ void acqu::FileFormatBase::FillEvents(queue_t& queue) noexcept
     if(reader->gcount() != 4*trueRecordLength) {
         // reached the end of file properly?
         if(reader->gcount() == 0 && reader->eof()) {
-            LogMessage(queue,
-                       TUnpackerMessage::Level_t::Info,
+            LogMessage(TUnpackerMessage::Level_t::Info,
                        std_ext::formatter()
                        << "Found proper end of file");
         }
         else {
-            LogMessage(queue,
-                       TUnpackerMessage::Level_t::DataError,
+            LogMessage(TUnpackerMessage::Level_t::DataError,
                        std_ext::formatter()
                        << "Read only " << reader->gcount()
                        << " bytes, not enough for record length " << 4*trueRecordLength);
