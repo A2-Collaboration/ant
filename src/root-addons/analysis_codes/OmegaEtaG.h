@@ -3,6 +3,7 @@
 
 class TTree;
 class TCut;
+class TFile;
 
 class OmegaEtaG {
 public:
@@ -19,6 +20,7 @@ public:
     static void kinfit1();
 
     static void Plot(TTree* tree, const double binscale=1.0);
+    static void DataMC(TFile* mc_file, TFile* data_file, const double mcscale=1.0);
 };
 
 #endif

@@ -1,6 +1,7 @@
 #include "OmegaEtaG.h"
 
 #include "TTree.h"
+#include "TFile.h"
 #include "TH2.h"
 #include "TGraphErrors.h"
 #include "TF1.h"
@@ -12,6 +13,7 @@
 
 #include "analysis/plot/root_draw.h"
 #include "analysis/plot/Histogram.h"
+#include "base/std_ext/string.h"
 
 #include "TreeTools.h"
 
@@ -175,4 +177,43 @@ void OmegaEtaG::Plot(TTree* tree, const double binscale)
 
     canvas("2g IM")
             << ggIM << bachelor << endc;
+}
+
+void OmegaEtaG::DataMC(TFile* mc_file, TFile* data_file, const double mcscale)
+{
+    canvas c("MC Data");
+    for(int i=0;i<8; ++i) {
+        TH1* mc   = nullptr;
+        TH1* data = nullptr;
+
+        const auto histname = Form("h1d_%d",i);
+
+        mc_file->GetObject(histname, mc);
+        if(!mc) {
+            cout << "Could not get " << histname << " from mc file" << endl;
+            continue;
+        }
+        cout << "MC: " << mc->GetName() << endl;
+        mc->SetLineColor(kBlue);
+        const string backup_title(mc->GetTitle());
+        mc->SetTitle("mc");
+        mc->Scale(mcscale);
+
+        data_file->GetObject(histname, data);
+        if(!data) {
+            cout << "Could not get " << histname << " from mc file" << endl;
+            continue;
+        }
+        data->SetLineColor(kBlack);
+        data->SetTitle("data");
+
+
+        hstack* stack = new hstack(Form("stack_%d",i), backup_title);
+        *stack << mc << data;
+
+        c << drawoption("nostack") << padoption::Legend << *stack;
+
+    }
+
+    c << endc;
 }
