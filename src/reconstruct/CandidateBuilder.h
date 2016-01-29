@@ -22,11 +22,13 @@ struct TAPSVeto;
 namespace reconstruct {
 
 class CandidateBuilder {
-protected:
+public:
 
     using sorted_clusters_t = std::map<Detector_t::Type_t, std::list< TClusterPtr > >;
     using candidates_t = decltype(TEvent::Data::Candidates);
     using clusters_t = decltype(TEvent::Data::Clusters);
+
+protected:
 
     /**
      * @brief option_allowSingleVetoClusters: Make unmached Veto (PID/TAPSVeto) clusters into individual candidates.

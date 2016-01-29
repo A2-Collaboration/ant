@@ -75,14 +75,12 @@ void Reconstruct::DoReconstruct(TEvent::DataPtr& reconstructed)
     updateablemanager->UpdateParameters(reconstructed->ID);
 
     // apply the hooks for detector read hits (mostly calibrations),
-    // note that this also changes the detectorRead
+    // note that this also changes the hits itself
 
     ApplyHooksToReadHits(reconstructed->DetectorReadHits);
-    // the detectorRead is now calibrated as far as possible
+    // the detectorReads are now calibrated as far as possible
     // one might return now and detectorRead is just calibrated...
 
-    // for debug purposes, dump out the detectorRead
-    //cout << detectorRead << endl;
 
     // do the hit matching, which builds the TClusterHit's
     // put into the AdaptorTClusterHit to track Energy/Timing information
