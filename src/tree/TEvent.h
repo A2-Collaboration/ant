@@ -63,7 +63,7 @@ struct TEvent
 
     }; // Data
 
-    using DataPtr = std::shared_ptr<Data> ;
+    using DataPtr = std::unique_ptr<Data> ;
 
     DataPtr Reconstructed;
     DataPtr MCTrue;
@@ -75,11 +75,18 @@ struct TEvent
 
     virtual std::ostream& Print( std::ostream& s) const override;
 
+    static std::unique_ptr<TEvent> MakeReconstructed(const TID& id);
+
 #endif
 
     TEvent() {}
     virtual ~TEvent() {}
     ClassDef(TEvent, ANT_UNPACKER_ROOT_VERSION)
+
+private:
+    TEvent(const TEvent&);
+    TEvent& operator=(const TEvent&);
+
 };
 
 }

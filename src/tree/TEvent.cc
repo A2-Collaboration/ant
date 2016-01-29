@@ -8,6 +8,7 @@
 #include "base/cereal/archives/portable_binary.hpp"
 
 
+#include "base/std_ext/memory.h"
 #include "base/Logger.h"
 
 #include <sstream>
@@ -91,6 +92,12 @@ ostream& TEvent::Print(ostream& s) const {
     if(MCTrue)
         s << "> MCTrue:\n" << *MCTrue;
     return s;
+}
+
+std::unique_ptr<TEvent> TEvent::MakeReconstructed(const TID& id) {
+    auto event = std_ext::make_unique<TEvent>();
+    event->Reconstructed = std_ext::make_unique<TEvent::Data>(id);
+    return event;
 }
 
 ostream& TEvent::Data::Print(ostream& s) const {

@@ -3,6 +3,7 @@
 #include "tree/TEvent.h"
 
 #include "base/tmpfile_t.h"
+#include "base/std_ext/memory.h"
 
 #include "TFile.h"
 #include "TTree.h"
@@ -31,7 +32,7 @@ void dotest() {
 
   tree->Branch(branchname.c_str(), event);
 
-  event->Reconstructed = make_shared<TEvent::Data>();
+  event->Reconstructed = std_ext::make_unique<TEvent::Data>();
   auto& eventdata = event->Reconstructed;
 
   eventdata->ID = TID(10);
