@@ -21,7 +21,7 @@ class UnpackerAcqu : public Unpacker::Module
 public:
     UnpackerAcqu();
     virtual bool OpenFile(const std::string& filename) override;
-    virtual std::unique_ptr<TDataRecord> NextItem() noexcept override;
+    virtual std::unique_ptr<TEvent> NextEvent() noexcept override;
 
     class Exception : public Unpacker::Exception {
         using Unpacker::Exception::Exception; // use base class constructor
@@ -32,7 +32,7 @@ public:
     virtual double PercentDone() const override;
 
 private:
-    std::list< std::unique_ptr<TDataRecord> > queue; // std::list supports splice
+    std::list< std::unique_ptr<TEvent> > queue; // std::list supports splice
     std::unique_ptr<UnpackerAcquFileFormat> file;
 
 };
@@ -138,7 +138,7 @@ public:
 
 // define the templated constructors here to keep the class definition clean
 template<typename T>
-inline UnpackerAcquConfig::RawChannel_t<T>::RawChannel_t(const std::initializer_list<T> &l) {
+inline UnpackerAcquConfig::RawChannel_t<T>::RawChannel_t(const std::initializer_list<T>& l) {
     if(l.size()==2) {
         const std::vector<T> v(l);
         RawChannel = v[0];
@@ -149,7 +149,7 @@ inline UnpackerAcquConfig::RawChannel_t<T>::RawChannel_t(const std::initializer_
 }
 
 template<typename T>
-inline UnpackerAcquConfig::RawChannel_t<T>::RawChannel_t(const T &ch)
+inline UnpackerAcquConfig::RawChannel_t<T>::RawChannel_t(const T& ch)
 {
     RawChannel = ch;
     Mask = RawChannel_t<T>::NoMask;

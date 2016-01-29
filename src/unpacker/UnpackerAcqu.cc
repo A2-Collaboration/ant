@@ -1,7 +1,7 @@
 #include "UnpackerAcqu.h"
 #include "detail/UnpackerAcqu_detail.h"
 
-#include "tree/TDataRecord.h"
+#include "tree/TEvent.h"
 #include "base/Logger.h"
 
 #include <stdexcept>
@@ -30,7 +30,7 @@ bool UnpackerAcqu::OpenFile(const std::string &filename)
     return true;
 }
 
-std::unique_ptr<TDataRecord> UnpackerAcqu::NextItem() noexcept
+std::unique_ptr<TEvent> UnpackerAcqu::NextEvent() noexcept
 {
     // check if we need to replenish the queue
     if(queue.empty()) {
@@ -41,7 +41,6 @@ std::unique_ptr<TDataRecord> UnpackerAcqu::NextItem() noexcept
     }
 
     // std;:deque does not have a method to get and remove the element
-    // we also convert the unique_ptr here to some shared_ptr
     auto element = move(queue.front());
     queue.pop_front();
     return element;

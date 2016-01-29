@@ -12,15 +12,6 @@
 namespace ant {
 namespace unpacker {
 
-// little helper to fill the queue
-template<typename T>
-void fillQueue(UnpackerAcquFileFormat::queue_t& queue, std::unique_ptr<T>&& item) {
-    // but upcast the pointer for this
-    queue.emplace_back(
-                std_ext::static_cast_uptr<T, TDataRecord>(std::move(item))
-                );
-}
-
 // inspectHeader can actually be implemented for Mk1 and Mk2...
 template<typename T>
 bool inspectHeaderMk1Mk2_(const T* h, std::true_type) {

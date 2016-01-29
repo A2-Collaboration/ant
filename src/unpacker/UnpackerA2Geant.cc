@@ -3,7 +3,7 @@
 #include "expconfig/ExpConfig.h"
 
 
-#include "tree/TDetectorRead.h"
+#include "tree/TEvent.h"
 
 #include "base/WrapTFile.h"
 #include "base/Logger.h"
@@ -139,21 +139,22 @@ bool UnpackerA2Geant::OpenFile(const string& filename)
     return true;
 }
 
-unique_ptr<TDataRecord> UnpackerA2Geant::NextItem() noexcept
+std::unique_ptr<TEvent> UnpackerA2Geant::NextEvent() noexcept
 {
     if(current_entry>=geant->GetEntriesFast()-1)
         return nullptr;
 
     geant->GetEntry(++current_entry);
 
-    // start with an empty detector read
-    unique_ptr<TDetectorRead> detread = std_ext::make_unique<TDetectorRead>(*id);
+    // start with an empty event
+    auto event = std_ext::make_unique<TEvent>();
+    event->Reconstructed = make_shared<TEvent::Data>(*id);
 
     const size_t n_total = fnhits+fnpart+fntaps+fnvtaps+fvhits;
 
 
     // approx. 3 detector read hits per detector, we just want to prevent re-allocation
-    vector<TDetectorReadHit>& hits = detread->Hits;
+    vector<TDetectorReadHit>& hits = event->Reconstructed->DetectorReadHits;
     hits.reserve(3*n_total);
 
     // all energies from A2geant are in GeV, but here we need MeV...
@@ -254,7 +255,7 @@ unique_ptr<TDataRecord> UnpackerA2Geant::NextItem() noexcept
     if(!tid_from_file)
         ++(*id);
 
-    return move(detread);
+    return event;
 }
 
 double UnpackerA2Geant::PercentDone() const

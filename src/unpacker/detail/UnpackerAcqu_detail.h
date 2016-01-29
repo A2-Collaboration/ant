@@ -21,35 +21,30 @@ namespace ant {
  * Base class for file access management of acqu files
  */
 class RawFileReader;
-struct TDataRecord;
-struct THeaderInfo;
+struct TEvent;
 
 class UnpackerAcquFileFormat {
 public:
 
-    using queue_t = std::list< std::unique_ptr<TDataRecord> >;
+    using queue_t = std::list< std::unique_ptr<TEvent> >;
 
     /**
-   * @brief Get a suitable instance for the given filename
-   * @param filename the file to read
-   * @param queue for possible ant::T* messages during setup
-   * @return the instance, or nullptr if nothing found
-   *
-   * This factory method returns a fully setup reader. It might already fill
-   * the queue with some events about the header or some unpacker messages, for example.
-   *
-   * Throws exception if something unusual is encountered.
-   *
-   */
+      * @brief Get a suitable instance for the given filename
+      * @param filename the file to read
+      * @param queue for possible ant::T* messages during setup
+      * @return the instance, or nullptr if nothing found
+      *
+      * Throws exception if something unusual is encountered.
+      */
     static std::unique_ptr<UnpackerAcquFileFormat> Get(
             const std::string& filename,
             queue_t& queue
             );
 
     /**
-   * @brief FillEvents fills the given queue with more TDataRecord items (if any left)
-   * @param queue
-   */
+      * @brief FillEvents fills the given queue with more TEvent items (if any left)
+      * @param queue
+      */
     virtual void FillEvents(queue_t& queue) noexcept = 0;
 
     virtual ~UnpackerAcquFileFormat();

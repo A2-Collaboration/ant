@@ -4,8 +4,12 @@
  * @tableofcontents
  *
  * The unpacker stage handles the conversion of raw data, for example AcquRoot
- * Mk2 data, to a stream of ant::T* classes derived from ant::TDataRecord, for
- * example ant::TDetectorRead.
+ * Mk2 data, to a stream of ant::TEvent's. Usually they fill
+ * Reconstructed.DetectorReadHits
+ * and sometimes
+ * Reconstructed.SlowControls
+ * Reconstructed.UnpackerMessages
+ * which is then subsequently used by the Reconstruct stage.
  *
  * @section write_unpacker How to write a new unpacker?
  *
@@ -22,7 +26,7 @@
 
 namespace ant {
 
-struct TDataRecord;
+struct TEvent;
 
 /**
  * @brief The Unpacker class encapsulates the interface for unpacking raw data
@@ -36,13 +40,13 @@ public:
     /**
      * @brief The Reader interface returns the unpacked data as a stream
      *
-     * NextItem returns non-null pointers to instances of derived classes of TDataRecord,
-     * usually TDetectorRead
+     * NextEvent returns non-null pointers to instances of TEvent, when nullptr is returned,
+     * the Reader is empty
      */
     class Reader {
     public:
         virtual ~Reader() = default;
-        virtual std::unique_ptr<TDataRecord> NextItem() noexcept = 0;
+        virtual std::unique_ptr<TEvent> NextEvent() noexcept = 0;
         virtual double PercentDone() const = 0;
     };
 
