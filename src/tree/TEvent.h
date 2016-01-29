@@ -89,10 +89,10 @@ struct TEvent
         TTrigger Trigger;
         TTarget  Target;
 
-        std::vector<TClusterPtr>   Clusters;
-        std::vector<TCandidatePtr> Candidates;
-        PTypeList                  Particles;    // MCTrue final state, or identified from reconstructed candidates
-        TParticleTree_t            ParticleTree;
+        TClusterList     Clusters;
+        TCandidateList   Candidates;
+        PTypeList        Particles;    // MCTrue final state, or identified from reconstructed candidates
+        TParticleTree_t  ParticleTree;
 
         template<class Archive>
         void serialize(Archive& archive) {

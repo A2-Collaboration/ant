@@ -17,6 +17,7 @@ namespace ant {
 struct TCandidate;
 
 using TCandidatePtr = std::shared_ptr<TCandidate>;
+using TCandidateList = std::vector<TCandidatePtr>;
 
 struct TCandidate : printable_traits
 {

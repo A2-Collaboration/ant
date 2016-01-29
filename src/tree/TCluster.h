@@ -18,6 +18,7 @@ namespace ant {
 struct TCluster; // defined at very end of file...
 
 using TClusterPtr = std::shared_ptr<TCluster>;
+using TClusterList = std::vector<TClusterPtr>;
 
 struct TClusterHitDatum
 {
