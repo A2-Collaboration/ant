@@ -146,9 +146,8 @@ std::unique_ptr<TEvent> UnpackerA2Geant::NextEvent() noexcept
 
     geant->GetEntry(++current_entry);
 
-    // start with an empty event
-    auto event = std_ext::make_unique<TEvent>();
-    event->Reconstructed = make_shared<TEvent::Data>(*id);
+    // start with an empty reconstructed event
+    auto event = TEvent::MakeReconstructed(*id);
 
     const size_t n_total = fnhits+fnpart+fntaps+fnvtaps+fvhits;
 
