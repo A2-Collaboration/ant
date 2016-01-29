@@ -11,7 +11,6 @@ set(SRCS
   TTaggerHit.h
   TCalibrationData.h
   TAntHeader.h
-  TEventData.h
   ${ROOT_INCLUDE_DIR}/TLorentzVector.h
   )
 
@@ -22,7 +21,8 @@ set(SRCS_EXTRA
   TCluster.h
   TCandidate.h
   TParticle.cc
-  TEventData.cc
+  TEventData.h
+  TEvent.cc
   TAntHeader.cc
   )
 

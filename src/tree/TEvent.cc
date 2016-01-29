@@ -1,4 +1,4 @@
-#include "TEventData.h"
+#include "TEvent.h"
 #include "TClass.h"
 
 #include "base/cereal/types/polymorphic.hpp"
@@ -17,19 +17,11 @@
 using namespace std;
 using namespace ant;
 
-ostream& TEventData::Print(ostream& s) const {
-    return s << "TEventData ID=" << ID;
-}
-
-void TEventData::Streamer(TBuffer& R__b) {
+void TEvent::Streamer(TBuffer& R__b) {
 
     stringstream ss;
 
     if (R__b.IsReading()) {
-
-        ID.Streamer(R__b);
-        DetectorHits.Streamer(R__b);
-        Tagger.Streamer(R__b);
 
         string s;
         R__b.ReadStdString(s);
@@ -40,15 +32,18 @@ void TEventData::Streamer(TBuffer& R__b) {
 
     } else {
 
-        ID.Streamer(R__b);
-        DetectorHits.Streamer(R__b);
-        Tagger.Streamer(R__b);
-
-
         cereal::PortableBinaryOutputArchive ar(ss);
         ar(*this);
         const auto& str = ss.str();
         VLOG(9) << "Wrote " << str.length() << " bytes" << endl;
         R__b.WriteStdString(str);
     }
+}
+
+ostream& TEvent::Print(ostream& s) const {
+    if(Reconstructed)
+        s << "=== Reconstructed:\n" << *Reconstructed;
+    if(MCTrue)
+        s << "=== MCTrue:\n" << *MCTrue;
+    return s;
 }

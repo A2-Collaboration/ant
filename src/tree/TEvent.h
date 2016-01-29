@@ -1,8 +1,7 @@
 #pragma once
 
-#include "TEventData.h"
-
 #ifndef __CINT__
+#include "TEventData.h"
 #include <iomanip>
 #include <sstream>
 #endif
@@ -15,27 +14,25 @@ struct TEvent : printable_traits
 struct TEvent
 #endif
 {
-    TEventData Reconstructed;
-    TEventData MCTrue;
+
 
 #ifndef __CINT__
 
-    virtual std::ostream& Print( std::ostream& s) const override {
-        return s << "=== Reconstructed:\n" << Reconstructed
-                 << "=== MCTrue:\n" << MCTrue;
+    virtual std::ostream& Print( std::ostream& s) const override;
+
+    TEventDataPtr Reconstructed;
+    TEventDataPtr MCTrue;
+
+    template<class Archive>
+    void serialize(Archive archive) {
+        archive(Reconstructed, MCTrue);
     }
+
 #endif
 
-    TEvent() : Reconstructed(), MCTrue() {}
+    TEvent() {}
     virtual ~TEvent() {}
-#ifdef __clang__
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Winconsistent-missing-override"
-#endif
     ClassDef(TEvent, ANT_UNPACKER_ROOT_VERSION)
-#ifdef __clang__
-#pragma clang diagnostic pop
-#endif
 };
 
 }

@@ -4,47 +4,33 @@
 #include "TDetectorRead.h"
 #include "TTagger.h"
 #include "TSlowControl.h"
-
-#include "Rtypes.h"
-
-#include <iomanip>
-#include <ctime>
-
-#ifndef __CINT__
 #include "TCluster.h"
 #include "TCandidate.h"
 #include "TParticle.h"
-#include <memory>
-#endif
 
+#include <iomanip>
+#include <ctime>
+#include <memory>
 
 namespace ant {
 
-struct TDetectorReadHits : std::vector<TDetectorReadHit> {
-    TDetectorReadHits() : std::vector<TDetectorReadHit>() {}
-    virtual ~TDetectorReadHits() {}
-    ClassDef(TDetectorReadHits, ANT_UNPACKER_ROOT_VERSION)
-};
+struct TEventData;
 
-#ifndef __CINT__
+using TEventDataPtr = std::shared_ptr<TEventData>;
+
 struct TEventData : printable_traits
-#else
-struct TEventData
-#endif
 {
     TEventData(const TID& id) : ID(id) {}
+    TEventData() {}
+    virtual ~TEventData() {}
 
-    // we have a custom Streamer method, so mark all
-    // members visible to ROOTcint as transient with comment //!
-    TID ID;                               //!
-    TDetectorReadHits DetectorHits;       //!
-    TTagger Tagger;                       //!
-
-#ifndef __CINT__
+    TID ID;
+    std::vector<TDetectorReadHit> DetectorHits;
+    TTagger Tagger;
 
     std::vector<TClusterPtr>   Clusters;
     std::vector<TCandidatePtr> Candidates;
-    std::vector<TParticlePtr>  Particles; // final state, or identified from reconstructed candidates
+    std::vector<TParticlePtr>  Particles;    // MCTrue final state, or identified from reconstructed candidates
     TParticleTree_t            ParticleTree;
 
     template<class Archive>
@@ -52,12 +38,9 @@ struct TEventData
         archive(Clusters, Candidates, Particles, ParticleTree);
     }
 
-    virtual std::ostream& Print(std::ostream& s) const override;
-#endif
-
-    TEventData() : ID() {}
-    virtual ~TEventData() {}
-    ClassDef(TEventData, ANT_UNPACKER_ROOT_VERSION)
+    virtual std::ostream& Print(std::ostream& s) const override {
+        return s << "TEventData ID=" << ID;
+    }
 
 }; // TEventData
 
