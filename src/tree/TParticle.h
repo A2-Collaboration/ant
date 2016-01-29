@@ -30,16 +30,16 @@ struct TParticle : TLorentzVector, printable_traits {
     TCandidatePtr Candidate;
     const ParticleTypeDatabase::Type& Type() const { return *type; }
 
-    TParticle(const ParticleTypeDatabase::Type& _type,
-             ant::mev_t _Ek, ant::radian_t _theta, ant::radian_t _phi);
+    TParticle(const ParticleTypeDatabase::Type& type_,
+             ant::mev_t Ek_, ant::radian_t theta_, ant::radian_t phi_);
 
-    TParticle(const ParticleTypeDatabase::Type &_type, const TLorentzVector &_lorentzvector):
-        TLorentzVector(_lorentzvector),
-        type(std::addressof(_type))
+    TParticle(const ParticleTypeDatabase::Type& type_, const TLorentzVector& lorentzvector_):
+        TLorentzVector(lorentzvector_),
+        type(std::addressof(type_))
     {}
 
-    TParticle(const ParticleTypeDatabase::Type& _type, const TCandidatePtr& candidate):
-        TParticle(_type, candidate->CaloEnergy, candidate->Theta, candidate->Phi)
+    TParticle(const ParticleTypeDatabase::Type& type_, const TCandidatePtr& candidate):
+        TParticle(type_, candidate->CaloEnergy, candidate->Theta, candidate->Phi)
     {
         Candidate = candidate;
     }

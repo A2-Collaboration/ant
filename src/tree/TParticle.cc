@@ -4,17 +4,17 @@
 using namespace ant;
 using namespace ant::std_ext;
 
-TParticle::TParticle(const ParticleTypeDatabase::Type& _type, mev_t _Ek, radian_t _theta, radian_t _phi) :
-  type(std::addressof(_type))
+TParticle::TParticle(const ParticleTypeDatabase::Type& type_, mev_t Ek_, radian_t theta_, radian_t phi_) :
+  type(std::addressof(type_))
 {
-    const mev_t E = _Ek + type->Mass();
+    const mev_t E = Ek_ + type->Mass();
     const mev_t p = sqrt( sqr(E) - sqr(type->Mass()) );
 
     /// \bug This might be inefficient...
 
     TVector3 pv(1,0,0);
 
-    pv.SetMagThetaPhi(p,_theta,_phi);
+    pv.SetMagThetaPhi(p,theta_,phi_);
 
     *(reinterpret_cast<TLorentzVector*>(this)) = TLorentzVector(pv, E);
 }
