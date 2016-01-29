@@ -41,31 +41,19 @@ void Trigger_2014::BuildMappings(std::vector<UnpackerAcquConfig::hit_mapping_t>&
                 29192
                 );
 
-    std::list<scaler_mapping_t> reference_scalers;
-
-    reference_scalers.emplace_back(
+    scaler_mappings.emplace_back(
                 "Exptrigger_1MHz",
                 Type,
                 Scaler_Exptrigger_1MHz.Channel,
                 191
                 );
-    reference_scalers.emplace_back(
+    scaler_mappings.emplace_back(
                 "Beampolmon_1MHz",
                 Type,
                 Scaler_Beampolmon_1MHz.Channel,
                 315
                 );
 
-    // the reference scalers are added as TSlowControl
-    // and as logical channels
-    // (might be used by scaler calibrations from other detectors)
-    for(const scaler_mapping_t& scaler : reference_scalers) {
-        scaler_mappings.push_back(scaler);
-        // add again as DetectorRead item
-        scaler_mappings.emplace_back(scaler.Entries);
-    }
-
-    // some interesting scalers, added as TSlowControl only
     scaler_mappings.emplace_back(
                 "TotalLivetime",
                 Type,

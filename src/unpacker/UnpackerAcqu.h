@@ -81,11 +81,9 @@ public:
         using mapping_t::mapping_t; // use constructors from base class
     };
 
-    // scalers in acqu can be handled as additional information
-    // for a logical detector channel, or as TSlowControl items
+    // scalers in acqu are always TSlowControl items
     struct scaler_mapping_t  {
-        // if non-empty, scaler is converted to TSlowControl item
-        std::string SlowControlName;
+        std::string SlowControlName; // must not be empty!
 
         // one named slowcontrol may have more than one
         // data entry (for example tagger scaler for each channel)
@@ -105,7 +103,10 @@ public:
                 ) :
             SlowControlName(slowControlName),
             Entries(entries)
-        {}
+        {
+            if(SlowControlName.empty())
+                throw std::runtime_error("Empty SlowControlName provided");
+        }
 
         scaler_mapping_t(
                 const std::string& slowControlName,
@@ -115,19 +116,6 @@ public:
                 ) :
             scaler_mapping_t(slowControlName, {entry_t(detector, channel, rawChannel)})
         {}
-
-        scaler_mapping_t(
-                Detector_t::Type_t detector,
-                unsigned channel,
-                std::uint32_t rawChannel
-                ) :
-            scaler_mapping_t("", detector, channel, rawChannel)
-        {}
-
-        scaler_mapping_t(const std::vector< entry_t >& entries) :
-            scaler_mapping_t("", entries)
-        {}
-
     };
 
     virtual void BuildMappings(
@@ -136,7 +124,7 @@ public:
             ) const = 0;
 };
 
-// define the templated constructors here to keep the class definition clean
+// define the templated constructors here to keep the class definition cleaner
 template<typename T>
 inline UnpackerAcquConfig::RawChannel_t<T>::RawChannel_t(const std::initializer_list<T>& l) {
     if(l.size()==2) {
