@@ -20,6 +20,7 @@ namespace ant {
 struct TParticle;
 
 using TParticlePtr    = std::shared_ptr<TParticle>;
+using TParticleList   = std::vector<TParticlePtr>;
 using TParticleTree_t = std::shared_ptr<Tree<TParticlePtr>>;
 
 

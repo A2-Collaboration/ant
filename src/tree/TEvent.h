@@ -22,6 +22,8 @@
 namespace ant {
 
 #ifndef __CINT__
+struct TEvent;
+using TEventPtr = std::unique_ptr<TEvent>;
 struct TEvent : printable_traits
 #else
 struct TEvent
@@ -33,6 +35,47 @@ struct TEvent
 
     struct Data : printable_traits
     {
+        struct PTypeList {
+
+            void Add(TParticlePtr&& particle) {
+                lists[std::addressof(particle->Type())].emplace_back(particle);
+                all.emplace_back(particle);
+            }
+
+            void Add(TParticlePtr& particle) {
+                lists[std::addressof(particle->Type())].emplace_back(particle);
+                all.emplace_back(particle);
+            }
+
+            const TParticleList& GetAll() const { return all; }
+
+            const TParticleList& Get(const ant::ParticleTypeDatabase::Type& type) const {
+                auto entry = lists.find(std::addressof(type));
+                if(entry == lists.end()) {
+                    return empty;
+                }
+                return entry->second;
+            }
+
+            template<class Archive>
+            void save(Archive& archive) const {
+                archive(all);
+            }
+
+            template<class Archive>
+            void load(Archive& archive) {
+                archive(all);
+                for(const auto& p : all)
+                    lists[std::addressof(p->Type())].emplace_back(p);
+            }
+
+        private:
+            static const TParticleList empty;
+            TParticleList all;
+            std::map<const ParticleTypeDatabase::Type*, TParticleList> lists;
+
+        }; // PTypeList
+
         Data(const TID& id) : ID(id) {}
         Data() {}
         virtual ~Data() {}
@@ -48,7 +91,7 @@ struct TEvent
 
         std::vector<TClusterPtr>   Clusters;
         std::vector<TCandidatePtr> Candidates;
-        std::vector<TParticlePtr>  Particles;    // MCTrue final state, or identified from reconstructed candidates
+        PTypeList                  Particles;    // MCTrue final state, or identified from reconstructed candidates
         TParticleTree_t            ParticleTree;
 
         template<class Archive>

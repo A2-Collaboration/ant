@@ -18,6 +18,7 @@
 using namespace std;
 using namespace ant;
 
+const TParticleList TEvent::Data::PTypeList::empty;
 
 // teach cereal some ROOT types
 
@@ -126,7 +127,7 @@ ostream& TEvent::Data::Print(ostream& s) const {
         s << *i << endl;
 
     s << ">> Particles" << endl;
-    for(auto& i : Particles)
+    for(auto& i : Particles.GetAll())
         s << *i << endl;
 
     return s;
