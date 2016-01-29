@@ -106,17 +106,15 @@ struct TCluster : printable_traits
 
     template<class Archive>
     void load(Archive& archive) {
-        double x,y,z;
         archive(Energy, Time,
-                x, y, z,
+                Position,
                 DetectorType, CentralElement, Flags, ShortEnergy, Hits);
-        Position.SetXYZ(x,y,z);
     }
 
     template<class Archive>
     void save(Archive& archive) const {
         archive(Energy, Time,
-                Position.X(), Position.Y(), Position.Z(),
+                Position,
                 DetectorType, CentralElement, Flags, ShortEnergy, Hits);
     }
 

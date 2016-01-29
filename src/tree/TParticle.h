@@ -6,6 +6,7 @@
 #include "base/types.h"
 #include "base/ParticleType.h"
 #include "base/Tree.h"
+#include "base/cereal/types/base_class.hpp"
 
 #include "TLorentzVector.h"
 
@@ -59,15 +60,13 @@ struct TParticle : TLorentzVector, printable_traits {
 
     template<class Archive>
     void save(Archive& archive) const {
-        archive(Candidate, type->UID, Px(), Py(), Pz(), E());
+        archive(cereal::base_class<TLorentzVector>(this), Candidate, type->UID);
     }
 
     template<class Archive>
     void load(Archive& archive) {
         unsigned uid;
-        double px,py,pz,e;
-        archive(Candidate, uid, px, py, pz, e);
-        SetPxPyPzE(px,py,pz,e);
+        archive(cereal::base_class<TLorentzVector>(this), Candidate, uid);
         type = std::addressof(ParticleTypeDatabase::types.at(uid));
     }
 

@@ -14,6 +14,8 @@ set(SRCS
   TSlowControl.h
   TUnpackerMessage.h
   TTagger.h
+  TTarget.h
+  TTrigger.h
   TTaggerHit.h
   TCluster.h
   TCandidate.h

@@ -7,6 +7,9 @@
 #include "TUnpackerMessage.h"
 
 #include "TTagger.h"
+#include "TTrigger.h"
+#include "TTarget.h"
+
 #include "TCluster.h"
 #include "TCandidate.h"
 #include "TParticle.h"
@@ -39,7 +42,10 @@ struct TEvent
         std::vector<TSlowControl>     SlowControls;
         std::vector<TUnpackerMessage> UnpackerMessages;
 
-        TTagger                    Tagger;
+        TTagger  Tagger;
+        TTrigger Trigger;
+        TTarget  Target;
+
         std::vector<TClusterPtr>   Clusters;
         std::vector<TCandidatePtr> Candidates;
         std::vector<TParticlePtr>  Particles;    // MCTrue final state, or identified from reconstructed candidates
@@ -49,7 +55,8 @@ struct TEvent
         void serialize(Archive& archive) {
             archive(ID,
                     DetectorReadHits, SlowControls, UnpackerMessages,
-                    Tagger, Clusters, Candidates, Particles, ParticleTree);
+                    Tagger, Trigger, Target,
+                    Clusters, Candidates, Particles, ParticleTree);
         }
 
         virtual std::ostream& Print(std::ostream& s) const override;
