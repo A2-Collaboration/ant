@@ -42,7 +42,7 @@ std::ostream &TParticle::Print(std::ostream &stream) const
     stream << " Theta=" << Theta();
     stream << " Phi=" << Phi();
     if(Candidate) {
-        stream << " Candidate=" << *Candidate << "\n";
+        stream << " Candidate=" << *Candidate;
     }
     return stream;
 }

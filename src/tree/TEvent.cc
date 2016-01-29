@@ -43,12 +43,40 @@ void TEvent::Streamer(TBuffer& R__b) {
 
 ostream& TEvent::Print(ostream& s) const {
     if(Reconstructed)
-        s << "=== Reconstructed:\n" << *Reconstructed;
+        s << "> Reconstructed:\n" << *Reconstructed;
     if(MCTrue)
-        s << "=== MCTrue:\n" << *MCTrue;
+        s << "> MCTrue:\n" << *MCTrue;
     return s;
 }
 
 ostream& TEvent::Data::Print(ostream& s) const {
-    return s << "    ID=" << ID;
+    s << "ID=" << ID << endl;
+
+    s << ">> DetectorReadHits" << endl;
+    for(auto& i: DetectorReadHits)
+        s << i << endl;
+
+    s << ">> SlowControls" << endl;
+    for(auto& i : SlowControls)
+        s << i << endl;
+
+    s << ">> UnpackerMessages" << endl;
+    for(auto& i : UnpackerMessages)
+        s << i << endl;
+
+    s << ">> Tagger" << endl << Tagger;
+
+    s << ">> Clusters" << endl;
+    for(auto& i : Clusters)
+        s << *i << endl;
+
+    s << ">> Candidates" << endl;
+    for(auto& i : Candidates)
+        s << *i << endl;
+
+    s << ">> Particles" << endl;
+    for(auto& i : Particles)
+        s << *i << endl;
+
+    return s;
 }

@@ -21,7 +21,8 @@ struct TTagger : printable_traits
     }
 
     virtual std::ostream& Print( std::ostream& s) const override {
-        /// \todo Implement
+        for(auto& hit : Hits)
+            s << hit;
         return s;
     }
 
