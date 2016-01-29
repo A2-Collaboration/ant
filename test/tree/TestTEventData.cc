@@ -37,44 +37,51 @@ void dotest() {
   eventdata->DetectorHits.emplace_back();
   eventdata->DetectorHits.emplace_back();
 
-  auto cluster1 = make_shared<TCluster>(TVector3(1,2,3),
+  auto cluster0 = make_shared<TCluster>(TVector3(1,2,3),
                                        100, 0.5,
                                        Detector_t::Type_t::PID,
                                        127, // central element
                                        vector<TClusterHit>{TClusterHit()}
                                        );
-  auto cluster2 = make_shared<TCluster>(TVector3(4,5,6),
+  auto cluster1 = make_shared<TCluster>(TVector3(4,5,6),
                                        100, 0.5,
                                        Detector_t::Type_t::CB,
                                        127, // central element
                                        vector<TClusterHit>{TClusterHit(), TClusterHit()}
                                        );
-  auto cluster3 = make_shared<TCluster>(TVector3(7,8,9),
+  auto cluster2 = make_shared<TCluster>(TVector3(7,8,9),
                                        100, 0.5,
                                        Detector_t::Type_t::TAPS,
                                        127, // central element
                                        vector<TClusterHit>{TClusterHit(), TClusterHit(), TClusterHit()}
                                        );
+  eventdata->Clusters.emplace_back(cluster0);
   eventdata->Clusters.emplace_back(cluster1);
   eventdata->Clusters.emplace_back(cluster2);
-  eventdata->Clusters.emplace_back(cluster3);
 
 
-  auto candidate1 = make_shared<TCandidate>(
+  auto candidate0 = make_shared<TCandidate>(
                         Detector_t::Any_t::CB_Apparatus,
                         200,
                         0.0, 0.0, 0.0, // theta/phi/time
                         2, // cluster size
                         2.0, 0.0, // veto/tracker
-                        vector<TClusterPtr>{cluster2, cluster1}
+                        vector<TClusterPtr>{cluster1, cluster0}
                         );
 
-  eventdata->Candidates.emplace_back(candidate1);
+  eventdata->Candidates.emplace_back(candidate0);
 
-  auto particle1 = make_shared<TParticle>(ParticleTypeDatabase::Photon, candidate1);
+  auto particle0 = make_shared<TParticle>(ParticleTypeDatabase::Photon, candidate0);
+  auto particle1 = make_shared<TParticle>(ParticleTypeDatabase::Photon, TLorentzVector(7,8,9,10));
+  auto particle2 = make_shared<TParticle>(ParticleTypeDatabase::Pi0, TLorentzVector(3,4,5,6));
 
+
+  eventdata->Particles.emplace_back(particle0);
   eventdata->Particles.emplace_back(particle1);
 
+  eventdata->ParticleTree = Tree<TParticlePtr>::MakeNode(particle2);
+  eventdata->ParticleTree->CreateDaughter(particle1);
+  eventdata->ParticleTree->CreateDaughter(particle0);
 
 
   tree->Fill();
@@ -119,8 +126,20 @@ void dotest() {
 
   REQUIRE(readback->Clusters.at(0) == readback->Candidates.at(0)->Clusters.at(1));
 
+  REQUIRE(readback->Particles.size() == 2);
   REQUIRE(readback->Particles.at(0)->Type() == ParticleTypeDatabase::Photon);
   REQUIRE(readback->Particles.at(0)->Candidate == readback->Candidates.at(0));
+
+  REQUIRE(readback->ParticleTree != nullptr);
+  // check if that particle was properly re-created
+  REQUIRE(readback->ParticleTree->Get() != particle2);
+  REQUIRE(readback->ParticleTree->Get()->Type() == particle2->Type());
+  REQUIRE(readback->ParticleTree->Get()->Type() == ParticleTypeDatabase::Pi0);
+  REQUIRE(readback->ParticleTree->Daughters().size() == 2);
+  REQUIRE(readback->ParticleTree->Daughters().front()->Get() == readback->Particles.at(1));
+  REQUIRE(readback->ParticleTree->Daughters().back()->Get() == readback->Particles.at(0));
+
+
 
 
 }

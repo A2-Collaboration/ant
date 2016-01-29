@@ -45,11 +45,11 @@ struct TEventData
     std::vector<TClusterPtr>   Clusters;
     std::vector<TCandidatePtr> Candidates;
     std::vector<TParticlePtr>  Particles; // final state, or identified from reconstructed candidates
-
+    TParticleTree_t            ParticleTree;
 
     template<class Archive>
     void serialize(Archive& archive) {
-        archive(Clusters, Candidates, Particles);
+        archive(Clusters, Candidates, Particles, ParticleTree);
     }
 
     virtual std::ostream& Print(std::ostream& s) const override;

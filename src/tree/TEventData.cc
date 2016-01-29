@@ -4,6 +4,7 @@
 #include "base/cereal/types/polymorphic.hpp"
 #include "base/cereal/types/memory.hpp"
 #include "base/cereal/types/vector.hpp"
+#include "base/cereal/types/list.hpp"                 // hidden in TParticleTree_t ...
 #include "base/cereal/archives/portable_binary.hpp"
 
 
