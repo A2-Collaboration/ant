@@ -1,7 +1,6 @@
 #include "UnpackerReader.h"
 
 #include "TEvent.h"
-#include "TDetectorRead.h"
 #include "TUnpackerMessage.h"
 #include "TSlowControl.h"
 
@@ -38,8 +37,6 @@ bool UnpackerReader::OpenInput() {
     if(!SetupBranch("UnpackerMessage", UnpackerMessage))
         return false;
     if(!SetupBranch("SlowControl", SlowControl))
-        return false;
-    if(!SetupBranch("DetectorRead", DetectorRead))
         return false;
     if(!SetupBranch("Event", Event))
         return false;

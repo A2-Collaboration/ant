@@ -36,9 +36,9 @@ void dotest() {
 
   eventdata->ID = TID(10);
 
-  eventdata->DetectorHits.emplace_back();
-  eventdata->DetectorHits.emplace_back();
-  eventdata->DetectorHits.emplace_back();
+  eventdata->DetectorReadHits.emplace_back();
+  eventdata->DetectorReadHits.emplace_back();
+  eventdata->DetectorReadHits.emplace_back();
 
   auto cluster0 = make_shared<TCluster>(TVector3(1,2,3),
                                        100, 0.5,
@@ -122,7 +122,7 @@ void dotest() {
 
   REQUIRE(readback->ID == TID(10));
 
-  REQUIRE(readback->DetectorHits.size() == 3);
+  REQUIRE(readback->DetectorReadHits.size() == 3);
 
   REQUIRE(readback->Clusters.size() == 3);
   REQUIRE(readback->Clusters.at(0)->Position == TVector3(1,2,3));

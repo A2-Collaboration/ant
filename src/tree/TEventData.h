@@ -1,7 +1,7 @@
 #pragma once
 
 #include "TID.h"
-#include "TDetectorRead.h"
+#include "TDetectorReadHit.h"
 #include "TTagger.h"
 #include "TSlowControl.h"
 #include "TCluster.h"
@@ -25,7 +25,7 @@ struct TEventData : printable_traits
     virtual ~TEventData() {}
 
     TID ID;
-    std::vector<TDetectorReadHit> DetectorHits;
+    std::vector<TDetectorReadHit> DetectorReadHits;
     TTagger Tagger;
 
     std::vector<TClusterPtr>   Clusters;
@@ -35,7 +35,7 @@ struct TEventData : printable_traits
 
     template<class Archive>
     void serialize(Archive& archive) {
-        archive(Clusters, Candidates, Particles, ParticleTree);
+        archive(ID, DetectorReadHits, Tagger, Clusters, Candidates, Particles, ParticleTree);
     }
 
     virtual std::ostream& Print(std::ostream& s) const override {

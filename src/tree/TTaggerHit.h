@@ -1,41 +1,43 @@
 #pragma once
 
-#include "TDataRecord.h"
-#include <vector>
+#include "TID.h" // TKeyValue
 
-#ifndef __CINT__
+#include "base/printable.h"
+
+#include <vector>
 #include <iomanip>
 #include <sstream>
-#endif
 
 namespace ant {
 
-#ifndef __CINT__
 struct TTaggerHit : printable_traits
-#else
-struct TTaggerHit
-#endif
+
 {
     double PhotonEnergy;
     double Time;
     std::vector< TKeyValue<double> > Electrons; // Key=channel, Value=timing
 
 
-#ifndef __CINT__
     TTaggerHit(double photonE, const TKeyValue<double>& hit) :
         PhotonEnergy(photonE),
         Time(hit.Value),
         Electrons{hit}
     {}
+    TTaggerHit() {}
+    virtual ~TTaggerHit() {}
+
+    template<class Archive>
+    void serialize(Archive& archive) {
+        archive(PhotonEnergy, Time, Electrons);
+    }
+
+
     virtual std::ostream& Print( std::ostream& s) const override {
         return s << "TTaggerHit: Electrons=" << Electrons.size()
                  << " PhotonEnergy=" << PhotonEnergy << " Time=" << Time;
     }
-#endif
 
-    TTaggerHit() {}
-    virtual ~TTaggerHit() {}
-    ClassDef(TTaggerHit, ANT_UNPACKER_ROOT_VERSION)
+
 };
 
 }

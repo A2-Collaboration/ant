@@ -3,12 +3,10 @@ include_directories(.)
 set(SRCS
   TID.h
   TDataRecord.h
-  TDetectorRead.h
   TSlowControl.h
   TUnpackerMessage.h
   TEvent.h
-  TTagger.h
-  TTaggerHit.h
+
   TCalibrationData.h
   TAntHeader.h
   ${ROOT_INCLUDE_DIR}/TLorentzVector.h
@@ -18,6 +16,9 @@ set(SRCS_EXTRA
   MemoryPool.h
   UnpackerReader.cc
   UnpackerWriter.cc
+  TDetectorReadHit.h
+  TTagger.h
+  TTaggerHit.h
   TCluster.h
   TCandidate.h
   TParticle.cc

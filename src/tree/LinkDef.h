@@ -15,10 +15,6 @@
 #pragma link C++ class ant::TID+;
 #pragma link C++ class ant::TDataRecord+;
 
-#pragma link C++ class ant::TDetectorReadHit+;
-#pragma link C++ class ant::TDetectorRead+;
-#pragma link C++ class ant::TTaggerHit+;
-#pragma link C++ class ant::TTagger+;
 #pragma link C++ class ant::TEvent-; // has its own Streamer implementation
 
 #pragma link C++ class ant::TSlowControl+;

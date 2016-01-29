@@ -77,6 +77,11 @@ struct TID
         }
     }
 
+    template<class Archive>
+    void serialize(Archive& archive) {
+        archive(Flags, Timestamp, Lower, Reserved);
+    }
+
     // prevent implicit conversion calls
     TID(std::uint32_t, bool) = delete;
     TID(std::uint32_t, std::uint32_t, int) = delete;
@@ -183,6 +188,12 @@ struct TKeyValue
     virtual std::ostream& Print( std::ostream& s) const override {
         return s << Key << "=" << Value;
     }
+
+    template<class Archive>
+    void serialize(Archive& archive) {
+        archive(Key, Value);
+    }
+
 #endif
     TKeyValue() : Key(), Value() {}
     virtual ~TKeyValue() {}
