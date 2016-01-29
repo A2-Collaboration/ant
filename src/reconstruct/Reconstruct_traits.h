@@ -2,7 +2,9 @@
 
 #include "base/Detector_t.h"
 
+#include "tree/TEvent.h"
 #include "tree/MemoryPool.h"
+
 #include "base/mapped_vectors.h"
 
 #include <memory>
@@ -11,12 +13,6 @@
 #include <functional>
 
 namespace ant {
-
-struct TID;
-struct TDetectorRead;
-struct TDetectorReadHit;
-struct TEvent;
-struct TCluster;
 
 namespace reconstruct {
 struct AdaptorTClusterHit;
@@ -28,7 +24,7 @@ struct Reconstruct_traits {
      * @param detectorRead
      * @return the reconstructed TEvent
      */
-    virtual MemoryPool<TEvent>::Item DoReconstruct(TDetectorRead& detectorRead) = 0;
+    virtual void DoReconstruct(TEvent::DataPtr& reconstructed) = 0;
 
     virtual ~Reconstruct_traits() = default;
 };
@@ -53,7 +49,7 @@ struct ReconstructHook {
         using readhits_t = std_ext::mapped_vectors< Detector_t::Type_t, TDetectorReadHit* >;
         using extrahits_t = std::list< TDetectorReadHit >;
         using clusterhits_t = std::map< Detector_t::Type_t, std::list< reconstruct::AdaptorTClusterHit > >;
-        using clusters_t = std::map< Detector_t::Type_t, std::list< TCluster > >;
+        using clusters_t = std::map< Detector_t::Type_t, std::list< TClusterPtr > >;
         virtual ~Base() = default;
     };
 

@@ -37,7 +37,7 @@ public:
 
     void Build(const std::shared_ptr<ClusterDetector_t>& clusterdetector,
                const std::list<AdaptorTClusterHit>& clusterhits,
-               std::list<TCluster>& clusters
+               std::list<TClusterPtr>& clusters
                );
     virtual ~Clustering() = default;
 };

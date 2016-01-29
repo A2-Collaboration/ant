@@ -6,8 +6,6 @@
 
 #include "expconfig/ExpConfig.h"
 
-#include "tree/TDataRecord.h"
-#include "tree/TDetectorRead.h"
 #include "tree/TEvent.h"
 
 #include "base/Logger.h"
@@ -67,36 +65,30 @@ void Reconstruct::Initialize(const TID& tid)
     initialized = true;
 }
 
-MemoryPool<TEvent>::Item Reconstruct::DoReconstruct(TDetectorRead& detectorRead)
+void Reconstruct::DoReconstruct(TEvent::DataPtr& reconstructed)
 {
     if(!initialized) {
-        Initialize(detectorRead.ID);
+        Initialize(reconstructed->ID);
     }
 
     // update the updateables :)
-    updateablemanager->UpdateParameters(detectorRead.ID);
+    updateablemanager->UpdateParameters(reconstructed->ID);
 
     // apply the hooks for detector read hits (mostly calibrations),
     // note that this also changes the detectorRead
 
-    ApplyHooksToReadHits(detectorRead);
+    ApplyHooksToReadHits(reconstructed->DetectorReadHits);
     // the detectorRead is now calibrated as far as possible
     // one might return now and detectorRead is just calibrated...
 
     // for debug purposes, dump out the detectorRead
     //cout << detectorRead << endl;
 
-    // already create the event here, since Tagger
-    // doesn't need hit matching and thus can be filled already
-    // in BuildHits (see below)
-    auto event = MemoryPool<TEvent>::Get();
-    event->ID = detectorRead.ID;
-
     // do the hit matching, which builds the TClusterHit's
     // put into the AdaptorTClusterHit to track Energy/Timing information
     // for subsequent clustering
     sorted_bydetectortype_t<AdaptorTClusterHit> sorted_clusterhits;
-    BuildHits(sorted_clusterhits, event->Tagger);
+    BuildHits(sorted_clusterhits, reconstructed->Tagger);
 
     // apply hooks which modify clusterhits
     for(const auto& hook : hooks_clusterhits) {
@@ -104,7 +96,7 @@ MemoryPool<TEvent>::Item Reconstruct::DoReconstruct(TDetectorRead& detectorRead)
     }
 
     // then build clusters (at least for calorimeters this is not trivial)
-    sorted_bydetectortype_t<TCluster> sorted_clusters;
+    sorted_bydetectortype_t<TClusterPtr> sorted_clusters;
     BuildClusters(move(sorted_clusterhits), sorted_clusters);
 
     // apply hooks which modify clusters
@@ -113,24 +105,23 @@ MemoryPool<TEvent>::Item Reconstruct::DoReconstruct(TDetectorRead& detectorRead)
     }
 
     // finally, do the candidate building
-    candidatebuilder->Build(move(sorted_clusters), event->Candidates, event->AllClusters);
+    candidatebuilder->Build(move(sorted_clusters),
+                            reconstructed->Candidates, reconstructed->Clusters);
 
     // uncomment for debug purposes
     //cout << *event << endl;
-
-    return event;
 }
 
 void Reconstruct::ApplyHooksToReadHits(
-        TDetectorRead& detectorRead)
+        std::vector<TDetectorReadHit>& detectorReadHits)
 {
     // categorize the hits by detector type
     // this is handy for all subsequent reconstruction steps
     // we need to use non-const pointers because calibrations
     // may change the content
     sorted_readhits.clear();
-    for(TDetectorReadHit& readhit : detectorRead.Hits) {
-        sorted_readhits.add_item(readhit.GetDetectorType(), addressof(readhit));
+    for(TDetectorReadHit& readhit : detectorReadHits) {
+        sorted_readhits.add_item(readhit.DetectorType, addressof(readhit));
     }
 
     // apply calibration
@@ -143,12 +134,12 @@ void Reconstruct::ApplyHooksToReadHits(
 
     // adding extrahits to the detectorRead invalidates the sorted_readhits pointer map
     if(!extrahits.empty()) {
-        detectorRead.Hits.insert(detectorRead.Hits.end(),
+        detectorReadHits.insert(detectorReadHits.end(),
                                  make_move_iterator(extrahits.begin()),
                                  make_move_iterator(extrahits.end()));
         sorted_readhits.clear();
-        for(TDetectorReadHit& readhit : detectorRead.Hits) {
-            sorted_readhits.add_item(readhit.GetDetectorType(), addressof(readhit));
+        for(TDetectorReadHit& readhit : detectorReadHits) {
+            sorted_readhits.add_item(readhit.DetectorType, addressof(readhit));
         }
     }
 }
@@ -184,7 +175,7 @@ void Reconstruct::BuildHits(sorted_bydetectortype_t<AdaptorTClusterHit>& sorted_
 
             // transform the data from readhit into TClusterHitDatum's
             vector<TClusterHitDatum> data(readhit->Values.size());
-            const Channel_t::Type_t channeltype = readhit->GetChannelType();
+            const Channel_t::Type_t channeltype = readhit->ChannelType;
             auto do_transform = [channeltype] (double value) {
                 return TClusterHitDatum(channeltype, value);
             };
@@ -235,7 +226,7 @@ void Reconstruct::HandleTagger(const shared_ptr<TaggerDetector_t>& taggerdetecto
         if(readhit->Values.empty())
             continue;
 
-        switch(readhit->GetChannelType()) {
+        switch(readhit->ChannelType) {
 
         case Channel_t::Type_t::Timing: {
             // but we add each TClusterHitDatum as some single
@@ -275,7 +266,7 @@ void Reconstruct::HandleTagger(const shared_ptr<TaggerDetector_t>& taggerdetecto
 }
 
 void Reconstruct::BuildClusters(sorted_bydetectortype_t<AdaptorTClusterHit>&& sorted_clusterhits,
-        sorted_bydetectortype_t<TCluster>& sorted_clusters)
+        sorted_bydetectortype_t<TClusterPtr>& sorted_clusters)
 {
     auto insert_hint = sorted_clusters.begin();
 
@@ -289,7 +280,7 @@ void Reconstruct::BuildClusters(sorted_bydetectortype_t<AdaptorTClusterHit>&& so
             continue;
         const detector_ptr_t& detector = it_detector->second;
 
-        list<TCluster> clusters;
+        list<TClusterPtr> clusters;
 
         // check if detector supports clustering
         if(detector.ClusterDetector != nullptr) {
@@ -302,14 +293,15 @@ void Reconstruct::BuildClusters(sorted_bydetectortype_t<AdaptorTClusterHit>&& so
             for(const AdaptorTClusterHit& clusterhit : clusterhits) {
                 const auto& hit = clusterhit.Hit;
 
-                clusters.emplace_back(
-                            detector.Detector->GetPosition(hit->Channel),
-                            clusterhit.Energy,
-                            clusterhit.Time,
-                            detector.Detector->Type,
-                            hit->Channel,
-                            vector<TClusterHit>{*hit}
-                            );
+                clusters.emplace_back(make_shared<TCluster>(
+                                          detector.Detector->GetPosition(hit->Channel),
+                                          clusterhit.Energy,
+                                          clusterhit.Time,
+                                          detector.Detector->Type,
+                                          hit->Channel,
+                                          vector<TClusterHit>{*hit}
+                                          )
+                                      );
 
             }
         }

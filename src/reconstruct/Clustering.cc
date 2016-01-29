@@ -4,7 +4,7 @@
 #include "base/Detector_t.h"
 
 #include "tree/TCluster.h"
-#include "tree/TDetectorRead.h"
+#include "tree/TDetectorReadHit.h"
 
 #include "base/Logger.h"
 
@@ -22,9 +22,9 @@ AdaptorTClusterHit::AdaptorTClusterHit(const TDetectorReadHit* readhit,
 }
 
 void AdaptorTClusterHit::SetFields(const TDetectorReadHit *readhit) {
-    if(std::isnan(Energy) && readhit->GetChannelType() == Channel_t::Type_t::Integral)
+    if(std::isnan(Energy) && readhit->ChannelType == Channel_t::Type_t::Integral)
         Energy = readhit->Values[0];
-    if(std::isnan(Time) && readhit->GetChannelType() == Channel_t::Type_t::Timing)
+    if(std::isnan(Time) && readhit->ChannelType == Channel_t::Type_t::Timing)
         Time = readhit->Values[0];
 }
 
@@ -32,10 +32,9 @@ Clustering::Clustering(const shared_ptr<ExpConfig::Reconstruct>&)
 {
 }
 
-void Clustering::Build(
-        const shared_ptr<ClusterDetector_t>& clusterdetector,
+void Clustering::Build(const shared_ptr<ClusterDetector_t>& clusterdetector,
         const list<AdaptorTClusterHit>& clusterhits,
-        list<TCluster>& clusters)
+        std::list<TClusterPtr>& clusters)
 {
     // clustering detector, so we need additional information
     // to build the crystals_t
@@ -46,14 +45,15 @@ void Clustering::Build(
         if(!isfinite(clusterhit.Energy) || !isfinite(clusterhit.Time)) {
             // we're not allowed to throw anything away
             // so add some strange single hit cluster with no energy information here
-            clusters.emplace_back(
-                        clusterdetector->GetPosition(hit->Channel),
-                        clusterhit.Energy,
-                        clusterhit.Time,
-                        clusterdetector->Type,
-                        hit->Channel,
-                        vector<TClusterHit>{*hit}
-                        );
+            clusters.emplace_back(make_shared<TCluster>(
+                                      clusterdetector->GetPosition(hit->Channel),
+                                      clusterhit.Energy,
+                                      clusterhit.Time,
+                                      clusterdetector->Type,
+                                      hit->Channel,
+                                      vector<TClusterHit>{*hit}
+                                      )
+                                  );
             continue;
         }
         crystals.emplace_back(
@@ -103,18 +103,18 @@ void Clustering::Build(
             }
         }
         weightedPosition *= 1.0/weightedSum;
-        TCluster the_cluster(
-                    weightedPosition,
-                    cluster_energy,
-                    cluster_time,
-                    clusterdetector->Type,
-                    cluster_max_channel,
-                    clusterhits
-                    );
+        auto the_cluster = make_shared<TCluster>(
+                               weightedPosition,
+                               cluster_energy,
+                               cluster_time,
+                               clusterdetector->Type,
+                               cluster_max_channel,
+                               clusterhits
+                               );
         if(isfinite(cluster_shortenergy))
-            the_cluster.ShortEnergy = cluster_shortenergy;
+            the_cluster->ShortEnergy = cluster_shortenergy;
         if(cluster.Split)
-            the_cluster.SetFlag(TCluster::Flags_t::Split);
+            the_cluster->SetFlag(TCluster::Flags_t::Split);
         clusters.emplace_back(move(the_cluster));
     }
 }

@@ -30,7 +30,7 @@ public:
 
     // this method converts a TDetectorRead
     // into a calibrated TEvent
-    virtual MemoryPool<TEvent>::Item DoReconstruct(TDetectorRead& detectorRead) override;
+    virtual void DoReconstruct(TEvent::DataPtr& reconstructed) override;
 
     ~Reconstruct();
 
@@ -49,7 +49,7 @@ private:
     using sorted_readhits_t = ReconstructHook::Base::readhits_t;
     sorted_readhits_t sorted_readhits;
 
-    void ApplyHooksToReadHits(TDetectorRead& detectorRead);
+    void ApplyHooksToReadHits(std::vector<TDetectorReadHit>& detectorReadHits);
 
     void BuildHits(
             sorted_bydetectortype_t<reconstruct::AdaptorTClusterHit>& sorted_clusterhits,
@@ -61,7 +61,7 @@ private:
             TTagger& event_tagger);
 
     void BuildClusters(sorted_bydetectortype_t<reconstruct::AdaptorTClusterHit>&& sorted_clusterhits,
-            sorted_bydetectortype_t<TCluster>& sorted_clusters);
+            sorted_bydetectortype_t<TClusterPtr>& sorted_clusters);
 
 
 
