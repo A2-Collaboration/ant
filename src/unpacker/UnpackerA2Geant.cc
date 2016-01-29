@@ -149,8 +149,11 @@ std::unique_ptr<TEvent> UnpackerA2Geant::NextEvent() noexcept
     // start with an empty reconstructed event
     auto event = TEvent::MakeReconstructed(*id);
 
-    const size_t n_total = fnhits+fnpart+fntaps+fnvtaps+fvhits;
+    // however, vertex is some MCTrue information!
+    event->MCTrue = std_ext::make_unique<TEvent::Data>(); // do not set its ID, will be done by "real" MCTrue reader
+    event->MCTrue->Target.Vertex = fvertex; // TVector3 has conversion constructor...
 
+    const size_t n_total = fnhits+fnpart+fntaps+fnvtaps+fvhits;
 
     // approx. 3 detector read hits per detector, we just want to prevent re-allocation
     vector<TDetectorReadHit>& hits = event->Reconstructed->DetectorReadHits;
