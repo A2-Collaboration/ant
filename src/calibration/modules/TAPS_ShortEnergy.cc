@@ -1,15 +1,16 @@
 #include "TAPS_ShortEnergy.h"
-#include "TF1.h"
+
 #include "expconfig/detectors/TAPS.h"
 #include "calibration/fitfunctions/FitLandau.h"
 #include "calibration/fitfunctions/FitGaus.h"
-#include "analysis/plot/HistogramFactories.h"
-#include "analysis/data/Event.h"
-#include "analysis/utils/combinatorics.h"
+
 #include "calibration/gui/CalCanvas.h"
-#include "tree/TDataRecord.h"
+
 #include "base/Logger.h"
 #include "root-addons/cbtaps_display/TH2TAPS.h"
+
+#include "TF1.h"
+
 
 #include <list>
 #include <cmath>
@@ -17,8 +18,6 @@
 using namespace std;
 using namespace ant;
 using namespace ant::calibration;
-using namespace ant::analysis;
-using namespace ant::analysis::data;
 
 TAPS_ShortEnergy::TAPS_ShortEnergy(std::shared_ptr<expconfig::detector::TAPS> taps,
         std::shared_ptr<DataManager> calmgr,

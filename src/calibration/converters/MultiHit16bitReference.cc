@@ -1,6 +1,6 @@
 #include "MultiHit16bitReference.h"
 
-#include "tree/TDetectorRead.h"
+#include "tree/TDetectorReadHit.h"
 
 using namespace std;
 using namespace ant;
@@ -17,7 +17,7 @@ void converter::MultiHit16bitReference::ApplyTo(const readhits_t& hits, extrahit
     const auto& refhits = hits.get_item(ReferenceChannel.DetectorType);
 
     const auto comparer = [this] (TDetectorReadHit const * hit) {
-        return hit->GetChannelType() == ReferenceChannel.ChannelType &&
+        return hit->ChannelType == ReferenceChannel.ChannelType &&
                 hit->Channel == ReferenceChannel.Channel;
     };
     const auto it_refhit = find_if(refhits.cbegin(), refhits.cend(), comparer);

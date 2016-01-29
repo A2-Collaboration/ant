@@ -1,6 +1,6 @@
 #include "Scaler.h"
 
-#include "tree/TDetectorRead.h"
+#include "tree/TDetectorReadHit.h"
 #include "base/Logger.h"
 
 using namespace std;
@@ -27,7 +27,7 @@ void Scaler::ApplyTo(const readhits_t& hits, extrahits_t&)
 
     // now calibrate the scalers using the Converter
     for(TDetectorReadHit* dethit : dethits) {
-        if(dethit->GetChannelType() != Channel_t::Type_t::Scaler)
+        if(dethit->ChannelType != Channel_t::Type_t::Scaler)
             continue;
         dethit->Values = Converter->Convert(dethit->RawData);
     }

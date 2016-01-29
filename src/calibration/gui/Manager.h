@@ -4,7 +4,6 @@
 #include "AvgBuffer.h"
 
 #include "base/interval.h"
-#include "tree/TDataRecord.h"
 
 #include <memory>
 #include <list>
@@ -81,10 +80,6 @@ public:
     };
 
     RunReturn_t Run();
-//    void GetProgress(unsigned& slice, unsigned& channel) {
-//        slice = state.slice;
-//        channel = state.channel;
-//    }
 
     ~Manager();
 

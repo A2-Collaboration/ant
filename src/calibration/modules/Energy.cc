@@ -4,15 +4,13 @@
 #include "calibration/gui/CalCanvas.h"
 #include "calibration/fitfunctions/FitGausPol1.h"
 
-#include "analysis/plot/HistogramFactories.h"
-#include "analysis/data/Event.h"
-#include "analysis/utils/combinatorics.h"
-
 #include "tree/TCalibrationData.h"
-#include "tree/TDetectorRead.h"
+#include "tree/TDetectorReadHit.h"
 
 #include "base/Logger.h"
 
+#include "TH2.h"
+#include "TH3.h"
 #include "TF1.h"
 
 #include <cstdint>
@@ -64,7 +62,7 @@ void Energy::ApplyTo(const readhits_t& hits, extrahits_t& extrahits)
 
     // now calibrate the Energies (ignore any other kind of hits)
     for(TDetectorReadHit* dethit : dethits) {
-        if(dethit->GetChannelType() != ChannelType)
+        if(dethit->ChannelType != ChannelType)
             continue;
 
 
@@ -84,7 +82,7 @@ void Energy::ApplyTo(const readhits_t& hits, extrahits_t& extrahits)
             if(NeedsPedestals()) {
                 extrahits.emplace_back(
                             LogicalChannel_t{
-                                dethit->GetDetectorType(),
+                                dethit->DetectorType,
                                 ChannelType == Channel_t::Type_t::IntegralShort ?
                                 Channel_t::Type_t::PedestalShort : Channel_t::Type_t::Pedestal,
                                 dethit->Channel
