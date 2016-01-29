@@ -8,52 +8,59 @@
 
 namespace ant {
 
+struct TDAQError : printable_traits {
+    index_t ModuleID;
+    index_t ModuleIndex;
+    int     ErrorCode;
+    std::string ModuleName; // might be empty or unknown
+
+    TDAQError(index_t id, index_t index, int error_code,
+              const std::string& modname = ""):
+        ModuleID(id),
+        ModuleIndex(index),
+        ErrorCode(error_code),
+        ModuleName(modname)
+    {}
+    TDAQError() {}
+
+    virtual ~TDAQError() {}
+
+    template<class Archive>
+    void serialize(Archive& archive) {
+        archive(ModuleID, ModuleIndex, ErrorCode, ModuleName);
+    }
+
+
+    std::ostream& Print(std::ostream& s) const {
+        s << "TDAQError(Module ID=" << ModuleID;
+        if(!ModuleName.empty())
+            s << " Name=" << ModuleName;
+        s  << " ModuleIndex="
+          << ModuleIndex << " ErrorCode=" << ErrorCode << ")";
+        return s;
+    }
+};
+
 struct TTrigger : printable_traits {
-
-    struct DAQError : printable_traits {
-        index_t ModuleID;
-        index_t ModuleIndex;
-        int     ErrorCode;
-
-        DAQError(index_t id, index_t index, int error_code):
-            ModuleID(id),
-            ModuleIndex(index),
-            ErrorCode(error_code) {}
-        DAQError() {}
-
-        virtual ~DAQError() {}
-
-        template<class Archive>
-        void serialize(Archive& archive) {
-            archive(ModuleID, ModuleIndex, ErrorCode);
-        }
-
-
-        std::ostream& Print(std::ostream& s) const {
-            s << "DAQError(Module ID=" << ModuleID << " ModuleIndex="
-              << ModuleIndex << " ErrorCode=" << ErrorCode << ")";
-            return s;
-        }
-    };
 
     mev_t           CBEnergySum;
     unsigned int    ClusterMultiplicity;
     ns_t            CBTiming;
 
-    std::list<DAQError>     Errors;
+    std::vector<TDAQError> DAQErrors;
 
     TTrigger( mev_t CBESum=0.0,
                  unsigned int multiplicity=0):
         CBEnergySum(CBESum),
         ClusterMultiplicity(multiplicity),
-        Errors()
+        DAQErrors()
     {}
 
     virtual ~TTrigger() {}
 
     template<class Archive>
     void serialize(Archive& archive) {
-        archive(CBEnergySum, ClusterMultiplicity, CBTiming, Errors);
+        archive(CBEnergySum, ClusterMultiplicity, CBTiming, DAQErrors);
     }
 
     std::ostream& Print(std::ostream& stream) const {
@@ -61,7 +68,7 @@ struct TTrigger : printable_traits {
                << " CB Energy Sum=" << CBEnergySum << " MeV"
                << " Multipicity=" << ClusterMultiplicity
                << ")";
-        for(auto& error : Errors) {
+        for(auto& error : DAQErrors) {
             stream << "\t" << error << "\n";
         }
         return stream;
