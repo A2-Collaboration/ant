@@ -4,9 +4,7 @@
 #include "Unpacker.h"
 #include "expconfig/ExpConfig.h"
 
-#include "tree/TUnpackerMessage.h"
-#include "tree/TSlowControl.h"
-#include "tree/TDetectorRead.h"
+#include "tree/TEvent.h"
 
 #include "base/tmpfile_t.h"
 #include "base/std_ext/misc.h"
@@ -22,26 +20,15 @@
 #pragma GCC diagnostic ignored "-Wparentheses"
 
 using namespace std;
+using namespace ant;
 
-template<typename T>
-void dotest(Long64_t expectedEntries);
+void dotest();
 
-TEST_CASE("Test TreeWriter: ant::TSlowControl", "[unpacker]") {
-    dotest<ant::TSlowControl>(8);
+TEST_CASE("Test TreeWriter TEvent's", "[unpacker]") {
+    dotest();
 }
 
-TEST_CASE("Test TreeWriter: ant::TUnpackerMessage", "[unpacker]") {
-    dotest<ant::TUnpackerMessage>(8);
-}
-
-TEST_CASE("Test TreeWriter: ant::TDetectorRead", "[unpacker]") {
-    dotest<ant::TDetectorRead>(221);
-}
-
-template<typename T>
-void dotest(Long64_t expectedEntries) {
-
-    const string& classname = ant::std_ext::getTypeAsString<T>();
+void dotest() {
 
     ant::tmpfile_t tmpfile;
 
@@ -52,17 +39,15 @@ void dotest(Long64_t expectedEntries) {
     TFile* file = new TFile(tmpfile.filename.c_str(),"RECREATE");
 
     TTree* tree = new TTree("tree","tree");
-    T* ptr = new T();
-    REQUIRE(tree->Branch("branch", classname.c_str(), &ptr) != nullptr);
+    TEvent* ptr = new TEvent();
+    REQUIRE(tree->Branch("branch", "ant::TEvent", &ptr) != nullptr);
 
-    while(auto item = unpacker->NextItem()) {
-        ptr = dynamic_cast<T*>(item.get());
-        if(ptr==nullptr)
-            continue;
+    while(auto item = unpacker->NextEvent()) {
+        ptr = item.get();
         tree->Fill();
     }
 
-    REQUIRE( tree->GetEntries() == expectedEntries );
+    REQUIRE( tree->GetEntries() == 222 );
 
     file->Write();
     file->Close();
@@ -76,7 +61,7 @@ void dotest(Long64_t expectedEntries) {
 
     tree = dynamic_cast<TTree*>(file->Get("tree"));
     REQUIRE((tree != nullptr));
-    REQUIRE((tree->GetEntries()==expectedEntries));
+    REQUIRE((tree->GetEntries() == 222));
 
     ptr = 0;
     REQUIRE(tree->SetBranchAddress("branch", &ptr) == 0);

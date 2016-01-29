@@ -224,8 +224,10 @@ void acqu::FileFormatBase::FillEvents(queue_t& queue) noexcept
     // we use the buffer as some state-variable
     // if the buffer is already empty now, there is nothing more to read
     if(buffer.empty()) {
-        queue.emplace_back(TEvent::MakeReconstructed(id));
-        queue.back()->Reconstructed->UnpackerMessages = move(messages);
+        if(!messages.empty()) {
+            queue.emplace_back(TEvent::MakeReconstructed(id));
+            AppendMessagesToEvent(queue.back());
+        }
         return;
     }
 
