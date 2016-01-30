@@ -87,9 +87,9 @@ bool UnpackerA2Geant::OpenFile(const string& filename)
 
         /// \todo think of some better timestamp?
         id = new TID(static_cast<std::uint32_t>(std::time(nullptr)),
-                                       0, // start with 0 as lower ID
-                                       std::initializer_list<TID::Flags_t>({TID::Flags_t::MC, TID::Flags_t::AdHoc}) // mark as MC
-                                       );
+                     0, // start with 0 as lower ID
+                     std::list<TID::Flags_t>{TID::Flags_t::MC, TID::Flags_t::AdHoc} // mark as MC
+                     );
     }
 
     if(geant->GetEntries() >= numeric_limits<std::uint32_t>::max()) {
