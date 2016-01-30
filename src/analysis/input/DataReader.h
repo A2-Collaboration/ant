@@ -18,6 +18,7 @@ namespace input {
  * Examples:
  *  * goat file reader
  *  * new ant data format reader
+ *  * MCTrue Pluto reader
  */
 class DataReader {
 public:

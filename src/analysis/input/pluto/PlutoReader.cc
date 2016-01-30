@@ -127,7 +127,7 @@ std::string PlutoTable(const std::vector<const PParticle*> particles) {
     return s.str();
 }
 
-void PlutoReader::CopyPluto(TEvent::Data& mctrue, const TID& eventid_rec)
+void PlutoReader::CopyPluto(TEvent::Data& mctrue)
 {
     const Long64_t entries = PlutoMCTrue->GetEntries();
     std::vector<const PParticle*> PlutoParticles;
@@ -238,34 +238,25 @@ void PlutoReader::CopyPluto(TEvent::Data& mctrue, const TID& eventid_rec)
 
     }
 
-    // use eventID from file if available
-    // also check if it matches with reconstructed TID
-    if(tid_from_file) {
-        mctrue.ID = *tid;
-        if(!eventid_rec.IsInvalid() && eventid_rec != mctrue.ID) {
-            throw Exception(std_ext::formatter()
-                            << "TID mismatch: Reconstructed=" << eventid_rec
-                            << " not equal to MCTrue=" << mctrue.ID);
-        }
-    }
+
 
     // calculate energy sum based on direction of particle
     auto& triggerinfos = mctrue.Trigger;
+    triggerinfos.ClusterMultiplicity = 0;
     double Esum = 0;
     for(const TParticlePtr& particle : mctrue.Particles.GetAll()) {
         if(geometry.DetectorFromAngles(*particle) & Detector_t::Type_t::CB) {
             Esum += particle->Ek();
+            // expected MCTrue multiplicity
+            triggerinfos.ClusterMultiplicity++;
         }
     }
     triggerinfos.CBEnergySum = Esum;
 
-    /// @note multiplicity is only known on reconstructed
-
     // dump some information about the conversion
 
     if(missing_decay_treeinfo && mctrue.ParticleTree) {
-        const auto& tid = !mctrue.ID.IsInvalid() ? mctrue.ID : eventid_rec;
-        LOG(WARNING) << "Missing decay tree info for event " << tid;
+        LOG(WARNING) << "Missing decay tree info for event " << mctrue.ID;
         VLOG(5)      << "Dumping Pluto particles:\n" << PlutoTable(PlutoParticles);
         mctrue.ParticleTree = nullptr;
     }
@@ -287,7 +278,28 @@ bool PlutoReader::ReadNextEvent(TEvent& event)
 
     tree->GetEntry(current_entry);
 
-    CopyPluto(*event.MCTrue, event.Reconstructed->ID);
+    // use eventID from file if available
+    // also check if it matches with reconstructed TID
+    TID mctrue_tid;
+    if(tid_from_file) {
+        mctrue_tid = *tid;
+        if(event.Reconstructed &&
+           event.Reconstructed->ID != mctrue_tid) {
+            throw Exception(std_ext::formatter()
+                            << "TID mismatch: Reconstructed=" << event.Reconstructed->ID
+                            << " not equal to MCTrue=" << mctrue_tid);
+        }
+    }
+
+    // ensure MCTrue branch is there, potentially add TID if invalid so far
+    if(!event.MCTrue) {
+        event.MCTrue = std_ext::make_unique<TEvent::Data>(mctrue_tid);
+    }
+    else if(event.MCTrue->ID.IsInvalid()) {
+        event.MCTrue->ID = mctrue_tid;
+    }
+
+    CopyPluto(*event.MCTrue);
 
     ++current_entry;
 

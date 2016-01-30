@@ -33,12 +33,19 @@ double AntReader::PercentDone() const
 
 bool AntReader::ReadNextEvent(TEvent& event)
 {
+    // we expect Reconstructed branch to be filled always
     auto eventptr = unpacker->NextEvent();
 
     if(eventptr) {
         if(reconstruct)
             reconstruct->DoReconstruct(eventptr->Reconstructed);
-        event = move(*eventptr);
+
+        event.Reconstructed = move(eventptr->Reconstructed);
+
+        // the A2Geant unpacker also fills some MCTrue information
+        if(eventptr->MCTrue)
+            event.MCTrue = move(eventptr->MCTrue);
+
         return true;
     }
 

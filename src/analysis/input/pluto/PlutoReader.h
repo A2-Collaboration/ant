@@ -48,7 +48,7 @@ protected:
 
     Long64_t    current_entry = 0;
 
-    void CopyPluto(TEvent::Data& mctrue, const TID& eventid_rec);
+    void CopyPluto(TEvent::Data& mctrue);
 
     PStaticData* pluto_database;
     const ParticleTypeDatabase::Type* GetType(const PParticle* p) const;
