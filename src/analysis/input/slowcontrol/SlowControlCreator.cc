@@ -1,8 +1,8 @@
-#include "SlowcontrolCreator.h"
+#include "SlowControlCreator.h"
 
 using namespace ant;
 using namespace ant::analysis;
-using namespace ant::analysis::data;
+using namespace ant::analysis::input;
 using namespace std;
 
 /**
@@ -34,7 +34,7 @@ void CopyVector(const std::vector<TKeyValue<double>>& source, std::vector<double
 }
 
 
-void ant::analysis::FillSlowcontrol(Slowcontrol& slc, const TSlowControl& value)
+void FillSlowControl(SlowControl& slc, const TSlowControl& value)
 {
 
     switch (value.GetKey().Type) {
@@ -68,7 +68,7 @@ void ant::analysis::FillSlowcontrol(Slowcontrol& slc, const TSlowControl& value)
 }
 
 
-std::list<TSlowControl::Key> ant::analysis::RequestedKeys(const Slowcontrol& slc)
+std::list<TSlowControl::Key> RequestedKeys(const SlowControl& slc)
 {
     list<TSlowControl::Key> keys;
 

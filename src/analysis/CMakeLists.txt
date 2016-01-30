@@ -15,9 +15,8 @@ set(ANALYSIS_INPUT
   input/ant/AntReader.cc
   input/pluto/PlutoReader.cc
   input/pluto/detail/PlutoWrapper.cc
-  input/geant/GeantReader.cc
-  input/geant/GeantReader.h
-  input/detail/SlowcontrolCreator.cc
+  input/slowcontrol/SlowControl.cc
+  input/slowcontrol/SlowControlCreator.cc
 )
 
 set(ANALYSIS_PHYSICS
