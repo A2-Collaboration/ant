@@ -12,7 +12,6 @@ set(ANALYSIS_INPUT
   input/goat/detail/DetectorHitInput.cc
   input/goat/detail/TaggerInput.cc
   input/goat/GoatReader.cc
-  input/ant/detail/Convert.cc
   input/ant/AntReader.cc
   input/pluto/PlutoReader.cc
   input/pluto/detail/PlutoWrapper.cc

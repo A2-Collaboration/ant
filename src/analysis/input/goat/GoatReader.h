@@ -1,7 +1,6 @@
 #pragma once
 
 #include "analysis/input/DataReader.h"
-#include "analysis/data/Event.h"
 
 #include <memory>
 #include <string>
@@ -15,6 +14,7 @@
 #include "detail/TrackInput.h"
 #include "detail/ParticleInput.h"
 
+#include "base/types.h"
 
 class PStaticData;
 
@@ -77,10 +77,10 @@ protected:
 
     static clustersize_t MapClusterSize(const int& size);
 
-    void CopyTagger(data::Event& event);
-    void CopyTrigger(data::Event& event);
-    void CopyTracks(data::Event& event);
-    void CopyParticles(data::Event& event, ParticleInput& input_module, const ParticleTypeDatabase::Type& type);
+    void CopyTagger(TEvent& event);
+    void CopyTrigger(TEvent& event);
+    void CopyTracks(TEvent& event);
+    void CopyParticles(TEvent& event, ParticleInput& input_module, const ParticleTypeDatabase::Type& type);
 
 
     /**
@@ -97,7 +97,7 @@ public:
     GoatReader& operator= (const GoatReader&) = delete;
 
     virtual bool IsSource() override;
-    virtual bool ReadNextEvent(data::Event& event) override;
+    virtual bool ReadNextEvent(TEvent& event) override;
 
     double PercentDone() const override;
 };

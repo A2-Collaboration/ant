@@ -1,16 +1,13 @@
 #pragma once
 
-#include "tree/TSlowControl.h"
+#include "tree/TEvent.h"
 
 #include <memory>
+
 
 namespace ant {
 
 namespace analysis {
-
-namespace data {
-struct Event;
-}
 
 namespace input {
 
@@ -32,9 +29,8 @@ public:
       using std::runtime_error::runtime_error; // use base class constructor
     };
 
-    virtual bool IsSource() = 0;
-    virtual bool ReadNextEvent(data::Event& event) = 0;
-    virtual std::unique_ptr<TSlowControl> ReadNextSlowControl() { return nullptr; }
+    virtual bool IsSource() =0;
+    virtual bool ReadNextEvent(TEvent& event) =0;
 
     virtual double PercentDone() const =0;
 };

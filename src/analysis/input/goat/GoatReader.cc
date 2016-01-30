@@ -16,7 +16,6 @@
 using namespace ant;
 using namespace ant::analysis;
 using namespace ant::analysis::input;
-using namespace ant::analysis::data;
 using namespace std;
 
 /**
@@ -46,10 +45,10 @@ Detector_t::Any_t IntToDetector_t(const int& a) {
     return d;
 }
 
-void GoatReader::CopyTagger(Event& event)
+void GoatReader::CopyTagger(TEvent& event)
 {
     for( Int_t i=0; i<tagger.GetNTagged(); ++i) {
-        event.Reconstructed.TaggerHits.emplace_back(
+        event.Reconstructed->Tagger.Hits.emplace_back(
                     tagger.GetTaggedChannel(i),
                     tagger.GetTaggedEnergy(i),
                     tagger.GetTaggedTime(i)
@@ -57,19 +56,19 @@ void GoatReader::CopyTagger(Event& event)
     }
 }
 
-void GoatReader::CopyTrigger(Event& event)
+void GoatReader::CopyTrigger(TEvent& event)
 {
-    Trigger_t& ti = event.Reconstructed.Trigger;
+    TTrigger& ti = event.Reconstructed->Trigger;
 
     ti.CBEnergySum = trigger.GetEnergySum();
     ti.ClusterMultiplicity = trigger.GetMultiplicity();
 
     for( int err=0; err < trigger.GetNErrors(); ++err) {
-        ti.Errors.emplace_back(
-                    DAQError(
-                        trigger.GetErrorModuleID()[err],
-                        trigger.GetErrorModuleIndex()[err],
-                        trigger.GetErrorCode()[err]));
+        ti.DAQErrors.emplace_back(
+                    trigger.GetErrorModuleID()[err],
+                    trigger.GetErrorModuleIndex()[err],
+                    trigger.GetErrorCode()[err]
+                    );
     }
 }
 
@@ -83,7 +82,7 @@ clustersize_t GoatReader::MapClusterSize(const int& size) {
     return size < 0 ? 0 : size;
 }
 
-void GoatReader::CopyTracks(Event& event)
+void GoatReader::CopyTracks(TEvent& event)
 {
     for(Int_t i=0; i< tracks.GetNTracks(); ++i) {
 
@@ -95,7 +94,7 @@ void GoatReader::CopyTracks(Event& event)
             d = Detector_t::Type_t::TAPS;
         }
 
-        event.Reconstructed.Candidates.emplace_back(
+        event.Reconstructed->Candidates.emplace_back(
                     make_shared<TCandidate>(
                         det,
                         tracks.GetClusterEnergy(i),
@@ -105,8 +104,11 @@ void GoatReader::CopyTracks(Event& event)
                         MapClusterSize(tracks.GetClusterSize(i)),
                         tracks.GetVetoEnergy(i),
                         tracks.GetMWPC0Energy(i)+tracks.GetMWPC1Energy(i),
-                        std::vector<TCluster>{ TCluster(TVector3(),tracks.GetClusterEnergy(i),tracks.GetTime(i),d,0)
-                        }
+                        // GoAt does not provide clusters, 
+                        // but simulate at least some calo cluster 
+                        std::vector<TClusterPtr>{
+                            make_shared<TCluster>(TVector3(),tracks.GetClusterEnergy(i),tracks.GetTime(i),d,0)
+                        } // GoAT does not provide clusters
                         )
                     );
     }

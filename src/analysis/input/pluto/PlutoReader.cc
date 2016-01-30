@@ -127,7 +127,7 @@ std::string PlutoTable(const std::vector<const PParticle*> particles) {
     return s.str();
 }
 
-void PlutoReader::CopyPluto(Event& event)
+void PlutoReader::CopyPluto(TEvent& event)
 {
     const Long64_t entries = PlutoMCTrue->GetEntries();
     std::vector<const PParticle*> PlutoParticles;
@@ -145,7 +145,7 @@ void PlutoReader::CopyPluto(Event& event)
         PlutoParticles.push_back(particle);
     }
 
-    using treenode_t = shared_ptr<Tree<ParticlePtr>>;
+    using treenode_t = shared_ptr<Tree<TParticlePtr>>;
 
     vector<treenode_t> FlatTree;
 
@@ -157,13 +157,11 @@ void PlutoReader::CopyPluto(Event& event)
         auto type = GetType(PlutoParticle);
         TLorentzVector lv = *PlutoParticle;
         lv *= 1000.0;   // convert to MeV
-        auto AntParticle = make_shared<Particle>(*type,lv);
+        auto AntParticle = make_shared<TParticle>(*type,lv);
 
         // Add particle to event storage
         if(PlutoParticle->GetDaughterIndex() == -1 ) { // final state
-            event.MCTrue.Particles.AddParticle(AntParticle);
-        } else { //intermediate
-            event.MCTrue.Intermediates.AddParticle(AntParticle);
+            event.MCTrue->Particles.Add(AntParticle);
         }
 
         // Simulate some tagger hit
@@ -172,12 +170,12 @@ void PlutoReader::CopyPluto(Event& event)
             unsigned channel = 0;
             if(tagger && tagger->TryGetChannelFromPhoton(energy, channel)) {
                 const double time = 0.0; /// @todo handle non-prompt hits?
-                event.MCTrue.TaggerHits.emplace_back(channel, energy, time);
+                event.MCTrue->Tagger.Hits.emplace_back(channel, energy, time);
             }
         }
 
         // save it in list with same order as in PlutoParticles
-        FlatTree.emplace_back(Tree<ParticlePtr>::MakeNode(AntParticle));
+        FlatTree.emplace_back(Tree<TParticlePtr>::MakeNode(AntParticle));
 
     }
 
@@ -188,7 +186,7 @@ void PlutoReader::CopyPluto(Event& event)
     for(size_t i=0; i<PlutoParticles.size(); ++i) {
 
         const PParticle* PlutoParticle = PlutoParticles.at(i);
-        shared_ptr<Tree<ParticlePtr>>&  TreeNode = FlatTree.at(i);
+        shared_ptr<Tree<TParticlePtr>>&  TreeNode = FlatTree.at(i);
 
         Int_t parent_index = PlutoParticle->GetParentIndex();
 
@@ -200,7 +198,7 @@ void PlutoReader::CopyPluto(Event& event)
         } else {
 
             if( TreeNode->Get()->Type() == ParticleTypeDatabase::BeamTarget) {
-                auto& headnode = event.MCTrue.ParticleTree;
+                auto& headnode = event.MCTrue->ParticleTree;
                 if(headnode) {
                     LOG(WARNING) << "Found more than one BeamTarget in MCTrue";
                 }
@@ -224,39 +222,39 @@ void PlutoReader::CopyPluto(Event& event)
 
 
     // for gun generated pluto things, there's no BeamTarget particle and thus no tree...
-    if(event.MCTrue.ParticleTree) {
+    if(event.MCTrue->ParticleTree) {
         // remove articifial Pluto_dilepton particles,
         // this assumes that a dilepton never
         // is a parent of a dilepton
         for(auto i : dilepton_indices) {
-            ParticleTree_t& dilepton = FlatTree[i];
+            TParticleTree_t& dilepton = FlatTree[i];
             while(!dilepton->Daughters().empty()) {
                 auto& d =  dilepton->Daughters().front();
                 d->SetParent(dilepton->GetParent());
             }
             dilepton->Unlink();
         }
-        event.MCTrue.ParticleTree->Sort(utils::ParticleTools::SortParticleByName);
+        event.MCTrue->ParticleTree->Sort(utils::ParticleTools::SortParticleByName);
 
     }
-    auto& triggerinfos = event.MCTrue.Trigger;
 
     // use eventID from file if available
     // also check if it matches with reconstructed TID
     if(tid_from_file) {
-        triggerinfos.EventID = *tid;
+        event.MCTrue->ID = *tid;
 
-        const auto& eventid_rec = event.Reconstructed.Trigger.EventID;
-        if(!eventid_rec.IsInvalid() && eventid_rec != triggerinfos.EventID) {
+        const auto& eventid_rec = event.Reconstructed->ID;
+        if(!eventid_rec.IsInvalid() && eventid_rec != event.MCTrue->ID) {
             throw Exception(std_ext::formatter()
                             << "TID mismatch: Reconstructed=" << eventid_rec
-                            << " not equal to MCTrue=" << triggerinfos.EventID);
+                            << " not equal to MCTrue=" << event.MCTrue->ID);
         }
     }
 
     // calculate energy sum based on direction of particle
+    auto& triggerinfos = event.MCTrue->Trigger;
     double Esum = 0;
-    for(const ParticlePtr& particle : event.MCTrue.Particles.GetAll()) {
+    for(const TParticlePtr& particle : event.MCTrue->Particles.GetAll()) {
         if(geometry.DetectorFromAngles(*particle) & Detector_t::Type_t::CB) {
             Esum += particle->Ek();
         }
@@ -267,21 +265,21 @@ void PlutoReader::CopyPluto(Event& event)
 
     // dump some information about the conversion
 
-    if(missing_decay_treeinfo && event.MCTrue.ParticleTree) {
-        const auto& tid = !triggerinfos.EventID.IsInvalid() ? triggerinfos.EventID : event.Reconstructed.Trigger.EventID;
+    if(missing_decay_treeinfo && event.MCTrue->ParticleTree) {
+        const auto& tid = !event.MCTrue->ID.IsInvalid() ? event.MCTrue->ID : event.Reconstructed->ID;
         LOG(WARNING) << "Missing decay tree info for event " << tid;
         VLOG(5)      << "Dumping Pluto particles:\n" << PlutoTable(PlutoParticles);
-        event.MCTrue.ParticleTree = nullptr;
+        event.MCTrue->ParticleTree = nullptr;
     }
 
     if(!dilepton_indices.empty()) {
-        VLOG(5) << "Particle tree cleaned from dileptons: " << utils::ParticleTools::GetDecayString(event.MCTrue.ParticleTree);
+        VLOG(5) << "Particle tree cleaned from dileptons: " << utils::ParticleTools::GetDecayString(event.MCTrue->ParticleTree);
         VLOG(5) << "Dumping Pluto particles:\n" << PlutoTable(PlutoParticles);
     }
 }
 
 
-bool PlutoReader::ReadNextEvent(Event& event)
+bool PlutoReader::ReadNextEvent(TEvent& event)
 {
     if(!tree)
         return false;

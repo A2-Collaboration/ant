@@ -1,13 +1,6 @@
 #include "AntReader.h"
 
-#include "data/Event.h"
-
-#include "detail/Convert.h"
-
-#include "tree/UnpackerWriter.h"
 #include "tree/TEvent.h"
-#include "tree/TDetectorRead.h"
-#include "tree/TSlowControl.h"
 
 #include "base/Logger.h"
 
@@ -41,7 +34,6 @@ void AntReader::EnableUnpackerWriter(
         bool calibratedDetectorReads
         )
 {
-    writer = std_ext::make_unique<tree::UnpackerWriter>(outputfile);
     writeUncalibrated = uncalibratedDetectorReads;
     writeCalibrated = calibratedDetectorReads;
     if(writeCalibrated && writeUncalibrated)
@@ -52,12 +44,7 @@ void AntReader::EnableUnpackerWriter(
     else if(writeCalibrated)
         LOG(INFO) << "Write calibrated detectors (AFTER DoReconstruct) reads to " << outputfile;
     else
-        LOG(INFO) << "Writing unpacker TEvents to " << outputfile;
-}
-
-unique_ptr<TSlowControl> AntReader::ReadNextSlowControl()
-{
-    return move(buffered_slowcontrol);
+        LOG(INFO) << "Writing unpacker Events to " << outputfile;
 }
 
 double AntReader::PercentDone() const
@@ -65,54 +52,64 @@ double AntReader::PercentDone() const
     return reader->PercentDone();
 }
 
-bool AntReader::ReadNextEvent(Event& event)
+bool AntReader::ReadNextEvent(TEvent& event)
 {
-    while(auto item = reader->NextItem()) {
-        // we use ROOT's machinery to identify derived class types,
-        // because it's much faster than dynamic_cast (but also potentially unsafe)
-        const TClass* isA = item->IsA();
+    auto eventptr = reader->NextEvent();
+    /// \todo Handle reading/writing here?
 
-        if(isA == TDetectorRead::Class()) {
-            TDetectorRead* detread = reinterpret_cast<TDetectorRead*>(item.get());
-
-            if(writer && writeUncalibrated)
-                writer->Fill(item.get());
-
-            if(reconstruct) {
-                MemoryPool<TEvent>::Item tevent = reconstruct->DoReconstruct(*detread);
-                event = Converter::Convert(*tevent);
-                if(writer) {
-                    if(writeCalibrated)
-                        writer->Fill(item.get());
-                    else if(!writeUncalibrated)
-                        writer->Fill(tevent.get());
-                }
-                return true;
-            }
-
-            // skip the writing of the detector read item
-            // because writing is already handled above
-            continue;
-        }
-        else if(isA == TEvent::Class()) {
-            const TEvent* tevent = reinterpret_cast<TEvent*>(item.get());
-            event = Converter::Convert(*tevent);
-            // do not write TEvent's again to the file
-            return true;
-        }
-        else if(isA == TSlowControl::Class()) {
-            if(writer)
-                writer->Fill(item.get());
-            buffered_slowcontrol = unique_ptr<TSlowControl>(reinterpret_cast<TSlowControl*>(item.release()));
-            return false;
-        }
-        /// @todo handle TUnpackerMessage, especially DAQ errors might be of interest for the analysis
-
-        // by default, we write the items to the file
-        if(writer)
-            writer->Fill(item.get());
+    if(eventptr) {
+        event = move(*eventptr);
+        return true;
     }
 
     return false;
+
+//    while() {
+//        // we use ROOT's machinery to identify derived class types,
+//        // because it's much faster than dynamic_cast (but also potentially unsafe)
+//        const TClass* isA = item->IsA();
+
+//        if(isA == TDetectorRead::Class()) {
+//            TDetectorRead* detread = reinterpret_cast<TDetectorRead*>(item.get());
+
+//            if(writer && writeUncalibrated)
+//                writer->Fill(item.get());
+
+//            if(reconstruct) {
+//                MemoryPool<TEvent>::Item tevent = reconstruct->DoReconstruct(*detread);
+//                event = Converter::Convert(*tevent);
+//                if(writer) {
+//                    if(writeCalibrated)
+//                        writer->Fill(item.get());
+//                    else if(!writeUncalibrated)
+//                        writer->Fill(tevent.get());
+//                }
+//                return true;
+//            }
+
+//            // skip the writing of the detector read item
+//            // because writing is already handled above
+//            continue;
+//        }
+//        else if(isA == Event::Class()) {
+//            const Event* tevent = reinterpret_cast<Event*>(item.get());
+//            event = Converter::Convert(*tevent);
+//            // do not write Event's again to the file
+//            return true;
+//        }
+//        else if(isA == TSlowControl::Class()) {
+//            if(writer)
+//                writer->Fill(item.get());
+//            buffered_slowcontrol = unique_ptr<TSlowControl>(reinterpret_cast<TSlowControl*>(item.release()));
+//            return false;
+//        }
+//        /// @todo handle TUnpackerMessage, especially DAQ errors might be of interest for the analysis
+
+//        // by default, we write the items to the file
+//        if(writer)
+//            writer->Fill(item.get());
+//    }
+
+//    return false;
 }
 

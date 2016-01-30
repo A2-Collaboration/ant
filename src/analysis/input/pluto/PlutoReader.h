@@ -1,7 +1,6 @@
 #pragma once
 
 #include "analysis/input/DataReader.h"
-#include "analysis/data/Event.h"
 
 #include "analysis/utils/A2GeoAcceptance.h"
 
@@ -45,7 +44,7 @@ protected:
 
     Long64_t    current_entry = 0;
 
-    void CopyPluto(data::Event& event);
+    void CopyPluto(TEvent& event);
 
     PStaticData* pluto_database;
     const ParticleTypeDatabase::Type* GetType(const PParticle* p) const;
@@ -58,7 +57,7 @@ public:
 
     virtual bool IsSource() override { return false; }
 
-    virtual bool ReadNextEvent(data::Event& event) override;
+    virtual bool ReadNextEvent(TEvent& event) override;
 
     double PercentDone() const override;
 };
