@@ -49,7 +49,7 @@ PlutoReader::PlutoReader(const std::shared_ptr<WrapTFileInput>& rootfiles) :
     if(files->GetObject("data_tid", tid_tree)) {
 
         if(tid_tree->GetEntries() != tree->GetEntries()) {
-            throw Exception("Pluto Tree / TID Tree size missmatch:");
+            throw Exception("Pluto Tree / TID Tree size mismatch:");
         }
 
         tree->AddFriend(tid_tree);
@@ -127,7 +127,7 @@ std::string PlutoTable(const std::vector<const PParticle*> particles) {
     return s.str();
 }
 
-void PlutoReader::CopyPluto(TEvent& event)
+void PlutoReader::CopyPluto(TEvent::Data& mctrue, const TID& eventid_rec)
 {
     const Long64_t entries = PlutoMCTrue->GetEntries();
     std::vector<const PParticle*> PlutoParticles;
@@ -161,7 +161,7 @@ void PlutoReader::CopyPluto(TEvent& event)
 
         // Add particle to event storage
         if(PlutoParticle->GetDaughterIndex() == -1 ) { // final state
-            event.MCTrue->Particles.Add(AntParticle);
+            mctrue.Particles.Add(AntParticle);
         }
 
         // Simulate some tagger hit
@@ -170,7 +170,7 @@ void PlutoReader::CopyPluto(TEvent& event)
             unsigned channel = 0;
             if(tagger && tagger->TryGetChannelFromPhoton(energy, channel)) {
                 const double time = 0.0; /// @todo handle non-prompt hits?
-                event.MCTrue->Tagger.Hits.emplace_back(channel, energy, time);
+                mctrue.Tagger.Hits.emplace_back(channel, energy, time);
             }
         }
 
@@ -198,7 +198,7 @@ void PlutoReader::CopyPluto(TEvent& event)
         } else {
 
             if( TreeNode->Get()->Type() == ParticleTypeDatabase::BeamTarget) {
-                auto& headnode = event.MCTrue->ParticleTree;
+                auto& headnode = mctrue.ParticleTree;
                 if(headnode) {
                     LOG(WARNING) << "Found more than one BeamTarget in MCTrue";
                 }
@@ -222,7 +222,7 @@ void PlutoReader::CopyPluto(TEvent& event)
 
 
     // for gun generated pluto things, there's no BeamTarget particle and thus no tree...
-    if(event.MCTrue->ParticleTree) {
+    if(mctrue.ParticleTree) {
         // remove articifial Pluto_dilepton particles,
         // this assumes that a dilepton never
         // is a parent of a dilepton
@@ -234,27 +234,25 @@ void PlutoReader::CopyPluto(TEvent& event)
             }
             dilepton->Unlink();
         }
-        event.MCTrue->ParticleTree->Sort(utils::ParticleTools::SortParticleByName);
+        mctrue.ParticleTree->Sort(utils::ParticleTools::SortParticleByName);
 
     }
 
     // use eventID from file if available
     // also check if it matches with reconstructed TID
     if(tid_from_file) {
-        event.MCTrue->ID = *tid;
-
-        const auto& eventid_rec = event.Reconstructed->ID;
-        if(!eventid_rec.IsInvalid() && eventid_rec != event.MCTrue->ID) {
+        mctrue.ID = *tid;
+        if(!eventid_rec.IsInvalid() && eventid_rec != mctrue.ID) {
             throw Exception(std_ext::formatter()
                             << "TID mismatch: Reconstructed=" << eventid_rec
-                            << " not equal to MCTrue=" << event.MCTrue->ID);
+                            << " not equal to MCTrue=" << mctrue.ID);
         }
     }
 
     // calculate energy sum based on direction of particle
-    auto& triggerinfos = event.MCTrue->Trigger;
+    auto& triggerinfos = mctrue.Trigger;
     double Esum = 0;
-    for(const TParticlePtr& particle : event.MCTrue->Particles.GetAll()) {
+    for(const TParticlePtr& particle : mctrue.Particles.GetAll()) {
         if(geometry.DetectorFromAngles(*particle) & Detector_t::Type_t::CB) {
             Esum += particle->Ek();
         }
@@ -265,15 +263,15 @@ void PlutoReader::CopyPluto(TEvent& event)
 
     // dump some information about the conversion
 
-    if(missing_decay_treeinfo && event.MCTrue->ParticleTree) {
-        const auto& tid = !event.MCTrue->ID.IsInvalid() ? event.MCTrue->ID : event.Reconstructed->ID;
+    if(missing_decay_treeinfo && mctrue.ParticleTree) {
+        const auto& tid = !mctrue.ID.IsInvalid() ? mctrue.ID : eventid_rec;
         LOG(WARNING) << "Missing decay tree info for event " << tid;
         VLOG(5)      << "Dumping Pluto particles:\n" << PlutoTable(PlutoParticles);
-        event.MCTrue->ParticleTree = nullptr;
+        mctrue.ParticleTree = nullptr;
     }
 
     if(!dilepton_indices.empty()) {
-        VLOG(5) << "Particle tree cleaned from dileptons: " << utils::ParticleTools::GetDecayString(event.MCTrue->ParticleTree);
+        VLOG(5) << "Particle tree cleaned from dileptons: " << utils::ParticleTools::GetDecayString(mctrue.ParticleTree);
         VLOG(5) << "Dumping Pluto particles:\n" << PlutoTable(PlutoParticles);
     }
 }
@@ -289,7 +287,7 @@ bool PlutoReader::ReadNextEvent(TEvent& event)
 
     tree->GetEntry(current_entry);
 
-    CopyPluto(event);
+    CopyPluto(*event.MCTrue, event.Reconstructed->ID);
 
     ++current_entry;
 

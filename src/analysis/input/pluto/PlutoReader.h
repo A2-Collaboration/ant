@@ -6,6 +6,8 @@
 
 #include "base/ParticleType.h"
 
+#include "tree/TEvent.h"
+
 #include <memory>
 #include <string>
 #include <list>
@@ -46,7 +48,7 @@ protected:
 
     Long64_t    current_entry = 0;
 
-    void CopyPluto(TEvent& event);
+    void CopyPluto(TEvent::Data& mctrue, const TID& eventid_rec);
 
     PStaticData* pluto_database;
     const ParticleTypeDatabase::Type* GetType(const PParticle* p) const;

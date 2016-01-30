@@ -48,10 +48,10 @@ Detector_t::Any_t IntToDetector_t(const int& a) {
     return d;
 }
 
-void GoatReader::CopyTagger(TEvent& event)
+void GoatReader::CopyTagger(TEvent::Data& recon)
 {
     for( Int_t i=0; i<tagger.GetNTagged(); ++i) {
-        event.Reconstructed->Tagger.Hits.emplace_back(
+        recon.Tagger.Hits.emplace_back(
                     tagger.GetTaggedChannel(i),
                     tagger.GetTaggedEnergy(i),
                     tagger.GetTaggedTime(i)
@@ -59,9 +59,9 @@ void GoatReader::CopyTagger(TEvent& event)
     }
 }
 
-void GoatReader::CopyTrigger(TEvent& event)
+void GoatReader::CopyTrigger(TEvent::Data& recon)
 {
-    TTrigger& ti = event.Reconstructed->Trigger;
+    TTrigger& ti = recon.Trigger;
 
     ti.CBEnergySum = trigger.GetEnergySum();
     ti.ClusterMultiplicity = trigger.GetMultiplicity();
@@ -85,7 +85,7 @@ clustersize_t GoatReader::MapClusterSize(const int& size) {
     return size < 0 ? 0 : size;
 }
 
-void GoatReader::CopyTracks(TEvent& event)
+void GoatReader::CopyTracks(TEvent::Data& recon)
 {
     for(Int_t i=0; i< tracks.GetNTracks(); ++i) {
 
@@ -97,7 +97,7 @@ void GoatReader::CopyTracks(TEvent& event)
             d = Detector_t::Type_t::TAPS;
         }
 
-        event.Reconstructed->Candidates.emplace_back(
+        recon.Candidates.emplace_back(
                     make_shared<TCandidate>(
                         det,
                         tracks.GetClusterEnergy(i),
@@ -118,19 +118,17 @@ void GoatReader::CopyTracks(TEvent& event)
 }
 
 
-void GoatReader::CopyParticles(Event& event, ParticleInput& input_module,
+void GoatReader::CopyParticles(TEvent::Data& recon, ParticleInput& input_module,
                                const ParticleTypeDatabase::Type& type)
 {
     for(Int_t i=0; i < input_module.GetNParticles(); ++i) {
 
         const auto trackIndex = input_module.GeTCandidateIndex(i);
         if(trackIndex == -1) {
-            cerr << "No Track for this particle!!" << endl;
+            LOG(ERROR) << "No Track for this particle!!" << endl;
         } else {
-            const auto& track = event.Reconstructed.Candidates.at(trackIndex);
-
-            event.Reconstructed.Particles.AddParticle(
-                    std::make_shared<Particle>(type,track));
+            const auto& track = recon.Candidates.at(trackIndex);
+            recon.Particles.Add(std::make_shared<TParticle>(type,track));
         }
 
     }
@@ -183,7 +181,7 @@ GoatReader::~GoatReader() {}
 bool GoatReader::IsSource() { return trees->GetEntries()>0; }
 
 
-bool GoatReader::ReadNextEvent(Event& event)
+bool GoatReader::ReadNextEvent(TEvent& event)
 {
     if(current_entry>=trees->GetEntries())
         return false;
@@ -192,15 +190,17 @@ bool GoatReader::ReadNextEvent(Event& event)
 
     active_modules.GetEntry();
 
-    CopyTrigger(event);
-    CopyTagger(event);
-    CopyTracks(event);
+    auto& recon = *event.Reconstructed;
 
-    CopyParticles(event, photons, ParticleTypeDatabase::Photon);
-    CopyParticles(event, protons, ParticleTypeDatabase::Proton);
-    CopyParticles(event, pichagred, ParticleTypeDatabase::eCharged);
-    CopyParticles(event, echarged, ParticleTypeDatabase::PiCharged);
-    CopyParticles(event, neutrons, ParticleTypeDatabase::Neutron);
+    CopyTrigger(recon);
+    CopyTagger(recon);
+    CopyTracks(recon);
+
+    CopyParticles(recon, photons, ParticleTypeDatabase::Photon);
+    CopyParticles(recon, protons, ParticleTypeDatabase::Proton);
+    CopyParticles(recon, pichagred, ParticleTypeDatabase::eCharged);
+    CopyParticles(recon, echarged, ParticleTypeDatabase::PiCharged);
+    CopyParticles(recon, neutrons, ParticleTypeDatabase::Neutron);
 
     ++current_entry;
     return true;
