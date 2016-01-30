@@ -39,6 +39,8 @@ void Reconstruct::Initialize(const TID& tid)
                 (hook, hooks_clusterhits);
         std_ext::AddToSharedPtrList<ReconstructHook::Clusters, ReconstructHook::Base>
                 (hook, hooks_clusters);
+        std_ext::AddToSharedPtrList<ReconstructHook::EventData, ReconstructHook::Base>
+                (hook, hooks_eventdata);
     }
 
     // put the detectors in a map for convenient access
@@ -102,12 +104,15 @@ void Reconstruct::DoReconstruct(TEvent::DataPtr& reconstructed)
         hook->ApplyTo(sorted_clusters);
     }
 
-    // finally, do the candidate building
+    // do the candidate building
     candidatebuilder->Build(move(sorted_clusters),
                             reconstructed->Candidates, reconstructed->Clusters);
 
-    // uncomment for debug purposes
-    //cout << *event << endl;
+    // apply hooks which may modify the whole event
+    for(const auto& hook : hooks_eventdata) {
+        hook->ApplyTo(*reconstructed);
+    }
+
 }
 
 void Reconstruct::ApplyHooksToReadHits(

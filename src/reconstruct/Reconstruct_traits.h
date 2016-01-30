@@ -42,10 +42,9 @@ struct Reconstruct_traits {
  */
 struct ReconstructHook {
     /**
-     * @brief The Base class just defines some useful types
+     * @brief The Base struct just defines some useful types
      */
-    class Base {
-    public:
+    struct Base {
         using readhits_t = std_ext::mapped_vectors< Detector_t::Type_t, TDetectorReadHit* >;
         using extrahits_t = std::list< TDetectorReadHit >;
         using clusterhits_t = std::map< Detector_t::Type_t, std::list< reconstruct::AdaptorTClusterHit > >;
@@ -54,28 +53,33 @@ struct ReconstructHook {
     };
 
     /**
-     * @brief The DetectorReadHits class instances are applied before hit matching
+     * @brief The DetectorReadHits struct instances are applied before hit matching
      */
-    class DetectorReadHits : public Base {
-    public:
+    struct DetectorReadHits : Base {
         virtual void ApplyTo(const readhits_t& hits, extrahits_t& extrahits) = 0;
     };
 
     /**
-     * @brief The ClusterHits class instances are applied before clustering and after hit matching
+     * @brief The ClusterHits struct instances are applied before clustering and after hit matching
      */
-    class ClusterHits : public Base {
-    public:
+    struct ClusterHits : Base {
         virtual void ApplyTo(clusterhits_t& clusterhits) = 0;
     };
 
     /**
-     * @brief The Clusters class instances are applied before candidate matching and after clustering
+     * @brief The Clusters struct instances are applied before candidate matching and after clustering
      */
-    class Clusters : public Base {
-    public:
+    struct Clusters : Base {
         virtual void ApplyTo(clusters_t& clusters) = 0;
     };
+
+    /**
+     * @brief The EventData struct instances are applied after candidate building
+     */
+    struct EventData : Base {
+        virtual void ApplyTo(TEvent::Data& reconstructed) = 0;
+    };
+
 };
 
 

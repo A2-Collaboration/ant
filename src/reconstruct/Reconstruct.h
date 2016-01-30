@@ -97,6 +97,7 @@ private:
     shared_ptr_list<ReconstructHook::DetectorReadHits> hooks_readhits;
     shared_ptr_list<ReconstructHook::ClusterHits>      hooks_clusterhits;
     shared_ptr_list<ReconstructHook::Clusters>         hooks_clusters;
+    shared_ptr_list<ReconstructHook::EventData>        hooks_eventdata;
 
 
     std::unique_ptr<reconstruct::CandidateBuilder>  candidatebuilder;
