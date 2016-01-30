@@ -36,6 +36,8 @@ bool AntReader::ReadNextEvent(TEvent& event)
     auto eventptr = unpacker->NextEvent();
 
     if(eventptr) {
+        if(reconstruct)
+            reconstruct->DoReconstruct(eventptr->Reconstructed);
         event = move(*eventptr);
         return true;
     }
