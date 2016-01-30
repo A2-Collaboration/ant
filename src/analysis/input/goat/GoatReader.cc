@@ -2,9 +2,12 @@
 
 #include "detail/TreeManager.h"
 
+#include "tree/TEvent.h"
+
 #include "base/WrapTFile.h"
 #include "base/Logger.h"
 #include "base/std_ext/memory.h"
+#include "base/Detector_t.h"
 
 #include "TTree.h"
 

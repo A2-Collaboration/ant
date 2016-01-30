@@ -1,11 +1,11 @@
 #pragma once
 
-#include "tree/TEvent.h"
-
 #include <memory>
 
 
 namespace ant {
+
+struct TEvent;
 
 namespace analysis {
 

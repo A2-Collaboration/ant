@@ -1,15 +1,17 @@
 #include "GeoAcceptance.h"
+
 #include "utils/combinatorics.h"
 #include "utils/matcher.h"
+#include "utils/particle_tools.h"
+
 #include "plot/root_draw.h"
 #include "TMath.h"
-#include <tuple>
 #include "TVector3.h"
-#include <sstream>
 #include "TH3D.h"
 #include "TH2D.h"
 
-#include "utils/particle_tools.h"
+#include <sstream>
+#include <tuple>
 
 using namespace std;
 using namespace ant;

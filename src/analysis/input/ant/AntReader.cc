@@ -12,7 +12,6 @@
 using namespace std;
 using namespace ant;
 using namespace ant::analysis::input;
-using namespace ant::analysis::data;
 
 AntReader::AntReader(
         const std::shared_ptr<WrapTFileInput>& rootfiles,

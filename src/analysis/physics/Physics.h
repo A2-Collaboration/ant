@@ -18,8 +18,6 @@ class TDirectory;
 
 namespace ant {
 
-struct TAntHeader;
-
 namespace analysis {
 
 using PhysOptPtr = std::shared_ptr<const OptionsList>;

@@ -14,6 +14,7 @@
 #include "detail/TrackInput.h"
 #include "detail/ParticleInput.h"
 
+#include "base/ParticleType.h"
 #include "base/types.h"
 
 class PStaticData;

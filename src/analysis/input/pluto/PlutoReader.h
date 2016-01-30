@@ -4,6 +4,8 @@
 
 #include "analysis/utils/A2GeoAcceptance.h"
 
+#include "base/ParticleType.h"
+
 #include <memory>
 #include <string>
 #include <list>

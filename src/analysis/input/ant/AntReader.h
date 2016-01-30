@@ -3,29 +3,15 @@
 #include "analysis/input/DataReader.h"
 
 #include "unpacker/Unpacker.h"
-
 #include "reconstruct/Reconstruct_traits.h"
-
 #include "base/WrapTFile.h"
 
 #include <memory>
 #include <string>
 
-
-class TTree;
-
 namespace ant {
-
-struct Event;
-
 namespace analysis {
-
-namespace data {
-    struct Event;
-}
-
 namespace input {
-
 
 class AntReader : public DataReader {
 protected:
