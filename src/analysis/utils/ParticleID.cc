@@ -1,7 +1,6 @@
 #include "ParticleID.h"
 
-#include "data/Event.h"
-#include "data/Particle.h"
+#include "tree/TParticle.h"
 
 #include "base/std_ext/system.h"
 #include "base/WrapTFile.h"
@@ -14,10 +13,9 @@ using namespace std;
 using namespace ant;
 using namespace ant::analysis;
 using namespace ant::analysis::utils;
-using namespace ant::analysis::data;
 
 
-const ParticleTypeDatabase::Type* SimpleParticleID::Identify(const CandidatePtr& cand) const
+const ParticleTypeDatabase::Type* SimpleParticleID::Identify(const TCandidatePtr& cand) const
 {
     if(cand->VetoEnergy>0.25)
         return addressof(ParticleTypeDatabase::Proton);
@@ -36,7 +34,7 @@ bool TestCut(const std::shared_ptr<TCutG>& cut, const double& x, const double& y
 
 
 
-const ParticleTypeDatabase::Type* BasicParticleID::Identify(const CandidatePtr& cand) const
+const ParticleTypeDatabase::Type* BasicParticleID::Identify(const TCandidatePtr& cand) const
 {
     const bool hadronic =    TestCut(tof,  cand->CaloEnergy, cand->Time)
                   || TestCut(size, cand->CaloEnergy, cand->ClusterSize);
@@ -80,11 +78,11 @@ const ParticleTypeDatabase::Type* BasicParticleID::Identify(const CandidatePtr& 
     return nullptr;
 }
 
-std::shared_ptr<Particle> ParticleID::Process(const CandidatePtr& cand) const
+std::shared_ptr<TParticle> ParticleID::Process(const TCandidatePtr& cand) const
 {
     auto type = Identify(cand);
     if(type !=nullptr) {
-       return std::make_shared<Particle>(*type, cand);
+       return std::make_shared<TParticle>(*type, cand);
     }
 
     return nullptr;
@@ -116,11 +114,11 @@ CBTAPSBasicParticleID::~CBTAPSBasicParticleID()
 
 }
 
-const ParticleTypeDatabase::Type* CBTAPSBasicParticleID::Identify(const CandidatePtr& cand) const
+const ParticleTypeDatabase::Type* CBTAPSBasicParticleID::Identify(const TCandidatePtr& cand) const
 {
-    if(cand->GetDetector() & Detector_t::Any_t::CB_Apparatus) {
+    if(cand->Detector & Detector_t::Any_t::CB_Apparatus) {
         return cb.Identify(cand);
-    } else if(cand->GetDetector() & Detector_t::Any_t::TAPS_Apparatus) {
+    } else if(cand->Detector & Detector_t::Any_t::TAPS_Apparatus) {
         return taps.Identify(cand);
     }
 

@@ -1,6 +1,6 @@
 #pragma once
 
-#include "analysis/data/Particle.h"
+#include "tree/TParticle.h"
 #include "base/ParticleTypeTree.h"
 
 #include <string>
@@ -21,7 +21,7 @@ struct ParticleVars {
     double IM;
 
     ParticleVars(const TLorentzVector& lv, const ParticleTypeDatabase::Type& type) noexcept;
-    ParticleVars(const data::Particle& p) noexcept;
+    ParticleVars(const TParticle& p) noexcept;
     ParticleVars(double e=0.0, double theta=0.0, double phi=0.0, double im=0.0) noexcept:
         E(e), Theta(theta), Phi(phi), IM(im) {}
     ParticleVars(const ParticleVars&) = default;
@@ -39,7 +39,7 @@ struct ParticleTools {
      * @param particles
      * @return
      */
-    static std::string GetDecayString(const data::ParticleTree_t& particletree);
+    static std::string GetDecayString(const TParticleTree_t& particletree);
 
     static std::string GetDecayString(const ParticleTypeTree& particletypetree);
 
@@ -55,7 +55,7 @@ struct ParticleTools {
      * @param particle
      * @return
      */
-    static std::string GetProductionChannelString(const data::ParticleTree_t& particletree);
+    static std::string GetProductionChannelString(const TParticleTree_t& particletree);
 
     /**
      * @brief Find the first Particle of given type in particle list
@@ -63,12 +63,13 @@ struct ParticleTools {
      * @param particles List to search in
      * @return The Particle found
      */
-    static const data::ParticlePtr FindParticle(const ParticleTypeDatabase::Type& type, const data::ParticleList& particles);
+    static const TParticlePtr FindParticle(const ParticleTypeDatabase::Type& type, const TParticleList& particles);
 
-    static const data::ParticlePtr FindParticle(const ParticleTypeDatabase::Type& type, const data::ParticleTree_t& particletree, size_t maxlevel);
+    static const TParticlePtr FindParticle(const ParticleTypeDatabase::Type& type, const TParticleTree_t& particletree,
+                                           size_t maxlevel = std::numeric_limits<size_t>::max());
 
-    static const data::ParticleList FindParticles(const ParticleTypeDatabase::Type& type, const data::ParticleTree_t& particletree,
-                                                  size_t maxlevel = std::numeric_limits<size_t>::max());
+    static const TParticleList FindParticles(const ParticleTypeDatabase::Type& type, const TParticleTree_t& particletree,
+                                             size_t maxlevel = std::numeric_limits<size_t>::max());
 
 
     /**
@@ -77,14 +78,14 @@ struct ParticleTools {
      * @param n multiplicity or number of particles drawn from particles
      * @param particles list of particles
      */
-    static void FillIMCombinations(TH1* h, unsigned n, const data::ParticleList& particles);
+    static void FillIMCombinations(TH1* h, unsigned n, const TParticleList& particles);
 
-    static void FillIMCombinations(std::function<void(double)> filler, unsigned n, const data::ParticleList& particles);
+    static void FillIMCombinations(std::function<void(double)> filler, unsigned n, const TParticleList& particles);
 
 
-    static bool SortParticleByName(const data::ParticlePtr& a, const data::ParticlePtr& b);
+    static bool SortParticleByName(const TParticlePtr& a, const TParticlePtr& b);
 
-    static bool MatchByParticleName(const data::ParticlePtr& a, const ParticleTypeDatabase::Type& b);
+    static bool MatchByParticleName(const TParticlePtr& a, const ParticleTypeDatabase::Type& b);
 
 };
 

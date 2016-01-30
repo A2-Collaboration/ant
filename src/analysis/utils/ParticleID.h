@@ -1,6 +1,6 @@
 #pragma once
 
-#include "analysis/data/Particle.h"
+#include "tree/TParticle.h"
 
 #include "base/ParticleType.h"
 
@@ -20,9 +20,9 @@ class ParticleID {
 public:
     virtual ~ParticleID() {}
 
-    virtual const ParticleTypeDatabase::Type* Identify(const data::CandidatePtr& cand) const =0;
+    virtual const ParticleTypeDatabase::Type* Identify(const TCandidatePtr& cand) const =0;
 
-    virtual data::ParticlePtr Process(const data::CandidatePtr& cand) const;
+    virtual TParticlePtr Process(const TCandidatePtr& cand) const;
 };
 
 
@@ -31,7 +31,7 @@ public:
     SimpleParticleID() {}
     virtual ~SimpleParticleID() {}
 
-    virtual const ParticleTypeDatabase::Type* Identify(const data::CandidatePtr& cand) const override;
+    virtual const ParticleTypeDatabase::Type* Identify(const TCandidatePtr& cand) const override;
 };
 
 
@@ -49,7 +49,7 @@ public:
 
     std::shared_ptr<TCutG> size;
 
-    virtual const ParticleTypeDatabase::Type* Identify(const data::CandidatePtr& cand) const override;
+    virtual const ParticleTypeDatabase::Type* Identify(const TCandidatePtr& cand) const override;
 };
 
 class CBTAPSBasicParticleID: public ParticleID {
@@ -62,7 +62,7 @@ public:
     CBTAPSBasicParticleID(const std::string& pidcutsdir);
     virtual ~CBTAPSBasicParticleID();
 
-    virtual const ParticleTypeDatabase::Type* Identify(const data::CandidatePtr& cand) const override;
+    virtual const ParticleTypeDatabase::Type* Identify(const TCandidatePtr& cand) const override;
 };
 
 }
