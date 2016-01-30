@@ -120,6 +120,10 @@ struct TEvent
 
     static std::unique_ptr<TEvent> MakeReconstructed(const TID& id);
 
+    // TEvent is moveable
+    TEvent(TEvent&&) = default;
+    TEvent& operator=(TEvent&&) = default;
+
 #endif
 
     TEvent() {}
@@ -127,6 +131,7 @@ struct TEvent
     ClassDef(TEvent, ANT_UNPACKER_ROOT_VERSION)
 
 private:
+    // prevent ROOTcint from creating copy-constructors
     TEvent(const TEvent&);
     TEvent& operator=(const TEvent&);
 
