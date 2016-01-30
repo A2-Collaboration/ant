@@ -4,6 +4,8 @@
 
 #include "base/printable.h"
 
+#include "TLorentzVector.h"
+
 #include <vector>
 #include <iomanip>
 #include <sstream>
@@ -37,6 +39,10 @@ struct TTaggerHit : printable_traits
     template<class Archive>
     void serialize(Archive& archive) {
         archive(PhotonEnergy, Time, Channel, Electrons);
+    }
+
+    TLorentzVector GetPhotonBeam() const {
+        return TLorentzVector(0.0, 0.0, PhotonEnergy, PhotonEnergy);
     }
 
 
