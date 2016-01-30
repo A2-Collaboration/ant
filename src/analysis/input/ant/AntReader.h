@@ -6,7 +6,7 @@
 
 #include "reconstruct/Reconstruct_traits.h"
 
-#include "Rtypes.h"
+#include "base/WrapTFile.h"
 
 #include <memory>
 #include <string>
@@ -29,22 +29,16 @@ namespace input {
 
 class AntReader : public DataReader {
 protected:
-    std::unique_ptr<Unpacker::Reader> reader;
+    std::unique_ptr<Unpacker::Module>   unpacker;
     std::unique_ptr<Reconstruct_traits> reconstruct;
 
-    bool writeUncalibrated;
-    bool writeCalibrated;
-
 public:
-    AntReader(std::unique_ptr<Unpacker::Reader> unpacker_reader,
-                      std::unique_ptr<Reconstruct_traits> reconstruct = nullptr);
+    AntReader(const std::shared_ptr<WrapTFileInput>& rootfiles,
+              std::unique_ptr<Unpacker::Module> unpacker,
+              std::unique_ptr<Reconstruct_traits> reconstruct);
     virtual ~AntReader();
     AntReader(const AntReader&) = delete;
     AntReader& operator= (const AntReader&) = delete;
-
-    void EnableUnpackerWriter(const std::string& outputfile,
-                              bool uncalibratedDetectorReads = false,
-                              bool calibratedDetectorReads = false);
 
     // DataReader interface
     virtual bool IsSource() override { return true; }

@@ -4,7 +4,6 @@
 
 #include "reconstruct/Reconstruct.h"
 
-#include "tree/TDetectorRead.h"
 #include "expconfig/setups/SetupRegistry.h"
 
 #include "base/WrapTFile.h"
@@ -69,7 +68,7 @@ int main(int argc, char** argv) {
     ExpConfig::Setup::ManualName = "Setup_Raw";
 
     // now we can try to open the files with an unpacker
-    std::unique_ptr<Unpacker::Reader> unpacker = nullptr;
+    std::unique_ptr<Unpacker::Module> unpacker = nullptr;
 
     try {
         unpacker = Unpacker::Get(inputfile);
@@ -106,21 +105,22 @@ int main(int argc, char** argv) {
     }
 
     // run the loop
-    while(auto item = unpacker->NextItem()) {
+    while(auto event = unpacker->NextEvent()) {
         if(!keepRunning)
             break;
-        TDetectorRead* detread = dynamic_cast<TDetectorRead*>(item.get());
-        if(detread==nullptr)
+
+        const auto& recon = event->Reconstructed;
+        if(!recon)
             continue;
 
         if(!masterFile) {
-            LOG(INFO) << *detread;
+            LOG(INFO) << recon->DetectorReadHits;
             continue;
         }
 
         ADC_index->resize(0);
         ADC_value->resize(0);
-        for(const TDetectorReadHit& readhit : detread->Hits) {
+        for(const TDetectorReadHit& readhit : recon->DetectorReadHits) {
             // assume raw data to be 16bit chunks
             const auto& rawData = readhit.RawData;
             if(rawData.size() % 2 != 0)
