@@ -30,6 +30,9 @@ TEST_CASE("Test TreeWriter TEvent's", "[unpacker]") {
 
 void dotest() {
 
+    /// \todo the ROOT object handling here is baaaad,
+    /// the test segfaults when some requirements are not met
+
     ant::tmpfile_t tmpfile;
 
     ant::ExpConfig::Setup::ManualName = "Setup_Test";
@@ -47,7 +50,7 @@ void dotest() {
         tree->Fill();
     }
 
-    REQUIRE( tree->GetEntries() == 222 );
+    REQUIRE( tree->GetEntries() == 221 );
 
     file->Write();
     file->Close();
@@ -61,7 +64,7 @@ void dotest() {
 
     tree = dynamic_cast<TTree*>(file->Get("tree"));
     REQUIRE((tree != nullptr));
-    REQUIRE((tree->GetEntries() == 222));
+    REQUIRE((tree->GetEntries() == 221));
 
     ptr = 0;
     REQUIRE(tree->SetBranchAddress("branch", &ptr) == 0);

@@ -51,7 +51,7 @@ void dotest_read() {
     }
 
 
-    REQUIRE(nEvents==222);
+    REQUIRE(nEvents==221);
     REQUIRE(nSlowControls == 8);
     REQUIRE(nCandidates == 822);
 
