@@ -230,6 +230,14 @@ void PhysicsManager::ProcessEvent(std::unique_ptr<TEvent> event)
         }
     }
 
+    // ensure that physics classes always
+    // have at least empty TEvent::Data branches MCTrue and Reconstructed
+
+    if(!event->Reconstructed)
+        event->Reconstructed = std_ext::make_unique<TEvent::Data>();
+    if(!event->MCTrue)
+        event->MCTrue = std_ext::make_unique<TEvent::Data>();
+
     for( auto& m : physics ) {
         m->ProcessEvent(*event);
     }
