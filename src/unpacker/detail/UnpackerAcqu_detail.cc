@@ -212,7 +212,13 @@ void acqu::FileFormatBase::LogMessage(
 
 void acqu::FileFormatBase::AppendMessagesToEvent(std::unique_ptr<TEvent>& event)
 {
-    event->Reconstructed->UnpackerMessages = move(messages);
+    vector<TUnpackerMessage>& u_messages = event->Reconstructed->UnpackerMessages;
+    if(u_messages.empty())
+       u_messages = move(messages);
+    else {
+        u_messages.insert(u_messages.end(), messages.begin(), messages.end());
+        messages.clear();
+    }
 }
 
 
@@ -291,4 +297,10 @@ void acqu::FileFormatBase::FillEvents(queue_t& queue) noexcept
         }
         buffer.clear();
     }
+
+    // the above refill might have created messages,
+    // and to suppress empty events with messages only,
+    // we simply append them to the last event if any present
+    if(!queue.empty())
+        AppendMessagesToEvent(queue.back());
 }
