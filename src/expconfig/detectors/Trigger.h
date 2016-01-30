@@ -2,6 +2,8 @@
 
 #include "base/Detector_t.h"
 #include "unpacker/UnpackerAcqu.h"
+#include "reconstruct/Reconstruct_traits.h"
+
 #include <stdexcept>
 
 namespace ant {
@@ -9,7 +11,8 @@ namespace expconfig {
 namespace detector {
 struct Trigger :
         Detector_t,
-        UnpackerAcquConfig
+        UnpackerAcquConfig,
+        ReconstructHook::EventData
 {
 
     Trigger() : Detector_t(Detector_t::Type_t::Trigger) {}
@@ -39,6 +42,9 @@ struct Trigger :
             std::vector<hit_mapping_t>&,
             std::vector<scaler_mapping_t>&) const override;
 
+    // for ReconstructHook::EventData
+    // calculates the CBESum
+    virtual void ApplyTo(TEvent::Data& reconstructed) override;
 };
 
 

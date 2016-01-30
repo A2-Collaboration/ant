@@ -79,3 +79,33 @@ void Trigger_2014::BuildMappings(std::vector<UnpackerAcquConfig::hit_mapping_t>&
                 311
                 );
 }
+
+
+void ant::expconfig::detector::Trigger::ApplyTo(TEvent::Data& reconstructed)
+{
+
+    /// @todo The multiplicity is a much harder business, see acqu/root/src/TA2BasePhysics.cc
+    /// the code there might only apply to the old trigger system before 2012
+    /// so it might be best to implement such algorithms with some nicely designed interface into the
+    /// pseudo-detector Trigger in expconfig/detectors
+
+    double Esum = 0.0;
+    double TimeEsum = 0.0;
+    double TimeE = 0.0;
+    for(const TClusterPtr& cluster : reconstructed.Clusters) {
+        if(cluster->DetectorType == Detector_t::Type_t::CB) {
+            if(isfinite(cluster->Energy)) {
+                Esum += cluster->Energy;
+                if(isfinite(cluster->Time)) {
+                    TimeEsum += cluster->Energy;
+                    TimeE += cluster->Energy*cluster->Time;
+                }
+            }
+        }
+    }
+
+    auto& triggerinfos = reconstructed.Trigger;
+    triggerinfos.CBEnergySum = Esum;
+    triggerinfos.CBTiming = TimeE/TimeEsum;
+
+}

@@ -29,6 +29,11 @@ std::list<std::shared_ptr<ant::ReconstructHook::Base> > Setup::GetReconstructHoo
                     calib, list
                     );
     }
+    for(const auto& detector : detectors) {
+        std_ext::AddToSharedPtrList<ReconstructHook::Base, Detector_t>(
+                    detector, list
+                    );
+    }
     return list;
 }
 

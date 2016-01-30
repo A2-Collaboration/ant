@@ -85,11 +85,16 @@ struct ReconstructTester : Reconstruct_traits {
             hook->ApplyTo(sorted_clusters);
         }
 
-        // finally, do the candidate building
+        // do the candidate building
         const auto n_all_before = reconstructed->Clusters.size();
         REQUIRE(n_all_before==0);
         r.candidatebuilder->Build(move(sorted_clusters),
                                   reconstructed->Candidates, reconstructed->Clusters);
+
+        // apply hooks which may modify the whole event
+        for(const auto& hook : r.hooks_eventdata) {
+            hook->ApplyTo(*reconstructed);
+        }
 
         const auto n_all_after = reconstructed->Clusters.size();
         REQUIRE(n_all_after>=n_all_before);
@@ -106,6 +111,7 @@ struct ReconstructTester : Reconstruct_traits {
         if(matched_clusters) {
             const size_t n_candidates = reconstructed->Candidates.size();
             REQUIRE(n_candidates>0);
+            REQUIRE(reconstructed->Trigger.CBEnergySum > 0);
         }
     }
 };
