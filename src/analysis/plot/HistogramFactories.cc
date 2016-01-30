@@ -1,7 +1,6 @@
 #include "plot/HistogramFactories.h"
 
 #include "plot/SmartHist.h"
-#include "data/Particle.h"
 
 #include "base/std_ext/string.h"
 
@@ -9,8 +8,8 @@
 #include "TDirectory.h"
 #include "TTree.h"
 
+using namespace ant;
 using namespace ant::analysis;
-using namespace ant::analysis::data;
 using namespace std;
 
 
@@ -132,10 +131,10 @@ TTree*SmartHistFactory::makeTTree(const string& name)
     return t;
 }
 
-SmartHist1<const ParticlePtr &> SmartHistFactory::InvariantMass(const string &title, const string &xlabel, const string &ylabel, BinSettings bins, const string &name)
+SmartHist1<const TParticlePtr &> SmartHistFactory::InvariantMass(const string &title, const string &xlabel, const string &ylabel, BinSettings bins, const string &name)
 {
-    return makeHist<const ParticlePtr&>(
-                [] (const ParticlePtr& p) { return p->M();},
+    return makeHist<const TParticlePtr&>(
+                [] (const TParticlePtr& p) { return p->M();},
             MakeTitle(title),
             xlabel,
             ylabel,
@@ -143,10 +142,10 @@ SmartHist1<const ParticlePtr &> SmartHistFactory::InvariantMass(const string &ti
     name);
 }
 
-SmartHist1<const ParticlePtr &> SmartHistFactory::ThetaAngle(const string &title, const string &xlabel, const string &ylabel, BinSettings bins, const string &name)
+SmartHist1<const TParticlePtr &> SmartHistFactory::ThetaAngle(const string &title, const string &xlabel, const string &ylabel, BinSettings bins, const string &name)
 {
-    return makeHist<const ParticlePtr&>(
-                [] (const ParticlePtr& p) { return p->Theta() * TMath::DegToRad();},
+    return makeHist<const TParticlePtr&>(
+                [] (const TParticlePtr& p) { return p->Theta() * TMath::DegToRad();},
             MakeTitle(title),
             xlabel,
             ylabel,
@@ -154,10 +153,10 @@ SmartHist1<const ParticlePtr &> SmartHistFactory::ThetaAngle(const string &title
             name);
 }
 
-SmartHist1<const ParticlePtr &> SmartHistFactory::KinEnergyPlot(const string &title, const string &xlabel, const string &ylabel, BinSettings bins, const string &name)
+SmartHist1<const TParticlePtr&> SmartHistFactory::KinEnergyPlot(const string &title, const string &xlabel, const string &ylabel, BinSettings bins, const string &name)
 {
-    return makeHist<const ParticlePtr&>(
-                [] (const ParticlePtr& p) { return p->Ek();},
+    return makeHist<const TParticlePtr&>(
+                [] (const TParticlePtr& p) { return p->Ek();},
             MakeTitle(title),
             xlabel,
             ylabel,
