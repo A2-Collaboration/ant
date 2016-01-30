@@ -1,7 +1,6 @@
 #include "catch.hpp"
 #include "catch_config.h"
 
-#include "analysis/data/Event.h"
 #include "analysis/physics/PhysicsManager.h"
 #include "analysis/input/ant/AntReader.h"
 #include "analysis/input/pluto/PlutoReader.h"
@@ -49,11 +48,11 @@ struct TestPhysics : Physics
 
     TestPhysics() : Physics("TestPhysics", nullptr) {}
 
-    virtual void ProcessEvent(const data::Event& event) override
+    virtual void ProcessEvent(const TEvent& event) override
     {
         seenEvents++;
-        seenCandidates += event.Reconstructed.Candidates.size();
-        seenMCTrue += event.MCTrue.Particles.GetAll().size();
+        seenCandidates += event.Reconstructed->Candidates.size();
+        seenMCTrue += event.MCTrue->Particles.GetAll().size();
     }
     virtual void Finish() override
     {
@@ -63,7 +62,7 @@ struct TestPhysics : Physics
     {
         showCalled = true;
     }
-    virtual void Initialize(data::Slowcontrol&) override
+    virtual void Initialize(input::SlowControl&) override
     {
         initCalled = true;
     }
@@ -92,7 +91,7 @@ void dotest_raw()
     auto unpacker = Unpacker::Get(string(TEST_BLOBS_DIRECTORY)+"/Acqu_oneevent-big.dat.xz");
     auto reconstruct = std_ext::make_unique<Reconstruct>();
     list< unique_ptr<analysis::input::DataReader> > readers;
-    readers.emplace_back(std_ext::make_unique<input::AntReader>(move(unpacker), move(reconstruct)));
+    readers.emplace_back(std_ext::make_unique<input::AntReader>(nullptr, move(unpacker), move(reconstruct)));
     pm.ReadFrom(move(readers), numeric_limits<long long>::max());
     TAntHeader header;
     pm.SetAntHeader(header);
@@ -122,7 +121,7 @@ void dotest_plutogeant()
     auto unpacker = Unpacker::Get(string(TEST_BLOBS_DIRECTORY)+"/Geant_with_TID.root");
     auto reconstruct = std_ext::make_unique<Reconstruct>();
     list< unique_ptr<analysis::input::DataReader> > readers;
-    readers.emplace_back(std_ext::make_unique<input::AntReader>(move(unpacker), move(reconstruct)));
+    readers.emplace_back(std_ext::make_unique<input::AntReader>(nullptr, move(unpacker), move(reconstruct)));
 
     auto plutofile = std::make_shared<WrapTFileInput>(string(TEST_BLOBS_DIRECTORY)+"/Pluto_with_TID.root");
     readers.push_back(std_ext::make_unique<analysis::input::PlutoReader>(plutofile));
