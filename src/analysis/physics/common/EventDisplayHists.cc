@@ -43,16 +43,16 @@ EventDisplayHists::EventDisplayHists(const string& name, ant::analysis::PhysOptP
 EventDisplayHists::~EventDisplayHists()
 {}
 
-void EventDisplayHists::ProcessEvent(const analysis::data::Event& event)
+void EventDisplayHists::ProcessEvent(const TEvent& event)
 {
 
-    const auto& candidates = event.Reconstructed.Candidates;
+    const auto& candidates = event.Reconstructed->Candidates;
 
 
     taps_cands.resize(0);
 
     for(const auto& c : candidates) {
-        if(c->GetDetector() & Detector_t::Type_t::TAPS) {
+        if(c->Detector & Detector_t::Type_t::TAPS) {
             taps_cands.emplace_back(c);
         }
     }
@@ -79,7 +79,7 @@ void EventDisplayHists::ProcessEvent(const analysis::data::Event& event)
 
     }
 
-    const auto true_particles = event.MCTrue.Particles.GetAll();
+    const auto true_particles = event.MCTrue->Particles.GetAll();
 
     for(const auto& p : true_particles) {
         if(p->Theta() < degree_to_radian(30.0)) {

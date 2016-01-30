@@ -24,7 +24,7 @@ protected:
 public:
     SplitCheck();
     virtual ~SplitCheck() {}
-    void ProcessEvent(const Event &event);
+    void ProcessEvent(const TEvent& event);
     void Finish();
     void ShowResult();
 };

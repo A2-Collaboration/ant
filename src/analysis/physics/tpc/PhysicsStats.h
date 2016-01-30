@@ -19,7 +19,7 @@ protected:
 
 public:
     TPC_PhysicsStats(const std::string& name, PhysOptPtr& opts);
-    void ProcessEvent(const data::Event& event);
+    void ProcessEvent(const TEvent& event);
     void Finish();
     void ShowResult();
 };

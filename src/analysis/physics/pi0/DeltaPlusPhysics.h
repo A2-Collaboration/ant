@@ -83,7 +83,7 @@ public:
 
     // Physics interface
 public:
-    void ProcessEvent(const data::Event &event);
+    void ProcessEvent(const TEvent& event);
     void Finish();
     void ShowResult();
 };

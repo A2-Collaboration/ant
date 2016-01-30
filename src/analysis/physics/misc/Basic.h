@@ -27,7 +27,7 @@ protected:
 public:
     Basic(const mev_t energy_scale=1000.0);
     virtual ~Basic() {}
-    void ProcessEvent(const Event &event);
+    void ProcessEvent(const TEvent& event);
     void Finish();
     void ShowResult();
 };

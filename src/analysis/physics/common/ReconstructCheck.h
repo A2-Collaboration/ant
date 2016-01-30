@@ -85,7 +85,7 @@ protected:
         std::unique_ptr<PositionMap> makePosMap(SmartHistFactory& f, detectortype d, const std::string& name, const std::string title="");
 
         histgroup(SmartHistFactory& f, const std::string& prefix, detectortype d=detectortype::All);
-        void Fill(const data::ParticlePtr& mctrue, const data::CandidateList & cand, const data::ClusterList& all_clusters);
+        void Fill(const TParticlePtr& mctrue, const TCandidateList& cand, const TClusterList& all_clusters);
         void ShowResult() const;
         void Finish();
 
@@ -102,7 +102,7 @@ protected:
 
         void ShowResult();
         void Finish() {}
-        void Fill(const data::CandidateList& cands, const data::ClusterList& instane);
+        void Fill(const TCandidateList& cands, const TClusterList& all_clusters);
     };
 
     histgroup cb_group;
@@ -134,7 +134,7 @@ protected:
 public:
     ReconstructCheck(const std::string& name, PhysOptPtr opts);
 
-    void ProcessEvent(const data::Event &event) override;
+    void ProcessEvent(const TEvent& event) override;
     void Finish() override;
     void ShowResult() override;
 };

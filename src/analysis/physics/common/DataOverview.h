@@ -33,7 +33,7 @@ protected:
      */
     std::string GetMode() const;
 
-    const data::Event::Data& GetBranch(const data::Event& event) const;
+    const TEvent::Data& GetBranch(const TEvent& event) const;
 
 public:
     DataOverviewBase(const std::string& name, PhysOptPtr opts);
@@ -56,7 +56,7 @@ public:
     TaggerOverview(const std::string& name, PhysOptPtr opts);
     virtual ~TaggerOverview();
 
-    void ProcessEvent(const data::Event &event) override;
+    void ProcessEvent(const TEvent& event) override;
     void ShowResult() override;
 };
 
@@ -77,7 +77,7 @@ public:
     TriggerOverview(const std::string& name, PhysOptPtr opts);
     virtual ~TriggerOverview();
 
-    void ProcessEvent(const data::Event &event) override;
+    void ProcessEvent(const TEvent& event) override;
     void Finish() override;
     void ShowResult() override;
 };
@@ -94,7 +94,7 @@ public:
     TargetOverview(const std::string& name, PhysOptPtr opts);
     virtual ~TargetOverview();
 
-    void ProcessEvent(const data::Event &event) override;
+    void ProcessEvent(const TEvent& event) override;
     void ShowResult() override;
 };
 
@@ -114,7 +114,7 @@ public:
     ParticleOverview(const std::string& name, PhysOptPtr opts);
     virtual ~ParticleOverview();
 
-    void ProcessEvent(const data::Event &event) override;
+    void ProcessEvent(const TEvent& event) override;
     void ShowResult() override;
 };
 

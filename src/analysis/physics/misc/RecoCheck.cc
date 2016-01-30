@@ -30,12 +30,12 @@ analysis::RecoCheck::RecoCheck():
                             "# unmatched / event","",npart_bins,"n_unmatched");
 }
 
-void analysis::RecoCheck::ProcessEvent(const Event &event)
+void analysis::RecoCheck::ProcessEvent(const TEvent& event)
 {
-    const ParticleList& mc = event.MCTrue().Particles().GetAll();
-    const ParticleList& rec = event.Reconstructed().Particles().GetAll();
+    const TParticleList& mc = event.MCTrue().Particles().GetAll();
+    const TParticleList& rec = event.Reconstructed().Particles().GetAll();
 
-    ParticleList mc_in_cb;
+    TParticleList mc_in_cb;
 
     for( auto& p : mc ) {
         if( cb_angle.Contains(p->Theta()))
@@ -43,7 +43,7 @@ void analysis::RecoCheck::ProcessEvent(const Event &event)
     }
 
     // find mc-reco matches
-    auto matched = utils::match1to1(mc_in_cb, rec, [] ( const ParticlePtr& p1, const ParticlePtr& p2 ) {
+    auto matched = utils::match1to1(mc_in_cb, rec, [] ( const TParticlePtr& p1, const TParticlePtr& p2 ) {
                                         return p1->Angle(p2->Vect());
                                     });
 

@@ -25,7 +25,7 @@ public:
 public:
     IMPlots(const std::string& name, PhysOptPtr opts);
 
-    void ProcessEvent(const data::Event &event) override;
+    void ProcessEvent(const TEvent& event) override;
     void ShowResult() override;
 };
 
@@ -50,7 +50,7 @@ public:
     Symmetric2Gamma(const std::string& name, PhysOptPtr opts);
     virtual ~Symmetric2Gamma();
 
-    void ProcessEvent(const data::Event &event) override;
+    void ProcessEvent(const TEvent& event) override;
     void ShowResult() override;
 };
 

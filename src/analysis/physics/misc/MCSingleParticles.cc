@@ -150,15 +150,15 @@ ant::analysis::MCSingleParticles::~MCSingleParticles()
 
 }
 
-void ant::analysis::MCSingleParticles::ProcessEvent(const ant::Event &event)
+void ant::analysis::MCSingleParticles::ProcessEvent(const ant::TEvent& event)
 {
-    const ParticleList& mc_particles = event.MCTrue().Particles().GetAll();
+    const TParticleList& mc_particles = event.MCTrue().Particles().GetAll();
     const TrackList& tracks = event.Reconstructed().Tracks();
-    const ParticleList& rec_particles = event.Reconstructed().Particles().GetAll();
+    const TParticleList& rec_particles = event.Reconstructed().Particles().GetAll();
 
     if( mc_particles.size() ==1 ) {
 
-        const ParticlePtr& mc = mc_particles.front();
+        const TParticlePtr& mc = mc_particles.front();
 
         MC_tracklist_pair_stats.Fill( make_pair(tracks, mc));
 

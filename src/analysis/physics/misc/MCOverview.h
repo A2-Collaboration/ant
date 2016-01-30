@@ -12,13 +12,13 @@ namespace analysis {
 
 class MCOverview: public ant::Physics {
 
-    PlotList<ParticlePtr> mc_particle_stats;
+    PlotList<TParticlePtr> mc_particle_stats;
 
     // Physics interface
 public:
     MCOverview(const mev_t energy_scale=1000.0);
     virtual ~MCOverview();
-    void ProcessEvent(const Event &event);
+    void ProcessEvent(const TEvent& event);
     void Finish();
     void ShowResult();
 };

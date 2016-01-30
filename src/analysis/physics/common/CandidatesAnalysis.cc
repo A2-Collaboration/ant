@@ -1,6 +1,5 @@
 #include "physics/common/CandidatesAnalysis.h"
 #include "plot/root_draw.h"
-#include "data/Particle.h"
 #include "TH1D.h"
 #include "TLorentzVector.h"
 #include <cmath>
@@ -10,7 +9,6 @@ using namespace std;
 using namespace ant;
 using namespace ant::analysis;
 using namespace ant::analysis::physics;
-using namespace ant::analysis::data;
 
 CandidatesAnalysis::CandidatesAnalysis(const std::string& name, PhysOptPtr opts):
     Physics(name,opts)
@@ -37,9 +35,9 @@ CandidatesAnalysis::CandidatesAnalysis(const std::string& name, PhysOptPtr opts)
     psa_all_angles = HistFac.makeTH2D("TAPS PSA","#phi [#circ]","r", BinSettings(160,45-20,45+20),BinSettings(250,0,500),"psa_all_angles");
 }
 
-void CandidatesAnalysis::ProcessEvent(const Event &event)
+void CandidatesAnalysis::ProcessEvent(const TEvent& event)
 {
-    const auto& candidates = event.Reconstructed.Candidates;
+    const auto& candidates = event.Reconstructed->Candidates;
 
     nCandidatesEvent->Fill(candidates.size());
 
@@ -50,18 +48,18 @@ void CandidatesAnalysis::ProcessEvent(const Event &event)
     auto i = candidates.begin();
 
     while(i!=candidates.end()) {
-        const CandidatePtr& ci = *i;
+        const TCandidatePtr& ci = *i;
         energy->Fill((*i)->CaloEnergy);
         theta->Fill((*i)->Theta*TMath::RadToDeg());
         phi->Fill((*i)->Phi*TMath::RadToDeg());
-        detectors->Fill(string(ci->GetDetector()).c_str(),1);
+        detectors->Fill(string(ci->Detector).c_str(),1);
 
         if((*i)->CaloEnergy>20.0) {
 
-            if(ci->GetDetector() & Detector_t::Any_t::CB_Apparatus) {
+            if(ci->Detector & Detector_t::Any_t::CB_Apparatus) {
                 cbdEE->Fill(ci->CaloEnergy,ci->VetoEnergy);
                 cbtof->Fill(ci->Time, ci->CaloEnergy);
-            } else if(ci->GetDetector() & Detector_t::Any_t::TAPS_Apparatus) {
+            } else if(ci->Detector & Detector_t::Any_t::TAPS_Apparatus) {
                 tapsdEE->Fill(ci->CaloEnergy,ci->VetoEnergy);
                 tapstof->Fill(ci->Time, ci->CaloEnergy);
 
@@ -96,12 +94,12 @@ void CandidatesAnalysis::ProcessEvent(const Event &event)
                     }
             }
 
-            const Particle a(ParticleTypeDatabase::Photon,*i);
+            const TParticle a(ParticleTypeDatabase::Photon,*i);
             auto j = i;
             ++j;
             while(j!=candidates.end()) {
                 if((*i)->CaloEnergy>20.0) {
-                    const Particle b(ParticleTypeDatabase::Photon,*j);
+                    const TParticle b(ParticleTypeDatabase::Photon,*j);
                     const TLorentzVector s = a + b;
 
                     if((*i)->VetoEnergy==0 && (*j)->VetoEnergy==0)

@@ -4,7 +4,6 @@
 
 using namespace std;
 using namespace ant;
-using namespace ant::analysis::data;
 using namespace ant::analysis::physics;
 
 
@@ -33,13 +32,13 @@ TAPS_ShortEnergy::TAPS_ShortEnergy(const string& name, analysis::PhysOptPtr opts
                       "rel_gamma");
 }
 
-void TAPS_ShortEnergy::ProcessEvent(const Event& event)
+void TAPS_ShortEnergy::ProcessEvent(const TEvent& event)
 {
     // pedestals
-    for(const TCluster& cluster : event.Reconstructed.AllClusters) {
-        if(!(cluster.GetDetectorType() == Detector_t::Type_t::TAPS))
+    for(const TClusterPtr& cluster : event.Reconstructed->Clusters) {
+        if(!(cluster->DetectorType == Detector_t::Type_t::TAPS))
             continue;
-        for(const TClusterHit& clusterhit : cluster.Hits) {
+        for(const TClusterHit& clusterhit : cluster->Hits) {
             /// \todo check for timing hit?
             /// \todo check for trigger pattern?
             for(const TClusterHitDatum& datum : clusterhit.Data) {
@@ -52,7 +51,7 @@ void TAPS_ShortEnergy::ProcessEvent(const Event& event)
         }
     }
 
-    for(const auto& c : event.Reconstructed.Candidates) {
+    for(const auto& c : event.Reconstructed->Candidates) {
         if(c->VetoEnergy < 0.5) {
             const auto& cluster = c->FindCaloCluster();
 

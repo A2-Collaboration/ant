@@ -19,7 +19,7 @@ protected:
 public:
     RecoCheck();
     virtual ~RecoCheck() {}
-    void ProcessEvent(const Event &event);
+    void ProcessEvent(const TEvent& event);
     void Finish();
     void ShowResult();
 };

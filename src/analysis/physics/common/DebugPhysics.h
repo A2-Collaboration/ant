@@ -12,10 +12,10 @@ public:
     DebugPhysics(const std::string& name, PhysOptPtr opts=nullptr);
     virtual ~DebugPhysics();
 
-    virtual void ProcessEvent(const data::Event& event) override;
+    virtual void ProcessEvent(const TEvent& event) override;
     virtual void Finish() override;
     virtual void ShowResult() override;
-    virtual void Initialize(data::Slowcontrol &slowcontrol) override;
+    virtual void Initialize(input::SlowControl& slowcontrol) override;
 };
 
 class DebugPIDAlignment: public Physics {
@@ -25,7 +25,7 @@ public:
     DebugPIDAlignment(const std::string& name, PhysOptPtr opts=nullptr);
     virtual ~DebugPIDAlignment();
 
-    virtual void ProcessEvent(const data::Event& event) override;
+    virtual void ProcessEvent(const TEvent& event) override;
     virtual void ShowResult() override;
 };
 

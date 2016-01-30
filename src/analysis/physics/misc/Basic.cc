@@ -85,7 +85,7 @@ ant::analysis::Basic::Basic(const mev_t energy_scale)
 }
 
 
-void ant::analysis::Basic::ProcessEvent(const ant::Event &event)
+void ant::analysis::Basic::ProcessEvent(const ant::TEvent& event)
 {
     for(auto& track : event.Reconstructed().Tracks()) {
         banana->Fill(track->ClusterEnergy(), track->VetoEnergy());
@@ -95,7 +95,7 @@ void ant::analysis::Basic::ProcessEvent(const ant::Event &event)
         particles->Fill(particle->Type().PrintName().c_str(), 1);
     }
 
-    const ParticleList& gammas = event.Reconstructed().Particles().Get(ParticleTypeDatabase::Photon);
+    const TParticleList& gammas = event.Reconstructed().Particles().Get(ParticleTypeDatabase::Photon);
 
     auto entry = nGammaImEvent.find(gammas.size());
 

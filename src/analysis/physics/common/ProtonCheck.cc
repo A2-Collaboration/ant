@@ -1,16 +1,16 @@
 #include "physics/common/ProtonCheck.h"
 #include "plot/root_draw.h"
-#include "data/Particle.h"
 #include "TH1D.h"
 #include "TLorentzVector.h"
 #include <cmath>
 #include <iostream>
 
+#include "utils/particle_tools.h"
+
 using namespace std;
 using namespace ant;
 using namespace ant::analysis;
 using namespace ant::analysis::physics;
-using namespace ant::analysis::data;
 
 ProtonCheck::ProtonCheck(const std::string& name,PhysOptPtr opts):
     Physics(name,opts)
@@ -29,19 +29,19 @@ ProtonCheck::ProtonCheck(const std::string& name,PhysOptPtr opts):
     theta_corr = HistFac.makeTH2D("Theta Corrleation","true","rec",theta_bins,theta_bins,"theta_corr");
 }
 
-void ProtonCheck::ProcessEvent(const Event &event)
+void ProtonCheck::ProcessEvent(const TEvent& event)
 {
-    if(event.MCTrue.Particles.GetAll().size() == 1) {
-        const auto& protons = event.MCTrue.Particles.Get(ParticleTypeDatabase::Proton);
+    if(event.MCTrue->Particles.GetAll().size() == 1) {
+        const auto& protons = event.MCTrue->Particles.Get(ParticleTypeDatabase::Proton);
 
         if(protons.size()==1) {
             const auto& mctrue = protons.at(0);
 
             if(mctrue->Theta() < 20.0*TMath::DegToRad()) {
 
-                for(const auto& cand : event.Reconstructed.Candidates) {
+                for(const auto& cand : event.Reconstructed->Candidates) {
 
-                    if(cand->GetDetector() & Detector_t::Any_t::TAPS_Apparatus) {
+                    if(cand->Detector & Detector_t::Any_t::TAPS_Apparatus) {
                         tof->Fill(cand->Time, cand->CaloEnergy);
                         tof_trueE->Fill(cand->Time, mctrue->Ek());
                         dEE->Fill(cand->CaloEnergy, cand->VetoEnergy);
@@ -50,7 +50,7 @@ void ProtonCheck::ProcessEvent(const Event &event)
                     }
                 }
 
-                cand_mult->Fill(event.Reconstructed.Candidates.size());
+                cand_mult->Fill(event.Reconstructed->Candidates.size());
             }
 
         }

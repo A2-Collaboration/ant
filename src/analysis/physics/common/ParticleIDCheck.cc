@@ -9,7 +9,6 @@ using namespace std;
 using namespace ant;
 using namespace ant::analysis;
 using namespace ant::analysis::physics;
-using namespace ant::analysis::data;
 
 ParticleIDCheck::ParticleIDCheck(const std::string& name,PhysOptPtr opts):
     Physics(name, opts),
@@ -42,12 +41,12 @@ ParticleIDCheck::ParticleIDCheck(const std::string& name,PhysOptPtr opts):
     }
 }
 
-void ParticleIDCheck::ProcessEvent(const Event &event)
+void ParticleIDCheck::ProcessEvent(const TEvent& event)
 {
-    mctrue.Fill(event.MCTrue);
-    rec.Fill(event.Reconstructed);
+    mctrue.Fill(*event.MCTrue);
+    rec.Fill(*event.Reconstructed);
 
-    for(const auto& candidate : event.Reconstructed.Candidates) {
+    for(const auto& candidate : event.Reconstructed->Candidates) {
         for(const auto& banana : bananas) {
             const auto& phi_range = std::get<0>(banana);
             const auto& theta_range = std::get<1>(banana);
@@ -89,7 +88,7 @@ ParticleIDCheck::branch_hists::branch_hists(SmartHistFactory& HistFac, const str
     }
 }
 
-void ParticleIDCheck::branch_hists::Fill(const Event::Data& data)
+void ParticleIDCheck::branch_hists::Fill(const TEvent::Data& data)
 {
     hist->Fill("unID", max(0,int(data.Candidates.size()) - int(data.Particles.GetAll().size())));
 

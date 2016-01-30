@@ -9,7 +9,6 @@
 
 using namespace std;
 using namespace ant;
-using namespace ant::analysis::data;
 using namespace ant::analysis::physics;
 
 CB_TimeWalk::CB_TimeWalk(const string& name, analysis::PhysOptPtr opts) :
@@ -42,13 +41,13 @@ CB_TimeWalk::CB_TimeWalk(const string& name, analysis::PhysOptPtr opts) :
                 );
 }
 
-void CB_TimeWalk::ProcessEvent(const analysis::data::Event& event)
+void CB_TimeWalk::ProcessEvent(const TEvent& event)
 {
-    for(const auto& cand: event.Reconstructed.Candidates) {
-        for(const TCluster& cluster: cand->Clusters) {
-            if(cluster.GetDetectorType() != Detector_t::Type_t::CB)
+    for(const auto& cand: event.Reconstructed->Candidates) {
+        for(const TClusterPtr& cluster: cand->Clusters) {
+            if(cluster->DetectorType != Detector_t::Type_t::CB)
                 continue;
-            for(const TClusterHit& hit : cluster.Hits) {
+            for(const TClusterHit& hit : cluster->Hits) {
                 // found the hit of the central element
                 // now search for its timing information
                 double time = numeric_limits<double>::quiet_NaN();

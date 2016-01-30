@@ -44,18 +44,18 @@ MCSmearing::~MCSmearing()
 
 }
 
-void MCSmearing::ProcessEvent(const data::Event& event)
+void MCSmearing::ProcessEvent(const TEvent& event)
 {
 
-    const auto& true_photons = event.MCTrue.Particles.Get(ParticleTypeDatabase::Photon);
-    const auto& reco_photons = event.Reconstructed.Particles.Get(ParticleTypeDatabase::Photon);
+    const auto& true_photons = event.MCTrue->Particles.Get(ParticleTypeDatabase::Photon);
+    const auto& reco_photons = event.Reconstructed->Particles.Get(ParticleTypeDatabase::Photon);
 
     utils::ParticleTools::FillIMCombinations(IM, reco_photons.size(), reco_photons);
 
     if(true_photons.size() == 1 && reco_photons.size() == 1) {
 
-        const data::ParticlePtr& true_g = true_photons.front();
-        const data::ParticlePtr& reco_g = reco_photons.front();
+        const TParticlePtr& true_g = true_photons.front();
+        const TParticlePtr& reco_g = reco_photons.front();
 
         const auto& true_theta = std_ext::radian_to_degree(true_g->Theta());
 

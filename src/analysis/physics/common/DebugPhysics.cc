@@ -12,7 +12,7 @@ DebugPhysics::DebugPhysics(const std::string& name, PhysOptPtr opts): Physics(na
 
 DebugPhysics::~DebugPhysics() {}
 
-void DebugPhysics::ProcessEvent(const data::Event& event)
+void DebugPhysics::ProcessEvent(const TEvent& event)
 {
     LOG(INFO) << event;
 }
@@ -27,7 +27,7 @@ void DebugPhysics::ShowResult()
     LOG(INFO) << "Nop";
 }
 
-void DebugPhysics::Initialize(data::Slowcontrol& slowcontrol)
+void DebugPhysics::Initialize(input::SlowControl& slowcontrol)
 {
     slowcontrol.FaradayCup.Request();
 }
@@ -46,22 +46,22 @@ DebugPIDAlignment::~DebugPIDAlignment()
 
 }
 
-void DebugPIDAlignment::ProcessEvent(const data::Event& event)
+void DebugPIDAlignment::ProcessEvent(const TEvent& event)
 {
-    if(event.MCTrue.Particles.GetAll().size() == 1) {
-        const auto mctrue_phi = event.MCTrue.Particles.GetAll().front()->Phi() * TMath::RadToDeg();
+    if(event.MCTrue->Particles.GetAll().size() == 1) {
+        const auto mctrue_phi = event.MCTrue->Particles.GetAll().front()->Phi() * TMath::RadToDeg();
 
-        for(const data::CandidatePtr& cand : event.Reconstructed.Candidates) {
-            for(const TCluster& c : cand->Clusters) {
-                if(c.GetDetectorType() == Detector_t::Type_t::PID) {
-                    angles->Fill(mctrue_phi, c.Position.Phi()* TMath::RadToDeg());
+        for(const TCandidatePtr& cand : event.Reconstructed->Candidates) {
+            for(const TClusterPtr& c : cand->Clusters) {
+                if(c->DetectorType == Detector_t::Type_t::PID) {
+                    angles->Fill(mctrue_phi, c->Position.Phi()* TMath::RadToDeg());
                 }
             }
         }
 
-        for(const TCluster& c : event.Reconstructed.AllClusters) {
-            if(c.GetDetectorType() == Detector_t::Type_t::PID) {
-                angles->Fill(mctrue_phi, c.Position.Phi()* TMath::RadToDeg());
+        for(const TClusterPtr& c : event.Reconstructed->Clusters) {
+            if(c->DetectorType == Detector_t::Type_t::PID) {
+                angles->Fill(mctrue_phi, c->Position.Phi()* TMath::RadToDeg());
             }
         }
     }

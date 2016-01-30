@@ -6,7 +6,6 @@
 using namespace ant;
 using namespace ant::std_ext;
 using namespace ant::analysis;
-using namespace ant::analysis::data;
 using namespace ant::analysis::physics;
 using namespace std;
 
@@ -42,13 +41,13 @@ double TimeAverage(const std::initializer_list<const T> cands) {
     return time / energy;
 }
 
-void ProtonTagger::ProcessEvent(const data::Event& event)
+void ProtonTagger::ProcessEvent(const TEvent& event)
 {
 
-    data::CandidateList taps_hits;
+    TCandidateList taps_hits;
 
-    for(const auto& p : event.Reconstructed.Candidates) {
-        if((p->GetDetector() & Detector_t::Any_t::TAPS_Apparatus) && p->CaloEnergy > 50.0) {
+    for(const auto& p : event.Reconstructed->Candidates) {
+        if((p->Detector & Detector_t::Any_t::TAPS_Apparatus) && p->CaloEnergy > 50.0) {
             taps_hits.emplace_back(p);
         }
     }
@@ -57,10 +56,10 @@ void ProtonTagger::ProcessEvent(const data::Event& event)
 
 
 
-    data::ParticleList cb_photons;
+    TParticleList cb_photons;
 
-    for(const auto& p : event.Reconstructed.Particles.Get(ParticleTypeDatabase::Photon)) {
-        if((p->Candidate && p->Candidate->GetDetector() & Detector_t::Any_t::CB_Apparatus) && p->Energy() > 50.0) {
+    for(const auto& p : event.Reconstructed->Particles.Get(ParticleTypeDatabase::Photon)) {
+        if((p->Candidate && p->Candidate->Detector & Detector_t::Any_t::CB_Apparatus) && p->Energy() > 50.0) {
             cb_photons.emplace_back(p);
         }
     }
@@ -77,7 +76,7 @@ void ProtonTagger::ProcessEvent(const data::Event& event)
 
     const TLorentzVector target(0,0,0,ParticleTypeDatabase::Proton.Mass());
 
-    for(const auto& t : event.Reconstructed.TaggerHits) {
+    for(const auto& t : event.Reconstructed->Tagger.Hits) {
 
         b_tagTime = t.Time;
         b_tagCh   = t.Channel;

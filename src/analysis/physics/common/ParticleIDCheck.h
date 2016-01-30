@@ -17,7 +17,7 @@ protected:
     struct branch_hists {
         branch_hists(SmartHistFactory& HistFac,const std::string& name);
         TH1D* hist;
-        void Fill(const data::Event::Data& data);
+        void Fill(const TEvent::Data& data);
     };
 
     branch_hists mctrue;
@@ -28,7 +28,7 @@ protected:
 public:
     ParticleIDCheck(const std::string& name,PhysOptPtr opts);
 
-    void ProcessEvent(const data::Event &event) override;
+    void ProcessEvent(const TEvent& event) override;
     void Finish() override;
     void ShowResult() override;
 };

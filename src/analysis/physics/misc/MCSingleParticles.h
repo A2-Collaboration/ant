@@ -11,9 +11,9 @@ namespace analysis {
 class MCSingleParticles: public ant::Physics {
 
 public:
-    typedef std::pair<const TrackPtr&, const ParticlePtr&> Track_MC_pair;
-    typedef std::pair<const TrackList&, const ParticlePtr&> MC_tracklist_pair;
-    typedef std::pair<const ParticlePtr&, const ParticlePtr&> Rec_MC_pair;
+    typedef std::pair<const TrackPtr&, const TParticlePtr&> Track_MC_pair;
+    typedef std::pair<const TrackList&, const TParticlePtr&> MC_tracklist_pair;
+    typedef std::pair<const TParticlePtr&, const TParticlePtr&> Rec_MC_pair;
 private:
 
     PlotList<Track_MC_pair> MC_track_pair_stats;
@@ -24,7 +24,7 @@ private:
 public:
     MCSingleParticles(const mev_t energy_scale=1000.0);
     virtual ~MCSingleParticles();
-    void ProcessEvent(const Event &event);
+    void ProcessEvent(const TEvent& event);
     void Finish();
     void ShowResult();
 };

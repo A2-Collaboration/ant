@@ -17,7 +17,7 @@ protected:
     struct MultiPi0 {
         MultiPi0(SmartHistFactory& histFac, unsigned nPi0, bool nofitandnotree = false);
 
-        void ProcessData(const data::Event::Data& data, const data::ParticleTree_t& ptree);
+        void ProcessData(const TEvent::Data& data, const TParticleTree_t& ptree);
         void ShowResult();
 
     protected:
@@ -58,7 +58,7 @@ protected:
 public:
     JustPi0(const std::string& name, PhysOptPtr opts);
 
-    virtual void ProcessEvent(const data::Event& event) override;
+    virtual void ProcessEvent(const TEvent& event) override;
     virtual void ShowResult() override;
 };
 

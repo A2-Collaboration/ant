@@ -24,7 +24,7 @@ public:
 
     ExtractTimings(const std::string& name, PhysOptPtr opts);
 
-    void ProcessEvent(const data::Event &event) override;
+    void ProcessEvent(const TEvent& event) override;
     void ShowResult() override;
 };
 

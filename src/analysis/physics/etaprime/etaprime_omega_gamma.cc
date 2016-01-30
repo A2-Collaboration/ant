@@ -212,11 +212,11 @@ void EtapOmegaG::ref_TTree_t::SetBranches()
     Proton.SetBranches(Tree, "Proton");
 }
 
-void EtapOmegaG::ProcessEvent(const data::Event& event)
+void EtapOmegaG::ProcessEvent(const TEvent& event)
 {
-    const auto& data = event.Reconstructed;
+    const auto& data = *event.Reconstructed;
 
-    auto& particletree = event.MCTrue.ParticleTree;
+    auto& particletree = event.MCTrue->ParticleTree;
 
     ProcessRef(particletree, data);
     ProcessSig(particletree, data);
@@ -242,8 +242,8 @@ void EtapOmegaG::ProcessEvent(const data::Event& event)
     }
 }
 
-void EtapOmegaG::ProcessSig(const data::ParticleTree_t& particletree,
-                            const data::Event::Data& data)
+void EtapOmegaG::ProcessSig(const TParticleTree_t& particletree,
+                            const TEvent::Data& data)
 {
     TH1D* steps = sig_hists.Steps;
 
@@ -272,14 +272,14 @@ void EtapOmegaG::ProcessSig(const data::ParticleTree_t& particletree,
     if(nProtons != 1)
         return;
     steps->Fill("nProtons==1",1);
-    const data::ParticlePtr& proton = protons.front();
+    const TParticlePtr& proton = protons.front();
 
     const sig_perDecayHists_t& h = getHistogram(particletree, sig_perDecayHists, sig_TTree.MCTrueIndex);
     const bool other_channel = (unsigned)sig_TTree.MCTrueIndex == sig_perDecayHists.size()-1;
     steps = h.Steps;
     steps->Fill("Seen",1);
 
-    if(!(proton->Candidate->GetDetector() & Detector_t::Type_t::TAPS))
+    if(!(proton->Candidate->Detector & Detector_t::Type_t::TAPS))
         return;
     steps->Fill("p in TAPS", 1);
 
@@ -295,7 +295,7 @@ void EtapOmegaG::ProcessSig(const data::ParticleTree_t& particletree,
     h.gggg->Fill(photon_sum.M());
 
     // use tagged photon
-    for(const auto& th : data.TaggerHits) {
+    for(const auto& th : data.Tagger.Hits) {
         /// \todo make prompt/random cut
         const TLorentzVector beam_target = th.GetPhotonBeam() + TLorentzVector(0, 0, 0, ParticleTypeDatabase::Proton.Mass());
         const TLorentzVector mm = beam_target - photon_sum;
@@ -353,10 +353,10 @@ void EtapOmegaG::ProcessSig(const data::ParticleTree_t& particletree,
 
     struct result_t {
         double Chi2 = std::numeric_limits<double>::infinity();
-        data::ParticlePtr g_pi0_0;
-        data::ParticlePtr g_pi0_1;
-        data::ParticlePtr g_omega;
-        data::ParticlePtr g_etap;
+        TParticlePtr g_pi0_0;
+        TParticlePtr g_pi0_1;
+        TParticlePtr g_omega;
+        TParticlePtr g_etap;
         TLorentzVector Pi0;
         TLorentzVector Omega;
         TLorentzVector EtaPrime;
@@ -434,7 +434,7 @@ void EtapOmegaG::ProcessSig(const data::ParticleTree_t& particletree,
     }
 
     // use tagged photon
-    for(const auto& th : data.TaggerHits) {
+    for(const auto& th : data.Tagger.Hits) {
         /// \todo make prompt/random cut
         const TLorentzVector beam_target = th.GetPhotonBeam() + TLorentzVector(0, 0, 0, ParticleTypeDatabase::Proton.Mass());
         const TLorentzVector mm = beam_target - result.EtaPrime;
@@ -465,8 +465,8 @@ void EtapOmegaG::ProcessSig(const data::ParticleTree_t& particletree,
     sig_TTree.Tree->Fill();
 }
 
-void EtapOmegaG::ProcessRef(const data::ParticleTree_t& particletree,
-                            const data::Event::Data& data)
+void EtapOmegaG::ProcessRef(const TParticleTree_t& particletree,
+                            const TEvent::Data& data)
 {
     TH1D* steps = ref_hists.Steps;
 
@@ -495,7 +495,7 @@ void EtapOmegaG::ProcessRef(const data::ParticleTree_t& particletree,
     if(nProtons != 1)
         return;
     steps->Fill("nProtons==1",1);
-    const data::ParticlePtr& proton = protons.front();
+    const TParticlePtr& proton = protons.front();
 
 
     const ref_perDecayHists_t& h = getHistogram(particletree, ref_perDecayHists, ref_TTree.MCTrueIndex);
@@ -503,7 +503,7 @@ void EtapOmegaG::ProcessRef(const data::ParticleTree_t& particletree,
     steps = h.Steps;
     steps->Fill("Seen",1);
 
-    if(!(proton->Candidate->GetDetector() & Detector_t::Type_t::TAPS))
+    if(!(proton->Candidate->Detector & Detector_t::Type_t::TAPS))
         return;
     steps->Fill("p in TAPS", 1);
 
@@ -539,7 +539,7 @@ void EtapOmegaG::ProcessRef(const data::ParticleTree_t& particletree,
     }
 
     // use tagged photon
-    for(const auto& th : data.TaggerHits) {
+    for(const auto& th : data.Tagger.Hits) {
         /// \todo make prompt/random cut
         const TLorentzVector beam_target = th.GetPhotonBeam() + TLorentzVector(0, 0, 0, ParticleTypeDatabase::Proton.Mass());
         const TLorentzVector mm = beam_target - photon_sum;

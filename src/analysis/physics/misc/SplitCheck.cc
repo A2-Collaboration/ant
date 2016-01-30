@@ -55,18 +55,18 @@ ant::analysis::SplitCheck::SplitCheck()
                                 "#phi [#circ]",theta_bins,phi_bins,"IMbig_theta_phi");
 }
 
-void ant::analysis::SplitCheck::ProcessEvent(const ant::Event &event)
+void ant::analysis::SplitCheck::ProcessEvent(const ant::TEvent& event)
 {
     if(event.Reconstructed().TriggerInfos().CBEenergySum()<550.0) return;
 
-    ParticleList gammas = event.Reconstructed().Particles().Get(ParticleTypeDatabase::Photon);
+    TParticleList gammas = event.Reconstructed().Particles().Get(ParticleTypeDatabase::Photon);
 
     const size_t ngammas = gammas.size();
 
 
     if(ngammas==4) {
-        ParticleList small_gammas;
-        ParticleList large_gammas;
+        TParticleList small_gammas;
+        TParticleList large_gammas;
 
         for( auto& g :gammas ) {
             if(g->E() < 50.0 ) {
@@ -79,7 +79,7 @@ void ant::analysis::SplitCheck::ProcessEvent(const ant::Event &event)
             }
         }
 
-        auto matches = utils::match1to1(large_gammas, small_gammas, [] ( const ParticlePtr& p1, const ParticlePtr& p2 ) {
+        auto matches = utils::match1to1(large_gammas, small_gammas, [] ( const TParticlePtr& p1, const TParticlePtr& p2 ) {
                                             return p1->Angle(p2->Vect());
                                         });
 
@@ -107,7 +107,7 @@ void ant::analysis::SplitCheck::ProcessEvent(const ant::Event &event)
 
     auto& hists = entry->second;
 
-    sort(gammas.begin(), gammas.end(), [] (const ParticlePtr& a, const ParticlePtr& b) { return a->E() > b->E();});
+    sort(gammas.begin(), gammas.end(), [] (const TParticlePtr& a, const TParticlePtr& b) { return a->E() > b->E();});
 
     for(size_t g=0;g<ngammas;++g) {
         hists.at(g)->Fill(gammas.at(g)->E());

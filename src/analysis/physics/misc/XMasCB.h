@@ -30,7 +30,7 @@ public:
     XMasCB(const std::string& name, PhysOptPtr opts);
     virtual ~XMasCB();
 
-    void ProcessEvent(const data::Event &event) override;
+    void ProcessEvent(const TEvent& event) override;
 };
 
 }

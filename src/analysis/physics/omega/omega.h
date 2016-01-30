@@ -32,14 +32,14 @@ public:
         PerChannel_t(const std::string& Title, SmartHistFactory& hf);
 
         void Show();
-        void Fill(const data::Event::Data& d);
+        void Fill(const TEvent::Data& d);
     };
 
     std::map<std::string,PerChannel_t> channels;
 
     OmegaMCTruePlots(const std::string& name, PhysOptPtr opts);
 
-    void ProcessEvent(const data::Event& event);
+    void ProcessEvent(const TEvent& event);
     void Finish();
     void ShowResult();
 };
@@ -54,12 +54,12 @@ public:
 
 protected:
     utils::A2SimpleGeometry geo;
-    double calcEnergySum(const data::ParticleList &particles) const;
-    data::ParticleList getGeoAccepted(const data::ParticleList& p) const;
+    double calcEnergySum(const TParticleList& particles) const;
+    TParticleList getGeoAccepted(const TParticleList& p) const;
 
     DataMode mode = DataMode::Reconstructed;
 
-    virtual void Analyse(const data::Event::Data& data, const data::Event& event) =0;
+    virtual void Analyse(const TEvent::Data& data, const TEvent& event) =0;
 
 
 
@@ -67,7 +67,7 @@ public:
     OmegaBase(const std::string &name, PhysOptPtr opts);
     virtual ~OmegaBase() = default;
 
-    virtual void ProcessEvent(const data::Event& event) override;
+    virtual void ProcessEvent(const TEvent& event) override;
     void Finish() override;
     void ShowResult() override;
 
@@ -111,7 +111,7 @@ protected:
 
     std::map<std::string, perDecayhists_t> gg_decays;
 
-    virtual void Analyse(const data::Event::Data& data, const data::Event& event) override;
+    virtual void Analyse(const TEvent::Data& data, const TEvent& event) override;
 
     BinSettings imbinning = BinSettings(1000);
     BinSettings mmbinning = BinSettings(1000, 400,1400);
@@ -139,7 +139,7 @@ public:
     OmegaMCTree(const std::string& name, PhysOptPtr opts);
     virtual ~OmegaMCTree();
 
-    void ProcessEvent(const data::Event& event) override;
+    void ProcessEvent(const TEvent& event) override;
     void ShowResult() override;
     TLorentzVector getGamma1() const;
     void setGamma1(const TLorentzVector& value);
@@ -151,7 +151,7 @@ class OmegaEtaG2 : public OmegaBase {
 
     // OmegaBase interface
 protected:
-    void Analyse(const data::Event::Data &data, const data::Event &event) override;
+    void Analyse(const TEvent::Data &data, const TEvent& event) override;
 
 
     enum SigBgFlag_t {
@@ -160,7 +160,7 @@ protected:
         flagBackground
     };
 
-    SigBgFlag_t identify(const data::Event &event) const;
+    SigBgFlag_t identify(const TEvent& event) const;
 
 
     std::shared_ptr<ant::Tree<const ParticleTypeDatabase::Type&>> signal_tree;
@@ -222,7 +222,7 @@ protected:
     interval<double> photon_E_taps = {200.0,1600.0};
     interval<double> proton_theta  = std_ext::degree_to_radian(interval<double>({0.0, 45.0}));
 
-    double calcEnergySum2(const data::Event::Data &e) const;
+    double calcEnergySum2(const TEvent::Data &e) const;
 
     struct expected_peak_t {
         double Mean;
@@ -249,11 +249,11 @@ protected:
     ant::analysis::PromptRandom::Switch promptrandom;
     utils::KinFitter fitter;
 
-    bool AcceptedPhoton(const data::ParticlePtr& photon);
-    bool AcceptedProton(const data::ParticlePtr& proton);
+    bool AcceptedPhoton(const TParticlePtr& photon);
+    bool AcceptedProton(const TParticlePtr& proton);
 
-    data::ParticleList FilterPhotons(const data::ParticleList& list);
-    data::ParticleList FilterProtons(const data::ParticleList& list);
+    TParticleList FilterPhotons(const TParticleList& list);
+    TParticleList FilterProtons(const TParticleList& list);
 
 public:
     OmegaEtaG2(const std::string& name, PhysOptPtr opts);

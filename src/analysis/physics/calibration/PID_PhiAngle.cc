@@ -4,7 +4,6 @@
 
 using namespace std;
 using namespace ant;
-using namespace ant::analysis::data;
 using namespace ant::analysis::physics;
 
 PID_PhiAngle::PID_PhiAngle(const string& name, analysis::PhysOptPtr opts) :
@@ -20,16 +19,16 @@ PID_PhiAngle::PID_PhiAngle(const string& name, analysis::PhysOptPtr opts) :
 }
 
 
-void PID_PhiAngle::ProcessEvent(const Event& event)
+void PID_PhiAngle::ProcessEvent(const TEvent& event)
 {
-    const auto& cands = event.Reconstructed.Candidates;
+    const auto& cands = event.Reconstructed->Candidates;
 
     // search for events with
     // one cluster in CB, one cluster in PID
     // ignore the matched candidates, since this is what
     // we want to calibrate
 
-    const TCluster* cluster_pid = nullptr;
+    TClusterPtr cluster_pid = nullptr;
     double phi_cb = numeric_limits<double>::quiet_NaN();
 
     for(const auto& cand : cands) {
@@ -57,15 +56,15 @@ void PID_PhiAngle::ProcessEvent(const Event& event)
     }
 
     /// \todo search all clusters, leave candidates alone
-    for(const TCluster& cl : event.Reconstructed.AllClusters) {
-        if(cl.GetDetectorType() != Detector_t::Type_t::PID)
+    for(const TClusterPtr& cl : event.Reconstructed->Clusters) {
+        if(cl->DetectorType != Detector_t::Type_t::PID)
             continue;
-        if(!isfinite(cl.Energy) || !isfinite(cl.Time))
+        if(!isfinite(cl->Energy) || !isfinite(cl->Time))
             continue;
         // found more than one PID cluster
         if(cluster_pid != nullptr)
             return;
-        cluster_pid = addressof(cl);
+        cluster_pid = cl;
     }
 
     if(!isfinite(phi_cb) || cluster_pid == nullptr)

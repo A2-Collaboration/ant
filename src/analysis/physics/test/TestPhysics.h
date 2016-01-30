@@ -17,13 +17,13 @@ protected:
     SmartHist1<int>    nphotons;
     SmartHist1<int>    nprotons;
 
-    std::map<const ant::ParticleTypeDatabase::Type*, SmartHist1<const data::ParticlePtr&>> EHists;
+    std::map<const ant::ParticleTypeDatabase::Type*, SmartHist1<const TParticlePtr&>> EHists;
 
 public:
     ParticleCombinatoricsTest(const std::string& name, PhysOptPtr opts);
     virtual ~ParticleCombinatoricsTest() {}
 
-    virtual void ProcessEvent(const data::Event& event);
+    virtual void ProcessEvent(const TEvent& event);
     virtual void Finish();
     virtual void ShowResult();
 };

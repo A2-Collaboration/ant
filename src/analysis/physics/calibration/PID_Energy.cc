@@ -4,7 +4,6 @@
 
 using namespace std;
 using namespace ant;
-using namespace ant::analysis::data;
 using namespace ant::analysis::physics;
 
 PID_Energy::PID_Energy(const string& name, analysis::PhysOptPtr opts) :
@@ -101,17 +100,17 @@ PID_Energy::PerChannel_t::PerChannel_t(SmartHistFactory HistFac)
     QDCMultiplicity = HistFac.makeTH1D("PID QDC Multiplicity", "nHits", "#", BinSettings(10), "QDCMultiplicity");
 }
 
-void PID_Energy::ProcessEvent(const Event& event)
+void PID_Energy::ProcessEvent(const TEvent& event)
 {
     // pedestals, best determined from clusters with energy information only
-    for(const TCluster& cluster : event.Reconstructed.AllClusters) {
-        if(cluster.GetDetectorType() != Detector_t::Type_t::PID)
+    for(const TClusterPtr& cluster : event.Reconstructed->Clusters) {
+        if(cluster->DetectorType != Detector_t::Type_t::PID)
             continue;
 
         // only consider one cluster PID hits
-        if(cluster.Hits.size() != 1)
+        if(cluster->Hits.size() != 1)
             continue;
-        const TClusterHit& pidhit = cluster.Hits.front();
+        const TClusterHit& pidhit = cluster->Hits.front();
 
         PerChannel_t& h = h_perChannel[pidhit.Channel];
 
@@ -152,12 +151,12 @@ void PID_Energy::ProcessEvent(const Event& event)
 
 
     // bananas per channel histograms
-    for(const auto& candidate : event.Reconstructed.Candidates) {
+    for(const auto& candidate : event.Reconstructed->Candidates) {
         // only candidates with one cluster in CB and one cluster in PID
         if(candidate->Clusters.size() != 2)
             continue;
-        const bool cb_and_pid = candidate->GetDetector() & Detector_t::Type_t::CB &&
-                                candidate->GetDetector() & Detector_t::Type_t::PID;
+        const bool cb_and_pid = candidate->Detector & Detector_t::Type_t::CB &&
+                                candidate->Detector & Detector_t::Type_t::PID;
         if(!cb_and_pid)
             continue;
 

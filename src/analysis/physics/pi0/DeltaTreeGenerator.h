@@ -29,7 +29,7 @@ public:
     virtual ~DeltaTreeGenerator() {}
 
     // Physics interface
-    void ProcessEvent(const data::Event &event);
+    void ProcessEvent(const TEvent& event);
     void Finish();
     void ShowResult();
 };

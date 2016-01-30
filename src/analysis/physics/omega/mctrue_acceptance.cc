@@ -1,11 +1,12 @@
 #include "physics/omega/mctrue_acceptance.h"
 #include "plot/root_draw.h"
 
+#include "utils/particle_tools.h"
+
 using namespace std;
 using namespace ant;
 using namespace ant::analysis;
 using namespace ant::analysis::physics;
-using namespace ant::analysis::data;
 
 MCTrueAcceptance::MCTrueAcceptance(const std::string& name,PhysOptPtr opts):
     Physics(name, opts), events_seen(0)
@@ -20,7 +21,7 @@ MCTrueAcceptance::MCTrueAcceptance(const std::string& name,PhysOptPtr opts):
     detect.GetRootHistogram()->Reset();
 }
 
-MCTrueAcceptance::det_hit_count_t MCTrueAcceptance::AllAccepted(const ParticleList& particles) {
+MCTrueAcceptance::det_hit_count_t MCTrueAcceptance::AllAccepted(const TParticleList& particles) {
     det_hit_count_t acc;
 
     for( auto& p : particles ) {
@@ -36,7 +37,7 @@ MCTrueAcceptance::det_hit_count_t MCTrueAcceptance::AllAccepted(const ParticleLi
     return acc;
 }
 
-bool MCTrueAcceptance::alldetectable(const ParticleList &particles) const
+bool MCTrueAcceptance::alldetectable(const TParticleList& particles) const
 {
     for(const auto& p : particles) {
         if( Detector_t::Any_t::None == geo.DetectorFromAngles(p->Theta(), p->Phi()))
@@ -45,18 +46,18 @@ bool MCTrueAcceptance::alldetectable(const ParticleList &particles) const
     return true;
 }
 
-void MCTrueAcceptance::ProcessEvent(const Event &event)
+void MCTrueAcceptance::ProcessEvent(const TEvent& event)
 {
 
     detect.Fill("Events", 1);
 
-    if(alldetectable(event.MCTrue.Particles.GetAll())) {
+    if(alldetectable(event.MCTrue->Particles.GetAll())) {
         detect.Fill("All Detected",1);
     }
 
     for( auto& type : ParticleTypeDatabase::DetectableTypes() ) {
 
-        const ParticleList& particles = event.MCTrue.Particles.Get(*type);
+        const TParticleList& particles = event.MCTrue->Particles.Get(*type);
 
         if(particles.size() > 0) {
 
