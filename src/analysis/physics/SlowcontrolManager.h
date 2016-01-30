@@ -1,7 +1,8 @@
 #pragma once
 
-#include "tree/TSlowControl.h"
-#include "analysis/data/Slowcontrol.h"
+#include "analysis/input/slowcontrol/SlowControl.h"
+
+#include "tree/TEvent.h"
 
 #include <map>
 #include <queue>
@@ -10,12 +11,12 @@
 
 namespace ant {
 namespace analysis {
-namespace slowontrol {
+namespace slowcontrol {
 
 class Manager {
 protected:
 
-    using buffer_t = std::queue<std::unique_ptr<const TSlowControl>>;
+    using buffer_t = std::queue<std::pair<TID,  TSlowControl>>;
     std::map<TSlowControl::Key, buffer_t> slowcontrol;
 
     TID minimal_in_buffer;
@@ -27,7 +28,7 @@ public:
 
     void SetRequiredKeys(const std::list<TSlowControl::Key> keys);
 
-    void ProcessSlowcontrol(std::unique_ptr<const TSlowControl> data);
+    void ProcessSlowControls(TEvent& event);
 
     /**
      * @brief check if at least one slow control variable has been requrested
@@ -39,7 +40,7 @@ public:
 
     TID FindMinimalTID() const;
 
-    TID UpdateSlowcontrolData(data::Slowcontrol& slc);
+    TID UpdateSlowcontrolData(input::SlowControl& slc);
 
 };
 

@@ -1,9 +1,9 @@
 #pragma once
 
 #include "analysis/plot/HistogramFactories.h"
-#include "analysis/data/Event.h"
+#include "analysis/input/slowcontrol/SlowControl.h"
 
-#include "analysis/data/Slowcontrol.h"
+#include "tree/TEvent.h"
 
 #include "base/OptionsList.h"
 
@@ -35,12 +35,12 @@ protected:
 public:
     Physics(const std::string& name, PhysOptPtr opts);
     virtual ~Physics() {}
-    virtual void ProcessEvent(const data::Event& event) =0;
+    virtual void ProcessEvent(const TEvent& event) =0;
     virtual void Finish() {}
     virtual void ShowResult() {}
     std::string GetName() const { return name_; }
 
-    virtual void Initialize(data::Slowcontrol& slowcontrol);
+    virtual void Initialize(input::SlowControl& slowcontrol);
 
     Physics(const Physics&) = delete;
     Physics& operator=(const Physics&) = delete;

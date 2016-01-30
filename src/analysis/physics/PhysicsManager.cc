@@ -7,7 +7,7 @@
 #include "tree/TAntHeader.h"
 #include "base/Logger.h"
 
-#include "input/detail/SlowcontrolCreator.h"
+#include "input/slowcontrol/SlowControlCreator.h"
 
 #include "base/ProgressCounter.h"
 
@@ -58,37 +58,32 @@ bool PhysicsManager::InitReaders(PhysicsManager::readers_t readers_)
     return true;
 }
 
-bool PhysicsManager::TryReadEvent(unique_ptr<data::Event>& event)
+bool PhysicsManager::TryReadEvent(TEventPtr& event)
 {
     bool read_event = false;
 
     while(!read_event) {
         if(source) {
-            bool event_ok = source->ReadNextEvent(*event);
-            auto sc = source->ReadNextSlowControl();
-            if(!event_ok && !sc)
-                return false;
-            if(event_ok)
+            if(source->ReadNextEvent(*event)) {
                 read_event = true;
-            if(sc)
-               slowcontrol_mgr.ProcessSlowcontrol(move(sc));
+                slowcontrol_mgr.ProcessSlowControls(*event);
+            }
+            else {
+                return false;
+            }
         }
 
         auto it_reader = readers.begin();
         while(it_reader != readers.end()) {
-            bool event_ok = (*it_reader)->ReadNextEvent(*event);
-            auto sc = (*it_reader)->ReadNextSlowControl();
 
-            if(!event_ok && !sc) {
-                it_reader = readers.erase(it_reader);
-                continue;
-            }
-
-            if(event_ok)
+            if((*it_reader)->ReadNextEvent(*event)) {
                 read_event = true;
-            if(sc)
-                slowcontrol_mgr.ProcessSlowcontrol(move(sc));
-            ++it_reader;
+                slowcontrol_mgr.ProcessSlowControls(*event);
+                ++it_reader;
+            }
+            else {
+                it_reader = readers.erase(it_reader);
+            }
         }
 
         if(!source && readers.empty())
@@ -119,7 +114,7 @@ void PhysicsManager::ProcessEventBuffer(long long maxevents)
             return;
 
         auto& event = eventbuffer.front();
-        auto& eventid = event->Reconstructed.Trigger.EventID;
+        auto& eventid = event->Reconstructed->ID;
 
         if(slowcontrol_mgr.hasRequests() && (eventid > runUntil))
             break;
@@ -177,7 +172,7 @@ void PhysicsManager::ReadFrom(
                 finished_reading = true;
                 break;
             }
-            auto event = std_ext::make_unique<data::Event>();
+            auto event = std_ext::make_unique<TEvent>();
             if(!TryReadEvent(event)) {
                 VLOG(5) << "No more events to read, finish.";
                 finished_reading = true;
@@ -223,15 +218,15 @@ void PhysicsManager::ReadFrom(
 
 
 
-void PhysicsManager::ProcessEvent(unique_ptr<data::Event> event)
+void PhysicsManager::ProcessEvent(std::unique_ptr<TEvent> event)
 {
-    if(particleID) {
+    if(particleID && event->Reconstructed) {
         // run particle ID for Reconstructed candidates
         auto& reconstructed = event->Reconstructed;
-        for(const auto& cand : reconstructed.Candidates) {
+        for(const auto& cand : reconstructed->Candidates) {
             auto particle = particleID->Process(cand);
             if(particle)
-                reconstructed.Particles.AddParticle(particle);
+                reconstructed->Particles.Add(particle);
         }
     }
 

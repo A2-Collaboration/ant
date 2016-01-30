@@ -1,9 +1,10 @@
 #include "SlowControlCreator.h"
 
-using namespace ant;
-using namespace ant::analysis;
-using namespace ant::analysis::input;
 using namespace std;
+
+namespace ant {
+namespace analysis {
+namespace input {
 
 /**
  * @brief Get first value of vector. Returns NaN if empty.
@@ -78,3 +79,5 @@ std::list<TSlowControl::Key> RequestedKeys(const SlowControl& slc)
 
     return keys;
 }
+
+}}}

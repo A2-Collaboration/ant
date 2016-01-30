@@ -1,13 +1,13 @@
 #include "SlowcontrolManager.h"
 #include "tree/TSlowControl.h"
-#include "input/detail/SlowcontrolCreator.h"
+#include "input/slowcontrol/SlowControlCreator.h"
 #include <stdexcept>
 
 using namespace ant;
 using namespace ant::analysis;
 
 
-TID slowontrol::Manager::min(const TID& a, const TID& b)
+TID slowcontrol::Manager::min(const TID& a, const TID& b)
 {
     if(a.IsInvalid())
         return b;
@@ -16,7 +16,7 @@ TID slowontrol::Manager::min(const TID& a, const TID& b)
     return std::min(a,b);
 }
 
-void slowontrol::Manager::SetRequiredKeys(const std::list<ant::TSlowControl::Key> keys)
+void slowcontrol::Manager::SetRequiredKeys(const std::list<ant::TSlowControl::Key> keys)
 {
     for(const auto& key : keys) {
         const auto entry = slowcontrol.find(key);
@@ -26,16 +26,26 @@ void slowontrol::Manager::SetRequiredKeys(const std::list<ant::TSlowControl::Key
     }
 }
 
-void slowontrol::Manager::ProcessSlowcontrol(std::unique_ptr<const TSlowControl> data)
+void slowcontrol::Manager::ProcessSlowControls(TEvent& event)
 {
-    auto entry = slowcontrol.find(data->GetKey());
-    if(entry != slowcontrol.end()) {
-        buffer_t& buffer = entry->second;
-        buffer.emplace(move(data));
+    /// \todo Maybe MCTrue could also have some SlowControl stuff?
+    if(!event.Reconstructed)
+        return;
+
+    auto& slowcontrols = event.Reconstructed->SlowControls;
+
+    for(TSlowControl& sc : slowcontrols) {
+        auto entry = slowcontrol.find(sc.GetKey());
+        if(entry != slowcontrol.end()) {
+            buffer_t& buffer = entry->second;
+            buffer.emplace(std::make_pair(event.Reconstructed->ID, std::move(sc)));
+        }
     }
+
+    slowcontrols.resize(0);
 }
 
-bool slowontrol::Manager::isComplete() const {
+bool slowcontrol::Manager::isComplete() const {
 
     for(const auto& entry : slowcontrol) {
         if(entry.second.empty())
@@ -45,20 +55,20 @@ bool slowontrol::Manager::isComplete() const {
     return true;
 }
 
-TID slowontrol::Manager::FindMinimalTID() const
+TID slowcontrol::Manager::FindMinimalTID() const
 {
     TID minimal;
 
     for(const auto& entry : slowcontrol) {
         const buffer_t& buffer = entry.second;
         const auto& slread = buffer.front();
-        minimal = min(minimal, slread->ID);
+        minimal = min(minimal, slread.first);
     }
 
     return minimal;
 }
 
-TID slowontrol::Manager::UpdateSlowcontrolData(data::Slowcontrol& slc)
+TID slowcontrol::Manager::UpdateSlowcontrolData(input::SlowControl& slc)
 {
 
     if(isComplete()) {
@@ -71,9 +81,9 @@ TID slowontrol::Manager::UpdateSlowcontrolData(data::Slowcontrol& slc)
             auto slread = move(buffer.front());
             buffer.pop();
 
-            FillSlowcontrol(slc, *slread);
+            FillSlowControl(slc, slread.second);
 
-            minimal_in_buffer = min(minimal_in_buffer, slread->ID);
+            minimal_in_buffer = min(minimal_in_buffer, slread.first);
         }
 
         return validuntil;

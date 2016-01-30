@@ -1,9 +1,9 @@
 #pragma once
 
 #include "Physics.h"
+#include "SlowcontrolManager.h"
+
 #include "tree/TSlowControl.h"
-#include "analysis/data/Slowcontrol.h"
-#include "analysis/physics/SlowcontrolManager.h"
 
 
 namespace ant {
@@ -33,17 +33,17 @@ protected:
     std::unique_ptr<input::DataReader> source;
 
     bool InitReaders(readers_t readers_);
-    bool TryReadEvent(std::unique_ptr<data::Event>& event);
+    bool TryReadEvent(TEventPtr& event);
 
-    slowontrol::Manager slowcontrol_mgr;
-    data::Slowcontrol slowcontrol_data;
+    slowcontrol::Manager slowcontrol_mgr;
+    input::SlowControl slowcontrol_data;
 
-    std::queue< std::unique_ptr<data::Event> > eventbuffer;
+    std::queue<TEventPtr> eventbuffer;
 
     long long nEventsProcessed = 0;
 
     void ProcessEventBuffer(long long maxevents);
-    void ProcessEvent(std::unique_ptr<data::Event> event);
+    void ProcessEvent(TEventPtr event);
 
     bool progressUpdates = true;
 
