@@ -51,7 +51,6 @@ protected:
     void CopyPluto(TEvent::Data& mctrue);
 
     PStaticData* pluto_database;
-    const ParticleTypeDatabase::Type* GetType(const PParticle* p) const;
 
 public:
     PlutoReader(const std::shared_ptr<ant::WrapTFileInput>& rootfiles);

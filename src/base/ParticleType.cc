@@ -69,16 +69,6 @@ const ParticleTypeDatabase::Type *ParticleTypeDatabase::GetTypeOfPlutoID(index_t
     return entry->second;
 }
 
-const ParticleTypeDatabase::Type* ParticleTypeDatabase::AddTempPlutoType(index_t pid, const string &_name, const string &_print_name, const mev_t &_mass, const bool &_charged, const ParticleTypeDatabase::Type *_sametype)
-{
-    if(pluto_id_map.find(pid) == pluto_id_map.end()) {
-        Type* type = new Type(_name,_print_name,_mass,_charged, _sametype);
-        pluto_id_map[pid] = type;
-        return type;
-    }
-    return nullptr;
-}
-
 const ParticleTypeDatabase::TypeList_t ParticleTypeDatabase::detectables = { &ParticleTypeDatabase::Photon,
                                                                              &ParticleTypeDatabase::Proton,
                                                                              &ParticleTypeDatabase::PiCharged,

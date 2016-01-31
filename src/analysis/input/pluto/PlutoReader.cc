@@ -11,6 +11,7 @@
 #include "base/WrapTFile.h"
 #include "base/Logger.h"
 #include "base/std_ext/string.h"
+#include "base/std_ext/vector.h"
 
 #include "TTree.h"
 #include "TClonesArray.h"
@@ -65,30 +66,6 @@ PlutoReader::PlutoReader(const std::shared_ptr<WrapTFileInput>& rootfiles) :
 
 PlutoReader::~PlutoReader() {}
 
-
-const ParticleTypeDatabase::Type* PlutoReader::GetType(const PParticle* p) const {
-
-    const ParticleTypeDatabase::Type* type= ParticleTypeDatabase::GetTypeOfPlutoID( p->ID() );
-
-    if(!type) {
-
-        type = ParticleTypeDatabase::AddTempPlutoType(
-                    p->ID(),
-                    "Pluto_"+to_string(p->ID()),
-                    "Pluto_"+ string( pluto_database->GetParticleName(p->ID()) ),
-                    pluto_database->GetParticleMass(p->ID())*1000.0,
-                    pluto_database->GetParticleCharge(p->ID()) != 0
-                );
-        VLOG(7) << "Adding a ParticleType for pluto ID " << p->ID() << " to ParticleTypeDatabse";
-
-        if(!type)
-            /// \todo Change this so that it does not stop the whole process and can be caught for each particle
-            throw std::out_of_range("Could not create dynamic mapping for Pluto Particle ID "+to_string(p->ID()));
-    }
-
-    return type;
-}
-
 /**
  * @brief Find a PParticle in a vector by its ID. ID has to be unique in the vector.
  * @param particles vector to search
@@ -139,8 +116,9 @@ void PlutoReader::CopyPluto(TEvent::Data& mctrue)
 
         const PParticle* particle = dynamic_cast<const PParticle*>((*PlutoMCTrue)[i]);
 
-        // ignore those weird dilepton particles
-        if(particle->ID() == pluto_database->GetParticleID("dilepton"))
+        // remember positions of those weird dilepton/dimuon particles
+        if(particle->ID() == pluto_database->GetParticleID("dilepton") ||
+           particle->ID() == pluto_database->GetParticleID("dimuon"))
             dilepton_indices.push_back(i);
         PlutoParticles.push_back(particle);
     }
@@ -151,10 +129,26 @@ void PlutoReader::CopyPluto(TEvent::Data& mctrue)
 
     // convert pluto particles to ant particles and place in buffer list
 
-    for( auto& PlutoParticle : PlutoParticles ) {
+    for(size_t i=0; i<PlutoParticles.size(); ++i) {
+
+        auto& PlutoParticle = PlutoParticles[i];
+
+        // find pluto type in database
+        auto type = ParticleTypeDatabase::GetTypeOfPlutoID( PlutoParticle->ID() );
+
+        // note that type might by nullptr (in particular for those dileptons...)
+        // then just add some "empty" tree node
+        if(!type) {
+            if(!std_ext::contains(dilepton_indices, i))
+                // check $PLUTOSYS/src/PStdData.cc what to do, you may add it to the ant Database if you wish
+                throw Exception(std_ext::formatter() << "Unknown pluto particle found: ID="
+                                << PlutoParticle->ID());
+
+            FlatTree.emplace_back(Tree<TParticlePtr>::MakeNode(nullptr));
+            continue;
+        }
 
         // make an AntParticle out of it
-        auto type = GetType(PlutoParticle);
         TLorentzVector lv = *PlutoParticle;
         lv *= 1000.0;   // convert to MeV
         auto AntParticle = make_shared<TParticle>(*type,lv);
@@ -197,10 +191,11 @@ void PlutoReader::CopyPluto(TEvent::Data& mctrue)
 
         } else {
 
-            if( TreeNode->Get()->Type() == ParticleTypeDatabase::BeamTarget) {
+            if(TreeNode->Get() &&
+               TreeNode->Get()->Type() == ParticleTypeDatabase::BeamTarget) {
                 auto& headnode = mctrue.ParticleTree;
                 if(headnode) {
-                    LOG(WARNING) << "Found more than one BeamTarget in MCTrue";
+                    LOG(WARNING) << "Found more than one BeamTarget in MCTrue, that's weird.";
                 }
                 headnode = TreeNode;
             }
@@ -211,7 +206,8 @@ void PlutoReader::CopyPluto(TEvent::Data& mctrue)
                 if(search_result.second) {
                     VLOG(7) << "Recovered missing pluto decay tree information.";
                     TreeNode->SetParent(FlatTree.at(search_result.first));
-                } else {  // BeamProton is not supposed to have a parent
+                } else {
+                    // recovery failed
                     missing_decay_treeinfo = true;
                 }
 
