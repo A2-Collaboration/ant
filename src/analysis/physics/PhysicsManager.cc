@@ -206,13 +206,20 @@ void PhysicsManager::ReadFrom(
     VLOG(5) << "First EventId processed: " << firstID;
     VLOG(5) << "Last  EventId processed: " << lastID;
 
-    if(treeEvents->GetEntries() == 0)
-        delete treeEvents;
+
 
     end = chrono::system_clock::now();
     chrono::duration<double> elapsed_seconds = end-start;
     LOG(INFO) << "Processed " << nEventsProcessed << " events, speed "
-              << nEventsProcessed/elapsed_seconds.count() << " Items/s";
+              << nEventsProcessed/elapsed_seconds.count() << " event/s";
+
+    if(treeEvents->GetEntries() == 0)
+        delete treeEvents;
+    else {
+        LOG(INFO) << "Wrote treeEvents: "
+                  << (double)treeEvents->GetTotBytes()/(1 << 20) << " MB, "
+                  << (double)treeEvents->GetTotBytes()/nEventsProcessed << " bytes/event";
+     }
 }
 
 void PhysicsManager::ProcessEvent(std::unique_ptr<TEvent> event)
