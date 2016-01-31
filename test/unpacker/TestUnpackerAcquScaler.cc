@@ -31,13 +31,11 @@ void dotest() {
 
     while(auto event = unpacker->NextEvent()) {
         auto& readhits = event->Reconstructed->DetectorReadHits;
-        if(!readhits.empty()) {
-            nEvents++;
-            nHits += readhits.size();
-        }
-        else {
-            // last event is empty, telling us the proper end-of-file
-            REQUIRE(nEvents == 211);
+        nEvents++;
+        nHits += readhits.size();
+
+        // last event should report proper end of file
+        if(nEvents==211) {
             REQUIRE(event->Reconstructed->UnpackerMessages.back().Message == "Found proper end of file");
         }
 
