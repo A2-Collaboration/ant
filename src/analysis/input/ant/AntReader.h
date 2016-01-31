@@ -13,15 +13,20 @@ namespace ant {
 namespace analysis {
 namespace input {
 
+namespace detail {
+struct AntReaderInternal;
+}
+
 class AntReader : public DataReader {
+
 protected:
-    std::unique_ptr<Unpacker::Module>   unpacker;
-    std::unique_ptr<Reconstruct_traits> reconstruct;
+    std::unique_ptr<detail::AntReaderInternal> reader;
+    std::unique_ptr<Reconstruct_traits>        reconstruct;
 
 public:
     AntReader(const std::shared_ptr<WrapTFileInput>& rootfiles,
               std::unique_ptr<Unpacker::Module> unpacker,
-              std::unique_ptr<Reconstruct_traits> reconstruct);
+              std::unique_ptr<Reconstruct_traits> reconstruct_);
     virtual ~AntReader();
     AntReader(const AntReader&) = delete;
     AntReader& operator= (const AntReader&) = delete;

@@ -99,39 +99,104 @@ struct PhysicsManagerTester : PhysicsManager
 
 void dotest_raw()
 {
-    tmpfile_t tmpfile;
-    WrapTFileOutput outfile(tmpfile.filename, WrapTFileOutput::mode_t::recreate, true);
-
-    PhysicsManagerTester pm;
-    pm.AddPhysics<TestPhysics>();
-
-    // make some meaningful input for the physics manager
-    ant::ExpConfig::Setup::ManualName = "Setup_Test";
-    auto unpacker = Unpacker::Get(string(TEST_BLOBS_DIRECTORY)+"/Acqu_oneevent-big.dat.xz");
-    auto reconstruct = std_ext::make_unique<Reconstruct>();
-    list< unique_ptr<analysis::input::DataReader> > readers;
-    readers.emplace_back(std_ext::make_unique<input::AntReader>(nullptr, move(unpacker), move(reconstruct)));
-    pm.ReadFrom(move(readers), numeric_limits<long long>::max());
-    TAntHeader header;
-    pm.SetAntHeader(header);
-
-    const std::uint32_t timestamp = 1408221194;
     const unsigned expectedEvents = 221;
-    REQUIRE(header.FirstID == TID(timestamp, 0u));
-    REQUIRE(header.LastID == TID(timestamp, expectedEvents-1));
 
-    std::shared_ptr<TestPhysics> physics = pm.GetTestPhysicsModule();
+    tmpfile_t tmpfile;
 
-    REQUIRE(physics->finishCalled);
-    REQUIRE_FALSE(physics->showCalled);
-    REQUIRE(physics->initCalled);
+    // write out some file
+    {
+        WrapTFileOutput outfile(tmpfile.filename, WrapTFileOutput::mode_t::recreate, true);
+        PhysicsManagerTester pm;
+        pm.AddPhysics<TestPhysics>();
 
-    REQUIRE(physics->seenEvents == expectedEvents);
-    REQUIRE(physics->seenCandidates == 822);
+        // make some meaningful input for the physics manager
+        ant::ExpConfig::Setup::ManualName = "Setup_Test";
+        auto unpacker = Unpacker::Get(string(TEST_BLOBS_DIRECTORY)+"/Acqu_oneevent-big.dat.xz");
+        auto reconstruct = std_ext::make_unique<Reconstruct>();
+        list< unique_ptr<analysis::input::DataReader> > readers;
+        readers.emplace_back(std_ext::make_unique<input::AntReader>(nullptr, move(unpacker), move(reconstruct)));
+        pm.ReadFrom(move(readers), numeric_limits<long long>::max());
+        TAntHeader header;
+        pm.SetAntHeader(header);
 
-    auto tree = outfile.GetSharedClone<TTree>("treeEvents");
-    REQUIRE(tree != nullptr);
-    REQUIRE(tree->GetEntries() == expectedEvents/3);
+        const std::uint32_t timestamp = 1408221194;
+        REQUIRE(header.FirstID == TID(timestamp, 0u));
+        REQUIRE(header.LastID == TID(timestamp, expectedEvents-1));
+
+        std::shared_ptr<TestPhysics> physics = pm.GetTestPhysicsModule();
+
+        REQUIRE(physics->finishCalled);
+        REQUIRE_FALSE(physics->showCalled);
+        REQUIRE(physics->initCalled);
+
+        REQUIRE(physics->seenEvents == expectedEvents);
+        REQUIRE(physics->seenCandidates == 822);
+
+        // quick check if TTree was there...
+        auto tree = outfile.GetSharedClone<TTree>("treeEvents");
+        REQUIRE(tree != nullptr);
+        REQUIRE(tree->GetEntries() == expectedEvents/3);
+    }
+
+    // read in file with AntReader
+    {
+        auto inputfiles = make_shared<WrapTFileInput>(tmpfile.filename);
+
+        PhysicsManagerTester pm;
+        pm.AddPhysics<TestPhysics>();
+
+        // make some meaningful input for the physics manager
+        ant::ExpConfig::Setup::ManualName = "Setup_Test";
+
+        auto reconstruct = std_ext::make_unique<Reconstruct>();
+        list< unique_ptr<analysis::input::DataReader> > readers;
+
+        readers.emplace_back(std_ext::make_unique<input::AntReader>(inputfiles, nullptr, move(reconstruct)));
+        pm.ReadFrom(move(readers), numeric_limits<long long>::max());
+        TAntHeader header;
+        pm.SetAntHeader(header);
+
+        // note that we actually requested every third event to be saved in the physics class
+        const std::uint32_t timestamp = 1408221194;
+        REQUIRE(header.FirstID == TID(timestamp, 2u));
+        REQUIRE(header.LastID == TID(timestamp, 3*unsigned((expectedEvents-1)/3)-1));
+
+        std::shared_ptr<TestPhysics> physics = pm.GetTestPhysicsModule();
+
+        REQUIRE(physics->seenEvents == expectedEvents/3);
+        // make sure the reconstruction wasn't applied twice!
+        REQUIRE(physics->seenCandidates == 273);
+
+    }
+
+    // read in file with AntReader
+    {
+        auto inputfiles = make_shared<WrapTFileInput>(tmpfile.filename);
+
+        PhysicsManagerTester pm;
+        pm.AddPhysics<TestPhysics>();
+
+        // make some meaningful input for the physics manager
+        ant::ExpConfig::Setup::ManualName = "Setup_Test";
+
+        list< unique_ptr<analysis::input::DataReader> > readers;
+        readers.emplace_back(std_ext::make_unique<input::AntReader>(inputfiles, nullptr, nullptr));
+        pm.ReadFrom(move(readers), numeric_limits<long long>::max());
+        TAntHeader header;
+        pm.SetAntHeader(header);
+
+        // note that we actually requested every third event to be saved in the physics class
+        const std::uint32_t timestamp = 1408221194;
+        REQUIRE(header.FirstID == TID(timestamp, 2u));
+        REQUIRE(header.LastID == TID(timestamp, 3*unsigned((expectedEvents-1)/3)-1));
+
+        std::shared_ptr<TestPhysics> physics = pm.GetTestPhysicsModule();
+
+        REQUIRE(physics->seenEvents == expectedEvents/3);
+        REQUIRE(physics->seenCandidates == 273);
+
+    }
+
 }
 
 void dotest_raw_nowrite()
@@ -163,12 +228,12 @@ void dotest_raw_nowrite()
     REQUIRE_FALSE(physics->showCalled);
     REQUIRE(physics->initCalled);
 
+
     REQUIRE(physics->seenEvents == expectedEvents);
     REQUIRE(physics->seenCandidates == 822);
 
     // the PhysicsManager should not create a TTree...
     REQUIRE(outfile.GetSharedClone<TTree>("treeEvents") == nullptr);
-
 }
 
 void dotest_plutogeant()
