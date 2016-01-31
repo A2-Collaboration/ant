@@ -34,27 +34,27 @@ namespace ant {
 struct ReconstructTester : Reconstruct_traits {
     Reconstruct r;
 
-    void DoReconstruct(TEvent::DataPtr& reconstructed) override
+    void DoReconstruct(TEvent::Data& reconstructed) override
     {
         /// \todo Improve requirements
 
         if(!r.initialized) {
-            r.Initialize(reconstructed->ID);
+            r.Initialize(reconstructed.ID);
         }
         REQUIRE(r.initialized);
 
         // update the updateables :)
-        r.updateablemanager->UpdateParameters(reconstructed->ID);
+        r.updateablemanager->UpdateParameters(reconstructed.ID);
 
         // apply the hooks (mostly calibrations)
-        r.ApplyHooksToReadHits(reconstructed->DetectorReadHits);
+        r.ApplyHooksToReadHits(reconstructed.DetectorReadHits);
         // manually scan the r.sorted_readhits
         // they are a member variable for performance reasons
         size_t n_readhits = 0;
         for(const auto& readhit : r.sorted_readhits ) {
             n_readhits += readhit.second.size();
         }
-        if(!reconstructed->DetectorReadHits.empty())
+        if(!reconstructed.DetectorReadHits.empty())
             REQUIRE(n_readhits>0);
 
         // the detectorRead is now calibrated as far as possible
@@ -62,7 +62,7 @@ struct ReconstructTester : Reconstruct_traits {
         // we also extract the energy, which is always defined as a
         // single value with type Channel_t::Type_t
         Reconstruct::sorted_bydetectortype_t<AdaptorTClusterHit> sorted_clusterhits;
-        r.BuildHits(sorted_clusterhits, reconstructed->Tagger);
+        r.BuildHits(sorted_clusterhits, reconstructed.Tagger);
 
         // apply hooks which modify clusterhits
         for(const auto& hook : r.hooks_clusterhits) {
@@ -70,13 +70,13 @@ struct ReconstructTester : Reconstruct_traits {
         }
 
         size_t n_clusterhits = getTotalCount(sorted_clusterhits);
-        REQUIRE(n_clusterhits + reconstructed->Tagger.Hits.size() <= n_readhits);
+        REQUIRE(n_clusterhits + reconstructed.Tagger.Hits.size() <= n_readhits);
 
         // then build clusters (at least for calorimeters this is not trivial)
         Reconstruct::sorted_bydetectortype_t<TClusterPtr> sorted_clusters;
         r.BuildClusters(move(sorted_clusterhits), sorted_clusters);
         size_t n_clusters = getTotalCount(sorted_clusters);
-        if(!reconstructed->DetectorReadHits.empty())
+        if(!reconstructed.DetectorReadHits.empty())
             REQUIRE(n_clusters>0);
         REQUIRE(n_clusters <= n_clusterhits);
 
@@ -86,32 +86,32 @@ struct ReconstructTester : Reconstruct_traits {
         }
 
         // do the candidate building
-        const auto n_all_before = reconstructed->Clusters.size();
+        const auto n_all_before = reconstructed.Clusters.size();
         REQUIRE(n_all_before==0);
         r.candidatebuilder->Build(move(sorted_clusters),
-                                  reconstructed->Candidates, reconstructed->Clusters);
+                                  reconstructed.Candidates, reconstructed.Clusters);
 
         // apply hooks which may modify the whole event
         for(const auto& hook : r.hooks_eventdata) {
-            hook->ApplyTo(*reconstructed);
+            hook->ApplyTo(reconstructed);
         }
 
-        const auto n_all_after = reconstructed->Clusters.size();
+        const auto n_all_after = reconstructed.Clusters.size();
         REQUIRE(n_all_after>=n_all_before);
         const auto n_all_added = n_all_after - n_all_before;
         REQUIRE(n_all_added == n_clusters);
 
         bool matched_clusters = false;
-        for(auto cluster : reconstructed->Clusters) {
+        for(auto cluster : reconstructed.Clusters) {
             if(!cluster->HasFlag(TCluster::Flags_t::Unmatched)) {
                 matched_clusters = true;
                 break;
             }
         }
         if(matched_clusters) {
-            const size_t n_candidates = reconstructed->Candidates.size();
+            const size_t n_candidates = reconstructed.Candidates.size();
             REQUIRE(n_candidates>0);
-            REQUIRE(reconstructed->Trigger.CBEnergySum > 0);
+            REQUIRE(reconstructed.Trigger.CBEnergySum > 0);
         }
     }
 };
@@ -136,7 +136,7 @@ void dotest() {
         nHits += hits.size();
         if(!hits.empty())
             nReads++;
-        reconstruct.DoReconstruct(event->Reconstructed);
+        reconstruct.DoReconstruct(*event->Reconstructed);
         nCandidates += event->Reconstructed->Candidates.size();
 
     }

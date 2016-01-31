@@ -30,7 +30,7 @@ public:
 
     // this method converts a TDetectorRead
     // into a calibrated TEvent
-    virtual void DoReconstruct(TEvent::DataPtr& reconstructed) override;
+    virtual void DoReconstruct(TEvent::Data& reconstructed) override;
 
     ~Reconstruct();
 

@@ -67,19 +67,19 @@ void Reconstruct::Initialize(const TID& tid)
     initialized = true;
 }
 
-void Reconstruct::DoReconstruct(TEvent::DataPtr& reconstructed)
+void Reconstruct::DoReconstruct(TEvent::Data& reconstructed)
 {
     if(!initialized) {
-        Initialize(reconstructed->ID);
+        Initialize(reconstructed.ID);
     }
 
     // update the updateables :)
-    updateablemanager->UpdateParameters(reconstructed->ID);
+    updateablemanager->UpdateParameters(reconstructed.ID);
 
     // apply the hooks for detector read hits (mostly calibrations),
     // note that this also changes the hits itself
 
-    ApplyHooksToReadHits(reconstructed->DetectorReadHits);
+    ApplyHooksToReadHits(reconstructed.DetectorReadHits);
     // the detectorReads are now calibrated as far as possible
     // one might return now and detectorRead is just calibrated...
 
@@ -88,7 +88,7 @@ void Reconstruct::DoReconstruct(TEvent::DataPtr& reconstructed)
     // put into the AdaptorTClusterHit to track Energy/Timing information
     // for subsequent clustering
     sorted_bydetectortype_t<AdaptorTClusterHit> sorted_clusterhits;
-    BuildHits(sorted_clusterhits, reconstructed->Tagger);
+    BuildHits(sorted_clusterhits, reconstructed.Tagger);
 
     // apply hooks which modify clusterhits
     for(const auto& hook : hooks_clusterhits) {
@@ -106,11 +106,11 @@ void Reconstruct::DoReconstruct(TEvent::DataPtr& reconstructed)
 
     // do the candidate building
     candidatebuilder->Build(move(sorted_clusters),
-                            reconstructed->Candidates, reconstructed->Clusters);
+                            reconstructed.Candidates, reconstructed.Clusters);
 
     // apply hooks which may modify the whole event
     for(const auto& hook : hooks_eventdata) {
-        hook->ApplyTo(*reconstructed);
+        hook->ApplyTo(reconstructed);
     }
 
 }

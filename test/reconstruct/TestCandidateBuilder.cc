@@ -152,7 +152,7 @@ void dotest() {
         if(!hits.empty()) {
             nReads++;
             if(nReads == 6 || nReads == 2) {
-                reconstruct.DoReconstruct(event->Reconstructed);
+                reconstruct.DoReconstruct(*event->Reconstructed);
             }
             else if(nReads > 6)
                 break;
