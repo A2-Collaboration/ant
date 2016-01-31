@@ -15,6 +15,7 @@
 #include "base/tmpfile_t.h"
 #include "base/WrapTFile.h"
 
+#include "TTree.h"
 
 
 #include <iostream>
@@ -25,11 +26,16 @@ using namespace ant;
 using namespace ant::analysis;
 
 void dotest_raw();
+void dotest_raw_nowrite();
 void dotest_plutogeant();
 
 
 TEST_CASE("PhysicsManager: Raw Input", "[analysis]") {
     dotest_raw();
+}
+
+TEST_CASE("PhysicsManager: Raw Input without TEvent writing", "[analysis]") {
+    dotest_raw_nowrite();
 }
 
 TEST_CASE("PhysicsManager: Pluto/Geant Input", "[analysis]") {
@@ -41,18 +47,28 @@ struct TestPhysics : Physics
     bool finishCalled = false;
     bool initCalled = false;
     bool showCalled = false;
+    bool nowrite    = false;
     unsigned seenEvents = 0;
     unsigned seenCandidates = 0;
     unsigned seenMCTrue = 0;
 
 
-    TestPhysics() : Physics("TestPhysics", nullptr) {}
+    TestPhysics(bool nowrite_ = false) :
+        Physics("TestPhysics", nullptr),
+        nowrite(nowrite_)
+    {
+        HistFac.makeTH1D("test","test","test",BinSettings(10));
+    }
 
     virtual void ProcessEvent(const TEvent& event, manager_t& manager) override
     {
         seenEvents++;
         seenCandidates += event.Reconstructed->Candidates.size();
         seenMCTrue += event.MCTrue->Particles.GetAll().size();
+
+        // request to save every third event
+        if(!nowrite && seenEvents % 3 == 0)
+            manager.SaveEvent();
     }
     virtual void Finish() override
     {
@@ -83,6 +99,9 @@ struct PhysicsManagerTester : PhysicsManager
 
 void dotest_raw()
 {
+    tmpfile_t tmpfile;
+    WrapTFileOutput outfile(tmpfile.filename, WrapTFileOutput::mode_t::recreate, true);
+
     PhysicsManagerTester pm;
     pm.AddPhysics<TestPhysics>();
 
@@ -109,10 +128,54 @@ void dotest_raw()
 
     REQUIRE(physics->seenEvents == expectedEvents);
     REQUIRE(physics->seenCandidates == 822);
+
+    auto tree = outfile.GetSharedClone<TTree>("treeEvents");
+    REQUIRE(tree != nullptr);
+    REQUIRE(tree->GetEntries() == expectedEvents/3);
+}
+
+void dotest_raw_nowrite()
+{
+    tmpfile_t tmpfile;
+    WrapTFileOutput outfile(tmpfile.filename, WrapTFileOutput::mode_t::recreate, true);
+
+    PhysicsManagerTester pm;
+    pm.AddPhysics<TestPhysics>(true);
+
+    // make some meaningful input for the physics manager
+    ant::ExpConfig::Setup::ManualName = "Setup_Test";
+    auto unpacker = Unpacker::Get(string(TEST_BLOBS_DIRECTORY)+"/Acqu_oneevent-big.dat.xz");
+    auto reconstruct = std_ext::make_unique<Reconstruct>();
+    list< unique_ptr<analysis::input::DataReader> > readers;
+    readers.emplace_back(std_ext::make_unique<input::AntReader>(nullptr, move(unpacker), move(reconstruct)));
+    pm.ReadFrom(move(readers), numeric_limits<long long>::max());
+    TAntHeader header;
+    pm.SetAntHeader(header);
+
+    const std::uint32_t timestamp = 1408221194;
+    const unsigned expectedEvents = 221;
+    REQUIRE(header.FirstID == TID(timestamp, 0u));
+    REQUIRE(header.LastID == TID(timestamp, expectedEvents-1));
+
+    std::shared_ptr<TestPhysics> physics = pm.GetTestPhysicsModule();
+
+    REQUIRE(physics->finishCalled);
+    REQUIRE_FALSE(physics->showCalled);
+    REQUIRE(physics->initCalled);
+
+    REQUIRE(physics->seenEvents == expectedEvents);
+    REQUIRE(physics->seenCandidates == 822);
+
+    // the PhysicsManager should not create a TTree...
+    REQUIRE(outfile.GetSharedClone<TTree>("treeEvents") == nullptr);
+
 }
 
 void dotest_plutogeant()
 {
+    tmpfile_t tmpfile;
+    WrapTFileOutput outfile(tmpfile.filename, WrapTFileOutput::mode_t::recreate, true);
+
     PhysicsManagerTester pm;
     pm.AddPhysics<TestPhysics>();
 

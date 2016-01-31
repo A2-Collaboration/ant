@@ -3,12 +3,12 @@
 #include "Physics.h"
 #include "SlowcontrolManager.h"
 
-#include "tree/TSlowControl.h"
-
+class TTree;
 
 namespace ant {
 
 struct TAntHeader;
+struct TEvent;
 
 namespace analysis {
 
@@ -32,7 +32,7 @@ protected:
     readers_t readers;
     std::unique_ptr<input::DataReader> source;
 
-    bool InitReaders(readers_t readers_);
+    void InitReaders(readers_t readers_);
     bool TryReadEvent(TEventPtr& event);
 
     slowcontrol::Manager slowcontrol_mgr;
@@ -64,6 +64,10 @@ protected:
     TID lastID;
 
     Physics::manager_t processmanager;
+
+    // for output of TEvents to TTree
+    TTree*  treeEvents;
+    TEvent* treeEventPtr;
 
 public:
 

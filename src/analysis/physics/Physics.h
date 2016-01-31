@@ -35,14 +35,14 @@ public:
     virtual ~Physics() {}
 
     struct manager_t {
-        friend class PhysicsManager;
-
         void SaveEvent() {
             saveEvent = true;
         }
     private:
-        manager_t() : saveEvent(false) {}
         bool saveEvent;
+        friend class PhysicsManager;
+        manager_t() { Reset(); }
+        void Reset() { saveEvent = false; }
     };
 
     virtual void ProcessEvent(const TEvent& event, manager_t& manager) =0;

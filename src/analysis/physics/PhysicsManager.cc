@@ -11,6 +11,8 @@
 
 #include "base/ProgressCounter.h"
 
+#include "TTree.h"
+
 #include <iomanip>
 
 
@@ -35,7 +37,7 @@ void PhysicsManager::SetAntHeader(TAntHeader& header)
     header.LastID = lastID;
 }
 
-bool PhysicsManager::InitReaders(PhysicsManager::readers_t readers_)
+void PhysicsManager::InitReaders(PhysicsManager::readers_t readers_)
 {
     readers = move(readers_);
 
@@ -44,10 +46,8 @@ bool PhysicsManager::InitReaders(PhysicsManager::readers_t readers_)
     auto it_reader = readers.begin();
     while(it_reader != readers.end()) {
         if((*it_reader)->IsSource()) {
-            if(source != nullptr) {
-                LOG(ERROR) << "Found more than one source for events, stop.";
-                return false;
-            }
+            if(source != nullptr)
+                throw Exception("Found more than one source in given readers");
             source = move(*it_reader);
             it_reader = readers.erase(it_reader);
         }
@@ -55,7 +55,6 @@ bool PhysicsManager::InitReaders(PhysicsManager::readers_t readers_)
             ++it_reader;
         }
     }
-    return true;
 }
 
 bool PhysicsManager::TryReadEvent(TEventPtr& event)
@@ -134,24 +133,24 @@ void PhysicsManager::ReadFrom(
         list<unique_ptr<input::DataReader> > readers_,
         long long maxevents)
 {
-    if(!InitReaders(move(readers_)))
-        return;
+    InitReaders(move(readers_));
 
-    if(physics.empty()) {
-        throw Exception("No Analysis Instances activated. Will not analyse anything.");
-    }
+    if(physics.empty())
+        throw Exception("No analysis instances activated. Cannot not analyse anything.");
 
-
-
+    // prepare slowcontrol
     auto slkeys = RequestedKeys(slowcontrol_data);
-
     VLOG(7) << "Requested Slowcontrol keys";
     for(const auto& key : slkeys) {
         VLOG(7) << key;
     }
-
     slowcontrol_mgr.SetRequiredKeys(slkeys);
 
+
+    // prepare output of TEvents
+    treeEvents = new TTree("treeEvents","TEvent data");
+    treeEventPtr = nullptr;
+    treeEvents->Branch("data", addressof(treeEventPtr));
 
 
     chrono::time_point<std::chrono::system_clock> start, end;
@@ -207,16 +206,14 @@ void PhysicsManager::ReadFrom(
     VLOG(5) << "First EventId processed: " << firstID;
     VLOG(5) << "Last  EventId processed: " << lastID;
 
+    if(treeEvents->GetEntries() == 0)
+        delete treeEvents;
 
     end = chrono::system_clock::now();
     chrono::duration<double> elapsed_seconds = end-start;
     LOG(INFO) << "Processed " << nEventsProcessed << " events, speed "
               << nEventsProcessed/elapsed_seconds.count() << " Items/s";
 }
-
-
-
-
 
 void PhysicsManager::ProcessEvent(std::unique_ptr<TEvent> event)
 {
@@ -245,16 +242,21 @@ void PhysicsManager::ProcessEvent(std::unique_ptr<TEvent> event)
     }
 
     // run the physics classes
+    processmanager.Reset();
     for( auto& m : physics ) {
         m->ProcessEvent(*event, processmanager);
     }
 
-    //
+    // remove the temporary empty branches again
     if(clean_reconstructed)
         event->Reconstructed = nullptr;
     if(clean_mctrue)
         event->MCTrue = nullptr;
 
+    if(processmanager.saveEvent) {
+        treeEventPtr = event.get();
+        treeEvents->Fill();
+    }
 
 }
 
