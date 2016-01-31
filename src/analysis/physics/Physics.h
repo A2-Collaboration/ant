@@ -38,11 +38,15 @@ public:
         void SaveEvent() {
             saveEvent = true;
         }
+        void KeepDetectorReadHits() {
+            keepReadHits = true;
+        }
     private:
         bool saveEvent;
+        bool keepReadHits;
         friend class PhysicsManager;
         manager_t() { Reset(); }
-        void Reset() { saveEvent = false; }
+        void Reset() { saveEvent = false; keepReadHits = false; }
     };
 
     virtual void ProcessEvent(const TEvent& event, manager_t& manager) =0;

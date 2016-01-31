@@ -254,6 +254,8 @@ void PhysicsManager::ProcessEvent(std::unique_ptr<TEvent> event)
         event->MCTrue = nullptr;
 
     if(processmanager.saveEvent) {
+        if(!processmanager.keepReadHits)
+            event->Reconstructed->DetectorReadHits.resize(0);
         treeEventPtr = event.get();
         treeEvents->Fill();
     }

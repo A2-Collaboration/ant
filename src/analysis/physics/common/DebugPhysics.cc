@@ -11,6 +11,7 @@ using namespace ant::analysis::physics;
 DebugPhysics::DebugPhysics(const std::string& name, PhysOptPtr opts) :
     Physics(name, opts),
     writeEvents(opts->Get<bool>("WriteEvents", false)),
+    keepReadHits(opts->Get<bool>("KeepReadHits", false)),
     requestSlowControl(opts->Get<bool>("RequestSlowControl", false))
 {
 }
@@ -21,6 +22,8 @@ void DebugPhysics::ProcessEvent(const TEvent& event, manager_t& manager)
 {
     if(writeEvents) {
         manager.SaveEvent();
+        if(keepReadHits)
+            manager.KeepDetectorReadHits();
     }
     else {
         LOG(INFO) << event;
