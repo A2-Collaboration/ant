@@ -187,7 +187,17 @@ int main(int argc, char** argv) {
         }
     }
 
-    /// \todo use AntHeader's setupname to manually set it here...
+    // check if there's a previous AntHeader present,
+    // which could tell us the SetupName
+    TAntHeader* previous_AntHeader;
+    if(rootfiles->GetObject<TAntHeader>("AntHeader",previous_AntHeader)) {
+        if(!previous_AntHeader->SetupName.empty()) {
+            ExpConfig::Setup::ManualName = previous_AntHeader->SetupName;
+            LOG(INFO) << "Setup name set to '" << ExpConfig::Setup::ManualName << "' from input file";
+        }
+        else
+            LOG(WARNING) << "Found AntHeader in input files, but SetupName was empty";
+    }
 
     // override the setup name from cmd line
     if(cmd_setup->isSet()) {
