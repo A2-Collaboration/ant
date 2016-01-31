@@ -219,11 +219,15 @@ void PhysicsManager::ProcessEvent(std::unique_ptr<TEvent> event)
 {
     if(particleID && event->Reconstructed) {
         // run particle ID for Reconstructed candidates
-        auto& reconstructed = event->Reconstructed;
-        for(const auto& cand : reconstructed->Candidates) {
-            auto particle = particleID->Process(cand);
-            if(particle)
-                reconstructed->Particles.Add(particle);
+        // but only if there are no identified particles present yet
+        /// \todo implement flag to force particle ID again?
+        TEvent::Data& recon = *event->Reconstructed;
+        if(recon.Particles.GetAll().empty()) {
+            for(const auto& cand : recon.Candidates) {
+                auto particle = particleID->Process(cand);
+                if(particle)
+                    recon.Particles.Add(particle);
+            }
         }
     }
 
