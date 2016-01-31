@@ -76,11 +76,11 @@ bool ant::OptionsList::Get<bool>(const string& key, const bool& def_value) const
     auto v = GetOption(key);
     std::transform(v.begin(), v.end(), v.begin(), ::tolower);
 
-    if(v=="on" || v=="yes" || v=="true" || v=="1") {
+    if(v=="on" || v=="yes" || v=="true" || v=="1" || v=="y") {
         return true;
     }
 
-    if(v=="off" || v=="no" || v=="false" || v=="0") {
+    if(v=="off" || v=="no" || v=="false" || v=="0" || v=="n") {
         return false;
     }
 
