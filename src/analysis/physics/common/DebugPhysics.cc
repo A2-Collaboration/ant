@@ -8,13 +8,23 @@ using namespace ant;
 using namespace ant::analysis;
 using namespace ant::analysis::physics;
 
-DebugPhysics::DebugPhysics(const std::string& name, PhysOptPtr opts): Physics(name, opts) {}
+DebugPhysics::DebugPhysics(const std::string& name, PhysOptPtr opts) :
+    Physics(name, opts),
+    writeEvents(opts->Get<bool>("WriteEvents", false)),
+    requestSlowControl(opts->Get<bool>("RequestSlowControl", false))
+{
+}
 
 DebugPhysics::~DebugPhysics() {}
 
-void DebugPhysics::ProcessEvent(const TEvent& event, manager_t&)
+void DebugPhysics::ProcessEvent(const TEvent& event, manager_t& manager)
 {
-    LOG(INFO) << event;
+    if(writeEvents) {
+        manager.SaveEvent();
+    }
+    else {
+        LOG(INFO) << event;
+    }
 }
 
 void DebugPhysics::Finish()
@@ -29,7 +39,8 @@ void DebugPhysics::ShowResult()
 
 void DebugPhysics::Initialize(input::SlowControl& slowcontrol)
 {
-    slowcontrol.FaradayCup.Request();
+    if(requestSlowControl)
+        slowcontrol.FaradayCup.Request();
 }
 
 

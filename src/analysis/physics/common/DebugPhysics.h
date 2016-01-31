@@ -8,6 +8,9 @@ namespace physics {
 
 
 class DebugPhysics: public Physics {
+protected:
+    const bool writeEvents;
+    const bool requestSlowControl;
 public:
     DebugPhysics(const std::string& name, PhysOptPtr opts=nullptr);
     virtual ~DebugPhysics();
