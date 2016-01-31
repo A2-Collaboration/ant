@@ -23,6 +23,7 @@ public:
 
     protected:
         unsigned UID; // used by TParticle for serialization
+        static unsigned NextUID;
         std::string name;
         std::string print_name;
         mev_t mass;
@@ -51,15 +52,14 @@ public:
             return false;
         }
 
-        Type( const Type& p ) = delete;
-        Type& operator=(Type) = delete;
+        Type(const Type&) = delete;
+        Type& operator=(const Type&) = delete;
     };
 
     using PlutoIDMap_t = std::map<index_t, const Type*>;
     using TypeList_t = std::vector<const Type*>;
 
 protected:
-    static unsigned NTypesTotal;
 
     using  Particles_t = std::map<unsigned, const Type&>;
     static Particles_t types;

@@ -12,7 +12,7 @@ ostream& operator<<(ostream &stream, const ParticleTypeDatabase::Type& particle_
     return stream;
 }
 
-unsigned ParticleTypeDatabase::NTypesTotal;
+unsigned ParticleTypeDatabase::Type::NextUID;
 ParticleTypeDatabase::Particles_t ParticleTypeDatabase::types;
 
 const ParticleTypeDatabase::Type ParticleTypeDatabase::Proton("Proton",               "p",            938.272046, true);
@@ -43,7 +43,7 @@ const ParticleTypeDatabase::Type ParticleTypeDatabase::BeamNeutron("BeamNeutron"
 
 ParticleTypeDatabase::Type::Type(const string &_name,
                                  const string &_print_name, const mev_t &_mass, const bool &_charged, const ParticleTypeDatabase::Type *_sametype):
-    UID(NTypesTotal++),
+    UID(NextUID++),
     name(_name),
     print_name(_print_name),
     mass(_mass),
