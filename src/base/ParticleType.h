@@ -29,7 +29,6 @@ public:
         bool charged;
         const Type* sametype;
 
-        Type( const Type& p ) = delete;
         Type(const std::string& _name, const std::string& _print_name, const mev_t& _mass, const bool& _charged, const Type* _sametype=nullptr );
 
     public:
@@ -52,6 +51,7 @@ public:
             return false;
         }
 
+        Type( const Type& p ) = delete;
         Type& operator=(Type) = delete;
     };
 
