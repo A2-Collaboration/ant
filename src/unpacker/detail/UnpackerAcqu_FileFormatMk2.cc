@@ -24,7 +24,7 @@ bool acqu::FileFormatMk2::InspectHeader(const vector<uint32_t>& buffer) const
     return inspectHeaderMk1Mk2<AcquMk2Info_t>(buffer);
 }
 
-void acqu::FileFormatMk2::FillInfo(reader_t &reader, buffer_t &buffer, Info &info) const
+void acqu::FileFormatMk2::FillInfo(reader_t &reader, buffer_t &buffer, Info &info)
 {
     const acqu::AcquMk2Info_t* h = reinterpret_cast<const acqu::AcquMk2Info_t*>(buffer.data()+1);
 
@@ -72,7 +72,10 @@ void acqu::FileFormatMk2::FillInfo(reader_t &reader, buffer_t &buffer, Info &inf
                 reinterpret_cast<const acqu::ModuleInfoMk2_t*>(buffer_ptr);
         auto it = ModuleIDToString.find(m->fModID);
         if(it == ModuleIDToString.end()) {
-            LOG(WARNING) << "Skipping unknown module with ID=0x" << hex << m->fModID << dec;
+            LogMessage(TUnpackerMessage::Level_t::Warn,
+                       std_ext::formatter()
+                       << "Skipping unknown module with ID=0x" << hex << m->fModID << dec
+                       );
             continue;
         }
 
@@ -98,6 +101,10 @@ void acqu::FileFormatMk2::FillInfo(reader_t &reader, buffer_t &buffer, Info &inf
             << totalADCs << " channels";
     VLOG(9) << "Header says: Have " << info.ScalerModules.size() << " Scaler modules with "
             << totalScalers << " channels";
+
+    LogMessage(TUnpackerMessage::Level_t::Info,
+               "Acqu Mk2 header successfully unpacked"
+               );
 }
 
 void acqu::FileFormatMk2::FillFirstDataBuffer(reader_t& reader, buffer_t& buffer)

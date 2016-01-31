@@ -88,6 +88,20 @@ void acqu::FileFormatBase::Setup(reader_t &&reader_, buffer_t &&buffer_) {
     // let child class fill the info
     FillInfo(reader, buffer, info);
 
+    // create some messages from it
+    LogMessage(TUnpackerMessage::Level_t::Info,
+               std_ext::formatter()
+               << "Acqu Header Info: "
+               << "Time='" << std_ext::to_iso8601(std_ext::to_time_t(info.Time)) << "' "
+               << "Description='" << info.Description << "' "
+               << "RunNote='" << info.RunNote << "' "
+               << "OutFile='" << info.OutFile << "' "
+               << "RunNumber=" << info.RunNumber << " "
+               << "RecordLength=" << info.RecordLength << " "
+               << "NADCModules=" << info.ADCModules.size() << " "
+               << "NScalerModules=" << info.ScalerModules.size()
+               );
+
     // guessing the timestamp from the Acqu header
     // is somewhat more involved...
     const time_t timestamp = GetTimeStamp();
