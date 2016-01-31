@@ -48,7 +48,7 @@ struct TestPhysics : Physics
 
     TestPhysics() : Physics("TestPhysics", nullptr) {}
 
-    virtual void ProcessEvent(const TEvent& event) override
+    virtual void ProcessEvent(const TEvent& event, manager_t& manager) override
     {
         seenEvents++;
         seenCandidates += event.Reconstructed->Candidates.size();

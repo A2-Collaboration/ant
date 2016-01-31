@@ -212,7 +212,7 @@ void EtapOmegaG::ref_TTree_t::SetBranches()
     Proton.SetBranches(Tree, "Proton");
 }
 
-void EtapOmegaG::ProcessEvent(const TEvent& event)
+void EtapOmegaG::ProcessEvent(const TEvent& event, manager_t&)
 {
     const auto& data = *event.Reconstructed;
 

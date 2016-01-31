@@ -22,7 +22,7 @@ bool containsCharged(const TParticleList& particles) {
     return false;
 }
 
-void TPC_PhysicsStats::ProcessEvent(const TEvent& event)
+void TPC_PhysicsStats::ProcessEvent(const TEvent& event, manager_t&)
 {
     const auto& particletree = event.MCTrue->ParticleTree;
     if(particletree) {

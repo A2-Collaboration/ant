@@ -100,7 +100,7 @@ PID_Energy::PerChannel_t::PerChannel_t(SmartHistFactory HistFac)
     QDCMultiplicity = HistFac.makeTH1D("PID QDC Multiplicity", "nHits", "#", BinSettings(10), "QDCMultiplicity");
 }
 
-void PID_Energy::ProcessEvent(const TEvent& event)
+void PID_Energy::ProcessEvent(const TEvent& event, manager_t&)
 {
     // pedestals, best determined from clusters with energy information only
     for(const TClusterPtr& cluster : event.Reconstructed->Clusters) {

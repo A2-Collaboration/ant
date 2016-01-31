@@ -59,7 +59,7 @@ Detector_t::Any_t GetCommonDetector(const TCandidateList& cands) {
     return common_detetctor;
 }
 
-void ReconstructCheck::ProcessEvent(const TEvent& event)
+void ReconstructCheck::ProcessEvent(const TEvent& event, manager_t&)
 {
     if(event.MCTrue->Particles.GetAll().size() == 1) {
 

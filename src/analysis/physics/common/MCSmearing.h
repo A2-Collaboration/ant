@@ -19,7 +19,7 @@ public:
     MCSmearing(const std::string& name, PhysOptPtr opts=nullptr);
     virtual ~MCSmearing();
 
-    virtual void ProcessEvent(const TEvent& event) override;
+    virtual void ProcessEvent(const TEvent& event, manager_t& manager) override;
     virtual void Finish() override;
     virtual void ShowResult() override;
 };

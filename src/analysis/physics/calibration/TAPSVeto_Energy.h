@@ -15,8 +15,8 @@ public:
 
     TAPSVeto_Energy(const std::string& name, PhysOptPtr opts);
 
-    void ProcessEvent(const TEvent& event) override;
-    void ShowResult() override;
+    virtual void ProcessEvent(const TEvent& event, manager_t& manager) override;
+    virtual void ShowResult() override;
 };
 
 }}} // namespace ant::analysis::physics

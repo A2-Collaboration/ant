@@ -112,9 +112,9 @@ protected:
 public:
     TestAPLCON(const std::string& name, PhysOptPtr opts);
     virtual ~TestAPLCON() {}
-    void ProcessEvent(const TEvent& event) override;
-    void Finish() override;
-    void ShowResult() override;
+    virtual void ProcessEvent(const TEvent& event, manager_t& manager) override;
+    virtual void Finish() override;
+    virtual void ShowResult() override;
 };
 
 }

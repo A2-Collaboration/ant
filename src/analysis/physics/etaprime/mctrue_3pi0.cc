@@ -52,7 +52,7 @@ McTrue3Pi0::McTrue3Pi0(const std::string& name, PhysOptPtr opts) :
 }
 
 
-void McTrue3Pi0::ProcessEvent(const TEvent& event)
+void McTrue3Pi0::ProcessEvent(const TEvent& event, manager_t&)
 {
     const auto& mcdata = *event.MCTrue;
 

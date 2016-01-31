@@ -29,7 +29,7 @@ ProtonCheck::ProtonCheck(const std::string& name,PhysOptPtr opts):
     theta_corr = HistFac.makeTH2D("Theta Corrleation","true","rec",theta_bins,theta_bins,"theta_corr");
 }
 
-void ProtonCheck::ProcessEvent(const TEvent& event)
+void ProtonCheck::ProcessEvent(const TEvent& event, manager_t&)
 {
     if(event.MCTrue->Particles.GetAll().size() == 1) {
         const auto& protons = event.MCTrue->Particles.Get(ParticleTypeDatabase::Proton);

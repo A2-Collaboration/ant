@@ -30,7 +30,7 @@ T inc(T x) {
     return ++x;
 }
 
-void ExtractTimings::ProcessEvent(const TEvent& event)
+void ExtractTimings::ProcessEvent(const TEvent& event, manager_t&)
 {
     const auto& photons = event.Reconstructed->Particles.Get(ParticleTypeDatabase::Photon);
 

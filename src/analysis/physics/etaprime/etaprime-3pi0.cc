@@ -319,7 +319,7 @@ bool Etap3pi0::MakeMCProton(const TEvent::Data& mcdata, TParticlePtr& proton)
    return true;
 }
 
-void Etap3pi0::ProcessEvent(const TEvent& event)
+void Etap3pi0::ProcessEvent(const TEvent& event, manager_t&)
 {
     const auto& data   = *event.Reconstructed;
     const auto& mcdata = *event.MCTrue;

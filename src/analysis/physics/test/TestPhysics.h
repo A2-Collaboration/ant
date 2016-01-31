@@ -23,9 +23,9 @@ public:
     ParticleCombinatoricsTest(const std::string& name, PhysOptPtr opts);
     virtual ~ParticleCombinatoricsTest() {}
 
-    virtual void ProcessEvent(const TEvent& event);
-    virtual void Finish();
-    virtual void ShowResult();
+    virtual void ProcessEvent(const TEvent& event, manager_t& manager) override;
+    virtual void Finish() override;
+    virtual void ShowResult() override;
 };
 
 }

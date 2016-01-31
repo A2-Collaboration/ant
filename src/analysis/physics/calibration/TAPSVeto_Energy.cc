@@ -34,7 +34,7 @@ TAPSVeto_Energy::TAPSVeto_Energy(const string& name, analysis::PhysOptPtr opts) 
                 );
 }
 
-void TAPSVeto_Energy::ProcessEvent(const TEvent& event)
+void TAPSVeto_Energy::ProcessEvent(const TEvent& event, manager_t&)
 {
     const auto& cands = event.Reconstructed->Candidates;
 

@@ -42,12 +42,10 @@ protected:
 
     long long nEventsProcessed = 0;
 
-    void ProcessEventBuffer(long long maxevents);
-    void ProcessEvent(TEventPtr event);
+    virtual void ProcessEventBuffer(long long maxevents);
+    virtual void ProcessEvent(TEventPtr event);
 
     bool progressUpdates = true;
-
-
 
     struct running_t {
         running_t(volatile bool* running_) :
@@ -61,8 +59,11 @@ protected:
         volatile bool* running = nullptr;
     };
     running_t running;
+
     TID firstID;
     TID lastID;
+
+    Physics::manager_t processmanager;
 
 public:
 
@@ -96,7 +97,7 @@ public:
                   long long maxevents
                   );
 
-    void ShowResults();
+    virtual void ShowResults();
 
     class Exception : public std::runtime_error {
         using std::runtime_error::runtime_error; // use base class constructor

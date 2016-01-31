@@ -19,7 +19,7 @@ PID_PhiAngle::PID_PhiAngle(const string& name, analysis::PhysOptPtr opts) :
 }
 
 
-void PID_PhiAngle::ProcessEvent(const TEvent& event)
+void PID_PhiAngle::ProcessEvent(const TEvent& event, manager_t&)
 {
     const auto& cands = event.Reconstructed->Candidates;
 

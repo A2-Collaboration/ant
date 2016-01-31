@@ -56,7 +56,7 @@ TAPS_Energy::TAPS_Energy(const string& name, analysis::PhysOptPtr opts) :
     cands_TAPS.Setup("TAPS", cands_tree);
 }
 
-void TAPS_Energy::ProcessEvent(const TEvent& event)
+void TAPS_Energy::ProcessEvent(const TEvent& event, manager_t&)
 {
     const auto& cands = event.Reconstructed->Candidates;
 

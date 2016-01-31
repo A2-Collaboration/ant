@@ -71,7 +71,7 @@ private:
 
         AcceptanceAnalysis(SmartHistFactory& factory, const utils::A2SimpleGeometry& geo_, const std::string& name_);
         void Fill(const TParticleList& mctrue, const TParticleList& reconstructed);
-        void ShowResult();
+        virtual void ShowResult();
     };
 
     utils::A2SimpleGeometry geo;
@@ -81,9 +81,9 @@ private:
 public:
     GeoAcceptance(const std::string& name, PhysOptPtr opts);
     virtual ~GeoAcceptance();
-    void ProcessEvent(const TEvent& event);
-    void Finish();
-    void ShowResult();
+    virtual void ProcessEvent(const TEvent& event, manager_t& manager) override;
+    virtual void Finish() override;
+    virtual void ShowResult() override;
 };
 }
 }

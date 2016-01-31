@@ -44,7 +44,7 @@ MCSmearing::~MCSmearing()
 
 }
 
-void MCSmearing::ProcessEvent(const TEvent& event)
+void MCSmearing::ProcessEvent(const TEvent& event, manager_t&)
 {
 
     const auto& true_photons = event.MCTrue->Particles.Get(ParticleTypeDatabase::Photon);

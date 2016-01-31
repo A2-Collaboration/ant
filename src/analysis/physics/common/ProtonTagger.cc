@@ -41,7 +41,7 @@ double TimeAverage(const std::initializer_list<const T> cands) {
     return time / energy;
 }
 
-void ProtonTagger::ProcessEvent(const TEvent& event)
+void ProtonTagger::ProcessEvent(const TEvent& event, manager_t&)
 {
 
     TCandidateList taps_hits;

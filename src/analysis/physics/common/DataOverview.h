@@ -56,8 +56,8 @@ public:
     TaggerOverview(const std::string& name, PhysOptPtr opts);
     virtual ~TaggerOverview();
 
-    void ProcessEvent(const TEvent& event) override;
-    void ShowResult() override;
+    virtual void ProcessEvent(const TEvent& event, manager_t& manager) override;
+    virtual void ShowResult() override;
 };
 
 /**
@@ -77,9 +77,9 @@ public:
     TriggerOverview(const std::string& name, PhysOptPtr opts);
     virtual ~TriggerOverview();
 
-    void ProcessEvent(const TEvent& event) override;
-    void Finish() override;
-    void ShowResult() override;
+    virtual void ProcessEvent(const TEvent& event, manager_t& manager) override;
+    virtual void Finish() override;
+    virtual void ShowResult() override;
 };
 
 /**
@@ -94,8 +94,8 @@ public:
     TargetOverview(const std::string& name, PhysOptPtr opts);
     virtual ~TargetOverview();
 
-    void ProcessEvent(const TEvent& event) override;
-    void ShowResult() override;
+    virtual void ProcessEvent(const TEvent& event, manager_t& manager) override;
+    virtual void ShowResult() override;
 };
 
 /**
@@ -114,8 +114,8 @@ public:
     ParticleOverview(const std::string& name, PhysOptPtr opts);
     virtual ~ParticleOverview();
 
-    void ProcessEvent(const TEvent& event) override;
-    void ShowResult() override;
+    virtual void ProcessEvent(const TEvent& event, manager_t& manager) override;
+    virtual void ShowResult() override;
 };
 
 

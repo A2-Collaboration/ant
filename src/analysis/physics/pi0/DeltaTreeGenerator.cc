@@ -39,7 +39,7 @@ DeltaTreeGenerator::DeltaTreeGenerator(const std::string& name, PhysOptPtr opts)
     recgamma = HistFac.makeTH1D("#gamma - reconstructed","# #gamma","#",BinSettings(8));
 }
 
-void DeltaTreeGenerator::ProcessEvent(const TEvent& event)
+void DeltaTreeGenerator::ProcessEvent(const TEvent& event, manager_t&)
 {
     TParticleList photons;
     TParticleList mc_photons;

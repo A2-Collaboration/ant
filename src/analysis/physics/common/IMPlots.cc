@@ -36,7 +36,7 @@ TLorentzVector sumlv(iter start, iter end) {
 }
 
 
-void IMPlots::ProcessEvent(const TEvent& event)
+void IMPlots::ProcessEvent(const TEvent& event, manager_t&)
 {
     const auto& photons = event.Reconstructed->Particles.Get(ParticleTypeDatabase::Photon);
 
@@ -86,7 +86,7 @@ Symmetric2Gamma::Symmetric2Gamma(const string& name, PhysOptPtr opts):
 Symmetric2Gamma::~Symmetric2Gamma()
 {}
 
-void Symmetric2Gamma::ProcessEvent(const TEvent& event)
+void Symmetric2Gamma::ProcessEvent(const TEvent& event, manager_t&)
 {
     const auto& photons = event.Reconstructed->Particles.Get(ParticleTypeDatabase::Photon);
     for( auto comb = utils::makeCombination(photons,2); !comb.Done(); ++comb) {

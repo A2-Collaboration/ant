@@ -41,7 +41,7 @@ ParticleIDCheck::ParticleIDCheck(const std::string& name,PhysOptPtr opts):
     }
 }
 
-void ParticleIDCheck::ProcessEvent(const TEvent& event)
+void ParticleIDCheck::ProcessEvent(const TEvent& event, manager_t&)
 {
     mctrue.Fill(*event.MCTrue);
     rec.Fill(*event.Reconstructed);

@@ -39,9 +39,9 @@ public:
 
     OmegaMCTruePlots(const std::string& name, PhysOptPtr opts);
 
-    void ProcessEvent(const TEvent& event);
-    void Finish();
-    void ShowResult();
+    virtual void ProcessEvent(const TEvent& event, manager_t& manager) override;
+    virtual void Finish() override;
+    virtual void ShowResult() override;
 };
 
 class OmegaBase: public Physics {
@@ -67,9 +67,9 @@ public:
     OmegaBase(const std::string &name, PhysOptPtr opts);
     virtual ~OmegaBase() = default;
 
-    virtual void ProcessEvent(const TEvent& event) override;
-    void Finish() override;
-    void ShowResult() override;
+    virtual void ProcessEvent(const TEvent& event, manager_t& manager) override;
+    virtual void Finish() override;
+    virtual void ShowResult() override;
 
 
 };
@@ -119,7 +119,7 @@ protected:
 public:
     OmegaEtaG(const std::string& name, PhysOptPtr opts);
     virtual ~OmegaEtaG() = default;
-    void ShowResult() override;
+    virtual void ShowResult() override;
 };
 
 
@@ -139,8 +139,8 @@ public:
     OmegaMCTree(const std::string& name, PhysOptPtr opts);
     virtual ~OmegaMCTree();
 
-    void ProcessEvent(const TEvent& event) override;
-    void ShowResult() override;
+    virtual void ProcessEvent(const TEvent& event, manager_t& manager) override;
+    virtual void ShowResult() override;
     TLorentzVector getGamma1() const;
     void setGamma1(const TLorentzVector& value);
 };

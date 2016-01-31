@@ -46,7 +46,7 @@ bool MCTrueAcceptance::alldetectable(const TParticleList& particles) const
     return true;
 }
 
-void MCTrueAcceptance::ProcessEvent(const TEvent& event)
+void MCTrueAcceptance::ProcessEvent(const TEvent& event, manager_t&)
 {
 
     detect.Fill("Events", 1);

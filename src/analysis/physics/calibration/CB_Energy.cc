@@ -22,7 +22,7 @@ CB_Energy::CB_Energy(const string& name, analysis::PhysOptPtr opts) :
     h_cbdisplay = HistFac.make<TH2CB>("h_cbdisplay","Number of entries");
 }
 
-void CB_Energy::ProcessEvent(const TEvent& event)
+void CB_Energy::ProcessEvent(const TEvent& event, manager_t&)
 {
     const auto& cands = event.Reconstructed->Candidates;
 

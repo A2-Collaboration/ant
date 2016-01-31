@@ -28,7 +28,7 @@ XMasCB::XMasCB(const std::string& name, PhysOptPtr opts):
 XMasCB::~XMasCB()
 {}
 
-void XMasCB::ProcessEvent(const TEvent& event)
+void XMasCB::ProcessEvent(const TEvent& event, manager_t&)
 {
     if(m++<skipevents)
         return;

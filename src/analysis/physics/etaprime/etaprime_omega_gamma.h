@@ -184,7 +184,7 @@ class EtapOmegaG : public Physics {
 
 public:
     EtapOmegaG(const std::string& name, PhysOptPtr opts);
-    virtual void ProcessEvent(const TEvent& event) override;
+    virtual void ProcessEvent(const TEvent& event, manager_t& manager) override;
     virtual void Finish() override;
     virtual void ShowResult() override;
 };

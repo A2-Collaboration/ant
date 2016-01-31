@@ -47,7 +47,7 @@ TaggerOverview::~TaggerOverview()
 {
 }
 
-void TaggerOverview::ProcessEvent(const TEvent& event)
+void TaggerOverview::ProcessEvent(const TEvent& event, manager_t&)
 {
     const auto taggerhits = (mode == Mode::Reconstructed) ? event.Reconstructed->Tagger.Hits : event.MCTrue->Tagger.Hits;
 
@@ -136,7 +136,7 @@ TriggerOverview::TriggerOverview(const string &name, PhysOptPtr opts):
 TriggerOverview::~TriggerOverview()
 {}
 
-void TriggerOverview::ProcessEvent(const TEvent& event)
+void TriggerOverview::ProcessEvent(const TEvent& event, manager_t&)
 {
     const auto& branch =  GetBranch(event);
     const auto& trigger = branch.Trigger;
@@ -190,7 +190,7 @@ TargetOverview::TargetOverview(const string& name, PhysOptPtr opts):
 TargetOverview::~TargetOverview()
 {}
 
-void TargetOverview::ProcessEvent(const TEvent& event)
+void TargetOverview::ProcessEvent(const TEvent& event, manager_t&)
 {
     const auto& target = GetBranch(event).Target;
     VertexXY->Fill(target.Vertex.X(), target.Vertex.Y());
@@ -234,7 +234,7 @@ ParticleOverview::~ParticleOverview()
 
 }
 
-void ParticleOverview::ProcessEvent(const TEvent& event)
+void ParticleOverview::ProcessEvent(const TEvent& event, manager_t&)
 {
     const auto& particles = GetBranch(event).Particles.GetAll();
     nParticles->Fill(particles.size());

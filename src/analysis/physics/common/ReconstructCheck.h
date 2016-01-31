@@ -86,8 +86,8 @@ protected:
 
         histgroup(SmartHistFactory& f, const std::string& prefix, detectortype d=detectortype::All);
         void Fill(const TParticlePtr& mctrue, const TCandidateList& cand, const TClusterList& all_clusters);
-        void ShowResult() const;
-        void Finish();
+        virtual void ShowResult() const;
+        virtual void Finish();
 
         histgroup(const histgroup&) = delete;
         histgroup& operator =(const histgroup&) = delete;
@@ -100,8 +100,8 @@ protected:
         TAPSVetoMatch(const TAPSVetoMatch&) = delete;
         TAPSVetoMatch& operator =(const TAPSVetoMatch&) = delete;
 
-        void ShowResult();
-        void Finish() {}
+        virtual void ShowResult();
+        virtual void Finish() {}
         void Fill(const TCandidateList& cands, const TClusterList& all_clusters);
     };
 
@@ -134,9 +134,9 @@ protected:
 public:
     ReconstructCheck(const std::string& name, PhysOptPtr opts);
 
-    void ProcessEvent(const TEvent& event) override;
-    void Finish() override;
-    void ShowResult() override;
+    virtual void ProcessEvent(const TEvent& event, manager_t& manager) override;
+    virtual void Finish() override;
+    virtual void ShowResult() override;
 };
 
 }

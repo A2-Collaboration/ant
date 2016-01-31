@@ -30,7 +30,7 @@ DeltaPlusPhysics::DeltaPlusPhysics(const string& name, PhysOptPtr opts):
     cout << "Pi0 cut: " << pi0_cut << " MeV\n";
 }
 
-void DeltaPlusPhysics::ProcessEvent(const TEvent& event)
+void DeltaPlusPhysics::ProcessEvent(const TEvent& event, manager_t&)
 {
     TParticleList photons;
     TParticleList protons;

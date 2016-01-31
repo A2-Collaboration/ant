@@ -26,7 +26,7 @@ JustPi0::JustPi0(const string& name, PhysOptPtr opts) :
     }
 }
 
-void JustPi0::ProcessEvent(const TEvent& event)
+void JustPi0::ProcessEvent(const TEvent& event, manager_t&)
 {
     const auto& data = *event.Reconstructed;
     for(auto& m : multiPi0)

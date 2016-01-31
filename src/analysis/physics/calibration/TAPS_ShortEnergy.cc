@@ -32,7 +32,7 @@ TAPS_ShortEnergy::TAPS_ShortEnergy(const string& name, analysis::PhysOptPtr opts
                       "rel_gamma");
 }
 
-void TAPS_ShortEnergy::ProcessEvent(const TEvent& event)
+void TAPS_ShortEnergy::ProcessEvent(const TEvent& event, manager_t&)
 {
     // pedestals
     for(const TClusterPtr& cluster : event.Reconstructed->Clusters) {

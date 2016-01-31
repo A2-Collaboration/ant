@@ -33,7 +33,19 @@ protected:
 public:
     Physics(const std::string& name, PhysOptPtr opts);
     virtual ~Physics() {}
-    virtual void ProcessEvent(const TEvent& event) =0;
+
+    struct manager_t {
+        friend class PhysicsManager;
+
+        void SaveEvent() {
+            saveEvent = true;
+        }
+    private:
+        manager_t() : saveEvent(false) {}
+        bool saveEvent;
+    };
+
+    virtual void ProcessEvent(const TEvent& event, manager_t& manager) =0;
     virtual void Finish() {}
     virtual void ShowResult() {}
     std::string GetName() const { return name_; }

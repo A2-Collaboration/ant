@@ -29,7 +29,7 @@ physics::ExtractResolutions::ExtractResolutions(const std::string& name, PhysOpt
     tree->Branch("rDir",    &b_recDir);
 }
 
-void physics::ExtractResolutions::ProcessEvent(const TEvent& event)
+void physics::ExtractResolutions::ProcessEvent(const TEvent& event, manager_t&)
 {
     const auto& mcparticles = event.MCTrue->Particles.GetAll();
 

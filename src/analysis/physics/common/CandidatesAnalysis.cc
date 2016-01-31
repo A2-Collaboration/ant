@@ -35,7 +35,7 @@ CandidatesAnalysis::CandidatesAnalysis(const std::string& name, PhysOptPtr opts)
     psa_all_angles = HistFac.makeTH2D("TAPS PSA","#phi [#circ]","r", BinSettings(160,45-20,45+20),BinSettings(250,0,500),"psa_all_angles");
 }
 
-void CandidatesAnalysis::ProcessEvent(const TEvent& event)
+void CandidatesAnalysis::ProcessEvent(const TEvent& event, manager_t&)
 {
     const auto& candidates = event.Reconstructed->Candidates;
 

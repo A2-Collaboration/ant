@@ -41,7 +41,7 @@ CB_TimeWalk::CB_TimeWalk(const string& name, analysis::PhysOptPtr opts) :
                 );
 }
 
-void CB_TimeWalk::ProcessEvent(const TEvent& event)
+void CB_TimeWalk::ProcessEvent(const TEvent& event, manager_t&)
 {
     for(const auto& cand: event.Reconstructed->Candidates) {
         for(const TClusterPtr& cluster: cand->Clusters) {

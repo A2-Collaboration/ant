@@ -37,7 +37,7 @@ ParticleCombinatoricsTest::ParticleCombinatoricsTest(const std::string& name, Ph
 }
 
 
-void ParticleCombinatoricsTest::ProcessEvent(const TEvent& event)
+void ParticleCombinatoricsTest::ProcessEvent(const TEvent& event, manager_t&)
 
 {
     const TParticleList& photons = event.Reconstructed->Particles.Get(ParticleTypeDatabase::Photon);

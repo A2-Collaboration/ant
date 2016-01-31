@@ -43,7 +43,7 @@ EventDisplayHists::EventDisplayHists(const string& name, ant::analysis::PhysOptP
 EventDisplayHists::~EventDisplayHists()
 {}
 
-void EventDisplayHists::ProcessEvent(const TEvent& event)
+void EventDisplayHists::ProcessEvent(const TEvent& event, manager_t&)
 {
 
     const auto& candidates = event.Reconstructed->Candidates;

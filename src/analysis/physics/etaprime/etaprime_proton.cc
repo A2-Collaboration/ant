@@ -79,7 +79,7 @@ EtapProton::EtapProton(const string& name, PhysOptPtr opts):
     taps_detector = ExpConfig::Setup::GetDetector<expconfig::detector::TAPS>();
 }
 
-void EtapProton::ProcessEvent(const TEvent& event)
+void EtapProton::ProcessEvent(const TEvent& event, manager_t&)
 {
     steps->Fill("Seen",1.0);
 

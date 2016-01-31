@@ -29,9 +29,9 @@ public:
     virtual ~DeltaTreeGenerator() {}
 
     // Physics interface
-    void ProcessEvent(const TEvent& event);
-    void Finish();
-    void ShowResult();
+    virtual void ProcessEvent(const TEvent& event, manager_t& manager) override;
+    virtual void Finish() override;
+    virtual void ShowResult() override;
 };
 
 }

@@ -19,9 +19,9 @@ protected:
 
 public:
     TPC_PhysicsStats(const std::string& name, PhysOptPtr& opts);
-    void ProcessEvent(const TEvent& event);
-    void Finish();
-    void ShowResult();
+    virtual void ProcessEvent(const TEvent& event, manager_t& manager) override;
+    virtual void Finish() override;
+    virtual void ShowResult() override;
 };
 
 }

@@ -46,7 +46,7 @@ Time::Time(const Detector_t::Type_t& detectorType,
 
 }
 
-void Time::ProcessEvent(const TEvent& event)
+void Time::ProcessEvent(const TEvent& event, manager_t&)
 {
     const double CBTimeAvg = event.Reconstructed->Trigger.CBTiming;
     hCBTriggerTiming->Fill(CBTimeAvg);

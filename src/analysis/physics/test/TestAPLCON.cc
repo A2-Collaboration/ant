@@ -224,7 +224,7 @@ TestAPLCON::TestAPLCON(const string& name, PhysOptPtr opts) :
 }
 
 
-void TestAPLCON::ProcessEvent(const TEvent& event)
+void TestAPLCON::ProcessEvent(const TEvent& event, manager_t&)
 {
 
 

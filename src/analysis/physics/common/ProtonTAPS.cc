@@ -37,7 +37,7 @@ double TimeAverage(const T& cands) {
     return time / energy;
 }
 
-void ProtonTAPS::ProcessEvent(const TEvent& event)
+void ProtonTAPS::ProcessEvent(const TEvent& event, manager_t&)
 {
 
     TCandidateList cands_taps;

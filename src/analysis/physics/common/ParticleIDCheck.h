@@ -28,9 +28,9 @@ protected:
 public:
     ParticleIDCheck(const std::string& name,PhysOptPtr opts);
 
-    void ProcessEvent(const TEvent& event) override;
-    void Finish() override;
-    void ShowResult() override;
+    virtual void ProcessEvent(const TEvent& event, manager_t& manager) override;
+    virtual void Finish() override;
+    virtual void ShowResult() override;
 };
 
 }

@@ -12,7 +12,7 @@ DebugPhysics::DebugPhysics(const std::string& name, PhysOptPtr opts): Physics(na
 
 DebugPhysics::~DebugPhysics() {}
 
-void DebugPhysics::ProcessEvent(const TEvent& event)
+void DebugPhysics::ProcessEvent(const TEvent& event, manager_t&)
 {
     LOG(INFO) << event;
 }
@@ -46,7 +46,7 @@ DebugPIDAlignment::~DebugPIDAlignment()
 
 }
 
-void DebugPIDAlignment::ProcessEvent(const TEvent& event)
+void DebugPIDAlignment::ProcessEvent(const TEvent& event, manager_t&)
 {
     if(event.MCTrue->Particles.GetAll().size() == 1) {
         const auto mctrue_phi = event.MCTrue->Particles.GetAll().front()->Phi() * TMath::RadToDeg();
