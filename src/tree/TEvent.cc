@@ -138,6 +138,13 @@ std::unique_ptr<TEvent> TEvent::MakeReconstructed(const TID& id) {
     return event;
 }
 
+TEvent::TEvent() : Reconstructed(), MCTrue() {}
+TEvent::~TEvent() {}
+
+TEvent::Data::Data(const TID& id) : ID(id) {}
+TEvent::Data::Data() {}
+TEvent::Data::~Data() {}
+
 ostream& TEvent::Data::Print(ostream& s) const {
     s << "ID=" << ID << endl;
 

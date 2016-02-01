@@ -76,9 +76,9 @@ struct TEvent
 
         }; // PTypeList
 
-        Data(const TID& id) : ID(id) {}
-        Data() {}
-        virtual ~Data() {}
+        Data(const TID& id);
+        Data();
+        virtual ~Data();
 
         TID ID;
         std::vector<TDetectorReadHit> DetectorReadHits;
@@ -126,8 +126,8 @@ struct TEvent
 
 #endif
 
-    TEvent() {}
-    virtual ~TEvent() {}
+    TEvent();
+    virtual ~TEvent();
     ClassDef(TEvent, ANT_UNPACKER_ROOT_VERSION)
 
 private:
