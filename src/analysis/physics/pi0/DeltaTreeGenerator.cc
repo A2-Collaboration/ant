@@ -18,7 +18,7 @@ using namespace ant::analysis;
 using namespace ant::analysis::physics;
 using namespace std;
 
-DeltaTreeGenerator::DeltaTreeGenerator(const std::string& name, PhysOptPtr opts):
+DeltaTreeGenerator::DeltaTreeGenerator(const std::string& name, OptionsPtr opts):
     Physics(name, opts),
     taggerEnergy(0)
 {

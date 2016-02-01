@@ -10,7 +10,7 @@ using namespace ant::analysis::physics;
 using namespace std;
 
 
-ExtractTimings::ExtractTimings(const string& name, PhysOptPtr opts):
+ExtractTimings::ExtractTimings(const string& name, OptionsPtr opts):
     Physics(name, opts)
 {
     const BinSettings timebins(opts->Get<int>("TimeBins",800),-40,40);

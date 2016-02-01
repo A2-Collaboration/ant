@@ -6,7 +6,7 @@ using namespace std;
 using namespace ant;
 using namespace ant::analysis::physics;
 
-PID_Energy::PID_Energy(const string& name, analysis::PhysOptPtr opts) :
+PID_Energy::PID_Energy(const string& name, OptionsPtr opts) :
     Physics(name, opts)
 {
     const auto detector = ExpConfig::Setup::GetDetector(Detector_t::Type_t::PID);

@@ -26,7 +26,7 @@ protected:
     std::vector< std::tuple<interval<double>,interval<double>,TH2D*> > bananas;
 
 public:
-    ParticleIDCheck(const std::string& name,PhysOptPtr opts);
+    ParticleIDCheck(const std::string& name,OptionsPtr opts);
 
     virtual void ProcessEvent(const TEvent& event, manager_t& manager) override;
     virtual void Finish() override;

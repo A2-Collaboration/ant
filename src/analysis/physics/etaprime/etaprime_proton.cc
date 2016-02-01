@@ -14,7 +14,7 @@ using namespace ant::analysis::physics;
 using namespace std;
 
 
-EtapProton::EtapProton(const string& name, PhysOptPtr opts):
+EtapProton::EtapProton(const string& name, OptionsPtr opts):
     Physics(name, opts)
 {
     multiplicities = opts->Get<decltype(multiplicities)>("PhotonMulti",{{2,2},{4,4},{6,6}});

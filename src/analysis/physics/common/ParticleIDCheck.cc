@@ -10,7 +10,7 @@ using namespace ant;
 using namespace ant::analysis;
 using namespace ant::analysis::physics;
 
-ParticleIDCheck::ParticleIDCheck(const std::string& name,PhysOptPtr opts):
+ParticleIDCheck::ParticleIDCheck(const std::string& name,OptionsPtr opts):
     Physics(name, opts),
     mctrue(HistFac,"MCTrue"),
     rec(HistFac,"Rec")

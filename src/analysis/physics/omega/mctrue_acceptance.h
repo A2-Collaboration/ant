@@ -26,7 +26,7 @@ protected:
     bool alldetectable(const TParticleList& particles) const;
 
 public:
-    MCTrueAcceptance(const std::string& name, PhysOptPtr opts);
+    MCTrueAcceptance(const std::string& name, OptionsPtr opts);
 
     virtual void ProcessEvent(const TEvent& event, manager_t& manager) override;
     virtual void Finish() override;

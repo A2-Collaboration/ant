@@ -56,7 +56,7 @@ protected:
     std::vector<std::unique_ptr<MultiPi0>> multiPi0;
 
 public:
-    JustPi0(const std::string& name, PhysOptPtr opts);
+    JustPi0(const std::string& name, OptionsPtr opts);
 
     virtual void ProcessEvent(const TEvent& event, manager_t& manager) override;
     virtual void ShowResult() override;

@@ -8,7 +8,7 @@ using namespace ant::analysis::physics;
 
 
 
-TAPSVeto_Energy::TAPSVeto_Energy(const string& name, analysis::PhysOptPtr opts) :
+TAPSVeto_Energy::TAPSVeto_Energy(const string& name, OptionsPtr opts) :
     Physics(name, opts)
 {
     auto detector = ExpConfig::Setup::GetDetector(Detector_t::Type_t::TAPSVeto);

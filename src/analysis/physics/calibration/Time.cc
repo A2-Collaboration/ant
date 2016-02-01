@@ -7,7 +7,7 @@ using namespace ant;
 using namespace ant::analysis::physics;
 
 Time::Time(const Detector_t::Type_t& detectorType,
-           const string& name, analysis::PhysOptPtr opts)
+           const string& name, OptionsPtr opts)
     :
       Physics(name, opts)
 {
@@ -93,35 +93,35 @@ namespace analysis {
 namespace physics {
 
 struct EPT_Time : Time {
-    EPT_Time(const std::string& name, PhysOptPtr opts) :
+    EPT_Time(const std::string& name, OptionsPtr opts) :
         Time(Detector_t::Type_t::EPT, name, opts)
     {}
 };
 AUTO_REGISTER_PHYSICS(EPT_Time)
 
 struct CB_Time : Time {
-    CB_Time(const std::string& name, PhysOptPtr opts) :
+    CB_Time(const std::string& name, OptionsPtr opts) :
         Time(Detector_t::Type_t::CB, name, opts)
     {}
 };
 AUTO_REGISTER_PHYSICS(CB_Time)
 
 struct PID_Time : Time {
-    PID_Time(const std::string& name, PhysOptPtr opts) :
+    PID_Time(const std::string& name, OptionsPtr opts) :
         Time(Detector_t::Type_t::PID, name, opts)
     {}
 };
 AUTO_REGISTER_PHYSICS(PID_Time)
 
 struct TAPS_Time : Time {
-    TAPS_Time(const std::string& name, PhysOptPtr opts) :
+    TAPS_Time(const std::string& name, OptionsPtr opts) :
         Time(Detector_t::Type_t::TAPS, name, opts)
     {}
 };
 AUTO_REGISTER_PHYSICS(TAPS_Time)
 
 struct TAPSVeto_Time : Time {
-    TAPSVeto_Time(const std::string& name, PhysOptPtr opts) :
+    TAPSVeto_Time(const std::string& name, OptionsPtr opts) :
         Time(Detector_t::Type_t::TAPSVeto, name, opts)
     {}
 };

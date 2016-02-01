@@ -20,18 +20,16 @@ namespace ant {
 
 namespace analysis {
 
-using PhysOptPtr = std::shared_ptr<const OptionsList>;
-
 class Physics {
 private:
     std::string name_;
 
 protected:
     SmartHistFactory HistFac;
-    const PhysOptPtr Options;
+    const OptionsPtr Options;
 
 public:
-    Physics(const std::string& name, PhysOptPtr opts);
+    Physics(const std::string& name, OptionsPtr opts);
     virtual ~Physics() {}
 
     struct manager_t {
@@ -62,7 +60,7 @@ public:
 
 
 
-using physics_creator = std::function<std::unique_ptr<Physics>(const std::string&, PhysOptPtr)>;
+using physics_creator = std::function<std::unique_ptr<Physics>(const std::string&, OptionsPtr)>;
 
 class PhysicsRegistry
 {
@@ -78,7 +76,7 @@ private:
     }
 public:
 
-    static std::unique_ptr<Physics> Create(const std::string& name, PhysOptPtr opts = std::make_shared<OptionsList>());
+    static std::unique_ptr<Physics> Create(const std::string& name, OptionsPtr opts = std::make_shared<OptionsList>());
 
     static std::vector<std::string> GetList();
 
@@ -95,7 +93,7 @@ public:
 };
 
 template<class T>
-std::unique_ptr<Physics> physics_factory(const std::string& name, PhysOptPtr opts)
+std::unique_ptr<Physics> physics_factory(const std::string& name, OptionsPtr opts)
 {
     return std_ext::make_unique<T>(name, opts);
 }

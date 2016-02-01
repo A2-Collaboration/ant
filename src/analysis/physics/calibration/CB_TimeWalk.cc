@@ -11,7 +11,7 @@ using namespace std;
 using namespace ant;
 using namespace ant::analysis::physics;
 
-CB_TimeWalk::CB_TimeWalk(const string& name, analysis::PhysOptPtr opts) :
+CB_TimeWalk::CB_TimeWalk(const string& name, OptionsPtr opts) :
     Physics(name, opts)
 {
     cb_detector = ExpConfig::Setup::GetDetector<expconfig::detector::CB>();

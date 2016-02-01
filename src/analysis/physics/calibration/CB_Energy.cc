@@ -9,7 +9,7 @@ using namespace std;
 using namespace ant;
 using namespace ant::analysis::physics;
 
-CB_Energy::CB_Energy(const string& name, analysis::PhysOptPtr opts) :
+CB_Energy::CB_Energy(const string& name, OptionsPtr opts) :
     Physics(name, opts)
 {
     auto detector = ExpConfig::Setup::GetDetector(Detector_t::Type_t::CB);

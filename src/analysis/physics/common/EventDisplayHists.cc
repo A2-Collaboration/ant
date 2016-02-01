@@ -18,7 +18,7 @@ using namespace ant::analysis::physics;
 using namespace std;
 
 
-EventDisplayHists::EventDisplayHists(const string& name, ant::analysis::PhysOptPtr opts):
+EventDisplayHists::EventDisplayHists(const string& name, OptionsPtr opts):
     Physics(name, opts),
     taps_cands(12)
 {

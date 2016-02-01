@@ -18,7 +18,7 @@ using namespace ant::analysis::physics;
 
 
 
-Etap3pi0::Etap3pi0(const std::string& name, PhysOptPtr opts) :
+Etap3pi0::Etap3pi0(const std::string& name, OptionsPtr opts) :
     Physics(name, opts),
     dataset(Options->Get<string>("dataset"))
 {

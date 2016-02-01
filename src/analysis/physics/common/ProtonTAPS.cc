@@ -10,7 +10,7 @@ using namespace ant::analysis::physics;
 using namespace std;
 
 
-ProtonTAPS::ProtonTAPS(const string& name, PhysOptPtr opts):
+ProtonTAPS::ProtonTAPS(const string& name, OptionsPtr opts):
     Physics(name, opts)
 {
 

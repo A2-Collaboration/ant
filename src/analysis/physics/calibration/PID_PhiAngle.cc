@@ -6,7 +6,7 @@ using namespace std;
 using namespace ant;
 using namespace ant::analysis::physics;
 
-PID_PhiAngle::PID_PhiAngle(const string& name, analysis::PhysOptPtr opts) :
+PID_PhiAngle::PID_PhiAngle(const string& name, OptionsPtr opts) :
     Physics(name, opts),
     theta_range(40.0*TMath::DegToRad(), 140*TMath::DegToRad())
 {

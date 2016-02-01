@@ -16,7 +16,7 @@ using namespace ant::analysis::physics;
 
 
 
-TAPS_Energy::TAPS_Energy(const string& name, analysis::PhysOptPtr opts) :
+TAPS_Energy::TAPS_Energy(const string& name, OptionsPtr opts) :
     Physics(name, opts)
 {
     taps_detector = ExpConfig::Setup::GetDetector<expconfig::detector::TAPS>();

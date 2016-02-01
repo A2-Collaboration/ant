@@ -14,7 +14,7 @@ using namespace ant::analysis;
 using namespace ant::analysis::physics;
 using namespace std;
 
-DeltaPlusPhysics::DeltaPlusPhysics(const string& name, PhysOptPtr opts):
+DeltaPlusPhysics::DeltaPlusPhysics(const string& name, OptionsPtr opts):
     Physics(name, opts),
     prompt("DeltaPlus_prompt"),
     random("DeltaPlus_random"),

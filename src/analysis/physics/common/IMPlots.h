@@ -23,7 +23,7 @@ public:
 
 
 public:
-    IMPlots(const std::string& name, PhysOptPtr opts);
+    IMPlots(const std::string& name, OptionsPtr opts);
 
     virtual void ProcessEvent(const TEvent& event, manager_t& manager) override;
     virtual void ShowResult() override;
@@ -47,7 +47,7 @@ protected:
     double perc = 0.2;
 
 public:
-    Symmetric2Gamma(const std::string& name, PhysOptPtr opts);
+    Symmetric2Gamma(const std::string& name, OptionsPtr opts);
     virtual ~Symmetric2Gamma();
 
     virtual void ProcessEvent(const TEvent& event, manager_t& manager) override;

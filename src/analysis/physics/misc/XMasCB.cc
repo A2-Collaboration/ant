@@ -9,7 +9,7 @@ using namespace ant::analysis::physics;
 using namespace ant::analysis;
 using namespace std;
 
-XMasCB::XMasCB(const std::string& name, PhysOptPtr opts):
+XMasCB::XMasCB(const std::string& name, OptionsPtr opts):
     Physics(name, opts),
     ext(opts->Get<string>("FileType", "pdf")),
     w_px(opts->Get<int>("x_px", 1024))

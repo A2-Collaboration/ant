@@ -37,7 +37,7 @@ public:
 
     std::map<std::string,PerChannel_t> channels;
 
-    OmegaMCTruePlots(const std::string& name, PhysOptPtr opts);
+    OmegaMCTruePlots(const std::string& name, OptionsPtr opts);
 
     virtual void ProcessEvent(const TEvent& event, manager_t& manager) override;
     virtual void Finish() override;
@@ -64,7 +64,7 @@ protected:
 
 
 public:
-    OmegaBase(const std::string &name, PhysOptPtr opts);
+    OmegaBase(const std::string &name, OptionsPtr opts);
     virtual ~OmegaBase() = default;
 
     virtual void ProcessEvent(const TEvent& event, manager_t& manager) override;
@@ -117,7 +117,7 @@ protected:
     BinSettings mmbinning = BinSettings(1000, 400,1400);
 
 public:
-    OmegaEtaG(const std::string& name, PhysOptPtr opts);
+    OmegaEtaG(const std::string& name, OptionsPtr opts);
     virtual ~OmegaEtaG() = default;
     virtual void ShowResult() override;
 };
@@ -136,7 +136,7 @@ protected:
 
 public:
 
-    OmegaMCTree(const std::string& name, PhysOptPtr opts);
+    OmegaMCTree(const std::string& name, OptionsPtr opts);
     virtual ~OmegaMCTree();
 
     virtual void ProcessEvent(const TEvent& event, manager_t& manager) override;
@@ -256,7 +256,7 @@ protected:
     TParticleList FilterProtons(const TParticleList& list);
 
 public:
-    OmegaEtaG2(const std::string& name, PhysOptPtr opts);
+    OmegaEtaG2(const std::string& name, OptionsPtr opts);
     virtual ~OmegaEtaG2();
 
 };

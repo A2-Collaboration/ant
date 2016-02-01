@@ -8,7 +8,7 @@ using namespace ant::analysis::physics;
 
 
 
-TAPS_ShortEnergy::TAPS_ShortEnergy(const string& name, analysis::PhysOptPtr opts) :
+TAPS_ShortEnergy::TAPS_ShortEnergy(const string& name, OptionsPtr opts) :
     Physics(name, opts)
 {
     auto taps = ExpConfig::Setup::GetDetector(Detector_t::Type_t::TAPS);

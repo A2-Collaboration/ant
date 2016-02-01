@@ -10,7 +10,7 @@ using namespace ant;
 using namespace ant::analysis;
 using namespace ant::analysis::physics;
 
-CandidatesAnalysis::CandidatesAnalysis(const std::string& name, PhysOptPtr opts):
+CandidatesAnalysis::CandidatesAnalysis(const std::string& name, OptionsPtr opts):
     Physics(name,opts)
 {
     nCandidatesEvent = HistFac.makeTH1D("Candidates/Event","Candidates","",BinSettings(15),"nCand");

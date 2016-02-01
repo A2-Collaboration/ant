@@ -26,7 +26,7 @@ protected:
     std::vector<PerChannel_t> h_perChannel;
 public:
 
-    PID_Energy(const std::string& name, PhysOptPtr opts);
+    PID_Energy(const std::string& name, OptionsPtr opts);
 
     virtual void ProcessEvent(const TEvent& event, manager_t& manager) override;
     virtual void ShowResult() override;

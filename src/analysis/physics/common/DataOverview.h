@@ -36,7 +36,7 @@ protected:
     const TEvent::Data& GetBranch(const TEvent& event) const;
 
 public:
-    DataOverviewBase(const std::string& name, PhysOptPtr opts);
+    DataOverviewBase(const std::string& name, OptionsPtr opts);
     virtual ~DataOverviewBase();
 };
 
@@ -53,7 +53,7 @@ protected:
     TH2D* channel_correlation = nullptr;
 
 public:
-    TaggerOverview(const std::string& name, PhysOptPtr opts);
+    TaggerOverview(const std::string& name, OptionsPtr opts);
     virtual ~TaggerOverview();
 
     virtual void ProcessEvent(const TEvent& event, manager_t& manager) override;
@@ -74,7 +74,7 @@ protected:
     TH2D* E_perCh = nullptr;
 
 public:
-    TriggerOverview(const std::string& name, PhysOptPtr opts);
+    TriggerOverview(const std::string& name, OptionsPtr opts);
     virtual ~TriggerOverview();
 
     virtual void ProcessEvent(const TEvent& event, manager_t& manager) override;
@@ -91,7 +91,7 @@ protected:
     TH1D* VertexZ;
 
 public:
-    TargetOverview(const std::string& name, PhysOptPtr opts);
+    TargetOverview(const std::string& name, OptionsPtr opts);
     virtual ~TargetOverview();
 
     virtual void ProcessEvent(const TEvent& event, manager_t& manager) override;
@@ -111,7 +111,7 @@ protected:
     static void SetBinLabels(TH1D* hist, const ParticleTypeDatabase::TypeList_t& types);
 
 public:
-    ParticleOverview(const std::string& name, PhysOptPtr opts);
+    ParticleOverview(const std::string& name, OptionsPtr opts);
     virtual ~ParticleOverview();
 
     virtual void ProcessEvent(const TEvent& event, manager_t& manager) override;

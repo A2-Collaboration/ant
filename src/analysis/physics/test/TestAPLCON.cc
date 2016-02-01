@@ -55,7 +55,7 @@ void TestAPLCON::FillIM(TH1D *h, const std::vector<TestAPLCON::FitParticle> &pho
     h->Fill(sum.M());
 }
 
-TestAPLCON::TestAPLCON(const string& name, PhysOptPtr opts) :
+TestAPLCON::TestAPLCON(const string& name, OptionsPtr opts) :
     Physics(name, opts),
     fitter(name),
     photons(nPhotons)

@@ -27,7 +27,7 @@ protected:
 
 
 public:
-    XMasCB(const std::string& name, PhysOptPtr opts);
+    XMasCB(const std::string& name, OptionsPtr opts);
     virtual ~XMasCB();
 
     virtual void ProcessEvent(const TEvent& event, manager_t& manager) override;

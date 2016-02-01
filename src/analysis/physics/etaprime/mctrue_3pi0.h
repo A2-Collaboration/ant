@@ -50,7 +50,7 @@ protected:
     TTree* mcTrue;
 
 public:
-    McTrue3Pi0(const std::string& name, PhysOptPtr opts);
+    McTrue3Pi0(const std::string& name, OptionsPtr opts);
     virtual void ProcessEvent(const TEvent& event, manager_t& manager) override;
     virtual void ShowResult() override;
 };

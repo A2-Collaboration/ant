@@ -10,7 +10,7 @@ using namespace ant::analysis;
 using namespace ant::analysis::physics;
 using namespace std;
 
-IMPlots::IMPlots(const std::string& name, PhysOptPtr opts):
+IMPlots::IMPlots(const std::string& name, OptionsPtr opts):
     Physics(name, opts),
     m(8,{prs})
 {
@@ -64,7 +64,7 @@ void IMPlots::ShowResult()
 }
 
 
-Symmetric2Gamma::Symmetric2Gamma(const string& name, PhysOptPtr opts):
+Symmetric2Gamma::Symmetric2Gamma(const string& name, OptionsPtr opts):
     Physics(name, opts)
 {
     const BinSettings im(1600);

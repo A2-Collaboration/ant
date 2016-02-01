@@ -10,7 +10,7 @@ using namespace ant::analysis::physics;
 using namespace std;
 
 
-ProtonTagger::ProtonTagger(const string& name, PhysOptPtr opts):
+ProtonTagger::ProtonTagger(const string& name, OptionsPtr opts):
     Physics(name, opts)
 {
 

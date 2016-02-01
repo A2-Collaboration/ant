@@ -8,7 +8,7 @@ using namespace ant;
 using namespace ant::analysis;
 using namespace ant::analysis::physics;
 
-MCTrueAcceptance::MCTrueAcceptance(const std::string& name,PhysOptPtr opts):
+MCTrueAcceptance::MCTrueAcceptance(const std::string& name,OptionsPtr opts):
     Physics(name, opts), events_seen(0)
 {
     detect = HistFac.makeHist<std::string>("Geometric Acceptance (MC True)","Particle Type","% events | all particles found", BinSettings(0),"detection");

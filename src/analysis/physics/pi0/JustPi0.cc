@@ -18,7 +18,7 @@ using namespace std;
 
 
 
-JustPi0::JustPi0(const string& name, PhysOptPtr opts) :
+JustPi0::JustPi0(const string& name, OptionsPtr opts) :
     Physics(name, opts)
 {
     for(unsigned mult=1;mult<=opts->Get<unsigned>("nPi0",1);mult++) {

@@ -14,7 +14,7 @@ using namespace ant;
 using namespace ant::analysis;
 using namespace ant::analysis::physics;
 
-TaggerOverview::TaggerOverview(const string &name, PhysOptPtr opts):
+TaggerOverview::TaggerOverview(const string &name, OptionsPtr opts):
     DataOverviewBase(name, opts)
 {
 
@@ -77,7 +77,7 @@ void TaggerOverview::ShowResult()
 }
 
 
-DataOverviewBase::DataOverviewBase(const string &name, PhysOptPtr opts):
+DataOverviewBase::DataOverviewBase(const string &name, OptionsPtr opts):
     Physics(name, opts)
 {
     if(opts->Get<string>("Mode") == "Reconstructed")
@@ -105,7 +105,7 @@ const TEvent::Data& DataOverviewBase::GetBranch(const TEvent& event) const
 }
 
 
-TriggerOverview::TriggerOverview(const string &name, PhysOptPtr opts):
+TriggerOverview::TriggerOverview(const string &name, OptionsPtr opts):
     DataOverviewBase(name, opts)
 {
     const BinSettings bins_errors(30);
@@ -176,7 +176,7 @@ void TriggerOverview::ShowResult()
             << endc;
 }
 
-TargetOverview::TargetOverview(const string& name, PhysOptPtr opts):
+TargetOverview::TargetOverview(const string& name, OptionsPtr opts):
     DataOverviewBase(name, opts)
 {
     VertexXY = HistFac.makeTH2D("Vertex XY","X/cm","Y/cm",
@@ -215,7 +215,7 @@ void ParticleOverview::SetBinLabels(TH1D *hist, const ParticleTypeDatabase::Type
     }
 }
 
-ParticleOverview::ParticleOverview(const string &name, PhysOptPtr opts):
+ParticleOverview::ParticleOverview(const string &name, OptionsPtr opts):
     DataOverviewBase(name, opts)
 {
     const BinSettings bins_particles(15);

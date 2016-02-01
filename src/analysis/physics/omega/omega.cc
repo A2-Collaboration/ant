@@ -63,7 +63,7 @@ TParticleList OmegaBase::getGeoAccepted(const TParticleList &p) const
     return list;
 }
 
-OmegaBase::OmegaBase(const string &name, PhysOptPtr opts):
+OmegaBase::OmegaBase(const string &name, OptionsPtr opts):
     Physics(name, opts), mode(DataMode::Reconstructed)
 {
 
@@ -80,7 +80,7 @@ void OmegaBase::ShowResult()
 //======= Omega Eta Gamma =====================================================================
 
 
-OmegaEtaG::OmegaEtaG(const std::string& name, PhysOptPtr opts):
+OmegaEtaG::OmegaEtaG(const std::string& name, OptionsPtr opts):
     OmegaBase(name, opts)
 {
     ggg_gg     = HistFac.makeTH2D("3#gamma IM vs 2#gamma sub IM (signal only)","3#gamma IM [MeV]", "2#gamma sub IM [MeV]",imbinning,imbinning,"ggg_gg_omega");
@@ -373,7 +373,7 @@ void OmegaMCTruePlots::PerChannel_t::Fill(const TEvent::Data& d)
 
 
 
-OmegaMCTruePlots::OmegaMCTruePlots(const std::string& name, PhysOptPtr opts):
+OmegaMCTruePlots::OmegaMCTruePlots(const std::string& name, OptionsPtr opts):
     Physics(name, opts)
 {
 
@@ -433,7 +433,7 @@ void OmegaMCTree::setGamma1(const TLorentzVector& value)
     gamma1_vector = value;
 }
 
-OmegaMCTree::OmegaMCTree(const std::string& name, PhysOptPtr opts): Physics(name, opts) {
+OmegaMCTree::OmegaMCTree(const std::string& name, OptionsPtr opts): Physics(name, opts) {
     tree=new TTree("omegatree","omgega eta gamma MC true");
     tree->Branch("p", &proton_vector);
     tree->Branch("omega", &omega_vector);
@@ -860,7 +860,7 @@ TParticleList OmegaEtaG2::FilterProtons(const TParticleList& list)
 }
 
 
-OmegaEtaG2::OmegaEtaG2(const std::string& name, PhysOptPtr opts):
+OmegaEtaG2::OmegaEtaG2(const std::string& name, OptionsPtr opts):
     OmegaBase(name, opts), fitter("OmegaEtaG2", 3)
 {
     const auto setup = ant::ExpConfig::Setup::GetLastFound();

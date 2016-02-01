@@ -132,7 +132,7 @@ protected:
     unsigned b_Cal = 0;
 
 public:
-    ReconstructCheck(const std::string& name, PhysOptPtr opts);
+    ReconstructCheck(const std::string& name, OptionsPtr opts);
 
     virtual void ProcessEvent(const TEvent& event, manager_t& manager) override;
     virtual void Finish() override;

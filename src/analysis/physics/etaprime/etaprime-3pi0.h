@@ -201,7 +201,7 @@ protected:
     void FillImEtaPrime(const Etap3pi0::result_t& result, TH1D* hist);
     TLorentzVector MakeLoretzSum(const TParticleList& particles);
 public:
-    Etap3pi0(const std::string& name, PhysOptPtr opts);
+    Etap3pi0(const std::string& name, OptionsPtr opts);
     virtual void ProcessEvent(const TEvent& event, manager_t& manager) override;
     virtual void Finish() override;
     virtual void ShowResult() override;

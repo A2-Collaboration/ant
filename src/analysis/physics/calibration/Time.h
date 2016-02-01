@@ -21,7 +21,7 @@ protected:
 public:
 
     Time(const Detector_t::Type_t& detectorType,
-         const std::string& name, PhysOptPtr opts);
+         const std::string& name, OptionsPtr opts);
 
     virtual void ProcessEvent(const TEvent& event, manager_t& manager) override;
     virtual void ShowResult() override;

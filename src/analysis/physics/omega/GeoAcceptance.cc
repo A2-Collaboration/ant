@@ -39,7 +39,7 @@ void GeoAcceptance::ParticleThetaPhiPlot::Draw(const string &option) const
 }
 
 
-GeoAcceptance::GeoAcceptance(const std::string& name, PhysOptPtr opts):
+GeoAcceptance::GeoAcceptance(const std::string& name, OptionsPtr opts):
     Physics(name, opts)
 {
     for( auto& emin : std::vector<double>({0.95,0.9,0.8,0})) {

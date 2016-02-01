@@ -18,7 +18,7 @@ using namespace ant::analysis;
 using namespace ant::analysis::physics;
 
 
-ReconstructCheck::ReconstructCheck(const std::string& name, PhysOptPtr opts):
+ReconstructCheck::ReconstructCheck(const std::string& name, OptionsPtr opts):
     Physics(name,opts),
     cb_group(HistFac, "CB", histgroup::detectortype::CB),
     taps_group(HistFac,"TAPS",histgroup::detectortype::TAPS),

@@ -13,7 +13,7 @@ protected:
     TH3D* h_bananas = nullptr;
 public:
 
-    TAPSVeto_Energy(const std::string& name, PhysOptPtr opts);
+    TAPSVeto_Energy(const std::string& name, OptionsPtr opts);
 
     virtual void ProcessEvent(const TEvent& event, manager_t& manager) override;
     virtual void ShowResult() override;

@@ -8,7 +8,7 @@ using namespace ant;
 using namespace ant::analysis;
 using namespace ant::analysis::physics;
 
-DebugPhysics::DebugPhysics(const std::string& name, PhysOptPtr opts) :
+DebugPhysics::DebugPhysics(const std::string& name, OptionsPtr opts) :
     Physics(name, opts),
     writeEvents(opts->Get<bool>("WriteEvents", false)),
     keepReadHits(opts->Get<bool>("KeepReadHits", false)),
@@ -48,7 +48,7 @@ void DebugPhysics::Initialize(input::SlowControl& slowcontrol)
 
 
 
-DebugPIDAlignment::DebugPIDAlignment(const std::string& name, PhysOptPtr opts):
+DebugPIDAlignment::DebugPIDAlignment(const std::string& name, OptionsPtr opts):
     Physics(name, opts)
 {
     const BinSettings bins(360,-180,180);

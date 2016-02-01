@@ -8,7 +8,7 @@ using namespace ant::analysis;
 using namespace ant::analysis::physics;
 using namespace std;
 
-physics::ExtractResolutions::ExtractResolutions(const std::string& name, PhysOptPtr opts):
+physics::ExtractResolutions::ExtractResolutions(const std::string& name, OptionsPtr opts):
     Physics(name, opts)
 {
     if(opts->Get<string>("Detector") == "CB") {

@@ -20,7 +20,7 @@ protected:
     std::map<const ant::ParticleTypeDatabase::Type*, SmartHist1<const TParticlePtr&>> EHists;
 
 public:
-    ParticleCombinatoricsTest(const std::string& name, PhysOptPtr opts);
+    ParticleCombinatoricsTest(const std::string& name, OptionsPtr opts);
     virtual ~ParticleCombinatoricsTest() {}
 
     virtual void ProcessEvent(const TEvent& event, manager_t& manager) override;

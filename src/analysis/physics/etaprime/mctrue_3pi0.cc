@@ -31,7 +31,7 @@ std::vector<double> McTrue3Pi0::GetAllPhotonAngles(const TParticleList& photons)
     return angles;
 }
 
-McTrue3Pi0::McTrue3Pi0(const std::string& name, PhysOptPtr opts) :
+McTrue3Pi0::McTrue3Pi0(const std::string& name, OptionsPtr opts) :
     Physics(name, opts),
     pi0s(3),
     popens(3),

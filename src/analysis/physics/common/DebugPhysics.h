@@ -13,7 +13,7 @@ protected:
     const bool keepReadHits;
     const bool requestSlowControl;
 public:
-    DebugPhysics(const std::string& name, PhysOptPtr opts=nullptr);
+    DebugPhysics(const std::string& name, OptionsPtr opts=nullptr);
     virtual ~DebugPhysics();
 
     virtual void ProcessEvent(const TEvent& event, manager_t& manager) override;
@@ -26,7 +26,7 @@ class DebugPIDAlignment: public Physics {
 protected:
     TH2D* angles = nullptr;
 public:
-    DebugPIDAlignment(const std::string& name, PhysOptPtr opts=nullptr);
+    DebugPIDAlignment(const std::string& name, OptionsPtr opts=nullptr);
     virtual ~DebugPIDAlignment();
 
     virtual void ProcessEvent(const TEvent& event, manager_t& manager) override;

@@ -12,7 +12,7 @@ using namespace ant;
 using namespace ant::analysis;
 using namespace ant::analysis::physics;
 
-ProtonCheck::ProtonCheck(const std::string& name,PhysOptPtr opts):
+ProtonCheck::ProtonCheck(const std::string& name,OptionsPtr opts):
     Physics(name,opts)
 {
     const BinSettings e(1000);

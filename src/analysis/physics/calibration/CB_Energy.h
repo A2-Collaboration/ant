@@ -16,7 +16,7 @@ protected:
 
 public:
 
-    CB_Energy(const std::string& name, PhysOptPtr opts);
+    CB_Energy(const std::string& name, OptionsPtr opts);
 
     virtual void ProcessEvent(const TEvent& event, manager_t& manager) override;
     virtual void ShowResult() override;
