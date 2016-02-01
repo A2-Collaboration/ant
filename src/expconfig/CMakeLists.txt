@@ -14,7 +14,6 @@ set(SRCS_SETUPS
   setups/Setup_2014_10_EPT_Prod.cc
   setups/Setup_2014_12_EPT_Prod.cc
   setups/Setup_Test.cc
-  setups/Setup_Raw.cc
   )
 
 set(SRCS_DETECTORS

@@ -5,12 +5,14 @@
 #include "reconstruct/Reconstruct.h"
 
 #include "expconfig/setups/SetupRegistry.h"
+#include "expconfig/setups/Setup.h"
 
 #include "base/WrapTFile.h"
 #include "base/std_ext/system.h"
 #include "base/CmdLine.h"
 #include "base/Logger.h"
 #include "base/OptionsList.h"
+#include "base/piecewise_interval.h"
 
 #include "TTree.h"
 
@@ -53,19 +55,66 @@ int main(int argc, char** argv) {
     }
 
 
-    // construct the ADC option for Setup_Raw
-    std::shared_ptr<OptionsList> setup_opts = make_shared<OptionsList>();
-    stringstream AcquADC_option;
-    AcquADC_option << "AcquADC=";
+    // construct the piecewise integral from the options
+    PiecewiseInterval<unsigned> adc_ranges;
     for(auto adcstr : cmd_ADCs->getValue()) {
-        AcquADC_option << adcstr << " ";
+        interval<unsigned> range(0,0);
+        stringstream ss(adcstr);
+        if(ss >> range && range.IsSane())
+            adc_ranges.push_back(range);
+        else
+            LOG(WARNING) << "Cannot parse ADC range '" << adcstr << "'";
     }
-    setup_opts->SetOption(AcquADC_option.str());
-    ant::expconfig::SetupRegistry::SetSetupOptions(setup_opts);
+
+    if(adc_ranges.empty()) {
+        LOG(ERROR) << "You should at least provide one ADC range";
+        return 1;
+    }
 
 
-    // override the setup name
+
+    // register some simple Setup and override the setup name
+
     ExpConfig::Setup::ManualName = "Setup_Raw";
+
+    struct MySetup : expconfig::Setup {
+
+        MySetup(const PiecewiseInterval<unsigned>& adc_ranges_) :
+            Setup(ExpConfig::Setup::ManualName, nullptr),
+            ADC_ranges(adc_ranges_) {}
+
+        bool Matches(const TID&) const override {
+            // Setup must be manually selected
+            // via command line
+            return false;
+        }
+
+        void BuildMappings(std::vector<hit_mapping_t>& hit_mappings,
+                           std::vector<scaler_mapping_t>&) const override
+        {
+            // create a 1:1 mapping to LogicalChannels
+            // the Detector/ChannelType is set to "Raw"
+
+            for(interval<unsigned> ADC_range : ADC_ranges) {
+                for(unsigned adc = ADC_range.Start(); adc <= ADC_range.Stop(); adc++) {
+                    hit_mappings.emplace_back(
+                                Detector_t::Type_t::Raw,
+                                Channel_t::Type_t::Raw,
+                                adc,
+                                adc
+                                );
+                }
+                LOG(INFO) << "Added Acqu ADC range " << ADC_range;
+            }
+        }
+    protected:
+
+        PiecewiseInterval<unsigned> ADC_ranges;
+    };
+
+
+    expconfig::SetupRegistry::AddSetup( ExpConfig::Setup::ManualName,
+                                        make_shared<MySetup>(adc_ranges));
 
     // now we can try to open the files with an unpacker
     std::unique_ptr<Unpacker::Module> unpacker = nullptr;
