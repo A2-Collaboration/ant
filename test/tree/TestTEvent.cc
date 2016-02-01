@@ -87,11 +87,24 @@ void dotest() {
   eventdata->ParticleTree->CreateDaughter(particle1);
   eventdata->ParticleTree->CreateDaughter(particle0);
 
+  cout << event << endl;
+  cout << *event << endl;
 
   tree->Fill();
 
-  cout << event << endl;
-  cout << *event << endl;
+  event->Reconstructed = std_ext::make_unique<TEvent::Data>();
+  event->MCTrue = std_ext::make_unique<TEvent::Data>();
+
+  event->Reconstructed->Particles.Add(particle0);
+  event->Reconstructed->Particles.Add(particle0);
+
+  event->MCTrue->Particles.Add(particle0);
+  event->MCTrue->Particles.Add(particle1);
+
+
+  event->MCTrue->Candidates.push_back(particle0->Candidate);
+
+  tree->Fill();
 
   f.Write();
   f.Close();
@@ -109,7 +122,7 @@ void dotest() {
 
   tree->SetBranchAddress(branchname.c_str(), &readback_event);
 
-  REQUIRE(tree->GetEntries()==1);
+  REQUIRE(tree->GetEntries() == 2);
 
   tree->GetEntry(0);
 
