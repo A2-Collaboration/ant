@@ -2,7 +2,6 @@
 #include "plot/root_draw.h"
 #include "base/std_ext/math.h"
 #include "base/std_ext/string.h"
-#include "data/Particle.h"
 #include "utils/particle_tools.h"
 
 #include "TTree.h"
@@ -12,12 +11,11 @@ using namespace std;
 using namespace ant::std_ext;
 using namespace ant::analysis;
 using namespace ant::analysis::utils;
-using namespace ant::analysis::data;
 using namespace ant::analysis::physics;
 
 
 
-std::vector<double> McTrue3Pi0::GetAllPhotonAngles(const ParticleList& photons) const
+std::vector<double> McTrue3Pi0::GetAllPhotonAngles(const TParticleList& photons) const
 {
     vector<double> angles((photons.size() * (photons.size() - 1)) / 2);
     unsigned index = 0;
@@ -33,7 +31,7 @@ std::vector<double> McTrue3Pi0::GetAllPhotonAngles(const ParticleList& photons) 
     return angles;
 }
 
-McTrue3Pi0::McTrue3Pi0(const std::string& name, PhysOptPtr opts) :
+McTrue3Pi0::McTrue3Pi0(const std::string& name, OptionsPtr opts) :
     Physics(name, opts),
     pi0s(3),
     popens(3),
@@ -54,11 +52,13 @@ McTrue3Pi0::McTrue3Pi0(const std::string& name, PhysOptPtr opts) :
 }
 
 
-void McTrue3Pi0::ProcessEvent(const data::Event& event)
+void McTrue3Pi0::ProcessEvent(const TEvent& event, manager_t&)
 {
-    const auto& mcdata = event.MCTrue;
+    const auto& mcdata = *event.MCTrue;
 
-    const auto& pions  = mcdata.Intermediates.Get(ParticleTypeDatabase::Pi0);
+    /// \todo this could actually be implemented with ParticleTree_t comparison
+
+    const auto& pions  = utils::ParticleTools::FindParticles(ParticleTypeDatabase::Pi0, mcdata.ParticleTree);
     const auto& protons = mcdata.Particles.Get(ParticleTypeDatabase::Proton);
     const auto& photons = mcdata.Particles.Get(ParticleTypeDatabase::Photon);
 

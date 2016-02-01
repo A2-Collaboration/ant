@@ -14,12 +14,11 @@
 using namespace ant;
 using namespace ant::analysis;
 using namespace ant::analysis::physics;
-using namespace ant::analysis::data;
 using namespace std;
 
 
 
-JustPi0::JustPi0(const string& name, PhysOptPtr opts) :
+JustPi0::JustPi0(const string& name, OptionsPtr opts) :
     Physics(name, opts)
 {
     for(unsigned mult=1;mult<=opts->Get<unsigned>("nPi0",1);mult++) {
@@ -27,11 +26,11 @@ JustPi0::JustPi0(const string& name, PhysOptPtr opts) :
     }
 }
 
-void JustPi0::ProcessEvent(const Event& event)
+void JustPi0::ProcessEvent(const TEvent& event, manager_t&)
 {
-    const auto& data = event.Reconstructed;
+    const auto& data = *event.Reconstructed;
     for(auto& m : multiPi0)
-        m->ProcessData(data, event.MCTrue.ParticleTree);
+        m->ProcessData(data, event.MCTrue->ParticleTree);
 }
 
 void JustPi0::ShowResult()
@@ -103,7 +102,7 @@ JustPi0::MultiPi0::MultiPi0(SmartHistFactory& histFac, unsigned nPi0, bool nofit
     }
 }
 
-void JustPi0::MultiPi0::ProcessData(const Event::Data& data, const ParticleTree_t& ptree)
+void JustPi0::MultiPi0::ProcessData(const TEvent::Data& data, const TParticleTree_t& ptree)
 {
     const auto nPhotons_expected = multiplicity*2;
 
@@ -124,7 +123,7 @@ void JustPi0::MultiPi0::ProcessData(const Event::Data& data, const ParticleTree_
     steps->Fill(nCandidates_cutstr.c_str(),1);
 
     // do some MCTrue matching if feasible
-    CandidatePtr proton_mctrue_match = nullptr;
+    TCandidatePtr proton_mctrue_match = nullptr;
     if(ptree && directPi0 &&
        ptree->IsEqual(directPi0, utils::ParticleTools::MatchByParticleName)) {
         // check if MCTrue matches the found proton
@@ -132,15 +131,15 @@ void JustPi0::MultiPi0::ProcessData(const Event::Data& data, const ParticleTree_
         auto true_proton = utils::ParticleTools::FindParticle(ParticleTypeDatabase::Proton, ptree, 1);
         auto true_photons = utils::ParticleTools::FindParticles(ParticleTypeDatabase::Photon, ptree);
 
-        auto mymatcher = [&cands] (const std::vector<ParticlePtr> true_particles) {
+        auto mymatcher = [&cands] (const std::vector<TParticlePtr> true_particles) {
             return utils::match1to1(true_particles,
                                     cands,
-                                    [] (const ParticlePtr& p1, const CandidatePtr& p2) {
+                                    [] (const TParticlePtr& p1, const TCandidatePtr& p2) {
                 return p1->Angle(*p2);
             }, {0.0, std_ext::degree_to_radian(15.0)});
         };
 
-        vector<ParticlePtr> true_all(true_photons);
+        vector<TParticlePtr> true_all(true_photons);
         true_all.push_back(true_proton);
         const auto match_all = mymatcher(true_all);
 
@@ -152,12 +151,12 @@ void JustPi0::MultiPi0::ProcessData(const Event::Data& data, const ParticleTree_
 
     for(auto i_proton=cands.begin();i_proton!=cands.end();i_proton++) {
 
-        const auto proton = std::make_shared<Particle>(ParticleTypeDatabase::Proton, *i_proton);
-        std::vector<ParticlePtr> photons;
+        const auto proton = std::make_shared<TParticle>(ParticleTypeDatabase::Proton, *i_proton);
+        std::vector<TParticlePtr> photons;
         for(auto i_photon=cands.begin();i_photon!=cands.end();i_photon++) {
             if(i_photon == i_proton)
                 continue;
-            photons.emplace_back(make_shared<Particle>(ParticleTypeDatabase::Photon, *i_photon));
+            photons.emplace_back(make_shared<TParticle>(ParticleTypeDatabase::Photon, *i_photon));
         }
         assert(photons.size() == nPhotons_expected);
 
@@ -180,7 +179,7 @@ void JustPi0::MultiPi0::ProcessData(const Event::Data& data, const ParticleTree_
 
         // iterate over tagger hits
 
-        for(const TaggerHit& taggerhit : data.TaggerHits) {
+        for(const TTaggerHit& taggerhit : data.Tagger.Hits) {
             steps->Fill("Seen taggerhits",1.0);
 
             promptrandom.SetTaggerHit(taggerhit.Time);

@@ -1,28 +1,29 @@
 #include "GeoAcceptance.h"
-#include "data/Particle.h"
+
 #include "utils/combinatorics.h"
 #include "utils/matcher.h"
+#include "utils/particle_tools.h"
+
 #include "plot/root_draw.h"
-#include "data/Event.h"
 #include "TMath.h"
-#include <tuple>
 #include "TVector3.h"
-#include <sstream>
 #include "TH3D.h"
 #include "TH2D.h"
+
+#include <sstream>
+#include <tuple>
 
 using namespace std;
 using namespace ant;
 using namespace ant::analysis;
 using namespace ant::analysis::physics;
-using namespace ant::analysis::data;
 
 GeoAcceptance::ParticleThetaPhiPlot::ParticleThetaPhiPlot(SmartHistFactory &factory, const string &title, const string &name,const BinSettings& thetabins,const BinSettings& phibins)
 {
     hist = factory.makeTH2D(title,"#theta [#circ]","#phi [#circ]",thetabins,phibins,name);
 }
 
-void GeoAcceptance::ParticleThetaPhiPlot::Fill(const ParticlePtr &p)
+void GeoAcceptance::ParticleThetaPhiPlot::Fill(const TParticlePtr &p)
 {
     hist->Fill(p->Theta()*TMath::RadToDeg(), p->Phi()*TMath::RadToDeg());
 }
@@ -38,7 +39,7 @@ void GeoAcceptance::ParticleThetaPhiPlot::Draw(const string &option) const
 }
 
 
-GeoAcceptance::GeoAcceptance(const std::string& name, PhysOptPtr opts):
+GeoAcceptance::GeoAcceptance(const std::string& name, OptionsPtr opts):
     Physics(name, opts)
 {
     for( auto& emin : std::vector<double>({0.95,0.9,0.8,0})) {
@@ -52,13 +53,12 @@ GeoAcceptance::~GeoAcceptance()
 {
 }
 
-void GeoAcceptance::ProcessEvent(const Event &event)
+void GeoAcceptance::ProcessEvent(const TEvent& event, manager_t&)
 {
     for( auto& a : analyses ) {
-        a.Fill(
-                event.MCTrue.Particles.Get(ParticleTypeDatabase::Photon),
-                event.Reconstructed.Particles.Get(ParticleTypeDatabase::Photon)
-                );
+        a.Fill(event.MCTrue->Particles.Get(ParticleTypeDatabase::Photon),
+               event.Reconstructed->Particles.Get(ParticleTypeDatabase::Photon)
+               );
     }
 }
 
@@ -82,7 +82,7 @@ GeoAcceptance::ParticleThetaPhiPlot3D::ParticleThetaPhiPlot3D(SmartHistFactory& 
 {
 }
 
-void GeoAcceptance::ParticleThetaPhiPlot3D::Fill(const ParticlePtr& p)
+void GeoAcceptance::ParticleThetaPhiPlot3D::Fill(const TParticlePtr& p)
 {
         TVector3 v(p->Vect().Unit());
         hist->Fill(v.X(),v.Y(),v.Z());
@@ -126,7 +126,7 @@ void remove_low_energy(T& data, double min) {
               [min] (const element_type& m) { return (m.b->E()/m.a->E()) < min;}), data.end());
 }
 
-void GeoAcceptance::AcceptanceAnalysis::Fill(const ParticleList &mctrue, const ParticleList &reconstructed)
+void GeoAcceptance::AcceptanceAnalysis::Fill(const TParticleList &mctrue, const TParticleList &reconstructed)
 {
     if( mctrue.size() != 1)
         return;
@@ -141,7 +141,7 @@ void GeoAcceptance::AcceptanceAnalysis::Fill(const ParticleList &mctrue, const P
 
     mctrue_pos.Fill(input);
 
-    auto matched = utils::match1to1(mctrue, reconstructed, Particle::CalcAngle, IntervalD(0.0, 20.0*TMath::DegToRad()));
+    auto matched = utils::match1to1(mctrue, reconstructed, TParticle::CalcAngle, IntervalD(0.0, 20.0*TMath::DegToRad()));
     remove_low_energy(matched, emin);
 
     if( matched.size() ==0 ) {

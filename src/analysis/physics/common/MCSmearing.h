@@ -16,10 +16,10 @@ protected:
 
 
 public:
-    MCSmearing(const std::string& name, PhysOptPtr opts=nullptr);
+    MCSmearing(const std::string& name, OptionsPtr opts=nullptr);
     virtual ~MCSmearing();
 
-    virtual void ProcessEvent(const data::Event& event) override;
+    virtual void ProcessEvent(const TEvent& event, manager_t& manager) override;
     virtual void Finish() override;
     virtual void ShowResult() override;
 };

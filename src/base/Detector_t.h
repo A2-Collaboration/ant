@@ -30,11 +30,11 @@ struct Detector_t : printable_traits {
 
     // Any_t represents a collection of detectors
     struct Any_t : printable_traits {
-        friend struct TCandidate; // Any_t ROOT-ified as internal bitfield
         static const Any_t None;
         static const Any_t Tracker; // i.e. MWPC
-        static const Any_t CB_Apparatus;
-        static const Any_t TAPS_Apparatus;
+        static const Any_t CB_Apparatus; // i.e. PID, MWPC, CB
+        static const Any_t TAPS_Apparatus; // i.e. TAPS, TAPSVeto
+        static const Any_t Calo; // i.e. CB or TAPS calorimeter
         static const Any_t Veto; // i.e. PID or TAPSVeto
 
         Any_t(const Type_t& type);
@@ -47,6 +47,13 @@ struct Detector_t : printable_traits {
         operator std::string() const;
 
         virtual std::ostream& Print(std::ostream& stream) const override;
+
+        // support cereal
+        template<class Archive>
+        void serialize(Archive archive) {
+            archive(bitfield);
+        }
+
     private:
         Any_t(std::uint64_t bitfield_) : bitfield(bitfield_) {}
         std::uint64_t bitfield;

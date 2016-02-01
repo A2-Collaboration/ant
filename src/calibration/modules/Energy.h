@@ -3,7 +3,7 @@
 #include "calibration/Calibration.h"
 #include "base/Detector_t.h"
 
-#include "tree/TDataRecord.h" // for TKeyValue, TID
+#include "tree/TID.h" // for TKeyValue, TID
 
 #include <memory>
 

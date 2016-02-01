@@ -1,7 +1,7 @@
 #include "TAPSVeto.h"
 #include <cassert>
 
-#include "tree/THeaderInfo.h"
+#include "tree/TID.h"
 
 #include "detail/TAPSVeto_2013_BaF2_elements.h"
 #include "detail/TAPSVeto_2013_PbWO4_elements.h"
@@ -109,12 +109,12 @@ bool TAPSVeto::IsPbWO4(const unsigned channel) const
     return channelFirstSector < PbWO4_elementsPerSector;
 }
 
-bool TAPSVeto_2013::Matches(const THeaderInfo &headerInfo) const
+bool TAPSVeto_2013::Matches(const TID& tid) const
 {
-    return std_ext::time_between(headerInfo.Timestamp, "2013-11-01", "2013-31-12");
+    return std_ext::time_between(tid.Timestamp, "2013-11-01", "2013-31-12");
 }
 
-bool TAPSVeto_2014::Matches(const THeaderInfo &headerInfo) const
+bool TAPSVeto_2014::Matches(const TID& tid) const
 {
-    return std_ext::time_after(headerInfo.Timestamp, "2014-01-01");
+    return std_ext::time_after(tid.Timestamp, "2014-01-01");
 }

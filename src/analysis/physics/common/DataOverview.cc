@@ -13,9 +13,8 @@ using namespace std;
 using namespace ant;
 using namespace ant::analysis;
 using namespace ant::analysis::physics;
-using namespace ant::analysis::data;
 
-TaggerOverview::TaggerOverview(const string &name, PhysOptPtr opts):
+TaggerOverview::TaggerOverview(const string &name, OptionsPtr opts):
     DataOverviewBase(name, opts)
 {
 
@@ -48,9 +47,9 @@ TaggerOverview::~TaggerOverview()
 {
 }
 
-void TaggerOverview::ProcessEvent(const Event &event)
+void TaggerOverview::ProcessEvent(const TEvent& event, manager_t&)
 {
-    const auto taggerhits = (mode == Mode::Reconstructed) ? event.Reconstructed.TaggerHits : event.MCTrue.TaggerHits;
+    const auto taggerhits = (mode == Mode::Reconstructed) ? event.Reconstructed->Tagger.Hits : event.MCTrue->Tagger.Hits;
 
     for(auto hit=taggerhits.cbegin(); hit!=taggerhits.cend(); ++hit) {
         Channels->Fill(hit->Channel);
@@ -78,7 +77,7 @@ void TaggerOverview::ShowResult()
 }
 
 
-DataOverviewBase::DataOverviewBase(const string &name, PhysOptPtr opts):
+DataOverviewBase::DataOverviewBase(const string &name, OptionsPtr opts):
     Physics(name, opts)
 {
     if(opts->Get<string>("Mode") == "Reconstructed")
@@ -100,13 +99,13 @@ string DataOverviewBase::GetMode() const
         return "MCTrue";
 }
 
-const Event::Data &DataOverviewBase::GetBranch(const Event &event) const
+const TEvent::Data& DataOverviewBase::GetBranch(const TEvent& event) const
 {
-   return (mode == Mode::Reconstructed) ? event.Reconstructed : event.MCTrue;
+   return (mode == Mode::Reconstructed) ? *event.Reconstructed : *event.MCTrue;
 }
 
 
-TriggerOverview::TriggerOverview(const string &name, PhysOptPtr opts):
+TriggerOverview::TriggerOverview(const string &name, OptionsPtr opts):
     DataOverviewBase(name, opts)
 {
     const BinSettings bins_errors(30);
@@ -137,18 +136,18 @@ TriggerOverview::TriggerOverview(const string &name, PhysOptPtr opts):
 TriggerOverview::~TriggerOverview()
 {}
 
-void TriggerOverview::ProcessEvent(const Event &event)
+void TriggerOverview::ProcessEvent(const TEvent& event, manager_t&)
 {
     const auto& branch =  GetBranch(event);
     const auto& trigger = branch.Trigger;
 
     CBESum->Fill(trigger.CBEnergySum);
     Multiplicity->Fill(trigger.ClusterMultiplicity);
-    nErrorsEvent->Fill(trigger.Errors.size());
+    nErrorsEvent->Fill(trigger.DAQErrors.size());
 
-    for(const TCluster& cluster : branch.AllClusters) {
-        if(cluster.GetDetectorType() == Detector_t::Type_t::CB) {
-            for(const TClusterHit& hit : cluster.Hits) {
+    for(const TClusterPtr& cluster : branch.Clusters) {
+        if(cluster->DetectorType == Detector_t::Type_t::CB) {
+            for(const TClusterHit& hit : cluster->Hits) {
                 for(const TClusterHitDatum datum : hit.Data) {
                     if(datum.GetType() == Channel_t::Type_t::Integral) {
                         CBESum_perCh->Fill(trigger.CBEnergySum, hit.Channel);
@@ -177,7 +176,7 @@ void TriggerOverview::ShowResult()
             << endc;
 }
 
-TargetOverview::TargetOverview(const string& name, PhysOptPtr opts):
+TargetOverview::TargetOverview(const string& name, OptionsPtr opts):
     DataOverviewBase(name, opts)
 {
     VertexXY = HistFac.makeTH2D("Vertex XY","X/cm","Y/cm",
@@ -191,7 +190,7 @@ TargetOverview::TargetOverview(const string& name, PhysOptPtr opts):
 TargetOverview::~TargetOverview()
 {}
 
-void TargetOverview::ProcessEvent(const Event& event)
+void TargetOverview::ProcessEvent(const TEvent& event, manager_t&)
 {
     const auto& target = GetBranch(event).Target;
     VertexXY->Fill(target.Vertex.X(), target.Vertex.Y());
@@ -216,7 +215,7 @@ void ParticleOverview::SetBinLabels(TH1D *hist, const ParticleTypeDatabase::Type
     }
 }
 
-ParticleOverview::ParticleOverview(const string &name, PhysOptPtr opts):
+ParticleOverview::ParticleOverview(const string &name, OptionsPtr opts):
     DataOverviewBase(name, opts)
 {
     const BinSettings bins_particles(15);
@@ -235,7 +234,7 @@ ParticleOverview::~ParticleOverview()
 
 }
 
-void ParticleOverview::ProcessEvent(const Event &event)
+void ParticleOverview::ProcessEvent(const TEvent& event, manager_t&)
 {
     const auto& particles = GetBranch(event).Particles.GetAll();
     nParticles->Fill(particles.size());

@@ -159,12 +159,12 @@ class EtapOmegaG : public Physics {
     ref_TTree_t ref_TTree;
 
 
-    void ProcessSig(const data::ParticleTree_t& particletree, const data::Event::Data& data);
-    void ProcessRef(const data::ParticleTree_t& particletree, const data::Event::Data& data);
+    void ProcessSig(const TParticleTree_t& particletree, const TEvent::Data& data);
+    void ProcessRef(const TParticleTree_t& particletree, const TEvent::Data& data);
 
 
     template<typename T>
-    const T& getHistogram(const data::ParticleTree_t& particletree,
+    const T& getHistogram(const TParticleTree_t& particletree,
                           const std::vector<EtapOmegaG::perDecayHists_t<T>>& perDecayHists,
                           int& index
                           ) {
@@ -183,8 +183,8 @@ class EtapOmegaG : public Physics {
     }
 
 public:
-    EtapOmegaG(const std::string& name, PhysOptPtr opts);
-    virtual void ProcessEvent(const data::Event& event) override;
+    EtapOmegaG(const std::string& name, OptionsPtr opts);
+    virtual void ProcessEvent(const TEvent& event, manager_t& manager) override;
     virtual void Finish() override;
     virtual void ShowResult() override;
 };

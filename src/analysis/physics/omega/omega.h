@@ -32,16 +32,16 @@ public:
         PerChannel_t(const std::string& Title, SmartHistFactory& hf);
 
         void Show();
-        void Fill(const data::Event::Data& d);
+        void Fill(const TEvent::Data& d);
     };
 
     std::map<std::string,PerChannel_t> channels;
 
-    OmegaMCTruePlots(const std::string& name, PhysOptPtr opts);
+    OmegaMCTruePlots(const std::string& name, OptionsPtr opts);
 
-    void ProcessEvent(const data::Event& event);
-    void Finish();
-    void ShowResult();
+    virtual void ProcessEvent(const TEvent& event, manager_t& manager) override;
+    virtual void Finish() override;
+    virtual void ShowResult() override;
 };
 
 class OmegaBase: public Physics {
@@ -54,22 +54,22 @@ public:
 
 protected:
     utils::A2SimpleGeometry geo;
-    double calcEnergySum(const data::ParticleList &particles) const;
-    data::ParticleList getGeoAccepted(const data::ParticleList& p) const;
+    double calcEnergySum(const TParticleList& particles) const;
+    TParticleList getGeoAccepted(const TParticleList& p) const;
 
     DataMode mode = DataMode::Reconstructed;
 
-    virtual void Analyse(const data::Event::Data& data, const data::Event& event) =0;
+    virtual void Analyse(const TEvent::Data& data, const TEvent& event, manager_t& manager) =0;
 
 
 
 public:
-    OmegaBase(const std::string &name, PhysOptPtr opts);
+    OmegaBase(const std::string &name, OptionsPtr opts);
     virtual ~OmegaBase() = default;
 
-    virtual void ProcessEvent(const data::Event& event) override;
-    void Finish() override;
-    void ShowResult() override;
+    virtual void ProcessEvent(const TEvent& event, manager_t& manager) override;
+    virtual void Finish() override;
+    virtual void ShowResult() override;
 
 
 };
@@ -111,15 +111,15 @@ protected:
 
     std::map<std::string, perDecayhists_t> gg_decays;
 
-    virtual void Analyse(const data::Event::Data& data, const data::Event& event) override;
+    virtual void Analyse(const TEvent::Data& data, const TEvent& event, manager_t&) override;
 
     BinSettings imbinning = BinSettings(1000);
     BinSettings mmbinning = BinSettings(1000, 400,1400);
 
 public:
-    OmegaEtaG(const std::string& name, PhysOptPtr opts);
+    OmegaEtaG(const std::string& name, OptionsPtr opts);
     virtual ~OmegaEtaG() = default;
-    void ShowResult() override;
+    virtual void ShowResult() override;
 };
 
 
@@ -136,11 +136,11 @@ protected:
 
 public:
 
-    OmegaMCTree(const std::string& name, PhysOptPtr opts);
+    OmegaMCTree(const std::string& name, OptionsPtr opts);
     virtual ~OmegaMCTree();
 
-    void ProcessEvent(const data::Event& event) override;
-    void ShowResult() override;
+    virtual void ProcessEvent(const TEvent& event, manager_t& manager) override;
+    virtual void ShowResult() override;
     TLorentzVector getGamma1() const;
     void setGamma1(const TLorentzVector& value);
 };
@@ -151,7 +151,7 @@ class OmegaEtaG2 : public OmegaBase {
 
     // OmegaBase interface
 protected:
-    void Analyse(const data::Event::Data &data, const data::Event &event) override;
+    void Analyse(const TEvent::Data &data, const TEvent& event, manager_t& manager) override;
 
 
     enum SigBgFlag_t {
@@ -160,7 +160,7 @@ protected:
         flagBackground
     };
 
-    SigBgFlag_t identify(const data::Event &event) const;
+    SigBgFlag_t identify(const TEvent& event) const;
 
 
     std::shared_ptr<ant::Tree<const ParticleTypeDatabase::Type&>> signal_tree;
@@ -214,6 +214,7 @@ protected:
 
     bool data_proton = true;
     bool data_tagger = true;
+    bool just_preselect = false;
 
     double cut_ESum = 550.0;
     double cut_Copl = std_ext::degree_to_radian(15.0);
@@ -222,7 +223,7 @@ protected:
     interval<double> photon_E_taps = {200.0,1600.0};
     interval<double> proton_theta  = std_ext::degree_to_radian(interval<double>({0.0, 45.0}));
 
-    double calcEnergySum2(const data::Event::Data &e) const;
+    double calcEnergySum2(const TEvent::Data &e) const;
 
     struct expected_peak_t {
         double Mean;
@@ -249,14 +250,14 @@ protected:
     ant::analysis::PromptRandom::Switch promptrandom;
     utils::KinFitter fitter;
 
-    bool AcceptedPhoton(const data::ParticlePtr& photon);
-    bool AcceptedProton(const data::ParticlePtr& proton);
+    bool AcceptedPhoton(const TParticlePtr& photon);
+    bool AcceptedProton(const TParticlePtr& proton);
 
-    data::ParticleList FilterPhotons(const data::ParticleList& list);
-    data::ParticleList FilterProtons(const data::ParticleList& list);
+    TParticleList FilterPhotons(const TParticleList& list);
+    TParticleList FilterProtons(const TParticleList& list);
 
 public:
-    OmegaEtaG2(const std::string& name, PhysOptPtr opts);
+    OmegaEtaG2(const std::string& name, OptionsPtr opts);
     virtual ~OmegaEtaG2();
 
 };

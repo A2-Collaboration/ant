@@ -9,7 +9,7 @@ using namespace std;
 using namespace ant;
 using namespace ant::analysis;
 
-Physics::Physics(const string &name, PhysOptPtr opts):
+Physics::Physics(const string &name, OptionsPtr opts):
     name_(name),
     HistFac(name),
     Options(opts)
@@ -18,7 +18,7 @@ Physics::Physics(const string &name, PhysOptPtr opts):
         HistFac.SetDirDescription(opts->Flatten());
 }
 
-void Physics::Initialize(data::Slowcontrol&)
+void Physics::Initialize(input::SlowControl&)
 {
 }
 
@@ -28,7 +28,7 @@ PhysicsRegistry& PhysicsRegistry::get_instance()
     return instance;
 }
 
-std::unique_ptr<Physics> PhysicsRegistry::Create(const string& name, PhysOptPtr opts)
+std::unique_ptr<Physics> PhysicsRegistry::Create(const string& name, OptionsPtr opts)
 {
     auto creator = PhysicsRegistry::get_instance().physics_creators.find(name);
 

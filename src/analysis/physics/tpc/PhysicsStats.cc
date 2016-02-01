@@ -1,5 +1,4 @@
 #include "PhysicsStats.h"
-#include "data/Particle.h"
 #include "base/ParticleType.h"
 #include "plot/root_draw.h"
 #include "utils/particle_tools.h"
@@ -9,15 +8,13 @@ using namespace std;
 using namespace ant;
 using namespace ant::analysis;
 using namespace ant::analysis::physics;
-using namespace ant::analysis::data;
 
-
-TPC_PhysicsStats::TPC_PhysicsStats(const std::string& name, PhysOptPtr& opts): Physics(name, opts)
+TPC_PhysicsStats::TPC_PhysicsStats(const std::string& name, OptionsPtr& opts): Physics(name, opts)
 {
 
 }
 
-bool containsCharged(const ParticleList& particles) {
+bool containsCharged(const TParticleList& particles) {
     for(const auto& p : particles) {
         if(p->Type() == ParticleTypeDatabase::PiCharged || p->Type() == ParticleTypeDatabase::eCharged)
             return true;
@@ -25,9 +22,9 @@ bool containsCharged(const ParticleList& particles) {
     return false;
 }
 
-void TPC_PhysicsStats::ProcessEvent(const Event& event)
+void TPC_PhysicsStats::ProcessEvent(const TEvent& event, manager_t&)
 {
-    const auto& particletree = event.MCTrue.ParticleTree;
+    const auto& particletree = event.MCTrue->ParticleTree;
     if(particletree) {
         const auto process = utils::ParticleTools::GetProductionChannelString(particletree);
         TH1D* h = nullptr;
@@ -41,10 +38,10 @@ void TPC_PhysicsStats::ProcessEvent(const Event& event)
             h = entry->second;
         }
 
-        const auto& particles = event.MCTrue.Particles.GetAll();
+        const auto& particles = event.MCTrue->Particles.GetAll();
         if(containsCharged(particles)) {
 
-            for(const ParticlePtr& p : particles) {
+            for(const TParticlePtr& p : particles) {
                 if(p->Type().Charged()) {
                     h->Fill(p->Theta()*TMath::RadToDeg());
                 }

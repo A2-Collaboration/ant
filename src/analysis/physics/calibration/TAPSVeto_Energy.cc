@@ -4,12 +4,11 @@
 
 using namespace std;
 using namespace ant;
-using namespace ant::analysis::data;
 using namespace ant::analysis::physics;
 
 
 
-TAPSVeto_Energy::TAPSVeto_Energy(const string& name, analysis::PhysOptPtr opts) :
+TAPSVeto_Energy::TAPSVeto_Energy(const string& name, OptionsPtr opts) :
     Physics(name, opts)
 {
     auto detector = ExpConfig::Setup::GetDetector(Detector_t::Type_t::TAPSVeto);
@@ -35,15 +34,15 @@ TAPSVeto_Energy::TAPSVeto_Energy(const string& name, analysis::PhysOptPtr opts) 
                 );
 }
 
-void TAPSVeto_Energy::ProcessEvent(const Event& event)
+void TAPSVeto_Energy::ProcessEvent(const TEvent& event, manager_t&)
 {
-    const auto& cands = event.Reconstructed.Candidates;
+    const auto& cands = event.Reconstructed->Candidates;
 
     // pedestals
-    for(const TCluster& cluster : event.Reconstructed.AllClusters) {
-        if(cluster.GetDetectorType() != Detector_t::Type_t::TAPSVeto)
+    for(const TClusterPtr& cluster : event.Reconstructed->Clusters) {
+        if(cluster->DetectorType != Detector_t::Type_t::TAPSVeto)
             continue;
-        for(const TClusterHit& clusterhit : cluster.Hits) {
+        for(const TClusterHit& clusterhit : cluster->Hits) {
             /// \todo check for timing hit?
             for(const TClusterHitDatum& datum : clusterhit.Data) {
                 if(datum.GetType() != Channel_t::Type_t::Pedestal)
@@ -57,8 +56,8 @@ void TAPSVeto_Energy::ProcessEvent(const Event& event)
     for(const auto& candidate : cands) {
         if(candidate->Clusters.size() != 2)
             continue;
-        if(candidate->GetDetector() & Detector_t::Type_t::TAPS &&
-           candidate->GetDetector() & Detector_t::Type_t::TAPSVeto
+        if(candidate->Detector & Detector_t::Type_t::TAPS &&
+           candidate->Detector & Detector_t::Type_t::TAPSVeto
            )
         {
             // search for TAPSVeto cluster

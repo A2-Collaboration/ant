@@ -27,3 +27,14 @@ void SetupLogger();
 // Please see
 // https://github.com/easylogging/easyloggingpp
 // what this nice logger can do
+
+namespace ant {
+namespace logger {
+
+struct DebugInfo {
+    static int nUnpackedBuffers;
+    static int nProcessedEvents;
+};
+
+}}
+

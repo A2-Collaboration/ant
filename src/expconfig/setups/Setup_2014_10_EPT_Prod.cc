@@ -10,7 +10,7 @@ class Setup_2014_10_EPT_Prod : public Setup_2014_EPT
 {
 public:
 
-    Setup_2014_10_EPT_Prod(const std::string& name, SetupOptPtr opt)
+    Setup_2014_10_EPT_Prod(const std::string& name, OptionsPtr opt)
         : Setup_2014_EPT(name, opt)
     {
         // see https://wwwa2.kph.uni-mainz.de/intern/daqwiki/analysis/beamtimes/2014-10-14
@@ -24,10 +24,10 @@ public:
     }
 
 
-    bool Matches(const THeaderInfo& header) const override {
-        if(!Setup_2014_EPT::Matches(header))
+    bool Matches(const TID& tid) const override {
+        if(!Setup_2014_EPT::Matches(tid))
             return false;
-        if(!std_ext::time_between(header.Timestamp, "2014-10-14", "2014-11-03"))
+        if(!std_ext::time_between(tid.Timestamp, "2014-10-14", "2014-11-03"))
             return false;
         return true;
     }

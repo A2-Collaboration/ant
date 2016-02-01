@@ -1,7 +1,5 @@
 #pragma once
 
-#include "base/Detector_t.h"
-#include "tree/TCluster.h"
 #include "tree/TEvent.h"
 #include "expconfig/ExpConfig.h"
 
@@ -24,6 +22,12 @@ struct TAPSVeto;
 namespace reconstruct {
 
 class CandidateBuilder {
+public:
+
+    using sorted_clusters_t = std::map<Detector_t::Type_t, std::list< TClusterPtr > >;
+    using candidates_t = decltype(TEvent::Data::Candidates);
+    using clusters_t = decltype(TEvent::Data::Clusters);
+
 protected:
 
     /**
@@ -41,27 +45,23 @@ protected:
     const ant::ExpConfig::Reconstruct::candidatebuilder_config_t config;
 
     void Build_PID_CB(
-            std::map<Detector_t::Type_t, std::list< TCluster > >& sorted_clusters,
-            TEvent::candidates_t& candidates,
-            std::vector<TCluster>& all_clusters
+            sorted_clusters_t& sorted_clusters,
+            candidates_t& candidates, clusters_t& all_clusters
             );
 
     void Build_TAPS_Veto(
-            std::map<Detector_t::Type_t, std::list< TCluster > >& sorted_clusters,
-            TEvent::candidates_t& candidates,
-            std::vector<TCluster>& all_clusters
+            sorted_clusters_t& sorted_clusters,
+            candidates_t& candidates, clusters_t& all_clusters
             );
 
     void Catchall(
-            std::map<Detector_t::Type_t, std::list< TCluster > >& sorted_clusters,
-            TEvent::candidates_t& candidates,
-            std::vector<TCluster>& all_clusters
+            sorted_clusters_t& sorted_clusters,
+            candidates_t& candidates, clusters_t& all_clusters
             );
 
     virtual void BuildCandidates(
-            std::map<Detector_t::Type_t, std::list<TCluster> >& sorted_clusters,
-            TEvent::candidates_t& candidates,
-            std::vector<TCluster>& all_clusters);
+            sorted_clusters_t& sorted_clusters,
+            candidates_t& candidates,  clusters_t& all_clusters);
 
 public:
 
@@ -74,9 +74,9 @@ public:
     // with tracks built from the given sorted clusters
     /// \todo make this method abstract and create proper derived Candidate builders
     virtual void Build(
-            std::map<Detector_t::Type_t, std::list<TCluster> > sorted_clusters,
-            TEvent::candidates_t& candidates,
-            std::vector<TCluster>& all_clusters
+            std::map<Detector_t::Type_t, std::list<TClusterPtr> > sorted_clusters,
+            candidates_t& candidates,
+            clusters_t& all_clusters
             );
 };
 

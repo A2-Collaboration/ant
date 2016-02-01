@@ -26,6 +26,7 @@ typedef Long_t     int64_t;
 #include <tuple>
 #include <cstdint>
 #include <stdexcept>
+#include <list>
 
 static_assert(std::is_same<ULong_t, std::uint64_t>::value, "Type size mismatch");
 static_assert(std::is_same<Long_t, std::int64_t>::value, "Type size mismatch");
@@ -65,7 +66,8 @@ struct TID
     TID(
             std::uint32_t timestamp,
             std::uint32_t lower = 0,
-            const std::initializer_list<Flags_t> flags={})
+            const std::list<Flags_t>& flags={}
+       )
         :
           Flags(0),
           Timestamp(timestamp),
@@ -75,6 +77,11 @@ struct TID
         for(const auto& f : flags) {
             Flags |= 1 << static_cast<std::uint8_t>(f);
         }
+    }
+
+    template<class Archive>
+    void serialize(Archive& archive) {
+        archive(Flags, Timestamp, Lower, Reserved);
     }
 
     // prevent implicit conversion calls
@@ -183,6 +190,12 @@ struct TKeyValue
     virtual std::ostream& Print( std::ostream& s) const override {
         return s << Key << "=" << Value;
     }
+
+    template<class Archive>
+    void serialize(Archive& archive) {
+        archive(Key, Value);
+    }
+
 #endif
     TKeyValue() : Key(), Value() {}
     virtual ~TKeyValue() {}

@@ -17,7 +17,7 @@ protected:
     struct branch_hists {
         branch_hists(SmartHistFactory& HistFac,const std::string& name);
         TH1D* hist;
-        void Fill(const data::Event::Data& data);
+        void Fill(const TEvent::Data& data);
     };
 
     branch_hists mctrue;
@@ -26,11 +26,11 @@ protected:
     std::vector< std::tuple<interval<double>,interval<double>,TH2D*> > bananas;
 
 public:
-    ParticleIDCheck(const std::string& name,PhysOptPtr opts);
+    ParticleIDCheck(const std::string& name,OptionsPtr opts);
 
-    void ProcessEvent(const data::Event &event) override;
-    void Finish() override;
-    void ShowResult() override;
+    virtual void ProcessEvent(const TEvent& event, manager_t& manager) override;
+    virtual void Finish() override;
+    virtual void ShowResult() override;
 };
 
 }

@@ -1,6 +1,6 @@
 #pragma once
 
-#include "analysis/data/Particle.h"
+#include "tree/TParticle.h"
 
 #include <string>
 #include <vector>
@@ -97,9 +97,9 @@ private:
 
     PhotonBeamVector Beam = PhotonBeamVector("Beam");
 
-    double EnergyResolution(const data::ParticlePtr& p) const;
-    double ThetaResolution(const data::ParticlePtr& p) const;
-    double PhiResolution(const data::ParticlePtr& p) const;
+    double EnergyResolution(const TParticlePtr& p) const;
+    double ThetaResolution(const TParticlePtr& p) const;
+    double PhiResolution(const TParticlePtr& p) const;
 
     static TLorentzVector GetVector(const std::vector<double>& EkThetaPhi, const double m);
 
@@ -143,11 +143,11 @@ public:
     KinFitter(const std::string& name, unsigned numGammas);
 
     void SetEgammaBeam(const double& ebeam);
-    void SetProton(const data::ParticlePtr& proton);
-    void SetPhotons(const data::ParticleList& photons);
+    void SetProton(const TParticlePtr& proton);
+    void SetPhotons(const TParticleList& photons);
 
-    data::ParticlePtr GetFittedProton() const;
-    data::ParticleList GetFittedPhotons() const;
+    TParticlePtr GetFittedProton() const;
+    TParticleList GetFittedPhotons() const;
     double GetFittedBeamE() const;
 
     APLCON::Result_t DoFit();

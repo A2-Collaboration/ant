@@ -2,7 +2,6 @@
 #include "plot/root_draw.h"
 #include "utils/combinatorics.h"
 #include "base/std_ext/math.h"
-#include "data/Particle.h"
 #include "utils/particle_tools.h"
 
 #include <algorithm>
@@ -15,12 +14,11 @@
 using namespace std;
 using namespace ant::std_ext;
 using namespace ant::analysis;
-using namespace ant::analysis::data;
 using namespace ant::analysis::physics;
 
 
 
-Etap3pi0::Etap3pi0(const std::string& name, PhysOptPtr opts) :
+Etap3pi0::Etap3pi0(const std::string& name, OptionsPtr opts) :
     Physics(name, opts),
     dataset(Options->Get<string>("dataset"))
 {
@@ -122,7 +120,7 @@ Etap3pi0::Etap3pi0(const std::string& name, PhysOptPtr opts) :
     bkg_tree = ParticleTypeTreeDatabase::Get(ParticleTypeTreeDatabase::Channel::Direct3Pi0_6g);
 }
 
-TLorentzVector Etap3pi0::MakeLoretzSum(const ParticleList& particles)
+TLorentzVector Etap3pi0::MakeLoretzSum(const TParticleList& particles)
 {
     TLorentzVector lorenzTemp(0,0,0,0);
     for (const auto& prat: particles)
@@ -130,7 +128,7 @@ TLorentzVector Etap3pi0::MakeLoretzSum(const ParticleList& particles)
     return lorenzTemp;
 }
 
-void Etap3pi0::FillCrossChecks(const ParticleList& photons, const ParticleList& mcphotons)
+void Etap3pi0::FillCrossChecks(const TParticleList& photons, const TParticleList& mcphotons)
 {
     hists.at("xc").at("Ngamma")->Fill(photons.size());
     hists.at("xc").at("NgammaMC")->Fill(mcphotons.size());
@@ -138,7 +136,7 @@ void Etap3pi0::FillCrossChecks(const ParticleList& photons, const ParticleList& 
     if (photons.size() != 6)
         return;
 
-    auto fill_combinations = [] (TH1* h, unsigned multiplicity, const data::ParticleList& particles) {
+    auto fill_combinations = [] (TH1* h, unsigned multiplicity, const TParticleList& particles) {
         for( auto comb = utils::makeCombination(particles,multiplicity); !comb.Done(); ++comb) {
              TLorentzVector sum(0,0,0,0);
              for(const auto& p : comb) {
@@ -154,15 +152,15 @@ void Etap3pi0::FillCrossChecks(const ParticleList& photons, const ParticleList& 
 }
 
 
-Etap3pi0::result_t Etap3pi0::MakeMC3pi0(const Event::Data& mcEvt )
+Etap3pi0::result_t Etap3pi0::MakeMC3pi0(const TEvent::Data& mcEvt )
 {
     result_t result;
 
     result.Chi2_intermediate = 0;
     result.Chi2_mother = 0;
 
-    const auto& pions = mcEvt.Intermediates.Get(ParticleTypeDatabase::Pi0);
-    const auto& etaprime = mcEvt.Intermediates.Get(ParticleTypeDatabase::EtaPrime);
+    const auto& pions = utils::ParticleTools::FindParticles(ParticleTypeDatabase::Pi0, mcEvt.ParticleTree);
+    const auto& etaprime = utils::ParticleTools::FindParticles(ParticleTypeDatabase::EtaPrime, mcEvt.ParticleTree);
 
     result.success = ( pions.size() == 3) && (etaprime.size() == 1 );
 
@@ -179,7 +177,7 @@ Etap3pi0::result_t Etap3pi0::MakeMC3pi0(const Event::Data& mcEvt )
     return result;
 }
 
-Etap3pi0::result_t Etap3pi0::Make3pi0(const ParticleList& photons)
+Etap3pi0::result_t Etap3pi0::Make3pi0(const TParticleList& photons)
 {
     result_t result;
 
@@ -201,7 +199,7 @@ Etap3pi0::result_t Etap3pi0::Make3pi0(const ParticleList& photons)
         bool skip_comination = false;
         for(unsigned i=0;i<tmp.mesons.size();i++)
         {
-            auto pi0candidate = make_shared<Particle>(ParticleTypeDatabase::Pi0, *(tmp.g_final[2*i]) + *(tmp.g_final[2*i+1]));
+            auto pi0candidate = make_shared<TParticle>(ParticleTypeDatabase::Pi0, *(tmp.g_final[2*i]) + *(tmp.g_final[2*i+1]));
             double chi2 = std_ext::sqr((pi0candidate->M() - 126) / 15); // width and center from fit
             hists.at("chi2s").at("signal_pi0")->Fill(chi2);
             if ( chi2 > pi0Chi2Cut )
@@ -236,7 +234,7 @@ Etap3pi0::result_t Etap3pi0::Make3pi0(const ParticleList& photons)
     }
     return result;
 }
-Etap3pi0::result_t Etap3pi0::MakeEta2pi0(const ParticleList& photons)
+Etap3pi0::result_t Etap3pi0::MakeEta2pi0(const TParticleList& photons)
 {
     result_t result;
     const double pi0Chi2cut = 3;
@@ -261,21 +259,21 @@ Etap3pi0::result_t Etap3pi0::MakeEta2pi0(const ParticleList& photons)
             unsigned etacount = 0;
             unsigned picount = 0;
 
-            auto etacandidate = make_shared<Particle>(ParticleTypeDatabase::Eta,*(tmp.g_final[2*etaIndex]) + *(tmp.g_final[2*etaIndex+1]));
+            auto etacandidate = make_shared<TParticle>(ParticleTypeDatabase::Eta,*(tmp.g_final[2*etaIndex]) + *(tmp.g_final[2*etaIndex+1]));
             double chi2eta    = std_ext::sqr((etacandidate->M() - 515.5) / 19.4);        // width and center from fit
             hists.at("chi2s").at("ref_eta")->Fill(chi2eta);
             if ( chi2eta < etaChi2cut)
                 etacount++;
 
             unsigned pi1Index = ( etaIndex + 1 ) % 3;
-            auto pi1candidate = make_shared<Particle>(ParticleTypeDatabase::Pi0,*(tmp.g_final[2*pi1Index]) + *(tmp.g_final[2*pi1Index+1]));
+            auto pi1candidate = make_shared<TParticle>(ParticleTypeDatabase::Pi0,*(tmp.g_final[2*pi1Index]) + *(tmp.g_final[2*pi1Index+1]));
             double chipi1     = std_ext::sqr((pi1candidate->M() - 126) / 15);
             hists.at("chi2s").at("ref_pi0")->Fill(chipi1);
             if ( chipi1 < pi0Chi2cut )
                 picount++;
 
             unsigned pi2Index = ( etaIndex + 2 ) % 3;
-            auto pi2candidate =  make_shared<Particle>(ParticleTypeDatabase::Pi0,*(tmp.g_final[2*pi2Index]) + *(tmp.g_final[2*pi2Index+1]));
+            auto pi2candidate =  make_shared<TParticle>(ParticleTypeDatabase::Pi0,*(tmp.g_final[2*pi2Index]) + *(tmp.g_final[2*pi2Index+1]));
             double chipi2     =  std_ext::sqr((pi2candidate->M() - 126) / 15);
             hists.at("chi2s").at("ref_pi0")->Fill(chipi2);
             if (chipi2 < pi0Chi2cut)
@@ -312,7 +310,7 @@ Etap3pi0::result_t Etap3pi0::MakeEta2pi0(const ParticleList& photons)
     return result;
 }
 
-bool Etap3pi0::MakeMCProton(const data::Event::Data& mcdata, ParticlePtr& proton)
+bool Etap3pi0::MakeMCProton(const TEvent::Data& mcdata, TParticlePtr& proton)
 {
    const auto& protonlist = mcdata.Particles.Get(ParticleTypeDatabase::Proton);
    if (protonlist.size() != 1)
@@ -321,10 +319,10 @@ bool Etap3pi0::MakeMCProton(const data::Event::Data& mcdata, ParticlePtr& proton
    return true;
 }
 
-void Etap3pi0::ProcessEvent(const data::Event& event)
+void Etap3pi0::ProcessEvent(const TEvent& event, manager_t&)
 {
-    const auto& data   = event.Reconstructed;
-    const auto& mcdata = event.MCTrue;
+    const auto& data   = *event.Reconstructed;
+    const auto& mcdata = *event.MCTrue;
 
 
     if ( mcdata.ParticleTree )
@@ -362,7 +360,7 @@ void Etap3pi0::ProcessEvent(const data::Event& event)
     const auto& mcphotons = mcdata.Particles.Get(ParticleTypeDatabase::Photon);
 
     FillCrossChecks(photons,mcphotons);
-    hists.at("xc").at("NTagger")->Fill(data.TaggerHits.size());
+    hists.at("xc").at("NTagger")->Fill(data.Tagger.Hits.size());
 
     hists.at("steps").at("IM_base")->Fill(MakeLoretzSum(photons).M());
 
@@ -379,10 +377,10 @@ void Etap3pi0::ProcessEvent(const data::Event& event)
     hists.at("channels").at("nocut")->Fill(utils::ParticleTools::GetDecayString(mcdata.ParticleTree).c_str(),1);
 
     // we need a tagger hit
-    if (data.TaggerHits.size() != 1)
+    if (data.Tagger.Hits.size() != 1)
         return;
     hists.at("steps").at("evcount")->Fill("req. 1 tagger hit",1);
-    //vector<ParticlePtr> protons;
+    //vector<TParticlePtr> protons;
     // only take proton if in TAPS and only select single
     /*
     for ( const auto& pcandidate: protonCandidates)
@@ -632,12 +630,12 @@ void Etap3pi0::KinFitter::SetEgammaBeam(const double& ebeam)
     EgammaBeam.second = taggerSmear(ebeam);
 }
 
-void Etap3pi0::KinFitter::SetProtonTAPS(const data::ParticlePtr& proton)
+void Etap3pi0::KinFitter::SetProtonTAPS(const TParticlePtr& proton)
 {
     ProtonTAPS.SetEkThetaPhi(proton->Ek(),proton->Theta(),proton->Phi());
 }
 
-void Etap3pi0::KinFitter::SetPhotons(const std::vector<ParticlePtr>& photons)
+void Etap3pi0::KinFitter::SetPhotons(const std::vector<TParticlePtr>& photons)
 {
     assert(Photons.size() == photons.size());
 

@@ -2,15 +2,9 @@
 
 #include "expconfig/detectors/TAPS.h"
 
-#include "analysis/plot/HistogramFactories.h"
-#include "analysis/data/Event.h"
-#include "analysis/utils/combinatorics.h"
-
 #include "calibration/fitfunctions/FitLandau.h"
 #include "calibration/gui/CalCanvas.h"
 #include "calibration/fitfunctions/FitGausPol3.h"
-
-#include "tree/TDataRecord.h"
 
 #include "root-addons/cbtaps_display/TH2TAPS.h"
 #include "base/Logger.h"
@@ -23,8 +17,6 @@
 using namespace std;
 using namespace ant;
 using namespace ant::calibration;
-using namespace ant::analysis;
-using namespace ant::analysis::data;
 
 TAPS_Energy::TAPS_Energy(std::shared_ptr<expconfig::detector::TAPS> taps,
         std::shared_ptr<DataManager> calmgr,

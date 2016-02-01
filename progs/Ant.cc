@@ -8,7 +8,6 @@
 #include "analysis/input/ant/AntReader.h"
 #include "analysis/input/goat/GoatReader.h"
 #include "analysis/input/pluto/PlutoReader.h"
-#include "analysis/input/geant/GeantReader.h"
 #include "analysis/utils/ParticleID.h"
 #include "analysis/physics/PhysicsManager.h"
 
@@ -22,9 +21,6 @@
 
 #include "reconstruct/Reconstruct.h"
 
-#include "tree/UnpackerReader.h"
-#include "tree/UnpackerWriter.h"
-#include "tree/THeaderInfo.h"
 #include "tree/TAntHeader.h"
 
 #include "base/std_ext/vector.h"
@@ -126,10 +122,10 @@ int main(int argc, char** argv) {
 
     auto cmd_calibrations  = cmd.add<TCLAP::MultiArg<string>>("c","calibration","Calibration to run",false,"calibration");
 
-    auto cmd_unpackerout  = cmd.add<TCLAP::ValueArg<string>>("u","unpackerout","Unpacker output file",false,"","outputfile");
-    auto cmd_u_writeuncal  = cmd.add<TCLAP::SwitchArg>("","u_writeuncalibrated","Unpacker: Output UNcalibrated detector reads (before reconstruct)",false);
+//    auto cmd_unpackerout  = cmd.add<TCLAP::ValueArg<string>>("u","unpackerout","Unpacker output file",false,"","outputfile");
+//    auto cmd_u_writeuncal  = cmd.add<TCLAP::SwitchArg>("","u_writeuncalibrated","Unpacker: Output UNcalibrated detector reads (before reconstruct)",false);
     auto cmd_u_disablerecon  = cmd.add<TCLAP::SwitchArg>("","u_disablereconstruct","Unpacker: Disable Reconstruct (disables also all analysis)",false);
-    auto cmd_u_writecal  = cmd.add<TCLAP::SwitchArg>("","u_writecalibrated","Unpacker: Output calibrated detector reads (only if Reconstruct found)",false);
+//    auto cmd_u_writecal  = cmd.add<TCLAP::SwitchArg>("","u_writecalibrated","Unpacker: Output calibrated detector reads (only if Reconstruct found)",false);
 
     auto cmd_p_disableParticleID  = cmd.add<TCLAP::SwitchArg>("","p_disableParticleID","Physics: Disable ParticleID",false);
     auto cmd_p_simpleParticleID  = cmd.add<TCLAP::SwitchArg>("","p_simpleParticleID","Physics: Use simple ParticleID (just protons/photons)",false);
@@ -191,20 +187,16 @@ int main(int argc, char** argv) {
         }
     }
 
-    // then init the unpacker root input file manager
-    auto unpackerFile = std_ext::make_unique<tree::UnpackerReader>(rootfiles);
-
-    // search for header info?
-    if(unpackerFile->OpenInput()) {
-        LOG(INFO) << "Found complete set of input ROOT trees for unpacker";
-        THeaderInfo headerInfo;
-        if(unpackerFile->GetUniqueHeaderInfo(headerInfo)) {
-            VLOG(5) << "Found unique header info " << headerInfo;
-            if(!headerInfo.SetupName.empty()) {
-                ExpConfig::Setup::ManualName = headerInfo.SetupName;
-                LOG(INFO) << "Using header info to manually set the setup name to " << ExpConfig::Setup::ManualName;
-            }
+    // check if there's a previous AntHeader present,
+    // which could tell us the SetupName
+    TAntHeader* previous_AntHeader;
+    if(rootfiles->GetObject<TAntHeader>("AntHeader",previous_AntHeader)) {
+        if(!previous_AntHeader->SetupName.empty()) {
+            ExpConfig::Setup::ManualName = previous_AntHeader->SetupName;
+            LOG(INFO) << "Setup name set to '" << ExpConfig::Setup::ManualName << "' from input file";
         }
+        else
+            LOG(WARNING) << "Found AntHeader in input files, but SetupName was empty";
     }
 
     // override the setup name from cmd line
@@ -218,7 +210,7 @@ int main(int argc, char** argv) {
 
 
     // now we can try to open the files with an unpacker
-    std::unique_ptr<Unpacker::Reader> unpacker = nullptr;
+    std::unique_ptr<Unpacker::Module> unpacker = nullptr;
     for(const auto& inputfile : cmd_input->getValue()) {
         VLOG(5) << "Unpacker: Looking at file " << inputfile;
         try {
@@ -234,7 +226,7 @@ int main(int argc, char** argv) {
             VLOG(5) << "Unpacker: " << e.what();
         }
         catch(RawFileReader::Exception e) {
-            LOG(WARNING) << "Unpacker: Error opening file "<<inputfile<<": " << e.what();
+            LOG(WARNING) << "Unpacker: Error opening file "<< inputfile<<": " << e.what();
         }
         catch(ExpConfig::ExceptionNoConfig) {
             LOG(ERROR) << "The inputfile " << inputfile << " cannot be unpacked without a manually specified setupname. "
@@ -243,46 +235,21 @@ int main(int argc, char** argv) {
         }
     }
 
-    // select the right source for the unpacker stage
-    if(unpacker != nullptr && unpackerFile->IsOpen()) {
-        LOG(WARNING) << "Found file suitable for unpacker and ROOT file for unpacker stage, preferring raw data file";
-    }
-    else if(unpackerFile->IsOpen()) {
-        LOG(INFO) << "Running unpacker stage from input ROOT file(s)";
-        unpacker = move(unpackerFile);
-    }
-    else if(unpacker != nullptr) {
-        LOG(INFO) << "Running unpacker stage from raw data file";
-    }
-
 
     // we can finally we can create the available input readers
     // for the analysis
 
     list< unique_ptr<analysis::input::DataReader> > readers;
 
-    if(unpacker) {
-        // turn the unpacker into a input::DataReader
-        auto reconstruct = cmd_u_disablerecon->isSet() ? nullptr : std_ext::make_unique<Reconstruct>();
-        auto unpacker_reader =
-                std_ext::make_unique<analysis::input::AntReader>(
-                    move(unpacker),
-                    move(reconstruct)
-                    );
-        // it may write stuff during the unpacker stage
-        if(cmd_unpackerout->isSet()) {
-            unpacker_reader->EnableUnpackerWriter(
-                        cmd_unpackerout->getValue(),
-                        cmd_u_writeuncal->isSet(),
-                        cmd_u_writecal->isSet()
-                        );
-        }
-        readers.push_back(move(unpacker_reader));
-    }
-
+    // turn the unpacker into a input::DataReader
+    readers.push_back(std_ext::make_unique<analysis::input::AntReader>(
+                          rootfiles,
+                          move(unpacker),
+                          cmd_u_disablerecon->isSet() ? nullptr : std_ext::make_unique<Reconstruct>()
+                          )
+                      );
     readers.push_back(std_ext::make_unique<analysis::input::PlutoReader>(rootfiles));
     readers.push_back(std_ext::make_unique<analysis::input::GoatReader>(rootfiles));
-    readers.push_back(std_ext::make_unique<analysis::input::GeantReader>(rootfiles));
 
 
     // create the list of enabled calibrations here,
@@ -363,19 +330,24 @@ int main(int argc, char** argv) {
 
         auto colpos = line.find(":");
 
-        auto classname = line.substr(0,colpos);
+        auto physicsname = line.substr(0,colpos);
         auto optstr = line.substr(colpos+1,line.npos);
         auto options = make_shared<OptionsList>(popts);
         options->SetOptions(optstr);
         try {
-            pm.AddPhysics( analysis::PhysicsRegistry::Create(classname, options) );
-            LOG(INFO) << "Activated physics class '" << classname << "' with options " << optstr;
+            pm.AddPhysics( analysis::PhysicsRegistry::Create(physicsname, options) );
+            LOG(INFO) << "Activated physics class '" << physicsname << "' with options " << optstr;
         } catch (...) {
             LOG(ERROR) << "Physics class '" << line << "' not found";
             return 1;
         }
-    }
 
+        auto unused_popts = options->GetUnused();
+        if(!unused_popts.empty()) {
+            LOG(ERROR) << "Physics class '" << physicsname << "' did not use the options: " << unused_popts;
+            return 1;
+        }
+    }
 
     for(const auto& calibration : enabled_calibrations) {
         const auto& physicsclasses = calibration->GetPhysicsModules();
@@ -395,6 +367,20 @@ int main(int argc, char** argv) {
                 return 1;
             }
         }
+    }
+
+    // check global unused after activating all physics classes
+    auto global_unused_popts =  popts->GetUnused();
+    if(!global_unused_popts.empty()) {
+        LOG(ERROR) << "The following global physics options were not used by any activated physics class: " << global_unused_popts;
+        return 1;
+    }
+
+    // check setup options after physics initialization
+    auto unused_setup_opts = setup_opts->GetUnused();
+    if(!unused_setup_opts.empty()) {
+        LOG(ERROR) << "The following setup options were not used: " << unused_setup_opts;
+        return 1;
     }
 
     // set up particle ID

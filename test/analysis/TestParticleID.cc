@@ -1,7 +1,6 @@
 #include "catch.hpp"
 
 #include "base/ParticleType.h"
-#include "analysis/data/Particle.h"
 #include "analysis/utils/ParticleID.h"
 #include "analysis/utils/root-addons.h"
 
@@ -13,14 +12,13 @@
 
 using namespace std;
 using namespace ant;
-using namespace ant::analysis::data;
 using namespace ant::analysis::utils;
 
-bool dEEtest(const CandidatePtr& cand, const std::shared_ptr<TCutG>& cut) {
+bool dEEtest(const TCandidatePtr& cand, const std::shared_ptr<TCutG>& cut) {
     return cut->IsInside(cand->CaloEnergy, cand->VetoEnergy);
 }
 
-bool toftest(const CandidatePtr& cand, const std::shared_ptr<TCutG>& cut) {
+bool toftest(const TCandidatePtr& cand, const std::shared_ptr<TCutG>& cut) {
     return cut->IsInside(cand->CaloEnergy, cand->Time);
 }
 
@@ -45,10 +43,10 @@ struct testdata {
     std::shared_ptr<TCutG> dEE_proton;
     std::shared_ptr<TCutG> tofcut;
 
-    CandidatePtr gamma;
-    CandidatePtr neutron;
-    CandidatePtr proton;
-    CandidatePtr electron;
+    TCandidatePtr gamma;
+    TCandidatePtr neutron;
+    TCandidatePtr proton;
+    TCandidatePtr electron;
 };
 
 const testdata data;
@@ -169,7 +167,7 @@ testdata::testdata()
 
     auto make_candidate = [] (double caloE, double time, double vetoE) {
         return std::make_shared<TCandidate>(Detector_t::Type_t::CB,
-                                            caloE, 0, 0, time, 0, vetoE, 0, std::vector<TCluster>{});
+                                            caloE, 0, 0, time, 0, vetoE, 0, std::vector<TClusterPtr>{});
     };
 
     //create particles and make sure they fulfill their respective cuts

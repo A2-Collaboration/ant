@@ -2,8 +2,6 @@
 
 #include "plot/root_draw.h"
 #include "plot/Histogram.h"
-#include "data/Event.h"
-#include "data/Particle.h"
 #include "base/ParticleType.h"
 #include "TH1.h"
 #include "TH2.h"
@@ -18,10 +16,9 @@
 using namespace ant;
 using namespace ant::analysis;
 using namespace ant::analysis::physics;
-using namespace ant::analysis::data;
 using namespace std;
 
-DeltaTreeGenerator::DeltaTreeGenerator(const std::string& name, PhysOptPtr opts):
+DeltaTreeGenerator::DeltaTreeGenerator(const std::string& name, OptionsPtr opts):
     Physics(name, opts),
     taggerEnergy(0)
 {
@@ -42,13 +39,13 @@ DeltaTreeGenerator::DeltaTreeGenerator(const std::string& name, PhysOptPtr opts)
     recgamma = HistFac.makeTH1D("#gamma - reconstructed","# #gamma","#",BinSettings(8));
 }
 
-void DeltaTreeGenerator::ProcessEvent(const Event &event)
+void DeltaTreeGenerator::ProcessEvent(const TEvent& event, manager_t&)
 {
-    ParticleList photons;
-    ParticleList mc_photons;
-    for( const auto& particle : event.Reconstructed.Particles.Get(ParticleTypeDatabase::Photon) )
+    TParticleList photons;
+    TParticleList mc_photons;
+    for( const auto& particle : event.Reconstructed->Particles.Get(ParticleTypeDatabase::Photon) )
         photons.emplace_back(particle);
-    for ( const auto& mc_particle: event.MCTrue.Particles.Get(ParticleTypeDatabase::Photon))
+    for ( const auto& mc_particle: event.MCTrue->Particles.Get(ParticleTypeDatabase::Photon))
         mc_photons.emplace_back(mc_particle);
 
     mcgamma->Fill(mc_photons.size());
@@ -79,7 +76,7 @@ void DeltaTreeGenerator::ProcessEvent(const Event &event)
 
 
     // taggerHits should always have size on though
-    for( const auto& taggerHit: event.MCTrue.TaggerHits)
+    for( const auto& taggerHit: event.MCTrue->Tagger.Hits)
     {
         taggerEnergy = taggerHit.PhotonEnergy;
         taggerHits->Fill( taggerEnergy );

@@ -1,4 +1,16 @@
-#!/bin/bash -e
+#!/bin/bash
+
+set -e
+
+# the secret password is not set for pull requests
+# and we also don't want the doc to be updated for that.. so that fits.
+
+if [[ $TRAVIS_PULL_REQUEST != 'false' ]]; then exit; fi
+
+openssl aes-256-cbc -K $encrypted_b7ce407a834b_key -iv $encrypted_b7ce407a834b_iv -in ci/travis_rsa.enc -out ci/travis_rsa -d
+chmod 0600 ci/travis_rsa
+cp ci/travis_rsa ~/.ssh/id_rsa 
+
 
 # Settings
 REPO_PATH=git@github.com:A2-Collaboration-dev/ant.git

@@ -1,8 +1,6 @@
 #include "DeltaPlusPhysics.h"
 
 #include "plot/Histogram.h"
-#include "data/Event.h"
-#include "data/Particle.h"
 #include "base/ParticleType.h"
 #include "TH1.h"
 #include "TH2.h"
@@ -14,10 +12,9 @@
 using namespace ant;
 using namespace ant::analysis;
 using namespace ant::analysis::physics;
-using namespace ant::analysis::data;
 using namespace std;
 
-DeltaPlusPhysics::DeltaPlusPhysics(const string& name, PhysOptPtr opts):
+DeltaPlusPhysics::DeltaPlusPhysics(const string& name, OptionsPtr opts):
     Physics(name, opts),
     prompt("DeltaPlus_prompt"),
     random("DeltaPlus_random"),
@@ -33,12 +30,12 @@ DeltaPlusPhysics::DeltaPlusPhysics(const string& name, PhysOptPtr opts):
     cout << "Pi0 cut: " << pi0_cut << " MeV\n";
 }
 
-void DeltaPlusPhysics::ProcessEvent(const Event &event)
+void DeltaPlusPhysics::ProcessEvent(const TEvent& event, manager_t&)
 {
-    ParticleList photons;
-    ParticleList protons;
+    TParticleList photons;
+    TParticleList protons;
 
-    for( auto& particle : event.Reconstructed.Particles.GetAll() ) {
+    for( auto& particle : event.Reconstructed->Particles.GetAll() ) {
 
         if( particle->Type() ==  ParticleTypeDatabase::Photon )
             photons.emplace_back(particle);
@@ -47,11 +44,11 @@ void DeltaPlusPhysics::ProcessEvent(const Event &event)
 
     }
 
-    for(const auto& cand : event.Reconstructed.Candidates ) {
+    for(const auto& cand : event.Reconstructed->Candidates ) {
         prompt["pid"]->Fill(cand->CaloEnergy, cand->VetoEnergy);
     }
 
-    for(const auto& taggerhit : event.Reconstructed.TaggerHits) {
+    for(const auto& taggerhit : event.Reconstructed->Tagger.Hits) {
         bool isPrompt = false;
 
         if( prompt_window.Contains(taggerhit.Time) ) {
@@ -64,13 +61,13 @@ void DeltaPlusPhysics::ProcessEvent(const Event &event)
         Histogm& h = isPrompt ? prompt : random;
 
         // some basic histograms
-        h["nPart"]->Fill(event.Reconstructed.Particles.GetAll().size());
+        h["nPart"]->Fill(event.Reconstructed->Particles.GetAll().size());
         h["tag_energy"]->Fill(taggerhit.PhotonEnergy);
         h["tag_time"]->Fill(taggerhit.Time);
 
 
         if(photons.size() == 2) {
-            const Particle pi0 ( ParticleTypeDatabase::Pi0, *photons.at(0) + *photons.at(1));
+            const TParticle pi0 ( ParticleTypeDatabase::Pi0, *photons.at(0) + *photons.at(1));
             h["2gIM"]->Fill(pi0.M());
 
             if( pi0_cut.Contains( pi0.M()) ) {

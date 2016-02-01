@@ -7,10 +7,9 @@
 
 using namespace std;
 using namespace ant;
-using namespace ant::analysis::data;
 using namespace ant::analysis::physics;
 
-CB_Energy::CB_Energy(const string& name, analysis::PhysOptPtr opts) :
+CB_Energy::CB_Energy(const string& name, OptionsPtr opts) :
     Physics(name, opts)
 {
     auto detector = ExpConfig::Setup::GetDetector(Detector_t::Type_t::CB);
@@ -23,19 +22,19 @@ CB_Energy::CB_Energy(const string& name, analysis::PhysOptPtr opts) :
     h_cbdisplay = HistFac.make<TH2CB>("h_cbdisplay","Number of entries");
 }
 
-void CB_Energy::ProcessEvent(const analysis::data::Event& event)
+void CB_Energy::ProcessEvent(const TEvent& event, manager_t&)
 {
-    const auto& cands = event.Reconstructed.Candidates;
+    const auto& cands = event.Reconstructed->Candidates;
 
     for( auto comb = analysis::utils::makeCombination(cands,2); !comb.Done(); ++comb ) {
-        const CandidatePtr& p1 = comb.at(0);
-        const CandidatePtr& p2 = comb.at(1);
+        const TCandidatePtr& p1 = comb.at(0);
+        const TCandidatePtr& p2 = comb.at(1);
 
         if(p1->VetoEnergy==0 && p2->VetoEnergy==0
-           && (p1->GetDetector() & Detector_t::Type_t::CB)
-           && (p2->GetDetector() & Detector_t::Type_t::CB)) {
-            const Particle a(ParticleTypeDatabase::Photon,comb.at(0));
-            const Particle b(ParticleTypeDatabase::Photon,comb.at(1));
+           && (p1->Detector & Detector_t::Type_t::CB)
+           && (p2->Detector & Detector_t::Type_t::CB)) {
+            const TParticle a(ParticleTypeDatabase::Photon,comb.at(0));
+            const TParticle b(ParticleTypeDatabase::Photon,comb.at(1));
             const TLorentzVector gg = a + b;
 
             auto cl1 = p1->FindCaloCluster();

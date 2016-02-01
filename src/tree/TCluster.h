@@ -1,52 +1,52 @@
 #pragma once
 
-#include "TDataRecord.h"
-
-
-#include <TVector3.h>
-#include <vector>
-#include <cmath>
-
-#ifndef __CINT__
-#include <iomanip>
-#include <sstream>
 #include "base/root_printable.h"
 #include "base/Detector_t.h"
 #include "base/std_ext/math.h"
-#endif
+
+#include "TVector3.h"
+
+#include <vector>
+#include <cmath>
+#include <iomanip>
+#include <sstream>
+#include <memory>
+
 
 namespace ant {
+
+struct TCluster; // defined at very end of file...
+
+using TClusterPtr = std::shared_ptr<TCluster>;
+using TClusterList = std::vector<TClusterPtr>;
 
 struct TClusterHitDatum
 {
     std::uint8_t Type;
     double Value;
 
-#ifndef __CINT__
     TClusterHitDatum(Channel_t::Type_t type, double value) :
         Type(static_cast<std::uint8_t>(type)),
         Value(value)
     {}
+
+    template<class Archive>
+    void serialize(Archive& archive) {
+        archive(Type, Value);
+    }
+
     Channel_t::Type_t GetType() const {
         return static_cast<Channel_t::Type_t>(Type);
     }
-#endif
 
     TClusterHitDatum() {}
-    virtual ~TClusterHitDatum() {}
-    ClassDef(TClusterHitDatum, ANT_UNPACKER_ROOT_VERSION)
 };
 
-#ifndef __CINT__
-struct TClusterHit: public ant::printable_traits
-#else
-struct TClusterHit
-#endif
+struct TClusterHit : printable_traits
 {
     std::uint32_t Channel;
     std::vector<TClusterHitDatum> Data;
 
-#ifndef __CINT__
 
     TClusterHit(unsigned channel,
                 const std::vector<TClusterHitDatum>& data):
@@ -57,6 +57,11 @@ struct TClusterHit
 
     }
 
+    template<class Archive>
+    void serialize(Archive& archive) {
+        archive(Channel, Data);
+    }
+
     virtual std::ostream& Print( std::ostream& s) const override {
         s << "TClusterHit Ch=" << Channel << ": ";
         for(auto& datum : Data) {
@@ -64,32 +69,23 @@ struct TClusterHit
         }
         return s;
     }
-#endif
 
     TClusterHit() {}
     virtual ~TClusterHit() {}
-    ClassDef(TClusterHit, ANT_UNPACKER_ROOT_VERSION)
-
 };
 
-
-#ifndef __CINT__
-struct TCluster: public ant::printable_traits
-#else
-struct TCluster
-#endif
+struct TCluster : printable_traits
 {
     double Energy;
     double Time;
     TVector3 Position;
-    std::uint8_t DetectorType;
+    Detector_t::Type_t DetectorType;
     std::uint32_t CentralElement;
     std::uint32_t Flags;
     double ShortEnergy;
 
     std::vector<TClusterHit> Hits;
 
-#ifndef __CINT__
 
     TCluster(
             const TVector3& pos,
@@ -102,22 +98,32 @@ struct TCluster
         Energy(E),
         Time(t),
         Position(pos),
-        DetectorType(static_cast<std::uint8_t>(type)),
+        DetectorType(type),
         CentralElement(central),
         Flags(0),
         ShortEnergy(std_ext::NaN),
         Hits(hits)
     {}
 
-    Detector_t::Type_t GetDetectorType() const {
-        return static_cast<Detector_t::Type_t>(DetectorType);
+    template<class Archive>
+    void load(Archive& archive) {
+        archive(Energy, Time,
+                Position,
+                DetectorType, CentralElement, Flags, ShortEnergy, Hits);
+    }
+
+    template<class Archive>
+    void save(Archive& archive) const {
+        archive(Energy, Time,
+                Position,
+                DetectorType, CentralElement, Flags, ShortEnergy, Hits);
     }
 
     virtual std::ostream& Print( std::ostream& s) const override {
         return s << "TCluster: " << Hits.size() << " hits @" << Position
                  << ", Energy=" << Energy << " ShortEnergy=" << ShortEnergy
                  << " Central Element=" << CentralElement
-                 << " Detector=" << Detector_t::ToString(GetDetectorType());
+                 << " Detector=" << Detector_t::ToString(DetectorType);
     }
 
     // the cluster alorithm may set those flags
@@ -148,15 +154,15 @@ struct TCluster
         return std::atan2(ShortEnergy, Energy);
     }
 
-#endif
-
     bool isSane() const {
         return std::isfinite(Energy) && std::isfinite(Time);
     }
 
-    TCluster() : Energy(), Time(), Position(), DetectorType(), CentralElement(), Flags(), ShortEnergy() {}
-    virtual ~TCluster()  {}
-    ClassDef(TCluster, ANT_UNPACKER_ROOT_VERSION)
+    TCluster() : Energy(), Time(),
+        Position(),
+        DetectorType(), CentralElement(), Flags(), ShortEnergy() {}
+    virtual ~TCluster() {}
 };
 
 }
+

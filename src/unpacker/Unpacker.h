@@ -4,8 +4,12 @@
  * @tableofcontents
  *
  * The unpacker stage handles the conversion of raw data, for example AcquRoot
- * Mk2 data, to a stream of ant::T* classes derived from ant::TDataRecord, for
- * example ant::TDetectorRead.
+ * Mk2 data, to a stream of ant::TEvent's. Usually they fill
+ * Reconstructed.DetectorReadHits
+ * and sometimes
+ * Reconstructed.SlowControls
+ * Reconstructed.UnpackerMessages
+ * which is then subsequently used by the Reconstruct stage.
  *
  * @section write_unpacker How to write a new unpacker?
  *
@@ -22,7 +26,7 @@
 
 namespace ant {
 
-struct TDataRecord;
+struct TEvent;
 
 /**
  * @brief The Unpacker class encapsulates the interface for unpacking raw data
@@ -34,24 +38,16 @@ public:
     Unpacker() = delete;
 
     /**
-     * @brief The Reader interface returns the unpacked data as a stream
-     *
-     * NextItem returns non-null pointers to instances of derived classes of TDataRecord,
-     * usually TDetectorRead
+     * @brief The Module interface is used by Unpacker::Get,
+     * it represents a source for TEvent's
      */
-    class Reader {
+    class Module {
     public:
-        virtual ~Reader() = default;
-        virtual std::unique_ptr<TDataRecord> NextItem() noexcept = 0;
+        virtual ~Module() = default;
+        virtual std::unique_ptr<TEvent> NextEvent() noexcept = 0;
         virtual double PercentDone() const = 0;
-    };
-
-    /**
-     * @brief The Module interface is used by Unpacker::Get
-     */
-    class Module : public Reader {
-        friend class Unpacker;
     protected:
+        friend class Unpacker;
         virtual bool OpenFile(const std::string& filename) = 0;
     };
 
@@ -61,7 +57,7 @@ public:
      * @return pointer to the unpacker instance
      * @throw Exception if no or more than one unpacker for filename found
      */
-    static std::unique_ptr<Reader> Get(const std::string &filename);
+    static std::unique_ptr<Module> Get(const std::string &filename);
 
     /**
      * @brief The Exception class is thrown if an unexpected error during unpacking occurs

@@ -27,10 +27,10 @@ protected:
 
 
 public:
-    XMasCB(const std::string& name, PhysOptPtr opts);
+    XMasCB(const std::string& name, OptionsPtr opts);
     virtual ~XMasCB();
 
-    void ProcessEvent(const data::Event &event) override;
+    virtual void ProcessEvent(const TEvent& event, manager_t& manager) override;
 };
 
 }

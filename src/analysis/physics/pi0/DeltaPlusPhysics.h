@@ -77,15 +77,15 @@ protected:
     const TLorentzVector target;
 
 public:
-    DeltaPlusPhysics(const std::string& name, PhysOptPtr opts);
+    DeltaPlusPhysics(const std::string& name, OptionsPtr opts);
     virtual ~DeltaPlusPhysics() {}
 
 
     // Physics interface
 public:
-    void ProcessEvent(const data::Event &event);
-    void Finish();
-    void ShowResult();
+    virtual void ProcessEvent(const TEvent& event, manager_t& manager) override;
+    virtual void Finish() override;
+    virtual void ShowResult() override;
 };
 
 }

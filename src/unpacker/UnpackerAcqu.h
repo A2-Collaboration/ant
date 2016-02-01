@@ -21,7 +21,7 @@ class UnpackerAcqu : public Unpacker::Module
 public:
     UnpackerAcqu();
     virtual bool OpenFile(const std::string& filename) override;
-    virtual std::unique_ptr<TDataRecord> NextItem() noexcept override;
+    virtual std::unique_ptr<TEvent> NextEvent() noexcept override;
 
     class Exception : public Unpacker::Exception {
         using Unpacker::Exception::Exception; // use base class constructor
@@ -32,7 +32,7 @@ public:
     virtual double PercentDone() const override;
 
 private:
-    std::list< std::unique_ptr<TDataRecord> > queue; // std::list supports splice
+    std::list< std::unique_ptr<TEvent> > queue; // std::list supports splice
     std::unique_ptr<UnpackerAcquFileFormat> file;
 
 };
@@ -81,11 +81,9 @@ public:
         using mapping_t::mapping_t; // use constructors from base class
     };
 
-    // scalers in acqu can be handled as additional information
-    // for a logical detector channel, or as TSlowControl items
+    // scalers in acqu are always TSlowControl items
     struct scaler_mapping_t  {
-        // if non-empty, scaler is converted to TSlowControl item
-        std::string SlowControlName;
+        std::string SlowControlName; // must not be empty!
 
         // one named slowcontrol may have more than one
         // data entry (for example tagger scaler for each channel)
@@ -105,7 +103,10 @@ public:
                 ) :
             SlowControlName(slowControlName),
             Entries(entries)
-        {}
+        {
+            if(SlowControlName.empty())
+                throw std::runtime_error("Empty SlowControlName provided");
+        }
 
         scaler_mapping_t(
                 const std::string& slowControlName,
@@ -115,19 +116,6 @@ public:
                 ) :
             scaler_mapping_t(slowControlName, {entry_t(detector, channel, rawChannel)})
         {}
-
-        scaler_mapping_t(
-                Detector_t::Type_t detector,
-                unsigned channel,
-                std::uint32_t rawChannel
-                ) :
-            scaler_mapping_t("", detector, channel, rawChannel)
-        {}
-
-        scaler_mapping_t(const std::vector< entry_t >& entries) :
-            scaler_mapping_t("", entries)
-        {}
-
     };
 
     virtual void BuildMappings(
@@ -136,9 +124,9 @@ public:
             ) const = 0;
 };
 
-// define the templated constructors here to keep the class definition clean
+// define the templated constructors here to keep the class definition cleaner
 template<typename T>
-inline UnpackerAcquConfig::RawChannel_t<T>::RawChannel_t(const std::initializer_list<T> &l) {
+inline UnpackerAcquConfig::RawChannel_t<T>::RawChannel_t(const std::initializer_list<T>& l) {
     if(l.size()==2) {
         const std::vector<T> v(l);
         RawChannel = v[0];
@@ -149,7 +137,7 @@ inline UnpackerAcquConfig::RawChannel_t<T>::RawChannel_t(const std::initializer_
 }
 
 template<typename T>
-inline UnpackerAcquConfig::RawChannel_t<T>::RawChannel_t(const T &ch)
+inline UnpackerAcquConfig::RawChannel_t<T>::RawChannel_t(const T& ch)
 {
     RawChannel = ch;
     Mask = RawChannel_t<T>::NoMask;

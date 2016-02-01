@@ -56,7 +56,7 @@ void CB_TimeWalk::ApplyTo(clusterhits_t& sorted_clusterhits)
     if(it_sorted_clusterhits == sorted_clusterhits.end())
         return;
 
-    list< reconstruct::AdaptorTClusterHit >& clusterhits = it_sorted_clusterhits->second;
+    auto& clusterhits = it_sorted_clusterhits->second;
 
     auto it_clusterhit = clusterhits.begin();
 

@@ -1,14 +1,6 @@
 #include "AntReader.h"
 
-#include "data/Event.h"
-
-#include "detail/Convert.h"
-
-#include "tree/UnpackerWriter.h"
 #include "tree/TEvent.h"
-#include "tree/THeaderInfo.h"
-#include "tree/TDetectorRead.h"
-#include "tree/TSlowControl.h"
 
 #include "base/Logger.h"
 
@@ -20,107 +12,123 @@
 using namespace std;
 using namespace ant;
 using namespace ant::analysis::input;
-using namespace ant::analysis::data;
 
-AntReader::AntReader(
-        unique_ptr<Unpacker::Reader> unpacker_reader,
-        std::unique_ptr<Reconstruct_traits> reconstruct
+namespace ant {
+namespace analysis {
+namespace input {
+namespace detail {
+
+struct AntReaderInternal {
+    virtual double PercentDone() const = 0;
+    virtual std::unique_ptr<TEvent> NextEvent() = 0;
+};
+
+
+struct UnpackerReader : AntReaderInternal {
+    UnpackerReader(unique_ptr<Unpacker::Module> unpacker_) :
+        unpacker(move(unpacker_))
+    {
+        LOG(INFO) << "Reading events from unpacker";
+    }
+    virtual double PercentDone() const override {
+        return unpacker->PercentDone();
+    }
+    virtual std::unique_ptr<TEvent> NextEvent() override {
+        return unpacker->NextEvent();
+    }
+private:
+    unique_ptr<Unpacker::Module> unpacker;
+}; // UnpackerReader
+
+
+struct TreeReader : AntReaderInternal {
+    TreeReader(const std::shared_ptr<WrapTFileInput>& rootfiles)
+    {
+        if(!rootfiles->GetObject("treeEvents", tree))
+            return;
+
+        VLOG(5) << "Found Ant Events Tree";
+
+        const auto res = tree->SetBranchAddress("data", addressof(eventPtr));
+        if(res != TTree::kMatch) {
+            tree = nullptr;
+            LOG(ERROR) << "Could not access branch 'data' in Ant events tree";
+            return;
+        }
+    }
+
+    virtual double PercentDone() const override {
+        if(tree)
+            return double(current_entry)/double(tree->GetEntries());
+        return numeric_limits<double>::quiet_NaN();
+    }
+
+    virtual std::unique_ptr<TEvent> NextEvent() override {
+        if(!tree)
+            return nullptr;
+
+        eventPtr = nullptr;
+        tree->GetEntry(current_entry);
+        current_entry++;
+        return unique_ptr<TEvent>(eventPtr);
+    }
+
+private:
+    Long64_t current_entry = 0;
+    TTree* tree = nullptr;
+    TEvent* eventPtr = nullptr;
+
+}; // TreeReader
+
+}}}} // namespace ant::analysis::input::detail
+
+
+AntReader::AntReader(const std::shared_ptr<WrapTFileInput>& rootfiles,
+        unique_ptr<Unpacker::Module> unpacker,
+        std::unique_ptr<Reconstruct_traits> reconstruct_
         ) :
-    reader(move(unpacker_reader)),
-    reconstruct(move(reconstruct)),
-    haveReconstruct(false),
-    writeUncalibrated(false),
-    writeCalibrated(false)
+    reconstruct(move(reconstruct_))
 {
+    // prefer unpacker
+    if(unpacker) {
+        reader = std_ext::make_unique<detail::UnpackerReader>(move(unpacker));
+        if(!reconstruct)
+            LOG(WARNING) << "Reconstruct disabled although reading from unpacker. Produce DetectorReadHits only.";
+    }
+    else{
+        // try root files
+        reader = std_ext::make_unique<detail::TreeReader>(rootfiles);
+    }
 
 }
 
 AntReader::~AntReader() {}
-
-void AntReader::EnableUnpackerWriter(
-        const string& outputfile,
-        bool uncalibratedDetectorReads,
-        bool calibratedDetectorReads
-        )
-{
-    writer = std_ext::make_unique<tree::UnpackerWriter>(outputfile);
-    writeUncalibrated = uncalibratedDetectorReads;
-    writeCalibrated = calibratedDetectorReads;
-    if(writeCalibrated && writeUncalibrated)
-        throw Exception("Writing calibrated AND uncalibrated detector reads in one file makes no sense");
-
-    if(writeUncalibrated)
-        LOG(INFO) << "Write UNcalibrated detectors reads (BEFORE DoReconstruct) to " << outputfile;
-    else if(writeCalibrated)
-        LOG(INFO) << "Write calibrated detectors (AFTER DoReconstruct) reads to " << outputfile;
-    else
-        LOG(INFO) << "Writing unpacker TEvents to " << outputfile;
-}
-
-unique_ptr<TSlowControl> AntReader::ReadNextSlowControl()
-{
-    return move(buffered_slowcontrol);
-}
 
 double AntReader::PercentDone() const
 {
     return reader->PercentDone();
 }
 
-bool AntReader::ReadNextEvent(Event& event)
+bool AntReader::ReadNextEvent(TEvent& event)
 {
-    while(auto item = reader->NextItem()) {
-        // we use ROOT's machinery to identify derived class types,
-        // because it's much faster than dynamic_cast (but also potentially unsafe)
-        const TClass* isA = item->IsA();
+    // we expect Reconstructed branch to be filled always
+    auto eventptr = reader->NextEvent();
 
-        if(isA == THeaderInfo::Class()) {
-            const THeaderInfo* headerInfo = reinterpret_cast<THeaderInfo*>(item.get());
-            if(reconstruct) {
-                reconstruct->Initialize(*headerInfo);
-                haveReconstruct = true;
-                LOG(INFO) << "Found THeaderInfo in unpacker datastream, initialized Reconstruct";
-            }
+    if(eventptr) {
+        if(reconstruct) {
+            TEvent::Data& recon = *eventptr->Reconstructed;
+            /// \todo improve check if TEvent was run through reconstructed
+            /// you may also introduce some flag to force application?
+            if(recon.Clusters.empty())
+                reconstruct->DoReconstruct(recon);
         }
-        else if(isA == TDetectorRead::Class()) {
-            TDetectorRead* detread = reinterpret_cast<TDetectorRead*>(item.get());
+        event.Reconstructed = move(eventptr->Reconstructed);
 
-            if(writer && writeUncalibrated)
-                writer->Fill(item.get());
+        // the A2Geant unpacker also fills some MCTrue information
+        if(eventptr->MCTrue)
+            event.MCTrue = move(eventptr->MCTrue);
 
-            if(haveReconstruct) {
-                MemoryPool<TEvent>::Item tevent = reconstruct->DoReconstruct(*detread);
-                event = Converter::Convert(*tevent);
-                if(writer) {
-                    if(writeCalibrated)
-                        writer->Fill(item.get());
-                    else if(!writeUncalibrated)
-                        writer->Fill(tevent.get());
-                }
-                return true;
-            }
-
-            // skip the writing of the detector read item
-            // because writing is already handled above
-            continue;
-        }
-        else if(isA == TEvent::Class()) {
-            const TEvent* tevent = reinterpret_cast<TEvent*>(item.get());
-            event = Converter::Convert(*tevent);
-            // do not write TEvent's again to the file
-            return true;
-        }
-        else if(isA == TSlowControl::Class()) {
-            if(writer)
-                writer->Fill(item.get());
-            buffered_slowcontrol = unique_ptr<TSlowControl>(reinterpret_cast<TSlowControl*>(item.release()));
-            return false;
-        }
-        /// @todo handle TUnpackerMessage, especially DAQ errors might be of interest for the analysis
-
-        // by default, we write the items to the file
-        if(writer)
-            writer->Fill(item.get());
+        return true;
     }
 
     return false;

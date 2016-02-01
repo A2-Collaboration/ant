@@ -11,23 +11,30 @@
 namespace ant {
 
 class ParticleTypeDatabase {
+
+    friend struct TParticle;
+
 public:
 
     class Type {
 
         friend class ParticleTypeDatabase;
+        friend struct TParticle;
 
     protected:
+        unsigned UID; // used by TParticle for serialization
+        static unsigned NextUID;
         std::string name;
         std::string print_name;
         mev_t mass;
         bool charged;
         const Type* sametype;
 
-        Type( const Type& p ) = delete;
-        Type( const std::string& _name, const std::string& _print_name, const mev_t& _mass, const bool& _charged, const Type* _sametype=nullptr );
+        Type(const std::string& _name, const std::string& _print_name, const mev_t& _mass, const bool& _charged, const Type* _sametype=nullptr );
 
     public:
+
+
         virtual ~Type() {}
 
         const std::string& PrintName()  const { return print_name; }
@@ -45,25 +52,23 @@ public:
             return false;
         }
 
-        Type& operator=(Type) = delete;
+        Type(const Type&) = delete;
+        Type& operator=(const Type&) = delete;
     };
 
-    typedef std::map<index_t, const Type*> PIDMap_t;
-    typedef std::vector<const Type*> TypeList_t;
+    using PlutoIDMap_t = std::map<index_t, const Type*>;
+    using TypeList_t = std::vector<const Type*>;
 
 protected:
 
-    typedef std::map<std::string, const Type&> Particles_t;
+    using  Particles_t = std::map<unsigned, const Type&>;
     static Particles_t types;
 
-
-
-    static PIDMap_t pluto_pid_map;
+    static PlutoIDMap_t pluto_id_map;
 
     static const TypeList_t detectables;
     static const TypeList_t mc_finalstate;
     static const TypeList_t neutral_mesons;
-    static TypeList_t temp_types;
 
 public:
 
@@ -117,9 +122,6 @@ public:
     static const TypeList_t& NeutralMesons() { return neutral_mesons; }
 
     static const Type* GetTypeOfPlutoID(index_t pid);
-
-    static const Type* AddTempPlutoType(index_t pid, const std::string& _name, const std::string& _print_name, const mev_t& _mass, const bool& _charged, const Type* _sametype=nullptr);
-
 
 };
 

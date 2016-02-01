@@ -1,28 +1,27 @@
 #pragma once
 
-#include "TDataRecord.h"
 #include "TCluster.h"
 
+#include "base/Detector_t.h"
 
 #include <TVector3.h>
 
 #include <vector>
-
-#ifndef __CINT__
-#include "base/Detector_t.h"
 #include <iomanip>
 #include <sstream>
-#endif
+#include <memory>
+
 
 namespace ant {
 
-#ifndef __CINT__
-struct TCandidate: ant::printable_traits
-#else
-struct TCandidate
-#endif
+struct TCandidate;
+
+using TCandidatePtr = std::shared_ptr<TCandidate>;
+using TCandidateList = std::vector<TCandidatePtr>;
+
+struct TCandidate : printable_traits
 {
-    std::uint64_t Detector;
+    Detector_t::Any_t Detector;
     double CaloEnergy;
     double Theta;
     double Phi;
@@ -32,9 +31,8 @@ struct TCandidate
     double VetoEnergy;
     double TrackerEnergy;
 
-    std::vector<TCluster> Clusters;
+    std::vector<TClusterPtr> Clusters;
 
-#ifndef __CINT__
     TCandidate(
             Detector_t::Any_t detector,
             double caloE,
@@ -44,9 +42,9 @@ struct TCandidate
             unsigned clusterSize,
             double vetoE,
             double trackerE,
-            const std::vector<TCluster>& clusters
+            const std::vector<TClusterPtr>& clusters
             ) :
-        Detector(detector.bitfield),
+        Detector(detector),
         CaloEnergy(caloE),
         Theta(theta),
         Phi(phi),
@@ -57,29 +55,28 @@ struct TCandidate
         Clusters(clusters)
     {}
 
+    template<class Archive>
+    void serialize(Archive& archive) {
+        archive(Detector, CaloEnergy, Theta, Phi, Time, ClusterSize, VetoEnergy, TrackerEnergy, Clusters);
+    }
+
     operator TVector3() const { TVector3 p; p.SetMagThetaPhi(1.0, Theta, Phi); return p; }
 
-    const TCluster* FindFirstCluster(Detector_t::Any_t detector) const {
+    TClusterPtr FindFirstCluster(Detector_t::Any_t detector) const {
         for(const auto& cl : Clusters) {
-            if(cl.GetDetectorType() & detector) {
-                return std::addressof(cl);
+            if(cl->DetectorType & detector) {
+                return cl;
             }
         }
         return nullptr;
     }
 
-    const TCluster* FindCaloCluster() const {
+    TClusterPtr FindCaloCluster() const {
         return FindFirstCluster(Detector_t::Type_t::CB | Detector_t::Type_t::TAPS);
     }
 
-    const TCluster* FindVetoCluster() const {
-        if(VetoEnergy == 0.0)
-            return nullptr;
-        return FindFirstCluster(Detector_t::Type_t::PID | Detector_t::Type_t::TAPSVeto);
-    }
-
-    Detector_t::Any_t GetDetector() const {
-        return Detector_t::Any_t(Detector);
+    TClusterPtr FindVetoCluster() const {
+        return FindFirstCluster(Detector_t::Any_t::Veto);
     }
 
     virtual std::ostream& Print( std::ostream& s) const override {
@@ -89,12 +86,9 @@ struct TCandidate
                  << " VetoEnergy=" << VetoEnergy << " TrackerEnergy=" << TrackerEnergy;
     }
 
-
-#endif
-
-    TCandidate() {}
+    TCandidate() : Detector(Detector_t::Any_t::None) {}
     virtual ~TCandidate() {}
-    ClassDef(TCandidate, ANT_UNPACKER_ROOT_VERSION)
 };
+
 
 }

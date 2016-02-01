@@ -3,8 +3,6 @@
 #include "reconstruct/UpdateableManager.h"
 #include "reconstruct/Reconstruct_traits.h"
 
-#include "tree/TDataRecord.h"
-
 using namespace std;
 using namespace ant;
 using namespace ant::reconstruct;

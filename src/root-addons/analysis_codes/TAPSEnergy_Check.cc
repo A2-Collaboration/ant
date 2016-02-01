@@ -79,8 +79,8 @@ void TAPSEnergy_Check::AnalyseTree(TFile* file)
     for(Long64_t entry=0;entry<tree->GetEntries();entry++)  {
         tree->GetEntry(entry);
 
-        std::list<std::pair<unsigned, data::Particle>> taps_photons;
-        std::list<data::Particle> cb_photons;
+        std::list<std::pair<unsigned, TParticle>> taps_photons;
+        std::list<TParticle> cb_photons;
 
         for(unsigned i=0;i<TAPS.Channel->size();i++) {
             // cut on TAPS properties
@@ -90,7 +90,7 @@ void TAPSEnergy_Check::AnalyseTree(TFile* file)
                 continue;
 
             // build the TAPS photon but remember the channel
-            data::Particle photon(ParticleTypeDatabase::Photon, (*TAPS.Ek)[i], (*TAPS.Theta)[i], (*TAPS.Phi)[i]);
+            TParticle photon(ParticleTypeDatabase::Photon, (*TAPS.Ek)[i], (*TAPS.Theta)[i], (*TAPS.Phi)[i]);
             taps_photons.emplace_back((*TAPS.Channel)[i], move(photon));
         }
 

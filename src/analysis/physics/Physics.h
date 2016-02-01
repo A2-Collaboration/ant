@@ -1,9 +1,9 @@
 #pragma once
 
 #include "analysis/plot/HistogramFactories.h"
-#include "analysis/data/Event.h"
+#include "analysis/input/slowcontrol/SlowControl.h"
 
-#include "analysis/data/Slowcontrol.h"
+#include "tree/TEvent.h"
 
 #include "base/OptionsList.h"
 
@@ -18,11 +18,7 @@ class TDirectory;
 
 namespace ant {
 
-struct TAntHeader;
-
 namespace analysis {
-
-using PhysOptPtr = std::shared_ptr<const OptionsList>;
 
 class Physics {
 private:
@@ -30,17 +26,33 @@ private:
 
 protected:
     SmartHistFactory HistFac;
-    const PhysOptPtr Options;
+    const OptionsPtr Options;
 
 public:
-    Physics(const std::string& name, PhysOptPtr opts);
+    Physics(const std::string& name, OptionsPtr opts);
     virtual ~Physics() {}
-    virtual void ProcessEvent(const data::Event& event) =0;
+
+    struct manager_t {
+        void SaveEvent() {
+            saveEvent = true;
+        }
+        void KeepDetectorReadHits() {
+            keepReadHits = true;
+        }
+    private:
+        bool saveEvent;
+        bool keepReadHits;
+        friend class PhysicsManager;
+        manager_t() { Reset(); }
+        void Reset() { saveEvent = false; keepReadHits = false; }
+    };
+
+    virtual void ProcessEvent(const TEvent& event, manager_t& manager) =0;
     virtual void Finish() {}
     virtual void ShowResult() {}
     std::string GetName() const { return name_; }
 
-    virtual void Initialize(data::Slowcontrol& slowcontrol);
+    virtual void Initialize(input::SlowControl& slowcontrol);
 
     Physics(const Physics&) = delete;
     Physics& operator=(const Physics&) = delete;
@@ -48,7 +60,7 @@ public:
 
 
 
-using physics_creator = std::function<std::unique_ptr<Physics>(const std::string&, PhysOptPtr)>;
+using physics_creator = std::function<std::unique_ptr<Physics>(const std::string&, OptionsPtr)>;
 
 class PhysicsRegistry
 {
@@ -64,7 +76,7 @@ private:
     }
 public:
 
-    static std::unique_ptr<Physics> Create(const std::string& name, PhysOptPtr opts = std::make_shared<OptionsList>());
+    static std::unique_ptr<Physics> Create(const std::string& name, OptionsPtr opts = std::make_shared<OptionsList>());
 
     static std::vector<std::string> GetList();
 
@@ -81,7 +93,7 @@ public:
 };
 
 template<class T>
-std::unique_ptr<Physics> physics_factory(const std::string& name, PhysOptPtr opts)
+std::unique_ptr<Physics> physics_factory(const std::string& name, OptionsPtr opts)
 {
     return std_ext::make_unique<T>(name, opts);
 }

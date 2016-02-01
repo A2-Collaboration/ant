@@ -19,8 +19,8 @@ add_ant_executable(Ant-calib-viewer)
 
 add_ant_executable(Ant-chain)
 add_ant_executable(Ant-addTID)
-add_ant_executable(Ant-info)
 add_ant_executable(Ant-rawdump)
+add_ant_executable(Ant-info)
 
 option(OmegaTools "Build Omega Tools" OFF)
 

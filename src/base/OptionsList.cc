@@ -17,7 +17,7 @@ void OptionsList::SetOption(const string& str, const string delim)
     if( delimiter_pos != str.npos) {
         const std::string key = str.substr(0, delimiter_pos);
         const std::string val = str.substr(delimiter_pos + delim.length(), str.npos);
-        options.insert({key,val});
+        options[key] = make_pair(false, val);
     } else {
         LOG(WARNING) << "Can't parse option string \"" << str << "\"";
     }
@@ -41,33 +41,36 @@ void OptionsList::SetOptions(const string& str,const string optdelim, const stri
 
 string OptionsList::GetOption(const string& key) const
 {
-    const auto entry = options.find(key);
+    auto entry = options.find(key);
 
     if(entry == options.end()) {
+        // ask parent
         if(parent) {
             return parent->GetOption(key);
         }
         return "";
     }
 
-    return entry->second;
-
+    entry->second.first = true;
+    return entry->second.second;
 }
 
 string OptionsList::Flatten() const
 {
-    auto strptrcmp = [] (const string* s1, const string* s2) { return *s1 == *s2; };
-    std::map<const string*, const string*, decltype (strptrcmp)> m(strptrcmp);
-
-    for(const auto& entry : options) {
-        m[addressof(entry.first)] = addressof(entry.second);
-    }
-
     stringstream s;
-    for(const auto& e : m) {
-        s << *e.first << "=" << *e.second <<":";
+    for(const auto& e : options) {
+        s << e.first << "=" << e.second.second << ":";
     }
     return s.str();
+}
+
+std::vector<string> OptionsList::GetUnused() const
+{
+    std::vector<string> unused;
+    for(const auto& e : options)
+        if(!e.second.first)
+            unused.push_back(e.first);
+    return unused;
 }
 
 template<>
@@ -76,11 +79,11 @@ bool ant::OptionsList::Get<bool>(const string& key, const bool& def_value) const
     auto v = GetOption(key);
     std::transform(v.begin(), v.end(), v.begin(), ::tolower);
 
-    if(v=="on" || v=="yes" || v=="true" || v=="1") {
+    if(v=="on" || v=="yes" || v=="true" || v=="1" || v=="y") {
         return true;
     }
 
-    if(v=="off" || v=="no" || v=="false" || v=="0") {
+    if(v=="off" || v=="no" || v=="false" || v=="0" || v=="n") {
         return false;
     }
 

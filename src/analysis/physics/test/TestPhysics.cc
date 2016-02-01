@@ -1,7 +1,5 @@
 #include "TestPhysics.h"
 
-#include "data/Event.h"
-#include "data/Particle.h"
 #include "base/ParticleType.h"
 #include "utils/combinatorics.h"
 #include "TH1D.h"
@@ -12,13 +10,14 @@
 
 #include "plot/root_draw.h"
 
+#include "utils/particle_tools.h"
+
 using namespace std;
 using namespace ant;
 using namespace ant::analysis;
 using namespace ant::analysis::physics;
-using namespace ant::analysis::data;
 
-ParticleCombinatoricsTest::ParticleCombinatoricsTest(const std::string& name, PhysOptPtr opts):
+ParticleCombinatoricsTest::ParticleCombinatoricsTest(const std::string& name, OptionsPtr opts):
     Physics(name, opts)
 {
     const BinSettings im_binning(100,0,250);
@@ -38,13 +37,12 @@ ParticleCombinatoricsTest::ParticleCombinatoricsTest(const std::string& name, Ph
 }
 
 
-void ParticleCombinatoricsTest::ProcessEvent(const Event &event)
+void ParticleCombinatoricsTest::ProcessEvent(const TEvent& event, manager_t&)
 
 {
-
-    const ParticleList& photons = event.Reconstructed.Particles.Get(ParticleTypeDatabase::Photon);
-    const ParticleList& protons = event.Reconstructed.Particles.Get(ParticleTypeDatabase::Proton);
-    const ParticleList& all = event.Reconstructed.Particles.GetAll();
+    const TParticleList& photons = event.Reconstructed->Particles.Get(ParticleTypeDatabase::Photon);
+    const TParticleList& protons = event.Reconstructed->Particles.Get(ParticleTypeDatabase::Proton);
+    const TParticleList& all = event.Reconstructed->Particles.GetAll();
 
     for( auto& particle : all ) {
 

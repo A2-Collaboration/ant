@@ -1,6 +1,6 @@
 #include "ScalerFrequency.h"
 
-#include "tree/TDetectorRead.h"
+#include "tree/TDetectorReadHit.h"
 #include <cstdint>
 
 using namespace std;
@@ -14,7 +14,7 @@ void converter::ScalerFrequency::ApplyTo(const readhits_t& hits, extrahits_t&) {
     const auto& refhits = hits.get_item(ReferenceScaler.DetectorType);
 
     const auto comparer = [this] (TDetectorReadHit const * hit) {
-        return hit->GetChannelType() == ReferenceScaler.ChannelType &&
+        return hit->ChannelType == ReferenceScaler.ChannelType &&
                 hit->Channel == ReferenceScaler.Channel;
     };
     const auto it_refhit = find_if(refhits.cbegin(), refhits.cend(), comparer);

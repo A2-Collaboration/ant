@@ -10,7 +10,7 @@ class Setup_2014_12_EPT_Prod : public Setup_2014_EPT
 {
 public:
 
-    Setup_2014_12_EPT_Prod(const std::string& name, SetupOptPtr opt)
+    Setup_2014_12_EPT_Prod(const std::string& name, OptionsPtr opt)
         : Setup_2014_EPT(name, opt)
     {
         IgnoreDetectorChannel(Detector_t::Type_t::CB,  17); /// odd time [walk]
@@ -38,10 +38,10 @@ public:
     }
 
 
-    bool Matches(const THeaderInfo& header) const override {
-        if(!Setup_2014_EPT::Matches(header))
+    bool Matches(const TID& tid) const override {
+        if(!Setup_2014_EPT::Matches(tid))
             return false;
-        if(!std_ext::time_between(header.Timestamp, "2014-12-01", "2014-12-22"))
+        if(!std_ext::time_between(tid.Timestamp, "2014-12-01", "2014-12-22"))
             return false;
         return true;
     }

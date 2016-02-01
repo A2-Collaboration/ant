@@ -11,6 +11,7 @@
 #include "base/WrapTFile.h"
 #include "base/Logger.h"
 #include "base/std_ext/string.h"
+#include "base/std_ext/vector.h"
 
 #include "TTree.h"
 #include "TClonesArray.h"
@@ -49,7 +50,7 @@ PlutoReader::PlutoReader(const std::shared_ptr<WrapTFileInput>& rootfiles) :
     if(files->GetObject("data_tid", tid_tree)) {
 
         if(tid_tree->GetEntries() != tree->GetEntries()) {
-            throw Exception("Pluto Tree / TID Tree size missmatch:");
+            throw Exception("Pluto Tree / TID Tree size mismatch:");
         }
 
         tree->AddFriend(tid_tree);
@@ -64,30 +65,6 @@ PlutoReader::PlutoReader(const std::shared_ptr<WrapTFileInput>& rootfiles) :
 }
 
 PlutoReader::~PlutoReader() {}
-
-
-const ParticleTypeDatabase::Type* PlutoReader::GetType(const PParticle* p) const {
-
-    const ParticleTypeDatabase::Type* type= ParticleTypeDatabase::GetTypeOfPlutoID( p->ID() );
-
-    if(!type) {
-
-        type = ParticleTypeDatabase::AddTempPlutoType(
-                    p->ID(),
-                    "Pluto_"+to_string(p->ID()),
-                    "Pluto_"+ string( pluto_database->GetParticleName(p->ID()) ),
-                    pluto_database->GetParticleMass(p->ID())*1000.0,
-                    pluto_database->GetParticleCharge(p->ID()) != 0
-                );
-        VLOG(7) << "Adding a ParticleType for pluto ID " << p->ID() << " to ParticleTypeDatabse";
-
-        if(!type)
-            /// \todo Change this so that it does not stop the whole process and can be caught for each particle
-            throw std::out_of_range("Could not create dynamic mapping for Pluto Particle ID "+to_string(p->ID()));
-    }
-
-    return type;
-}
 
 /**
  * @brief Find a PParticle in a vector by its ID. ID has to be unique in the vector.
@@ -127,7 +104,7 @@ std::string PlutoTable(const std::vector<const PParticle*> particles) {
     return s.str();
 }
 
-void PlutoReader::CopyPluto(Event& event)
+void PlutoReader::CopyPluto(TEvent::Data& mctrue)
 {
     const Long64_t entries = PlutoMCTrue->GetEntries();
     std::vector<const PParticle*> PlutoParticles;
@@ -139,31 +116,46 @@ void PlutoReader::CopyPluto(Event& event)
 
         const PParticle* particle = dynamic_cast<const PParticle*>((*PlutoMCTrue)[i]);
 
-        // ignore those weird dilepton particles
-        if(particle->ID() == pluto_database->GetParticleID("dilepton"))
+        // remember positions of those weird dilepton/dimuon particles
+        if(particle->ID() == pluto_database->GetParticleID("dilepton") ||
+           particle->ID() == pluto_database->GetParticleID("dimuon"))
             dilepton_indices.push_back(i);
         PlutoParticles.push_back(particle);
     }
 
-    using treenode_t = shared_ptr<Tree<ParticlePtr>>;
+    using treenode_t = shared_ptr<Tree<TParticlePtr>>;
 
     vector<treenode_t> FlatTree;
 
     // convert pluto particles to ant particles and place in buffer list
 
-    for( auto& PlutoParticle : PlutoParticles ) {
+    for(size_t i=0; i<PlutoParticles.size(); ++i) {
+
+        auto& PlutoParticle = PlutoParticles[i];
+
+        // find pluto type in database
+        auto type = ParticleTypeDatabase::GetTypeOfPlutoID( PlutoParticle->ID() );
+
+        // note that type might by nullptr (in particular for those dileptons...)
+        // then just add some "empty" tree node
+        if(!type) {
+            if(!std_ext::contains(dilepton_indices, i))
+                // check $PLUTOSYS/src/PStdData.cc what to do, you may add it to the ant Database if you wish
+                throw Exception(std_ext::formatter() << "Unknown pluto particle found: ID="
+                                << PlutoParticle->ID());
+
+            FlatTree.emplace_back(Tree<TParticlePtr>::MakeNode(nullptr));
+            continue;
+        }
 
         // make an AntParticle out of it
-        auto type = GetType(PlutoParticle);
         TLorentzVector lv = *PlutoParticle;
         lv *= 1000.0;   // convert to MeV
-        auto AntParticle = make_shared<Particle>(*type,lv);
+        auto AntParticle = make_shared<TParticle>(*type,lv);
 
         // Add particle to event storage
         if(PlutoParticle->GetDaughterIndex() == -1 ) { // final state
-            event.MCTrue.Particles.AddParticle(AntParticle);
-        } else { //intermediate
-            event.MCTrue.Intermediates.AddParticle(AntParticle);
+            mctrue.Particles.Add(AntParticle);
         }
 
         // Simulate some tagger hit
@@ -172,12 +164,12 @@ void PlutoReader::CopyPluto(Event& event)
             unsigned channel = 0;
             if(tagger && tagger->TryGetChannelFromPhoton(energy, channel)) {
                 const double time = 0.0; /// @todo handle non-prompt hits?
-                event.MCTrue.TaggerHits.emplace_back(channel, energy, time);
+                mctrue.Tagger.Hits.emplace_back(channel, energy, time);
             }
         }
 
         // save it in list with same order as in PlutoParticles
-        FlatTree.emplace_back(Tree<ParticlePtr>::MakeNode(AntParticle));
+        FlatTree.emplace_back(Tree<TParticlePtr>::MakeNode(AntParticle));
 
     }
 
@@ -188,7 +180,7 @@ void PlutoReader::CopyPluto(Event& event)
     for(size_t i=0; i<PlutoParticles.size(); ++i) {
 
         const PParticle* PlutoParticle = PlutoParticles.at(i);
-        shared_ptr<Tree<ParticlePtr>>&  TreeNode = FlatTree.at(i);
+        shared_ptr<Tree<TParticlePtr>>&  TreeNode = FlatTree.at(i);
 
         Int_t parent_index = PlutoParticle->GetParentIndex();
 
@@ -199,10 +191,11 @@ void PlutoReader::CopyPluto(Event& event)
 
         } else {
 
-            if( TreeNode->Get()->Type() == ParticleTypeDatabase::BeamTarget) {
-                auto& headnode = event.MCTrue.ParticleTree;
+            if(TreeNode->Get() &&
+               TreeNode->Get()->Type() == ParticleTypeDatabase::BeamTarget) {
+                auto& headnode = mctrue.ParticleTree;
                 if(headnode) {
-                    LOG(WARNING) << "Found more than one BeamTarget in MCTrue";
+                    LOG(WARNING) << "Found more than one BeamTarget in MCTrue, that's weird.";
                 }
                 headnode = TreeNode;
             }
@@ -213,7 +206,8 @@ void PlutoReader::CopyPluto(Event& event)
                 if(search_result.second) {
                     VLOG(7) << "Recovered missing pluto decay tree information.";
                     TreeNode->SetParent(FlatTree.at(search_result.first));
-                } else {  // BeamProton is not supposed to have a parent
+                } else {
+                    // recovery failed
                     missing_decay_treeinfo = true;
                 }
 
@@ -224,64 +218,53 @@ void PlutoReader::CopyPluto(Event& event)
 
 
     // for gun generated pluto things, there's no BeamTarget particle and thus no tree...
-    if(event.MCTrue.ParticleTree) {
+    if(mctrue.ParticleTree) {
         // remove articifial Pluto_dilepton particles,
         // this assumes that a dilepton never
         // is a parent of a dilepton
         for(auto i : dilepton_indices) {
-            ParticleTree_t& dilepton = FlatTree[i];
+            TParticleTree_t& dilepton = FlatTree[i];
             while(!dilepton->Daughters().empty()) {
                 auto& d =  dilepton->Daughters().front();
                 d->SetParent(dilepton->GetParent());
             }
             dilepton->Unlink();
         }
-        event.MCTrue.ParticleTree->Sort(utils::ParticleTools::SortParticleByName);
+        mctrue.ParticleTree->Sort(utils::ParticleTools::SortParticleByName);
 
     }
-    auto& triggerinfos = event.MCTrue.Trigger;
 
-    // use eventID from file if available
-    // also check if it matches with reconstructed TID
-    if(tid_from_file) {
-        triggerinfos.EventID = *tid;
 
-        const auto& eventid_rec = event.Reconstructed.Trigger.EventID;
-        if(!eventid_rec.IsInvalid() && eventid_rec != triggerinfos.EventID) {
-            throw Exception(std_ext::formatter()
-                            << "TID mismatch: Reconstructed=" << eventid_rec
-                            << " not equal to MCTrue=" << triggerinfos.EventID);
-        }
-    }
 
     // calculate energy sum based on direction of particle
+    auto& triggerinfos = mctrue.Trigger;
+    triggerinfos.ClusterMultiplicity = 0;
     double Esum = 0;
-    for(const ParticlePtr& particle : event.MCTrue.Particles.GetAll()) {
+    for(const TParticlePtr& particle : mctrue.Particles.GetAll()) {
         if(geometry.DetectorFromAngles(*particle) & Detector_t::Type_t::CB) {
             Esum += particle->Ek();
+            // expected MCTrue multiplicity
+            triggerinfos.ClusterMultiplicity++;
         }
     }
     triggerinfos.CBEnergySum = Esum;
 
-    /// @note multiplicity is only known on reconstructed
-
     // dump some information about the conversion
 
-    if(missing_decay_treeinfo && event.MCTrue.ParticleTree) {
-        const auto& tid = !triggerinfos.EventID.IsInvalid() ? triggerinfos.EventID : event.Reconstructed.Trigger.EventID;
-        LOG(WARNING) << "Missing decay tree info for event " << tid;
+    if(missing_decay_treeinfo && mctrue.ParticleTree) {
+        LOG(WARNING) << "Missing decay tree info for event " << mctrue.ID;
         VLOG(5)      << "Dumping Pluto particles:\n" << PlutoTable(PlutoParticles);
-        event.MCTrue.ParticleTree = nullptr;
+        mctrue.ParticleTree = nullptr;
     }
 
     if(!dilepton_indices.empty()) {
-        VLOG(5) << "Particle tree cleaned from dileptons: " << utils::ParticleTools::GetDecayString(event.MCTrue.ParticleTree);
+        VLOG(5) << "Particle tree cleaned from dileptons: " << utils::ParticleTools::GetDecayString(mctrue.ParticleTree);
         VLOG(5) << "Dumping Pluto particles:\n" << PlutoTable(PlutoParticles);
     }
 }
 
 
-bool PlutoReader::ReadNextEvent(Event& event)
+bool PlutoReader::ReadNextEvent(TEvent& event)
 {
     if(!tree)
         return false;
@@ -291,7 +274,28 @@ bool PlutoReader::ReadNextEvent(Event& event)
 
     tree->GetEntry(current_entry);
 
-    CopyPluto(event);
+    // use eventID from file if available
+    // also check if it matches with reconstructed TID
+    TID mctrue_tid;
+    if(tid_from_file) {
+        mctrue_tid = *tid;
+        if(event.Reconstructed &&
+           event.Reconstructed->ID != mctrue_tid) {
+            throw Exception(std_ext::formatter()
+                            << "TID mismatch: Reconstructed=" << event.Reconstructed->ID
+                            << " not equal to MCTrue=" << mctrue_tid);
+        }
+    }
+
+    // ensure MCTrue branch is there, potentially add TID if invalid so far
+    if(!event.MCTrue) {
+        event.MCTrue = std_ext::make_unique<TEvent::Data>(mctrue_tid);
+    }
+    else if(event.MCTrue->ID.IsInvalid()) {
+        event.MCTrue->ID = mctrue_tid;
+    }
+
+    CopyPluto(*event.MCTrue);
 
     ++current_entry;
 

@@ -7,9 +7,11 @@
 #include "tree/TAntHeader.h"
 #include "base/Logger.h"
 
-#include "input/detail/SlowcontrolCreator.h"
+#include "input/slowcontrol/SlowControlCreator.h"
 
 #include "base/ProgressCounter.h"
+
+#include "TTree.h"
 
 #include <iomanip>
 
@@ -35,7 +37,7 @@ void PhysicsManager::SetAntHeader(TAntHeader& header)
     header.LastID = lastID;
 }
 
-bool PhysicsManager::InitReaders(PhysicsManager::readers_t readers_)
+void PhysicsManager::InitReaders(PhysicsManager::readers_t readers_)
 {
     readers = move(readers_);
 
@@ -44,10 +46,8 @@ bool PhysicsManager::InitReaders(PhysicsManager::readers_t readers_)
     auto it_reader = readers.begin();
     while(it_reader != readers.end()) {
         if((*it_reader)->IsSource()) {
-            if(source != nullptr) {
-                LOG(ERROR) << "Found more than one source for events, stop.";
-                return false;
-            }
+            if(source != nullptr)
+                throw Exception("Found more than one source in given readers");
             source = move(*it_reader);
             it_reader = readers.erase(it_reader);
         }
@@ -55,40 +55,34 @@ bool PhysicsManager::InitReaders(PhysicsManager::readers_t readers_)
             ++it_reader;
         }
     }
-    return true;
 }
 
-bool PhysicsManager::TryReadEvent(unique_ptr<data::Event>& event)
+bool PhysicsManager::TryReadEvent(TEventPtr& event)
 {
     bool read_event = false;
 
     while(!read_event) {
         if(source) {
-            bool event_ok = source->ReadNextEvent(*event);
-            auto sc = source->ReadNextSlowControl();
-            if(!event_ok && !sc)
-                return false;
-            if(event_ok)
+            if(source->ReadNextEvent(*event)) {
                 read_event = true;
-            if(sc)
-               slowcontrol_mgr.ProcessSlowcontrol(move(sc));
+                slowcontrol_mgr.ProcessSlowControls(*event);
+            }
+            else {
+                return false;
+            }
         }
 
         auto it_reader = readers.begin();
         while(it_reader != readers.end()) {
-            bool event_ok = (*it_reader)->ReadNextEvent(*event);
-            auto sc = (*it_reader)->ReadNextSlowControl();
 
-            if(!event_ok && !sc) {
-                it_reader = readers.erase(it_reader);
-                continue;
-            }
-
-            if(event_ok)
+            if((*it_reader)->ReadNextEvent(*event)) {
                 read_event = true;
-            if(sc)
-                slowcontrol_mgr.ProcessSlowcontrol(move(sc));
-            ++it_reader;
+                slowcontrol_mgr.ProcessSlowControls(*event);
+                ++it_reader;
+            }
+            else {
+                it_reader = readers.erase(it_reader);
+            }
         }
 
         if(!source && readers.empty())
@@ -119,7 +113,7 @@ void PhysicsManager::ProcessEventBuffer(long long maxevents)
             return;
 
         auto& event = eventbuffer.front();
-        auto& eventid = event->Reconstructed.Trigger.EventID;
+        auto& eventid = event->Reconstructed->ID;
 
         if(slowcontrol_mgr.hasRequests() && (eventid > runUntil))
             break;
@@ -139,24 +133,24 @@ void PhysicsManager::ReadFrom(
         list<unique_ptr<input::DataReader> > readers_,
         long long maxevents)
 {
-    if(!InitReaders(move(readers_)))
-        return;
+    InitReaders(move(readers_));
 
-    if(physics.empty()) {
-        throw Exception("No Analysis Instances activated. Will not analyse anything.");
-    }
+    if(physics.empty())
+        throw Exception("No analysis instances activated. Cannot not analyse anything.");
 
-
-
+    // prepare slowcontrol
     auto slkeys = RequestedKeys(slowcontrol_data);
-
     VLOG(7) << "Requested Slowcontrol keys";
     for(const auto& key : slkeys) {
         VLOG(7) << key;
     }
-
     slowcontrol_mgr.SetRequiredKeys(slkeys);
 
+
+    // prepare output of TEvents
+    treeEvents = new TTree("treeEvents","TEvent data");
+    treeEventPtr = nullptr;
+    treeEvents->Branch("data", addressof(treeEventPtr));
 
 
     chrono::time_point<std::chrono::system_clock> start, end;
@@ -177,7 +171,7 @@ void PhysicsManager::ReadFrom(
                 finished_reading = true;
                 break;
             }
-            auto event = std_ext::make_unique<data::Event>();
+            auto event = std_ext::make_unique<TEvent>();
             if(!TryReadEvent(event)) {
                 VLOG(5) << "No more events to read, finish.";
                 finished_reading = true;
@@ -213,31 +207,76 @@ void PhysicsManager::ReadFrom(
     VLOG(5) << "Last  EventId processed: " << lastID;
 
 
+
     end = chrono::system_clock::now();
     chrono::duration<double> elapsed_seconds = end-start;
     LOG(INFO) << "Processed " << nEventsProcessed << " events, speed "
-              << nEventsProcessed/elapsed_seconds.count() << " Items/s";
+              << nEventsProcessed/elapsed_seconds.count() << " event/s";
+
+    const auto nEventsSaved = treeEvents->GetEntries();
+    if(nEventsSaved == 0)
+        delete treeEvents;
+    else if(treeEvents->GetCurrentFile() != nullptr) {
+        treeEvents->Write();
+        LOG(INFO) << "Wrote " << nEventsSaved << " treeEvents: "
+                  << (double)treeEvents->GetTotBytes()/(1 << 20) << " MB (uncompressed), "
+                  << (double)treeEvents->GetTotBytes()/nEventsSaved << " bytes/event";
+     }
 }
 
-
-
-
-
-void PhysicsManager::ProcessEvent(unique_ptr<data::Event> event)
+void PhysicsManager::ProcessEvent(std::unique_ptr<TEvent> event)
 {
-    if(particleID) {
+    logger::DebugInfo::nProcessedEvents = nEventsProcessed;
+
+    if(particleID && event->Reconstructed) {
         // run particle ID for Reconstructed candidates
-        auto& reconstructed = event->Reconstructed;
-        for(const auto& cand : reconstructed.Candidates) {
-            auto particle = particleID->Process(cand);
-            if(particle)
-                reconstructed.Particles.AddParticle(particle);
+        // but only if there are no identified particles present yet
+        /// \todo implement flag to force particle ID again?
+        TEvent::Data& recon = *event->Reconstructed;
+        if(recon.Particles.GetAll().empty()) {
+            for(const auto& cand : recon.Candidates) {
+                auto particle = particleID->Process(cand);
+                if(particle)
+                    recon.Particles.Add(particle);
+            }
         }
     }
 
-    for( auto& m : physics ) {
-        m->ProcessEvent(*event);
+    // ensure that physics classes always
+    // have at least empty TEvent::Data branches MCTrue and Reconstructed
+
+    bool clean_reconstructed = false;
+    if(!event->Reconstructed) {
+        event->Reconstructed = std_ext::make_unique<TEvent::Data>();
+        clean_reconstructed = true;
     }
+    bool clean_mctrue = false;
+    if(!event->MCTrue) {
+        event->MCTrue = std_ext::make_unique<TEvent::Data>();
+        clean_mctrue = true;
+    }
+
+    // run the physics classes
+    processmanager.Reset();
+    for( auto& m : physics ) {
+        m->ProcessEvent(*event, processmanager);
+    }
+
+    // remove the temporary empty branches again
+    if(clean_reconstructed)
+        event->Reconstructed = nullptr;
+    if(clean_mctrue)
+        event->MCTrue = nullptr;
+
+    if(processmanager.saveEvent) {
+        if(treeEvents->GetCurrentFile() == nullptr)
+            LOG_N_TIMES(1, WARNING) << "Writing treeEvents to memory. Might be a lot of data!";
+        if(!processmanager.keepReadHits)
+            event->Reconstructed->DetectorReadHits.resize(0);
+        treeEventPtr = event.get();
+        treeEvents->Fill();
+    }
+
 }
 
 void PhysicsManager::ShowResults()

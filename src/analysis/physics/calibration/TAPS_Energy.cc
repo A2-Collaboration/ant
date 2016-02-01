@@ -12,12 +12,11 @@
 
 using namespace std;
 using namespace ant;
-using namespace ant::analysis::data;
 using namespace ant::analysis::physics;
 
 
 
-TAPS_Energy::TAPS_Energy(const string& name, analysis::PhysOptPtr opts) :
+TAPS_Energy::TAPS_Energy(const string& name, OptionsPtr opts) :
     Physics(name, opts)
 {
     taps_detector = ExpConfig::Setup::GetDetector<expconfig::detector::TAPS>();
@@ -57,15 +56,15 @@ TAPS_Energy::TAPS_Energy(const string& name, analysis::PhysOptPtr opts) :
     cands_TAPS.Setup("TAPS", cands_tree);
 }
 
-void TAPS_Energy::ProcessEvent(const Event& event)
+void TAPS_Energy::ProcessEvent(const TEvent& event, manager_t&)
 {
-    const auto& cands = event.Reconstructed.Candidates;
+    const auto& cands = event.Reconstructed->Candidates;
 
     // pedestals
-    for(const TCluster& cluster : event.Reconstructed.AllClusters) {
-        if(cluster.GetDetectorType() != Detector_t::Type_t::TAPS)
+    for(const TClusterPtr& cluster : event.Reconstructed->Clusters) {
+        if(cluster->DetectorType != Detector_t::Type_t::TAPS)
             continue;
-        for(const TClusterHit& clusterhit : cluster.Hits) {
+        for(const TClusterHit& clusterhit : cluster->Hits) {
             /// \todo check for timing hit?
             /// \todo check for trigger pattern?
             for(const TClusterHitDatum& datum : clusterhit.Data) {
@@ -78,23 +77,23 @@ void TAPS_Energy::ProcessEvent(const Event& event)
 
     // invariant mass of two photons
     for( auto comb = analysis::utils::makeCombination(cands,2); !comb.Done(); ++comb ) {
-        const CandidatePtr& cand1 = comb.at(0);
-        const CandidatePtr& cand2 = comb.at(1);
+        const TCandidatePtr& cand1 = comb.at(0);
+        const TCandidatePtr& cand2 = comb.at(1);
 
         if(cand1->VetoEnergy<0.5 && cand2->VetoEnergy<0.5) {
 
             //require exactly 1 CB and 1 TAPS
             const auto CBTAPS = Detector_t::Type_t::CB | Detector_t::Type_t::TAPS;
-            const auto dets = (cand1->GetDetector() & CBTAPS) ^ (cand2->GetDetector() & CBTAPS);
+            const auto dets = (cand1->Detector & CBTAPS) ^ (cand2->Detector & CBTAPS);
 
             if(dets & CBTAPS) {
-                const Particle a(ParticleTypeDatabase::Photon,comb.at(0));
-                const Particle b(ParticleTypeDatabase::Photon,comb.at(1));
+                const TParticle a(ParticleTypeDatabase::Photon,comb.at(0));
+                const TParticle b(ParticleTypeDatabase::Photon,comb.at(1));
                 const TLorentzVector& gg = a + b;
 
 
                 // Find the one that was in TAPS
-                auto cand_taps = cand1->GetDetector() & Detector_t::Type_t::TAPS ? cand1 : cand2;
+                auto cand_taps = cand1->Detector & Detector_t::Type_t::TAPS ? cand1 : cand2;
                 auto cl_taps = cand_taps->FindCaloCluster();
                 if(cl_taps) {
                     const unsigned ch = cl_taps->CentralElement;
@@ -114,12 +113,12 @@ void TAPS_Energy::ProcessEvent(const Event& event)
 
     if(ggIM_mult != nullptr) {
         // collect neutral candidates
-        CandidateList cb_candidates;
-        CandidateList taps_candidates;
+        TCandidateList cb_candidates;
+        TCandidateList taps_candidates;
 
-        for(const CandidatePtr& cand : event.Reconstructed.Candidates)
+        for(const TCandidatePtr& cand : event.Reconstructed->Candidates)
         {
-            if((cand->GetDetector() & Detector_t::Type_t::TAPS)
+            if((cand->Detector & Detector_t::Type_t::TAPS)
                && cand->VetoEnergy < 1.0)
             {
                 auto taps_cluster = cand->FindCaloCluster();
@@ -128,7 +127,7 @@ void TAPS_Energy::ProcessEvent(const Event& event)
                 if(ring > 4 || fabs(cand->Time) < 2.5)
                     taps_candidates.emplace_back(move(cand));
             }
-            else if((cand->GetDetector() & Detector_t::Type_t::CB)
+            else if((cand->Detector & Detector_t::Type_t::CB)
                     && cand->VetoEnergy < 0.25)
             {
                 cb_candidates.emplace_back(move(cand));
@@ -137,13 +136,13 @@ void TAPS_Energy::ProcessEvent(const Event& event)
 
         const auto nNeutrals = taps_candidates.size() + cb_candidates.size();
 
-        for(const CandidatePtr& taps_cand : taps_candidates) {
+        for(const TCandidatePtr& taps_cand : taps_candidates) {
             auto taps_cluster = taps_cand->FindCaloCluster();
             const unsigned ch = taps_cluster->CentralElement;
-            for(const CandidatePtr& cb_cand : cb_candidates) {
+            for(const TCandidatePtr& cb_cand : cb_candidates) {
 
-                const TLorentzVector& gg = Particle(ParticleTypeDatabase::Photon, taps_cand)
-                                           + Particle(ParticleTypeDatabase::Photon, cb_cand);
+                const TLorentzVector& gg = TParticle(ParticleTypeDatabase::Photon, taps_cand)
+                                           + TParticle(ParticleTypeDatabase::Photon, cb_cand);
                 ggIM_mult->Fill(gg.M(), ch, nNeutrals);
             }
         }
@@ -155,9 +154,9 @@ void TAPS_Energy::ProcessEvent(const Event& event)
         cands_CB.Clear();
         bool interesting_event = false;
         const vector<unsigned> interesting_channels = {31, 0, 1, 2, 15};
-        for(const CandidatePtr& cand : event.Reconstructed.Candidates) {
+        for(const TCandidatePtr& cand : event.Reconstructed->Candidates) {
             // find interesting TAPS clusters
-            if(cand->GetDetector() & Detector_t::Type_t::TAPS) {
+            if(cand->Detector & Detector_t::Type_t::TAPS) {
                 auto taps_cluster = cand->FindCaloCluster();
                 if(std_ext::contains(interesting_channels, taps_cluster->CentralElement)) {
                     cands_TAPS.Fill(*cand);
@@ -168,8 +167,8 @@ void TAPS_Energy::ProcessEvent(const Event& event)
 
         if(interesting_event) {
             bool CB_seen = false;
-            for(const CandidatePtr& cand : event.Reconstructed.Candidates) {
-                if(cand->GetDetector() & Detector_t::Type_t::CB)
+            for(const TCandidatePtr& cand : event.Reconstructed->Candidates) {
+                if(cand->Detector & Detector_t::Type_t::CB)
                 {
                     cands_CB.Fill(*cand);
                     CB_seen = true;

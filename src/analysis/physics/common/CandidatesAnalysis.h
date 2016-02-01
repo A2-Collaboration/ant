@@ -29,11 +29,11 @@ protected:
     TH2D* psa_all_angles = nullptr;
 
 public:
-    CandidatesAnalysis(const std::string& name,PhysOptPtr opts);
+    CandidatesAnalysis(const std::string& name,OptionsPtr opts);
 
-    void ProcessEvent(const data::Event &event) override;
-    void Finish() override;
-    void ShowResult() override;
+    virtual void ProcessEvent(const TEvent& event, manager_t&) override;
+    virtual void Finish() override;
+    virtual void ShowResult() override;
 };
 
 }

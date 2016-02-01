@@ -1,6 +1,6 @@
 #include "Trigger.h"
 
-#include "tree/THeaderInfo.h"
+#include "tree/TID.h"
 
 using namespace std;
 using namespace ant;
@@ -22,9 +22,9 @@ void Trigger::BuildMappings(std::vector<UnpackerAcquConfig::hit_mapping_t>& hit_
 }
 
 
-bool Trigger_2014::Matches(const THeaderInfo& headerInfo) const {
+bool Trigger_2014::Matches(const TID& tid) const {
     // timepoint roughly to Eta Prime beamtime...
-    return std_ext::time_after(headerInfo.Timestamp, "2014-07-01");
+    return std_ext::time_after(tid.Timestamp, "2014-07-01");
 }
 
 void Trigger_2014::BuildMappings(std::vector<UnpackerAcquConfig::hit_mapping_t>& hit_mappings,
@@ -41,31 +41,19 @@ void Trigger_2014::BuildMappings(std::vector<UnpackerAcquConfig::hit_mapping_t>&
                 29192
                 );
 
-    std::list<scaler_mapping_t> reference_scalers;
-
-    reference_scalers.emplace_back(
+    scaler_mappings.emplace_back(
                 "Exptrigger_1MHz",
                 Type,
                 Scaler_Exptrigger_1MHz.Channel,
                 191
                 );
-    reference_scalers.emplace_back(
+    scaler_mappings.emplace_back(
                 "Beampolmon_1MHz",
                 Type,
                 Scaler_Beampolmon_1MHz.Channel,
                 315
                 );
 
-    // the reference scalers are added as TSlowControl
-    // and as logical channels
-    // (might be used by scaler calibrations from other detectors)
-    for(const scaler_mapping_t& scaler : reference_scalers) {
-        scaler_mappings.push_back(scaler);
-        // add again as DetectorRead item
-        scaler_mappings.emplace_back(scaler.Entries);
-    }
-
-    // some interesting scalers, added as TSlowControl only
     scaler_mappings.emplace_back(
                 "TotalLivetime",
                 Type,
@@ -90,4 +78,34 @@ void Trigger_2014::BuildMappings(std::vector<UnpackerAcquConfig::hit_mapping_t>&
                 202,
                 311
                 );
+}
+
+
+void ant::expconfig::detector::Trigger::ApplyTo(TEvent::Data& reconstructed)
+{
+
+    /// @todo The multiplicity is a much harder business, see acqu/root/src/TA2BasePhysics.cc
+    /// the code there might only apply to the old trigger system before 2012
+    /// so it might be best to implement such algorithms with some nicely designed interface into the
+    /// pseudo-detector Trigger in expconfig/detectors
+
+    double Esum = 0.0;
+    double TimeEsum = 0.0;
+    double TimeE = 0.0;
+    for(const TClusterPtr& cluster : reconstructed.Clusters) {
+        if(cluster->DetectorType == Detector_t::Type_t::CB) {
+            if(isfinite(cluster->Energy)) {
+                Esum += cluster->Energy;
+                if(isfinite(cluster->Time)) {
+                    TimeEsum += cluster->Energy;
+                    TimeE += cluster->Energy*cluster->Time;
+                }
+            }
+        }
+    }
+
+    auto& triggerinfos = reconstructed.Trigger;
+    triggerinfos.CBEnergySum = Esum;
+    triggerinfos.CBTiming = TimeE/TimeEsum;
+
 }

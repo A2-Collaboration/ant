@@ -116,8 +116,8 @@ protected:
         KinFitter(const ParticleTypeDatabase::Type& motherParticle = ParticleTypeDatabase::EtaPrime);
 
         void SetEgammaBeam(const double& ebeam);
-        void SetProtonTAPS(const data::ParticlePtr& proton);
-        void SetPhotons(const std::vector<data::ParticlePtr>& photons);
+        void SetProtonTAPS(const TParticlePtr& proton);
+        void SetPhotons(const std::vector<TParticlePtr>& photons);
 
         APLCON::Result_t DoFit() { return aplcon.DoFit(); }
     };
@@ -128,7 +128,7 @@ protected:
 
 
 
-    using MesonCandidate = std::pair<data::ParticlePtr,double>;    // <particle,chi2>
+    using MesonCandidate = std::pair<TParticlePtr,double>;    // <particle,chi2>
 
     struct result_t {
         double Chi2_intermediate = std::numeric_limits<double>::infinity();
@@ -137,7 +137,7 @@ protected:
 
         bool success = false;
 
-        std::vector<data::ParticlePtr> g_final;
+        std::vector<TParticlePtr> g_final;
         std::vector<MesonCandidate> mesons;
 
         TLorentzVector mother;
@@ -189,20 +189,20 @@ protected:
 
 
 
-    void FillCrossChecks(const data::ParticleList& photons, const data::ParticleList& mcphotons);
+    void FillCrossChecks(const TParticleList& photons, const TParticleList& mcphotons);
 
-    bool MakeMCProton(const data::Event::Data& mcdata, data::ParticlePtr& proton);
+    bool MakeMCProton(const TEvent::Data& mcdata, TParticlePtr& proton);
 
-    Etap3pi0::result_t Make3pi0(const data::ParticleList& photons);
-    Etap3pi0::result_t MakeEta2pi0(const data::ParticleList& photons);
-    Etap3pi0::result_t MakeMC3pi0(const data::Event::Data &mcEvt);
+    Etap3pi0::result_t Make3pi0(const TParticleList& photons);
+    Etap3pi0::result_t MakeEta2pi0(const TParticleList& photons);
+    Etap3pi0::result_t MakeMC3pi0(const TEvent::Data &mcEvt);
 
     void FillIm(const Etap3pi0::result_t& result, const ParticleTypeDatabase::Type& type, TH1D* hist);
     void FillImEtaPrime(const Etap3pi0::result_t& result, TH1D* hist);
-    TLorentzVector MakeLoretzSum(const data::ParticleList& particles);
+    TLorentzVector MakeLoretzSum(const TParticleList& particles);
 public:
-    Etap3pi0(const std::string& name, PhysOptPtr opts);
-    virtual void ProcessEvent(const data::Event& event) override;
+    Etap3pi0(const std::string& name, OptionsPtr opts);
+    virtual void ProcessEvent(const TEvent& event, manager_t& manager) override;
     virtual void Finish() override;
     virtual void ShowResult() override;
 };

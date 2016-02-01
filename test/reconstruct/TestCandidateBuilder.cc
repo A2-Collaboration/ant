@@ -8,9 +8,6 @@
 
 #include "unpacker/Unpacker.h"
 
-#include "tree/THeaderInfo.h"
-#include "tree/TDetectorRead.h"
-
 using namespace std;
 using namespace ant;
 using namespace ant::reconstruct;
@@ -49,15 +46,15 @@ struct counts_t {
 };
 
 counts_t getCounts(
-        const std::map<Detector_t::Type_t, std::list<TCluster> >& sorted_clusters,
-        const TEvent::candidates_t& candidates,
-        const std::vector<TCluster>& all_clusters) {
+        const CandidateBuilder::sorted_clusters_t& sorted_clusters,
+        const CandidateBuilder::candidates_t& candidates,
+        const CandidateBuilder::clusters_t& all_clusters) {
     counts_t counts;
     counts.clusters = getTotalCount(sorted_clusters);
     counts.candidates = candidates.size();
     counts.allclusters = all_clusters.size();
     for(const auto& cand : candidates)
-        counts.candidateclusters += cand.Clusters.size();
+        counts.candidateclusters += cand->Clusters.size();
     return counts;
 }
 
@@ -68,9 +65,9 @@ struct CandidateBuilderTester : CandidateBuilder {
 
     using CandidateBuilder::CandidateBuilder; // use base class constructors
 
-    virtual void BuildCandidates(std::map<Detector_t::Type_t, std::list<TCluster> >& sorted_clusters,
-            TEvent::candidates_t& candidates,
-            std::vector<TCluster>& all_clusters
+    virtual void BuildCandidates(sorted_clusters_t& sorted_clusters,
+            candidates_t& candidates,
+            clusters_t& all_clusters
             ) override {
 
         counts_t before;
@@ -99,9 +96,9 @@ struct CandidateBuilderTester : CandidateBuilder {
         REQUIRE(diff.candidateclusters + diff.clusters == 0);
     }
 
-    virtual void Build(std::map<Detector_t::Type_t, std::list<TCluster> > sorted_clusters,
-            TEvent::candidates_t& candidates,
-            std::vector<TCluster>& all_clusters
+    virtual void Build(sorted_clusters_t sorted_clusters,
+            candidates_t& candidates,
+            clusters_t& all_clusters
             ) override {
         counts_t before;
         counts_t after;
@@ -118,7 +115,7 @@ struct CandidateBuilderTester : CandidateBuilder {
         // examine unmatched flag clusters
         size_t unmatched_clusters = 0;
         for(auto cluster : all_clusters) {
-            if(cluster.HasFlag(TCluster::Flags_t::Unmatched))
+            if(cluster->HasFlag(TCluster::Flags_t::Unmatched))
                 unmatched_clusters++;
         }
         REQUIRE(unmatched_clusters>0);
@@ -128,11 +125,11 @@ struct CandidateBuilderTester : CandidateBuilder {
 
 struct ReconstructTester : Reconstruct {
 
-    virtual void Initialize(const THeaderInfo& headerInfo) override
+    virtual void Initialize(const TID& tid) override
     {
-        Reconstruct::Initialize(headerInfo);
+        Reconstruct::Initialize(tid);
         // replace the candidate builder with our tester
-        const auto& config = ExpConfig::Reconstruct::Get(headerInfo);
+        const auto& config = ExpConfig::Reconstruct::Get(tid);
         candidatebuilder = std_ext::make_unique<CandidateBuilderTester>(sorted_detectors, config);
     }
 };
@@ -144,28 +141,18 @@ void dotest() {
     auto unpacker = Unpacker::Get(string(TEST_BLOBS_DIRECTORY)+"/Acqu_oneevent-big.dat.xz");
 
     // instead of the usual reconstruct, we use our tester
-    unique_ptr<ReconstructTester> reconstruct;
+    ReconstructTester reconstruct;
 
     unsigned nReads = 0;
-    unsigned nHits = 0;
-    unsigned nCandidates = 0;
 
-    while(auto item = unpacker->NextItem()) {
+    while(auto event = unpacker->NextEvent()) {
 
-        auto HeaderInfo = dynamic_cast<THeaderInfo*>(item.get());
-        if(HeaderInfo != nullptr) {
-            reconstruct = std_ext::make_unique<ReconstructTester>();
-            reconstruct->Initialize(*HeaderInfo);
-            continue;
-        }
+        auto& hits = event->Reconstructed->DetectorReadHits;
 
-        auto DetectorRead = dynamic_cast<TDetectorRead*>(item.get());
-        if(DetectorRead != nullptr) {
+        if(!hits.empty()) {
             nReads++;
-            nHits += DetectorRead->Hits.size();
-            if(reconstruct && (nReads == 6 || nReads == 2)) {
-                auto event = reconstruct->DoReconstruct(*DetectorRead);
-                nCandidates += event->Candidates.size();
+            if(nReads == 6 || nReads == 2) {
+                reconstruct.DoReconstruct(*event->Reconstructed);
             }
             else if(nReads > 6)
                 break;

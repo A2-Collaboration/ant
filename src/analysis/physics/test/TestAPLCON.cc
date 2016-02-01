@@ -1,5 +1,4 @@
 #include "TestAPLCON.h"
-#include "data/Particle.h"
 #include "plot/root_draw.h"
 #include <string>
 #include "utils/combinatorics.h"
@@ -13,11 +12,10 @@ using namespace std;
 using namespace ant;
 using namespace ant::analysis;
 using namespace ant::analysis::physics;
-using namespace ant::analysis::data;
 
 std::default_random_engine TestAPLCON::FitParticle::generator;
 
-TLorentzVector TestAPLCON::FitParticle::Make(const std::vector<double> &EkThetaPhi, const Double_t m) {
+TLorentzVector TestAPLCON::FitParticle::Make(const std::vector<double>& EkThetaPhi, const Double_t m) {
     const double E = EkThetaPhi[0] + m;
     const Double_t p = sqrt( E*E - m*m );
     TVector3 pv(1,0,0);
@@ -57,7 +55,7 @@ void TestAPLCON::FillIM(TH1D *h, const std::vector<TestAPLCON::FitParticle> &pho
     h->Fill(sum.M());
 }
 
-TestAPLCON::TestAPLCON(const string& name, PhysOptPtr opts) :
+TestAPLCON::TestAPLCON(const string& name, OptionsPtr opts) :
     Physics(name, opts),
     fitter(name),
     photons(nPhotons)
@@ -226,34 +224,34 @@ TestAPLCON::TestAPLCON(const string& name, PhysOptPtr opts) :
 }
 
 
-void TestAPLCON::ProcessEvent(const Event &event)
+void TestAPLCON::ProcessEvent(const TEvent& event, manager_t&)
 {
 
 
-    for(auto& cand : event.Reconstructed.Candidates) {
+    for(auto& cand : event.Reconstructed->Candidates) {
         banana->Fill(cand->CaloEnergy, cand->VetoEnergy);
     }
 
-    for(auto& particle : event.Reconstructed.Particles.GetAll()) {
+    for(auto& particle : event.Reconstructed->Particles.GetAll()) {
         particles->Fill(particle->Type().PrintName().c_str(), 1);
     }
 
-    ntagged->Fill(event.Reconstructed.TaggerHits.size());
+    ntagged->Fill(event.Reconstructed->Tagger.Hits.size());
 
-    cbesum->Fill(event.Reconstructed.Trigger.CBEnergySum);
+    cbesum->Fill(event.Reconstructed->Trigger.CBEnergySum);
 
     for( auto& t : ParticleTypeDatabase::DetectableTypes() ) {
         try {
-            numParticleType.at(t)->Fill(event.Reconstructed.Particles.Get(*t).size());
+            numParticleType.at(t)->Fill(event.Reconstructed->Particles.Get(*t).size());
         } catch (...) {}
     }
 
-    for(const auto& taggerhit : event.MCTrue.TaggerHits) {
+    for(const auto& taggerhit : event.MCTrue->Tagger.Hits) {
         tagger->Fill(taggerhit.PhotonEnergy);
 
         // find the photons and one proton
         size_t foundPhotons = 0;
-        for(const auto& p : event.MCTrue.Particles.GetAll()) {
+        for(const auto& p : event.MCTrue->Particles.GetAll()) {
             if(p->Type() == ParticleTypeDatabase::Proton) {
                 proton.SetFromVector(*p);
             }

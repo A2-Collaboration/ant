@@ -2,7 +2,7 @@
 
 #include "Histogram.h"
 #include "SmartHist.h"
-#include "analysis/data/Particle.h"
+#include "tree/TParticle.h"
 
 #include <string>
 
@@ -91,21 +91,21 @@ public:
 
     // Predef smart hists
 
-    SmartHist1<const data::ParticlePtr&> InvariantMass(
+    SmartHist1<const TParticlePtr&> InvariantMass(
             const std::string& title,
             const std::string& xlabel="M [MeV]",
             const std::string& ylabel="",
             BinSettings bins=BinSettings(1000),
             const std::string& name="");
 
-    SmartHist1<const data::ParticlePtr&> ThetaAngle(
+    SmartHist1<const TParticlePtr&> ThetaAngle(
             const std::string& title,
             const std::string& xlabel="#theta [#circ]",
             const std::string& ylabel="",
             BinSettings bins=BinSettings(180),
             const std::string& name="");
 
-    SmartHist1<const data::ParticlePtr &> KinEnergyPlot(
+    SmartHist1<const TParticlePtr &> KinEnergyPlot(
             const std::string& title,
             const std::string& xlabel="#E_{k} [MeV]",
             const std::string& ylabel="",

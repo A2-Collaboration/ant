@@ -6,12 +6,11 @@
 using namespace ant;
 using namespace ant::std_ext;
 using namespace ant::analysis;
-using namespace ant::analysis::data;
 using namespace ant::analysis::physics;
 using namespace std;
 
 
-ProtonTAPS::ProtonTAPS(const string& name, PhysOptPtr opts):
+ProtonTAPS::ProtonTAPS(const string& name, OptionsPtr opts):
     Physics(name, opts)
 {
 
@@ -38,18 +37,18 @@ double TimeAverage(const T& cands) {
     return time / energy;
 }
 
-void ProtonTAPS::ProcessEvent(const data::Event& event)
+void ProtonTAPS::ProcessEvent(const TEvent& event, manager_t&)
 {
 
-    data::CandidateList cands_taps;
-    data::CandidateList cands_cb;
+    TCandidateList cands_taps;
+    TCandidateList cands_cb;
 
     b_CBAvgVetoE = 0;
-    for(const auto& p : event.Reconstructed.Candidates) {
-        if(p->GetDetector() & Detector_t::Any_t::TAPS_Apparatus) {
+    for(const auto& p : event.Reconstructed->Candidates) {
+        if(p->Detector & Detector_t::Any_t::TAPS_Apparatus) {
             cands_taps.emplace_back(p);
         }
-        else if(p->GetDetector() & Detector_t::Any_t::CB_Apparatus) {
+        else if(p->Detector & Detector_t::Any_t::CB_Apparatus) {
             cands_cb.emplace_back(p);
             b_CBAvgVetoE += p->VetoEnergy;
         }
@@ -64,7 +63,7 @@ void ProtonTAPS::ProcessEvent(const data::Event& event)
 
     // find the proton in TAPS
     b_Proton.Time = numeric_limits<double>::quiet_NaN();
-    for(const CandidatePtr& cand_proton : cands_taps) {
+    for(const TCandidatePtr& cand_proton : cands_taps) {
         if(!isfinite(b_Proton.Time) || b_Proton.Time < cand_proton->Time) {
             b_Proton = *cand_proton;
         }

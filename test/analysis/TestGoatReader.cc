@@ -1,7 +1,6 @@
 #include "catch.hpp"
 
 #include "analysis/input/goat/GoatReader.h"
-#include "analysis/data/Event.h"
 
 #include "base/WrapTFile.h"
 

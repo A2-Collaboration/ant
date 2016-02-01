@@ -44,14 +44,14 @@ protected:
     std::vector<double> popens;
     std::vector<ant::analysis::utils::ParticleVars> gammas;
 
-    std::vector<double> GetAllPhotonAngles(const data::ParticleList& photons) const;
+    std::vector<double> GetAllPhotonAngles(const TParticleList& photons) const;
 
     TH1D* hAngle;
     TTree* mcTrue;
 
 public:
-    McTrue3Pi0(const std::string& name, PhysOptPtr opts);
-    virtual void ProcessEvent(const data::Event& event) override;
+    McTrue3Pi0(const std::string& name, OptionsPtr opts);
+    virtual void ProcessEvent(const TEvent& event, manager_t& manager) override;
     virtual void ShowResult() override;
 };
 

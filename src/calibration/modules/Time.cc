@@ -1,14 +1,12 @@
 #include "Time.h"
-#include "analysis/plot/HistogramFactories.h"
-#include "analysis/data/Event.h"
-#include "analysis/utils/combinatorics.h"
+
 
 #include "calibration/gui/CalCanvas.h"
 #include "calibration/fitfunctions/FitFunction.h" // PeakingFitFunction
 
 #include "DataManager.h"
 
-#include "tree/TDetectorRead.h"
+#include "tree/TDetectorReadHit.h"
 #include "tree/TCalibrationData.h"
 
 #include "base/Logger.h"
@@ -22,8 +20,6 @@
 using namespace std;
 using namespace ant;
 using namespace ant::calibration;
-using namespace ant::analysis;
-using namespace ant::analysis::data;
 
 Time::Time(const std::shared_ptr<Detector_t>& detector, const std::shared_ptr<DataManager>& CalibrationManager,
            Calibration::Converter::ptr_t converter,
@@ -98,7 +94,7 @@ void Time::ApplyTo(const readhits_t& hits, extrahits_t&)
 
     // now calibrate the Times (ignore any other kind of hits)
     for(TDetectorReadHit* dethit : dethits) {
-        if(dethit->GetChannelType() != Channel_t::Type_t::Timing)
+        if(dethit->ChannelType != Channel_t::Type_t::Timing)
             continue;
 
         // the Converter is smart enough to account for reference Times!

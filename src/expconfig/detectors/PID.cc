@@ -7,7 +7,7 @@
 #include "detail/PID_2014_elements.h"
 
 
-#include "tree/THeaderInfo.h"
+#include "tree/TID.h"
 #include "base/std_ext/math.h"
 #include "base/root_printable.h"
 
@@ -82,26 +82,26 @@ void PID::RotateElements()
     }
 }
 
-bool PID_2004::Matches(const THeaderInfo &headerInfo) const {
-    return std_ext::time_between(headerInfo.Timestamp, "2004-04-30", "2009-05-09");
+bool PID_2004::Matches(const TID& tid) const {
+    return std_ext::time_between(tid.Timestamp, "2004-04-30", "2009-05-09");
 }
 
 
-bool PID_2009_05::Matches(const THeaderInfo &headerInfo) const {
-    return std_ext::time_between(headerInfo.Timestamp, "2009-05-10", "2009-06-29");
+bool PID_2009_05::Matches(const TID& tid) const {
+    return std_ext::time_between(tid.Timestamp, "2009-05-10", "2009-06-29");
 }
 
 
-bool PID_2009_06::Matches(const THeaderInfo &headerInfo) const {
-    return std_ext::time_between(headerInfo.Timestamp, "2009-06-30", "2009-07-12");
+bool PID_2009_06::Matches(const TID& tid) const {
+    return std_ext::time_between(tid.Timestamp, "2009-06-30", "2009-07-12");
 }
 
 
-bool PID_2009_07::Matches(const THeaderInfo &headerInfo) const {
-    return std_ext::time_between(headerInfo.Timestamp, "2009-07-13", "2014-01-25");
+bool PID_2009_07::Matches(const TID& tid) const {
+    return std_ext::time_between(tid.Timestamp, "2009-07-13", "2014-01-25");
 }
 
 
-bool PID_2014::Matches(const THeaderInfo &headerInfo) const {
-    return std_ext::time_after(headerInfo.Timestamp, "2014-01-26");
+bool PID_2014::Matches(const TID& tid) const {
+    return std_ext::time_after(tid.Timestamp, "2014-01-26");
 }

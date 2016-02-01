@@ -1,9 +1,4 @@
 #include "TAPSVeto_Energy.h"
-#include "analysis/plot/HistogramFactories.h"
-#include "analysis/data/Event.h"
-#include "analysis/utils/combinatorics.h"
-
-#include "tree/TDataRecord.h"
 
 #include "calibration/fitfunctions/FitLandau.h"
 
@@ -15,8 +10,6 @@
 using namespace std;
 using namespace ant;
 using namespace ant::calibration;
-using namespace ant::analysis;
-using namespace ant::analysis::data;
 
 TAPSVeto_Energy::TAPSVeto_Energy(std::shared_ptr<expconfig::detector::TAPSVeto> tapsveto,
                                  std::shared_ptr<DataManager> calmgr,

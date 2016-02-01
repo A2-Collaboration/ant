@@ -60,12 +60,13 @@ You may want to add your `ant/build/bin` directory to your `$PATH` variable.
 ## Troubleshooting
 
   * In case CMake is not able to locate your Pluto installation, you can provide the environment variable `$PLUTOSYS` to tell CMake where to find it. If you installed Pluto inside your home directory, `~/pluto` or `~/src/pluto`, or placed it in `/opt/pluto`, the make process may have failed. Please make sure you ran `make` in your Pluto directory with a proper ROOT installation.
-  * If you're using gcc version 5.X and experiencing build errors within ROOT generated dictionary files (i.e. redeclaration of `struct __xfer_bufptrs`), please update to a more recent ROOT version. As of November 2015, you need to clone the git branch which includes the patches. To do so:
-    * get the source with`git clone -b v5-34-00-patches https://github.com/root-mirror/root.git`
-	* `cd` in the cloned directory
-	* create a new folder for the build process, e.g. `mkdir build_dir`
-	* `cd` in it and run `cmake .. && make -jN`, replace `N` with the number of threads which should be used
+  * If you're using gcc version 5.x and experiencing build errors within ROOT generated dictionary files (i.e. redeclaration of `struct __xfer_bufptrs`), please update to a more recent ROOT version. As of November 2015, you need to clone the git branch which includes the patches. To do so:
+    * get the source with `git clone -b v5-34-00-patches https://github.com/root-mirror/root.git`
+    * `cd` in the cloned directory
+    * create a new folder for the build process, e.g. `mkdir build_dir`
+    * `cd` in it and run `cmake .. && make -jN`, replace `N` with the number of threads which should be used
     * set your `$ROOTSYS` accordingly
+  * gdb version 7.7 crashes in combination with cereal, so use version 7.10
 
 # Contributing
 

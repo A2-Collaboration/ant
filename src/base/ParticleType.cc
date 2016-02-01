@@ -12,7 +12,7 @@ ostream& operator<<(ostream &stream, const ParticleTypeDatabase::Type& particle_
     return stream;
 }
 
-
+unsigned ParticleTypeDatabase::Type::NextUID;
 ParticleTypeDatabase::Particles_t ParticleTypeDatabase::types;
 
 const ParticleTypeDatabase::Type ParticleTypeDatabase::Proton("Proton",               "p",            938.272046, true);
@@ -41,41 +41,32 @@ const ParticleTypeDatabase::Type ParticleTypeDatabase::BeamTarget("BeamTarget", 
 const ParticleTypeDatabase::Type ParticleTypeDatabase::BeamProton("BeamProton",       "(#gamma p)",    938.272046, true,  &ParticleTypeDatabase::BeamTarget);
 const ParticleTypeDatabase::Type ParticleTypeDatabase::BeamNeutron("BeamNeutron",      "(#gamma n)",    939.565378, false, &ParticleTypeDatabase::BeamTarget);
 
-ParticleTypeDatabase::Type::Type(const string &_name, const string &_print_name, const mev_t &_mass, const bool &_charged, const ParticleTypeDatabase::Type *_sametype):
+ParticleTypeDatabase::Type::Type(const string &_name,
+                                 const string &_print_name, const mev_t &_mass, const bool &_charged, const ParticleTypeDatabase::Type *_sametype):
+    UID(NextUID++),
     name(_name),
     print_name(_print_name),
     mass(_mass),
     charged(_charged),
     sametype(_sametype)
 {
-    types.insert( pair<string, const Type&>(_name,*this) );
+    types.emplace(UID, *this);
 }
 
 void ParticleTypeDatabase::Print()
 {
     for(auto& p : types) {
-        cout << (p.second) << endl;
+        cout << p.second << endl;
     }
 }
 
 const ParticleTypeDatabase::Type *ParticleTypeDatabase::GetTypeOfPlutoID(index_t pid)
 {
-    PIDMap_t::const_iterator entry = pluto_pid_map.find(pid);
-    if(entry == pluto_pid_map.end()) {
+    PlutoIDMap_t::const_iterator entry = pluto_id_map.find(pid);
+    if(entry == pluto_id_map.end()) {
         return nullptr;
     }
     return entry->second;
-}
-
-const ParticleTypeDatabase::Type* ParticleTypeDatabase::AddTempPlutoType(index_t pid, const string &_name, const string &_print_name, const mev_t &_mass, const bool &_charged, const ParticleTypeDatabase::Type *_sametype)
-{
-    if(pluto_pid_map.find(pid) == pluto_pid_map.end()) {
-        Type* type = new Type(_name,_print_name,_mass,_charged, _sametype);
-        pluto_pid_map[pid] = type;
-        temp_types.push_back(type);
-        return type;
-    }
-    return nullptr;
 }
 
 const ParticleTypeDatabase::TypeList_t ParticleTypeDatabase::detectables = { &ParticleTypeDatabase::Photon,
@@ -100,10 +91,9 @@ const ParticleTypeDatabase::TypeList_t ParticleTypeDatabase::neutral_mesons = { 
                                                                                 &ParticleTypeDatabase::EtaPrime
                                                                               };
 
-ParticleTypeDatabase::TypeList_t ParticleTypeDatabase::temp_types;
 
-ParticleTypeDatabase::PIDMap_t ParticleTypeDatabase::pluto_pid_map = [] () {
-    ParticleTypeDatabase::PIDMap_t m;
+ParticleTypeDatabase::PlutoIDMap_t ParticleTypeDatabase::pluto_id_map = [] () {
+    ParticleTypeDatabase::PlutoIDMap_t m;
     m[1]  = &ParticleTypeDatabase::Photon;
     m[2]  = &ParticleTypeDatabase::ePlus;
     m[3]  = &ParticleTypeDatabase::eMinus;

@@ -1,66 +1,140 @@
 #pragma once
 
-#include "TDataRecord.h"
-#include "TCandidate.h"
-#include "TCluster.h"
-#include "TTagger.h"
-
 #ifndef __CINT__
+#include "TID.h"
+#include "TDetectorReadHit.h"
+#include "TSlowControl.h"
+#include "TUnpackerMessage.h"
+
+#include "TTagger.h"
+#include "TTrigger.h"
+#include "TTarget.h"
+
+#include "TCluster.h"
+#include "TCandidate.h"
+#include "TParticle.h"
+
 #include <iomanip>
-#include <sstream>
+#include <ctime>
+#include <memory>
 #endif
 
 namespace ant {
 
-struct TEvent : TDataRecord
+#ifndef __CINT__
+struct TEvent;
+using TEventPtr = std::unique_ptr<TEvent>;
+struct TEvent : printable_traits
+#else
+struct TEvent
+#endif
 {
-    typedef std::vector<TCandidate> candidates_t;
-    std::vector<TCandidate> Candidates;
-    TTagger Tagger;
-    typedef std::vector<TCluster> clusters_t;
-    std::vector<TCluster> AllClusters;
 
-    void Clear() {
-        Candidates.resize(0);
-        Tagger.Clear();
-        AllClusters.resize(0);
-    }
 
 #ifndef __CINT__
-    TEvent(const TID& id) :
-        TDataRecord(id)
-    {}
 
-    virtual std::ostream& Print( std::ostream& s) const override {
-        s << "TEvent ID=" << ID << '\n';
-        s << " " << Tagger.Hits.size() << " Taggerhits:\n";
-        for(auto& th : Tagger.Hits) {
-            s << "  " << th << "\n";
-        }
-        s << " " << Candidates.size() << " Candidates:\n";
-        for(auto& cand : Candidates) {
-            s << "  " << cand << "\n";
-            for(auto& c : cand.Clusters) {
-                s << "   " << c << "\n";
-                for(auto& h : c.Hits) {
-                    s << "    " << h << "\n";
-                }
+    struct Data : printable_traits
+    {
+        struct PTypeList {
+
+            void Add(TParticlePtr&& particle) {
+                lists[std::addressof(particle->Type())].emplace_back(particle);
+                all.emplace_back(particle);
             }
+
+            void Add(TParticlePtr& particle) {
+                lists[std::addressof(particle->Type())].emplace_back(particle);
+                all.emplace_back(particle);
+            }
+
+            const TParticleList& GetAll() const { return all; }
+
+            const TParticleList& Get(const ant::ParticleTypeDatabase::Type& type) const {
+                auto entry = lists.find(std::addressof(type));
+                if(entry == lists.end()) {
+                    return empty;
+                }
+                return entry->second;
+            }
+
+            template<class Archive>
+            void save(Archive& archive) const {
+                archive(all);
+            }
+
+            template<class Archive>
+            void load(Archive& archive) {
+                archive(all);
+                for(const auto& p : all)
+                    lists[std::addressof(p->Type())].emplace_back(p);
+            }
+
+        private:
+            static const TParticleList empty;
+            TParticleList all;
+            std::map<const ParticleTypeDatabase::Type*, TParticleList> lists;
+
+        }; // PTypeList
+
+        Data(const TID& id);
+        Data();
+        virtual ~Data();
+
+        TID ID;
+        std::vector<TDetectorReadHit> DetectorReadHits;
+        std::vector<TSlowControl>     SlowControls;
+        std::vector<TUnpackerMessage> UnpackerMessages;
+
+        TTagger  Tagger;
+        TTrigger Trigger;
+        TTarget  Target;
+
+        TClusterList     Clusters;
+        TCandidateList   Candidates;
+        PTypeList        Particles;    // MCTrue final state, or identified from reconstructed candidates
+        TParticleTree_t  ParticleTree;
+
+        template<class Archive>
+        void serialize(Archive& archive) {
+            archive(ID,
+                    DetectorReadHits, SlowControls, UnpackerMessages,
+                    Tagger, Trigger, Target,
+                    Clusters, Candidates, Particles, ParticleTree);
         }
-        return s;
+
+        virtual std::ostream& Print(std::ostream& s) const override;
+
+    }; // Data
+
+    using DataPtr = std::unique_ptr<Data> ;
+
+    DataPtr Reconstructed;
+    DataPtr MCTrue;
+
+    template<class Archive>
+    void serialize(Archive archive) {
+        archive(Reconstructed, MCTrue);
     }
+
+    virtual std::ostream& Print( std::ostream& s) const override;
+
+    static std::unique_ptr<TEvent> MakeReconstructed(const TID& id);
+
+    // TEvent is moveable
+    TEvent(TEvent&&) = default;
+    TEvent& operator=(TEvent&&) = default;
+
 #endif
 
-    TEvent() : TDataRecord(), Candidates(), Tagger() {}
-    virtual ~TEvent() {}
-#ifdef __clang__
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Winconsistent-missing-override"
-#endif
+    TEvent();
+    virtual ~TEvent();
     ClassDef(TEvent, ANT_UNPACKER_ROOT_VERSION)
-#ifdef __clang__
-#pragma clang diagnostic pop
-#endif
+
+private:
+    // prevent ROOTcint from creating copy-constructors
+    TEvent(const TEvent&);
+    TEvent& operator=(const TEvent&);
+
 };
 
 }

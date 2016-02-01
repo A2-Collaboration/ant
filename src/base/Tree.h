@@ -1,5 +1,7 @@
 #pragma once
 
+#include "base/cereal/access.hpp"
+
 #include <memory>
 #include <list>
 #include <algorithm>
@@ -31,6 +33,15 @@ protected:
 
 
     Tree(T&& data_) : data(data_), is_sorted(false) {}
+
+
+    friend class cereal::access;
+    Tree() {} // in order to construct shared_ptr of Tree<T>
+    template <class Archive>
+    void serialize(Archive& archive)
+    {
+        archive(data, parent, self, daughters, is_sorted);
+    }
 
 public:
 

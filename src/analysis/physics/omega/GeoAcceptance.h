@@ -31,7 +31,7 @@ private:
                              const std::string& name="",
                              const BinSettings& thetabins = BinSettings(180),
                              const BinSettings& phibins = BinSettings(360,-180.0,180.0));
-        void Fill(const data::ParticlePtr& p);
+        void Fill(const TParticlePtr& p);
 
 
         TObject *GetObject();
@@ -44,7 +44,7 @@ private:
         unsigned int n;
 
         ParticleThetaPhiPlot3D(SmartHistFactory& factory, const std::string& title, const std::string& name="");
-        void Fill(const data::ParticlePtr& p);
+        void Fill(const TParticlePtr& p);
 
 
         TObject *GetObject();
@@ -70,8 +70,8 @@ private:
 
 
         AcceptanceAnalysis(SmartHistFactory& factory, const utils::A2SimpleGeometry& geo_, const std::string& name_);
-        void Fill(const data::ParticleList& mctrue, const data::ParticleList& reconstructed);
-        void ShowResult();
+        void Fill(const TParticleList& mctrue, const TParticleList& reconstructed);
+        virtual void ShowResult();
     };
 
     utils::A2SimpleGeometry geo;
@@ -79,11 +79,11 @@ private:
     std::list<AcceptanceAnalysis> analyses;
 
 public:
-    GeoAcceptance(const std::string& name, PhysOptPtr opts);
+    GeoAcceptance(const std::string& name, OptionsPtr opts);
     virtual ~GeoAcceptance();
-    void ProcessEvent(const data::Event &event);
-    void Finish();
-    void ShowResult();
+    virtual void ProcessEvent(const TEvent& event, manager_t& manager) override;
+    virtual void Finish() override;
+    virtual void ShowResult() override;
 };
 }
 }

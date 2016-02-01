@@ -22,15 +22,15 @@ using namespace ant::analysis;
 using namespace ant::analysis::utils;
 
 
-double KinFitter::EnergyResolution(const analysis::data::ParticlePtr& p) const
+double KinFitter::EnergyResolution(const TParticlePtr& p) const
 {
     assert(p->Candidate!=nullptr);
 
-    if(p->Candidate->GetDetector() & Detector_t::Type_t::CB) {
+    if(p->Candidate->Detector & Detector_t::Type_t::CB) {
 
         return 1.07134e-02 * p->Ek();
 
-    } else if(p->Candidate->GetDetector() & Detector_t::Type_t::TAPS) {
+    } else if(p->Candidate->Detector & Detector_t::Type_t::TAPS) {
 
         return 3.5E-2 * p->Ek();
 
@@ -42,15 +42,15 @@ double KinFitter::EnergyResolution(const analysis::data::ParticlePtr& p) const
     return 0.0;
 }
 
-double KinFitter::ThetaResolution(const analysis::data::ParticlePtr& p) const
+double KinFitter::ThetaResolution(const TParticlePtr& p) const
 {
     assert(p->Candidate!=nullptr);
 
-    if(p->Candidate->GetDetector() & Detector_t::Type_t::CB) {
+    if(p->Candidate->Detector & Detector_t::Type_t::CB) {
 
         return cb_sigma_theta.GetSigma(p->Candidate->FindCaloCluster()->CentralElement, p->Ek());
 
-    } if(p->Candidate->GetDetector() & Detector_t::Type_t::TAPS) {
+    } if(p->Candidate->Detector & Detector_t::Type_t::TAPS) {
 
         return taps_sigma_theta.GetSigma(p->Candidate->FindCaloCluster()->CentralElement, p->Ek());
 
@@ -61,15 +61,15 @@ double KinFitter::ThetaResolution(const analysis::data::ParticlePtr& p) const
     return 0.0;
 }
 
-double KinFitter::PhiResolution(const analysis::data::ParticlePtr& p) const
+double KinFitter::PhiResolution(const TParticlePtr& p) const
 {
     assert(p->Candidate!=nullptr);
 
-    if(p->Candidate->GetDetector() & Detector_t::Type_t::CB) {
+    if(p->Candidate->Detector & Detector_t::Type_t::CB) {
 
         return cb_sigma_phi.GetSigma(p->Candidate->FindCaloCluster()->CentralElement, p->Ek());
 
-    } else if(p->Candidate->GetDetector() & Detector_t::Type_t::TAPS) {
+    } else if(p->Candidate->Detector & Detector_t::Type_t::TAPS) {
 
         return taps_sigma_phi.GetSigma(p->Candidate->FindCaloCluster()->CentralElement, p->Ek());
 
@@ -167,7 +167,7 @@ void KinFitter::SetEgammaBeam(const double &ebeam)
     Beam.Sigma = fct_TaggerEGausSigma(ebeam);
 }
 
-void KinFitter::SetProton(const analysis::data::ParticlePtr &proton)
+void KinFitter::SetProton(const TParticlePtr& proton)
 {
     Proton.Ek         = proton->Ek();
     Proton.sigmaEk    = 0.0; // unmeasured
@@ -177,10 +177,10 @@ void KinFitter::SetProton(const analysis::data::ParticlePtr &proton)
 
     assert(proton->Candidate!=nullptr);
 
-    if(proton->Candidate->GetDetector() & Detector_t::Type_t::CB) {
+    if(proton->Candidate->Detector & Detector_t::Type_t::CB) {
         Proton.sigmaTheta = degree_to_radian(5.43);
         Proton.sigmaPhi   = degree_to_radian(5.31);
-    } else if(proton->Candidate->GetDetector() & Detector_t::Type_t::TAPS) {
+    } else if(proton->Candidate->Detector & Detector_t::Type_t::TAPS) {
         Proton.sigmaTheta = degree_to_radian(2.89);
         Proton.sigmaPhi   = degree_to_radian(4.45);
     } else {
@@ -189,17 +189,17 @@ void KinFitter::SetProton(const analysis::data::ParticlePtr &proton)
 
 }
 
-data::ParticlePtr KinFitter::GetFittedProton() const
+TParticlePtr KinFitter::GetFittedProton() const
 {
-    return make_shared<data::Particle>(ParticleTypeDatabase::Proton, Proton.Ek, Proton.Theta, Proton.Phi);
+    return make_shared<TParticle>(ParticleTypeDatabase::Proton, Proton.Ek, Proton.Theta, Proton.Phi);
 }
 
-data::ParticleList KinFitter::GetFittedPhotons() const
+TParticleList KinFitter::GetFittedPhotons() const
 {
-    data::ParticleList photons;
+    TParticleList photons;
     for(const auto& photon : Photons) {
-        photons.emplace_back(make_shared<data::Particle>(ParticleTypeDatabase::Photon,
-                                                         photon.Ek, photon.Theta, photon.Phi));
+        photons.emplace_back(make_shared<TParticle>(ParticleTypeDatabase::Photon,
+                                                    photon.Ek, photon.Theta, photon.Phi));
     }
     return photons;
 }
@@ -211,7 +211,7 @@ double KinFitter::GetFittedBeamE() const
 
 
 
-void KinFitter::SetPhotons(const std::vector<analysis::data::ParticlePtr> &photons_data)
+void KinFitter::SetPhotons(const std::vector<TParticlePtr> &photons_data)
 {
     if(Photons.size() != photons_data.size())
         throw Exception("Given number of photons does not match configured fitter");

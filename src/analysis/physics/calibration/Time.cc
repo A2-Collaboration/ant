@@ -4,11 +4,10 @@
 
 using namespace std;
 using namespace ant;
-using namespace ant::analysis::data;
 using namespace ant::analysis::physics;
 
 Time::Time(const Detector_t::Type_t& detectorType,
-           const string& name, analysis::PhysOptPtr opts)
+           const string& name, OptionsPtr opts)
     :
       Physics(name, opts)
 {
@@ -47,33 +46,33 @@ Time::Time(const Detector_t::Type_t& detectorType,
 
 }
 
-void Time::ProcessEvent(const Event& event)
+void Time::ProcessEvent(const TEvent& event, manager_t&)
 {
-    const double CBTimeAvg = event.Reconstructed.Trigger.CBTiming;
+    const double CBTimeAvg = event.Reconstructed->Trigger.CBTiming;
     hCBTriggerTiming->Fill(CBTimeAvg);
 
     // handle Tagger differently
     if(isTagger)
     {
-        for (const auto& tHit: event.Reconstructed.TaggerHits) {
+        for (const auto& tHit: event.Reconstructed->Tagger.Hits) {
             hTime->Fill(tHit.Time, tHit.Channel);
             hTimeToF->Fill(tHit.Time - CBTimeAvg, tHit.Channel);
         }
         return;
     }
 
-    for(const auto& cand: event.Reconstructed.Candidates) {
-        for(const TCluster& cluster: cand->Clusters) {
-            if(cluster.GetDetectorType() != Detector->Type)
+    for(const auto& cand: event.Reconstructed->Candidates) {
+        for(const TClusterPtr& cluster: cand->Clusters) {
+            if(cluster->DetectorType != Detector->Type)
                 continue;
-            hTime->Fill(cluster.Time, cluster.CentralElement);
-            const double tof = Detector->GetTimeOfFlight(cluster.Time,
-                                                         cluster.CentralElement,
+            hTime->Fill(cluster->Time, cluster->CentralElement);
+            const double tof = Detector->GetTimeOfFlight(cluster->Time,
+                                                         cluster->CentralElement,
                                                          CBTimeAvg);
-            hTimeToF->Fill(tof, cluster.CentralElement);
-            for(const auto& taggerhit : event.Reconstructed.TaggerHits) {
-                const double relative_time = cluster.Time - taggerhit.Time;
-                hTimeToTagger->Fill(relative_time, cluster.CentralElement);
+            hTimeToF->Fill(tof, cluster->CentralElement);
+            for(const auto& taggerhit : event.Reconstructed->Tagger.Hits) {
+                const double relative_time = cluster->Time - taggerhit.Time;
+                hTimeToTagger->Fill(relative_time, cluster->CentralElement);
             }
         }
     }
@@ -94,35 +93,35 @@ namespace analysis {
 namespace physics {
 
 struct EPT_Time : Time {
-    EPT_Time(const std::string& name, PhysOptPtr opts) :
+    EPT_Time(const std::string& name, OptionsPtr opts) :
         Time(Detector_t::Type_t::EPT, name, opts)
     {}
 };
 AUTO_REGISTER_PHYSICS(EPT_Time)
 
 struct CB_Time : Time {
-    CB_Time(const std::string& name, PhysOptPtr opts) :
+    CB_Time(const std::string& name, OptionsPtr opts) :
         Time(Detector_t::Type_t::CB, name, opts)
     {}
 };
 AUTO_REGISTER_PHYSICS(CB_Time)
 
 struct PID_Time : Time {
-    PID_Time(const std::string& name, PhysOptPtr opts) :
+    PID_Time(const std::string& name, OptionsPtr opts) :
         Time(Detector_t::Type_t::PID, name, opts)
     {}
 };
 AUTO_REGISTER_PHYSICS(PID_Time)
 
 struct TAPS_Time : Time {
-    TAPS_Time(const std::string& name, PhysOptPtr opts) :
+    TAPS_Time(const std::string& name, OptionsPtr opts) :
         Time(Detector_t::Type_t::TAPS, name, opts)
     {}
 };
 AUTO_REGISTER_PHYSICS(TAPS_Time)
 
 struct TAPSVeto_Time : Time {
-    TAPSVeto_Time(const std::string& name, PhysOptPtr opts) :
+    TAPSVeto_Time(const std::string& name, OptionsPtr opts) :
         Time(Detector_t::Type_t::TAPSVeto, name, opts)
     {}
 };

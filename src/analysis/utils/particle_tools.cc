@@ -15,7 +15,6 @@
 using namespace std;
 using namespace ant;
 using namespace ant::analysis;
-using namespace ant::analysis::data;
 using namespace ant::analysis::utils;
 
 ParticleVars::ParticleVars(const TLorentzVector& lv, const ParticleTypeDatabase::Type& type) noexcept
@@ -26,7 +25,7 @@ ParticleVars::ParticleVars(const TLorentzVector& lv, const ParticleTypeDatabase:
     E     = lv.E() - type.Mass();
 }
 
-ParticleVars::ParticleVars(const Particle& p) noexcept
+ParticleVars::ParticleVars(const TParticle& p) noexcept
 {
     IM    = p.M();
     Theta = std_ext::radian_to_degree(p.Theta());
@@ -85,9 +84,9 @@ string _GetDecayString(const shared_ptr<Tree<T>>& particletree, function<string(
 
 
 
-string ParticleTools::GetDecayString(const ParticleTree_t& particletree)
+string ParticleTools::GetDecayString(const TParticleTree_t& particletree)
 {
-    return _GetDecayString<ParticlePtr>(particletree, [] (const ParticlePtr& p) { return p->Type().PrintName(); });
+    return _GetDecayString<TParticlePtr>(particletree, [] (const TParticlePtr& p) { return p->Type().PrintName(); });
 }
 
 string ParticleTools::GetDecayString(const ParticleTypeTree& particletypetree)
@@ -106,7 +105,7 @@ string ParticleTools::SanitizeDecayString(string decaystring)
     return string("x")+decaystring;
 }
 
-string ParticleTools::GetProductionChannelString(const data::ParticleTree_t& particletree)
+string ParticleTools::GetProductionChannelString(const TParticleTree_t& particletree)
 {
     if(!particletree)
         return "empty_unknown";
@@ -124,7 +123,7 @@ string ParticleTools::GetProductionChannelString(const data::ParticleTree_t& par
     return s.str();
 }
 
-const ParticlePtr ParticleTools::FindParticle(const ant::ParticleTypeDatabase::Type& type, const ParticleList& particles)
+const TParticlePtr ParticleTools::FindParticle(const ant::ParticleTypeDatabase::Type& type, const TParticleList& particles)
 {
     for(const auto& p : particles) {
         if(p->Type() == type) {
@@ -135,14 +134,14 @@ const ParticlePtr ParticleTools::FindParticle(const ant::ParticleTypeDatabase::T
     return nullptr;
 }
 
-const ParticlePtr ParticleTools::FindParticle(const ParticleTypeDatabase::Type& type,
-                                              const ParticleTree_t& particletree,
+const TParticlePtr ParticleTools::FindParticle(const ParticleTypeDatabase::Type& type,
+                                              const TParticleTree_t& particletree,
                                               size_t maxlevel)
 {
     if(!particletree)
         return nullptr;
-    ParticlePtr p_found = nullptr;
-    particletree->Map_level([&type, &p_found, maxlevel] (const ParticlePtr& p, size_t level) {
+    TParticlePtr p_found = nullptr;
+    particletree->Map_level([&type, &p_found, maxlevel] (const TParticlePtr& p, size_t level) {
         if(level <= maxlevel && !p_found && p->Type() == type) {
             p_found = p;
         }
@@ -150,12 +149,12 @@ const ParticlePtr ParticleTools::FindParticle(const ParticleTypeDatabase::Type& 
     return p_found;
 }
 
-const ParticleList ParticleTools::FindParticles(const ParticleTypeDatabase::Type& type, const ParticleTree_t& particletree, size_t maxlevel)
+const TParticleList ParticleTools::FindParticles(const ParticleTypeDatabase::Type& type, const TParticleTree_t& particletree, size_t maxlevel)
 {
-    ParticleList list;
+    TParticleList list;
     if(!particletree)
         return list;
-    particletree->Map_level([&type, &list, maxlevel] (const ParticlePtr& p, size_t level) {
+    particletree->Map_level([&type, &list, maxlevel] (const TParticlePtr& p, size_t level) {
         if(level <= maxlevel && p->Type() == type) {
             list.push_back(p);
         }
@@ -163,12 +162,12 @@ const ParticleList ParticleTools::FindParticles(const ParticleTypeDatabase::Type
     return list;
 }
 
-void ParticleTools::FillIMCombinations(TH1* h, unsigned n, const ParticleList& particles)
+void ParticleTools::FillIMCombinations(TH1* h, unsigned n, const TParticleList& particles)
 {
     FillIMCombinations([h] (double x) {h->Fill(x);}, n, particles);
 }
 
-void ParticleTools::FillIMCombinations(std::function<void(double)> filler, unsigned n, const ParticleList& particles)
+void ParticleTools::FillIMCombinations(std::function<void(double)> filler, unsigned n, const TParticleList& particles)
 {
     for( auto comb = makeCombination(particles,n); !comb.Done(); ++comb) {
          TLorentzVector sum(0,0,0,0);
@@ -179,12 +178,12 @@ void ParticleTools::FillIMCombinations(std::function<void(double)> filler, unsig
     }
 }
 
-bool ParticleTools::SortParticleByName(const data::ParticlePtr& a, const data::ParticlePtr& b)
+bool ParticleTools::SortParticleByName(const TParticlePtr& a, const TParticlePtr& b)
 {
     return a->Type().Name() < b->Type().Name();
 }
 
-bool ParticleTools::MatchByParticleName(const data::ParticlePtr& a, const ant::ParticleTypeDatabase::Type& b)
+bool ParticleTools::MatchByParticleName(const TParticlePtr& a, const ant::ParticleTypeDatabase::Type& b)
 {
     return a->Type().Name() == b.Name();
 }

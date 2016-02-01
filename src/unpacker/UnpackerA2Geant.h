@@ -30,7 +30,7 @@ public:
     UnpackerA2Geant();
     virtual ~UnpackerA2Geant();
     virtual bool OpenFile(const std::string& filename) override;
-    virtual std::unique_ptr<TDataRecord> NextItem() noexcept override;
+    virtual std::unique_ptr<TEvent> NextEvent() noexcept override;
 
     class Exception : public Unpacker::Exception {
         using Unpacker::Exception::Exception; // use base class constructor
@@ -44,7 +44,6 @@ private:
     std::unique_ptr<WrapTFileInput> inputfile;
     TTree* geant;
 
-    std::unique_ptr<THeaderInfo> headerInfo;
     std::list< std::shared_ptr<TaggerDetector_t> >  taggerdetectors;
     std::shared_ptr<Detector_t> cb_detector;
     std::shared_ptr<Detector_t> pid_detector;

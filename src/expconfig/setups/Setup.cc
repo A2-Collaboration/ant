@@ -29,6 +29,11 @@ std::list<std::shared_ptr<ant::ReconstructHook::Base> > Setup::GetReconstructHoo
                     calib, list
                     );
     }
+    for(const auto& detector : detectors) {
+        std_ext::AddToSharedPtrList<ReconstructHook::Base, Detector_t>(
+                    detector, list
+                    );
+    }
     return list;
 }
 
@@ -61,7 +66,7 @@ std::string Setup::GetPhysicsFilesDirectory() const
     return std::string(ANT_PATH_DATABASE)+"/"+GetName()+"/physics_files";
 }
 
-Setup::Setup(const std::string& name, SetupOptPtr opt) :
+Setup::Setup(const std::string& name, OptionsPtr opt) :
     name_(name),
     Options(opt)
 {
@@ -69,13 +74,13 @@ Setup::Setup(const std::string& name, SetupOptPtr opt) :
     calibrationDataManager = std::make_shared<calibration::DataManager>(calibrationDataFolder);
 }
 
-bool Setup::Matches(const ant::THeaderInfo& header) const {
+bool Setup::Matches(const ant::TID& tid) const {
     // check that all detectors match
     for(const auto& detector : detectors) {
         const auto& ptr = std::dynamic_pointer_cast<ExpConfig::Base, Detector_t>(detector);
         if(ptr == nullptr)
             continue;
-        if(!ptr->Matches(header))
+        if(!ptr->Matches(tid))
             return false;
     }
     return true;

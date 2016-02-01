@@ -10,12 +10,11 @@
 using namespace ant;
 using namespace ant::std_ext;
 using namespace ant::analysis;
-using namespace ant::analysis::data;
 using namespace ant::analysis::physics;
 using namespace std;
 
 
-EtapProton::EtapProton(const string& name, PhysOptPtr opts):
+EtapProton::EtapProton(const string& name, OptionsPtr opts):
     Physics(name, opts)
 {
     multiplicities = opts->Get<decltype(multiplicities)>("PhotonMulti",{{2,2},{4,4},{6,6}});
@@ -80,20 +79,20 @@ EtapProton::EtapProton(const string& name, PhysOptPtr opts):
     taps_detector = ExpConfig::Setup::GetDetector<expconfig::detector::TAPS>();
 }
 
-void EtapProton::ProcessEvent(const data::Event& event)
+void EtapProton::ProcessEvent(const TEvent& event, manager_t&)
 {
     steps->Fill("Seen",1.0);
 
-    const auto& cands = event.Reconstructed.Candidates;
-    data::CandidateList cands_taps;
-    data::CandidateList cands_cb;
+    const auto& cands = event.Reconstructed->Candidates;
+    TCandidateList cands_taps;
+    TCandidateList cands_cb;
 
     b_CBSumVetoE = 0;
     for(const auto& p : cands) {
-        if(p->GetDetector() & Detector_t::Any_t::TAPS_Apparatus) {
+        if(p->Detector & Detector_t::Any_t::TAPS_Apparatus) {
             cands_taps.emplace_back(p);
         }
-        else if(p->GetDetector() & Detector_t::Any_t::CB_Apparatus) {
+        else if(p->Detector & Detector_t::Any_t::CB_Apparatus) {
             cands_cb.emplace_back(p);
             b_CBSumVetoE += p->VetoEnergy;
         }
@@ -104,7 +103,7 @@ void EtapProton::ProcessEvent(const data::Event& event)
     steps->Fill("nTAPS>0",1.0);
 
     b_nCB = cands_cb.size();
-    b_CBAvgTime = event.Reconstructed.Trigger.CBTiming;
+    b_CBAvgTime = event.Reconstructed->Trigger.CBTiming;
     if(!isfinite(b_CBAvgTime))
         return;
     steps->Fill("CBAvgTime ok",1.0);
@@ -112,14 +111,14 @@ void EtapProton::ProcessEvent(const data::Event& event)
 
     // find the proton candidate in TAPS, ie. the lowest beta=v/c in TAPS
     b_ProtonBeta = numeric_limits<double>::quiet_NaN();
-    data::ParticlePtr proton;
-    for(const CandidatePtr& cand_taps : cands_taps) {
+    TParticlePtr proton;
+    for(const TCandidatePtr& cand_taps : cands_taps) {
         // calculate the beta = v/c of the particle from time of flight
         // note that the time of flight is only correct if the correct reference time
         // is used...
         auto taps_cluster = cand_taps->FindCaloCluster();
         const double dt = taps_detector->GetTimeOfFlight(taps_cluster->Time, taps_cluster->CentralElement,
-                                                          event.Reconstructed.Trigger.CBTiming);
+                                                          event.Reconstructed->Trigger.CBTiming);
         const double s = taps_detector->GetZPosition();
         constexpr double c = 30; // velocity of light in cm/ns
 
@@ -129,17 +128,17 @@ void EtapProton::ProcessEvent(const data::Event& event)
             b_Proton = *cand_taps;
             b_ProtonBeta = beta;
             b_ProtonToF = dt;
-            proton = make_shared<Particle>(ParticleTypeDatabase::Proton, cand_taps);
+            proton = make_shared<TParticle>(ParticleTypeDatabase::Proton, cand_taps);
         }
     }
 
     // create "photons" from all other clusters
-    data::ParticleList photons;
+    TParticleList photons;
     for(const auto& cand_cb : cands_cb)
-        photons.emplace_back(make_shared<Particle>(ParticleTypeDatabase::Photon, cand_cb));
+        photons.emplace_back(make_shared<TParticle>(ParticleTypeDatabase::Photon, cand_cb));
     for(const auto& cand_taps : cands_taps) {
         if(cand_taps != proton->Candidate)
-            photons.emplace_back(make_shared<Particle>(ParticleTypeDatabase::Photon, cand_taps));
+            photons.emplace_back(make_shared<TParticle>(ParticleTypeDatabase::Photon, cand_taps));
     }
 
     assert(photons.size() == cands.size()-1);
@@ -162,7 +161,7 @@ void EtapProton::ProcessEvent(const data::Event& event)
     utils::KinFitter& fitter = *fitters.at(photons.size()-1);
 
     bool kinFit_ok = false;
-    for(const data::TaggerHit& taggerhit : event.Reconstructed.TaggerHits) {
+    for(const TTaggerHit& taggerhit : event.Reconstructed->Tagger.Hits) {
         promptrandom.SetTaggerHit(taggerhit.Time - b_CBAvgTime);
         if(promptrandom.State() == PromptRandom::Case::Outside)
             continue;

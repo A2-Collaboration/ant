@@ -3,8 +3,7 @@
 #include "expconfig/ExpConfig.h"
 
 
-#include "tree/THeaderInfo.h"
-#include "tree/TDetectorRead.h"
+#include "tree/TEvent.h"
 
 #include "base/WrapTFile.h"
 #include "base/Logger.h"
@@ -74,7 +73,7 @@ bool UnpackerA2Geant::OpenFile(const string& filename)
 
     if(inputfile->GetObject("h12_tid", tid_tree)) {
         if(tid_tree->GetEntries() != geant->GetEntries()) {
-            throw Exception("Geant Tree and TID Tree size missmatch");
+            throw Exception("Geant Tree and TID Tree size mismatch");
         }
 
         geant->AddFriend(tid_tree);
@@ -88,9 +87,9 @@ bool UnpackerA2Geant::OpenFile(const string& filename)
 
         /// \todo think of some better timestamp?
         id = new TID(static_cast<std::uint32_t>(std::time(nullptr)),
-                                       0, // start with 0 as lower ID
-                                       std::initializer_list<TID::Flags_t>({TID::Flags_t::MC, TID::Flags_t::AdHoc}) // mark as MC
-                                       );
+                     0, // start with 0 as lower ID
+                     std::list<TID::Flags_t>{TID::Flags_t::MC, TID::Flags_t::AdHoc} // mark as MC
+                     );
     }
 
     if(geant->GetEntries() >= numeric_limits<std::uint32_t>::max()) {
@@ -106,10 +105,8 @@ bool UnpackerA2Geant::OpenFile(const string& filename)
     if(manualName.empty()) {
         throw ExpConfig::ExceptionNoConfig("This unpacker requires a manually set setup name");
     }
-    // build a bogus headerInfo and ask for config
-    headerInfo = std_ext::make_unique<THeaderInfo>(*id,
-                                                   manualName);
-    auto config = ExpConfig::Unpacker<UnpackerA2GeantConfig>::Get(*headerInfo);
+    // actually the given id does not matter since ManualName is set...
+    auto config = ExpConfig::Unpacker<UnpackerA2GeantConfig>::Get(*id);
 
     // find some taggerdetectors
     // needed to create proper tagger hits from incoming photons
@@ -142,27 +139,24 @@ bool UnpackerA2Geant::OpenFile(const string& filename)
     return true;
 }
 
-unique_ptr<TDataRecord> UnpackerA2Geant::NextItem() noexcept
+std::unique_ptr<TEvent> UnpackerA2Geant::NextEvent() noexcept
 {
     if(current_entry>=geant->GetEntriesFast()-1)
         return nullptr;
 
-    // return the headerinfo as the very first item, afterwards,
-    // we can forget about the headerInfo...
-    if(headerInfo != nullptr) {
-        return move(headerInfo);
-    }
-
     geant->GetEntry(++current_entry);
 
-    // start with an empty detector read
-    unique_ptr<TDetectorRead> detread = std_ext::make_unique<TDetectorRead>(*id);
+    // start with an empty reconstructed event
+    auto event = TEvent::MakeReconstructed(*id);
+
+    // however, vertex is some MCTrue information!
+    event->MCTrue = std_ext::make_unique<TEvent::Data>(); // do not set its ID, will be done by "real" MCTrue reader
+    event->MCTrue->Target.Vertex = fvertex; // TVector3 has conversion constructor...
 
     const size_t n_total = fnhits+fnpart+fntaps+fnvtaps+fvhits;
 
-
     // approx. 3 detector read hits per detector, we just want to prevent re-allocation
-    vector<TDetectorReadHit>& hits = detread->Hits;
+    vector<TDetectorReadHit>& hits = event->Reconstructed->DetectorReadHits;
     hits.reserve(3*n_total);
 
     // all energies from A2geant are in GeV, but here we need MeV...
@@ -263,7 +257,7 @@ unique_ptr<TDataRecord> UnpackerA2Geant::NextItem() noexcept
     if(!tid_from_file)
         ++(*id);
 
-    return move(detread);
+    return event;
 }
 
 double UnpackerA2Geant::PercentDone() const

@@ -51,10 +51,10 @@ public:
 
     Detector_t::Type_t det = Detector_t::Type_t::CB;
 
-    ExtractResolutions(const std::string& name, PhysOptPtr opts);
+    ExtractResolutions(const std::string& name, OptionsPtr opts);
 
-    void ProcessEvent(const data::Event &event) override;
-    void ShowResult() override;
+    virtual void ProcessEvent(const TEvent& event, manager_t& manager) override;
+    virtual void ShowResult() override;
 };
 
 }

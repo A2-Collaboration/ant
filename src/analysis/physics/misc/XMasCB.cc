@@ -7,10 +7,9 @@
 using namespace ant;
 using namespace ant::analysis::physics;
 using namespace ant::analysis;
-using namespace ant::analysis::data;
 using namespace std;
 
-XMasCB::XMasCB(const std::string& name, PhysOptPtr opts):
+XMasCB::XMasCB(const std::string& name, OptionsPtr opts):
     Physics(name, opts),
     ext(opts->Get<string>("FileType", "pdf")),
     w_px(opts->Get<int>("x_px", 1024))
@@ -29,7 +28,7 @@ XMasCB::XMasCB(const std::string& name, PhysOptPtr opts):
 XMasCB::~XMasCB()
 {}
 
-void XMasCB::ProcessEvent(const Event& event)
+void XMasCB::ProcessEvent(const TEvent& event, manager_t&)
 {
     if(m++<skipevents)
         return;
@@ -49,9 +48,9 @@ void XMasCB::ProcessEvent(const Event& event)
 
     hist->ResetElements(0.0);
 
-    for(const auto& c : event.Reconstructed.Candidates) {
+    for(const auto& c : event.Reconstructed->Candidates) {
 
-        if(c->GetDetector() & Detector_t::Type_t::CB) {
+        if(c->Detector & Detector_t::Type_t::CB) {
             const auto& cluster  = c->FindCaloCluster();
 
             for(const auto& hit : cluster->Hits) {

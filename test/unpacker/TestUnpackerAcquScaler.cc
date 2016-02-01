@@ -4,9 +4,7 @@
 #include "Unpacker.h"
 #include "expconfig/ExpConfig.h"
 
-#include "tree/THeaderInfo.h"
-#include "tree/TDetectorRead.h"
-#include "tree/TSlowControl.h"
+#include "tree/TEvent.h"
 
 #include <iostream>
 #include <string>
@@ -25,30 +23,38 @@ void dotest() {
     auto unpacker = ant::Unpacker::Get(string(TEST_BLOBS_DIRECTORY)+"/Acqu_scalerblock.dat.xz");
 
     unsigned nSlowControls = 0;
-    unsigned nReads = 0;
+    unsigned nEvents = 0;
     unsigned nHits = 0;
+    unsigned nEmptyEvents = 0;
 
     bool taggerScalerBlockFound = false;
 
-    while(auto item = unpacker->NextItem()) {
-        auto DetectorRead = dynamic_cast<TDetectorRead*>(item.get());
-        if(DetectorRead != nullptr) {
-            nReads++;
-            nHits += DetectorRead->Hits.size();
+    while(auto event = unpacker->NextEvent()) {
+        auto& readhits = event->Reconstructed->DetectorReadHits;
+        nEvents++;
+        nHits += readhits.size();
+
+        // last event should report proper end of file
+        if(nEvents==211) {
+            REQUIRE(event->Reconstructed->UnpackerMessages.back().Message == "Found proper end of file");
         }
-        auto SlowControl = dynamic_cast<TSlowControl*>(item.get());
-        if(SlowControl != nullptr) {
-            nSlowControls++;
-            if(SlowControl->Name == "TaggerScalers") {
-                taggerScalerBlockFound = true;
-                // we know the file is extracted from an EPT run...
-                REQUIRE(SlowControl->Payload_Int.size() == 47);
+
+        auto& slowcontrols = event->Reconstructed->SlowControls;
+        if(!slowcontrols.empty()) {
+            nSlowControls += slowcontrols.size();
+            for(auto& sc : slowcontrols) {
+                if(sc.Name == "TaggerScalers") {
+                    taggerScalerBlockFound = true;
+                    // we know the file is extracted from an EPT run...
+                    REQUIRE(sc.Payload_Int.size() == 47);
+                }
             }
         }
     }
 
     REQUIRE(nSlowControls == 15);
-    REQUIRE(nReads == 211);
-    REQUIRE(nHits == 28667);
+    REQUIRE(nEvents == 211);
+    REQUIRE(nHits == 28665);
+    REQUIRE(nEmptyEvents == 0);
     REQUIRE(taggerScalerBlockFound);
 }

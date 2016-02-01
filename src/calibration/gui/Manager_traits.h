@@ -1,8 +1,8 @@
 #pragma once
 
 #include "base/interval.h"
-#include "tree/THeaderInfo.h"
 #include "base/WrapTFile.h"
+#include "tree/TID.h"
 
 #include <string>
 #include <list>

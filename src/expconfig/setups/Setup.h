@@ -6,7 +6,7 @@
 #include "unpacker/UnpackerAcqu.h"
 #include "unpacker/UnpackerA2Geant.h"
 
-#include "tree/THeaderInfo.h"
+#include "tree/TID.h"
 
 #include "calibration/Calibration.h"
 #include "calibration/DataManager.h"
@@ -18,9 +18,6 @@
 
 namespace ant {
 namespace expconfig {
-
-using SetupOptPtr = std::shared_ptr<const OptionsList>;
-
 
 /**
  * @brief The Setup class serves as a base class for all known beamtime setup configurations
@@ -62,9 +59,9 @@ public:
     }
 
 protected:
-    const SetupOptPtr Options;
+    const OptionsPtr Options;
 
-    Setup(const std::string& name, SetupOptPtr opt);
+    Setup(const std::string& name, OptionsPtr opt);
 
     void AddDetector(const std::shared_ptr<Detector_t>& detector) {
         detectors.push_back(detector);
@@ -90,7 +87,7 @@ protected:
         AddCalibration(std::make_shared<T>(std::forward<Args>(args)...));
     }
 
-    bool Matches(const THeaderInfo& header) const override;
+    bool Matches(const TID& tid) const override;
 
     void BuildMappings(std::vector<hit_mapping_t>& hit_mappings,
                        std::vector<scaler_mapping_t>& scaler_mappings) const override;

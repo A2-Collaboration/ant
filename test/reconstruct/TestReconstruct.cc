@@ -8,9 +8,6 @@
 
 #include "unpacker/Unpacker.h"
 
-#include "tree/THeaderInfo.h"
-#include "tree/TDetectorRead.h"
-
 using namespace std;
 using namespace ant;
 using namespace ant::reconstruct;
@@ -37,40 +34,35 @@ namespace ant {
 struct ReconstructTester : Reconstruct_traits {
     Reconstruct r;
 
-    void Initialize(const THeaderInfo& headerInfo) override
-    {
-        r.Initialize(headerInfo);
-    }
-
-    MemoryPool<TEvent>::Item DoReconstruct(TDetectorRead& detectorRead) override
+    void DoReconstruct(TEvent::Data& reconstructed) override
     {
         /// \todo Improve requirements
 
+        if(!r.initialized) {
+            r.Initialize(reconstructed.ID);
+        }
+        REQUIRE(r.initialized);
+
         // update the updateables :)
-        r.updateablemanager->UpdateParameters(detectorRead.ID);
+        r.updateablemanager->UpdateParameters(reconstructed.ID);
 
         // apply the hooks (mostly calibrations)
-        r.ApplyHooksToReadHits(detectorRead);
+        r.ApplyHooksToReadHits(reconstructed.DetectorReadHits);
         // manually scan the r.sorted_readhits
         // they are a member variable for performance reasons
         size_t n_readhits = 0;
         for(const auto& readhit : r.sorted_readhits ) {
             n_readhits += readhit.second.size();
         }
-        REQUIRE(n_readhits>0);
-
-        // already create the event here, since Tagger
-        // doesn't need hit matching and thus can be filled already
-        // in BuildHits (see below)
-        auto event = MemoryPool<TEvent>::Get();
-        event->ID = detectorRead.ID;
+        if(!reconstructed.DetectorReadHits.empty())
+            REQUIRE(n_readhits>0);
 
         // the detectorRead is now calibrated as far as possible
         // lets start the hit matching, which builds the TClusterHit's
         // we also extract the energy, which is always defined as a
         // single value with type Channel_t::Type_t
         Reconstruct::sorted_bydetectortype_t<AdaptorTClusterHit> sorted_clusterhits;
-        r.BuildHits(sorted_clusterhits, event->Tagger);
+        r.BuildHits(sorted_clusterhits, reconstructed.Tagger);
 
         // apply hooks which modify clusterhits
         for(const auto& hook : r.hooks_clusterhits) {
@@ -78,13 +70,14 @@ struct ReconstructTester : Reconstruct_traits {
         }
 
         size_t n_clusterhits = getTotalCount(sorted_clusterhits);
-        REQUIRE(n_clusterhits + event->Tagger.Hits.size() <= n_readhits);
+        REQUIRE(n_clusterhits + reconstructed.Tagger.Hits.size() <= n_readhits);
 
         // then build clusters (at least for calorimeters this is not trivial)
-        Reconstruct::sorted_bydetectortype_t<TCluster> sorted_clusters;
+        Reconstruct::sorted_bydetectortype_t<TClusterPtr> sorted_clusters;
         r.BuildClusters(move(sorted_clusterhits), sorted_clusters);
         size_t n_clusters = getTotalCount(sorted_clusters);
-        REQUIRE(n_clusters>0);
+        if(!reconstructed.DetectorReadHits.empty())
+            REQUIRE(n_clusters>0);
         REQUIRE(n_clusters <= n_clusterhits);
 
         // apply hooks which modify clusters
@@ -92,29 +85,34 @@ struct ReconstructTester : Reconstruct_traits {
             hook->ApplyTo(sorted_clusters);
         }
 
-        // finally, do the candidate building
-        const auto n_all_before = event->AllClusters.size();
+        // do the candidate building
+        const auto n_all_before = reconstructed.Clusters.size();
         REQUIRE(n_all_before==0);
-        r.candidatebuilder->Build(move(sorted_clusters), event->Candidates, event->AllClusters);
+        r.candidatebuilder->Build(move(sorted_clusters),
+                                  reconstructed.Candidates, reconstructed.Clusters);
 
-        const auto n_all_after = event->AllClusters.size();
+        // apply hooks which may modify the whole event
+        for(const auto& hook : r.hooks_eventdata) {
+            hook->ApplyTo(reconstructed);
+        }
+
+        const auto n_all_after = reconstructed.Clusters.size();
         REQUIRE(n_all_after>=n_all_before);
         const auto n_all_added = n_all_after - n_all_before;
         REQUIRE(n_all_added == n_clusters);
 
         bool matched_clusters = false;
-        for(auto cluster : event->AllClusters) {
-            if(!cluster.HasFlag(TCluster::Flags_t::Unmatched)) {
+        for(auto cluster : reconstructed.Clusters) {
+            if(!cluster->HasFlag(TCluster::Flags_t::Unmatched)) {
                 matched_clusters = true;
                 break;
             }
         }
         if(matched_clusters) {
-            const size_t n_candidates = event->Candidates.size();
+            const size_t n_candidates = reconstructed.Candidates.size();
             REQUIRE(n_candidates>0);
+            REQUIRE(reconstructed.Trigger.CBEnergySum > 0);
         }
-
-        return event;
     }
 };
 }
@@ -126,30 +124,21 @@ void dotest() {
     auto unpacker = Unpacker::Get(string(TEST_BLOBS_DIRECTORY)+"/Acqu_oneevent-big.dat.xz");
 
     // instead of the usual reconstruct, we use our tester
-    unique_ptr<ReconstructTester> reconstruct;
+    ReconstructTester reconstruct;
 
     unsigned nReads = 0;
     unsigned nHits = 0;
     unsigned nCandidates = 0;
 
-    while(auto item = unpacker->NextItem()) {
+    while(auto event = unpacker->NextEvent()) {
 
-        auto HeaderInfo = dynamic_cast<THeaderInfo*>(item.get());
-        if(HeaderInfo != nullptr) {
-            reconstruct = std_ext::make_unique<ReconstructTester>();
-            reconstruct->Initialize(*HeaderInfo);
-            continue;
-        }
-
-        auto DetectorRead = dynamic_cast<TDetectorRead*>(item.get());
-        if(DetectorRead != nullptr) {
+        auto& hits = event->Reconstructed->DetectorReadHits;
+        nHits += hits.size();
+        if(!hits.empty())
             nReads++;
-            nHits += DetectorRead->Hits.size();
-            if(reconstruct) {
-                auto event = reconstruct->DoReconstruct(*DetectorRead);
-                nCandidates += event->Candidates.size();
-            }
-        }
+        reconstruct.DoReconstruct(*event->Reconstructed);
+        nCandidates += event->Reconstructed->Candidates.size();
+
     }
 
     REQUIRE(nReads == 221);

@@ -20,13 +20,13 @@ protected:
     static constexpr int clusterMarker = 25;  // Empty square
     static constexpr int trueMarker    = 24;  // Empty circle
 
-    std::vector<data::CandidatePtr> taps_cands;
+    TCandidateList taps_cands;
 
 public:
-    EventDisplayHists(const std::string& name, PhysOptPtr opts);
+    EventDisplayHists(const std::string& name, OptionsPtr opts);
     virtual ~EventDisplayHists();
 
-    void ProcessEvent(const data::Event &event) override;
+    virtual void ProcessEvent(const TEvent& event, manager_t& manager) override;
 };
 
 }

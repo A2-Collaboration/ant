@@ -11,7 +11,7 @@ using namespace ant;
 using namespace ant::analysis;
 using namespace ant::analysis::physics;
 
-MCSmearing::MCSmearing(const std::string& name, PhysOptPtr opts) : Physics(name, opts)
+MCSmearing::MCSmearing(const std::string& name, OptionsPtr opts) : Physics(name, opts)
 {
     BinSettings bins_energies(50, 0, 1000);
     BinSettings bins_theta(50, 0, 180);
@@ -44,18 +44,18 @@ MCSmearing::~MCSmearing()
 
 }
 
-void MCSmearing::ProcessEvent(const data::Event& event)
+void MCSmearing::ProcessEvent(const TEvent& event, manager_t&)
 {
 
-    const auto& true_photons = event.MCTrue.Particles.Get(ParticleTypeDatabase::Photon);
-    const auto& reco_photons = event.Reconstructed.Particles.Get(ParticleTypeDatabase::Photon);
+    const auto& true_photons = event.MCTrue->Particles.Get(ParticleTypeDatabase::Photon);
+    const auto& reco_photons = event.Reconstructed->Particles.Get(ParticleTypeDatabase::Photon);
 
     utils::ParticleTools::FillIMCombinations(IM, reco_photons.size(), reco_photons);
 
     if(true_photons.size() == 1 && reco_photons.size() == 1) {
 
-        const data::ParticlePtr& true_g = true_photons.front();
-        const data::ParticlePtr& reco_g = reco_photons.front();
+        const TParticlePtr& true_g = true_photons.front();
+        const TParticlePtr& reco_g = reco_photons.front();
 
         const auto& true_theta = std_ext::radian_to_degree(true_g->Theta());
 

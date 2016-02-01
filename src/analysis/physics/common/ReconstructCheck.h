@@ -85,9 +85,9 @@ protected:
         std::unique_ptr<PositionMap> makePosMap(SmartHistFactory& f, detectortype d, const std::string& name, const std::string title="");
 
         histgroup(SmartHistFactory& f, const std::string& prefix, detectortype d=detectortype::All);
-        void Fill(const data::ParticlePtr& mctrue, const data::CandidateList & cand, const data::ClusterList& all_clusters);
-        void ShowResult() const;
-        void Finish();
+        void Fill(const TParticlePtr& mctrue, const TCandidateList& cand, const TClusterList& all_clusters);
+        virtual void ShowResult() const;
+        virtual void Finish();
 
         histgroup(const histgroup&) = delete;
         histgroup& operator =(const histgroup&) = delete;
@@ -100,9 +100,9 @@ protected:
         TAPSVetoMatch(const TAPSVetoMatch&) = delete;
         TAPSVetoMatch& operator =(const TAPSVetoMatch&) = delete;
 
-        void ShowResult();
-        void Finish() {}
-        void Fill(const data::CandidateList& cands, const data::ClusterList& instane);
+        virtual void ShowResult();
+        virtual void Finish() {}
+        void Fill(const TCandidateList& cands, const TClusterList& all_clusters);
     };
 
     histgroup cb_group;
@@ -132,11 +132,11 @@ protected:
     unsigned b_Cal = 0;
 
 public:
-    ReconstructCheck(const std::string& name, PhysOptPtr opts);
+    ReconstructCheck(const std::string& name, OptionsPtr opts);
 
-    void ProcessEvent(const data::Event &event) override;
-    void Finish() override;
-    void ShowResult() override;
+    virtual void ProcessEvent(const TEvent& event, manager_t& manager) override;
+    virtual void Finish() override;
+    virtual void ShowResult() override;
 };
 
 }

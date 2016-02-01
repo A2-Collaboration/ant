@@ -65,7 +65,7 @@ list<string> SetupRegistry::GetNames()
     return list;
 }
 
-void SetupRegistry::SetSetupOptions(SetupOptPtr opt)
+void SetupRegistry::SetSetupOptions(OptionsPtr opt)
 {
     if(!get_instance().setups.empty())
         throw runtime_error("Set SetupOptions before any setups have been created");

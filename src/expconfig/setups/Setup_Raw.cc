@@ -19,7 +19,7 @@ class Setup_Raw :
 {
 public:
 
-    Setup_Raw(const std::string& name, SetupOptPtr opt) : Setup(name, opt)
+    Setup_Raw(const std::string& name, OptionsPtr opt) : Setup(name, opt)
     {
         ADC_ranges = Options->Get<decltype(ADC_ranges)>("AcquADC");
     }
@@ -28,7 +28,7 @@ public:
         return numeric_limits<double>::quiet_NaN();
     }
 
-    bool Matches(const THeaderInfo&) const override {
+    bool Matches(const TID&) const override {
         // Setup must be manually selected
         // via command line
         return false;

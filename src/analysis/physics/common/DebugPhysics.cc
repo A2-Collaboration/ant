@@ -8,18 +8,32 @@ using namespace ant;
 using namespace ant::analysis;
 using namespace ant::analysis::physics;
 
-DebugPhysics::DebugPhysics(const std::string& name, PhysOptPtr opts): Physics(name, opts) {}
+DebugPhysics::DebugPhysics(const std::string& name, OptionsPtr opts) :
+    Physics(name, opts),
+    writeEvents(opts->Get<unsigned>("WriteEvents", 0)),
+    keepReadHits(opts->Get<bool>("KeepReadHits", false)),
+    requestSlowControl(opts->Get<bool>("RequestSlowControl", false))
+{
+}
 
 DebugPhysics::~DebugPhysics() {}
 
-void DebugPhysics::ProcessEvent(const data::Event& event)
+void DebugPhysics::ProcessEvent(const TEvent& event, manager_t& manager)
 {
-    LOG(INFO) << event;
+    if(writeEvents>0 && seenEvents % writeEvents == 0) {
+        manager.SaveEvent();
+        if(keepReadHits)
+            manager.KeepDetectorReadHits();
+    }
+    else if(!writeEvents) {
+        LOG(INFO) << event;
+    }
+    seenEvents++;
 }
 
 void DebugPhysics::Finish()
 {
-    LOG(INFO) << "Nop";
+    LOG(INFO) << "Seen " << seenEvents << " Events";
 }
 
 void DebugPhysics::ShowResult()
@@ -27,14 +41,15 @@ void DebugPhysics::ShowResult()
     LOG(INFO) << "Nop";
 }
 
-void DebugPhysics::Initialize(data::Slowcontrol& slowcontrol)
+void DebugPhysics::Initialize(input::SlowControl& slowcontrol)
 {
-    slowcontrol.FaradayCup.Request();
+    if(requestSlowControl)
+        slowcontrol.FaradayCup.Request();
 }
 
 
 
-DebugPIDAlignment::DebugPIDAlignment(const std::string& name, PhysOptPtr opts):
+DebugPIDAlignment::DebugPIDAlignment(const std::string& name, OptionsPtr opts):
     Physics(name, opts)
 {
     const BinSettings bins(360,-180,180);
@@ -46,22 +61,22 @@ DebugPIDAlignment::~DebugPIDAlignment()
 
 }
 
-void DebugPIDAlignment::ProcessEvent(const data::Event& event)
+void DebugPIDAlignment::ProcessEvent(const TEvent& event, manager_t&)
 {
-    if(event.MCTrue.Particles.GetAll().size() == 1) {
-        const auto mctrue_phi = event.MCTrue.Particles.GetAll().front()->Phi() * TMath::RadToDeg();
+    if(event.MCTrue->Particles.GetAll().size() == 1) {
+        const auto mctrue_phi = event.MCTrue->Particles.GetAll().front()->Phi() * TMath::RadToDeg();
 
-        for(const data::CandidatePtr& cand : event.Reconstructed.Candidates) {
-            for(const TCluster& c : cand->Clusters) {
-                if(c.GetDetectorType() == Detector_t::Type_t::PID) {
-                    angles->Fill(mctrue_phi, c.Position.Phi()* TMath::RadToDeg());
+        for(const TCandidatePtr& cand : event.Reconstructed->Candidates) {
+            for(const TClusterPtr& c : cand->Clusters) {
+                if(c->DetectorType == Detector_t::Type_t::PID) {
+                    angles->Fill(mctrue_phi, c->Position.Phi()* TMath::RadToDeg());
                 }
             }
         }
 
-        for(const TCluster& c : event.Reconstructed.AllClusters) {
-            if(c.GetDetectorType() == Detector_t::Type_t::PID) {
-                angles->Fill(mctrue_phi, c.Position.Phi()* TMath::RadToDeg());
+        for(const TClusterPtr& c : event.Reconstructed->Clusters) {
+            if(c->DetectorType == Detector_t::Type_t::PID) {
+                angles->Fill(mctrue_phi, c->Position.Phi()* TMath::RadToDeg());
             }
         }
     }

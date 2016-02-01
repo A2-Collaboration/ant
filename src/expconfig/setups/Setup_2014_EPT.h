@@ -10,11 +10,11 @@ class Setup_2014_EPT : public Setup
 {
 public:
 
-    Setup_2014_EPT(const string& name, SetupOptPtr opt);
+    Setup_2014_EPT(const string& name, OptionsPtr opt);
 
     virtual double GetElectronBeamEnergy() const override;
 
-    bool Matches(const THeaderInfo& header) const override;
+    bool Matches(const TID& tid) const override;
 
     void BuildMappings(std::vector<hit_mapping_t>& hit_mappings,
                        std::vector<scaler_mapping_t>& scaler_mappings) const override;

@@ -1,9 +1,12 @@
 #pragma once
 
 #include "analysis/input/DataReader.h"
-#include "analysis/data/Event.h"
 
 #include "analysis/utils/A2GeoAcceptance.h"
+
+#include "base/ParticleType.h"
+
+#include "tree/TEvent.h"
 
 #include <memory>
 #include <string>
@@ -45,10 +48,9 @@ protected:
 
     Long64_t    current_entry = 0;
 
-    void CopyPluto(data::Event& event);
+    void CopyPluto(TEvent::Data& mctrue);
 
     PStaticData* pluto_database;
-    const ParticleTypeDatabase::Type* GetType(const PParticle* p) const;
 
 public:
     PlutoReader(const std::shared_ptr<ant::WrapTFileInput>& rootfiles);
@@ -58,7 +60,7 @@ public:
 
     virtual bool IsSource() override { return false; }
 
-    virtual bool ReadNextEvent(data::Event& event) override;
+    virtual bool ReadNextEvent(TEvent& event) override;
 
     double PercentDone() const override;
 };

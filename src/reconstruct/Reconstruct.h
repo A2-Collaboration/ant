@@ -28,14 +28,9 @@ class Reconstruct : public Reconstruct_traits {
 public:
     Reconstruct();
 
-    // You can only use the reconstruct machinery
-    // if it's able to find its config. For this, it needs the
-    // some THeaderInfo object
-    virtual void Initialize(const THeaderInfo& headerInfo) override;
-
     // this method converts a TDetectorRead
     // into a calibrated TEvent
-    virtual MemoryPool<TEvent>::Item DoReconstruct(TDetectorRead& detectorRead) override;
+    virtual void DoReconstruct(TEvent::Data& reconstructed) override;
 
     ~Reconstruct();
 
@@ -48,12 +43,13 @@ public:
 
 private:
 
-
+    bool initialized = false;
+    virtual void Initialize(const TID& tid);
 
     using sorted_readhits_t = ReconstructHook::Base::readhits_t;
     sorted_readhits_t sorted_readhits;
 
-    void ApplyHooksToReadHits(TDetectorRead& detectorRead);
+    void ApplyHooksToReadHits(std::vector<TDetectorReadHit>& detectorReadHits);
 
     void BuildHits(
             sorted_bydetectortype_t<reconstruct::AdaptorTClusterHit>& sorted_clusterhits,
@@ -65,7 +61,7 @@ private:
             TTagger& event_tagger);
 
     void BuildClusters(sorted_bydetectortype_t<reconstruct::AdaptorTClusterHit>&& sorted_clusterhits,
-            sorted_bydetectortype_t<TCluster>& sorted_clusters);
+            sorted_bydetectortype_t<TClusterPtr>& sorted_clusters);
 
 
 
@@ -101,6 +97,7 @@ private:
     shared_ptr_list<ReconstructHook::DetectorReadHits> hooks_readhits;
     shared_ptr_list<ReconstructHook::ClusterHits>      hooks_clusterhits;
     shared_ptr_list<ReconstructHook::Clusters>         hooks_clusters;
+    shared_ptr_list<ReconstructHook::EventData>        hooks_eventdata;
 
 
     std::unique_ptr<reconstruct::CandidateBuilder>  candidatebuilder;

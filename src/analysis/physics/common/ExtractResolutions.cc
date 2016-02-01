@@ -8,7 +8,7 @@ using namespace ant::analysis;
 using namespace ant::analysis::physics;
 using namespace std;
 
-physics::ExtractResolutions::ExtractResolutions(const std::string& name, PhysOptPtr opts):
+physics::ExtractResolutions::ExtractResolutions(const std::string& name, OptionsPtr opts):
     Physics(name, opts)
 {
     if(opts->Get<string>("Detector") == "CB") {
@@ -29,20 +29,20 @@ physics::ExtractResolutions::ExtractResolutions(const std::string& name, PhysOpt
     tree->Branch("rDir",    &b_recDir);
 }
 
-void physics::ExtractResolutions::ProcessEvent(const data::Event& event)
+void physics::ExtractResolutions::ProcessEvent(const TEvent& event, manager_t&)
 {
-    const auto& mcparticles = event.MCTrue.Particles.GetAll();
+    const auto& mcparticles = event.MCTrue->Particles.GetAll();
 
     if(mcparticles.size() == 1) {
 
-        const auto& recparticles = event.Reconstructed.Particles.GetAll();
+        const auto& recparticles = event.Reconstructed->Particles.GetAll();
 
         if(recparticles.size() ==1 ) {
 
             const auto& mcp = mcparticles.front();
             const auto& rep = recparticles.front();
 
-            if(rep->Candidate && (rep->Candidate->GetDetector() & det)) {
+            if(rep->Candidate && (rep->Candidate->Detector & det)) {
                 const auto& c = rep->Candidate->FindCaloCluster();
                 if(c) {
 

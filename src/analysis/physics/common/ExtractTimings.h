@@ -22,10 +22,10 @@ public:
     TH1D* TAPS     = nullptr;
     TH1D* EPT      = nullptr;
 
-    ExtractTimings(const std::string& name, PhysOptPtr opts);
+    ExtractTimings(const std::string& name, OptionsPtr opts);
 
-    void ProcessEvent(const data::Event &event) override;
-    void ShowResult() override;
+    virtual void ProcessEvent(const TEvent& event, manager_t& manager) override;
+    virtual void ShowResult() override;
 };
 
 }

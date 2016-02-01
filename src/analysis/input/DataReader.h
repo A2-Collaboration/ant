@@ -1,16 +1,13 @@
 #pragma once
 
-#include "tree/TSlowControl.h"
-
 #include <memory>
+
 
 namespace ant {
 
-namespace analysis {
+struct TEvent;
 
-namespace data {
-struct Event;
-}
+namespace analysis {
 
 namespace input {
 
@@ -21,6 +18,7 @@ namespace input {
  * Examples:
  *  * goat file reader
  *  * new ant data format reader
+ *  * MCTrue Pluto reader
  */
 class DataReader {
 public:
@@ -32,9 +30,8 @@ public:
       using std::runtime_error::runtime_error; // use base class constructor
     };
 
-    virtual bool IsSource() = 0;
-    virtual bool ReadNextEvent(data::Event& event) = 0;
-    virtual std::unique_ptr<TSlowControl> ReadNextSlowControl() { return nullptr; }
+    virtual bool IsSource() =0;
+    virtual bool ReadNextEvent(TEvent& event) =0;
 
     virtual double PercentDone() const =0;
 };

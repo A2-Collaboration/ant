@@ -25,13 +25,13 @@ private:
     TH1D*  recgamma;
 
 public:
-    DeltaTreeGenerator(const std::string& name, PhysOptPtr opts);
+    DeltaTreeGenerator(const std::string& name, OptionsPtr opts);
     virtual ~DeltaTreeGenerator() {}
 
     // Physics interface
-    void ProcessEvent(const data::Event &event);
-    void Finish();
-    void ShowResult();
+    virtual void ProcessEvent(const TEvent& event, manager_t& manager) override;
+    virtual void Finish() override;
+    virtual void ShowResult() override;
 };
 
 }

@@ -1,7 +1,7 @@
 #pragma once
 
-#include "data/Particle.h"
-#include "data/TaggerHit.h"
+#include "tree/TTaggerHit.h"
+#include "tree/TCandidate.h"
 
 namespace ant {
 namespace analysis {
@@ -27,7 +27,7 @@ struct TimeSmearingHack {
      * @param p2
      * @return p1 time - p2 time
      */
-    double CalculateTimeDifference(const data::CandidatePtr& p1, const data::CandidatePtr& p2) const;
+    double CalculateTimeDifference(const TCandidatePtr& p1, const TCandidatePtr& p2) const;
 
     /**
      * @brief Calculate Time Difference of a candidate and a tagger hit, and smear it accordingly if smearing is enabled
@@ -35,14 +35,14 @@ struct TimeSmearingHack {
      * @param taggerhit
      * @return time p - time taggerhit
      */
-    double CalculateTimeDifference(const data::CandidatePtr& p , const data::TaggerHit& taggerhit) const;
+    double CalculateTimeDifference(const TCandidatePtr& p , const TTaggerHit& taggerhit) const;
 
     /**
      * @brief Get the Time inforamtion from a candidate, smeared if enabeld
      * @param p
      * @return time of p
      */
-    double GetTime(const data::CandidatePtr& p) const;
+    double GetTime(const TCandidatePtr& p) const;
 
     TimeSmearingHack();
 
