@@ -238,6 +238,8 @@ void acqu::FileFormatBase::AppendMessagesToEvent(std::unique_ptr<TEvent>& event)
 
 void acqu::FileFormatBase::FillEvents(queue_t& queue) noexcept
 {
+    logger::DebugInfo::nUnpackedBuffers = unpackedBuffers;
+
     // this method never throws exceptions, but just adds TUnpackerMessage to event
     // if something strange while unpacking is encountered
 
@@ -280,7 +282,6 @@ void acqu::FileFormatBase::FillEvents(queue_t& queue) noexcept
         queue.splice(queue.end(), move(queue_buffer));
     }
 
-    dbg::buffer_n = unpackedBuffers;
     unpackedBuffers++;
 
 

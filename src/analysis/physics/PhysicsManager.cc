@@ -226,6 +226,8 @@ void PhysicsManager::ReadFrom(
 
 void PhysicsManager::ProcessEvent(std::unique_ptr<TEvent> event)
 {
+    logger::DebugInfo::nProcessedEvents = nEventsProcessed;
+
     if(particleID && event->Reconstructed) {
         // run particle ID for Reconstructed candidates
         // but only if there are no identified particles present yet

@@ -7,6 +7,7 @@
 INITIALIZE_EASYLOGGINGPP
 
 using namespace std;
+using namespace ant::logger;
 
 void SetupLogger(int argc, char* argv[]) {
     START_EASYLOGGINGPP(argc, argv);
@@ -29,15 +30,24 @@ void SetupLogger() {
         // Bool_t is abort, not used for now...
 
         if (level < gErrorIgnoreLevel)
-           return;
+            return;
 
         stringstream ss;
         ss << "ROOT<" << location << ">: " << msg;
         if(level < kInfo) { LOG(INFO) << ss.str(); }
         else if(level == kInfo) { LOG(INFO) << ss.str(); }
         else if(level == kWarning) { LOG(WARNING) << ss.str(); }
-        else { LOG(ERROR) << ss.str() << " Buffer:" << dbg::buffer_n; }
+        else {
+            LOG(ERROR) << ss.str();
+            if(DebugInfo::nProcessedEvents>=0)
+                LOG(DEBUG) << "nProcessEvents=" << DebugInfo::nProcessedEvents;
+            if(DebugInfo::nUnpackedBuffers>=0)
+                LOG(DEBUG) << "nUnpackedBuffers=" << DebugInfo::nUnpackedBuffers;
+        }
+
     });
 }
 
-int dbg::buffer_n = 0;
+int DebugInfo::nProcessedEvents = -1;
+int DebugInfo::nUnpackedBuffers = -1;
+
