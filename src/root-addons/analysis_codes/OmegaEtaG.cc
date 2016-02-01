@@ -164,6 +164,18 @@ void OmegaEtaG::Plot(TTree* tree, const double binscale)
 //    auto bachelor_fit      = Draw(tree, "BachelorE", propmt_randomt*cut_fit,     "E #gamma_{#omega} [MeV]", "", Ebins);
     auto bachelor          = Draw(tree, "BachelorE", all,                        "E #gamma_{#omega} [MeV]", "", Ebins);
 
+    map<string, TH1*> pulls;
+
+    for(const auto& particle : {"Proton", "Photon0", "Photon1","Photon2"}) {
+        for(const auto& var : {"Phi_pull","Theta_pull","Ek_pull"}) {
+            const string branch = formatter() << "EPB_" << particle << "_" << var;
+            cout << branch << endl;
+            auto h = Draw(tree, branch, prompt_random*cut_fit, "", "", BinSettings(200,-20,20));
+            if(h)
+                pulls[branch] = h;
+        }
+    }
+
     canvas("Kin Fit")
             << fit_chi2dof
             << fit_prob
@@ -177,6 +189,14 @@ void OmegaEtaG::Plot(TTree* tree, const double binscale)
 
     canvas("2g IM")
             << ggIM << bachelor << endc;
+
+    canvas cpulls("Pulls");
+
+    for(auto& h : pulls)
+        cpulls << h.second;
+
+    cpulls << endc;
+
 }
 
 void OmegaEtaG::DataMC(TFile* mc_file, TFile* data_file, const double mcscale)
