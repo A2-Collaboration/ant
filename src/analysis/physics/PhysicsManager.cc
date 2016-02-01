@@ -37,6 +37,18 @@ void PhysicsManager::SetAntHeader(TAntHeader& header)
     header.LastID = lastID;
 }
 
+void PhysicsManager::EnableProgressUpdates(bool updates)
+{
+    progressUpdates = updates;
+}
+
+void PhysicsManager::ShowResults()
+{
+    for(auto& p : physics) {
+        p->ShowResult();
+    }
+}
+
 void PhysicsManager::InitReaders(PhysicsManager::readers_t readers_)
 {
     readers = move(readers_);
@@ -56,79 +68,6 @@ void PhysicsManager::InitReaders(PhysicsManager::readers_t readers_)
         }
     }
 }
-
-bool PhysicsManager::TryReadEvent(TEventPtr& event)
-{
-    bool read_event = false;
-
-    while(!read_event) {
-        if(source) {
-            if(source->ReadNextEvent(*event)) {
-                read_event = true;
-                slowcontrol_mgr.ProcessSlowControls(*event);
-            }
-            else {
-                return false;
-            }
-        }
-
-        auto it_reader = readers.begin();
-        while(it_reader != readers.end()) {
-
-            if((*it_reader)->ReadNextEvent(*event)) {
-                read_event = true;
-                slowcontrol_mgr.ProcessSlowControls(*event);
-                ++it_reader;
-            }
-            else {
-                it_reader = readers.erase(it_reader);
-            }
-        }
-
-        if(!source && readers.empty())
-            return false;
-    }
-    return true;
-}
-
-void PhysicsManager::ProcessEventBuffer(long long maxevents)
-{
-    // if running is already false,
-    // flush the buffer no matter what...
-    bool flush = !running;
-    if(flush)
-        VLOG(5) << "Flushing " << eventbuffer.size() << " events from eventbuffer";
-
-    TID runUntil = slowcontrol_mgr.UpdateSlowcontrolData(slowcontrol_data);
-
-    if(slowcontrol_mgr.hasRequests() && runUntil.IsInvalid())
-        return;
-
-    while(!eventbuffer.empty()) {
-        // running might change to false here in this loop
-        if(!running && !flush)
-            return;
-
-        if(nEventsProcessed>=maxevents)
-            return;
-
-        auto& event = eventbuffer.front();
-        auto& eventid = event->Reconstructed->ID;
-
-        if(slowcontrol_mgr.hasRequests() && (eventid > runUntil))
-            break;
-
-        if(nEventsProcessed==0)
-            firstID = eventid;
-        lastID = eventid;
-
-        // note that this invalidates also the eventid reference!
-        ProcessEvent(move(event));
-        eventbuffer.pop();
-        nEventsProcessed++;
-    }
-}
-
 
 
 void PhysicsManager::ReadFrom(
@@ -226,6 +165,81 @@ void PhysicsManager::ReadFrom(
      }
 }
 
+
+bool PhysicsManager::TryReadEvent(TEventPtr& event)
+{
+    bool read_event = false;
+
+    while(!read_event) {
+        if(source) {
+            if(source->ReadNextEvent(*event)) {
+                read_event = true;
+                slowcontrol_mgr.ProcessSlowControls(*event);
+            }
+            else {
+                return false;
+            }
+        }
+
+        auto it_reader = readers.begin();
+        while(it_reader != readers.end()) {
+
+            if((*it_reader)->ReadNextEvent(*event)) {
+                read_event = true;
+                slowcontrol_mgr.ProcessSlowControls(*event);
+                ++it_reader;
+            }
+            else {
+                it_reader = readers.erase(it_reader);
+            }
+        }
+
+        if(!source && readers.empty())
+            return false;
+    }
+    return true;
+}
+
+
+void PhysicsManager::ProcessEventBuffer(long long maxevents)
+{
+    // if running is already false,
+    // flush the buffer no matter what...
+    bool flush = !running;
+    if(flush)
+        VLOG(5) << "Flushing " << eventbuffer.size() << " events from eventbuffer";
+
+    TID runUntil = slowcontrol_mgr.UpdateSlowcontrolData(slowcontrol_data);
+
+    if(slowcontrol_mgr.hasRequests() && runUntil.IsInvalid())
+        return;
+
+    while(!eventbuffer.empty()) {
+        // running might change to false here in this loop
+        if(!running && !flush)
+            return;
+
+        if(nEventsProcessed>=maxevents)
+            return;
+
+        auto& event = eventbuffer.front();
+        auto& eventid = event->Reconstructed->ID;
+
+        if(slowcontrol_mgr.hasRequests() && (eventid > runUntil))
+            break;
+
+        if(nEventsProcessed==0)
+            firstID = eventid;
+        lastID = eventid;
+
+        // note that this invalidates also the eventid reference!
+        ProcessEvent(move(event));
+        eventbuffer.pop();
+        nEventsProcessed++;
+    }
+}
+
+
 void PhysicsManager::ProcessEvent(std::unique_ptr<TEvent> event)
 {
     logger::DebugInfo::nProcessedEvents = nEventsProcessed;
@@ -279,16 +293,4 @@ void PhysicsManager::ProcessEvent(std::unique_ptr<TEvent> event)
         treeEvents->Fill();
     }
 
-}
-
-void PhysicsManager::ShowResults()
-{
-    for(auto& p : physics) {
-        p->ShowResult();
-    }
-}
-
-void PhysicsManager::EnableProgressUpdates(bool updates)
-{
-    progressUpdates = updates;
 }
