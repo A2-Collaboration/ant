@@ -10,7 +10,7 @@ using namespace ant::analysis::physics;
 
 DebugPhysics::DebugPhysics(const std::string& name, OptionsPtr opts) :
     Physics(name, opts),
-    writeEvents(opts->Get<bool>("WriteEvents", false)),
+    writeEvents(opts->Get<unsigned>("WriteEvents", 0)),
     keepReadHits(opts->Get<bool>("KeepReadHits", false)),
     requestSlowControl(opts->Get<bool>("RequestSlowControl", false))
 {
@@ -20,19 +20,20 @@ DebugPhysics::~DebugPhysics() {}
 
 void DebugPhysics::ProcessEvent(const TEvent& event, manager_t& manager)
 {
-    if(writeEvents) {
+    if(writeEvents>0 && seenEvents % writeEvents == 0) {
         manager.SaveEvent();
         if(keepReadHits)
             manager.KeepDetectorReadHits();
     }
-    else {
+    else if(!writeEvents) {
         LOG(INFO) << event;
     }
+    seenEvents++;
 }
 
 void DebugPhysics::Finish()
 {
-    LOG(INFO) << "Nop";
+    LOG(INFO) << "Seen " << seenEvents << " Events";
 }
 
 void DebugPhysics::ShowResult()
