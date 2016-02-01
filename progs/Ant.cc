@@ -330,19 +330,24 @@ int main(int argc, char** argv) {
 
         auto colpos = line.find(":");
 
-        auto classname = line.substr(0,colpos);
+        auto physicsname = line.substr(0,colpos);
         auto optstr = line.substr(colpos+1,line.npos);
         auto options = make_shared<OptionsList>(popts);
         options->SetOptions(optstr);
         try {
-            pm.AddPhysics( analysis::PhysicsRegistry::Create(classname, options) );
-            LOG(INFO) << "Activated physics class '" << classname << "' with options " << optstr;
+            pm.AddPhysics( analysis::PhysicsRegistry::Create(physicsname, options) );
+            LOG(INFO) << "Activated physics class '" << physicsname << "' with options " << optstr;
         } catch (...) {
             LOG(ERROR) << "Physics class '" << line << "' not found";
             return 1;
         }
-    }
 
+        auto unused_popts = options->GetUnused();
+        if(!unused_popts.empty()) {
+            LOG(ERROR) << "Physics class '" << physicsname << "' did not use the options: " << unused_popts;
+            return 1;
+        }
+    }
 
     for(const auto& calibration : enabled_calibrations) {
         const auto& physicsclasses = calibration->GetPhysicsModules();
@@ -362,6 +367,20 @@ int main(int argc, char** argv) {
                 return 1;
             }
         }
+    }
+
+    // check global unused after activating all physics classes
+    auto global_unused_popts =  popts->GetUnused();
+    if(!global_unused_popts.empty()) {
+        LOG(ERROR) << "The following global physics options were not used by any activated physics class: " << global_unused_popts;
+        return 1;
+    }
+
+    // check setup options after physics initialization
+    auto unused_setup_opts = setup_opts->GetUnused();
+    if(!unused_setup_opts.empty()) {
+        LOG(ERROR) << "The following setup options were not used: " << unused_setup_opts;
+        return 1;
     }
 
     // set up particle ID
