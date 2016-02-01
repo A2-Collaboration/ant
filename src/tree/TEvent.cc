@@ -5,7 +5,7 @@
 #include "base/cereal/types/memory.hpp"
 #include "base/cereal/types/vector.hpp"
 #include "base/cereal/types/list.hpp"                 // hidden in TParticleTree_t ...
-#include "base/cereal/archives/portable_binary.hpp"
+#include "base/cereal/archives/binary.hpp"
 
 
 #include "base/std_ext/memory.h"
@@ -64,63 +64,54 @@ namespace cereal
 
 // create some TBuffer to std::streambuf interface
 
-/// \todo the implementation below causes a segfault at weird places
-/// when writing larger amounts of data,
-/// probably TBuffer is not treated correctly...
+class stream_TBuffer : public std::streambuf {
+public:
+    explicit stream_TBuffer(TBuffer& tbuffer_) :
+        tbuffer(tbuffer_)
+    {
+        if(tbuffer.IsReading()) {
+            // reading uses the default std::streambuf behaviour
+            const auto begin = tbuffer.Buffer()+tbuffer.Length();
+            const auto end = tbuffer.Buffer()+tbuffer.BufferSize();
+            setg(begin, begin, end);
+        }
+    }
+private:
+    // the streambuf interface for writing
+    streamsize xsputn(const char_type* s, streamsize n) override {
+        tbuffer.WriteFastArray(s, n);
+        return n;
+    }
 
-//class stream_TBuffer : public std::streambuf {
-//public:
-//    explicit stream_TBuffer(TBuffer& tbuffer_) :
-//        tbuffer(tbuffer_)
-//    {
-//        if(tbuffer.IsReading()) {
-//            // reading uses the default std::streambuf behaviour
-//            const auto begin = tbuffer.Buffer()+tbuffer.Length();
-//            const auto end = tbuffer.Buffer()+tbuffer.BufferSize();
-//            setg(begin, begin, end);
-//        }
-//    }
-//private:
-//    // the streambuf interface for writing
-//    streamsize xsputn(const char_type* s, streamsize n) override {
-//        tbuffer.WriteFastArray(s, n);
-//        return n;
-//    }
+    int_type overflow(int_type ch) override {
+        if(ch != traits_type::eof()) {
+            tbuffer.WriteChar(ch);
+        }
+        return ch;
+    }
 
-//    int_type overflow(int_type ch) override {
-//        if(ch != traits_type::eof()) {
-//            tbuffer.WriteChar(ch);
-//        }
-//        return ch;
-//    }
+    // forbid copy
+    stream_TBuffer(const stream_TBuffer&) = delete;
+    stream_TBuffer& operator=(const stream_TBuffer&) = delete;
 
-//    // forbid copy
-//    stream_TBuffer(const stream_TBuffer&) = delete;
-//    stream_TBuffer& operator=(const stream_TBuffer&) = delete;
-
-//    // hold a reference to the buffer for writing business
-//    TBuffer& tbuffer;
-//};
+    // hold a reference to the buffer for writing business
+    TBuffer& tbuffer;
+};
 
 
 
 void TEvent::Streamer(TBuffer& R__b)
 {
-//    stream_TBuffer buf(R__b);
-//    iostream inoutstream(addressof(buf));
+    stream_TBuffer buf(R__b);
+    iostream inoutstream(addressof(buf));
 
-    stringstream ss;
     if (R__b.IsReading()) {
-        string s;
-        R__b.ReadStdString(s);
-        ss << s;
-        cereal::PortableBinaryInputArchive ar(ss);
+        cereal::BinaryInputArchive ar(inoutstream);
         ar(*this);
     }
     else {
-        cereal::PortableBinaryOutputArchive ar(ss);
+        cereal::BinaryOutputArchive ar(inoutstream);
         ar(*this);
-        R__b.WriteStdString(ss.str());
     }
 }
 
