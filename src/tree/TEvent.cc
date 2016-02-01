@@ -64,54 +64,63 @@ namespace cereal
 
 // create some TBuffer to std::streambuf interface
 
-class stream_TBuffer : public std::streambuf {
-public:
-    explicit stream_TBuffer(TBuffer& tbuffer_) :
-        tbuffer(tbuffer_)
-    {
-        if(tbuffer.IsReading()) {
-            // reading uses the default std::streambuf behaviour
-            const auto begin = tbuffer.Buffer()+tbuffer.Length();
-            const auto end = tbuffer.Buffer()+tbuffer.BufferSize();
-            setg(begin, begin, end);
-        }
-    }
-private:
-    // the streambuf interface for writing
-    streamsize xsputn(const char_type* s, streamsize n) override {
-        tbuffer.WriteFastArray(s, n);
-        return n;
-    }
+/// \todo the implementation below causes a segfault at weird places
+/// when writing larger amounts of data,
+/// probably TBuffer is not treated correctly...
 
-    int_type overflow(int_type ch) override {
-        if(ch != traits_type::eof()) {
-            tbuffer.WriteChar(ch);
-        }
-        return ch;
-    }
+//class stream_TBuffer : public std::streambuf {
+//public:
+//    explicit stream_TBuffer(TBuffer& tbuffer_) :
+//        tbuffer(tbuffer_)
+//    {
+//        if(tbuffer.IsReading()) {
+//            // reading uses the default std::streambuf behaviour
+//            const auto begin = tbuffer.Buffer()+tbuffer.Length();
+//            const auto end = tbuffer.Buffer()+tbuffer.BufferSize();
+//            setg(begin, begin, end);
+//        }
+//    }
+//private:
+//    // the streambuf interface for writing
+//    streamsize xsputn(const char_type* s, streamsize n) override {
+//        tbuffer.WriteFastArray(s, n);
+//        return n;
+//    }
 
-    // forbid copy
-    stream_TBuffer(const stream_TBuffer&) = delete;
-    stream_TBuffer& operator=(const stream_TBuffer&) = delete;
+//    int_type overflow(int_type ch) override {
+//        if(ch != traits_type::eof()) {
+//            tbuffer.WriteChar(ch);
+//        }
+//        return ch;
+//    }
 
-    // hold a reference to the buffer for writing business
-    TBuffer& tbuffer;
-};
+//    // forbid copy
+//    stream_TBuffer(const stream_TBuffer&) = delete;
+//    stream_TBuffer& operator=(const stream_TBuffer&) = delete;
+
+//    // hold a reference to the buffer for writing business
+//    TBuffer& tbuffer;
+//};
 
 
 
 void TEvent::Streamer(TBuffer& R__b)
 {
-    stream_TBuffer buf(R__b);
-    iostream inoutstream(addressof(buf));
+//    stream_TBuffer buf(R__b);
+//    iostream inoutstream(addressof(buf));
 
+    stringstream ss;
     if (R__b.IsReading()) {
-        cereal::PortableBinaryInputArchive ar(inoutstream);
+        string s;
+        R__b.ReadStdString(s);
+        ss << s;
+        cereal::PortableBinaryInputArchive ar(ss);
         ar(*this);
     }
     else {
-        cereal::PortableBinaryOutputArchive ar(inoutstream);
+        cereal::PortableBinaryOutputArchive ar(ss);
         ar(*this);
+        R__b.WriteStdString(ss.str());
     }
 }
 
