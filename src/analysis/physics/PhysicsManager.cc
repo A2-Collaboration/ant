@@ -118,11 +118,13 @@ void PhysicsManager::ProcessEventBuffer(long long maxevents)
         if(slowcontrol_mgr.hasRequests() && (eventid > runUntil))
             break;
 
-        ProcessEvent(move(event));
-        eventbuffer.pop();
         if(nEventsProcessed==0)
             firstID = eventid;
         lastID = eventid;
+
+        // note that this invalidates also the eventid reference!
+        ProcessEvent(move(event));
+        eventbuffer.pop();
         nEventsProcessed++;
     }
 }
