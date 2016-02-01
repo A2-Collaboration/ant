@@ -19,6 +19,7 @@
 
 using namespace std;
 using namespace ant;
+using namespace ant::std_ext;
 using namespace ant::analysis;
 
 void OmegaEtaG::Chi2Plot(TTree* tree)
