@@ -1,5 +1,6 @@
 #include "catch.hpp"
 #include "catch_config.h"
+#include "expconfig_helpers.h"
 
 #include "Unpacker.h"
 #include "expconfig/ExpConfig.h"
@@ -15,12 +16,12 @@ using namespace ant;
 void dotest();
 
 TEST_CASE("Test UnpackerAcqu: TID", "[unpacker]") {
+    test::EnsureSetup();
     dotest();
 }
 
 TID GetFirstID(const string& filename) {
-    ExpConfig::Setup::ManualName = "Setup_Test";
-    auto unpacker = ant::Unpacker::Get(filename);
+    auto unpacker = Unpacker::Get(filename);
 
     auto firstevent = unpacker->NextEvent();
     if(firstevent == nullptr)

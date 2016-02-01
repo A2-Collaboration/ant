@@ -1,5 +1,6 @@
 #include "catch.hpp"
 #include "catch_config.h"
+#include "expconfig_helpers.h"
 
 #include "unpacker/Unpacker.h"
 #include "expconfig/ExpConfig.h"
@@ -16,17 +17,11 @@ void getlastfound();
 void getall();
 
 TEST_CASE("ExpConfig Get (all)", "[expconfig]") {
-    ExpConfig::Setup::Cleanup();
     getall();
 }
 
-TEST_CASE("ExpConfig GetLastFound", "[expconfig]") {
-    ExpConfig::Setup::Cleanup();
-    getlastfound();
-}
-
 TEST_CASE("ExpConfig GetDetector", "[expconfig]") {
-    ExpConfig::Setup::Cleanup();
+
     getdetector();
 }
 
@@ -38,7 +33,7 @@ void getall() {
 }
 
 void getdetector() {
-    ExpConfig::Setup::ManualName = "Setup_Test";
+    test::EnsureSetup();
     REQUIRE_NOTHROW(Unpacker::Get(string(TEST_BLOBS_DIRECTORY)+"/Acqu_oneevent-big.dat.xz"));
 
     auto tagger = ExpConfig::Setup::GetDetector<TaggerDetector_t>();
@@ -53,8 +48,3 @@ void getdetector() {
     REQUIRE_THROWS_AS(ExpConfig::Setup::GetDetector(Detector_t::Type_t::Tagger), ExpConfig::Exception);
 }
 
-void getlastfound() {
-    REQUIRE(ExpConfig::Setup::GetLastFound().get() == nullptr);
-    ExpConfig::Setup::ManualName = "Setup_Test";
-    REQUIRE(ExpConfig::Setup::GetLastFound().get() != nullptr);
-}

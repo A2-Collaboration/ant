@@ -1,5 +1,6 @@
 #include "catch.hpp"
 #include "catch_config.h"
+#include "expconfig_helpers.h"
 
 #include "reconstruct/Reconstruct.h"
 #include "reconstruct/CandidateBuilder.h"
@@ -16,6 +17,7 @@ using namespace ant::reconstruct;
 void dotest();
 
 TEST_CASE("CandidateBuilder", "[reconstruct]") {
+    test::EnsureSetup();
     dotest();
 }
 
@@ -137,7 +139,6 @@ struct ReconstructTester : Reconstruct {
 
 
 void dotest() {
-    ant::ExpConfig::Setup::ManualName = "Setup_Test";
     auto unpacker = Unpacker::Get(string(TEST_BLOBS_DIRECTORY)+"/Acqu_oneevent-big.dat.xz");
 
     // instead of the usual reconstruct, we use our tester

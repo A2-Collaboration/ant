@@ -1,8 +1,7 @@
 #include "catch.hpp"
+#include "expconfig_helpers.h"
 
 #include "analysis/physics/Physics.h"
-
-#include "expconfig/ExpConfig.h"
 
 #include "base/OptionsList.h"
 #include "base/WrapTFile.h"
@@ -19,6 +18,7 @@ using namespace ant::analysis;
 void dotest();
 
 TEST_CASE("PhysicsRegistry: Create all physics classes", "[analysis]") {
+    test::EnsureSetup();
     dotest();
 }
 
@@ -45,9 +45,6 @@ void dotest() {
             duplicate_mkdir_detected = true;
         DefaultErrorHandler(level, abort, location, msg);
     });
-
-    // some physics classes may need some setup
-    ExpConfig::Setup::ManualName = "Setup_Test";
 
     // create all available physics classes
     for(auto name : PhysicsRegistry::GetList()) {

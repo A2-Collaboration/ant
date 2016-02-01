@@ -1,8 +1,8 @@
 #include "catch.hpp"
 #include "catch_config.h"
+#include "expconfig_helpers.h"
 
 #include "Unpacker.h"
-#include "expconfig/ExpConfig.h"
 #include "tree/TEvent.h"
 
 #include <string>
@@ -17,8 +17,7 @@ TEST_CASE("Test UnpackerA2Geant", "[unpacker]") {
 }
 
 void dotest() {
-    // try to open the file, but we need some setup name for this...
-    ant::ExpConfig::Setup::ManualName = "Setup_Test";
+    test::EnsureSetup();
 
     std::unique_ptr<Unpacker::Module> unpacker;
     REQUIRE_NOTHROW(unpacker = ant::Unpacker::Get(string(TEST_BLOBS_DIRECTORY)+"/Geant_with_TID.root"));

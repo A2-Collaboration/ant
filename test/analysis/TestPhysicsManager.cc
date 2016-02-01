@@ -1,5 +1,6 @@
 #include "catch.hpp"
 #include "catch_config.h"
+#include "expconfig_helpers.h"
 
 #include "analysis/physics/PhysicsManager.h"
 #include "analysis/input/ant/AntReader.h"
@@ -8,8 +9,6 @@
 #include "unpacker/Unpacker.h"
 #include "reconstruct/Reconstruct.h"
 #include "tree/TAntHeader.h"
-
-#include "expconfig/ExpConfig.h"
 
 #include "base/Logger.h"
 #include "base/tmpfile_t.h"
@@ -31,14 +30,17 @@ void dotest_plutogeant();
 
 
 TEST_CASE("PhysicsManager: Raw Input", "[analysis]") {
+    test::EnsureSetup();
     dotest_raw();
 }
 
 TEST_CASE("PhysicsManager: Raw Input without TEvent writing", "[analysis]") {
+    test::EnsureSetup();
     dotest_raw_nowrite();
 }
 
 TEST_CASE("PhysicsManager: Pluto/Geant Input", "[analysis]") {
+    test::EnsureSetup();
     dotest_plutogeant();
 }
 
@@ -110,7 +112,6 @@ void dotest_raw()
         pm.AddPhysics<TestPhysics>();
 
         // make some meaningful input for the physics manager
-        ant::ExpConfig::Setup::ManualName = "Setup_Test";
         auto unpacker = Unpacker::Get(string(TEST_BLOBS_DIRECTORY)+"/Acqu_oneevent-big.dat.xz");
         auto reconstruct = std_ext::make_unique<Reconstruct>();
         list< unique_ptr<analysis::input::DataReader> > readers;
@@ -146,7 +147,6 @@ void dotest_raw()
         pm.AddPhysics<TestPhysics>();
 
         // make some meaningful input for the physics manager
-        ant::ExpConfig::Setup::ManualName = "Setup_Test";
 
         auto reconstruct = std_ext::make_unique<Reconstruct>();
         list< unique_ptr<analysis::input::DataReader> > readers;
@@ -177,7 +177,6 @@ void dotest_raw()
         pm.AddPhysics<TestPhysics>();
 
         // make some meaningful input for the physics manager
-        ant::ExpConfig::Setup::ManualName = "Setup_Test";
 
         list< unique_ptr<analysis::input::DataReader> > readers;
         readers.emplace_back(std_ext::make_unique<input::AntReader>(inputfiles, nullptr, nullptr));
@@ -208,7 +207,6 @@ void dotest_raw_nowrite()
     pm.AddPhysics<TestPhysics>(true);
 
     // make some meaningful input for the physics manager
-    ant::ExpConfig::Setup::ManualName = "Setup_Test";
     auto unpacker = Unpacker::Get(string(TEST_BLOBS_DIRECTORY)+"/Acqu_oneevent-big.dat.xz");
     auto reconstruct = std_ext::make_unique<Reconstruct>();
     list< unique_ptr<analysis::input::DataReader> > readers;
@@ -245,7 +243,6 @@ void dotest_plutogeant()
     pm.AddPhysics<TestPhysics>();
 
     // make some meaningful input for the physics manager
-    ant::ExpConfig::Setup::ManualName = "Setup_Test";
     auto unpacker = Unpacker::Get(string(TEST_BLOBS_DIRECTORY)+"/Geant_with_TID.root");
     auto reconstruct = std_ext::make_unique<Reconstruct>();
     list< unique_ptr<analysis::input::DataReader> > readers;

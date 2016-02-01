@@ -1,11 +1,11 @@
 #include "catch.hpp"
 #include "catch_config.h"
+#include "expconfig_helpers.h"
 
 #include "analysis/input/ant/AntReader.h"
 
 #include "tree/TEvent.h"
 
-#include "expconfig/ExpConfig.h"
 #include "unpacker/Unpacker.h"
 #include "reconstruct/Reconstruct.h"
 
@@ -25,11 +25,11 @@ using namespace ant::analysis::input;
 void dotest_read();
 
 TEST_CASE("AntReader: Simply read", "[analysis]") {
+    test::EnsureSetup();
     dotest_read();
 }
 
 void dotest_read() {
-    ant::ExpConfig::Setup::ManualName = "Setup_Test";
     auto unpacker = Unpacker::Get(string(TEST_BLOBS_DIRECTORY)+"/Acqu_oneevent-big.dat.xz");
     auto reconstruct = std_ext::make_unique<Reconstruct>();
     AntReader reader(nullptr, move(unpacker), move(reconstruct));

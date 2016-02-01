@@ -1,8 +1,8 @@
 #include "catch.hpp"
 #include "catch_config.h"
+#include "expconfig_helpers.h"
 
 #include "Unpacker.h"
-#include "expconfig/ExpConfig.h"
 
 #include "tree/TEvent.h"
 
@@ -19,8 +19,8 @@ TEST_CASE("Test UnpackerAcqu: Scaler block", "[unpacker]") {
 }
 
 void dotest() {
-    ant::ExpConfig::Setup::ManualName = "Setup_Test";
-    auto unpacker = ant::Unpacker::Get(string(TEST_BLOBS_DIRECTORY)+"/Acqu_scalerblock.dat.xz");
+    ant::test::EnsureSetup();
+    auto unpacker = Unpacker::Get(string(TEST_BLOBS_DIRECTORY)+"/Acqu_scalerblock.dat.xz");
 
     unsigned nSlowControls = 0;
     unsigned nEvents = 0;

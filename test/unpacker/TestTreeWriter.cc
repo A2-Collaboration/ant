@@ -1,5 +1,6 @@
 #include "catch.hpp"
 #include "catch_config.h"
+#include "expconfig_helpers.h"
 
 #include "Unpacker.h"
 #include "expconfig/ExpConfig.h"
@@ -35,7 +36,6 @@ void dotest() {
 
     ant::tmpfile_t tmpfile;
 
-    ant::ExpConfig::Setup::ManualName = "Setup_Test";
     auto unpacker = ant::Unpacker::Get(string(TEST_BLOBS_DIRECTORY)+"/Acqu_oneevent-big.dat.xz");
 
     // write some stuff to a ROOT tree

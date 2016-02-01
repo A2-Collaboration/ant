@@ -2,7 +2,8 @@
 #include "catch_config.h"
 
 #include "Unpacker.h"
-#include "expconfig/ExpConfig.h"
+
+#include "expconfig_helpers.h"
 
 #include <iostream>
 #include <string>
@@ -29,7 +30,7 @@ TEST_CASE("Test UnpackerAcqu: one event, small record length", "[unpacker]") {
 
 
 void dotest(const string &filename) {
-    ant::ExpConfig::Setup::ManualName = "Setup_Test";
+    ant::test::EnsureSetup();
     // this simply tries to open the file
     REQUIRE_NOTHROW(ant::Unpacker::Get(filename));
 }

@@ -7,6 +7,9 @@ add_custom_target(build_and_test
 add_library(catch catch.cc catch.hpp catch_config.h)
 target_link_libraries(catch base)
 
+add_library(expconfig_helpers expconfig_helpers.cc)
+target_link_libraries(expconfig_helpers expconfig)
+
 # some tests need binary blobs
 # use a configure file to
 set(TEST_BLOBS_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/_blobs")
@@ -27,7 +30,7 @@ macro(add_ant_test name)
   set(TESTNAME "test_${TEST_SUBDIR}_${name}")
   set(TESTFILE "Test${name}.cc")
   add_executable(${TESTNAME} EXCLUDE_FROM_ALL ${TESTFILE})
-  target_link_libraries(${TESTNAME} catch ${TEST_SUBDIR} ${ARGN})
+  target_link_libraries(${TESTNAME} catch expconfig_helpers ${TEST_SUBDIR} ${ARGN})
   add_test(NAME ${TESTNAME} COMMAND ${TESTNAME})
   set_tests_properties(${TESTNAME} PROPERTIES TIMEOUT 60)
   add_dependencies(build_and_test ${TESTNAME})
