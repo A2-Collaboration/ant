@@ -27,3 +27,7 @@ void SetupLogger();
 // Please see
 // https://github.com/easylogging/easyloggingpp
 // what this nice logger can do
+
+struct dbg {
+    static int buffer_n;
+};

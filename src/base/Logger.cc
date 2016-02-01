@@ -36,6 +36,8 @@ void SetupLogger() {
         if(level < kInfo) { LOG(INFO) << ss.str(); }
         else if(level == kInfo) { LOG(INFO) << ss.str(); }
         else if(level == kWarning) { LOG(WARNING) << ss.str(); }
-        else { LOG(ERROR) << ss.str(); }
+        else { LOG(ERROR) << ss.str() << " Buffer:" << dbg::buffer_n; }
     });
 }
+
+int dbg::buffer_n = 0;

@@ -280,6 +280,7 @@ void acqu::FileFormatBase::FillEvents(queue_t& queue) noexcept
         queue.splice(queue.end(), move(queue_buffer));
     }
 
+    dbg::buffer_n = unpackedBuffers;
     unpackedBuffers++;
 
 
