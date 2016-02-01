@@ -213,12 +213,13 @@ void PhysicsManager::ReadFrom(
     LOG(INFO) << "Processed " << nEventsProcessed << " events, speed "
               << nEventsProcessed/elapsed_seconds.count() << " event/s";
 
-    if(treeEvents->GetEntries() == 0)
+    const auto nEventsSaved = treeEvents->GetEntries();
+    if(nEventsSaved == 0)
         delete treeEvents;
     else if(treeEvents->GetCurrentFile() != nullptr) {
-        LOG(INFO) << "Wrote treeEvents: "
-                  << (double)treeEvents->GetTotBytes()/(1 << 20) << " MB, "
-                  << (double)treeEvents->GetTotBytes()/nEventsProcessed << " bytes/event";
+        LOG(INFO) << "Wrote " << nEventsSaved << " treeEvents: "
+                  << (double)treeEvents->GetTotBytes()/(1 << 20) << " MB (uncompressed), "
+                  << (double)treeEvents->GetTotBytes()/nEventsSaved << " bytes/event";
      }
 }
 
