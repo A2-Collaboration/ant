@@ -1,6 +1,7 @@
 #pragma once
 
-#include "ExpConfig.h"
+#include "expconfig/ExpConfig.h"
+
 #include "SetupRegistry.h"
 
 #include "unpacker/UnpackerAcqu.h"
@@ -56,6 +57,10 @@ public:
 
     virtual std::string GetName() const override final {
         return name_;
+    }
+
+    virtual double GetElectronBeamEnergy() const override {
+        return std::numeric_limits<double>::quiet_NaN();
     }
 
 protected:

@@ -65,6 +65,11 @@ list<string> SetupRegistry::GetNames()
     return list;
 }
 
+void SetupRegistry::AddSetup(const string& name, shared_ptr<Setup> setup)
+{
+    get_instance().setups[name] = setup;
+}
+
 void SetupRegistry::SetSetupOptions(OptionsPtr opt)
 {
     if(!get_instance().setups.empty())
