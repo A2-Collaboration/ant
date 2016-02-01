@@ -217,6 +217,7 @@ void PhysicsManager::ReadFrom(
     if(nEventsSaved == 0)
         delete treeEvents;
     else if(treeEvents->GetCurrentFile() != nullptr) {
+        treeEvents->Write();
         LOG(INFO) << "Wrote " << nEventsSaved << " treeEvents: "
                   << (double)treeEvents->GetTotBytes()/(1 << 20) << " MB (uncompressed), "
                   << (double)treeEvents->GetTotBytes()/nEventsSaved << " bytes/event";
