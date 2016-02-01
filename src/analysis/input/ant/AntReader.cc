@@ -67,6 +67,9 @@ struct TreeReader : AntReaderInternal {
         if(!tree)
             return nullptr;
 
+        if(current_entry==tree->GetEntries())
+            return nullptr;
+
         eventPtr = nullptr;
         tree->GetEntry(current_entry);
         current_entry++;
