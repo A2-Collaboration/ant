@@ -59,7 +59,7 @@ protected:
 
     DataMode mode = DataMode::Reconstructed;
 
-    virtual void Analyse(const TEvent::Data& data, const TEvent& event) =0;
+    virtual void Analyse(const TEvent::Data& data, const TEvent& event, manager_t& manager) =0;
 
 
 
@@ -111,7 +111,7 @@ protected:
 
     std::map<std::string, perDecayhists_t> gg_decays;
 
-    virtual void Analyse(const TEvent::Data& data, const TEvent& event) override;
+    virtual void Analyse(const TEvent::Data& data, const TEvent& event, manager_t&) override;
 
     BinSettings imbinning = BinSettings(1000);
     BinSettings mmbinning = BinSettings(1000, 400,1400);
@@ -151,7 +151,7 @@ class OmegaEtaG2 : public OmegaBase {
 
     // OmegaBase interface
 protected:
-    void Analyse(const TEvent::Data &data, const TEvent& event) override;
+    void Analyse(const TEvent::Data &data, const TEvent& event, manager_t& manager) override;
 
 
     enum SigBgFlag_t {
@@ -214,6 +214,7 @@ protected:
 
     bool data_proton = true;
     bool data_tagger = true;
+    bool just_preselect = false;
 
     double cut_ESum = 550.0;
     double cut_Copl = std_ext::degree_to_radian(15.0);

@@ -34,10 +34,10 @@ using namespace ant::analysis;
 using namespace ant::analysis::physics;
 using namespace ant::std_ext;
 
-void OmegaBase::ProcessEvent(const TEvent& event, manager_t&)
+void OmegaBase::ProcessEvent(const TEvent& event, manager_t& manager)
 {
     const auto& data = mode==DataMode::Reconstructed ? *event.Reconstructed : *event.MCTrue;
-    Analyse(data, event);
+    Analyse(data, event, manager);
 }
 
 double OmegaBase::calcEnergySum(const TParticleList &particles) const
@@ -129,7 +129,7 @@ TLorentzVector Boost(const TLorentzVector& lv, const TVector3& boost) {
     return b;
 }
 
-void OmegaEtaG::Analyse(const TEvent::Data &data, const TEvent& event)
+void OmegaEtaG::Analyse(const TEvent::Data &data, const TEvent& event, manager_t&)
 {
 
     steps->Fill("Events seen",1);
@@ -551,7 +551,7 @@ double IM(const TParticlePtr& p1, const TParticlePtr& p2) {
 }
 
 
-void OmegaEtaG2::Analyse(const TEvent::Data &data, const TEvent& event)
+void OmegaEtaG2::Analyse(const TEvent::Data &data, const TEvent& event, manager_t& manager)
 {
 
     const auto& particletree = event.MCTrue->ParticleTree;
@@ -655,6 +655,11 @@ void OmegaEtaG2::Analyse(const TEvent::Data &data, const TEvent& event)
     if(!isfinite(b_CBAvgTime))
         return;
 
+
+    if(just_preselect) {
+        manager.SaveEvent();
+        return;
+    }
 
     for(const TTaggerHit& t : data_tagger ? data.Tagger.Hits : event.MCTrue->Tagger.Hits) {
 
@@ -878,6 +883,12 @@ OmegaEtaG2::OmegaEtaG2(const std::string& name, OptionsPtr opts):
         data_tagger = false;
         LOG(INFO) << "Using Tagger from MCTrue";
     };
+
+    just_preselect = Options->Get<bool>("Preselect", false);
+
+    if(just_preselect) {
+        LOG(INFO) << "Running in preselect mode";
+    }
 
     promptrandom.AddPromptRange({-5,5});
     promptrandom.AddRandomRange({-20, -10});
