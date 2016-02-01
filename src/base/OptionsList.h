@@ -8,7 +8,7 @@
 
 namespace ant {
 
-struct OptionsList;
+class OptionsList;
 
 using OptionsPtr = std::shared_ptr<const OptionsList>;
 
