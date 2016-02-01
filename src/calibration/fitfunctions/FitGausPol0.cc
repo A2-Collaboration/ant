@@ -58,11 +58,14 @@ void FitGausPol0::SetDefaults(TH1 *hist)
         func->SetParameter(0,100);
         func->SetParameter(1,100);
     }
+
+    func->SetParLimits(0,0,1E+12); // positive amplitude
 }
 
 void FitGausPol0::SetRange(ant::interval<double> i)
 {
     setRange(func, i);
+    func->SetParLimits(1, i.Start(), i.Stop()); // peak position inside range
 }
 
 ant::interval<double> FitGausPol0::GetRange() const
