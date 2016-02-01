@@ -19,9 +19,6 @@
 namespace ant {
 namespace expconfig {
 
-using SetupOptPtr = std::shared_ptr<const OptionsList>;
-
-
 /**
  * @brief The Setup class serves as a base class for all known beamtime setup configurations
  *
@@ -62,9 +59,9 @@ public:
     }
 
 protected:
-    const SetupOptPtr Options;
+    const OptionsPtr Options;
 
-    Setup(const std::string& name, SetupOptPtr opt);
+    Setup(const std::string& name, OptionsPtr opt);
 
     void AddDetector(const std::shared_ptr<Detector_t>& detector) {
         detectors.push_back(detector);

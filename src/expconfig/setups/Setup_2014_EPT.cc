@@ -39,7 +39,7 @@ using namespace ant::expconfig;
 using namespace ant::expconfig::setup;
 
 
-Setup_2014_EPT::Setup_2014_EPT(const string& name, SetupOptPtr opt) :
+Setup_2014_EPT::Setup_2014_EPT(const string& name, OptionsPtr opt) :
     Setup(name, opt)
 {
 

@@ -48,7 +48,7 @@ class Setup_Test :
 {
 public:
 
-    Setup_Test(const std::string& name, SetupOptPtr opt) : Setup(name, opt) {
+    Setup_Test(const std::string& name, OptionsPtr opt) : Setup(name, opt) {
         // setup the detectors of interest
         auto trigger = make_shared<detector::Trigger_2014>();
         AddDetector(trigger);

@@ -19,7 +19,7 @@ class Setup_Raw :
 {
 public:
 
-    Setup_Raw(const std::string& name, SetupOptPtr opt) : Setup(name, opt)
+    Setup_Raw(const std::string& name, OptionsPtr opt) : Setup(name, opt)
     {
         ADC_ranges = Options->Get<decltype(ADC_ranges)>("AcquADC");
     }
