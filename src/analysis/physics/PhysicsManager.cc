@@ -215,7 +215,7 @@ void PhysicsManager::ReadFrom(
 
     if(treeEvents->GetEntries() == 0)
         delete treeEvents;
-    else {
+    else if(treeEvents->GetCurrentFile() != nullptr) {
         LOG(INFO) << "Wrote treeEvents: "
                   << (double)treeEvents->GetTotBytes()/(1 << 20) << " MB, "
                   << (double)treeEvents->GetTotBytes()/nEventsProcessed << " bytes/event";
@@ -265,6 +265,8 @@ void PhysicsManager::ProcessEvent(std::unique_ptr<TEvent> event)
         event->MCTrue = nullptr;
 
     if(processmanager.saveEvent) {
+        if(treeEvents->GetCurrentFile() == nullptr)
+            LOG_N_TIMES(1, WARNING) << "Writing treeEvents to memory. Might be a lot of data!";
         if(!processmanager.keepReadHits)
             event->Reconstructed->DetectorReadHits.resize(0);
         treeEventPtr = event.get();
