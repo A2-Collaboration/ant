@@ -50,6 +50,7 @@ set(ANALYSIS_PHYSICS
   physics/common/ProtonTAPS.cc
   physics/etaprime/etaprime_proton.cc
   physics/common/EventDisplayHists.cc
+  physics/common/EventFilter.cc
   )
 
 set(ANALYSIS_PHYSICS_CALIBRATION
