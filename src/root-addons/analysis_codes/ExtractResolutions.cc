@@ -249,6 +249,8 @@ void Analyse(TTree* tree, const unsigned nElements, const string& branch, const 
         h_p1     = new TH2TAPS(Form("%s_sigmas_p1", branch.c_str()), Form("%s sigmas p1", branch.c_str()));
         h_p2     = new TH2TAPS(Form("%s_sigmas_p2", branch.c_str()), Form("%s sigmas p2", branch.c_str()));
     }
+    else
+        return;
 
     h_global->SetZTitle(Form("#sigma %s [rad]", branch.c_str()));
     h_global->SetElements(*h_global_sigma);

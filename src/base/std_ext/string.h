@@ -48,7 +48,7 @@ inline void replace(std::string& subject, const std::string& search,
  */
 inline std::string string_sanitize(const char* in) {
   std::string s(in);
-  const std::string& whitespace = " \t\f\v\n\r";
+  const std::string whitespace = " \t\f\v\n\r";
   int start = s.find_first_not_of(whitespace);
   int end = s.find_last_not_of(whitespace);
   if(start == -1 && end == -1)
