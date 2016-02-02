@@ -2,6 +2,8 @@
 
 #include "expconfig/ExpConfig.h"
 
+#include "base/std_ext/vector.h"
+
 using namespace std;
 using namespace ant;
 using namespace ant::analysis::physics;
@@ -104,69 +106,53 @@ void PID_Energy::ProcessEvent(const TEvent& event, manager_t&)
 {
     // pedestals, best determined from clusters with energy information only
 
-    std::map<unsigned, vector<double>> pedestals_ch;
+    struct hitmapping_t {
+        vector<double> Pedestals;
+        vector<double> Timings;
+    };
+
+    std::map<unsigned, hitmapping_t> hits;
 
     for(const TDetectorReadHit& readhit : event.Reconstructed->DetectorReadHits) {
         if(readhit.DetectorType != Detector_t::Type_t::PID)
             continue;
-        if(readhit.ChannelType != Channel_t::Type_t::Integral)
-            continue;
-        pedestals_ch[readhit.Channel] = readhit.Converted;
+
+        auto& item = hits[readhit.Channel];
+
+        if(readhit.ChannelType == Channel_t::Type_t::Integral) {
+            std_ext::concatenate(item.Pedestals, readhit.Converted);
+        }
+        else if(readhit.ChannelType == Channel_t::Type_t::Timing) {
+            std_ext::concatenate(item.Timings, readhit.Values); // passed the timing window!
+        }
     }
 
+    for(const auto& it_hit : hits) {
 
-    for(const TClusterPtr& cluster : event.Reconstructed->Clusters) {
-        if(cluster->DetectorType != Detector_t::Type_t::PID)
+        const auto channel = it_hit.first;
+        const hitmapping_t& item = it_hit.second;
+
+        PerChannel_t& h = h_perChannel[channel];
+
+        h.QDCMultiplicity->Fill(item.Pedestals.size());
+        h.TDCMultiplicity->Fill(item.Timings.size());
+
+
+        if(item.Pedestals.size() != 1)
+            continue;
+        if(item.Timings.size()>1)
             continue;
 
-        // only consider one cluster PID hits
-        if(cluster->Hits.size() != 1)
-            continue;
-        const TClusterHit& pidhit = cluster->Hits.front();
+        const auto& pedestal = item.Pedestals.front();
 
-        PerChannel_t& h = h_perChannel[pidhit.Channel];
+        h_pedestals->Fill(pedestal, channel);
 
-        double timing = numeric_limits<double>::quiet_NaN();
-
-        unsigned nIntegrals = 0;
-        unsigned nTimings = 0;
-        for(const TClusterHitDatum& datum : pidhit.Data) {
-            if(datum.GetType() == Channel_t::Type_t::Integral) {
-                nIntegrals++;
-            }
-            if(datum.GetType() == Channel_t::Type_t::Timing) {
-                timing = datum.Value;
-                nTimings++;
-            }
-        }
-
-        h.QDCMultiplicity->Fill(nIntegrals);
-        h.TDCMultiplicity->Fill(nTimings);
-
-        const auto it_pedestals = pedestals_ch.find(pidhit.Channel);
-        if(it_pedestals == pedestals_ch.end()) {
-            assert(nIntegrals == 0);
-            continue;
-        }
-        const auto& pedestals = it_pedestals->second;
-        assert(nIntegrals == pedestals.size());
-
-        if(nIntegrals != 1)
-            continue;
-        if(nTimings > 1)
-            continue;
-
-        const auto& pedestal = pedestals.front();
-
-        h_pedestals->Fill(pedestal, pidhit.Channel);
-
-        if(std::isfinite(timing))
-            h.PedestalTiming->Fill(timing, pedestal);
+        if(item.Timings.size()==1)
+            h.PedestalTiming->Fill(item.Timings.front(), pedestal);
         else
             h.PedestalNoTiming->Fill(pedestal);
 
     }
-
 
     // bananas per channel histograms
     for(const auto& candidate : event.Reconstructed->Candidates) {
@@ -193,11 +179,11 @@ void PID_Energy::ProcessEvent(const TEvent& event, manager_t&)
                        candidate->VetoEnergy);
 
         // is there an pedestal available?
-        const auto it_pedestals = pedestals_ch.find(pid_cluster->CentralElement);
-        if(it_pedestals == pedestals_ch.end()) {
+        const auto it_hit = hits.find(pid_cluster->CentralElement);
+        if(it_hit == hits.end()) {
             continue;
         }
-        const auto& pedestals = it_pedestals->second;
+        const auto& pedestals = it_hit->second.Pedestals;
         if(pedestals.size() != 1)
             continue;
 
