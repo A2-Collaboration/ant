@@ -52,7 +52,7 @@ Detector_t::Any_t IntToDetector_t(const int& a) {
 void GoatReader::CopyTagger(TEventData& recon)
 {
     for( Int_t i=0; i<tagger.GetNTagged(); ++i) {
-        recon.Tagger.Hits.emplace_back(
+        recon.TaggerHits.emplace_back(
                     tagger.GetTaggedChannel(i),
                     tagger.GetTaggedEnergy(i),
                     tagger.GetTaggedTime(i)

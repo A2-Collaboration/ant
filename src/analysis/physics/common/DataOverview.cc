@@ -49,7 +49,7 @@ TaggerOverview::~TaggerOverview()
 
 void TaggerOverview::ProcessEvent(const TEvent& event, manager_t&)
 {
-    const auto taggerhits = (mode == Mode::Reconstructed) ? event.Reconstructed->Tagger.Hits : event.MCTrue->Tagger.Hits;
+    const auto taggerhits = (mode == Mode::Reconstructed) ? event.Reconstructed->TaggerHits : event.MCTrue->TaggerHits;
 
     for(auto hit=taggerhits.cbegin(); hit!=taggerhits.cend(); ++hit) {
         Channels->Fill(hit->Channel);

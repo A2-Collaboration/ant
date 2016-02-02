@@ -76,7 +76,7 @@ void DeltaTreeGenerator::ProcessEvent(const TEvent& event, manager_t&)
 
 
     // taggerHits should always have size on though
-    for( const auto& taggerHit: event.MCTrue->Tagger.Hits)
+    for( const auto& taggerHit: event.MCTrue->TaggerHits)
     {
         taggerEnergy = taggerHit.PhotonEnergy;
         taggerHits->Fill( taggerEnergy );

@@ -48,7 +48,7 @@ void DeltaPlusPhysics::ProcessEvent(const TEvent& event, manager_t&)
         prompt["pid"]->Fill(cand->CaloEnergy, cand->VetoEnergy);
     }
 
-    for(const auto& taggerhit : event.Reconstructed->Tagger.Hits) {
+    for(const auto& taggerhit : event.Reconstructed->TaggerHits) {
         bool isPrompt = false;
 
         if( prompt_window.Contains(taggerhit.Time) ) {

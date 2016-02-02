@@ -35,7 +35,7 @@ Time::Time(const Detector_t::Type_t& detectorType,
                         BinSettings(Detector->GetNChannels()),
                         "hTimeToTagger"
                         );
-    hCBTriggerTiming = HistFac.makeTH1D(detectorName + " - Energy-averaged time",
+    hCBTriggerTiming = HistFac.makeTH1D("CB - Energy-averaged time",
                                 "time [ns]",
                                 "#",
                                 BinSettings(500,-15,15),
@@ -54,7 +54,7 @@ void Time::ProcessEvent(const TEvent& event, manager_t&)
     // handle Tagger differently
     if(isTagger)
     {
-        for (const auto& tHit: event.Reconstructed->Tagger.Hits) {
+        for (const auto& tHit: event.Reconstructed->TaggerHits) {
             hTime->Fill(tHit.Time, tHit.Channel);
             hTimeToF->Fill(tHit.Time - CBTimeAvg, tHit.Channel);
         }
@@ -70,7 +70,7 @@ void Time::ProcessEvent(const TEvent& event, manager_t&)
                                                          cluster->CentralElement,
                                                          CBTimeAvg);
             hTimeToF->Fill(tof, cluster->CentralElement);
-            for(const auto& taggerhit : event.Reconstructed->Tagger.Hits) {
+            for(const auto& taggerhit : event.Reconstructed->TaggerHits) {
                 const double relative_time = cluster->Time - taggerhit.Time;
                 hTimeToTagger->Fill(relative_time, cluster->CentralElement);
             }

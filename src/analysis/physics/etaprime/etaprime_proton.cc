@@ -161,7 +161,7 @@ void EtapProton::ProcessEvent(const TEvent& event, manager_t&)
     utils::KinFitter& fitter = *fitters.at(photons.size()-1);
 
     bool kinFit_ok = false;
-    for(const TTaggerHit& taggerhit : event.Reconstructed->Tagger.Hits) {
+    for(const TTaggerHit& taggerhit : event.Reconstructed->TaggerHits) {
         promptrandom.SetTaggerHit(taggerhit.Time - b_CBAvgTime);
         if(promptrandom.State() == PromptRandom::Case::Outside)
             continue;

@@ -7,7 +7,7 @@
 #include "TSlowControl.h"
 #include "TUnpackerMessage.h"
 
-#include "TTagger.h"
+#include "TTaggerHit.h"
 #include "TTrigger.h"
 #include "TTarget.h"
 
@@ -72,7 +72,7 @@ struct TEventData : printable_traits
     std::vector<TSlowControl>     SlowControls;
     std::vector<TUnpackerMessage> UnpackerMessages;
 
-    TTagger  Tagger;
+    std::vector<TTaggerHit>  TaggerHits;
     TTrigger Trigger;
     TTarget  Target;
 
@@ -85,7 +85,7 @@ struct TEventData : printable_traits
     void serialize(Archive& archive) {
         archive(ID,
                 DetectorReadHits, SlowControls, UnpackerMessages,
-                Tagger, Trigger, Target,
+                TaggerHits, Trigger, Target,
                 Clusters, Candidates, Particles, ParticleTree);
     }
 

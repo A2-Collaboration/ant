@@ -360,7 +360,7 @@ void Etap3pi0::ProcessEvent(const TEvent& event, manager_t&)
     const auto& mcphotons = mcdata.Particles.Get(ParticleTypeDatabase::Photon);
 
     FillCrossChecks(photons,mcphotons);
-    hists.at("xc").at("NTagger")->Fill(data.Tagger.Hits.size());
+    hists.at("xc").at("NTagger")->Fill(data.TaggerHits.size());
 
     hists.at("steps").at("IM_base")->Fill(MakeLoretzSum(photons).M());
 
@@ -377,7 +377,7 @@ void Etap3pi0::ProcessEvent(const TEvent& event, manager_t&)
     hists.at("channels").at("nocut")->Fill(utils::ParticleTools::GetDecayString(mcdata.ParticleTree).c_str(),1);
 
     // we need a tagger hit
-    if (data.Tagger.Hits.size() != 1)
+    if (data.TaggerHits.size() != 1)
         return;
     hists.at("steps").at("evcount")->Fill("req. 1 tagger hit",1);
     //vector<TParticlePtr> protons;

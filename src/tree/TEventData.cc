@@ -24,7 +24,9 @@ ostream& TEventData::Print(ostream& s) const {
     for(auto& i : UnpackerMessages)
         s << i << endl;
 
-    s << ">> Tagger" << endl << Tagger;
+    s << ">> TaggerHits" << endl;
+    for(auto& i : TaggerHits)
+        s << i << endl;
 
     s << ">> Clusters" << endl;
     for(auto& i : Clusters)

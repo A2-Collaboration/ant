@@ -236,7 +236,7 @@ void TestAPLCON::ProcessEvent(const TEvent& event, manager_t&)
         particles->Fill(particle->Type().PrintName().c_str(), 1);
     }
 
-    ntagged->Fill(event.Reconstructed->Tagger.Hits.size());
+    ntagged->Fill(event.Reconstructed->TaggerHits.size());
 
     cbesum->Fill(event.Reconstructed->Trigger.CBEnergySum);
 
@@ -246,7 +246,7 @@ void TestAPLCON::ProcessEvent(const TEvent& event, manager_t&)
         } catch (...) {}
     }
 
-    for(const auto& taggerhit : event.MCTrue->Tagger.Hits) {
+    for(const auto& taggerhit : event.MCTrue->TaggerHits) {
         tagger->Fill(taggerhit.PhotonEnergy);
 
         // find the photons and one proton

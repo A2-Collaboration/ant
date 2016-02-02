@@ -13,7 +13,6 @@ set(SRCS
   TDetectorReadHit.h
   TSlowControl.h
   TUnpackerMessage.h
-  TTagger.h
   TTarget.h
   TTrigger.h
   TTaggerHit.h

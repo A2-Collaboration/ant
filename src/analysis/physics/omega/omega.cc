@@ -218,7 +218,7 @@ void OmegaEtaG::Analyse(const TEventData &data, const TEvent& event, manager_t&)
         const TParticlePtr mc_p = !mc_protons.empty() ? mc_protons.at(0) : shared_ptr<TParticle>(nullptr);
 
         if(omega_range.Contains(gggIM) && h) {
-            for(auto& th : event.MCTrue->Tagger.Hits) {
+            for(auto& th : event.MCTrue->TaggerHits) {
                 const TLorentzVector beam_target = th.GetPhotonBeam() + TLorentzVector(0, 0, 0, ParticleTypeDatabase::Proton.Mass());
                 const TLorentzVector mm = beam_target - gggState;
                 const TLorentzVector mm_boosted = Boost(mm,-beam_target.BoostVector());
@@ -661,7 +661,7 @@ void OmegaEtaG2::Analyse(const TEventData &data, const TEvent& event, manager_t&
         return;
     }
 
-    for(const TTaggerHit& t : data_tagger ? data.Tagger.Hits : event.MCTrue->Tagger.Hits) {
+    for(const TTaggerHit& t : data_tagger ? data.TaggerHits : event.MCTrue->TaggerHits) {
 
         promptrandom.SetTaggerHit(t.Time - b_CBAvgTime);
 

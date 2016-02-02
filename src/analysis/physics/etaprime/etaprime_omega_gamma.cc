@@ -295,7 +295,7 @@ void EtapOmegaG::ProcessSig(const TParticleTree_t& particletree,
     h.gggg->Fill(photon_sum.M());
 
     // use tagged photon
-    for(const auto& th : data.Tagger.Hits) {
+    for(const auto& th : data.TaggerHits) {
         /// \todo make prompt/random cut
         const TLorentzVector beam_target = th.GetPhotonBeam() + TLorentzVector(0, 0, 0, ParticleTypeDatabase::Proton.Mass());
         const TLorentzVector mm = beam_target - photon_sum;
@@ -434,7 +434,7 @@ void EtapOmegaG::ProcessSig(const TParticleTree_t& particletree,
     }
 
     // use tagged photon
-    for(const auto& th : data.Tagger.Hits) {
+    for(const auto& th : data.TaggerHits) {
         /// \todo make prompt/random cut
         const TLorentzVector beam_target = th.GetPhotonBeam() + TLorentzVector(0, 0, 0, ParticleTypeDatabase::Proton.Mass());
         const TLorentzVector mm = beam_target - result.EtaPrime;
@@ -539,7 +539,7 @@ void EtapOmegaG::ProcessRef(const TParticleTree_t& particletree,
     }
 
     // use tagged photon
-    for(const auto& th : data.Tagger.Hits) {
+    for(const auto& th : data.TaggerHits) {
         /// \todo make prompt/random cut
         const TLorentzVector beam_target = th.GetPhotonBeam() + TLorentzVector(0, 0, 0, ParticleTypeDatabase::Proton.Mass());
         const TLorentzVector mm = beam_target - photon_sum;

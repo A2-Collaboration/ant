@@ -15,22 +15,42 @@ namespace ant {
 struct TTaggerHit : printable_traits
 
 {
-    double PhotonEnergy;
-    double Time;
     unsigned Channel;
-    std::vector< TKeyValue<double> > Electrons; // Key=channel, Value=timing
+    double   PhotonEnergy;
+    double   Time;
 
+    struct Electron_t : printable_traits {
+        double Timing;
+        double QDCEnergy;
 
-    TTaggerHit(double photonE, const TKeyValue<double>& hit) :
-        PhotonEnergy(photonE),
-        Time(hit.Value),
-        Channel(hit.Key),
-        Electrons{hit}
-    {}
-    TTaggerHit(unsigned channel, double photonE, double time) :
+        Electron_t(double timing,
+                   double energy = std::numeric_limits<double>::quiet_NaN()) :
+            Timing(timing), QDCEnergy(energy)
+        {}
+
+        Electron_t() {}
+        virtual ~Electron_t() {}
+        template<class Archive>
+        void serialize(Archive& archive) {
+            archive(Timing, QDCEnergy);
+        }
+
+        virtual std::ostream& Print( std::ostream& s) const override {
+            s << "(" << Timing;
+            if(std::isfinite(QDCEnergy))
+                s << "," << QDCEnergy;
+            return s << ")";
+        }
+    };
+
+    std::vector< TKeyValue<Electron_t> > Electrons; // Key=channel
+
+    TTaggerHit(unsigned channel, double photonE, double time,
+               double qdc_energy = std::numeric_limits<double>::quiet_NaN()) :
+        Channel(channel),
         PhotonEnergy(photonE),
         Time(time),
-        Channel(channel)
+        Electrons{ {channel, {time, qdc_energy} } }
     {}
 
     TTaggerHit() {}

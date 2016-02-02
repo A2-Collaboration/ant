@@ -68,7 +68,7 @@ struct ReconstructTester : Reconstruct_traits {
         // we also extract the energy, which is always defined as a
         // single value with type Channel_t::Type_t
         Reconstruct::sorted_bydetectortype_t<AdaptorTClusterHit> sorted_clusterhits;
-        r.BuildHits(sorted_clusterhits, reconstructed.Tagger);
+        r.BuildHits(sorted_clusterhits, reconstructed.TaggerHits);
 
         // apply hooks which modify clusterhits
         for(const auto& hook : r.hooks_clusterhits) {
@@ -76,7 +76,7 @@ struct ReconstructTester : Reconstruct_traits {
         }
 
         size_t n_clusterhits = getTotalCount(sorted_clusterhits);
-        REQUIRE(n_clusterhits + reconstructed.Tagger.Hits.size() <= n_readhits);
+        REQUIRE(n_clusterhits + reconstructed.TaggerHits.size() <= n_readhits);
 
         // then build clusters (at least for calorimeters this is not trivial)
         Reconstruct::sorted_bydetectortype_t<TClusterPtr> sorted_clusters;

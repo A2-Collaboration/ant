@@ -76,7 +76,7 @@ void ProtonTagger::ProcessEvent(const TEvent& event, manager_t&)
 
     const TLorentzVector target(0,0,0,ParticleTypeDatabase::Proton.Mass());
 
-    for(const auto& t : event.Reconstructed->Tagger.Hits) {
+    for(const auto& t : event.Reconstructed->TaggerHits) {
 
         b_tagTime = t.Time;
         b_tagCh   = t.Channel;

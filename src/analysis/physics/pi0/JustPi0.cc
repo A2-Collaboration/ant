@@ -179,7 +179,7 @@ void JustPi0::MultiPi0::ProcessData(const TEventData& data, const TParticleTree_
 
         // iterate over tagger hits
 
-        for(const TTaggerHit& taggerhit : data.Tagger.Hits) {
+        for(const TTaggerHit& taggerhit : data.TaggerHits) {
             steps->Fill("Seen taggerhits",1.0);
 
             promptrandom.SetTaggerHit(taggerhit.Time);

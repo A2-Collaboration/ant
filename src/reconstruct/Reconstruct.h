@@ -7,7 +7,7 @@
 
 namespace ant {
 
-struct TTagger;
+struct TTaggerHit;
 
 namespace reconstruct {
 class CandidateBuilder;
@@ -47,14 +47,13 @@ private:
 
     void ApplyHooksToReadHits(std::vector<TDetectorReadHit>& detectorReadHits);
 
-    void BuildHits(
-            sorted_bydetectortype_t<reconstruct::AdaptorTClusterHit>& sorted_clusterhits,
-            TTagger& event_tagger
+    void BuildHits(sorted_bydetectortype_t<reconstruct::AdaptorTClusterHit>& sorted_clusterhits,
+            std::vector<TTaggerHit>& taggerhits
             );
 
     void HandleTagger(const std::shared_ptr<TaggerDetector_t>& taggerdetector,
             const std::vector<TDetectorReadHit*>& readhits,
-            TTagger& event_tagger);
+            std::vector<TTaggerHit>& taggerhits);
 
     void BuildClusters(sorted_bydetectortype_t<reconstruct::AdaptorTClusterHit>&& sorted_clusterhits,
             sorted_bydetectortype_t<TClusterPtr>& sorted_clusters);

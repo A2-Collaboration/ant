@@ -8,6 +8,7 @@
 
 #include "tree/TEventData.h"
 
+#include "base/std_ext/vector.h"
 #include "base/Logger.h"
 
 #include <algorithm>
@@ -88,7 +89,7 @@ void Reconstruct::DoReconstruct(TEventData& reconstructed)
     // put into the AdaptorTClusterHit to track Energy/Timing information
     // for subsequent clustering
     sorted_bydetectortype_t<AdaptorTClusterHit> sorted_clusterhits;
-    BuildHits(sorted_clusterhits, reconstructed.Tagger);
+    BuildHits(sorted_clusterhits, reconstructed.TaggerHits);
 
     // apply hooks which modify clusterhits
     for(const auto& hook : hooks_clusterhits) {
@@ -135,7 +136,7 @@ void Reconstruct::ApplyHooksToReadHits(
 }
 
 void Reconstruct::BuildHits(sorted_bydetectortype_t<AdaptorTClusterHit>& sorted_clusterhits,
-        TTagger& event_tagger)
+        vector<TTaggerHit>& taggerhits)
 {
     auto insert_hint = sorted_clusterhits.cbegin();
 
@@ -152,7 +153,7 @@ void Reconstruct::BuildHits(sorted_bydetectortype_t<AdaptorTClusterHit>& sorted_
 
         // for tagger detectors, we do not match the hits by channel at all
         if(detector.TaggerDetector != nullptr) {
-            HandleTagger(detector.TaggerDetector, readhits, event_tagger);
+            HandleTagger(detector.TaggerDetector, readhits, taggerhits);
             continue;
         }
 
@@ -206,44 +207,45 @@ void Reconstruct::BuildHits(sorted_bydetectortype_t<AdaptorTClusterHit>& sorted_
 
 void Reconstruct::HandleTagger(const shared_ptr<TaggerDetector_t>& taggerdetector,
                                const vector<TDetectorReadHit*>& readhits,
-                               TTagger& event_tagger
+                               std::vector<TTaggerHit>& taggerhits
                                )
 {
-    /// \todo add Moeller/PairSpec information here? or better use SlowControlManager for it?
+
+    // gather electron hits by channel
+    struct taggerhit_t {
+        std::vector<double> Timings;
+        std::vector<double> Energies;
+    };
+    map<unsigned, taggerhit_t > hits;
 
     for(const TDetectorReadHit* readhit : readhits) {
         // ignore uncalibrated items
         if(readhit->Values.empty())
             continue;
 
-        switch(readhit->ChannelType) {
-
-        case Channel_t::Type_t::Timing: {
-            // but we add each TClusterHitDatum as some single
-            // TClusterHit representing an electron with a timing
-            /// \todo implement tagger double-hit decoding?
-            for(const double timing : readhit->Values) {
-                event_tagger.Hits.emplace_back(
-                            taggerdetector->GetPhotonEnergy(readhit->Channel),
-                            TKeyValue<double>(readhit->Channel, timing)
-                            );
-            }
-            break;
+        auto& item = hits[readhit->Channel];
+        if(readhit->ChannelType == Channel_t::Type_t::Timing) {
+            std_ext::concatenate(item.Timings, readhit->Values);
         }
-
-        case Channel_t::Type_t::Integral: {
-            // tagger energies are rarely present, only for special fastbus QDC runs
-            /// \todo actually test this part of the code with Tagger QDC runs
-            for(const double energy : readhit->Values) {
-                event_tagger.Energies.emplace_back(readhit->Channel, energy);
-            }
-            break;
+        else if(readhit->ChannelType == Channel_t::Type_t::Integral) {
+            std_ext::concatenate(item.Energies, readhit->Values);
         }
+    }
 
-        default:
-            break;
+    for(const auto& hit : hits) {
+        const auto channel = hit.first;
+        const auto& item = hit.second;
+        // create a taggerhit from each timing for now
+        /// \todo handle double hits here?
+        /// \todo handle energies here better? (actually test with appropiate QDC run)
+        const auto qdc_energy = item.Energies.empty() ? std_ext::NaN : item.Energies.front();
+        for(const auto timing : item.Timings) {
+            taggerhits.emplace_back(channel,
+                                    taggerdetector->GetPhotonEnergy(channel),
+                                    timing,
+                                    qdc_energy
+                                    );
         }
-
     }
 }
 

@@ -43,7 +43,7 @@ void IMPlots::ProcessEvent(const TEvent& event, manager_t&)
     for(unsigned n = MinNGamma(); n<MaxNGamma(); ++n) {
         for( auto comb = utils::makeCombination(photons,n); !comb.Done(); ++comb) {
             const TLorentzVector sum = sumlv(comb.begin(), comb.end());
-                for(const auto& h : event.Reconstructed->Tagger.Hits) {
+                for(const auto& h : event.Reconstructed->TaggerHits) {
                     prs.SetTaggerHit(h.Time);
                     m.at(n - MinNGamma()).Fill(sum.M());
                 }
