@@ -10,7 +10,7 @@ const double converter::MultiHit16bitReference::CATCH_TDC_Gain = 0.1171;
 const double converter::MultiHit16bitReference::V1190_TDC_Gain = 0.1;
 
 
-void converter::MultiHit16bitReference::ApplyTo(const readhits_t& hits, extrahits_t&) {
+void converter::MultiHit16bitReference::ApplyTo(const readhits_t& hits) {
     ReferenceTiming = numeric_limits<double>::quiet_NaN();
 
     // search for reference timing

@@ -81,7 +81,7 @@ public:
          );
 
     // ReconstructHook
-    virtual void ApplyTo(const readhits_t& hits, extrahits_t&) override;
+    virtual void ApplyTo(const readhits_t& hits) override;
 
     // Updateable_traits interface
     virtual std::list<Loader_t> GetLoaders() override;

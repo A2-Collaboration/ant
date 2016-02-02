@@ -128,22 +128,9 @@ void Reconstruct::ApplyHooksToReadHits(
     }
 
     // apply calibration
-    // this may change the given detectorRead,
-    // and even provide use with extrahits to be added to it
-    list<TDetectorReadHit> extrahits;
+    // this may change the given readhits
     for(const auto& hook : hooks_readhits) {
-        hook->ApplyTo(sorted_readhits, extrahits);
-    }
-
-    // adding extrahits to the detectorRead invalidates the sorted_readhits pointer map
-    if(!extrahits.empty()) {
-        detectorReadHits.insert(detectorReadHits.end(),
-                                 make_move_iterator(extrahits.begin()),
-                                 make_move_iterator(extrahits.end()));
-        sorted_readhits.clear();
-        for(TDetectorReadHit& readhit : detectorReadHits) {
-            sorted_readhits.add_item(readhit.DetectorType, addressof(readhit));
-        }
+        hook->ApplyTo(sorted_readhits);
     }
 }
 

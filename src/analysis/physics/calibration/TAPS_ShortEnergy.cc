@@ -35,24 +35,21 @@ TAPS_ShortEnergy::TAPS_ShortEnergy(const string& name, OptionsPtr opts) :
 void TAPS_ShortEnergy::ProcessEvent(const TEvent& event, manager_t&)
 {
     // pedestals
-    for(const TClusterPtr& cluster : event.Reconstructed->Clusters) {
-        if(!(cluster->DetectorType == Detector_t::Type_t::TAPS))
+    for(const TDetectorReadHit& readhit : event.Reconstructed->DetectorReadHits) {
+        if(readhit.DetectorType != Detector_t::Type_t::TAPS)
             continue;
-        for(const TClusterHit& clusterhit : cluster->Hits) {
-            /// \todo check for timing hit?
-            /// \todo check for trigger pattern?
-            for(const TClusterHitDatum& datum : clusterhit.Data) {
-
-                if(datum.GetType() != Channel_t::Type_t::PedestalShort)
-                    continue;
-                h_pedestals->Fill(datum.Value, clusterhit.Channel);
-
-            }
-        }
+        if(readhit.ChannelType != Channel_t::Type_t::IntegralShort)
+            continue;
+        /// \todo check for timing hit?
+        /// \todo check for trigger pattern?
+        for(const double& value : readhit.Converted)
+            h_pedestals->Fill(value, readhit.Channel);
     }
 
-    for(const auto& c : event.Reconstructed->Candidates) {
-        if(c->VetoEnergy < 0.5) {
+    for(const TCandidatePtr& c : event.Reconstructed->Candidates) {
+        if(c->Detector & Detector_t::Any_t::TAPS_Apparatus
+           && c->VetoEnergy < 0.5)
+        {
             const auto& cluster = c->FindCaloCluster();
 
             if(cluster)

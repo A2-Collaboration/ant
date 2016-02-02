@@ -85,7 +85,7 @@ void Time::GetGUIs(std::list<std::unique_ptr<gui::CalibModule_traits> >& guis) {
                           ));
 }
 
-void Time::ApplyTo(const readhits_t& hits, extrahits_t&)
+void Time::ApplyTo(const readhits_t& hits)
 {
     if(IsMC)
         return;
@@ -98,11 +98,11 @@ void Time::ApplyTo(const readhits_t& hits, extrahits_t&)
             continue;
 
         // the Converter is smart enough to account for reference Times!
-        const auto& values = Converters[dethit->Channel]->Convert(dethit->RawData);
-        dethit->Values.reserve(values.size());
+        dethit->Converted = Converters[dethit->Channel]->Convert(dethit->RawData);
+        dethit->Values.reserve(dethit->Converted.size());
 
         // apply gain/offset to each of the values (might be multihit)
-        for(double value : values) {
+        for(double value : dethit->Converted) {
             if(Gains.empty())
                 value *= DefaultGains[dethit->Channel];
             else

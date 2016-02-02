@@ -29,7 +29,7 @@ struct MultiHit16bitReference : MultiHit16bit, ReconstructHook::DetectorReadHits
         return ConvertWithFactorAndOffset(rawData, Gain, ReferenceTiming);
     }
 
-    virtual void ApplyTo(const readhits_t& hits, extrahits_t&) override;
+    virtual void ApplyTo(const readhits_t& hits) override;
 
 private:
     LogicalChannel_t ReferenceChannel;

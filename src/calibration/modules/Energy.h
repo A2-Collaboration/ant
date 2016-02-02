@@ -27,7 +27,7 @@ class Energy :
 
 public:
     // ReconstructHook
-    virtual void ApplyTo(const readhits_t& hits, extrahits_t& extrahits) override;
+    virtual void ApplyTo(const readhits_t& hits) override;
 
     // Updateable_traits interface
     virtual std::list<Loader_t> GetLoaders() override;
@@ -43,12 +43,6 @@ protected:
            Channel_t::Type_t channelType = Channel_t::Type_t::Integral
            );
     virtual ~Energy();
-
-    /**
-     * @brief NeedsPedestals can be overridden by base class to disable pedestal insertion
-     * @return true if pedestal values (no gain applied, unsubtracted) are needed
-     */
-    virtual bool NeedsPedestals() const { return true; }
 
     /**
      * @brief The CalibType struct stores the data

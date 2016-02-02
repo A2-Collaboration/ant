@@ -39,17 +39,15 @@ void TAPSVeto_Energy::ProcessEvent(const TEvent& event, manager_t&)
     const auto& cands = event.Reconstructed->Candidates;
 
     // pedestals
-    for(const TClusterPtr& cluster : event.Reconstructed->Clusters) {
-        if(cluster->DetectorType != Detector_t::Type_t::TAPSVeto)
+    for(const TDetectorReadHit& readhit : event.Reconstructed->DetectorReadHits) {
+        if(readhit.DetectorType != Detector_t::Type_t::TAPSVeto)
             continue;
-        for(const TClusterHit& clusterhit : cluster->Hits) {
-            /// \todo check for timing hit?
-            for(const TClusterHitDatum& datum : clusterhit.Data) {
-                if(datum.GetType() != Channel_t::Type_t::Pedestal)
-                    continue;
-                h_pedestals->Fill(datum.Value, clusterhit.Channel);
-            }
-        }
+        if(readhit.ChannelType != Channel_t::Type_t::Integral)
+            continue;
+        /// \todo check for timing hit?
+        /// \todo check for trigger pattern?
+        for(const double& value : readhit.Converted)
+            h_pedestals->Fill(value, readhit.Channel);
     }
 
     // bananas

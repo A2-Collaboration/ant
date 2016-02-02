@@ -103,6 +103,18 @@ PID_Energy::PerChannel_t::PerChannel_t(SmartHistFactory HistFac)
 void PID_Energy::ProcessEvent(const TEvent& event, manager_t&)
 {
     // pedestals, best determined from clusters with energy information only
+
+    std::map<unsigned, vector<double>> pedestals_ch;
+
+    for(const TDetectorReadHit& readhit : event.Reconstructed->DetectorReadHits) {
+        if(readhit.DetectorType != Detector_t::Type_t::PID)
+            continue;
+        if(readhit.ChannelType != Channel_t::Type_t::Integral)
+            continue;
+        pedestals_ch[readhit.Channel] = readhit.Converted;
+    }
+
+
     for(const TClusterPtr& cluster : event.Reconstructed->Clusters) {
         if(cluster->DetectorType != Detector_t::Type_t::PID)
             continue;
@@ -114,15 +126,13 @@ void PID_Energy::ProcessEvent(const TEvent& event, manager_t&)
 
         PerChannel_t& h = h_perChannel[pidhit.Channel];
 
-        double pedestal = numeric_limits<double>::quiet_NaN();
         double timing = numeric_limits<double>::quiet_NaN();
 
-        unsigned nPedestals = 0;
+        unsigned nIntegrals = 0;
         unsigned nTimings = 0;
         for(const TClusterHitDatum& datum : pidhit.Data) {
-            if(datum.GetType() == Channel_t::Type_t::Pedestal) {
-                pedestal = datum.Value;
-                nPedestals++;
+            if(datum.GetType() == Channel_t::Type_t::Integral) {
+                nIntegrals++;
             }
             if(datum.GetType() == Channel_t::Type_t::Timing) {
                 timing = datum.Value;
@@ -130,15 +140,23 @@ void PID_Energy::ProcessEvent(const TEvent& event, manager_t&)
             }
         }
 
-        h.QDCMultiplicity->Fill(nPedestals);
+        h.QDCMultiplicity->Fill(nIntegrals);
         h.TDCMultiplicity->Fill(nTimings);
 
-        if(!std::isfinite(pedestal))
+        const auto it_pedestals = pedestals_ch.find(pidhit.Channel);
+        if(it_pedestals == pedestals_ch.end()) {
+            assert(nIntegrals == 0);
             continue;
-        if(nPedestals > 1)
+        }
+        const auto& pedestals = it_pedestals->second;
+        assert(nIntegrals == pedestals.size());
+
+        if(nIntegrals != 1)
             continue;
         if(nTimings > 1)
             continue;
+
+        const auto& pedestal = pedestals.front();
 
         h_pedestals->Fill(pedestal, pidhit.Channel);
 
@@ -161,7 +179,7 @@ void PID_Energy::ProcessEvent(const TEvent& event, manager_t&)
             continue;
 
         // search for PID cluster
-        auto pid_cluster = candidate->FindFirstCluster(Detector_t::Type_t::PID);
+        const TClusterPtr& pid_cluster = candidate->FindFirstCluster(Detector_t::Type_t::PID);
 
         h_bananas->Fill(candidate->CaloEnergy,
                         candidate->VetoEnergy,
@@ -174,19 +192,16 @@ void PID_Energy::ProcessEvent(const TEvent& event, manager_t&)
         h.Banana->Fill(candidate->CaloEnergy,
                        candidate->VetoEnergy);
 
-
-        double pedestal = numeric_limits<double>::quiet_NaN();
-        //double timing = numeric_limits<double>::quiet_NaN();
-        for(const TClusterHit& pidhit : pid_cluster->Hits) {
-            for(const TClusterHitDatum& datum : pidhit.Data) {
-                if(datum.GetType() == Channel_t::Type_t::Pedestal) {
-                    pedestal = datum.Value;
-                }
-                //                if(datum.Type == Channel_t::Type_t::Timing) {
-                //                    timing = datum.Value;
-                //                }
-            }
+        // is there an pedestal available?
+        const auto it_pedestals = pedestals_ch.find(pid_cluster->CentralElement);
+        if(it_pedestals == pedestals_ch.end()) {
+            continue;
         }
+        const auto& pedestals = it_pedestals->second;
+        if(pedestals.size() != 1)
+            continue;
+
+        const auto& pedestal = pedestals.front();
 
         h.BananaRaw->Fill(candidate->CaloEnergy, pedestal);
         //h.BananaTiming->Fill(candidate->ClusterEnergy(), candidate->VetoEnergy(), timing);

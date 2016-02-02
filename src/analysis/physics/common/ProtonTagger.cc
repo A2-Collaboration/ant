@@ -102,7 +102,7 @@ void ProtonTagger::ProcessEvent(const TEvent& event, manager_t&)
                     for(const TClusterHit& clusterhit : cluster->Hits) {
                         for(const TClusterHitDatum& datum : clusterhit.Data) {
 
-                            if(datum.GetType() != Channel_t::Type_t::PedestalShort)
+                            if(datum.GetType() != Channel_t::Type_t::IntegralShort)
                                 continue;
 
                             b_Eshort += datum.Value;

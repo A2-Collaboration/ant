@@ -105,7 +105,6 @@ struct Channel_t {
     enum class Type_t : std::uint8_t {
         Timing,
         Integral, IntegralShort,
-        Pedestal, PedestalShort,
         IntegralAlternate, IntegralShortAlternate,
         BitPattern, Scaler, Counter,
         Raw

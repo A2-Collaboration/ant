@@ -91,10 +91,6 @@ const char* ant::Channel_t::ToString(const Type_t& type)
         return "Scaler";
     case Channel_t::Type_t::Timing:
         return "Timing";
-    case Channel_t::Type_t::Pedestal:
-        return "Pedestal";
-    case Channel_t::Type_t::PedestalShort:
-        return "PedestalShort";
     case Channel_t::Type_t::Raw:
         return "Raw";
     }

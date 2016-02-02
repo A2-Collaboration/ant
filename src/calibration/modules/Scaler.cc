@@ -20,7 +20,7 @@ Scaler::Scaler(Detector_t::Type_t detectorType, Calibration::Converter::ptr_t co
 
 Scaler::~Scaler() {}
 
-void Scaler::ApplyTo(const readhits_t& hits, extrahits_t&)
+void Scaler::ApplyTo(const readhits_t& hits)
 {
     // search for to be calibrated scalers
     const auto& dethits = hits.get_item(DetectorType);

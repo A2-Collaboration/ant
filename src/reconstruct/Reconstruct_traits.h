@@ -48,7 +48,6 @@ struct ReconstructHook {
      */
     struct Base {
         using readhits_t = std_ext::mapped_vectors< Detector_t::Type_t, TDetectorReadHit* >;
-        using extrahits_t = std::list< TDetectorReadHit >;
         using clusterhits_t = std::map< Detector_t::Type_t, std::list< reconstruct::AdaptorTClusterHit > >;
         using clusters_t = std::map< Detector_t::Type_t, std::list< TClusterPtr > >;
         virtual ~Base() = default;
@@ -58,7 +57,7 @@ struct ReconstructHook {
      * @brief The DetectorReadHits struct instances are applied before hit matching
      */
     struct DetectorReadHits : Base {
-        virtual void ApplyTo(const readhits_t& hits, extrahits_t& extrahits) = 0;
+        virtual void ApplyTo(const readhits_t& hits) = 0;
     };
 
     /**

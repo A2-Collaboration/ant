@@ -56,7 +56,7 @@ Energy::~Energy()
 {
 }
 
-void Energy::ApplyTo(const readhits_t& hits, extrahits_t& extrahits)
+void Energy::ApplyTo(const readhits_t& hits)
 {
     const auto& dethits = hits.get_item(DetectorType);
 
@@ -70,46 +70,31 @@ void Energy::ApplyTo(const readhits_t& hits, extrahits_t& extrahits)
         // Values might already be filled
         // (for example by previous calibration run, or A2Geant unpacker),
         // then we apply the threshold and the relative gain only
-        std::vector<double> values;
+        std::vector<double> all_values;
 
         // prefer RawData if available
         if(!dethit->RawData.empty()) {
-            // convert to not-so-raw values (still not MeV scale)
-            values = Converter->Convert(dethit->RawData);
-
-            // for pedestal calibration, we insert extra hits here
-            // containing the raw values
-            if(NeedsPedestals()) {
-                extrahits.emplace_back(
-                            LogicalChannel_t{
-                                dethit->DetectorType,
-                                ChannelType == Channel_t::Type_t::IntegralShort ?
-                                Channel_t::Type_t::PedestalShort : Channel_t::Type_t::Pedestal,
-                                dethit->Channel
-                            },
-                            values
-                            );
-            }
+            // convert to not-so-raw values (still not MeV scale though)
+            dethit->Converted = Converter->Convert(dethit->RawData);
 
             // apply pedestal/gain to each of the values (might be multihit)
-            for(double& value : values) {
-                if(NeedsPedestals()) {
-                    value -= Pedestals.Get(dethit->Channel);
-                }
+            for(double value : dethit->Converted) {
+                value -= Pedestals.Get(dethit->Channel);
                 value *= Gains.Get(dethit->Channel);
+                all_values.push_back(value);
             }
 
         }
         else {
             // maybe the values are already filled
-            values = dethit->Values;
-            dethit->Values.resize(0);
+            all_values = dethit->Values;
         }
 
         // always apply the threshold cut and the relative gains
-        dethit->Values.reserve(values.size());
+        dethit->Values.resize(0);
+        dethit->Values.reserve(all_values.size());
 
-        for(double value : values) {
+        for(double value : all_values) {
             value *= RelativeGains.Get(dethit->Channel);
 
             const double threshold = Thresholds.Get(dethit->Channel);

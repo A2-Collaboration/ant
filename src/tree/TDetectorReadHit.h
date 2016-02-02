@@ -14,6 +14,7 @@ struct TDetectorReadHit  : printable_traits
 
     std::vector<std::uint8_t>   RawData;
 
+    std::vector<double> Converted;
     std::vector<double> Values;
     std::vector<bool>   ValueBits;
 

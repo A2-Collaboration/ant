@@ -7,7 +7,7 @@ using namespace std;
 using namespace ant;
 using namespace ant::calibration;
 
-void converter::ScalerFrequency::ApplyTo(const readhits_t& hits, extrahits_t&) {
+void converter::ScalerFrequency::ApplyTo(const readhits_t& hits) {
     ReferenceCounts = numeric_limits<double>::quiet_NaN();
 
     // search for reference scaler

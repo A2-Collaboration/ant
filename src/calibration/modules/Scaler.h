@@ -19,7 +19,7 @@ public:
     virtual ~Scaler();
 
     // ReconstructHook
-    virtual void ApplyTo(const readhits_t& hits, extrahits_t&) override;
+    virtual void ApplyTo(const readhits_t& hits) override;
 
 protected:
     const Detector_t::Type_t DetectorType;

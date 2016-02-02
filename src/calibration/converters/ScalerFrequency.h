@@ -23,7 +23,7 @@ struct ScalerFrequency : Calibration::Converter, ReconstructHook::DetectorReadHi
 
     virtual std::vector<double> Convert(const std::vector<uint8_t>& rawData) const override;
 
-    virtual void ApplyTo(const readhits_t& hits, extrahits_t&) override;
+    virtual void ApplyTo(const readhits_t& hits) override;
 
 private:
     LogicalChannel_t ReferenceScaler;
