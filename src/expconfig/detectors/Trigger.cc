@@ -36,49 +36,20 @@ void Trigger_2014::BuildMappings(std::vector<UnpackerAcquConfig::hit_mapping_t>&
 
     // The PbWO4 timings also have some reference,
     // but they are quite new...
-    /// \todo check when those V1190 modules actually were installed
+    /// \todo check when those V1190 modules actually were installed and
+    /// move the emplace_back to base class maybe...
     hit_mappings.emplace_back(
                 Reference_V1190_TAPSPbWO4,
                 29192
                 );
 
-    scaler_mappings.emplace_back(
-                "Exptrigger_1MHz",
-                Type,
-                Scaler_Exptrigger_1MHz.Channel,
-                191
-                );
-    scaler_mappings.emplace_back(
-                "Beampolmon_1MHz",
-                Type,
-                Scaler_Beampolmon_1MHz.Channel,
-                315
-                );
+    scaler_mappings.emplace_back("Exptrigger_1MHz", 191);
+    scaler_mappings.emplace_back("Beampolmon_1MHz", 315);
 
-    scaler_mappings.emplace_back(
-                "TotalLivetime",
-                Type,
-                100,
-                190
-                );
-    scaler_mappings.emplace_back(
-                "FaradayCup",
-                Type,
-                200,
-                313
-                );
-    scaler_mappings.emplace_back(
-                "IonChamber",
-                Type,
-                201,
-                312
-                );
-    scaler_mappings.emplace_back(
-                "PbGlass",
-                Type,
-                202,
-                311
-                );
+    scaler_mappings.emplace_back("TotalLivetime", 190);
+    scaler_mappings.emplace_back("FaradayCup",    313);
+    scaler_mappings.emplace_back("IonChamber",    312);
+    scaler_mappings.emplace_back("PbGlass",       311);
 }
 
 

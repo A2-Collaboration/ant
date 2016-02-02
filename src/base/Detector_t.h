@@ -106,8 +106,7 @@ struct Channel_t {
         Timing,
         Integral, IntegralShort,
         IntegralAlternate, IntegralShortAlternate,
-        BitPattern, Scaler, Counter,
-        Raw
+        BitPattern, Raw
     };
     static bool IsIntegral(const Type_t& t);
     static const char* ToString(const Type_t& type);

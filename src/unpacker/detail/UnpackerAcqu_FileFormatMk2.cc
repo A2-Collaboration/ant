@@ -380,7 +380,7 @@ void acqu::FileFormatMk2::FillDetectorReadHits(vector<TDetectorReadHit>& hits) c
             using RawChannel_t = UnpackerAcquConfig::RawChannel_t<uint16_t>;
             if(mapping->RawChannels.size() != 1)
                 throw UnpackerAcqu::Exception("Not implemented");
-            if(mapping->RawChannels[0].Mask != RawChannel_t::NoMask)
+            if(mapping->RawChannels[0].Mask != RawChannel_t::NoMask())
                 throw UnpackerAcqu::Exception("Not implemented");
             std::vector<std::uint8_t> rawData(sizeof(uint16_t)*values.size());
             std::copy(values.begin(), values.end(),
@@ -487,25 +487,23 @@ void acqu::FileFormatMk2::FillSlowControls(const scalers_t& scalers,
                     );
         auto& sc = slowcontrols.back();
 
-        // fill TSlowControl's payload
+        // fill TSlowControl's payload according to entries
 
-        for(const auto& mapping : scaler_mapping.Entries) {
-            using RawChannel_t = UnpackerAcquConfig::RawChannel_t<uint32_t>;
-            for(const RawChannel_t& rawChannel : mapping.RawChannels) {
-                const auto it_map = scalers.find(rawChannel.RawChannel);
-                if(it_map==scalers.cend())
-                    continue;
-                const std::vector<uint32_t>& values = it_map->second;
-                // require strict > to prevent signed/unsigned ambiguity
-                using payload_t = decltype(sc.Payload_Int);
-                static_assert(sizeof(payload_t::value_type) > sizeof(uint32_t),
-                              "Payload_Int not suitable for scaler value");
-                // transform the scaler values to KeyValue entries
-                // in TSlowControl's Payload_Int
-                payload_t& payload = sc.Payload_Int;
-                for(const uint32_t& value : values) {
-                    payload.emplace_back(mapping.LogicalChannel.Channel, value);
-                }
+        for(const auto& entry : scaler_mapping.Entries) {
+            const auto rawChannel = entry.RawChannel;
+            const auto it_map = scalers.find(rawChannel.RawChannel);
+            if(it_map==scalers.cend())
+                continue;
+            const std::vector<uint32_t>& values = it_map->second;
+            // require strict > to prevent signed/unsigned ambiguity
+            using payload_t = decltype(sc.Payload_Int);
+            static_assert(sizeof(payload_t::value_type) > sizeof(uint32_t),
+                          "Payload_Int not suitable for scaler value");
+            // transform the scaler values to KeyValue entries
+            // in TSlowControl's Payload_Int
+            payload_t& payload = sc.Payload_Int;
+            for(const uint32_t& value : values) {
+                payload.emplace_back(entry.LogicalChannel, value);
             }
         }
 

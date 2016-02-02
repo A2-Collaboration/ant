@@ -50,8 +50,8 @@ struct Trigger :
 
 struct Trigger_2014 : Trigger {
     const LogicalChannel_t Reference_V1190_TAPSPbWO4 = {Type, Channel_t::Type_t::Timing, 1002};
-    const LogicalChannel_t Scaler_Exptrigger_1MHz = {Type, Channel_t::Type_t::Scaler, 10};
-    const LogicalChannel_t Scaler_Beampolmon_1MHz = {Type, Channel_t::Type_t::Scaler, 20};
+    //const LogicalChannel_t Scaler_Exptrigger_1MHz = {Type, Channel_t::Type_t::Scaler, 10};
+    //const LogicalChannel_t Scaler_Beampolmon_1MHz = {Type, Channel_t::Type_t::Scaler, 20};
 
     virtual bool Matches(const TID& tid) const override;
     virtual void BuildMappings(

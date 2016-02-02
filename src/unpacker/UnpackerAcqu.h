@@ -47,51 +47,49 @@ public:
         static_assert(std::is_unsigned<T>::value, "T must be unsigned");
         T RawChannel;
         T Mask;
-        static constexpr T NoMask = std::numeric_limits<T>::max();
-        // provide some handy constructors (implemented below)
-        RawChannel_t(const std::initializer_list<T>& l);
-        RawChannel_t(const T& ch);
+        static constexpr T NoMask() { return std::numeric_limits<T>::max(); }
+        // provide some handy constructors
+        RawChannel_t(const T& ch, const T& mask) : RawChannel(ch), Mask(mask) {}
+        RawChannel_t(const T& ch) : RawChannel_t(ch, NoMask()) {}
     };
 
-    template<typename T>
-    struct mapping_t {
+    // hits (or Acqu ADC values) are always part of TDetectorRead
+    //
+    struct hit_mapping_t {
         LogicalChannel_t LogicalChannel;
-        std::vector< RawChannel_t<T> > RawChannels;
+        std::vector< RawChannel_t< std::uint16_t > > RawChannels;
         // provide constructors for single raw channel mapping
-        mapping_t(
+        // (most commonly used)
+        hit_mapping_t(
                 const LogicalChannel_t& logicalChannel,
-                T rawChannel
+                std::uint16_t rawChannel
                 ) :
             LogicalChannel(logicalChannel),
             RawChannels{rawChannel}
         {}
-        mapping_t(
+        hit_mapping_t(
                 Detector_t::Type_t detector,
                 Channel_t::Type_t channeltype,
                 unsigned channel,
-                T rawChannel
+                std::uint16_t rawChannel
                 ) :
             LogicalChannel{detector, channeltype, channel},
             RawChannels{rawChannel}
         {}
     };
 
-    // hits (or Acqu ADC values) are always part of TDetectorRead
-    struct hit_mapping_t : mapping_t<std::uint16_t> {
-        using mapping_t::mapping_t; // use constructors from base class
-    };
-
     // scalers in acqu are always TSlowControl items
     struct scaler_mapping_t  {
         std::string SlowControlName; // must not be empty!
 
-        // one named slowcontrol may have more than one
+        // slowcontrol may have more than one
         // data entry (for example tagger scaler for each channel)
-        struct entry_t : mapping_t<std::uint32_t> {
-            entry_t( Detector_t::Type_t detector,
-                     unsigned channel,
-                     std::uint32_t rawChannel) :
-                mapping_t(detector, Channel_t::Type_t::Scaler, channel, rawChannel)
+        struct entry_t {
+            unsigned LogicalChannel;
+            RawChannel_t< std::uint32_t > RawChannel;
+
+            entry_t(unsigned channel, std::uint32_t rawChannel) :
+                LogicalChannel(channel), RawChannel(rawChannel)
             {}
         };
         std::vector< entry_t > Entries;
@@ -110,11 +108,9 @@ public:
 
         scaler_mapping_t(
                 const std::string& slowControlName,
-                Detector_t::Type_t detector,
-                unsigned channel,
                 std::uint32_t rawChannel
                 ) :
-            scaler_mapping_t(slowControlName, {entry_t(detector, channel, rawChannel)})
+            scaler_mapping_t(slowControlName, {entry_t(0, rawChannel)})
         {}
     };
 
@@ -123,25 +119,5 @@ public:
             std::vector<scaler_mapping_t>& scaler_mappings
             ) const = 0;
 };
-
-// define the templated constructors here to keep the class definition cleaner
-template<typename T>
-inline UnpackerAcquConfig::RawChannel_t<T>::RawChannel_t(const std::initializer_list<T>& l) {
-    if(l.size()==2) {
-        const std::vector<T> v(l);
-        RawChannel = v[0];
-        Mask = v[1];
-    }
-    else
-        throw std::runtime_error("RawChannel_t can only be initialized with 2 values.");
-}
-
-template<typename T>
-inline UnpackerAcquConfig::RawChannel_t<T>::RawChannel_t(const T& ch)
-{
-    RawChannel = ch;
-    Mask = RawChannel_t<T>::NoMask;
-}
-
 
 } // namespace ant

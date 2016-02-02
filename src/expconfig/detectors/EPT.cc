@@ -52,8 +52,7 @@ void EPT::BuildMappings(
                                   );
 
         // build the scaler entries
-        scaler_entries.emplace_back(Type,
-                                    element.Channel,
+        scaler_entries.emplace_back(element.Channel,
                                     element.Scaler);
 
         // ADC information are rarely present for the EPT

@@ -205,11 +205,11 @@ void Reconstruct::BuildHits(sorted_bydetectortype_t<AdaptorTClusterHit>& sorted_
 }
 
 void Reconstruct::HandleTagger(const shared_ptr<TaggerDetector_t>& taggerdetector,
-                               const std::vector<TDetectorReadHit*>& readhits,
+                               const vector<TDetectorReadHit*>& readhits,
                                TTagger& event_tagger
                                )
 {
-    /// \todo add Moeller/PairSpec information here
+    /// \todo add Moeller/PairSpec information here? or better use SlowControlManager for it?
 
     for(const TDetectorReadHit* readhit : readhits) {
         // ignore uncalibrated items
@@ -231,17 +231,9 @@ void Reconstruct::HandleTagger(const shared_ptr<TaggerDetector_t>& taggerdetecto
             break;
         }
 
-        case Channel_t::Type_t::Scaler: {
-            // scalers are already calibrated to frequencies
-            for(const double frequency : readhit->Values) {
-                event_tagger.Scalers.emplace_back(readhit->Channel, frequency);
-            }
-            break;
-        }
-
         case Channel_t::Type_t::Integral: {
             // tagger energies are rarely present, only for special fastbus QDC runs
-            /// \todo actually test this part of the code
+            /// \todo actually test this part of the code with Tagger QDC runs
             for(const double energy : readhit->Values) {
                 event_tagger.Energies.emplace_back(readhit->Channel, energy);
             }

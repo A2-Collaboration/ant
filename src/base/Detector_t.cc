@@ -77,8 +77,6 @@ const char* ant::Channel_t::ToString(const Type_t& type)
     switch(type) {
     case Channel_t::Type_t::BitPattern:
         return "BitPattern";
-    case Channel_t::Type_t::Counter:
-        return "Counter";
     case Channel_t::Type_t::Integral:
         return "Integral";
     case Channel_t::Type_t::IntegralAlternate:
@@ -87,8 +85,6 @@ const char* ant::Channel_t::ToString(const Type_t& type)
         return "IntegralShort";
     case Channel_t::Type_t::IntegralShortAlternate:
         return "IntegralShortAlternate";
-    case Channel_t::Type_t::Scaler:
-        return "Scaler";
     case Channel_t::Type_t::Timing:
         return "Timing";
     case Channel_t::Type_t::Raw:
