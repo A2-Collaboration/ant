@@ -15,7 +15,6 @@
 #include "detectors/EPT.h"
 
 #include "calibration/modules/Time.h"
-#include "calibration/modules/Scaler.h"
 #include "calibration/modules/CB_Energy.h"
 #include "calibration/modules/CB_TimeWalk.h"
 #include "calibration/modules/PID_Energy.h"
@@ -35,7 +34,6 @@
 #include "calibration/converters/MultiHit16bit.h"
 #include "calibration/converters/MultiHit16bitReference.h"
 #include "calibration/converters/GeSiCa_SADC.h"
-#include "calibration/converters/ScalerFrequency.h"
 
 #include <limits>
 
@@ -95,20 +93,12 @@ void ant::test::EnsureSetup() {
                         calibration::converter::MultiHit16bitReference::V1190_TDC_Gain
                         );
 
-            const auto& convert_ScalerFrequency_Beampolmon
-                    = make_shared<calibration::converter::ScalerFrequency>(trigger->Scaler_Beampolmon_1MHz);
-
             // the order of the reconstruct hooks is important
             // add both CATCH converters and the V1190 first,
             // since they need to scan the detector read for their reference hit
             AddHook(convert_CATCH_Tagger);
             AddHook(convert_CATCH_CB);
             AddHook(convert_V1190_TAPSPbWO4);
-            // also the ScalerFrequency needs a reference
-            AddHook(convert_ScalerFrequency_Beampolmon);
-
-            AddCalibration<calibration::Scaler>(Detector_t::Type_t::EPT,
-                                                convert_ScalerFrequency_Beampolmon);
 
             // then we add the others, and link it to the converters
             AddCalibration<calibration::Time>(EPT,

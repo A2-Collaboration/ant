@@ -8,7 +8,6 @@ set(SRCS
     Editor.cc
     modules/Time.cc
     modules/Energy.cc
-    modules/Scaler.cc
     modules/TAPS_ShowerCorrection.h
     modules/CB_Energy.cc
     modules/CB_TimeWalk.cc
@@ -23,7 +22,6 @@ set(SRCS
     converters/GeSiCa_SADC.h
     converters/MultiHit16bit.h
     converters/MultiHit16bitReference.cc
-    converters/ScalerFrequency.cc
     gui/Manager.cc
     gui/Manager_traits.h
     gui/ManagerWindow.cc
