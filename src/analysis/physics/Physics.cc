@@ -18,7 +18,7 @@ Physics::Physics(const string &name, OptionsPtr opts):
         HistFac.SetDirDescription(opts->Flatten());
 }
 
-void Physics::Initialize(input::SlowControl&)
+void Physics::Initialize(slowcontrol::SlowControl&)
 {
 }
 

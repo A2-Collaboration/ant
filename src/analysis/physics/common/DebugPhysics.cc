@@ -41,7 +41,7 @@ void DebugPhysics::ShowResult()
     LOG(INFO) << "Nop";
 }
 
-void DebugPhysics::Initialize(input::SlowControl& slowcontrol)
+void DebugPhysics::Initialize(slowcontrol::SlowControl& slowcontrol)
 {
     if(requestSlowControl)
         slowcontrol.FaradayCup.Request();

@@ -20,7 +20,7 @@ public:
     virtual void ProcessEvent(const TEvent& event, manager_t& manager) override;
     virtual void Finish() override;
     virtual void ShowResult() override;
-    virtual void Initialize(input::SlowControl& slowcontrol) override;
+    virtual void Initialize(slowcontrol::SlowControl& slowcontrol) override;
 };
 
 class DebugPIDAlignment: public Physics {

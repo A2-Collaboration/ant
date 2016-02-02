@@ -1,6 +1,6 @@
 #pragma once
 
-#include "analysis/input/slowcontrol/SlowControl.h"
+#include "analysis/slowcontrol/SlowControl.h"
 
 #include "tree/TSlowControl.h"
 
@@ -14,9 +14,8 @@ namespace ant {
 struct TEvent;
 
 namespace analysis {
-namespace slowcontrol {
 
-class Manager {
+class SlowControlManager {
 protected:
 
     using buffer_t = std::queue<std::pair<TID,  TSlowControl>>;
@@ -27,7 +26,7 @@ protected:
     static TID min(const TID& a, const TID& b);
 
 public:
-    Manager() = default;
+    SlowControlManager() = default;
 
     void SetRequiredKeys(const std::list<TSlowControl::Key> keys);
 
@@ -43,10 +42,9 @@ public:
 
     TID FindMinimalTID() const;
 
-    TID UpdateSlowcontrolData(input::SlowControl& slc);
+    TID UpdateSlowcontrolData(slowcontrol::SlowControl& slc);
 
 };
 
-}
 }
 }

@@ -80,7 +80,7 @@ struct TestPhysics : Physics
     {
         showCalled = true;
     }
-    virtual void Initialize(input::SlowControl&) override
+    virtual void Initialize(slowcontrol::SlowControl&) override
     {
         initCalled = true;
     }

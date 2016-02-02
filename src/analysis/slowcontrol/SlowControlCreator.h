@@ -7,7 +7,7 @@
 
 namespace ant {
 namespace analysis {
-namespace input {
+namespace slowcontrol {
 
 /**
  * @brief Fills the values from a TSlowControl into the corresponding field of a SlowControl object

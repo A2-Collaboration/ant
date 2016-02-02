@@ -8,8 +8,7 @@
 #include <limits>
 
 using namespace std;
-using namespace ant;
-using namespace ant::analysis::input;
+using namespace ant::analysis::slowcontrol;
 
 bool SlowControlRequestable::isRequested() const
 {

@@ -4,7 +4,7 @@
 
 namespace ant {
 namespace analysis {
-namespace input {
+namespace slowcontrol {
 
 class SlowControlRequestable {
 protected:

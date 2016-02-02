@@ -1,7 +1,7 @@
 #pragma once
 
 #include "analysis/plot/HistogramFactories.h"
-#include "analysis/input/slowcontrol/SlowControl.h"
+#include "analysis/slowcontrol/SlowControl.h"
 
 #include "tree/TEvent.h"
 #include "tree/TEventData.h"
@@ -53,7 +53,7 @@ public:
     virtual void ShowResult() {}
     std::string GetName() const { return name_; }
 
-    virtual void Initialize(input::SlowControl& slowcontrol);
+    virtual void Initialize(slowcontrol::SlowControl& slowcontrol);
 
     Physics(const Physics&) = delete;
     Physics& operator=(const Physics&) = delete;

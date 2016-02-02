@@ -7,7 +7,7 @@
 #include "tree/TAntHeader.h"
 #include "base/Logger.h"
 
-#include "input/slowcontrol/SlowControlCreator.h"
+#include "slowcontrol/SlowControlCreator.h"
 
 #include "base/ProgressCounter.h"
 

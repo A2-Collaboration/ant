@@ -4,7 +4,7 @@ using namespace std;
 
 namespace ant {
 namespace analysis {
-namespace input {
+namespace slowcontrol {
 
 /**
  * @brief Get first value of vector. Returns NaN if empty.

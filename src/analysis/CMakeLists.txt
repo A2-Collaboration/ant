@@ -15,8 +15,13 @@ set(ANALYSIS_INPUT
   input/ant/AntReader.cc
   input/pluto/PlutoReader.cc
   input/pluto/detail/PlutoWrapper.cc
-  input/slowcontrol/SlowControl.cc
-  input/slowcontrol/SlowControlCreator.cc
+)
+
+set(ANALYSIS_SLOWCONTROL
+  slowcontrol/SlowControl.cc
+  slowcontrol/SlowControlCreator.cc
+  slowcontrol/SlowControlManager.cc
+  slowcontrol/processors/SlowControlProcessor.h
 )
 
 set(ANALYSIS_PHYSICS
@@ -37,7 +42,6 @@ set(ANALYSIS_PHYSICS
   physics/common/ReconstructCheck.cc
   physics/common/MCSmearing.cc
   physics/tpc/PhysicsStats.cc
-  physics/SlowcontrolManager.cc
   physics/etaprime/etaprime_omega_gamma.cc
   physics/etaprime/etaprime-3pi0.cc
   physics/etaprime/mctrue_3pi0.cc
@@ -86,6 +90,7 @@ set(ANALYSIS_UTILS
 
 set(ANALYSIS_ALL
     ${ANALYSIS_INPUT}
+    ${ANALYSIS_SLOWCONTROL}
     ${ANALYSIS_PHYSICS}
     ${ANALYSIS_PHYSICS_CALIBRATION}
     ${ANALYSIS_PLOT}

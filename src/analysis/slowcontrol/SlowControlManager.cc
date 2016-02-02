@@ -1,9 +1,9 @@
-#include "SlowcontrolManager.h"
+#include "SlowControlManager.h"
 
 #include "tree/TEvent.h"
 #include "tree/TEventData.h"
 
-#include "input/slowcontrol/SlowControlCreator.h"
+#include "slowcontrol/SlowControlCreator.h"
 
 #include <stdexcept>
 
@@ -11,7 +11,7 @@ using namespace ant;
 using namespace ant::analysis;
 
 
-TID slowcontrol::Manager::min(const TID& a, const TID& b)
+TID SlowControlManager::min(const TID& a, const TID& b)
 {
     if(a.IsInvalid())
         return b;
@@ -20,7 +20,7 @@ TID slowcontrol::Manager::min(const TID& a, const TID& b)
     return std::min(a,b);
 }
 
-void slowcontrol::Manager::SetRequiredKeys(const std::list<ant::TSlowControl::Key> keys)
+void SlowControlManager::SetRequiredKeys(const std::list<ant::TSlowControl::Key> keys)
 {
     for(const auto& key : keys) {
         const auto entry = slowcontrol.find(key);
@@ -30,7 +30,7 @@ void slowcontrol::Manager::SetRequiredKeys(const std::list<ant::TSlowControl::Ke
     }
 }
 
-void slowcontrol::Manager::ProcessSlowControls(TEvent& event)
+void SlowControlManager::ProcessSlowControls(TEvent& event)
 {
     /// \todo Maybe MCTrue could also have some SlowControl stuff?
     if(!event.Reconstructed)
@@ -49,7 +49,7 @@ void slowcontrol::Manager::ProcessSlowControls(TEvent& event)
     slowcontrols.resize(0);
 }
 
-bool slowcontrol::Manager::isComplete() const {
+bool SlowControlManager::isComplete() const {
 
     for(const auto& entry : slowcontrol) {
         if(entry.second.empty())
@@ -59,7 +59,7 @@ bool slowcontrol::Manager::isComplete() const {
     return true;
 }
 
-TID slowcontrol::Manager::FindMinimalTID() const
+TID SlowControlManager::FindMinimalTID() const
 {
     TID minimal;
 
@@ -72,7 +72,7 @@ TID slowcontrol::Manager::FindMinimalTID() const
     return minimal;
 }
 
-TID slowcontrol::Manager::UpdateSlowcontrolData(input::SlowControl& slc)
+TID SlowControlManager::UpdateSlowcontrolData(slowcontrol::SlowControl& slc)
 {
 
     if(isComplete()) {

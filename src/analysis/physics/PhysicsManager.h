@@ -1,7 +1,7 @@
 #pragma once
 
 #include "Physics.h"
-#include "SlowcontrolManager.h"
+#include "analysis/slowcontrol/SlowControlManager.h"
 
 class TTree;
 
@@ -35,8 +35,8 @@ protected:
     void InitReaders(readers_t readers_);
     bool TryReadEvent(TEventPtr& event);
 
-    slowcontrol::Manager slowcontrol_mgr;
-    input::SlowControl slowcontrol_data;
+    SlowControlManager slowcontrol_mgr;
+    slowcontrol::SlowControl slowcontrol_data;
 
     std::queue<TEventPtr> eventbuffer;
 
