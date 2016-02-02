@@ -8,9 +8,22 @@
 
 #include <cstdint>
 
+#include "TH1.h"
+#include "TF1.h"
+
 using namespace std;
 using namespace ant;
 using namespace ant::calibration;
+
+
+class TAPSTimeFunction : public calibration::gui::FitGausPol0 {
+public:
+    using FitGausPol0::FitGausPol0;
+
+    virtual void SetDefaults(TH1* hist) override;
+
+};
+
 
 TAPS_Time::TAPS_Time(shared_ptr<expconfig::detector::TAPS> taps,
                      shared_ptr<DataManager> calmgr,
@@ -23,7 +36,7 @@ TAPS_Time::TAPS_Time(shared_ptr<expconfig::detector::TAPS> taps,
          calmgr,
          converter_BaF2, // for BaF2
          -170, // for BaF2
-         std::make_shared<calibration::gui::FitGausPol0>(),
+         std::make_shared<TAPSTimeFunction>(),
          timeWindow_BaF2, // for BaF2
          -0.100 // for BaF2
          )
@@ -41,3 +54,30 @@ TAPS_Time::TAPS_Time(shared_ptr<expconfig::detector::TAPS> taps,
         }
     }
 }
+
+
+void TAPSTimeFunction::SetDefaults(TH1 *hist)
+{
+    if(hist) {
+        const auto height = hist->GetMaximum();
+        func->SetParameter(0, height/2.0);
+        func->SetParLimits(0, 0.0, height); // positive amplitude
+
+        const double max_pos = hist->GetXaxis()->GetBinCenter(hist->GetMaximumBin());
+        func->SetParameter(1,max_pos);
+
+        SetRange({-20, 20});
+
+        func->SetParameter(2,5);
+        func->SetParLimits(2, 0, GetRange().Length() / 2.0);
+
+        func->SetParameter(3,height/2.0);
+        func->SetParLimits(3, 0.0, height);
+    } else {
+        func->SetParameter(0,100.0);
+        func->SetParameter(1,100.0);
+        func->SetParameter(2,2.0);
+        func->SetParameter(3,0.0);
+    }
+}
+
