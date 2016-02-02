@@ -51,6 +51,9 @@ public:
         std::vector<double> previousOffsets;
 
         bool IgnorePreviousFitParameters = false;
+
+        double AutoStopOnChi2 = 6.0;
+
     public:
         TheGUI(const std::string& name,
                const std::shared_ptr<Detector_t>& theDetector,

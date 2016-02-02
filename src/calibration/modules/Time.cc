@@ -154,6 +154,8 @@ void Time::TheGUI::InitGUI(gui::ManagerWindow_traits* window)
 {
     window->AddCheckBox("Ignore prev fit params", IgnorePreviousFitParameters);
 
+    window->AddNumberEntry("Chi2/NDF limit for autostop", AutoStopOnChi2);
+
     theCanvas = window->AddCalCanvas();
     times = new TH1D("times","Times",
                      1000, -400 ,400);
@@ -205,7 +207,7 @@ gui::CalibModule_traits::DoFitReturn_t Time::TheGUI::DoFit(TH1* hist, unsigned c
     do {
         fitFunction->Fit(times);
         VLOG(5) << "Chi2/dof = " << fitFunction->Chi2NDF();
-        if(fitFunction->Chi2NDF() < 3000.0) {
+        if(fitFunction->Chi2NDF() < AutoStopOnChi2) {
             return DoFitReturn_t::Next;
         }
         retries--;
