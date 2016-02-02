@@ -15,6 +15,11 @@ inline void insertRange(std::vector<unsigned>& v, unsigned start, unsigned stop)
   v.insert(v.end(), v_.cbegin(), v_.cend());
 }
 
+template<typename T, typename U>
+inline void concatenate(T& dest, const U& src) {
+    dest.insert(dest.end(), src.begin(), src.end());
+}
+
 template<typename T>
 inline bool contains(const std::vector<T> v, const T& val) {
   return std::find(v.cbegin(), v.cend(), val) != v.cend();
