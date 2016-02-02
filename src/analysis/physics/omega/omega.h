@@ -56,6 +56,7 @@ protected:
     utils::A2SimpleGeometry geo;
     double calcEnergySum(const TParticleList& particles) const;
     TParticleList getGeoAccepted(const TParticleList& p) const;
+    unsigned geoAccepted(const TCandidateList& cands) const;
 
     DataMode mode = DataMode::Reconstructed;
 

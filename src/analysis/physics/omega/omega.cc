@@ -63,6 +63,18 @@ TParticleList OmegaBase::getGeoAccepted(const TParticleList &p) const
     return list;
 }
 
+unsigned OmegaBase::geoAccepted(const TCandidateList& cands) const {
+
+    unsigned n = 0;
+
+    for( auto& c : cands) {
+        if( geo.DetectorFromAngles(c->Theta, c->Phi) != Detector_t::Any_t::None )
+            ++n;
+    }
+
+    return n;
+}
+
 OmegaBase::OmegaBase(const string &name, OptionsPtr opts):
     Physics(name, opts), mode(DataMode::Reconstructed)
 {
@@ -573,9 +585,6 @@ void OmegaEtaG2::Analyse(const TEventData &data, const TEvent& event, manager_t&
 
     }
 
-    const TParticleList& iphotons = data.Particles.Get(ParticleTypeDatabase::Photon);
-    const TParticleList& iprotons = (data_proton ? event.Reconstructed : event.MCTrue)->Particles.Get(ParticleTypeDatabase::Proton);
-
     steps->Fill("0 Events seen", 1);
 
     const auto Esum = data.Trigger.CBEnergySum;
@@ -584,6 +593,30 @@ void OmegaEtaG2::Analyse(const TEventData &data, const TEvent& event, manager_t&
         return;
 
     steps->Fill("1 CBEsum", 1);
+
+    const auto n_cands = geoAccepted(data.Candidates);
+
+    if(n_cands != 4) {
+        return;
+    }
+
+    steps->Fill("2 nCands", 1);
+
+    if(just_preselect) {
+        manager.SaveEvent();
+        return;
+    }
+
+    TParticleList iphotons;
+    TParticleList iprotons;
+
+    for(auto p: data.Candidates) {
+        if(p->VetoEnergy < .25) {
+            iphotons.emplace_back(make_shared<TParticle>(ParticleTypeDatabase::Photon, p));
+        } else {
+            iprotons.emplace_back(make_shared<TParticle>(ParticleTypeDatabase::Proton, p));
+        }
+    }
 
     if(iphotons.size() != 3)
         return;
@@ -601,10 +634,9 @@ void OmegaEtaG2::Analyse(const TEventData &data, const TEvent& event, manager_t&
     if(photons.size() != 3)
         return;
 
-    steps->Fill("2 nPhotons nProtons", 1);
+    steps->Fill("3 nPhotons nProtons", 1);
 
     const auto& proton = protons.at(0);
-
 
 
     //const auto& mctrue_photons = event.MCTrue().Particles().Get(ParticleTypeDatabase::Photon);
@@ -643,7 +675,7 @@ void OmegaEtaG2::Analyse(const TEventData &data, const TEvent& event, manager_t&
     if(b_copl_angle > cut_Copl)
         return;
 
-    steps->Fill("3 Coplanarity", 1);
+    steps->Fill("4 Coplanarity", 1);
 
     b_g1 = analysis::utils::ParticleVars(*photons.at(0));
     b_g2 = analysis::utils::ParticleVars(*photons.at(1));
@@ -654,12 +686,6 @@ void OmegaEtaG2::Analyse(const TEventData &data, const TEvent& event, manager_t&
     b_CBAvgTime = event.Reconstructed->Trigger.CBTiming;
     if(!isfinite(b_CBAvgTime))
         return;
-
-
-    if(just_preselect) {
-        manager.SaveEvent();
-        return;
-    }
 
     for(const TTaggerHit& t : data_tagger ? data.TaggerHits : event.MCTrue->TaggerHits) {
 
