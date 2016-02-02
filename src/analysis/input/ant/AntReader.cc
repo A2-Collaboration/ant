@@ -1,6 +1,7 @@
 #include "AntReader.h"
 
 #include "tree/TEvent.h"
+#include "tree/TEventData.h"
 
 #include "base/Logger.h"
 
@@ -119,7 +120,7 @@ bool AntReader::ReadNextEvent(TEvent& event)
 
     if(eventptr) {
         if(reconstruct) {
-            TEvent::Data& recon = *eventptr->Reconstructed;
+            TEventData& recon = *eventptr->Reconstructed;
             /// \todo improve check if TEvent was run through reconstructed
             /// you may also introduce some flag to force application?
             if(recon.Clusters.empty())

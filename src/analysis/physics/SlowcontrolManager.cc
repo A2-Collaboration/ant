@@ -1,6 +1,10 @@
 #include "SlowcontrolManager.h"
-#include "tree/TSlowControl.h"
+
+#include "tree/TEvent.h"
+#include "tree/TEventData.h"
+
 #include "input/slowcontrol/SlowControlCreator.h"
+
 #include <stdexcept>
 
 using namespace ant;

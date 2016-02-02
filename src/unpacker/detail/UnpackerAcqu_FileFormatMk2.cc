@@ -5,6 +5,7 @@
 #include "UnpackerAcqu_templates.h"
 
 #include "tree/TEvent.h"
+#include "tree/TEventData.h"
 
 #include "RawFileReader.h"
 
@@ -293,7 +294,7 @@ void acqu::FileFormatMk2::UnpackEvent(
     /// \todo Scan mappings if there's an ADC channel defined which mimicks those blocks
 
     queue.emplace_back(TEvent::MakeReconstructed(id));
-    TEvent::DataPtr& eventdata = queue.back()->Reconstructed;
+    TEventDataPtr& eventdata = queue.back()->Reconstructed;
 
     hit_storage.clear();
     // there might be more than one scaler block in each event, so

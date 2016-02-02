@@ -88,7 +88,7 @@ ParticleIDCheck::branch_hists::branch_hists(SmartHistFactory& HistFac, const str
     }
 }
 
-void ParticleIDCheck::branch_hists::Fill(const TEvent::Data& data)
+void ParticleIDCheck::branch_hists::Fill(const TEventData& data)
 {
     hist->Fill("unID", max(0,int(data.Candidates.size()) - int(data.Particles.GetAll().size())));
 

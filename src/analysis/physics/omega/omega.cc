@@ -129,7 +129,7 @@ TLorentzVector Boost(const TLorentzVector& lv, const TVector3& boost) {
     return b;
 }
 
-void OmegaEtaG::Analyse(const TEvent::Data &data, const TEvent& event, manager_t&)
+void OmegaEtaG::Analyse(const TEventData &data, const TEvent& event, manager_t&)
 {
 
     steps->Fill("Events seen",1);
@@ -362,7 +362,7 @@ void OmegaMCTruePlots::PerChannel_t::Show()
     canvas("Omega per Channel: "+title) << drawoption("colz") << proton_E_theta << endc;
 }
 
-void OmegaMCTruePlots::PerChannel_t::Fill(const TEvent::Data& d)
+void OmegaMCTruePlots::PerChannel_t::Fill(const TEventData& d)
 {
     const auto& protons = d.Particles.Get(ParticleTypeDatabase::Proton);
     if(!protons.empty()) {
@@ -551,7 +551,7 @@ double IM(const TParticlePtr& p1, const TParticlePtr& p2) {
 }
 
 
-void OmegaEtaG2::Analyse(const TEvent::Data &data, const TEvent& event, manager_t& manager)
+void OmegaEtaG2::Analyse(const TEventData &data, const TEvent& event, manager_t& manager)
 {
 
     const auto& particletree = event.MCTrue->ParticleTree;

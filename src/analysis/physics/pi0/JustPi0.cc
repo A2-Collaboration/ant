@@ -102,7 +102,7 @@ JustPi0::MultiPi0::MultiPi0(SmartHistFactory& histFac, unsigned nPi0, bool nofit
     }
 }
 
-void JustPi0::MultiPi0::ProcessData(const TEvent::Data& data, const TParticleTree_t& ptree)
+void JustPi0::MultiPi0::ProcessData(const TEventData& data, const TParticleTree_t& ptree)
 {
     const auto nPhotons_expected = multiplicity*2;
 

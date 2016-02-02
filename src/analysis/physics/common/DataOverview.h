@@ -33,7 +33,7 @@ protected:
      */
     std::string GetMode() const;
 
-    const TEvent::Data& GetBranch(const TEvent& event) const;
+    const TEventData& GetBranch(const TEvent& event) const;
 
 public:
     DataOverviewBase(const std::string& name, OptionsPtr opts);

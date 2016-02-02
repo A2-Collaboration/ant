@@ -44,7 +44,7 @@ struct Trigger :
 
     // for ReconstructHook::EventData
     // calculates the CBESum
-    virtual void ApplyTo(TEvent::Data& reconstructed) override;
+    virtual void ApplyTo(TEventData& reconstructed) override;
 };
 
 

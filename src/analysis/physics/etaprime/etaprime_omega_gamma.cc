@@ -243,7 +243,7 @@ void EtapOmegaG::ProcessEvent(const TEvent& event, manager_t&)
 }
 
 void EtapOmegaG::ProcessSig(const TParticleTree_t& particletree,
-                            const TEvent::Data& data)
+                            const TEventData& data)
 {
     TH1D* steps = sig_hists.Steps;
 
@@ -466,7 +466,7 @@ void EtapOmegaG::ProcessSig(const TParticleTree_t& particletree,
 }
 
 void EtapOmegaG::ProcessRef(const TParticleTree_t& particletree,
-                            const TEvent::Data& data)
+                            const TEventData& data)
 {
     TH1D* steps = ref_hists.Steps;
 

@@ -7,10 +7,6 @@
 
 namespace ant {
 
-struct TEvent;
-struct THeaderInfo;
-struct TDetectorRead;
-struct TCluster;
 struct TTagger;
 
 namespace reconstruct {
@@ -30,7 +26,7 @@ public:
 
     // this method converts a TDetectorRead
     // into a calibrated TEvent
-    virtual void DoReconstruct(TEvent::Data& reconstructed) override;
+    virtual void DoReconstruct(TEventData& reconstructed) override;
 
     ~Reconstruct();
 

@@ -3,6 +3,7 @@
 #include "detail/TreeManager.h"
 
 #include "tree/TEvent.h"
+#include "tree/TEventData.h"
 
 #include "base/WrapTFile.h"
 #include "base/Logger.h"
@@ -48,7 +49,7 @@ Detector_t::Any_t IntToDetector_t(const int& a) {
     return d;
 }
 
-void GoatReader::CopyTagger(TEvent::Data& recon)
+void GoatReader::CopyTagger(TEventData& recon)
 {
     for( Int_t i=0; i<tagger.GetNTagged(); ++i) {
         recon.Tagger.Hits.emplace_back(
@@ -59,7 +60,7 @@ void GoatReader::CopyTagger(TEvent::Data& recon)
     }
 }
 
-void GoatReader::CopyTrigger(TEvent::Data& recon)
+void GoatReader::CopyTrigger(TEventData& recon)
 {
     TTrigger& ti = recon.Trigger;
 
@@ -85,7 +86,7 @@ clustersize_t GoatReader::MapClusterSize(const int& size) {
     return size < 0 ? 0 : size;
 }
 
-void GoatReader::CopyTracks(TEvent::Data& recon)
+void GoatReader::CopyTracks(TEventData& recon)
 {
     for(Int_t i=0; i< tracks.GetNTracks(); ++i) {
 
@@ -107,8 +108,8 @@ void GoatReader::CopyTracks(TEvent::Data& recon)
                         MapClusterSize(tracks.GetClusterSize(i)),
                         tracks.GetVetoEnergy(i),
                         tracks.GetMWPC0Energy(i)+tracks.GetMWPC1Energy(i),
-                        // GoAt does not provide clusters, 
-                        // but simulate at least some calo cluster 
+                        // GoAt does not provide clusters,
+                        // but simulate at least some calo cluster
                         std::vector<TClusterPtr>{
                             make_shared<TCluster>(TVector3(),tracks.GetClusterEnergy(i),tracks.GetTime(i),d,0)
                         } // GoAT does not provide clusters
@@ -118,7 +119,7 @@ void GoatReader::CopyTracks(TEvent::Data& recon)
 }
 
 
-void GoatReader::CopyParticles(TEvent::Data& recon, ParticleInput& input_module,
+void GoatReader::CopyParticles(TEventData& recon, ParticleInput& input_module,
                                const ParticleTypeDatabase::Type& type)
 {
     for(Int_t i=0; i < input_module.GetNParticles(); ++i) {
@@ -197,7 +198,7 @@ bool GoatReader::ReadNextEvent(TEvent& event)
                     static_cast<std::uint32_t>(current_entry),
                     std::list<TID::Flags_t>{TID::Flags_t::AdHoc}
                     );
-        event.Reconstructed = std_ext::make_unique<TEvent::Data>(tid);
+        event.Reconstructed = std_ext::make_unique<TEventData>(tid);
     }
 
     auto& recon = *event.Reconstructed;

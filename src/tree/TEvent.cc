@@ -1,5 +1,5 @@
 #include "TEvent.h"
-#include "TClass.h"
+#include "TEventData.h"
 
 #include "base/cereal/types/polymorphic.hpp"
 #include "base/cereal/types/memory.hpp"
@@ -8,17 +8,19 @@
 #include "base/cereal/archives/binary.hpp"
 
 
+
 #include "base/std_ext/memory.h"
 #include "base/Logger.h"
 
-#include <sstream>
+#include "TClass.h"
+
 #include <streambuf>
-#include <iostream>
 
 using namespace std;
 using namespace ant;
 
-const TParticleList TEvent::Data::PTypeList::empty;
+// use some versioning
+CEREAL_CLASS_VERSION(TEvent, ANT_TEVENT_VERSION)
 
 // teach cereal some ROOT types
 
@@ -125,45 +127,11 @@ ostream& TEvent::Print(ostream& s) const {
 
 std::unique_ptr<TEvent> TEvent::MakeReconstructed(const TID& id) {
     auto event = std_ext::make_unique<TEvent>();
-    event->Reconstructed = std_ext::make_unique<TEvent::Data>(id);
+    event->Reconstructed = std_ext::make_unique<TEventData>(id);
     return event;
 }
 
 TEvent::TEvent() : Reconstructed(), MCTrue() {}
 TEvent::~TEvent() {}
 
-TEvent::Data::Data(const TID& id) : ID(id) {}
-TEvent::Data::Data() {}
-TEvent::Data::~Data() {}
 
-ostream& TEvent::Data::Print(ostream& s) const {
-    s << "ID=" << ID << endl;
-
-    s << ">> DetectorReadHits" << endl;
-    for(auto& i: DetectorReadHits)
-        s << i << endl;
-
-    s << ">> SlowControls" << endl;
-    for(auto& i : SlowControls)
-        s << i << endl;
-
-    s << ">> UnpackerMessages" << endl;
-    for(auto& i : UnpackerMessages)
-        s << i << endl;
-
-    s << ">> Tagger" << endl << Tagger;
-
-    s << ">> Clusters" << endl;
-    for(auto& i : Clusters)
-        s << *i << endl;
-
-    s << ">> Candidates" << endl;
-    for(auto& i : Candidates)
-        s << *i << endl;
-
-    s << ">> Particles" << endl;
-    for(auto& i : Particles.GetAll())
-        s << *i << endl;
-
-    return s;
-}

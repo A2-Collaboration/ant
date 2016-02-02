@@ -2,8 +2,8 @@
 
 #include "expconfig/ExpConfig.h"
 
-
 #include "tree/TEvent.h"
+#include "tree/TEventData.h"
 
 #include "base/WrapTFile.h"
 #include "base/Logger.h"
@@ -150,7 +150,7 @@ std::unique_ptr<TEvent> UnpackerA2Geant::NextEvent() noexcept
     auto event = TEvent::MakeReconstructed(*id);
 
     // however, vertex is some MCTrue information!
-    event->MCTrue = std_ext::make_unique<TEvent::Data>(); // do not set its ID, will be done by "real" MCTrue reader
+    event->MCTrue = std_ext::make_unique<TEventData>(); // do not set its ID, will be done by "real" MCTrue reader
     event->MCTrue->Target.Vertex = fvertex; // TVector3 has conversion constructor...
 
     const size_t n_total = fnhits+fnpart+fntaps+fnvtaps+fvhits;

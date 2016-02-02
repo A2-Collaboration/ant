@@ -14,8 +14,6 @@
 #include "detail/TrackInput.h"
 #include "detail/ParticleInput.h"
 
-#include "tree/TEvent.h"
-
 #include "base/ParticleType.h"
 #include "base/types.h"
 
@@ -25,6 +23,7 @@ class PStaticData;
 namespace ant {
 
 class WrapTFileInput;
+struct TEventData;
 
 namespace analysis {
 namespace input {
@@ -81,10 +80,10 @@ protected:
 
     static clustersize_t MapClusterSize(const int& size);
 
-    void CopyTagger(TEvent::Data& recon);
-    void CopyTrigger(TEvent::Data& recon);
-    void CopyTracks(TEvent::Data& recon);
-    void CopyParticles(TEvent::Data& recon,
+    void CopyTagger(TEventData& recon);
+    void CopyTrigger(TEventData& recon);
+    void CopyTracks(TEventData& recon);
+    void CopyParticles(TEventData& recon,
                        ParticleInput& input_module, const ParticleTypeDatabase::Type& type);
 
 

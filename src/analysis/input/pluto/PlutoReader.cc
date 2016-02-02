@@ -6,7 +6,12 @@
 
 #include "utils/particle_tools.h"
 
+#include "tree/TEvent.h"
+#include "tree/TEventData.h"
+
 #include "detail/PlutoWrapper.h"
+
+#include "expconfig/ExpConfig.h"
 
 #include "base/WrapTFile.h"
 #include "base/Logger.h"
@@ -16,14 +21,10 @@
 #include "TTree.h"
 #include "TClonesArray.h"
 
-#include "expconfig/ExpConfig.h"
-
-
+using namespace std;
 using namespace ant;
 using namespace ant::analysis;
 using namespace ant::analysis::input;
-using namespace ant::analysis::data;
-using namespace std;
 
 PlutoReader::PlutoReader(const std::shared_ptr<WrapTFileInput>& rootfiles) :
     files(rootfiles)
@@ -104,7 +105,7 @@ std::string PlutoTable(const std::vector<const PParticle*> particles) {
     return s.str();
 }
 
-void PlutoReader::CopyPluto(TEvent::Data& mctrue)
+void PlutoReader::CopyPluto(TEventData& mctrue)
 {
     const Long64_t entries = PlutoMCTrue->GetEntries();
     std::vector<const PParticle*> PlutoParticles;
@@ -289,7 +290,7 @@ bool PlutoReader::ReadNextEvent(TEvent& event)
 
     // ensure MCTrue branch is there, potentially add TID if invalid so far
     if(!event.MCTrue) {
-        event.MCTrue = std_ext::make_unique<TEvent::Data>(mctrue_tid);
+        event.MCTrue = std_ext::make_unique<TEventData>(mctrue_tid);
     }
     else if(event.MCTrue->ID.IsInvalid()) {
         event.MCTrue->ID = mctrue_tid;

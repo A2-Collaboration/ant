@@ -1,6 +1,9 @@
 #include "unpacker/Unpacker.h"
 #include "expconfig/ExpConfig.h"
 
+#include "tree/TEvent.h"
+#include "tree/TEventData.h"
+
 #include "base/Logger.h"
 #include <iostream>
 

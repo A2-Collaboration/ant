@@ -99,7 +99,7 @@ string DataOverviewBase::GetMode() const
         return "MCTrue";
 }
 
-const TEvent::Data& DataOverviewBase::GetBranch(const TEvent& event) const
+const TEventData& DataOverviewBase::GetBranch(const TEvent& event) const
 {
    return (mode == Mode::Reconstructed) ? *event.Reconstructed : *event.MCTrue;
 }

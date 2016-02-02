@@ -6,8 +6,6 @@
 
 #include "base/ParticleType.h"
 
-#include "tree/TEvent.h"
-
 #include <memory>
 #include <string>
 #include <list>
@@ -23,13 +21,9 @@ namespace ant {
 
 class WrapTFileInput;
 struct TID;
+struct TEventData;
 
 namespace analysis {
-
-namespace data {
-    struct Event;
-}
-
 namespace input {
 
 class PlutoReader: public DataReader {
@@ -48,7 +42,7 @@ protected:
 
     Long64_t    current_entry = 0;
 
-    void CopyPluto(TEvent::Data& mctrue);
+    void CopyPluto(TEventData& mctrue);
 
     PStaticData* pluto_database;
 

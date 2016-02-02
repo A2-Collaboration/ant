@@ -2,7 +2,6 @@
 
 #include <memory>
 
-
 namespace ant {
 
 struct TEvent;

@@ -2,7 +2,7 @@
 
 #include "analysis/input/slowcontrol/SlowControl.h"
 
-#include "tree/TEvent.h"
+#include "tree/TSlowControl.h"
 
 #include <map>
 #include <queue>
@@ -10,6 +10,9 @@
 #include <list>
 
 namespace ant {
+
+struct TEvent;
+
 namespace analysis {
 namespace slowcontrol {
 

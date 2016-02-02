@@ -17,7 +17,7 @@ protected:
     struct branch_hists {
         branch_hists(SmartHistFactory& HistFac,const std::string& name);
         TH1D* hist;
-        void Fill(const TEvent::Data& data);
+        void Fill(const TEventData& data);
     };
 
     branch_hists mctrue;

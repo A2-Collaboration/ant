@@ -1,6 +1,8 @@
 #pragma once
 
-#include "tree/TEvent.h"
+#include "tree/TCandidate.h"
+#include "tree/TCluster.h"
+
 #include "expconfig/ExpConfig.h"
 
 #include <map>
@@ -25,8 +27,8 @@ class CandidateBuilder {
 public:
 
     using sorted_clusters_t = std::map<Detector_t::Type_t, std::list< TClusterPtr > >;
-    using candidates_t = decltype(TEvent::Data::Candidates);
-    using clusters_t = decltype(TEvent::Data::Clusters);
+    using candidates_t = TCandidateList;
+    using clusters_t = TClusterList;
 
 protected:
 

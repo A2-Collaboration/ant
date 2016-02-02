@@ -2,6 +2,9 @@
 #include "catch_config.h"
 #include "expconfig_helpers.h"
 
+#include "tree/TEvent.h"
+#include "tree/TEventData.h"
+
 #include "reconstruct/Reconstruct.h"
 #include "reconstruct/CandidateBuilder.h"
 #include "reconstruct/Clustering.h"
@@ -37,7 +40,7 @@ namespace ant {
 struct ReconstructTester : Reconstruct_traits {
     Reconstruct r;
 
-    void DoReconstruct(TEvent::Data& reconstructed) override
+    void DoReconstruct(TEventData& reconstructed) override
     {
         /// \todo Improve requirements
 

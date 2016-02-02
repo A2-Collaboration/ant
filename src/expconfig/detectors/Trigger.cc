@@ -1,6 +1,7 @@
 #include "Trigger.h"
 
 #include "tree/TID.h"
+#include "tree/TEventData.h"
 
 using namespace std;
 using namespace ant;
@@ -81,7 +82,7 @@ void Trigger_2014::BuildMappings(std::vector<UnpackerAcquConfig::hit_mapping_t>&
 }
 
 
-void ant::expconfig::detector::Trigger::ApplyTo(TEvent::Data& reconstructed)
+void ant::expconfig::detector::Trigger::ApplyTo(TEventData& reconstructed)
 {
 
     /// @todo The multiplicity is a much harder business, see acqu/root/src/TA2BasePhysics.cc

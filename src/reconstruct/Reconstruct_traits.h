@@ -1,10 +1,6 @@
 #pragma once
 
 #include "base/Detector_t.h"
-
-#include "tree/TEvent.h"
-#include "tree/MemoryPool.h"
-
 #include "base/mapped_vectors.h"
 
 #include <memory>
@@ -13,6 +9,12 @@
 #include <functional>
 
 namespace ant {
+
+struct TID;
+struct TEventData;
+struct TDetectorReadHit;
+struct TCluster;
+using TClusterPtr = std::shared_ptr<TCluster>;
 
 namespace reconstruct {
 struct AdaptorTClusterHit;
@@ -24,7 +26,7 @@ struct Reconstruct_traits {
      * @param detectorRead
      * @return the reconstructed TEvent
      */
-    virtual void DoReconstruct(TEvent::Data& reconstructed) = 0;
+    virtual void DoReconstruct(TEventData& reconstructed) = 0;
 
     virtual ~Reconstruct_traits() = default;
 };
@@ -77,7 +79,7 @@ struct ReconstructHook {
      * @brief The EventData struct instances are applied after candidate building
      */
     struct EventData : Base {
-        virtual void ApplyTo(TEvent::Data& reconstructed) = 0;
+        virtual void ApplyTo(TEventData& reconstructed) = 0;
     };
 
 };

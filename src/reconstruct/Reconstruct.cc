@@ -6,7 +6,7 @@
 
 #include "expconfig/ExpConfig.h"
 
-#include "tree/TEvent.h"
+#include "tree/TEventData.h"
 
 #include "base/Logger.h"
 
@@ -67,7 +67,7 @@ void Reconstruct::Initialize(const TID& tid)
     initialized = true;
 }
 
-void Reconstruct::DoReconstruct(TEvent::Data& reconstructed)
+void Reconstruct::DoReconstruct(TEventData& reconstructed)
 {
     if(!initialized) {
         Initialize(reconstructed.ID);

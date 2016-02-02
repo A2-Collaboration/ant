@@ -1,6 +1,7 @@
 #include "catch.hpp"
 
 #include "tree/TEvent.h"
+#include "tree/TEventData.h"
 
 #include "base/tmpfile_t.h"
 #include "base/std_ext/memory.h"
@@ -32,7 +33,7 @@ void dotest() {
 
   tree->Branch(branchname.c_str(), event);
 
-  event->Reconstructed = std_ext::make_unique<TEvent::Data>();
+  event->Reconstructed = std_ext::make_unique<TEventData>();
   auto& eventdata = event->Reconstructed;
 
   eventdata->ID = TID(10);
@@ -92,8 +93,8 @@ void dotest() {
 
   tree->Fill();
 
-  event->Reconstructed = std_ext::make_unique<TEvent::Data>();
-  event->MCTrue = std_ext::make_unique<TEvent::Data>();
+  event->Reconstructed = std_ext::make_unique<TEventData>();
+  event->MCTrue = std_ext::make_unique<TEventData>();
 
   event->Reconstructed->Particles.Add(particle0);
   event->Reconstructed->Particles.Add(particle0);

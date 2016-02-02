@@ -191,11 +191,11 @@ protected:
 
     void FillCrossChecks(const TParticleList& photons, const TParticleList& mcphotons);
 
-    bool MakeMCProton(const TEvent::Data& mcdata, TParticlePtr& proton);
+    bool MakeMCProton(const TEventData& mcdata, TParticlePtr& proton);
 
     Etap3pi0::result_t Make3pi0(const TParticleList& photons);
     Etap3pi0::result_t MakeEta2pi0(const TParticleList& photons);
-    Etap3pi0::result_t MakeMC3pi0(const TEvent::Data &mcEvt);
+    Etap3pi0::result_t MakeMC3pi0(const TEventData &mcEvt);
 
     void FillIm(const Etap3pi0::result_t& result, const ParticleTypeDatabase::Type& type, TH1D* hist);
     void FillImEtaPrime(const Etap3pi0::result_t& result, TH1D* hist);

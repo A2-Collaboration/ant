@@ -5,6 +5,7 @@
 #include "analysis/input/ant/AntReader.h"
 
 #include "tree/TEvent.h"
+#include "tree/TEventData.h"
 
 #include "unpacker/Unpacker.h"
 #include "reconstruct/Reconstruct.h"

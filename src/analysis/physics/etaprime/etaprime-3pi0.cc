@@ -152,7 +152,7 @@ void Etap3pi0::FillCrossChecks(const TParticleList& photons, const TParticleList
 }
 
 
-Etap3pi0::result_t Etap3pi0::MakeMC3pi0(const TEvent::Data& mcEvt )
+Etap3pi0::result_t Etap3pi0::MakeMC3pi0(const TEventData& mcEvt )
 {
     result_t result;
 
@@ -310,7 +310,7 @@ Etap3pi0::result_t Etap3pi0::MakeEta2pi0(const TParticleList& photons)
     return result;
 }
 
-bool Etap3pi0::MakeMCProton(const TEvent::Data& mcdata, TParticlePtr& proton)
+bool Etap3pi0::MakeMCProton(const TEventData& mcdata, TParticlePtr& proton)
 {
    const auto& protonlist = mcdata.Particles.Get(ParticleTypeDatabase::Proton);
    if (protonlist.size() != 1)

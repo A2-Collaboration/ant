@@ -1,29 +1,26 @@
 #pragma once
 
+#include "Rtypes.h"
+
 #ifndef __CINT__
-#include "TID.h"
-#include "TDetectorReadHit.h"
-#include "TSlowControl.h"
-#include "TUnpackerMessage.h"
-
-#include "TTagger.h"
-#include "TTrigger.h"
-#include "TTarget.h"
-
-#include "TCluster.h"
-#include "TCandidate.h"
-#include "TParticle.h"
-
-#include <iomanip>
-#include <ctime>
+#include "base/printable.h"
 #include <memory>
+#include <stdexcept>
 #endif
+
+#define ANT_TEVENT_VERSION 0
 
 namespace ant {
 
 #ifndef __CINT__
+struct TID;
+struct TEventData;
 struct TEvent;
 using TEventPtr = std::unique_ptr<TEvent>;
+#endif
+
+
+#ifndef __CINT__
 struct TEvent : printable_traits
 #else
 struct TEvent
@@ -33,86 +30,13 @@ struct TEvent
 
 #ifndef __CINT__
 
-    struct Data : printable_traits
-    {
-        struct PTypeList {
-
-            void Add(TParticlePtr&& particle) {
-                lists[std::addressof(particle->Type())].emplace_back(particle);
-                all.emplace_back(particle);
-            }
-
-            void Add(TParticlePtr& particle) {
-                lists[std::addressof(particle->Type())].emplace_back(particle);
-                all.emplace_back(particle);
-            }
-
-            const TParticleList& GetAll() const { return all; }
-
-            const TParticleList& Get(const ant::ParticleTypeDatabase::Type& type) const {
-                auto entry = lists.find(std::addressof(type));
-                if(entry == lists.end()) {
-                    return empty;
-                }
-                return entry->second;
-            }
-
-            template<class Archive>
-            void save(Archive& archive) const {
-                archive(all);
-            }
-
-            template<class Archive>
-            void load(Archive& archive) {
-                archive(all);
-                for(const auto& p : all)
-                    lists[std::addressof(p->Type())].emplace_back(p);
-            }
-
-        private:
-            static const TParticleList empty;
-            TParticleList all;
-            std::map<const ParticleTypeDatabase::Type*, TParticleList> lists;
-
-        }; // PTypeList
-
-        Data(const TID& id);
-        Data();
-        virtual ~Data();
-
-        TID ID;
-        std::vector<TDetectorReadHit> DetectorReadHits;
-        std::vector<TSlowControl>     SlowControls;
-        std::vector<TUnpackerMessage> UnpackerMessages;
-
-        TTagger  Tagger;
-        TTrigger Trigger;
-        TTarget  Target;
-
-        TClusterList     Clusters;
-        TCandidateList   Candidates;
-        PTypeList        Particles;    // MCTrue final state, or identified from reconstructed candidates
-        TParticleTree_t  ParticleTree;
-
-        template<class Archive>
-        void serialize(Archive& archive) {
-            archive(ID,
-                    DetectorReadHits, SlowControls, UnpackerMessages,
-                    Tagger, Trigger, Target,
-                    Clusters, Candidates, Particles, ParticleTree);
-        }
-
-        virtual std::ostream& Print(std::ostream& s) const override;
-
-    }; // Data
-
-    using DataPtr = std::unique_ptr<Data> ;
-
-    DataPtr Reconstructed;
-    DataPtr MCTrue;
+    std::unique_ptr<TEventData> Reconstructed;
+    std::unique_ptr<TEventData> MCTrue;
 
     template<class Archive>
-    void serialize(Archive archive) {
+    void serialize(Archive archive, const std::uint32_t version) {
+        if(version != ANT_TEVENT_VERSION)
+            throw std::runtime_error("TEvent version mismatch");
         archive(Reconstructed, MCTrue);
     }
 
@@ -128,7 +52,7 @@ struct TEvent
 
     TEvent();
     virtual ~TEvent();
-    ClassDef(TEvent, ANT_UNPACKER_ROOT_VERSION)
+    ClassDef(TEvent, ANT_TEVENT_VERSION)
 
 private:
     // prevent ROOTcint from creating copy-constructors

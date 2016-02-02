@@ -2,6 +2,9 @@
 #include "catch_config.h"
 #include "expconfig_helpers.h"
 
+#include "tree/TEvent.h"
+#include "tree/TEventData.h"
+
 #include "reconstruct/Reconstruct.h"
 #include "reconstruct/CandidateBuilder.h"
 #include "reconstruct/Clustering.h"

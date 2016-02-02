@@ -7,6 +7,9 @@
 #include "expconfig/setups/SetupRegistry.h"
 #include "expconfig/setups/Setup.h"
 
+#include "tree/TEvent.h"
+#include "tree/TEventData.h"
+
 #include "base/WrapTFile.h"
 #include "base/std_ext/system.h"
 #include "base/CmdLine.h"

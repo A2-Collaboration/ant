@@ -248,7 +248,7 @@ void PhysicsManager::ProcessEvent(std::unique_ptr<TEvent> event)
         // run particle ID for Reconstructed candidates
         // but only if there are no identified particles present yet
         /// \todo implement flag to force particle ID again?
-        TEvent::Data& recon = *event->Reconstructed;
+        TEventData& recon = *event->Reconstructed;
         if(recon.Particles.GetAll().empty()) {
             for(const auto& cand : recon.Candidates) {
                 auto particle = particleID->Process(cand);
@@ -259,16 +259,16 @@ void PhysicsManager::ProcessEvent(std::unique_ptr<TEvent> event)
     }
 
     // ensure that physics classes always
-    // have at least empty TEvent::Data branches MCTrue and Reconstructed
+    // have at least empty TEventData branches MCTrue and Reconstructed
 
     bool clean_reconstructed = false;
     if(!event->Reconstructed) {
-        event->Reconstructed = std_ext::make_unique<TEvent::Data>();
+        event->Reconstructed = std_ext::make_unique<TEventData>();
         clean_reconstructed = true;
     }
     bool clean_mctrue = false;
     if(!event->MCTrue) {
-        event->MCTrue = std_ext::make_unique<TEvent::Data>();
+        event->MCTrue = std_ext::make_unique<TEventData>();
         clean_mctrue = true;
     }
 

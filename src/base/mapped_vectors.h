@@ -4,6 +4,8 @@
 #include <memory>
 #include <type_traits>
 
+#include "base/std_ext/memory.h" // make_unique
+
 namespace ant {
 namespace std_ext {
 
@@ -75,7 +77,7 @@ public:
         // retrieve an already existing key
         auto& ptr = storage[key_u];
         if(ptr==nullptr) {
-            ptr = make_unique< std::pair<Key, std::vector<Value>> >(make_pair(key, std::vector<Value>()));
+            ptr = std_ext::make_unique< std::pair<Key, std::vector<Value>> >(make_pair(key, std::vector<Value>()));
         }
 
         std::vector<Value>& values = ptr->second;

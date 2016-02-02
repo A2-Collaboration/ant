@@ -159,8 +159,8 @@ class EtapOmegaG : public Physics {
     ref_TTree_t ref_TTree;
 
 
-    void ProcessSig(const TParticleTree_t& particletree, const TEvent::Data& data);
-    void ProcessRef(const TParticleTree_t& particletree, const TEvent::Data& data);
+    void ProcessSig(const TParticleTree_t& particletree, const TEventData& data);
+    void ProcessRef(const TParticleTree_t& particletree, const TEventData& data);
 
 
     template<typename T>

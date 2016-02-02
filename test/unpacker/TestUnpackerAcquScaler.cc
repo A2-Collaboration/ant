@@ -5,6 +5,7 @@
 #include "Unpacker.h"
 
 #include "tree/TEvent.h"
+#include "tree/TEventData.h"
 
 #include <iostream>
 #include <string>

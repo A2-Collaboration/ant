@@ -32,7 +32,7 @@ public:
         PerChannel_t(const std::string& Title, SmartHistFactory& hf);
 
         void Show();
-        void Fill(const TEvent::Data& d);
+        void Fill(const TEventData& d);
     };
 
     std::map<std::string,PerChannel_t> channels;
@@ -59,7 +59,7 @@ protected:
 
     DataMode mode = DataMode::Reconstructed;
 
-    virtual void Analyse(const TEvent::Data& data, const TEvent& event, manager_t& manager) =0;
+    virtual void Analyse(const TEventData& data, const TEvent& event, manager_t& manager) =0;
 
 
 
@@ -111,7 +111,7 @@ protected:
 
     std::map<std::string, perDecayhists_t> gg_decays;
 
-    virtual void Analyse(const TEvent::Data& data, const TEvent& event, manager_t&) override;
+    virtual void Analyse(const TEventData& data, const TEvent& event, manager_t&) override;
 
     BinSettings imbinning = BinSettings(1000);
     BinSettings mmbinning = BinSettings(1000, 400,1400);
@@ -151,7 +151,7 @@ class OmegaEtaG2 : public OmegaBase {
 
     // OmegaBase interface
 protected:
-    void Analyse(const TEvent::Data &data, const TEvent& event, manager_t& manager) override;
+    void Analyse(const TEventData &data, const TEvent& event, manager_t& manager) override;
 
 
     enum SigBgFlag_t {
@@ -223,7 +223,7 @@ protected:
     interval<double> photon_E_taps = {200.0,1600.0};
     interval<double> proton_theta  = std_ext::degree_to_radian(interval<double>({0.0, 45.0}));
 
-    double calcEnergySum2(const TEvent::Data &e) const;
+    double calcEnergySum2(const TEventData &e) const;
 
     struct expected_peak_t {
         double Mean;
