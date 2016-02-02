@@ -25,7 +25,7 @@ EventFilter::EventFilter(const string& name, OptionsPtr opts):
     SetBinLabel(steps,3, formatter() << "nCands in " << nCands);
 
     VLOG(3) << "CBEsum > " << CBEsum;
-    VLOG(3) < "nCands in " << nCands;
+    VLOG(3) << "nCands in " << nCands;
 }
 
 EventFilter::~EventFilter()
