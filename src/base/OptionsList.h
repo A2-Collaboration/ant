@@ -47,7 +47,7 @@ public:
     template <typename T>
     T Get(const std::string& key, const T& def_value = T()) const {
         std::stringstream ss(GetOption(key));
-        T ret;
+        T ret(def_value);
         if(ss >> ret) {
             return ret;
         }
