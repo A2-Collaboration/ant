@@ -70,7 +70,7 @@ void RawFileReader::HandlePerformanceStats()
     const double bytes_per_s_uncompressed = performanceBytesRead/elapsed_seconds.count();
 
     if(performanceBytesRead_compressed<0) {
-        LOG(INFO) << "Reading file with " << std::fixed << setprecision(3) << bytes_per_s_uncompressed/(1<<20);
+        LOG(INFO) << "Reading file with " << std::fixed << setprecision(3) << bytes_per_s_uncompressed/(1<<20) << " MB/s";
     }
     else {
         LOG(INFO) << "Reading compressed/uncompressed file with "
