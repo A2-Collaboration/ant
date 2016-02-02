@@ -21,12 +21,12 @@ bool acqu::FileFormatMk1::InspectHeader(const vector<uint32_t>& buffer) const
     return inspectHeaderMk1Mk2<AcquExptInfo_t>(buffer);
 }
 
-void acqu::FileFormatMk1::FillInfo(reader_t& reader, buffer_t& buffer, Info& info)
+void acqu::FileFormatMk1::FillInfo(reader_t& reader, buffer_t& buffer, Info& info) const
 {
     throw UnpackerAcqu::Exception("Mk1 format not implemented yet");
 }
 
-void acqu::FileFormatMk1::FillFirstDataBuffer(reader_t& reader, buffer_t& buffer)
+void acqu::FileFormatMk1::FillFirstDataBuffer(reader_t& reader, buffer_t& buffer) const
 {
     throw UnpackerAcqu::Exception("Mk1 format not implemented yet");
 }

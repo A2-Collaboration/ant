@@ -69,7 +69,10 @@ public:
 private:
     std::unique_ptr<RawFileReader> reader;
     std::vector<std::uint32_t>     buffer;
-    std::vector<TUnpackerMessage>  messages;
+    // messages must be buffered during event unpacking,
+    // but in order to have LogMessage() const,
+    // the storage must be mutable
+    mutable std::vector<TUnpackerMessage>  messages;
     signed trueRecordLength;
     unsigned unpackedBuffers;
     time_t GetTimeStamp();
@@ -123,12 +126,12 @@ protected:
 
     // unpacker messages handling
     void LogMessage(TUnpackerMessage::Level_t level,
-                    const std::string& msg);
-    void AppendMessagesToEvent(std::unique_ptr<TEvent>& event);
+                    const std::string& msg) const;
+    void AppendMessagesToEvent(std::unique_ptr<TEvent>& event) const;
 
     // Mk1/Mk2 specific methods
-    virtual void FillInfo(reader_t& reader, buffer_t& buffer, Info& info) = 0;
-    virtual void FillFirstDataBuffer(reader_t& reader, buffer_t& buffer) = 0;
+    virtual void FillInfo(reader_t& reader, buffer_t& buffer, Info& info) const = 0;
+    virtual void FillFirstDataBuffer(reader_t& reader, buffer_t& buffer) const = 0;
     virtual bool UnpackDataBuffer(queue_t &queue, it_t& it, const it_t& it_endbuffer) noexcept = 0;
 
 };

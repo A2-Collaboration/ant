@@ -202,7 +202,7 @@ time_t acqu::FileFormatBase::GetTimeStamp()
 void acqu::FileFormatBase::LogMessage(
         TUnpackerMessage::Level_t level,
         const string& msg
-        )
+        ) const
 {
 
     messages.emplace_back(level, msg);
@@ -224,7 +224,7 @@ void acqu::FileFormatBase::LogMessage(
 
 }
 
-void acqu::FileFormatBase::AppendMessagesToEvent(std::unique_ptr<TEvent>& event)
+void acqu::FileFormatBase::AppendMessagesToEvent(std::unique_ptr<TEvent>& event) const
 {
     vector<TUnpackerMessage>& u_messages = event->Reconstructed->UnpackerMessages;
     if(u_messages.empty())

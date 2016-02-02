@@ -25,7 +25,7 @@ bool acqu::FileFormatMk2::InspectHeader(const vector<uint32_t>& buffer) const
     return inspectHeaderMk1Mk2<AcquMk2Info_t>(buffer);
 }
 
-void acqu::FileFormatMk2::FillInfo(reader_t &reader, buffer_t &buffer, Info &info)
+void acqu::FileFormatMk2::FillInfo(reader_t &reader, buffer_t &buffer, Info &info) const
 {
     const acqu::AcquMk2Info_t* h = reinterpret_cast<const acqu::AcquMk2Info_t*>(buffer.data()+1);
 
@@ -108,7 +108,7 @@ void acqu::FileFormatMk2::FillInfo(reader_t &reader, buffer_t &buffer, Info &inf
                );
 }
 
-void acqu::FileFormatMk2::FillFirstDataBuffer(reader_t& reader, buffer_t& buffer)
+void acqu::FileFormatMk2::FillFirstDataBuffer(reader_t& reader, buffer_t& buffer) const
 {
     // finally search for the Mk2Header, this also
     // fills the buffer correctly with the first Mk2DataBuffer (if available)
@@ -127,7 +127,7 @@ void acqu::FileFormatMk2::FillFirstDataBuffer(reader_t& reader, buffer_t& buffer
 
 
 bool acqu::FileFormatMk2::SearchFirstDataBuffer(reader_t& reader, buffer_t& buffer,
-                                                size_t offset)
+                                                size_t offset) const
 {
     VLOG(9) << "Searching first Mk2 buffer at offset 0x"
             << hex << offset << dec;
@@ -192,7 +192,8 @@ bool acqu::FileFormatMk2::SearchFirstDataBuffer(reader_t& reader, buffer_t& buff
 
 
 
-bool acqu::FileFormatMk2::UnpackDataBuffer(UnpackerAcquFileFormat::queue_t& queue, it_t& it, const it_t& it_endbuffer) noexcept
+bool acqu::FileFormatMk2::UnpackDataBuffer(UnpackerAcquFileFormat::queue_t& queue, it_t& it,
+                                           const it_t& it_endbuffer) noexcept
 {
     const size_t buffersize_bytes = 4*distance(it, it_endbuffer);
 
@@ -401,7 +402,7 @@ void acqu::FileFormatMk2::HandleScalerBuffer(
         it_t& it, const it_t& it_end,
         bool& good,
         std::vector<TDAQError>& errors
-        ) noexcept
+        ) const noexcept
 {
     // ignore Scaler buffer marker
     it++;
@@ -468,7 +469,7 @@ void acqu::FileFormatMk2::HandleScalerBuffer(
 }
 
 void acqu::FileFormatMk2::FillSlowControls(const scalers_t& scalers,
-                                           vector<TSlowControl>& slowcontrols) noexcept
+                                           vector<TSlowControl>& slowcontrols) const noexcept
 {
     if(scalers.empty())
         return;
@@ -514,7 +515,7 @@ void acqu::FileFormatMk2::FillSlowControls(const scalers_t& scalers,
 
 void acqu::FileFormatMk2::HandleDAQError(std::vector<TDAQError>& errors,
                                          it_t& it, const it_t& it_end,
-                                         bool& good) noexcept
+                                         bool& good) const noexcept
 {
     // is there enough space in the event at all?
     static_assert(sizeof(acqu::ReadErrorMk2_t) % sizeof(decltype(*it)) == 0,
@@ -557,7 +558,7 @@ void acqu::FileFormatMk2::HandleEPICSBuffer(
         std::vector<TSlowControl>& slowcontrols,
         it_t& it, const it_t& it_end,
         bool& good
-        ) noexcept
+        ) const noexcept
 {
     // ignore EPICS buffer marker
     it++;
