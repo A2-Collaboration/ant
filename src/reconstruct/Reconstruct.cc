@@ -70,6 +70,10 @@ void Reconstruct::Initialize(const TID& tid)
 
 void Reconstruct::DoReconstruct(TEventData& reconstructed)
 {
+    // ignore empty events
+    if(reconstructed.DetectorReadHits.empty())
+        return;
+
     if(!initialized) {
         Initialize(reconstructed.ID);
     }

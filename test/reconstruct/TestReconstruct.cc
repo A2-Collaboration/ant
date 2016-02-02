@@ -42,6 +42,10 @@ struct ReconstructTester : Reconstruct_traits {
 
     void DoReconstruct(TEventData& reconstructed) override
     {
+        // ignore empty events
+        if(reconstructed.DetectorReadHits.empty())
+            return;
+
         /// \todo Improve requirements
 
         if(!r.initialized) {
