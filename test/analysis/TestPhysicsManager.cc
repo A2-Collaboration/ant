@@ -62,7 +62,7 @@ struct TestPhysics : Physics
         HistFac.makeTH1D("test","test","test",BinSettings(10));
     }
 
-    virtual void ProcessEvent(const TEvent& event, manager_t& manager) override
+    virtual void ProcessEvent(const TEvent& event, physics::manager_t& manager) override
     {
         seenEvents++;
         seenCandidates += event.Reconstructed->Candidates.size();

@@ -63,7 +63,7 @@ protected:
     TID firstID;
     TID lastID;
 
-    Physics::manager_t processmanager;
+    physics::manager_t processmanager;
 
     // for output of TEvents to TTree
     TTree*  treeEvents;
