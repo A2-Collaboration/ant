@@ -1,5 +1,7 @@
 #include "DebugPhysics.h"
 
+#include "slowcontrol/SlowControlVariables.h"
+
 #include "base/Logger.h"
 #include "expconfig/ExpConfig.h"
 
@@ -14,6 +16,7 @@ DebugPhysics::DebugPhysics(const std::string& name, OptionsPtr opts) :
     keepReadHits(opts->Get<bool>("KeepReadHits", false)),
     requestSlowControl(opts->Get<bool>("RequestSlowControl", false))
 {
+    slowcontrol::Variables::TaggerScalers->Request();
 }
 
 DebugPhysics::~DebugPhysics() {}

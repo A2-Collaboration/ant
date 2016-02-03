@@ -5,10 +5,15 @@
 
 #include "slowcontrol/SlowControlCreator.h"
 
+#include "SlowControlVariables.h"
+
+#include "base/Logger.h"
+
 #include <stdexcept>
 
 using namespace ant;
 using namespace ant::analysis;
+using namespace ant::analysis::slowcontrol;
 
 
 TID SlowControlManager::min(const TID& a, const TID& b)
@@ -18,6 +23,16 @@ TID SlowControlManager::min(const TID& a, const TID& b)
     if(!b.IsInvalid())
         return a;
     return std::min(a,b);
+}
+
+SlowControlManager::SlowControlManager()
+{
+    unsigned nRegistered = 0;
+    for(VariablePtr var : Variables::All)
+        /// \todo remember the processors here...
+        if(!var->GetProcessors().empty())
+            nRegistered++;
+    LOG(INFO) << "Have " << nRegistered << " registered slowcontrol variables";
 }
 
 void SlowControlManager::SetRequiredKeys(const std::list<ant::TSlowControl::Key> keys)

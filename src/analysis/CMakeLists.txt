@@ -17,13 +17,6 @@ set(ANALYSIS_INPUT
   input/pluto/detail/PlutoWrapper.cc
 )
 
-set(ANALYSIS_SLOWCONTROL
-  slowcontrol/SlowControl.cc
-  slowcontrol/SlowControlCreator.cc
-  slowcontrol/SlowControlManager.cc
-  slowcontrol/processors/SlowControlProcessor.h
-)
-
 set(ANALYSIS_PHYSICS
   physics/Physics.cc
   physics/PhysicsManager.cc
@@ -91,12 +84,13 @@ set(ANALYSIS_UTILS
 
 set(ANALYSIS_ALL
     ${ANALYSIS_INPUT}
-    ${ANALYSIS_SLOWCONTROL}
     ${ANALYSIS_PHYSICS}
     ${ANALYSIS_PHYSICS_CALIBRATION}
     ${ANALYSIS_PLOT}
     ${ANALYSIS_UTILS}
 )
+
+add_subdirectory(slowcontrol)
 
 append_header_files(ANALYSIS_ALL)
 
@@ -109,4 +103,5 @@ target_link_libraries(analysis
   tree
   expconfig
   cbtaps_display
+  slowcontrol
   )

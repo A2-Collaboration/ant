@@ -26,7 +26,7 @@ protected:
     static TID min(const TID& a, const TID& b);
 
 public:
-    SlowControlManager() = default;
+    SlowControlManager();
 
     void SetRequiredKeys(const std::list<TSlowControl::Key> keys);
 
