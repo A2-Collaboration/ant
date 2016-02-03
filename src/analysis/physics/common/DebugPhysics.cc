@@ -13,10 +13,10 @@ using namespace ant::analysis::physics;
 DebugPhysics::DebugPhysics(const std::string& name, OptionsPtr opts) :
     Physics(name, opts),
     writeEvents(opts->Get<unsigned>("WriteEvents", 0)),
-    keepReadHits(opts->Get<bool>("KeepReadHits", false)),
-    requestSlowControl(opts->Get<bool>("RequestSlowControl", false))
+    keepReadHits(opts->Get<bool>("KeepReadHits", false))
 {
-    slowcontrol::Variables::TaggerScalers->Request();
+    if(opts->Get<bool>("RequestSlowControl", false))
+        slowcontrol::Variables::TaggerScalers->Request();
 }
 
 DebugPhysics::~DebugPhysics() {}
@@ -44,11 +44,7 @@ void DebugPhysics::ShowResult()
     LOG(INFO) << "Nop";
 }
 
-void DebugPhysics::Initialize(slowcontrol::SlowControl& slowcontrol)
-{
-    if(requestSlowControl)
-        slowcontrol.FaradayCup.Request();
-}
+
 
 
 

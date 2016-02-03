@@ -18,10 +18,6 @@ Physics::Physics(const string &name, OptionsPtr opts):
         HistFac.SetDirDescription(opts->Flatten());
 }
 
-void Physics::Initialize(slowcontrol::SlowControl&)
-{
-}
-
 PhysicsRegistry& PhysicsRegistry::get_instance()
 {
     static PhysicsRegistry instance;

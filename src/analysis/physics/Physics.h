@@ -3,7 +3,6 @@
 #include "analysis/physics/manager_t.h"
 
 #include "analysis/plot/HistogramFactories.h"
-#include "analysis/slowcontrol/SlowControl.h"
 
 #include "tree/TEvent.h"
 #include "tree/TEventData.h"
@@ -39,8 +38,6 @@ public:
     virtual void Finish() {}
     virtual void ShowResult() {}
     std::string GetName() const { return name_; }
-
-    virtual void Initialize(slowcontrol::SlowControl& slowcontrol);
 
     Physics(const Physics&) = delete;
     Physics& operator=(const Physics&) = delete;

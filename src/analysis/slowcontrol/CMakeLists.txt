@@ -1,8 +1,6 @@
 include_directories(.)
 
 set(SLOWCONTROL
-  SlowControl.cc
-  SlowControlCreator.cc
   SlowControlManager.cc
 )
 

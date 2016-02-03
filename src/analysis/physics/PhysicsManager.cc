@@ -7,7 +7,7 @@
 #include "tree/TAntHeader.h"
 #include "base/Logger.h"
 
-#include "slowcontrol/SlowControlCreator.h"
+#include "slowcontrol/SlowControlManager.h"
 
 #include "base/ProgressCounter.h"
 
@@ -79,13 +79,9 @@ void PhysicsManager::ReadFrom(
     if(physics.empty())
         throw Exception("No analysis instances activated. Cannot not analyse anything.");
 
-    // prepare slowcontrol
-    auto slkeys = RequestedKeys(slowcontrol_data);
-    VLOG(7) << "Requested Slowcontrol keys";
-    for(const auto& key : slkeys) {
-        VLOG(7) << key;
-    }
-    slowcontrol_mgr.SetRequiredKeys(slkeys);
+    // prepare slowcontrol, init here since physics classes
+    // register slowcontrol variables in constructor
+    slowcontrol_mgr = std_ext::make_unique<SlowControlManager>();
 
 
     // prepare output of TEvents
@@ -130,9 +126,9 @@ void PhysicsManager::ReadFrom(
             }
 
         }
-        while(!slowcontrol_mgr.isComplete());
+        while(!slowcontrol_mgr->isComplete());
 
-        if(slowcontrol_mgr.isComplete()) {
+        if(slowcontrol_mgr->isComplete()) {
             VLOG(5) << "Slowcontrol set complete. Processing event buffer.";
             ProcessEventBuffer(maxevents);
         } else {
@@ -174,7 +170,7 @@ bool PhysicsManager::TryReadEvent(TEventPtr& event)
         if(source) {
             if(source->ReadNextEvent(*event)) {
                 read_event = true;
-                slowcontrol_mgr.ProcessSlowControls(*event);
+                slowcontrol_mgr->ProcessEvent(*event, processmanager);
             }
             else {
                 return false;
@@ -186,7 +182,7 @@ bool PhysicsManager::TryReadEvent(TEventPtr& event)
 
             if((*it_reader)->ReadNextEvent(*event)) {
                 read_event = true;
-                slowcontrol_mgr.ProcessSlowControls(*event);
+                slowcontrol_mgr->ProcessEvent(*event, processmanager);
                 ++it_reader;
             }
             else {
@@ -209,9 +205,9 @@ void PhysicsManager::ProcessEventBuffer(long long maxevents)
     if(flush)
         VLOG(5) << "Flushing " << eventbuffer.size() << " events from eventbuffer";
 
-    TID runUntil = slowcontrol_mgr.UpdateSlowcontrolData(slowcontrol_data);
+    TID runUntil = slowcontrol_mgr->GetRunUntil();
 
-    if(slowcontrol_mgr.hasRequests() && runUntil.IsInvalid())
+    if(slowcontrol_mgr->hasRequests() && runUntil.IsInvalid())
         return;
 
     while(!eventbuffer.empty()) {
@@ -225,7 +221,7 @@ void PhysicsManager::ProcessEventBuffer(long long maxevents)
         auto& event = eventbuffer.front();
         auto& eventid = event->Reconstructed->ID;
 
-        if(slowcontrol_mgr.hasRequests() && (eventid > runUntil))
+        if(slowcontrol_mgr->hasRequests() && (eventid > runUntil))
             break;
 
         if(nEventsProcessed==0)

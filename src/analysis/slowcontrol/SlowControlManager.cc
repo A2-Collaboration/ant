@@ -3,8 +3,6 @@
 #include "tree/TEvent.h"
 #include "tree/TEventData.h"
 
-#include "slowcontrol/SlowControlCreator.h"
-
 #include "SlowControlVariables.h"
 
 #include "base/Logger.h"
@@ -35,33 +33,21 @@ SlowControlManager::SlowControlManager()
     LOG(INFO) << "Have " << nRegistered << " registered slowcontrol variables";
 }
 
-void SlowControlManager::SetRequiredKeys(const std::list<ant::TSlowControl::Key> keys)
+void SlowControlManager::ProcessEvent(const TEvent& event, physics::manager_t& manager)
 {
-    for(const auto& key : keys) {
-        const auto entry = slowcontrol.find(key);
-        if(entry == slowcontrol.end()) {
-            slowcontrol[key] = buffer_t();
-        }
-    }
-}
-
-void SlowControlManager::ProcessSlowControls(TEvent& event)
-{
-    /// \todo Maybe MCTrue could also have some SlowControl stuff?
     if(!event.Reconstructed)
         return;
 
-    auto& slowcontrols = event.Reconstructed->SlowControls;
+    auto& reconstructed = *event.Reconstructed;
 
-    for(TSlowControl& sc : slowcontrols) {
+    /// \todo re-implement!
+    for(const TSlowControl& sc : reconstructed.SlowControls) {
         auto entry = slowcontrol.find(sc.GetKey());
         if(entry != slowcontrol.end()) {
             buffer_t& buffer = entry->second;
-            buffer.emplace(std::make_pair(event.Reconstructed->ID, std::move(sc)));
+            buffer.emplace(std::make_pair(reconstructed.ID, std::move(sc)));
         }
     }
-
-    slowcontrols.resize(0);
 }
 
 bool SlowControlManager::isComplete() const {
@@ -74,7 +60,7 @@ bool SlowControlManager::isComplete() const {
     return true;
 }
 
-TID SlowControlManager::FindMinimalTID() const
+TID SlowControlManager::GetRunUntil() const
 {
     TID minimal;
 
@@ -87,27 +73,27 @@ TID SlowControlManager::FindMinimalTID() const
     return minimal;
 }
 
-TID SlowControlManager::UpdateSlowcontrolData(slowcontrol::SlowControl& slc)
-{
+//TID SlowControlManager::UpdateSlowcontrolData(slowcontrol::SlowControl& slc)
+//{
 
-    if(isComplete()) {
-        auto validuntil = minimal_in_buffer.IsInvalid() ? FindMinimalTID() : minimal_in_buffer;
+//    if(isComplete()) {
+//        auto validuntil = minimal_in_buffer.IsInvalid() ? FindMinimalTID() : minimal_in_buffer;
 
-        minimal_in_buffer = TID();
+//        minimal_in_buffer = TID();
 
-        for(auto& entry : slowcontrol) {
-            buffer_t& buffer = entry.second;
-            auto slread = move(buffer.front());
-            buffer.pop();
+//        for(auto& entry : slowcontrol) {
+//            buffer_t& buffer = entry.second;
+//            auto slread = move(buffer.front());
+//            buffer.pop();
 
-            FillSlowControl(slc, slread.second);
+//            FillSlowControl(slc, slread.second);
 
-            minimal_in_buffer = min(minimal_in_buffer, slread.first);
-        }
+//            minimal_in_buffer = min(minimal_in_buffer, slread.first);
+//        }
 
-        return validuntil;
-    }
+//        return validuntil;
+//    }
 
-    return TID();
+//    return TID();
 
-}
+//}

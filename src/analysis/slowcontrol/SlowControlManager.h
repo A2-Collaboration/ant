@@ -1,7 +1,6 @@
 #pragma once
 
-#include "analysis/slowcontrol/SlowControl.h"
-
+#include "physics/manager_t.h"
 #include "tree/TSlowControl.h"
 
 #include <map>
@@ -28,9 +27,7 @@ protected:
 public:
     SlowControlManager();
 
-    void SetRequiredKeys(const std::list<TSlowControl::Key> keys);
-
-    void ProcessSlowControls(TEvent& event);
+    void ProcessEvent(const TEvent& event, physics::manager_t& manager);
 
     /**
      * @brief check if at least one slow control variable has been requrested
@@ -40,9 +37,7 @@ public:
 
     bool isComplete() const;
 
-    TID FindMinimalTID() const;
-
-    TID UpdateSlowcontrolData(slowcontrol::SlowControl& slc);
+    TID GetRunUntil() const;
 
 };
 

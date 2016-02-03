@@ -1,7 +1,9 @@
 #pragma once
 
 #include "Physics.h"
-#include "analysis/slowcontrol/SlowControlManager.h"
+
+#include <memory>
+#include <queue>
 
 class TTree;
 
@@ -11,6 +13,8 @@ struct TAntHeader;
 struct TEvent;
 
 namespace analysis {
+
+class SlowControlManager;
 
 namespace utils {
 class ParticleID;
@@ -35,8 +39,7 @@ protected:
     void InitReaders(readers_t readers_);
     bool TryReadEvent(TEventPtr& event);
 
-    SlowControlManager slowcontrol_mgr;
-    slowcontrol::SlowControl slowcontrol_data;
+    std::unique_ptr<SlowControlManager> slowcontrol_mgr;
 
     std::queue<TEventPtr> eventbuffer;
 
@@ -87,8 +90,6 @@ public:
 
         if(pc==nullptr)
             return;
-
-        pc->Initialize(slowcontrol_data);
         physics.emplace_back(std::move(pc));
     }
 

@@ -11,7 +11,6 @@ class DebugPhysics: public Physics {
 protected:
     const unsigned writeEvents;
     const bool keepReadHits;
-    const bool requestSlowControl;
     unsigned seenEvents = 0;
 public:
     DebugPhysics(const std::string& name, OptionsPtr opts=nullptr);
@@ -20,7 +19,6 @@ public:
     virtual void ProcessEvent(const TEvent& event, manager_t& manager) override;
     virtual void Finish() override;
     virtual void ShowResult() override;
-    virtual void Initialize(slowcontrol::SlowControl& slowcontrol) override;
 };
 
 class DebugPIDAlignment: public Physics {
