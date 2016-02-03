@@ -123,7 +123,7 @@ void PhysicsManager::ReadFrom(
 
             if(nEventsProcessed == maxevents) {
                 VLOG(3) << "Reached max Events (" << maxevents;
-                finished_reading = false;
+                finished_reading = true;
                 break;
             }
 
