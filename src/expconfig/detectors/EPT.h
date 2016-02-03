@@ -33,6 +33,8 @@ struct EPT :
     virtual void BuildMappings(std::vector<hit_mapping_t>&,
             std::vector<scaler_mapping_t>&) const override;
 
+    const static std::string ScalerName;
+
 protected:
 
     /// \todo have a look at ugcal?

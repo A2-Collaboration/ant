@@ -7,6 +7,13 @@ using namespace std;
 using namespace ant;
 using namespace ant::expconfig::detector;
 
+const std::string Trigger::ScalerName::Exptrigger_1MHz = "Exptrigger_1Mhz";
+const std::string Trigger::ScalerName::Beampolmon_1MHz = "Beampolmon_1Mhz";
+
+const std::string Trigger::ScalerName::TotalLivetime = "TotalLivetime";
+const std::string Trigger::ScalerName::FaradayCup    = "FaradayCup";
+const std::string Trigger::ScalerName::IonChamber    = "IonChamber";
+const std::string Trigger::ScalerName::PbGlass       = "PbGlass";
 
 void Trigger::BuildMappings(std::vector<UnpackerAcquConfig::hit_mapping_t>& hit_mappings,
                             std::vector<UnpackerAcquConfig::scaler_mapping_t>&) const {
@@ -21,6 +28,7 @@ void Trigger::BuildMappings(std::vector<UnpackerAcquConfig::hit_mapping_t>& hit_
                 2000
                 );
 }
+
 
 
 bool Trigger_2014::Matches(const TID& tid) const {
@@ -43,13 +51,40 @@ void Trigger_2014::BuildMappings(std::vector<UnpackerAcquConfig::hit_mapping_t>&
                 29192
                 );
 
-    scaler_mappings.emplace_back("Exptrigger_1MHz", 191);
-    scaler_mappings.emplace_back("Beampolmon_1MHz", 315);
+    // add the scaler mappings from internal map
+    for(const auto& m : scaler_mapping) {
+        scaler_mappings.emplace_back(m.first, m.second);
+    }
+}
 
-    scaler_mappings.emplace_back("TotalLivetime", 190);
-    scaler_mappings.emplace_back("FaradayCup",    313);
-    scaler_mappings.emplace_back("IonChamber",    312);
-    scaler_mappings.emplace_back("PbGlass",       311);
+string Trigger_2014::GetScalerReference(const string& scalername) const
+{
+    auto& m = scaler_mapping; // shortcut
+
+    auto item = m.find(scalername);
+    if(item == m.end())
+        return "";
+
+    if(item->second <= m.at(ScalerName::Exptrigger_1MHz))
+        return ScalerName::Exptrigger_1MHz;
+    if(item->second <= m.at(ScalerName::Beampolmon_1MHz))
+        return ScalerName::Beampolmon_1MHz;
+
+    return "";
+}
+
+Trigger_2014::scaler_mapping_t Trigger_2014::MakeScalerMapping()
+{
+    // build the mapping from human-readable names
+    // to Acqu scaler indices
+    scaler_mapping_t m;
+    m[ScalerName::Exptrigger_1MHz] = 191;
+    m[ScalerName::Beampolmon_1MHz] = 315;
+    m[ScalerName::TotalLivetime]   = 190;
+    m[ScalerName::FaradayCup]      = 313;
+    m[ScalerName::IonChamber]      = 312;
+    m[ScalerName::PbGlass]         = 311;
+    return m;
 }
 
 
@@ -81,3 +116,4 @@ void ant::expconfig::detector::Trigger::ApplyTo(TEventData& reconstructed)
     triggerinfos.CBTiming = TimeE/TimeEsum;
 
 }
+
