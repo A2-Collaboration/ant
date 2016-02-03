@@ -32,12 +32,14 @@ struct TEvent
 
     std::unique_ptr<TEventData> Reconstructed;
     std::unique_ptr<TEventData> MCTrue;
+    // indicates that this event was only saved for SlowControl processing
+    bool SavedForSlowControls = false;
 
     template<class Archive>
     void serialize(Archive archive, const std::uint32_t version) {
         if(version != ANT_TEVENT_VERSION)
             throw std::runtime_error("TEvent version mismatch");
-        archive(Reconstructed, MCTrue);
+        archive(Reconstructed, MCTrue, SavedForSlowControls);
     }
 
     virtual std::ostream& Print( std::ostream& s) const override;
