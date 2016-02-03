@@ -10,10 +10,29 @@ namespace ant {
 
 namespace analysis {
 
+namespace slowcontrol {
+
+struct event_t {
+    bool      Save;  // indicates that slowcontrol processors found this interesting
+    TEventPtr Event;
+    event_t() {}
+    event_t(bool save, TEventPtr event) :
+        Save(save), Event(move(event))
+    {}
+    explicit operator bool() const {
+        return Event != nullptr;
+    }
+};
+
+} // namespace slowcontrol
+
 class SlowControlManager {
+public:
+
+
 protected:
 
-    std::queue<TEventPtr> eventbuffer;
+    std::queue<slowcontrol::event_t> eventbuffer;
 
     using buffer_t = std::queue<TID>;
     std::map<std::shared_ptr<slowcontrol::Processor>, buffer_t> slowcontrol;
@@ -32,7 +51,7 @@ public:
 
     void ProcessEvent(TEventPtr event);
 
-    TEventPtr PopEvent();
+    slowcontrol::event_t PopEvent();
     bool hasEvents() const;
 
 };

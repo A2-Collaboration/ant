@@ -16,12 +16,11 @@ struct manager_t {
         keepReadHits = true;
     }
 private:
-    bool saveEvent;
-    bool keepReadHits;
     friend class ant::analysis::PhysicsManager;
     friend class ant::analysis::SlowControlManager;
-    manager_t() { Reset(); }
-    void Reset() { saveEvent = false; keepReadHits = false; }
+    bool saveEvent = false;
+    bool keepReadHits = false;
+
 };
 
 }

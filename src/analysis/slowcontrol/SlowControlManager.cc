@@ -73,7 +73,7 @@ void SlowControlManager::ProcessEvent(TEventPtr event)
     if(!event->Reconstructed)
         return;
 
-    auto& reconstructed = *(event->Reconstructed);
+    TEventData& reconstructed = *(event->Reconstructed);
 
     physics::manager_t manager;
 
@@ -90,21 +90,18 @@ void SlowControlManager::ProcessEvent(TEventPtr event)
         all_complete &= !sl.second.empty();
     }
 
-
-    //if manager says save-> mark event to be saved
-
-    eventbuffer.emplace(move(event));
+    eventbuffer.emplace(manager.saveEvent, move(event));
 }
 
-TEventPtr SlowControlManager::PopEvent() {
+event_t SlowControlManager::PopEvent() {
 
     if(!all_complete || eventbuffer.empty())
-        return nullptr;
+        return {};
 
-    auto i = move(eventbuffer.front());
+    auto i = std::move(eventbuffer.front());
     eventbuffer.pop();
 
-    if(i->Reconstructed->ID == changepoint) {
+    if(i.Event->Reconstructed->ID == changepoint) {
         changepoint = PopBuffers(changepoint);
     }
 
