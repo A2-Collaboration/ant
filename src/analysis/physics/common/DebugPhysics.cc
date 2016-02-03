@@ -28,6 +28,8 @@ void DebugPhysics::ProcessEvent(const TEvent& event, manager_t& manager)
         manager.SaveEvent();
         if(keepReadHits)
             manager.KeepDetectorReadHits();
+        if(requestSlowControl)
+            LOG_N_TIMES(1, INFO) <<  "First Tagger Scalers: " << slowcontrol::Variables::TaggerScalers->Get();
     }
     else if(!writeEvents) {
         LOG(INFO) << event;
