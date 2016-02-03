@@ -15,6 +15,11 @@ struct EPT_Scalers : Processor {
         return return_t::Complete;
     }
 
+    virtual void PopQueue() override
+    {
+
+    }
+
 };
 
 }}}} // namespace ant::analysis::slowcontrol::processor

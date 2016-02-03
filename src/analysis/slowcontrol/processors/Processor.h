@@ -16,6 +16,7 @@ struct Processor {
 
     virtual return_t ProcessEventData(const TEventData& recon, physics::manager_t& manager) =0;
 
+    virtual void PopQueue() =0;
 };
 
 }}}
