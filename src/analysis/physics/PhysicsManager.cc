@@ -93,47 +93,58 @@ void PhysicsManager::ReadFrom(
     chrono::time_point<std::chrono::system_clock> start, end;
     start = chrono::system_clock::now();
 
+    long long nEventsProcessed = 0;
+
     bool finished_reading = false;
-    long long nEventsRead = 0;
 
     ProgressCounter progress;
     while(true) {
         if(finished_reading)
             break;
 
-        do
-        {
-            if(!running || nEventsRead>=maxevents) {
-                VLOG(5) << "End of reading requested";
-                finished_reading = true;
+        if(!running) {
+            VLOG(3) << "Stop requested";
+            finished_reading = true;
+            break;
+        }
+
+        // read new event
+
+        auto event = std_ext::make_unique<TEvent>();
+        if(!TryReadEvent(event)) {
+            VLOG(5) << "No more events to read, finish.";
+            finished_reading = true;
+            break;
+        }
+
+        slowcontrol_mgr->ProcessEvent(move(event));
+
+        while(auto buffered_event = slowcontrol_mgr->PopEvent()) {
+
+            if(nEventsProcessed == maxevents) {
+                VLOG(3) << "Reached max Events (" << maxevents;
+                finished_reading = false;
                 break;
             }
-            auto event = std_ext::make_unique<TEvent>();
-            if(!TryReadEvent(event)) {
-                VLOG(5) << "No more events to read, finish.";
-                finished_reading = true;
+
+            if(!running)
                 break;
-            }
-            if(eventbuffer.size()>20000) {
-                throw Exception("SlowControl buffering reached maximum size without becoming complete.");
-            }
 
-            eventbuffer.emplace(move(event));
-            nEventsRead++;
+            const auto& eventid = buffered_event->Reconstructed->ID;
+            if(nEventsProcessed==0)
+                firstID = eventid;
+            lastID = eventid;
 
-            if(progressUpdates && source && progress.Update(source->PercentDone())) {
-                LOG(INFO) << progress;
-            }
+            logger::DebugInfo::nProcessedEvents = nEventsProcessed;
+            ProcessEvent(move(buffered_event));
 
+            nEventsProcessed++;
         }
-        while(!slowcontrol_mgr->isComplete());
 
-        if(slowcontrol_mgr->isComplete()) {
-            VLOG(5) << "Slowcontrol set complete. Processing event buffer.";
-            ProcessEventBuffer(maxevents);
-        } else {
-            VLOG(5) << "Finished reading but slowcontrol block not complete. Dropping remaining " << eventbuffer.size() << " events.";
+        if(progressUpdates && source && progress.Update(source->PercentDone())) {
+            LOG(INFO) << progress;
         }
+
     }
 
     for(auto& pclass : physics) {
@@ -164,81 +175,33 @@ void PhysicsManager::ReadFrom(
 
 bool PhysicsManager::TryReadEvent(TEventPtr& event)
 {
-    bool read_event = false;
-
-    while(!read_event) {
-        if(source) {
-            if(source->ReadNextEvent(*event)) {
-                read_event = true;
-                slowcontrol_mgr->ProcessEvent(*event, processmanager);
-            }
-            else {
-                return false;
-            }
-        }
-
-        auto it_reader = readers.begin();
-        while(it_reader != readers.end()) {
-
-            if((*it_reader)->ReadNextEvent(*event)) {
-                read_event = true;
-                slowcontrol_mgr->ProcessEvent(*event, processmanager);
-                ++it_reader;
-            }
-            else {
-                it_reader = readers.erase(it_reader);
-            }
-        }
-
-        if(!source && readers.empty())
+    bool event_read = false;
+    if(source) {
+        if(!source->ReadNextEvent(*event)) {
             return false;
+        }
+        event_read = true;
     }
-    return true;
-}
 
 
-void PhysicsManager::ProcessEventBuffer(long long maxevents)
-{
-    // if running is already false,
-    // flush the buffer no matter what...
-    bool flush = !running;
-    if(flush)
-        VLOG(5) << "Flushing " << eventbuffer.size() << " events from eventbuffer";
+    auto it_reader = readers.begin();
+    while(it_reader != readers.end()) {
 
-    TID runUntil = slowcontrol_mgr->GetRunUntil();
-
-    if(slowcontrol_mgr->hasRequests() && runUntil.IsInvalid())
-        return;
-
-    while(!eventbuffer.empty()) {
-        // running might change to false here in this loop
-        if(!running && !flush)
-            return;
-
-        if(nEventsProcessed>=maxevents)
-            return;
-
-        auto& event = eventbuffer.front();
-        auto& eventid = event->Reconstructed->ID;
-
-        if(slowcontrol_mgr->hasRequests() && (eventid > runUntil))
-            break;
-
-        if(nEventsProcessed==0)
-            firstID = eventid;
-        lastID = eventid;
-
-        // note that this invalidates also the eventid reference!
-        ProcessEvent(move(event));
-        eventbuffer.pop();
-        nEventsProcessed++;
+        if((*it_reader)->ReadNextEvent(*event)) {
+            ++it_reader;
+            event_read = true;
+        }
+        else {
+            it_reader = readers.erase(it_reader);
+        }
     }
-}
 
+    return event_read;
+}
 
 void PhysicsManager::ProcessEvent(std::unique_ptr<TEvent> event)
 {
-    logger::DebugInfo::nProcessedEvents = nEventsProcessed;
+
 
     if(particleID && event->Reconstructed) {
         // run particle ID for Reconstructed candidates

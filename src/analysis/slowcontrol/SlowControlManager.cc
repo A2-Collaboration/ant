@@ -14,6 +14,11 @@ using namespace ant::analysis;
 using namespace ant::analysis::slowcontrol;
 
 
+void SlowControlManager::AddProcessor(std::shared_ptr<Processor> p)
+{
+    slowcontrol.insert({p, buffer_t()});
+}
+
 TID SlowControlManager::min(const TID& a, const TID& b)
 {
     if(a.IsInvalid())
@@ -23,77 +28,85 @@ TID SlowControlManager::min(const TID& a, const TID& b)
     return std::min(a,b);
 }
 
+TID SlowControlManager::PopBuffers(const TID& id)
+{
+    TID next;
+
+    all_complete = true;
+    for(auto& s : slowcontrol) {
+        if(!s.second.empty() && s.second.front() == id) {
+            s.second.pop();
+            s.first->PopQueue();
+        }
+
+        if(!s.second.empty()) {
+            next = min(next, s.second.front());
+        } else {
+            all_complete = false;
+        }
+    }
+
+    return next;
+}
+
 SlowControlManager::SlowControlManager()
 {
     unsigned nRegistered = 0;
     for(VariablePtr var : Variables::All)
-        /// \todo remember the processors here...
-        if(!var->GetProcessors().empty())
+
+
+        if(!var->GetProcessors().empty()) {
+
             nRegistered++;
-    LOG(INFO) << "Have " << nRegistered << " registered slowcontrol variables";
+
+            for(auto& p : var->GetProcessors()) {
+                AddProcessor(p);
+            }
+
+        }
+
+    LOG(INFO) << "Have " << nRegistered << " registered slowcontrol variables and " << slowcontrol.size() << " processors";
 }
 
-void SlowControlManager::ProcessEvent(const TEvent& event, physics::manager_t& manager)
+void SlowControlManager::ProcessEvent(TEventPtr event)
 {
-    if(!event.Reconstructed)
+    if(!event->Reconstructed)
         return;
 
-    auto& reconstructed = *event.Reconstructed;
+    auto& reconstructed = *(event->Reconstructed);
 
-    /// \todo re-implement!
-    for(const TSlowControl& sc : reconstructed.SlowControls) {
-        auto entry = slowcontrol.find(sc.GetKey());
-        if(entry != slowcontrol.end()) {
-            buffer_t& buffer = entry->second;
-            buffer.emplace(std::make_pair(reconstructed.ID, std::move(sc)));
+    physics::manager_t manager;
+
+    all_complete = true;
+
+    for(auto& sl : slowcontrol) {
+
+        const auto result = sl.first->ProcessEventData(reconstructed, manager);
+
+        if(result == slowcontrol::Processor::return_t::Complete) {
+            sl.second.push(reconstructed.ID);
         }
-    }
-}
 
-bool SlowControlManager::isComplete() const {
-
-    for(const auto& entry : slowcontrol) {
-        if(entry.second.empty())
-            return false;
+        all_complete &= !sl.second.empty();
     }
 
-    return true;
+
+    //if manager says save-> mark event to be saved
+
+    eventbuffer.emplace(move(event));
 }
 
-TID SlowControlManager::GetRunUntil() const
-{
-    TID minimal;
+TEventPtr SlowControlManager::PopEvent() {
 
-    for(const auto& entry : slowcontrol) {
-        const buffer_t& buffer = entry.second;
-        const auto& slread = buffer.front();
-        minimal = min(minimal, slread.first);
+    if(!all_complete || eventbuffer.empty())
+        return nullptr;
+
+    auto i = move(eventbuffer.front());
+    eventbuffer.pop();
+
+    if(i->Reconstructed->ID == changepoint) {
+        changepoint = PopBuffers(changepoint);
     }
 
-    return minimal;
+    return i;
 }
-
-//TID SlowControlManager::UpdateSlowcontrolData(slowcontrol::SlowControl& slc)
-//{
-
-//    if(isComplete()) {
-//        auto validuntil = minimal_in_buffer.IsInvalid() ? FindMinimalTID() : minimal_in_buffer;
-
-//        minimal_in_buffer = TID();
-
-//        for(auto& entry : slowcontrol) {
-//            buffer_t& buffer = entry.second;
-//            auto slread = move(buffer.front());
-//            buffer.pop();
-
-//            FillSlowControl(slc, slread.second);
-
-//            minimal_in_buffer = min(minimal_in_buffer, slread.first);
-//        }
-
-//        return validuntil;
-//    }
-
-//    return TID();
-
-//}

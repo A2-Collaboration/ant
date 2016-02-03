@@ -41,11 +41,6 @@ protected:
 
     std::unique_ptr<SlowControlManager> slowcontrol_mgr;
 
-    std::queue<TEventPtr> eventbuffer;
-
-    long long nEventsProcessed = 0;
-
-    virtual void ProcessEventBuffer(long long maxevents);
     virtual void ProcessEvent(TEventPtr event);
 
     bool progressUpdates = true;
@@ -61,6 +56,7 @@ protected:
     private:
         volatile bool* running = nullptr;
     };
+
     running_t running;
 
     TID firstID;

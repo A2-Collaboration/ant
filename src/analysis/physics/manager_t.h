@@ -3,7 +3,8 @@
 namespace ant {
 namespace analysis {
 
-struct PhysicsManager;
+class PhysicsManager;
+class SlowControlManager;
 
 namespace physics {
 
@@ -18,6 +19,7 @@ private:
     bool saveEvent;
     bool keepReadHits;
     friend class ant::analysis::PhysicsManager;
+    friend class ant::analysis::SlowControlManager;
     manager_t() { Reset(); }
     void Reset() { saveEvent = false; keepReadHits = false; }
 };
