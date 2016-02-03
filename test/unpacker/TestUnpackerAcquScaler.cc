@@ -44,7 +44,9 @@ void dotest() {
         if(!slowcontrols.empty()) {
             nSlowControls += slowcontrols.size();
             for(auto& sc : slowcontrols) {
-                if(sc.Name == "TaggerScalers") {
+                // the test setup and the Acqu test blob uses the end-point tagger,
+                // so there should be corresponding scalers
+                if(sc.Name == "EPT_Scalers") {
                     taggerScalerBlockFound = true;
                     // we know the file is extracted from an EPT run...
                     REQUIRE(sc.Payload_Int.size() == 47);

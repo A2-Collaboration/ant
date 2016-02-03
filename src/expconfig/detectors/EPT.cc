@@ -65,7 +65,7 @@ void EPT::BuildMappings(
 
     // map the scalers
     /// \todo use static string instead of hard-coded word!
-    scaler_mappings.emplace_back("TaggerScalers", scaler_entries);
+    scaler_mappings.emplace_back("EPT_Scalers", scaler_entries);
 }
 
 
