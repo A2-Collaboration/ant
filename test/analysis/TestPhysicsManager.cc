@@ -47,7 +47,6 @@ TEST_CASE("PhysicsManager: Pluto/Geant Input", "[analysis]") {
 struct TestPhysics : Physics
 {
     bool finishCalled = false;
-    bool initCalled = false;
     bool showCalled = false;
     bool nowrite    = false;
     unsigned seenEvents = 0;
@@ -79,10 +78,6 @@ struct TestPhysics : Physics
     virtual void ShowResult() override
     {
         showCalled = true;
-    }
-    virtual void Initialize(slowcontrol::SlowControl&) override
-    {
-        initCalled = true;
     }
 };
 
@@ -128,7 +123,6 @@ void dotest_raw()
 
         REQUIRE(physics->finishCalled);
         REQUIRE_FALSE(physics->showCalled);
-        REQUIRE(physics->initCalled);
 
         REQUIRE(physics->seenEvents == expectedEvents);
         REQUIRE(physics->seenCandidates == 822);
@@ -224,8 +218,6 @@ void dotest_raw_nowrite()
 
     REQUIRE(physics->finishCalled);
     REQUIRE_FALSE(physics->showCalled);
-    REQUIRE(physics->initCalled);
-
 
     REQUIRE(physics->seenEvents == expectedEvents);
     REQUIRE(physics->seenCandidates == 822);
