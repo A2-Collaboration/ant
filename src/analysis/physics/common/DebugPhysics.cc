@@ -30,6 +30,7 @@ void DebugPhysics::ProcessEvent(const TEvent& event, manager_t& manager)
     }
     else if(!writeEvents) {
         LOG(INFO) << event;
+        LOG(INFO) << "Tagger Scalers: " << slowcontrol::Variables::TaggerScalers->Get();
     }
     seenEvents++;
 }
