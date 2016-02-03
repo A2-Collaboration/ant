@@ -320,8 +320,11 @@ int main(int argc, char** argv) {
         try {
             pm.AddPhysics( analysis::PhysicsRegistry::Create(classname, popts) );
             LOG(INFO) << "Activated physics class '" << classname << "'";
+        } catch (const std::exception& e) {
+            LOG(ERROR) << "Error while activating physics class \"" << classname << "\": " << e.what();
+            return 1;
         } catch (...) {
-            LOG(ERROR) << "Could not activate physics class";
+            LOG(ERROR) << "Could not activate physics class for unknown reason";
             return 1;
         }
     }
