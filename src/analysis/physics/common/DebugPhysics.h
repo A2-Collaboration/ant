@@ -11,6 +11,7 @@ class DebugPhysics: public Physics {
 protected:
     const unsigned writeEvents;
     const bool keepReadHits;
+    const bool requestSlowControl;
     unsigned seenEvents = 0;
 public:
     DebugPhysics(const std::string& name, OptionsPtr opts=nullptr);

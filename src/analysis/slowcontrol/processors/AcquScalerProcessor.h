@@ -34,6 +34,10 @@ struct AcquScalerVector : Processor {
     }
 
     value_t Get() const {
+        // if this assert fails, probably a physics class forgot
+        // to request the slowcontrol variable in its constructor
+        // see DebugPhysics how to it properly
+        assert(!queue.empty());
         return queue.front();
     }
 

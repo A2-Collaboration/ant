@@ -13,9 +13,10 @@ using namespace ant::analysis::physics;
 DebugPhysics::DebugPhysics(const std::string& name, OptionsPtr opts) :
     Physics(name, opts),
     writeEvents(opts->Get<unsigned>("WriteEvents", 0)),
-    keepReadHits(opts->Get<bool>("KeepReadHits", false))
+    keepReadHits(opts->Get<bool>("KeepReadHits", false)),
+    requestSlowControl(opts->Get<bool>("RequestSlowControl", false))
 {
-    if(opts->Get<bool>("RequestSlowControl", false))
+    if(requestSlowControl)
         slowcontrol::Variables::TaggerScalers->Request();
 }
 
@@ -30,7 +31,9 @@ void DebugPhysics::ProcessEvent(const TEvent& event, manager_t& manager)
     }
     else if(!writeEvents) {
         LOG(INFO) << event;
-        LOG(INFO) << "Tagger Scalers: " << slowcontrol::Variables::TaggerScalers->Get();
+        // only access slowcontrol if it was actually requested in the beginning
+        if(requestSlowControl)
+            LOG(INFO) << "Tagger Scalers: " << slowcontrol::Variables::TaggerScalers->Get();
     }
     seenEvents++;
 }
