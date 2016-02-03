@@ -48,6 +48,6 @@ void SetupLogger() {
     });
 }
 
-int DebugInfo::nProcessedEvents = -1;
+long long DebugInfo::nProcessedEvents = -1;
 int DebugInfo::nUnpackedBuffers = -1;
 

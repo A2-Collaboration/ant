@@ -33,7 +33,7 @@ namespace logger {
 
 struct DebugInfo {
     static int nUnpackedBuffers;
-    static int nProcessedEvents;
+    static long long nProcessedEvents;
 };
 
 }}
