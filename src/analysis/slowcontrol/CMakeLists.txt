@@ -34,6 +34,7 @@ add_library(slowcontrol_processors  ${SLOWCONTROL_PROCESSORS})
 
 append_header_files(SLOWCONTROL_VARIABLES)
 add_library(slowcontrol_variables ${SLOWCONTROL_VARIABLES})
+target_link_libraries(slowcontrol_variables expconfig)
 
 
 add_library(slowcontrol ${SLOWCONTROL})
