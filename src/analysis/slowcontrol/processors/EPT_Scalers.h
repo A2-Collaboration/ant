@@ -1,25 +1,16 @@
 #pragma once
 
-#include "Processor.h"
+#include "AcquScalerProcessor.h"
+
+#include "expconfig/detectors/EPT.h"
 
 namespace ant {
 namespace analysis {
 namespace slowcontrol {
 namespace processor {
 
-struct EPT_Scalers : Processor {
-
-
-    virtual return_t ProcessEventData(const TEventData& recon,  physics::manager_t& manager) override
-    {
-        return return_t::Complete;
-    }
-
-    virtual void PopQueue() override
-    {
-
-    }
-
+struct EPT_Scalers : AcquScalerVector {
+    EPT_Scalers() : AcquScalerVector(expconfig::detector::EPT::ScalerName) {}
 };
 
 }}}} // namespace ant::analysis::slowcontrol::processor

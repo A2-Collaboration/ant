@@ -17,6 +17,10 @@ struct Processor {
     virtual return_t ProcessEventData(const TEventData& recon, physics::manager_t& manager) =0;
 
     virtual void PopQueue() =0;
+
+    class Exception : public std::runtime_error {
+        using std::runtime_error::runtime_error; // use base class constructor
+    };
 };
 
 }}}

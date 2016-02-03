@@ -2,16 +2,17 @@ include_directories(.)
 
 set(SLOWCONTROL
   SlowControlManager.cc
+  SlowControlManager.h
 )
 
 set(SLOWCONTROL_PROCESSORS
-  SlowControlProcessors.h
   SlowControlProcessors.cc
   processors/Processor.h
+  processors/AcquScalerProcessor.h
+  processors/ExpTrigger.h
+  processors/Beampolmon.h
   processors/EPT_Scalers.h
-  processors/TotalLivetime.h
   processors/Tagger_Scalers.h
-  processors/Tagger_Livetime.h
   processors/PairSpec.h
 )
 
@@ -28,6 +29,7 @@ set(SLOWCONTROL_VARIABLES
 # managed in static registries, they are compiled
 # as separate libraries
 
+append_header_files(SLOWCONTROL_PROCESSORS)
 add_library(slowcontrol_processors  ${SLOWCONTROL_PROCESSORS})
 
 append_header_files(SLOWCONTROL_VARIABLES)
