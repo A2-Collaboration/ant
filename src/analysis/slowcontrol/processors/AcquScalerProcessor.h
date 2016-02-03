@@ -21,13 +21,21 @@ struct AcquScalerVector : Processor {
                 if(sc.Validity != TSlowControl::Validity_t::Backward)
                     throw Exception("Encountered AcquScaler with forward validity. That's strange.");
 
-                queue.push(sc.Payload_Int);
                 manager.SaveEvent();
 
+                if(!firstScalerSeen) {
+                    firstScalerSeen = true;
+                    return return_t::Skip;
+                }
+
+                queue.push(sc.Payload_Int);
                 return return_t::Complete;
             }
         }
-        return return_t::Buffer;
+        if(firstScalerSeen)
+            return return_t::Buffer;
+        else
+            return return_t::Skip;
     }
     virtual void PopQueue() override {
         queue.pop();
@@ -44,6 +52,7 @@ struct AcquScalerVector : Processor {
     AcquScalerVector(const std::string& name) : name(name) {}
 
 private:
+    bool firstScalerSeen = false;
     const std::string name;
     std::queue<value_t> queue;
 };

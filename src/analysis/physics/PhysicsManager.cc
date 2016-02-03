@@ -94,6 +94,7 @@ void PhysicsManager::ReadFrom(
     start = chrono::system_clock::now();
 
     long long nEventsProcessed = 0;
+    long long nEventsAnalyzed = 0;
     long long nEventsSaved = 0;
 
     bool reached_maxevents = false;
@@ -108,48 +109,52 @@ void PhysicsManager::ReadFrom(
             break;
         }
 
-        // read new event
-
-        auto event = std_ext::make_unique<TEvent>();
-        if(!TryReadEvent(event)) {
-            VLOG(5) << "No more events to read, finish.";
-            reached_maxevents = true;
-            break;
+        // read events until slowcontrol_mgr is complete
+        while(true) {
+            auto event = std_ext::make_unique<TEvent>();
+            if(!TryReadEvent(event)) {
+                VLOG(5) << "No more events to read, finish.";
+                reached_maxevents = true;
+                break;
+            }
+            if(slowcontrol_mgr->ProcessEvent(move(event)))
+                break;
         }
-
-        slowcontrol_mgr->ProcessEvent(move(event));
 
         while(auto buffered_event = slowcontrol_mgr->PopEvent()) {
 
-            if(nEventsProcessed == maxevents) {
+            if(nEventsAnalyzed == maxevents) {
                 VLOG(3) << "Reached max Events (" << maxevents;
                 reached_maxevents = true;
-                // we cannot simply break here since ProcessEvent might
+                // we cannot simply break here since might
                 // need to save stuff for slowcontrol purposes
             }
 
             if(!running)
                 break;
 
+            logger::DebugInfo::nProcessedEvents = nEventsProcessed;
+
             physics::manager_t manager;
             TEvent& event = *buffered_event.Event;
             if(!reached_maxevents && !event.SavedForSlowControls) {
-                logger::DebugInfo::nProcessedEvents = nEventsProcessed;
                 ProcessEvent(event, manager);
 
                 // prefer Reconstructed ID, but at least one branch should be non-null
                 const auto& eventid = event.Reconstructed ? event.Reconstructed->ID : event.MCTrue->ID;
-                if(nEventsProcessed==0)
+                if(nEventsAnalyzed==0)
                     firstID = eventid;
                 lastID = eventid;
 
-                nEventsProcessed++;
+                nEventsAnalyzed++;
 
                 if(manager.saveEvent)
                     nEventsSaved++;
             }
 
             SaveEvent(move(buffered_event), manager);
+
+            nEventsProcessed++;
         }
 
         if(progressUpdates && source && progress.Update(source->PercentDone())) {
@@ -169,7 +174,13 @@ void PhysicsManager::ReadFrom(
 
     end = chrono::system_clock::now();
     chrono::duration<double> elapsed_seconds = end-start;
-    LOG(INFO) << "Processed " << nEventsProcessed << " events, speed "
+    LOG(INFO) << "Analyzed " << nEventsAnalyzed << " events"
+              << (
+                     nEventsProcessed != nEventsAnalyzed ?
+                                             string(std_ext::formatter() << " (" << nEventsProcessed << " processed)")
+                                           : ""
+                 )
+              <<   ", speed "
               << nEventsProcessed/elapsed_seconds.count() << " event/s";
 
     const auto nEventsSavedTotal = treeEvents->GetEntries();

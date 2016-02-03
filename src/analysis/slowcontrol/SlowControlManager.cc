@@ -68,16 +68,17 @@ SlowControlManager::SlowControlManager()
     LOG(INFO) << "Have " << nRegistered << " registered slowcontrol variables and " << slowcontrol.size() << " processors";
 }
 
-void SlowControlManager::ProcessEvent(TEventPtr event)
+bool SlowControlManager::ProcessEvent(TEventPtr event)
 {
     if(!event->Reconstructed)
-        return;
+        return true;
 
     TEventData& reconstructed = *(event->Reconstructed);
 
     physics::manager_t manager;
 
     all_complete = true;
+    bool wants_skip = false;
 
     for(auto& sl : slowcontrol) {
 
@@ -86,11 +87,22 @@ void SlowControlManager::ProcessEvent(TEventPtr event)
         if(result == slowcontrol::Processor::return_t::Complete) {
             sl.second.push(reconstructed.ID);
         }
+        else if(result == slowcontrol::Processor::return_t::Skip) {
+            wants_skip = true;
+        }
 
         all_complete &= !sl.second.empty();
     }
 
+    // a skipped event could still be saved in order to trigger
+    // slow control processsors (see for example AcquScalerProcessor),
+    // but should NOT be processed by physics classes. Mark the event accordingly.
+    if(wants_skip)
+        event->SavedForSlowControls = true;
+
     eventbuffer.emplace(manager.saveEvent, move(event));
+
+    return all_complete;
 }
 
 event_t SlowControlManager::PopEvent() {

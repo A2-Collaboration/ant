@@ -49,10 +49,11 @@ protected:
 public:
     SlowControlManager();
 
-    void ProcessEvent(TEventPtr event);
+    bool ProcessEvent(TEventPtr event);
 
     slowcontrol::event_t PopEvent();
-    bool hasEvents() const;
+
+    size_t BufferSize() const { return eventbuffer.size(); }
 
 };
 
