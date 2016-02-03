@@ -348,6 +348,7 @@ int main(int argc, char** argv) {
         auto unused_popts = options->GetUnused();
         if(!unused_popts.empty()) {
             LOG(ERROR) << "Physics class '" << physicsname << "' did not use the options: " << unused_popts;
+            LOG(INFO)  << "Did you mean: " << options->GetNotFound();
             return 1;
         }
     }
@@ -376,6 +377,7 @@ int main(int argc, char** argv) {
     auto global_unused_popts =  popts->GetUnused();
     if(!global_unused_popts.empty()) {
         LOG(ERROR) << "The following global physics options were not used by any activated physics class: " << global_unused_popts;
+        LOG(INFO)  << "Did you mean: " << popts->GetNotFound();
         return 1;
     }
 
@@ -383,6 +385,7 @@ int main(int argc, char** argv) {
     auto unused_setup_opts = setup_opts->GetUnused();
     if(!unused_setup_opts.empty()) {
         LOG(ERROR) << "The following setup options were not used: " << unused_setup_opts;
+        LOG(INFO)  << "Did you mean: " << setup_opts->GetNotFound();
         return 1;
     }
 

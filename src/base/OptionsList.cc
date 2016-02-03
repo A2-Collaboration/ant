@@ -17,7 +17,7 @@ void OptionsList::SetOption(const string& str, const string delim)
     if( delimiter_pos != str.npos) {
         const std::string key = str.substr(0, delimiter_pos);
         const std::string val = str.substr(delimiter_pos + delim.length(), str.npos);
-        options[key] = make_pair(false, val);
+        options[key].Value = val;
     } else {
         LOG(WARNING) << "Can't parse option string \"" << str << "\"";
     }
@@ -44,6 +44,7 @@ string OptionsList::GetOption(const string& key) const
     auto entry = options.find(key);
 
     if(entry == options.end()) {
+        notfound.insert(key);
         // ask parent
         if(parent) {
             return parent->GetOption(key);
@@ -51,25 +52,30 @@ string OptionsList::GetOption(const string& key) const
         return "";
     }
 
-    entry->second.first = true;
-    return entry->second.second;
+    entry->second.Used = true;
+    return entry->second.Value;
 }
 
 string OptionsList::Flatten() const
 {
     stringstream s;
     for(const auto& e : options) {
-        s << e.first << "=" << e.second.second << ":";
+        s << e.first << "=" << e.second.Value << ":";
     }
     return s.str();
 }
 
-std::vector<string> OptionsList::GetUnused() const
+std::set<string> OptionsList::GetNotFound() const
 {
-    std::vector<string> unused;
+    return notfound;
+}
+
+std::set<string> OptionsList::GetUnused() const
+{
+    std::set<string> unused;
     for(const auto& e : options)
-        if(!e.second.first)
-            unused.push_back(e.first);
+        if(!e.second.Used)
+            unused.insert(e.first);
     return unused;
 }
 

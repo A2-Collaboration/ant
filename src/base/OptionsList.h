@@ -3,7 +3,7 @@
 #include <string>
 #include <memory>
 #include <map>
-#include <vector>
+#include <set>
 #include <sstream>
 
 namespace ant {
@@ -18,9 +18,19 @@ protected:
     OptionsPtr parent;
 
     // options are stored as key=value, with additional bool
-    // to indicate that this Option was used by someones
-    // see GetUnused()
-    mutable std::map<std::string, std::pair<bool, std::string> > options;
+    // to indicate that this Option was used by some client
+    // (physics classes or setups)
+    // see GetUnused() and GetNotFound()
+    // this makes debugging missing or wrongly specified options
+    // much easier
+    struct option_t {
+        std::string Value;
+        bool Used = false;
+    };
+
+    mutable std::map<std::string, option_t > options;
+    mutable std::set<std::string> notfound;
+
     std::string GetOption(const std::string& key) const;
 
 public:
@@ -38,7 +48,8 @@ public:
      * @brief GetUnconsumed
      * @return string representations of options which were not used by GetOption
      */
-    std::vector<std::string> GetUnused() const;
+    std::set<std::string> GetUnused() const;
+    std::set<std::string> GetNotFound() const;
 
     /**
      * @brief main method to retrieve options, already parsed to requested type
