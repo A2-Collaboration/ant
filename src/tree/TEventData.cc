@@ -7,8 +7,6 @@ TEventData::TEventData(const TID& id) : ID(id) {}
 TEventData::TEventData() {}
 TEventData::~TEventData() {}
 
-const TParticleList TEventData::PTypeList::empty;
-
 ostream& TEventData::Print(ostream& s) const {
     s << "ID=" << ID << endl;
 
