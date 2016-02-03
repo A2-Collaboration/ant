@@ -20,5 +20,7 @@ if(CMAKE_CXX_COMPILER_ID MATCHES "Clang")
   "-Wno-effc++ -DR__ACCESS_IN_SYMBOL")
 endif()
 
+append_header_files(SRCS_EXTRA)
+
 add_library(smarttree ${SRCS} ${SRCS_EXTRA})
 target_link_libraries(smarttree base ${ROOT_LIBRARIES})

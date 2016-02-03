@@ -35,5 +35,7 @@ if(CMAKE_CXX_COMPILER_ID MATCHES "Clang")
   "-Wno-effc++ -DR__ACCESS_IN_SYMBOL")
 endif()
 
+append_header_files(SRCS)
+
 add_library(analysis_codes ${SRCS} ${DICT_HEADERS})
 target_link_libraries(analysis_codes base analysis cbtaps_display ${ROOT_LIBRARIES})

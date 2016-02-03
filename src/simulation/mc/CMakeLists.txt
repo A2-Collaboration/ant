@@ -12,6 +12,7 @@ set(SIMULATION_MC
   utils/PlutoTID.cc
 )
 
+append_header_files(SIMULATION_MC)
 
 # use Python-Script for precompiled database
 ADD_CUSTOM_COMMAND(

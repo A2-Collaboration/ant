@@ -45,5 +45,7 @@ set(SRCS
     modules/MCEnergySmearing.cc
   )
 
+append_header_files(SRCS)
+
 add_library(calibration ${SRCS})
 target_link_libraries(calibration base tree expconfig-detectors cbtaps_display)
