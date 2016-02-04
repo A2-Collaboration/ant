@@ -1,0 +1,20 @@
+#!/bin/bash -e
+#
+# Change paths of a list of file names.
+#
+
+if [ $# -le 0 ]; then
+    echo "Changes paths of file names in a list"
+    echo "Usage example:"
+    echo "${0} <new_path> < list_of_file_paths > new_list" 
+    exit 1
+fi
+
+TOPATH="${1}"
+
+while read IPATH;
+do
+    FNAME=$(basename "${IPATH}")
+    NFNAME="${TOPATH}/${FNAME}"
+    echo "${NFNAME}"
+done
