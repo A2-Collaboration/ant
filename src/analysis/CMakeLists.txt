@@ -82,6 +82,7 @@ set(ANALYSIS_UTILS
   utils/particle_tools.cc
   utils/TimeSmearingHack.cc
   utils/KinFitter.cc
+  utils/ProtonPermutation.cc
   )
 
 set(ANALYSIS_ALL
