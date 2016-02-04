@@ -15,8 +15,17 @@ protected:
 
     const interval<size_t> nCands;
     const double CBEsum;
+    const double maxCoplAngle;
 
     TH1D* steps;
+
+    /**
+     * @brief check if at least one combination passes "coplanarity" test
+     * @param cands list of candidates
+     * @param maxangle
+     * @return
+     */
+    static bool checkCoplanarity(const TCandidateList& cands, const double maxangle);
 
 public:
     EventFilter(const std::string& name, OptionsPtr opts);
