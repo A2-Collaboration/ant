@@ -933,7 +933,8 @@ OmegaEtaG2::OmegaEtaG2(const std::string& name, OptionsPtr opts):
     b_ggg.SetBranches(tree, "ggg");
     tree->Branch("ggg_Time", &b_gggTime);
 
-    tree->Branch("AnglePcP", &b_copl_angle);
+    tree->Branch("CoplAngle", &b_copl_angle);
+    tree->Branch("Angle_p_mm",&b_p_mm_angle);
 
     tree->Branch("ggIM",     b_ggIM, "ggIM[3]/D");
 
