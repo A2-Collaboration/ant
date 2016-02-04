@@ -50,19 +50,19 @@ protected:
 
     bool progressUpdates = true;
 
-    struct running_t {
-        running_t(volatile bool* running_) :
-            running(running_) {}
+    struct interrupt_t {
+        interrupt_t(volatile bool* interrupt_) :
+            interrupt(interrupt_) {}
         explicit operator bool() {
-            if(running != nullptr)
-                return *running;
-            return true;
+            if(interrupt != nullptr)
+                return *interrupt;
+            return false;
         }
     private:
-        volatile bool* running = nullptr;
+        volatile bool* interrupt = nullptr;
     };
 
-    running_t running;
+    interrupt_t interrupt;
 
     TID firstID;
     TID lastID;
@@ -73,7 +73,7 @@ protected:
 
 public:
 
-    PhysicsManager(volatile bool* running_ = nullptr);
+    PhysicsManager(volatile bool* interrupt_ = nullptr);
     virtual ~PhysicsManager();
 
     template <typename T, typename ... args_t>

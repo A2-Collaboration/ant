@@ -20,9 +20,9 @@ using namespace std;
 using namespace ant;
 using namespace ant::analysis;
 
-PhysicsManager::PhysicsManager(volatile bool* running_) :
+PhysicsManager::PhysicsManager(volatile bool* interrupt_) :
     physics(),
-    running(running_)
+    interrupt(interrupt_)
 {}
 
 PhysicsManager::~PhysicsManager() {}
@@ -101,16 +101,16 @@ void PhysicsManager::ReadFrom(
 
     ProgressCounter progress;
     while(true) {
-        if(reached_maxevents)
+        if(reached_maxevents || interrupt)
             break;
-
-        if(!running) {
-            VLOG(3) << "Running interrupted";
-            break;
-        }
 
         // read events until slowcontrol_mgr is complete
         while(true) {
+            if(interrupt) {
+                VLOG(3) << "Reading interrupted";
+                break;
+            }
+
             auto event = std_ext::make_unique<TEvent>();
             if(!TryReadEvent(event)) {
                 VLOG(5) << "No more events to read, finish.";
@@ -123,15 +123,17 @@ void PhysicsManager::ReadFrom(
 
         while(auto buffered_event = slowcontrol_mgr->PopEvent()) {
 
+            if(interrupt) {
+                VLOG(3) << "Processing interrupted";
+                break;
+            }
+
             if(nEventsAnalyzed == maxevents) {
                 VLOG(3) << "Reached max Events (" << maxevents;
                 reached_maxevents = true;
                 // we cannot simply break here since might
                 // need to save stuff for slowcontrol purposes
             }
-
-            if(!running)
-                break;
 
             logger::DebugInfo::nProcessedEvents = nEventsProcessed;
 
