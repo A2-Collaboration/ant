@@ -117,9 +117,10 @@ void PhysicsManager::ReadFrom(
                 reached_maxevents = true;
                 break;
             }
+            // dump it into slowcontrol until full...
             if(slowcontrol_mgr->ProcessEvent(move(event)))
                 break;
-            // 20000 corresponds to two Acqu Scaler blocks
+            // ..or max buffersize reached: 20000 corresponds to two Acqu Scaler blocks
             if(slowcontrol_mgr->BufferSize()>20000) {
                 throw Exception(std_ext::formatter() <<
                                 "Slowcontrol buffer reached maximum size " << slowcontrol_mgr->BufferSize()
@@ -134,30 +135,37 @@ void PhysicsManager::ReadFrom(
                 break;
             }
 
-            if(nEventsAnalyzed == maxevents) {
-                VLOG(3) << "Reached max Events " << maxevents;
-                reached_maxevents = true;
-                // we cannot simply break here since might
-                // need to save stuff for slowcontrol purposes
-            }
-
             logger::DebugInfo::nProcessedEvents = nEventsProcessed;
 
             physics::manager_t manager;
-            TEvent& event = *buffered_event.Event;
-            if(!reached_maxevents && !event.SavedForSlowControls) {
-                ProcessEvent(event, manager);
 
-                // prefer Reconstructed ID, but at least one branch should be non-null
-                const auto& eventid = event.Reconstructed ? event.Reconstructed->ID : event.MCTrue->ID;
-                if(nEventsAnalyzed==0)
-                    firstID = eventid;
-                lastID = eventid;
+            // if we've already reached the maxevents,
+            // we just postprocess the remaining slowcontrol buffer (if any)
+            if(!reached_maxevents) {
+                if(nEventsAnalyzed == maxevents) {
+                    VLOG(3) << "Reached max Events " << maxevents;
+                    reached_maxevents = true;
+                    // we cannot simply break here since might
+                    // need to save stuff for slowcontrol purposes
+                    if(slowcontrol_mgr->BufferSize()==0)
+                        break;
+                }
 
-                nEventsAnalyzed++;
+                TEvent& event = *buffered_event.Event;
+                if(!reached_maxevents && !event.SavedForSlowControls) {
+                    ProcessEvent(event, manager);
 
-                if(manager.saveEvent)
-                    nEventsSaved++;
+                    // prefer Reconstructed ID, but at least one branch should be non-null
+                    const auto& eventid = event.Reconstructed ? event.Reconstructed->ID : event.MCTrue->ID;
+                    if(nEventsAnalyzed==0)
+                        firstID = eventid;
+                    lastID = eventid;
+
+                    nEventsAnalyzed++;
+
+                    if(manager.saveEvent)
+                        nEventsSaved++;
+                }
             }
 
             SaveEvent(move(buffered_event), manager);
@@ -283,11 +291,12 @@ void PhysicsManager::ProcessEvent(TEvent& event, physics::manager_t& manager)
 
 void PhysicsManager::SaveEvent(slowcontrol::event_t buffered_event, const physics::manager_t& manager)
 {
-    if(manager.saveEvent || buffered_event.Save) {
+    auto& event = buffered_event.Event;
+
+    if(manager.saveEvent || buffered_event.Save || event->SavedForSlowControls) {
         if(!buffered_event.Save && treeEvents->GetCurrentFile() == nullptr)
             LOG_N_TIMES(1, WARNING) << "Writing treeEvents to memory. Might be a lot of data!";
 
-        auto& event = buffered_event.Event;
 
         // always keep read hits if saving for slowcontrol
         if(!manager.keepReadHits && !buffered_event.Save)
