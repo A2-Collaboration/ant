@@ -119,6 +119,12 @@ void PhysicsManager::ReadFrom(
             }
             if(slowcontrol_mgr->ProcessEvent(move(event)))
                 break;
+            // 20000 corresponds to two Acqu Scaler blocks
+            if(slowcontrol_mgr->BufferSize()>20000) {
+                throw Exception(std_ext::formatter() <<
+                                "Slowcontrol buffer reached maximum size " << slowcontrol_mgr->BufferSize()
+                                << " without becoming complete. Stopping.");
+            }
         }
 
         while(auto buffered_event = slowcontrol_mgr->PopEvent()) {
@@ -129,7 +135,7 @@ void PhysicsManager::ReadFrom(
             }
 
             if(nEventsAnalyzed == maxevents) {
-                VLOG(3) << "Reached max Events (" << maxevents;
+                VLOG(3) << "Reached max Events " << maxevents;
                 reached_maxevents = true;
                 // we cannot simply break here since might
                 // need to save stuff for slowcontrol purposes
