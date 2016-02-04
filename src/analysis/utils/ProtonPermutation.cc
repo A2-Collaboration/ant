@@ -32,7 +32,7 @@ ProtonPermutation::ProtonPermutation(const TCandidateList& candidates):
     Fill();
 }
 
-bool ProtonPermutation::Next()
+void ProtonPermutation::Next()
 {
     ++p_it;
 
@@ -40,6 +40,4 @@ bool ProtonPermutation::Next()
 
     if(!end)
         Fill();
-
-    return !end;
 }

@@ -54,12 +54,12 @@ void dotest_permutation(const TCandidateList& cands, const vector<u_int16_t>& nu
 
     assert(numbers.size() >= 1);
 
-    utils::ProtonPermutation perm(cands);
+
 
     unsigned n=0;
 
     vector<u_int16_t> a;
-    do {
+    for(utils::ProtonPermutation perm(cands); perm.Good(); perm.Next()) {
 
         vector<u_int16_t> b;
 
@@ -80,7 +80,7 @@ void dotest_permutation(const TCandidateList& cands, const vector<u_int16_t>& nu
 
         ++n;
 
-    } while(perm.Next());
+    }
 
     sort(a);
 

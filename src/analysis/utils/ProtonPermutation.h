@@ -23,7 +23,8 @@ public:
     const TParticlePtr   Proton()  const { return proton; }
     const TParticleList& Photons() const { return photons; }
 
-    bool Next();
+    void Next();
+    bool Good() const { return p_it != cands.cend(); }
 };
 
 }
