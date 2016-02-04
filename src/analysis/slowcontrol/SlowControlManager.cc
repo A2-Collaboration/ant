@@ -97,8 +97,8 @@ bool SlowControlManager::ProcessEvent(TEventPtr event)
     // a skipped event could still be saved in order to trigger
     // slow control processsors (see for example AcquScalerProcessor),
     // but should NOT be processed by physics classes. Mark the event accordingly.
-    if(wants_skip)
-        event->SavedForSlowControls = true;
+    if(wants_skip && !event->SavedForSlowControls)
+        event->SavedForSlowControls = manager.saveEvent;
 
     eventbuffer.emplace(manager.saveEvent, move(event));
 
