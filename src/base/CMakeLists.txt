@@ -27,6 +27,7 @@ set(SRCS_BASE
   OptionsList.cc
   ProgressCounter.cc
   TF1Ext.h
+  TH1Ext.h
 )
 
 set(SRCS_CEREAL
