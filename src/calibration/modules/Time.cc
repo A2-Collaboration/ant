@@ -10,6 +10,7 @@
 #include "tree/TCalibrationData.h"
 
 #include "base/Logger.h"
+#include "base/TH1Ext.h"
 
 #include "TH1D.h"
 #include "TH2D.h"
@@ -155,6 +156,8 @@ void Time::TheGUI::InitGUI(gui::ManagerWindow_traits* window)
     window->AddCheckBox("Ignore prev fit params", IgnorePreviousFitParameters);
 
     window->AddNumberEntry("Chi2/NDF limit for autostop", AutoStopOnChi2);
+    window->AddNumberEntry("Max Peakposition difference", AutoStopOnPeakPos);
+    window->AddNumberEntry("Stop at Channel", AutoStopAtChannel);
 
     theCanvas = window->AddCalCanvas();
     times = new TH1D("times","Times",
@@ -203,19 +206,31 @@ gui::CalibModule_traits::DoFitReturn_t Time::TheGUI::DoFit(TH1* hist, unsigned c
         fitFunction->Load(it_fit_param->second);
     }
 
+    const auto maximum = GetMaxPos(times);
+    bool fitOK = false;
     size_t retries = 5;
     do {
         fitFunction->Fit(times);
         VLOG(5) << "Chi2/dof = " << fitFunction->Chi2NDF();
-        if(fitFunction->Chi2NDF() < AutoStopOnChi2) {
-            return DoFitReturn_t::Next;
+        if(fitFunction->Chi2NDF() < AutoStopOnChi2 && fabs(maximum - fitFunction->GetPeakPosition()) < AutoStopOnPeakPos ) {
+            fitOK = true;
+            break;
         }
         retries--;
     }
     while(retries>0);
 
+    if(int(AutoStopAtChannel) == int(channel))
+        return DoFitReturn_t::Display;
+
+    if(fitOK)
+        return DoFitReturn_t::Next;
+
     // reached maximum retries without good chi2
     LOG(INFO) << "Chi2/dof = " << fitFunction->Chi2NDF();
+    LOG(INFO) << "Distance Max to PeakPos : " << maximum << " - " <<  fitFunction->GetPeakPosition() <<
+                 " = " << fabs(maximum - fitFunction->GetPeakPosition());
+
     return DoFitReturn_t::Display;
 
 }

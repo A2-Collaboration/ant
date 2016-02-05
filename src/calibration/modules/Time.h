@@ -53,6 +53,8 @@ public:
         bool IgnorePreviousFitParameters = false;
 
         double AutoStopOnChi2 = 6.0;
+        double AutoStopOnPeakPos = 6;
+        double AutoStopAtChannel = -1;
 
     public:
         TheGUI(const std::string& name,
