@@ -210,13 +210,16 @@ gui::CalibModule_traits::DoFitReturn_t Time::TheGUI::DoFit(TH1* hist, unsigned c
     }
 
     const auto maximum = GetMaxPos(times);
-    bool fitOK = false;
+    bool chi2OK = false;
+    bool PeakPosOK = false;
     size_t retries = 5;
     do {
         fitFunction->Fit(times);
         VLOG(5) << "Chi2/dof = " << fitFunction->Chi2NDF();
-        if(fitFunction->Chi2NDF() < AutoStopOnChi2 && fabs(maximum - fitFunction->GetPeakPosition()) < AutoStopOnPeakPos ) {
-            fitOK = true;
+
+        chi2OK = fitFunction->Chi2NDF() < AutoStopOnChi2 ;
+        PeakPosOK = fabs(maximum - fitFunction->GetPeakPosition()) < AutoStopOnPeakPos ;
+        if( chi2OK && PeakPosOK )  {
             break;
         }
         retries--;
@@ -226,13 +229,16 @@ gui::CalibModule_traits::DoFitReturn_t Time::TheGUI::DoFit(TH1* hist, unsigned c
     if(int(AutoStopAtChannel) == int(channel))
         return DoFitReturn_t::Display;
 
-    if(fitOK)
+    if( chi2OK && PeakPosOK )
         return DoFitReturn_t::Next;
 
     // reached maximum retries without good chi2
-    LOG(INFO) << "Chi2/dof = " << fitFunction->Chi2NDF();
-    LOG(INFO) << "Distance Max to PeakPos : " << maximum << " - " <<  fitFunction->GetPeakPosition() <<
-                 " = " << fabs(maximum - fitFunction->GetPeakPosition());
+
+    LOG(INFO) << "Stopped automode" ;
+    if (!chi2OK) LOG(INFO)    << " -> Chi2/dof = " << fitFunction->Chi2NDF();
+
+    if (!PeakPosOK) LOG(INFO) << " -> Distance Max to PeakPos : " << maximum << " - " <<  fitFunction->GetPeakPosition()
+                              << " = " << fabs(maximum - fitFunction->GetPeakPosition());
 
     return DoFitReturn_t::Display;
 
