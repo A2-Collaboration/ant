@@ -61,12 +61,12 @@ void TAPSTimeFunction::SetDefaults(TH1 *hist)
     if(hist) {
         const auto height = hist->GetMaximum();
         func->SetParameter(0, height/2.0);
-        func->SetParLimits(0, 0.0, height); // positive amplitude
+        func->SetParLimits(0, 0.0, 1.5 * height); // positive amplitude
 
         const double max_pos = hist->GetXaxis()->GetBinCenter(hist->GetMaximumBin());
         func->SetParameter(1,max_pos);
 
-        SetRange({-20, 20});
+        SetRange({max_pos - 20, max_pos + 20});
 
         func->SetParameter(2,5);
         func->SetParLimits(2, 0, GetRange().Length() / 2.0);
