@@ -158,6 +158,7 @@ void Time::TheGUI::InitGUI(gui::ManagerWindow_traits* window)
     window->AddNumberEntry("Chi2/NDF limit for autostop", AutoStopOnChi2);
     window->AddNumberEntry("Max Peakposition difference", AutoStopOnPeakPos);
     window->AddNumberEntry("Stop at Channel", AutoStopAtChannel);
+    window->AddNumberEntry("time in [ - t_0 , t_0 ]", HardTimeCut);
 
     theCanvas = window->AddCalCanvas();
     times = new TH1D("times","Times",
@@ -198,6 +199,8 @@ gui::CalibModule_traits::DoFitReturn_t Time::TheGUI::DoFit(TH1* hist, unsigned c
     TH2* hist2 = dynamic_cast<TH2*>(hist);
 
     times = hist2->ProjectionX("times",channel+1,channel+1);
+    if (HardTimeCut > 0 )
+        times->GetXaxis()->SetRangeUser(-fabs(HardTimeCut),fabs(HardTimeCut));
 
     fitFunction->SetDefaults(times);
     const auto it_fit_param = fitParams.find(channel);
