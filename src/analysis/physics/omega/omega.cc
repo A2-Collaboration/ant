@@ -542,6 +542,8 @@ TLorentzVector boost(const TLorentzVector& lv, const TVector3& boot) {
     return v;
 }
 
+#define FASSERT(x) if(!(x)) LOG(ERROR) << "ERROR";
+
 struct chi2_highscore_t {
 
     double chi2  = std::numeric_limits<double>::infinity();
@@ -765,54 +767,71 @@ void OmegaEtaG2::Analyse(const TEventData &data, const TEvent& event, manager_t&
 
 
         TParticleList rec_photons(3);
-        TParticleList true_photons(3);
+        TParticlePtr  rec_proton = nullptr;
+        TParticleList true_particles(4);
 
         b_ggIM_real    = std::numeric_limits<double>::quiet_NaN();
         b_ggIM_comb[0] = std::numeric_limits<double>::quiet_NaN();
         b_ggIM_comb[1] = std::numeric_limits<double>::quiet_NaN();
 
         if(particletree && (b_SigBgFlag==0 || b_SigBgFlag ==1)) {
-            particletree->Map_level([&true_photons] (const TParticlePtr& p, const size_t& level) {
+            particletree->Map_level([&true_particles] (const TParticlePtr& p, const size_t& level) {
+
+                if(level == 1) {
+                    if(p->Type() == ParticleTypeDatabase::Proton) {
+                        FASSERT(true_particles[3] == nullptr);
+                        true_particles[3] = p;
+                    }
+                }
 
                 if(p->Type() == ParticleTypeDatabase::Photon) {
 
                     if(level==2) {
-                        assert(true_photons[0]==nullptr);
-                        true_photons[0] = p;
+                        FASSERT(true_particles[0]==nullptr);
+                        true_particles[0] = p;
 
                     } else if(level == 3) {
 
-                        if(!true_photons[1]) {
-                            true_photons[1] = p;
+                        if(!true_particles[1]) {
+                            true_particles[1] = p;
                         } else {
-                            assert(true_photons[2]==nullptr);
-                            true_photons[2] = p;
+                            FASSERT(true_particles[2]==nullptr);
+                            true_particles[2] = p;
                         }
                     }
                 }
             });
 
-            assert(true_photons[0]!=nullptr);
-            assert(true_photons[1]!=nullptr);
-            assert(true_photons[2]!=nullptr);
+            FASSERT(true_particles[0]!=nullptr);
+            FASSERT(true_particles[1]!=nullptr);
+            FASSERT(true_particles[2]!=nullptr);
+            FASSERT(true_particles[3]!=nullptr);
 
-            const auto matched  = utils::match1to1(true_photons, photons, [] (const TParticlePtr& p1, const TParticlePtr& p2) {
+            const auto matched  = utils::match1to1(true_particles, data.Particles.GetAll(), [] (const TParticlePtr& p1, const TParticlePtr& p2) {
                 return p1->Angle(p2->Vect());
             }, {0.0, degree_to_radian(15.0)});
 
-            if(matched.size() ==3) {
+            if(matched.size() == true_particles.size()) {
 
-                rec_photons[0] = utils::FindMatched(matched, true_photons[0]);
-                rec_photons[1] = utils::FindMatched(matched, true_photons[1]);
-                rec_photons[2] = utils::FindMatched(matched, true_photons[2]);
+                rec_photons[0] = utils::FindMatched(matched, true_particles[0]);
+                rec_photons[1] = utils::FindMatched(matched, true_particles[1]);
+                rec_photons[2] = utils::FindMatched(matched, true_particles[2]);
+                rec_proton     = utils::FindMatched(matched, true_particles[3]);
 
-                assert(rec_photons[0]!=nullptr);
-                assert(rec_photons[1]!=nullptr);
-                assert(rec_photons[2]!=nullptr);
+                FASSERT(rec_photons[0]!=nullptr);
+                FASSERT(rec_photons[1]!=nullptr);
+                FASSERT(rec_photons[2]!=nullptr);
+                FASSERT(rec_proton    !=nullptr);
 
                 b_ggIM_real    = IM(rec_photons[1], rec_photons[2]);
                 b_ggIM_comb[0] = IM(rec_photons[0], rec_photons[1]);
                 b_ggIM_comb[1] = IM(rec_photons[0], rec_photons[2]);
+
+                if(rec_proton->Type() == ParticleTypeDatabase::Proton) {
+                    b_found_proton = 1;
+                } else {
+                    b_found_proton = 0;
+                }
             }
 
         }
@@ -956,6 +975,8 @@ OmegaEtaG2::OmegaEtaG2(const std::string& name, OptionsPtr opts):
     tree->Branch("ggIM_comb[2]",     b_ggIM_comb, "ggIM_comb[2]/D");
 
     tree->Branch("CBAvgTime",       &b_CBAvgTime);
+
+    tree->Branch("found_proton", &b_found_proton);
 
     // set up kin fitter
     fitter.SetupBranches(tree, "EPB");

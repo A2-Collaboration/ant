@@ -195,6 +195,8 @@ protected:
     double b_TagE      = 0.0;
     double b_TagW      = 0.0;
 
+    int    b_found_proton = 0;
+
 
     int       b_SigBgFlag = flagSignal;
 
