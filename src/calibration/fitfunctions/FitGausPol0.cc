@@ -110,5 +110,8 @@ double FitGausPol0::SignalToBackground(const double x) const
     const auto s = func->Eval(x);
     const auto b = func->GetParameter(3);
 
-    return (s-b)/(s+b);
+    if ( b == 0 )
+        return s;
+
+    return (s-b)/b;
 }
