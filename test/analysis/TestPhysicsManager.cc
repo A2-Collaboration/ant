@@ -52,6 +52,8 @@ struct TestPhysics : Physics
     unsigned seenEvents = 0;
     unsigned seenCandidates = 0;
     unsigned seenMCTrue = 0;
+    unsigned seenTrueTargetPos = 0;
+    unsigned seenReconTargetPosNaN = 0;
 
 
     TestPhysics(bool nowrite_ = false) :
@@ -66,7 +68,9 @@ struct TestPhysics : Physics
         seenEvents++;
         seenCandidates += event.Reconstructed->Candidates.size();
         seenMCTrue += event.MCTrue->Particles.GetAll().size();
-
+        // make sure it's non-zero and not nan only for MCTrue
+        seenTrueTargetPos += event.MCTrue->Target.Vertex.Z() < -1;
+        seenReconTargetPosNaN += std::isnan(event.Reconstructed->Target.Vertex.Z());
         // request to save every third event
         if(!nowrite && seenEvents % 3 == 0)
             manager.SaveEvent();
@@ -126,6 +130,8 @@ void dotest_raw()
 
         REQUIRE(physics->seenEvents == expectedEvents);
         REQUIRE(physics->seenCandidates == 822);
+        REQUIRE(physics->seenTrueTargetPos == 0);
+        REQUIRE(physics->seenReconTargetPosNaN == expectedEvents);
 
         // quick check if TTree was there...
         auto tree = outfile.GetSharedClone<TTree>("treeEvents");
@@ -163,7 +169,7 @@ void dotest_raw()
 
     }
 
-    // read in file with AntReader
+    // read in file with AntReader without reconstruction
     {
         auto inputfiles = make_shared<WrapTFileInput>(tmpfile.filename);
 
@@ -250,5 +256,9 @@ void dotest_plutogeant()
     REQUIRE(physics->seenEvents == 10);
     REQUIRE(physics->seenCandidates == 10);
     REQUIRE(physics->seenMCTrue == 10);
+    REQUIRE(physics->seenTrueTargetPos == 5);
+    REQUIRE(physics->seenReconTargetPosNaN == 10);
+
+
 
 }
