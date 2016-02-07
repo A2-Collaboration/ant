@@ -45,7 +45,7 @@ bool ProgressCounter::Update(double pos)
 
     if(elapsed_seconds.count() >= t) {
         percent_sec  = (x - last_x) / elapsed_seconds.count();
-        sec_emaining = (max - x) / percent_sec;
+        sec_remaining = (max - x) / percent_sec;
         last_output = now;
         last_x = x;
         return true;
@@ -60,15 +60,11 @@ double ProgressCounter::PercentDone() const
 
 double ProgressCounter::SecondsLeft() const
 {
-    return sec_emaining;
+    return sec_remaining;
 }
 
-namespace ant {
-
-ostream&operator<<(ostream& stream, const ProgressCounter& counter)
+ostream& ant::ProgressCounter::Print(ostream& stream) const
 {
-    stream << setw(2) << std::setprecision(4) << counter.PercentDone() << " % done, ETA: " << TimeToStr(unsigned(counter.SecondsLeft()));
+    stream << setw(2) << std::setprecision(4) << PercentDone() << " % done, ETA: " << TimeToStr(unsigned(SecondsLeft()));
     return stream;
-}
-
 }
