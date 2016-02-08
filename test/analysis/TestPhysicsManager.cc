@@ -27,7 +27,7 @@ using namespace ant::analysis;
 void dotest_raw();
 void dotest_raw_nowrite();
 void dotest_plutogeant();
-
+void dotest_runall();
 
 TEST_CASE("PhysicsManager: Raw Input", "[analysis]") {
     test::EnsureSetup();
@@ -42,6 +42,10 @@ TEST_CASE("PhysicsManager: Raw Input without TEvent writing", "[analysis]") {
 TEST_CASE("PhysicsManager: Pluto/Geant Input", "[analysis]") {
     test::EnsureSetup();
     dotest_plutogeant();
+}
+TEST_CASE("PhysicsManager: Run all physics", "[analysis]") {
+    test::EnsureSetup();
+    dotest_runall();
 }
 
 struct TestPhysics : Physics
@@ -258,7 +262,21 @@ void dotest_plutogeant()
     REQUIRE(physics->seenMCTrue == 10);
     REQUIRE(physics->seenTrueTargetPos == 5);
     REQUIRE(physics->seenReconTargetPosNaN == 10);
+}
 
+void dotest_runall() {
 
+    PhysicsManager pm;
+
+    for(auto name : PhysicsRegistry::GetList()) {
+        REQUIRE_NOTHROW(pm.AddPhysics(PhysicsRegistry::Create(name)));
+    }
+
+    auto unpacker = Unpacker::Get(string(TEST_BLOBS_DIRECTORY)+"/Acqu_twoscalerblocks.dat.xz");
+    auto reconstruct = std_ext::make_unique<Reconstruct>();
+    list< unique_ptr<analysis::input::DataReader> > readers;
+    readers.emplace_back(std_ext::make_unique<input::AntReader>(nullptr, move(unpacker), move(reconstruct)));
+
+    REQUIRE_NOTHROW(pm.ReadFrom(move(readers), 30));
 
 }
