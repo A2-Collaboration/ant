@@ -128,6 +128,7 @@ void PhysicsManager::ReadFrom(
             }
         }
 
+        // read the slowcontrol_mgr's buffer and process the events
         while(auto buffered_event = slowcontrol_mgr->PopEvent()) {
 
             if(interrupt) {

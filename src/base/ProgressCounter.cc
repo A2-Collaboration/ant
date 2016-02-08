@@ -63,7 +63,7 @@ double ProgressCounter::SecondsLeft() const
     return sec_remaining;
 }
 
-ostream& ant::ProgressCounter::Print(ostream& stream) const
+ostream& ProgressCounter::Print(ostream& stream) const
 {
     stream << setw(2) << std::setprecision(4) << PercentDone() << " % done, ETA: " << TimeToStr(unsigned(SecondsLeft()));
     return stream;
