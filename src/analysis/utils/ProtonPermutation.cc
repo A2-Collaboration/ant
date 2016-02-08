@@ -17,12 +17,14 @@ void ProtonPermutation::Fill()
             photons.emplace_back(make_shared<TParticle>(ParticleTypeDatabase::Photon, *i));
         } else {
             proton = make_shared<TParticle>(ParticleTypeDatabase::Proton, *i);
+            trueMatch = (*i == true_proton);
         }
     }
 }
 
-ProtonPermutation::ProtonPermutation(const TCandidateList& candidates):
-    cands(candidates)
+ProtonPermutation::ProtonPermutation(const TCandidateList& candidates, const TCandidatePtr& true_p):
+    cands(candidates),
+    true_proton(true_p)
 {
     if(!cands.empty())
         photons.reserve(cands.size()-1);
