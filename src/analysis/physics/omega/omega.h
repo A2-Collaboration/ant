@@ -172,45 +172,62 @@ protected:
 
     TTree*  tree = nullptr;
 
-    analysis::utils::ParticleVars b_g1;
-    analysis::utils::ParticleVars b_g2;
-    analysis::utils::ParticleVars b_g3;
-    analysis::utils::ParticleVars b_p;
-    analysis::utils::ParticleVars b_ggg;
-    analysis::utils::ParticleVars b_mmvector;
+    struct branches_t {
 
-    double b_pTime   = {};
-    double b_p_PSA_R     = 0.0;
-    double b_p_PSA_Angle = 0.0;
-    unsigned  b_p_detector = 0;
+        analysis::utils::ParticleVars b_g1;
+        analysis::utils::ParticleVars b_g2;
+        analysis::utils::ParticleVars b_g3;
+        analysis::utils::ParticleVars b_p;
+        analysis::utils::ParticleVars b_ggg;
+        analysis::utils::ParticleVars b_mmvector;
 
-    double b_gggTime = {};
-    double b_ggIM[3] = {};
+        double b_pTime   = {};
+        double b_p_PSA_R     = 0.0;
+        double b_p_PSA_Angle = 0.0;
+        unsigned  b_p_detector = 0;
 
-    double b_copl_angle = 0.0;
-    double b_p_mm_angle = 0.0;
+        double b_gggTime = {};
+        double b_ggIM[3] = {};
 
-    int    b_TagCh     = -1;
-    double b_TagTime   = 0.0;
-    double b_TagE      = 0.0;
-    double b_TagW      = 0.0;
-
-    int    b_found_proton = 0;
+        double b_copl_angle = 0.0;
+        double b_p_mm_angle = 0.0;
 
 
-    int       b_SigBgFlag = flagSignal;
+        int    b_found_proton = 0;
 
-    double b_ggIM_real    = {};
-    double b_ggIM_comb[2] = {};
-
-    double b_BachelorE[3] = {};
-
-    double b_CBAvgTime = 0.0;
+        int    b_TagCh     = -1;
+        double b_TagTime   = 0.0;
+        double b_TagE      = 0.0;
+        double b_TagW      = 0.0;
 
 
-    double kinfit_chi2       = 0.0;
-    bool   b_fitok           = false;
-    unsigned b_fitIterations = 0;
+        int       b_SigBgFlag = flagSignal;
+
+        double b_ggIM_real    = {};
+        double b_ggIM_comb[2] = {};
+
+        double b_BachelorE[3] = {};
+
+        double b_CBAvgTime = 0.0;
+
+
+        double kinfit_chi2       = 0.0;
+        bool   b_fitok           = false;
+        unsigned b_fitIterations = 0;
+
+        branches_t() {}
+
+        branches_t(const branches_t&) = default;
+        branches_t(branches_t&&) = delete;
+
+        branches_t& operator=(const branches_t&) =default;
+        branches_t& operator=(branches_t&) =delete;
+
+        void SetupBranches(TTree* tree);
+
+    };
+
+    branches_t branches;
 
 
     //======== Settings ===========================================================

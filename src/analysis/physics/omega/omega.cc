@@ -642,71 +642,71 @@ void OmegaEtaG2::Analyse(const TEventData &data, const TEvent& event, manager_t&
 
 
     //const auto& mctrue_photons = event.MCTrue().Particles().Get(ParticleTypeDatabase::Photon);
-    b_SigBgFlag = identify(event);
+    branches.b_SigBgFlag = identify(event);
 
-    b_p = analysis::utils::ParticleVars(*proton);
-    b_pTime       = data_proton ? proton->Candidate->Time : numeric_limits<double>::quiet_NaN();
+    branches.b_p = analysis::utils::ParticleVars(*proton);
+    branches.b_pTime       = data_proton ? proton->Candidate->Time : numeric_limits<double>::quiet_NaN();
 
-    b_p_PSA_Angle = numeric_limits<double>::quiet_NaN();
-    b_p_PSA_R     = numeric_limits<double>::quiet_NaN();
-    b_p_detector  = 0;
+    branches.b_p_PSA_Angle = numeric_limits<double>::quiet_NaN();
+    branches.b_p_PSA_R     = numeric_limits<double>::quiet_NaN();
+    branches.b_p_detector  = 0;
 
     if(proton->Candidate) {
 
         if(proton->Candidate->Detector & Detector_t::Type_t::TAPS) {
-            b_p_detector = 2;
+            branches.b_p_detector = 2;
             const auto& cluster = proton->Candidate->FindCaloCluster();
             if(cluster) {
-                b_p_PSA_Angle = std_ext::radian_to_degree(cluster->GetPSAAngle());
-                b_p_PSA_R     = cluster->GetPSARadius();
+                branches.b_p_PSA_Angle = std_ext::radian_to_degree(cluster->GetPSAAngle());
+                branches.b_p_PSA_R     = cluster->GetPSARadius();
             }
         } else if(proton->Candidate->Detector & Detector_t::Type_t::CB) {
-            b_p_detector = 1;
+            branches.b_p_detector = 1;
         }
 
     }
 
 
     const TParticle ggg(ParticleTypeDatabase::Omega, LVSum(photons.begin(), photons.end()));
-    b_gggTime  = TimeAvg(photons.begin(), photons.end());
-    b_ggg      = analysis::utils::ParticleVars(ggg);
+    branches.b_gggTime  = TimeAvg(photons.begin(), photons.end());
+    branches.b_ggg      = analysis::utils::ParticleVars(ggg);
 
 
-    b_copl_angle = fabs(TVector2::Phi_mpi_pi(proton->Phi() - ggg.Phi() - M_PI));
+    branches.b_copl_angle = fabs(TVector2::Phi_mpi_pi(proton->Phi() - ggg.Phi() - M_PI));
 
-    if(b_copl_angle > cut_Copl)
+    if(branches.b_copl_angle > cut_Copl)
         return;
 
     steps->Fill("4 Coplanarity", 1);
 
-    b_g1 = analysis::utils::ParticleVars(*photons.at(0));
-    b_g2 = analysis::utils::ParticleVars(*photons.at(1));
-    b_g3 = analysis::utils::ParticleVars(*photons.at(2));
+    branches.b_g1 = analysis::utils::ParticleVars(*photons.at(0));
+    branches.b_g2 = analysis::utils::ParticleVars(*photons.at(1));
+    branches.b_g3 = analysis::utils::ParticleVars(*photons.at(2));
 
     const TVector3 gggBoost = -ggg.BoostVector();
 
-    b_CBAvgTime = event.Reconstructed->Trigger.CBTiming;
-    if(!isfinite(b_CBAvgTime))
+    branches.b_CBAvgTime = event.Reconstructed->Trigger.CBTiming;
+    if(!isfinite(branches.b_CBAvgTime))
         return;
 
     for(const TTaggerHit& t : data_tagger ? data.TaggerHits : event.MCTrue->TaggerHits) {
 
-        promptrandom.SetTaggerHit(t.Time - b_CBAvgTime);
+        promptrandom.SetTaggerHit(t.Time - branches.b_CBAvgTime);
 
         if(promptrandom.State() == PromptRandom::Case::Outside)
             continue;
 
-        b_TagW    = promptrandom.FillWeight();
-        b_TagE    = t.PhotonEnergy;
-        b_TagCh   = unsigned(t.Channel);
-        b_TagTime = t.Time;
+        branches.b_TagW    = promptrandom.FillWeight();
+        branches.b_TagE    = t.PhotonEnergy;
+        branches.b_TagCh   = unsigned(t.Channel);
+        branches.b_TagTime = t.Time;
 
         const TLorentzVector beam_target = t.GetPhotonBeam() + TLorentzVector(0, 0, 0, ParticleTypeDatabase::Proton.Mass());
         const TParticle missing(ParticleTypeDatabase::Proton, beam_target - ggg);
 
-        b_mmvector = analysis::utils::ParticleVars(missing);
+        branches.b_mmvector = analysis::utils::ParticleVars(missing);
 
-        b_p_mm_angle = radian_to_degree(missing.Angle(proton->Vect()));
+        branches.b_p_mm_angle = radian_to_degree(missing.Angle(proton->Vect()));
 
         int combindex = 0;
 
@@ -719,11 +719,11 @@ void OmegaEtaG2::Analyse(const TEventData &data, const TEvent& event, manager_t&
 
             const TLorentzVector gg = *g1 + *g2;
 
-            b_ggIM[combindex] = gg.M();
+            branches.b_ggIM[combindex] = gg.M();
 
             const TLorentzVector g3_boosted = boost(*g3, gggBoost);
 
-            b_BachelorE[combindex] = g3_boosted.E();
+            branches.b_BachelorE[combindex] = g3_boosted.E();
 
             ++combindex;
 
@@ -759,10 +759,10 @@ void OmegaEtaG2::Analyse(const TEventData &data, const TEvent& event, manager_t&
             }
         }
 
-        b_fitok = (fitres.Status == APLCON::Result_Status_t::Success);
+        branches.b_fitok = (fitres.Status == APLCON::Result_Status_t::Success);
 
-        kinfit_chi2 = fitres.ChiSquare / fitres.NDoF;
-        b_fitIterations = unsigned(fitres.NIterations);
+        branches.kinfit_chi2 = fitres.ChiSquare / fitres.NDoF;
+        branches.b_fitIterations = unsigned(fitres.NIterations);
 
 
 
@@ -770,11 +770,11 @@ void OmegaEtaG2::Analyse(const TEventData &data, const TEvent& event, manager_t&
         TParticlePtr  rec_proton = nullptr;
         TParticleList true_particles(4);
 
-        b_ggIM_real    = std::numeric_limits<double>::quiet_NaN();
-        b_ggIM_comb[0] = std::numeric_limits<double>::quiet_NaN();
-        b_ggIM_comb[1] = std::numeric_limits<double>::quiet_NaN();
+        branches.b_ggIM_real    = std::numeric_limits<double>::quiet_NaN();
+        branches.b_ggIM_comb[0] = std::numeric_limits<double>::quiet_NaN();
+        branches.b_ggIM_comb[1] = std::numeric_limits<double>::quiet_NaN();
 
-        if(particletree && (b_SigBgFlag==0 || b_SigBgFlag ==1)) {
+        if(particletree && (branches.b_SigBgFlag==0 || branches.b_SigBgFlag ==1)) {
             particletree->Map_level([&true_particles] (const TParticlePtr& p, const size_t& level) {
 
                 if(level == 1) {
@@ -823,15 +823,17 @@ void OmegaEtaG2::Analyse(const TEventData &data, const TEvent& event, manager_t&
                 FASSERT(rec_photons[2]!=nullptr);
                 FASSERT(rec_proton    !=nullptr);
 
-                b_ggIM_real    = IM(rec_photons[1], rec_photons[2]);
-                b_ggIM_comb[0] = IM(rec_photons[0], rec_photons[1]);
-                b_ggIM_comb[1] = IM(rec_photons[0], rec_photons[2]);
 
                 if(rec_proton->Type() == ParticleTypeDatabase::Proton) {
-                    b_found_proton = 1;
+                    branches.b_found_proton = 1;
                 } else {
-                    b_found_proton = 0;
+                    branches.b_found_proton = 0;
                 }
+
+                branches.b_ggIM_real    = IM(rec_photons[1], rec_photons[2]);
+                branches.b_ggIM_comb[0] = IM(rec_photons[0], rec_photons[1]);
+                branches.b_ggIM_comb[1] = IM(rec_photons[0], rec_photons[2]);
+
             }
 
         }
@@ -943,6 +945,29 @@ OmegaEtaG2::OmegaEtaG2(const std::string& name, OptionsPtr opts):
 
     tree = HistFac.makeTTree("tree");
 
+    branches.SetupBranches(tree);
+
+    // set up kin fitter
+    fitter.SetupBranches(tree, "EPB");
+
+    fitter.LoadSigmaData(setup->GetPhysicsFilesDirectory()+"/FitterSigmas.root");
+
+    signal_tree    = ParticleTypeTreeDatabase::Get(ParticleTypeTreeDatabase::Channel::Omega_gEta_3g);
+    reference_tree = ParticleTypeTreeDatabase::Get(ParticleTypeTreeDatabase::Channel::Omega_gPi0_3g);
+
+    steps = HistFac.makeTH1D("Steps","Step","Events passed",BinSettings(14),"steps");
+
+    h_TotalEvents = HistFac.makeTH1D("TotalEvents","","",BinSettings(3),"TotalEvents");
+
+}
+
+OmegaEtaG2::~OmegaEtaG2()
+{
+
+}
+
+void OmegaEtaG2::branches_t::SetupBranches(TTree* tree)
+{
     b_p.SetBranches(tree, "p");
     tree->Branch("p_Time",      &b_pTime);
     tree->Branch("p_PSA_R",     &b_p_PSA_R);
@@ -978,24 +1003,8 @@ OmegaEtaG2::OmegaEtaG2(const std::string& name, OptionsPtr opts):
 
     tree->Branch("found_proton", &b_found_proton);
 
-    // set up kin fitter
-    fitter.SetupBranches(tree, "EPB");
-
-    fitter.LoadSigmaData(setup->GetPhysicsFilesDirectory()+"/FitterSigmas.root");
-
-    signal_tree    = ParticleTypeTreeDatabase::Get(ParticleTypeTreeDatabase::Channel::Omega_gEta_3g);
-    reference_tree = ParticleTypeTreeDatabase::Get(ParticleTypeTreeDatabase::Channel::Omega_gPi0_3g);
-
-    steps = HistFac.makeTH1D("Steps","Step","Events passed",BinSettings(14),"steps");
-
-    h_TotalEvents = HistFac.makeTH1D("TotalEvents","","",BinSettings(3),"TotalEvents");
-
 }
 
-OmegaEtaG2::~OmegaEtaG2()
-{
-
-}
 
 AUTO_REGISTER_PHYSICS(OmegaEtaG)
 AUTO_REGISTER_PHYSICS(OmegaMCTruePlots)
