@@ -1,19 +1,23 @@
 #include "KinFitter.h"
 
+#include "expconfig/ExpConfig.h"
+
 #include "base/std_ext/memory.h"
 #include "base/std_ext/math.h"
+#include "base/std_ext/system.h"
 #include "base/ParticleType.h"
-
 #include "base/WrapTFile.h"
-#include <cassert>
-#include "expconfig/ExpConfig.h"
 #include "base/Logger.h"
-#include <APLCON.hpp>
+#include "base/Paths.h"
+
+#include "APLCON.hpp" // external project
 
 #include "TTree.h"
 #include "TVector3.h"
 #include "TH1D.h"
 #include "TF1.h"
+
+#include <cassert>
 
 using namespace std;
 using namespace ant;
@@ -265,8 +269,15 @@ void KinFitter::LoadSigmaData(const string& filename)
     if(!setup)
         throw std::runtime_error("No Setup found!");
 
+    unique_ptr<WrapTFileInput> f;
+    if(!std_ext::system::testopen(filename)) {
+        LOG(WARNING) << "Could not read sigmas from '" << filename << "', using default.";
+        f = std_ext::make_unique<WrapTFileInput>(string(ANT_PATH_DATABASE)+"/default/physics_files/FitterSigmas.root");
+    }
+    else {
+        f = std_ext::make_unique<WrapTFileInput>(filename);
+    }
 
-    WrapTFileInput f(filename);
 
     const auto& CB = setup->GetDetector(Detector_t::Type_t::CB);
     if(!CB)
@@ -280,11 +291,11 @@ void KinFitter::LoadSigmaData(const string& filename)
 
     const auto nTAPS = TAPS->GetNChannels();
 
-    cb_sigma_theta.Load(f, "CB_sigma_Theta", int(nCB));
-    cb_sigma_phi.Load(  f, "CB_sigma_Phi",   int(nCB));
+    cb_sigma_theta.Load(*f, "CB_sigma_Theta", int(nCB));
+    cb_sigma_phi.Load(  *f, "CB_sigma_Phi",   int(nCB));
 
-    taps_sigma_theta.Load(f, "TAPS_sigma_Theta", int(nTAPS));
-    taps_sigma_phi.Load(  f, "TAPS_sigma_Phi",   int(nTAPS));
+    taps_sigma_theta.Load(*f, "TAPS_sigma_Theta", int(nTAPS));
+    taps_sigma_phi.Load(  *f, "TAPS_sigma_Phi",   int(nTAPS));
 }
 
 
