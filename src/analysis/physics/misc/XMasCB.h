@@ -21,8 +21,9 @@ protected:
     unsigned n = 0;
     unsigned m = 0;
 
-    unsigned skipevents = 0;
-    std::string ext;
+    const unsigned skipevents = 0;
+    const std::string ext;
+    const bool reallysave = false;
     const int w_px;
 
 

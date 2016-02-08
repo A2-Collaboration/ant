@@ -11,7 +11,9 @@ using namespace std;
 
 XMasCB::XMasCB(const std::string& name, OptionsPtr opts):
     Physics(name, opts),
+    skipevents(opts->Get<unsigned>("Skip", 0)),
     ext(opts->Get<string>("FileType", "pdf")),
+    reallysave(opts->Get<bool>("ReallySave", false)),
     w_px(opts->Get<int>("x_px", 1024))
 {
     hist = std_ext::make_unique<TH2CB>("", "", false);
@@ -22,7 +24,6 @@ XMasCB::XMasCB(const std::string& name, OptionsPtr opts):
 
     c    = new TCanvas("xmascb", "XMasCB");
 
-    skipevents = opts->Get<unsigned>("Skip", 0);
 }
 
 XMasCB::~XMasCB()
@@ -113,7 +114,8 @@ void XMasCB::ProcessEvent(const TEvent& event, manager_t&)
     std_ext::formatter f;
     f << "xmas_cb_" << n++ << "." << ext;
 
-    c->SaveAs(f.str().c_str());
+    if(reallysave)
+        c->SaveAs(f.str().c_str());
 
 }
 
