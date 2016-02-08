@@ -11,7 +11,7 @@ using namespace std;
 using duration_t = chrono::duration<double>;
 
 ProgressCounter::ProgressCounter(double start, double stop):
-    last_output(chrono::system_clock::now()), x(start), max(stop), last_x(x)
+    last_output(clock_t::now()), x(start), max(stop), last_x(x)
 {}
 
 void ProgressCounter::SetInterval(double i)
@@ -40,7 +40,7 @@ bool ProgressCounter::Update(double pos)
 {
     x = pos;
 
-    const auto now = chrono::system_clock::now();
+    const auto now = clock_t::now();
     const duration_t elapsed_seconds = now - last_output;
 
     if(elapsed_seconds.count() >= t) {

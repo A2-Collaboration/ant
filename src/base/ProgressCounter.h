@@ -11,7 +11,8 @@ namespace ant {
 
 class ProgressCounter : public printable_traits {
 protected:
-    std::chrono::time_point<std::chrono::system_clock> last_output;
+    using clock_t = std::chrono::steady_clock;
+    std::chrono::time_point<clock_t> last_output;
     double t = 5.0; //sec
 
     double x = 0.0;
