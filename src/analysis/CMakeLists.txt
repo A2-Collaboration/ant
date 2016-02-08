@@ -51,6 +51,7 @@ set(ANALYSIS_PHYSICS
   physics/etaprime/etaprime_proton.cc
   physics/common/EventDisplayHists.cc
   physics/common/EventFilter.cc
+  physics/omega/FindProton.cc
   )
 
 set(ANALYSIS_PHYSICS_CALIBRATION
