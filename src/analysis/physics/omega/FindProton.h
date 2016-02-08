@@ -44,6 +44,6 @@ public:
     FindProton(const std::string& name, OptionsPtr opts);
     virtual ~FindProton();
 
-    virtual void ProcessEvent(const TEvent& event, manager_t& manager) override;
+    virtual void ProcessEvent(const TEvent& event, manager_t&) override;
 };
 }}}
