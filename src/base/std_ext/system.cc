@@ -86,3 +86,9 @@ bool ant::std_ext::system::testopen(const std::string& filename, std::string& er
     errmsg = "";
     return true;
 }
+
+bool system::testopen(const string& filename)
+{
+    string errmsg;
+    return testopen(filename, errmsg);
+}
