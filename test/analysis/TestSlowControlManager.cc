@@ -25,13 +25,17 @@ using namespace std;
 using namespace ant;
 using namespace ant::analysis;
 
-void dotest();
+void dotest_ScalerBlobs();
+void dotest_FakeReader();
 
-TEST_CASE("SlowControlManager", "[analysis]") {
+TEST_CASE("SlowControlManager: Two scaler blob", "[analysis]") {
     test::EnsureSetup();
-    dotest();
+    dotest_ScalerBlobs();
 }
 
+TEST_CASE("SlowControlManager: FakeReader", "[analysis]") {
+    dotest_FakeReader();
+}
 
 struct TestPhysics : Physics
 {
@@ -53,7 +57,7 @@ struct TestPhysics : Physics
     }
 };
 
-void dotest()
+void dotest_ScalerBlobs()
 {
 
     tmpfile_t stage1;
@@ -114,5 +118,72 @@ void dotest()
         readers.emplace_back(std_ext::make_unique<input::AntReader>(inputfiles, nullptr, nullptr));
         pm.ReadFrom(move(readers), numeric_limits<long long>::max());
     }
+
+}
+
+class SLCFakeReader : public ant::analysis::input::DataReader {
+public:
+    using pattern_t = std::list<std::list<TSlowControl>>;
+protected:
+    const pattern_t pattern;
+    pattern_t::const_iterator i;
+
+public:
+    SLCFakeReader(const pattern_t& p):
+        pattern(p),
+        i(pattern.cbegin())
+    {}
+
+    bool IsSource() override { return true; }
+    bool ReadNextEvent(TEvent &event) override;
+    double PercentDone() const override { return 0.0; }
+
+
+};
+
+bool SLCFakeReader::ReadNextEvent(TEvent &event)
+{
+    if(i==pattern.cend())
+        return false;
+
+    for(const auto& s : *i) {
+        event.Reconstructed->SlowControls.push_back(s);
+    }
+
+    ++i;
+
+    return true;
+}
+
+TSlowControl makeAcqu(const std::string& name, const int value) {
+    TSlowControl s(TSlowControl::Type_t::AcquScaler,TSlowControl::Validity_t::Backward,0, name, "Auto Gen");
+    s.Payload_Int.push_back(TKeyValue<int64_t>(0,value));
+    return s;
+}
+
+void dotest_FakeReader() {
+    SLCFakeReader reader({
+                             {makeAcqu("A", 0)},
+                             {},
+                             {},
+                             {makeAcqu("A", 1)},
+                             {},
+                             {makeAcqu("A", 2),makeAcqu("B",1)},
+                             {}
+                         });
+
+    TID tid(time(nullptr), 0, {TID::Flags_t::AdHoc});
+    do {
+
+        auto e = TEvent::MakeReconstructed(tid);
+        ++tid;
+
+        if(reader.ReadNextEvent(*e)) {
+            cout << *e << endl;
+
+        } else {
+            break;
+        }
+    } while(true);
 
 }
