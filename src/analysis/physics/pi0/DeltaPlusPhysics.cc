@@ -16,9 +16,9 @@ using namespace std;
 
 DeltaPlusPhysics::DeltaPlusPhysics(const string& name, OptionsPtr opts):
     Physics(name, opts),
-    prompt("DeltaPlus_prompt"),
-    random("DeltaPlus_random"),
-    diff("DeltaPlus_diff"),
+    prompt(SmartHistFactory("prompt", HistFac)),
+    random(SmartHistFactory("random", HistFac)),
+    diff(SmartHistFactory("diff", HistFac)),
     pi0_cut(110,150),
     prompt_window(-8,8),
     random_window(-16,16),
@@ -120,82 +120,59 @@ void DeltaPlusPhysics::ShowResult()
 
 }
 
-
-void DeltaPlusPhysics::Histogm::AddHistogram(const string &name, const string &title, const string &x_label, const string &y_label, const int x_bins_n, const double x_bins_low, const double x_bins_up)
+DeltaPlusPhysics::Histogm::Histogm(SmartHistFactory HistFac)
 {
 
-    // setup one dimensional histogram TH1D
-    h_title[name] = title;
+    auto insert_hist = [this] (TH1* hist) {
+        h[hist->GetName()] = hist;
+    };
 
-    h[name] = HistogramFactory::Default().Make1D(
-                title,
-                x_label,
-                y_label,
-                BinSettings(x_bins_n, x_bins_low, x_bins_up));
+    insert_hist(HistFac.makeTH1D("number of particles",
+                                 "number of particles / event", "",
+                                 BinSettings(10, 0, 10), "nPart")); // 10 bins from 0 to 10
 
-}
+    insert_hist(HistFac.makeTH2D("PID Bananas",
+                                 "CB Energy [MeV]", "dE [MeV]",
+                                 BinSettings(100,0,450),     // 100 bins from 0 to 450 in x
+                                 BinSettings(100,0,20), // 100 bins from 0 to 20  in y
+                                 "pid"));
 
-void DeltaPlusPhysics::Histogm::AddHistogram(const string &name, const string &title, const string &x_label, const string &y_label, const int x_bins_n, const double x_bins_low, const double x_bins_up, const int y_bins_n, const double y_bins_low, const double y_bins_up)
-{
+    insert_hist(HistFac.makeTH1D("2#gamma invariant mass",
+                                 "M_{#gamma #gamma} [MeV]", "",
+                                 BinSettings(100,0,300), "2gIM"));
 
-    // setup two dimensional histogram TH2D
-    h_title[name] = title;
-    h[name] = HistogramFactory::Default().Make2D(
-                title,
-                x_label,
-                y_label,
-                BinSettings(x_bins_n, x_bins_low, x_bins_up),
-                BinSettings(y_bins_n, y_bins_low, y_bins_up));
-}
+    insert_hist(HistFac.makeTH1D("Tagger time",
+                                 "t [ns]", "",
+                                 BinSettings(100,-50,50),"tag_time"));
 
-DeltaPlusPhysics::Histogm::Histogm(const string &prefix)
-{
+    insert_hist(HistFac.makeTH1D("Tagged Photon Energy",
+                                 "E_{#gamma} [MeV]", "",
+                                 BinSettings(100,100,450),"tag_energy"));
 
-    AddHistogram(prefix+"_nPart", prefix+" number of particles",
-                   "number of particles / event", "",
-                   10, 0, 10); // 10 bins from 0 to 10
+    insert_hist(HistFac.makeTH1D("Missing Mass Proton",
+                                 "MM_{p} [MeV]", "",
+                                 BinSettings(100,600,1100),"mmp"));
 
-    AddHistogram(prefix+"pid", prefix+" PID Bananas",
-                   "CB Energy [MeV]", "dE [MeV]",
-                   100,0,450, // 100 bins from 0 to 450 in x
-                   100,0,20   // 100 bins from 0 to 20  in y
-                   );
+    insert_hist(HistFac.makeTH1D("#pi^{0} #Theta angle (boosted)",
+                                 "cos(#theta_{#pi^{0}})", "",
+                                 BinSettings(180,-1,1),"pi0angle"));
 
-    AddHistogram(prefix+"2gIM", prefix+" 2#gamma invariant mass",
-                   "M_{#gamma #gamma} [MeV]", "",
-                   100,0,300);
+    insert_hist(HistFac.makeTH1D("#pi^{0} #Theta angle (not boosted)",
+                                 "cos(#theta_{#pi^{0}})", "",
+                                 BinSettings(180,-1,1),"pi0angle_noboost"));
 
-    AddHistogram(prefix+"tag_time", prefix+" Tagger time",
-                   "t [ns]", "",
-                   100,-50,50);
+    insert_hist(HistFac.makeTH2D("#pi^{0} #Theta angle (boosted) vs tagged E",
+                                 "E_{#gamma} [MeV]", "cos(#theta_{pi^{0}})",
+                                 BinSettings(180,-1,1),
+                                 BinSettings(14,110,300),"pi0angle_tagged"));
 
-    AddHistogram(prefix+"tag_energy", prefix+" Tagged Photon Energy",
-                   "E_{#gamma} [MeV]", "",
-                   100,100,450);
+    insert_hist(HistFac.makeTH1D("#Delta^{+} momentum magnitude (boosted)",
+                                 "p_{#Delta^{+}} [MeV]","",
+                                 BinSettings(100,0,300),"delta_pz"));
 
-    AddHistogram(prefix+"mmp", prefix+" Missing Mass Proton",
-                   "MM_{p} [MeV]", "",
-                   100,600,1100);
-
-    AddHistogram(prefix+"pi0angle", prefix+" #pi^{0} #Theta angle (boosted)",
-                   "cos(#theta_{#pi^{0}})", "",
-                   180,-1,1);
-
-    AddHistogram(prefix+"pi0angle_noboost", prefix+" #pi^{0} #Theta angle (not boosted)",
-                   "cos(#theta_{#pi^{0}})", "",
-                   180,-1,1);
-
-    AddHistogram(prefix+"pi0angle_tagged", prefix+" #pi^{0} #Theta angle (boosted) vs tagged E",
-                   "E_{#gamma} [MeV]", "cos(#theta_{pi^{0}})",
-                   180,-1,1,14,110,300);
-
-    AddHistogram(prefix+"delta_pz", prefix+" #Delta^{+} momentum magnitude (boosted)",
-                   "p_{#Delta^{+}} [MeV]","",
-                   100,0,300);
-
-    AddHistogram(prefix+"delta_IM", prefix+" #Delta^{+} Invariant mass",
-                   "M_{#Delta^{+}} [MeV]","",
-                   100,800,1500);
+    insert_hist(HistFac.makeTH1D("#Delta^{+} Invariant mass",
+                                 "M_{#Delta^{+}} [MeV]","",
+                                 BinSettings(100,800,1500),"delta_IM"));
 }
 
 void DeltaPlusPhysics::Histogm::Draw()

@@ -45,19 +45,43 @@ struct Trigger :
     // for ReconstructHook::EventData
     // calculates the CBESum
     virtual void ApplyTo(TEventData& reconstructed) override;
+
+    // Define some scaler names of commonly used scalers
+    struct ScalerName {
+        static const std::string Exptrigger_1MHz;
+        static const std::string Beampolmon_1MHz;
+        static const std::string TotalLivetime;
+        static const std::string FaradayCup;
+        static const std::string IonChamber;
+        static const std::string PbGlass;
+    };
+
+    // base class knows nothing about scaler references
+    virtual std::string GetScalerReference(const std::string& scalername) const =0;
+
 };
 
 
 struct Trigger_2014 : Trigger {
+
+
     const LogicalChannel_t Reference_V1190_TAPSPbWO4 = {Type, Channel_t::Type_t::Timing, 1002};
-    //const LogicalChannel_t Scaler_Exptrigger_1MHz = {Type, Channel_t::Type_t::Scaler, 10};
-    //const LogicalChannel_t Scaler_Beampolmon_1MHz = {Type, Channel_t::Type_t::Scaler, 20};
+
+
 
     virtual bool Matches(const TID& tid) const override;
     virtual void BuildMappings(
             std::vector<hit_mapping_t>&,
             std::vector<scaler_mapping_t>&) const override;
 
+    virtual std::string GetScalerReference(const std::string& scalername) const override;
+
+    Trigger_2014() : scaler_mapping(MakeScalerMapping()) {}
+
+protected:
+    using scaler_mapping_t = std::map<std::string, unsigned>;
+    static scaler_mapping_t MakeScalerMapping();
+    const scaler_mapping_t scaler_mapping;
 };
 
 }}} // namespace ant::expconfig::detector

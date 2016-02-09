@@ -34,12 +34,12 @@ struct TEventData : printable_traits
             all.emplace_back(particle);
         }
 
-        const TParticleList& GetAll() const { return all; }
+        TParticleList GetAll() const { return all; }
 
-        const TParticleList& Get(const ant::ParticleTypeDatabase::Type& type) const {
+        TParticleList Get(const ant::ParticleTypeDatabase::Type& type) const {
             auto entry = lists.find(std::addressof(type));
             if(entry == lists.end()) {
-                return empty;
+                return {};
             }
             return entry->second;
         }
@@ -57,7 +57,6 @@ struct TEventData : printable_traits
         }
 
     private:
-        static const TParticleList empty;
         TParticleList all;
         std::map<const ParticleTypeDatabase::Type*, TParticleList> lists;
 

@@ -22,32 +22,8 @@ protected:
     public:
         std::string  pref;  // prefix to label whole group of histograms
         mutable std::map<std::string, TH1* > h; // container for histograms by name (without prefix)
-        std::map<std::string, std::string> h_title; // container for histogram titles by name (without prefix)
 
-        // Add 1D histogram
-        void AddHistogram(const std::string& name,       // short specifier for histogram
-                          const std::string& title,      // descriptive title for histogram
-                          const std::string& x_label,    // x axis label
-                          const std::string& y_label,    // y axis label
-                          const int x_bins_n,       // number of bins in x
-                          const double x_bins_low,  // lower bound of x axis
-                          const double x_bins_up    // upper bound of x axis
-                          );
-
-        // Add 2D histogram
-        void AddHistogram(const std::string& name,       // short specifier for histogram
-                          const std::string& title,      // descriptive title for histogram
-                          const std::string& x_label,    // x axis label
-                          const std::string& y_label,    // y axis label
-                          const int x_bins_n,       // number of bins in x
-                          const double x_bins_low,  // lower bound of x axis
-                          const double x_bins_up,   // upper bound of y axis
-                          const int y_bins_n,       // number of bins in y
-                          const double y_bins_low,  // lower bound of y axis
-                          const double y_bins_up    // upper bound of y axis
-                          );
-
-        Histogm( const std::string& prefix );
+        Histogm(SmartHistFactory HistFac);
 
         void Draw();
 

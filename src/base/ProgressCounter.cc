@@ -11,7 +11,7 @@ using namespace std;
 using duration_t = chrono::duration<double>;
 
 ProgressCounter::ProgressCounter(double start, double stop):
-    last_output(chrono::system_clock::now()), x(start), max(stop), last_x(x)
+    last_output(clock_t::now()), x(start), max(stop), last_x(x)
 {}
 
 void ProgressCounter::SetInterval(double i)
@@ -40,12 +40,12 @@ bool ProgressCounter::Update(double pos)
 {
     x = pos;
 
-    const auto now = chrono::system_clock::now();
+    const auto now = clock_t::now();
     const duration_t elapsed_seconds = now - last_output;
 
     if(elapsed_seconds.count() >= t) {
         percent_sec  = (x - last_x) / elapsed_seconds.count();
-        sec_emaining = (max - x) / percent_sec;
+        sec_remaining = (max - x) / percent_sec;
         last_output = now;
         last_x = x;
         return true;
@@ -60,15 +60,11 @@ double ProgressCounter::PercentDone() const
 
 double ProgressCounter::SecondsLeft() const
 {
-    return sec_emaining;
+    return sec_remaining;
 }
 
-namespace ant {
-
-ostream&operator<<(ostream& stream, const ProgressCounter& counter)
+ostream& ProgressCounter::Print(ostream& stream) const
 {
-    stream << setw(2) << std::setprecision(4) << counter.PercentDone() << " % done, ETA: " << TimeToStr(unsigned(counter.SecondsLeft()));
+    stream << setw(2) << std::setprecision(4) << PercentDone() << " % done, ETA: " << TimeToStr(unsigned(SecondsLeft()));
     return stream;
-}
-
 }

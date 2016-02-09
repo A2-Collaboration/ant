@@ -1,19 +1,24 @@
 #pragma once
 
+#include "base/printable.h"
+
 #include <chrono>
 #include <ostream>
 
+
+
 namespace ant {
 
-class ProgressCounter {
+class ProgressCounter : public printable_traits {
 protected:
-    std::chrono::time_point<std::chrono::system_clock> last_output;
+    using clock_t = std::chrono::steady_clock;
+    std::chrono::time_point<clock_t> last_output;
     double t = 5.0; //sec
 
     double x = 0.0;
     const double max = 1.0;
 
-    double sec_emaining = 0.0;
+    double sec_remaining = 0.0;
     double percent_sec = 0.0;
     double last_x = 0.0;
 
@@ -26,9 +31,8 @@ public:
     double PercentDone() const;
     double SecondsLeft() const;
 
+    virtual std::ostream& Print(std::ostream& stream) const override;
 };
-
-std::ostream& operator<<(std::ostream& stream, const ant::ProgressCounter& counter);
 
 }
 

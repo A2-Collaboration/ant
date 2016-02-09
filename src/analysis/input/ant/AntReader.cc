@@ -126,11 +126,9 @@ bool AntReader::ReadNextEvent(TEvent& event)
             if(recon.Clusters.empty())
                 reconstruct->DoReconstruct(recon);
         }
-        event.Reconstructed = move(eventptr->Reconstructed);
 
-        // the A2Geant unpacker also fills some MCTrue information
-        if(eventptr->MCTrue)
-            event.MCTrue = move(eventptr->MCTrue);
+        // pay attention that Geant unpacker might also set MCTrue branch partly
+        event = move(*eventptr);
 
         return true;
     }

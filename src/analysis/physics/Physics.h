@@ -1,7 +1,8 @@
 #pragma once
 
+#include "analysis/physics/manager_t.h"
+
 #include "analysis/plot/HistogramFactories.h"
-#include "analysis/input/slowcontrol/SlowControl.h"
 
 #include "tree/TEvent.h"
 #include "tree/TEventData.h"
@@ -33,27 +34,10 @@ public:
     Physics(const std::string& name, OptionsPtr opts);
     virtual ~Physics() {}
 
-    struct manager_t {
-        void SaveEvent() {
-            saveEvent = true;
-        }
-        void KeepDetectorReadHits() {
-            keepReadHits = true;
-        }
-    private:
-        bool saveEvent;
-        bool keepReadHits;
-        friend class PhysicsManager;
-        manager_t() { Reset(); }
-        void Reset() { saveEvent = false; keepReadHits = false; }
-    };
-
-    virtual void ProcessEvent(const TEvent& event, manager_t& manager) =0;
+    virtual void ProcessEvent(const TEvent& event, physics::manager_t& manager) =0;
     virtual void Finish() {}
     virtual void ShowResult() {}
     std::string GetName() const { return name_; }
-
-    virtual void Initialize(input::SlowControl& slowcontrol);
 
     Physics(const Physics&) = delete;
     Physics& operator=(const Physics&) = delete;

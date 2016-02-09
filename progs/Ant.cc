@@ -41,7 +41,7 @@
 using namespace std;
 using namespace ant;
 
-volatile bool running = true;
+volatile bool interrupt = false;
 
 class MyTInterruptHandler : public TSignalHandler {
 public:
@@ -52,7 +52,7 @@ public:
             fDelay++;
             return kTRUE;
         }
-        running = false;
+        interrupt = true;
         cout << " >>> Interrupted! " << endl;
         return kTRUE;
     }
@@ -307,7 +307,7 @@ int main(int argc, char** argv) {
     }
 
     // add the physics/calibrationphysics modules
-    analysis::PhysicsManager pm(addressof(running));
+    analysis::PhysicsManager pm(addressof(interrupt));
     std::shared_ptr<OptionsList> popts = make_shared<OptionsList>();
 
     if(cmd_physicsOptions->isSet()) {

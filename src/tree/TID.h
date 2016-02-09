@@ -57,7 +57,10 @@ struct TID
 
     // you may append flags, but never remove or change order!
     enum class Flags_t : std::uint8_t {
-        Invalid, MC, AdHoc
+        Invalid,    // simply invalid, unset, whatever...
+        MC,         // this ID belongs to a MC event (not real data)
+        AdHoc,      // this ID was "invented" by a reader since the
+                    // input did not provide proper timestamp information
     };
 
     // ensure correct init in default constructor

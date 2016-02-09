@@ -33,6 +33,7 @@ struct system {
      */
     static bool testopen(const std::string& filename, std::string& errmsg);
 
+    static bool testopen(const std::string& filename);
 
     /**
      * @brief execute given cmd and return stdout (stderr is suppressed)

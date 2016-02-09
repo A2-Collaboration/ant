@@ -12,7 +12,7 @@ using namespace std;
 using namespace ant;
 using namespace ant::expconfig::detector;
 
-
+const std::string EPT::ScalerName = "EPT_Scalers";
 
 bool EPT_2014::Matches(const TID& tid) const {
     return std_ext::time_between(tid.Timestamp,
@@ -64,8 +64,7 @@ void EPT::BuildMappings(
     }
 
     // map the scalers
-    /// \todo use static string instead of hard-coded word!
-    scaler_mappings.emplace_back("TaggerScalers", scaler_entries);
+    scaler_mappings.emplace_back(EPT::ScalerName, scaler_entries);
 }
 
 

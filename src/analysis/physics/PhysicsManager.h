@@ -1,7 +1,9 @@
 #pragma once
 
 #include "Physics.h"
-#include "SlowcontrolManager.h"
+
+#include <memory>
+#include <queue>
 
 class TTree;
 
@@ -11,6 +13,12 @@ struct TAntHeader;
 struct TEvent;
 
 namespace analysis {
+
+class SlowControlManager;
+
+namespace slowcontrol {
+struct event_t;
+}
 
 namespace utils {
 class ParticleID;
@@ -35,35 +43,29 @@ protected:
     void InitReaders(readers_t readers_);
     bool TryReadEvent(TEventPtr& event);
 
-    slowcontrol::Manager slowcontrol_mgr;
-    input::SlowControl slowcontrol_data;
+    std::unique_ptr<SlowControlManager> slowcontrol_mgr;
 
-    std::queue<TEventPtr> eventbuffer;
-
-    long long nEventsProcessed = 0;
-
-    virtual void ProcessEventBuffer(long long maxevents);
-    virtual void ProcessEvent(TEventPtr event);
+    virtual void ProcessEvent(TEvent& event, physics::manager_t& manager);
+    virtual void SaveEvent(slowcontrol::event_t event, const physics::manager_t& manager);
 
     bool progressUpdates = true;
 
-    struct running_t {
-        running_t(volatile bool* running_) :
-            running(running_) {}
+    struct interrupt_t {
+        interrupt_t(volatile bool* interrupt_) :
+            interrupt(interrupt_) {}
         explicit operator bool() {
-            if(running != nullptr)
-                return *running;
-            return true;
+            if(interrupt != nullptr)
+                return *interrupt;
+            return false;
         }
     private:
-        volatile bool* running = nullptr;
+        volatile bool* interrupt = nullptr;
     };
-    running_t running;
+
+    interrupt_t interrupt;
 
     TID firstID;
     TID lastID;
-
-    Physics::manager_t processmanager;
 
     // for output of TEvents to TTree
     TTree*  treeEvents;
@@ -71,7 +73,7 @@ protected:
 
 public:
 
-    PhysicsManager(volatile bool* running_ = nullptr);
+    PhysicsManager(volatile bool* interrupt_ = nullptr);
     virtual ~PhysicsManager();
 
     template <typename T, typename ... args_t>
@@ -87,8 +89,6 @@ public:
 
         if(pc==nullptr)
             return;
-
-        pc->Initialize(slowcontrol_data);
         physics.emplace_back(std::move(pc));
     }
 

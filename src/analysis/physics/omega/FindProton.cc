@@ -60,7 +60,7 @@ FindProton::~FindProton()
 
 }
 
-void FindProton::ProcessEvent(const TEvent& event, Physics::manager_t&)
+void FindProton::ProcessEvent(const TEvent& event, manager_t&)
 {
 
     const auto cands = event.Reconstructed->Candidates;

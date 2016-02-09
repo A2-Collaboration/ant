@@ -69,7 +69,7 @@ EventFilter::~EventFilter()
 
 
 
-void EventFilter::ProcessEvent(const TEvent& event, Physics::manager_t& manager)
+void EventFilter::ProcessEvent(const TEvent& event, manager_t& manager)
 {
     const auto& data = *(event.Reconstructed);
 

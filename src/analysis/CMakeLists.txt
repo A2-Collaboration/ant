@@ -15,13 +15,12 @@ set(ANALYSIS_INPUT
   input/ant/AntReader.cc
   input/pluto/PlutoReader.cc
   input/pluto/detail/PlutoWrapper.cc
-  input/slowcontrol/SlowControl.cc
-  input/slowcontrol/SlowControlCreator.cc
 )
 
 set(ANALYSIS_PHYSICS
   physics/Physics.cc
   physics/PhysicsManager.cc
+  physics/manager_t.h
   physics/test/TestPhysics.cc
   physics/pi0/DeltaPlusPhysics.cc
   physics/pi0/DeltaTreeGenerator.cc
@@ -37,7 +36,6 @@ set(ANALYSIS_PHYSICS
   physics/common/ReconstructCheck.cc
   physics/common/MCSmearing.cc
   physics/tpc/PhysicsStats.cc
-  physics/SlowcontrolManager.cc
   physics/etaprime/etaprime_omega_gamma.cc
   physics/etaprime/etaprime-3pi0.cc
   physics/etaprime/mctrue_3pi0.cc
@@ -94,6 +92,8 @@ set(ANALYSIS_ALL
     ${ANALYSIS_UTILS}
 )
 
+add_subdirectory(slowcontrol)
+
 append_header_files(ANALYSIS_ALL)
 
 add_library(analysis ${ANALYSIS_ALL})
@@ -105,4 +105,5 @@ target_link_libraries(analysis
   tree
   expconfig
   cbtaps_display
+  slowcontrol
   )

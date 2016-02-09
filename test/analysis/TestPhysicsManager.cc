@@ -27,7 +27,7 @@ using namespace ant::analysis;
 void dotest_raw();
 void dotest_raw_nowrite();
 void dotest_plutogeant();
-
+void dotest_runall();
 
 TEST_CASE("PhysicsManager: Raw Input", "[analysis]") {
     test::EnsureSetup();
@@ -43,16 +43,21 @@ TEST_CASE("PhysicsManager: Pluto/Geant Input", "[analysis]") {
     test::EnsureSetup();
     dotest_plutogeant();
 }
+TEST_CASE("PhysicsManager: Run all physics", "[analysis]") {
+    test::EnsureSetup();
+    dotest_runall();
+}
 
 struct TestPhysics : Physics
 {
     bool finishCalled = false;
-    bool initCalled = false;
     bool showCalled = false;
     bool nowrite    = false;
     unsigned seenEvents = 0;
     unsigned seenCandidates = 0;
     unsigned seenMCTrue = 0;
+    unsigned seenTrueTargetPos = 0;
+    unsigned seenReconTargetPosNaN = 0;
 
 
     TestPhysics(bool nowrite_ = false) :
@@ -62,12 +67,14 @@ struct TestPhysics : Physics
         HistFac.makeTH1D("test","test","test",BinSettings(10));
     }
 
-    virtual void ProcessEvent(const TEvent& event, manager_t& manager) override
+    virtual void ProcessEvent(const TEvent& event, physics::manager_t& manager) override
     {
         seenEvents++;
         seenCandidates += event.Reconstructed->Candidates.size();
         seenMCTrue += event.MCTrue->Particles.GetAll().size();
-
+        // make sure it's non-zero and not nan only for MCTrue
+        seenTrueTargetPos += event.MCTrue->Target.Vertex.Z() < -1;
+        seenReconTargetPosNaN += std::isnan(event.Reconstructed->Target.Vertex.Z());
         // request to save every third event
         if(!nowrite && seenEvents % 3 == 0)
             manager.SaveEvent();
@@ -79,10 +86,6 @@ struct TestPhysics : Physics
     virtual void ShowResult() override
     {
         showCalled = true;
-    }
-    virtual void Initialize(input::SlowControl&) override
-    {
-        initCalled = true;
     }
 };
 
@@ -128,10 +131,11 @@ void dotest_raw()
 
         REQUIRE(physics->finishCalled);
         REQUIRE_FALSE(physics->showCalled);
-        REQUIRE(physics->initCalled);
 
         REQUIRE(physics->seenEvents == expectedEvents);
         REQUIRE(physics->seenCandidates == 822);
+        REQUIRE(physics->seenTrueTargetPos == 0);
+        REQUIRE(physics->seenReconTargetPosNaN == expectedEvents);
 
         // quick check if TTree was there...
         auto tree = outfile.GetSharedClone<TTree>("treeEvents");
@@ -169,7 +173,7 @@ void dotest_raw()
 
     }
 
-    // read in file with AntReader
+    // read in file with AntReader without reconstruction
     {
         auto inputfiles = make_shared<WrapTFileInput>(tmpfile.filename);
 
@@ -224,8 +228,6 @@ void dotest_raw_nowrite()
 
     REQUIRE(physics->finishCalled);
     REQUIRE_FALSE(physics->showCalled);
-    REQUIRE(physics->initCalled);
-
 
     REQUIRE(physics->seenEvents == expectedEvents);
     REQUIRE(physics->seenCandidates == 822);
@@ -258,5 +260,23 @@ void dotest_plutogeant()
     REQUIRE(physics->seenEvents == 10);
     REQUIRE(physics->seenCandidates == 10);
     REQUIRE(physics->seenMCTrue == 10);
+    REQUIRE(physics->seenTrueTargetPos == 5);
+    REQUIRE(physics->seenReconTargetPosNaN == 10);
+}
+
+void dotest_runall() {
+
+    PhysicsManager pm;
+
+    for(auto name : PhysicsRegistry::GetList()) {
+        REQUIRE_NOTHROW(pm.AddPhysics(PhysicsRegistry::Create(name)));
+    }
+
+    auto unpacker = Unpacker::Get(string(TEST_BLOBS_DIRECTORY)+"/Acqu_twoscalerblocks.dat.xz");
+    auto reconstruct = std_ext::make_unique<Reconstruct>();
+    list< unique_ptr<analysis::input::DataReader> > readers;
+    readers.emplace_back(std_ext::make_unique<input::AntReader>(nullptr, move(unpacker), move(reconstruct)));
+
+    REQUIRE_NOTHROW(pm.ReadFrom(move(readers), 30));
 
 }

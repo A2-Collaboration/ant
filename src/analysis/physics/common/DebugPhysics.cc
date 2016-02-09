@@ -1,5 +1,7 @@
 #include "DebugPhysics.h"
 
+#include "slowcontrol/SlowControlVariables.h"
+
 #include "base/Logger.h"
 #include "expconfig/ExpConfig.h"
 
@@ -14,6 +16,8 @@ DebugPhysics::DebugPhysics(const std::string& name, OptionsPtr opts) :
     keepReadHits(opts->Get<bool>("KeepReadHits", false)),
     requestSlowControl(opts->Get<bool>("RequestSlowControl", false))
 {
+    if(requestSlowControl)
+        slowcontrol::Variables::TaggerScalers->Request();
 }
 
 DebugPhysics::~DebugPhysics() {}
@@ -24,9 +28,14 @@ void DebugPhysics::ProcessEvent(const TEvent& event, manager_t& manager)
         manager.SaveEvent();
         if(keepReadHits)
             manager.KeepDetectorReadHits();
+        if(requestSlowControl)
+            LOG_N_TIMES(1, INFO) <<  "First Tagger Scalers: " << slowcontrol::Variables::TaggerScalers->Get();
     }
     else if(!writeEvents) {
         LOG(INFO) << event;
+        // only access slowcontrol if it was actually requested in the beginning
+        if(requestSlowControl)
+            LOG(INFO) << "Tagger Scalers: " << slowcontrol::Variables::TaggerScalers->Get();
     }
     seenEvents++;
 }
@@ -41,11 +50,7 @@ void DebugPhysics::ShowResult()
     LOG(INFO) << "Nop";
 }
 
-void DebugPhysics::Initialize(input::SlowControl& slowcontrol)
-{
-    if(requestSlowControl)
-        slowcontrol.FaradayCup.Request();
-}
+
 
 
 
