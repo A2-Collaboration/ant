@@ -36,8 +36,6 @@ EtapProton::EtapProton(const string& name, OptionsPtr opts):
     tree->Branch("CBAvgTime",  &b_CBAvgTime);
     tree->Branch("CBSumVetoE", &b_CBSumVetoE);
 
-    tree->Branch("Proton",     &b_Proton);
-    tree->Branch("Photons",    &b_Photons);
     tree->Branch("PhotonSum",  &b_PhotonSum);
     tree->Branch("ProtonCopl", &b_ProtonCopl);
     tree->Branch("ProtonBeta", &b_ProtonBeta);
@@ -47,10 +45,10 @@ EtapProton::EtapProton(const string& name, OptionsPtr opts):
     tree->Branch("FitChi2",  &b_FitChi2);
     tree->Branch("NFitIterations", &b_NFitIterations); // number of good fits
 
-    tree->Branch("TaggW",  &b_TaggW); // prompt/random weight
-    tree->Branch("TaggE",  &b_TaggE);
-    tree->Branch("TaggT",  &b_TaggT);
-    tree->Branch("TaggCh", &b_TaggCh);
+    tree->Branch("TaggW",   &b_TaggW); // prompt/random weight
+    tree->Branch("TaggE",   &b_TaggE);
+    tree->Branch("TaggT",   &b_TaggT);
+    tree->Branch("TaggCh",  &b_TaggCh);
     tree->Branch("Missing", &b_Missing);
 
 
@@ -125,7 +123,6 @@ void EtapProton::ProcessEvent(const TEvent& event, manager_t&)
         const double beta = s / (s + c * dt * cos(cand_taps->Theta));
 
         if(!isfinite(b_ProtonBeta) || b_ProtonBeta > beta) {
-            b_Proton = *cand_taps;
             b_ProtonBeta = beta;
             b_ProtonToF = dt;
             proton = make_shared<TParticle>(ParticleTypeDatabase::Proton, cand_taps);
@@ -148,10 +145,8 @@ void EtapProton::ProcessEvent(const TEvent& event, manager_t&)
     steps->Fill("Multiplicity ok",1.0);
 
     b_PhotonSum.SetPxPyPzE(0,0,0,0);
-    b_Photons.resize(0);
     for(const auto& p : photons) {
        b_PhotonSum += *p;
-       b_Photons.emplace_back(*p->Candidate);
     }
 
     // proton coplanarity

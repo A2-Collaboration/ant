@@ -27,8 +27,6 @@ protected:
     double    b_CBAvgTime  = 0.0;
     double    b_CBSumVetoE  = 0.0;
 
-    TCandidate b_Proton;
-    std::vector<TCandidate> b_Photons;
     TLorentzVector b_PhotonSum;
     double b_ProtonCopl;
     double b_ProtonBeta;
