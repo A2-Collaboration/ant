@@ -100,28 +100,13 @@ Or, automatically generated with `cmake --graphviz`
 
 ## Development
 
-  * [x] Unpacker for Acqu Mk2 data
-  * [x] Unpacker for a2geant data
-  * [ ] [Calibration modules](src/calibration/modules):
-    * [x] CB Energy/Timewalk
-    * [x] TAPS Energy
-    * [x] Time offsets for PID/CB/TAPS/Tagger
-    * [ ] Complete calibration cycle on blaster
-  * [ ] [Experiment configuration](src/expconfig/setups)
-    * [x] EPT 2014 beamtimes
-    * [ ] Any normal tagger beamtime
-    * [ ] Wire chamber
-  * [x] Reconstruct
-    * [x] Apply calibration factors
-    * [x] Update calibration factors
-    * [x] Clustering
-    * [x] Candidate builder (Veto/Calorimeter matching)
-  * [ ] Physics
-    * [x] Data structure for events
-    * [x] Input readers
-    * [ ] Slowcontrol handling
-    * [ ] Kinematic fitting on measured data
+The following items are still to-do:
 
+  * Implement the wire chamber detector (hard), or the conventional
+    tagger ladder (easy) including magnetic field energy calibration
+    (not so easy)
+  * Implement Mk1 unpacker (many things already provided)
+  * Implement EPICS reader, and some more slow control variables  
 
 ## Detector Type Mapping
 
@@ -141,6 +126,16 @@ Or, automatically generated with `cmake --graphviz`
 |                  |               | PbWO4|
 | TAPSVeto         | TAPSVeto      | Veto |
 | Cherenkov        | Cherenkov     | -    |
+
+## Data flow
+
+The physics classes analyse `TEvent`s provided by different sources or
+amenders. The main source of events is the AntReader, which itself is
+either fed by some unpacker or by already unpacked and possibly
+reconstructed `treeEvents`. Additionally, the SlowControlManager needs
+to do proper buffering to make physics classes easy to implement.
+
+<img src="doc/dataflow.png">
 
 ## External Components
 
