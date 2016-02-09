@@ -77,7 +77,7 @@ EtapProton::EtapProton(const string& name, OptionsPtr opts):
     taps_detector = ExpConfig::Setup::GetDetector<expconfig::detector::TAPS>();
 }
 
-void EtapProton::ProcessEvent(const TEvent& event, manager_t&)
+void EtapProton::ProcessEvent(const TEvent& event, manager_t& manager)
 {
     steps->Fill("Seen",1.0);
 
@@ -143,6 +143,8 @@ void EtapProton::ProcessEvent(const TEvent& event, manager_t&)
     if(photons.size()==0 || !multiplicities.Contains(photons.size()))
         return;
     steps->Fill("Multiplicity ok",1.0);
+
+    manager.SaveEvent();
 
     b_PhotonSum.SetPxPyPzE(0,0,0,0);
     for(const auto& p : photons) {
