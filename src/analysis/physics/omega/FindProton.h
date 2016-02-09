@@ -3,6 +3,7 @@
 #include "analysis/physics/Physics.h"
 #include "base/std_ext/math.h"
 #include "analysis/utils/KinFitter.h"
+#include "analysis/plot/PromptRandomHist.h"
 
 class TTree;
 
@@ -24,6 +25,13 @@ protected:
 
         double mangle      = std_ext::NaN;
 
+        double p_theta     = std_ext::NaN;
+        double p_phi       = std_ext::NaN;
+        double p_PSA_r     = std_ext::NaN;
+        double p_PSA_a     = std_ext::NaN;
+        double p_veto      = std_ext::NaN;
+        double TagW        = std_ext::NaN;
+
         branches_t() = default;
         branches_t(const branches_t&) = default;
         branches_t(branches_t&&) = delete;
@@ -35,10 +43,16 @@ protected:
 
     };
 
+    const unsigned nPhotons;
+
     TTree* tree = nullptr;
 
     branches_t branches;
     utils::KinFitter fitter;
+
+    TH1D* steps = nullptr;
+
+    ant::analysis::PromptRandom::Switch promptrandom;
 
 public:
     FindProton(const std::string& name, OptionsPtr opts);

@@ -22,7 +22,13 @@ void FindProton::branches_t::SetBranchtes(TTree* tree)
     tree->Branch("matched_p",   &matched_p);
     tree->Branch("isBest",      &isBest);
     tree->Branch("fitstatus",   &fitstatus);
-    tree->Branch("mangle",   &mangle);
+    tree->Branch("mangle",      &mangle);
+    tree->Branch("p_theta",     &p_theta);
+    tree->Branch("p_phi",       &p_phi);
+    tree->Branch("p_PSA_r",     &p_PSA_r);
+    tree->Branch("p_PSA_a",     &p_PSA_a);
+    tree->Branch("p_veto",      &p_veto);
+    tree->Branch("TagW",        &TagW);
 }
 
 void FindProton::branches_t::Reset()
@@ -35,13 +41,21 @@ void FindProton::branches_t::Reset()
     matched_p   = -1;
     isBest      = -1;
     fitstatus   = -1;
+
+    p_theta     = std_ext::NaN;
+    p_phi       = std_ext::NaN;
+    p_PSA_r     = std_ext::NaN;
+    p_PSA_a     = std_ext::NaN;
+    p_veto      = std_ext::NaN;
+    TagW        = std_ext::NaN;
 }
 
 
 
 FindProton::FindProton(const string& name, OptionsPtr opts):
     Physics(name,opts),
-    fitter("FindProton", 3)
+    nPhotons(opts->Get<unsigned>("nPhotons", 3)),
+    fitter("FindProton", nPhotons)
 {
     tree = HistFac.makeTTree("tree");
     branches.SetBranchtes(tree);
@@ -53,6 +67,13 @@ FindProton::FindProton(const string& name, OptionsPtr opts):
     }
 
     fitter.LoadSigmaData(setup->GetPhysicsFilesDirectory()+"/FitterSigmas.root");
+
+    steps = HistFac.makeTH1D("Steps","","",BinSettings(3), "steps");
+
+
+    promptrandom.AddPromptRange({-5,5});
+    promptrandom.AddRandomRange({-20, -10});
+    promptrandom.AddRandomRange({ 10,  20});
 }
 
 FindProton::~FindProton()
@@ -63,10 +84,14 @@ FindProton::~FindProton()
 void FindProton::ProcessEvent(const TEvent& event, manager_t&)
 {
 
+    steps->Fill("Total", 1.0);
+
     const auto cands = event.Reconstructed->Candidates;
 
-    if(cands.size() != 4)
+    if(cands.size() != nPhotons+1)
         return;
+
+    steps->Fill("nCands", 1.0);
 
     TCandidatePtr matchedProton = nullptr;
 
@@ -98,7 +123,18 @@ void FindProton::ProcessEvent(const TEvent& event, manager_t&)
     branches_t best_combo;
     best_combo.probability = -100;
 
+    if(!isfinite(event.Reconstructed->Trigger.CBTiming))
+        return;
+
     for(const auto taggerhit : event.Reconstructed->TaggerHits) {
+
+        promptrandom.SetTaggerHit(taggerhit.Time - event.Reconstructed->Trigger.CBTiming);
+
+        if(promptrandom.State() == PromptRandom::Case::Outside)
+            continue;
+
+        branches.TagW = promptrandom.FillWeight();
+
         for(utils::ProtonPermutation perm(event.Reconstructed->Candidates, matchedProton); perm.Good(); perm.Next()) {
 
             if(matchedProton) {
@@ -117,6 +153,16 @@ void FindProton::ProcessEvent(const TEvent& event, manager_t&)
             branches.chi2dof     = fitres.ChiSquare / fitres.NDoF;
             branches.probability = fitres.Probability;
             branches.fitstatus   = fitres.Status == APLCON::Result_Status_t::Success ? 1 : 0;
+
+            branches.p_theta = perm.Proton()->Theta();
+            branches.p_phi   = perm.Proton()->Phi();
+            branches.p_veto  = perm.Proton()->Candidate->VetoEnergy;
+
+            const auto& cluster = perm.Proton()->Candidate->FindCaloCluster();
+            if(cluster) {
+                branches.p_PSA_a = std_ext::radian_to_degree(cluster->GetPSAAngle());
+                branches.p_PSA_r = cluster->GetPSARadius();
+            }
 
             if(branches.probability > best_combo.probability)
                 best_combo = branches;
