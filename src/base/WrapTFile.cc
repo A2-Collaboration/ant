@@ -140,8 +140,9 @@ WrapTFileOutput::WrapTFileOutput(const std::string& filename, mode_t access_mode
 
 WrapTFileOutput::~WrapTFileOutput()
 {
-    LOG(INFO) << "Writing output file " <<  files.front()->GetName();
     files.front()->Write();
+    LOG(INFO) << "Wrote output file " <<  files.front()->GetName()
+              << " (" << (double)files.front()->GetFileBytesWritten()/(1 << 20) << " MB)";
 }
 
 void WrapTFileOutput::cd()
