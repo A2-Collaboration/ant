@@ -31,7 +31,7 @@ void FindProton::branches_t::Reset()
     probability = std_ext::NaN;
     copl_angle  = std_ext::NaN;
     angle_p_cp  = std_ext::NaN;
-    double mangle      = std_ext::NaN;
+    mangle      = std_ext::NaN;
     matched_p   = -1;
     isBest      = -1;
     fitstatus   = -1;
