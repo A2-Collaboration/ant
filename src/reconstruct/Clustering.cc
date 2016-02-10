@@ -43,17 +43,6 @@ void Clustering::Build(const shared_ptr<ClusterDetector_t>& clusterdetector,
         const auto& hit = clusterhit.Hit;
         // ignore hits without energy or time information
         if(!isfinite(clusterhit.Energy) || !isfinite(clusterhit.Time)) {
-            // we're not allowed to throw anything away
-            // so add some strange single hit cluster with no energy information here
-            clusters.emplace_back(make_shared<TCluster>(
-                                      clusterdetector->GetPosition(hit->Channel),
-                                      clusterhit.Energy,
-                                      clusterhit.Time,
-                                      clusterdetector->Type,
-                                      hit->Channel,
-                                      vector<TClusterHit>{*hit}
-                                      )
-                                  );
             continue;
         }
         crystals.emplace_back(
