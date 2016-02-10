@@ -12,6 +12,7 @@
 #include "base/WrapTFile.h"
 #include "base/std_ext/string.h"
 #include "base/std_ext/system.h"
+#include "base/std_ext/memory.h"
 
 //ROOT
 #include "TDirectory.h"
@@ -56,6 +57,10 @@ int main(int argc, char** argv) {
     auto cmd_verbose = cmd.add<TCLAP::ValueArg<int>>("v","verbose","Verbosity level (0..9)", false, 0,"level");
     auto cmd_output     = cmd.add<TCLAP::ValueArg<string>>("o","output","Output file",true,"","filename");
     auto cmd_inputfiles = cmd.add<TCLAP::UnlabeledMultiArg<string>>("inputfiles","input root files",true,"inputfiles");
+    auto cmd_macrooverwrite  = cmd.add<TCLAP::SwitchArg>("","macrooverwrite","Overwrite existing macro file",false);
+    auto cmd_proofworkers  = cmd.add<TCLAP::ValueArg<unsigned>>("","proofworkers","Specify number of workers for PROOF, =0 disables it.",false,8,"n");
+    auto cmd_ignoretreeevents  = cmd.add<TCLAP::SwitchArg>("","ignoretreeevents","Ignore the ubiquitious treeEvents",false);
+
 
     cmd.parse(argc, argv);
 
@@ -72,11 +77,14 @@ int main(int argc, char** argv) {
             return EXIT_FAILURE;
         }
 
-        WrapTFileOutput outfile(cmd_output->getValue(),
+        const string outfilename = cmd_output->getValue();
+        WrapTFileOutput outfile(outfilename,
                                 WrapTFileOutput::mode_t::recreate,
                                 true);
         list<TChain*> chains;
         for(const auto& name : chain_names) {
+            if(cmd_ignoretreeevents->getValue() && name == "treeEvents")
+                continue;
             auto chain = new TChain(name.c_str());
             chains.push_back(chain);
             gDirectory->Add(chain);
@@ -93,10 +101,40 @@ int main(int argc, char** argv) {
             LOG(INFO) << "Added " << file;
         }
 
+        unique_ptr<ofstream> macrofile;\
+        const string macrofilename = outfilename + ".C";
+        if(!std_ext::system::testopen(macrofilename) || cmd_macrooverwrite->getValue()) {
+            macrofile = std_ext::make_unique<ofstream>();
+            macrofile->open(macrofilename);
+            *macrofile << "{" << endl;
+            *macrofile << "TFile* myfile = TFile::Open(\"" << outfilename << "\");" << endl;
+            if(cmd_proofworkers->getValue()>0)
+                *macrofile << "TProof::Open(\"workers=" << cmd_proofworkers->getValue() << "\");" << endl;
+        }
+        else {
+            LOG(WARNING) << "Macro '" << macrofilename <<  "' already exists. Not overwriting it. Use --macrooverwrite to force it.";
+        }
+
+        unsigned n = 0;
         for(auto chain : chains) {
             LOG(INFO) << chain->GetName() << ": " << chain->GetEntries() << " Entries";
-            if(std_ext::contains(chain->GetName(), "/"))
-                LOG(INFO) << "Remember to use 'TTree* tree = gDirectory->GetKey(\"" << chain->GetName() << "\")->ReadObj()'";
+            if(macrofile) {
+                string chainname = "tree";
+                if(chains.size()>1)
+                    chainname += to_string(n);
+                *macrofile << "TChain* " << chainname << " = myfile->GetKey(\""
+                           << chain->GetName() <<  "\")->ReadObj();" << endl;
+                if(cmd_proofworkers->getValue()>0)
+                    *macrofile << chainname << "->SetProof();" << endl;
+
+            }
+            n++;
+        }
+
+        if(macrofile) {
+            *macrofile << "}" << endl;
+            macrofile->close();
+            LOG(INFO) << "Created macro '" << macrofilename << "'. Use it when starting ROOT.";
         }
 
     }
