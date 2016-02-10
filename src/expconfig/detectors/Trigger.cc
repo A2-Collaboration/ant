@@ -29,7 +29,41 @@ void Trigger::BuildMappings(std::vector<UnpackerAcquConfig::hit_mapping_t>& hit_
                 );
 }
 
+void Trigger::ApplyTo(TEventData& reconstructed)
+{
 
+    /// @todo The multiplicity is a much harder business, see acqu/root/src/TA2BasePhysics.cc
+    /// the code there might only apply to the old trigger system before 2012
+    /// so it might be best to implement such algorithms with some nicely designed interface into the
+    /// pseudo-detector Trigger in expconfig/detectors
+
+    double Esum = 0.0;
+    for(const TDetectorReadHit& dethit : reconstructed.DetectorReadHits) {
+        if(dethit.DetectorType != Detector_t::Type_t::CB)
+            continue;
+        if(dethit.ChannelType != Channel_t::Type_t::Integral)
+            continue;
+        for(double energy : dethit.Values)
+            Esum += energy;
+    }
+
+    double TimeEsum = 0.0;
+    double TimeE = 0.0;
+    for(const TClusterPtr& cluster : reconstructed.Clusters) {
+        if(cluster->DetectorType != Detector_t::Type_t::CB)
+            continue;
+        if(!isfinite(cluster->Energy) || !isfinite(cluster->Time))
+            continue;
+        TimeEsum += cluster->Energy;
+        TimeE += cluster->Energy*cluster->Time;
+    }
+
+
+    auto& triggerinfos = reconstructed.Trigger;
+    triggerinfos.CBEnergySum = Esum;
+    triggerinfos.CBTiming = TimeE/TimeEsum;
+
+}
 
 bool Trigger_2014::Matches(const TID& tid) const {
     // timepoint roughly to Eta Prime beamtime...
@@ -88,32 +122,5 @@ Trigger_2014::scaler_mapping_t Trigger_2014::MakeScalerMapping()
 }
 
 
-void ant::expconfig::detector::Trigger::ApplyTo(TEventData& reconstructed)
-{
 
-    /// @todo The multiplicity is a much harder business, see acqu/root/src/TA2BasePhysics.cc
-    /// the code there might only apply to the old trigger system before 2012
-    /// so it might be best to implement such algorithms with some nicely designed interface into the
-    /// pseudo-detector Trigger in expconfig/detectors
-
-    double Esum = 0.0;
-    double TimeEsum = 0.0;
-    double TimeE = 0.0;
-    for(const TClusterPtr& cluster : reconstructed.Clusters) {
-        if(cluster->DetectorType == Detector_t::Type_t::CB) {
-            if(isfinite(cluster->Energy)) {
-                Esum += cluster->Energy;
-                if(isfinite(cluster->Time)) {
-                    TimeEsum += cluster->Energy;
-                    TimeE += cluster->Energy*cluster->Time;
-                }
-            }
-        }
-    }
-
-    auto& triggerinfos = reconstructed.Trigger;
-    triggerinfos.CBEnergySum = Esum;
-    triggerinfos.CBTiming = TimeE/TimeEsum;
-
-}
 
