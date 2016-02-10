@@ -19,6 +19,7 @@ public:
         IgnoreDetectorChannel(Detector_t::Type_t::CB, 125); /// odd time [walk] and energy
         IgnoreDetectorChannel(Detector_t::Type_t::CB, 265); /// few entries
         IgnoreDetectorChannel(Detector_t::Type_t::CB, 418); /// odd time spectrum
+        IgnoreDetectorChannel(Detector_t::Type_t::CB, 547); /// few entries
         IgnoreDetectorChannel(Detector_t::Type_t::CB, 549); /// no entries
         IgnoreDetectorChannel(Detector_t::Type_t::CB, 557); /// double peak in time
         IgnoreDetectorChannel(Detector_t::Type_t::CB, 565); /// no entries
