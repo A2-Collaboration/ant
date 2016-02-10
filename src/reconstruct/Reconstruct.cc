@@ -279,6 +279,11 @@ void Reconstruct::BuildClusters(sorted_bydetectortype_t<AdaptorTClusterHit>&& so
             // in case of no clustering detector,
             // build simple "cluster" consisting of single TClusterHit
             for(const AdaptorTClusterHit& clusterhit : clusterhits) {
+
+                // ignore hits with time and energy information
+                if(!isfinite(clusterhit.Energy) || !isfinite(clusterhit.Time))
+                    continue;
+
                 const auto& hit = clusterhit.Hit;
 
                 clusters.emplace_back(make_shared<TCluster>(
@@ -295,8 +300,7 @@ void Reconstruct::BuildClusters(sorted_bydetectortype_t<AdaptorTClusterHit>&& so
         }
 
         // insert the clusters (if any)
-        if(!clusterhits.empty()) {
-            assert(!clusters.empty());
+        if(!clusters.empty()) {
             insert_hint =
                     sorted_clusters.insert(insert_hint,
                                            make_pair(detectortype, move(clusters)));
