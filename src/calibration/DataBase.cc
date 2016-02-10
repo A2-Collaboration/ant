@@ -144,7 +144,16 @@ void DataBase::handleStrictRange(const TCalibrationData& cdata) const
         // if range overlaps, then they must exactly match
         // anything else is not allowed right now
         if(*it_range != range) {
-            throw Exception("Given TCalibrationData range conflicts with existing database entry.");
+            if(it_range->Stop().Lower +1 == range.Stop().Lower) {
+                LOG(WARNING) << "Fixing TCalibrationData range: Off by one to database";
+
+                const auto oldfolder = Layout.GetRangeFolder(calibrationID, *it_range);
+                const auto newfolder = Layout.GetRangeFolder(calibrationID, range);
+
+                system::exec(formatter() << "mv " << oldfolder << " " << newfolder);
+
+            } else
+                throw Exception(formatter() << "Given TCalibrationData range(" << range << ") conflicts with existing database entry(" << *it_range << ").");
         }
     }
 
