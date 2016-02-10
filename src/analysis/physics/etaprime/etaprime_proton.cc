@@ -44,7 +44,7 @@ EtapProton::EtapProton(const string& name, OptionsPtr opts):
     tree->Branch("ProtonToF",  &b_ProtonToF);
 
     tree->Branch("FitStatus",  &b_FitStatus);
-    tree->Branch("FitChi2",  &b_FitChi2);
+    tree->Branch("FitChi2",    &b_FitChi2);
     tree->Branch("NFitIterations", &b_NFitIterations); // number of good fits
 
     tree->Branch("TaggW",   &b_TaggW); // prompt/random weight
@@ -62,6 +62,8 @@ EtapProton::EtapProton(const string& name, OptionsPtr opts):
     // prepare fitters for all multiplicities
     fitters.resize(enclosing.Stop());
     const auto setup = ant::ExpConfig::Setup::GetLastFound();
+    if(!setup)
+        throw runtime_error("EtapProton needs a setup");
     for(unsigned mult=enclosing.Start();mult<=enclosing.Stop();mult++) {
         if(!multiplicities.Contains(mult))
             continue;
@@ -77,6 +79,8 @@ EtapProton::EtapProton(const string& name, OptionsPtr opts):
 
     // needed for calculating ToF
     taps_detector = ExpConfig::Setup::GetDetector<expconfig::detector::TAPS>();
+    if(!taps_detector)
+        throw runtime_error("EtapProton needs TAPS detector in setup");
 }
 
 void EtapProton::ProcessEvent(const TEvent& event, manager_t& manager)
