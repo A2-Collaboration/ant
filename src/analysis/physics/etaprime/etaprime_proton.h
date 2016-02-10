@@ -16,7 +16,9 @@ namespace physics {
 class EtapProton : public Physics {
 
 protected:
-    PiecewiseInterval<unsigned> multiplicities;
+    const PiecewiseInterval<unsigned> multiplicities;
+    const bool fitter_branches;
+    const bool save_events;
 
     TH1D* steps;
 

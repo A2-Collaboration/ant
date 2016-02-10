@@ -15,9 +15,11 @@ using namespace std;
 
 
 EtapProton::EtapProton(const string& name, OptionsPtr opts):
-    Physics(name, opts)
+    Physics(name, opts),
+    multiplicities(opts->Get<decltype(multiplicities)>("PhotonMulti",{{2,2},{4,4},{6,6}})),
+    fitter_branches(opts->Get<bool>("FitterBranches", false)),
+    save_events(opts->Get<bool>("SaveEvents",false))
 {
-    multiplicities = opts->Get<decltype(multiplicities)>("PhotonMulti",{{2,2},{4,4},{6,6}});
     auto enclosing = multiplicities.EnclosingInterval();
     if(!enclosing.IsSane() || enclosing.Start()<1)
         throw runtime_error("Given photon multiplicities not sane");
@@ -69,7 +71,8 @@ EtapProton::EtapProton(const string& name, OptionsPtr opts):
                           mult
                           );
         fitter->LoadSigmaData(setup->GetPhysicsFilesDirectory()+"/FitterSigmas.root");
-        fitter->SetupBranches(tree);
+        if(fitter_branches)
+            fitter->SetupBranches(tree);
         fitters[mult-1] = move(fitter);
     }
 
@@ -144,7 +147,8 @@ void EtapProton::ProcessEvent(const TEvent& event, manager_t& manager)
         return;
     steps->Fill("Multiplicity ok",1.0);
 
-    manager.SaveEvent();
+    if(save_events)
+        manager.SaveEvent();
 
     b_PhotonSum.SetPxPyPzE(0,0,0,0);
     for(const auto& p : photons) {
