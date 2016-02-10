@@ -49,22 +49,22 @@ void PhysicsManager::ShowResults()
     }
 }
 
-void PhysicsManager::InitReaders(PhysicsManager::readers_t readers_)
+void PhysicsManager::InitReaders(readers_t readers_)
 {
-    readers = move(readers_);
+    amenders = move(readers_);
 
     // figure out what set of readers we have
-    // we expect maximum one source and several amends
-    auto it_reader = readers.begin();
-    while(it_reader != readers.end()) {
-        if((*it_reader)->IsSource()) {
+    // we expect maximum one source and several amenders
+    auto it_amender = amenders.begin();
+    while(it_amender != amenders.end()) {
+        if((*it_amender)->IsSource()) {
             if(source != nullptr)
                 throw Exception("Found more than one source in given readers");
-            source = move(*it_reader);
-            it_reader = readers.erase(it_reader);
+            source = move(*it_amender);
+            it_amender = amenders.erase(it_amender);
         }
         else {
-            ++it_reader;
+            ++it_amender;
         }
     }
 }
@@ -229,15 +229,15 @@ bool PhysicsManager::TryReadEvent(TEventPtr& event)
     }
 
 
-    auto it_reader = readers.begin();
-    while(it_reader != readers.end()) {
+    auto it_amender = amenders.begin();
+    while(it_amender != amenders.end()) {
 
-        if((*it_reader)->ReadNextEvent(*event)) {
-            ++it_reader;
+        if((*it_amender)->ReadNextEvent(*event)) {
+            ++it_amender;
             event_read = true;
         }
         else {
-            it_reader = readers.erase(it_reader);
+            it_amender = amenders.erase(it_amender);
         }
     }
 

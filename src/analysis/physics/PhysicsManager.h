@@ -37,7 +37,7 @@ protected:
     std::unique_ptr<utils::ParticleID> particleID;
 
     using readers_t = std::list< std::unique_ptr<input::DataReader> >;
-    readers_t readers;
+    readers_t amenders;
     std::unique_ptr<input::DataReader> source;
 
     void InitReaders(readers_t readers_);
