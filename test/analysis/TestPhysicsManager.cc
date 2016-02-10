@@ -266,17 +266,15 @@ void dotest_plutogeant()
 
 void dotest_runall() {
 
-    PhysicsManager pm;
-
     for(auto name : PhysicsRegistry::GetList()) {
+        PhysicsManager pm;
         REQUIRE_NOTHROW(pm.AddPhysics(PhysicsRegistry::Create(name)));
+        auto unpacker = Unpacker::Get(string(TEST_BLOBS_DIRECTORY)+"/Acqu_twoscalerblocks.dat.xz");
+        auto reconstruct = std_ext::make_unique<Reconstruct>();
+        list< unique_ptr<analysis::input::DataReader> > readers;
+        readers.emplace_back(std_ext::make_unique<input::AntReader>(nullptr, move(unpacker), move(reconstruct)));
+
+        REQUIRE_NOTHROW(pm.ReadFrom(move(readers), 20));
     }
-
-    auto unpacker = Unpacker::Get(string(TEST_BLOBS_DIRECTORY)+"/Acqu_twoscalerblocks.dat.xz");
-    auto reconstruct = std_ext::make_unique<Reconstruct>();
-    list< unique_ptr<analysis::input::DataReader> > readers;
-    readers.emplace_back(std_ext::make_unique<input::AntReader>(nullptr, move(unpacker), move(reconstruct)));
-
-    REQUIRE_NOTHROW(pm.ReadFrom(move(readers), 30));
 
 }
