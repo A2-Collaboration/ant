@@ -53,7 +53,7 @@ public:
         }
     }
 
-    interval_t EnclosingInterval() {
+    interval_t EnclosingInterval() const {
         if(this->empty())
             return interval_t({},{});
 
