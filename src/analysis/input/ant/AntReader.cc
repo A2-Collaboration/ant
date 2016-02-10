@@ -116,7 +116,9 @@ bool AntReader::IsSource() {
 
 double AntReader::PercentDone() const
 {
-    return reader->PercentDone();
+    if(reader)
+        return reader->PercentDone();
+    return numeric_limits<double>::quiet_NaN();
 }
 
 bool AntReader::ReadNextEvent(TEvent& event)
