@@ -56,7 +56,6 @@ EtapProton::EtapProton(const string& name, OptionsPtr opts):
 
     tree->Branch("FittedTaggE",      &b_FittedTaggE);
     tree->Branch("FittedProton",     &b_FittedProton);
-    tree->Branch("FittedPhotons",    &b_FittedPhotons);
     tree->Branch("FittedPhotonSum",  &b_FittedPhotonSum);
     tree->Branch("FittedProtonCopl", &b_FittedProtonCopl);
 
@@ -188,7 +187,6 @@ void EtapProton::ProcessEvent(const TEvent& event, manager_t& manager)
         b_NFitIterations = 0;
         b_FittedTaggE = numeric_limits<double>::quiet_NaN();
         b_FittedPhotonSum.SetPxPyPzE(0,0,0,0);
-        b_FittedPhotons.resize(0);
         b_FittedProton.SetPxPyPzE(0,0,0,0);
         b_FittedProtonCopl = numeric_limits<double>::quiet_NaN();
 
@@ -207,7 +205,6 @@ void EtapProton::ProcessEvent(const TEvent& event, manager_t& manager)
 
             for(const auto& p : fitted_photons) {
                 b_FittedPhotonSum += *p;
-                b_FittedPhotons.emplace_back(*p);
             }
 
             b_FittedProtonCopl = std_ext::radian_to_degree(TVector2::Phi_mpi_pi(b_FittedProton.Phi() - b_FittedPhotonSum.Phi() - M_PI ));

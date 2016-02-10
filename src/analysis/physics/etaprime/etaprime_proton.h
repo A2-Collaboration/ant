@@ -49,7 +49,6 @@ protected:
 
     double b_FittedTaggE;
     TLorentzVector b_FittedProton;
-    std::vector<TLorentzVector> b_FittedPhotons;
     TLorentzVector b_FittedPhotonSum;
     double b_FittedProtonCopl;
 
