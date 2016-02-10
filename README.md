@@ -1,9 +1,10 @@
 [![Build status master branch](https://travis-ci.org/A2-Collaboration-dev/ant.svg?branch=master)](https://travis-ci.org/A2-Collaboration-dev/ant)
 [![Codecov status master branch](https://codecov.io/github/A2-Collaboration-dev/ant/coverage.svg?branch=master)](https://codecov.io/github/A2-Collaboration-dev/ant?branch=master)
 
-
 ant
 ===
+
+![A2 ant logo](extra/a2-ant-logo.png?raw=true)
 
 Just another **AN**alysis **T**oolkit `ant`, which can read from many
 input sources with minimal user intervention and let's you create
