@@ -30,7 +30,12 @@ protected:
         double p_PSA_r     = std_ext::NaN;
         double p_PSA_a     = std_ext::NaN;
         double p_veto      = std_ext::NaN;
+        int    p_detector  = -1;
+
         double TagW        = std_ext::NaN;
+        double TagE        = std_ext::NaN;
+        double TagTime     = std_ext::NaN;
+        int    TagCh       = -1;
 
         branches_t() = default;
         branches_t(const branches_t&) = default;
@@ -47,7 +52,7 @@ protected:
 
     TTree* tree = nullptr;
 
-    branches_t branches;
+    branches_t tree_branches;
     utils::KinFitter fitter;
 
     TH1D* steps = nullptr;

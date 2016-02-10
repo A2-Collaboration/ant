@@ -5,6 +5,9 @@
 #include "utils/ProtonPermutation.h"
 #include "expconfig/ExpConfig.h"
 #include "TTree.h"
+#include <list>
+#include <memory>
+#include "base/Logger.h"
 
 using namespace ant;
 using namespace ant::std_ext;
@@ -28,7 +31,11 @@ void FindProton::branches_t::SetBranchtes(TTree* tree)
     tree->Branch("p_PSA_r",     &p_PSA_r);
     tree->Branch("p_PSA_a",     &p_PSA_a);
     tree->Branch("p_veto",      &p_veto);
+    tree->Branch("p_detector",  &p_detector);
     tree->Branch("TagW",        &TagW);
+    tree->Branch("TagE",        &TagE);
+    tree->Branch("TagTime",     &TagTime);
+    tree->Branch("TagCh",       &TagCh);
 }
 
 void FindProton::branches_t::Reset()
@@ -47,7 +54,12 @@ void FindProton::branches_t::Reset()
     p_PSA_r     = std_ext::NaN;
     p_PSA_a     = std_ext::NaN;
     p_veto      = std_ext::NaN;
+    p_detector  = -1;
     TagW        = std_ext::NaN;
+    TagE        = std_ext::NaN;
+    TagTime     = std_ext::NaN;
+    TagCh       = -1;
+
 }
 
 
@@ -58,7 +70,7 @@ FindProton::FindProton(const string& name, OptionsPtr opts):
     fitter("FindProton", nPhotons)
 {
     tree = HistFac.makeTTree("tree");
-    branches.SetBranchtes(tree);
+    tree_branches.SetBranchtes(tree);
 
     const auto setup = ant::ExpConfig::Setup::GetLastFound();
 
@@ -119,9 +131,7 @@ void FindProton::ProcessEvent(const TEvent& event, manager_t&)
         }
     }
 
-    branches.Reset();
-    branches_t best_combo;
-    best_combo.probability = -100;
+
 
     if(!isfinite(event.Reconstructed->Trigger.CBTiming))
         return;
@@ -133,14 +143,41 @@ void FindProton::ProcessEvent(const TEvent& event, manager_t&)
         if(promptrandom.State() == PromptRandom::Case::Outside)
             continue;
 
-        branches.TagW = promptrandom.FillWeight();
+        shared_ptr<branches_t> best_combo = nullptr;
+
+        list<shared_ptr<branches_t>> b;
 
         for(utils::ProtonPermutation perm(event.Reconstructed->Candidates, matchedProton); perm.Good(); perm.Next()) {
 
+            auto branches = make_shared<branches_t>();
+
+            b.emplace_back(branches);
+
+            branches->TagW = promptrandom.FillWeight();
+            branches->TagE    = taggerhit.PhotonEnergy;
+            branches->TagCh   = taggerhit.Channel;
+            branches->TagTime = taggerhit.Time;
+            branches->p_detector  = 0;
+
+            if(perm.Proton()->Candidate) {
+
+                if(perm.Proton()->Candidate->Detector & Detector_t::Type_t::TAPS) {
+                    branches->p_detector = 2;
+                    const auto& cluster = perm.Proton()->Candidate->FindCaloCluster();
+                    if(cluster) {
+                        branches->p_PSA_a = std_ext::radian_to_degree(cluster->GetPSAAngle());
+                        branches->p_PSA_r = cluster->GetPSARadius();
+                    }
+                } else if(perm.Proton()->Candidate->Detector & Detector_t::Type_t::CB) {
+                    branches->p_detector = 1;
+                }
+
+            }
+
             if(matchedProton) {
-                branches.matched_p = (perm.isTrueProton()) ? 1 : 0;
+                branches->matched_p = (perm.isTrueProton()) ? 1 : 0;
             } else {
-                branches.matched_p = -2; // = No mc true info
+                branches->matched_p = -2; // = No mc true info
             }
 
 
@@ -150,32 +187,34 @@ void FindProton::ProcessEvent(const TEvent& event, manager_t&)
 
             const auto fitres = fitter.DoFit();
 
-            branches.chi2dof     = fitres.ChiSquare / fitres.NDoF;
-            branches.probability = fitres.Probability;
-            branches.fitstatus   = fitres.Status == APLCON::Result_Status_t::Success ? 1 : 0;
+            branches->chi2dof     = fitres.ChiSquare / fitres.NDoF;
+            branches->probability = fitres.Probability;
+            branches->fitstatus   = fitres.Status == APLCON::Result_Status_t::Success ? 1 : 0;
 
-            branches.p_theta = perm.Proton()->Theta();
-            branches.p_phi   = perm.Proton()->Phi();
-            branches.p_veto  = perm.Proton()->Candidate->VetoEnergy;
+            branches->p_theta = perm.Proton()->Theta();
+            branches->p_phi   = perm.Proton()->Phi();
+            branches->p_veto  = perm.Proton()->Candidate->VetoEnergy;
 
-            const auto& cluster = perm.Proton()->Candidate->FindCaloCluster();
-            if(cluster) {
-                branches.p_PSA_a = std_ext::radian_to_degree(cluster->GetPSAAngle());
-                branches.p_PSA_r = cluster->GetPSARadius();
-            }
+            if(!best_combo || branches->probability > best_combo->probability)
+                    best_combo = branches;
 
-            if(branches.probability > best_combo.probability)
-                best_combo = branches;
+        }
 
+        for(auto& br : b) {
+
+            br->isBest = (br==best_combo) ? 1 : 0;
+
+            tree_branches.Reset();
+
+            tree_branches = *br;
+            VLOG(6) << "isBest=" << tree_branches.isBest;
             tree->Fill();
+
         }
     }
 
-    if(best_combo.probability != -100) {
-        best_combo.isBest = 1;
-        branches = best_combo;
-        tree->Fill();
-    }
+
+
 
 }
 
