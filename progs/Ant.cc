@@ -122,10 +122,7 @@ int main(int argc, char** argv) {
 
     auto cmd_calibrations  = cmd.add<TCLAP::MultiArg<string>>("c","calibration","Calibration to run",false,"calibration");
 
-//    auto cmd_unpackerout  = cmd.add<TCLAP::ValueArg<string>>("u","unpackerout","Unpacker output file",false,"","outputfile");
-//    auto cmd_u_writeuncal  = cmd.add<TCLAP::SwitchArg>("","u_writeuncalibrated","Unpacker: Output UNcalibrated detector reads (before reconstruct)",false);
     auto cmd_u_disablerecon  = cmd.add<TCLAP::SwitchArg>("","u_disablereconstruct","Unpacker: Disable Reconstruct (disables also all analysis)",false);
-//    auto cmd_u_writecal  = cmd.add<TCLAP::SwitchArg>("","u_writecalibrated","Unpacker: Output calibrated detector reads (only if Reconstruct found)",false);
 
     auto cmd_p_disableParticleID  = cmd.add<TCLAP::SwitchArg>("","p_disableParticleID","Physics: Disable ParticleID",false);
     auto cmd_p_simpleParticleID  = cmd.add<TCLAP::SwitchArg>("","p_simpleParticleID","Physics: Use simple ParticleID (just protons/photons)",false);
