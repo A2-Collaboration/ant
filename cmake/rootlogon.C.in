@@ -5,6 +5,9 @@
     if(gSystem->Load("@LIBRARY_OUTPUT_PATH@/libcbtaps_display.so") == 0)
         cout << "Ant cbtaps_display library successfully loaded" << endl;
 
+    if(gSystem->Load("@LIBRARY_OUTPUT_PATH@/libexpconfig.so") == 0)
+        cout << "Ant expconfig library successfully loaded" << endl;
+
     if(gSystem->Load("@LIBRARY_OUTPUT_PATH@/libanalysis_codes.so") == 0)
         cout << "Ant analysis_codes library successfully loaded" << endl;
 
