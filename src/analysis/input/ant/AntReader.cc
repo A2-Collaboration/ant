@@ -97,16 +97,22 @@ AntReader::AntReader(const std::shared_ptr<WrapTFileInput>& rootfiles,
     if(unpacker) {
         reader = std_ext::make_unique<detail::UnpackerReader>(move(unpacker));
         if(!reconstruct)
-            LOG(WARNING) << "Reconstruct disabled although reading from unpacker. Produce DetectorReadHits only.";
+            LOG(WARNING) << "Reconstruct disabled although reading from unpacker. Producing DetectorReadHits only.";
     }
-    else{
+    else {
         // try root files
-        reader = std_ext::make_unique<detail::TreeReader>(rootfiles);
+        auto treereader = std_ext::make_unique<detail::TreeReader>(rootfiles);
+        if(isfinite(treereader->PercentDone()))
+            reader = move(treereader);
     }
 
 }
 
 AntReader::~AntReader() {}
+
+bool AntReader::IsSource() {
+    return reader != nullptr;
+}
 
 double AntReader::PercentDone() const
 {
@@ -115,6 +121,9 @@ double AntReader::PercentDone() const
 
 bool AntReader::ReadNextEvent(TEvent& event)
 {
+    if(!reader)
+        return false;
+
     // we expect Reconstructed branch to be filled always
     auto eventptr = reader->NextEvent();
 
@@ -133,6 +142,7 @@ bool AntReader::ReadNextEvent(TEvent& event)
         return true;
     }
 
+    reader = nullptr;
     return false;
 }
 

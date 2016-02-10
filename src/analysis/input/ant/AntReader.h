@@ -32,7 +32,7 @@ public:
     AntReader& operator= (const AntReader&) = delete;
 
     // DataReader interface
-    virtual bool IsSource() override { return true; }
+    virtual bool IsSource() override;
     virtual bool ReadNextEvent(TEvent& event) override;
 
     double PercentDone() const override;
