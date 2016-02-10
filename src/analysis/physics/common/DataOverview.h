@@ -68,6 +68,7 @@ protected:
     TH1D* CBESum       = nullptr;
     TH1D* Multiplicity = nullptr;
     TH1D* nErrorsEvent = nullptr;
+    TH1D* CBTiming     = nullptr;
     ///@todo Add histograms for Error Codes and ModuleIDs ?
 
     TH2D* CBESum_perCh = nullptr;

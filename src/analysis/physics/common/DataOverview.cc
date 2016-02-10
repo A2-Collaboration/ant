@@ -114,7 +114,8 @@ TriggerOverview::TriggerOverview(const string &name, OptionsPtr opts):
 
     CBESum       = HistFac.makeTH1D("CB Energy Sum",  "CB Energy Sum [MeV]", "", bins_energy,      "CBESum");
     Multiplicity = HistFac.makeTH1D("Multiplicity",   "# Hits",              "", bins_multiplicity,"Multiplicity");
-    nErrorsEvent = HistFac.makeTH1D("Errors / Event", "# errors",            "", bins_errors,      "nErrrorsEvent");
+    nErrorsEvent = HistFac.makeTH1D("Errors / Event", "# errors",            "", bins_errors,      "nErrorsEvent");
+    CBTiming     = HistFac.makeTH1D("CB Timing", "CB Timing [ns]", "", BinSettings(300,-20,20), "CBTiming");
 
 
     auto cb_detector = ExpConfig::Setup::GetDetector(Detector_t::Type_t::CB);
@@ -144,6 +145,7 @@ void TriggerOverview::ProcessEvent(const TEvent& event, manager_t&)
     CBESum->Fill(trigger.CBEnergySum);
     Multiplicity->Fill(trigger.ClusterMultiplicity);
     nErrorsEvent->Fill(trigger.DAQErrors.size());
+    CBTiming->Fill(trigger.CBTiming);
 
     for(const TClusterPtr& cluster : branch.Clusters) {
         if(cluster->DetectorType == Detector_t::Type_t::CB) {
@@ -173,6 +175,7 @@ void TriggerOverview::ShowResult()
             << nErrorsEvent
             << drawoption("colz") << CBESum_perCh
             << E_perCh
+            << CBTiming
             << endc;
 }
 
