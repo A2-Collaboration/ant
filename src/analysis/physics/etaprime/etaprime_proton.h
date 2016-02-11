@@ -33,6 +33,8 @@ protected:
     double b_ProtonCopl;
     double b_ProtonBeta;
     double b_ProtonToF;
+    double b_ProtonPSA_R;
+    double b_ProtonPSA_Angle;
 
     PromptRandom::Switch promptrandom;
 

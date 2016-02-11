@@ -42,6 +42,8 @@ EtapProton::EtapProton(const string& name, OptionsPtr opts):
     tree->Branch("ProtonCopl", &b_ProtonCopl);
     tree->Branch("ProtonBeta", &b_ProtonBeta);
     tree->Branch("ProtonToF",  &b_ProtonToF);
+    tree->Branch("b_ProtonPSA_R",      &b_ProtonPSA_R);
+    tree->Branch("b_ProtonPSA_Angle",  &b_ProtonPSA_Angle);
 
     tree->Branch("FitStatus",  &b_FitStatus);
     tree->Branch("FitChi2",    &b_FitChi2);
@@ -120,7 +122,7 @@ void EtapProton::ProcessEvent(const TEvent& event, manager_t& manager)
         // calculate the beta = v/c of the particle from time of flight
         // note that the time of flight is only correct if the correct reference time
         // is used...
-        auto taps_cluster = cand_taps->FindCaloCluster();
+        const auto taps_cluster = cand_taps->FindCaloCluster();
         const double dt = taps_detector->GetTimeOfFlight(taps_cluster->Time, taps_cluster->CentralElement,
                                                           event.Reconstructed->Trigger.CBTiming);
         const double s = taps_detector->GetZPosition();
@@ -131,8 +133,11 @@ void EtapProton::ProcessEvent(const TEvent& event, manager_t& manager)
         if(!isfinite(b_ProtonBeta) || b_ProtonBeta > beta) {
             b_ProtonBeta = beta;
             b_ProtonToF = dt;
+            b_ProtonPSA_R     = taps_cluster->GetPSARadius();
+            b_ProtonPSA_Angle = taps_cluster->GetPSAAngle();
             proton = make_shared<TParticle>(ParticleTypeDatabase::Proton, cand_taps);
         }
+
     }
 
     // create "photons" from all other clusters
