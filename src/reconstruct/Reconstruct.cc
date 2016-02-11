@@ -267,7 +267,7 @@ void Reconstruct::BuildClusters(sorted_bydetectortype_t<TClusterHit>&& sorted_cl
             for(const TClusterHit& hit : clusterhits) {
 
                 // ignore hits with time and energy information
-                if(!isfinite(hit.Energy) || !isfinite(hit.Time))
+                if(!hit.IsSane())
                     continue;
 
 

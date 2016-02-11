@@ -48,7 +48,6 @@ struct TClusterHit : printable_traits
 
     std::vector<Datum> Data;
 
-
     TClusterHit(unsigned channel,
                 double energy,
                 double time) :
@@ -58,6 +57,10 @@ struct TClusterHit : printable_traits
     {
         static_assert(sizeof(Channel)>=sizeof(channel),
                       "Parameter channel does not fit into TClusterHit::Channel");
+    }
+
+    bool IsSane() const {
+        return std::isfinite(Time) && std::isfinite(Energy);
     }
 
     template<class Archive>

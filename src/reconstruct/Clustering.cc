@@ -25,7 +25,7 @@ void Clustering::Build(const shared_ptr<ClusterDetector_t>& clusterdetector,
     list<clustering::crystal_t> crystals;
     for(const TClusterHit& hit : clusterhits) {
         // ignore hits without energy or time information
-        if(!isfinite(hit.Energy) || !isfinite(hit.Time)) {
+        if(!hit.IsSane()) {
             continue;
         }
         crystals.emplace_back(
