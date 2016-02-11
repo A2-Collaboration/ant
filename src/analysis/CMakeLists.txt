@@ -50,6 +50,7 @@ set(ANALYSIS_PHYSICS
   physics/common/EventDisplayHists.cc
   physics/common/EventFilter.cc
   physics/omega/FindProton.cc
+  physics/misc/GoatComparison.cc
   )
 
 set(ANALYSIS_PHYSICS_CALIBRATION
