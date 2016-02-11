@@ -109,24 +109,19 @@ struct TCluster : printable_traits
     {}
 
     template<class Archive>
-    void load(Archive& archive) {
-        archive(Energy, Time,
-                Position,
-                DetectorType, CentralElement, Flags, ShortEnergy, Hits);
-    }
-
-    template<class Archive>
-    void save(Archive& archive) const {
-        archive(Energy, Time,
-                Position,
+    void serialize(Archive& archive) {
+        archive(Energy, Time, Position,
                 DetectorType, CentralElement, Flags, ShortEnergy, Hits);
     }
 
     virtual std::ostream& Print( std::ostream& s) const override {
-        return s << "TCluster: " << Hits.size() << " hits @" << Position
-                 << ", Energy=" << Energy << " ShortEnergy=" << ShortEnergy
-                 << " Central Element=" << CentralElement
-                 << " Detector=" << Detector_t::ToString(DetectorType);
+        s << "TCluster: " << Hits.size() << " hits @" << Position
+          << ", Energy=" << Energy << " ShortEnergy=" << ShortEnergy
+          << " CentralElement=" << CentralElement
+          << " Detector=" << Detector_t::ToString(DetectorType) << std::endl;
+        for(const auto& hit : Hits)
+            s << hit << std::endl;
+        return s;
     }
 
     // the cluster alorithm may set those flags
