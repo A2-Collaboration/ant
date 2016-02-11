@@ -171,7 +171,7 @@ static void split_cluster(const cluster_t& cluster,
     // so this cluster should not be splitted,
     // just add it to the clusters
     if(votes[0] == cluster.size()) {
-        clusters.push_back(cluster);
+        clusters.emplace_back(std::move(cluster));
         return;
     }
 
@@ -187,11 +187,11 @@ static void split_cluster(const cluster_t& cluster,
         bump.Position = cluster[i].Element->Position;
         bump.Weights.resize(cluster.size(), 0);
         calc_bump_weights(cluster, bump);
-        bumps.push_back(bump);
+        bumps.emplace_back(bump);
     }
 
     // as long as we have overlapping bumps
-    Bool_t haveOverlap = kFALSE;
+    Bool_t haveOverlap = false;
 
     do {
         // converge the positions of the bumps
@@ -199,7 +199,7 @@ static void split_cluster(const cluster_t& cluster,
         bumps_t stable_bumps;
         const double positionEpsilon = 0.01;
         while(!bumps.empty()) {
-            for(bumps_t::iterator b=bumps.begin(); b != bumps.end(); ++b) {
+            for(auto b=bumps.begin(); b != bumps.end(); ++b) {
                 // calculate new bump position with current weights
                 TVector3 oldPos = (*b).Position;
                 update_bump_position(cluster, *b);
@@ -211,7 +211,7 @@ static void split_cluster(const cluster_t& cluster,
                     continue;
                 }
                 // yes, then save it and erase it from to-be-stabilized bumps
-                stable_bumps.push_back(*b);
+                stable_bumps.emplace_back(std::move(*b));
                 b = bumps.erase(b);
             }
             // check max iterations
@@ -226,7 +226,7 @@ static void split_cluster(const cluster_t& cluster,
         // do we have any stable bumps?
         // Then just the use cluster as is
         if(stable_bumps.empty()) {
-            clusters.push_back(cluster);
+            clusters.emplace_back(cluster);
             return;
         }
 
@@ -237,22 +237,22 @@ static void split_cluster(const cluster_t& cluster,
 
         typedef std::vector< std::vector< bump_t > > overlaps_t;
         overlaps_t overlaps(cluster.size()); // index of highest energy crystal -> corresponding stable bumps
-        haveOverlap = kFALSE;
-        for(bumps_t::iterator b=stable_bumps.begin(); b != stable_bumps.end(); ++b) {
+        haveOverlap = false;
+        for(const auto& b : stable_bumps) {
             // remember the bump at its highest energy
-            overlaps[b->MaxIndex].push_back(*b);
+            overlaps[b.MaxIndex].emplace_back(b);
         }
 
-        for(overlaps_t::iterator o=overlaps.begin(); o != overlaps.end(); ++o) {
-            if(o->size()==0) {
+        for(const auto& o : overlaps) {
+            if(o.size()==0) {
                 continue;
             }
-            else if(o->size()==1) {
-                bumps.push_back(o->at(0));
+            else if(o.size()==1) {
+                bumps.emplace_back(o[0]);
             }
             else { // size>1 more than one bump at index, then merge overlapping bumps
-                haveOverlap = kTRUE;
-                bumps.push_back(merge_bumps(*o));
+                haveOverlap = true;
+                bumps.emplace_back(merge_bumps(o));
             }
         }
 
@@ -270,20 +270,18 @@ static void split_cluster(const cluster_t& cluster,
     b_seeds.reserve(bumps.size());
     using state_t = std::vector< std::set<size_t> >;
     state_t state(cluster.size()); // at each crystal, we track the bump index
-    for(bumps_t::iterator b=bumps.begin(); b != bumps.end(); ++b) {
+    for(const auto& b : bumps) {
         size_t i = b_seeds.size();
-        state[b->MaxIndex].insert(i);
+        state[b.MaxIndex].insert(i);
         // starting seed is just the max index
-        std::vector<size_t> single;
-        single.push_back(b->MaxIndex);
-        b_seeds.push_back(single);
+        b_seeds.emplace_back(std::vector<size_t>{b.MaxIndex});
     }
 
-    Bool_t noMoreSeeds = kFALSE;
+    Bool_t noMoreSeeds = false;
     while(!noMoreSeeds) {
         bump_seeds_t b_next_seeds(bumps.size());
         state_t next_state = state;
-        noMoreSeeds = kTRUE;
+        noMoreSeeds = true;
         for(size_t i=0; i<bumps.size(); i++) {
             // for each bump, do next neighbour iteration
             // so find intersection of neighbours of seeds with crystals inside the cluster
@@ -298,11 +296,11 @@ static void split_cluster(const cluster_t& cluster,
                         if(seed.Element->Neighbours[n] != cluster[j].Element->Channel)
                             continue;
                         // for bump i, we found a next_seed, ...
-                        b_next_seeds[i].push_back(j);
+                        b_next_seeds[i].emplace_back(j);
                         // ... and we assign it to this bump
                         next_state[j].insert(i);
                         // flag that we found more seeds
-                        noMoreSeeds = kFALSE;
+                        noMoreSeeds = false;
                         // neighbours is a list of unique items, we can stop searching
                         break;
                     }
@@ -325,7 +323,7 @@ static void split_cluster(const cluster_t& cluster,
         if(state[j].size()==1) {
             // crystal claimed by only one bump
             size_t i = *(state[j].begin());
-            bump_clusters[i].push_back(cluster[j]);
+            bump_clusters[i].emplace_back(cluster[j]);
             bump_energies[i] += cluster[j].Energy;
         }
     }
@@ -352,22 +350,21 @@ static void split_cluster(const cluster_t& cluster,
 
         std::vector<double> pulls(bumps.size());
         double sum_pull = 0;
-        for(std::set<size_t>::iterator b=state[j].begin(); b != state[j].end(); ++b) {
+        for(auto b=state[j].begin(); b != state[j].end(); ++b) {
             TVector3 r = cluster[j].Element->Position - bump_positions[*b];
             double pull = bump_energies[*b] * TMath::Exp(-r.Mag()/cluster[j].Element->MoliereRadius);
             pulls[*b] = pull;
             sum_pull += pull;
         }
 
-        for(std::set<size_t>::iterator b=state[j].begin(); b != state[j].end(); ++b) {
-            crystal_t crys = cluster[j];
+        for(auto b=state[j].begin(); b != state[j].end(); ++b) {
+            crystal_t crys = cluster[j]; // copy crystal
             crys.Energy *= pulls[*b]/sum_pull;
-            bump_clusters[*b].push_back(crys);
+            bump_clusters[*b].emplace_back(std::move(crys));
         }
     }
 
-    for(size_t i=0; i<bump_clusters.size(); i++) {
-        cluster_t& bump_cluster = bump_clusters[i];
+    for(auto& bump_cluster : bump_clusters) {
         bump_cluster.Split = true;
         // always sort before adding to clusters
         sort(bump_cluster.begin(), bump_cluster.end());
@@ -378,14 +375,14 @@ static void split_cluster(const cluster_t& cluster,
 static void build_cluster(std::list<crystal_t>& crystals,
                           cluster_t& cluster) {
     // first crystal has highest energy
-    std::list<crystal_t>::iterator i = crystals.begin();
+    auto i = crystals.begin();
 
     // start with initial seed list
     cluster_t seeds;
-    seeds.push_back(*i);
+    seeds.emplace_back(*i);
 
     // save i in the current cluster
-    cluster.push_back(*i);
+    cluster.emplace_back(*i);
     // remove it from the candidates
     crystals.erase(i);
 
@@ -393,15 +390,15 @@ static void build_cluster(std::list<crystal_t>& crystals,
         // neighbours of all seeds are next seeds
         cluster_t next_seeds;
 
-        for(auto seed=seeds.begin(); seed != seeds.end(); seed++) {
+        for(const auto& seed : seeds) {
             // find intersection of neighbours and seed
-            for(std::list<crystal_t>::iterator j = crystals.begin() ; j != crystals.end() ; ) {
+            for(auto j = crystals.begin() ; j != crystals.end() ; ) {
                 bool foundNeighbour = false;
-                for(size_t n=0;n<(*seed).Element->Neighbours.size();n++) {
-                    if((*seed).Element->Neighbours[n] != (*j).Element->Channel)
+                for(size_t n=0;n<seed.Element->Neighbours.size();n++) {
+                    if(seed.Element->Neighbours[n] != j->Element->Channel)
                         continue;
-                    next_seeds.push_back(*j);
-                    cluster.push_back(*j);
+                    next_seeds.emplace_back(*j);
+                    cluster.emplace_back(*j);
                     j = crystals.erase(j);
                     foundNeighbour = true;
                     // neighbours is a list of unique items, we can stop searching
