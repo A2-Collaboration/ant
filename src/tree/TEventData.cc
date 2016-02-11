@@ -40,3 +40,8 @@ ostream& TEventData::Print(ostream& s) const {
 
     return s;
 }
+
+void TEventData::ClearDetectorReadHits()
+{
+    DetectorReadHits.resize(0);
+}

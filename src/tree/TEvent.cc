@@ -131,6 +131,14 @@ std::unique_ptr<TEvent> TEvent::MakeReconstructed(const TID& id) {
     return event;
 }
 
+void TEvent::ClearDetectorReadHits()
+{
+    if(Reconstructed)
+        Reconstructed->ClearDetectorReadHits();
+    if(MCTrue)
+        MCTrue->ClearDetectorReadHits();
+}
+
 TEvent::TEvent() : Reconstructed(), MCTrue() {}
 TEvent::~TEvent() {}
 

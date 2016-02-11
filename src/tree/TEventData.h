@@ -90,6 +90,8 @@ struct TEventData : printable_traits
 
     virtual std::ostream& Print(std::ostream& s) const override;
 
+    void ClearDetectorReadHits();
+
 };
 
 }

@@ -301,7 +301,7 @@ void PhysicsManager::SaveEvent(slowcontrol::event_t buffered_event, const physic
 
         // always keep read hits if saving for slowcontrol
         if(!manager.keepReadHits && !buffered_event.Save)
-            event->Reconstructed->DetectorReadHits.resize(0);
+            event->ClearDetectorReadHits();
 
         // indicate that this event was saved for slowcontrol purposes only
         if(!manager.saveEvent && buffered_event.Save) {

@@ -46,6 +46,8 @@ struct TEvent
 
     static std::unique_ptr<TEvent> MakeReconstructed(const TID& id);
 
+    void ClearDetectorReadHits();
+
     // TEvent is moveable
     TEvent(TEvent&&) = default;
     TEvent& operator=(TEvent&&) = default;
