@@ -16,10 +16,6 @@ class UpdateableManager;
 }
 
 class Reconstruct : public Reconstruct_traits {
-    // used in test/reconstruct/TestReconstruct.cc
-    // to test the private methods interplay
-    friend struct ReconstructTester;
-
 public:
     Reconstruct();
 
@@ -36,7 +32,7 @@ public:
     template<typename T>
     using sorted_bydetectortype_t = std::map<Detector_t::Type_t, std::vector< T > >;
 
-private:
+protected:
 
     bool initialized = false;
     virtual void Initialize(const TID& tid);

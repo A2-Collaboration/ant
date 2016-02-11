@@ -35,10 +35,7 @@ unsigned getTotalCount(const Reconstruct::sorted_bydetectortype_t<T>& m) {
     return total;
 }
 
-// we use the friend class trick to test private methods
-namespace ant {
-struct ReconstructTester : Reconstruct_traits {
-    Reconstruct r;
+struct ReconstructTester : Reconstruct {
 
     void DoReconstruct(TEventData& reconstructed) override
     {
@@ -48,20 +45,20 @@ struct ReconstructTester : Reconstruct_traits {
 
         /// \todo Improve requirements
 
-        if(!r.initialized) {
-            r.Initialize(reconstructed.ID);
+        if(!initialized) {
+            Initialize(reconstructed.ID);
         }
-        REQUIRE(r.initialized);
+        REQUIRE(initialized);
 
         // update the updateables :)
-        r.updateablemanager->UpdateParameters(reconstructed.ID);
+        updateablemanager->UpdateParameters(reconstructed.ID);
 
         // apply the hooks (mostly calibrations)
-        r.ApplyHooksToReadHits(reconstructed.DetectorReadHits);
+        ApplyHooksToReadHits(reconstructed.DetectorReadHits);
         // manually scan the r.sorted_readhits
         // they are a member variable for performance reasons
         size_t n_readhits = 0;
-        for(const auto& readhit : r.sorted_readhits ) {
+        for(const auto& readhit : sorted_readhits ) {
             n_readhits += readhit.second.size();
         }
         if(!reconstructed.DetectorReadHits.empty())
@@ -72,10 +69,10 @@ struct ReconstructTester : Reconstruct_traits {
         // we also extract the energy, which is always defined as a
         // single value with type Channel_t::Type_t
         Reconstruct::sorted_bydetectortype_t<TClusterHit> sorted_clusterhits;
-        r.BuildHits(sorted_clusterhits, reconstructed.TaggerHits);
+        BuildHits(sorted_clusterhits, reconstructed.TaggerHits);
 
         // apply hooks which modify clusterhits
-        for(const auto& hook : r.hooks_clusterhits) {
+        for(const auto& hook : hooks_clusterhits) {
             hook->ApplyTo(sorted_clusterhits);
         }
 
@@ -84,25 +81,25 @@ struct ReconstructTester : Reconstruct_traits {
 
         // then build clusters (at least for calorimeters this is not trivial)
         Reconstruct::sorted_bydetectortype_t<TClusterPtr> sorted_clusters;
-        r.BuildClusters(move(sorted_clusterhits), sorted_clusters);
+        BuildClusters(move(sorted_clusterhits), sorted_clusters);
         size_t n_clusters = getTotalCount(sorted_clusters);
         if(!reconstructed.DetectorReadHits.empty())
             REQUIRE(n_clusters>0);
         REQUIRE(n_clusters <= n_clusterhits);
 
         // apply hooks which modify clusters
-        for(const auto& hook : r.hooks_clusters) {
+        for(const auto& hook : hooks_clusters) {
             hook->ApplyTo(sorted_clusters);
         }
 
         // do the candidate building
         const auto n_all_before = reconstructed.Clusters.size();
         REQUIRE(n_all_before==0);
-        r.candidatebuilder->Build(move(sorted_clusters),
-                                  reconstructed.Candidates, reconstructed.Clusters);
+        candidatebuilder->Build(move(sorted_clusters),
+                                reconstructed.Candidates, reconstructed.Clusters);
 
         // apply hooks which may modify the whole event
-        for(const auto& hook : r.hooks_eventdata) {
+        for(const auto& hook : hooks_eventdata) {
             hook->ApplyTo(reconstructed);
         }
 
@@ -125,8 +122,6 @@ struct ReconstructTester : Reconstruct_traits {
         }
     }
 };
-}
-
 
 void dotest() {
     auto unpacker = Unpacker::Get(string(TEST_BLOBS_DIRECTORY)+"/Acqu_oneevent-big.dat.xz");
