@@ -155,17 +155,18 @@ protected:
     void Analyse(const TEventData &data, const TEvent& event, manager_t& manager) override;
 
 
-    enum SigBgFlag_t {
-        flagSignal = 0,
-        flagReference,
-        flagBackground
-    };
+    int identify(const TEvent& event);
 
-    SigBgFlag_t identify(const TEvent& event) const;
+    using decaytree_t = ant::Tree<const ParticleTypeDatabase::Type&>;
 
+    std::shared_ptr<decaytree_t> signal_tree;
+    std::shared_ptr<decaytree_t> reference_tree;
 
-    std::shared_ptr<ant::Tree<const ParticleTypeDatabase::Type&>> signal_tree;
-    std::shared_ptr<ant::Tree<const ParticleTypeDatabase::Type&>> reference_tree;
+    const std::map<int, std::shared_ptr<decaytree_t>> reaction_channels;
+
+    std::map<int, std::shared_ptr<decaytree_t>> makeChannels();
+    TH1D* missed_channels = nullptr;
+    TH1D* found_channels  = nullptr;
 
 
     //======== Tree ===============================================================
@@ -201,7 +202,7 @@ protected:
         double b_TagW      = 0.0;
 
 
-        int       b_SigBgFlag = flagSignal;
+        int       b_SigBgFlag = 0;
 
         double b_ggIM_real    = {};
         double b_ggIM_comb[2] = {};

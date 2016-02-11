@@ -845,20 +845,43 @@ void OmegaEtaG2::Analyse(const TEventData &data, const TEvent& event, manager_t&
 
 }
 
-OmegaEtaG2::SigBgFlag_t OmegaEtaG2::identify(const TEvent &event) const
+int OmegaEtaG2::identify(const TEvent &event)
 {
 
     const auto particletree = event.MCTrue->ParticleTree;
 
     if(!particletree)
-        return flagSignal;
+        return 0;
 
-    if(particletree->IsEqual(signal_tree, utils::ParticleTools::MatchByParticleName))
-        return flagSignal;
-    else if(particletree->IsEqual(reference_tree, utils::ParticleTools::MatchByParticleName))
-        return flagReference;
-    else
-        return flagBackground;
+    const auto reaction_name = utils::ParticleTools::GetDecayString(particletree);
+
+    for(const auto& c : reaction_channels) {
+
+        if(particletree->IsEqual(c.second, utils::ParticleTools::MatchByParticleName)) {
+            found_channels->Fill(reaction_name.c_str(), 1.0);
+            return c.first;
+        }
+    }
+
+    missed_channels->Fill(reaction_name.c_str(), 1.0);
+
+    return 100000;
+}
+
+std::map<int, std::shared_ptr<OmegaEtaG2::decaytree_t> > OmegaEtaG2::makeChannels()
+{
+    std::map<int, std::shared_ptr<OmegaEtaG2::decaytree_t> > m;
+
+    m[0] = ParticleTypeTreeDatabase::Get(ParticleTypeTreeDatabase::Channel::Omega_gEta_3g);  //sig
+    m[1] = ParticleTypeTreeDatabase::Get(ParticleTypeTreeDatabase::Channel::Omega_gPi0_3g);  //ref
+
+    m[2] = ParticleTypeTreeDatabase::Get(ParticleTypeTreeDatabase::Channel::Direct1Pi0_2g);
+    m[3] = ParticleTypeTreeDatabase::Get(ParticleTypeTreeDatabase::Channel::Direct2Pi0_4g);
+    m[4] = ParticleTypeTreeDatabase::Get(ParticleTypeTreeDatabase::Channel::Direct3Pi0_6g);
+    m[5] = ParticleTypeTreeDatabase::Get(ParticleTypeTreeDatabase::Channel::DirectPi0Eta_4g);
+    m[6] = ParticleTypeTreeDatabase::Get(ParticleTypeTreeDatabase::Channel::Omega_Pi0PiPPiM_2g);
+
+    return m;
 }
 
 bool OmegaEtaG2::AcceptedPhoton(const TParticlePtr& photon)
@@ -913,7 +936,9 @@ TParticleList OmegaEtaG2::FilterProtons(const TParticleList& list)
 
 
 OmegaEtaG2::OmegaEtaG2(const std::string& name, OptionsPtr opts):
-    OmegaBase(name, opts), fitter("OmegaEtaG2", 3)
+    OmegaBase(name, opts),
+    reaction_channels(makeChannels()),
+    fitter("OmegaEtaG2", 3)
 {
     const auto setup = ant::ExpConfig::Setup::GetLastFound();
 
@@ -958,6 +983,14 @@ OmegaEtaG2::OmegaEtaG2(const std::string& name, OptionsPtr opts):
     steps = HistFac.makeTH1D("Steps","Step","Events passed",BinSettings(14),"steps");
 
     h_TotalEvents = HistFac.makeTH1D("TotalEvents","","",BinSettings(3),"TotalEvents");
+
+    missed_channels = HistFac.makeTH1D("Unlisted Background Channels","","",BinSettings(20),"mBgC");
+    found_channels  = HistFac.makeTH1D("Known Channels","","",BinSettings(reaction_channels.size()),"known");
+
+    int i=1;
+    for(const auto& c : reaction_channels) {
+        found_channels->GetXaxis()->SetBinLabel(i++,utils::ParticleTools::GetDecayString(c.second).c_str());
+    }
 
 }
 
