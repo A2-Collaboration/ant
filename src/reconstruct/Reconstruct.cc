@@ -92,7 +92,7 @@ void Reconstruct::DoReconstruct(TEventData& reconstructed)
     // do the hit matching, which builds the TClusterHit's
     // put into the AdaptorTClusterHit to track Energy/Timing information
     // for subsequent clustering
-    sorted_bydetectortype_t<AdaptorTClusterHit> sorted_clusterhits;
+    sorted_bydetectortype_t<TClusterHit> sorted_clusterhits;
     BuildHits(sorted_clusterhits, reconstructed.TaggerHits);
 
     // apply hooks which modify clusterhits
@@ -139,13 +139,12 @@ void Reconstruct::ApplyHooksToReadHits(
     }
 }
 
-void Reconstruct::BuildHits(sorted_bydetectortype_t<AdaptorTClusterHit>& sorted_clusterhits,
+void Reconstruct::BuildHits(sorted_bydetectortype_t<TClusterHit>& sorted_clusterhits,
         vector<TTaggerHit>& taggerhits)
 {
     auto insert_hint = sorted_clusterhits.cbegin();
 
     for(const auto& it_hit : sorted_readhits) {
-        list<AdaptorTClusterHit> clusterhits;
         const Detector_t::Type_t detectortype = it_hit.first;
         const auto& readhits = it_hit.second;
 
@@ -161,41 +160,28 @@ void Reconstruct::BuildHits(sorted_bydetectortype_t<AdaptorTClusterHit>& sorted_
             continue;
         }
 
+        map<unsigned, TClusterHit> hits;
+
         for(const TDetectorReadHit* readhit : readhits) {
             // ignore uncalibrated items
             if(readhit->Values.empty())
                 continue;
 
+            /// \todo think about multi hit handling here?
+            TClusterHit& hit = hits[readhit->Channel];
+            hit.Data.emplace_back(readhit->ChannelType, readhit->Values.front());
+            hit.Channel = readhit->Channel;
 
-
-            // transform the data from readhit into TClusterHitDatum's
-            vector<TClusterHitDatum> data(readhit->Values.size());
-            const Channel_t::Type_t channeltype = readhit->ChannelType;
-            auto do_transform = [channeltype] (double value) {
-                return TClusterHitDatum(channeltype, value);
-            };
-            transform(readhit->Values.cbegin(), readhit->Values.cend(),
-                      data.begin(), do_transform);
-
-            // for non-tagger detectors, search for a TClusterHit with same channel
-            const auto match_channel = [readhit] (const AdaptorTClusterHit& hit) {
-                return hit.Hit->Channel == readhit->Channel;
-            };
-            const auto it_clusterhit = find_if(clusterhits.begin(),
-                                               clusterhits.end(),
-                                               match_channel);
-            if(it_clusterhit == clusterhits.end()) {
-                // not found, create new HitWithEnergy from readhit
-                clusterhits.emplace_back(readhit, move(data));
-            }
-            else {
-                // clusterhit with channel of readhit already exists,
-                // so append TClusterHitDatum's and try to set properties
-                it_clusterhit->SetFields(readhit);
-                move(data.begin(), data.end(),
-                     back_inserter(it_clusterhit->Hit->Data));
-            }
+            if(readhit->ChannelType == Channel_t::Type_t::Integral)
+                hit.Energy = readhit->Values.front();
+            else if(readhit->ChannelType == Channel_t::Type_t::Timing)
+                hit.Time = readhit->Values.front();
         }
+
+        TClusterHitList clusterhits;
+        for(const auto& hit : hits)
+            clusterhits.emplace_back(move(hit.second));
+
 
         // The trigger or tagger detectors don't fill anything
         // so skip it
@@ -253,14 +239,14 @@ void Reconstruct::HandleTagger(const shared_ptr<TaggerDetector_t>& taggerdetecto
     }
 }
 
-void Reconstruct::BuildClusters(sorted_bydetectortype_t<AdaptorTClusterHit>&& sorted_clusterhits,
+void Reconstruct::BuildClusters(sorted_bydetectortype_t<TClusterHit>&& sorted_clusterhits,
         sorted_bydetectortype_t<TClusterPtr>& sorted_clusters)
 {
     auto insert_hint = sorted_clusters.begin();
 
     for(const auto& it_clusterhits : sorted_clusterhits) {
         const Detector_t::Type_t detectortype = it_clusterhits.first;
-        const list<AdaptorTClusterHit>& clusterhits = it_clusterhits.second;
+        const TClusterHitList& clusterhits = it_clusterhits.second;
 
         // find the detector instance for this type
         const auto& it_detector = sorted_detectors.find(detectortype);
@@ -268,7 +254,7 @@ void Reconstruct::BuildClusters(sorted_bydetectortype_t<AdaptorTClusterHit>&& so
             continue;
         const detector_ptr_t& detector = it_detector->second;
 
-        list<TClusterPtr> clusters;
+        TClusterList clusters;
 
         // check if detector supports clustering
         if(detector.ClusterDetector != nullptr) {
@@ -278,21 +264,20 @@ void Reconstruct::BuildClusters(sorted_bydetectortype_t<AdaptorTClusterHit>&& so
         else {
             // in case of no clustering detector,
             // build simple "cluster" consisting of single TClusterHit
-            for(const AdaptorTClusterHit& clusterhit : clusterhits) {
+            for(const TClusterHit& hit : clusterhits) {
 
                 // ignore hits with time and energy information
-                if(!isfinite(clusterhit.Energy) || !isfinite(clusterhit.Time))
+                if(!isfinite(hit.Energy) || !isfinite(hit.Time))
                     continue;
 
-                const auto& hit = clusterhit.Hit;
 
                 clusters.emplace_back(make_shared<TCluster>(
-                                          detector.Detector->GetPosition(hit->Channel),
-                                          clusterhit.Energy,
-                                          clusterhit.Time,
+                                          detector.Detector->GetPosition(hit.Channel),
+                                          hit.Energy,
+                                          hit.Time,
                                           detector.Detector->Type,
-                                          hit->Channel,
-                                          vector<TClusterHit>{*hit}
+                                          hit.Channel,
+                                          vector<TClusterHit>{hit}
                                           )
                                       );
 

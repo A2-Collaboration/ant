@@ -55,11 +55,7 @@ void XMasCB::ProcessEvent(const TEvent& event, manager_t&)
             const auto& cluster  = c->FindCaloCluster();
 
             for(const auto& hit : cluster->Hits) {
-                for(const auto& datum : hit.Data) {
-                    if(datum.GetType() == Channel_t::Type_t::Integral) {
-                        hist->SetElement(hit.Channel, hist->GetElement(hit.Channel)+datum.Value);
-                    }
-                }
+                hist->SetElement(hit.Channel, hist->GetElement(hit.Channel)+hit.Energy);
             }
         }
     }

@@ -76,12 +76,12 @@ void CandidatesAnalysis::ProcessEvent(const TEvent& event, manager_t&)
 
                         if(clusterhit.Channel == cluster->CentralElement) {
                             double central_e = 0.0;
-                            for(const TClusterHitDatum& datum : clusterhit.Data) {
+                            for(const TClusterHit::Datum& datum : clusterhit.Data) {
 
-                                if(datum.GetType() == Channel_t::Type_t::Integral)
+                                if(datum.Type == Channel_t::Type_t::Integral)
                                     central_e = datum.Value;
 
-                                if(datum.GetType() == Channel_t::Type_t::IntegralShort) {
+                                if(datum.Type == Channel_t::Type_t::IntegralShort) {
 
                                     if(ci->VetoEnergy<0.5)
                                         psa->Fill(central_e, datum.Value);

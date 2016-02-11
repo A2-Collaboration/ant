@@ -11,7 +11,6 @@ struct TTaggerHit;
 
 namespace reconstruct {
 class CandidateBuilder;
-struct AdaptorTClusterHit;
 class Clustering;
 class UpdateableManager;
 }
@@ -35,7 +34,7 @@ public:
     };
 
     template<typename T>
-    using sorted_bydetectortype_t = std::map<Detector_t::Type_t, std::list< T > >;
+    using sorted_bydetectortype_t = std::map<Detector_t::Type_t, std::vector< T > >;
 
 private:
 
@@ -47,7 +46,7 @@ private:
 
     void ApplyHooksToReadHits(std::vector<TDetectorReadHit>& detectorReadHits);
 
-    void BuildHits(sorted_bydetectortype_t<reconstruct::AdaptorTClusterHit>& sorted_clusterhits,
+    void BuildHits(sorted_bydetectortype_t<TClusterHit>& sorted_clusterhits,
             std::vector<TTaggerHit>& taggerhits
             );
 
@@ -55,7 +54,7 @@ private:
             const std::vector<TDetectorReadHit*>& readhits,
             std::vector<TTaggerHit>& taggerhits);
 
-    void BuildClusters(sorted_bydetectortype_t<reconstruct::AdaptorTClusterHit>&& sorted_clusterhits,
+    void BuildClusters(sorted_bydetectortype_t<TClusterHit>&& sorted_clusterhits,
             sorted_bydetectortype_t<TClusterPtr>& sorted_clusters);
 
 

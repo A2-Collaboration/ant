@@ -28,7 +28,7 @@ template<typename T>
 unsigned getTotalCount(const Reconstruct::sorted_bydetectortype_t<T>& m) {
     unsigned total = 0;
     for(const auto& m_item : m) {
-        const list<T>& list = m_item.second;
+        const auto& list = m_item.second;
         total += list.size();
     }
     return total;

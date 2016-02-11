@@ -43,6 +43,7 @@ CB_TimeWalk::CB_TimeWalk(const string& name, OptionsPtr opts) :
 
 void CB_TimeWalk::ProcessEvent(const TEvent& event, manager_t&)
 {
+    /// \todo maybe use TDetectorReadHits directly here?
     for(const auto& cand: event.Reconstructed->Candidates) {
         for(const TClusterPtr& cluster: cand->Clusters) {
             if(cluster->DetectorType != Detector_t::Type_t::CB)
@@ -50,12 +51,14 @@ void CB_TimeWalk::ProcessEvent(const TEvent& event, manager_t&)
             for(const TClusterHit& hit : cluster->Hits) {
                 // found the hit of the central element
                 // now search for its timing information
+                // we really need to search the Data, since
+                // Energy/Time of TClusterHit are already corrected!
                 double time = numeric_limits<double>::quiet_NaN();
                 double energy = numeric_limits<double>::quiet_NaN();
-                for(const TClusterHitDatum& d : hit.Data) {
-                    if(d.GetType() == Channel_t::Type_t::Timing)
+                for(const TClusterHit::Datum& d : hit.Data) {
+                    if(d.Type == Channel_t::Type_t::Timing)
                         time = d.Value;
-                    if(d.GetType() == Channel_t::Type_t::Integral)
+                    if(d.Type == Channel_t::Type_t::Integral)
                         energy = d.Value;
                 }
                 h_timewalk->Fill(energy, time, hit.Channel);

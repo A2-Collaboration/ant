@@ -58,12 +58,12 @@ void TAPS_ShortEnergy::ProcessEvent(const TEvent& event, manager_t&)
                     if(clusterhit.Channel == cluster->CentralElement) {
                         double central_e = numeric_limits<double>::quiet_NaN();
                         double short_e = numeric_limits<double>::quiet_NaN();
-                        for(const TClusterHitDatum& datum : clusterhit.Data) {
+                        for(const TClusterHit::Datum& datum : clusterhit.Data) {
 
-                            if(datum.GetType() == Channel_t::Type_t::Integral)
+                            if(datum.Type == Channel_t::Type_t::Integral)
                                 central_e = datum.Value;
 
-                            if(datum.GetType() == Channel_t::Type_t::IntegralShort)
+                            if(datum.Type == Channel_t::Type_t::IntegralShort)
                                 short_e = datum.Value;
                         }
 

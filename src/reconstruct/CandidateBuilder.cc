@@ -271,7 +271,8 @@ void CandidateBuilder::BuildCandidates(sorted_clusters_t& sorted_clusters,
     Catchall(sorted_clusters, candidates, all_clusters);
 }
 
-void CandidateBuilder::Build(std::map<Detector_t::Type_t, std::list<TClusterPtr> > sorted_clusters,
+void CandidateBuilder::Build(
+        sorted_clusters_t sorted_clusters,
         candidates_t& candidates,
         clusters_t& all_clusters
         )

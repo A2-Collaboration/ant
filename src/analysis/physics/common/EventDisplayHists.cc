@@ -66,11 +66,7 @@ void EventDisplayHists::ProcessEvent(const TEvent& event, manager_t&)
         const auto cluster = c->FindCaloCluster();
 
         for(const auto& hit : cluster->Hits) {
-            for(const auto& data : hit.Data) {
-                if(data.GetType() == Channel_t::Type_t::Integral) {
-                    tapsCal->SetElement(hit.Channel, data.Value);
-                }
-            }
+            tapsCal->SetElement(hit.Channel, hit.Energy);
         }
 
         tapsCal->CreateMarker(cluster->Position.XYvector(), kFullCircle, kOpenCircle);

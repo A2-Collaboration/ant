@@ -29,7 +29,7 @@ template<typename T>
 unsigned getTotalCount(const Reconstruct::sorted_bydetectortype_t<T>& m) {
     unsigned total = 0;
     for(const auto& m_item : m) {
-        const list<T>& list = m_item.second;
+        const auto& list = m_item.second;
         total += list.size();
     }
     return total;
@@ -71,7 +71,7 @@ struct ReconstructTester : Reconstruct_traits {
         // lets start the hit matching, which builds the TClusterHit's
         // we also extract the energy, which is always defined as a
         // single value with type Channel_t::Type_t
-        Reconstruct::sorted_bydetectortype_t<AdaptorTClusterHit> sorted_clusterhits;
+        Reconstruct::sorted_bydetectortype_t<TClusterHit> sorted_clusterhits;
         r.BuildHits(sorted_clusterhits, reconstructed.TaggerHits);
 
         // apply hooks which modify clusterhits

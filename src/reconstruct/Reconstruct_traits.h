@@ -13,12 +13,13 @@ namespace ant {
 struct TID;
 struct TEventData;
 struct TDetectorReadHit;
+
+struct TClusterHit;
+using TClusterHitList = std::vector<TClusterHit>;
+
 struct TCluster;
 using TClusterPtr = std::shared_ptr<TCluster>;
-
-namespace reconstruct {
-struct AdaptorTClusterHit;
-}
+using TClusterList = std::vector<TClusterPtr>;
 
 struct Reconstruct_traits {
     /**
@@ -48,8 +49,8 @@ struct ReconstructHook {
      */
     struct Base {
         using readhits_t = std_ext::mapped_vectors< Detector_t::Type_t, TDetectorReadHit* >;
-        using clusterhits_t = std::map< Detector_t::Type_t, std::list< reconstruct::AdaptorTClusterHit > >;
-        using clusters_t = std::map< Detector_t::Type_t, std::list< TClusterPtr > >;
+        using clusterhits_t = std::map< Detector_t::Type_t, TClusterHitList >;
+        using clusters_t = std::map< Detector_t::Type_t, TClusterList >;
         virtual ~Base() = default;
     };
 

@@ -12,20 +12,20 @@
 #include <set>
 
 namespace ant {
+
+struct TClusterHit;
+
 namespace reconstruct {
-
-struct AdaptorTClusterHit;
-
 namespace clustering {
 
 struct crystal_t  {
     double Energy;
     const ClusterDetector_t::Element_t* Element;
-    const AdaptorTClusterHit* Hit;
+    const TClusterHit* Hit;
     crystal_t(
             double energy,
             const ClusterDetector_t::Element_t* element,
-            const AdaptorTClusterHit* hit
+            const TClusterHit* hit
             )
         :
           Energy(energy),

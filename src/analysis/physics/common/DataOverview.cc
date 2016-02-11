@@ -150,13 +150,8 @@ void TriggerOverview::ProcessEvent(const TEvent& event, manager_t&)
     for(const TClusterPtr& cluster : branch.Clusters) {
         if(cluster->DetectorType == Detector_t::Type_t::CB) {
             for(const TClusterHit& hit : cluster->Hits) {
-                for(const TClusterHitDatum datum : hit.Data) {
-                    if(datum.GetType() == Channel_t::Type_t::Integral) {
-                        CBESum_perCh->Fill(trigger.CBEnergySum, hit.Channel);
-                        E_perCh->Fill(datum.Value, hit.Channel);
-                        break;
-                    }
-                }
+                CBESum_perCh->Fill(trigger.CBEnergySum, hit.Channel);
+                E_perCh->Fill(hit.Energy, hit.Channel);
             }
         }
     }

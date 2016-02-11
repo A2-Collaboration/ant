@@ -15,57 +15,60 @@
 
 namespace ant {
 
-struct TCluster; // defined at very end of file...
+struct TClusterHit;
+using TClusterHitList = std::vector<TClusterHit>;
 
+struct TCluster;
 using TClusterPtr = std::shared_ptr<TCluster>;
 using TClusterList = std::vector<TClusterPtr>;
-
-struct TClusterHitDatum
-{
-    std::uint8_t Type;
-    double Value;
-
-    TClusterHitDatum(Channel_t::Type_t type, double value) :
-        Type(static_cast<std::uint8_t>(type)),
-        Value(value)
-    {}
-
-    template<class Archive>
-    void serialize(Archive& archive) {
-        archive(Type, Value);
-    }
-
-    Channel_t::Type_t GetType() const {
-        return static_cast<Channel_t::Type_t>(Type);
-    }
-
-    TClusterHitDatum() {}
-};
 
 struct TClusterHit : printable_traits
 {
     std::uint32_t Channel;
-    std::vector<TClusterHitDatum> Data;
+    double Energy = std::numeric_limits<double>::quiet_NaN();
+    double Time = std::numeric_limits<double>::quiet_NaN();
+
+    struct Datum
+    {
+        Channel_t::Type_t Type;
+        double Value;
+
+        Datum(Channel_t::Type_t type, double value) :
+            Type(type),
+            Value(value)
+        {}
+
+        template<class Archive>
+        void serialize(Archive& archive) {
+            archive(Type, Value);
+        }
+
+        Datum() {}
+    };
+
+    std::vector<Datum> Data;
 
 
     TClusterHit(unsigned channel,
-                const std::vector<TClusterHitDatum>& data):
+                double energy,
+                double time) :
         Channel(channel),
-        Data(data) {
+        Energy(energy),
+        Time(time)
+    {
         static_assert(sizeof(Channel)>=sizeof(channel),
                       "Parameter channel does not fit into TClusterHit::Channel");
-
     }
 
     template<class Archive>
     void serialize(Archive& archive) {
-        archive(Channel, Data);
+        archive(Channel, Energy, Time, Data);
     }
 
     virtual std::ostream& Print( std::ostream& s) const override {
-        s << "TClusterHit Ch=" << Channel << ": ";
-        for(auto& datum : Data) {
-            s << Channel_t::ToString(datum.GetType()) << "=" << datum.Value << " ";
+        s << "TClusterHit Ch=" << Channel << ", Energy=" << Energy << ", Time=" << Time;
+        for(const auto& datum : Data) {
+            s << ", " << Channel_t::ToString(datum.Type) << "=" << datum.Value;
         }
         return s;
     }
@@ -84,7 +87,7 @@ struct TCluster : printable_traits
     std::uint32_t Flags;
     double ShortEnergy;
 
-    std::vector<TClusterHit> Hits;
+    TClusterHitList Hits;
 
 
     TCluster(

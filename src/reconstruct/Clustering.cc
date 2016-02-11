@@ -12,43 +12,26 @@ using namespace std;
 using namespace ant;
 using namespace ant::reconstruct;
 
-AdaptorTClusterHit::AdaptorTClusterHit(const TDetectorReadHit* readhit,
-                                       const vector<TClusterHitDatum>&& data) :
-    Hit(std_ext::make_unique<TClusterHit>(readhit->Channel, data)),
-    Energy(numeric_limits<double>::quiet_NaN()), // use nan as unset indicator
-    Time(numeric_limits<double>::quiet_NaN())
-{
-    SetFields(readhit);
-}
-
-void AdaptorTClusterHit::SetFields(const TDetectorReadHit *readhit) {
-    if(std::isnan(Energy) && readhit->ChannelType == Channel_t::Type_t::Integral)
-        Energy = readhit->Values[0];
-    if(std::isnan(Time) && readhit->ChannelType == Channel_t::Type_t::Timing)
-        Time = readhit->Values[0];
-}
-
 Clustering::Clustering(const shared_ptr<ExpConfig::Reconstruct>&)
 {
 }
 
 void Clustering::Build(const shared_ptr<ClusterDetector_t>& clusterdetector,
-        const list<AdaptorTClusterHit>& clusterhits,
-        std::list<TClusterPtr>& clusters)
+        const TClusterHitList& clusterhits,
+        TClusterList& clusters)
 {
     // clustering detector, so we need additional information
     // to build the crystals_t
     list<clustering::crystal_t> crystals;
-    for(const AdaptorTClusterHit& clusterhit : clusterhits) {
-        const auto& hit = clusterhit.Hit;
+    for(const TClusterHit& hit : clusterhits) {
         // ignore hits without energy or time information
-        if(!isfinite(clusterhit.Energy) || !isfinite(clusterhit.Time)) {
+        if(!isfinite(hit.Energy) || !isfinite(hit.Time)) {
             continue;
         }
         crystals.emplace_back(
-                    clusterhit.Energy,
-                    clusterdetector->GetClusterElement(hit->Channel),
-                    addressof(clusterhit)
+                    hit.Energy,
+                    clusterdetector->GetClusterElement(hit.Channel),
+                    addressof(hit)
                     );
     }
 
@@ -77,14 +60,14 @@ void Clustering::Build(const shared_ptr<ClusterDetector_t>& clusterdetector,
             double wgtE = clustering::calc_energy_weight(crystal.Energy, cluster_energy);
             weightedPosition += crystal.Element->Position * wgtE;
             weightedSum += wgtE;
-            clusterhits.emplace_back(*(crystal.Hit->Hit));
+            clusterhits.emplace_back(*crystal.Hit);
             if(cluster_maxenergy<=crystal.Energy) {
                 cluster_time = crystal.Hit->Time;
                 cluster_maxenergy = crystal.Energy;
                 cluster_max_channel = crystal.Element->Channel;
                 // search for short energy
-                for(const TClusterHitDatum& datum : crystal.Hit->Hit->Data) {
-                    if(datum.GetType() == Channel_t::Type_t::IntegralShort) {
+                for(const TClusterHit::Datum& datum : crystal.Hit->Data) {
+                    if(datum.Type == Channel_t::Type_t::IntegralShort) {
                         cluster_shortenergy = datum.Value;
                         break;
                     }

@@ -26,7 +26,7 @@ namespace reconstruct {
 class CandidateBuilder {
 public:
 
-    using sorted_clusters_t = std::map<Detector_t::Type_t, std::list< TClusterPtr > >;
+    using sorted_clusters_t = std::map<Detector_t::Type_t, std::vector< TClusterPtr > >;
     using candidates_t = TCandidateList;
     using clusters_t = TClusterList;
 
@@ -76,7 +76,7 @@ public:
     // with tracks built from the given sorted clusters
     /// \todo make this method abstract and create proper derived Candidate builders
     virtual void Build(
-            std::map<Detector_t::Type_t, std::list<TClusterPtr> > sorted_clusters,
+            sorted_clusters_t sorted_clusters,
             candidates_t& candidates,
             clusters_t& all_clusters
             );
