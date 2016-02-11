@@ -92,10 +92,37 @@ void GoatReader::CopyTracks(TEventData& recon)
 
         const auto det = IntToDetector_t(tracks.GetDetectors(i));
 
-        Detector_t::Type_t d = Detector_t::Type_t::CB;
+        auto make_TVector3 = [] (double theta, double phi) {
+            TVector3 vec;
+            vec.SetMagThetaPhi(1.0, theta, phi);
+            return vec;
+        };
 
-        if(det & Detector_t::Type_t::TAPS) {
-            d = Detector_t::Type_t::TAPS;
+        // Goat does not provide clusters,
+        // so simulate some with fuzzy logic...
+        /// \todo how does this work with MWPC?
+        TClusterList clusters;
+        auto calo_cluster = make_shared<TCluster>(
+                                make_TVector3(tracks.GetTheta(i), tracks.GetPhi(i)),
+                                tracks.GetClusterEnergy(i),
+                                tracks.GetTime(i),
+                                det & Detector_t::Type_t::CB ? Detector_t::Type_t::CB : Detector_t::Type_t::TAPS ,
+                                tracks.GetCentralCrystal(i)
+                                );
+        if(tracks.GetShortEnergy(i)>0)
+            calo_cluster->ShortEnergy = tracks.GetShortEnergy(i);
+
+        clusters.emplace_back(calo_cluster);
+
+        if(tracks.GetCentralVeto(i)>0) {
+            clusters.emplace_back(make_shared<TCluster>(
+                                      make_TVector3(tracks.GetTheta(i), tracks.GetPhi(i)),
+                                      tracks.GetVetoEnergy(i),
+                                      std_ext::NaN, // no veto timing
+                                      det & Detector_t::Type_t::PID ? Detector_t::Type_t::PID : Detector_t::Type_t::TAPSVeto,
+                                      tracks.GetCentralVeto(i)
+                                      )
+                                  );
         }
 
         recon.Candidates.emplace_back(
@@ -108,11 +135,7 @@ void GoatReader::CopyTracks(TEventData& recon)
                         MapClusterSize(tracks.GetClusterSize(i)),
                         tracks.GetVetoEnergy(i),
                         tracks.GetMWPC0Energy(i)+tracks.GetMWPC1Energy(i),
-                        // GoAt does not provide clusters,
-                        // but simulate at least some calo cluster
-                        std::vector<TClusterPtr>{
-                            make_shared<TCluster>(TVector3(),tracks.GetClusterEnergy(i),tracks.GetTime(i),d,0)
-                        } // GoAT does not provide clusters
+                        clusters
                         )
                     );
     }
