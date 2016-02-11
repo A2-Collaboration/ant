@@ -130,7 +130,7 @@ struct CandidateBuilderTester : CandidateBuilder {
 
 struct ReconstructTester : Reconstruct {
 
-    virtual void Initialize(const TID& tid) override
+    void Initialize(const TID& tid) override
     {
         Reconstruct::Initialize(tid);
         // replace the candidate builder with our tester

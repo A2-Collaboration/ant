@@ -16,10 +16,10 @@ class Clustering {
 public:
     Clustering(const std::shared_ptr<ExpConfig::Reconstruct>& config);
 
-    void Build(const std::shared_ptr<ClusterDetector_t>& clusterdetector,
-               const TClusterHitList& clusterhits,
-               TClusterList& clusters
-               );
+    virtual void Build(const std::shared_ptr<ClusterDetector_t>& clusterdetector,
+                       const TClusterHitList& clusterhits,
+                       TClusterList& clusters
+                       );
     virtual ~Clustering() = default;
 };
 
