@@ -63,9 +63,6 @@ counts_t getCounts(
     return counts;
 }
 
-// we use the friend class trick to test private methods
-namespace ant {
-
 struct CandidateBuilderTester : CandidateBuilder {
 
     using CandidateBuilder::CandidateBuilder; // use base class constructors
@@ -138,8 +135,6 @@ struct ReconstructTester : Reconstruct {
         candidatebuilder = std_ext::make_unique<CandidateBuilderTester>(sorted_detectors, config);
     }
 };
-}
-
 
 void dotest() {
     auto unpacker = Unpacker::Get(string(TEST_BLOBS_DIRECTORY)+"/Acqu_oneevent-big.dat.xz");
@@ -147,19 +142,14 @@ void dotest() {
     // instead of the usual reconstruct, we use our tester
     ReconstructTester reconstruct;
 
-    unsigned nReads = 0;
+    unsigned nEvents = 0;
 
     while(auto event = unpacker->NextEvent()) {
-
-        auto& hits = event->Reconstructed->DetectorReadHits;
-
-        if(!hits.empty()) {
-            nReads++;
-            if(nReads == 6 || nReads == 2) {
-                reconstruct.DoReconstruct(*event->Reconstructed);
-            }
-            else if(nReads > 6)
-                break;
+        nEvents++;
+        if(nEvents == 6 || nEvents == 2) {
+            reconstruct.DoReconstruct(*event->Reconstructed);
         }
+        else if(nEvents > 6)
+            break;
     }
 }
