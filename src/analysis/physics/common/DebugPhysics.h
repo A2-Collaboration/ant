@@ -24,7 +24,11 @@ public:
 
 class DebugPIDAlignment: public Physics {
 protected:
-    TH2D* angles = nullptr;
+    TH2D* angles_mc = nullptr;
+    TH2D* angles_candidates = nullptr;
+    TH2D* angles_clusters = nullptr;
+    TH1D* angles_diff = nullptr;
+    TH1D* angles_diff_wrap = nullptr;
 public:
     DebugPIDAlignment(const std::string& name, OptionsPtr opts=nullptr);
     virtual ~DebugPIDAlignment();

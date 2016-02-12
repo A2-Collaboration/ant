@@ -58,7 +58,11 @@ DebugPIDAlignment::DebugPIDAlignment(const std::string& name, OptionsPtr opts):
     Physics(name, opts)
 {
     const BinSettings bins(360,-180,180);
-    angles = HistFac.makeTH2D("PID Phi angles","MCTrue #phi","Rec #phi",bins,bins);
+    angles_mc = HistFac.makeTH2D("PID Phi angles MC","MCTrue #phi","Rec #phi",bins,bins);
+    angles_candidates = HistFac.makeTH2D("PID Phi angles Candidates","PID #phi","CB #phi",bins,bins);
+    angles_clusters   = HistFac.makeTH2D("PID Phi angles Clusters","PID #phi","CB #phi",bins,bins);
+    angles_diff = HistFac.makeTH1D("PID-CB Angle Difference","#Delta#phi","",BinSettings(720,-360,360));
+    angles_diff_wrap = HistFac.makeTH1D("PID-CB Angle Difference wrapped","#Delta#phi","",BinSettings(720,-360,360));
 }
 
 DebugPIDAlignment::~DebugPIDAlignment()
@@ -74,22 +78,60 @@ void DebugPIDAlignment::ProcessEvent(const TEvent& event, manager_t&)
         for(const TCandidatePtr& cand : event.Reconstructed->Candidates) {
             for(const TClusterPtr& c : cand->Clusters) {
                 if(c->DetectorType == Detector_t::Type_t::PID) {
-                    angles->Fill(mctrue_phi, c->Position.Phi()* TMath::RadToDeg());
+                    angles_mc->Fill(mctrue_phi, c->Position.Phi()* TMath::RadToDeg());
                 }
             }
         }
+    }
 
-        for(const TClusterPtr& c : event.Reconstructed->Clusters) {
-            if(c->DetectorType == Detector_t::Type_t::PID) {
-                angles->Fill(mctrue_phi, c->Position.Phi()* TMath::RadToDeg());
+    for(const TCandidatePtr& cand : event.Reconstructed->Candidates) {
+        if(cand->Detector & Detector_t::Any_t::CB_Apparatus) {
+            auto cl_cb = cand->FindCaloCluster();
+            auto cl_pid = cand->FindVetoCluster();
+            if(cl_cb && cl_pid) {
+                angles_candidates->Fill(cl_pid->Position.Phi()*TMath::RadToDeg(),
+                                        cl_cb->Position.Phi()*TMath::RadToDeg());
             }
         }
+    }
+
+    const auto& clusters =  event.Reconstructed->Clusters;
+
+    const auto get_clusters = [] (const TClusterList& clusters, Detector_t::Type_t type) {
+        TClusterList ret;
+        for(const auto& cl : clusters)
+            if(cl->DetectorType == type)
+                ret.emplace_back(cl);
+        return ret;
+    };
+
+    auto cb_clusters = get_clusters(clusters, Detector_t::Type_t::CB);
+    auto pid_clusters = get_clusters(clusters, Detector_t::Type_t::PID);
+
+    if(cb_clusters.size() == 1 && pid_clusters.size() == 1) {
+
+        const auto& cl_cb = cb_clusters.front();
+        const auto& cl_pid = pid_clusters.front();
+
+        const double phi_cb = cl_cb->Position.Phi();
+        const double phi_pid = cl_pid->Position.Phi();
+        angles_clusters->Fill(phi_pid*TMath::RadToDeg(),
+                              phi_cb*TMath::RadToDeg());
+        angles_diff->Fill((phi_cb-phi_pid)*TMath::RadToDeg());
+        angles_diff_wrap->Fill(TVector2::Phi_mpi_pi(phi_cb-phi_pid)*TMath::RadToDeg());
     }
 }
 
 void DebugPIDAlignment::ShowResult()
 {
-    canvas("PID angles") << drawoption("colz") << angles << endc;
+    canvas("PID angles")
+            << drawoption("colz")
+            << angles_mc
+            << angles_candidates
+            << angles_clusters
+            << angles_diff
+            << angles_diff_wrap
+            << endc;
 
 }
 
