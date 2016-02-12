@@ -135,46 +135,50 @@ void CandidateBuilder::Build_TAPS_Veto(sorted_clusters_t& sorted_clusters,
 
     const auto element_radius2 = std_ext::sqr(tapsveto->GetElementRadius());
 
-    auto veto_cluster = veto_clusters.begin();
-    while(veto_cluster != veto_clusters.end()) {
+    auto it_veto_cluster = veto_clusters.begin();
+    while(it_veto_cluster != veto_clusters.end()) {
+
+        auto& veto_cluster = *it_veto_cluster;
 
         bool matched = false;
 
-        const TVector3& vpos = (*veto_cluster)->Position;
+        const TVector3& vpos = veto_cluster->Position;
 
-        auto taps_cluster = taps_clusters.begin();
+        auto it_taps_cluster = taps_clusters.begin();
 
-        while(taps_cluster != taps_clusters.end()) {
+        while(it_taps_cluster != taps_clusters.end()) {
 
-            const TVector3& tpos = (*taps_cluster)->Position;
+            auto& taps_cluster = *it_taps_cluster;
+
+            const TVector3& tpos = taps_cluster->Position;
             const TVector3 d = tpos - vpos;
 
             if( d.XYvector().Mod() < element_radius2 ) {
                 candidates.emplace_back(make_shared<TCandidate>(
                                             Detector_t::Type_t::TAPS | Detector_t::Type_t::TAPSVeto,
-                                            (*taps_cluster)->Energy,
-                                            (*taps_cluster)->Position.Theta(),
-                                            (*taps_cluster)->Position.Phi(),
-                                            (*taps_cluster)->Time,
-                                            (*taps_cluster)->Hits.size(),
-                                            (*veto_cluster)->Energy,
+                                            taps_cluster->Energy,
+                                            taps_cluster->Position.Theta(),
+                                            taps_cluster->Position.Phi(),
+                                            taps_cluster->Time,
+                                            taps_cluster->Hits.size(),
+                                            veto_cluster->Energy,
                                             numeric_limits<double>::quiet_NaN(), // no tracker information
-                                            std::vector<TClusterPtr>{*taps_cluster, *veto_cluster}
+                                            std::vector<TClusterPtr>{taps_cluster, veto_cluster}
                                             )
                                             );
-                all_clusters.emplace_back(move(*taps_cluster));
-                taps_cluster = taps_clusters.erase(taps_cluster);
+                all_clusters.emplace_back(move(taps_cluster));
+                it_taps_cluster = taps_clusters.erase(it_taps_cluster);
                 matched = true;
             } else {
-                ++taps_cluster;
+                ++it_taps_cluster;
             }
         }
 
         if(matched) {
-            all_clusters.emplace_back(move(*veto_cluster));
-            veto_cluster = veto_clusters.erase(veto_cluster);
+            all_clusters.emplace_back(move(veto_cluster));
+            it_veto_cluster = veto_clusters.erase(it_veto_cluster);
         } else {
-            ++veto_cluster;
+            ++it_veto_cluster;
         }
     }
 }
