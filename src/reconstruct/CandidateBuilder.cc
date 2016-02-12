@@ -65,61 +65,54 @@ void CandidateBuilder::Build_PID_CB(sorted_clusters_t& sorted_clusters,
     if(pid_clusters.empty())
         return;
 
-    auto pid_cluster = pid_clusters.begin();
+    auto it_pid_cluster = pid_clusters.begin();
 
-    const auto dphi_max = (pid->dPhi((*pid_cluster)->Hits.at(0).Channel) + config.PID_Phi_Epsilon) / 2.0;
+    while(it_pid_cluster != pid_clusters.end()) {
 
-    while(pid_cluster != pid_clusters.end()) {
+        auto& pid_cluster = *it_pid_cluster;
+        const auto pid_phi = pid_cluster->Position.Phi();
+        const auto dphi_max = (pid->dPhi(pid_cluster->CentralElement) + config.PID_Phi_Epsilon) / 2.0;
 
-        const auto pid_phi = (*pid_cluster)->Position.Phi();
+        bool matched = false;
 
-        if((*pid_cluster)->Hits.size() == 1) {
+        auto it_cb_cluster = cb_clusters.begin();
 
-            bool matched = false;
+        while(it_cb_cluster != cb_clusters.end()) {
+            auto& cb_cluster = *it_cb_cluster;
+            const auto cb_phi = cb_cluster->Position.Phi();
 
-            auto cb_cluster = cb_clusters.begin();
+            // calculate phi angle difference.
+            // Phi_mpi_pi() takes care of wrap-arounds at 180/-180 deg
+            const auto dphi = fabs(TVector2::Phi_mpi_pi(cb_phi - pid_phi));
+            if(dphi < dphi_max ) { // match!
 
-            while(cb_cluster != cb_clusters.end()) {
-                const auto cb_phi = (*cb_cluster)->Position.Phi();
-
-                // calculate phi angle difference.
-                // Phi_mpi_pi() takes care of wrap-arounds at 180/-180 deg
-                const auto dphi = fabs(TVector2::Phi_mpi_pi(cb_phi - pid_phi));
-                if(dphi < dphi_max ) { // match!
-
-                    candidates.emplace_back(make_shared<TCandidate>(
-                                                Detector_t::Type_t::CB | Detector_t::Type_t::PID,
-                                                (*cb_cluster)->Energy,
-                                                (*cb_cluster)->Position.Theta(),
-                                                (*cb_cluster)->Position.Phi(),
-                                                (*cb_cluster)->Time,
-                                                (*cb_cluster)->Hits.size(),
-                                                (*pid_cluster)->Energy,
-                                                numeric_limits<double>::quiet_NaN(), // no tracker information
-                                                std::vector<TClusterPtr>{*cb_cluster, *pid_cluster}
-                                                )
-                                            );
-                    all_clusters.emplace_back(move(*cb_cluster));
-                    cb_cluster = cb_clusters.erase(cb_cluster);
-                    matched = true;
-                }
-                else {
-                    ++cb_cluster;
-                }
+                candidates.emplace_back(make_shared<TCandidate>(
+                                            Detector_t::Type_t::CB | Detector_t::Type_t::PID,
+                                            cb_cluster->Energy,
+                                            cb_cluster->Position.Theta(),
+                                            cb_cluster->Position.Phi(),
+                                            cb_cluster->Time,
+                                            cb_cluster->Hits.size(),
+                                            pid_cluster->Energy,
+                                            numeric_limits<double>::quiet_NaN(), // no tracker information
+                                            std::vector<TClusterPtr>{cb_cluster, pid_cluster}
+                                            )
+                                        );
+                all_clusters.emplace_back(move(cb_cluster));
+                it_cb_cluster = cb_clusters.erase(it_cb_cluster);
+                matched = true;
             }
-
-            if(matched) {
-                all_clusters.emplace_back(move(*pid_cluster));
-                pid_cluster = pid_clusters.erase(pid_cluster);
-            } else {
-                ++pid_cluster;
+            else {
+                ++it_cb_cluster;
             }
-
-        } else {
-            VLOG(3) << "Strange PID Cluster encountered";
-            pid_cluster = pid_clusters.erase(pid_cluster);
         }
 
+        if(matched) {
+            all_clusters.emplace_back(move(*it_pid_cluster));
+            it_pid_cluster = pid_clusters.erase(it_pid_cluster);
+        } else {
+            ++it_pid_cluster;
+        }
     }
 }
 
@@ -280,8 +273,9 @@ void CandidateBuilder::Build(
     // search for clusters which are not sane or don't pass thresholds
     // add them to all_clusters with unmatched flag set
     for(auto& det_entry : sorted_clusters) {
-        auto detectortype = det_entry.first;
+        const auto detectortype = det_entry.first;
         auto& clusters = det_entry.second;
+
         auto it_cluster = clusters.begin();
         while(it_cluster != clusters.end()) {
             double threshold = 0.0;
@@ -290,15 +284,16 @@ void CandidateBuilder::Build(
             if(detectortype == Detector_t::Type_t::TAPS)
                 threshold = config.TAPS_ClusterThreshold;
 
+            TClusterPtr& cluster = *it_cluster;
+
             // do not remove clusters which are sane and pass the thresholds
-            if((*it_cluster)->isSane() && (*it_cluster)->Energy > threshold) {
+            if(cluster->isSane() && cluster->Energy > threshold) {
                 ++it_cluster;
                 continue;
             }
 
-
-            (*it_cluster)->SetFlag(TCluster::Flags_t::Unmatched);
-            all_clusters.emplace_back(move(*it_cluster));
+            cluster->SetFlag(TCluster::Flags_t::Unmatched);
+            all_clusters.emplace_back(move(cluster));
             it_cluster = clusters.erase(it_cluster);
         }
     }
