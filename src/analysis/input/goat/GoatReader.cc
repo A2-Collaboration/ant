@@ -88,56 +88,81 @@ clustersize_t GoatReader::MapClusterSize(const int& size) {
 
 void GoatReader::CopyTracks(TEventData& recon)
 {
+
+
     for(Int_t i=0; i< tracks.GetNTracks(); ++i) {
 
-        const auto det = IntToDetector_t(tracks.GetDetectors(i));
-
-        auto make_TVector3 = [] (double theta, double phi) {
-            TVector3 vec;
-            vec.SetMagThetaPhi(1.0, theta, phi);
-            return vec;
-        };
+        const Detector_t::Any_t det = IntToDetector_t(tracks.GetDetectors(i));
 
         // Goat does not provide clusters,
         // so simulate some with fuzzy logic...
-        /// \todo how does this work with MWPC?
         TClusterList clusters;
-        auto calo_cluster = make_shared<TCluster>(
-                                make_TVector3(tracks.GetTheta(i), tracks.GetPhi(i)),
-                                tracks.GetClusterEnergy(i),
-                                tracks.GetTime(i),
-                                det & Detector_t::Type_t::CB ? Detector_t::Type_t::CB : Detector_t::Type_t::TAPS ,
-                                tracks.GetCentralCrystal(i)
-                                );
-        if(tracks.GetShortEnergy(i)>0)
-            calo_cluster->ShortEnergy = tracks.GetShortEnergy(i);
+        /// \todo how does this work with MWPC?
 
-        clusters.emplace_back(calo_cluster);
+        if(det & Detector_t::Any_t::Calo) {
+            const auto make_TVector3 = [] (double theta, double phi) {
+                TVector3 vec;
+                vec.SetMagThetaPhi(1.0, theta, phi);
+                return vec;
+            };
 
-        if(tracks.GetCentralVeto(i)>0) {
+            auto calo_cluster = make_shared<TCluster>(
+                                    make_TVector3(tracks.GetTheta(i), tracks.GetPhi(i)),
+                                    tracks.GetClusterEnergy(i),
+                                    tracks.GetTime(i),
+                                    det & Detector_t::Type_t::CB ? Detector_t::Type_t::CB : Detector_t::Type_t::TAPS ,
+                                    tracks.GetCentralCrystal(i)
+                                    );
+            if(tracks.GetShortEnergy(i)>0)
+                calo_cluster->ShortEnergy = tracks.GetShortEnergy(i);
+
+            clusters.emplace_back(calo_cluster);
+
+            double vetoEnergy = 0.0;
+            if(det & Detector_t::Any_t::Veto) {
+                vetoEnergy =  tracks.GetVetoEnergy(i);
+                clusters.emplace_back(make_shared<TCluster>(
+                                          TVector3(std_ext::NaN, std_ext::NaN, std_ext::NaN), // no veto position available
+                                          vetoEnergy,
+                                          std_ext::NaN, // no veto timing available
+                                          det & Detector_t::Type_t::PID ? Detector_t::Type_t::PID : Detector_t::Type_t::TAPSVeto,
+                                          tracks.GetCentralVeto(i)
+                                          )
+                                      );
+
+            }
+
+            recon.Candidates.emplace_back(
+                        make_shared<TCandidate>(
+                            det,
+                            tracks.GetClusterEnergy(i),
+                            tracks.GetTheta(i),
+                            tracks.GetPhi(i),
+                            tracks.GetTime(i),
+                            MapClusterSize(tracks.GetClusterSize(i)),
+                            vetoEnergy,
+                            //tracks.GetMWPC0Energy(i)+tracks.GetMWPC1Energy(i),
+                            std_ext::NaN, // MWPC not handled correctly at the moment
+                            clusters
+                            )
+                        );
+        }
+        else if(det & Detector_t::Any_t::Veto) {
+            // veto-only track is just a cluster in Ant
+            // don't know if such tracks actually exist in GoAT/Acqu...
+            const double vetoEnergy =  tracks.GetVetoEnergy(i);
             clusters.emplace_back(make_shared<TCluster>(
-                                      make_TVector3(tracks.GetTheta(i), tracks.GetPhi(i)),
-                                      tracks.GetVetoEnergy(i),
-                                      std_ext::NaN, // no veto timing
+                                      TVector3(std_ext::NaN, std_ext::NaN, std_ext::NaN), // no veto position available
+                                      vetoEnergy,
+                                      std_ext::NaN, // no veto timing available
                                       det & Detector_t::Type_t::PID ? Detector_t::Type_t::PID : Detector_t::Type_t::TAPSVeto,
                                       tracks.GetCentralVeto(i)
                                       )
                                   );
         }
 
-        recon.Candidates.emplace_back(
-                    make_shared<TCandidate>(
-                        det,
-                        tracks.GetClusterEnergy(i),
-                        tracks.GetTheta(i),
-                        tracks.GetPhi(i),
-                        tracks.GetTime(i),
-                        MapClusterSize(tracks.GetClusterSize(i)),
-                        tracks.GetVetoEnergy(i),
-                        tracks.GetMWPC0Energy(i)+tracks.GetMWPC1Energy(i),
-                        clusters
-                        )
-                    );
+        // always add clusters...
+        recon.Clusters.insert(recon.Clusters.end(), clusters.begin(), clusters.end());
     }
 }
 
