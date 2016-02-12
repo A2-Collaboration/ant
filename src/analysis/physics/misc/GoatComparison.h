@@ -28,6 +28,8 @@ protected:
     TH2CB* n_photon_low;
 
     TH1D* IM_gg;
+    TH1D* IM_gg_neutral;
+
 
     TH2D* photon_thetaE;
     TH2D* photon_clusterSizeE;
