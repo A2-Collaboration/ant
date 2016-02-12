@@ -21,17 +21,15 @@ protected:
     TH1D* steps;
 
     TH1D* h_CBSumVetoE;
+    TH1D* h_PIDSumE;
+
 
     TH2CB* n_photon_high;
     TH2CB* n_photon_low;
-    TH2TAPS* n_proton;
 
     TH1D* IM_gg;
 
-    TH2D* proton_thetaE;
     TH2D* photon_thetaE;
-
-    TH2D* proton_clusterSizeE;
     TH2D* photon_clusterSizeE;
 
 public:
