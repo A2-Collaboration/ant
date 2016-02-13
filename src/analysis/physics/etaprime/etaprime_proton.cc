@@ -39,11 +39,13 @@ EtapProton::EtapProton(const string& name, OptionsPtr opts):
     tree->Branch("CBSumVetoE", &b_CBSumVetoE);
 
     tree->Branch("PhotonSum",  &b_PhotonSum);
+    tree->Branch("Proton",     &b_Proton);
+    tree->Branch("ProtonVetoE",&b_Proton_vetoE);
     tree->Branch("ProtonCopl", &b_ProtonCopl);
     tree->Branch("ProtonBeta", &b_ProtonBeta);
     tree->Branch("ProtonToF",  &b_ProtonToF);
-    tree->Branch("b_ProtonPSA_R",      &b_ProtonPSA_R);
-    tree->Branch("b_ProtonPSA_Angle",  &b_ProtonPSA_Angle);
+    tree->Branch("ProtonPSA_R",      &b_ProtonPSA_R);
+    tree->Branch("ProtonPSA_Angle",  &b_ProtonPSA_Angle);
 
     tree->Branch("FitStatus",  &b_FitStatus);
     tree->Branch("FitChi2",    &b_FitChi2);
@@ -131,11 +133,14 @@ void EtapProton::ProcessEvent(const TEvent& event, manager_t& manager)
         const double beta = s / (s + c * dt * cos(cand_taps->Theta));
 
         if(!isfinite(b_ProtonBeta) || b_ProtonBeta > beta) {
+
             b_ProtonBeta = beta;
             b_ProtonToF = dt;
             b_ProtonPSA_R     = taps_cluster->GetPSARadius();
             b_ProtonPSA_Angle = taps_cluster->GetPSAAngle();
             proton = make_shared<TParticle>(ParticleTypeDatabase::Proton, cand_taps);
+            b_Proton = *proton;
+            b_Proton_vetoE = cand_taps->VetoEnergy;
         }
 
     }

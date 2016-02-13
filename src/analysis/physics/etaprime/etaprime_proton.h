@@ -30,6 +30,8 @@ protected:
     double    b_CBSumVetoE  = 0.0;
 
     TLorentzVector b_PhotonSum;
+    TLorentzVector b_Proton;
+    double b_Proton_vetoE;
     double b_ProtonCopl;
     double b_ProtonBeta;
     double b_ProtonToF;
