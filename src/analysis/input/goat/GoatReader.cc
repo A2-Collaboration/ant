@@ -49,6 +49,37 @@ Detector_t::Any_t IntToDetector_t(const int& a) {
     return d;
 }
 
+void GoatReader::CopyDetectorHits(TEventData& recon)
+{
+    auto fill_readhits = [] (TEventData& recon,
+            const DetectorHitInput::Item_t item,
+            Detector_t::Type_t type) {
+        for(int i=0;i<item.nHits;i++) {
+            const unsigned channel = item.Hits[i];
+            const double energy = item.Energy[i];
+            const double time = item.Time[i];
+            if(isfinite(energy)) {
+                recon.DetectorReadHits.emplace_back(
+                            LogicalChannel_t{type, Channel_t::Type_t::Integral, channel},
+                            vector<double>{energy}
+                            );
+            }
+            if(isfinite(time)) {
+                recon.DetectorReadHits.emplace_back(
+                            LogicalChannel_t{type, Channel_t::Type_t::Timing, channel},
+                            vector<double>{time}
+                            );
+            }
+        }
+    };
+
+    fill_readhits(recon, detectorhits.NaI, Detector_t::Type_t::CB);
+    fill_readhits(recon, detectorhits.PID, Detector_t::Type_t::PID);
+    fill_readhits(recon, detectorhits.BaF2, Detector_t::Type_t::TAPS);
+    fill_readhits(recon, detectorhits.Veto, Detector_t::Type_t::TAPSVeto);
+    /// \todo think about MWPC stuff here
+}
+
 void GoatReader::CopyTagger(TEventData& recon)
 {
     for( Int_t i=0; i<tagger.GetNTagged(); ++i) {
@@ -75,7 +106,6 @@ void GoatReader::CopyTrigger(TEventData& recon)
                     );
     }
 }
-
 
 /**
  * @brief map the cluster sizes from goat to unisgend ints
@@ -251,6 +281,7 @@ bool GoatReader::ReadNextEvent(TEvent& event)
 
     auto& recon = *event.Reconstructed;
 
+    CopyDetectorHits(recon);
     CopyTrigger(recon);
     CopyTagger(recon);
     CopyTracks(recon);

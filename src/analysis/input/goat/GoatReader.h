@@ -80,6 +80,7 @@ protected:
 
     static clustersize_t MapClusterSize(const int& size);
 
+    void CopyDetectorHits(TEventData& recon);
     void CopyTagger(TEventData& recon);
     void CopyTrigger(TEventData& recon);
     void CopyTracks(TEventData& recon);
