@@ -11,13 +11,14 @@
 #include "analysis/utils/KinFitter.h"
 #include "base/interval.h"
 #include "analysis/plot/PromptRandomHist.h"
-
+#include "TTree.h"
 #include <map>
 
 class TH1D;
 class TH2D;
 class TH3D;
-class TTree;
+
+
 namespace ant {
 
 namespace analysis {
@@ -173,6 +174,29 @@ protected:
 
     TTree*  tree = nullptr;
 
+    template<typename T>
+    struct branchVar {
+
+        T b;
+
+        branchVar(TTree* t, const std::string& bname, const T& default_value={}):
+            b(default_value)
+        {
+            t->Branch(bname.c_str(), std::addressof(b));
+        }
+
+        branchVar(branchVar&&) = delete;
+        branchVar(const branchVar&) = delete;
+        branchVar operator=(branchVar&&) = delete;
+        branchVar operator=(const branchVar&) = delete;
+
+
+        void operator= (const T& v) { b =v; }
+
+        operator T() const { return b; }
+
+    };
+
     struct branches_t {
 
         analysis::utils::ParticleVars b_g1;
@@ -181,11 +205,13 @@ protected:
         analysis::utils::ParticleVars b_p;
         analysis::utils::ParticleVars b_ggg;
         analysis::utils::ParticleVars b_mmvector;
+        analysis::utils::ParticleVars b_fitted_p;
+        analysis::utils::ParticleVars b_true_p;
 
-        double b_pTime   = {};
-        double b_p_PSA_R     = 0.0;
-        double b_p_PSA_Angle = 0.0;
-        unsigned  b_p_detector = 0;
+        double    b_pTime       = 0.0;
+        double    b_p_PSA_R     = 0.0;
+        double    b_p_PSA_Angle = 0.0;
+        unsigned  b_p_detector  = 0;
 
         double b_gggTime = {};
         double b_ggIM[3] = {};
@@ -216,7 +242,7 @@ protected:
         bool   b_fitok           = false;
         unsigned b_fitIterations = 0;
 
-        branches_t() {}
+        branches_t();
 
         branches_t(const branches_t&) = default;
         branches_t(branches_t&&) = delete;

@@ -764,6 +764,7 @@ void OmegaEtaG2::Analyse(const TEventData &data, const TEvent& event, manager_t&
         branches.kinfit_chi2 = fitres.ChiSquare / fitres.NDoF;
         branches.b_fitIterations = unsigned(fitres.NIterations);
 
+        branches.b_fitted_p = analysis::utils::ParticleVars(*fitter.GetFittedProton());
 
 
         TParticleList rec_photons(3);
@@ -806,6 +807,8 @@ void OmegaEtaG2::Analyse(const TEventData &data, const TEvent& event, manager_t&
             FASSERT(true_particles[1]!=nullptr);
             FASSERT(true_particles[2]!=nullptr);
             FASSERT(true_particles[3]!=nullptr);
+
+            branches.b_true_p = analysis::utils::ParticleVars(*true_particles[3]);
 
             const auto matched  = utils::match1to1(true_particles, data.Particles.GetAll(), [] (const TParticlePtr& p1, const TParticlePtr& p2) {
                 return p1->Angle(p2->Vect());
@@ -938,6 +941,7 @@ TParticleList OmegaEtaG2::FilterProtons(const TParticleList& list)
 OmegaEtaG2::OmegaEtaG2(const std::string& name, OptionsPtr opts):
     OmegaBase(name, opts),
     reaction_channels(makeChannels()),
+    tree(HistFac.makeTTree("tree")),
     fitter("OmegaEtaG2", 3)
 {
     const auto setup = ant::ExpConfig::Setup::GetLastFound();
@@ -968,8 +972,6 @@ OmegaEtaG2::OmegaEtaG2(const std::string& name, OptionsPtr opts):
 
     cut_ESum = Options->Get<double>("ESum", cut_ESum);
 
-    tree = HistFac.makeTTree("tree");
-
     branches.SetupBranches(tree);
 
     // set up kin fitter
@@ -999,27 +1001,31 @@ OmegaEtaG2::~OmegaEtaG2()
 
 }
 
+OmegaEtaG2::branches_t::branches_t() {}
+
 void OmegaEtaG2::branches_t::SetupBranches(TTree* tree)
 {
+    b_g1.SetBranches(tree, "g1");
+    b_g2.SetBranches(tree, "g2");
+    b_g3.SetBranches(tree, "g3");
     b_p.SetBranches(tree, "p");
+    b_ggg.SetBranches(tree, "ggg");
+    b_mmvector.SetBranches(tree,"mmvect");
+    b_fitted_p.SetBranches(tree, "fitted_p");
+    b_true_p.SetBranches(tree, "ture_p");
+
     tree->Branch("p_Time",      &b_pTime);
     tree->Branch("p_PSA_R",     &b_p_PSA_R);
     tree->Branch("p_PSA_Angle", &b_p_PSA_Angle);
     tree->Branch("p_detector",  &b_p_detector);
 
-    b_ggg.SetBranches(tree, "ggg");
     tree->Branch("ggg_Time", &b_gggTime);
+    tree->Branch("ggIM",     b_ggIM, "ggIM[3]/D");
 
     tree->Branch("CoplAngle", &b_copl_angle);
     tree->Branch("Angle_p_mm",&b_p_mm_angle);
 
-    tree->Branch("ggIM",     b_ggIM, "ggIM[3]/D");
-
-    b_mmvector.SetBranches(tree,"mmvect");
-
-    b_g1.SetBranches(tree, "g1");
-    b_g2.SetBranches(tree, "g2");
-    b_g3.SetBranches(tree, "g3");
+    tree->Branch("found_proton", &b_found_proton);
 
     tree->Branch("TagCh",   &b_TagCh);
     tree->Branch("TagE",    &b_TagE);
@@ -1028,13 +1034,17 @@ void OmegaEtaG2::branches_t::SetupBranches(TTree* tree)
 
     tree->Branch("SigBgFlag",       &b_SigBgFlag);
 
-    tree->Branch("BachelorE[3]",     b_BachelorE,"EgOmegaSys[3]/D");
-    tree->Branch("ggIM_real",       &b_ggIM_real);
-    tree->Branch("ggIM_comb[2]",     b_ggIM_comb, "ggIM_comb[2]/D");
+    tree->Branch("BachelorE[3]",     b_BachelorE, "BachelorE[3]/D");
 
     tree->Branch("CBAvgTime",       &b_CBAvgTime);
 
-    tree->Branch("found_proton", &b_found_proton);
+    tree->Branch("ggIM_real",       &b_ggIM_real);
+    tree->Branch("ggIM_comb[2]",     b_ggIM_comb, "ggIM_comb[2]/D");
+
+    tree->Branch("chi2dof",         &kinfit_chi2);
+    tree->Branch("fitstatus",       &b_fitok);
+    tree->Branch("fitIterations",   &b_fitIterations);
+
 
 }
 
