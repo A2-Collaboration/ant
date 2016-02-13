@@ -102,7 +102,7 @@ void dotest() {
 
         if (init2) cout << "Goat Tracks: " << tracks.GetNTracks() << endl;
         if (init3) cout << "Trigger CBEsum: " << trigger.GetEnergySum() << "MeV" << endl;
-        if (init4) cout << "DetectorHit: N NaIHits: " << detectorhit.GetNNaIHits() << endl;
+        if (init4) cout << "DetectorHit: N NaIHits: " << detectorhit.NaI.Hits << endl;
         if (init5) cout << "Photons: " << photons.GetNParticles() << endl;
         if (init7) cout << "Tagger hits: " << tagger.GetNTagged() << endl;
 
