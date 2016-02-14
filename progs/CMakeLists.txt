@@ -33,6 +33,7 @@ option(SimpleTools "Simple Tools" OFF)
 
 if(SimpleTools)
     add_ant_executable(show_cocktail_database)
+    add_ant_executable(compare_ant_goat)
 endif()
 
 option(XmasCB "Crystal Ball Christmas ornaments" OFF)
