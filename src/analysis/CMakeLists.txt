@@ -11,6 +11,7 @@ set(ANALYSIS_INPUT
   input/goat/detail/TriggerInput.cc
   input/goat/detail/DetectorHitInput.cc
   input/goat/detail/TaggerInput.cc
+  input/goat/detail/EventParameters.cc
   input/goat/GoatReader.cc
   input/ant/AntReader.cc
   input/pluto/PlutoReader.cc

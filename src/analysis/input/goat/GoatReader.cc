@@ -95,6 +95,7 @@ void GoatReader::CopyTrigger(TEventData& recon)
 {
     TTrigger& ti = recon.Trigger;
 
+    ti.DAQEventID = eventParameters.EventNumber;
     ti.CBEnergySum = trigger.GetEnergySum();
     ti.ClusterMultiplicity = trigger.GetMultiplicity();
 

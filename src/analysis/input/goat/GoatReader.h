@@ -9,6 +9,7 @@
 #include "detail/InputModule.h"
 
 #include "detail/TriggerInput.h"
+#include "detail/EventParameters.h"
 #include "detail/TaggerInput.h"
 #include "detail/DetectorHitInput.h"
 #include "detail/TrackInput.h"
@@ -55,6 +56,7 @@ protected:
 
 
     TriggerInput        trigger;
+    EventParameters     eventParameters;
     TaggerInput         tagger;
     TrackInput          tracks;
     DetectorHitInput    detectorhits;
@@ -66,6 +68,7 @@ protected:
 
     ModuleManager active_modules = {
         &trigger,
+        &eventParameters,
         &tagger,
         &tracks,
         &detectorhits,
