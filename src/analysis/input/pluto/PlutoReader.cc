@@ -29,13 +29,6 @@ using namespace ant::analysis::input;
 PlutoReader::PlutoReader(const std::shared_ptr<WrapTFileInput>& rootfiles) :
     files(rootfiles)
 {
-    try {
-        tagger = ExpConfig::Setup::GetDetector<TaggerDetector_t>();
-    }
-    catch(ExpConfig::Exception e) {
-        LOG(WARNING) << "Not generating MCTrue tagger hits since no tagger detector was found: " << e.what();
-    }
-
     /// \note the Pluto tree is really named just "data"
     if(!files->GetObject("data", tree))
         return;
@@ -63,6 +56,13 @@ PlutoReader::PlutoReader(const std::shared_ptr<WrapTFileInput>& rootfiles) :
     }
 
     LOG(INFO) << "MCTrue input active, " << (tid_from_file ? "with" : " WITHOUT") << " TID match check";
+
+    try {
+        tagger = ExpConfig::Setup::GetDetector<TaggerDetector_t>();
+    }
+    catch(ExpConfig::Exception e) {
+        LOG(WARNING) << "Not generating MCTrue tagger hits since no tagger detector was found: " << e.what();
+    }
 }
 
 PlutoReader::~PlutoReader() {}
