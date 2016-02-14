@@ -33,37 +33,15 @@ void DetectorHitInput::GetEntry()
 bool DetectorHitInput::SetupBranches(TreeRequestManager&& input_files) {
 
 
-    TTree* detectorhit = input_files.GetTree("detectorHits");
+    TTree* tree = input_files.GetTree("detectorHits");
 
-    if(detectorhit==nullptr)
+    if(tree==nullptr)
         return false;
 
-    NaI.SetupBranches(detectorhit);
-
-//    detectorhit->SetBranchAddress("nNaIHits", &nNaIHits);
-//    detectorhit->SetBranchAddress("NaIHits", NaIHits);
-//    detectorhit->SetBranchAddress("NaICluster", NaICluster);
-//    detectorhit->SetBranchAddress("NaIEnergy", NaIEnergy);
-//    detectorhit->SetBranchAddress("NaITime", NaITime);
-
-//    detectorhit->SetBranchAddress("nPIDHits", &nPIDHits);
-//    detectorhit->SetBranchAddress("PIDHits", PIDHits);
-//    detectorhit->SetBranchAddress("PIDEnergy", PIDEnergy);
-//    detectorhit->SetBranchAddress("PIDTime", PIDTime);
-
-//    detectorhit->SetBranchAddress("nMWPCHits", &nMWPCHits);
-//    detectorhit->SetBranchAddress("MWPCHits", MWPCHits);
-
-//    detectorhit->SetBranchAddress("nBaF2Hits", &nBaF2Hits);
-//    detectorhit->SetBranchAddress("BaF2Hits", BaF2Hits);
-//    detectorhit->SetBranchAddress("BaF2Cluster", BaF2Cluster);
-//    detectorhit->SetBranchAddress("BaF2Energy", BaF2Energy);
-//    detectorhit->SetBranchAddress("BaF2Time", BaF2Time);
-
-//    detectorhit->SetBranchAddress("nVetoHits", &nVetoHits);
-//    detectorhit->SetBranchAddress("VetoHits", VetoHits);
-//    detectorhit->SetBranchAddress("VetoEnergy", VetoEnergy);
-//    detectorhit->SetBranchAddress("VetoTime", VetoTime);
+    NaI.SetupBranches(tree);
+    PID.SetupBranches(tree);
+    BaF2.SetupBranches(tree);
+    Veto.SetupBranches(tree);
 
     return true;
 
