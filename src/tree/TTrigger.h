@@ -4,6 +4,7 @@
 #include "base/printable.h"
 
 #include <list>
+#include <limits>
 #include <memory>
 
 namespace ant {
@@ -46,13 +47,15 @@ struct TTrigger : printable_traits {
     mev_t           CBEnergySum;
     unsigned int    ClusterMultiplicity;
     ns_t            CBTiming;
+    unsigned        DAQEventID; // might wrap-around at 16bit integer...
 
     std::vector<TDAQError> DAQErrors;
 
-    TTrigger( mev_t CBESum=0.0,
-                 unsigned int multiplicity=0):
-        CBEnergySum(CBESum),
-        ClusterMultiplicity(multiplicity),
+    TTrigger():
+        CBEnergySum(std::numeric_limits<double>::quiet_NaN()),
+        ClusterMultiplicity(0),
+        CBTiming(std::numeric_limits<double>::quiet_NaN()),
+        DAQEventID(0),
         DAQErrors()
     {}
 
@@ -60,18 +63,18 @@ struct TTrigger : printable_traits {
 
     template<class Archive>
     void serialize(Archive& archive) {
-        archive(CBEnergySum, ClusterMultiplicity, CBTiming, DAQErrors);
+        archive(CBEnergySum, ClusterMultiplicity, CBTiming,
+                DAQEventID, DAQErrors);
     }
 
-    std::ostream& Print(std::ostream& stream) const {
-        stream << "Trigger("
-               << " CB Energy Sum=" << CBEnergySum << " MeV"
-               << " Multipicity=" << ClusterMultiplicity
-               << ")";
-        for(auto& error : DAQErrors) {
-            stream << "\t" << error << "\n";
-        }
-        return stream;
+    std::ostream& Print(std::ostream& s) const {
+        s << "Trigger"
+          << " CBEnergySum=" << CBEnergySum
+          << " Multipicity=" << ClusterMultiplicity
+          << " CBTiming=" << CBTiming
+          << " DAQEventId=0x" << std::hex << DAQEventID << std::dec
+          << " nDAQErrors=" << DAQErrors.size();
+        return s;
     }
 };
 
