@@ -68,7 +68,8 @@ struct TTaggerHit : printable_traits
 
     virtual std::ostream& Print( std::ostream& s) const override {
         return s << "TTaggerHit: Electrons=" << Electrons.size()
-                 << " PhotonEnergy=" << PhotonEnergy << " Time=" << Time;
+                 << " Channel=" << Channel << " PhotonEnergy=" << PhotonEnergy
+                 << " Time=" << Time;
     }
 
 
