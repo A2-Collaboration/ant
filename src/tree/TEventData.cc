@@ -26,6 +26,9 @@ ostream& TEventData::Print(ostream& s) const {
     for(auto& i : TaggerHits)
         s << i << endl;
 
+    s << ">> " << Trigger << endl;
+    s << ">> " << Target << endl;
+
     s << ">> Clusters: n=" << Clusters.size() << endl;
     for(auto& i : Clusters)
         s << *i << endl;

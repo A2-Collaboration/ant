@@ -28,9 +28,7 @@ struct TTarget : printable_traits {
 
 
     std::ostream& Print(std::ostream& s) const {
-        s << "Target"
-               << "(Vertex=" << Vertex
-               << ")";
+        s << "Target Vertex=" << Vertex;
         return s;
     }
 
