@@ -296,6 +296,7 @@ void acqu::FileFormatMk2::UnpackEvent(
 
     queue.emplace_back(TEvent::MakeReconstructed(id));
     TEventDataPtr& eventdata = queue.back()->Reconstructed;
+    eventdata->Trigger.DAQEventID = AcquID_last;
 
     hit_storage.clear();
     // there might be more than one scaler block in each event, so
