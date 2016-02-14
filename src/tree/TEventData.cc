@@ -10,31 +10,31 @@ TEventData::~TEventData() {}
 ostream& TEventData::Print(ostream& s) const {
     s << "ID=" << ID << endl;
 
-    s << ">> DetectorReadHits" << endl;
+    s << ">> DetectorReadHits: n=" << DetectorReadHits.size() << endl;
     for(auto& i: DetectorReadHits)
         s << i << endl;
 
-    s << ">> SlowControls" << endl;
+    s << ">> SlowControls: n=" << SlowControls.size() << endl;
     for(auto& i : SlowControls)
         s << i << endl;
 
-    s << ">> UnpackerMessages" << endl;
+    s << ">> UnpackerMessages: n=" << UnpackerMessages.size() << endl;
     for(auto& i : UnpackerMessages)
         s << i << endl;
 
-    s << ">> TaggerHits" << endl;
+    s << ">> TaggerHits: n=" << TaggerHits.size() << endl;
     for(auto& i : TaggerHits)
         s << i << endl;
 
-    s << ">> Clusters" << endl;
+    s << ">> Clusters: n=" << Clusters.size() << endl;
     for(auto& i : Clusters)
         s << *i << endl;
 
-    s << ">> Candidates" << endl;
+    s << ">> Candidates: n=" << Candidates.size() << endl;
     for(auto& i : Candidates)
         s << *i << endl;
 
-    s << ">> Particles" << endl;
+    s << ">> Particles: n=" << Particles.GetAll().size() << endl;
     for(auto& i : Particles.GetAll())
         s << *i << endl;
 
