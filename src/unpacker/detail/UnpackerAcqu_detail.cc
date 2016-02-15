@@ -464,3 +464,82 @@ bool acqu::FileFormatBase::UnpackDataBuffer(UnpackerAcquFileFormat::queue_t& que
 
     return true;
 }
+
+void acqu::FileFormatBase::FillDetectorReadHits(vector<TDetectorReadHit>& hits) const noexcept
+{
+    // the order of hits corresponds to the given mappings
+    hits.reserve(2*hit_storage.size());
+
+    for(const auto& it_hits : hit_storage) {
+        const uint16_t& ch = it_hits.first;
+        const std::vector<uint16_t>& values = it_hits.second;
+
+        if(values.empty())
+            continue;
+
+        if(ch>=hit_mappings_ptr.size())
+            continue;
+
+        for(const UnpackerAcquConfig::hit_mapping_t* mapping : hit_mappings_ptr[ch]) {
+            using RawChannel_t = UnpackerAcquConfig::RawChannel_t<uint16_t>;
+            if(mapping->RawChannels.size() != 1)
+                throw UnpackerAcqu::Exception("Not implemented");
+            if(mapping->RawChannels[0].Mask != RawChannel_t::NoMask())
+                throw UnpackerAcqu::Exception("Not implemented");
+            std::vector<std::uint8_t> rawData(sizeof(uint16_t)*values.size());
+            std::copy(values.begin(), values.end(),
+                      reinterpret_cast<uint16_t*>(std::addressof(rawData[0])));
+
+            hits.emplace_back(mapping->LogicalChannel, move(rawData));
+        }
+    }
+
+    if(hits.empty()) {
+        /// \todo Improve message, maybe add TUnpackerMessage then?
+        LOG(WARNING) << "Found event with no hits at all";
+    }
+
+}
+
+void acqu::FileFormatBase::FillSlowControls(const scalers_t& scalers,
+                                           vector<TSlowControl>& slowcontrols) const noexcept
+{
+    if(scalers.empty())
+        return;
+
+    // create slowcontrol items according to mapping
+
+    for(const UnpackerAcquConfig::scaler_mapping_t& scaler_mapping : scaler_mappings) {
+
+        slowcontrols.emplace_back(
+                    TSlowControl::Type_t::AcquScaler,
+                    TSlowControl::Validity_t::Backward,
+                    0, /// \todo estimate some timestamp from ID_lower here?
+                    scaler_mapping.SlowControlName,
+                    "" // spare the description
+                    );
+        auto& sc = slowcontrols.back();
+
+        // fill TSlowControl's payload according to entries
+
+        for(const auto& entry : scaler_mapping.Entries) {
+            const auto rawChannel = entry.RawChannel;
+            const auto it_map = scalers.find(rawChannel.RawChannel);
+            if(it_map==scalers.cend())
+                continue;
+            const std::vector<uint32_t>& values = it_map->second;
+            // require strict > to prevent signed/unsigned ambiguity
+            using payload_t = decltype(sc.Payload_Int);
+            static_assert(sizeof(payload_t::value_type) > sizeof(uint32_t),
+                          "Payload_Int not suitable for scaler value");
+            // transform the scaler values to KeyValue entries
+            // in TSlowControl's Payload_Int
+            payload_t& payload = sc.Payload_Int;
+            for(const uint32_t& value : values) {
+                payload.emplace_back(entry.LogicalChannel, value);
+            }
+        }
+
+        VLOG(9) << sc;
+    }
+}

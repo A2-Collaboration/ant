@@ -22,6 +22,7 @@ namespace ant {
  */
 class RawFileReader;
 struct TEvent;
+struct TSlowControl;
 
 class UnpackerAcquFileFormat {
 public:
@@ -111,6 +112,7 @@ protected:
     Info info;
     TID id;
     unsigned AcquID_last = 0;
+    using scalers_t = std::map<uint32_t, std::vector<uint32_t> >;
 
     // we so some more effort for the hits,
     // especially keeping storage_hits over multiple
@@ -141,6 +143,9 @@ protected:
     std::uint32_t GetDataBufferMarker() const;
     bool UnpackDataBuffer(queue_t& queue, it_t& it, const it_t& it_endbuffer) noexcept;
     bool SearchFirstDataBuffer(reader_t& reader, buffer_t& buffer, size_t offset) const;
+    void FillDetectorReadHits(std::vector<TDetectorReadHit>& hits) const noexcept;
+    void FillSlowControls(const scalers_t& scalers, std::vector<TSlowControl>& slowcontrols) const noexcept;
+
 };
 
 }} // namespace unpacker::acqu
