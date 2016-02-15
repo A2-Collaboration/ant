@@ -28,8 +28,10 @@ GoatComparison::GoatComparison(const std::string& name, OptionsPtr opts):
     n_photon_high = HistFac.make<TH2CB>("n_photon_high","n_photon_high");
     n_photon_low = HistFac.make<TH2CB>("n_photon_low","n_photon_low");
 
-    IM_gg = HistFac.makeTH1D("IM(2#gamma)","IM [MeV]","",BinSettings(1000,0,1100),"IM_gg");
-    IM_gg_neutral = HistFac.makeTH1D("IM(2#gamma) PIDSumE==0","IM [MeV]","",BinSettings(1000,0,1100),"IM_gg_neutral");
+    BinSettings bins_im(1000,0,1100);
+    IM_gg = HistFac.makeTH1D("IM(2#gamma)","IM [MeV]","",bins_im,"IM_gg");
+    IM_gg_noPID = HistFac.makeTH1D("IM(2#gamma) PIDSumE==0","IM [MeV]","",bins_im,"IM_gg_noPID");
+    IM_gg_noVetoE = HistFac.makeTH1D("IM(2#gamma) CBVetoE==0","IM [MeV]","",bins_im,"IM_gg_noVetoE");
 
 
     BinSettings bins_photon_E(500,0,1000);
@@ -113,7 +115,9 @@ void GoatComparison::ProcessEvent(const TEvent& event, manager_t& manager)
     photon_clusterSizeE->Fill(photon_low->ClusterSize, photon_low->CaloEnergy);
 
     if(PIDSumE == 0)
-        IM_gg_neutral->Fill(sum.M());
+        IM_gg_noPID->Fill(sum.M());
+    if(CBSumVetoE == 0)
+        IM_gg_noVetoE->Fill(sum.M());
 }
 
 void GoatComparison::ShowResult()
@@ -128,7 +132,8 @@ void GoatComparison::ShowResult()
             << photon_clusterSizeE
             << h_CBSumVetoE
             << h_PIDSumE
-            << IM_gg_neutral
+            << IM_gg_noPID
+            << IM_gg_noVetoE
             << endc;
 }
 

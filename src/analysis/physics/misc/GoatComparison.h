@@ -28,7 +28,8 @@ protected:
     TH2CB* n_photon_low;
 
     TH1D* IM_gg;
-    TH1D* IM_gg_neutral;
+    TH1D* IM_gg_noPID;
+    TH1D* IM_gg_noVetoE;
 
 
     TH2D* photon_thetaE;
