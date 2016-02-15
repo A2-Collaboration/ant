@@ -8,6 +8,7 @@ set(SRCS
 set(SRCS_SETUPS
   setups/Setup.cc
   setups/SetupRegistry.cc
+  setups/Setup_2012_12_Compton.cc
   setups/Setup_2014_EPT.cc
   setups/Setup_2014_07_EPT_Prod.cc
   setups/Setup_2014_10_EPT_Prod.cc
