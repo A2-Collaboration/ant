@@ -98,35 +98,36 @@ Setup_2014_EPT::Setup_2014_EPT(const string& name, OptionsPtr opt) :
                                       convert_CATCH_Tagger,
                                       -325, // default offset in ns
                                       std::make_shared<calibration::gui::FitGausPol0>(),
-                                      timecuts ? interval<double>{-100, 100} : no_timecut
+                                      timecuts ? interval<double>{-120, 120} : no_timecut
                                       );
     AddCalibration<calibration::Time>(cb,
                                       calibrationDataManager,
                                       convert_CATCH_CB,
                                       -325,      // default offset in ns
                                       std::make_shared<calibration::gui::CBPeakFunction>(),
-                                      timecuts ? interval<double>{-10, 100} : no_timecut
+                                      // before timewalk correction
+                                      timecuts ? interval<double>{-20, 200} : no_timecut
                                       );
     AddCalibration<calibration::Time>(pid,
                                       calibrationDataManager,
                                       convert_CATCH_CB,
                                       -325,
                                       std::make_shared<calibration::gui::FitGaus>(),
-                                      timecuts ? interval<double>{-7, 7} : no_timecut
+                                      timecuts ? interval<double>{-20, 20} : no_timecut
                                       );
     AddCalibration<calibration::TAPS_Time>(taps,
                                            calibrationDataManager,
                                            convert_MultiHit16bit,   // for BaF2
                                            convert_V1190_TAPSPbWO4, // for PbWO4
-                                           timecuts ? interval<double>{-10, 10} : no_timecut, // for BaF2
-                                           timecuts ? interval<double>{-20, 20} : no_timecut  // for PbWO4
+                                           timecuts ? interval<double>{-15, 15} : no_timecut, // for BaF2
+                                           timecuts ? interval<double>{-25, 25} : no_timecut  // for PbWO4
                                            );
     AddCalibration<calibration::TAPSVeto_Time>(tapsVeto,
                                                calibrationDataManager,
                                                convert_MultiHit16bit,   // for BaF2
                                                convert_V1190_TAPSPbWO4, // for PbWO4
-                                               timecuts ? interval<double>{-7, 7} : no_timecut,
-                                               timecuts ? interval<double>{-7, 7} : no_timecut
+                                               timecuts ? interval<double>{-12, 12} : no_timecut,
+                                               timecuts ? interval<double>{-12, 12} : no_timecut
                                                );
 
     AddCalibration<calibration::CB_Energy>(cb, calibrationDataManager, convert_GeSiCa_SADC );
@@ -150,7 +151,7 @@ Setup_2014_EPT::Setup_2014_EPT(const string& name, OptionsPtr opt) :
 
     // CB timing needs timewalk correction
     AddCalibration<calibration::CB_TimeWalk>(cb, calibrationDataManager,
-                                             timecuts ? interval<double>{-5, 10} : no_timecut);
+                                             timecuts ? interval<double>{-10, 20} : no_timecut);
 
     if(opt->Get<bool>("MCSmearing", false)) {
         AddHook(make_shared<calibration::MCEnergySmearing>(Detector_t::Type_t::CB,   1.05830, 0.3));
