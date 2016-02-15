@@ -25,7 +25,7 @@ bool acqu::FileFormatMk2::InspectHeader(const vector<uint32_t>& buffer) const
     return inspectHeaderMk1Mk2<AcquMk2Info_t>(buffer);
 }
 
-void acqu::FileFormatMk2::FillInfo(reader_t &reader, buffer_t &buffer, Info &info) const
+void acqu::FileFormatMk2::FillInfo(reader_t &reader, buffer_t &buffer, Info &info)
 {
     const acqu::AcquMk2Info_t* h = reinterpret_cast<const acqu::AcquMk2Info_t*>(buffer.data()+1);
 

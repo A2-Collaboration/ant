@@ -135,7 +135,7 @@ protected:
     void AppendMessagesToEvent(std::unique_ptr<TEvent>& event) const;
 
     // Mk1/Mk2 specific methods
-    virtual void FillInfo(reader_t& reader, buffer_t& buffer, Info& info) const = 0;
+    virtual void FillInfo(reader_t& reader, buffer_t& buffer, Info& info) = 0;
     virtual void FillFirstDataBuffer(reader_t& reader, buffer_t& buffer) const = 0;
     virtual void UnpackEvent(queue_t& queue, it_t& it, const it_t& it_endbuffer, bool& good) noexcept = 0;
 

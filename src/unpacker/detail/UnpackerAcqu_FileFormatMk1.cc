@@ -25,7 +25,7 @@ bool acqu::FileFormatMk1::InspectHeader(const vector<uint32_t>& buffer) const
     return inspectHeaderMk1Mk2<AcquExptInfo_t>(buffer);
 }
 
-void acqu::FileFormatMk1::FillInfo(reader_t& reader, buffer_t& buffer, Info& info) const
+void acqu::FileFormatMk1::FillInfo(reader_t& reader, buffer_t& buffer, Info& info)
 {
     const acqu::AcquExptInfo_t* h = reinterpret_cast<const acqu::AcquExptInfo_t*>(buffer.data()+1);
 
@@ -36,6 +36,9 @@ void acqu::FileFormatMk1::FillInfo(reader_t& reader, buffer_t& buffer, Info& inf
     info.OutFile = std_ext::string_sanitize(h->fOutFile);
     info.RunNumber = static_cast<unsigned>(h->fRun);
     info.RecordLength = static_cast<unsigned>(h->fRecLen);
+
+    nScalers = h->fNscaler;
+
 
     /// \todo parse some more stuff from the Mk1 header here,
     /// but don't forget to read enough into the buffer
@@ -168,14 +171,19 @@ void acqu::FileFormatMk1::HandleScalerBuffer(
     // ignore Scaler buffer marker
     it++;
 
+    if(distance(it, it_end)<nScalers) {
+        LogMessage(TUnpackerMessage::Level_t::DataError,
+                   "Mk1 scaler block not completely present in buffer"
+                   );
+        return;
+    }
+
     /// \todo check if that scaler block decoding makes any sense
     /// we assume that a scaler block comes last in event
     /// also what the hell is Acqu doing with the SplitScaler stuff?!
 
-    uint32_t scalerIndex = 0;
-    while(it != it_end) {
+    for(uint32_t scalerIndex = 0; scalerIndex < nScalers; scalerIndex++) {
         scalers[scalerIndex].push_back(*it);
-        scalerIndex++;
         it++;
     }
 
