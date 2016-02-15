@@ -9,23 +9,19 @@
 
 using namespace std;
 
-TH1*Draw(TTree* tree, const string& formula, const TCut& cut, const int bins, const double min, const double max) {
+TH1* Draw(TTree* tree, const string& formula, const TCut& cut, const int bins, const double min, const double max) {
     static unsigned n = 0;
     const char* hname = Form("h1d_%d", n++);
-
-    tree->Draw(Form("%s>>%s(%d,%lf,%lf)",formula.c_str(),hname,bins,min,max),cut);
-    TH1* h = NULL;
-    gDirectory->GetObject(hname, h);
+    TH1* h = new TH1D(hname,"",bins, min, max);
+    tree->Draw(Form("%s>>%s",formula.c_str(),hname),cut);
     return h;
 }
 
 TH2*Draw(TTree* tree, const string& formula, const TCut& cut, const int xbins, const double xmin, const double xmax, const int ybins, const double ymin, const double ymax) {
     static unsigned n = 0;
     const char* hname = Form("h2d_%d", n++);
-
-    tree->Draw(Form("%s>>%s(%d,%lf,%lf,%d,%lf,%lf)",formula.c_str(),hname,xbins,xmin,xmax,ybins,ymin,ymax),cut,"colz");
-    TH2* h = NULL;
-    gDirectory->GetObject(hname, h);
+    TH2* h = new TH2D(hname,"",xbins, xmin, xmax,ybins,ymin,ymax);
+    tree->Draw(Form("%s>>%s",formula.c_str(), hname),cut,"colz");
     return h;
 }
 
