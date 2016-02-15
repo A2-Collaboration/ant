@@ -37,6 +37,8 @@ string GitInfo::GetDescription()
 
 string GitInfo::exec_git(const string& args)
 {
+    if(!std_ext::system::testopen(repofolder))
+        return "";
     stringstream ss_cmd;
     ss_cmd << "cd " << repofolder << " && git " << args;
     return std_ext::system::exec(ss_cmd.str());
