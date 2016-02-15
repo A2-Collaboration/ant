@@ -13,14 +13,27 @@ const Detector_t::Any_t Detector_t::Any_t::Veto(Type_t::PID | Type_t::TAPSVeto);
 
 
 std::ostream& ant::Detector_t::Any_t::Print(std::ostream& stream) const  {
-    typename std::underlying_type<Type_t>::type i = 0;
-    decltype(bitfield) temp  = 1;
+    if(bitfield == 0)
+        return stream << "None";
+
+    using i_t = typename std::underlying_type<Type_t>::type;
+    using bitfield_t = decltype(bitfield);
+
+    bitfield_t temp = bitfield;
+
+    i_t i_max = 0;
+    while(temp >>= 1)
+        i_max++;
+
+    i_t i = 0;
+    temp = 1;
     while(temp<=bitfield) {
         if(bitfield & temp) {
             stream << Detector_t::ToString(
                           static_cast<Detector_t::Type_t>(i)
-                          )
-                   << " ";
+                          );
+            if(i<i_max)
+                stream << "|";
         }
         ++i;
         temp <<= 1;

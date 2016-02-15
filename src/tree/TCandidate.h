@@ -80,7 +80,8 @@ struct TCandidate : printable_traits
     }
 
     virtual std::ostream& Print( std::ostream& s) const override {
-        return s << "TCandidate: " << Clusters.size() << " clusters, CaloEnergy=" << CaloEnergy
+        return s << "TCandidate: " << Clusters.size() << " clusters, Detector=" << Detector
+                 << " CaloEnergy=" << CaloEnergy
                  << " Theta=" << Theta <<", Phi=" << Phi
                  << " ClusterSize=" << ClusterSize << " Time=" << Time
                  << " VetoEnergy=" << VetoEnergy << " TrackerEnergy=" << TrackerEnergy;
