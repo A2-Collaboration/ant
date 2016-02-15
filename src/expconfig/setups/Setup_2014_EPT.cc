@@ -68,11 +68,13 @@ Setup_2014_EPT::Setup_2014_EPT(const string& name, OptionsPtr opt) :
     const auto& convert_MultiHit16bit = make_shared<calibration::converter::MultiHit16bit>();
     const auto& convert_CATCH_Tagger = make_shared<calibration::converter::MultiHit16bitReference>(
                                            trigger->Reference_CATCH_TaggerCrate,
-                                           calibration::converter::MultiHit16bitReference::CATCH_TDC_Gain
+                                           calibration::converter::MultiHit16bitReference::CATCH_TDC_Gain,
+                                           1000 // 1us is maximum window
                                            );
     const auto& convert_CATCH_CB = make_shared<calibration::converter::MultiHit16bitReference>(
                                        trigger->Reference_CATCH_CBCrate,
-                                       calibration::converter::MultiHit16bitReference::CATCH_TDC_Gain
+                                       calibration::converter::MultiHit16bitReference::CATCH_TDC_Gain,
+                                       1000 // 1us is maximum
                                        );
     const auto& convert_GeSiCa_SADC = make_shared<calibration::converter::GeSiCa_SADC>();
     const auto& convert_V1190_TAPSPbWO4 =  make_shared<calibration::converter::MultiHit16bitReference>(

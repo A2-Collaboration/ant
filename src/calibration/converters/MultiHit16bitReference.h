@@ -14,10 +14,14 @@ struct MultiHit16bitReference : MultiHit16bit, ReconstructHook::DetectorReadHits
     const static double CATCH_TDC_Gain;
     const static double V1190_TDC_Gain;
 
-    MultiHit16bitReference(const LogicalChannel_t& referenceChannel, double gain) :
+    MultiHit16bitReference(const LogicalChannel_t& referenceChannel,
+                           double gain,
+                           double maxWindow = std::numeric_limits<double>::infinity()
+                           ) :
         ReferenceChannel(referenceChannel),
         ReferenceTiming(std::numeric_limits<double>::quiet_NaN()),
-        Gain(gain)
+        Gain(gain),
+        MaxWindow(maxWindow)
     {}
 
     virtual std::vector<double> Convert(const std::vector<uint8_t>& rawData) const override
@@ -26,15 +30,16 @@ struct MultiHit16bitReference : MultiHit16bit, ReconstructHook::DetectorReadHits
         if(std::isnan(ReferenceTiming))
             return {};
 
-        return ConvertWithFactorAndOffset(rawData, Gain, ReferenceTiming);
+        return ConvertWithFactorAndOffset(rawData, Gain, ReferenceTiming, MaxWindow);
     }
 
     virtual void ApplyTo(const readhits_t& hits) override;
 
 private:
     LogicalChannel_t ReferenceChannel;
-    double ReferenceTiming;
+    double ReferenceTiming; // extracted in ApplyTo
     const double Gain;
+    const double MaxWindow;
 
 };
 
