@@ -32,7 +32,7 @@
 #include "calibration/converters/MultiHit16bitReference.h"
 #include "calibration/converters/GeSiCa_SADC.h"
 
-
+using namespace std;
 using namespace ant::expconfig;
 using namespace ant::expconfig::setup;
 
