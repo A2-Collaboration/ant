@@ -21,13 +21,10 @@ protected:
     virtual void FillInfo(reader_t& reader, buffer_t& buffer, Info& info) const override;
     virtual void FillFirstDataBuffer(reader_t& reader, buffer_t& buffer) const override;
 
-    virtual bool UnpackDataBuffer(queue_t &queue, it_t& it, const it_t& it_endbuffer) noexcept override;
-
 private:
     using scalers_t = std::map<uint32_t, std::vector<uint32_t> >;
 
-    bool SearchFirstDataBuffer(reader_t& reader, buffer_t& buffer, size_t offset) const;
-    void UnpackEvent(queue_t& queue, it_t& it, const it_t& it_endbuffer, bool& good) noexcept;
+    virtual void UnpackEvent(queue_t& queue, it_t& it, const it_t& it_endbuffer, bool& good) noexcept override;
     void FillDetectorReadHits(std::vector<TDetectorReadHit>& hits) const noexcept;
     void HandleScalerBuffer(scalers_t& scalers,
                             it_t& it, const it_t& it_end, bool& good,

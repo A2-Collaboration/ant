@@ -82,10 +82,7 @@ protected:
     using buffer_t = decltype(buffer);
     using it_t = buffer_t::const_iterator;
 
-    // helper class to finally create the THeaderInfo items
-    // the fields are still very similar to the Acqu header info fields
-    // but the knowledge what data format it actually was created from
-    // is already gone, yay
+    // contains what we now about the file
     struct Info {
         struct HardwareModule {
             std::string Identifier; // some more or less unique identifier of the module
@@ -103,6 +100,12 @@ protected:
         std::string OutFile;
         unsigned RunNumber;
         unsigned RecordLength; // Record length according to header (might not be correct, see trueRecordLength)
+
+        enum class Format_t {
+            Mk1, Mk2
+        };
+        Format_t Format;
+
     };
 
     Info info;
@@ -114,7 +117,7 @@ protected:
     // events makes it considerably faster
     std::vector<UnpackerAcquConfig::hit_mapping_t> hit_mappings;
     std::vector< std::vector< const UnpackerAcquConfig::hit_mapping_t* > > hit_mappings_ptr;
-    using hits_t = std_ext::mapped_vectors<uint16_t, uint16_t>;
+    using hits_t = std_ext::mapped_vectors<std::uint16_t, std::uint16_t>;
     hits_t hit_storage;
 
     std::vector<UnpackerAcquConfig::scaler_mapping_t> scaler_mappings;
@@ -132,8 +135,12 @@ protected:
     // Mk1/Mk2 specific methods
     virtual void FillInfo(reader_t& reader, buffer_t& buffer, Info& info) const = 0;
     virtual void FillFirstDataBuffer(reader_t& reader, buffer_t& buffer) const = 0;
-    virtual bool UnpackDataBuffer(queue_t &queue, it_t& it, const it_t& it_endbuffer) noexcept = 0;
+    virtual void UnpackEvent(queue_t& queue, it_t& it, const it_t& it_endbuffer, bool& good) noexcept = 0;
 
+    // things shared by Mk1/Mk2
+    std::uint32_t GetDataBufferMarker() const;
+    bool UnpackDataBuffer(queue_t& queue, it_t& it, const it_t& it_endbuffer) noexcept;
+    bool SearchFirstDataBuffer(reader_t& reader, buffer_t& buffer, size_t offset) const;
 };
 
 }} // namespace unpacker::acqu
