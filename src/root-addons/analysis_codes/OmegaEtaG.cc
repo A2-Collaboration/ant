@@ -146,17 +146,27 @@ void OmegaEtaG::Plot(TTree* tree, const double binscale)
     const BinSettings MMgggIMbins_X(600*binscale, 0, 1200);
     const BinSettings MMgggIMbins_Y(750*binscale, 500, 2000);
 
+    const BinSettings pThetaBins(500*binscale, 0, 50);
+    const BinSettings pEbins (1000*binscale,   0, 1000);
+
 
     TH1* ggg_IM_free   = Draw(tree, "ggg_IM",    prompt_random,         "3#gamma IM [MeV]", "", IMbins);
-    TH1* ggg_IM_fit    = Draw(tree, "ggg_IM",    prompt_random*cut_fit, "3#gamma IM [MeV]", "", IMbins);
+    ggg_IM_free->SetTitle("3#gamma IM");
 
-    TH1* ggIM          = Draw(tree, "ggIM",      all,                    "2#gamma IM [MeV]", "", IMbins);
+    TH1* ggg_IM_fit    = Draw(tree, "ggg_IM",    prompt_random*cut_fit, "3#gamma IM [MeV]", "", IMbins);
+    ggg_IM_fit->SetTitle("3#gamma IM, #chi^{2} cut");
 
     TH1* mm_free       = Draw(tree, "mmvect_IM", prompt_random,         "MM [MeV]", "", MMbins);
+    mm_free->SetTitle("Missig Mass");
+
     TH1* mm_fit        = Draw(tree, "mmvect_IM", prompt_random*cut_fit, "MM [MeV]", "", MMbins);
+    mm_fit->SetTitle("Missing Mass, #chi^{2} cut");
 
     TH2* mm_gggIM_free = Draw(tree, "mmvect_IM:ggg_IM", prompt_random,         "3#gamma IM[MeV]", "MM [MeV]", MMgggIMbins_X, MMgggIMbins_Y);
+    mm_gggIM_free->SetTitle("Missing Mass vs. 3#gamma IM");
+
     TH2* mm_gggIM_fit  = Draw(tree, "mmvect_IM:ggg_IM", prompt_random*cut_fit, "3#gamma IM[MeV]", "MM [MeV]", MMgggIMbins_X, MMgggIMbins_Y);
+    mm_gggIM_fit->SetTitle("Missing Mass vs. 3#gamma IM, #chi^{2} cut");
 
     auto fit_chi2dof   = Draw(tree, "EPB_chi2dof",     prompt_random,        "#chi^{2}/dof", "", Chi2bins);
     auto fit_prob      = Draw(tree, "EPB_probability", prompt_random,        "probabiliyt", "",  probbins);
@@ -164,6 +174,13 @@ void OmegaEtaG::Plot(TTree* tree, const double binscale)
 //    auto bachelor_free     = Draw(tree, "BachelorE", propmt_randomt,             "E #gamma_{#omega} [MeV]", "", Ebins);
 //    auto bachelor_fit      = Draw(tree, "BachelorE", propmt_randomt*cut_fit,     "E #gamma_{#omega} [MeV]", "", Ebins);
     auto bachelor          = Draw(tree, "BachelorE", all,                        "E #gamma_{#omega} [MeV]", "", Ebins);
+    bachelor->SetTitle("Bachelor Photon, (#chi^{2}, mm, 3#gammaIM)-cut");
+
+    TH2* protonThetaE  = Draw(tree, "fitted_p_Theta:fitted_p_E", all, "Fitted Proton E [MeV]", "Fitted Proton #theta [#circ]", pEbins, pThetaBins);
+    protonThetaE->SetTitle("Fitted Proton #theta vs. Energy, (#chi^{2}, mm, 3#gammaIM)-cut");
+
+    TH1* ggIM          = Draw(tree, "ggIM",      all,                    "2#gamma IM [MeV]", "", IMbins);
+    ggIM->SetTitle("2#gamma sub IM, (#chi^{2}, mm, 3#gammaIM)-cut");
 
     map<string, TH1*> pulls;
 
@@ -182,21 +199,21 @@ void OmegaEtaG::Plot(TTree* tree, const double binscale)
             << fit_prob
             << endc;
 
+    canvas cpulls("Pulls");
+    for(auto& h : pulls)
+        cpulls << h.second;
+    cpulls << endc;
+
     canvas("Cut Varaibles")
             << ggg_IM_free << ggg_IM_fit
             << mm_free << mm_fit
             << drawoption("colz") << mm_gggIM_free << mm_gggIM_fit
             << endc;
 
-    canvas("2g IM")
-            << ggIM << bachelor << endc;
-
-    canvas cpulls("Pulls");
-
-    for(auto& h : pulls)
-        cpulls << h.second;
-
-    cpulls << endc;
+    canvas("Results")
+            << ggIM << bachelor
+            << drawoption("colz") << protonThetaE
+            << endc;
 
 }
 
