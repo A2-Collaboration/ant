@@ -25,110 +25,6 @@ using namespace ant;
 using namespace ant::std_ext;
 using namespace ant::analysis;
 
-void OmegaEtaG::Chi2Plot(TTree* tree)
-{
-//    new TCanvas("chi2_plot","Kinfit Chi2");
-//    TH1* chi2_bg = Draw(tree, "EPB_chi2dof","SigBgFlag==2", 1000,0,10);
-//    chi2_bg->SetTitle("#chi^{2} Background");
-//    chi2_bg->SetLineColor(kRed);
-
-//    TH1* chi2_sig = Draw(tree, "EPB_chi2dof","SigBgFlag!=2", 1000,0,10);
-//    chi2_sig->SetTitle("#chi^{2} Signal + Reference");
-//    chi2_sig->SetLineColor(kBlue);
-
-//    THStack* stack = new THStack();
-//    stack->Add(chi2_bg);
-//    stack->Add(chi2_sig);
-
-//    new TCanvas();
-//    stack->Draw("nostack");
-//    stack->GetXaxis()->SetTitle("#chi^{2}/dof");
-//    gPad->BuildLegend();
-}
-
-void OmegaEtaG::Chi2CutCompare(TTree* tree, double chi2)
-{
-
-//    new TCanvas();
-//    TCut cut = Form("EPB_chi2dof<%lf",chi2);
-
-//    TH1* all_nocut = Draw(tree, "ggg_IM","",1200,0,1200);
-//    all_nocut->SetTitle("No Cut");
-//    all_nocut->SetLineColor(kBlack);
-
-//    TH1* bg_nocut = Draw(tree, "ggg_IM", "SigBgFlag==2", 1200,0,1200);
-//    bg_nocut->SetTitle("Background No Cut");
-//    bg_nocut->SetLineColor(kGray);
-
-//    TH1* all_cut = Draw(tree, "ggg_IM",cut,1200,0,1200);
-//    all_cut->SetTitle("Cut");
-//    all_cut->SetLineColor(kRed);
-
-//    TH1* bg_cut = Draw(tree, "ggg_IM", cut+"SigBgFlag==2", 1200,0,1200);
-//    bg_cut->SetTitle("Background Cut");
-//    bg_cut->SetLineColor(kOrange);
-
-//    TH1* sig_cut = Draw(tree, "ggg_IM",cut+"SigBgFlag!=2",1200,0,1200);
-//    sig_cut->SetTitle("Signal + Reference Cut");
-//    sig_cut->SetLineColor(kGreen);
-
-//    TH1* sig_nocut = Draw(tree, "ggg_IM", "SigBgFlag!=2", 1200,0,1200);
-//    sig_nocut->SetTitle("Signal + Reference No Cut");
-//    sig_nocut->SetLineColor(kBlue);
-
-//    THStack* stack = new THStack();
-//    stack->Add(all_nocut);
-//    stack->Add(all_cut);
-//    stack->Add(bg_nocut);
-//    stack->Add(bg_cut);
-//    stack->Add(sig_nocut);
-//    stack->Add(sig_cut);
-//    stack->Draw("nostack");
-//    gPad->BuildLegend(0.1,0.7,0.5,0.9);
-//    stack->GetXaxis()->SetTitle("3#gamma IM [MeV]");
-}
-
-void OmegaEtaG::gggIM_MM(TTree* tree, const TCut& cut)
-{
-/*    new TCanvas();
-
-    TH2* h = Draw(tree, "mmvect_IM:ggg_IM", cut*"TagW", 600, 0, 1200, 750, 500,2000);
-    h->SetXTitle("3#gamma IM [MeV]");
-    h->SetYTitle("calculated p IM [MeV]");*/
-
-
-}
-
-void OmegaEtaG::ggIM(TTree* tree, const TCut& cut)
-{
-//    new TCanvas();
-
-//    TH1* h = Draw(tree, "ggIM", cut*"TagW", 1000, 0, 1000);
-//    h->SetXTitle("2#gamma IM [MeV]");
-//    h->SetYTitle("#/1MeV");
-}
-
-void OmegaEtaG::Analyse(TTree* tree) {
-
-    new TCanvas();
-
-    Chi2Plot(tree);
-    Chi2CutCompare(tree,4);
-
-}
-
-void OmegaEtaG::kinfit1() {
-
-    if(gDirectory->cd("OmegaEtaG2") ) {
-
-        TTree* tree = NULL;
-        gDirectory->GetObject("tree", tree);
-
-        if(tree)
-            Analyse(tree);
-    }
-}
-
 struct OmegaEtaG_hists {
     TH1* ggg_IM_free;
     TH1* ggg_IM_fit;
@@ -369,50 +265,65 @@ void OmegaEtaG::DataMCBGs(TFile* mc_file, TFile* data_file, const double mcscale
         hstack* stack = new hstack(formatter() << "stack_" << hname, backup_title);
         *stack << data;
 
+        const auto data_entries = data->Integral();
+
         // ----- MC
 
         TH1* mcsum = nullptr;
 
+        std::list<TH1*> mc_hists;
 
-        for(int bg=0; bg<=channels.size(); ++bg) {
+        for(size_t bg=0; bg<=channels.size(); ++bg) {
 
-                const string histname = formatter() << "BG" << bg << "_" << hname;
+            const string histname = formatter() << "BG" << bg << "_" << hname;
 
-                TH1* mch = nullptr;
+            TH1* mch = nullptr;
 
-                mc_file->GetObject(histname.c_str(), mch);
-                if(!mch) {
-                    cout << "Could not get " << histname << " from mc file" << endl;
-                    continue;
-                }
-                cout << "MC: " << mch->GetName() << ":" << mch->GetEntries() << endl;
-
-                if(bg==channels.size()) {
-                    mch->SetTitle("Others");
-                    mch->SetLineColor(colors.Get("Others"));
-                } else {
-                    const string chname = utils::ParticleTools::GetDecayString(channels.at(bg));
-                    mch->SetLineColor(colors.Get(to_string(bg)));
-                    mch->SetTitle(chname.c_str());
-                }
-
-                if(bg==0) {
-                    mcsum = (TH1D*)mch->Clone();
-                    const string name = formatter() << "MCSUM_" << hname;
-                    mcsum->SetName(name.c_str());
-                    mcsum->SetTitle("MC Sum");
-                    mcsum->SetLabelColor(colors.Get("MC Sum"));
-                    *stack << mcsum;
-                }
-
-                mch->Scale(mcscale);
-                mcsum->Add(mch, 1.0);
-                *stack << mch;
+            mc_file->GetObject(histname.c_str(), mch);
+            if(!mch) {
+                cout << "Could not get " << histname << " from mc file" << endl;
+                continue;
             }
+            if(bg==channels.size()) {
+                mch->SetTitle("Others");
+                mch->SetLineColor(colors.Get("Others"));
+            } else {
+                const string chname = utils::ParticleTools::GetDecayString(channels.at(int(bg)));
+                mch->SetLineColor(colors.Get(to_string(bg)));
+                mch->SetTitle(chname.c_str());
+            }
+
+            if(bg==0) {
+                mcsum = dynamic_cast<TH1D*>(mch->Clone());
+                const string name = formatter() << "MCSUM_" << hname;
+                mcsum->SetName(name.c_str());
+                mcsum->SetTitle("MC Sum");
+                mcsum->SetLabelColor(colors.Get("MC Sum"));
+                mc_hists.push_back(mcsum);
+            } else {
+                mcsum->Add(mch);
+            }
+
+            mc_hists.push_back(mch);
+        }
+
+        const auto mc_entries   = mcsum->Integral();
+        const auto ratio = data_entries / mc_entries;
+
+        cout << "Scale factor " << ratio << endl;
+
+        mc_hists.sort([] (TH1* h1, TH1* h2){ return h1->Integral() > h2->Integral();});
+
+        for(auto& h : mc_hists) {
+            cout << h->GetTitle() << endl;
+            h->Scale(mcscale);
+            *stack << h;
+        }
 
         c << drawoption("nostack") << padoption::Legend << *stack;
 
-    }
+
+    } // for hname
 
     c << endc;
 }
