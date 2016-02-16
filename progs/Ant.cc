@@ -179,8 +179,8 @@ int main(int argc, char** argv) {
         VLOG(5) << "ROOT File Manager: Looking at file " << inputfile;
         try {
             rootfiles->OpenFile(inputfile);
-        } catch (const std::runtime_error& e) {
-            VLOG(5) << "Could not open ROOT file " << inputfile;
+        } catch (const WrapTFile::ENotARootFile& e) {
+            VLOG(5) <<  e.what();
         }
     }
 
