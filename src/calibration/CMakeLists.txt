@@ -20,8 +20,9 @@ set(SRCS
     modules/TAPS_ToF.cc
     modules/TAPSVeto_Time.cc
     converters/GeSiCa_SADC.h
-    converters/MultiHit16bit.h
-    converters/MultiHit16bitReference.cc
+    converters/MultiHit.h
+    converters/MultiHitReference.cc
+    converters/CATCH_TDC.h
     gui/Manager.cc
     gui/Manager_traits.h
     gui/ManagerWindow.cc

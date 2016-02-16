@@ -31,9 +31,10 @@
 #include "calibration/fitfunctions/FitGausPol0.h"
 #include "calibration/fitfunctions/FitGausPol3.h"
 
-#include "calibration/converters/MultiHit16bit.h"
-#include "calibration/converters/MultiHit16bitReference.h"
+#include "calibration/converters/MultiHit.h"
+#include "calibration/converters/MultiHitReference.h"
 #include "calibration/converters/GeSiCa_SADC.h"
+#include "calibration/converters/CATCH_TDC.h"
 
 #include <limits>
 
@@ -78,20 +79,18 @@ void ant::test::EnsureSetup() {
             // they can be quite different (especially for the COMPASS TCS system), but most of them simply decode the bytes
             // to 16bit signed values
             /// \todo check if 16bit signed is correct for all those detectors
-            const auto& convert_MultiHit16bit = make_shared<calibration::converter::MultiHit16bit>();
-            const auto& convert_CATCH_Tagger = make_shared<calibration::converter::MultiHit16bitReference>(
-                        trigger->Reference_CATCH_TaggerCrate,
-                        calibration::converter::MultiHit16bitReference::CATCH_TDC_Gain
-                        );
-            const auto& convert_CATCH_CB = make_shared<calibration::converter::MultiHit16bitReference>(
-                        trigger->Reference_CATCH_CBCrate,
-                        calibration::converter::MultiHit16bitReference::CATCH_TDC_Gain
-                        );
+            const auto& convert_MultiHit16bit = make_shared<calibration::converter::MultiHit<std::uint16_t>>();
+            const auto& convert_CATCH_Tagger = make_shared<calibration::converter::CATCH_TDC>(
+                                                   trigger->Reference_CATCH_TaggerCrate
+                                                   );
+            const auto& convert_CATCH_CB = make_shared<calibration::converter::CATCH_TDC>(
+                                               trigger->Reference_CATCH_CBCrate
+                                               );
             const auto& convert_GeSiCa_SADC = make_shared<calibration::converter::GeSiCa_SADC>();
-            const auto& convert_V1190_TAPSPbWO4 =  make_shared<calibration::converter::MultiHit16bitReference>(
-                        trigger->Reference_V1190_TAPSPbWO4,
-                        calibration::converter::MultiHit16bitReference::V1190_TDC_Gain
-                        );
+            const auto& convert_V1190_TAPSPbWO4 =  make_shared<calibration::converter::MultiHitReference<std::uint16_t>>(
+                                                       trigger->Reference_V1190_TAPSPbWO4,
+                                                       calibration::converter::Gains::V1190_TDC
+                                                       );
 
             // the order of the reconstruct hooks is important
             // add both CATCH converters and the V1190 first,
