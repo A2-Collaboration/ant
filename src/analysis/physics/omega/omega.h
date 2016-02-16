@@ -165,7 +165,6 @@ protected:
 
     const std::map<int, std::shared_ptr<decaytree_t>> reaction_channels;
 
-    std::map<int, std::shared_ptr<decaytree_t>> makeChannels();
     TH1D* missed_channels = nullptr;
     TH1D* found_channels  = nullptr;
 
@@ -306,6 +305,8 @@ protected:
 public:
     OmegaEtaG2(const std::string& name, OptionsPtr opts);
     virtual ~OmegaEtaG2();
+
+    static std::map<int, std::shared_ptr<decaytree_t>> makeChannels();
 
 };
 
