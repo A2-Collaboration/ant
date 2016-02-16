@@ -135,7 +135,7 @@ void Manager::FillBufferFromFiles()
 
     if(state.it_file == input_files.end()) {
         VLOG(7) << "Reached end of files, processing remaining buffer";
-        buffer.Finish();
+        buffer.Flush();
     }
 }
 
