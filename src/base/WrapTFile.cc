@@ -33,6 +33,11 @@ std::unique_ptr<TFile> WrapTFile::openFile(const string& filename, const string 
     auto file = std_ext::make_unique<TFile>(filename.c_str(), mode.c_str());
 
     if(!file->IsOpen() || file->IsZombie()) {
+
+        if (!isROOTFile(*file)) {
+            throw ENotARootFile(filename+" is not a ROOT file");
+        }
+
         throw Exception("Could not properly open TFile at "+filename);
     }
 
@@ -45,6 +50,14 @@ std::unique_ptr<TFile> WrapTFile::openFile(const string& filename, const string 
 
 WrapTFile::WrapTFile()
 {
+}
+
+bool WrapTFile::isROOTFile(TFile &f)
+{
+    char buffer[4];
+    f.ReadBuffer(buffer, 0, 4);
+
+    return strncmp(buffer, "root", 4) == 0;
 }
 
 void traverse_dir(TDirectory* dir, std::function<void (TKey*)> func) {

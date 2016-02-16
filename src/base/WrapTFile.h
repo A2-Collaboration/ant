@@ -32,6 +32,8 @@ protected:
     std::list<std::unique_ptr<TFile>> files;
     std::unique_ptr<TFile> openFile(const std::string& filename, const std::string mode);
     WrapTFile(); // cannot be directly constructed, use WrapTFileInput or WrapTFileOutput
+
+    static bool isROOTFile(TFile& f);
 public:
 
     /**
@@ -134,6 +136,10 @@ public:
         using std::runtime_error::runtime_error;
     };
 
+    struct ENotARootFile : public Exception {
+        using Exception::Exception;
+    };
+
     virtual ~WrapTFile();
     WrapTFile(const WrapTFile&) = delete;
     WrapTFile& operator= (const WrapTFile&) = delete;
@@ -190,6 +196,8 @@ public:
 
     WrapTFileInput(const WrapTFileInput&) = delete;
     WrapTFileInput& operator= (const WrapTFileInput&) = delete;
+
+
 };
 
 }
