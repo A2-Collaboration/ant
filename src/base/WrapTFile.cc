@@ -17,7 +17,7 @@
 using namespace std;
 using namespace ant;
 
-bool warningDetected; // need that ugly global variable for ROOT's error handler
+static bool warningDetected = false; // need that ugly global variable for ROOT's error handler
 
 std::unique_ptr<TFile> WrapTFile::openFile(const string& filename, const string mode)
 {
