@@ -60,7 +60,7 @@ void ExtractResolutions::AnalyseECB(TTree* tree)
     const unsigned nElements = 720;
 
     new TCanvas();
-    auto h = Draw(tree, "E:Element",TCut(""), int(nElements), 0, nElements, 120, range.Start(), range.Stop());
+    TH2* h = Draw(tree, "E:Element", TCut(""), "Element", "Energy", BinSettings(nElements), BinSettings(120, range), "E"); //FIXME
     h->SetXTitle("Element");
     h->SetYTitle("#Delta E [MeV]");
     h->SetZTitle("# Particles");
@@ -119,7 +119,7 @@ void ExtractResolutions::AnalysePhiTAPS(TTree* tree) {
 void ExtractResolutions::AnalyseGlobalPhi(TTree* tree, double range)
 {
     new TCanvas();
-    auto h = Draw(tree, "Phi*TMath::RadToDeg()", "", 2*int(range)*10, -range, range);
+    auto h = Draw(tree, "Phi*TMath::RadToDeg()", TCut(""), "#phi [#circ]","", BinSettings(2*unsigned(range)*10, -range, range), "Phi");
     h->SetXTitle("#Delta#phi [#circ]");
     h->SetTitle("#Delta Phi, global");
 
@@ -129,7 +129,7 @@ void ExtractResolutions::AnalyseGlobalPhi(TTree* tree, double range)
 void ExtractResolutions::AnalyseGlobalTheta(TTree* tree, double range)
 {
     new TCanvas();
-    auto h = Draw(tree, "Theta*TMath::RadToDeg()", "", 2*int(range)*10, -range, range);
+    auto h = Draw(tree, "Theta*TMath::RadToDeg()", TCut(""), "#theta [#circ]", "", BinSettings(2*unsigned(range)*10, -range, range),"Theta"); // FIXME
     h->SetXTitle("#Delta#theta [#circ]");
     h->SetTitle("#Delta Theta, global");
 

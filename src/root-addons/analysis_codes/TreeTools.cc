@@ -6,22 +6,32 @@
 #include "TH3.h"
 #include "TCut.h"
 #include "TDirectory.h"
+#include "base/std_ext/string.h"
 
 using namespace std;
+using namespace ant::std_ext;
+using namespace ant::analysis;
 
-TH1* Draw(TTree* tree, const string& formula, const TCut& cut, const int bins, const double min, const double max) {
-    static unsigned n = 0;
-    const char* hname = Form("h1d_%d", n++);
-    TH1* h = new TH1D(hname,"",bins, min, max);
-    tree->Draw(Form("%s>>%s",formula.c_str(),hname),cut);
+
+TH1*Draw(TTree* tree, const string& formula, const TCut& cut, const string& xtitle, const string& ytitle, const BinSettings& xbins, const std::string& name)
+{
+    TH1* h = new TH1D(name.c_str(),"",int(xbins.Bins()), xbins.Start(), xbins.Stop());
+
+    tree->Draw(Form("%s>>%s",formula.c_str(),name.c_str()),cut);
+
+    h->SetXTitle(xtitle.c_str());
+    h->SetYTitle(ytitle.c_str());
+
     return h;
 }
 
-TH2*Draw(TTree* tree, const string& formula, const TCut& cut, const int xbins, const double xmin, const double xmax, const int ybins, const double ymin, const double ymax) {
-    static unsigned n = 0;
-    const char* hname = Form("h2d_%d", n++);
-    TH2* h = new TH2D(hname,"",xbins, xmin, xmax,ybins,ymin,ymax);
-    tree->Draw(Form("%s>>%s",formula.c_str(), hname),cut,"colz");
+TH2*Draw(TTree* tree, const string& formula, const TCut& cut, const string& xtitle, const string& ytitle, const ant::analysis::BinSettings& xbins, const ant::analysis::BinSettings& ybins, const std::string& name)
+{
+    TH2* h = new TH2D(name.c_str(),"",int(xbins.Bins()), xbins.Start(), xbins.Stop(), int(ybins.Bins()), ybins.Start(), ybins.Stop());
+    tree->Draw(Form("%s>>%s",formula.c_str(), name.c_str()), cut,"colz");
+    h->SetXTitle(xtitle.c_str());
+    h->SetYTitle(ytitle.c_str());
+
     return h;
 }
 
@@ -42,23 +52,5 @@ TH3* Draw(TTree* tree, const string& formula, const TCut& cut, const ant::analys
                 ,cut);
     TH3* h = NULL;
     gDirectory->GetObject(hname, h);
-    return h;
-}
-
-TH1*Draw(TTree* tree, const string& formula, const TCut& cut, const string& xtitle, const string& ytitle, const ant::analysis::BinSettings& xbins)
-{
-    auto h = Draw(tree, formula, cut, int(xbins.Bins()), xbins.Start(), xbins.Stop());
-    h->SetXTitle(xtitle.c_str());
-    h->SetYTitle(ytitle.c_str());
-
-    return h;
-}
-
-TH2*Draw(TTree* tree, const string& formula, const TCut& cut, const string& xtitle, const string& ytitle, const ant::analysis::BinSettings& xbins, const ant::analysis::BinSettings& ybins)
-{
-    auto h = Draw(tree, formula, cut, int(xbins.Bins()), xbins.Start(), xbins.Stop(), int(ybins.Bins()), ybins.Start(), ybins.Stop());
-    h->SetXTitle(xtitle.c_str());
-    h->SetYTitle(ytitle.c_str());
-
     return h;
 }
