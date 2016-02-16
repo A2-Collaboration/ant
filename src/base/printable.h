@@ -18,10 +18,14 @@ inline std::ostream& operator<< (std::ostream& stream, const ant::printable_trai
 template<class T>
 inline std::ostream& operator<< (std::ostream& stream, const std::vector<T>& v)
 {
-    for (auto& entry: v)
+    stream << "[";
+    for(unsigned i=0;i<v.size();i++)
     {
-        stream << entry << " , ";
+        stream << v[i];
+        if(i+1<v.size())
+            stream << ";";
     }
+    stream << "]";
     return stream;
 }
 
