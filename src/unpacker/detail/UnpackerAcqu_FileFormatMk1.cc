@@ -27,6 +27,7 @@ bool acqu::FileFormatMk1::InspectHeader(const vector<uint32_t>& buffer) const
 
 void acqu::FileFormatMk1::FillInfo(reader_t& reader, buffer_t& buffer, Info& info)
 {
+
     const acqu::AcquExptInfo_t* h = reinterpret_cast<const acqu::AcquExptInfo_t*>(buffer.data()+1);
 
     info.Format = Info::Format_t::Mk1;
@@ -41,7 +42,8 @@ void acqu::FileFormatMk1::FillInfo(reader_t& reader, buffer_t& buffer, Info& inf
 
 
     /// \todo parse some more stuff from the Mk1 header here,
-    /// but don't forget to read enough into the buffer
+    /// but don't forget to read enough into the buffer using reader
+    (void)reader; // prevent unused variable warning for now...
 
 }
 
