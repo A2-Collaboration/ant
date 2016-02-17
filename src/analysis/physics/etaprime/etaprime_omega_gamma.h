@@ -2,6 +2,8 @@
 
 #include "analysis/physics/Physics.h"
 #include "utils/particle_tools.h"
+#include "utils/KinFitter.h"
+#include "plot/PromptRandomHist.h"
 
 #include "base/ParticleTypeTree.h"
 
@@ -14,6 +16,36 @@ class TH3D;
 namespace ant {
 namespace analysis {
 namespace physics {
+
+class EtapOmegaG : public Physics {
+
+    TH1D* h_CommonCuts;
+
+
+    // variables for TTree branches
+    // shared among sig/ref analyses
+    unsigned b_nPhotonsCB;
+    unsigned b_nPhotonsTAPS;
+    double   b_CBSumVetoE;
+
+    double   b_ProtonCopl;
+    double   b_KinFitChi2;
+    double   b_TaggW;
+    double   b_TaggE;
+    double   b_TaggT;
+    unsigned b_TaggCh;
+
+    PromptRandom::Switch promptrandom;
+    utils::KinFitter kinfitter_2;
+    utils::KinFitter kinfitter_4;
+
+public:
+    EtapOmegaG(const std::string& name, OptionsPtr opts);
+    virtual void ProcessEvent(const TEvent& event, manager_t& manager) override;
+    virtual void Finish() override;
+    virtual void ShowResult() override;
+
+};
 
 class EtapOmegaG_MC : public Physics {
 

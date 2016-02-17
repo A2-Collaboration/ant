@@ -1,21 +1,174 @@
 #include "etaprime_omega_gamma.h"
+
 #include "plot/root_draw.h"
 #include "utils/particle_tools.h"
-#include "base/Logger.h"
-#include "base/std_ext/math.h"
 
 #include "plot/TH1Dcut.h"
 
-#include <cassert>
-#include <numeric>
+#include "expconfig/ExpConfig.h"
+
+#include "base/Logger.h"
+#include "base/std_ext/math.h"
 
 #include <TTree.h>
 
+#include <limits>
+
+
 using namespace std;
+using namespace ant;
 using namespace ant::analysis;
 using namespace ant::analysis::physics;
 
 
+EtapOmegaG::EtapOmegaG(const string& name, OptionsPtr opts) :
+    Physics(name, opts),
+    kinfitter_2("kinfitter_2",2),
+    kinfitter_4("kinfitter_4",4)
+{
+    promptrandom.AddPromptRange({-2.5,1.5}); // slight offset due to CBAvgTime reference
+    promptrandom.AddRandomRange({-50,-10});  // just ensure to be way off prompt peak
+    promptrandom.AddRandomRange({  10,50});
+
+    h_CommonCuts = HistFac.makeTH1D("Common Cuts", "", "#", BinSettings(10),"h_TotalEvents");
+
+    const auto setup = ant::ExpConfig::Setup::GetLastFound();
+    if(!setup)
+        throw runtime_error("EtapOmegaG needs a setup");
+    kinfitter_2.LoadSigmaData(setup->GetPhysicsFilesDirectory()+"/FitterSigmas.root");
+    kinfitter_4.LoadSigmaData(setup->GetPhysicsFilesDirectory()+"/FitterSigmas.root");
+
+}
+
+void EtapOmegaG::ProcessEvent(const TEvent& event, manager_t&)
+{
+    // we start with some general candidate handling,
+    // later we split into ref/sig analysis according to
+    // number of photons
+
+    TEventData& data = *event.Reconstructed;
+
+    h_CommonCuts->Fill("Seen",1.0);
+
+    auto& particletree = event.MCTrue->ParticleTree;
+
+    if(particletree) {
+        h_CommonCuts->Fill("MCTrue #eta'", 0); // ensure it's there...
+        // note: this might also match to g p -> eta' eta' p,
+        // but this is kinematically forbidden
+        if(utils::ParticleTools::FindParticle(ParticleTypeDatabase::EtaPrime, particletree, 1)) {
+            h_CommonCuts->Fill("MCTrue #eta'", 1);
+        }
+    }
+
+    if(data.Trigger.CBEnergySum<=550)
+        return;
+    h_CommonCuts->Fill("CBEnergySum>550",1.0);
+
+    // identify the proton here as slowest cluster in TAPS
+    /// \todo think about using beta here as in EtapProton?
+    TParticlePtr proton;
+    double proton_timing = numeric_limits<double>::quiet_NaN();
+    for(const TCandidatePtr& cand : data.Candidates) {
+        if(cand->Detector & Detector_t::Type_t::TAPS) {
+            if(!isfinite(proton_timing) || proton_timing < cand->Time) {
+                proton_timing = cand->Time;
+                proton = make_shared<TParticle>(ParticleTypeDatabase::Proton, cand);
+            }
+        }
+    }
+
+    if(!proton)
+        return;
+
+    h_CommonCuts->Fill("p in TAPS", 1.0);
+
+    // remaining candidates are photons
+    const auto nPhotons = data.Candidates.size() - 1;
+    if(nPhotons != 2 && nPhotons != 4)
+        return;
+    h_CommonCuts->Fill("nPhotons==2|4", 1.0);
+
+    TParticleList photons;
+    TLorentzVector photon_sum(0,0,0,0);
+    b_nPhotonsCB = 0;
+    b_nPhotonsTAPS = 0;
+    b_CBSumVetoE = 0;
+    for(const TCandidatePtr& cand : data.Candidates) {
+         if(cand == proton->Candidate)
+             continue;
+         if(cand->Detector & Detector_t::Type_t::CB) {
+             b_nPhotonsCB++;
+             b_CBSumVetoE += cand->VetoEnergy;
+         }
+         if(cand->Detector & Detector_t::Type_t::TAPS)
+             b_nPhotonsTAPS++;
+         auto photon = make_shared<TParticle>(ParticleTypeDatabase::Photon, cand);
+         photon_sum += *photon;
+         photons.emplace_back(move(photon));
+    }
+    assert(photons.size() == nPhotons);
+    assert(nPhotons == b_nPhotonsCB + b_nPhotonsTAPS);
+
+    // don't bother with events where proton coplanarity is not ok
+    // we use some rather large window here...
+    b_ProtonCopl = std_ext::radian_to_degree(TVector2::Phi_mpi_pi(proton->Phi() - photon_sum.Phi() - M_PI ));
+    const interval<double> ProtonCopl_cut(-30, 30);
+    if(!ProtonCopl_cut.Contains(b_ProtonCopl))
+        return;
+    h_CommonCuts->Fill("ProtonCopl ok", 1.0);
+
+    utils::KinFitter& fitter = nPhotons==2 ? kinfitter_2 : kinfitter_4;
+
+    bool kinfit_ok = false;
+    for(const TTaggerHit& taggerhit : data.TaggerHits) {
+        promptrandom.SetTaggerHit(taggerhit.Time - data.Trigger.CBTiming);
+        if(promptrandom.State() == PromptRandom::Case::Outside)
+            continue;
+
+//        // simple missing mass cut
+//        const TLorentzVector beam_target = taggerhit.GetPhotonBeam() + TLorentzVector(0, 0, 0, ParticleTypeDatabase::Proton.Mass());
+//        b_Missing = beam_target - b_PhotonSum;
+
+        b_TaggW = promptrandom.FillWeight();
+        b_TaggE = taggerhit.PhotonEnergy;
+        b_TaggT = taggerhit.Time;
+        b_TaggCh = taggerhit.Channel;
+
+        // do kinfit
+        fitter.SetEgammaBeam(taggerhit.PhotonEnergy);
+        fitter.SetProton(proton);
+        fitter.SetPhotons(photons);
+        auto fit_result = fitter.DoFit();
+
+        b_KinFitChi2 = numeric_limits<double>::quiet_NaN();
+        if(fit_result.Status == APLCON::Result_Status_t::Success) {
+            kinfit_ok = true;
+            b_KinFitChi2 = fit_result.ChiSquare;
+        }
+
+
+        /// \todo call actual analysis code
+    }
+
+    if(kinfit_ok)
+        h_CommonCuts->Fill("KinFit OK", 1.0);
+    if(nPhotons==2)
+        h_CommonCuts->Fill("nPhotons==2", 1.0);
+    if(nPhotons==4)
+        h_CommonCuts->Fill("nPhotons==4", 1.0);
+
+}
+
+void EtapOmegaG::Finish()
+{
+    canvas("Overview") << h_CommonCuts << endc;
+}
+
+void EtapOmegaG::ShowResult()
+{
+
+}
 
 
 EtapOmegaG_MC::EtapOmegaG_MC(const std::string& name, OptionsPtr opts) : Physics(name, opts),
@@ -608,8 +761,5 @@ void EtapOmegaG_MC::ShowResult()
 }
 
 
-
-
-
-
+AUTO_REGISTER_PHYSICS(EtapOmegaG)
 AUTO_REGISTER_PHYSICS(EtapOmegaG_MC)
