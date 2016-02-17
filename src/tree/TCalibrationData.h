@@ -56,11 +56,19 @@ struct TCalibrationData
     }
 
     virtual std::ostream& Print( std::ostream& s) const override {
-        s << "TCalibrationData:\n";
-        s << "  Generated at    " << std_ext::to_iso8601(TimeStamp) << " by " << Author << '\n';
-        s << "  CalibrationID:  " << CalibrationID << '\n';
-        s << "  Valid for IDs:  [" << FirstID << ", " << LastID << "]";
-        s  << '\n';
+        s << "TCalibrationData:" << std::endl;
+        s << "  Generated at    " << std_ext::to_iso8601(TimeStamp) << " by " << Author << std::endl;
+        s << "  CalibrationID:  " << CalibrationID << std::endl;
+        s << "  Valid for IDs:  [" << FirstID << ", " << LastID << "]" << std::endl;
+
+        double avgFitParameters = 0;
+        for(const TFitParameters& fitparam : FitParameters)
+            avgFitParameters += fitparam.Value.size();
+        avgFitParameters /= FitParameters.size();
+        s << "  nEntries=" << Data.size() << " nFitParameters=" << FitParameters.size()
+          << " avgFitParameters=" << avgFitParameters
+          << std::endl;
+
         return s;
     }
 #endif
