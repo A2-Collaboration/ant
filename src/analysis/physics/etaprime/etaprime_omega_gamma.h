@@ -15,7 +15,7 @@ namespace ant {
 namespace analysis {
 namespace physics {
 
-class EtapOmegaG : public Physics {
+class EtapOmegaG_MC : public Physics {
 
     struct expected_peak_t {
         double Mean;
@@ -165,7 +165,7 @@ class EtapOmegaG : public Physics {
 
     template<typename T>
     const T& getHistogram(const TParticleTree_t& particletree,
-                          const std::vector<EtapOmegaG::perDecayHists_t<T>>& perDecayHists,
+                          const std::vector<EtapOmegaG_MC::perDecayHists_t<T>>& perDecayHists,
                           int& index
                           ) {
         assert(!perDecayHists.empty());
@@ -183,7 +183,7 @@ class EtapOmegaG : public Physics {
     }
 
 public:
-    EtapOmegaG(const std::string& name, OptionsPtr opts);
+    EtapOmegaG_MC(const std::string& name, OptionsPtr opts);
     virtual void ProcessEvent(const TEvent& event, manager_t& manager) override;
     virtual void Finish() override;
     virtual void ShowResult() override;

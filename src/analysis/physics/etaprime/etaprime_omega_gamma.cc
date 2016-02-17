@@ -18,7 +18,7 @@ using namespace ant::analysis::physics;
 
 
 
-EtapOmegaG::EtapOmegaG(const std::string& name, OptionsPtr opts) : Physics(name, opts),
+EtapOmegaG_MC::EtapOmegaG_MC(const std::string& name, OptionsPtr opts) : Physics(name, opts),
     sig_HistFac("Sig",HistFac),
     ref_HistFac("Ref",HistFac),
     sig_hists(sig_HistFac),
@@ -109,13 +109,13 @@ EtapOmegaG::EtapOmegaG(const std::string& name, OptionsPtr opts) : Physics(name,
     ref_perDecayHists.emplace_back("Ref_Bkg_Other", ref_HistFac);
 }
 
-EtapOmegaG::histogram_t::histogram_t(SmartHistFactory HistFac)
+EtapOmegaG_MC::histogram_t::histogram_t(SmartHistFactory HistFac)
 {
     Steps = HistFac.makeTH1D("Steps", "", "#", BinSettings(10),"steps");
     MissedBkg = HistFac.makeTH1D("Missed Bkg channels", "", "#", BinSettings(20),"missed_bkg");
 }
 
-EtapOmegaG::sig_perDecayHists_t::sig_perDecayHists_t(SmartHistFactory HistFac)
+EtapOmegaG_MC::sig_perDecayHists_t::sig_perDecayHists_t(SmartHistFactory HistFac)
 {
     Steps = HistFac.makeTH1D("Steps", "", "#", BinSettings(10),"steps");
 
@@ -159,7 +159,7 @@ EtapOmegaG::sig_perDecayHists_t::sig_perDecayHists_t(SmartHistFactory HistFac)
     g_EtaPrime_E = HistFac.makeTH1D("#gamma^{#eta'} E in #eta'","E / MeV","#",BinSettings(500,0,300),"g_EtaPrime_E");
 }
 
-EtapOmegaG::ref_perDecayHists_t::ref_perDecayHists_t(SmartHistFactory HistFac)
+EtapOmegaG_MC::ref_perDecayHists_t::ref_perDecayHists_t(SmartHistFactory HistFac)
 {
     Steps = HistFac.makeTH1D("Steps", "", "#", BinSettings(10),"steps");
 
@@ -185,7 +185,7 @@ EtapOmegaG::ref_perDecayHists_t::ref_perDecayHists_t(SmartHistFactory HistFac)
     Proton_Energy = HistFac.makeTH1D("p #delta(E)","#deltaE / MeV","",BinSettings(400,-50,350),"Proton_Energy");
 }
 
-void EtapOmegaG::sig_TTree_t::SetBranches()
+void EtapOmegaG_MC::sig_TTree_t::SetBranches()
 {
     Tree->Branch("MCTrueIndex", &MCTrueIndex);
 
@@ -205,14 +205,14 @@ void EtapOmegaG::sig_TTree_t::SetBranches()
     EtaPrime.SetBranches(Tree, "EtaPrime");
 }
 
-void EtapOmegaG::ref_TTree_t::SetBranches()
+void EtapOmegaG_MC::ref_TTree_t::SetBranches()
 {
     Tree->Branch("MCTrueIndex", &MCTrueIndex);
 
     Proton.SetBranches(Tree, "Proton");
 }
 
-void EtapOmegaG::ProcessEvent(const TEvent& event, manager_t&)
+void EtapOmegaG_MC::ProcessEvent(const TEvent& event, manager_t&)
 {
     const auto& data = *event.Reconstructed;
 
@@ -242,7 +242,7 @@ void EtapOmegaG::ProcessEvent(const TEvent& event, manager_t&)
     }
 }
 
-void EtapOmegaG::ProcessSig(const TParticleTree_t& particletree,
+void EtapOmegaG_MC::ProcessSig(const TParticleTree_t& particletree,
                             const TEventData& data)
 {
     TH1D* steps = sig_hists.Steps;
@@ -465,7 +465,7 @@ void EtapOmegaG::ProcessSig(const TParticleTree_t& particletree,
     sig_TTree.Tree->Fill();
 }
 
-void EtapOmegaG::ProcessRef(const TParticleTree_t& particletree,
+void EtapOmegaG_MC::ProcessRef(const TParticleTree_t& particletree,
                             const TEventData& data)
 {
     TH1D* steps = ref_hists.Steps;
@@ -560,11 +560,11 @@ void EtapOmegaG::ProcessRef(const TParticleTree_t& particletree,
 }
 
 
-void EtapOmegaG::Finish()
+void EtapOmegaG_MC::Finish()
 {
 }
 
-void EtapOmegaG::ShowResult()
+void EtapOmegaG_MC::ShowResult()
 {
     canvas c_steps(GetName()+": Overview");
     c_steps << h_TotalEvents
@@ -612,4 +612,4 @@ void EtapOmegaG::ShowResult()
 
 
 
-AUTO_REGISTER_PHYSICS(EtapOmegaG)
+AUTO_REGISTER_PHYSICS(EtapOmegaG_MC)
