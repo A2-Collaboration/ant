@@ -9,6 +9,7 @@ set(DICT_HEADERS
     DetectorPlots.h
     BrowseHistograms.h
     RootPointerFun.h
+    PlotTimings.h
   )
 
 set(SRCS
@@ -21,6 +22,7 @@ set(SRCS
     DetectorPlots.cc
     BrowseHistograms.cc
     RootPointerFun.cc
+    PlotTimings.cc
   )
 
 set(ROOT_DICTIONARY "${CMAKE_CURRENT_BINARY_DIR}/G__analysis_codes.cc")
