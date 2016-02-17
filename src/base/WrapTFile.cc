@@ -142,7 +142,7 @@ WrapTFileOutput::~WrapTFileOutput()
 {
     files.front()->Write();
     LOG(INFO) << "Wrote output file " <<  files.front()->GetName()
-              << " (" << (double)files.front()->GetFileBytesWritten()/(1 << 20) << " MB)";
+              << " (" << (double)files.front()->GetBytesWritten()/(1 << 20) << " MB)";
 }
 
 void WrapTFileOutput::cd()
