@@ -34,15 +34,12 @@ public:
 
     public:
 
-
-        virtual ~Type() {}
-
         const std::string& PrintName()  const { return print_name; }
         const std::string& Name()       const { return name; }
         mev_t Mass()                    const { return mass; }
         bool  Charged()                 const { return charged; }
 
-        virtual bool operator== (const Type& rhs) const {
+        bool operator== (const Type& rhs) const {
             if( this == &rhs )
                 return true;
             if( sametype == &rhs )
@@ -50,6 +47,10 @@ public:
             if( rhs.sametype == this )
                 return true;
             return false;
+        }
+
+        bool operator!= (const Type& rhs) const {
+            return !this->operator==(rhs);
         }
 
         Type(const Type&) = delete;
@@ -80,6 +81,7 @@ public:
 
     static const Type Proton;
     static const Type Neutron;
+    static const Type Nucleon;
     static const Type Photon;
     static const Type Pi0;
     static const Type PiPlus;

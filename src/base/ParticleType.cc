@@ -1,6 +1,8 @@
 #include "base/ParticleType.h"
 #include <iostream>
 
+#include "base/std_ext/math.h"
+
 using namespace std;
 using namespace ant;
 
@@ -15,8 +17,9 @@ ostream& operator<<(ostream &stream, const ParticleTypeDatabase::Type& particle_
 unsigned ParticleTypeDatabase::Type::NextUID;
 ParticleTypeDatabase::Particles_t ParticleTypeDatabase::types;
 
-const ParticleTypeDatabase::Type ParticleTypeDatabase::Proton("Proton",               "p",            938.272046, true);
-const ParticleTypeDatabase::Type ParticleTypeDatabase::Neutron("Neutron",             "n",            939.565378, false);
+const ParticleTypeDatabase::Type ParticleTypeDatabase::Nucleon("Nucleon",             "Nucleon",      std_ext::NaN, false);
+const ParticleTypeDatabase::Type ParticleTypeDatabase::Proton("Proton",               "p",            938.272046, true, &ParticleTypeDatabase::Nucleon);
+const ParticleTypeDatabase::Type ParticleTypeDatabase::Neutron("Neutron",             "n",            939.565378, false, &ParticleTypeDatabase::Nucleon);
 const ParticleTypeDatabase::Type ParticleTypeDatabase::Photon("Photon",               "#gamma",       0.0,        false);
 
 const ParticleTypeDatabase::Type ParticleTypeDatabase::Pi0("Pi0",                     "#pi^{0}",      134.9766,  false);
@@ -37,7 +40,7 @@ const ParticleTypeDatabase::Type ParticleTypeDatabase::Omega("Omega",           
 const ParticleTypeDatabase::Type ParticleTypeDatabase::EtaPrime("EtaPrime",           "#eta'",         957.78, false);
 const ParticleTypeDatabase::Type ParticleTypeDatabase::Rho("Rho",                     "#rho'",         775.26, false);
 
-const ParticleTypeDatabase::Type ParticleTypeDatabase::BeamTarget("BeamTarget",       "BeamTarget",    0, false);
+const ParticleTypeDatabase::Type ParticleTypeDatabase::BeamTarget("BeamTarget",       "BeamTarget",    std_ext::NaN, false);
 const ParticleTypeDatabase::Type ParticleTypeDatabase::BeamProton("BeamProton",       "(#gamma p)",    938.272046, true,  &ParticleTypeDatabase::BeamTarget);
 const ParticleTypeDatabase::Type ParticleTypeDatabase::BeamNeutron("BeamNeutron",      "(#gamma n)",    939.565378, false, &ParticleTypeDatabase::BeamTarget);
 
