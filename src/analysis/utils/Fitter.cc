@@ -19,6 +19,8 @@
 
 #include <cassert>
 
+#include "utils/particle_tools.h"
+
 using namespace std;
 using namespace ant;
 using namespace ant::std_ext;
@@ -388,7 +390,112 @@ KinFitter::PhotonBeamVector::PhotonBeamVector(const string& name):
 }
 
 
+TreeFitter::TreeFitter(const string& name, ParticleTypeTree ptree) :
+    Fitter(name)
+{
+    tree = Tree<Node_t>::MakeNode(ptree);
+    WalkTree(ptree, tree);
 
+    vector<unsigned> p;
+    for(unsigned i=0;i<tree_leaves.size();i++)
+        p.push_back(i);
 
+    struct unique_perm_t {
+        vector<unsigned> Perm;
+        tree_t Tree;
+    };
 
+    vector<unique_perm_t> unique_permutations;
 
+    do {
+        for(unsigned i=0;i<tree_leaves.size();i++)
+            tree_leaves[i]->Get().leave_sum = 1 << p[i];
+
+        CalcSum(tree);
+
+        tree->Sort([] (const Node_t& a, const Node_t& b) {
+            bool a_less_b = a.TypeTree->Get() < b.TypeTree->Get();
+            bool b_less_a = b.TypeTree->Get() < a.TypeTree->Get();
+            if(!a_less_b && !b_less_a) {
+                return a.leave_sum < b.leave_sum;
+            }
+            return a_less_b;
+        });
+
+        bool found = false;
+        for(const unique_perm_t& u : unique_permutations) {
+            if(IsEqual(u.Tree, tree)) {
+                found = true;
+                break;
+            }
+        }
+        if(!found) {
+            unique_perm_t u;
+            u.Perm = p;
+            auto t  = Tree<Node_t>::MakeNode(tree->Get().TypeTree);
+            CopyTree(tree, t);
+            u.Tree = t;
+            unique_permutations.emplace_back(move(u));
+        }
+    }
+    while(std::next_permutation(p.begin(), p.end()));
+
+    cout << "Unique Permutations:" << unique_permutations.size() << endl;
+    for(const unique_perm_t& u : unique_permutations) {
+        cout << u.Perm << endl;
+    }
+
+    cout << "Decay: " << ParticleTools::GetDecayString(ptree) << endl;
+}
+
+void TreeFitter::WalkTree(ParticleTypeTree ptree, tree_t tree)
+{
+    for(auto daughter : ptree->Daughters()) {
+        auto& d = tree->CreateDaughter(daughter);
+        if(daughter->Daughters().empty())
+            tree_leaves.push_back(d);
+        else
+            WalkTree(daughter, d);
+    }
+}
+
+void TreeFitter::CalcSum(tree_t tree)
+{
+    if(!tree->Daughters().empty())
+        tree->Get().leave_sum = 0;
+    for(auto daughter : tree->Daughters()) {
+        CalcSum(daughter);
+        tree->Get().leave_sum += daughter->Get().leave_sum;
+    }
+}
+
+void TreeFitter::CopyTree(tree_t source, tree_t dest)
+{
+    dest->Get().leave_sum = source->Get().leave_sum;
+    for(auto daughter : source->Daughters()) {
+        CopyTree(daughter, dest->CreateDaughter(daughter->Get().TypeTree));
+    }
+}
+
+bool TreeFitter::IsEqual(tree_t a, tree_t b)
+{
+    assert(a->Daughters().size() == b->Daughters().size());
+    assert(a->Get().TypeTree->Get() == b->Get().TypeTree->Get());
+
+    // ignore leaves
+    if(a->Daughters().empty())
+        return true;
+
+    if(a->Get().leave_sum != b->Get().leave_sum)
+        return false;
+
+    auto it_a = a->Daughters().begin();
+    auto it_b = b->Daughters().begin();
+
+    for(; it_a != a->Daughters().end() && it_b != b->Daughters().end(); ++it_a, ++it_b) {
+        if(!IsEqual(*it_a, *it_b))
+            return false;
+    }
+
+    return true;
+}

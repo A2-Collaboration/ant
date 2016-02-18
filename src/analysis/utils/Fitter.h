@@ -1,17 +1,18 @@
 #pragma once
 
 #include "tree/TParticle.h"
-
-#include <string>
-#include <vector>
-#include <memory>
-#include <array>
+#include "base/ParticleTypeTree.h"
 
 #include "TLorentzVector.h"
 
 #include "APLCON.hpp"
 
 #include <stdexcept>
+#include <string>
+#include <vector>
+#include <memory>
+#include <set>
+#include <functional>
 
 class TTree;
 class TH1D;
@@ -128,6 +129,19 @@ private:
 
 class KinFitter : public Fitter
 {
+public:
+
+    KinFitter(const std::string& name, unsigned numGammas);
+
+    void SetEgammaBeam(const double& ebeam);
+    void SetProton(const TParticlePtr& proton);
+    void SetPhotons(const TParticleList& photons);
+
+    TParticlePtr GetFittedProton() const;
+    TParticleList GetFittedPhotons() const;
+    double GetFittedBeamE() const;
+
+    void SetupBranches(TTree* tree, std::string branch_prefix="");
 
 protected:
 
@@ -157,20 +171,39 @@ protected:
 
     PhotonBeamVector Beam = PhotonBeamVector("Beam");
 
-public:
-
-    KinFitter(const std::string& name, unsigned numGammas);
-
-    void SetEgammaBeam(const double& ebeam);
-    void SetProton(const TParticlePtr& proton);
-    void SetPhotons(const TParticleList& photons);
-
-    TParticlePtr GetFittedProton() const;
-    TParticleList GetFittedPhotons() const;
-    double GetFittedBeamE() const;
-
-    void SetupBranches(TTree* tree, std::string branch_prefix="");
-
 };
+
+class TreeFitter : public Fitter
+{
+
+public:
+    TreeFitter(const std::string& name, ParticleTypeTree ptree);
+
+protected:
+
+    struct Node_t {
+        Node_t(ParticleTypeTree ptree) : TypeTree(ptree) {}
+        ParticleTypeTree TypeTree;
+        TParticlePtr Particle;
+        TParticlePtr FittedParticle;
+    private:
+        friend class TreeFitter;
+        std::uint64_t leave_sum = 0;
+    };
+
+    using tree_t = std::shared_ptr<Tree<Node_t>>;
+
+    void WalkTree(ParticleTypeTree ptree, tree_t tree);
+
+    static void CalcSum(tree_t tree);
+    static void CopyTree(tree_t source, tree_t dest);
+    static bool IsEqual(tree_t a, tree_t b);
+
+    tree_t tree;
+
+    std::vector<tree_t> tree_leaves;
+};
+
+
 
 }}} // namespace ant::analysis::utils
