@@ -20,12 +20,14 @@ namespace physics {
 class EtapOmegaG : public Physics {
 
     TH1D* h_CommonCuts;
-
+    TH1D* h_MissedBkg;
 
     // variables for TTree branches
     // shared among sig/ref analyses
 
     TTree* treeCommon;
+    bool     b_IsSignal;
+    unsigned b_MCTrue;
     unsigned b_nPhotonsCB;
     unsigned b_nPhotonsTAPS;
     double   b_CBSumVetoE;
@@ -51,29 +53,35 @@ class EtapOmegaG : public Physics {
         TParticleList Photons;
     };
 
+    struct Sig_t {
+        TTree* Tree;
+        void SetupBranches();
+        void ResetBranches();
+        void Process(const Particles_t& particles);
+    };
+
     struct Ref_t {
         TTree* Tree;
         double b_IM_2g;
         void SetupBranches();
-        void Process(const Particles_t& particles);
-    };
-    struct Sig_t {
-        TTree* Tree;
-        void SetupBranches();
+        void ResetBranches();
         void Process(const Particles_t& particles);
     };
 
-    Ref_t Ref;
-    Ref_t RefFitted;
     Sig_t Sig;
     Sig_t SigFitted;
+    Ref_t Ref;
+    Ref_t RefFitted;
+
+
+    ParticleTypeTree ptreeSignal;
+    ParticleTypeTree ptreeReference;
+    static const std::vector<ParticleTypeTree> ptreeBackgrounds;
 
 public:
     EtapOmegaG(const std::string& name, OptionsPtr opts);
     virtual void ProcessEvent(const TEvent& event, manager_t& manager) override;
-    virtual void Finish() override;
     virtual void ShowResult() override;
-
 };
 
 class EtapOmegaG_MC : public Physics {

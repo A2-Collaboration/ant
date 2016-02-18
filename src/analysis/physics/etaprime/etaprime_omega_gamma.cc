@@ -37,6 +37,8 @@ EtapOmegaG::EtapOmegaG(const string& name, OptionsPtr opts) :
 
 
     h_CommonCuts = HistFac.makeTH1D("Common Cuts", "", "#", BinSettings(10),"h_TotalEvents");
+    h_MissedBkg = HistFac.makeTH1D("Missed Background", "", "#", BinSettings(25),"h_MissedBkg");
+
 
     const auto setup = ant::ExpConfig::Setup::GetLastFound();
     if(!setup)
@@ -46,14 +48,17 @@ EtapOmegaG::EtapOmegaG(const string& name, OptionsPtr opts) :
 
     treeCommon = HistFac.makeTTree("treeCommon");
 
-    Ref.Tree = HistFac.makeTTree("treeRef");
-    RefFitted.Tree = HistFac.makeTTree("treeRefFitted");
     Sig.Tree = HistFac.makeTTree("treeSig");
     SigFitted.Tree = HistFac.makeTTree("treeSigFitted");
+    Ref.Tree = HistFac.makeTTree("treeRef");
+    RefFitted.Tree = HistFac.makeTTree("treeRefFitted");
+
 
 #define ADD_BRANCH(name) \
     treeCommon->Branch(#name,addressof(b_ ## name));
 
+    ADD_BRANCH(IsSignal);
+    ADD_BRANCH(MCTrue);
     ADD_BRANCH(nPhotonsCB);
     ADD_BRANCH(nPhotonsTAPS);
     ADD_BRANCH(CBSumVetoE);
@@ -69,10 +74,14 @@ EtapOmegaG::EtapOmegaG(const string& name, OptionsPtr opts) :
 
 #undef ADD_BRANCH
 
-    Ref.SetupBranches();
-    RefFitted.SetupBranches();
+
     Sig.SetupBranches();
     SigFitted.SetupBranches();
+    Ref.SetupBranches();
+    RefFitted.SetupBranches();
+
+    ptreeSignal = ParticleTypeTreeDatabase::Get(ParticleTypeTreeDatabase::Channel::EtaPrime_gOmega_ggPi0_4g);
+    ptreeReference = ParticleTypeTreeDatabase::Get(ParticleTypeTreeDatabase::Channel::EtaPrime_2g);
 
 }
 
@@ -169,14 +178,51 @@ void EtapOmegaG::ProcessEvent(const TEvent& event, manager_t&)
         }
     }
 
+    // select signal or reference according to nPhotons
 
-    utils::KinFitter& fitter = nPhotons==2 ? kinfitter_2 : kinfitter_4;
-
-    if(nPhotons==2)
-        Ref.Process(particles);
-    else
+    b_IsSignal = nPhotons == 4; // else nPhotons==2, so reference
+    utils::KinFitter& fitter = b_IsSignal ? kinfitter_4 : kinfitter_2;
+    if(b_IsSignal) {
         Sig.Process(particles);
+        Ref.ResetBranches();
+    }
+    else {
+        Ref.Process(particles);
+        Sig.ResetBranches();
+    }
 
+    // do some MCTrue identification (if available)
+    b_MCTrue = 0; // indicate data by default
+    if(particletree) {
+        auto get_mctrue = [] (ParticleTypeTree expected, TParticleTree_t particletree) -> unsigned {
+            if(particletree->IsEqual(expected, utils::ParticleTools::MatchByParticleName))
+                return 1;
+            unsigned n = 10;
+            for(const auto& ptreeBkg : ptreeBackgrounds) {
+                if(particletree->IsEqual(ptreeBkg, utils::ParticleTools::MatchByParticleName))
+                    return n;
+                n++;
+            }
+            return 9; // missed background
+        };
+
+        // 1=Signal, 2=Reference, 9=MissedBkg, >=10 found in ptreeBackgrounds
+        if(b_IsSignal) {
+            b_MCTrue = get_mctrue(ptreeSignal, particletree);
+        }
+        else {
+            b_MCTrue = get_mctrue(ptreeReference, particletree);
+            if(b_MCTrue==1)
+                b_MCTrue++;
+        }
+
+        if(b_MCTrue==9) {
+            const auto& decaystr = utils::ParticleTools::GetDecayString(particletree);
+            h_MissedBkg->Fill(decaystr.c_str(), 1.0);
+        }
+    }
+
+    // loop over tagger hits, do KinFit
     bool kinfit_ok = false;
     for(const TTaggerHit& taggerhit : data.TaggerHits) {
         promptrandom.SetTaggerHit(taggerhit.Time - b_CBAvgTime);
@@ -207,27 +253,48 @@ void EtapOmegaG::ProcessEvent(const TEvent& event, manager_t&)
             Particles_t fitted_particles;
             fitted_particles.Proton = fitter.GetFittedProton();
             fitted_particles.Photons = fitter.GetFittedPhotons();
-            if(nPhotons==2)
-                RefFitted.Process(fitted_particles);
-            else
+            if(b_IsSignal) {
                 SigFitted.Process(fitted_particles);
+                RefFitted.ResetBranches();
+            }
+            else {
+                RefFitted.Process(fitted_particles);
+                SigFitted.ResetBranches();
+            }
         }
 
         treeCommon->Fill();
-        Ref.Tree->Fill();
-        RefFitted.Tree->Fill();
         Sig.Tree->Fill();
         SigFitted.Tree->Fill();
+        Ref.Tree->Fill();
+        RefFitted.Tree->Fill();
+
     }
 
     if(kinfit_ok)
         h_CommonCuts->Fill("KinFit OK", 1.0);
-
     if(nPhotons==2)
         h_CommonCuts->Fill("nPhotons==2", 1.0);
     if(nPhotons==4)
         h_CommonCuts->Fill("nPhotons==4", 1.0);
 
+}
+
+
+
+void EtapOmegaG::Sig_t::SetupBranches()
+{
+
+}
+
+void EtapOmegaG::Sig_t::ResetBranches()
+{
+
+}
+
+void EtapOmegaG::Sig_t::Process(const EtapOmegaG::Particles_t& particles)
+{
+    assert(particles.Photons.size() == 4);
 }
 
 void EtapOmegaG::Ref_t::SetupBranches()
@@ -241,34 +308,35 @@ void EtapOmegaG::Ref_t::SetupBranches()
 
 }
 
+void EtapOmegaG::Ref_t::ResetBranches()
+{
+    b_IM_2g = numeric_limits<double>::quiet_NaN();
+}
+
 void EtapOmegaG::Ref_t::Process(const EtapOmegaG::Particles_t& particles)
 {
     assert(particles.Photons.size() == 2);
-
     b_IM_2g = (*particles.Photons.front() + *particles.Photons.back()).M();
-
-}
-
-void EtapOmegaG::Sig_t::SetupBranches()
-{
-
-}
-
-void EtapOmegaG::Sig_t::Process(const EtapOmegaG::Particles_t& particles)
-{
-    assert(particles.Photons.size() == 4);
-}
-
-void EtapOmegaG::Finish()
-{
-    canvas("Overview") << h_CommonCuts << endc;
 }
 
 void EtapOmegaG::ShowResult()
 {
-
+    canvas("Overview") << h_CommonCuts << h_MissedBkg << endc;
 }
 
+
+const std::vector<ParticleTypeTree> EtapOmegaG::ptreeBackgrounds = {
+    ParticleTypeTreeDatabase::Get(ParticleTypeTreeDatabase::Channel::Pi0_2g),
+    ParticleTypeTreeDatabase::Get(ParticleTypeTreeDatabase::Channel::TwoPi0_4g),
+    ParticleTypeTreeDatabase::Get(ParticleTypeTreeDatabase::Channel::Pi0Eta_4g),
+    ParticleTypeTreeDatabase::Get(ParticleTypeTreeDatabase::Channel::ThreePi0_6g),
+    ParticleTypeTreeDatabase::Get(ParticleTypeTreeDatabase::Channel::Omega_gPi0_3g),
+    ParticleTypeTreeDatabase::Get(ParticleTypeTreeDatabase::Channel::Omega_Pi0PiPPiM_2g),
+    ParticleTypeTreeDatabase::Get(ParticleTypeTreeDatabase::Channel::EtaPrime_2Pi0Eta_6g),
+    ParticleTypeTreeDatabase::Get(ParticleTypeTreeDatabase::Channel::TwoPi0_2ggEpEm),
+    ParticleTypeTreeDatabase::Get(ParticleTypeTreeDatabase::Channel::ThreePi0_4ggEpEm),
+    ParticleTypeTreeDatabase::Get(ParticleTypeTreeDatabase::Channel::Eta_2g),
+};
 
 EtapOmegaG_MC::EtapOmegaG_MC(const std::string& name, OptionsPtr opts) : Physics(name, opts),
     sig_HistFac("Sig",HistFac),
@@ -298,17 +366,17 @@ EtapOmegaG_MC::EtapOmegaG_MC(const std::string& name, OptionsPtr opts) : Physics
     sig_perDecayHists.emplace_back(
                 "Sig_Bkg_2pi0",
                 sig_HistFac,
-                ParticleTypeTreeDatabase::Get(ParticleTypeTreeDatabase::Channel::Direct2Pi0_4g)
+                ParticleTypeTreeDatabase::Get(ParticleTypeTreeDatabase::Channel::TwoPi0_4g)
                 );
     sig_perDecayHists.emplace_back(
                 "Sig_Bkg_pi0eta",
                 sig_HistFac,
-                ParticleTypeTreeDatabase::Get(ParticleTypeTreeDatabase::Channel::DirectPi0Eta_4g)
+                ParticleTypeTreeDatabase::Get(ParticleTypeTreeDatabase::Channel::Pi0Eta_4g)
                 );
     sig_perDecayHists.emplace_back(
                 "Sig_Bkg_3pi0",
                 sig_HistFac,
-                ParticleTypeTreeDatabase::Get(ParticleTypeTreeDatabase::Channel::Direct3Pi0_6g)
+                ParticleTypeTreeDatabase::Get(ParticleTypeTreeDatabase::Channel::ThreePi0_6g)
                 );
     sig_perDecayHists.emplace_back(
                 "Sig_Bkg_OmegaPi0g",
@@ -318,7 +386,7 @@ EtapOmegaG_MC::EtapOmegaG_MC(const std::string& name, OptionsPtr opts) : Physics
     sig_perDecayHists.emplace_back(
                 "Sig_Bkg_1pi0",
                 sig_HistFac,
-                ParticleTypeTreeDatabase::Get(ParticleTypeTreeDatabase::Channel::Direct1Pi0_2g)
+                ParticleTypeTreeDatabase::Get(ParticleTypeTreeDatabase::Channel::Pi0_2g)
                 );
     sig_perDecayHists.emplace_back(
                 "Sig_Bkg_Etap_Eta2Pi0",
@@ -328,12 +396,12 @@ EtapOmegaG_MC::EtapOmegaG_MC(const std::string& name, OptionsPtr opts) : Physics
     sig_perDecayHists.emplace_back(
                 "Sig_Bkg_2pi0_1Dalitz",
                 sig_HistFac,
-                ParticleTypeTreeDatabase::Get(ParticleTypeTreeDatabase::Channel::Direct2Pi0_2ggEpEm)
+                ParticleTypeTreeDatabase::Get(ParticleTypeTreeDatabase::Channel::TwoPi0_2ggEpEm)
                 );
     sig_perDecayHists.emplace_back(
                 "Sig_Bkg_3pi0_1Dalitz",
                 sig_HistFac,
-                ParticleTypeTreeDatabase::Get(ParticleTypeTreeDatabase::Channel::Direct3Pi0_4ggEpEm)
+                ParticleTypeTreeDatabase::Get(ParticleTypeTreeDatabase::Channel::ThreePi0_4ggEpEm)
                 );
     sig_perDecayHists.emplace_back("Signal_Bkg_Other", sig_HistFac);
 
@@ -346,17 +414,17 @@ EtapOmegaG_MC::EtapOmegaG_MC(const std::string& name, OptionsPtr opts) : Physics
     ref_perDecayHists.emplace_back(
                 "Ref_Bkg_2pi0",
                 ref_HistFac,
-                ParticleTypeTreeDatabase::Get(ParticleTypeTreeDatabase::Channel::Direct2Pi0_4g)
+                ParticleTypeTreeDatabase::Get(ParticleTypeTreeDatabase::Channel::TwoPi0_4g)
                 );
     ref_perDecayHists.emplace_back(
                 "Ref_Bkg_pi0eta",
                 ref_HistFac,
-                ParticleTypeTreeDatabase::Get(ParticleTypeTreeDatabase::Channel::DirectPi0Eta_4g)
+                ParticleTypeTreeDatabase::Get(ParticleTypeTreeDatabase::Channel::Pi0Eta_4g)
                 );
     ref_perDecayHists.emplace_back(
                 "Ref_Bkg_1pi0",
                 ref_HistFac,
-                ParticleTypeTreeDatabase::Get(ParticleTypeTreeDatabase::Channel::Direct1Pi0_2g)
+                ParticleTypeTreeDatabase::Get(ParticleTypeTreeDatabase::Channel::Pi0_2g)
                 );
     ref_perDecayHists.emplace_back("Ref_Bkg_Other", ref_HistFac);
 }
