@@ -27,17 +27,39 @@ class EtapOmegaG : public Physics {
     unsigned b_nPhotonsCB;
     unsigned b_nPhotonsTAPS;
     double   b_CBSumVetoE;
+    double   b_CBAvgTime;
+    double   b_PIDSumE;
 
     double   b_ProtonCopl;
     double   b_KinFitChi2;
     double   b_TaggW;
+    double   b_TaggW_tight;
     double   b_TaggE;
     double   b_TaggT;
     unsigned b_TaggCh;
 
     PromptRandom::Switch promptrandom;
+    PromptRandom::Switch promptrandom_tight;
+
     utils::KinFitter kinfitter_2;
     utils::KinFitter kinfitter_4;
+
+    struct Particles_t {
+        TParticlePtr  Proton;
+        TParticleList Photons;
+    };
+
+    struct Ref_t {
+        void Process(const Particles_t& particles);
+    };
+    struct Sig_t {
+        void Process(const Particles_t& particles);
+    };
+
+    Ref_t Ref;
+    Ref_t RefFitted;
+    Sig_t Sig;
+    Sig_t SigFitted;
 
 public:
     EtapOmegaG(const std::string& name, OptionsPtr opts);
