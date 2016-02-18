@@ -128,6 +128,7 @@ void Etap3pi0::ProcessEvent(const TEvent& event, manager_t&)
         vars.taggCh        = unsigned(t.Channel);
         vars.taggTime      = t.Time;
     }
+    tree->Fill();
  }
 
 
