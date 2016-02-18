@@ -12,13 +12,13 @@ using ParticleTypeTree = std::shared_ptr<Tree<const ParticleTypeDatabase::Type&>
 class ParticleTypeTreeDatabase {
 public:
     enum class Channel {
-        Direct3Pi0_6g,
-        Direct2Pi0_4g,
-        Direct1Pi0_2g,
-        Direct2Pi0_2ggEpEm,
-        Direct3Pi0_4ggEpEm,
-        DirectPi0Eta_4g,
-        DirectEta_2g,
+        ThreePi0_6g,
+        TwoPi0_4g,
+        Pi0_2g,
+        TwoPi0_2ggEpEm,
+        ThreePi0_4ggEpEm,
+        Pi0Eta_4g,
+        Eta_2g,
         Omega_gEta_3g,
         Omega_gPi0_3g,
         Omega_Pi0PiPPiM_2g,

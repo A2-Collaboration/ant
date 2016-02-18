@@ -47,33 +47,33 @@ ParticleTypeTreeDatabase::database_t ParticleTypeTreeDatabase::CreateDatabase()
 {
     database_t database;
 
-    database[Channel::Direct1Pi0_2g] = GetBaseTree();
-    add_Pi0_2g(database[Channel::Direct1Pi0_2g]);
+    database[Channel::Pi0_2g] = GetBaseTree();
+    add_Pi0_2g(database[Channel::Pi0_2g]);
 
-    database[Channel::Direct2Pi0_4g] = GetBaseTree();
-    add_Pi0_2g(database[Channel::Direct2Pi0_4g]);
-    add_Pi0_2g(database[Channel::Direct2Pi0_4g]);
+    database[Channel::TwoPi0_4g] = GetBaseTree();
+    add_Pi0_2g(database[Channel::TwoPi0_4g]);
+    add_Pi0_2g(database[Channel::TwoPi0_4g]);
 
-    database[Channel::Direct3Pi0_6g] = GetBaseTree();
-    add_Pi0_2g(database[Channel::Direct3Pi0_6g]);
-    add_Pi0_2g(database[Channel::Direct3Pi0_6g]);
-    add_Pi0_2g(database[Channel::Direct3Pi0_6g]);
+    database[Channel::ThreePi0_6g] = GetBaseTree();
+    add_Pi0_2g(database[Channel::ThreePi0_6g]);
+    add_Pi0_2g(database[Channel::ThreePi0_6g]);
+    add_Pi0_2g(database[Channel::ThreePi0_6g]);
 
-    database[Channel::Direct2Pi0_2ggEpEm] = GetBaseTree();
-    add_Pi0_2g(database[Channel::Direct2Pi0_2ggEpEm]);
-    add_Pi0_gEpEm(database[Channel::Direct2Pi0_2ggEpEm]);
+    database[Channel::TwoPi0_2ggEpEm] = GetBaseTree();
+    add_Pi0_2g(database[Channel::TwoPi0_2ggEpEm]);
+    add_Pi0_gEpEm(database[Channel::TwoPi0_2ggEpEm]);
 
-    database[Channel::Direct3Pi0_4ggEpEm] = GetBaseTree();
-    add_Pi0_2g(database[Channel::Direct3Pi0_4ggEpEm]);
-    add_Pi0_2g(database[Channel::Direct3Pi0_4ggEpEm]);
-    add_Pi0_gEpEm(database[Channel::Direct3Pi0_4ggEpEm]);
+    database[Channel::ThreePi0_4ggEpEm] = GetBaseTree();
+    add_Pi0_2g(database[Channel::ThreePi0_4ggEpEm]);
+    add_Pi0_2g(database[Channel::ThreePi0_4ggEpEm]);
+    add_Pi0_gEpEm(database[Channel::ThreePi0_4ggEpEm]);
 
-    database[Channel::DirectPi0Eta_4g] = GetBaseTree();
-    add_Pi0_2g(database[Channel::DirectPi0Eta_4g]);
-    add_Type_2g(database[Channel::DirectPi0Eta_4g], ParticleTypeDatabase::Eta);
+    database[Channel::Pi0Eta_4g] = GetBaseTree();
+    add_Pi0_2g(database[Channel::Pi0Eta_4g]);
+    add_Type_2g(database[Channel::Pi0Eta_4g], ParticleTypeDatabase::Eta);
 
-    database[Channel::DirectEta_2g] = GetBaseTree();
-    add_Type_2g(database[Channel::DirectEta_2g],ParticleTypeDatabase::Eta);
+    database[Channel::Eta_2g] = GetBaseTree();
+    add_Type_2g(database[Channel::Eta_2g],ParticleTypeDatabase::Eta);
 
     {
         database[Channel::Omega_Pi0PiPPiM_2g] = GetBaseTree();
