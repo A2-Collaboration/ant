@@ -1,8 +1,8 @@
 #pragma once
 
+#include "analysis/utils/KinFitter.h"
 #include "analysis/physics/Physics.h"
-
-#include <APLCON.hpp>
+#include "analysis/plot/PromptRandomHist.h"
 
 class TH1D;
 class TTree;
@@ -56,124 +56,50 @@ protected:
         { {0, 5}, {1, 4}, {2, 3} }
     };
 
-    // =======================   aplcon    =====================================================
+    ant::analysis::PromptRandom::Switch promptrandom;
+    utils::KinFitter fitter;
+    TTree* tree;
 
+    struct branches {
+        TLorentzVector proton= {};
 
-    class KinFitter
-    {
+        TLorentzVector fittedProton= {};
 
-    private:
-        struct kinVector
-        {
-            const std::string Name;
-            const unsigned nPhotons = 6;
+        TLorentzVector trueProton= {};
 
-            double Ek;
-            double Theta;
-            double Phi;
+        TLorentzVector MM= {};
 
-            double sEk;
-            double sTheta;
-            double sPhi;
+        double coplanarity= {};
 
-            double energySmear(const double& E) const;
+        double      taggWeight= {};
+        double      taggE= {};
+        unsigned    taggCh= {};
+        double      taggTime= {};
 
-            std::vector<double*> Adresses()
-            {
-                return { std::addressof(Ek),
-                         std::addressof(Theta),
-                         std::addressof(Phi)};
-            }
-            std::vector<double*> Adresses_Sigma()
-            {
-                return { std::addressof(sEk),
-                         std::addressof(sTheta),
-                         std::addressof(sPhi)};
-            }
+        std::vector<TLorentzVector> pi0 = std::vector<TLorentzVector>(3);
+        double pi0_chi2[3]= {};
+        double pi0_prob[3]= {};
+        int    pi0_iteration[3]= {};
+        int    pi0_status[3]= {};
 
-            void SetEkThetaPhi(double ek, double theta, double phi);
+        TLorentzVector etaprime= {};
+        double event_chi2= {};
+        double event_prob= {};
+        int    event_iteration= {};
+        int    event_status= {};
 
-            kinVector(const std::string& name): Name(name) {}
-        };
+        int type= {};
 
-        double taggerSmear( const double& E) const;
-        TLorentzVector GetVector(const std::vector<double>& EkThetaPhi, const double m) const;
+        void SetBranches(TTree* tree);
 
-        APLCON aplcon;
-
-        std::pair<double,double> EgammaBeam;
-        kinVector ProtonTAPS;
-        std::vector<kinVector> Photons;
-
-        const double IM_Mother;
-
-    public:
-        const std::string egammaName = "EBEAM";
-
-
-
-
-        KinFitter(const ParticleTypeDatabase::Type& motherParticle = ParticleTypeDatabase::EtaPrime);
-
-        void SetEgammaBeam(const double& ebeam);
-        void SetProtonTAPS(const TParticlePtr& proton);
-        void SetPhotons(const std::vector<TParticlePtr>& photons);
-
-        APLCON::Result_t DoFit() { return aplcon.DoFit(); }
     };
 
-
-    // =======================   structs   =====================================================
-
+    branches vars;
 
 
-
-    using MesonCandidate = std::pair<TParticlePtr,double>;    // <particle,chi2>
-
-    struct result_t {
-        double Chi2_intermediate = std::numeric_limits<double>::infinity();
-        double Chi2_mother       = std::numeric_limits<double>::infinity();
-        double chi2() const { return Chi2_mother + Chi2_intermediate; }
-
-        bool success = false;
-
-        std::vector<TParticlePtr> g_final;
-        std::vector<MesonCandidate> mesons;
-
-        TLorentzVector mother;
-
-        result_t() : g_final(6), mesons(3), mother(0,0,0,0){}
-    };
-
-    struct DalitzVars
-    {
-        double TMean;
-
-        double s1;
-        double s2;
-        double s3;
-
-        double x;
-        double y;
-
-        double z;
-
-        DalitzVars(result_t r);
-    };
 
     // =======================   datastorage  ==================================================
 
-    std::string dataset;
-
-    KinFitter fitToEtaPrime;
-    APLCON::Result_t result_fitToEtaPrime;
-
-    enum class filterType {
-        Chi2,
-        KinFit,
-        ProtonInTaps,
-        ProtonTOF
-    };
 
     //histograms
     std::map<std::string,std::map<std::string,TH1*>> hists;
@@ -189,22 +115,17 @@ protected:
 
 
 
-    void FillCrossChecks(const TParticleList& photons, const TParticleList& mcphotons);
 
-    bool MakeMCProton(const TEventData& mcdata, TParticlePtr& proton);
 
-    Etap3pi0::result_t Make3pi0(const TParticleList& photons);
-    Etap3pi0::result_t MakeEta2pi0(const TParticleList& photons);
-    Etap3pi0::result_t MakeMC3pi0(const TEventData &mcEvt);
 
-    void FillIm(const Etap3pi0::result_t& result, const ParticleTypeDatabase::Type& type, TH1D* hist);
-    void FillImEtaPrime(const Etap3pi0::result_t& result, TH1D* hist);
     TLorentzVector MakeLoretzSum(const TParticleList& particles);
 public:
     Etap3pi0(const std::string& name, OptionsPtr opts);
     virtual void ProcessEvent(const TEvent& event, manager_t& manager) override;
     virtual void Finish() override;
     virtual void ShowResult() override;
+private:
+    bool MakeMCProton(const TEventData& mcdata, TParticlePtr& proton);
 };
 
 
