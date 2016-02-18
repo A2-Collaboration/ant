@@ -185,3 +185,20 @@ TEST_CASE("Tree: compare", "[base]") {
     b->Sort(int_sorter);
     REQUIRE_FALSE(a->IsEqual(b, int_comparer));
 }
+
+TEST_CASE("Tree: DeepCopy", "[base]") {
+    auto a = Tree<int>::MakeNode(1);
+    auto a0 = a->CreateDaughter(1);
+    auto a1 = a->CreateDaughter(1);
+    a0->CreateDaughter(2);
+    a0->CreateDaughter(2);
+    a1->CreateDaughter(3);
+    a1->CreateDaughter(3);
+
+    auto copy = a->DeepCopy<double>();
+
+    REQUIRE(copy->Get() == 1);
+    REQUIRE(copy->Daughters().front()->Daughters().front()->Get() == 2);
+    REQUIRE(copy->Daughters().back()->Daughters().front()->Get() == 3);
+
+}
