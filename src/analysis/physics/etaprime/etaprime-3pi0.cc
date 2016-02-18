@@ -131,6 +131,22 @@ void Etap3pi0::ProcessEvent(const TEvent& event, manager_t&)
  }
 
 
+void Etap3pi0::Finish()
+{
+}
+
+
+void Etap3pi0::ShowResult()
+{
+    vector<string> cats = { "steps"};
+    for (auto& category: cats)
+    {
+        canvas c(category);
+        for (auto h: hists.at(category))
+            c << h.second;
+        c << endc;
+    }
+}
 
 void Etap3pi0::branches::SetBranches(TTree* tree)
 {
@@ -162,6 +178,24 @@ void Etap3pi0::branches::SetBranches(TTree* tree)
     tree->Branch("event_status", &event_status);
 
     tree->Branch("type", &type);
+}
+
+void Etap3pi0::AddHist1D(
+        const std::string& category, const std::string& hname,
+        const std::string& title,
+        const std::string& xlabel, const std::string& ylabel,
+        const BinSettings& bins
+        )
+{
+    hists[category][hname] = HistFac.makeTH1D(title,xlabel,ylabel,bins,(category + string("_") + hname));
+}
+
+void Etap3pi0::AddHist2D(const string& category, const string& hname,
+                         const string& title,
+                         const string& xlabel, const string& ylabel,
+                         const BinSettings& xbins, const BinSettings& ybins)
+{
+    hists[category][hname] = HistFac.makeTH2D(title,xlabel,ylabel,xbins,ybins,(category + string("_") + hname));
 }
 
 AUTO_REGISTER_PHYSICS(Etap3pi0)
