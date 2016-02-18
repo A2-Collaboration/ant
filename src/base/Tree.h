@@ -61,6 +61,7 @@ public:
     T& operator*() { return data; }
     const T& operator *() const { return data; }
 
+    T& Get() { return data; }
     const T& Get() const { return data; }
 
     snode_t GetParent() const { return parent.lock(); }
