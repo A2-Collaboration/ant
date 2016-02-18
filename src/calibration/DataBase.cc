@@ -35,7 +35,11 @@ bool DataBase::GetItem(const string& calibrationID,
 
     // handle MC
     if(currentPoint.isSet(TID::Flags_t::MC)) {
-        return loadFile(Layout.GetCurrentFile(calibrationID, OnDiskLayout::Type_t::MC), theData);
+        if(loadFile(Layout.GetCurrentFile(calibrationID, OnDiskLayout::Type_t::MC), theData)) {
+            LOG(INFO) << "Loaded MC data for " << calibrationID;
+            return true;
+        }
+        return false;
     }
 
     // try to find it in the DataRanges
