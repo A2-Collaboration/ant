@@ -123,6 +123,21 @@ string ParticleTools::GetProductionChannelString(const TParticleTree_t& particle
     return s.str();
 }
 
+ParticleTypeTree ParticleTools::GetProducedParticle(const ParticleTypeTree& particletypetree)
+{
+    if(particletypetree->Get() != ParticleTypeDatabase::BeamTarget)
+        return nullptr;
+
+    if(particletypetree->Daughters().size() != 2)
+        return nullptr;
+
+    for(const auto& daughter : particletypetree->Daughters()) {
+        if(daughter->Get() != ParticleTypeDatabase::Nucleon)
+            return daughter;
+    }
+    return nullptr;
+}
+
 const TParticlePtr ParticleTools::FindParticle(const ant::ParticleTypeDatabase::Type& type, const TParticleList& particles)
 {
     for(const auto& p : particles) {

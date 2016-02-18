@@ -57,6 +57,9 @@ struct ParticleTools {
      */
     static std::string GetProductionChannelString(const TParticleTree_t& particletree);
 
+    static ParticleTypeTree GetProducedParticle(const ParticleTypeTree& particletypetree);
+
+
     /**
      * @brief Find the first Particle of given type in particle list
      * @param type Type to search for
