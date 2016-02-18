@@ -76,12 +76,12 @@ public:
     }
 
     template <typename ... args_t>
-    snode_t CreateDaughter(args_t&&... args) {
+    snode_t& CreateDaughter(args_t&&... args) {
         auto n = MakeNode(std::forward<args_t>(args)...);
+        is_sorted = false;
         n->parent = Self();
         daughters.emplace_back(n);
-        is_sorted = false;
-        return n;
+        return daughters.back();
     }
 
     void SetParent(const snode_t& p) {
