@@ -54,7 +54,11 @@ class EtapOmegaG : public Physics {
     };
 
     struct Sig_t {
+        Sig_t();
+
         TTree* Tree;
+        utils::TreeFitter treefitter;
+
         void SetupBranches();
         void ResetBranches();
         void Process(const Particles_t& particles);
@@ -73,9 +77,9 @@ class EtapOmegaG : public Physics {
     Ref_t Ref;
     Ref_t RefFitted;
 
-
-    ParticleTypeTree ptreeSignal;
-    ParticleTypeTree ptreeReference;
+    friend class Sig_t;
+    static const ParticleTypeTree ptreeSignal;
+    static const ParticleTypeTree ptreeReference;
     static const std::vector<ParticleTypeTree> ptreeBackgrounds;
 
 public:

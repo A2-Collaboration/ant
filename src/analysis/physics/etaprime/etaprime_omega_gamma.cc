@@ -20,6 +20,9 @@ using namespace ant;
 using namespace ant::analysis;
 using namespace ant::analysis::physics;
 
+const ParticleTypeTree EtapOmegaG::ptreeSignal = ParticleTypeTreeDatabase::Get(ParticleTypeTreeDatabase::Channel::EtaPrime_gOmega_ggPi0_4g);
+const ParticleTypeTree EtapOmegaG::ptreeReference = ParticleTypeTreeDatabase::Get(ParticleTypeTreeDatabase::Channel::EtaPrime_2g);
+
 
 EtapOmegaG::EtapOmegaG(const string& name, OptionsPtr opts) :
     Physics(name, opts),
@@ -36,7 +39,7 @@ EtapOmegaG::EtapOmegaG(const string& name, OptionsPtr opts) :
     promptrandom_tight.AddRandomRange({  10,30});
 
 
-    h_CommonCuts = HistFac.makeTH1D("Common Cuts", "", "#", BinSettings(10),"h_TotalEvents");
+    h_CommonCuts = HistFac.makeTH1D("Common Cuts", "", "#", BinSettings(15),"h_TotalEvents");
     h_MissedBkg = HistFac.makeTH1D("Missed Background", "", "#", BinSettings(25),"h_MissedBkg");
 
 
@@ -74,14 +77,10 @@ EtapOmegaG::EtapOmegaG(const string& name, OptionsPtr opts) :
 
 #undef ADD_BRANCH
 
-
     Sig.SetupBranches();
     SigFitted.SetupBranches();
     Ref.SetupBranches();
     RefFitted.SetupBranches();
-
-    ptreeSignal = ParticleTypeTreeDatabase::Get(ParticleTypeTreeDatabase::Channel::EtaPrime_gOmega_ggPi0_4g);
-    ptreeReference = ParticleTypeTreeDatabase::Get(ParticleTypeTreeDatabase::Channel::EtaPrime_2g);
 
 }
 
@@ -97,8 +96,8 @@ void EtapOmegaG::ProcessEvent(const TEvent& event, manager_t&)
 
     auto& particletree = event.MCTrue->ParticleTree;
 
+    h_CommonCuts->Fill("MCTrue #eta'", 0); // ensure the bin is there...
     if(particletree) {
-        h_CommonCuts->Fill("MCTrue #eta'", 0); // ensure it's there...
         // note: this might also match to g p -> eta' eta' p,
         // but this is kinematically forbidden
         if(utils::ParticleTools::FindParticle(ParticleTypeDatabase::EtaPrime, particletree, 1)) {
@@ -281,6 +280,13 @@ void EtapOmegaG::ProcessEvent(const TEvent& event, manager_t&)
 }
 
 
+
+EtapOmegaG::Sig_t::Sig_t() :
+    treefitter("sig_treefitter",
+               utils::ParticleTools::GetProducedParticle(EtapOmegaG::ptreeSignal))
+{
+
+}
 
 void EtapOmegaG::Sig_t::SetupBranches()
 {
