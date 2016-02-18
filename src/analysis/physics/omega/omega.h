@@ -8,7 +8,7 @@
 #include "analysis/utils/particle_tools.h"
 #include "base/std_ext/math.h"
 
-#include "analysis/utils/KinFitter.h"
+#include "analysis/utils/Fitter.h"
 #include "base/interval.h"
 #include "analysis/plot/PromptRandomHist.h"
 #include "TTree.h"

@@ -3,7 +3,7 @@
 #include "analysis/physics/Physics.h"
 #include "base/interval.h"
 #include "plot/PromptRandomHist.h"
-#include "utils/KinFitter.h"
+#include "utils/Fitter.h"
 #include "expconfig/detectors/TAPS.h"
 
 class TH1D;

@@ -2,7 +2,7 @@
 
 #include "analysis/physics/Physics.h"
 #include "utils/particle_tools.h"
-#include "utils/KinFitter.h"
+#include "utils/Fitter.h"
 #include "plot/PromptRandomHist.h"
 
 #include "base/ParticleTypeTree.h"

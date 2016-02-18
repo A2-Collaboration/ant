@@ -2,7 +2,7 @@
 
 #include "analysis/physics/Physics.h"
 #include "base/std_ext/math.h"
-#include "analysis/utils/KinFitter.h"
+#include "analysis/utils/Fitter.h"
 #include "analysis/plot/PromptRandomHist.h"
 
 class TTree;

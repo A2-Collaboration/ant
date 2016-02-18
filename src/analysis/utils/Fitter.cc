@@ -1,4 +1,4 @@
-#include "KinFitter.h"
+#include "Fitter.h"
 
 #include "expconfig/ExpConfig.h"
 

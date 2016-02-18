@@ -82,7 +82,7 @@ set(ANALYSIS_UTILS
   utils/root-addons.cc
   utils/particle_tools.cc
   utils/TimeSmearingHack.cc
-  utils/KinFitter.cc
+  utils/Fitter.cc
   utils/ProtonPermutation.cc
   )
 

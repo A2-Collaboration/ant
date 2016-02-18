@@ -2,7 +2,7 @@
 
 #include "physics/Physics.h"
 #include "plot/PromptRandomHist.h"
-#include "utils/KinFitter.h"
+#include "utils/Fitter.h"
 #include "base/ParticleTypeTree.h"
 
 class TH1D;
