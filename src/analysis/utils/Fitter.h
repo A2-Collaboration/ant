@@ -24,10 +24,46 @@ class WrapTFile;
 namespace analysis {
 namespace utils {
 
-class KinFitter
-{
+class Fitter {
 
-private:
+public:
+    struct angular_sigma {
+        using Hist = std::shared_ptr<TH1D>;
+        Hist p0 = nullptr;
+        Hist p1 = nullptr;
+        Hist p2 = nullptr;
+
+        double GetSigma(const unsigned element, const double E) const;
+
+        static double f(const double x, const double p0, const double p1, const double p2) noexcept;
+        static double f_root(const double* x, const double* p) noexcept;
+
+        static TF1* GetTF1(const std::string& name="SigmaFit");
+
+        void Load(ant::WrapTFile& f, const std::string& prefix, const int bins);
+        Hist LoadHist(ant::WrapTFile& f, const std::string& name, const int bins);
+
+        angular_sigma();
+        ~angular_sigma();
+
+    };
+
+    struct Exception : std::runtime_error {
+        using std::runtime_error::runtime_error;
+    };
+
+    void LoadSigmaData(const std::string& filename);
+
+    APLCON::Result_t DoFit();
+
+protected:
+
+    Fitter(const std::string& fittername);
+
+    std::unique_ptr<APLCON> aplcon;
+
+    void SetupBranches(TTree* tree, std::string branch_prefix="");
+
     struct kinVector
     {
         double Ek            = 0.0;
@@ -43,8 +79,6 @@ private:
         double pullPhi       = 0.0;
 
         const std::string Name;
-
-        double EnergyResolution(const double& E) const;
 
         std::vector<double*> Addresses()
         {
@@ -71,13 +105,39 @@ private:
         void SetupBranches(TTree* tree, const std::string& prefix);
     };
 
+    static TLorentzVector GetVector(const std::vector<double>& EkThetaPhi, const double m);
+
+    angular_sigma cb_sigma_theta;
+    angular_sigma cb_sigma_phi;
+    angular_sigma taps_sigma_theta;
+    angular_sigma taps_sigma_phi;
+
+    double EnergyResolution(const TParticlePtr& p) const;
+    double ThetaResolution(const TParticlePtr& p) const;
+    double PhiResolution(const TParticlePtr& p) const;
+
+    static double fct_TaggerEGausSigma(double E);
+
+private:
+    double result_chi2ndof       =  0.0;
+    int result_iterations        =  0;
+    int result_status            = -1;
+    double result_probability    =  0.0;
+
+};
+
+class KinFitter : public Fitter
+{
+
+protected:
+
     struct PhotonBeamVector {
         double E     = 0.0;
         double Sigma = 0.0;
 
-        const std::string name;
+        const std::string Name;
 
-        PhotonBeamVector(const std::string& Name);
+        PhotonBeamVector(const std::string& name);
 
         std::vector<double*> Adresses()
         {
@@ -97,48 +157,7 @@ private:
 
     PhotonBeamVector Beam = PhotonBeamVector("Beam");
 
-    double EnergyResolution(const TParticlePtr& p) const;
-    double ThetaResolution(const TParticlePtr& p) const;
-    double PhiResolution(const TParticlePtr& p) const;
-
-    static TLorentzVector GetVector(const std::vector<double>& EkThetaPhi, const double m);
-
-    std::unique_ptr<APLCON> aplcon;
-    double result_chi2ndof       =  0.0;
-    int result_iterations        =  0;
-    int result_status            = -1;
-    double result_probability    =  0.0;
-
-    static double fct_TaggerEGausSigma(double E);
-
 public:
-
-    struct angular_sigma {
-        using Hist = std::shared_ptr<TH1D>;
-        Hist p0 = nullptr;
-        Hist p1 = nullptr;
-        Hist p2 = nullptr;
-
-        double GetSigma(const unsigned element, const double E) const;
-
-        static double f(const double x, const double p0, const double p1, const double p2) noexcept;
-        static double f_root(const double* x, const double* p) noexcept;
-
-        static TF1* GetTF1(const std::string& name="SigmaFit");
-
-        void Load(ant::WrapTFile& f, const std::string& prefix, const int bins);
-        Hist LoadHist(ant::WrapTFile& f, const std::string& name, const int bins);
-
-        angular_sigma();
-        ~angular_sigma();
-
-
-    };
-
-    angular_sigma cb_sigma_theta;
-    angular_sigma cb_sigma_phi;
-    angular_sigma taps_sigma_theta;
-    angular_sigma taps_sigma_phi;
 
     KinFitter(const std::string& name, unsigned numGammas);
 
@@ -150,15 +169,8 @@ public:
     TParticleList GetFittedPhotons() const;
     double GetFittedBeamE() const;
 
-    APLCON::Result_t DoFit();
-
     void SetupBranches(TTree* tree, std::string branch_prefix="");
 
-    void LoadSigmaData(const std::string& filename);
-
-    struct Exception : std::runtime_error {
-        using std::runtime_error::runtime_error;
-    };
 };
 
 }}} // namespace ant::analysis::utils
