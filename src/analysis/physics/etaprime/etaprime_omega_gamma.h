@@ -24,6 +24,8 @@ class EtapOmegaG : public Physics {
 
     // variables for TTree branches
     // shared among sig/ref analyses
+
+    TTree* treeCommon;
     unsigned b_nPhotonsCB;
     unsigned b_nPhotonsTAPS;
     double   b_CBSumVetoE;
@@ -50,9 +52,14 @@ class EtapOmegaG : public Physics {
     };
 
     struct Ref_t {
+        TTree* Tree;
+        double b_IM_2g;
+        void SetupBranches();
         void Process(const Particles_t& particles);
     };
     struct Sig_t {
+        TTree* Tree;
+        void SetupBranches();
         void Process(const Particles_t& particles);
     };
 

@@ -44,6 +44,36 @@ EtapOmegaG::EtapOmegaG(const string& name, OptionsPtr opts) :
     kinfitter_2.LoadSigmaData(setup->GetPhysicsFilesDirectory()+"/FitterSigmas.root");
     kinfitter_4.LoadSigmaData(setup->GetPhysicsFilesDirectory()+"/FitterSigmas.root");
 
+    treeCommon = HistFac.makeTTree("treeCommon");
+
+    Ref.Tree = HistFac.makeTTree("treeRef");
+    RefFitted.Tree = HistFac.makeTTree("treeRefFitted");
+    Sig.Tree = HistFac.makeTTree("treeSig");
+    SigFitted.Tree = HistFac.makeTTree("treeSigFitted");
+
+#define ADD_BRANCH(name) \
+    treeCommon->Branch(#name,addressof(b_ ## name));
+
+    ADD_BRANCH(nPhotonsCB);
+    ADD_BRANCH(nPhotonsTAPS);
+    ADD_BRANCH(CBSumVetoE);
+    ADD_BRANCH(CBAvgTime);
+    ADD_BRANCH(PIDSumE);
+    ADD_BRANCH(ProtonCopl);
+    ADD_BRANCH(KinFitChi2);
+    ADD_BRANCH(TaggW);
+    ADD_BRANCH(TaggW_tight);
+    ADD_BRANCH(TaggE);
+    ADD_BRANCH(TaggT);
+    ADD_BRANCH(TaggCh);
+
+#undef ADD_BRANCH
+
+    Ref.SetupBranches();
+    RefFitted.SetupBranches();
+    Sig.SetupBranches();
+    SigFitted.SetupBranches();
+
 }
 
 void EtapOmegaG::ProcessEvent(const TEvent& event, manager_t&)
@@ -182,10 +212,17 @@ void EtapOmegaG::ProcessEvent(const TEvent& event, manager_t&)
             else
                 SigFitted.Process(fitted_particles);
         }
+
+        treeCommon->Fill();
+        Ref.Tree->Fill();
+        RefFitted.Tree->Fill();
+        Sig.Tree->Fill();
+        SigFitted.Tree->Fill();
     }
 
     if(kinfit_ok)
         h_CommonCuts->Fill("KinFit OK", 1.0);
+
     if(nPhotons==2)
         h_CommonCuts->Fill("nPhotons==2", 1.0);
     if(nPhotons==4)
@@ -193,14 +230,33 @@ void EtapOmegaG::ProcessEvent(const TEvent& event, manager_t&)
 
 }
 
+void EtapOmegaG::Ref_t::SetupBranches()
+{
+#define ADD_BRANCH(name) \
+    Tree->Branch(#name,addressof(b_ ## name));
+
+    ADD_BRANCH(IM_2g);
+
+#undef ADD_BRANCH
+
+}
+
 void EtapOmegaG::Ref_t::Process(const EtapOmegaG::Particles_t& particles)
+{
+    assert(particles.Photons.size() == 2);
+
+    b_IM_2g = (*particles.Photons.front() + *particles.Photons.back()).M();
+
+}
+
+void EtapOmegaG::Sig_t::SetupBranches()
 {
 
 }
 
 void EtapOmegaG::Sig_t::Process(const EtapOmegaG::Particles_t& particles)
 {
-
+    assert(particles.Photons.size() == 4);
 }
 
 void EtapOmegaG::Finish()
