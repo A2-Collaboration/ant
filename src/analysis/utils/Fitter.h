@@ -64,43 +64,43 @@ protected:
 
     void SetupBranches(TTree* tree, std::string branch_prefix="");
 
-    struct kinVector
+    struct FitParticle
     {
-        double Ek            = 0.0;
-        double Theta         = 0.0;
-        double Phi           = 0.0;
+        struct Var_t {
+            double Value = 0;
+            double Sigma = 0;
+            double Pull = 0;
+            void SetupBranches(TTree* tree, const std::string& prefix);
 
-        double sigmaEk       = 0.0;
-        double sigmaTheta    = 0.0;
-        double sigmaPhi      = 0.0;
+        };
 
-        double pullEk        = 0.0;
-        double pullTheta     = 0.0;
-        double pullPhi       = 0.0;
+        Var_t Ek;
+        Var_t Theta;
+        Var_t Phi;
 
         const std::string Name;
 
         std::vector<double*> Addresses()
         {
-            return { std::addressof(Ek),
-                     std::addressof(Theta),
-                     std::addressof(Phi)};
+            return { std::addressof(Ek.Value),
+                     std::addressof(Theta.Value),
+                     std::addressof(Phi.Value)};
         }
         std::vector<double*> Addresses_Sigma()
         {
-            return { std::addressof(sigmaEk),
-                     std::addressof(sigmaTheta),
-                     std::addressof(sigmaPhi)};
+            return { std::addressof(Ek.Sigma),
+                     std::addressof(Theta.Sigma),
+                     std::addressof(Phi.Sigma)};
         }
 
         std::vector<double*> Addresses_Pulls()
         {
-            return { std::addressof(pullEk),
-                     std::addressof(pullTheta),
-                     std::addressof(pullPhi)};
+            return { std::addressof(Ek.Pull),
+                     std::addressof(Theta.Pull),
+                     std::addressof(Phi.Pull)};
         }
 
-        kinVector(const std::string& name): Name(name) {}
+        FitParticle(const std::string& name): Name(name) {}
 
         void SetupBranches(TTree* tree, const std::string& prefix);
     };
@@ -151,9 +151,9 @@ protected:
 
     };
 
-    std::vector<kinVector> Photons;
+    std::vector<FitParticle> Photons;
 
-    kinVector Proton = kinVector("Proton");
+    FitParticle Proton = FitParticle("Proton");
 
     PhotonBeamVector Beam = PhotonBeamVector("Beam");
 

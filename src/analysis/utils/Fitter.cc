@@ -130,17 +130,18 @@ double Fitter::fct_TaggerEGausSigma(double)
     return  3.0/sqrt(12.0);
 }
 
-void Fitter::kinVector::SetupBranches(TTree* tree, const string& prefix)
+void Fitter::FitParticle::Var_t::SetupBranches(TTree* tree, const string& prefix)
 {
-    tree->Branch((prefix+"_"+Name+"_Ek").c_str(),     addressof(Ek));
-    tree->Branch((prefix+"_"+Name+"_Theta").c_str(),  addressof(Theta));
-    tree->Branch((prefix+"_"+Name+"_Phi").c_str(),    addressof(Phi));
-    tree->Branch((prefix+"_"+Name+"_Ek_pull").c_str(),     addressof(pullEk));
-    tree->Branch((prefix+"_"+Name+"_Theta_pull").c_str(),  addressof(pullTheta));
-    tree->Branch((prefix+"_"+Name+"_Phi_pull").c_str(),    addressof(pullPhi));
-    tree->Branch((prefix+"_"+Name+"_Ek_sigma").c_str(),    addressof(sigmaEk));
-    tree->Branch((prefix+"_"+Name+"_Theta_sigma").c_str(), addressof(sigmaTheta));
-    tree->Branch((prefix+"_"+Name+"_Phi_sigma").c_str(),   addressof(sigmaPhi));
+    tree->Branch(prefix.c_str(), addressof(Value));
+    tree->Branch((prefix+"_pull").c_str(), addressof(Pull));
+    tree->Branch((prefix+"_sigma").c_str(), addressof(Sigma));
+}
+
+void Fitter::FitParticle::SetupBranches(TTree* tree, const string& prefix)
+{
+    Ek.SetupBranches(tree, prefix+"_"+Name+"_Ek");
+    Theta.SetupBranches(tree, prefix+"_"+Name+"_Theta");
+    Phi.SetupBranches(tree, prefix+"_"+Name+"_Phi");
 }
 
 Fitter::angular_sigma::angular_sigma()
@@ -244,7 +245,7 @@ KinFitter::KinFitter(const std::string& name, unsigned numGammas) :
 
     Photons.reserve(numGammas);
     for(unsigned i=0; i<numGammas;++i) {
-        Photons.emplace_back(kinVector("Photon"+to_string(i)));
+        Photons.emplace_back(FitParticle("Photon"+to_string(i)));
     }
 
     aplcon->LinkVariable(Beam.Name,
@@ -306,20 +307,20 @@ void KinFitter::SetEgammaBeam(const double &ebeam)
 
 void KinFitter::SetProton(const TParticlePtr& proton)
 {
-    Proton.Ek         = proton->Ek();
-    Proton.sigmaEk    = 0.0; // unmeasured
+    Proton.Ek.Value         = proton->Ek();
+    Proton.Ek.Sigma    = 0.0; // unmeasured
 
-    Proton.Theta      = proton->Theta();
-    Proton.Phi        = proton->Phi();
+    Proton.Theta.Value      = proton->Theta();
+    Proton.Phi.Value        = proton->Phi();
 
     assert(proton->Candidate!=nullptr);
 
     if(proton->Candidate->Detector & Detector_t::Type_t::CB) {
-        Proton.sigmaTheta = degree_to_radian(5.43);
-        Proton.sigmaPhi   = degree_to_radian(5.31);
+        Proton.Theta.Sigma = degree_to_radian(5.43);
+        Proton.Phi.Sigma   = degree_to_radian(5.31);
     } else if(proton->Candidate->Detector & Detector_t::Type_t::TAPS) {
-        Proton.sigmaTheta = degree_to_radian(2.89);
-        Proton.sigmaPhi   = degree_to_radian(4.45);
+        Proton.Theta.Sigma = degree_to_radian(2.89);
+        Proton.Phi.Sigma   = degree_to_radian(4.45);
     } else {
         LOG(WARNING) << "Proton is not in (CB,TAPS)?";
     }
@@ -328,7 +329,8 @@ void KinFitter::SetProton(const TParticlePtr& proton)
 
 TParticlePtr KinFitter::GetFittedProton() const
 {
-    return make_shared<TParticle>(ParticleTypeDatabase::Proton, Proton.Ek, Proton.Theta, Proton.Phi);
+    return make_shared<TParticle>(ParticleTypeDatabase::Proton, Proton.Ek.Value,
+                                  Proton.Theta.Value, Proton.Phi.Value);
 }
 
 TParticleList KinFitter::GetFittedPhotons() const
@@ -336,7 +338,7 @@ TParticleList KinFitter::GetFittedPhotons() const
     TParticleList photons;
     for(const auto& photon : Photons) {
         photons.emplace_back(make_shared<TParticle>(ParticleTypeDatabase::Photon,
-                                                    photon.Ek, photon.Theta, photon.Phi));
+                                                    photon.Ek.Value, photon.Theta.Value, photon.Phi.Value));
     }
     return photons;
 }
@@ -355,14 +357,14 @@ void KinFitter::SetPhotons(const std::vector<TParticlePtr> &photons_data)
         auto& photon = Photons.at(i);
         auto& data   = photons_data.at(i);
 
-        photon.Ek  = data->Ek();
-        photon.sigmaEk = EnergyResolution(data);
+        photon.Ek.Value  = data->Ek();
+        photon.Ek.Sigma = EnergyResolution(data);
 
-        photon.Theta  = data->Theta();
-        photon.sigmaTheta = ThetaResolution(data);
+        photon.Theta.Value  = data->Theta();
+        photon.Theta.Sigma = ThetaResolution(data);
 
-        photon.Phi  = data->Phi();
-        photon.sigmaPhi = PhiResolution(data);
+        photon.Phi.Value  = data->Phi();
+        photon.Phi.Sigma = PhiResolution(data);
     }
 }
 
@@ -384,6 +386,9 @@ KinFitter::PhotonBeamVector::PhotonBeamVector(const string& name):
 {
 
 }
+
+
+
 
 
 
