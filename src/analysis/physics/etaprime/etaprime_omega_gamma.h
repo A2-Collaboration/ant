@@ -35,6 +35,7 @@ class EtapOmegaG : public Physics {
     double   b_PIDSumE;
 
     double   b_ProtonCopl;
+    double   b_MissingMass;
     double   b_KinFitChi2;
     double   b_TaggW;
     double   b_TaggW_tight;
@@ -49,8 +50,9 @@ class EtapOmegaG : public Physics {
     utils::KinFitter kinfitter_4;
 
     struct Particles_t {
-        TParticlePtr  Proton;
-        TParticleList Photons;
+        TParticlePtr    Proton;
+        TParticleList   Photons;
+        TLorentzVector  PhotonSum;
     };
 
     struct Sig_t {
@@ -63,16 +65,34 @@ class EtapOmegaG : public Physics {
         utils::TreeFitter::tree_t fitted_Omega;
         utils::TreeFitter::tree_t fitted_Pi0;
 
+        utils::TreeFitter::tree_t fitted_g_EtaPrime;
+        utils::TreeFitter::tree_t fitted_g_Omega;
+        utils::TreeFitter::tree_t fitted_g1_Pi0;
+        utils::TreeFitter::tree_t fitted_g2_Pi0;
+
+
         double   b_TreeFitChi2;
         unsigned b_TreeFitIterations;
-        double b_IM_EtaPrime;
-        double b_IM_Omega;
-        double b_IM_Pi0;
 
+        double b_IM_EtaPrime_fitted;
+        double b_IM_Omega_fitted;
+        double b_IM_Pi0_fitted;
+
+        double b_IM_EtaPrime_best;
+        double b_IM_Omega_best;
+        double b_IM_Pi0_best;
+
+
+        double b_Bachelor_best_best;
+        double b_Bachelor_best_fit;
+        double b_Bachelor_fit_best;
+        double b_Bachelor_fit_fit;
+
+        unsigned b_MCTrueMatch;
 
         void SetupBranches();
         void ResetBranches();
-        void Process(const Particles_t& particles);
+        void Process(const Particles_t& particles, TParticleTree_t particletree);
     };
 
     struct Ref_t {
