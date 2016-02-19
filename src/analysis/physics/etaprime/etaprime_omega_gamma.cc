@@ -285,7 +285,10 @@ EtapOmegaG::Sig_t::Sig_t() :
     treefitter("sig_treefitter",
                utils::ParticleTools::GetProducedParticle(EtapOmegaG::ptreeSignal))
 {
-
+    const auto setup = ant::ExpConfig::Setup::GetLastFound();
+    if(!setup)
+        throw runtime_error("EtapOmegaG needs a setup");
+    treefitter.LoadSigmaData(setup->GetPhysicsFilesDirectory()+"/FitterSigmas.root");
 }
 
 void EtapOmegaG::Sig_t::SetupBranches()
@@ -301,6 +304,8 @@ void EtapOmegaG::Sig_t::ResetBranches()
 void EtapOmegaG::Sig_t::Process(const EtapOmegaG::Particles_t& particles)
 {
     assert(particles.Photons.size() == 4);
+    treefitter.SetLeaves(particles.Photons);
+    treefitter.DoFit();
 }
 
 void EtapOmegaG::Ref_t::SetupBranches()
