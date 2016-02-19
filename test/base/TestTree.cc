@@ -248,4 +248,21 @@ TEST_CASE("Tree: GetUniquePermutations", "[base]") {
 
     REQUIRE(leaves_ptree.size() == 4);
     REQUIRE(perms.size() == 12);
+
+
+    auto a = Tree<int>::MakeNode(1);
+    auto a0 = a->CreateDaughter(1);
+    auto a1 = a->CreateDaughter(1);
+    a0->CreateDaughter(2);
+    a0->CreateDaughter(2);
+    a1->CreateDaughter(2);
+    a1->CreateDaughter(2);
+    vector<Tree<int>::node_t> leaves_int;
+
+    a->Sort();
+    REQUIRE_NOTHROW(a->GetUniquePermutations(leaves_int, perms));
+
+    REQUIRE(perms.size() == 3);
+
+
 }
