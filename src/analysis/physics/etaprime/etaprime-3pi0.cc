@@ -36,7 +36,11 @@ Etap3pi0::Etap3pi0(const std::string& name, OptionsPtr opts) :
     tree = HistFac.makeTTree("tree");
 
     string cat("steps");
-    AddHist1D(cat, "evcount"              , "events after steps", "", "# events", BinSettings(5));
+    AddHist1D(cat, "evcount",          "events after steps", "", "# events", BinSettings(5));
+
+    cat = "channels";
+    AddHist1D(cat,"mc_true",            "mc true for signal, ref, bkg", "", "#", BinSettings(3));
+
 
 //    fitter.SetupBranches(tree, "EPB");
     fitter.LoadSigmaData(setup->GetPhysicsFilesDirectory()+"/FitterSigmas.root");
@@ -78,7 +82,8 @@ void Etap3pi0::ProcessEvent(const TEvent& event, manager_t&)
     const auto& data   = *event.Reconstructed;
     const auto& mcdata = *event.MCTrue;
 
-/*
+    hists.at("steps").at("evcount")->Fill("totalEvts",1);
+
     if ( mcdata.ParticleTree )
     {
         if (mcdata.ParticleTree->IsEqual(signal_tree, utils::ParticleTools::MatchByParticleName))
@@ -88,7 +93,6 @@ void Etap3pi0::ProcessEvent(const TEvent& event, manager_t&)
         if (mcdata.ParticleTree->IsEqual(bkg_tree, utils::ParticleTools::MatchByParticleName))
             hists.at("channels").at("mc_true")->Fill(utils::ParticleTools::GetDecayString(mcdata.ParticleTree).c_str(),1);
     }
-*/
     
     const auto& photons            = data.Particles.Get(ParticleTypeDatabase::Photon);
     const auto& protonCandidates   = data.Particles.Get(ParticleTypeDatabase::Proton);
@@ -97,13 +101,17 @@ void Etap3pi0::ProcessEvent(const TEvent& event, manager_t&)
     if ( data.Candidates.size() != 7)
         return;
 
+    hists.at("steps").at("evcount")->Fill("7cands",1);
+
     if (photons.size() != 6)
         return;
+
+    hists.at("steps").at("evcount")->Fill("6gamma",1);
 
     if (protonCandidates.size() != 1)
         return;
 
-    hists.at("steps").at("evcount")->Fill("nParticles",1);
+    hists.at("steps").at("evcount")->Fill("1p",1);
 
     // geo-cuts
 
@@ -111,7 +119,11 @@ void Etap3pi0::ProcessEvent(const TEvent& event, manager_t&)
 
     vars.etaprime = MakeLoretzSum(photons);
 
-    vars.trueProton = *mcprotons.at(0);
+    if (mcprotons.size() > 1)
+        return;
+
+    if (mcprotons.size() == 1)
+        vars.trueProton = *mcprotons.at(0);
 
     double CBAvgTime = event.Reconstructed->Trigger.CBTiming;
     if(!isfinite(CBAvgTime))
@@ -127,8 +139,9 @@ void Etap3pi0::ProcessEvent(const TEvent& event, manager_t&)
         vars.taggE         = t.PhotonEnergy;
         vars.taggCh        = unsigned(t.Channel);
         vars.taggTime      = t.Time;
+
+        tree->Fill();
     }
-    tree->Fill();
  }
 
 
@@ -151,6 +164,7 @@ void Etap3pi0::ShowResult()
 
 void Etap3pi0::branches::SetBranches(TTree* tree)
 {
+    cout << "Setting up branches" << endl;
     tree->Branch("proton", &proton);
 
     tree->Branch("fittedProton",&fittedProton);
@@ -166,7 +180,7 @@ void Etap3pi0::branches::SetBranches(TTree* tree)
     tree->Branch("taggCh", &taggCh);
     tree->Branch("taggTime", &taggTime);
 
-    tree->Branch("pi0[3]", &pi0);
+    tree->Branch("pi0s", &pi0);
     tree->Branch("pi0_chi2[3]", pi0_chi2, "pi0_chi2[3]/D");
     tree->Branch("pi0_prob[3]", pi0_prob, "pi0_prob[3]/D");
     tree->Branch("pi0_iteration[3]", pi0_iteration, "pi0_iteration[3]/D");
