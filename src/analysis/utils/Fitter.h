@@ -104,9 +104,11 @@ protected:
         FitParticle(const std::string& name): Name(name) {}
 
         void SetupBranches(TTree* tree, const std::string& prefix);
+
+        static TLorentzVector GetVector(const std::vector<double>& EkThetaPhi, const double m);
     };
 
-    static TLorentzVector GetVector(const std::vector<double>& EkThetaPhi, const double m);
+    void LinkVariable(FitParticle& particle);
 
     angular_sigma cb_sigma_theta;
     angular_sigma cb_sigma_phi;
@@ -145,6 +147,9 @@ public:
 
 protected:
 
+    TParticleList set_photons;
+    TParticlePtr set_proton;
+
     struct PhotonBeamVector {
         double E     = 0.0;
         double Sigma = 0.0;
@@ -179,14 +184,15 @@ class TreeFitter : public Fitter
 public:
     TreeFitter(const std::string& name, ParticleTypeTree ptree);
 
-protected:
+    void SetLeaves(const TParticleList& particles);
 
+protected:
 
     struct Node_t {
         Node_t(const ParticleTypeTree& ptree) : TypeTree(ptree) {}
         const ParticleTypeTree TypeTree;
-        TParticlePtr Particle;
-        TParticlePtr FittedParticle;
+        TLorentzVector Particle;
+        std::unique_ptr<FitParticle> LeaveParticle;
         bool operator<(const Node_t& rhs) const {
             return TypeTree->Get() < rhs.TypeTree->Get();
         }

@@ -2,9 +2,12 @@
 
 #include "expconfig/ExpConfig.h"
 
+#include "utils/particle_tools.h"
+
 #include "base/std_ext/memory.h"
 #include "base/std_ext/math.h"
 #include "base/std_ext/system.h"
+#include "base/std_ext/string.h"
 #include "base/ParticleType.h"
 #include "base/WrapTFile.h"
 #include "base/Logger.h"
@@ -19,7 +22,6 @@
 
 #include <cassert>
 
-#include "utils/particle_tools.h"
 
 using namespace std;
 using namespace ant;
@@ -55,9 +57,20 @@ void Fitter::SetupBranches(TTree* tree, string branch_prefix)
     tree->Branch((branch_prefix+"_probability").c_str(), &result_probability);
 }
 
+void Fitter::LinkVariable(Fitter::FitParticle& particle)
+{
+    aplcon->LinkVariable(particle.Name,
+                         particle.Addresses(),
+                         particle.Addresses_Sigma(),
+                         particle.Addresses_Pulls());
+}
+
 double Fitter::EnergyResolution(const TParticlePtr& p) const
 {
     assert(p->Candidate!=nullptr);
+
+    if(p->Type() != ParticleTypeDatabase::Photon)
+        throw Exception("Currently only photons are supported");
 
     if(p->Candidate->Detector & Detector_t::Type_t::CB) {
 
@@ -79,6 +92,9 @@ double Fitter::ThetaResolution(const TParticlePtr& p) const
 {
     assert(p->Candidate!=nullptr);
 
+    if(p->Type() != ParticleTypeDatabase::Photon)
+        throw Exception("Currently only photons are supported");
+
     if(p->Candidate->Detector & Detector_t::Type_t::CB) {
 
         return cb_sigma_theta.GetSigma(p->Candidate->FindCaloCluster()->CentralElement, p->Ek());
@@ -98,6 +114,9 @@ double Fitter::PhiResolution(const TParticlePtr& p) const
 {
     assert(p->Candidate!=nullptr);
 
+    if(p->Type() != ParticleTypeDatabase::Photon)
+        throw Exception("Currently only photons are supported");
+
     if(p->Candidate->Detector & Detector_t::Type_t::CB) {
 
         return cb_sigma_phi.GetSigma(p->Candidate->FindCaloCluster()->CentralElement, p->Ek());
@@ -111,20 +130,6 @@ double Fitter::PhiResolution(const TParticlePtr& p) const
     }
 
     return 0.0;
-}
-
-TLorentzVector Fitter::GetVector(const std::vector<double>& EkThetaPhi, const double m)
-{
-    const mev_t E = EkThetaPhi[0] + m;
-    const mev_t p = sqrt( sqr(E) - sqr(m) );
-
-    /// \bug This might be inefficient...
-
-    TVector3 pv(1,0,0);
-
-    pv.SetMagThetaPhi(p, EkThetaPhi[1], EkThetaPhi[2]);
-
-    return TLorentzVector(pv,E);
 }
 
 double Fitter::fct_TaggerEGausSigma(double)
@@ -144,6 +149,20 @@ void Fitter::FitParticle::SetupBranches(TTree* tree, const string& prefix)
     Ek.SetupBranches(tree, prefix+"_"+Name+"_Ek");
     Theta.SetupBranches(tree, prefix+"_"+Name+"_Theta");
     Phi.SetupBranches(tree, prefix+"_"+Name+"_Phi");
+}
+
+TLorentzVector Fitter::FitParticle::GetVector(const std::vector<double>& EkThetaPhi, const double m)
+{
+    const mev_t E = EkThetaPhi[0] + m;
+    const mev_t p = sqrt( sqr(E) - sqr(m) );
+
+    /// \bug This might be inefficient...
+
+    TVector3 pv(1,0,0);
+
+    pv.SetMagThetaPhi(p, EkThetaPhi[1], EkThetaPhi[2]);
+
+    return TLorentzVector(pv,E);
 }
 
 Fitter::angular_sigma::angular_sigma()
@@ -254,20 +273,13 @@ KinFitter::KinFitter(const std::string& name, unsigned numGammas) :
                          Beam.Adresses() ,
                          Beam.Adresses_Sigma() );
 
-    aplcon->LinkVariable(Proton.Name,
-                         Proton.Addresses(),
-                         Proton.Addresses_Sigma(),
-                         Proton.Addresses_Pulls());
+    LinkVariable(Proton);
 
     vector<string> namesLInv      = { Beam.Name, Proton.Name };
 
     for ( auto& photon: Photons)
     {
-        aplcon->LinkVariable(photon.Name,
-                             photon.Addresses(),
-                             photon.Addresses_Sigma(),
-                             photon.Addresses_Pulls());
-
+        LinkVariable(photon);
         namesLInv.push_back(photon.Name);
     }
 
@@ -284,11 +296,11 @@ KinFitter::KinFitter(const std::string& name, unsigned numGammas) :
 
         TLorentzVector constraint = tg + beam;
 
-        constraint -= GetVector(proton, ParticleTypeDatabase::Proton.Mass());
+        constraint -= FitParticle::GetVector(proton, ParticleTypeDatabase::Proton.Mass());
 
         const auto s = values.size();
         for ( unsigned photon = 0 ; photon < s-2 ; ++ photon)
-            constraint -= GetVector(values[photon + 2], ParticleTypeDatabase::Photon.Mass());
+            constraint -= FitParticle::GetVector(values[photon + 2], ParticleTypeDatabase::Photon.Mass());
 
         return vector<double>(
                { constraint.X(),
@@ -297,7 +309,7 @@ KinFitter::KinFitter(const std::string& name, unsigned numGammas) :
                  constraint.E()} );
     };
 
-    aplcon->AddConstraint("LInv",{namesLInv},LorentzInvariance);
+    aplcon->AddConstraint("LInv",namesLInv,LorentzInvariance);
 
 }
 
@@ -327,20 +339,49 @@ void KinFitter::SetProton(const TParticlePtr& proton)
         LOG(WARNING) << "Proton is not in (CB,TAPS)?";
     }
 
+    set_proton = proton;
+}
+
+void KinFitter::SetPhotons(const std::vector<TParticlePtr>& photons)
+{
+    if(Photons.size() != photons.size())
+        throw Exception("Given number of photons does not match configured fitter");
+
+    for ( unsigned i = 0 ; i < Photons.size() ; ++ i) {
+        auto& photon = Photons.at(i);
+        auto& p   = photons.at(i);
+
+        photon.Ek.Value  = p->Ek();
+        photon.Ek.Sigma = EnergyResolution(p);
+
+        photon.Theta.Value  = p->Theta();
+        photon.Theta.Sigma = ThetaResolution(p);
+
+        photon.Phi.Value  = p->Phi();
+        photon.Phi.Sigma = PhiResolution(p);
+    }
+
+    set_photons = photons;
 }
 
 TParticlePtr KinFitter::GetFittedProton() const
 {
-    return make_shared<TParticle>(ParticleTypeDatabase::Proton, Proton.Ek.Value,
-                                  Proton.Theta.Value, Proton.Phi.Value);
+    auto p = make_shared<TParticle>(ParticleTypeDatabase::Proton, Proton.Ek.Value,
+                                    Proton.Theta.Value, Proton.Phi.Value);
+    p->Candidate = set_proton->Candidate;
+    return p;
 }
 
 TParticleList KinFitter::GetFittedPhotons() const
 {
+    assert(Photons.size() == set_photons.size());
     TParticleList photons;
-    for(const auto& photon : Photons) {
-        photons.emplace_back(make_shared<TParticle>(ParticleTypeDatabase::Photon,
-                                                    photon.Ek.Value, photon.Theta.Value, photon.Phi.Value));
+    for(unsigned i=0;i<Photons.size();i++) {
+        const auto& photon = Photons[i];
+        auto p = make_shared<TParticle>(ParticleTypeDatabase::Photon,
+                                        photon.Ek.Value, photon.Theta.Value, photon.Phi.Value);
+        p->Candidate = set_photons[i]->Candidate;
+        photons.emplace_back(move(p));
     }
     return photons;
 }
@@ -350,25 +391,7 @@ double KinFitter::GetFittedBeamE() const
     return Beam.E;
 }
 
-void KinFitter::SetPhotons(const std::vector<TParticlePtr> &photons_data)
-{
-    if(Photons.size() != photons_data.size())
-        throw Exception("Given number of photons does not match configured fitter");
 
-    for ( unsigned i = 0 ; i < Photons.size() ; ++ i) {
-        auto& photon = Photons.at(i);
-        auto& data   = photons_data.at(i);
-
-        photon.Ek.Value  = data->Ek();
-        photon.Ek.Sigma = EnergyResolution(data);
-
-        photon.Theta.Value  = data->Theta();
-        photon.Theta.Sigma = ThetaResolution(data);
-
-        photon.Phi.Value  = data->Phi();
-        photon.Phi.Sigma = PhiResolution(data);
-    }
-}
 
 void KinFitter::SetupBranches(TTree* tree, string branch_prefix)
 {
@@ -389,14 +412,71 @@ KinFitter::PhotonBeamVector::PhotonBeamVector(const string& name):
 
 }
 
-
 TreeFitter::TreeFitter(const string& name, ParticleTypeTree ptree) :
     Fitter(name),
     tree(MakeTree(ptree))
 {
     tree->GetUniquePermutations(tree_leaves, permutations);
-    LOG(INFO) << "Initialized TreeFitter for " << utils::ParticleTools::GetDecayString(ptree)
+    LOG(INFO) << "Initialized TreeFitter for " << utils::ParticleTools::GetDecayString(ptree, false)
               << " with " << permutations.size() << " permutations";
+
+    // setup fitter variables, collect leave names for constraint
+    vector<string> leave_names;
+    for(unsigned i=0;i<tree_leaves.size();i++) {
+        Node_t& node = tree_leaves[i]->Get();
+        leave_names.emplace_back(node.TypeTree->Get().Name()+"_"+to_string(i));
+        node.LeaveParticle = std_ext::make_unique<FitParticle>(leave_names.back());
+        LinkVariable(*node.LeaveParticle);
+    }
+
+    // define the constraint
+    auto IM_at_nodes = [this] (const vector<vector<double>>& v) {
+        assert(v.size() == tree_leaves.size());
+        // assign values v to leaves
+        for(unsigned i=0;i<v.size();i++) {
+            Node_t& node = tree_leaves[i]->Get();
+            node.Particle = FitParticle::GetVector(v[i],
+                                                   node.TypeTree->Get().Mass());
+        }
+        // add the Particles up (rely on depth-first recursion of Map_nodes)
+        // and calculate the IM constraint
+        std::vector<double> IM_diff;
+        tree->Map_nodes([&IM_diff] (const Tree<Node_t>::node_t& tnode) {
+            if(tnode->IsLeaf())
+                return;
+            Node_t& node = tnode->Get();
+            node.Particle = TLorentzVector(0,0,0,0);
+            for(const auto& d : tnode->Daughters())
+                node.Particle += d->Get().Particle;
+            const double IM_calc = node.Particle.M();
+            const double IM_expected = node.TypeTree->Get().Mass();
+            IM_diff.emplace_back(IM_calc - IM_expected);
+        });
+        return IM_diff;
+    };
+
+    aplcon->AddConstraint("IM_at_nodes",leave_names, IM_at_nodes);
+}
+
+void TreeFitter::SetLeaves(const TParticleList& particles)
+{
+    if(particles.size() != tree_leaves.size())
+        throw Exception("Given leave particles does not match configured fitter");
+
+    for(unsigned i=0;i<particles.size();i++) {
+        const TParticlePtr& p = particles.at(i);
+
+        FitParticle& leave = *tree_leaves[i]->Get().LeaveParticle;
+
+        leave.Ek.Value  = p->Ek();
+        leave.Ek.Sigma = EnergyResolution(p);
+
+        leave.Theta.Value  = p->Theta();
+        leave.Theta.Sigma = ThetaResolution(p);
+
+        leave.Phi.Value  = p->Phi();
+        leave.Phi.Sigma = PhiResolution(p);
+    }
 }
 
 TreeFitter::tree_t TreeFitter::MakeTree(ParticleTypeTree ptree)
