@@ -21,6 +21,7 @@
 #include "TF1.h"
 
 #include <cassert>
+#include <functional>
 
 
 using namespace std;
@@ -33,7 +34,7 @@ using namespace ant::analysis::utils;
 Fitter::Fitter(const string& fittername)
 {
     APLCON::Fit_Settings_t settings = APLCON::Fit_Settings_t::Default;
-    settings.MaxIterations = 100;
+    settings.MaxIterations = 40;
     aplcon = make_unique<APLCON>(fittername, settings);
 }
 
@@ -423,35 +424,45 @@ TreeFitter::TreeFitter(const string& name, ParticleTypeTree ptree) :
     // setup fitter variables, collect leave names for constraint
     vector<string> leave_names;
     for(unsigned i=0;i<tree_leaves.size();i++) {
-        Node_t& node = tree_leaves[i]->Get();
+        node_t& node = tree_leaves[i]->Get();
         leave_names.emplace_back(node.TypeTree->Get().Name()+"_"+to_string(i));
         node.LeaveParticle = std_ext::make_unique<FitParticle>(leave_names.back());
         LinkVariable(*node.LeaveParticle);
     }
 
-    // define the constraint
-    auto IM_at_nodes = [this] (const vector<vector<double>>& v) {
-        assert(v.size() == tree_leaves.size());
-        // assign values v to leaves
-        for(unsigned i=0;i<v.size();i++) {
-            Node_t& node = tree_leaves[i]->Get();
-            node.Particle = FitParticle::GetVector(v[i],
-                                                   node.TypeTree->Get().Mass());
-        }
-        // add the Particles up (rely on depth-first recursion of Map_nodes)
-        // and calculate the IM constraint
-        std::vector<double> IM_diff;
-        tree->Map_nodes([&IM_diff] (const Tree<Node_t>::node_t& tnode) {
-            if(tnode->IsLeaf())
-                return;
-            Node_t& node = tnode->Get();
-            node.Particle = TLorentzVector(0,0,0,0);
+    // prepare the calculation at each constraint
+    // the Map_nodes call can be done once and the
+    // calculation is stored in little functions
+    using node_constraint_t = function<double()>;
+    vector<node_constraint_t> node_constraints;
+    tree->Map_nodes([&node_constraints] (const tree_t& tnode) {
+        if(tnode->IsLeaf())
+            return;
+        LOG(INFO) << "IM node constraint for " << tnode->Get().TypeTree->Get().Name();
+        node_constraints.emplace_back([tnode] () {
+            node_t& node = tnode->Get();
+            node.Particle.SetPtEtaPhiE(0,0,0,0);
             for(const auto& d : tnode->Daughters())
                 node.Particle += d->Get().Particle;
             const double IM_calc = node.Particle.M();
-            const double IM_expected = node.TypeTree->Get().Mass();
-            IM_diff.emplace_back(IM_calc - IM_expected);
+            const double IM_expected = tnode->Get().TypeTree->Get().Mass();
+            return IM_calc - IM_expected;
         });
+    });
+
+    // define the constraint
+    auto IM_at_nodes = [this, node_constraints] (const vector<vector<double>>& v) {
+        assert(v.size() == tree_leaves.size());
+        // assign values v to leaves
+        for(unsigned i=0;i<v.size();i++) {
+            node_t& node = tree_leaves[i]->Get();
+            node.Particle = FitParticle::GetVector(v[i],
+                                                   node.TypeTree->Get().Mass());
+        }
+        // calculate the IM constraint by evaluating the pre-defined functions
+        vector<double> IM_diff(node_constraints.size());
+        for(unsigned i=0;i<node_constraints.size();i++)
+            IM_diff[i] = node_constraints[i]();
         return IM_diff;
     };
 
@@ -481,7 +492,7 @@ void TreeFitter::SetLeaves(const TParticleList& particles)
 
 TreeFitter::tree_t TreeFitter::MakeTree(ParticleTypeTree ptree)
 {
-    auto t = ptree->DeepCopy<Node_t>([] (const ParticleTypeTree& n) { return n; });
+    auto t = ptree->DeepCopy<node_t>([] (const ParticleTypeTree& n) { return n; });
     t->Sort();
     return t;
 }

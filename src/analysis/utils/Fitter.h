@@ -184,21 +184,33 @@ class TreeFitter : public Fitter
 public:
     TreeFitter(const std::string& name, ParticleTypeTree ptree);
 
-    void SetLeaves(const TParticleList& particles);
-
-protected:
-
-    struct Node_t {
-        Node_t(const ParticleTypeTree& ptree) : TypeTree(ptree) {}
+    struct node_t {
+        node_t(const ParticleTypeTree& ptree) : TypeTree(ptree) {}
         const ParticleTypeTree TypeTree;
         TLorentzVector Particle;
         std::unique_ptr<FitParticle> LeaveParticle;
-        bool operator<(const Node_t& rhs) const {
+        bool operator<(const node_t& rhs) const {
             return TypeTree->Get() < rhs.TypeTree->Get();
         }
     };
 
-    using tree_t = std::shared_ptr<Tree<Node_t>>;
+    using tree_t = Tree<node_t>::node_t;
+
+    void SetLeaves(const TParticleList& particles);
+
+    tree_t GetTreeNode(const ParticleTypeDatabase::Type& type) const {
+        tree_t treenode = nullptr;
+        tree->Map_nodes([&treenode, &type] (tree_t t) {
+            if(t->Get().TypeTree->Get() == type)
+                treenode = t;
+        });
+        return treenode;
+    }
+
+
+protected:
+
+
 
     static tree_t MakeTree(ParticleTypeTree ptree);
 

@@ -59,6 +59,17 @@ class EtapOmegaG : public Physics {
         TTree* Tree;
         utils::TreeFitter treefitter;
 
+        utils::TreeFitter::tree_t fitted_EtaPrime;
+        utils::TreeFitter::tree_t fitted_Omega;
+        utils::TreeFitter::tree_t fitted_Pi0;
+
+        double   b_TreeFitChi2;
+        unsigned b_TreeFitIterations;
+        double b_IM_EtaPrime;
+        double b_IM_Omega;
+        double b_IM_Pi0;
+
+
         void SetupBranches();
         void ResetBranches();
         void Process(const Particles_t& particles);

@@ -243,7 +243,7 @@ void EtapOmegaG::ProcessEvent(const TEvent& event, manager_t&)
         fitter.SetEgammaBeam(taggerhit.PhotonEnergy);
         fitter.SetProton(particles.Proton);
         fitter.SetPhotons(particles.Photons);
-        auto fit_result = fitter.DoFit();
+        const auto& fit_result = fitter.DoFit();
 
         b_KinFitChi2 = numeric_limits<double>::quiet_NaN();
         if(fit_result.Status == APLCON::Result_Status_t::Success) {
@@ -283,7 +283,10 @@ void EtapOmegaG::ProcessEvent(const TEvent& event, manager_t&)
 
 EtapOmegaG::Sig_t::Sig_t() :
     treefitter("sig_treefitter",
-               utils::ParticleTools::GetProducedParticle(EtapOmegaG::ptreeSignal))
+               utils::ParticleTools::GetProducedParticle(EtapOmegaG::ptreeSignal)),
+    fitted_EtaPrime(treefitter.GetTreeNode(ParticleTypeDatabase::EtaPrime)),
+    fitted_Omega(treefitter.GetTreeNode(ParticleTypeDatabase::Omega)),
+    fitted_Pi0(treefitter.GetTreeNode(ParticleTypeDatabase::Pi0))
 {
     const auto setup = ant::ExpConfig::Setup::GetLastFound();
     if(!setup)
@@ -293,11 +296,26 @@ EtapOmegaG::Sig_t::Sig_t() :
 
 void EtapOmegaG::Sig_t::SetupBranches()
 {
+#define ADD_BRANCH(name) \
+    Tree->Branch(#name,addressof(b_ ## name));
 
+    ADD_BRANCH(TreeFitChi2);
+    ADD_BRANCH(TreeFitIterations);
+
+    ADD_BRANCH(IM_EtaPrime);
+    ADD_BRANCH(IM_Omega);
+    ADD_BRANCH(IM_Pi0);
+
+#undef ADD_BRANCH
 }
 
 void EtapOmegaG::Sig_t::ResetBranches()
 {
+    b_TreeFitChi2 = numeric_limits<double>::quiet_NaN();
+    b_TreeFitIterations = 0;
+    b_IM_EtaPrime = numeric_limits<double>::quiet_NaN();
+    b_IM_Omega = numeric_limits<double>::quiet_NaN();
+    b_IM_Pi0 = numeric_limits<double>::quiet_NaN();
 
 }
 
@@ -305,7 +323,16 @@ void EtapOmegaG::Sig_t::Process(const EtapOmegaG::Particles_t& particles)
 {
     assert(particles.Photons.size() == 4);
     treefitter.SetLeaves(particles.Photons);
-    treefitter.DoFit();
+    const APLCON::Result_t& r = treefitter.DoFit();
+
+    b_TreeFitIterations = r.NIterations;
+    if(r.Status == APLCON::Result_Status_t::Success) {
+        b_TreeFitChi2 = r.ChiSquare;
+        b_IM_EtaPrime = fitted_EtaPrime->Get().Particle.M();
+        b_IM_Omega = fitted_Omega->Get().Particle.M();
+        b_IM_Pi0 = fitted_Pi0->Get().Particle.M();
+    }
+
 }
 
 void EtapOmegaG::Ref_t::SetupBranches()
