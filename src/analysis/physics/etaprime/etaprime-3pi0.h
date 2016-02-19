@@ -3,6 +3,7 @@
 #include "analysis/utils/KinFitter.h"
 #include "analysis/physics/Physics.h"
 #include "analysis/plot/PromptRandomHist.h"
+#include "utils/A2GeoAcceptance.h"
 
 class TH1D;
 class TTree;
@@ -14,6 +15,8 @@ namespace physics {
 class Etap3pi0 : public Physics {
 
 protected:
+    //geometry
+    ant::analysis::utils::A2SimpleGeometry geometry;
 
     // =======================   constants =====================================================
 

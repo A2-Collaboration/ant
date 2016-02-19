@@ -41,6 +41,9 @@ Etap3pi0::Etap3pi0(const std::string& name, OptionsPtr opts) :
     cat = "channels";
     AddHist1D(cat,"mc_true",            "mc true for signal, ref, bkg", "", "#", BinSettings(3));
 
+    cat = "tagger";
+    AddHist1D(cat,"tagHits", "# Tagger hits", "# hits", "", BinSettings(12));
+
 
 //    fitter.SetupBranches(tree, "EPB");
     fitter.LoadSigmaData(setup->GetPhysicsFilesDirectory()+"/FitterSigmas.root");
@@ -67,6 +70,10 @@ TLorentzVector Etap3pi0::MakeLoretzSum(const TParticleList& particles)
 
 
 
+TLorentzVector GetMM(double , const TLorentzVector& )
+{
+    return TLorentzVector();
+}
 
 bool Etap3pi0::MakeMCProton(const TEventData& mcdata, TParticlePtr& proton)
 {
@@ -79,10 +86,12 @@ bool Etap3pi0::MakeMCProton(const TEventData& mcdata, TParticlePtr& proton)
 
 void Etap3pi0::ProcessEvent(const TEvent& event, manager_t&)
 {
+    /// TODO:geo-cuts ??
+
     const auto& data   = *event.Reconstructed;
     const auto& mcdata = *event.MCTrue;
 
-    hists.at("steps").at("evcount")->Fill("totalEvts",1);
+    hists.at("steps").at("evcount")->Fill("1) totalEvts",1);
 
     if ( mcdata.ParticleTree )
     {
@@ -93,7 +102,7 @@ void Etap3pi0::ProcessEvent(const TEvent& event, manager_t&)
         if (mcdata.ParticleTree->IsEqual(bkg_tree, utils::ParticleTools::MatchByParticleName))
             hists.at("channels").at("mc_true")->Fill(utils::ParticleTools::GetDecayString(mcdata.ParticleTree).c_str(),1);
     }
-    
+
     const auto& photons            = data.Particles.Get(ParticleTypeDatabase::Photon);
     const auto& protonCandidates   = data.Particles.Get(ParticleTypeDatabase::Proton);
     const auto& mcprotons          = mcdata.Particles.Get(ParticleTypeDatabase::Proton);
@@ -101,26 +110,31 @@ void Etap3pi0::ProcessEvent(const TEvent& event, manager_t&)
     if ( data.Candidates.size() != 7)
         return;
 
-    hists.at("steps").at("evcount")->Fill("7cands",1);
+    hists.at("steps").at("evcount")->Fill("2) 7 cands",1);
 
     if (photons.size() != 6)
         return;
 
-    hists.at("steps").at("evcount")->Fill("6gamma",1);
+    hists.at("steps").at("evcount")->Fill("3) 6 gamma",1);
 
+    // cut on and generate proton
     if (protonCandidates.size() != 1)
         return;
-
-    hists.at("steps").at("evcount")->Fill("1p",1);
-
-    // geo-cuts
-
+    vars.proton = *protonCandidates.at(0);
+    hists.at("steps").at("evcount")->Fill("4) 1 proton",1);
     //proton-cuts -> TAPS
+    if (geometry.DetectorFromAngles(vars.proton.Theta(),vars.proton.Phi()) != Detector_t::Type_t::TAPS)
+        return;
+    hists.at("steps").at("evcount")->Fill("5) proton in TAPS",1);
+
+
+
 
     vars.etaprime = MakeLoretzSum(photons);
 
     if (mcprotons.size() > 1)
         return;
+    hists.at("steps").at("evcount")->Fill("6) <= 1 mc-true proton",1);
 
     if (mcprotons.size() == 1)
         vars.trueProton = *mcprotons.at(0);
@@ -128,11 +142,12 @@ void Etap3pi0::ProcessEvent(const TEvent& event, manager_t&)
     double CBAvgTime = event.Reconstructed->Trigger.CBTiming;
     if(!isfinite(CBAvgTime))
         return;
+    hists.at("steps").at("evcount")->Fill("7) finite CBAvg-Time",1);
 
+    hists.at("tagger").at("tagHits")->Fill(data.TaggerHits.size());
     for(const TTaggerHit& t : data.TaggerHits )
     {
         promptrandom.SetTaggerHit(t.Time - CBAvgTime);
-
         if(promptrandom.State() == PromptRandom::Case::Outside)
             continue;
         vars.taggWeight    = promptrandom.FillWeight();
@@ -140,6 +155,17 @@ void Etap3pi0::ProcessEvent(const TEvent& event, manager_t&)
         vars.taggCh        = unsigned(t.Channel);
         vars.taggTime      = t.Time;
 
+        vector<double> chi2_pions[3];
+
+        for (const auto& combination: combinations)
+        {
+            for (unsigned ind_pion = 0; ind_pion < 3 ; ++ind_pion)
+            {
+
+            }
+        }
+
+        vars.MM = GetMM(vars.taggE,vars.etaprime);
         tree->Fill();
     }
  }
