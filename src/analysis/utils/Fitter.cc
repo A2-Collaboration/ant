@@ -34,7 +34,7 @@ using namespace ant::analysis::utils;
 Fitter::Fitter(const string& fittername)
 {
     APLCON::Fit_Settings_t settings = APLCON::Fit_Settings_t::Default;
-    settings.MaxIterations = 40;
+    settings.MaxIterations = 30;
     aplcon = make_unique<APLCON>(fittername, settings);
 }
 
