@@ -40,7 +40,7 @@ protected:
     }
 
 
-    Tree(T&& data_) : data(data_), is_sorted(false) {}
+    Tree(T&& data_) : data(std::forward<T>(data_)), is_sorted(false) {}
 
 
     friend class cereal::access;
