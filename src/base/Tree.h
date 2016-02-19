@@ -119,10 +119,13 @@ public:
         }
     }
 
+    /**
+     * @brief Map_nodes runs through the tree recursively depth-first
+     * @param function applied to each node
+     * @note depth first is important for @c GetUniquePermutations
+     */
     template <typename F>
     void Map_nodes(F function) const {
-        // deep first is important,
-        // see GetUniquePermutations Bitfield summation
         for(auto& daughter : daughters) {
             daughter->Map_nodes(function);
         }
@@ -203,8 +206,10 @@ public:
         return IsEqual(other, [] (const T& a, const U& b) { return a==b; });
     }
 
-
-
+    /**
+     * @brief DeepCopy uses the given transfrom from node_t to U to deeply copy the tree
+     * @param transform function to convert node to new type U
+     */
     template<typename U = T, typename Transform = std::function<U(node_t)> >
     snode_t<U> DeepCopy(Transform transform = [] (const node_t& n) { return n->Get(); } ) const {
         auto r = Tree<U>::MakeNode(transform(Self()));
@@ -214,6 +219,16 @@ public:
         return r;
     }
 
+    /**
+     * @brief GetUniquePermutations calculates the unique permutations of the (assumed identical) leaves
+     * @param leaves the leaves of the tree for convenience, defines also the order of indices in perms
+     * @param perms permutations as indices corresponding to vector leaves
+     *
+     * @note We assume that the tree is already sorted with std::less comparison,
+     * anything else will lead to wrong results.
+     *
+     * @todo extend function such that non-identical leaves are supported, i.e. let user provide comparison
+     */
     void GetUniquePermutations(std::vector<node_t>& leaves,
                                std::vector<std::vector<size_t>>& perms) const
     {
@@ -286,12 +301,8 @@ public:
                 prev_leave = leave;
         }
 
-        struct wrap_perm_t {
-            wrap_perm_t(const perm_t& p, wrapped_node_t t) : Perm(p), Tree(t) {}
-            perm_t Perm;
-            wrapped_node_t Tree;
-        };
-        std::list<wrap_perm_t> unique_perms;
+        // remember the already found trees corresponding to permutations
+        std::list<wrapped_node_t> unique_trees;
 
         // loop over all permuations
         do {
@@ -304,13 +315,11 @@ public:
             // calculate the sum of upper bitfields,
             // we rely on deep-first recursion of Map_nodes
             wrapped->Map_nodes([] (wrapped_node_t node) {
-                if(!node->Daughters().empty())
-                    node->Get().Bitfield = 0;
-            });
-            wrapped->Map_nodes([] (wrapped_node_t node) {
-                auto p = node->GetParent();
-                if(p)
-                    p->Get().Bitfield += node->Get().Bitfield;
+                if(node->IsLeaf())
+                    return;
+                node->Get().Bitfield = 0;
+                for(const auto& d : node->Daughters())
+                    node->Get().Bitfield += d->Get().Bitfield;
             });
 
             // check that summation has worked
@@ -319,10 +328,10 @@ public:
             // sort by Bitfield sums (but keep ordering of original nodes)
             wrapped->Sort();
 
-            // have a look if we know this structure already
+            // have a look if we know this tree already
             bool found = false;
-            for(const wrap_perm_t& p : unique_perms) {
-                if(p.Tree->IsEqual(wrapped)) {
+            for(const wrapped_node_t& t : unique_trees) {
+                if(t->IsEqual(wrapped)) {
                     found = true;
                     break;
                 }
@@ -330,15 +339,13 @@ public:
             if(!found) {
                 auto t = wrapped->DeepCopy();
                 t->Sort();
-                unique_perms.emplace_back(current_perm, move(t));
+                unique_trees.emplace_back(move(t));
+                // add it to the returned perms as well
+                perms.emplace_back(current_perm);
             }
 
         }
         while(std::next_permutation(current_perm.begin(), current_perm.end()));
-
-        // unwrap the unique_perms
-        for(wrap_perm_t& p : unique_perms)
-            perms.emplace_back(std::move(p.Perm));
 
     }
 
