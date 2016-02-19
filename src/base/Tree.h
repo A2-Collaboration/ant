@@ -222,7 +222,8 @@ public:
     /**
      * @brief GetUniquePermutations calculates the unique permutations of the (assumed identical) leaves
      * @param leaves the leaves of the tree for convenience, defines also the order of indices in perms
-     * @param perms permutations as indices corresponding to vector leaves
+     * @param perms permutations as indices corresponding to vector leaves.
+     * Use indices to assign particles to leaves (not leaves to particles)
      *
      * @note We assume that the tree is already sorted with std::less comparison,
      * anything else will lead to wrong results.
@@ -308,8 +309,8 @@ public:
         do {
             // apply the current permutation to the leaves
             for(unsigned i=0;i<wrapped_leaves.size();i++) {
-                auto& perm_leave = wrapped_leaves[current_perm[i]];
-                perm_leave->Get().Bitfield = 1 << i;
+                auto& leave = wrapped_leaves[i]->Get();
+                leave.Bitfield = 1 << current_perm[i];
             }
 
             // calculate the sum of upper bitfields,
