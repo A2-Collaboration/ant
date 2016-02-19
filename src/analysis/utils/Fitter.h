@@ -189,6 +189,7 @@ public:
         const ParticleTypeTree TypeTree;
         TLorentzVector Particle;
         std::unique_ptr<FitParticle> LeaveParticle;
+        TParticlePtr SetParticle;
         bool operator<(const node_t& rhs) const {
             return TypeTree->Get() < rhs.TypeTree->Get();
         }
@@ -207,17 +208,26 @@ public:
         return treenode;
     }
 
+    bool NextFit(APLCON::Result_t& fit_result);
+
+    std::vector<size_t> GetCurrentPermutation() const {
+        return *current_perm;
+    }
 
 protected:
 
-
+    using Fitter::DoFit;
 
     static tree_t MakeTree(ParticleTypeTree ptree);
 
 
     const tree_t tree;
     std::vector<tree_t> tree_leaves;
-    std::vector<std::vector<size_t>> permutations;
+    using permutations_t = std::vector<std::vector<size_t>>;
+    permutations_t permutations;
+    permutations_t::const_iterator current_perm;
+
+    TParticleList p_leaves;
 };
 
 

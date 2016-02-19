@@ -418,6 +418,8 @@ TreeFitter::TreeFitter(const string& name, ParticleTypeTree ptree) :
     tree(MakeTree(ptree))
 {
     tree->GetUniquePermutations(tree_leaves, permutations);
+    current_perm = permutations.end();
+
     LOG(INFO) << "Initialized TreeFitter for " << utils::ParticleTools::GetDecayString(ptree, false)
               << " with " << permutations.size() << " permutations";
 
@@ -474,10 +476,24 @@ void TreeFitter::SetLeaves(const TParticleList& particles)
     if(particles.size() != tree_leaves.size())
         throw Exception("Given leave particles does not match configured fitter");
 
-    for(unsigned i=0;i<particles.size();i++) {
-        const TParticlePtr& p = particles.at(i);
+    p_leaves = particles;
+    current_perm = permutations.begin();
+}
 
-        FitParticle& leave = *tree_leaves[i]->Get().LeaveParticle;
+bool TreeFitter::NextFit(APLCON::Result_t& fit_result)
+{
+    if(current_perm == permutations.end())
+        return false;
+
+    for(unsigned i=0;i<p_leaves.size();i++) {
+
+
+        const TParticlePtr& p = p_leaves.at(current_perm->at(i));
+        node_t& leave_node = tree_leaves[i]->Get();
+
+        leave_node.SetParticle = p;
+
+        FitParticle& leave = *leave_node.LeaveParticle;
 
         leave.Ek.Value  = p->Ek();
         leave.Ek.Sigma = EnergyResolution(p);
@@ -488,6 +504,11 @@ void TreeFitter::SetLeaves(const TParticleList& particles)
         leave.Phi.Value  = p->Phi();
         leave.Phi.Sigma = PhiResolution(p);
     }
+
+    fit_result = aplcon->DoFit();
+
+    current_perm++;
+    return true;
 }
 
 TreeFitter::tree_t TreeFitter::MakeTree(ParticleTypeTree ptree)
