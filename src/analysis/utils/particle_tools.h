@@ -41,7 +41,7 @@ struct ParticleTools {
      */
     static std::string GetDecayString(const TParticleTree_t& particletree);
 
-    static std::string GetDecayString(const ParticleTypeTree& particletypetree);
+    static std::string GetDecayString(const ParticleTypeTree& particletypetree, bool usePrintName = true);
 
     /**
      * @brief SanitizeDecayString replaces all special characters by _

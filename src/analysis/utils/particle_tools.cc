@@ -51,7 +51,7 @@ void ParticleVars::Clear()
 
 
 template<typename T>
-string _GetDecayString(const shared_ptr<Tree<T>>& particletree, function<string(const T&)> to_string)
+string _GetDecayString(const shared_ptr<Tree<T>>& particletree, function<string(const T&)> to_string, bool usePrintName = true)
 {
     if(!particletree)
         return "empty_unknown";
@@ -59,7 +59,7 @@ string _GetDecayString(const shared_ptr<Tree<T>>& particletree, function<string(
     stringstream s;
 
     // the head is the beam particle
-    s << to_string(particletree->Get()) << " #rightarrow ";
+    s << to_string(particletree->Get()) << (usePrintName ? " #rightarrow " : " -> ");
 
     // ignore level==0 since it's the already handled beamparticle
     size_t lastlevel = 1;
@@ -89,9 +89,12 @@ string ParticleTools::GetDecayString(const TParticleTree_t& particletree)
     return _GetDecayString<TParticlePtr>(particletree, [] (const TParticlePtr& p) { return p->Type().PrintName(); });
 }
 
-string ParticleTools::GetDecayString(const ParticleTypeTree& particletypetree)
+string ParticleTools::GetDecayString(const ParticleTypeTree& particletypetree, bool usePrintName)
 {
-    return _GetDecayString<const ParticleTypeDatabase::Type&>(particletypetree, [] (const ParticleTypeDatabase::Type& t) { return t.PrintName(); });
+    auto print_fct = [usePrintName] (const ParticleTypeDatabase::Type& t) {
+        return usePrintName ? t.PrintName() : t.Name();
+    };
+    return _GetDecayString<const ParticleTypeDatabase::Type&>(particletypetree, print_fct, usePrintName);
 }
 
 string ParticleTools::SanitizeDecayString(string decaystring)
