@@ -5,6 +5,7 @@
 
 #include "utils/particle_tools.h"
 #include "utils/matcher.h"
+#include "utils/combinatorics.h"
 
 #include "expconfig/ExpConfig.h"
 
@@ -65,12 +66,17 @@ EtapOmegaG::EtapOmegaG(const string& name, OptionsPtr opts) :
     ADD_BRANCH(MCTrue);
     ADD_BRANCH(nPhotonsCB);
     ADD_BRANCH(nPhotonsTAPS);
+    ADD_BRANCH(CBSumE);
     ADD_BRANCH(CBSumVetoE);
     ADD_BRANCH(CBAvgTime);
+    ADD_BRANCH(ProtonTime);
     ADD_BRANCH(PIDSumE);
+
     ADD_BRANCH(ProtonCopl);
     ADD_BRANCH(MissingMass);
     ADD_BRANCH(KinFitChi2);
+    ADD_BRANCH(KinFitIterations);
+
     ADD_BRANCH(TaggW);
     ADD_BRANCH(TaggW_tight);
     ADD_BRANCH(TaggE);
@@ -110,6 +116,7 @@ void EtapOmegaG::ProcessEvent(const TEvent& event, manager_t&)
     if(data.Trigger.CBEnergySum<=550)
         return;
     h_CommonCuts->Fill("CBEnergySum>550",1.0);
+    b_CBSumE = data.Trigger.CBEnergySum;
 
     b_CBAvgTime = event.Reconstructed->Trigger.CBTiming;
     if(!isfinite(b_CBAvgTime))
@@ -120,12 +127,14 @@ void EtapOmegaG::ProcessEvent(const TEvent& event, manager_t&)
     Particles_t particles;
 
     // identify the proton here as slowest cluster in TAPS
+    // using CBAvgTime does not help here, since it's constant
+    // over each TAPS clusters
     /// \todo think about using beta here as in EtapProton?
-    double proton_timing = numeric_limits<double>::quiet_NaN();
+    b_ProtonTime = std_ext::NaN;
     for(const TCandidatePtr& cand : data.Candidates) {
         if(cand->Detector & Detector_t::Type_t::TAPS) {
-            if(!isfinite(proton_timing) || proton_timing < cand->Time) {
-                proton_timing = cand->Time;
+            if(!isfinite(b_ProtonTime) || b_ProtonTime < cand->Time) {
+                b_ProtonTime = cand->Time;
                 particles.Proton = make_shared<TParticle>(ParticleTypeDatabase::Proton, cand);
             }
         }
@@ -258,10 +267,12 @@ void EtapOmegaG::ProcessEvent(const TEvent& event, manager_t&)
         SigFitted.ResetBranches();
         RefFitted.ResetBranches();
 
-        b_KinFitChi2 = numeric_limits<double>::quiet_NaN();
+        b_KinFitChi2 = std_ext::NaN;
+        b_KinFitIterations = 0;
         if(fit_result.Status == APLCON::Result_Status_t::Success) {
             kinfit_ok = true;
             b_KinFitChi2 = fit_result.ChiSquare;
+            b_KinFitIterations = fit_result.NIterations;
             Particles_t fitted_particles;
             fitted_particles.Proton = fitter.GetFittedProton();
             fitted_particles.Photons = fitter.GetFittedPhotons();
@@ -300,7 +311,10 @@ EtapOmegaG::Sig_t::Sig_t() :
                utils::ParticleTools::GetProducedParticle(EtapOmegaG::ptreeSignal)),
     fitted_EtaPrime(treefitter.GetTreeNode(ParticleTypeDatabase::EtaPrime)),
     fitted_Omega(treefitter.GetTreeNode(ParticleTypeDatabase::Omega)),
-    fitted_Pi0(treefitter.GetTreeNode(ParticleTypeDatabase::Pi0))
+    fitted_Pi0(treefitter.GetTreeNode(ParticleTypeDatabase::Pi0)),
+    b_ggg(4),  // size=4
+    b_gg_gg1(3), // size=3
+    b_gg_gg2(3)
 {
     const auto setup = ant::ExpConfig::Setup::GetLastFound();
     if(!setup)
@@ -331,6 +345,10 @@ void EtapOmegaG::Sig_t::SetupBranches()
     ADD_BRANCH(TreeFitChi2);
     ADD_BRANCH(TreeFitIterations);
 
+    ADD_BRANCH(ggg);
+    ADD_BRANCH(gg_gg1);
+    ADD_BRANCH(gg_gg2);
+
     ADD_BRANCH(IM_EtaPrime_fitted);
     ADD_BRANCH(IM_Omega_fitted);
     ADD_BRANCH(IM_Pi0_fitted);
@@ -351,18 +369,26 @@ void EtapOmegaG::Sig_t::SetupBranches()
 
 void EtapOmegaG::Sig_t::ResetBranches()
 {
-    b_TreeFitChi2 = numeric_limits<double>::quiet_NaN();
+    b_TreeFitChi2 = std_ext::NaN;
     b_TreeFitIterations = 0;
-    b_IM_EtaPrime_fitted = numeric_limits<double>::quiet_NaN();
-    b_IM_Omega_fitted = numeric_limits<double>::quiet_NaN();
-    b_IM_Pi0_fitted = numeric_limits<double>::quiet_NaN();
-    b_IM_EtaPrime_best = numeric_limits<double>::quiet_NaN();
-    b_IM_Omega_best = numeric_limits<double>::quiet_NaN();
-    b_IM_Pi0_best = numeric_limits<double>::quiet_NaN();
-    b_Bachelor_best_best = numeric_limits<double>::quiet_NaN();
-    b_Bachelor_best_fit = numeric_limits<double>::quiet_NaN();
-    b_Bachelor_fit_best = numeric_limits<double>::quiet_NaN();
-    b_Bachelor_fit_fit = numeric_limits<double>::quiet_NaN();
+
+    std::fill(b_ggg.begin(), b_ggg.end(), std_ext::NaN);
+    std::fill(b_gg_gg1.begin(), b_gg_gg1.end(), std_ext::NaN);
+    std::fill(b_gg_gg2.begin(), b_gg_gg2.end(), std_ext::NaN);
+
+    b_IM_EtaPrime_fitted  = std_ext::NaN;
+    b_IM_Omega_fitted = std_ext::NaN;
+    b_IM_Pi0_fitted = std_ext::NaN;
+
+    b_IM_EtaPrime_best = std_ext::NaN;
+    b_IM_Omega_best = std_ext::NaN;
+    b_IM_Pi0_best = std_ext::NaN;
+
+    b_Bachelor_best_best = std_ext::NaN;
+    b_Bachelor_best_fit = std_ext::NaN;
+    b_Bachelor_fit_best = std_ext::NaN;
+    b_Bachelor_fit_fit = std_ext::NaN;
+
     b_MCTrueMatch = 0;
 }
 
@@ -372,7 +398,24 @@ void EtapOmegaG::Sig_t::Process(const EtapOmegaG::Particles_t& particles, TParti
 
     assert(particles.Photons.size() == 4);
 
-    /// \todo do some ggg, gggg, gg/gg combinatorics here
+    //  ggg combinatorics
+    auto it_ggg = b_ggg.begin();
+    for( auto comb = utils::makeCombination(particles.Photons,3); !comb.Done(); ++comb ) {
+        *it_ggg = (*comb.at(0) + *comb.at(1) + *comb.at(2)).M();
+        ++it_ggg;
+    }
+
+    // gg/gg "Goldhaber" combinatorics
+    const auto goldhaber_comb = vector<vector<unsigned>>({{0,1,2,3},{0,2,1,3},{0,3,1,2}});
+    auto it_gg_gg1 = b_gg_gg1.begin();
+    auto it_gg_gg2 = b_gg_gg2.begin();
+    for(auto i : goldhaber_comb) {
+        const auto& p = particles.Photons;
+        *it_gg_gg1 = (*p[i[0]] + *p[i[1]]).M();
+        *it_gg_gg2 = (*p[i[2]] + *p[i[3]]).M();
+        ++it_gg_gg1;
+        ++it_gg_gg2;
+    }
 
 
     // g_Omega to check against MCTrue
@@ -482,7 +525,7 @@ void EtapOmegaG::Ref_t::SetupBranches()
 
 void EtapOmegaG::Ref_t::ResetBranches()
 {
-    b_IM_2g = numeric_limits<double>::quiet_NaN();
+    b_IM_2g = std_ext::NaN;
 }
 
 void EtapOmegaG::Ref_t::Process(const EtapOmegaG::Particles_t& particles)

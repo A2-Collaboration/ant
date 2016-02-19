@@ -30,13 +30,16 @@ class EtapOmegaG : public Physics {
     unsigned b_MCTrue;
     unsigned b_nPhotonsCB;
     unsigned b_nPhotonsTAPS;
+    double   b_CBSumE;
     double   b_CBSumVetoE;
     double   b_CBAvgTime;
+    double   b_ProtonTime;
     double   b_PIDSumE;
 
     double   b_ProtonCopl;
     double   b_MissingMass;
     double   b_KinFitChi2;
+    unsigned b_KinFitIterations;
     double   b_TaggW;
     double   b_TaggW_tight;
     double   b_TaggE;
@@ -70,6 +73,9 @@ class EtapOmegaG : public Physics {
         utils::TreeFitter::tree_t fitted_g1_Pi0;
         utils::TreeFitter::tree_t fitted_g2_Pi0;
 
+        std::vector<double> b_ggg;
+        std::vector<double> b_gg_gg1;
+        std::vector<double> b_gg_gg2;
 
         double   b_TreeFitChi2;
         unsigned b_TreeFitIterations;
