@@ -1,12 +1,12 @@
 #pragma once
 
 #include "base/cereal/access.hpp"
-#include "base/std_ext/misc.h"
 
 #include <memory>
 #include <list>
 #include <vector>
 #include <algorithm>
+#include <cassert>
 
 namespace ant {
 
@@ -106,17 +106,27 @@ public:
     template <typename F>
     void Map(F function) const {
         function(Get());
-        for(auto& node: daughters) {
-            node->Map(function);
+        for(auto& daughter : daughters) {
+            daughter->Map(function);
         }
     }
 
     template <typename F>
     void Map_level(F function, size_t level=0) const {
         function(Get(), level);
-        for(auto& node: daughters) {
-            node->Map_level(function, level+1);
+        for(auto& daughter : daughters) {
+            daughter->Map_level(function, level+1);
         }
+    }
+
+    template <typename F>
+    void Map_nodes(F function) const {
+        // deep first is important,
+        // see GetUniquePermutations Bitfield summation
+        for(auto& daughter : daughters) {
+            daughter->Map_nodes(function);
+        }
+        function(Self());
     }
 
     size_t Size() const {
@@ -188,14 +198,148 @@ public:
         return comp(data, other->data);
     }
 
+    template<typename U>
+    bool IsEqual(const snode_t<U>& other) const {
+        return IsEqual(other, [] (const T& a, const U& b) { return a==b; });
+    }
 
-    template<typename U, typename Transform = std::function<U(node_t)> >
+
+
+    template<typename U = T, typename Transform = std::function<U(node_t)> >
     snode_t<U> DeepCopy(Transform transform = [] (const node_t& n) { return n->Get(); } ) const {
         auto r = Tree<U>::MakeNode(transform(Self()));
         for(const auto& daughter : daughters) {
             r->AddDaughter(daughter->DeepCopy<U>(transform));
         }
         return r;
+    }
+
+    void GetUniquePermutations(std::vector<node_t>& leaves,
+                               std::vector<std::vector<size_t>>& perms) const
+    {
+
+        // ensure we're sorted (let's hope by standard std::less)
+        // and everything is cleared
+        Map_nodes([] (const node_t& n) {
+            if(!n->is_sorted)
+                throw std::runtime_error("Tree is not sorted");
+        });
+        leaves.resize(0);
+        perms.resize(0);
+
+        // append to each node of this tree some bitfield
+        struct wrapped_t {
+            wrapped_t(const node_t& n) : Node(n) {}
+            node_t Node;
+            std::uint64_t Bitfield = 0;
+            bool operator<(const wrapped_t& rhs) const {
+                // std::less here...
+                const bool a_less_b = Node->Get() < rhs.Node->Get();
+                const bool b_less_a = rhs.Node->Get() < Node->Get();
+                if(!a_less_b && !b_less_a) {
+                    return Bitfield < rhs.Bitfield;
+                }
+                return a_less_b;
+            }
+            bool operator==(const wrapped_t& rhs) const {
+                // ignore leaves in do { ... } loop
+                // Bitfield is only used there, so use this as a flag
+                if(Bitfield>0) {
+                    // in do {...} loop, we also assume the Node does not change
+                    //assert(Node->Get() == rhs.Node->Get());
+                    //assert(Node->Daughters().size() == rhs.Node->Daughters().size());
+                    if(Node->IsLeaf())
+                        return true;
+                }
+                return !(*this < rhs) && !(rhs < *this);
+            }
+        };
+
+        // prepare the wrapped version of this tree
+        // and also the leaves and the current permutation array
+        using wrapped_node_t = typename Tree<wrapped_t>::node_t;
+        wrapped_node_t wrapped = DeepCopy<wrapped_t>([] (const node_t& n) { return n; });
+
+        using perm_t = std::vector<size_t>;
+        perm_t current_perm;
+        wrapped_node_t prev_leave = nullptr;
+
+        std::vector<wrapped_node_t> wrapped_leaves;
+        wrapped->Map_nodes([&wrapped_leaves] (wrapped_node_t node) {
+            if(node->IsLeaf())
+                wrapped_leaves.push_back(node);
+        });
+
+        for(unsigned i=0;i<wrapped_leaves.size();i++) {
+            auto& leave = wrapped_leaves[i];
+            if(i > sizeof(std::uint64_t)*8-1)
+                throw std::runtime_error("Too many leaves");
+            // important here to keep the order of leaves
+            leaves.push_back(leave->Get().Node);
+            current_perm.push_back(i);
+
+            // do not use == here
+            if(prev_leave && !(prev_leave->Get() == leave->Get())) {
+                throw std::runtime_error("Not all leaves are equal");
+            }
+            else
+                prev_leave = leave;
+        }
+
+        struct wrap_perm_t {
+            wrap_perm_t(const perm_t& p, wrapped_node_t t) : Perm(p), Tree(t) {}
+            perm_t Perm;
+            wrapped_node_t Tree;
+        };
+        std::list<wrap_perm_t> unique_perms;
+
+        // loop over all permuations
+        do {
+            // apply the current permutation to the leaves
+            for(unsigned i=0;i<wrapped_leaves.size();i++) {
+                auto& perm_leave = wrapped_leaves[current_perm[i]];
+                perm_leave->Get().Bitfield = 1 << i;
+            }
+
+            // calculate the sum of upper bitfields,
+            // we rely on deep-first recursion of Map_nodes
+            wrapped->Map_nodes([] (wrapped_node_t node) {
+                if(!node->Daughters().empty())
+                    node->Get().Bitfield = 0;
+            });
+            wrapped->Map_nodes([] (wrapped_node_t node) {
+                auto p = node->GetParent();
+                if(p)
+                    p->Get().Bitfield += node->Get().Bitfield;
+            });
+
+            // check that summation has worked
+            assert(wrapped->Get().Bitfield == (unsigned)(1 << wrapped_leaves.size())-1 );
+
+            // sort by Bitfield sums (but keep ordering of original nodes)
+            wrapped->Sort();
+
+            // have a look if we know this structure already
+            bool found = false;
+            for(const wrap_perm_t& p : unique_perms) {
+                if(p.Tree->IsEqual(wrapped)) {
+                    found = true;
+                    break;
+                }
+            }
+            if(!found) {
+                auto t = wrapped->DeepCopy();
+                t->Sort();
+                unique_perms.emplace_back(current_perm, move(t));
+            }
+
+        }
+        while(std::next_permutation(current_perm.begin(), current_perm.end()));
+
+        // unwrap the unique_perms
+        for(wrap_perm_t& p : unique_perms)
+            perms.emplace_back(std::move(p.Perm));
+
     }
 
 };

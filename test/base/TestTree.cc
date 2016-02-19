@@ -2,6 +2,11 @@
 #include "base/Tree.h"
 #include <iostream>
 
+#include "base/printable.h"
+
+#include "base/ParticleTypeTree.h"
+#include "analysis/utils/particle_tools.h"
+
 using namespace std;
 using namespace ant;
 
@@ -201,4 +206,46 @@ TEST_CASE("Tree: DeepCopy", "[base]") {
     REQUIRE(copy->Daughters().front()->Daughters().front()->Get() == 2);
     REQUIRE(copy->Daughters().back()->Daughters().front()->Get() == 3);
 
+}
+
+TEST_CASE("Tree: GetUniquePermutations", "[base]") {
+
+    auto get_ptree = [] (ParticleTypeTreeDatabase::Channel ch) -> ParticleTypeTree {
+        auto particletypetree = ParticleTypeTreeDatabase::Get(ch);
+
+        if(particletypetree->Get() != ParticleTypeDatabase::BeamTarget)
+            return nullptr;
+
+        if(particletypetree->Daughters().size() != 2)
+            return nullptr;
+
+        for(const auto& daughter : particletypetree->Daughters()) {
+            if(daughter->Get() != ParticleTypeDatabase::Nucleon)
+                return daughter;
+        }
+        return nullptr;
+    };
+
+    std::vector<std::vector<size_t>> perms;
+    vector<ParticleTypeTree> leaves_ptree;
+    ParticleTypeTree ptree;
+
+    ptree = ParticleTypeTreeDatabase::Get(ParticleTypeTreeDatabase::Channel::EtaPrime_2Pi0Eta_6g);
+    REQUIRE_THROWS(ptree->GetUniquePermutations(leaves_ptree, perms));
+
+    ptree = get_ptree(ParticleTypeTreeDatabase::Channel::EtaPrime_2Pi0Eta_6g);
+    ptree->GetUniquePermutations(leaves_ptree, perms);
+    REQUIRE(leaves_ptree.size() == 6);
+    REQUIRE(perms.size() == 45);
+
+    ptree = get_ptree(ParticleTypeTreeDatabase::Channel::EtaPrime_3Pi0_6g);
+    REQUIRE_NOTHROW(ptree->GetUniquePermutations(leaves_ptree, perms));
+    REQUIRE(leaves_ptree.size() == 6);
+    REQUIRE(perms.size() == 15);
+
+    ptree = get_ptree(ParticleTypeTreeDatabase::Channel::EtaPrime_gOmega_ggPi0_4g);
+    REQUIRE_NOTHROW(ptree->GetUniquePermutations(leaves_ptree, perms));
+
+    REQUIRE(leaves_ptree.size() == 4);
+    REQUIRE(perms.size() == 12);
 }

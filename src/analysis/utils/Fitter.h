@@ -181,27 +181,25 @@ public:
 
 protected:
 
+
     struct Node_t {
-        Node_t(ParticleTypeTree ptree) : TypeTree(ptree) {}
-        ParticleTypeTree TypeTree;
+        Node_t(const ParticleTypeTree& ptree) : TypeTree(ptree) {}
+        const ParticleTypeTree TypeTree;
         TParticlePtr Particle;
         TParticlePtr FittedParticle;
-    private:
-        friend class TreeFitter;
-        std::uint64_t leave_sum = 0;
+        bool operator<(const Node_t& rhs) const {
+            return TypeTree->Get() < rhs.TypeTree->Get();
+        }
     };
 
     using tree_t = std::shared_ptr<Tree<Node_t>>;
 
-    void WalkTree(ParticleTypeTree ptree, tree_t tree);
+    static tree_t MakeTree(ParticleTypeTree ptree);
 
-    static void CalcSum(tree_t tree);
-    static void CopyTree(tree_t source, tree_t dest);
-    static bool IsEqual(tree_t a, tree_t b);
 
-    tree_t tree;
-
+    const tree_t tree;
     std::vector<tree_t> tree_leaves;
+    std::vector<std::vector<size_t>> permutations;
 };
 
 
