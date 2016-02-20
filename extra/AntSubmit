@@ -112,8 +112,8 @@ sub main {
     push(@jobs, {
                  'inputfiles' => \@inputfiles,
                  'jobnumber' => $runnumber,
-                 'logfile' => "$LOG_DIR/$basename.log",
-                 'outputfile' => "$OUT_DIR/Ant_$basename.root"
+                 'logfile' => "$LOG_DIR/$jobtag_$basename.log",
+                 'outputfile' => "$OUT_DIR/$jobtag_$basename.root"
                 }
         );
   }
