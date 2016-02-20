@@ -51,44 +51,12 @@ EtapOmegaG::EtapOmegaG(const string& name, OptionsPtr opts) :
     kinfitter_2.LoadSigmaData(setup->GetPhysicsFilesDirectory()+"/FitterSigmas.root");
     kinfitter_4.LoadSigmaData(setup->GetPhysicsFilesDirectory()+"/FitterSigmas.root");
 
-    treeCommon = HistFac.makeTTree("treeCommon");
+    t.CreateBranches(HistFac.makeTTree("treeCommon"));
 
-    Sig.Tree = HistFac.makeTTree("treeSig");
-    SigFitted.Tree = HistFac.makeTTree("treeSigFitted");
-    Ref.Tree = HistFac.makeTTree("treeRef");
-    RefFitted.Tree = HistFac.makeTTree("treeRefFitted");
-
-
-#define ADD_BRANCH(name) \
-    treeCommon->Branch(#name,addressof(b_ ## name));
-
-    ADD_BRANCH(IsSignal);
-    ADD_BRANCH(MCTrue);
-    ADD_BRANCH(nPhotonsCB);
-    ADD_BRANCH(nPhotonsTAPS);
-    ADD_BRANCH(CBSumE);
-    ADD_BRANCH(CBSumVetoE);
-    ADD_BRANCH(CBAvgTime);
-    ADD_BRANCH(ProtonTime);
-    ADD_BRANCH(PIDSumE);
-
-    ADD_BRANCH(ProtonCopl);
-    ADD_BRANCH(MissingMass);
-    ADD_BRANCH(KinFitChi2);
-    ADD_BRANCH(KinFitIterations);
-
-    ADD_BRANCH(TaggW);
-    ADD_BRANCH(TaggW_tight);
-    ADD_BRANCH(TaggE);
-    ADD_BRANCH(TaggT);
-    ADD_BRANCH(TaggCh);
-
-#undef ADD_BRANCH
-
-    Sig.SetupBranches();
-    SigFitted.SetupBranches();
-    Ref.SetupBranches();
-    RefFitted.SetupBranches();
+    Sig.t.CreateBranches(HistFac.makeTTree("treeSig"));
+    SigFitted.t.CreateBranches(HistFac.makeTTree("treeSigFitted"));
+    Ref.t.CreateBranches(HistFac.makeTTree("treeRef"));
+    RefFitted.t.CreateBranches(HistFac.makeTTree("treeRefFitted"));
 
 }
 
@@ -116,10 +84,10 @@ void EtapOmegaG::ProcessEvent(const TEvent& event, manager_t&)
     if(data.Trigger.CBEnergySum<=550)
         return;
     h_CommonCuts->Fill("CBEnergySum>550",1.0);
-    b_CBSumE = data.Trigger.CBEnergySum;
+    t.CBSumE = data.Trigger.CBEnergySum;
 
-    b_CBAvgTime = event.Reconstructed->Trigger.CBTiming;
-    if(!isfinite(b_CBAvgTime))
+    t.CBAvgTime = event.Reconstructed->Trigger.CBTiming;
+    if(!isfinite(t.CBAvgTime))
         return;
     h_CommonCuts->Fill("CBAvgTime ok",1.0);
 
@@ -130,11 +98,11 @@ void EtapOmegaG::ProcessEvent(const TEvent& event, manager_t&)
     // using CBAvgTime does not help here, since it's constant
     // over each TAPS clusters
     /// \todo think about using beta here as in EtapProton?
-    b_ProtonTime = std_ext::NaN;
+    t.ProtonTime = std_ext::NaN;
     for(const TCandidatePtr& cand : data.Candidates) {
         if(cand->Detector & Detector_t::Type_t::TAPS) {
-            if(!isfinite(b_ProtonTime) || b_ProtonTime < cand->Time) {
-                b_ProtonTime = cand->Time;
+            if(!isfinite(t.ProtonTime) || t.ProtonTime < cand->Time) {
+                t.ProtonTime = cand->Time;
                 particles.Proton = make_shared<TParticle>(ParticleTypeDatabase::Proton, cand);
             }
         }
@@ -152,39 +120,39 @@ void EtapOmegaG::ProcessEvent(const TEvent& event, manager_t&)
     h_CommonCuts->Fill("nPhotons==2|4", 1.0);
 
     particles.PhotonSum.SetPxPyPzE(0,0,0,0);
-    b_nPhotonsCB = 0;
-    b_nPhotonsTAPS = 0;
-    b_CBSumVetoE = 0;
+    t.nPhotonsCB = 0;
+    t.nPhotonsTAPS = 0;
+    t.CBSumVetoE = 0;
     for(const TCandidatePtr& cand : data.Candidates) {
          if(cand == particles.Proton->Candidate)
              continue;
          if(cand->Detector & Detector_t::Type_t::CB) {
-             b_nPhotonsCB++;
-             b_CBSumVetoE += cand->VetoEnergy;
+             t.nPhotonsCB++;
+             t.CBSumVetoE += cand->VetoEnergy;
          }
          if(cand->Detector & Detector_t::Type_t::TAPS)
-             b_nPhotonsTAPS++;
+             t.nPhotonsTAPS++;
          auto photon = make_shared<TParticle>(ParticleTypeDatabase::Photon, cand);
          particles.PhotonSum += *photon;
          particles.Photons.emplace_back(move(photon));
     }
     assert(particles.Photons.size() == nPhotons);
-    assert(nPhotons == b_nPhotonsCB + b_nPhotonsTAPS);
+    assert(nPhotons == t.nPhotonsCB + t.nPhotonsTAPS);
 
     // don't bother with events where proton coplanarity is not ok
     // we use some rather large window here...
-    b_ProtonCopl = std_ext::radian_to_degree(TVector2::Phi_mpi_pi(particles.Proton->Phi() - particles.PhotonSum.Phi() - M_PI ));
+    t.ProtonCopl = std_ext::radian_to_degree(TVector2::Phi_mpi_pi(particles.Proton->Phi() - particles.PhotonSum.Phi() - M_PI ));
     const interval<double> ProtonCopl_cut(-30, 30);
-    if(!ProtonCopl_cut.Contains(b_ProtonCopl))
+    if(!ProtonCopl_cut.Contains(t.ProtonCopl))
         return;
     h_CommonCuts->Fill("ProtonCopl ok", 1.0);
 
     // sum up the PID energy
     // (might be different to matched CB/PID Veto energy)
-    b_PIDSumE = 0;
+    t.PIDSumE = 0;
     for(const TClusterPtr& cl : data.Clusters) {
         if(cl->DetectorType == Detector_t::Type_t::PID) {
-            b_PIDSumE += cl->Energy;
+            t.PIDSumE += cl->Energy;
         }
     }
 
@@ -192,13 +160,13 @@ void EtapOmegaG::ProcessEvent(const TEvent& event, manager_t&)
 
     // select signal or reference according to nPhotons
 
-    b_IsSignal = nPhotons == 4; // else nPhotons==2, so reference
-    utils::KinFitter& fitter = b_IsSignal ? kinfitter_4 : kinfitter_2;
+    t.IsSignal = nPhotons == 4; // else nPhotons==2, so reference
+    utils::KinFitter& fitter = t.IsSignal ? kinfitter_4 : kinfitter_2;
 
 
 
     // do some MCTrue identification (if available)
-    b_MCTrue = 0; // indicate data by default
+    t.MCTrue = 0; // indicate data by default
     TParticleTree_t ptree_sigref = nullptr; // used by Sig_t::Process to check matching
     if(particletree) {
         auto get_mctrue = [] (ParticleTypeTree expected, TParticleTree_t particletree) -> unsigned {
@@ -214,20 +182,20 @@ void EtapOmegaG::ProcessEvent(const TEvent& event, manager_t&)
         };
 
         // 1=Signal, 2=Reference, 9=MissedBkg, >=10 found in ptreeBackgrounds
-        if(b_IsSignal) {
-            b_MCTrue = get_mctrue(ptreeSignal, particletree);
-            if(b_MCTrue==1)
+        if(t.IsSignal) {
+            t.MCTrue = get_mctrue(ptreeSignal, particletree);
+            if(t.MCTrue==1)
                 ptree_sigref = particletree;
         }
         else {
-            b_MCTrue = get_mctrue(ptreeReference, particletree);
-            if(b_MCTrue==1) {
+            t.MCTrue = get_mctrue(ptreeReference, particletree);
+            if(t.MCTrue==1) {
                 ptree_sigref = particletree;
-                b_MCTrue++;
+                t.MCTrue++;
             }
         }
 
-        if(b_MCTrue==9) {
+        if(t.MCTrue==9) {
             const auto& decaystr = utils::ParticleTools::GetDecayString(particletree);
             h_MissedBkg->Fill(decaystr.c_str(), 1.0);
         }
@@ -235,7 +203,7 @@ void EtapOmegaG::ProcessEvent(const TEvent& event, manager_t&)
 
     Sig.ResetBranches();
     Ref.ResetBranches();
-    if(b_IsSignal)
+    if(t.IsSignal)
         Sig.Process(particles, ptree_sigref);
     else
         Ref.Process(particles);
@@ -243,20 +211,20 @@ void EtapOmegaG::ProcessEvent(const TEvent& event, manager_t&)
     // loop over tagger hits, do KinFit
     bool kinfit_ok = false;
     for(const TTaggerHit& taggerhit : data.TaggerHits) {
-        promptrandom.SetTaggerHit(taggerhit.Time - b_CBAvgTime);
-        promptrandom_tight.SetTaggerHit(taggerhit.Time - b_CBAvgTime);
+        promptrandom.SetTaggerHit(taggerhit.Time - t.CBAvgTime);
+        promptrandom_tight.SetTaggerHit(taggerhit.Time - t.CBAvgTime);
         if(promptrandom.State() == PromptRandom::Case::Outside)
             continue;
 
         // missing mass
         const TLorentzVector beam_target = taggerhit.GetPhotonBeam() + TLorentzVector(0, 0, 0, ParticleTypeDatabase::Proton.Mass());
-        b_MissingMass = (beam_target - particles.PhotonSum).M();
+        t.MissingMass = (beam_target - particles.PhotonSum).M();
 
-        b_TaggW = promptrandom.FillWeight();
-        b_TaggW_tight = promptrandom_tight.FillWeight();
-        b_TaggE = taggerhit.PhotonEnergy;
-        b_TaggT = taggerhit.Time;
-        b_TaggCh = taggerhit.Channel;
+        t.TaggW = promptrandom.FillWeight();
+        t.TaggW_tight = promptrandom_tight.FillWeight();
+        t.TaggE = taggerhit.PhotonEnergy;
+        t.TaggT = taggerhit.Time;
+        t.TaggCh = taggerhit.Channel;
 
         // do kinfit
         fitter.SetEgammaBeam(taggerhit.PhotonEnergy);
@@ -267,12 +235,12 @@ void EtapOmegaG::ProcessEvent(const TEvent& event, manager_t&)
         SigFitted.ResetBranches();
         RefFitted.ResetBranches();
 
-        b_KinFitChi2 = std_ext::NaN;
-        b_KinFitIterations = 0;
+        t.KinFitChi2 = std_ext::NaN;
+        t.KinFitIterations = 0;
         if(fit_result.Status == APLCON::Result_Status_t::Success) {
             kinfit_ok = true;
-            b_KinFitChi2 = fit_result.ChiSquare;
-            b_KinFitIterations = fit_result.NIterations;
+            t.KinFitChi2 = fit_result.ChiSquare;
+            t.KinFitIterations = fit_result.NIterations;
             Particles_t fitted_particles;
             fitted_particles.Proton = fitter.GetFittedProton();
             fitted_particles.Photons = fitter.GetFittedPhotons();
@@ -281,17 +249,17 @@ void EtapOmegaG::ProcessEvent(const TEvent& event, manager_t&)
             for(const TParticlePtr& p : fitted_particles.Photons)
                 fitted_particles.PhotonSum += *p;
 
-            if(b_IsSignal)
+            if(t.IsSignal)
                 SigFitted.Process(fitted_particles, ptree_sigref);
             else
                 RefFitted.Process(fitted_particles);
         }
 
-        treeCommon->Fill();
-        Sig.Tree->Fill();
-        SigFitted.Tree->Fill();
-        Ref.Tree->Fill();
-        RefFitted.Tree->Fill();
+        t.Tree->Fill();
+        Sig.t.Tree->Fill();
+        SigFitted.t.Tree->Fill();
+        Ref.t.Tree->Fill();
+        RefFitted.t.Tree->Fill();
 
     }
 
@@ -311,11 +279,12 @@ EtapOmegaG::Sig_t::Sig_t() :
                utils::ParticleTools::GetProducedParticle(EtapOmegaG::ptreeSignal)),
     fitted_EtaPrime(treefitter.GetTreeNode(ParticleTypeDatabase::EtaPrime)),
     fitted_Omega(treefitter.GetTreeNode(ParticleTypeDatabase::Omega)),
-    fitted_Pi0(treefitter.GetTreeNode(ParticleTypeDatabase::Pi0)),
-    b_ggg(4),  // size=4
-    b_gg_gg1(3), // size=3
-    b_gg_gg2(3)
+    fitted_Pi0(treefitter.GetTreeNode(ParticleTypeDatabase::Pi0))
 {
+    t.ggg().resize(4);
+    t.gg_gg1().resize(3);
+    t.gg_gg2().resize(3);
+
     const auto setup = ant::ExpConfig::Setup::GetLastFound();
     if(!setup)
         throw runtime_error("EtapOmegaG needs a setup");
@@ -337,59 +306,29 @@ EtapOmegaG::Sig_t::Sig_t() :
     fitted_g2_Pi0 = find_photons(fitted_Pi0).at(1);
 }
 
-void EtapOmegaG::Sig_t::SetupBranches()
-{
-#define ADD_BRANCH(name) \
-    Tree->Branch(#name,addressof(b_ ## name));
-
-    ADD_BRANCH(TreeFitChi2);
-    ADD_BRANCH(TreeFitIterations);
-
-    ADD_BRANCH(ggg);
-    ADD_BRANCH(gg_gg1);
-    ADD_BRANCH(gg_gg2);
-
-    ADD_BRANCH(IM_EtaPrime_fitted);
-    ADD_BRANCH(IM_Omega_fitted);
-    ADD_BRANCH(IM_Pi0_fitted);
-
-    ADD_BRANCH(IM_EtaPrime_best);
-    ADD_BRANCH(IM_Omega_best);
-    ADD_BRANCH(IM_Pi0_best);
-
-    ADD_BRANCH(Bachelor_best_best);
-    ADD_BRANCH(Bachelor_best_fit);
-    ADD_BRANCH(Bachelor_fit_best);
-    ADD_BRANCH(Bachelor_fit_fit);
-
-    ADD_BRANCH(MCTrueMatch);
-
-#undef ADD_BRANCH
-}
-
 void EtapOmegaG::Sig_t::ResetBranches()
 {
-    b_TreeFitChi2 = std_ext::NaN;
-    b_TreeFitIterations = 0;
+    t.TreeFitChi2 = std_ext::NaN;
+    t.TreeFitIterations = 0;
 
-    std::fill(b_ggg.begin(), b_ggg.end(), std_ext::NaN);
-    std::fill(b_gg_gg1.begin(), b_gg_gg1.end(), std_ext::NaN);
-    std::fill(b_gg_gg2.begin(), b_gg_gg2.end(), std_ext::NaN);
+    std::fill(t.ggg().begin(), t.ggg().end(), std_ext::NaN);
+    std::fill(t.gg_gg1().begin(), t.gg_gg1().end(), std_ext::NaN);
+    std::fill(t.gg_gg2().begin(), t.gg_gg2().end(), std_ext::NaN);
 
-    b_IM_EtaPrime_fitted  = std_ext::NaN;
-    b_IM_Omega_fitted = std_ext::NaN;
-    b_IM_Pi0_fitted = std_ext::NaN;
+    t.IM_EtaPrime_fitted  = std_ext::NaN;
+    t.IM_Omega_fitted = std_ext::NaN;
+    t.IM_Pi0_fitted = std_ext::NaN;
 
-    b_IM_EtaPrime_best = std_ext::NaN;
-    b_IM_Omega_best = std_ext::NaN;
-    b_IM_Pi0_best = std_ext::NaN;
+    t.IM_EtaPrime_best = std_ext::NaN;
+    t.IM_Omega_best = std_ext::NaN;
+    t.IM_Pi0_best = std_ext::NaN;
 
-    b_Bachelor_best_best = std_ext::NaN;
-    b_Bachelor_best_fit = std_ext::NaN;
-    b_Bachelor_fit_best = std_ext::NaN;
-    b_Bachelor_fit_fit = std_ext::NaN;
+    t.Bachelor_best_best = std_ext::NaN;
+    t.Bachelor_best_fit = std_ext::NaN;
+    t.Bachelor_fit_best = std_ext::NaN;
+    t.Bachelor_fit_fit = std_ext::NaN;
 
-    b_MCTrueMatch = 0;
+    t.MCTrueMatch = 0;
 }
 
 void EtapOmegaG::Sig_t::Process(const EtapOmegaG::Particles_t& particles, TParticleTree_t ptree_sigref)
@@ -399,7 +338,7 @@ void EtapOmegaG::Sig_t::Process(const EtapOmegaG::Particles_t& particles, TParti
     assert(particles.Photons.size() == 4);
 
     //  ggg combinatorics
-    auto it_ggg = b_ggg.begin();
+    auto it_ggg = t.ggg().begin();
     for( auto comb = utils::makeCombination(particles.Photons,3); !comb.Done(); ++comb ) {
         *it_ggg = (*comb.at(0) + *comb.at(1) + *comb.at(2)).M();
         ++it_ggg;
@@ -407,8 +346,8 @@ void EtapOmegaG::Sig_t::Process(const EtapOmegaG::Particles_t& particles, TParti
 
     // gg/gg "Goldhaber" combinatorics
     const auto goldhaber_comb = vector<vector<unsigned>>({{0,1,2,3},{0,2,1,3},{0,3,1,2}});
-    auto it_gg_gg1 = b_gg_gg1.begin();
-    auto it_gg_gg2 = b_gg_gg2.begin();
+    auto it_gg_gg1 = t.gg_gg1().begin();
+    auto it_gg_gg2 = t.gg_gg2().begin();
     for(auto i : goldhaber_comb) {
         const auto& p = particles.Photons;
         *it_gg_gg1 = (*p[i[0]] + *p[i[1]]).M();
@@ -424,7 +363,7 @@ void EtapOmegaG::Sig_t::Process(const EtapOmegaG::Particles_t& particles, TParti
     TParticlePtr g_EtaPrime_best;
     TLorentzVector g_EtaPrime_fitted;
     const TLorentzVector& EtaPrime_best = particles.PhotonSum; // does not change with permutation
-    b_IM_EtaPrime_best = EtaPrime_best.M();
+    t.IM_EtaPrime_best = EtaPrime_best.M();
     TLorentzVector EtaPrime_fitted;
 
     treefitter.SetLeaves(particles.Photons);
@@ -433,33 +372,33 @@ void EtapOmegaG::Sig_t::Process(const EtapOmegaG::Particles_t& particles, TParti
     while(treefitter.NextFit(r)) {
         if(r.Status != APLCON::Result_Status_t::Success)
             continue;
-        if(isfinite(b_TreeFitChi2) && r.ChiSquare>b_TreeFitChi2)
+        if(isfinite(t.TreeFitChi2) && r.ChiSquare>t.TreeFitChi2)
             continue;
         // found fit with better chi2
-        b_TreeFitChi2 = r.ChiSquare;
-        b_TreeFitIterations = r.NIterations;
+        t.TreeFitChi2 = r.ChiSquare;
+        t.TreeFitIterations = r.NIterations;
 
         EtaPrime_fitted = fitted_EtaPrime->Get().Particle;
 
         // IM fitted expected to be delta peaks since they were fitted...
-        b_IM_EtaPrime_fitted = EtaPrime_fitted.M();
-        b_IM_Omega_fitted = fitted_Omega->Get().Particle.M();
-        b_IM_Pi0_fitted = fitted_Pi0->Get().Particle.M();
+        t.IM_EtaPrime_fitted = EtaPrime_fitted.M();
+        t.IM_Omega_fitted = fitted_Omega->Get().Particle.M();
+        t.IM_Pi0_fitted = fitted_Pi0->Get().Particle.M();
 
         // have a look at the assigned gammas to Pi0/Omega
         const TLorentzVector& Pi0_best = *fitted_g1_Pi0->Get().SetParticle + *fitted_g2_Pi0->Get().SetParticle;
-        b_IM_Pi0_best = Pi0_best.M();
+        t.IM_Pi0_best = Pi0_best.M();
 
         g_Omega_best = fitted_g_Omega->Get().SetParticle;
         const TLorentzVector& Omega_best = *g_Omega_best + Pi0_best;
-        b_IM_Omega_best = Omega_best.M();
+        t.IM_Omega_best = Omega_best.M();
 
         // have a look at the EtaPrime bachelor photon
         g_EtaPrime_fitted = fitted_g_EtaPrime->Get().Particle;
         g_EtaPrime_best = fitted_g_EtaPrime->Get().SetParticle;
     }
 
-    if(isfinite(b_TreeFitChi2)) {
+    if(isfinite(t.TreeFitChi2)) {
 
         // do that Bachelor photon boosting
         auto do_boost = [] (const TLorentzVector& bachelor, const TLorentzVector& etaprime) {
@@ -468,10 +407,10 @@ void EtapOmegaG::Sig_t::Process(const EtapOmegaG::Particles_t& particles, TParti
             return boosted;
         };
 
-        b_Bachelor_best_best = do_boost(*g_EtaPrime_best, EtaPrime_best).E();
-        b_Bachelor_best_fit  = do_boost(*g_EtaPrime_best, EtaPrime_fitted).E();
-        b_Bachelor_fit_best  = do_boost(g_EtaPrime_fitted, EtaPrime_best).E();
-        b_Bachelor_fit_fit   = do_boost(g_EtaPrime_fitted, EtaPrime_fitted).E();
+        t.Bachelor_best_best = do_boost(*g_EtaPrime_best, EtaPrime_best).E();
+        t.Bachelor_best_fit  = do_boost(*g_EtaPrime_best, EtaPrime_fitted).E();
+        t.Bachelor_fit_best  = do_boost(g_EtaPrime_fitted, EtaPrime_best).E();
+        t.Bachelor_fit_fit   = do_boost(g_EtaPrime_fitted, EtaPrime_fitted).E();
 
 
         // check MC matching
@@ -501,9 +440,9 @@ void EtapOmegaG::Sig_t::Process(const EtapOmegaG::Particles_t& particles, TParti
                 auto g_Etap_matched = utils::FindMatched(matched, g_Etap->Get());
                 auto g_Omega_matched = utils::FindMatched(matched, g_Omega->Get());
                 if(g_Etap_matched == g_EtaPrime_best)
-                    b_MCTrueMatch += 1;
+                    t.MCTrueMatch += 1;
                 if(g_Omega_matched == g_Omega_best)
-                    b_MCTrueMatch += 2;
+                    t.MCTrueMatch += 2;
 
             }
         }
@@ -512,26 +451,15 @@ void EtapOmegaG::Sig_t::Process(const EtapOmegaG::Particles_t& particles, TParti
 
 }
 
-void EtapOmegaG::Ref_t::SetupBranches()
-{
-#define ADD_BRANCH(name) \
-    Tree->Branch(#name,addressof(b_ ## name));
-
-    ADD_BRANCH(IM_2g);
-
-#undef ADD_BRANCH
-
-}
-
 void EtapOmegaG::Ref_t::ResetBranches()
 {
-    b_IM_2g = std_ext::NaN;
+    t.IM_2g = std_ext::NaN;
 }
 
 void EtapOmegaG::Ref_t::Process(const EtapOmegaG::Particles_t& particles)
 {
     assert(particles.Photons.size() == 2);
-    b_IM_2g = particles.PhotonSum.M();
+    t.IM_2g = particles.PhotonSum.M();
 }
 
 void EtapOmegaG::ShowResult()

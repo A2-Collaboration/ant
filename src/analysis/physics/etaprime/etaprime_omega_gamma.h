@@ -1,11 +1,12 @@
 #pragma once
 
 #include "analysis/physics/Physics.h"
-#include "utils/particle_tools.h"
-#include "utils/Fitter.h"
-#include "plot/PromptRandomHist.h"
+#include "analysis/utils/particle_tools.h"
+#include "analysis/utils/Fitter.h"
+#include "analysis/plot/PromptRandomHist.h"
 
 #include "base/ParticleTypeTree.h"
+#include "base/WrapTTree.h"
 
 #include <cassert>
 
@@ -17,34 +18,37 @@ namespace ant {
 namespace analysis {
 namespace physics {
 
-class EtapOmegaG : public Physics {
+struct EtapOmegaG : Physics {
 
     TH1D* h_CommonCuts;
     TH1D* h_MissedBkg;
 
-    // variables for TTree branches
+    // TreeCommon contains things
     // shared among sig/ref analyses
 
-    TTree* treeCommon;
-    bool     b_IsSignal;
-    unsigned b_MCTrue;
-    unsigned b_nPhotonsCB;
-    unsigned b_nPhotonsTAPS;
-    double   b_CBSumE;
-    double   b_CBSumVetoE;
-    double   b_CBAvgTime;
-    double   b_ProtonTime;
-    double   b_PIDSumE;
+    struct TreeCommon : WrapTTree {
+        ADD_BRANCH_T(bool,     IsSignal)
+        ADD_BRANCH_T(unsigned, MCTrue)
+        ADD_BRANCH_T(unsigned, nPhotonsCB)
+        ADD_BRANCH_T(unsigned, nPhotonsTAPS)
+        ADD_BRANCH_T(double,   CBSumE)
+        ADD_BRANCH_T(double,   CBSumVetoE)
+        ADD_BRANCH_T(double,   CBAvgTime)
+        ADD_BRANCH_T(double,   ProtonTime)
+        ADD_BRANCH_T(double,   PIDSumE)
 
-    double   b_ProtonCopl;
-    double   b_MissingMass;
-    double   b_KinFitChi2;
-    unsigned b_KinFitIterations;
-    double   b_TaggW;
-    double   b_TaggW_tight;
-    double   b_TaggE;
-    double   b_TaggT;
-    unsigned b_TaggCh;
+        ADD_BRANCH_T(double,   ProtonCopl)
+        ADD_BRANCH_T(double,   MissingMass)
+        ADD_BRANCH_T(double,   KinFitChi2)
+        ADD_BRANCH_T(unsigned, KinFitIterations)
+        ADD_BRANCH_T(double,   TaggW)
+        ADD_BRANCH_T(double,   TaggW_tight)
+        ADD_BRANCH_T(double,   TaggE)
+        ADD_BRANCH_T(double,   TaggT)
+        ADD_BRANCH_T(unsigned, TaggCh)
+    };
+
+    TreeCommon t;
 
     PromptRandom::Switch promptrandom;
     PromptRandom::Switch promptrandom_tight;
@@ -61,7 +65,6 @@ class EtapOmegaG : public Physics {
     struct Sig_t {
         Sig_t();
 
-        TTree* Tree;
         utils::TreeFitter treefitter;
 
         utils::TreeFitter::tree_t fitted_EtaPrime;
@@ -73,38 +76,44 @@ class EtapOmegaG : public Physics {
         utils::TreeFitter::tree_t fitted_g1_Pi0;
         utils::TreeFitter::tree_t fitted_g2_Pi0;
 
-        std::vector<double> b_ggg;
-        std::vector<double> b_gg_gg1;
-        std::vector<double> b_gg_gg2;
+        struct Tree_t : WrapTTree {
 
-        double   b_TreeFitChi2;
-        unsigned b_TreeFitIterations;
+            ADD_BRANCH_T(std::vector<double>, ggg)
+            ADD_BRANCH_T(std::vector<double>, gg_gg1)
+            ADD_BRANCH_T(std::vector<double>, gg_gg2)
 
-        double b_IM_EtaPrime_fitted;
-        double b_IM_Omega_fitted;
-        double b_IM_Pi0_fitted;
+            ADD_BRANCH_T(double,   TreeFitChi2)
+            ADD_BRANCH_T(unsigned, TreeFitIterations)
 
-        double b_IM_EtaPrime_best;
-        double b_IM_Omega_best;
-        double b_IM_Pi0_best;
+            ADD_BRANCH_T(double, IM_EtaPrime_fitted)
+            ADD_BRANCH_T(double, IM_Omega_fitted)
+            ADD_BRANCH_T(double, IM_Pi0_fitted)
 
+            ADD_BRANCH_T(double, IM_EtaPrime_best)
+            ADD_BRANCH_T(double, IM_Omega_best)
+            ADD_BRANCH_T(double, IM_Pi0_best)
 
-        double b_Bachelor_best_best;
-        double b_Bachelor_best_fit;
-        double b_Bachelor_fit_best;
-        double b_Bachelor_fit_fit;
+            ADD_BRANCH_T(double, Bachelor_best_best)
+            ADD_BRANCH_T(double, Bachelor_best_fit)
+            ADD_BRANCH_T(double, Bachelor_fit_best)
+            ADD_BRANCH_T(double, Bachelor_fit_fit)
 
-        unsigned b_MCTrueMatch;
+            ADD_BRANCH_T(unsigned, MCTrueMatch)
 
-        void SetupBranches();
+        };
+
+        Tree_t t;
+
         void ResetBranches();
         void Process(const Particles_t& particles, TParticleTree_t particletree);
     };
 
     struct Ref_t {
-        TTree* Tree;
-        double b_IM_2g;
-        void SetupBranches();
+        struct Tree_t : WrapTTree {
+            ADD_BRANCH_T(double, IM_2g)
+        };
+        Tree_t t;
+
         void ResetBranches();
         void Process(const Particles_t& particles);
     };
@@ -114,12 +123,10 @@ class EtapOmegaG : public Physics {
     Ref_t Ref;
     Ref_t RefFitted;
 
-    friend struct Sig_t;
     static const ParticleTypeTree ptreeSignal;
     static const ParticleTypeTree ptreeReference;
     static const std::vector<ParticleTypeTree> ptreeBackgrounds;
 
-public:
     EtapOmegaG(const std::string& name, OptionsPtr opts);
     virtual void ProcessEvent(const TEvent& event, manager_t& manager) override;
     virtual void ShowResult() override;
