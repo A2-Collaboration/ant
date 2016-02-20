@@ -22,6 +22,7 @@ my $LOG_DIR = 'log';
 my $OUT_DIR = 'root';
 my $no_log = 0;
 my $no_test = 0;
+my $no_qsub = 0;
 my $queue = 'batch';
 my $walltime = '3:00:00';
 
@@ -35,6 +36,7 @@ GetOptions(
            'filelist=s' => \$filelist,
            'no_log' => \$no_log,
            'no_test' => \$no_test,
+           'no_qsub' => \$no_qsub,
            'queue=s' => \$queue,
            'walltime=s' => \$walltime
           ) or print_help();
@@ -112,8 +114,8 @@ sub main {
     push(@jobs, {
                  'inputfiles' => \@inputfiles,
                  'jobnumber' => $runnumber,
-                 'logfile' => "$LOG_DIR/$basename.log",
-                 'outputfile' => "$OUT_DIR/Ant_$basename.root"
+                 'logfile' => "$LOG_DIR/".$jobtag."_$basename.log",
+                 'outputfile' => "$OUT_DIR/".$jobtag."_$basename.root"
                 }
         );
   }
@@ -153,22 +155,29 @@ sub main {
     unlink $ant_outputfile_test;
   }
 
-  # finally submit the jobs
-  my $submitted = 0;
-  for my $sub (@submissions) {
-    submit_job($sub);
-    $submitted++;
-    printf("%-40s\r",sprintf("%04d/%04d = %03.0f %% submitted",$submitted,$total,100*$submitted/$total));
+  if($no_qsub) {
+    for my $sub (@submissions) {
+      print $sub->[1],"\n";
+    }
   }
-  printf("%-40s\n", "Submitted $submitted jobs.");
+  else {
+    # finally submit the jobs
+    my $submitted = 0;
+    for my $sub (@submissions) {
+      submit_job($sub);
+      $submitted++;
+      printf("%-40s\r",sprintf("%04d/%04d = %03.0f %% submitted",$submitted,$total,100*$submitted/$total));
+    }
+    printf("%-40s\n", "Submitted $submitted jobs.");
 
-  if ($no_log) {
-    return;
+    if ($no_log) {
+      return;
+    }
+
+    open(my $fh_log, ">>AntSubmit.log") or die "Can't open AntSubmit.log: $!";
+    printf $fh_log "%s: %04d jobs with args '%s'\n", $timestampstr, $submitted, $ANT_ARGS;
+    close $fh_log;
   }
-
-  open(my $fh_log, ">>AntSubmit.log") or die "Can't open AntSubmit.log: $!";
-  printf $fh_log "%s: %04d jobs with args '%s'\n", $timestampstr, $submitted, $ANT_ARGS;
-  close $fh_log;
 }
 
 sub prepare_dir {
@@ -299,6 +308,8 @@ Options:
   --tag       Specify a custom job tag, default is Ant
   --filelist  Read from file instead of STDIN
   --no_log    Do not write submission into AntSubmit.log
+  --no_test   Do not run first job as test before submission
+  --no_qsub   Do not submit, but dumb Ant commands on STDOUT
   --queue     Set job queue (default: 'batch')
   --walltime  Set walltime (default: 3:00:00)
 __EOF
