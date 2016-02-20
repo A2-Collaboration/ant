@@ -214,7 +214,7 @@ public:
     snode_t<U> DeepCopy(Transform transform = [] (const node_t& n) { return n->Get(); } ) const {
         auto r = Tree<U>::MakeNode(transform(Self()));
         for(const auto& daughter : daughters) {
-            r->AddDaughter(daughter->DeepCopy<U>(transform));
+            r->AddDaughter(daughter->template DeepCopy<U>(transform));
         }
         return r;
     }

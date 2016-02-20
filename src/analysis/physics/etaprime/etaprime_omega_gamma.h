@@ -114,7 +114,7 @@ class EtapOmegaG : public Physics {
     Ref_t Ref;
     Ref_t RefFitted;
 
-    friend class Sig_t;
+    friend struct Sig_t;
     static const ParticleTypeTree ptreeSignal;
     static const ParticleTypeTree ptreeReference;
     static const std::vector<ParticleTypeTree> ptreeBackgrounds;
