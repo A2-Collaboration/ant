@@ -47,4 +47,5 @@ option(EtapOmegaG "Build EtaPrime Omega Gamma tools" OFF)
 
 if(EtapOmegaG)
     add_ant_executable(EtapOmegaG_plot)
+    add_ant_executable(EtapOmegaG_MC_plot)
 endif()
