@@ -28,6 +28,7 @@ set(SRCS_BASE
   ProgressCounter.cc
   TF1Ext.h
   TH1Ext.h
+  WrapTTree.h
 )
 
 set(SRCS_CEREAL
