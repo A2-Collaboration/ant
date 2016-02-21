@@ -69,8 +69,6 @@ struct WrapTTree {
         }
     }
 
-protected:
-
     template<typename T>
     struct Branch_t {
         Branch_t(WrapTTree* wraptree, const std::string& name) :
@@ -89,6 +87,8 @@ protected:
         T& operator() () { return *Value; }
         const T& operator() () const { return *Value; }
     };
+
+protected:
 
     template<typename T>
     friend struct Branch_t;
