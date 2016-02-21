@@ -76,9 +76,14 @@ struct WrapTTree {
             Value(new T())
         { wraptree->branches.emplace_back(ROOT_branch_t::Make(Name, std::addressof(Value))); }
         ~Branch_t() { delete Value; }
+        Branch_t(const Branch_t&) = delete;
+        Branch_t(Branch_t&&) = delete;
+        Branch_t& operator= (const Branch_t&) = delete;
+        Branch_t& operator= (Branch_t&&) = delete;
 
         const std::string Name;
         T* Value;
+
         operator T& () { return *Value; }
         operator const T& () const { return *Value; }
         T& operator= (const T& v) { *Value = v; return *Value; }
