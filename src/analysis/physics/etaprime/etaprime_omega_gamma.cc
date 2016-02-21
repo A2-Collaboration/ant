@@ -53,10 +53,14 @@ EtapOmegaG::EtapOmegaG(const string& name, OptionsPtr opts) :
 
     t.CreateBranches(HistFac.makeTTree("treeCommon"));
 
-    Sig.t.CreateBranches(HistFac.makeTTree("treeSig"));
-    SigFitted.t.CreateBranches(HistFac.makeTTree("treeSigFitted"));
-    Ref.t.CreateBranches(HistFac.makeTTree("treeRef"));
-    RefFitted.t.CreateBranches(HistFac.makeTTree("treeRefFitted"));
+    SmartHistFactory HistFacNotFitted("NotFitted",HistFac);
+    SmartHistFactory HistFacFitted("Fitted",HistFac);
+
+    Sig.SetupTrees(HistFacNotFitted);
+    Ref.t.CreateBranches(HistFacNotFitted.makeTTree("treeRef"));
+
+    SigFitted.SetupTrees(HistFacFitted);
+    RefFitted.t.CreateBranches(HistFacFitted.makeTTree("treeRef"));
 
 }
 
@@ -261,8 +265,10 @@ void EtapOmegaG::ProcessEvent(const TEvent& event, manager_t&)
         }
 
         t.Tree->Fill();
-        Sig.t.Tree->Fill();
-        SigFitted.t.Tree->Fill();
+
+        Sig.Fill();
+        SigFitted.Fill();
+
         Ref.t.Tree->Fill();
         RefFitted.t.Tree->Fill();
 
@@ -277,11 +283,53 @@ void EtapOmegaG::ProcessEvent(const TEvent& event, manager_t&)
 
 }
 
-
-
 EtapOmegaG::Sig_t::Sig_t() :
-    treefitter("sig_treefitter",
-               utils::ParticleTools::GetProducedParticle(EtapOmegaG::ptreeSignal)),
+    All(ParticleTypeDatabase::Photon), // we cheat a bit here, since a photon can never be a node...
+    No_Pi0(ParticleTypeDatabase::Pi0),
+    No_Omega(ParticleTypeDatabase::Omega),
+    No_EtaPrime(ParticleTypeDatabase::EtaPrime)
+{
+}
+
+void EtapOmegaG::Sig_t::SetupTrees(SmartHistFactory HistFac)
+{
+    All.t.CreateBranches(HistFac.makeTTree("SigAll"));
+    No_Pi0.t.CreateBranches(HistFac.makeTTree("SigNoPi0"));
+    No_Omega.t.CreateBranches(HistFac.makeTTree("SigNoOmega"));
+    No_EtaPrime.t.CreateBranches(HistFac.makeTTree("SigNoEtaPrime"));
+}
+
+void EtapOmegaG::Sig_t::Fill()
+{
+    All.t.Tree->Fill();
+    No_Pi0.t.Tree->Fill();
+    No_Omega.t.Tree->Fill();
+    No_EtaPrime.t.Tree->Fill();
+}
+
+void EtapOmegaG::Sig_t::ResetBranches()
+{
+    All.ResetBranches();
+    No_Pi0.ResetBranches();
+    No_Omega.ResetBranches();
+    No_EtaPrime.ResetBranches();
+}
+
+void EtapOmegaG::Sig_t::Process(const Particles_t& particles, TParticleTree_t particletree)
+{
+    All.Process(particles, particletree);
+    No_Pi0.Process(particles, particletree);
+    No_Omega.Process(particles, particletree);
+    No_EtaPrime.Process(particles, particletree);
+}
+
+
+
+EtapOmegaG::Sig_t::Fit_t::Fit_t(const ParticleTypeDatabase::Type& type) :
+    treefitter("sig_treefitter_"+type.Name(),
+               utils::ParticleTools::GetProducedParticle(EtapOmegaG::ptreeSignal),
+               [&type] (ParticleTypeTree tree) { return tree->Get() == type; }
+               ),
     fitted_EtaPrime(treefitter.GetTreeNode(ParticleTypeDatabase::EtaPrime)),
     fitted_Omega(treefitter.GetTreeNode(ParticleTypeDatabase::Omega)),
     fitted_Pi0(treefitter.GetTreeNode(ParticleTypeDatabase::Pi0))
@@ -311,7 +359,7 @@ EtapOmegaG::Sig_t::Sig_t() :
     fitted_g2_Pi0 = find_photons(fitted_Pi0).at(1);
 }
 
-void EtapOmegaG::Sig_t::ResetBranches()
+void EtapOmegaG::Sig_t::Fit_t::ResetBranches()
 {
     t.TreeFitChi2 = std_ext::NaN;
     t.TreeFitIterations = 0;
@@ -336,7 +384,7 @@ void EtapOmegaG::Sig_t::ResetBranches()
     t.MCTrueMatch = 0;
 }
 
-void EtapOmegaG::Sig_t::Process(const EtapOmegaG::Particles_t& particles, TParticleTree_t ptree_sigref)
+void EtapOmegaG::Sig_t::Fit_t::Process(const EtapOmegaG::Particles_t& particles, TParticleTree_t ptree_sigref)
 {
     ResetBranches();
 
@@ -1074,6 +1122,10 @@ void EtapOmegaG_MC::ShowResult()
           << endc;
     }
 }
+
+
+
+
 
 
 AUTO_REGISTER_PHYSICS(EtapOmegaG)

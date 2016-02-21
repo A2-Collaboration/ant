@@ -63,18 +63,6 @@ struct EtapOmegaG : Physics {
     };
 
     struct Sig_t {
-        Sig_t();
-
-        utils::TreeFitter treefitter;
-
-        utils::TreeFitter::tree_t fitted_EtaPrime;
-        utils::TreeFitter::tree_t fitted_Omega;
-        utils::TreeFitter::tree_t fitted_Pi0;
-
-        utils::TreeFitter::tree_t fitted_g_EtaPrime;
-        utils::TreeFitter::tree_t fitted_g_Omega;
-        utils::TreeFitter::tree_t fitted_g1_Pi0;
-        utils::TreeFitter::tree_t fitted_g2_Pi0;
 
         struct Tree_t : WrapTTree {
 
@@ -102,10 +90,43 @@ struct EtapOmegaG : Physics {
 
         };
 
-        Tree_t t;
+        // we have multiple ideas for treefitting...
+        struct Fit_t {
 
+            Fit_t(const ParticleTypeDatabase::Type& type);
+
+            utils::TreeFitter treefitter;
+
+            utils::TreeFitter::tree_t fitted_EtaPrime;
+            utils::TreeFitter::tree_t fitted_Omega;
+            utils::TreeFitter::tree_t fitted_Pi0;
+
+            utils::TreeFitter::tree_t fitted_g_EtaPrime;
+            utils::TreeFitter::tree_t fitted_g_Omega;
+            utils::TreeFitter::tree_t fitted_g1_Pi0;
+            utils::TreeFitter::tree_t fitted_g2_Pi0;
+
+            Tree_t t;
+
+            void ResetBranches();
+            void Process(const Particles_t& particles, TParticleTree_t particletree);
+
+        };
+
+        Sig_t();
+
+        Fit_t All;
+        Fit_t No_Pi0;
+        Fit_t No_Omega;
+        Fit_t No_EtaPrime;
+
+        void SetupTrees(SmartHistFactory HistFac);
+        void Fill();
         void ResetBranches();
         void Process(const Particles_t& particles, TParticleTree_t particletree);
+
+
+
     };
 
     struct Ref_t {
