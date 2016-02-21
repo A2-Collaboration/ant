@@ -200,6 +200,11 @@ void EtapOmegaG::ProcessEvent(const TEvent& event, manager_t&)
             h_MissedBkg->Fill(decaystr.c_str(), 1.0);
         }
     }
+    else if(!event.MCTrue->ID.IsInvalid()) {
+        // in rare cases, the particletree is not available, although we're running on MCTrue
+        // mark this as other MC background
+        t.MCTrue = 9;
+    }
 
     Sig.ResetBranches();
     Ref.ResetBranches();
