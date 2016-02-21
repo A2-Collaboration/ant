@@ -6,12 +6,14 @@
 using namespace std;
 using namespace ant;
 
+namespace ant {
 ostream& operator<<(ostream &stream, const ParticleTypeDatabase::Type& particle_type)
 {
     stream << "ParticleType " << particle_type.Name() << ":";
     stream << "\tMass=" << particle_type.Mass();
     stream << "\t"  << (particle_type.Charged() ? "Charged" : "Neutral");
     return stream;
+}
 }
 
 unsigned ParticleTypeDatabase::Type::NextUID;

@@ -132,8 +132,9 @@ inline bool operator<(const ant::ParticleTypeDatabase::Type& a, const ant::Parti
     return a.Name() < b.Name();
 }
 
+std::ostream& operator<< ( std::ostream& stream, const ant::ParticleTypeDatabase::Type& particle_type );
+
 }
 
 
 
-std::ostream& operator<< ( std::ostream& stream, const ant::ParticleTypeDatabase::Type& particle_type );
