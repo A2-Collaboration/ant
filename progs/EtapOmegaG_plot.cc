@@ -1,6 +1,5 @@
 #include "base/Logger.h"
 
-#include "TRint.h"
 #include "analysis/plot/root_draw.h"
 #include "analysis/physics/etaprime/etaprime_omega_gamma.h"
 
@@ -10,9 +9,12 @@
 #include "base/printable.h"
 #include "base/iterators.h"
 #include "base/std_ext/string.h"
+#include "base/std_ext/system.h"
 #include "base/WrapTFile.h"
 
 #include "TH1D.h"
+#include "TSystem.h"
+#include "TRint.h"
 
 #include <functional>
 #include <string>
@@ -21,6 +23,23 @@
 using namespace ant;
 using namespace ant::analysis;
 using namespace std;
+
+volatile bool interrupt = false;
+
+class MyTInterruptHandler : public TSignalHandler {
+public:
+    MyTInterruptHandler() : TSignalHandler(kSigInterrupt, kFALSE) { }
+
+    Bool_t  Notify() {
+        if (fDelay) {
+            fDelay++;
+            return kTRUE;
+        }
+        interrupt = true;
+        cout << " >>> Interrupted! " << endl;
+        return kTRUE;
+    }
+};
 
 
 using CommonTree_t = physics::EtapOmegaG::TreeCommon;
@@ -49,9 +68,12 @@ struct Node_t {
         // 0=Data, 1=Sig, 2=Ref, 3=AllMC, 9=Unknown_Bkg, >=10 Known Bkg
         // create them here already to get them in the right order
         m.emplace(0, SmartHistFactory("Data", h, "Data"));
-        m.emplace(3, SmartHistFactory("MC",   h, "MC"));
         m.emplace(1, SmartHistFactory("Sig",  h, "Sig"));
         m.emplace(2, SmartHistFactory("Ref",  h, "Ref"));
+        // mctrue is never 3 in tree, use this to sum up all MC or all bkg MC
+        m.emplace(3, SmartHistFactory("Sum_MC", h, "Sum_MC"));
+        m.emplace(4, SmartHistFactory("Bkg_MC", h, "Bkg_MC"));
+
         return m;
     }
 
@@ -76,8 +98,12 @@ struct Node_t {
            }
 
            it_hist->second.Fill(treeCommon, treeSigRef);
-           if(mctrue>0) // mctrue is never 3 in tree, use this to sum up all MC
+           if(mctrue>0) {
                Hists.at(3).Fill(treeCommon, treeSigRef);
+               if(mctrue >= 9)
+                   Hists.at(4).Fill(treeCommon, treeSigRef);
+           }
+
            return true;
        }
        return false;
@@ -141,7 +167,7 @@ struct CommonHist_t {
         h_KinFitChi2->Fill(treeCommon.KinFitChi2, treeCommon.TaggW);
     }
 
-    // there are some common cuts for Sig and Ref channel
+    // Sig and Ref channel share some cuts...
     template<typename Tree_t>
     static Cuts_t<Tree_t> GetCuts() {
         Cuts_t<Tree_t> cuts;
@@ -163,26 +189,67 @@ struct CommonHist_t {
 struct SigHist_t : CommonHist_t {
     using Tree_t = physics::EtapOmegaG::Sig_t::Tree_t;
 
+    TH2D* h_IM_gg_gg; // Goldhaber plot
     TH1D* h_TreeFitChi2;
     TH1D* h_Bachelor_E;
 
     SigHist_t(SmartHistFactory HistFac) : CommonHist_t(HistFac) {
+        BinSettings bins_goldhaber(400, 0, 900);
+        const string axislabel_goldhaber("2#gamma IM / MeV");
+
+        h_IM_gg_gg = HistFac.makeTH2D("IM 2#gamma-2#gamma",
+                                    axislabel_goldhaber, axislabel_goldhaber,
+                                    bins_goldhaber, bins_goldhaber,
+                                    "h_IM_gg_gg"
+                                    );
         h_TreeFitChi2 = HistFac.makeTH1D("TreeFitChi2", "#chi^{2}","",BinSettings(200,0,100),"h_TreeFitChi2");
         h_Bachelor_E = HistFac.makeTH1D("E_#gamma in #eta' frame","E_{#gamma}","",BinSettings(400,0,400),"h_Bachelor_E");
     }
 
-    void Fill(const CommonTree_t& treeCommon, const Tree_t& treeSig) {
+    void Fill(const CommonTree_t& treeCommon, const Tree_t& tree) {
         CommonHist_t::Fill(treeCommon);
-        h_TreeFitChi2->Fill(treeSig.TreeFitChi2, treeCommon.TaggW);
-        h_Bachelor_E->Fill(treeSig.Bachelor_best_best, treeCommon.TaggW);
+        for(unsigned i=0;i<tree.gg_gg1().size();i++){
+            h_IM_gg_gg->Fill(tree.gg_gg1()[i], tree.gg_gg2()[i]);
+            h_IM_gg_gg->Fill(tree.gg_gg2()[i], tree.gg_gg1()[i]);
+        }
+        h_TreeFitChi2->Fill(tree.TreeFitChi2, treeCommon.TaggW);
+        h_Bachelor_E->Fill(tree.Bachelor_best_best, treeCommon.TaggW);
     }
 
     static Cuts_t<Tree_t> GetCuts() {
         auto cuts = CommonHist_t::GetCuts<Tree_t>();
+
+        // reduces pi0pi0 and pi0eta backgrounds
+        auto goldhaber_cut = [] (const CommonTree_t&, const Tree_t& tree) {
+            const auto& Pi0 = ParticleTypeDatabase::Pi0.GetWindow(40);
+            const auto& Eta = ParticleTypeDatabase::Eta.GetWindow(30);
+
+            for(unsigned i=0;i<tree.gg_gg1().size();i++) {
+                const double im1 = tree.gg_gg1()[i];
+                const double im2 = tree.gg_gg2()[i];
+                if(   im1 < Pi0.Stop()
+                   && im2 < Pi0.Stop())
+                    return false;
+                if(   Eta.Contains(im1)
+                   && Pi0.Contains(im2))
+                    return false;
+                if(   Pi0.Contains(im1)
+                   && Eta.Contains(im2))
+                    return false;
+            }
+            return true;
+        };
+
+        cuts.emplace_back(MultiCut_t<Tree_t>{
+                              {"Goldhaber", goldhaber_cut },
+                          });
+
         cuts.emplace_back(MultiCut_t<Tree_t>{
                               {"TreeFitChi2<20", [] (const CommonTree_t&, const Tree_t& tree) { return tree.TreeFitChi2<20; } },
                               {"TreeFitChi2<50", [] (const CommonTree_t&, const Tree_t& tree) { return tree.TreeFitChi2<50; } },
                           });
+
+
         return cuts;
     }
 };
@@ -196,9 +263,9 @@ struct RefHist_t : CommonHist_t {
         h_IM_2g = HistFac.makeTH1D("IM 2g","IM / MeV","",BinSettings(1100,0,1100),"h_IM_2g");
     }
 
-    void Fill(const CommonTree_t& treeCommon, const Tree_t& treeRef) {
+    void Fill(const CommonTree_t& treeCommon, const Tree_t& tree) {
         CommonHist_t::Fill(treeCommon);
-        h_IM_2g->Fill(treeRef.IM_2g, treeCommon.TaggW);
+        h_IM_2g->Fill(tree.IM_2g, treeCommon.TaggW);
     }
 
     static Cuts_t<Tree_t> GetCuts() {
@@ -211,10 +278,28 @@ int main(int argc, char** argv) {
     SetupLogger();
 
     TCLAP::CmdLine cmd("plot", ' ', "0.1");
-    auto cmd_file = cmd.add<TCLAP::ValueArg<string>>("i","input","Input file",true,"","input");;
+    auto cmd_input = cmd.add<TCLAP::ValueArg<string>>("i","input","Input file",true,"","input");
+    auto cmd_batchmode = cmd.add<TCLAP::MultiSwitchArg>("b","batch","Run in batch mode (no ROOT shell afterwards)",false);
+    auto cmd_maxevents = cmd.add<TCLAP::MultiArg<int>>("m","maxevents","Process only max events",false,"maxevents");
+    auto cmd_output = cmd.add<TCLAP::ValueArg<string>>("o","output","Output file",false,"","filename");
+
+
     cmd.parse(argc, argv);
 
-    WrapTFileInput input(cmd_file->getValue());
+    int fake_argc=1;
+    char* fake_argv[2];
+    fake_argv[0] = argv[0];
+    if(cmd_batchmode->isSet()) {
+        fake_argv[fake_argc++] = strdup("-b");
+    }
+    TRint app("Ant",&fake_argc,fake_argv,nullptr,0,true);
+    auto oldsig = app.GetSignalHandler();
+    oldsig->Remove();
+    auto mysig = new MyTInterruptHandler();
+    mysig->Add();
+    gSystem->AddSignalHandler(mysig);
+
+    WrapTFileInput input(cmd_input->getValue());
 
     auto link_branches = [&input] (const string treename, WrapTTree* wraptree, long long expected_entries) {
         TTree* t;
@@ -228,7 +313,9 @@ int main(int argc, char** argv) {
 
     CommonTree_t treeCommon;
     link_branches("EtapOmegaG/treeCommon", addressof(treeCommon), -1);
-    const auto entries = treeCommon.Tree->GetEntries();
+    auto entries = treeCommon.Tree->GetEntries();
+    if(cmd_maxevents->isSet() && cmd_maxevents->getValue().back()<entries)
+        entries = cmd_maxevents->getValue().back();
 
     SigHist_t::Tree_t treeSig;
     link_branches("EtapOmegaG/treeSig", addressof(treeSig), entries);
@@ -241,6 +328,14 @@ int main(int argc, char** argv) {
 
     LOG(INFO) << "Tree entries=" << entries;
 
+    unique_ptr<WrapTFileOutput> masterFile;
+    if(cmd_output->isSet()) {
+        masterFile = std_ext::make_unique<WrapTFileOutput>(cmd_output->getValue(),
+                                                    WrapTFileOutput::mode_t::recreate,
+                                                     true); // cd into masterFile upon creation
+    }
+
+
     SmartHistFactory HistFac("EtapOmegaG");
 
 
@@ -250,6 +345,9 @@ int main(int argc, char** argv) {
     auto cuttreeRefFitted = MakeCutTree<RefHist_t>(HistFac, "RefFitted");
 
     for(long long entry=0;entry<entries;entry++) {
+        if(interrupt)
+            break;
+
         treeCommon.Tree->GetEntry(entry);
 
         // we handle the Ref/Sig cut here to save some reading work
@@ -265,17 +363,30 @@ int main(int argc, char** argv) {
             treeRefFitted.Tree->GetEntry(entry);
             FillCutTree<RefHist_t>(cuttreeRefFitted, treeCommon, treeRefFitted);
         }
+        if(entry % 100000 == 0)
+            LOG(INFO) << "Processed " << 100.0*entry/entries << " %";
     }
 
+    if(!cmd_batchmode->isSet()) {
+        if(!std_ext::system::isInteractive()) {
+            LOG(INFO) << "No TTY attached. Not starting ROOT shell.";
+        }
+        else {
 
-    int fake_argc=0;
-    char** fake_argv=nullptr;
-    TRint app("plot",&fake_argc,fake_argv,nullptr,0,true);
+            mysig->Remove();
+            oldsig->Add();
+            gSystem->AddSignalHandler(oldsig);
+            delete mysig;
 
-    //canvas() << padoption::LogY << h_IM_2g << endc;
+            if(masterFile)
+                LOG(INFO) << "Stopped running, but close ROOT properly to write data to disk.";
 
-    app.Run();
-
+            app.Run(kTRUE); // really important to return...
+            if(masterFile)
+                LOG(INFO) << "Writing output file...";
+            masterFile = nullptr;   // and to destroy the master WrapTFile before TRint is destroyed
+        }
+    }
 
 
     return 0;
