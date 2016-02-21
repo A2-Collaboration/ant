@@ -82,10 +82,12 @@ protected:
         const std::string Name;
         T* Value;
         operator T& () { return *Value; }
+        operator const T& () const { return *Value; }
         T& operator= (const T& v) { *Value = v; return *Value; }
         T& operator= (T&& v) { *Value = v; return *Value; }
         // if you need to call methods of T, sometimes operator() is handy
         T& operator() () { return *Value; }
+        const T& operator() () const { return *Value; }
     };
 
     template<typename T>
