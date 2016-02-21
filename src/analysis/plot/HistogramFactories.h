@@ -44,6 +44,7 @@ public:
 
     void SetRootDir(TDirectory* root_dir=nullptr);
     void SetTitlePrefix(const std::string& title_prefix_);
+    std::string GetTitlePrefix() const;
     void SetDirDescription(const std::string& desc);
 
 

@@ -92,6 +92,11 @@ void SmartHistFactory::SetTitlePrefix(const string& title_prefix_)
     title_prefix = title_prefix_;
 }
 
+string SmartHistFactory::GetTitlePrefix() const
+{
+    return title_prefix;
+}
+
 void SmartHistFactory::SetDirDescription(const string &desc)
 {
     dir->SetTitle(desc.c_str());
