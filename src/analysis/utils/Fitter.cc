@@ -413,7 +413,7 @@ KinFitter::PhotonBeamVector::PhotonBeamVector(const string& name):
 
 }
 
-TreeFitter::TreeFitter(const string& name, ParticleTypeTree ptree) :
+TreeFitter::TreeFitter(const string& name, ParticleTypeTree ptree, std::function<bool(ParticleTypeTree)> excludeNode) :
     Fitter(name),
     tree(MakeTree(ptree))
 {
@@ -435,25 +435,40 @@ TreeFitter::TreeFitter(const string& name, ParticleTypeTree ptree) :
     // prepare the calculation at each constraint
     // the Map_nodes call can be done once and the
     // calculation is stored in little functions
+    using sum_daughters_t = function<void()>;
     using node_constraint_t = function<double()>;
+
+    vector<sum_daughters_t> sum_daughters;
     vector<node_constraint_t> node_constraints;
-    tree->Map_nodes([&node_constraints] (const tree_t& tnode) {
+
+    tree->Map_nodes([&sum_daughters, &node_constraints, excludeNode] (const tree_t& tnode) {
         if(tnode->IsLeaf())
             return;
-        LOG(INFO) << "IM node constraint for " << tnode->Get().TypeTree->Get().Name();
-        node_constraints.emplace_back([tnode] () {
+
+        // always sum daughters
+        sum_daughters.emplace_back([tnode] () {
             node_t& node = tnode->Get();
             node.Particle.SetPtEtaPhiE(0,0,0,0);
             for(const auto& d : tnode->Daughters())
                 node.Particle += d->Get().Particle;
+        });
+
+        if(excludeNode(tnode->Get().TypeTree))
+            return;
+
+        LOG(INFO) << "IM node constraint for " << tnode->Get().TypeTree->Get().Name();
+        node_constraints.emplace_back([tnode] () {
+            node_t& node = tnode->Get();
             const double IM_calc = node.Particle.M();
             const double IM_expected = tnode->Get().TypeTree->Get().Mass();
             return IM_calc - IM_expected;
         });
     });
 
+    LOG(INFO) << "Have " << node_constraints.size() << " node constraints at " << sum_daughters.size() << " nodes";
+
     // define the constraint
-    auto IM_at_nodes = [this, node_constraints] (const vector<vector<double>>& v) {
+    auto IM_at_nodes = [this, sum_daughters, node_constraints] (const vector<vector<double>>& v) {
         assert(v.size() == tree_leaves.size());
         // assign values v to leaves
         for(unsigned i=0;i<v.size();i++) {
@@ -461,6 +476,11 @@ TreeFitter::TreeFitter(const string& name, ParticleTypeTree ptree) :
             node.Particle = FitParticle::GetVector(v[i],
                                                    node.TypeTree->Get().Mass());
         }
+
+        // sum daughters' Particle
+        for(const auto f : sum_daughters)
+            f();
+
         // calculate the IM constraint by evaluating the pre-defined functions
         vector<double> IM_diff(node_constraints.size());
         for(unsigned i=0;i<node_constraints.size();i++)

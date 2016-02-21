@@ -182,7 +182,8 @@ class TreeFitter : public Fitter
 {
 
 public:
-    TreeFitter(const std::string& name, ParticleTypeTree ptree);
+    TreeFitter(const std::string& name, ParticleTypeTree ptree,
+               std::function<bool(ParticleTypeTree)> excludeNode = [] (ParticleTypeTree) {return false;});
 
     struct node_t {
         node_t(const ParticleTypeTree& ptree) : TypeTree(ptree) {}
