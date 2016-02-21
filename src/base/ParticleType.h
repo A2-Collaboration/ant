@@ -1,6 +1,7 @@
 #pragma once
 
 #include "base/types.h"
+#include "base/interval.h"
 
 #include <string>
 #include <ostream>
@@ -38,6 +39,7 @@ public:
         const std::string& Name()       const { return name; }
         mev_t Mass()                    const { return mass; }
         bool  Charged()                 const { return charged; }
+        interval<mev_t> GetWindow(const mev_t width) const { return {mass-width/2,mass+width/2}; }
 
         bool operator== (const Type& rhs) const {
             if( this == &rhs )
