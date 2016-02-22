@@ -187,13 +187,25 @@ public:
  */
 class hstack: public root_drawable_traits {
 protected:
+    struct Hist_t {
+        Hist_t(TH1* ptr, const std::string& option) : Ptr(ptr), Option(option) {}
+        TH1* Ptr;
+        const std::string Option;
+    };
+    std::vector<Hist_t> hists;
+
     THStack* stack;
     std::string current_option;
     std::string xlabel;
     std::string ylabel;
 
+    bool UseIntelliLegend;
+    bool IgnoreEmptyHist;
+
 public:
-    hstack(const std::string& name, const std::string& title="");
+    hstack(const std::string& name, const std::string& title="",
+           bool useIntelliLegend = false,
+           bool ignoreEmptyHist = false);
     virtual ~hstack();
 
     hstack(const hstack&) = delete;
@@ -202,8 +214,8 @@ public:
     hstack& operator= (hstack&&) = default;
 
 
-    virtual hstack& operator<< (TH1* hist);
-    virtual hstack& operator<< (const drawoption& c);
+    hstack& operator<< (TH1* hist);
+    hstack& operator<< (const drawoption& c);
 
     void Draw(const std::string& option) const override;
 };
