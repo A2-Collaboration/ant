@@ -17,7 +17,7 @@
 #include "base/std_ext/string.h"
 #include "base/Logger.h"
 #include "base/detail/tclap/ValuesConstraintExtra.h"
-#include "base/iterators.h"
+#include "base/std_ext/iterators.h"
 
 #include "analysis/plot/root_draw.h"
 
@@ -108,7 +108,7 @@ int main( int argc, char** argv )
     histograms.push_back(totalptr);
 
     hstack sumplot("sum", "");
-    auto cit = getCirculatIterator(ColorPalette::Colors.begin(), ColorPalette::Colors.end());
+    auto cit = std_ext::getCircularIterator(ColorPalette::Colors.begin(), ColorPalette::Colors.end());
     for (auto histptr: histograms)
     {
         histptr->SetXTitle("E_{#gamma} [GeV]");

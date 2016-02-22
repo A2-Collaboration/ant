@@ -12,7 +12,7 @@
 #include "TLine.h"
 #include "base/interval.h"
 
-#include "base/iterators.h"
+#include "base/std_ext/iterators.h"
 #include "base/std_ext/string.h"
 
 using namespace ant;

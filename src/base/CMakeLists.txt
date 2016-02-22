@@ -21,7 +21,6 @@ set(SRCS_BASE
   CmdLine.h
   Paths.h
   matrixstack.cc
-  iterators.h
   enumfield.h
   GitInfo.cc
   OptionsList.cc
@@ -135,6 +134,7 @@ set(SRCS_STD_EXT
   std_ext/vector.h
   std_ext/system.cc
   std_ext/convert.h
+  std_ext/iterators.h
 )
 
 set(SRCS

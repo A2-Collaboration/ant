@@ -1,7 +1,8 @@
 #pragma once
 #include <iterator>
 
-
+namespace ant {
+namespace std_ext {
 
 template <typename T>
 class circit: public std::iterator_traits<typename T::value_type> {
@@ -41,6 +42,8 @@ public:
 };
 
 template <typename T>
-circit<T> getCirculatIterator(T start, T end) {
+circit<T> getCircularIterator(T start, T end) {
     return circit<T>(start, end);
 }
+
+}}

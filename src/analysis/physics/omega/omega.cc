@@ -14,7 +14,7 @@
 #include "base/std_ext/math.h"
 
 #include "TTree.h"
-#include "base/iterators.h"
+#include "base/std_ext/iterators.h"
 #include "base/ParticleTypeTree.h"
 
 #include "utils/particle_tools.h"
@@ -309,7 +309,7 @@ void OmegaEtaG::ShowResult()
     histlist.sort( [] (const perDecayhists_t* h1, const perDecayhists_t* h2) -> bool {return h1->gg->GetEntries() > h2->gg->GetEntries();});
 
 
-    auto cit = getCirculatIterator(ColorPalette::Colors.begin(), ColorPalette::Colors.end());
+    auto cit = getCircularIterator(ColorPalette::Colors.begin(), ColorPalette::Colors.end());
 
     hstack stack("decays","gg");
     hstack stack2("ggg","ggg");
