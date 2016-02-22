@@ -53,7 +53,7 @@ struct Cut_t {
 };
 
 
-template<typename SigRefTree_t, typename Hist_t>
+template<typename Hist_t, typename SigRefTree_t = typename Hist_t::Tree_t>
 struct Node_t {
     SmartHistFactory HistFac; // directory for cuts (and H)
     SmartHistFactory H;       // subdir for mctrue splitted hists
@@ -90,7 +90,10 @@ struct Node_t {
             static unsigned nStacksCreated = 0;
             for(auto h : histptrs) {
                 const string name = h->GetName();
-                Stacks.emplace_back(name+to_string(nStacksCreated), HistFac.GetTitlePrefix()+": "+name);
+                Stacks.emplace_back(name+to_string(nStacksCreated), HistFac.GetTitlePrefix()+": "+name,
+                                    true, // use intelliLegend
+                                    true  // ignore empty histograms
+                                    );
                 Stacks.back() << h;
             }
             nStacksCreated++;
@@ -111,7 +114,7 @@ struct Node_t {
         m.emplace(0, WrappedHist_t{SmartHistFactory("Data",   h, "Data"),   MakeColorHistMod(kBlack)});
         m.emplace(1, WrappedHist_t{SmartHistFactory("Sig",    h, "Sig"),    MakeColorHistMod(kRed)});
         m.emplace(2, WrappedHist_t{SmartHistFactory("Ref",    h, "Ref"),    MakeColorHistMod(kRed)});
-        // mctrue is never 3 in tree, use this to sum up all MC or all bkg MC
+        // mctrue is never >=3 (and <9) in tree, use this to sum up all MC and all bkg MC
         m.emplace(3, WrappedHist_t{SmartHistFactory("Sum_MC", h, "Sum_MC"), MakeColorHistMod(kBlack)});
         m.emplace(4, WrappedHist_t{SmartHistFactory("Bkg_MC", h, "Bkg_MC"), MakeColorHistMod(kGray)});
 
@@ -172,7 +175,7 @@ using CutsIterator_t = typename Cuts_t<SigRefTree_t>::const_iterator;
 
 
 template<typename SigRefTree_t, typename Hist_t>
-using CutTree_t = typename Tree<Node_t<SigRefTree_t, Hist_t>>::node_t;
+using CutTree_t = typename Tree<Node_t<Hist_t, SigRefTree_t>>::node_t;
 
 template<typename SigRefTree_t, typename Hist_t>
 void BuildCutTree(CutTree_t<SigRefTree_t, Hist_t> cuttree, CutsIterator_t<SigRefTree_t> first, CutsIterator_t<SigRefTree_t> last) {
@@ -188,7 +191,7 @@ void BuildCutTree(CutTree_t<SigRefTree_t, Hist_t> cuttree, CutsIterator_t<SigRef
 template<typename Hist_t, typename SigRefTree_t = typename Hist_t::Tree_t>
 CutTree_t<SigRefTree_t, Hist_t> MakeCutTree(SmartHistFactory histFac, const string& name) {
     const auto& cuts = Hist_t::GetCuts();
-    auto cuttree = Tree<Node_t<SigRefTree_t, Hist_t>>::MakeNode(histFac, Cut_t<SigRefTree_t>{name});
+    auto cuttree = Tree<Node_t<Hist_t, SigRefTree_t>>::MakeNode(histFac, Cut_t<SigRefTree_t>{name});
     BuildCutTree<SigRefTree_t, Hist_t>(cuttree, cuts.begin(), cuts.end());
     return cuttree;
 }
@@ -201,6 +204,21 @@ void FillCutTree(CutTree_t<SigRefTree_t, Hist_t> cuttree, const CommonTree_t& co
         }
     }
 }
+
+template<typename Hist_t, typename SigRefTree_t = typename Hist_t::Tree_t>
+void DrawCutTree(CutTree_t<SigRefTree_t, Hist_t> cuttree, bool leaves_only = true) {
+    if(!leaves_only || cuttree->IsLeaf()) {
+        canvas c(cuttree->Get().HistFac.GetTitlePrefix());
+        for(auto& stack : cuttree->Get().Stacks)
+            c << drawoption("nostack") << stack;
+        c << endc;
+    }
+    for(const auto& d : cuttree->Daughters()) {
+        DrawCutTree<Hist_t, SigRefTree_t>(d, leaves_only);
+    }
+}
+
+
 
 // define the structs containing the histograms
 // and the cuts. for simple branch variables, that could
@@ -380,15 +398,12 @@ int main(int argc, char** argv) {
     CommonTree_t treeCommon;
     link_branches("EtapOmegaG/treeCommon", addressof(treeCommon), -1);
     auto entries = treeCommon.Tree->GetEntries();
-    if(cmd_maxevents->isSet() && cmd_maxevents->getValue().back()<entries)
-        entries = cmd_maxevents->getValue().back();
 
     SigHist_t::Tree_t treeSig;
     link_branches("EtapOmegaG/"+cmd_sigtree->getValue(), addressof(treeSig), entries);
     RefHist_t::Tree_t treeRef;
     link_branches("EtapOmegaG/"+cmd_reftree->getValue(), addressof(treeRef), entries);
 
-    LOG(INFO) << "Tree entries=" << entries;
 
     unique_ptr<WrapTFileOutput> masterFile;
     if(cmd_output->isSet()) {
@@ -403,7 +418,16 @@ int main(int argc, char** argv) {
     auto cuttreeSig = MakeCutTree<SigHist_t>(HistFac, std_ext::replace_str(cmd_sigtree->getValue(),"/","_"));
     auto cuttreeRef = MakeCutTree<RefHist_t>(HistFac, std_ext::replace_str(cmd_reftree->getValue(),"/","_"));
 
-    for(long long entry=0;entry<entries;entry++) {
+    LOG(INFO) << "Tree entries=" << entries;
+    auto max_entries = entries;
+    if(cmd_maxevents->isSet() && cmd_maxevents->getValue().back()<entries) {
+        max_entries = cmd_maxevents->getValue().back();
+        LOG(INFO) << "Running until " << max_entries;
+    }
+
+
+
+    for(long long entry=0;entry<max_entries;entry++) {
         if(interrupt)
             break;
 
@@ -436,7 +460,8 @@ int main(int argc, char** argv) {
             if(masterFile)
                 LOG(INFO) << "Stopped running, but close ROOT properly to write data to disk.";
 
-            canvas() << drawoption("nostack") << padoption::Legend << cuttreeRef->Get().Stacks.front() << endc;
+            DrawCutTree<SigHist_t>(cuttreeSig);
+            DrawCutTree<RefHist_t>(cuttreeRef);
 
             app.Run(kTRUE); // really important to return...
             if(masterFile)
