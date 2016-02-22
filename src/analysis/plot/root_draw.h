@@ -149,29 +149,29 @@ protected:
 public:
 
     canvas(const std::string& title="");
-    virtual ~canvas();
+    ~canvas();
 
-    virtual void cd();
+    void cd();
 
-    virtual canvas& operator<< (root_drawable_traits& drawable);
+    canvas& operator<< (root_drawable_traits& drawable);
 
-    virtual canvas& operator<< (TObject* hist);
+    canvas& operator<< (TObject* hist);
 
-    virtual canvas& operator<< (const endcanvas& c);
+    canvas& operator<< (const endcanvas& c);
 
-    virtual canvas& operator<< (const endrow&);
+    canvas& operator<< (const endrow&);
 
-    virtual canvas& operator<< (const samepad_t&);
+    canvas& operator<< (const samepad_t&);
 
-    virtual canvas& operator<< (const drawoption& c);
+    canvas& operator<< (const drawoption& c);
 
-    virtual canvas& operator<< (const padoption& c);
+    canvas& operator<< (const padoption& c);
 
-    virtual canvas& operator<< (const padoption::enable& c);
+    canvas& operator<< (const padoption::enable& c);
 
-    virtual canvas& operator<< (const padoption::disable& c);
+    canvas& operator<< (const padoption::disable& c);
 
-    virtual canvas& operator>> (const std::string& filename);
+    canvas& operator>> (const std::string& filename);
 
 };
 
