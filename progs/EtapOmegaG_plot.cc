@@ -283,6 +283,8 @@ int main(int argc, char** argv) {
     auto cmd_maxevents = cmd.add<TCLAP::MultiArg<int>>("m","maxevents","Process only max events",false,"maxevents");
     auto cmd_output = cmd.add<TCLAP::ValueArg<string>>("o","output","Output file",false,"","filename");
 
+    auto cmd_sigtree = cmd.add<TCLAP::ValueArg<string>>("","sigtree","Signal tree name",false,"Fitted/SigAll","treename");
+    auto cmd_reftree = cmd.add<TCLAP::ValueArg<string>>("","reftree","Reference tree name",false,"Fitted/treeRef","treename");
 
     cmd.parse(argc, argv);
 
@@ -318,13 +320,9 @@ int main(int argc, char** argv) {
         entries = cmd_maxevents->getValue().back();
 
     SigHist_t::Tree_t treeSig;
-    link_branches("EtapOmegaG/treeSig", addressof(treeSig), entries);
-    SigHist_t::Tree_t treeSigFitted;
-    link_branches("EtapOmegaG/treeSigFitted", addressof(treeSigFitted), entries);
+    link_branches("EtapOmegaG/"+cmd_sigtree->getValue(), addressof(treeSig), entries);
     RefHist_t::Tree_t treeRef;
-    link_branches("EtapOmegaG/treeRef", addressof(treeRef), entries);
-    RefHist_t::Tree_t treeRefFitted;
-    link_branches("EtapOmegaG/treeRefFitted", addressof(treeRefFitted), entries);
+    link_branches("EtapOmegaG/"+cmd_reftree->getValue(), addressof(treeRef), entries);
 
     LOG(INFO) << "Tree entries=" << entries;
 
@@ -338,11 +336,8 @@ int main(int argc, char** argv) {
 
     SmartHistFactory HistFac("EtapOmegaG");
 
-
-    auto cuttreeSig = MakeCutTree<SigHist_t>(HistFac, "Sig");
-    auto cuttreeSigFitted = MakeCutTree<SigHist_t>(HistFac, "SigFitted");
-    auto cuttreeRef = MakeCutTree<RefHist_t>(HistFac, "Ref");
-    auto cuttreeRefFitted = MakeCutTree<RefHist_t>(HistFac, "RefFitted");
+    auto cuttreeSig = MakeCutTree<SigHist_t>(HistFac, std_ext::replace_str(cmd_sigtree->getValue(),"/","_"));
+    auto cuttreeRef = MakeCutTree<RefHist_t>(HistFac, std_ext::replace_str(cmd_reftree->getValue(),"/","_"));
 
     for(long long entry=0;entry<entries;entry++) {
         if(interrupt)
@@ -354,14 +349,10 @@ int main(int argc, char** argv) {
         if(treeCommon.IsSignal) {
             treeSig.Tree->GetEntry(entry);
             FillCutTree<SigHist_t>(cuttreeSig, treeCommon, treeSig);
-            treeSigFitted.Tree->GetEntry(entry);
-            FillCutTree<SigHist_t>(cuttreeSigFitted, treeCommon, treeSigFitted);
         }
         else {
             treeRef.Tree->GetEntry(entry);
             FillCutTree<RefHist_t>(cuttreeRef, treeCommon, treeRef);
-            treeRefFitted.Tree->GetEntry(entry);
-            FillCutTree<RefHist_t>(cuttreeRefFitted, treeCommon, treeRefFitted);
         }
         if(entry % 100000 == 0)
             LOG(INFO) << "Processed " << 100.0*entry/entries << " %";
