@@ -21,6 +21,8 @@
 
 #include "analysis/plot/root_draw.h"
 
+#include "root-addons/analysis_codes/hstack.h"
+
 
 using namespace std;
 using namespace ant;
@@ -130,7 +132,7 @@ int main( int argc, char** argv )
 
 
     canvas("total") << drawoption("nostack") << padoption::Legend << padoption::LogY
-                    << sumplot << endc;
+                    << &sumplot << endc;
 
     app->Run(kTRUE);
 

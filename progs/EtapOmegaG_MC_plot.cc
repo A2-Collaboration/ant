@@ -15,6 +15,8 @@
 #include "base/std_ext/iterators.h"
 #include "base/std_ext/string.h"
 
+#include "root-addons/analysis_codes/hstack.h"
+
 using namespace ant;
 using namespace std;
 
@@ -189,7 +191,7 @@ void do_Sum_Signal_Bkg(TDirectory *dir,
     }
 
     canvas c("c_"+hname+(bkgdetail ? "_detail" : ""));
-    c << padoption::Legend << drawoption("nostack") << mystack << endc;
+    c << padoption::Legend << drawoption("nostack") << &mystack << endc;
 }
 
 

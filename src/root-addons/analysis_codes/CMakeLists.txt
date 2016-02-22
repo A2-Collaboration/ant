@@ -10,6 +10,7 @@ set(DICT_HEADERS
     BrowseHistograms.h
     RootPointerFun.h
     PlotTimings.h
+    hstack.h
   )
 
 set(SRCS
@@ -23,6 +24,7 @@ set(SRCS
     BrowseHistograms.cc
     RootPointerFun.cc
     PlotTimings.cc
+    hstack.cc
   )
 
 set(ROOT_DICTIONARY "${CMAKE_CURRENT_BINARY_DIR}/G__analysis_codes.cc")
@@ -40,4 +42,4 @@ endif()
 append_header_files(SRCS)
 
 add_library(analysis_codes ${SRCS} ${DICT_HEADERS})
-target_link_libraries(analysis_codes base analysis cbtaps_display ${ROOT_LIBRARIES})
+target_link_libraries(analysis_codes base cbtaps_display ${ROOT_LIBRARIES})

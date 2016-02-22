@@ -28,6 +28,8 @@
 
 #include "utils/matcher.h"
 
+#include "root-addons/analysis_codes/hstack.h"
+
 using namespace std;
 using namespace ant;
 using namespace ant::analysis;
@@ -340,12 +342,12 @@ void OmegaEtaG::ShowResult()
             break;
     }
 
-    canvas("OmegaEtaG per Decay Results gg") << stack << endc;
-    canvas("OmegaEtaG per Decay Results ggg") << stack2 << endc;
-    canvas("OmegaEtaG per Decay Results mm") << drawoption("pads") << stack3 << endc;
-    canvas("OmegaEtaG per Decay Results Angle p") << drawoption("pads") << stack4 << endc;
-    canvas("OmegaEtaG per Decay Results Angle p ggg") << drawoption("pads") << stack5 << endc;
-    canvas("OmegaEtaG per Decay Resultsp phi diff") << drawoption("pads") << stack6 << endc;
+    canvas("OmegaEtaG per Decay Results gg") << &stack << endc;
+    canvas("OmegaEtaG per Decay Results ggg") << &stack2 << endc;
+    canvas("OmegaEtaG per Decay Results mm") << drawoption("pads") << &stack3 << endc;
+    canvas("OmegaEtaG per Decay Results Angle p") << drawoption("pads") << &stack4 << endc;
+    canvas("OmegaEtaG per Decay Results Angle p ggg") << drawoption("pads") << &stack5 << endc;
+    canvas("OmegaEtaG per Decay Resultsp phi diff") << drawoption("pads") << &stack6 << endc;
     c7 << endc;
     c8 << endc;
 }

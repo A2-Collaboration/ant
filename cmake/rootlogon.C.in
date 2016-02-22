@@ -8,6 +8,9 @@
     if(gSystem->Load("@LIBRARY_OUTPUT_PATH@/libexpconfig.so") == 0)
         cout << "Ant expconfig library successfully loaded" << endl;
 
+    if(gSystem->Load("@LIBRARY_OUTPUT_PATH@/libanalysis.so") == 0)
+        cout << "Ant analysis library successfully loaded" << endl;
+
     if(gSystem->Load("@LIBRARY_OUTPUT_PATH@/libanalysis_codes.so") == 0)
         cout << "Ant analysis_codes library successfully loaded" << endl;
 

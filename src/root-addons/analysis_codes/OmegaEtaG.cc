@@ -11,6 +11,7 @@
 #include "TCut.h"
 #include "THStack.h"
 
+#include "root-addons/analysis_codes/hstack.h"
 #include "analysis/plot/root_draw.h"
 #include "analysis/plot/Histogram.h"
 #include "base/std_ext/string.h"
@@ -191,7 +192,7 @@ void OmegaEtaG::DataMC(TFile* mc_file, TFile* data_file, const double mcscale)
         hstack* stack = new hstack(Form("stack_%d",i), backup_title);
         *stack << mc << data;
 
-        c << drawoption("nostack") << padoption::Legend << *stack;
+        c << drawoption("nostack") << padoption::Legend << stack;
 
     }
 
@@ -320,7 +321,7 @@ void OmegaEtaG::DataMCBGs(TFile* mc_file, TFile* data_file, const double mcscale
             *stack << h;
         }
 
-        c << drawoption("nostack") << padoption::Legend << *stack;
+        c << drawoption("nostack") << padoption::Legend << stack;
 
 
     } // for hname

@@ -3,6 +3,8 @@
 #include "analysis/plot/root_draw.h"
 #include "analysis/physics/etaprime/etaprime_omega_gamma.h"
 
+#include "root-addons/analysis_codes/hstack.h"
+
 #include "base/CmdLine.h"
 #include "base/interval.h"
 #include "base/printable.h"
@@ -66,7 +68,7 @@ struct Node_t {
 
     map<unsigned, WrappedHist_t> Hists;
     typename Cut_t<SigRefTree_t>::Passes_t PassesCut;
-    vector<ant::hstack> Stacks;
+    vector<ant::hstack*> Stacks;
 
     Node_t(const SmartHistFactory& parentHistFac, Cut_t<SigRefTree_t> cut) :
         HistFac(cut.Name, parentHistFac, cut.Name),
@@ -87,21 +89,21 @@ struct Node_t {
             hist.Modify(h);
         }
         if(Stacks.empty()) {
-            static unsigned nStacksCreated = 0;
             for(auto h : histptrs) {
                 const string name = h->GetName();
-                Stacks.emplace_back(name+to_string(nStacksCreated), HistFac.GetTitlePrefix()+": "+name,
-                                    true, // use intelliLegend
-                                    true  // ignore empty histograms
-                                    );
-                Stacks.back() << h;
+                Stacks.emplace_back(HistFac.make<ant::hstack>(
+                                        name,
+                                        HistFac.GetTitlePrefix()+": "+name,
+                                        true, // use intelliLegend
+                                        true  // ignore empty histograms
+                                        ));
+                *Stacks.back() << h;
             }
-            nStacksCreated++;
         }
         else {
             assert(histptrs.size() == Stacks.size());
             for(size_t i=0;i<Stacks.size();i++)
-                Stacks[i] << histptrs[i];
+                *Stacks[i] << histptrs[i];
         }
     }
 
@@ -204,21 +206,6 @@ void FillCutTree(CutTree_t<SigRefTree_t, Hist_t> cuttree, const CommonTree_t& co
         }
     }
 }
-
-template<typename Hist_t, typename SigRefTree_t = typename Hist_t::Tree_t>
-void DrawCutTree(CutTree_t<SigRefTree_t, Hist_t> cuttree, bool leaves_only = true) {
-    if(!leaves_only || cuttree->IsLeaf()) {
-        canvas c(cuttree->Get().HistFac.GetTitlePrefix());
-        for(auto& stack : cuttree->Get().Stacks)
-            c << drawoption("nostack") << stack;
-        c << endc;
-    }
-    for(const auto& d : cuttree->Daughters()) {
-        DrawCutTree<Hist_t, SigRefTree_t>(d, leaves_only);
-    }
-}
-
-
 
 // define the structs containing the histograms
 // and the cuts. for simple branch variables, that could
@@ -459,9 +446,6 @@ int main(int argc, char** argv) {
 
             if(masterFile)
                 LOG(INFO) << "Stopped running, but close ROOT properly to write data to disk.";
-
-            DrawCutTree<SigHist_t>(cuttreeSig);
-            DrawCutTree<RefHist_t>(cuttreeRef);
 
             app.Run(kTRUE); // really important to return...
             if(masterFile)

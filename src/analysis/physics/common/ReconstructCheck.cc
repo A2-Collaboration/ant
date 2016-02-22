@@ -11,6 +11,7 @@
 #include "base/std_ext/math.h"
 #include "TTree.h"
 
+#include "root-addons/analysis_codes/hstack.h"
 
 using namespace std;
 using namespace ant;
@@ -228,7 +229,7 @@ void ReconstructCheck::histgroup::ShowResult() const
     c << drawoption("colz") << nPerEvent << nPerEventPerE << splitPerEvent
       << *splitFlagPos << *splitPos
       << cluserSize << cluserSize_true << dEE << dEE_true << nCharged << *posCharged << unmatched_veto
-      << drawoption("nostack") << padoption::Legend << splitstack
+      << drawoption("nostack") << padoption::Legend << &splitstack
       << drawoption("colz") << *energy_recov
       << padoption::LogZ << energyinout
       << thetainout << *input_positions << *mult1_chargedPos

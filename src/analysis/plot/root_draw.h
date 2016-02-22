@@ -175,51 +175,6 @@ public:
 
 };
 
-/**
- * @brief The hstack class
- *
- * Wrapper for ROOT's THStack.
- * Overloads the << operator to add histograms to it, and of course
- * can be drawn the same way with the canvas class.
- * The axis labels are always taken from the last histogram added.
- * @see ant::canvas
- *
- */
-class hstack: public root_drawable_traits {
-protected:
-    struct Hist_t {
-        Hist_t(TH1* ptr, const std::string& option) : Ptr(ptr), Option(option) {}
-        TH1* Ptr;
-        const std::string Option;
-    };
-    std::vector<Hist_t> hists;
-
-    THStack* stack;
-    std::string current_option;
-    std::string xlabel;
-    std::string ylabel;
-
-    bool UseIntelliLegend;
-    bool IgnoreEmptyHist;
-
-public:
-    hstack(const std::string& name, const std::string& title="",
-           bool useIntelliLegend = false,
-           bool ignoreEmptyHist = false);
-    virtual ~hstack();
-
-    hstack(const hstack&) = delete;
-    hstack& operator= (const hstack&) = delete;
-    hstack(hstack&&) = default;
-    hstack& operator= (hstack&&) = default;
-
-
-    hstack& operator<< (TH1* hist);
-    hstack& operator<< (const drawoption& c);
-
-    void Draw(const std::string& option) const override;
-};
-
 struct ColorPalette {
     static const std::vector<Color_t> Colors;
 };

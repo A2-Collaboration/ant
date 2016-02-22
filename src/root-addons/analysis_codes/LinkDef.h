@@ -22,5 +22,7 @@
 #pragma link C++ class TestClassContainer+;
 #pragma link C++ class PtrTest+;
 
+#pragma link C++ class ant::hstack-; // has its own Streamer implementation with cereal
+
 #endif // __CINT__
 

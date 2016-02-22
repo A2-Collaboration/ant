@@ -107,5 +107,6 @@ target_link_libraries(analysis
   tree
   expconfig
   cbtaps_display
+  analysis_codes
   slowcontrol
   )
