@@ -456,7 +456,7 @@ TreeFitter::TreeFitter(const string& name, ParticleTypeTree ptree, std::function
         if(excludeNode(tnode->Get().TypeTree))
             return;
 
-        LOG(INFO) << "IM node constraint for " << tnode->Get().TypeTree->Get().Name();
+        LOG(INFO) << "IM constraint for " << tnode->Get().TypeTree->Get().Name();
         node_constraints.emplace_back([tnode] () {
             node_t& node = tnode->Get();
             const double IM_calc = node.Particle.M();
@@ -465,7 +465,7 @@ TreeFitter::TreeFitter(const string& name, ParticleTypeTree ptree, std::function
         });
     });
 
-    LOG(INFO) << "Have " << node_constraints.size() << " node constraints at " << sum_daughters.size() << " nodes";
+    LOG(INFO) << "Have " << node_constraints.size() << " constraints at " << sum_daughters.size() << " nodes";
 
     // define the constraint
     auto IM_at_nodes = [this, sum_daughters, node_constraints] (const vector<vector<double>>& v) {
