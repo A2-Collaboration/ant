@@ -3,6 +3,7 @@
 #include <string>
 #include <sstream>
 #include <algorithm>
+#include <vector>
 
 namespace ant {
 namespace std_ext {
@@ -103,6 +104,30 @@ inline std::string basename(const std::string& filenamepath) {
     }
 
 
+}
+
+inline std::vector<std::string> tokenize_string(const std::string& str, const std::string& delim) {
+    std::vector<std::string> tokens;
+    std::string::size_type p = 0;
+    std::string::size_type np = 0;
+
+    do {
+        np = str.find(delim, p);
+        tokens.push_back(str.substr(p, np==str.npos? np : np-p));
+        p = np+delim.size();
+    } while(np != str.npos);
+
+    return tokens;
+}
+
+inline std::string concatenate_string(const std::vector<std::string>& tokens, const std::string& delim) {
+    std::stringstream ss;
+    for(auto it = tokens.begin(); it != tokens.end(); ++it) {
+        ss << *it;
+        if(it != std::prev(tokens.end()))
+            ss << delim;
+    }
+    return ss.str();
 }
 
 /**
