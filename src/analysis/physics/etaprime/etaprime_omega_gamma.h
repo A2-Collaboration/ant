@@ -93,7 +93,9 @@ struct EtapOmegaG : Physics {
         // we have multiple ideas for treefitting...
         struct Fit_t {
 
-            Fit_t(const ParticleTypeDatabase::Type& type);
+            Fit_t(const ParticleTypeDatabase::Type* typeptr = nullptr);
+
+            static utils::TreeFitter MakeFitter(const ParticleTypeDatabase::Type* typeptr);
 
             utils::TreeFitter treefitter;
 
@@ -124,7 +126,6 @@ struct EtapOmegaG : Physics {
         void Fill();
         void ResetBranches();
         void Process(const Particles_t& particles, TParticleTree_t particletree);
-
 
 
     };

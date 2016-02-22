@@ -284,10 +284,10 @@ void EtapOmegaG::ProcessEvent(const TEvent& event, manager_t&)
 }
 
 EtapOmegaG::Sig_t::Sig_t() :
-    All(ParticleTypeDatabase::Photon), // we cheat a bit here, since a photon can never be a node...
-    No_Pi0(ParticleTypeDatabase::Pi0),
-    No_Omega(ParticleTypeDatabase::Omega),
-    No_EtaPrime(ParticleTypeDatabase::EtaPrime)
+    All(),
+    No_Pi0(&ParticleTypeDatabase::Pi0),
+    No_Omega(&ParticleTypeDatabase::Omega),
+    No_EtaPrime(&ParticleTypeDatabase::EtaPrime)
 {
 }
 
@@ -323,13 +323,8 @@ void EtapOmegaG::Sig_t::Process(const Particles_t& particles, TParticleTree_t pa
     No_EtaPrime.Process(particles, particletree);
 }
 
-
-
-EtapOmegaG::Sig_t::Fit_t::Fit_t(const ParticleTypeDatabase::Type& type) :
-    treefitter("sig_treefitter_"+type.Name(),
-               utils::ParticleTools::GetProducedParticle(EtapOmegaG::ptreeSignal),
-               [&type] (ParticleTypeTree tree) { return tree->Get() == type; }
-               ),
+EtapOmegaG::Sig_t::Fit_t::Fit_t(const ParticleTypeDatabase::Type* typeptr) :
+    treefitter{MakeFitter(typeptr)},
     fitted_EtaPrime(treefitter.GetTreeNode(ParticleTypeDatabase::EtaPrime)),
     fitted_Omega(treefitter.GetTreeNode(ParticleTypeDatabase::Omega)),
     fitted_Pi0(treefitter.GetTreeNode(ParticleTypeDatabase::Pi0))
@@ -357,6 +352,17 @@ EtapOmegaG::Sig_t::Fit_t::Fit_t(const ParticleTypeDatabase::Type& type) :
     fitted_g_Omega = find_photons(fitted_Omega).at(0);
     fitted_g1_Pi0 = find_photons(fitted_Pi0).at(0);
     fitted_g2_Pi0 = find_photons(fitted_Pi0).at(1);
+}
+
+utils::TreeFitter EtapOmegaG::Sig_t::Fit_t::MakeFitter(const ParticleTypeDatabase::Type* typeptr)
+{
+    if(typeptr == nullptr)
+        return {"sig_treefitter_All", utils::ParticleTools::GetProducedParticle(EtapOmegaG::ptreeSignal)};
+    else
+        return {"sig_treefitter_No"+typeptr->Name(),
+                    utils::ParticleTools::GetProducedParticle(EtapOmegaG::ptreeSignal),
+                    [&typeptr] (ParticleTypeTree tree) { return tree->Get() == *typeptr; }
+        };
 }
 
 void EtapOmegaG::Sig_t::Fit_t::ResetBranches()
