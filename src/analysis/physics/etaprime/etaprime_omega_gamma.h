@@ -141,9 +141,9 @@ struct EtapOmegaG : Physics {
     };
 
     Sig_t Sig;
-    Sig_t SigFitted;
+    Sig_t SigKinFit;
     Ref_t Ref;
-    Ref_t RefFitted;
+    Ref_t RefKinFit;
 
     static const ParticleTypeTree ptreeSignal;
     static const ParticleTypeTree ptreeReference;

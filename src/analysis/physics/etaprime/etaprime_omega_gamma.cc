@@ -53,14 +53,14 @@ EtapOmegaG::EtapOmegaG(const string& name, OptionsPtr opts) :
 
     t.CreateBranches(HistFac.makeTTree("treeCommon"));
 
-    SmartHistFactory HistFacNotFitted("NotFitted",HistFac);
-    SmartHistFactory HistFacFitted("Fitted",HistFac);
+    SmartHistFactory HistFacNoKinFit("NoKinFit",HistFac);
+    SmartHistFactory HistFacKinFit("KinFit",HistFac);
 
-    Sig.SetupTrees(HistFacNotFitted);
-    Ref.t.CreateBranches(HistFacNotFitted.makeTTree("Ref"));
+    Sig.SetupTrees(HistFacNoKinFit);
+    Ref.t.CreateBranches(HistFacNoKinFit.makeTTree("Ref"));
 
-    SigFitted.SetupTrees(HistFacFitted);
-    RefFitted.t.CreateBranches(HistFacFitted.makeTTree("Ref"));
+    SigKinFit.SetupTrees(HistFacKinFit);
+    RefKinFit.t.CreateBranches(HistFacKinFit.makeTTree("Ref"));
 
 }
 
@@ -241,8 +241,8 @@ void EtapOmegaG::ProcessEvent(const TEvent& event, manager_t&)
         fitter.SetPhotons(particles.Photons);
         const auto& fit_result = fitter.DoFit();
 
-        SigFitted.ResetBranches();
-        RefFitted.ResetBranches();
+        SigKinFit.ResetBranches();
+        RefKinFit.ResetBranches();
 
         t.KinFitChi2 = std_ext::NaN;
         t.KinFitIterations = 0;
@@ -259,18 +259,18 @@ void EtapOmegaG::ProcessEvent(const TEvent& event, manager_t&)
                 fitted_particles.PhotonSum += *p;
 
             if(t.IsSignal)
-                SigFitted.Process(fitted_particles, ptree_sigref);
+                SigKinFit.Process(fitted_particles, ptree_sigref);
             else
-                RefFitted.Process(fitted_particles);
+                RefKinFit.Process(fitted_particles);
         }
 
         t.Tree->Fill();
 
         Sig.Fill();
-        SigFitted.Fill();
+        SigKinFit.Fill();
 
         Ref.t.Tree->Fill();
-        RefFitted.t.Tree->Fill();
+        RefKinFit.t.Tree->Fill();
 
     }
 
