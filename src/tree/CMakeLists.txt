@@ -10,6 +10,7 @@ set(SRCS_DICT
 
 set(SRCS
   MemoryPool.h
+  stream_TBuffer.h
   TDetectorReadHit.h
   TSlowControl.h
   TUnpackerMessage.h
