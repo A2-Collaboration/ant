@@ -474,9 +474,9 @@ TreeFitter::TreeFitter(const string& name, ParticleTypeTree ptree, std::function
         assert(v.size() == tree_leaves.size());
         // assign values v to leaves
         for(unsigned i=0;i<v.size();i++) {
-            node_t& node = tree_leaves[i]->Get();
-            node.Particle = FitParticle::GetVector(v[i],
-                                                   node.TypeTree->Get().Mass());
+            auto& node = tree_leaves[i]->Get();
+            const auto m = node.TypeTree->Get().Mass();
+            node.Particle = FitParticle::GetVector(v[i], m);
         }
 
         // sum daughters' Particle
