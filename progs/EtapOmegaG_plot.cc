@@ -5,12 +5,10 @@
 
 #include "base/CmdLine.h"
 #include "base/interval.h"
-
 #include "base/printable.h"
-#include "base/iterators.h"
+#include "base/WrapTFile.h"
 #include "base/std_ext/string.h"
 #include "base/std_ext/system.h"
-#include "base/WrapTFile.h"
 
 #include "TH1D.h"
 #include "TSystem.h"
@@ -58,14 +56,36 @@ struct Cut_t {
 template<typename SigRefTree_t, typename Hist_t>
 struct Node_t {
     SmartHistFactory HistFac; // directory for cuts (and H)
-    SmartHistFactory H;       // subdir for hists only
-    map<unsigned, Hist_t> Hists;
+    SmartHistFactory H;       // subdir for mctrue splitted hists
+    struct WrappedHist_t {
+        using histmod_t = std::function<void(TH1*)>;
+        Hist_t Hist;
+        histmod_t Modify;
+        WrappedHist_t(const SmartHistFactory& histFac, histmod_t mod) : Hist(histFac), Modify(mod) {}
+    };
+
+    map<unsigned, WrappedHist_t> Hists;
     typename Cut_t<SigRefTree_t>::Passes_t PassesCut;
     vector<ant::hstack> Stacks;
 
+    Node_t(const SmartHistFactory& parentHistFac, Cut_t<SigRefTree_t> cut) :
+        HistFac(cut.Name, parentHistFac, cut.Name),
+        H("h", HistFac),
+        Hists(MakeHists(H, HistFac.GetTitlePrefix())),
+        PassesCut(cut.Passes)
+    {
+        for(const auto& it_hist : Hists) {
+            AddToStack(it_hist.second);
+        }
+    }
 
-    void AddToStack(const Hist_t& h) {
-        const auto& histptrs = h.GetHists();
+
+    void AddToStack(const WrappedHist_t& hist) {
+        const auto histptrs = hist.Hist.GetHists();
+        for(TH1* h : histptrs) {
+            h->SetLineWidth(2);
+            hist.Modify(h);
+        }
         if(Stacks.empty()) {
             static unsigned nStacksCreated = 0;
             for(auto h : histptrs) {
@@ -82,32 +102,31 @@ struct Node_t {
         }
     }
 
-    static map<unsigned, Hist_t> MakeHists(SmartHistFactory& h, const std::string& prefix)
+    static map<unsigned, WrappedHist_t> MakeHists(SmartHistFactory& h, const std::string& prefix)
     {
         h.SetTitlePrefix(prefix);
-        map<unsigned, Hist_t> m;
+        map<unsigned, WrappedHist_t> m;
         // 0=Data, 1=Sig, 2=Ref, 3=AllMC, 9=Unknown_Bkg, >=10 Known Bkg
         // create them here already to get them in the right order
-        m.emplace(0, SmartHistFactory("Data", h, "Data"));
-        m.emplace(1, SmartHistFactory("Sig",  h, "Sig"));
-        m.emplace(2, SmartHistFactory("Ref",  h, "Ref"));
+        m.emplace(0, WrappedHist_t{SmartHistFactory("Data",   h, "Data"),   MakeColorHistMod(kBlack)});
+        m.emplace(1, WrappedHist_t{SmartHistFactory("Sig",    h, "Sig"),    MakeColorHistMod(kRed)});
+        m.emplace(2, WrappedHist_t{SmartHistFactory("Ref",    h, "Ref"),    MakeColorHistMod(kRed)});
         // mctrue is never 3 in tree, use this to sum up all MC or all bkg MC
-        m.emplace(3, SmartHistFactory("Sum_MC", h, "Sum_MC"));
-        m.emplace(4, SmartHistFactory("Bkg_MC", h, "Bkg_MC"));
+        m.emplace(3, WrappedHist_t{SmartHistFactory("Sum_MC", h, "Sum_MC"), MakeColorHistMod(kBlack)});
+        m.emplace(4, WrappedHist_t{SmartHistFactory("Bkg_MC", h, "Bkg_MC"), MakeColorHistMod(kGray)});
 
         return m;
     }
 
-    Node_t(const SmartHistFactory& parentHistFac, Cut_t<SigRefTree_t> cut) :
-        HistFac(cut.Name, parentHistFac, cut.Name),
-        H("h", HistFac),
-        Hists(MakeHists(H, HistFac.GetTitlePrefix())),
-        PassesCut(cut.Passes)
-    {
-        for(const auto& it_hist : Hists) {
-            AddToStack(it_hist.second);
-        }
+    static Color_t GetColor(unsigned i) {
+        const std::vector<Color_t> colors = {kGreen+1, kBlue, kYellow+1, kMagenta, kCyan, kOrange, kSpring+10,};
+        return colors[i % colors.size()];
     }
+
+    static typename WrappedHist_t::histmod_t MakeColorHistMod(const Color_t color) {
+        return [color] (TH1* h) { h->SetLineColor(color); };
+    }
+
 
     bool Fill(const CommonTree_t& treeCommon, const SigRefTree_t& treeSigRef) {
        if(PassesCut(treeCommon, treeSigRef)) {
@@ -119,14 +138,20 @@ struct Node_t {
                const string& name = mctrue>=10 ?
                                         physics::EtapOmegaG::ptreeBackgrounds[mctrue-10].Name
                                     : "Other";
-               it_hist = Hists.emplace_hint(it_hist, mctrue, SmartHistFactory("Bkg_"+name, H, name));
+               it_hist = Hists.emplace_hint(it_hist, mctrue, WrappedHist_t{
+                                                SmartHistFactory("Bkg_"+name, H, name),
+                                                MakeColorHistMod(GetColor(mctrue-9))
+                                            });
+
+               AddToStack(it_hist->second);
            }
 
-           it_hist->second.Fill(treeCommon, treeSigRef);
+           it_hist->second.Hist.Fill(treeCommon, treeSigRef);
+           // handle MC_all and MC_bkg
            if(mctrue>0) {
-               Hists.at(3).Fill(treeCommon, treeSigRef);
+               Hists.at(3).Hist.Fill(treeCommon, treeSigRef);
                if(mctrue >= 9)
-                   Hists.at(4).Fill(treeCommon, treeSigRef);
+                   Hists.at(4).Hist.Fill(treeCommon, treeSigRef);
            }
 
            return true;
@@ -218,7 +243,7 @@ struct CommonHist_t {
 struct SigHist_t : CommonHist_t {
     using Tree_t = physics::EtapOmegaG::Sig_t::Tree_t;
 
-    TH2D* h_IM_gg_gg; // Goldhaber plot
+    TH2D* h_IM_gg_gg;     // Goldhaber plot
     TH1D* h_TreeFitChi2;
     TH1D* h_Bachelor_E;
 
@@ -333,7 +358,7 @@ int main(int argc, char** argv) {
     if(cmd_batchmode->isSet()) {
         fake_argv[fake_argc++] = strdup("-b");
     }
-    TRint app("Ant",&fake_argc,fake_argv,nullptr,0,true);
+    TRint app("EtapOmegaG_plot",&fake_argc,fake_argv,nullptr,0,true);
     auto oldsig = app.GetSignalHandler();
     oldsig->Remove();
     auto mysig = new MyTInterruptHandler();
