@@ -1,5 +1,5 @@
 #include "OptionsList.h"
-
+#include "std_ext/string.h"
 #include "Logger.h"
 #include <cstdlib>
 
@@ -25,18 +25,8 @@ void OptionsList::SetOption(const string& str, const string delim)
 
 void OptionsList::SetOptions(const string& str,const string optdelim, const string valdelim)
 {
-    string::size_type p = 0;
-    string::size_type np = 0;
-
-    do {
-
-        np = str.find(optdelim, p);
-
-        SetOption(str.substr(p,np), valdelim);
-
-        p = np+optdelim.size();
-
-    } while(np != str.npos);
+    for(const auto& option : std_ext::tokenize_string(str, optdelim))
+        SetOption(option, valdelim);
 }
 
 string OptionsList::GetOption(const string& key) const
