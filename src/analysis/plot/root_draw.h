@@ -198,6 +198,9 @@ public:
 
     hstack(const hstack&) = delete;
     hstack& operator= (const hstack&) = delete;
+    hstack(hstack&&) = default;
+    hstack& operator= (hstack&&) = default;
+
 
     virtual hstack& operator<< (TH1* hist);
     virtual hstack& operator<< (const drawoption& c);
