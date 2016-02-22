@@ -57,10 +57,10 @@ EtapOmegaG::EtapOmegaG(const string& name, OptionsPtr opts) :
     SmartHistFactory HistFacFitted("Fitted",HistFac);
 
     Sig.SetupTrees(HistFacNotFitted);
-    Ref.t.CreateBranches(HistFacNotFitted.makeTTree("treeRef"));
+    Ref.t.CreateBranches(HistFacNotFitted.makeTTree("Ref"));
 
     SigFitted.SetupTrees(HistFacFitted);
-    RefFitted.t.CreateBranches(HistFacFitted.makeTTree("treeRef"));
+    RefFitted.t.CreateBranches(HistFacFitted.makeTTree("Ref"));
 
 }
 
