@@ -10,13 +10,12 @@ TParticle::TParticle(const ParticleTypeDatabase::Type& type_, mev_t Ek_, radian_
     const mev_t E = Ek_ + type->Mass();
     const mev_t p = sqrt( sqr(E) - sqr(type->Mass()) );
 
-    /// \bug This might be inefficient...
-
-    TVector3 pv(1,0,0);
-
-    pv.SetMagThetaPhi(p,theta_,phi_);
-
-    *(reinterpret_cast<TLorentzVector*>(this)) = TLorentzVector(pv, E);
+    this->SetPxPyPzE(
+                p*TMath::Sin(theta_)*TMath::Cos(phi_),
+                p*TMath::Sin(theta_)*TMath::Sin(phi_),
+                p*TMath::Cos(theta_),
+                E
+                );
 }
 
 void TParticle::ChangeType(const ParticleTypeDatabase::Type& newtype)
@@ -25,13 +24,10 @@ void TParticle::ChangeType(const ParticleTypeDatabase::Type& newtype)
     const mev_t newE = Ek() + newtype.Mass();
     const mev_t newP = sqrt( sqr(newE) - sqr(newtype.Mass()) );
 
-    TVector3 pv = Vect();
-    pv.SetMag(newP);
-
-    SetVect(pv);
+    SetRho(newP);
     SetE(newE);
-    type = &newtype;
 
+    type = &newtype;
 }
 
 std::ostream &TParticle::Print(std::ostream &stream) const

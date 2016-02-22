@@ -157,13 +157,15 @@ TLorentzVector Fitter::FitParticle::GetVector(const std::vector<double>& EkTheta
     const mev_t E = EkThetaPhi[0] + m;
     const mev_t p = sqrt( sqr(E) - sqr(m) );
 
-    /// \bug This might be inefficient...
+    const double theta_ = EkThetaPhi[1];
+    const double phi_ = EkThetaPhi[2];
 
-    TVector3 pv(1,0,0);
-
-    pv.SetMagThetaPhi(p, EkThetaPhi[1], EkThetaPhi[2]);
-
-    return TLorentzVector(pv,E);
+    return TLorentzVector(
+                p*TMath::Sin(theta_)*TMath::Cos(phi_),
+                p*TMath::Sin(theta_)*TMath::Sin(phi_),
+                p*TMath::Cos(theta_),
+                E
+                );
 }
 
 Fitter::angular_sigma::angular_sigma()
