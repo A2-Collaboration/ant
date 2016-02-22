@@ -15,6 +15,7 @@
 #include "TH1D.h"
 #include "TSystem.h"
 #include "TRint.h"
+#include "THStack.h"
 
 #include <functional>
 #include <string>
@@ -56,10 +57,30 @@ struct Cut_t {
 
 template<typename SigRefTree_t, typename Hist_t>
 struct Node_t {
-    SmartHistFactory HistFac; // directory for cuts
+    SmartHistFactory HistFac; // directory for cuts (and H)
     SmartHistFactory H;       // subdir for hists only
     map<unsigned, Hist_t> Hists;
     typename Cut_t<SigRefTree_t>::Passes_t PassesCut;
+    vector<ant::hstack> Stacks;
+
+
+    void AddToStack(const Hist_t& h) {
+        const auto& histptrs = h.GetHists();
+        if(Stacks.empty()) {
+            static unsigned nStacksCreated = 0;
+            for(auto h : histptrs) {
+                const string name = h->GetName();
+                Stacks.emplace_back(name+to_string(nStacksCreated), HistFac.GetTitlePrefix()+": "+name);
+                Stacks.back() << h;
+            }
+            nStacksCreated++;
+        }
+        else {
+            assert(histptrs.size() == Stacks.size());
+            for(size_t i=0;i<Stacks.size();i++)
+                Stacks[i] << histptrs[i];
+        }
+    }
 
     static map<unsigned, Hist_t> MakeHists(SmartHistFactory& h, const std::string& prefix)
     {
@@ -82,7 +103,11 @@ struct Node_t {
         H("h", HistFac),
         Hists(MakeHists(H, HistFac.GetTitlePrefix())),
         PassesCut(cut.Passes)
-    {}
+    {
+        for(const auto& it_hist : Hists) {
+            AddToStack(it_hist.second);
+        }
+    }
 
     bool Fill(const CommonTree_t& treeCommon, const SigRefTree_t& treeSigRef) {
        if(PassesCut(treeCommon, treeSigRef)) {
@@ -166,6 +191,9 @@ struct CommonHist_t {
     void Fill(const CommonTree_t& treeCommon) {
         h_KinFitChi2->Fill(treeCommon.KinFitChi2, treeCommon.TaggW);
     }
+    std::vector<TH1*> GetHists() const {
+        return {h_KinFitChi2};
+    }
 
     // Sig and Ref channel share some cuts...
     template<typename Tree_t>
@@ -183,6 +211,7 @@ struct CommonHist_t {
                              });
         return cuts;
     }
+
 
 };
 
@@ -214,6 +243,11 @@ struct SigHist_t : CommonHist_t {
         }
         h_TreeFitChi2->Fill(tree.TreeFitChi2, treeCommon.TaggW);
         h_Bachelor_E->Fill(tree.Bachelor_best_best, treeCommon.TaggW);
+    }
+    std::vector<TH1*> GetHists() const {
+        auto hists = CommonHist_t::GetHists();
+        hists.insert(hists.end(), {h_IM_gg_gg, h_TreeFitChi2, h_Bachelor_E});
+        return hists;
     }
 
     static Cuts_t<Tree_t> GetCuts() {
@@ -266,6 +300,11 @@ struct RefHist_t : CommonHist_t {
     void Fill(const CommonTree_t& treeCommon, const Tree_t& tree) {
         CommonHist_t::Fill(treeCommon);
         h_IM_2g->Fill(tree.IM_2g, treeCommon.TaggW);
+    }
+    std::vector<TH1*> GetHists() const {
+        auto hists = CommonHist_t::GetHists();
+        hists.insert(hists.end(), {h_IM_2g});
+        return hists;
     }
 
     static Cuts_t<Tree_t> GetCuts() {
@@ -371,6 +410,8 @@ int main(int argc, char** argv) {
 
             if(masterFile)
                 LOG(INFO) << "Stopped running, but close ROOT properly to write data to disk.";
+
+            canvas() << drawoption("nostack") << padoption::Legend << cuttreeRef->Get().Stacks.front() << endc;
 
             app.Run(kTRUE); // really important to return...
             if(masterFile)
