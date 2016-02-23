@@ -1,6 +1,5 @@
 #include "DeltaPlusPhysics.h"
 
-#include "plot/Histogram.h"
 #include "base/ParticleType.h"
 #include "TH1.h"
 #include "TH2.h"
@@ -16,9 +15,9 @@ using namespace std;
 
 DeltaPlusPhysics::DeltaPlusPhysics(const string& name, OptionsPtr opts):
     Physics(name, opts),
-    prompt(SmartHistFactory("prompt", HistFac)),
-    random(SmartHistFactory("random", HistFac)),
-    diff(SmartHistFactory("diff", HistFac)),
+    prompt(HistogramFactory("prompt", HistFac)),
+    random(HistogramFactory("random", HistFac)),
+    diff(HistogramFactory("diff", HistFac)),
     pi0_cut(110,150),
     prompt_window(-8,8),
     random_window(-16,16),
@@ -120,7 +119,7 @@ void DeltaPlusPhysics::ShowResult()
 
 }
 
-DeltaPlusPhysics::Histogm::Histogm(SmartHistFactory HistFac)
+DeltaPlusPhysics::Histogm::Histogm(HistogramFactory HistFac)
 {
 
     auto insert_hist = [this] (TH1* hist) {

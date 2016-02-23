@@ -122,7 +122,7 @@ struct EtapOmegaG : Physics {
         Fit_t No_Omega;
         Fit_t No_EtaPrime;
 
-        void SetupTrees(SmartHistFactory HistFac);
+        void SetupTrees(HistogramFactory HistFac);
         void Fill();
         void ResetBranches();
         void Process(const Particles_t& particles, TParticleTree_t particletree);

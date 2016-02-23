@@ -18,7 +18,7 @@ using namespace ant;
 using namespace ant::analysis;
 using namespace ant::analysis::physics;
 
-GeoAcceptance::ParticleThetaPhiPlot::ParticleThetaPhiPlot(SmartHistFactory &factory, const string &title, const string &name,const BinSettings& thetabins,const BinSettings& phibins)
+GeoAcceptance::ParticleThetaPhiPlot::ParticleThetaPhiPlot(HistogramFactory &factory, const string &title, const string &name,const BinSettings& thetabins,const BinSettings& phibins)
 {
     hist = factory.makeTH2D(title,"#theta [#circ]","#phi [#circ]",thetabins,phibins,name);
 }
@@ -76,7 +76,7 @@ void GeoAcceptance::ShowResult()
 }
 
 
-GeoAcceptance::ParticleThetaPhiPlot3D::ParticleThetaPhiPlot3D(SmartHistFactory& factory, const string &title, const string &name):
+GeoAcceptance::ParticleThetaPhiPlot3D::ParticleThetaPhiPlot3D(HistogramFactory& factory, const string &title, const string &name):
     hist(factory.makeTH3D(title, "x","y","z",BinSettings(200,-1,1),BinSettings(200,-1,1),BinSettings(200,-1,1),name)),
     n(0)
 {
@@ -99,7 +99,7 @@ void GeoAcceptance::ParticleThetaPhiPlot3D::Draw(const string &option) const
 }
 
 
-GeoAcceptance::AcceptanceAnalysis::AcceptanceAnalysis(SmartHistFactory& factory, const utils::A2SimpleGeometry &geo_, const string &name_):
+GeoAcceptance::AcceptanceAnalysis::AcceptanceAnalysis(HistogramFactory& factory, const utils::A2SimpleGeometry &geo_, const string &name_):
     name(name_),
     HistFac(name,factory),
     geo(geo_),
@@ -111,7 +111,7 @@ GeoAcceptance::AcceptanceAnalysis::AcceptanceAnalysis(SmartHistFactory& factory,
     lost3d(HistFac,"Not Reconctructed 3D","lost3d"),
     angle_regions(HistFac.makeTH1D("Angle Regions "+name,"Region","",BinSettings(3),"regions")),
     nlost(HistFac.makeTH1D("# lost "+name,"lost","",BinSettings(3),"nlost")),
-    energy_reco(HistFac.makeHist<double>("Energy Reconstrution "+name,"E_{rec}/E_{true}","",BinSettings(100,.5,1),"energy_reco")),
+    energy_reco(HistFac.makeTH1D("Energy Reconstrution "+name,"E_{rec}/E_{true}","",BinSettings(100,.5,1),"energy_reco")),
     matched_pos_after_geo(HistFac,"Reconstucted 1, with geo cuts"),
     emin(0)
 {
@@ -151,7 +151,7 @@ void GeoAcceptance::AcceptanceAnalysis::Fill(const TParticleList &mctrue, const 
     } else if( matched.size() ==1 ) {
 
         matched_pos.Fill(input);
-        energy_reco.Fill( matched.front().b->E()/matched.front().a->E());
+        energy_reco->Fill( matched.front().b->E()/matched.front().a->E());
 
         if(reconstructed.size()>1)
             multimatched_pos.Fill(input);

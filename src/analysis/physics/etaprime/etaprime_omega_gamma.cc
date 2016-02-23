@@ -53,8 +53,8 @@ EtapOmegaG::EtapOmegaG(const string& name, OptionsPtr opts) :
 
     t.CreateBranches(HistFac.makeTTree("treeCommon"));
 
-    SmartHistFactory HistFacNoKinFit("NoKinFit",HistFac);
-    SmartHistFactory HistFacKinFit("KinFit",HistFac);
+    HistogramFactory HistFacNoKinFit("NoKinFit",HistFac);
+    HistogramFactory HistFacKinFit("KinFit",HistFac);
 
     Sig.SetupTrees(HistFacNoKinFit);
     Ref.t.CreateBranches(HistFacNoKinFit.makeTTree("Ref"));
@@ -291,7 +291,7 @@ EtapOmegaG::Sig_t::Sig_t() :
 {
 }
 
-void EtapOmegaG::Sig_t::SetupTrees(SmartHistFactory HistFac)
+void EtapOmegaG::Sig_t::SetupTrees(HistogramFactory HistFac)
 {
     All.t.CreateBranches(HistFac.makeTTree("SigAll"));
     No_Pi0.t.CreateBranches(HistFac.makeTTree("SigNoPi0"));

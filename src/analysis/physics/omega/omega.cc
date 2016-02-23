@@ -2,11 +2,9 @@
 #include "TLorentzVector.h"
 #include "TH1D.h"
 #include "plot/root_draw.h"
-#include "plot/Histogram.h"
 #include "utils/combinatorics.h"
 #include <string>
 #include <iostream>
-#include "plot/SmartHist.h"
 #include "TH3.h"
 #include "base/Logger.h"
 #include <algorithm>
@@ -365,7 +363,7 @@ string to_string(const OmegaBase::DataMode &m)
 
 
 
-OmegaMCTruePlots::PerChannel_t::PerChannel_t(const string& Title, SmartHistFactory& hf):
+OmegaMCTruePlots::PerChannel_t::PerChannel_t(const string& Title, HistogramFactory& hf):
     title(Title)
 {
     proton_E_theta = hf.makeTH2D(title,"E [MeV]","#theta [#circ]",BinSettings(1000),BinSettings(360,0,180), title+"_e_theta");

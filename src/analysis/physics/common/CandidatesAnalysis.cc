@@ -1,6 +1,4 @@
 #include "physics/common/CandidatesAnalysis.h"
-#include "plot/root_draw.h"
-#include "TH1D.h"
 #include "TLorentzVector.h"
 #include <cmath>
 #include "base/std_ext/math.h"

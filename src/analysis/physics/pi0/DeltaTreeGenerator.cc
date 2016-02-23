@@ -1,7 +1,6 @@
 #include "DeltaTreeGenerator.h"
 
 #include "plot/root_draw.h"
-#include "plot/Histogram.h"
 #include "base/ParticleType.h"
 #include "TH1.h"
 #include "TH2.h"

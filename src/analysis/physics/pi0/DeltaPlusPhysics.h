@@ -1,7 +1,6 @@
 #pragma once
 
 #include "physics/Physics.h"
-#include "plot/Histogram.h"
 #include "base/interval.h"
 #include <map>
 #include <string>
@@ -23,7 +22,7 @@ protected:
         std::string  pref;  // prefix to label whole group of histograms
         mutable std::map<std::string, TH1* > h; // container for histograms by name (without prefix)
 
-        Histogm(SmartHistFactory HistFac);
+        Histogm(HistogramFactory HistFac);
 
         void Draw();
 

@@ -1,7 +1,7 @@
 #pragma once
 
 #include <string>
-#include "analysis/plot/Histogram.h"
+#include "analysis/plot/HistogramFactories.h"
 
 class TTree;
 class TH1;

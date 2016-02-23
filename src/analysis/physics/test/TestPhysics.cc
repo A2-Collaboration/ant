@@ -21,17 +21,17 @@ ParticleCombinatoricsTest::ParticleCombinatoricsTest(const std::string& name, Op
     Physics(name, opts)
 {
     const BinSettings im_binning(100,0,250);
-    const BinSettings energy_binning(100,0,250);
     const BinSettings npart_binning(10,0,10);
+    const BinSettings energy_binning(100,0,250);
 
-    ggim     = HistFac.makeHist<double>("2 #gamma IM", "M_{#gamma #gamma} [MeV]","#", im_binning);
-    gggim    = HistFac.makeHist<double>("3 #gamma im","M_{#gamma #gamma #gamma} [MeV]","#", im_binning);
-    nphotons = HistFac.makeHist<int>("Number of photons", "N", "", npart_binning);
-    nprotons = HistFac.makeHist<int>("Number of protons","N","",npart_binning);
+    ggim     = HistFac.makeTH1D("2 #gamma IM",       "M_{#gamma #gamma} [MeV]",       "#", im_binning);
+    gggim    = HistFac.makeTH1D("3 #gamma im",       "M_{#gamma #gamma #gamma} [MeV]","#", im_binning);
+    nphotons = HistFac.makeTH1D("Number of photons", "N",                             "",  npart_binning);
+    nprotons = HistFac.makeTH1D("Number of protons", "N",                             "",  npart_binning);
 
     // Build a map of ParticleType -> Histogram, and fill it
     for( auto& type : ParticleTypeDatabase() ) {
-        EHists[&type] = HistFac.KinEnergyPlot(type.PrintName()+" Energy");
+        EHists[&type] = HistFac.makeTH1D(type.PrintName()+" Energy", "E [MeV]", "", energy_binning);
     }
 
 }
@@ -49,13 +49,13 @@ void ParticleCombinatoricsTest::ProcessEvent(const TEvent& event, manager_t&)
         // fill the histogram corresponding to the partice type of the current particle
         auto entry = EHists.find(&particle->Type());
         if( entry != EHists.end()) {
-            entry->second.Fill(particle);
+            entry->second->Fill(particle->Ek());
         }
 
     }
 
-    nphotons.Fill(photons.size());
-    nprotons.Fill(protons.size());
+    nphotons->Fill(photons.size());
+    nprotons->Fill(protons.size());
 
     auto combinations2 = utils::makeCombination(photons,2);
     do {
@@ -64,7 +64,7 @@ void ParticleCombinatoricsTest::ProcessEvent(const TEvent& event, manager_t&)
             v += *i;
         }
 
-        ggim.Fill(v.M());
+        ggim->Fill(v.M());
 
     } while(combinations2.next());
 
@@ -75,7 +75,7 @@ void ParticleCombinatoricsTest::ProcessEvent(const TEvent& event, manager_t&)
             v += *i;
         }
 
-        gggim.Fill(v.M());
+        gggim->Fill(v.M());
 
     } while(combinations3.next());
 }

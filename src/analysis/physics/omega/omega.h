@@ -1,7 +1,6 @@
 #pragma once
 
 #include "analysis/physics/Physics.h"
-#include "analysis/plot/SmartHist.h"
 #include "analysis/utils/A2GeoAcceptance.h"
 #include "base/Tree.h"
 #include "base/interval.h"
@@ -30,7 +29,7 @@ public:
         std::string title;
         TH2D* proton_E_theta = nullptr;
 
-        PerChannel_t(const std::string& Title, SmartHistFactory& hf);
+        PerChannel_t(const std::string& Title, HistogramFactory& hf);
 
         void Show();
         void Fill(const TEventData& d);

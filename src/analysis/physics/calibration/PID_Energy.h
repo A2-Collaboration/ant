@@ -20,7 +20,7 @@ protected:
         TH1D* TDCMultiplicity;
         TH1D* QDCMultiplicity;
         //TH3D* BananaTiming = nullptr;
-        PerChannel_t(analysis::SmartHistFactory HistFac);
+        PerChannel_t(analysis::HistogramFactory HistFac);
     };
 
     std::vector<PerChannel_t> h_perChannel;

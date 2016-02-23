@@ -42,11 +42,11 @@ PID_Energy::PID_Energy(const string& name, OptionsPtr opts) :
         stringstream ss;
         ss << "Ch" << ch;
         h_perChannel.push_back(
-                    PerChannel_t(SmartHistFactory(ss.str(), HistFac, ss.str())));
+                    PerChannel_t(HistogramFactory(ss.str(), HistFac, ss.str())));
     }
 }
 
-PID_Energy::PerChannel_t::PerChannel_t(SmartHistFactory HistFac)
+PID_Energy::PerChannel_t::PerChannel_t(HistogramFactory HistFac)
 {
     const BinSettings cb_energy(400,0,800);
     const BinSettings pid_timing(300,-300,700);

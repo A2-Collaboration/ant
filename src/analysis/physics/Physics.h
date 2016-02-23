@@ -3,11 +3,17 @@
 #include "analysis/physics/manager_t.h"
 
 #include "analysis/plot/HistogramFactories.h"
+#include "base/std_ext/memory.h"
 
 #include "tree/TEvent.h"
 #include "tree/TEventData.h"
 
 #include "base/OptionsList.h"
+
+#include "analysis/plot/root_draw.h"
+#include "TH1D.h"
+#include "TH2D.h"
+#include "TH3D.h"
 
 #include <list>
 #include <string>
@@ -27,7 +33,7 @@ private:
     std::string name_;
 
 protected:
-    SmartHistFactory HistFac;
+    HistogramFactory HistFac;
     const OptionsPtr Options;
 
 public:

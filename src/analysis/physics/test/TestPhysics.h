@@ -1,10 +1,10 @@
 #pragma once
 
 #include "physics/Physics.h"
-#include "plot/Histogram.h"
-#include "plot/SmartHist.h"
 
 #include <map>
+
+class TH1D;
 
 namespace ant {
 namespace analysis {
@@ -12,12 +12,12 @@ namespace physics {
 
 class ParticleCombinatoricsTest: public Physics {
 protected:
-    SmartHist1<double> ggim;
-    SmartHist1<double> gggim;
-    SmartHist1<int>    nphotons;
-    SmartHist1<int>    nprotons;
+    TH1D* ggim;
+    TH1D* gggim;
+    TH1D* nphotons;
+    TH1D* nprotons;
 
-    std::map<const ant::ParticleTypeDatabase::Type*, SmartHist1<const TParticlePtr&>> EHists;
+    std::map<const ant::ParticleTypeDatabase::Type*, TH1D*> EHists;
 
 public:
     ParticleCombinatoricsTest(const std::string& name, OptionsPtr opts);

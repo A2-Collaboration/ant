@@ -3,6 +3,7 @@
 #include "base/std_ext/memory.h"
 #include "base/std_ext/string.h"
 #include "TCanvas.h"
+#include "TColor.h"
 
 using namespace ant;
 using namespace ant::analysis::physics;

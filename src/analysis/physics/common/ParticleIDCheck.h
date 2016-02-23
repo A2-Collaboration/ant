@@ -6,6 +6,7 @@
 #include <string>
 
 class TH1D;
+class TH2D;
 
 namespace ant {
 namespace analysis {
@@ -15,7 +16,7 @@ class ParticleIDCheck : public Physics {
 protected:
 
     struct branch_hists {
-        branch_hists(SmartHistFactory& HistFac,const std::string& name);
+        branch_hists(HistogramFactory& HistFac,const std::string& name);
         TH1D* hist;
         void Fill(const TEventData& data);
     };

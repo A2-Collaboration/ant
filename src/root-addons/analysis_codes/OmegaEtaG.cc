@@ -13,7 +13,6 @@
 
 #include "root-addons/analysis_codes/hstack.h"
 #include "analysis/plot/root_draw.h"
-#include "analysis/plot/Histogram.h"
 #include "base/std_ext/string.h"
 
 #include "TreeTools.h"

@@ -139,7 +139,7 @@ void LabelBins(TAxis* x) {
     }
 }
 
-std::unique_ptr<ReconstructCheck::PositionMap> ReconstructCheck::histgroup::makePosMap(SmartHistFactory& f, ReconstructCheck::histgroup::detectortype d, const string& name, const string title)
+std::unique_ptr<ReconstructCheck::PositionMap> ReconstructCheck::histgroup::makePosMap(HistogramFactory& f, ReconstructCheck::histgroup::detectortype d, const string& name, const string title)
 {
     std::unique_ptr<PositionMap> ptr;
     switch (d) {
@@ -154,7 +154,7 @@ std::unique_ptr<ReconstructCheck::PositionMap> ReconstructCheck::histgroup::make
     return ptr;
 }
 
-ReconstructCheck::histgroup::histgroup(SmartHistFactory& f, const string& prefix, detectortype d): Prefix(prefix)
+ReconstructCheck::histgroup::histgroup(HistogramFactory& f, const string& prefix, detectortype d): Prefix(prefix)
 {
     const BinSettings energy(1600);
     const BinSettings vetoEnergy(100,0,10);
@@ -360,14 +360,14 @@ void ReconstructCheck::PositionMap::Draw(const string&) const
     maphist->Draw("colz");
 }
 
-ReconstructCheck::PositionMapCB::PositionMapCB(SmartHistFactory &f, const string &name, const string &title)
+ReconstructCheck::PositionMapCB::PositionMapCB(HistogramFactory &f, const string &name, const string &title)
 {
     const BinSettings costheta(360,-1,1);
     const BinSettings phi(360,-180,180);
     maphist = f.makeTH2D(title,"cos(#theta_{True})","#phi [#circ]",costheta,phi,name);
 }
 
-ReconstructCheck::PositionMapTAPS::PositionMapTAPS(SmartHistFactory &f, const string &name, const string& title)
+ReconstructCheck::PositionMapTAPS::PositionMapTAPS(HistogramFactory &f, const string &name, const string& title)
 {
     const auto l   = 70.0; //cm
     const auto res =   .5; //cm
@@ -399,7 +399,7 @@ void ReconstructCheck::PositionMapTAPS::Draw(const string&) const
 
 
 
-ReconstructCheck::TAPSVetoMatch::TAPSVetoMatch(SmartHistFactory& f)
+ReconstructCheck::TAPSVetoMatch::TAPSVetoMatch(HistogramFactory& f)
 {
     const auto nchannels = 384;
 

@@ -66,9 +66,7 @@ set(ANALYSIS_PHYSICS_CALIBRATION
 )
 
 set(ANALYSIS_PLOT
-  plot/Histogram.cc
   plot/root_draw.cc
-  plot/SmartHist.cc
   plot/HistogramFactories.cc
   plot/TH1Dcut.cc
   plot/PromptRandomHist.cc

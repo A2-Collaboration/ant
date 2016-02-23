@@ -5,18 +5,18 @@ using namespace ant::analysis;
 using namespace ant::analysis::PromptRandom;
 using namespace std;
 
-void Hist1::MakeHistograms(SmartHistFactory& factory, const string& name, const string& title, const BinSettings& bins, const string& xtitle, const string& ytitle) {
+void Hist1::MakeHistograms(HistogramFactory& factory, const string& name, const string& title, const BinSettings& bins, const string& xtitle, const string& ytitle) {
 
-    SmartHistFactory myFactory(name, factory, title);
+    HistogramFactory myFactory(name, factory, title);
 
     prompt     = myFactory.makeTH1D("Prompt",    xtitle, ytitle, bins, "prompt");
     random     = myFactory.makeTH1D("Random",    xtitle, ytitle, bins, "random");
     subtracted = myFactory.makeTH1D("Subtracted",xtitle, ytitle, bins, "subtracted");
 }
 
-void Hist2::MakeHistograms(SmartHistFactory& factory, const string& name, const string& title, const BinSettings& xbins, const BinSettings& ybins, const string& xtitle, const string& ytitle) {
+void Hist2::MakeHistograms(HistogramFactory& factory, const string& name, const string& title, const BinSettings& xbins, const BinSettings& ybins, const string& xtitle, const string& ytitle) {
 
-    SmartHistFactory myFactory(name, factory, title);
+    HistogramFactory myFactory(name, factory, title);
 
     prompt     = myFactory.makeTH2D("Prompt",    xtitle, ytitle, xbins, ybins, "prompt");
     random     = myFactory.makeTH2D("Random",    xtitle, ytitle, xbins, ybins, "random");

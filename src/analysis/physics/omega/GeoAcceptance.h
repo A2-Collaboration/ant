@@ -1,8 +1,6 @@
 #pragma once
 
 #include "analysis/physics/Physics.h"
-#include "analysis/plot/Histogram.h"
-#include "analysis/plot/SmartHist.h"
 #include "analysis/plot/HistogramFactories.h"
 #include "analysis/plot/root_draw.h"
 
@@ -26,7 +24,7 @@ private:
         const static BinSettings theta_bins;
         const static BinSettings phi_bins;
 
-        ParticleThetaPhiPlot(SmartHistFactory& factory,
+        ParticleThetaPhiPlot(HistogramFactory& factory,
                              const std::string& title,
                              const std::string& name="",
                              const BinSettings& thetabins = BinSettings(180),
@@ -43,7 +41,7 @@ private:
         TH3* hist;
         unsigned int n;
 
-        ParticleThetaPhiPlot3D(SmartHistFactory& factory, const std::string& title, const std::string& name="");
+        ParticleThetaPhiPlot3D(HistogramFactory& factory, const std::string& title, const std::string& name="");
         void Fill(const TParticlePtr& p);
 
 
@@ -54,7 +52,7 @@ private:
     class AcceptanceAnalysis {
     public:
         std::string name;
-        SmartHistFactory HistFac;
+        HistogramFactory HistFac;
         const utils::A2SimpleGeometry& geo;
         ParticleThetaPhiPlot mctrue_pos;
         ParticleThetaPhiPlot matched_pos;
@@ -64,12 +62,12 @@ private:
         ParticleThetaPhiPlot3D lost3d;
         TH1D* angle_regions;
         TH1D* nlost;
-        SmartHist1<double> energy_reco;
+        TH1D* energy_reco;
         ParticleThetaPhiPlot matched_pos_after_geo;
         double emin;
 
 
-        AcceptanceAnalysis(SmartHistFactory& factory, const utils::A2SimpleGeometry& geo_, const std::string& name_);
+        AcceptanceAnalysis(HistogramFactory& factory, const utils::A2SimpleGeometry& geo_, const std::string& name_);
         void Fill(const TParticleList& mctrue, const TParticleList& reconstructed);
         virtual void ShowResult();
     };

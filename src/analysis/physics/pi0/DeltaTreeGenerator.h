@@ -1,7 +1,6 @@
 #pragma once
 
 #include "physics/Physics.h"
-#include "plot/Histogram.h"
 #include "base/interval.h"
 #include <map>
 #include <string>

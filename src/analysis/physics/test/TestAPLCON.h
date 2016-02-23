@@ -1,7 +1,6 @@
 #pragma once
 
 #include "analysis/physics/Physics.h"
-#include "analysis/plot/Histogram.h"
 
 #include <APLCON.hpp>
 

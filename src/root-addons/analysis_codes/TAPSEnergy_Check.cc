@@ -5,6 +5,7 @@
 #include "analysis/plot/root_draw.h"
 #include "base/interval.h"
 #include "base/std_ext/math.h"
+#include "tree/TParticle.h"
 
 #include "TFile.h"
 #include "TH2D.h"
@@ -66,7 +67,7 @@ void TAPSEnergy_Check::AnalyseTree(TFile* file)
         TH1D* nCB;
         hist_t(unsigned ch) {
             string titlestr = std_ext::formatter() << "TAPSEnergy_Ch" << ch;
-            SmartHistFactory HistFac(titlestr);
+            HistogramFactory HistFac(titlestr);
             HistFac.SetTitlePrefix(titlestr);
             IM = HistFac.makeTH1D("IM","IM / MeV","#",BinSettings(400,0,500),"IM");
             nTAPS = HistFac.makeTH1D("nTAPS","Photons in TAPS","#",BinSettings(10),"nTAPS");

@@ -1,9 +1,10 @@
 #pragma once
 
 #include "physics/Physics.h"
-#include "plot/SmartHist.h"
 
 #include "utils/A2GeoAcceptance.h"
+
+class TH1D;
 
 namespace ant {
 namespace analysis {
@@ -11,7 +12,7 @@ namespace physics {
 
 class MCTrueAcceptance: public Physics {
 protected:
-    SmartHist1<std::string> detect;
+    TH1D* detect;
     utils::A2SimpleGeometry geo;
     unsigned int events_seen;
 

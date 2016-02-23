@@ -80,7 +80,7 @@ void ParticleIDCheck::ShowResult()
 
 
 
-ParticleIDCheck::branch_hists::branch_hists(SmartHistFactory& HistFac, const string& name)
+ParticleIDCheck::branch_hists::branch_hists(HistogramFactory& HistFac, const string& name)
 {
     hist = HistFac.makeTH1D(name+": particles in CB","","",BinSettings(10),name+"_particles");
     for(auto& pt : ParticleTypeDatabase::DetectableTypes()) {

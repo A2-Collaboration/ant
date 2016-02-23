@@ -42,7 +42,7 @@ void JustPi0::ShowResult()
 
 
 
-JustPi0::MultiPi0::MultiPi0(SmartHistFactory& histFac, unsigned nPi0, bool nofitandnotree) :
+JustPi0::MultiPi0::MultiPi0(HistogramFactory& histFac, unsigned nPi0, bool nofitandnotree) :
     multiplicity(nPi0),
     skipfit(nofitandnotree),
     fitter(std_ext::formatter() << multiplicity << "Pi0", 2*multiplicity),
@@ -53,7 +53,7 @@ JustPi0::MultiPi0::MultiPi0(SmartHistFactory& histFac, unsigned nPi0, bool nofit
     IM_2g_fitted(promptrandom)
 {
     std::string multiplicity_str = std_ext::formatter() << "m" << multiplicity << "Pi0";
-    SmartHistFactory HistFac(multiplicity_str, histFac, multiplicity_str);
+    HistogramFactory HistFac(multiplicity_str, histFac, multiplicity_str);
 
     promptrandom.AddPromptRange({-2.5,2.5});
     promptrandom.AddRandomRange({-50,-5});

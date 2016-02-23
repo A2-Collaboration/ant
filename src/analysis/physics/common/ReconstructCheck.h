@@ -32,13 +32,13 @@ protected:
     };
 
     struct PositionMapCB : PositionMap {
-        PositionMapCB(SmartHistFactory& f, const std::string& name, const std::string &title="");
+        PositionMapCB(HistogramFactory& f, const std::string& name, const std::string &title="");
         virtual void Fill(const double theta, const double phi, const double v=1.0) override;
         virtual ~PositionMapCB() = default;
     };
 
     struct PositionMapTAPS : PositionMap {
-        PositionMapTAPS(SmartHistFactory& f, const std::string& name, const std::string &title="");
+        PositionMapTAPS(HistogramFactory& f, const std::string& name, const std::string &title="");
         virtual void Fill(const double cos, const double phi, const double v=1.0) override;
         virtual void Draw(const std::string& option) const override;
         virtual ~PositionMapTAPS() = default;
@@ -82,9 +82,9 @@ protected:
             All, CB, TAPS
         };
 
-        std::unique_ptr<PositionMap> makePosMap(SmartHistFactory& f, detectortype d, const std::string& name, const std::string title="");
+        std::unique_ptr<PositionMap> makePosMap(HistogramFactory& f, detectortype d, const std::string& name, const std::string title="");
 
-        histgroup(SmartHistFactory& f, const std::string& prefix, detectortype d=detectortype::All);
+        histgroup(HistogramFactory& f, const std::string& prefix, detectortype d=detectortype::All);
         void Fill(const TParticlePtr& mctrue, const TCandidateList& cand, const TClusterList& all_clusters);
         virtual void ShowResult() const;
         virtual void Finish();
@@ -96,7 +96,7 @@ protected:
 
     struct TAPSVetoMatch {
         TH2D* vetoElement_dist;
-        TAPSVetoMatch(SmartHistFactory& f);
+        TAPSVetoMatch(HistogramFactory& f);
         TAPSVetoMatch(const TAPSVetoMatch&) = delete;
         TAPSVetoMatch& operator =(const TAPSVetoMatch&) = delete;
 
