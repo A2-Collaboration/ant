@@ -82,7 +82,8 @@ HistogramFactory::HistogramFactory(const string& directory_name, const Histogram
     (
         parent.title_prefix.empty() ?
             title_prefix_ :
-            std_ext::formatter() << parent.title_prefix << ": " << title_prefix_
+            (title_prefix_.empty() ? parent.title_prefix :
+                                     std_ext::formatter() << parent.title_prefix << ": " << title_prefix_)
     )
 {
     my_directory = parent.my_directory->mkdir(directory_name.c_str());
