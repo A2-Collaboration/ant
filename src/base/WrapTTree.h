@@ -2,6 +2,9 @@
 
 #include "TTree.h"
 
+#include <vector>
+#include <string>
+
 namespace ant {
 
 /**
@@ -40,34 +43,21 @@ struct WrapTTree {
      * @brief CreateBranches prepares the instance for filling the TTree
      * @param tree the tree to be filled
      */
-    void CreateBranches(TTree* tree) {
-        Tree = tree;
-        // little trick to access the protected method
-        struct TTree_trick : TTree {
-            using TTree::BranchImpRef;
-        };
-        auto tree_trick = (TTree_trick*)Tree;
-        for(ROOT_branch_t b : branches) {
-            // dereference ValuePtr here to pointer to value
-            tree_trick->BranchImpRef(b.Name.c_str(), b.ROOTClass, b.ROOTType, *b.ValuePtr, 32000, 99);
-        }
-    }
+    void CreateBranches(TTree* tree);
 
     /**
      * @brief LinkBranches prepares the instance for reading the TTree
      * @param tree the tree to read from
      */
-    void LinkBranches(TTree* tree) {
-        Tree = tree;
-        for(ROOT_branch_t b : branches) {
-            // copied from TTree::SetBranchAddress<T>
-            // but handling of classes should be tested better...
-            if(b.ROOTClass)
-                Tree->SetBranchAddress(b.Name.c_str(),b.ValuePtr,0,b.ROOTClass,b.ROOTType,true);
-            else
-                Tree->SetBranchAddress(b.Name.c_str(),*b.ValuePtr,0,b.ROOTClass,b.ROOTType,false);
-        }
-    }
+    void LinkBranches(TTree* tree);
+
+    /**
+     * @brief Matches checks if the branch names are all available
+     * @param tree the tree to check
+     * @param exact if false, the TTree may have additional branches
+     * @return true if successful
+     */
+    bool Matches(TTree* tree, bool exact = true) const;
 
     template<typename T>
     struct Branch_t {
@@ -94,6 +84,10 @@ struct WrapTTree {
     };
 
 protected:
+    // force user to inherit from this class
+    // use ADD_BRANCH_T to define branches (see comments above as well)
+    WrapTTree() = default;
+
 
     template<typename T>
     friend struct Branch_t;
