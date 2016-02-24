@@ -42,21 +42,40 @@ public:
     }
 };
 
-
-using CommonTree_t = physics::EtapOmegaG::TreeCommon;
-
-template<typename SigRefTree_t>
+template<typename Fill_t>
 struct Cut_t {
-    using Passes_t = function<bool(const CommonTree_t&, const SigRefTree_t&)>;
+    using Passes_t = function<bool(const Fill_t&)>;
     Cut_t(const std::string& name,
-          Passes_t passes = [] (const CommonTree_t&, const SigRefTree_t&) { return true; }) : Name(name), Passes(passes) {}
+          Passes_t passes = [] (const Fill_t&) { return true; }) : Name(name), Passes(passes) {}
     const std::string Name;
     const Passes_t Passes;
 };
 
+template<typename Fill_t>
+using MultiCut_t = std::vector<Cut_t<Fill_t>>;
 
-template<typename Hist_t, typename SigRefTree_t = typename Hist_t::Tree_t>
+template<typename Fill_t>
+using Cuts_t = std::list<MultiCut_t<Fill_t>>;
+
+template<typename ToFill_t, typename FromFill_t>
+Cuts_t<ToFill_t> ConvertCuts(const Cuts_t<FromFill_t>& from_cuts) {
+    Cuts_t<ToFill_t> to_cuts;
+    for(const auto& from_multicut : from_cuts) {
+        to_cuts.emplace_back();
+        auto& to_multicut = to_cuts.back();
+        for(const auto& from_cut : from_multicut) {
+            auto passes = from_cut.Passes;
+            to_multicut.emplace_back(from_cut.Name, [passes] (const ToFill_t f) { return passes(f); });
+        }
+    }
+    return to_cuts;
+}
+
+template<typename Hist_t>
 struct Node_t {
+    // Hist_t should have that type defined
+    using Fill_t = typename Hist_t::Fill_t;
+
     SmartHistFactory HistFac; // directory for cuts (and H)
     SmartHistFactory H;       // subdir for mctrue splitted hists
     struct WrappedHist_t {
@@ -67,10 +86,10 @@ struct Node_t {
     };
 
     map<unsigned, WrappedHist_t> Hists;
-    typename Cut_t<SigRefTree_t>::Passes_t PassesCut;
+    typename Cut_t<Fill_t>::Passes_t PassesCut;
     vector<ant::hstack*> Stacks;
 
-    Node_t(const SmartHistFactory& parentHistFac, Cut_t<SigRefTree_t> cut) :
+    Node_t(const SmartHistFactory& parentHistFac, Cut_t<Fill_t> cut) :
         HistFac(cut.Name, parentHistFac, cut.Name),
         H("h", HistFac),
         Hists(MakeHists(H, HistFac.GetTitlePrefix())),
@@ -133,8 +152,9 @@ struct Node_t {
     }
 
 
-    bool Fill(const CommonTree_t& treeCommon, const SigRefTree_t& treeSigRef) {
-       if(PassesCut(treeCommon, treeSigRef)) {
+    bool Fill(const Fill_t& f) {
+       if(PassesCut(f)) {
+           const auto& treeCommon = f.Common;
 
            const auto mctrue = treeCommon.MCTrue();
            auto it_hist = Hists.lower_bound(mctrue);
@@ -151,12 +171,12 @@ struct Node_t {
                AddToStack(it_hist->second);
            }
 
-           it_hist->second.Hist.Fill(treeCommon, treeSigRef);
+           it_hist->second.Hist.Fill(f);
            // handle MC_all and MC_bkg
            if(mctrue>0) {
-               Hists.at(3).Hist.Fill(treeCommon, treeSigRef);
+               Hists.at(3).Hist.Fill(f);
                if(mctrue >= 9)
-                   Hists.at(4).Hist.Fill(treeCommon, treeSigRef);
+                   Hists.at(4).Hist.Fill(f);
            }
 
            return true;
@@ -165,44 +185,37 @@ struct Node_t {
     }
 };
 
+template<typename Hist_t>
+using CutsIterator_t = typename Cuts_t<typename Hist_t::Fill_t>::const_iterator;
 
-template<typename SigRefTree_t>
-using MultiCut_t = std::vector<Cut_t<SigRefTree_t>>;
+template<typename Hist_t>
+using CutTree_t = typename Tree<Node_t<Hist_t>>::node_t;
 
-template<typename SigRefTree_t>
-using Cuts_t = std::list<MultiCut_t<SigRefTree_t>>;
-
-template<typename SigRefTree_t>
-using CutsIterator_t = typename Cuts_t<SigRefTree_t>::const_iterator;
-
-
-template<typename SigRefTree_t, typename Hist_t>
-using CutTree_t = typename Tree<Node_t<Hist_t, SigRefTree_t>>::node_t;
-
-template<typename SigRefTree_t, typename Hist_t>
-void BuildCutTree(CutTree_t<SigRefTree_t, Hist_t> cuttree, CutsIterator_t<SigRefTree_t> first, CutsIterator_t<SigRefTree_t> last) {
+template<typename Hist_t>
+void BuildCutTree(CutTree_t<Hist_t> cuttree, CutsIterator_t<Hist_t> first, CutsIterator_t<Hist_t> last) {
     if(first == last)
         return;
-    const MultiCut_t<SigRefTree_t>& multicut = *first;
-    for(const Cut_t<SigRefTree_t>& cut : multicut) {
+    const auto& multicut = *first;
+    for(const auto& cut : multicut) {
         auto daughter = cuttree->CreateDaughter(cuttree->Get().HistFac, cut);
-        BuildCutTree<SigRefTree_t, Hist_t>(daughter, std::next(first), last);
+        BuildCutTree<Hist_t>(daughter, std::next(first), last);
     }
 }
 
-template<typename Hist_t, typename SigRefTree_t = typename Hist_t::Tree_t>
-CutTree_t<SigRefTree_t, Hist_t> MakeCutTree(SmartHistFactory histFac, const string& name) {
+template<typename Hist_t>
+CutTree_t<Hist_t> MakeCutTree(SmartHistFactory histFac, const string& name) {
     const auto& cuts = Hist_t::GetCuts();
-    auto cuttree = Tree<Node_t<Hist_t, SigRefTree_t>>::MakeNode(histFac, Cut_t<SigRefTree_t>{name});
-    BuildCutTree<SigRefTree_t, Hist_t>(cuttree, cuts.begin(), cuts.end());
+    using Fill_t = typename Hist_t::Fill_t;
+    auto cuttree = Tree<Node_t<Hist_t>>::MakeNode(histFac, Cut_t<Fill_t>{name});
+    BuildCutTree<Hist_t>(cuttree, cuts.begin(), cuts.end());
     return cuttree;
 }
 
-template<typename Hist_t, typename SigRefTree_t = typename Hist_t::Tree_t>
-void FillCutTree(CutTree_t<SigRefTree_t, Hist_t> cuttree, const CommonTree_t& commonTree, const SigRefTree_t& tree) {
-    if(cuttree->Get().Fill(commonTree, tree)) {
+template<typename Hist_t, typename Fill_t = typename Hist_t::Fill_t>
+void FillCutTree(CutTree_t<Hist_t> cuttree, const Fill_t& f) {
+    if(cuttree->Get().Fill(f)) {
         for(const auto& d : cuttree->Daughters()) {
-            FillCutTree<Hist_t, SigRefTree_t>(d, commonTree, tree);
+            FillCutTree<Hist_t>(d, f);
         }
     }
 }
@@ -213,31 +226,48 @@ void FillCutTree(CutTree_t<SigRefTree_t, Hist_t> cuttree, const CommonTree_t& co
 
 
 struct CommonHist_t {
+    using Tree_t = physics::EtapOmegaG::TreeCommon;
+
     TH1D* h_KinFitChi2;
+    struct Fill_t {
+        const Tree_t& Common;
+        Fill_t(const Tree_t& common) : Common(common) {}
+        double TaggW() const {
+            return Common.TaggW;
+        }
+    };
+
+    template<typename SigRefTree_t>
+    struct SigRefFill_t : Fill_t {
+        const SigRefTree_t& Tree;
+        SigRefFill_t(const CommonHist_t::Tree_t& common, const SigRefTree_t& tree) :
+            CommonHist_t::Fill_t(common),
+            Tree(tree)
+        {}
+    };
 
     CommonHist_t(SmartHistFactory HistFac) {
         h_KinFitChi2 = HistFac.makeTH1D("KinFitChi2","#chi^{2}","",BinSettings(200,0,100),"h_KinFitChi2");
     }
-    void Fill(const CommonTree_t& treeCommon) {
-        h_KinFitChi2->Fill(treeCommon.KinFitChi2, treeCommon.TaggW);
+    void Fill(const Fill_t& f) {
+        h_KinFitChi2->Fill(f.Common.KinFitChi2, f.TaggW());
     }
     std::vector<TH1*> GetHists() const {
         return {h_KinFitChi2};
     }
 
     // Sig and Ref channel share some cuts...
-    template<typename Tree_t>
-    static Cuts_t<Tree_t> GetCuts() {
-        Cuts_t<Tree_t> cuts;
-        cuts.emplace_back(MultiCut_t<Tree_t>{
-                                 {"CBSumVeto=0", [] (const CommonTree_t& treeCommon, const Tree_t&) { return treeCommon.CBSumVetoE==0; } },
-                                 {"CBSumVeto<0.25", [] (const CommonTree_t& treeCommon, const Tree_t&) { return treeCommon.CBSumVetoE<0.25; } },
-                                 {"PIDSumE=0", [] (const CommonTree_t& treeCommon, const Tree_t&) { return treeCommon.PIDSumE==0; } },
-                                 {"PIDSumE<0.25", [] (const CommonTree_t& treeCommon, const Tree_t&) { return treeCommon.PIDSumE<0.25; } },
+    static Cuts_t<Fill_t> GetCuts() {
+        Cuts_t<Fill_t> cuts;
+        cuts.emplace_back(MultiCut_t<Fill_t>{
+                                 {"CBSumVeto=0", [] (const Fill_t& f) { return f.Common.CBSumVetoE==0; } },
+                                 {"CBSumVeto<0.25", [] (const Fill_t& f) { return f.Common.CBSumVetoE<0.25; } },
+                                 {"PIDSumE=0", [] (const Fill_t& f) { return f.Common.PIDSumE==0; } },
+                                 {"PIDSumE<0.25", [] (const Fill_t& f) { return f.Common.PIDSumE<0.25; } },
                              });
-        cuts.emplace_back(MultiCut_t<Tree_t>{
-                                 {"KinFitChi2<10", [] (const CommonTree_t& treeCommon, const Tree_t&) { return treeCommon.KinFitChi2<10; } },
-                                 {"KinFitChi2<20", [] (const CommonTree_t& treeCommon, const Tree_t&) { return treeCommon.KinFitChi2<20; } },
+        cuts.emplace_back(MultiCut_t<Fill_t>{
+                                 {"KinFitChi2<10", [] (const Fill_t& f) { return f.Common.KinFitChi2<10; } },
+                                 {"KinFitChi2<20", [] (const Fill_t& f) { return f.Common.KinFitChi2<20; } },
                              });
         return cuts;
     }
@@ -247,6 +277,7 @@ struct CommonHist_t {
 
 struct SigHist_t : CommonHist_t {
     using Tree_t = physics::EtapOmegaG::Sig_t::Tree_t;
+    using Fill_t = CommonHist_t::SigRefFill_t<Tree_t>;
 
     TH2D* h_IM_gg_gg;     // Goldhaber plot
     TH1D* h_TreeFitChi2;
@@ -265,14 +296,15 @@ struct SigHist_t : CommonHist_t {
         h_Bachelor_E = HistFac.makeTH1D("E_#gamma in #eta' frame","E_{#gamma}","",BinSettings(400,0,400),"h_Bachelor_E");
     }
 
-    void Fill(const CommonTree_t& treeCommon, const Tree_t& tree) {
-        CommonHist_t::Fill(treeCommon);
+    void Fill(const Fill_t& f) {
+        CommonHist_t::Fill(f);
+        const Tree_t& tree = f.Tree;
         for(unsigned i=0;i<tree.gg_gg1().size();i++){
-            h_IM_gg_gg->Fill(tree.gg_gg1()[i], tree.gg_gg2()[i]);
-            h_IM_gg_gg->Fill(tree.gg_gg2()[i], tree.gg_gg1()[i]);
+            h_IM_gg_gg->Fill(tree.gg_gg1()[i], tree.gg_gg2()[i], f.TaggW());
+            h_IM_gg_gg->Fill(tree.gg_gg2()[i], tree.gg_gg1()[i], f.TaggW());
         }
-        h_TreeFitChi2->Fill(tree.TreeFitChi2, treeCommon.TaggW);
-        h_Bachelor_E->Fill(tree.Bachelor_best_best, treeCommon.TaggW);
+        h_TreeFitChi2->Fill(tree.TreeFitChi2, f.TaggW());
+        h_Bachelor_E->Fill(tree.Bachelor_best_best, f.TaggW());
     }
     std::vector<TH1*> GetHists() const {
         auto hists = CommonHist_t::GetHists();
@@ -280,11 +312,12 @@ struct SigHist_t : CommonHist_t {
         return hists;
     }
 
-    static Cuts_t<Tree_t> GetCuts() {
-        auto cuts = CommonHist_t::GetCuts<Tree_t>();
+    static Cuts_t<Fill_t> GetCuts() {
+        auto cuts = ConvertCuts<Fill_t, CommonHist_t::Fill_t>(CommonHist_t::GetCuts());
 
         // reduces pi0pi0 and pi0eta backgrounds
-        auto goldhaber_cut = [] (const CommonTree_t&, const Tree_t& tree) {
+        auto goldhaber_cut = [] (const Fill_t& f) {
+            const Tree_t& tree = f.Tree;
             const auto& Pi0 = ParticleTypeDatabase::Pi0.GetWindow(40);
             const auto& Eta = ParticleTypeDatabase::Eta.GetWindow(30);
 
@@ -304,13 +337,13 @@ struct SigHist_t : CommonHist_t {
             return true;
         };
 
-        cuts.emplace_back(MultiCut_t<Tree_t>{
+        cuts.emplace_back(MultiCut_t<Fill_t>{
                               {"Goldhaber", goldhaber_cut },
                           });
 
-        cuts.emplace_back(MultiCut_t<Tree_t>{
-                              {"TreeFitChi2<20", [] (const CommonTree_t&, const Tree_t& tree) { return tree.TreeFitChi2<20; } },
-                              {"TreeFitChi2<50", [] (const CommonTree_t&, const Tree_t& tree) { return tree.TreeFitChi2<50; } },
+        cuts.emplace_back(MultiCut_t<Fill_t>{
+                              {"TreeFitChi2<20", [] (const Fill_t& f) { return f.Tree.TreeFitChi2<20; } },
+                              {"TreeFitChi2<50", [] (const Fill_t& f) { return f.Tree.TreeFitChi2<50; } },
                           });
 
 
@@ -320,6 +353,8 @@ struct SigHist_t : CommonHist_t {
 
 struct RefHist_t : CommonHist_t {
     using Tree_t = physics::EtapOmegaG::Ref_t::Tree_t;
+    using Fill_t = CommonHist_t::SigRefFill_t<Tree_t>;
+
 
     TH1D* h_IM_2g;
 
@@ -327,19 +362,21 @@ struct RefHist_t : CommonHist_t {
         h_IM_2g = HistFac.makeTH1D("IM 2g","IM / MeV","",BinSettings(1100,0,1100),"h_IM_2g");
     }
 
-    void Fill(const CommonTree_t& treeCommon, const Tree_t& tree) {
-        CommonHist_t::Fill(treeCommon);
-        h_IM_2g->Fill(tree.IM_2g, treeCommon.TaggW);
+    void Fill(const Fill_t& f) {
+        CommonHist_t::Fill(f);
+        const Tree_t& tree = f.Tree;
+        h_IM_2g->Fill(tree.IM_2g, f.TaggW());
     }
+
     std::vector<TH1*> GetHists() const {
         auto hists = CommonHist_t::GetHists();
         hists.insert(hists.end(), {h_IM_2g});
         return hists;
     }
 
-    static Cuts_t<Tree_t> GetCuts() {
+    static Cuts_t<Fill_t> GetCuts() {
         // reference does not have more to cut than common stuff...
-        return CommonHist_t::GetCuts<Tree_t>();
+        return ConvertCuts<Fill_t, CommonHist_t::Fill_t>(CommonHist_t::GetCuts());
     }
 };
 
@@ -382,7 +419,7 @@ int main(int argc, char** argv) {
     };
 
 
-    CommonTree_t treeCommon;
+    CommonHist_t::Tree_t treeCommon;
     link_branches("EtapOmegaG/treeCommon", addressof(treeCommon), -1);
     auto entries = treeCommon.Tree->GetEntries();
 
@@ -423,11 +460,11 @@ int main(int argc, char** argv) {
         // we handle the Ref/Sig cut here to save some reading work
         if(treeCommon.IsSignal) {
             treeSig.Tree->GetEntry(entry);
-            FillCutTree<SigHist_t>(cuttreeSig, treeCommon, treeSig);
+            FillCutTree<SigHist_t>(cuttreeSig, {treeCommon, treeSig});
         }
         else {
             treeRef.Tree->GetEntry(entry);
-            FillCutTree<RefHist_t>(cuttreeRef, treeCommon, treeRef);
+            FillCutTree<RefHist_t>(cuttreeRef, {treeCommon, treeRef});
         }
         if(entry % 100000 == 0)
             LOG(INFO) << "Processed " << 100.0*entry/entries << " %";
