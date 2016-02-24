@@ -155,21 +155,27 @@ void Etap3pi0::ProcessEvent(const TEvent& event, manager_t&)
         vars.taggCh        = unsigned(t.Channel);
         vars.taggTime      = t.Time;
 
-        vector<double> chi2_pions[3];
+        const auto chi2signal = MakeSignal();
+        const auto chi2ref    = MakeReference();
 
-        for (const auto& combination: combinations)
-        {
-            for (unsigned ind_pion = 0; ind_pion < 3 ; ++ind_pion)
-            {
-
-            }
-        }
+        if (chi2signal < chi2ref)
+            vars.type = 0;
+       else
+            vars.type = 1;
 
         vars.MM = GetMM(vars.taggE,vars.etaprime);
         tree->Fill();
     }
- }
+}
 
+double Etap3pi0::MakeSignal()
+{
+    return 0;
+}
+double Etap3pi0::MakeReference()
+{
+    return 0;
+}
 
 void Etap3pi0::Finish()
 {

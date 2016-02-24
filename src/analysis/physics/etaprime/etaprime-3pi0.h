@@ -1,6 +1,6 @@
 #pragma once
 
-#include "analysis/utils/KinFitter.h"
+#include "analysis/utils/Fitter.h"
 #include "analysis/physics/Physics.h"
 #include "analysis/plot/PromptRandomHist.h"
 #include "utils/A2GeoAcceptance.h"
@@ -35,6 +35,8 @@ protected:
     std::shared_ptr<ant::Tree<const ParticleTypeDatabase::Type&>> signal_tree;
     std::shared_ptr<ant::Tree<const ParticleTypeDatabase::Type&>> reference_tree;
     std::shared_ptr<ant::Tree<const ParticleTypeDatabase::Type&>> bkg_tree;
+
+//    enum class EvtType : int { SIG = 1, REF = 2, BKG = 3 };
 
     const std::vector<std::vector<std::pair<unsigned,unsigned>>> combinations =
     {
@@ -116,19 +118,17 @@ protected:
                    const BinSettings& xbins, const BinSettings& ybins);
 
 
-
-
-
-
-
     TLorentzVector MakeLoretzSum(const TParticleList& particles);
+    double MakeSignal();
+    double MakeReference();
+    bool MakeMCProton(const TEventData& mcdata, TParticlePtr& proton);
+
 public:
     Etap3pi0(const std::string& name, OptionsPtr opts);
     virtual void ProcessEvent(const TEvent& event, manager_t& manager) override;
     virtual void Finish() override;
     virtual void ShowResult() override;
-private:
-    bool MakeMCProton(const TEventData& mcdata, TParticlePtr& proton);
+
 };
 
 
