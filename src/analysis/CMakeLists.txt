@@ -69,6 +69,7 @@ set(ANALYSIS_PLOT
   plot/root_draw.cc
   plot/HistogramFactories.cc
   plot/PromptRandomHist.cc
+  plot/CutTree.h
 )
 
 set(ANALYSIS_UTILS

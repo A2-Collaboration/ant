@@ -1,9 +1,7 @@
 #include "base/Logger.h"
 
-#include "analysis/plot/root_draw.h"
+#include "analysis/plot/CutTree.h"
 #include "analysis/physics/etaprime/etaprime_omega_gamma.h"
-
-#include "root-addons/analysis_codes/hstack.h"
 
 #include "base/CmdLine.h"
 #include "base/interval.h"
@@ -12,17 +10,12 @@
 #include "base/std_ext/string.h"
 #include "base/std_ext/system.h"
 
-#include "TH1D.h"
 #include "TSystem.h"
 #include "TRint.h"
-#include "THStack.h"
-
-#include <functional>
-#include <string>
-#include <list>
 
 using namespace ant;
 using namespace ant::analysis;
+using namespace ant::analysis::plot;
 using namespace std;
 
 volatile bool interrupt = false;
@@ -42,152 +35,14 @@ public:
     }
 };
 
-template<typename Fill_t>
-struct Cut_t {
-    using Passes_t = function<bool(const Fill_t&)>;
-    Cut_t(const std::string& name,
-          Passes_t passes = [] (const Fill_t&) { return true; }) : Name(name), Passes(passes) {}
-    const std::string Name;
-    const Passes_t Passes;
-};
-
-template<typename Fill_t>
-using MultiCut_t = std::vector<Cut_t<Fill_t>>;
-
-template<typename Fill_t>
-using Cuts_t = std::list<MultiCut_t<Fill_t>>;
-
-template<typename ToFill_t, typename FromFill_t>
-Cuts_t<ToFill_t> ConvertCuts(const Cuts_t<FromFill_t>& from_cuts) {
-    Cuts_t<ToFill_t> to_cuts;
-    for(const auto& from_multicut : from_cuts) {
-        to_cuts.emplace_back();
-        auto& to_multicut = to_cuts.back();
-        for(const auto& from_cut : from_multicut) {
-            auto passes = from_cut.Passes;
-            to_multicut.emplace_back(from_cut.Name, [passes] (const ToFill_t f) { return passes(f); });
-        }
-    }
-    return to_cuts;
-}
-
 template<typename Hist_t>
-struct Node_t {
-    // Hist_t should have that type defined
-    using Fill_t = typename Hist_t::Fill_t;
-
-    SmartHistFactory HistFac;
-    Hist_t Hist;
-    typename Cut_t<Fill_t>::Passes_t PassesCut;
-
-    Node_t(const SmartHistFactory& parentHistFac, Cut_t<Fill_t> cut) :
-        HistFac(cut.Name, parentHistFac, cut.Name),
-        Hist(HistFac),
-        PassesCut(cut.Passes)
-    {}
-
-    bool Fill(const Fill_t& f) {
-       if(PassesCut(f)) {
-           Hist.Fill(f);
-           return true;
-       }
-       return false;
-    }
-};
-
-struct HistMod_t : std::function<void(TH1*)> {
-    using std::function<void(TH1*)>::function;
-
-    static Color_t GetColor(unsigned i) {
-        const std::vector<Color_t> colors = {kGreen+1, kBlue, kYellow+1, kMagenta, kCyan, kOrange, kSpring+10,};
-        return colors[i % colors.size()];
-    }
-
-    static HistMod_t MakeColor(const Color_t color) {
-        return [color] (TH1* h) { h->SetLineColor(color); };
-    }
-};
-
-template<typename Hist_t>
-struct StackedHists_t {
-protected:
-    StackedHists_t(const SmartHistFactory& histFac) :
-        HistFac(histFac),
-        H("h", HistFac)
-    {
-    }
-
-
-    const Hist_t& GetHist(unsigned key, const std::string& name = "", HistMod_t histmod = [] (TH1*) {}) {
-        auto it_hist = Hists.lower_bound(key);
-        if(it_hist == Hists.end() || it_hist->first != key) {
-            if(name.empty())
-                throw std::runtime_error("Cannot create hist with empty name");
-            it_hist = Hists.emplace_hint(it_hist, key, WrappedHist_t{
-                                             name,
-                                             H,
-                                             histmod
-                                         });
-
-            AddToStack(it_hist->second);
-        }
-        return it_hist->second.Hist;
-    }
-
-
-
-private:
-
-    SmartHistFactory HistFac; // directory for stacks and H itself
-    SmartHistFactory H; // directory for mctrue splitted histfacs
-
-    struct WrappedHist_t {
-        Hist_t    Hist;
-        HistMod_t Modify;
-        WrappedHist_t(const std::string& name,
-                      const SmartHistFactory& parentHistFac,
-                      HistMod_t mod) :
-            Hist(SmartHistFactory(name, parentHistFac, name)), Modify(mod) {}
-    };
-
-    map<unsigned, WrappedHist_t> Hists;
-    vector<ant::hstack*> Stacks;
-
-    void AddToStack(const WrappedHist_t& hist) {
-        const auto histptrs = hist.Hist.GetHists();
-
-        if(Stacks.empty()) {
-            for(auto h : histptrs) {
-                const string name = h->GetName();
-                Stacks.emplace_back(HistFac.make<ant::hstack>( // use the parent histFac here!
-                                        name,
-                                        H.GetTitlePrefix()+": "+name,
-                                        true, // use intelliLegend
-                                        true, // ignore empty histograms
-                                        true  // always draw with nostack option
-                                        ));
-            }
-        }
-
-        for(TH1* h : histptrs) {
-            h->SetLineWidth(2); // make it thicker by default
-            hist.Modify(h);
-        }
-        assert(histptrs.size() == Stacks.size());
-        for(size_t i=0;i<Stacks.size();i++)
-            *Stacks[i] << histptrs[i];
-    }
-
-};
-
-
-template<typename Hist_t>
-struct MCTrue_Splitter : StackedHists_t<Hist_t> {
+struct MCTrue_Splitter : cuttree::StackedHists_t<Hist_t> {
 
     // Hist_t should have that type defined
     using Fill_t = typename Hist_t::Fill_t;
 
-    MCTrue_Splitter(const SmartHistFactory& histFac) : StackedHists_t<Hist_t>(histFac) {
+    MCTrue_Splitter(const SmartHistFactory& histFac) : cuttree::StackedHists_t<Hist_t>(histFac) {
+        using cuttree::HistMod_t;
         this->GetHist(0, "Data", HistMod_t::MakeColor(kBlack));
         this->GetHist(1, "Sig",  HistMod_t::MakeColor(kRed));
         this->GetHist(2, "Ref",  HistMod_t::MakeColor(kRed));
@@ -208,6 +63,7 @@ struct MCTrue_Splitter : StackedHists_t<Hist_t> {
             return "Bkg_"+name;
         };
 
+        using cuttree::HistMod_t;
         const Hist_t& hist = mctrue<9 ? this->GetHist(mctrue) :
                                         this->GetHist(mctrue,
                                                       get_bkg_name(mctrue),
@@ -225,44 +81,9 @@ struct MCTrue_Splitter : StackedHists_t<Hist_t> {
     }
 };
 
-
-template<typename Hist_t>
-using CutsIterator_t = typename Cuts_t<typename Hist_t::Fill_t>::const_iterator;
-
-template<typename Hist_t>
-using CutTree_t = typename Tree<Node_t<Hist_t>>::node_t;
-
-template<typename Hist_t>
-void BuildCutTree(CutTree_t<Hist_t> cuttree, CutsIterator_t<Hist_t> first, CutsIterator_t<Hist_t> last) {
-    if(first == last)
-        return;
-    const auto& multicut = *first;
-    for(const auto& cut : multicut) {
-        auto daughter = cuttree->CreateDaughter(cuttree->Get().HistFac, cut);
-        BuildCutTree<Hist_t>(daughter, std::next(first), last);
-    }
-}
-
-template<typename Hist_t, typename Fill_t = typename Hist_t::Fill_t>
-CutTree_t<Hist_t> MakeCutTree(SmartHistFactory histFac, const string& name, const Cuts_t<Fill_t>& cuts) {
-    auto cuttree = Tree<Node_t<Hist_t>>::MakeNode(histFac, Cut_t<Fill_t>{name});
-    BuildCutTree<Hist_t>(cuttree, cuts.begin(), cuts.end());
-    return cuttree;
-}
-
-template<typename Hist_t, typename Fill_t = typename Hist_t::Fill_t>
-void FillCutTree(CutTree_t<Hist_t> cuttree, const Fill_t& f) {
-    if(cuttree->Get().Fill(f)) {
-        for(const auto& d : cuttree->Daughters()) {
-            FillCutTree<Hist_t>(d, f);
-        }
-    }
-}
-
 // define the structs containing the histograms
 // and the cuts. for simple branch variables, that could
 // be combined...
-
 
 struct CommonHist_t {
     using Tree_t = physics::EtapOmegaG::TreeCommon;
@@ -296,8 +117,9 @@ struct CommonHist_t {
     }
 
     // Sig and Ref channel share some cuts...
-    static Cuts_t<Fill_t> GetCuts() {
-        Cuts_t<Fill_t> cuts;
+    static cuttree::Cuts_t<Fill_t> GetCuts() {
+        using cuttree::MultiCut_t;
+        cuttree::Cuts_t<Fill_t> cuts;
         cuts.emplace_back(MultiCut_t<Fill_t>{
                                  {"CBSumVeto=0", [] (const Fill_t& f) { return f.Common.CBSumVetoE==0; } },
                                  {"CBSumVeto<0.25", [] (const Fill_t& f) { return f.Common.CBSumVetoE<0.25; } },
@@ -352,8 +174,9 @@ struct SigHist_t : CommonHist_t {
         return hists;
     }
 
-    static Cuts_t<Fill_t> GetCuts() {
-        auto cuts = ConvertCuts<Fill_t, CommonHist_t::Fill_t>(CommonHist_t::GetCuts());
+    static cuttree::Cuts_t<Fill_t> GetCuts() {
+        using cuttree::MultiCut_t;
+        auto cuts = cuttree::ConvertCuts<Fill_t, CommonHist_t::Fill_t>(CommonHist_t::GetCuts());
 
         // reduces pi0pi0 and pi0eta backgrounds
         auto goldhaber_cut = [] (const Fill_t& f) {
@@ -413,9 +236,9 @@ struct RefHist_t : CommonHist_t {
         return hists;
     }
 
-    static Cuts_t<Fill_t> GetCuts() {
+    static cuttree::Cuts_t<Fill_t> GetCuts() {
         // reference does not have more to cut than common stuff...
-        return ConvertCuts<Fill_t, CommonHist_t::Fill_t>(CommonHist_t::GetCuts());
+        return cuttree::ConvertCuts<Fill_t, CommonHist_t::Fill_t>(CommonHist_t::GetCuts());
     }
 };
 
@@ -480,14 +303,14 @@ int main(int argc, char** argv) {
 
     SmartHistFactory HistFac("EtapOmegaG");
 
-    auto cuttreeSig = MakeCutTree<MCSigHist_t>(HistFac,
-                                               std_ext::replace_str(cmd_sigtree->getValue(),"/","_"),
-                                               SigHist_t::GetCuts()
-                                               );
-    auto cuttreeRef = MakeCutTree<MCRefHist_t>(HistFac,
-                                               std_ext::replace_str(cmd_reftree->getValue(),"/","_"),
-                                               RefHist_t::GetCuts()
-                                               );
+    auto cuttreeSig = cuttree::Make<MCSigHist_t>(HistFac,
+                                                 std_ext::replace_str(cmd_sigtree->getValue(),"/","_"),
+                                                 SigHist_t::GetCuts()
+                                                 );
+    auto cuttreeRef = cuttree::Make<MCRefHist_t>(HistFac,
+                                                 std_ext::replace_str(cmd_reftree->getValue(),"/","_"),
+                                                 RefHist_t::GetCuts()
+                                                 );
 
     LOG(INFO) << "Tree entries=" << entries;
     auto max_entries = entries;
@@ -505,11 +328,11 @@ int main(int argc, char** argv) {
         // we handle the Ref/Sig cut here to save some reading work
         if(treeCommon.IsSignal) {
             treeSig.Tree->GetEntry(entry);
-            FillCutTree<MCSigHist_t>(cuttreeSig, {treeCommon, treeSig});
+            cuttree::Fill<MCSigHist_t>(cuttreeSig, {treeCommon, treeSig});
         }
         else {
             treeRef.Tree->GetEntry(entry);
-            FillCutTree<MCRefHist_t>(cuttreeRef, {treeCommon, treeRef});
+            cuttree::Fill<MCRefHist_t>(cuttreeRef, {treeCommon, treeRef});
         }
         if(entry % 100000 == 0)
             LOG(INFO) << "Processed " << 100.0*entry/entries << " %";
