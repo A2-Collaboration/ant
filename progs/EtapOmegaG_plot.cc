@@ -76,69 +76,91 @@ struct Node_t {
     // Hist_t should have that type defined
     using Fill_t = typename Hist_t::Fill_t;
 
-    SmartHistFactory HistFac; // directory for cuts (and H)
-    SmartHistFactory H;       // subdir for mctrue splitted hists
+    SmartHistFactory HistFac;
+    Hist_t Hist;
+    typename Cut_t<Fill_t>::Passes_t PassesCut;
+
+    Node_t(const SmartHistFactory& parentHistFac, Cut_t<Fill_t> cut) :
+        HistFac(cut.Name, parentHistFac, cut.Name),
+        Hist(HistFac),
+        PassesCut(cut.Passes)
+    {}
+
+    bool Fill(const Fill_t& f) {
+       if(PassesCut(f)) {
+           Hist.Fill(f);
+           return true;
+       }
+       return false;
+    }
+};
+
+template<typename Hist_t>
+struct MCTrue_Splitter {
+    // Hist_t should have that type defined
+    using Fill_t = typename Hist_t::Fill_t;
+
+    SmartHistFactory HistFac; // directory for mctrue splitted histfacs
+
     struct WrappedHist_t {
         using histmod_t = std::function<void(TH1*)>;
         Hist_t Hist;
         histmod_t Modify;
-        WrappedHist_t(const SmartHistFactory& histFac, histmod_t mod) : Hist(histFac), Modify(mod) {}
+        WrappedHist_t(const std::string& name,
+                      const SmartHistFactory& parentHistFac,
+                      histmod_t mod) :
+            Hist(SmartHistFactory(name, parentHistFac, name)), Modify(mod) {}
     };
 
     map<unsigned, WrappedHist_t> Hists;
-    typename Cut_t<Fill_t>::Passes_t PassesCut;
     vector<ant::hstack*> Stacks;
 
-    Node_t(const SmartHistFactory& parentHistFac, Cut_t<Fill_t> cut) :
-        HistFac(cut.Name, parentHistFac, cut.Name),
-        H("h", HistFac),
-        Hists(MakeHists(H, HistFac.GetTitlePrefix())),
-        PassesCut(cut.Passes)
+    MCTrue_Splitter(const SmartHistFactory& histFac) :
+        HistFac("h", histFac),
+        Hists(MakePredefinedHists(HistFac))
     {
+        assert(!Hists.empty());
+        // use the first histogram to build the stacks
+        const auto& first = Hists.begin()->second;
+        for(auto h : first.Hist.GetHists()) {
+            const string name = h->GetName();
+            Stacks.emplace_back(histFac.make<ant::hstack>( // use the parent histFac here!
+                                    name,
+                                    HistFac.GetTitlePrefix()+": "+name,
+                                    true, // use intelliLegend
+                                    true, // ignore empty histograms
+                                    true  // always draw with nostack option
+                                    ));
+        }
+
         for(const auto& it_hist : Hists) {
             AddToStack(it_hist.second);
         }
     }
 
-
     void AddToStack(const WrappedHist_t& hist) {
         const auto histptrs = hist.Hist.GetHists();
         for(TH1* h : histptrs) {
-            h->SetLineWidth(2);
+            h->SetLineWidth(2); // make it thicker by default
             hist.Modify(h);
         }
-        if(Stacks.empty()) {
-            for(auto h : histptrs) {
-                const string name = h->GetName();
-                Stacks.emplace_back(HistFac.make<ant::hstack>(
-                                        name,
-                                        HistFac.GetTitlePrefix()+": "+name,
-                                        true, // use intelliLegend
-                                        true  // ignore empty histograms
-                                        ));
-                *Stacks.back() << h;
-            }
-        }
-        else {
-            assert(histptrs.size() == Stacks.size());
-            for(size_t i=0;i<Stacks.size();i++)
-                *Stacks[i] << histptrs[i];
-        }
+        assert(histptrs.size() == Stacks.size());
+        for(size_t i=0;i<Stacks.size();i++)
+            *Stacks[i] << histptrs[i];
     }
 
-    static map<unsigned, WrappedHist_t> MakeHists(SmartHistFactory& h, const std::string& prefix)
+    static std::map<unsigned, WrappedHist_t> MakePredefinedHists(const SmartHistFactory& h)
     {
-        h.SetTitlePrefix(prefix);
         map<unsigned, WrappedHist_t> m;
         // 0=Data, 1=Sig, 2=Ref, 3=AllMC, 9=Unknown_Bkg, >=10 Known Bkg
         // create them here already to get them in the right order
-        m.emplace(0, WrappedHist_t{SmartHistFactory("Data",   h, "Data"),   MakeColorHistMod(kBlack)});
-        m.emplace(1, WrappedHist_t{SmartHistFactory("Sig",    h, "Sig"),    MakeColorHistMod(kRed)});
-        m.emplace(2, WrappedHist_t{SmartHistFactory("Ref",    h, "Ref"),    MakeColorHistMod(kRed)});
+        m.emplace(0, WrappedHist_t{"Data", h, MakeColorHistMod(kBlack)});
+        m.emplace(1, WrappedHist_t{"Sig",  h, MakeColorHistMod(kRed)});
+        m.emplace(2, WrappedHist_t{"Ref",  h, MakeColorHistMod(kRed)});
         // mctrue is never >=3 (and <9) in tree, use this to sum up all MC and all bkg MC
-        m.emplace(3, WrappedHist_t{SmartHistFactory("Sum_MC", h, "Sum_MC"), MakeColorHistMod(kBlack)});
-        m.emplace(4, WrappedHist_t{SmartHistFactory("Bkg_MC", h, "Bkg_MC"), MakeColorHistMod(kGray)});
-
+        // see also Fill()
+        m.emplace(3, WrappedHist_t{"Sum_MC", h, MakeColorHistMod(kBlack)});
+        m.emplace(4, WrappedHist_t{"Bkg_MC", h, MakeColorHistMod(kGray)});
         return m;
     }
 
@@ -151,39 +173,34 @@ struct Node_t {
         return [color] (TH1* h) { h->SetLineColor(color); };
     }
 
+    void Fill(const Fill_t& f) {
 
-    bool Fill(const Fill_t& f) {
-       if(PassesCut(f)) {
-           const auto& treeCommon = f.Common;
+        const auto mctrue = f.MCTrue();
+        auto it_hist = Hists.lower_bound(mctrue);
+        if(it_hist == Hists.end() || it_hist->first != mctrue) {
+            // mctrue should be 9 or higher here...
+            const string& name = mctrue>=10 ?
+                                     physics::EtapOmegaG::ptreeBackgrounds[mctrue-10].Name
+                                 : "Other";
+            it_hist = Hists.emplace_hint(it_hist, mctrue, WrappedHist_t{
+                                             "Bkg_"+name,
+                                             HistFac,
+                                             MakeColorHistMod(GetColor(mctrue-9))
+                                         });
 
-           const auto mctrue = treeCommon.MCTrue();
-           auto it_hist = Hists.lower_bound(mctrue);
-           if(it_hist == Hists.end() || it_hist->first != mctrue) {
-               // mctrue should be 9 or higher here...
-               const string& name = mctrue>=10 ?
-                                        physics::EtapOmegaG::ptreeBackgrounds[mctrue-10].Name
-                                    : "Other";
-               it_hist = Hists.emplace_hint(it_hist, mctrue, WrappedHist_t{
-                                                SmartHistFactory("Bkg_"+name, H, name),
-                                                MakeColorHistMod(GetColor(mctrue-9))
-                                            });
+            AddToStack(it_hist->second);
+        }
 
-               AddToStack(it_hist->second);
-           }
-
-           it_hist->second.Hist.Fill(f);
-           // handle MC_all and MC_bkg
-           if(mctrue>0) {
-               Hists.at(3).Hist.Fill(f);
-               if(mctrue >= 9)
-                   Hists.at(4).Hist.Fill(f);
-           }
-
-           return true;
-       }
-       return false;
+        it_hist->second.Hist.Fill(f);
+        // handle MC_all and MC_bkg
+        if(mctrue>0) {
+            Hists.at(3).Hist.Fill(f);
+            if(mctrue >= 9)
+                Hists.at(4).Hist.Fill(f);
+        }
     }
 };
+
 
 template<typename Hist_t>
 using CutsIterator_t = typename Cuts_t<typename Hist_t::Fill_t>::const_iterator;
@@ -202,10 +219,8 @@ void BuildCutTree(CutTree_t<Hist_t> cuttree, CutsIterator_t<Hist_t> first, CutsI
     }
 }
 
-template<typename Hist_t>
-CutTree_t<Hist_t> MakeCutTree(SmartHistFactory histFac, const string& name) {
-    const auto& cuts = Hist_t::GetCuts();
-    using Fill_t = typename Hist_t::Fill_t;
+template<typename Hist_t, typename Fill_t = typename Hist_t::Fill_t>
+CutTree_t<Hist_t> MakeCutTree(SmartHistFactory histFac, const string& name, const Cuts_t<Fill_t>& cuts) {
     auto cuttree = Tree<Node_t<Hist_t>>::MakeNode(histFac, Cut_t<Fill_t>{name});
     BuildCutTree<Hist_t>(cuttree, cuts.begin(), cuts.end());
     return cuttree;
@@ -227,13 +242,15 @@ void FillCutTree(CutTree_t<Hist_t> cuttree, const Fill_t& f) {
 
 struct CommonHist_t {
     using Tree_t = physics::EtapOmegaG::TreeCommon;
-
-    TH1D* h_KinFitChi2;
     struct Fill_t {
         const Tree_t& Common;
         Fill_t(const Tree_t& common) : Common(common) {}
         double TaggW() const {
             return Common.TaggW;
+        }
+        // for MCTrue_Splitter wrapper
+        unsigned MCTrue() const {
+            return Common.MCTrue;
         }
     };
 
@@ -245,6 +262,8 @@ struct CommonHist_t {
             Tree(tree)
         {}
     };
+
+    TH1D* h_KinFitChi2;
 
     CommonHist_t(SmartHistFactory HistFac) {
         h_KinFitChi2 = HistFac.makeTH1D("KinFitChi2","#chi^{2}","",BinSettings(200,0,100),"h_KinFitChi2");
@@ -306,6 +325,7 @@ struct SigHist_t : CommonHist_t {
         h_TreeFitChi2->Fill(tree.TreeFitChi2, f.TaggW());
         h_Bachelor_E->Fill(tree.Bachelor_best_best, f.TaggW());
     }
+
     std::vector<TH1*> GetHists() const {
         auto hists = CommonHist_t::GetHists();
         hists.insert(hists.end(), {h_IM_gg_gg, h_TreeFitChi2, h_Bachelor_E});
@@ -354,7 +374,6 @@ struct SigHist_t : CommonHist_t {
 struct RefHist_t : CommonHist_t {
     using Tree_t = physics::EtapOmegaG::Ref_t::Tree_t;
     using Fill_t = CommonHist_t::SigRefFill_t<Tree_t>;
-
 
     TH1D* h_IM_2g;
 
@@ -436,11 +455,19 @@ int main(int argc, char** argv) {
                                                      true); // cd into masterFile upon creation
     }
 
+    using MCSigHist_t = MCTrue_Splitter<SigHist_t>;
+    using MCRefHist_t = MCTrue_Splitter<RefHist_t>;
 
     SmartHistFactory HistFac("EtapOmegaG");
 
-    auto cuttreeSig = MakeCutTree<SigHist_t>(HistFac, std_ext::replace_str(cmd_sigtree->getValue(),"/","_"));
-    auto cuttreeRef = MakeCutTree<RefHist_t>(HistFac, std_ext::replace_str(cmd_reftree->getValue(),"/","_"));
+    auto cuttreeSig = MakeCutTree<MCSigHist_t>(HistFac,
+                                               std_ext::replace_str(cmd_sigtree->getValue(),"/","_"),
+                                               SigHist_t::GetCuts()
+                                               );
+    auto cuttreeRef = MakeCutTree<MCRefHist_t>(HistFac,
+                                               std_ext::replace_str(cmd_reftree->getValue(),"/","_"),
+                                               RefHist_t::GetCuts()
+                                               );
 
     LOG(INFO) << "Tree entries=" << entries;
     auto max_entries = entries;
@@ -448,8 +475,6 @@ int main(int argc, char** argv) {
         max_entries = cmd_maxevents->getValue().back();
         LOG(INFO) << "Running until " << max_entries;
     }
-
-
 
     for(long long entry=0;entry<max_entries;entry++) {
         if(interrupt)
@@ -460,11 +485,11 @@ int main(int argc, char** argv) {
         // we handle the Ref/Sig cut here to save some reading work
         if(treeCommon.IsSignal) {
             treeSig.Tree->GetEntry(entry);
-            FillCutTree<SigHist_t>(cuttreeSig, {treeCommon, treeSig});
+            FillCutTree<MCSigHist_t>(cuttreeSig, {treeCommon, treeSig});
         }
         else {
             treeRef.Tree->GetEntry(entry);
-            FillCutTree<RefHist_t>(cuttreeRef, {treeCommon, treeRef});
+            FillCutTree<MCRefHist_t>(cuttreeRef, {treeCommon, treeRef});
         }
         if(entry % 100000 == 0)
             LOG(INFO) << "Processed " << 100.0*entry/entries << " %";
