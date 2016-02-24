@@ -68,7 +68,10 @@ struct WrapTTree {
         ~Branch_t() { delete Value; }
         Branch_t(const Branch_t&) = delete;
         Branch_t(Branch_t&&) = delete;
-        Branch_t& operator= (const Branch_t&) = delete;
+        Branch_t& operator= (const Branch_t& other) {
+            *Value = *(other.value);
+        }
+
         Branch_t& operator= (Branch_t&&) = delete;
 
         const std::string Name;
