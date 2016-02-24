@@ -150,25 +150,7 @@ public:
 
 
 class OmegaEtaG2 : public OmegaBase {
-
-protected:
-    void Analyse(const TEventData &data, const TEvent& event, manager_t&) override;
-
-
-    int identify(const TEvent& event);
-
-    using decaytree_t = ant::Tree<const ParticleTypeDatabase::Type&>;
-
-    const std::map<int, std::shared_ptr<decaytree_t>> reaction_channels;
-
-    TH1D* missed_channels = nullptr;
-    TH1D* found_channels  = nullptr;
-
-
-    //======== Tree ===============================================================
-
-    TTree*  tree = nullptr;
-
+public:
     struct OmegaTree_t : WrapTTree {
         OmegaTree_t();
 
@@ -214,6 +196,23 @@ protected:
 
     };
 
+protected:
+    void Analyse(const TEventData &data, const TEvent& event, manager_t&) override;
+
+
+    int identify(const TEvent& event);
+
+    using decaytree_t = ant::Tree<const ParticleTypeDatabase::Type&>;
+
+    const std::map<int, std::shared_ptr<decaytree_t>> reaction_channels;
+
+    TH1D* missed_channels = nullptr;
+    TH1D* found_channels  = nullptr;
+
+
+    //======== Tree ===============================================================
+
+    TTree*  tree = nullptr;
     OmegaTree_t t;
 
     static const std::vector<std::vector<std::size_t>> combs;
