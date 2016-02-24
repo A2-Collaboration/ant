@@ -283,55 +283,46 @@ void EtapOmegaG::ProcessEvent(const TEvent& event, manager_t&)
 }
 
 EtapOmegaG::Sig_t::Sig_t() :
-    All(),
-    No_Pi0(&ParticleTypeDatabase::Pi0),
-    No_Omega(&ParticleTypeDatabase::Omega),
-    No_EtaPrime(&ParticleTypeDatabase::EtaPrime)
+    All(Fit_t::Make()),
+    No_EtaPrime(Fit_t::Make(&ParticleTypeDatabase::EtaPrime)),
+    OmegaPi0()
 {
 }
 
 void EtapOmegaG::Sig_t::SetupTrees(HistogramFactory HistFac)
 {
     All.t.CreateBranches(HistFac.makeTTree("SigAll"));
-    No_Pi0.t.CreateBranches(HistFac.makeTTree("SigNoPi0"));
-    No_Omega.t.CreateBranches(HistFac.makeTTree("SigNoOmega"));
     No_EtaPrime.t.CreateBranches(HistFac.makeTTree("SigNoEtaPrime"));
+    OmegaPi0.t.CreateBranches(HistFac.makeTTree("SigOmegaPi0"));
 }
 
 void EtapOmegaG::Sig_t::Fill()
 {
     All.t.Tree->Fill();
-    No_Pi0.t.Tree->Fill();
-    No_Omega.t.Tree->Fill();
     No_EtaPrime.t.Tree->Fill();
+    OmegaPi0.t.Tree->Fill();
 }
 
 void EtapOmegaG::Sig_t::ResetBranches()
 {
     All.ResetBranches();
-    No_Pi0.ResetBranches();
-    No_Omega.ResetBranches();
     No_EtaPrime.ResetBranches();
+    OmegaPi0.ResetBranches();
 }
 
-void EtapOmegaG::Sig_t::Process(const Particles_t& particles, TParticleTree_t particletree)
+void EtapOmegaG::Sig_t::Process(const Particles_t& particles, TParticleTree_t ptree_sigref)
 {
-    All.Process(particles, particletree);
-    No_Pi0.Process(particles, particletree);
-    No_Omega.Process(particles, particletree);
-    No_EtaPrime.Process(particles, particletree);
+    All.Process(particles, ptree_sigref);
+    No_EtaPrime.Process(particles, ptree_sigref);
+    OmegaPi0.Process(particles, ptree_sigref);
 }
 
-EtapOmegaG::Sig_t::Fit_t::Fit_t(const ParticleTypeDatabase::Type* typeptr) :
-    treefitter{MakeFitter(typeptr)},
+EtapOmegaG::Sig_t::Fit_t::Fit_t(utils::TreeFitter fitter) :
+    treefitter(move(fitter)),
     fitted_EtaPrime(treefitter.GetTreeNode(ParticleTypeDatabase::EtaPrime)),
     fitted_Omega(treefitter.GetTreeNode(ParticleTypeDatabase::Omega)),
     fitted_Pi0(treefitter.GetTreeNode(ParticleTypeDatabase::Pi0))
 {
-    t.ggg().resize(4);
-    t.gg_gg1().resize(3);
-    t.gg_gg2().resize(3);
-
     const auto setup = ant::ExpConfig::Setup::GetLastFound();
     if(!setup)
         throw runtime_error("EtapOmegaG needs a setup");
@@ -347,13 +338,14 @@ EtapOmegaG::Sig_t::Fit_t::Fit_t(const ParticleTypeDatabase::Type* typeptr) :
         return photons;
     };
 
-    fitted_g_EtaPrime = find_photons(fitted_EtaPrime).at(0);
+    if(fitted_EtaPrime)
+        fitted_g_EtaPrime = find_photons(fitted_EtaPrime).at(0);
     fitted_g_Omega = find_photons(fitted_Omega).at(0);
     fitted_g1_Pi0 = find_photons(fitted_Pi0).at(0);
     fitted_g2_Pi0 = find_photons(fitted_Pi0).at(1);
 }
 
-utils::TreeFitter EtapOmegaG::Sig_t::Fit_t::MakeFitter(const ParticleTypeDatabase::Type* typeptr)
+utils::TreeFitter EtapOmegaG::Sig_t::Fit_t::Make(const ParticleTypeDatabase::Type* typeptr)
 {
     if(typeptr == nullptr)
         return {"sig_treefitter_All", utils::ParticleTools::GetProducedParticle(EtapOmegaG::ptreeSignal)};
@@ -395,33 +387,15 @@ void EtapOmegaG::Sig_t::Fit_t::Process(const EtapOmegaG::Particles_t& particles,
 
     assert(particles.Photons.size() == 4);
 
-    //  ggg combinatorics
-    auto it_ggg = t.ggg().begin();
-    for( auto comb = utils::makeCombination(particles.Photons,3); !comb.Done(); ++comb ) {
-        *it_ggg = (*comb.at(0) + *comb.at(1) + *comb.at(2)).M();
-        ++it_ggg;
-    }
-
-    // gg/gg "Goldhaber" combinatorics
-    const auto goldhaber_comb = vector<vector<unsigned>>({{0,1,2,3},{0,2,1,3},{0,3,1,2}});
-    auto it_gg_gg1 = t.gg_gg1().begin();
-    auto it_gg_gg2 = t.gg_gg2().begin();
-    for(auto i : goldhaber_comb) {
-        const auto& p = particles.Photons;
-        *it_gg_gg1 = (*p[i[0]] + *p[i[1]]).M();
-        *it_gg_gg2 = (*p[i[2]] + *p[i[3]]).M();
-        ++it_gg_gg1;
-        ++it_gg_gg2;
-    }
-
+    DoPhotonCombinatorics(particles.Photons);
+    const TLorentzVector& EtaPrime_best = particles.PhotonSum; // does not change with permutation
+    t.IM_EtaPrime_best = EtaPrime_best.M();
 
     // g_Omega to check against MCTrue
     TParticlePtr g_Omega_best;
     // the EtaPrime bachelor photon is most important to us...
     TParticlePtr g_EtaPrime_best;
     TLorentzVector g_EtaPrime_fitted;
-    const TLorentzVector& EtaPrime_best = particles.PhotonSum; // does not change with permutation
-    t.IM_EtaPrime_best = EtaPrime_best.M();
     TLorentzVector EtaPrime_fitted;
 
     treefitter.SetLeaves(particles.Photons);
@@ -470,43 +444,162 @@ void EtapOmegaG::Sig_t::Fit_t::Process(const EtapOmegaG::Particles_t& particles,
         t.Bachelor_fit_best  = do_boost(g_EtaPrime_fitted, EtaPrime_best).E();
         t.Bachelor_fit_fit   = do_boost(g_EtaPrime_fitted, EtaPrime_fitted).E();
 
-
         // check MC matching
-        if(ptree_sigref) {
+        CheckMCPhotonAssignment(particles.Photons, ptree_sigref, g_Omega_best, g_EtaPrime_best);
+    }
+}
 
-            auto true_photons = utils::ParticleTools::FindParticles(ParticleTypeDatabase::Photon, ptree_sigref);
-            assert(true_photons.size() == 4);
-            auto match_bycandidate = [] (const TParticlePtr& mctrue, const TParticlePtr& recon) {
-                return mctrue->Angle(*recon->Candidate); // TCandidate converts into TVector3
-            };
-            auto matched = utils::match1to1(true_photons, particles.Photons,
-                                            match_bycandidate,IntervalD(0.0, 15.0*TMath::DegToRad()));
-            if(matched.size() == 4) {
-                // do that tedious photon determination (rewriting the matcher somehow would be nice....)
-                auto select_daughter = [] (TParticleTree_t tree, const ParticleTypeDatabase::Type& type) {
-                    auto d = tree->Daughters().front()->Get()->Type() == type ?
-                                 tree->Daughters().front() : tree->Daughters().back();
-                    assert(d->Get()->Type() == type);
-                    return d;
-                };
+void EtapOmegaG::Sig_t::Fit_t::DoPhotonCombinatorics(const TParticleList& photons)
+{
+    //  ggg combinatorics
+    auto it_ggg = t.ggg().begin();
+    for( auto comb = utils::makeCombination(photons,3); !comb.Done(); ++comb ) {
+        *it_ggg = (*comb.at(0) + *comb.at(1) + *comb.at(2)).M();
+        ++it_ggg;
+    }
 
-                auto etap = select_daughter(ptree_sigref, ParticleTypeDatabase::EtaPrime);
-                auto g_Etap = select_daughter(etap, ParticleTypeDatabase::Photon);
-                auto omega = select_daughter(etap, ParticleTypeDatabase::Omega);
-                auto g_Omega = select_daughter(omega, ParticleTypeDatabase::Photon);
+    // gg/gg "Goldhaber" combinatorics
+    const auto goldhaber_comb = vector<vector<unsigned>>({{0,1,2,3},{0,2,1,3},{0,3,1,2}});
+    auto it_gg_gg1 = t.gg_gg1().begin();
+    auto it_gg_gg2 = t.gg_gg2().begin();
+    for(auto i : goldhaber_comb) {
+        const auto& p = photons;
+        *it_gg_gg1 = (*p[i[0]] + *p[i[1]]).M();
+        *it_gg_gg2 = (*p[i[2]] + *p[i[3]]).M();
+        ++it_gg_gg1;
+        ++it_gg_gg2;
+    }
+}
 
-                auto g_Etap_matched = utils::FindMatched(matched, g_Etap->Get());
-                auto g_Omega_matched = utils::FindMatched(matched, g_Omega->Get());
-                if(g_Etap_matched == g_EtaPrime_best)
-                    t.MCTrueMatch += 1;
-                if(g_Omega_matched == g_Omega_best)
-                    t.MCTrueMatch += 2;
+void EtapOmegaG::Sig_t::Fit_t::CheckMCPhotonAssignment(const TParticleList& photons,
+                                                       TParticleTree_t ptree_sigref,
+                                                       TParticlePtr g_Omega_best,
+                                                       TParticlePtr g_EtaPrime_best)
+{
+    if(!ptree_sigref)
+        return;
+    auto true_photons = utils::ParticleTools::FindParticles(ParticleTypeDatabase::Photon, ptree_sigref);
+    assert(true_photons.size() == 4);
+    auto match_bycandidate = [] (const TParticlePtr& mctrue, const TParticlePtr& recon) {
+        return mctrue->Angle(*recon->Candidate); // TCandidate converts into TVector3
+    };
+    auto matched = utils::match1to1(true_photons, photons,
+                                    match_bycandidate,IntervalD(0.0, 15.0*TMath::DegToRad()));
+    if(matched.size() == 4) {
+        // do that tedious photon determination (rewriting the matcher somehow would be nice....)
+        auto select_daughter = [] (TParticleTree_t tree, const ParticleTypeDatabase::Type& type) {
+            auto d = tree->Daughters().front()->Get()->Type() == type ?
+                         tree->Daughters().front() : tree->Daughters().back();
+            assert(d->Get()->Type() == type);
+            return d;
+        };
 
-            }
+        auto etap = select_daughter(ptree_sigref, ParticleTypeDatabase::EtaPrime);
+        auto g_Etap = select_daughter(etap, ParticleTypeDatabase::Photon);
+        auto omega = select_daughter(etap, ParticleTypeDatabase::Omega);
+        auto g_Omega = select_daughter(omega, ParticleTypeDatabase::Photon);
+
+        auto g_Etap_matched = utils::FindMatched(matched, g_Etap->Get());
+        auto g_Omega_matched = utils::FindMatched(matched, g_Omega->Get());
+        if(g_Etap_matched == g_EtaPrime_best)
+            t.MCTrueMatch += 1;
+        if(g_Omega_matched == g_Omega_best)
+            t.MCTrueMatch += 2;
+    }
+}
+
+EtapOmegaG::Sig_t::FitOmegaPi0_t::FitOmegaPi0_t() :
+    Fit_t(Make())
+{
+
+}
+
+utils::TreeFitter EtapOmegaG::Sig_t::FitOmegaPi0_t::Make()
+{
+    auto EtaPrime = utils::ParticleTools::GetProducedParticle(EtapOmegaG::ptreeSignal);
+    auto select_daughter = [] (ParticleTypeTree tree, const ParticleTypeDatabase::Type& type) {
+        auto d = tree->Daughters().front()->Get() == type ?
+                     tree->Daughters().front() : tree->Daughters().back();
+        assert(d->Get() == type);
+        return d;
+    };
+
+    auto Omega = select_daughter(EtaPrime, ParticleTypeDatabase::Omega);
+    return {
+        "sig_treefitter_OmegaPi0",
+        Omega
+    };
+}
+
+void EtapOmegaG::Sig_t::FitOmegaPi0_t::Process(const EtapOmegaG::Particles_t& particles,
+                                               TParticleTree_t ptree_sigref)
+{
+    ResetBranches();
+
+    assert(particles.Photons.size() == 4);
+
+    DoPhotonCombinatorics(particles.Photons);
+    const TLorentzVector& EtaPrime_best = particles.PhotonSum; // does not change with permutation
+    t.IM_EtaPrime_best = EtaPrime_best.M();
+
+    // g_Omega to check against MCTrue
+    TParticlePtr g_Omega_best;
+    // the EtaPrime bachelor photon is most important to us...
+    TParticlePtr g_EtaPrime_best;
+
+    for( auto comb = utils::makeCombination(particles.Photons, 3); !comb.Done(); ++comb ) {
+
+        assert(std::distance(comb.begin_not(), comb.end_not()) == 1);
+
+        treefitter.SetLeaves({comb.begin(), comb.end()});
+        APLCON::Result_t r;
+
+        while(treefitter.NextFit(r)) {
+            if(r.Status != APLCON::Result_Status_t::Success)
+                continue;
+            if(isfinite(t.TreeFitChi2) && r.ChiSquare>t.TreeFitChi2)
+                continue;
+
+            // found fit with better chi2
+            t.TreeFitChi2 = r.ChiSquare;
+            t.TreeFitIterations = r.NIterations;
+
+            // IM fitted expected to be delta peaks since they were fitted...
+            t.IM_Omega_fitted = fitted_Omega->Get().Particle.M();
+            t.IM_Pi0_fitted = fitted_Pi0->Get().Particle.M();
+
+            // have a look at the assigned gammas to Pi0/Omega
+            const TLorentzVector& Pi0_best = *fitted_g1_Pi0->Get().SetParticle + *fitted_g2_Pi0->Get().SetParticle;
+            t.IM_Pi0_best = Pi0_best.M();
+
+            g_Omega_best = fitted_g_Omega->Get().SetParticle;
+            const TLorentzVector& Omega_best = *g_Omega_best + Pi0_best;
+            t.IM_Omega_best = Omega_best.M();
+
+            // have a look at the EtaPrime bachelor photon
+            // the element not in the combinator is the Bachelor photon
+            g_EtaPrime_best = *comb.begin_not();
         }
+
     }
 
 
+
+    // there was at least one successful fit
+    if(isfinite(t.TreeFitChi2)) {
+
+        // do that Bachelor photon boosting
+        auto do_boost = [] (const TLorentzVector& bachelor, const TLorentzVector& etaprime) {
+            TLorentzVector boosted(bachelor);
+            boosted.Boost(-etaprime.BoostVector());
+            return boosted;
+        };
+
+        t.Bachelor_best_best = do_boost(*g_EtaPrime_best, EtaPrime_best).E();
+
+        // check MC matching
+        CheckMCPhotonAssignment(particles.Photons, ptree_sigref, g_Omega_best, g_EtaPrime_best);
+    }
 }
 
 void EtapOmegaG::Ref_t::ResetBranches()

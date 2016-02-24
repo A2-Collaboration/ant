@@ -66,9 +66,9 @@ struct EtapOmegaG : Physics {
 
         struct Tree_t : WrapTTree {
 
-            ADD_BRANCH_T(std::vector<double>, ggg)
-            ADD_BRANCH_T(std::vector<double>, gg_gg1)
-            ADD_BRANCH_T(std::vector<double>, gg_gg2)
+            ADD_BRANCH_T(std::vector<double>, ggg, 4)
+            ADD_BRANCH_T(std::vector<double>, gg_gg1, 3)
+            ADD_BRANCH_T(std::vector<double>, gg_gg2, 3)
 
             ADD_BRANCH_T(double,   TreeFitChi2)
             ADD_BRANCH_T(unsigned, TreeFitIterations)
@@ -93,9 +93,9 @@ struct EtapOmegaG : Physics {
         // we have multiple ideas for treefitting...
         struct Fit_t {
 
-            Fit_t(const ParticleTypeDatabase::Type* typeptr = nullptr);
+            Fit_t(utils::TreeFitter fitter);
 
-            static utils::TreeFitter MakeFitter(const ParticleTypeDatabase::Type* typeptr);
+            static utils::TreeFitter Make(const ParticleTypeDatabase::Type* typeptr = nullptr);
 
             utils::TreeFitter treefitter;
 
@@ -111,21 +111,30 @@ struct EtapOmegaG : Physics {
             Tree_t t;
 
             void ResetBranches();
-            void Process(const Particles_t& particles, TParticleTree_t particletree);
+            void Process(const Particles_t& particles, TParticleTree_t ptree_sigref);
+            void DoPhotonCombinatorics(const TParticleList& photons);
+            void CheckMCPhotonAssignment(const TParticleList& photons,
+                                         TParticleTree_t ptree_sigref,
+                                         TParticlePtr g_Omega_best,
+                                         TParticlePtr g_EtaPrime_best);
+        };
 
+        struct FitOmegaPi0_t : Fit_t {
+            FitOmegaPi0_t();
+            static utils::TreeFitter Make();
+            void Process(const Particles_t& particles, TParticleTree_t ptree_sigref);
         };
 
         Sig_t();
 
         Fit_t All;
-        Fit_t No_Pi0;
-        Fit_t No_Omega;
         Fit_t No_EtaPrime;
+        FitOmegaPi0_t OmegaPi0;
 
         void SetupTrees(HistogramFactory HistFac);
         void Fill();
         void ResetBranches();
-        void Process(const Particles_t& particles, TParticleTree_t particletree);
+        void Process(const Particles_t& particles, TParticleTree_t ptree_sigref);
 
 
     };
