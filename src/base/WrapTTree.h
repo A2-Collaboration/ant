@@ -59,6 +59,13 @@ struct WrapTTree {
      */
     bool Matches(TTree* tree, bool exact = true) const;
 
+    /**
+     * @brief operator bool returns true if Tree is not null
+     */
+    explicit operator bool() const {
+        return Tree != nullptr;
+    }
+
     template<typename T>
     struct Branch_t {
         Branch_t(WrapTTree* wraptree, const std::string& name) :
