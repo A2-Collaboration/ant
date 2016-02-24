@@ -1,0 +1,242 @@
+#include "base/Logger.h"
+
+#include "analysis/plot/CutTree.h"
+#include "analysis/physics/omega/omega.h"
+
+#include "base/CmdLine.h"
+#include "base/interval.h"
+#include "base/printable.h"
+#include "base/WrapTFile.h"
+#include "base/std_ext/string.h"
+#include "base/std_ext/system.h"
+
+#include "TSystem.h"
+#include "TRint.h"
+
+using namespace ant;
+using namespace ant::analysis;
+using namespace ant::analysis::plot;
+using namespace std;
+
+volatile bool interrupt = false;
+
+class MyTInterruptHandler : public TSignalHandler {
+public:
+    MyTInterruptHandler() : TSignalHandler(kSigInterrupt, kFALSE) { }
+
+    Bool_t  Notify() {
+        if (fDelay) {
+            fDelay++;
+            return kTRUE;
+        }
+        interrupt = true;
+        cout << " >>> Interrupted! " << endl;
+        return kTRUE;
+    }
+};
+
+//template<typename Hist_t>
+//struct MCTrue_Splitter : cuttree::StackedHists_t<Hist_t> {
+
+//    // Hist_t should have that type defined
+//    using Fill_t = typename Hist_t::Fill_t;
+
+//    MCTrue_Splitter(const HistogramFactory& histFac) : cuttree::StackedHists_t<Hist_t>(histFac) {
+//        using cuttree::HistMod_t;
+//        this->GetHist(0, "Data", HistMod_t::MakeColor(kBlack));
+//        this->GetHist(1, "Sig",  HistMod_t::MakeColor(kRed));
+//        this->GetHist(2, "Ref",  HistMod_t::MakeColor(kRed));
+//        // mctrue is never >=3 (and <9) in tree, use this to sum up all MC and all bkg MC
+//        // see also Fill()
+//        this->GetHist(3, "Sum_MC", HistMod_t::MakeColor(kBlack));
+//        this->GetHist(4, "Bkg_MC", HistMod_t::MakeColor(kGray));
+//    }
+
+//    void Fill(const Fill_t& f) {
+
+//        const unsigned mctrue = f.Common.MCTrue;
+
+//        auto get_bkg_name = [] (unsigned mctrue) {
+//            const string& name = mctrue>=10 ?
+//                                     physics::OmegaEtaG2::ptreeBackgrounds[mctrue-10].Name
+//                                 : "Other";
+//            return "Bkg_"+name;
+//        };
+
+//        using cuttree::HistMod_t;
+//        const Hist_t& hist = mctrue<9 ? this->GetHist(mctrue) :
+//                                        this->GetHist(mctrue,
+//                                                      get_bkg_name(mctrue),
+//                                                      HistMod_t::MakeColor(HistMod_t::GetColor(mctrue-9))
+//                                                      );
+
+//        hist.Fill(f);
+
+//        // handle MC_all and MC_bkg
+//        if(mctrue>0) {
+//            this->GetHist(3).Fill(f);
+//            if(mctrue >= 9)
+//                this->GetHist(4).Fill(f);
+//        }
+//    }
+//};
+
+// define the structs containing the histograms
+// and the cuts. for simple branch variables, that could
+// be combined...
+
+struct OmegaHist_t {
+
+    using Tree_t = physics::OmegaEtaG2::OmegaTree_t;
+
+    struct Fill_t {
+        const Tree_t& Tree;
+        Fill_t(const Tree_t& t) : Tree(t) {}
+        double TaggW() const {
+            return Tree.TaggW;
+        }
+    };
+
+    TH1D* h_KinFitChi2;
+
+    OmegaHist_t(HistogramFactory HistFac) {
+        h_KinFitChi2 = HistFac.makeTH1D("KinFitChi2", "#chi^{2}", "", BinSettings(200,0,100), "h_KinFitChi2");
+    }
+
+    void Fill(const Fill_t& f) const {
+        h_KinFitChi2->Fill(f.Tree.KinFitChi2, f.TaggW());
+    }
+
+    std::vector<TH1*> GetHists() const {
+        return {h_KinFitChi2};
+    }
+
+    // Sig and Ref channel share some cuts...
+    static cuttree::Cuts_t<Fill_t> GetCuts() {
+
+        using cuttree::MultiCut_t;
+
+        cuttree::Cuts_t<Fill_t> cuts;
+
+        cuts.emplace_back(MultiCut_t<Fill_t>{
+                                 {"KinFitChi2<10", [] (const Fill_t& f) { return f.Tree.KinFitChi2< 10; } },
+                                 {"KinFitChi2<5",  [] (const Fill_t& f) { return f.Tree.KinFitChi2<  5; } },
+                             });
+        return cuts;
+    }
+
+};
+
+
+
+int main(int argc, char** argv) {
+    SetupLogger();
+
+    TCLAP::CmdLine cmd("plot", ' ', "0.1");
+    auto cmd_input = cmd.add<TCLAP::ValueArg<string>>("i","input","Input file",true,"","input");
+    auto cmd_batchmode = cmd.add<TCLAP::MultiSwitchArg>("b","batch","Run in batch mode (no ROOT shell afterwards)",false);
+    auto cmd_maxevents = cmd.add<TCLAP::MultiArg<int>>("m","maxevents","Process only max events",false,"maxevents");
+    auto cmd_output = cmd.add<TCLAP::ValueArg<string>>("o","output","Output file",false,"","filename");
+
+    auto cmd_tree = cmd.add<TCLAP::ValueArg<string>>("","tree","Tree name",false,"Fitted/SigAll","treename");
+
+    cmd.parse(argc, argv);
+
+    int fake_argc=1;
+    char* fake_argv[2];
+    fake_argv[0] = argv[0];
+    if(cmd_batchmode->isSet()) {
+        fake_argv[fake_argc++] = strdup("-b");
+    }
+    TRint app("EtapOmegaG_plot",&fake_argc,fake_argv,nullptr,0,true);
+    auto oldsig = app.GetSignalHandler();
+    oldsig->Remove();
+    auto mysig = new MyTInterruptHandler();
+    mysig->Add();
+    gSystem->AddSignalHandler(mysig);
+
+    WrapTFileInput input(cmd_input->getValue());
+
+    auto link_branches = [&input] (const string treename, WrapTTree* wraptree, long long expected_entries) {
+        TTree* t;
+        if(!input.GetObject(treename,t))
+            throw runtime_error("Cannot find tree "+treename+" in input file");
+        if(expected_entries>=0 && t->GetEntries() != expected_entries)
+            throw runtime_error("Tree "+treename+" does not have entries=="+to_string(expected_entries));
+        if(wraptree->Matches(t)) {
+            wraptree->LinkBranches(t);
+            return true;
+        }
+        return false;
+    };
+
+
+    OmegaHist_t::Tree_t tree;
+
+    if(!link_branches("OmegaEtaG2/tree", addressof(tree), -1)) {
+        LOG(ERROR) << "Cannot link branches of tree";
+        return 1;
+    }
+
+    const auto entries = tree.Tree->GetEntries();
+
+     unique_ptr<WrapTFileOutput> masterFile;
+    if(cmd_output->isSet()) {
+        masterFile = std_ext::make_unique<WrapTFileOutput>(cmd_output->getValue(),
+                                                    WrapTFileOutput::mode_t::recreate,
+                                                     true); // cd into masterFile upon creation
+    }
+
+
+    HistogramFactory HistFac("OmegaEtaG2");
+
+    const auto& sanitized_treename = std_ext::replace_str(cmd_tree->getValue(),"/","_");
+
+    auto cuttree = cuttree::Make<OmegaHist_t>(HistFac,
+                                              sanitized_treename,
+                                              OmegaHist_t::GetCuts()
+                                              );
+
+    LOG(INFO) << "Tree entries=" << entries;
+
+    auto max_entries = entries;
+    if(cmd_maxevents->isSet() && cmd_maxevents->getValue().back()<entries) {
+        max_entries = cmd_maxevents->getValue().back();
+        LOG(INFO) << "Running until " << max_entries;
+    }
+
+    for(long long entry=0;entry<max_entries;entry++) {
+        if(interrupt)
+            break;
+
+        tree.Tree->GetEntry(entry);
+        cuttree::Fill<OmegaHist_t>(cuttree, {tree});
+
+        if(entry % 100000 == 0)
+            LOG(INFO) << "Processed " << 100.0*entry/entries << " %";
+    }
+
+    if(!cmd_batchmode->isSet()) {
+        if(!std_ext::system::isInteractive()) {
+            LOG(INFO) << "No TTY attached. Not starting ROOT shell.";
+        }
+        else {
+
+            mysig->Remove();
+            oldsig->Add();
+            gSystem->AddSignalHandler(oldsig);
+            delete mysig;
+
+            if(masterFile)
+                LOG(INFO) << "Stopped running, but close ROOT properly to write data to disk.";
+
+            app.Run(kTRUE); // really important to return...
+            if(masterFile)
+                LOG(INFO) << "Writing output file...";
+            masterFile = nullptr;   // and to destroy the master WrapTFile before TRint is destroyed
+        }
+    }
+
+
+    return 0;
+}

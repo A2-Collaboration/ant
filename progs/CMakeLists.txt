@@ -26,6 +26,7 @@ add_ant_executable(Ant-treeTool)
 option(OmegaTools "Build Omega Tools" OFF)
 
 if(OmegaTools)
+    add_ant_executable(OmegaEtaG2_plot)
 endif()
 
 option(SimpleTools "Simple Tools" OFF)
