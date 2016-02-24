@@ -564,28 +564,14 @@ double IM(const TParticlePtr& p1, const TParticlePtr& p2) {
     return (TLorentzVector(*p1)+TLorentzVector(*p2)).M();
 }
 
+double getTime(const TParticlePtr& p) {
+    return p->Candidate != nullptr ? p->Candidate->Time : std_ext::NaN;
+}
 
-void OmegaEtaG2::Analyse(const TEventData &data, const TEvent& event, manager_t& manager)
+void OmegaEtaG2::Analyse(const TEventData &data, const TEvent& event, manager_t&)
 {
 
     const auto& particletree = event.MCTrue->ParticleTree;
-
-    if(particletree) {
-
-        if(utils::ParticleTools::FindParticle(ParticleTypeDatabase::Omega, particletree, 1)) {
-
-            h_TotalEvents->Fill("#omega", 1);
-
-            if(particletree->IsEqual(signal_tree, utils::ParticleTools::MatchByParticleName)) {
-                h_TotalEvents->Fill("Signal",1);
-            }
-            else if(particletree->IsEqual(reference_tree, utils::ParticleTools::MatchByParticleName)) {
-                h_TotalEvents->Fill("Reference",1);
-            }
-        }
-
-
-    }
 
     steps->Fill("0 Events seen", 1);
 
@@ -604,10 +590,6 @@ void OmegaEtaG2::Analyse(const TEventData &data, const TEvent& event, manager_t&
 
     steps->Fill("2 nCands", 1);
 
-    if(just_preselect) {
-        manager.SaveEvent();
-        return;
-    }
 
     TParticleList iphotons;
     TParticleList iprotons;
@@ -642,75 +624,76 @@ void OmegaEtaG2::Analyse(const TEventData &data, const TEvent& event, manager_t&
 
 
     //const auto& mctrue_photons = event.MCTrue().Particles().Get(ParticleTypeDatabase::Photon);
-    branches.b_SigBgFlag = identify(event);
+    t.Channel = identify(event);
 
-    branches.b_p = analysis::utils::ParticleVars(*proton);
-    branches.b_pTime       = data_proton ? proton->Candidate->Time : numeric_limits<double>::quiet_NaN();
+    t.p      = *proton;
+    t.p_Time = getTime(proton);
 
-    branches.b_p_PSA_Angle = numeric_limits<double>::quiet_NaN();
-    branches.b_p_PSA_R     = numeric_limits<double>::quiet_NaN();
-    branches.b_p_detector  = 0;
+    t.p_PSA_Angle  = std_ext::NaN;
+    t.p_PSA_Radius = std_ext::NaN;
+    t.p_detector   = 0;
 
     if(proton->Candidate) {
 
         if(proton->Candidate->Detector & Detector_t::Type_t::TAPS) {
-            branches.b_p_detector = 2;
+            t.p_detector = 2;
             const auto& cluster = proton->Candidate->FindCaloCluster();
             if(cluster) {
-                branches.b_p_PSA_Angle = std_ext::radian_to_degree(cluster->GetPSAAngle());
-                branches.b_p_PSA_R     = cluster->GetPSARadius();
+                t.p_PSA_Angle  = radian_to_degree(cluster->GetPSAAngle());
+                t.p_PSA_Radius = cluster->GetPSARadius();
             }
         } else if(proton->Candidate->Detector & Detector_t::Type_t::CB) {
-            branches.b_p_detector = 1;
+            t.p_detector = 1;
         }
 
     }
 
 
     const TParticle ggg(ParticleTypeDatabase::Omega, LVSum(photons.begin(), photons.end()));
-    branches.b_gggTime  = TimeAvg(photons.begin(), photons.end());
-    branches.b_ggg      = analysis::utils::ParticleVars(ggg);
+    t.ggg = ggg;
 
+    t.copl_angle = fabs(TVector2::Phi_mpi_pi(proton->Phi() - ggg.Phi() - M_PI));
 
-    branches.b_copl_angle = fabs(TVector2::Phi_mpi_pi(proton->Phi() - ggg.Phi() - M_PI));
-
-    if(branches.b_copl_angle > cut_Copl)
+    if(t.copl_angle > cut_Copl)
         return;
 
     steps->Fill("4 Coplanarity", 1);
 
-    branches.b_g1 = analysis::utils::ParticleVars(*photons.at(0));
-    branches.b_g2 = analysis::utils::ParticleVars(*photons.at(1));
-    branches.b_g3 = analysis::utils::ParticleVars(*photons.at(2));
+    t.photons().at(0) = *photons.at(0);
+    t.photons().at(1) = *photons.at(1);
+    t.photons().at(2) = *photons.at(2);
 
     const TVector3 gggBoost = -ggg.BoostVector();
 
-    branches.b_CBAvgTime = event.Reconstructed->Trigger.CBTiming;
-    if(!isfinite(branches.b_CBAvgTime))
+    t.CBAvgTime = event.Reconstructed->Trigger.CBTiming;
+    if(!isfinite(t.CBAvgTime))
         return;
 
-    for(const TTaggerHit& t : data_tagger ? data.TaggerHits : event.MCTrue->TaggerHits) {
+    steps->Fill("5 valid CB Avg Time", 1);
 
-        promptrandom.SetTaggerHit(t.Time - branches.b_CBAvgTime);
+    if(data.TaggerHits.size() > 0)
+        steps->Fill("6 has TaggHits", 1);
+
+    for(const TTaggerHit& TagH : data.TaggerHits) {
+
+        promptrandom.SetTaggerHit(TagH.Time - t.CBAvgTime);
 
         if(promptrandom.State() == PromptRandom::Case::Outside)
             continue;
 
-        branches.b_TagW    = promptrandom.FillWeight();
-        branches.b_TagE    = t.PhotonEnergy;
-        branches.b_TagCh   = unsigned(t.Channel);
-        branches.b_TagTime = t.Time;
+        t.TaggW  = promptrandom.FillWeight();
+        t.TaggE  = TagH.PhotonEnergy;
+        t.TaggCh = TagH.Channel;
+        t.TaggT  = TagH.Time;
 
-        const TLorentzVector beam_target = t.GetPhotonBeam() + TLorentzVector(0, 0, 0, ParticleTypeDatabase::Proton.Mass());
+        const TLorentzVector beam_target = TagH.GetPhotonBeam() + TLorentzVector(0, 0, 0, ParticleTypeDatabase::Proton.Mass()); // make global
         const TParticle missing(ParticleTypeDatabase::Proton, beam_target - ggg);
 
-        branches.b_mmvector = analysis::utils::ParticleVars(missing);
+        t.mm = missing;
 
-        branches.b_p_mm_angle = radian_to_degree(missing.Angle(proton->Vect()));
+        t.p_mm_angle = radian_to_degree(missing.Angle(proton->Vect()));
 
-        int combindex = 0;
-
-        const vector<vector<size_t>> combs = {{0,1,2},{0,2,1},{1,2,0}};
+        size_t combindex = 0;
 
         for(const auto& comb : combs) {
             const auto& g1 = photons.at(comb[0]);
@@ -719,63 +702,39 @@ void OmegaEtaG2::Analyse(const TEventData &data, const TEvent& event, manager_t&
 
             const TLorentzVector gg = *g1 + *g2;
 
-            branches.b_ggIM[combindex] = gg.M();
+            t.ggIM().at(combindex) = gg.M();
 
             const TLorentzVector g3_boosted = boost(*g3, gggBoost);
 
-            branches.b_BachelorE[combindex] = g3_boosted.E();
+            t.BachelorE().at(combindex) = g3_boosted.E();
 
             ++combindex;
 
         }
 
-        fitter.SetEgammaBeam(t.PhotonEnergy);
+        fitter.SetEgammaBeam(TagH.PhotonEnergy);
         fitter.SetProton(proton);
         fitter.SetPhotons(photons);
 
         auto fitres = fitter.DoFit();
 
-        if(fitres.Status == APLCON::Result_Status_t::Success) {
+        if(fitres.Status != APLCON::Result_Status_t::Success)
+            continue;
 
-            for(const auto& it_map : fitres.Variables) {
-                const string& varname = it_map.first;
-                const APLCON::Result_Variable_t& var = it_map.second;
-                auto it_pull = pulls.find(varname);
-                TH1D* h_pull;
-                if(it_pull == pulls.end()) {
-                    // not found so far, create the histogram on-the-fly
-                    stringstream title;
-                    title << "Pull " << var.PristineName << " " << component.at(var.Index);
-                    h_pull = HistFac.makeTH1D(title.str(),
-                                              "Pull", "#",
-                                              pull_bins,
-                                              "pull_"+varname);
-                    pulls[varname] = h_pull;
-                }
-                else {
-                    h_pull = it_pull->second;
-                }
-                h_pull->Fill(var.Pull);
-            }
-        }
+        t.KinFitChi2 = fitres.ChiSquare / fitres.NDoF;
+        t.KinFitIterations = unsigned(fitres.NIterations);
 
-        branches.b_fitok = (fitres.Status == APLCON::Result_Status_t::Success);
-
-        branches.kinfit_chi2 = fitres.ChiSquare / fitres.NDoF;
-        branches.b_fitIterations = unsigned(fitres.NIterations);
-
-        branches.b_fitted_p = analysis::utils::ParticleVars(*fitter.GetFittedProton());
+        t.p_fitted = *fitter.GetFittedProton();
 
 
         TParticleList rec_photons(3);
         TParticlePtr  rec_proton = nullptr;
         TParticleList true_particles(4);
 
-        branches.b_ggIM_real    = std::numeric_limits<double>::quiet_NaN();
-        branches.b_ggIM_comb[0] = std::numeric_limits<double>::quiet_NaN();
-        branches.b_ggIM_comb[1] = std::numeric_limits<double>::quiet_NaN();
+        t.ggIM_real = NaN;
+        t.ggIM_comb = {NaN, NaN};
 
-        if(particletree && (branches.b_SigBgFlag==0 || branches.b_SigBgFlag ==1)) {
+        if(particletree && (t.Channel == 1 || t.Channel == 2)) {
             particletree->Map_level([&true_particles] (const TParticlePtr& p, const size_t& level) {
 
                 if(level == 1) {
@@ -808,7 +767,7 @@ void OmegaEtaG2::Analyse(const TEventData &data, const TEvent& event, manager_t&
             FASSERT(true_particles[2]!=nullptr);
             FASSERT(true_particles[3]!=nullptr);
 
-            branches.b_true_p = analysis::utils::ParticleVars(*true_particles[3]);
+            t.p_true = *true_particles[3];
 
             const auto matched  = utils::match1to1(true_particles, data.Particles.GetAll(), [] (const TParticlePtr& p1, const TParticlePtr& p2) {
                 return p1->Angle(p2->Vect());
@@ -827,20 +786,15 @@ void OmegaEtaG2::Analyse(const TEventData &data, const TEvent& event, manager_t&
                 FASSERT(rec_proton    !=nullptr);
 
 
-                if(rec_proton->Type() == ParticleTypeDatabase::Proton) {
-                    branches.b_found_proton = 1;
-                } else {
-                    branches.b_found_proton = 0;
-                }
+                t.p_matched = (rec_proton->Type() == ParticleTypeDatabase::Proton);
 
-                branches.b_ggIM_real    = IM(rec_photons[1], rec_photons[2]);
-                branches.b_ggIM_comb[0] = IM(rec_photons[0], rec_photons[1]);
-                branches.b_ggIM_comb[1] = IM(rec_photons[0], rec_photons[2]);
+                t.ggIM_real      = IM(rec_photons[1], rec_photons[2]);
+                t.ggIM_comb()[0] = IM(rec_photons[0], rec_photons[1]);
+                t.ggIM_comb()[1] = IM(rec_photons[0], rec_photons[2]);
 
             }
 
         }
-
 
         tree->Fill();
 
@@ -875,14 +829,14 @@ std::map<int, std::shared_ptr<OmegaEtaG2::decaytree_t> > OmegaEtaG2::makeChannel
 {
     std::map<int, std::shared_ptr<OmegaEtaG2::decaytree_t> > m;
 
-    m[0] = ParticleTypeTreeDatabase::Get(ParticleTypeTreeDatabase::Channel::Omega_gEta_3g);  //sig
-    m[1] = ParticleTypeTreeDatabase::Get(ParticleTypeTreeDatabase::Channel::Omega_gPi0_3g);  //ref
+    m[1] = ParticleTypeTreeDatabase::Get(ParticleTypeTreeDatabase::Channel::Omega_gEta_3g);  //sig
+    m[2] = ParticleTypeTreeDatabase::Get(ParticleTypeTreeDatabase::Channel::Omega_gPi0_3g);  //ref
 
-    m[2] = ParticleTypeTreeDatabase::Get(ParticleTypeTreeDatabase::Channel::Pi0_2g);
-    m[3] = ParticleTypeTreeDatabase::Get(ParticleTypeTreeDatabase::Channel::TwoPi0_4g);
-    m[4] = ParticleTypeTreeDatabase::Get(ParticleTypeTreeDatabase::Channel::ThreePi0_6g);
-    m[5] = ParticleTypeTreeDatabase::Get(ParticleTypeTreeDatabase::Channel::Pi0Eta_4g);
-    m[6] = ParticleTypeTreeDatabase::Get(ParticleTypeTreeDatabase::Channel::Omega_Pi0PiPPiM_2g);
+    m[3] = ParticleTypeTreeDatabase::Get(ParticleTypeTreeDatabase::Channel::Pi0_2g);
+    m[4] = ParticleTypeTreeDatabase::Get(ParticleTypeTreeDatabase::Channel::TwoPi0_4g);
+    m[5] = ParticleTypeTreeDatabase::Get(ParticleTypeTreeDatabase::Channel::ThreePi0_6g);
+    m[6] = ParticleTypeTreeDatabase::Get(ParticleTypeTreeDatabase::Channel::Pi0Eta_4g);
+    m[7] = ParticleTypeTreeDatabase::Get(ParticleTypeTreeDatabase::Channel::Omega_Pi0PiPPiM_2g);
 
     return m;
 }
@@ -942,6 +896,12 @@ OmegaEtaG2::OmegaEtaG2(const std::string& name, OptionsPtr opts):
     OmegaBase(name, opts),
     reaction_channels(makeChannels()),
     tree(HistFac.makeTTree("tree")),
+
+    cut_ESum(opts->Get<double>("CBESum", 550.0)),
+    cut_Copl(degree_to_radian(opts->Get<double>("CoplAngle", 15.0))),
+    photon_E_cb(opts->Get<decltype(photon_E_cb)>("PhotonECB", {50.0, 1600.0})),
+    photon_E_taps(opts->Get<decltype(photon_E_taps)>("PhotonETAPS", {200.0, 1600.0})),
+    proton_theta(degree_to_radian(opts->Get<decltype(proton_theta)>("ProtonThetaRange", {2.0, 45.0}))),
     fitter("OmegaEtaG2", 3)
 {
     const auto setup = ant::ExpConfig::Setup::GetLastFound();
@@ -950,104 +910,41 @@ OmegaEtaG2::OmegaEtaG2(const std::string& name, OptionsPtr opts):
         throw std::runtime_error("No Setup found");
     }
 
-    if(Options->Get<string>("Proton") == "MCTrue") {
-        data_proton = false;
-        LOG(INFO) << "Using proton from MCTrue";
-    };
-
-    if(Options->Get<string>("Tagger") == "MCTrue") {
-        data_tagger = false;
-        LOG(INFO) << "Using Tagger from MCTrue";
-    };
-
-    just_preselect = Options->Get<bool>("Preselect", false);
-
-    if(just_preselect) {
-        LOG(INFO) << "Running in preselect mode";
-    }
-
     promptrandom.AddPromptRange({-5,5});
     promptrandom.AddRandomRange({-20, -10});
     promptrandom.AddRandomRange({ 10,  20});
 
-    cut_ESum = Options->Get<double>("ESum", cut_ESum);
-
-    branches.SetupBranches(tree);
-
-    // set up kin fitter
-    fitter.SetupBranches(tree, "EPB");
+    t.CreateBranches(tree);
 
     fitter.LoadSigmaData(setup->GetPhysicsFilesDirectory()+"/FitterSigmas.root");
 
-    signal_tree    = ParticleTypeTreeDatabase::Get(ParticleTypeTreeDatabase::Channel::Omega_gEta_3g);
-    reference_tree = ParticleTypeTreeDatabase::Get(ParticleTypeTreeDatabase::Channel::Omega_gPi0_3g);
 
     steps = HistFac.makeTH1D("Steps","Step","Events passed",BinSettings(14),"steps");
+    missed_channels = HistFac.makeTH1D("Unlisted Channels","","Total Events seen",BinSettings(20),"unlistedChannels");
+    found_channels  = HistFac.makeTH1D("Listed Channels",  "","Total Events seen",BinSettings(reaction_channels.size()+1),"listedChannels");
 
-    h_TotalEvents = HistFac.makeTH1D("TotalEvents","","",BinSettings(3),"TotalEvents");
-
-    missed_channels = HistFac.makeTH1D("Unlisted Background Channels","","",BinSettings(20),"mBgC");
-    found_channels  = HistFac.makeTH1D("Known Channels","","",BinSettings(reaction_channels.size()),"known");
-
-    int i=1;
+    found_channels->GetXaxis()->SetBinLabel(1, "Data");
     for(const auto& c : reaction_channels) {
-        found_channels->GetXaxis()->SetBinLabel(i++,utils::ParticleTools::GetDecayString(c.second).c_str());
+        found_channels->GetXaxis()->SetBinLabel(c.first+1,utils::ParticleTools::GetDecayString(c.second).c_str());
     }
 
 }
 
 OmegaEtaG2::~OmegaEtaG2()
 {
-
 }
 
-OmegaEtaG2::branches_t::branches_t() {}
 
-void OmegaEtaG2::branches_t::SetupBranches(TTree* tree)
+
+OmegaEtaG2::OmegaTree_t::OmegaTree_t()
 {
-    b_g1.SetBranches(tree, "g1");
-    b_g2.SetBranches(tree, "g2");
-    b_g3.SetBranches(tree, "g3");
-    b_p.SetBranches(tree, "p");
-    b_ggg.SetBranches(tree, "ggg");
-    b_mmvector.SetBranches(tree,"mmvect");
-    b_fitted_p.SetBranches(tree, "fitted_p");
-    b_true_p.SetBranches(tree, "ture_p");
-
-    tree->Branch("p_Time",      &b_pTime);
-    tree->Branch("p_PSA_R",     &b_p_PSA_R);
-    tree->Branch("p_PSA_Angle", &b_p_PSA_Angle);
-    tree->Branch("p_detector",  &b_p_detector);
-
-    tree->Branch("ggg_Time", &b_gggTime);
-    tree->Branch("ggIM",     b_ggIM, "ggIM[3]/D");
-
-    tree->Branch("CoplAngle", &b_copl_angle);
-    tree->Branch("Angle_p_mm",&b_p_mm_angle);
-
-    tree->Branch("found_proton", &b_found_proton);
-
-    tree->Branch("TagCh",   &b_TagCh);
-    tree->Branch("TagE",    &b_TagE);
-    tree->Branch("TagTime", &b_TagTime);
-    tree->Branch("TagW",    &b_TagW);
-
-    tree->Branch("SigBgFlag",       &b_SigBgFlag);
-
-    tree->Branch("BachelorE[3]",     b_BachelorE, "BachelorE[3]/D");
-
-    tree->Branch("CBAvgTime",       &b_CBAvgTime);
-
-    tree->Branch("ggIM_real",       &b_ggIM_real);
-    tree->Branch("ggIM_comb[2]",     b_ggIM_comb, "ggIM_comb[2]/D");
-
-    tree->Branch("chi2dof",         &kinfit_chi2);
-    tree->Branch("fitstatus",       &b_fitok);
-    tree->Branch("fitIterations",   &b_fitIterations);
-
-
+    photons().resize(3);
+    ggIM().resize(3);
+    BachelorE().resize(3);
+    ggIM_comb().resize(3);
 }
 
+decltype(OmegaEtaG2::combs) OmegaEtaG2::combs = {{0,1,2},{0,2,1},{1,2,0}};
 
 AUTO_REGISTER_PHYSICS(OmegaEtaG)
 AUTO_REGISTER_PHYSICS(OmegaMCTruePlots)

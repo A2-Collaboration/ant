@@ -13,6 +13,8 @@
 #include "TTree.h"
 #include <map>
 
+#include "base/WrapTTree.h"
+
 class TH1D;
 class TH2D;
 class TH3D;
@@ -149,18 +151,13 @@ public:
 
 class OmegaEtaG2 : public OmegaBase {
 
-
-    // OmegaBase interface
 protected:
-    void Analyse(const TEventData &data, const TEvent& event, manager_t& manager) override;
+    void Analyse(const TEventData &data, const TEvent& event, manager_t&) override;
 
 
     int identify(const TEvent& event);
 
     using decaytree_t = ant::Tree<const ParticleTypeDatabase::Type&>;
-
-    std::shared_ptr<decaytree_t> signal_tree;
-    std::shared_ptr<decaytree_t> reference_tree;
 
     const std::map<int, std::shared_ptr<decaytree_t>> reaction_channels;
 
@@ -172,125 +169,65 @@ protected:
 
     TTree*  tree = nullptr;
 
-    template<typename T>
-    struct branchVar {
+    struct OmegaTree_t : WrapTTree {
+        OmegaTree_t();
 
-        T b;
+        ADD_BRANCH_T(std::vector<TLorentzVector>, photons)
+        ADD_BRANCH_T(TLorentzVector,              p)
+        ADD_BRANCH_T(double,                      p_Time)
+        ADD_BRANCH_T(double,                      p_PSA_Angle)
+        ADD_BRANCH_T(double,                      p_PSA_Radius)
+        ADD_BRANCH_T(int,                         p_detector)
 
-        branchVar(TTree* t, const std::string& bname, const T& default_value={}):
-            b(default_value)
-        {
-            t->Branch(bname.c_str(), std::addressof(b));
-        }
+        ADD_BRANCH_T(TLorentzVector,              p_true)
+        ADD_BRANCH_T(TLorentzVector,              p_fitted)
 
-        branchVar(branchVar&&) = delete;
-        branchVar(const branchVar&) = delete;
-        branchVar operator=(branchVar&&) = delete;
-        branchVar operator=(const branchVar&) = delete;
+        ADD_BRANCH_T(TLorentzVector,              ggg)
+        ADD_BRANCH_T(TLorentzVector,              mm)
+        ADD_BRANCH_T(double,                      copl_angle)
+        ADD_BRANCH_T(double,                      p_mm_angle)
 
+        ADD_BRANCH_T(std::vector<double>,         ggIM)
 
-        void operator= (const T& v) { b =v; }
+        ADD_BRANCH_T(std::vector<double>,         BachelorE)
 
-        operator T() const { return b; }
+        ADD_BRANCH_T(double,                      ggIM_real)  // only if Signal/Ref
+        ADD_BRANCH_T(std::vector<double>,         ggIM_comb)  // only if Signal/Ref
 
-    };
+        ADD_BRANCH_T(double,   TaggW)
+        ADD_BRANCH_T(double,   TaggW_tight)
+        ADD_BRANCH_T(double,   TaggE)
+        ADD_BRANCH_T(double,   TaggT)
+        ADD_BRANCH_T(unsigned, TaggCh)
 
-    struct branches_t {
+        ADD_BRANCH_T(double,   KinFitChi2)
+        ADD_BRANCH_T(unsigned, KinFitIterations)
 
-        analysis::utils::ParticleVars b_g1;
-        analysis::utils::ParticleVars b_g2;
-        analysis::utils::ParticleVars b_g3;
-        analysis::utils::ParticleVars b_p;
-        analysis::utils::ParticleVars b_ggg;
-        analysis::utils::ParticleVars b_mmvector;
-        analysis::utils::ParticleVars b_fitted_p;
-        analysis::utils::ParticleVars b_true_p;
+        ADD_BRANCH_T(double,   CBSumE)
+        ADD_BRANCH_T(double,   CBAvgTime)
+        ADD_BRANCH_T(unsigned, nPhotonsCB)
+        ADD_BRANCH_T(unsigned, nPhotonsTAPS)
 
-        double    b_pTime       = 0.0;
-        double    b_p_PSA_R     = 0.0;
-        double    b_p_PSA_Angle = 0.0;
-        unsigned  b_p_detector  = 0;
+        ADD_BRANCH_T(bool,     p_matched)
 
-        double b_gggTime = {};
-        double b_ggIM[3] = {};
-
-        double b_copl_angle = 0.0;
-        double b_p_mm_angle = 0.0;
-
-
-        int    b_found_proton = 0;
-
-        int    b_TagCh     = -1;
-        double b_TagTime   = 0.0;
-        double b_TagE      = 0.0;
-        double b_TagW      = 0.0;
-
-
-        int       b_SigBgFlag = 0;
-
-        double b_ggIM_real    = {};
-        double b_ggIM_comb[2] = {};
-
-        double b_BachelorE[3] = {};
-
-        double b_CBAvgTime = 0.0;
-
-
-        double kinfit_chi2       = 0.0;
-        bool   b_fitok           = false;
-        unsigned b_fitIterations = 0;
-
-        branches_t();
-
-        branches_t(const branches_t&) = default;
-        branches_t(branches_t&&) = delete;
-
-        branches_t& operator=(const branches_t&) =default;
-        branches_t& operator=(branches_t&) =delete;
-
-        void SetupBranches(TTree* tree);
+        ADD_BRANCH_T(int,      Channel)
 
     };
 
-    branches_t branches;
+    OmegaTree_t t;
+
+    static const std::vector<std::vector<std::size_t>> combs;
 
 
     //======== Settings ===========================================================
 
-    bool data_proton = true;
-    bool data_tagger = true;
-    bool just_preselect = false;
-
-    double cut_ESum = 550.0;
-    double cut_Copl = std_ext::degree_to_radian(15.0);
-
-    interval<double> photon_E_cb   = { 50.0,1600.0};
-    interval<double> photon_E_taps = {200.0,1600.0};
-    interval<double> proton_theta  = std_ext::degree_to_radian(interval<double>({0.0, 45.0}));
-
-    double calcEnergySum2(const TEventData &e) const;
-
-    struct expected_peak_t {
-        double Mean;
-        double Sigma;
-        expected_peak_t(double mean, double sigma) :
-            Mean(mean), Sigma(sigma) {}
-    };
-
-    const expected_peak_t omega_peak = {7.64266e+02, 3.29420e+01};
-    const expected_peak_t eta_peak   = {5.30815e+02, 2.93928e+01};
-    const expected_peak_t pi0_peak   = {1.31331e+02, 1.04835e+01};
-
+    const double cut_ESum;
+    const double cut_Copl;
+    const interval<double> photon_E_cb;
+    const interval<double> photon_E_taps;
+    const interval<double> proton_theta;
 
     TH1D* steps;
-
-    TH1D* h_TotalEvents;
-
-    std::map<std::string, TH1D*> pulls;
-
-    const std::map<short, std::string> component = {{0, "Energy"}, {1, "Theta"}, {2, "Phi"}};
-    const BinSettings pull_bins = BinSettings(201, -10, 10);
-
 
     ant::analysis::PromptRandom::Switch promptrandom;
     utils::KinFitter fitter;
@@ -302,6 +239,7 @@ protected:
     TParticleList FilterProtons(const TParticleList& list);
 
 public:
+
     OmegaEtaG2(const std::string& name, OptionsPtr opts);
     virtual ~OmegaEtaG2();
 
