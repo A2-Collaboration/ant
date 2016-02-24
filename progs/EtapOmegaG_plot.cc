@@ -251,8 +251,7 @@ int main(int argc, char** argv) {
     auto cmd_maxevents = cmd.add<TCLAP::MultiArg<int>>("m","maxevents","Process only max events",false,"maxevents");
     auto cmd_output = cmd.add<TCLAP::ValueArg<string>>("o","output","Output file",false,"","filename");
 
-    auto cmd_sigtree = cmd.add<TCLAP::ValueArg<string>>("","sigtree","Signal tree name",false,"Fitted/SigAll","treename");
-    auto cmd_reftree = cmd.add<TCLAP::ValueArg<string>>("","reftree","Reference tree name",false,"Fitted/treeRef","treename");
+    auto cmd_tree = cmd.add<TCLAP::ValueArg<string>>("","tree","Tree name",false,"Fitted/SigAll","treename");
 
     cmd.parse(argc, argv);
 
@@ -277,19 +276,39 @@ int main(int argc, char** argv) {
             throw runtime_error("Cannot find tree "+treename+" in input file");
         if(expected_entries>=0 && t->GetEntries() != expected_entries)
             throw runtime_error("Tree "+treename+" does not have entries=="+to_string(expected_entries));
-        wraptree->LinkBranches(t);
+        if(wraptree->Matches(t)) {
+            wraptree->LinkBranches(t);
+            return true;
+        }
+        return false;
     };
 
 
     CommonHist_t::Tree_t treeCommon;
-    link_branches("EtapOmegaG/treeCommon", addressof(treeCommon), -1);
+    if(!link_branches("EtapOmegaG/treeCommon", addressof(treeCommon), -1)) {
+        LOG(ERROR) << "Cannot link branches of treeCommon";
+        return 1;
+    }
+
     auto entries = treeCommon.Tree->GetEntries();
 
-    SigHist_t::Tree_t treeSig;
-    link_branches("EtapOmegaG/"+cmd_sigtree->getValue(), addressof(treeSig), entries);
-    RefHist_t::Tree_t treeRef;
-    link_branches("EtapOmegaG/"+cmd_reftree->getValue(), addressof(treeRef), entries);
 
+
+    SigHist_t::Tree_t treeSig;
+    RefHist_t::Tree_t treeRef;
+
+    // auto-detect which tree "type" to use
+    const auto& treename = cmd_tree->getValue();
+    if(link_branches("EtapOmegaG/"+treename, addressof(treeSig), entries)) {
+        LOG(INFO) << "Identified " << treename << " as signal tree";
+    }
+    else if(link_branches("EtapOmegaG/"+treename, addressof(treeRef), entries)) {
+        LOG(INFO) << "Identified " << treename << " as reference tree";
+    }
+    else {
+        LOG(ERROR) << "Could not identify " << treename;
+        return 1;
+    }
 
     unique_ptr<WrapTFileOutput> masterFile;
     if(cmd_output->isSet()) {
@@ -303,14 +322,15 @@ int main(int argc, char** argv) {
 
     HistogramFactory HistFac("EtapOmegaG");
 
-    auto cuttreeSig = cuttree::Make<MCSigHist_t>(HistFac,
-                                                 std_ext::replace_str(cmd_sigtree->getValue(),"/","_"),
-                                                 SigHist_t::GetCuts()
-                                                 );
-    auto cuttreeRef = cuttree::Make<MCRefHist_t>(HistFac,
-                                                 std_ext::replace_str(cmd_reftree->getValue(),"/","_"),
-                                                 RefHist_t::GetCuts()
-                                                 );
+    const auto& sanitized_treename = std_ext::replace_str(cmd_tree->getValue(),"/","_");
+    auto cuttreeSig = treeSig ? cuttree::Make<MCSigHist_t>(HistFac,
+                                                           sanitized_treename,
+                                                           SigHist_t::GetCuts()
+                                                           ) : nullptr;
+    auto cuttreeRef = treeRef ? cuttree::Make<MCRefHist_t>(HistFac,
+                                                           sanitized_treename,
+                                                           RefHist_t::GetCuts()
+                                                           ) : nullptr;
 
     LOG(INFO) << "Tree entries=" << entries;
     auto max_entries = entries;
@@ -326,11 +346,11 @@ int main(int argc, char** argv) {
         treeCommon.Tree->GetEntry(entry);
 
         // we handle the Ref/Sig cut here to save some reading work
-        if(treeCommon.IsSignal) {
+        if(treeSig && treeCommon.IsSignal) {
             treeSig.Tree->GetEntry(entry);
             cuttree::Fill<MCSigHist_t>(cuttreeSig, {treeCommon, treeSig});
         }
-        else {
+        else if(treeRef && !treeCommon.IsSignal) {
             treeRef.Tree->GetEntry(entry);
             cuttree::Fill<MCRefHist_t>(cuttreeRef, {treeCommon, treeRef});
         }
