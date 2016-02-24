@@ -68,7 +68,6 @@ set(ANALYSIS_PHYSICS_CALIBRATION
 set(ANALYSIS_PLOT
   plot/root_draw.cc
   plot/HistogramFactories.cc
-  plot/TH1Dcut.cc
   plot/PromptRandomHist.cc
 )
 

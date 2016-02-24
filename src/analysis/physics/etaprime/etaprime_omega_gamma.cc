@@ -1,7 +1,6 @@
 #include "etaprime_omega_gamma.h"
 
 #include "plot/root_draw.h"
-#include "plot/TH1Dcut.h"
 
 #include "utils/particle_tools.h"
 #include "utils/matcher.h"
