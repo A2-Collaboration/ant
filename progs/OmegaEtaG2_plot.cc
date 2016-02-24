@@ -9,11 +9,13 @@
 #include "base/WrapTFile.h"
 #include "base/std_ext/string.h"
 #include "base/std_ext/system.h"
+#include "base/std_ext/math.h"
 
 #include "TSystem.h"
 #include "TRint.h"
 
 using namespace ant;
+using namespace ant::std_ext;
 using namespace ant::analysis;
 using namespace ant::analysis::plot;
 using namespace std;
@@ -98,13 +100,55 @@ struct OmegaHist_t {
     };
 
     TH1D* h_KinFitChi2;
+    TH1D* h_gggIM;
+    TH1D* h_ggIM;
+    TH1D* h_mm;
+    TH1D* h_bachelorE;
+    TH2D* h_p_Theta_E;
+    TH2D* h_mm_gggIM;
+
+    const BinSettings Ebins = BinSettings(1600,   0, 1600);
+
+    const BinSettings Chi2bins = BinSettings (250, 0,   25);
+    const BinSettings probbins = BinSettings (250, 0,   1);
+
+    const BinSettings IMbins = BinSettings(1600,   0, 1600);
+    const BinSettings MMbins = BinSettings(1600, 400, 2000);
+
+    const BinSettings MMgggIMbins_X = BinSettings(600, 0, 1200);
+    const BinSettings MMgggIMbins_Y = BinSettings(750, 500, 2000);
+
+    const BinSettings pThetaBins = BinSettings(500, 0, 50);
+    const BinSettings pEbins = BinSettings(1000,   0, 1000);
 
     OmegaHist_t(HistogramFactory HistFac) {
-        h_KinFitChi2 = HistFac.makeTH1D("KinFitChi2", "#chi^{2}", "", BinSettings(200,0,100), "h_KinFitChi2");
+        h_KinFitChi2 = HistFac.makeTH1D("KinFitChi2", "#chi^{2}",             "", BinSettings(200,0,100), "h_KinFitChi2");
+        h_gggIM      = HistFac.makeTH1D("3#gamma IM", "3#gamma IM [MeV]",     "", IMbins,                 "h_ggg_IM");
+        h_ggIM       = HistFac.makeTH1D("2#gamma sub-IM", "2#gamma IM [MeV]", "", IMbins,                 "h_gg_IM");
+        h_mm         = HistFac.makeTH1D("Missing Mass",   "MM [MeV]",         "", IMbins,                 "h_mm");
+        h_bachelorE  = HistFac.makeTH1D("Bachelor E",     "E [MeV]",          "", IMbins,                 "h_bachelorE");
+        h_p_Theta_E  = HistFac.makeTH2D("Proton #theta vs. E_{k}", "E_{k} [MeV]", "#theta [#circ]", pEbins, pThetaBins, "h_p_theta_E");
+        h_mm_gggIM   = HistFac.makeTH2D("Missing Mass / 3#gamma IM", "3#gamma IM [MeV]", "MM [MeV]", IMbins, MMbins, "h_mm_gggIM");
     }
 
     void Fill(const Fill_t& f) const {
+
         h_KinFitChi2->Fill(f.Tree.KinFitChi2, f.TaggW());
+
+        h_gggIM->Fill(f.Tree.ggg().M(), f.TaggW());
+
+        for(const auto& v : f.Tree.ggIM())
+            h_ggIM->Fill(v, f.TaggW());
+
+        h_mm->Fill(f.Tree.mm().M(), f.TaggW());
+
+        for(const auto& v : f.Tree.BachelorE())
+            h_bachelorE->Fill(v, f.TaggW());
+
+        h_p_Theta_E->Fill(f.Tree.ggg().M(), radian_to_degree(f.Tree.p().Theta()));
+
+        h_mm_gggIM->Fill(f.Tree.ggg().M(), f.Tree.mm().M(), f.TaggW());
+
     }
 
     std::vector<TH1*> GetHists() const {
@@ -120,7 +164,7 @@ struct OmegaHist_t {
 
         cuts.emplace_back(MultiCut_t<Fill_t>{
                                  {"KinFitChi2<10", [] (const Fill_t& f) { return f.Tree.KinFitChi2< 10; } },
-                                 {"KinFitChi2<5",  [] (const Fill_t& f) { return f.Tree.KinFitChi2<  5; } },
+                                 {"mm cut",        [] (const Fill_t& f) { return f.Tree.mm().M()<1100 && f.Tree.mm().M() > 800; } },
                              });
         return cuts;
     }
