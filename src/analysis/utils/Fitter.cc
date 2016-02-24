@@ -470,11 +470,12 @@ TreeFitter::TreeFitter(const string& name, ParticleTypeTree ptree, std::function
     LOG(INFO) << "Have " << node_constraints.size() << " constraints at " << sum_daughters.size() << " nodes";
 
     // define the constraint
-    auto IM_at_nodes = [this, sum_daughters, node_constraints] (const vector<vector<double>>& v) {
-        assert(v.size() == tree_leaves.size());
+    auto tree_leaves_ = tree_leaves; // the local copy here prevents strange behaviour
+    auto IM_at_nodes = [tree_leaves_, sum_daughters, node_constraints] (const vector<vector<double>>& v) {
+        assert(v.empty() || v.size() == tree_leaves_.size());
         // assign values v to leaves
         for(unsigned i=0;i<v.size();i++) {
-            auto& node = tree_leaves[i]->Get();
+            auto& node = tree_leaves_[i]->Get();
             const auto m = node.TypeTree->Get().Mass();
             node.Particle = FitParticle::GetVector(v[i], m);
         }
