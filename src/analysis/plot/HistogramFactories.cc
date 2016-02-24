@@ -108,7 +108,7 @@ void HistogramFactory::SetDirDescription(const string &desc)
 
 TH1D *HistogramFactory::makeTH1D(const string &title, const string &xlabel, const string &ylabel, const BinSettings &bins, const string &name)
 {
-    auto r = make<TH1D>(GetNextHistName(name).c_str(), title.c_str(),
+    auto r = make<TH1D>(GetNextHistName(name).c_str(), MakeTitle(title).c_str(),
                         bins.Bins(), bins.Start(), bins.Stop());
     r->SetXTitle(xlabel.c_str());
     r->SetYTitle(ylabel.c_str());
@@ -120,7 +120,7 @@ TH1D *HistogramFactory::makeTH1D(const string &title, const string &xlabel, cons
 
 TH2D *HistogramFactory::makeTH2D(const string &title, const string &xlabel, const string &ylabel, const BinSettings &xbins, const BinSettings &ybins, const string &name)
 {
-    auto h = make<TH2D>(GetNextHistName(name).c_str(), title.c_str(),
+    auto h = make<TH2D>(GetNextHistName(name).c_str(), MakeTitle(title).c_str(),
                          xbins.Bins(), xbins.Start(), xbins.Stop(),
                          ybins.Bins(), ybins.Start(), ybins.Stop());
     h->SetXTitle(xlabel.c_str());
@@ -137,7 +137,7 @@ TH3D *HistogramFactory::makeTH3D(const string &title,
                                  const BinSettings &zbins,
                                  const string &name)
 {
-    auto h = make<TH3D>(GetNextHistName(name).c_str(), title.c_str(),
+    auto h = make<TH3D>(GetNextHistName(name).c_str(), MakeTitle(title).c_str(),
                        xbins.Bins(), xbins.Start(), xbins.Stop(),
                        ybins.Bins(), ybins.Start(), ybins.Stop(),
                        zbins.Bins(), zbins.Start(), zbins.Stop());
@@ -149,7 +149,7 @@ TH3D *HistogramFactory::makeTH3D(const string &title,
 
 TTree*HistogramFactory::makeTTree(const string& name)
 {
-    TTree* t = make<TTree>(name.c_str(), name.c_str());
+    TTree* t = make<TTree>(name.c_str(), MakeTitle(name.c_str()).c_str());
     return t;
 }
 
