@@ -140,6 +140,11 @@ public:
         using Exception::Exception;
     };
 
+
+    struct ENotReadable : public Exception {
+        using Exception::Exception;
+    };
+
     virtual ~WrapTFile();
     WrapTFile(const WrapTFile&) = delete;
     WrapTFile& operator= (const WrapTFile&) = delete;

@@ -2,6 +2,7 @@
 
 #include "std_ext/memory.h"
 #include "std_ext/misc.h"
+#include "std_ext/system.h"
 #include "Logger.h"
 
 #include "TSystem.h"
@@ -33,6 +34,11 @@ std::unique_ptr<TFile> WrapTFile::openFile(const string& filename, const string 
     auto file = std_ext::make_unique<TFile>(filename.c_str(), mode.c_str());
 
     if(!file->IsOpen() || file->IsZombie()) {
+
+        string errmsg;
+        if(!std_ext::system::testopen(filename, errmsg)) {
+            throw ENotReadable(filename+" cannot be opened: "+errmsg);
+        }
 
         if (!isROOTFile(*file)) {
             throw ENotARootFile(filename+" is not a ROOT file");
