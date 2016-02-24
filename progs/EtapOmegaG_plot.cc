@@ -41,7 +41,7 @@ struct MCTrue_Splitter : cuttree::StackedHists_t<Hist_t> {
     // Hist_t should have that type defined
     using Fill_t = typename Hist_t::Fill_t;
 
-    MCTrue_Splitter(const SmartHistFactory& histFac) : cuttree::StackedHists_t<Hist_t>(histFac) {
+    MCTrue_Splitter(const HistogramFactory& histFac) : cuttree::StackedHists_t<Hist_t>(histFac) {
         using cuttree::HistMod_t;
         this->GetHist(0, "Data", HistMod_t::MakeColor(kBlack));
         this->GetHist(1, "Sig",  HistMod_t::MakeColor(kRed));
@@ -106,7 +106,7 @@ struct CommonHist_t {
 
     TH1D* h_KinFitChi2;
 
-    CommonHist_t(SmartHistFactory HistFac) {
+    CommonHist_t(HistogramFactory HistFac) {
         h_KinFitChi2 = HistFac.makeTH1D("KinFitChi2","#chi^{2}","",BinSettings(200,0,100),"h_KinFitChi2");
     }
     void Fill(const Fill_t& f) const {
@@ -144,7 +144,7 @@ struct SigHist_t : CommonHist_t {
     TH1D* h_TreeFitChi2;
     TH1D* h_Bachelor_E;
 
-    SigHist_t(SmartHistFactory HistFac) : CommonHist_t(HistFac) {
+    SigHist_t(HistogramFactory HistFac) : CommonHist_t(HistFac) {
         BinSettings bins_goldhaber(400, 0, 900);
         const string axislabel_goldhaber("2#gamma IM / MeV");
 
@@ -220,7 +220,7 @@ struct RefHist_t : CommonHist_t {
 
     TH1D* h_IM_2g;
 
-    RefHist_t(SmartHistFactory HistFac) : CommonHist_t(HistFac) {
+    RefHist_t(HistogramFactory HistFac) : CommonHist_t(HistFac) {
         h_IM_2g = HistFac.makeTH1D("IM 2g","IM / MeV","",BinSettings(1100,0,1100),"h_IM_2g");
     }
 
@@ -301,7 +301,7 @@ int main(int argc, char** argv) {
     using MCSigHist_t = MCTrue_Splitter<SigHist_t>;
     using MCRefHist_t = MCTrue_Splitter<RefHist_t>;
 
-    SmartHistFactory HistFac("EtapOmegaG");
+    HistogramFactory HistFac("EtapOmegaG");
 
     auto cuttreeSig = cuttree::Make<MCSigHist_t>(HistFac,
                                                  std_ext::replace_str(cmd_sigtree->getValue(),"/","_"),

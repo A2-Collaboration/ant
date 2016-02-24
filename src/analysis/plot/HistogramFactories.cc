@@ -17,7 +17,7 @@ using namespace ant::std_ext;
 using namespace std;
 
 
-void HistogramFactory::goto_dir()
+void HistogramFactory::goto_dir() const
 {
     if(my_directory)
         my_directory->cd();

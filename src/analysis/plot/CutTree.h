@@ -4,6 +4,8 @@
 #include "root-addons/analysis_codes/hstack.h"
 #include "base/Tree.h"
 
+#include "TH1.h"
+
 #include <vector>
 #include <list>
 #include <map>
@@ -53,11 +55,11 @@ struct Node_t {
     // Hist_t should have that type defined
     using Fill_t = typename Hist_t::Fill_t;
 
-    SmartHistFactory HistFac;
+    HistogramFactory HistFac;
     Hist_t Hist;
     typename Cut_t<Fill_t>::Passes_t PassesCut;
 
-    Node_t(const SmartHistFactory& parentHistFac, Cut_t<Fill_t> cut) :
+    Node_t(const HistogramFactory& parentHistFac, Cut_t<Fill_t> cut) :
         HistFac(cut.Name, parentHistFac, cut.Name),
         Hist(HistFac),
         PassesCut(cut.Passes)
@@ -90,7 +92,7 @@ void Build(CutTree_t<Hist_t> cuttree, CutsIterator_t<Hist_t> first, CutsIterator
 }
 
 template<typename Hist_t, typename Fill_t = typename Hist_t::Fill_t>
-CutTree_t<Hist_t> Make(SmartHistFactory histFac, const std::string& name, const Cuts_t<Fill_t>& cuts) {
+CutTree_t<Hist_t> Make(HistogramFactory histFac, const std::string& name, const Cuts_t<Fill_t>& cuts) {
     auto cuttree = Tree<Node_t<Hist_t>>::MakeNode(histFac, Cut_t<Fill_t>{name});
     Build<Hist_t>(cuttree, cuts.begin(), cuts.end());
     return cuttree;
@@ -121,7 +123,7 @@ struct HistMod_t : std::function<void(TH1*)> {
 template<typename Hist_t>
 struct StackedHists_t {
 protected:
-    StackedHists_t(const SmartHistFactory& histFac) :
+    StackedHists_t(const HistogramFactory& histFac) :
         HistFac(histFac),
         H("h", HistFac)
     {
@@ -148,16 +150,16 @@ protected:
 
 private:
 
-    SmartHistFactory HistFac; // directory for stacks and H itself
-    SmartHistFactory H; // directory for mctrue splitted histfacs
+    HistogramFactory HistFac; // directory for stacks and H itself
+    HistogramFactory H; // directory for mctrue splitted histfacs
 
     struct WrappedHist_t {
         Hist_t    Hist;
         HistMod_t Modify;
         WrappedHist_t(const std::string& name,
-                      const SmartHistFactory& parentHistFac,
+                      const HistogramFactory& parentHistFac,
                       HistMod_t mod) :
-            Hist(SmartHistFactory(name, parentHistFac, name)), Modify(mod) {}
+            Hist(HistogramFactory(name, parentHistFac, name)), Modify(mod) {}
     };
 
     std::map<unsigned, WrappedHist_t> Hists;

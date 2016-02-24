@@ -44,7 +44,7 @@ class HistogramFactory {
 private:
 
     TDirectory* my_directory = nullptr;
-    void goto_dir();
+    void goto_dir() const;
 
     struct DirStackPush {
         TDirectory* dir;
@@ -104,10 +104,10 @@ public:
     TTree* makeTTree(const std::string& name);
 
     template<class T, typename... Args>
-    T* make(Args&&... args) {
+    T* make(Args&&... args) const {
 
         // save current dir and cd back to it on exit
-        DirStackPush dirstrack;
+        DirStackPush dirstack;
         goto_dir();
 
         auto t = new T(std::forward<Args>(args)...);
