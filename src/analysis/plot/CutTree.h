@@ -78,10 +78,10 @@ template<typename Hist_t>
 using CutsIterator_t = typename Cuts_t<typename Hist_t::Fill_t>::const_iterator;
 
 template<typename Hist_t>
-using CutTree_t = typename Tree<Node_t<Hist_t>>::node_t;
+using Tree_t = typename Tree<Node_t<Hist_t>>::node_t;
 
 template<typename Hist_t>
-void Build(CutTree_t<Hist_t> cuttree, CutsIterator_t<Hist_t> first, CutsIterator_t<Hist_t> last) {
+void Build(Tree_t<Hist_t> cuttree, CutsIterator_t<Hist_t> first, CutsIterator_t<Hist_t> last) {
     if(first == last)
         return;
     const auto& multicut = *first;
@@ -92,14 +92,14 @@ void Build(CutTree_t<Hist_t> cuttree, CutsIterator_t<Hist_t> first, CutsIterator
 }
 
 template<typename Hist_t, typename Fill_t = typename Hist_t::Fill_t>
-CutTree_t<Hist_t> Make(HistogramFactory histFac, const std::string& name, const Cuts_t<Fill_t>& cuts) {
+Tree_t<Hist_t> Make(HistogramFactory histFac, const std::string& name, const Cuts_t<Fill_t>& cuts) {
     auto cuttree = Tree<Node_t<Hist_t>>::MakeNode(histFac, Cut_t<Fill_t>{name});
     Build<Hist_t>(cuttree, cuts.begin(), cuts.end());
     return cuttree;
 }
 
 template<typename Hist_t, typename Fill_t = typename Hist_t::Fill_t>
-void Fill(CutTree_t<Hist_t> cuttree, const Fill_t& f) {
+void Fill(Tree_t<Hist_t> cuttree, const Fill_t& f) {
     if(cuttree->Get().Fill(f)) {
         for(const auto& d : cuttree->Daughters()) {
             Fill<Hist_t>(d, f);
