@@ -1,5 +1,7 @@
 #pragma once
 
+#include "base/std_ext/vector.h"
+
 #include <vector>
 
 namespace ant {
@@ -24,6 +26,7 @@ protected:
     typedef std::size_t index_type;
     typedef std::vector<index_type> index_list;
     index_list indices;
+    index_list not_indices;
 
     bool done;
 
@@ -39,6 +42,14 @@ protected:
         } else {
             indices.at(i)++;
             return true;
+        }
+    }
+
+    void calc_not_indices() {
+        not_indices.resize(0);
+        for(index_type i=0;i<n(); ++i) {
+            if(!std_ext::contains(indices, i))
+                not_indices.emplace_back(i);
         }
     }
 
@@ -59,12 +70,14 @@ public:
 
         indices.resize(k);
 
+
         for(index_type i=0;i<k; ++i) {
             indices.at(i) = i;
         }
+        calc_not_indices();
     }
 
-    //TODO: make a move constructor
+    /// \todo make a move constructor
 
     /**
      * @brief Access the ith element of the currently drawn combination
@@ -85,6 +98,8 @@ public:
         }
         bool res = nextlevel(indices.size()-1);
         done = !res;
+        if(!done)
+            calc_not_indices();
         return res;
     }
 
@@ -115,6 +130,10 @@ public:
 
     const_iterator begin() const { return !done ? const_iterator(*this, indices.begin()): end(); }
     const_iterator end() const { return const_iterator(*this, indices.end()); }
+
+    // iterate over elements NOT in the current combination
+    const_iterator begin_not() const { return !done ? const_iterator(*this, not_indices.begin()) : end(); }
+    const_iterator end_not() const { return const_iterator(*this, not_indices.end()); }
 
 
     const std::vector<T>& Indices() const { return indices; }
