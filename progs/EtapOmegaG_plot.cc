@@ -95,51 +95,80 @@ struct Node_t {
     }
 };
 
-template<typename Hist_t>
-struct MCTrue_Splitter {
-    // Hist_t should have that type defined
-    using Fill_t = typename Hist_t::Fill_t;
+struct HistMod_t : std::function<void(TH1*)> {
+    using std::function<void(TH1*)>::function;
 
-    SmartHistFactory HistFac; // directory for mctrue splitted histfacs
+    static Color_t GetColor(unsigned i) {
+        const std::vector<Color_t> colors = {kGreen+1, kBlue, kYellow+1, kMagenta, kCyan, kOrange, kSpring+10,};
+        return colors[i % colors.size()];
+    }
+
+    static HistMod_t MakeColor(const Color_t color) {
+        return [color] (TH1* h) { h->SetLineColor(color); };
+    }
+};
+
+template<typename Hist_t>
+struct StackedHists_t {
+protected:
+    StackedHists_t(const SmartHistFactory& histFac) :
+        HistFac(histFac),
+        H("h", HistFac)
+    {
+    }
+
+
+    const Hist_t& GetHist(unsigned key, const std::string& name = "", HistMod_t histmod = [] (TH1*) {}) {
+        auto it_hist = Hists.lower_bound(key);
+        if(it_hist == Hists.end() || it_hist->first != key) {
+            if(name.empty())
+                throw std::runtime_error("Cannot create hist with empty name");
+            it_hist = Hists.emplace_hint(it_hist, key, WrappedHist_t{
+                                             name,
+                                             H,
+                                             histmod
+                                         });
+
+            AddToStack(it_hist->second);
+        }
+        return it_hist->second.Hist;
+    }
+
+
+
+private:
+
+    SmartHistFactory HistFac; // directory for stacks and H itself
+    SmartHistFactory H; // directory for mctrue splitted histfacs
 
     struct WrappedHist_t {
-        using histmod_t = std::function<void(TH1*)>;
-        Hist_t Hist;
-        histmod_t Modify;
+        Hist_t    Hist;
+        HistMod_t Modify;
         WrappedHist_t(const std::string& name,
                       const SmartHistFactory& parentHistFac,
-                      histmod_t mod) :
+                      HistMod_t mod) :
             Hist(SmartHistFactory(name, parentHistFac, name)), Modify(mod) {}
     };
 
     map<unsigned, WrappedHist_t> Hists;
     vector<ant::hstack*> Stacks;
 
-    MCTrue_Splitter(const SmartHistFactory& histFac) :
-        HistFac("h", histFac),
-        Hists(MakePredefinedHists(HistFac))
-    {
-        assert(!Hists.empty());
-        // use the first histogram to build the stacks
-        const auto& first = Hists.begin()->second;
-        for(auto h : first.Hist.GetHists()) {
-            const string name = h->GetName();
-            Stacks.emplace_back(histFac.make<ant::hstack>( // use the parent histFac here!
-                                    name,
-                                    HistFac.GetTitlePrefix()+": "+name,
-                                    true, // use intelliLegend
-                                    true, // ignore empty histograms
-                                    true  // always draw with nostack option
-                                    ));
-        }
-
-        for(const auto& it_hist : Hists) {
-            AddToStack(it_hist.second);
-        }
-    }
-
     void AddToStack(const WrappedHist_t& hist) {
         const auto histptrs = hist.Hist.GetHists();
+
+        if(Stacks.empty()) {
+            for(auto h : histptrs) {
+                const string name = h->GetName();
+                Stacks.emplace_back(HistFac.make<ant::hstack>( // use the parent histFac here!
+                                        name,
+                                        H.GetTitlePrefix()+": "+name,
+                                        true, // use intelliLegend
+                                        true, // ignore empty histograms
+                                        true  // always draw with nostack option
+                                        ));
+            }
+        }
+
         for(TH1* h : histptrs) {
             h->SetLineWidth(2); // make it thicker by default
             hist.Modify(h);
@@ -149,54 +178,49 @@ struct MCTrue_Splitter {
             *Stacks[i] << histptrs[i];
     }
 
-    static std::map<unsigned, WrappedHist_t> MakePredefinedHists(const SmartHistFactory& h)
-    {
-        map<unsigned, WrappedHist_t> m;
-        // 0=Data, 1=Sig, 2=Ref, 3=AllMC, 9=Unknown_Bkg, >=10 Known Bkg
-        // create them here already to get them in the right order
-        m.emplace(0, WrappedHist_t{"Data", h, MakeColorHistMod(kBlack)});
-        m.emplace(1, WrappedHist_t{"Sig",  h, MakeColorHistMod(kRed)});
-        m.emplace(2, WrappedHist_t{"Ref",  h, MakeColorHistMod(kRed)});
+};
+
+
+template<typename Hist_t>
+struct MCTrue_Splitter : StackedHists_t<Hist_t> {
+
+    // Hist_t should have that type defined
+    using Fill_t = typename Hist_t::Fill_t;
+
+    MCTrue_Splitter(const SmartHistFactory& histFac) : StackedHists_t<Hist_t>(histFac) {
+        this->GetHist(0, "Data", HistMod_t::MakeColor(kBlack));
+        this->GetHist(1, "Sig",  HistMod_t::MakeColor(kRed));
+        this->GetHist(2, "Ref",  HistMod_t::MakeColor(kRed));
         // mctrue is never >=3 (and <9) in tree, use this to sum up all MC and all bkg MC
         // see also Fill()
-        m.emplace(3, WrappedHist_t{"Sum_MC", h, MakeColorHistMod(kBlack)});
-        m.emplace(4, WrappedHist_t{"Bkg_MC", h, MakeColorHistMod(kGray)});
-        return m;
-    }
-
-    static Color_t GetColor(unsigned i) {
-        const std::vector<Color_t> colors = {kGreen+1, kBlue, kYellow+1, kMagenta, kCyan, kOrange, kSpring+10,};
-        return colors[i % colors.size()];
-    }
-
-    static typename WrappedHist_t::histmod_t MakeColorHistMod(const Color_t color) {
-        return [color] (TH1* h) { h->SetLineColor(color); };
+        this->GetHist(3, "Sum_MC", HistMod_t::MakeColor(kBlack));
+        this->GetHist(4, "Bkg_MC", HistMod_t::MakeColor(kGray));
     }
 
     void Fill(const Fill_t& f) {
 
-        const auto mctrue = f.MCTrue();
-        auto it_hist = Hists.lower_bound(mctrue);
-        if(it_hist == Hists.end() || it_hist->first != mctrue) {
-            // mctrue should be 9 or higher here...
+        const unsigned mctrue = f.Common.MCTrue;
+
+        auto get_bkg_name = [] (unsigned mctrue) {
             const string& name = mctrue>=10 ?
                                      physics::EtapOmegaG::ptreeBackgrounds[mctrue-10].Name
                                  : "Other";
-            it_hist = Hists.emplace_hint(it_hist, mctrue, WrappedHist_t{
-                                             "Bkg_"+name,
-                                             HistFac,
-                                             MakeColorHistMod(GetColor(mctrue-9))
-                                         });
+            return "Bkg_"+name;
+        };
 
-            AddToStack(it_hist->second);
-        }
+        const Hist_t& hist = mctrue<9 ? this->GetHist(mctrue) :
+                                        this->GetHist(mctrue,
+                                                      get_bkg_name(mctrue),
+                                                      HistMod_t::MakeColor(HistMod_t::GetColor(mctrue-9))
+                                                      );
 
-        it_hist->second.Hist.Fill(f);
+        hist.Fill(f);
+
         // handle MC_all and MC_bkg
         if(mctrue>0) {
-            Hists.at(3).Hist.Fill(f);
+            this->GetHist(3).Fill(f);
             if(mctrue >= 9)
-                Hists.at(4).Hist.Fill(f);
+                this->GetHist(4).Fill(f);
         }
     }
 };
@@ -248,10 +272,6 @@ struct CommonHist_t {
         double TaggW() const {
             return Common.TaggW;
         }
-        // for MCTrue_Splitter wrapper
-        unsigned MCTrue() const {
-            return Common.MCTrue;
-        }
     };
 
     template<typename SigRefTree_t>
@@ -268,7 +288,7 @@ struct CommonHist_t {
     CommonHist_t(SmartHistFactory HistFac) {
         h_KinFitChi2 = HistFac.makeTH1D("KinFitChi2","#chi^{2}","",BinSettings(200,0,100),"h_KinFitChi2");
     }
-    void Fill(const Fill_t& f) {
+    void Fill(const Fill_t& f) const {
         h_KinFitChi2->Fill(f.Common.KinFitChi2, f.TaggW());
     }
     std::vector<TH1*> GetHists() const {
@@ -315,7 +335,7 @@ struct SigHist_t : CommonHist_t {
         h_Bachelor_E = HistFac.makeTH1D("E_#gamma in #eta' frame","E_{#gamma}","",BinSettings(400,0,400),"h_Bachelor_E");
     }
 
-    void Fill(const Fill_t& f) {
+    void Fill(const Fill_t& f) const {
         CommonHist_t::Fill(f);
         const Tree_t& tree = f.Tree;
         for(unsigned i=0;i<tree.gg_gg1().size();i++){
@@ -381,7 +401,7 @@ struct RefHist_t : CommonHist_t {
         h_IM_2g = HistFac.makeTH1D("IM 2g","IM / MeV","",BinSettings(1100,0,1100),"h_IM_2g");
     }
 
-    void Fill(const Fill_t& f) {
+    void Fill(const Fill_t& f) const {
         CommonHist_t::Fill(f);
         const Tree_t& tree = f.Tree;
         h_IM_2g->Fill(tree.IM_2g, f.TaggW());
