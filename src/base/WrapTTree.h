@@ -68,9 +68,10 @@ struct WrapTTree {
 
     template<typename T>
     struct Branch_t {
-        Branch_t(WrapTTree* wraptree, const std::string& name) :
+        template<typename... Args>
+        Branch_t(WrapTTree* wraptree, const std::string& name, Args&&... args) :
             Name(name),
-            Value(new T())
+            Value(new T(std::forward<Args>(args)...))
         { wraptree->branches.emplace_back(ROOT_branch_t::Make(Name, std::addressof(Value))); }
         ~Branch_t() { delete Value; }
         Branch_t(const Branch_t&) = delete;
@@ -126,4 +127,4 @@ protected:
 }
 
 // macro to define branches consistently
-#define ADD_BRANCH_T(type, name) Branch_t<type> name{this, #name};
+#define ADD_BRANCH_T(type, name, args...) Branch_t<type> name{this, #name, args};
