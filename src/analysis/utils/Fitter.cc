@@ -415,14 +415,15 @@ KinFitter::PhotonBeamVector::PhotonBeamVector(const string& name):
 
 }
 
-TreeFitter::TreeFitter(const string& name, ParticleTypeTree ptree, std::function<bool(ParticleTypeTree)> excludeNode) :
+TreeFitter::TreeFitter(const string& name, ParticleTypeTree ptree, std::function<nodesetup_t(ParticleTypeTree)> nodeSetup) :
     Fitter(name),
     tree(MakeTree(ptree))
 {
     tree->GetUniquePermutations(tree_leaves, permutations);
     current_perm = permutations.end();
 
-    LOG(INFO) << "Initialized TreeFitter for " << utils::ParticleTools::GetDecayString(ptree, false)
+    LOG(INFO) << "Initialized TreeFitter '" << name
+              << "' for " << utils::ParticleTools::GetDecayString(ptree, false)
               << " with " << permutations.size() << " permutations";
 
     // setup fitter variables, collect leave names for constraint
@@ -443,7 +444,7 @@ TreeFitter::TreeFitter(const string& name, ParticleTypeTree ptree, std::function
     vector<sum_daughters_t> sum_daughters;
     vector<node_constraint_t> node_constraints;
 
-    tree->Map_nodes([&sum_daughters, &node_constraints, excludeNode] (const tree_t& tnode) {
+    tree->Map_nodes([&sum_daughters, &node_constraints, nodeSetup] (const tree_t& tnode) {
         if(tnode->IsLeaf())
             return;
 
@@ -455,15 +456,18 @@ TreeFitter::TreeFitter(const string& name, ParticleTypeTree ptree, std::function
                 node.Particle += d->Get().Particle;
         });
 
-        if(excludeNode(tnode->Get().TypeTree))
+        const nodesetup_t& setup = nodeSetup(tnode->Get().TypeTree);
+        if(setup.Excluded)
             return;
 
-        LOG(INFO) << "IM constraint for " << tnode->Get().TypeTree->Get().Name();
-        node_constraints.emplace_back([tnode] () {
+        const auto IM_Sigma = setup.IM_Sigma;
+        LOG(INFO) << "IM constraint for " << tnode->Get().TypeTree->Get().Name()
+                  << " with sigma=" << IM_Sigma;
+        node_constraints.emplace_back([tnode, IM_Sigma] () {
             node_t& node = tnode->Get();
             const double IM_calc = node.Particle.M();
             const double IM_expected = tnode->Get().TypeTree->Get().Mass();
-            return IM_calc - IM_expected;
+            return (IM_calc - IM_expected)/IM_Sigma;
         });
     });
 

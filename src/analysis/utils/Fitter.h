@@ -182,8 +182,20 @@ class TreeFitter : public Fitter
 {
 
 public:
+    struct nodesetup_t {
+        double IM_Sigma;
+        double Excluded;
+        explicit nodesetup_t(double IM_sigma = 1.0, bool excluded = false) :
+            IM_Sigma(IM_sigma),
+            Excluded(excluded)
+        {}
+    };
+
+
     TreeFitter(const std::string& name, ParticleTypeTree ptree,
-               std::function<bool(ParticleTypeTree)> excludeNode = [] (ParticleTypeTree) {return false;});
+               std::function<nodesetup_t(ParticleTypeTree)> nodeSetup = [] (ParticleTypeTree) {return nodesetup_t{};});
+
+
 
     struct node_t {
         node_t(const ParticleTypeTree& ptree) : TypeTree(ptree) {}
