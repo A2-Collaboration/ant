@@ -22,10 +22,12 @@ using namespace std;
 
 hstack::hstack(const string& name, const std::string& title,
                bool useIntelliLegend,
-               bool ignoreEmptyHist) :
+               bool ignoreEmptyHist,
+               bool drawNoStack) :
     TNamed(name.c_str(), title.c_str()),
     UseIntelliLegend(useIntelliLegend),
-    IgnoreEmptyHist(ignoreEmptyHist)
+    IgnoreEmptyHist(ignoreEmptyHist),
+    DrawNoStack(drawNoStack)
 {
     gDirectory->Append(this);
 }
@@ -122,7 +124,10 @@ void hstack::Draw(const char* option)
     }
 
     if(nAdded>0) {
-        stack->Draw(option);
+        string option_str(option);
+        if(DrawNoStack)
+            option_str += "nostack";
+        stack->Draw(option_str.c_str());
         auto xaxis = stack->GetXaxis();
         if(xaxis)
             xaxis->SetTitle(xlabel.c_str());

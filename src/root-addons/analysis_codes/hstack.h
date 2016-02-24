@@ -69,13 +69,15 @@ protected:
 
     bool UseIntelliLegend;
     bool IgnoreEmptyHist;
+    bool DrawNoStack;
 
     void checkHists();
 
 public:
     hstack(const std::string& name, const std::string& title="",
            bool useIntelliLegend = false,
-           bool ignoreEmptyHist = false);
+           bool ignoreEmptyHist = false,
+           bool drawNoStack = false);
 
 
     hstack(hstack&&) = default;
@@ -90,7 +92,7 @@ public:
     template<typename Archive>
     void serialize(Archive archive) {
         archive(static_cast<TNamed&>(*this),
-                hists, xlabel, ylabel, UseIntelliLegend, IgnoreEmptyHist);
+                hists, xlabel, ylabel, UseIntelliLegend, IgnoreEmptyHist, DrawNoStack);
         checkHists(); // see if any nullptr were loaded
     }
 
