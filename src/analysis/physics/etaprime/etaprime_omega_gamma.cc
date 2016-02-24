@@ -28,7 +28,11 @@ const ParticleTypeTree EtapOmegaG::ptreeReference = ParticleTypeTreeDatabase::Ge
 EtapOmegaG::EtapOmegaG(const string& name, OptionsPtr opts) :
     Physics(name, opts),
     kinfitter_2("kinfitter_2",2),
-    kinfitter_4("kinfitter_4",4)
+    kinfitter_4("kinfitter_4",4),
+    // KinFitted gg/ggg/gggg IM peaks show roughly equal sigmas for pi0/omega/etaprime
+    // but without kinfit, the peaks for omega/etaprime are roughly twice as broad compared to pi0
+    // reflect that here
+    Sig(Sig_t::Fit_t::IM_Sigma_t{2.0, 2.0})
 {
     const interval<double> prompt_range{-2.5,1.5};
     promptrandom.AddPromptRange(prompt_range); // slight offset due to CBAvgTime reference
@@ -282,10 +286,10 @@ void EtapOmegaG::ProcessEvent(const TEvent& event, manager_t&)
 
 }
 
-EtapOmegaG::Sig_t::Sig_t() :
-    All(Fit_t::Make()),
-    No_EtaPrime(Fit_t::Make(&ParticleTypeDatabase::EtaPrime)),
-    OmegaPi0()
+EtapOmegaG::Sig_t::Sig_t(const Fit_t::IM_Sigma_t& IM_Sigma) :
+    All(Fit_t::Make(IM_Sigma)),
+    No_EtaPrime(Fit_t::Make(IM_Sigma, &ParticleTypeDatabase::EtaPrime)),
+    OmegaPi0(FitOmegaPi0_t::Make(IM_Sigma))
 {
 }
 
@@ -345,14 +349,27 @@ EtapOmegaG::Sig_t::Fit_t::Fit_t(utils::TreeFitter fitter) :
     fitted_g2_Pi0 = find_photons(fitted_Pi0).at(1);
 }
 
-utils::TreeFitter EtapOmegaG::Sig_t::Fit_t::Make(const ParticleTypeDatabase::Type* typeptr)
+utils::TreeFitter EtapOmegaG::Sig_t::Fit_t::Make(const Fit_t::IM_Sigma_t& IM_Sigma, const ParticleTypeDatabase::Type* typeptr)
 {
+    auto get_sigma = [IM_Sigma] (ParticleTypeTree tree) {
+        double sigma = 1.0;
+        if(tree->Get() == ParticleTypeDatabase::Omega)
+            sigma = IM_Sigma.Omega;
+        if(tree->Get() == ParticleTypeDatabase::EtaPrime)
+            sigma = IM_Sigma.EtaPrime;
+        return utils::TreeFitter::nodesetup_t{sigma, false};
+    };
+
     if(typeptr == nullptr)
-        return {"sig_treefitter_All", utils::ParticleTools::GetProducedParticle(EtapOmegaG::ptreeSignal)};
+        return {"sig_treefitter_All", utils::ParticleTools::GetProducedParticle(EtapOmegaG::ptreeSignal), get_sigma};
     else
         return {"sig_treefitter_No"+typeptr->Name(),
                     utils::ParticleTools::GetProducedParticle(EtapOmegaG::ptreeSignal),
-                    [&typeptr] (ParticleTypeTree tree) { return tree->Get() == *typeptr; }
+                    [typeptr, get_sigma] (ParticleTypeTree tree) {
+                auto setup = get_sigma(tree);
+                setup.Excluded = tree->Get() == *typeptr;
+                return setup;
+            }
         };
 }
 
@@ -508,14 +525,14 @@ void EtapOmegaG::Sig_t::Fit_t::CheckMCPhotonAssignment(const TParticleList& phot
     }
 }
 
-EtapOmegaG::Sig_t::FitOmegaPi0_t::FitOmegaPi0_t() :
-    Fit_t(Make())
+EtapOmegaG::Sig_t::FitOmegaPi0_t::FitOmegaPi0_t(utils::TreeFitter fitter) :
+    Fit_t(move(fitter))
 {
-
 }
 
-utils::TreeFitter EtapOmegaG::Sig_t::FitOmegaPi0_t::Make()
+utils::TreeFitter EtapOmegaG::Sig_t::FitOmegaPi0_t::Make(const Fit_t::IM_Sigma_t& IM_Sigma)
 {
+    // find the Omega sub-tree
     auto EtaPrime = utils::ParticleTools::GetProducedParticle(EtapOmegaG::ptreeSignal);
     auto select_daughter = [] (ParticleTypeTree tree, const ParticleTypeDatabase::Type& type) {
         auto d = tree->Daughters().front()->Get() == type ?
@@ -523,11 +540,19 @@ utils::TreeFitter EtapOmegaG::Sig_t::FitOmegaPi0_t::Make()
         assert(d->Get() == type);
         return d;
     };
-
     auto Omega = select_daughter(EtaPrime, ParticleTypeDatabase::Omega);
+
+    // get_sigma is easy for this sub-tree of Omega and Pi0 only
+    auto get_sigma = [IM_Sigma] (ParticleTypeTree tree) {
+        return utils::TreeFitter::nodesetup_t{
+            (tree->Get() == ParticleTypeDatabase::Omega) ? IM_Sigma.Omega : 1.0,
+            false // never exclude any node
+        };
+    };
+
     return {
         "sig_treefitter_OmegaPi0",
-        Omega
+        Omega, get_sigma
     };
 }
 

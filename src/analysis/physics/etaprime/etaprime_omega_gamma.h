@@ -91,11 +91,22 @@ struct EtapOmegaG : Physics {
         };
 
         // we have multiple ideas for treefitting...
+
+
+
         struct Fit_t {
+            struct IM_Sigma_t {
+                double EtaPrime;
+                double Omega;
+                IM_Sigma_t(double etaPrime = 1.0, double omega = 1.0) :
+                    EtaPrime(etaPrime), Omega(omega) {}
+                // Pi0 width is "reference"
+            };
 
             Fit_t(utils::TreeFitter fitter);
 
-            static utils::TreeFitter Make(const ParticleTypeDatabase::Type* typeptr = nullptr);
+            static utils::TreeFitter Make(const Fit_t::IM_Sigma_t& IM_Sigma,
+                                          const ParticleTypeDatabase::Type* typeptr = nullptr);
 
             utils::TreeFitter treefitter;
 
@@ -120,12 +131,14 @@ struct EtapOmegaG : Physics {
         };
 
         struct FitOmegaPi0_t : Fit_t {
-            FitOmegaPi0_t();
-            static utils::TreeFitter Make();
+            FitOmegaPi0_t(utils::TreeFitter fitter);
+            static utils::TreeFitter Make(const Fit_t::IM_Sigma_t& IM_Sigma);
             void Process(const Particles_t& particles, TParticleTree_t ptree_sigref);
         };
 
-        Sig_t();
+
+
+        Sig_t(const Fit_t::IM_Sigma_t& IM_Sigma = {});
 
         Fit_t All;
         Fit_t No_EtaPrime;
