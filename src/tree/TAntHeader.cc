@@ -4,6 +4,7 @@
 
 #include "TDirectory.h"
 
+#include "base/Logger.h"
 
 using namespace std;
 using namespace ant;
@@ -43,5 +44,42 @@ void TAntHeader::Print(Option_t*) const
 void TAntHeader::Print() const
 {
     Print("");
+}
+
+void TAntHeader::Browse(TBrowser*)
+{
+    Print("");
+}
+
+Long64_t TAntHeader::Merge(TCollection* li)
+{
+    if(!li)
+        return 0;
+
+    if(FirstID.IsInvalid() || LastID.IsInvalid()) {
+        LOG(ERROR) << "Header with invalid FirstID or LastID encountered";
+        return 0;
+    }
+
+    TIter next(li);
+
+    while(auto h = dynamic_cast<TAntHeader*>(next())) {
+        if(!IsCompatible(*h)) {
+            LOG(ERROR) << "Skipping incompatible header:\n "
+                         << *this << "\n"
+                         << *h;
+            continue;
+        }
+        if(h->FirstID.IsInvalid() || h->LastID.IsInvalid()) {
+            LOG(ERROR) << "Skipping header with invalid FirstID or LastID:\n"
+                       << *h;
+
+            continue;
+        }
+        FirstID = std::min(FirstID, h->FirstID);
+        LastID = std::max(LastID, h->LastID);
+    }
+
+    return 0;
 }
 

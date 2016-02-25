@@ -42,6 +42,10 @@ struct TAntHeader : TNamed
     // for convenience when used within ROOT shell
     virtual void Print(Option_t*) const override;
     virtual void Print() const; //*MENU*
+    virtual void Browse(TBrowser* b) override;
+
+    // to be used with Ant-hadd
+    Long64_t Merge(TCollection* li);
 
     virtual ~TAntHeader();
 #ifdef __clang__
