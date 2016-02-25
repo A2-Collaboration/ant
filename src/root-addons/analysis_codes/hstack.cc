@@ -163,7 +163,7 @@ void hstack::Draw(const char* option)
                     unique_tokens.emplace_back(token);
             string unique_title = std_ext::concatenate_string(unique_tokens, delim);
             if(options.ShowEntriesInLegend)
-                unique_title += std_ext::formatter() << ": " << hists[i].Ptr->GetEntries();
+                unique_title += std_ext::formatter() << " (" << hists[i].Ptr->GetEntries() << ")";
             hists[i].Ptr->SetTitle(unique_title.c_str());
         }
     }
