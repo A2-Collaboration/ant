@@ -181,20 +181,28 @@ struct SigHist_t : CommonHist_t {
         // reduces pi0pi0 and pi0eta backgrounds
         auto goldhaber_cut = [] (const Fill_t& f) {
             const Tree_t& tree = f.Tree;
-            const auto& Pi0 = ParticleTypeDatabase::Pi0.GetWindow(40);
-            const auto& Eta = ParticleTypeDatabase::Eta.GetWindow(30);
+            const double pi0 = ParticleTypeDatabase::Pi0.Mass();
+            const double eta = ParticleTypeDatabase::Eta.Mass();
+            const TVector2 Pi0Pi0(pi0, pi0);
+            const TVector2 EtaPi0(eta, pi0);
+
+            auto check_within = [] (TVector2 im, TVector2 center, double radius, double scale) {
+                TVector2 diff(im-center);
+                diff.Set(diff.X(), scale*diff.Y());
+                return diff.Mod() < radius;
+            };
 
             for(unsigned i=0;i<tree.gg_gg1().size();i++) {
                 const double im1 = tree.gg_gg1()[i];
                 const double im2 = tree.gg_gg2()[i];
-                if(   im1 < Pi0.Stop()
-                   && im2 < Pi0.Stop())
+                if(   im1 < pi0+20
+                   && im2 < pi0+20)
                     return false;
-                if(   Eta.Contains(im1)
-                   && Pi0.Contains(im2))
+                if(check_within({im1, im2}, Pi0Pi0, 40, 1.0))
                     return false;
-                if(   Pi0.Contains(im1)
-                   && Eta.Contains(im2))
+                if(check_within({im1, im2}, EtaPi0, 40, 1.5))
+                    return false;
+                if(check_within({im2, im1}, EtaPi0, 40, 1.5))
                     return false;
             }
             return true;
@@ -251,7 +259,7 @@ int main(int argc, char** argv) {
     auto cmd_maxevents = cmd.add<TCLAP::MultiArg<int>>("m","maxevents","Process only max events",false,"maxevents");
     auto cmd_output = cmd.add<TCLAP::ValueArg<string>>("o","output","Output file",false,"","filename");
 
-    auto cmd_tree = cmd.add<TCLAP::ValueArg<string>>("","tree","Tree name",false,"Fitted/SigAll","treename");
+    auto cmd_tree = cmd.add<TCLAP::ValueArg<string>>("t","tree","Tree name",false,"Fitted/SigAll","treename");
 
     cmd.parse(argc, argv);
 
