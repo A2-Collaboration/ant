@@ -64,6 +64,7 @@ public:
     static const padoption LogX;
     static const padoption LogY;
     static const padoption LogZ;
+    static const padoption MakeSquare;
 
 
     struct enable : permanent {
@@ -98,6 +99,7 @@ protected:
     std::string name;
     bool automode = true;
     bool addobject = false;
+    bool endcanvas_called = false;
 
     TCanvas* CreateTCanvas(const std::string& title="");
     TCanvas* FindTCanvas();

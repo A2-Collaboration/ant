@@ -25,6 +25,11 @@ const padoption padoption::Legend = [] (TVirtualPad* p) {p->BuildLegend();};
 const padoption padoption::LogX = [] (TVirtualPad* p) {p->SetLogx();};
 const padoption padoption::LogY = [] (TVirtualPad* p) {p->SetLogy();};
 const padoption padoption::LogZ = [] (TVirtualPad* p) {p->SetLogz();};
+const padoption padoption::MakeSquare = [] (TVirtualPad* p) {
+    auto min_size = std::min(p->GetWh(), p->GetWw());
+    p->SetCanvasSize(min_size, min_size);
+};
+
 
 unsigned int canvas::num = 0;
 
@@ -41,6 +46,8 @@ canvas::canvas(const string& title) :
 
 canvas::~canvas()
 {
+    if(!endcanvas_called && !pads.empty())
+        LOG(WARNING) << "ant::canvas went out of scope without being drawn. Forgot '<< ant::endc'?";
 }
 
 TCanvas* canvas::CreateTCanvas(const string& title)
@@ -175,6 +182,8 @@ canvas& canvas::operator<<(const endcanvas&)
     if(pads.empty()) {
         return *this;
     }
+
+    endcanvas_called = true;
 
     TCanvas* c = FindTCanvas();
 
