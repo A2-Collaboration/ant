@@ -89,6 +89,15 @@ public:
         for(auto& file : files) {
             T* ptr_ = nullptr;
             file->GetObject(name.c_str(), ptr_);
+            if(ptr_ == nullptr) {
+                // GetObject did not work, try GetKey fallback
+                // useful for objects which have / in their names
+                TKey* key = file->GetKey(name.c_str());
+                if(key != nullptr) {
+                    ptr_ = dynamic_cast<T*>(key->ReadObj());
+                }
+            }
+
             if(ptr == nullptr && ptr_ != nullptr) {
                 ptr = ptr_;
                 filename = file->GetName();
