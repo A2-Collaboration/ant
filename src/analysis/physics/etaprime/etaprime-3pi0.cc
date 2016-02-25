@@ -3,6 +3,9 @@
 #include "utils/combinatorics.h"
 #include "base/std_ext/math.h"
 #include "utils/particle_tools.h"
+#include "utils/ParticleID.h"
+#include "base/ParticleType.h"
+#include "base/ParticleTypeTree.h"
 
 #include <algorithm>
 #include <cassert>
@@ -21,7 +24,12 @@ using namespace ant::analysis::physics;
 
 Etap3pi0::Etap3pi0(const std::string& name, OptionsPtr opts) :
     Physics(name, opts),
-    fitter(GetName(), 6)
+    signal_tree(ParticleTypeTreeDatabase::Get(ParticleTypeTreeDatabase::Channel::EtaPrime_3Pi0_6g)),
+    reference_tree(ParticleTypeTreeDatabase::Get(ParticleTypeTreeDatabase::Channel::EtaPrime_2Pi0Eta_6g)),
+    bkg_tree(ParticleTypeTreeDatabase::Get(ParticleTypeTreeDatabase::Channel::ThreePi0_6g)),
+    fitterSig("fitterSig",utils::ParticleTools::GetProducedParticle(signal_tree)),
+    fitterRef("fitterRef",utils::ParticleTools::GetProducedParticle(reference_tree)),
+    kinFitterEMB(GetName(), 6)
 {
     const auto setup = ant::ExpConfig::Setup::GetLastFound();
     if(!setup) {
@@ -40,17 +48,16 @@ Etap3pi0::Etap3pi0(const std::string& name, OptionsPtr opts) :
 
     cat = "channels";
     AddHist1D(cat,"mc_true",            "mc true for signal, ref, bkg", "", "#", BinSettings(3));
+    AddHist1D(cat,"identified",         "IdentifiedChannels", "channel", "#", BinSettings(3));
 
     cat = "tagger";
-    AddHist1D(cat,"tagHits", "# Tagger hits", "# hits", "", BinSettings(12));
+    AddHist1D(cat,"tagHits",            "# Tagger hits", "# hits", "", BinSettings(12));
 
 
-//    fitter.SetupBranches(tree, "EPB");
-    fitter.LoadSigmaData(setup->GetPhysicsFilesDirectory()+"/FitterSigmas.root");
-
-    signal_tree = ParticleTypeTreeDatabase::Get(ParticleTypeTreeDatabase::Channel::EtaPrime_3Pi0_6g);
-    reference_tree = ParticleTypeTreeDatabase::Get(ParticleTypeTreeDatabase::Channel::EtaPrime_2Pi0Eta_6g);
-    bkg_tree = ParticleTypeTreeDatabase::Get(ParticleTypeTreeDatabase::Channel::ThreePi0_6g);
+    kinFitterEMB.SetupBranches(tree, "kinFitEMB");
+    kinFitterEMB.LoadSigmaData(setup->GetPhysicsFilesDirectory()+"/FitterSigmas.root");
+    fitterSig.LoadSigmaData(setup->GetPhysicsFilesDirectory()+"/FitterSigmas.root");
+    fitterRef.LoadSigmaData(setup->GetPhysicsFilesDirectory()+"/FitterSigmas.root");
 
     vars.SetBranches(tree);
 
@@ -64,17 +71,6 @@ TLorentzVector Etap3pi0::MakeLoretzSum(const TParticleList& particles)
     return lorenzTemp;
 }
 
-
-
-
-
-
-
-TLorentzVector GetMM(double , const TLorentzVector& )
-{
-    return TLorentzVector();
-}
-
 bool Etap3pi0::MakeMCProton(const TEventData& mcdata, TParticlePtr& proton)
 {
    const auto& protonlist = mcdata.Particles.Get(ParticleTypeDatabase::Proton);
@@ -82,6 +78,19 @@ bool Etap3pi0::MakeMCProton(const TEventData& mcdata, TParticlePtr& proton)
        return false;
    proton = protonlist.at(0);
    return true;
+}
+
+double Etap3pi0::getEnergyMomentumConservation(double EBeam, const ant::TParticleList& photons, const TParticlePtr& proton)
+{
+   APLCON::Result_t result;
+
+   kinFitterEMB.SetEgammaBeam(EBeam);
+   kinFitterEMB.SetPhotons(photons);
+   kinFitterEMB.SetProton(proton);
+
+   result = kinFitterEMB.DoFit();
+
+   return result.ChiSquare;
 }
 
 void Etap3pi0::ProcessEvent(const TEvent& event, manager_t&)
@@ -130,7 +139,7 @@ void Etap3pi0::ProcessEvent(const TEvent& event, manager_t&)
 
 
 
-    vars.etaprime = MakeLoretzSum(photons);
+    vars.etaprimeCand = MakeLoretzSum(photons);
 
     if (mcprotons.size() > 1)
         return;
@@ -143,8 +152,10 @@ void Etap3pi0::ProcessEvent(const TEvent& event, manager_t&)
     if(!isfinite(CBAvgTime))
         return;
     hists.at("steps").at("evcount")->Fill("7) finite CBAvg-Time",1);
-
     hists.at("tagger").at("tagHits")->Fill(data.TaggerHits.size());
+
+
+
     for(const TTaggerHit& t : data.TaggerHits )
     {
         promptrandom.SetTaggerHit(t.Time - CBAvgTime);
@@ -155,26 +166,70 @@ void Etap3pi0::ProcessEvent(const TEvent& event, manager_t&)
         vars.taggCh        = unsigned(t.Channel);
         vars.taggTime      = t.Time;
 
-        const auto chi2signal = MakeSignal();
-        const auto chi2ref    = MakeReference();
+        TLorentzVector beamPseudoParticle = t.GetPhotonBeam() + TLorentzVector(0,0,0, ParticleTypeDatabase::Proton.Mass());
+        vars.MM = beamPseudoParticle - vars.etaprimeCand;
 
-        if (chi2signal < chi2ref)
+        assert( photons.size() == 6);
+
+        vars.EMB_chi2 = getEnergyMomentumConservation(t.PhotonEnergy,photons,protonCandidates.at(0));
+
+
+        MakeSignal(photons);
+        MakeReference(photons);
+
+
+        if (vars.event_chi2_sig < vars.event_chi2_ref)
+        {
             vars.type = 0;
+            hists.at("steps").at("evcount")->Fill("8a) signal identified",vars.taggWeight);
+        }
        else
+        {
             vars.type = 1;
+            hists.at("steps").at("evcount")->Fill("8b) reference identified",vars.taggWeight);
+        }
 
-        vars.MM = GetMM(vars.taggE,vars.etaprime);
+        if (vars.event_chi2_ref > phSettings.fourConstrainChi2Cut && vars.event_chi2_sig > phSettings.fourConstrainChi2Cut )
+        {
+            vars.type = -1;
+            hists.at("steps").at("evcount")->Fill("8c) background identified",vars.taggWeight);
+        }
+
         tree->Fill();
     }
 }
 
-double Etap3pi0::MakeSignal()
+//bool Etap3pi0::checkEnergyMomentumConservation(const TLorentzVector& initialState, const TLorentzVector& finalState)
+
+void Etap3pi0::MakeSignal(const TParticleList& photonLeaves)
 {
-    return 0;
+    fitterSig.SetLeaves(photonLeaves);
+    APLCON::Result_t result;
+    vars.event_chi2_sig = std::numeric_limits<double>::infinity();
+
+    while (fitterSig.NextFit(result))
+    {
+        if (result.Status != APLCON::Result_Status_t::Success )
+            continue;
+        if ( vars.event_chi2_sig < result.ChiSquare)
+            continue;
+        vars.event_chi2_sig = result.ChiSquare;
+    }
 }
-double Etap3pi0::MakeReference()
+void Etap3pi0::MakeReference(const TParticleList& photonLeaves)
 {
-    return 0;
+    fitterRef.SetLeaves(photonLeaves);
+    APLCON::Result_t result;
+    vars.event_chi2_ref = std::numeric_limits<double>::infinity();
+
+    while (fitterRef.NextFit(result))
+    {
+        if (result.Status != APLCON::Result_Status_t::Success )
+            continue;
+        if ( vars.event_chi2_ref < result.ChiSquare)
+            continue;
+        vars.event_chi2_ref = result.ChiSquare;
+    }
 }
 
 void Etap3pi0::Finish()
@@ -199,6 +254,8 @@ void Etap3pi0::branches::SetBranches(TTree* tree)
     cout << "Setting up branches" << endl;
     tree->Branch("proton", &proton);
 
+    tree->Branch("etaprimeCand", &etaprimeCand);
+
     tree->Branch("fittedProton",&fittedProton);
 
     tree->Branch("trueProton", &trueProton);
@@ -212,14 +269,16 @@ void Etap3pi0::branches::SetBranches(TTree* tree)
     tree->Branch("taggCh", &taggCh);
     tree->Branch("taggTime", &taggTime);
 
+    tree->Branch("EMB_chi2",&EMB_chi2);
+
     tree->Branch("pi0s", &pi0);
     tree->Branch("pi0_chi2[3]", pi0_chi2, "pi0_chi2[3]/D");
     tree->Branch("pi0_prob[3]", pi0_prob, "pi0_prob[3]/D");
     tree->Branch("pi0_iteration[3]", pi0_iteration, "pi0_iteration[3]/D");
     tree->Branch("pi0_status[3]", pi0_status, "pi0_status[3]/D");
 
-    tree->Branch("etaprime", &etaprime);
-    tree->Branch("event_chi2", &event_chi2);
+    tree->Branch("event_chi2_ref", &event_chi2_ref);
+    tree->Branch("event_chi2_sig", &event_chi2_sig);
     tree->Branch("event_prob", &event_prob);
     tree->Branch("event_iteration", &event_iteration);
     tree->Branch("event_status", &event_status);
