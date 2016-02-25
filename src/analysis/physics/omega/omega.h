@@ -200,12 +200,6 @@ protected:
     void Analyse(const TEventData &data, const TEvent& event, manager_t&) override;
 
 
-    int identify(const TEvent& event);
-
-    using decaytree_t = ant::Tree<const ParticleTypeDatabase::Type&>;
-
-    const std::map<int, std::shared_ptr<decaytree_t>> reaction_channels;
-
     TH1D* missed_channels = nullptr;
     TH1D* found_channels  = nullptr;
 
@@ -242,7 +236,25 @@ public:
     OmegaEtaG2(const std::string& name, OptionsPtr opts);
     virtual ~OmegaEtaG2();
 
-    static std::map<int, std::shared_ptr<decaytree_t>> makeChannels();
+    using decaytree_t = ant::Tree<const ParticleTypeDatabase::Type&>;
+
+    struct ReactionChannel_t {
+        std::string name="";
+        std::shared_ptr<decaytree_t> tree=nullptr;
+        ReactionChannel_t(const std::shared_ptr<decaytree_t>& t);
+        ReactionChannel_t(const std::string& n);
+        ReactionChannel_t() = default;
+        ~ReactionChannel_t();
+    };
+
+    struct ReactionChannelList_t {
+        static const int other_index;
+        std::map<int, ReactionChannel_t> channels;
+        int identify(const TParticleTree_t &tree) const;
+    };
+
+    static ReactionChannelList_t makeChannels();
+    static const ReactionChannelList_t reaction_channels;
 
 };
 

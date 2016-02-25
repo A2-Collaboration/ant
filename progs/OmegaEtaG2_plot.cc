@@ -2,6 +2,7 @@
 
 #include "analysis/plot/CutTree.h"
 #include "analysis/physics/omega/omega.h"
+#include "analysis/utils/particle_tools.h"
 
 #include "base/CmdLine.h"
 #include "base/interval.h"
@@ -37,51 +38,59 @@ public:
     }
 };
 
-//template<typename Hist_t>
-//struct MCTrue_Splitter : cuttree::StackedHists_t<Hist_t> {
+template<typename Hist_t>
+struct MCTrue_Splitter : cuttree::StackedHists_t<Hist_t> {
 
-//    // Hist_t should have that type defined
-//    using Fill_t = typename Hist_t::Fill_t;
+    // Hist_t should have that type defined
+    using Fill_t = typename Hist_t::Fill_t;
 
-//    MCTrue_Splitter(const HistogramFactory& histFac) : cuttree::StackedHists_t<Hist_t>(histFac) {
-//        using cuttree::HistMod_t;
-//        this->GetHist(0, "Data", HistMod_t::MakeColor(kBlack));
-//        this->GetHist(1, "Sig",  HistMod_t::MakeColor(kRed));
-//        this->GetHist(2, "Ref",  HistMod_t::MakeColor(kRed));
-//        // mctrue is never >=3 (and <9) in tree, use this to sum up all MC and all bkg MC
-//        // see also Fill()
-//        this->GetHist(3, "Sum_MC", HistMod_t::MakeColor(kBlack));
-//        this->GetHist(4, "Bkg_MC", HistMod_t::MakeColor(kGray));
-//    }
+    const decltype (physics::OmegaEtaG2::makeChannels()) Channels;
 
-//    void Fill(const Fill_t& f) {
+    MCTrue_Splitter(const HistogramFactory& histFac) : cuttree::StackedHists_t<Hist_t>(histFac),
+      Channels(physics::OmegaEtaG2::makeChannels())
+    {
+        using cuttree::HistMod_t;
 
-//        const unsigned mctrue = f.Common.MCTrue;
+        // TODO: derive this from channel map
+        this->GetHist(0, "Data", HistMod_t::MakeDataPoints(kBlack));
+        this->GetHist(1, "Sig",  HistMod_t::MakeLine(kRed, 2.0));
+        this->GetHist(2, "Ref",  HistMod_t::MakeLine(kGreen, 2.0));
+        // mctrue is never >=3 (and <9) in tree, use this to sum up all MC and all bkg MC
+        // see also Fill()
+        this->GetHist(3, "Sum_MC", HistMod_t::MakeLine(kBlack, 1.0));
+        this->GetHist(4, "Bkg_MC", HistMod_t::MakeLine(kGray, 1.0));
+    }
 
-//        auto get_bkg_name = [] (unsigned mctrue) {
-//            const string& name = mctrue>=10 ?
-//                                     physics::OmegaEtaG2::ptreeBackgrounds[mctrue-10].Name
-//                                 : "Other";
-//            return "Bkg_"+name;
-//        };
+    void Fill(const Fill_t& f) {
 
-//        using cuttree::HistMod_t;
-//        const Hist_t& hist = mctrue<9 ? this->GetHist(mctrue) :
-//                                        this->GetHist(mctrue,
-//                                                      get_bkg_name(mctrue),
-//                                                      HistMod_t::MakeColor(HistMod_t::GetColor(mctrue-9))
-//                                                      );
+        const int mctrue = f.Tree.Channel;
 
-//        hist.Fill(f);
+        auto get_bkg_name = [] (unsigned mctrue) {
+            const auto entry = physics::OmegaEtaG2::reaction_channels.channels.find(mctrue);
 
-//        // handle MC_all and MC_bkg
-//        if(mctrue>0) {
-//            this->GetHist(3).Fill(f);
-//            if(mctrue >= 9)
-//                this->GetHist(4).Fill(f);
-//        }
-//    }
-//};
+            if(entry!=physics::OmegaEtaG2::reaction_channels.channels.end())
+                return entry->second.name;
+
+            return string("Unknown Decay");
+        };
+
+        using cuttree::HistMod_t;
+        const Hist_t& hist = mctrue<10 ? this->GetHist(mctrue) :
+                                        this->GetHist(mctrue,
+                                                      get_bkg_name(mctrue),
+                                                      HistMod_t::MakeLine(HistMod_t::GetColor(mctrue-9), 1.0)
+                                                      );
+
+        hist.Fill(f);
+
+        // handle MC_all and MC_bkg
+        if(mctrue>0) {
+            this->GetHist(3).Fill(f);
+            if(mctrue >= 10)
+                this->GetHist(4).Fill(f);
+        }
+    }
+};
 
 // define the structs containing the histograms
 // and the cuts. for simple branch variables, that could
@@ -152,7 +161,7 @@ struct OmegaHist_t {
     }
 
     std::vector<TH1*> GetHists() const {
-        return {h_KinFitChi2};
+        return {h_KinFitChi2,h_gggIM,h_ggIM,h_mm,h_bachelorE,h_p_Theta_E,h_mm_gggIM};
     }
 
     // Sig and Ref channel share some cuts...
@@ -236,7 +245,7 @@ int main(int argc, char** argv) {
 
     const auto& sanitized_treename = std_ext::replace_str(cmd_tree->getValue(),"/","_");
 
-    auto cuttree = cuttree::Make<OmegaHist_t>(HistFac,
+    auto cuttree = cuttree::Make<MCTrue_Splitter<OmegaHist_t>>(HistFac,
                                               sanitized_treename,
                                               OmegaHist_t::GetCuts()
                                               );
@@ -254,7 +263,7 @@ int main(int argc, char** argv) {
             break;
 
         tree.Tree->GetEntry(entry);
-        cuttree::Fill<OmegaHist_t>(cuttree, {tree});
+        cuttree::Fill<MCTrue_Splitter<OmegaHist_t>>(cuttree, {tree});
 
         if(entry % 100000 == 0)
             LOG(INFO) << "Processed " << 100.0*entry/entries << " %";

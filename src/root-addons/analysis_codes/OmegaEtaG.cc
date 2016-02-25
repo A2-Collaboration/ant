@@ -146,17 +146,17 @@ void OmegaEtaG::Plot(TTree* tree, const TCut& extra_cut, const double binscale)
 
 void OmegaEtaG::PlotBGs(TTree *tree, const double binscale)
 {
-    const unsigned nch = ant::analysis::physics::OmegaEtaG2::makeChannels().size();
-    for(unsigned i=0;i<nch;++i) {
-        cout << "===== " << i << " ============"<<endl;
-        OmegaEtaG_hists h(formatter()<<"BG"<<i);
-        const string sel = (formatter() << "SigBgFlag==" << i);
-        h.Make(tree, sel.c_str(), binscale);
-    }
+//    const unsigned nch = ant::analysis::physics::OmegaEtaG2::re().size();
+//    for(unsigned i=0;i<nch;++i) {
+//        cout << "===== " << i << " ============"<<endl;
+//        OmegaEtaG_hists h(formatter()<<"BG"<<i);
+//        const string sel = (formatter() << "SigBgFlag==" << i);
+//        h.Make(tree, sel.c_str(), binscale);
+//    }
 
-    OmegaEtaG_hists h(formatter() << "BG" << nch);
-    const string sel = (formatter() << "SigBgFlag>=" << nch);
-    h.Make(tree, sel.c_str(), binscale);
+//    OmegaEtaG_hists h(formatter() << "BG" << nch);
+//    const string sel = (formatter() << "SigBgFlag>=" << nch);
+//    h.Make(tree, sel.c_str(), binscale);
 }
 
 void OmegaEtaG::DataMC(TFile* mc_file, TFile* data_file, const double mcscale)
@@ -242,88 +242,88 @@ void OmegaEtaG::DataMCBGs(TFile* mc_file, TFile* data_file, const double mcscale
 
     canvas c("MC Data");
 
-    for(const auto& hname : {"ggg_IM_free","ggg_IM_fit","mm_free","mm_fit","fit_chi2dof","fit_prob","bachelor","ggIM"}) {
+//    for(const auto& hname : {"ggg_IM_free","ggg_IM_fit","mm_free","mm_fit","fit_chi2dof","fit_prob","bachelor","ggIM"}) {
 
 
-        // ------- Data
+//        // ------- Data
 
-        TH1* data = nullptr;
+//        TH1* data = nullptr;
 
-        const string histname = formatter() << "h_" << hname;
-        data_file->GetObject(histname.c_str(), data);
+//        const string histname = formatter() << "h_" << hname;
+//        data_file->GetObject(histname.c_str(), data);
 
-        if(!data) {
-            cout << "Could not get " << histname << " from mc file" << endl;
-            return;
-        }
+//        if(!data) {
+//            cout << "Could not get " << histname << " from mc file" << endl;
+//            return;
+//        }
 
-        const string backup_title = data->GetTitle();
+//        const string backup_title = data->GetTitle();
 
-        data->SetLineColor(kBlack);
-        data->SetTitle("Data");
+//        data->SetLineColor(kBlack);
+//        data->SetTitle("Data");
 
-        hstack* stack = new hstack(formatter() << "stack_" << hname, backup_title);
-        *stack << data;
+//        hstack* stack = new hstack(formatter() << "stack_" << hname, backup_title);
+//        *stack << data;
 
-        const auto data_entries = data->Integral();
+//        const auto data_entries = data->Integral();
 
-        // ----- MC
+//        // ----- MC
 
-        TH1* mcsum = nullptr;
+//        TH1* mcsum = nullptr;
 
-        std::list<TH1*> mc_hists;
+//        std::list<TH1*> mc_hists;
 
-        for(size_t bg=0; bg<=channels.size(); ++bg) {
+//        for(size_t bg=0; bg<=channels.size(); ++bg) {
 
-            const string histname = formatter() << "BG" << bg << "_" << hname;
+//            const string histname = formatter() << "BG" << bg << "_" << hname;
 
-            TH1* mch = nullptr;
+//            TH1* mch = nullptr;
 
-            mc_file->GetObject(histname.c_str(), mch);
-            if(!mch) {
-                cout << "Could not get " << histname << " from mc file" << endl;
-                continue;
-            }
-            if(bg==channels.size()) {
-                mch->SetTitle("Others");
-                mch->SetLineColor(colors.Get("Others"));
-            } else {
-                const string chname = utils::ParticleTools::GetDecayString(channels.at(int(bg)));
-                mch->SetLineColor(colors.Get(to_string(bg)));
-                mch->SetTitle(chname.c_str());
-            }
+//            mc_file->GetObject(histname.c_str(), mch);
+//            if(!mch) {
+//                cout << "Could not get " << histname << " from mc file" << endl;
+//                continue;
+//            }
+//            if(bg==channels.size()) {
+//                mch->SetTitle("Others");
+//                mch->SetLineColor(colors.Get("Others"));
+//            } else {
+//                const string chname = utils::ParticleTools::GetDecayString(channels.at(int(bg)));
+//                mch->SetLineColor(colors.Get(to_string(bg)));
+//                mch->SetTitle(chname.c_str());
+//            }
 
-            if(bg==0) {
-                mcsum = dynamic_cast<TH1D*>(mch->Clone());
-                const string name = formatter() << "MCSUM_" << hname;
-                mcsum->SetName(name.c_str());
-                mcsum->SetTitle("MC Sum");
-                mcsum->SetLabelColor(colors.Get("MC Sum"));
-                mc_hists.push_back(mcsum);
-            } else {
-                mcsum->Add(mch);
-            }
+//            if(bg==0) {
+//                mcsum = dynamic_cast<TH1D*>(mch->Clone());
+//                const string name = formatter() << "MCSUM_" << hname;
+//                mcsum->SetName(name.c_str());
+//                mcsum->SetTitle("MC Sum");
+//                mcsum->SetLabelColor(colors.Get("MC Sum"));
+//                mc_hists.push_back(mcsum);
+//            } else {
+//                mcsum->Add(mch);
+//            }
 
-            mc_hists.push_back(mch);
-        }
+//            mc_hists.push_back(mch);
+//        }
 
-        const auto mc_entries   = mcsum->Integral();
-        const auto ratio = data_entries / mc_entries;
+//        const auto mc_entries   = mcsum->Integral();
+//        const auto ratio = data_entries / mc_entries;
 
-        cout << "Scale factor " << ratio << endl;
+//        cout << "Scale factor " << ratio << endl;
 
-        mc_hists.sort([] (TH1* h1, TH1* h2){ return h1->Integral() > h2->Integral();});
+//        mc_hists.sort([] (TH1* h1, TH1* h2){ return h1->Integral() > h2->Integral();});
 
-        for(auto& h : mc_hists) {
-            cout << h->GetTitle() << endl;
-            h->Scale(mcscale);
-            *stack << h;
-        }
+//        for(auto& h : mc_hists) {
+//            cout << h->GetTitle() << endl;
+//            h->Scale(mcscale);
+//            *stack << h;
+//        }
 
-        c << drawoption("nostack") << padoption::Legend << stack;
+//        c << drawoption("nostack") << padoption::Legend << stack;
 
 
-    } // for hname
+//    } // for hname
 
-    c << endc;
+//    c << endc;
 }
