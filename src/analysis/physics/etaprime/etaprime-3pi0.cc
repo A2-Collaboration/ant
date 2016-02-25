@@ -102,18 +102,30 @@ void Etap3pi0::ProcessEvent(const TEvent& event, manager_t&)
 
     hists.at("steps").at("evcount")->Fill("1) totalEvts",1);
 
+    // fill channels and set true particle ids if possible
+
     if ( mcdata.ParticleTree )
     {
         if (mcdata.ParticleTree->IsEqual(signal_tree, utils::ParticleTools::MatchByParticleName))
+        {
             hists.at("channels").at("mc_true")->Fill(utils::ParticleTools::GetDecayString(mcdata.ParticleTree).c_str(),1);
+            vars.truetype = 0;
+        }
         if (mcdata.ParticleTree->IsEqual(reference_tree, utils::ParticleTools::MatchByParticleName))
+        {
             hists.at("channels").at("mc_true")->Fill(utils::ParticleTools::GetDecayString(mcdata.ParticleTree).c_str(),1);
+            vars.truetype = 1;
+        }
         if (mcdata.ParticleTree->IsEqual(bkg_tree, utils::ParticleTools::MatchByParticleName))
+        {
             hists.at("channels").at("mc_true")->Fill(utils::ParticleTools::GetDecayString(mcdata.ParticleTree).c_str(),1);
+            vars.truetype = 2;
+        }
+        vars.decayString = utils::ParticleTools::GetDecayString(mcdata.ParticleTree);
     }
 
-    const auto& photons            = data.Particles.Get(ParticleTypeDatabase::Photon);
-    const auto& protonCandidates   = data.Particles.Get(ParticleTypeDatabase::Proton);
+    const auto& photons            =  data.Particles.Get(ParticleTypeDatabase::Photon);
+    const auto& protonCandidates   =  data.Particles.Get(ParticleTypeDatabase::Proton);
     const auto& mcprotons          = mcdata.Particles.Get(ParticleTypeDatabase::Proton);
 
     if ( data.Candidates.size() != 7)
@@ -284,6 +296,9 @@ void Etap3pi0::branches::SetBranches(TTree* tree)
     tree->Branch("event_status", &event_status);
 
     tree->Branch("type", &type);
+    tree->Branch("truetype", &truetype);
+
+    tree->Branch("decayString",&decayString);
 }
 
 void Etap3pi0::AddHist1D(
