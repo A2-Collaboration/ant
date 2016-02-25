@@ -41,7 +41,7 @@ TH1* hstack::Hist_t::GetPtr(const string& path)
 {
    auto ptr = dynamic_cast<TH1*>(gDirectory->Get(path.c_str()));
    if(ptr == nullptr)
-       LOG(WARNING) << "Did not find TH1 for path " << path;
+       LOG(WARNING) << "Could not Get() TH1* for path " << path;
    return ptr;
 }
 
@@ -73,21 +73,66 @@ hstack& hstack::operator<<(const drawoption& c)
     return *this;
 }
 
+ostream& hstack::Print(ostream& s) const
+{
+    s << "ant::hstack: "  << GetName() << ": " << GetTitle() << "\n";
+    /// \todo print current options...?
+    for(const auto& h : hists) {
+        s << "  " << h.Path << "\n";
+    }
+    s << endl;
+    return s;
+}
+
+void hstack::Print(Option_t*) const
+{
+    cout << *this;
+}
+
+void hstack::Print() const
+{
+    Print("");
+}
+
 void hstack::checkHists()
 {
     auto it_hist = hists.begin();
     while(it_hist != hists.end()) {
-        if(it_hist->Ptr == nullptr)
-            it_hist = hists.erase(it_hist);
-        else
-            it_hist++;
+        Hist_t hist = *it_hist;
+        if(hist.Ptr == nullptr) {
+            // try to get it now, might be that after merge
+            // the Ptr is not yet initialized
+            hist.Ptr = Hist_t::GetPtr(hist.Path);
+            // erase if still unsuccessful
+            if(hist.Ptr == nullptr) {
+                it_hist = hists.erase(it_hist);
+                continue;
+            }
+        }
+        it_hist++;
     }
+}
+
+bool hstack::IsCompatible(const hstack& other) const
+{
+    // we do not check hists here, since that's what could be merged
+    return string(GetName()) == string(other.GetName()) &&
+            string(GetTitle()) == string(other.GetTitle()) &&
+            xlabel == other.xlabel &&
+            ylabel == other.ylabel &&
+            UseIntelliLegend == other.UseIntelliLegend &&
+            IgnoreEmptyHist == other.IgnoreEmptyHist &&
+            DrawNoStack == other.DrawNoStack;
+
 }
 
 void hstack::Draw(const char* option)
 {
     if(hists.empty())
         return;
+
+    // ensure the histograms are ok
+    checkHists();
 
     vector<string> orig_titles;
     if(UseIntelliLegend) {
@@ -154,6 +199,35 @@ void hstack::Browse(TBrowser* b)
 {
     Draw(b ? b->GetDrawOption() : "");
     gPad->Update();
+}
+
+Long64_t hstack::Merge(TCollection* li)
+{
+    if(!li)
+        return 0;
+    TIter next(li);
+
+    while(auto h = dynamic_cast<hstack*>(next())) {
+        if(!IsCompatible(*h)) {
+            LOG(ERROR) << "Skipping incompatible hstack:\n "
+                         << *this << "\n"
+                         << *h;
+            continue;
+        }
+        // we add non-existing paths
+        auto have_path = [] (const hists_t& hists, const string& path) {
+            for(const auto& hist : hists)
+                if(hist.Path == path)
+                    return true;
+            return false;
+        };
+        for(const auto& hist : h->hists) {
+            if(!have_path(hists, hist.Path))
+                hists.emplace_back(hist);
+        }
+    }
+
+    return 0;
 }
 
 // cereal business
