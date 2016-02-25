@@ -2,20 +2,22 @@
 
 
 
-#include "base/cereal/cereal.hpp"
 #include "base/std_ext/string.h"
+#include "base/std_ext/math.h"
 #include "base/Logger.h"
 
-#include "tree/stream_TBuffer.h"
 
+#include "base/cereal/cereal.hpp"
 #include "base/cereal/types/string.hpp"
 #include "base/cereal/types/vector.hpp"
 #include "base/cereal/archives/binary.hpp"
+#include "tree/stream_TBuffer.h"
 
 #include "TPad.h"
 #include "THStack.h"
 #include "TBrowser.h"
 #include "TDirectory.h"
+#include "TVirtualHistPainter.h"
 
 #include <list>
 
@@ -23,6 +25,9 @@ using namespace ant;
 using namespace std;
 
 const hstack::options_t hstack::options_t::all_enabled = {true, true, true, true};
+
+double hstack::Global_MC_Scaling = std_ext::NaN;
+map<TH1*, double> hstack::Scaled_Hists = {};
 
 bool hstack::options_t::operator==(const hstack::options_t& rhs) const {
     /// \todo check if one could use the serialize method here...
@@ -46,7 +51,7 @@ hstack::hstack() {}
 hstack::~hstack()
 {}
 
-TH1* hstack::Hist_t::GetPtr(const string& path)
+TH1* hstack::hist_t::GetPtr(const string& path)
 {
    auto ptr = dynamic_cast<TH1*>(gDirectory->Get(path.c_str()));
    if(ptr == nullptr)
@@ -54,7 +59,7 @@ TH1* hstack::Hist_t::GetPtr(const string& path)
    return ptr;
 }
 
-string hstack::Hist_t::GetPath(const TH1* ptr)
+string hstack::hist_t::GetPath(const TH1* ptr)
 {
     const std::string path = std_ext::formatter()
             << ptr->GetDirectory()->GetPath()
@@ -85,6 +90,8 @@ hstack& hstack::operator<<(const drawoption& c)
 ostream& hstack::Print(ostream& s) const
 {
     s << "ant::hstack: "  << GetName() << ": " << GetTitle() << "\n";
+    if(isfinite(Global_MC_Scaling))
+        s << "Global MC Scaling = " << Global_MC_Scaling;
     /// \todo print current options...?
     for(const auto& h : hists) {
         s << "  " << h.Path << "\n";
@@ -92,6 +99,8 @@ ostream& hstack::Print(ostream& s) const
     s << endl;
     return s;
 }
+
+
 
 void hstack::Print(const char*) const
 {
@@ -107,11 +116,11 @@ void hstack::checkHists()
 {
     auto it_hist = hists.begin();
     while(it_hist != hists.end()) {
-        Hist_t hist = *it_hist;
+        hist_t hist = *it_hist;
         if(hist.Ptr == nullptr) {
             // try to get it now, might be that after merge
             // the Ptr is not yet initialized
-            hist.Ptr = Hist_t::GetPtr(hist.Path);
+            hist.Ptr = hist_t::GetPtr(hist.Path);
             // erase if still unsuccessful
             if(hist.Ptr == nullptr) {
                 it_hist = hists.erase(it_hist);
@@ -176,30 +185,34 @@ void hstack::Draw(const char* option)
             if(fHists->IsEmpty())
                 return;
 
-            // Why the hell does the following not work?
+            // Why the hell does the following not work from scratch?
             // std::reverse(fHists->begin(), fHists->end());
             // can't ROOT just stick to STL...grrr
 
-            auto reverse_TList =  [] (TList* list) {
+            auto reverse_TList =  [] (TList* li) {
                 // this is super ugly, one should actually just re-link the list
                 // we also need to pay attention to the options attached to each list node
-                std::list<std::pair<TObject*, std::string>> tmp;
-                auto lastlink = list->LastLink();
+                list<pair<TH1*, string>> tmp_hists;
+                auto lastlink = li->LastLink();
                 while(lastlink) {
-                    tmp.emplace_back(lastlink->GetObject(), lastlink->GetOption());
+                    TH1* hist = dynamic_cast<TH1*>(lastlink->GetObject());
+                    const string option = lastlink->GetOption();
+                    tmp_hists.emplace_back(hist, option);
                     lastlink = lastlink->Prev();
                 }
-                list->Clear("nodelete");
-                for(const auto& o : tmp)
-                    list->Add(o.first, o.second.c_str());
+                li->Clear("nodelete");
+                for(const auto& o : tmp_hists)
+                    li->Add(o.first, o.second.c_str());
             };
 
             reverse_TList(fHists);
-            Modified(); // invalidate fStack
+
             // let's hope that this does not throw an exception
+            // before we unreverse the fHists
             THStack::Paint(chopt);
+
             reverse_TList(fHists);
-            Modified(); // invalidate fStack
+
         }
 
     };
@@ -215,10 +228,16 @@ void hstack::Draw(const char* option)
     }
 
     if(nAdded>0) {
+
+        UpdateMCScaling();
+
+        // finally draw the stack
         string option_str(option);
         if(options.DrawNoStack)
             option_str += "nostack";
         stack->Draw(option_str.c_str());
+
+        // axis business
         auto xaxis = stack->GetXaxis();
         if(xaxis)
             xaxis->SetTitle(xlabel.c_str());
@@ -226,6 +245,7 @@ void hstack::Draw(const char* option)
         auto yaxis = stack->GetYaxis();
         if(yaxis)
             yaxis->SetTitle(ylabel.c_str());
+
     }
     else {
         LOG(WARNING) << "No histograms in ant::hstack to draw (maybe all empty)";
@@ -234,7 +254,7 @@ void hstack::Draw(const char* option)
 
     if(options.UseIntelliLegend) {
         if(nAdded>0)
-            gPad->BuildLegend();
+            gPad->BuildLegend(0.7, 0.67, 0.88, 0.88);
         for(size_t i=0;i<orig_titles.size();i++)
             hists[i].Ptr->SetTitle(orig_titles[i].c_str());
     }
@@ -245,6 +265,39 @@ void hstack::Browse(TBrowser* b)
 {
     Draw(b ? b->GetDrawOption() : "");
     gPad->Update();
+}
+
+void hstack::SetGlobalMCScaling(double scaling)
+{
+    if(isfinite(scaling) && scaling != 0) {
+
+        Global_MC_Scaling = scaling;
+        UpdateMCScaling();
+        gPad->Modified();
+        gPad->Update();
+        cout << endl << "ant::hstack: Set global MC scaling to " << scaling << endl;
+    }
+}
+
+void hstack::UpdateMCScaling()
+{
+    if(isfinite(Global_MC_Scaling)) {
+        for(hist_t& hist : hists) {
+            /// \todo find better way to detect which histograms
+            /// should NOT be scaled. We assume that data is always drawn
+            /// with error bars.
+            if(std_ext::contains(hist.Option, "E"))
+                continue;
+            // have a look if this hist was scaled already
+            double scale = Global_MC_Scaling;
+            auto it_scaled_hist = Scaled_Hists.find(hist.Ptr);
+            if(it_scaled_hist != Scaled_Hists.end()) {
+                scale /= it_scaled_hist->second;
+            }
+            hist.Ptr->Scale(scale);
+            Scaled_Hists[hist.Ptr] = Global_MC_Scaling;
+        }
+    }
 }
 
 Long64_t hstack::Merge(TCollection* li)

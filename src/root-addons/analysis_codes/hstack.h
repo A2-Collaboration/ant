@@ -92,33 +92,38 @@ struct hstack : TNamed
         checkHists();
     }
 
+    static double Global_MC_Scaling;
+    static std::map<TH1*, double> Scaled_Hists;
+    void UpdateMCScaling();
+
 protected:
 
-    struct Hist_t {
+    struct hist_t {
 
-        Hist_t(TH1* ptr, const std::string& option) :
+        hist_t(TH1* ptr, const std::string& option) :
             Path(GetPath(ptr)),
             Ptr(ptr),
-            Option(option) {}
+            Option(option)
+        {}
 
         // clear the Ptr on copy
         // checkHists() needs to be called then
-        Hist_t(const Hist_t& other) {
+        hist_t(const hist_t& other) {
             Path = other.Path;
             Option = other.Option;
             Ptr = nullptr;
         }
-        Hist_t& operator= (const Hist_t&) = delete;
+        hist_t& operator= (const hist_t&) = delete;
 
         // move is ok
-        Hist_t& operator= (Hist_t&&) = default;
-        Hist_t(Hist_t&&) = default;
+        hist_t& operator= (hist_t&&) = default;
+        hist_t(hist_t&&) = default;
 
         std::string Path;
         TH1* Ptr = nullptr;
         std::string Option;
 
-        Hist_t() {}
+        hist_t() {}
 
 
         template<typename Archive>
@@ -135,7 +140,7 @@ protected:
         static std::string GetPath(const TH1* ptr);
     };
 
-    using hists_t = std::vector<Hist_t>;
+    using hists_t = std::vector<hist_t>;
     hists_t hists;
 
     std::string current_option;
@@ -157,6 +162,8 @@ public:
     virtual void Print() const; //*MENU*
     virtual void Draw(const char* option) override;
     virtual void Browse(TBrowser* b) override;
+
+    virtual void SetGlobalMCScaling(double scaling); //*MENU*
 
     // to be used with Ant-hadd
     Long64_t Merge(TCollection* li);
