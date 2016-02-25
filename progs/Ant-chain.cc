@@ -60,7 +60,7 @@ int main(int argc, char** argv) {
     auto cmd_macrooverwrite  = cmd.add<TCLAP::SwitchArg>("","macrooverwrite","Overwrite existing macro file",false);
     auto cmd_proofworkers  = cmd.add<TCLAP::ValueArg<unsigned>>("","proofworkers","Specify number of workers for PROOF, =0 disables it.",false,8,"n");
     auto cmd_ignoretreeevents  = cmd.add<TCLAP::SwitchArg>("","ignoretreeevents","Ignore the ubiquitious treeEvents",false);
-
+    auto cmd_checkentries = cmd.add<TCLAP::SwitchArg>("","checkentries","Check the total entries of tree (might be slow)",false);
 
     cmd.parse(argc, argv);
 
@@ -117,7 +117,10 @@ int main(int argc, char** argv) {
 
         unsigned n = 0;
         for(auto chain : chains) {
-            LOG(INFO) << chain->GetName() << ": " << chain->GetEntries() << " Entries";
+            if(cmd_checkentries->isSet())
+                LOG(INFO) << "Chain: " << chain->GetName() << ": " << chain->GetEntries() << " Entries";
+            else
+                LOG(INFO) << "Chain: " << chain->GetName();
             if(macrofile) {
                 string chainname = "tree";
                 if(chains.size()>1)
