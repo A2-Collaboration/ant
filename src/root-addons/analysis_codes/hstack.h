@@ -43,8 +43,54 @@ struct hstack : TNamed
 #endif
 {
 
-// for CINT, this class looks empty (except TNamed inheritance)
+// for CINT, this class looks empty (except TNamed inheritance and some methods)
 #ifndef __CINT__
+
+    struct options_t {
+        bool UseIntelliLegend;
+        bool IgnoreEmptyHist;
+        bool DrawNoStack;
+        bool ShowEntriesInLegend;
+        // by default we don't use any of those fancy options
+        options_t(bool useIntelliLegend = false,
+                  bool ignoreEmptyHist = false,
+                  bool drawNoStack = false,
+                  bool showEntriesInLegend = false) :
+            UseIntelliLegend(useIntelliLegend),
+            IgnoreEmptyHist(ignoreEmptyHist),
+            DrawNoStack(drawNoStack),
+            ShowEntriesInLegend(showEntriesInLegend)
+        {}
+
+        static const options_t all_enabled;
+
+        bool operator== (const options_t& rhs) const;
+
+        template<typename Archive>
+        void serialize(Archive archive) {
+            archive(UseIntelliLegend, IgnoreEmptyHist, DrawNoStack, ShowEntriesInLegend);
+        }
+    };
+
+    hstack(const std::string& name, const std::string& title="",
+           const options_t& options_ = {});
+
+    bool IsCompatible(const hstack& other) const;
+
+    hstack(hstack&&) = default;
+    hstack& operator= (hstack&&) = default;
+
+    hstack& operator<< (TH1* hist);
+    hstack& operator<< (const drawoption& c);
+
+    virtual std::ostream& Print( std::ostream& s) const override;
+
+    template<typename Archive>
+    void serialize(Archive archive) {
+        archive(static_cast<TNamed&>(*this),
+                hists, xlabel, ylabel, options);
+        checkHists();
+    }
 
 protected:
 
@@ -98,38 +144,14 @@ protected:
     std::string ylabel;
     std::string title;
 
-    bool UseIntelliLegend;
-    bool IgnoreEmptyHist;
-    bool DrawNoStack;
+    options_t options;
 
     void checkHists();
 
 
+#endif // __CINT__
+
 public:
-    hstack(const std::string& name, const std::string& title="",
-           bool useIntelliLegend = false,
-           bool ignoreEmptyHist = false,
-           bool drawNoStack = false);
-
-    bool IsCompatible(const hstack& other) const;
-
-    hstack(hstack&&) = default;
-    hstack& operator= (hstack&&) = default;
-
-    hstack& operator<< (TH1* hist);
-    hstack& operator<< (const drawoption& c);
-
-    virtual std::ostream& Print( std::ostream& s) const override;
-
-    template<typename Archive>
-    void serialize(Archive archive) {
-        archive(static_cast<TNamed&>(*this),
-                hists, xlabel, ylabel,
-                UseIntelliLegend, IgnoreEmptyHist, DrawNoStack);
-        checkHists();
-    }
-
-#endif
 
     virtual void Print(Option_t*) const override;
     virtual void Print() const; //*MENU*
@@ -138,8 +160,6 @@ public:
 
     // to be used with Ant-hadd
     Long64_t Merge(TCollection* li);
-
-public:
 
     hstack();
     virtual ~hstack();

@@ -20,14 +20,21 @@
 using namespace ant;
 using namespace std;
 
+const hstack::options_t hstack::options_t::all_enabled = {true, true, true, true};
+
+bool hstack::options_t::operator==(const hstack::options_t& rhs) const {
+    /// \todo check if one could use the serialize method here...
+    auto make_tuple = [] (const options_t& o) {
+        return std::tie(o.UseIntelliLegend, o.IgnoreEmptyHist,
+                        o.DrawNoStack, o.ShowEntriesInLegend);
+    };
+    return make_tuple(*this) == make_tuple(rhs);
+}
+
 hstack::hstack(const string& name, const std::string& title,
-               bool useIntelliLegend,
-               bool ignoreEmptyHist,
-               bool drawNoStack) :
+               const options_t& options_) :
     TNamed(name.c_str(), title.c_str()),
-    UseIntelliLegend(useIntelliLegend),
-    IgnoreEmptyHist(ignoreEmptyHist),
-    DrawNoStack(drawNoStack)
+    options(options_)
 {
     gDirectory->Append(this);
 }
@@ -120,9 +127,7 @@ bool hstack::IsCompatible(const hstack& other) const
             string(GetTitle()) == string(other.GetTitle()) &&
             xlabel == other.xlabel &&
             ylabel == other.ylabel &&
-            UseIntelliLegend == other.UseIntelliLegend &&
-            IgnoreEmptyHist == other.IgnoreEmptyHist &&
-            DrawNoStack == other.DrawNoStack;
+            options == other.options;
 
 }
 
@@ -135,7 +140,7 @@ void hstack::Draw(const char* option)
     checkHists();
 
     vector<string> orig_titles;
-    if(UseIntelliLegend) {
+    if(options.UseIntelliLegend) {
         const auto& delim = ": ";
         vector<vector<string>> title_parts;
         map<string, unsigned>  token_counter;
@@ -154,7 +159,10 @@ void hstack::Draw(const char* option)
             for(const auto& token : tokens)
                 if(token_counter[token] < hists.size())
                     unique_tokens.emplace_back(token);
-            hists[i].Ptr->SetTitle(std_ext::concatenate_string(unique_tokens, delim).c_str());
+            string unique_title = std_ext::concatenate_string(unique_tokens, delim);
+            if(options.ShowEntriesInLegend)
+                unique_title += std_ext::formatter() << ": " << hists[i].Ptr->GetEntries();
+            hists[i].Ptr->SetTitle(unique_title.c_str());
         }
     }
 
@@ -162,7 +170,7 @@ void hstack::Draw(const char* option)
 
     unsigned nAdded = 0;
     for(const auto& hist : hists) {
-        if(IgnoreEmptyHist && hist.Ptr->GetEntries()==0)
+        if(options.IgnoreEmptyHist && hist.Ptr->GetEntries()==0)
             continue;
         stack->Add(hist.Ptr, hist.Option.c_str());
         nAdded++;
@@ -170,7 +178,7 @@ void hstack::Draw(const char* option)
 
     if(nAdded>0) {
         string option_str(option);
-        if(DrawNoStack)
+        if(options.DrawNoStack)
             option_str += "nostack";
         stack->Draw(option_str.c_str());
         auto xaxis = stack->GetXaxis();
@@ -186,7 +194,7 @@ void hstack::Draw(const char* option)
     }
 
 
-    if(UseIntelliLegend) {
+    if(options.UseIntelliLegend) {
         if(nAdded>0)
             gPad->BuildLegend();
         for(size_t i=0;i<orig_titles.size();i++)
@@ -270,5 +278,7 @@ void hstack::Streamer(TBuffer& R__b)
         ar(*this);
     }
 }
+
+
 
 

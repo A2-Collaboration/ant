@@ -171,13 +171,13 @@ private:
         if(Stacks.empty()) {
             for(auto h : histptrs) {
                 const std::string name = h->GetName();
-                Stacks.emplace_back(HistFac.make<ant::hstack>( // use the parent histFac here!
-                                        name,
-                                        H.GetTitlePrefix()+": "+name,
-                                        true, // use intelliLegend
-                                        true, // ignore empty histograms
-                                        true  // always draw with nostack option
-                                        ));
+                Stacks.emplace_back(
+                            HistFac.make<ant::hstack>(
+                                // use the parent histFac here!
+                                name,
+                                H.GetTitlePrefix()+": "+name,
+                                ant::hstack::options_t::all_enabled
+                                ));
             }
         }
 
