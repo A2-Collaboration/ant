@@ -181,7 +181,7 @@ int main( int argc, char **argv )
    } else {
       targetname = argv[ffirst-1];
    }
-      
+
    if (verbosity > 1) {
       cout << "hadd Target file: " << targetname << endl;
    }
@@ -198,7 +198,7 @@ int main( int argc, char **argv )
       exit(1);
    }
 
-   
+
    for ( int i = ffirst; i < argc; i++ ) {
       if (argv[i] && argv[i][0]=='@') {
          std::ifstream indirect_file(argv[i]+1);
@@ -211,7 +211,7 @@ int main( int argc, char **argv )
             if( std::getline(indirect_file, line) && line.length() &&  !merger.AddFile(line.c_str()) ) {
                return 1;
             }
-         }         
+         }
       } else if( ! merger.AddFile(argv[i]) ) {
          if ( skip_errors ) {
             cerr << "hadd skipping file with error: " << argv[i] << endl;
