@@ -74,9 +74,13 @@
 #include "TROOT.h"
 #include "TInterpreter.h"
 
+#include "base/Logger.h"
+
 //___________________________________________________________________________
 int main( int argc, char **argv )
 {
+
+   SetupLogger();
 
    if ( argc < 3 || "-h" == string(argv[1]) || "--help" == string(argv[1]) ) {
       cout << "Usage: " << argv[0] << " [-f[0-9]] [-k] [-T] [-O] [-n maxopenedfiles] [-v verbosity] targetfile source1 [source2 source3 ...]" << endl;
