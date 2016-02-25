@@ -107,17 +107,39 @@ void Fill(Tree_t<Hist_t> cuttree, const Fill_t& f) {
     }
 }
 
-struct HistMod_t : std::function<void(TH1*)> {
-    using std::function<void(TH1*)>::function;
+// returns string to be used as draw option
+struct HistMod_t : std::function<std::string(TH1*)> {
+    // use constructors
+    using std::function<std::string(TH1*)>::function;
+
+    HistMod_t() : std::function<std::string(TH1*)>([] (TH1*) { return ""; }) {}
 
     static Color_t GetColor(unsigned i) {
         const std::vector<Color_t> colors = {kGreen+1, kBlue, kYellow+1, kMagenta, kCyan, kOrange, kSpring+10,};
         return colors[i % colors.size()];
     }
 
-    static HistMod_t MakeColor(const Color_t color) {
-        return [color] (TH1* h) { h->SetLineColor(color); };
+    static HistMod_t MakeLine(const Color_t color, double linewidth = 1.0) {
+        return [color, linewidth] (TH1* h) {
+            h->SetLineColor(color);
+            h->SetLineWidth(linewidth);
+            h->SetMarkerSize(1);
+            h->SetMarkerColor(color);
+            return "";
+        };
     }
+
+    static HistMod_t MakeDataPoints(const Color_t color, double linewidth = 1.0) {
+        return [color, linewidth] (TH1* h) {
+            h->SetLineColor(color);
+            h->SetLineWidth(linewidth);
+            h->SetMarkerColor(color);
+            h->SetMarkerStyle(kPlus);
+            return "E"; // draw error bars
+        };
+
+    }
+
 };
 
 template<typename Hist_t>
@@ -130,7 +152,9 @@ protected:
     }
 
 
-    const Hist_t& GetHist(unsigned key, const std::string& name = "", HistMod_t histmod = [] (TH1*) {}) {
+    const Hist_t& GetHist(unsigned key,
+                          const std::string& name = "",
+                          HistMod_t histmod = {}) {
         auto it_hist = Hists.lower_bound(key);
         if(it_hist == Hists.end() || it_hist->first != key) {
             if(name.empty())
@@ -180,14 +204,12 @@ private:
                                 ));
             }
         }
-
-        for(TH1* h : histptrs) {
-            h->SetLineWidth(2); // make it thicker by default
-            hist.Modify(h);
-        }
         assert(histptrs.size() == Stacks.size());
-        for(size_t i=0;i<Stacks.size();i++)
-            *Stacks[i] << histptrs[i];
+
+        for(size_t i=0;i<Stacks.size();i++) {
+            TH1* h = histptrs[i];
+            *Stacks[i] << drawoption(hist.Modify(h)) << h;
+        }
     }
 
 };
