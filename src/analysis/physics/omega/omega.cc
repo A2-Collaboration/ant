@@ -626,6 +626,14 @@ void OmegaEtaG2::Analyse(const TEventData &data, const TEvent& event, manager_t&
     //const auto& mctrue_photons = event.MCTrue().Particles().Get(ParticleTypeDatabase::Photon);
     t.Channel = reaction_channels.identify(event.MCTrue->ParticleTree);
 
+    if(t.Channel == ReactionChannelList_t::other_index) {
+        if(event.MCTrue->ParticleTree!=nullptr) {
+            missed_channels->Fill(utils::ParticleTools::GetDecayString(event.MCTrue->ParticleTree).c_str(), 1.0);
+        }
+    } else {
+        found_channels->Fill(t.Channel);
+    }
+
     t.p      = *proton;
     t.p_Time = getTime(proton);
 
@@ -901,11 +909,11 @@ OmegaEtaG2::OmegaEtaG2(const std::string& name, OptionsPtr opts):
 
     steps = HistFac.makeTH1D("Steps","Step","Events passed",BinSettings(14),"steps");
     missed_channels = HistFac.makeTH1D("Unlisted Channels","","Total Events seen",BinSettings(20),"unlistedChannels");
-    found_channels  = HistFac.makeTH1D("Listed Channels",  "","Total Events seen",BinSettings(reaction_channels.channels.size()+1),"listedChannels");
+    found_channels  = HistFac.makeTH1D("Listed Channels",  "","Total Events seen",BinSettings(20),"listedChannels");
 
-    found_channels->GetXaxis()->SetBinLabel(1, "Data");
     for(const auto& c : reaction_channels.channels) {
-        found_channels->GetXaxis()->SetBinLabel(c.first+1,c.second.name.c_str());
+        if(c.first<20)
+            found_channels->GetXaxis()->SetBinLabel(c.first+1,c.second.name.c_str());
     }
 
 }
