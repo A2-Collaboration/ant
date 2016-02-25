@@ -330,7 +330,8 @@ void KinFitter::SetProton(const TParticlePtr& proton)
     Proton.Theta.Value      = proton->Theta();
     Proton.Phi.Value        = proton->Phi();
 
-    assert(proton->Candidate!=nullptr);
+    if (proton->Candidate == nullptr)
+        throw std::runtime_error(aplcon->GetName() + ": Proton-Candidate for Kinfitter not set!");
 
     if(proton->Candidate->Detector & Detector_t::Type_t::CB) {
         Proton.Theta.Sigma = degree_to_radian(5.43);
