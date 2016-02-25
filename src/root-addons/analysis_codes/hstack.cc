@@ -17,6 +17,8 @@
 #include "TBrowser.h"
 #include "TDirectory.h"
 
+#include <list>
+
 using namespace ant;
 using namespace std;
 
@@ -91,7 +93,7 @@ ostream& hstack::Print(ostream& s) const
     return s;
 }
 
-void hstack::Print(Option_t*) const
+void hstack::Print(const char*) const
 {
     cout << *this;
 }
@@ -166,7 +168,43 @@ void hstack::Draw(const char* option)
         }
     }
 
-    auto stack = new THStack((string(GetName())+"_").c_str(), GetTitle());
+    // hack the THStack such that the last histogram added gets drawn first
+    struct THStack_hack : THStack {
+        using THStack::THStack; // use constructors
+        virtual void Paint(const char* chopt="") override {
+
+            if(fHists->IsEmpty())
+                return;
+
+            // Why the hell does the following not work?
+            // std::reverse(fHists->begin(), fHists->end());
+            // can't ROOT just stick to STL...grrr
+
+            auto reverse_TList =  [] (TList* list) {
+                // this is super ugly, one should actually just re-link the list
+                // we also need to pay attention to the options attached to each list node
+                std::list<std::pair<TObject*, std::string>> tmp;
+                auto lastlink = list->LastLink();
+                while(lastlink) {
+                    tmp.emplace_back(lastlink->GetObject(), lastlink->GetOption());
+                    lastlink = lastlink->Prev();
+                }
+                list->Clear("nodelete");
+                for(const auto& o : tmp)
+                    list->Add(o.first, o.second.c_str());
+            };
+
+            reverse_TList(fHists);
+            Modified(); // invalidate fStack
+            // let's hope that this does not throw an exception
+            THStack::Paint(chopt);
+            reverse_TList(fHists);
+            Modified(); // invalidate fStack
+        }
+
+    };
+
+    auto stack = new THStack_hack((string(GetName())+"_").c_str(), GetTitle());
 
     unsigned nAdded = 0;
     for(const auto& hist : hists) {

@@ -153,7 +153,7 @@ protected:
 
 public:
 
-    virtual void Print(Option_t*) const override;
+    virtual void Print(const char* option) const override;
     virtual void Print() const; //*MENU*
     virtual void Draw(const char* option) override;
     virtual void Browse(TBrowser* b) override;
