@@ -65,7 +65,7 @@ struct MCTrue_Splitter : cuttree::StackedHists_t<Hist_t> {
 
         const int mctrue = f.Tree.Channel;
 
-        auto get_bkg_name = [] (unsigned mctrue) {
+        auto get_bkg_name = [] (int mctrue) {
             const auto entry = physics::OmegaEtaG2::reaction_channels.channels.find(mctrue);
 
             if(entry!=physics::OmegaEtaG2::reaction_channels.channels.end())
@@ -115,6 +115,9 @@ struct OmegaHist_t {
     TH1D* h_bachelorE;
     TH2D* h_p_Theta_E;
     TH2D* h_mm_gggIM;
+    TH2D* h_PSA;
+    TH1D* h_TaggCh;
+    TH1D* h_TaggTime;
 
     const BinSettings Ebins = BinSettings(1600,   0, 1600);
 
@@ -127,17 +130,27 @@ struct OmegaHist_t {
     const BinSettings MMgggIMbins_X = BinSettings(600, 0, 1200);
     const BinSettings MMgggIMbins_Y = BinSettings(750, 500, 2000);
 
-    const BinSettings pThetaBins = BinSettings(500, 0, 50);
-    const BinSettings pEbins = BinSettings(1000,   0, 1000);
+    const BinSettings pThetaBins = BinSettings( 500,  0,   50);
+    const BinSettings pEbins     = BinSettings(1000,  0, 1000);
+    const BinSettings PSAABins   = BinSettings(  60, 20,   60);
+    const BinSettings PSARBins   = BinSettings( 100,  0,  450);
+    const BinSettings TaggChBins = BinSettings(47);
+    const BinSettings Chi2Bins   = BinSettings(100,0,50);
+    const BinSettings TaggTime   = BinSettings(200, -25, 25);
 
     OmegaHist_t(HistogramFactory HistFac) {
-        h_KinFitChi2 = HistFac.makeTH1D("KinFitChi2", "#chi^{2}",             "", BinSettings(200,0,100), "h_KinFitChi2");
-        h_gggIM      = HistFac.makeTH1D("3#gamma IM", "3#gamma IM [MeV]",     "", IMbins,                 "h_ggg_IM");
-        h_ggIM       = HistFac.makeTH1D("2#gamma sub-IM", "2#gamma IM [MeV]", "", IMbins,                 "h_gg_IM");
-        h_mm         = HistFac.makeTH1D("Missing Mass",   "MM [MeV]",         "", IMbins,                 "h_mm");
-        h_bachelorE  = HistFac.makeTH1D("Bachelor E",     "E [MeV]",          "", IMbins,                 "h_bachelorE");
-        h_p_Theta_E  = HistFac.makeTH2D("Proton #theta vs. E_{k}", "E_{k} [MeV]", "#theta [#circ]", pEbins, pThetaBins, "h_p_theta_E");
-        h_mm_gggIM   = HistFac.makeTH2D("Missing Mass / 3#gamma IM", "3#gamma IM [MeV]", "MM [MeV]", IMbins, MMbins, "h_mm_gggIM");
+        h_KinFitChi2 = HistFac.makeTH1D("KinFitChi2",      "#chi^{2}",             "",       Chi2Bins,   "h_KinFitChi2");
+        h_gggIM      = HistFac.makeTH1D("3#gamma IM",      "3#gamma IM [MeV]",     "",       IMbins,     "h_ggg_IM");
+        h_ggIM       = HistFac.makeTH1D("2#gamma sub-IM",  "2#gamma IM [MeV]",     "",       IMbins,     "h_gg_IM");
+        h_mm         = HistFac.makeTH1D("Missing Mass",    "MM [MeV]",             "",       IMbins,     "h_mm");
+        h_bachelorE  = HistFac.makeTH1D("Bachelor E",      "E [MeV]",              "",       IMbins,     "h_bachelorE");
+        h_TaggCh     = HistFac.makeTH1D("Tagger Channels", "Channel",              "# hits", TaggChBins, "TaggCh");
+        h_TaggTime   = HistFac.makeTH1D("Tagger Time - CB Average Time", "t [ns]", "",       TaggTime,   "TaggTime");
+
+        h_p_Theta_E  = HistFac.makeTH2D("Proton #theta vs. E_{k}", "E_{k} [MeV]", "#theta [#circ]",  pEbins,   pThetaBins, "h_p_theta_E");
+        h_mm_gggIM   = HistFac.makeTH2D("Missing Mass / 3#gamma IM", "3#gamma IM [MeV]", "MM [MeV]", IMbins,   MMbins,     "h_mm_gggIM");
+        h_PSA        = HistFac.makeTH2D("Proton PSA", "PSA Angle [#circ]", "PSA Radius",             PSAABins, PSARBins,   "p_PSA");
+
     }
 
     void Fill(const Fill_t& f) const {
@@ -154,14 +167,30 @@ struct OmegaHist_t {
         for(const auto& v : f.Tree.BachelorE())
             h_bachelorE->Fill(v, f.TaggW());
 
-        h_p_Theta_E->Fill(f.Tree.ggg().M(), radian_to_degree(f.Tree.p().Theta()));
+        h_p_Theta_E->Fill(f.Tree.p_fitted().E() - ParticleTypeDatabase::Proton.Mass(), radian_to_degree(f.Tree.p_fitted().Theta()));
 
         h_mm_gggIM->Fill(f.Tree.ggg().M(), f.Tree.mm().M(), f.TaggW());
+
+        h_PSA->Fill(f.Tree.p_PSA_Angle, f.Tree.p_PSA_Radius, f.TaggW());
+
+        h_TaggCh->Fill(f.Tree.TaggCh, f.TaggW());
+        h_TaggTime->Fill(f.Tree.TaggT - f.Tree.CBAvgTime);
 
     }
 
     std::vector<TH1*> GetHists() const {
-        return {h_KinFitChi2,h_gggIM,h_ggIM,h_mm,h_bachelorE,h_p_Theta_E,h_mm_gggIM};
+        return {
+            h_KinFitChi2,
+                    h_gggIM,
+                    h_ggIM,
+                    h_mm,
+                    h_bachelorE,
+                    h_p_Theta_E,
+                    h_mm_gggIM,
+                    h_PSA,
+                    h_TaggTime,
+                    h_TaggCh
+        };
     }
 
     // Sig and Ref channel share some cuts...
@@ -172,9 +201,14 @@ struct OmegaHist_t {
         cuttree::Cuts_t<Fill_t> cuts;
 
         cuts.emplace_back(MultiCut_t<Fill_t>{
-                                 {"KinFitChi2<10", [] (const Fill_t& f) { return f.Tree.KinFitChi2< 10; } },
-                                 {"mm cut",        [] (const Fill_t& f) { return f.Tree.mm().M()<1100 && f.Tree.mm().M() > 800; } },
+                                 {"KinFitChi2<5 ", [] (const Fill_t& f) { return f.Tree.KinFitChi2<5; } }
                              });
+        cuts.emplace_back(MultiCut_t<Fill_t>{
+                              {"mm cut",        [] (const Fill_t& f) { return f.Tree.mm().M()<1100 && f.Tree.mm().M() > 800; } }
+                          });
+        cuts.emplace_back(MultiCut_t<Fill_t>{
+                              {"gggIM cut",        [] (const Fill_t& f) { return f.Tree.ggg().M()<840 && f.Tree.ggg().M() > 700; } }
+                          });
         return cuts;
     }
 
@@ -191,7 +225,7 @@ int main(int argc, char** argv) {
     auto cmd_maxevents = cmd.add<TCLAP::MultiArg<int>>("m","maxevents","Process only max events",false,"maxevents");
     auto cmd_output = cmd.add<TCLAP::ValueArg<string>>("o","output","Output file",false,"","filename");
 
-    auto cmd_tree = cmd.add<TCLAP::ValueArg<string>>("","tree","Tree name",false,"Fitted/SigAll","treename");
+    auto cmd_tree = cmd.add<TCLAP::ValueArg<string>>("","tree","Tree name",false,"T1","treename");
 
     cmd.parse(argc, argv);
 
