@@ -304,11 +304,11 @@ void KinFitter::SetEgammaBeam(const double &ebeam)
 
 void KinFitter::SetProton(const TParticlePtr& proton)
 {
-    Proton.Ek.Value         = proton->Ek();
+    Proton.Ek.Value    = proton->Ek();
     Proton.Ek.Sigma    = 0.0; // unmeasured
 
-    Proton.Theta.Value      = proton->Theta();
-    Proton.Phi.Value        = proton->Phi();
+    Proton.Theta.Value = proton->Theta();
+    Proton.Phi.Value   = proton->Phi();
 
     if (proton->Candidate == nullptr)
         throw std::runtime_error(aplcon->GetName() + ": Proton-Candidate for Kinfitter not set!");
@@ -323,7 +323,7 @@ void KinFitter::SetProton(const TParticlePtr& proton)
         LOG(WARNING) << "Proton is not in (CB,TAPS)?";
     }
 
-    set_proton = proton;
+    Proton.Particle = proton;
 }
 
 void KinFitter::SetPhotons(const std::vector<TParticlePtr>& photons)
@@ -343,28 +343,29 @@ void KinFitter::SetPhotons(const std::vector<TParticlePtr>& photons)
 
         photon.Phi.Value  = p->Phi();
         photon.Phi.Sigma = PhiResolution(p);
-    }
 
-    set_photons = photons;
+        photon.Particle = p;
+    }
 }
 
 TParticlePtr KinFitter::GetFittedProton() const
 {
-    auto p = make_shared<TParticle>(ParticleTypeDatabase::Proton, Proton.Ek.Value,
-                                    Proton.Theta.Value, Proton.Phi.Value);
-    p->Candidate = set_proton->Candidate;
+    auto p = make_shared<TParticle>(ParticleTypeDatabase::Proton,
+                                    Proton.Ek.Value,
+                                    Proton.Theta.Value,
+                                    Proton.Phi.Value);
+    p->Candidate = Proton.Particle->Candidate;
     return p;
 }
 
 TParticleList KinFitter::GetFittedPhotons() const
 {
-    assert(Photons.size() == set_photons.size());
     TParticleList photons;
     for(unsigned i=0;i<Photons.size();i++) {
         const auto& photon = Photons[i];
         auto p = make_shared<TParticle>(ParticleTypeDatabase::Photon,
                                         photon.Ek.Value, photon.Theta.Value, photon.Phi.Value);
-        p->Candidate = set_photons[i]->Candidate;
+        p->Candidate = photon.Particle->Candidate;
         photons.emplace_back(move(p));
     }
     return photons;
@@ -427,8 +428,8 @@ TreeFitter::TreeFitter(const string& name, ParticleTypeTree ptree, std::function
     for(unsigned i=0;i<tree_leaves.size();i++) {
         node_t& node = tree_leaves[i]->Get();
         leave_names.emplace_back(node.TypeTree->Get().Name()+"_"+to_string(i));
-        node.LeaveParticle = std_ext::make_unique<FitParticle>(leave_names.back());
-        LinkVariable(*node.LeaveParticle);
+        node.Leave = std_ext::make_unique<FitParticle>(leave_names.back());
+        LinkVariable(*node.Leave);
     }
 
     // prepare the calculation at each constraint
@@ -441,15 +442,17 @@ TreeFitter::TreeFitter(const string& name, ParticleTypeTree ptree, std::function
     vector<node_constraint_t> node_constraints;
 
     tree->Map_nodes([&sum_daughters, &node_constraints, nodeSetup] (const tree_t& tnode) {
+        // do not include leaves
         if(tnode->IsLeaf())
             return;
 
-        // always sum daughters
+        // always sum up the tree nodes
         sum_daughters.emplace_back([tnode] () {
             node_t& node = tnode->Get();
-            node.Particle.SetPtEtaPhiE(0,0,0,0);
+            node.LVSum.SetPtEtaPhiE(0,0,0,0);
+            assert(!tnode->Daughters().empty());
             for(const auto& d : tnode->Daughters())
-                node.Particle += d->Get().Particle;
+                node.LVSum += d->Get().LVSum;
         });
 
         const nodesetup_t& setup = nodeSetup(tnode->Get().TypeTree);
@@ -461,7 +464,7 @@ TreeFitter::TreeFitter(const string& name, ParticleTypeTree ptree, std::function
                   << " with sigma=" << IM_Sigma;
         node_constraints.emplace_back([tnode, IM_Sigma] () {
             node_t& node = tnode->Get();
-            const double IM_calc = node.Particle.M();
+            const double IM_calc = node.LVSum.M();
             const double IM_expected = tnode->Get().TypeTree->Get().Mass();
             return (IM_calc - IM_expected)/IM_Sigma;
         });
@@ -473,11 +476,11 @@ TreeFitter::TreeFitter(const string& name, ParticleTypeTree ptree, std::function
     auto tree_leaves_ = tree_leaves; // the local copy here prevents strange behaviour
     auto IM_at_nodes = [tree_leaves_, sum_daughters, node_constraints] (const vector<vector<double>>& v) {
         assert(v.empty() || v.size() == tree_leaves_.size());
-        // assign values v to leaves
+        // assign values v to leaves' LVSum
         for(unsigned i=0;i<v.size();i++) {
             auto& node = tree_leaves_[i]->Get();
             const auto m = node.TypeTree->Get().Mass();
-            node.Particle = FitParticle::GetVector(v[i], m);
+            node.LVSum = FitParticle::GetVector(v[i], m);
         }
 
         // sum daughters' Particle
@@ -510,13 +513,11 @@ bool TreeFitter::NextFit(APLCON::Result_t& fit_result)
 
     for(unsigned i=0;i<p_leaves.size();i++) {
 
-
         const TParticlePtr& p = p_leaves.at(current_perm->at(i));
-        node_t& leave_node = tree_leaves[i]->Get();
 
-        leave_node.SetParticle = p;
+        FitParticle& leave = *tree_leaves[i]->Get().Leave;
 
-        FitParticle& leave = *leave_node.LeaveParticle;
+        leave.Particle = p;
 
         leave.Ek.Value  = p->Ek();
         leave.Ek.Sigma = EnergyResolution(p);

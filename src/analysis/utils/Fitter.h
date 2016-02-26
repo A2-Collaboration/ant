@@ -63,6 +63,8 @@ protected:
 
     struct FitParticle
     {
+        TParticlePtr Particle;
+
         struct Var_t {
             double Value = 0;
             double Sigma = 0;
@@ -139,9 +141,6 @@ public:
 
 protected:
 
-    TParticleList set_photons;
-    TParticlePtr set_proton;
-
     struct PhotonBeamVector {
         double E     = 0.0;
         double Sigma = 0.0;
@@ -196,9 +195,8 @@ public:
     struct node_t {
         node_t(const ParticleTypeTree& ptree) : TypeTree(ptree) {}
         const ParticleTypeTree TypeTree;
-        TLorentzVector Particle;
-        std::unique_ptr<FitParticle> LeaveParticle;
-        TParticlePtr SetParticle;
+        TLorentzVector LVSum;
+        std::unique_ptr<FitParticle> Leave;
         bool operator<(const node_t& rhs) const {
             return TypeTree->Get() < rhs.TypeTree->Get();
         }

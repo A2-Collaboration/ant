@@ -409,24 +409,25 @@ void EtapOmegaG::Sig_t::Fit_t::Process(const EtapOmegaG::Particles_t& particles,
         t.TreeFitChi2 = r.ChiSquare;
         t.TreeFitIterations = r.NIterations;
 
-        EtaPrime_fitted = fitted_EtaPrime->Get().Particle;
+        EtaPrime_fitted = fitted_EtaPrime->Get().LVSum;
 
         // IM fitted expected to be delta peaks since they were fitted...
         t.IM_EtaPrime_fitted = EtaPrime_fitted.M();
-        t.IM_Omega_fitted = fitted_Omega->Get().Particle.M();
-        t.IM_Pi0_fitted = fitted_Pi0->Get().Particle.M();
+        t.IM_Omega_fitted = fitted_Omega->Get().LVSum.M();
+        t.IM_Pi0_fitted = fitted_Pi0->Get().LVSum.M();
 
         // have a look at the assigned gammas to Pi0/Omega
-        const TLorentzVector& Pi0_best = *fitted_g1_Pi0->Get().SetParticle + *fitted_g2_Pi0->Get().SetParticle;
+        // summing up the "best" IMs manually
+        const TLorentzVector& Pi0_best = *fitted_g1_Pi0->Get().Leave->Particle + *fitted_g2_Pi0->Get().Leave->Particle;
         t.IM_Pi0_best = Pi0_best.M();
 
-        g_Omega_best = fitted_g_Omega->Get().SetParticle;
+        g_Omega_best = fitted_g_Omega->Get().Leave->Particle;
         const TLorentzVector& Omega_best = *g_Omega_best + Pi0_best;
         t.IM_Omega_best = Omega_best.M();
 
         // have a look at the EtaPrime bachelor photon
-        g_EtaPrime_fitted = fitted_g_EtaPrime->Get().Particle;
-        g_EtaPrime_best = fitted_g_EtaPrime->Get().SetParticle;
+        g_EtaPrime_fitted = fitted_g_EtaPrime->Get().LVSum;
+        g_EtaPrime_best = fitted_g_EtaPrime->Get().Leave->Particle;
     }
 
     if(isfinite(t.TreeFitChi2)) {
@@ -572,14 +573,14 @@ void EtapOmegaG::Sig_t::FitOmegaPi0_t::Process(const EtapOmegaG::Particles_t& pa
             t.TreeFitIterations = r.NIterations;
 
             // IM fitted expected to be delta peaks since they were fitted...
-            t.IM_Omega_fitted = fitted_Omega->Get().Particle.M();
-            t.IM_Pi0_fitted = fitted_Pi0->Get().Particle.M();
+            t.IM_Omega_fitted = fitted_Omega->Get().LVSum.M();
+            t.IM_Pi0_fitted = fitted_Pi0->Get().LVSum.M();
 
             // have a look at the assigned gammas to Pi0/Omega
-            const TLorentzVector& Pi0_best = *fitted_g1_Pi0->Get().SetParticle + *fitted_g2_Pi0->Get().SetParticle;
+            const TLorentzVector& Pi0_best = *fitted_g1_Pi0->Get().Leave->Particle + *fitted_g2_Pi0->Get().Leave->Particle;
             t.IM_Pi0_best = Pi0_best.M();
 
-            g_Omega_best = fitted_g_Omega->Get().SetParticle;
+            g_Omega_best = fitted_g_Omega->Get().Leave->Particle;
             const TLorentzVector& Omega_best = *g_Omega_best + Pi0_best;
             t.IM_Omega_best = Omega_best.M();
 
