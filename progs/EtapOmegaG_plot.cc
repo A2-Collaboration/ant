@@ -141,6 +141,8 @@ struct SigHist_t : CommonHist_t {
     using Fill_t = CommonHist_t::SigRefFill_t<Tree_t>;
 
     TH2D* h_IM_gg_gg;     // Goldhaber plot
+    TH1D* h_IM_4g;        // EtaPrime IM
+    TH2D* h_IM_3g_4g;     // Omega IM vs. EtaPrime IM
     TH1D* h_TreeFitChi2;
     TH1D* h_Bachelor_E;
 
@@ -153,8 +155,16 @@ struct SigHist_t : CommonHist_t {
                                     bins_goldhaber, bins_goldhaber,
                                     "h_IM_gg_gg"
                                     );
+        BinSettings IM_Etap(100,800,1000);
+        BinSettings IM_Omega(100, 700, 950);
+        h_IM_4g = HistFac.makeTH1D("#eta' IM", "IM(#pi^{0}#gamma#gamma) / MeV","",IM_Etap,"h_IM_4g");
+        h_IM_3g_4g = HistFac.makeTH2D("Best #omega vs. #eta' IM",
+                                      "IM(#pi^{0}#gamma#gamma) / MeV",
+                                      "IM(#pi^{0}#gamma) best / MeV",
+                                      IM_Etap, IM_Omega,"h_IM_3g_4g"
+                                      );
         h_TreeFitChi2 = HistFac.makeTH1D("TreeFitChi2", "#chi^{2}","",BinSettings(200,0,100),"h_TreeFitChi2");
-        h_Bachelor_E = HistFac.makeTH1D("E_#gamma in #eta' frame","E_{#gamma}","",BinSettings(400,0,400),"h_Bachelor_E");
+        h_Bachelor_E = HistFac.makeTH1D("E_#gamma in #eta' frame","E_{#gamma} / MeV","",BinSettings(400,0,400),"h_Bachelor_E");
     }
 
     void Fill(const Fill_t& f) const {
@@ -166,11 +176,13 @@ struct SigHist_t : CommonHist_t {
         }
         h_TreeFitChi2->Fill(tree.TreeFitChi2, f.TaggW());
         h_Bachelor_E->Fill(tree.Bachelor_best_best, f.TaggW());
+        h_IM_3g_4g->Fill(tree.IM_EtaPrime_best, tree.IM_Omega_best, f.TaggW());
+        h_IM_4g->Fill(tree.IM_EtaPrime_best, f.TaggW());
     }
 
     std::vector<TH1*> GetHists() const {
         auto hists = CommonHist_t::GetHists();
-        hists.insert(hists.end(), {h_IM_gg_gg, h_TreeFitChi2, h_Bachelor_E});
+        hists.insert(hists.end(), {h_IM_4g, h_TreeFitChi2, h_Bachelor_E});
         return hists;
     }
 
