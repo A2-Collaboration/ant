@@ -247,9 +247,8 @@ KinFitter::KinFitter(const std::string& name, unsigned numGammas) :
     Fitter(name)
 {
 
-    Photons.reserve(numGammas);
     for(unsigned i=0; i<numGammas;++i) {
-        Photons.emplace_back(FitParticle("Photon"+to_string(i)));
+        Photons.emplace_back(make_shared<FitParticle>("Photon"+to_string(i)));
     }
 
     aplcon->LinkVariable(Beam.Name,
@@ -262,8 +261,8 @@ KinFitter::KinFitter(const std::string& name, unsigned numGammas) :
 
     for ( auto& photon: Photons)
     {
-        LinkVariable(photon);
-        namesLInv.push_back(photon.Name);
+        LinkVariable(*photon);
+        namesLInv.push_back(photon->Name);
     }
 
     auto LorentzInvariance = [] (const vector<vector<double>>& values)
@@ -332,7 +331,7 @@ void KinFitter::SetPhotons(const std::vector<TParticlePtr>& photons)
         throw Exception("Given number of photons does not match configured fitter");
 
     for ( unsigned i = 0 ; i < Photons.size() ; ++ i) {
-        auto& photon = Photons.at(i);
+        auto& photon = *Photons.at(i);
         auto& p   = photons.at(i);
 
         photon.Ek.Value  = p->Ek();
@@ -362,7 +361,7 @@ TParticleList KinFitter::GetFittedPhotons() const
 {
     TParticleList photons;
     for(unsigned i=0;i<Photons.size();i++) {
-        const auto& photon = Photons[i];
+        const auto& photon = *Photons[i];
         auto p = make_shared<TParticle>(ParticleTypeDatabase::Photon,
                                         photon.Ek.Value, photon.Theta.Value, photon.Phi.Value);
         p->Candidate = photon.Particle->Candidate;
@@ -385,7 +384,7 @@ void KinFitter::SetupBranches(TTree* tree, string branch_prefix)
 
     Proton.SetupBranches(tree, branch_prefix);
     for(auto& p : Photons) {
-        p.SetupBranches(tree, branch_prefix);
+        p->SetupBranches(tree, branch_prefix);
     }
 
     tree->Branch((branch_prefix+"_chi2dof").c_str(),     &result_chi2ndof);
@@ -412,7 +411,9 @@ KinFitter::PhotonBeamVector::PhotonBeamVector(const string& name):
 
 }
 
-TreeFitter::TreeFitter(const string& name, ParticleTypeTree ptree, std::function<nodesetup_t(ParticleTypeTree)> nodeSetup) :
+TreeFitter::TreeFitter(const string& name,
+                       ParticleTypeTree ptree,
+                       std::function<nodesetup_t(ParticleTypeTree)> nodeSetup) :
     Fitter(name),
     tree(MakeTree(ptree))
 {

@@ -161,7 +161,7 @@ protected:
 
     };
 
-    std::vector<FitParticle> Photons;
+    std::vector<std::shared_ptr<FitParticle>> Photons;
 
     FitParticle Proton = FitParticle("Proton");
 
