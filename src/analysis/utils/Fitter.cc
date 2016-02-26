@@ -113,6 +113,20 @@ double Fitter::PhiResolution(const TParticlePtr& p) const
     return 0.0;
 }
 
+void Fitter::SetPhotonEkThetaPhi(FitParticle& photon, const TParticlePtr& p) const
+{
+    photon.Particle = p;
+
+    photon.Ek.Value  = p->Ek();
+    photon.Ek.Sigma = EnergyResolution(p);
+
+    photon.Theta.Value  = p->Theta();
+    photon.Theta.Sigma = ThetaResolution(p);
+
+    photon.Phi.Value  = p->Phi();
+    photon.Phi.Sigma = PhiResolution(p);
+}
+
 double Fitter::fct_TaggerEGausSigma(double)
 {
     return  3.0/sqrt(12.0);
@@ -212,7 +226,7 @@ void Fitter::LoadSigmaData(const string& filename)
 {
     const auto& setup = ant::ExpConfig::Setup::GetLastFound();
     if(!setup)
-        throw std::runtime_error("No Setup found!");
+        throw Exception("No Setup found!");
 
     unique_ptr<WrapTFileInput> f;
     if(!std_ext::system::testopen(filename)) {
@@ -226,13 +240,13 @@ void Fitter::LoadSigmaData(const string& filename)
 
     const auto& CB = setup->GetDetector(Detector_t::Type_t::CB);
     if(!CB)
-        throw std::runtime_error("No CB detector defined in setup");
+        throw Exception("No CB detector defined in setup");
 
     const auto nCB = CB->GetNChannels();
 
     const auto& TAPS = setup->GetDetector(Detector_t::Type_t::TAPS);
     if(!TAPS)
-        throw std::runtime_error("No TAPS detector defined in setup");
+        throw Exception("No TAPS detector defined in setup");
 
     const auto nTAPS = TAPS->GetNChannels();
 
@@ -255,13 +269,15 @@ KinFitter::KinFitter(const std::string& name, unsigned numGammas) :
         Photons.emplace_back(make_shared<FitParticle>("Photon"+to_string(i)));
     }
 
-    aplcon->LinkVariable(Beam.Name,
-                         Beam.Adresses() ,
-                         Beam.Adresses_Sigma() );
+    Beam = std_ext::make_unique<PhotonBeamVector>("Beam");
+    aplcon->LinkVariable(Beam->Name,
+                         Beam->Adresses() ,
+                         Beam->Adresses_Sigma() );
 
-    LinkVariable(Proton);
+    Proton = std_ext::make_unique<FitParticle>("Proton");
+    LinkVariable(*Proton);
 
-    vector<string> namesLInv      = { Beam.Name, Proton.Name };
+    vector<string> namesLInv      = { Beam->Name, Proton->Name };
 
     for ( auto& photon: Photons)
     {
@@ -299,34 +315,38 @@ KinFitter::KinFitter(const std::string& name, unsigned numGammas) :
 
 }
 
-void KinFitter::SetEgammaBeam(const double &ebeam)
+void KinFitter::SetEgammaBeam(const double ebeam)
 {
-    Beam.E     = ebeam;
-    Beam.Sigma = fct_TaggerEGausSigma(ebeam);
+    Beam->E        = ebeam;
+    Beam->E_before = ebeam;
+    Beam->Sigma = fct_TaggerEGausSigma(ebeam);
 }
 
 void KinFitter::SetProton(const TParticlePtr& proton)
 {
-    Proton.Ek.Value    = proton->Ek();
-    Proton.Ek.Sigma    = 0.0; // unmeasured
-
-    Proton.Theta.Value = proton->Theta();
-    Proton.Phi.Value   = proton->Phi();
-
     if (proton->Candidate == nullptr)
-        throw std::runtime_error(aplcon->GetName() + ": Proton-Candidate for Kinfitter not set!");
+        throw Exception(aplcon->GetName() + ": Proton-Candidate for Kinfitter not set!");
+
+
+    Proton->Ek.Value    = proton->Ek();
+    Proton->Theta.Value = proton->Theta();
+    Proton->Phi.Value   = proton->Phi();
+
+    Proton->Ek.Sigma    = 0.0; // unmeasured
+
+
 
     if(proton->Candidate->Detector & Detector_t::Type_t::CB) {
-        Proton.Theta.Sigma = degree_to_radian(5.43);
-        Proton.Phi.Sigma   = degree_to_radian(5.31);
+        Proton->Theta.Sigma = degree_to_radian(5.43);
+        Proton->Phi.Sigma   = degree_to_radian(5.31);
     } else if(proton->Candidate->Detector & Detector_t::Type_t::TAPS) {
-        Proton.Theta.Sigma = degree_to_radian(2.89);
-        Proton.Phi.Sigma   = degree_to_radian(4.45);
+        Proton->Theta.Sigma = degree_to_radian(2.89);
+        Proton->Phi.Sigma   = degree_to_radian(4.45);
     } else {
         LOG(WARNING) << "Proton is not in (CB,TAPS)?";
     }
 
-    Proton.Particle = proton;
+    Proton->Particle = proton;
 }
 
 void KinFitter::SetPhotons(const std::vector<TParticlePtr>& photons)
@@ -334,30 +354,17 @@ void KinFitter::SetPhotons(const std::vector<TParticlePtr>& photons)
     if(Photons.size() != photons.size())
         throw Exception("Given number of photons does not match configured fitter");
 
-    for ( unsigned i = 0 ; i < Photons.size() ; ++ i) {
-        auto& photon = *Photons.at(i);
-        auto& p   = photons.at(i);
-
-        photon.Ek.Value  = p->Ek();
-        photon.Ek.Sigma = EnergyResolution(p);
-
-        photon.Theta.Value  = p->Theta();
-        photon.Theta.Sigma = ThetaResolution(p);
-
-        photon.Phi.Value  = p->Phi();
-        photon.Phi.Sigma = PhiResolution(p);
-
-        photon.Particle = p;
-    }
+    for ( unsigned i = 0 ; i < Photons.size() ; ++ i)
+        SetPhotonEkThetaPhi(*Photons[i], photons[i]);
 }
 
 TParticlePtr KinFitter::GetFittedProton() const
 {
     auto p = make_shared<TParticle>(ParticleTypeDatabase::Proton,
-                                    Proton.Ek.Value,
-                                    Proton.Theta.Value,
-                                    Proton.Phi.Value);
-    p->Candidate = Proton.Particle->Candidate;
+                                    Proton->Ek.Value,
+                                    Proton->Theta.Value,
+                                    Proton->Phi.Value);
+    p->Candidate = Proton->Particle->Candidate;
     return p;
 }
 
@@ -376,7 +383,7 @@ TParticleList KinFitter::GetFittedPhotons() const
 
 double KinFitter::GetFittedBeamE() const
 {
-    return Beam.E;
+    return Beam->E;
 }
 
 
@@ -386,7 +393,7 @@ void KinFitter::SetupBranches(TTree* tree, string branch_prefix)
     if(branch_prefix.empty())
         branch_prefix = aplcon->GetName();
 
-    Proton.SetupBranches(tree, branch_prefix);
+    Proton->SetupBranches(tree, branch_prefix);
     for(auto& p : Photons) {
         p->SetupBranches(tree, branch_prefix);
     }
@@ -541,25 +548,32 @@ bool TreeFitter::NextFit(APLCON::Result_t& fit_result)
     if(current_comb.Done())
         return false;
 
-    for(unsigned i=0;i<current_perm->size();i++) {
+    const auto k = current_perm->size();
+    const auto n = Photons.size();
 
+    // by construction, the leaves are 0..k-1
+    for(unsigned i=0;i<k;i++) {
         const TParticlePtr& p = current_comb.at(current_perm->at(i));
-
-        FitParticle& leave = *Photons[i];
-
-        leave.Particle = p;
-
-        leave.Ek.Value  = p->Ek();
-        leave.Ek.Sigma = EnergyResolution(p);
-
-        leave.Theta.Value  = p->Theta();
-        leave.Theta.Sigma = ThetaResolution(p);
-
-        leave.Phi.Value  = p->Phi();
-        leave.Phi.Sigma = PhiResolution(p);
+        SetPhotonEkThetaPhi(*Photons[i], p);
     }
 
-    fit_result = aplcon->DoFit();
+    auto it_not_comb = current_comb.begin_not();
+    assert(n>=k);
+    assert((unsigned)distance(it_not_comb, current_comb.end_not()) == n - k);
+
+    // and by construction, the non-leaves are from k..n-1
+    for(unsigned i=k;i<n;i++) {
+        SetPhotonEkThetaPhi(*Photons[i], *it_not_comb);
+        ++it_not_comb;
+    }
+
+    if(Proton && Beam) {
+        SetProton(Proton->Particle);
+        SetEgammaBeam(Beam->E_before);
+    }
+
+
+    fit_result = KinFitter::DoFit();
 
     ++current_perm;
 

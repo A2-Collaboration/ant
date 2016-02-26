@@ -57,9 +57,13 @@ public:
 
     void LoadSigmaData(const std::string& filename);
 
+
 protected:
 
     Fitter(const std::string& fittername);
+    Fitter(Fitter&&) = default;
+    Fitter& operator=(Fitter&&) = default;
+    virtual ~Fitter() = default;
 
     std::unique_ptr<APLCON> aplcon;
 
@@ -119,7 +123,10 @@ protected:
     double ThetaResolution(const TParticlePtr& p) const;
     double PhiResolution(const TParticlePtr& p) const;
 
+    void SetPhotonEkThetaPhi(FitParticle& photon, const TParticlePtr& p) const;
+
     static double fct_TaggerEGausSigma(double E);
+
 
 };
 
@@ -129,7 +136,7 @@ public:
 
     KinFitter(const std::string& name, unsigned numGammas);
 
-    void SetEgammaBeam(const double& ebeam);
+    void SetEgammaBeam(double ebeam);
     void SetProton(const TParticlePtr& proton);
     virtual void SetPhotons(const TParticleList& photons);
 
@@ -144,8 +151,9 @@ public:
 protected:
 
     struct PhotonBeamVector {
-        double E     = 0.0;
-        double Sigma = 0.0;
+        double E_before = std_ext::NaN;
+        double E     = std_ext::NaN;
+        double Sigma = std_ext::NaN;
 
         const std::string Name;
 
@@ -163,11 +171,14 @@ protected:
 
     };
 
+    // it's pretty important that those things are pointers,
+    // since the members are linked to APLCON in ctor!
+    // A move/copy of those members may not happen, so we just
+    // point to their fixed location in memory.
     std::vector<std::shared_ptr<FitParticle>> Photons;
+    std::unique_ptr<FitParticle> Proton;
+    std::unique_ptr<PhotonBeamVector> Beam;
 
-    FitParticle Proton = FitParticle("Proton");
-
-    PhotonBeamVector Beam = PhotonBeamVector("Beam");
 private:
     double result_chi2ndof       =  0.0;
     int result_iterations        =  0;
@@ -212,7 +223,6 @@ public:
               ) : TreeFitter(name, ptree, 0, nodeSetup)
     {}
 
-
     struct node_t {
         node_t(const ParticleTypeTree& ptree) : TypeTree(ptree) {}
         const ParticleTypeTree TypeTree;
@@ -242,11 +252,18 @@ public:
 
     bool NextFit(APLCON::Result_t& fit_result);
 
-    std::vector<size_t> GetCurrentPermutation() const {
-        return *current_perm;
+    using current_comb_t = KofNvector<TParticlePtr>;
+    const current_comb_t& GetCurrentCombination() const {
+        return *current_comb_ptr;
     }
 
+
+
 protected:
+
+    // use while(NextFit()) {} instead
+    // to run all fits
+    using KinFitter::DoFit;
 
     static tree_t MakeTree(ParticleTypeTree ptree);
 
@@ -256,7 +273,6 @@ protected:
     permutations_t::const_iterator current_perm;
 
     // use unique_ptr since KofNvector does not have default ctor
-    using current_comb_t = KofNvector<TParticlePtr>;
     std::unique_ptr<current_comb_t> current_comb_ptr;
 
 };
