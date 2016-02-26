@@ -38,26 +38,6 @@ Fitter::Fitter(const string& fittername)
     aplcon = make_unique<APLCON>(fittername, settings);
 }
 
-APLCON::Result_t Fitter::DoFit() {
-
-    const auto res = aplcon->DoFit();
-
-    result_chi2ndof    = res.ChiSquare / res.NDoF;
-    result_iterations  = res.NIterations;
-    result_status      = static_cast<int>(res.Status);
-    result_probability = res.Probability;
-
-    return res;
-}
-
-void Fitter::SetupBranches(TTree* tree, string branch_prefix)
-{
-    tree->Branch((branch_prefix+"_chi2dof").c_str(),     &result_chi2ndof);
-    tree->Branch((branch_prefix+"_iterations").c_str(),  &result_iterations);
-    tree->Branch((branch_prefix+"_status").c_str(),      &result_status);
-    tree->Branch((branch_prefix+"_probability").c_str(), &result_probability);
-}
-
 void Fitter::LinkVariable(Fitter::FitParticle& particle)
 {
     aplcon->LinkVariable(particle.Name,
@@ -407,7 +387,22 @@ void KinFitter::SetupBranches(TTree* tree, string branch_prefix)
         p.SetupBranches(tree, branch_prefix);
     }
 
-    Fitter::SetupBranches(tree, branch_prefix);
+    tree->Branch((branch_prefix+"_chi2dof").c_str(),     &result_chi2ndof);
+    tree->Branch((branch_prefix+"_iterations").c_str(),  &result_iterations);
+    tree->Branch((branch_prefix+"_status").c_str(),      &result_status);
+    tree->Branch((branch_prefix+"_probability").c_str(), &result_probability);
+}
+
+APLCON::Result_t KinFitter::DoFit() {
+
+    const auto res = aplcon->DoFit();
+
+    result_chi2ndof    = res.ChiSquare / res.NDoF;
+    result_iterations  = res.NIterations;
+    result_status      = static_cast<int>(res.Status);
+    result_probability = res.Probability;
+
+    return res;
 }
 
 KinFitter::PhotonBeamVector::PhotonBeamVector(const string& name):

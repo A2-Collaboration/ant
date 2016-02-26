@@ -55,15 +55,11 @@ public:
 
     void LoadSigmaData(const std::string& filename);
 
-    APLCON::Result_t DoFit();
-
 protected:
 
     Fitter(const std::string& fittername);
 
     std::unique_ptr<APLCON> aplcon;
-
-    void SetupBranches(TTree* tree, std::string branch_prefix="");
 
     struct FitParticle
     {
@@ -121,12 +117,6 @@ protected:
 
     static double fct_TaggerEGausSigma(double E);
 
-private:
-    double result_chi2ndof       =  0.0;
-    int result_iterations        =  0;
-    int result_status            = -1;
-    double result_probability    =  0.0;
-
 };
 
 class KinFitter : public Fitter
@@ -144,6 +134,8 @@ public:
     double GetFittedBeamE() const;
 
     void SetupBranches(TTree* tree, std::string branch_prefix="");
+
+    APLCON::Result_t DoFit();
 
 protected:
 
@@ -175,7 +167,11 @@ protected:
     FitParticle Proton = FitParticle("Proton");
 
     PhotonBeamVector Beam = PhotonBeamVector("Beam");
-
+private:
+    double result_chi2ndof       =  0.0;
+    int result_iterations        =  0;
+    int result_status            = -1;
+    double result_probability    =  0.0;
 };
 
 class TreeFitter : public Fitter
@@ -229,10 +225,7 @@ public:
 
 protected:
 
-    using Fitter::DoFit;
-
     static tree_t MakeTree(ParticleTypeTree ptree);
-
 
     const tree_t tree;
     std::vector<tree_t> tree_leaves;
