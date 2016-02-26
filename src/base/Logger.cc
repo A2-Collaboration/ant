@@ -32,6 +32,16 @@ void SetupLogger() {
         if (level < gErrorIgnoreLevel)
             return;
 
+        // somehow ROOT issues a very strange warning
+        // when using gROOT->FindObjectAny (called in ant::canvas::FindTCanvas to search for TCanvas)
+        if(level == kWarning &&
+           string(location) == "TClass::TClass" &&
+           string(msg) == "no dictionary for class iterator<bidirectional_iterator_tag,TObject*,long,const TObject**,const TObject*&> is available")
+            return; // ignore it for now
+
+
+
+
         stringstream ss;
         ss << "ROOT<" << location << ">: " << msg;
         if(level < kInfo) { LOG(INFO) << ss.str(); }
