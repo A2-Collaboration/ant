@@ -129,7 +129,7 @@ public:
 
     void SetEgammaBeam(const double& ebeam);
     void SetProton(const TParticlePtr& proton);
-    void SetPhotons(const TParticleList& photons);
+    virtual void SetPhotons(const TParticleList& photons);
 
     TParticlePtr GetFittedProton() const;
     TParticleList GetFittedPhotons() const;
@@ -173,7 +173,7 @@ private:
     double result_probability    =  0.0;
 };
 
-class TreeFitter : public Fitter
+class TreeFitter : public KinFitter
 {
 
 public:
@@ -186,17 +186,26 @@ public:
         {}
     };
 
+    // construct TreeFitter with KinFit
+    TreeFitter(const std::string& name,
+               ParticleTypeTree ptree,
+               unsigned kinFitGammas,
+               std::function<nodesetup_t(ParticleTypeTree)> nodeSetup = [] (ParticleTypeTree) {return nodesetup_t{};}
+              );
 
-    TreeFitter(const std::string& name, ParticleTypeTree ptree,
-               std::function<nodesetup_t(ParticleTypeTree)> nodeSetup = [] (ParticleTypeTree) {return nodesetup_t{};});
-
+    // construct TreeFitter without additional KinFit
+    TreeFitter(const std::string& name,
+               ParticleTypeTree ptree,
+               std::function<nodesetup_t(ParticleTypeTree)> nodeSetup = [] (ParticleTypeTree) {return nodesetup_t{};}
+              ) : TreeFitter(name, ptree, 0, nodeSetup)
+    {}
 
 
     struct node_t {
         node_t(const ParticleTypeTree& ptree) : TypeTree(ptree) {}
         const ParticleTypeTree TypeTree;
         TLorentzVector LVSum;
-        std::unique_ptr<FitParticle> Leave;
+        std::shared_ptr<FitParticle> Leave;
         bool operator<(const node_t& rhs) const {
             return TypeTree->Get() < rhs.TypeTree->Get();
         }
@@ -204,7 +213,11 @@ public:
 
     using tree_t = Tree<node_t>::node_t;
 
-    void SetLeaves(const TParticleList& particles);
+    void SetLeaves(const TParticleList& photons);
+
+    virtual void SetPhotons(const TParticleList& photons) override {
+        SetLeaves(photons);
+    }
 
     tree_t GetTreeNode(const ParticleTypeDatabase::Type& type) const {
         tree_t treenode = nullptr;
@@ -226,12 +239,11 @@ protected:
     static tree_t MakeTree(ParticleTypeTree ptree);
 
     const tree_t tree;
-    std::vector<tree_t> tree_leaves;
     using permutations_t = std::vector<std::vector<size_t>>;
     permutations_t permutations;
     permutations_t::const_iterator current_perm;
 
-    TParticleList p_leaves;
+    TParticleList set_photons;
 };
 
 

@@ -246,6 +246,10 @@ void Fitter::LoadSigmaData(const string& filename)
 KinFitter::KinFitter(const std::string& name, unsigned numGammas) :
     Fitter(name)
 {
+    // nothing to do in this special case
+    // used by "KinFit-free" TreeFitter
+    if(numGammas==0)
+        return;
 
     for(unsigned i=0; i<numGammas;++i) {
         Photons.emplace_back(make_shared<FitParticle>("Photon"+to_string(i)));
@@ -413,24 +417,38 @@ KinFitter::PhotonBeamVector::PhotonBeamVector(const string& name):
 
 TreeFitter::TreeFitter(const string& name,
                        ParticleTypeTree ptree,
+                       unsigned kinFitGammas,
                        std::function<nodesetup_t(ParticleTypeTree)> nodeSetup) :
-    Fitter(name),
+    KinFitter(name, kinFitGammas),
     tree(MakeTree(ptree))
 {
+
+    vector<tree_t> tree_leaves;
+
     tree->GetUniquePermutations(tree_leaves, permutations);
     current_perm = permutations.end();
 
+    // handle special case of no kinfit
+    if(kinFitGammas==0) {
+        for(unsigned i=0;i<tree_leaves.size();i++) {
+            Photons.emplace_back(make_shared<FitParticle>("Photon"+to_string(i)));
+            LinkVariable(*Photons.back());
+        }
+    }
+    else if(tree_leaves.size()>kinFitGammas)
+        throw Exception("Given ptree has too many leaves for given kinFitGammas");
+
     LOG(INFO) << "Initialized TreeFitter '" << name
               << "' for " << utils::ParticleTools::GetDecayString(ptree, false)
-              << " with " << permutations.size() << " permutations";
+              << " with " << permutations.size() << " permutations"
+              << (kinFitGammas>0 ? ", including KinFit" : "");
 
     // setup fitter variables, collect leave names for constraint
     vector<string> leave_names;
     for(unsigned i=0;i<tree_leaves.size();i++) {
         node_t& node = tree_leaves[i]->Get();
-        leave_names.emplace_back(node.TypeTree->Get().Name()+"_"+to_string(i));
-        node.Leave = std_ext::make_unique<FitParticle>(leave_names.back());
-        LinkVariable(*node.Leave);
+        node.Leave = Photons[i]; // link via shared_ptr
+        leave_names.emplace_back(node.Leave->Name);
     }
 
     // prepare the calculation at each constraint
@@ -474,12 +492,11 @@ TreeFitter::TreeFitter(const string& name,
     LOG(INFO) << "Have " << node_constraints.size() << " constraints at " << sum_daughters.size() << " nodes";
 
     // define the constraint
-    auto tree_leaves_ = tree_leaves; // the local copy here prevents strange behaviour
-    auto IM_at_nodes = [tree_leaves_, sum_daughters, node_constraints] (const vector<vector<double>>& v) {
-        assert(v.empty() || v.size() == tree_leaves_.size());
+    auto IM_at_nodes = [tree_leaves, sum_daughters, node_constraints] (const vector<vector<double>>& v) {
+        assert(v.empty() || v.size() == tree_leaves.size());
         // assign values v to leaves' LVSum
         for(unsigned i=0;i<v.size();i++) {
-            auto& node = tree_leaves_[i]->Get();
+            auto& node = tree_leaves[i]->Get();
             const auto m = node.TypeTree->Get().Mass();
             node.LVSum = FitParticle::GetVector(v[i], m);
         }
@@ -498,12 +515,13 @@ TreeFitter::TreeFitter(const string& name,
     aplcon->AddConstraint("IM_at_nodes",leave_names, IM_at_nodes);
 }
 
-void TreeFitter::SetLeaves(const TParticleList& particles)
+void TreeFitter::SetLeaves(const TParticleList& photons)
 {
-    if(particles.size() != tree_leaves.size())
-        throw Exception("Given leave particles does not match configured fitter");
+    if(photons.size() != Photons.size())
+        throw Exception("Given leave particles does not match configured TreeFitter");
 
-    p_leaves = particles;
+    set_photons = photons;
+
     current_perm = permutations.begin();
 }
 
@@ -512,11 +530,11 @@ bool TreeFitter::NextFit(APLCON::Result_t& fit_result)
     if(current_perm == permutations.end())
         return false;
 
-    for(unsigned i=0;i<p_leaves.size();i++) {
+    for(unsigned i=0;i<current_perm->size();i++) {
 
-        const TParticlePtr& p = p_leaves.at(current_perm->at(i));
+        const TParticlePtr& p = set_photons.at(current_perm->at(i));
 
-        FitParticle& leave = *tree_leaves[i]->Get().Leave;
+        FitParticle& leave = *Photons[i];
 
         leave.Particle = p;
 
