@@ -9,6 +9,7 @@
 #ifndef __CINT__
 #include "analysis/plot/root_draw.h"
 #include "base/printable.h"
+#include "base/interval.h"
 #else
 // disable the override keyword
 #define override
@@ -96,6 +97,9 @@ struct hstack : TNamed
     static std::map<TH1*, double> Scaled_Hists;
     void UpdateMCScaling();
 
+    static interval<double> GlobalYAxisRange;
+    static interval<interval<double>> GlobalLegendPosition;
+
 protected:
 
     struct hist_t {
@@ -159,11 +163,14 @@ protected:
 public:
 
     virtual void Print(const char* option) const override;
-    virtual void Print() const; //*MENU*
+    virtual void Print() const; // *MENU*
     virtual void Draw(const char* option) override;
     virtual void Browse(TBrowser* b) override;
 
-    virtual void SetGlobalMCScaling(double scaling); //*MENU*
+    virtual void SetGlobalMCScaling(double scaling); // *MENU*
+    virtual void SetGlobalYAxisRange(double low, double high); // *MENU*
+    virtual void SetGlobalLegendPosition(double x1=0.5, double y1=0.67, double x2=0.88, double y2=0.88); // *MENU*
+
 
     // to be used with Ant-hadd
     Long64_t Merge(TCollection* li);

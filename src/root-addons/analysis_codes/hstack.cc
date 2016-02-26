@@ -29,6 +29,13 @@ const hstack::options_t hstack::options_t::all_enabled = {true, true, true, true
 double hstack::Global_MC_Scaling = std_ext::NaN;
 map<TH1*, double> hstack::Scaled_Hists = {};
 
+interval<double> hstack::GlobalYAxisRange = {std_ext::NaN, std_ext::NaN};
+interval<interval<double>> hstack::GlobalLegendPosition = {
+    {std_ext::NaN, std_ext::NaN},
+    {std_ext::NaN, std_ext::NaN}
+};
+
+
 bool hstack::options_t::operator==(const hstack::options_t& rhs) const {
     /// \todo check if one could use the serialize method here...
     auto make_tuple = [] (const options_t& o) {
@@ -182,8 +189,19 @@ void hstack::Draw(const char* option)
         using THStack::THStack; // use constructors
         virtual void Paint(const char* chopt="") override {
 
+            if(GlobalYAxisRange.IsSane()) {
+                SetMinimum(GlobalYAxisRange.Start());
+                SetMaximum(GlobalYAxisRange.Stop());
+            }
+            else {
+                // resets it to default -1111, well, THStack knows what to do then
+                SetMinimum();
+                SetMaximum();
+            }
+
             if(fHists->IsEmpty())
                 return;
+
 
             // Why the hell does the following not work from scratch?
             // std::reverse(fHists->begin(), fHists->end());
@@ -201,8 +219,9 @@ void hstack::Draw(const char* option)
                     lastlink = lastlink->Prev();
                 }
                 li->Clear("nodelete");
-                for(const auto& o : tmp_hists)
+                for(const auto& o : tmp_hists) {
                     li->Add(o.first, o.second.c_str());
+                }
             };
 
             reverse_TList(fHists);
@@ -239,13 +258,10 @@ void hstack::Draw(const char* option)
 
         // axis business
         auto xaxis = stack->GetXaxis();
-        if(xaxis)
-            xaxis->SetTitle(xlabel.c_str());
+        xaxis->SetTitle(xlabel.c_str());
 
         auto yaxis = stack->GetYaxis();
-        if(yaxis)
-            yaxis->SetTitle(ylabel.c_str());
-
+        yaxis->SetTitle(ylabel.c_str());
     }
     else {
         LOG(WARNING) << "No histograms in ant::hstack to draw (maybe all empty)";
@@ -253,8 +269,20 @@ void hstack::Draw(const char* option)
 
 
     if(options.UseIntelliLegend) {
-        if(nAdded>0)
-            gPad->BuildLegend(0.7, 0.67, 0.88, 0.88);
+        if(nAdded>0) {
+            const auto& p = GlobalLegendPosition;
+            if(p.Start().Start()<p.Stop().Start() &&
+               p.Start().Stop()<p.Stop().Stop()) {
+                gPad->BuildLegend(p.Start().Start(), // x1
+                                  p.Start().Stop(),  // y1
+                                  p.Stop().Start(),  // x2
+                                  p.Stop().Stop()    // y2
+                                  );
+            }
+            else {
+                gPad->BuildLegend();
+            }
+        }
         for(size_t i=0;i<orig_titles.size();i++)
             hists[i].Ptr->SetTitle(orig_titles[i].c_str());
     }
@@ -270,13 +298,25 @@ void hstack::Browse(TBrowser* b)
 void hstack::SetGlobalMCScaling(double scaling)
 {
     if(isfinite(scaling) && scaling != 0) {
-
         Global_MC_Scaling = scaling;
         UpdateMCScaling();
         gPad->Modified();
         gPad->Update();
         cout << endl << "ant::hstack: Set global MC scaling to " << scaling << endl;
     }
+}
+
+void hstack::SetGlobalYAxisRange(double low, double high)
+{
+    GlobalYAxisRange = {low, high};
+    // even if axis range is not sane, redraw
+    gPad->Modified();
+    gPad->Update();
+}
+
+void hstack::SetGlobalLegendPosition(double x1, double y1, double x2, double y2)
+{
+    GlobalLegendPosition = {{x1, y1},{x2,y2}};
 }
 
 void hstack::UpdateMCScaling()
