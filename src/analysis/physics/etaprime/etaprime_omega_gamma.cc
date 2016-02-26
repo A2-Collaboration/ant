@@ -194,6 +194,7 @@ void EtapOmegaG::ProcessEvent(const TEvent& event, manager_t&)
             }
         }
 
+        // fill histogram of missed bkgs
         if(t.MCTrue==9) {
             const auto& decaystr = utils::ParticleTools::GetDecayString(particletree);
             h_MissedBkg->Fill(decaystr.c_str(), 1.0);
