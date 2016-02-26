@@ -520,19 +520,30 @@ void TreeFitter::SetLeaves(const TParticleList& photons)
     if(photons.size() != Photons.size())
         throw Exception("Given leave particles does not match configured TreeFitter");
 
-    set_photons = photons;
-
     current_perm = permutations.begin();
+    current_comb_ptr = std_ext::make_unique<current_comb_t>(photons, current_perm->size());
 }
 
 bool TreeFitter::NextFit(APLCON::Result_t& fit_result)
 {
-    if(current_perm == permutations.end())
+    assert(!permutations.empty());
+
+    if(!current_comb_ptr)
+        return false;
+
+    auto& current_comb = *current_comb_ptr;
+
+    if(current_perm == permutations.end()) {
+        current_perm = permutations.begin();
+        ++current_comb;
+    }
+
+    if(current_comb.Done())
         return false;
 
     for(unsigned i=0;i<current_perm->size();i++) {
 
-        const TParticlePtr& p = set_photons.at(current_perm->at(i));
+        const TParticlePtr& p = current_comb.at(current_perm->at(i));
 
         FitParticle& leave = *Photons[i];
 
@@ -550,7 +561,8 @@ bool TreeFitter::NextFit(APLCON::Result_t& fit_result)
 
     fit_result = aplcon->DoFit();
 
-    current_perm++;
+    ++current_perm;
+
     return true;
 }
 

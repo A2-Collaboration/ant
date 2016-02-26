@@ -3,6 +3,8 @@
 #include "tree/TParticle.h"
 #include "base/ParticleTypeTree.h"
 
+#include "analysis/utils/combinatorics.h"
+
 #include "TLorentzVector.h"
 
 #include "APLCON.hpp"
@@ -243,7 +245,10 @@ protected:
     permutations_t permutations;
     permutations_t::const_iterator current_perm;
 
-    TParticleList set_photons;
+    // use unique_ptr since KofNvector does not have default ctor
+    using current_comb_t = KofNvector<TParticlePtr>;
+    std::unique_ptr<current_comb_t> current_comb_ptr;
+
 };
 
 
