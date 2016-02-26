@@ -60,6 +60,7 @@ struct EtapOmegaG : Physics {
         TParticlePtr    Proton;
         TParticleList   Photons;
         TLorentzVector  PhotonSum;
+        double          EBeam = std_ext::NaN;
     };
 
     struct Sig_t {
