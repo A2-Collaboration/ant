@@ -162,9 +162,7 @@ struct EtapOmegaG : Physics {
         void Process(const Particles_t& particles);
     };
 
-    Sig_t Sig;
     Sig_t SigKinFit;
-    Ref_t Ref;
     Ref_t RefKinFit;
 
     static const ParticleTypeTree ptreeSignal;

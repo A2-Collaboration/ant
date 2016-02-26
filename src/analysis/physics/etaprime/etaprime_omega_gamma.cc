@@ -28,11 +28,7 @@ const ParticleTypeTree EtapOmegaG::ptreeReference = ParticleTypeTreeDatabase::Ge
 EtapOmegaG::EtapOmegaG(const string& name, OptionsPtr opts) :
     Physics(name, opts),
     kinfitter_2("kinfitter_2",2),
-    kinfitter_4("kinfitter_4",4),
-    // KinFitted gg/ggg/gggg IM peaks show roughly equal sigmas for pi0/omega/etaprime
-    // but without kinfit, the peaks for omega/etaprime are roughly twice as broad compared to pi0
-    // reflect that here
-    Sig(Sig_t::Fit_t::IM_Sigma_t{2.0, 2.0})
+    kinfitter_4("kinfitter_4",4)
 {
     const interval<double> prompt_range{-2.5,1.5};
     promptrandom.AddPromptRange(prompt_range); // slight offset due to CBAvgTime reference
@@ -56,11 +52,7 @@ EtapOmegaG::EtapOmegaG(const string& name, OptionsPtr opts) :
 
     t.CreateBranches(HistFac.makeTTree("treeCommon"));
 
-    HistogramFactory HistFacNoKinFit("NoKinFit",HistFac);
     HistogramFactory HistFacKinFit("KinFit",HistFac);
-
-    Sig.SetupTrees(HistFacNoKinFit);
-    Ref.t.CreateBranches(HistFacNoKinFit.makeTTree("Ref"));
 
     SigKinFit.SetupTrees(HistFacKinFit);
     RefKinFit.t.CreateBranches(HistFacKinFit.makeTTree("Ref"));
@@ -213,13 +205,6 @@ void EtapOmegaG::ProcessEvent(const TEvent& event, manager_t&)
         t.MCTrue = 9;
     }
 
-    Sig.ResetBranches();
-    Ref.ResetBranches();
-    if(t.IsSignal)
-        Sig.Process(particles, ptree_sigref);
-    else
-        Ref.Process(particles);
-
     // loop over tagger hits, do KinFit
     bool kinfit_ok = false;
     for(const TTaggerHit& taggerhit : data.TaggerHits) {
@@ -269,12 +254,8 @@ void EtapOmegaG::ProcessEvent(const TEvent& event, manager_t&)
 
         t.Tree->Fill();
 
-        Sig.Fill();
         SigKinFit.Fill();
-
-        Ref.t.Tree->Fill();
         RefKinFit.t.Tree->Fill();
-
     }
 
     if(kinfit_ok)
