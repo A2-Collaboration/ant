@@ -192,20 +192,32 @@ void Etap3pi0::ProcessEvent(const TEvent& event, manager_t&)
 
         if (vars.event_chi2_sig < vars.event_chi2_ref)
         {
-            vars.type = 0;
-            hists.at("steps").at("evcount")->Fill("8a) signal identified",vars.taggWeight);
+            if ( vars.event_chi2_sig < phSettings.fourConstrainChi2Cut )
+            {
+                vars.type = 0;
+                hists.at("steps").at("evcount")->Fill("8a) signal identified",vars.taggWeight);
+            }
+            else
+            {
+                vars.type = -1;
+                hists.at("steps").at("evcount")->Fill("8c) background identified",vars.taggWeight);
+
+            }
         }
-       else
+        else
         {
-            vars.type = 1;
-            hists.at("steps").at("evcount")->Fill("8b) reference identified",vars.taggWeight);
+            if (vars.event_chi2_ref < phSettings.fourConstrainChi2Cut )
+            {
+                vars.type = 1;
+                hists.at("steps").at("evcount")->Fill("8b) reference identified",vars.taggWeight);
+            }
+            else
+            {
+                vars.type = -1;
+                hists.at("steps").at("evcount")->Fill("8c) background identified",vars.taggWeight);
+            }
         }
 
-        if (vars.event_chi2_ref > phSettings.fourConstrainChi2Cut && vars.event_chi2_sig > phSettings.fourConstrainChi2Cut )
-        {
-            vars.type = -1;
-            hists.at("steps").at("evcount")->Fill("8c) background identified",vars.taggWeight);
-        }
 
         tree->Fill();
     }
