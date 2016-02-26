@@ -20,8 +20,6 @@ using namespace ant::std_ext;
 using namespace ant::analysis;
 using namespace ant::analysis::physics;
 
-
-
 Etap3pi0::Etap3pi0(const std::string& name, OptionsPtr opts) :
     Physics(name, opts),
     signal_tree(ParticleTypeTreeDatabase::Get(ParticleTypeTreeDatabase::Channel::EtaPrime_3Pi0_6g)),
@@ -35,7 +33,6 @@ Etap3pi0::Etap3pi0(const std::string& name, OptionsPtr opts) :
     if(!setup) {
         throw std::runtime_error("No Setup found");
     }
-
 
     promptrandom.AddPromptRange({-5,5});
     promptrandom.AddRandomRange({-20, -10});
@@ -60,7 +57,6 @@ Etap3pi0::Etap3pi0(const std::string& name, OptionsPtr opts) :
     fitterRef.LoadSigmaData(setup->GetPhysicsFilesDirectory()+"/FitterSigmas.root");
 
     vars.SetBranches(tree);
-
 }
 
 TLorentzVector Etap3pi0::MakeLoretzSum(const TParticleList& particles)
@@ -128,34 +124,37 @@ void Etap3pi0::ProcessEvent(const TEvent& event, manager_t&)
     const auto& protonCandidates   =  data.Particles.Get(ParticleTypeDatabase::Proton);
     const auto& mcprotons          = mcdata.Particles.Get(ParticleTypeDatabase::Proton);
 
+    if(data.Trigger.CBEnergySum < phSettings.EsumCB)
+        return;
+
+    hists.at("steps").at("evcounts")->Fill("3) CB-Energy-Sum",1);
+    vars.EsumCB = data.Trigger.CBEnergySum;
+
     if ( data.Candidates.size() != 7)
         return;
 
-    hists.at("steps").at("evcount")->Fill("2) 7 cands",1);
+    hists.at("steps").at("evcount")->Fill("3) 7 cands",1);
 
     if (photons.size() != 6)
         return;
 
-    hists.at("steps").at("evcount")->Fill("3) 6 gamma",1);
+    hists.at("steps").at("evcount")->Fill("4) 6 gamma",1);
 
     // cut on and generate proton
     if (protonCandidates.size() != 1)
         return;
     vars.proton = *protonCandidates.at(0);
-    hists.at("steps").at("evcount")->Fill("4) 1 proton",1);
+    hists.at("steps").at("evcount")->Fill("5) 1 proton",1);
     //proton-cuts -> TAPS
     if (geometry.DetectorFromAngles(vars.proton.Theta(),vars.proton.Phi()) != Detector_t::Type_t::TAPS)
         return;
-    hists.at("steps").at("evcount")->Fill("5) proton in TAPS",1);
-
-
-
+    hists.at("steps").at("evcount")->Fill("6) proton in TAPS",1);
 
     vars.etaprimeCand = MakeLoretzSum(photons);
 
     if (mcprotons.size() > 1)
         return;
-    hists.at("steps").at("evcount")->Fill("6) <= 1 mc-true proton",1);
+    hists.at("steps").at("evcount")->Fill("7) <= 1 mc-true proton",1);
 
     if (mcprotons.size() == 1)
         vars.trueProton = *mcprotons.at(0);
@@ -165,8 +164,6 @@ void Etap3pi0::ProcessEvent(const TEvent& event, manager_t&)
         return;
     hists.at("steps").at("evcount")->Fill("7) finite CBAvg-Time",1);
     hists.at("tagger").at("tagHits")->Fill(data.TaggerHits.size());
-
-
 
     for(const TTaggerHit& t : data.TaggerHits )
     {
@@ -185,22 +182,20 @@ void Etap3pi0::ProcessEvent(const TEvent& event, manager_t&)
 
         vars.EMB_chi2 = getEnergyMomentumConservation(t.PhotonEnergy,photons,protonCandidates.at(0));
 
-
         MakeSignal(photons);
         MakeReference(photons);
-
 
         if (vars.event_chi2_sig < vars.event_chi2_ref)
         {
             if ( vars.event_chi2_sig < phSettings.fourConstrainChi2Cut )
             {
                 vars.type = 0;
-                hists.at("steps").at("evcount")->Fill("8a) signal identified",vars.taggWeight);
+                hists.at("steps").at("evcount")->Fill("9a) signal identified",vars.taggWeight);
             }
             else
             {
                 vars.type = -1;
-                hists.at("steps").at("evcount")->Fill("8c) background identified",vars.taggWeight);
+                hists.at("steps").at("evcount")->Fill("9c) background identified",vars.taggWeight);
 
             }
         }
@@ -209,16 +204,14 @@ void Etap3pi0::ProcessEvent(const TEvent& event, manager_t&)
             if (vars.event_chi2_ref < phSettings.fourConstrainChi2Cut )
             {
                 vars.type = 1;
-                hists.at("steps").at("evcount")->Fill("8b) reference identified",vars.taggWeight);
+                hists.at("steps").at("evcount")->Fill("9b) reference identified",vars.taggWeight);
             }
             else
             {
                 vars.type = -1;
-                hists.at("steps").at("evcount")->Fill("8c) background identified",vars.taggWeight);
+                hists.at("steps").at("evcount")->Fill("9c) background identified",vars.taggWeight);
             }
         }
-
-
         tree->Fill();
     }
 }
@@ -240,6 +233,7 @@ void Etap3pi0::MakeSignal(const TParticleList& photonLeaves)
         vars.event_chi2_sig = result.ChiSquare;
     }
 }
+
 void Etap3pi0::MakeReference(const TParticleList& photonLeaves)
 {
     fitterRef.SetLeaves(photonLeaves);
@@ -259,7 +253,6 @@ void Etap3pi0::MakeReference(const TParticleList& photonLeaves)
 void Etap3pi0::Finish()
 {
 }
-
 
 void Etap3pi0::ShowResult()
 {
@@ -287,6 +280,7 @@ void Etap3pi0::branches::SetBranches(TTree* tree)
     tree->Branch("MM", &MM);
 
     tree->Branch("coplanarity", &coplanarity);
+    tree->Branch("EsumCB", &EsumCB);
 
     tree->Branch("taggWeight", &taggWeight);
     tree->Branch("taggE", &taggE);

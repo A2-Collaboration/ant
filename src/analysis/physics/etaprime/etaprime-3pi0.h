@@ -44,6 +44,7 @@ protected:
                                                {-1,"other"}};
         const double EMBChi2Cut= std::numeric_limits<double>::infinity();
         const double fourConstrainChi2Cut= 40;
+        const double EsumCB= 550;
     };
     settings_t phSettings;
 
@@ -91,6 +92,7 @@ protected:
         TLorentzVector MM= {};
 
         double coplanarity= {};
+        double EsumCB= {};
 
         double      taggWeight= {};
         double      taggE= {};
