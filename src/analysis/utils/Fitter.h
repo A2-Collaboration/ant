@@ -186,19 +186,29 @@ public:
             IM_Sigma(IM_sigma),
             Excluded(excluded)
         {}
+
+        // the getter lets the user decide how to setup the node
+        struct getter : std::function<nodesetup_t(ParticleTypeTree)> {
+            // use base class constructors
+            using std::function<nodesetup_t(ParticleTypeTree)>::function;
+            // provide default which gets the default nodesetup_t
+            getter() :
+                std::function<nodesetup_t(ParticleTypeTree)>([] (ParticleTypeTree) {return nodesetup_t{};})
+            {}
+        };
     };
 
     // construct TreeFitter with KinFit
     TreeFitter(const std::string& name,
                ParticleTypeTree ptree,
                unsigned kinFitGammas,
-               std::function<nodesetup_t(ParticleTypeTree)> nodeSetup = [] (ParticleTypeTree) {return nodesetup_t{};}
+               nodesetup_t::getter nodeSetup = {}
               );
 
     // construct TreeFitter without additional KinFit
     TreeFitter(const std::string& name,
                ParticleTypeTree ptree,
-               std::function<nodesetup_t(ParticleTypeTree)> nodeSetup = [] (ParticleTypeTree) {return nodesetup_t{};}
+               nodesetup_t::getter nodeSetup = {}
               ) : TreeFitter(name, ptree, 0, nodeSetup)
     {}
 

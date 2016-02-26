@@ -418,7 +418,7 @@ KinFitter::PhotonBeamVector::PhotonBeamVector(const string& name):
 TreeFitter::TreeFitter(const string& name,
                        ParticleTypeTree ptree,
                        unsigned kinFitGammas,
-                       std::function<nodesetup_t(ParticleTypeTree)> nodeSetup) :
+                       nodesetup_t::getter nodeSetup) :
     KinFitter(name, kinFitGammas),
     tree(MakeTree(ptree))
 {
