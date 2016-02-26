@@ -21,7 +21,7 @@ template <class T>
 class KofNvector {
 
 protected:
-    const std::vector<T>& data;             // ref. to the original data
+    const std::vector<T> data;
 
     typedef std::size_t index_type;
     typedef std::vector<index_type> index_list;
