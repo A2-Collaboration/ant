@@ -48,7 +48,7 @@ Etap3pi0::Etap3pi0(const std::string& name, OptionsPtr opts) :
     AddHist1D(cat,"identified",         "IdentifiedChannels", "channel", "#", BinSettings(3));
 
     cat = "tagger";
-    AddHist1D(cat,"tagHits",            "# Tagger hits", "# hits", "", BinSettings(12));
+    AddHist1D(cat,"tagHits",            "# Tagger hits", "# hits", "", BinSettings(15));
 
 
     kinFitterEMB.SetupBranches(tree, "kinFitEMB");
@@ -57,14 +57,6 @@ Etap3pi0::Etap3pi0(const std::string& name, OptionsPtr opts) :
     fitterRef.LoadSigmaData(setup->GetPhysicsFilesDirectory()+"/FitterSigmas.root");
 
     vars.SetBranches(tree);
-}
-
-TLorentzVector Etap3pi0::MakeLoretzSum(const TParticleList& particles)
-{
-    TLorentzVector lorenzTemp(0,0,0,0);
-    for (const auto& prat: particles)
-        lorenzTemp+=*(prat);
-    return lorenzTemp;
 }
 
 bool Etap3pi0::MakeMCProton(const TEventData& mcdata, TParticlePtr& proton)
@@ -121,8 +113,6 @@ void Etap3pi0::ProcessEvent(const TEvent& event, manager_t&)
     }
 
     /// soon obsolete
-    const auto& photons            =  data.Particles.Get(ParticleTypeDatabase::Photon);
-    const auto& protonCandidates   =  data.Particles.Get(ParticleTypeDatabase::Proton);
     const auto& mcprotons          = mcdata.Particles.Get(ParticleTypeDatabase::Proton);
 
     if(data.Trigger.CBEnergySum < phSettings.EsumCB)
@@ -134,28 +124,37 @@ void Etap3pi0::ProcessEvent(const TEvent& event, manager_t&)
         return;
     hists.at("steps").at("evcount")->Fill("3) 7 cands",1);
 
-
-    /// soon obsolete
-    if (photons.size() != 6)
+    vars.protonTime = std_ext::NaN;
+    for(const auto& cand : data.Candidates)
+    {
+        if(cand->Detector & Detector_t::Type_t::TAPS)
+        {
+            if(!isfinite(vars.protonTime) || vars.protonTime < cand->Time)
+            {
+                vars.protonTime = cand->Time;
+                proton = make_shared<TParticle>(ParticleTypeDatabase::Proton, cand);
+            }
+        }
+    }
+    if (!proton)
         return;
-    hists.at("steps").at("evcount")->Fill("4) 6 gamma",1);
 
-    /// soon obsolete
-    if (protonCandidates.size() != 1)
-        return;
-    vars.proton = *protonCandidates.at(0);
-    hists.at("steps").at("evcount")->Fill("5) 1 proton",1);
+    vars.proton = *proton;
+    hists.at("steps").at("evcount")->Fill("4) proton in TAPS",1);
 
-    //proton-cuts -> TAPS
-    if (geometry.DetectorFromAngles(vars.proton.Theta(),vars.proton.Phi()) != Detector_t::Type_t::TAPS)
-        return;
-    hists.at("steps").at("evcount")->Fill("6) proton in TAPS",1);
-
-    vars.etaprimeCand = MakeLoretzSum(photons);
+    for ( const auto& cand: data.Candidates )
+    {
+       if ( cand != proton->Candidate )
+       {
+         auto photon = make_shared<TParticle>(ParticleTypeDatabase::Photon, cand);
+         vars.etaprimeCand += *photon;
+         photons.emplace_back(move(photon));
+       }
+    }
 
     if (mcprotons.size() > 1)
         return;
-    hists.at("steps").at("evcount")->Fill("7) <= 1 mc-true proton",1);
+    hists.at("steps").at("evcount")->Fill("5) <= 1 mc-true proton",1);
 
     if (mcprotons.size() == 1)
         vars.trueProton = *mcprotons.at(0);
@@ -163,7 +162,7 @@ void Etap3pi0::ProcessEvent(const TEvent& event, manager_t&)
     double CBAvgTime = event.Reconstructed->Trigger.CBTiming;
     if(!isfinite(CBAvgTime))
         return;
-    hists.at("steps").at("evcount")->Fill("7) finite CBAvg-Time",1);
+    hists.at("steps").at("evcount")->Fill("6) finite CBAvg-Time",1);
     hists.at("tagger").at("tagHits")->Fill(data.TaggerHits.size());
 
     for(const TTaggerHit& t : data.TaggerHits )
@@ -181,14 +180,14 @@ void Etap3pi0::ProcessEvent(const TEvent& event, manager_t&)
 
         assert( photons.size() == 6);
 
-        vars.EMB_chi2 = getEnergyMomentumConservation(t.PhotonEnergy,photons,protonCandidates.at(0));
+        vars.EMB_chi2 = getEnergyMomentumConservation(t.PhotonEnergy,photons,proton);
 
         MakeSignal(photons);
         MakeReference(photons);
 
-        if (vars.event_chi2_sig < vars.event_chi2_ref)
+        if (vars.chi2_sig < vars.chi2_ref)
         {
-            if ( vars.event_chi2_sig < phSettings.fourConstrainChi2Cut )
+            if ( vars.chi2_sig < phSettings.fourConstrainChi2Cut )
             {
                 vars.type = 0;
                 hists.at("steps").at("evcount")->Fill("9a) signal identified",vars.taggWeight);
@@ -202,7 +201,7 @@ void Etap3pi0::ProcessEvent(const TEvent& event, manager_t&)
         }
         else
         {
-            if (vars.event_chi2_ref < phSettings.fourConstrainChi2Cut )
+            if (vars.chi2_ref < phSettings.fourConstrainChi2Cut )
             {
                 vars.type = 1;
                 hists.at("steps").at("evcount")->Fill("9b) reference identified",vars.taggWeight);
@@ -223,15 +222,15 @@ void Etap3pi0::MakeSignal(const TParticleList& photonLeaves)
 {
     fitterSig.SetLeaves(photonLeaves);
     APLCON::Result_t result;
-    vars.event_chi2_sig = std::numeric_limits<double>::infinity();
+    vars.chi2_sig = std::numeric_limits<double>::infinity();
 
     while (fitterSig.NextFit(result))
     {
         if (result.Status != APLCON::Result_Status_t::Success )
             continue;
-        if ( vars.event_chi2_sig < result.ChiSquare)
+        if ( vars.chi2_sig < result.ChiSquare)
             continue;
-        vars.event_chi2_sig = result.ChiSquare;
+        vars.chi2_sig = result.ChiSquare;
     }
 }
 
@@ -239,15 +238,15 @@ void Etap3pi0::MakeReference(const TParticleList& photonLeaves)
 {
     fitterRef.SetLeaves(photonLeaves);
     APLCON::Result_t result;
-    vars.event_chi2_ref = std::numeric_limits<double>::infinity();
+    vars.chi2_ref = std::numeric_limits<double>::infinity();
 
     while (fitterRef.NextFit(result))
     {
         if (result.Status != APLCON::Result_Status_t::Success )
             continue;
-        if ( vars.event_chi2_ref < result.ChiSquare)
+        if ( vars.chi2_ref < result.ChiSquare)
             continue;
-        vars.event_chi2_ref = result.ChiSquare;
+        vars.chi2_ref = result.ChiSquare;
     }
 }
 
@@ -296,11 +295,14 @@ void Etap3pi0::branches::SetBranches(TTree* tree)
     tree->Branch("pi0_iteration[3]", pi0_iteration, "pi0_iteration[3]/D");
     tree->Branch("pi0_status[3]", pi0_status, "pi0_status[3]/D");
 
-    tree->Branch("event_chi2_ref", &event_chi2_ref);
-    tree->Branch("event_chi2_sig", &event_chi2_sig);
-    tree->Branch("event_prob", &event_prob);
-    tree->Branch("event_iteration", &event_iteration);
-    tree->Branch("event_status", &event_status);
+    tree->Branch("chi2_ref", &chi2_ref);
+    tree->Branch("prob_ref", &prob_ref);
+    tree->Branch("iteration_ref", &iteration_ref);
+    tree->Branch("status_ref", &status_ref);
+    tree->Branch("chi2_sig", &chi2_sig);
+    tree->Branch("prob_sig", &prob_sig);
+    tree->Branch("iteration_sig", &iteration_sig);
+    tree->Branch("status_sig", &status_sig);
 
     tree->Branch("type", &type);
     tree->Branch("truetype", &truetype);

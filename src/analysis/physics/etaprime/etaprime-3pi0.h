@@ -48,6 +48,7 @@ protected:
     };
     settings_t phSettings;
 
+    //obsolete...
     const std::vector<std::vector<std::pair<unsigned,unsigned>>> combinations =
     {
         { {0, 1}, {2, 3}, {4, 5} },
@@ -71,15 +72,12 @@ protected:
         { {0, 5}, {1, 4}, {2, 3} }
     };
 
-    struct ParticleCollection_t
-    {
-        TParticlePtr  proton;
-        TParticleList intermediate;
-        TParticleList photons;
-    };
+    // data
+    TParticleList intermediate_SIG;
+    TParticleList intermediate_REF;
 
-    ParticleCollection_t SIG_particles;
-    ParticleCollection_t REF_particles;
+    TParticlePtr  proton;
+    TParticleList photons;
 
     utils::TreeFitter fitterSig;
     utils::TreeFitter fitterRef;
@@ -94,6 +92,7 @@ protected:
         TLorentzVector etaprimeCand= {};
 
         TLorentzVector proton= {};
+        double protonTime= std_ext::NaN;
 
         TLorentzVector fittedProton= {};
 
@@ -119,11 +118,14 @@ protected:
         int    pi0_iteration[3]= {};
         int    pi0_status[3]= {};
 
-        double event_chi2_ref= std::numeric_limits<double>::infinity();
-        double event_chi2_sig= std::numeric_limits<double>::infinity();
-        double event_prob= {};
-        int    event_iteration= {};
-        int    event_status= {};
+        double chi2_ref= std::numeric_limits<double>::infinity();
+        double prob_ref= {};
+        int    iteration_ref= {};
+        int    status_ref= {};
+        double chi2_sig= std::numeric_limits<double>::infinity();
+        double prob_sig= {};
+        int    iteration_sig= {};
+        int    status_sig= {};
 
         int type= -1;
         int truetype= -1;
@@ -133,13 +135,7 @@ protected:
         void SetBranches(TTree* tree);
 
     };
-
     branches vars;
-
-
-
-    // =======================   datastorage  ==================================================
-
 
     //histograms
     std::map<std::string,std::map<std::string,TH1*>> hists;
@@ -152,16 +148,13 @@ protected:
                    const std::string& xlabel, const std::string& ylabel,
                    const BinSettings& xbins, const BinSettings& ybins);
 
-
-    //helpers:
-    TLorentzVector MakeLoretzSum(const TParticleList& particles);
-
+    // functions
     void MakeSignal(const TParticleList& photonLeaves);
     void MakeReference(const TParticleList& photonLeaves);
     bool MakeMCProton(const TEventData& mcdata, TParticlePtr& proton);
 
-
     double getEnergyMomentumConservation(double EBeam, const TParticleList& photons, const TParticlePtr& proton);
+
 public:
     Etap3pi0(const std::string& name, OptionsPtr opts);
     virtual void ProcessEvent(const TEvent& event, manager_t& manager) override;
