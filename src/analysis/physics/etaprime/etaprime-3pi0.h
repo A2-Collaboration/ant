@@ -71,12 +71,22 @@ protected:
         { {0, 5}, {1, 4}, {2, 3} }
     };
 
+    struct ParticleCollection_t
+    {
+        TParticlePtr  proton;
+        TParticleList intermediate;
+        TParticleList photons;
+    };
+
+    ParticleCollection_t SIG_particles;
+    ParticleCollection_t REF_particles;
+
     utils::TreeFitter fitterSig;
     utils::TreeFitter fitterRef;
+    utils::KinFitter kinFitterEMB;
 
 
     ant::analysis::PromptRandom::Switch promptrandom;
-    utils::KinFitter kinFitterEMB;
 
     TTree* tree;
 

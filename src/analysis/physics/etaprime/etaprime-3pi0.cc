@@ -120,31 +120,32 @@ void Etap3pi0::ProcessEvent(const TEvent& event, manager_t&)
         vars.decayString = utils::ParticleTools::GetDecayString(mcdata.ParticleTree);
     }
 
+    /// soon obsolete
     const auto& photons            =  data.Particles.Get(ParticleTypeDatabase::Photon);
     const auto& protonCandidates   =  data.Particles.Get(ParticleTypeDatabase::Proton);
     const auto& mcprotons          = mcdata.Particles.Get(ParticleTypeDatabase::Proton);
 
     if(data.Trigger.CBEnergySum < phSettings.EsumCB)
         return;
-
     hists.at("steps").at("evcounts")->Fill("3) CB-Energy-Sum",1);
     vars.EsumCB = data.Trigger.CBEnergySum;
 
     if ( data.Candidates.size() != 7)
         return;
-
     hists.at("steps").at("evcount")->Fill("3) 7 cands",1);
 
+
+    /// soon obsolete
     if (photons.size() != 6)
         return;
-
     hists.at("steps").at("evcount")->Fill("4) 6 gamma",1);
 
-    // cut on and generate proton
+    /// soon obsolete
     if (protonCandidates.size() != 1)
         return;
     vars.proton = *protonCandidates.at(0);
     hists.at("steps").at("evcount")->Fill("5) 1 proton",1);
+
     //proton-cuts -> TAPS
     if (geometry.DetectorFromAngles(vars.proton.Theta(),vars.proton.Phi()) != Detector_t::Type_t::TAPS)
         return;
