@@ -88,6 +88,13 @@ void Etap3pi0::ProcessEvent(const TEvent& event, manager_t&)
     const auto& data   = *event.Reconstructed;
     const auto& mcdata = *event.MCTrue;
 
+    // maybe this????
+    //TParticleList intermediate_SIG;
+    //TParticleList intermediate_REF;
+
+    TParticlePtr  proton;
+    TParticleList photons;
+
     hists.at("steps").at("evcount")->Fill("1) totalEvts",1);
 
     // fill channels and set true particle ids if possible
@@ -117,7 +124,7 @@ void Etap3pi0::ProcessEvent(const TEvent& event, manager_t&)
 
     if(data.Trigger.CBEnergySum < phSettings.EsumCB)
         return;
-    hists.at("steps").at("evcounts")->Fill("3) CB-Energy-Sum",1);
+    hists.at("steps").at("evcount")->Fill("3) CB-Energy-Sum",1);
     vars.EsumCB = data.Trigger.CBEnergySum;
 
     if ( data.Candidates.size() != 7)
@@ -190,12 +197,12 @@ void Etap3pi0::ProcessEvent(const TEvent& event, manager_t&)
             if ( vars.chi2_sig < phSettings.fourConstrainChi2Cut )
             {
                 vars.type = 0;
-                hists.at("steps").at("evcount")->Fill("9a) signal identified",vars.taggWeight);
+                hists.at("steps").at("evcount")->Fill("7a) signal identified",vars.taggWeight);
             }
             else
             {
                 vars.type = -1;
-                hists.at("steps").at("evcount")->Fill("9c) background identified",vars.taggWeight);
+                hists.at("steps").at("evcount")->Fill("7c) background identified",vars.taggWeight);
 
             }
         }
@@ -204,12 +211,12 @@ void Etap3pi0::ProcessEvent(const TEvent& event, manager_t&)
             if (vars.chi2_ref < phSettings.fourConstrainChi2Cut )
             {
                 vars.type = 1;
-                hists.at("steps").at("evcount")->Fill("9b) reference identified",vars.taggWeight);
+                hists.at("steps").at("evcount")->Fill("7b) reference identified",vars.taggWeight);
             }
             else
             {
                 vars.type = -1;
-                hists.at("steps").at("evcount")->Fill("9c) background identified",vars.taggWeight);
+                hists.at("steps").at("evcount")->Fill("7c) background identified",vars.taggWeight);
             }
         }
         tree->Fill();

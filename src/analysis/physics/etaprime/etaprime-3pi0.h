@@ -72,12 +72,6 @@ protected:
         { {0, 5}, {1, 4}, {2, 3} }
     };
 
-    // data
-    TParticleList intermediate_SIG;
-    TParticleList intermediate_REF;
-
-    TParticlePtr  proton;
-    TParticleList photons;
 
     utils::TreeFitter fitterSig;
     utils::TreeFitter fitterRef;
