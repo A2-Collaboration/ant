@@ -158,10 +158,12 @@ struct SigHist_t : CommonHist_t {
     void Fill(const Fill_t& f) const {
         CommonHist_t::Fill(f);
         const Tree_t& tree = f.Tree;
-        for(unsigned i=0;i<tree.gg_gg1().size();i++){
-            h_IM_gg_gg->Fill(tree.gg_gg1()[i], tree.gg_gg2()[i], f.TaggW());
-            h_IM_gg_gg->Fill(tree.gg_gg2()[i], tree.gg_gg1()[i], f.TaggW());
+
+        for(unsigned i=0;i<f.Common.gg_gg1().size();i++) {
+            h_IM_gg_gg->Fill(f.Common.gg_gg1()[i], f.Common.gg_gg2()[i], f.TaggW());
+            h_IM_gg_gg->Fill(f.Common.gg_gg2()[i], f.Common.gg_gg1()[i], f.TaggW());
         }
+
         h_TreeFitChi2->Fill(tree.TreeFitChi2, f.TaggW());
         h_Bachelor_E->Fill(tree.Bachelor_E, f.TaggW());
         h_IM_3g_4g->Fill(tree.IM_Pi0gg_best, tree.IM_Pi0g_best, f.TaggW());
@@ -180,7 +182,7 @@ struct SigHist_t : CommonHist_t {
 
         // reduces pi0pi0 and pi0eta backgrounds
         auto goldhaber_cut = [] (const Fill_t& f) {
-            const Tree_t& tree = f.Tree;
+            const auto& tree = f.Common;
             const double pi0 = ParticleTypeDatabase::Pi0.Mass();
             const double eta = ParticleTypeDatabase::Eta.Mass();
             const TVector2 Pi0Pi0(pi0, pi0);

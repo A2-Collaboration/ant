@@ -37,6 +37,10 @@ struct EtapOmegaG : Physics {
         ADD_BRANCH_T(double,   ProtonTime)
         ADD_BRANCH_T(double,   PIDSumE)
 
+        ADD_BRANCH_T(std::vector<double>, ggg, 4)
+        ADD_BRANCH_T(std::vector<double>, gg_gg1, 3)
+        ADD_BRANCH_T(std::vector<double>, gg_gg2, 3)
+
         ADD_BRANCH_T(double,   ProtonCopl)
         ADD_BRANCH_T(double,   MissingMass)
         ADD_BRANCH_T(double,   TaggW)
@@ -61,10 +65,6 @@ struct EtapOmegaG : Physics {
     struct Sig_t {
 
         struct Tree_t : WrapTTree {
-
-            ADD_BRANCH_T(std::vector<double>, ggg, 4)
-            ADD_BRANCH_T(std::vector<double>, gg_gg1, 3)
-            ADD_BRANCH_T(std::vector<double>, gg_gg2, 3)
 
             ADD_BRANCH_T(double,   TreeFitChi2)
             ADD_BRANCH_T(unsigned, TreeFitIterations)
@@ -114,7 +114,6 @@ struct EtapOmegaG : Physics {
 
             void ResetBranches();
             void Process(const Particles_t& particles, TParticleTree_t ptree_sigref);
-            void DoPhotonCombinatorics(const TParticleList& photons);
             void CheckMCPhotonAssignment(const TParticleList& photons,
                                          TParticleTree_t ptree_sigref,
                                          TParticlePtr g_Omega_best,

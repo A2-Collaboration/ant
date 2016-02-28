@@ -190,6 +190,35 @@ void EtapOmegaG::ProcessEvent(const TEvent& event, manager_t&)
         t.MCTrue = 9;
     }
 
+    // photon combinatorics in case of signal
+    if(t.IsSignal) {
+        const auto& photons = particles.Photons;
+
+        //  ggg combinatorics
+        auto it_ggg = t.ggg().begin();
+        for( auto comb = utils::makeCombination(photons,3); !comb.Done(); ++comb ) {
+            *it_ggg = (*comb.at(0) + *comb.at(1) + *comb.at(2)).M();
+            ++it_ggg;
+        }
+
+        // gg/gg "Goldhaber" combinatorics
+        const auto goldhaber_comb = vector<vector<unsigned>>({{0,1,2,3},{0,2,1,3},{0,3,1,2}});
+        auto it_gg_gg1 = t.gg_gg1().begin();
+        auto it_gg_gg2 = t.gg_gg2().begin();
+        for(auto i : goldhaber_comb) {
+            const auto& p = photons;
+            *it_gg_gg1 = (*p[i[0]] + *p[i[1]]).M();
+            *it_gg_gg2 = (*p[i[2]] + *p[i[3]]).M();
+            ++it_gg_gg1;
+            ++it_gg_gg2;
+        }
+    }
+    else {
+        std::fill(t.ggg().begin(), t.ggg().end(), std_ext::NaN);
+        std::fill(t.gg_gg1().begin(), t.gg_gg1().end(), std_ext::NaN);
+        std::fill(t.gg_gg2().begin(), t.gg_gg2().end(), std_ext::NaN);
+    }
+
     // loop over tagger hits, delegate to Ref/Sig
     for(const TTaggerHit& taggerhit : data.TaggerHits) {
         promptrandom.SetTaggerHit(taggerhit.Time - t.CBAvgTime);
@@ -323,10 +352,6 @@ void EtapOmegaG::Sig_t::Fit_t::ResetBranches()
     t.TreeFitChi2 = std_ext::NaN;
     t.TreeFitIterations = 0;
 
-    std::fill(t.ggg().begin(), t.ggg().end(), std_ext::NaN);
-    std::fill(t.gg_gg1().begin(), t.gg_gg1().end(), std_ext::NaN);
-    std::fill(t.gg_gg2().begin(), t.gg_gg2().end(), std_ext::NaN);
-
     t.IM_Pi0g_fitted = std_ext::NaN;
     t.IM_Pi0_fitted = std_ext::NaN;
 
@@ -345,19 +370,18 @@ void EtapOmegaG::Sig_t::Fit_t::Process(const EtapOmegaG::Particles_t& particles,
 
     assert(particles.Photons.size() == 4);
 
-    DoPhotonCombinatorics(particles.Photons);
 //    const TLorentzVector& EtaPrime_best = particles.PhotonSum; // does not change with permutation
 //    t.IM_EtaPrime_best = EtaPrime_best.M();
 
     // g_Omega to check against MCTrue
-    TParticlePtr g_Omega_best;
-    // the EtaPrime bachelor photon is most important to us...
-    TParticlePtr g_EtaPrime_best;
-    TLorentzVector g_EtaPrime_fitted;
-    TLorentzVector EtaPrime_fitted;
+//    TParticlePtr g_Omega_best;
+//    // the EtaPrime bachelor photon is most important to us...
+//    TParticlePtr g_EtaPrime_best;
+//    TLorentzVector g_EtaPrime_fitted;
+//    TLorentzVector EtaPrime_fitted;
 
-    treefitter.SetLeaves(particles.Photons);
-    APLCON::Result_t r;
+//    treefitter.SetLeaves(particles.Photons);
+//    APLCON::Result_t r;
 
 //    while(treefitter.NextFit(r)) {
 //        if(r.Status != APLCON::Result_Status_t::Success)
@@ -399,29 +423,7 @@ void EtapOmegaG::Sig_t::Fit_t::Process(const EtapOmegaG::Particles_t& particles,
         //t.Bachelor_E = do_boost(*g_EtaPrime_best, EtaPrime_best).E();
 
         // check MC matching
-        CheckMCPhotonAssignment(particles.Photons, ptree_sigref, g_Omega_best, g_EtaPrime_best);
-    }
-}
-
-void EtapOmegaG::Sig_t::Fit_t::DoPhotonCombinatorics(const TParticleList& photons)
-{
-    //  ggg combinatorics
-    auto it_ggg = t.ggg().begin();
-    for( auto comb = utils::makeCombination(photons,3); !comb.Done(); ++comb ) {
-        *it_ggg = (*comb.at(0) + *comb.at(1) + *comb.at(2)).M();
-        ++it_ggg;
-    }
-
-    // gg/gg "Goldhaber" combinatorics
-    const auto goldhaber_comb = vector<vector<unsigned>>({{0,1,2,3},{0,2,1,3},{0,3,1,2}});
-    auto it_gg_gg1 = t.gg_gg1().begin();
-    auto it_gg_gg2 = t.gg_gg2().begin();
-    for(auto i : goldhaber_comb) {
-        const auto& p = photons;
-        *it_gg_gg1 = (*p[i[0]] + *p[i[1]]).M();
-        *it_gg_gg2 = (*p[i[2]] + *p[i[3]]).M();
-        ++it_gg_gg1;
-        ++it_gg_gg2;
+        //CheckMCPhotonAssignment(particles.Photons, ptree_sigref, g_Omega_best, g_EtaPrime_best);
     }
 }
 
