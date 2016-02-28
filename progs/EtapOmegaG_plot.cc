@@ -125,7 +125,7 @@ struct CommonHist_t {
 };
 
 struct SigHist_t : CommonHist_t {
-    using Tree_t = physics::EtapOmegaG::Sig_t::Tree_t;
+    using Tree_t = physics::EtapOmegaG::Sig_t::Fit_t::Tree_t;
     using Fill_t = CommonHist_t::SigRefFill_t<Tree_t>;
 
     TH2D* h_IM_gg_gg;     // Goldhaber plot
@@ -157,7 +157,7 @@ struct SigHist_t : CommonHist_t {
 
     void Fill(const Fill_t& f) const {
         CommonHist_t::Fill(f);
-        const Tree_t& tree = f.Tree;
+        const auto& tree = f.Tree;
 
         for(unsigned i=0;i<f.Common.gg_gg1().size();i++) {
             h_IM_gg_gg->Fill(f.Common.gg_gg1()[i], f.Common.gg_gg2()[i], f.TaggW());
@@ -165,9 +165,9 @@ struct SigHist_t : CommonHist_t {
         }
 
         h_TreeFitChi2->Fill(tree.TreeFitChi2, f.TaggW());
-        h_Bachelor_E->Fill(tree.Bachelor_E, f.TaggW());
-        h_IM_3g_4g->Fill(tree.IM_Pi0gg_best, tree.IM_Pi0g_best, f.TaggW());
-        h_IM_4g->Fill(tree.IM_Pi0gg_best, f.TaggW());
+        //h_Bachelor_E->Fill(tree.Bachelor_E, f.TaggW());
+        //h_IM_3g_4g->Fill(tree.IM_Pi0gg_best, tree.IM_Pi0g_best, f.TaggW());
+        h_IM_4g->Fill(tree.IM_Pi0gg, f.TaggW());
     }
 
     std::vector<TH1*> GetHists() const {

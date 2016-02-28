@@ -58,29 +58,10 @@ struct EtapOmegaG : Physics {
     struct Particles_t {
         TParticlePtr    Proton;
         TParticleList   Photons;
-        TLorentzVector  PhotonSum;
         double          EBeam = std_ext::NaN;
     };
 
     struct Sig_t {
-
-        struct Tree_t : WrapTTree {
-
-            ADD_BRANCH_T(double,   TreeFitChi2)
-            ADD_BRANCH_T(unsigned, TreeFitIterations)
-
-            ADD_BRANCH_T(double, IM_Pi0g_fitted)
-            ADD_BRANCH_T(double, IM_Pi0_fitted)
-
-            ADD_BRANCH_T(double, IM_Pi0gg_best)
-            ADD_BRANCH_T(double, IM_Pi0g_best)
-            ADD_BRANCH_T(double, IM_Pi0_best)
-
-            ADD_BRANCH_T(double, Bachelor_E)
-
-            ADD_BRANCH_T(unsigned, MCTrueMatch)
-
-        };
 
         // the subtree to be fitted is either pi0->2g
         // or omega->pi0g->3g
@@ -88,44 +69,73 @@ struct EtapOmegaG : Physics {
         // photons
 
         struct Fit_t {
-            struct IM_Sigma_t {
-                double EtaPrime;
-                double Omega;
-                IM_Sigma_t(double etaPrime = 1.0, double omega = 1.0) :
-                    EtaPrime(etaPrime), Omega(omega) {}
-                // Pi0 width is "reference"
+
+            struct Tree_t : WrapTTree {
+
+                ADD_BRANCH_T(double,   TreeFitChi2)
+                ADD_BRANCH_T(unsigned, TreeFitIterations)
+
+                ADD_BRANCH_T(double, IM_Pi0_best)
+                ADD_BRANCH_T(double, IM_Pi0_fitted)
+
+                ADD_BRANCH_T(double, IM_Pi0gg)
+
+                ADD_BRANCH_T(unsigned, MCTrueMatch)
+
+                void Reset();
             };
 
             Fit_t(utils::TreeFitter fitter);
 
-            static utils::TreeFitter Make(const Fit_t::IM_Sigma_t& IM_Sigma,
-                                          const ParticleTypeDatabase::Type& subtree);
+            static utils::TreeFitter Make(const ParticleTypeDatabase::Type& subtree);
 
             utils::TreeFitter treefitter;
 
-            utils::TreeFitter::tree_t fitted_Omega;
             utils::TreeFitter::tree_t fitted_Pi0;
-
-            utils::TreeFitter::tree_t fitted_g_Omega;
             utils::TreeFitter::tree_t fitted_g1_Pi0;
             utils::TreeFitter::tree_t fitted_g2_Pi0;
 
-            Tree_t t;
+            utils::TreeFitter::tree_t fitted_Omega;
+            utils::TreeFitter::tree_t fitted_g_Omega;
 
-            void ResetBranches();
-            void Process(const Particles_t& particles, TParticleTree_t ptree_sigref);
-            void CheckMCPhotonAssignment(const TParticleList& photons,
-                                         TParticleTree_t ptree_sigref,
-                                         TParticlePtr g_Omega_best,
-                                         TParticlePtr g_EtaPrime_best);
         };
 
+        struct Pi0_t : Fit_t {
 
+            Pi0_t();
 
-        Sig_t(const Fit_t::IM_Sigma_t& IM_Sigma = {});
+            struct Tree_t : Fit_t::Tree_t {
+                ADD_BRANCH_T(std::vector<double>, IM_Pi0g, 2)
+                void Reset();
+            };
 
-        Fit_t OmegaPi0;
-        Fit_t Pi0;
+            Tree_t t;
+
+            void Process(const Particles_t& particles, TParticleTree_t ptree_sigref);
+        };
+
+        struct OmegaPi0_t : Fit_t {
+
+            OmegaPi0_t();
+
+            struct Tree_t : Fit_t::Tree_t {
+                ADD_BRANCH_T(double, IM_Pi0g_fitted)
+                ADD_BRANCH_T(double, IM_Pi0g_best)
+
+                ADD_BRANCH_T(double, Bachelor_E_fitted)
+                ADD_BRANCH_T(double, Bachelor_E_best)
+
+                void Reset();
+            };
+
+            Tree_t t;
+
+            void Process(const Particles_t& particles, TParticleTree_t ptree_sigref);
+
+        };
+
+        Pi0_t Pi0;
+        OmegaPi0_t OmegaPi0;
 
 
         void SetupTrees(HistogramFactory HistFac);
