@@ -207,8 +207,6 @@ void EtapOmegaG::ProcessEvent(const TEvent& event, manager_t&)
         t.TaggT = taggerhit.Time;
         t.TaggCh = taggerhit.Channel;
 
-
-
         Sig.ResetBranches();
         Ref.ResetBranches();
 
@@ -233,7 +231,6 @@ void EtapOmegaG::ProcessEvent(const TEvent& event, manager_t&)
 }
 
 EtapOmegaG::Sig_t::Sig_t(const Fit_t::IM_Sigma_t& IM_Sigma) :
-    All(Fit_t::Make(IM_Sigma)),
     No_EtaPrime(Fit_t::Make(IM_Sigma, &ParticleTypeDatabase::EtaPrime)),
     OmegaPi0(FitOmegaPi0_t::Make(IM_Sigma))
 {
@@ -241,28 +238,24 @@ EtapOmegaG::Sig_t::Sig_t(const Fit_t::IM_Sigma_t& IM_Sigma) :
 
 void EtapOmegaG::Sig_t::SetupTrees(HistogramFactory HistFac)
 {
-    All.t.CreateBranches(HistFac.makeTTree("SigAll"));
     No_EtaPrime.t.CreateBranches(HistFac.makeTTree("SigNoEtaPrime"));
     OmegaPi0.t.CreateBranches(HistFac.makeTTree("SigOmegaPi0"));
 }
 
 void EtapOmegaG::Sig_t::Fill()
 {
-    All.t.Tree->Fill();
     No_EtaPrime.t.Tree->Fill();
     OmegaPi0.t.Tree->Fill();
 }
 
 void EtapOmegaG::Sig_t::ResetBranches()
 {
-    All.ResetBranches();
     No_EtaPrime.ResetBranches();
     OmegaPi0.ResetBranches();
 }
 
 void EtapOmegaG::Sig_t::Process(const Particles_t& particles, TParticleTree_t ptree_sigref)
 {
-    All.Process(particles, ptree_sigref);
     No_EtaPrime.Process(particles, ptree_sigref);
     OmegaPi0.Process(particles, ptree_sigref);
 }

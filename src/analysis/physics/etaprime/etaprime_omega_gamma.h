@@ -86,9 +86,13 @@ struct EtapOmegaG : Physics {
 
         };
 
-        // we have multiple ideas for treefitting...
-
-
+        // we have two ideas for treefitting:
+        // combine kinfit and treefit
+        // or do kinfit, then treefit
+        // the subtree to be fitted is either pi0->2g
+        // or omega->pi0g->3g
+        // fitting the whole decay tree would overconstrain the
+        // photons
 
         struct Fit_t {
             struct IM_Sigma_t {
@@ -136,7 +140,6 @@ struct EtapOmegaG : Physics {
 
         Sig_t(const Fit_t::IM_Sigma_t& IM_Sigma = {});
 
-        Fit_t All;
         Fit_t No_EtaPrime;
         FitOmegaPi0_t OmegaPi0;
 
