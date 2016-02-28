@@ -44,7 +44,7 @@ Cuts_t<ToFill_t> ConvertCuts(const Cuts_t<FromFill_t>& from_cuts) {
         auto& to_multicut = to_cuts.back();
         for(const auto& from_cut : from_multicut) {
             auto passes = from_cut.Passes;
-            to_multicut.emplace_back(from_cut.Name, [passes] (const ToFill_t f) { return passes(f); });
+            to_multicut.emplace_back(from_cut.Name, [passes] (const ToFill_t& f) { return passes(f); });
         }
     }
     return to_cuts;
