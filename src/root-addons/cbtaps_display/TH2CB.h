@@ -9,6 +9,9 @@
 #include "TH2Poly.h"
 #include "Rtypes.h"
 
+namespace ant {
+
+class TH2DrawTool;
 
 /**
  * @brief The TH2CB class
@@ -27,10 +30,6 @@
  *
  * Element Number (element): The crystals are not cabled in the ordering of the crystals. Acqu uses elements.
  */
-
-namespace ant {
-
-class TH2DrawTool;
 
 class TH2CB: public TH2Crystals {
 
@@ -133,7 +132,7 @@ public:
      * @param value Value to set it it
      * @see SetCrystal720()
      */
-    virtual void SetElement(const UInt_t element, Double_t value) override; 
+    virtual void SetElement(const UInt_t element, Double_t value) override;
 
     /**
      * @brief Fill a hit pattern (mapped), ordered by element numers
@@ -168,7 +167,7 @@ public:
     Int_t GetNumberOfElements() const override { return 720; }
 
     virtual void CreateMarker(UInt_t element) override; // *MENU*
-    
+
 #ifdef __clang__
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Winconsistent-missing-override"
