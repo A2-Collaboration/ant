@@ -104,17 +104,9 @@ struct CommonHist_t {
         {}
     };
 
-    TH1D* h_KinFitChi2;
-
-    CommonHist_t(HistogramFactory HistFac) {
-        h_KinFitChi2 = HistFac.makeTH1D("KinFitChi2","#chi^{2}","",BinSettings(200,0,100),"h_KinFitChi2");
-    }
-    void Fill(const Fill_t& f) const {
-        h_KinFitChi2->Fill(f.Common.KinFitChi2, f.TaggW());
-    }
-    std::vector<TH1*> GetHists() const {
-        return {h_KinFitChi2};
-    }
+    CommonHist_t(HistogramFactory) {}
+    void Fill(const Fill_t&) const {}
+    std::vector<TH1*> GetHists() const { return {}; }
 
     // Sig and Ref channel share some cuts...
     static cuttree::Cuts_t<Fill_t> GetCuts() {
@@ -125,10 +117,6 @@ struct CommonHist_t {
                                  {"CBSumVeto<0.25", [] (const Fill_t& f) { return f.Common.CBSumVetoE<0.25; } },
                                  {"PIDSumE=0", [] (const Fill_t& f) { return f.Common.PIDSumE==0; } },
                                  {"PIDSumE<0.25", [] (const Fill_t& f) { return f.Common.PIDSumE<0.25; } },
-                             });
-        cuts.emplace_back(MultiCut_t<Fill_t>{
-                                 {"KinFitChi2<10", [] (const Fill_t& f) { return f.Common.KinFitChi2<10; } },
-                                 {"KinFitChi2<20", [] (const Fill_t& f) { return f.Common.KinFitChi2<20; } },
                              });
         return cuts;
     }
@@ -238,27 +226,35 @@ struct RefHist_t : CommonHist_t {
     using Tree_t = physics::EtapOmegaG::Ref_t::Tree_t;
     using Fill_t = CommonHist_t::SigRefFill_t<Tree_t>;
 
+    TH1D* h_KinFitChi2;
     TH1D* h_IM_2g;
 
     RefHist_t(HistogramFactory HistFac) : CommonHist_t(HistFac) {
+        h_KinFitChi2 = HistFac.makeTH1D("KinFitChi2","#chi^{2}","",BinSettings(200,0,100),"h_KinFitChi2");
         h_IM_2g = HistFac.makeTH1D("IM 2g","IM / MeV","",BinSettings(1100,0,1100),"h_IM_2g");
     }
 
     void Fill(const Fill_t& f) const {
         CommonHist_t::Fill(f);
         const Tree_t& tree = f.Tree;
+        h_KinFitChi2->Fill(tree.KinFitChi2, f.TaggW());
         h_IM_2g->Fill(tree.IM_2g, f.TaggW());
     }
 
     std::vector<TH1*> GetHists() const {
         auto hists = CommonHist_t::GetHists();
-        hists.insert(hists.end(), {h_IM_2g});
+        hists.insert(hists.end(), {h_KinFitChi2, h_IM_2g});
         return hists;
     }
 
     static cuttree::Cuts_t<Fill_t> GetCuts() {
-        // reference does not have more to cut than common stuff...
-        return cuttree::ConvertCuts<Fill_t, CommonHist_t::Fill_t>(CommonHist_t::GetCuts());
+        using cuttree::MultiCut_t;
+        auto cuts = cuttree::ConvertCuts<Fill_t, CommonHist_t::Fill_t>(CommonHist_t::GetCuts());
+        cuts.emplace_back(MultiCut_t<Fill_t>{
+                                 {"KinFitChi2<10", [] (const Fill_t& f) { return f.Tree.KinFitChi2<10; } },
+                                 {"KinFitChi2<20", [] (const Fill_t& f) { return f.Tree.KinFitChi2<20; } },
+                             });
+        return cuts;
     }
 };
 

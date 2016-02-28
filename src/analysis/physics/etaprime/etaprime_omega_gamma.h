@@ -39,8 +39,6 @@ struct EtapOmegaG : Physics {
 
         ADD_BRANCH_T(double,   ProtonCopl)
         ADD_BRANCH_T(double,   MissingMass)
-        ADD_BRANCH_T(double,   KinFitChi2)
-        ADD_BRANCH_T(unsigned, KinFitIterations)
         ADD_BRANCH_T(double,   TaggW)
         ADD_BRANCH_T(double,   TaggW_tight)
         ADD_BRANCH_T(double,   TaggE)
@@ -52,9 +50,6 @@ struct EtapOmegaG : Physics {
 
     PromptRandom::Switch promptrandom;
     PromptRandom::Switch promptrandom_tight;
-
-    utils::KinFitter kinfitter_2;
-    utils::KinFitter kinfitter_4;
 
     struct Particles_t {
         TParticlePtr    Proton;
@@ -154,8 +149,15 @@ struct EtapOmegaG : Physics {
     };
 
     struct Ref_t {
+
+        Ref_t();
+
+        utils::KinFitter kinfitter;
+
         struct Tree_t : WrapTTree {
-            ADD_BRANCH_T(double, IM_2g)
+            ADD_BRANCH_T(double,   IM_2g)
+            ADD_BRANCH_T(double,   KinFitChi2)
+            ADD_BRANCH_T(unsigned, KinFitIterations)
         };
         Tree_t t;
 

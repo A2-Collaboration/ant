@@ -26,9 +26,7 @@ const ParticleTypeTree EtapOmegaG::ptreeReference = ParticleTypeTreeDatabase::Ge
 
 
 EtapOmegaG::EtapOmegaG(const string& name, OptionsPtr opts) :
-    Physics(name, opts),
-    kinfitter_2("kinfitter_2",2),
-    kinfitter_4("kinfitter_4",4)
+    Physics(name, opts)
 {
     const interval<double> prompt_range{-2.5,1.5};
     promptrandom.AddPromptRange(prompt_range); // slight offset due to CBAvgTime reference
@@ -42,13 +40,6 @@ EtapOmegaG::EtapOmegaG(const string& name, OptionsPtr opts) :
 
     h_CommonCuts = HistFac.makeTH1D("Common Cuts", "", "#", BinSettings(15),"h_TotalEvents");
     h_MissedBkg = HistFac.makeTH1D("Missed Background", "", "#", BinSettings(25),"h_MissedBkg");
-
-
-    const auto setup = ant::ExpConfig::Setup::GetLastFound();
-    if(!setup)
-        throw runtime_error("EtapOmegaG needs a setup");
-    kinfitter_2.LoadSigmaData(setup->GetPhysicsFilesDirectory()+"/FitterSigmas.root");
-    kinfitter_4.LoadSigmaData(setup->GetPhysicsFilesDirectory()+"/FitterSigmas.root");
 
     t.CreateBranches(HistFac.makeTTree("treeCommon"));
 
@@ -155,11 +146,7 @@ void EtapOmegaG::ProcessEvent(const TEvent& event, manager_t&)
 
 
     // select signal or reference according to nPhotons
-
     t.IsSignal = nPhotons == 4; // else nPhotons==2, so reference
-    utils::KinFitter& fitter = t.IsSignal ? kinfitter_4 : kinfitter_2;
-
-
 
     // do some MCTrue identification (if available)
     t.MCTrue = 0; // indicate data by default
@@ -203,8 +190,7 @@ void EtapOmegaG::ProcessEvent(const TEvent& event, manager_t&)
         t.MCTrue = 9;
     }
 
-    // loop over tagger hits, do KinFit
-    bool kinfit_ok = false;
+    // loop over tagger hits, delegate to Ref/Sig
     for(const TTaggerHit& taggerhit : data.TaggerHits) {
         promptrandom.SetTaggerHit(taggerhit.Time - t.CBAvgTime);
         promptrandom_tight.SetTaggerHit(taggerhit.Time - t.CBAvgTime);
@@ -221,35 +207,17 @@ void EtapOmegaG::ProcessEvent(const TEvent& event, manager_t&)
         t.TaggT = taggerhit.Time;
         t.TaggCh = taggerhit.Channel;
 
-        // do kinfit
-        fitter.SetEgammaBeam(taggerhit.PhotonEnergy);
-        fitter.SetProton(particles.Proton);
-        fitter.SetPhotons(particles.Photons);
-        const auto& fit_result = fitter.DoFit();
+
 
         Sig.ResetBranches();
         Ref.ResetBranches();
 
-        t.KinFitChi2 = std_ext::NaN;
-        t.KinFitIterations = 0;
-        if(fit_result.Status == APLCON::Result_Status_t::Success) {
-            kinfit_ok = true;
-            t.KinFitChi2 = fit_result.ChiSquare;
-            t.KinFitIterations = fit_result.NIterations;
-            Particles_t fitted_particles;
-            fitted_particles.Proton = fitter.GetFittedProton();
-            fitted_particles.Photons = fitter.GetFittedPhotons();
-            fitted_particles.EBeam = taggerhit.PhotonEnergy;
-            fitted_particles.PhotonSum.SetPxPyPzE(0,0,0,0);
+        particles.EBeam = taggerhit.PhotonEnergy;
 
-            for(const TParticlePtr& p : fitted_particles.Photons)
-                fitted_particles.PhotonSum += *p;
-
-            if(t.IsSignal)
-                Sig.Process(fitted_particles, ptree_sigref);
-            else
-                Ref.Process(fitted_particles);
-        }
+        if(t.IsSignal)
+            Sig.Process(particles, ptree_sigref);
+        else
+            Ref.Process(particles);
 
         t.Tree->Fill();
 
@@ -257,8 +225,6 @@ void EtapOmegaG::ProcessEvent(const TEvent& event, manager_t&)
         Ref.t.Tree->Fill();
     }
 
-    if(kinfit_ok)
-        h_CommonCuts->Fill("KinFit OK", 1.0);
     if(nPhotons==2)
         h_CommonCuts->Fill("nPhotons==2", 1.0);
     if(nPhotons==4)
@@ -609,6 +575,15 @@ void EtapOmegaG::Sig_t::FitOmegaPi0_t::Process(const EtapOmegaG::Particles_t& pa
     }
 }
 
+EtapOmegaG::Ref_t::Ref_t() :
+    kinfitter("kinfitter_Ref", 2)
+{
+    const auto setup = ant::ExpConfig::Setup::GetLastFound();
+    if(!setup)
+        throw runtime_error("EtapOmegaG needs a setup");
+    kinfitter.LoadSigmaData(setup->GetPhysicsFilesDirectory()+"/FitterSigmas.root");
+}
+
 void EtapOmegaG::Ref_t::ResetBranches()
 {
     t.IM_2g = std_ext::NaN;
@@ -617,7 +592,24 @@ void EtapOmegaG::Ref_t::ResetBranches()
 void EtapOmegaG::Ref_t::Process(const EtapOmegaG::Particles_t& particles)
 {
     assert(particles.Photons.size() == 2);
-    t.IM_2g = particles.PhotonSum.M();
+
+    // do kinfit
+    kinfitter.SetEgammaBeam(particles.EBeam);
+    kinfitter.SetProton(particles.Proton);
+    kinfitter.SetPhotons(particles.Photons);
+    const auto& fit_result = kinfitter.DoFit();
+
+    t.KinFitChi2 = std_ext::NaN;
+    t.KinFitIterations = 0;
+    if(fit_result.Status != APLCON::Result_Status_t::Success)
+        return;
+
+    t.KinFitChi2 = fit_result.ChiSquare;
+    t.KinFitIterations = fit_result.NIterations;
+
+    const auto& photons = kinfitter.GetFittedPhotons();
+
+    t.IM_2g = (*photons.front() + *photons.back()).M();
 }
 
 void EtapOmegaG::ShowResult()
