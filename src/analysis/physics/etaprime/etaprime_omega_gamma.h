@@ -69,26 +69,19 @@ struct EtapOmegaG : Physics {
             ADD_BRANCH_T(double,   TreeFitChi2)
             ADD_BRANCH_T(unsigned, TreeFitIterations)
 
-            ADD_BRANCH_T(double, IM_EtaPrime_fitted)
-            ADD_BRANCH_T(double, IM_Omega_fitted)
+            ADD_BRANCH_T(double, IM_Pi0g_fitted)
             ADD_BRANCH_T(double, IM_Pi0_fitted)
 
-            ADD_BRANCH_T(double, IM_EtaPrime_best)
-            ADD_BRANCH_T(double, IM_Omega_best)
+            ADD_BRANCH_T(double, IM_Pi0gg_best)
+            ADD_BRANCH_T(double, IM_Pi0g_best)
             ADD_BRANCH_T(double, IM_Pi0_best)
 
-            ADD_BRANCH_T(double, Bachelor_best_best)
-            ADD_BRANCH_T(double, Bachelor_best_fit)
-            ADD_BRANCH_T(double, Bachelor_fit_best)
-            ADD_BRANCH_T(double, Bachelor_fit_fit)
+            ADD_BRANCH_T(double, Bachelor_E)
 
             ADD_BRANCH_T(unsigned, MCTrueMatch)
 
         };
 
-        // we have two ideas for treefitting:
-        // combine kinfit and treefit
-        // or do kinfit, then treefit
         // the subtree to be fitted is either pi0->2g
         // or omega->pi0g->3g
         // fitting the whole decay tree would overconstrain the
@@ -106,15 +99,13 @@ struct EtapOmegaG : Physics {
             Fit_t(utils::TreeFitter fitter);
 
             static utils::TreeFitter Make(const Fit_t::IM_Sigma_t& IM_Sigma,
-                                          const ParticleTypeDatabase::Type* typeptr = nullptr);
+                                          const ParticleTypeDatabase::Type& subtree);
 
             utils::TreeFitter treefitter;
 
-            utils::TreeFitter::tree_t fitted_EtaPrime;
             utils::TreeFitter::tree_t fitted_Omega;
             utils::TreeFitter::tree_t fitted_Pi0;
 
-            utils::TreeFitter::tree_t fitted_g_EtaPrime;
             utils::TreeFitter::tree_t fitted_g_Omega;
             utils::TreeFitter::tree_t fitted_g1_Pi0;
             utils::TreeFitter::tree_t fitted_g2_Pi0;
@@ -130,18 +121,13 @@ struct EtapOmegaG : Physics {
                                          TParticlePtr g_EtaPrime_best);
         };
 
-        struct FitOmegaPi0_t : Fit_t {
-            FitOmegaPi0_t(utils::TreeFitter fitter);
-            static utils::TreeFitter Make(const Fit_t::IM_Sigma_t& IM_Sigma);
-            void Process(const Particles_t& particles, TParticleTree_t ptree_sigref);
-        };
-
 
 
         Sig_t(const Fit_t::IM_Sigma_t& IM_Sigma = {});
 
-        Fit_t No_EtaPrime;
-        FitOmegaPi0_t OmegaPi0;
+        Fit_t OmegaPi0;
+        Fit_t Pi0;
+
 
         void SetupTrees(HistogramFactory HistFac);
         void Fill();
