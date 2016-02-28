@@ -52,10 +52,8 @@ EtapOmegaG::EtapOmegaG(const string& name, OptionsPtr opts) :
 
     t.CreateBranches(HistFac.makeTTree("treeCommon"));
 
-    HistogramFactory HistFacKinFit("KinFit",HistFac);
-
-    SigKinFit.SetupTrees(HistFacKinFit);
-    RefKinFit.t.CreateBranches(HistFacKinFit.makeTTree("Ref"));
+    Sig.SetupTrees(HistFac);
+    Ref.t.CreateBranches(HistFac.makeTTree("Ref"));
 
 }
 
@@ -109,7 +107,6 @@ void EtapOmegaG::ProcessEvent(const TEvent& event, manager_t&)
 
     if(!particles.Proton)
         return;
-
     h_CommonCuts->Fill("p in TAPS", 1.0);
 
     // remaining candidates are photons
@@ -230,8 +227,8 @@ void EtapOmegaG::ProcessEvent(const TEvent& event, manager_t&)
         fitter.SetPhotons(particles.Photons);
         const auto& fit_result = fitter.DoFit();
 
-        SigKinFit.ResetBranches();
-        RefKinFit.ResetBranches();
+        Sig.ResetBranches();
+        Ref.ResetBranches();
 
         t.KinFitChi2 = std_ext::NaN;
         t.KinFitIterations = 0;
@@ -249,15 +246,15 @@ void EtapOmegaG::ProcessEvent(const TEvent& event, manager_t&)
                 fitted_particles.PhotonSum += *p;
 
             if(t.IsSignal)
-                SigKinFit.Process(fitted_particles, ptree_sigref);
+                Sig.Process(fitted_particles, ptree_sigref);
             else
-                RefKinFit.Process(fitted_particles);
+                Ref.Process(fitted_particles);
         }
 
         t.Tree->Fill();
 
-        SigKinFit.Fill();
-        RefKinFit.t.Tree->Fill();
+        Sig.Fill();
+        Ref.t.Tree->Fill();
     }
 
     if(kinfit_ok)
