@@ -472,6 +472,10 @@ TreeFitter::TreeFitter(const string& name,
         if(tnode->IsLeaf())
             return;
 
+        // do not include beamparticles
+        if(tnode->Get().TypeTree->Get() == ParticleTypeDatabase::BeamTarget)
+            return;
+
         // always sum up the tree nodes
         sum_daughters.emplace_back([tnode] () {
             node_t& node = tnode->Get();
@@ -582,7 +586,19 @@ bool TreeFitter::NextFit(APLCON::Result_t& fit_result)
 
 TreeFitter::tree_t TreeFitter::MakeTree(ParticleTypeTree ptree)
 {
+
     auto t = ptree->DeepCopy<node_t>([] (const ParticleTypeTree& n) { return n; });
+
+    if(t->Get().TypeTree->Get() == ParticleTypeDatabase::BeamTarget) {
+        for(const auto& daughter : t->Daughters()) {
+            if(daughter->Get().TypeTree->Get() == ParticleTypeDatabase::Nucleon) {
+                LOG(INFO) << "Removing nucleon from tree";
+                daughter->Unlink();
+                break;
+            }
+        }
+    }
+
     t->Sort();
     return t;
 }
