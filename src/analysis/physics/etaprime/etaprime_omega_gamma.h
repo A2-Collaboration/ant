@@ -73,6 +73,7 @@ struct EtapOmegaG : Physics {
             struct Tree_t : WrapTTree {
 
                 ADD_BRANCH_T(double,   TreeFitChi2)
+                ADD_BRANCH_T(double,   TreeFitProb)
                 ADD_BRANCH_T(unsigned, TreeFitIterations)
 
                 ADD_BRANCH_T(double, IM_Pi0_best)

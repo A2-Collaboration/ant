@@ -334,6 +334,7 @@ utils::TreeFitter EtapOmegaG::Sig_t::Fit_t::Make(const ParticleTypeDatabase::Typ
 void EtapOmegaG::Sig_t::Fit_t::Tree_t::Reset()
 {
     TreeFitChi2 = std_ext::NaN;
+    TreeFitProb = std_ext::NaN;
     TreeFitIterations = 0;
     IM_Pi0_fitted = std_ext::NaN;
     IM_Pi0_best = std_ext::NaN;
@@ -376,6 +377,7 @@ void EtapOmegaG::Sig_t::Pi0_t::Process(const EtapOmegaG::Particles_t& particles,
             continue;
         // found fit with better chi2
         t.TreeFitChi2 = r.ChiSquare;
+        t.TreeFitProb = r.Probability;
         t.TreeFitIterations = r.NIterations;
 
         // sum up photon, should give the EtaPrime
@@ -502,6 +504,7 @@ void EtapOmegaG::Sig_t::OmegaPi0_t::Process(const EtapOmegaG::Particles_t& parti
             continue;
         // found fit with better chi2
         t.TreeFitChi2 = r.ChiSquare;
+        t.TreeFitProb = r.Probability;
         t.TreeFitIterations = r.NIterations;
 
         // sum up photon, should give the EtaPrime
