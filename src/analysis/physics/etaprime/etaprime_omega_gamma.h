@@ -60,7 +60,8 @@ struct EtapOmegaG : Physics {
 
 
     struct Particles_t {
-        TParticleList   Photons;
+        TParticleList  Photons;
+        TLorentzVector PhotonSum;
     };
 
     struct Sig_t {
@@ -132,8 +133,7 @@ struct EtapOmegaG : Physics {
                 ADD_BRANCH_T(double, IM_Pi0g_fitted)
                 ADD_BRANCH_T(double, IM_Pi0g_best)
 
-                ADD_BRANCH_T(double, Bachelor_E_fitted)
-                ADD_BRANCH_T(double, Bachelor_E_best)
+                ADD_BRANCH_T(double, Bachelor_E)
 
                 void Reset();
             };

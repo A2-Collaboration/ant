@@ -240,6 +240,9 @@ void EtapOmegaG::ProcessEvent(const TEvent& event, manager_t&)
 
             Particles_t fitted_particles;
             fitted_particles.Photons = kinfitter.GetFittedPhotons();
+            fitted_particles.PhotonSum.SetPxPyPzE(0,0,0,0);
+            for(const auto& photon : fitted_particles.Photons)
+                fitted_particles.PhotonSum += *photon;
 
             if(t.IsSignal)
                 Sig.Process(fitted_particles, ptree_sigref);
@@ -394,67 +397,59 @@ void EtapOmegaG::Sig_t::Pi0_t::Process(const EtapOmegaG::Particles_t& particles,
 
     DoPhotonCombinatorics(particles.Photons, t);
 
-    // do treefit
-    treefitter.SetLeaves(particles.Photons);
+    // sum of photons should give the EtaPrime
+    t.IM_Pi0gg = particles.PhotonSum.M();
 
     // for MCtrue identification
     TParticlePtr g1_Pi0_best;
     TParticlePtr g2_Pi0_best;
 
+    for(auto comb=utils::makeCombination(particles.Photons, 2); !comb.Done(); ++comb) {
 
-    APLCON::Result_t r;
+        // do treefit (build photons from iterator ctor)
+        treefitter.SetLeaves({comb.begin(), comb.end()});
 
-    while(treefitter.NextFit(r)) {
-        if(r.Status != APLCON::Result_Status_t::Success)
-            continue;
-        if(isfinite(t.TreeFitChi2) && r.ChiSquare>t.TreeFitChi2)
-            continue;
-        // found fit with better chi2
-        t.TreeFitChi2 = r.ChiSquare;
-        t.TreeFitProb = r.Probability;
-        t.TreeFitIterations = r.NIterations;
+        APLCON::Result_t r;
 
-        // sum up photon, should give the EtaPrime
-        const auto& fitted_photons = treefitter.GetFittedPhotons();
-        assert(fitted_photons.size()==4);
-        TLorentzVector photon_sum(0,0,0,0);
-        for(const auto& photon : fitted_photons)
-            photon_sum += *photon;
-        t.IM_Pi0gg = photon_sum.M();
+        while(treefitter.NextFit(r)) {
+            if(r.Status != APLCON::Result_Status_t::Success)
+                continue;
+            if(isfinite(t.TreeFitChi2) && r.ChiSquare>t.TreeFitChi2)
+                continue;
+            // found fit with better chi2
+            t.TreeFitChi2 = r.ChiSquare;
+            t.TreeFitProb = r.Probability;
+            t.TreeFitIterations = r.NIterations;
 
-        // IM fitted expected to be delta peaks since they were fitted...
-        const TLorentzVector& pi0_fitted = fitted_Pi0->Get().LVSum;
-        t.IM_Pi0_fitted = pi0_fitted.M();
+            // IM fitted expected to be delta peaks since they were fitted...
+            const TLorentzVector& pi0_fitted = fitted_Pi0->Get().LVSum;
+            t.IM_Pi0_fitted = pi0_fitted.M();
 
-        // have a look at the assigned gammas to Pi0/Omega
-        g1_Pi0_best = fitted_g1_Pi0->Get().Leave->Particle;
-        g2_Pi0_best = fitted_g2_Pi0->Get().Leave->Particle;
+            // have a look at the assigned gammas to Pi0/Omega
+            g1_Pi0_best = fitted_g1_Pi0->Get().Leave->Particle;
+            g2_Pi0_best = fitted_g2_Pi0->Get().Leave->Particle;
 
-        const TLorentzVector& Pi0_best = *g1_Pi0_best + *g2_Pi0_best;
-        t.IM_Pi0_best = Pi0_best.M();
+            const TLorentzVector& Pi0_best = *g1_Pi0_best + *g2_Pi0_best;
+            t.IM_Pi0_best = Pi0_best.M();
 
-        // there are two photon combinations possible
-        // for the omega
-        // for each of them, we find the fitted photon
-        // and calculate the IM with the fitted Pi0
-        auto it_IM_Pi0g = t.IM_Pi0g().begin();
-        TLorentzVector sum_2g_fitted(0,0,0,0);
-        for(auto it_not = treefitter.GetCurrentCombination().begin_not();
-            it_not != treefitter.GetCurrentCombination().end_not(); ++it_not)
-        {
-            auto photon_notPi0 = *it_not;
-            for(const auto& photon : fitted_photons) {
-                if(photon->Candidate == photon_notPi0->Candidate) {
-                    *it_IM_Pi0g = (pi0_fitted + *photon).M();
-                    sum_2g_fitted += *photon;
-                }
+            // there are two photon combinations possible
+            // for the omega
+            // for each of them, we find the fitted photon
+            // and calculate the IM with the fitted Pi0
+            auto it_IM_Pi0g = t.IM_Pi0g().begin();
+            TLorentzVector sum_2g_fitted(0,0,0,0);
+            for(auto it_not = comb.begin_not(); it_not != comb.end_not(); ++it_not)
+            {
+                const auto& photon = *it_not;
+                *it_IM_Pi0g = (Pi0_best + *photon).M();
+                ++it_IM_Pi0g;
+                sum_2g_fitted += *photon;
             }
-            ++it_IM_Pi0g;
+            t.IM_gg = sum_2g_fitted.M();
+            std::sort(t.IM_Pi0g().begin(), t.IM_Pi0g().end());
         }
-        t.IM_gg = sum_2g_fitted.M();
-        std::sort(t.IM_Pi0g().begin(), t.IM_Pi0g().end());
-    }
 
+    }
 
     // there was at least one successful fit
     if(isfinite(t.TreeFitChi2)) {
@@ -507,8 +502,7 @@ void EtapOmegaG::Sig_t::OmegaPi0_t::Tree_t::Reset()
     Fit_t::Tree_t::Reset();
     IM_Pi0g_fitted = std_ext::NaN;
     IM_Pi0g_best = std_ext::NaN;
-    Bachelor_E_fitted = std_ext::NaN;
-    Bachelor_E_best = std_ext::NaN;
+    Bachelor_E = std_ext::NaN;
 }
 
 
@@ -519,61 +513,49 @@ void EtapOmegaG::Sig_t::OmegaPi0_t::Process(const EtapOmegaG::Particles_t& parti
 
     DoPhotonCombinatorics(particles.Photons, t);
 
+    // sum of photons should give the EtaPrime
+    const TLorentzVector& EtaPrime = particles.PhotonSum;
+    t.IM_Pi0gg = EtaPrime.M();
+
     // g_Omega to check against MCTrue
     TParticlePtr g_Omega_best;
     // the EtaPrime bachelor photon is most important to us...
-    TParticlePtr g_EtaPrime_fitted;
     TParticlePtr g_EtaPrime_best;
-    TLorentzVector EtaPrime_fitted;
 
-    // do treefit
-    treefitter.SetLeaves(particles.Photons);
+    for(auto comb=utils::makeCombination(particles.Photons, 3); !comb.Done(); ++comb) {
 
-    APLCON::Result_t r;
+        // do treefit (build photons from iterator ctor)
+        treefitter.SetLeaves({comb.begin(), comb.end()});
 
-    while(treefitter.NextFit(r)) {
-        if(r.Status != APLCON::Result_Status_t::Success)
-            continue;
-        if(isfinite(t.TreeFitChi2) && r.ChiSquare>t.TreeFitChi2)
-            continue;
-        // found fit with better chi2
-        t.TreeFitChi2 = r.ChiSquare;
-        t.TreeFitProb = r.Probability;
-        t.TreeFitIterations = r.NIterations;
+        APLCON::Result_t r;
 
-        // sum up photon, should give the EtaPrime
-        const auto& fitted_photons = treefitter.GetFittedPhotons();
-        assert(fitted_photons.size()==4);
-        EtaPrime_fitted.SetPxPyPzE(0,0,0,0);
-        for(const auto& photon : fitted_photons)
-            EtaPrime_fitted += *photon;
-        t.IM_Pi0gg = EtaPrime_fitted.M();
+        while(treefitter.NextFit(r)) {
+            if(r.Status != APLCON::Result_Status_t::Success)
+                continue;
+            if(isfinite(t.TreeFitChi2) && r.ChiSquare>t.TreeFitChi2)
+                continue;
+            // found fit with better chi2
+            t.TreeFitChi2 = r.ChiSquare;
+            t.TreeFitProb = r.Probability;
+            t.TreeFitIterations = r.NIterations;
 
+            // IM fitted expected to be delta peaks since they were fitted...
+            t.IM_Pi0g_fitted = fitted_Omega->Get().LVSum.M();
+            t.IM_Pi0_fitted = fitted_Pi0->Get().LVSum.M();
 
-        // IM fitted expected to be delta peaks since they were fitted...
-        t.IM_Pi0g_fitted = fitted_Omega->Get().LVSum.M();
-        t.IM_Pi0_fitted = fitted_Pi0->Get().LVSum.M();
+            // have a look at the assigned gammas to Pi0/Omega
+            const TLorentzVector& Pi0_best = *fitted_g1_Pi0->Get().Leave->Particle + *fitted_g2_Pi0->Get().Leave->Particle;
+            t.IM_Pi0_best = Pi0_best.M();
 
-        // have a look at the assigned gammas to Pi0/Omega
-        const TLorentzVector& Pi0_best = *fitted_g1_Pi0->Get().Leave->Particle + *fitted_g2_Pi0->Get().Leave->Particle;
-        t.IM_Pi0_best = Pi0_best.M();
+            g_Omega_best = fitted_g_Omega->Get().Leave->Particle;
+            const TLorentzVector& Omega_best = *g_Omega_best + Pi0_best;
+            t.IM_Pi0g_best = Omega_best.M();
 
-        g_Omega_best = fitted_g_Omega->Get().Leave->Particle;
-        const TLorentzVector& Omega_best = *g_Omega_best + Pi0_best;
-        t.IM_Pi0g_best = Omega_best.M();
-
-        // have a look at the EtaPrime bachelor photon
-        // the element NOT in the combination is the Bachelor photon
-        // but we need the fitted photon vector of it (matched by same candidate)
-        g_EtaPrime_best = *treefitter.GetCurrentCombination().begin_not();
-        TParticlePtr g_Omega_fitted;
-        for(const auto& photon : fitted_photons) {
-            if(photon->Candidate == g_EtaPrime_best->Candidate)
-                g_EtaPrime_fitted = photon;
-            else if(photon->Candidate == g_Omega_best->Candidate)
-                g_Omega_fitted = photon;
+            // have a look at the EtaPrime bachelor photon
+            // the element NOT in the combination is the Bachelor photon
+            g_EtaPrime_best = *comb.begin_not();
+            t.IM_gg = (*g_EtaPrime_best + *g_Omega_best).M();
         }
-        t.IM_gg = (*g_EtaPrime_fitted + *g_Omega_fitted).M();
     }
 
 
@@ -587,8 +569,7 @@ void EtapOmegaG::Sig_t::OmegaPi0_t::Process(const EtapOmegaG::Particles_t& parti
             return boosted;
         };
 
-        t.Bachelor_E_fitted = do_boost(*g_EtaPrime_fitted, EtaPrime_fitted).E();
-        t.Bachelor_E_best = do_boost(*g_EtaPrime_best, EtaPrime_fitted).E();
+        t.Bachelor_E = do_boost(*g_EtaPrime_best, EtaPrime).E();
 
         // check MC matching
         if(ptree_sigref) {
@@ -638,7 +619,7 @@ void EtapOmegaG::Ref_t::ResetBranches()
 void EtapOmegaG::Ref_t::Process(const EtapOmegaG::Particles_t& particles)
 {
     assert(particles.Photons.size() == 2);
-    t.IM_2g = (*particles.Photons.front() + *particles.Photons.back()).M();
+    t.IM_2g = particles.PhotonSum.M();
 }
 
 void EtapOmegaG::ShowResult()

@@ -309,7 +309,7 @@ struct SigOmegaPi0Hist_t : SigHist_t {
     void Fill(const Fill_t& f) const {
         SigHist_t::Fill(f);
         const Tree_t& omegapi0 = f.OmegaPi0;
-        h_Bachelor_E->Fill(omegapi0.Bachelor_E_fitted, f.TaggW());
+        h_Bachelor_E->Fill(omegapi0.Bachelor_E, f.TaggW());
     }
 
     static cuttree::Cuts_t<Fill_t> GetCuts() {
