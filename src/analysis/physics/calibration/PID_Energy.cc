@@ -200,6 +200,11 @@ void PID_Energy::ShowResult()
     canvas(GetName())
             << drawoption("colz") << h_pedestals
             << endc;
+    canvas c_bananas(GetName()+": Bananas");
+    c_bananas << drawoption("colz");
+    for(auto& h : h_perChannel)
+        c_bananas << h.Banana;
+    c_bananas << endc;
 }
 
 AUTO_REGISTER_PHYSICS(PID_Energy)
