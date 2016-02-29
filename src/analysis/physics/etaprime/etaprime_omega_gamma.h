@@ -37,10 +37,6 @@ struct EtapOmegaG : Physics {
         ADD_BRANCH_T(double,   ProtonTime)
         ADD_BRANCH_T(double,   PIDSumE)
 
-        ADD_BRANCH_T(std::vector<double>, ggg, 4)
-        ADD_BRANCH_T(std::vector<double>, gg_gg1, 3)
-        ADD_BRANCH_T(std::vector<double>, gg_gg2, 3)
-
         ADD_BRANCH_T(double,   ProtonCopl)
         ADD_BRANCH_T(double,   MissingMass)
         ADD_BRANCH_T(double,   TaggW)
@@ -48,6 +44,10 @@ struct EtapOmegaG : Physics {
         ADD_BRANCH_T(double,   TaggE)
         ADD_BRANCH_T(double,   TaggT)
         ADD_BRANCH_T(unsigned, TaggCh)
+
+        ADD_BRANCH_T(double,   KinFitChi2)
+        ADD_BRANCH_T(double,   KinFitProb)
+        ADD_BRANCH_T(unsigned, KinFitIterations)
     };
 
     TreeCommon t;
@@ -55,10 +55,12 @@ struct EtapOmegaG : Physics {
     PromptRandom::Switch promptrandom;
     PromptRandom::Switch promptrandom_tight;
 
+    utils::KinFitter kinfitter_2;
+    utils::KinFitter kinfitter_4;
+
+
     struct Particles_t {
-        TParticlePtr    Proton;
         TParticleList   Photons;
-        double          EBeam = std_ext::NaN;
     };
 
     struct Sig_t {
@@ -71,6 +73,10 @@ struct EtapOmegaG : Physics {
         struct Fit_t {
 
             struct Tree_t : WrapTTree {
+
+                ADD_BRANCH_T(std::vector<double>, ggg, 4)
+                ADD_BRANCH_T(std::vector<double>, gg_gg1, 3)
+                ADD_BRANCH_T(std::vector<double>, gg_gg2, 3)
 
                 ADD_BRANCH_T(double,   TreeFitChi2)
                 ADD_BRANCH_T(double,   TreeFitProb)
@@ -91,6 +97,7 @@ struct EtapOmegaG : Physics {
             Fit_t(utils::TreeFitter fitter);
 
             static utils::TreeFitter Make(const ParticleTypeDatabase::Type& subtree);
+            static void DoPhotonCombinatorics(TParticleList photons, Tree_t& t);
 
             utils::TreeFitter treefitter;
 
@@ -153,12 +160,8 @@ struct EtapOmegaG : Physics {
 
         Ref_t();
 
-        utils::KinFitter kinfitter;
-
         struct Tree_t : WrapTTree {
             ADD_BRANCH_T(double,   IM_2g)
-            ADD_BRANCH_T(double,   KinFitChi2)
-            ADD_BRANCH_T(unsigned, KinFitIterations)
         };
         Tree_t t;
 
