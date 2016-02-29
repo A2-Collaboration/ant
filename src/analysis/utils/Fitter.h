@@ -193,7 +193,7 @@ public:
     struct nodesetup_t {
         double IM_Sigma;
         double Excluded;
-        explicit nodesetup_t(double IM_sigma = 1.0, bool excluded = false) :
+        nodesetup_t(double IM_sigma = 1.0, bool excluded = false) :
             IM_Sigma(IM_sigma),
             Excluded(excluded)
         {}
