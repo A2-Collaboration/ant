@@ -131,6 +131,7 @@ struct SigHist_t : CommonHist_t {
 
     TH2D* h_IM_gg_gg;     // Goldhaber plot
     TH1D* h_IM_4g;        // EtaPrime IM
+    TH1D* h_IM_gg;        // EtaPrime IM
     TH1D* h_TreeFitChi2;
 
     const BinSettings IM_Etap {200, 400,1100};
@@ -147,6 +148,7 @@ struct SigHist_t : CommonHist_t {
                                     );
 
         h_IM_4g = HistFac.makeTH1D("#eta' IM", "IM(#pi^{0}#gamma#gamma) / MeV","",IM_Etap,"h_IM_4g");
+        h_IM_gg = HistFac.makeTH1D("#eta' IM", "IM(#pi^{0}#gamma#gamma) / MeV","",BinSettings(200,80,700),"h_IM_gg");
         h_TreeFitChi2 = HistFac.makeTH1D("TreeFitChi2", "#chi^{2}","",BinSettings(200,0,100),"h_TreeFitChi2");
     }
 
@@ -159,13 +161,14 @@ struct SigHist_t : CommonHist_t {
             h_IM_gg_gg->Fill(f.Common.gg_gg2()[i], f.Common.gg_gg1()[i], f.TaggW());
         }
 
-        h_TreeFitChi2->Fill(tree.TreeFitChi2, f.TaggW());
         h_IM_4g->Fill(tree.IM_Pi0gg, f.TaggW());
+        h_IM_gg->Fill(tree.IM_gg, f.TaggW());
+        h_TreeFitChi2->Fill(tree.TreeFitChi2, f.TaggW());
     }
 
     std::vector<TH1*> GetHists() const {
         auto hists = CommonHist_t::GetHists();
-        hists.insert(hists.end(), {h_IM_4g, h_TreeFitChi2});
+        hists.insert(hists.end(), {h_IM_4g, h_IM_gg, h_TreeFitChi2});
         return hists;
     }
 
@@ -205,6 +208,7 @@ struct SigHist_t : CommonHist_t {
 
         cuts.emplace_back(MultiCut_t<Fill_t>{
                               {"Goldhaber", goldhaber_cut },
+                              {"IM_gg", [] (const Fill_t& f) { return 175<f.Tree.IM_gg && f.Tree.IM_gg<510; } },
                           });
 
         cuts.emplace_back(MultiCut_t<Fill_t>{
