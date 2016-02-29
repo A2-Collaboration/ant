@@ -124,8 +124,9 @@ protected:
         int type= -1;
         int truetype= -1;
 
-        void SetBranches(TTree* tree);
+        std::string decayString= {};
 
+        void SetBranches(TTree* tree);
     };
     branches vars;
 

@@ -99,10 +99,9 @@ void Etap3pi0::ProcessEvent(const TEvent& event, manager_t&)
 
     // fill channels and set true particle ids if possible
 
-    vars.truetype = std_ext::NaN;
+    vars.truetype = -1;
     if ( mcdata.ParticleTree )
     {
-        vars.truetype = -1;
         if (mcdata.ParticleTree->IsEqual(signal_tree, utils::ParticleTools::MatchByParticleName))
         {
             hists.at("channels").at("mc_true")->Fill(utils::ParticleTools::GetDecayString(mcdata.ParticleTree).c_str(),1);
@@ -118,6 +117,7 @@ void Etap3pi0::ProcessEvent(const TEvent& event, manager_t&)
             hists.at("channels").at("mc_true")->Fill(utils::ParticleTools::GetDecayString(mcdata.ParticleTree).c_str(),1);
             vars.truetype = 2;
         }
+        vars.decayString = utils::ParticleTools::GetDecayString(mcdata.ParticleTree);
     }
 
     /// soon obsolete
@@ -315,6 +315,8 @@ void Etap3pi0::branches::SetBranches(TTree* tree)
 
     tree->Branch("type", &type);
     tree->Branch("truetype", &truetype);
+
+    tree->Branch("decayString",&decayString);
 }
 
 void Etap3pi0::AddHist1D(
