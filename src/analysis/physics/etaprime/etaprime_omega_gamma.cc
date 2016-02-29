@@ -282,8 +282,6 @@ void EtapOmegaG::Sig_t::ResetBranches()
 }
 
 
-
-
 void EtapOmegaG::Sig_t::Process(const Particles_t& particles, TParticleTree_t ptree_sigref)
 {
     OmegaPi0.Process(particles, ptree_sigref);
@@ -292,6 +290,8 @@ void EtapOmegaG::Sig_t::Process(const Particles_t& particles, TParticleTree_t pt
 
 EtapOmegaG::Sig_t::Fit_t::Fit_t(utils::TreeFitter fitter) :
     treefitter(move(fitter)),
+    treefitter_Pi0Pi0("treefit_Pi0Pi0",ParticleTypeTreeDatabase::Get(ParticleTypeTreeDatabase::Channel::TwoPi0_4g)),
+    treefitter_Pi0Eta("treefit_Pi0Eta",ParticleTypeTreeDatabase::Get(ParticleTypeTreeDatabase::Channel::Pi0Eta_4g)),
     fitted_Pi0(treefitter.GetTreeNode(ParticleTypeDatabase::Pi0)),
     fitted_Omega(treefitter.GetTreeNode(ParticleTypeDatabase::Omega))
 {
@@ -299,6 +299,8 @@ EtapOmegaG::Sig_t::Fit_t::Fit_t(utils::TreeFitter fitter) :
     if(!setup)
         throw runtime_error("EtapOmegaG needs a setup");
     treefitter.LoadSigmaData(setup->GetPhysicsFilesDirectory()+"/FitterSigmas.root");
+    treefitter_Pi0Pi0.LoadSigmaData(setup->GetPhysicsFilesDirectory()+"/FitterSigmas.root");
+    treefitter_Pi0Eta.LoadSigmaData(setup->GetPhysicsFilesDirectory()+"/FitterSigmas.root");
 
     // search dependent gammas and remember the tree nodes in the fitter
 
@@ -362,19 +364,59 @@ void EtapOmegaG::Sig_t::Fit_t::DoPhotonCombinatorics(
     }
 }
 
+void EtapOmegaG::Sig_t::Fit_t::DoAntiPi0Eta(TParticleList photons, Tree_t& t)
+{
+    APLCON::Result_t r;
+
+    treefitter_Pi0Pi0.SetLeaves(photons);
+    while(treefitter_Pi0Pi0.NextFit(r)) {
+        if(r.Status != APLCON::Result_Status_t::Success)
+            continue;
+        if(isfinite(t.AntiPi0FitChi2) && r.ChiSquare>t.AntiPi0FitChi2)
+            continue;
+        // found fit with better chi2
+        t.AntiPi0FitChi2 = r.ChiSquare;
+        t.AntiPi0FitProb = r.Probability;
+        t.AntiPi0FitIterations = r.NIterations;
+    }
+
+    treefitter_Pi0Eta.SetLeaves(photons);
+    while(treefitter_Pi0Eta.NextFit(r)) {
+        if(r.Status != APLCON::Result_Status_t::Success)
+            continue;
+        if(isfinite(t.AntiEtaFitChi2) && r.ChiSquare>t.AntiEtaFitChi2)
+            continue;
+        // found fit with better chi2
+        t.AntiEtaFitChi2 = r.ChiSquare;
+        t.AntiEtaFitProb = r.Probability;
+        t.AntiEtaFitIterations = r.NIterations;
+    }
+}
+
 
 void EtapOmegaG::Sig_t::Fit_t::Tree_t::Reset()
 {
     std::fill(ggg().begin(), ggg().end(), std_ext::NaN);
     std::fill(gg_gg1().begin(), gg_gg1().end(), std_ext::NaN);
     std::fill(gg_gg2().begin(), gg_gg2().end(), std_ext::NaN);
+
     TreeFitChi2 = std_ext::NaN;
     TreeFitProb = std_ext::NaN;
     TreeFitIterations = 0;
-    IM_Pi0_fitted = std_ext::NaN;
+
+    AntiPi0FitChi2 = std_ext::NaN;
+    AntiPi0FitProb = std_ext::NaN;
+    AntiPi0FitIterations = 0;
+
+    AntiEtaFitChi2 = std_ext::NaN;
+    AntiEtaFitProb = std_ext::NaN;
+    AntiEtaFitIterations = 0;
+
     IM_Pi0_best = std_ext::NaN;
+    IM_Pi0_fitted = std_ext::NaN;
     IM_Pi0gg = std_ext::NaN;
     IM_gg = std_ext::NaN;
+
     MCTrueMatch = 0;
 }
 
@@ -396,6 +438,7 @@ void EtapOmegaG::Sig_t::Pi0_t::Process(const EtapOmegaG::Particles_t& particles,
     assert(particles.Photons.size() == 4);
 
     DoPhotonCombinatorics(particles.Photons, t);
+    DoAntiPi0Eta(particles.Photons, t);
 
     // sum of photons should give the EtaPrime
     t.IM_Pi0gg = particles.PhotonSum.M();
@@ -512,6 +555,7 @@ void EtapOmegaG::Sig_t::OmegaPi0_t::Process(const EtapOmegaG::Particles_t& parti
     assert(particles.Photons.size() == 4);
 
     DoPhotonCombinatorics(particles.Photons, t);
+    DoAntiPi0Eta(particles.Photons, t);
 
     // sum of photons should give the EtaPrime
     const TLorentzVector& EtaPrime = particles.PhotonSum;

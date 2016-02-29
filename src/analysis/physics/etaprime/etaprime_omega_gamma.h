@@ -83,6 +83,14 @@ struct EtapOmegaG : Physics {
                 ADD_BRANCH_T(double,   TreeFitProb)
                 ADD_BRANCH_T(unsigned, TreeFitIterations)
 
+                ADD_BRANCH_T(double,   AntiPi0FitChi2)
+                ADD_BRANCH_T(double,   AntiPi0FitProb)
+                ADD_BRANCH_T(unsigned, AntiPi0FitIterations)
+
+                ADD_BRANCH_T(double,   AntiEtaFitChi2)
+                ADD_BRANCH_T(double,   AntiEtaFitProb)
+                ADD_BRANCH_T(unsigned, AntiEtaFitIterations)
+
                 ADD_BRANCH_T(double, IM_Pi0_best)
                 ADD_BRANCH_T(double, IM_Pi0_fitted)
 
@@ -97,10 +105,14 @@ struct EtapOmegaG : Physics {
 
             Fit_t(utils::TreeFitter fitter);
 
-            static utils::TreeFitter Make(const ParticleTypeDatabase::Type& subtree);
-            static void DoPhotonCombinatorics(TParticleList photons, Tree_t& t);
-
             utils::TreeFitter treefitter;
+            static utils::TreeFitter Make(const ParticleTypeDatabase::Type& subtree);
+
+            utils::TreeFitter treefitter_Pi0Pi0;
+            utils::TreeFitter treefitter_Pi0Eta;
+            void DoAntiPi0Eta(TParticleList photons, Tree_t& t);
+
+            static void DoPhotonCombinatorics(TParticleList photons, Tree_t& t);
 
             utils::TreeFitter::tree_t fitted_Pi0;
             utils::TreeFitter::tree_t fitted_g1_Pi0;
