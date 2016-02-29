@@ -340,7 +340,7 @@ void TH2CB::SetElements(const std::vector<Double_t> &pattern)
 void TH2CB::SetElements(const TH1 &h)
 {
     if( h.GetNbinsX() != GetNumberOfElements() ) {
-        cerr << "WARNING: Number of bis don't match" << endl;
+        cerr << "WARNING: Number of bins don't match" << endl;
     }
 
     const Int_t n = min((Int_t)GetNumberOfElements(), h.GetNbinsX());
@@ -354,7 +354,7 @@ void TH2CB::SetElements(const TH1 &h)
 void TH2CB::FillElements(const TH1 &h)
 {
     if( h.GetNbinsX() != GetNumberOfElements() ) {
-        cerr << "WARNING: Number of bis don't match" << endl;
+        cerr << "WARNING: Number of bins don't match" << endl;
     }
 
     const Int_t n = min((Int_t)GetNumberOfElements(), h.GetNbinsX());

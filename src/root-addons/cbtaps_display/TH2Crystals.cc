@@ -164,7 +164,7 @@ void TH2Crystals::SetElements(const std::vector<Double_t> &pattern)
 void TH2Crystals::SetElements(const TH1 &h)
 {
     if( h.GetNbinsX() != GetNumberOfElements() ) {
-        cerr << "WARNING: Number of bis don't match" << endl;
+        cerr << "WARNING: Number of bins don't match" << endl;
     }
 
     TIter next(fBins);
@@ -199,7 +199,7 @@ void TH2Crystals::FillElements(const std::vector<Double_t> &pattern)
 void TH2Crystals::FillElements(const TH1 &h)
 {
     if( h.GetNbinsX() != GetNumberOfElements() ) {
-        cerr << "WARNING: Number of bis don't match" << endl;
+        cerr << "WARNING: Number of bins don't match" << endl;
     }
 
     TIter next(fBins);
