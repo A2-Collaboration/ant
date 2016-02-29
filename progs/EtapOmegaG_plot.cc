@@ -113,11 +113,12 @@ struct CommonHist_t {
         using cuttree::MultiCut_t;
         cuttree::Cuts_t<Fill_t> cuts;
         cuts.emplace_back(MultiCut_t<Fill_t>{
-                                 {"CBSumVeto=0", [] (const Fill_t& f) { return f.Common.CBSumVetoE==0; } },
-                                 {"CBSumVeto<0.25", [] (const Fill_t& f) { return f.Common.CBSumVetoE<0.25; } },
-                                 {"PIDSumE=0", [] (const Fill_t& f) { return f.Common.PIDSumE==0; } },
-                                 {"PIDSumE<0.25", [] (const Fill_t& f) { return f.Common.PIDSumE<0.25; } },
-                             });
+                              // Use non-null PID cuts only when PID calibrated...
+                              {"CBSumVeto=0", [] (const Fill_t& f) { return f.Common.CBSumVetoE==0; } },
+                              //{"CBSumVeto<0.25", [] (const Fill_t& f) { return f.Common.CBSumVetoE<0.25; } },
+                              {"PIDSumE=0", [] (const Fill_t& f) { return f.Common.PIDSumE==0; } },
+                              //{"PIDSumE<0.25", [] (const Fill_t& f) { return f.Common.PIDSumE<0.25; } },
+                          });
         return cuts;
     }
 
@@ -132,8 +133,8 @@ struct SigHist_t : CommonHist_t {
     TH1D* h_IM_4g;        // EtaPrime IM
     TH1D* h_TreeFitChi2;
 
-    const BinSettings IM_Etap{100,800,1000};
-    const BinSettings IM_Omega{100, 700, 950};
+    const BinSettings IM_Etap {200, 400,1100};
+    const BinSettings IM_Omega{200, 200, 950};
 
     SigHist_t(HistogramFactory HistFac) : CommonHist_t(HistFac) {
         BinSettings bins_goldhaber(400, 0, 900);
@@ -172,7 +173,7 @@ struct SigHist_t : CommonHist_t {
         using cuttree::MultiCut_t;
         auto cuts = cuttree::ConvertCuts<Fill_t, CommonHist_t::Fill_t>(CommonHist_t::GetCuts());
 
-        // reduces pi0pi0 and pi0eta backgrounds
+        // Goldhaber cuts reduce pi0pi0 and pi0eta backgrounds
         auto goldhaber_cut = [] (const Fill_t& f) {
             const auto& tree = f.Common;
             const double pi0 = ParticleTypeDatabase::Pi0.Mass();
@@ -219,7 +220,8 @@ struct SigHist_t : CommonHist_t {
 struct SigPi0Hist_t : SigHist_t {
     using Tree_t = physics::EtapOmegaG::Sig_t::Pi0_t::Tree_t;
 
-    TH2D* h_IM_3g_4g;     // Omega IM vs. EtaPrime IM
+    TH2D* h_IM_3g_4g_low;     // Omega IM vs. EtaPrime IM
+    TH2D* h_IM_3g_4g_high;     // Omega IM vs. EtaPrime IM
 
     struct Fill_t : SigHist_t::Fill_t {
         const Tree_t& Pi0;
@@ -230,21 +232,35 @@ struct SigPi0Hist_t : SigHist_t {
     };
 
     SigPi0Hist_t(HistogramFactory HistFac) : SigHist_t(HistFac) {
-        h_IM_3g_4g = HistFac.makeTH2D("Best #omega vs. #eta' IM",
-                                      "IM(#pi^{0}#gamma#gamma) / MeV",
-                                      "IM(#pi^{0}#gamma) best / MeV",
-                                      IM_Etap, IM_Omega,"h_IM_3g_4g"
-                                      );
+        h_IM_3g_4g_low = HistFac.makeTH2D("Best #omega vs. #eta' IM",
+                                          "IM(#pi^{0}#gamma#gamma) / MeV",
+                                          "IM(#pi^{0}#gamma) / MeV",
+                                          IM_Etap, IM_Omega,"h_IM_3g_4g_low"
+                                          );
+        h_IM_3g_4g_high = HistFac.makeTH2D("Best #omega vs. #eta' IM",
+                                           "IM(#pi^{0}#gamma#gamma) / MeV",
+                                           "IM(#pi^{0}#gamma) / MeV",
+                                           IM_Etap, IM_Omega,"h_IM_3g_4g_high"
+                                           );
     }
 
     void Fill(const Fill_t& f) const {
         SigHist_t::Fill(f);
         const Tree_t& pi0 = f.Pi0;
-        h_IM_3g_4g->Fill(pi0.IM_Pi0gg, pi0.IM_Pi0g()[0], f.TaggW());
+        h_IM_3g_4g_low->Fill(pi0.IM_Pi0gg, pi0.IM_Pi0g()[0], f.TaggW());
+        h_IM_3g_4g_high->Fill(pi0.IM_Pi0gg, pi0.IM_Pi0g()[1], f.TaggW());
     }
 
     static cuttree::Cuts_t<Fill_t> GetCuts() {
-        return cuttree::ConvertCuts<Fill_t, SigHist_t::Fill_t>(SigHist_t::GetCuts());
+        using cuttree::MultiCut_t;
+        auto cuts = cuttree::ConvertCuts<Fill_t, SigHist_t::Fill_t>(SigHist_t::GetCuts());
+        auto omega_window = ParticleTypeDatabase::Omega.GetWindow(80);
+        cuts.emplace_back(MultiCut_t<Fill_t>{
+                              {"|IM_Pi0g[1]-IM_w|<40", [omega_window] (const Fill_t& f) {
+                                   return omega_window.Contains(f.Pi0.IM_Pi0g()[1]);
+                               }},
+                          });
+        return cuts;
     }
 
 };
