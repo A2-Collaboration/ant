@@ -16,7 +16,9 @@ namespace calibration {
 
 
 
-class PID_Energy : public Energy
+class PID_Energy :
+        public Energy,
+        public ReconstructHook::EventData
 {
 
 
@@ -33,6 +35,8 @@ public:
     virtual ~PID_Energy();
 
     virtual void GetGUIs(std::list<std::unique_ptr<calibration::gui::CalibModule_traits> >& guis) override;
+
+    virtual void ApplyTo(TEventData& reconstructed) override;
 
 protected:
     std::shared_ptr<expconfig::detector::PID> pid_detector;
