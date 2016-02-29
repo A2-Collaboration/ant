@@ -57,28 +57,28 @@ struct ReconstructHook {
     /**
      * @brief The DetectorReadHits struct instances are applied before hit matching
      */
-    struct DetectorReadHits : Base {
+    struct DetectorReadHits : virtual Base {
         virtual void ApplyTo(const readhits_t& hits) = 0;
     };
 
     /**
      * @brief The ClusterHits struct instances are applied before clustering and after hit matching
      */
-    struct ClusterHits : Base {
+    struct ClusterHits : virtual Base {
         virtual void ApplyTo(clusterhits_t& clusterhits) = 0;
     };
 
     /**
      * @brief The Clusters struct instances are applied before candidate matching and after clustering
      */
-    struct Clusters : Base {
+    struct Clusters : virtual Base {
         virtual void ApplyTo(clusters_t& clusters) = 0;
     };
 
     /**
      * @brief The EventData struct instances are applied after candidate building
      */
-    struct EventData : Base {
+    struct EventData : virtual Base {
         virtual void ApplyTo(TEventData& reconstructed) = 0;
     };
 
