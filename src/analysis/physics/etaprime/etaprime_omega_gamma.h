@@ -80,6 +80,8 @@ struct EtapOmegaG : Physics {
 
                 ADD_BRANCH_T(double, IM_Pi0gg)
 
+                ADD_BRANCH_T(double, IM_gg)
+
                 ADD_BRANCH_T(unsigned, MCTrueMatch)
 
                 void Reset();

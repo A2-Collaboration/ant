@@ -338,6 +338,7 @@ void EtapOmegaG::Sig_t::Fit_t::Tree_t::Reset()
     IM_Pi0_fitted = std_ext::NaN;
     IM_Pi0_best = std_ext::NaN;
     IM_Pi0gg = std_ext::NaN;
+    IM_gg = std_ext::NaN;
     MCTrueMatch = 0;
 }
 
@@ -401,6 +402,7 @@ void EtapOmegaG::Sig_t::Pi0_t::Process(const EtapOmegaG::Particles_t& particles,
         // for each of them, we find the fitted photon
         // and calculate the IM with the fitted Pi0
         auto it_IM_Pi0g = t.IM_Pi0g().begin();
+        TLorentzVector sum_2g_fitted(0,0,0,0);
         for(auto it_not = treefitter.GetCurrentCombination().begin_not();
             it_not != treefitter.GetCurrentCombination().end_not(); ++it_not)
         {
@@ -408,10 +410,12 @@ void EtapOmegaG::Sig_t::Pi0_t::Process(const EtapOmegaG::Particles_t& particles,
             for(const auto& photon : fitted_photons) {
                 if(photon->Candidate == photon_notPi0->Candidate) {
                     *it_IM_Pi0g = (pi0_fitted + *photon).M();
+                    sum_2g_fitted += *photon;
                 }
             }
             ++it_IM_Pi0g;
         }
+        t.IM_gg = sum_2g_fitted.M();
         std::sort(t.IM_Pi0g().begin(), t.IM_Pi0g().end());
     }
 
@@ -525,9 +529,14 @@ void EtapOmegaG::Sig_t::OmegaPi0_t::Process(const EtapOmegaG::Particles_t& parti
         // the element NOT in the combination is the Bachelor photon
         // but we need the fitted photon vector of it (matched by same candidate)
         g_EtaPrime_best = *treefitter.GetCurrentCombination().begin_not();
-        for(const auto& photon : fitted_photons)
+        TParticlePtr g_Omega_fitted;
+        for(const auto& photon : fitted_photons) {
             if(photon->Candidate == g_EtaPrime_best->Candidate)
                 g_EtaPrime_fitted = photon;
+            else if(photon->Candidate == g_Omega_best->Candidate)
+                g_Omega_fitted = photon;
+        }
+        t.IM_gg = (*g_EtaPrime_fitted + *g_Omega_fitted).M();
     }
 
 
