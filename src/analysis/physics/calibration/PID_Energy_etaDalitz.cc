@@ -23,7 +23,7 @@ PID_Energy_etaDalitz::PID_Energy_etaDalitz(const string& name, OptionsPtr opts) 
     const BinSettings cb_channels(detector->GetNChannels());
     const BinSettings energybins(1000, 0, 10);
 
-    eegPID = HistFac.makeTH2D("2 charged 1 neutral (PID,PID)", "PID Energy [MeV]", "#",
+    eegPID = HistFac.makeTH2D("PID 2 charged 1 neutral", "PID Energy [MeV]", "#",
                               energybins, cb_channels, "eegPID");
     etaIM = HistFac.makeTH1D("#eta IM all comb", "IM [MeV]", "#", BinSettings(1200), "etaIM");
     hCopl = HistFac.makeTH1D("coplanarity #eta - proton all comb", "coplanarity [#circ]", "#", BinSettings(720, -180, 180), "hCopl");
@@ -40,7 +40,7 @@ void PID_Energy_etaDalitz::ProcessEvent(const TEvent& event, manager_t&)
     TLorentzVector eta;
     TLorentzVector proton;
     const interval<double> eta_im({ETA_IM-ETA_SIGMA, ETA_IM+ETA_SIGMA});
-    const interval<double> coplanarity({-20, 20});
+    const interval<double> coplanarity({-10, 10});
     vector<TCandidatePtr> comb;
     for( auto p : cands )
         comb.emplace_back(p);

@@ -16,7 +16,7 @@ protected:
     TH1D* hCopl = nullptr;
     TH1D* protonVeto = nullptr;
     static constexpr double ETA_IM = 547.853;
-    static constexpr double ETA_SIGMA = 25.;
+    static constexpr double ETA_SIGMA = 30.;
 
     template<typename T>
     void shift_right(std::vector<T>&);
