@@ -134,7 +134,7 @@ struct HistMod_t : std::function<std::string(TH1*)> {
             h->SetLineColor(color);
             h->SetLineWidth(linewidth);
             h->SetMarkerColor(color);
-            h->SetMarkerStyle(kPlus);
+            h->SetMarkerStyle(kDot);
             return "E"; // draw error bars
         };
 
