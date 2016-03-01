@@ -25,7 +25,7 @@ using namespace ant::analysis;
 using namespace ant::analysis::plot;
 using namespace std;
 
-volatile bool interrupt = false;
+volatile static bool interrupt = false;
 
 class MyTInterruptHandler : public TSignalHandler {
 public:
@@ -57,20 +57,20 @@ struct MCTrue_Splitter : cuttree::StackedHists_t<Hist_t> {
 
         // TODO: derive this from channel map
         this->GetHist(0, "Data", HistMod_t::MakeDataPoints(kBlack));
-        this->GetHist(1, "Sig",  HistMod_t::MakeLine(kRed, 2.0));
-        this->GetHist(2, "Ref",  HistMod_t::MakeLine(kGreen, 2.0));
+        this->GetHist(1, "Sig",  HistMod_t::MakeLine(kRed, 2));
+        this->GetHist(2, "Ref",  HistMod_t::MakeLine(kGreen, 2));
         // mctrue is never >=3 (and <9) in tree, use this to sum up all MC and all bkg MC
         // see also Fill()
-        this->GetHist(3, "Sum_MC", HistMod_t::MakeLine(kBlack, 1.0));
-        this->GetHist(4, "Bkg_MC", HistMod_t::MakeLine(kGray, 1.0));
+        this->GetHist(3, "Sum_MC", HistMod_t::MakeLine(kBlack, 1));
+        this->GetHist(4, "Bkg_MC", HistMod_t::MakeLine(kGray, 1));
     }
 
     void Fill(const Fill_t& f) {
 
-        const int mctrue = f.Tree.Channel;
+        const unsigned mctrue = unsigned(f.Tree.Channel);
 
-        auto get_bkg_name = [] (int mctrue) {
-            const auto entry = physics::OmegaEtaG2::reaction_channels.channels.find(mctrue);
+        auto get_bkg_name = [] (const unsigned mctrue) {
+            const auto entry = physics::OmegaEtaG2::reaction_channels.channels.find(int(mctrue));
 
             if(entry!=physics::OmegaEtaG2::reaction_channels.channels.end())
                 return entry->second.name;
@@ -95,6 +95,14 @@ struct MCTrue_Splitter : cuttree::StackedHists_t<Hist_t> {
         }
     }
 };
+
+bool Contains(const interval<double>& i, const std::vector<double>& d) {
+    for(const auto& v : d)
+        if(i.Contains(v))
+            return true;
+
+    return false;
+}
 
 // define the structs containing the histograms
 // and the cuts. for simple branch variables, that could
@@ -142,7 +150,7 @@ struct OmegaHist_t {
 
     const BinSettings Ebins = BinSettings(1600,   0, 1600);
 
-    const BinSettings Chi2bins = BinSettings (250, 0,   25);
+    const BinSettings Chi2bins = BinSettings (2500, 0,   25);
     const BinSettings probbins = BinSettings (250, 0,   1);
 
     const BinSettings IMbins = BinSettings(1600,   0, 1600);
@@ -158,7 +166,7 @@ struct OmegaHist_t {
     const BinSettings TaggChBins = BinSettings(47);
     const BinSettings Chi2Bins   = BinSettings(100,0,50);
     const BinSettings TaggTime   = BinSettings(200, -25, 25);
-    const BinSettings CoplBins   = BinSettings(100, 0, 30.0);
+    const BinSettings CoplBins   = BinSettings(300, 0, 30.0);
 
     HistogramFactory HistFac;
 
@@ -174,15 +182,15 @@ struct OmegaHist_t {
 
     OmegaHist_t(const HistogramFactory& hf): HistFac(hf) {
 
-        AddTH1("KinFitChi2",      "#chi^{2}",             "",       Chi2Bins,   "h_KinFitChi2",
+        AddTH1("KinFitChi2",      "#chi^{2}",             "",       Chi2Bins,   "KinFitChi2",
                [] (TH1D* h, const Fill_t& f) { h->Fill(f.Tree.KinFitChi2, f.TaggW());
         });
 
-        AddTH1("3#gamma IM",      "3#gamma IM [MeV]",     "",       IMbins,     "h_ggg_IM",
+        AddTH1("3#gamma IM",      "3#gamma IM [MeV]",     "",       IMbins,     "ggg_IM",
                [] (TH1D* h, const Fill_t& f) { h->Fill(f.Tree.ggg().M(), f.TaggW());
         });
 
-        AddTH1("2#gamma sub-IM",  "2#gamma IM [MeV]",     "",       IMbins,     "h_gg_IM",
+        AddTH1("2#gamma sub-IM",  "2#gamma IM [MeV]",     "",       IMbins,     "gg_IM",
                [] (TH1D* h, const Fill_t& f) {
 
             for(const auto& v : f.Tree.ggIM())
@@ -206,7 +214,7 @@ struct OmegaHist_t {
         });
 
         AddTH1("Coplanarity Angle", "Coplanarity angle [#circ]", "", CoplBins, "CoplAngle",
-               [] (TH1D* h, const Fill_t& f) { h->Fill(f.Tree.copl_angle, f.TaggW());
+               [] (TH1D* h, const Fill_t& f) { h->Fill(radian_to_degree(f.Tree.copl_angle()), f.TaggW());
         });
 
         AddTH1("Tagger Time - CB Average Time", "t [ns]", "",       TaggTime,   "TaggTime",
@@ -259,10 +267,11 @@ struct OmegaHist_t {
                                  {"KinFitChi2<5 ", [] (const Fill_t& f) { return f.Tree.KinFitChi2<5; } }
                              });
         cuts.emplace_back(MultiCut_t<Fill_t>{
-                              {"mm cut",        [] (const Fill_t& f) { return f.Tree.mm().M()<1100 && f.Tree.mm().M() > 800; } }
+                              {"mm cut",        [] (const Fill_t& f) { return f.Tree.mm().M()<1100 && f.Tree.mm().M() > 780; } },
+                              {"pi0",           [] (const Fill_t& f) { return Contains( {125.0, 145.0}, f.Tree.ggIM()); } }
                           });
         cuts.emplace_back(MultiCut_t<Fill_t>{
-                              {"gggIM cut",        [] (const Fill_t& f) { return f.Tree.ggg().M()<840 && f.Tree.ggg().M() > 700; } }
+                              {"gggIM cut",        [] (const Fill_t& f) { return f.Tree.ggg().M()<900 && f.Tree.ggg().M() > 700; } }
                           });
         return cuts;
     }
