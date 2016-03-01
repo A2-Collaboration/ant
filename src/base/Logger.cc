@@ -39,6 +39,12 @@ void SetupLogger() {
            string(msg) == "no dictionary for class iterator<bidirectional_iterator_tag,TObject*,long,const TObject**,const TObject*&> is available")
             return; // ignore it for now
 
+        if(level == kWarning &&
+           string(location) == "TTree::Bronch" &&
+           string(msg) == "Using split mode on a class: TLorentzVector with a custom Streamer")
+            return; // ignore it for now
+
+
 
 
 
