@@ -140,17 +140,6 @@ struct OmegaHist_t {
     HistMgr<TH1D> h1;
     HistMgr<TH2D> h2;
 
-    TH1D* h_KinFitChi2;
-    TH1D* h_gggIM;
-    TH1D* h_ggIM;
-    TH1D* h_mm;
-    TH1D* h_bachelorE;
-    TH2D* h_p_Theta_E;
-    TH2D* h_mm_gggIM;
-    TH2D* h_PSA;
-    TH1D* h_TaggCh;
-    TH1D* h_TaggTime;
-
     const BinSettings Ebins = BinSettings(1600,   0, 1600);
 
     const BinSettings Chi2bins = BinSettings (250, 0,   25);
@@ -186,59 +175,57 @@ struct OmegaHist_t {
     OmegaHist_t(const HistogramFactory& hf): HistFac(hf) {
 
         AddTH1("KinFitChi2",      "#chi^{2}",             "",       Chi2Bins,   "h_KinFitChi2",
-                            [] (TH1D* hist, const Fill_t& f) {
-                                        hist->Fill(f.Tree.KinFitChi2, f.TaggW());
-                                    });
+               [] (TH1D* h, const Fill_t& f) { h->Fill(f.Tree.KinFitChi2, f.TaggW());
+        });
 
         AddTH1("3#gamma IM",      "3#gamma IM [MeV]",     "",       IMbins,     "h_ggg_IM",
-               [] (TH1D* h, const Fill_t& f) { h->Fill(f.Tree.ggg().M(), f.TaggW()); });
+               [] (TH1D* h, const Fill_t& f) { h->Fill(f.Tree.ggg().M(), f.TaggW());
+        });
 
         AddTH1("2#gamma sub-IM",  "2#gamma IM [MeV]",     "",       IMbins,     "h_gg_IM",
-          [] (TH1D* h, const Fill_t& f) {
+               [] (TH1D* h, const Fill_t& f) {
 
             for(const auto& v : f.Tree.ggIM())
                 h->Fill(v, f.TaggW());
         });
 
         AddTH1("Bachelor Photon Energy",  "E [MeV]",     "",       IMbins,     "bachelorE",
-          [] (TH1D* h, const Fill_t& f) {
+               [] (TH1D* h, const Fill_t& f) {
 
             for(const auto& v : f.Tree.BachelorE())
                 h->Fill(v, f.TaggW());
         });
 
         AddTH1("Missing Mass",      "MM [MeV]",     "",       MMbins,     "mm",
-               [] (TH1D* h, const Fill_t& f) { h->Fill(f.Tree.mm().M(), f.TaggW()); });
+               [] (TH1D* h, const Fill_t& f) { h->Fill(f.Tree.mm().M(), f.TaggW());
+        });
 
 
         AddTH1("Tagger Channels", "Channel",              "# hits", TaggChBins, "TaggCh",
-               [] (TH1D* h, const Fill_t& f) { h->Fill(f.Tree.TaggCh, f.TaggW()); }
-               );
+               [] (TH1D* h, const Fill_t& f) { h->Fill(f.Tree.TaggCh, f.TaggW());
+        });
 
         AddTH1("Coplanarity Angle", "Coplanarity angle [#circ]", "", CoplBins, "CoplAngle",
-               [] (TH1D* h, const Fill_t& f) { h->Fill(f.Tree.copl_angle, f.TaggW()); }
-               );
+               [] (TH1D* h, const Fill_t& f) { h->Fill(f.Tree.copl_angle, f.TaggW());
+        });
 
         AddTH1("Tagger Time - CB Average Time", "t [ns]", "",       TaggTime,   "TaggTime",
-               [] (TH1D* h, const Fill_t& f) {
-            h->Fill(f.Tree.TaggT - f.Tree.CBAvgTime);
+               [] (TH1D* h, const Fill_t& f) { h->Fill(f.Tree.TaggT - f.Tree.CBAvgTime);
         });
 
         AddTH2("Proton #theta vs. E_{k}", "E_{k} [MeV]", "#theta [#circ]",  pEbins,   pThetaBins, "p_theta_E",
                [] (TH2D* h, const Fill_t& f) {
-                   h->Fill(f.Tree.p_fitted().E() - ParticleTypeDatabase::Proton.Mass(), radian_to_degree(f.Tree.p_fitted().Theta()));
-               });
-
+            h->Fill(f.Tree.p_fitted().E() - ParticleTypeDatabase::Proton.Mass(), radian_to_degree(f.Tree.p_fitted().Theta()));
+        });
 
         AddTH2("Missing Mass / 3#gamma IM", "3#gamma IM [MeV]", "MM [MeV]", IMbins,   MMbins,     "mm_gggIM",
-                [] (TH2D* h, const Fill_t& f) {
-                   h->Fill(f.Tree.ggg().M(), f.Tree.mm().M(), f.TaggW());
+               [] (TH2D* h, const Fill_t& f) { h->Fill(f.Tree.ggg().M(), f.Tree.mm().M(), f.TaggW());
         });
 
         AddTH2("Proton PSA", "PSA Angle [#circ]", "PSA Radius",             PSAABins, PSARBins,   "p_PSA",
                [] (TH2D* h, const Fill_t& f) {
-                  h->Fill(f.Tree.p_PSA_Angle, f.Tree.p_PSA_Radius, f.TaggW());
-       });
+            h->Fill(f.Tree.p_PSA_Angle, f.Tree.p_PSA_Radius, f.TaggW());
+        });
 
     }
 
