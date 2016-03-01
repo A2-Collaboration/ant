@@ -82,6 +82,7 @@ set(ANALYSIS_UTILS
   utils/TimeSmearingHack.cc
   utils/Fitter.cc
   utils/ProtonPermutation.cc
+  utils/ClusterTools.cc
   )
 
 set(ANALYSIS_ALL
