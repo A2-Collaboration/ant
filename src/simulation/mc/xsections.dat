@@ -1030,3 +1030,21 @@ Particle eta pi0
 1.632   3.99508
 1.638   3.98546
 1.644   3.97477
+
+# Eur. Phys. J. A 23, 317–344 (2005)
+Particle rh0
+1.08   0
+1.1    10
+1.4    20
+1.6    25
+2.0    20
+2.4    17.5
+
+#Particle pi+ pi- pi0
+
+
+
+#Particle pi+ pi- pi0 pi0
+
+
+
