@@ -12,6 +12,10 @@
 #include "base/std_ext/system.h"
 #include "base/std_ext/math.h"
 
+#include <list>
+#include <vector>
+#include <algorithm>
+
 #include "TSystem.h"
 #include "TRint.h"
 
@@ -108,6 +112,34 @@ struct OmegaHist_t {
         }
     };
 
+    template <typename Hist>
+    using fillfunc_t = std::function<void(Hist*, const Fill_t&)>;
+
+    template <typename Hist>
+    struct HistFiller_t {
+        fillfunc_t<Hist> func;
+        Hist* h;
+        HistFiller_t(Hist* hist, fillfunc_t<Hist> f): func(f), h(hist) {}
+        void Fill(const Fill_t& data) const {
+            func(h, data);
+        }
+    };
+
+    template <typename Hist>
+    struct HistMgr : std::list<HistFiller_t<Hist>> {
+
+        using list<HistFiller_t<Hist>>::list;
+
+        void Fill(const Fill_t& data) const {
+            for(auto& h : *this) {
+                h.Fill(data);
+            }
+        }
+    };
+
+    HistMgr<TH1D> h1;
+    HistMgr<TH2D> h2;
+
     TH1D* h_KinFitChi2;
     TH1D* h_gggIM;
     TH1D* h_ggIM;
@@ -137,60 +169,96 @@ struct OmegaHist_t {
     const BinSettings TaggChBins = BinSettings(47);
     const BinSettings Chi2Bins   = BinSettings(100,0,50);
     const BinSettings TaggTime   = BinSettings(200, -25, 25);
+    const BinSettings CoplBins   = BinSettings(100, 0, 30.0);
 
-    OmegaHist_t(HistogramFactory HistFac) {
-        h_KinFitChi2 = HistFac.makeTH1D("KinFitChi2",      "#chi^{2}",             "",       Chi2Bins,   "h_KinFitChi2");
-        h_gggIM      = HistFac.makeTH1D("3#gamma IM",      "3#gamma IM [MeV]",     "",       IMbins,     "h_ggg_IM");
-        h_ggIM       = HistFac.makeTH1D("2#gamma sub-IM",  "2#gamma IM [MeV]",     "",       IMbins,     "h_gg_IM");
-        h_mm         = HistFac.makeTH1D("Missing Mass",    "MM [MeV]",             "",       IMbins,     "h_mm");
-        h_bachelorE  = HistFac.makeTH1D("Bachelor E",      "E [MeV]",              "",       IMbins,     "h_bachelorE");
-        h_TaggCh     = HistFac.makeTH1D("Tagger Channels", "Channel",              "# hits", TaggChBins, "TaggCh");
-        h_TaggTime   = HistFac.makeTH1D("Tagger Time - CB Average Time", "t [ns]", "",       TaggTime,   "TaggTime");
+    HistogramFactory HistFac;
 
-        h_p_Theta_E  = HistFac.makeTH2D("Proton #theta vs. E_{k}", "E_{k} [MeV]", "#theta [#circ]",  pEbins,   pThetaBins, "h_p_theta_E");
-        h_mm_gggIM   = HistFac.makeTH2D("Missing Mass / 3#gamma IM", "3#gamma IM [MeV]", "MM [MeV]", IMbins,   MMbins,     "h_mm_gggIM");
-        h_PSA        = HistFac.makeTH2D("Proton PSA", "PSA Angle [#circ]", "PSA Radius",             PSAABins, PSARBins,   "p_PSA");
+    void AddTH1(const string &title, const string &xlabel, const string &ylabel, const BinSettings &bins, const string &name, fillfunc_t<TH1D> f) {
+        h1.emplace_back(HistFiller_t<TH1D>(
+                                    HistFac.makeTH1D(title, xlabel, ylabel, bins, name),f));
+    }
+
+    void AddTH2(const string &title, const string &xlabel, const string &ylabel, const BinSettings &xbins, const BinSettings& ybins, const string &name, fillfunc_t<TH2D> f) {
+        h2.emplace_back(HistFiller_t<TH2D>(
+                                    HistFac.makeTH2D(title, xlabel, ylabel, xbins, ybins, name),f));
+    }
+
+    OmegaHist_t(const HistogramFactory& hf): HistFac(hf) {
+
+        AddTH1("KinFitChi2",      "#chi^{2}",             "",       Chi2Bins,   "h_KinFitChi2",
+                            [] (TH1D* hist, const Fill_t& f) {
+                                        hist->Fill(f.Tree.KinFitChi2, f.TaggW());
+                                    });
+
+        AddTH1("3#gamma IM",      "3#gamma IM [MeV]",     "",       IMbins,     "h_ggg_IM",
+               [] (TH1D* h, const Fill_t& f) { h->Fill(f.Tree.ggg().M(), f.TaggW()); });
+
+        AddTH1("2#gamma sub-IM",  "2#gamma IM [MeV]",     "",       IMbins,     "h_gg_IM",
+          [] (TH1D* h, const Fill_t& f) {
+
+            for(const auto& v : f.Tree.ggIM())
+                h->Fill(v, f.TaggW());
+        });
+
+        AddTH1("Bachelor Photon Energy",  "E [MeV]",     "",       IMbins,     "bachelorE",
+          [] (TH1D* h, const Fill_t& f) {
+
+            for(const auto& v : f.Tree.BachelorE())
+                h->Fill(v, f.TaggW());
+        });
+
+        AddTH1("Missing Mass",      "MM [MeV]",     "",       MMbins,     "mm",
+               [] (TH1D* h, const Fill_t& f) { h->Fill(f.Tree.mm().M(), f.TaggW()); });
+
+
+        AddTH1("Tagger Channels", "Channel",              "# hits", TaggChBins, "TaggCh",
+               [] (TH1D* h, const Fill_t& f) { h->Fill(f.Tree.TaggCh, f.TaggW()); }
+               );
+
+        AddTH1("Coplanarity Angle", "Coplanarity angle [#circ]", "", CoplBins, "CoplAngle",
+               [] (TH1D* h, const Fill_t& f) { h->Fill(f.Tree.copl_angle, f.TaggW()); }
+               );
+
+        AddTH1("Tagger Time - CB Average Time", "t [ns]", "",       TaggTime,   "TaggTime",
+               [] (TH1D* h, const Fill_t& f) {
+            h->Fill(f.Tree.TaggT - f.Tree.CBAvgTime);
+        });
+
+        AddTH2("Proton #theta vs. E_{k}", "E_{k} [MeV]", "#theta [#circ]",  pEbins,   pThetaBins, "p_theta_E",
+               [] (TH2D* h, const Fill_t& f) {
+                   h->Fill(f.Tree.p_fitted().E() - ParticleTypeDatabase::Proton.Mass(), radian_to_degree(f.Tree.p_fitted().Theta()));
+               });
+
+
+        AddTH2("Missing Mass / 3#gamma IM", "3#gamma IM [MeV]", "MM [MeV]", IMbins,   MMbins,     "mm_gggIM",
+                [] (TH2D* h, const Fill_t& f) {
+                   h->Fill(f.Tree.ggg().M(), f.Tree.mm().M(), f.TaggW());
+        });
+
+        AddTH2("Proton PSA", "PSA Angle [#circ]", "PSA Radius",             PSAABins, PSARBins,   "p_PSA",
+               [] (TH2D* h, const Fill_t& f) {
+                  h->Fill(f.Tree.p_PSA_Angle, f.Tree.p_PSA_Radius, f.TaggW());
+       });
 
     }
 
     void Fill(const Fill_t& f) const {
 
-        h_KinFitChi2->Fill(f.Tree.KinFitChi2, f.TaggW());
-
-        h_gggIM->Fill(f.Tree.ggg().M(), f.TaggW());
-
-        for(const auto& v : f.Tree.ggIM())
-            h_ggIM->Fill(v, f.TaggW());
-
-        h_mm->Fill(f.Tree.mm().M(), f.TaggW());
-
-        for(const auto& v : f.Tree.BachelorE())
-            h_bachelorE->Fill(v, f.TaggW());
-
-        h_p_Theta_E->Fill(f.Tree.p_fitted().E() - ParticleTypeDatabase::Proton.Mass(), radian_to_degree(f.Tree.p_fitted().Theta()));
-
-        h_mm_gggIM->Fill(f.Tree.ggg().M(), f.Tree.mm().M(), f.TaggW());
-
-        h_PSA->Fill(f.Tree.p_PSA_Angle, f.Tree.p_PSA_Radius, f.TaggW());
-
-        h_TaggCh->Fill(f.Tree.TaggCh, f.TaggW());
-        h_TaggTime->Fill(f.Tree.TaggT - f.Tree.CBAvgTime);
+        h1.Fill(f);
+        h2.Fill(f);
 
     }
 
     std::vector<TH1*> GetHists() const {
-        return {
-            h_KinFitChi2,
-                    h_gggIM,
-                    h_ggIM,
-                    h_mm,
-                    h_bachelorE,
-                    h_p_Theta_E,
-                    h_mm_gggIM,
-                    h_PSA,
-                    h_TaggTime,
-                    h_TaggCh
-        };
+        vector<TH1*> v;
+        v.reserve(h1.size()+h2.size());
+        for(auto& e : h1) {
+            v.emplace_back(e.h);
+        }
+        for(auto& e: h2) {
+            v.emplace_back(e.h);
+        }
+        return v;
     }
 
     // Sig and Ref channel share some cuts...
