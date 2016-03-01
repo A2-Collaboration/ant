@@ -2,7 +2,6 @@ include_directories(.)
 
 set(DICT_HEADERS
     symmetric_pi0.h
-    OmegaEtaG.h
     ExtractResolutions.h
     CBESum_Check.h
     TAPSEnergy_Check.h
@@ -15,7 +14,6 @@ set(DICT_HEADERS
 
 set(SRCS
     symmetric_pi0.cc
-    OmegaEtaG.cc
     TreeTools.cc
     ExtractResolutions.cc
     CBESum_Check.cc
