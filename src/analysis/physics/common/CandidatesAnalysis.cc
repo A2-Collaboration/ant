@@ -2,6 +2,7 @@
 #include "TLorentzVector.h"
 #include <cmath>
 #include "base/std_ext/math.h"
+#include "analysis/utils/ClusterTools.h"
 
 using namespace std;
 using namespace ant;
@@ -31,6 +32,7 @@ CandidatesAnalysis::CandidatesAnalysis(const std::string& name, OptionsPtr opts)
     psa = HistFac.makeTH2D("TAPS PSA (Charged)","E_{long} [MeV]","E_{short} [MeV]", BinSettings(1000),BinSettings(1000),"psa");
     psa_all = HistFac.makeTH2D("TAPS PSA","E_{long} [MeV]","E_{short} [MeV]", BinSettings(1000),BinSettings(1000),"psa_all");
     psa_all_angles = HistFac.makeTH2D("TAPS PSA","#phi [#circ]","r", BinSettings(160,45-20,45+20),BinSettings(250,0,500),"psa_all_angles");
+    lateral_moment_cb = HistFac.makeTH1D("Cluster Lateral Moment CB","","",BinSettings(1000,0,1),"cb_lateral");
 }
 
 void CandidatesAnalysis::ProcessEvent(const TEvent& event, manager_t&)
@@ -57,6 +59,12 @@ void CandidatesAnalysis::ProcessEvent(const TEvent& event, manager_t&)
             if(ci->Detector & Detector_t::Any_t::CB_Apparatus) {
                 cbdEE->Fill(ci->CaloEnergy,ci->VetoEnergy);
                 cbtof->Fill(ci->Time, ci->CaloEnergy);
+
+                const auto& cluster = ci->FindCaloCluster();
+
+                if(cluster)
+                    lateral_moment_cb->Fill(utils::ClusterTools::LateralMoment(*cluster));
+
             } else if(ci->Detector & Detector_t::Any_t::TAPS_Apparatus) {
                 tapsdEE->Fill(ci->CaloEnergy,ci->VetoEnergy);
                 tapstof->Fill(ci->Time, ci->CaloEnergy);
@@ -90,6 +98,7 @@ void CandidatesAnalysis::ProcessEvent(const TEvent& event, manager_t&)
                             }
                         }
                     }
+
             }
 
             const TParticle a(ParticleTypeDatabase::Photon,*i);
@@ -128,7 +137,7 @@ void CandidatesAnalysis::ShowResult()
             << drawoption("colz")
             << cbdEE << cbtof
             << tapsdEE << tapstof
-            << psa << psa_all << psa_all_angles
+            << psa << psa_all << psa_all_angles << lateral_moment_cb
             << endc;
 }
 

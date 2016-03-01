@@ -27,6 +27,7 @@ protected:
     TH2D* psa = nullptr;
     TH2D* psa_all = nullptr;
     TH2D* psa_all_angles = nullptr;
+    TH1D* lateral_moment_cb = nullptr;
 
 public:
     CandidatesAnalysis(const std::string& name,OptionsPtr opts);
