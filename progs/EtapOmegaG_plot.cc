@@ -104,17 +104,27 @@ struct CommonHist_t {
         {}
     };
 
-    TH1D* h_KinFitChi2;
+    const BinSettings bins_FitProb{200, 0, 0.3};
+    TH1D* h_KinFitProb;
+    TH1D* h_CBSumE;
+    TH1D* h_CBSumVetoE;
+    TH1D* h_PIDSumE;
 
 
     CommonHist_t(HistogramFactory HistFac) {
-        h_KinFitChi2 = HistFac.makeTH1D("KinFitChi2","#chi^{2}","",BinSettings(200,0,100),"h_KinFitChi2");
+        h_KinFitProb = HistFac.makeTH1D("KinFitProb","p","",bins_FitProb,"h_KinFitProb");
+        h_CBSumE = HistFac.makeTH1D("CB Sum E","E / MeV","",BinSettings(100,500,1600),"h_CBSumE");
+        h_CBSumVetoE = HistFac.makeTH1D("CB Veto Sum E","E / MeV","",BinSettings(50,0,10),"h_CBSumVetoE");
+        h_PIDSumE = HistFac.makeTH1D("PID Sum E","E / MeV","",BinSettings(50,0,10),"h_PIDSumE");
     }
     void Fill(const Fill_t& f) const {
-        h_KinFitChi2->Fill(f.Common.KinFitChi2, f.TaggW());
+        h_KinFitProb->Fill(f.Common.KinFitProb, f.TaggW());
+        h_CBSumE->Fill(f.Common.CBSumE, f.TaggW());
+        h_CBSumVetoE->Fill(f.Common.CBSumVetoE, f.TaggW());
+        h_PIDSumE->Fill(f.Common.PIDSumE, f.TaggW());
     }
     std::vector<TH1*> GetHists() const {
-        return {h_KinFitChi2};
+        return {h_KinFitProb, h_CBSumE, h_CBSumVetoE, h_PIDSumE};
     }
 
     // Sig and Ref channel share some cuts...
@@ -123,14 +133,14 @@ struct CommonHist_t {
         cuttree::Cuts_t<Fill_t> cuts;
         cuts.emplace_back(MultiCut_t<Fill_t>{
                               // Use non-null PID cuts only when PID calibrated...
-                              {"CBSumVeto=0", [] (const Fill_t& f) { return f.Common.CBSumVetoE==0; } },
-                              //{"CBSumVeto<0.25", [] (const Fill_t& f) { return f.Common.CBSumVetoE<0.25; } },
-                              {"PIDSumE=0", [] (const Fill_t& f) { return f.Common.PIDSumE==0; } },
-                              //{"PIDSumE<0.25", [] (const Fill_t& f) { return f.Common.PIDSumE<0.25; } },
+                              //{"CBSumVeto=0", [] (const Fill_t& f) { return f.Common.CBSumVetoE==0; } },
+                              {"CBSumVeto<0.25", [] (const Fill_t& f) { return f.Common.CBSumVetoE<0.25; } },
+                              //{"PIDSumE=0", [] (const Fill_t& f) { return f.Common.PIDSumE==0; } },
+                              {"PIDSumE<1", [] (const Fill_t& f) { return f.Common.PIDSumE<1; } },
                           });
         cuts.emplace_back(MultiCut_t<Fill_t>{
-                                 {"KinFitChi2<10", [] (const Fill_t& f) { return f.Common.KinFitChi2<10; } },
-                                 {"KinFitChi2<20", [] (const Fill_t& f) { return f.Common.KinFitChi2<20; } },
+                                 {"KinFitProb>0.01", [] (const Fill_t& f) { return f.Common.KinFitProb>0.01; } },
+                                 {"KinFitProb>0.02", [] (const Fill_t& f) { return f.Common.KinFitProb>0.02; } },
                              });
         return cuts;
     }
@@ -145,13 +155,15 @@ struct SigHist_t : CommonHist_t {
     TH2D* h_IM_gg_gg;     // Goldhaber plot
     TH1D* h_IM_4g;        // EtaPrime IM
     TH1D* h_IM_gg;        // EtaPrime IM
-    TH1D* h_TreeFitChi2;
+    TH1D* h_AntiPi0FitProb;
+    TH1D* h_AntiEtaFitProb;
+    TH1D* h_TreeFitProb;
 
-    const BinSettings IM_Etap {200, 400,1100};
-    const BinSettings IM_Omega{200, 200, 950};
+    const BinSettings bins_IM_Etap {100, 800,1050};
+    const BinSettings bins_IM_Omega{100, 550, 950};
 
     SigHist_t(HistogramFactory HistFac) : CommonHist_t(HistFac) {
-        BinSettings bins_goldhaber(400, 0, 900);
+        BinSettings bins_goldhaber(200, 0, 900);
         const string axislabel_goldhaber("2#gamma IM / MeV");
 
         h_IM_gg_gg = HistFac.makeTH2D("IM 2#gamma-2#gamma",
@@ -159,10 +171,11 @@ struct SigHist_t : CommonHist_t {
                                     bins_goldhaber, bins_goldhaber,
                                     "h_IM_gg_gg"
                                     );
-
-        h_IM_4g = HistFac.makeTH1D("#eta' IM", "IM(#pi^{0}#gamma#gamma) / MeV","",IM_Etap,"h_IM_4g");
-        h_IM_gg = HistFac.makeTH1D("#eta' IM", "IM(#pi^{0}#gamma#gamma) / MeV","",BinSettings(200,80,700),"h_IM_gg");
-        h_TreeFitChi2 = HistFac.makeTH1D("TreeFitChi2", "#chi^{2}","",BinSettings(200,0,100),"h_TreeFitChi2");
+        h_IM_4g = HistFac.makeTH1D("#eta' IM", "IM(#pi^{0}#gamma#gamma) / MeV","",bins_IM_Etap,"h_IM_4g");
+        h_IM_gg = HistFac.makeTH1D("#eta' IM", "IM(#gamma#gamma) / MeV","",BinSettings(200,80,700),"h_IM_gg");
+        h_AntiPi0FitProb = HistFac.makeTH1D("AntiPi0FitProb", "p","",bins_FitProb,"h_AntiPi0FitProb");
+        h_AntiEtaFitProb = HistFac.makeTH1D("AntiEtaFitProb", "p","",bins_FitProb,"h_AntiEtaFitProb");
+        h_TreeFitProb = HistFac.makeTH1D("TreeFitProb", "p","",bins_FitProb,"h_TreeFitProb");
     }
 
     void Fill(const Fill_t& f) const {
@@ -176,12 +189,14 @@ struct SigHist_t : CommonHist_t {
 
         h_IM_4g->Fill(tree.IM_Pi0gg, f.TaggW());
         h_IM_gg->Fill(tree.IM_gg, f.TaggW());
-        h_TreeFitChi2->Fill(tree.TreeFitChi2, f.TaggW());
+        h_AntiPi0FitProb->Fill(tree.AntiPi0FitProb, f.TaggW());
+        h_AntiEtaFitProb->Fill(tree.AntiEtaFitProb, f.TaggW());
+        h_TreeFitProb->Fill(tree.TreeFitProb, f.TaggW());
     }
 
     std::vector<TH1*> GetHists() const {
         auto hists = CommonHist_t::GetHists();
-        hists.insert(hists.end(), {h_IM_4g, h_IM_gg, h_TreeFitChi2});
+        hists.insert(hists.end(), {h_IM_4g, h_IM_gg, h_AntiPi0FitProb, h_AntiEtaFitProb, h_TreeFitProb});
         return hists;
     }
 
@@ -220,13 +235,21 @@ struct SigHist_t : CommonHist_t {
         };
 
         cuts.emplace_back(MultiCut_t<Fill_t>{
-                              {"Goldhaber", goldhaber_cut },
-                              {"IM_gg", [] (const Fill_t& f) { return 175<f.Tree.IM_gg && f.Tree.IM_gg<510; } },
+                              {"AntiPi0FitProb<0.002", [] (const Fill_t& f) { return f.Tree.AntiPi0FitProb<0.002; } },
                           });
 
         cuts.emplace_back(MultiCut_t<Fill_t>{
-                              {"TreeFitChi2<20", [] (const Fill_t& f) { return f.Tree.TreeFitChi2<20; } },
-                              {"TreeFitChi2<50", [] (const Fill_t& f) { return f.Tree.TreeFitChi2<50; } },
+                              {"AntiEtaFitProb<0.005", [] (const Fill_t& f) { return f.Tree.AntiEtaFitProb<0.005; } },
+                          });
+
+        cuts.emplace_back(MultiCut_t<Fill_t>{
+                              {"Goldhaber", goldhaber_cut },
+                              {"IM_gg", [] (const Fill_t& f) { return 180<f.Tree.IM_gg && f.Tree.IM_gg<460; } },
+                          });
+
+        cuts.emplace_back(MultiCut_t<Fill_t>{
+                              {"TreeFitProb>0.04", [] (const Fill_t& f) { return f.Tree.TreeFitProb>0.04; } },
+                              {"TreeFitProb>0.01", [] (const Fill_t& f) { return f.Tree.TreeFitProb>0.01; } },
                           });
 
 
@@ -252,12 +275,12 @@ struct SigPi0Hist_t : SigHist_t {
         h_IM_3g_4g_low = HistFac.makeTH2D("Best #omega vs. #eta' IM",
                                           "IM(#pi^{0}#gamma#gamma) / MeV",
                                           "IM(#pi^{0}#gamma) / MeV",
-                                          IM_Etap, IM_Omega,"h_IM_3g_4g_low"
+                                          bins_IM_Etap, bins_IM_Omega,"h_IM_3g_4g_low"
                                           );
         h_IM_3g_4g_high = HistFac.makeTH2D("Best #omega vs. #eta' IM",
                                            "IM(#pi^{0}#gamma#gamma) / MeV",
                                            "IM(#pi^{0}#gamma) / MeV",
-                                           IM_Etap, IM_Omega,"h_IM_3g_4g_high"
+                                           bins_IM_Etap, bins_IM_Omega,"h_IM_3g_4g_high"
                                            );
     }
 
@@ -271,10 +294,9 @@ struct SigPi0Hist_t : SigHist_t {
     static cuttree::Cuts_t<Fill_t> GetCuts() {
         using cuttree::MultiCut_t;
         auto cuts = cuttree::ConvertCuts<Fill_t, SigHist_t::Fill_t>(SigHist_t::GetCuts());
-        auto omega_window = ParticleTypeDatabase::Omega.GetWindow(80);
         cuts.emplace_back(MultiCut_t<Fill_t>{
-                              {"|IM_Pi0g[1]-IM_w|<40", [omega_window] (const Fill_t& f) {
-                                   return omega_window.Contains(f.Pi0.IM_Pi0g()[1]);
+                              {"IM_Pi0g[1]>650", [] (const Fill_t& f) {
+                                   return f.Pi0.IM_Pi0g()[1] > 650;
                                }},
                           });
         return cuts;
