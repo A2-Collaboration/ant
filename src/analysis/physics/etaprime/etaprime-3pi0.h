@@ -77,12 +77,27 @@ protected:
     utils::TreeFitter fitterRef;
     utils::KinFitter kinFitterEMB;
 
-
     ant::analysis::PromptRandom::Switch promptrandom;
+
+
+
+
 
     TTree* tree;
 
     struct branches {
+        struct kinFitReturn_t
+        {
+            double          beamE;
+            TLorentzVector  etaprimeCand;
+            TLorentzVector  pi01;
+            TLorentzVector  pi02;
+            TLorentzVector  pi03;
+            TLorentzVector  p;
+        };
+
+        kinFitReturn_t kinfitted;
+
         TLorentzVector etaprimeCand= {};
 
         TLorentzVector proton= {};
@@ -127,6 +142,8 @@ protected:
         std::string decayString= {};
 
         void SetBranches(TTree* tree);
+        void FillKinFit(double beamE, const TParticleList& photons, const TParticlePtr& proton);
+
     };
     branches vars;
 
