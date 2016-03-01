@@ -1,10 +1,11 @@
 #pragma once
 
+#include "HistStyle.h"
+
 #include "analysis/plot/HistogramFactories.h"
 #include "root-addons/analysis_codes/hstack.h"
 #include "base/Tree.h"
 
-#include "TH1.h"
 
 #include <vector>
 #include <list>
@@ -107,41 +108,6 @@ void Fill(Tree_t<Hist_t> cuttree, const Fill_t& f) {
     }
 }
 
-// returns string to be used as draw option
-struct HistMod_t : std::function<std::string(TH1*)> {
-    // use constructors
-    using std::function<std::string(TH1*)>::function;
-
-    HistMod_t() : std::function<std::string(TH1*)>([] (TH1*) { return ""; }) {}
-
-    static Color_t GetColor(unsigned i) {
-        const std::vector<Color_t> colors = {kGreen+1, kBlue, kYellow+1, kMagenta, kCyan, kOrange, kSpring+10,};
-        return colors[i % colors.size()];
-    }
-
-    static HistMod_t MakeLine(const Color_t color, short linewidth = 1) {
-        return [color, linewidth] (TH1* h) {
-            h->SetLineColor(color);
-            h->SetLineWidth(linewidth);
-            h->SetMarkerSize(1);
-            h->SetMarkerColor(color);
-            return "";
-        };
-    }
-
-    static HistMod_t MakeDataPoints(const Color_t color, short linewidth = 1) {
-        return [color, linewidth] (TH1* h) {
-            h->SetLineColor(color);
-            h->SetLineWidth(linewidth);
-            h->SetMarkerColor(color);
-            h->SetMarkerStyle(kDot);
-            return "E"; // draw error bars
-        };
-
-    }
-
-};
-
 template<typename Hist_t>
 struct StackedHists_t {
 protected:
@@ -154,7 +120,7 @@ protected:
 
     const Hist_t& GetHist(unsigned key,
                           const std::string& name = "",
-                          HistMod_t histmod = {}) {
+                          histstyle::Mod_t histmod = {}) {
         auto it_hist = Hists.lower_bound(key);
         if(it_hist == Hists.end() || it_hist->first != key) {
             if(name.empty())
@@ -178,11 +144,11 @@ private:
     HistogramFactory H; // directory for mctrue splitted histfacs
 
     struct WrappedHist_t {
-        Hist_t    Hist;
-        HistMod_t Modify;
+        Hist_t           Hist;
+        histstyle::Mod_t Modify;
         WrappedHist_t(const std::string& name,
                       const HistogramFactory& parentHistFac,
-                      HistMod_t mod) :
+                      histstyle::Mod_t mod) :
             Hist(HistogramFactory(name, parentHistFac, name)), Modify(mod) {}
     };
 

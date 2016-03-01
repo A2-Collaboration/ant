@@ -53,16 +53,16 @@ struct MCTrue_Splitter : cuttree::StackedHists_t<Hist_t> {
     MCTrue_Splitter(const HistogramFactory& histFac) : cuttree::StackedHists_t<Hist_t>(histFac),
       Channels(physics::OmegaEtaG2::makeChannels())
     {
-        using cuttree::HistMod_t;
+        using histstyle::Mod_t;
 
         // TODO: derive this from channel map
-        this->GetHist(0, "Data", HistMod_t::MakeDataPoints(kBlack));
-        this->GetHist(1, "Sig",  HistMod_t::MakeLine(kRed, 2));
-        this->GetHist(2, "Ref",  HistMod_t::MakeLine(kGreen, 2));
+        this->GetHist(0, "Data", Mod_t::MakeDataPoints(kBlack));
+        this->GetHist(1, "Sig",  Mod_t::MakeLine(kRed, 2));
+        this->GetHist(2, "Ref",  Mod_t::MakeLine(kGreen, 2));
         // mctrue is never >=3 (and <9) in tree, use this to sum up all MC and all bkg MC
         // see also Fill()
-        this->GetHist(3, "Sum_MC", HistMod_t::MakeLine(kBlack, 1));
-        this->GetHist(4, "Bkg_MC", HistMod_t::MakeLine(kGray, 1));
+        this->GetHist(3, "Sum_MC", Mod_t::MakeLine(kBlack, 1));
+        this->GetHist(4, "Bkg_MC", Mod_t::MakeLine(kGray, 1));
     }
 
     void Fill(const Fill_t& f) {
@@ -78,11 +78,11 @@ struct MCTrue_Splitter : cuttree::StackedHists_t<Hist_t> {
             return string("Unknown Decay");
         };
 
-        using cuttree::HistMod_t;
+        using histstyle::Mod_t;
         const Hist_t& hist = mctrue<10 ? this->GetHist(mctrue) :
                                         this->GetHist(mctrue,
                                                       get_bkg_name(mctrue),
-                                                      HistMod_t::MakeLine(HistMod_t::GetColor(mctrue-9), 1.0)
+                                                      Mod_t::MakeLine(histstyle::color_t::Get(mctrue-9), 1)
                                                       );
 
         hist.Fill(f);

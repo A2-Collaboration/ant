@@ -42,14 +42,14 @@ struct MCTrue_Splitter : cuttree::StackedHists_t<Hist_t> {
     using Fill_t = typename Hist_t::Fill_t;
 
     MCTrue_Splitter(const HistogramFactory& histFac) : cuttree::StackedHists_t<Hist_t>(histFac) {
-        using cuttree::HistMod_t;
-        this->GetHist(0, "Data", HistMod_t::MakeDataPoints(kBlack));
-        this->GetHist(1, "Sig",  HistMod_t::MakeLine(kRed, 2.0));
-        this->GetHist(2, "Ref",  HistMod_t::MakeLine(kRed, 2.0));
+        using histstyle::Mod_t;
+        this->GetHist(0, "Data", Mod_t::MakeDataPoints(kBlack));
+        this->GetHist(1, "Sig",  Mod_t::MakeLine(kRed, 2.0));
+        this->GetHist(2, "Ref",  Mod_t::MakeLine(kRed, 2.0));
         // mctrue is never >=3 (and <9) in tree, use this to sum up all MC and all bkg MC
         // see also Fill()
-        this->GetHist(3, "Sum_MC", HistMod_t::MakeLine(kBlack, 2.0));
-        this->GetHist(4, "Bkg_MC", HistMod_t::MakeLine(kGray, 2.0));
+        this->GetHist(3, "Sum_MC", Mod_t::MakeLine(kBlack, 2.0));
+        this->GetHist(4, "Bkg_MC", Mod_t::MakeLine(kGray, 2.0));
     }
 
     void Fill(const Fill_t& f) {
@@ -63,11 +63,11 @@ struct MCTrue_Splitter : cuttree::StackedHists_t<Hist_t> {
             return "Bkg_"+name;
         };
 
-        using cuttree::HistMod_t;
+        using histstyle::Mod_t;
         const Hist_t& hist = mctrue<9 ? this->GetHist(mctrue) :
                                         this->GetHist(mctrue,
                                                       get_bkg_name(mctrue),
-                                                      HistMod_t::MakeLine(HistMod_t::GetColor(mctrue-9))
+                                                      Mod_t::MakeLine(histstyle::color_t::Get(mctrue-9))
                                                       );
 
         hist.Fill(f);
