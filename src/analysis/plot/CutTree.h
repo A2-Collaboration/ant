@@ -119,7 +119,7 @@ struct HistMod_t : std::function<std::string(TH1*)> {
         return colors[i % colors.size()];
     }
 
-    static HistMod_t MakeLine(const Color_t color, short linewidth = 1.0) {
+    static HistMod_t MakeLine(const Color_t color, short linewidth = 1) {
         return [color, linewidth] (TH1* h) {
             h->SetLineColor(color);
             h->SetLineWidth(linewidth);
@@ -129,7 +129,7 @@ struct HistMod_t : std::function<std::string(TH1*)> {
         };
     }
 
-    static HistMod_t MakeDataPoints(const Color_t color, short linewidth = 1.0) {
+    static HistMod_t MakeDataPoints(const Color_t color, short linewidth = 1) {
         return [color, linewidth] (TH1* h) {
             h->SetLineColor(color);
             h->SetLineWidth(linewidth);
