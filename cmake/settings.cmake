@@ -49,6 +49,15 @@ set(DEFAULT_COMPILE_FLAGS ${CMAKE_CXX_FLAGS_${BUILD_TYPE}})
 
 SET(BUILD_SHARED_LIBS ON)
 
+# check if gold linker is available and use it
+execute_process(COMMAND ${CMAKE_CXX_COMPILER} -fuse-ld=gold -Wl,--version ERROR_QUIET OUTPUT_VARIABLE LD_VERSION)
+if ("${LD_VERSION}" MATCHES "GNU gold")
+    set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -Wl,-fuse-ld=gold")
+    set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -Wl,-fuse-ld=gold")
+    message(STATUS "GNU gold linker will be used.")
+endif()
+
+
 # for file(GLOB_RECURSE..) don't follow symlinks
 cmake_policy(SET CMP0009 NEW)
 
