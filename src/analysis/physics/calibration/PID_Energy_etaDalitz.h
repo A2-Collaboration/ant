@@ -12,6 +12,9 @@ class PID_Energy_etaDalitz : public Physics {
 
 protected:
     TH2* eegPID = nullptr;
+    TH1D* etaIM = nullptr;
+    TH1D* hCopl = nullptr;
+    TH1D* protonVeto = nullptr;
     static constexpr double ETA_IM = 547.853;
     static constexpr double ETA_SIGMA = 25.;
 

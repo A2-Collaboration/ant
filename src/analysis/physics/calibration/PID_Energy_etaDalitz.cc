@@ -25,6 +25,9 @@ PID_Energy_etaDalitz::PID_Energy_etaDalitz(const string& name, OptionsPtr opts) 
 
     eegPID = HistFac.makeTH2D("2 charged 1 neutral (PID,PID)", "PID Energy [MeV]", "#",
                               energybins, cb_channels, "eegPID");
+    etaIM = HistFac.makeTH1D("#eta IM all comb", "IM [MeV]", "#", BinSettings(1200), "etaIM");
+    hCopl = HistFac.makeTH1D("coplanarity #eta - proton all comb", "coplanarity [#circ]", "#", BinSettings(720, -180, 180), "hCopl");
+    protonVeto = HistFac.makeTH1D("Veto energy identified proton", "Veto [MeV]", "#", energybins, "protonVeto");
 }
 
 void PID_Energy_etaDalitz::ProcessEvent(const TEvent& event, manager_t&)
@@ -48,7 +51,9 @@ void PID_Energy_etaDalitz::ProcessEvent(const TEvent& event, manager_t&)
         for( size_t i = 0; i < comb.size()-1; i++ )
             eta += TParticle(ParticleTypeDatabase::Photon, comb.at(i));
         proton = TParticle(ParticleTypeDatabase::Proton, comb.back());
-        const double copl = std_ext::radian_to_degree(abs(eta.Phi() - proton.Phi()));
+        const double copl = std_ext::radian_to_degree(abs(eta.Phi() - proton.Phi())) - 180.;
+        etaIM->Fill(eta.M());
+        hCopl->Fill(copl);
         if (eta_im.Contains(eta.M()) && coplanarity.Contains(copl)
                 && std::count_if(comb.begin(), comb.end()-1, [](TCandidatePtr c){ return c->VetoEnergy; }) >= 2)
             break;
@@ -58,6 +63,7 @@ void PID_Energy_etaDalitz::ProcessEvent(const TEvent& event, manager_t&)
     if(!found)
         return;
 
+    protonVeto->Fill(comb.back()->VetoEnergy);
     // at this point a possible eta Dalitz candidate was found, work only with eta final state
     comb.pop_back();
 
