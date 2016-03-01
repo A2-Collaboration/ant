@@ -38,12 +38,13 @@ protected:
 
     struct settings_t
     {
-        std::map<int,std::string> EventTypes= {{0,"signal"},
-                                               {1,"reference"},
-                                               {2,"background"},
+        std::map<int,std::string> EventTypes= {{0,"signal"},        // etaprime -> pi0 pi0 pi0
+                                               {1,"reference"},     // etaprime -> eta pi0 pi0
+                                               {2,"background"},    // 3 pi0 photoproduction
                                                {-1,"other"}};
         const double EMBChi2Cut= std::numeric_limits<double>::infinity();
         const double fourConstrainChi2Cut= 40;
+        const double coplCut = 15;
         const double EsumCB= 550;
     };
     settings_t phSettings;
