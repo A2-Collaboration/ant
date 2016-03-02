@@ -40,6 +40,7 @@ public:
         mev_t Mass()                    const { return mass; }
         bool  Charged()                 const { return charged; }
         interval<mev_t> GetWindow(const mev_t width) const { return {mass-width/2,mass+width/2}; }
+        mev_t PhotoproductionThresh()   const { return CalculatePhotoproductionThreshold(mass); }
 
         bool operator== (const Type& rhs) const {
             if( this == &rhs )
@@ -126,6 +127,8 @@ public:
     static const TypeList_t& NeutralMesons() { return neutral_mesons; }
 
     static const Type* GetTypeOfPlutoID(index_t pid);
+
+    static mev_t CalculatePhotoproductionThreshold(mev_t m_sum);
 
 };
 

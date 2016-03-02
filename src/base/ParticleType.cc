@@ -74,6 +74,12 @@ const ParticleTypeDatabase::Type *ParticleTypeDatabase::GetTypeOfPlutoID(index_t
     return entry->second;
 }
 
+mev_t ParticleTypeDatabase::CalculatePhotoproductionThreshold(mev_t m_sum)
+{
+    // assume proton as target
+    return m_sum*(m_sum + 2*Proton.Mass())/(2*Proton.Mass());
+}
+
 const ParticleTypeDatabase::TypeList_t ParticleTypeDatabase::detectables = { &ParticleTypeDatabase::Photon,
                                                                              &ParticleTypeDatabase::Proton,
                                                                              &ParticleTypeDatabase::PiCharged,
