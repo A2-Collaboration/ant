@@ -57,10 +57,12 @@ public:
 
     void LoadSigmaData(const std::string& filename);
 
+    static const APLCON::Fit_Settings_t DefaultSettings;
 
 protected:
 
-    Fitter(const std::string& fittername);
+    Fitter(const std::string& fittername,
+           const APLCON::Fit_Settings_t& settings);
     Fitter(Fitter&&) = default;
     Fitter& operator=(Fitter&&) = default;
     virtual ~Fitter() = default;
@@ -127,6 +129,8 @@ protected:
 
     static double fct_TaggerEGausSigma(double E);
 
+private:
+    static APLCON::Fit_Settings_t MakeDefaultSettings();
 
 };
 
@@ -134,7 +138,9 @@ class KinFitter : public Fitter
 {
 public:
 
-    KinFitter(const std::string& name, unsigned numGammas);
+    KinFitter(const std::string& name, unsigned numGammas,
+              const APLCON::Fit_Settings_t& settings = DefaultSettings
+              );
 
     void SetEgammaBeam(double ebeam);
     void SetProton(const TParticlePtr& proton);
@@ -213,14 +219,16 @@ public:
     TreeFitter(const std::string& name,
                ParticleTypeTree ptree,
                unsigned kinFitGammas,
-               nodesetup_t::getter nodeSetup = {}
+               nodesetup_t::getter nodeSetup = {},
+               const APLCON::Fit_Settings_t& settings = DefaultSettings
               );
 
     // construct TreeFitter without additional KinFit
     TreeFitter(const std::string& name,
                ParticleTypeTree ptree,
-               nodesetup_t::getter nodeSetup = {}
-              ) : TreeFitter(name, ptree, 0, nodeSetup)
+               nodesetup_t::getter nodeSetup = {},
+               const APLCON::Fit_Settings_t& settings = DefaultSettings
+              ) : TreeFitter(name, ptree, 0, nodeSetup, settings)
     {}
 
     struct node_t {

@@ -30,12 +30,18 @@ using namespace ant::std_ext;
 using namespace ant::analysis;
 using namespace ant::analysis::utils;
 
+const APLCON::Fit_Settings_t Fitter::Fitter::DefaultSettings = Fitter::MakeDefaultSettings();
 
-Fitter::Fitter(const string& fittername)
+Fitter::Fitter(const string& fittername, const APLCON::Fit_Settings_t& settings)
 {
-    APLCON::Fit_Settings_t settings = APLCON::Fit_Settings_t::Default;
-    settings.MaxIterations = 30;
     aplcon = make_unique<APLCON>(fittername, settings);
+}
+
+APLCON::Fit_Settings_t Fitter::MakeDefaultSettings()
+{
+    auto settings = APLCON::Fit_Settings_t::Default;
+    settings.MaxIterations = 30;
+    return settings;
 }
 
 void Fitter::LinkVariable(Fitter::FitParticle& particle)
@@ -131,6 +137,8 @@ double Fitter::fct_TaggerEGausSigma(double)
 {
     return  3.0/sqrt(12.0);
 }
+
+
 
 void Fitter::FitParticle::Var_t::SetupBranches(TTree* tree, const string& prefix)
 {
@@ -257,8 +265,8 @@ void Fitter::LoadSigmaData(const string& filename)
     taps_sigma_phi.Load(  *f, "TAPS_sigma_Phi",   int(nTAPS));
 }
 
-KinFitter::KinFitter(const std::string& name, unsigned numGammas) :
-    Fitter(name)
+KinFitter::KinFitter(const std::string& name, unsigned numGammas, const APLCON::Fit_Settings_t& settings) :
+    Fitter(name, settings)
 {
     // nothing to do in this special case
     // used by "KinFit-free" TreeFitter
@@ -425,8 +433,9 @@ KinFitter::PhotonBeamVector::PhotonBeamVector(const string& name):
 TreeFitter::TreeFitter(const string& name,
                        ParticleTypeTree ptree,
                        unsigned kinFitGammas,
-                       nodesetup_t::getter nodeSetup) :
-    KinFitter(name, kinFitGammas),
+                       nodesetup_t::getter nodeSetup,
+                       const APLCON::Fit_Settings_t& settings) :
+    KinFitter(name, kinFitGammas, settings),
     tree(MakeTree(ptree))
 {
 
