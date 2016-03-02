@@ -1,6 +1,6 @@
 #include "catch.hpp"
 
-#include "analysis/physics/Physics.h"
+#include "base/OptionsList.h"
 
 #include <cassert>
 #include <iostream>
@@ -14,15 +14,15 @@ void dotest1();
 void dotest2();
 void dotest3();
 
-TEST_CASE("OptionsList: Basic", "[analysis]") {
+TEST_CASE("OptionsList: Basic", "[base]") {
     dotest1();
 }
 
-TEST_CASE("OptionsList: Chained", "[analysis]") {
+TEST_CASE("OptionsList: Chained", "[base]") {
     dotest2();
 }
 
-TEST_CASE("OptionsList: Flags", "[analysis]") {
+TEST_CASE("OptionsList: Flags", "[base]") {
     dotest3();
 }
 
