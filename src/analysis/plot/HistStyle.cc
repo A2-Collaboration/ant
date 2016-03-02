@@ -55,6 +55,12 @@ Mod_t Mod_t::MakeDataPoints(Color_t color, short linewidth) {
 
 }
 
+/**
+ * @brief Mod_t::MakeFill
+ * @param color
+ * @param zpos: higher -> in front
+ * @return
+ */
 Mod_t Mod_t::MakeFill(Color_t color, int zpos)
 {
     return [color, zpos] (TH1* h) {
