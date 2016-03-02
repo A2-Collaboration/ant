@@ -155,12 +155,19 @@ struct SigHist_t : CommonHist_t {
     TH2D* h_IM_gg_gg;     // Goldhaber plot
     TH1D* h_IM_4g;        // EtaPrime IM
     TH1D* h_IM_gg;        // EtaPrime IM
+
     TH1D* h_AntiPi0FitProb;
     TH1D* h_AntiEtaFitProb;
     TH1D* h_TreeFitProb;
 
+    TH1D* h_ClusterShape_g1_Pi0;
+    TH1D* h_ClusterShape_g2_Pi0;
+    TH1D* h_ClusterShape_g_Omega;
+    TH1D* h_ClusterShape_g_EtaPrime;
+
     const BinSettings bins_IM_Etap {100, 800,1050};
     const BinSettings bins_IM_Omega{100, 550, 950};
+    const BinSettings bins_ClusterShape{20,0,20};
 
     SigHist_t(HistogramFactory HistFac) : CommonHist_t(HistFac) {
         BinSettings bins_goldhaber(200, 0, 900);
@@ -176,11 +183,17 @@ struct SigHist_t : CommonHist_t {
         h_AntiPi0FitProb = HistFac.makeTH1D("AntiPi0FitProb", "p","",bins_FitProb,"h_AntiPi0FitProb");
         h_AntiEtaFitProb = HistFac.makeTH1D("AntiEtaFitProb", "p","",bins_FitProb,"h_AntiEtaFitProb");
         h_TreeFitProb = HistFac.makeTH1D("TreeFitProb", "p","",bins_FitProb,"h_TreeFitProb");
+
+        h_ClusterShape_g1_Pi0 = HistFac.makeTH1D("ClusterShape #gamma_{1} #pi^{0}","","",bins_ClusterShape, "h_ClusterShape_g1_Pi0");
+        h_ClusterShape_g2_Pi0 = HistFac.makeTH1D("ClusterShape #gamma_{2} #pi^{0}","","",bins_ClusterShape, "h_ClusterShape_g2_Pi0");
+        h_ClusterShape_g_Omega = HistFac.makeTH1D("ClusterShape #gamma #omega","","",bins_ClusterShape, "h_ClusterShape_g_Omega");
+        h_ClusterShape_g_EtaPrime = HistFac.makeTH1D("ClusterShape #gamma #eta'","","",bins_ClusterShape, "h_ClusterShape_g_EtaPrime");
+
     }
 
     void Fill(const Fill_t& f) const {
         CommonHist_t::Fill(f);
-        const auto& tree = f.Tree;
+        const Tree_t& tree = f.Tree;
 
         for(unsigned i=0;i<tree.gg_gg1().size();i++) {
             h_IM_gg_gg->Fill(tree.gg_gg1()[i], tree.gg_gg2()[i], f.TaggW());
@@ -192,11 +205,19 @@ struct SigHist_t : CommonHist_t {
         h_AntiPi0FitProb->Fill(tree.AntiPi0FitProb, f.TaggW());
         h_AntiEtaFitProb->Fill(tree.AntiEtaFitProb, f.TaggW());
         h_TreeFitProb->Fill(tree.TreeFitProb, f.TaggW());
+
+        h_ClusterShape_g1_Pi0->Fill(tree.ClusterShape_g1_Pi0, f.TaggW());
+        h_ClusterShape_g2_Pi0->Fill(tree.ClusterShape_g2_Pi0, f.TaggW());
+        h_ClusterShape_g_Omega->Fill(tree.ClusterShape_g_Omega, f.TaggW());
+        h_ClusterShape_g_EtaPrime->Fill(tree.ClusterShape_g_EtaPrime, f.TaggW());
     }
 
     std::vector<TH1*> GetHists() const {
         auto hists = CommonHist_t::GetHists();
-        hists.insert(hists.end(), {h_IM_4g, h_IM_gg, h_AntiPi0FitProb, h_AntiEtaFitProb, h_TreeFitProb});
+        hists.insert(hists.end(), {
+                         h_IM_4g, h_IM_gg, h_AntiPi0FitProb, h_AntiEtaFitProb, h_TreeFitProb,
+                         h_ClusterShape_g1_Pi0, h_ClusterShape_g2_Pi0, h_ClusterShape_g_Omega, h_ClusterShape_g_EtaPrime
+                     });
         return hists;
     }
 
