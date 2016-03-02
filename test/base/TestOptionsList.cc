@@ -8,7 +8,6 @@
 
 using namespace std;
 using namespace ant;
-using namespace ant::analysis;
 
 void dotest1();
 void dotest2();
