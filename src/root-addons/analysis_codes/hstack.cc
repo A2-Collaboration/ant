@@ -166,31 +166,8 @@ void hstack::Draw(const char* option)
     // ensure the histograms are ok
     checkHists();
 
-    vector<string> orig_titles;
     if(options.UseIntelliLegend) {
-        const auto& delim = ": ";
-        vector<vector<string>> title_parts;
-        map<string, unsigned>  token_counter;
-        for(const auto& hist : hists) {
-            const string title = hist.Ptr->GetTitle();
-            orig_titles.emplace_back(title);
-            title_parts.emplace_back(std_ext::tokenize_string(title, delim));
-            for(const auto& token : title_parts.back())
-                token_counter[token]++;
-        }
-        vector<vector<string>> unique_title_parts;
-        for(size_t i=0; i< title_parts.size(); i++) {
-            const auto& tokens = title_parts[i];
-            unique_title_parts.emplace_back();
-            auto& unique_tokens = unique_title_parts.back();
-            for(const auto& token : tokens)
-                if(token_counter[token] < hists.size())
-                    unique_tokens.emplace_back(token);
-            string unique_title = std_ext::concatenate_string(unique_tokens, delim);
-            if(options.ShowEntriesInLegend)
-                unique_title += std_ext::formatter() << " (" << hists[i].Ptr->GetEntries() << ")";
-            hists[i].Ptr->SetTitle(unique_title.c_str());
-        }
+
     }
 
     // hack the THStack such that the last histogram added gets drawn first
@@ -285,7 +262,11 @@ void hstack::Draw(const char* option)
         nAdded++;
     }
 
-    if(nAdded>0) {
+    if(nAdded==0) {
+        LOG(WARNING) << "No histograms in ant::hstack to draw (maybe all empty)";
+        return;
+    }
+
 
         UpdateMCScaling();
 
@@ -301,28 +282,51 @@ void hstack::Draw(const char* option)
 
         auto yaxis = stack->GetYaxis();
         yaxis->SetTitle(ylabel.c_str());
-    }
-    else {
-        LOG(WARNING) << "No histograms in ant::hstack to draw (maybe all empty)";
-    }
 
 
     if(options.UseIntelliLegend) {
-        if(nAdded>0) {
-            const auto& p = GlobalLegendPosition;
-            if(p.Start().Start()<p.Stop().Start() &&
-               p.Start().Stop()<p.Stop().Stop()) {
-                gPad->BuildLegend(p.Start().Start(), // x1
-                                  p.Start().Stop(),  // y1
-                                  p.Stop().Start(),  // x2
-                                  p.Stop().Stop()    // y2
-                                  );
-            }
-            else {
-                // use defaults
-                gPad->BuildLegend();
-            }
+        vector<string> orig_titles;
+
+        const auto& delim = ": "; // this makes the tokens
+
+        vector<vector<string>> title_parts;
+        map<string, unsigned>  token_counter;
+        for(const auto& hist : hists) {
+            const string title = hist.Ptr->GetTitle();
+            orig_titles.emplace_back(title);
+            title_parts.emplace_back(std_ext::tokenize_string(title, delim));
+            for(const auto& token : title_parts.back())
+                token_counter[token]++;
         }
+        vector<vector<string>> unique_title_parts;
+        for(size_t i=0; i< title_parts.size(); i++) {
+            const auto& tokens = title_parts[i];
+            unique_title_parts.emplace_back();
+            auto& unique_tokens = unique_title_parts.back();
+            for(const auto& token : tokens)
+                if(token_counter[token] < hists.size())
+                    unique_tokens.emplace_back(token);
+            string unique_title = std_ext::concatenate_string(unique_tokens, delim);
+            if(options.ShowEntriesInLegend)
+                unique_title += std_ext::formatter() << " (" << hists[i].Ptr->GetEntries() << ")";
+            hists[i].Ptr->SetTitle(unique_title.c_str());
+        }
+
+
+        const auto& p = GlobalLegendPosition;
+        if(p.Start().Start()<p.Stop().Start() &&
+           p.Start().Stop()<p.Stop().Stop()) {
+            gPad->BuildLegend(p.Start().Start(), // x1
+                              p.Start().Stop(),  // y1
+                              p.Stop().Start(),  // x2
+                              p.Stop().Stop()    // y2
+                              );
+        }
+        else {
+            // use defaults
+            gPad->BuildLegend();
+        }
+
         for(size_t i=0;i<orig_titles.size();i++)
             hists[i].Ptr->SetTitle(orig_titles[i].c_str());
     }
