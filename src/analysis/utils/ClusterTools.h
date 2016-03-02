@@ -1,5 +1,9 @@
 #pragma once
 
+#include "base/Detector_t.h"
+
+#include <memory>
+#include <map>
 
 namespace ant {
 
@@ -9,6 +13,8 @@ namespace analysis {
 namespace utils {
 
 struct ClusterTools {
+
+    ClusterTools();
 
     /**
      * @brief Calculate the Lateral Moment of a cluster
@@ -22,7 +28,17 @@ struct ClusterTools {
      *
      * Reimplemented after BaBar
      */
-     static double LateralMoment(const ant::TCluster& cluster);
+     double LateralMoment(const ant::TCluster& cluster) const;
+
+protected:
+     struct det_t {
+         using det_ptr_t = std::shared_ptr<ClusterDetector_t>;
+         det_t(const det_ptr_t& det);
+         det_ptr_t Detector;
+         std::vector<double> R0; // element-wise R0
+     };
+
+     std::map<Detector_t::Type_t, det_t> cluster_detectors;
 };
 
 }}}

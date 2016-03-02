@@ -33,6 +33,8 @@ CandidatesAnalysis::CandidatesAnalysis(const std::string& name, OptionsPtr opts)
     psa_all = HistFac.makeTH2D("TAPS PSA","E_{long} [MeV]","E_{short} [MeV]", BinSettings(1000),BinSettings(1000),"psa_all");
     psa_all_angles = HistFac.makeTH2D("TAPS PSA","#phi [#circ]","r", BinSettings(160,45-20,45+20),BinSettings(250,0,500),"psa_all_angles");
     lateral_moment_cb = HistFac.makeTH1D("Cluster Lateral Moment CB","","",BinSettings(1000,0,1),"cb_lateral");
+    lateral_moment_taps = HistFac.makeTH1D("Cluster Lateral Moment TAPS","","",BinSettings(1000,0,1),"taps_lateral");
+
 }
 
 void CandidatesAnalysis::ProcessEvent(const TEvent& event, manager_t&)
@@ -63,7 +65,7 @@ void CandidatesAnalysis::ProcessEvent(const TEvent& event, manager_t&)
                 const auto& cluster = ci->FindCaloCluster();
 
                 if(cluster)
-                    lateral_moment_cb->Fill(utils::ClusterTools::LateralMoment(*cluster));
+                    lateral_moment_cb->Fill(clustertools.LateralMoment(*cluster));
 
             } else if(ci->Detector & Detector_t::Any_t::TAPS_Apparatus) {
                 tapsdEE->Fill(ci->CaloEnergy,ci->VetoEnergy);
@@ -75,6 +77,8 @@ void CandidatesAnalysis::ProcessEvent(const TEvent& event, manager_t&)
                 const auto& cluster = ci->FindCaloCluster();
 
                 if(cluster)
+
+                    lateral_moment_taps->Fill(clustertools.LateralMoment(*cluster));
 
                     psa_all_angles->Fill(std_ext::radian_to_degree(cluster->GetPSAAngle()), cluster->GetPSARadius());
 
@@ -137,7 +141,8 @@ void CandidatesAnalysis::ShowResult()
             << drawoption("colz")
             << cbdEE << cbtof
             << tapsdEE << tapstof
-            << psa << psa_all << psa_all_angles << lateral_moment_cb
+            << psa << psa_all << psa_all_angles
+            << lateral_moment_cb << lateral_moment_taps
             << endc;
 }
 

@@ -1,6 +1,7 @@
 #pragma once
 
 #include "analysis/physics/Physics.h"
+#include "utils/ClusterTools.h"
 
 #include <string>
 
@@ -28,6 +29,10 @@ protected:
     TH2D* psa_all = nullptr;
     TH2D* psa_all_angles = nullptr;
     TH1D* lateral_moment_cb = nullptr;
+    TH1D* lateral_moment_taps = nullptr;
+
+
+    utils::ClusterTools clustertools;
 
 public:
     CandidatesAnalysis(const std::string& name,OptionsPtr opts);

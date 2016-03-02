@@ -14,26 +14,49 @@ using namespace ant::std_ext;
 using namespace ant::analysis::utils;
 using namespace std;
 
-double ClusterTools::LateralMoment(const TCluster &cluster)
+ClusterTools::ClusterTools()
 {
-    
+    auto config = dynamic_pointer_cast<ExpConfig::Reconstruct, ExpConfig::Setup>(ExpConfig::Setup::GetLastFound());
+    if(config == nullptr)
+        throw ExpConfig::ExceptionNoConfig("No Setup found");
+    for(const auto& detector : config->GetDetectors()) {
+        auto clusterdetector = dynamic_pointer_cast<ClusterDetector_t, Detector_t>(detector);
+        if(clusterdetector)
+            cluster_detectors.emplace(clusterdetector->Type, clusterdetector);
+    }
+}
+
+
+ClusterTools::det_t::det_t(const det_ptr_t& det) : Detector(det)
+{
+    for(unsigned ch=0;ch<Detector->GetNChannels();ch++) {
+        // build average of distances to neighbours
+        const auto& element = Detector->GetClusterElement(ch);
+        double r_sum = 0;
+        for(const auto& n : element->Neighbours) {
+            r_sum += (Detector->GetPosition(n) - element->Position).Mag();
+        }
+        R0.emplace_back(r_sum/element->Neighbours.size());
+    }
+}
+
+double ClusterTools::LateralMoment(const TCluster &cluster) const
+{
+
     const auto& hits = cluster.Hits;
 
     if(cluster.Hits.size() < 3)
         return NaN;
-    
-        
+
+    auto it_det = cluster_detectors.find(cluster.DetectorType);
+    if(it_det == cluster_detectors.end())
+        return NaN;
+    const auto& det = it_det->second;
+
+
     const auto& center = cluster.Position;
 
-    const auto setup = ant::ExpConfig::Setup::GetLastFound();
-
-    if(!setup) {
-        throw std::runtime_error("No Setup found");
-    }
-
-    const auto det = setup->GetDetector(cluster.DetectorType);
-
-    const auto r0 = 7.0; // TODO FIXME
+    const auto r0 = det.R0[cluster.CentralElement];
 
     auto hit = hits.cbegin();
 
@@ -53,7 +76,7 @@ double ClusterTools::LateralMoment(const TCluster &cluster)
             swap(h,hit1);
         }
 
-        const TVector3 d = (center - det->GetPosition(h->Channel));
+        const TVector3 d = (center - det.Detector->GetPosition(h->Channel));
         const auto r = d.Mag();
         ret += h->Channel * sqr(r);
 
@@ -61,3 +84,5 @@ double ClusterTools::LateralMoment(const TCluster &cluster)
 
     return ret / (ret + sqr(r0)*(hit0->Energy + hit1->Energy));
 }
+
+
