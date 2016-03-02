@@ -95,14 +95,7 @@ struct CommonHist_t {
         }
     };
 
-    template<typename SigRefTree_t>
-    struct SigRefFill_t : Fill_t {
-        const SigRefTree_t& Tree;
-        SigRefFill_t(const CommonHist_t::Tree_t& common, const SigRefTree_t& tree) :
-            CommonHist_t::Fill_t(common),
-            Tree(tree)
-        {}
-    };
+
 
     const BinSettings bins_FitProb{200, 0, 0.3};
     TH1D* h_KinFitProb;
@@ -149,8 +142,20 @@ struct CommonHist_t {
 };
 
 struct SigHist_t : CommonHist_t {
-    using Tree_t = physics::EtapOmegaG::Sig_t::Fit_t::Tree_t;
-    using Fill_t = CommonHist_t::SigRefFill_t<Tree_t>;
+    using SharedTree_t = physics::EtapOmegaG::Sig_t::SharedTree_t;
+    using Tree_t = physics::EtapOmegaG::Sig_t::Fit_t::BaseTree_t;
+
+    struct Fill_t : CommonHist_t::Fill_t {
+        const SharedTree_t& Shared;
+        const Tree_t& Tree;
+        Fill_t(const CommonHist_t::Tree_t& common,
+               const SharedTree_t& shared,
+               const Tree_t& tree) :
+            CommonHist_t::Fill_t(common),
+            Shared(shared),
+            Tree(tree)
+        {}
+    };
 
     TH2D* h_IM_gg_gg;     // Goldhaber plot
     TH1D* h_IM_4g;        // EtaPrime IM
@@ -193,17 +198,18 @@ struct SigHist_t : CommonHist_t {
 
     void Fill(const Fill_t& f) const {
         CommonHist_t::Fill(f);
+        const SharedTree_t& s = f.Shared;
         const Tree_t& tree = f.Tree;
 
-        for(unsigned i=0;i<tree.gg_gg1().size();i++) {
-            h_IM_gg_gg->Fill(tree.gg_gg1()[i], tree.gg_gg2()[i], f.TaggW());
-            h_IM_gg_gg->Fill(tree.gg_gg2()[i], tree.gg_gg1()[i], f.TaggW());
+        for(unsigned i=0;i<s.gg_gg1().size();i++) {
+            h_IM_gg_gg->Fill(s.gg_gg1()[i], s.gg_gg2()[i], f.TaggW());
+            h_IM_gg_gg->Fill(s.gg_gg2()[i], s.gg_gg1()[i], f.TaggW());
         }
+        h_AntiPi0FitProb->Fill(s.AntiPi0FitProb, f.TaggW());
+        h_AntiEtaFitProb->Fill(s.AntiEtaFitProb, f.TaggW());
 
         h_IM_4g->Fill(tree.IM_Pi0gg, f.TaggW());
         h_IM_gg->Fill(tree.IM_gg, f.TaggW());
-        h_AntiPi0FitProb->Fill(tree.AntiPi0FitProb, f.TaggW());
-        h_AntiEtaFitProb->Fill(tree.AntiEtaFitProb, f.TaggW());
         h_TreeFitProb->Fill(tree.TreeFitProb, f.TaggW());
 
         h_ClusterShape_g1_Pi0->Fill(tree.ClusterShape_g1_Pi0, f.TaggW());
@@ -227,7 +233,7 @@ struct SigHist_t : CommonHist_t {
 
         // Goldhaber cuts reduce pi0pi0 and pi0eta backgrounds
         auto goldhaber_cut = [] (const Fill_t& f) {
-            const auto& tree = f.Tree;
+            const auto& tree = f.Shared;
             const double pi0 = ParticleTypeDatabase::Pi0.Mass();
             const double eta = ParticleTypeDatabase::Eta.Mass();
             const TVector2 Pi0Pi0(pi0, pi0);
@@ -256,11 +262,11 @@ struct SigHist_t : CommonHist_t {
         };
 
         cuts.emplace_back(MultiCut_t<Fill_t>{
-                              {"AntiPi0FitProb<0.002", [] (const Fill_t& f) { return f.Tree.AntiPi0FitProb<0.002; } },
+                              {"AntiPi0FitProb<0.002", [] (const Fill_t& f) { return f.Shared.AntiPi0FitProb<0.002; } },
                           });
 
         cuts.emplace_back(MultiCut_t<Fill_t>{
-                              {"AntiEtaFitProb<0.005", [] (const Fill_t& f) { return f.Tree.AntiEtaFitProb<0.005; } },
+                              {"AntiEtaFitProb<0.005", [] (const Fill_t& f) { return f.Shared.AntiEtaFitProb<0.005; } },
                           });
 
         cuts.emplace_back(MultiCut_t<Fill_t>{
@@ -279,15 +285,17 @@ struct SigHist_t : CommonHist_t {
 };
 
 struct SigPi0Hist_t : SigHist_t {
-    using Tree_t = physics::EtapOmegaG::Sig_t::Pi0_t::Tree_t;
+    using Tree_t = physics::EtapOmegaG::Sig_t::Pi0_t::BaseTree_t;
 
     TH2D* h_IM_3g_4g_low;     // Omega IM vs. EtaPrime IM
     TH2D* h_IM_3g_4g_high;     // Omega IM vs. EtaPrime IM
 
     struct Fill_t : SigHist_t::Fill_t {
         const Tree_t& Pi0;
-        Fill_t(const CommonHist_t::Tree_t& common, const Tree_t& pi0) :
-            SigHist_t::Fill_t(common, pi0),
+        Fill_t(const CommonHist_t::Tree_t& common,
+               const SharedTree_t& shared,
+               const Tree_t& pi0) :
+            SigHist_t::Fill_t(common, shared, pi0),
             Pi0(pi0)
         {}
     };
@@ -326,11 +334,13 @@ struct SigPi0Hist_t : SigHist_t {
 };
 
 struct SigOmegaPi0Hist_t : SigHist_t {
-    using Tree_t = physics::EtapOmegaG::Sig_t::OmegaPi0_t::Tree_t;
+    using Tree_t = physics::EtapOmegaG::Sig_t::OmegaPi0_t::BaseTree_t;
     struct Fill_t : SigHist_t::Fill_t {
         const Tree_t& OmegaPi0;
-        Fill_t(const CommonHist_t::Tree_t& common, const Tree_t& omegapi0) :
-            SigHist_t::Fill_t(common, omegapi0),
+        Fill_t(const CommonHist_t::Tree_t& common,
+               const SharedTree_t& shared,
+               const Tree_t& omegapi0) :
+            SigHist_t::Fill_t(common, shared, omegapi0),
             OmegaPi0(omegapi0)
         {}
     };
@@ -363,7 +373,14 @@ struct SigOmegaPi0Hist_t : SigHist_t {
 
 struct RefHist_t : CommonHist_t {
     using Tree_t = physics::EtapOmegaG::Ref_t::Tree_t;
-    using Fill_t = CommonHist_t::SigRefFill_t<Tree_t>;
+
+    struct Fill_t : CommonHist_t::Fill_t {
+        const Tree_t& Tree;
+        Fill_t(const CommonHist_t::Tree_t& common, const Tree_t& tree) :
+            CommonHist_t::Fill_t(common),
+            Tree(tree)
+        {}
+    };
 
     TH1D* h_IM_2g;
 
@@ -470,6 +487,14 @@ int main(int argc, char** argv) {
         return 1;
     }
 
+    SigHist_t::SharedTree_t treeSigShared;
+    if(treeSigPi0 || treeSigOmegaPi0) {
+        if(!link_branches("EtapOmegaG/SigShared", addressof(treeSigShared), entries)) {
+            LOG(ERROR) << "Cannot find SigShared tree";
+            return 1;
+        }
+    }
+
     unique_ptr<WrapTFileOutput> masterFile;
     if(cmd_output->isSet()) {
         masterFile = std_ext::make_unique<WrapTFileOutput>(cmd_output->getValue(),
@@ -503,13 +528,14 @@ int main(int argc, char** argv) {
 
         // we handle the Ref/Sig cut here to save some reading work
         if(treeCommon.IsSignal) {
+            treeSigShared.Tree->GetEntry(entry);
             if(treeSigPi0) {
                 treeSigPi0.Tree->GetEntry(entry);
-                cuttree::Fill<MCSigPi0Hist_t>(cuttreeSigPi0, {treeCommon, treeSigPi0});
+                cuttree::Fill<MCSigPi0Hist_t>(cuttreeSigPi0, {treeCommon, treeSigShared, treeSigPi0});
             }
             else if(treeSigOmegaPi0) {
                 treeSigOmegaPi0.Tree->GetEntry(entry);
-                cuttree::Fill<MCSigOmegaPi0Hist_t>(cuttreeSigOmegaPi0, {treeCommon, treeSigOmegaPi0});
+                cuttree::Fill<MCSigOmegaPi0Hist_t>(cuttreeSigOmegaPi0, {treeCommon, treeSigShared, treeSigOmegaPi0});
             }
         }
         else if(treeRef && !treeCommon.IsSignal) {

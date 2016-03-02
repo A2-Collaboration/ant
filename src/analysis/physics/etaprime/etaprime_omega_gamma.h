@@ -74,23 +74,11 @@ struct EtapOmegaG : Physics {
 
         struct Fit_t {
 
-            struct Tree_t : WrapTTree {
-
-                ADD_BRANCH_T(std::vector<double>, ggg, 4)
-                ADD_BRANCH_T(std::vector<double>, gg_gg1, 3)
-                ADD_BRANCH_T(std::vector<double>, gg_gg2, 3)
+            struct BaseTree_t : WrapTTree {
 
                 ADD_BRANCH_T(double,   TreeFitChi2)
                 ADD_BRANCH_T(double,   TreeFitProb)
                 ADD_BRANCH_T(unsigned, TreeFitIterations)
-
-                ADD_BRANCH_T(double,   AntiPi0FitChi2)
-                ADD_BRANCH_T(double,   AntiPi0FitProb)
-                ADD_BRANCH_T(unsigned, AntiPi0FitIterations)
-
-                ADD_BRANCH_T(double,   AntiEtaFitChi2)
-                ADD_BRANCH_T(double,   AntiEtaFitProb)
-                ADD_BRANCH_T(unsigned, AntiEtaFitIterations)
 
                 ADD_BRANCH_T(double, ClusterShape_g1_Pi0)
                 ADD_BRANCH_T(double, ClusterShape_g2_Pi0)
@@ -109,19 +97,14 @@ struct EtapOmegaG : Physics {
                 void Reset();
             };
 
+        protected:
+
             Fit_t(utils::TreeFitter fitter);
 
-            utils::ClusterTools clustertools;
-
-            utils::TreeFitter treefitter;
             static utils::TreeFitter Make(const ParticleTypeDatabase::Type& subtree);
 
-            utils::TreeFitter treefitter_Pi0Pi0;
-            utils::TreeFitter treefitter_Pi0Eta;
-            void DoAntiPi0Eta(TParticleList photons, Tree_t& t);
-
-            static void DoPhotonCombinatorics(TParticleList photons, Tree_t& t);
-
+            utils::ClusterTools clustertools;
+            utils::TreeFitter treefitter;
             utils::TreeFitter::tree_t fitted_Pi0;
             utils::TreeFitter::tree_t fitted_g1_Pi0;
             utils::TreeFitter::tree_t fitted_g2_Pi0;
@@ -135,12 +118,12 @@ struct EtapOmegaG : Physics {
 
             Pi0_t();
 
-            struct Tree_t : Fit_t::Tree_t {
+            struct BaseTree_t : Fit_t::BaseTree_t {
                 ADD_BRANCH_T(std::vector<double>, IM_Pi0g, 2)
                 void Reset();
             };
 
-            Tree_t t;
+            BaseTree_t t;
 
             void Process(const Particles_t& particles, TParticleTree_t ptree_sigref);
         };
@@ -149,7 +132,7 @@ struct EtapOmegaG : Physics {
 
             OmegaPi0_t();
 
-            struct Tree_t : Fit_t::Tree_t {
+            struct BaseTree_t : Fit_t::BaseTree_t {
                 ADD_BRANCH_T(double, IM_Pi0g_fitted)
                 ADD_BRANCH_T(double, IM_Pi0g_best)
 
@@ -158,21 +141,44 @@ struct EtapOmegaG : Physics {
                 void Reset();
             };
 
-            Tree_t t;
+            BaseTree_t t;
 
             void Process(const Particles_t& particles, TParticleTree_t ptree_sigref);
 
         };
 
+        Sig_t();
+
         Pi0_t Pi0;
         OmegaPi0_t OmegaPi0;
 
+        struct SharedTree_t : WrapTTree {
+            ADD_BRANCH_T(std::vector<double>, ggg, 4)
+            ADD_BRANCH_T(std::vector<double>, gg_gg1, 3)
+            ADD_BRANCH_T(std::vector<double>, gg_gg2, 3)
+
+            ADD_BRANCH_T(double,   AntiPi0FitChi2)
+            ADD_BRANCH_T(double,   AntiPi0FitProb)
+            ADD_BRANCH_T(unsigned, AntiPi0FitIterations)
+
+            ADD_BRANCH_T(double,   AntiEtaFitChi2)
+            ADD_BRANCH_T(double,   AntiEtaFitProb)
+            ADD_BRANCH_T(unsigned, AntiEtaFitIterations)
+
+            void Reset();
+        };
 
         void SetupTrees(HistogramFactory HistFac);
         void Fill();
         void ResetBranches();
         void Process(const Particles_t& particles, TParticleTree_t ptree_sigref);
 
+    private:
+        SharedTree_t t;
+        utils::TreeFitter treefitter_Pi0Pi0;
+        utils::TreeFitter treefitter_Pi0Eta;
+        void DoAntiPi0Eta(TParticleList photons);
+        void DoPhotonCombinatorics(TParticleList photons);
 
     };
 

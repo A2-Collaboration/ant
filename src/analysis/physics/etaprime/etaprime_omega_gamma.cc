@@ -262,36 +262,115 @@ void EtapOmegaG::ProcessEvent(const TEvent& event, manager_t&)
 
 }
 
+EtapOmegaG::Sig_t::Sig_t() :
+    treefitter_Pi0Pi0("treefit_Pi0Pi0",ParticleTypeTreeDatabase::Get(ParticleTypeTreeDatabase::Channel::TwoPi0_4g)),
+    treefitter_Pi0Eta("treefit_Pi0Eta",ParticleTypeTreeDatabase::Get(ParticleTypeTreeDatabase::Channel::Pi0Eta_4g))
+{
+    const auto setup = ant::ExpConfig::Setup::GetLastFound();
+    if(!setup)
+        throw runtime_error("EtapOmegaG needs a setup");
+    treefitter_Pi0Pi0.LoadSigmaData(setup->GetPhysicsFilesDirectory()+"/FitterSigmas.root");
+    treefitter_Pi0Eta.LoadSigmaData(setup->GetPhysicsFilesDirectory()+"/FitterSigmas.root");
+}
+
 void EtapOmegaG::Sig_t::SetupTrees(HistogramFactory HistFac)
 {
+    t.CreateBranches(HistFac.makeTTree("SigShared"));
     OmegaPi0.t.CreateBranches(HistFac.makeTTree("SigOmegaPi0"));
     Pi0.t.CreateBranches(HistFac.makeTTree("SigPi0"));
-
 }
 
 void EtapOmegaG::Sig_t::Fill()
 {
+    t.Tree->Fill();
     OmegaPi0.t.Tree->Fill();
     Pi0.t.Tree->Fill();
 }
 
 void EtapOmegaG::Sig_t::ResetBranches()
 {
+    t.Reset();
     OmegaPi0.t.Reset();
     Pi0.t.Reset();
 }
 
+void EtapOmegaG::Sig_t::SharedTree_t::Reset()
+{
+    std::fill(ggg().begin(), ggg().end(), std_ext::NaN);
+    std::fill(gg_gg1().begin(), gg_gg1().end(), std_ext::NaN);
+    std::fill(gg_gg2().begin(), gg_gg2().end(), std_ext::NaN);
+
+    AntiPi0FitChi2 = std_ext::NaN;
+    AntiPi0FitProb = std_ext::NaN;
+    AntiPi0FitIterations = 0;
+
+    AntiEtaFitChi2 = std_ext::NaN;
+    AntiEtaFitProb = std_ext::NaN;
+    AntiEtaFitIterations = 0;
+}
 
 void EtapOmegaG::Sig_t::Process(const Particles_t& particles, TParticleTree_t ptree_sigref)
 {
+    DoPhotonCombinatorics(particles.Photons);
+    DoAntiPi0Eta(particles.Photons);
     OmegaPi0.Process(particles, ptree_sigref);
     Pi0.Process(particles, ptree_sigref);
 }
 
+void EtapOmegaG::Sig_t::DoPhotonCombinatorics(TParticleList photons)
+{
+
+    //  ggg combinatorics
+    auto it_ggg = t.ggg().begin();
+    for( auto comb = utils::makeCombination(photons,3); !comb.Done(); ++comb ) {
+        *it_ggg = (*comb.at(0) + *comb.at(1) + *comb.at(2)).M();
+        ++it_ggg;
+    }
+
+    // gg/gg "Goldhaber" combinatorics
+    const auto goldhaber_comb = vector<vector<unsigned>>({{0,1,2,3},{0,2,1,3},{0,3,1,2}});
+    auto it_gg_gg1 = t.gg_gg1().begin();
+    auto it_gg_gg2 = t.gg_gg2().begin();
+    for(auto i : goldhaber_comb) {
+        const auto& p = photons;
+        *it_gg_gg1 = (*p[i[0]] + *p[i[1]]).M();
+        *it_gg_gg2 = (*p[i[2]] + *p[i[3]]).M();
+        ++it_gg_gg1;
+        ++it_gg_gg2;
+    }
+}
+
+void EtapOmegaG::Sig_t::DoAntiPi0Eta(TParticleList photons)
+{
+    APLCON::Result_t r;
+
+    treefitter_Pi0Pi0.SetLeaves(photons);
+    while(treefitter_Pi0Pi0.NextFit(r)) {
+        if(r.Status != APLCON::Result_Status_t::Success)
+            continue;
+        if(isfinite(t.AntiPi0FitChi2) && r.ChiSquare>t.AntiPi0FitChi2)
+            continue;
+        // found fit with better chi2
+        t.AntiPi0FitChi2 = r.ChiSquare;
+        t.AntiPi0FitProb = r.Probability;
+        t.AntiPi0FitIterations = r.NIterations;
+    }
+
+    treefitter_Pi0Eta.SetLeaves(photons);
+    while(treefitter_Pi0Eta.NextFit(r)) {
+        if(r.Status != APLCON::Result_Status_t::Success)
+            continue;
+        if(isfinite(t.AntiEtaFitChi2) && r.ChiSquare>t.AntiEtaFitChi2)
+            continue;
+        // found fit with better chi2
+        t.AntiEtaFitChi2 = r.ChiSquare;
+        t.AntiEtaFitProb = r.Probability;
+        t.AntiEtaFitIterations = r.NIterations;
+    }
+}
+
 EtapOmegaG::Sig_t::Fit_t::Fit_t(utils::TreeFitter fitter) :
     treefitter(move(fitter)),
-    treefitter_Pi0Pi0("treefit_Pi0Pi0",ParticleTypeTreeDatabase::Get(ParticleTypeTreeDatabase::Channel::TwoPi0_4g)),
-    treefitter_Pi0Eta("treefit_Pi0Eta",ParticleTypeTreeDatabase::Get(ParticleTypeTreeDatabase::Channel::Pi0Eta_4g)),
     fitted_Pi0(treefitter.GetTreeNode(ParticleTypeDatabase::Pi0)),
     fitted_Omega(treefitter.GetTreeNode(ParticleTypeDatabase::Omega))
 {
@@ -299,8 +378,6 @@ EtapOmegaG::Sig_t::Fit_t::Fit_t(utils::TreeFitter fitter) :
     if(!setup)
         throw runtime_error("EtapOmegaG needs a setup");
     treefitter.LoadSigmaData(setup->GetPhysicsFilesDirectory()+"/FitterSigmas.root");
-    treefitter_Pi0Pi0.LoadSigmaData(setup->GetPhysicsFilesDirectory()+"/FitterSigmas.root");
-    treefitter_Pi0Eta.LoadSigmaData(setup->GetPhysicsFilesDirectory()+"/FitterSigmas.root");
 
     // search dependent gammas and remember the tree nodes in the fitter
 
@@ -339,78 +416,14 @@ utils::TreeFitter EtapOmegaG::Sig_t::Fit_t::Make(const ParticleTypeDatabase::Typ
     };
 }
 
-void EtapOmegaG::Sig_t::Fit_t::DoPhotonCombinatorics(
-        TParticleList photons,
-        EtapOmegaG::Sig_t::Fit_t::Tree_t& t)
+
+
+
+void EtapOmegaG::Sig_t::Fit_t::BaseTree_t::Reset()
 {
-
-    //  ggg combinatorics
-    auto it_ggg = t.ggg().begin();
-    for( auto comb = utils::makeCombination(photons,3); !comb.Done(); ++comb ) {
-        *it_ggg = (*comb.at(0) + *comb.at(1) + *comb.at(2)).M();
-        ++it_ggg;
-    }
-
-    // gg/gg "Goldhaber" combinatorics
-    const auto goldhaber_comb = vector<vector<unsigned>>({{0,1,2,3},{0,2,1,3},{0,3,1,2}});
-    auto it_gg_gg1 = t.gg_gg1().begin();
-    auto it_gg_gg2 = t.gg_gg2().begin();
-    for(auto i : goldhaber_comb) {
-        const auto& p = photons;
-        *it_gg_gg1 = (*p[i[0]] + *p[i[1]]).M();
-        *it_gg_gg2 = (*p[i[2]] + *p[i[3]]).M();
-        ++it_gg_gg1;
-        ++it_gg_gg2;
-    }
-}
-
-void EtapOmegaG::Sig_t::Fit_t::DoAntiPi0Eta(TParticleList photons, Tree_t& t)
-{
-    APLCON::Result_t r;
-
-    treefitter_Pi0Pi0.SetLeaves(photons);
-    while(treefitter_Pi0Pi0.NextFit(r)) {
-        if(r.Status != APLCON::Result_Status_t::Success)
-            continue;
-        if(isfinite(t.AntiPi0FitChi2) && r.ChiSquare>t.AntiPi0FitChi2)
-            continue;
-        // found fit with better chi2
-        t.AntiPi0FitChi2 = r.ChiSquare;
-        t.AntiPi0FitProb = r.Probability;
-        t.AntiPi0FitIterations = r.NIterations;
-    }
-
-    treefitter_Pi0Eta.SetLeaves(photons);
-    while(treefitter_Pi0Eta.NextFit(r)) {
-        if(r.Status != APLCON::Result_Status_t::Success)
-            continue;
-        if(isfinite(t.AntiEtaFitChi2) && r.ChiSquare>t.AntiEtaFitChi2)
-            continue;
-        // found fit with better chi2
-        t.AntiEtaFitChi2 = r.ChiSquare;
-        t.AntiEtaFitProb = r.Probability;
-        t.AntiEtaFitIterations = r.NIterations;
-    }
-}
-
-
-void EtapOmegaG::Sig_t::Fit_t::Tree_t::Reset()
-{
-    std::fill(ggg().begin(), ggg().end(), std_ext::NaN);
-    std::fill(gg_gg1().begin(), gg_gg1().end(), std_ext::NaN);
-    std::fill(gg_gg2().begin(), gg_gg2().end(), std_ext::NaN);
-
     TreeFitChi2 = std_ext::NaN;
     TreeFitProb = std_ext::NaN;
     TreeFitIterations = 0;
-
-    AntiPi0FitChi2 = std_ext::NaN;
-    AntiPi0FitProb = std_ext::NaN;
-    AntiPi0FitIterations = 0;
-
-    AntiEtaFitChi2 = std_ext::NaN;
-    AntiEtaFitProb = std_ext::NaN;
-    AntiEtaFitIterations = 0;
 
     ClusterShape_g1_Pi0 = std_ext::NaN;
     ClusterShape_g2_Pi0 = std_ext::NaN;
@@ -431,9 +444,9 @@ EtapOmegaG::Sig_t::Pi0_t::Pi0_t() :
 
 }
 
-void EtapOmegaG::Sig_t::Pi0_t::Tree_t::Reset()
+void EtapOmegaG::Sig_t::Pi0_t::BaseTree_t::Reset()
 {
-    Fit_t::Tree_t::Reset();
+    Fit_t::BaseTree_t::Reset();
     std::fill(IM_Pi0g().begin(), IM_Pi0g().end(), std_ext::NaN);
 }
 
@@ -441,9 +454,6 @@ void EtapOmegaG::Sig_t::Pi0_t::Process(const EtapOmegaG::Particles_t& particles,
                                        TParticleTree_t ptree_sigref)
 {
     assert(particles.Photons.size() == 4);
-
-    DoPhotonCombinatorics(particles.Photons, t);
-    DoAntiPi0Eta(particles.Photons, t);
 
     // sum of photons should give the EtaPrime
     t.IM_Pi0gg = particles.PhotonSum.M();
@@ -548,9 +558,9 @@ EtapOmegaG::Sig_t::OmegaPi0_t::OmegaPi0_t() :
 
 }
 
-void EtapOmegaG::Sig_t::OmegaPi0_t::Tree_t::Reset()
+void EtapOmegaG::Sig_t::OmegaPi0_t::BaseTree_t::Reset()
 {
-    Fit_t::Tree_t::Reset();
+    Fit_t::BaseTree_t::Reset();
     IM_Pi0g_fitted = std_ext::NaN;
     IM_Pi0g_best = std_ext::NaN;
     Bachelor_E = std_ext::NaN;
@@ -561,9 +571,6 @@ void EtapOmegaG::Sig_t::OmegaPi0_t::Process(const EtapOmegaG::Particles_t& parti
 {
 
     assert(particles.Photons.size() == 4);
-
-    DoPhotonCombinatorics(particles.Photons, t);
-    DoAntiPi0Eta(particles.Photons, t);
 
     // sum of photons should give the EtaPrime
     const TLorentzVector& EtaPrime = particles.PhotonSum;
@@ -700,5 +707,9 @@ const std::vector<EtapOmegaG::Background_t> EtapOmegaG::ptreeBackgrounds = {
     {"3Pi0Dalitz", ParticleTypeTreeDatabase::Get(ParticleTypeTreeDatabase::Channel::ThreePi0_4ggEpEm)},
     {"1Eta", ParticleTypeTreeDatabase::Get(ParticleTypeTreeDatabase::Channel::Eta_2g)},
 };
+
+
+
+
 
 AUTO_REGISTER_PHYSICS(EtapOmegaG)
