@@ -24,27 +24,27 @@ add_ant_executable(Ant-rawdump)
 add_ant_executable(Ant-info)
 add_ant_executable(Ant-treeTool)
 
-option(OmegaTools "Build Omega Tools" OFF)
+option(AntProgs_Omega "Build Omega Analysis Tools" OFF)
 
-if(OmegaTools)
+if(AntProgs_Omega)
     add_ant_executable(OmegaEtaG2_plot)
 endif()
 
-option(SimpleTools "Simple Tools" OFF)
+option(AntProgs_SimpleTools "Simple Tools" OFF)
 
-if(SimpleTools)
+if(AntProgs_SimpleTools)
     add_ant_executable(show_cocktail_database)
     add_ant_executable(compare_ant_goat)
 endif()
 
-option(XmasCB "Crystal Ball Christmas ornaments" OFF)
+option(AntProgs_XmasCB "Crystal Ball Christmas ornaments" OFF)
 
-if(XmasCB)
+if(AntProgs_XmasCB)
     add_ant_executable(XmasCB)
 endif()
 
-option(EtapOmegaG "Build EtaPrime Omega Gamma tools" OFF)
+option(AntProgs_EtapOmegaG "Build EtaPrime Omega Gamma tools" OFF)
 
-if(EtapOmegaG)
+if(AntProgs_EtapOmegaG)
     add_ant_executable(EtapOmegaG_plot)
 endif()

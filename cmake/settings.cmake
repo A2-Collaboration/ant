@@ -8,11 +8,11 @@ if(NOT DEFINED LIBRARY_OUTPUT_PATH)
         set(LIBRARY_OUTPUT_PATH "${CMAKE_BINARY_DIR}/lib")
 endif()
 
-option(COVERAGE "Enable coverage build" OFF)
+option(Ant_COVERAGE "Enable coverage build" OFF)
 
 # we check for empty string here, since the variable
 # is indeed defined to an empty string
-if(COVERAGE)
+if(Ant_COVERAGE)
   message(STATUS "Coverage build, enforce Debug build type")
   set(CMAKE_BUILD_TYPE Debug CACHE STRING
     "Choose the type of build, options are: None Debug Release RelWithDebInfo MinSizeRel."
@@ -39,8 +39,8 @@ else()
   message(FATAL_ERROR "Non-gnu compiler not supported at the moment")
 endif()
 
-option(MARCH "Enable auto-detection of CPU specific optimizations" OFF)
-if(MARCH)
+option(Ant_MARCH "Enable auto-detection of CPU specific optimizations (march=native)" OFF)
+if(Ant_MARCH)
     set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -march=native")
 endif()
 
