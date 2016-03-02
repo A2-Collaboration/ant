@@ -33,6 +33,7 @@ endif()
 option(AntProgs_SimpleTools "Simple Tools" OFF)
 
 if(AntProgs_SimpleTools)
+    add_ant_executable(processEtapTree)
     add_ant_executable(show_cocktail_database)
     add_ant_executable(compare_ant_goat)
 endif()
