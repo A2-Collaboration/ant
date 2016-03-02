@@ -46,6 +46,7 @@ protected:
         const double fourConstrainChi2Cut= 40;
         const double coplCut = 15;
         const double EsumCB= 550;
+        const double etaprimeThreshold = 1445.6;
     };
     settings_t phSettings;
 

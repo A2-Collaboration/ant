@@ -211,27 +211,37 @@ void Etap3pi0::ProcessEvent(const TEvent& event, manager_t&)
         vars.taggCh        = unsigned(t.Channel);
         vars.taggTime      = t.Time;
 
+        // cut on Tagger-Energy below eta' threshold
+        if ( vars.taggE < phSettings.etaprimeThreshold )
+            continue;
+        hists.at("steps").at("evcount")->Fill("6) E_{#gamma} < E_{thresh}(#eta')",vars.taggWeight);
+
         TLorentzVector beamPseudoParticle = t.GetPhotonBeam() + TLorentzVector(0,0,0, ParticleTypeDatabase::Proton.Mass());
         vars.MM = beamPseudoParticle - vars.etaprimeCand;
 
         assert( photons.size() == 6);
 
+        // EMB - kinFit - cut
         vars.EMB_chi2 = getEnergyMomentumConservation(t.PhotonEnergy,photons,proton);
+        if ( vars.taggE < phSettings.fourConstrainChi2Cut )
+            continue;
+        hists.at("steps").at("evcount")->Fill("7) EMB-4C-KinFit: #chi^{2} < 40)",vars.taggWeight);
 
+
+        // IDF: ref & sig
         MakeSignal(photons);
         MakeReference(photons);
-
         if (vars.chi2_sig < vars.chi2_ref)
         {
             if ( vars.chi2_sig < phSettings.fourConstrainChi2Cut )
             {
                 vars.type = 0;
-                hists.at("steps").at("evcount")->Fill("6a) signal identified",vars.taggWeight);
+                hists.at("steps").at("evcount")->Fill("8a) signal identified",vars.taggWeight);
             }
             else
             {
                 vars.type = -1;
-                hists.at("steps").at("evcount")->Fill("6c) background identified",vars.taggWeight);
+                hists.at("steps").at("evcount")->Fill("8c) background identified",vars.taggWeight);
 
             }
         }
@@ -240,12 +250,12 @@ void Etap3pi0::ProcessEvent(const TEvent& event, manager_t&)
             if (vars.chi2_ref < phSettings.fourConstrainChi2Cut )
             {
                 vars.type = 1;
-                hists.at("steps").at("evcount")->Fill("6b) reference identified",vars.taggWeight);
+                hists.at("steps").at("evcount")->Fill("8b) reference identified",vars.taggWeight);
             }
             else
             {
                 vars.type = -1;
-                hists.at("steps").at("evcount")->Fill("7c) background identified",vars.taggWeight);
+                hists.at("steps").at("evcount")->Fill("8c) background identified",vars.taggWeight);
             }
         }
         tree->Fill();
