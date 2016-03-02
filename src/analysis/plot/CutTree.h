@@ -174,7 +174,9 @@ private:
 
         for(size_t i=0;i<Stacks.size();i++) {
             TH1* h = histptrs[i];
-            *Stacks[i] << drawoption(hist.Modify(h)) << h;
+            const auto& modoption = hist.Modify(h);
+            *Stacks[i] << drawoption(modoption.DrawOption)
+                       << hstack::zpos(modoption.Z) << h;
         }
     }
 

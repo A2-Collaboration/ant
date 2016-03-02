@@ -81,16 +81,25 @@ string hstack::hist_t::GetPath(const TH1* ptr)
 hstack& hstack::operator<<(TH1* hist)
 {
 
-    hists.emplace_back(hist, current_option);
+    hists.emplace_back(hist, current_option, current_z);
 
     xlabel = hist->GetXaxis()->GetTitle();
     ylabel = hist->GetYaxis()->GetTitle();
+
+    current_z = 0; // reset z after each add
+
     return *this;
 }
 
 hstack& hstack::operator<<(const drawoption& c)
 {
     current_option = c.Option();
+    return *this;
+}
+
+hstack& hstack::operator<<(const hstack::zpos& z)
+{
+    current_z = z.Z();
     return *this;
 }
 
@@ -203,34 +212,62 @@ void hstack::Draw(const char* option)
                 return;
 
 
-            // Why the hell does the following not work from scratch?
-            // std::reverse(fHists->begin(), fHists->end());
-            // can't ROOT just stick to STL...grrr
 
-            auto reverse_TList =  [] (TList* li) {
-                // this is super ugly, one should actually just re-link the list
-                // we also need to pay attention to the options attached to each list node
-                list<pair<TH1*, string>> tmp_hists;
-                auto lastlink = li->LastLink();
-                while(lastlink) {
-                    TH1* hist = dynamic_cast<TH1*>(lastlink->GetObject());
-                    const string option = lastlink->GetOption();
-                    tmp_hists.emplace_back(hist, option);
-                    lastlink = lastlink->Prev();
+            // this helper extracts the z number from the options,
+            // and temporarily removes them from the the option before
+            // painting the histogram
+            struct tmphist_t {
+                tmphist_t(TObject* obj, const char* option) :
+                    Obj(obj),
+                    OrigOption(option)
+                {
+                    stringstream ss_option;
+                    ss_option << OrigOption;
+                    // try to extract Z (see hstack->Add as well)
+                    ss_option >> Z;
+                    // use rest as is
+                    ss_option >> Option;
                 }
-                li->Clear("nodelete");
-                for(const auto& o : tmp_hists) {
-                    li->Add(o.first, o.second.c_str());
+                TObject* Obj;
+                string OrigOption;
+                string Option;
+                int Z = 0;
+                bool operator< (const tmphist_t& other) const {
+                    return Z < other.Z;
                 }
             };
 
-            reverse_TList(fHists);
+            list<tmphist_t> tmp_hists;
+            // we need to iterate over links, since we need the option string
+            // attached to each item
+            auto firstlink = fHists->FirstLink();
+            while(firstlink) {
+                tmp_hists.emplace_back(firstlink->GetObject(), firstlink->GetOption());
+                firstlink = firstlink->Next();
+            }
+            // save for later
+            auto tmp_hists_backup = tmp_hists;
+
+            // reverse first
+            std::reverse(tmp_hists.begin(), tmp_hists.end());
+
+            // then sort according to Z (the sort is stable)
+            tmp_hists.sort();
+
+            fHists->Clear("nodelete");
+            for(const auto& o : tmp_hists) {
+                fHists->Add(o.Obj, o.Option.c_str());
+            }
 
             // let's hope that this does not throw an exception
             // before we unreverse the fHists
             THStack::Paint(chopt);
 
-            reverse_TList(fHists);
+            // restore from backup
+            fHists->Clear("nodelete");
+            for(const auto& o : tmp_hists_backup) {
+                fHists->Add(o.Obj, o.OrigOption.c_str());
+            }
 
         }
 
@@ -242,7 +279,9 @@ void hstack::Draw(const char* option)
     for(const auto& hist : hists) {
         if(options.IgnoreEmptyHist && hist.Ptr->GetEntries()==0)
             continue;
-        stack->Add(hist.Ptr, hist.Option.c_str());
+        stringstream ss_option;
+        ss_option << hist.Z << hist.Option;
+        stack->Add(hist.Ptr, ss_option.str().c_str());
         nAdded++;
     }
 
@@ -280,6 +319,7 @@ void hstack::Draw(const char* option)
                                   );
             }
             else {
+                // use defaults
                 gPad->BuildLegend();
             }
         }

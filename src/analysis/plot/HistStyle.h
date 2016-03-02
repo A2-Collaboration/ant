@@ -20,16 +20,25 @@ struct color_t {
 
 
 // returns string to be used as draw option
-struct Mod_t : std::function<std::string(TH1*)> {
+struct ModOption_t {
+    std::string DrawOption;
+    int Z;
+    ModOption_t(const std::string& drawoption = "", int z = 0) :
+        DrawOption(drawoption), Z(z)
+    {}
+};
+
+struct Mod_t : std::function<ModOption_t(TH1*)> {
     // use constructors of base class
-    using std::function<std::string(TH1*)>::function;
+    using std::function<ModOption_t(TH1*)>::function;
 
     // default ctor modifies nothing
-    Mod_t() : std::function<std::string(TH1*)>([] (TH1*) { return ""; }) {}
+    Mod_t() : std::function<ModOption_t(TH1*)>([] (TH1*) { return ModOption_t{}; }) {}
 
     // helpers to create modifiers
-    static Mod_t MakeLine(Color_t color, short linewidth = 1.0);
-    static Mod_t MakeDataPoints(Color_t color, short linewidth = 1.0);
+    static Mod_t MakeLine(Color_t color, short linewidth = 1);
+    static Mod_t MakeDataPoints(Color_t color, short linewidth = 1);
+    static Mod_t MakeFill(Color_t color, int zpos = -1);
 
 };
 

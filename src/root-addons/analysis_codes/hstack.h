@@ -84,6 +84,16 @@ struct hstack : TNamed
     hstack& operator<< (TH1* hist);
     hstack& operator<< (const drawoption& c);
 
+    struct zpos {
+        zpos(int z=0): z_(z) {}
+        int Z() const { return z_; }
+    protected:
+        int z_;
+    };
+
+    hstack& operator<< (const zpos& z);
+
+
     virtual std::ostream& Print( std::ostream& s) const override;
 
     template<typename Archive>
@@ -104,10 +114,11 @@ protected:
 
     struct hist_t {
 
-        hist_t(TH1* ptr, const std::string& option) :
+        hist_t(TH1* ptr, const std::string& option, int z) :
             Path(GetPath(ptr)),
             Ptr(ptr),
-            Option(option)
+            Option(option),
+            Z(z)
         {}
 
         // clear the Ptr on copy
@@ -115,6 +126,7 @@ protected:
         hist_t(const hist_t& other) {
             Path = other.Path;
             Option = other.Option;
+            Z = other.Z;
             Ptr = nullptr;
         }
         hist_t& operator= (const hist_t&) = delete;
@@ -126,18 +138,19 @@ protected:
         std::string Path;
         TH1* Ptr = nullptr;
         std::string Option;
+        int Z;
 
         hist_t() {}
 
 
         template<typename Archive>
         void load(Archive archive) {
-            archive(Path, Option);
+            archive(Path, Option, Z);
             Ptr = GetPtr(Path);
         }
         template<typename Archive>
         void save(Archive archive) const {
-            archive(Path, Option);
+            archive(Path, Option, Z);
         }
 
         static TH1* GetPtr(const std::string& path);
@@ -148,6 +161,7 @@ protected:
     hists_t hists;
 
     std::string current_option;
+    int current_z = 0;
 
     std::string xlabel;
     std::string ylabel;

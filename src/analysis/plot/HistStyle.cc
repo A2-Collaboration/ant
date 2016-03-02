@@ -40,7 +40,7 @@ Mod_t Mod_t::MakeLine(Color_t color, short linewidth) {
         h->SetLineWidth(linewidth);
         h->SetMarkerSize(1);
         h->SetMarkerColor(color);
-        return "";
+        return ModOption_t{};
     };
 }
 
@@ -50,7 +50,19 @@ Mod_t Mod_t::MakeDataPoints(Color_t color, short linewidth) {
         h->SetLineWidth(linewidth);
         h->SetMarkerColor(color);
         h->SetMarkerStyle(kDot);
-        return "E"; // draw error bars
+        return ModOption_t{"E"}; // draw error bars
     };
 
+}
+
+Mod_t Mod_t::MakeFill(Color_t color, int zpos)
+{
+    return [color, zpos] (TH1* h) {
+        h->SetLineWidth(1);
+        h->SetLineColor(color);
+        h->SetMarkerColor(color);
+        h->SetFillColor(color);
+        h->SetFillStyle(1001); // using kFSolid is wrong...
+        return ModOption_t{"", zpos};
+    };
 }

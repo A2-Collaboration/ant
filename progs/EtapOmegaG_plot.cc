@@ -49,7 +49,7 @@ struct MCTrue_Splitter : cuttree::StackedHists_t<Hist_t> {
         // mctrue is never >=3 (and <9) in tree, use this to sum up all MC and all bkg MC
         // see also Fill()
         this->GetHist(3, "Sum_MC", Mod_t::MakeLine(kBlack, 2.0));
-        this->GetHist(4, "Bkg_MC", Mod_t::MakeLine(kGray, 2.0));
+        this->GetHist(4, "Bkg_MC", Mod_t::MakeFill(kGray+2));
     }
 
     void Fill(const Fill_t& f) {
