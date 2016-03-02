@@ -19,13 +19,16 @@ struct color_t {
 };
 
 
-// returns string to be used as draw option
 struct ModOption_t {
     std::string DrawOption;
     int Z;
     ModOption_t(const std::string& drawoption = "", int z = 0) :
         DrawOption(drawoption), Z(z)
     {}
+    template<typename Archive>
+    void serialize(Archive archive) {
+        archive(DrawOption, Z);
+    }
 };
 
 struct Mod_t : std::function<ModOption_t(TH1*)> {

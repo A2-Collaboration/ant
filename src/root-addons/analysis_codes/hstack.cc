@@ -81,25 +81,25 @@ string hstack::hist_t::GetPath(const TH1* ptr)
 hstack& hstack::operator<<(TH1* hist)
 {
 
-    hists.emplace_back(hist, current_option, current_z);
+    hists.emplace_back(hist, current_option);
 
     xlabel = hist->GetXaxis()->GetTitle();
     ylabel = hist->GetYaxis()->GetTitle();
 
-    current_z = 0; // reset z after each add
+    current_option.Z = 0; // reset z after each add
 
     return *this;
 }
 
 hstack& hstack::operator<<(const drawoption& c)
 {
-    current_option = c.Option();
+    current_option.DrawOption = c.Option();
     return *this;
 }
 
-hstack& hstack::operator<<(const hstack::zpos& z)
+hstack& hstack::operator<<(const ModOption_t& option)
 {
-    current_z = z.Z();
+    current_option = option;
     return *this;
 }
 
@@ -257,7 +257,7 @@ void hstack::Draw(const char* option)
         if(options.IgnoreEmptyHist && hist.Ptr->GetEntries()==0)
             continue;
         stringstream ss_option;
-        ss_option << hist.Z << hist.Option;
+        ss_option << hist.Option.Z << hist.Option.DrawOption;
         stack->Add(hist.Ptr, ss_option.str().c_str());
         nAdded++;
     }
@@ -370,7 +370,7 @@ void hstack::UpdateMCScaling()
             /// \todo find better way to detect which histograms
             /// should NOT be scaled. We assume that data is always drawn
             /// with error bars.
-            if(std_ext::contains(hist.Option, "E"))
+            if(std_ext::contains(hist.Option.DrawOption, "E"))
                 continue;
             // have a look if this hist was scaled already
             double scale = Global_MC_Scaling;

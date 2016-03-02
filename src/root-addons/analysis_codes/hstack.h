@@ -8,6 +8,7 @@
 
 #ifndef __CINT__
 #include "analysis/plot/root_draw.h"
+#include "analysis/plot/HistStyle.h"
 #include "base/printable.h"
 #include "base/interval.h"
 #else
@@ -47,6 +48,8 @@ struct hstack : TNamed
 // for CINT, this class looks empty (except TNamed inheritance and some methods)
 #ifndef __CINT__
 
+    using ModOption_t = analysis::plot::histstyle::ModOption_t;
+
     struct options_t {
         bool UseIntelliLegend;
         bool IgnoreEmptyHist;
@@ -83,15 +86,7 @@ struct hstack : TNamed
 
     hstack& operator<< (TH1* hist);
     hstack& operator<< (const drawoption& c);
-
-    struct zpos {
-        zpos(int z=0): z_(z) {}
-        int Z() const { return z_; }
-    protected:
-        int z_;
-    };
-
-    hstack& operator<< (const zpos& z);
+    hstack& operator<< (const ModOption_t& option);
 
 
     virtual std::ostream& Print( std::ostream& s) const override;
@@ -112,13 +107,13 @@ struct hstack : TNamed
 
 protected:
 
+
     struct hist_t {
 
-        hist_t(TH1* ptr, const std::string& option, int z) :
+        hist_t(TH1* ptr, const ModOption_t& option) :
             Path(GetPath(ptr)),
             Ptr(ptr),
-            Option(option),
-            Z(z)
+            Option(option)
         {}
 
         // clear the Ptr on copy
@@ -126,7 +121,6 @@ protected:
         hist_t(const hist_t& other) {
             Path = other.Path;
             Option = other.Option;
-            Z = other.Z;
             Ptr = nullptr;
         }
         hist_t& operator= (const hist_t&) = delete;
@@ -137,20 +131,19 @@ protected:
 
         std::string Path;
         TH1* Ptr = nullptr;
-        std::string Option;
-        int Z;
+        ModOption_t Option;
 
         hist_t() {}
 
 
         template<typename Archive>
         void load(Archive archive) {
-            archive(Path, Option, Z);
+            archive(Path, Option);
             Ptr = GetPtr(Path);
         }
         template<typename Archive>
         void save(Archive archive) const {
-            archive(Path, Option, Z);
+            archive(Path, Option);
         }
 
         static TH1* GetPtr(const std::string& path);
@@ -160,8 +153,7 @@ protected:
     using hists_t = std::vector<hist_t>;
     hists_t hists;
 
-    std::string current_option;
-    int current_z = 0;
+    ModOption_t current_option;
 
     std::string xlabel;
     std::string ylabel;
