@@ -33,7 +33,7 @@ protected:
     std::unique_ptr<TFile> openFile(const std::string& filename, const std::string mode);
     WrapTFile(); // cannot be directly constructed, use WrapTFileInput or WrapTFileOutput
 
-    static bool isROOTFile(TFile& f);
+    static bool hasROOTmagic(const std::string& filename);
 public:
 
     /**

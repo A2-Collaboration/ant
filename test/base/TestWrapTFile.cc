@@ -5,12 +5,7 @@
 #include "base/tmpfile_t.h"
 #include "base/std_ext/memory.h"
 
-
-#include "unpacker/Unpacker.h"
-#include "expconfig/ExpConfig.h"
-
 #include "TH1D.h"
-#include "TTree.h"
 
 using namespace std;
 using namespace ant;
@@ -27,8 +22,9 @@ TEST_CASE("WrapTFileOutput", "[base]") {
 }
 
 void dotest_r() {
-    /// \todo write some WrapTFileInput tests...
-    /// create ROOT file manually, then inspect it with WrapTFileInput
+    WrapTFileInput input;
+    REQUIRE_THROWS_AS(input.OpenFile(string(TEST_BLOBS_DIRECTORY)+"/Acqu_headeronly-small.dat.xz"), WrapTFile::ENotARootFile);
+    REQUIRE_THROWS_AS(input.OpenFile("/dev/nulll"), WrapTFile::ENotReadable);
 }
 
 

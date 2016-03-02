@@ -34,16 +34,6 @@ std::unique_ptr<TFile> WrapTFile::openFile(const string& filename, const string 
     auto file = std_ext::make_unique<TFile>(filename.c_str(), mode.c_str());
 
     if(!file->IsOpen() || file->IsZombie()) {
-
-        string errmsg;
-        if(!std_ext::system::testopen(filename, errmsg)) {
-            throw ENotReadable(filename+" cannot be opened: "+errmsg);
-        }
-
-        if (!isROOTFile(*file)) {
-            throw ENotARootFile(filename+" is not a ROOT file");
-        }
-
         throw Exception("Could not properly open TFile at "+filename);
     }
 
@@ -58,12 +48,12 @@ WrapTFile::WrapTFile()
 {
 }
 
-bool WrapTFile::isROOTFile(TFile &f)
+bool WrapTFile::hasROOTmagic(const std::string& filename)
 {
-    char buffer[4];
-    f.ReadBuffer(buffer, 0, 4);
-
-    return strncmp(buffer, "root", 4) == 0;
+    ifstream is(filename.c_str());
+    string buffer(4,'\0');
+    is.read(addressof(buffer[0]), 4);
+    return buffer == "root";
 }
 
 void traverse_dir(TDirectory* dir, std::function<void (TKey*)> func) {
@@ -190,6 +180,13 @@ WrapTFileInput::~WrapTFileInput()
 
 void WrapTFileInput::OpenFile(const string& filename)
 {
+    // test some basic things before giving the file to ROOT
+    string errmsg;
+    if(!std_ext::system::testopen(filename, errmsg))
+        throw ENotReadable(filename+" cannot be opened: "+errmsg);
+    if(!hasROOTmagic(filename))
+        throw ENotARootFile(filename+" is not a ROOT file");
+
     SavedDirectory_t d;
     auto file = openFile(filename, "READ");
     VLOG(5) << "Opened file " << filename << " for reading";
