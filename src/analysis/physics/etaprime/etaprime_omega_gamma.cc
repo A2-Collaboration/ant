@@ -26,10 +26,17 @@ const ParticleTypeTree EtapOmegaG::ptreeSignal = ParticleTypeTreeDatabase::Get(P
 const ParticleTypeTree EtapOmegaG::ptreeReference = ParticleTypeTreeDatabase::Get(ParticleTypeTreeDatabase::Channel::EtaPrime_2g);
 
 
+APLCON::Fit_Settings_t EtapOmegaG::MakeFitSettings(unsigned max_iterations)
+{
+    auto settings = APLCON::Fit_Settings_t::Default;
+    settings.MaxIterations = max_iterations;
+    return settings;
+}
+
 EtapOmegaG::EtapOmegaG(const string& name, OptionsPtr opts) :
     Physics(name, opts),
-    kinfitter_2("kinfitter_2", 2),
-    kinfitter_4("kinfitter_4", 4)
+    kinfitter_2("kinfitter_2", 2, MakeFitSettings(25)),
+    kinfitter_4("kinfitter_4", 4, MakeFitSettings(25))
 {
     const interval<double> prompt_range{-2.5,1.5};
     promptrandom.AddPromptRange(prompt_range); // slight offset due to CBAvgTime reference
@@ -263,8 +270,14 @@ void EtapOmegaG::ProcessEvent(const TEvent& event, manager_t&)
 }
 
 EtapOmegaG::Sig_t::Sig_t() :
-    treefitter_Pi0Pi0("treefit_Pi0Pi0",ParticleTypeTreeDatabase::Get(ParticleTypeTreeDatabase::Channel::TwoPi0_4g)),
-    treefitter_Pi0Eta("treefit_Pi0Eta",ParticleTypeTreeDatabase::Get(ParticleTypeTreeDatabase::Channel::Pi0Eta_4g))
+    treefitter_Pi0Pi0("treefit_Pi0Pi0",
+                      ParticleTypeTreeDatabase::Get(ParticleTypeTreeDatabase::Channel::TwoPi0_4g), {},
+                      MakeFitSettings(20)
+                      ),
+    treefitter_Pi0Eta("treefit_Pi0Eta",
+                      ParticleTypeTreeDatabase::Get(ParticleTypeTreeDatabase::Channel::Pi0Eta_4g), {},
+                      MakeFitSettings(15)
+                      )
 {
     const auto setup = ant::ExpConfig::Setup::GetLastFound();
     if(!setup)
@@ -412,7 +425,9 @@ utils::TreeFitter EtapOmegaG::Sig_t::Fit_t::Make(const ParticleTypeDatabase::Typ
 
     return {
         "sig_treefitter_"+subtree.Name(),
-        subtree==Omega->Get() ? Omega : Pi0
+        subtree==Omega->Get() ? Omega : Pi0,
+        {},
+        MakeFitSettings(15)
     };
 }
 
