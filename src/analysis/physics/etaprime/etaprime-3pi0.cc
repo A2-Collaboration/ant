@@ -223,7 +223,7 @@ void Etap3pi0::ProcessEvent(const TEvent& event, manager_t&)
 
         // EMB - kinFit - cut
         vars.EMB_chi2 = getEnergyMomentumConservation(t.PhotonEnergy,photons,proton);
-        if ( vars.taggE < phSettings.fourConstrainChi2Cut )
+        if ( vars.EMB_chi2 > phSettings.fourConstrainChi2Cut )
             continue;
         hists.at("steps").at("evcount")->Fill("7) EMB-4C-KinFit: #chi^{2} < 40)",vars.taggWeight);
 
