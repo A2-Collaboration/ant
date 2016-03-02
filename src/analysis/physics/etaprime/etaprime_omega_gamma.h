@@ -3,6 +3,7 @@
 #include "analysis/physics/Physics.h"
 #include "analysis/utils/particle_tools.h"
 #include "analysis/utils/Fitter.h"
+#include "analysis/utils/ClusterTools.h"
 #include "analysis/plot/PromptRandomHist.h"
 
 #include "base/ParticleTypeTree.h"
@@ -109,6 +110,8 @@ struct EtapOmegaG : Physics {
             };
 
             Fit_t(utils::TreeFitter fitter);
+
+            utils::ClusterTools clustertools;
 
             utils::TreeFitter treefitter;
             static utils::TreeFitter Make(const ParticleTypeDatabase::Type& subtree);

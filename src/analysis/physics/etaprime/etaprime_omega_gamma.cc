@@ -476,8 +476,8 @@ void EtapOmegaG::Sig_t::Pi0_t::Process(const EtapOmegaG::Particles_t& particles,
             // have a look at the assigned gammas to Pi0/Omega
             g1_Pi0_best = fitted_g1_Pi0->Get().Leave->Particle;
             g2_Pi0_best = fitted_g2_Pi0->Get().Leave->Particle;
-            t.ClusterShape_g1_Pi0 = g1_Pi0_best->Candidate->ClusterSize;
-            t.ClusterShape_g2_Pi0 = g2_Pi0_best->Candidate->ClusterSize;
+            t.ClusterShape_g1_Pi0 = clustertools.LateralMoment(*g1_Pi0_best->Candidate->FindCaloCluster());
+            t.ClusterShape_g2_Pi0 = clustertools.LateralMoment(*g2_Pi0_best->Candidate->FindCaloCluster());
 
             const TLorentzVector& Pi0_best = *g1_Pi0_best + *g2_Pi0_best;
             t.IM_Pi0_best = Pi0_best.M();
@@ -490,8 +490,8 @@ void EtapOmegaG::Sig_t::Pi0_t::Process(const EtapOmegaG::Particles_t& particles,
             t.IM_gg = (*g1 + *g2).M();
             t.IM_Pi0g().front() = (Pi0_best + *g1).M();
             t.IM_Pi0g().back()  = (Pi0_best + *g2).M();
-            t.ClusterShape_g_EtaPrime = g1->Candidate->ClusterSize;
-            t.ClusterShape_g_Omega    = g2->Candidate->ClusterSize;
+            t.ClusterShape_g_EtaPrime = clustertools.LateralMoment(*g1->Candidate->FindCaloCluster());
+            t.ClusterShape_g_Omega    = clustertools.LateralMoment(*g2->Candidate->FindCaloCluster());
             if(t.IM_Pi0g().front() > t.IM_Pi0g().back()) {
                 // first IM is higher, then swap also cluster shapes
                 // we assume that the photon with the lower IM corresponds to
@@ -598,8 +598,8 @@ void EtapOmegaG::Sig_t::OmegaPi0_t::Process(const EtapOmegaG::Particles_t& parti
             // have a look at the assigned gammas to Pi0/Omega
             const auto& g1_Pi0_best = fitted_g1_Pi0->Get().Leave->Particle;
             const auto& g2_Pi0_best = fitted_g2_Pi0->Get().Leave->Particle;
-            t.ClusterShape_g1_Pi0 = g1_Pi0_best->Candidate->ClusterSize;
-            t.ClusterShape_g2_Pi0 = g2_Pi0_best->Candidate->ClusterSize;
+            t.ClusterShape_g1_Pi0 = clustertools.LateralMoment(*g1_Pi0_best->Candidate->FindCaloCluster());
+            t.ClusterShape_g2_Pi0 = clustertools.LateralMoment(*g2_Pi0_best->Candidate->FindCaloCluster());
 
             const TLorentzVector& Pi0_best = *g1_Pi0_best + *g2_Pi0_best;
             t.IM_Pi0_best = Pi0_best.M();
@@ -613,8 +613,8 @@ void EtapOmegaG::Sig_t::OmegaPi0_t::Process(const EtapOmegaG::Particles_t& parti
             g_EtaPrime_best = *comb.begin_not();
             t.IM_gg = (*g_EtaPrime_best + *g_Omega_best).M();
 
-            t.ClusterShape_g_Omega = g_Omega_best->Candidate->ClusterSize;
-            t.ClusterShape_g_EtaPrime = g_EtaPrime_best->Candidate->ClusterSize;
+            t.ClusterShape_g_Omega = clustertools.LateralMoment(*g_Omega_best->Candidate->FindCaloCluster());
+            t.ClusterShape_g_EtaPrime = clustertools.LateralMoment(*g_EtaPrime_best->Candidate->FindCaloCluster());
         }
     }
 
