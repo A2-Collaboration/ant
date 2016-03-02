@@ -1,12 +1,13 @@
 #pragma once
 
-#include "base/std_ext/math.h"
+#include "Rtypes.h" // for Color_t
 
-#include "TH1.h"
-#include "TColor.h"
-
-#include <vector>
+#include <string>
 #include <functional>
+
+
+
+class TH1;
 
 namespace ant {
 namespace analysis {
@@ -14,21 +15,7 @@ namespace plot {
 namespace histstyle {
 
 struct color_t {
-    double R = std_ext::NaN;
-    double G = std_ext::NaN;
-    double B = std_ext::NaN;
-
-    color_t(double r, double g, double b);
-    color_t(const Color_t color);
-
-    Color_t ToColor_t() const;
-
-    static color_t Get(unsigned i);
-
-protected:
-    // count instances
-    static unsigned n;
-    Color_t root_color;
+    static Color_t Get(unsigned i);
 };
 
 
@@ -37,28 +24,12 @@ struct Mod_t : std::function<std::string(TH1*)> {
     // use constructors of base class
     using std::function<std::string(TH1*)>::function;
 
+    // default ctor modifies nothing
     Mod_t() : std::function<std::string(TH1*)>([] (TH1*) { return ""; }) {}
 
-    static Mod_t MakeLine(const color_t& color, short linewidth = 1.0) {
-        return [&color, linewidth] (TH1* h) {
-            h->SetLineColor(color.ToColor_t());
-            h->SetLineWidth(linewidth);
-            h->SetMarkerSize(1);
-            h->SetMarkerColor(color.ToColor_t());
-            return "";
-        };
-    }
-
-    static Mod_t MakeDataPoints(const color_t& color, short linewidth = 1.0) {
-        return [color, linewidth] (TH1* h) {
-            h->SetLineColor(color.ToColor_t());
-            h->SetLineWidth(linewidth);
-            h->SetMarkerColor(color.ToColor_t());
-            h->SetMarkerStyle(kDot);
-            return "E"; // draw error bars
-        };
-
-    }
+    // helpers to create modifiers
+    static Mod_t MakeLine(Color_t color, short linewidth = 1.0);
+    static Mod_t MakeDataPoints(Color_t color, short linewidth = 1.0);
 
 };
 
