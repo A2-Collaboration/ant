@@ -376,9 +376,9 @@ void Etap3pi0::branches::FillKinFit(double beamE, const ant::TParticleList& phot
 
     kinfitted.pi01 = *photons.at(0) + *photons.at(1);
     kinfitted.pi02 = *photons.at(2) + *photons.at(3);
-    kinfitted.pi02 = *photons.at(4) + *photons.at(5);
+    kinfitted.pi03 = *photons.at(4) + *photons.at(5);
 
-    kinfitted.etaprimeCand =  kinfitted.pi01 + kinfitted.pi02 + kinfitted.pi02;
+    kinfitted.etaprimeCand =  kinfitted.pi01 + kinfitted.pi02 + kinfitted.pi03;
 
     kinfitted.p = *proton;
 }
