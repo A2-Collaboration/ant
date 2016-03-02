@@ -412,6 +412,11 @@ void EtapOmegaG::Sig_t::Fit_t::Tree_t::Reset()
     AntiEtaFitProb = std_ext::NaN;
     AntiEtaFitIterations = 0;
 
+    ClusterShape_g1_Pi0 = std_ext::NaN;
+    ClusterShape_g2_Pi0 = std_ext::NaN;
+    ClusterShape_g_Omega = std_ext::NaN;
+    ClusterShape_g_EtaPrime = std_ext::NaN;
+
     IM_Pi0_best = std_ext::NaN;
     IM_Pi0_fitted = std_ext::NaN;
     IM_Pi0gg = std_ext::NaN;
@@ -471,27 +476,30 @@ void EtapOmegaG::Sig_t::Pi0_t::Process(const EtapOmegaG::Particles_t& particles,
             // have a look at the assigned gammas to Pi0/Omega
             g1_Pi0_best = fitted_g1_Pi0->Get().Leave->Particle;
             g2_Pi0_best = fitted_g2_Pi0->Get().Leave->Particle;
+            t.ClusterShape_g1_Pi0 = g1_Pi0_best->Candidate->ClusterSize;
+            t.ClusterShape_g2_Pi0 = g2_Pi0_best->Candidate->ClusterSize;
 
             const TLorentzVector& Pi0_best = *g1_Pi0_best + *g2_Pi0_best;
             t.IM_Pi0_best = Pi0_best.M();
 
             // there are two photon combinations possible
             // for the omega
-            // for each of them, we find the fitted photon
-            // and calculate the IM with the fitted Pi0
-            auto it_IM_Pi0g = t.IM_Pi0g().begin();
-            TLorentzVector sum_2g_fitted(0,0,0,0);
-            for(auto it_not = comb.begin_not(); it_not != comb.end_not(); ++it_not)
-            {
-                const auto& photon = *it_not;
-                *it_IM_Pi0g = (Pi0_best + *photon).M();
-                ++it_IM_Pi0g;
-                sum_2g_fitted += *photon;
+            assert(t.IM_Pi0g().size() == 2);
+            const TParticlePtr& g1 = *comb.begin_not();
+            const TParticlePtr& g2 = *std::next(comb.begin_not());
+            t.IM_gg = (*g1 + *g2).M();
+            t.IM_Pi0g().front() = (Pi0_best + *g1).M();
+            t.IM_Pi0g().back()  = (Pi0_best + *g2).M();
+            t.ClusterShape_g_EtaPrime = g1->Candidate->ClusterSize;
+            t.ClusterShape_g_Omega    = g2->Candidate->ClusterSize;
+            if(t.IM_Pi0g().front() > t.IM_Pi0g().back()) {
+                // first IM is higher, then swap also cluster shapes
+                // we assume that the photon with the lower IM corresponds to
+                // the EtaPrime bachelor photon
+                std::swap(t.IM_Pi0g().front(), t.IM_Pi0g().back());
+                std::swap(t.ClusterShape_g_EtaPrime(), t.ClusterShape_g_Omega());
             }
-            t.IM_gg = sum_2g_fitted.M();
-            std::sort(t.IM_Pi0g().begin(), t.IM_Pi0g().end());
         }
-
     }
 
     // there was at least one successful fit
@@ -588,7 +596,12 @@ void EtapOmegaG::Sig_t::OmegaPi0_t::Process(const EtapOmegaG::Particles_t& parti
             t.IM_Pi0_fitted = fitted_Pi0->Get().LVSum.M();
 
             // have a look at the assigned gammas to Pi0/Omega
-            const TLorentzVector& Pi0_best = *fitted_g1_Pi0->Get().Leave->Particle + *fitted_g2_Pi0->Get().Leave->Particle;
+            const auto& g1_Pi0_best = fitted_g1_Pi0->Get().Leave->Particle;
+            const auto& g2_Pi0_best = fitted_g2_Pi0->Get().Leave->Particle;
+            t.ClusterShape_g1_Pi0 = g1_Pi0_best->Candidate->ClusterSize;
+            t.ClusterShape_g2_Pi0 = g2_Pi0_best->Candidate->ClusterSize;
+
+            const TLorentzVector& Pi0_best = *g1_Pi0_best + *g2_Pi0_best;
             t.IM_Pi0_best = Pi0_best.M();
 
             g_Omega_best = fitted_g_Omega->Get().Leave->Particle;
@@ -599,6 +612,9 @@ void EtapOmegaG::Sig_t::OmegaPi0_t::Process(const EtapOmegaG::Particles_t& parti
             // the element NOT in the combination is the Bachelor photon
             g_EtaPrime_best = *comb.begin_not();
             t.IM_gg = (*g_EtaPrime_best + *g_Omega_best).M();
+
+            t.ClusterShape_g_Omega = g_Omega_best->Candidate->ClusterSize;
+            t.ClusterShape_g_EtaPrime = g_EtaPrime_best->Candidate->ClusterSize;
         }
     }
 
