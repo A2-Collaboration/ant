@@ -22,12 +22,13 @@ struct color_t {
 struct ModOption_t {
     std::string DrawOption;
     int Z;
-    ModOption_t(const std::string& drawoption = "", int z = 0) :
-        DrawOption(drawoption), Z(z)
+    Color_t BkgColor;
+    ModOption_t(const std::string& drawoption = "", int z = 0, Color_t bkgColor = -1) :
+        DrawOption(drawoption), Z(z), BkgColor(bkgColor)
     {}
     template<typename Archive>
     void serialize(Archive archive) {
-        archive(DrawOption, Z);
+        archive(DrawOption, Z, BkgColor);
     }
 };
 
@@ -39,7 +40,7 @@ struct Mod_t : std::function<ModOption_t(TH1*)> {
     Mod_t() : std::function<ModOption_t(TH1*)>([] (TH1*) { return ModOption_t{}; }) {}
 
     // helpers to create modifiers
-    static Mod_t MakeLine(Color_t color, short linewidth = 1);
+    static Mod_t MakeLine(Color_t color, short linewidth = 1, Color_t bkgColor = -1);
     static Mod_t MakeDataPoints(Color_t color, short linewidth = 1);
     static Mod_t MakeFill(Color_t color, int zpos = -1);
 

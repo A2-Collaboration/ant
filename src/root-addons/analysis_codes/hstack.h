@@ -162,7 +162,7 @@ protected:
     options_t options;
 
     void checkHists();
-
+    void buildIntelliLegend() const;
 
 #endif // __CINT__
 

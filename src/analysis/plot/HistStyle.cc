@@ -34,13 +34,13 @@ Color_t color_t::Get(unsigned i) {
     return colors[i % colors.size()];
 }
 
-Mod_t Mod_t::MakeLine(Color_t color, short linewidth) {
-    return [color, linewidth] (TH1* h) {
+Mod_t Mod_t::MakeLine(Color_t color, short linewidth, Color_t bkgColor) {
+    return [color, linewidth, bkgColor] (TH1* h) {
         h->SetLineColor(color);
         h->SetLineWidth(linewidth);
         h->SetMarkerSize(1);
         h->SetMarkerColor(color);
-        return ModOption_t{};
+        return ModOption_t{"", 0, bkgColor};
     };
 }
 

@@ -13,11 +13,13 @@
 #include "base/cereal/archives/binary.hpp"
 #include "tree/stream_TBuffer.h"
 
-#include "TPad.h"
-#include "THStack.h"
 #include "TBrowser.h"
+#include "TPad.h"
+#include "TLegend.h"
+#include "TLegendEntry.h"
+#include "TH1.h"
+#include "THStack.h"
 #include "TDirectory.h"
-#include "TVirtualHistPainter.h"
 
 #include <list>
 
@@ -31,8 +33,8 @@ map<TH1*, double> hstack::Scaled_Hists = {};
 
 interval<double> hstack::GlobalYAxisRange = {std_ext::NaN, std_ext::NaN};
 interval<interval<double>> hstack::GlobalLegendPosition = {
-    {std_ext::NaN, std_ext::NaN},
-    {std_ext::NaN, std_ext::NaN}
+    {0.7,  0.63},
+    {0.88, 0.88}
 };
 
 
@@ -60,17 +62,17 @@ hstack::~hstack()
 
 TH1* hstack::hist_t::GetPtr(const string& path)
 {
-   auto ptr = dynamic_cast<TH1*>(gDirectory->Get(path.c_str()));
-   if(ptr == nullptr)
-       LOG(WARNING) << "Could not Get() TH1* for path " << path;
-   return ptr;
+    auto ptr = dynamic_cast<TH1*>(gDirectory->Get(path.c_str()));
+    if(ptr == nullptr)
+        LOG(WARNING) << "Could not Get() TH1* for path " << path;
+    return ptr;
 }
 
 string hstack::hist_t::GetPath(const TH1* ptr)
 {
     const std::string path = std_ext::formatter()
-            << ptr->GetDirectory()->GetPath()
-            << "/" << ptr->GetName();
+                             << ptr->GetDirectory()->GetPath()
+                             << "/" << ptr->GetName();
     // strip the file of the full path
     const auto n = path.find_first_of(':');
     if(n == path.npos)
@@ -147,6 +149,8 @@ void hstack::checkHists()
     }
 }
 
+
+
 bool hstack::IsCompatible(const hstack& other) const
 {
     // we do not check hists here, since that's what could be merged
@@ -158,6 +162,61 @@ bool hstack::IsCompatible(const hstack& other) const
 
 }
 
+template<typename Att>
+void AttCopy(const Att* src, Att* dest) {
+    src->Copy(*dest);
+}
+
+void hstack::buildIntelliLegend() const
+{
+    const auto& p = GlobalLegendPosition;
+    auto legend = new TLegend(p.Start().Start(), // x1
+                              p.Start().Stop(),  // y1
+                              p.Stop().Start(),  // x2
+                              p.Stop().Stop()    // y2
+                              );
+
+    const auto& delim = ": "; // this makes the tokens
+
+    vector<vector<string>> title_parts;
+    map<string, unsigned>  token_counter;
+    for(const auto& hist : hists) {
+        const string title = hist.Ptr->GetTitle();
+        title_parts.emplace_back(std_ext::tokenize_string(title, delim));
+        for(const auto& token : title_parts.back())
+            token_counter[token]++;
+    }
+
+    vector<vector<string>> unique_title_parts;
+    for(size_t i=0; i< title_parts.size(); i++) {
+        const hist_t& hist = hists[i];
+        if(options.IgnoreEmptyHist && hist.Ptr->GetEntries()==0)
+            continue;
+
+        const auto& tokens = title_parts[i];
+        unique_title_parts.emplace_back();
+        auto& unique_tokens = unique_title_parts.back();
+        for(const auto& token : tokens)
+            if(token_counter[token] < hists.size())
+                unique_tokens.emplace_back(token);
+        string unique_title = std_ext::concatenate_string(unique_tokens, delim);
+        if(options.ShowEntriesInLegend)
+            unique_title += std_ext::formatter() << " (" << hists[i].Ptr->GetEntries() << ")";
+
+        auto entry = legend->AddEntry((TObject*)0, unique_title.c_str());
+        AttCopy<TAttLine>(hist.Ptr, entry);
+        AttCopy<TAttFill>(hist.Ptr, entry);
+        AttCopy<TAttMarker>(hist.Ptr, entry);
+        if(hist.Option.BkgColor>=0) {
+            // during legend building, modify fill color
+            entry->SetFillColor(hist.Option.BkgColor);
+            entry->SetFillStyle(1001);
+            entry->SetLineWidth(2);
+        }
+    }
+    legend->Draw();
+}
+
 void hstack::Draw(const char* option)
 {
     if(hists.empty())
@@ -165,10 +224,6 @@ void hstack::Draw(const char* option)
 
     // ensure the histograms are ok
     checkHists();
-
-    if(options.UseIntelliLegend) {
-
-    }
 
     // hack the THStack such that the last histogram added gets drawn first
     struct THStack_hack : THStack {
@@ -267,70 +322,23 @@ void hstack::Draw(const char* option)
         return;
     }
 
+    UpdateMCScaling();
 
-        UpdateMCScaling();
+    // finally draw the stack
+    string option_str(option);
+    if(options.DrawNoStack)
+        option_str += "nostack";
+    stack->Draw(option_str.c_str());
 
-        // finally draw the stack
-        string option_str(option);
-        if(options.DrawNoStack)
-            option_str += "nostack";
-        stack->Draw(option_str.c_str());
+    // axis business
+    auto xaxis = stack->GetXaxis();
+    xaxis->SetTitle(xlabel.c_str());
 
-        // axis business
-        auto xaxis = stack->GetXaxis();
-        xaxis->SetTitle(xlabel.c_str());
+    auto yaxis = stack->GetYaxis();
+    yaxis->SetTitle(ylabel.c_str());
 
-        auto yaxis = stack->GetYaxis();
-        yaxis->SetTitle(ylabel.c_str());
-
-
-    if(options.UseIntelliLegend) {
-        vector<string> orig_titles;
-
-        const auto& delim = ": "; // this makes the tokens
-
-        vector<vector<string>> title_parts;
-        map<string, unsigned>  token_counter;
-        for(const auto& hist : hists) {
-            const string title = hist.Ptr->GetTitle();
-            orig_titles.emplace_back(title);
-            title_parts.emplace_back(std_ext::tokenize_string(title, delim));
-            for(const auto& token : title_parts.back())
-                token_counter[token]++;
-        }
-        vector<vector<string>> unique_title_parts;
-        for(size_t i=0; i< title_parts.size(); i++) {
-            const auto& tokens = title_parts[i];
-            unique_title_parts.emplace_back();
-            auto& unique_tokens = unique_title_parts.back();
-            for(const auto& token : tokens)
-                if(token_counter[token] < hists.size())
-                    unique_tokens.emplace_back(token);
-            string unique_title = std_ext::concatenate_string(unique_tokens, delim);
-            if(options.ShowEntriesInLegend)
-                unique_title += std_ext::formatter() << " (" << hists[i].Ptr->GetEntries() << ")";
-            hists[i].Ptr->SetTitle(unique_title.c_str());
-        }
-
-
-        const auto& p = GlobalLegendPosition;
-        if(p.Start().Start()<p.Stop().Start() &&
-           p.Start().Stop()<p.Stop().Stop()) {
-            gPad->BuildLegend(p.Start().Start(), // x1
-                              p.Start().Stop(),  // y1
-                              p.Stop().Start(),  // x2
-                              p.Stop().Stop()    // y2
-                              );
-        }
-        else {
-            // use defaults
-            gPad->BuildLegend();
-        }
-
-        for(size_t i=0;i<orig_titles.size();i++)
-            hists[i].Ptr->SetTitle(orig_titles[i].c_str());
-    }
-
+    if(options.UseIntelliLegend)
+        buildIntelliLegend();
 }
 
 void hstack::Browse(TBrowser* b)
@@ -360,7 +368,7 @@ void hstack::SetGlobalYAxisRange(double low, double high)
 
 void hstack::SetGlobalLegendPosition(double x1, double y1, double x2, double y2)
 {
-    GlobalLegendPosition = {{x1, y1},{x2,y2}};
+    GlobalLegendPosition = {{x1, y1}, {x2, y2}};
 }
 
 void hstack::UpdateMCScaling()
@@ -393,8 +401,8 @@ Long64_t hstack::Merge(TCollection* li)
     while(auto h = dynamic_cast<hstack*>(next())) {
         if(!IsCompatible(*h)) {
             LOG(ERROR) << "Skipping incompatible hstack:\n "
-                         << *this << "\n"
-                         << *h;
+                       << *this << "\n"
+                       << *h;
             continue;
         }
         // we add non-existing paths
@@ -435,8 +443,8 @@ void load(Archive & archive,
 
 namespace cereal
 {
-  template <class Archive>
-  struct specialize<Archive, hstack, cereal::specialization::member_serialize> {};
+template <class Archive>
+struct specialize<Archive, hstack, cereal::specialization::member_serialize> {};
 }
 
 void hstack::Streamer(TBuffer& R__b)
