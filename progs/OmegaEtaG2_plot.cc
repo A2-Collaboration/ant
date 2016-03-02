@@ -62,7 +62,7 @@ struct MCTrue_Splitter : cuttree::StackedHists_t<Hist_t> {
         // mctrue is never >=3 (and <9) in tree, use this to sum up all MC and all bkg MC
         // see also Fill()
         this->GetHist(3, "Sum_MC", Mod_t::MakeLine(kBlack, 1));
-        this->GetHist(4, "Bkg_MC", Mod_t::MakeLine(kGray, 1));
+        this->GetHist(4, "Bkg_MC", Mod_t::MakeFill(kGray+1, -1));
     }
 
     void Fill(const Fill_t& f) {
@@ -103,6 +103,12 @@ bool Contains(const interval<double>& i, const std::vector<double>& d) {
 
     return false;
 }
+
+
+double max(const std::vector<double>& data) {
+    return *max_element(data.cbegin(), data.cend());
+}
+
 
 // define the structs containing the histograms
 // and the cuts. for simple branch variables, that could
@@ -235,6 +241,11 @@ struct OmegaHist_t {
             h->Fill(f.Tree.p_PSA_Angle, f.Tree.p_PSA_Radius, f.TaggW());
         });
 
+        AddTH2("3#gamma IM vs 2#gamma IM", "3#gamma IM [MeV]", "max(2#gamma IM) [MeV]", IMbins, IMbins, "ggg_max_gg",
+               [] (TH2D* h, const Fill_t& f) {
+            h->Fill(f.Tree.ggg().M(), max(f.Tree.ggIM()), f.TaggW());
+        });
+
     }
 
     void Fill(const Fill_t& f) const {
@@ -267,11 +278,13 @@ struct OmegaHist_t {
                                  {"KinFitChi2<5 ", [] (const Fill_t& f) { return f.Tree.KinFitChi2<5; } }
                              });
         cuts.emplace_back(MultiCut_t<Fill_t>{
-                              {"mm cut",        [] (const Fill_t& f) { return f.Tree.mm().M()<1100 && f.Tree.mm().M() > 780; } },
-                              {"pi0",           [] (const Fill_t& f) { return Contains( {125.0, 145.0}, f.Tree.ggIM()); } }
+                              {"mm cut",        [] (const Fill_t& f) { return f.Tree.mm().M()<1100 && f.Tree.mm().M() > 780; } }
                           });
         cuts.emplace_back(MultiCut_t<Fill_t>{
-                              {"gggIM cut",        [] (const Fill_t& f) { return f.Tree.ggg().M()<900 && f.Tree.ggg().M() > 700; } }
+                              {"gggIM cut",        [] (const Fill_t& f) { return f.Tree.ggg().M()<900 && f.Tree.ggg().M() > 700; } },
+                              {"eta",           [] (const Fill_t& f) { return Contains( {530.0, 580.0}, f.Tree.ggIM()); } },
+                              {"pi0",           [] (const Fill_t& f) { return Contains( {125.0, 145.0}, f.Tree.ggIM()); } }
+
                           });
         return cuts;
     }
