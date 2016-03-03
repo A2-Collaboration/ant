@@ -74,13 +74,14 @@ protected:
         { {0, 5}, {1, 4}, {2, 3} }
     };
 
+    //===================== KinFitting ========================================================
 
     utils::TreeFitter fitterSig;
-    utils::TreeFitter fitterRef;
+    std::vector<utils::TreeFitter::tree_t> intermediatesTreeSig= std::vector<utils::TreeFitter::tree_t>(3);
 
-    utils::TreeFitter::tree_t pi1Sig;
-    utils::TreeFitter::tree_t pi2Sig;
-    utils::TreeFitter::tree_t pi3Sig;
+    utils::TreeFitter fitterRef;
+    std::vector<utils::TreeFitter::tree_t> intermediatesTreeRef= std::vector<utils::TreeFitter::tree_t>(3);
+
 
     utils::KinFitter kinFitterEMB;
 
@@ -90,20 +91,22 @@ protected:
 
 
 
+    //========================  Storage  ============================================================
     TTree* tree;
 
     struct branches {
         struct kinFitReturn_t
         {
             double          beamE= {};
-            std::vector<TLorentzVector> intermediates= std::vector<TLorentzVector>(3);
-            std::vector<TLorentzVector> gammas= std::vector<TLorentzVector>(6);
+            std::vector<TLorentzVector> intermediatesSig= std::vector<TLorentzVector>(3);
+            std::vector<TLorentzVector> gammasSig= std::vector<TLorentzVector>(6);
+            std::vector<TLorentzVector> intermediatesRef= std::vector<TLorentzVector>(3);
+            std::vector<TLorentzVector> gammasRef= std::vector<TLorentzVector>(6);
             TLorentzVector  etaprimeCand= {};
             TLorentzVector  p= {};
         };
 
-        kinFitReturn_t kinfittedSig= {};
-        kinFitReturn_t kinfittedRef= {};
+        kinFitReturn_t kinfitted= {};
 
         TLorentzVector etaprimeCand= {};
 
@@ -149,12 +152,12 @@ protected:
         std::string decayString= {};
 
         void SetBranches(TTree* tree);
-        void FillKinFit(double beamE, const TParticleList& photons, const TParticlePtr& proton);
+        void FillKinfitBeamProton(double beamE, const TParticlePtr& proton);
 
     };
     branches vars;
 
-    //histograms
+    //======================= histograms ===========================================================
     std::map<std::string,std::map<std::string,TH1*>> hists;
     void AddHist1D(const std::string& category, const std::string& hname,
                    const std::string& title,
@@ -170,7 +173,7 @@ protected:
     void MakeReference(const TParticleList& photonLeaves);
     bool MakeMCProton(const TEventData& mcdata, TParticlePtr& proton);
 
-    double getEnergyMomentumConservation(double EBeam, const TParticleList& photons, const TParticlePtr& proton);
+    double applyEnergyMomentumConservation(double EBeam, const TParticleList& photons, const TParticlePtr& proton);
 
 public:
     Etap3pi0(const std::string& name, OptionsPtr opts);
