@@ -6,6 +6,10 @@ namespace ant {
 namespace expconfig {
 namespace setup {
 
+/**
+ * @brief Ant Setup for the October 2014 End Point Tagger beam time
+ * @see https://wwwa2.kph.uni-mainz.de/intern/daqwiki/analysis/beamtimes/2014-10-14
+ */
 class Setup_2014_10_EPT_Prod : public Setup_2014_EPT
 {
 public:

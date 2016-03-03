@@ -19,10 +19,20 @@ public:
 
     static void          PlotCBTheta(const std::string& setup_name);
     static void          PlotCBPhi(const std::string& setup_name);
+
+    /**
+     * @brief Plot all ignored Crystal Ball Elements in a ant::TH2CB histogram in a new Canvas
+     * @param setup_name A valid Ant setup name
+     */
     static void          PlotCBIgnored(const std::string& setup_name);
 
     static void          PlotTAPSTheta(const std::string& setup_name);
     static void          PlotTAPSPhi(const std::string& setup_name);
+
+    /**
+     * @brief Plot all ignored TAPS Elements in a ant::TH2TAPS histogram in a new Canvas
+     * @param setup_name A valid Ant setup name
+     */
     static void          PlotTAPSIgnored(const std::string& setup_name);
 
 

@@ -4,6 +4,9 @@ namespace ant {
 namespace expconfig {
 namespace setup {
 
+/**
+ * @brief Common base class for all Setups of the 2014 Ent Point Tagger beam times
+ */
 class Setup_2014_EPT : public Setup
 {
 public:

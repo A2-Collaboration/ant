@@ -1,3 +1,14 @@
+/**
+  * @file Ant-addTID.cc
+  * @brief Program to add TID tree to a pluto ROOT file or a geant ROOT file.
+  *
+  * Adds a TTree to the given pluto ROOT file, containing a branch of TID with one ID for each pluto event (entry in the "data" TTree).
+  *
+  * The "copy-to-geant" mode copies a TID TTree from a pluto ROOT file to a geant ROOT file.
+  * Useful if the TID tree was not added after the pluto file was created and geant has aleady simulated the pluto data.
+  * This should be used with caution and if you are very sure that the pluto and geant file belong together.
+  */
+
 #include "simulation/mc/utils/PlutoTID.h"
 #include "base/Logger.h"
 

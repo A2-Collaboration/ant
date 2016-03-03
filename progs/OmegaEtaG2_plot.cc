@@ -1,3 +1,8 @@
+/**
+  * @file OmegaEtaG2_plot.cc
+  * @brief Plotting tool for TTrees from the ant::analysis::physics::OmegaEtaG2 physics class
+  */
+
 #include "base/Logger.h"
 
 #include "analysis/plot/CutTree.h"
