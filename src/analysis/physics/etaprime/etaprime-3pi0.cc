@@ -71,6 +71,14 @@ Etap3pi0::Etap3pi0(const std::string& name, OptionsPtr opts) :
     fitterRef.LoadSigmaData(setup->GetPhysicsFilesDirectory()+"/FitterSigmas.root");
 
     vars.SetBranches(tree);
+
+
+    utils::TreeFitter::tree_t etaP = fitterSig.GetTreeNode(ParticleTypeDatabase::EtaPrime);
+    auto it = etaP->Daughters().begin();
+    pi1Sig = *it++;
+    pi2Sig = *it++;
+    pi3Sig = *it;
+
 }
 
 bool Etap3pi0::MakeMCProton(const TEventData& mcdata, TParticlePtr& proton)
@@ -262,8 +270,6 @@ void Etap3pi0::ProcessEvent(const TEvent& event, manager_t&)
     }
 }
 
-//bool Etap3pi0::checkEnergyMomentumConservation(const TLorentzVector& initialState, const TLorentzVector& finalState)
-
 void Etap3pi0::MakeSignal(const TParticleList& photonLeaves)
 {
     fitterSig.SetLeaves(photonLeaves);
@@ -279,6 +285,18 @@ void Etap3pi0::MakeSignal(const TParticleList& photonLeaves)
         vars.chi2_sig      = result.ChiSquare;
         vars.prob_sig      = result.Probability;
         vars.iteration_sig = result.NIterations;
+        auto it_gamma =  pi1Sig->Daughters().begin();
+        vars.kinfittedSig.gammas.at(0) = *((*it_gamma++)->Get().Leave->Particle);
+        vars.kinfittedSig.gammas.at(1) = *((*it_gamma)->Get().Leave->Particle);
+        vars.kinfittedSig.intermediates.at(0) = vars.kinfittedSig.gammas.at(0) + vars.kinfittedSig.gammas.at(1);
+        it_gamma =  pi2Sig->Daughters().begin();
+        vars.kinfittedSig.gammas.at(2) = *((*it_gamma++)->Get().Leave->Particle);
+        vars.kinfittedSig.gammas.at(3) = *((*it_gamma)->Get().Leave->Particle);
+        vars.kinfittedSig.intermediates.at(1) = vars.kinfittedSig.gammas.at(2) + vars.kinfittedSig.gammas.at(3);
+        it_gamma =  pi3Sig->Daughters().begin();
+        vars.kinfittedSig.gammas.at(4) = *((*it_gamma++)->Get().Leave->Particle);
+        vars.kinfittedSig.gammas.at(5) = *((*it_gamma)->Get().Leave->Particle);
+        vars.kinfittedSig.intermediates.at(2) = vars.kinfittedSig.gammas.at(4) + vars.kinfittedSig.gammas.at(5);
     }
 }
 
@@ -360,27 +378,26 @@ void Etap3pi0::branches::SetBranches(TTree* tree)
 
     tree->Branch("decayString",&decayString);
 
-    tree->Branch("kf_beamE",&kinfitted.beamE);
-    tree->Branch("kf_6g",&kinfitted.etaprimeCand);
-    tree->Branch("kf_pi01",&kinfitted.pi01);
-    tree->Branch("kf_pi02",&kinfitted.pi02);
-    tree->Branch("kf_pi03",&kinfitted.pi03);
-    tree->Branch("kf_p",&kinfitted.p);
+    tree->Branch("kf_beamE",  &kinfittedSig.beamE);
+    tree->Branch("kf_gammas", &kinfittedSig.gammas);
+    tree->Branch("kf_6g",     &kinfittedSig.etaprimeCand);
+    tree->Branch("kf_p",      &kinfittedSig.p);
 }
 
 void Etap3pi0::branches::FillKinFit(double beamE, const ant::TParticleList& photons, const ant::TParticlePtr& proton)
 {
     assert(photons.size() == 6);
 
-    kinfitted.beamE = beamE;
+    kinfittedSig.beamE = beamE;
+    kinfittedSig.etaprimeCand = TLorentzVector(0,0,0,0);
 
-    kinfitted.pi01 = *photons.at(0) + *photons.at(1);
-    kinfitted.pi02 = *photons.at(2) + *photons.at(3);
-    kinfitted.pi03 = *photons.at(4) + *photons.at(5);
+    for (size_t i = 0 ; i < 6 ; ++i)
+    {
+        kinfittedSig.gammas.at(i) = *photons.at(i);
+        kinfittedSig.etaprimeCand += *photons.at(i);
+    }
 
-    kinfitted.etaprimeCand =  kinfitted.pi01 + kinfitted.pi02 + kinfitted.pi03;
-
-    kinfitted.p = *proton;
+    kinfittedSig.p = *proton;
 }
 
 void Etap3pi0::AddHist1D(

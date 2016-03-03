@@ -77,6 +77,11 @@ protected:
 
     utils::TreeFitter fitterSig;
     utils::TreeFitter fitterRef;
+
+    utils::TreeFitter::tree_t pi1Sig;
+    utils::TreeFitter::tree_t pi2Sig;
+    utils::TreeFitter::tree_t pi3Sig;
+
     utils::KinFitter kinFitterEMB;
 
     ant::analysis::PromptRandom::Switch promptrandom;
@@ -90,15 +95,15 @@ protected:
     struct branches {
         struct kinFitReturn_t
         {
-            double          beamE;
-            TLorentzVector  etaprimeCand;
-            TLorentzVector  pi01;
-            TLorentzVector  pi02;
-            TLorentzVector  pi03;
-            TLorentzVector  p;
+            double          beamE= {};
+            std::vector<TLorentzVector> intermediates= std::vector<TLorentzVector>(3);
+            std::vector<TLorentzVector> gammas= std::vector<TLorentzVector>(6);
+            TLorentzVector  etaprimeCand= {};
+            TLorentzVector  p= {};
         };
 
-        kinFitReturn_t kinfitted;
+        kinFitReturn_t kinfittedSig= {};
+        kinFitReturn_t kinfittedRef= {};
 
         TLorentzVector etaprimeCand= {};
 
