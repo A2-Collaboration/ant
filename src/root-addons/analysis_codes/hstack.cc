@@ -20,13 +20,14 @@
 #include "TH1.h"
 #include "THStack.h"
 #include "TDirectory.h"
+#include "TPaveText.h"
 
 #include <list>
 
 using namespace ant;
 using namespace std;
 
-const hstack::options_t hstack::options_t::all_enabled = {true, true, true, true};
+hstack::options_t hstack::GlobalOptions;
 
 double hstack::Global_MC_Scaling = std_ext::NaN;
 map<TH1*, double> hstack::Scaled_Hists = {};
@@ -38,19 +39,8 @@ interval<interval<double>> hstack::GlobalLegendPosition = {
 };
 
 
-bool hstack::options_t::operator==(const hstack::options_t& rhs) const {
-    /// \todo check if one could use the serialize method here...
-    auto make_tuple = [] (const options_t& o) {
-        return std::tie(o.UseIntelliLegend, o.IgnoreEmptyHist,
-                        o.DrawNoStack, o.ShowEntriesInLegend);
-    };
-    return make_tuple(*this) == make_tuple(rhs);
-}
-
-hstack::hstack(const string& name, const std::string& title,
-               const options_t& options_) :
-    TNamed(name.c_str(), title.c_str()),
-    options(options_)
+hstack::hstack(const string& name, const std::string& title) :
+    TNamed(name.c_str(), title.c_str())
 {
     gDirectory->Append(this);
 }
@@ -157,9 +147,7 @@ bool hstack::IsCompatible(const hstack& other) const
     return string(GetName()) == string(other.GetName()) &&
             string(GetTitle()) == string(other.GetTitle()) &&
             xlabel == other.xlabel &&
-            ylabel == other.ylabel &&
-            options == other.options;
-
+            ylabel == other.ylabel;
 }
 
 template<typename Att>
@@ -190,7 +178,7 @@ void hstack::buildIntelliLegend() const
     vector<vector<string>> unique_title_parts;
     for(size_t i=0; i< title_parts.size(); i++) {
         const hist_t& hist = hists[i];
-        if(options.IgnoreEmptyHist && hist.Ptr->GetEntries()==0)
+        if(GlobalOptions.IgnoreEmptyHist && hist.Ptr->GetEntries()==0)
             continue;
 
         const auto& tokens = title_parts[i];
@@ -200,7 +188,7 @@ void hstack::buildIntelliLegend() const
             if(token_counter[token] < hists.size())
                 unique_tokens.emplace_back(token);
         string unique_title = std_ext::concatenate_string(unique_tokens, delim);
-        if(options.ShowEntriesInLegend)
+        if(GlobalOptions.ShowEntriesInLegend)
             unique_title += std_ext::formatter() << " (" << hists[i].Ptr->GetEntries() << ")";
 
         auto entry = legend->AddEntry((TObject*)0, unique_title.c_str());
@@ -215,6 +203,28 @@ void hstack::buildIntelliLegend() const
         }
     }
     legend->Draw();
+}
+
+void hstack::buildIntelliTitle() const
+{
+    vector<string> title_parts = std_ext::tokenize_string(GetTitle(), ": ");
+    if(title_parts.size()<3)
+        return;
+
+    const auto height = 0.03*(title_parts.size()-1);
+    const auto x1 = GlobalLegendPosition.Start().Start();
+    const auto y1 = GlobalLegendPosition.Start().Stop()-height;
+    const auto x2 = GlobalLegendPosition.Stop().Start();
+    const auto y2 = GlobalLegendPosition.Start().Stop();
+
+    TPaveText *pt = new TPaveText(x1,y1,x2,y2, "NDC");
+    pt->SetFillColor(kWhite);
+    pt->SetBorderSize(1);
+
+    //pt->AddText(("Cuts: "+title_parts.back()).c_str());
+    for(auto it = next(title_parts.begin()); it != prev(title_parts.end()); ++it)
+        pt->AddText(it->c_str());
+    pt->Draw();
 }
 
 void hstack::Draw(const char* option)
@@ -305,11 +315,12 @@ void hstack::Draw(const char* option)
 
     };
 
-    auto stack = new THStack_hack((string(GetName())+"_").c_str(), GetTitle());
+    auto stack = new THStack_hack((string(GetName())+"_").c_str(),
+                                  GlobalOptions.UseIntelliTitle ? "" : GetTitle());
 
     unsigned nAdded = 0;
     for(const auto& hist : hists) {
-        if(options.IgnoreEmptyHist && hist.Ptr->GetEntries()==0)
+        if(GlobalOptions.IgnoreEmptyHist && hist.Ptr->GetEntries()==0)
             continue;
         stringstream ss_option;
         ss_option << hist.Option.Z << hist.Option.DrawOption;
@@ -326,8 +337,7 @@ void hstack::Draw(const char* option)
 
     // finally draw the stack
     string option_str(option);
-    if(options.DrawNoStack)
-        option_str += "nostack";
+    option_str += "nostack"; // always draw with nostack
     stack->Draw(option_str.c_str());
 
     // axis business
@@ -337,7 +347,10 @@ void hstack::Draw(const char* option)
     auto yaxis = stack->GetYaxis();
     yaxis->SetTitle(ylabel.c_str());
 
-    if(options.UseIntelliLegend)
+    if(GlobalOptions.UseIntelliTitle)
+        buildIntelliTitle();
+
+    if(GlobalOptions.UseIntelliLegend)
         buildIntelliLegend();
 }
 
@@ -370,6 +383,16 @@ void hstack::SetGlobalLegendPosition(double x1, double y1, double x2, double y2)
 {
     GlobalLegendPosition = {{x1, y1}, {x2, y2}};
 }
+
+
+void hstack::UseIntelliLegend(bool flag) { GlobalOptions.UseIntelliLegend = flag; }
+bool hstack::GetUseIntelliLegend() const { return GlobalOptions.UseIntelliLegend; }
+void hstack::UseIntelliTitle(bool flag) { GlobalOptions.UseIntelliTitle = flag; }
+bool hstack::GetUseIntelliTitle() const { return GlobalOptions.UseIntelliTitle; }
+void hstack::IgnoreEmptyHist(bool flag) { GlobalOptions.IgnoreEmptyHist = flag; }
+bool hstack::GetIgnoreEmptyHist() const { return GlobalOptions.IgnoreEmptyHist; }
+void hstack::ShowEntriesInLegend(bool flag) { GlobalOptions.ShowEntriesInLegend = flag; }
+bool hstack::GetShowEntriesInLegend() const { return GlobalOptions.ShowEntriesInLegend; }
 
 void hstack::UpdateMCScaling()
 {

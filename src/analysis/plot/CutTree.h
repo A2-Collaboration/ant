@@ -165,8 +165,7 @@ private:
                             HistFac.make<ant::hstack>(
                                 // use the parent histFac here!
                                 name,
-                                H.GetTitlePrefix()+": "+name,
-                                ant::hstack::options_t::all_enabled
+                                H.GetTitlePrefix()+": "+name
                                 ));
             }
         }

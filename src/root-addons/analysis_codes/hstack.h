@@ -51,33 +51,13 @@ struct hstack : TNamed
     using ModOption_t = analysis::plot::histstyle::ModOption_t;
 
     struct options_t {
-        bool UseIntelliLegend;
-        bool IgnoreEmptyHist;
-        bool DrawNoStack;
-        bool ShowEntriesInLegend;
-        // by default we don't use any of those fancy options
-        options_t(bool useIntelliLegend = false,
-                  bool ignoreEmptyHist = false,
-                  bool drawNoStack = false,
-                  bool showEntriesInLegend = false) :
-            UseIntelliLegend(useIntelliLegend),
-            IgnoreEmptyHist(ignoreEmptyHist),
-            DrawNoStack(drawNoStack),
-            ShowEntriesInLegend(showEntriesInLegend)
-        {}
-
-        static const options_t all_enabled;
-
-        bool operator== (const options_t& rhs) const;
-
-        template<typename Archive>
-        void serialize(Archive archive) {
-            archive(UseIntelliLegend, IgnoreEmptyHist, DrawNoStack, ShowEntriesInLegend);
-        }
+        bool UseIntelliLegend = true ;
+        bool IgnoreEmptyHist = true;
+        bool ShowEntriesInLegend = true;
+        bool UseIntelliTitle = true;
     };
 
-    hstack(const std::string& name, const std::string& title="",
-           const options_t& options_ = {});
+    hstack(const std::string& name, const std::string& title="");
 
     bool IsCompatible(const hstack& other) const;
 
@@ -94,7 +74,7 @@ struct hstack : TNamed
     template<typename Archive>
     void serialize(Archive archive) {
         archive(static_cast<TNamed&>(*this),
-                hists, xlabel, ylabel, options);
+                hists, xlabel, ylabel);
         checkHists();
     }
 
@@ -104,6 +84,8 @@ struct hstack : TNamed
 
     static interval<double> GlobalYAxisRange;
     static interval<interval<double>> GlobalLegendPosition;
+
+    static options_t GlobalOptions;
 
 protected:
 
@@ -159,10 +141,10 @@ protected:
     std::string ylabel;
     std::string title;
 
-    options_t options;
 
     void checkHists();
     void buildIntelliLegend() const;
+    void buildIntelliTitle() const;
 
 #endif // __CINT__
 
@@ -177,6 +159,17 @@ public:
     virtual void SetGlobalYAxisRange(double low, double high); // *MENU*
     virtual void SetGlobalLegendPosition(double x1=0.5, double y1=0.67, double x2=0.88, double y2=0.88); // *MENU*
 
+    virtual void UseIntelliLegend(bool flag); // *TOGGLE* *GETTER=GetUseIntelliLegend
+    virtual bool GetUseIntelliLegend() const;
+
+    virtual void UseIntelliTitle(bool flag); // *TOGGLE* *GETTER=GetUseIntelliTitle
+    virtual bool GetUseIntelliTitle() const;
+
+    virtual void IgnoreEmptyHist(bool flag); // *TOGGLE* *GETTER=GetIgnoreEmptyHist
+    virtual bool GetIgnoreEmptyHist() const;
+
+    virtual void ShowEntriesInLegend(bool flag); // *TOGGLE* *GETTER=GetShowEntriesInLegend
+    virtual bool GetShowEntriesInLegend() const;
 
     // to be used with Ant-hadd
     Long64_t Merge(TCollection* li);
