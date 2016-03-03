@@ -171,8 +171,8 @@ struct OmegaHist_t {
     const BinSettings MMgggIMbins_X = BinSettings(600, 0, 1200);
     const BinSettings MMgggIMbins_Y = BinSettings(750, 500, 2000);
 
-    const BinSettings pThetaBins = BinSettings( 500,  0,   50);
-    const BinSettings pEbins     = BinSettings(1000,  0, 1000);
+    const BinSettings pThetaBins = BinSettings( 125, 0,   50);
+    const BinSettings pEbins     = BinSettings(250,  0, 1000);
     const BinSettings PSAABins   = BinSettings(  60, 20,   60);
     const BinSettings PSARBins   = BinSettings( 100,  0,  450);
     const BinSettings TaggChBins = BinSettings(47);
@@ -281,15 +281,15 @@ struct OmegaHist_t {
         cuttree::Cuts_t<Fill_t> cuts;
 
         cuts.emplace_back(MultiCut_t<Fill_t>{
-                                 {"KinFitChi2<5 ", [] (const Fill_t& f) { return f.Tree.KinFitChi2<5; } }
+                                 {"#chi^{2}<5", [] (const Fill_t& f) { return f.Tree.KinFitChi2<5; } }
                              });
         cuts.emplace_back(MultiCut_t<Fill_t>{
                               {"mm cut",        [] (const Fill_t& f) { return f.Tree.mm().M()<1100 && f.Tree.mm().M() > 780; } }
                           });
         cuts.emplace_back(MultiCut_t<Fill_t>{
-                              {"gggIM cut",        [] (const Fill_t& f) { return f.Tree.ggg().M()<900 && f.Tree.ggg().M() > 700; } },
-                              {"eta",           [] (const Fill_t& f) { return Contains( {530.0, 580.0}, f.Tree.ggIM()); } },
-                              {"pi0",           [] (const Fill_t& f) { return Contains( {125.0, 145.0}, f.Tree.ggIM()); } }
+                              {"m(3#gamma) cut",        [] (const Fill_t& f) { return f.Tree.ggg().M()<900 && f.Tree.ggg().M() > 700; } },
+                              {"#eta window",           [] (const Fill_t& f) { return Contains( {530.0, 580.0}, f.Tree.ggIM()); } },
+                              {"#pi^{0} window",        [] (const Fill_t& f) { return Contains( {125.0, 145.0}, f.Tree.ggIM()); } }
 
                           });
         return cuts;
