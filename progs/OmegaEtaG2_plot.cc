@@ -68,6 +68,7 @@ struct MCTrue_Splitter : cuttree::StackedHists_t<Hist_t> {
         // see also Fill()
         this->GetHist(3, "Sum_MC", Mod_t::MakeLine(kBlack, 1));
         this->GetHist(4, "Bkg_MC", Mod_t::MakeFill(kGray+1, -1));
+
     }
 
     void Fill(const Fill_t& f) {
@@ -87,7 +88,7 @@ struct MCTrue_Splitter : cuttree::StackedHists_t<Hist_t> {
         const Hist_t& hist = mctrue<10 ? this->GetHist(mctrue) :
                                         this->GetHist(mctrue,
                                                       get_bkg_name(mctrue),
-                                                      Mod_t::MakeLine(histstyle::color_t::Get(mctrue-9), 1)
+                                                      Mod_t::MakeLine(histstyle::color_t::Get(mctrue-10), 1, kGray+1)
                                                       );
 
         hist.Fill(f);
@@ -159,13 +160,13 @@ struct OmegaHist_t {
     HistMgr<TH1D> h1;
     HistMgr<TH2D> h2;
 
-    const BinSettings Ebins = BinSettings(1600,   0, 1600);
+    const BinSettings Ebins    = BinSettings(1600,   0, 1600);
 
     const BinSettings Chi2bins = BinSettings (2500, 0,   25);
     const BinSettings probbins = BinSettings (250, 0,   1);
 
-    const BinSettings IMbins = BinSettings(1600,   0, 1600);
-    const BinSettings MMbins = BinSettings(1600, 400, 2000);
+    const BinSettings IMbins        = BinSettings(1600,   0, 1600);
+    const BinSettings MMbins        = BinSettings(1600, 400, 2000);
 
     const BinSettings MMgggIMbins_X = BinSettings(600, 0, 1200);
     const BinSettings MMgggIMbins_Y = BinSettings(750, 500, 2000);
@@ -234,7 +235,7 @@ struct OmegaHist_t {
 
         AddTH2("Proton #theta vs. E_{k}", "E_{k} [MeV]", "#theta [#circ]",  pEbins,   pThetaBins, "p_theta_E",
                [] (TH2D* h, const Fill_t& f) {
-            h->Fill(f.Tree.p_fitted().E() - ParticleTypeDatabase::Proton.Mass(), radian_to_degree(f.Tree.p_fitted().Theta()));
+            h->Fill(f.Tree.p_fitted().E() - ParticleTypeDatabase::Proton.Mass(), radian_to_degree(f.Tree.p_fitted().Theta()), f.TaggW());
         });
 
         AddTH2("Missing Mass / 3#gamma IM", "3#gamma IM [MeV]", "MM [MeV]", IMbins,   MMbins,     "mm_gggIM",
