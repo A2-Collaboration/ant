@@ -283,6 +283,8 @@ void Etap3pi0::MakeSignal(const TParticleList& photonLeaves)
         vars.prob_sig      = result.Probability;
         vars.iteration_sig = result.NIterations;
 
+        //signal is first, so fill 6g here...
+        vars.kinfitted.etaprimeCand = TLorentzVector(0,0,0,0);
         for (size_t i = 0 ; i < 3 ; ++i)
         {
             auto it_gamma =  intermediatesTreeSig[i]->Daughters().begin();
@@ -290,6 +292,7 @@ void Etap3pi0::MakeSignal(const TParticleList& photonLeaves)
             vars.kinfitted.gammasSig.at((2*i)+1) = *((*it_gamma)->Get().Leave->Particle);
             vars.kinfitted.intermediatesSig.at(i) =   vars.kinfitted.gammasSig.at(2*i)
                                                     + vars.kinfitted.gammasSig.at((2*i)+1);
+            vars.kinfitted.etaprimeCand += vars.kinfitted.intermediatesSig.at(i);
         }
     }
 }
@@ -315,6 +318,8 @@ void Etap3pi0::MakeReference(const TParticleList& photonLeaves)
             auto it_gamma =  intermediatesTreeRef[i]->Daughters().begin();
             vars.kinfitted.gammasRef.at(2*i) = *((*it_gamma++)->Get().Leave->Particle);
             vars.kinfitted.gammasRef.at((2*i)+1) = *((*it_gamma)->Get().Leave->Particle);
+            vars.kinfitted.intermediatesRef.at(i) =   vars.kinfitted.gammasRef.at(2*i)
+                                                    + vars.kinfitted.gammasRef.at((2*i)+1);
         }
     }
 }
@@ -379,10 +384,13 @@ void Etap3pi0::branches::SetBranches(TTree* tree)
 
     tree->Branch("decayString",&decayString);
 
-    tree->Branch("kf_beamE",  &kinfitted.beamE);
-    tree->Branch("kf_gammas", &kinfitted.gammasSig);
-    tree->Branch("kf_6g",     &kinfitted.etaprimeCand);
-    tree->Branch("kf_p",      &kinfitted.p);
+    tree->Branch("kf_beamE",      &kinfitted.beamE);
+    tree->Branch("kf_inter_Sig", &kinfitted.intermediatesSig);
+    tree->Branch("kf_gammas_Sig", &kinfitted.gammasSig);
+    tree->Branch("kf_gammas_Ref", &kinfitted.gammasRef);
+    tree->Branch("kf_inter_Ref", &kinfitted.intermediatesRef);
+    tree->Branch("kf_6g",         &kinfitted.etaprimeCand);
+    tree->Branch("kf_p",          &kinfitted.p);
 }
 
 void Etap3pi0::branches::FillKinfitBeamProton(double beamE, const ant::TParticlePtr& proton)
