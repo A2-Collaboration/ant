@@ -68,6 +68,7 @@ int main( int argc, char** argv )
     double taggW;
     int type;
     int truetype;
+    vector<TLorentzVector> pions(3);
     vector<TLorentzVector> gammas(6);
     TLorentzVector sixG;
     TLorentzVector proton;
@@ -75,7 +76,8 @@ int main( int argc, char** argv )
     tree->SetBranchAddress("taggWeight", &taggW);
     tree->SetBranchAddress("type",&type);
     tree->SetBranchAddress("truetype",&truetype);
-    tree->SetBranchAddress("kf_gammas", &gammas);
+    tree->SetBranchAddress("kf_inter_Sig", &pions);
+    tree->SetBranchAddress("kf_gammas_Sig", &gammas);
     tree->SetBranchAddress("kf_6g", &sixG);
     tree->SetBranchAddress("kf_p", &proton);
 
