@@ -132,8 +132,8 @@ struct CommonHist_t {
                               {"PIDSumE<1", [] (const Fill_t& f) { return f.Common.PIDSumE<1; } },
                           });
         cuts.emplace_back(MultiCut_t<Fill_t>{
+                                 {"KinFitProb>0", [] (const Fill_t& f) { return f.Common.KinFitProb>0; } },
                                  {"KinFitProb>0.01", [] (const Fill_t& f) { return f.Common.KinFitProb>0.01; } },
-                                 {"KinFitProb>0.02", [] (const Fill_t& f) { return f.Common.KinFitProb>0.02; } },
                              });
         return cuts;
     }
@@ -172,7 +172,7 @@ struct SigHist_t : CommonHist_t {
 
     const BinSettings bins_IM_Etap {100, 800,1050};
     const BinSettings bins_IM_Omega{100, 550, 950};
-    const BinSettings bins_ClusterShape{20,0,20};
+    const BinSettings bins_ClusterShape{30,0,1};
 
     SigHist_t(HistogramFactory HistFac) : CommonHist_t(HistFac) {
         BinSettings bins_goldhaber(200, 0, 900);
@@ -349,7 +349,7 @@ struct SigOmegaPi0Hist_t : SigHist_t {
 
     SigOmegaPi0Hist_t(HistogramFactory HistFac) : SigHist_t(HistFac) {
         h_Bachelor_E = HistFac.makeTH1D("E_#gamma in #eta' frame","E_{#gamma} / MeV","",
-                                        BinSettings(400,0,400),"h_Bachelor_E");
+                                        BinSettings(150,0,350),"h_Bachelor_E");
 
     }
 
@@ -527,7 +527,7 @@ int main(int argc, char** argv) {
         treeCommon.Tree->GetEntry(entry);
 
         // we handle the Ref/Sig cut here to save some reading work
-        if(treeCommon.IsSignal) {
+        if(treeSigShared && treeCommon.IsSignal) {
             treeSigShared.Tree->GetEntry(entry);
             if(treeSigPi0) {
                 treeSigPi0.Tree->GetEntry(entry);
