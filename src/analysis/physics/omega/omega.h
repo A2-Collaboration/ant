@@ -240,6 +240,7 @@ public:
     struct ReactionChannel_t {
         std::string name="";
         std::shared_ptr<decaytree_t> tree=nullptr;
+        ReactionChannel_t(const std::shared_ptr<decaytree_t>& t, const std::string& n);
         ReactionChannel_t(const std::shared_ptr<decaytree_t>& t);
         ReactionChannel_t(const std::string& n);
         ReactionChannel_t() = default;
