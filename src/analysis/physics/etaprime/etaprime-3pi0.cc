@@ -342,53 +342,42 @@ void Etap3pi0::ShowResult()
 
 void Etap3pi0::branches::SetBranches(TTree* tree)
 {
-    cout << "Setting up branches" << endl;
-    tree->Branch("proton", &proton);
-
+    tree->Branch("proton",       &proton);
     tree->Branch("etaprimeCand", &etaprimeCand);
-
-    tree->Branch("fittedProton",&fittedProton);
-
-    tree->Branch("trueProton", &trueProton);
-
-    tree->Branch("MM", &MM);
+    tree->Branch("trueProton",   &trueProton);
+    tree->Branch("MM",           &MM);
 
     tree->Branch("coplanarity", &coplanarity);
+
     tree->Branch("EsumCB", &EsumCB);
 
     tree->Branch("taggWeight", &taggWeight);
-    tree->Branch("taggE", &taggE);
-    tree->Branch("taggCh", &taggCh);
-    tree->Branch("taggTime", &taggTime);
+    tree->Branch("taggE",      &taggE);
+    tree->Branch("taggCh",     &taggCh);
+    tree->Branch("taggTime",   &taggTime);
 
-    tree->Branch("EMB_chi2",&EMB_chi2);
+    tree->Branch("EMB_chi2", &EMB_chi2);
 
-    tree->Branch("pi0s", &pi0);
-    tree->Branch("pi0_chi2[3]", pi0_chi2, "pi0_chi2[3]/D");
-    tree->Branch("pi0_prob[3]", pi0_prob, "pi0_prob[3]/D");
-    tree->Branch("pi0_iteration[3]", pi0_iteration, "pi0_iteration[3]/D");
-    tree->Branch("pi0_status[3]", pi0_status, "pi0_status[3]/D");
-
-    tree->Branch("chi2_ref", &chi2_ref);
-    tree->Branch("prob_ref", &prob_ref);
+    tree->Branch("chi2_ref",      &chi2_ref);
+    tree->Branch("prob_ref",      &prob_ref);
     tree->Branch("iteration_ref", &iteration_ref);
-    tree->Branch("status_ref", &status_ref);
+    tree->Branch("status_ref",    &status_ref);
 
-    tree->Branch("chi2_sig", &chi2_sig);
-    tree->Branch("prob_sig", &prob_sig);
+    tree->Branch("chi2_sig",      &chi2_sig);
+    tree->Branch("prob_sig",      &prob_sig);
     tree->Branch("iteration_sig", &iteration_sig);
-    tree->Branch("status_sig", &status_sig);
+    tree->Branch("status_sig",    &status_sig);
 
-    tree->Branch("type", &type);
+    tree->Branch("type",     &type);
     tree->Branch("truetype", &truetype);
 
-    tree->Branch("decayString",&decayString);
+    tree->Branch("decayString", &decayString);
 
     tree->Branch("kf_beamE",      &kinfitted.beamE);
-    tree->Branch("kf_inter_Sig", &kinfitted.intermediatesSig);
+    tree->Branch("kf_inter_Sig",  &kinfitted.intermediatesSig);
     tree->Branch("kf_gammas_Sig", &kinfitted.gammasSig);
     tree->Branch("kf_gammas_Ref", &kinfitted.gammasRef);
-    tree->Branch("kf_inter_Ref", &kinfitted.intermediatesRef);
+    tree->Branch("kf_inter_Ref",  &kinfitted.intermediatesRef);
     tree->Branch("kf_6g",         &kinfitted.etaprimeCand);
     tree->Branch("kf_p",          &kinfitted.p);
 }

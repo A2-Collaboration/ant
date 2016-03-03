@@ -115,8 +115,6 @@ protected:
         TLorentzVector proton= {};
         double protonTime= std_ext::NaN;
 
-        TLorentzVector fittedProton= {};
-
         TLorentzVector trueProton= {};
 
         TLorentzVector MM= {};
@@ -130,14 +128,6 @@ protected:
         double      taggTime= {};
 
         double EMB_chi2= std::numeric_limits<double>::infinity();
-
-        std::vector<TLorentzVector> pi0 = std::vector<TLorentzVector>(3);
-        double pi0_chi2[3]= {  std::numeric_limits<double>::infinity(),
-                               std::numeric_limits<double>::infinity(),
-                               std::numeric_limits<double>::infinity()  };
-        double pi0_prob[3]= {};
-        int    pi0_iteration[3]= {};
-        int    pi0_status[3]= {};
 
         double chi2_ref= std::numeric_limits<double>::infinity();
         double prob_ref= {};
