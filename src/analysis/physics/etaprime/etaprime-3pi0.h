@@ -43,9 +43,11 @@ protected:
                                                {2,"background"},    // 3 pi0 photoproduction
                                                {-1,"other"}};
         const double EMBChi2Cut= std::numeric_limits<double>::infinity();
-        const double fourConstrainChi2Cut= 40;
-        const double coplCut = 15;
-        const double EsumCB= 550;
+        const double Chi2CutEMB = 22.5;
+        const double Chi2CutSig = 17.5;
+        const double Chi2CutRef = 20;
+        const double coplCut    = 15;
+        const double EsumCB     = 550;
         const double etaprimeThreshold = 1445.6;
     };
     settings_t phSettings;

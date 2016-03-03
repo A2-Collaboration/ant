@@ -228,7 +228,7 @@ void Etap3pi0::ProcessEvent(const TEvent& event, manager_t&)
 
         // EMB - kinFit - cut
         vars.EMB_chi2 = applyEnergyMomentumConservation(t.PhotonEnergy,photons,proton);
-        if ( vars.EMB_chi2 > phSettings.fourConstrainChi2Cut )
+        if ( vars.EMB_chi2 > phSettings.Chi2CutEMB )
             continue;
         hists.at("steps").at("evcount")->Fill("7) EMB-4C-KinFit: #chi^{2} < 40)",vars.taggWeight);
 
@@ -238,7 +238,7 @@ void Etap3pi0::ProcessEvent(const TEvent& event, manager_t&)
         MakeReference(kinFitterEMB.GetFittedPhotons());
         if (vars.chi2_sig < vars.chi2_ref)
         {
-            if ( vars.chi2_sig < phSettings.fourConstrainChi2Cut )
+            if ( vars.chi2_sig < phSettings.Chi2CutSig )
             {
                 vars.type = 0;
                 hists.at("steps").at("evcount")->Fill("8a) signal identified",vars.taggWeight);
@@ -252,7 +252,7 @@ void Etap3pi0::ProcessEvent(const TEvent& event, manager_t&)
         }
         else
         {
-            if (vars.chi2_ref < phSettings.fourConstrainChi2Cut )
+            if (vars.chi2_ref < phSettings.Chi2CutRef )
             {
                 vars.type = 1;
                 hists.at("steps").at("evcount")->Fill("8b) reference identified",vars.taggWeight);
