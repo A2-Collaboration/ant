@@ -76,7 +76,9 @@ struct hstack : THStack
 
     template<typename Archive>
     void serialize(Archive archive) {
+        SetTitle(origtitle.c_str());
         archive(static_cast<TNamed&>(*this), hists);
+        origtitle = GetTitle();
         checkHists();
     }
 
