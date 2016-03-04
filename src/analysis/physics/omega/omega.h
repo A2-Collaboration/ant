@@ -192,7 +192,7 @@ public:
 
         ADD_BRANCH_T(bool,     p_matched)
 
-        ADD_BRANCH_T(int,      Channel)
+        ADD_BRANCH_T(unsigned,      Channel)
 
     };
 
@@ -220,7 +220,6 @@ protected:
     const interval<double> photon_E_taps;
     const interval<double> proton_theta;
 
-    TH1D* steps;
 
     ant::analysis::PromptRandom::Switch promptrandom;
     utils::KinFitter fitter;
@@ -248,13 +247,15 @@ public:
     };
 
     struct ReactionChannelList_t {
-        static const int other_index;
-        std::map<int, ReactionChannel_t> channels;
-        int identify(const TParticleTree_t &tree) const;
+        static const unsigned other_index;
+        std::map<unsigned, ReactionChannel_t> channels;
+        unsigned identify(const TParticleTree_t &tree) const;
     };
 
     static ReactionChannelList_t makeChannels();
     static const ReactionChannelList_t reaction_channels;
+
+    std::map<unsigned, TH1D*> stephists;
 
 };
 

@@ -573,6 +573,19 @@ void OmegaEtaG2::Analyse(const TEventData &data, const TEvent& event, manager_t&
 
     const auto& particletree = event.MCTrue->ParticleTree;
 
+    //const auto& mctrue_photons = event.MCTrue().Particles().Get(ParticleTypeDatabase::Photon);
+    t.Channel = reaction_channels.identify(event.MCTrue->ParticleTree);
+
+    if(t.Channel == ReactionChannelList_t::other_index) {
+        if(event.MCTrue->ParticleTree!=nullptr) {
+            missed_channels->Fill(utils::ParticleTools::GetDecayString(event.MCTrue->ParticleTree).c_str(), 1.0);
+        }
+    } else {
+        found_channels->Fill(t.Channel);
+    }
+
+    TH1* steps = stephists.at(t.Channel);
+
     steps->Fill("0 Events seen", 1);
 
     const auto Esum = data.Trigger.CBEnergySum;
@@ -621,18 +634,6 @@ void OmegaEtaG2::Analyse(const TEventData &data, const TEvent& event, manager_t&
     steps->Fill("3 nPhotons nProtons", 1);
 
     const auto& proton = protons.at(0);
-
-
-    //const auto& mctrue_photons = event.MCTrue().Particles().Get(ParticleTypeDatabase::Photon);
-    t.Channel = reaction_channels.identify(event.MCTrue->ParticleTree);
-
-    if(t.Channel == ReactionChannelList_t::other_index) {
-        if(event.MCTrue->ParticleTree!=nullptr) {
-            missed_channels->Fill(utils::ParticleTools::GetDecayString(event.MCTrue->ParticleTree).c_str(), 1.0);
-        }
-    } else {
-        found_channels->Fill(t.Channel);
-    }
 
     t.p      = *proton;
     t.p_Time = getTime(proton);
@@ -906,12 +907,13 @@ OmegaEtaG2::OmegaEtaG2(const std::string& name, OptionsPtr opts):
 
     fitter.LoadSigmaData(setup->GetPhysicsFilesDirectory()+"/FitterSigmas.root");
 
-
-    steps = HistFac.makeTH1D("Steps","Step","Events passed",BinSettings(14),"steps");
     missed_channels = HistFac.makeTH1D("Unlisted Channels","","Total Events seen",BinSettings(20),"unlistedChannels");
     found_channels  = HistFac.makeTH1D("Listed Channels",  "","Total Events seen",BinSettings(20),"listedChannels");
 
     for(const auto& c : reaction_channels.channels) {
+
+        stephists[c.first] = HistFac.makeTH1D("Steps " + c.second.name, "", "", BinSettings(14), "steps_" + to_string(c.first));
+
         if(c.first<20)
             found_channels->GetXaxis()->SetBinLabel(c.first+1,c.second.name.c_str());
     }
@@ -950,7 +952,7 @@ OmegaEtaG2::ReactionChannel_t::~ReactionChannel_t()
 
 
 
-int OmegaEtaG2::ReactionChannelList_t::identify(const ant::TParticleTree_t& tree) const
+unsigned OmegaEtaG2::ReactionChannelList_t::identify(const ant::TParticleTree_t& tree) const
 {
 
     if(!tree)
@@ -971,7 +973,7 @@ int OmegaEtaG2::ReactionChannelList_t::identify(const ant::TParticleTree_t& tree
 
 const OmegaEtaG2::ReactionChannelList_t OmegaEtaG2::reaction_channels = OmegaEtaG2::makeChannels();
 
-const int OmegaEtaG2::ReactionChannelList_t::other_index = 1000;
+const unsigned OmegaEtaG2::ReactionChannelList_t::other_index = 1000;
 
 AUTO_REGISTER_PHYSICS(OmegaEtaG)
 AUTO_REGISTER_PHYSICS(OmegaMCTruePlots)
