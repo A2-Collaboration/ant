@@ -4,6 +4,7 @@
 
 #include "base/std_ext/string.h"
 #include "base/std_ext/math.h"
+#include "base/std_ext/memory.h"
 #include "base/Logger.h"
 
 
@@ -18,7 +19,6 @@
 #include "TLegend.h"
 #include "TLegendEntry.h"
 #include "TH1.h"
-#include "THStack.h"
 #include "TDirectory.h"
 #include "TPaveText.h"
 
@@ -38,19 +38,16 @@ interval<interval<double>> hstack::GlobalLegendPosition = {
     {0.88, 0.88}
 };
 
-
 hstack::hstack(const string& name, const std::string& title) :
-    TNamed(name.c_str(), title.c_str())
+    THStack(name.c_str(), title.c_str()),
+    origtitle(title)
 {
     gDirectory->Append(this);
 }
 
-hstack::hstack() {}
+hstack::hstack() : THStack() {}
 
-hstack::~hstack()
-{}
-
-
+hstack::~hstack() {}
 
 TH1* hstack::hist_t::GetPtr(const string& path)
 {
@@ -76,9 +73,6 @@ hstack& hstack::operator<<(TH1* hist)
 {
 
     hists.emplace_back(hist, current_option);
-
-    xlabel = hist->GetXaxis()->GetTitle();
-    ylabel = hist->GetYaxis()->GetTitle();
 
     current_option.Z = 0; // reset z after each add
 
@@ -147,9 +141,7 @@ bool hstack::IsCompatible(const hstack& other) const
 {
     // we do not check hists here, since that's what could be merged
     return string(GetName()) == string(other.GetName()) &&
-            string(GetTitle()) == string(other.GetTitle()) &&
-            xlabel == other.xlabel &&
-            ylabel == other.ylabel;
+            string(GetTitle()) == string(other.GetTitle());
 }
 
 template<typename Att>
@@ -157,116 +149,103 @@ void AttCopy(const Att* src, Att* dest) {
     src->Copy(*dest);
 }
 
-bool isDataHist(const string& option)
+bool hstack::hist_t::isDataHist() const
 {
     /// \todo find better way to detect which histograms
     /// should NOT be scaled or drawn with error bar in legend.
     /// For now, we assume that data is always drawn
     /// with error bars.
-    return std_ext::contains(option, "E");
+    return std_ext::contains(Option.DrawOption, "E");
 }
 
-
-
-void hstack::buildIntelliTitle() const
+void hstack::buildIntelliTitle()
 {
-    vector<string> title_parts = std_ext::tokenize_string(GetTitle(), ": ");
+    vector<string> title_parts = std_ext::tokenize_string(origtitle, ": ");
     if(title_parts.size()<3)
         return;
 
     const auto height = 0.03*(title_parts.size()-1);
-    const auto x1 = GlobalLegendPosition.Start().Start();
-    const auto y1 = GlobalLegendPosition.Start().Stop()-height;
-    const auto x2 = GlobalLegendPosition.Stop().Start();
-    const auto y2 = GlobalLegendPosition.Start().Stop();
 
-    TPaveText *pt = new TPaveText(x1,y1,x2,y2, "NDC");
-    pt->SetFillColor(kWhite);
-    pt->SetBorderSize(1);
-
-    //pt->AddText(("Cuts: "+title_parts.back()).c_str());
-    for(auto it = next(title_parts.begin()); it != prev(title_parts.end()); ++it)
-        pt->AddText(it->c_str());
-    pt->Draw();
-}
-
-hstack::ModOption_t unpackModOption_t(const std::string& hexstr) {
-    stringstream buf_hex(hexstr);
-    stringstream buf;
-    unsigned int c; // for correct overload call of >>
-    while(buf_hex >> hex >> c)
-        buf << (unsigned char)c;
-    cereal::BinaryInputArchive ar(buf);
-    hstack::ModOption_t modoption;
-    ar(modoption);
-    return modoption;
-}
-
-std::string packModOption_t(const hstack::ModOption_t& modoption) {
-    stringstream buf;
-    cereal::BinaryOutputArchive ar(buf);
-    ar(modoption);
-    // convert to string hex to avoid null byte problems...
-    stringstream buf_hex;
-    // pay attention to correct conversion to hex with >>
-    for(unsigned char c : buf.str()) {
-        buf_hex << hex << (unsigned int)c << " ";
+    if(!intellititle) {
+        const auto& p = GlobalLegendPosition;
+        intellititle = std_ext::make_unique<TPaveText>(
+                           p.Start().Start(),
+                           p.Start().Stop()-height,
+                           p.Stop().Start(),
+                           p.Start().Stop(),
+                           "NDC"
+                           );
+        intellititle->SetFillColor(kWhite);
+        intellititle->SetBorderSize(1);
+        //pt->AddText(("Cuts: "+title_parts.back()).c_str());
+        for(auto it = next(title_parts.begin()); it != prev(title_parts.end()); ++it)
+            intellititle->AddText(it->c_str());
     }
-    return buf_hex.str();
+
+    if(intellilegend) {
+        const auto x1 = intellilegend->GetX1NDC();
+        const auto y1 = intellilegend->GetY1NDC()-height;
+        const auto x2 = intellilegend->GetX2NDC();
+        const auto y2 = intellilegend->GetY1NDC();
+        intellititle->SetX1NDC(x1);
+        intellititle->SetY1NDC(y1);
+        intellititle->SetX2NDC(x2);
+        intellititle->SetY2NDC(y2);
+    }
 }
 
-// this helper extracts the z number from the options,
-
-struct tmphist_t {
-    tmphist_t(TObject* obj, const char* packedoption) :
-        Ptr(dynamic_cast<TH1*>(obj)),
-        Option(unpackModOption_t(packedoption))
-    {}
-    TH1* Ptr;
-    hstack::ModOption_t Option;
-    double Entries;
-    bool operator< (const tmphist_t& other) const {
-        return Option.Z < other.Option.Z;
-    }
-};
-
-void updateIntelliLegend(TLegend* legend, const list<tmphist_t>& hists)
+void hstack::updateIntelliLegend(TLegend& legend, std::list<wraphist_t> wraphists)
 {
-    const auto& p = hstack::GlobalLegendPosition;
-    legend->SetX1NDC(p.Start().Start());
-    legend->SetY1NDC(p.Start().Stop());
-    legend->SetX2NDC(p.Stop().Start());
-    legend->SetY2NDC(p.Stop().Stop());
 
-    legend->Clear();
+    if(GlobalOptions.FixLegendPosition) {
+        const auto& p = GlobalLegendPosition;
+        legend.SetX1NDC(p.Start().Start());
+        legend.SetY1NDC(p.Start().Stop());
+        legend.SetX2NDC(p.Stop().Start());
+        legend.SetY2NDC(p.Stop().Stop());
+    }
+
+    legend.Clear();
 
     const auto& delim = ": "; // this makes the tokens
 
     vector<vector<string>> title_parts;
-    map<string, unsigned>  token_counter;
-    for(const auto& hist : hists) {
-        const string title = hist.Ptr->GetTitle();
+    for(const auto& wraphist : wraphists) {
+        const auto& hist = *wraphist.Hist;
+        const auto& title = hist.Ptr->GetTitle();
         title_parts.emplace_back(std_ext::tokenize_string(title, delim));
-        for(const auto& token : title_parts.back())
-            token_counter[token]++;
     }
 
-    vector<vector<string>> unique_title_parts;
-    auto it_hist = hists.begin();
+    auto it_hist = wraphists.begin();
     for(size_t i=0; i< title_parts.size(); i++) {
-        const tmphist_t& hist = *it_hist;
+        const wraphist_t& wraphist = *it_hist;
+        const hist_t& hist = *wraphist.Hist;
 
+        vector<string> unique_tokens;
         const auto& tokens = title_parts[i];
-        unique_title_parts.emplace_back();
-        auto& unique_tokens = unique_title_parts.back();
-        for(const auto& token : tokens)
-            if(token_counter[token] < hists.size())
-                unique_tokens.emplace_back(token);
+
+        for(size_t j=0;j<tokens.size();j++) {
+            const auto& token = tokens[j];
+            bool equals_others = true;
+            for(size_t k=0;k<title_parts.size();k++) {
+                if(k==i)
+                    continue;
+                if(title_parts[k].size() != tokens.size())
+                    continue;
+                if(token != title_parts[k][j]) {
+                    equals_others = false;
+                    break;
+                }
+            }
+            if(!equals_others)
+                unique_tokens.push_back(token);
+        }
+
         string unique_title = std_ext::concatenate_string(unique_tokens, delim);
         if(hstack::GlobalOptions.ShowEntriesInLegend)
-            unique_title += std_ext::formatter() << " (" << hist.Entries << ")";
+            unique_title += std_ext::formatter() << " (" << wraphist.Entries << ")";
 
-        auto entry = legend->AddEntry((TObject*)0, unique_title.c_str(), isDataHist(hist.Option.DrawOption) ? "lpfe" : "lpf");
+        auto entry = legend.AddEntry((TObject*)0, unique_title.c_str(), hist.isDataHist() ? "lpfe" : "lpf");
         AttCopy<TAttLine>(hist.Ptr, entry);
         AttCopy<TAttFill>(hist.Ptr, entry);
         AttCopy<TAttMarker>(hist.Ptr, entry);
@@ -281,138 +260,110 @@ void updateIntelliLegend(TLegend* legend, const list<tmphist_t>& hists)
     }
 }
 
-void hstack::Draw(const char* option)
+void hstack::Paint(const char* chopt)
 {
     if(hists.empty())
         return;
 
-    // ensure the histograms are ok
+    // ensure the histograms are there
     checkHists();
-
-    // hack the THStack such that the last histogram added gets drawn first
-    struct THStack_hack : THStack {
-        using THStack::THStack; // use constructors
-
-        TLegend* legend = nullptr;
-
-        virtual void Paint(const char* chopt="") override {
-
-            if(GlobalYAxisRange.IsSane()) {
-                SetMinimum(GlobalYAxisRange.Start());
-                SetMaximum(GlobalYAxisRange.Stop());
-            }
-            else {
-                // resets it to default -1111, well, THStack knows what to do then
-                SetMinimum();
-                SetMaximum();
-            }
-
-            // we need to iterate over links, since we need the option string
-            // attached to each item
-            if(fHists->IsEmpty())
-                return;
-            auto firstlink = fHists->FirstLink();
-            list<tmphist_t> tmp_hists;
-            do {
-                tmp_hists.emplace_back(firstlink->GetObject(), firstlink->GetOption());
-            }
-            while((firstlink = firstlink->Next()));
-
-            // save for later
-            auto tmp_hists_backup = tmp_hists;
-
-            // remove all empty hists if requested
-            if(fHistogram) {
-                const auto xfirst = fHistogram->GetXaxis()->GetFirst();
-                const auto xlast = fHistogram->GetXaxis()->GetLast();
-                auto it_hist = tmp_hists.begin();
-                while(it_hist != tmp_hists.end()) {
-                    TH1* h = it_hist->Ptr;
-                    it_hist->Entries = h->GetDimension() > 1 ?
-                                           h->GetEntries() : h->Integral(xfirst, xlast);
-                    if(GlobalOptions.IgnoreEmptyHist && it_hist->Entries == 0)
-                        it_hist = tmp_hists.erase(it_hist);
-                    else
-                        ++it_hist;
-                }
-            }
-
-            // build the legend before re-ordering and after removal
-            if(GlobalOptions.UseIntelliLegend) {
-                if(!legend)
-                    legend = new TLegend();
-                updateIntelliLegend(legend, tmp_hists);
-            }
-            else {
-                delete legend;
-                legend = nullptr;
-            }
-
-
-            // reverse first
-            std::reverse(tmp_hists.begin(), tmp_hists.end());
-
-            // then sort according to Z (the sort is stable)
-            tmp_hists.sort();
-
-
-            fHists->Clear("nodelete");
-            for(const auto& o : tmp_hists) {
-                fHists->Add(o.Ptr, o.Option.DrawOption.c_str());
-            }
-
-            // let's hope that this does not throw an exception
-            // before we unreverse the fHists
-            THStack::Paint(chopt);
-
-            if(legend)
-                legend->Draw();
-
-            // restore from backup
-            fHists->Clear("nodelete");
-            for(const auto& o : tmp_hists_backup) {
-                fHists->Add(o.Ptr, packModOption_t(o.Option).c_str());
-            }
-
-        }
-
-    };
-
-    auto stack = new THStack_hack((string(GetName())+"_").c_str(),
-                                  GlobalOptions.UseIntelliTitle ? "" : GetTitle());
-
-    for(const auto& hist : hists)
-        stack->Add(hist.Ptr, packModOption_t(hist.Option).c_str());
 
     UpdateMCScaling();
 
-    // finally draw the stack
-    string option_str(option);
-    option_str += "nostack"; // always draw with nostack
-    stack->Draw(option_str.c_str());
-
-    // axis business
-    auto xaxis = stack->GetXaxis();
-    xaxis->SetTitle(xlabel.c_str());
-
-    auto yaxis = stack->GetYaxis();
-    yaxis->SetTitle(ylabel.c_str());
-
     if(GlobalOptions.UseIntelliTitle)
-        buildIntelliTitle();
-}
+        SetTitle("");
+    else
+        SetTitle(origtitle.c_str());
 
-void hstack::Browse(TBrowser* b)
-{
-    Draw(b ? b->GetDrawOption() : "");
-    gPad->Update();
+    if(GlobalYAxisRange.IsSane()) {
+        SetMinimum(GlobalYAxisRange.Start());
+        SetMaximum(GlobalYAxisRange.Stop());
+    }
+    else {
+        // resets it to default -1111, well, THStack knows what to do then
+        SetMinimum();
+        SetMaximum();
+    }
+
+    // make list of wrapped hists, in order to kick out elements and
+    // count entries...
+    list<wraphist_t> tmp_hists(hists.begin(), hists.end());
+
+    // remove all empty hists if requested
+    const auto basehist = fHistogram ? fHistogram : hists.front().Ptr;
+    const auto xaxis = basehist->GetXaxis();
+    auto it_hist = tmp_hists.begin();
+    while(it_hist != tmp_hists.end()) {
+        TH1* h = it_hist->Hist->Ptr;
+        it_hist->Entries = h->GetDimension() > 1 ?
+                               h->GetEntries() : h->Integral(xaxis->GetFirst(), xaxis->GetLast());
+        if(GlobalOptions.IgnoreEmptyHist && it_hist->Entries < 1)
+            it_hist = tmp_hists.erase(it_hist);
+        else
+            ++it_hist;
+    }
+
+    // build the legend before re-ordering and after removal
+    if(GlobalOptions.UseIntelliLegend) {
+        if(!intellilegend) {
+            const auto& p = GlobalLegendPosition;
+            intellilegend = std_ext::make_unique<TLegend>(
+                         p.Start().Start(),
+                         p.Start().Stop(),
+                         p.Stop().Start(),
+                         p.Stop().Stop()
+                         );
+        }
+        updateIntelliLegend(*intellilegend, tmp_hists);
+    }
+    else {
+        intellilegend = nullptr;
+    }
+
+    if(GlobalOptions.UseIntelliTitle) {
+        buildIntelliTitle();
+    }
+    else {
+        intellititle = nullptr;
+    }
+
+    // reverse first
+    std::reverse(tmp_hists.begin(), tmp_hists.end());
+
+    // then sort according to Z (the sort is stable)
+    tmp_hists.sort();
+
+
+    if(fHists)
+        fHists->Clear("nodelete");
+    for(const auto& o : tmp_hists) {
+        Add(o.Hist->Ptr, o.Hist->Option.DrawOption.c_str());
+    }
+
+    // let's hope that this does not throw an exception
+    // before we unreverse the fHists
+    string chopt_str(chopt);
+    chopt_str += "nostack"; // always draw with nostack
+    THStack::Paint(chopt_str.c_str());
+
+    if(basehist != fHistogram) {
+        const auto yaxis = basehist->GetYaxis();
+        GetXaxis()->SetTitle(xaxis->GetTitle());
+        GetYaxis()->SetTitle(yaxis->GetTitle());
+        THStack::Paint(chopt_str.c_str());
+    }
+
+    if(intellilegend)
+       intellilegend->Draw();
+
+    if(intellititle)
+        intellititle->Draw();
 }
 
 void hstack::SetGlobalMCScaling(double scaling)
 {
     if(isfinite(scaling) && scaling != 0) {
         Global_MC_Scaling = scaling;
-        UpdateMCScaling();
         gPad->Modified();
         gPad->Update();
         cout << endl << "ant::hstack: Set global MC scaling to " << scaling << endl;
@@ -426,13 +377,17 @@ void hstack::SetGlobalYAxisRange(double low, double high)
     gPad->Update();
 }
 
-void hstack::SetGlobalLegendPosition(double x1, double y1, double x2, double y2)
+void hstack::FixLegendPosition(bool flag)
 {
-    GlobalLegendPosition = {{x1, y1}, {x2, y2}};
-    gPad->Modified();
-    gPad->Update();
+    if(intellilegend) {
+        GlobalLegendPosition = {
+            {intellilegend->GetX1NDC(), intellilegend->GetY1NDC()},
+            {intellilegend->GetX2NDC(), intellilegend->GetY2NDC()}
+        };
+    }
+    GlobalOptions.FixLegendPosition = flag;
 }
-
+bool hstack::GetFixLegendPosition() const { return GlobalOptions.FixLegendPosition; }
 
 void hstack::UseIntelliLegend(bool flag) { GlobalOptions.UseIntelliLegend = flag; gPad->Modified(); gPad->Update(); }
 bool hstack::GetUseIntelliLegend() const { return GlobalOptions.UseIntelliLegend; }
@@ -447,7 +402,7 @@ void hstack::UpdateMCScaling()
 {
     if(isfinite(Global_MC_Scaling)) {
         for(hist_t& hist : hists) {
-            if(isDataHist(hist.Option.DrawOption))
+            if(hist.isDataHist())
                 continue;
             // have a look if this hist was scaled already
             double scale = Global_MC_Scaling;
@@ -461,7 +416,7 @@ void hstack::UpdateMCScaling()
     }
 }
 
-Long64_t hstack::Merge(TCollection* li)
+Long64_t hstack::Merge(TCollection* li, TFileMergeInfo*)
 {
     if(!li)
         return 0;

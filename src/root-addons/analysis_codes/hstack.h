@@ -1,7 +1,7 @@
 #pragma once
 
 #include "Rtypes.h"
-#include "TNamed.h"
+#include "THStack.h"
 
 #include <string>
 #include <vector>
@@ -11,13 +11,15 @@
 #include "analysis/plot/HistStyle.h"
 #include "base/printable.h"
 #include "base/interval.h"
+#include <memory>
 #else
 // disable the override keyword
 #define override
 #endif
 
-class THStack;
 class TH1;
+class TLegend;
+class TPaveText;
 
 namespace ant {
 
@@ -39,9 +41,9 @@ namespace ant {
  */
 
 #ifndef __CINT__
-struct hstack :  TNamed, printable_traits
+struct hstack :  THStack, printable_traits
 #else
-struct hstack : TNamed
+struct hstack : THStack
 #endif
 {
 
@@ -55,6 +57,7 @@ struct hstack : TNamed
         bool IgnoreEmptyHist = true;
         bool ShowEntriesInLegend = true;
         bool UseIntelliTitle = true;
+        bool FixLegendPosition = false;
     };
 
     hstack(const std::string& name, const std::string& title="");
@@ -73,8 +76,7 @@ struct hstack : TNamed
 
     template<typename Archive>
     void serialize(Archive archive) {
-        archive(static_cast<TNamed&>(*this),
-                hists, xlabel, ylabel);
+        archive(static_cast<TNamed&>(*this), hists);
         checkHists();
     }
 
@@ -84,11 +86,11 @@ struct hstack : TNamed
 
     static interval<double> GlobalYAxisRange;
     static interval<interval<double>> GlobalLegendPosition;
-
     static options_t GlobalOptions;
 
 protected:
 
+    using THStack::Add; // hide Add
 
     struct hist_t {
 
@@ -97,25 +99,13 @@ protected:
             Ptr(ptr),
             Option(option)
         {}
-
-        // clear the Ptr on copy
-        // checkHists() needs to be called then
-        hist_t(const hist_t& other) {
-            Path = other.Path;
-            Option = other.Option;
-            Ptr = nullptr;
-        }
-        hist_t& operator= (const hist_t&) = delete;
-
-        // move is ok
-        hist_t& operator= (hist_t&&) = default;
-        hist_t(hist_t&&) = default;
+        hist_t() {}
 
         std::string Path;
         TH1* Ptr = nullptr;
         ModOption_t Option;
 
-        hist_t() {}
+        bool isDataHist() const;
 
         template<typename Archive>
         void load(Archive archive) {
@@ -134,15 +124,25 @@ protected:
     using hists_t = std::vector<hist_t>;
     hists_t hists;
 
+    struct wraphist_t {
+        wraphist_t(const hist_t& h) : Hist(std::addressof(h)) {}
+        const hist_t* Hist;
+        double Entries = 0;
+        bool operator<(const wraphist_t& other) const {
+            return Hist->Option.Z < other.Hist->Option.Z;
+        }
+    };
+
     ModOption_t current_option;
 
-    std::string xlabel;
-    std::string ylabel;
-    std::string title;
+    std::string origtitle;
 
+    std::unique_ptr<TLegend>   intellilegend;
+    std::unique_ptr<TPaveText> intellititle;
 
     void checkHists();
-    void buildIntelliTitle() const;
+    void buildIntelliTitle();
+    static void updateIntelliLegend(TLegend& legend, std::list<wraphist_t> wraphists);
 
 #endif // __CINT__
 
@@ -150,12 +150,13 @@ public:
 
     virtual void Print(const char* option) const override;
     virtual void Print() const; // *MENU*
-    virtual void Draw(const char* option) override;
-    virtual void Browse(TBrowser* b) override;
+    virtual void Paint(const char* chopt) override;
 
     virtual void SetGlobalMCScaling(double scaling); // *MENU*
     virtual void SetGlobalYAxisRange(double low, double high); // *MENU*
-    virtual void SetGlobalLegendPosition(double x1=0.5, double y1=0.67, double x2=0.88, double y2=0.88); // *MENU*
+
+    virtual void FixLegendPosition(bool flag); // *TOGGLE* *GETTER=GetFixLegendPosition
+    virtual bool GetFixLegendPosition() const;
 
     virtual void UseIntelliLegend(bool flag); // *TOGGLE* *GETTER=GetUseIntelliLegend
     virtual bool GetUseIntelliLegend() const;
@@ -170,10 +171,11 @@ public:
     virtual bool GetShowEntriesInLegend() const;
 
     // to be used with Ant-hadd
-    Long64_t Merge(TCollection* li);
+    virtual Long64_t Merge(TCollection* li, TFileMergeInfo *info) override;
 
     hstack();
     virtual ~hstack();
+
 #ifdef __clang__
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Winconsistent-missing-override"
