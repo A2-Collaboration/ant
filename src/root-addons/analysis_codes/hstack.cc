@@ -50,6 +50,15 @@ hstack::hstack() {}
 hstack::~hstack()
 {}
 
+bool hstack::hist_t::isDataHist() const
+{
+    /// \todo find better way to detect which histograms
+    /// should NOT be scaled or drawn with error bar in legend.
+    /// For now, we assume that data is always drawn
+    /// with error bars.
+    return std_ext::contains(Option.DrawOption, "E");
+}
+
 TH1* hstack::hist_t::GetPtr(const string& path)
 {
     auto ptr = dynamic_cast<TH1*>(gDirectory->Get(path.c_str()));
@@ -191,7 +200,7 @@ void hstack::buildIntelliLegend() const
         if(GlobalOptions.ShowEntriesInLegend)
             unique_title += std_ext::formatter() << " (" << hists[i].Ptr->GetEntries() << ")";
 
-        auto entry = legend->AddEntry((TObject*)0, unique_title.c_str());
+        auto entry = legend->AddEntry((TObject*)0, unique_title.c_str(), hist.isDataHist() ? "lpfe" : "lpf");
         AttCopy<TAttLine>(hist.Ptr, entry);
         AttCopy<TAttFill>(hist.Ptr, entry);
         AttCopy<TAttMarker>(hist.Ptr, entry);
@@ -398,10 +407,7 @@ void hstack::UpdateMCScaling()
 {
     if(isfinite(Global_MC_Scaling)) {
         for(hist_t& hist : hists) {
-            /// \todo find better way to detect which histograms
-            /// should NOT be scaled. We assume that data is always drawn
-            /// with error bars.
-            if(std_ext::contains(hist.Option.DrawOption, "E"))
+            if(hist.isDataHist())
                 continue;
             // have a look if this hist was scaled already
             double scale = Global_MC_Scaling;

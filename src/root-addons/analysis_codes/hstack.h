@@ -117,6 +117,7 @@ protected:
 
         hist_t() {}
 
+        bool isDataHist() const;
 
         template<typename Archive>
         void load(Archive archive) {
