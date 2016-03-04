@@ -522,6 +522,18 @@ TLorentzVector LVSum(it_type begin, it_type end) {
 }
 
 template <typename it_type>
+TLorentzVector LVSumL(it_type begin, it_type end) {
+    TLorentzVector v;
+
+    while(begin!=end) {
+        v += *begin;
+        ++begin;
+    }
+
+    return v;
+}
+
+template <typename it_type>
 double TimeAvg(it_type begin, it_type end) {
     double t    = 0.0;
     double Esum = 0.0;
@@ -635,6 +647,10 @@ void OmegaEtaG2::Analyse(const TEventData &data, const TEvent& event, manager_t&
 
     const auto& proton = protons.at(0);
 
+    t.photons().at(0) = *photons.at(0);
+    t.photons().at(1) = *photons.at(1);
+    t.photons().at(2) = *photons.at(2);
+
     t.p      = *proton;
     t.p_Time = getTime(proton);
 
@@ -660,6 +676,7 @@ void OmegaEtaG2::Analyse(const TEventData &data, const TEvent& event, manager_t&
 
     const TParticle ggg(ParticleTypeDatabase::Omega, LVSum(photons.begin(), photons.end()));
     t.ggg = ggg;
+    const TVector3 gggBoost = -ggg.BoostVector();
 
     t.copl_angle = fabs(TVector2::Phi_mpi_pi(proton->Phi() - ggg.Phi() - M_PI));
 
@@ -667,12 +684,6 @@ void OmegaEtaG2::Analyse(const TEventData &data, const TEvent& event, manager_t&
         return;
 
     steps->Fill("4 Coplanarity", 1);
-
-    t.photons().at(0) = *photons.at(0);
-    t.photons().at(1) = *photons.at(1);
-    t.photons().at(2) = *photons.at(2);
-
-    const TVector3 gggBoost = -ggg.BoostVector();
 
     t.CBAvgTime = event.Reconstructed->Trigger.CBTiming;
     if(!isfinite(t.CBAvgTime))
@@ -702,6 +713,30 @@ void OmegaEtaG2::Analyse(const TEventData &data, const TEvent& event, manager_t&
 
         t.p_mm_angle = radian_to_degree(missing.Angle(proton->Vect()));
 
+
+        fitter.SetEgammaBeam(TagH.PhotonEnergy);
+        fitter.SetProton(proton);
+        fitter.SetPhotons(photons);
+
+        auto fitres = fitter.DoFit();
+
+        if(fitres.Status != APLCON::Result_Status_t::Success)
+            continue;
+
+        t.KinFitChi2 = fitres.ChiSquare / fitres.NDoF;
+        t.KinFitIterations = unsigned(fitres.NIterations);
+
+        t.p_fitted = *fitter.GetFittedProton();
+
+        t.photons_fitted().at(0) = *fitter.GetFittedPhotons().at(0);
+        t.photons_fitted().at(1) = *fitter.GetFittedPhotons().at(1);
+        t.photons_fitted().at(2) = *fitter.GetFittedPhotons().at(2);
+
+        const TParticle ggg_fitted(ParticleTypeDatabase::Omega, LVSumL(t.photons_fitted().begin(), t.photons_fitted().end()));
+        t.ggg_fitted = ggg_fitted;
+
+        const TVector3 gggBoost_fitted = -ggg_fitted.BoostVector();
+
         size_t combindex = 0;
 
         for(const auto& comb : combs) {
@@ -718,22 +753,26 @@ void OmegaEtaG2::Analyse(const TEventData &data, const TEvent& event, manager_t&
             t.BachelorE().at(combindex) = g3_boosted.E();
 
             ++combindex;
-
         }
 
-        fitter.SetEgammaBeam(TagH.PhotonEnergy);
-        fitter.SetProton(proton);
-        fitter.SetPhotons(photons);
+        combindex = 0;
+        for(const auto& comb : combs) {
+            const auto& g1 = t.photons_fitted().at(comb[0]);
+            const auto& g2 = t.photons_fitted().at(comb[1]);
+            const auto& g3 = t.photons_fitted().at(comb[2]);
 
-        auto fitres = fitter.DoFit();
+            const TLorentzVector gg = g1 + g2;
 
-        if(fitres.Status != APLCON::Result_Status_t::Success)
-            continue;
+            t.ggIM_fitted().at(combindex) = gg.M();
 
-        t.KinFitChi2 = fitres.ChiSquare / fitres.NDoF;
-        t.KinFitIterations = unsigned(fitres.NIterations);
+            const TLorentzVector g3_boosted = boost(g3, gggBoost_fitted);
 
-        t.p_fitted = *fitter.GetFittedProton();
+            t.BachelorE_fitted().at(combindex) = g3_boosted.E();
+
+            ++combindex;
+        }
+
+
 
 
         TParticleList rec_photons(3);
@@ -935,12 +974,7 @@ void OmegaEtaG2::Finish()
 
 
 OmegaEtaG2::OmegaTree_t::OmegaTree_t()
-{
-    photons().resize(3);
-    ggIM().resize(3);
-    BachelorE().resize(3);
-    ggIM_comb().resize(3);
-}
+{}
 
 decltype(OmegaEtaG2::combs) OmegaEtaG2::combs = {{0,1,2},{0,2,1},{1,2,0}};
 

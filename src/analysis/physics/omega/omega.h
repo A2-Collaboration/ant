@@ -154,7 +154,8 @@ public:
     struct OmegaTree_t : WrapTTree {
         OmegaTree_t();
 
-        ADD_BRANCH_T(std::vector<TLorentzVector>, photons)
+        ADD_BRANCH_T(std::vector<TLorentzVector>, photons, 3)
+        ADD_BRANCH_T(std::vector<TLorentzVector>, photons_fitted, 3)
         ADD_BRANCH_T(TLorentzVector,              p)
         ADD_BRANCH_T(double,                      p_Time)
         ADD_BRANCH_T(double,                      p_PSA_Angle)
@@ -165,16 +166,19 @@ public:
         ADD_BRANCH_T(TLorentzVector,              p_fitted)
 
         ADD_BRANCH_T(TLorentzVector,              ggg)
+        ADD_BRANCH_T(TLorentzVector,              ggg_fitted)
         ADD_BRANCH_T(TLorentzVector,              mm)
         ADD_BRANCH_T(double,                      copl_angle)
         ADD_BRANCH_T(double,                      p_mm_angle)
 
-        ADD_BRANCH_T(std::vector<double>,         ggIM)
+        ADD_BRANCH_T(std::vector<double>,         ggIM, 3)
+        ADD_BRANCH_T(std::vector<double>,         ggIM_fitted, 3)
 
-        ADD_BRANCH_T(std::vector<double>,         BachelorE)
+        ADD_BRANCH_T(std::vector<double>,         BachelorE, 3)
+        ADD_BRANCH_T(std::vector<double>,         BachelorE_fitted, 3)
 
         ADD_BRANCH_T(double,                      ggIM_real)  // only if Signal/Ref
-        ADD_BRANCH_T(std::vector<double>,         ggIM_comb)  // only if Signal/Ref
+        ADD_BRANCH_T(std::vector<double>,         ggIM_comb, 2)  // only if Signal/Ref
 
         ADD_BRANCH_T(double,   TaggW)
         ADD_BRANCH_T(double,   TaggW_tight)

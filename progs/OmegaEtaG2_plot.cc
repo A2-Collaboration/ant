@@ -199,20 +199,20 @@ struct OmegaHist_t {
         });
 
         AddTH1("3#gamma IM",      "3#gamma IM [MeV]",     "",       IMbins,     "ggg_IM",
-               [] (TH1D* h, const Fill_t& f) { h->Fill(f.Tree.ggg().M(), f.TaggW());
+               [] (TH1D* h, const Fill_t& f) { h->Fill(f.Tree.ggg_fitted().M(), f.TaggW());
         });
 
         AddTH1("2#gamma sub-IM",  "2#gamma IM [MeV]",     "",       IMbins,     "gg_IM",
                [] (TH1D* h, const Fill_t& f) {
 
-            for(const auto& v : f.Tree.ggIM())
+            for(const auto& v : f.Tree.ggIM_fitted())
                 h->Fill(v, f.TaggW());
         });
 
         AddTH1("Bachelor Photon Energy",  "E [MeV]",     "",       IMbins,     "bachelorE",
                [] (TH1D* h, const Fill_t& f) {
 
-            for(const auto& v : f.Tree.BachelorE())
+            for(const auto& v : f.Tree.BachelorE_fitted())
                 h->Fill(v, f.TaggW());
         });
 
@@ -249,7 +249,7 @@ struct OmegaHist_t {
 
         AddTH2("3#gamma IM vs 2#gamma IM", "3#gamma IM [MeV]", "max(2#gamma IM) [MeV]", IMbins, IMbins, "ggg_max_gg",
                [] (TH2D* h, const Fill_t& f) {
-            h->Fill(f.Tree.ggg().M(), max(f.Tree.ggIM()), f.TaggW());
+            h->Fill(f.Tree.ggg_fitted().M(), max(f.Tree.ggIM_fitted()), f.TaggW());
         });
 
     }
@@ -287,9 +287,9 @@ struct OmegaHist_t {
                               {"mm cut",        [] (const Fill_t& f) { return f.Tree.mm().M()<1100 && f.Tree.mm().M() > 780; } }
                           });
         cuts.emplace_back(MultiCut_t<Fill_t>{
-                              {"m(3#gamma) cut",        [] (const Fill_t& f) { return f.Tree.ggg().M()<900 && f.Tree.ggg().M() > 700; } },
-                              {"#eta window",           [] (const Fill_t& f) { return Contains( {530.0, 580.0}, f.Tree.ggIM()); } },
-                              {"#pi^{0} window",        [] (const Fill_t& f) { return Contains( {125.0, 145.0}, f.Tree.ggIM()); } }
+                              {"m(3#gamma) cut",        [] (const Fill_t& f) { return f.Tree.ggg_fitted().M()<900 && f.Tree.ggg_fitted().M() > 700; } },
+                              {"#eta window",           [] (const Fill_t& f) { return Contains( {530.0, 580.0}, f.Tree.ggIM_fitted()); } },
+                              {"#pi^{0} window",        [] (const Fill_t& f) { return Contains( {125.0, 145.0}, f.Tree.ggIM_fitted()); } }
 
                           });
         return cuts;
