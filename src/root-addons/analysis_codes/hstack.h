@@ -117,8 +117,6 @@ protected:
 
         hist_t() {}
 
-        bool isDataHist() const;
-
         template<typename Archive>
         void load(Archive archive) {
             archive(Path, Option);
@@ -144,7 +142,6 @@ protected:
 
 
     void checkHists();
-    void buildIntelliLegend() const;
     void buildIntelliTitle() const;
 
 #endif // __CINT__
