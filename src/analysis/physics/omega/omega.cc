@@ -912,7 +912,7 @@ OmegaEtaG2::OmegaEtaG2(const std::string& name, OptionsPtr opts):
 
     for(const auto& c : reaction_channels.channels) {
 
-        stephists[c.first] = HistFac.makeTH1D("Steps " + c.second.name, "", "", BinSettings(14), "steps_" + to_string(c.first));
+        stephists[c.first] = HistFac.makeTH1D("Steps: " + c.second.name, "", "", BinSettings(14), "steps_" + to_string(c.first));
 
         if(c.first<20)
             found_channels->GetXaxis()->SetBinLabel(c.first+1,c.second.name.c_str());
@@ -922,6 +922,14 @@ OmegaEtaG2::OmegaEtaG2(const std::string& name, OptionsPtr opts):
 
 OmegaEtaG2::~OmegaEtaG2()
 {
+}
+
+void OmegaEtaG2::Finish()
+{
+    hstack* s = HistFac.make<hstack>("steps");
+    for(auto& c : stephists) {
+        (*s) << c.second;
+    }
 }
 
 

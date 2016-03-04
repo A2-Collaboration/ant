@@ -386,19 +386,6 @@ int main(int argc, char** argv) {
             LOG(INFO) << "Processed " << 100.0*entry/entries << " %";
     }
 
-    canvas c("Steps");
-    hstack s;
-    for(const auto& c : physics::OmegaEtaG2::reaction_channels.channels) {
-        TH1D* h = nullptr;
-        cout << "OmegaEtaG2/setps_"+to_string(c.first) << endl;
-        input.GetObject("OmegaEtaG2/steps_"+to_string(c.first), h);
-        if(h){
-            s << h;
-            cout << h->GetName() << endl;
-        }
-    }
-    c << &s << endc;
-
     if(!cmd_batchmode->isSet()) {
         if(!std_ext::system::isInteractive()) {
             LOG(INFO) << "No TTY attached. Not starting ROOT shell.";

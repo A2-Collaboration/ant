@@ -235,6 +235,8 @@ public:
     OmegaEtaG2(const std::string& name, OptionsPtr opts);
     virtual ~OmegaEtaG2();
 
+    void Finish() override;
+
     using decaytree_t = ant::Tree<const ParticleTypeDatabase::Type&>;
 
     struct ReactionChannel_t {
