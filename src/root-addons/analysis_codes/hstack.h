@@ -55,6 +55,8 @@ struct hstack : THStack
     struct options_t {
         bool UseIntelliLegend = true ;
         bool IgnoreEmptyHist = true;
+        double HistThreshold = 1;
+        std::string HistThresholdMatches = "Bkg_";
         bool ShowEntriesInLegend = true;
         bool UseIntelliTitle = true;
         bool FixLegendPosition = false;
@@ -130,9 +132,7 @@ protected:
         wraphist_t(const hist_t& h) : Hist(std::addressof(h)) {}
         const hist_t* Hist;
         double Entries = 0;
-        bool operator<(const wraphist_t& other) const {
-            return Hist->Option.Z < other.Hist->Option.Z;
-        }
+        bool operator<(const wraphist_t& other) const;
     };
 
     ModOption_t current_option;
@@ -156,6 +156,7 @@ public:
 
     virtual void SetGlobalMCScaling(double scaling); // *MENU*
     virtual void SetGlobalYAxisRange(double low, double high); // *MENU*
+    virtual void SetHistThreshold(double thresh, const char* matches = "Bkg_"); // *MENU*
 
     virtual void FixLegendPosition(bool flag); // *TOGGLE* *GETTER=GetFixLegendPosition
     virtual bool GetFixLegendPosition() const;

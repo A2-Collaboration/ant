@@ -23,6 +23,7 @@
 #include "TPaveText.h"
 
 #include <list>
+#include <iomanip>
 
 using namespace ant;
 using namespace std;
@@ -67,6 +68,10 @@ string hstack::hist_t::GetPath(const TH1* ptr)
     if(n == path.npos)
         return path;
     return path.substr(n+1);
+}
+
+bool hstack::wraphist_t::operator<(const hstack::wraphist_t& other) const {
+    return Hist->Option.Z < other.Hist->Option.Z;
 }
 
 hstack& hstack::operator<<(TH1* hist)
@@ -243,7 +248,7 @@ void hstack::updateIntelliLegend(TLegend& legend, std::list<wraphist_t> wraphist
 
         string unique_title = std_ext::concatenate_string(unique_tokens, delim);
         if(hstack::GlobalOptions.ShowEntriesInLegend)
-            unique_title += std_ext::formatter() << " (" << wraphist.Entries << ")";
+            unique_title += std_ext::formatter() << " (" << setprecision(3) << wraphist.Entries << ")";
 
         auto entry = legend.AddEntry((TObject*)0, unique_title.c_str(), hist.isDataHist() ? "lpfe" : "lpf");
         AttCopy<TAttLine>(hist.Ptr, entry);
@@ -297,7 +302,9 @@ void hstack::Paint(const char* chopt)
         TH1* h = it_hist->Hist->Ptr;
         it_hist->Entries = h->GetDimension() > 1 ?
                                h->GetEntries() : h->Integral(xaxis->GetFirst(), xaxis->GetLast());
-        if(GlobalOptions.IgnoreEmptyHist && it_hist->Entries < 1)
+        if((GlobalOptions.IgnoreEmptyHist && it_hist->Entries < 1)
+           || (std_ext::contains(h->GetTitle(), GlobalOptions.HistThresholdMatches)
+               && it_hist->Entries < GlobalOptions.HistThreshold) )
             it_hist = tmp_hists.erase(it_hist);
         else
             ++it_hist;
@@ -314,6 +321,19 @@ void hstack::Paint(const char* chopt)
                          p.Stop().Stop()
                          );
         }
+        // sort by name if it's Bkg_
+        // little hack to get legends stable...
+        tmp_hists.sort([] (const wraphist_t& a, const wraphist_t& b) {
+            if(a.Hist->Option.Z == b.Hist->Option.Z) {
+                const string& title_a = a.Hist->Ptr->GetTitle();
+                const string& title_b = b.Hist->Ptr->GetTitle();
+                if(std_ext::contains(title_a,"Bkg_") && std_ext::contains(title_b,"Bkg_"))
+                    return title_a < title_b;
+                else
+                    return false;
+            }
+            return false;
+        });
         updateIntelliLegend(*intellilegend, tmp_hists);
     }
     else {
@@ -330,7 +350,7 @@ void hstack::Paint(const char* chopt)
     // reverse first
     std::reverse(tmp_hists.begin(), tmp_hists.end());
 
-    // then sort according to Z (the sort is stable)
+    // then sort according to Z
     tmp_hists.sort();
 
 
@@ -353,10 +373,10 @@ void hstack::Paint(const char* chopt)
         THStack::Paint(chopt_str.c_str());
     }
 
-    if(intellilegend)
+    if(intellilegend && !gPad->FindObject(intellilegend.get()))
        intellilegend->Draw();
 
-    if(intellititle)
+    if(intellititle && !gPad->FindObject(intellititle.get()))
         intellititle->Draw();
 }
 
@@ -377,13 +397,25 @@ void hstack::SetGlobalYAxisRange(double low, double high)
     gPad->Update();
 }
 
+void hstack::SetHistThreshold(double thresh, const char* matches)
+{
+    GlobalOptions.HistThreshold = thresh;
+    GlobalOptions.HistThresholdMatches = matches;
+    gPad->Modified();
+    gPad->Update();
+}
+
 void hstack::FixLegendPosition(bool flag)
 {
-    if(intellilegend) {
-        GlobalLegendPosition = {
-            {intellilegend->GetX1NDC(), intellilegend->GetY1NDC()},
-            {intellilegend->GetX2NDC(), intellilegend->GetY2NDC()}
-        };
+    TIter next(gPad->GetListOfPrimitives());
+    while(TObject* obj = next()) {
+        if(obj->IsA() == TLegend::Class()) {
+            TLegend* legend = dynamic_cast<TLegend*>(obj);
+            GlobalLegendPosition = {
+                {legend->GetX1NDC(), legend->GetY1NDC()},
+                {legend->GetX2NDC(), legend->GetY2NDC()}
+            };
+        }
     }
     GlobalOptions.FixLegendPosition = flag;
 }
@@ -393,7 +425,7 @@ void hstack::UseIntelliLegend(bool flag) { GlobalOptions.UseIntelliLegend = flag
 bool hstack::GetUseIntelliLegend() const { return GlobalOptions.UseIntelliLegend; }
 void hstack::UseIntelliTitle(bool flag) { GlobalOptions.UseIntelliTitle = flag; gPad->Modified(); gPad->Update(); }
 bool hstack::GetUseIntelliTitle() const { return GlobalOptions.UseIntelliTitle; }
-void hstack::IgnoreEmptyHist(bool flag) { GlobalOptions.IgnoreEmptyHist = flag; gPad->Modified(); gPad->Update(); }
+void hstack::IgnoreEmptyHist(bool flag) { GlobalOptions.IgnoreEmptyHist = flag; gPad->Modified(); gPad->Update();}
 bool hstack::GetIgnoreEmptyHist() const { return GlobalOptions.IgnoreEmptyHist; }
 void hstack::ShowEntriesInLegend(bool flag) { GlobalOptions.ShowEntriesInLegend = flag; gPad->Modified(); gPad->Update(); }
 bool hstack::GetShowEntriesInLegend() const { return GlobalOptions.ShowEntriesInLegend; }
@@ -485,6 +517,8 @@ void hstack::Streamer(TBuffer& R__b)
         ar(*this);
     }
 }
+
+
 
 
 
