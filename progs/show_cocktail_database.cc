@@ -113,8 +113,12 @@ int main( int argc, char** argv )
     auto cit = std_ext::getCircularIterator(ColorPalette::Colors.begin(), ColorPalette::Colors.end());
     for (auto histptr: histograms)
     {
+        histptr->GetXaxis()->SetNdivisions(4);
+        histptr->GetYaxis()->SetNdivisions(3);
         histptr->SetXTitle("E_{#gamma} [GeV]");
         histptr->SetYTitle("#sigma_{tot} [#mub]");
+        histptr->SetLabelSize(0.08,"X");
+        histptr->SetLabelSize(0.08,"Y");
         histptr->SetMarkerStyle(7);
         histptr->SetLineColor(*cit);
         sumplot << histptr;
