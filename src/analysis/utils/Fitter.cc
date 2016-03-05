@@ -20,6 +20,8 @@
 #include "TH1D.h"
 #include "TF1.h"
 
+#include "base/LorentzVec.h"
+
 #include <cassert>
 #include <functional>
 
@@ -154,7 +156,7 @@ void Fitter::FitParticle::SetupBranches(TTree* tree, const string& prefix)
     Phi.SetupBranches(tree, prefix+"_"+Name+"_Phi");
 }
 
-TLorentzVector Fitter::FitParticle::GetVector(const std::vector<double>& EkThetaPhi, const double m)
+LorentzVec Fitter::FitParticle::GetVector(const std::vector<double>& EkThetaPhi, const double m)
 {
     const mev_t E = EkThetaPhi[0] + m;
     const mev_t p = sqrt( sqr(E) - sqr(m) );
@@ -162,7 +164,7 @@ TLorentzVector Fitter::FitParticle::GetVector(const std::vector<double>& EkTheta
     const double theta_ = EkThetaPhi[1];
     const double phi_ = EkThetaPhi[2];
 
-    return TLorentzVector(
+    return LorentzVec(
                 p*TMath::Sin(theta_)*TMath::Cos(phi_),
                 p*TMath::Sin(theta_)*TMath::Sin(phi_),
                 p*TMath::Cos(theta_),
@@ -295,16 +297,16 @@ KinFitter::KinFitter(const std::string& name, unsigned numGammas, const APLCON::
 
     auto LorentzInvariance = [] (const vector<vector<double>>& values)
     {
-        // beam    TLorentzVector(0.0, 0.0, PhotonEnergy(), PhotonEnergy());
-        // target  TLorentzVector(0.0, 0.0, 0.0, ParticleTypeDatabase::Proton.Mass())
+        // beam    LorentzVec(0.0, 0.0, PhotonEnergy(), PhotonEnergy());
+        // target  LorentzVec(0.0, 0.0, 0.0, ParticleTypeDatabase::Proton.Mass())
         const auto& Ebeam  = values[0][0];
         const auto& proton = values[1];
 
         //  Beam-LV:
-        const TLorentzVector beam(0, 0, Ebeam, Ebeam);
-        const TLorentzVector tg(0,0,0,ParticleTypeDatabase::Proton.Mass());
+        const LorentzVec beam(0, 0, Ebeam, Ebeam);
+        const LorentzVec tg(0,0,0,ParticleTypeDatabase::Proton.Mass());
 
-        TLorentzVector constraint = tg + beam;
+        LorentzVec constraint = tg + beam;
 
         constraint -= FitParticle::GetVector(proton, ParticleTypeDatabase::Proton.Mass());
 
@@ -313,10 +315,10 @@ KinFitter::KinFitter(const std::string& name, unsigned numGammas, const APLCON::
             constraint -= FitParticle::GetVector(values[photon + 2], ParticleTypeDatabase::Photon.Mass());
 
         return vector<double>(
-               { constraint.X(),
-                 constraint.Y(),
-                 constraint.Z(),
-                 constraint.E()} );
+               { constraint.x.x,
+                 constraint.x.y,
+                 constraint.x.z,
+                 constraint.E} );
     };
 
     aplcon->AddConstraint("LInv",namesLInv,LorentzInvariance);

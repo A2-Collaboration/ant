@@ -6,6 +6,7 @@
 #include "analysis/utils/combinatorics.h"
 
 #include "TLorentzVector.h"
+#include "base/LorentzVec.h"
 
 #include "APLCON.hpp"
 
@@ -111,7 +112,7 @@ protected:
 
         void SetupBranches(TTree* tree, const std::string& prefix);
 
-        static TLorentzVector GetVector(const std::vector<double>& EkThetaPhi, double m);
+        static ant::LorentzVec GetVector(const std::vector<double>& EkThetaPhi, double m);
     };
 
     void LinkVariable(FitParticle& particle);
