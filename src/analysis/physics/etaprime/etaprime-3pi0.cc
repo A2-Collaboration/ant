@@ -148,12 +148,12 @@ void Etap3pi0::ProcessEvent(const TEvent& event, manager_t&)
 
     if(data.Trigger.CBEnergySum < phSettings.EsumCB)
         return;
-    hists.at("steps").at("evcount")->Fill("2) CB-Energy-Sum",1);
+    hists.at("steps").at("evcount")->Fill((formatter() << "2) CB-Energy-Sum > " << phSettings.EsumCB).str().c_str(),1);
     vars.EsumCB = data.Trigger.CBEnergySum;
 
     if ( data.Candidates.size() != 7)
         return;
-    hists.at("steps").at("evcount")->Fill("3) 7 cands",1);
+    hists.at("steps").at("evcount")->Fill("3) 7 candidates",1);
 
     vars.protonTime = std_ext::NaN;
     for(const auto& cand : data.Candidates)
@@ -201,7 +201,7 @@ void Etap3pi0::ProcessEvent(const TEvent& event, manager_t&)
     vars.coplanarity = std_ext::radian_to_degree(TVector2::Phi_mpi_pi(vars.proton.Phi() - vars.etaprimeCand.Phi() - M_PI ));
     if (fabs(vars.coplanarity) > phSettings.coplCut)
         return;
-    hists.at("steps").at("evcount")->Fill("5) proton Coplanarity",1);
+    hists.at("steps").at("evcount")->Fill((formatter() << "5) proton Coplanarity < " << phSettings.coplCut).str().c_str(),1);
 
 
 
@@ -230,7 +230,8 @@ void Etap3pi0::ProcessEvent(const TEvent& event, manager_t&)
         vars.EMB_chi2 = applyEnergyMomentumConservation(t.PhotonEnergy,photons,proton);
         if ( vars.EMB_chi2 > phSettings.Chi2CutEMB )
             continue;
-        hists.at("steps").at("evcount")->Fill("7) EMB-4C-KinFit: #chi^{2} < 40)",vars.taggWeight);
+        hists.at("steps").at("evcount")->Fill((formatter() << "7) EMB-4C-KinFit: #chi^{2} < )" << phSettings.Chi2CutEMB).str().c_str(),
+                                              vars.taggWeight);
 
 
         // IDF: ref & sig
