@@ -1,17 +1,10 @@
 #include "hstack.h"
 
-
-
 #include "base/std_ext/string.h"
 #include "base/std_ext/math.h"
 #include "base/std_ext/memory.h"
 #include "base/Logger.h"
 
-
-#include "base/cereal/cereal.hpp"
-#include "base/cereal/types/string.hpp"
-#include "base/cereal/types/vector.hpp"
-#include "base/cereal/archives/binary.hpp"
 #include "tree/stream_TBuffer.h"
 
 #include "TBrowser.h"
@@ -505,17 +498,7 @@ struct specialize<Archive, hstack, cereal::specialization::member_serialize> {};
 
 void hstack::Streamer(TBuffer& R__b)
 {
-    stream_TBuffer buf(R__b);
-    iostream inoutstream(addressof(buf));
-
-    if (R__b.IsReading()) {
-        cereal::BinaryInputArchive ar(inoutstream);
-        ar(*this);
-    }
-    else {
-        cereal::BinaryOutputArchive ar(inoutstream);
-        ar(*this);
-    }
+    stream_TBuffer::DoBinary(R__b, *this);
 }
 
 

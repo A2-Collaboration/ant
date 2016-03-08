@@ -22,6 +22,7 @@ namespace detail {
 struct AntReaderInternal {
     virtual double PercentDone() const = 0;
     virtual std::unique_ptr<TEvent> NextEvent() = 0;
+    virtual ~AntReaderInternal() = default;
 };
 
 
