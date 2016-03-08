@@ -48,8 +48,6 @@ protected:
     virtual void ProcessEvent(TEvent& event, physics::manager_t& manager);
     virtual void SaveEvent(slowcontrol::event_t event, const physics::manager_t& manager);
 
-    bool progressUpdates = true;
-
     struct interrupt_t {
         interrupt_t(volatile bool* interrupt_) :
             interrupt(interrupt_) {}
@@ -70,6 +68,9 @@ protected:
     // for output of TEvents to TTree
     TTree*  treeEvents;
     TEvent* treeEventPtr;
+
+    // for progress
+    double last_PercentDone;
 
 public:
 
@@ -107,7 +108,6 @@ public:
         using std::runtime_error::runtime_error; // use base class constructor
     };
 
-    void EnableProgressUpdates(bool updates=false);
 };
 
 }} // namespace ant::analysis

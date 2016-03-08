@@ -125,8 +125,9 @@ int main(int argc, char** argv) {
         el::Loggers::setVerboseLevel(cmd_verbose->getValue());
     }
 
+    // progress updates only when running interactively
     if(std_ext::system::isInteractive())
-        RawFileReader::OutputPerformanceStats = 3;
+        ProgressCounter::Interval = 3;
 
     // check if input files are readable
     for(const auto& inputfile : cmd_input->getValue()) {
@@ -384,9 +385,6 @@ int main(int argc, char** argv) {
     } else {
         LOG(INFO) << "ParticleID disabled by command line";
     }
-
-    // progress messages only when running interactively
-    pm.EnableProgressUpdates(std_ext::system::isInteractive());
 
     // create some variables for running
     long long maxevents = cmd_maxevents->isSet()

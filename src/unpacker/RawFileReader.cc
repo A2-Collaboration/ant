@@ -15,8 +15,6 @@ extern "C" {
 using namespace std;
 using namespace ant;
 
-double RawFileReader::OutputPerformanceStats = numeric_limits<double>::quiet_NaN();
-
 ant::RawFileReader::~RawFileReader() {}
 
 double RawFileReader::PercentDone() const
@@ -24,7 +22,7 @@ double RawFileReader::PercentDone() const
     return double(p->pos()) / double(p->filesize_total());
 }
 
-void RawFileReader::open(const string &filename, const size_t inbufsize) {
+void RawFileReader::open(const string& filename, const size_t inbufsize) {
     // open it as plain raw file
     ifstream file(filename.c_str());
 
@@ -41,52 +39,45 @@ void RawFileReader::open(const string &filename, const size_t inbufsize) {
     else {
         p = std_ext::make_unique<PlainBase>(filename);
     }
+
+    progress = MakeProgressCounter();
 }
 
-void RawFileReader::HandlePerformanceStats()
+RawFileReader::progress_t RawFileReader::MakeProgressCounter()
 {
-    if(!std::isfinite(OutputPerformanceStats))
-        return;
-    if(performanceBytesRead<0) {
-        // very first read, just setup the variables
-        lastPerformanceOutput = chrono::system_clock::now();
-        performanceBytesRead = gcount();
-        performanceBytesRead_compressed = p->gcount_compressed();
-        return;
-    }
-
-    performanceBytesRead += gcount();
-    performanceBytesRead_compressed += p->gcount_compressed();
-
-
-    const std::chrono::time_point<std::chrono::system_clock> now = std::chrono::system_clock::now();
-    const std::chrono::duration<double> elapsed_seconds = now - lastPerformanceOutput;
-    if(elapsed_seconds.count()<OutputPerformanceStats)
-        return;
-
-
-    const double bytes_per_s = (performanceBytesRead_compressed<0 ? performanceBytesRead : performanceBytesRead_compressed)
-                               / elapsed_seconds.count();
-    const double bytes_per_s_uncompressed = performanceBytesRead/elapsed_seconds.count();
-
-    if(performanceBytesRead_compressed<0) {
-        LOG(INFO) << "Reading file with " << std::fixed << setprecision(3) << bytes_per_s_uncompressed/(1<<20) << " MB/s";
+    // in future, there might be more than one compressed reader
+    // so create the progress counter only according to p->gcount_compressed()
+    ProgressCounter::Updater_t updater;
+    if(p->gcount_compressed()<0) {
+        // uncompressed reader
+        updater = [this] (std::chrono::duration<double> elapsed_seconds) {
+            const double bytes_per_s = (totalBytesRead - last_totalBytesRead)/elapsed_seconds.count();
+            LOG(INFO) << "Reading file with "
+                      << std::fixed << setprecision(3) << bytes_per_s/(1<<20)
+                      << " MB/s";
+            last_totalBytesRead = totalBytesRead;
+        };
     }
     else {
-        LOG(INFO) << "Reading compressed/uncompressed file with "
-                  << std::fixed << setprecision(3) << bytes_per_s/(1<<20)
-                  << "/"
-                  << std::fixed << setprecision(3) << bytes_per_s_uncompressed/(1<<20)
-                  << " MB/s, ratio="
-                  << std::fixed << setprecision(2) << 100*bytes_per_s/bytes_per_s_uncompressed
-                  << " %";
+        // compressed reader
+        updater = [this] (std::chrono::duration<double> elapsed_seconds) {
+            const double bytes_per_s_compressed = (totalBytesRead_compressed - last_totalBytesRead_compressed)
+                                                  / elapsed_seconds.count();
+            const double bytes_per_s = (totalBytesRead - last_totalBytesRead)/elapsed_seconds.count();
+
+            LOG(INFO) << "Reading compressed/uncompressed file with "
+                      << std::fixed << setprecision(3) << bytes_per_s_compressed/(1<<20)
+                      << "/"
+                      << std::fixed << setprecision(3) << bytes_per_s/(1<<20)
+                      << " MB/s, ratio="
+                      << std::fixed << setprecision(2) << 100*bytes_per_s_compressed/bytes_per_s
+                      << " %";
+            last_totalBytesRead = totalBytesRead;
+            last_totalBytesRead_compressed = totalBytesRead_compressed;
+        };
     }
 
-    // reset counters
-    lastPerformanceOutput = now;
-    performanceBytesRead = 0;
-    performanceBytesRead_compressed = 0;
-
+    return std_ext::make_unique<ProgressCounter>(updater);
 }
 
 struct RawFileReader::XZ::lzma_stream : ::lzma_stream {};

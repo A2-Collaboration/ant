@@ -1,11 +1,12 @@
 #pragma once
 
+#include "base/ProgressCounter.h"
+
 #include <fstream>
 #include <string>
 #include <memory>
 #include <cstdint>
 #include <vector>
-#include <chrono>
 
 namespace ant {
 
@@ -17,19 +18,6 @@ namespace ant {
  */
 class RawFileReader {
 public:
-
-    /**
-     * @brief OutputPerformanceStats
-     *
-     * Set to finite number to output performance stats every
-     * given seconds for all RawFileReader's in use
-     */
-    static double OutputPerformanceStats;
-
-    RawFileReader() :
-        performanceBytesRead(-1), // nothing read at all
-        performanceBytesRead_compressed(-1) // needed if there's underlying compression
-    {}
 
     virtual ~RawFileReader();
 
@@ -60,8 +48,9 @@ public:
    */
     void read(char* s, std::streamsize n) {
         p->read(s,n);
-        // track how much has been read if required
-        HandlePerformanceStats();
+        // track how much has been read in total so far
+        totalBytesRead += gcount();
+        totalBytesRead_compressed += p->gcount_compressed();
     }
 
     void read(std::uint32_t* s, std::streamsize n) {
@@ -220,11 +209,14 @@ private:
     // private stuff for RawFileReader
     std::unique_ptr<PlainBase> p;
 
+    using progress_t = std::unique_ptr<ProgressCounter>;
 
-    std::chrono::time_point<std::chrono::system_clock> lastPerformanceOutput;
-    std::streamsize performanceBytesRead;
-    std::streamsize performanceBytesRead_compressed;
-    void HandlePerformanceStats();
+    progress_t MakeProgressCounter();
+    progress_t progress;
+    std::streamsize totalBytesRead = 0;
+    std::streamsize totalBytesRead_compressed = 0;
+    std::streamsize last_totalBytesRead = 0;
+    std::streamsize last_totalBytesRead_compressed = 0;
 
 
 

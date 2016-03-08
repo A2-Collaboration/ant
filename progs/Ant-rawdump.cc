@@ -47,7 +47,7 @@ int main(int argc, char** argv) {
     }
 
     if(std_ext::system::isInteractive())
-        RawFileReader::OutputPerformanceStats = 3;
+        ProgressCounter::Interval = 3;
 
     // check if input file is readable
     const string& inputfile = cmd_input->getValue();

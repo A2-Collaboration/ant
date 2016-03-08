@@ -37,11 +37,6 @@ void PhysicsManager::SetAntHeader(TAntHeader& header)
     header.LastID = lastID;
 }
 
-void PhysicsManager::EnableProgressUpdates(bool updates)
-{
-    progressUpdates = updates;
-}
-
 void PhysicsManager::ShowResults()
 {
     for(auto& p : physics) {
@@ -89,17 +84,22 @@ void PhysicsManager::ReadFrom(
     treeEventPtr = nullptr;
     treeEvents->Branch("data", addressof(treeEventPtr));
 
-
-    chrono::time_point<std::chrono::system_clock> start, end;
-    start = chrono::system_clock::now();
-
     long long nEventsProcessed = 0;
     long long nEventsAnalyzed = 0;
     long long nEventsSaved = 0;
 
     bool reached_maxevents = false;
 
-    ProgressCounter progress;
+    last_PercentDone = 0;
+    ProgressCounter progress(
+                [this] (std::chrono::duration<double> elapsed) {
+        if(!source)
+            return;
+        const double percent = source->PercentDone();
+        const double speed = (percent - last_PercentDone)/elapsed.count();
+        LOG(INFO) << setw(2) << std::setprecision(4) << percent*100 << " % done, ETA: " << ProgressCounter::TimeToStr((1-percent)/speed);
+        last_PercentDone = percent;
+    });
     while(true) {
         if(reached_maxevents || interrupt)
             break;
@@ -173,11 +173,6 @@ void PhysicsManager::ReadFrom(
 
             nEventsProcessed++;
         }
-
-        if(progressUpdates && source && progress.Update(source->PercentDone())) {
-            LOG(INFO) << progress;
-        }
-
     }
 
     for(auto& pclass : physics) {
@@ -187,18 +182,13 @@ void PhysicsManager::ReadFrom(
     VLOG(5) << "First EventId processed: " << firstID;
     VLOG(5) << "Last  EventId processed: " << lastID;
 
+    string processed_str;
+    if(nEventsProcessed != nEventsAnalyzed)
+        processed_str = std_ext::formatter() << " (" << nEventsProcessed << " processed)";
 
-
-    end = chrono::system_clock::now();
-    chrono::duration<double> elapsed_seconds = end-start;
     LOG(INFO) << "Analyzed " << nEventsAnalyzed << " events"
-              << (
-                     nEventsProcessed != nEventsAnalyzed ?
-                                             string(std_ext::formatter() << " (" << nEventsProcessed << " processed)")
-                                           : ""
-                 )
-              <<   ", speed "
-              << nEventsProcessed/elapsed_seconds.count() << " event/s";
+              << processed_str << ", speed "
+              << nEventsProcessed/progress.GetTotalSecs() << " event/s";
 
     const auto nEventsSavedTotal = treeEvents->GetEntries();
     if(nEventsSaved==0) {
@@ -215,6 +205,10 @@ void PhysicsManager::ReadFrom(
                   << (double)treeEvents->GetTotBytes()/(1 << 20) << " MB (uncompressed), "
                   << (double)treeEvents->GetTotBytes()/nEventsSavedTotal << " bytes/event";
     }
+
+    // cleanup readers (important for stopping progress output)
+    source = nullptr;
+    amenders.clear();
 }
 
 
