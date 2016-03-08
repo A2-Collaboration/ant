@@ -68,6 +68,7 @@ private:
     TF1 _energyFunction;
 
     //-- Output ---
+    /// \todo use WrapTFile here
     TFile* _outfile;
     TTree* _data;
 

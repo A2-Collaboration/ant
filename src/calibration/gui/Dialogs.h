@@ -7,19 +7,15 @@
 #include "TGLabel.h"
 #include "TExec.h"
 
-namespace ant
-{
-namespace calibration
-{
-namespace gui{
+namespace ant {
+namespace calibration {
+namespace gui {
 
 class Query;
 
-
 class DialogHandler_traits
 {
-friend class Query;
-protected:
+public:
     virtual void captureReturnValue(Query* dialog, std::vector<std::string>& returnValue)=0;
 protected:
     ~DialogHandler_traits() = default;
