@@ -99,6 +99,8 @@ struct Updateable_traits {
      * @param id the ID with some different Flags field
      */
     virtual void UpdatedTIDFlags(const TID&) {}
+
+    virtual ~Updateable_traits() = default;
 };
 
 } // namespace ant

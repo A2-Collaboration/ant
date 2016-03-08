@@ -1,6 +1,10 @@
 #pragma once
 
+// ignore warnings from library
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wnon-virtual-dtor"
 #include "base/cereal/access.hpp"
+#pragma GCC diagnostic pop
 
 #include <memory>
 #include <list>

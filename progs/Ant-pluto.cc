@@ -83,6 +83,7 @@ struct Action {
     double   Emin;
     double   Emax;
     virtual void Run() const =0;
+    virtual ~Action() = default;
 };
 
 struct PlutoAction : Action {

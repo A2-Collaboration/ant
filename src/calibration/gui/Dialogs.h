@@ -21,6 +21,8 @@ class DialogHandler_traits
 friend class Query;
 protected:
     virtual void captureReturnValue(Query* dialog, std::vector<std::string>& returnValue)=0;
+protected:
+    ~DialogHandler_traits() = default;
 };
 
 class Query: public TExec

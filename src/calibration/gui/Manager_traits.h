@@ -22,6 +22,8 @@ public:
     virtual gui::CalCanvas* AddCalCanvas(const std::string& name = "") =0;
     virtual void AddCheckBox(const std::string& label, bool& flag) =0;
     virtual void AddNumberEntry(const std::string& label, double& number) =0;
+protected:
+    ~ManagerWindow_traits() = default;
 };
 
 class CalibModule_traits {

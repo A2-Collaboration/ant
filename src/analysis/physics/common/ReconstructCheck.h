@@ -86,8 +86,8 @@ protected:
 
         histgroup(HistogramFactory& f, const std::string& prefix, detectortype d=detectortype::All);
         void Fill(const TParticlePtr& mctrue, const TCandidateList& cand, const TClusterList& all_clusters);
-        virtual void ShowResult() const;
-        virtual void Finish();
+        void ShowResult() const;
+        void Finish();
 
         histgroup(const histgroup&) = delete;
         histgroup& operator =(const histgroup&) = delete;
@@ -100,8 +100,8 @@ protected:
         TAPSVetoMatch(const TAPSVetoMatch&) = delete;
         TAPSVetoMatch& operator =(const TAPSVetoMatch&) = delete;
 
-        virtual void ShowResult();
-        virtual void Finish() {}
+        void ShowResult();
+        void Finish() {}
         void Fill(const TCandidateList& cands, const TClusterList& all_clusters);
     };
 

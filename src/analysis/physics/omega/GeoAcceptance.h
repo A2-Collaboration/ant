@@ -69,7 +69,7 @@ private:
 
         AcceptanceAnalysis(HistogramFactory& factory, const utils::A2SimpleGeometry& geo_, const std::string& name_);
         void Fill(const TParticleList& mctrue, const TParticleList& reconstructed);
-        virtual void ShowResult();
+        void ShowResult();
     };
 
     utils::A2SimpleGeometry geo;

@@ -36,6 +36,9 @@ public:
      * @return number of failed events
      */
     virtual unsigned long Sample(const unsigned long& nevts) const=0;
+
+protected:
+    ~ManagedPlutoReaction() = default;
 };
 
 
@@ -98,7 +101,8 @@ public:
 
     virtual unsigned long Sample(const unsigned long &nevts) const override;
     virtual void Finish() const;
-    //virtual ~A2Cocktail(){Finish();} maybe better, not sure yet
+    virtual ~A2Cocktail(){ Finish(); } // maybe better, not sure yet
+
 };
 
 
@@ -126,6 +130,7 @@ public:
 
     virtual unsigned long Sample(const unsigned long& nevts) const override;
 
+    virtual ~FixedEnergyCocktail() = default;
 };
 
 

@@ -34,6 +34,9 @@ public:
     */
     virtual bool GetData(const std::string& calibrationID, const TID& eventID, TCalibrationData& cdata) = 0;
 
+protected:
+    ~DataAccess() = default;
+
 };
 
 class DataBase;

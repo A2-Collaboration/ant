@@ -19,6 +19,8 @@ struct Viewport {
 class update_notify_traits {
 public:
     virtual void UpdateMe() =0;
+protected:
+    ~update_notify_traits() = default;
 };
 
 
@@ -67,6 +69,8 @@ public:
     virtual double get() const =0;
     virtual void set(double v) =0;
     virtual double reference() const { return 0.0; }
+
+    virtual ~IndicatorKnob() = default;
 };
 
 }

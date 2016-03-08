@@ -19,6 +19,7 @@ struct Variable {
         requested = true;
     }
 
+    virtual ~Variable() = default;
 
 protected:
     bool requested = false;
