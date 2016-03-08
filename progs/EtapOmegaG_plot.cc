@@ -20,21 +20,6 @@ using namespace std;
 
 volatile bool interrupt = false;
 
-class MyTInterruptHandler : public TSignalHandler {
-public:
-    MyTInterruptHandler() : TSignalHandler(kSigInterrupt, kFALSE) { }
-
-    Bool_t  Notify() {
-        if (fDelay) {
-            fDelay++;
-            return kTRUE;
-        }
-        interrupt = true;
-        cout << " >>> Interrupted! " << endl;
-        return kTRUE;
-    }
-};
-
 template<typename Hist_t>
 struct MCTrue_Splitter : cuttree::StackedHists_t<Hist_t> {
 
@@ -418,6 +403,8 @@ cuttree::Tree_t<MCTrue_Splitter<Hist_t>> makeMCSplitTree(const HistogramFactory&
 int main(int argc, char** argv) {
     SetupLogger();
 
+    signal(SIGINT, [] (int) { interrupt = true; } );
+
     TCLAP::CmdLine cmd("plot", ' ', "0.1");
     auto cmd_input = cmd.add<TCLAP::ValueArg<string>>("i","input","Input file",true,"","input");
     auto cmd_batchmode = cmd.add<TCLAP::MultiSwitchArg>("b","batch","Run in batch mode (no ROOT shell afterwards)",false);
@@ -427,19 +414,6 @@ int main(int argc, char** argv) {
     auto cmd_tree = cmd.add<TCLAP::ValueArg<string>>("t","tree","Tree name",false,"Fitted/SigAll","treename");
 
     cmd.parse(argc, argv);
-
-    int fake_argc=1;
-    char* fake_argv[2];
-    fake_argv[0] = argv[0];
-    if(cmd_batchmode->isSet()) {
-        fake_argv[fake_argc++] = strdup("-b");
-    }
-    TRint app("EtapOmegaG_plot",&fake_argc,fake_argv,nullptr,0,true);
-    auto oldsig = app.GetSignalHandler();
-    oldsig->Remove();
-    auto mysig = new MyTInterruptHandler();
-    mysig->Add();
-    gSystem->AddSignalHandler(mysig);
 
     WrapTFileInput input(cmd_input->getValue());
 
@@ -552,10 +526,7 @@ int main(int argc, char** argv) {
         }
         else {
 
-            mysig->Remove();
-            oldsig->Add();
-            gSystem->AddSignalHandler(oldsig);
-            delete mysig;
+            TRint app("EtapOmegaG_plot",&argc,argv,nullptr,0,true);
 
             if(masterFile)
                 LOG(INFO) << "Stopped running, but close ROOT properly to write data to disk.";

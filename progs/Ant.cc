@@ -37,29 +37,20 @@
 
 #include <sstream>
 #include <string>
+#include <csignal>
 
 using namespace std;
 using namespace ant;
 
 volatile bool interrupt = false;
 
-class MyTInterruptHandler : public TSignalHandler {
-public:
-    MyTInterruptHandler() : TSignalHandler(kSigInterrupt, kFALSE) { }
-
-    Bool_t  Notify() {
-        if (fDelay) {
-            fDelay++;
-            return kTRUE;
-        }
-        interrupt = true;
-        cout << " >>> Interrupted! " << endl;
-        return kTRUE;
-    }
-};
-
 int main(int argc, char** argv) {
     SetupLogger();
+
+    signal(SIGINT, [] (int) {
+        cout << ">>> Interrupted" << endl;
+        interrupt = true;
+    });
 
     // check for bash completion commands
     if(argc >= 2) {
@@ -136,23 +127,6 @@ int main(int argc, char** argv) {
 
     if(std_ext::system::isInteractive())
         RawFileReader::OutputPerformanceStats = 3;
-
-
-
-
-
-    int fake_argc=1;
-    char* fake_argv[2];
-    fake_argv[0] = argv[0];
-    if(cmd_batchmode->isSet()) {
-        fake_argv[fake_argc++] = strdup("-b");
-    }
-    TRint app("Ant",&fake_argc,fake_argv,nullptr,0,true);
-    auto oldsig = app.GetSignalHandler();
-    oldsig->Remove();
-    auto mysig = new MyTInterruptHandler();
-    mysig->Add();
-    gSystem->AddSignalHandler(mysig);
 
     // check if input files are readable
     for(const auto& inputfile : cmd_input->getValue()) {
@@ -456,11 +430,7 @@ int main(int argc, char** argv) {
             LOG(INFO) << "No TTY attached. Not starting ROOT shell.";
         }
         else {
-
-            mysig->Remove();
-            oldsig->Add();
-            gSystem->AddSignalHandler(oldsig);
-            delete mysig;
+            TRint app("Ant",&argc,argv,nullptr,0,true);
 
             if(masterFile != nullptr)
                 LOG(INFO) << "Stopped running, but close ROOT properly to write data to disk.";
