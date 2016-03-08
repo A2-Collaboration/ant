@@ -7,7 +7,7 @@
 
 namespace ant {
 
-class TCluster;
+struct TCluster;
 
 namespace analysis {
 namespace utils {
