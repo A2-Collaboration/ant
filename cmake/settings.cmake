@@ -32,10 +32,10 @@ set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -O0")
 #set(CMAKE_SHARED_LINKER_FLAGS "-Wl,--no-undefined")
 
 if(CMAKE_CXX_COMPILER_ID MATCHES "Clang")
-  # disable optimizations to fix clang infinite loop... 
+  # disable optimizations to fix clang infinite loop...
   set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -O1")
 elseif ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
-  # for GCC >5.1 add -Wsuggest-override  
+  # for GCC >5.1 add -Wsuggest-override
 else()
   message(FATAL_ERROR "Non-gnu compiler not supported at the moment")
 endif()
