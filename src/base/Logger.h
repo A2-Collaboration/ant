@@ -4,9 +4,12 @@
 #define ELPP_STL_LOGGING
 #define ELPP_DISABLE_DEFAULT_CRASH_HANDLING
 #define ELPP_NO_DEFAULT_LOG_FILE
+#define ELPP_THREAD_SAFE
 
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Weffc++"
+#pragma GCC diagnostic ignored "-Wunused-parameter"
+
 
 #ifdef __clang__
 #pragma clang diagnostic push
