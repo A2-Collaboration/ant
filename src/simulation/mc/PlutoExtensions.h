@@ -48,14 +48,6 @@ void UpdatePluteDataBase()
     sdata->AddDecay("w --> pi0 pi0",        "w", "pi0,pi0",         2.1E-4);    // upper limit
     sdata->AddDecay("w --> pi0 pi0 pi0",    "w", "pi0,pi0,pi0",     2.3E-4);    // upper limit
 
-    // additional rho decays ( PDG 2016)
-    sdata->AddDecay("rho0 --> pi+ pi- g",           "rho0", "pi+,pi-,g",            9.9E-3);
-    sdata->AddDecay("rho0 --> pi0 g",               "rho0", "pi0,g",                6.0E-4);
-    sdata->AddDecay("rho0 --> eta g",               "rho0", "eta,g",                3.0E-4);
-    sdata->AddDecay("rho0 --> eta g",               "rho0", "eta,g",                3.0E-4);
-    sdata->AddDecay("rho0 --> pi0 pi0 g",           "rho0", "pi0,pi0,g",            4.5E-5);
-    sdata->AddDecay("rho0 --> pi+ pi- pi0 pi0 g",   "rho0", "pi+,pi-,pi0,pi0,g",    1.6E-5);
-    sdata->AddDecay("rho0 --> pi+ pi- pi+ pi- g",   "rho0", "pi+,pi-,pi+,pi-,g",    1.8E-5);
 
     std::cout << "=============================================" << endl;
     std::cout << "omega after change:" << endl;
@@ -81,6 +73,21 @@ void UpdatePluteDataBase()
     std::cout << "=============================================" << endl;
     std::cout << "eta' after change:" << endl;
     listParticle("eta'");
+
+    std::cout << "=============================================" << endl;
+    std::cout << "rho0 before change:" << endl;
+    listParticle("rho0");
+    // additional rho decays ( PDG 2016)
+    sdata->AddDecay("rho0 --> pi+ pi- g",           "rho0", "pi+,pi-,g",            9.9E-3);
+    sdata->AddDecay("rho0 --> pi0 g",               "rho0", "pi0,g",                6.0E-4);
+    sdata->AddDecay("rho0 --> eta g",               "rho0", "eta,g",                3.0E-4);
+    sdata->AddDecay("rho0 --> eta g",               "rho0", "eta,g",                3.0E-4);
+    sdata->AddDecay("rho0 --> pi0 pi0 g",           "rho0", "pi0,pi0,g",            4.5E-5);
+    sdata->AddDecay("rho0 --> pi+ pi- pi0 pi0 g",   "rho0", "pi+,pi-,pi0,pi0,g",    1.6E-5);
+    sdata->AddDecay("rho0 --> pi+ pi- pi+ pi- g",   "rho0", "pi+,pi-,pi+,pi-,g",    1.8E-5);
+    std::cout << "=============================================" << endl;
+    std::cout << "rho0 after change:" << endl;
+    listParticle("rho0");
 }
 
 }
