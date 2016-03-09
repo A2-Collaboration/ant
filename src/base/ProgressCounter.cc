@@ -17,8 +17,8 @@ long int ProgressCounter::Interval = 0;
 
 // remember the running threads
 // in this map, protect it by mutex
-std::mutex running_mutex;
-std::map<const thread*, bool> running;
+mutex running_mutex;
+vector<bool> running;
 
 ProgressCounter::ProgressCounter(ProgressCounter::Updater_t updater) :
     Updater(updater)
@@ -27,17 +27,27 @@ ProgressCounter::ProgressCounter(ProgressCounter::Updater_t updater) :
     if(Interval<=0)
         return;
 
-    std::lock_guard<std::mutex> lock(running_mutex);
-    worker = std_ext::make_unique<std::thread>([this] () {
+    lock_guard<mutex> lock(running_mutex);
+
+    auto it_flag = find(running.begin(), running.end(), false);
+    if(it_flag == running.end())
+        it_flag = running.insert(it_flag, true);
+    else
+        *it_flag = true;
+
+    // n needs to be locally copied to lambda
+    auto n = distance(running.begin(), it_flag);
+    worker = std_ext::make_unique<std::thread>([this, n] () {
         while(true) {
-            std::this_thread::sleep_for(std::chrono::seconds(Interval));
-            std::lock_guard<std::mutex> lock(running_mutex);
-            if(!worker || !running[worker.get()])
+            this_thread::sleep_for(std::chrono::seconds(Interval));
+            lock_guard<mutex> lock(running_mutex);
+            if(!running[n])
                 break;
             this->work();
         }
     });
-    running[worker.get()] = true;
+    // remember the index
+    worker_n = n;
 }
 
 ProgressCounter::~ProgressCounter() {
@@ -45,7 +55,7 @@ ProgressCounter::~ProgressCounter() {
         return;
     worker->detach();
     std::lock_guard<std::mutex> lock(running_mutex);
-    running[worker.get()] = false;
+    running[worker_n] = false;
 }
 
 double ProgressCounter::GetTotalSecs() const {

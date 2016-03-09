@@ -35,6 +35,7 @@ protected:
 
     Updater_t Updater;
     std::unique_ptr<std::thread> worker;
+    std::size_t worker_n;
 
     using clock_t = std::chrono::steady_clock;
     std::chrono::time_point<clock_t> first_now = clock_t::now();
