@@ -79,7 +79,7 @@ private:
     TRandom3* _rndEngine;
 
     void init(std::vector<std::string> filelist);
-    PReaction* makeReaction(const double &energy, const std::string& particles) const;
+    PReaction* makeReaction(const double &energy, const std::string& particles, const std::string &targetParticle = "p") const;
 
 public:
 

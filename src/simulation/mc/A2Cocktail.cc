@@ -142,13 +142,14 @@ void A2Cocktail::init(vector<string> filelist)
     }
 }
 
-PReaction *A2Cocktail::makeReaction(const double& energy, const string &particles) const
+/// TODO allow different target particles here
+PReaction *A2Cocktail::makeReaction(const double& energy, const string &particles, const string& targetParticle) const
 {
     // convert database entry t pluto-decay-string: g + p --> p + product1 + ...
-    string reactionstring = "p " + particles;
+    string reactionstring = targetParticle + particles;
 
     PReaction* reaction = new PReaction(energy,                         // beam momentum = photon engry
-                                        strdup("g"),strdup("p"),        // beam,target
+                                        strdup("g"),strdup(targetParticle.c_str()),        // beam,target
                                         strdup(reactionstring.c_str()),
                                         strdup(_outfileName.c_str()),   // output - filename
                                         _saveUnstable,0,1,0,            // pluto - flags
