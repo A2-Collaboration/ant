@@ -126,7 +126,7 @@ void A2Cocktail::init(vector<string> filelist)
         {
             double xsection = a2man.Xsection(product, currentBin.Energy);
 
-            if ( xsection != 0)
+            if ( xsection > 0)
             {
                 acc_prob_channels += xsection;
                 pair<double,PReaction*> accprobReactionPair;

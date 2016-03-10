@@ -108,7 +108,7 @@ public:
 
 
 /**
- * @brief The A2OldCocktail class generates MC events for a fixed energy, using the Pluto class PDecayManager
+ * @brief The FixedEnergyCocktail class generates MC events for a fixed energy, using the Pluto class PDecayManager
  */
 // @ Andi bitte nicht loeschen!!!!!
 class FixedEnergyCocktail: public ManagedPlutoReaction

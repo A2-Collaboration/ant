@@ -192,7 +192,7 @@ A2ChannelManager::A2ChannelManager(vector<string> dataFiles)
 vector<string> A2ChannelManager::GetChannels() const
 {
     vector<string> names;
-    for ( auto& ch: _XList) names.push_back(ch.first);
+    for (const auto& ch: _XList) names.push_back(ch.first);
     return names;
 }
 
@@ -201,7 +201,7 @@ vector<string> A2ChannelManager::GetChannels() const
 PDecayChannel* A2ChannelManager::GenerateDecays(const double &Energy)
 {
     PDecayChannel* primaries = new PDecayChannel();
-    for ( auto& ch: _XList){
+    for (const auto& ch: _XList){
         istringstream ss(ch.first);
         vector<string> dparticles{ istream_iterator<string>{ss},
                                    istream_iterator<string>{}};
