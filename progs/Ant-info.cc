@@ -24,7 +24,7 @@ int main(int argc, char** argv)
             LOG(ERROR) << "Error: Did not find header info in file " << argv[1];
             return EXIT_FAILURE;
         }
-        for(auto& message : firstevent->Reconstructed().UnpackerMessages) {
+        for(auto& message : firstevent.Reconstructed().UnpackerMessages) {
             cout << message << endl;
         }
         return EXIT_SUCCESS;

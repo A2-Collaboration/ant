@@ -21,7 +21,7 @@ class UnpackerAcqu : public Unpacker::Module
 public:
     UnpackerAcqu();
     virtual bool OpenFile(const std::string& filename) override;
-    virtual std::unique_ptr<TEvent> NextEvent() noexcept override;
+    virtual TEvent NextEvent() noexcept override;
 
     class Exception : public Unpacker::Exception {
         using Unpacker::Exception::Exception; // use base class constructor
@@ -32,7 +32,7 @@ public:
     virtual double PercentDone() const override;
 
 private:
-    std::list< std::unique_ptr<TEvent> > queue; // std::list supports splice
+    std::list<TEvent> queue; // std::list supports splice
     std::unique_ptr<UnpackerAcquFileFormat> file;
 
 };

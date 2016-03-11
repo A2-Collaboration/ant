@@ -21,7 +21,7 @@ namespace detail {
 
 struct AntReaderInternal {
     virtual double PercentDone() const = 0;
-    virtual std::unique_ptr<TEvent> NextEvent() = 0;
+    virtual TEvent NextEvent() = 0;
     virtual ~AntReaderInternal() = default;
 };
 
@@ -35,7 +35,7 @@ struct UnpackerReader : AntReaderInternal {
     virtual double PercentDone() const override {
         return unpacker->PercentDone();
     }
-    virtual std::unique_ptr<TEvent> NextEvent() override {
+    virtual TEvent NextEvent() override {
         return unpacker->NextEvent();
     }
 private:
@@ -59,23 +59,27 @@ struct TreeReader : AntReaderInternal {
         }
     }
 
+    virtual ~TreeReader() {
+        if(eventPtr)
+            delete eventPtr;
+    }
+
     virtual double PercentDone() const override {
         if(tree)
             return double(current_entry)/double(tree->GetEntries());
         return numeric_limits<double>::quiet_NaN();
     }
 
-    virtual std::unique_ptr<TEvent> NextEvent() override {
+    virtual TEvent NextEvent() override {
         if(!tree)
-            return nullptr;
+            return {};
 
         if(current_entry==tree->GetEntries())
-            return nullptr;
+            return {};
 
-        eventPtr = nullptr;
         tree->GetEntry(current_entry);
         current_entry++;
-        return unique_ptr<TEvent>(eventPtr);
+        return move(*eventPtr);
     }
 
 private:
@@ -128,11 +132,11 @@ bool AntReader::ReadNextEvent(TEvent& event)
         return false;
 
     // we expect Reconstructed branch to be filled always
-    auto eventptr = reader->NextEvent();
+    auto nextevent = reader->NextEvent();
 
-    if(eventptr) {
+    if(nextevent) {
         if(reconstruct) {
-            TEventData& recon = eventptr->Reconstructed();
+            TEventData& recon = nextevent.Reconstructed();
             /// \todo improve check if TEvent was run through reconstructed
             /// you may also introduce some flag to force application?
             if(recon.Clusters.empty())
@@ -140,7 +144,7 @@ bool AntReader::ReadNextEvent(TEvent& event)
         }
 
         // pay attention that Geant unpacker might also set MCTrue branch partly
-        event = move(*eventptr);
+        event = move(nextevent);
 
         return true;
     }

@@ -90,6 +90,7 @@ void PhysicsManager::ReadFrom(
 
     bool reached_maxevents = false;
 
+
     last_PercentDone = 0;
     ProgressCounter progress(
                 [this] (std::chrono::duration<double> elapsed) {
@@ -111,7 +112,7 @@ void PhysicsManager::ReadFrom(
                 break;
             }
 
-            auto event = std_ext::make_unique<TEvent>();
+            TEvent event;
             if(!TryReadEvent(event)) {
                 VLOG(5) << "No more events to read, finish.";
                 reached_maxevents = true;
@@ -152,7 +153,7 @@ void PhysicsManager::ReadFrom(
                         break;
                 }
 
-                TEvent& event = *buffered_event.Event;
+                TEvent& event = buffered_event.Event;
                 if(!reached_maxevents && !event.SavedForSlowControls) {
                     ProcessEvent(event, manager);
 
@@ -212,11 +213,11 @@ void PhysicsManager::ReadFrom(
 }
 
 
-bool PhysicsManager::TryReadEvent(TEventPtr& event)
+bool PhysicsManager::TryReadEvent(TEvent& event)
 {
     bool event_read = false;
     if(source) {
-        if(!source->ReadNextEvent(*event)) {
+        if(!source->ReadNextEvent(event)) {
             return false;
         }
         event_read = true;
@@ -226,7 +227,7 @@ bool PhysicsManager::TryReadEvent(TEventPtr& event)
     auto it_amender = amenders.begin();
     while(it_amender != amenders.end()) {
 
-        if((*it_amender)->ReadNextEvent(*event)) {
+        if((*it_amender)->ReadNextEvent(event)) {
             ++it_amender;
             event_read = true;
         }
@@ -268,21 +269,21 @@ void PhysicsManager::SaveEvent(slowcontrol::event_t buffered_event, const physic
 {
     auto& event = buffered_event.Event;
 
-    if(manager.saveEvent || buffered_event.Save || event->SavedForSlowControls) {
+    if(manager.saveEvent || buffered_event.Save || event.SavedForSlowControls) {
         if(!buffered_event.Save && treeEvents->GetCurrentFile() == nullptr)
             LOG_N_TIMES(1, WARNING) << "Writing treeEvents to memory. Might be a lot of data!";
 
 
         // always keep read hits if saving for slowcontrol
         if(!manager.keepReadHits && !buffered_event.Save)
-            event->ClearDetectorReadHits();
+            event.ClearDetectorReadHits();
 
         // indicate that this event was saved for slowcontrol purposes only
         if(!manager.saveEvent && buffered_event.Save) {
-            event->SavedForSlowControls = true;
+            event.SavedForSlowControls = true;
         }
 
-        treeEventPtr = event.get();
+        treeEventPtr = addressof(event);
         treeEvents->Fill();
     }
 }

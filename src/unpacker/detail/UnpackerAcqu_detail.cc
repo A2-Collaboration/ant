@@ -224,9 +224,9 @@ void acqu::FileFormatBase::LogMessage(
 
 }
 
-void acqu::FileFormatBase::AppendMessagesToEvent(std::unique_ptr<TEvent>& event) const
+void acqu::FileFormatBase::AppendMessagesToEvent(TEvent& event) const
 {
-    vector<TUnpackerMessage>& u_messages = event->Reconstructed().UnpackerMessages;
+    vector<TUnpackerMessage>& u_messages = event.Reconstructed().UnpackerMessages;
     if(u_messages.empty())
        u_messages = move(messages);
     else {
@@ -249,7 +249,7 @@ void acqu::FileFormatBase::FillEvents(queue_t& queue) noexcept
         // still issue some TEvent if there are messages left or
         // it's the very first buffer now, then the data consisted of header-only data
         if(!messages.empty() || unpackedBuffers==0) {
-            queue.emplace_back(std_ext::make_unique<TEvent>(id));
+            queue.emplace_back(id);
             AppendMessagesToEvent(queue.back());
         }
         return;
@@ -271,7 +271,7 @@ void acqu::FileFormatBase::FillEvents(queue_t& queue) noexcept
                     );
         messages.back().Payload.push_back(unpackedBuffers);
 
-        queue.emplace_back(std_ext::make_unique<TEvent>(id));
+        queue.emplace_back(id);
         AppendMessagesToEvent(queue.back());
     }
     else {

@@ -15,8 +15,6 @@ namespace ant {
 #ifndef __CINT__
 struct TID;
 struct TEventData;
-struct TEvent;
-using TEventPtr = std::unique_ptr<TEvent>;
 #endif
 
 
@@ -37,6 +35,9 @@ struct TEvent
     TEventData& MCTrue() { return *mctrue; }
     bool HasMCTrue() const { return mctrue!=nullptr; }
 
+    explicit operator bool() const {
+        return HasReconstructed() || HasMCTrue();
+    }
 
     // indicates that this event was only saved for SlowControl processing
     bool SavedForSlowControls = false;
@@ -62,8 +63,8 @@ struct TEvent
     void ClearTempBranches();
 
     // TEvent is moveable
-    TEvent(TEvent&&) = default;
-    TEvent& operator=(TEvent&&) = default;
+    TEvent(TEvent&&);
+    TEvent& operator=(TEvent&&);
 
 protected:
     std::unique_ptr<TEventData> reconstructed;

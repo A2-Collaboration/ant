@@ -78,8 +78,8 @@ void acqu::FileFormatMk1::UnpackEvent(queue_t& queue,
     }
 
     /// \todo Scan mappings if there's an ADC channel defined which mimicks those blocks
-    queue.emplace_back(std_ext::make_unique<TEvent>(id));
-    TEventData& eventdata = queue.back()->Reconstructed();
+    queue.emplace_back(id);
+    TEventData& eventdata = queue.back().Reconstructed();
     eventdata.Trigger.DAQEventID = AcquID_last;
 
     hit_storage.clear();

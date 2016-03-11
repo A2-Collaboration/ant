@@ -127,6 +127,10 @@ void TEvent::ClearTempBranches()
     }
 }
 
+TEvent& TEvent::operator=(TEvent&&) = default;
+TEvent::TEvent(TEvent&&) = default;
+
+
 ostream& TEvent::Print(ostream& s) const
 {
     if(reconstructed)

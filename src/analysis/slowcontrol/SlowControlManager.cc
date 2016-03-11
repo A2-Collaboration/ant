@@ -68,12 +68,12 @@ SlowControlManager::SlowControlManager()
     LOG(INFO) << "Have " << nRegistered << " registered slowcontrol variables and " << slowcontrol.size() << " processors";
 }
 
-bool SlowControlManager::ProcessEvent(TEventPtr event)
+bool SlowControlManager::ProcessEvent(TEvent event)
 {
-    if(!event->HasReconstructed())
+    if(!event.HasReconstructed())
         return true;
 
-    TEventData& reconstructed = event->Reconstructed();
+    TEventData& reconstructed = event.Reconstructed();
 
     physics::manager_t manager;
 
@@ -97,10 +97,10 @@ bool SlowControlManager::ProcessEvent(TEventPtr event)
     // a skipped event could still be saved in order to trigger
     // slow control processsors (see for example AcquScalerProcessor),
     // but should NOT be processed by physics classes. Mark the event accordingly.
-    if(wants_skip && !event->SavedForSlowControls)
-        event->SavedForSlowControls = manager.saveEvent;
+    if(wants_skip && !event.SavedForSlowControls)
+        event.SavedForSlowControls = manager.saveEvent;
 
-    eventbuffer.emplace(manager.saveEvent, move(event));
+    eventbuffer.emplace(manager.saveEvent, std::move(event));
 
     return all_complete;
 }
@@ -113,7 +113,7 @@ event_t SlowControlManager::PopEvent() {
     auto i = std::move(eventbuffer.front());
     eventbuffer.pop();
 
-    if(i.Event->Reconstructed().ID == changepoint) {
+    if(i.Event.Reconstructed().ID == changepoint) {
         changepoint = PopBuffers(changepoint);
     }
 

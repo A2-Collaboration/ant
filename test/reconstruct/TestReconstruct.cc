@@ -135,12 +135,12 @@ void dotest() {
 
     while(auto event = unpacker->NextEvent()) {
 
-        auto& hits = event->Reconstructed().DetectorReadHits;
+        auto& hits = event.Reconstructed().DetectorReadHits;
         nHits += hits.size();
         if(!hits.empty())
             nReads++;
-        reconstruct.DoReconstruct(event->Reconstructed());
-        nCandidates += event->Reconstructed().Candidates.size();
+        reconstruct.DoReconstruct(event.Reconstructed());
+        nCandidates += event.Reconstructed().Candidates.size();
 
     }
 

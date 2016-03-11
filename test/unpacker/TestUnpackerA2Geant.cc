@@ -33,7 +33,7 @@ void dotest_readall() {
     unsigned nEvents = 0;
     while(auto event = unpacker->NextEvent()) {
         nEvents++;
-        REQUIRE(event->HasReconstructed());
+        REQUIRE(event.HasReconstructed());
     }
 
     REQUIRE(nEvents==10);
@@ -44,10 +44,8 @@ void dotest_single() {
     REQUIRE_NOTHROW(unpacker = ant::Unpacker::Get(string(TEST_BLOBS_DIRECTORY)+"/Geant_with_TID.root"));
     REQUIRE(unpacker != nullptr);
 
-    auto eventptr = unpacker->NextEvent();
-    REQUIRE(eventptr);
-
-    TEvent event = move(*eventptr);
+    auto event = unpacker->NextEvent();
+    REQUIRE(event);
 
     REQUIRE(event.HasMCTrue());
     REQUIRE(event.HasReconstructed());
