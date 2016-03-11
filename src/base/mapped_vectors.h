@@ -41,18 +41,14 @@ template<typename Key, typename Value>
 struct mapped_vectors {
 
 private:
-    using storage_item_t = std::unique_ptr< std::pair<Key, std::vector<Value> > >;
-    using storage_t = std::vector< storage_item_t >;
+    using storage_item_t = std::pair<Key, std::vector<Value> >;
+    using storage_item_ptr_t = std::unique_ptr<storage_item_t>;
+    using storage_t = std::vector< storage_item_ptr_t >;
     storage_t storage;
     using keys_t = std::vector<Key>;
     keys_t keys;
 
 public:
-//    using is_enum = std::is_enum<Key>;
-//    using Key_enum = typename std::underlying_type<Key>::type;
-//    using Key_u = typename std::conditional< is_enum::value, typename std::underlying_type<Key>::type, Key >::type;
-
-//    static_assert(std::is_integral< Key_u >::value, "Key for mapped_vectors must be integral type");
 
     void clear() {
         for(auto key : keys) {
@@ -105,15 +101,13 @@ public:
 
     friend class const_iterator;
 
-    using A = std::allocator< std::pair<Key, std::vector<Value>> >;
-
-    class const_iterator {
+    class const_iterator : public std::iterator<std::forward_iterator_tag, storage_item_t> {
     public:
-        typedef typename A::difference_type difference_type;
-        typedef typename A::value_type value_type;
-        typedef typename A::reference const_reference;
-        typedef typename A::pointer const_pointer;
-        typedef std::forward_iterator_tag iterator_category;
+        using typename std::iterator<std::forward_iterator_tag, storage_item_t>::reference;
+        using typename std::iterator<std::forward_iterator_tag, storage_item_t>::pointer;
+
+        using const_reference =  typename std::add_const<reference>::type;
+        using const_pointer =  typename std::add_const<pointer>::type;
 
         bool operator==(const const_iterator& rhs) const {
             return it_key == rhs.it_key;
@@ -129,6 +123,11 @@ public:
         const_reference operator*() const {
             return *(storage_ptr->at(to_integral(*it_key)));
         }
+
+        const_pointer operator->() const {
+            return storage_ptr->at(to_integral(*it_key)).get();
+        }
+
     private:
         friend struct mapped_vectors;
 
