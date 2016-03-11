@@ -318,8 +318,8 @@ void hstack::Paint(const char* chopt)
         // little hack to get legends stable...
         tmp_hists.sort([] (const wraphist_t& a, const wraphist_t& b) {
             if(a.Hist->Option.Z == b.Hist->Option.Z) {
-                const string& title_a = a.Hist->Ptr->GetTitle();
-                const string& title_b = b.Hist->Ptr->GetTitle();
+                const string title_a = a.Hist->Ptr->GetTitle();
+                const string title_b = b.Hist->Ptr->GetTitle();
                 if(std_ext::contains(title_a,"Bkg_") && std_ext::contains(title_b,"Bkg_"))
                     return title_a < title_b;
                 else
