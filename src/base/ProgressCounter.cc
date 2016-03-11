@@ -64,9 +64,12 @@ double ProgressCounter::GetTotalSecs() const {
 
 string ProgressCounter::TimeToStr(double secs)
 {
-    const unsigned hours_left = secs / 3600;
+    if(!isfinite(secs))
+        return "??";
+
+    const auto hours_left = std::floor(secs / 3600);
     secs -= hours_left * 3600;
-    const unsigned mins_left = secs / 60;
+    const auto mins_left = std::floor(secs / 60);
     secs -= mins_left * 60;
 
     std::stringstream ss_ETA;
@@ -74,7 +77,7 @@ string ProgressCounter::TimeToStr(double secs)
         ss_ETA << hours_left << ":";
     if(mins_left>0)
         ss_ETA << setw(2) << setfill('0') << mins_left << ":";
-    ss_ETA << setw(2) << setfill('0') << static_cast<unsigned>(secs);
+    ss_ETA << setw(2) << setfill('0') << std::floor(secs);
 
     return ss_ETA.str();
 }
