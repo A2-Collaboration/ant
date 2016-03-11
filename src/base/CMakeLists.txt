@@ -17,7 +17,6 @@ set(SRCS_BASE
   Tree.h
   root_printable.h
   WrapTFile.cc
-  mapped_vectors.h
   CmdLine.h
   Paths.h
   matrixstack.cc
@@ -135,6 +134,7 @@ set(SRCS_STD_EXT
   std_ext/system.cc
   std_ext/convert.h
   std_ext/iterators.h
+  std_ext/mapped_vectors.h
 )
 
 set(SRCS

@@ -1,10 +1,10 @@
 #pragma once
 
+#include "base/std_ext/memory.h" // make_unique
+
 #include <vector>
 #include <memory>
 #include <type_traits>
-
-#include "base/std_ext/memory.h" // make_unique
 
 namespace ant {
 namespace std_ext {
