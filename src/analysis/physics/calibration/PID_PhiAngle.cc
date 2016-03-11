@@ -27,7 +27,7 @@ void PID_PhiAngle::ProcessEvent(const TEvent& event, manager_t&)
 
     TClusterPtr cluster_pid;
     TClusterPtr cluster_cb;
-    for(const TClusterPtr& cl : event.Reconstructed->Clusters) {
+    for(const TClusterPtr& cl : event.Reconstructed().Clusters) {
         if(cl->DetectorType == Detector_t::Type_t::PID) {
             if(cluster_pid)
                 return;

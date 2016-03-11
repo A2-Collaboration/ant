@@ -147,7 +147,7 @@ void dotest() {
     while(auto event = unpacker->NextEvent()) {
         nEvents++;
         if(nEvents == 6 || nEvents == 2) {
-            reconstruct.DoReconstruct(*event->Reconstructed);
+            reconstruct.DoReconstruct(event->Reconstructed());
         }
         else if(nEvents > 6)
             break;

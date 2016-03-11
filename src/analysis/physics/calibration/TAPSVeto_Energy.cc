@@ -36,10 +36,10 @@ TAPSVeto_Energy::TAPSVeto_Energy(const string& name, OptionsPtr opts) :
 
 void TAPSVeto_Energy::ProcessEvent(const TEvent& event, manager_t&)
 {
-    const auto& cands = event.Reconstructed->Candidates;
+    const auto& cands = event.Reconstructed().Candidates;
 
     // pedestals
-    for(const TDetectorReadHit& readhit : event.Reconstructed->DetectorReadHits) {
+    for(const TDetectorReadHit& readhit : event.Reconstructed().DetectorReadHits) {
         if(readhit.DetectorType != Detector_t::Type_t::TAPSVeto)
             continue;
         if(readhit.ChannelType != Channel_t::Type_t::Integral)

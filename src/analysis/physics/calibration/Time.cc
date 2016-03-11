@@ -48,20 +48,20 @@ Time::Time(const Detector_t::Type_t& detectorType,
 
 void Time::ProcessEvent(const TEvent& event, manager_t&)
 {
-    const double CBTimeAvg = event.Reconstructed->Trigger.CBTiming;
+    const double CBTimeAvg = event.Reconstructed().Trigger.CBTiming;
     hCBTriggerTiming->Fill(CBTimeAvg);
 
     // handle Tagger differently
     if(isTagger)
     {
-        for (const auto& tHit: event.Reconstructed->TaggerHits) {
+        for (const auto& tHit: event.Reconstructed().TaggerHits) {
             hTime->Fill(tHit.Time, tHit.Channel);
             hTimeToF->Fill(tHit.Time - CBTimeAvg, tHit.Channel);
         }
         return;
     }
 
-    for(const auto& cand: event.Reconstructed->Candidates) {
+    for(const auto& cand: event.Reconstructed().Candidates) {
         for(const TClusterPtr& cluster: cand->Clusters) {
             if(cluster->DetectorType != Detector->Type)
                 continue;
@@ -70,7 +70,7 @@ void Time::ProcessEvent(const TEvent& event, manager_t&)
                                                          cluster->CentralElement,
                                                          CBTimeAvg);
             hTimeToF->Fill(tof, cluster->CentralElement);
-            for(const auto& taggerhit : event.Reconstructed->TaggerHits) {
+            for(const auto& taggerhit : event.Reconstructed().TaggerHits) {
                 const double relative_time = cluster->Time - taggerhit.Time;
                 hTimeToTagger->Fill(relative_time, cluster->CentralElement);
             }

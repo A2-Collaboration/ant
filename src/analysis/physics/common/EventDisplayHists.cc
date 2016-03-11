@@ -46,7 +46,7 @@ EventDisplayHists::~EventDisplayHists()
 void EventDisplayHists::ProcessEvent(const TEvent& event, manager_t&)
 {
 
-    const auto& candidates = event.Reconstructed->Candidates;
+    const auto& candidates = event.Reconstructed().Candidates;
 
 
     taps_cands.resize(0);
@@ -75,7 +75,7 @@ void EventDisplayHists::ProcessEvent(const TEvent& event, manager_t&)
 
     }
 
-    const auto true_particles = event.MCTrue->Particles.GetAll();
+    const auto true_particles = event.MCTrue().Particles.GetAll();
 
     for(const auto& p : true_particles) {
         if(p->Theta() < degree_to_radian(30.0)) {

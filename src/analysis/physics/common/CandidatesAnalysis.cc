@@ -39,7 +39,7 @@ CandidatesAnalysis::CandidatesAnalysis(const std::string& name, OptionsPtr opts)
 
 void CandidatesAnalysis::ProcessEvent(const TEvent& event, manager_t&)
 {
-    const auto& candidates = event.Reconstructed->Candidates;
+    const auto& candidates = event.Reconstructed().Candidates;
 
     nCandidatesEvent->Fill(candidates.size());
 

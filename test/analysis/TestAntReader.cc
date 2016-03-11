@@ -47,8 +47,8 @@ void dotest_read() {
             break;
 
         nEvents++;
-        nCandidates += event.Reconstructed->Candidates.size();
-        nSlowControls += event.Reconstructed->SlowControls.size();
+        nCandidates += event.Reconstructed().Candidates.size();
+        nSlowControls += event.Reconstructed().SlowControls.size();
     }
 
 

@@ -34,7 +34,7 @@ void DeltaPlusPhysics::ProcessEvent(const TEvent& event, manager_t&)
     TParticleList photons;
     TParticleList protons;
 
-    for( auto& particle : event.Reconstructed->Particles.GetAll() ) {
+    for( auto& particle : event.Reconstructed().Particles.GetAll() ) {
 
         if( particle->Type() ==  ParticleTypeDatabase::Photon )
             photons.emplace_back(particle);
@@ -43,11 +43,11 @@ void DeltaPlusPhysics::ProcessEvent(const TEvent& event, manager_t&)
 
     }
 
-    for(const auto& cand : event.Reconstructed->Candidates ) {
+    for(const auto& cand : event.Reconstructed().Candidates ) {
         prompt["pid"]->Fill(cand->CaloEnergy, cand->VetoEnergy);
     }
 
-    for(const auto& taggerhit : event.Reconstructed->TaggerHits) {
+    for(const auto& taggerhit : event.Reconstructed().TaggerHits) {
         bool isPrompt = false;
 
         if( prompt_window.Contains(taggerhit.Time) ) {
@@ -60,7 +60,7 @@ void DeltaPlusPhysics::ProcessEvent(const TEvent& event, manager_t&)
         Histogm& h = isPrompt ? prompt : random;
 
         // some basic histograms
-        h["nPart"]->Fill(event.Reconstructed->Particles.GetAll().size());
+        h["nPart"]->Fill(event.Reconstructed().Particles.GetAll().size());
         h["tag_energy"]->Fill(taggerhit.PhotonEnergy);
         h["tag_time"]->Fill(taggerhit.Time);
 

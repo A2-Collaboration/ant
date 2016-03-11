@@ -71,7 +71,7 @@ EventFilter::~EventFilter()
 
 void EventFilter::ProcessEvent(const TEvent& event, manager_t& manager)
 {
-    const auto& data = *(event.Reconstructed);
+    const auto& data = event.Reconstructed();
 
     steps->SetBinContent(1, steps->GetBinContent(1)+1);
 

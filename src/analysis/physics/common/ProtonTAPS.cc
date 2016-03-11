@@ -44,7 +44,7 @@ void ProtonTAPS::ProcessEvent(const TEvent& event, manager_t&)
     TCandidateList cands_cb;
 
     b_CBAvgVetoE = 0;
-    for(const auto& p : event.Reconstructed->Candidates) {
+    for(const auto& p : event.Reconstructed().Candidates) {
         if(p->Detector & Detector_t::Any_t::TAPS_Apparatus) {
             cands_taps.emplace_back(p);
         }

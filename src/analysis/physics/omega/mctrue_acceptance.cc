@@ -58,13 +58,13 @@ void MCTrueAcceptance::ProcessEvent(const TEvent& event, manager_t&)
 
     detect->Fill("Events", 1);
 
-    if(alldetectable(event.MCTrue->Particles.GetAll())) {
+    if(alldetectable(event.MCTrue().Particles.GetAll())) {
         detect->Fill("All Detected",1);
     }
 
     for( auto& type : ParticleTypeDatabase::DetectableTypes() ) {
 
-        const TParticleList& particles = event.MCTrue->Particles.Get(*type);
+        const TParticleList& particles = event.MCTrue().Particles.Get(*type);
 
         if(particles.size() > 0) {
 

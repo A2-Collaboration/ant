@@ -61,8 +61,8 @@ int main( int argc, char** argv )
         treeGoat->GetEntry(entryGoat);
 
         if(!synced) {
-            const auto antEventID = eventAnt->Reconstructed->Trigger.DAQEventID;
-            const auto goatEventID = eventGoat->Reconstructed->Trigger.DAQEventID;
+            const auto antEventID = eventAnt->Reconstructed().Trigger.DAQEventID;
+            const auto goatEventID = eventGoat->Reconstructed().Trigger.DAQEventID;
             if(antEventID < goatEventID) {
                 entryAnt++;
                 continue;
@@ -75,8 +75,8 @@ int main( int argc, char** argv )
             LOG(INFO) << "Synced at ant=" << entryAnt << " goat=" << entryGoat;
         }
 
-        const TEventData& antRecon = *eventAnt->Reconstructed;
-        const TEventData& goatRecon = *eventGoat->Reconstructed;
+        const TEventData& antRecon = eventAnt->Reconstructed();
+        const TEventData& goatRecon = eventGoat->Reconstructed();
 
         if(antRecon.TaggerHits.size() != goatRecon.TaggerHits.size()) {
             LOG(ERROR) << "TaggerHits size mismatch at ant=" << entryAnt << " goat=" << entryGoat;

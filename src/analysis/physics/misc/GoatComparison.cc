@@ -53,7 +53,7 @@ void GoatComparison::ProcessEvent(const TEvent& event, manager_t& manager)
 {
     steps->Fill("Seen",1.0);
 
-    const auto& cands = event.Reconstructed->Candidates;
+    const auto& cands = event.Reconstructed().Candidates;
     TCandidateList cands_cb;
 
     double CBSumVetoE = 0;
@@ -65,7 +65,7 @@ void GoatComparison::ProcessEvent(const TEvent& event, manager_t& manager)
     }
 
     double PIDSumE = 0;
-    for(const TClusterPtr& cl : event.Reconstructed->Clusters) {
+    for(const TClusterPtr& cl : event.Reconstructed().Clusters) {
         if(cl->DetectorType == Detector_t::Type_t::PID)
             PIDSumE += cl->Energy;
     }

@@ -17,9 +17,6 @@
 
 namespace ant {
 
-struct TEventData;
-using TEventDataPtr = std::unique_ptr<TEventData> ;
-
 struct TEventData : printable_traits
 {
     struct PTypeList {

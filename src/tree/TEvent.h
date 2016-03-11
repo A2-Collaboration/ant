@@ -30,8 +30,14 @@ struct TEvent
 
 #ifndef __CINT__
 
-    std::unique_ptr<TEventData> Reconstructed;
-    std::unique_ptr<TEventData> MCTrue;
+    const TEventData& Reconstructed() const { return *reconstructed; }
+    TEventData& Reconstructed() { return *reconstructed; }
+    bool HasReconstructed() const { return reconstructed!=nullptr; }
+    const TEventData& MCTrue() const { return *mctrue; }
+    TEventData& MCTrue() { return *mctrue; }
+    bool HasMCTrue() const { return mctrue!=nullptr; }
+
+
     // indicates that this event was only saved for SlowControl processing
     bool SavedForSlowControls = false;
 
@@ -39,20 +45,35 @@ struct TEvent
     void serialize(Archive archive, const std::uint32_t version) {
         if(version != ANT_TEVENT_VERSION)
             throw std::runtime_error("TEvent version mismatch");
-        archive(Reconstructed, MCTrue, SavedForSlowControls);
+        archive(reconstructed, mctrue, SavedForSlowControls);
     }
 
     virtual std::ostream& Print( std::ostream& s) const override;
 
-    static std::unique_ptr<TEvent> MakeReconstructed(const TID& id);
+    TEvent(const TID& id_reconstructed);
+    TEvent(const TID& id_reconstructed, const TID& id_mctrue);
+
+    void MakeReconstructed(const TID& id_reconstructed);
+    void MakeMCTrue(const TID& id_mctrue);
+    void MakeReconstructedMCTrue(const TID& id_reconstructed, const TID& id_mctrue);
 
     void ClearDetectorReadHits();
+    void EnsureTempBranches();
+    void ClearTempBranches();
 
     // TEvent is moveable
     TEvent(TEvent&&) = default;
     TEvent& operator=(TEvent&&) = default;
 
+protected:
+    std::unique_ptr<TEventData> reconstructed;
+    bool empty_reconstructed = false;
+    std::unique_ptr<TEventData> mctrue;
+    bool empty_mctrue = false;
+
 #endif
+
+public:
 
     TEvent();
     virtual ~TEvent();

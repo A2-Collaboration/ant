@@ -58,10 +58,10 @@ TAPS_Energy::TAPS_Energy(const string& name, OptionsPtr opts) :
 
 void TAPS_Energy::ProcessEvent(const TEvent& event, manager_t&)
 {
-    const auto& cands = event.Reconstructed->Candidates;
+    const auto& cands = event.Reconstructed().Candidates;
 
     // pedestals
-    for(const TDetectorReadHit& readhit : event.Reconstructed->DetectorReadHits) {
+    for(const TDetectorReadHit& readhit : event.Reconstructed().DetectorReadHits) {
         if(readhit.DetectorType != Detector_t::Type_t::TAPS)
             continue;
         if(readhit.ChannelType != Channel_t::Type_t::Integral)
@@ -113,7 +113,7 @@ void TAPS_Energy::ProcessEvent(const TEvent& event, manager_t&)
         TCandidateList cb_candidates;
         TCandidateList taps_candidates;
 
-        for(const TCandidatePtr& cand : event.Reconstructed->Candidates)
+        for(const TCandidatePtr& cand : event.Reconstructed().Candidates)
         {
             if((cand->Detector & Detector_t::Type_t::TAPS)
                && cand->VetoEnergy < 1.0)
@@ -151,7 +151,7 @@ void TAPS_Energy::ProcessEvent(const TEvent& event, manager_t&)
         cands_CB.Clear();
         bool interesting_event = false;
         const vector<unsigned> interesting_channels = {31, 0, 1, 2, 15};
-        for(const TCandidatePtr& cand : event.Reconstructed->Candidates) {
+        for(const TCandidatePtr& cand : event.Reconstructed().Candidates) {
             // find interesting TAPS clusters
             if(cand->Detector & Detector_t::Type_t::TAPS) {
                 auto taps_cluster = cand->FindCaloCluster();
@@ -164,7 +164,7 @@ void TAPS_Energy::ProcessEvent(const TEvent& event, manager_t&)
 
         if(interesting_event) {
             bool CB_seen = false;
-            for(const TCandidatePtr& cand : event.Reconstructed->Candidates) {
+            for(const TCandidatePtr& cand : event.Reconstructed().Candidates) {
                 if(cand->Detector & Detector_t::Type_t::CB)
                 {
                     cands_CB.Fill(*cand);

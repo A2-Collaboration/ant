@@ -91,7 +91,7 @@ void EtapProton::ProcessEvent(const TEvent& event, manager_t& manager)
 {
     steps->Fill("Seen",1.0);
 
-    const auto& cands = event.Reconstructed->Candidates;
+    const auto& cands = event.Reconstructed().Candidates;
     TCandidateList cands_taps;
     TCandidateList cands_cb;
 
@@ -111,7 +111,7 @@ void EtapProton::ProcessEvent(const TEvent& event, manager_t& manager)
     steps->Fill("nTAPS>0",1.0);
 
     b_nCB = cands_cb.size();
-    b_CBAvgTime = event.Reconstructed->Trigger.CBTiming;
+    b_CBAvgTime = event.Reconstructed().Trigger.CBTiming;
     if(!isfinite(b_CBAvgTime))
         return;
     steps->Fill("CBAvgTime ok",1.0);
@@ -126,7 +126,7 @@ void EtapProton::ProcessEvent(const TEvent& event, manager_t& manager)
         // is used...
         const auto taps_cluster = cand_taps->FindCaloCluster();
         const double dt = taps_detector->GetTimeOfFlight(taps_cluster->Time, taps_cluster->CentralElement,
-                                                          event.Reconstructed->Trigger.CBTiming);
+                                                          event.Reconstructed().Trigger.CBTiming);
         const double s = taps_detector->GetZPosition();
         constexpr double c = 30; // velocity of light in cm/ns
 
@@ -175,7 +175,7 @@ void EtapProton::ProcessEvent(const TEvent& event, manager_t& manager)
     utils::KinFitter& fitter = *fitters.at(photons.size()-1);
 
     bool kinFit_ok = false;
-    for(const TTaggerHit& taggerhit : event.Reconstructed->TaggerHits) {
+    for(const TTaggerHit& taggerhit : event.Reconstructed().TaggerHits) {
         promptrandom.SetTaggerHit(taggerhit.Time - b_CBAvgTime);
         if(promptrandom.State() == PromptRandom::Case::Outside)
             continue;

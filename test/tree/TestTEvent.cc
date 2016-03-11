@@ -29,18 +29,16 @@ void dotest() {
   TFile f(tmpfile.filename.c_str(),"RECREATE");
 
   TTree* tree = new TTree(treename.c_str(),"");
-  TEvent* event = new TEvent();
+  auto event = new TEvent();
 
   tree->Branch(branchname.c_str(), event);
 
-  event->Reconstructed = std_ext::make_unique<TEventData>();
-  auto& eventdata = event->Reconstructed;
+  event->MakeReconstructed(TID(10));
+  auto& eventdata = event->Reconstructed();
 
-  eventdata->ID = TID(10);
-
-  eventdata->DetectorReadHits.emplace_back();
-  eventdata->DetectorReadHits.emplace_back();
-  eventdata->DetectorReadHits.emplace_back();
+  eventdata.DetectorReadHits.emplace_back();
+  eventdata.DetectorReadHits.emplace_back();
+  eventdata.DetectorReadHits.emplace_back();
 
   auto cluster0 = make_shared<TCluster>(TVector3(1,2,3),
                                        100, 0.5,
@@ -60,9 +58,9 @@ void dotest() {
                                        127, // central element
                                        vector<TClusterHit>{TClusterHit(), TClusterHit(), TClusterHit()}
                                        );
-  eventdata->Clusters.emplace_back(cluster0);
-  eventdata->Clusters.emplace_back(cluster1);
-  eventdata->Clusters.emplace_back(cluster2);
+  eventdata.Clusters.emplace_back(cluster0);
+  eventdata.Clusters.emplace_back(cluster1);
+  eventdata.Clusters.emplace_back(cluster2);
 
 
   auto candidate0 = make_shared<TCandidate>(
@@ -74,36 +72,36 @@ void dotest() {
                         vector<TClusterPtr>{cluster1, cluster0}
                         );
 
-  eventdata->Candidates.emplace_back(candidate0);
+  eventdata.Candidates.emplace_back(candidate0);
 
   auto particle0 = make_shared<TParticle>(ParticleTypeDatabase::Photon, candidate0);
   auto particle1 = make_shared<TParticle>(ParticleTypeDatabase::Photon, TLorentzVector(7,8,9,10));
   auto particle2 = make_shared<TParticle>(ParticleTypeDatabase::Pi0, TLorentzVector(3,4,5,6));
 
 
-  eventdata->Particles.Add(particle0);
-  eventdata->Particles.Add(particle1);
+  eventdata.Particles.Add(particle0);
+  eventdata.Particles.Add(particle1);
 
-  eventdata->ParticleTree = Tree<TParticlePtr>::MakeNode(particle2);
-  eventdata->ParticleTree->CreateDaughter(particle1);
-  eventdata->ParticleTree->CreateDaughter(particle0);
+  eventdata.ParticleTree = Tree<TParticlePtr>::MakeNode(particle2);
+  eventdata.ParticleTree->CreateDaughter(particle1);
+  eventdata.ParticleTree->CreateDaughter(particle0);
 
   cout << event << endl;
   cout << *event << endl;
 
   tree->Fill();
 
-  event->Reconstructed = std_ext::make_unique<TEventData>();
-  event->MCTrue = std_ext::make_unique<TEventData>();
+  event->MakeReconstructed(TID());
+  event->MakeMCTrue(TID());
 
-  event->Reconstructed->Particles.Add(particle0);
-  event->Reconstructed->Particles.Add(particle0);
+  event->Reconstructed().Particles.Add(particle0);
+  event->Reconstructed().Particles.Add(particle0);
 
-  event->MCTrue->Particles.Add(particle0);
-  event->MCTrue->Particles.Add(particle1);
+  event->MCTrue().Particles.Add(particle0);
+  event->MCTrue().Particles.Add(particle1);
 
 
-  event->MCTrue->Candidates.push_back(particle0->Candidate);
+  event->MCTrue().Candidates.push_back(particle0->Candidate);
 
   tree->Fill();
 
@@ -131,39 +129,39 @@ void dotest() {
   cout << *readback_event << endl;
 
 
-  auto& readback = readback_event->Reconstructed;
-  REQUIRE(readback != nullptr);
+  REQUIRE(readback_event->HasReconstructed());
+  const auto& readback = readback_event->Reconstructed();
 
 
-  REQUIRE(readback->ID == TID(10));
+  REQUIRE(readback.ID == TID(10));
 
-  REQUIRE(readback->DetectorReadHits.size() == 3);
+  REQUIRE(readback.DetectorReadHits.size() == 3);
 
-  REQUIRE(readback->Clusters.size() == 3);
-  REQUIRE(readback->Clusters.at(0)->Position == TVector3(1,2,3));
-  REQUIRE(readback->Clusters.at(2)->Position == TVector3(7,8,9));
-  REQUIRE(readback->Clusters.at(0)->Hits.size() == 1);
-  REQUIRE(readback->Clusters.at(2)->Hits.size() == 3);
+  REQUIRE(readback.Clusters.size() == 3);
+  REQUIRE(readback.Clusters.at(0)->Position == TVector3(1,2,3));
+  REQUIRE(readback.Clusters.at(2)->Position == TVector3(7,8,9));
+  REQUIRE(readback.Clusters.at(0)->Hits.size() == 1);
+  REQUIRE(readback.Clusters.at(2)->Hits.size() == 3);
 
-  REQUIRE(readback->Candidates.size() == 1);
+  REQUIRE(readback.Candidates.size() == 1);
 
-  REQUIRE(readback->Clusters.at(0) == readback->Candidates.at(0)->Clusters.at(1));
+  REQUIRE(readback.Clusters.at(0) == readback.Candidates.at(0)->Clusters.at(1));
 
-  REQUIRE(readback->Particles.GetAll().size() == 2);
-  REQUIRE(readback->Particles.GetAll().at(0)->Type() == ParticleTypeDatabase::Photon);
-  REQUIRE(readback->Particles.GetAll().at(0)->Candidate == readback->Candidates.at(0));
-  REQUIRE(readback->Particles.GetAll().at(1)->E() == 10);
-  REQUIRE(readback->Particles.Get(ParticleTypeDatabase::Photon).size() == 2);
-  REQUIRE(readback->Particles.Get(ParticleTypeDatabase::Proton).size() == 0);
+  REQUIRE(readback.Particles.GetAll().size() == 2);
+  REQUIRE(readback.Particles.GetAll().at(0)->Type() == ParticleTypeDatabase::Photon);
+  REQUIRE(readback.Particles.GetAll().at(0)->Candidate == readback.Candidates.at(0));
+  REQUIRE(readback.Particles.GetAll().at(1)->E() == 10);
+  REQUIRE(readback.Particles.Get(ParticleTypeDatabase::Photon).size() == 2);
+  REQUIRE(readback.Particles.Get(ParticleTypeDatabase::Proton).size() == 0);
 
-  REQUIRE(readback->ParticleTree != nullptr);
+  REQUIRE(readback.ParticleTree != nullptr);
   // check if that particle was properly re-created
-  REQUIRE(readback->ParticleTree->Get() != particle2);
-  REQUIRE(readback->ParticleTree->Get()->Type() == particle2->Type());
-  REQUIRE(readback->ParticleTree->Get()->Type() == ParticleTypeDatabase::Pi0);
-  REQUIRE(readback->ParticleTree->Daughters().size() == 2);
-  REQUIRE(readback->ParticleTree->Daughters().front()->Get() == readback->Particles.GetAll().at(1));
-  REQUIRE(readback->ParticleTree->Daughters().back()->Get() == readback->Particles.GetAll().at(0));
+  REQUIRE(readback.ParticleTree->Get() != particle2);
+  REQUIRE(readback.ParticleTree->Get()->Type() == particle2->Type());
+  REQUIRE(readback.ParticleTree->Get()->Type() == ParticleTypeDatabase::Pi0);
+  REQUIRE(readback.ParticleTree->Daughters().size() == 2);
+  REQUIRE(readback.ParticleTree->Daughters().front()->Get() == readback.Particles.GetAll().at(1));
+  REQUIRE(readback.ParticleTree->Daughters().back()->Get() == readback.Particles.GetAll().at(0));
 
 
 

@@ -157,7 +157,7 @@ void PhysicsManager::ReadFrom(
                     ProcessEvent(event, manager);
 
                     // prefer Reconstructed ID, but at least one branch should be non-null
-                    const auto& eventid = event.Reconstructed ? event.Reconstructed->ID : event.MCTrue->ID;
+                    const auto& eventid = event.HasReconstructed() ? event.Reconstructed().ID : event.MCTrue().ID;
                     if(nEventsAnalyzed==0)
                         firstID = eventid;
                     lastID = eventid;
@@ -240,11 +240,11 @@ bool PhysicsManager::TryReadEvent(TEventPtr& event)
 
 void PhysicsManager::ProcessEvent(TEvent& event, physics::manager_t& manager)
 {
-    if(particleID && event.Reconstructed) {
+    if(particleID && event.HasReconstructed()) {
         // run particle ID for Reconstructed candidates
         // but only if there are no identified particles present yet
         /// \todo implement flag to force particle ID again?
-        TEventData& recon = *event.Reconstructed;
+        TEventData& recon = event.Reconstructed();
         if(recon.Particles.GetAll().empty()) {
             for(const auto& cand : recon.Candidates) {
                 auto particle = particleID->Process(cand);
@@ -254,34 +254,14 @@ void PhysicsManager::ProcessEvent(TEvent& event, physics::manager_t& manager)
         }
     }
 
-    // ensure that physics classes always
-    // have at least empty TEventData branches MCTrue and Reconstructed
-    // use RAII for that
-    struct clean_branch_t {
-        TEventDataPtr& branch;
-        bool clean = false;
-        clean_branch_t(TEventDataPtr& branch_) : branch(branch_) {
-            if(!branch) {
-                // create temporary empty branch
-                branch = std_ext::make_unique<TEventData>();
-                clean = true;
-            }
-        }
-        ~clean_branch_t() {
-            // delete the branch if it was just empty in dtor
-            if(clean)
-                branch = nullptr;
-        }
-    };
-
-    // make sure the branches are non-null for physics classes
-    clean_branch_t rec(event.Reconstructed);
-    clean_branch_t mc(event.MCTrue);
+    event.EnsureTempBranches();
 
     // run the physics classes
     for( auto& m : physics ) {
         m->ProcessEvent(event, manager);
     }
+
+    event.ClearTempBranches();
 }
 
 void PhysicsManager::SaveEvent(slowcontrol::event_t buffered_event, const physics::manager_t& manager)

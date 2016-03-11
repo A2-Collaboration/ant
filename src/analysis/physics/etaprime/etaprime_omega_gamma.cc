@@ -70,11 +70,11 @@ void EtapOmegaG::ProcessEvent(const TEvent& event, manager_t&)
     // later we split into ref/sig analysis according to
     // number of photons
 
-    TEventData& data = *event.Reconstructed;
+    const TEventData& data = event.Reconstructed();
 
     h_CommonCuts->Fill("Seen",1.0);
 
-    auto& particletree = event.MCTrue->ParticleTree;
+    auto& particletree = event.MCTrue().ParticleTree;
 
     h_CommonCuts->Fill("MCTrue #eta'", 0); // ensure the bin is there...
     if(particletree) {
@@ -90,7 +90,7 @@ void EtapOmegaG::ProcessEvent(const TEvent& event, manager_t&)
     h_CommonCuts->Fill("CBEnergySum>550",1.0);
     t.CBSumE = data.Trigger.CBEnergySum;
 
-    t.CBAvgTime = event.Reconstructed->Trigger.CBTiming;
+    t.CBAvgTime = event.Reconstructed().Trigger.CBTiming;
     if(!isfinite(t.CBAvgTime))
         return;
     h_CommonCuts->Fill("CBAvgTime ok",1.0);
@@ -201,7 +201,7 @@ void EtapOmegaG::ProcessEvent(const TEvent& event, manager_t&)
             h_MissedBkg->Fill(decaystr.c_str(), 1.0);
         }
     }
-    else if(!event.MCTrue->ID.IsInvalid()) {
+    else if(!event.MCTrue().ID.IsInvalid()) {
         // in rare cases, the particletree is not available, although we're running on MCTrue
         // mark this as other MC background
         t.MCTrue = 9;

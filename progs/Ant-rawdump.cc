@@ -161,18 +161,19 @@ int main(int argc, char** argv) {
         if(!keepRunning)
             break;
 
-        const auto& recon = event->Reconstructed;
-        if(!recon)
+        if(!event->HasReconstructed())
             continue;
 
+        const auto& recon = event->Reconstructed();
+
         if(!masterFile) {
-            LOG(INFO) << recon->DetectorReadHits;
+            LOG(INFO) << recon.DetectorReadHits;
             continue;
         }
 
         ADC_index->resize(0);
         ADC_value->resize(0);
-        for(const TDetectorReadHit& readhit : recon->DetectorReadHits) {
+        for(const TDetectorReadHit& readhit : recon.DetectorReadHits) {
             // assume raw data to be 16bit chunks
             const auto& rawData = readhit.RawData;
             if(rawData.size() % 2 != 0)

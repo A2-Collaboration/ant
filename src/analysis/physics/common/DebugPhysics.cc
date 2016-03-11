@@ -72,10 +72,10 @@ DebugPIDAlignment::~DebugPIDAlignment()
 
 void DebugPIDAlignment::ProcessEvent(const TEvent& event, manager_t&)
 {
-    if(event.MCTrue->Particles.GetAll().size() == 1) {
-        const auto mctrue_phi = event.MCTrue->Particles.GetAll().front()->Phi() * TMath::RadToDeg();
+    if(event.MCTrue().Particles.GetAll().size() == 1) {
+        const auto mctrue_phi = event.MCTrue().Particles.GetAll().front()->Phi() * TMath::RadToDeg();
 
-        for(const TCandidatePtr& cand : event.Reconstructed->Candidates) {
+        for(const TCandidatePtr& cand : event.Reconstructed().Candidates) {
             for(const TClusterPtr& c : cand->Clusters) {
                 if(c->DetectorType == Detector_t::Type_t::PID) {
                     angles_mc->Fill(mctrue_phi, c->Position.Phi()* TMath::RadToDeg());
@@ -84,7 +84,7 @@ void DebugPIDAlignment::ProcessEvent(const TEvent& event, manager_t&)
         }
     }
 
-    for(const TCandidatePtr& cand : event.Reconstructed->Candidates) {
+    for(const TCandidatePtr& cand : event.Reconstructed().Candidates) {
         if(cand->Detector & Detector_t::Any_t::CB_Apparatus) {
             auto cl_cb = cand->FindCaloCluster();
             auto cl_pid = cand->FindVetoCluster();
@@ -95,7 +95,7 @@ void DebugPIDAlignment::ProcessEvent(const TEvent& event, manager_t&)
         }
     }
 
-    const auto& clusters =  event.Reconstructed->Clusters;
+    const auto& clusters =  event.Reconstructed().Clusters;
 
     const auto get_clusters = [] (const TClusterList& clusters, Detector_t::Type_t type) {
         TClusterList ret;

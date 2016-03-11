@@ -31,11 +31,11 @@ physics::ExtractResolutions::ExtractResolutions(const std::string& name, Options
 
 void physics::ExtractResolutions::ProcessEvent(const TEvent& event, manager_t&)
 {
-    const auto& mcparticles = event.MCTrue->Particles.GetAll();
+    const auto& mcparticles = event.MCTrue().Particles.GetAll();
 
     if(mcparticles.size() == 1) {
 
-        const auto& recparticles = event.Reconstructed->Particles.GetAll();
+        const auto& recparticles = event.Reconstructed().Particles.GetAll();
 
         if(recparticles.size() ==1 ) {
 

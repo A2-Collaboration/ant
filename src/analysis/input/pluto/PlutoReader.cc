@@ -280,23 +280,23 @@ bool PlutoReader::ReadNextEvent(TEvent& event)
     TID mctrue_tid;
     if(tid_from_file) {
         mctrue_tid = *tid;
-        if(event.Reconstructed &&
-           event.Reconstructed->ID != mctrue_tid) {
+        if(event.HasReconstructed() &&
+           event.Reconstructed().ID != mctrue_tid) {
             throw Exception(std_ext::formatter()
-                            << "TID mismatch: Reconstructed=" << event.Reconstructed->ID
+                            << "TID mismatch: Reconstructed=" << event.Reconstructed().ID
                             << " not equal to MCTrue=" << mctrue_tid);
         }
     }
 
     // ensure MCTrue branch is there, potentially add TID if invalid so far
-    if(!event.MCTrue) {
-        event.MCTrue = std_ext::make_unique<TEventData>(mctrue_tid);
+    if(!event.HasMCTrue()) {
+        event.MakeMCTrue(mctrue_tid);
     }
-    else if(event.MCTrue->ID.IsInvalid()) {
-        event.MCTrue->ID = mctrue_tid;
+    else if(event.MCTrue().ID.IsInvalid()) {
+        event.MCTrue().ID = mctrue_tid;
     }
 
-    CopyPluto(*event.MCTrue);
+    CopyPluto(event.MCTrue());
 
     ++current_entry;
 

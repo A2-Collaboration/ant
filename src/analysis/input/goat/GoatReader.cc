@@ -270,17 +270,17 @@ bool GoatReader::ReadNextEvent(TEvent& event)
 
     active_modules.GetEntry();
 
-    if(!event.Reconstructed) {
+    if(!event.HasReconstructed()) {
         /// \todo think of some better timestamp?
         const TID tid(
                     static_cast<std::uint32_t>(std::time(nullptr)),
                     static_cast<std::uint32_t>(current_entry),
                     std::list<TID::Flags_t>{TID::Flags_t::AdHoc}
                     );
-        event.Reconstructed = std_ext::make_unique<TEventData>(tid);
+        event.MakeReconstructed(tid);
     }
 
-    auto& recon = *event.Reconstructed;
+    auto& recon = event.Reconstructed();
 
     CopyDetectorHits(recon);
     CopyTrigger(recon);

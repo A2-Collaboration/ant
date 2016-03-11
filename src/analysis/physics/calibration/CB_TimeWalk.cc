@@ -44,7 +44,7 @@ CB_TimeWalk::CB_TimeWalk(const string& name, OptionsPtr opts) :
 void CB_TimeWalk::ProcessEvent(const TEvent& event, manager_t&)
 {
     /// \todo maybe use TDetectorReadHits directly here?
-    for(const auto& cand: event.Reconstructed->Candidates) {
+    for(const auto& cand: event.Reconstructed().Candidates) {
         for(const TClusterPtr& cluster: cand->Clusters) {
             if(cluster->DetectorType != Detector_t::Type_t::CB)
                 continue;

@@ -28,7 +28,7 @@ TID GetFirstID(const string& filename) {
     if(firstevent == nullptr)
         throw runtime_error(string("Didn't get first event from ")+filename);
 
-    return firstevent->Reconstructed->ID;
+    return firstevent->Reconstructed().ID;
 }
 
 void dotest() {

@@ -94,7 +94,7 @@ void dotest_statistical() {
     unsigned nSplitClusterHits = 0;
 
     while(auto event = unpacker->NextEvent()) {
-        auto& recon = *event->Reconstructed;
+        auto& recon = event->Reconstructed();
         reconstruct.DoReconstruct(recon);
         for(const TClusterPtr& cluster : recon.Clusters) {
             nClusters++;

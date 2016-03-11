@@ -54,7 +54,7 @@ McTrue3Pi0::McTrue3Pi0(const std::string& name, OptionsPtr opts) :
 
 void McTrue3Pi0::ProcessEvent(const TEvent& event, manager_t&)
 {
-    const auto& mcdata = *event.MCTrue;
+    const auto& mcdata = event.MCTrue();
 
     /// \todo this could actually be implemented with ParticleTree_t comparison
 

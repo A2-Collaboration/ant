@@ -52,7 +52,7 @@ struct TestPhysics : Physics
         REQUIRE_FALSE(event.SavedForSlowControls);
         auto taggerscalers = slowcontrol::Variables::TaggerScalers->Get();
         REQUIRE(taggerscalers.size() == 47);
-        if(event.Reconstructed->SlowControls.empty())
+        if(event.Reconstructed().SlowControls.empty())
             manager.SaveEvent();
     }
 };
@@ -147,7 +147,7 @@ bool SLCFakeReader::ReadNextEvent(TEvent &event)
         return false;
 
     for(const auto& s : *i) {
-        event.Reconstructed->SlowControls.push_back(s);
+        event.Reconstructed().SlowControls.push_back(s);
     }
 
     ++i;
@@ -175,11 +175,11 @@ void dotest_FakeReader() {
     TID tid(time(nullptr), 0, {TID::Flags_t::AdHoc});
     do {
 
-        auto e = TEvent::MakeReconstructed(tid);
+        TEvent e(tid);
         ++tid;
 
-        if(reader.ReadNextEvent(*e)) {
-            cout << *e << endl;
+        if(reader.ReadNextEvent(e)) {
+            cout << e << endl;
 
         } else {
             break;

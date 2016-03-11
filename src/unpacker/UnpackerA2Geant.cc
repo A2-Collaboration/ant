@@ -146,17 +146,18 @@ std::unique_ptr<TEvent> UnpackerA2Geant::NextEvent() noexcept
 
     geant->GetEntry(++current_entry);
 
-    // start with an empty reconstructed event
-    auto event = TEvent::MakeReconstructed(*id);
+    // start with an empty event with reconstructed ID set
+    // MCTrue ID will be set by MCTrue reader, but this unpacker
+    // knows the true vertex position...
+    auto event = std_ext::make_unique<TEvent>(*id, TID());
 
     // however, vertex is some MCTrue information!
-    event->MCTrue = std_ext::make_unique<TEventData>(); // do not set its ID, will be done by "real" MCTrue reader
-    event->MCTrue->Target.Vertex = fvertex; // TVector3 has conversion constructor...
+    event->MCTrue().Target.Vertex = fvertex; // TVector3 has conversion constructor...
 
     const size_t n_total = fnhits+fnpart+fntaps+fnvtaps+fvhits;
 
     // approx. 3 detector read hits per detector, we just want to prevent re-allocation
-    vector<TDetectorReadHit>& hits = event->Reconstructed->DetectorReadHits;
+    vector<TDetectorReadHit>& hits = event->Reconstructed().DetectorReadHits;
     hits.reserve(3*n_total);
 
     // all energies from A2geant are in GeV, but here we need MeV...

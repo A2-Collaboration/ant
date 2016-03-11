@@ -42,9 +42,9 @@ void DeltaTreeGenerator::ProcessEvent(const TEvent& event, manager_t&)
 {
     TParticleList photons;
     TParticleList mc_photons;
-    for( const auto& particle : event.Reconstructed->Particles.Get(ParticleTypeDatabase::Photon) )
+    for( const auto& particle : event.Reconstructed().Particles.Get(ParticleTypeDatabase::Photon) )
         photons.emplace_back(particle);
-    for ( const auto& mc_particle: event.MCTrue->Particles.Get(ParticleTypeDatabase::Photon))
+    for ( const auto& mc_particle: event.MCTrue().Particles.Get(ParticleTypeDatabase::Photon))
         mc_photons.emplace_back(mc_particle);
 
     mcgamma->Fill(mc_photons.size());
@@ -75,7 +75,7 @@ void DeltaTreeGenerator::ProcessEvent(const TEvent& event, manager_t&)
 
 
     // taggerHits should always have size on though
-    for( const auto& taggerHit: event.MCTrue->TaggerHits)
+    for( const auto& taggerHit: event.MCTrue().TaggerHits)
     {
         taggerEnergy = taggerHit.PhotonEnergy;
         taggerHits->Fill( taggerEnergy );

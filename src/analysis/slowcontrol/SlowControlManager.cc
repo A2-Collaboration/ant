@@ -70,10 +70,10 @@ SlowControlManager::SlowControlManager()
 
 bool SlowControlManager::ProcessEvent(TEventPtr event)
 {
-    if(!event->Reconstructed)
+    if(!event->HasReconstructed())
         return true;
 
-    TEventData& reconstructed = *(event->Reconstructed);
+    TEventData& reconstructed = event->Reconstructed();
 
     physics::manager_t manager;
 
@@ -113,7 +113,7 @@ event_t SlowControlManager::PopEvent() {
     auto i = std::move(eventbuffer.front());
     eventbuffer.pop();
 
-    if(i.Event->Reconstructed->ID == changepoint) {
+    if(i.Event->Reconstructed().ID == changepoint) {
         changepoint = PopBuffers(changepoint);
     }
 

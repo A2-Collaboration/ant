@@ -28,9 +28,9 @@ JustPi0::JustPi0(const string& name, OptionsPtr opts) :
 
 void JustPi0::ProcessEvent(const TEvent& event, manager_t&)
 {
-    const auto& data = *event.Reconstructed;
+    const auto& data = event.Reconstructed();
     for(auto& m : multiPi0)
-        m->ProcessData(data, event.MCTrue->ParticleTree);
+        m->ProcessData(data, event.MCTrue().ParticleTree);
 }
 
 void JustPi0::ShowResult()

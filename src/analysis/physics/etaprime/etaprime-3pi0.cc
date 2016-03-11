@@ -112,8 +112,8 @@ void Etap3pi0::ProcessEvent(const TEvent& event, manager_t&)
 {
     /// TODO:geo-cuts ??
 
-    const auto& data   = *event.Reconstructed;
-    const auto& mcdata = *event.MCTrue;
+    const auto& data   = event.Reconstructed();
+    const auto& mcdata = event.MCTrue();
 
     TParticlePtr  proton;
     TParticleList photons;
@@ -191,7 +191,7 @@ void Etap3pi0::ProcessEvent(const TEvent& event, manager_t&)
     if (mcprotons.size() == 1)
         vars.trueProton = *mcprotons.at(0);
 
-    double CBAvgTime = event.Reconstructed->Trigger.CBTiming;
+    double CBAvgTime = event.Reconstructed().Trigger.CBTiming;
     if(!isfinite(CBAvgTime))
         return;
     //debug:

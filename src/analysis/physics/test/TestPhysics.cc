@@ -40,9 +40,9 @@ ParticleCombinatoricsTest::ParticleCombinatoricsTest(const std::string& name, Op
 void ParticleCombinatoricsTest::ProcessEvent(const TEvent& event, manager_t&)
 
 {
-    const TParticleList& photons = event.Reconstructed->Particles.Get(ParticleTypeDatabase::Photon);
-    const TParticleList& protons = event.Reconstructed->Particles.Get(ParticleTypeDatabase::Proton);
-    const TParticleList& all = event.Reconstructed->Particles.GetAll();
+    const TParticleList& photons = event.Reconstructed().Particles.Get(ParticleTypeDatabase::Photon);
+    const TParticleList& protons = event.Reconstructed().Particles.Get(ParticleTypeDatabase::Proton);
+    const TParticleList& all = event.Reconstructed().Particles.GetAll();
 
     for( auto& particle : all ) {
 

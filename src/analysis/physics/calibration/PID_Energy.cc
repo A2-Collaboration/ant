@@ -113,7 +113,7 @@ void PID_Energy::ProcessEvent(const TEvent& event, manager_t&)
 
     std::map<unsigned, hitmapping_t> hits;
 
-    for(const TDetectorReadHit& readhit : event.Reconstructed->DetectorReadHits) {
+    for(const TDetectorReadHit& readhit : event.Reconstructed().DetectorReadHits) {
         if(readhit.DetectorType != Detector_t::Type_t::PID)
             continue;
 
@@ -155,7 +155,7 @@ void PID_Energy::ProcessEvent(const TEvent& event, manager_t&)
     }
 
     // bananas per channel histograms
-    for(const auto& candidate : event.Reconstructed->Candidates) {
+    for(const auto& candidate : event.Reconstructed().Candidates) {
         // only candidates with one cluster in CB and one cluster in PID
         if(candidate->Clusters.size() != 2)
             continue;
