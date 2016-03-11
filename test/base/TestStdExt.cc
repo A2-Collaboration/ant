@@ -5,11 +5,13 @@
 #include "base/std_ext/string.h"
 #include "base/std_ext/vector.h"
 #include "base/std_ext/system.h"
+#include "base/std_ext/shared_ptr_container.h"
 
 #include "base/tmpfile_t.h"
 
 #include <string>
 #include <memory>
+#include <iostream>
 
 using namespace std;
 using namespace ant;
@@ -26,6 +28,7 @@ void TestMakeUnique();
 void TestString();
 void TestVector();
 void TestLsFiles();
+void TestSharedPtrContainer();
 
 TEST_CASE("make_unique", "[base/std_ext]") {
     TestMakeUnique();
@@ -40,8 +43,11 @@ TEST_CASE("vector stuff", "[base/std_ext]") {
 }
 
 TEST_CASE("system lsFiles", "[base/std_ext]") {
-
     TestLsFiles();
+}
+
+TEST_CASE("shared_ptr_container", "[base/std_ext]") {
+    TestSharedPtrContainer();
 }
 
 void TestMakeUnique() {
@@ -104,4 +110,32 @@ void TestLsFiles() {
 
     REQUIRE_NOTHROW(files = std_ext::system::lsFiles(folder.foldername,".tst"));
     REQUIRE(files.size()==2);
+}
+
+struct int_t {
+    static size_t n_constructed;
+    int val;
+    int_t(int v) : val(v) { n_constructed++; }
+    operator int() const { return val; }
+};
+
+size_t int_t::n_constructed = 0;
+
+void TestSharedPtrContainer() {
+
+    std_ext::shared_ptr_container<int_t, std::list> c1;
+    c1.emplace_back(5);
+    REQUIRE(*c1.begin() == 5);
+    REQUIRE(c1[0] == 5);
+    c1.emplace_back(6);
+    c1.erase(c1.begin());
+    REQUIRE(c1[0]==6);
+
+    std_ext::shared_ptr_container<int_t, std::vector> c2{c1.begin(), c1.begin()};
+    REQUIRE(c2[0]==6);
+    REQUIRE(c2[1]==6);
+
+    // number of emplace_back calls!
+    REQUIRE(int_t::n_constructed == 2);
+
 }
