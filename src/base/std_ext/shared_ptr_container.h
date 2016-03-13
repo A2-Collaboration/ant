@@ -7,12 +7,14 @@ namespace ant {
 namespace std_ext {
 
 template<typename T, class it_t>
-struct shared_ptr_iterator_t : std::iterator<typename it_t::iterator_category, T>
+struct shared_ptr_iterator_t : std::iterator<std::bidirectional_iterator_tag, T>
 {
-    using iterator_category = typename it_t::iterator_category;
-    using typename std::iterator<iterator_category, T>::reference;
-    using typename std::iterator<iterator_category, T>::pointer;
+    static_assert(std::is_same<typename it_t::value_type, std::shared_ptr<T>>::value,
+                  "shared_ptr_iterator_t must be used with iterator pointing to shared_ptr<T>");
 
+    using base_type = typename std::iterator<std::bidirectional_iterator_tag, T>;
+    using typename base_type::reference;
+    using typename base_type::pointer;
     using const_reference =  typename std::add_const<reference>::type;
     using const_pointer =  typename std::add_const<pointer>::type;
 
@@ -25,11 +27,17 @@ struct shared_ptr_iterator_t : std::iterator<typename it_t::iterator_category, T
     shared_ptr_iterator_t& operator++() {
         ++it; return *this;
     }
+    shared_ptr_iterator_t& operator--() {
+        --it; return *this;
+    }
     const_reference operator*() const {
         return **it;
     }
     const_pointer operator->() const {
         return std::addressof(*this);
+    }
+    std::shared_ptr<const T> get_const() const {
+        return *it;
     }
 
 private:
@@ -85,13 +93,14 @@ public:
         c.emplace_back(std::make_shared<T>(std::forward<Args>(args)...));
     }
 
-    const T& operator[] (int i) const
+    const T& operator[] (typename const_iterator::difference_type i) const
     {
         return **std::next(c.begin(), i);
     }
 
     const_iterator erase(const const_iterator& it)
     {
+        // need explicit cast to const_iterator since erase returns normal iterator
         return const_iterator(c.erase(it.it));
     }
 };

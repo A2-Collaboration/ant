@@ -130,12 +130,19 @@ void TestSharedPtrContainer() {
     c1.emplace_back(6);
     c1.erase(c1.begin());
     REQUIRE(c1[0]==6);
+    c1.emplace_back(7);
 
-    std_ext::shared_ptr_container<int_t, std::vector> c2{c1.begin(), c1.begin()};
-    REQUIRE(c2[0]==6);
+    std_ext::shared_ptr_container<int_t, std::vector> c2{std::prev(c1.end()), c1.begin()};
+    REQUIRE(c2[0]==7);
     REQUIRE(c2[1]==6);
 
+    auto ptr = c2.begin().get_const();
+    using ptr_t = decltype(ptr);
+    REQUIRE(std::is_const<ptr_t::element_type>::value);
+    auto is_convertible = std::is_convertible<ptr_t,shared_ptr<int_t>>::value;
+    REQUIRE(!is_convertible);
+
     // number of emplace_back calls!
-    REQUIRE(int_t::n_constructed == 2);
+    REQUIRE(int_t::n_constructed == 3);
 
 }
