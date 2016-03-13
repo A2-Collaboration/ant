@@ -12,7 +12,7 @@ namespace std_ext {
 template<class E, class Enable = void>
 struct to_integral_helper
 {
-    static E inner(E e)
+    static constexpr E inner(E e)
     {
         return e;
     }
@@ -21,14 +21,14 @@ struct to_integral_helper
 template<typename E>
 struct to_integral_helper<E, typename std::enable_if<std::is_enum<E>::value>::type>
 {
-    static typename std::underlying_type<E>::type inner(E e)
+    static constexpr typename std::underlying_type<E>::type inner(E e)
     {
         return static_cast<typename std::underlying_type<E>::type>(e);
     }
 };
 
 template<typename E>
-auto to_integral(E e) -> decltype(to_integral_helper<E>::inner(e))
+constexpr auto to_integral(E e) -> decltype(to_integral_helper<E>::inner(e))
 {
     return to_integral_helper<E>::inner(e);
 }
@@ -63,8 +63,6 @@ public:
     }
 
     void add_item(const Key& key, const Value& value) {
-        // return silently if we encounter
-        // a key which is too large for the storage
         const auto key_u = to_integral(key);
         if(key_u>=storage.size()) {
             storage.resize(key_u+1);
