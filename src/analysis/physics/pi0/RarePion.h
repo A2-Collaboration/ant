@@ -16,9 +16,17 @@ protected:
     TH1D* gggim;
     TH1D* ggggim;
     TH1D* nphotons;
-    TH1D* nprotons;
+    TH1D* nphotons_anglecut;
+    TH1D* im_3g;
+    TH1D* minAngle;
+    TH1D* minAngle2g;
+    TH1D* minAngle3g;
+    TH1D* splitoffangle;
 
-    std::map<const ant::ParticleTypeDatabase::Type*, TH1D*> EHists;
+    TH2D* theta_vs_En;
+
+
+    //std::map<const ant::ParticleTypeDatabase::Type*, TH1D*> EHists;
 
 public:
     RarePion(const std::string& name, OptionsPtr opts);
