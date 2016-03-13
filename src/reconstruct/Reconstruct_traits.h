@@ -48,7 +48,7 @@ struct ReconstructHook {
      * @brief The Base struct just defines some useful types
      */
     struct Base {
-        using readhits_t = std_ext::mapped_vectors< Detector_t::Type_t, TDetectorReadHit* >;
+        using readhits_t = std_ext::mapped_vectors< Detector_t::Type_t, std::reference_wrapper<TDetectorReadHit> >;
         using clusterhits_t = std::map< Detector_t::Type_t, TClusterHitList >;
         using clusters_t = std::map< Detector_t::Type_t, TClusterList >;
         virtual ~Base() = default;

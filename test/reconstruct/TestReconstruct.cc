@@ -26,7 +26,7 @@ TEST_CASE("Reconstruct", "[reconstruct]") {
 }
 
 template<typename T>
-unsigned getTotalCount(const Reconstruct::sorted_bydetectortype_t<T>& m) {
+unsigned getTotalCount(const T& m) {
     unsigned total = 0;
     for(const auto& m_item : m) {
         const auto& list = m_item.second;

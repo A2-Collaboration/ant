@@ -61,8 +61,8 @@ void Energy::ApplyTo(const readhits_t& hits)
     const auto& dethits = hits.get_item(DetectorType);
 
     // now calibrate the Energies (ignore any other kind of hits)
-    for(TDetectorReadHit* dethit : dethits) {
-        if(dethit->ChannelType != ChannelType)
+    for(TDetectorReadHit& dethit : dethits) {
+        if(dethit.ChannelType != ChannelType)
             continue;
 
 
@@ -73,36 +73,36 @@ void Energy::ApplyTo(const readhits_t& hits)
         std::vector<double> all_values;
 
         // prefer RawData if available
-        if(!dethit->RawData.empty()) {
+        if(!dethit.RawData.empty()) {
             // convert to not-so-raw values (still not MeV scale though)
-            dethit->Converted = Converter->Convert(dethit->RawData);
+            dethit.Converted = Converter->Convert(dethit.RawData);
 
             // apply pedestal/gain to each of the values (might be multihit)
-            for(double value : dethit->Converted) {
-                value -= Pedestals.Get(dethit->Channel);
-                value *= Gains.Get(dethit->Channel);
+            for(double value : dethit.Converted) {
+                value -= Pedestals.Get(dethit.Channel);
+                value *= Gains.Get(dethit.Channel);
                 all_values.push_back(value);
             }
 
         }
         else {
             // maybe the values are already filled
-            all_values = dethit->Values;
+            all_values = dethit.Values;
         }
 
         // always apply the threshold cut and the relative gains
-        dethit->Values.resize(0);
-        dethit->Values.reserve(all_values.size());
+        dethit.Values.resize(0);
+        dethit.Values.reserve(all_values.size());
 
         for(double value : all_values) {
-            value *= RelativeGains.Get(dethit->Channel);
+            value *= RelativeGains.Get(dethit.Channel);
 
-            const double threshold = Thresholds.Get(dethit->Channel);
+            const double threshold = Thresholds.Get(dethit.Channel);
             if(value<threshold)
                 continue;
 
             // only add if it passes the threshold
-            dethit->Values.push_back(value);
+            dethit.Values.push_back(value);
         }
 
     }

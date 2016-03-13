@@ -91,36 +91,36 @@ void Time::ApplyTo(const readhits_t& hits)
     if(IsMC)
         return;
 
-    const auto& dethits = hits.get_item(Detector->Type);
+    auto& dethits = hits.get_item(Detector->Type);
 
     // now calibrate the Times (ignore any other kind of hits)
-    for(TDetectorReadHit* dethit : dethits) {
-        if(dethit->ChannelType != Channel_t::Type_t::Timing)
+    for(TDetectorReadHit& dethit : dethits) {
+        if(dethit.ChannelType != Channel_t::Type_t::Timing)
             continue;
 
         // the Converter is smart enough to account for reference Times!
-        dethit->Converted = Converters[dethit->Channel]->Convert(dethit->RawData);
-        dethit->Values.reserve(dethit->Converted.size());
+        dethit.Converted = Converters[dethit.Channel]->Convert(dethit.RawData);
+        dethit.Values.reserve(dethit.Converted.size());
 
         // apply gain/offset to each of the values (might be multihit)
-        for(double value : dethit->Converted) {
+        for(double value : dethit.Converted) {
             if(Gains.empty())
-                value *= DefaultGains[dethit->Channel];
+                value *= DefaultGains[dethit.Channel];
             else
-                value *= Gains[dethit->Channel];
+                value *= Gains[dethit.Channel];
 
             if(Offsets.empty())
-                value -= DefaultOffsets[dethit->Channel];
+                value -= DefaultOffsets[dethit.Channel];
             else
-                value -= Offsets[dethit->Channel];
+                value -= Offsets[dethit.Channel];
 
-            if(!TimeWindows[dethit->Channel].Contains(value))
+            if(!TimeWindows[dethit.Channel].Contains(value))
             {
-                VLOG(9) << "Discarding hit in channel " << dethit->Channel << ", which is outside time window.";
+                VLOG(9) << "Discarding hit in channel " << dethit.Channel << ", which is outside time window.";
                 continue;
             }
 
-            dethit->Values.push_back(value);
+            dethit.Values.push_back(value);
         }
     }
 }

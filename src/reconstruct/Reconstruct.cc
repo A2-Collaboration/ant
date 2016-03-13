@@ -125,11 +125,11 @@ void Reconstruct::ApplyHooksToReadHits(
 {
     // categorize the hits by detector type
     // this is handy for all subsequent reconstruction steps
-    // we need to use non-const pointers because calibrations
-    // may change the content
+    // we need to use non-const references because calibrations
+    // may change the content (use std::reference_wrapper to hold it in vector)
     sorted_readhits.clear();
     for(TDetectorReadHit& readhit : detectorReadHits) {
-        sorted_readhits.add_item(readhit.DetectorType, addressof(readhit));
+        sorted_readhits.add_item(readhit.DetectorType, readhit);
     }
 
     // apply calibration
@@ -162,20 +162,20 @@ void Reconstruct::BuildHits(sorted_bydetectortype_t<TClusterHit>& sorted_cluster
 
         map<unsigned, TClusterHit> hits;
 
-        for(const TDetectorReadHit* readhit : readhits) {
+        for(const TDetectorReadHit& readhit : readhits) {
             // ignore uncalibrated items
-            if(readhit->Values.empty())
+            if(readhit.Values.empty())
                 continue;
 
             /// \todo think about multi hit handling here?
-            TClusterHit& hit = hits[readhit->Channel];
-            hit.Data.emplace_back(readhit->ChannelType, readhit->Values.front());
-            hit.Channel = readhit->Channel;
+            TClusterHit& hit = hits[readhit.Channel];
+            hit.Data.emplace_back(readhit.ChannelType, readhit.Values.front());
+            hit.Channel = readhit.Channel;
 
-            if(readhit->ChannelType == Channel_t::Type_t::Integral)
-                hit.Energy = readhit->Values.front();
-            else if(readhit->ChannelType == Channel_t::Type_t::Timing)
-                hit.Time = readhit->Values.front();
+            if(readhit.ChannelType == Channel_t::Type_t::Integral)
+                hit.Energy = readhit.Values.front();
+            else if(readhit.ChannelType == Channel_t::Type_t::Timing)
+                hit.Time = readhit.Values.front();
         }
 
         TClusterHitList clusterhits;
@@ -196,7 +196,7 @@ void Reconstruct::BuildHits(sorted_bydetectortype_t<TClusterHit>& sorted_cluster
 }
 
 void Reconstruct::HandleTagger(const shared_ptr<TaggerDetector_t>& taggerdetector,
-                               const vector<TDetectorReadHit*>& readhits,
+                               const std::vector<std::reference_wrapper<TDetectorReadHit> >& readhits,
                                std::vector<TTaggerHit>& taggerhits
                                )
 {
@@ -208,17 +208,17 @@ void Reconstruct::HandleTagger(const shared_ptr<TaggerDetector_t>& taggerdetecto
     };
     map<unsigned, taggerhit_t > hits;
 
-    for(const TDetectorReadHit* readhit : readhits) {
+    for(const TDetectorReadHit& readhit : readhits) {
         // ignore uncalibrated items
-        if(readhit->Values.empty())
+        if(readhit.Values.empty())
             continue;
 
-        auto& item = hits[readhit->Channel];
-        if(readhit->ChannelType == Channel_t::Type_t::Timing) {
-            std_ext::concatenate(item.Timings, readhit->Values);
+        auto& item = hits[readhit.Channel];
+        if(readhit.ChannelType == Channel_t::Type_t::Timing) {
+            std_ext::concatenate(item.Timings, readhit.Values);
         }
-        else if(readhit->ChannelType == Channel_t::Type_t::Integral) {
-            std_ext::concatenate(item.Energies, readhit->Values);
+        else if(readhit.ChannelType == Channel_t::Type_t::Integral) {
+            std_ext::concatenate(item.Energies, readhit.Values);
         }
     }
 
