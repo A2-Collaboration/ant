@@ -142,7 +142,12 @@ void TestSharedPtrContainer() {
     auto is_convertible = std::is_convertible<ptr_t,shared_ptr<int_t>>::value;
     REQUIRE(!is_convertible);
 
+    c2.emplace_back(8);
+
+    const std_ext::shared_ptr_container<int_t, std::vector> c3(c2.begin(), c2.end());
+    REQUIRE(c3.size()==3);
+
     // number of emplace_back calls!
-    REQUIRE(int_t::n_constructed == 3);
+    REQUIRE(int_t::n_constructed == 4);
 
 }
