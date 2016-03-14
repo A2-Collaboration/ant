@@ -10,6 +10,7 @@
 #include <iomanip>
 #include <sstream>
 #include <memory>
+#include <algorithm>
 
 
 namespace ant {
@@ -31,7 +32,7 @@ struct TCandidate : printable_traits
     double VetoEnergy;
     double TrackerEnergy;
 
-    std::vector<TClusterPtr> Clusters;
+    TClusterList Clusters;
 
     TCandidate(
             Detector_t::Any_t detector,
@@ -42,7 +43,7 @@ struct TCandidate : printable_traits
             unsigned clusterSize,
             double vetoE,
             double trackerE,
-            const std::vector<TClusterPtr>& clusters
+            TClusterList clusters
             ) :
         Detector(detector),
         CaloEnergy(caloE),
@@ -52,7 +53,7 @@ struct TCandidate : printable_traits
         ClusterSize(clusterSize),
         VetoEnergy(vetoE),
         TrackerEnergy(trackerE),
-        Clusters(clusters)
+        Clusters(std::move(clusters))
     {}
 
     template<class Archive>
@@ -62,20 +63,17 @@ struct TCandidate : printable_traits
 
     operator TVector3() const { TVector3 p; p.SetMagThetaPhi(1.0, Theta, Phi); return p; }
 
-    TClusterPtr FindFirstCluster(Detector_t::Any_t detector) const {
-        for(const auto& cl : Clusters) {
-            if(cl->DetectorType & detector) {
-                return cl;
-            }
-        }
-        return nullptr;
+    TClusterList::const_iterator FindFirstCluster(Detector_t::Any_t detector) const {
+        return std::find_if(Clusters.begin(), Clusters.end(), [detector] (const TCluster& cl) {
+            return cl.DetectorType & detector;
+        });
     }
 
-    TClusterPtr FindCaloCluster() const {
-        return FindFirstCluster(Detector_t::Type_t::CB | Detector_t::Type_t::TAPS);
+    TClusterList::const_iterator FindCaloCluster() const {
+        return FindFirstCluster(Detector_t::Any_t::Calo);
     }
 
-    TClusterPtr FindVetoCluster() const {
+    TClusterList::const_iterator FindVetoCluster() const {
         return FindFirstCluster(Detector_t::Any_t::Veto);
     }
 
