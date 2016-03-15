@@ -1045,11 +1045,22 @@ Particle rho0
 2.40   16
 2.6    16
 
-#Particle pi+ pi- pi0
-
-
-
-#Particle pi+ pi- pi0 pi0
+#only for EPT:
+# actual poduction thresholds:
+# pi+ pi- pi0:  505.505 GeV
+# pi+ pi- 2pi0: 709.763 GeV
+#
+#rough estimate (value for 1.6 GeV) 
+Particle pi+ pi- pi0
+0.0 0
+1.4 0
+1.41 25
+#
+#rough estimate (value for 1.6 GeV)
+Particle pi+ pi- pi0 pi0
+0.0 0
+1.4 0
+1.41 18
 
 
 
