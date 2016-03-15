@@ -33,12 +33,7 @@ protected:
         unsigned Tagg_Ch; // tagger channel
         double   Tagg_E;  // tagger energy
 
-        TCandidate Proton;
-        TCandidate ProtonMCTrue;
         unsigned ProtonMCTrueMatches;
-
-        std::vector<TCandidate> Photons;
-
 
         TH1D* steps;
         TH1D* Proton_Coplanarity;

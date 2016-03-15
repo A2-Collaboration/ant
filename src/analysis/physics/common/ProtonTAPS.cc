@@ -22,8 +22,6 @@ ProtonTAPS::ProtonTAPS(const string& name, OptionsPtr opts):
     tree->Branch("CBAvgTime", &b_CBAvgTime);
     tree->Branch("CBAvgVetoE", &b_CBAvgVetoE);
 
-    tree->Branch("Proton", &b_Proton);
-
 }
 
 template <typename T>
@@ -60,14 +58,6 @@ void ProtonTAPS::ProcessEvent(const TEvent& event, manager_t&)
     b_nCB = cands_cb.size();
     b_CBAvgTime = TimeAverage(cands_cb);
     b_CBAvgVetoE /= b_nCB;
-
-    // find the proton in TAPS
-    b_Proton.Time = numeric_limits<double>::quiet_NaN();
-    for(const TCandidatePtr& cand_proton : cands_taps) {
-        if(!isfinite(b_Proton.Time) || b_Proton.Time < cand_proton->Time) {
-            b_Proton = *cand_proton;
-        }
-    }
 
     tree->Fill();
 }

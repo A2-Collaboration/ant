@@ -165,7 +165,7 @@ void PID_Energy::ProcessEvent(const TEvent& event, manager_t&)
             continue;
 
         // search for PID cluster
-        const TClusterPtr& pid_cluster = candidate->FindFirstCluster(Detector_t::Type_t::PID);
+        const auto& pid_cluster = candidate->FindFirstCluster(Detector_t::Type_t::PID);
 
         h_bananas->Fill(candidate->CaloEnergy,
                         candidate->VetoEnergy,

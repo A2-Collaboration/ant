@@ -150,28 +150,28 @@ int main( int argc, char** argv )
 
             // compare clusters Ant/Goat
             struct cluster_t {
-                TClusterPtr Ant;
-                TClusterPtr Goat;
+                TClusterList::const_iterator Ant;
+                TClusterList::const_iterator Goat;
             };
 
             map<unsigned, cluster_t> clusters;
             double antEnergy = 0;
-            for(const TClusterPtr& cl : antRecon.Clusters)
-                if(cl->DetectorType == type && cl->Energy>threshold) {
-                    antEnergy += cl->Energy;
-                    clusters[cl->CentralElement].Ant = cl;
+            for(auto it_cl = antRecon.Clusters.begin(); it_cl; ++it_cl)
+                if(it_cl->DetectorType == type && it_cl->Energy>threshold) {
+                    antEnergy += it_cl->Energy;
+                    clusters[it_cl->CentralElement].Ant = it_cl;
                 }
 
             double goatEnergy = 0;
-            for(const TClusterPtr& cl : goatRecon.Clusters)
-                if(cl->DetectorType == type && cl->Energy>threshold) {
-                    goatEnergy += cl->Energy;
-                    clusters[cl->CentralElement].Goat = cl;
+            for(auto it_cl = goatRecon.Clusters.begin(); it_cl; ++it_cl)
+                if(it_cl->DetectorType == type && it_cl->Energy>threshold) {
+                    goatEnergy += it_cl->Energy;
+                    clusters[it_cl->CentralElement].Goat = it_cl;
                 }
 
             cout << "  EnergySum: " << antEnergy << "/" << goatEnergy << endl;
             for(const auto& it_cl : clusters) {
-                auto stringify_cl = [] (const TClusterPtr& cl) -> string {
+                auto stringify_cl = [] (const TClusterList::const_iterator& cl) -> string {
                     if(!cl)
                         return "";
                     return std_ext::formatter() << "(E=" << cl->Energy

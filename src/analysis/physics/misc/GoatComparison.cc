@@ -65,9 +65,9 @@ void GoatComparison::ProcessEvent(const TEvent& event, manager_t& manager)
     }
 
     double PIDSumE = 0;
-    for(const TClusterPtr& cl : event.Reconstructed().Clusters) {
-        if(cl->DetectorType == Detector_t::Type_t::PID)
-            PIDSumE += cl->Energy;
+    for(const TCluster& cl : event.Reconstructed().Clusters) {
+        if(cl.DetectorType == Detector_t::Type_t::PID)
+            PIDSumE += cl.Energy;
     }
 
     const auto nCB = cands_cb.size();
@@ -88,8 +88,8 @@ void GoatComparison::ProcessEvent(const TEvent& event, manager_t& manager)
         photon_low = cands_cb.front();
     }
 
-    TClusterPtr photon_high_cluster = photon_high->FindCaloCluster();
-    TClusterPtr photon_low_cluster = photon_low->FindCaloCluster();
+    auto photon_high_cluster = photon_high->FindCaloCluster();
+    auto photon_low_cluster = photon_low->FindCaloCluster();
 
     if(!photon_high_cluster || !photon_low_cluster)
         return;

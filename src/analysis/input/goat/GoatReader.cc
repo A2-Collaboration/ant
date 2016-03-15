@@ -137,29 +137,28 @@ void GoatReader::CopyTracks(TEventData& recon)
                 return vec;
             };
 
-            auto calo_cluster = make_shared<TCluster>(
-                                    make_TVector3(tracks.GetTheta(i), tracks.GetPhi(i)),
-                                    tracks.GetClusterEnergy(i),
-                                    tracks.GetTime(i),
-                                    det & Detector_t::Type_t::CB ? Detector_t::Type_t::CB : Detector_t::Type_t::TAPS ,
-                                    tracks.GetCentralCrystal(i)
-                                    );
-            if(tracks.GetShortEnergy(i)>0)
-                calo_cluster->ShortEnergy = tracks.GetShortEnergy(i);
 
-            clusters.emplace_back(calo_cluster);
+            clusters.emplace_back(
+                        make_TVector3(tracks.GetTheta(i), tracks.GetPhi(i)),
+                        tracks.GetClusterEnergy(i),
+                        tracks.GetTime(i),
+                        det & Detector_t::Type_t::CB ? Detector_t::Type_t::CB : Detector_t::Type_t::TAPS ,
+                        tracks.GetCentralCrystal(i)
+                        );
+            auto& calo_cluster = clusters.back();
+            if(tracks.GetShortEnergy(i)>0)
+                calo_cluster.ShortEnergy = tracks.GetShortEnergy(i);
 
             double vetoEnergy = 0.0;
             if(det & Detector_t::Any_t::Veto) {
                 vetoEnergy =  tracks.GetVetoEnergy(i);
-                clusters.emplace_back(make_shared<TCluster>(
-                                          TVector3(std_ext::NaN, std_ext::NaN, std_ext::NaN), // no veto position available
-                                          vetoEnergy,
-                                          std_ext::NaN, // no veto timing available
-                                          det & Detector_t::Type_t::PID ? Detector_t::Type_t::PID : Detector_t::Type_t::TAPSVeto,
-                                          tracks.GetCentralVeto(i)
-                                          )
-                                      );
+                clusters.emplace_back(
+                            TVector3(std_ext::NaN, std_ext::NaN, std_ext::NaN), // no veto position available
+                            vetoEnergy,
+                            std_ext::NaN, // no veto timing available
+                            det & Detector_t::Type_t::PID ? Detector_t::Type_t::PID : Detector_t::Type_t::TAPSVeto,
+                            tracks.GetCentralVeto(i)
+                            );
 
             }
 
@@ -174,7 +173,7 @@ void GoatReader::CopyTracks(TEventData& recon)
                             vetoEnergy,
                             //tracks.GetMWPC0Energy(i)+tracks.GetMWPC1Energy(i),
                             std_ext::NaN, // MWPC not handled correctly at the moment
-                            clusters
+                            TClusterList(clusters.begin(), clusters.end())
                             )
                         );
         }
@@ -182,14 +181,13 @@ void GoatReader::CopyTracks(TEventData& recon)
             // veto-only track is just a cluster in Ant
             // don't know if such tracks actually exist in GoAT/Acqu...
             const double vetoEnergy =  tracks.GetVetoEnergy(i);
-            clusters.emplace_back(make_shared<TCluster>(
-                                      TVector3(std_ext::NaN, std_ext::NaN, std_ext::NaN), // no veto position available
-                                      vetoEnergy,
-                                      std_ext::NaN, // no veto timing available
-                                      det & Detector_t::Type_t::PID ? Detector_t::Type_t::PID : Detector_t::Type_t::TAPSVeto,
-                                      tracks.GetCentralVeto(i)
-                                      )
-                                  );
+            clusters.emplace_back(
+                        TVector3(std_ext::NaN, std_ext::NaN, std_ext::NaN), // no veto position available
+                        vetoEnergy,
+                        std_ext::NaN, // no veto timing available
+                        det & Detector_t::Type_t::PID ? Detector_t::Type_t::PID : Detector_t::Type_t::TAPSVeto,
+                        tracks.GetCentralVeto(i)
+                        );
         }
 
         // always add clusters...

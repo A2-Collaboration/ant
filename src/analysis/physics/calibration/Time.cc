@@ -62,17 +62,17 @@ void Time::ProcessEvent(const TEvent& event, manager_t&)
     }
 
     for(const auto& cand: event.Reconstructed().Candidates) {
-        for(const TClusterPtr& cluster: cand->Clusters) {
-            if(cluster->DetectorType != Detector->Type)
+        for(const TCluster& cluster: cand->Clusters) {
+            if(cluster.DetectorType != Detector->Type)
                 continue;
-            hTime->Fill(cluster->Time, cluster->CentralElement);
-            const double tof = Detector->GetTimeOfFlight(cluster->Time,
-                                                         cluster->CentralElement,
+            hTime->Fill(cluster.Time, cluster.CentralElement);
+            const double tof = Detector->GetTimeOfFlight(cluster.Time,
+                                                         cluster.CentralElement,
                                                          CBTimeAvg);
-            hTimeToF->Fill(tof, cluster->CentralElement);
+            hTimeToF->Fill(tof, cluster.CentralElement);
             for(const auto& taggerhit : event.Reconstructed().TaggerHits) {
-                const double relative_time = cluster->Time - taggerhit.Time;
-                hTimeToTagger->Fill(relative_time, cluster->CentralElement);
+                const double relative_time = cluster.Time - taggerhit.Time;
+                hTimeToTagger->Fill(relative_time, cluster.CentralElement);
             }
         }
     }

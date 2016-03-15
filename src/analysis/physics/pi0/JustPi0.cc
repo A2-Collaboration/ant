@@ -84,10 +84,7 @@ JustPi0::MultiPi0::MultiPi0(HistogramFactory& histFac, unsigned nPi0, bool nofit
     tree->Branch("Tagg_Ch", addressof(Tagg_Ch));
     tree->Branch("Tagg_E", addressof(Tagg_E));
 
-    tree->Branch("Proton",addressof(Proton));
-    tree->Branch("ProtonMCTrue",addressof(ProtonMCTrue));
     tree->Branch("ProtonMCTrueMatches",addressof(ProtonMCTrueMatches));
-    tree->Branch("Photons",addressof(Photons));
 
     fitter.SetupBranches(tree, "Fit");
 
@@ -229,14 +226,8 @@ void JustPi0::MultiPi0::ProcessData(const TEventData& data, const TParticleTree_
             Tagg_Ch = taggerhit.Channel;
             Tagg_W  = promptrandom.FillWeight();
 
-            Photons.resize(0);
-            for(auto photon : photons)
-                Photons.emplace_back(*photon->Candidate);
-            Proton = *proton->Candidate;
-            ProtonMCTrueMatches = proton->Candidate.get() == proton_mctrue_match.get();
-            if(proton_mctrue_match)
-                ProtonMCTrue = *proton_mctrue_match;
 
+            ProtonMCTrueMatches = proton->Candidate.get() == proton_mctrue_match.get();
             tree->Fill();
         }
     }

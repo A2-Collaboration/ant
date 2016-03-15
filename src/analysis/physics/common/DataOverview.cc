@@ -147,9 +147,9 @@ void TriggerOverview::ProcessEvent(const TEvent& event, manager_t&)
     nErrorsEvent->Fill(trigger.DAQErrors.size());
     CBTiming->Fill(trigger.CBTiming);
 
-    for(const TClusterPtr& cluster : branch.Clusters) {
-        if(cluster->DetectorType == Detector_t::Type_t::CB) {
-            for(const TClusterHit& hit : cluster->Hits) {
+    for(const TCluster& cluster : branch.Clusters) {
+        if(cluster.DetectorType == Detector_t::Type_t::CB) {
+            for(const TClusterHit& hit : cluster.Hits) {
                 CBESum_perCh->Fill(trigger.CBEnergySum, hit.Channel);
                 E_perCh->Fill(hit.Energy, hit.Channel);
             }

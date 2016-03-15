@@ -154,9 +154,9 @@ void EtapOmegaG::ProcessEvent(const TEvent& event, manager_t&)
     // sum up the PID energy
     // (might be different to matched CB/PID Veto energy)
     t.PIDSumE = 0;
-    for(const TClusterPtr& cl : data.Clusters) {
-        if(cl->DetectorType == Detector_t::Type_t::PID) {
-            t.PIDSumE += cl->Energy;
+    for(const TCluster& cl : data.Clusters) {
+        if(cl.DetectorType == Detector_t::Type_t::PID) {
+            t.PIDSumE += cl.Energy;
         }
     }
 

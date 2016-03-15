@@ -76,9 +76,9 @@ void DebugPIDAlignment::ProcessEvent(const TEvent& event, manager_t&)
         const auto mctrue_phi = event.MCTrue().Particles.GetAll().front()->Phi() * TMath::RadToDeg();
 
         for(const TCandidatePtr& cand : event.Reconstructed().Candidates) {
-            for(const TClusterPtr& c : cand->Clusters) {
-                if(c->DetectorType == Detector_t::Type_t::PID) {
-                    angles_mc->Fill(mctrue_phi, c->Position.Phi()* TMath::RadToDeg());
+            for(const TCluster& c : cand->Clusters) {
+                if(c.DetectorType == Detector_t::Type_t::PID) {
+                    angles_mc->Fill(mctrue_phi, c.Position.Phi()* TMath::RadToDeg());
                 }
             }
         }
@@ -99,9 +99,9 @@ void DebugPIDAlignment::ProcessEvent(const TEvent& event, manager_t&)
 
     const auto get_clusters = [] (const TClusterList& clusters, Detector_t::Type_t type) {
         TClusterList ret;
-        for(const auto& cl : clusters)
-            if(cl->DetectorType == type)
-                ret.emplace_back(cl);
+        for(auto it_cl = clusters.begin(); it_cl; ++it_cl)
+            if(it_cl->DetectorType == type)
+                ret.emplace_back(it_cl);
         return ret;
     };
 
@@ -113,8 +113,8 @@ void DebugPIDAlignment::ProcessEvent(const TEvent& event, manager_t&)
         const auto& cl_cb = cb_clusters.front();
         const auto& cl_pid = pid_clusters.front();
 
-        const double phi_cb = cl_cb->Position.Phi();
-        const double phi_pid = cl_pid->Position.Phi();
+        const double phi_cb = cl_cb.Position.Phi();
+        const double phi_pid = cl_pid.Position.Phi();
         angles_clusters->Fill(phi_pid*TMath::RadToDeg(),
                               phi_cb*TMath::RadToDeg());
         angles_diff->Fill((phi_cb-phi_pid)*TMath::RadToDeg());

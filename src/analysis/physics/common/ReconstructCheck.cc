@@ -304,8 +304,8 @@ void ReconstructCheck::histgroup::Fill(const TParticlePtr& mctrue, const TCandid
                 ncharged++;
             ++n;
 
-        for(const TClusterPtr& cl : c->Clusters) {
-            if(cl->HasFlag(TCluster::Flags_t::Split)) {
+        for(const TCluster& cl : c->Clusters) {
+            if(cl.HasFlag(TCluster::Flags_t::Split)) {
                 ++nsplit;
                 splitFlagPos->Fill(mc_theta, mc_phi);
 
@@ -314,8 +314,8 @@ void ReconstructCheck::histgroup::Fill(const TParticlePtr& mctrue, const TCandid
     }
 
     unsigned nunmatched_veto(0);
-    for(const TClusterPtr& ic : all_clusters) {
-        if(ic->DetectorType & Detector_t::Any_t::Veto) {
+    for(const TCluster& ic : all_clusters) {
+        if(ic.DetectorType & Detector_t::Any_t::Veto) {
             nunmatched_veto++;
         }
     }
@@ -416,7 +416,7 @@ void ReconstructCheck::TAPSVetoMatch::Fill(const TCandidateList& cands, const TC
 {
     using namespace ant::std_ext;
 
-    auto clusterLoop = [this] (const TClusterPtr& vCluster, const TCandidateList& cands) {
+    auto clusterLoop = [this] (const TClusterList::const_iterator& vCluster, const TCandidateList& cands) {
         if(vCluster && vCluster->DetectorType & Detector_t::Type_t::TAPSVeto) {
             for(const TCandidatePtr& cCand : cands) {
                 const auto cCluster = cCand->FindCaloCluster();
@@ -436,7 +436,7 @@ void ReconstructCheck::TAPSVetoMatch::Fill(const TCandidateList& cands, const TC
         clusterLoop(vCluster, cands);
     }
 
-    for(const TClusterPtr& iCluster : all_clusters) {
+    for(auto iCluster=all_clusters.begin(); iCluster; ++iCluster) {
         clusterLoop(iCluster, cands);
     }
 

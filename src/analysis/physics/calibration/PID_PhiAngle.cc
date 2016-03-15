@@ -25,18 +25,18 @@ void PID_PhiAngle::ProcessEvent(const TEvent& event, manager_t&)
     // search for events with
     // one cluster in CB, one cluster in PID
 
-    TClusterPtr cluster_pid;
-    TClusterPtr cluster_cb;
-    for(const TClusterPtr& cl : event.Reconstructed().Clusters) {
-        if(cl->DetectorType == Detector_t::Type_t::PID) {
+    TClusterList::const_iterator cluster_pid;
+    TClusterList::const_iterator cluster_cb;
+    for(auto it_cl = event.Reconstructed().Clusters.begin(); it_cl; ++it_cl) {
+        if(it_cl->DetectorType == Detector_t::Type_t::PID) {
             if(cluster_pid)
                 return;
-            cluster_pid = cl;
+            cluster_pid = it_cl;
         }
-        else if(cl->DetectorType == Detector_t::Type_t::CB) {
+        else if(it_cl->DetectorType == Detector_t::Type_t::CB) {
             if(cluster_cb)
                 return;
-            cluster_cb = cl;
+            cluster_cb = it_cl;
         }
     }
 

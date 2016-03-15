@@ -20,9 +20,6 @@ public:
     double    b_CBAvgTime  = 0.0;
     double    b_CBAvgVetoE  = 0.0;
 
-    TCandidate b_Proton;
-
-
     ProtonTAPS(const std::string& name, OptionsPtr opts);
 
     virtual void ProcessEvent(const TEvent& event, manager_t& manager) override;
