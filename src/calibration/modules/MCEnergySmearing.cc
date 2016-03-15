@@ -23,7 +23,7 @@ void MCEnergySmearing::ApplyTo(ReconstructHook::Base::clusters_t& clusters)
         return;
 
     for(auto& cluster : myclusters->second) {
-        Smear(*cluster);
+        Smear(cluster);
     }
 }
 
