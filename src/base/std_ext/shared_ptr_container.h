@@ -6,51 +6,69 @@
 namespace ant {
 namespace std_ext {
 
-template<typename T, class it_t>
-struct shared_ptr_iterator_t : std::iterator<std::bidirectional_iterator_tag, T>
+template<class it_t, class T = decltype(*std::declval<it_t>())>
+constexpr bool
+is_const_iterator() {
+    return  ! std::is_assignable <
+            decltype( *std::declval<it_t>() ),
+            T
+            >::value;
+}
+
+template<class it_t, bool is_const = is_const_iterator<it_t>()>
+struct shared_ptr_iterator_t
 {
-    static_assert(std::is_same<typename it_t::value_type, std::shared_ptr<T>>::value,
-                  "shared_ptr_iterator_t must be used with iterator pointing to shared_ptr<T>");
+    // assume that it_t is iterator over shared_ptr, which defines element_type
+    using value_type = typename it_t::value_type::element_type;
+    using iterator_category = std::bidirectional_iterator_tag;
+    using difference_type = typename it_t::difference_type;
+    using pointer =  typename std::conditional<is_const, const value_type*, value_type*>::type;
+    using reference =  typename std::conditional<is_const, const value_type&, value_type&>::type;
 
-    using const_reference =  const T&;
-    using const_pointer = const T*;
+    shared_ptr_iterator_t() {}
 
-    bool operator==(const shared_ptr_iterator_t& rhs) const {
-        return it == rhs.it;
-    }
-    bool operator!=(const shared_ptr_iterator_t& rhs) const {
-        return !(*this == rhs);
-    }
+    // convert from non-const to const iterator
+    template<class other_it_t>
+    shared_ptr_iterator_t(const shared_ptr_iterator_t<other_it_t, false>& i) : it(i.it) {}
+
     shared_ptr_iterator_t& operator++() {
         ++it; return *this;
     }
     shared_ptr_iterator_t& operator--() {
         --it; return *this;
     }
-    const_reference operator*() const {
+    reference operator*() const {
         return **it;
     }
-    const_pointer operator->() const {
+    pointer operator->() const {
         return std::addressof(**it);
     }
-    std::shared_ptr<const T> get_const() const {
+    std::shared_ptr<const value_type> get_const() const {
         return *it;
     }
 
-    explicit operator bool() const {
-        return it != it_end;
+
+    friend bool operator==(const shared_ptr_iterator_t& x,
+                           const shared_ptr_iterator_t& y)
+    {
+        return x.it == y.it;
     }
 
-    shared_ptr_iterator_t() {}
+    friend bool operator!=(const shared_ptr_iterator_t& x,
+                           const shared_ptr_iterator_t& y)
+    {
+        return x.it != y.it;
+    }
 
 private:
     template<typename, template<class, class> class>
     friend class shared_ptr_container;
 
-    shared_ptr_iterator_t(const it_t& it_, const it_t& it_end_) : it(it_), it_end(it_end_) {}
-    it_t it;
-    it_t it_end;
+    template<class, bool>
+    friend class shared_ptr_iterator_t;
 
+    shared_ptr_iterator_t(const it_t& it_) : it(it_) {}
+    it_t it;
 };
 
 template<typename T, template<class, class> class Container = std::vector>
@@ -62,13 +80,14 @@ private:
 
 public:
 
-    using const_iterator = shared_ptr_iterator_t<T, typename c_t::const_iterator>;
+    using const_iterator = shared_ptr_iterator_t<typename c_t::const_iterator>;
+    using iterator = shared_ptr_iterator_t<typename c_t::iterator>;
     using items_t = std::initializer_list<const_iterator>;
 
     shared_ptr_container() = default;
 
     template<class it_t>
-    shared_ptr_container(std::initializer_list< shared_ptr_iterator_t<T, it_t> > items)
+    shared_ptr_container(std::initializer_list< shared_ptr_iterator_t<it_t> > items)
     {
         // need to convert iterators from shared_ptr here
         // since only this class has access to shared_ptr iterator
@@ -77,7 +96,7 @@ public:
     }
 
     template<class it_t>
-    shared_ptr_container(shared_ptr_iterator_t<T, it_t> first, shared_ptr_iterator_t<T, it_t> last)
+    shared_ptr_container(shared_ptr_iterator_t<it_t> first, shared_ptr_iterator_t<it_t> last)
     {
         // need to convert iterators from shared_ptr here
         // since only this class has access to shared_ptr iterator
@@ -94,12 +113,22 @@ public:
 
     const_iterator begin() const noexcept
     {
-        return const_iterator(c.begin(), c.end());
+        return c.begin();
     }
 
     const_iterator end() const noexcept
     {
-        return const_iterator(c.end(), c.end());
+        return c.end();
+    }
+
+    iterator begin() noexcept
+    {
+        return c.begin();
+    }
+
+    iterator end() noexcept
+    {
+        return c.end();
     }
 
     template<class... Args>
@@ -111,9 +140,9 @@ public:
         c.emplace_back(*item.it);
     }
 
-    const_iterator insert(const_iterator pos, const_iterator first, const_iterator last) {
-        auto it = c.insert(pos.it, first.it, last.it);
-        return const_iterator(it, c.end());
+    template<class it_t>
+    iterator insert(const_iterator pos, it_t first, it_t last) {
+        return c.insert(pos.it, first.it, last.it);
     }
 
 
@@ -138,11 +167,14 @@ public:
         return *c.front();
     }
 
-    const_iterator erase(const const_iterator& it) noexcept
+    T& front() {
+        return *c.front();
+    }
+
+
+    iterator erase(const iterator& it) noexcept
     {
-        // need explicit cast to const_iterator since erase returns normal iterator
-        auto it_ = c.erase(it.it);
-        return const_iterator(it_, c.end());
+        return c.erase(it.it);
     }
 
     typename c_t::size_type size() const noexcept {

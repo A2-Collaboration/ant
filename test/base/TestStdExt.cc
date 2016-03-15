@@ -117,6 +117,9 @@ struct int_t {
     int val;
     int_t(int v) : val(v) { n_constructed++; }
     operator int() const { return val; }
+    int_t& operator++() {
+        ++val; return *this;
+    }
 };
 
 size_t int_t::n_constructed = 0;
@@ -136,6 +139,15 @@ void TestSharedPtrContainer() {
     REQUIRE(c2[0]==7);
     REQUIRE(c2[1]==6);
 
+    for(auto& item : c2)
+        ++item;
+    REQUIRE(c2[0]==8);
+    REQUIRE(c2[1]==7);
+
+    c2.insert(c2.end(), c1.begin(), c1.end());
+    REQUIRE(c2.size()==4);
+
+
     auto ptr = c2.begin().get_const();
     using ptr_t = decltype(ptr);
     REQUIRE(std::is_const<ptr_t::element_type>::value);
@@ -145,9 +157,15 @@ void TestSharedPtrContainer() {
     c2.emplace_back(8);
 
     const std_ext::shared_ptr_container<int_t, std::vector> c3(c2.begin(), c2.end());
-    REQUIRE(c3.size()==3);
+    REQUIRE(c3.size()==5);
+
+    // make sure the constness of the container is correctly propagated
+    constexpr auto is_assignable = std::is_assignable<decltype(*c3.begin()),int_t>::value;
+    REQUIRE_FALSE(is_assignable);
 
     // number of emplace_back calls!
     REQUIRE(int_t::n_constructed == 4);
+
+
 
 }
