@@ -126,10 +126,10 @@ void TestSharedPtrContainer() {
     std_ext::shared_ptr_container<int_t, std::list> c1;
     c1.emplace_back(5);
     REQUIRE(*c1.begin() == 5);
-    REQUIRE(c1[0] == 5);
+    REQUIRE(c1.front() == 5);
     c1.emplace_back(6);
     c1.erase(c1.begin());
-    REQUIRE(c1[0]==6);
+    REQUIRE(c1.front()==6);
     c1.emplace_back(7);
 
     std_ext::shared_ptr_container<int_t, std::vector> c2{std::prev(c1.end()), c1.begin()};

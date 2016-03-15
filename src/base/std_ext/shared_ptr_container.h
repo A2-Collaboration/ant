@@ -120,9 +120,13 @@ public:
     }
 
 
-    const T& operator[] (typename const_iterator::difference_type i) const noexcept
+    const T& operator[] (typename c_t::size_type i) const noexcept
     {
-        return **std::next(c.begin(), i);
+        return *c[i];
+    }
+
+    const T& at(typename c_t::size_type i) const {
+        return *c.at(i);
     }
 
     const T& back() const {
