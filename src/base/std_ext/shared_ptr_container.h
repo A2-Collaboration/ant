@@ -12,11 +12,8 @@ struct shared_ptr_iterator_t : std::iterator<std::bidirectional_iterator_tag, T>
     static_assert(std::is_same<typename it_t::value_type, std::shared_ptr<T>>::value,
                   "shared_ptr_iterator_t must be used with iterator pointing to shared_ptr<T>");
 
-    using base_type = typename std::iterator<std::bidirectional_iterator_tag, T>;
-    using typename base_type::reference;
-    using typename base_type::pointer;
-    using const_reference =  typename std::add_const<reference>::type;
-    using const_pointer =  typename std::add_const<pointer>::type;
+    using const_reference =  const T&;
+    using const_pointer = const T*;
 
     bool operator==(const shared_ptr_iterator_t& rhs) const {
         return it == rhs.it;
