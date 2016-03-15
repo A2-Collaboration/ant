@@ -161,15 +161,10 @@ LorentzVec Fitter::FitParticle::GetVector(const std::vector<double>& EkThetaPhi,
     const mev_t E = EkThetaPhi[0] + m;
     const mev_t p = sqrt( sqr(E) - sqr(m) );
 
-    const double theta_ = EkThetaPhi[1];
-    const double phi_ = EkThetaPhi[2];
+    const double& theta_ = EkThetaPhi[1];
+    const double& phi_   = EkThetaPhi[2];
 
-    return LorentzVec(
-                p*TMath::Sin(theta_)*TMath::Cos(phi_),
-                p*TMath::Sin(theta_)*TMath::Sin(phi_),
-                p*TMath::Cos(theta_),
-                E
-                );
+    return LorentzVec::EPThetaPhi(E, p, theta_, phi_);
 }
 
 Fitter::angular_sigma::angular_sigma()
