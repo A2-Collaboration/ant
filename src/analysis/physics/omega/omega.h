@@ -12,6 +12,7 @@
 #include "analysis/plot/PromptRandomHist.h"
 #include "TTree.h"
 #include <map>
+#include "Rtypes.h"
 
 #include "base/WrapTTree.h"
 
@@ -246,8 +247,9 @@ public:
     struct ReactionChannel_t {
         std::string name="";
         std::shared_ptr<decaytree_t> tree=nullptr;
-        ReactionChannel_t(const std::shared_ptr<decaytree_t>& t, const std::string& n);
-        ReactionChannel_t(const std::shared_ptr<decaytree_t>& t);
+        int color=kBlack;
+        ReactionChannel_t(const std::shared_ptr<decaytree_t>& t, const std::string& n, const int c);
+        ReactionChannel_t(const std::shared_ptr<decaytree_t>& t, const int c);
         ReactionChannel_t(const std::string& n);
         ReactionChannel_t() = default;
         ~ReactionChannel_t();
