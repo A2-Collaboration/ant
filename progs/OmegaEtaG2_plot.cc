@@ -24,6 +24,8 @@
 #include "TSystem.h"
 #include "TRint.h"
 
+#include "TStyle.h"
+
 using namespace ant;
 using namespace ant::std_ext;
 using namespace ant::analysis;
@@ -60,21 +62,8 @@ struct MCTrue_Splitter : cuttree::StackedHists_t<Hist_t> {
 
         const unsigned mctrue = unsigned(f.Tree.Channel);
 
-        auto get_bkg_name = [] (const unsigned mctrue) {
-            const auto entry = physics::OmegaEtaG2::reaction_channels.channels.find(int(mctrue));
-
-            if(entry!=physics::OmegaEtaG2::reaction_channels.channels.end())
-                return entry->second.name;
-
-            return string("Unknown Decay");
-        };
-
         using histstyle::Mod_t;
-        const Hist_t& hist = mctrue<10 ? this->GetHist(mctrue) :
-                                        this->GetHist(mctrue,
-                                                      get_bkg_name(mctrue),
-                                                      Mod_t::MakeLine(histstyle::color_t::Get(mctrue-10), 1, kGray+1)
-                                                      );
+        const Hist_t& hist = this->GetHist(mctrue);
 
         hist.Fill(f);
 
@@ -142,28 +131,32 @@ struct OmegaHist_t {
         }
     };
 
+    static BinSettings Bins(const unsigned bins, const double min, const double max) {
+        return BinSettings(unsigned(bins*binScale), min, max);
+    }
+
     HistMgr<TH1D> h1;
     HistMgr<TH2D> h2;
 
-    const BinSettings Ebins    = BinSettings(1600,   0, 1600);
+    const BinSettings Ebins    = Bins(1600, 0, 1600);
 
-    const BinSettings Chi2bins = BinSettings (2500, 0,   25);
-    const BinSettings probbins = BinSettings (250, 0,   1);
+    const BinSettings Chi2Bins = BinSettings(250, 0,   25);
+    const BinSettings probbins = BinSettings(250, 0,   1);
 
-    const BinSettings IMbins        = BinSettings(1600,   0, 1600);
-    const BinSettings MMbins        = BinSettings(1600, 400, 2000);
+    const BinSettings IMbins        = Bins(1600,   0, 1600);
+    const BinSettings MMbins        = Bins(1600, 400, 2000);
 
-    const BinSettings MMgggIMbins_X = BinSettings(600, 0, 1200);
-    const BinSettings MMgggIMbins_Y = BinSettings(750, 500, 2000);
+    const BinSettings MMgggIMbins_X = Bins(600, 0, 1200);
+    const BinSettings MMgggIMbins_Y = Bins(750, 500, 2000);
 
-    const BinSettings pThetaBins = BinSettings( 125, 0,   50);
-    const BinSettings pEbins     = BinSettings(250,  0, 1000);
-    const BinSettings PSAABins   = BinSettings(  60, 20,   60);
-    const BinSettings PSARBins   = BinSettings( 100,  0,  450);
+    const BinSettings pThetaBins = Bins( 125, 0,   50);
+    const BinSettings pEbins     = Bins(250,  0, 1000);
+    const BinSettings PSAABins   = Bins(  60, 20,   60);
+    const BinSettings PSARBins   = Bins( 100,  0,  450);
     const BinSettings TaggChBins = BinSettings(47);
-    const BinSettings Chi2Bins   = BinSettings(100,0,50);
+
     const BinSettings TaggTime   = BinSettings(200, -25, 25);
-    const BinSettings CoplBins   = BinSettings(300, 0, 30.0);
+    const BinSettings CoplBins   = Bins(300, 0, 30.0);
 
     HistogramFactory HistFac;
 
@@ -224,7 +217,7 @@ struct OmegaHist_t {
         });
 
         AddTH2("Missing Mass / 3#gamma IM", "3#gamma IM [MeV]", "MM [MeV]", IMbins,   MMbins,     "mm_gggIM",
-               [] (TH2D* h, const Fill_t& f) { h->Fill(f.Tree.ggg().M(), f.Tree.mm().M(), f.TaggW());
+               [] (TH2D* h, const Fill_t& f) { h->Fill(f.Tree.ggg_fitted().M(), f.Tree.mm().M(), f.TaggW());
         });
 
         AddTH2("Proton PSA", "PSA Angle [#circ]", "PSA Radius",             PSAABins, PSARBins,   "p_PSA",
@@ -296,8 +289,20 @@ int main(int argc, char** argv) {
     auto cmd_output = cmd.add<TCLAP::ValueArg<string>>("o","output","Output file",false,"","filename");
 
     auto cmd_tree = cmd.add<TCLAP::ValueArg<string>>("","tree","Tree name",false,"T1","treename");
+    auto cmd_pres = cmd.add<TCLAP::SwitchArg>("p","", "Presentation Mode", false);
+    auto cmd_binscale = cmd.add<TCLAP::ValueArg<double>>("B","bin-scale","Bin Scaleing", false, 1.0, "bins");
 
     cmd.parse(argc, argv);
+
+    if(cmd_pres->isSet()) {
+        gStyle->SetLabelSize(.05f, "XYZ");
+        gStyle->SetTextSize(.05f);
+        gStyle->SetCanvasBorderSize(0);
+    }
+
+    if(cmd_binscale->isSet()) {
+        binScale = cmd_binscale->getValue();
+    }
 
     WrapTFileInput input(cmd_input->getValue());
 
@@ -365,8 +370,6 @@ int main(int argc, char** argv) {
             LOG(INFO) << "No TTY attached. Not starting ROOT shell.";
         }
         else {
-
-            TRint app("OmegaEtaG2_plot",&argc,argv,nullptr,0,true);
 
             if(masterFile)
                 LOG(INFO) << "Stopped running, but close ROOT properly to write data to disk.";
