@@ -33,6 +33,7 @@ using namespace ant::analysis::plot;
 using namespace std;
 
 volatile static bool interrupt = false;
+double binScale=1.0;
 
 template<typename Hist_t>
 struct MCTrue_Splitter : cuttree::StackedHists_t<Hist_t> {
@@ -304,6 +305,7 @@ int main(int argc, char** argv) {
         binScale = cmd_binscale->getValue();
     }
 
+
     WrapTFileInput input(cmd_input->getValue());
 
     auto link_branches = [&input] (const string treename, WrapTTree* wraptree, long long expected_entries) {
@@ -370,6 +372,8 @@ int main(int argc, char** argv) {
             LOG(INFO) << "No TTY attached. Not starting ROOT shell.";
         }
         else {
+
+            TRint app("EtapOmegaG_plot",&argc,argv,nullptr,0,true);
 
             if(masterFile)
                 LOG(INFO) << "Stopped running, but close ROOT properly to write data to disk.";
