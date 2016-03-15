@@ -12,13 +12,33 @@ struct vec3 {
     double y = {};
     double z = {};
 
-    vec3() = default;
-    vec3(const vec3&) = default;
-    vec3(vec3&&) = default;
-    vec3(const double X, const double Y, const double Z): x(X), y(Y), z(Z) {}
+    vec3() noexcept = default;
+    vec3(const vec3&) noexcept = default;
+    vec3(vec3&&) noexcept  = default;
+    vec3(const double X, const double Y, const double Z) noexcept : x(X), y(Y), z(Z) {}
 
-    vec3& operator= (const vec3&) = default;
-    vec3& operator= (vec3&&) = default;
+    vec3& operator= (const vec3&) noexcept = default;
+    vec3& operator= (vec3&&) noexcept = default;
+
+
+    // =====  TVector3 interface =====
+
+    vec3(const TVector3& v) noexcept:
+        x(v.X()),y(v.Y()),z(v.Z())
+    {}
+
+    vec3& operator= (const TVector3& v) noexcept {
+        x = v.X();
+        y = v.Y();
+        z = v.Z();
+        return *this;
+    }
+
+    operator TVector3() const {
+        return TVector3(x,y,z);
+    }
+
+    // ===============================
 
     vec3& operator+=(const vec3& other) noexcept {
         x += other.x;
@@ -120,10 +140,6 @@ struct vec3 {
        const auto tot2 = this->R2();
        const auto tot = (tot2 > 0) ?  1.0/sqrt(tot2) : 1.0;
        return vec3(*this)*=tot;
-    }
-
-    operator TVector3() const {
-        return TVector3(x,y,z);
     }
 
     static vec3 RThetaPhi(const double r, const double theta, const double phi) {

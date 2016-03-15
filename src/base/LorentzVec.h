@@ -12,19 +12,37 @@ struct LorentzVec {
     vec3   x = {};
     double E = {};
 
-    LorentzVec() = default;
-    LorentzVec(const LorentzVec&) = default;
-    LorentzVec(LorentzVec&&) = default;
-    LorentzVec(const double E_, const vec3& v) noexcept:
+    LorentzVec() noexcept = default;
+    LorentzVec(const LorentzVec&) noexcept = default;
+    LorentzVec(LorentzVec&&) noexcept = default;
+    LorentzVec(const vec3& v, const double E_) noexcept:
         x(v), E(E_) {}
     LorentzVec(const double X, const double Y, const double Z, const double _E) noexcept :
         x(X,Y,Z), E(_E) {}
 
-    LorentzVec& operator=(const LorentzVec&) = default;
-    LorentzVec& operator=(LorentzVec&&) = default;
+    LorentzVec& operator=(const LorentzVec&) noexcept = default;
+    LorentzVec& operator=(LorentzVec&&) noexcept = default;
 
-    static LorentzVec EPThetaPhi(const double E, const double p, const double theta, const double phi) {
-        return LorentzVec(E, vec3::RThetaPhi(p,theta,phi));
+
+    // ====== TLorentzVector interface ======
+
+    operator TLorentzVector() const {
+        return TLorentzVector(x.x, x.y, x.z, E);
+    }
+
+    LorentzVec(const TLorentzVector& other) noexcept:
+        x(other.Vect()), E(other.E()) {}
+
+    LorentzVec& operator=(const TLorentzVector other) noexcept {
+        x = other.Vect();
+        E = other.E();
+        return *this;
+    }
+
+    // ======================================
+
+    static LorentzVec EPThetaPhi(const double E, const double p, const double theta, const double phi) noexcept {
+        return LorentzVec(vec3::RThetaPhi(p,theta,phi), E);
     }
 
     LorentzVec& operator+=(const LorentzVec& other) noexcept {
@@ -62,10 +80,6 @@ struct LorentzVec {
 
     double Phi() const {
         return x.Phi();
-    }
-
-    operator TLorentzVector() const {
-        return TLorentzVector(x.x, x.y, x.z, E);
     }
 
     double P() const {

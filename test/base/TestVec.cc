@@ -39,9 +39,9 @@ void do_test_3() {
     REQUIRE(b==c);
     REQUIRE(a==c);
 
-    REQUIRE(a.Mag() == b.R());
-    REQUIRE(a.Theta() == b.Theta());
-    REQUIRE(a.Phi() == b.Phi());
+    REQUIRE(a.Mag()   == Approx(b.R()));
+    REQUIRE(a.Theta() == Approx(b.Theta()));
+    REQUIRE(a.Phi()   == Approx(b.Phi()));
 
     const TVector3 f = b;
     REQUIRE(a == f);
@@ -58,8 +58,17 @@ void do_test_3() {
     auto y = x+b;
     REQUIRE(y == vec3(2,4,6));
 
-    REQUIRE(b.Dot(y) == a.Dot(y));
-    REQUIRE(b.Angle(y) == a.Angle(y));
+    REQUIRE(b.Dot(y)   == Approx(a.Dot(y)));
+    REQUIRE(b.Angle(y) == Approx(a.Angle(y)));
+
+    auto m = vec3::RThetaPhi(1.0, 2.0, 3.0);
+    REQUIRE(m.R()     == Approx(1.0));
+    REQUIRE(m.Theta() == Approx(2.0));
+    REQUIRE(m.Phi()   == Approx(3.0));
+    m *= 5.0;
+    REQUIRE(m.R()     == Approx(5.0));
+    REQUIRE(m.Theta() == Approx(2.0));
+    REQUIRE(m.Phi()   == Approx(3.0));
 
 }
 
@@ -83,19 +92,19 @@ void do_test_lv() {
     REQUIRE(b==c);
     REQUIRE(a==c);
 
-    REQUIRE(a.M() == b.M());
-    REQUIRE(a.Theta() == b.Theta());
-    REQUIRE(a.Phi() == b.Phi());
-    REQUIRE(a.Beta() == b.Beta());
-    REQUIRE(a.Gamma() == b.Gamma());
+    REQUIRE(a.M() == Approx(b.M()));
+    REQUIRE(a.Theta() == Approx(b.Theta()));
+    REQUIRE(a.Phi() == Approx(b.Phi()));
+    REQUIRE(a.Beta() == Approx(b.Beta()));
+    REQUIRE(a.Gamma() == Approx(b.Gamma()));
     REQUIRE(a.BoostVector() == b.BoostVector());
-    REQUIRE(b.Dot(b2) == a.Dot(a2));
-    REQUIRE(a.P() == b.P());
+    REQUIRE(b.Dot(b2) == Approx(a.Dot(a2)));
+    REQUIRE(a.P() == Approx(b.P()));
 
     const auto x = a+a2;
     const auto y = b+b2;
 
-    REQUIRE(a.M() == b.M());
+    REQUIRE(a.M() == Approx(b.M()));
 
     REQUIRE(a+a2 == b+b2);
     REQUIRE(a-a2 == b-b2);
@@ -103,6 +112,4 @@ void do_test_lv() {
     REQUIRE(a*(1./3.0) == b/3.0);
 
     REQUIRE(a.Vect() == b.x);
-
-
 }
