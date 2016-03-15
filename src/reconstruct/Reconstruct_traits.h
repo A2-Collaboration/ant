@@ -2,6 +2,7 @@
 
 #include "base/Detector_t.h"
 #include "base/std_ext/mapped_vectors.h"
+#include "base/std_ext/shared_ptr_container.h"
 
 #include <memory>
 #include <map>
@@ -18,8 +19,7 @@ struct TClusterHit;
 using TClusterHitList = std::vector<TClusterHit>;
 
 struct TCluster;
-using TClusterPtr = std::shared_ptr<TCluster>;
-using TClusterList = std::vector<TClusterPtr>;
+using TClusterList = std_ext::shared_ptr_container<TCluster>;
 
 struct Reconstruct_traits {
     /**

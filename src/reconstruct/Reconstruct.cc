@@ -101,7 +101,7 @@ void Reconstruct::DoReconstruct(TEventData& reconstructed)
     }
 
     // then build clusters (at least for calorimeters this is not trivial)
-    sorted_bydetectortype_t<TClusterPtr> sorted_clusters;
+    sorted_clusters_t sorted_clusters;
     BuildClusters(move(sorted_clusterhits), sorted_clusters);
 
     // apply hooks which modify clusters
@@ -239,8 +239,9 @@ void Reconstruct::HandleTagger(const shared_ptr<TaggerDetector_t>& taggerdetecto
     }
 }
 
-void Reconstruct::BuildClusters(sorted_bydetectortype_t<TClusterHit>&& sorted_clusterhits,
-        sorted_bydetectortype_t<TClusterPtr>& sorted_clusters)
+void Reconstruct::BuildClusters(
+        const sorted_clusterhits_t& sorted_clusterhits,
+        sorted_clusters_t& sorted_clusters)
 {
     auto insert_hint = sorted_clusters.begin();
 
@@ -271,14 +272,14 @@ void Reconstruct::BuildClusters(sorted_bydetectortype_t<TClusterHit>&& sorted_cl
                     continue;
 
 
-                clusters.emplace_back(make_shared<TCluster>(
+                clusters.emplace_back(
                                           detector.Detector->GetPosition(hit.Channel),
                                           hit.Energy,
                                           hit.Time,
                                           detector.Detector->Type,
                                           hit.Channel,
                                           vector<TClusterHit>{hit}
-                                          )
+
                                       );
 
             }

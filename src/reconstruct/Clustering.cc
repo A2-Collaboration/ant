@@ -75,19 +75,21 @@ void Clustering::Build(const shared_ptr<ClusterDetector_t>& clusterdetector,
             }
         }
         weightedPosition *= 1.0/weightedSum;
-        auto the_cluster = make_shared<TCluster>(
-                               weightedPosition,
-                               cluster_energy,
-                               cluster_time,
-                               clusterdetector->Type,
-                               cluster_max_channel,
-                               clusterhits
-                               );
+
+
+        clusters.emplace_back(
+                    weightedPosition,
+                    cluster_energy,
+                    cluster_time,
+                    clusterdetector->Type,
+                    cluster_max_channel,
+                    clusterhits
+                    );
+        auto& the_cluster = clusters.back();
         if(isfinite(cluster_shortenergy))
-            the_cluster->ShortEnergy = cluster_shortenergy;
+            the_cluster.ShortEnergy = cluster_shortenergy;
         if(cluster.Split)
-            the_cluster->SetFlag(TCluster::Flags_t::Split);
-        clusters.emplace_back(move(the_cluster));
+            the_cluster.SetFlag(TCluster::Flags_t::Split);
     }
 }
 

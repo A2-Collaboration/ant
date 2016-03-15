@@ -26,7 +26,7 @@ namespace reconstruct {
 class CandidateBuilder {
 public:
 
-    using sorted_clusters_t = std::map<Detector_t::Type_t, std::vector< TClusterPtr > >;
+    using sorted_clusters_t = std::map<Detector_t::Type_t, TClusterList >;
     using candidates_t = TCandidateList;
     using clusters_t = TClusterList;
 

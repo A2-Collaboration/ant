@@ -52,8 +52,10 @@ protected:
             const std::vector<std::reference_wrapper<TDetectorReadHit>>& readhits,
             std::vector<TTaggerHit>& taggerhits);
 
-    void BuildClusters(sorted_bydetectortype_t<TClusterHit>&& sorted_clusterhits,
-            sorted_bydetectortype_t<TClusterPtr>& sorted_clusters);
+    using sorted_clusterhits_t = ReconstructHook::Base::clusterhits_t;
+    using sorted_clusters_t = ReconstructHook::Base::clusters_t;
+    void BuildClusters(const sorted_clusterhits_t& sorted_clusterhits,
+                       sorted_clusters_t& sorted_clusters);
 
     // little helper class which stores the upcasted versions of shared_ptr
     // to Detector_t instances
