@@ -63,17 +63,20 @@ struct TCandidate : printable_traits
 
     operator TVector3() const { TVector3 p; p.SetMagThetaPhi(1.0, Theta, Phi); return p; }
 
-    TClusterList::const_iterator FindFirstCluster(Detector_t::Any_t detector) const {
-        return std::find_if(Clusters.begin(), Clusters.end(), [detector] (const TCluster& cl) {
+    TClusterConstPtr FindFirstCluster(Detector_t::Any_t detector) const {
+        auto it = std::find_if(Clusters.begin(), Clusters.end(), [detector] (const TCluster& cl) {
             return cl.DetectorType & detector;
         });
+        if(it == Clusters.end())
+            return nullptr;
+        return it.get_const();
     }
 
-    TClusterList::const_iterator FindCaloCluster() const {
+    TClusterConstPtr FindCaloCluster() const {
         return FindFirstCluster(Detector_t::Any_t::Calo);
     }
 
-    TClusterList::const_iterator FindVetoCluster() const {
+    TClusterConstPtr FindVetoCluster() const {
         return FindFirstCluster(Detector_t::Any_t::Veto);
     }
 

@@ -416,7 +416,7 @@ void ReconstructCheck::TAPSVetoMatch::Fill(const TCandidateList& cands, const TC
 {
     using namespace ant::std_ext;
 
-    auto clusterLoop = [this] (const TClusterList::const_iterator& vCluster, const TCandidateList& cands) {
+    auto clusterLoop = [this] (const TClusterConstPtr& vCluster, const TCandidateList& cands) {
         if(vCluster && vCluster->DetectorType & Detector_t::Type_t::TAPSVeto) {
             for(const TCandidatePtr& cCand : cands) {
                 const auto cCluster = cCand->FindCaloCluster();
@@ -436,8 +436,8 @@ void ReconstructCheck::TAPSVetoMatch::Fill(const TCandidateList& cands, const TC
         clusterLoop(vCluster, cands);
     }
 
-    for(auto iCluster=all_clusters.begin(); iCluster; ++iCluster) {
-        clusterLoop(iCluster, cands);
+    for(auto iCluster=all_clusters.begin(); iCluster != all_clusters.end(); ++iCluster) {
+        clusterLoop(iCluster.get_const(), cands);
     }
 
 }

@@ -95,10 +95,10 @@ void CandidateBuilder::Build_PID_CB(sorted_clusters_t& sorted_clusters,
                                             cb_cluster.Hits.size(),
                                             pid_cluster.Energy,
                                             numeric_limits<double>::quiet_NaN(), // no tracker information
-                                            TClusterList::items_t{it_cb_cluster, it_pid_cluster}
+                                            TClusterList{it_cb_cluster, it_pid_cluster}
                                             )
                                         );
-                all_clusters.emplace_back(it_cb_cluster);
+                all_clusters.push_back(it_cb_cluster);
                 it_cb_cluster = cb_clusters.erase(it_cb_cluster);
                 matched = true;
             }
@@ -108,7 +108,7 @@ void CandidateBuilder::Build_PID_CB(sorted_clusters_t& sorted_clusters,
         }
 
         if(matched) {
-            all_clusters.emplace_back(it_pid_cluster);
+            all_clusters.push_back(it_pid_cluster);
             it_pid_cluster = pid_clusters.erase(it_pid_cluster);
         } else {
             ++it_pid_cluster;
@@ -163,10 +163,10 @@ void CandidateBuilder::Build_TAPS_Veto(sorted_clusters_t& sorted_clusters,
                                             taps_cluster.Hits.size(),
                                             veto_cluster.Energy,
                                             numeric_limits<double>::quiet_NaN(), // no tracker information
-                                            TClusterList::items_t{it_taps_cluster, it_veto_cluster}
+                                            TClusterList{it_taps_cluster, it_veto_cluster}
                                             )
                                             );
-                all_clusters.emplace_back(it_taps_cluster);
+                all_clusters.push_back(it_taps_cluster);
                 it_taps_cluster = taps_clusters.erase(it_taps_cluster);
                 matched = true;
             } else {
@@ -175,7 +175,7 @@ void CandidateBuilder::Build_TAPS_Veto(sorted_clusters_t& sorted_clusters,
         }
 
         if(matched) {
-            all_clusters.emplace_back(it_veto_cluster);
+            all_clusters.push_back(it_veto_cluster);
             it_veto_cluster = veto_clusters.erase(it_veto_cluster);
         } else {
             ++it_veto_cluster;
@@ -204,10 +204,10 @@ void CandidateBuilder::Catchall(sorted_clusters_t& sorted_clusters,
                                             1, // cluster size
                                             c.Energy,
                                             numeric_limits<double>::quiet_NaN(), // no tracker information
-                                            TClusterList::items_t{it_c}
+                                            TClusterList{it_c}
                                             )
                                         );
-                all_clusters.emplace_back(it_c);
+                all_clusters.push_back(it_c);
             }
             clusters.clear();
         } else if(detector_type == Detector_t::Type_t::CB || detector_type == Detector_t::Type_t::TAPS) {
@@ -222,10 +222,10 @@ void CandidateBuilder::Catchall(sorted_clusters_t& sorted_clusters,
                                             c.Hits.size(),
                                             0, // no energy in Veto
                                             numeric_limits<double>::quiet_NaN(), // no tracker information
-                                            TClusterList::items_t{it_c}
+                                            TClusterList{it_c}
                                             )
                                         );
-                all_clusters.emplace_back(it_c);
+                all_clusters.push_back(it_c);
             }
             clusters.clear();
         } else if(detector_type == Detector_t::Type_t::MWPC0 || detector_type == Detector_t::Type_t::MWPC1
@@ -243,10 +243,10 @@ void CandidateBuilder::Catchall(sorted_clusters_t& sorted_clusters,
                                             1,        // cluster size
                                             0,        // no energy in veto
                                             c.Energy, // tracker energy (not meaningful for cherenkov clusters)
-                                            TClusterList::items_t{it_c}
+                                            TClusterList{it_c}
                                             )
                                             );
-                all_clusters.emplace_back(it_c);
+                all_clusters.push_back(it_c);
             }
             clusters.clear();
         }
@@ -300,7 +300,7 @@ void CandidateBuilder::Build(
             }
 
             cluster.SetFlag(TCluster::Flags_t::Unmatched);
-            all_clusters.emplace_back(it_cluster);
+            all_clusters.push_back(it_cluster);
             it_cluster = clusters.erase(it_cluster);
         }
     }
@@ -313,7 +313,7 @@ void CandidateBuilder::Build(
         for(auto it_cluster = clusters.begin(); it_cluster != clusters.end(); ++it_cluster)
         {
             it_cluster->SetFlag(TCluster::Flags_t::Unmatched);
-            all_clusters.emplace_back(it_cluster);
+            all_clusters.push_back(it_cluster);
         }
     }
 }

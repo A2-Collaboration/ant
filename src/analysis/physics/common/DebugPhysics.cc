@@ -97,21 +97,17 @@ void DebugPIDAlignment::ProcessEvent(const TEvent& event, manager_t&)
 
     const auto& clusters =  event.Reconstructed().Clusters;
 
-    const auto get_clusters = [] (const TClusterList& clusters, Detector_t::Type_t type) {
-        TClusterList ret;
-        for(auto it_cl = clusters.begin(); it_cl; ++it_cl)
-            if(it_cl->DetectorType == type)
-                ret.emplace_back(it_cl);
-        return ret;
-    };
-
-    auto cb_clusters = get_clusters(clusters, Detector_t::Type_t::CB);
-    auto pid_clusters = get_clusters(clusters, Detector_t::Type_t::PID);
+    auto cb_clusters = clusters.get_const_list([] (const TCluster& cluster) {
+        return cluster.DetectorType == Detector_t::Type_t::CB;
+    });
+    auto pid_clusters = clusters.get_const_list([] (const TCluster& cluster) {
+        return cluster.DetectorType == Detector_t::Type_t::PID;
+    });
 
     if(cb_clusters.size() == 1 && pid_clusters.size() == 1) {
 
-        const auto& cl_cb = cb_clusters.front();
-        const auto& cl_pid = pid_clusters.front();
+        const auto& cl_cb = *cb_clusters.front();
+        const auto& cl_pid = *pid_clusters.front();
 
         const double phi_cb = cl_cb.Position.Phi();
         const double phi_pid = cl_pid.Position.Phi();
