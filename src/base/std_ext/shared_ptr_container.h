@@ -211,11 +211,11 @@ public:
     }
 
     template<class it_t>
-    iterator insert(const_iterator pos,
-                    non_const_iterator<it_t> first,
-                    non_const_iterator<it_t> last)
+    void insert(iterator pos,
+                non_const_iterator<it_t> first,
+                non_const_iterator<it_t> last)
     {
-        return c.insert(pos.it, first.it, last.it);
+        c.insert(pos.it, first.it, last.it);
     }
 
     iterator erase(const iterator& it) noexcept
