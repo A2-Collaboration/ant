@@ -40,28 +40,29 @@ void dotest() {
   eventdata.DetectorReadHits.emplace_back();
   eventdata.DetectorReadHits.emplace_back();
 
-  auto cluster0 = make_shared<TCluster>(TVector3(1,2,3),
-                                       100, 0.5,
-                                       Detector_t::Type_t::PID,
-                                       127, // central element
-                                       vector<TClusterHit>{TClusterHit()}
-                                       );
-  auto cluster1 = make_shared<TCluster>(TVector3(4,5,6),
-                                       100, 0.5,
-                                       Detector_t::Type_t::CB,
-                                       127, // central element
-                                       vector<TClusterHit>{TClusterHit(), TClusterHit()}
-                                       );
-  auto cluster2 = make_shared<TCluster>(TVector3(7,8,9),
-                                       100, 0.5,
-                                       Detector_t::Type_t::TAPS,
-                                       127, // central element
-                                       vector<TClusterHit>{TClusterHit(), TClusterHit(), TClusterHit()}
-                                       );
-  eventdata.Clusters.emplace_back(cluster0);
-  eventdata.Clusters.emplace_back(cluster1);
-  eventdata.Clusters.emplace_back(cluster2);
+  auto& clusters = eventdata.Clusters;
 
+  clusters.emplace_back(TVector3(1,2,3),
+                        100, 0.5,
+                        Detector_t::Type_t::PID,
+                        127, // central element
+                        vector<TClusterHit>{TClusterHit()}
+                        );
+  clusters.emplace_back(TVector3(4,5,6),
+                        100, 0.5,
+                        Detector_t::Type_t::CB,
+                        127, // central element
+                        vector<TClusterHit>{TClusterHit(), TClusterHit()}
+                        );
+  clusters.emplace_back(TVector3(7,8,9),
+                        100, 0.5,
+                        Detector_t::Type_t::TAPS,
+                        127, // central element
+                        vector<TClusterHit>{TClusterHit(), TClusterHit(), TClusterHit()}
+                        );
+
+  auto cluster0 = std::next(clusters.begin(), 0);
+  auto cluster1 = std::next(clusters.begin(), 1);
 
   auto candidate0 = make_shared<TCandidate>(
                         Detector_t::Any_t::CB_Apparatus,
@@ -69,7 +70,7 @@ void dotest() {
                         0.0, 0.0, 0.0, // theta/phi/time
                         2, // cluster size
                         2.0, 0.0, // veto/tracker
-                        vector<TClusterPtr>{cluster1, cluster0}
+                        TClusterList{cluster1, cluster0}
                         );
 
   eventdata.Candidates.emplace_back(candidate0);
@@ -138,14 +139,14 @@ void dotest() {
   REQUIRE(readback.DetectorReadHits.size() == 3);
 
   REQUIRE(readback.Clusters.size() == 3);
-  REQUIRE(readback.Clusters.at(0)->Position == TVector3(1,2,3));
-  REQUIRE(readback.Clusters.at(2)->Position == TVector3(7,8,9));
-  REQUIRE(readback.Clusters.at(0)->Hits.size() == 1);
-  REQUIRE(readback.Clusters.at(2)->Hits.size() == 3);
+  REQUIRE(readback.Clusters.at(0).Position == TVector3(1,2,3));
+  REQUIRE(readback.Clusters.at(2).Position == TVector3(7,8,9));
+  REQUIRE(readback.Clusters.at(0).Hits.size() == 1);
+  REQUIRE(readback.Clusters.at(2).Hits.size() == 3);
 
   REQUIRE(readback.Candidates.size() == 1);
 
-  REQUIRE(readback.Clusters.at(0) == readback.Candidates.at(0)->Clusters.at(1));
+  REQUIRE(readback.Clusters.get_const(0) == readback.Candidates.at(0)->Clusters.get_const(1));
 
   REQUIRE(readback.Particles.GetAll().size() == 2);
   REQUIRE(readback.Particles.GetAll().at(0)->Type() == ParticleTypeDatabase::Photon);

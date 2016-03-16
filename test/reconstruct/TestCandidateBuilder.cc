@@ -110,14 +110,14 @@ struct CandidateBuilderTester : CandidateBuilder {
         REQUIRE(before.candidateclusters==0);
         REQUIRE(before.candidates==0);
         REQUIRE(before.clusters>0);
-        CandidateBuilder::Build(sorted_clusters, candidates, all_clusters);
+        CandidateBuilder::Build(std::move(sorted_clusters), candidates, all_clusters);
         after = getCounts(sorted_clusters, candidates, all_clusters);
         REQUIRE(before.clusters == after.allclusters);
 
         // examine unmatched flag clusters
         size_t unmatched_clusters = 0;
-        for(auto cluster : all_clusters) {
-            if(cluster->HasFlag(TCluster::Flags_t::Unmatched))
+        for(auto& cluster : all_clusters) {
+            if(cluster.HasFlag(TCluster::Flags_t::Unmatched))
                 unmatched_clusters++;
         }
         REQUIRE(unmatched_clusters>0);

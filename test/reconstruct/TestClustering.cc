@@ -64,8 +64,8 @@ struct ClusteringTester : Clustering {
         Clustering::Build(clusterdetector, clusterhits, clusters);
 
         double total_energy_after = 0.0;
-        for(const TClusterPtr& cluster : clusters)
-            total_energy_after += cluster->Energy;
+        for(const TCluster& cluster : clusters)
+            total_energy_after += cluster.Energy;
         REQUIRE(total_energy_after == Approx(total_energy_before));
     }
 
@@ -96,12 +96,12 @@ void dotest_statistical() {
     while(auto event = unpacker->NextEvent()) {
         auto& recon = event.Reconstructed();
         reconstruct.DoReconstruct(recon);
-        for(const TClusterPtr& cluster : recon.Clusters) {
+        for(const TCluster& cluster : recon.Clusters) {
             nClusters++;
-            nClusterHits += cluster->Hits.size();
-            if(cluster->HasFlag(TCluster::Flags_t::Split)) {
+            nClusterHits += cluster.Hits.size();
+            if(cluster.HasFlag(TCluster::Flags_t::Split)) {
                 nSplitClusters++;
-                nSplitClusterHits += cluster->Hits.size();
+                nSplitClusterHits += cluster.Hits.size();
             }
 
         }
