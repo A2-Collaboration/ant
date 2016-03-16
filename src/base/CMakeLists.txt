@@ -28,6 +28,7 @@ set(SRCS_BASE
   TH1Ext.h
   WrapTTree.cc
   vec3.cc
+  vec2.cc
   LorentzVec.cc
 )
 
