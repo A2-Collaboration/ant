@@ -1,5 +1,6 @@
 #include "catch.hpp"
 
+#include "base/vec2.h"
 #include "base/vec3.h"
 #include "base/LorentzVec.h"
 
@@ -69,6 +70,10 @@ void do_test_3() {
     REQUIRE(m.R()     == Approx(5.0));
     REQUIRE(m.Theta() == Approx(2.0));
     REQUIRE(m.Phi()   == Approx(3.0));
+
+    REQUIRE(b.XY() == vec2(1,2));
+    REQUIRE(b.YZ() == vec2(2,3));
+    REQUIRE(b.XZ() == vec2(1,3));
 
 }
 

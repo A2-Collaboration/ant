@@ -1,5 +1,7 @@
 #pragma once
 
+#include "vec2.h"
+
 #include <cmath>
 
 // ROOT compat
@@ -84,18 +86,28 @@ struct vec3 {
         return vec3(*this) /= s;
     }
 
+    /**
+     * @brief Get the length squared
+     * @return
+     * @see R()
+     */
     double R2() const noexcept {
         return x*x+y*y+z*z;
     }
 
+    /**
+     * @brief Get the length or radius
+     * @return
+     * @see R2()
+     */
     double R() const noexcept {
         return sqrt(this->R2());
     }
 
     /**
-     * @brief Angle
+     * @brief Angle to another vec3
      * @param other
-     * @return
+     * @return (radians)
      *
      * Taken from ROOT TVector3
      */
@@ -113,28 +125,46 @@ struct vec3 {
         }
     }
 
+    /**
+     * @brief Dot product
+     * @param other
+     * @return
+     */
     double Dot(const vec3& other) const noexcept {
         return x * other.x + y * other.y + z * other.z;
     }
 
+    /**
+     * @brief Cross product
+     * @param p other vector
+     * @return
+     */
     vec3 Cross(const vec3& p) const noexcept {
        return vec3(y*p.z-p.y*z, z*p.x-p.z*x, x*p.y-p.x*y);
     }
 
+    /**
+     * @brief Calculate the phi angle
+     * @return (radians)
+     */
     double Phi() const {
         return x == 0.0 && y == 0.0 ? 0.0 : atan2(y,x);
     }
 
     /**
-     * @brief Theta
-     * @return
+     * @brief Calculate the theta angle
+     * @return (radians)
      * Taken from TVector3
      */
     double Theta() const {
         return x == 0.0 && y == 0.0 && z == 0.0 ? 0.0 : atan2(sqrt(x*x+y*y),z);
     }
 
-    vec3 Unit() const
+    /**
+     * @brief Get a vector of unit length parallel to this one
+     * @return
+     */
+    vec3 Unit() const noexcept
     {
        // return unit vector parallel to this.
        const auto tot2 = this->R2();
@@ -142,7 +172,14 @@ struct vec3 {
        return vec3(*this)*=tot;
     }
 
-    static vec3 RThetaPhi(const double r, const double theta, const double phi) {
+    /**
+     * @brief Create a new vec3 from Radius and theta and phi angles
+     * @param r Radius/Length of vector
+     * @param theta (radians) Angle to the z-axis
+     * @param phi (radians)
+     * @return
+     */
+    static vec3 RThetaPhi(const double r, const double theta, const double phi) noexcept {
         const auto stheta = sin(theta);
         const auto ctheta = cos(theta);
         const auto sphi   = sin(phi);
@@ -156,6 +193,30 @@ struct vec3 {
 
     bool operator!=(const vec3& other) const noexcept {
         return !(*this == other);
+    }
+
+    /**
+     * @brief Get X and Y as vec2
+     * @return (X,Y)
+     */
+    vec2 XY() const noexcept {
+        return {x,y};
+    }
+
+    /**
+     * @brief Get Y and Z as a vec2
+     * @return (Y,Z)
+     */
+    vec2 YZ() const noexcept {
+        return {y,z};
+    }
+
+    /**
+     * @brief Get X and Z as a vec2
+     * @return (X,Z)
+     */
+    vec2 XZ() const noexcept {
+        return {x,z};
     }
 
 };
