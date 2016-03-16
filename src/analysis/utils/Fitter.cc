@@ -159,7 +159,7 @@ void Fitter::FitParticle::SetupBranches(TTree* tree, const string& prefix)
 LorentzVec Fitter::FitParticle::GetVector(const std::vector<double>& EkThetaPhi, const double m)
 {
     const mev_t E = EkThetaPhi[0] + m;
-    const mev_t p = sqrt( sqr(E) - sqr(m) );
+    const mev_t p = m == 0.0 ? E : sqrt( sqr(E) - sqr(m) );
 
     const double& theta_ = EkThetaPhi[1];
     const double& phi_   = EkThetaPhi[2];
