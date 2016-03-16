@@ -135,37 +135,39 @@ void TestSharedPtrContainer() {
     REQUIRE(c1.front()==6);
     c1.emplace_back(7);
 
-    std_ext::shared_ptr_container<int_t, std::vector> c2{std::prev(c1.end()), c1.begin()};
-    REQUIRE(c2[0]==7);
-    REQUIRE(c2[1]==6);
+    // c1 == {6, 7}
+    REQUIRE(c1.size()  == 2);
+    REQUIRE(c1.front() == 6);
+    REQUIRE(c1.back()  == 7);
 
-    for(auto& item : c2)
-        ++item;
-    REQUIRE(c2[0]==8);
-    REQUIRE(c2[1]==7);
-
+    std_ext::shared_ptr_container<int_t, std::vector> c2;
+    c2.insert(c2.end(), c1.begin(), c1.end());
     c2.insert(c2.end(), c1.begin(), c1.end());
     REQUIRE(c2.size()==4);
 
+    for(auto& item : c2)
+        ++item;
+    // due to pointers, the elements 0,1 are identical to 2,3
+    REQUIRE(c2.get_const(0));
+    REQUIRE(c2.get_const(0) == c2.get_const(2));
+    REQUIRE(c2.get_const(1) == c2.get_const(3));
+    REQUIRE(c2[0]==8);
+    REQUIRE(c2[1]==9);
 
-    auto ptr = c2.begin().get_const();
+    auto ptr = c1.begin().get_const();
     using ptr_t = decltype(ptr);
     REQUIRE(std::is_const<ptr_t::element_type>::value);
     auto is_convertible = std::is_convertible<ptr_t,shared_ptr<int_t>>::value;
     REQUIRE(!is_convertible);
 
-    c2.emplace_back(8);
+    // use range construct
+    const std_ext::shared_ptr_container<int_t, std::list> c3(c2.begin(), c2.end());
+    REQUIRE(c3.size()==4);
 
-    const std_ext::shared_ptr_container<int_t, std::vector> c3(c2.begin(), c2.end());
-    REQUIRE(c3.size()==5);
-
-    // make sure the constness of the container is correctly propagated
+    // make sure the constness of the container is correctly propagated to the iterator
     constexpr auto is_assignable = std::is_assignable<decltype(*c3.begin()),int_t>::value;
     REQUIRE_FALSE(is_assignable);
 
     // number of emplace_back calls!
-    REQUIRE(int_t::n_constructed == 4);
-
-
-
+    REQUIRE(int_t::n_constructed == 3);
 }

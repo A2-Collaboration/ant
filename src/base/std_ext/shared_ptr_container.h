@@ -2,9 +2,44 @@
 
 #include <vector>
 #include <memory>
+#include <functional>
+#include <algorithm>
 
 namespace ant {
 namespace std_ext {
+
+template<class T>
+struct cc_shared_ptr {
+
+    using element_type = const T;
+
+    cc_shared_ptr() = default;
+    cc_shared_ptr(const cc_shared_ptr&) = default;
+    cc_shared_ptr& operator=(const cc_shared_ptr&) = default;
+    cc_shared_ptr(cc_shared_ptr&&) = default;
+    cc_shared_ptr& operator=(cc_shared_ptr&&) = default;
+
+    cc_shared_ptr(std::nullptr_t) : cc_shared_ptr() {}
+    cc_shared_ptr(const std::shared_ptr<T>& ptr_) : ptr(ptr_) {}
+
+    const T& operator*() const {
+        return *ptr;
+    }
+    const T* operator->() const {
+        return ptr.operator->();
+    }
+    bool operator==(const cc_shared_ptr& other) const {
+        return ptr == other.ptr;
+    }
+    explicit operator bool() const {
+        return static_cast<bool>(ptr);
+    }
+    // make it cerealizable
+    template<class Archive>
+    void serialize(Archive& archive) { archive(ptr); }
+private:
+    std::shared_ptr<T> ptr;
+};
 
 template<class it_t, class T = decltype(*std::declval<it_t>())>
 constexpr bool
@@ -14,6 +49,7 @@ is_const_iterator() {
             T
             >::value;
 }
+
 
 template<class it_t, bool is_const = is_const_iterator<it_t>()>
 struct shared_ptr_iterator_t
@@ -25,11 +61,10 @@ struct shared_ptr_iterator_t
     using pointer =  typename std::conditional<is_const, const value_type*, value_type*>::type;
     using reference =  typename std::conditional<is_const, const value_type&, value_type&>::type;
 
-    shared_ptr_iterator_t() {}
-
     // convert from non-const to const iterator
-    template<class other_it_t>
-    shared_ptr_iterator_t(const shared_ptr_iterator_t<other_it_t, false>& i) : it(i.it) {}
+    template<typename other_it_t>
+    shared_ptr_iterator_t(const shared_ptr_iterator_t<other_it_t, false>& i) :
+        shared_ptr_iterator_t(i.it) {}
 
     shared_ptr_iterator_t& operator++() {
         ++it; return *this;
@@ -43,10 +78,13 @@ struct shared_ptr_iterator_t
     pointer operator->() const {
         return std::addressof(**it);
     }
-    std::shared_ptr<const value_type> get_const() const {
+    cc_shared_ptr<value_type> get_const() const {
         return *it;
     }
 
+    operator cc_shared_ptr<value_type>() const {
+        return get_const();
+    }
 
     friend bool operator==(const shared_ptr_iterator_t& x,
                            const shared_ptr_iterator_t& y)
@@ -75,123 +113,114 @@ template<typename T, template<class, class> class Container = std::vector>
 class shared_ptr_container
 {
 private:
-    using c_t = Container<std::shared_ptr<T>, std::allocator<std::shared_ptr<T>>>;
+    // shortcut to use container with std::allocator
+    template<typename t, template<class, class> class container>
+    using container_t = container<t, std::allocator<t>>;
+
+    using c_t = container_t<std::shared_ptr<T>, Container>;
     c_t c;
 
 public:
-
+    using size_type = typename c_t::size_type;
     using const_iterator = shared_ptr_iterator_t<typename c_t::const_iterator>;
     using iterator = shared_ptr_iterator_t<typename c_t::iterator>;
-    using items_t = std::initializer_list<const_iterator>;
+
+    template<class it_t>
+    using non_const_iterator = shared_ptr_iterator_t<it_t, false>;
 
     shared_ptr_container() = default;
 
     template<class it_t>
-    shared_ptr_container(std::initializer_list< shared_ptr_iterator_t<it_t> > items)
+    shared_ptr_container(std::initializer_list<non_const_iterator<it_t>> items)
     {
-        // need to convert iterators from shared_ptr here
-        // since only this class has access to shared_ptr iterator
-        for(const auto& i : items)
-            c.emplace_back(*i.it);
+        for(auto& item: items)
+            c.emplace_back(*item.it);
     }
 
     template<class it_t>
-    shared_ptr_container(shared_ptr_iterator_t<it_t> first, shared_ptr_iterator_t<it_t> last)
-    {
-        // need to convert iterators from shared_ptr here
-        // since only this class has access to shared_ptr iterator
-        for(auto i = first; i != last; ++i)
-            c.emplace_back(*i.it);
-    }
+    shared_ptr_container(non_const_iterator<it_t> first, non_const_iterator<it_t> last) :
+        c(first.it, last.it)
+    {}
 
+    // make it cerealizable
+    template<class Archive>
+    void serialize(Archive& archive) { archive(c); }
 
-    // copy/move
+    // make it movable only
     shared_ptr_container(const shared_ptr_container&) = delete;
     shared_ptr_container& operator=(const shared_ptr_container&) = delete;
     shared_ptr_container(shared_ptr_container&&) = default;
     shared_ptr_container& operator=(shared_ptr_container&&) = default;
 
-    const_iterator begin() const noexcept
-    {
-        return c.begin();
-    }
+    // access methods
+    const_iterator begin() const noexcept { return c.begin(); }
+          iterator begin()       noexcept { return c.begin(); }
 
-    const_iterator end() const noexcept
-    {
-        return c.end();
-    }
+    const_iterator end() const noexcept { return c.end(); }
+          iterator end()       noexcept { return c.end(); }
 
-    iterator begin() noexcept
-    {
-        return c.begin();
-    }
+    const T& back() const { return *c.back(); }
+          T& back()       { return *c.back(); }
 
-    iterator end() noexcept
-    {
-        return c.end();
-    }
-
-    template<class... Args>
-    void emplace_back(Args&&... args) {
-        c.emplace_back(std::make_shared<T>(std::forward<Args>(args)...));
-    }
-
-    void emplace_back(const_iterator item) {
-        c.emplace_back(*item.it);
-    }
-
-    template<class it_t>
-    iterator insert(const_iterator pos, it_t first, it_t last) {
-        return c.insert(pos.it, first.it, last.it);
-    }
-
+    const T& front() const { return *c.front(); }
+          T& front()       { return *c.front(); }
 
     const T& operator[] (typename c_t::size_type i) const noexcept
     {
         return *c[i];
     }
 
-    const T& at(typename c_t::size_type i) const {
+    const T& at(typename c_t::size_type i) const
+    {
         return *c.at(i);
     }
 
-    const T& back() const {
-        return *c.back();
+    cc_shared_ptr<T> get_const(size_type i) const noexcept
+    {
+        return c[i];
     }
 
-    T& back() {
-        return *c.back();
+    template<template<class, class> class container = Container>
+    container_t<cc_shared_ptr<T>, container> get_const_list(
+            std::function<bool(const T&)> filter
+            = [] (const T&) {return true;}) const {
+        container_t<cc_shared_ptr<T>, container> tmp_c;
+        for(auto& item : c) {
+            if(filter(*item))
+                tmp_c.emplace_back(item);
+        }
+        return tmp_c;
     }
 
-    const T& front() const {
-        return *c.front();
+    size_type size() const noexcept { return c.size(); }
+
+    bool empty() const noexcept { return c.empty(); }
+
+    void clear() noexcept { c.clear(); }
+
+    template<class... Args>
+    void emplace_back(Args&&... args)
+    {
+        c.emplace_back(std::make_shared<T>(std::forward<Args>(args)...));
     }
 
-    T& front() {
-        return *c.front();
+    template<class it_t>
+    void push_back(non_const_iterator<it_t> item)
+    {
+        c.emplace_back(*item.it);
     }
 
+    template<class it_t>
+    iterator insert(const_iterator pos,
+                    non_const_iterator<it_t> first,
+                    non_const_iterator<it_t> last)
+    {
+        return c.insert(pos.it, first.it, last.it);
+    }
 
     iterator erase(const iterator& it) noexcept
     {
         return c.erase(it.it);
-    }
-
-    typename c_t::size_type size() const noexcept {
-        return c.size();
-    }
-
-    bool empty() const noexcept {
-        return c.empty();
-    }
-
-    void clear() noexcept {
-        c.clear();
-    }
-
-    template<class Archive>
-    void serialize(Archive& archive) {
-        archive(c);
     }
 };
 
