@@ -8,6 +8,9 @@
 
 namespace ant {
 
+/**
+ * @brief A Lorentz vector (x,y,z,E), diag(-1,-1,-1, 1)
+ */
 struct LorentzVec {
     vec3   x = {};
     double E = {};
@@ -27,7 +30,7 @@ struct LorentzVec {
     // ====== TLorentzVector interface ======
 
     operator TLorentzVector() const {
-        return TLorentzVector(x.x, x.y, x.z, E);
+        return TLorentzVector(x, E);
     }
 
     LorentzVec(const TLorentzVector& other) noexcept:
@@ -118,9 +121,12 @@ struct LorentzVec {
         return x.R() / E;
     }
 
+    /**
+     * @brief Gamma = 1 / sqrt(1-beta^2)
+     * @return
+     */
     double Gamma() const noexcept {
-        const auto beta = this->Beta();
-        return 1.0 / sqrt(1 - beta*beta);
+        return 1.0 / sqrt(1 - (x.R2()/(E*E)));
     }
 
     double Dot(const LorentzVec& other) const noexcept {
