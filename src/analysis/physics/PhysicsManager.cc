@@ -173,6 +173,7 @@ void PhysicsManager::ReadFrom(
 
             nEventsProcessed++;
         }
+        ProgressCounter::Tick();
     }
 
     for(auto& pclass : physics) {

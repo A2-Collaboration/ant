@@ -1,61 +1,41 @@
 #include "ProgressCounter.h"
 
-#include "base/Logger.h"
-#include "std_ext/memory.h"
 #include "std_ext/math.h"
 
 #include <sstream>
 #include <iomanip>
-#include <chrono>
-#include <mutex>
-#include <map>
+#include <algorithm>
 
 using namespace ant;
 using namespace std;
 
 long int ProgressCounter::Interval = 0;
 
-// remember the running threads
-// in this map, protect it by mutex
-mutex running_mutex;
-vector<bool> running;
+ProgressCounter::registry_t ProgressCounter::registry;
+ProgressCounter::timepoint_t ProgressCounter::last_now = ProgressCounter::clock_t::now();
+
+void ProgressCounter::Tick()
+{
+    if(Interval<=0)
+        return;
+    const auto now = clock_t::now();
+    std::chrono::duration<double> elapsed = now - last_now;
+    if(elapsed.count()<Interval)
+        return;
+    for(auto c : registry)
+        c->Updater(elapsed);
+    last_now = now;
+}
 
 ProgressCounter::ProgressCounter(ProgressCounter::Updater_t updater) :
     Updater(updater)
 {
-    // silently ignore progress output
-    if(Interval<=0)
-        return;
-
-    lock_guard<mutex> lock(running_mutex);
-
-    auto it_flag = find(running.begin(), running.end(), false);
-    if(it_flag == running.end())
-        it_flag = running.insert(it_flag, true);
-    else
-        *it_flag = true;
-
-    // n needs to be locally copied to lambda
-    auto n = distance(running.begin(), it_flag);
-    worker = std_ext::make_unique<std::thread>([this, n] () {
-        while(true) {
-            this_thread::sleep_for(std::chrono::seconds(Interval));
-            lock_guard<mutex> lock(running_mutex);
-            if(!running[n])
-                break;
-            this->work();
-        }
-    });
-    // remember the index
-    worker_n = n;
+    registry.push_back(this);
 }
 
 ProgressCounter::~ProgressCounter() {
-    if(!worker)
-        return;
-    worker->detach();
-    std::lock_guard<std::mutex> lock(running_mutex);
-    running[worker_n] = false;
+    auto it = std::find(registry.begin(), registry.end(), this);
+    registry.erase(it);
 }
 
 double ProgressCounter::GetTotalSecs() const {
@@ -80,10 +60,4 @@ string ProgressCounter::TimeToStr(double secs)
     ss_ETA << setw(2) << setfill('0') << std::floor(secs);
 
     return ss_ETA.str();
-}
-
-void ProgressCounter::work() {
-    const auto now = clock_t::now();
-    Updater(now - last_now);
-    last_now = now;
 }

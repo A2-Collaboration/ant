@@ -4,13 +4,15 @@
 
 
 #include <chrono>
-#include <thread>
 #include <functional>
 #include <string>
+#include <list>
 
 namespace ant {
 
 struct ProgressCounter {
+
+    static void Tick();
 
     using Updater_t = std::function<void(std::chrono::duration<double>)>;
     ProgressCounter(Updater_t updater);
@@ -31,16 +33,15 @@ struct ProgressCounter {
     static long int Interval;
 
 protected:
-    void work();
-
     Updater_t Updater;
-    std::unique_ptr<std::thread> worker;
-    std::size_t worker_n;
 
     using clock_t = std::chrono::steady_clock;
-    std::chrono::time_point<clock_t> first_now = clock_t::now();
-    std::chrono::time_point<clock_t> last_now = clock_t::now();
+    using timepoint_t = std::chrono::time_point<clock_t>;
+    timepoint_t first_now = clock_t::now();
 
+    using registry_t = std::list<const ProgressCounter*>;
+    static registry_t  registry;
+    static timepoint_t last_now;
 };
 
 
