@@ -17,7 +17,7 @@ struct Trigger :
 
     Trigger() : Detector_t(Detector_t::Type_t::Trigger) {}
 
-    virtual TVector3 GetPosition(unsigned) const override {
+    virtual vec3 GetPosition(unsigned) const override {
         // when you ask the trigger detector for positions,
         // this is certainly a bug :)
         throw Exception("The trigger detector knows nothing about positions.");

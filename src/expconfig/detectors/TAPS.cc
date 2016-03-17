@@ -173,11 +173,11 @@ void TAPS::InitClusterElements()
     // we assume that the channel elements are consecutive
     const double zpos = GetZPosition();
     for(auto& baf2 : BaF2_elements) {
-        baf2.Position.SetZ(zpos);
+        baf2.Position.z = zpos;
         clusterelements[baf2.Channel] = addressof(baf2);
     }
     for(auto& pbwo4 : PbWO4_elements) {
-        pbwo4.Position.SetZ(zpos);
+        pbwo4.Position.z = zpos;
         clusterelements[pbwo4.Channel] = addressof(pbwo4);
     }
 

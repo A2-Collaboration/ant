@@ -74,11 +74,11 @@ void TAPSVeto::InitElements()
     const double zpos = CherenkovInstalled ? 174.2 : 145.7;
     /// \bug check z-position, Acqu config is inconsistent
     for(auto& baf2 : BaF2_elements) {
-        baf2.Position.SetZ(zpos);
+        baf2.Position.z = zpos;
         nElements++;
     }
     for(auto& pbwo4 : PbWO4_elements) {
-        pbwo4.Position.SetZ(zpos);
+        pbwo4.Position.z = zpos;
         nElements++;
     }
 
