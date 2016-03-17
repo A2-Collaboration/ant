@@ -81,7 +81,7 @@ void UpdatePluteDataBase()
     sdata->AddDecay("rho0 --> pi+ pi- g",           "rho0", "pi+,pi-,g",            9.9E-3);
     sdata->AddDecay("rho0 --> pi0 g",               "rho0", "pi0,g",                6.0E-4);
     sdata->AddDecay("rho0 --> eta g",               "rho0", "eta,g",                3.0E-4);
-    sdata->AddDecay("rho0 --> eta g",               "rho0", "eta,g",                3.0E-4);
+//    sdata->AddDecay("rho0 --> eta g",               "rho0", "eta,g",                3.0E-4);
     sdata->AddDecay("rho0 --> pi0 pi0 g",           "rho0", "pi0,pi0,g",            4.5E-5);
     sdata->AddDecay("rho0 --> pi+ pi- pi0 pi0 g",   "rho0", "pi+,pi-,pi0,pi0,g",    1.6E-5);
     sdata->AddDecay("rho0 --> pi+ pi- pi+ pi- g",   "rho0", "pi+,pi-,pi+,pi-,g",    1.8E-5);
