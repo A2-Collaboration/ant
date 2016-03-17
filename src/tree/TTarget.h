@@ -16,7 +16,7 @@ struct TTarget : printable_traits {
 
     vec3 Vertex;
 
-    TTarget(const TVector3& vertex = vec3(std_ext::NaN, std_ext::NaN, std_ext::NaN)):
+    TTarget(const vec3& vertex = {std_ext::NaN, std_ext::NaN, std_ext::NaN}):
         Vertex(vertex)
     {}
 

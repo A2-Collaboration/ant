@@ -4,8 +4,6 @@
 
 #include "base/Detector_t.h"
 
-#include <TVector3.h>
-
 #include <vector>
 #include <iomanip>
 #include <sstream>
