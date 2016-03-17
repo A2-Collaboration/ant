@@ -9,8 +9,8 @@ namespace utils {
 
 class ProtonPermutation {
 protected:
-    const TCandidateList& cands;
-    TCandidateList::const_iterator p_it = cands.begin();
+    TCandidatePtrList cands;
+    TCandidatePtrList::const_iterator p_it = cands.begin();
 
     const TCandidatePtr true_proton;
 
@@ -22,7 +22,7 @@ protected:
     void Fill();
 
 public:
-    ProtonPermutation(const TCandidateList& candidates, const TCandidatePtr& true_p=nullptr);
+    ProtonPermutation(const TCandidatePtrList& candidates, const TCandidatePtr& true_p=nullptr);
 
     const TParticlePtr   Proton()  const { return proton; }
     const TParticleList& Photons() const { return photons; }
