@@ -150,8 +150,8 @@ int main( int argc, char** argv )
 
             // compare clusters Ant/Goat
             struct cluster_t {
-                TClusterConstPtr Ant;
-                TClusterConstPtr Goat;
+                TClusterPtr Ant;
+                TClusterPtr Goat;
             };
 
             map<unsigned, cluster_t> clusters;
@@ -159,19 +159,19 @@ int main( int argc, char** argv )
             for(auto it_cl = antRecon.Clusters.begin(); it_cl != antRecon.Clusters.end(); ++it_cl)
                 if(it_cl->DetectorType == type && it_cl->Energy>threshold) {
                     antEnergy += it_cl->Energy;
-                    clusters[it_cl->CentralElement].Ant = it_cl.get_const();
+                    clusters[it_cl->CentralElement].Ant = it_cl.get_ptr();
                 }
 
             double goatEnergy = 0;
             for(auto it_cl = goatRecon.Clusters.begin(); it_cl != goatRecon.Clusters.end(); ++it_cl)
                 if(it_cl->DetectorType == type && it_cl->Energy>threshold) {
                     goatEnergy += it_cl->Energy;
-                    clusters[it_cl->CentralElement].Goat = it_cl.get_const();
+                    clusters[it_cl->CentralElement].Goat = it_cl.get_ptr();
                 }
 
             cout << "  EnergySum: " << antEnergy << "/" << goatEnergy << endl;
             for(const auto& it_cl : clusters) {
-                auto stringify_cl = [] (const TClusterConstPtr& cl) -> string {
+                auto stringify_cl = [] (const TClusterPtr& cl) -> string {
                     if(!cl)
                         return "";
                     return std_ext::formatter() << "(E=" << cl->Energy
@@ -207,11 +207,11 @@ int main( int argc, char** argv )
 
         map<unsigned, candidate_t> candidates;
 
-        for(const TCandidatePtr& c : antRecon.Candidates)
+        for(const auto& c : antRecon.Candidates.get_iter())
             if(c->Detector & Detector_t::Any_t::CB_Apparatus)
                 candidates[c->FindCaloCluster()->CentralElement].Ant = c;
 
-        for(const TCandidatePtr& c : goatRecon.Candidates)
+        for(const auto& c : goatRecon.Candidates.get_iter())
             if(c->Detector & Detector_t::Any_t::CB_Apparatus)
                 candidates[c->FindCaloCluster()->CentralElement].Goat = c;
 
