@@ -13,25 +13,28 @@ struct cc_shared_ptr {
 
     using element_type = const T;
 
-    cc_shared_ptr() = default;
-    cc_shared_ptr(const cc_shared_ptr&) = default;
-    cc_shared_ptr& operator=(const cc_shared_ptr&) = default;
-    cc_shared_ptr(cc_shared_ptr&&) = default;
-    cc_shared_ptr& operator=(cc_shared_ptr&&) = default;
+    cc_shared_ptr() noexcept = default;
+    cc_shared_ptr(const cc_shared_ptr&) noexcept = default;
+    cc_shared_ptr& operator=(const cc_shared_ptr&) noexcept = default;
+    cc_shared_ptr(cc_shared_ptr&&) noexcept = default;
+    cc_shared_ptr& operator=(cc_shared_ptr&&) noexcept = default;
 
-    cc_shared_ptr(std::nullptr_t) : cc_shared_ptr() {}
-    cc_shared_ptr(const std::shared_ptr<T>& ptr_) : ptr(ptr_) {}
+    cc_shared_ptr(std::nullptr_t) noexcept : cc_shared_ptr() {}
+    cc_shared_ptr(const std::shared_ptr<T>& ptr_) noexcept : ptr(ptr_) {}
 
-    const T& operator*() const {
+    const T& operator*() const noexcept {
         return *ptr;
     }
     const T* operator->() const {
         return ptr.operator->();
     }
-    bool operator==(const cc_shared_ptr& other) const {
+    bool operator==(const cc_shared_ptr& other) const noexcept {
         return ptr == other.ptr;
     }
-    explicit operator bool() const {
+    bool operator!=(const cc_shared_ptr& other) const noexcept {
+        return ptr != other.ptr;
+    }
+    explicit operator bool() const noexcept {
         return static_cast<bool>(ptr);
     }
     // make it cerealizable
@@ -63,37 +66,36 @@ struct shared_ptr_iterator_t
 
     // convert from non-const to const iterator
     template<typename other_it_t>
-    shared_ptr_iterator_t(const shared_ptr_iterator_t<other_it_t, false>& i) :
+    shared_ptr_iterator_t(const shared_ptr_iterator_t<other_it_t, false>& i) noexcept :
         shared_ptr_iterator_t(i.it) {}
 
-    shared_ptr_iterator_t& operator++() {
+    shared_ptr_iterator_t& operator++() noexcept {
         ++it; return *this;
     }
-    shared_ptr_iterator_t& operator--() {
+    shared_ptr_iterator_t& operator--() noexcept {
         --it; return *this;
     }
-    reference operator*() const {
+    reference operator*() const noexcept {
         return **it;
     }
-    pointer operator->() const {
+    pointer operator->() const noexcept {
         return std::addressof(**it);
     }
-    cc_shared_ptr<value_type> get_const() const {
+    cc_shared_ptr<value_type> get_ptr() const noexcept {
         return *it;
     }
-
-    operator cc_shared_ptr<value_type>() const {
-        return get_const();
+    operator cc_shared_ptr<value_type>() const noexcept {
+        return get_ptr();
     }
 
     friend bool operator==(const shared_ptr_iterator_t& x,
-                           const shared_ptr_iterator_t& y)
+                           const shared_ptr_iterator_t& y) noexcept
     {
         return x.it == y.it;
     }
 
     friend bool operator!=(const shared_ptr_iterator_t& x,
-                           const shared_ptr_iterator_t& y)
+                           const shared_ptr_iterator_t& y) noexcept
     {
         return x.it != y.it;
     }
@@ -103,9 +105,9 @@ private:
     friend class shared_ptr_container;
 
     template<class, bool>
-    friend class shared_ptr_iterator_t;
+    friend struct shared_ptr_iterator_t;
 
-    shared_ptr_iterator_t(const it_t& it_) : it(it_) {}
+    shared_ptr_iterator_t(const it_t& it_) noexcept : it(it_) {}
     it_t it;
 };
 
@@ -175,21 +177,9 @@ public:
         return *c.at(i);
     }
 
-    cc_shared_ptr<T> get_const(size_type i) const noexcept
+    cc_shared_ptr<T> get_ptr_at(size_type i) const noexcept
     {
         return c[i];
-    }
-
-    template<template<class, class> class container = Container>
-    container_t<cc_shared_ptr<T>, container> get_const_list(
-            std::function<bool(const T&)> filter
-            = [] (const T&) {return true;}) const {
-        container_t<cc_shared_ptr<T>, container> tmp_c;
-        for(auto& item : c) {
-            if(filter(*item))
-                tmp_c.emplace_back(item);
-        }
-        return tmp_c;
     }
 
     size_type size() const noexcept { return c.size(); }
@@ -222,6 +212,105 @@ public:
     {
         return c.erase(it.it);
     }
+
+
+    struct iterator_list_base {
+
+        using value_type = const_iterator;
+        using iterator_category = std::forward_iterator_tag;
+        using difference_type = std::ptrdiff_t;
+        using pointer =  const value_type*;
+        using reference =  const value_type&;
+
+        // minimum set of operators for traversal
+        reference operator*() const {  return it; }
+        iterator_list_base& operator++() { ++it; return *this; }
+        bool operator!=(const iterator_list_base& other) { return it != other.it; }
+
+        // begin/end wrapper
+        iterator_list_base begin() const { return {c, c.begin()}; }
+        iterator_list_base end() const { return {c, c.end()}; }
+
+    protected:
+        friend class shared_ptr_container;
+        explicit iterator_list_base(const c_t& c_) :
+            iterator_list_base(c_, c_.begin())
+        {}
+        iterator_list_base(const c_t& c_, const_iterator it_) :
+            c(c_), it(it_)
+        {}
+        const c_t& c;
+        const_iterator it;
+    };
+
+    template<typename filter_t>
+    struct iterator_list : iterator_list_base {
+
+        // go to next item according to filter_t
+        // might stop at end of container
+        iterator_list& operator++()
+        {
+            ++this->it;
+            skip_filtered();
+            return *this;
+        }
+
+        // begin/end wrapper
+        iterator_list begin() const { return {this->c, this->it, filter}; }
+        iterator_list end() const { return {this->c, this->c.end(), filter}; }
+
+    protected:
+        friend class shared_ptr_container;
+        iterator_list(const c_t& c_, filter_t filter_) :
+            iterator_list(c_, c_.begin(), filter_)
+        {
+            // might already to go end of container
+            skip_filtered();
+        }
+
+        iterator_list(const c_t& c_, const_iterator it_, filter_t filter_) :
+            iterator_list_base(c_, it_), filter(filter_)
+        {}
+
+        filter_t filter;
+
+        void skip_filtered() {
+            while(this->it != this->c.end()) {
+                if(filter(*this->it))
+                    break;
+                ++this->it;
+            }
+        }
+    };
+
+    iterator_list_base get_iter() const noexcept
+    {
+        return iterator_list_base(c);
+    }
+
+    template<typename filter_t>
+    iterator_list<filter_t> get_iter(filter_t filter) const noexcept
+    {
+        return {c, filter};
+    }
+
+    template<template<class, class> class container = Container>
+    container_t<cc_shared_ptr<T>, container>
+    get_ptr_list() const
+    {
+        auto tmp = get_iter();
+        return container_t<cc_shared_ptr<T>, container>(tmp.begin(), tmp.end());
+    }
+
+    template<typename filter_t, template<class, class> class container = Container>
+    container_t<cc_shared_ptr<T>, container>
+    get_ptr_list(filter_t filter) const
+    {
+        auto tmp = get_iter<filter_t>(filter);
+        return container_t<cc_shared_ptr<T>, container>(tmp.begin(), tmp.end());
+    }
+
+
 };
 
 

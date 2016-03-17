@@ -63,19 +63,30 @@ void dotest() {
 
   auto cluster0 = std::next(clusters.begin(), 0);
   auto cluster1 = std::next(clusters.begin(), 1);
+  auto cluster2 = std::next(clusters.begin(), 2);
 
-  auto candidate0 = make_shared<TCandidate>(
-                        Detector_t::Any_t::CB_Apparatus,
-                        200,
-                        0.0, 0.0, 0.0, // theta/phi/time
-                        2, // cluster size
-                        2.0, 0.0, // veto/tracker
-                        TClusterList{cluster1, cluster0}
-                        );
+  auto& candidates = eventdata.Candidates;
 
-  eventdata.Candidates.emplace_back(candidate0);
+  candidates.emplace_back(
+              Detector_t::Any_t::CB_Apparatus,
+              200,
+              0.0, 0.0, 0.0, // theta/phi/time
+              2, // cluster size
+              2.0, 0.0, // veto/tracker
+              TClusterList{cluster1, cluster0}
+              );
+  candidates.emplace_back(
+              Detector_t::Any_t::TAPS_Apparatus,
+              100,
+              1.0, 2.0, 3.0, // theta/phi/time
+              8, // cluster size
+              2.0, 0.0, // veto/tracker
+              TClusterList{cluster2}
+              );
 
-  auto particle0 = make_shared<TParticle>(ParticleTypeDatabase::Photon, candidate0);
+  auto candidate0 = std::next(candidates.begin(), 0);
+
+  auto particle0 = make_shared<TParticle>(ParticleTypeDatabase::Photon, candidate0.get_ptr());
   auto particle1 = make_shared<TParticle>(ParticleTypeDatabase::Photon, TLorentzVector(7,8,9,10));
   auto particle2 = make_shared<TParticle>(ParticleTypeDatabase::Pi0, TLorentzVector(3,4,5,6));
 
@@ -90,6 +101,8 @@ void dotest() {
   cout << event << endl;
   cout << *event << endl;
 
+  REQUIRE(event->Reconstructed().Candidates.size()==2);
+
   tree->Fill();
 
   event->MakeReconstructed(TID());
@@ -100,9 +113,6 @@ void dotest() {
 
   event->MCTrue().Particles.Add(particle0);
   event->MCTrue().Particles.Add(particle1);
-
-
-  event->MCTrue().Candidates.push_back(particle0->Candidate);
 
   tree->Fill();
 
@@ -144,13 +154,13 @@ void dotest() {
   REQUIRE(readback.Clusters.at(0).Hits.size() == 1);
   REQUIRE(readback.Clusters.at(2).Hits.size() == 3);
 
-  REQUIRE(readback.Candidates.size() == 1);
+  REQUIRE(readback.Candidates.size() == 2);
 
-  REQUIRE(readback.Clusters.get_const(0) == readback.Candidates.at(0)->Clusters.get_const(1));
+  REQUIRE(readback.Clusters.get_ptr_at(0) == readback.Candidates.at(0).Clusters.get_ptr_at(1));
 
   REQUIRE(readback.Particles.GetAll().size() == 2);
   REQUIRE(readback.Particles.GetAll().at(0)->Type() == ParticleTypeDatabase::Photon);
-  REQUIRE(readback.Particles.GetAll().at(0)->Candidate == readback.Candidates.at(0));
+  REQUIRE(readback.Particles.GetAll().at(0)->Candidate == readback.Candidates.get_ptr_at(0));
   REQUIRE(readback.Particles.GetAll().at(1)->E() == 10);
   REQUIRE(readback.Particles.Get(ParticleTypeDatabase::Photon).size() == 2);
   REQUIRE(readback.Particles.Get(ParticleTypeDatabase::Proton).size() == 0);
@@ -165,6 +175,21 @@ void dotest() {
   REQUIRE(readback.ParticleTree->Daughters().back()->Get() == readback.Particles.GetAll().at(0));
 
 
+  // check some list capabilities
 
+  TCandidatePtrList list;
+  for(auto it_cand : readback.Candidates.get_iter()) {
+      REQUIRE(it_cand.get_ptr());
+      REQUIRE_FALSE(it_cand->Clusters.empty());
+      list.emplace_back(it_cand);
+  }
+  REQUIRE(list.size() == 2);
+
+  auto all_cands = readback.Candidates.get_ptr_list();
+  REQUIRE(all_cands.size() == 2);
+
+  auto taps_cands = readback.Candidates.get_ptr_list(
+                        [] (const TCandidate& c) { return c.Detector & Detector_t::Type_t::TAPS; } );
+  REQUIRE(taps_cands.size() == 1);
 
 }

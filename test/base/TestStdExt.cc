@@ -120,6 +120,8 @@ struct int_t {
     int_t& operator++() {
         ++val; return *this;
     }
+    int get_value() const { return *this; }
+    explicit operator bool() const { return val == 0; }
 };
 
 size_t int_t::n_constructed = 0;
@@ -148,13 +150,13 @@ void TestSharedPtrContainer() {
     for(auto& item : c2)
         ++item;
     // due to pointers, the elements 0,1 are identical to 2,3
-    REQUIRE(c2.get_const(0));
-    REQUIRE(c2.get_const(0) == c2.get_const(2));
-    REQUIRE(c2.get_const(1) == c2.get_const(3));
+    REQUIRE(c2.get_ptr_at(0));
+    REQUIRE(c2.get_ptr_at(0) == c2.get_ptr_at(2));
+    REQUIRE(c2.get_ptr_at(1) == c2.get_ptr_at(3));
     REQUIRE(c2[0]==8);
     REQUIRE(c2[1]==9);
 
-    auto ptr = c1.begin().get_const();
+    auto ptr = c1.begin().get_ptr();
     using ptr_t = decltype(ptr);
     REQUIRE(std::is_const<ptr_t::element_type>::value);
     auto is_convertible = std::is_convertible<ptr_t,shared_ptr<int_t>>::value;
@@ -168,6 +170,43 @@ void TestSharedPtrContainer() {
     constexpr auto is_assignable = std::is_assignable<decltype(*c3.begin()),int_t>::value;
     REQUIRE_FALSE(is_assignable);
 
+    unsigned n = 0;
+    for(auto i : c3.get_iter()) {
+        REQUIRE(i.get_ptr());
+        ++n;
+    }
+    REQUIRE(n == 4);
+
+    unsigned n_eights = 0;
+    for(auto i : c3.get_iter([] (int_t i) { return i==8;} )) {
+        REQUIRE(i.get_ptr());
+        REQUIRE(i->get_value() == 8);
+        ++n_eights;
+    }
+    REQUIRE(n_eights == 2);
+
+    unsigned n_nines = 0;
+    for(auto i : c3.get_iter([] (int_t i) { return i==9;} )) {
+        REQUIRE(i.get_ptr());
+        REQUIRE(i->get_value() == 9);
+        ++n_nines;
+    }
+    REQUIRE(n_nines == 2);
+
+    unsigned n_nothing = 0;
+    for(auto i : c3.get_iter([] (int_t) { return false;} )) {
+        REQUIRE(i.get_ptr());
+        ++n_nothing;
+    }
+    REQUIRE(n_nothing == 0);
+
+    auto all_nines = c3.get_ptr_list([] (int_t i) { return i==9;});
+    REQUIRE(all_nines.size() == 2);
+
+    auto all_zeros = c3.get_ptr_list([] (int_t i) { return i;});
+    REQUIRE(all_zeros.size() == 0);
+
     // number of emplace_back calls!
     REQUIRE(int_t::n_constructed == 3);
+
 }
