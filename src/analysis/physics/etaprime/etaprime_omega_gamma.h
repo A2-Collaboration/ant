@@ -62,7 +62,7 @@ struct EtapOmegaG : Physics {
 
     struct Particles_t {
         TParticleList  Photons;
-        TLorentzVector PhotonSum;
+        LorentzVec PhotonSum;
     };
 
     struct Sig_t {

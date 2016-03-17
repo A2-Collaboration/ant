@@ -123,7 +123,7 @@ void EtapOmegaG::ProcessEvent(const TEvent& event, manager_t&)
     h_CommonCuts->Fill("nPhotons==2|4", 1.0);
 
     Particles_t particles;
-    TLorentzVector photon_sum(0,0,0,0);
+    LorentzVec photon_sum(0,0,0,0);
     t.nPhotonsCB = 0;
     t.nPhotonsTAPS = 0;
     t.CBSumVetoE = 0;
@@ -217,7 +217,7 @@ void EtapOmegaG::ProcessEvent(const TEvent& event, manager_t&)
             continue;
 
         // missing mass
-        const TLorentzVector beam_target = taggerhit.GetPhotonBeam() + TLorentzVector(0, 0, 0, ParticleTypeDatabase::Proton.Mass());
+        const LorentzVec beam_target = taggerhit.GetPhotonBeam() + LorentzVec(0, 0, 0, ParticleTypeDatabase::Proton.Mass());
         t.MissingMass = (beam_target - photon_sum).M();
 
         t.TaggW = promptrandom.FillWeight();
@@ -247,7 +247,7 @@ void EtapOmegaG::ProcessEvent(const TEvent& event, manager_t&)
 
             Particles_t fitted_particles;
             fitted_particles.Photons = kinfitter.GetFittedPhotons();
-            fitted_particles.PhotonSum.SetPxPyPzE(0,0,0,0);
+            fitted_particles.PhotonSum = LorentzVec{0,0,0,0};
             for(const auto& photon : fitted_particles.Photons)
                 fitted_particles.PhotonSum += *photon;
 
@@ -495,7 +495,7 @@ void EtapOmegaG::Sig_t::Pi0_t::Process(const EtapOmegaG::Particles_t& particles,
             t.TreeFitIterations = r.NIterations;
 
             // IM fitted expected to be delta peaks since they were fitted...
-            const TLorentzVector& pi0_fitted = fitted_Pi0->Get().LVSum;
+            const LorentzVec& pi0_fitted = fitted_Pi0->Get().LVSum;
             t.IM_Pi0_fitted = pi0_fitted.M();
 
             // have a look at the assigned gammas to Pi0/Omega
@@ -504,7 +504,7 @@ void EtapOmegaG::Sig_t::Pi0_t::Process(const EtapOmegaG::Particles_t& particles,
             t.ClusterShape_g1_Pi0 = clustertools.LateralMoment(*g1_Pi0_best->Candidate->FindCaloCluster());
             t.ClusterShape_g2_Pi0 = clustertools.LateralMoment(*g2_Pi0_best->Candidate->FindCaloCluster());
 
-            const TLorentzVector& Pi0_best = *g1_Pi0_best + *g2_Pi0_best;
+            const LorentzVec& Pi0_best = *g1_Pi0_best + *g2_Pi0_best;
             t.IM_Pi0_best = Pi0_best.M();
 
             // there are two photon combinations possible
@@ -588,7 +588,7 @@ void EtapOmegaG::Sig_t::OmegaPi0_t::Process(const EtapOmegaG::Particles_t& parti
     assert(particles.Photons.size() == 4);
 
     // sum of photons should give the EtaPrime
-    const TLorentzVector& EtaPrime = particles.PhotonSum;
+    const LorentzVec& EtaPrime = particles.PhotonSum;
     t.IM_Pi0gg = EtaPrime.M();
 
     // g_Omega to check against MCTrue
@@ -623,11 +623,11 @@ void EtapOmegaG::Sig_t::OmegaPi0_t::Process(const EtapOmegaG::Particles_t& parti
             t.ClusterShape_g1_Pi0 = clustertools.LateralMoment(*g1_Pi0_best->Candidate->FindCaloCluster());
             t.ClusterShape_g2_Pi0 = clustertools.LateralMoment(*g2_Pi0_best->Candidate->FindCaloCluster());
 
-            const TLorentzVector& Pi0_best = *g1_Pi0_best + *g2_Pi0_best;
+            const LorentzVec& Pi0_best = *g1_Pi0_best + *g2_Pi0_best;
             t.IM_Pi0_best = Pi0_best.M();
 
             g_Omega_best = fitted_g_Omega->Get().Leave->Particle;
-            const TLorentzVector& Omega_best = *g_Omega_best + Pi0_best;
+            const LorentzVec& Omega_best = *g_Omega_best + Pi0_best;
             t.IM_Pi0g_best = Omega_best.M();
 
             // have a look at the EtaPrime bachelor photon
@@ -645,13 +645,13 @@ void EtapOmegaG::Sig_t::OmegaPi0_t::Process(const EtapOmegaG::Particles_t& parti
     if(isfinite(t.TreeFitChi2)) {
 
         // do that Bachelor photon boosting
-        auto do_boost = [] (const TLorentzVector& bachelor, const TLorentzVector& etaprime) {
-            TLorentzVector boosted(bachelor);
+        auto do_boost = [] (const LorentzVec& bachelor, const LorentzVec& etaprime) {
+            LorentzVec boosted(bachelor);
             boosted.Boost(-etaprime.BoostVector());
             return boosted;
         };
 
-        t.Bachelor_E = do_boost(*g_EtaPrime_best, EtaPrime).E();
+        t.Bachelor_E = do_boost(*g_EtaPrime_best, EtaPrime).E;
 
         // check MC matching
         if(ptree_sigref) {
