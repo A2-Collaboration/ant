@@ -116,5 +116,5 @@ void do_test_lv() {
     REQUIRE(a*3.0 == b*3.0);
     REQUIRE(a*(1./3.0) == b/3.0);
 
-    REQUIRE(a.Vect() == b.x);
+    REQUIRE(a.Vect() == b.p);
 }
