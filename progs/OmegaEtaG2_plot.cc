@@ -64,7 +64,23 @@ struct MCTrue_Splitter : cuttree::StackedHists_t<Hist_t> {
         const unsigned mctrue = unsigned(f.Tree.Channel);
 
         using histstyle::Mod_t;
-        const Hist_t& hist = this->GetHist(mctrue);
+
+        auto get_bkg_name = [] (const unsigned mctrue) {
+            const auto entry = physics::OmegaEtaG2::reaction_channels.channels.find(int(mctrue));
+
+            if(entry!=physics::OmegaEtaG2::reaction_channels.channels.end())
+                return entry->second.name;
+
+            return string("Unknown Decay");
+        };
+
+        using histstyle::Mod_t;
+        const Hist_t& hist = mctrue<10 ? this->GetHist(mctrue) :
+                                         this->GetHist(mctrue,
+                                                       get_bkg_name(mctrue),
+                                                       Mod_t::MakeLine(histstyle::color_t::Get(mctrue-10), 1, kGray+1)
+                                                       );
+
 
         hist.Fill(f);
 
