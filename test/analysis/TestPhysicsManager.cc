@@ -133,7 +133,7 @@ void dotest_raw()
         REQUIRE_FALSE(physics->showCalled);
 
         REQUIRE(physics->seenEvents == expectedEvents);
-        REQUIRE(physics->seenCandidates == 860);
+        REQUIRE(physics->seenCandidates == 862);
         REQUIRE(physics->seenTrueTargetPos == 0);
         REQUIRE(physics->seenReconTargetPosNaN == expectedEvents);
 
@@ -169,7 +169,7 @@ void dotest_raw()
 
         REQUIRE(physics->seenEvents == expectedEvents/3);
         // make sure the reconstruction wasn't applied twice!
-        REQUIRE(physics->seenCandidates == 285);
+        REQUIRE(physics->seenCandidates == 286);
 
     }
 
@@ -196,7 +196,7 @@ void dotest_raw()
         std::shared_ptr<TestPhysics> physics = pm.GetTestPhysicsModule();
 
         REQUIRE(physics->seenEvents == expectedEvents/3);
-        REQUIRE(physics->seenCandidates == 285);
+        REQUIRE(physics->seenCandidates == 286);
 
     }
 
@@ -230,7 +230,7 @@ void dotest_raw_nowrite()
     REQUIRE_FALSE(physics->showCalled);
 
     REQUIRE(physics->seenEvents == expectedEvents);
-    REQUIRE(physics->seenCandidates == 860);
+    REQUIRE(physics->seenCandidates == 862);
 
     // the PhysicsManager should not create a TTree...
     REQUIRE(outfile.GetSharedClone<TTree>("treeEvents") == nullptr);
