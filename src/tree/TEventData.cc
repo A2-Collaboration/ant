@@ -35,7 +35,7 @@ ostream& TEventData::Print(ostream& s) const {
 
     s << ">> Candidates: n=" << Candidates.size() << endl;
     for(auto& i : Candidates)
-        s << *i << endl;
+        s << i << endl;
 
     s << ">> Particles: n=" << Particles.GetAll().size() << endl;
     for(auto& i : Particles.GetAll())

@@ -16,9 +16,9 @@
 namespace ant {
 
 struct TCandidate;
-
-using TCandidatePtr = std::shared_ptr<TCandidate>;
-using TCandidateList = std::vector<TCandidatePtr>;
+using TCandidateList = std_ext::shared_ptr_container<TCandidate>;
+using TCandidatePtr = std_ext::cc_shared_ptr<TCandidate>;
+using TCandidatePtrList = std::vector<TCandidatePtr>;
 
 struct TCandidate : printable_traits
 {
@@ -63,20 +63,20 @@ struct TCandidate : printable_traits
 
     operator TVector3() const { TVector3 p; p.SetMagThetaPhi(1.0, Theta, Phi); return p; }
 
-    TClusterConstPtr FindFirstCluster(Detector_t::Any_t detector) const {
+    TClusterPtr FindFirstCluster(Detector_t::Any_t detector) const {
         auto it = std::find_if(Clusters.begin(), Clusters.end(), [detector] (const TCluster& cl) {
             return cl.DetectorType & detector;
         });
         if(it == Clusters.end())
             return nullptr;
-        return it.get_const();
+        return it.get_ptr();
     }
 
-    TClusterConstPtr FindCaloCluster() const {
+    TClusterPtr FindCaloCluster() const {
         return FindFirstCluster(Detector_t::Any_t::Calo);
     }
 
-    TClusterConstPtr FindVetoCluster() const {
+    TClusterPtr FindVetoCluster() const {
         return FindFirstCluster(Detector_t::Any_t::Veto);
     }
 

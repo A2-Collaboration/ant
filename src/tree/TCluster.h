@@ -21,7 +21,7 @@ using TClusterHitList = std::vector<TClusterHit>;
 
 struct TCluster;
 using TClusterList = std_ext::shared_ptr_container<TCluster>;
-using TClusterConstPtr = std_ext::cc_shared_ptr<TCluster>;
+using TClusterPtr = std_ext::cc_shared_ptr<TCluster>;
 
 struct TClusterHit : printable_traits
 {
