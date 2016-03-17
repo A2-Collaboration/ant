@@ -3,7 +3,6 @@
 #include "base/Detector_t.h"
 #include "unpacker/UnpackerAcqu.h"
 
-#include "TVector2.h"
 #include <limits>
 #include <cassert>
 
@@ -110,7 +109,7 @@ protected:
     struct BaF2_Element_t : TAPS_Element_t {
         BaF2_Element_t(
                 unsigned channel,
-                const TVector2& pos_xy,
+                const vec2& pos_xy,
                 unsigned tac,
                 unsigned lg,
                 unsigned sg,
@@ -120,8 +119,8 @@ protected:
                 ) :
             TAPS_Element_t(
                 channel,
-                vec3(pos_xy.X(), pos_xy.Y(), // z-component set by BuildClusterElements()
-                         std::numeric_limits<double>::quiet_NaN()),
+                vec3(pos_xy.x, pos_xy.y, // z-component set by BuildClusterElements()
+                     std::numeric_limits<double>::quiet_NaN()),
                 neighbours,
                 3.4 /// \todo use best value from S. Lohse diploma thesis?
                 ),
@@ -141,7 +140,7 @@ protected:
     struct PbWO4_Element_t : TAPS_Element_t {
         PbWO4_Element_t(
                 unsigned channel,
-                const TVector2& pos_xy,
+                const vec2& pos_xy,
                 unsigned tdc,
                 unsigned qdch,
                 unsigned qdcl,
@@ -149,8 +148,8 @@ protected:
                 ) :
             TAPS_Element_t(
                 channel,
-                vec3(pos_xy.X(), pos_xy.Y(), // z-component set by InitClusterElements()
-                         std::numeric_limits<double>::quiet_NaN()),
+                vec3(pos_xy.x, pos_xy.y, // z-component set by InitClusterElements()
+                     std::numeric_limits<double>::quiet_NaN()),
                 neighbours,
                 2.2 /// \todo use best value from S. Lohse diploma thesis?
                 ),

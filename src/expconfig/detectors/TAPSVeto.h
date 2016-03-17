@@ -50,14 +50,14 @@ protected:
     struct BaF2_Element_t : TAPSVeto_Element_t {
         BaF2_Element_t(
                 unsigned channel,
-                const TVector2& pos_xy,
+                const vec2& pos_xy,
                 unsigned tac,
                 unsigned lgs // only sensitive for BaF2 Veto
                 ) :
             TAPSVeto_Element_t(
                 channel,
-                vec3(pos_xy.X(), pos_xy.Y(), // z-component set by InitElements()
-                         std::numeric_limits<double>::quiet_NaN())
+                vec3(pos_xy.x, pos_xy.y, // z-component set by InitElements()
+                     std::numeric_limits<double>::quiet_NaN())
                 ),
             TAC(tac),
             LGS(lgs)
@@ -69,15 +69,15 @@ protected:
     struct PbWO4_Element_t : TAPSVeto_Element_t {
       PbWO4_Element_t(
           unsigned channel,
-          const TVector2& pos_xy,
+          const vec2& pos_xy,
           unsigned tdc,
           unsigned qdch,
           unsigned qdcl
           ) :
         TAPSVeto_Element_t(
           channel,
-          vec3(pos_xy.X(), pos_xy.Y(), // z-component set by InitClusterElements()
-                   std::numeric_limits<double>::quiet_NaN())
+          vec3(pos_xy.x, pos_xy.y, // z-component set by InitClusterElements()
+               std::numeric_limits<double>::quiet_NaN())
           ),
         TDC(tdc),
         QDCH(qdch),
