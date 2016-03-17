@@ -1,5 +1,7 @@
 #pragma once
 
+#include "printable.h"
+
 #include "vec2.h"
 
 #include <cmath>
@@ -9,7 +11,7 @@
 
 namespace ant {
 
-struct vec3 {
+struct vec3 : printable_traits {
     double x = {};
     double y = {};
     double z = {};
@@ -64,6 +66,10 @@ struct vec3 {
         return vec3(*this) -= other;
     }
 
+    vec3 operator-() const noexcept {
+        return vec3(-x, -y, -z);
+    }
+
     vec3& operator*=(const double s) noexcept {
         x *= s;
         y *= s;
@@ -102,6 +108,13 @@ struct vec3 {
      */
     double R() const noexcept {
         return sqrt(this->R2());
+    }
+
+    /**
+     * @brief SetR rescales vector, keeping theta/phi constant
+     */
+    void SetR(double r) noexcept {
+        (*this) *= r/R();
     }
 
     /**
@@ -149,6 +162,12 @@ struct vec3 {
      */
     double Phi() const {
         return x == 0.0 && y == 0.0 ? 0.0 : atan2(y,x);
+    }
+
+    void SetPhi(double phi) {
+        const auto xy = XY().R();
+        x = xy*cos(phi);
+        y = xy*sin(phi);
     }
 
     /**
@@ -219,6 +238,16 @@ struct vec3 {
         return {x,z};
     }
 
+
+
+    template<class Archive>
+    void serialize(Archive& archive) {
+        archive(x, y, z);
+    }
+
+    virtual std::ostream& Print(std::ostream& stream) const override {
+        return stream << "(" << x << "," << y << "," << z << ")";
+    }
 };
 
 }
