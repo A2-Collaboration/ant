@@ -247,7 +247,7 @@ void PhysicsManager::ProcessEvent(TEvent& event, physics::manager_t& manager)
         /// \todo implement flag to force particle ID again?
         TEventData& recon = event.Reconstructed();
         if(recon.Particles.GetAll().empty()) {
-            for(const auto& cand : recon.Candidates) {
+            for(auto cand : recon.Candidates.get_iter()) {
                 auto particle = particleID->Process(cand);
                 if(particle)
                     recon.Particles.Add(particle);
