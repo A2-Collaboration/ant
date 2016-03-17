@@ -163,18 +163,16 @@ void GoatReader::CopyTracks(TEventData& recon)
             }
 
             recon.Candidates.emplace_back(
-                        make_shared<TCandidate>(
-                            det,
-                            tracks.GetClusterEnergy(i),
-                            tracks.GetTheta(i),
-                            tracks.GetPhi(i),
-                            tracks.GetTime(i),
-                            MapClusterSize(tracks.GetClusterSize(i)),
-                            vetoEnergy,
-                            //tracks.GetMWPC0Energy(i)+tracks.GetMWPC1Energy(i),
-                            std_ext::NaN, // MWPC not handled correctly at the moment
-                            TClusterList(clusters.begin(), clusters.end())
-                            )
+                        det,
+                        tracks.GetClusterEnergy(i),
+                        tracks.GetTheta(i),
+                        tracks.GetPhi(i),
+                        tracks.GetTime(i),
+                        MapClusterSize(tracks.GetClusterSize(i)),
+                        vetoEnergy,
+                        //tracks.GetMWPC0Energy(i)+tracks.GetMWPC1Energy(i),
+                        std_ext::NaN, // MWPC not handled correctly at the moment
+                        TClusterList(clusters.begin(), clusters.end())
                         );
         }
         else if(det & Detector_t::Any_t::Veto) {
@@ -205,7 +203,7 @@ void GoatReader::CopyParticles(TEventData& recon, ParticleInput& input_module,
         if(trackIndex == -1) {
             LOG(ERROR) << "No Track for this particle!!" << endl;
         } else {
-            const auto& track = recon.Candidates.at(trackIndex);
+            const auto& track = recon.Candidates.get_ptr_at(trackIndex);
             recon.Particles.Add(std::make_shared<TParticle>(type,track));
         }
 
