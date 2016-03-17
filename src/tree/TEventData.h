@@ -21,22 +21,19 @@ struct TEventData : printable_traits
 {
     struct PTypeList {
 
-        void Add(TParticlePtr&& particle) {
+        void Add(TParticlePtr particle)
+        {
             lists[std::addressof(particle->Type())].emplace_back(particle);
-            all.emplace_back(particle);
+            all.emplace_back(std::move(particle));
         }
 
-        void Add(TParticlePtr& particle) {
-            lists[std::addressof(particle->Type())].emplace_back(particle);
-            all.emplace_back(particle);
-        }
+        const TParticleList& GetAll() const { return all; }
 
-        TParticleList GetAll() const { return all; }
-
-        TParticleList Get(const ant::ParticleTypeDatabase::Type& type) const {
+        const TParticleList& Get(const ant::ParticleTypeDatabase::Type& type) const {
             auto entry = lists.find(std::addressof(type));
             if(entry == lists.end()) {
-                return {};
+                static const TParticleList empty;
+                return empty;
             }
             return entry->second;
         }
