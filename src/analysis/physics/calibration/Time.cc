@@ -62,7 +62,7 @@ void Time::ProcessEvent(const TEvent& event, manager_t&)
     }
 
     for(const auto& cand: event.Reconstructed().Candidates) {
-        for(const TCluster& cluster: cand->Clusters) {
+        for(const TCluster& cluster: cand.Clusters) {
             if(cluster.DetectorType != Detector->Type)
                 continue;
             hTime->Fill(cluster.Time, cluster.CentralElement);

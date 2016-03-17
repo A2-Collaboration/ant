@@ -98,7 +98,7 @@ void FindProton::ProcessEvent(const TEvent& event, manager_t&)
 
     steps->Fill("Total", 1.0);
 
-    const auto cands = event.Reconstructed().Candidates;
+    const auto& cands = event.Reconstructed().Candidates;
 
     if(cands.size() != nPhotons+1)
         return;
@@ -119,7 +119,7 @@ void FindProton::ProcessEvent(const TEvent& event, manager_t&)
         if(true_proton && true_photons.size() == 3) {
 
             const auto matched  = utils::match1to1(mcparticles,
-                                                   cands,
+                                                   cands.get_ptr_list(),
                                                    [] (const TParticlePtr& p1, const TCandidatePtr& p2) {
                 return p1->Angle(*p2);
             }, {0.0, degree_to_radian(15.0)});
@@ -147,7 +147,7 @@ void FindProton::ProcessEvent(const TEvent& event, manager_t&)
 
         list<shared_ptr<branches_t>> b;
 
-        for(utils::ProtonPermutation perm(event.Reconstructed().Candidates, matchedProton); perm.Good(); perm.Next()) {
+        for(utils::ProtonPermutation perm(event.Reconstructed().Candidates.get_ptr_list(), matchedProton); perm.Good(); perm.Next()) {
 
             auto branches = make_shared<branches_t>();
 

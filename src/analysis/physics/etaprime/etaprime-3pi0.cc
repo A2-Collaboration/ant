@@ -156,7 +156,7 @@ void Etap3pi0::ProcessEvent(const TEvent& event, manager_t&)
     hists.at("steps").at("evcount")->Fill("3) 7 candidates",1);
 
     vars.protonTime = std_ext::NaN;
-    for(const auto& cand : data.Candidates)
+    for(const auto& cand : data.Candidates.get_iter())
     {
         if(cand->Detector & Detector_t::Type_t::TAPS)
         {
@@ -174,9 +174,9 @@ void Etap3pi0::ProcessEvent(const TEvent& event, manager_t&)
     hists.at("steps").at("evcount")->Fill("4) proton in TAPS",1);
     vars.etaprimeCand = {};
 
-    for ( const auto& cand: data.Candidates )
+    for ( const auto& cand: data.Candidates.get_iter() )
     {
-       if ( cand != proton->Candidate )
+       if ( cand.get_ptr() != proton->Candidate )
        {
          auto photon = make_shared<TParticle>(ParticleTypeDatabase::Photon, cand);
          vars.etaprimeCand += *photon;

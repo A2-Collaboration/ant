@@ -103,7 +103,7 @@ void EtapOmegaG::ProcessEvent(const TEvent& event, manager_t&)
     /// \todo think about using beta here as in EtapProton?
     t.ProtonTime = std_ext::NaN;
     TParticlePtr proton;
-    for(const TCandidatePtr& cand : data.Candidates) {
+    for(const auto& cand : data.Candidates.get_iter()) {
         if(cand->Detector & Detector_t::Type_t::TAPS) {
             if(!isfinite(t.ProtonTime) || t.ProtonTime < cand->Time) {
                 t.ProtonTime = cand->Time;
@@ -127,8 +127,8 @@ void EtapOmegaG::ProcessEvent(const TEvent& event, manager_t&)
     t.nPhotonsCB = 0;
     t.nPhotonsTAPS = 0;
     t.CBSumVetoE = 0;
-    for(const TCandidatePtr& cand : data.Candidates) {
-         if(cand == proton->Candidate)
+    for(const auto& cand : data.Candidates.get_iter()) {
+         if(cand.get_ptr() == proton->Candidate)
              continue;
          if(cand->Detector & Detector_t::Type_t::CB) {
              t.nPhotonsCB++;

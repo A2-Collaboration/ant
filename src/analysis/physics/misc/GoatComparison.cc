@@ -54,10 +54,10 @@ void GoatComparison::ProcessEvent(const TEvent& event, manager_t& manager)
     steps->Fill("Seen",1.0);
 
     const auto& cands = event.Reconstructed().Candidates;
-    TCandidateList cands_cb;
+    TCandidatePtrList cands_cb;
 
     double CBSumVetoE = 0;
-    for(const auto& c : cands) {
+    for(const auto& c : cands.get_iter()) {
         if(c->Detector & Detector_t::Any_t::CB_Apparatus) {
             cands_cb.emplace_back(c);
             CBSumVetoE += c->VetoEnergy;

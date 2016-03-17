@@ -73,7 +73,7 @@ void TAPS_Energy::ProcessEvent(const TEvent& event, manager_t&)
     }
 
     // invariant mass of two photons
-    for( auto comb = analysis::utils::makeCombination(cands,2); !comb.Done(); ++comb ) {
+    for( auto comb = analysis::utils::makeCombination(cands.get_ptr_list(),2); !comb.Done(); ++comb ) {
         const TCandidatePtr& cand1 = comb.at(0);
         const TCandidatePtr& cand2 = comb.at(1);
 
@@ -110,10 +110,10 @@ void TAPS_Energy::ProcessEvent(const TEvent& event, manager_t&)
 
     if(ggIM_mult != nullptr) {
         // collect neutral candidates
-        TCandidateList cb_candidates;
-        TCandidateList taps_candidates;
+        TCandidatePtrList cb_candidates;
+        TCandidatePtrList taps_candidates;
 
-        for(const TCandidatePtr& cand : event.Reconstructed().Candidates)
+        for(const auto& cand : event.Reconstructed().Candidates.get_iter())
         {
             if((cand->Detector & Detector_t::Type_t::TAPS)
                && cand->VetoEnergy < 1.0)
@@ -151,12 +151,12 @@ void TAPS_Energy::ProcessEvent(const TEvent& event, manager_t&)
         cands_CB.Clear();
         bool interesting_event = false;
         const vector<unsigned> interesting_channels = {31, 0, 1, 2, 15};
-        for(const TCandidatePtr& cand : event.Reconstructed().Candidates) {
+        for(const TCandidate& cand : event.Reconstructed().Candidates) {
             // find interesting TAPS clusters
-            if(cand->Detector & Detector_t::Type_t::TAPS) {
-                auto taps_cluster = cand->FindCaloCluster();
+            if(cand.Detector & Detector_t::Type_t::TAPS) {
+                auto taps_cluster = cand.FindCaloCluster();
                 if(std_ext::contains(interesting_channels, taps_cluster->CentralElement)) {
-                    cands_TAPS.Fill(*cand);
+                    cands_TAPS.Fill(cand);
                     interesting_event = true;
                 }
             }
@@ -164,10 +164,10 @@ void TAPS_Energy::ProcessEvent(const TEvent& event, manager_t&)
 
         if(interesting_event) {
             bool CB_seen = false;
-            for(const TCandidatePtr& cand : event.Reconstructed().Candidates) {
-                if(cand->Detector & Detector_t::Type_t::CB)
+            for(const TCandidate& cand : event.Reconstructed().Candidates) {
+                if(cand.Detector & Detector_t::Type_t::CB)
                 {
-                    cands_CB.Fill(*cand);
+                    cands_CB.Fill(cand);
                     CB_seen = true;
                 }
             }

@@ -39,12 +39,12 @@ void ProtonCheck::ProcessEvent(const TEvent& event, manager_t&)
 
                 for(const auto& cand : event.Reconstructed().Candidates) {
 
-                    if(cand->Detector & Detector_t::Any_t::TAPS_Apparatus) {
-                        tof->Fill(cand->Time, cand->CaloEnergy);
-                        tof_trueE->Fill(cand->Time, mctrue->Ek());
-                        dEE->Fill(cand->CaloEnergy, cand->VetoEnergy);
-                        theta->Fill(cand->Theta*TMath::RadToDeg());
-                        theta_corr->Fill(mctrue->Theta()*TMath::RadToDeg(), cand->Theta*TMath::RadToDeg());
+                    if(cand.Detector & Detector_t::Any_t::TAPS_Apparatus) {
+                        tof->Fill(cand.Time, cand.CaloEnergy);
+                        tof_trueE->Fill(cand.Time, mctrue->Ek());
+                        dEE->Fill(cand.CaloEnergy, cand.VetoEnergy);
+                        theta->Fill(cand.Theta*TMath::RadToDeg());
+                        theta_corr->Fill(mctrue->Theta()*TMath::RadToDeg(), cand.Theta*TMath::RadToDeg());
                     }
                 }
 

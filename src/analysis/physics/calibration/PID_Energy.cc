@@ -157,26 +157,26 @@ void PID_Energy::ProcessEvent(const TEvent& event, manager_t&)
     // bananas per channel histograms
     for(const auto& candidate : event.Reconstructed().Candidates) {
         // only candidates with one cluster in CB and one cluster in PID
-        if(candidate->Clusters.size() != 2)
+        if(candidate.Clusters.size() != 2)
             continue;
-        const bool cb_and_pid = candidate->Detector & Detector_t::Type_t::CB &&
-                                candidate->Detector & Detector_t::Type_t::PID;
+        const bool cb_and_pid = candidate.Detector & Detector_t::Type_t::CB &&
+                                candidate.Detector & Detector_t::Type_t::PID;
         if(!cb_and_pid)
             continue;
 
         // search for PID cluster
-        const auto& pid_cluster = candidate->FindFirstCluster(Detector_t::Type_t::PID);
+        const auto& pid_cluster = candidate.FindFirstCluster(Detector_t::Type_t::PID);
 
-        h_bananas->Fill(candidate->CaloEnergy,
-                        candidate->VetoEnergy,
+        h_bananas->Fill(candidate.CaloEnergy,
+                        candidate.VetoEnergy,
                         pid_cluster->CentralElement);
 
         // per channel histograms
         PerChannel_t& h = h_perChannel[pid_cluster->CentralElement];
 
         // fill the banana
-        h.Banana->Fill(candidate->CaloEnergy,
-                       candidate->VetoEnergy);
+        h.Banana->Fill(candidate.CaloEnergy,
+                       candidate.VetoEnergy);
 
         // is there an pedestal available?
         const auto it_hit = hits.find(pid_cluster->CentralElement);
@@ -189,8 +189,8 @@ void PID_Energy::ProcessEvent(const TEvent& event, manager_t&)
 
         const auto& pedestal = pedestals.front();
 
-        h.BananaRaw->Fill(candidate->CaloEnergy, pedestal);
-        //h.BananaTiming->Fill(candidate->ClusterEnergy(), candidate->VetoEnergy(), timing);
+        h.BananaRaw->Fill(candidate.CaloEnergy, pedestal);
+        //h.BananaTiming->Fill(candidate.ClusterEnergy(), candidate.VetoEnergy(), timing);
 
     }
 }

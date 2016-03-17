@@ -92,11 +92,11 @@ void EtapProton::ProcessEvent(const TEvent& event, manager_t& manager)
     steps->Fill("Seen",1.0);
 
     const auto& cands = event.Reconstructed().Candidates;
-    TCandidateList cands_taps;
-    TCandidateList cands_cb;
+    TCandidatePtrList cands_taps;
+    TCandidatePtrList cands_cb;
 
     b_CBSumVetoE = 0;
-    for(const auto& p : cands) {
+    for(const auto& p : cands.get_iter()) {
         if(p->Detector & Detector_t::Any_t::TAPS_Apparatus) {
             cands_taps.emplace_back(p);
         }

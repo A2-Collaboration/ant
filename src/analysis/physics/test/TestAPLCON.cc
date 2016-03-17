@@ -229,7 +229,7 @@ void TestAPLCON::ProcessEvent(const TEvent& event, manager_t&)
 
 
     for(auto& cand : event.Reconstructed().Candidates) {
-        banana->Fill(cand->CaloEnergy, cand->VetoEnergy);
+        banana->Fill(cand.CaloEnergy, cand.VetoEnergy);
     }
 
     for(auto& particle : event.Reconstructed().Particles.GetAll()) {

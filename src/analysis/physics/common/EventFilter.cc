@@ -33,7 +33,7 @@ TLorentzVector sum_particles(const TParticleList& particles) {
 bool EventFilter::checkCoplanarity(const TCandidateList &cands, const double maxangle)
 {
 
-    for(utils::ProtonPermutation perm(cands); perm.Good(); perm.Next()) {
+    for(utils::ProtonPermutation perm(cands.get_ptr_list()); perm.Good(); perm.Next()) {
         const TLorentzVector photons = sum_particles(perm.Photons());
         const auto& proton = perm.Proton();
 

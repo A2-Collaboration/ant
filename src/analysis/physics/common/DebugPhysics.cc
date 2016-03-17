@@ -75,8 +75,8 @@ void DebugPIDAlignment::ProcessEvent(const TEvent& event, manager_t&)
     if(event.MCTrue().Particles.GetAll().size() == 1) {
         const auto mctrue_phi = event.MCTrue().Particles.GetAll().front()->Phi() * TMath::RadToDeg();
 
-        for(const TCandidatePtr& cand : event.Reconstructed().Candidates) {
-            for(const TCluster& c : cand->Clusters) {
+        for(const TCandidate& cand : event.Reconstructed().Candidates) {
+            for(const TCluster& c : cand.Clusters) {
                 if(c.DetectorType == Detector_t::Type_t::PID) {
                     angles_mc->Fill(mctrue_phi, c.Position.Phi()* TMath::RadToDeg());
                 }
@@ -84,10 +84,10 @@ void DebugPIDAlignment::ProcessEvent(const TEvent& event, manager_t&)
         }
     }
 
-    for(const TCandidatePtr& cand : event.Reconstructed().Candidates) {
-        if(cand->Detector & Detector_t::Any_t::CB_Apparatus) {
-            auto cl_cb = cand->FindCaloCluster();
-            auto cl_pid = cand->FindVetoCluster();
+    for(const TCandidate& cand : event.Reconstructed().Candidates) {
+        if(cand.Detector & Detector_t::Any_t::CB_Apparatus) {
+            auto cl_cb = cand.FindCaloCluster();
+            auto cl_pid = cand.FindVetoCluster();
             if(cl_cb && cl_pid) {
                 angles_candidates->Fill(cl_pid->Position.Phi()*TMath::RadToDeg(),
                                         cl_cb->Position.Phi()*TMath::RadToDeg());
@@ -97,10 +97,10 @@ void DebugPIDAlignment::ProcessEvent(const TEvent& event, manager_t&)
 
     const auto& clusters =  event.Reconstructed().Clusters;
 
-    auto cb_clusters = clusters.get_const_list([] (const TCluster& cluster) {
+    auto cb_clusters = clusters.get_ptr_list([] (const TCluster& cluster) {
         return cluster.DetectorType == Detector_t::Type_t::CB;
     });
-    auto pid_clusters = clusters.get_const_list([] (const TCluster& cluster) {
+    auto pid_clusters = clusters.get_ptr_list([] (const TCluster& cluster) {
         return cluster.DetectorType == Detector_t::Type_t::PID;
     });
 

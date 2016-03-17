@@ -68,7 +68,7 @@ unsigned OmegaBase::geoAccepted(const TCandidateList& cands) const {
     unsigned n = 0;
 
     for( auto& c : cands) {
-        if( geo.DetectorFromAngles(c->Theta, c->Phi) != Detector_t::Any_t::None )
+        if( geo.DetectorFromAngles(c.Theta, c.Phi) != Detector_t::Any_t::None )
             ++n;
     }
 
@@ -619,7 +619,7 @@ void OmegaEtaG2::Analyse(const TEventData &data, const TEvent& event, manager_t&
     TParticleList iphotons;
     TParticleList iprotons;
 
-    for(auto p: data.Candidates) {
+    for(auto p: data.Candidates.get_iter()) {
         if(p->VetoEnergy < .25) {
             iphotons.emplace_back(make_shared<TParticle>(ParticleTypeDatabase::Photon, p));
         } else {

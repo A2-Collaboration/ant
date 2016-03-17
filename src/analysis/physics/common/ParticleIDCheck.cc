@@ -50,10 +50,10 @@ void ParticleIDCheck::ProcessEvent(const TEvent& event, manager_t&)
         for(const auto& banana : bananas) {
             const auto& phi_range = std::get<0>(banana);
             const auto& theta_range = std::get<1>(banana);
-            if(phi_range.Contains(std_ext::radian_to_degree(candidate->Phi)) &&
-               theta_range.Contains(std_ext::radian_to_degree(candidate->Theta))) {
+            if(phi_range.Contains(std_ext::radian_to_degree(candidate.Phi)) &&
+               theta_range.Contains(std_ext::radian_to_degree(candidate.Theta))) {
                 const auto& h = std::get<2>(banana);
-                h->Fill(candidate->CaloEnergy, candidate->VetoEnergy);
+                h->Fill(candidate.CaloEnergy, candidate.VetoEnergy);
             }
         }
     }
