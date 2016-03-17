@@ -22,8 +22,8 @@ std::vector<double> McTrue3Pi0::GetAllPhotonAngles(const TParticleList& photons)
     for ( unsigned i = 0 ; i < photons.size() ; ++i )
         for ( unsigned j = i + 1 ; j < photons.size() ; ++j)
         {
-            TVector3 ph_i(photons.at(i)->Vect());
-            TVector3 ph_j(photons.at(j)->Vect());
+            TVector3 ph_i(photons.at(i)->p);
+            TVector3 ph_j(photons.at(j)->p);
 
             angles.at(index) = ph_i.Angle(ph_j);
             index++;
@@ -68,7 +68,7 @@ void McTrue3Pi0::ProcessEvent(const TEvent& event, manager_t&)
         for (int i = 0 ; i < 3 ; ++i)
         {
             pi0s.at(i) = ParticleVars(*(pions.at(i)));
-            popens.at(i) = photons.at(2*i)->Vect().Angle(photons.at(2*i+1)->Vect()) * TMath::RadToDeg();
+            popens.at(i) = photons.at(2*i)->p.Angle(photons.at(2*i+1)->p) * TMath::RadToDeg();
         }
         for (int i = 0 ; i < 6 ; ++i)
             gammas.at(i) = ParticleVars(*photons.at(i));

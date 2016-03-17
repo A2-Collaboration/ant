@@ -191,8 +191,8 @@ TargetOverview::~TargetOverview()
 void TargetOverview::ProcessEvent(const TEvent& event, manager_t&)
 {
     const auto& target = GetBranch(event).Target;
-    VertexXY->Fill(target.Vertex.X(), target.Vertex.Y());
-    VertexZ->Fill(target.Vertex.Z());
+    VertexXY->Fill(target.Vertex.x, target.Vertex.y);
+    VertexZ->Fill(target.Vertex.z);
 }
 
 void TargetOverview::ShowResult()

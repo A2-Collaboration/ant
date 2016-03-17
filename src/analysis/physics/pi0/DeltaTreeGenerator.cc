@@ -55,10 +55,7 @@ void DeltaTreeGenerator::ProcessEvent(const TEvent& event, manager_t&)
     for ( size_t i = 0 ; i < photons.size() ; ++i)
     {
         TLorentzVector* lph = (TLorentzVector*)reconstructed->ConstructedAt(i);
-        lph->SetPxPyPzE(photons.at(i)->Px(),
-                        photons.at(i)->Py(),
-                        photons.at(i)->Pz(),
-                        photons.at(i)->E());
+        *lph = *photons.at(i);
     }
 
     mctrue->Clear();
@@ -66,10 +63,7 @@ void DeltaTreeGenerator::ProcessEvent(const TEvent& event, manager_t&)
     for ( size_t i = 0 ; i < mc_photons.size() ; ++i)
     {
         TLorentzVector* lph = (TLorentzVector*)mctrue->ConstructedAt(i);
-        lph->SetPxPyPzE(mc_photons.at(i)->Px(),
-                        mc_photons.at(i)->Py(),
-                        mc_photons.at(i)->Pz(),
-                        mc_photons.at(i)->E());
+        *lph = *mc_photons.at(i);
     }
 
 

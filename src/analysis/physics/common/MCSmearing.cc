@@ -59,7 +59,7 @@ void MCSmearing::ProcessEvent(const TEvent& event, manager_t&)
 
         const auto& true_theta = std_ext::radian_to_degree(true_g->Theta());
 
-        angles->Fill(true_g->Ek(), true_theta, std_ext::radian_to_degree(reco_g->Angle(true_g->Vect())));
+        angles->Fill(true_g->Ek(), true_theta, std_ext::radian_to_degree(reco_g->Angle(*true_g)));
         energies->Fill(true_g->Ek(), true_theta, (reco_g->Ek()-true_g->Ek())/true_g->Ek());
     }
 

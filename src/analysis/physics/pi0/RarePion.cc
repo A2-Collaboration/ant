@@ -118,14 +118,14 @@ void RarePion::ProcessEvent(const TEvent& event, manager_t&)
         } while(combinations4.next());
 
         for( auto comb = utils::makeCombination(photons,2); !comb.Done(); ++comb) {
-            minAngle->Fill(comb.at(0)->Angle(comb.at(1)->Vect())*TMath::RadToDeg());
+            minAngle->Fill(comb.at(0)->Angle(comb.at(1)->p)*TMath::RadToDeg());
         }
 
         if(photons.size() == 2) { // cut already on # of clusters
             const TParticle pi02g ( ParticleTypeDatabase::Pi0, *photons.at(0) + *photons.at(1));
             im_2g->Fill(pi02g.M());
             for( auto comb = utils::makeCombination(photons,2); !comb.Done(); ++comb) {
-                minAngle2g->Fill(comb.at(0)->Angle(comb.at(1)->Vect())*TMath::RadToDeg());
+                minAngle2g->Fill(comb.at(0)->Angle(comb.at(1)->p)*TMath::RadToDeg());
             }
         }
 
@@ -133,9 +133,9 @@ void RarePion::ProcessEvent(const TEvent& event, manager_t&)
             const TParticle pi03g ( ParticleTypeDatabase::Pi0, *photons.at(0) + *photons.at(1) + *photons.at(2));
             im_3g->Fill(pi03g.M());
             Double_t anglemin = 180;
-            angle01 = photons.at(0)->Angle(photons.at(1)->Vect())*TMath::RadToDeg();
-            angle02 = photons.at(0)->Angle(photons.at(2)->Vect())*TMath::RadToDeg();
-            angle12 = photons.at(1)->Angle(photons.at(2)->Vect())*TMath::RadToDeg();
+            angle01 = photons.at(0)->Angle(photons.at(1)->p)*TMath::RadToDeg();
+            angle02 = photons.at(0)->Angle(photons.at(2)->p)*TMath::RadToDeg();
+            angle12 = photons.at(1)->Angle(photons.at(2)->p)*TMath::RadToDeg();
             if (angle01 < angle02){
                 if (angle01 < angle12){
                     //Fall1, vectors 01

@@ -421,8 +421,8 @@ void ReconstructCheck::TAPSVetoMatch::Fill(const TCandidateList& cands, const TC
             for(const TCandidate& cCand : cands) {
                 const auto cCluster = cCand.FindCaloCluster();
                 if(cCluster && cCluster->DetectorType == Detector_t::Type_t::TAPS) {
-                    const auto dx = vCluster->Position.X() - cCluster->Position.X();
-                    const auto dy = vCluster->Position.Y() - cCluster->Position.Y();
+                    const auto dx = vCluster->Position.x - cCluster->Position.x;
+                    const auto dy = vCluster->Position.y - cCluster->Position.y;
                     const auto d  = sqrt(sqr(dx)+sqr(dy));
                     this->vetoElement_dist->Fill(vCluster->CentralElement, d);
                 }

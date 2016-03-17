@@ -199,7 +199,7 @@ void JustPi0::MultiPi0::ProcessData(const TEventData& data, const TParticleTree_
             if(skipfit)
                 continue;
 
-            auto angle_p_calcp = std_ext::radian_to_degree(missing.Angle(proton->Vect()));
+            auto angle_p_calcp = std_ext::radian_to_degree(missing.Angle(proton->p));
             if(angle_p_calcp > 15.0)
                 continue;
             steps->Fill("p angle < 15.0#circ", 1.0);

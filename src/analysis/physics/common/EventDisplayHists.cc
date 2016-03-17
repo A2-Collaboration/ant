@@ -64,7 +64,7 @@ void EventDisplayHists::ProcessEvent(const TEvent& event, manager_t&)
             tapsCal->SetElement(hit.Channel, hit.Energy);
         }
 
-        tapsCal->CreateMarker(cluster->Position.XYvector(), kFullCircle, kOpenCircle);
+        tapsCal->CreateMarker(cluster->Position.XY(), kFullCircle, kOpenCircle);
 
         tapsCal->CreateMarker(cluster->CentralElement);
 
@@ -74,7 +74,7 @@ void EventDisplayHists::ProcessEvent(const TEvent& event, manager_t&)
 
     for(const auto& p : true_particles) {
         if(p->Theta() < degree_to_radian(30.0)) {
-            const auto xy = p->Vect().XYvector() * tapsZ / p->Vect().Z();
+            const auto xy = p->p.XY() * tapsZ / p->p.z;
 
             tapsCal->CreateMarker(xy, kFullSquare, kOpenSquare);
 

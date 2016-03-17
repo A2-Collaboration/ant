@@ -535,7 +535,7 @@ void EtapOmegaG::Sig_t::Pi0_t::Process(const EtapOmegaG::Particles_t& particles,
             auto true_photons = utils::ParticleTools::FindParticles(ParticleTypeDatabase::Photon, ptree_sigref);
             assert(true_photons.size() == 4);
             auto match_bycandidate = [] (const TParticlePtr& mctrue, const TParticlePtr& recon) {
-                return mctrue->Angle(*recon->Candidate); // TCandidate converts into TVector3
+                return mctrue->Angle(*recon->Candidate); // TCandidate converts into vec3
             };
             auto matched = utils::match1to1(true_photons, particles.Photons,
                                             match_bycandidate,IntervalD(0.0, 15.0*TMath::DegToRad()));
