@@ -3,8 +3,7 @@
 #include "TID.h" // TKeyValue
 
 #include "base/printable.h"
-
-#include "TLorentzVector.h"
+#include "base/LorentzVec.h"
 
 #include <vector>
 #include <iomanip>
@@ -61,8 +60,8 @@ struct TTaggerHit : printable_traits
         archive(PhotonEnergy, Time, Channel, Electrons);
     }
 
-    TLorentzVector GetPhotonBeam() const {
-        return TLorentzVector(0.0, 0.0, PhotonEnergy, PhotonEnergy);
+    LorentzVec GetPhotonBeam() const {
+        return {0.0, 0.0, PhotonEnergy, PhotonEnergy};
     }
 
 
