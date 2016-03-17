@@ -27,16 +27,17 @@ void PID_PhiAngle::ProcessEvent(const TEvent& event, manager_t&)
 
     TClusterPtr cluster_pid;
     TClusterPtr cluster_cb;
-    for(const TClusterPtr& cl : event.Reconstructed->Clusters) {
-        if(cl->DetectorType == Detector_t::Type_t::PID) {
+    auto& clusters = event.Reconstructed().Clusters;
+    for(auto it_cl = clusters.begin(); it_cl != clusters.end(); ++it_cl) {
+        if(it_cl->DetectorType == Detector_t::Type_t::PID) {
             if(cluster_pid)
                 return;
-            cluster_pid = cl;
+            cluster_pid = it_cl.get_ptr();
         }
-        else if(cl->DetectorType == Detector_t::Type_t::CB) {
+        else if(it_cl->DetectorType == Detector_t::Type_t::CB) {
             if(cluster_cb)
                 return;
-            cluster_cb = cl;
+            cluster_cb = it_cl.get_ptr();
         }
     }
 

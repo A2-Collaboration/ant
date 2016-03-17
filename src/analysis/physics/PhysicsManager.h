@@ -41,7 +41,7 @@ protected:
     std::unique_ptr<input::DataReader> source;
 
     void InitReaders(readers_t readers_);
-    bool TryReadEvent(TEventPtr& event);
+    bool TryReadEvent(TEvent& event);
 
     std::unique_ptr<SlowControlManager> slowcontrol_mgr;
 

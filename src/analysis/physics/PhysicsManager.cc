@@ -90,6 +90,7 @@ void PhysicsManager::ReadFrom(
 
     bool reached_maxevents = false;
 
+
     last_PercentDone = 0;
     ProgressCounter progress(
                 [this] (std::chrono::duration<double> elapsed) {
@@ -111,7 +112,7 @@ void PhysicsManager::ReadFrom(
                 break;
             }
 
-            auto event = std_ext::make_unique<TEvent>();
+            TEvent event;
             if(!TryReadEvent(event)) {
                 VLOG(5) << "No more events to read, finish.";
                 reached_maxevents = true;
@@ -152,12 +153,12 @@ void PhysicsManager::ReadFrom(
                         break;
                 }
 
-                TEvent& event = *buffered_event.Event;
+                TEvent& event = buffered_event.Event;
                 if(!reached_maxevents && !event.SavedForSlowControls) {
                     ProcessEvent(event, manager);
 
                     // prefer Reconstructed ID, but at least one branch should be non-null
-                    const auto& eventid = event.Reconstructed ? event.Reconstructed->ID : event.MCTrue->ID;
+                    const auto& eventid = event.HasReconstructed() ? event.Reconstructed().ID : event.MCTrue().ID;
                     if(nEventsAnalyzed==0)
                         firstID = eventid;
                     lastID = eventid;
@@ -213,11 +214,11 @@ void PhysicsManager::ReadFrom(
 }
 
 
-bool PhysicsManager::TryReadEvent(TEventPtr& event)
+bool PhysicsManager::TryReadEvent(TEvent& event)
 {
     bool event_read = false;
     if(source) {
-        if(!source->ReadNextEvent(*event)) {
+        if(!source->ReadNextEvent(event)) {
             return false;
         }
         event_read = true;
@@ -227,7 +228,7 @@ bool PhysicsManager::TryReadEvent(TEventPtr& event)
     auto it_amender = amenders.begin();
     while(it_amender != amenders.end()) {
 
-        if((*it_amender)->ReadNextEvent(*event)) {
+        if((*it_amender)->ReadNextEvent(event)) {
             ++it_amender;
             event_read = true;
         }
@@ -241,13 +242,13 @@ bool PhysicsManager::TryReadEvent(TEventPtr& event)
 
 void PhysicsManager::ProcessEvent(TEvent& event, physics::manager_t& manager)
 {
-    if(particleID && event.Reconstructed) {
+    if(particleID && event.HasReconstructed()) {
         // run particle ID for Reconstructed candidates
         // but only if there are no identified particles present yet
         /// \todo implement flag to force particle ID again?
-        TEventData& recon = *event.Reconstructed;
+        TEventData& recon = event.Reconstructed();
         if(recon.Particles.GetAll().empty()) {
-            for(const auto& cand : recon.Candidates) {
+            for(auto cand : recon.Candidates.get_iter()) {
                 auto particle = particleID->Process(cand);
                 if(particle)
                     recon.Particles.Add(particle);
@@ -255,55 +256,35 @@ void PhysicsManager::ProcessEvent(TEvent& event, physics::manager_t& manager)
         }
     }
 
-    // ensure that physics classes always
-    // have at least empty TEventData branches MCTrue and Reconstructed
-    // use RAII for that
-    struct clean_branch_t {
-        TEventDataPtr& branch;
-        bool clean = false;
-        clean_branch_t(TEventDataPtr& branch_) : branch(branch_) {
-            if(!branch) {
-                // create temporary empty branch
-                branch = std_ext::make_unique<TEventData>();
-                clean = true;
-            }
-        }
-        ~clean_branch_t() {
-            // delete the branch if it was just empty in dtor
-            if(clean)
-                branch = nullptr;
-        }
-    };
-
-    // make sure the branches are non-null for physics classes
-    clean_branch_t rec(event.Reconstructed);
-    clean_branch_t mc(event.MCTrue);
+    event.EnsureTempBranches();
 
     // run the physics classes
     for( auto& m : physics ) {
         m->ProcessEvent(event, manager);
     }
+
+    event.ClearTempBranches();
 }
 
 void PhysicsManager::SaveEvent(slowcontrol::event_t buffered_event, const physics::manager_t& manager)
 {
     auto& event = buffered_event.Event;
 
-    if(manager.saveEvent || buffered_event.Save || event->SavedForSlowControls) {
+    if(manager.saveEvent || buffered_event.Save || event.SavedForSlowControls) {
         if(!buffered_event.Save && treeEvents->GetCurrentFile() == nullptr)
             LOG_N_TIMES(1, WARNING) << "Writing treeEvents to memory. Might be a lot of data!";
 
 
         // always keep read hits if saving for slowcontrol
         if(!manager.keepReadHits && !buffered_event.Save)
-            event->ClearDetectorReadHits();
+            event.ClearDetectorReadHits();
 
         // indicate that this event was saved for slowcontrol purposes only
         if(!manager.saveEvent && buffered_event.Save) {
-            event->SavedForSlowControls = true;
+            event.SavedForSlowControls = true;
         }
 
-        treeEventPtr = event.get();
+        treeEventPtr = addressof(event);
         treeEvents->Fill();
     }
 }

@@ -167,7 +167,7 @@ testdata::testdata()
 
     auto make_candidate = [] (double caloE, double time, double vetoE) {
         return std::make_shared<TCandidate>(Detector_t::Type_t::CB,
-                                            caloE, 0, 0, time, 0, vetoE, 0, std::vector<TClusterPtr>{});
+                                            caloE, 0, 0, time, 0, vetoE, 0, TClusterList{});
     };
 
     //create particles and make sure they fulfill their respective cuts

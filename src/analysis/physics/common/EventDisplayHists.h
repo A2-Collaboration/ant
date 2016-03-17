@@ -20,8 +20,6 @@ protected:
     static constexpr int clusterMarker = 25;  // Empty square
     static constexpr int trueMarker    = 24;  // Empty circle
 
-    TCandidateList taps_cands;
-
 public:
     EventDisplayHists(const std::string& name, OptionsPtr opts);
     virtual ~EventDisplayHists();

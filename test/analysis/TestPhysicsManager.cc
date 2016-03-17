@@ -70,11 +70,11 @@ struct TestPhysics : Physics
     virtual void ProcessEvent(const TEvent& event, physics::manager_t& manager) override
     {
         seenEvents++;
-        seenCandidates += event.Reconstructed->Candidates.size();
-        seenMCTrue += event.MCTrue->Particles.GetAll().size();
+        seenCandidates += event.Reconstructed().Candidates.size();
+        seenMCTrue += event.MCTrue().Particles.GetAll().size();
         // make sure it's non-zero and not nan only for MCTrue
-        seenTrueTargetPos += event.MCTrue->Target.Vertex.Z() < -1;
-        seenReconTargetPosNaN += std::isnan(event.Reconstructed->Target.Vertex.Z());
+        seenTrueTargetPos += event.MCTrue().Target.Vertex.Z() < -1;
+        seenReconTargetPosNaN += std::isnan(event.Reconstructed().Target.Vertex.Z());
         // request to save every third event
         if(!nowrite && seenEvents % 3 == 0)
             manager.SaveEvent();

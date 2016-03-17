@@ -70,11 +70,11 @@ void EtapOmegaG::ProcessEvent(const TEvent& event, manager_t&)
     // later we split into ref/sig analysis according to
     // number of photons
 
-    TEventData& data = *event.Reconstructed;
+    const TEventData& data = event.Reconstructed();
 
     h_CommonCuts->Fill("Seen",1.0);
 
-    auto& particletree = event.MCTrue->ParticleTree;
+    auto& particletree = event.MCTrue().ParticleTree;
 
     h_CommonCuts->Fill("MCTrue #eta'", 0); // ensure the bin is there...
     if(particletree) {
@@ -90,7 +90,7 @@ void EtapOmegaG::ProcessEvent(const TEvent& event, manager_t&)
     h_CommonCuts->Fill("CBEnergySum>550",1.0);
     t.CBSumE = data.Trigger.CBEnergySum;
 
-    t.CBAvgTime = event.Reconstructed->Trigger.CBTiming;
+    t.CBAvgTime = event.Reconstructed().Trigger.CBTiming;
     if(!isfinite(t.CBAvgTime))
         return;
     h_CommonCuts->Fill("CBAvgTime ok",1.0);
@@ -103,7 +103,7 @@ void EtapOmegaG::ProcessEvent(const TEvent& event, manager_t&)
     /// \todo think about using beta here as in EtapProton?
     t.ProtonTime = std_ext::NaN;
     TParticlePtr proton;
-    for(const TCandidatePtr& cand : data.Candidates) {
+    for(const auto& cand : data.Candidates.get_iter()) {
         if(cand->Detector & Detector_t::Type_t::TAPS) {
             if(!isfinite(t.ProtonTime) || t.ProtonTime < cand->Time) {
                 t.ProtonTime = cand->Time;
@@ -127,8 +127,8 @@ void EtapOmegaG::ProcessEvent(const TEvent& event, manager_t&)
     t.nPhotonsCB = 0;
     t.nPhotonsTAPS = 0;
     t.CBSumVetoE = 0;
-    for(const TCandidatePtr& cand : data.Candidates) {
-         if(cand == proton->Candidate)
+    for(const auto& cand : data.Candidates.get_iter()) {
+         if(cand.get_ptr() == proton->Candidate)
              continue;
          if(cand->Detector & Detector_t::Type_t::CB) {
              t.nPhotonsCB++;
@@ -154,9 +154,9 @@ void EtapOmegaG::ProcessEvent(const TEvent& event, manager_t&)
     // sum up the PID energy
     // (might be different to matched CB/PID Veto energy)
     t.PIDSumE = 0;
-    for(const TClusterPtr& cl : data.Clusters) {
-        if(cl->DetectorType == Detector_t::Type_t::PID) {
-            t.PIDSumE += cl->Energy;
+    for(const TCluster& cl : data.Clusters) {
+        if(cl.DetectorType == Detector_t::Type_t::PID) {
+            t.PIDSumE += cl.Energy;
         }
     }
 
@@ -201,7 +201,7 @@ void EtapOmegaG::ProcessEvent(const TEvent& event, manager_t&)
             h_MissedBkg->Fill(decaystr.c_str(), 1.0);
         }
     }
-    else if(!event.MCTrue->ID.IsInvalid()) {
+    else if(!event.MCTrue().ID.IsInvalid()) {
         // in rare cases, the particletree is not available, although we're running on MCTrue
         // mark this as other MC background
         t.MCTrue = 9;

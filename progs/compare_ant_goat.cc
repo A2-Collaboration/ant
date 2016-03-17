@@ -61,8 +61,8 @@ int main( int argc, char** argv )
         treeGoat->GetEntry(entryGoat);
 
         if(!synced) {
-            const auto antEventID = eventAnt->Reconstructed->Trigger.DAQEventID;
-            const auto goatEventID = eventGoat->Reconstructed->Trigger.DAQEventID;
+            const auto antEventID = eventAnt->Reconstructed().Trigger.DAQEventID;
+            const auto goatEventID = eventGoat->Reconstructed().Trigger.DAQEventID;
             if(antEventID < goatEventID) {
                 entryAnt++;
                 continue;
@@ -75,8 +75,8 @@ int main( int argc, char** argv )
             LOG(INFO) << "Synced at ant=" << entryAnt << " goat=" << entryGoat;
         }
 
-        const TEventData& antRecon = *eventAnt->Reconstructed;
-        const TEventData& goatRecon = *eventGoat->Reconstructed;
+        const TEventData& antRecon = eventAnt->Reconstructed();
+        const TEventData& goatRecon = eventGoat->Reconstructed();
 
         if(antRecon.TaggerHits.size() != goatRecon.TaggerHits.size()) {
             LOG(ERROR) << "TaggerHits size mismatch at ant=" << entryAnt << " goat=" << entryGoat;
@@ -156,17 +156,17 @@ int main( int argc, char** argv )
 
             map<unsigned, cluster_t> clusters;
             double antEnergy = 0;
-            for(const TClusterPtr& cl : antRecon.Clusters)
-                if(cl->DetectorType == type && cl->Energy>threshold) {
-                    antEnergy += cl->Energy;
-                    clusters[cl->CentralElement].Ant = cl;
+            for(auto it_cl = antRecon.Clusters.begin(); it_cl != antRecon.Clusters.end(); ++it_cl)
+                if(it_cl->DetectorType == type && it_cl->Energy>threshold) {
+                    antEnergy += it_cl->Energy;
+                    clusters[it_cl->CentralElement].Ant = it_cl.get_ptr();
                 }
 
             double goatEnergy = 0;
-            for(const TClusterPtr& cl : goatRecon.Clusters)
-                if(cl->DetectorType == type && cl->Energy>threshold) {
-                    goatEnergy += cl->Energy;
-                    clusters[cl->CentralElement].Goat = cl;
+            for(auto it_cl = goatRecon.Clusters.begin(); it_cl != goatRecon.Clusters.end(); ++it_cl)
+                if(it_cl->DetectorType == type && it_cl->Energy>threshold) {
+                    goatEnergy += it_cl->Energy;
+                    clusters[it_cl->CentralElement].Goat = it_cl.get_ptr();
                 }
 
             cout << "  EnergySum: " << antEnergy << "/" << goatEnergy << endl;
@@ -207,11 +207,11 @@ int main( int argc, char** argv )
 
         map<unsigned, candidate_t> candidates;
 
-        for(const TCandidatePtr& c : antRecon.Candidates)
+        for(const auto& c : antRecon.Candidates.get_iter())
             if(c->Detector & Detector_t::Any_t::CB_Apparatus)
                 candidates[c->FindCaloCluster()->CentralElement].Ant = c;
 
-        for(const TCandidatePtr& c : goatRecon.Candidates)
+        for(const auto& c : goatRecon.Candidates.get_iter())
             if(c->Detector & Detector_t::Any_t::CB_Apparatus)
                 candidates[c->FindCaloCluster()->CentralElement].Goat = c;
 

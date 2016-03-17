@@ -46,7 +46,7 @@ void dotest() {
     REQUIRE(tree->Branch("branch", "ant::TEvent", &ptr) != nullptr);
 
     while(auto item = unpacker->NextEvent()) {
-        ptr = item.get();
+        *ptr = move(item);
         tree->Fill();
     }
 

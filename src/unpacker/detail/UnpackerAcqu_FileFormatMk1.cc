@@ -78,10 +78,9 @@ void acqu::FileFormatMk1::UnpackEvent(queue_t& queue,
     }
 
     /// \todo Scan mappings if there's an ADC channel defined which mimicks those blocks
-
-    queue.emplace_back(TEvent::MakeReconstructed(id));
-    TEventDataPtr& eventdata = queue.back()->Reconstructed;
-    eventdata->Trigger.DAQEventID = AcquID_last;
+    queue.emplace_back(id);
+    TEventData& eventdata = queue.back().Reconstructed();
+    eventdata.Trigger.DAQEventID = AcquID_last;
 
     hit_storage.clear();
     // there might be more than one scaler block in each event, so
@@ -102,7 +101,7 @@ void acqu::FileFormatMk1::UnpackEvent(queue_t& queue,
             break;
         case acqu::EReadError:
             // read error block, some hardware-related information
-            HandleDAQError(eventdata->Trigger.DAQErrors, it, it_endevent, good);
+            HandleDAQError(eventdata.Trigger.DAQErrors, it, it_endevent, good);
             break;
         default:
             // unfortunately, normal hits don't have a marker
@@ -128,8 +127,8 @@ void acqu::FileFormatMk1::UnpackEvent(queue_t& queue,
 
 
     // hit_storage is member variable for better memory allocation performance
-    FillDetectorReadHits(eventdata->DetectorReadHits);
-    FillSlowControls(scalers, eventdata->SlowControls);
+    FillDetectorReadHits(eventdata.DetectorReadHits);
+    FillSlowControls(scalers, eventdata.SlowControls);
 
     it++; // go to start word of next event (if any)
 }

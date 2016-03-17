@@ -78,7 +78,7 @@ const ParticleTypeDatabase::Type* BasicParticleID::Identify(const TCandidatePtr&
     return nullptr;
 }
 
-std::shared_ptr<TParticle> ParticleID::Process(const TCandidatePtr& cand) const
+TParticlePtr ParticleID::Process(const TCandidatePtr& cand) const
 {
     auto type = Identify(cand);
     if(type !=nullptr) {

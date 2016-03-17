@@ -36,7 +36,7 @@ using namespace ant::std_ext;
 
 void OmegaBase::ProcessEvent(const TEvent& event, manager_t& manager)
 {
-    const auto& data = mode==DataMode::Reconstructed ? *event.Reconstructed : *event.MCTrue;
+    const auto& data = mode==DataMode::Reconstructed ? event.Reconstructed() : event.MCTrue();
     Analyse(data, event, manager);
 }
 
@@ -68,7 +68,7 @@ unsigned OmegaBase::geoAccepted(const TCandidateList& cands) const {
     unsigned n = 0;
 
     for( auto& c : cands) {
-        if( geo.DetectorFromAngles(c->Theta, c->Phi) != Detector_t::Any_t::None )
+        if( geo.DetectorFromAngles(c.Theta, c.Phi) != Detector_t::Any_t::None )
             ++n;
     }
 
@@ -151,7 +151,7 @@ void OmegaEtaG::Analyse(const TEventData &data, const TEvent& event, manager_t&)
 
     perDecayhists_t* h = nullptr;
 
-    const string& decaystring = utils::ParticleTools::GetDecayString(event.MCTrue->ParticleTree);
+    const string& decaystring = utils::ParticleTools::GetDecayString(event.MCTrue().ParticleTree);
 
     if( h == nullptr) {
 
@@ -225,12 +225,12 @@ void OmegaEtaG::Analyse(const TEventData &data, const TEvent& event, manager_t&)
             h->ggg->Fill(gggIM);
         }
 
-        const auto& mc_protons = event.MCTrue->Particles.Get(ParticleTypeDatabase::Proton);
+        const auto& mc_protons = event.MCTrue().Particles.Get(ParticleTypeDatabase::Proton);
 
         const TParticlePtr mc_p = !mc_protons.empty() ? mc_protons.at(0) : shared_ptr<TParticle>(nullptr);
 
         if(omega_range.Contains(gggIM) && h) {
-            for(auto& th : event.MCTrue->TaggerHits) {
+            for(auto& th : event.MCTrue().TaggerHits) {
                 const TLorentzVector beam_target = th.GetPhotonBeam() + TLorentzVector(0, 0, 0, ParticleTypeDatabase::Proton.Mass());
                 const TLorentzVector mm = beam_target - gggState;
                 const TLorentzVector mm_boosted = Boost(mm,-beam_target.BoostVector());
@@ -393,7 +393,7 @@ OmegaMCTruePlots::OmegaMCTruePlots(const std::string& name, OptionsPtr opts):
 
 void OmegaMCTruePlots::ProcessEvent(const TEvent& event, manager_t&)
 {
-    const auto& decaystring =utils::ParticleTools::GetProductionChannelString(event.MCTrue->ParticleTree);
+    const auto& decaystring =utils::ParticleTools::GetProductionChannelString(event.MCTrue().ParticleTree);
 
     auto e = channels.find(decaystring);
 
@@ -402,7 +402,7 @@ void OmegaMCTruePlots::ProcessEvent(const TEvent& event, manager_t&)
     }
 
     e = channels.find(decaystring);
-    e->second.Fill(*event.MCTrue);
+    e->second.Fill(event.MCTrue());
 }
 
 void OmegaMCTruePlots::Finish()
@@ -462,7 +462,7 @@ OmegaMCTree::~OmegaMCTree()
 
 void OmegaMCTree::ProcessEvent(const TEvent& event, manager_t&)
 {
-    if(!event.MCTrue->ParticleTree)
+    if(!event.MCTrue().ParticleTree)
         return;
 
     struct TreeItem_t {
@@ -499,7 +499,7 @@ void OmegaMCTree::ProcessEvent(const TEvent& event, manager_t&)
         return false;
     };
 
-    if(event.MCTrue->ParticleTree->IsEqual(signal_tree, comparer))
+    if(event.MCTrue().ParticleTree->IsEqual(signal_tree, comparer))
         tree->Fill();
 }
 
@@ -583,14 +583,14 @@ double getTime(const TParticlePtr& p) {
 void OmegaEtaG2::Analyse(const TEventData &data, const TEvent& event, manager_t&)
 {
 
-    const auto& particletree = event.MCTrue->ParticleTree;
+    const auto& particletree = event.MCTrue().ParticleTree;
 
     //const auto& mctrue_photons = event.MCTrue().Particles().Get(ParticleTypeDatabase::Photon);
-    t.Channel = reaction_channels.identify(event.MCTrue->ParticleTree);
+    t.Channel = reaction_channels.identify(event.MCTrue().ParticleTree);
 
     if(t.Channel == ReactionChannelList_t::other_index) {
-        if(event.MCTrue->ParticleTree!=nullptr) {
-            missed_channels->Fill(utils::ParticleTools::GetDecayString(event.MCTrue->ParticleTree).c_str(), 1.0);
+        if(event.MCTrue().ParticleTree!=nullptr) {
+            missed_channels->Fill(utils::ParticleTools::GetDecayString(event.MCTrue().ParticleTree).c_str(), 1.0);
         }
     } else {
         found_channels->Fill(t.Channel);
@@ -619,7 +619,7 @@ void OmegaEtaG2::Analyse(const TEventData &data, const TEvent& event, manager_t&
     TParticleList iphotons;
     TParticleList iprotons;
 
-    for(auto p: data.Candidates) {
+    for(auto p: data.Candidates.get_iter()) {
         if(p->VetoEnergy < .25) {
             iphotons.emplace_back(make_shared<TParticle>(ParticleTypeDatabase::Photon, p));
         } else {
@@ -685,7 +685,7 @@ void OmegaEtaG2::Analyse(const TEventData &data, const TEvent& event, manager_t&
 
     steps->Fill("4 Coplanarity", 1);
 
-    t.CBAvgTime = event.Reconstructed->Trigger.CBTiming;
+    t.CBAvgTime = event.Reconstructed().Trigger.CBTiming;
     if(!isfinite(t.CBAvgTime))
         return;
 

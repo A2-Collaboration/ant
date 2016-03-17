@@ -28,9 +28,9 @@ JustPi0::JustPi0(const string& name, OptionsPtr opts) :
 
 void JustPi0::ProcessEvent(const TEvent& event, manager_t&)
 {
-    const auto& data = *event.Reconstructed;
+    const auto& data = event.Reconstructed();
     for(auto& m : multiPi0)
-        m->ProcessData(data, event.MCTrue->ParticleTree);
+        m->ProcessData(data, event.MCTrue().ParticleTree);
 }
 
 void JustPi0::ShowResult()
@@ -84,10 +84,7 @@ JustPi0::MultiPi0::MultiPi0(HistogramFactory& histFac, unsigned nPi0, bool nofit
     tree->Branch("Tagg_Ch", addressof(Tagg_Ch));
     tree->Branch("Tagg_E", addressof(Tagg_E));
 
-    tree->Branch("Proton",addressof(Proton));
-    tree->Branch("ProtonMCTrue",addressof(ProtonMCTrue));
     tree->Branch("ProtonMCTrueMatches",addressof(ProtonMCTrueMatches));
-    tree->Branch("Photons",addressof(Photons));
 
     fitter.SetupBranches(tree, "Fit");
 
@@ -133,7 +130,7 @@ void JustPi0::MultiPi0::ProcessData(const TEventData& data, const TParticleTree_
 
         auto mymatcher = [&cands] (const std::vector<TParticlePtr> true_particles) {
             return utils::match1to1(true_particles,
-                                    cands,
+                                    cands.get_ptr_list(),
                                     [] (const TParticlePtr& p1, const TCandidatePtr& p2) {
                 return p1->Angle(*p2);
             }, {0.0, std_ext::degree_to_radian(15.0)});
@@ -149,14 +146,14 @@ void JustPi0::MultiPi0::ProcessData(const TEventData& data, const TParticleTree_
 
     // use any candidate as proton, and do the analysis (ignore ParticleID stuff)
 
-    for(auto i_proton=cands.begin();i_proton!=cands.end();i_proton++) {
+    for(auto i_proton : cands.get_iter()) {
 
-        const auto proton = std::make_shared<TParticle>(ParticleTypeDatabase::Proton, *i_proton);
+        const auto proton = std::make_shared<TParticle>(ParticleTypeDatabase::Proton, i_proton);
         std::vector<TParticlePtr> photons;
-        for(auto i_photon=cands.begin();i_photon!=cands.end();i_photon++) {
+        for(auto i_photon : cands.get_iter()) {
             if(i_photon == i_proton)
                 continue;
-            photons.emplace_back(make_shared<TParticle>(ParticleTypeDatabase::Photon, *i_photon));
+            photons.emplace_back(make_shared<TParticle>(ParticleTypeDatabase::Photon, i_photon));
         }
         assert(photons.size() == nPhotons_expected);
 
@@ -229,14 +226,8 @@ void JustPi0::MultiPi0::ProcessData(const TEventData& data, const TParticleTree_
             Tagg_Ch = taggerhit.Channel;
             Tagg_W  = promptrandom.FillWeight();
 
-            Photons.resize(0);
-            for(auto photon : photons)
-                Photons.emplace_back(*photon->Candidate);
-            Proton = *proton->Candidate;
-            ProtonMCTrueMatches = proton->Candidate.get() == proton_mctrue_match.get();
-            if(proton_mctrue_match)
-                ProtonMCTrue = *proton_mctrue_match;
 
+            ProtonMCTrueMatches = proton->Candidate == proton_mctrue_match;
             tree->Fill();
         }
     }

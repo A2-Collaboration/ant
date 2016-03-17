@@ -31,11 +31,11 @@ ostream& TEventData::Print(ostream& s) const {
 
     s << ">> Clusters: n=" << Clusters.size() << endl;
     for(auto& i : Clusters)
-        s << *i << endl;
+        s << i << endl;
 
     s << ">> Candidates: n=" << Candidates.size() << endl;
     for(auto& i : Candidates)
-        s << *i << endl;
+        s << i << endl;
 
     s << ">> Particles: n=" << Particles.GetAll().size() << endl;
     for(auto& i : Particles.GetAll())

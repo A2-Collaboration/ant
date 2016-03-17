@@ -354,7 +354,7 @@ void KinFitter::SetProton(const TParticlePtr& proton)
     Proton->Particle = proton;
 }
 
-void KinFitter::SetPhotons(const std::vector<TParticlePtr>& photons)
+void KinFitter::SetPhotons(const TParticleList& photons)
 {
     if(Photons.size() != photons.size())
         throw Exception("Given number of photons does not match configured fitter");

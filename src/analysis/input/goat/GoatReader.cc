@@ -137,59 +137,55 @@ void GoatReader::CopyTracks(TEventData& recon)
                 return vec;
             };
 
-            auto calo_cluster = make_shared<TCluster>(
-                                    make_TVector3(tracks.GetTheta(i), tracks.GetPhi(i)),
-                                    tracks.GetClusterEnergy(i),
-                                    tracks.GetTime(i),
-                                    det & Detector_t::Type_t::CB ? Detector_t::Type_t::CB : Detector_t::Type_t::TAPS ,
-                                    tracks.GetCentralCrystal(i)
-                                    );
-            if(tracks.GetShortEnergy(i)>0)
-                calo_cluster->ShortEnergy = tracks.GetShortEnergy(i);
 
-            clusters.emplace_back(calo_cluster);
+            clusters.emplace_back(
+                        make_TVector3(tracks.GetTheta(i), tracks.GetPhi(i)),
+                        tracks.GetClusterEnergy(i),
+                        tracks.GetTime(i),
+                        det & Detector_t::Type_t::CB ? Detector_t::Type_t::CB : Detector_t::Type_t::TAPS ,
+                        tracks.GetCentralCrystal(i)
+                        );
+            auto& calo_cluster = clusters.back();
+            if(tracks.GetShortEnergy(i)>0)
+                calo_cluster.ShortEnergy = tracks.GetShortEnergy(i);
 
             double vetoEnergy = 0.0;
             if(det & Detector_t::Any_t::Veto) {
                 vetoEnergy =  tracks.GetVetoEnergy(i);
-                clusters.emplace_back(make_shared<TCluster>(
-                                          TVector3(std_ext::NaN, std_ext::NaN, std_ext::NaN), // no veto position available
-                                          vetoEnergy,
-                                          std_ext::NaN, // no veto timing available
-                                          det & Detector_t::Type_t::PID ? Detector_t::Type_t::PID : Detector_t::Type_t::TAPSVeto,
-                                          tracks.GetCentralVeto(i)
-                                          )
-                                      );
+                clusters.emplace_back(
+                            TVector3(std_ext::NaN, std_ext::NaN, std_ext::NaN), // no veto position available
+                            vetoEnergy,
+                            std_ext::NaN, // no veto timing available
+                            det & Detector_t::Type_t::PID ? Detector_t::Type_t::PID : Detector_t::Type_t::TAPSVeto,
+                            tracks.GetCentralVeto(i)
+                            );
 
             }
 
             recon.Candidates.emplace_back(
-                        make_shared<TCandidate>(
-                            det,
-                            tracks.GetClusterEnergy(i),
-                            tracks.GetTheta(i),
-                            tracks.GetPhi(i),
-                            tracks.GetTime(i),
-                            MapClusterSize(tracks.GetClusterSize(i)),
-                            vetoEnergy,
-                            //tracks.GetMWPC0Energy(i)+tracks.GetMWPC1Energy(i),
-                            std_ext::NaN, // MWPC not handled correctly at the moment
-                            clusters
-                            )
+                        det,
+                        tracks.GetClusterEnergy(i),
+                        tracks.GetTheta(i),
+                        tracks.GetPhi(i),
+                        tracks.GetTime(i),
+                        MapClusterSize(tracks.GetClusterSize(i)),
+                        vetoEnergy,
+                        //tracks.GetMWPC0Energy(i)+tracks.GetMWPC1Energy(i),
+                        std_ext::NaN, // MWPC not handled correctly at the moment
+                        TClusterList(clusters.begin(), clusters.end())
                         );
         }
         else if(det & Detector_t::Any_t::Veto) {
             // veto-only track is just a cluster in Ant
             // don't know if such tracks actually exist in GoAT/Acqu...
             const double vetoEnergy =  tracks.GetVetoEnergy(i);
-            clusters.emplace_back(make_shared<TCluster>(
-                                      TVector3(std_ext::NaN, std_ext::NaN, std_ext::NaN), // no veto position available
-                                      vetoEnergy,
-                                      std_ext::NaN, // no veto timing available
-                                      det & Detector_t::Type_t::PID ? Detector_t::Type_t::PID : Detector_t::Type_t::TAPSVeto,
-                                      tracks.GetCentralVeto(i)
-                                      )
-                                  );
+            clusters.emplace_back(
+                        TVector3(std_ext::NaN, std_ext::NaN, std_ext::NaN), // no veto position available
+                        vetoEnergy,
+                        std_ext::NaN, // no veto timing available
+                        det & Detector_t::Type_t::PID ? Detector_t::Type_t::PID : Detector_t::Type_t::TAPSVeto,
+                        tracks.GetCentralVeto(i)
+                        );
         }
 
         // always add clusters...
@@ -207,7 +203,7 @@ void GoatReader::CopyParticles(TEventData& recon, ParticleInput& input_module,
         if(trackIndex == -1) {
             LOG(ERROR) << "No Track for this particle!!" << endl;
         } else {
-            const auto& track = recon.Candidates.at(trackIndex);
+            const auto& track = recon.Candidates.get_ptr_at(trackIndex);
             recon.Particles.Add(std::make_shared<TParticle>(type,track));
         }
 
@@ -270,17 +266,17 @@ bool GoatReader::ReadNextEvent(TEvent& event)
 
     active_modules.GetEntry();
 
-    if(!event.Reconstructed) {
+    if(!event.HasReconstructed()) {
         /// \todo think of some better timestamp?
         const TID tid(
                     static_cast<std::uint32_t>(std::time(nullptr)),
                     static_cast<std::uint32_t>(current_entry),
                     std::list<TID::Flags_t>{TID::Flags_t::AdHoc}
                     );
-        event.Reconstructed = std_ext::make_unique<TEventData>(tid);
+        event.MakeReconstructed(tid);
     }
 
-    auto& recon = *event.Reconstructed;
+    auto& recon = event.Reconstructed();
 
     CopyDetectorHits(recon);
     CopyTrigger(recon);

@@ -138,6 +138,7 @@ set(SRCS_STD_EXT
   std_ext/convert.h
   std_ext/iterators.h
   std_ext/mapped_vectors.h
+  std_ext/shared_ptr_container.h
 )
 
 set(SRCS

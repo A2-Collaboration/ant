@@ -13,14 +13,14 @@ namespace analysis {
 namespace slowcontrol {
 
 struct event_t {
-    bool      Save;  // indicates that slowcontrol processors found this interesting
-    TEventPtr Event;
+    bool   Save;  // indicates that slowcontrol processors found this interesting
+    TEvent Event;
     event_t() {}
-    event_t(bool save, TEventPtr event) :
-        Save(save), Event(move(event))
+    event_t(bool save, TEvent event) :
+        Save(save), Event(std::move(event))
     {}
     explicit operator bool() const {
-        return Event != nullptr;
+        return static_cast<bool>(Event);
     }
 };
 
@@ -49,7 +49,7 @@ protected:
 public:
     SlowControlManager();
 
-    bool ProcessEvent(TEventPtr event);
+    bool ProcessEvent(TEvent event);
 
     slowcontrol::event_t PopEvent();
 

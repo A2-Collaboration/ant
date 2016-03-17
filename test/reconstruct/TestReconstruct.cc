@@ -26,7 +26,7 @@ TEST_CASE("Reconstruct", "[reconstruct]") {
 }
 
 template<typename T>
-unsigned getTotalCount(const Reconstruct::sorted_bydetectortype_t<T>& m) {
+unsigned getTotalCount(const T& m) {
     unsigned total = 0;
     for(const auto& m_item : m) {
         const auto& list = m_item.second;
@@ -80,7 +80,7 @@ struct ReconstructTester : Reconstruct {
         REQUIRE(n_clusterhits + reconstructed.TaggerHits.size() <= n_readhits);
 
         // then build clusters (at least for calorimeters this is not trivial)
-        Reconstruct::sorted_bydetectortype_t<TClusterPtr> sorted_clusters;
+        Reconstruct::sorted_clusters_t sorted_clusters;
         BuildClusters(move(sorted_clusterhits), sorted_clusters);
         size_t n_clusters = getTotalCount(sorted_clusters);
         if(!reconstructed.DetectorReadHits.empty())
@@ -109,8 +109,8 @@ struct ReconstructTester : Reconstruct {
         REQUIRE(n_all_added == n_clusters);
 
         bool matched_clusters = false;
-        for(auto cluster : reconstructed.Clusters) {
-            if(!cluster->HasFlag(TCluster::Flags_t::Unmatched)) {
+        for(auto& cluster : reconstructed.Clusters) {
+            if(!cluster.HasFlag(TCluster::Flags_t::Unmatched)) {
                 matched_clusters = true;
                 break;
             }
@@ -135,12 +135,12 @@ void dotest() {
 
     while(auto event = unpacker->NextEvent()) {
 
-        auto& hits = event->Reconstructed->DetectorReadHits;
+        auto& hits = event.Reconstructed().DetectorReadHits;
         nHits += hits.size();
         if(!hits.empty())
             nReads++;
-        reconstruct.DoReconstruct(*event->Reconstructed);
-        nCandidates += event->Reconstructed->Candidates.size();
+        reconstruct.DoReconstruct(event.Reconstructed());
+        nCandidates += event.Reconstructed().Candidates.size();
 
     }
 

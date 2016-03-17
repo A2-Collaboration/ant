@@ -25,10 +25,10 @@ TID GetFirstID(const string& filename) {
     auto unpacker = Unpacker::Get(filename);
 
     auto firstevent = unpacker->NextEvent();
-    if(firstevent == nullptr)
+    if(!firstevent)
         throw runtime_error(string("Didn't get first event from ")+filename);
 
-    return firstevent->Reconstructed->ID;
+    return firstevent.Reconstructed().ID;
 }
 
 void dotest() {

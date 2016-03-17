@@ -65,11 +65,11 @@ void PID_Energy::GetGUIs(std::list<std::unique_ptr<gui::CalibModule_traits> >& g
 void ant::calibration::PID_Energy::ApplyTo(TEventData& reconstructed)
 {
     // search for PID/CB candidates and correct PID energy by CB theta angle
-    for(const TCandidatePtr& cand : reconstructed.Candidates) {
-        const bool cb_and_pid = cand->Detector & Detector_t::Type_t::CB &&
-                                cand->Detector & Detector_t::Type_t::PID;
+    for(TCandidate& cand : reconstructed.Candidates) {
+        const bool cb_and_pid = cand.Detector & Detector_t::Type_t::CB &&
+                                cand.Detector & Detector_t::Type_t::PID;
         if(!cb_and_pid)
             continue;
-        cand->VetoEnergy *= sin(cand->Theta);
+        cand.VetoEnergy *= sin(cand.Theta);
     }
 }

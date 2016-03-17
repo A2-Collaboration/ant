@@ -50,10 +50,10 @@ void XMasCB::ProcessEvent(const TEvent& event, manager_t&)
 
     hist->ResetElements(0.0);
 
-    for(const auto& c : event.Reconstructed->Candidates) {
+    for(const auto& c : event.Reconstructed().Candidates) {
 
-        if(c->Detector & Detector_t::Type_t::CB) {
-            const auto& cluster  = c->FindCaloCluster();
+        if(c.Detector & Detector_t::Type_t::CB) {
+            const auto& cluster  = c.FindCaloCluster();
 
             for(const auto& hit : cluster->Hits) {
                 hist->SetElement(hit.Channel, hist->GetElement(hit.Channel)+hit.Energy);

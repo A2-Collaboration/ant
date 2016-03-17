@@ -98,7 +98,7 @@ void FindProton::ProcessEvent(const TEvent& event, manager_t&)
 
     steps->Fill("Total", 1.0);
 
-    const auto cands = event.Reconstructed->Candidates;
+    const auto& cands = event.Reconstructed().Candidates;
 
     if(cands.size() != nPhotons+1)
         return;
@@ -107,11 +107,11 @@ void FindProton::ProcessEvent(const TEvent& event, manager_t&)
 
     TCandidatePtr matchedProton = nullptr;
 
-    if(event.MCTrue  && event.MCTrue->ParticleTree) {
+    if(event.HasMCTrue()  && event.MCTrue().ParticleTree) {
 
-        const auto mcparticles = event.MCTrue->Particles.GetAll();
+        const auto mcparticles = event.MCTrue().Particles.GetAll();
 
-        const auto ptree  = event.MCTrue->ParticleTree;
+        const auto ptree  = event.MCTrue().ParticleTree;
 
         auto true_proton  = utils::ParticleTools::FindParticle (ParticleTypeDatabase::Proton, ptree, 1);
         auto true_photons = utils::ParticleTools::FindParticles(ParticleTypeDatabase::Photon, ptree);
@@ -119,7 +119,7 @@ void FindProton::ProcessEvent(const TEvent& event, manager_t&)
         if(true_proton && true_photons.size() == 3) {
 
             const auto matched  = utils::match1to1(mcparticles,
-                                                   cands,
+                                                   cands.get_ptr_list(),
                                                    [] (const TParticlePtr& p1, const TCandidatePtr& p2) {
                 return p1->Angle(*p2);
             }, {0.0, degree_to_radian(15.0)});
@@ -133,12 +133,12 @@ void FindProton::ProcessEvent(const TEvent& event, manager_t&)
 
 
 
-    if(!isfinite(event.Reconstructed->Trigger.CBTiming))
+    if(!isfinite(event.Reconstructed().Trigger.CBTiming))
         return;
 
-    for(const auto taggerhit : event.Reconstructed->TaggerHits) {
+    for(const auto taggerhit : event.Reconstructed().TaggerHits) {
 
-        promptrandom.SetTaggerHit(taggerhit.Time - event.Reconstructed->Trigger.CBTiming);
+        promptrandom.SetTaggerHit(taggerhit.Time - event.Reconstructed().Trigger.CBTiming);
 
         if(promptrandom.State() == PromptRandom::Case::Outside)
             continue;
@@ -147,7 +147,7 @@ void FindProton::ProcessEvent(const TEvent& event, manager_t&)
 
         list<shared_ptr<branches_t>> b;
 
-        for(utils::ProtonPermutation perm(event.Reconstructed->Candidates, matchedProton); perm.Good(); perm.Next()) {
+        for(utils::ProtonPermutation perm(event.Reconstructed().Candidates.get_ptr_list(), matchedProton); perm.Good(); perm.Next()) {
 
             auto branches = make_shared<branches_t>();
 

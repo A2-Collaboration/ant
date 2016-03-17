@@ -31,16 +31,16 @@ void dotest() {
     bool taggerScalerBlockFound = false;
 
     while(auto event = unpacker->NextEvent()) {
-        auto& readhits = event->Reconstructed->DetectorReadHits;
+        auto& readhits = event.Reconstructed().DetectorReadHits;
         nEvents++;
         nHits += readhits.size();
 
         // last event should report proper end of file
         if(nEvents==211) {
-            REQUIRE(event->Reconstructed->UnpackerMessages.back().Message == "Found proper end of file");
+            REQUIRE(event.Reconstructed().UnpackerMessages.back().Message == "Found proper end of file");
         }
 
-        auto& slowcontrols = event->Reconstructed->SlowControls;
+        auto& slowcontrols = event.Reconstructed().SlowControls;
         if(!slowcontrols.empty()) {
             nSlowControls += slowcontrols.size();
             for(auto& sc : slowcontrols) {

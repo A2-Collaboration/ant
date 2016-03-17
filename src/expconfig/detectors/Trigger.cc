@@ -49,13 +49,13 @@ void Trigger::ApplyTo(TEventData& reconstructed)
 
     double TimeEsum = 0.0;
     double TimeE = 0.0;
-    for(const TClusterPtr& cluster : reconstructed.Clusters) {
-        if(cluster->DetectorType != Detector_t::Type_t::CB)
+    for(const TCluster& cluster : reconstructed.Clusters) {
+        if(cluster.DetectorType != Detector_t::Type_t::CB)
             continue;
-        if(!isfinite(cluster->Energy) || !isfinite(cluster->Time))
+        if(!isfinite(cluster.Energy) || !isfinite(cluster.Time))
             continue;
-        TimeEsum += cluster->Energy;
-        TimeE += cluster->Energy*cluster->Time;
+        TimeEsum += cluster.Energy;
+        TimeE += cluster.Energy*cluster.Time;
     }
 
 

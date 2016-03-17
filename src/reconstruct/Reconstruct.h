@@ -29,8 +29,7 @@ public:
         using std::runtime_error::runtime_error; // use base class constructor
     };
 
-    template<typename T>
-    using sorted_bydetectortype_t = std::map<Detector_t::Type_t, std::vector< T > >;
+
 
 protected:
 
@@ -42,18 +41,21 @@ protected:
 
     void ApplyHooksToReadHits(std::vector<TDetectorReadHit>& detectorReadHits);
 
+    template<typename T>
+    using sorted_bydetectortype_t = std::map<Detector_t::Type_t, std::vector< T > >;
+
     void BuildHits(sorted_bydetectortype_t<TClusterHit>& sorted_clusterhits,
             std::vector<TTaggerHit>& taggerhits
             );
 
     void HandleTagger(const std::shared_ptr<TaggerDetector_t>& taggerdetector,
-            const std::vector<TDetectorReadHit*>& readhits,
+            const std::vector<std::reference_wrapper<TDetectorReadHit>>& readhits,
             std::vector<TTaggerHit>& taggerhits);
 
-    void BuildClusters(sorted_bydetectortype_t<TClusterHit>&& sorted_clusterhits,
-            sorted_bydetectortype_t<TClusterPtr>& sorted_clusters);
-
-
+    using sorted_clusterhits_t = ReconstructHook::Base::clusterhits_t;
+    using sorted_clusters_t = ReconstructHook::Base::clusters_t;
+    void BuildClusters(const sorted_clusterhits_t& sorted_clusterhits,
+                       sorted_clusters_t& sorted_clusters);
 
     // little helper class which stores the upcasted versions of shared_ptr
     // to Detector_t instances

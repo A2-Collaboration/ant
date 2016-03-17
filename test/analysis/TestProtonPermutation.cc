@@ -24,9 +24,8 @@ using namespace ant::analysis;
  * @param z
  * @return
  */
-TCandidateList MakeCands(const std::vector<u_int16_t>& z) {
-    TCandidateList l;
-    l.reserve(z.size());
+TCandidatePtrList MakeCands(const std::vector<u_int16_t>& z) {
+    TCandidatePtrList l;
 
     for(const auto& i : z) {
         auto c = std::make_shared<TCandidate>();
@@ -37,7 +36,7 @@ TCandidateList MakeCands(const std::vector<u_int16_t>& z) {
     return l;
 }
 
-void dotest_permutation(const TCandidateList& cands, const vector<u_int16_t> &numbers);
+void dotest_permutation(const TCandidatePtrList& cands, const vector<u_int16_t> &numbers);
 
 TEST_CASE("Analysis: Proton Permutation", "[analysis]") {
     const vector<u_int16_t> numbers = {0,1,2,3,4};
@@ -50,7 +49,7 @@ void sort(std::vector<T>& v) {
     std::sort(v.begin(), v.end());
 }
 
-void dotest_permutation(const TCandidateList& cands, const vector<u_int16_t>& numbers) {
+void dotest_permutation(const TCandidatePtrList& cands, const vector<u_int16_t>& numbers) {
 
     assert(numbers.size() >= 1);
 

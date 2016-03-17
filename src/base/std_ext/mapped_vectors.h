@@ -12,7 +12,7 @@ namespace std_ext {
 template<class E, class Enable = void>
 struct to_integral_helper
 {
-    static E inner(E e)
+    static constexpr E inner(E e)
     {
         return e;
     }
@@ -21,14 +21,14 @@ struct to_integral_helper
 template<typename E>
 struct to_integral_helper<E, typename std::enable_if<std::is_enum<E>::value>::type>
 {
-    static typename std::underlying_type<E>::type inner(E e)
+    static constexpr typename std::underlying_type<E>::type inner(E e)
     {
         return static_cast<typename std::underlying_type<E>::type>(e);
     }
 };
 
 template<typename E>
-auto to_integral(E e) -> decltype(to_integral_helper<E>::inner(e))
+constexpr auto to_integral(E e) -> decltype(to_integral_helper<E>::inner(e))
 {
     return to_integral_helper<E>::inner(e);
 }
@@ -53,7 +53,7 @@ public:
     void clear() {
         for(auto key : keys) {
             const auto key_u = to_integral(key);
-            storage[key_u]->second.resize(0);
+            storage[key_u]->second.clear();
         }
         keys.resize(0);
     }
@@ -63,8 +63,6 @@ public:
     }
 
     void add_item(const Key& key, const Value& value) {
-        // return silently if we encounter
-        // a key which is too large for the storage
         const auto key_u = to_integral(key);
         if(key_u>=storage.size()) {
             storage.resize(key_u+1);
@@ -87,17 +85,17 @@ public:
         ptr->second.push_back(value);
     }
 
-    std::vector<Value> get_item(const Key& key) const {
-        // return silently if we encounter
-        // a key which is too large for the storage
+    const std::vector<Value>& get_item(const Key& key) const {
+        const static std::vector<Value> empty;
         const auto key_u = to_integral(key);
         if(key_u>=storage.size())
-            return {};
+            return empty;
         auto& ptr = storage[key_u];
         if(ptr==nullptr)
-            return {};
+            return empty;
         return ptr->second;
     }
+
 
     friend class const_iterator;
 
@@ -121,34 +119,34 @@ public:
         }
 
         const_reference operator*() const {
-            return *(storage_ptr->at(to_integral(*it_key)));
+            return *(storage.at(to_integral(*it_key)));
         }
 
         const_pointer operator->() const {
-            return storage_ptr->at(to_integral(*it_key)).get();
+            return storage.at(to_integral(*it_key)).get();
         }
 
     private:
         friend struct mapped_vectors;
 
-        using storage_ptr_t = typename mapped_vectors::storage_t;
         using it_key_t = typename keys_t::const_iterator;
 
-        const_iterator(it_key_t it_key_, const storage_ptr_t* storage_ptr_) :
-            storage_ptr(storage_ptr_),
+        const_iterator(const it_key_t& it_key_,
+                       const storage_t& storage_) :
+            storage(storage_),
             it_key(it_key_)
         {}
 
-        const storage_ptr_t* storage_ptr;
+        const storage_t& storage;
         it_key_t it_key;
     };
 
     const_iterator begin() const {
-        return const_iterator(keys.cbegin(), std::addressof(storage));
+        return const_iterator(keys.cbegin(), storage);
     }
 
     const_iterator end() const {
-        return const_iterator(keys.cend(), std::addressof(storage));
+        return const_iterator(keys.cend(), storage);
     }
 };
 

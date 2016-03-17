@@ -35,7 +35,7 @@ TAPS_ShortEnergy::TAPS_ShortEnergy(const string& name, OptionsPtr opts) :
 void TAPS_ShortEnergy::ProcessEvent(const TEvent& event, manager_t&)
 {
     // pedestals
-    for(const TDetectorReadHit& readhit : event.Reconstructed->DetectorReadHits) {
+    for(const TDetectorReadHit& readhit : event.Reconstructed().DetectorReadHits) {
         if(readhit.DetectorType != Detector_t::Type_t::TAPS)
             continue;
         if(readhit.ChannelType != Channel_t::Type_t::IntegralShort)
@@ -46,11 +46,11 @@ void TAPS_ShortEnergy::ProcessEvent(const TEvent& event, manager_t&)
             h_pedestals->Fill(value, readhit.Channel);
     }
 
-    for(const TCandidatePtr& c : event.Reconstructed->Candidates) {
-        if(c->Detector & Detector_t::Any_t::TAPS_Apparatus
-           && c->VetoEnergy < 0.5)
+    for(const TCandidate& c : event.Reconstructed().Candidates) {
+        if(c.Detector & Detector_t::Any_t::TAPS_Apparatus
+           && c.VetoEnergy < 0.5)
         {
-            const auto& cluster = c->FindCaloCluster();
+            const auto& cluster = c.FindCaloCluster();
 
             if(cluster)
                 for(const TClusterHit& clusterhit : cluster->Hits) {

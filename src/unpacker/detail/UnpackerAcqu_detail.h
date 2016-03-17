@@ -27,7 +27,7 @@ struct TSlowControl;
 class UnpackerAcquFileFormat {
 public:
 
-    using queue_t = std::list< std::unique_ptr<TEvent> >;
+    using queue_t = std::list<TEvent>; // std::list supports splice
 
     /**
       * @brief Get a suitable instance for the given filename
@@ -132,7 +132,7 @@ protected:
     // unpacker messages handling
     void LogMessage(TUnpackerMessage::Level_t level,
                     const std::string& msg) const;
-    void AppendMessagesToEvent(std::unique_ptr<TEvent>& event) const;
+    void AppendMessagesToEvent(TEvent& event) const;
 
     // Mk1/Mk2 specific methods
     virtual void FillInfo(reader_t& reader, buffer_t& buffer, Info& info) = 0;

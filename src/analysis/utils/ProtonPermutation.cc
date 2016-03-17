@@ -22,7 +22,7 @@ void ProtonPermutation::Fill()
     }
 }
 
-ProtonPermutation::ProtonPermutation(const TCandidateList& candidates, const TCandidatePtr& true_p):
+ProtonPermutation::ProtonPermutation(const TCandidatePtrList& candidates, const TCandidatePtr& true_p):
     cands(candidates),
     true_proton(true_p)
 {

@@ -53,11 +53,11 @@ void GoatComparison::ProcessEvent(const TEvent& event, manager_t& manager)
 {
     steps->Fill("Seen",1.0);
 
-    const auto& cands = event.Reconstructed->Candidates;
-    TCandidateList cands_cb;
+    const auto& cands = event.Reconstructed().Candidates;
+    TCandidatePtrList cands_cb;
 
     double CBSumVetoE = 0;
-    for(const auto& c : cands) {
+    for(const auto& c : cands.get_iter()) {
         if(c->Detector & Detector_t::Any_t::CB_Apparatus) {
             cands_cb.emplace_back(c);
             CBSumVetoE += c->VetoEnergy;
@@ -65,9 +65,9 @@ void GoatComparison::ProcessEvent(const TEvent& event, manager_t& manager)
     }
 
     double PIDSumE = 0;
-    for(const TClusterPtr& cl : event.Reconstructed->Clusters) {
-        if(cl->DetectorType == Detector_t::Type_t::PID)
-            PIDSumE += cl->Energy;
+    for(const TCluster& cl : event.Reconstructed().Clusters) {
+        if(cl.DetectorType == Detector_t::Type_t::PID)
+            PIDSumE += cl.Energy;
     }
 
     const auto nCB = cands_cb.size();
@@ -88,8 +88,8 @@ void GoatComparison::ProcessEvent(const TEvent& event, manager_t& manager)
         photon_low = cands_cb.front();
     }
 
-    TClusterPtr photon_high_cluster = photon_high->FindCaloCluster();
-    TClusterPtr photon_low_cluster = photon_low->FindCaloCluster();
+    auto photon_high_cluster = photon_high->FindCaloCluster();
+    auto photon_low_cluster = photon_low->FindCaloCluster();
 
     if(!photon_high_cluster || !photon_low_cluster)
         return;

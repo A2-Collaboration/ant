@@ -45,16 +45,15 @@ struct MultiHitReference : MultiHit<T>, ReconstructHook::DetectorReadHits {
 
         // search for reference timing
         const auto& refhits = hits.get_item(ReferenceChannel.DetectorType);
-
-        const auto comparer = [this] (TDetectorReadHit const * hit) {
-            return hit->ChannelType == ReferenceChannel.ChannelType &&
-                    hit->Channel == ReferenceChannel.Channel;
+        const auto comparer = [this] (const TDetectorReadHit& hit) {
+            return hit.ChannelType == ReferenceChannel.ChannelType &&
+                    hit.Channel == ReferenceChannel.Channel;
         };
         const auto it_refhit = find_if(refhits.cbegin(), refhits.cend(), comparer);
-        if(it_refhit == refhits.end())
+        if(it_refhit == refhits.cend())
             return;
         // use the same converter for the reference hit
-        ReferenceHits = MultiHit<T>::template ConvertRaw<T>((*it_refhit)->RawData);
+        ReferenceHits = MultiHit<T>::template ConvertRaw<T>(it_refhit->get().RawData);
     }
 
 protected:

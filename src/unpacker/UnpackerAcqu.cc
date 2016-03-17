@@ -30,14 +30,14 @@ bool UnpackerAcqu::OpenFile(const std::string &filename)
     return true;
 }
 
-std::unique_ptr<TEvent> UnpackerAcqu::NextEvent() noexcept
+TEvent UnpackerAcqu::NextEvent() noexcept
 {
     // check if we need to replenish the queue
     if(queue.empty()) {
         file->FillEvents(queue);
         // still empty? Then the file is completely processed...
         if(queue.empty())
-            return nullptr;
+            return {};
     }
 
     // std;:deque does not have a method to get and remove the element

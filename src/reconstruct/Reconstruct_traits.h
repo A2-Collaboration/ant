@@ -2,6 +2,7 @@
 
 #include "base/Detector_t.h"
 #include "base/std_ext/mapped_vectors.h"
+#include "base/std_ext/shared_ptr_container.h"
 
 #include <memory>
 #include <map>
@@ -18,8 +19,7 @@ struct TClusterHit;
 using TClusterHitList = std::vector<TClusterHit>;
 
 struct TCluster;
-using TClusterPtr = std::shared_ptr<TCluster>;
-using TClusterList = std::vector<TClusterPtr>;
+using TClusterList = std_ext::shared_ptr_container<TCluster>;
 
 struct Reconstruct_traits {
     /**
@@ -48,7 +48,7 @@ struct ReconstructHook {
      * @brief The Base struct just defines some useful types
      */
     struct Base {
-        using readhits_t = std_ext::mapped_vectors< Detector_t::Type_t, TDetectorReadHit* >;
+        using readhits_t = std_ext::mapped_vectors< Detector_t::Type_t, std::reference_wrapper<TDetectorReadHit> >;
         using clusterhits_t = std::map< Detector_t::Type_t, TClusterHitList >;
         using clusters_t = std::map< Detector_t::Type_t, TClusterList >;
         virtual ~Base() = default;

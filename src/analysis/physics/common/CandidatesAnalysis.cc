@@ -39,7 +39,7 @@ CandidatesAnalysis::CandidatesAnalysis(const std::string& name, OptionsPtr opts)
 
 void CandidatesAnalysis::ProcessEvent(const TEvent& event, manager_t&)
 {
-    const auto& candidates = event.Reconstructed->Candidates;
+    const auto& candidates = event.Reconstructed().Candidates;
 
     nCandidatesEvent->Fill(candidates.size());
 
@@ -50,31 +50,31 @@ void CandidatesAnalysis::ProcessEvent(const TEvent& event, manager_t&)
     auto i = candidates.begin();
 
     while(i!=candidates.end()) {
-        const TCandidatePtr& ci = *i;
-        energy->Fill((*i)->CaloEnergy);
-        theta->Fill((*i)->Theta*TMath::RadToDeg());
-        phi->Fill((*i)->Phi*TMath::RadToDeg());
-        detectors->Fill(string(ci->Detector).c_str(),1);
+        const TCandidate& ci = *i;
+        energy->Fill(ci.CaloEnergy);
+        theta->Fill(ci.Theta*TMath::RadToDeg());
+        phi->Fill(ci.Phi*TMath::RadToDeg());
+        detectors->Fill(string(ci.Detector).c_str(),1);
 
-        if((*i)->CaloEnergy>20.0) {
+        if(ci.CaloEnergy>20.0) {
 
-            if(ci->Detector & Detector_t::Any_t::CB_Apparatus) {
-                cbdEE->Fill(ci->CaloEnergy,ci->VetoEnergy);
-                cbtof->Fill(ci->Time, ci->CaloEnergy);
+            if(ci.Detector & Detector_t::Any_t::CB_Apparatus) {
+                cbdEE->Fill(ci.CaloEnergy,ci.VetoEnergy);
+                cbtof->Fill(ci.Time, ci.CaloEnergy);
 
-                const auto& cluster = ci->FindCaloCluster();
+                const auto& cluster = ci.FindCaloCluster();
 
                 if(cluster)
                     lateral_moment_cb->Fill(clustertools.LateralMoment(*cluster));
 
-            } else if(ci->Detector & Detector_t::Any_t::TAPS_Apparatus) {
-                tapsdEE->Fill(ci->CaloEnergy,ci->VetoEnergy);
-                tapstof->Fill(ci->Time, ci->CaloEnergy);
+            } else if(ci.Detector & Detector_t::Any_t::TAPS_Apparatus) {
+                tapsdEE->Fill(ci.CaloEnergy,ci.VetoEnergy);
+                tapstof->Fill(ci.Time, ci.CaloEnergy);
 
 
                 // extract short gate stuff
 
-                const auto& cluster = ci->FindCaloCluster();
+                const auto& cluster = ci.FindCaloCluster();
 
                 if(cluster)
 
@@ -93,7 +93,7 @@ void CandidatesAnalysis::ProcessEvent(const TEvent& event, manager_t&)
 
                                 if(datum.Type == Channel_t::Type_t::IntegralShort) {
 
-                                    if(ci->VetoEnergy<0.5)
+                                    if(ci.VetoEnergy<0.5)
                                         psa->Fill(central_e, datum.Value);
 
                                     psa_all->Fill(central_e, datum.Value);
@@ -105,15 +105,15 @@ void CandidatesAnalysis::ProcessEvent(const TEvent& event, manager_t&)
 
             }
 
-            const TParticle a(ParticleTypeDatabase::Photon,*i);
+            const TParticle a(ParticleTypeDatabase::Photon,i.get_ptr());
             auto j = i;
             ++j;
             while(j!=candidates.end()) {
-                if((*i)->CaloEnergy>20.0) {
-                    const TParticle b(ParticleTypeDatabase::Photon,*j);
+                if(ci.CaloEnergy>20.0) {
+                    const TParticle b(ParticleTypeDatabase::Photon,j.get_ptr());
                     const TLorentzVector s = a + b;
 
-                    if((*i)->VetoEnergy==0 && (*j)->VetoEnergy==0)
+                    if(ci.VetoEnergy==0 && j->VetoEnergy==0)
                         ggIM->Fill(s.M());
 
                     ttIM->Fill(s.M());

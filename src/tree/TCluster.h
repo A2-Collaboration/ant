@@ -3,6 +3,7 @@
 #include "base/root_printable.h"
 #include "base/Detector_t.h"
 #include "base/std_ext/math.h"
+#include "base/std_ext/shared_ptr_container.h"
 
 #include "TVector3.h"
 
@@ -19,8 +20,8 @@ struct TClusterHit;
 using TClusterHitList = std::vector<TClusterHit>;
 
 struct TCluster;
-using TClusterPtr = std::shared_ptr<TCluster>;
-using TClusterList = std::vector<TClusterPtr>;
+using TClusterList = std_ext::shared_ptr_container<TCluster>;
+using TClusterPtr = std_ext::cc_shared_ptr<TCluster>;
 
 struct TClusterHit : printable_traits
 {
@@ -159,10 +160,16 @@ struct TCluster : printable_traits
         return std::isfinite(Energy) && std::isfinite(Time);
     }
 
-    TCluster() : Energy(), Time(),
+    TCluster() : Energy(std_ext::NaN), Time(std_ext::NaN),
         Position(),
         DetectorType(), CentralElement(), Flags(), ShortEnergy() {}
     virtual ~TCluster() {}
+
+    TCluster(const TCluster&) = delete;
+    TCluster(TCluster&&) = delete;
+    TCluster& operator=(const TCluster&) = delete;
+    TCluster& operator=(TCluster&&) = delete;
+
 };
 
 }

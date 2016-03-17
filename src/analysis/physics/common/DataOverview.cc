@@ -49,7 +49,7 @@ TaggerOverview::~TaggerOverview()
 
 void TaggerOverview::ProcessEvent(const TEvent& event, manager_t&)
 {
-    const auto taggerhits = (mode == Mode::Reconstructed) ? event.Reconstructed->TaggerHits : event.MCTrue->TaggerHits;
+    const auto taggerhits = (mode == Mode::Reconstructed) ? event.Reconstructed().TaggerHits : event.MCTrue().TaggerHits;
 
     for(auto hit=taggerhits.cbegin(); hit!=taggerhits.cend(); ++hit) {
         Channels->Fill(hit->Channel);
@@ -101,7 +101,7 @@ string DataOverviewBase::GetMode() const
 
 const TEventData& DataOverviewBase::GetBranch(const TEvent& event) const
 {
-   return (mode == Mode::Reconstructed) ? *event.Reconstructed : *event.MCTrue;
+   return (mode == Mode::Reconstructed) ? event.Reconstructed() : event.MCTrue();
 }
 
 
@@ -147,9 +147,9 @@ void TriggerOverview::ProcessEvent(const TEvent& event, manager_t&)
     nErrorsEvent->Fill(trigger.DAQErrors.size());
     CBTiming->Fill(trigger.CBTiming);
 
-    for(const TClusterPtr& cluster : branch.Clusters) {
-        if(cluster->DetectorType == Detector_t::Type_t::CB) {
-            for(const TClusterHit& hit : cluster->Hits) {
+    for(const TCluster& cluster : branch.Clusters) {
+        if(cluster.DetectorType == Detector_t::Type_t::CB) {
+            for(const TClusterHit& hit : cluster.Hits) {
                 CBESum_perCh->Fill(trigger.CBEnergySum, hit.Channel);
                 E_perCh->Fill(hit.Energy, hit.Channel);
             }

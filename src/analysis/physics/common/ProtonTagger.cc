@@ -44,21 +44,18 @@ double TimeAverage(const std::initializer_list<const T> cands) {
 void ProtonTagger::ProcessEvent(const TEvent& event, manager_t&)
 {
 
-    TCandidateList taps_hits;
-
-    for(const auto& p : event.Reconstructed->Candidates) {
-        if((p->Detector & Detector_t::Any_t::TAPS_Apparatus) && p->CaloEnergy > 50.0) {
-            taps_hits.emplace_back(p);
-        }
-    }
-    if(taps_hits.size() != 1)
+    auto taps_cands = event.Reconstructed().Candidates.get_ptr_list(
+                          [] (const TCandidate& c) {
+        return (c.Detector & Detector_t::Any_t::TAPS_Apparatus) && c.CaloEnergy > 50.0;
+    });
+    if(taps_cands.size() != 1)
         return;
 
 
 
     TParticleList cb_photons;
 
-    for(const auto& p : event.Reconstructed->Particles.Get(ParticleTypeDatabase::Photon)) {
+    for(const auto& p : event.Reconstructed().Particles.Get(ParticleTypeDatabase::Photon)) {
         if((p->Candidate && p->Candidate->Detector & Detector_t::Any_t::CB_Apparatus) && p->Energy() > 50.0) {
             cb_photons.emplace_back(p);
         }
@@ -76,7 +73,7 @@ void ProtonTagger::ProcessEvent(const TEvent& event, manager_t&)
 
     const TLorentzVector target(0,0,0,ParticleTypeDatabase::Proton.Mass());
 
-    for(const auto& t : event.Reconstructed->TaggerHits) {
+    for(const auto& t : event.Reconstructed().TaggerHits) {
 
         b_tagTime = t.Time;
         b_tagCh   = t.Channel;
@@ -85,7 +82,7 @@ void ProtonTagger::ProcessEvent(const TEvent& event, manager_t&)
 
         b_MM = mm.M();
 
-            for(const auto& p : taps_hits) {
+            for(const auto& p : taps_cands) {
                 b_Size = p->ClusterSize;
                 b_E    = p->CaloEnergy;
                 b_veto = p->VetoEnergy;

@@ -29,26 +29,26 @@ ProtonCheck::ProtonCheck(const std::string& name,OptionsPtr opts):
 
 void ProtonCheck::ProcessEvent(const TEvent& event, manager_t&)
 {
-    if(event.MCTrue->Particles.GetAll().size() == 1) {
-        const auto& protons = event.MCTrue->Particles.Get(ParticleTypeDatabase::Proton);
+    if(event.MCTrue().Particles.GetAll().size() == 1) {
+        const auto& protons = event.MCTrue().Particles.Get(ParticleTypeDatabase::Proton);
 
         if(protons.size()==1) {
             const auto& mctrue = protons.at(0);
 
             if(mctrue->Theta() < 20.0*TMath::DegToRad()) {
 
-                for(const auto& cand : event.Reconstructed->Candidates) {
+                for(const auto& cand : event.Reconstructed().Candidates) {
 
-                    if(cand->Detector & Detector_t::Any_t::TAPS_Apparatus) {
-                        tof->Fill(cand->Time, cand->CaloEnergy);
-                        tof_trueE->Fill(cand->Time, mctrue->Ek());
-                        dEE->Fill(cand->CaloEnergy, cand->VetoEnergy);
-                        theta->Fill(cand->Theta*TMath::RadToDeg());
-                        theta_corr->Fill(mctrue->Theta()*TMath::RadToDeg(), cand->Theta*TMath::RadToDeg());
+                    if(cand.Detector & Detector_t::Any_t::TAPS_Apparatus) {
+                        tof->Fill(cand.Time, cand.CaloEnergy);
+                        tof_trueE->Fill(cand.Time, mctrue->Ek());
+                        dEE->Fill(cand.CaloEnergy, cand.VetoEnergy);
+                        theta->Fill(cand.Theta*TMath::RadToDeg());
+                        theta_corr->Fill(mctrue->Theta()*TMath::RadToDeg(), cand.Theta*TMath::RadToDeg());
                     }
                 }
 
-                cand_mult->Fill(event.Reconstructed->Candidates.size());
+                cand_mult->Fill(event.Reconstructed().Candidates.size());
             }
 
         }

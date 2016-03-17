@@ -25,7 +25,7 @@ TEST_CASE("CandidateBuilder", "[reconstruct]") {
 }
 
 template<typename T>
-unsigned getTotalCount(const Reconstruct::sorted_bydetectortype_t<T>& m) {
+unsigned getTotalCount(const T& m) {
     unsigned total = 0;
     for(const auto& m_item : m) {
         const auto& list = m_item.second;
@@ -59,7 +59,7 @@ counts_t getCounts(
     counts.candidates = candidates.size();
     counts.allclusters = all_clusters.size();
     for(const auto& cand : candidates)
-        counts.candidateclusters += cand->Clusters.size();
+        counts.candidateclusters += cand.Clusters.size();
     return counts;
 }
 
@@ -110,14 +110,14 @@ struct CandidateBuilderTester : CandidateBuilder {
         REQUIRE(before.candidateclusters==0);
         REQUIRE(before.candidates==0);
         REQUIRE(before.clusters>0);
-        CandidateBuilder::Build(sorted_clusters, candidates, all_clusters);
+        CandidateBuilder::Build(std::move(sorted_clusters), candidates, all_clusters);
         after = getCounts(sorted_clusters, candidates, all_clusters);
         REQUIRE(before.clusters == after.allclusters);
 
         // examine unmatched flag clusters
         size_t unmatched_clusters = 0;
-        for(auto cluster : all_clusters) {
-            if(cluster->HasFlag(TCluster::Flags_t::Unmatched))
+        for(auto& cluster : all_clusters) {
+            if(cluster.HasFlag(TCluster::Flags_t::Unmatched))
                 unmatched_clusters++;
         }
         REQUIRE(unmatched_clusters>0);
@@ -147,7 +147,7 @@ void dotest() {
     while(auto event = unpacker->NextEvent()) {
         nEvents++;
         if(nEvents == 6 || nEvents == 2) {
-            reconstruct.DoReconstruct(*event->Reconstructed);
+            reconstruct.DoReconstruct(event.Reconstructed());
         }
         else if(nEvents > 6)
             break;
