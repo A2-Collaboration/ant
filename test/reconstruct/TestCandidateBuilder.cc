@@ -59,7 +59,7 @@ counts_t getCounts(
     counts.candidates = candidates.size();
     counts.allclusters = all_clusters.size();
     for(const auto& cand : candidates)
-        counts.candidateclusters += cand->Clusters.size();
+        counts.candidateclusters += cand.Clusters.size();
     return counts;
 }
 
