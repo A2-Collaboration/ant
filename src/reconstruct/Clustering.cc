@@ -45,7 +45,7 @@ void Clustering::Build(const shared_ptr<ClusterDetector_t>& clusterdetector,
     for(const clustering::cluster_t& cluster : crystal_clusters) {
         const double cluster_energy = clustering::calc_total_energy(cluster);
 
-        TVector3 weightedPosition(0,0,0);
+        vec3   weightedPosition(0,0,0);
         double weightedSum = 0;
 
         double   cluster_time        = numeric_limits<double>::quiet_NaN();
