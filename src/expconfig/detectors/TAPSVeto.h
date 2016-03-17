@@ -11,7 +11,7 @@ struct TAPSVeto :
         UnpackerAcquConfig // TAPSVeto knows how to be filled from Acqu data
 {
 
-    virtual TVector3 GetPosition(unsigned channel) const override {
+    virtual vec3 GetPosition(unsigned channel) const override {
         return elements.at(channel)->Position;
     }
     virtual unsigned GetNChannels() const override {
@@ -56,7 +56,7 @@ protected:
                 ) :
             TAPSVeto_Element_t(
                 channel,
-                TVector3(pos_xy.X(), pos_xy.Y(), // z-component set by InitElements()
+                vec3(pos_xy.X(), pos_xy.Y(), // z-component set by InitElements()
                          std::numeric_limits<double>::quiet_NaN())
                 ),
             TAC(tac),
@@ -76,7 +76,7 @@ protected:
           ) :
         TAPSVeto_Element_t(
           channel,
-          TVector3(pos_xy.X(), pos_xy.Y(), // z-component set by InitClusterElements()
+          vec3(pos_xy.X(), pos_xy.Y(), // z-component set by InitClusterElements()
                    std::numeric_limits<double>::quiet_NaN())
           ),
         TDC(tdc),

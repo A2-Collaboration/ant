@@ -2,7 +2,7 @@
 
 #include "base/printable.h"
 
-#include "TVector3.h"
+#include "base/vec3.h"
 
 #include <cstdint>
 #include <stdexcept>
@@ -67,16 +67,16 @@ struct Detector_t : printable_traits {
     // Element_t is the minimum information,
     // derived classes may extend this
     struct Element_t {
-        Element_t(unsigned channel, const TVector3& position) :
+        Element_t(unsigned channel, const vec3& position) :
             Channel(channel),
             Position(position)
         {}
         unsigned Channel; // unique within Detector for all time!
-        TVector3 Position;
+        vec3 Position;
     };
 
     virtual unsigned GetNChannels() const = 0;
-    virtual TVector3 GetPosition(unsigned channel) const = 0;
+    virtual vec3 GetPosition(unsigned channel) const = 0;
     virtual void SetIgnored(unsigned channel) = 0;
     virtual bool IsIgnored(unsigned channel) const = 0;
     virtual double GetTimeOfFlight(double clustertime, unsigned channel, double trigger_reftime) const {
@@ -126,7 +126,7 @@ struct ClusterDetector_t : Detector_t {
     struct Element_t : Detector_t::Element_t {
         Element_t(
                 unsigned channel,
-                const TVector3& position,
+                const vec3& position,
                 const std::vector<unsigned>& neighbours,
                 double moliereRadius
                 ) :
@@ -151,7 +151,7 @@ struct TaggerDetector_t : Detector_t {
 
     virtual bool TryGetChannelFromPhoton(double photonEnergy, unsigned& channel) const = 0;
 
-    virtual TVector3 GetPosition(unsigned) const final {
+    virtual vec3 GetPosition(unsigned) const final {
         throw Exception("You cannot ask a TaggerDetector_t for its position");
     }
 

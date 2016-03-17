@@ -12,7 +12,7 @@ struct PID :
 {
 
 
-    virtual TVector3 GetPosition(unsigned channel) const override {
+    virtual vec3 GetPosition(unsigned channel) const override {
         return elements[channel].Position;
     }
     virtual unsigned GetNChannels() const override {
@@ -67,7 +67,7 @@ protected:
                 ) :
             Detector_t::Element_t(
                 channel,
-                TVector3(5.1, 0, 0) // start with vector in x/y plane, is rotated in RotateElements()
+                vec3(5.1, 0, 0) // start with vector in x/y plane, is rotated in RotateElements()
                 ),
             ADC(adc),
             TDC(tdc),

@@ -84,7 +84,7 @@ GeoAcceptance::ParticleThetaPhiPlot3D::ParticleThetaPhiPlot3D(HistogramFactory& 
 
 void GeoAcceptance::ParticleThetaPhiPlot3D::Fill(const TParticlePtr& p)
 {
-        TVector3 v(p->Vect().Unit());
+        TVector3 v = p->p.Unit();
         hist->Fill(v.X(),v.Y(),v.Z());
 }
 
@@ -123,7 +123,7 @@ void remove_low_energy(T& data, double min) {
     using element_type = typename T::value_type;
 
     data.erase(remove_if(data.begin(), data.end(),
-              [min] (const element_type& m) { return (m.b->E()/m.a->E()) < min;}), data.end());
+              [min] (const element_type& m) { return (m.b->Ek()/m.a->Ek()) < min;}), data.end());
 }
 
 void GeoAcceptance::AcceptanceAnalysis::Fill(const TParticleList &mctrue, const TParticleList &reconstructed)
@@ -151,7 +151,7 @@ void GeoAcceptance::AcceptanceAnalysis::Fill(const TParticleList &mctrue, const 
     } else if( matched.size() ==1 ) {
 
         matched_pos.Fill(input);
-        energy_reco->Fill( matched.front().b->E()/matched.front().a->E());
+        energy_reco->Fill( matched.front().b->Ek()/matched.front().a->Ek());
 
         if(reconstructed.size()>1)
             multimatched_pos.Fill(input);

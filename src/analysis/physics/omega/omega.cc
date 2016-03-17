@@ -711,7 +711,7 @@ void OmegaEtaG2::Analyse(const TEventData &data, const TEvent& event, manager_t&
 
         t.mm = missing;
 
-        t.p_mm_angle = radian_to_degree(missing.Angle(proton->Vect()));
+        t.p_mm_angle = radian_to_degree(missing.Angle(*proton));
 
 
         fitter.SetEgammaBeam(TagH.PhotonEnergy);
@@ -817,9 +817,7 @@ void OmegaEtaG2::Analyse(const TEventData &data, const TEvent& event, manager_t&
 
             t.p_true = *true_particles[3];
 
-            const auto matched  = utils::match1to1(true_particles, data.Particles.GetAll(), [] (const TParticlePtr& p1, const TParticlePtr& p2) {
-                return p1->Angle(p2->Vect());
-            }, {0.0, degree_to_radian(15.0)});
+            const auto matched  = utils::match1to1(true_particles, data.Particles.GetAll(), TParticle::CalcAngle, {0.0, degree_to_radian(15.0)});
 
             if(matched.size() == true_particles.size()) {
 

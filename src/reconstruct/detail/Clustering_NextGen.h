@@ -4,7 +4,7 @@
 
 
 
-#include "TVector3.h"
+#include "base/vec3.h"
 #include "TMath.h"
 
 #include <vector>
@@ -45,7 +45,7 @@ inline bool operator< (const crystal_t& lhs, const crystal_t& rhs){
 }
 
 struct bump_t {
-    TVector3 Position;
+    vec3 Position;
     std::vector<double> Weights;
     size_t MaxIndex; // index of highest weight
 };
@@ -66,7 +66,7 @@ static double calc_energy_weight(const double energy, const double total_energy)
 static void calc_bump_weights(const cluster_t& cluster, bump_t& bump) {
     double w_sum = 0;
     for(size_t i=0;i<cluster.size();i++) {
-        double r = (bump.Position - cluster[i].Element->Position).Mag();
+        double r = (bump.Position - cluster[i].Element->Position).R();
         double w = cluster[i].Energy*TMath::Exp(-2.5*r/cluster[i].Element->MoliereRadius);
         bump.Weights[i] = w;
         w_sum += w;
@@ -90,7 +90,7 @@ static void update_bump_position(const cluster_t& cluster, bump_t& bump) {
     for(size_t i=0;i<cluster.size();i++) {
         bump_energy += bump.Weights[i] * cluster[i].Energy;
     }
-    TVector3 position(0,0,0);
+    vec3 position(0,0,0);
     double w_sum = 0;
     for(size_t i=0;i<cluster.size();i++) {
         double energy = bump.Weights[i] * cluster[i].Energy;
@@ -201,9 +201,9 @@ static void split_cluster(const cluster_t& cluster,
         while(!bumps.empty()) {
             for(auto b=bumps.begin(); b != bumps.end(); ++b) {
                 // calculate new bump position with current weights
-                TVector3 oldPos = (*b).Position;
+                const vec3& oldPos = (*b).Position;
                 update_bump_position(cluster, *b);
-                double diff = (oldPos - (*b).Position).Mag();
+                double diff = (oldPos - (*b).Position).R();
                 // check if position is stable
                 if(diff>positionEpsilon) {
                     // no, then calc new weights with new position
@@ -329,7 +329,7 @@ static void split_cluster(const cluster_t& cluster,
     }
 
     // then calc weighted bump_positions for those preliminary bumps
-    std::vector<TVector3> bump_positions(bumps.size(), TVector3(0,0,0));
+    std::vector<vec3> bump_positions(bumps.size(), vec3(0,0,0));
     for(size_t i=0; i<bump_clusters.size(); i++) {
         cluster_t bump_cluster = bump_clusters[i];
         double w_sum = 0;
@@ -351,8 +351,8 @@ static void split_cluster(const cluster_t& cluster,
         std::vector<double> pulls(bumps.size());
         double sum_pull = 0;
         for(auto b=state[j].begin(); b != state[j].end(); ++b) {
-            TVector3 r = cluster[j].Element->Position - bump_positions[*b];
-            double pull = bump_energies[*b] * TMath::Exp(-r.Mag()/cluster[j].Element->MoliereRadius);
+            const auto& r = cluster[j].Element->Position - bump_positions[*b];
+            double pull = bump_energies[*b] * TMath::Exp(-r.R()/cluster[j].Element->MoliereRadius);
             pulls[*b] = pull;
             sum_pull += pull;
         }

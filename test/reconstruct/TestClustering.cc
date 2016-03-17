@@ -107,8 +107,8 @@ void dotest_statistical() {
         }
     }
 
-    REQUIRE(nClusters == 3251);
-    REQUIRE(nClusterHits == 5792);
-    REQUIRE(nSplitClusters == 107);
-    REQUIRE(nSplitClusterHits == 671);
+    REQUIRE(nClusters == 3261);
+    REQUIRE(nClusterHits == 5800);
+    REQUIRE(nSplitClusters == 117);
+    REQUIRE(nSplitClusterHits == 679);
 }

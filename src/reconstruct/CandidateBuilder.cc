@@ -141,7 +141,7 @@ void CandidateBuilder::Build_TAPS_Veto(sorted_clusters_t& sorted_clusters,
 
         bool matched = false;
 
-        const TVector3& vpos = veto_cluster.Position;
+        const auto& vpos = veto_cluster.Position;
 
         auto it_taps_cluster = taps_clusters.begin();
 
@@ -149,10 +149,10 @@ void CandidateBuilder::Build_TAPS_Veto(sorted_clusters_t& sorted_clusters,
 
             auto& taps_cluster = *it_taps_cluster;
 
-            const TVector3& tpos = taps_cluster.Position;
-            const TVector3 d = tpos - vpos;
+            const auto& tpos = taps_cluster.Position;
+            const auto& d = tpos - vpos;
 
-            if( d.XYvector().Mod() < element_radius2 ) {
+            if( d.XY().R() < element_radius2 ) {
                 candidates.emplace_back(
                             Detector_t::Type_t::TAPS | Detector_t::Type_t::TAPSVeto,
                             taps_cluster.Energy,

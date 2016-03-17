@@ -15,41 +15,7 @@ using namespace ant;
 // use some versioning
 CEREAL_CLASS_VERSION(TEvent, ANT_TEVENT_VERSION)
 
-// teach cereal some ROOT types
-
-template<class Archive>
-void save(Archive& archive,
-          const TVector3& m)
-{
-    archive( m.X(), m.Y(), m.Z() );
-}
-
-template<class Archive>
-void load(Archive & archive,
-          TVector3& m)
-{
-    double x,y,z;
-    archive(x, y, z);
-    m.SetXYZ(x,y,z);
-}
-
-template<class Archive>
-void save(Archive& archive,
-          const TLorentzVector& m)
-{
-    archive( m.Px(), m.Py(), m.Pz(), m.E() );
-}
-
-template<class Archive>
-void load(Archive & archive,
-          TLorentzVector& m)
-{
-    double px,py,pz,e;
-    archive(px, py, pz, e);
-    m.SetPxPyPzE(px,py,pz,e);
-}
-
-// tell cereal to use the correct TParticle load/save due to inheritance from TLorentzVector
+// tell cereal to use the correct TParticle load/save due to inheritance from LorentzVec
 
 namespace cereal
 {

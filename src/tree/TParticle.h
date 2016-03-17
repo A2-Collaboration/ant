@@ -7,7 +7,7 @@
 #include "base/ParticleType.h"
 #include "base/Tree.h"
 
-#include "TLorentzVector.h"
+#include "base/LorentzVec.h"
 
 #include <vector>
 #include <list>
@@ -26,7 +26,7 @@ using TParticleTree_t = Tree<TParticlePtr>::node_t;
 /**
  * @brief Base TParticle class
  */
-struct TParticle : TLorentzVector, printable_traits {
+struct TParticle : LorentzVec, printable_traits {
 
     TCandidatePtr Candidate;
     const ParticleTypeDatabase::Type& Type() const { return *type; }
@@ -34,8 +34,8 @@ struct TParticle : TLorentzVector, printable_traits {
     TParticle(const ParticleTypeDatabase::Type& type_,
              ant::mev_t Ek_, ant::radian_t theta_, ant::radian_t phi_);
 
-    TParticle(const ParticleTypeDatabase::Type& type_, const TLorentzVector& lorentzvector_):
-        TLorentzVector(lorentzvector_),
+    TParticle(const ParticleTypeDatabase::Type& type_, const LorentzVec& lorentzvector_):
+        LorentzVec(lorentzvector_),
         type(std::addressof(type_))
     {}
 
@@ -46,27 +46,26 @@ struct TParticle : TLorentzVector, printable_traits {
     }
 
 
-    mev_t Ek() const { return E() - type->Mass(); }
+    mev_t Ek() const { return E - type->Mass(); }
 
     void ChangeType(const ParticleTypeDatabase::Type& newtype);
 
-    using TLorentzVector::Print;
     virtual std::ostream& Print(std::ostream& stream) const;
 
-    using TLorentzVector::Angle;
+
     static double CalcAngle( const TParticlePtr& p1, const TParticlePtr& p2 ) {
-        return p1->Angle(p2->Vect());
+        return p1->Angle(*p2);
     }
 
     template<class Archive>
     void save(Archive& archive) const {
-        archive(static_cast<const TLorentzVector&>(*this), Candidate, type->UID);
+        archive(static_cast<const LorentzVec&>(*this), Candidate, type->UID);
     }
 
     template<class Archive>
     void load(Archive& archive) {
         unsigned uid;
-        archive(static_cast<TLorentzVector&>(*this), Candidate, uid);
+        archive(static_cast<LorentzVec&>(*this), Candidate, uid);
         type = std::addressof(ParticleTypeDatabase::types.at(uid));
     }
 
@@ -75,7 +74,7 @@ struct TParticle : TLorentzVector, printable_traits {
     TParticle(TParticle&&) = default;
     TParticle& operator= (TParticle&&) = default;
 
-    TParticle() : TLorentzVector(), Candidate(nullptr), type(nullptr) {}
+    TParticle() : LorentzVec(), Candidate(nullptr), type(nullptr) {}
     virtual ~TParticle() = default;
 
 protected:

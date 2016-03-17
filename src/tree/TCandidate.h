@@ -61,7 +61,7 @@ struct TCandidate : printable_traits
         archive(Detector, CaloEnergy, Theta, Phi, Time, ClusterSize, VetoEnergy, TrackerEnergy, Clusters);
     }
 
-    operator TVector3() const { TVector3 p; p.SetMagThetaPhi(1.0, Theta, Phi); return p; }
+    operator vec3() const { return vec3::RThetaPhi(1.0, Theta, Phi); }
 
     TClusterPtr FindFirstCluster(Detector_t::Any_t detector) const {
         auto it = std::find_if(Clusters.begin(), Clusters.end(), [detector] (const TCluster& cl) {

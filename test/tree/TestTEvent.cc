@@ -161,7 +161,7 @@ void dotest() {
   REQUIRE(readback.Particles.GetAll().size() == 2);
   REQUIRE(readback.Particles.GetAll().at(0)->Type() == ParticleTypeDatabase::Photon);
   REQUIRE(readback.Particles.GetAll().at(0)->Candidate == readback.Candidates.get_ptr_at(0));
-  REQUIRE(readback.Particles.GetAll().at(1)->E() == 10);
+  REQUIRE(readback.Particles.GetAll().at(1)->E == 10);
   REQUIRE(readback.Particles.Get(ParticleTypeDatabase::Photon).size() == 2);
   REQUIRE(readback.Particles.Get(ParticleTypeDatabase::Proton).size() == 0);
 

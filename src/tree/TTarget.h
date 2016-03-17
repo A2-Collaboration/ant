@@ -5,7 +5,7 @@
 #include "base/root_printable.h"
 #include "base/std_ext/math.h"
 
-#include "TVector3.h"
+#include "base/vec3.h"
 
 #include <list>
 #include <memory>
@@ -14,9 +14,9 @@ namespace ant {
 
 struct TTarget : printable_traits {
 
-    TVector3 Vertex;
+    vec3 Vertex;
 
-    TTarget(const TVector3& vertex = TVector3(std_ext::NaN, std_ext::NaN, std_ext::NaN)):
+    TTarget(const TVector3& vertex = vec3(std_ext::NaN, std_ext::NaN, std_ext::NaN)):
         Vertex(vertex)
     {}
 

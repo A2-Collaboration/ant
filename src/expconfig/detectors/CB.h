@@ -13,7 +13,7 @@ struct CB :
 
     CB();
 
-    virtual TVector3 GetPosition(unsigned channel) const override {
+    virtual vec3 GetPosition(unsigned channel) const override {
         return elements[channel].Position;
     }
     virtual unsigned GetNChannels() const override {
@@ -42,7 +42,7 @@ protected:
     struct Element_t : ClusterDetector_t::Element_t {
         Element_t(
                 unsigned channel,
-                const TVector3& position,
+                const vec3& position,
                 unsigned adc,
                 unsigned tdc,
                 const std::vector<unsigned>& neighbours
