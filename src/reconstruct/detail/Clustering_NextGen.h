@@ -95,7 +95,7 @@ static void update_bump_position(const cluster_t& cluster, bump_t& bump) {
     for(size_t i=0;i<cluster.size();i++) {
         double energy = bump.Weights[i] * cluster[i].Energy;
         double w = calc_energy_weight(energy, bump_energy);
-        position += w * cluster[i].Element->Position;
+        position += cluster[i].Element->Position * w;
         w_sum += w;
     }
     position *= 1.0/w_sum;
@@ -335,7 +335,7 @@ static void split_cluster(const cluster_t& cluster,
         double w_sum = 0;
         for(size_t j=0;j<bump_cluster.size();j++) {
             double w = calc_energy_weight(bump_cluster[j].Energy, bump_energies[i]);
-            bump_positions[i] += w * bump_cluster[j].Element->Position;
+            bump_positions[i] += bump_cluster[j].Element->Position * w;
             w_sum += w;
         }
         bump_positions[i] *= 1.0/w_sum;
