@@ -16,7 +16,6 @@
 #include "APLCON.hpp" // external project
 
 #include "TTree.h"
-#include "TVector3.h"
 #include "TH1D.h"
 #include "TF1.h"
 
@@ -310,9 +309,9 @@ KinFitter::KinFitter(const std::string& name, unsigned numGammas, const APLCON::
             constraint -= FitParticle::GetVector(values[photon + 2], ParticleTypeDatabase::Photon.Mass());
 
         return vector<double>(
-               { constraint.x.x,
-                 constraint.x.y,
-                 constraint.x.z,
+               { constraint.p.x,
+                 constraint.p.y,
+                 constraint.p.z,
                  constraint.E} );
     };
 
@@ -485,7 +484,7 @@ TreeFitter::TreeFitter(const string& name,
         // always sum up the tree nodes
         sum_daughters.emplace_back([tnode] () {
             node_t& node = tnode->Get();
-            node.LVSum.SetPtEtaPhiE(0,0,0,0);
+            node.LVSum = LorentzVec{0,0,0,0};
             assert(!tnode->Daughters().empty());
             for(const auto& d : tnode->Daughters())
                 node.LVSum += d->Get().LVSum;

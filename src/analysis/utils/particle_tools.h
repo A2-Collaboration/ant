@@ -2,10 +2,9 @@
 
 #include "tree/TParticle.h"
 #include "base/ParticleTypeTree.h"
+#include "base/LorentzVec.h"
 
 #include <string>
-
-#include "TLorentzVector.h"
 
 class TH1;
 class TTree;
@@ -20,7 +19,7 @@ struct ParticleVars {
     double Phi;
     double IM;
 
-    ParticleVars(const TLorentzVector& lv, const ParticleTypeDatabase::Type& type) noexcept;
+    ParticleVars(const LorentzVec& lv, const ParticleTypeDatabase::Type& type) noexcept;
     ParticleVars(const TParticle& p) noexcept;
     ParticleVars(double e=0.0, double theta=0.0, double phi=0.0, double im=0.0) noexcept:
         E(e), Theta(theta), Phi(phi), IM(im) {}

@@ -1,12 +1,9 @@
 #pragma once
 
-#include "tree/TParticle.h"
-#include "base/ParticleTypeTree.h"
-
-#include "analysis/utils/combinatorics.h"
-
-#include "TLorentzVector.h"
 #include "base/LorentzVec.h"
+#include "base/ParticleTypeTree.h"
+#include "tree/TParticle.h"
+#include "analysis/utils/combinatorics.h"
 
 #include "APLCON.hpp"
 
@@ -235,7 +232,7 @@ public:
     struct node_t {
         node_t(const ParticleTypeTree& ptree) : TypeTree(ptree) {}
         const ParticleTypeTree TypeTree;
-        TLorentzVector LVSum;
+        LorentzVec LVSum;
         std::shared_ptr<FitParticle> Leave;
         bool operator<(const node_t& rhs) const {
             return TypeTree->Get() < rhs.TypeTree->Get();

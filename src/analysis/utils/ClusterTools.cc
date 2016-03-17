@@ -34,7 +34,7 @@ ClusterTools::det_t::det_t(const det_ptr_t& det) : Detector(det)
         const auto& element = Detector->GetClusterElement(ch);
         double r_sum = 0;
         for(const auto& n : element->Neighbours) {
-            r_sum += (Detector->GetPosition(n) - element->Position).Mag();
+            r_sum += (Detector->GetPosition(n) - element->Position).R();
         }
         R0.emplace_back(r_sum/element->Neighbours.size());
     }
@@ -76,8 +76,8 @@ double ClusterTools::LateralMoment(const TCluster &cluster) const
             swap(h,hit1);
         }
 
-        const TVector3 d = (center - det.Detector->GetPosition(h->Channel));
-        const auto r = d.Mag();
+        const auto d = center - det.Detector->GetPosition(h->Channel);
+        const auto r = d.R();
         ret += h->Channel * sqr(r);
 
     }

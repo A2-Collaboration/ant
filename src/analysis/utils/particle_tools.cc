@@ -17,12 +17,12 @@ using namespace ant;
 using namespace ant::analysis;
 using namespace ant::analysis::utils;
 
-ParticleVars::ParticleVars(const TLorentzVector& lv, const ParticleTypeDatabase::Type& type) noexcept
+ParticleVars::ParticleVars(const LorentzVec& lv, const ParticleTypeDatabase::Type& type) noexcept
 {
     IM    = lv.M();
     Theta = std_ext::radian_to_degree(lv.Theta());
     Phi   = std_ext::radian_to_degree(lv.Phi());
-    E     = lv.E() - type.Mass();
+    E     = lv.E - type.Mass();
 }
 
 ParticleVars::ParticleVars(const TParticle& p) noexcept
@@ -188,7 +188,7 @@ void ParticleTools::FillIMCombinations(TH1* h, unsigned n, const TParticleList& 
 void ParticleTools::FillIMCombinations(std::function<void(double)> filler, unsigned n, const TParticleList& particles)
 {
     for( auto comb = makeCombination(particles,n); !comb.Done(); ++comb) {
-         TLorentzVector sum(0,0,0,0);
+         LorentzVec sum(0,0,0,0);
          for(const auto& p : comb) {
              sum += *p;
          }
