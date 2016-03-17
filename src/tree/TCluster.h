@@ -5,7 +5,7 @@
 #include "base/std_ext/math.h"
 #include "base/std_ext/shared_ptr_container.h"
 
-#include "TVector3.h"
+#include "base/vec3.h"
 
 #include <vector>
 #include <cmath>
@@ -85,7 +85,7 @@ struct TCluster : printable_traits
 {
     double Energy;
     double Time;
-    TVector3 Position;
+    vec3 Position;
     Detector_t::Type_t DetectorType;
     std::uint32_t CentralElement;
     std::uint32_t Flags;
@@ -95,7 +95,7 @@ struct TCluster : printable_traits
 
 
     TCluster(
-            const TVector3& pos,
+            const vec3& pos,
             double E,
             double t,
             const Detector_t::Type_t& type,

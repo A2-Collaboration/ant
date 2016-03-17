@@ -73,8 +73,8 @@ struct TestPhysics : Physics
         seenCandidates += event.Reconstructed().Candidates.size();
         seenMCTrue += event.MCTrue().Particles.GetAll().size();
         // make sure it's non-zero and not nan only for MCTrue
-        seenTrueTargetPos += event.MCTrue().Target.Vertex.Z() < -1;
-        seenReconTargetPosNaN += std::isnan(event.Reconstructed().Target.Vertex.Z());
+        seenTrueTargetPos += event.MCTrue().Target.Vertex.z < -1;
+        seenReconTargetPosNaN += std::isnan(event.Reconstructed().Target.Vertex.z);
         // request to save every third event
         if(!nowrite && seenEvents % 3 == 0)
             manager.SaveEvent();
