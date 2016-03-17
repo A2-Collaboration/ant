@@ -152,7 +152,7 @@ TEvent UnpackerA2Geant::NextEvent() noexcept
     TEvent event(*id, TID());
 
     // however, vertex is some MCTrue information!
-    event.MCTrue().Target.Vertex = fvertex; // TVector3 has conversion constructor...
+    event.MCTrue().Target.Vertex = vec3(fvertex[0], fvertex[1], fvertex[2]);
 
     const size_t n_total = fnhits+fnpart+fntaps+fnvtaps+fvhits;
 
