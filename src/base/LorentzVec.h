@@ -137,6 +137,17 @@ struct LorentzVec {
         return p / E;
     }
 
+    void Boost(const vec3& b) noexcept {
+        // Boost this Lorentz vector
+        const auto b2 = b.R2();
+        const auto gamma = 1.0 / sqrt(1.0 - b2);
+        const auto bp = b.Dot(p);
+        const auto gamma2 = b2 > 0 ? (gamma - 1.0)/b2 : 0.0;
+
+        p += (gamma2*bp+gamma*E)*b;
+        E = gamma*(E + bp);
+    }
+
     double Angle(const vec3& other) const {
         return this->p.Angle(other);
     }
