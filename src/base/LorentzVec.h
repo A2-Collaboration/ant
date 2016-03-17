@@ -12,16 +12,16 @@ namespace ant {
  * @brief A Lorentz vector (x,y,z,E), diag(-1,-1,-1, 1)
  */
 struct LorentzVec {
-    vec3   x = {};
+    vec3   p = {};
     double E = {};
 
     LorentzVec() noexcept = default;
     LorentzVec(const LorentzVec&) noexcept = default;
     LorentzVec(LorentzVec&&) noexcept = default;
-    LorentzVec(const vec3& v, const double E_) noexcept:
-        x(v), E(E_) {}
-    LorentzVec(const double X, const double Y, const double Z, const double _E) noexcept :
-        x(X,Y,Z), E(_E) {}
+    LorentzVec(const vec3& p_, const double E_) noexcept:
+        p(p_), E(E_) {}
+    LorentzVec(const double px, const double py, const double pz, const double _E) noexcept :
+        p(px,py,pz), E(_E) {}
 
     LorentzVec& operator=(const LorentzVec&) noexcept = default;
     LorentzVec& operator=(LorentzVec&&) noexcept = default;
@@ -30,14 +30,14 @@ struct LorentzVec {
     // ====== TLorentzVector interface ======
 
     operator TLorentzVector() const {
-        return TLorentzVector(x, E);
+        return TLorentzVector(p, E);
     }
 
     LorentzVec(const TLorentzVector& other) noexcept:
-        x(other.Vect()), E(other.E()) {}
+        p(other.Vect()), E(other.E()) {}
 
     LorentzVec& operator=(const TLorentzVector other) noexcept {
-        x = other.Vect();
+        p = other.Vect();
         E = other.E();
         return *this;
     }
@@ -49,13 +49,13 @@ struct LorentzVec {
     }
 
     LorentzVec& operator+=(const LorentzVec& other) noexcept {
-        x += other.x;
+        p += other.p;
         E += other.E;
         return *this;
     }
 
     LorentzVec& operator-=(const LorentzVec& other) noexcept {
-        x -= other.x;
+        p -= other.p;
         E -= other.E;
         return *this;
     }
@@ -69,7 +69,7 @@ struct LorentzVec {
     }
 
     double M2() const noexcept {
-        return E*E - x.R2();
+        return E*E - p.R2();
     }
 
     double M() const {
@@ -78,19 +78,19 @@ struct LorentzVec {
     }
 
     double Theta() const {
-        return x.Theta();
+        return p.Theta();
     }
 
     double Phi() const {
-        return x.Phi();
+        return p.Phi();
     }
 
     double P() const {
-        return x.R();
+        return p.R();
     }
 
     bool operator==(const LorentzVec& other) const noexcept {
-        return x == other.x && E == other.E;
+        return p == other.p && E == other.E;
     }
 
     bool operator!=(const LorentzVec& other) const noexcept {
@@ -98,13 +98,13 @@ struct LorentzVec {
     }
 
     LorentzVec& operator*=(const double a) noexcept {
-        x *= a;
+        p *= a;
         E *= a;
         return *this;
     }
 
     LorentzVec& operator/=(const double a) noexcept {
-        x /= a;
+        p /= a;
         E /= a;
         return *this;
     }
@@ -118,7 +118,7 @@ struct LorentzVec {
     }
 
     double Beta() const noexcept {
-        return x.R() / E;
+        return p.R() / E;
     }
 
     /**
@@ -126,15 +126,28 @@ struct LorentzVec {
      * @return
      */
     double Gamma() const noexcept {
-        return 1.0 / sqrt(1 - (x.R2()/(E*E)));
+        return 1.0 / sqrt(1 - (p.R2()/(E*E)));
     }
 
     double Dot(const LorentzVec& other) const noexcept {
-        return E*other.E - x.Dot(other.x);
+        return E*other.E - p.Dot(other.p);
     }
 
     vec3 BoostVector() const noexcept {
-        return x / E;
+        return p / E;
+    }
+
+    double Angle(const vec3& other) const {
+        return this->p.Angle(other);
+    }
+
+    double Angle(const LorentzVec& other) const {
+        return this->p.Angle(other.p);
+    }
+
+    template<class Archive>
+    void serialize(Archive& archive) {
+        archive(p, E);
     }
 
 };
