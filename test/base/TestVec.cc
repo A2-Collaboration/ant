@@ -4,6 +4,10 @@
 #include "base/vec3.h"
 #include "base/LorentzVec.h"
 
+#include "TVector2.h"
+#include "TVector3.h"
+#include "TLorentzVector.h"
+
 #include <type_traits>
 #include <iostream>
 
