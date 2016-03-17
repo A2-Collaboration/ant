@@ -27,7 +27,7 @@ struct TimeSmearingHack {
      * @param p2
      * @return p1 time - p2 time
      */
-    double CalculateTimeDifference(const TCandidatePtr& p1, const TCandidatePtr& p2) const;
+    double CalculateTimeDifference(const TCandidate& p1, const TCandidate& p2) const;
 
     /**
      * @brief Calculate Time Difference of a candidate and a tagger hit, and smear it accordingly if smearing is enabled
@@ -35,14 +35,14 @@ struct TimeSmearingHack {
      * @param taggerhit
      * @return time p - time taggerhit
      */
-    double CalculateTimeDifference(const TCandidatePtr& p , const TTaggerHit& taggerhit) const;
+    double CalculateTimeDifference(const TCandidate& p , const TTaggerHit& taggerhit) const;
 
     /**
      * @brief Get the Time inforamtion from a candidate, smeared if enabeld
      * @param p
      * @return time of p
      */
-    double GetTime(const TCandidatePtr& p) const;
+    double GetTime(const TCandidate& p) const;
 
     TimeSmearingHack();
 

@@ -7,24 +7,24 @@ using namespace ant;
 using namespace ant::analysis;
 
 
-double utils::TimeSmearingHack::CalculateTimeDifference(const TCandidatePtr& p1, const TCandidatePtr& p2) const
+double utils::TimeSmearingHack::CalculateTimeDifference(const TCandidate& p1, const TCandidate& p2) const
 {
-    auto time_diff = p1->Time - p2->Time;
+    auto time_diff = p1.Time - p2.Time;
 
     if(smearing_enabled) {
-        if(   (p1->Detector & Detector_t::Any_t::CB_Apparatus   && p2->Detector & Detector_t::Any_t::TAPS_Apparatus)
-              || (p1->Detector & Detector_t::Any_t::TAPS_Apparatus && p2->Detector & Detector_t::Any_t::CB_Apparatus  )) {
+        if(   (p1.Detector & Detector_t::Any_t::CB_Apparatus   && p2.Detector & Detector_t::Any_t::TAPS_Apparatus)
+              || (p1.Detector & Detector_t::Any_t::TAPS_Apparatus && p2.Detector & Detector_t::Any_t::CB_Apparatus  )) {
 
             return gRandom->Gaus(time_diff, cb_taps_sigma);
         }
 
-        if(   p1->Detector & Detector_t::Any_t::CB_Apparatus
-              && p2->Detector & Detector_t::Any_t::CB_Apparatus) {
+        if(   p1.Detector & Detector_t::Any_t::CB_Apparatus
+              && p2.Detector & Detector_t::Any_t::CB_Apparatus) {
             return gRandom->Gaus(time_diff, cb_cb_sigma);
         }
 
-        if(   p1->Detector & Detector_t::Any_t::TAPS_Apparatus
-              && p2->Detector & Detector_t::Any_t::TAPS_Apparatus) {
+        if(   p1.Detector & Detector_t::Any_t::TAPS_Apparatus
+              && p2.Detector & Detector_t::Any_t::TAPS_Apparatus) {
             return gRandom->Gaus(time_diff, taps_taps_sigma);
         }
     }
@@ -33,16 +33,16 @@ double utils::TimeSmearingHack::CalculateTimeDifference(const TCandidatePtr& p1,
 
 }
 
-double utils::TimeSmearingHack::CalculateTimeDifference(const TCandidatePtr& p, const TTaggerHit& taggerhit) const
+double utils::TimeSmearingHack::CalculateTimeDifference(const TCandidate& p, const TTaggerHit& taggerhit) const
 {
-    auto time_diff = p->Time - taggerhit.Time;
+    auto time_diff = p.Time - taggerhit.Time;
 
     if(smearing_enabled) {
-        if(p->Detector & Detector_t::Any_t::CB_Apparatus) {
+        if(p.Detector & Detector_t::Any_t::CB_Apparatus) {
             return gRandom->Gaus(time_diff, tagg_cb_sigma);
         }
 
-        if(p->Detector & Detector_t::Any_t::TAPS_Apparatus) {
+        if(p.Detector & Detector_t::Any_t::TAPS_Apparatus) {
             return gRandom->Gaus(time_diff, tagg_taps_sigma);
         }
     }
@@ -51,15 +51,15 @@ double utils::TimeSmearingHack::CalculateTimeDifference(const TCandidatePtr& p, 
 
 }
 
-double utils::TimeSmearingHack::GetTime(const TCandidatePtr& p) const
+double utils::TimeSmearingHack::GetTime(const TCandidate& p) const
 {
-    const auto time = p->Time;
+    const auto time = p.Time;
 
-    if(p->Detector & Detector_t::Any_t::CB_Apparatus) {
+    if(p.Detector & Detector_t::Any_t::CB_Apparatus) {
         return gRandom->Gaus(time, cb_sigma);
     }
 
-    if(p->Detector & Detector_t::Any_t::TAPS_Apparatus) {
+    if(p.Detector & Detector_t::Any_t::TAPS_Apparatus) {
         return gRandom->Gaus(time, taps_sigma);
     }
 
