@@ -19,8 +19,7 @@ using namespace std;
 
 
 EventDisplayHists::EventDisplayHists(const string& name, OptionsPtr opts):
-    Physics(name, opts),
-    taps_cands(12)
+    Physics(name, opts)
 {
     const auto setup = ExpConfig::Setup::GetLastFound();
 
@@ -48,14 +47,10 @@ void EventDisplayHists::ProcessEvent(const TEvent& event, manager_t&)
 
     const auto& candidates = event.Reconstructed().Candidates;
 
-
-    taps_cands.resize(0);
-
-    for(const auto& c : candidates) {
-        if(c->Detector & Detector_t::Type_t::TAPS) {
-            taps_cands.emplace_back(c);
-        }
-    }
+    auto taps_cands = candidates.get_ptr_list(
+                          [] (const TCandidate& cand) {
+        return cand.Detector & Detector_t::Type_t::TAPS;
+    });
 
     if(taps_cands.empty())
         return;
