@@ -1,13 +1,11 @@
 #pragma once
 
 #include "printable.h"
-
 #include "vec2.h"
 
 #include <cmath>
 
-// ROOT compat
-#include "TVector3.h"
+class TVector3;
 
 namespace ant {
 
@@ -27,20 +25,9 @@ struct vec3 : printable_traits {
 
     // =====  TVector3 interface =====
 
-    vec3(const TVector3& v) noexcept:
-        x(v.X()),y(v.Y()),z(v.Z())
-    {}
-
-    vec3& operator= (const TVector3& v) noexcept {
-        x = v.X();
-        y = v.Y();
-        z = v.Z();
-        return *this;
-    }
-
-    operator TVector3() const {
-        return TVector3(x,y,z);
-    }
+    vec3(const TVector3& v) noexcept;
+    vec3& operator= (const TVector3& v) noexcept;
+    operator TVector3() const noexcept;
 
     // ===============================
 

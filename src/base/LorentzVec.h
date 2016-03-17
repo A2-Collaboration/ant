@@ -2,9 +2,7 @@
 
 #include "base/vec3.h"
 
-// ROOT compat
-#include "TLorentzVector.h"
-
+class TLorentzVector;
 
 namespace ant {
 
@@ -29,18 +27,9 @@ struct LorentzVec {
 
     // ====== TLorentzVector interface ======
 
-    operator TLorentzVector() const {
-        return TLorentzVector(p, E);
-    }
-
-    LorentzVec(const TLorentzVector& other) noexcept:
-        p(other.Vect()), E(other.E()) {}
-
-    LorentzVec& operator=(const TLorentzVector other) noexcept {
-        p = other.Vect();
-        E = other.E();
-        return *this;
-    }
+    operator TLorentzVector() const noexcept;
+    LorentzVec(const TLorentzVector& other) noexcept;
+    LorentzVec& operator=(const TLorentzVector other) noexcept;
 
     // ======================================
 
@@ -144,7 +133,7 @@ struct LorentzVec {
         const auto bp = b.Dot(p);
         const auto gamma2 = b2 > 0 ? (gamma - 1.0)/b2 : 0.0;
 
-        p += (gamma2*bp+gamma*E)*b;
+        p += b*(gamma2*bp+gamma*E);
         E = gamma*(E + bp);
     }
 

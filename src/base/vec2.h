@@ -2,8 +2,7 @@
 
 #include <cmath>
 
-// ROOT compat
-#include "TVector2.h"
+class TVector2;
 
 namespace ant {
 
@@ -22,19 +21,9 @@ struct vec2 {
 
     // =====  TVector2 interface =====
 
-    vec2(const TVector2& v) noexcept:
-        x(v.X()),y(v.Y())
-    {}
-
-    vec2& operator= (const TVector2& v) noexcept {
-        x = v.X();
-        y = v.Y();
-        return *this;
-    }
-
-    operator TVector2() const {
-        return TVector2(x,y);
-    }
+    vec2(const TVector2& v) noexcept;
+    vec2& operator=(const TVector2& v) noexcept;
+    operator TVector2() const noexcept;
 
     // ===============================
 
