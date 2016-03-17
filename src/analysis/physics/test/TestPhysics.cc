@@ -59,7 +59,7 @@ void ParticleCombinatoricsTest::ProcessEvent(const TEvent& event, manager_t&)
 
     auto combinations2 = utils::makeCombination(photons,2);
     do {
-        TLorentzVector v;
+        LorentzVec v;
         for( auto& i: combinations2 ) {
             v += *i;
         }
@@ -70,7 +70,7 @@ void ParticleCombinatoricsTest::ProcessEvent(const TEvent& event, manager_t&)
 
     auto combinations3 = utils::makeCombination(photons,3);
     do {
-        TLorentzVector v;
+        LorentzVec v;
         for( auto& i: combinations3 ) {
             v += *i;
         }

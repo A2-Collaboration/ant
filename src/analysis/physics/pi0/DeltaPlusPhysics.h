@@ -4,7 +4,7 @@
 #include "base/interval.h"
 #include <map>
 #include <string>
-#include "TLorentzVector.h"
+
 class TH1;
 
 namespace ant {
@@ -49,7 +49,7 @@ protected:
     interval<double> prompt_window;
     interval<double> random_window;
 
-    const TLorentzVector target;
+    const LorentzVec target;
 
 public:
     DeltaPlusPhysics(const std::string& name, OptionsPtr opts);

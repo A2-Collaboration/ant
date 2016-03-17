@@ -1,11 +1,15 @@
 #include "TestAPLCON.h"
+
 #include "plot/root_draw.h"
-#include <string>
 #include "utils/combinatorics.h"
+#include "base/std_ext/math.h"
+
+#include <APLCON.hpp>
+
+#include <string>
 #include <vector>
 #include <numeric>
 #include <functional>
-#include <APLCON.hpp>
 #include <iomanip>
 
 using namespace std;
@@ -15,12 +19,12 @@ using namespace ant::analysis::physics;
 
 std::default_random_engine TestAPLCON::FitParticle::generator;
 
-TLorentzVector TestAPLCON::FitParticle::Make(const std::vector<double>& EkThetaPhi, const Double_t m) {
+LorentzVec TestAPLCON::FitParticle::Make(const std::vector<double>& EkThetaPhi, const Double_t m) {
     const double E = EkThetaPhi[0] + m;
     const Double_t p = sqrt( E*E - m*m );
     TVector3 pv(1,0,0);
     pv.SetMagThetaPhi(p, EkThetaPhi[1], EkThetaPhi[2]);
-    TLorentzVector l(pv, E);
+    LorentzVec l(pv, E);
     return l;
 }
 
@@ -29,12 +33,12 @@ void TestAPLCON::FitParticle::Smear() {
     // then the fitter knows them as well (because they're linked)
 
     Ek_Sigma = 0.02*Ek*pow(Ek,-0.36);
-    Theta_Sigma = 2.5*TMath::DegToRad();
-    if(Theta>20*TMath::DegToRad() && Theta<160*TMath::DegToRad()) {
+    Theta_Sigma = std_ext::degree_to_radian(2.5);
+    if(Theta>std_ext::degree_to_radian(20) && Theta<std_ext::degree_to_radian(160)) {
         Phi_Sigma = Theta_Sigma/sin(Theta);
     }
     else {
-        Phi_Sigma = 1*TMath::DegToRad();
+        Phi_Sigma = std_ext::degree_to_radian(1);
     }
 
     // then artificially smear the values with gaussians
@@ -48,7 +52,7 @@ void TestAPLCON::FitParticle::Smear() {
 }
 
 void TestAPLCON::FillIM(TH1D *h, const std::vector<TestAPLCON::FitParticle> &photons) {
-    TLorentzVector sum(0,0,0,0);
+    LorentzVec sum(0,0,0,0);
     for(const auto& p : photons) {
         sum += FitParticle::Make(p, ParticleTypeDatabase::Photon.Mass());
     }
@@ -139,9 +143,9 @@ TestAPLCON::TestAPLCON(const string& name, OptionsPtr opts) :
     // Constraint: Incoming 4-vector = Outgoing 4-vector
     auto EnergyMomentumBalance = [] (const vector< vector<double> >& particles) -> vector<double>
     {
-        const TLorentzVector target(0,0,0, ParticleTypeDatabase::Proton.Mass());
+        const LorentzVec target(0,0,0, ParticleTypeDatabase::Proton.Mass());
         // assume first particle is beam photon
-        TLorentzVector diff = target + FitParticle::Make(particles[0], ParticleTypeDatabase::Photon.Mass());
+        LorentzVec diff = target + FitParticle::Make(particles[0], ParticleTypeDatabase::Photon.Mass());
         // assume second particle outgoing proton
         diff -= FitParticle::Make(particles[1], ParticleTypeDatabase::Proton.Mass());
         // subtract the rest, assumed to be photons
@@ -149,7 +153,7 @@ TestAPLCON::TestAPLCON(const string& name, OptionsPtr opts) :
             diff -= FitParticle::Make(particles[i], ParticleTypeDatabase::Photon.Mass());
         }
 
-        return {diff.X(), diff.Y(), diff.Z(), diff.T()};
+        return {diff.p.x, diff.p.y, diff.p.z, diff.E};
 
     };
     fitter.AddConstraint("EnergyMomentumBalance", all_names, EnergyMomentumBalance);
@@ -158,7 +162,7 @@ TestAPLCON::TestAPLCON(const string& name, OptionsPtr opts) :
     // make lambda catch also this with [&] specification
     auto RequireIM = [&] (const vector< vector<double> >& photons) -> double
     {
-        TLorentzVector sum(0,0,0,0);
+        LorentzVec sum(0,0,0,0);
         for(const auto& p : photons) {
             sum += FitParticle::Make(p, ParticleTypeDatabase::Photon.Mass());
         }
@@ -182,7 +186,7 @@ TestAPLCON::TestAPLCON(const string& name, OptionsPtr opts) :
         photons.resize(photons.size()-1); // get rid of last element
         // correct each photon's theta angle,
         // then calculate invariant mass of all photons
-        TLorentzVector sum(0,0,0,0);
+        LorentzVec sum(0,0,0,0);
         for(auto& p : photons) {
             const double theta = p[1]; // second element is theta
             const double theta_p = std::atan2( R*sin(theta), R*cos(theta) - v_z);

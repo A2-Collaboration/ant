@@ -5,6 +5,8 @@
 #include "analysis/plot/PromptRandomHist.h"
 #include "utils/A2GeoAcceptance.h"
 
+#include "TLorentzVector.h"
+
 class TH1D;
 class TTree;
 

@@ -68,14 +68,14 @@ void McTrue3Pi0::ProcessEvent(const TEvent& event, manager_t&)
         for (int i = 0 ; i < 3 ; ++i)
         {
             pi0s.at(i) = ParticleVars(*(pions.at(i)));
-            popens.at(i) = photons.at(2*i)->p.Angle(photons.at(2*i+1)->p) * TMath::RadToDeg();
+            popens.at(i) = std_ext::radian_to_degree(photons.at(2*i)->p.Angle(photons.at(2*i+1)->p));
         }
         for (int i = 0 ; i < 6 ; ++i)
             gammas.at(i) = ParticleVars(*photons.at(i));
     }
 
     for ( const auto& angle: GetAllPhotonAngles(photons))
-        hAngle->Fill(angle * TMath::RadToDeg());
+        hAngle->Fill(std_ext::radian_to_degree(angle));
 
     mcTrue->Fill();
 }

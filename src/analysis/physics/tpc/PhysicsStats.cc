@@ -43,7 +43,7 @@ void TPC_PhysicsStats::ProcessEvent(const TEvent& event, manager_t&)
 
             for(const TParticlePtr& p : particles) {
                 if(p->Type().Charged()) {
-                    h->Fill(p->Theta()*TMath::RadToDeg());
+                    h->Fill(std_ext::radian_to_degree(p->Theta()));
                 }
             }
         }

@@ -64,15 +64,15 @@ protected:
 
     // lightweight structure for linking to fitter
     struct FitParticle {
-        void SetFromVector(const TLorentzVector& p_) {
-            Ek = p_.E()-p_.M();
+        void SetFromVector(const LorentzVec& p_) {
+            Ek = p_.E-p_.M();
             Theta = p_.Theta();
             Phi = p_.Phi();
         }
 
-        static TLorentzVector Make(const std::vector<double>& EkThetaPhi,
+        static LorentzVec Make(const std::vector<double>& EkThetaPhi,
                                            const Double_t m);
-        static TLorentzVector Make(const FitParticle& p,
+        static LorentzVec Make(const FitParticle& p,
                                    const Double_t m) {
             return Make(std::vector<double>{p.Ek, p.Theta, p.Phi}, m);
         }

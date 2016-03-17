@@ -8,7 +8,7 @@ using namespace ant::analysis::physics;
 
 PID_PhiAngle::PID_PhiAngle(const string& name, OptionsPtr opts) :
     Physics(name, opts),
-    theta_range(40.0*TMath::DegToRad(), 140*TMath::DegToRad())
+    theta_range(std_ext::degree_to_radian<decltype(theta_range)>({40.0, 140}))
 {
     auto detector = ExpConfig::Setup::GetDetector(Detector_t::Type_t::PID);
     const BinSettings pid_channels(detector->GetNChannels());

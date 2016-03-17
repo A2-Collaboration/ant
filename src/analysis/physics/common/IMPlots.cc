@@ -26,8 +26,8 @@ IMPlots::IMPlots(const std::string& name, OptionsPtr opts):
 }
 
 template <typename iter>
-TLorentzVector sumlv(iter start, iter end) {
-    TLorentzVector s;
+LorentzVec sumlv(iter start, iter end) {
+    LorentzVec s;
     while(start != end ) {
         s += **(start);
         ++start;
@@ -42,7 +42,7 @@ void IMPlots::ProcessEvent(const TEvent& event, manager_t&)
 
     for(unsigned n = MinNGamma(); n<MaxNGamma(); ++n) {
         for( auto comb = utils::makeCombination(photons,n); !comb.Done(); ++comb) {
-            const TLorentzVector sum = sumlv(comb.begin(), comb.end());
+            const LorentzVec sum = sumlv(comb.begin(), comb.end());
                 for(const auto& h : event.Reconstructed().TaggerHits) {
                     prs.SetTaggerHit(h.Time);
                     m.at(n - MinNGamma()).Fill(sum.M());
@@ -95,7 +95,7 @@ void Symmetric2Gamma::ProcessEvent(const TEvent& event, manager_t&)
 
         const auto Eavg = (g1->Ek()+ g2->Ek()) / 2.0;
         if(fabs(g1->Ek() - Eavg) < perc * Eavg) {
-            const TLorentzVector sum = sumlv(comb.begin(), comb.end());
+            const LorentzVec sum = sumlv(comb.begin(), comb.end());
 
             b_IM = sum.M();
             b_E  = Eavg;

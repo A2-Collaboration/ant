@@ -538,7 +538,7 @@ void EtapOmegaG::Sig_t::Pi0_t::Process(const EtapOmegaG::Particles_t& particles,
                 return mctrue->Angle(*recon->Candidate); // TCandidate converts into vec3
             };
             auto matched = utils::match1to1(true_photons, particles.Photons,
-                                            match_bycandidate,IntervalD(0.0, 15.0*TMath::DegToRad()));
+                                            match_bycandidate,IntervalD(0.0, std_ext::degree_to_radian(15.0)));
             if(matched.size() == 4) {
                 // find the two photons of the pi0
                 TParticleList pi0_photons;
@@ -662,7 +662,7 @@ void EtapOmegaG::Sig_t::OmegaPi0_t::Process(const EtapOmegaG::Particles_t& parti
                 return mctrue->Angle(*recon->Candidate); // TCandidate converts into TVector3
             };
             auto matched = utils::match1to1(true_photons, particles.Photons,
-                                            match_bycandidate,IntervalD(0.0, 15.0*TMath::DegToRad()));
+                                            match_bycandidate,IntervalD(0.0, std_ext::degree_to_radian(15.0)));
             if(matched.size() == 4) {
                 // do that tedious photon determination (rewriting the matcher somehow would be nice....)
                 auto select_daughter = [] (TParticleTree_t tree, const ParticleTypeDatabase::Type& type) {

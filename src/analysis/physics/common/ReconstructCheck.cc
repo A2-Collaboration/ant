@@ -1,17 +1,18 @@
 #include "physics/common/ReconstructCheck.h"
+
 #include "plot/root_draw.h"
-#include "base/Detector_t.h"
-#include "TH1D.h"
-#include "TLorentzVector.h"
-#include <cmath>
-#include <iostream>
-#include "base/Logger.h"
+#include "root-addons/analysis_codes/hstack.h"
 #include "root-addons/cbtaps_display/TH2TAPS.h"
 #include "expconfig/ExpConfig.h"
+#include "base/Detector_t.h"
+#include "base/Logger.h"
 #include "base/std_ext/math.h"
+
+#include "TH1D.h"
 #include "TTree.h"
 
-#include "root-addons/analysis_codes/hstack.h"
+#include <cmath>
+#include <iostream>
 
 using namespace std;
 using namespace ant;
@@ -275,7 +276,7 @@ TCandidatePtrList CandidatesByDetector(const Detector_t::Any_t& detector, const 
 
 void ReconstructCheck::histgroup::Fill(const TParticlePtr& mctrue, const TCandidateList& cand, const TClusterList& all_clusters)
 {
-    const auto mc_phi = mctrue->Phi()*TMath::RadToDeg();
+    const auto mc_phi = std_ext::radian_to_degree(mctrue->Phi());
     const auto mc_theta = mctrue->Theta();
     const auto mc_energy = mctrue->Ek();
 
@@ -328,7 +329,7 @@ void ReconstructCheck::histgroup::Fill(const TParticlePtr& mctrue, const TCandid
 
     if(cand.size() == 2) {
         if(nsplit<3) {
-            mult2_split_angles[nsplit]->Fill(angle(cand.at(0), cand.at(1))*TMath::RadToDeg());
+            mult2_split_angles[nsplit]->Fill(std_ext::radian_to_degree(angle(cand.at(0), cand.at(1))));
         }
     }
 

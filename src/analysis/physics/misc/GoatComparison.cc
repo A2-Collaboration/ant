@@ -101,8 +101,8 @@ void GoatComparison::ProcessEvent(const TEvent& event, manager_t& manager)
     h_CBSumVetoE->Fill(CBSumVetoE);
     h_PIDSumE->Fill(PIDSumE);
 
-    TLorentzVector sum(TParticle(ParticleTypeDatabase::Photon, photon_high)
-                     + TParticle(ParticleTypeDatabase::Photon, photon_low));
+    LorentzVec sum(TParticle(ParticleTypeDatabase::Photon, photon_high)
+                   + TParticle(ParticleTypeDatabase::Photon, photon_low));
     IM_gg->Fill(sum.M());
 
     n_photon_high->FillElement(photon_high_cluster->CentralElement, 1.0);

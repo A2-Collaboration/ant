@@ -1,5 +1,4 @@
 #include "physics/common/ProtonCheck.h"
-#include "TLorentzVector.h"
 #include <cmath>
 #include <iostream>
 
@@ -35,7 +34,7 @@ void ProtonCheck::ProcessEvent(const TEvent& event, manager_t&)
         if(protons.size()==1) {
             const auto& mctrue = protons.at(0);
 
-            if(mctrue->Theta() < 20.0*TMath::DegToRad()) {
+            if(mctrue->Theta() < std_ext::degree_to_radian(20.0)) {
 
                 for(const auto& cand : event.Reconstructed().Candidates) {
 
@@ -43,8 +42,9 @@ void ProtonCheck::ProcessEvent(const TEvent& event, manager_t&)
                         tof->Fill(cand.Time, cand.CaloEnergy);
                         tof_trueE->Fill(cand.Time, mctrue->Ek());
                         dEE->Fill(cand.CaloEnergy, cand.VetoEnergy);
-                        theta->Fill(cand.Theta*TMath::RadToDeg());
-                        theta_corr->Fill(mctrue->Theta()*TMath::RadToDeg(), cand.Theta*TMath::RadToDeg());
+                        constexpr auto radtodeg = std_ext::radian_to_degree(1.0);
+                        theta->Fill(cand.Theta*radtodeg);
+                        theta_corr->Fill(mctrue->Theta()*radtodeg, cand.Theta*radtodeg);
                     }
                 }
 

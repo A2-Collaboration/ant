@@ -86,7 +86,7 @@ void TAPS_Energy::ProcessEvent(const TEvent& event, manager_t&)
             if(dets & CBTAPS) {
                 const TParticle a(ParticleTypeDatabase::Photon,comb.at(0));
                 const TParticle b(ParticleTypeDatabase::Photon,comb.at(1));
-                const TLorentzVector& gg = a + b;
+                const auto& gg = a + b;
 
 
                 // Find the one that was in TAPS
@@ -138,8 +138,8 @@ void TAPS_Energy::ProcessEvent(const TEvent& event, manager_t&)
             const unsigned ch = taps_cluster->CentralElement;
             for(const TCandidatePtr& cb_cand : cb_candidates) {
 
-                const TLorentzVector& gg = TParticle(ParticleTypeDatabase::Photon, taps_cand)
-                                           + TParticle(ParticleTypeDatabase::Photon, cb_cand);
+                const auto& gg = TParticle(ParticleTypeDatabase::Photon, taps_cand)
+                                 + TParticle(ParticleTypeDatabase::Photon, cb_cand);
                 ggIM_mult->Fill(gg.M(), ch, nNeutrals);
             }
         }

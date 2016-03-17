@@ -1,8 +1,8 @@
 #include "physics/common/CandidatesAnalysis.h"
-#include "TLorentzVector.h"
-#include <cmath>
 #include "base/std_ext/math.h"
 #include "analysis/utils/ClusterTools.h"
+
+#include <cmath>
 
 using namespace std;
 using namespace ant;
@@ -52,8 +52,8 @@ void CandidatesAnalysis::ProcessEvent(const TEvent& event, manager_t&)
     while(i!=candidates.end()) {
         const TCandidate& ci = *i;
         energy->Fill(ci.CaloEnergy);
-        theta->Fill(ci.Theta*TMath::RadToDeg());
-        phi->Fill(ci.Phi*TMath::RadToDeg());
+        theta->Fill(std_ext::radian_to_degree(ci.Theta));
+        phi->Fill(std_ext::radian_to_degree(ci.Phi));
         detectors->Fill(string(ci.Detector).c_str(),1);
 
         if(ci.CaloEnergy>20.0) {
@@ -111,7 +111,7 @@ void CandidatesAnalysis::ProcessEvent(const TEvent& event, manager_t&)
             while(j!=candidates.end()) {
                 if(ci.CaloEnergy>20.0) {
                     const TParticle b(ParticleTypeDatabase::Photon,j.get_ptr());
-                    const TLorentzVector s = a + b;
+                    const auto& s = a + b;
 
                     if(ci.VetoEnergy==0 && j->VetoEnergy==0)
                         ggIM->Fill(s.M());

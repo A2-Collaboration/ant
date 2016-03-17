@@ -19,9 +19,9 @@ void SetBinLabel(TH1* hist, const int bin, const std::string& label) {
     hist->GetXaxis()->SetBinLabel(bin, label.c_str());
 }
 
-TLorentzVector sum_particles(const TParticleList& particles) {
+LorentzVec sum_particles(const TParticleList& particles) {
 
-    TLorentzVector lv;
+    LorentzVec lv;
 
     for(const auto& p : particles) {
         lv += *p;
@@ -34,7 +34,7 @@ bool EventFilter::checkCoplanarity(const TCandidateList &cands, const double max
 {
 
     for(utils::ProtonPermutation perm(cands.get_ptr_list()); perm.Good(); perm.Next()) {
-        const TLorentzVector photons = sum_particles(perm.Photons());
+        const LorentzVec photons = sum_particles(perm.Photons());
         const auto& proton = perm.Proton();
 
         if(fabs(TVector2::Phi_mpi_pi(M_PI + proton->Phi() - photons.Phi())) < maxangle)

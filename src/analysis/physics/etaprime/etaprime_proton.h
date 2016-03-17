@@ -6,6 +6,8 @@
 #include "utils/Fitter.h"
 #include "expconfig/detectors/TAPS.h"
 
+#include "TLorentzVector.h"
+
 class TH1D;
 class TH2D;
 

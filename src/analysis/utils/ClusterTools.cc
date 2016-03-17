@@ -7,8 +7,6 @@
 #include <vector>
 #include <algorithm>
 
-#include "TVector3.h"
-
 using namespace ant;
 using namespace ant::std_ext;
 using namespace ant::analysis::utils;

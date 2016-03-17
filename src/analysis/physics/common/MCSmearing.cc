@@ -64,7 +64,7 @@ void MCSmearing::ProcessEvent(const TEvent& event, manager_t&)
     }
 
     if(true_photons.size() == 2 && reco_photons.size() == 2) {
-        const TLorentzVector sum(*reco_photons.front() + *reco_photons.back());
+        const LorentzVec sum(*reco_photons.front() + *reco_photons.back());
         IM_2g->Fill(sum.M());
     }
 

@@ -72,13 +72,16 @@ DebugPIDAlignment::~DebugPIDAlignment()
 
 void DebugPIDAlignment::ProcessEvent(const TEvent& event, manager_t&)
 {
+
+    constexpr auto radtodeg = std_ext::radian_to_degree(1.0);
+
     if(event.MCTrue().Particles.GetAll().size() == 1) {
-        const auto mctrue_phi = event.MCTrue().Particles.GetAll().front()->Phi() * TMath::RadToDeg();
+        const auto mctrue_phi = event.MCTrue().Particles.GetAll().front()->Phi()*radtodeg;
 
         for(const TCandidate& cand : event.Reconstructed().Candidates) {
             for(const TCluster& c : cand.Clusters) {
                 if(c.DetectorType == Detector_t::Type_t::PID) {
-                    angles_mc->Fill(mctrue_phi, c.Position.Phi()* TMath::RadToDeg());
+                    angles_mc->Fill(mctrue_phi, c.Position.Phi()*radtodeg);
                 }
             }
         }
@@ -89,8 +92,8 @@ void DebugPIDAlignment::ProcessEvent(const TEvent& event, manager_t&)
             auto cl_cb = cand.FindCaloCluster();
             auto cl_pid = cand.FindVetoCluster();
             if(cl_cb && cl_pid) {
-                angles_candidates->Fill(cl_pid->Position.Phi()*TMath::RadToDeg(),
-                                        cl_cb->Position.Phi()*TMath::RadToDeg());
+                angles_candidates->Fill(cl_pid->Position.Phi()*radtodeg,
+                                        cl_cb->Position.Phi()*radtodeg);
             }
         }
     }
@@ -111,10 +114,10 @@ void DebugPIDAlignment::ProcessEvent(const TEvent& event, manager_t&)
 
         const double phi_cb = cl_cb.Position.Phi();
         const double phi_pid = cl_pid.Position.Phi();
-        angles_clusters->Fill(phi_pid*TMath::RadToDeg(),
-                              phi_cb*TMath::RadToDeg());
-        angles_diff->Fill((phi_cb-phi_pid)*TMath::RadToDeg());
-        angles_diff_wrap->Fill(TVector2::Phi_mpi_pi(phi_cb-phi_pid)*TMath::RadToDeg());
+        angles_clusters->Fill(phi_pid*radtodeg,
+                              phi_cb*radtodeg);
+        angles_diff->Fill((phi_cb-phi_pid)*radtodeg);
+        angles_diff_wrap->Fill(TVector2::Phi_mpi_pi(phi_cb-phi_pid)*radtodeg);
     }
 }
 

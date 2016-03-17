@@ -150,7 +150,7 @@ void PlutoReader::CopyPluto(TEventData& mctrue)
         }
 
         // make an AntParticle out of it
-        TLorentzVector lv = *PlutoParticle;
+        LorentzVec lv = *PlutoParticle;
         lv *= 1000.0;   // convert to MeV
         auto AntParticle = make_shared<TParticle>(*type,lv);
 

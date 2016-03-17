@@ -73,29 +73,29 @@ void DeltaPlusPhysics::ProcessEvent(const TEvent& event, manager_t&)
                 h["pi0angle_noboost"]->Fill(pi0.Theta());
 
                 // construct beam photon 4-vector and, using this, the delta restframe
-                const TLorentzVector beam(0, 0, taggerhit.PhotonEnergy, taggerhit.PhotonEnergy);
-                const TLorentzVector delta_beam(beam + target);
+                const LorentzVec beam(0, 0, taggerhit.PhotonEnergy, taggerhit.PhotonEnergy);
+                const LorentzVec delta_beam(beam + target);
                 const TVector3 boost = -(delta_beam.BoostVector());
 
                 // boost pi0
-                TLorentzVector pi0_ = pi0;
+                LorentzVec pi0_ = pi0;
                 pi0_.Boost(boost);
 
                 // missing mass plot (should peak at proton)
-                TLorentzVector mmp = delta_beam - pi0;
+                LorentzVec mmp = delta_beam - pi0;
                 h["mmp"]->Fill( mmp.M() );
 
                 // plot boosted pi0 angle, our desired plot!
                 h["pi0angle"]->Fill( cos(pi0_.Theta()) );
                 h["pi0angle_noboost"]->Fill( cos(pi0.Theta()));
-                h["pi0angle_tagged"]->Fill( cos(pi0_.Theta()), beam.E());
+                h["pi0angle_tagged"]->Fill( cos(pi0_.Theta()), beam.E);
 
                 // have a look at proton reconstruction quality
                 // by creating a delta
                 if(protons.size()==1) {
-                    TLorentzVector delta = pi0 + *protons.at(0);
+                    LorentzVec delta = pi0 + *protons.at(0);
 
-                    TLorentzVector delta_ = delta;
+                    LorentzVec delta_ = delta;
                     delta_.Boost(boost);
 
                     h["delta_pz"]->Fill(delta_.P());

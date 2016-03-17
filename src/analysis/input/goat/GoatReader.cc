@@ -131,15 +131,9 @@ void GoatReader::CopyTracks(TEventData& recon)
         /// \todo how does this work with MWPC?
 
         if(det & Detector_t::Any_t::Calo) {
-            const auto make_TVector3 = [] (double theta, double phi) {
-                TVector3 vec;
-                vec.SetMagThetaPhi(1.0, theta, phi);
-                return vec;
-            };
-
 
             clusters.emplace_back(
-                        make_TVector3(tracks.GetTheta(i), tracks.GetPhi(i)),
+                        vec3::RThetaPhi(1.0, tracks.GetTheta(i), tracks.GetPhi(i)),
                         tracks.GetClusterEnergy(i),
                         tracks.GetTime(i),
                         det & Detector_t::Type_t::CB ? Detector_t::Type_t::CB : Detector_t::Type_t::TAPS ,
@@ -153,7 +147,7 @@ void GoatReader::CopyTracks(TEventData& recon)
             if(det & Detector_t::Any_t::Veto) {
                 vetoEnergy =  tracks.GetVetoEnergy(i);
                 clusters.emplace_back(
-                            TVector3(std_ext::NaN, std_ext::NaN, std_ext::NaN), // no veto position available
+                            vec3(std_ext::NaN, std_ext::NaN, std_ext::NaN), // no veto position available
                             vetoEnergy,
                             std_ext::NaN, // no veto timing available
                             det & Detector_t::Type_t::PID ? Detector_t::Type_t::PID : Detector_t::Type_t::TAPSVeto,
@@ -180,7 +174,7 @@ void GoatReader::CopyTracks(TEventData& recon)
             // don't know if such tracks actually exist in GoAT/Acqu...
             const double vetoEnergy =  tracks.GetVetoEnergy(i);
             clusters.emplace_back(
-                        TVector3(std_ext::NaN, std_ext::NaN, std_ext::NaN), // no veto position available
+                        vec3(std_ext::NaN, std_ext::NaN, std_ext::NaN), // no veto position available
                         vetoEnergy,
                         std_ext::NaN, // no veto timing available
                         det & Detector_t::Type_t::PID ? Detector_t::Type_t::PID : Detector_t::Type_t::TAPSVeto,

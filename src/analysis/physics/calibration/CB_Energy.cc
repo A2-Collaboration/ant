@@ -35,7 +35,7 @@ void CB_Energy::ProcessEvent(const TEvent& event, manager_t&)
            && (p2->Detector & Detector_t::Type_t::CB)) {
             const TParticle a(ParticleTypeDatabase::Photon,comb.at(0));
             const TParticle b(ParticleTypeDatabase::Photon,comb.at(1));
-            const TLorentzVector gg = a + b;
+            const auto& gg = a + b;
 
             auto cl1 = p1->FindCaloCluster();
             if(cl1)
