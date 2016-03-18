@@ -25,6 +25,7 @@
 #include "base/std_ext/memory.h"
 #include "base/std_ext/string.h"
 #include "base/WrapTFile.h"
+#include "base/vec3.h"
 #include "simulation/mc/PlutoExtensions.h"
 
 
@@ -58,7 +59,6 @@
 #include "TClonesArray.h"
 #include "TMath.h"
 #include "TRandom.h"
-#include "TVector3.h"
 
 #include <string>
 #include <memory>
@@ -320,9 +320,9 @@ void GunAction::Run() const
 
             const double p = sqrt(E*E - m*m);
 
-            TVector3 dir;
+            ant::vec3 dir;
             do {
-                gRandom->Sphere(dir[0], dir[1], dir[2], p);
+                gRandom->Sphere(dir.x, dir.y, dir.z, p);
             } while (dir.Theta() > thetaMax || dir.Theta() < thetaMin);
 
             PParticle* part = new PParticle( pID, dir);
