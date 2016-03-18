@@ -25,16 +25,15 @@ ReconstructCheck::ReconstructCheck(const std::string& name, OptionsPtr opts):
     cb_group(HistFac, "CB", histgroup::detectortype::CB),
     taps_group(HistFac,"TAPS",histgroup::detectortype::TAPS),
     all_group(HistFac,"All",histgroup::detectortype::All),
-    tapsveto(HistFac)
+    tapsveto(HistFac),
+    mult1_only(opts->Get<bool>("Mult1Only",false))
 {
     const BinSettings e(max(1000.0, Options->Get<double>("Emax")));
     EnergyRec_cb = HistFac.makeTH2D("Energry Reconstruction CB","E_{true} [MeV]","E_{rec} [MeV]", e, e, "Energy_rec_cb");
     EnergyRec_taps = HistFac.makeTH2D("Energry Reconstruction TAPS","E_{true} [MeV]","E_{rec} [MeV]", e, e, "Energy_rec_taps");
 
-    if(Options->Get<bool>("Mult1Only",false)) {
+    if(mult1_only)
         LOG(INFO) << "Using multiplicity == 1 events only";
-        mult1_only = true;
-    }
 
     tree = HistFac.makeTTree("tree");
     tree->Branch("mult", &b_mult);
@@ -155,82 +154,82 @@ std::unique_ptr<ReconstructCheck::PositionMap> ReconstructCheck::histgroup::make
     return ptr;
 }
 
-ReconstructCheck::histgroup::histgroup(HistogramFactory& f, const string& prefix, detectortype d): Prefix(prefix)
+ReconstructCheck::histgroup::histgroup(const HistogramFactory& parent, const string& prefix, detectortype d): Prefix(prefix)
 {
+    HistogramFactory HistFac(prefix, parent, prefix);
+
     const BinSettings energy(1600);
     const BinSettings vetoEnergy(100,0,10);
     const BinSettings clusersize(19,1,20);
-    const BinSettings costheta(360,-1,1);
-    const BinSettings phi(360,-180,180);
     const BinSettings theta = d == detectortype::TAPS ? BinSettings(50,0,25) : BinSettings(360,0,180);
     const BinSettings thetadiff(100,-25,25);
 
-    nPerEvent     = f.makeTH1D(prefix+" Candidates/Event", "Candidates/Event","",BinSettings(10),prefix+"candEvent");
+    nPerEvent     = HistFac.makeTH1D("Candidates/Event", "Candidates/Event","",BinSettings(10),"candEvent");
     LabelBins(nPerEvent->GetXaxis());
     nPerEvent->SetFillColor(kGray);
 
-    nPerEventPerE = f.makeTH2D(prefix+" Candidates/Event/Energy","MC True Energy [MeV]","Candidates/Event",BinSettings(1000),BinSettings(10),prefix+"candEventEnergy");
+    nPerEventPerE = HistFac.makeTH2D("Candidates/Event/Energy","MC True Energy [MeV]","Candidates/Event",BinSettings(1000),BinSettings(10),"candEventEnergy");
     LabelBins(nPerEventPerE->GetYaxis());
 
-    splitPerEvent = f.makeTH1D(prefix+" Split-flagged Clusters/Event", "# split clusters/Event","",BinSettings(20),prefix+"splits");
+    splitPerEvent = HistFac.makeTH1D("Split-flagged Clusters/Event", "# split clusters/Event","",BinSettings(20),"splits");
     LabelBins(splitPerEvent->GetXaxis());
     splitPerEvent->SetFillColor(kGray);
 
-    splitPos = makePosMap(f,d, prefix+"_splitpos",prefix+" Pos Mult > 1");
-    splitFlagPos = makePosMap(f,d, prefix+"_splitflagpos",prefix+" Pos of split-flagged clusters");
-    posCharged = makePosMap(f,d, prefix+"_chargedpos",prefix+" Pos of charged cands");
+    splitPos = makePosMap(HistFac,d, "splitpos","Pos Mult > 1");
+    splitFlagPos = makePosMap(HistFac,d, "splitflagpos","Pos of split-flagged clusters");
+    posCharged = makePosMap(HistFac,d, "chargedpos","Pos of charged cands");
 
     mult2_split_angles.resize(3);
+    splitstack = HistFac.make<hstack>("splitstack","splitstack",true);
     for(size_t i=0;i<mult2_split_angles.size();++i) {
-        mult2_split_angles[i] = f.makeTH1D(prefix+"Mult==2 cluster angle "+to_string(i),"#alpha [#circ]","",BinSettings(180,0,90),prefix+"mult2_"+to_string(i));
+        mult2_split_angles[i] = HistFac.makeTH1D("Mult==2 cluster angle "+to_string(i),"#alpha [#circ]","",BinSettings(180,0,90),"mult2_"+to_string(i));
+        *splitstack << mult2_split_angles[i];
     }
 
-    cluserSize = f.makeTH2D(prefix+" Cluster Size","E [MeV]","Elements",energy, clusersize,prefix+"_clustersize");
+    cluserSize = HistFac.makeTH2D("Cluster Size","E [MeV]","Elements",energy, clusersize,"clustersize");
     LabelBins(cluserSize->GetYaxis());
 
-    cluserSize_true = f.makeTH2D(prefix+" Cluster Size","E_{True} [MeV]","Elements",energy, clusersize,prefix+"_clustersize_true");
+    cluserSize_true = HistFac.makeTH2D("Cluster Size","E_{True} [MeV]","Elements",energy, clusersize,"clustersize_true");
     LabelBins(cluserSize_true->GetYaxis());
 
-    dEE = f.makeTH2D(prefix+" dEE TAPS", "E [MeV]","VetoEnergy [MeV]",energy, vetoEnergy,prefix+"_dEE");
-    dEE_true = f.makeTH2D(prefix+" dEE TAPS (true E)", "E_{True} [MeV]","VetoEnergy [MeV]",energy, vetoEnergy,prefix+"_dEE_true");
+    dEE = HistFac.makeTH2D("dEE TAPS", "E [MeV]","VetoEnergy [MeV]",energy, vetoEnergy,"dEE");
+    dEE_true = HistFac.makeTH2D("dEE TAPS (true E)", "E_{True} [MeV]","VetoEnergy [MeV]",energy, vetoEnergy,"dEE_true");
 
-    nCharged        = f.makeTH1D(prefix+" N Charged (VetoEnergy > 0)", "# charged candidates", "", BinSettings(10),prefix+"_ncharged");
+    nCharged        = HistFac.makeTH1D("N Charged (VetoEnergy > 0)", "# charged candidates", "", BinSettings(10),"ncharged");
     LabelBins(nCharged->GetXaxis());
     nCharged->SetFillColor(kGray);
 
-    unmatched_veto = f.makeTH1D(prefix+" Unmatched Veto Clusters","# unmatched veto clusters","",BinSettings(6),prefix+"_unmatched_veto");
+    unmatched_veto = HistFac.makeTH1D("Unmatched Veto Clusters","# unmatched veto clusters","",BinSettings(6),"unmatched_veto");
     LabelBins(unmatched_veto->GetXaxis());
     unmatched_veto->SetFillColor(kGray);
 
-    veto_cand_phi_diff = f.makeTH1D(prefix+" Angle unmatched Veto - Cand","# unmatched veto clusters","",BinSettings(6),prefix+"_veto_cand_phi_diff");
+    veto_cand_phi_diff = HistFac.makeTH1D("Angle unmatched Veto - Cand","# unmatched veto clusters","",BinSettings(6),"veto_cand_phi_diff");
 
-    energyinout = f.makeTH2D(prefix+" Energy","E_{True} [MeV]","E_{Rec} [MeV]",energy,energy,prefix+"_energy");
-    thetainout  = f.makeTH2D(prefix+" Theta Difference","#theta_{True} [#circ]","#theta_{Rec} [#circ]",theta,thetadiff,prefix+"_thetadiff");
+    energyinout = HistFac.makeTH2D("Energy","E_{True} [MeV]","E_{Rec} [MeV]",energy,energy,"energy");
+    thetainout  = HistFac.makeTH2D("Theta Difference","#theta_{True} [#circ]","#theta_{Rec} [#circ]",theta,thetadiff,"thetadiff");
 
-    energy_recov  = makePosMap(f,d,prefix+"_Erecov",prefix+" Energy Recovery Average");
+    energy_recov  = makePosMap(HistFac,d,"Erecov","Energy Recovery Average");
     energy_recov->maphist->SetStats(false);
 
-    mult1_positions  = makePosMap(f,d,prefix+"_Erecov_norm",prefix+" Energy Recovery Average Norm");
+    mult1_positions  = makePosMap(HistFac,d,"Erecov_norm","Energy Recovery Average Norm");
     mult1_positions->maphist->SetStats(false);
 
-    input_positions = makePosMap(f,d,prefix+"_input",prefix+" MC True Positions");
+    input_positions = makePosMap(HistFac,d,"input","MC True Positions");
 
-    mult1_chargedPos= makePosMap(f,d,prefix+"_mult1_chargedPos",prefix+"Mult==1 Charged Pos");
+    mult1_chargedPos= makePosMap(HistFac,d,"mult1_chargedPos","Mult==1 Charged Pos");
 
 
 }
 
 void ReconstructCheck::histgroup::ShowResult() const
 {
-    hstack splitstack("");
-    for(const auto& h : mult2_split_angles) { splitstack << h; }
 
     canvas c(Prefix);
 
     c << drawoption("colz") << nPerEvent << nPerEventPerE << splitPerEvent
       << *splitFlagPos << *splitPos
       << cluserSize << cluserSize_true << dEE << dEE_true << nCharged << *posCharged << unmatched_veto
-      << drawoption("nostack") << padoption::Legend << &splitstack
+      << drawoption("nostack") << padoption::Legend << splitstack
       << drawoption("colz") << *energy_recov
       << padoption::LogZ << energyinout
       << thetainout << *input_positions << *mult1_chargedPos

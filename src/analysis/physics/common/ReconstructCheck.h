@@ -9,7 +9,11 @@ class TH1D;
 class TH2D;
 class TH3D;
 
+
 namespace ant {
+
+struct hstack;
+
 namespace analysis {
 namespace physics {
 
@@ -56,6 +60,7 @@ protected:
         std::unique_ptr<PositionMap> splitPos;
 
         std::vector<TH1D*> mult2_split_angles;
+        ant::hstack* splitstack;
 
         TH1D* nCharged;
         TH2D* cluserSize;
@@ -78,13 +83,15 @@ protected:
         std::unique_ptr<PositionMap> input_positions;
         std::unique_ptr<PositionMap> mult1_chargedPos;
 
+
+
         enum class detectortype {
             All, CB, TAPS
         };
 
         std::unique_ptr<PositionMap> makePosMap(HistogramFactory& f, detectortype d, const std::string& name, const std::string title="");
 
-        histgroup(HistogramFactory& f, const std::string& prefix, detectortype d=detectortype::All);
+        histgroup(const HistogramFactory& parent, const std::string& prefix, detectortype d=detectortype::All);
         void Fill(const TParticlePtr& mctrue, const TCandidateList& cand, const TClusterList& all_clusters);
         void ShowResult() const;
         void Finish();
@@ -113,7 +120,7 @@ protected:
     utils::TimeSmearingHack timesmear;
 
 
-    bool mult1_only = false;
+    const bool mult1_only;
 
     TTree* tree = nullptr;
 
