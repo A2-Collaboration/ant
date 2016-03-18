@@ -58,7 +58,7 @@ void RarePion::ProcessEvent(const TEvent& event, manager_t&)
 
 {
     const TParticleList& photons = event.Reconstructed().Particles.Get(ParticleTypeDatabase::Photon);
-    const TParticleList& all = event.Reconstructed().Particles.GetAll();
+    //const TParticleList& all = event.Reconstructed().Particles.GetAll();
 
 //    for( auto& particle : all ) {
 

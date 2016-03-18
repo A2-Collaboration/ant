@@ -46,7 +46,7 @@ public:
         return true;
     }
 
-    virtual double GetElectronBeamEnergy() const {
+    virtual double GetElectronBeamEnergy() const override {
         return 450.0;
     }
 };
