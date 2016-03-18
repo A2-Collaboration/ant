@@ -1,6 +1,5 @@
 #pragma once
 
-#include "base/root_printable.h"
 #include "base/Detector_t.h"
 #include "base/std_ext/math.h"
 #include "base/std_ext/shared_ptr_container.h"

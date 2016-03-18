@@ -15,7 +15,6 @@ set(SRCS_BASE
   tmpfile_t.cc
   Format.h
   Tree.h
-  root_printable.h
   WrapTFile.cc
   CmdLine.h
   Paths.h

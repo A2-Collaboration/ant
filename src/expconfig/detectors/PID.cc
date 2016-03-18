@@ -9,7 +9,6 @@
 
 #include "tree/TID.h"
 #include "base/std_ext/math.h"
-#include "base/root_printable.h"
 
 #include <cassert>
 #include <cmath> // provides M_PI

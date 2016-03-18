@@ -2,7 +2,6 @@
 
 #include "base/types.h"
 #include "base/printable.h"
-#include "base/root_printable.h"
 #include "base/std_ext/math.h"
 
 #include "base/vec3.h"
