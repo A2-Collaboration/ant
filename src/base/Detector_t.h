@@ -128,14 +128,17 @@ struct ClusterDetector_t : Detector_t {
                 unsigned channel,
                 const vec3& position,
                 const std::vector<unsigned>& neighbours,
-                double moliereRadius
+                double moliereRadius,
+                bool touchesHole = false
                 ) :
             Detector_t::Element_t(channel, position),
             Neighbours(neighbours),
-            MoliereRadius(moliereRadius)
+            MoliereRadius(moliereRadius),
+            TouchesHole(touchesHole)
         {}
         std::vector<unsigned> Neighbours;
         double MoliereRadius;
+        bool TouchesHole;
     };
 
     virtual const Element_t* GetClusterElement(unsigned channel) const = 0;
