@@ -221,7 +221,7 @@ void Etap3pi0::ProcessEvent(const TEvent& event, manager_t&)
             continue;
         hists.at("steps").at("evcount")->Fill("6) E_{#gamma} < E_{thresh}(#eta')",vars.taggWeight);
 
-        TLorentzVector beamPseudoParticle = t.GetPhotonBeam() + TLorentzVector(0,0,0, ParticleTypeDatabase::Proton.Mass());
+        LorentzVec beamPseudoParticle = t.GetPhotonBeam() + LorentzVec(0,0,0, ParticleTypeDatabase::Proton.Mass());
         vars.MM = beamPseudoParticle - vars.etaprimeCand;
 
         assert( photons.size() == 6);
@@ -285,7 +285,7 @@ void Etap3pi0::MakeSignal(const TParticleList& photonLeaves)
         vars.iteration_sig = result.NIterations;
 
         //signal is first, so fill 6g here...
-        vars.kinfitted.etaprimeCand = TLorentzVector(0,0,0,0);
+        vars.kinfitted.etaprimeCand = LorentzVec(0,0,0,0);
         for (size_t i = 0 ; i < 3 ; ++i)
         {
             auto it_gamma =  intermediatesTreeSig[i]->Daughters().begin();

@@ -3,7 +3,6 @@
 #include "expconfig/ExpConfig.h"
 
 #include "TTree.h"
-#include "TLorentzVector.h"
 
 #include <cassert>
 
@@ -181,7 +180,7 @@ void EtapProton::ProcessEvent(const TEvent& event, manager_t& manager)
             continue;
 
         // simple missing mass cut
-        const TLorentzVector beam_target = taggerhit.GetPhotonBeam() + TLorentzVector(0, 0, 0, ParticleTypeDatabase::Proton.Mass());
+        const auto beam_target = taggerhit.GetPhotonBeam() + LorentzVec(0, 0, 0, ParticleTypeDatabase::Proton.Mass());
         b_Missing = beam_target - b_PhotonSum;
 
         b_TaggW = promptrandom.FillWeight();
