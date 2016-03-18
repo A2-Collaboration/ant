@@ -32,9 +32,10 @@ interval<interval<double>> hstack::GlobalLegendPosition = {
     {0.88, 0.88}
 };
 
-hstack::hstack(const string& name, const std::string& title) :
+hstack::hstack(const string& name, const std::string& title, bool simple_) :
     THStack(name.c_str(), title.c_str()),
-    origtitle(title)
+    origtitle(title),
+    simple(simple_)
 {
     gDirectory->Append(this);
 }
@@ -69,11 +70,10 @@ bool hstack::wraphist_t::operator<(const hstack::wraphist_t& other) const {
 
 hstack& hstack::operator<<(TH1* hist)
 {
-
+    if(simple)
+        Add(hist, current_option.DrawOption.c_str());
     hists.emplace_back(hist, current_option);
-
     current_option.Z = 0; // reset z after each add
-
     return *this;
 }
 
@@ -265,6 +265,11 @@ void hstack::Paint(const char* chopt)
 
     // ensure the histograms are there
     checkHists();
+
+    if(simple) {
+        THStack::Paint(chopt);
+        return;
+    }
 
     UpdateMCScaling();
 

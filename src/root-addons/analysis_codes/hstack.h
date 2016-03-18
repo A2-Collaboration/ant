@@ -62,7 +62,7 @@ struct hstack : THStack
         bool FixLegendPosition = false;
     };
 
-    hstack(const std::string& name, const std::string& title="");
+    hstack(const std::string& name, const std::string& title="", bool simple_ = false);
 
     bool IsCompatible(const hstack& other) const;
 
@@ -79,7 +79,7 @@ struct hstack : THStack
     template<typename Archive>
     void serialize(Archive archive) {
         SetTitle(origtitle.c_str());
-        archive(static_cast<TNamed&>(*this), hists);
+        archive(static_cast<TNamed&>(*this), hists, simple);
         origtitle = GetTitle();
         checkHists();
     }
@@ -138,6 +138,7 @@ protected:
     ModOption_t current_option;
 
     std::string origtitle;
+    bool simple;
 
     std::unique_ptr<TLegend>   intellilegend;
     std::unique_ptr<TPaveText> intellititle;
