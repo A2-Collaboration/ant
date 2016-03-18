@@ -221,13 +221,13 @@ struct SigHist_t : CommonHist_t {
             const auto& tree = f.Shared;
             const double pi0 = ParticleTypeDatabase::Pi0.Mass();
             const double eta = ParticleTypeDatabase::Eta.Mass();
-            const TVector2 Pi0Pi0(pi0, pi0);
-            const TVector2 EtaPi0(eta, pi0);
+            const vec2 Pi0Pi0(pi0, pi0);
+            const vec2 EtaPi0(eta, pi0);
 
-            auto check_within = [] (TVector2 im, TVector2 center, double radius, double scale) {
-                TVector2 diff(im-center);
-                diff.Set(diff.X(), scale*diff.Y());
-                return diff.Mod() < radius;
+            auto check_within = [] (vec2 im, vec2 center, double radius, double scale) {
+                vec2 diff(im-center);
+                diff.y *= scale;
+                return diff.R() < radius;
             };
 
             for(unsigned i=0;i<tree.gg_gg1().size();i++) {

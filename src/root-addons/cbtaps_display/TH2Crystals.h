@@ -2,6 +2,7 @@
 
 #include "Rtypes.h"
 #include "TH2Poly.h"
+#include "TVector2.h"
 
 #include <string>
 
