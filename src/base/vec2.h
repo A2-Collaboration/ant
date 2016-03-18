@@ -155,6 +155,18 @@ struct vec2 {
         return !(*this == other);
     }
 
+    /**
+     * @brief Phi_mpi_pi returns phi angle in interval [-pi,pi)
+     * @param phi
+     * @return
+     * @note copied from TVector2::Phi_mpi_pi
+     */
+    static double Phi_mpi_pi(double phi) {
+       while (phi >= M_PI) phi -= 2*M_PI;
+       while (phi < -M_PI) phi += 2*M_PI;
+       return phi;
+    }
+
 };
 
 }
