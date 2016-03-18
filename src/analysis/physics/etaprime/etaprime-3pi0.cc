@@ -198,7 +198,7 @@ void Etap3pi0::ProcessEvent(const TEvent& event, manager_t&)
 //    hists.at("steps").at("evcount")->Fill("debug) finite CBAvg-Time",1);
 
     // coplanarity
-    vars.coplanarity = std_ext::radian_to_degree(TVector2::Phi_mpi_pi(vars.proton.Phi() - vars.etaprimeCand.Phi() - M_PI ));
+    vars.coplanarity = std_ext::radian_to_degree(vec2::Phi_mpi_pi(vars.proton.Phi() - vars.etaprimeCand.Phi() - M_PI ));
     if (fabs(vars.coplanarity) > phSettings.coplCut)
         return;
     hists.at("steps").at("evcount")->Fill((formatter() << "5) proton Coplanarity < " << phSettings.coplCut).str().c_str(),1);

@@ -117,7 +117,7 @@ void DebugPIDAlignment::ProcessEvent(const TEvent& event, manager_t&)
         angles_clusters->Fill(phi_pid*radtodeg,
                               phi_cb*radtodeg);
         angles_diff->Fill((phi_cb-phi_pid)*radtodeg);
-        angles_diff_wrap->Fill(TVector2::Phi_mpi_pi(phi_cb-phi_pid)*radtodeg);
+        angles_diff_wrap->Fill(vec2::Phi_mpi_pi(phi_cb-phi_pid)*radtodeg);
     }
 }
 

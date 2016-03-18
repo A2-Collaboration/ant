@@ -2,6 +2,8 @@
 
 #include "analysis/physics/Physics.h"
 
+#include "TVector3.h"
+
 class TH2D;
 class TTree;
 

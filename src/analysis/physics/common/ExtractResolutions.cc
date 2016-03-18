@@ -48,7 +48,7 @@ void physics::ExtractResolutions::ProcessEvent(const TEvent& event, manager_t&)
 
                     b_DE      = rep->Ek() - mcp->Ek();
                     b_DTheta  = rep->Theta() - mcp->Theta();
-                    b_DPhi    = TVector2::Phi_mpi_pi(rep->Phi() - mcp->Phi());
+                    b_DPhi    = vec2::Phi_mpi_pi(rep->Phi() - mcp->Phi());
                     b_recDir  = rep->p;
 
                     b_Element = c->CentralElement;

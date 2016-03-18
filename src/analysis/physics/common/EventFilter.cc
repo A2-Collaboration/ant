@@ -5,7 +5,6 @@
 #include "base/Logger.h"
 #include "utils/ProtonPermutation.h"
 
-#include "TVector2.h"
 
 using namespace ant;
 using namespace ant::std_ext;
@@ -37,7 +36,7 @@ bool EventFilter::checkCoplanarity(const TCandidateList &cands, const double max
         const LorentzVec photons = sum_particles(perm.Photons());
         const auto& proton = perm.Proton();
 
-        if(fabs(TVector2::Phi_mpi_pi(M_PI + proton->Phi() - photons.Phi())) < maxangle)
+        if(fabs(vec2::Phi_mpi_pi(M_PI + proton->Phi() - photons.Phi())) < maxangle)
             return true;
     }
 

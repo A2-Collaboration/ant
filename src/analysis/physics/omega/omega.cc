@@ -254,7 +254,7 @@ void OmegaEtaG::Analyse(const TEventData &data, const TEvent& event, manager_t&)
                     const auto angle_pggg = ggg_boost.Angle(mc_p_v.p);
                     h->angle_p_ggg->Fill(angle_pggg * TMath::RadToDeg());
 
-                    const auto p_phi_diff = TVector2::Phi_mpi_pi(mm_boosted.Phi() - mc_p_v.Phi());
+                    const auto p_phi_diff = vec2::Phi_mpi_pi(mm_boosted.Phi() - mc_p_v.Phi());
                     h->p_phi_diff->Fill(p_phi_diff);
 
                 }
@@ -672,7 +672,7 @@ void OmegaEtaG2::Analyse(const TEventData &data, const TEvent& event, manager_t&
     t.ggg = ggg;
     const auto gggBoost = -ggg.BoostVector();
 
-    t.copl_angle = fabs(TVector2::Phi_mpi_pi(proton->Phi() - ggg.Phi() - M_PI));
+    t.copl_angle = fabs(vec2::Phi_mpi_pi(proton->Phi() - ggg.Phi() - M_PI));
 
     if(t.copl_angle > cut_Copl)
         return;

@@ -7,7 +7,6 @@
 #include "expconfig/detectors/TAPSVeto.h"
 #include "base/std_ext/math.h"
 
-#include "TVector2.h"
 
 
 using namespace ant;
@@ -83,7 +82,7 @@ void CandidateBuilder::Build_PID_CB(sorted_clusters_t& sorted_clusters,
 
             // calculate phi angle difference.
             // Phi_mpi_pi() takes care of wrap-arounds at 180/-180 deg
-            const auto dphi = fabs(TVector2::Phi_mpi_pi(cb_phi - pid_phi));
+            const auto dphi = fabs(vec2::Phi_mpi_pi(cb_phi - pid_phi));
             if(dphi < dphi_max ) { // match!
 
                 candidates.emplace_back(

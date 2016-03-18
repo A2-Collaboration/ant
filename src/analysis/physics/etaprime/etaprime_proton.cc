@@ -168,7 +168,7 @@ void EtapProton::ProcessEvent(const TEvent& event, manager_t& manager)
     }
 
     // proton coplanarity
-    b_ProtonCopl = std_ext::radian_to_degree(TVector2::Phi_mpi_pi(proton->Phi() - b_PhotonSum.Phi() - M_PI ));
+    b_ProtonCopl = std_ext::radian_to_degree(vec2::Phi_mpi_pi(proton->Phi() - b_PhotonSum.Phi() - M_PI ));
 
     // find the taggerhit with the best E-p conservation Chi2
     utils::KinFitter& fitter = *fitters.at(photons.size()-1);
@@ -220,7 +220,7 @@ void EtapProton::ProcessEvent(const TEvent& event, manager_t& manager)
                 b_FittedPhotonSum += *p;
             }
 
-            b_FittedProtonCopl = std_ext::radian_to_degree(TVector2::Phi_mpi_pi(b_FittedProton.Phi() - b_FittedPhotonSum.Phi() - M_PI ));
+            b_FittedProtonCopl = std_ext::radian_to_degree(vec2::Phi_mpi_pi(b_FittedProton.Phi() - b_FittedPhotonSum.Phi() - M_PI ));
         }
 
         tree->Fill();

@@ -165,7 +165,7 @@ void JustPi0::MultiPi0::ProcessData(const TEventData& data, const TParticleTree_
 
         // proton coplanarity
 
-        const double d_phi = std_ext::radian_to_degree(TVector2::Phi_mpi_pi(proton->Phi()-photon_sum.Phi() - M_PI ));
+        const double d_phi = std_ext::radian_to_degree(vec2::Phi_mpi_pi(proton->Phi()-photon_sum.Phi() - M_PI ));
         Proton_Coplanarity->Fill(d_phi);
 
         const interval<double> Proton_Copl_cut(-19, 19);

@@ -145,7 +145,7 @@ void EtapOmegaG::ProcessEvent(const TEvent& event, manager_t&)
 
     // don't bother with events where proton coplanarity is not ok
     // we use some rather large window here...
-    t.ProtonCopl = std_ext::radian_to_degree(TVector2::Phi_mpi_pi(proton->Phi() - photon_sum.Phi() - M_PI ));
+    t.ProtonCopl = std_ext::radian_to_degree(vec2::Phi_mpi_pi(proton->Phi() - photon_sum.Phi() - M_PI ));
     const interval<double> ProtonCopl_cut(-35, 35);
     if(!ProtonCopl_cut.Contains(t.ProtonCopl))
         return;
