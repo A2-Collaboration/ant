@@ -8,6 +8,7 @@ using namespace std;
 using namespace ant;
 using namespace ant::expconfig::detector;
 
+
 CB::CB() : ClusterDetector_t(Detector_t::Type_t::CB) {
     auto& holes = ignoredChannels;
     std_ext::insertRange(holes,  26,  26);
@@ -23,17 +24,27 @@ CB::CB() : ClusterDetector_t(Detector_t::Type_t::CB) {
     std_ext::insertRange(holes, 679, 679);
     std_ext::insertRange(holes, 681, 689);
     std_ext::insertRange(holes, 691, 692);
-    for(auto hole : holes)
+    for(auto hole : holes) {
         elements[hole].IsHole = true;
+        SetTouchesHoleOfNeighbours(hole);
+    }
 }
 
 void CB::SetIgnored(unsigned channel) {
     ignoredChannels.push_back(channel);
+    SetTouchesHoleOfNeighbours(channel);
 }
 
 bool CB::IsIgnored(unsigned channel) const {
     return std_ext::contains(ignoredChannels, channel);
 }
+
+void CB::SetTouchesHoleOfNeighbours(unsigned hole)
+{
+    for(auto neighbour : elements.at(hole).Neighbours)
+        elements.at(neighbour).TouchesHole = true;
+}
+
 
 bool CB::IsHole(unsigned channel) const
 {
@@ -66,6 +77,7 @@ void CB::BuildMappings(vector<UnpackerAcquConfig::hit_mapping_t> &hit_mappings,
     assert(true_elements <= 672);
     assert(true_elements == GetNChannels() - ignoredChannels.size());
 }
+
 
 
 

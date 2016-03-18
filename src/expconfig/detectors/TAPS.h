@@ -23,9 +23,7 @@ struct TAPS :
     virtual unsigned GetNChannels() const override {
         return clusterelements.size();
     }
-    virtual void SetIgnored(unsigned channel) override {
-        clusterelements[channel]->Ignored = true;
-    }
+    virtual void SetIgnored(unsigned channel) override;
     virtual bool IsIgnored(unsigned channel) const override {
         return clusterelements[channel]->Ignored;
     }

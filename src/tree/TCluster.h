@@ -127,7 +127,13 @@ struct TCluster : printable_traits
         return s;
     }
 
-    // the cluster alorithm may set those flags
+    /**
+     * @brief The Flags_t enum set by the Reconstruction algorithm
+     *
+     * TouchesHole: The central element is an edge crystal
+     * Split: The cluster was splitted from a larger number of hits
+     * Unmatched: The cluster was not assigned to any candidate
+     */
     enum class Flags_t : std::uint8_t {
         TouchesHole, Split, Unmatched
     };

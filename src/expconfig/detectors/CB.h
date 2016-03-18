@@ -63,6 +63,8 @@ protected:
     };
     static std::vector<Element_t> elements;
     std::vector<unsigned> ignoredChannels;
+
+    void SetTouchesHoleOfNeighbours(unsigned hole);
 };
 
 

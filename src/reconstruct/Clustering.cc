@@ -52,6 +52,7 @@ void Clustering::Build(const shared_ptr<ClusterDetector_t>& clusterdetector,
         double   cluster_maxenergy   = 0;
         unsigned cluster_max_channel = 0;
         double   cluster_shortenergy = numeric_limits<double>::quiet_NaN();
+        bool     cluster_toucheshole = false;
 
         std::vector<TClusterHit> clusterhits;
         clusterhits.reserve(cluster.size());
@@ -62,6 +63,7 @@ void Clustering::Build(const shared_ptr<ClusterDetector_t>& clusterdetector,
             weightedSum += wgtE;
             clusterhits.emplace_back(*crystal.Hit);
             if(cluster_maxenergy<=crystal.Energy) {
+                cluster_toucheshole = crystal.Element->TouchesHole;
                 cluster_time = crystal.Hit->Time;
                 cluster_maxenergy = crystal.Energy;
                 cluster_max_channel = crystal.Element->Channel;
@@ -90,6 +92,8 @@ void Clustering::Build(const shared_ptr<ClusterDetector_t>& clusterdetector,
             the_cluster.ShortEnergy = cluster_shortenergy;
         if(cluster.Split)
             the_cluster.SetFlag(TCluster::Flags_t::Split);
+        if(cluster_toucheshole)
+            the_cluster.SetFlag(TCluster::Flags_t::TouchesHole);
     }
 }
 

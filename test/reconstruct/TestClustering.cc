@@ -92,6 +92,9 @@ void dotest_statistical() {
     unsigned nClusterHits = 0;
     unsigned nSplitClusters = 0;
     unsigned nSplitClusterHits = 0;
+    unsigned nTouchesHole_CB = 0;
+    unsigned nTouchesHole_TAPS = 0;
+
 
     while(auto event = unpacker->NextEvent()) {
         auto& recon = event.Reconstructed();
@@ -103,12 +106,19 @@ void dotest_statistical() {
                 nSplitClusters++;
                 nSplitClusterHits += cluster.Hits.size();
             }
-
+            if(cluster.HasFlag(TCluster::Flags_t::TouchesHole)) {
+                if(cluster.DetectorType == Detector_t::Type_t::CB)
+                    nTouchesHole_CB++;
+                else if(cluster.DetectorType == Detector_t::Type_t::TAPS)
+                    nTouchesHole_TAPS++;
+            }
         }
     }
 
-    REQUIRE(nClusters == 3261);
-    REQUIRE(nClusterHits == 5800);
-    REQUIRE(nSplitClusters == 117);
-    REQUIRE(nSplitClusterHits == 679);
+    CHECK(nClusters == 3261);
+    CHECK(nClusterHits == 5800);
+    CHECK(nSplitClusters == 117);
+    CHECK(nSplitClusterHits == 679);
+    CHECK(nTouchesHole_CB == 220);
+    CHECK(nTouchesHole_TAPS == 92);
 }

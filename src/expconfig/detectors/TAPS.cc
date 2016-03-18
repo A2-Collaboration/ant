@@ -15,6 +15,13 @@ using namespace ant;
 using namespace ant::expconfig::detector;
 
 
+void TAPS::SetIgnored(unsigned channel) {
+    clusterelements[channel]->Ignored = true;
+    for(auto neighbour : clusterelements[channel]->Neighbours) {
+        clusterelements[neighbour]->TouchesHole = true;
+    }
+}
+
 double TAPS::GetZPosition() const
 {
     return CherenkovInstalled ? 174.2 : 145.7;
@@ -187,6 +194,25 @@ void TAPS::InitClusterElements()
     for(auto elem : clusterelements) {
         (void)elem; // prevent unused variable warning in Release build
         assert(elem != nullptr);
+    }
+
+    // set touches hole
+    /// \todo think of something better than counting neighbours...
+
+    for(auto& baf2 : BaF2_elements) {
+        // non-edge baf2 elements have at least 6 neighbours
+        if(baf2.Neighbours.size()<6)
+            baf2.TouchesHole = true;
+    }
+
+    for(auto& pbwo4 : PbWO4_elements) {
+        bool hasBaF2 = false;
+        std::for_each(pbwo4.Neighbours.begin(), pbwo4.Neighbours.end(),
+                      [this,&hasBaF2] (unsigned n) { hasBaF2 |= IsBaF2(n); });
+        if(hasBaF2)
+            continue;
+        if(pbwo4.Neighbours.size()<8)
+            pbwo4.TouchesHole = true;
     }
 }
 
