@@ -22,8 +22,8 @@ std::vector<double> McTrue3Pi0::GetAllPhotonAngles(const TParticleList& photons)
     for ( unsigned i = 0 ; i < photons.size() ; ++i )
         for ( unsigned j = i + 1 ; j < photons.size() ; ++j)
         {
-            TVector3 ph_i(photons.at(i)->p);
-            TVector3 ph_j(photons.at(j)->p);
+            vec3 ph_i(photons.at(i)->p);
+            vec3 ph_j(photons.at(j)->p);
 
             angles.at(index) = ph_i.Angle(ph_j);
             index++;

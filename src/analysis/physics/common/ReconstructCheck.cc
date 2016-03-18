@@ -252,15 +252,7 @@ void ReconstructCheck::histgroup::Finish()
 }
 
 double angle(const TCandidate& c1, const TCandidate& c2) {
-    TVector3 v1(1,0,0);
-    v1.SetTheta(c1.Theta);
-    v1.SetPhi(c1.Phi);
-
-    TVector3 v2(1,0,0);
-    v2.SetTheta(c2.Theta);
-    v2.SetPhi(c2.Phi);
-
-    return v1.Angle(v2);
+    return vec3::RThetaPhi(1, c1.Theta, c1.Phi).Angle(vec3::RThetaPhi(1, c2.Theta, c2.Phi));
 }
 
 TCandidatePtrList CandidatesByDetector(const Detector_t::Any_t& detector, const TCandidateList& candidates) {

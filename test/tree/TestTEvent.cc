@@ -42,19 +42,19 @@ void dotest() {
 
   auto& clusters = eventdata.Clusters;
 
-  clusters.emplace_back(TVector3(1,2,3),
+  clusters.emplace_back(vec3(1,2,3),
                         100, 0.5,
                         Detector_t::Type_t::PID,
                         127, // central element
                         vector<TClusterHit>{TClusterHit()}
                         );
-  clusters.emplace_back(TVector3(4,5,6),
+  clusters.emplace_back(vec3(4,5,6),
                         100, 0.5,
                         Detector_t::Type_t::CB,
                         127, // central element
                         vector<TClusterHit>{TClusterHit(), TClusterHit()}
                         );
-  clusters.emplace_back(TVector3(7,8,9),
+  clusters.emplace_back(vec3(7,8,9),
                         100, 0.5,
                         Detector_t::Type_t::TAPS,
                         127, // central element
@@ -149,8 +149,8 @@ void dotest() {
   REQUIRE(readback.DetectorReadHits.size() == 3);
 
   REQUIRE(readback.Clusters.size() == 3);
-  REQUIRE(readback.Clusters.at(0).Position == TVector3(1,2,3));
-  REQUIRE(readback.Clusters.at(2).Position == TVector3(7,8,9));
+  REQUIRE(readback.Clusters.at(0).Position == vec3(1,2,3));
+  REQUIRE(readback.Clusters.at(2).Position == vec3(7,8,9));
   REQUIRE(readback.Clusters.at(0).Hits.size() == 1);
   REQUIRE(readback.Clusters.at(2).Hits.size() == 3);
 

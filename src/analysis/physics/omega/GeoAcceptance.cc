@@ -6,7 +6,6 @@
 
 #include "plot/root_draw.h"
 #include "TMath.h"
-#include "TVector3.h"
 #include "TH3D.h"
 #include "TH2D.h"
 
@@ -84,8 +83,8 @@ GeoAcceptance::ParticleThetaPhiPlot3D::ParticleThetaPhiPlot3D(HistogramFactory& 
 
 void GeoAcceptance::ParticleThetaPhiPlot3D::Fill(const TParticlePtr& p)
 {
-        TVector3 v = p->p.Unit();
-        hist->Fill(v.X(),v.Y(),v.Z());
+        auto v = p->p.Unit();
+        hist->Fill(v.x,v.y,v.z);
 }
 
 TObject *GeoAcceptance::ParticleThetaPhiPlot3D::GetObject()

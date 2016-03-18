@@ -75,7 +75,7 @@ void DeltaPlusPhysics::ProcessEvent(const TEvent& event, manager_t&)
                 // construct beam photon 4-vector and, using this, the delta restframe
                 const LorentzVec beam(0, 0, taggerhit.PhotonEnergy, taggerhit.PhotonEnergy);
                 const LorentzVec delta_beam(beam + target);
-                const TVector3 boost = -(delta_beam.BoostVector());
+                const auto boost = -(delta_beam.BoostVector());
 
                 // boost pi0
                 LorentzVec pi0_ = pi0;

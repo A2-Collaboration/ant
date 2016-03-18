@@ -1,5 +1,4 @@
 ﻿#include "omega.h"
-#include "TLorentzVector.h"
 #include "TH1D.h"
 #include "plot/root_draw.h"
 #include "utils/combinatorics.h"
@@ -135,8 +134,8 @@ OmegaEtaG::perDecayhists_t OmegaEtaG::makePerDecayHists(const string &title)
     return h;
 }
 
-TLorentzVector Boost(const TLorentzVector& lv, const TVector3& boost) {
-    TLorentzVector b(lv);
+LorentzVec Boost(const LorentzVec& lv, const vec3& boost) {
+    LorentzVec b(lv);
     b.Boost(boost);
     return b;
 }
@@ -204,7 +203,7 @@ void OmegaEtaG::Analyse(const TEventData &data, const TEvent& event, manager_t&)
         TParticleList ggg_list;
         ggg_list.assign(comb.begin(),comb.end());
 
-        TLorentzVector gggState = *comb.at(0)+*comb.at(1)+*comb.at(2);
+        LorentzVec gggState = *comb.at(0)+*comb.at(1)+*comb.at(2);
         const double gggIM = gggState.M();
 
         ggg->Fill(gggIM);
@@ -231,28 +230,28 @@ void OmegaEtaG::Analyse(const TEventData &data, const TEvent& event, manager_t&)
 
         if(omega_range.Contains(gggIM) && h) {
             for(auto& th : event.MCTrue().TaggerHits) {
-                const TLorentzVector beam_target = th.GetPhotonBeam() + TLorentzVector(0, 0, 0, ParticleTypeDatabase::Proton.Mass());
-                const TLorentzVector mm = beam_target - gggState;
-                const TLorentzVector mm_boosted = Boost(mm,-beam_target.BoostVector());
+                const auto beam_target = th.GetPhotonBeam() + LorentzVec(0, 0, 0, ParticleTypeDatabase::Proton.Mass());
+                const auto mm = beam_target - gggState;
+                const auto mm_boosted = Boost(mm, -beam_target.BoostVector());
 
 
-                h->calc_proton_energy_theta->Fill(mm.Energy()-ParticleTypeDatabase::Proton.Mass(), mm.Theta() * TMath::RadToDeg());
+                h->calc_proton_energy_theta->Fill(mm.E-ParticleTypeDatabase::Proton.Mass(), mm.Theta() * TMath::RadToDeg());
 
                 h->mm->Fill(mm.M());
 
                 if(mc_p) {
 
-                    const TParticle p_special(ParticleTypeDatabase::Proton, mm.Energy()-ParticleTypeDatabase::Proton.Mass(), mc_p->Theta(), mc_p->Phi());
+                    const TParticle p_special(ParticleTypeDatabase::Proton, mm.E-ParticleTypeDatabase::Proton.Mass(), mc_p->Theta(), mc_p->Phi());
                     h->calc_proton_special->Fill(p_special.Ek(), p_special.Theta()*TMath::RadToDeg());
 
-                    TLorentzVector mc_p_v = TLorentzVector(*mc_p);
+                    LorentzVec mc_p_v = *mc_p;
                     mc_p_v.Boost(-beam_target.BoostVector());
-                    const auto angle = mc_p_v.Angle(mm_boosted.Vect());
+                    const auto angle = mc_p_v.Angle(mm_boosted.p);
                     h->angle_p->Fill(angle * TMath::RadToDeg());
 
-                    TLorentzVector ggg_boost = gggState;
+                    LorentzVec ggg_boost = gggState;
                     ggg_boost.Boost(-beam_target.BoostVector());
-                    const auto angle_pggg = ggg_boost.Angle(mc_p_v.Vect());
+                    const auto angle_pggg = ggg_boost.Angle(mc_p_v.p);
                     h->angle_p_ggg->Fill(angle_pggg * TMath::RadToDeg());
 
                     const auto p_phi_diff = TVector2::Phi_mpi_pi(mm_boosted.Phi() - mc_p_v.Phi());
@@ -264,9 +263,9 @@ void OmegaEtaG::Analyse(const TEventData &data, const TEvent& event, manager_t&)
 
         for( auto gcomb = utils::makeCombination(ggg_list,2); !gcomb.Done(); ++gcomb) {
 
-            const TLorentzVector g1(*gcomb.at(0));
-            const TLorentzVector g2(*gcomb.at(1));
-            const TLorentzVector ggState = g1 + g2;
+            const LorentzVec g1(*gcomb.at(0));
+            const LorentzVec g2(*gcomb.at(1));
+            const LorentzVec ggState = g1 + g2;
             const double ggIM = ggState.M();
 
             if(is_omega_decay) {
@@ -435,12 +434,12 @@ void OmegaMCTruePlots::ShowResult()
 
 
 
-TLorentzVector OmegaMCTree::getGamma1() const
+LorentzVec OmegaMCTree::getGamma1() const
 {
     return gamma1_vector;
 }
 
-void OmegaMCTree::setGamma1(const TLorentzVector& value)
+void OmegaMCTree::setGamma1(const LorentzVec& value)
 {
     gamma1_vector = value;
 }
@@ -510,8 +509,8 @@ void OmegaMCTree::ShowResult()
 
 
 template <typename it_type>
-TLorentzVector LVSum(it_type begin, it_type end) {
-    TLorentzVector v;
+LorentzVec LVSum(it_type begin, it_type end) {
+    LorentzVec v;
 
     while(begin!=end) {
         v += **begin;
@@ -522,8 +521,8 @@ TLorentzVector LVSum(it_type begin, it_type end) {
 }
 
 template <typename it_type>
-TLorentzVector LVSumL(it_type begin, it_type end) {
-    TLorentzVector v;
+LorentzVec LVSumL(it_type begin, it_type end) {
+    LorentzVec v;
 
     while(begin!=end) {
         v += *begin;
@@ -548,11 +547,6 @@ double TimeAvg(it_type begin, it_type end) {
     return t / Esum;
 }
 
-TLorentzVector boost(const TLorentzVector& lv, const TVector3& boot) {
-    TLorentzVector v(lv);
-    v.Boost(boot);
-    return v;
-}
 
 #define FASSERT(x) if(!(x)) LOG(ERROR) << "ERROR";
 
@@ -573,7 +567,7 @@ struct chi2_highscore_t {
 
 
 double IM(const TParticlePtr& p1, const TParticlePtr& p2) {
-    return (TLorentzVector(*p1)+TLorentzVector(*p2)).M();
+    return (*p1+*p2).M();
 }
 
 double getTime(const TParticlePtr& p) {
@@ -676,7 +670,7 @@ void OmegaEtaG2::Analyse(const TEventData &data, const TEvent& event, manager_t&
 
     const TParticle ggg(ParticleTypeDatabase::Omega, LVSum(photons.begin(), photons.end()));
     t.ggg = ggg;
-    const TVector3 gggBoost = -ggg.BoostVector();
+    const auto gggBoost = -ggg.BoostVector();
 
     t.copl_angle = fabs(TVector2::Phi_mpi_pi(proton->Phi() - ggg.Phi() - M_PI));
 
@@ -706,7 +700,7 @@ void OmegaEtaG2::Analyse(const TEventData &data, const TEvent& event, manager_t&
         t.TaggCh = TagH.Channel;
         t.TaggT  = TagH.Time;
 
-        const TLorentzVector beam_target = TagH.GetPhotonBeam() + TLorentzVector(0, 0, 0, ParticleTypeDatabase::Proton.Mass()); // make global
+        const LorentzVec beam_target = TagH.GetPhotonBeam() + LorentzVec(0, 0, 0, ParticleTypeDatabase::Proton.Mass()); // make global
         const TParticle missing(ParticleTypeDatabase::Proton, beam_target - ggg);
 
         t.mm = missing;
@@ -735,7 +729,7 @@ void OmegaEtaG2::Analyse(const TEventData &data, const TEvent& event, manager_t&
         const TParticle ggg_fitted(ParticleTypeDatabase::Omega, LVSumL(t.photons_fitted().begin(), t.photons_fitted().end()));
         t.ggg_fitted = ggg_fitted;
 
-        const TVector3 gggBoost_fitted = -ggg_fitted.BoostVector();
+        const auto gggBoost_fitted = -ggg_fitted.BoostVector();
 
         size_t combindex = 0;
 
@@ -744,13 +738,13 @@ void OmegaEtaG2::Analyse(const TEventData &data, const TEvent& event, manager_t&
             const auto& g2 = photons.at(comb[1]);
             const auto& g3 = photons.at(comb[2]);
 
-            const TLorentzVector gg = *g1 + *g2;
+            const auto gg = *g1 + *g2;
 
             t.ggIM().at(combindex) = gg.M();
 
-            const TLorentzVector g3_boosted = boost(*g3, gggBoost);
+            const auto g3_boosted = Boost(*g3, gggBoost);
 
-            t.BachelorE().at(combindex) = g3_boosted.E();
+            t.BachelorE().at(combindex) = g3_boosted.E;
 
             ++combindex;
         }
@@ -761,13 +755,13 @@ void OmegaEtaG2::Analyse(const TEventData &data, const TEvent& event, manager_t&
             const auto& g2 = t.photons_fitted().at(comb[1]);
             const auto& g3 = t.photons_fitted().at(comb[2]);
 
-            const TLorentzVector gg = g1 + g2;
+            const auto gg = g1 + g2;
 
             t.ggIM_fitted().at(combindex) = gg.M();
 
-            const TLorentzVector g3_boosted = boost(g3, gggBoost_fitted);
+            const auto g3_boosted = Boost(g3, gggBoost_fitted);
 
-            t.BachelorE_fitted().at(combindex) = g3_boosted.E();
+            t.BachelorE_fitted().at(combindex) = g3_boosted.E;
 
             ++combindex;
         }

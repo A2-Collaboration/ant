@@ -19,13 +19,10 @@ using namespace ant::analysis::physics;
 
 std::default_random_engine TestAPLCON::FitParticle::generator;
 
-LorentzVec TestAPLCON::FitParticle::Make(const std::vector<double>& EkThetaPhi, const Double_t m) {
-    const double E = EkThetaPhi[0] + m;
-    const Double_t p = sqrt( E*E - m*m );
-    TVector3 pv(1,0,0);
-    pv.SetMagThetaPhi(p, EkThetaPhi[1], EkThetaPhi[2]);
-    LorentzVec l(pv, E);
-    return l;
+LorentzVec TestAPLCON::FitParticle::Make(const std::vector<double>& EkThetaPhi, const double m) {
+    const auto E = EkThetaPhi[0] + m;
+    const auto p = sqrt( E*E - m*m );
+    return LorentzVec(vec3::RThetaPhi(p, EkThetaPhi[1], EkThetaPhi[2]), E);
 }
 
 void TestAPLCON::FitParticle::Smear() {

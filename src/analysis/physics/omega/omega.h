@@ -147,8 +147,8 @@ public:
 
     virtual void ProcessEvent(const TEvent& event, manager_t& manager) override;
     virtual void ShowResult() override;
-    TLorentzVector getGamma1() const;
-    void setGamma1(const TLorentzVector& value);
+    LorentzVec getGamma1() const;
+    void setGamma1(const LorentzVec& value);
 };
 
 
