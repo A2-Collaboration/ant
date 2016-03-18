@@ -58,6 +58,7 @@ protected:
         TH1D* splitPerEvent;
         std::unique_ptr<PositionMap> splitFlagPos;
         std::unique_ptr<PositionMap> splitPos;
+        std::unique_ptr<PositionMap> touchesholeFlagPos;
 
         std::vector<TH1D*> mult2_split_angles;
         ant::hstack* splitstack;

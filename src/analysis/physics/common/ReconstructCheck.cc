@@ -177,6 +177,7 @@ ReconstructCheck::histgroup::histgroup(const HistogramFactory& parent, const str
 
     splitPos = makePosMap(HistFac,d, "splitpos","Pos Mult > 1");
     splitFlagPos = makePosMap(HistFac,d, "splitflagpos","Pos of split-flagged clusters");
+    touchesholeFlagPos = makePosMap(HistFac,d, "touchesholeflagpos","Pos of toucheshole-flagged clusters");
     posCharged = makePosMap(HistFac,d, "chargedpos","Pos of charged cands");
 
     mult2_split_angles.resize(3);
@@ -227,7 +228,7 @@ void ReconstructCheck::histgroup::ShowResult() const
     canvas c(Prefix);
 
     c << drawoption("colz") << nPerEvent << nPerEventPerE << splitPerEvent
-      << *splitFlagPos << *splitPos
+      << *splitFlagPos << *splitPos << *touchesholeFlagPos
       << cluserSize << cluserSize_true << dEE << dEE_true << nCharged << *posCharged << unmatched_veto
       << drawoption("nostack") << padoption::Legend << splitstack
       << drawoption("colz") << *energy_recov
@@ -300,7 +301,10 @@ void ReconstructCheck::histgroup::Fill(const TParticlePtr& mctrue, const TCandid
             if(cl.HasFlag(TCluster::Flags_t::Split)) {
                 ++nsplit;
                 splitFlagPos->Fill(mc_theta, mc_phi);
-
+            }
+            if(cl.HasFlag(TCluster::Flags_t::TouchesHole)) {
+                ++nsplit;
+                touchesholeFlagPos->Fill(mc_theta, mc_phi);
             }
         }
     }
