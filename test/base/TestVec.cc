@@ -1,8 +1,8 @@
 #include "catch.hpp"
 
-#include "base/vec2.h"
-#include "base/vec3.h"
-#include "base/LorentzVec.h"
+#include "base/vec/vec2.h"
+#include "base/vec/vec3.h"
+#include "base/vec/LorentzVec.h"
 
 #include "TVector2.h"
 #include "TVector3.h"

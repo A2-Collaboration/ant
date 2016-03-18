@@ -7,7 +7,7 @@
 #include "base/ParticleType.h"
 #include "base/Tree.h"
 
-#include "base/LorentzVec.h"
+#include "base/vec/LorentzVec.h"
 
 #include <vector>
 #include <list>

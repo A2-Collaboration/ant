@@ -2,11 +2,6 @@
 
 #include "base/Detector_t.h"
 
-
-
-#include "base/vec3.h"
-#include "TMath.h"
-
 #include <vector>
 #include <list>
 #include <set>
@@ -59,7 +54,7 @@ static double calc_total_energy(const cluster_t& cluster) {
 }
 
 static double calc_energy_weight(const double energy, const double total_energy) {
-    double wgtE = 4.0 + TMath::Log(energy / total_energy); /// \todo use optimal cutoff value
+    double wgtE = 4.0 + log(energy / total_energy); /// \todo use optimal cutoff value
     return wgtE<0 ? 0 : wgtE;
 }
 
@@ -67,7 +62,7 @@ static void calc_bump_weights(const cluster_t& cluster, bump_t& bump) {
     double w_sum = 0;
     for(size_t i=0;i<cluster.size();i++) {
         double r = (bump.Position - cluster[i].Element->Position).R();
-        double w = cluster[i].Energy*TMath::Exp(-2.5*r/cluster[i].Element->MoliereRadius);
+        double w = cluster[i].Energy*exp(-2.5*r/cluster[i].Element->MoliereRadius);
         bump.Weights[i] = w;
         w_sum += w;
     }
@@ -352,7 +347,7 @@ static void split_cluster(const cluster_t& cluster,
         double sum_pull = 0;
         for(auto b=state[j].begin(); b != state[j].end(); ++b) {
             const auto& r = cluster[j].Element->Position - bump_positions[*b];
-            double pull = bump_energies[*b] * TMath::Exp(-r.R()/cluster[j].Element->MoliereRadius);
+            double pull = bump_energies[*b] * exp(-r.R()/cluster[j].Element->MoliereRadius);
             pulls[*b] = pull;
             sum_pull += pull;
         }

@@ -19,8 +19,6 @@
 #include "TH1D.h"
 #include "TF1.h"
 
-#include "base/LorentzVec.h"
-
 #include <cassert>
 #include <functional>
 

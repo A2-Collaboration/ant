@@ -4,7 +4,7 @@
 #include "base/std_ext/math.h"
 #include "base/std_ext/shared_ptr_container.h"
 
-#include "base/vec3.h"
+#include "base/vec/vec3.h"
 
 #include <vector>
 #include <cmath>

@@ -2,7 +2,7 @@
 
 #include "tree/TParticle.h"
 #include "base/ParticleTypeTree.h"
-#include "base/LorentzVec.h"
+#include "base/vec/LorentzVec.h"
 
 #include <string>
 

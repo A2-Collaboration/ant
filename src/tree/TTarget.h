@@ -4,7 +4,7 @@
 #include "base/printable.h"
 #include "base/std_ext/math.h"
 
-#include "base/vec3.h"
+#include "base/vec/vec3.h"
 
 #include <list>
 #include <memory>

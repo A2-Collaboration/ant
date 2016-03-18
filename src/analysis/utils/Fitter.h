@@ -1,6 +1,6 @@
 #pragma once
 
-#include "base/LorentzVec.h"
+#include "base/vec/LorentzVec.h"
 #include "base/ParticleTypeTree.h"
 #include "tree/TParticle.h"
 #include "analysis/utils/combinatorics.h"

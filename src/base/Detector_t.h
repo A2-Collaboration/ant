@@ -2,7 +2,7 @@
 
 #include "base/printable.h"
 
-#include "base/vec3.h"
+#include "base/vec/vec3.h"
 
 #include <cstdint>
 #include <stdexcept>

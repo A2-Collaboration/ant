@@ -3,7 +3,7 @@
 #include "TID.h" // TKeyValue
 
 #include "base/printable.h"
-#include "base/LorentzVec.h"
+#include "base/vec/LorentzVec.h"
 
 #include <vector>
 #include <iomanip>

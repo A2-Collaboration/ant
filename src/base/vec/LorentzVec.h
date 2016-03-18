@@ -1,6 +1,6 @@
 #pragma once
 
-#include "base/vec3.h"
+#include "base/vec/vec3.h"
 
 class TLorentzVector;
 

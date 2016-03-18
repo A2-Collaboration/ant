@@ -26,9 +26,12 @@ set(SRCS_BASE
   TF1Ext.h
   TH1Ext.h
   WrapTTree.cc
-  vec3.cc
-  vec2.cc
-  LorentzVec.cc
+  )
+
+set(SRCS_VEC
+  vec/vec3.cc
+  vec/vec2.cc
+  vec/LorentzVec.cc
 )
 
 set(SRCS_CEREAL
@@ -146,6 +149,7 @@ set(SRCS
   ${SRCS_DETAIL}
   ${SRCS_MATH_FUNCTIONS}
   ${SRCS_STD_EXT}
+  ${SRCS_VEC}
 )
 
 append_header_files(SRCS)

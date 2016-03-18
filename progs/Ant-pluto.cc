@@ -25,7 +25,7 @@
 #include "base/std_ext/memory.h"
 #include "base/std_ext/string.h"
 #include "base/WrapTFile.h"
-#include "base/vec3.h"
+#include "base/vec/vec3.h"
 #include "simulation/mc/PlutoExtensions.h"
 
 
