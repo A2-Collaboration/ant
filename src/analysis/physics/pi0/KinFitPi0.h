@@ -21,8 +21,14 @@ protected:
         void ShowResult();
 
     protected:
-
         const unsigned multiplicity;
+
+        HistogramFactory HistFac;
+
+
+        using IM_perms_t = std::vector<std::vector<size_t>>;
+        const IM_perms_t IM_perms;
+        static IM_perms_t BuildIMPerms(unsigned multiplicity);
 
         utils::KinFitter fitter;
 
@@ -38,6 +44,9 @@ protected:
         PromptRandom::Hist1 IM_2g_byFit;
         PromptRandom::Hist1 IM_2g_fitted;
 
+        std::map<std::string, PromptRandom::Hist1> h_pulls;
+        using fit_variables_t = decltype(APLCON::Result_t::Variables);
+        void FillPulls(const fit_variables_t& vars);
     };
 
     std::vector<std::unique_ptr<MultiPi0>> multiPi0;

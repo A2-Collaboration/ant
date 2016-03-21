@@ -21,7 +21,7 @@ using namespace std;
 KinFitPi0::KinFitPi0(const string& name, OptionsPtr opts) :
     Physics(name, opts)
 {
-    for(unsigned mult=1;mult<=opts->Get<unsigned>("nPi0",1);mult++) {
+    for(unsigned mult=1;mult<=opts->Get<unsigned>("nPi0",3);mult++) {
         multiPi0.emplace_back(std_ext::make_unique<MultiPi0>(HistFac, mult));
     }
 }
@@ -44,15 +44,15 @@ void KinFitPi0::ShowResult()
 
 KinFitPi0::MultiPi0::MultiPi0(HistogramFactory& histFac, unsigned nPi0) :
     multiplicity(nPi0),
+    HistFac(std_ext::formatter() << "m" << multiplicity << "Pi0", histFac,
+            std_ext::formatter() << "m" << multiplicity << "Pi0"),
+    IM_perms(BuildIMPerms(multiplicity)),
     fitter(std_ext::formatter() << multiplicity << "Pi0", 2*multiplicity),
     h_missingmass(promptrandom),
     h_fitprobability(promptrandom),
     IM_2g_byFit(promptrandom),
     IM_2g_fitted(promptrandom)
 {
-    std::string multiplicity_str = std_ext::formatter() << "m" << multiplicity << "Pi0";
-    HistogramFactory HistFac(multiplicity_str, histFac, multiplicity_str);
-
     promptrandom.AddPromptRange({-2.5,1.5}); // slight offset due to CBAvgTime reference
     promptrandom.AddRandomRange({-50,-10});  // just ensure to be way off prompt peak
     promptrandom.AddRandomRange({  10,50});
@@ -123,6 +123,29 @@ void KinFitPi0::MultiPi0::ProcessData(const TEventData& data)
             continue;
         }
 
+        // check invariant mass
+        bool im_ok = false;
+        for(auto& idx : IM_perms) {
+            bool all_inside_pi0 = true;
+            for(unsigned i=0;i<multiplicity;i++) {
+                const auto im = (*photons[idx[2*i]] + *photons[idx[2*i+1]]).M();
+                const auto Pi0 = ParticleTypeDatabase::Pi0.GetWindow(20);
+                if(!Pi0.Contains(im)) {
+                    all_inside_pi0 = false;
+                    break;
+                }
+            }
+            if(all_inside_pi0) {
+                im_ok = true;
+                break;
+            }
+        }
+        if(!im_ok) {
+            steps->Fill("IM not ok",1.0);
+            continue;
+        }
+
+
         LorentzVec photon_sum(0,0,0,0);
         for(const auto& p : photons) {
             photon_sum += *p;
@@ -167,12 +190,29 @@ void KinFitPi0::MultiPi0::ProcessData(const TEventData& data)
                 h_fitprobability.Fill(fit_result.Probability);
                 utils::ParticleTools::FillIMCombinations([this] (double x) {IM_2g_byFit.Fill(x);},  2, photons);
                 utils::ParticleTools::FillIMCombinations([this] (double x) {IM_2g_fitted.Fill(x);},  2, fitter.GetFittedPhotons());
+                FillPulls(fit_result.Variables);
             }
             else {
                 steps->Fill("Fit failed",1.0);
             }
 
         }
+    }
+}
+
+void KinFitPi0::MultiPi0::FillPulls(const fit_variables_t& vars)
+{
+    for(auto& var : vars) {
+        const auto& varname = var.first;
+        const auto& pull = var.second.Pull;
+        // get the iterator to where the key *should* be if it existed:
+        auto hint = h_pulls.lower_bound(varname);
+        if (hint == h_pulls.end() || h_pulls.key_comp()(varname, hint->first)) {
+            // insert at the correct location
+            hint = h_pulls.insert(hint, make_pair(varname, PromptRandom::Hist1(promptrandom)));
+            hint->second.MakeHistograms(HistFac,"pull_"+varname,varname+": Pull",BinSettings(100,-3,3),"Pull","");
+        }
+        hint->second.Fill(pull);
     }
 }
 
@@ -187,6 +227,41 @@ void KinFitPi0::MultiPi0::ShowResult()
             << IM_2g_byFit.subtracted
             << IM_2g_fitted.subtracted
             << endc;
+
+    canvas c_pulls(std_ext::formatter() << "KinFitPi0: " << multiplicity << "Pulls");
+
+    for(auto& h_pull : h_pulls)
+        c_pulls << h_pull.second.subtracted;
+
+    c_pulls << endc;
 }
+
+KinFitPi0::MultiPi0::IM_perms_t KinFitPi0::MultiPi0::BuildIMPerms(unsigned multiplicity)
+{
+    ParticleTypeTree t;
+    if(multiplicity==1)
+        t = ParticleTypeTreeDatabase::Get(ParticleTypeTreeDatabase::Channel::Pi0_2g);
+    else if(multiplicity==2)
+        t = ParticleTypeTreeDatabase::Get(ParticleTypeTreeDatabase::Channel::TwoPi0_4g);
+    else if(multiplicity==3)
+        t = ParticleTypeTreeDatabase::Get(ParticleTypeTreeDatabase::Channel::ThreePi0_6g);
+    if(!t)
+        throw runtime_error("Multiplicity not supported");
+    auto t_tmp = t->DeepCopy<int>([] (const ParticleTypeTree&) {return 0;});
+    for(const auto& daughter : t_tmp->Daughters()) {
+        if(daughter->IsLeaf()) {
+            daughter->Unlink();
+            break;
+        }
+    }
+    t_tmp->Sort();
+    IM_perms_t perms;
+    using t_tmp_t = decltype(t_tmp);
+    std::vector<t_tmp_t::element_type::node_t> leaves;
+    t_tmp->GetUniquePermutations(leaves, perms);
+    return perms;
+}
+
+
 
 AUTO_REGISTER_PHYSICS(KinFitPi0)
