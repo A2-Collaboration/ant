@@ -922,21 +922,14 @@ OmegaEtaG2::OmegaEtaG2(const std::string& name, OptionsPtr opts):
     photon_E_cb(opts->Get<decltype(photon_E_cb)>("PhotonECB", {50.0, 1600.0})),
     photon_E_taps(opts->Get<decltype(photon_E_taps)>("PhotonETAPS", {200.0, 1600.0})),
     proton_theta(degree_to_radian(opts->Get<decltype(proton_theta)>("ProtonThetaRange", {2.0, 45.0}))),
-    fitter("OmegaEtaG2", 3)
+    fitter("OmegaEtaG2", 3, utils::UncertaintyModels::MCExtracted::makeAndLoad())
 {
-    const auto setup = ant::ExpConfig::Setup::GetLastFound();
-
-    if(!setup) {
-        throw std::runtime_error("No Setup found");
-    }
 
     promptrandom.AddPromptRange({-5,5});
     promptrandom.AddRandomRange({-20, -10});
     promptrandom.AddRandomRange({ 10,  20});
 
     t.CreateBranches(tree);
-
-    fitter.LoadSigmaData(setup->GetPhysicsFilesDirectory()+"/FitterSigmas.root");
 
     missed_channels = HistFac.makeTH1D("Unlisted Channels","","Total Events seen",BinSettings(20),"unlistedChannels");
     found_channels  = HistFac.makeTH1D("Listed Channels",  "","Total Events seen",BinSettings(20),"listedChannels");

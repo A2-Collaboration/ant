@@ -31,10 +31,14 @@ using namespace ant::analysis::utils;
 
 const APLCON::Fit_Settings_t Fitter::Fitter::DefaultSettings = Fitter::MakeDefaultSettings();
 
-Fitter::Fitter(const string& fittername, const APLCON::Fit_Settings_t& settings)
+Fitter::Fitter(const string& fittername, const APLCON::Fit_Settings_t& settings, std::shared_ptr<UncertaintyModel> &uncertainty_model):
+    uncertainty(uncertainty_model)
 {
     aplcon = make_unique<APLCON>(fittername, settings);
 }
+
+Fitter::~Fitter()
+{}
 
 APLCON::Fit_Settings_t Fitter::MakeDefaultSettings()
 {
@@ -51,92 +55,26 @@ void Fitter::LinkVariable(Fitter::FitParticle& particle)
                          particle.Addresses_Pulls());
 }
 
-double Fitter::EnergyResolution(const TParticlePtr& p) const
-{
-    assert(p->Candidate!=nullptr);
-
-    if(p->Type() != ParticleTypeDatabase::Photon)
-        throw Exception("Currently only photons are supported");
-
-    if(p->Candidate->Detector & Detector_t::Type_t::CB) {
-
-        return 1.07134e-02 * p->Ek();
-
-    } else if(p->Candidate->Detector & Detector_t::Type_t::TAPS) {
-
-        return 3.5E-2 * p->Ek();
-
-    } else {
-        LOG(WARNING) << "Photon not in (CB,TAPS?)";
-    }
-
-
-    return 0.0;
-}
-
-double Fitter::ThetaResolution(const TParticlePtr& p) const
-{
-    assert(p->Candidate!=nullptr);
-
-    if(p->Type() != ParticleTypeDatabase::Photon)
-        throw Exception("Currently only photons are supported");
-
-    if(p->Candidate->Detector & Detector_t::Type_t::CB) {
-
-        return cb_sigma_theta.GetSigma(p->Candidate->FindCaloCluster()->CentralElement, p->Ek());
-
-    } if(p->Candidate->Detector & Detector_t::Type_t::TAPS) {
-
-        return taps_sigma_theta.GetSigma(p->Candidate->FindCaloCluster()->CentralElement, p->Ek());
-
-    } else {
-        LOG(WARNING) << "Photon not in (CB,TAPS?)";
-    }
-
-    return 0.0;
-}
-
-double Fitter::PhiResolution(const TParticlePtr& p) const
-{
-    assert(p->Candidate!=nullptr);
-
-    if(p->Type() != ParticleTypeDatabase::Photon)
-        throw Exception("Currently only photons are supported");
-
-    if(p->Candidate->Detector & Detector_t::Type_t::CB) {
-
-        return cb_sigma_phi.GetSigma(p->Candidate->FindCaloCluster()->CentralElement, p->Ek());
-
-    } else if(p->Candidate->Detector & Detector_t::Type_t::TAPS) {
-
-        return taps_sigma_phi.GetSigma(p->Candidate->FindCaloCluster()->CentralElement, p->Ek());
-
-    } else {
-        LOG(WARNING) << "Photon not in (CB,TAPS?)";
-    }
-
-    return 0.0;
-}
-
 void Fitter::SetPhotonEkThetaPhi(FitParticle& photon, const TParticlePtr& p) const
 {
     photon.Particle = p;
 
-    photon.Ek.Value  = p->Ek();
-    photon.Ek.Sigma = EnergyResolution(p);
-
+    photon.Ek.Value     = p->Ek();
     photon.Theta.Value  = p->Theta();
-    photon.Theta.Sigma = ThetaResolution(p);
+    photon.Phi.Value    = p->Phi();
 
-    photon.Phi.Value  = p->Phi();
-    photon.Phi.Sigma = PhiResolution(p);
+    const auto sigmas = uncertainty->GetSigmas(*p);
+
+    photon.Ek.Sigma    = sigmas.sigmaE;
+    photon.Theta.Sigma = sigmas.sigmaTheta;
+    photon.Phi.Sigma   = sigmas.sigmaPhi;
+
 }
 
 double Fitter::fct_TaggerEGausSigma(double)
 {
     return  3.0/sqrt(12.0);
 }
-
 
 
 void Fitter::FitParticle::Var_t::SetupBranches(TTree* tree, const string& prefix)
@@ -164,103 +102,21 @@ LorentzVec Fitter::FitParticle::GetVector(const std::vector<double>& EkThetaPhi,
     return LorentzVec::EPThetaPhi(E, p, theta_, phi_);
 }
 
-Fitter::angular_sigma::angular_sigma()
-{
-}
-
-Fitter::angular_sigma::~angular_sigma()
-{}
-
-double Fitter::angular_sigma::GetSigma(const unsigned element, const double E) const
-{
-    const double vp0 = p0->GetBinContent(int(element));
-    const double vp1 = p1->GetBinContent(int(element));
-    const double vp2 = p2->GetBinContent(int(element));
-
-    return f(E, vp0, vp1, vp2);
-
-}
-
-double Fitter::angular_sigma::f(const double x, const double p0, const double p1, const double p2) noexcept
-{
-    //return p0*exp(p1*x)+p2;
-    return exp(p0 + p1*x) + p2;
-}
-
-double Fitter::angular_sigma::f_root(const double* x, const double* p) noexcept
-{
-    return f(x[0], p[0], p[1], p[2]);
-}
-
-TF1* Fitter::angular_sigma::GetTF1(const std::string& name)
-{
-    auto f = new TF1(name.c_str(), f_root, 0, 1600, 3);
-    f->SetParName(0, "#alpha");
-    f->SetParName(1, "#beta");
-    f->SetParName(2, "Offset");
-    return f;
-}
 
 
-
-
-void Fitter::angular_sigma::Load(WrapTFile& f, const string& prefix, const int bins)
-{
-    p0 = LoadHist(f, prefix+"_p0", bins);
-    p1 = LoadHist(f, prefix+"_p1", bins);
-    p2 = LoadHist(f, prefix+"_p2", bins);
-}
-
-Fitter::angular_sigma::Hist Fitter::angular_sigma::LoadHist(WrapTFile& f, const string& name, const int bins)
-{
-    auto h = f.GetSharedHist<TH1D>(name);
-
-    if(!h)
-        throw std::runtime_error("Could not load histogram " + name);
-
-    if(h->GetNbinsX() != bins)
-        throw std::runtime_error(formatter() << "TH1D " << name << " has wrong number of bins: " << h->GetNbinsX()  << ", expected: " << bins);
-
-    return h;
-}
-
-void Fitter::LoadSigmaData(const string& filename)
-{
-    const auto& setup = ant::ExpConfig::Setup::GetLastFound();
-    if(!setup)
-        throw Exception("No Setup found!");
-
-    unique_ptr<WrapTFileInput> f;
-    if(!std_ext::system::testopen(filename)) {
-        LOG(WARNING) << "Could not read sigmas from '" << filename << "', using default.";
-        f = std_ext::make_unique<WrapTFileInput>(string(ANT_PATH_DATABASE)+"/default/physics_files/FitterSigmas.root");
-    }
-    else {
-        f = std_ext::make_unique<WrapTFileInput>(filename);
-    }
-
-
-    const auto& CB = setup->GetDetector(Detector_t::Type_t::CB);
-    if(!CB)
-        throw Exception("No CB detector defined in setup");
-
-    const auto nCB = CB->GetNChannels();
-
-    const auto& TAPS = setup->GetDetector(Detector_t::Type_t::TAPS);
-    if(!TAPS)
-        throw Exception("No TAPS detector defined in setup");
-
-    const auto nTAPS = TAPS->GetNChannels();
-
-    cb_sigma_theta.Load(*f, "CB_sigma_Theta", int(nCB));
-    cb_sigma_phi.Load(  *f, "CB_sigma_Phi",   int(nCB));
-
-    taps_sigma_theta.Load(*f, "TAPS_sigma_Theta", int(nTAPS));
-    taps_sigma_phi.Load(  *f, "TAPS_sigma_Phi",   int(nTAPS));
-}
-
-KinFitter::KinFitter(const std::string& name, unsigned numGammas, const APLCON::Fit_Settings_t& settings) :
-    Fitter(name, settings)
+/**
+ * @brief KinFitter::KinFitter
+ * @param name Name for the fitter
+ * @param numGammas number of photons involved in the fit
+ * @param Uncertainty_model model to predict uncertainties
+ * @param settings
+ */
+KinFitter::KinFitter(
+        const std::string& name,
+        unsigned numGammas,
+        std::shared_ptr<Fitter::UncertaintyModel> Uncertainty_model,
+        const APLCON::Fit_Settings_t& settings) :
+    Fitter(name, settings, Uncertainty_model)
 {
     // nothing to do in this special case
     // used by "KinFit-free" TreeFitter
@@ -334,19 +190,11 @@ void KinFitter::SetProton(const TParticlePtr& proton)
     Proton->Theta.Value = proton->Theta();
     Proton->Phi.Value   = proton->Phi();
 
-    Proton->Ek.Sigma    = 0.0; // unmeasured
+    const auto sigmas = uncertainty->GetSigmas(*proton);
 
-
-
-    if(proton->Candidate->Detector & Detector_t::Type_t::CB) {
-        Proton->Theta.Sigma = degree_to_radian(5.43);
-        Proton->Phi.Sigma   = degree_to_radian(5.31);
-    } else if(proton->Candidate->Detector & Detector_t::Type_t::TAPS) {
-        Proton->Theta.Sigma = degree_to_radian(2.89);
-        Proton->Phi.Sigma   = degree_to_radian(4.45);
-    } else {
-        LOG(WARNING) << "Proton is not in (CB,TAPS)?";
-    }
+    Proton->Ek.Sigma    = sigmas.sigmaE;
+    Proton->Theta.Sigma = sigmas.sigmaTheta;
+    Proton->Phi.Sigma   = sigmas.sigmaPhi;
 
     Proton->Particle = proton;
 }
@@ -427,9 +275,10 @@ KinFitter::PhotonBeamVector::PhotonBeamVector(const string& name):
 TreeFitter::TreeFitter(const string& name,
                        ParticleTypeTree ptree,
                        unsigned kinFitGammas,
+                       std::shared_ptr<Fitter::UncertaintyModel> uncertainty_model,
                        nodesetup_t::getter nodeSetup,
                        const APLCON::Fit_Settings_t& settings) :
-    KinFitter(name, kinFitGammas, settings),
+    KinFitter(name, kinFitGammas, uncertainty_model, settings),
     tree(MakeTree(ptree))
 {
 
@@ -529,6 +378,9 @@ TreeFitter::TreeFitter(const string& name,
     aplcon->AddConstraint("IM_at_nodes",leave_names, IM_at_nodes);
 }
 
+TreeFitter::~TreeFitter()
+{}
+
 void TreeFitter::SetLeaves(const TParticleList& photons)
 {
     if(photons.size() != Photons.size())
@@ -569,7 +421,7 @@ bool TreeFitter::NextFit(APLCON::Result_t& fit_result)
     assert((unsigned)distance(it_not_comb, current_comb.end_not()) == n - k);
 
     // and by construction, the non-leaves are from k..n-1
-    for(unsigned i=k;i<n;i++) {
+    for(auto i=k;i<n;i++) {
         SetPhotonEkThetaPhi(*Photons[i], *it_not_comb);
         ++it_not_comb;
     }
@@ -607,3 +459,184 @@ TreeFitter::tree_t TreeFitter::MakeTree(ParticleTypeTree ptree)
 }
 
 
+
+//-------------------------------------------------------------------------------
+
+
+UncertaintyModels::MCExtracted::angular_sigma::angular_sigma()
+{}
+
+UncertaintyModels::MCExtracted::angular_sigma::~angular_sigma()
+{}
+
+double UncertaintyModels::MCExtracted::angular_sigma::GetSigma(const unsigned element, const double E) const
+{
+    const double vp0 = p0->GetBinContent(int(element));
+    const double vp1 = p1->GetBinContent(int(element));
+    const double vp2 = p2->GetBinContent(int(element));
+
+    return f(E, vp0, vp1, vp2);
+
+}
+
+double UncertaintyModels::MCExtracted::angular_sigma::f(const double x, const double p0, const double p1, const double p2) noexcept
+{
+    //return p0*exp(p1*x)+p2;
+    return exp(p0 + p1*x) + p2;
+}
+
+double UncertaintyModels::MCExtracted::angular_sigma::f_root(const double* x, const double* p) noexcept
+{
+    return f(x[0], p[0], p[1], p[2]);
+}
+
+TF1* UncertaintyModels::MCExtracted::angular_sigma::GetTF1(const std::string& name)
+{
+    auto f = new TF1(name.c_str(), f_root, 0, 1600, 3);
+    f->SetParName(0, "#alpha");
+    f->SetParName(1, "#beta");
+    f->SetParName(2, "Offset");
+    return f;
+}
+
+
+
+
+void UncertaintyModels::MCExtracted::angular_sigma::Load(WrapTFile& f, const string& prefix, const int bins)
+{
+    p0 = LoadHist(f, prefix+"_p0", bins);
+    p1 = LoadHist(f, prefix+"_p1", bins);
+    p2 = LoadHist(f, prefix+"_p2", bins);
+}
+
+UncertaintyModels::MCExtracted::angular_sigma::Hist UncertaintyModels::MCExtracted::angular_sigma::LoadHist(WrapTFile& f, const string& name, const int bins)
+{
+    auto h = f.GetSharedHist<TH1D>(name);
+
+    if(!h)
+        throw std::runtime_error("Could not load histogram " + name);
+
+    if(h->GetNbinsX() != bins)
+        throw std::runtime_error(formatter() << "TH1D " << name << " has wrong number of bins: " << h->GetNbinsX()  << ", expected: " << bins);
+
+    return h;
+}
+
+Fitter::Uncertainties_t UncertaintyModels::MCExtracted::GetSigmasProton(const TParticle &proton) const
+{
+
+    Fitter::Uncertainties_t sigmas;
+
+    sigmas.sigmaE = 0.0;  // unmeasured
+
+    if(proton.Candidate->Detector & Detector_t::Type_t::CB) {
+        sigmas.sigmaTheta = degree_to_radian(5.43);
+        sigmas.sigmaPhi   = degree_to_radian(5.31);
+    } else if(proton.Candidate->Detector & Detector_t::Type_t::TAPS) {
+        sigmas.sigmaTheta = degree_to_radian(2.89);
+        sigmas.sigmaPhi   = degree_to_radian(4.45);
+    } else {
+        LOG(WARNING) << "Proton is not in (CB,TAPS)?";
+    }
+
+    return sigmas;
+}
+
+Fitter::Uncertainties_t UncertaintyModels::MCExtracted::GetSigmasPhoton(const TParticle &photon) const
+{
+    Fitter::Uncertainties_t sigmas;
+
+    const auto& cluster = photon.Candidate->FindCaloCluster();
+
+    if(photon.Candidate->Detector & Detector_t::Type_t::CB) {
+
+        sigmas.sigmaE     = 1.07134e-02 * photon.Ek();
+        sigmas.sigmaTheta = cb_sigma_theta.GetSigma(cluster->CentralElement, photon.Ek());
+        sigmas.sigmaPhi   = cb_sigma_phi.GetSigma(cluster->CentralElement, photon.Ek());
+
+    } else if(photon.Candidate->Detector & Detector_t::Type_t::TAPS) {
+
+        sigmas.sigmaE     = 3.5E-2 * photon.Ek();
+        sigmas.sigmaTheta = taps_sigma_theta.GetSigma(cluster->CentralElement, photon.Ek());
+        sigmas.sigmaPhi   = taps_sigma_phi.GetSigma(cluster->CentralElement, photon.Ek());
+
+    } else {
+        LOG(WARNING) << "Photon not in (CB,TAPS?)";
+    }
+
+    return sigmas;
+}
+
+UncertaintyModels::MCExtracted::MCExtracted()
+{}
+
+UncertaintyModels::MCExtracted::~MCExtracted()
+{}
+
+void UncertaintyModels::MCExtracted::LoadSigmas(const string& filename)
+{
+    const auto& setup = ant::ExpConfig::Setup::GetLastFound();
+    if(!setup)
+        throw Exception("No Setup found!");
+
+    unique_ptr<WrapTFileInput> f;
+    if(!std_ext::system::testopen(filename)) {
+        LOG(WARNING) << "Could not read sigmas from '" << filename << "', using default.";
+        f = std_ext::make_unique<WrapTFileInput>(string(ANT_PATH_DATABASE)+"/default/physics_files/FitterSigmas.root");
+    }
+    else {
+        f = std_ext::make_unique<WrapTFileInput>(filename);
+    }
+
+
+    const auto& CB = setup->GetDetector(Detector_t::Type_t::CB);
+    if(!CB)
+        throw Exception("No CB detector defined in setup");
+
+    const auto nCB = CB->GetNChannels();
+
+    const auto& TAPS = setup->GetDetector(Detector_t::Type_t::TAPS);
+    if(!TAPS)
+        throw Exception("No TAPS detector defined in setup");
+
+    const auto nTAPS = TAPS->GetNChannels();
+
+    cb_sigma_theta.Load(*f, "CB_sigma_Theta", int(nCB));
+    cb_sigma_phi.Load(  *f, "CB_sigma_Phi",   int(nCB));
+
+    taps_sigma_theta.Load(*f, "TAPS_sigma_Theta", int(nTAPS));
+    taps_sigma_phi.Load(  *f, "TAPS_sigma_Phi",   int(nTAPS));
+}
+
+Fitter::Uncertainties_t UncertaintyModels::MCExtracted::GetSigmas(const TParticle &particle) const
+{
+
+    if(particle.Type() == ParticleTypeDatabase::Photon)
+        return GetSigmasPhoton(particle);
+
+    if(particle.Type() == ParticleTypeDatabase::Proton)
+        return GetSigmasProton(particle);
+
+    // shoult never happen in normal running
+    throw Exception("Unexpected Particle: " + particle.Type().Name());
+
+}
+
+std::shared_ptr<UncertaintyModels::MCExtracted> UncertaintyModels::MCExtracted::makeAndLoad()
+{
+    auto s = std::make_shared<MCExtracted>();
+
+    const auto setup = ant::ExpConfig::Setup::GetLastFound();
+
+    if(!setup) {
+        throw std::runtime_error("No Setup found");
+    }
+
+    s->LoadSigmas(setup->GetPhysicsFilesDirectory()+"/FitterSigmas.root");
+
+    return s;
+}
+
+
+Fitter::UncertaintyModel::~UncertaintyModel()
+{}

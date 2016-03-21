@@ -28,43 +28,50 @@ namespace utils {
 class Fitter {
 
 public:
-    struct angular_sigma {
-        using Hist = std::shared_ptr<TH1D>;
-        Hist p0 = nullptr;
-        Hist p1 = nullptr;
-        Hist p2 = nullptr;
-
-        double GetSigma(const unsigned element, const double E) const;
-
-        static double f(const double x, const double p0, const double p1, const double p2) noexcept;
-        static double f_root(const double* x, const double* p) noexcept;
-
-        static TF1* GetTF1(const std::string& name="SigmaFit");
-
-        void Load(ant::WrapTFile& f, const std::string& prefix, const int bins);
-        Hist LoadHist(ant::WrapTFile& f, const std::string& name, const int bins);
-
-        angular_sigma();
-        ~angular_sigma();
-
-    };
 
     struct Exception : std::runtime_error {
         using std::runtime_error::runtime_error;
     };
 
-    void LoadSigmaData(const std::string& filename);
+    /**
+     * @brief Uncertainties for E, theta, and phi
+     */
+    struct Uncertainties_t {
+        double sigmaE     = {};
+        double sigmaTheta = {};
+        double sigmaPhi   = {};
+
+        Uncertainties_t() = default;
+        Uncertainties_t(const double E, const double Theta, const double Phi) : sigmaE(E), sigmaTheta(Theta), sigmaPhi(Phi) {}
+    };
+
+    /**
+     * @brief Virtual base class for different Uncertainty Models for kion fitter.
+     *        Derive and implement the GetSigmas() method
+     */
+    class UncertaintyModel {
+    public:
+        virtual ~UncertaintyModel();
+        virtual Uncertainties_t GetSigmas(const TParticle& particle) const =0;
+    };
 
     static const APLCON::Fit_Settings_t DefaultSettings;
 
+    Fitter(const Fitter&) = delete;
+    Fitter& operator=(const Fitter&) = delete;
+    virtual ~Fitter();
+
 protected:
 
+
+
     Fitter(const std::string& fittername,
-           const APLCON::Fit_Settings_t& settings);
+           const APLCON::Fit_Settings_t& settings, std::shared_ptr<Fitter::UncertaintyModel>& uncertainty_model);
+
     Fitter(Fitter&&) = default;
     Fitter& operator=(Fitter&&) = default;
-    virtual ~Fitter() = default;
 
+    std::shared_ptr<const Fitter::UncertaintyModel> uncertainty;
     std::unique_ptr<APLCON> aplcon;
 
     struct FitParticle
@@ -114,15 +121,6 @@ protected:
 
     void LinkVariable(FitParticle& particle);
 
-    angular_sigma cb_sigma_theta;
-    angular_sigma cb_sigma_phi;
-    angular_sigma taps_sigma_theta;
-    angular_sigma taps_sigma_phi;
-
-    double EnergyResolution(const TParticlePtr& p) const;
-    double ThetaResolution(const TParticlePtr& p) const;
-    double PhiResolution(const TParticlePtr& p) const;
-
     void SetPhotonEkThetaPhi(FitParticle& photon, const TParticlePtr& p) const;
 
     static double fct_TaggerEGausSigma(double E);
@@ -132,13 +130,21 @@ private:
 
 };
 
+
 class KinFitter : public Fitter
 {
 public:
 
-    KinFitter(const std::string& name, unsigned numGammas,
+    KinFitter(const std::string& name,
+              unsigned numGammas,
+              std::shared_ptr<UncertaintyModel> Uncertainty_model,
               const APLCON::Fit_Settings_t& settings = DefaultSettings
               );
+
+    KinFitter(const KinFitter&) = delete;
+    KinFitter& operator=(const KinFitter&) = delete;
+    KinFitter(KinFitter&&) = default;
+    KinFitter& operator=(KinFitter&&) = default;
 
     void SetEgammaBeam(double ebeam);
     void SetProton(const TParticlePtr& proton);
@@ -217,6 +223,7 @@ public:
     TreeFitter(const std::string& name,
                ParticleTypeTree ptree,
                unsigned kinFitGammas,
+               std::shared_ptr<Fitter::UncertaintyModel> uncertainty_model,
                nodesetup_t::getter nodeSetup = {},
                const APLCON::Fit_Settings_t& settings = DefaultSettings
               );
@@ -224,10 +231,18 @@ public:
     // construct TreeFitter without additional KinFit
     TreeFitter(const std::string& name,
                ParticleTypeTree ptree,
+               std::shared_ptr<Fitter::UncertaintyModel> uncertainty_model,
                nodesetup_t::getter nodeSetup = {},
                const APLCON::Fit_Settings_t& settings = DefaultSettings
-              ) : TreeFitter(name, ptree, 0, nodeSetup, settings)
+              ) : TreeFitter(name, ptree, 0, uncertainty_model, nodeSetup, settings)
     {}
+
+    TreeFitter(const TreeFitter&) = delete;
+    TreeFitter& operator=(const TreeFitter&) = delete;
+    TreeFitter(TreeFitter&&) = default;
+    TreeFitter& operator=(TreeFitter&&) = default;
+
+    virtual ~TreeFitter();
 
     struct node_t {
         node_t(const ParticleTypeTree& ptree) : TypeTree(ptree) {}
@@ -282,6 +297,79 @@ protected:
     std::unique_ptr<current_comb_t> current_comb_ptr;
 
 };
+
+
+
+
+namespace UncertaintyModels {
+
+class Constant : public Fitter::UncertaintyModel {
+public:
+};
+
+
+/**
+ * @brief Kin fitter uncertainties, uses histograms. Energy depenent values for each detector element. Histograms can be loaded from root files in setup database.
+ */
+class MCExtracted : public Fitter::UncertaintyModel {
+public:
+    struct angular_sigma {
+        using Hist = std::shared_ptr<TH1D>;
+        Hist p0 = nullptr;
+        Hist p1 = nullptr;
+        Hist p2 = nullptr;
+
+        double GetSigma(const unsigned element, const double E) const;
+
+        static double f(const double x, const double p0, const double p1, const double p2) noexcept;
+        static double f_root(const double* x, const double* p) noexcept;
+
+        static TF1* GetTF1(const std::string& name="SigmaFit");
+
+        void Load(ant::WrapTFile& f, const std::string& prefix, const int bins);
+        Hist LoadHist(ant::WrapTFile& f, const std::string& name, const int bins);
+
+        angular_sigma();
+        ~angular_sigma();
+
+    };
+
+protected:
+
+    angular_sigma cb_sigma_theta;
+    angular_sigma cb_sigma_phi;
+    angular_sigma taps_sigma_theta;
+    angular_sigma taps_sigma_phi;
+
+    Fitter::Uncertainties_t GetSigmasProton(const TParticle &proton) const;
+    Fitter::Uncertainties_t GetSigmasPhoton(const TParticle &photon) const;
+
+public:
+
+    struct Exception : std::runtime_error {
+        using std::runtime_error::runtime_error;
+    };
+
+    MCExtracted();
+    virtual ~MCExtracted();
+
+    /**
+     * @brief Load Sigmas from histograms in ROOT file
+     * @param path Path to root file
+     */
+    void LoadSigmas(const std::string& path);
+
+    Fitter::Uncertainties_t GetSigmas(const TParticle &particle) const override;
+
+    /**
+     * @brief Create an instance of this model and directly load sigmas from ROOT file of current setup
+     * @return new instance
+     */
+    static std::shared_ptr<MCExtracted> makeAndLoad();
+
+};
+
+}
 
 
 

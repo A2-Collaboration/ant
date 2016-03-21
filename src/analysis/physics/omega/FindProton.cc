@@ -67,18 +67,10 @@ void FindProton::branches_t::Reset()
 FindProton::FindProton(const string& name, OptionsPtr opts):
     Physics(name,opts),
     nPhotons(opts->Get<unsigned>("nPhotons", 3)),
-    fitter("FindProton", nPhotons)
+    fitter("FindProton", nPhotons, utils::UncertaintyModels::MCExtracted::makeAndLoad())
 {
     tree = HistFac.makeTTree("tree");
     tree_branches.SetBranchtes(tree);
-
-    const auto setup = ant::ExpConfig::Setup::GetLastFound();
-
-    if(!setup) {
-        throw std::runtime_error("No Setup found");
-    }
-
-    fitter.LoadSigmaData(setup->GetPhysicsFilesDirectory()+"/FitterSigmas.root");
 
     steps = HistFac.makeTH1D("Steps","","",BinSettings(3), "steps");
 

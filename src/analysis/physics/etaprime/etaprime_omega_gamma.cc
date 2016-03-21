@@ -35,8 +35,8 @@ APLCON::Fit_Settings_t EtapOmegaG::MakeFitSettings(unsigned max_iterations)
 
 EtapOmegaG::EtapOmegaG(const string& name, OptionsPtr opts) :
     Physics(name, opts),
-    kinfitter_2("kinfitter_2", 2, MakeFitSettings(25)),
-    kinfitter_4("kinfitter_4", 4, MakeFitSettings(25))
+    kinfitter_2("kinfitter_2", 2, utils::UncertaintyModels::MCExtracted::makeAndLoad(), MakeFitSettings(25)),
+    kinfitter_4("kinfitter_4", 4, utils::UncertaintyModels::MCExtracted::makeAndLoad(), MakeFitSettings(25))
 {
     const interval<double> prompt_range{-2.5,1.5};
     promptrandom.AddPromptRange(prompt_range); // slight offset due to CBAvgTime reference
@@ -55,12 +55,6 @@ EtapOmegaG::EtapOmegaG(const string& name, OptionsPtr opts) :
 
     Sig.SetupTrees(HistFac);
     Ref.t.CreateBranches(HistFac.makeTTree("Ref"));
-
-    const auto setup = ant::ExpConfig::Setup::GetLastFound();
-    if(!setup)
-        throw runtime_error("EtapOmegaG needs a setup");
-    kinfitter_2.LoadSigmaData(setup->GetPhysicsFilesDirectory()+"/FitterSigmas.root");
-    kinfitter_4.LoadSigmaData(setup->GetPhysicsFilesDirectory()+"/FitterSigmas.root");
 
 }
 
@@ -271,19 +265,16 @@ void EtapOmegaG::ProcessEvent(const TEvent& event, manager_t&)
 
 EtapOmegaG::Sig_t::Sig_t() :
     treefitter_Pi0Pi0("treefit_Pi0Pi0",
-                      ParticleTypeTreeDatabase::Get(ParticleTypeTreeDatabase::Channel::TwoPi0_4g), {},
+                      ParticleTypeTreeDatabase::Get(ParticleTypeTreeDatabase::Channel::TwoPi0_4g),
+                      utils::UncertaintyModels::MCExtracted::makeAndLoad(), {},
                       MakeFitSettings(20)
                       ),
     treefitter_Pi0Eta("treefit_Pi0Eta",
-                      ParticleTypeTreeDatabase::Get(ParticleTypeTreeDatabase::Channel::Pi0Eta_4g), {},
+                      ParticleTypeTreeDatabase::Get(ParticleTypeTreeDatabase::Channel::Pi0Eta_4g),
+                      utils::UncertaintyModels::MCExtracted::makeAndLoad(), {},
                       MakeFitSettings(15)
                       )
 {
-    const auto setup = ant::ExpConfig::Setup::GetLastFound();
-    if(!setup)
-        throw runtime_error("EtapOmegaG needs a setup");
-    treefitter_Pi0Pi0.LoadSigmaData(setup->GetPhysicsFilesDirectory()+"/FitterSigmas.root");
-    treefitter_Pi0Eta.LoadSigmaData(setup->GetPhysicsFilesDirectory()+"/FitterSigmas.root");
 }
 
 void EtapOmegaG::Sig_t::SetupTrees(HistogramFactory HistFac)
@@ -387,10 +378,6 @@ EtapOmegaG::Sig_t::Fit_t::Fit_t(utils::TreeFitter fitter) :
     fitted_Pi0(treefitter.GetTreeNode(ParticleTypeDatabase::Pi0)),
     fitted_Omega(treefitter.GetTreeNode(ParticleTypeDatabase::Omega))
 {
-    const auto setup = ant::ExpConfig::Setup::GetLastFound();
-    if(!setup)
-        throw runtime_error("EtapOmegaG needs a setup");
-    treefitter.LoadSigmaData(setup->GetPhysicsFilesDirectory()+"/FitterSigmas.root");
 
     // search dependent gammas and remember the tree nodes in the fitter
 
@@ -426,6 +413,7 @@ utils::TreeFitter EtapOmegaG::Sig_t::Fit_t::Make(const ParticleTypeDatabase::Typ
     return {
         "sig_treefitter_"+subtree.Name(),
         subtree==Omega->Get() ? Omega : Pi0,
+                utils::UncertaintyModels::MCExtracted::makeAndLoad(),
         {},
         MakeFitSettings(15)
     };

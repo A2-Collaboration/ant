@@ -26,6 +26,7 @@ Etap3pi0::Etap3pi0(const std::string& name, OptionsPtr opts) :
     reference_tree(ParticleTypeTreeDatabase::Get(ParticleTypeTreeDatabase::Channel::EtaPrime_2Pi0Eta_6g)),
     bkg_tree(ParticleTypeTreeDatabase::Get(ParticleTypeTreeDatabase::Channel::ThreePi0_6g)),
     fitterSig("fitterSig",utils::ParticleTools::GetProducedParticle(signal_tree),
+              utils::UncertaintyModels::MCExtracted::makeAndLoad(),
               [] (ParticleTypeTree tree)
               {
                 if(tree->Get() == ParticleTypeDatabase::EtaPrime)
@@ -34,6 +35,7 @@ Etap3pi0::Etap3pi0(const std::string& name, OptionsPtr opts) :
                     return utils::TreeFitter::nodesetup_t{};
                } ),
     fitterRef("fitterRef",utils::ParticleTools::GetProducedParticle(reference_tree),
+              utils::UncertaintyModels::MCExtracted::makeAndLoad(),
               [] (ParticleTypeTree tree)
               {
                 if(tree->Get() == ParticleTypeDatabase::EtaPrime)
@@ -41,7 +43,7 @@ Etap3pi0::Etap3pi0(const std::string& name, OptionsPtr opts) :
                 else
                     return utils::TreeFitter::nodesetup_t{};
               } ),
-    kinFitterEMB(GetName(), 6)
+    kinFitterEMB(GetName(), 6, utils::UncertaintyModels::MCExtracted::makeAndLoad())
 {
     const auto setup = ant::ExpConfig::Setup::GetLastFound();
     if(!setup) {
@@ -66,9 +68,6 @@ Etap3pi0::Etap3pi0(const std::string& name, OptionsPtr opts) :
 
 
     kinFitterEMB.SetupBranches(tree, "kinFitEMB");
-    kinFitterEMB.LoadSigmaData(setup->GetPhysicsFilesDirectory()+"/FitterSigmas.root");
-    fitterSig.LoadSigmaData(setup->GetPhysicsFilesDirectory()+"/FitterSigmas.root");
-    fitterRef.LoadSigmaData(setup->GetPhysicsFilesDirectory()+"/FitterSigmas.root");
 
     vars.SetBranches(tree);
 

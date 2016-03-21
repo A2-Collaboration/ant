@@ -47,7 +47,7 @@ KinFitPi0::MultiPi0::MultiPi0(HistogramFactory& histFac, unsigned nPi0) :
     HistFac(std_ext::formatter() << "m" << multiplicity << "Pi0", histFac,
             std_ext::formatter() << "m" << multiplicity << "Pi0"),
     IM_perms(BuildIMPerms(multiplicity)),
-    fitter(std_ext::formatter() << multiplicity << "Pi0", 2*multiplicity),
+    fitter(std_ext::formatter() << multiplicity << "Pi0", 2*multiplicity, utils::UncertaintyModels::MCExtracted::makeAndLoad()),
     h_missingmass(promptrandom),
     h_fitprobability(promptrandom),
     IM_2g_byFit(promptrandom),
@@ -70,9 +70,6 @@ KinFitPi0::MultiPi0::MultiPi0(HistogramFactory& histFac, unsigned nPi0) :
     IM_2g_byFit.MakeHistograms(HistFac, "IM_2g_byFit","IM 2#gamma by Fit",bins_IM,"IM / MeV","#");
     IM_2g_fitted.MakeHistograms(HistFac, "IM_2g_fitted","IM 2#gamma fitted",bins_IM,"IM / MeV","#");
 
-
-    const auto setup = ant::ExpConfig::Setup::GetLastFound();
-    fitter.LoadSigmaData(setup->GetPhysicsFilesDirectory()+"/FitterSigmas.root");
 }
 
 void KinFitPi0::MultiPi0::ProcessData(const TEventData& data)

@@ -98,7 +98,7 @@ TF1* ExtractResolutions::LogNormal()
 
 TF1* ExtractResolutions::SigmaFit()
 {
-    return utils::Fitter::angular_sigma::GetTF1();
+    return utils::UncertaintyModels::MCExtracted::angular_sigma::GetTF1();
 }
 
 TF1* ExtractResolutions::Voigtian()
@@ -196,7 +196,7 @@ void Analyse(TTree* tree, const unsigned nElements, const string& branch, const 
         gDirectory->GetObject(Form("%s_%s_%d_zy_2", detname.c_str(),branch.c_str(),e), h_sigma);
         h_sigma->SetTitle(Form("#Delta %s, fitted, %s, Element %d",branch.c_str(), detname.c_str(),e));
 
-        TF1* fe = utils::Fitter::angular_sigma::GetTF1(Form("f_%s_%s_%d",detname.c_str(),branch.c_str(), e));
+        TF1* fe = utils::UncertaintyModels::MCExtracted::angular_sigma::GetTF1(Form("f_%s_%s_%d",detname.c_str(),branch.c_str(), e));
         h_sigma->Fit(fe,"MRQ");
 
         TH1* p1 = proj->ProjectionY(Form("%s_%s_%d_proj",detname.c_str(),branch.c_str(),e),0,-1);

@@ -67,14 +67,18 @@ EtapProton::EtapProton(const string& name, OptionsPtr opts):
     const auto setup = ant::ExpConfig::Setup::GetLastFound();
     if(!setup)
         throw runtime_error("EtapProton needs a setup");
+
+    auto uncertainty = utils::UncertaintyModels::MCExtracted::makeAndLoad();
+
     for(unsigned mult=enclosing.Start();mult<=enclosing.Stop();mult++) {
         if(!multiplicities.Contains(mult))
             continue;
         auto fitter = std_ext::make_unique<utils::KinFitter>(
                           std_ext::formatter() << "FitMult" << mult,
-                          mult
+                          mult,
+                          uncertainty
                           );
-        fitter->LoadSigmaData(setup->GetPhysicsFilesDirectory()+"/FitterSigmas.root");
+
         if(fitter_branches)
             fitter->SetupBranches(tree);
         fitters[mult-1] = move(fitter);
