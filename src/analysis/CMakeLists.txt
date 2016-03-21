@@ -52,6 +52,7 @@ set(ANALYSIS_PHYSICS
   physics/omega/FindProton.cc
   physics/misc/GoatComparison.cc
   physics/pi0/RarePion.cc
+  physics/pi0/KinFitPi0.cc
   )
 
 set(ANALYSIS_PHYSICS_CALIBRATION
