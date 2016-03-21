@@ -27,7 +27,10 @@ protected:
         utils::KinFitter fitter;
 
         TH1D* steps;
+
         TH1D* Proton_Coplanarity;
+        TH1D* h_taggtime;
+
         PromptRandom::Switch promptrandom;
 
         PromptRandom::Hist1 h_missingmass;
