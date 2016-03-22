@@ -4,6 +4,7 @@
 #include "base/ParticleTypeTree.h"
 #include "tree/TParticle.h"
 #include "analysis/utils/combinatorics.h"
+#include "base/std_ext/math.h"
 
 #include "APLCON.hpp"
 
@@ -47,7 +48,9 @@ public:
 
     /**
      * @brief Virtual base class for different Uncertainty Models for kion fitter.
-     *        Derive and implement the GetSigmas() method
+     *        Derive and implement the GetSigmas() method.
+     * @see UncertaintyModels::Constant
+     * @see UncertaintyModels::MCExtracted
      */
     class UncertaintyModel {
     public:
@@ -62,8 +65,6 @@ public:
     virtual ~Fitter();
 
 protected:
-
-
 
     Fitter(const std::string& fittername,
            const APLCON::Fit_Settings_t& settings, std::shared_ptr<Fitter::UncertaintyModel>& uncertainty_model);
@@ -303,10 +304,56 @@ protected:
 
 namespace UncertaintyModels {
 
-class Constant : public Fitter::UncertaintyModel {
+/**
+ * @brief Constant/static kin fitter uncertainty model. has a fixed value for {cb,taps}{photon,proton}{E,theta,phi}
+ */
+struct Constant : public Fitter::UncertaintyModel {
 public:
+
+    struct Exception : std::runtime_error {
+        using std::runtime_error::runtime_error;
+    };
+
+    Fitter::Uncertainties_t photon_cb;
+    Fitter::Uncertainties_t photon_taps;
+    Fitter::Uncertainties_t proton_cb;
+    Fitter::Uncertainties_t proton_taps;
+
+    Constant();
+    virtual ~Constant();
+
+    Fitter::Uncertainties_t GetSigmas(const TParticle &particle) const override;
+
+    /**
+     * @brief Create a new instance and return a shared pointer to it
+     * @return
+     */
+    static std::shared_ptr<Constant> make();
 };
 
+/**
+ * @brief Simple kin fitter uncertainty model. has a fixed value for {cb,taps}{photon,proton}{theta,phi}, Energries are relative values and get multipied with the particle energy on GetSigmas()
+ */
+struct ConstantRelativeE : public Constant {
+public:
+
+    ConstantRelativeE();
+    virtual ~ConstantRelativeE();
+
+    Fitter::Uncertainties_t GetSigmas(const TParticle &particle) const override;
+
+    /**
+     * @brief Create a new, empty instance and return a shared pointer to it
+     * @return
+     */
+    static std::shared_ptr<ConstantRelativeE> make();
+
+    /**
+     * @brief Create a new instance filled with global values determined from MC and return a shared ptr to it
+     * @return
+     */
+    static std::shared_ptr<ConstantRelativeE> makeMCLongTarget();
+};
 
 /**
  * @brief Kin fitter uncertainties, uses histograms. Energy depenent values for each detector element. Histograms can be loaded from root files in setup database.

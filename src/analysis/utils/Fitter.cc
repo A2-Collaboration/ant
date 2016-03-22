@@ -40,6 +40,9 @@ Fitter::Fitter(const string& fittername, const APLCON::Fit_Settings_t& settings,
 Fitter::~Fitter()
 {}
 
+Fitter::UncertaintyModel::~UncertaintyModel()
+{}
+
 APLCON::Fit_Settings_t Fitter::MakeDefaultSettings()
 {
     auto settings = APLCON::Fit_Settings_t::Default;
@@ -638,5 +641,67 @@ std::shared_ptr<UncertaintyModels::MCExtracted> UncertaintyModels::MCExtracted::
 }
 
 
-Fitter::UncertaintyModel::~UncertaintyModel()
+UncertaintyModels::Constant::Constant()
 {}
+
+UncertaintyModels::Constant::~Constant()
+{}
+
+std::shared_ptr<UncertaintyModels::Constant> UncertaintyModels::Constant::make()
+{
+    return std::make_shared<Constant>();
+}
+
+Fitter::Uncertainties_t ant::analysis::utils::UncertaintyModels::Constant::GetSigmas(const TParticle &particle) const
+{
+    if(particle.Candidate->Detector & Detector_t::Type_t::CB) {
+
+        if(particle.Type() == ParticleTypeDatabase::Photon) {
+            return photon_cb;
+        } else if(particle.Type() == ParticleTypeDatabase::Proton) {
+            return proton_cb;
+        } else {
+            throw Exception("Unexpected Particle: " + particle.Type().Name());
+        }
+
+    } else if(particle.Candidate->Detector & Detector_t::Type_t::TAPS) {
+
+        if(particle.Type() == ParticleTypeDatabase::Photon) {
+            return photon_taps;
+        } else if(particle.Type() == ParticleTypeDatabase::Proton) {
+            return proton_taps;
+        } else {
+            throw Exception("Unexpected Particle: " + particle.Type().Name());
+        }
+    }
+    else {
+        throw Exception("Unexpected Detector: " + string(particle.Candidate->Detector));
+    }
+}
+
+UncertaintyModels::ConstantRelativeE::ConstantRelativeE()
+{}
+
+UncertaintyModels::ConstantRelativeE::~ConstantRelativeE()
+{}
+
+Fitter::Uncertainties_t UncertaintyModels::ConstantRelativeE::GetSigmas(const TParticle &particle) const
+{
+    auto s = Constant::GetSigmas(particle);
+    s.sigmaE *= particle.Ek();
+
+    return s;
+}
+
+std::shared_ptr<UncertaintyModels::ConstantRelativeE> UncertaintyModels::ConstantRelativeE::makeMCLongTarget()
+{
+    auto s = std::make_shared<ConstantRelativeE>();
+
+    s->photon_cb   = { 0.0107, std_ext::degree_to_radian(3.79), std_ext::degree_to_radian(1.78)};
+    s->photon_taps = { 0.035,  std_ext::degree_to_radian(0.42), std_ext::degree_to_radian(1.15)};
+
+    s->proton_cb   = { 0.0,    std_ext::degree_to_radian(5.5), std_ext::degree_to_radian(5.3)};
+    s->proton_taps = { 0.0,    std_ext::degree_to_radian(2.8), std_ext::degree_to_radian(4.45)};
+
+    return s;
+}
