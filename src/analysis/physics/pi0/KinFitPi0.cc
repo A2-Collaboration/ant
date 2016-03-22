@@ -206,7 +206,7 @@ void KinFitPi0::MultiPi0::FillPulls(const fit_variables_t& vars)
         auto hint = h_pulls.lower_bound(varname);
         if (hint == h_pulls.end() || h_pulls.key_comp()(varname, hint->first)) {
             // insert at the correct location
-            hint = h_pulls.insert(hint, make_pair(varname, PromptRandom::Hist1(promptrandom)));
+            hint = h_pulls.emplace_hint(hint, varname, PromptRandom::Hist1(promptrandom));
             hint->second.MakeHistograms(HistFac,"pull_"+varname,varname+": Pull",BinSettings(100,-3,3),"Pull","");
         }
         hint->second.Fill(pull);
