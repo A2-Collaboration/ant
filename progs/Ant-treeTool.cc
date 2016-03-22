@@ -24,7 +24,7 @@ int main (int argc, char** argv)
 {
 
     SetupLogger();
-    TCLAP::CmdLine cmd("Ant-calib - Fit histograms and calculate new calibration parameters", ' ', "0.1");
+    TCLAP::CmdLine cmd("Ant-treeTool - Execute cmd on TTree's in files", ' ', "0.1");
     auto cmd_verbose = cmd.add<TCLAP::ValueArg<int>>("v","verbose","Verbosity level (0..9)", false, 0,"level");
     auto cmd_treename = cmd.add<TCLAP::ValueArg<string>>("t","tree","Tree name", false, "","");
     auto cmd_cmd = cmd.add<TCLAP::ValueArg<string>>("c","cmd","command", true, "","");
