@@ -283,7 +283,7 @@ struct OmegaHist_t {
                           });
         cuts.emplace_back(MultiCut_t<Fill_t>{
                               {"m(3#gamma) cut",        [] (const Fill_t& f) { return f.Tree.ggg_fitted().M()<900 && f.Tree.ggg_fitted().M() > 700; } },
-                              {"#eta window",           [] (const Fill_t& f) { return Contains( {530.0, 580.0}, f.Tree.ggIM_fitted()); } },
+                              {"#eta window",           [] (const Fill_t& f) { return Contains( {530.0, 580.0}, f.Tree.ggIM_fitted()) && !Contains( {115.0, 155.0}, f.Tree.ggIM_fitted()); } },
                               {"#pi^{0} window",        [] (const Fill_t& f) { return Contains( {125.0, 145.0}, f.Tree.ggIM_fitted()); } }
 
                           });
