@@ -2,6 +2,7 @@
 
 #include "utils/particle_tools.h"
 #include "utils/matcher.h"
+#include "base/Logger.h"
 
 #include "expconfig/ExpConfig.h"
 
@@ -18,11 +19,30 @@ using namespace std;
 
 
 
+std::shared_ptr<utils::Fitter::UncertaintyModel> KinFitPi0::getModel(const OptionsList &opts) const
+{
+    const auto model_name = opts.Get<string>("Model", "ConstantRelativeE");
+
+    if(model_name == "ConstantRelativeE") {
+        return utils::UncertaintyModels::ConstantRelativeE::makeMCLongTarget();
+    }
+
+    if(model_name == "MCExtracted"){
+        return  utils::UncertaintyModels::MCExtracted::makeAndLoad();
+    }
+
+    // fallback
+    throw std::runtime_error("no fitter uncertainty model specified");
+}
+
 KinFitPi0::KinFitPi0(const string& name, OptionsPtr opts) :
     Physics(name, opts)
 {
+
+    auto model = getModel(*opts);
+
     for(unsigned mult=1;mult<=opts->Get<unsigned>("nPi0",3);mult++) {
-        multiPi0.emplace_back(std_ext::make_unique<MultiPi0>(HistFac, mult));
+        multiPi0.emplace_back(std_ext::make_unique<MultiPi0>(HistFac, mult, model));
     }
 }
 
@@ -42,12 +62,12 @@ void KinFitPi0::ShowResult()
 
 
 
-KinFitPi0::MultiPi0::MultiPi0(HistogramFactory& histFac, unsigned nPi0) :
+KinFitPi0::MultiPi0::MultiPi0(HistogramFactory& histFac, unsigned nPi0, std::shared_ptr<const utils::Fitter::UncertaintyModel> model) :
     multiplicity(nPi0),
     HistFac(std_ext::formatter() << "m" << multiplicity << "Pi0", histFac,
             std_ext::formatter() << "m" << multiplicity << "Pi0"),
     IM_perms(BuildIMPerms(multiplicity)),
-    fitter(std_ext::formatter() << multiplicity << "Pi0", 2*multiplicity, utils::UncertaintyModels::MCExtracted::makeAndLoad()),
+    fitter(std_ext::formatter() << multiplicity << "Pi0", 2*multiplicity, model),
     h_missingmass(promptrandom),
     h_fitprobability(promptrandom),
     IM_2g_byFit(promptrandom),

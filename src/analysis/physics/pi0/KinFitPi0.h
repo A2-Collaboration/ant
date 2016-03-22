@@ -15,7 +15,7 @@ class KinFitPi0 : public Physics {
 protected:
 
     struct MultiPi0 {
-        MultiPi0(HistogramFactory& histFac, unsigned nPi0);
+        MultiPi0(HistogramFactory& histFac, unsigned nPi0, std::shared_ptr<const utils::Fitter::UncertaintyModel> model=utils::UncertaintyModels::MCExtracted::makeAndLoad());
 
         void ProcessData(const TEventData& data);
         void ShowResult();
@@ -50,6 +50,8 @@ protected:
     };
 
     std::vector<std::unique_ptr<MultiPi0>> multiPi0;
+
+    std::shared_ptr<utils::Fitter::UncertaintyModel> getModel(const OptionsList& opts) const;
 
 public:
     KinFitPi0(const std::string& name, OptionsPtr opts);
