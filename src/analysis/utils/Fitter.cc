@@ -705,3 +705,63 @@ std::shared_ptr<UncertaintyModels::ConstantRelativeE> UncertaintyModels::Constan
 
     return s;
 }
+
+UncertaintyModels::ConstantRelativeEpow::ConstantRelativeEpow()
+{}
+
+UncertaintyModels::ConstantRelativeEpow::~ConstantRelativeEpow()
+{}
+
+Fitter::Uncertainties_t UncertaintyModels::ConstantRelativeEpow::GetSigmas(const TParticle &particle) const
+{
+    Fitter::Uncertainties_t s;
+
+    if(particle.Candidate->Detector & Detector_t::Type_t::CB) {
+
+        if(particle.Type() == ParticleTypeDatabase::Photon) {
+            s = photon_cb;
+            s.sigmaE = s.sigmaE* particle.Ek() * pow(particle.Ek(), Eexp_cb);
+        } else if(particle.Type() == ParticleTypeDatabase::Proton) {
+            s = proton_cb;
+        } else {
+            throw Exception("Unexpected Particle: " + particle.Type().Name());
+        }
+
+    } else if(particle.Candidate->Detector & Detector_t::Type_t::TAPS) {
+
+        if(particle.Type() == ParticleTypeDatabase::Photon) {
+            s = photon_taps;
+            s.sigmaE = s.sigmaE* particle.Ek() * pow(particle.Ek(), Eexp_taps);
+        } else if(particle.Type() == ParticleTypeDatabase::Proton) {
+            s = proton_taps;
+        } else {
+            throw Exception("Unexpected Particle: " + particle.Type().Name());
+        }
+    }
+    else {
+        throw Exception("Unexpected Detector: " + string(particle.Candidate->Detector));
+    }
+
+    return s;
+}
+
+std::shared_ptr<UncertaintyModels::ConstantRelativeEpow> UncertaintyModels::ConstantRelativeEpow::make()
+{
+    return std::make_shared<ConstantRelativeEpow>();
+}
+
+std::shared_ptr<UncertaintyModels::ConstantRelativeEpow> UncertaintyModels::ConstantRelativeEpow::makeMCLongTarget()
+{
+    auto s = std::make_shared<ConstantRelativeEpow>();
+
+    s->photon_cb   = { 0.0107, std_ext::degree_to_radian(3.79), std_ext::degree_to_radian(1.78)};
+    s->photon_taps = { 0.035,  std_ext::degree_to_radian(0.42), std_ext::degree_to_radian(1.15)};
+
+    s->proton_cb   = { 0.0,    std_ext::degree_to_radian(5.5), std_ext::degree_to_radian(5.3)};
+    s->proton_taps = { 0.0,    std_ext::degree_to_radian(2.8), std_ext::degree_to_radian(4.45)};
+
+    s->Eexp_cb   = -0.5;
+    s->Eexp_taps = -0.5;
+
+    return s;
+}

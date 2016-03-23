@@ -355,6 +355,29 @@ public:
     static std::shared_ptr<ConstantRelativeE> makeMCLongTarget();
 };
 
+struct ConstantRelativeEpow : public Constant {
+public:
+    double Eexp_cb   = 1.0;
+    double Eexp_taps = 1.0;
+
+    ConstantRelativeEpow();
+    virtual ~ConstantRelativeEpow();
+
+    Fitter::Uncertainties_t GetSigmas(const TParticle &particle) const override;
+
+    /**
+     * @brief Create a new, empty instance and return a shared pointer to it
+     * @return
+     */
+    static std::shared_ptr<ConstantRelativeEpow> make();
+
+    /**
+     * @brief Create a new instance filled with global values determined from MC and return a shared ptr to it
+     * @return
+     */
+    static std::shared_ptr<ConstantRelativeEpow> makeMCLongTarget();
+};
+
 /**
  * @brief Kin fitter uncertainties, uses histograms. Energy depenent values for each detector element. Histograms can be loaded from root files in setup database.
  */
