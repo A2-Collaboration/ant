@@ -28,7 +28,14 @@ std::shared_ptr<utils::Fitter::UncertaintyModel> KinFitPi0::getModel(const Optio
     }
 
     if(model_name == "MCExtracted"){
-        return  utils::UncertaintyModels::MCExtracted::makeAndLoad();
+        return utils::UncertaintyModels::MCExtracted::makeAndLoad();
+    }
+
+    if(model_name == "ConstantRelativeEpow") {
+        auto s = utils::UncertaintyModels::ConstantRelativeEpow::makeMCLongTarget();
+        s->Eexp_cb   = opts.Get("Eexp_cb",   s->Eexp_cb);
+        s->Eexp_taps = opts.Get("Eexp_taps", s->Eexp_taps);
+        return s;
     }
 
     // fallback
