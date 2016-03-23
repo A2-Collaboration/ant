@@ -204,7 +204,7 @@ public:
     };
 
 protected:
-    void Analyse(const TEventData &data, const TEvent& event, manager_t&) override;
+    void Analyse(const TEventData &data, const TEvent& event, manager_t&manager) override;
 
 
     TH1D* missed_channels = nullptr;
@@ -236,6 +236,8 @@ protected:
 
     TParticleList FilterPhotons(const TParticleList& list);
     TParticleList FilterProtons(const TParticleList& list);
+
+    bool opt_save_after_kinfit = false;
 
 public:
 

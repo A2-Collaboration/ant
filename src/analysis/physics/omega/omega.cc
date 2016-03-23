@@ -574,7 +574,7 @@ double getTime(const TParticlePtr& p) {
     return p->Candidate != nullptr ? p->Candidate->Time : std_ext::NaN;
 }
 
-void OmegaEtaG2::Analyse(const TEventData &data, const TEvent& event, manager_t&)
+void OmegaEtaG2::Analyse(const TEventData &data, const TEvent& event, manager_t& manager)
 {
 
     const auto& particletree = event.MCTrue().ParticleTree;
@@ -836,6 +836,9 @@ void OmegaEtaG2::Analyse(const TEventData &data, const TEvent& event, manager_t&
 
         }
 
+        if(opt_save_after_kinfit && t.KinFitChi2 < 5.0)
+            manager.SaveEvent();
+
         tree->Fill();
 
     }
@@ -942,6 +945,8 @@ OmegaEtaG2::OmegaEtaG2(const std::string& name, OptionsPtr opts):
         if(c.first<20)
             found_channels->GetXaxis()->SetBinLabel(c.first+1,c.second.name.c_str());
     }
+
+    opt_save_after_kinfit = opts->Get("SaveAfterKinfit", opt_save_after_kinfit);
 
 }
 
