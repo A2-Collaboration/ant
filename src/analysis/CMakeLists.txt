@@ -85,6 +85,7 @@ set(ANALYSIS_UTILS
   utils/Fitter.cc
   utils/ProtonPermutation.cc
   utils/ClusterTools.cc
+  utils/MCSmear.cc
   )
 
 set(ANALYSIS_ALL

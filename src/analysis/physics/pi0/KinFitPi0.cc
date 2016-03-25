@@ -43,21 +43,23 @@ std::shared_ptr<utils::Fitter::UncertaintyModel> KinFitPi0::getModel(const Optio
 }
 
 KinFitPi0::KinFitPi0(const string& name, OptionsPtr opts) :
-    Physics(name, opts)
+    Physics(name, opts),
+    model(getModel(*opts)),
+    smear(model),
+    opt_useMCSmear(opts->Get("MCSmear", false))
 {
-
-    auto model = getModel(*opts);
 
     for(unsigned mult=1;mult<=opts->Get<unsigned>("nPi0",3);mult++) {
         multiPi0.emplace_back(std_ext::make_unique<MultiPi0>(HistFac, mult, model));
     }
+
 }
 
 void KinFitPi0::ProcessEvent(const TEvent& event, manager_t&)
 {
     const auto& data = event.Reconstructed();
     for(auto& m : multiPi0)
-        m->ProcessData(data);
+        m->ProcessData(data, smear);
 }
 
 void KinFitPi0::ShowResult()
@@ -99,7 +101,7 @@ KinFitPi0::MultiPi0::MultiPi0(HistogramFactory& histFac, unsigned nPi0, std::sha
 
 }
 
-void KinFitPi0::MultiPi0::ProcessData(const TEventData& data)
+void KinFitPi0::MultiPi0::ProcessData(const TEventData& data, const utils::MCSmear& smear)
 {
     const auto nPhotons_expected = multiplicity*2;
 
@@ -117,7 +119,7 @@ void KinFitPi0::MultiPi0::ProcessData(const TEventData& data)
 
     for(auto i_proton : cands.get_iter()) {
 
-        const auto proton = std::make_shared<TParticle>(ParticleTypeDatabase::Proton, i_proton);
+        const auto proton = smear.Smear(std::make_shared<TParticle>(ParticleTypeDatabase::Proton, i_proton));
         std::vector<TParticlePtr> photons;
         unsigned nPhotons_CB = 0;
         unsigned nPhotons_TAPS = 0;
@@ -125,7 +127,7 @@ void KinFitPi0::MultiPi0::ProcessData(const TEventData& data)
         for(auto i_photon : cands.get_iter()) {
             if(i_photon == i_proton)
                 continue;
-            photons.emplace_back(make_shared<TParticle>(ParticleTypeDatabase::Photon, i_photon));
+            photons.emplace_back(smear.Smear(make_shared<TParticle>(ParticleTypeDatabase::Photon, i_photon)));
 
             if(i_photon->Detector & Detector_t::Type_t::CB)
                 nPhotons_CB++;

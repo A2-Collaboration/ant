@@ -3,6 +3,7 @@
 #include "physics/Physics.h"
 #include "plot/PromptRandomHist.h"
 #include "utils/Fitter.h"
+#include "utils/MCSmear.h"
 #include "base/ParticleTypeTree.h"
 
 class TH1D;
@@ -17,7 +18,7 @@ protected:
     struct MultiPi0 {
         MultiPi0(HistogramFactory& histFac, unsigned nPi0, std::shared_ptr<const utils::Fitter::UncertaintyModel> model=utils::UncertaintyModels::MCExtracted::makeAndLoad());
 
-        void ProcessData(const TEventData& data);
+        void ProcessData(const TEventData& data, const utils::MCSmear& smear);
         void ShowResult();
 
     protected:
@@ -52,6 +53,10 @@ protected:
     std::vector<std::unique_ptr<MultiPi0>> multiPi0;
 
     std::shared_ptr<utils::Fitter::UncertaintyModel> getModel(const OptionsList& opts) const;
+
+    std::shared_ptr<utils::Fitter::UncertaintyModel> model;
+    utils::MCSmear smear;
+    const bool opt_useMCSmear = false;
 
 public:
     KinFitPi0(const std::string& name, OptionsPtr opts);
