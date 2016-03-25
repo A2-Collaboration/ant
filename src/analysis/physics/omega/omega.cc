@@ -766,7 +766,50 @@ void OmegaEtaG2::Analyse(const TEventData &data, const TEvent& event, manager_t&
             ++combindex;
         }
 
+        //treefit_pi0.SetEgammaBeam(TagH.PhotonEnergy);
+        treefit_pi0.SetPhotons(photons);
+        //treefit_pi0.SetProton(proton);
 
+
+        APLCON::Result_t treefitres;
+        combindex=0;
+        t.iBestPi0 = 0;
+        while(treefit_pi0.NextFit(treefitres)) {
+
+            const auto chi2 = treefitres.Status == APLCON::Result_Status_t::Success ? fitres.ChiSquare : NaN;
+
+            t.pi0chi2().at(combindex) = chi2;
+
+            if( chi2 < t.pi0chi2().at(t.iBestPi0) )
+                t.iBestPi0 = combindex;
+
+            ++combindex;
+
+        }
+
+        //treefit_eta.SetEgammaBeam(TagH.PhotonEnergy);
+        treefit_eta.SetPhotons(photons);
+        //treefit_eta.SetProton(proton);
+
+        combindex=0;
+        t.iBestEta = 0;
+        while(treefit_eta.NextFit(treefitres)) {
+
+            const auto chi2 = fitres.Status == APLCON::Result_Status_t::Success ? fitres.ChiSquare : NaN;
+
+            t.etachi2().at(combindex) = chi2;
+
+            if( chi2 < t.etachi2().at(t.iBestEta) )
+                t.iBestEta = combindex;
+
+            ++combindex;
+        }
+
+        if(t.pi0chi2().at(t.iBestPi0) < t.etachi2().at(t.iBestEta)) {
+            t.bestHyp = 1;  // PI0
+        } else {
+            t.bestHyp = 2;  // ETA
+        }
 
 
         TParticleList rec_photons(3);
@@ -925,7 +968,21 @@ OmegaEtaG2::OmegaEtaG2(const std::string& name, OptionsPtr opts):
     photon_E_cb(opts->Get<decltype(photon_E_cb)>("PhotonECB", {50.0, 1600.0})),
     photon_E_taps(opts->Get<decltype(photon_E_taps)>("PhotonETAPS", {200.0, 1600.0})),
     proton_theta(degree_to_radian(opts->Get<decltype(proton_theta)>("ProtonThetaRange", {2.0, 45.0}))),
-    fitter("OmegaEtaG2", 3, utils::UncertaintyModels::MCExtracted::makeAndLoad())
+    model(utils::UncertaintyModels::MCExtracted::makeAndLoad()),
+    fitter("OmegaEtaG2", 3, model),
+    treefit_pi0(
+        "treefit_pi0",
+        ParticleTypeTreeDatabase::Get(ParticleTypeTreeDatabase::Channel::Omega_gPi0_3g),
+        model,
+        {}
+        ),
+    treefit_eta(
+        "treefit_eta",
+        ParticleTypeTreeDatabase::Get(ParticleTypeTreeDatabase::Channel::Omega_gEta_3g),
+        model,
+        {}
+        )
+
 {
 
     promptrandom.AddPromptRange({-5,5});

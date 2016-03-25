@@ -201,6 +201,13 @@ public:
 
         ADD_BRANCH_T(unsigned,      Channel)
 
+        ADD_BRANCH_T(std::vector<double>,       pi0chi2, 3)
+        ADD_BRANCH_T(int,                        iBestPi0)
+        ADD_BRANCH_T(std::vector<double>,       etachi2, 3)
+        ADD_BRANCH_T(int,                        iBestEta)
+
+        ADD_BRANCH_T(int,                        bestHyp)
+
     };
 
 protected:
@@ -229,7 +236,11 @@ protected:
 
 
     ant::analysis::PromptRandom::Switch promptrandom;
+
+    std::shared_ptr<utils::Fitter::UncertaintyModel> model;
     utils::KinFitter fitter;
+    utils::TreeFitter treefit_pi0;
+    utils::TreeFitter treefit_eta;
 
     bool AcceptedPhoton(const TParticlePtr& photon);
     bool AcceptedProton(const TParticlePtr& proton);
