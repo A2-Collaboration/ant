@@ -1126,7 +1126,7 @@ OmegaEtaG2::MyTreeFitter_t::MyTreeFitter_t(const ParticleTypeTree& ttree, const 
         ttree,
         3,
         model,
-        {}
+        [] (const ParticleTypeTree& t) { return utils::TreeFitter::nodesetup_t(1.0, (t->Get() == ParticleTypeDatabase::Omega)); }
         )
 {
     auto find_daughter = [] (utils::TreeFitter::tree_t& node, const ParticleTypeDatabase::Type& type) {
