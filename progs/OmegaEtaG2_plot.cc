@@ -161,6 +161,7 @@ struct OmegaHist_t {
     const BinSettings probbins = BinSettings(250, 0,   1);
 
     const BinSettings IMbins        = Bins(1600,   0, 1600);
+    const BinSettings gggIMbins     = Bins( 300,   650, 950);
     const BinSettings MMbins        = Bins(1600, 400, 2000);
 
     const BinSettings MMgggIMbins_X = Bins(600, 0, 1200);
@@ -216,35 +217,63 @@ struct OmegaHist_t {
         });
 
 
-        AddTH1("Tagger Channels", "Channel",              "# hits", TaggChBins, "TaggCh",
-               [] (TH1D* h, const Fill_t& f) { h->Fill(f.Tree.TaggCh, f.TaggW());
-        });
+//        AddTH1("Tagger Channels", "Channel",              "# hits", TaggChBins, "TaggCh",
+//               [] (TH1D* h, const Fill_t& f) { h->Fill(f.Tree.TaggCh, f.TaggW());
+//        });
 
-        AddTH1("Coplanarity Angle", "Coplanarity angle [#circ]", "", CoplBins, "CoplAngle",
-               [] (TH1D* h, const Fill_t& f) { h->Fill(radian_to_degree(f.Tree.copl_angle()), f.TaggW());
-        });
+//        AddTH1("Coplanarity Angle", "Coplanarity angle [#circ]", "", CoplBins, "CoplAngle",
+//               [] (TH1D* h, const Fill_t& f) { h->Fill(radian_to_degree(f.Tree.copl_angle()), f.TaggW());
+//        });
 
         AddTH1("Tagger Time - CB Average Time", "t [ns]", "",       TaggTime,   "TaggTime",
                [] (TH1D* h, const Fill_t& f) { h->Fill(f.Tree.TaggT - f.Tree.CBAvgTime);
         });
 
-        AddTH2("Proton #theta vs. E_{k}", "E_{k} [MeV]", "#theta [#circ]",  pEbins,   pThetaBins, "p_theta_E",
-               [] (TH2D* h, const Fill_t& f) {
-            h->Fill(f.Tree.p_fitted().E() - ParticleTypeDatabase::Proton.Mass(), radian_to_degree(f.Tree.p_fitted().Theta()), f.TaggW());
-        });
+//        AddTH2("Proton #theta vs. E_{k}", "E_{k} [MeV]", "#theta [#circ]",  pEbins,   pThetaBins, "p_theta_E",
+//               [] (TH2D* h, const Fill_t& f) {
+//            h->Fill(f.Tree.p_fitted().E() - ParticleTypeDatabase::Proton.Mass(), radian_to_degree(f.Tree.p_fitted().Theta()), f.TaggW());
+//        });
 
         AddTH2("Missing Mass / 3#gamma IM", "3#gamma IM [MeV]", "MM [MeV]", IMbins,   MMbins,     "mm_gggIM",
                [] (TH2D* h, const Fill_t& f) { h->Fill(f.Tree.ggg_fitted().M(), f.Tree.mm().M(), f.TaggW());
         });
 
-        AddTH2("Proton PSA", "PSA Angle [#circ]", "PSA Radius",             PSAABins, PSARBins,   "p_PSA",
-               [] (TH2D* h, const Fill_t& f) {
-            h->Fill(f.Tree.p_PSA_Angle, f.Tree.p_PSA_Radius, f.TaggW());
-        });
+//        AddTH2("Proton PSA", "PSA Angle [#circ]", "PSA Radius",             PSAABins, PSARBins,   "p_PSA",
+//               [] (TH2D* h, const Fill_t& f) {
+//            h->Fill(f.Tree.p_PSA_Angle, f.Tree.p_PSA_Radius, f.TaggW());
+//        });
 
         AddTH2("3#gamma IM vs 2#gamma IM", "3#gamma IM [MeV]", "max(2#gamma IM) [MeV]", IMbins, IMbins, "ggg_max_gg",
                [] (TH2D* h, const Fill_t& f) {
             h->Fill(f.Tree.ggg_fitted().M(), max(f.Tree.ggIM_fitted()), f.TaggW());
+        });
+
+        AddTH1("#pi^{0} Hyp: #chi^2", "#chi^{2}_{#pi^{0}}","",Chi2Bins, "pi0hyp_chi2",
+               [] (TH1D* h, const Fill_t& f) {
+            const auto& i = f.Tree.iBestPi0;
+            if(i >= 0)
+                h->Fill(f.Tree.pi0chi2().at(size_t(i)), f.TaggW());
+        });
+
+        AddTH1("#eta Hyp: #chi^2", "#chi^{2}_{#eta}","",Chi2Bins, "etahyp_chi2",
+               [] (TH1D* h, const Fill_t& f) {
+            const auto& i = f.Tree.iBestEta;
+            if(i >= 0)
+                h->Fill(f.Tree.etachi2().at(size_t(i)), f.TaggW());
+        });
+
+        AddTH1("#eta Hyp: #omega IM", "m(#omega_{#eta})","",IMbins, "etahyp_omega",
+               [] (TH1D* h, const Fill_t& f) {
+            const auto& i = f.Tree.iBestEta;
+            if(i >= 0)
+                h->Fill(f.Tree.eta_omega_im().at(size_t(i)), f.TaggW());
+        });
+
+        AddTH1("#pi^{0} Hyp: #omega IM", "m(#omega_{#pi^{0}}})","",IMbins, "pi0hyp_omega",
+               [] (TH1D* h, const Fill_t& f) {
+            const auto& i = f.Tree.iBestEta;
+            if(i >= 0)
+                h->Fill(f.Tree.pi0_omega_im().at(size_t(i)), f.TaggW());
         });
 
     }
@@ -276,11 +305,9 @@ struct OmegaHist_t {
         cuttree::Cuts_t<Fill_t> cuts;
 
         cuts.emplace_back(MultiCut_t<Fill_t>{
-                                 {"#chi^{2}<5", [] (const Fill_t& f) { return f.Tree.KinFitChi2<5; } }
+                                 {"#chi^{2}<5+mm", [] (const Fill_t& f) { return f.Tree.KinFitChi2<5 && f.Tree.mm().M()<1100 && f.Tree.mm().M() > 780; } }
                              });
-        cuts.emplace_back(MultiCut_t<Fill_t>{
-                              {"mm cut",        [] (const Fill_t& f) { return f.Tree.mm().M()<1100 && f.Tree.mm().M() > 780; } }
-                          });
+
         cuts.emplace_back(MultiCut_t<Fill_t>{
                               {"m(3#gamma) cut",        [] (const Fill_t& f) { return f.Tree.ggg_fitted().M()<900 && f.Tree.ggg_fitted().M() > 700; } },
                               {"#eta window",           [] (const Fill_t& f) { return Contains( {530.0, 580.0}, f.Tree.ggIM_fitted()) && !Contains( {115.0, 155.0}, f.Tree.ggIM_fitted()); } },
