@@ -707,18 +707,20 @@ void OmegaEtaG2::Analyse(const TEventData &data, const TEvent& event, manager_t&
 
         t.p_mm_angle = radian_to_degree(missing.Angle(*proton));
 
+        // KinFit
+        {
+            fitter.SetEgammaBeam(TagH.PhotonEnergy);
+            fitter.SetProton(proton);
+            fitter.SetPhotons(photons);
 
-        fitter.SetEgammaBeam(TagH.PhotonEnergy);
-        fitter.SetProton(proton);
-        fitter.SetPhotons(photons);
+            auto fitres = fitter.DoFit();
 
-        auto fitres = fitter.DoFit();
+            if(fitres.Status != APLCON::Result_Status_t::Success)
+                continue;
 
-        if(fitres.Status != APLCON::Result_Status_t::Success)
-            continue;
-
-        t.KinFitChi2 = fitres.ChiSquare / fitres.NDoF;
-        t.KinFitIterations = unsigned(fitres.NIterations);
+            t.KinFitChi2 = fitres.ChiSquare / fitres.NDoF;
+            t.KinFitIterations = unsigned(fitres.NIterations);
+        }
 
         t.p_fitted = *fitter.GetFittedProton();
 
@@ -771,25 +773,30 @@ void OmegaEtaG2::Analyse(const TEventData &data, const TEvent& event, manager_t&
         fitter_pi0.treefitter.SetProton(proton);
 
 
-        APLCON::Result_t treefitres;
+        // Pi0 Hyp fit
+        {
+            APLCON::Result_t treefitres;
 
-        t.iBestPi0 = -1;
-        double BestPi0Chi2 = inf;
-        t.pi0chi2 = {inf, inf , inf};
+            t.iBestPi0 = -1;
+            double BestPi0Chi2 = inf;
+            t.pi0chi2 = {inf, inf , inf};
 
-        while(fitter_pi0.treefitter.NextFit(treefitres)) {
+            while(fitter_pi0.treefitter.NextFit(treefitres)) {
 
-            const auto chi2 = treefitres.Status == APLCON::Result_Status_t::Success ? fitres.ChiSquare : NaN;
+                const auto chi2 = treefitres.Status == APLCON::Result_Status_t::Success ? treefitres.ChiSquare : NaN;
 
-            const auto combindex = CombIndex(photons, fitter_pi0);
+                const size_t combindex = CombIndex(photons, fitter_pi0);
 
-            t.pi0chi2().at(combindex) = chi2;
+                t.pi0chi2().at(combindex)      = chi2;
+                t.pi0_im().at(combindex)       = fitter_eta.fitted_X->Get().LVSum.M();
+                t.pi0_omega_im().at(combindex) = fitter_eta.fitted_Omega->Get().LVSum.M();
 
-            if( isfinite(chi2) && chi2 < BestPi0Chi2 ) {
-                t.iBestPi0 = combindex;
-                BestPi0Chi2 = chi2;
+                if( isfinite(chi2) && chi2 < BestPi0Chi2 ) {
+                    t.iBestPi0 = int(combindex);
+                    BestPi0Chi2 = chi2;
+                }
+
             }
-
         }
 
         fitter_eta.treefitter.SetEgammaBeam(TagH.PhotonEnergy);
@@ -797,20 +804,27 @@ void OmegaEtaG2::Analyse(const TEventData &data, const TEvent& event, manager_t&
         fitter_eta.treefitter.SetProton(proton);
 
 
-        t.iBestEta = -1;
-        t.etachi2 = {inf, inf , inf};
-        double BestEtaChi2 = inf;
-        while(fitter_eta.treefitter.NextFit(treefitres)) {
+        // Eta Hyp fit
+        {
+            APLCON::Result_t treefitres;
 
-            const auto chi2 = fitres.Status == APLCON::Result_Status_t::Success ? treefitres.ChiSquare : NaN;
+            t.iBestEta = -1;
+            t.etachi2 = {inf, inf , inf};
+            double BestEtaChi2 = inf;
+            while(fitter_eta.treefitter.NextFit(treefitres)) {
 
-            const auto combindex = CombIndex(photons, fitter_eta);
+                const auto chi2 = treefitres.Status == APLCON::Result_Status_t::Success ? treefitres.ChiSquare : NaN;
 
-            t.etachi2().at(combindex) = chi2;
+                const size_t combindex = CombIndex(photons, fitter_eta);
 
-            if( isfinite(chi2) && chi2 < BestEtaChi2) {
-                t.iBestEta = combindex;
-                BestEtaChi2 = chi2;
+                t.etachi2().at(combindex)      = chi2;
+                t.eta_im().at(combindex)       = fitter_eta.fitted_X->Get().LVSum.M();
+                t.eta_omega_im().at(combindex) = fitter_eta.fitted_Omega->Get().LVSum.M();
+
+                if( isfinite(chi2) && chi2 < BestEtaChi2) {
+                    t.iBestEta = int(combindex);
+                    BestEtaChi2 = chi2;
+                }
             }
         }
 
@@ -909,7 +923,7 @@ void OmegaEtaG2::Analyse(const TEventData &data, const TEvent& event, manager_t&
 
 }
 
-int OmegaEtaG2::CombIndex(const TParticleList& orig, const MyTreeFitter_t& f)
+size_t OmegaEtaG2::CombIndex(const TParticleList& orig, const MyTreeFitter_t& f)
 {
     for(size_t i=0; i<orig.size(); ++i) {
         if(orig[i] == f.fitted_g_Omega->Get().Leave->Particle) {

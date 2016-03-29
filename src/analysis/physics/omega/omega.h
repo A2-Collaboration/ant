@@ -208,6 +208,11 @@ public:
 
         ADD_BRANCH_T(int,                        bestHyp)
 
+        ADD_BRANCH_T(std::vector<double>,       pi0_im,3)
+        ADD_BRANCH_T(std::vector<double>,       eta_im,3)
+        ADD_BRANCH_T(std::vector<double>,       eta_omega_im,3)
+        ADD_BRANCH_T(std::vector<double>,       pi0_omega_im,3)
+
     };
 
 protected:
@@ -253,7 +258,7 @@ protected:
 
         MyTreeFitter_t(const ParticleTypeTree& ttree, const ParticleTypeDatabase::Type& mesonT, const std::shared_ptr<const utils::Fitter::UncertaintyModel>& model);
     };
-    static int CombIndex(const ant::TParticleList& orig, const MyTreeFitter_t&);
+    static size_t CombIndex(const ant::TParticleList& orig, const MyTreeFitter_t&);
 
     MyTreeFitter_t fitter_pi0;
     MyTreeFitter_t fitter_eta;
