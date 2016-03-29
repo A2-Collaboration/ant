@@ -226,6 +226,8 @@ protected:
     static const std::vector<std::vector<std::size_t>> combs;
 
 
+
+
     //======== Settings ===========================================================
 
     const double cut_ESum;
@@ -238,9 +240,23 @@ protected:
     ant::analysis::PromptRandom::Switch promptrandom;
 
     std::shared_ptr<utils::Fitter::UncertaintyModel> model;
+
     utils::KinFitter fitter;
-    utils::TreeFitter treefit_pi0;
-    utils::TreeFitter treefit_eta;
+
+    struct MyTreeFitter_t {
+        utils::TreeFitter treefitter;
+        utils::TreeFitter::tree_t fitted_Omega;
+        utils::TreeFitter::tree_t fitted_g_Omega;
+        utils::TreeFitter::tree_t fitted_X;
+        utils::TreeFitter::tree_t fitted_g1_X;
+        utils::TreeFitter::tree_t fitted_g2_X;
+
+        MyTreeFitter_t(const ParticleTypeTree& ttree, const ParticleTypeDatabase::Type& mesonT, const std::shared_ptr<const utils::Fitter::UncertaintyModel>& model);
+    };
+    static int CombIndex(const ant::TParticleList& orig, const MyTreeFitter_t&);
+
+    MyTreeFitter_t fitter_pi0;
+    MyTreeFitter_t fitter_eta;
 
     bool AcceptedPhoton(const TParticlePtr& photon);
     bool AcceptedProton(const TParticlePtr& proton);

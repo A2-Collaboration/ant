@@ -766,50 +766,71 @@ void OmegaEtaG2::Analyse(const TEventData &data, const TEvent& event, manager_t&
             ++combindex;
         }
 
-        //treefit_pi0.SetEgammaBeam(TagH.PhotonEnergy);
-        treefit_pi0.SetPhotons(photons);
-        //treefit_pi0.SetProton(proton);
+        fitter_pi0.treefitter.SetEgammaBeam(TagH.PhotonEnergy);
+        fitter_pi0.treefitter.SetPhotons(photons);
+        fitter_pi0.treefitter.SetProton(proton);
 
 
         APLCON::Result_t treefitres;
-        combindex=0;
-        t.iBestPi0 = 0;
-        while(treefit_pi0.NextFit(treefitres)) {
+
+        t.iBestPi0 = -1;
+        double BestPi0Chi2 = inf;
+        t.pi0chi2 = {inf, inf , inf};
+
+        while(fitter_pi0.treefitter.NextFit(treefitres)) {
 
             const auto chi2 = treefitres.Status == APLCON::Result_Status_t::Success ? fitres.ChiSquare : NaN;
 
+            const auto combindex = CombIndex(photons, fitter_pi0);
+
             t.pi0chi2().at(combindex) = chi2;
 
-            if( chi2 < t.pi0chi2().at(t.iBestPi0) )
+            if( isfinite(chi2) && chi2 < BestPi0Chi2 ) {
                 t.iBestPi0 = combindex;
-
-            ++combindex;
+                BestPi0Chi2 = chi2;
+            }
 
         }
 
-        //treefit_eta.SetEgammaBeam(TagH.PhotonEnergy);
-        treefit_eta.SetPhotons(photons);
-        //treefit_eta.SetProton(proton);
+        fitter_eta.treefitter.SetEgammaBeam(TagH.PhotonEnergy);
+        fitter_eta.treefitter.SetPhotons(photons);
+        fitter_eta.treefitter.SetProton(proton);
 
-        combindex=0;
-        t.iBestEta = 0;
-        while(treefit_eta.NextFit(treefitres)) {
 
-            const auto chi2 = fitres.Status == APLCON::Result_Status_t::Success ? fitres.ChiSquare : NaN;
+        t.iBestEta = -1;
+        t.etachi2 = {inf, inf , inf};
+        double BestEtaChi2 = inf;
+        while(fitter_eta.treefitter.NextFit(treefitres)) {
+
+            const auto chi2 = fitres.Status == APLCON::Result_Status_t::Success ? treefitres.ChiSquare : NaN;
+
+            const auto combindex = CombIndex(photons, fitter_eta);
 
             t.etachi2().at(combindex) = chi2;
 
-            if( chi2 < t.etachi2().at(t.iBestEta) )
+            if( isfinite(chi2) && chi2 < BestEtaChi2) {
                 t.iBestEta = combindex;
-
-            ++combindex;
+                BestEtaChi2 = chi2;
+            }
         }
 
-        if(t.pi0chi2().at(t.iBestPi0) < t.etachi2().at(t.iBestEta)) {
-            t.bestHyp = 1;  // PI0
-        } else {
-            t.bestHyp = 2;  // ETA
+        t.bestHyp = 0;
+
+        if(t.iBestEta == -1 && t.iBestPi0 == -1)
+            continue;
+
+        if(t.iBestPi0 == -1)
+            t.bestHyp = 2; // Eta
+
+        else if(t.iBestEta == -1) {
+            t.bestHyp = 1; // Pi0
         }
+        else
+            if(t.pi0chi2().at(t.iBestPi0) < t.etachi2().at(t.iBestEta)) {
+                t.bestHyp = 1;  // PI0
+            } else {
+                t.bestHyp = 2;  // ETA
+            }
 
 
         TParticleList rec_photons(3);
@@ -885,6 +906,18 @@ void OmegaEtaG2::Analyse(const TEventData &data, const TEvent& event, manager_t&
         tree->Fill();
 
     }
+
+}
+
+int OmegaEtaG2::CombIndex(const TParticleList& orig, const MyTreeFitter_t& f)
+{
+    for(size_t i=0; i<orig.size(); ++i) {
+        if(orig[i] == f.fitted_g_Omega->Get().Leave->Particle) {
+            return i;
+        }
+    }
+
+    throw std::runtime_error("CombIndex: Photon not found");
 
 }
 
@@ -970,17 +1003,15 @@ OmegaEtaG2::OmegaEtaG2(const std::string& name, OptionsPtr opts):
     proton_theta(degree_to_radian(opts->Get<decltype(proton_theta)>("ProtonThetaRange", {2.0, 45.0}))),
     model(utils::UncertaintyModels::MCExtracted::makeAndLoad()),
     fitter("OmegaEtaG2", 3, model),
-    treefit_pi0(
-        "treefit_pi0",
+    fitter_pi0(
         ParticleTypeTreeDatabase::Get(ParticleTypeTreeDatabase::Channel::Omega_gPi0_3g),
-        model,
-        {}
+        ParticleTypeDatabase::Pi0,
+        model
         ),
-    treefit_eta(
-        "treefit_eta",
+    fitter_eta(
         ParticleTypeTreeDatabase::Get(ParticleTypeTreeDatabase::Channel::Omega_gEta_3g),
-        model,
-        {}
+        ParticleTypeDatabase::Eta,
+        model
         )
 
 {
@@ -1004,6 +1035,8 @@ OmegaEtaG2::OmegaEtaG2(const std::string& name, OptionsPtr opts):
     }
 
     opt_save_after_kinfit = opts->Get("SaveAfterKinfit", opt_save_after_kinfit);
+
+
 
 }
 
@@ -1070,6 +1103,35 @@ unsigned OmegaEtaG2::ReactionChannelList_t::identify(const ant::TParticleTree_t&
 const OmegaEtaG2::ReactionChannelList_t OmegaEtaG2::reaction_channels = OmegaEtaG2::makeChannels();
 
 const unsigned OmegaEtaG2::ReactionChannelList_t::other_index = 1000;
+
+
+
+OmegaEtaG2::MyTreeFitter_t::MyTreeFitter_t(const ParticleTypeTree& ttree, const ParticleTypeDatabase::Type& mesonT, const std::shared_ptr<const utils::Fitter::UncertaintyModel>& model):
+    treefitter(
+        "treefit_"+mesonT.Name(),
+        ttree,
+        3,
+        model,
+        {}
+        )
+{
+    auto find_daughter = [] (utils::TreeFitter::tree_t& node, const ParticleTypeDatabase::Type& type) {
+        for(const auto& d : node->Daughters()) {
+            if(d->Get().TypeTree->Get() == type)
+                return d;
+        }
+        return utils::TreeFitter::tree_t(nullptr);
+    };
+
+    fitted_Omega   = treefitter.GetTreeNode(ParticleTypeDatabase::Omega);
+    fitted_g_Omega = find_daughter(fitted_Omega, ParticleTypeDatabase::Photon);
+    fitted_X     = find_daughter(fitted_Omega, mesonT);
+    fitted_g1_X  = fitted_X->Daughters().front();
+    fitted_g2_X  = fitted_X->Daughters().back();
+
+    if(!fitted_Omega || !fitted_g_Omega || !fitted_X || !fitted_g1_X ||!fitted_g1_X ||!fitted_g2_X)
+        throw std::runtime_error("Error initializing OmegaEtaG2::MyTreeFitter_t");
+}
 
 AUTO_REGISTER_PHYSICS(OmegaEtaG)
 AUTO_REGISTER_PHYSICS(OmegaMCTruePlots)
