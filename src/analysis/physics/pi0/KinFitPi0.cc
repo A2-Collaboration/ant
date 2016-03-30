@@ -209,12 +209,15 @@ void KinFitPi0::MultiPi0::ProcessData(const TEventData& data, const utils::MCSme
 
         for(const TTaggerHit& taggerhit : data.TaggerHits) {
 
+
             steps->Fill("Seen taggerhits",1.0);
             const auto taggtime = taggerhit.Time - data.Trigger.CBTiming;
             promptrandom.SetTaggerHit(taggtime);
             if(promptrandom.State() == PromptRandom::Case::Outside)
                 continue;
             h_taggtime->Fill(taggtime);
+
+            b_tagw = promptrandom.FillWeight();
 
             // simple missing mass cut
             const LorentzVec beam_target = taggerhit.GetPhotonBeam() + LorentzVec(0, 0, 0, ParticleTypeDatabase::Proton.Mass());

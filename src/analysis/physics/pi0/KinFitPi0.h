@@ -44,6 +44,7 @@ protected:
         TLorentzVector b_g1;
         TLorentzVector b_g2;
         TLorentzVector b_p;
+        double         b_tagw;
 
         PromptRandom::Switch promptrandom;
 
