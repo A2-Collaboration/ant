@@ -16,7 +16,7 @@ class KinFitPi0 : public Physics {
 protected:
 
     struct MultiPi0 {
-        MultiPi0(HistogramFactory& histFac, unsigned nPi0, std::shared_ptr<const utils::Fitter::UncertaintyModel> model=utils::UncertaintyModels::MCExtracted::makeAndLoad());
+        MultiPi0(HistogramFactory& histFac, unsigned nPi0, std::shared_ptr<const utils::Fitter::UncertaintyModel> fitter_model=utils::UncertaintyModels::MCExtracted::makeAndLoad());
 
         void ProcessData(const TEventData& data, const utils::MCSmear& smear);
         void ShowResult();
@@ -52,9 +52,10 @@ protected:
 
     std::vector<std::unique_ptr<MultiPi0>> multiPi0;
 
-    std::shared_ptr<utils::Fitter::UncertaintyModel> getModel(const OptionsList& opts) const;
+    std::shared_ptr<utils::Fitter::UncertaintyModel> getModel(const std::string& model_name) const;
 
-    std::shared_ptr<utils::Fitter::UncertaintyModel> model;
+    std::shared_ptr<utils::Fitter::UncertaintyModel> fitter_model;
+    std::shared_ptr<utils::Fitter::UncertaintyModel> smear_model;
     utils::MCSmear smear;
     const bool opt_useMCSmear = false;
 

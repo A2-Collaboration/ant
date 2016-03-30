@@ -5,6 +5,7 @@
 #include "base/Logger.h"
 
 #include "expconfig/ExpConfig.h"
+#include <string>
 
 #include "TH1D.h"
 #include "TTree.h"
@@ -19,10 +20,8 @@ using namespace std;
 
 
 
-std::shared_ptr<utils::Fitter::UncertaintyModel> KinFitPi0::getModel(const OptionsList &opts) const
+std::shared_ptr<utils::Fitter::UncertaintyModel> KinFitPi0::getModel(const string& model_name) const
 {
-    const auto model_name = opts.Get<string>("Model", "ConstantRelativeE");
-
     if(model_name == "ConstantRelativeE") {
         return utils::UncertaintyModels::ConstantRelativeE::makeMCLongTarget();
     }
@@ -33,9 +32,22 @@ std::shared_ptr<utils::Fitter::UncertaintyModel> KinFitPi0::getModel(const Optio
 
     if(model_name == "ConstantRelativeEpow") {
         auto s = utils::UncertaintyModels::ConstantRelativeEpow::makeMCLongTarget();
-        s->Eexp_cb   = opts.Get("Eexp_cb",   s->Eexp_cb);
-        s->Eexp_taps = opts.Get("Eexp_taps", s->Eexp_taps);
+//        s->Eexp_cb   = opts.Get("Eexp_cb",   s->Eexp_cb);
+//        s->Eexp_taps = opts.Get("Eexp_taps", s->Eexp_taps);
         return s;
+    }
+
+    if(model_name == "Zero") {
+        auto s = utils::UncertaintyModels::Constant::make();
+        s->photon_cb   = {0,0,0};
+        s->photon_taps = {0,0,0};
+        s->proton_cb   = {0,0,0};
+        s->proton_taps = {0,0,0};
+        return s;
+    }
+
+    if(model_name == "Theoretical") {
+        return std::make_shared<utils::UncertaintyModels::Theoretical>();
     }
 
     // fallback
@@ -44,13 +56,13 @@ std::shared_ptr<utils::Fitter::UncertaintyModel> KinFitPi0::getModel(const Optio
 
 KinFitPi0::KinFitPi0(const string& name, OptionsPtr opts) :
     Physics(name, opts),
-    model(getModel(*opts)),
-    smear(model),
-    opt_useMCSmear(opts->Get("MCSmear", false))
+    fitter_model(getModel(opts->Get<string>("FitModel", "ConstantRelativeE"))),
+    smear_model(getModel(opts->Get<string>("SmearModel", "Zero"))),
+    smear(smear_model)
 {
 
     for(unsigned mult=1;mult<=opts->Get<unsigned>("nPi0",3);mult++) {
-        multiPi0.emplace_back(std_ext::make_unique<MultiPi0>(HistFac, mult, model));
+        multiPi0.emplace_back(std_ext::make_unique<MultiPi0>(HistFac, mult, fitter_model));
     }
 
 }
