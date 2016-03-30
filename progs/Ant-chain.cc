@@ -73,7 +73,7 @@ int main(int argc, char** argv) {
 
         const auto chain_names = GetTreeNames(inputs);
         if(chain_names.empty()) {
-            LOG(ERROR) << "No TTree found in first input file";
+            LOG(ERROR) << "No TTree found in first input file: " <<cmd_inputfiles->getValue().front();
             return EXIT_FAILURE;
         }
 
