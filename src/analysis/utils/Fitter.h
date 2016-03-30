@@ -439,6 +439,14 @@ public:
 
 };
 
+struct Theoretical : Fitter::UncertaintyModel {
+
+    Theoretical();
+    virtual ~Theoretical();
+
+    Fitter::Uncertainties_t GetSigmas(const TParticle& particle) const;
+};
+
 }
 
 

@@ -765,3 +765,23 @@ std::shared_ptr<UncertaintyModels::ConstantRelativeEpow> UncertaintyModels::Cons
 
     return s;
 }
+
+UncertaintyModels::Theoretical::Theoretical()
+{}
+
+UncertaintyModels::Theoretical::~Theoretical()
+{}
+
+Fitter::Uncertainties_t UncertaintyModels::Theoretical::GetSigmas(const TParticle& particle) const
+{
+    const auto theta = particle.Theta();
+    const auto E     = particle.Ek();
+
+    Fitter::Uncertainties_t s;
+
+    s.sigmaE     = 0.02 * E / pow(E/1000.0, 0.25);
+    s.sigmaTheta = degree_to_radian(2.5);
+    s.sigmaPhi   = s.sigmaTheta / sin(theta);
+
+    return s;
+}
