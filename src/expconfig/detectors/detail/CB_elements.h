@@ -2,8 +2,8 @@
 // generated with expconfig/tools/convert_acqucfg_cb.pl
 // from acqu_user/data.general/Detector-NaI.dat
 #include "detectors/CB.h"
-std::vector<ant::expconfig::detector::CB::Element_t>
-ant::expconfig::detector::CB::elements = {
+const std::vector<ant::expconfig::detector::CB::Element_t>
+ant::expconfig::detector::CB::elements_init = {
   // element number, {xyz}, ADC, TDC, {neigbours}
   {  0, {  3.619000,  45.214000,   2.629000}, 3015, 2032, {1,144,576,145,577,432,579,2,3,146,288}},
   {  1, {  7.322000,  44.510000,   5.320000}, 3014, 2033, {0,2,3,5,6,4,146,145,144,576,577,579}},

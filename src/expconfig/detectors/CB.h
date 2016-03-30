@@ -61,7 +61,8 @@ protected:
         unsigned TDC;
         bool IsHole;
     };
-    static std::vector<Element_t> elements;
+    static const std::vector<Element_t> elements_init;
+    std::vector<Element_t> elements;
     std::vector<unsigned> ignoredChannels;
 
     void SetTouchesHoleOfNeighbours(unsigned hole);

@@ -9,7 +9,10 @@ using namespace ant;
 using namespace ant::expconfig::detector;
 
 
-CB::CB() : ClusterDetector_t(Detector_t::Type_t::CB) {
+CB::CB() :
+    ClusterDetector_t(Detector_t::Type_t::CB),
+    elements(elements_init)
+{
     auto& holes = ignoredChannels;
     std_ext::insertRange(holes,  26,  26);
     std_ext::insertRange(holes,  29,  38);
