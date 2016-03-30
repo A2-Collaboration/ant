@@ -5,8 +5,10 @@
 #include "utils/Fitter.h"
 #include "utils/MCSmear.h"
 #include "base/ParticleTypeTree.h"
+#include "TLorentzVector.h"
 
 class TH1D;
+class TTree;
 
 namespace ant {
 namespace analysis {
@@ -37,6 +39,11 @@ protected:
 
         TH1D* Proton_Coplanarity;
         TH1D* h_taggtime;
+
+        TTree* tree = nullptr;
+        TLorentzVector b_g1;
+        TLorentzVector b_g2;
+        TLorentzVector b_p;
 
         PromptRandom::Switch promptrandom;
 

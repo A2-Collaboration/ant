@@ -106,10 +106,17 @@ KinFitPi0::MultiPi0::MultiPi0(HistogramFactory& histFac, unsigned nPi0, std::sha
     h_missingmass.MakeHistograms(HistFac, "h_missingmass","Missing Mass",BinSettings(400,400, 1400),"MM / MeV","#");
     h_fitprobability.MakeHistograms(HistFac, "fit_probability","KinFitter probability",BinSettings(150,0,1),"p","#");
 
+    tree = HistFac.makeTTree("tree");
+
     BinSettings bins_IM(1400,0,1400);
 
     IM_2g_byFit.MakeHistograms(HistFac, "IM_2g_byFit","IM 2#gamma by Fit",bins_IM,"IM / MeV","#");
     IM_2g_fitted.MakeHistograms(HistFac, "IM_2g_fitted","IM 2#gamma fitted",bins_IM,"IM / MeV","#");
+
+    fitter.SetupBranches(tree);
+    tree->Branch("g1", &b_g1);
+    tree->Branch("g2", &b_g2);
+    tree->Branch("p",  &b_p);
 
 }
 
@@ -196,6 +203,10 @@ void KinFitPi0::MultiPi0::ProcessData(const TEventData& data, const utils::MCSme
 
         // iterate over tagger hits
 
+        b_g1 = *photons.at(0);
+        b_g2 = *photons.at(1);
+        b_p  = *proton;
+
         for(const TTaggerHit& taggerhit : data.TaggerHits) {
 
             steps->Fill("Seen taggerhits",1.0);
@@ -229,6 +240,7 @@ void KinFitPi0::MultiPi0::ProcessData(const TEventData& data, const utils::MCSme
                 utils::ParticleTools::FillIMCombinations([this] (double x) {IM_2g_byFit.Fill(x);},  2, photons);
                 utils::ParticleTools::FillIMCombinations([this] (double x) {IM_2g_fitted.Fill(x);},  2, fitter.GetFittedPhotons());
                 FillPulls(fit_result.Variables);
+                tree->Fill();
             }
             else {
                 steps->Fill("Fit failed",1.0);
