@@ -10,6 +10,7 @@ set(DICT_HEADERS
     RootPointerFun.h
     PlotTimings.h
     hstack.h
+    histtools.h
   )
 
 set(SRCS
@@ -23,6 +24,7 @@ set(SRCS
     RootPointerFun.cc
     PlotTimings.cc
     hstack.cc
+    histtools.cc
   )
 
 set(ROOT_DICTIONARY "${CMAKE_CURRENT_BINARY_DIR}/G__analysis_codes.cc")
