@@ -308,11 +308,34 @@ struct OmegaHist_t {
                                  {"#chi^{2}<5+mm", [] (const Fill_t& f) { return f.Tree.KinFitChi2<5 && f.Tree.mm().M()<1100 && f.Tree.mm().M() > 780; } }
                              });
 
+        auto etaHypCut = [] (const Fill_t& f) {
+
+            if(f.Tree.bestHyp != 2)
+                return false;
+
+            const auto& etachi2  = f.Tree.etachi2()[f.Tree.iBestEta];
+            const auto& iBestPi0 = f.Tree.iBestPi0;
+            const auto& pi0chi2  = f.Tree.pi0chi2()[iBestPi0];
+
+            return etachi2 < 10 && (iBestPi0==-1 || pi0chi2 > 10);
+        };
+
+        auto pi0HypCut = [] (const Fill_t& f) {
+            if(f.Tree.bestHyp != 1)
+                return false;
+
+            const auto& iBestPi0 = f.Tree.iBestPi0;
+            const auto& pi0chi2  = f.Tree.pi0chi2()[iBestPi0];
+
+            return pi0chi2 < 10;
+        };
+
         cuts.emplace_back(MultiCut_t<Fill_t>{
                               {"m(3#gamma) cut",        [] (const Fill_t& f) { return f.Tree.ggg_fitted().M()<900 && f.Tree.ggg_fitted().M() > 700; } },
-                              {"#eta window",           [] (const Fill_t& f) { return Contains( {530.0, 580.0}, f.Tree.ggIM_fitted()) && !Contains( {115.0, 155.0}, f.Tree.ggIM_fitted()); } },
-                              {"#pi^{0} window",        [] (const Fill_t& f) { return Contains( {125.0, 145.0}, f.Tree.ggIM_fitted()); } }
-
+//                              {"#eta window",           [] (const Fill_t& f) { return Contains( {530.0, 580.0}, f.Tree.ggIM_fitted()) && !Contains( {115.0, 155.0}, f.Tree.ggIM_fitted()); } },
+ //                             {"#pi^{0} window",        [] (const Fill_t& f) { return Contains( {125.0, 145.0}, f.Tree.ggIM_fitted()); } },
+                              {"#etaHyp",               etaHypCut},
+                              {"#pi0Hyp",               pi0HypCut}
                           });
         return cuts;
     }
