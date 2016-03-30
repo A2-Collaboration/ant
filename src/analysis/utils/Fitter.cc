@@ -779,9 +779,38 @@ Fitter::Uncertainties_t UncertaintyModels::Theoretical::GetSigmas(const TParticl
 
     Fitter::Uncertainties_t s;
 
-    s.sigmaE     = 0.02 * E / pow(E/1000.0, 0.25);
-    s.sigmaTheta = degree_to_radian(2.5);
-    s.sigmaPhi   = s.sigmaTheta / sin(theta);
+    if(particle.Candidate->Detector & Detector_t::Type_t::CB) {
+
+        if(particle.Type() == ParticleTypeDatabase::Photon) {
+            s.sigmaE     = 0.02 * E / pow(E/1000.0, 0.25);
+            s.sigmaTheta = degree_to_radian(2.5);
+            s.sigmaPhi   = s.sigmaTheta / sin(theta);
+
+        } else if(particle.Type() == ParticleTypeDatabase::Proton) {
+            ///@todo replace
+            s = { 0.0,    std_ext::degree_to_radian(5.5), std_ext::degree_to_radian(5.3)};
+
+        } else {
+            throw Exception("Unexpected Particle: " + particle.Type().Name());
+        }
+
+    } else if(particle.Candidate->Detector & Detector_t::Type_t::TAPS) {
+
+        if(particle.Type() == ParticleTypeDatabase::Photon) {
+            ///@todo replace
+            s =  { 0.035,  std_ext::degree_to_radian(0.42), std_ext::degree_to_radian(1.15)};
+
+        } else if(particle.Type() == ParticleTypeDatabase::Proton) {
+            ///@todo replace
+            s = { 0.0,    std_ext::degree_to_radian(2.8), std_ext::degree_to_radian(4.45)};
+
+        } else {
+            throw Exception("Unexpected Particle: " + particle.Type().Name());
+        }
+    }
+    else {
+        throw Exception("Unexpected Detector: " + string(particle.Candidate->Detector));
+    }
 
     return s;
 }

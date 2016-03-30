@@ -441,6 +441,10 @@ public:
 
 struct Theoretical : Fitter::UncertaintyModel {
 
+    struct Exception : std::runtime_error {
+        using std::runtime_error::runtime_error;
+    };
+
     Theoretical();
     virtual ~Theoretical();
 
