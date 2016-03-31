@@ -269,7 +269,12 @@ protected:
     TParticleList FilterPhotons(const TParticleList& list);
     TParticleList FilterProtons(const TParticleList& list);
 
-    bool opt_save_after_kinfit = false;
+
+
+    // Analysis options
+
+    const bool   opt_save_after_kinfit = false;
+    const double opt_kinfit_chi2cut    = 10.0;
 
 public:
 

@@ -720,6 +720,14 @@ void OmegaEtaG2::Analyse(const TEventData &data, const TEvent& event, manager_t&
 
             t.KinFitChi2 = fitres.ChiSquare / fitres.NDoF;
             t.KinFitIterations = unsigned(fitres.NIterations);
+
+
+            if(t.KinFitChi2 > opt_kinfit_chi2cut)
+                continue;
+
+
+            if(opt_save_after_kinfit)
+                manager.SaveEvent();
         }
 
         t.p_fitted = *fitter.GetFittedProton();
@@ -914,9 +922,6 @@ void OmegaEtaG2::Analyse(const TEventData &data, const TEvent& event, manager_t&
 
         }
 
-        if(opt_save_after_kinfit && t.KinFitChi2 < 5.0)
-            manager.SaveEvent();
-
         tree->Fill();
 
     }
@@ -1026,7 +1031,9 @@ OmegaEtaG2::OmegaEtaG2(const std::string& name, OptionsPtr opts):
         ParticleTypeTreeDatabase::Get(ParticleTypeTreeDatabase::Channel::Omega_gEta_3g),
         ParticleTypeDatabase::Eta,
         model
-        )
+        ),
+    opt_save_after_kinfit(opts->Get("SaveAfterKinfit", false)),
+    opt_kinfit_chi2cut(opts->Get<double>("KinFit_Chi2Cut", 10.0))
 
 {
 
@@ -1047,11 +1054,6 @@ OmegaEtaG2::OmegaEtaG2(const std::string& name, OptionsPtr opts):
         if(c.first<20)
             found_channels->GetXaxis()->SetBinLabel(c.first+1,c.second.name.c_str());
     }
-
-    opt_save_after_kinfit = opts->Get("SaveAfterKinfit", opt_save_after_kinfit);
-
-
-
 }
 
 OmegaEtaG2::~OmegaEtaG2()
