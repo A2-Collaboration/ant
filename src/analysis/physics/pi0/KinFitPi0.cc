@@ -114,9 +114,10 @@ KinFitPi0::MultiPi0::MultiPi0(HistogramFactory& histFac, unsigned nPi0, std::sha
     IM_2g_fitted.MakeHistograms(HistFac, "IM_2g_fitted","IM 2#gamma fitted",bins_IM,"IM / MeV","#");
 
     fitter.SetupBranches(tree);
-    tree->Branch("g1", &b_g1);
-    tree->Branch("g2", &b_g2);
-    tree->Branch("p",  &b_p);
+    tree->Branch("g1",    &b_g1);
+    tree->Branch("g2",    &b_g2);
+    tree->Branch("p",     &b_p);
+    tree->Branch("TaggW", &b_tagw);
 
 }
 
