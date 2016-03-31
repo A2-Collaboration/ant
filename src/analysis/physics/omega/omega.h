@@ -202,9 +202,11 @@ public:
         ADD_BRANCH_T(unsigned,      Channel)
 
         ADD_BRANCH_T(std::vector<double>,       pi0chi2, 3)
-        ADD_BRANCH_T(int,                        iBestPi0)
+        ADD_BRANCH_T(std::vector<double>,       pi0prob, 3)
+        ADD_BRANCH_T(int,                       iBestPi0)
         ADD_BRANCH_T(std::vector<double>,       etachi2, 3)
-        ADD_BRANCH_T(int,                        iBestEta)
+        ADD_BRANCH_T(std::vector<double>,       etaprob, 3)
+        ADD_BRANCH_T(int,                       iBestEta)
 
         ADD_BRANCH_T(int,                        bestHyp)
 
@@ -248,6 +250,8 @@ protected:
 
     utils::KinFitter fitter;
 
+    using doubles = std::vector<double>;
+
     struct MyTreeFitter_t {
         utils::TreeFitter treefitter;
         utils::TreeFitter::tree_t fitted_Omega;
@@ -257,6 +261,8 @@ protected:
         utils::TreeFitter::tree_t fitted_g2_X;
 
         MyTreeFitter_t(const ParticleTypeTree& ttree, const ParticleTypeDatabase::Type& mesonT, const std::shared_ptr<const utils::Fitter::UncertaintyModel>& model);
+
+        void HypTestCombis(const TParticleList& photons, doubles& chi2s, doubles& probs, doubles& ggims, doubles& gggims, int& bestIndex);
     };
     static size_t CombIndex(const ant::TParticleList& orig, const MyTreeFitter_t&);
 

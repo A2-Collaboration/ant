@@ -776,83 +776,70 @@ void OmegaEtaG2::Analyse(const TEventData &data, const TEvent& event, manager_t&
             ++combindex;
         }
 
-        fitter_pi0.treefitter.SetEgammaBeam(TagH.PhotonEnergy);
-        fitter_pi0.treefitter.SetPhotons(photons);
-        fitter_pi0.treefitter.SetProton(proton);
 
 
-        // Pi0 Hyp fit
+        //===== Hypothesis testing with kinematic fitter ======
+
         {
-            APLCON::Result_t treefitres;
 
-            t.iBestPi0 = -1;
-            double BestPi0Chi2 = inf;
-            t.pi0chi2 = {inf, inf , inf};
 
-            while(fitter_pi0.treefitter.NextFit(treefitres)) {
+            // Kin fit: test pi0 hypothesis
 
-                const auto chi2 = treefitres.Status == APLCON::Result_Status_t::Success ? treefitres.ChiSquare : NaN;
+            fitter_pi0.treefitter.SetEgammaBeam(TagH.PhotonEnergy);
+            fitter_pi0.treefitter.SetPhotons(photons);
+            fitter_pi0.treefitter.SetProton(proton);
 
-                const size_t combindex = CombIndex(photons, fitter_pi0);
+            fitter_pi0.HypTestCombis(photons,
+                                     t.pi0chi2,
+                                     t.pi0prob,
+                                     t.pi0_im,
+                                     t.pi0_omega_im,
+                                     t.iBestPi0);
 
-                t.pi0chi2().at(combindex)      = chi2;
-                t.pi0_im().at(combindex)       = fitter_eta.fitted_X->Get().LVSum.M();
-                t.pi0_omega_im().at(combindex) = fitter_eta.fitted_Omega->Get().LVSum.M();
 
-                if( isfinite(chi2) && chi2 < BestPi0Chi2 ) {
-                    t.iBestPi0 = int(combindex);
-                    BestPi0Chi2 = chi2;
+
+            // Kin fit: test eta hypothesis
+
+            fitter_eta.treefitter.SetEgammaBeam(TagH.PhotonEnergy);
+            fitter_eta.treefitter.SetPhotons(photons);
+            fitter_eta.treefitter.SetProton(proton);
+
+            fitter_eta.HypTestCombis(photons,
+                                     t.etachi2,
+                                     t.etaprob,
+                                     t.eta_im,
+                                     t.eta_omega_im,
+                                     t.iBestEta);
+
+
+            // find most probable hypothesis
+
+            t.bestHyp = 0;
+
+            // both fits failed
+            if(t.iBestEta == -1 && t.iBestPi0 == -1)
+                continue;
+
+            // Pi0 fits failed, but at least one eta fit worked -> eta wins
+            if(t.iBestPi0 == -1)
+                t.bestHyp = 2; // Eta
+
+            // Eta fits failed, but at least one pi0 fit worked -> pi0 wins
+            else if(t.iBestEta == -1) {
+                t.bestHyp = 1; // Pi0
+            }
+
+            // both hypotheses have valid fit results: select lower chi2
+            else
+                if(t.pi0chi2().at(t.iBestPi0) < t.etachi2().at(t.iBestEta)) {
+                    t.bestHyp = 1;  // PI0
+                } else {
+                    t.bestHyp = 2;  // ETA
                 }
 
-            }
         }
 
-        fitter_eta.treefitter.SetEgammaBeam(TagH.PhotonEnergy);
-        fitter_eta.treefitter.SetPhotons(photons);
-        fitter_eta.treefitter.SetProton(proton);
 
-
-        // Eta Hyp fit
-        {
-            APLCON::Result_t treefitres;
-
-            t.iBestEta = -1;
-            t.etachi2 = {inf, inf , inf};
-            double BestEtaChi2 = inf;
-            while(fitter_eta.treefitter.NextFit(treefitres)) {
-
-                const auto chi2 = treefitres.Status == APLCON::Result_Status_t::Success ? treefitres.ChiSquare : NaN;
-
-                const size_t combindex = CombIndex(photons, fitter_eta);
-
-                t.etachi2().at(combindex)      = chi2;
-                t.eta_im().at(combindex)       = fitter_eta.fitted_X->Get().LVSum.M();
-                t.eta_omega_im().at(combindex) = fitter_eta.fitted_Omega->Get().LVSum.M();
-
-                if( isfinite(chi2) && chi2 < BestEtaChi2) {
-                    t.iBestEta = int(combindex);
-                    BestEtaChi2 = chi2;
-                }
-            }
-        }
-
-        t.bestHyp = 0;
-
-        if(t.iBestEta == -1 && t.iBestPi0 == -1)
-            continue;
-
-        if(t.iBestPi0 == -1)
-            t.bestHyp = 2; // Eta
-
-        else if(t.iBestEta == -1) {
-            t.bestHyp = 1; // Pi0
-        }
-        else
-            if(t.pi0chi2().at(t.iBestPi0) < t.etachi2().at(t.iBestEta)) {
-                t.bestHyp = 1;  // PI0
-            } else {
-                t.bestHyp = 2;  // ETA
-            }
 
 
         TParticleList rec_photons(3);
@@ -1141,12 +1128,42 @@ OmegaEtaG2::MyTreeFitter_t::MyTreeFitter_t(const ParticleTypeTree& ttree, const 
 
     fitted_Omega   = treefitter.GetTreeNode(ParticleTypeDatabase::Omega);
     fitted_g_Omega = find_daughter(fitted_Omega, ParticleTypeDatabase::Photon);
-    fitted_X     = find_daughter(fitted_Omega, mesonT);
-    fitted_g1_X  = fitted_X->Daughters().front();
-    fitted_g2_X  = fitted_X->Daughters().back();
+    fitted_X       = find_daughter(fitted_Omega, mesonT);
+    fitted_g1_X    = fitted_X->Daughters().front();
+    fitted_g2_X    = fitted_X->Daughters().back();
 
     if(!fitted_Omega || !fitted_g_Omega || !fitted_X || !fitted_g1_X ||!fitted_g1_X ||!fitted_g2_X)
         throw std::runtime_error("Error initializing OmegaEtaG2::MyTreeFitter_t");
+}
+
+void OmegaEtaG2::MyTreeFitter_t::HypTestCombis(const TParticleList& photons, doubles& chi2s, doubles& probs, doubles& ggims, doubles& gggims, int& bestIndex)
+{
+
+    APLCON::Result_t treefitres;
+
+    bestIndex = -1;
+    chi2s = { inf,  inf ,  inf};
+    probs = {-inf, -inf , -inf};
+    double bestChi2 = inf;
+
+    while(treefitter.NextFit(treefitres)) {
+
+        const auto chi2 = treefitres.Status == APLCON::Result_Status_t::Success ? treefitres.ChiSquare : NaN;
+        const auto prob = treefitres.Status == APLCON::Result_Status_t::Success ? treefitres.Probability : NaN;
+
+        const auto combindex = CombIndex(photons, *this);
+
+        chi2s.at(combindex)  = chi2;
+        probs.at(combindex)  = prob;
+        ggims.at(combindex)  = fitted_X->Get().LVSum.M();
+        gggims.at(combindex) = fitted_Omega->Get().LVSum.M();
+
+        if( isfinite(chi2) && chi2 < bestChi2 ) {
+            bestIndex = int(combindex);
+            bestChi2 = chi2;
+        }
+
+    }
 }
 
 AUTO_REGISTER_PHYSICS(OmegaEtaG)
