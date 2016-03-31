@@ -783,7 +783,7 @@ Fitter::Uncertainties_t UncertaintyModels::Theoretical::GetSigmas(const TParticl
 
         if(particle.Type() == ParticleTypeDatabase::Photon) {
             s.sigmaE     = 0.02 * E / pow(E/1000.0, 0.25);
-            s.sigmaTheta = degree_to_radian(2.5);
+            s.sigmaTheta = degree_to_radian(3.8); // avg from MC, long target
             s.sigmaPhi   = s.sigmaTheta / sin(theta);
 
         } else if(particle.Type() == ParticleTypeDatabase::Proton) {
