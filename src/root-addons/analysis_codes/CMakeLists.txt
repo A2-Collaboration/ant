@@ -11,6 +11,7 @@ set(DICT_HEADERS
     PlotTimings.h
     hstack.h
     histtools.h
+    ThetaCBToyMC.h
   )
 
 set(SRCS
@@ -25,6 +26,7 @@ set(SRCS
     PlotTimings.cc
     hstack.cc
     histtools.cc
+    ThetaCBToyMC.cc
   )
 
 set(ROOT_DICTIONARY "${CMAKE_CURRENT_BINARY_DIR}/G__analysis_codes.cc")

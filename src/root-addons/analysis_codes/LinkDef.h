@@ -24,6 +24,7 @@
 #pragma link C++ class ant::hstack-; // has its own Streamer implementation with cereal
 
 #pragma link C++ class ant::histtools+;
+#pragma link C++ class ant::MC::ThetaCBToyMC+;
 
 #endif // __CINT__
 
