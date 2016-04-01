@@ -248,18 +248,18 @@ struct OmegaHist_t {
             h->Fill(f.Tree.ggg_fitted().M(), max(f.Tree.ggIM_fitted()), f.TaggW());
         });
 
-        AddTH1("#pi^{0} Hyp: #chi^2", "#chi^{2}_{#pi^{0}}","",Chi2Bins, "pi0hyp_chi2",
+        AddTH1("#pi^{0} Hyp: prob", "prob_{#pi^{0}}","",probbins, "pi0hyp_prob",
                [] (TH1D* h, const Fill_t& f) {
             const auto& i = f.Tree.iBestPi0;
             if(i >= 0)
-                h->Fill(f.Tree.pi0chi2().at(size_t(i)), f.TaggW());
+                h->Fill(f.Tree.pi0prob().at(size_t(i)), f.TaggW());
         });
 
-        AddTH1("#eta Hyp: #chi^2", "#chi^{2}_{#eta}","",Chi2Bins, "etahyp_chi2",
+        AddTH1("#eta Hyp: prob", "#chi^{2}_{#eta}","",probbins, "etahyp_prob",
                [] (TH1D* h, const Fill_t& f) {
             const auto& i = f.Tree.iBestEta;
             if(i >= 0)
-                h->Fill(f.Tree.etachi2().at(size_t(i)), f.TaggW());
+                h->Fill(f.Tree.etaprob().at(size_t(i)), f.TaggW());
         });
 
         AddTH1("#eta Hyp: #omega IM", "m(#omega_{#eta})","",IMbins, "etahyp_omega",
