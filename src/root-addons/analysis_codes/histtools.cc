@@ -4,7 +4,10 @@
 #include <string>
 
 #include "TH1.h"
+#include "TH2.h"
 #include "TH1D.h"
+#include "TGraph.h"
+#include "TCanvas.h"
 
 using namespace std;
 using namespace ant;
@@ -63,4 +66,36 @@ TH1*histtools::PlotSignificance(const TH1* const h1, const TH1* const h2)
 
     }
     return h;
+}
+
+void histtools::PlotMeansRMS(const TH2* const h)
+{
+    auto gmeans = new TGraph(h->GetNbinsX());
+    gmeans->SetTitle(Form("Y-Means: %s", h->GetTitle()));
+    gmeans->SetMarkerSize(2);
+
+    auto grms   = new TGraph(h->GetNbinsX());
+    grms->SetTitle(Form("Y-RMS: %s", h->GetTitle()));
+    grms->SetMarkerSize(2);
+
+    for(int i=1; i<h->GetNbinsX(); ++i) {
+        auto proj = h->ProjectionY("",i,i);
+        const auto mean = proj->GetMean();
+        const auto rms  = proj->GetRMS();
+        const auto x    = h->GetXaxis()->GetBinCenter(i);
+
+        gmeans->SetPoint(i, x, mean);
+        grms->SetPoint(i, x, rms);
+        delete proj;
+    }
+
+    auto c = new TCanvas();
+    c->SetTitle(h->GetTitle());
+
+    c->Divide(2,1);
+    c->cd(1);
+    gmeans->Draw("AP");
+    c->cd(2);
+    grms->Draw("AP");
+
 }

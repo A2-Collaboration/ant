@@ -1,6 +1,7 @@
 #pragma once
 
 class TH1;
+class TH2;
 
 
 namespace ant {
@@ -22,6 +23,8 @@ struct histtools {
      * @return new histogram
      */
     static TH1* PlotSignificance(const TH1* const h1, const TH1* const h2);
+
+    static void PlotMeansRMS(const TH2* const h);
 };
 
 }
