@@ -772,6 +772,14 @@ UncertaintyModels::Theoretical::Theoretical()
 UncertaintyModels::Theoretical::~Theoretical()
 {}
 
+double Pol2(double x, const double p0, const double p1, const double p2) {
+    double r = p0;
+    r+=x*p1;
+    x*=x;
+    r+=x*p2;
+    return r;
+}
+
 Fitter::Uncertainties_t UncertaintyModels::Theoretical::GetSigmas(const TParticle& particle) const
 {
     const auto theta = particle.Theta();
@@ -783,7 +791,8 @@ Fitter::Uncertainties_t UncertaintyModels::Theoretical::GetSigmas(const TParticl
 
         if(particle.Type() == ParticleTypeDatabase::Photon) {
             s.sigmaE     = 0.02 * E / pow(E/1000.0, 0.25);
-            s.sigmaTheta = degree_to_radian(3.8); // avg from MC, long target
+//            s.sigmaTheta = degree_to_radian(3.8); // avg from MC, long target
+            s.sigmaTheta   = degree_to_radian(Pol2(theta, -0.606055, 0.113981, -0.000636305));
             s.sigmaPhi   = s.sigmaTheta / sin(theta);
 
         } else if(particle.Type() == ParticleTypeDatabase::Proton) {
