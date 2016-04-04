@@ -64,6 +64,7 @@ set(ANALYSIS_PHYSICS_CALIBRATION
   physics/calibration/PID_Energy.cc
   physics/calibration/PID_PhiAngle.cc
   physics/calibration/TAPSVeto_Energy.cc
+  physics/calibration/Thresholds.cc
 )
 
 set(ANALYSIS_PLOT
