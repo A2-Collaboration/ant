@@ -1,6 +1,7 @@
 #include "Setup_2014_EPT.h"
 
 #include "base/std_ext/math.h"
+#include "base/Logger.h"
 
 #include "detectors/Trigger.h"
 #include "detectors/CB.h"
@@ -86,8 +87,14 @@ Setup_2014_EPT::Setup_2014_EPT(const string& name, OptionsPtr opt) :
     AddHook(convert_CATCH_CB);
     AddHook(convert_V1190_TAPSPbWO4);
 
-    bool timecuts = !Options->Get<bool>("DisableTimecuts");
+    const bool timecuts = !Options->Get<bool>("DisableTimecuts");
     interval<double> no_timecut(-std_ext::inf, std_ext::inf);
+    if(!timecuts)
+        LOG(INFO) << "Disabling timecuts";
+
+    const bool thresholds = !Options->Get<bool>("DisableThresholds");
+    if(!thresholds)
+        LOG(INFO) << "Disabling thresholds";
 
     // then we add the others, and link it to the converters
     AddCalibration<calibration::Time>(EPT,
@@ -130,7 +137,7 @@ Setup_2014_EPT::Setup_2014_EPT(const string& name, OptionsPtr opt) :
     AddCalibration<calibration::CB_Energy>(cb, calibrationDataManager, convert_GeSiCa_SADC,
                                            0,    // default pedestal
                                            0.07, // default gain
-                                           2,    // default threshold
+                                           thresholds ? 2 : 0,    // default threshold
                                            1.0   // default relative gain
                                            );
 
@@ -139,7 +146,7 @@ Setup_2014_EPT::Setup_2014_EPT(const string& name, OptionsPtr opt) :
     AddCalibration<calibration::TAPS_Energy>(taps, calibrationDataManager, convert_MultiHit16bit,
                                              100, // default pedestal
                                              0.3, // default gain
-                                             1,   // default threshold
+                                             thresholds ? 1 : 0,   // default threshold
                                              1.0  // default relative gain
                                              );
 
