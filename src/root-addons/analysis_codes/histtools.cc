@@ -68,7 +68,7 @@ TH1*histtools::PlotSignificance(const TH1* const h1, const TH1* const h2)
     return h;
 }
 
-void histtools::PlotMeansRMS(const TH2* const h)
+std::pair<TGraph*, TGraph*> histtools::MeanRMS(const TH2* const h)
 {
     auto gmeans = new TGraph(h->GetNbinsX());
     gmeans->SetTitle(Form("Y-Means: %s", h->GetTitle()));
@@ -89,13 +89,20 @@ void histtools::PlotMeansRMS(const TH2* const h)
         delete proj;
     }
 
+    return {gmeans, grms};
+}
+
+void histtools::PlotMeansRMS(const TH2* const h)
+{
+    auto graphs = MeanRMS(h);
+
     auto c = new TCanvas();
     c->SetTitle(h->GetTitle());
 
     c->Divide(2,1);
     c->cd(1);
-    gmeans->Draw("AP");
+    graphs.first->Draw("AP");
     c->cd(2);
-    grms->Draw("AP");
+    graphs.second->Draw("AP");
 
 }

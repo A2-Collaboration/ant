@@ -1,8 +1,10 @@
 #pragma once
 
+#include <utility>
+
 class TH1;
 class TH2;
-
+class TGraph;
 
 namespace ant {
 
@@ -24,6 +26,7 @@ struct histtools {
      */
     static TH1* PlotSignificance(const TH1* const h1, const TH1* const h2);
 
+    static std::pair<TGraph*, TGraph*> MeanRMS(const TH2* const h);
     static void PlotMeansRMS(const TH2* const h);
 };
 
