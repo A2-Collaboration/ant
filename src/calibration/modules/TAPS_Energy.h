@@ -55,10 +55,10 @@ public:
             std::shared_ptr<expconfig::detector::TAPS> taps,
             std::shared_ptr<DataManager> calmgr,
             Calibration::Converter::ptr_t converter,
-            double defaultPedestal = 100,
-            double defaultGain = 0.3,
-            double defaultThreshold = 1,
-            double defaultRelativeGain = 1.0);
+            double defaultPedestal,
+            double defaultGain,
+            double defaultThreshold,
+            double defaultRelativeGain);
 
     virtual void GetGUIs(std::list<std::unique_ptr<calibration::gui::CalibModule_traits> >& guis) override;
 protected:

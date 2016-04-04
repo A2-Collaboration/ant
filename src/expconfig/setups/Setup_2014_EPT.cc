@@ -136,7 +136,12 @@ Setup_2014_EPT::Setup_2014_EPT(const string& name, OptionsPtr opt) :
 
     AddCalibration<calibration::PID_Energy>(pid, calibrationDataManager, convert_MultiHit16bit );
 
-    AddCalibration<calibration::TAPS_Energy>(taps, calibrationDataManager, convert_MultiHit16bit );
+    AddCalibration<calibration::TAPS_Energy>(taps, calibrationDataManager, convert_MultiHit16bit,
+                                             100, // default pedestal
+                                             0.3, // default gain
+                                             1,   // default threshold
+                                             1.0  // default relative gain
+                                             );
 
     AddCalibration<calibration::TAPS_ShortEnergy>(taps, calibrationDataManager, convert_MultiHit16bit );
 
