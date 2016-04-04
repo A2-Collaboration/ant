@@ -135,7 +135,12 @@ void ant::test::EnsureSetup() {
                                                        interval<double>{-1000, 1000}
                                                        );
 
-            AddCalibration<calibration::CB_Energy>(cb, calibrationDataManager, convert_GeSiCa_SADC );
+            AddCalibration<calibration::CB_Energy>(cb, calibrationDataManager, convert_GeSiCa_SADC,
+                                                   0,    // default pedestal
+                                                   0.07, // default gain
+                                                   2,    // default threshold
+                                                   1.0   // default relative gain
+                                                   );
 
             AddCalibration<calibration::PID_Energy>(pid, calibrationDataManager, convert_MultiHit16bit );
 
