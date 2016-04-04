@@ -1,9 +1,16 @@
 #include "ThetaCBToyMC.h"
 #include "base/std_ext/math.h"
 #include "TH2.h"
+#include "TH3.h"
 #include "TH2D.h"
+#include "TGraph.h"
+#include "TCanvas.h"
+#include "histtools.h"
+#include <iostream>
+#include "TList.h"
+#include "analysis/plot/root_draw.h"
 
-
+using namespace std;
 using namespace ant;
 using namespace ant::MC;
 using namespace ant::std_ext;
@@ -42,5 +49,85 @@ TH2* ThetaCBToyMC::SimTheta(const unsigned n, const double r, const double l, TH
     }
 
     return hist;
+
+}
+
+void ThetaCBToyMC::Analyse3(TH3* hist)
+{
+    const int EBins = hist->GetNbinsZ();
+
+    const std::vector<int> colors = {kBlack, kRed, kBlue, kGreen, kPink, kCyan, kOrange, kTeal};
+
+    new TCanvas();
+
+    for(int iE=1; iE <= EBins; ++iE) {
+
+        hist->GetZaxis()->SetRange(iE,iE);
+        auto eSlice = dynamic_cast<TH2*>(hist->Project3D(Form("sliceE%d_yx", iE)));
+        if(!eSlice) {
+            cerr << "Projection failed!" << endl;
+            return;
+        }
+
+        eSlice->SetTitle(Form("E > %f && E < %f", hist->GetZaxis()->GetBinLowEdge(iE), hist->GetZaxis()->GetBinUpEdge(iE)));
+
+      //  ant::histtools::PlotMeansRMS(eSlice);
+
+        auto g = ant::histtools::MeanRMS(eSlice);
+
+        g.second->SetMarkerColor(colors.at( iE % colors.size()));
+        g.second->SetMarkerStyle(7);
+
+        if(iE==1)
+            g.second->Draw("AP");
+        else
+            g.second->Draw("P same");
+
+
+    }
+}
+
+void ThetaCBToyMC::SimThetaMulti(const unsigned n, const double rmin, const double rmax, const unsigned steps, const double l)
+{
+    const std::vector<int> colors = {kBlack, kRed, kBlue, kGreen, kPink, kCyan, kOrange, kTeal};
+
+    canvas cHists("Thetas");
+    auto cMean = new TCanvas("Mean");
+    auto cRMS  = new TCanvas("RMS");
+
+    for(unsigned i=0; i<steps; ++i) {
+        const double r = rmin + ((rmax - rmin)/steps)*i;
+
+        const auto hist = SimTheta(n, r, l);
+
+        cHists << drawoption("colz")
+                << hist;
+
+        auto g = ant::histtools::MeanRMS(hist);
+
+        g.first->SetMarkerStyle(7);
+        g.second->SetMarkerStyle(7);
+        g.first->SetMarkerColor(colors.at( i % colors.size()));
+        g.second->SetMarkerColor(colors.at( i % colors.size()));
+
+        g.first->SetTitle(Form("Mean r = %f", r));
+        g.second->SetTitle(Form("RMS r = %f", r));
+
+        if(i==0) {
+            cMean->cd();
+            g.first->Draw("AP");
+            cRMS->cd();
+            g.second->Draw("AP");
+        } else {
+            cMean->cd();
+            g.first->Draw("P same");
+            cRMS->cd();
+            g.second->Draw("P same");
+        }
+
+
+    }
+
+    cHists << endc;
 
 }
