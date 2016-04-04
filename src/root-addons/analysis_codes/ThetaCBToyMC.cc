@@ -7,7 +7,7 @@
 #include "TCanvas.h"
 #include "histtools.h"
 #include <iostream>
-#include "TList.h"
+#include "TF1.h"
 #include "analysis/plot/root_draw.h"
 
 using namespace std;
@@ -61,6 +61,12 @@ void ThetaCBToyMC::Analyse3(TH3* hist)
     auto cMean = new TCanvas();
     auto cRMS  = new TCanvas();
 
+    TF1* line = new TF1("lin", "pol1", 25, 145);
+    TGraph* slope = new TGraph(EBins);
+    slope->SetTitle("Fitted #theta slope");
+    slope->SetMarkerStyle(7);
+
+
     for(int iE=1; iE <= EBins; ++iE) {
 
         hist->GetZaxis()->SetRange(iE,iE);
@@ -91,8 +97,18 @@ void ThetaCBToyMC::Analyse3(TH3* hist)
             g.second->Draw("P same");
         }
 
+        auto gmean = g.first;
+
+        line->SetParameters(0,0);
+
+        gmean->Fit(line,"RBQ");
+
+        slope->SetPoint(iE, hist->GetZaxis()->GetBinCenter(iE), line->GetParameter(1));
 
     }
+
+    new TCanvas();
+    slope->Draw("AP");
 }
 
 void ThetaCBToyMC::SimThetaMulti(const unsigned n, const double rmin, const double rmax, const unsigned steps, const double l)
