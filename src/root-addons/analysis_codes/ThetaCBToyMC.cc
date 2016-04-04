@@ -58,7 +58,8 @@ void ThetaCBToyMC::Analyse3(TH3* hist)
 
     const std::vector<int> colors = {kBlack, kRed, kBlue, kGreen, kPink, kCyan, kOrange, kTeal};
 
-    new TCanvas();
+    auto cMean = new TCanvas();
+    auto cRMS  = new TCanvas();
 
     for(int iE=1; iE <= EBins; ++iE) {
 
@@ -71,17 +72,24 @@ void ThetaCBToyMC::Analyse3(TH3* hist)
 
         eSlice->SetTitle(Form("E > %f && E < %f", hist->GetZaxis()->GetBinLowEdge(iE), hist->GetZaxis()->GetBinUpEdge(iE)));
 
-      //  ant::histtools::PlotMeansRMS(eSlice);
-
         auto g = ant::histtools::MeanRMS(eSlice);
 
+        g.first->SetMarkerColor(colors.at( iE % colors.size()));
+        g.first->SetMarkerStyle(7);
         g.second->SetMarkerColor(colors.at( iE % colors.size()));
         g.second->SetMarkerStyle(7);
 
-        if(iE==1)
+        if(iE==1) {
+            cMean->cd();
+            g.first->Draw("AP");
+            cRMS->cd();
             g.second->Draw("AP");
-        else
+        } else {
+            cMean->cd();
+            g.first->Draw("P same");
+            cRMS->cd();
             g.second->Draw("P same");
+        }
 
 
     }
