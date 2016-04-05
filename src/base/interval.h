@@ -28,7 +28,7 @@ public:
      * @return an interval that spans symmetrically around center with given width
      */
     constexpr static interval CenterWidth( const T center, const T width) {
-        return std::move( interval(center - width/2.0, center + width/2.0));
+        return interval(center - width/2.0, center + width/2.0);
     }
 
     virtual ~interval() {}
