@@ -781,6 +781,10 @@ double Pol2(double x, const double p0, const double p1, const double p2) {
     return r;
 }
 
+double Pol2Scheitelpkt(const double x, const double px, const double py, const double p0) {
+    return py + p0 * sqr(x-px);
+}
+
 Fitter::Uncertainties_t UncertaintyModels::Theoretical::GetSigmas(const TParticle& particle) const
 {
     const auto theta = particle.Theta();
@@ -791,9 +795,13 @@ Fitter::Uncertainties_t UncertaintyModels::Theoretical::GetSigmas(const TParticl
     if(particle.Candidate->Detector & Detector_t::Type_t::CB) {
 
         if(particle.Type() == ParticleTypeDatabase::Photon) {
+
             s.sigmaE     = 0.02 * E / pow(E/1000.0, 0.25);
-//            s.sigmaTheta = degree_to_radian(3.8); // avg from MC, long target
-            s.sigmaTheta   = degree_to_radian( sqrt(sqr(Pol2(theta, -0.606055, 0.113981, -0.000636305)) + sqr(2.5)) );
+
+            const double target_part = Pol2Scheitelpkt(degree_to_radian(theta), 89.987, 4.96232,-0.000673972);
+            const double const_part  = 2.5;
+
+            s.sigmaTheta   = degree_to_radian(sqrt( sqr(target_part) + sqr(const_part) ));
             s.sigmaPhi   = s.sigmaTheta / sin(theta);
 
         } else if(particle.Type() == ParticleTypeDatabase::Proton) {
