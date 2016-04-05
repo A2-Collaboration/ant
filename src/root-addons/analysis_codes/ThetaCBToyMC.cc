@@ -18,14 +18,14 @@ using namespace ant::std_ext;
 #include <cmath>
 #include "TRandom2.h"
 
-double ThetaCBToyMC::dTheta(const double theta, const double z, const double r) {
+double ThetaCBToyMC::dTheta(const double theta, const double z, const double r, const double yoffset) {
     const auto a0 = r*cos(theta);
-    const auto b  = r*sin(theta);
+    const auto b  = r*sin(theta) + yoffset;
 
     return atan2(b,a0-z);
 }
 
-TH2* ThetaCBToyMC::SimTheta(const unsigned n, const double r, const double l, TH2* hist)
+TH2* ThetaCBToyMC::SimTheta(const unsigned n, const double r, const double l, const double gap, TH2* hist)
 {
     const double theta_min = degree_to_radian(20.0);
     const double theta_max = degree_to_radian(160.0);
@@ -43,7 +43,7 @@ TH2* ThetaCBToyMC::SimTheta(const unsigned n, const double r, const double l, TH
         const auto theta = rng.Uniform(theta_max - theta_min) + theta_min;
         const auto z     = rng.Uniform(l) - l/2.0;
 
-        const auto dtheta = theta - dTheta(theta, z, r);
+        const auto dtheta = theta - dTheta(theta, z, r, gap/2.0);
 
         hist->Fill(radian_to_degree(theta), radian_to_degree(dtheta));
     }
