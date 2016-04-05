@@ -72,11 +72,16 @@ std::pair<TGraph*, TGraph*> histtools::MeanRMS(const TH2* const h)
 {
     auto gmeans = new TGraph(h->GetNbinsX());
     gmeans->SetTitle(Form("Y-Means: %s", h->GetTitle()));
-    gmeans->SetMarkerSize(2);
+    gmeans->GetXaxis()->SetTitle(h->GetXaxis()->GetTitle());
+    gmeans->GetYaxis()->SetTitle(Form("Mean(%s)", h->GetYaxis()->GetTitle()));
+    gmeans->SetMarkerStyle(6);
+
 
     auto grms   = new TGraph(h->GetNbinsX());
     grms->SetTitle(Form("Y-RMS: %s", h->GetTitle()));
-    grms->SetMarkerSize(2);
+    grms->SetMarkerStyle(6);
+    grms->GetXaxis()->SetTitle(h->GetXaxis()->GetTitle());
+    grms->GetYaxis()->SetTitle(Form("RMS(%s)", h->GetYaxis()->GetTitle()));
 
     for(int i=1; i<h->GetNbinsX(); ++i) {
         auto proj = h->ProjectionY("",i,i);
