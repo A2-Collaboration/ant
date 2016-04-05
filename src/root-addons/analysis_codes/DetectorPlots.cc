@@ -7,6 +7,7 @@
 #include <iostream>
 
 #include "TCanvas.h"
+#include "TGraph2D.h"
 
 using namespace std;
 using namespace ant;
@@ -16,9 +17,7 @@ TH2TAPS* DetectorPlots::MakeTAPSTheta(const string& setup_name)
 {
     auto taps = new TH2TAPS();
 
-    ExpConfig::Setup::ManualName = setup_name;
-
-    const auto setup = ExpConfig::Setup::GetLastFound();
+    const auto setup = ExpConfig::Setup::Get(setup_name);
 
     if(!setup) {
         cerr << "Setup \"" << setup_name << "\" not found!" << endl;
@@ -46,9 +45,7 @@ TH2TAPS* DetectorPlots::MakeTAPSPhi(const string& setup_name)
 {
     auto taps = new TH2TAPS();
 
-    ExpConfig::Setup::ManualName = setup_name;
-
-    const auto setup = ExpConfig::Setup::GetLastFound();
+    const auto setup = ExpConfig::Setup::Get(setup_name);
 
     if(!setup) {
         cerr << "Setup \"" << setup_name << "\" not found!" << endl;
@@ -78,9 +75,7 @@ TH2CB* DetectorPlots::MakeCBTheta(const string& setup_name)
 {
     auto cb = new TH2CB();
 
-    ExpConfig::Setup::ManualName = setup_name;
-
-    const auto setup = ExpConfig::Setup::GetLastFound();
+    const auto setup = ExpConfig::Setup::Get(setup_name);
 
     if(!setup) {
         cerr << "Setup \"" << setup_name << "\" not found!" << endl;
@@ -108,9 +103,7 @@ TH2CB* DetectorPlots::MakeCBPhi(const string& setup_name)
 {
     auto cb = new TH2CB();
 
-    ExpConfig::Setup::ManualName = setup_name;
-
-    const auto setup = ExpConfig::Setup::GetLastFound();
+    const auto setup = ExpConfig::Setup::Get(setup_name);
 
     if(!setup) {
         cerr << "Setup \"" << setup_name << "\" not found!" << endl;
@@ -161,9 +154,7 @@ void DetectorPlots::PlotCBPhi(const string& setup_name)
 
 void DetectorPlots::PlotCBIgnored(const string& setup_name)
 {
-    ExpConfig::Setup::ManualName = setup_name;
-
-    const auto setup = ExpConfig::Setup::GetLastFound();
+    const auto setup = ExpConfig::Setup::Get(setup_name);
     if(!setup) {
         cerr << "Setup \"" << setup_name << "\" not found!" << endl;
         return;
@@ -221,9 +212,7 @@ void DetectorPlots::PlotTAPSPhi(const string& setup_name)
 void DetectorPlots::PlotTAPSIgnored(const string& setup_name)
 {
 
-    ExpConfig::Setup::ManualName = setup_name;
-
-    const auto setup = ExpConfig::Setup::GetLastFound();
+    const auto setup = ExpConfig::Setup::Get(setup_name);
     if(!setup) {
         cerr << "Setup \"" << setup_name << "\" not found!" << endl;
         return;
@@ -250,4 +239,37 @@ void DetectorPlots::PlotTAPSIgnored(const string& setup_name)
     new TCanvas();
     taps->Draw("col");
     grid->Draw("same text");
+}
+
+void DetectorPlots::PlotCBTAPSDetectorPositions(const string& setup_name, double CB_gap)
+{
+    const auto setup = ExpConfig::Setup::Get(setup_name);
+    if(!setup) {
+        cerr << "Setup \"" << setup_name << "\" not found!" << endl;
+        return;
+    }
+    const auto cb = setup->GetDetector(Detector_t::Type_t::CB);
+    const auto taps = setup->GetDetector(Detector_t::Type_t::TAPS);
+
+    auto graph = new TGraph2D(cb->GetNChannels()+taps->GetNChannels());
+
+    for(unsigned ch=0;ch<cb->GetNChannels();ch++) {
+        auto pos = cb->GetPosition(ch);
+        if(pos.y<0)
+            pos.y -= CB_gap/2;
+        else
+            pos.y += CB_gap/2;
+        graph->SetPoint(ch,pos.x,pos.y,pos.z);
+    }
+
+    for(unsigned ch=0;ch<taps->GetNChannels();ch++) {
+        const auto& pos = taps->GetPosition(ch);
+        graph->SetPoint(cb->GetNChannels()+ch,pos.x,pos.y,pos.z);
+    }
+
+
+    graph->GetXaxis()->SetTitle("X");
+    graph->GetYaxis()->SetTitle("Y");
+    graph->GetZaxis()->SetTitle("Z");
+    graph->Draw("P0");
 }

@@ -4,10 +4,9 @@
 #include <string>
 
 namespace ant {
-    class TH2CB;
-    class TH2TAPS;
+class TH2CB;
+class TH2TAPS;
 }
-
 
 class DetectorPlots {
 public:
@@ -26,6 +25,7 @@ public:
      */
     static void          PlotCBIgnored(const std::string& setup_name);
 
+
     static void          PlotTAPSTheta(const std::string& setup_name);
     static void          PlotTAPSPhi(const std::string& setup_name);
 
@@ -35,9 +35,8 @@ public:
      */
     static void          PlotTAPSIgnored(const std::string& setup_name);
 
-
+    static void          PlotDetectorPositions(const std::string& setup_name, double CB_gap = 0.0);
 
 };
-
 
 #endif
