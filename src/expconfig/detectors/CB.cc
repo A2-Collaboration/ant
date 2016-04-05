@@ -31,6 +31,19 @@ CB::CB() :
         elements[hole].IsHole = true;
         SetTouchesHoleOfNeighbours(hole);
     }
+
+    // the gap is reflected in the Geant simulation,
+    // but not in the element positions from Acqu
+    // we use 1.0 cm as some rough estimate here
+    constexpr double gap = 1.0; // in cm
+
+    for(auto& element : elements) {
+        auto& pos = element.Position;
+        if(pos.y<0)
+            pos.y -= gap/2;
+        else
+            pos.y += gap/2;
+    }
 }
 
 void CB::SetIgnored(unsigned channel) {
