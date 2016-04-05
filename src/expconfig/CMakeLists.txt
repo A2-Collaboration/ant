@@ -14,6 +14,7 @@ set(SRCS_SETUPS
   setups/Setup_2014_10_EPT_Prod.cc
   setups/Setup_2014_12_EPT_Prod.cc
   setups/Setup_2015_01_Pion.cc
+  setups/Setup_CBSourceCalib.cc
   )
 
 set(SRCS_DETECTORS
