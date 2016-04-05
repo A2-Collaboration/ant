@@ -798,10 +798,9 @@ Fitter::Uncertainties_t UncertaintyModels::Theoretical::GetSigmas(const TParticl
 
             s.sigmaE     = 0.02 * E / pow(E/1000.0, 0.25);
 
-            const double target_part = Pol2Scheitelpkt(degree_to_radian(theta), 89.987, 4.96232,-0.000673972);
-            const double const_part  = 2.5;
+            // extraced from MC, with gap, long target
+            s.sigmaTheta = degree_to_radian( dThetaSin(theta, 0.0885038, 4.4947) );
 
-            s.sigmaTheta   = degree_to_radian(sqrt( sqr(target_part) + sqr(const_part) ));
             s.sigmaPhi   = s.sigmaTheta / sin(theta);
 
         } else if(particle.Type() == ParticleTypeDatabase::Proton) {
@@ -831,4 +830,9 @@ Fitter::Uncertainties_t UncertaintyModels::Theoretical::GetSigmas(const TParticl
     }
 
     return s;
+}
+
+double UncertaintyModels::Theoretical::dThetaSin(const double theta, const double offset, const double thetapart)
+{
+    return offset + thetapart * sin(theta);
 }
