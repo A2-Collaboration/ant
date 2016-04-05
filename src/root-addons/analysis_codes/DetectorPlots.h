@@ -35,7 +35,7 @@ public:
      */
     static void          PlotTAPSIgnored(const std::string& setup_name);
 
-    static void          PlotDetectorPositions(const std::string& setup_name, double CB_gap = 0.0);
+    static void          PlotCBTAPSDetectorPositions(const std::string& setup_name, double CB_gap = 0.0);
 
 };
 
