@@ -142,9 +142,11 @@ TEST_CASE("Interval algos", "[base]") {
     std::vector<double> x;
     for(auto s =stepper(a,3); !s.Done(); s.Next()) {
         x.push_back(s.value);
+        cout << s.value << endl;
     }
 
-    x.at(0) == Approx(0);
-    x.at(1) == Approx(5);
-    x.at(2) == Approx(10);
+    REQUIRE(x.size() == 3);
+    REQUIRE(x.at(0) == Approx(0));
+    REQUIRE(x.at(1) == Approx(5));
+    REQUIRE(x.at(2) == Approx(10));
 }

@@ -21,8 +21,8 @@ struct stepper {
     bool Next() {
 
         if(p<n) {
-            value = step(i,n,p);
             ++p;
+            value = step(i,n,p);
             return true;
         } else
             return false;
