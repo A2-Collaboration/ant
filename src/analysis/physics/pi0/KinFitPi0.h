@@ -23,6 +23,8 @@ protected:
         void ProcessData(const TEventData& data, const utils::MCSmear& smear);
         void ShowResult();
 
+        TTree* tree = nullptr;
+
     protected:
         const unsigned multiplicity;
 
@@ -40,7 +42,7 @@ protected:
         TH1D* Proton_Coplanarity;
         TH1D* h_taggtime;
 
-        TTree* tree = nullptr;
+
         TLorentzVector b_g1;
         TLorentzVector b_g2;
         TLorentzVector b_p;

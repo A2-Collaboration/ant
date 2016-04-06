@@ -5,11 +5,12 @@
 #include "base/Logger.h"
 
 #include "expconfig/ExpConfig.h"
-#include <string>
+#include "base/interval_algo.h"
 
 #include "TH1D.h"
 #include "TTree.h"
 
+#include <string>
 #include <memory>
 #include <cassert>
 
@@ -62,16 +63,51 @@ KinFitPi0::KinFitPi0(const string& name, OptionsPtr opts) :
 {
 
     for(unsigned mult=1;mult<=opts->Get<unsigned>("nPi0",3);mult++) {
-        multiPi0.emplace_back(std_ext::make_unique<MultiPi0>(HistFac, mult, fitter_model));
+
+        auto mpi0 = std_ext::make_unique<MultiPi0>(HistFac, mult, fitter_model);
+
+        // if using the theoretical model, add some branches to the oputput trees
+        if(auto theom = std::dynamic_pointer_cast<utils::UncertaintyModels::Theoretical>(fitter_model)) {
+            mpi0->tree->Branch("T_cb_photon_theta_const", addressof(theom->cb_photon_theta_const));
+            mpi0->tree->Branch("T_cb_photon_theta_Sin",   addressof(theom->cb_photon_theta_Sin));
+            mpi0->tree->Branch("T_cb_photon_E_rel",       addressof(theom->cb_photon_E_rel));
+            mpi0->tree->Branch("T_cb_photon_E_exp",       addressof(theom->cb_photon_E_exp));
+        }
+
+        multiPi0.emplace_back(move(mpi0));
+
     }
 
 }
 
 void KinFitPi0::ProcessEvent(const TEvent& event, manager_t&)
 {
-    const auto& data = event.Reconstructed();
-    for(auto& m : multiPi0)
-        m->ProcessData(data, smear);
+
+    if(auto theom = std::dynamic_pointer_cast<utils::UncertaintyModels::Theoretical>(fitter_model)) {
+
+        const interval<double> theta_const_i = { .5, 2.5 };
+        const interval<double> theta_Sin_i   = { 4, 8 };
+        const unsigned steps = 3;
+
+        for(auto thsin = stepper(theta_Sin_i, steps); !thsin.Done(); thsin.Next()) {
+            theom->cb_photon_theta_Sin = thsin.value;
+
+            for(auto thconst = stepper(theta_const_i, steps); !thconst.Done(); thconst.Next()) {
+                theom->cb_photon_theta_const = thconst.value;
+
+                // fit
+                const auto& data = event.Reconstructed();
+                for(auto& m : multiPi0)
+                    m->ProcessData(data, smear);
+            }
+
+        }
+
+    } else {
+        const auto& data = event.Reconstructed();
+        for(auto& m : multiPi0)
+            m->ProcessData(data, smear);
+    }
 }
 
 void KinFitPi0::ShowResult()
