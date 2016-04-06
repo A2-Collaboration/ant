@@ -796,11 +796,8 @@ Fitter::Uncertainties_t UncertaintyModels::Theoretical::GetSigmas(const TParticl
 
         if(particle.Type() == ParticleTypeDatabase::Photon) {
 
-            s.sigmaE     = 0.02 * E / pow(E/1000.0, 0.25);
-
-            // extraced from MC, with gap, long target
-            s.sigmaTheta = degree_to_radian( dThetaSin(theta, 0.0885038, 4.4947) );
-
+            s.sigmaE     = cb_photon_E_rel * E * pow( E/1000.0, cb_photon_E_exp);
+            s.sigmaTheta = degree_to_radian( dThetaSin(theta, cb_photon_theta_const, cb_photon_theta_Sin) );
             s.sigmaPhi   = s.sigmaTheta / sin(theta);
 
         } else if(particle.Type() == ParticleTypeDatabase::Proton) {
