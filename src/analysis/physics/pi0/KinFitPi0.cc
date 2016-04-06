@@ -85,8 +85,8 @@ void KinFitPi0::ProcessEvent(const TEvent& event, manager_t&)
 
     if(auto theom = std::dynamic_pointer_cast<utils::UncertaintyModels::Theoretical>(fitter_model)) {
 
-        const interval<double> theta_const_i = { .5, 2.5 };
-        const interval<double> theta_Sin_i   = { 4, 8 };
+        const interval<double> theta_const_i = { .5, 3.5 };
+        const interval<double> theta_Sin_i   = { 3, 8 };
         const unsigned steps = 3;
 
         for(auto thsin = stepper(theta_Sin_i, steps); !thsin.Done(); thsin.Next()) {
