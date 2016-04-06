@@ -10,6 +10,7 @@ set(SRCS_BASE
   ParticleTypeTree.cc
   interval.h
   piecewise_interval.h
+  interval_algo.h
   printable.h
   Logger.cc
   tmpfile_t.cc

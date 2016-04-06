@@ -1,6 +1,7 @@
 #include "catch.hpp"
 #include "base/piecewise_interval.h"
 #include "base/interval.h"
+#include "base/interval_algo.h"
 #include "base/std_ext/math.h"
 #include <iostream>
 #include <sstream>
@@ -131,4 +132,19 @@ TEST_CASE("Piecewiese Interval: Parse from string", "[base]") {
     REQUIRE(ss_c >> c_out);
     REQUIRE(c_in == c_out);
 
+}
+
+TEST_CASE("Interval algos", "[base]") {
+    const interval<double> a = {0, 10};
+
+    REQUIRE(step(a,3,1) == Approx(5.0));
+
+    std::vector<double> x;
+    for(auto s =stepper(a,3); !s.Done(); s.Next()) {
+        x.push_back(s.value);
+    }
+
+    x.at(0) == Approx(0);
+    x.at(1) == Approx(5);
+    x.at(2) == Approx(10);
 }
