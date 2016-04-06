@@ -149,4 +149,8 @@ TEST_CASE("Interval algos", "[base]") {
     REQUIRE(x.at(0) == Approx(0));
     REQUIRE(x.at(1) == Approx(5));
     REQUIRE(x.at(2) == Approx(10));
+
+    for(const auto& x : Range(a,30)) {
+        cout << x << endl;
+    }
 }

@@ -34,4 +34,63 @@ struct stepper {
 
 };
 
+struct Range {
+
+    Range(const ant::interval<double>& i, const unsigned n) noexcept:
+        m_i(i), m_n(n) {}
+
+    struct iterator {
+
+        using value_type        = double;
+        using iterator_category = std::bidirectional_iterator_tag;
+        using difference_type   = std::ptrdiff_t;
+        using pointer           = const double*;
+        using reference         = const double;
+
+        bool operator==(const iterator& other) const noexcept {
+            return m_p == other.m_p;
+        }
+
+        bool operator!=(const iterator& other) const noexcept {
+            return ! operator==(other);
+        }
+
+        iterator& operator++() noexcept {
+            ++m_p; return *this;
+        }
+
+        iterator& operator--() noexcept {
+            --m_p; return *this;
+        }
+
+        value_type value() const noexcept {
+            return step(m_range.m_i, m_range.m_n, m_p);
+        }
+
+        unsigned position() const noexcept {
+            return m_p;
+        }
+
+        reference operator*() const noexcept {
+            return value();
+        }
+
+        iterator(const Range& range, const unsigned pos=0):
+            m_range(range), m_p(pos) {}
+
+        protected:
+            const Range& m_range;
+            unsigned m_p = 0;
+
+    };
+
+    iterator begin() const noexcept { return iterator(*this, 0); }
+    iterator end()   const noexcept { return iterator(*this, m_n); }
+
+protected:
+    const ant::interval<double>& m_i;
+    const unsigned m_n;
+
+};
+
 }
