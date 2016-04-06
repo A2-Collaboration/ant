@@ -142,7 +142,6 @@ TEST_CASE("Interval algos", "[base]") {
     std::vector<double> x;
     for(auto s =stepper(a,3); !s.Done(); s.Next()) {
         x.push_back(s.value);
-        cout << s.value << endl;
     }
 
     REQUIRE(x.size() == 3);
@@ -150,7 +149,14 @@ TEST_CASE("Interval algos", "[base]") {
     REQUIRE(x.at(1) == Approx(5));
     REQUIRE(x.at(2) == Approx(10));
 
-    for(const auto& x : Range(a,30)) {
-        cout << x << endl;
+    x.clear();
+
+    for(const auto& v : Range(a,3)) {
+        x.push_back(v);
     }
+    REQUIRE(x.size() == 3);
+    REQUIRE(x.at(0) == Approx(0));
+    REQUIRE(x.at(1) == Approx(5));
+    REQUIRE(x.at(2) == Approx(10));
+
 }
