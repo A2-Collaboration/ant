@@ -89,11 +89,11 @@ void KinFitPi0::ProcessEvent(const TEvent& event, manager_t&)
         const interval<double> theta_Sin_i   = { 3, 8 };
         const unsigned steps = 3;
 
-        for(auto thsin = stepper(theta_Sin_i, steps); !thsin.Done(); thsin.Next()) {
-            theom->cb_photon_theta_Sin = thsin.value;
+        for(const auto thsin : Range(theta_Sin_i, steps)) {
+            theom->cb_photon_theta_Sin = thsin;
 
-            for(auto thconst = stepper(theta_const_i, steps); !thconst.Done(); thconst.Next()) {
-                theom->cb_photon_theta_const = thconst.value;
+            for(const auto thconst : Range(theta_const_i, steps)) {
+                theom->cb_photon_theta_const = thconst;
 
                 // fit
                 const auto& data = event.Reconstructed();
