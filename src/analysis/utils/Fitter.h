@@ -439,26 +439,57 @@ public:
 
 };
 
-struct Theoretical : Fitter::UncertaintyModel {
+/**
+ * @brief Optimized / adjusted to data uncertainty model:
+ *
+ * Uses fixed/constant values for protons: Energy always 0 -> unmeasured,
+ * different values for theta and phi in CB and TAPS.
+ *
+ * Photons:
+ * CB:
+ *  simga E = A*E / (E[GeV])**b
+ *
+ *  sigma Theta = constant + A*sin(theta)
+ *
+ *  sigma Phi   = sigma Theta / sin(theta)
+ *
+ * TAPS:
+ *   constant values for now.
+ *
+ */
+struct Optimized : Fitter::UncertaintyModel {
 
-    double cb_photon_theta_const = 1.1; // degrees
-    double cb_photon_theta_Sin   = 3.9; // degrees
+    double cb_photon_theta_const;
+    double cb_photon_theta_Sin;
 
-    double cb_photon_E_rel       =  0.02;
-    double cb_photon_E_exp       = -0.25;
+    double cb_photon_E_rel;
+    double cb_photon_E_exp;
 
-    Fitter::Uncertainties_t cb_proton   = { 0.0,    std_ext::degree_to_radian(5.5), std_ext::degree_to_radian(5.3)};
-    Fitter::Uncertainties_t taps_proton = { 0.0,    std_ext::degree_to_radian(2.8), std_ext::degree_to_radian(4.45)};
+    Fitter::Uncertainties_t cb_proton;
+    Fitter::Uncertainties_t taps_proton;
 
     struct Exception : std::runtime_error {
         using std::runtime_error::runtime_error;
     };
 
-    Theoretical();
-    virtual ~Theoretical();
+    Optimized(double cb_photon_theta_const_=0.0,
+              double cb_photon_theta_Sin_=0.0,
+              double cb_photon_E_rel_=0.0,
+              double cb_photon_E_exp_=0.0,
+              const Fitter::Uncertainties_t& cb_proton_={},
+              const Fitter::Uncertainties_t& taps_proton_={});
+
+    virtual ~Optimized();
 
     Fitter::Uncertainties_t GetSigmas(const TParticle& particle) const;
     static double dThetaSin(const double theta, const double offset, const double thetapart);
+};
+
+/**
+ * @brief Values for the optimized model, obtainded from KinFitPi0 on data
+ */
+struct Optimized_Oli1 : Optimized {
+    Optimized_Oli1();
 };
 
 }

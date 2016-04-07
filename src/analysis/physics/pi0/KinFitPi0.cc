@@ -48,7 +48,7 @@ std::shared_ptr<utils::Fitter::UncertaintyModel> KinFitPi0::getModel(const strin
     }
 
     if(model_name == "Theoretical") {
-        return std::make_shared<utils::UncertaintyModels::Theoretical>();
+        return std::make_shared<utils::UncertaintyModels::Optimized_Oli1>();
     }
 
     // fallback
@@ -68,7 +68,7 @@ KinFitPi0::KinFitPi0(const string& name, OptionsPtr opts) :
         auto mpi0 = std_ext::make_unique<MultiPi0>(HistFac, mult, fitter_model);
 
         // if using the theoretical model, add some branches to the oputput trees
-        if(auto theom = std::dynamic_pointer_cast<utils::UncertaintyModels::Theoretical>(fitter_model)) {
+        if(auto theom = std::dynamic_pointer_cast<utils::UncertaintyModels::Optimized>(fitter_model)) {
             mpi0->tree->Branch("T_cb_photon_theta_const", addressof(theom->cb_photon_theta_const));
             mpi0->tree->Branch("T_cb_photon_theta_Sin",   addressof(theom->cb_photon_theta_Sin));
             mpi0->tree->Branch("T_cb_photon_E_rel",       addressof(theom->cb_photon_E_rel));
@@ -85,7 +85,7 @@ void KinFitPi0::ProcessEvent(const TEvent& event, manager_t&)
 {
 
     if(opt_sweep_param) {
-        if(auto theom = std::dynamic_pointer_cast<utils::UncertaintyModels::Theoretical>(fitter_model)) {
+        if(auto theom = std::dynamic_pointer_cast<utils::UncertaintyModels::Optimized>(fitter_model)) {
 
             const interval<double> theta_const_i = { .5, 3.5 };
             const interval<double> theta_Sin_i   = { 3, 8 };

@@ -767,13 +767,24 @@ std::shared_ptr<UncertaintyModels::ConstantRelativeEpow> UncertaintyModels::Cons
     return s;
 }
 
-UncertaintyModels::Theoretical::Theoretical()
+UncertaintyModels::Optimized::Optimized(double cb_photon_theta_const_,
+                                        double cb_photon_theta_Sin_,
+                                        double cb_photon_E_rel_,
+                                        double cb_photon_E_exp_,
+                                        const Fitter::Uncertainties_t& cb_proton_,
+                                        const Fitter::Uncertainties_t& taps_proton_):
+    cb_photon_theta_const(cb_photon_theta_const_),
+    cb_photon_theta_Sin(cb_photon_theta_Sin_),
+    cb_photon_E_rel(cb_photon_E_rel_),
+    cb_photon_E_exp(cb_photon_E_exp_),
+    cb_proton(cb_proton_),
+    taps_proton(taps_proton_)
 {}
 
-UncertaintyModels::Theoretical::~Theoretical()
+UncertaintyModels::Optimized::~Optimized()
 {}
 
-Fitter::Uncertainties_t UncertaintyModels::Theoretical::GetSigmas(const TParticle& particle) const
+Fitter::Uncertainties_t UncertaintyModels::Optimized::GetSigmas(const TParticle& particle) const
 {
     const auto theta = particle.Theta();
     const auto E     = particle.Ek();
@@ -817,7 +828,19 @@ Fitter::Uncertainties_t UncertaintyModels::Theoretical::GetSigmas(const TParticl
     return s;
 }
 
-double UncertaintyModels::Theoretical::dThetaSin(const double theta, const double offset, const double thetapart)
+double UncertaintyModels::Optimized::dThetaSin(const double theta, const double offset, const double thetapart)
 {
     return offset + thetapart * sin(theta);
+}
+
+UncertaintyModels::Optimized_Oli1::Optimized_Oli1()
+{
+    cb_photon_theta_const = 1.1; // degrees
+    cb_photon_theta_Sin   = 3.9; // degrees
+
+    cb_photon_E_rel       =  0.02;
+    cb_photon_E_exp       = -0.25;
+
+    cb_proton   = { 0.0,    std_ext::degree_to_radian(5.5), std_ext::degree_to_radian(5.3)};
+    taps_proton = { 0.0,    std_ext::degree_to_radian(2.8), std_ext::degree_to_radian(4.45)};
 }

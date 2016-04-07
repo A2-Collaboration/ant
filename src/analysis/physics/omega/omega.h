@@ -159,6 +159,14 @@ public:
 
         ADD_BRANCH_T(std::vector<TLorentzVector>, photons, 3)
         ADD_BRANCH_T(std::vector<TLorentzVector>, photons_fitted, 3)
+
+//        ADD_BRANCH_T(std::vector<double>,         photon_E_pulls, 3)
+//        ADD_BRANCH_T(std::vector<double>,         photon_theta_pulls, 3)
+//        ADD_BRANCH_T(std::vector<double>,         photon_phi_pulls, 3)
+//        ADD_BRANCH_T(double,                      beam_E_pull)
+//        ADD_BRANCH_T(double,                      p_theta_pull)
+//        ADD_BRANCH_T(double,                      p_phi_pull)
+
         ADD_BRANCH_T(TLorentzVector,              p)
         ADD_BRANCH_T(double,                      p_Time)
         ADD_BRANCH_T(double,                      p_PSA_Angle)
