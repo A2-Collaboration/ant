@@ -59,7 +59,8 @@ KinFitPi0::KinFitPi0(const string& name, OptionsPtr opts) :
     Physics(name, opts),
     fitter_model(getModel(opts->Get<string>("FitModel", "ConstantRelativeE"))),
     smear_model(getModel(opts->Get<string>("SmearModel", "Zero"))),
-    smear(smear_model)
+    smear(smear_model),
+    opt_sweep_param(opts->Get<bool>("Sweep", false))
 {
 
     for(unsigned mult=1;mult<=opts->Get<unsigned>("nPi0",3);mult++) {
@@ -83,26 +84,28 @@ KinFitPi0::KinFitPi0(const string& name, OptionsPtr opts) :
 void KinFitPi0::ProcessEvent(const TEvent& event, manager_t&)
 {
 
-    if(auto theom = std::dynamic_pointer_cast<utils::UncertaintyModels::Theoretical>(fitter_model)) {
+    if(opt_sweep_param) {
+        if(auto theom = std::dynamic_pointer_cast<utils::UncertaintyModels::Theoretical>(fitter_model)) {
 
-        const interval<double> theta_const_i = { .5, 3.5 };
-        const interval<double> theta_Sin_i   = { 3, 8 };
-        const unsigned steps = 3;
+            const interval<double> theta_const_i = { .5, 3.5 };
+            const interval<double> theta_Sin_i   = { 3, 8 };
+            const unsigned steps = 3;
 
-        for(const auto thsin : Range(theta_Sin_i, steps)) {
-            theom->cb_photon_theta_Sin = thsin;
+            for(const auto thsin : Range(theta_Sin_i, steps)) {
+                theom->cb_photon_theta_Sin = thsin;
 
-            for(const auto thconst : Range(theta_const_i, steps)) {
-                theom->cb_photon_theta_const = thconst;
+                for(const auto thconst : Range(theta_const_i, steps)) {
+                    theom->cb_photon_theta_const = thconst;
 
-                // fit
-                const auto& data = event.Reconstructed();
-                for(auto& m : multiPi0)
-                    m->ProcessData(data, smear);
+                    // fit
+                    const auto& data = event.Reconstructed();
+                    for(auto& m : multiPi0)
+                        m->ProcessData(data, smear);
+                }
+
             }
 
         }
-
     } else {
         const auto& data = event.Reconstructed();
         for(auto& m : multiPi0)

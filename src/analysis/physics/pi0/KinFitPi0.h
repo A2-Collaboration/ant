@@ -67,7 +67,8 @@ protected:
     std::shared_ptr<utils::Fitter::UncertaintyModel> fitter_model;
     std::shared_ptr<utils::Fitter::UncertaintyModel> smear_model;
     utils::MCSmear smear;
-    const bool opt_useMCSmear = false;
+    const bool opt_useMCSmear  = false;
+    const bool opt_sweep_param = false;
 
 public:
     KinFitPi0(const std::string& name, OptionsPtr opts);
