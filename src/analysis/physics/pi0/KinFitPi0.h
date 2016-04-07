@@ -18,15 +18,16 @@ class KinFitPi0 : public Physics {
 protected:
 
     struct MultiPi0 {
-        MultiPi0(HistogramFactory& histFac, unsigned nPi0, std::shared_ptr<const utils::Fitter::UncertaintyModel> fitter_model=utils::UncertaintyModels::MCExtracted::makeAndLoad());
+        MultiPi0(HistogramFactory& histFac, unsigned nPi0, unsigned nTAPS, std::shared_ptr<const utils::Fitter::UncertaintyModel> fitter_model=utils::UncertaintyModels::MCExtracted::makeAndLoad());
 
-        void ProcessData(const TEventData& data, const utils::MCSmear& smear);
+        void ProcessData(const TEventData& data, const utils::MCSmear& smear, manager_t& manager);
         void ShowResult();
 
         TTree* tree = nullptr;
 
     protected:
         const unsigned multiplicity;
+        const unsigned nPhotons_expected_taps;
 
         HistogramFactory HistFac;
 
@@ -58,6 +59,10 @@ protected:
         std::map<std::string, PromptRandom::Hist1> h_pulls;
         using fit_variables_t = decltype(APLCON::Result_t::Variables);
         void FillPulls(const fit_variables_t& vars);
+
+    public:
+        bool opt_save_after_cut = false;
+        bool opt_save_only     = false;
     };
 
     std::vector<std::unique_ptr<MultiPi0>> multiPi0;

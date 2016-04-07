@@ -62,10 +62,16 @@ KinFitPi0::KinFitPi0(const string& name, OptionsPtr opts) :
     smear(smear_model),
     opt_sweep_param(opts->Get<bool>("Sweep", false))
 {
+    const auto nTAPS = opts->Get<unsigned>("nTAPS",0);
+    const auto save_only = opts->Get<bool>("SaveOnly", false);
+    const auto save_after_cut = opts->Get<bool>("SaveAfterCut", false);
 
-    for(unsigned mult=1;mult<=opts->Get<unsigned>("nPi0",3);mult++) {
+    for(unsigned mult=1; mult<=opts->Get<unsigned>("nPi0",3); mult++) {
 
-        auto mpi0 = std_ext::make_unique<MultiPi0>(HistFac, mult, fitter_model);
+        auto mpi0 = std_ext::make_unique<MultiPi0>(HistFac, mult, nTAPS, fitter_model);
+
+        mpi0->opt_save_only = save_only;
+        mpi0->opt_save_after_cut = save_after_cut;
 
         // if using the theoretical model, add some branches to the oputput trees
         if(auto theom = std::dynamic_pointer_cast<utils::UncertaintyModels::Optimized>(fitter_model)) {
@@ -73,6 +79,8 @@ KinFitPi0::KinFitPi0(const string& name, OptionsPtr opts) :
             mpi0->tree->Branch("T_cb_photon_theta_Sin",   addressof(theom->cb_photon_theta_Sin));
             mpi0->tree->Branch("T_cb_photon_E_rel",       addressof(theom->cb_photon_E_rel));
             mpi0->tree->Branch("T_cb_photon_E_exp",       addressof(theom->cb_photon_E_exp));
+
+
         }
 
         multiPi0.emplace_back(move(mpi0));
@@ -81,7 +89,7 @@ KinFitPi0::KinFitPi0(const string& name, OptionsPtr opts) :
 
 }
 
-void KinFitPi0::ProcessEvent(const TEvent& event, manager_t&)
+void KinFitPi0::ProcessEvent(const TEvent& event, manager_t& manager)
 {
 
     if(opt_sweep_param) {
@@ -100,7 +108,7 @@ void KinFitPi0::ProcessEvent(const TEvent& event, manager_t&)
                     // fit
                     const auto& data = event.Reconstructed();
                     for(auto& m : multiPi0)
-                        m->ProcessData(data, smear);
+                        m->ProcessData(data, smear, manager);
                 }
 
             }
@@ -109,7 +117,7 @@ void KinFitPi0::ProcessEvent(const TEvent& event, manager_t&)
     } else {
         const auto& data = event.Reconstructed();
         for(auto& m : multiPi0)
-            m->ProcessData(data, smear);
+            m->ProcessData(data, smear, manager);
     }
 }
 
@@ -122,8 +130,9 @@ void KinFitPi0::ShowResult()
 
 
 
-KinFitPi0::MultiPi0::MultiPi0(HistogramFactory& histFac, unsigned nPi0, std::shared_ptr<const utils::Fitter::UncertaintyModel> model) :
+KinFitPi0::MultiPi0::MultiPi0(HistogramFactory& histFac, unsigned nPi0, unsigned nTAPS, std::shared_ptr<const utils::Fitter::UncertaintyModel> model) :
     multiplicity(nPi0),
+    nPhotons_expected_taps(nTAPS),
     HistFac(std_ext::formatter() << "m" << multiplicity << "Pi0", histFac,
             std_ext::formatter() << "m" << multiplicity << "Pi0"),
     IM_perms(BuildIMPerms(multiplicity)),
@@ -153,16 +162,20 @@ KinFitPi0::MultiPi0::MultiPi0(HistogramFactory& histFac, unsigned nPi0, std::sha
     IM_2g_fitted.MakeHistograms(HistFac, "IM_2g_fitted","IM 2#gamma fitted",bins_IM,"IM / MeV","#");
 
     fitter.SetupBranches(tree);
+
+    ///\todo: This only makes sense for single pi0...
     tree->Branch("g1",    &b_g1);
     tree->Branch("g2",    &b_g2);
+
     tree->Branch("p",     &b_p);
     tree->Branch("TaggW", &b_tagw);
 
 }
 
-void KinFitPi0::MultiPi0::ProcessData(const TEventData& data, const utils::MCSmear& smear)
+void KinFitPi0::MultiPi0::ProcessData(const TEventData& data, const utils::MCSmear& smear, manager_t& manager)
 {
-    const auto nPhotons_expected = multiplicity*2;
+    const auto nPhotons_expected    = multiplicity*2;
+    const auto nPhotons_expected_cb = nPhotons_expected - nPhotons_expected_taps;
 
     steps->Fill("Seen",1);
 
@@ -180,26 +193,28 @@ void KinFitPi0::MultiPi0::ProcessData(const TEventData& data, const utils::MCSme
 
         const auto proton = smear.Smear(std::make_shared<TParticle>(ParticleTypeDatabase::Proton, i_proton));
         std::vector<TParticlePtr> photons;
-        unsigned nPhotons_CB = 0;
-        unsigned nPhotons_TAPS = 0;
+        std::vector<TParticlePtr> cb_photons;
+        std::vector<TParticlePtr> taps_photons;
+
         bool touchesHole = false;
         for(auto i_photon : cands.get_iter()) {
             if(i_photon == i_proton)
                 continue;
-            photons.emplace_back(smear.Smear(make_shared<TParticle>(ParticleTypeDatabase::Photon, i_photon)));
 
-            if(i_photon->Detector & Detector_t::Type_t::CB)
-                nPhotons_CB++;
-            else if(i_photon->Detector & Detector_t::Type_t::TAPS)
-                nPhotons_TAPS++;
+            if(i_photon->Detector & Detector_t::Type_t::CB) {
+                cb_photons.emplace_back(smear.Smear(make_shared<TParticle>(ParticleTypeDatabase::Photon, i_photon)));
+            }
+            else if(i_photon->Detector & Detector_t::Type_t::TAPS) {
+                taps_photons.emplace_back(smear.Smear(make_shared<TParticle>(ParticleTypeDatabase::Photon, i_photon)));
+            }
 
             if(i_photon->FindCaloCluster()->HasFlag(TCluster::Flags_t::TouchesHole))
                 touchesHole = true;
         }
-        assert(photons.size() == nPhotons_expected);
+        //assert(photons.size() == nPhotons_expected);
 
-        if(nPhotons_CB != nPhotons_expected) {
-            steps->Fill("Photons in TAPS", 1.0);
+        if(cb_photons.size() != nPhotons_expected_cb || taps_photons.size() != nPhotons_expected_taps) {
+            steps->Fill("Photon counts don't match", 1.0);
             continue;
         }
 
@@ -207,6 +222,10 @@ void KinFitPi0::MultiPi0::ProcessData(const TEventData& data, const utils::MCSme
             steps->Fill("TouchesHole", 1.0);
             continue;
         }
+
+        // merge CB and TAPS photons. CB first in the list, then TAPS.
+        photons.insert(photons.end(), cb_photons.begin(), cb_photons.end());
+        photons.insert(photons.end(), taps_photons.begin(), taps_photons.end());
 
         // check invariant mass
         bool im_ok = false;
@@ -246,6 +265,12 @@ void KinFitPi0::MultiPi0::ProcessData(const TEventData& data, const utils::MCSme
         b_g1 = *photons.at(0);
         b_g2 = *photons.at(1);
         b_p  = *proton;
+
+        if(opt_save_after_cut) {
+            manager.SaveEvent();
+            if(opt_save_only)
+                continue;
+        }
 
         for(const TTaggerHit& taggerhit : data.TaggerHits) {
 
