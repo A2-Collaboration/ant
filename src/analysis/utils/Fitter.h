@@ -441,14 +441,14 @@ public:
 
 struct Theoretical : Fitter::UncertaintyModel {
 
-//    double cb_photon_theta_const = 0.0885038; // degrees
-//    double cb_photon_theta_Sin   = 4.4947;    // degrees
-
     double cb_photon_theta_const = 1.1; // degrees
     double cb_photon_theta_Sin   = 3.9; // degrees
 
     double cb_photon_E_rel       =  0.02;
     double cb_photon_E_exp       = -0.25;
+
+    Fitter::Uncertainties_t cb_proton   = { 0.0,    std_ext::degree_to_radian(5.5), std_ext::degree_to_radian(5.3)};
+    Fitter::Uncertainties_t taps_proton = { 0.0,    std_ext::degree_to_radian(2.8), std_ext::degree_to_radian(4.45)};
 
     struct Exception : std::runtime_error {
         using std::runtime_error::runtime_error;

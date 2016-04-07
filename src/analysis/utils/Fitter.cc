@@ -773,18 +773,6 @@ UncertaintyModels::Theoretical::Theoretical()
 UncertaintyModels::Theoretical::~Theoretical()
 {}
 
-double Pol2(double x, const double p0, const double p1, const double p2) {
-    double r = p0;
-    r+=x*p1;
-    x*=x;
-    r+=x*p2;
-    return r;
-}
-
-double Pol2Scheitelpkt(const double x, const double px, const double py, const double p0) {
-    return py + p0 * sqr(x-px);
-}
-
 Fitter::Uncertainties_t UncertaintyModels::Theoretical::GetSigmas(const TParticle& particle) const
 {
     const auto theta = particle.Theta();
@@ -801,8 +789,8 @@ Fitter::Uncertainties_t UncertaintyModels::Theoretical::GetSigmas(const TParticl
             s.sigmaPhi   = s.sigmaTheta / sin(theta);
 
         } else if(particle.Type() == ParticleTypeDatabase::Proton) {
-            ///@todo replace
-            s = { 0.0,    std_ext::degree_to_radian(5.5), std_ext::degree_to_radian(5.3)};
+
+            s = cb_proton;
 
         } else {
             throw Exception("Unexpected Particle: " + particle.Type().Name());
@@ -815,8 +803,8 @@ Fitter::Uncertainties_t UncertaintyModels::Theoretical::GetSigmas(const TParticl
             s =  { 0.035,  std_ext::degree_to_radian(0.42), std_ext::degree_to_radian(1.15)};
 
         } else if(particle.Type() == ParticleTypeDatabase::Proton) {
-            ///@todo replace
-            s = { 0.0,    std_ext::degree_to_radian(2.8), std_ext::degree_to_radian(4.45)};
+
+            s = taps_proton;
 
         } else {
             throw Exception("Unexpected Particle: " + particle.Type().Name());
