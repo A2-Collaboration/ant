@@ -12,6 +12,7 @@ set(DICT_HEADERS
     hstack.h
     histtools.h
     ThetaCBToyMC.h
+    KinfitExtract.h
   )
 
 set(SRCS
@@ -27,6 +28,7 @@ set(SRCS
     hstack.cc
     histtools.cc
     ThetaCBToyMC.cc
+    KinfitExtract.cc
   )
 
 set(ROOT_DICTIONARY "${CMAKE_CURRENT_BINARY_DIR}/G__analysis_codes.cc")
