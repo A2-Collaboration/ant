@@ -1,6 +1,8 @@
 #include "analysis/physics/Physics.h"
 #include "root-addons/cbtaps_display/TH2CB.h"
 
+#include "calibration/converters/GeSiCa_SADC.h"
+
 
 namespace ant {
 namespace analysis {
@@ -12,6 +14,7 @@ class CB_SourceCalib : public Physics {
 protected:
     TH2* ggIM = nullptr;
     TH2CB* h_cbdisplay = nullptr;
+    calibration::converter::GeSiCa_SADC adc_converter;
 
 public:
 
