@@ -59,6 +59,7 @@ set(ANALYSIS_PHYSICS_CALIBRATION
   physics/calibration/Time.cc
   physics/calibration/CB_Energy.cc
   physics/calibration/CB_TimeWalk.cc
+  physics/calibration/CB_SourceCalib.cc
   physics/calibration/TAPS_Energy.cc
   physics/calibration/TAPS_ShortEnergy.cc
   physics/calibration/PID_Energy.cc
