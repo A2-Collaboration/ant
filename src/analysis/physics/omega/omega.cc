@@ -1041,6 +1041,8 @@ OmegaEtaG2::OmegaEtaG2(const std::string& name, OptionsPtr opts):
         if(c.first<20)
             found_channels->GetXaxis()->SetBinLabel(c.first+1,c.second.name.c_str());
     }
+
+    fitter.SetupBranches(t.Tree);
 }
 
 OmegaEtaG2::~OmegaEtaG2()
