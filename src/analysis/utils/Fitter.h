@@ -441,8 +441,11 @@ public:
 
 struct Theoretical : Fitter::UncertaintyModel {
 
-    double cb_photon_theta_const = 0.0885038; // degrees
-    double cb_photon_theta_Sin   = 4.4947;    // degrees
+//    double cb_photon_theta_const = 0.0885038; // degrees
+//    double cb_photon_theta_Sin   = 4.4947;    // degrees
+
+    double cb_photon_theta_const = 1.1; // degrees
+    double cb_photon_theta_Sin   = 3.9; // degrees
 
     double cb_photon_E_rel       =  0.02;
     double cb_photon_E_exp       = -0.25;
