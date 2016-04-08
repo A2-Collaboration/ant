@@ -131,8 +131,6 @@ protected:
     std::shared_ptr<const Fitter::UncertaintyModel> uncertainty;
     std::unique_ptr<APLCON> aplcon;
 
-
-
     void LinkVariable(FitParticle& particle);
 
     void SetPhotonEkThetaPhi(FitParticle& photon, const TParticlePtr& p) const;
@@ -167,6 +165,8 @@ public:
     TParticlePtr GetFittedProton() const;
     TParticleList GetFittedPhotons() const;
     double GetFittedBeamE() const;
+
+    std::vector<FitParticle> GetFitParticles() const;
 
     void SetupBranches(TTree* tree, std::string branch_prefix="");
 

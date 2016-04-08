@@ -245,6 +245,14 @@ double KinFitter::GetFittedBeamE() const
     return Beam->E;
 }
 
+std::vector<Fitter::FitParticle> KinFitter::GetFitParticles() const
+{
+    std::vector<Fitter::FitParticle> particles{*Proton};
+    for(auto& photon : Photons)
+        particles.emplace_back(*photon);
+    return particles;
+}
+
 
 
 void KinFitter::SetupBranches(TTree* tree, string branch_prefix)
