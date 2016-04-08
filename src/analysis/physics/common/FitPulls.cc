@@ -23,9 +23,28 @@ FitPulls::FitPulls(const string& name, OptionsPtr opts) :
     promptrandom.AddRandomRange({-50,-10});  // just ensure to be way off prompt peak
     promptrandom.AddRandomRange({  10,50});
 
-    h_protoncopl = HistFac.makeTH1D("p Coplanarity","#delta#phi / degree","",BinSettings(400,-180,180),"h_protoncopl");
-    h_taggtime = HistFac.makeTH1D("Tagged Time","t / ns", "", BinSettings(300,-60,60), "h_taggtime");
+    auto uncertainty_model = make_shared<utils::UncertaintyModels::Optimized_Oli1>();
 
+    HistogramFactory histFac(uncertainty_model->to_string_short(), HistFac);
+
+    h_protoncopl = histFac.makeTH1D("Coplanarity","#delta#phi / degree","",BinSettings(100,-180,180),"h_protoncopl");
+    h_taggtime = histFac.makeTH1D("Tagged Time","t / ns", "", BinSettings(300,-60,60), "h_taggtime");
+
+    h_probability = histFac.makeTH1D("Probability","p","",BinSettings(100,0,1),"h_probability");
+
+    BinSettings bins_pulls(30,-3,3);
+    p_cb_g_E     = histFac.makeTH1D("p_cb_g_E",    "","",bins_pulls,"p_cb_g_E");
+    p_cb_g_Theta = histFac.makeTH1D("p_cb_g_Theta","","",bins_pulls,"p_cb_g_Theta");
+    p_cb_g_Phi   = histFac.makeTH1D("p_cb_g_Phi",  "","",bins_pulls,"p_cb_g_Phi");
+    p_cb_p_E     = histFac.makeTH1D("p_cb_p_E",    "","",bins_pulls,"p_cb_p_E");
+    p_cb_p_Theta = histFac.makeTH1D("p_cb_p_Theta","","",bins_pulls,"p_cb_p_Theta");
+    p_cb_p_Phi   = histFac.makeTH1D("p_cb_p_Phi",  "","",bins_pulls,"p_cb_p_Phi");
+    p_taps_g_E     = histFac.makeTH1D("p_taps_g_E",    "","",bins_pulls,"p_taps_g_E");
+    p_taps_g_Theta = histFac.makeTH1D("p_taps_g_Theta","","",bins_pulls,"p_taps_g_Theta");
+    p_taps_g_Phi   = histFac.makeTH1D("p_taps_g_Phi",  "","",bins_pulls,"p_taps_g_Phi");
+    p_taps_p_E     = histFac.makeTH1D("p_taps_p_E",    "","",bins_pulls,"p_taps_p_E");
+    p_taps_p_Theta = histFac.makeTH1D("p_taps_p_Theta","","",bins_pulls,"p_taps_p_Theta");
+    p_taps_p_Phi   = histFac.makeTH1D("p_taps_p_Phi",  "","",bins_pulls,"p_taps_p_Phi");
 
     // create fitter for each channel
     auto count_leaves = [] (const ParticleTypeTree& tree) {
@@ -36,7 +55,6 @@ FitPulls::FitPulls(const string& name, OptionsPtr opts) :
         return leaves;
     };
 
-    auto uncertainty_model = make_shared<utils::UncertaintyModels::Optimized_Oli1>();
 
     unsigned n_ch = 0;
     for(auto& channel : channels) {
@@ -125,11 +143,10 @@ void FitPulls::ProcessEvent(const TEvent& event, manager_t& manager)
 
         // check coplanarity
         const double d_phi = std_ext::radian_to_degree(vec2::Phi_mpi_pi(proton->Phi()-photon_sum.Phi() - M_PI ));
+        h_protoncopl->Fill(d_phi, promptrandom.FillWeight());
         const interval<double> copl_cut{-20, 20};
         if(!copl_cut.Contains(d_phi))
             continue;
-
-        h_protoncopl->Fill(d_phi, promptrandom.FillWeight());
 
         // do all the fits
         for(utils::TreeFitter& fitter : fitters->second) {
@@ -138,8 +155,39 @@ void FitPulls::ProcessEvent(const TEvent& event, manager_t& manager)
             fitter.SetProton(proton);
 
             APLCON::Result_t result;
+            double max_prob = 0;
+            std::vector<utils::Fitter::FitParticle> fitparticles;
             while(fitter.NextFit(result)) {
+                if(result.Status != APLCON::Result_Status_t::Success)
+                    continue;
+                if(result.Probability<max_prob)
+                    continue;
+                max_prob = result.Probability;
+                fitparticles = fitter.GetFitParticles();
+            }
 
+            h_probability->Fill(max_prob, promptrandom.FillWeight());
+
+            for(const auto& fitparticle : fitparticles) {
+                const auto& p = fitparticle.Particle;
+                // select the right set of histograms
+                auto& h_E = p->Type() == ParticleTypeDatabase::Photon ?
+                                (p->Candidate->Detector & Detector_t::Type_t::CB ? p_cb_g_E : p_taps_g_E)
+                              :
+                                (p->Candidate->Detector & Detector_t::Type_t::CB ? p_cb_p_E : p_taps_p_E);
+                h_E->Fill(fitparticle.Ek.Pull, promptrandom.FillWeight());
+
+                auto& h_Theta = p->Type() == ParticleTypeDatabase::Photon ?
+                                    (p->Candidate->Detector & Detector_t::Type_t::CB ? p_cb_g_Theta : p_taps_g_Theta)
+                                  :
+                                    (p->Candidate->Detector & Detector_t::Type_t::CB ? p_cb_p_Theta : p_taps_p_Theta);
+                h_Theta->Fill(fitparticle.Theta.Pull, promptrandom.FillWeight());
+
+                auto& h_Phi = p->Type() == ParticleTypeDatabase::Photon ?
+                                  (p->Candidate->Detector & Detector_t::Type_t::CB ? p_cb_g_Phi : p_taps_g_Phi)
+                                :
+                                  (p->Candidate->Detector & Detector_t::Type_t::CB ? p_cb_p_Phi : p_taps_p_Phi);
+                h_Phi->Fill(fitparticle.Phi.Pull, promptrandom.FillWeight());
             }
         }
     }

@@ -27,6 +27,22 @@ protected:
     TH1D* h_protoncopl;
     TH1D* h_taggtime;
 
+    TH1D* h_probability;
+
+    TH1D* p_cb_g_E;
+    TH1D* p_cb_g_Theta;
+    TH1D* p_cb_g_Phi;
+    TH1D* p_cb_p_E;
+    TH1D* p_cb_p_Theta;
+    TH1D* p_cb_p_Phi;
+    TH1D* p_taps_g_E;
+    TH1D* p_taps_g_Theta;
+    TH1D* p_taps_g_Phi;
+    TH1D* p_taps_p_E;
+    TH1D* p_taps_p_Theta;
+    TH1D* p_taps_p_Phi;
+
+
     const bool opt_save_after_cut;
     const bool opt_save_only;
 public:
