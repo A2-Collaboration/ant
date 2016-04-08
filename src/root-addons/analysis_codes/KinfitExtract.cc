@@ -61,5 +61,12 @@ void KinfitExtract::Sweep1(TTree* t)
 std::string KinfitExtract::JSONTest()
 {
     analysis::utils::UncertaintyModels::Optimized_Oli1 m;
-    return m.to_string_cereal();
+    return m.to_string_short();
+}
+
+string KinfitExtract::LoadAndDump(const string& s)
+{
+    analysis::utils::UncertaintyModels::Optimized_Oli1 m;
+    m.load_from_string(s);
+    return m.to_string();
 }

@@ -13,8 +13,10 @@
 #include "base/Logger.h"
 #include "base/Paths.h"
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wnon-virtual-dtor"
 #include "base/cereal/archives/json.hpp"
-#include "base/cereal/archives/binary.hpp"
+#pragma GCC diagnostic pop
 
 #include "APLCON.hpp" // external project
 
@@ -25,7 +27,7 @@
 #include <cassert>
 #include <functional>
 #include <cmath>
-
+#include <algorithm>
 
 using namespace std;
 using namespace ant;
@@ -826,7 +828,7 @@ double UncertaintyModels::Optimized::dThetaSin(const double theta, const double 
     return offset + thetapart * sin(theta);
 }
 
-string UncertaintyModels::Optimized::to_string() const
+string UncertaintyModels::Optimized::to_string_simple() const
 {
     return formatter()
             << "cgtc=" << cb_photon_theta_const << sepatator
@@ -844,30 +846,105 @@ string UncertaintyModels::Optimized::to_string() const
             << "tpp="  << taps_proton.sigmaPhi;
 }
 
-string UncertaintyModels::Optimized::to_string_cereal() const
+double angleoutput(const double x) {
+    const auto y = radian_to_degree(x);
+    return std::floor(y * 100 + .5) / 100;
+}
+
+double angleinput(const double x) {
+    return degree_to_radian(x);
+}
+
+string UncertaintyModels::Optimized::to_string() const
 {
     std::stringstream ss; // any stream can be used
 
     {
       cereal::JSONOutputArchive oarchive(ss); // Create an output archive
 
+      const auto cb_photon_theta_const_d = angleoutput(cb_photon_theta_const);
+      LOG(INFO) << cb_photon_theta_const_d;
+      const auto cb_photon_theta_Sin_d   = angleoutput(cb_photon_theta_Sin);
+      const auto cb_photon_phi_d         = angleoutput(cb_photon_phi);
+      const auto cb_proton_theta_d       = angleoutput(cb_proton.sigmaTheta);
+      const auto cb_proton_phi_d         = angleoutput(cb_proton.sigmaPhi);
+      const auto taps_photon_theta_d     = angleoutput(taps_photon_theta);
+      const auto taps_photon_phi_d       = angleoutput(taps_photon_phi);
+      const auto taps_proton_theta_d     = angleoutput(taps_proton.sigmaTheta);
+      const auto taps_proton_phi_d       = angleoutput(taps_proton.sigmaPhi);
+
+
       oarchive(
-                  cereal::make_nvp("cgtc", cb_photon_theta_const),
-                  cereal::make_nvp("cgts", cb_photon_theta_Sin),
-                  cereal::make_nvp("cgp",  cb_photon_phi),
+                  cereal::make_nvp("cgtc", cb_photon_theta_const_d),
+                  cereal::make_nvp("cgts", cb_photon_theta_Sin_d),
+                  cereal::make_nvp("cgp",  cb_photon_phi_d),
                   cereal::make_nvp("cgEr", cb_photon_E_rel),
                   cereal::make_nvp("cgEe", cb_photon_E_exp),
-                  cereal::make_nvp("cpt",  cb_proton.sigmaTheta),
-                  cereal::make_nvp("cpp",  cb_proton.sigmaPhi),
-                  cereal::make_nvp("tgt",  taps_photon_theta),
-                  cereal::make_nvp("tgp",  taps_photon_phi),
+                  cereal::make_nvp("cpt",  cb_proton_theta_d),
+                  cereal::make_nvp("cpp",  cb_proton_phi_d),
+                  cereal::make_nvp("tgt",  taps_photon_theta_d),
+                  cereal::make_nvp("tgp",  taps_photon_phi_d),
                   cereal::make_nvp("tgEr", taps_photon_E_rel),
-                  cereal::make_nvp("tpt",  taps_proton.sigmaTheta),
-                  cereal::make_nvp("tpp",  taps_proton.sigmaPhi)
+                  cereal::make_nvp("tpt",  taps_proton_theta_d),
+                  cereal::make_nvp("tpp",  taps_proton_phi_d)
                   );
     }
 
     return ss.str();
+}
+
+string UncertaintyModels::Optimized::to_string_short() const
+{
+    auto str = to_string();
+    str.erase(std::remove_if(str.begin(),
+                                  str.end(),
+                                  [](char x){return std::isspace(x);}),
+                   str.end());
+    return str;
+}
+
+void UncertaintyModels::Optimized::load_from_string(const string& data)
+{
+    std::stringstream ss(data);
+
+    cereal::JSONInputArchive iarchive(ss);
+
+    double cb_photon_theta_const_d;
+    double cb_photon_theta_Sin_d;
+    double cb_photon_phi_d;
+    double cb_proton_theta_d;
+    double cb_proton_phi_d;
+    double taps_photon_theta_d;
+    double taps_photon_phi_d;
+    double taps_proton_theta_d;
+    double taps_proton_phi_d;
+
+    iarchive(
+                cereal::make_nvp("cgtc", cb_photon_theta_const_d),
+                cereal::make_nvp("cgts", cb_photon_theta_Sin_d),
+                cereal::make_nvp("cgp",  cb_photon_phi_d),
+                cereal::make_nvp("cgEr", cb_photon_E_rel),
+                cereal::make_nvp("cgEe", cb_photon_E_exp),
+                cereal::make_nvp("cpt",  cb_proton_theta_d),
+                cereal::make_nvp("cpp",  cb_proton_phi_d),
+                cereal::make_nvp("tgt",  taps_photon_theta_d),
+                cereal::make_nvp("tgp",  taps_photon_phi_d),
+                cereal::make_nvp("tgEr", taps_photon_E_rel),
+                cereal::make_nvp("tpt",  taps_proton_theta_d),
+                cereal::make_nvp("tpp",  taps_proton_phi_d)
+                );
+
+    cb_photon_theta_const  = angleinput(cb_photon_theta_const_d);
+    cb_photon_theta_Sin    = angleinput(cb_photon_theta_Sin_d);
+    cb_photon_phi          = angleinput(cb_photon_phi_d);
+    cb_proton.sigmaE       = 0.0;
+    cb_proton.sigmaTheta   = angleinput(cb_proton_theta_d);
+    cb_proton.sigmaPhi     = angleinput(cb_proton_phi_d);
+    taps_photon_theta      = angleinput(taps_photon_theta_d);
+    taps_photon_phi        = angleinput(taps_photon_phi_d);
+    taps_proton.sigmaE     = 0.0;
+    taps_proton.sigmaTheta = angleinput(taps_proton_theta_d);
+    taps_proton.sigmaPhi   = angleinput(taps_proton_phi_d);
 }
 
 UncertaintyModels::Optimized_Oli1::Optimized_Oli1()

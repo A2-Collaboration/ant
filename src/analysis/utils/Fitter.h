@@ -483,8 +483,25 @@ struct Optimized : Fitter::UncertaintyModel {
     Fitter::Uncertainties_t GetSigmas(const TParticle& particle) const;
     static double dThetaSin(const double theta, const double offset, const double thetapart);
 
+    std::string to_string_simple() const;
+
+    /**
+     * @brief serialize to JSON string
+     * @return
+     */
     std::string to_string() const;
-    std::string to_string_cereal() const;
+
+    /**
+     * @brief serialzie to JSON string without whitespace
+     * @return
+     */
+    std::string to_string_short() const;
+
+    /**
+     * @brief load from a JSON string
+     * @param data
+     */
+    void load_from_string(const std::string& data);
 
 protected:
     const static std::string sepatator;
