@@ -64,17 +64,6 @@ public:
     Fitter& operator=(const Fitter&) = delete;
     virtual ~Fitter();
 
-protected:
-
-    Fitter(const std::string& fittername,
-           const APLCON::Fit_Settings_t& settings, std::shared_ptr<const Fitter::UncertaintyModel>& uncertainty_model);
-
-    Fitter(Fitter&&) = default;
-    Fitter& operator=(Fitter&&) = default;
-
-    std::shared_ptr<const Fitter::UncertaintyModel> uncertainty;
-    std::unique_ptr<APLCON> aplcon;
-
     struct FitParticle
     {
         TParticlePtr Particle;
@@ -83,15 +72,27 @@ protected:
             double Value = 0;
             double Sigma = 0;
             double Pull = 0;
+        protected:
+            friend struct FitParticle;
             void SetupBranches(TTree* tree, const std::string& prefix);
-
         };
 
         Var_t Ek;
         Var_t Theta;
         Var_t Phi;
 
+
+    protected:
+        friend class Fitter;
+        friend class KinFitter;
+        friend class TreeFitter;
+
+        FitParticle(const std::string& name): Name(name) {}
+
         const std::string Name;
+        void SetupBranches(TTree* tree, const std::string& prefix);
+        static ant::LorentzVec GetVector(const std::vector<double>& EkThetaPhi, double m);
+
 
         std::vector<double*> Addresses()
         {
@@ -112,13 +113,25 @@ protected:
                      std::addressof(Theta.Pull),
                      std::addressof(Phi.Pull)};
         }
-
-        FitParticle(const std::string& name): Name(name) {}
-
-        void SetupBranches(TTree* tree, const std::string& prefix);
-
-        static ant::LorentzVec GetVector(const std::vector<double>& EkThetaPhi, double m);
     };
+
+protected:
+
+    // trick for using make_shared/make_unique with protected ctor of FitParticle
+    struct FitParticle_internal : FitParticle {
+        FitParticle_internal(const std::string& name) : FitParticle(name) {}
+    };
+
+    Fitter(const std::string& fittername,
+           const APLCON::Fit_Settings_t& settings, std::shared_ptr<const Fitter::UncertaintyModel>& uncertainty_model);
+
+    Fitter(Fitter&&) = default;
+    Fitter& operator=(Fitter&&) = default;
+
+    std::shared_ptr<const Fitter::UncertaintyModel> uncertainty;
+    std::unique_ptr<APLCON> aplcon;
+
+
 
     void LinkVariable(FitParticle& particle);
 
