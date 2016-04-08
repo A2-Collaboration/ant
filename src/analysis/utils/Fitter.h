@@ -482,6 +482,10 @@ struct Optimized : Fitter::UncertaintyModel {
 
     Fitter::Uncertainties_t GetSigmas(const TParticle& particle) const;
     static double dThetaSin(const double theta, const double offset, const double thetapart);
+
+    std::string to_string() const;
+protected:
+    const static std::string sepatator;
 };
 
 /**

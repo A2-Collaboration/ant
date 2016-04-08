@@ -823,6 +823,24 @@ double UncertaintyModels::Optimized::dThetaSin(const double theta, const double 
     return offset + thetapart * sin(theta);
 }
 
+string UncertaintyModels::Optimized::to_string() const
+{
+    return formatter()
+            << "cgtc=" << cb_photon_theta_const << sepatator
+            << "cgts=" << cb_photon_theta_Sin   << sepatator
+            << "cgp="  << cb_photon_phi         << sepatator
+            << "cgEr=" << cb_photon_E_rel       << sepatator
+            << "cgEe=" << cb_photon_E_exp       << sepatator
+            << "cpt="  << cb_proton.sigmaTheta  << sepatator
+            << "cpp="  << cb_proton.sigmaPhi    << sepatator
+            << "tgEr=" << taps_photon_E_rel     << sepatator
+            << "tgEe=" << taps_photon_E_exp     << sepatator
+            << "tgt="  << taps_photon_theta     << sepatator
+            << "tgp="  << taps_photon_phi       << sepatator
+            << "tpt="  << taps_proton.sigmaTheta<< sepatator
+            << "tpp="  << taps_proton.sigmaPhi;
+}
+
 UncertaintyModels::Optimized_Oli1::Optimized_Oli1()
 {
     cb_photon_theta_const = degree_to_radian(1.1);
@@ -843,3 +861,5 @@ UncertaintyModels::Optimized_Oli1::Optimized_Oli1()
     taps_proton = { 0.0, degree_to_radian(2.8), degree_to_radian(4.45)};
 
 }
+
+const std::string UncertaintyModels::Optimized::sepatator = ": ";
