@@ -172,6 +172,10 @@ void ant::test::EnsureSetup() {
             // via ExpConfig::Setup::ManualName
             return false;
         }
+
+        double GetElectronBeamEnergy() const override {
+            return 1604.0;
+        }
     };
 
     expconfig::SetupRegistry::AddSetup( ExpConfig::Setup::ManualName,
