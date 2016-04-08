@@ -767,18 +767,7 @@ std::shared_ptr<UncertaintyModels::ConstantRelativeEpow> UncertaintyModels::Cons
     return s;
 }
 
-UncertaintyModels::Optimized::Optimized(double cb_photon_theta_const_,
-                                        double cb_photon_theta_Sin_,
-                                        double cb_photon_E_rel_,
-                                        double cb_photon_E_exp_,
-                                        const Fitter::Uncertainties_t& cb_proton_,
-                                        const Fitter::Uncertainties_t& taps_proton_):
-    cb_photon_theta_const(cb_photon_theta_const_),
-    cb_photon_theta_Sin(cb_photon_theta_Sin_),
-    cb_photon_E_rel(cb_photon_E_rel_),
-    cb_photon_E_exp(cb_photon_E_exp_),
-    cb_proton(cb_proton_),
-    taps_proton(taps_proton_)
+UncertaintyModels::Optimized::Optimized()
 {}
 
 UncertaintyModels::Optimized::~Optimized()
@@ -796,8 +785,8 @@ Fitter::Uncertainties_t UncertaintyModels::Optimized::GetSigmas(const TParticle&
         if(particle.Type() == ParticleTypeDatabase::Photon) {
 
             s.sigmaE     = cb_photon_E_rel * E * pow( E/1000.0, cb_photon_E_exp);
-            s.sigmaTheta = degree_to_radian( dThetaSin(theta, cb_photon_theta_const, cb_photon_theta_Sin) );
-            s.sigmaPhi   = s.sigmaTheta / sin(theta);
+            s.sigmaTheta = dThetaSin(theta, cb_photon_theta_const, cb_photon_theta_Sin);
+            s.sigmaPhi   = cb_photon_phi / sin(theta);
 
         } else if(particle.Type() == ParticleTypeDatabase::Proton) {
 
@@ -810,11 +799,12 @@ Fitter::Uncertainties_t UncertaintyModels::Optimized::GetSigmas(const TParticle&
     } else if(particle.Candidate->Detector & Detector_t::Type_t::TAPS) {
 
         if(particle.Type() == ParticleTypeDatabase::Photon) {
-            ///@todo replace
-            s =  { 0.035,  std_ext::degree_to_radian(0.42), std_ext::degree_to_radian(1.15)};
+
+            s.sigmaE     = taps_photon_E_rel * E * pow( E/1000.0, taps_photon_E_exp);
+            s.sigmaTheta = taps_photon_theta;
+            s.sigmaPhi   = taps_photon_phi;
 
         } else if(particle.Type() == ParticleTypeDatabase::Proton) {
-
             s = taps_proton;
 
         } else {
@@ -835,12 +825,21 @@ double UncertaintyModels::Optimized::dThetaSin(const double theta, const double 
 
 UncertaintyModels::Optimized_Oli1::Optimized_Oli1()
 {
-    cb_photon_theta_const = 1.1; // degrees
-    cb_photon_theta_Sin   = 3.9; // degrees
+    cb_photon_theta_const = degree_to_radian(1.1);
+    cb_photon_theta_Sin   = degree_to_radian(3.9);
+    cb_photon_phi         = degree_to_radian(4.1); // as average from dTheta over theta
 
-    cb_photon_E_rel       =  0.02;
-    cb_photon_E_exp       = -0.25;
+    cb_photon_E_rel       =  0.02;  // 2% of E
+    cb_photon_E_exp       = -0.25;  // dev by 4th root of E (in GeV)
 
-    cb_proton   = { 0.0,    std_ext::degree_to_radian(5.5), std_ext::degree_to_radian(5.3)};
-    taps_proton = { 0.0,    std_ext::degree_to_radian(2.8), std_ext::degree_to_radian(4.45)};
+    cb_proton   = { 0.0, degree_to_radian(5.5), degree_to_radian(5.3)};
+
+    taps_photon_E_rel = 0.035;  // 3.5% of E
+    taps_photon_E_exp = -.025;  //
+
+    taps_photon_phi   = degree_to_radian(1.15*0.83);
+    taps_photon_theta = degree_to_radian(0.42*0.95);
+
+    taps_proton = { 0.0, degree_to_radian(2.8), degree_to_radian(4.45)};
+
 }

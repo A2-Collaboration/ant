@@ -447,7 +447,7 @@ public:
  *
  *  sigma Theta = constant + A*sin(theta)
  *
- *  sigma Phi   = sigma Theta / sin(theta)
+ *  sigma Phi   = sPhi / sin(theta)
  *
  * TAPS:
  *   constant values for now.
@@ -455,25 +455,28 @@ public:
  */
 struct Optimized : Fitter::UncertaintyModel {
 
-    double cb_photon_theta_const;
-    double cb_photon_theta_Sin;
+    double cb_photon_theta_const = 0.0;
+    double cb_photon_theta_Sin   = 0.0;
+    double cb_photon_phi         = 0.0;
 
-    double cb_photon_E_rel;
-    double cb_photon_E_exp;
+    double cb_photon_E_rel = 0.0;
+    double cb_photon_E_exp = 0.0;
 
-    Fitter::Uncertainties_t cb_proton;
-    Fitter::Uncertainties_t taps_proton;
+    Fitter::Uncertainties_t cb_proton = {};
+
+
+    double taps_photon_E_rel = 0.0;
+    double taps_photon_E_exp = 0.0;
+    double taps_photon_theta = 0.0;
+    double taps_photon_phi   = 0.0;
+
+    Fitter::Uncertainties_t taps_proton = {};
 
     struct Exception : std::runtime_error {
         using std::runtime_error::runtime_error;
     };
 
-    Optimized(double cb_photon_theta_const_=0.0,
-              double cb_photon_theta_Sin_=0.0,
-              double cb_photon_E_rel_=0.0,
-              double cb_photon_E_exp_=0.0,
-              const Fitter::Uncertainties_t& cb_proton_={},
-              const Fitter::Uncertainties_t& taps_proton_={});
+    Optimized();
 
     virtual ~Optimized();
 
