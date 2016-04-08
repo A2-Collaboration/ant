@@ -53,6 +53,7 @@ set(ANALYSIS_PHYSICS
   physics/misc/GoatComparison.cc
   physics/pi0/RarePion.cc
   physics/pi0/KinFitPi0.cc
+  physics/common/FitPulls.cc
   )
 
 set(ANALYSIS_PHYSICS_CALIBRATION
