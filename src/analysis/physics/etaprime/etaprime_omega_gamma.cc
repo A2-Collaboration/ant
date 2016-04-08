@@ -348,7 +348,7 @@ void EtapOmegaG::Sig_t::DoAntiPi0Eta(TParticleList photons)
 {
     APLCON::Result_t r;
 
-    treefitter_Pi0Pi0.SetLeaves(photons);
+    treefitter_Pi0Pi0.SetPhotons(photons);
     while(treefitter_Pi0Pi0.NextFit(r)) {
         if(r.Status != APLCON::Result_Status_t::Success)
             continue;
@@ -360,7 +360,7 @@ void EtapOmegaG::Sig_t::DoAntiPi0Eta(TParticleList photons)
         t.AntiPi0FitIterations = r.NIterations;
     }
 
-    treefitter_Pi0Eta.SetLeaves(photons);
+    treefitter_Pi0Eta.SetPhotons(photons);
     while(treefitter_Pi0Eta.NextFit(r)) {
         if(r.Status != APLCON::Result_Status_t::Success)
             continue;
@@ -468,7 +468,7 @@ void EtapOmegaG::Sig_t::Pi0_t::Process(const EtapOmegaG::Particles_t& particles,
     for(auto comb=utils::makeCombination(particles.Photons, 2); !comb.Done(); ++comb) {
 
         // do treefit (build photons from iterator ctor)
-        treefitter.SetLeaves({comb.begin(), comb.end()});
+        treefitter.SetPhotons({comb.begin(), comb.end()});
 
         APLCON::Result_t r;
 
@@ -587,7 +587,7 @@ void EtapOmegaG::Sig_t::OmegaPi0_t::Process(const EtapOmegaG::Particles_t& parti
     for(auto comb=utils::makeCombination(particles.Photons, 3); !comb.Done(); ++comb) {
 
         // do treefit (build photons from iterator ctor)
-        treefitter.SetLeaves({comb.begin(), comb.end()});
+        treefitter.SetPhotons({comb.begin(), comb.end()});
 
         APLCON::Result_t r;
 

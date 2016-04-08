@@ -257,11 +257,7 @@ public:
 
     using tree_t = Tree<node_t>::node_t;
 
-    void SetLeaves(const TParticleList& photons);
-
-    virtual void SetPhotons(const TParticleList& photons) override {
-        SetLeaves(photons);
-    }
+    virtual void SetPhotons(const TParticleList& photons) override;
 
     tree_t GetTreeNode(const ParticleTypeDatabase::Type& type) const {
         tree_t treenode = nullptr;

@@ -385,7 +385,7 @@ TreeFitter::TreeFitter(const string& name,
 TreeFitter::~TreeFitter()
 {}
 
-void TreeFitter::SetLeaves(const TParticleList& photons)
+void TreeFitter::SetPhotons(const TParticleList& photons)
 {
     if(photons.size() != Photons.size())
         throw Exception("Given leave particles does not match configured TreeFitter");
