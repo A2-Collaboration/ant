@@ -6,6 +6,8 @@
 #include "base/std_ext/memory.h"
 #include "base/std_ext/string.h"
 #include "analysis/plot/root_draw.h"
+
+#include "analysis/utils/Fitter.h"
 #include <memory>
 
 using namespace std;
@@ -54,4 +56,10 @@ void KinfitExtract::Sweep1(TTree* t)
 
     canvas("RMS") << drawoption("surf") << g << endc;
 
+}
+
+std::string KinfitExtract::JSONTest()
+{
+    analysis::utils::UncertaintyModels::Optimized_Oli1 m;
+    return m.to_string_cereal();
 }

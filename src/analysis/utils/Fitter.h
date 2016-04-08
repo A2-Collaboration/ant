@@ -484,6 +484,8 @@ struct Optimized : Fitter::UncertaintyModel {
     static double dThetaSin(const double theta, const double offset, const double thetapart);
 
     std::string to_string() const;
+    std::string to_string_cereal() const;
+
 protected:
     const static std::string sepatator;
 };

@@ -13,6 +13,9 @@
 #include "base/Logger.h"
 #include "base/Paths.h"
 
+#include "base/cereal/archives/json.hpp"
+#include "base/cereal/archives/binary.hpp"
+
 #include "APLCON.hpp" // external project
 
 #include "TTree.h"
@@ -839,6 +842,32 @@ string UncertaintyModels::Optimized::to_string() const
             << "tgp="  << taps_photon_phi       << sepatator
             << "tpt="  << taps_proton.sigmaTheta<< sepatator
             << "tpp="  << taps_proton.sigmaPhi;
+}
+
+string UncertaintyModels::Optimized::to_string_cereal() const
+{
+    std::stringstream ss; // any stream can be used
+
+    {
+      cereal::JSONOutputArchive oarchive(ss); // Create an output archive
+
+      oarchive(
+                  cereal::make_nvp("cgtc", cb_photon_theta_const),
+                  cereal::make_nvp("cgts", cb_photon_theta_Sin),
+                  cereal::make_nvp("cgp",  cb_photon_phi),
+                  cereal::make_nvp("cgEr", cb_photon_E_rel),
+                  cereal::make_nvp("cgEe", cb_photon_E_exp),
+                  cereal::make_nvp("cpt",  cb_proton.sigmaTheta),
+                  cereal::make_nvp("cpp",  cb_proton.sigmaPhi),
+                  cereal::make_nvp("tgt",  taps_photon_theta),
+                  cereal::make_nvp("tgp",  taps_photon_phi),
+                  cereal::make_nvp("tgEr", taps_photon_E_rel),
+                  cereal::make_nvp("tpt",  taps_proton.sigmaTheta),
+                  cereal::make_nvp("tpp",  taps_proton.sigmaPhi)
+                  );
+    }
+
+    return ss.str();
 }
 
 UncertaintyModels::Optimized_Oli1::Optimized_Oli1()
