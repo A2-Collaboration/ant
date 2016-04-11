@@ -29,18 +29,24 @@ protected:
 
     TH1D* h_probability;
 
-    TH1D* p_cb_g_E;
-    TH1D* p_cb_g_Theta;
-    TH1D* p_cb_g_Phi;
-    TH1D* p_cb_p_E;
-    TH1D* p_cb_p_Theta;
-    TH1D* p_cb_p_Phi;
-    TH1D* p_taps_g_E;
-    TH1D* p_taps_g_Theta;
-    TH1D* p_taps_g_Phi;
-    TH1D* p_taps_p_E;
-    TH1D* p_taps_p_Theta;
-    TH1D* p_taps_p_Phi;
+    struct ChannelHists_t {
+        TH1D* p_cb_g_E;
+        TH1D* p_cb_g_Theta;
+        TH1D* p_cb_g_Phi;
+        TH1D* p_cb_p_E;
+        TH1D* p_cb_p_Theta;
+        TH1D* p_cb_p_Phi;
+        TH1D* p_taps_g_E;
+        TH1D* p_taps_g_Theta;
+        TH1D* p_taps_g_Phi;
+        TH1D* p_taps_p_E;
+        TH1D* p_taps_p_Theta;
+        TH1D* p_taps_p_Phi;
+
+        ChannelHists_t(HistogramFactory& histFac, const std::string& name);
+    };
+
+    ChannelHists_t pulls;
 
 
     const bool opt_save_after_cut;
