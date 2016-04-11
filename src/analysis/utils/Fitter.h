@@ -61,6 +61,7 @@ public:
         virtual ~UncertaintyModel();
         virtual Uncertainties_t GetSigmas(const TParticle& particle) const =0;
     };
+    using UncertaintyModelPtr = std::shared_ptr<const Fitter::UncertaintyModel>;
 
     static const APLCON::Fit_Settings_t DefaultSettings;
 
@@ -153,7 +154,7 @@ public:
 
     KinFitter(const std::string& name,
               unsigned numGammas,
-              std::shared_ptr<const UncertaintyModel> Uncertainty_model,
+              UncertaintyModelPtr Uncertainty_model,
               const APLCON::Fit_Settings_t& settings = DefaultSettings
               );
 
@@ -241,7 +242,7 @@ public:
     TreeFitter(const std::string& name,
                ParticleTypeTree ptree,
                unsigned kinFitGammas,
-               std::shared_ptr<const Fitter::UncertaintyModel> uncertainty_model,
+               UncertaintyModelPtr uncertainty_model,
                nodesetup_t::getter nodeSetup = {},
                const APLCON::Fit_Settings_t& settings = DefaultSettings
               );
@@ -249,7 +250,7 @@ public:
     // construct TreeFitter without additional KinFit
     TreeFitter(const std::string& name,
                ParticleTypeTree ptree,
-               std::shared_ptr<const Fitter::UncertaintyModel> uncertainty_model,
+               UncertaintyModelPtr uncertainty_model,
                nodesetup_t::getter nodeSetup = {},
                const APLCON::Fit_Settings_t& settings = DefaultSettings
               ) : TreeFitter(name, ptree, 0, uncertainty_model, nodeSetup, settings)
