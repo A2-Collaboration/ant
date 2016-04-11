@@ -29,7 +29,7 @@ FitPulls::FitPulls(const string& name, OptionsPtr opts) :
     auto uncertainty_model = make_shared<utils::UncertaintyModels::Optimized_Oli1>();
 
     const auto& histFac_name = uncertainty_model->to_string_simple();
-    HistogramFactory histFac(histFac_name, HistFac);
+    HistogramFactory histFac(utils::ParticleTools::SanitizeDecayString(histFac_name), HistFac);
 
     h_protoncopl = histFac.makeTH1D("Coplanarity","#delta#phi / degree","",BinSettings(100,-180,180),"h_protoncopl");
     h_taggtime = histFac.makeTH1D("Tagged Time","t / ns", "", BinSettings(300,-60,60), "h_taggtime");
@@ -251,7 +251,7 @@ void FitPulls::ShowResult()
 
 FitPulls::ChannelHists_t::ChannelHists_t(const HistogramFactory& h, const string& name)
 {
-    HistogramFactory histFac(name, h, name);
+    HistogramFactory histFac(utils::ParticleTools::SanitizeDecayString(name), h, name);
 
     h_probability = histFac.makeTH1D("Probability","p","",BinSettings(100,0,1),"h_probability");
 
