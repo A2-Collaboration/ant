@@ -14,20 +14,7 @@ namespace physics {
 
 class FitPulls : public Physics {
 protected:
-    static const std::vector<ParticleTypeTree> channels;
-
-    std::map<unsigned, std::vector<utils::TreeFitter>> treefitters;
-
-    void findProton(const TCandidateList& cands, const TTaggerHit& taggerhit,
-                    TParticlePtr& proton, TParticleList& photons,
-                    LorentzVec& photon_sum);
-
-    PromptRandom::Switch promptrandom;
-
-    TH1D* h_protoncopl;
-    TH1D* h_taggtime;
-
-    TH1D* h_probability;
+    static const std::vector<ParticleTypeTreeDatabase::Channel> channels;
 
     struct ChannelHists_t {
         TH1D* p_cb_g_E;
@@ -43,11 +30,30 @@ protected:
         TH1D* p_taps_p_Theta;
         TH1D* p_taps_p_Phi;
 
-        ChannelHists_t(HistogramFactory& histFac, const std::string& name);
+        ChannelHists_t(const HistogramFactory& histFac, const std::string& name);
     };
 
-    ChannelHists_t pulls;
+    struct ChannelItem_t {
+        // use unique_ptr to make ctor easier...
+        std::unique_ptr<utils::TreeFitter> Fitter;
+        std::unique_ptr<ChannelHists_t>    Hists;
+        unsigned          Multiplicity;
+        ChannelItem_t(const HistogramFactory& parent,
+                      ParticleTypeTreeDatabase::Channel channel,
+                      utils::Fitter::UncertaintyModelPtr uncertainty_model);
+    };
 
+    std::map<unsigned, std::vector<ChannelItem_t>> treefitters;
+
+    void findProton(const TCandidateList& cands, const TTaggerHit& taggerhit,
+                    TParticlePtr& proton, TParticleList& photons,
+                    LorentzVec& photon_sum);
+
+    PromptRandom::Switch promptrandom;
+
+    TH1D* h_protoncopl;
+    TH1D* h_taggtime;
+    TH1D* h_probability;
 
     const bool opt_save_after_cut;
     const bool opt_save_only;

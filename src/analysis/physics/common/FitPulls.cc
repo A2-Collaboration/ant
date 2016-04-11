@@ -2,21 +2,22 @@
 #include "base/std_ext/vector.h"
 #include "TH1D.h"
 
+#include "utils/particle_tools.h"
+
 using namespace ant;
 using namespace ant::analysis;
 using namespace ant::analysis::physics;
 using namespace std;
 
-const vector<ParticleTypeTree> FitPulls::channels = {
-    ParticleTypeTreeDatabase::Get(ParticleTypeTreeDatabase::Channel::Pi0_2g),
-    ParticleTypeTreeDatabase::Get(ParticleTypeTreeDatabase::Channel::TwoPi0_4g),
-    ParticleTypeTreeDatabase::Get(ParticleTypeTreeDatabase::Channel::ThreePi0_6g),
-    ParticleTypeTreeDatabase::Get(ParticleTypeTreeDatabase::Channel::Omega_gPi0_3g),
+const vector<ParticleTypeTreeDatabase::Channel> FitPulls::channels = {
+    ParticleTypeTreeDatabase::Channel::Pi0_2g,
+    ParticleTypeTreeDatabase::Channel::TwoPi0_4g,
+    ParticleTypeTreeDatabase::Channel::ThreePi0_6g,
+    ParticleTypeTreeDatabase::Channel::Omega_gPi0_3g,
 };
 
 FitPulls::FitPulls(const string& name, OptionsPtr opts) :
     Physics(name, opts),
-    pulls(HistFac, "all"),
     opt_save_after_cut(opts->Get<bool>("SaveAfterCut", false)),
     opt_save_only(opts->Get<bool>("SaveOnly", false))
 {
@@ -26,7 +27,8 @@ FitPulls::FitPulls(const string& name, OptionsPtr opts) :
 
     auto uncertainty_model = make_shared<utils::UncertaintyModels::Optimized_Oli1>();
 
-    HistogramFactory histFac(uncertainty_model->to_string_short(), HistFac);
+    const auto& histFac_title = uncertainty_model->to_string_simple();
+    HistogramFactory histFac(histFac_title, HistFac, histFac_title);
 
     h_protoncopl = histFac.makeTH1D("Coplanarity","#delta#phi / degree","",BinSettings(100,-180,180),"h_protoncopl");
     h_taggtime = histFac.makeTH1D("Tagged Time","t / ns", "", BinSettings(300,-60,60), "h_taggtime");
@@ -35,6 +37,19 @@ FitPulls::FitPulls(const string& name, OptionsPtr opts) :
 
 
     // create fitter for each channel
+    for(auto& channel : channels) {
+        ChannelItem_t item(histFac, channel, uncertainty_model);
+        auto& items = treefitters[item.Multiplicity];
+        items.emplace_back(move(item));
+    }
+}
+
+FitPulls::ChannelItem_t::ChannelItem_t(const HistogramFactory& parent,
+                                     ParticleTypeTreeDatabase::Channel channel,
+                                     utils::Fitter::UncertaintyModelPtr uncertainty_model
+                                     )
+{
+    auto ptree = ParticleTypeTreeDatabase::Get(channel);
     auto count_leaves = [] (const ParticleTypeTree& tree) {
         unsigned leaves = 0;
         tree->Map_nodes(
@@ -42,19 +57,16 @@ FitPulls::FitPulls(const string& name, OptionsPtr opts) :
         );
         return leaves;
     };
+    Multiplicity = count_leaves(ptree);
 
+    const auto& ptree_name = utils::ParticleTools::GetDecayString(ptree);
 
-    unsigned n_ch = 0;
-    for(auto& channel : channels) {
-        const auto nParticles = count_leaves(channel);
-        treefitters[nParticles].emplace_back(
-                    std_ext::formatter() << "treefitter_" << n_ch,
-                    channel,
-                    nParticles-1, // assume one particle to be proton
-                    uncertainty_model
-                    );
-        n_ch++;
-    }
+    Fitter = std_ext::make_unique<utils::TreeFitter>("treefitter_" + ptree_name,
+                                                     ptree,
+                                                     Multiplicity-1, // assume one particle to be proton
+                                                     uncertainty_model);
+
+    Hists = std_ext::make_unique<ChannelHists_t>(parent, ptree_name);
 }
 
 void FitPulls::findProton(const TCandidateList& cands,
@@ -137,7 +149,8 @@ void FitPulls::ProcessEvent(const TEvent& event, manager_t& manager)
             continue;
 
         // do all the fits
-        for(utils::TreeFitter& fitter : fitters->second) {
+        for(const ChannelItem_t& item : fitters->second) {
+            utils::TreeFitter& fitter = *item.Fitter;
             fitter.SetEgammaBeam(taggerhit.PhotonEnergy);
             fitter.SetPhotons(photons);
             fitter.SetProton(proton);
@@ -154,27 +167,29 @@ void FitPulls::ProcessEvent(const TEvent& event, manager_t& manager)
                 fitparticles = fitter.GetFitParticles();
             }
 
+            const ChannelHists_t& h = *item.Hists;
+
             h_probability->Fill(max_prob, promptrandom.FillWeight());
 
             for(const auto& fitparticle : fitparticles) {
                 const auto& p = fitparticle.Particle;
                 // select the right set of histograms
                 auto& h_E = p->Type() == ParticleTypeDatabase::Photon ?
-                                (p->Candidate->Detector & Detector_t::Type_t::CB ? pulls.p_cb_g_E : pulls.p_taps_g_E)
+                                (p->Candidate->Detector & Detector_t::Type_t::CB ? h.p_cb_g_E : h.p_taps_g_E)
                               :
-                                (p->Candidate->Detector & Detector_t::Type_t::CB ? pulls.p_cb_p_E : pulls.p_taps_p_E);
+                                (p->Candidate->Detector & Detector_t::Type_t::CB ? h.p_cb_p_E : h.p_taps_p_E);
                 h_E->Fill(fitparticle.Ek.Pull, promptrandom.FillWeight());
 
                 auto& h_Theta = p->Type() == ParticleTypeDatabase::Photon ?
-                                    (p->Candidate->Detector & Detector_t::Type_t::CB ? pulls.p_cb_g_Theta : pulls.p_taps_g_Theta)
+                                    (p->Candidate->Detector & Detector_t::Type_t::CB ? h.p_cb_g_Theta : h.p_taps_g_Theta)
                                   :
-                                    (p->Candidate->Detector & Detector_t::Type_t::CB ? pulls.p_cb_p_Theta : pulls.p_taps_p_Theta);
+                                    (p->Candidate->Detector & Detector_t::Type_t::CB ? h.p_cb_p_Theta : h.p_taps_p_Theta);
                 h_Theta->Fill(fitparticle.Theta.Pull, promptrandom.FillWeight());
 
                 auto& h_Phi = p->Type() == ParticleTypeDatabase::Photon ?
-                                  (p->Candidate->Detector & Detector_t::Type_t::CB ? pulls.p_cb_g_Phi : pulls.p_taps_g_Phi)
+                                  (p->Candidate->Detector & Detector_t::Type_t::CB ? h.p_cb_g_Phi : h.p_taps_g_Phi)
                                 :
-                                  (p->Candidate->Detector & Detector_t::Type_t::CB ? pulls.p_cb_p_Phi : pulls.p_taps_p_Phi);
+                                  (p->Candidate->Detector & Detector_t::Type_t::CB ? h.p_cb_p_Phi : h.p_taps_p_Phi);
                 h_Phi->Fill(fitparticle.Phi.Pull, promptrandom.FillWeight());
             }
         }
@@ -190,9 +205,9 @@ void FitPulls::ShowResult()
 
 
 
-FitPulls::ChannelHists_t::ChannelHists_t(HistogramFactory& h, const string& name)
+FitPulls::ChannelHists_t::ChannelHists_t(const HistogramFactory& h, const string& name)
 {
-    HistogramFactory histFac(name, h);
+    HistogramFactory histFac(name, h, name);
 
     BinSettings bins_pulls(30,-3,3);
     p_cb_g_E     = histFac.makeTH1D("p_cb_g_E",    "","",bins_pulls,"p_cb_g_E");
@@ -208,5 +223,9 @@ FitPulls::ChannelHists_t::ChannelHists_t(HistogramFactory& h, const string& name
     p_taps_p_Theta = histFac.makeTH1D("p_taps_p_Theta","","",bins_pulls,"p_taps_p_Theta");
     p_taps_p_Phi   = histFac.makeTH1D("p_taps_p_Phi",  "","",bins_pulls,"p_taps_p_Phi");
 }
+
+
+
+
 
 AUTO_REGISTER_PHYSICS(FitPulls)
