@@ -4,7 +4,7 @@
 #include "base/Logger.h"
 
 
-int main( int argc, char* const argv[] )
+int main( int argc, char* argv[] )
 {
   el::Configurations loggerConf;
   loggerConf.setToDefault();
