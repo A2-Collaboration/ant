@@ -99,7 +99,7 @@ string ParticleTools::GetDecayString(const ParticleTypeTree& particletypetree, b
 
 string ParticleTools::SanitizeDecayString(string decaystring)
 {
-    for(const auto c : {'(',')','[',']','{','}','^',' ','#'}) {
+    for(const auto c : {'(',')','[',']','{','}','^',' ','#',':'}) {
         std::replace( decaystring.begin(), decaystring.end(), c, '_');
     }
     std::replace(decaystring.begin(), decaystring.end(), '\'', 'p');
