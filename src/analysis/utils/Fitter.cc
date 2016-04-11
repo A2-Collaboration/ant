@@ -183,6 +183,11 @@ KinFitter::KinFitter(
 
 }
 
+KinFitter::~KinFitter()
+{
+
+}
+
 void KinFitter::SetEgammaBeam(const double ebeam)
 {
     Beam->E        = ebeam;

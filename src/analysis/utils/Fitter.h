@@ -153,6 +153,8 @@ public:
               const APLCON::Fit_Settings_t& settings = DefaultSettings
               );
 
+    virtual ~KinFitter();
+
     KinFitter(const KinFitter&) = delete;
     KinFitter& operator=(const KinFitter&) = delete;
     KinFitter(KinFitter&&) = default;
