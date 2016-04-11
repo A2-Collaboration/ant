@@ -16,12 +16,12 @@ CB_SourceCalib::CB_SourceCalib(const string & name, OptionsPtr opts) :
     auto detector = ExpConfig::Setup::GetDetector(Detector_t::Type_t::CB);
 
     const BinSettings cb_channels(detector->GetNChannels());
-    const BinSettings energybins(1000);
+    const BinSettings ADCBins(140);
 
-    ggIM = HistFac.makeTH2D("2 neutral IM (CB,CB)", "IM [MeV]", "#",
-                            energybins, cb_channels, "ggIM");
+    HitsADC = HistFac.makeTH2D("Detector Hits for ADC-Channel", "ADC-Channel", "#",
+                            ADCBins, cb_channels, "HitsADC");
     h_cbdisplay = HistFac.make<TH2CB>("h_cbdisplay","Number of entries");
-
+    KristallHits= HistFac.makeTH1D("Hits in one Crystall", "ADC-Channel", "Hits", ADCBins, "KristallHits");
 
 }
 void CB_SourceCalib::ProcessEvent(const TEvent& event, manager_t&)
@@ -33,54 +33,38 @@ void CB_SourceCalib::ProcessEvent(const TEvent& event, manager_t&)
         if(readhit.DetectorType != Detector_t::Type_t::CB)
             continue;
 
-        cout << readhit << endl;
+        //cout << readhit << endl;
+        for( int Channel=1; Channel<=720; ++Channel)
+            if (readhit.Channel==Channel && readhit.ChannelType == Channel_t::Type_t::Integral)
+            {
+                const auto& values = adc_converter.Convert(readhit.RawData);
+                KristallHits->Fill(values.at(0));
+                ;
+            }
 
+//       if (readhit.Channel==483 && readhit.ChannelType == Channel_t::Type_t::Integral )
+//      {
+//           const auto& values = adc_converter.Convert(readhit.RawData);
+//           KristallHits->Fill(values.at(0));
+//       }
         if(readhit.ChannelType == Channel_t::Type_t::Integral) {
             const auto& values = adc_converter.Convert(readhit.RawData);
             cout << values.at(0) << endl;
-            ggIM->Fill(values.at(0),readhit.Channel);
+            HitsADC->Fill(values.at(0),readhit.Channel);
         }
     }
-//        if(readhit.DetectorType != Detector->Type)
-//            continue;
-//        if(readhit.Values.empty())
-//            continue;
-//        auto& hit = hits[readhit.Channel];
-//        if(readhit.ChannelType == Channel_t::Type_t::Integral)
-//            hit.Energy = readhit.Values.front();
-//        if(readhit.ChannelType == Channel_t::Type_t::Timing)
-//            hit.Time = readhit.Values.front();
-
-    //const auto& cands = event.Reconstructed().Candidates;
 
 
-//    for( auto comb = analysis::utils::makeCombination(cands.get_ptr_list(),2); !comb.Done(); ++comb ) {
-//        const TCandidatePtr& p1 = comb.at(0);
-//        const TCandidatePtr& p2 = comb.at(1);
 
-//        if(p1->VetoEnergy==0   && p2->VetoEnergy==0
-//           && (p1->Detector & Detector_t::Type_t::CB)
-//           && (p2->Detector & Detector_t::Type_t::CB)) {
-//            const TParticle a(ParticleTypeDatabase::Photon,comb.at(0));
-//            const TParticle b(ParticleTypeDatabase::Photon,comb.at(1));
-//            const auto& gg = a+b;
 
-//            auto cl1 = p1->FindCaloCluster();
-//            if(cl1)
-//                ggIM->Fill(gg.P(),cl1->CentralElement);
-
-//            auto cl2 = p2->FindCaloCluster();
-//            if(cl2)
-//                ggIM->Fill(gg.P(),cl2->CentralElement);
-//        }
-//    }
 }
 
 
 void CB_SourceCalib::ShowResult()
 {
-   h_cbdisplay->SetElements(*ggIM->ProjectionY());
-   canvas(GetName()) << drawoption("colz") << ggIM
+   h_cbdisplay->SetElements(*HitsADC->ProjectionY());
+   canvas(GetName()) << drawoption("colz") << HitsADC
+                      << KristallHits
                       << h_cbdisplay
                       << endc;
 }
