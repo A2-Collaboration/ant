@@ -977,6 +977,29 @@ void UncertaintyModels::Optimized::load_from_string(const string& data)
     taps_proton.sigmaPhi   = angleinput(taps_proton_phi_d);
 }
 
+
+bool UncertaintyModels::Optimized::operator==(const UncertaintyModels::Optimized& other) const noexcept
+{
+    return
+               cb_photon_theta_const == other.cb_photon_theta_const
+            && cb_photon_theta_Sin   == other.cb_photon_theta_Sin
+            && cb_photon_phi         == other.cb_photon_phi
+            && cb_photon_E_rel       == other.cb_photon_E_rel
+            && cb_photon_E_exp       == other.cb_photon_E_exp
+            && cb_proton             == other.cb_proton
+            && taps_photon_E_rel     == other.taps_photon_E_rel
+            && taps_photon_E_exp     == other.taps_photon_E_exp
+            && taps_photon_theta     == other.taps_photon_theta
+            && taps_photon_phi       == other.taps_photon_phi
+            && taps_proton           == other.taps_proton;
+
+}
+
+bool UncertaintyModels::Optimized::operator!=(const UncertaintyModels::Optimized& other) const noexcept
+{
+    return !(*this == other);
+}
+
 UncertaintyModels::Optimized_Oli1::Optimized_Oli1()
 {
     cb_photon_theta_const = degree_to_radian(1.1);

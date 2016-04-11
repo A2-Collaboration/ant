@@ -44,6 +44,10 @@ public:
 
         Uncertainties_t() = default;
         Uncertainties_t(const double E, const double Theta, const double Phi) : sigmaE(E), sigmaTheta(Theta), sigmaPhi(Phi) {}
+
+        bool operator==(const Uncertainties_t& other) const noexcept {
+            return sigmaE == other.sigmaE && sigmaTheta == other.sigmaTheta && sigmaPhi == other.sigmaPhi;
+        }
     };
 
     /**
@@ -515,6 +519,9 @@ struct Optimized : Fitter::UncertaintyModel {
      * @param data
      */
     void load_from_string(const std::string& data);
+
+    bool operator==(const Optimized& other) const noexcept;
+    bool operator!=(const Optimized& other) const noexcept;
 
 protected:
     const static std::string sepatator;
