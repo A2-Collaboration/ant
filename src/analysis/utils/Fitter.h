@@ -86,13 +86,13 @@ public:
         Var_t Theta;
         Var_t Phi;
 
+        FitParticle(const std::string& name): Name(name) {}
 
     protected:
         friend class Fitter;
         friend class KinFitter;
         friend class TreeFitter;
 
-        FitParticle(const std::string& name): Name(name) {}
 
         const std::string Name;
         void SetupBranches(TTree* tree, const std::string& prefix);
@@ -121,11 +121,6 @@ public:
     };
 
 protected:
-
-    // trick for using make_shared/make_unique with protected ctor of FitParticle
-    struct FitParticle_internal : FitParticle {
-        FitParticle_internal(const std::string& name) : FitParticle(name) {}
-    };
 
     Fitter(const std::string& fittername,
            const APLCON::Fit_Settings_t& settings, std::shared_ptr<const Fitter::UncertaintyModel>& uncertainty_model);

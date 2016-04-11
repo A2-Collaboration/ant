@@ -134,7 +134,7 @@ KinFitter::KinFitter(
         return;
 
     for(unsigned i=0; i<numGammas;++i) {
-        Photons.emplace_back(make_shared<FitParticle_internal>("Photon"+to_string(i)));
+        Photons.emplace_back(make_shared<FitParticle>("Photon"+to_string(i)));
     }
 
     Beam = std_ext::make_unique<PhotonBeamVector>("Beam");
@@ -142,7 +142,7 @@ KinFitter::KinFitter(
                          Beam->Adresses() ,
                          Beam->Adresses_Sigma() );
 
-    Proton = std_ext::make_unique<FitParticle_internal>("Proton");
+    Proton = std_ext::make_unique<FitParticle>("Proton");
     LinkVariable(*Proton);
 
     vector<string> namesLInv      = { Beam->Name, Proton->Name };
@@ -308,7 +308,7 @@ TreeFitter::TreeFitter(const string& name,
     // handle special case of no kinfit
     if(kinFitGammas==0) {
         for(unsigned i=0;i<tree_leaves.size();i++) {
-            Photons.emplace_back(make_shared<FitParticle_internal>("Photon"+to_string(i)));
+            Photons.emplace_back(make_shared<FitParticle>("Photon"+to_string(i)));
             LinkVariable(*Photons.back());
         }
     }
