@@ -351,7 +351,6 @@ void hstack::Paint(const char* chopt)
     // then sort according to Z
     tmp_hists.sort();
 
-
     if(fHists)
         fHists->Clear("nodelete");
     for(const auto& o : tmp_hists) {
@@ -364,7 +363,7 @@ void hstack::Paint(const char* chopt)
     chopt_str += "nostack"; // always draw with nostack
     THStack::Paint(chopt_str.c_str());
 
-    if(basehist != fHistogram) {
+    if(!tmp_hists.empty() && basehist != fHistogram) {
         const auto yaxis = basehist->GetYaxis();
         GetXaxis()->SetTitle(xaxis->GetTitle());
         GetYaxis()->SetTitle(yaxis->GetTitle());
