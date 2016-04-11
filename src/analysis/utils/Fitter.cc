@@ -888,8 +888,8 @@ string UncertaintyModels::Optimized::to_string() const
       const auto cb_proton_phi_d         = angleoutput(cb_proton.sigmaPhi);
       const auto taps_photon_theta_d     = angleoutput(taps_photon_theta);
       const auto taps_photon_phi_d       = angleoutput(taps_photon_phi);
-      const auto taps_photon_E_rel_d     = angleoutput(taps_photon_E_rel);
-      const auto taps_photon_E_exp_d     = angleoutput(taps_photon_E_exp);
+      const auto taps_photon_E_rel_d     = numberoutput(taps_photon_E_rel);
+      const auto taps_photon_E_exp_d     = numberoutput(taps_photon_E_exp);
       const auto taps_proton_theta_d     = angleoutput(taps_proton.sigmaTheta);
       const auto taps_proton_phi_d       = angleoutput(taps_proton.sigmaPhi);
 
@@ -963,8 +963,8 @@ void UncertaintyModels::Optimized::load_from_string(const string& data)
     cb_photon_theta_const  = angleinput(cb_photon_theta_const_d);
     cb_photon_theta_Sin    = angleinput(cb_photon_theta_Sin_d);
     cb_photon_phi          = angleinput(cb_photon_phi_d);
-    cb_photon_E_rel        = angleinput(cb_photon_E_rel_d);
-    cb_photon_E_exp        = angleinput(cb_photon_E_exp_d);
+    cb_photon_E_rel        = numberinput(cb_photon_E_rel_d);
+    cb_photon_E_exp        = numberinput(cb_photon_E_exp_d);
     cb_proton.sigmaE       = 0.0;
     cb_proton.sigmaTheta   = angleinput(cb_proton_theta_d);
     cb_proton.sigmaPhi     = angleinput(cb_proton_phi_d);
