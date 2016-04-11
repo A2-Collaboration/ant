@@ -190,21 +190,23 @@ void FitPulls::ShowResult()
 
 
 
-FitPulls::ChannelHists_t::ChannelHists_t(HistogramFactory& histFac, const string& name)
+FitPulls::ChannelHists_t::ChannelHists_t(HistogramFactory& h, const string& name)
 {
+    HistogramFactory histFac(name, h);
+
     BinSettings bins_pulls(30,-3,3);
-    p_cb_g_E     = histFac.makeTH1D(Form("%s_p_cb_g_E", name.c_str()),    "","",bins_pulls,Form("%s_p_cb_g_E", name.c_str()));
-    p_cb_g_Theta = histFac.makeTH1D(Form("%s_p_cb_g_Theta", name.c_str()),"","",bins_pulls,Form("%s_p_cb_g_Theta", name.c_str()));
-    p_cb_g_Phi   = histFac.makeTH1D(Form("%s_p_cb_g_Phi", name.c_str()),  "","",bins_pulls,Form("%s_p_cb_g_Phi", name.c_str()));
-    p_cb_p_E     = histFac.makeTH1D(Form("%s_p_cb_p_E", name.c_str()),    "","",bins_pulls,Form("%s_p_cb_p_E", name.c_str()));
-    p_cb_p_Theta = histFac.makeTH1D(Form("%s_p_cb_p_Theta", name.c_str()),"","",bins_pulls,Form("%s_p_cb_p_Theta", name.c_str()));
-    p_cb_p_Phi   = histFac.makeTH1D(Form("%s_p_cb_p_Phi", name.c_str()),  "","",bins_pulls,Form("%s_p_cb_p_Phi", name.c_str()));
-    p_taps_g_E     = histFac.makeTH1D(Form("%s_p_taps_g_E", name.c_str()),    "","",bins_pulls,Form("%s_p_taps_g_E", name.c_str()));
-    p_taps_g_Theta = histFac.makeTH1D(Form("%s_p_taps_g_Theta", name.c_str()),"","",bins_pulls,Form("%s_p_taps_g_Theta", name.c_str()));
-    p_taps_g_Phi   = histFac.makeTH1D(Form("%s_p_taps_g_Phi", name.c_str()),  "","",bins_pulls,Form("%s_p_taps_g_Phi", name.c_str()));
-    p_taps_p_E     = histFac.makeTH1D(Form("%s_p_taps_p_E", name.c_str()),    "","",bins_pulls,Form("%s_p_taps_p_E", name.c_str()));
-    p_taps_p_Theta = histFac.makeTH1D(Form("%s_p_taps_p_Theta", name.c_str()),"","",bins_pulls,Form("%s_p_taps_p_Theta", name.c_str()));
-    p_taps_p_Phi   = histFac.makeTH1D(Form("%s_p_taps_p_Phi", name.c_str()),  "","",bins_pulls,Form("%s_p_taps_p_Phi", name.c_str()));
+    p_cb_g_E     = histFac.makeTH1D("p_cb_g_E",    "","",bins_pulls,"p_cb_g_E");
+    p_cb_g_Theta = histFac.makeTH1D("p_cb_g_Theta","","",bins_pulls,"p_cb_g_Theta");
+    p_cb_g_Phi   = histFac.makeTH1D("p_cb_g_Phi",  "","",bins_pulls,"p_cb_g_Phi");
+    p_cb_p_E     = histFac.makeTH1D("p_cb_p_E",    "","",bins_pulls,"p_cb_p_E");
+    p_cb_p_Theta = histFac.makeTH1D("p_cb_p_Theta","","",bins_pulls,"p_cb_p_Theta");
+    p_cb_p_Phi   = histFac.makeTH1D("p_cb_p_Phi",  "","",bins_pulls,"p_cb_p_Phi");
+    p_taps_g_E     = histFac.makeTH1D("p_taps_g_E",    "","",bins_pulls,"p_taps_g_E");
+    p_taps_g_Theta = histFac.makeTH1D("p_taps_g_Theta","","",bins_pulls,"p_taps_g_Theta");
+    p_taps_g_Phi   = histFac.makeTH1D("p_taps_g_Phi",  "","",bins_pulls,"p_taps_g_Phi");
+    p_taps_p_E     = histFac.makeTH1D("p_taps_p_E",    "","",bins_pulls,"p_taps_p_E");
+    p_taps_p_Theta = histFac.makeTH1D("p_taps_p_Theta","","",bins_pulls,"p_taps_p_Theta");
+    p_taps_p_Phi   = histFac.makeTH1D("p_taps_p_Phi",  "","",bins_pulls,"p_taps_p_Phi");
 }
 
 AUTO_REGISTER_PHYSICS(FitPulls)
