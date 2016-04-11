@@ -70,3 +70,14 @@ string KinfitExtract::LoadAndDump(const string& s)
     m.load_from_string(s);
     return m.to_string();
 }
+
+void KinfitExtract::short_string_test()
+{
+    analysis::utils::UncertaintyModels::Optimized_Oli1 m;
+    const auto s = m.to_string_simple();
+    cout << s << endl;
+
+    analysis::utils::UncertaintyModels::Optimized n;
+    n.load_from_string_simple(s);
+    cout << n.to_string_simple() << endl;
+}

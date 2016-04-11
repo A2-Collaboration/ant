@@ -837,24 +837,6 @@ double UncertaintyModels::Optimized::dThetaSin(const double theta, const double 
     return offset + thetapart * sin(theta);
 }
 
-string UncertaintyModels::Optimized::to_string_simple() const
-{
-    return formatter()
-            << "cgtc=" << cb_photon_theta_const << sepatator
-            << "cgts=" << cb_photon_theta_Sin   << sepatator
-            << "cgp="  << cb_photon_phi         << sepatator
-            << "cgEr=" << cb_photon_E_rel       << sepatator
-            << "cgEe=" << cb_photon_E_exp       << sepatator
-            << "cpt="  << cb_proton.sigmaTheta  << sepatator
-            << "cpp="  << cb_proton.sigmaPhi    << sepatator
-            << "tgEr=" << taps_photon_E_rel     << sepatator
-            << "tgEe=" << taps_photon_E_exp     << sepatator
-            << "tgt="  << taps_photon_theta     << sepatator
-            << "tgp="  << taps_photon_phi       << sepatator
-            << "tpt="  << taps_proton.sigmaTheta<< sepatator
-            << "tpp="  << taps_proton.sigmaPhi;
-}
-
 string angleoutput(const double x) {
     const auto y = radian_to_degree(x);
     return formatter() << setprecision(3) << y;
@@ -870,6 +852,24 @@ double angleinput(const string& x) {
 
 double numberinput(const string& x) {
     return atof(x.c_str());
+}
+
+string UncertaintyModels::Optimized::to_string_simple() const
+{
+    return formatter()
+            << "cgtc="<< angleoutput(cb_photon_theta_const)  << sepatator
+            << "cgts="<< angleoutput(cb_photon_theta_Sin)    << sepatator
+            << "cgp=" << angleoutput(cb_photon_phi)          << sepatator
+            << "cgEr="<< numberoutput(cb_photon_E_rel)       << sepatator
+            << "cgEe="<< numberoutput(cb_photon_E_exp)       << sepatator
+            << "cpt=" << angleoutput(cb_proton.sigmaTheta)   << sepatator
+            << "cpp=" << angleoutput(cb_proton.sigmaPhi)     << sepatator
+            << "tgt=" << angleoutput(taps_photon_theta)      << sepatator
+            << "tgp=" << angleoutput(taps_photon_phi)        << sepatator
+            << "tgEr="<< numberoutput(taps_photon_E_rel)     << sepatator
+            << "tgEe="<< numberoutput(taps_photon_E_exp)     << sepatator
+            << "tpt=" << angleoutput(taps_proton.sigmaTheta) << sepatator
+            << "tpp=" << angleoutput(taps_proton.sigmaPhi);
 }
 
 string UncertaintyModels::Optimized::to_string() const
@@ -977,6 +977,16 @@ void UncertaintyModels::Optimized::load_from_string(const string& data)
     taps_proton.sigmaPhi   = angleinput(taps_proton_phi_d);
 }
 
+void UncertaintyModels::Optimized::load_from_string_simple(const string& data)
+{
+
+    const auto tokens = std_ext::tokenize_string(data, sepatator);
+
+    for(const auto& token : tokens) {
+        ReadToken(token);
+    }
+
+}
 
 bool UncertaintyModels::Optimized::operator==(const UncertaintyModels::Optimized& other) const noexcept
 {
@@ -998,6 +1008,44 @@ bool UncertaintyModels::Optimized::operator==(const UncertaintyModels::Optimized
 bool UncertaintyModels::Optimized::operator!=(const UncertaintyModels::Optimized& other) const noexcept
 {
     return !(*this == other);
+}
+
+void UncertaintyModels::Optimized::ReadToken(const string& token)
+{
+    const auto tokens = std_ext::tokenize_string(token, "=");
+    if(tokens.size() != 2)
+        return;
+
+    const auto& name  = tokens.front();
+    const auto& value = tokens.back();
+
+    if(name == "cgtc") {
+        cb_photon_theta_const = angleinput(value);
+    } else if(name=="cgts") {
+        cb_photon_theta_Sin = angleinput(value);
+    } else if(name=="cgp") {
+        cb_photon_phi = angleinput(value);
+    } else if(name=="cgEr") {
+        cb_photon_E_rel = numberinput(value);
+    } else if(name=="cgEe") {
+        cb_photon_E_exp = numberinput(value);
+    } else if(name=="cpt") {
+        cb_proton.sigmaTheta = angleinput(value);
+    } else if(name=="cpp") {
+        cb_proton.sigmaPhi = angleinput(value);
+    } else if(name=="tgt") {
+        taps_photon_theta = angleinput(value);
+    } else if(name=="tgp") {
+        taps_photon_phi = angleinput(value);
+    } else if(name=="tgEr") {
+        taps_photon_E_rel = numberinput(value);
+    } else if(name=="tgEe") {
+        taps_photon_E_exp = numberinput(value);
+    } else if(name=="tpt") {
+        taps_proton.sigmaTheta = angleinput(value);
+    } else if(name=="tpp") {
+        taps_proton.sigmaPhi = angleinput(value);
+    }
 }
 
 UncertaintyModels::Optimized_Oli1::Optimized_Oli1()

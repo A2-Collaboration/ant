@@ -10,6 +10,8 @@ struct KinfitExtract {
 
     static std::string JSONTest();
     static std::string LoadAndDump(const std::string& s);
+
+    static void short_string_test();
 };
 
 

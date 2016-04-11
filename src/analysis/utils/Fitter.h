@@ -520,11 +520,15 @@ struct Optimized : Fitter::UncertaintyModel {
      */
     void load_from_string(const std::string& data);
 
+    void load_from_string_simple(const std::string& data);
+
     bool operator==(const Optimized& other) const noexcept;
     bool operator!=(const Optimized& other) const noexcept;
 
 protected:
     const static std::string sepatator;
+
+    void ReadToken(const std::string& token);
 };
 
 /**
