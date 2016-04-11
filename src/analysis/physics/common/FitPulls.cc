@@ -3,6 +3,7 @@
 #include "TH1D.h"
 
 #include "utils/particle_tools.h"
+#include "plot/root_draw.h"
 
 using namespace ant;
 using namespace ant::analysis;
@@ -27,21 +28,64 @@ FitPulls::FitPulls(const string& name, OptionsPtr opts) :
 
     auto uncertainty_model = make_shared<utils::UncertaintyModels::Optimized_Oli1>();
 
-    const auto& histFac_title = uncertainty_model->to_string_simple();
-    HistogramFactory histFac(histFac_title, HistFac, histFac_title);
+    const auto& histFac_name = uncertainty_model->to_string_simple();
+    HistogramFactory histFac(histFac_name, HistFac);
 
     h_protoncopl = histFac.makeTH1D("Coplanarity","#delta#phi / degree","",BinSettings(100,-180,180),"h_protoncopl");
     h_taggtime = histFac.makeTH1D("Tagged Time","t / ns", "", BinSettings(300,-60,60), "h_taggtime");
 
-    h_probability = histFac.makeTH1D("Probability","p","",BinSettings(100,0,1),"h_probability");
+    auto make_hstack = [histFac_name, histFac] (const std::string& name) {
+        return histFac.make<ant::hstack>(name, "hstack: "+histFac_name+": "+name);
+    };
+
+    hstacks.emplace_back(make_hstack("h_probability"));
+    hstacks.emplace_back(make_hstack("p_cb_g_E"));
+    hstacks.emplace_back(make_hstack("p_cb_g_Phi"));
+    hstacks.emplace_back(make_hstack("p_cb_g_Theta"));
+    hstacks.emplace_back(make_hstack("p_cb_p_E"));
+    hstacks.emplace_back(make_hstack("p_cb_p_Theta"));
+    hstacks.emplace_back(make_hstack("p_cb_p_Phi"));
+    hstacks.emplace_back(make_hstack("p_taps_g_E"));
+    hstacks.emplace_back(make_hstack("p_taps_g_Theta"));
+    hstacks.emplace_back(make_hstack("p_taps_g_Phi"));
+    hstacks.emplace_back(make_hstack("p_taps_p_E"));
+    hstacks.emplace_back(make_hstack("p_taps_p_Theta"));
+    hstacks.emplace_back(make_hstack("p_taps_p_Phi"));
 
 
     // create fitter for each channel
+    unsigned n_ch = 0;
     for(auto& channel : channels) {
         ChannelItem_t item(histFac, channel, uncertainty_model);
+        ChannelHists_t& hists = *item.Hists;
+
+        std::vector<TH1*> histptrs{
+                    hists.h_probability,
+                    hists.p_cb_g_E,
+                    hists.p_cb_g_Theta,
+                    hists.p_cb_g_Phi,
+                    hists.p_cb_p_E,
+                    hists.p_cb_p_Theta,
+                    hists.p_cb_p_Phi,
+                    hists.p_taps_g_E,
+                    hists.p_taps_g_Theta,
+                    hists.p_taps_g_Phi,
+                    hists.p_taps_p_E,
+                    hists.p_taps_p_Theta,
+                    hists.p_taps_p_Phi
+        };
+
+        for(unsigned i=0;i<histptrs.size();i++) {
+            histptrs[i]->SetLineColor(ColorPalette::Colors[n_ch]);
+            *hstacks.at(i) << histptrs[i];
+        }
+
         auto& items = treefitters[item.Multiplicity];
         items.emplace_back(move(item));
+        n_ch++;
     }
+
+
 }
 
 FitPulls::ChannelItem_t::ChannelItem_t(const HistogramFactory& parent,
@@ -169,7 +213,7 @@ void FitPulls::ProcessEvent(const TEvent& event, manager_t& manager)
 
             const ChannelHists_t& h = *item.Hists;
 
-            h_probability->Fill(max_prob, promptrandom.FillWeight());
+            h.h_probability->Fill(max_prob, promptrandom.FillWeight());
 
             for(const auto& fitparticle : fitparticles) {
                 const auto& p = fitparticle.Particle;
@@ -208,6 +252,8 @@ void FitPulls::ShowResult()
 FitPulls::ChannelHists_t::ChannelHists_t(const HistogramFactory& h, const string& name)
 {
     HistogramFactory histFac(name, h, name);
+
+    h_probability = histFac.makeTH1D("Probability","p","",BinSettings(100,0,1),"h_probability");
 
     BinSettings bins_pulls(30,-3,3);
     p_cb_g_E     = histFac.makeTH1D("p_cb_g_E",    "","",bins_pulls,"p_cb_g_E");

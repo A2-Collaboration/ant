@@ -6,6 +6,8 @@
 
 #include "base/ParticleTypeTree.h"
 
+#include "root-addons/analysis_codes/hstack.h"
+
 class TH1D;
 
 namespace ant {
@@ -17,6 +19,8 @@ protected:
     static const std::vector<ParticleTypeTreeDatabase::Channel> channels;
 
     struct ChannelHists_t {
+        TH1D* h_probability;
+
         TH1D* p_cb_g_E;
         TH1D* p_cb_g_Theta;
         TH1D* p_cb_g_Phi;
@@ -53,7 +57,8 @@ protected:
 
     TH1D* h_protoncopl;
     TH1D* h_taggtime;
-    TH1D* h_probability;
+
+    std::vector<ant::hstack*> hstacks;
 
     const bool opt_save_after_cut;
     const bool opt_save_only;
