@@ -32,10 +32,20 @@ struct Trigger :
         throw Exception("The trigger detector knows nothing about ignored channels.");
     }
 
+    struct ReferenceTimingHitMapping_t {
+        LogicalChannel_t LogicalChannel;
+        unsigned AcquRawChannel;
+        ReferenceTimingHitMapping_t(unsigned logicalChannel, unsigned acquRawChannel) :
+            LogicalChannel{Detector_t::Type_t::Trigger, Channel_t::Type_t::Timing, logicalChannel},
+            AcquRawChannel(acquRawChannel)
+        {}
+        operator LogicalChannel_t() const {
+            return LogicalChannel;
+        }
+    };
 
-
-    const LogicalChannel_t Reference_CATCH_TaggerCrate = {Type, Channel_t::Type_t::Timing, 1000};
-    const LogicalChannel_t Reference_CATCH_CBCrate = {Type, Channel_t::Type_t::Timing, 1001};
+    static const ReferenceTimingHitMapping_t Reference_CATCH_TaggerCrate;
+    static const ReferenceTimingHitMapping_t Reference_CATCH_CBCrate;
 
     // for UnpackerAcquConfig
     virtual void BuildMappings(

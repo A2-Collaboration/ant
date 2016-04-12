@@ -15,17 +15,21 @@ const std::string Trigger::ScalerName::FaradayCup    = "FaradayCup";
 const std::string Trigger::ScalerName::IonChamber    = "IonChamber";
 const std::string Trigger::ScalerName::PbGlass       = "PbGlass";
 
+// the CATCH TDC reference channels have never changed
+// so map them here as const static
+const Trigger::ReferenceTimingHitMapping_t Trigger::Reference_CATCH_TaggerCrate = {1000, 1400};
+const Trigger::ReferenceTimingHitMapping_t Trigger::Reference_CATCH_CBCrate = {1001, 2000};
+
+
 void Trigger::BuildMappings(std::vector<UnpackerAcquConfig::hit_mapping_t>& hit_mappings,
                             std::vector<UnpackerAcquConfig::scaler_mapping_t>&) const {
-    // the CATCH TDC reference channels have never changed
-    // so map them here in the base class (to be used by derived classes)
     hit_mappings.emplace_back(
-                Reference_CATCH_TaggerCrate,
-                1400
+                Reference_CATCH_TaggerCrate.LogicalChannel,
+                Reference_CATCH_TaggerCrate.AcquRawChannel
                 );
     hit_mappings.emplace_back(
-                Reference_CATCH_CBCrate,
-                2000
+                Reference_CATCH_CBCrate.LogicalChannel,
+                Reference_CATCH_CBCrate.AcquRawChannel
                 );
 }
 
