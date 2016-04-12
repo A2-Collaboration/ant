@@ -26,11 +26,17 @@ protected:
         TH1D* p_cb_g_Phi;
         TH1D* p_cb_p_Theta;
         TH1D* p_cb_p_Phi;
+        TH1D* c_cb_g_Theta;
+        TH1D* c_cb_g_E;
+        TH1D* c_cb_p_Theta;
         TH1D* p_taps_g_E;
         TH1D* p_taps_g_Theta;
         TH1D* p_taps_g_Phi;
         TH1D* p_taps_p_Theta;
         TH1D* p_taps_p_Phi;
+        TH1D* c_taps_g_Theta;
+        TH1D* c_taps_g_E;
+        TH1D* c_taps_p_Theta;
 
         ChannelHists_t(const HistogramFactory& histFac, const std::string& name);
     };

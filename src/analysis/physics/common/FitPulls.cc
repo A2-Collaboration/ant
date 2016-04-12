@@ -1,5 +1,6 @@
 #include "FitPulls.h"
 #include "base/std_ext/vector.h"
+#include "base/std_ext/math.h"
 #include "TH1D.h"
 
 #include "utils/particle_tools.h"
@@ -8,6 +9,7 @@
 using namespace ant;
 using namespace ant::analysis;
 using namespace ant::analysis::physics;
+using namespace ant::std_ext;
 using namespace std;
 
 const vector<ParticleTypeTreeDatabase::Channel> FitPulls::channels = {
@@ -44,11 +46,18 @@ FitPulls::FitPulls(const string& name, OptionsPtr opts) :
     hstacks.emplace_back(make_hstack("p_cb_g_Theta"));
     hstacks.emplace_back(make_hstack("p_cb_p_Theta"));
     hstacks.emplace_back(make_hstack("p_cb_p_Phi"));
+    hstacks.emplace_back(make_hstack("c_cb_g_Theta"));
+    hstacks.emplace_back(make_hstack("c_cb_g_E"));
+    hstacks.emplace_back(make_hstack("c_cb_p_Theta"));
     hstacks.emplace_back(make_hstack("p_taps_g_E"));
     hstacks.emplace_back(make_hstack("p_taps_g_Theta"));
     hstacks.emplace_back(make_hstack("p_taps_g_Phi"));
     hstacks.emplace_back(make_hstack("p_taps_p_Theta"));
     hstacks.emplace_back(make_hstack("p_taps_p_Phi"));
+    hstacks.emplace_back(make_hstack("c_taps_g_Theta"));
+    hstacks.emplace_back(make_hstack("c_taps_g_E"));
+    hstacks.emplace_back(make_hstack("c_taps_p_Theta"));
+
 
 
     // create fitter for each channel
@@ -64,11 +73,17 @@ FitPulls::FitPulls(const string& name, OptionsPtr opts) :
                     hists.p_cb_g_Phi,
                     hists.p_cb_p_Theta,
                     hists.p_cb_p_Phi,
+                    hists.c_cb_g_E,
+                    hists.c_cb_g_Theta,
+                    hists.c_cb_p_Theta,
                     hists.p_taps_g_E,
                     hists.p_taps_g_Theta,
                     hists.p_taps_g_Phi,
                     hists.p_taps_p_Theta,
-                    hists.p_taps_p_Phi
+                    hists.p_taps_p_Phi,
+                    hists.c_taps_g_E,
+                    hists.c_taps_g_Theta,
+                    hists.c_taps_p_Theta
         };
 
         for(unsigned i=0;i<histptrs.size();i++) {
@@ -211,6 +226,22 @@ void FitPulls::ProcessEvent(const TEvent& event, manager_t& manager)
 
             h.h_probability->Fill(max_prob, promptrandom.FillWeight());
 
+            for(const auto& photon : photons) {
+                if(photon->Candidate->Detector & Detector_t::Type_t::CB) {
+                    h.c_cb_g_E->Fill(photon->Ek());
+                    h.c_cb_g_Theta->Fill(photon->Theta());
+                } else if(photon->Candidate->Detector & Detector_t::Type_t::TAPS) {
+                    h.c_taps_g_E->Fill(photon->Ek());
+                    h.c_taps_g_Theta->Fill(photon->Theta());
+                }
+            }
+
+            if(proton->Candidate->Detector & Detector_t::Type_t::CB) {
+                h.c_cb_p_Theta->Fill(radian_to_degree(proton->Theta()));
+            } else if(proton->Candidate->Detector & Detector_t::Type_t::TAPS) {
+                h.c_taps_p_Theta->Fill(radian_to_degree(proton->Theta()));
+            }
+
             for(const auto& fitparticle : fitparticles) {
                 const auto& p = fitparticle.Particle;
                 // select the right set of histograms
@@ -251,19 +282,31 @@ FitPulls::ChannelHists_t::ChannelHists_t(const HistogramFactory& h, const string
 
     h_probability = histFac.makeTH1D("Probability","p","",BinSettings(100,0,1),"h_probability");
 
-    BinSettings bins_pulls(30,-3,3);
-    p_cb_g_E     = histFac.makeTH1D("p_cb_g_E",    "","",bins_pulls,"p_cb_g_E");
-    p_cb_g_Theta = histFac.makeTH1D("p_cb_g_Theta","","",bins_pulls,"p_cb_g_Theta");
-    p_cb_g_Phi   = histFac.makeTH1D("p_cb_g_Phi",  "","",bins_pulls,"p_cb_g_Phi");
+    const BinSettings bins_pulls     (30, -3,  3);
+    const BinSettings bins_theta_cb  (90,  0, 180);
+    const BinSettings bins_E         (100, 0,1000);
+    const BinSettings bins_theta_taps(12,  0,  24);
+
+    p_cb_g_E     = histFac.makeTH1D("p_cb_g_E",     "","",bins_pulls,"p_cb_g_E");
+    p_cb_g_Theta = histFac.makeTH1D("p_cb_g_Theta", "","",bins_pulls,"p_cb_g_Theta");
+    p_cb_g_Phi   = histFac.makeTH1D("p_cb_g_Phi",   "","",bins_pulls,"p_cb_g_Phi");
+
+    c_cb_g_Theta = histFac.makeTH1D("c_cb_g_Thtea", "#theta [#circ]", "", bins_theta_cb, "c_cb_g_Theta");
+    c_cb_g_E     = histFac.makeTH1D("c_cb_g_E",     "E [MeV]",        "", bins_E,        "c_cb_g_E");
+    c_cb_p_Theta = histFac.makeTH1D("c_cb_p_Theta", "#theta [#circ]", "", bins_theta_cb, "c_cb_p_Theta");
 
     p_cb_p_Theta = histFac.makeTH1D("p_cb_p_Theta","","",bins_pulls,"p_cb_p_Theta");
     p_cb_p_Phi   = histFac.makeTH1D("p_cb_p_Phi",  "","",bins_pulls,"p_cb_p_Phi");
     p_taps_g_E     = histFac.makeTH1D("p_taps_g_E",    "","",bins_pulls,"p_taps_g_E");
     p_taps_g_Theta = histFac.makeTH1D("p_taps_g_Theta","","",bins_pulls,"p_taps_g_Theta");
     p_taps_g_Phi   = histFac.makeTH1D("p_taps_g_Phi",  "","",bins_pulls,"p_taps_g_Phi");
-
     p_taps_p_Theta = histFac.makeTH1D("p_taps_p_Theta","","",bins_pulls,"p_taps_p_Theta");
     p_taps_p_Phi   = histFac.makeTH1D("p_taps_p_Phi",  "","",bins_pulls,"p_taps_p_Phi");
+
+    c_taps_g_Theta = histFac.makeTH1D("c_taps_g_Thtea", "#theta [#circ]", "", bins_theta_taps, "c_taps_g_Theta");
+    c_cb_g_E       = histFac.makeTH1D("c_taps_g_E",     "E [MeV]",        "", bins_E,          "c_taps_g_E");
+    c_cb_p_Theta   = histFac.makeTH1D("c_taps_p_Theta", "#theta [#circ]", "", bins_theta_taps, "c_taps_p_Theta");
+
 }
 
 
