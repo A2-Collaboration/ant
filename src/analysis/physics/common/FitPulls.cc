@@ -179,7 +179,7 @@ bool FitPulls::findProtonVetos(const TCandidateList& cands, const TTaggerHit&, T
         }
     }
 
-    return true;
+    return proton != nullptr;
 
 }
 
