@@ -53,7 +53,11 @@ protected:
 
     std::map<unsigned, std::vector<ChannelItem_t>> treefitters;
 
-    void findProton(const TCandidateList& cands, const TTaggerHit& taggerhit,
+    bool findProton(const TCandidateList& cands, const TTaggerHit& taggerhit,
+                    TParticlePtr& proton, TParticleList& photons,
+                    LorentzVec& photon_sum);
+
+    bool findProtonVetos(const TCandidateList& cands, const TTaggerHit& taggerhit,
                     TParticlePtr& proton, TParticleList& photons,
                     LorentzVec& photon_sum);
 

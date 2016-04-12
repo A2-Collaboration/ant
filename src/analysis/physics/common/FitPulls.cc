@@ -124,7 +124,7 @@ FitPulls::ChannelItem_t::ChannelItem_t(const HistogramFactory& parent,
     Hists = std_ext::make_unique<ChannelHists_t>(parent, ptree_name);
 }
 
-void FitPulls::findProton(const TCandidateList& cands,
+bool FitPulls::findProton(const TCandidateList& cands,
                           const TTaggerHit& taggerhit,
                           TParticlePtr& proton,
                           TParticleList& photons,
@@ -156,6 +156,31 @@ void FitPulls::findProton(const TCandidateList& cands,
             continue;
         photons.emplace_back(make_shared<TParticle>(ParticleTypeDatabase::Photon, cand_ptr));
     }
+
+    return true;
+}
+
+bool FitPulls::findProtonVetos(const TCandidateList& cands, const TTaggerHit&, TParticlePtr& proton, TParticleList& photons, LorentzVec& photon_sum)
+{
+    photons.clear();
+    proton = nullptr;
+    photon_sum = LorentzVec();
+
+    for(auto p: cands.get_iter()) {
+        if(p->VetoEnergy < .25) {
+            photons.emplace_back(make_shared<TParticle>(ParticleTypeDatabase::Photon, p));
+            photon_sum += *photons.back();
+        } else {
+
+            if(proton != nullptr)
+                return false; // more than one charged
+
+            proton= make_shared<TParticle>(ParticleTypeDatabase::Proton, p);
+        }
+    }
+
+    return true;
+
 }
 
 void FitPulls::ProcessEvent(const TEvent& event, manager_t& manager)
@@ -194,7 +219,8 @@ void FitPulls::ProcessEvent(const TEvent& event, manager_t& manager)
         TParticlePtr  proton;
         TParticleList photons;
         LorentzVec photon_sum;
-        findProton(cands, taggerhit, proton, photons, photon_sum);
+        if( !findProtonVetos(cands, taggerhit, proton, photons, photon_sum) )
+            continue;
 
         // check coplanarity
         const double d_phi = std_ext::radian_to_degree(vec2::Phi_mpi_pi(proton->Phi()-photon_sum.Phi() - M_PI ));
