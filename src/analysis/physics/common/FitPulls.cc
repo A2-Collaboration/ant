@@ -42,13 +42,11 @@ FitPulls::FitPulls(const string& name, OptionsPtr opts) :
     hstacks.emplace_back(make_hstack("p_cb_g_E"));
     hstacks.emplace_back(make_hstack("p_cb_g_Phi"));
     hstacks.emplace_back(make_hstack("p_cb_g_Theta"));
-    hstacks.emplace_back(make_hstack("p_cb_p_E"));
     hstacks.emplace_back(make_hstack("p_cb_p_Theta"));
     hstacks.emplace_back(make_hstack("p_cb_p_Phi"));
     hstacks.emplace_back(make_hstack("p_taps_g_E"));
     hstacks.emplace_back(make_hstack("p_taps_g_Theta"));
     hstacks.emplace_back(make_hstack("p_taps_g_Phi"));
-    hstacks.emplace_back(make_hstack("p_taps_p_E"));
     hstacks.emplace_back(make_hstack("p_taps_p_Theta"));
     hstacks.emplace_back(make_hstack("p_taps_p_Phi"));
 
@@ -64,13 +62,11 @@ FitPulls::FitPulls(const string& name, OptionsPtr opts) :
                     hists.p_cb_g_E,
                     hists.p_cb_g_Theta,
                     hists.p_cb_g_Phi,
-                    hists.p_cb_p_E,
                     hists.p_cb_p_Theta,
                     hists.p_cb_p_Phi,
                     hists.p_taps_g_E,
                     hists.p_taps_g_Theta,
                     hists.p_taps_g_Phi,
-                    hists.p_taps_p_E,
                     hists.p_taps_p_Theta,
                     hists.p_taps_p_Phi
         };
@@ -218,11 +214,11 @@ void FitPulls::ProcessEvent(const TEvent& event, manager_t& manager)
             for(const auto& fitparticle : fitparticles) {
                 const auto& p = fitparticle.Particle;
                 // select the right set of histograms
-                auto& h_E = p->Type() == ParticleTypeDatabase::Photon ?
-                                (p->Candidate->Detector & Detector_t::Type_t::CB ? h.p_cb_g_E : h.p_taps_g_E)
-                              :
-                                (p->Candidate->Detector & Detector_t::Type_t::CB ? h.p_cb_p_E : h.p_taps_p_E);
-                h_E->Fill(fitparticle.Ek.Pull, promptrandom.FillWeight());
+
+                if(p->Type() == ParticleTypeDatabase::Photon) {
+                    auto& h_E =  (p->Candidate->Detector & Detector_t::Type_t::CB ? h.p_cb_g_E : h.p_taps_g_E);
+                    h_E->Fill(fitparticle.Ek.Pull, promptrandom.FillWeight());
+                }
 
                 auto& h_Theta = p->Type() == ParticleTypeDatabase::Photon ?
                                     (p->Candidate->Detector & Detector_t::Type_t::CB ? h.p_cb_g_Theta : h.p_taps_g_Theta)
@@ -259,13 +255,13 @@ FitPulls::ChannelHists_t::ChannelHists_t(const HistogramFactory& h, const string
     p_cb_g_E     = histFac.makeTH1D("p_cb_g_E",    "","",bins_pulls,"p_cb_g_E");
     p_cb_g_Theta = histFac.makeTH1D("p_cb_g_Theta","","",bins_pulls,"p_cb_g_Theta");
     p_cb_g_Phi   = histFac.makeTH1D("p_cb_g_Phi",  "","",bins_pulls,"p_cb_g_Phi");
-    p_cb_p_E     = histFac.makeTH1D("p_cb_p_E",    "","",bins_pulls,"p_cb_p_E");
+
     p_cb_p_Theta = histFac.makeTH1D("p_cb_p_Theta","","",bins_pulls,"p_cb_p_Theta");
     p_cb_p_Phi   = histFac.makeTH1D("p_cb_p_Phi",  "","",bins_pulls,"p_cb_p_Phi");
     p_taps_g_E     = histFac.makeTH1D("p_taps_g_E",    "","",bins_pulls,"p_taps_g_E");
     p_taps_g_Theta = histFac.makeTH1D("p_taps_g_Theta","","",bins_pulls,"p_taps_g_Theta");
     p_taps_g_Phi   = histFac.makeTH1D("p_taps_g_Phi",  "","",bins_pulls,"p_taps_g_Phi");
-    p_taps_p_E     = histFac.makeTH1D("p_taps_p_E",    "","",bins_pulls,"p_taps_p_E");
+
     p_taps_p_Theta = histFac.makeTH1D("p_taps_p_Theta","","",bins_pulls,"p_taps_p_Theta");
     p_taps_p_Phi   = histFac.makeTH1D("p_taps_p_Phi",  "","",bins_pulls,"p_taps_p_Phi");
 }
