@@ -476,12 +476,14 @@ struct Optimized : Fitter::UncertaintyModel {
 
     double cb_photon_E_rel = 0.0;
     double cb_photon_E_exp = 0.0;
+    double cb_photon_E_lin = 0.0;
 
     Fitter::Uncertainties_t cb_proton = {};
 
 
     double taps_photon_E_rel = 0.0;
     double taps_photon_E_exp = 0.0;
+    double taps_photon_E_lin = 0.0;
     double taps_photon_theta = 0.0;
     double taps_photon_phi   = 0.0;
 
@@ -496,7 +498,7 @@ struct Optimized : Fitter::UncertaintyModel {
     virtual ~Optimized();
 
     Fitter::Uncertainties_t GetSigmas(const TParticle& particle) const;
-    static double dThetaSin(const double theta, const double offset, const double thetapart);
+    static double dThetaSin(const double theta, const double offset, const double thetapart) noexcept;
 
     std::string to_string_simple() const;
 

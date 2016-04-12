@@ -804,7 +804,7 @@ Fitter::Uncertainties_t UncertaintyModels::Optimized::GetSigmas(const TParticle&
 
         if(particle.Type() == ParticleTypeDatabase::Photon) {
 
-            s.sigmaE     = cb_photon_E_rel * E * pow( E/1000.0, cb_photon_E_exp);
+            s.sigmaE     = dE(E, cb_photon_E_rel, cb_photon_E_exp, cb_photon_E_lin);
             s.sigmaTheta = dThetaSin(theta, cb_photon_theta_const, cb_photon_theta_Sin);
             s.sigmaPhi   = cb_photon_phi / sin(theta);
 
@@ -820,7 +820,7 @@ Fitter::Uncertainties_t UncertaintyModels::Optimized::GetSigmas(const TParticle&
 
         if(particle.Type() == ParticleTypeDatabase::Photon) {
 
-            s.sigmaE     = taps_photon_E_rel * E * pow( E/1000.0, taps_photon_E_exp);
+            s.sigmaE     = dE(E, taps_photon_E_rel, taps_photon_E_exp, taps_photon_E_lin);
             s.sigmaTheta = taps_photon_theta;
             s.sigmaPhi   = taps_photon_phi;
 
@@ -841,6 +841,11 @@ Fitter::Uncertainties_t UncertaintyModels::Optimized::GetSigmas(const TParticle&
 double UncertaintyModels::Optimized::dThetaSin(const double theta, const double offset, const double thetapart)
 {
     return offset + thetapart * sin(theta);
+}
+
+double UncertaintyModels::Optimized::dE(const double E, const double rel, const double exp, const double reloffset) noexcept
+{
+    return rel * E * pow( E/1000.0, exp) + reloffset * E;
 }
 
 string angleoutput(const double x) {
@@ -868,12 +873,14 @@ string UncertaintyModels::Optimized::to_string_simple() const
             << "cgp=" << angleoutput(cb_photon_phi)          << sepatator
             << "cgEr="<< numberoutput(cb_photon_E_rel)       << sepatator
             << "cgEe="<< numberoutput(cb_photon_E_exp)       << sepatator
+            << "cgEl="<< numberoutput(cb_photon_E_lin)       << sepatator
             << "cpt=" << angleoutput(cb_proton.sigmaTheta)   << sepatator
             << "cpp=" << angleoutput(cb_proton.sigmaPhi)     << sepatator
             << "tgt=" << angleoutput(taps_photon_theta)      << sepatator
             << "tgp=" << angleoutput(taps_photon_phi)        << sepatator
             << "tgEr="<< numberoutput(taps_photon_E_rel)     << sepatator
             << "tgEe="<< numberoutput(taps_photon_E_exp)     << sepatator
+            << "tgEl="<< numberoutput(taps_photon_E_lin)     << sepatator
             << "tpt=" << angleoutput(taps_proton.sigmaTheta) << sepatator
             << "tpp=" << angleoutput(taps_proton.sigmaPhi);
 }
@@ -890,12 +897,14 @@ string UncertaintyModels::Optimized::to_string() const
       const auto cb_photon_phi_d         = angleoutput(cb_photon_phi);
       const auto cb_photon_E_rel_d       = numberoutput(cb_photon_E_rel);
       const auto cb_photon_E_exp_d       = numberoutput(cb_photon_E_exp);
+      const auto cb_photon_E_lin_d       = numberoutput(cb_photon_E_lin);
       const auto cb_proton_theta_d       = angleoutput(cb_proton.sigmaTheta);
       const auto cb_proton_phi_d         = angleoutput(cb_proton.sigmaPhi);
       const auto taps_photon_theta_d     = angleoutput(taps_photon_theta);
       const auto taps_photon_phi_d       = angleoutput(taps_photon_phi);
       const auto taps_photon_E_rel_d     = numberoutput(taps_photon_E_rel);
       const auto taps_photon_E_exp_d     = numberoutput(taps_photon_E_exp);
+      const auto taps_photon_E_lin_d     = numberoutput(taps_photon_E_lin);
       const auto taps_proton_theta_d     = angleoutput(taps_proton.sigmaTheta);
       const auto taps_proton_phi_d       = angleoutput(taps_proton.sigmaPhi);
 
@@ -906,12 +915,14 @@ string UncertaintyModels::Optimized::to_string() const
                   cereal::make_nvp("cgp",  cb_photon_phi_d),
                   cereal::make_nvp("cgEr", cb_photon_E_rel_d),
                   cereal::make_nvp("cgEe", cb_photon_E_exp_d),
+                  cereal::make_nvp("cgEl", cb_photon_E_lin_d),
                   cereal::make_nvp("cpt",  cb_proton_theta_d),
                   cereal::make_nvp("cpp",  cb_proton_phi_d),
                   cereal::make_nvp("tgt",  taps_photon_theta_d),
                   cereal::make_nvp("tgp",  taps_photon_phi_d),
                   cereal::make_nvp("tgEr", taps_photon_E_rel_d),
                   cereal::make_nvp("tgEe", taps_photon_E_exp_d),
+                  cereal::make_nvp("tgEl", taps_photon_E_lin_d),
                   cereal::make_nvp("tpt",  taps_proton_theta_d),
                   cereal::make_nvp("tpp",  taps_proton_phi_d)
                   );
@@ -941,12 +952,14 @@ void UncertaintyModels::Optimized::load_from_string(const string& data)
     string cb_photon_phi_d;
     string cb_photon_E_rel_d;
     string cb_photon_E_exp_d;
+    string cb_photon_E_lin_d;
     string cb_proton_theta_d;
     string cb_proton_phi_d;
     string taps_photon_theta_d;
     string taps_photon_phi_d;
     string taps_photon_E_rel_d;
     string taps_photon_E_exp_d;
+    string taps_photon_E_lin_d;
     string taps_proton_theta_d;
     string taps_proton_phi_d;
 
@@ -956,12 +969,14 @@ void UncertaintyModels::Optimized::load_from_string(const string& data)
                 cereal::make_nvp("cgp",  cb_photon_phi_d),
                 cereal::make_nvp("cgEr", cb_photon_E_rel_d),
                 cereal::make_nvp("cgEe", cb_photon_E_exp_d),
+                cereal::make_nvp("cgEe", cb_photon_E_lin_d),
                 cereal::make_nvp("cpt",  cb_proton_theta_d),
                 cereal::make_nvp("cpp",  cb_proton_phi_d),
                 cereal::make_nvp("tgt",  taps_photon_theta_d),
                 cereal::make_nvp("tgp",  taps_photon_phi_d),
                 cereal::make_nvp("tgEr", taps_photon_E_rel_d),
                 cereal::make_nvp("tgEe", taps_photon_E_exp_d),
+                cereal::make_nvp("tgEl", taps_photon_E_lin_d),
                 cereal::make_nvp("tpt",  taps_proton_theta_d),
                 cereal::make_nvp("tpp",  taps_proton_phi_d)
                 );
@@ -971,6 +986,7 @@ void UncertaintyModels::Optimized::load_from_string(const string& data)
     cb_photon_phi          = angleinput(cb_photon_phi_d);
     cb_photon_E_rel        = numberinput(cb_photon_E_rel_d);
     cb_photon_E_exp        = numberinput(cb_photon_E_exp_d);
+    cb_photon_E_lin        = numberinput(cb_photon_E_lin_d);
     cb_proton.sigmaE       = 0.0;
     cb_proton.sigmaTheta   = angleinput(cb_proton_theta_d);
     cb_proton.sigmaPhi     = angleinput(cb_proton_phi_d);
@@ -978,6 +994,7 @@ void UncertaintyModels::Optimized::load_from_string(const string& data)
     taps_photon_phi        = angleinput(taps_photon_phi_d);
     taps_photon_E_rel      = numberinput(taps_photon_E_rel_d);
     taps_photon_E_exp      = numberinput(taps_photon_E_exp_d);
+    taps_photon_E_lin      = numberinput(taps_photon_E_lin_d);
     taps_proton.sigmaE     = 0.0;
     taps_proton.sigmaTheta = angleinput(taps_proton_theta_d);
     taps_proton.sigmaPhi   = angleinput(taps_proton_phi_d);
@@ -1002,9 +1019,11 @@ bool UncertaintyModels::Optimized::operator==(const UncertaintyModels::Optimized
             && cb_photon_phi         == other.cb_photon_phi
             && cb_photon_E_rel       == other.cb_photon_E_rel
             && cb_photon_E_exp       == other.cb_photon_E_exp
+            && cb_photon_E_lin       == other.cb_photon_E_lin
             && cb_proton             == other.cb_proton
             && taps_photon_E_rel     == other.taps_photon_E_rel
             && taps_photon_E_exp     == other.taps_photon_E_exp
+            && taps_photon_E_lin     == other.taps_photon_E_lin
             && taps_photon_theta     == other.taps_photon_theta
             && taps_photon_phi       == other.taps_photon_phi
             && taps_proton           == other.taps_proton;
@@ -1033,6 +1052,8 @@ void UncertaintyModels::Optimized::ReadToken(const string& token)
         cb_photon_phi = angleinput(value);
     } else if(name=="cgEr") {
         cb_photon_E_rel = numberinput(value);
+    } else if(name=="cgEl") {
+        cb_photon_E_lin = numberinput(value);
     } else if(name=="cgEe") {
         cb_photon_E_exp = numberinput(value);
     } else if(name=="cpt") {
@@ -1047,6 +1068,8 @@ void UncertaintyModels::Optimized::ReadToken(const string& token)
         taps_photon_E_rel = numberinput(value);
     } else if(name=="tgEe") {
         taps_photon_E_exp = numberinput(value);
+    } else if(name=="tgEl") {
+        taps_photon_E_lin = numberinput(value);
     } else if(name=="tpt") {
         taps_proton.sigmaTheta = angleinput(value);
     } else if(name=="tpp") {
