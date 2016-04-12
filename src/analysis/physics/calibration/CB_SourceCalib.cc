@@ -46,32 +46,34 @@ void CB_SourceCalib::ProcessEvent(const TEvent& event, manager_t&)
 
     auto& readhits = event.Reconstructed().DetectorReadHits;
 
-    //auto cb_element = cb_detector->GetClusterElement(20);
+    auto cb_element = cb_detector->GetClusterElement(5);
     //cout << "Nachbarn von Cluster Element 20" << cb_element->Neighbours << endl;
-    for( int Channel=1;Channel<=50;++Channel )
-    {
-        auto cb_element = cb_detector->GetClusterElement(Channel);
 
-        for( int numberNeighbours=0; numberNeighbours<=11; ++numberNeighbours)
+    //auto cb_element = cb_detector->GetClusterElement();
+    for (const TDetectorReadHit& readhit : readhits)
         {
-            for (const TDetectorReadHit& readhit : readhits)
-            {
-                if(readhit.DetectorType != Detector_t::Type_t::CB && readhit.ChannelType == Channel_t::Type_t::Integral)
+        cout <<readhit.Channel<< endl;
 
-                    continue;
-                //cout <<"suche ich das?"<< readhit.Channel << endl;
-                if(readhit.Channel==cb_element->Neighbours[numberNeighbours])
+
+            for (int numberNeighbours=0; numberNeighbours <= cb_element->Neighbours.size(); ++numberNeighbours)
                 {
-                    cout << "Treffer" << "Channel" <<readhit.Channel << "Nachbar" <<cb_element->Neighbours[numberNeighbours] << endl;
-                }
-            }
 
-            //if(cb_element->Neighbours[numberNeighbours]==)
-           // cout << cb_element->Neighbours[numberNeighbours]<<endl;
-        }
+                    if (readhit.Channel==cb_element->Neighbours[numberNeighbours])
+                    {
+                        cout << "getroffener Kanal:   " << readhit.Channel
+                             <<" Nachbar:  " << cb_element->Neighbours[numberNeighbours]<< endl;
+
+                    }
+
+                }
+    }
+
+
+
+
         //cout << cb_element->Neighbours << Channel << endl;
         //cout << readhits[1] << endl;
-    }
+
     for(const TDetectorReadHit& readhit : readhits) {
         // ignore readhits which are not from CB
         if(readhit.DetectorType != Detector_t::Type_t::CB)
