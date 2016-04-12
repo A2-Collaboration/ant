@@ -468,7 +468,8 @@ TreeFitter::tree_t TreeFitter::MakeTree(ParticleTypeTree ptree)
     auto t = ptree->DeepCopy<node_t>([] (const ParticleTypeTree& n) { return n; });
 
     if(t->Get().TypeTree->Get() == ParticleTypeDatabase::BeamTarget) {
-        for(const auto& daughter : t->Daughters()) {
+        // do not use constref'ed daughter here, see ant::Tree::Unlink
+        for(auto daughter : t->Daughters()) {
             if(daughter->Get().TypeTree->Get() == ParticleTypeDatabase::Nucleon) {
                 LOG(INFO) << "Removing nucleon from tree";
                 daughter->Unlink();

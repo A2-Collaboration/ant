@@ -79,6 +79,11 @@ public:
     node_t Self() const { return self.lock(); }
     const snodelist_t& Daughters() const { return daughters; }
 
+    /**
+     * @brief Unlink remove this node from parent
+     * @note ensure that the instance of the node is local, and NOT some
+     * referenced node in the original tree
+     */
     void Unlink() {
         if(auto p = GetParent()) {
             p->RemoveDaughter(this);
