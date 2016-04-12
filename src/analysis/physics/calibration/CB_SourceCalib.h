@@ -2,6 +2,8 @@
 #include "root-addons/cbtaps_display/TH2CB.h"
 
 #include "calibration/converters/GeSiCa_SADC.h"
+#include "calibration/converters/CATCH_TDC.h"
+#include "expconfig/detectors/CB.h"
 
 
 namespace ant {
@@ -16,6 +18,9 @@ protected:
     TH1* KristallHits = nullptr;
     TH2CB* h_cbdisplay = nullptr;
     calibration::converter::GeSiCa_SADC adc_converter;
+    calibration::converter::CATCH_TDC   tdc_converter;
+
+    std::shared_ptr<expconfig::detector::CB> cb_detector;
 
 public:
 
