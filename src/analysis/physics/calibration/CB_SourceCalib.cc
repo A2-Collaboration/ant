@@ -23,6 +23,10 @@ CB_SourceCalib::CB_SourceCalib(const string & name, OptionsPtr opts) :
                             ADCBins, cb_channels, "HitsADC");
     h_cbdisplay = HistFac.make<TH2CB>("h_cbdisplay","Number of entries");
     KristallHits= HistFac.makeTH1D("Hits in one Crystall", "ADC-Channel", "Hits", ADCBins, "KristallHits");
+    TimeHits=HistFac.makeTH2D("Time Hits for ADC-Channel", "ADC-Channel", "#", 500, cb_channels, "Time in ns");
+    HitsADC_Cluster = HistFac.makeTH2D("Detector Hits for ADC-Channel", "ADC-Channel", "#",
+                            ADCBins, cb_channels, "HitsADC_Cluster");
+    VerworfeneHits = HistFac.makeTH2D(" Verworfene Einträge", "ADC-Channel", "#", ADCBins, cb_channels, "VerworfeneHits");
 
 }
 void CB_SourceCalib::ProcessEvent(const TEvent& event, manager_t&)
@@ -45,34 +49,35 @@ void CB_SourceCalib::ProcessEvent(const TEvent& event, manager_t&)
 //    }
 
     auto& readhits = event.Reconstructed().DetectorReadHits;
+    auto& clusters = event.Reconstructed().Clusters;
+    // auto cb_element = cb_detector->GetClusterElement(5);
+    // cout << "Nachbarn von Cluster Element 5" << cb_element->Neighbours << endl;
+    for (const TCluster& cluster : clusters)
+    {
+        if(cluster.DetectorType != Detector_t::Type_t::CB )
+            continue;
 
-    auto cb_element = cb_detector->GetClusterElement(5);
-    //cout << "Nachbarn von Cluster Element 20" << cb_element->Neighbours << endl;
-
-    //auto cb_element = cb_detector->GetClusterElement();
-    for (const TDetectorReadHit& readhit : readhits)
+        //cout << cluster.Time << endl;
+        //cout << cluster.CentralElement <<endl;
+        for(const TClusterHit& hit : cluster.Hits)
         {
-        cout <<readhit.Channel<< endl;
+            HitsADC_Cluster->Fill(hit.Energy,hit.Channel);
 
+        }
+        //cout << cluster.Hits << "ClusterHits" << endl;
+        TimeHits->Fill(cluster.Time, cluster.CentralElement);
 
-            for (int numberNeighbours=0; numberNeighbours <= cb_element->Neighbours.size(); ++numberNeighbours)
-                {
-
-                    if (readhit.Channel==cb_element->Neighbours[numberNeighbours])
-                    {
-                        cout << "getroffener Kanal:   " << readhit.Channel
-                             <<" Nachbar:  " << cb_element->Neighbours[numberNeighbours]<< endl;
-
-                    }
-
-                }
+//        if (cluster.Hits.size()==1)
+//        {
+//            //cout << cluster.Hits.size() << "  CLusterHits" << endl;
+//            HitsADC_Cluster->Fill(cluster.Energy,cluster.CentralElement);
+//        }
+//        else
+//        {
+//           VerworfeneHits->Fill(cluster.Energy, cluster.CentralElement);
+//        }
     }
 
-
-
-
-        //cout << cb_element->Neighbours << Channel << endl;
-        //cout << readhits[1] << endl;
 
     for(const TDetectorReadHit& readhit : readhits) {
         // ignore readhits which are not from CB
@@ -84,13 +89,8 @@ void CB_SourceCalib::ProcessEvent(const TEvent& event, manager_t&)
 //            const auto& timings = tdc_converter.Convert(readhit.RawData);
 //            cout << timings << endl;
 //        }
-
-
-        //cout << readhit << endl;
-
-        // plot the sum of all hits of the cb aginst the ADC-channel
-
-           if (readhit.ChannelType == Channel_t::Type_t::Integral)
+            // plot the sum of all hits of the cb aginst the ADC-channel
+          if (readhit.ChannelType == Channel_t::Type_t::Integral)
             {
 
                 const auto& values = adc_converter.Convert(readhit.RawData);
@@ -124,7 +124,9 @@ void CB_SourceCalib::ShowResult()
    h_cbdisplay->SetElements(*HitsADC->ProjectionY());
    canvas(GetName()) << drawoption("colz") << HitsADC
                       << KristallHits
-                      << h_cbdisplay
+                      << VerworfeneHits
+                      << TimeHits
+                      << HitsADC_Cluster
                       << endc;
 }
 
