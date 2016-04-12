@@ -42,8 +42,8 @@ FitPulls::FitPulls(const string& name, OptionsPtr opts) :
 
     hstacks.emplace_back(make_hstack("h_probability"));
     hstacks.emplace_back(make_hstack("p_cb_g_E"));
-    hstacks.emplace_back(make_hstack("p_cb_g_Phi"));
     hstacks.emplace_back(make_hstack("p_cb_g_Theta"));
+    hstacks.emplace_back(make_hstack("p_cb_g_Phi"));
     hstacks.emplace_back(make_hstack("p_cb_p_Theta"));
     hstacks.emplace_back(make_hstack("p_cb_p_Phi"));
     hstacks.emplace_back(make_hstack("c_cb_g_E"));
