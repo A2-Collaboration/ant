@@ -254,18 +254,18 @@ void FitPulls::ProcessEvent(const TEvent& event, manager_t& manager)
 
             for(const auto& photon : photons) {
                 if(photon->Candidate->Detector & Detector_t::Type_t::CB) {
-                    h.c_cb_g_E->Fill(photon->Ek());
-                    h.c_cb_g_Theta->Fill(radian_to_degree(photon->Theta()));
+                    h.c_cb_g_E->Fill(photon->Ek(), promptrandom.FillWeight());
+                    h.c_cb_g_Theta->Fill(radian_to_degree(photon->Theta()), promptrandom.FillWeight());
                 } else if(photon->Candidate->Detector & Detector_t::Type_t::TAPS) {
-                    h.c_taps_g_E->Fill(photon->Ek());
-                    h.c_taps_g_Theta->Fill(radian_to_degree(photon->Theta()));
+                    h.c_taps_g_E->Fill(photon->Ek(), promptrandom.FillWeight());
+                    h.c_taps_g_Theta->Fill(radian_to_degree(photon->Theta()), promptrandom.FillWeight());
                 }
             }
 
             if(proton->Candidate->Detector & Detector_t::Type_t::CB) {
-                h.c_cb_p_Theta->Fill(radian_to_degree(proton->Theta()));
+                h.c_cb_p_Theta->Fill(radian_to_degree(proton->Theta()), promptrandom.FillWeight());
             } else if(proton->Candidate->Detector & Detector_t::Type_t::TAPS) {
-                h.c_taps_p_Theta->Fill(radian_to_degree(proton->Theta()));
+                h.c_taps_p_Theta->Fill(radian_to_degree(proton->Theta()), promptrandom.FillWeight());
             }
 
             for(const auto& fitparticle : fitparticles) {
