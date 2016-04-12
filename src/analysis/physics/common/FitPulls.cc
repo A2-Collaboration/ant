@@ -229,10 +229,10 @@ void FitPulls::ProcessEvent(const TEvent& event, manager_t& manager)
             for(const auto& photon : photons) {
                 if(photon->Candidate->Detector & Detector_t::Type_t::CB) {
                     h.c_cb_g_E->Fill(photon->Ek());
-                    h.c_cb_g_Theta->Fill(photon->Theta());
+                    h.c_cb_g_Theta->Fill(radian_to_degree(photon->Theta()));
                 } else if(photon->Candidate->Detector & Detector_t::Type_t::TAPS) {
                     h.c_taps_g_E->Fill(photon->Ek());
-                    h.c_taps_g_Theta->Fill(photon->Theta());
+                    h.c_taps_g_Theta->Fill(radian_to_degree(photon->Theta()));
                 }
             }
 
@@ -285,7 +285,7 @@ FitPulls::ChannelHists_t::ChannelHists_t(const HistogramFactory& h, const string
     const BinSettings bins_pulls     (30, -3,  3);
     const BinSettings bins_theta_cb  (90,  0, 180);
     const BinSettings bins_E         (100, 0,1000);
-    const BinSettings bins_theta_taps(12,  0,  24);
+    const BinSettings bins_theta_taps(24,  0,  24);
 
     p_cb_g_E     = histFac.makeTH1D("p_cb_g_E",     "","",bins_pulls,"p_cb_g_E");
     p_cb_g_Theta = histFac.makeTH1D("p_cb_g_Theta", "","",bins_pulls,"p_cb_g_Theta");
@@ -303,7 +303,7 @@ FitPulls::ChannelHists_t::ChannelHists_t(const HistogramFactory& h, const string
     p_taps_p_Theta = histFac.makeTH1D("p_taps_p_Theta","","",bins_pulls,"p_taps_p_Theta");
     p_taps_p_Phi   = histFac.makeTH1D("p_taps_p_Phi",  "","",bins_pulls,"p_taps_p_Phi");
 
-    c_taps_g_Theta = histFac.makeTH1D("c_taps_g_Thtea", "#theta [#circ]", "", bins_theta_taps, "c_taps_g_Theta");
+    c_taps_g_Theta = histFac.makeTH1D("c_taps_g_Thtea",   "#theta [#circ]", "", bins_theta_taps, "c_taps_g_Theta");
     c_taps_g_E       = histFac.makeTH1D("c_taps_g_E",     "E [MeV]",        "", bins_E,          "c_taps_g_E");
     c_taps_p_Theta   = histFac.makeTH1D("c_taps_p_Theta", "#theta [#circ]", "", bins_theta_taps, "c_taps_p_Theta");
 
