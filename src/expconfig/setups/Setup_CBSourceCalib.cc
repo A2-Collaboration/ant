@@ -1,6 +1,7 @@
 #include "Setup.h"
 
 #include "detectors/CB.h"
+#include "detectors/Trigger.h"
 
 
 using namespace std;
@@ -21,6 +22,15 @@ public:
     }
     bool Matches(const TID&) const override {
         return false;
+    }
+    void BuildMappings(std::vector<hit_mapping_t>& hit_mappings,
+                       std::vector<scaler_mapping_t>& scaler_mappings) const override {
+        Setup::BuildMappings(hit_mappings, scaler_mappings);
+        auto& cb_reftiming = detector::Trigger::Reference_CATCH_CBCrate;
+        hit_mappings.emplace_back(
+                    cb_reftiming.LogicalChannel,
+                    cb_reftiming.AcquRawChannel
+                    );
     }
 };
 
