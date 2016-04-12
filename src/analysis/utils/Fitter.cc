@@ -838,7 +838,7 @@ Fitter::Uncertainties_t UncertaintyModels::Optimized::GetSigmas(const TParticle&
     return s;
 }
 
-double UncertaintyModels::Optimized::dThetaSin(const double theta, const double offset, const double thetapart)
+double UncertaintyModels::Optimized::dThetaSin(const double theta, const double offset, const double thetapart) noexcept
 {
     return offset + thetapart * sin(theta);
 }

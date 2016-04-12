@@ -500,6 +500,8 @@ struct Optimized : Fitter::UncertaintyModel {
     Fitter::Uncertainties_t GetSigmas(const TParticle& particle) const;
     static double dThetaSin(const double theta, const double offset, const double thetapart) noexcept;
 
+    static double dE(const double E, const double rel, const double exp, const double reloffset) noexcept;
+
     std::string to_string_simple() const;
 
     /**
