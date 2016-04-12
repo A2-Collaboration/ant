@@ -304,8 +304,8 @@ FitPulls::ChannelHists_t::ChannelHists_t(const HistogramFactory& h, const string
     p_taps_p_Phi   = histFac.makeTH1D("p_taps_p_Phi",  "","",bins_pulls,"p_taps_p_Phi");
 
     c_taps_g_Theta = histFac.makeTH1D("c_taps_g_Thtea", "#theta [#circ]", "", bins_theta_taps, "c_taps_g_Theta");
-    c_cb_g_E       = histFac.makeTH1D("c_taps_g_E",     "E [MeV]",        "", bins_E,          "c_taps_g_E");
-    c_cb_p_Theta   = histFac.makeTH1D("c_taps_p_Theta", "#theta [#circ]", "", bins_theta_taps, "c_taps_p_Theta");
+    c_taps_g_E       = histFac.makeTH1D("c_taps_g_E",     "E [MeV]",        "", bins_E,          "c_taps_g_E");
+    c_taps_p_Theta   = histFac.makeTH1D("c_taps_p_Theta", "#theta [#circ]", "", bins_theta_taps, "c_taps_p_Theta");
 
 }
 
