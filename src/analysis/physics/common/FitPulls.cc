@@ -115,7 +115,7 @@ FitPulls::ChannelItem_t::ChannelItem_t(const HistogramFactory& parent,
                                      utils::Fitter::UncertaintyModelPtr uncertainty_model
                                      )
 {
-    auto ptree = ParticleTypeTreeDatabase::Get(channel);
+    Tree = ParticleTypeTreeDatabase::Get(channel);
     auto count_leaves = [] (const ParticleTypeTree& tree) {
         unsigned leaves = 0;
         tree->Map_nodes(
@@ -123,12 +123,12 @@ FitPulls::ChannelItem_t::ChannelItem_t(const HistogramFactory& parent,
         );
         return leaves;
     };
-    Multiplicity = count_leaves(ptree);
+    Multiplicity = count_leaves(Tree);
 
-    const auto& ptree_name = utils::ParticleTools::GetDecayString(ptree);
+    const auto& ptree_name = utils::ParticleTools::GetDecayString(Tree);
 
     Fitter = std_ext::make_unique<utils::TreeFitter>("treefitter_" + ptree_name,
-                                                     ptree,
+                                                     Tree,
                                                      Multiplicity-1, // assume one particle to be proton
                                                      uncertainty_model);
 
@@ -308,6 +308,12 @@ void FitPulls::ProcessEvent(const TEvent& event, manager_t& manager)
 
             fill_hists(*item.Hists_All);
 
+            auto& ptree = event.MCTrue().ParticleTree;
+            if(ptree) {
+               if(ptree->IsEqual(item.Tree,
+                                 utils::ParticleTools::MatchByParticleName))
+                   fill_hists(*item.Hists_Sig);
+            }
 
         }
     }

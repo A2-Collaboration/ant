@@ -44,6 +44,7 @@ protected:
     struct ChannelItem_t {
         // use unique_ptr to make ctor easier...
         std::unique_ptr<utils::TreeFitter> Fitter;
+        ParticleTypeTree                   Tree;
         std::unique_ptr<ChannelHists_t>    Hists_All;
         std::unique_ptr<ChannelHists_t>    Hists_Sig;
         unsigned          Multiplicity;
