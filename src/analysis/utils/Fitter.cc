@@ -1093,8 +1093,8 @@ UncertaintyModels::Optimized_Oli1::Optimized_Oli1()
     taps_photon_E_exp = -0.5;     // dev by sqrt
     taps_photon_E_lin =  0.018;   // 1.8% of E as linear part
 
-    taps_photon_theta = degree_to_radian(2);
-    taps_photon_phi   = degree_to_radian(2);
+    taps_photon_theta = degree_to_radian(2.0);
+    taps_photon_phi   = degree_to_radian(2.0);
 
 
     taps_proton = { 0.0, degree_to_radian(2.8), degree_to_radian(4.45)};
