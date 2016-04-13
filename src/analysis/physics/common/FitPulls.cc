@@ -248,47 +248,53 @@ void FitPulls::ProcessEvent(const TEvent& event, manager_t& manager)
                 fitparticles = fitter.GetFitParticles();
             }
 
-            const ChannelHists_t& h = *item.Hists;
 
-            h.h_probability->Fill(max_prob, promptrandom.FillWeight());
+            auto fill_hists = [&] (const ChannelHists_t& h) {
 
-            for(const auto& photon : photons) {
-                if(photon->Candidate->Detector & Detector_t::Type_t::CB) {
-                    h.c_cb_g_E->Fill(photon->Ek(), promptrandom.FillWeight());
-                    h.c_cb_g_Theta->Fill(radian_to_degree(photon->Theta()), promptrandom.FillWeight());
-                } else if(photon->Candidate->Detector & Detector_t::Type_t::TAPS) {
-                    h.c_taps_g_E->Fill(photon->Ek(), promptrandom.FillWeight());
-                    h.c_taps_g_Theta->Fill(radian_to_degree(photon->Theta()), promptrandom.FillWeight());
-                }
-            }
+                h.h_probability->Fill(max_prob, promptrandom.FillWeight());
 
-            if(proton->Candidate->Detector & Detector_t::Type_t::CB) {
-                h.c_cb_p_Theta->Fill(radian_to_degree(proton->Theta()), promptrandom.FillWeight());
-            } else if(proton->Candidate->Detector & Detector_t::Type_t::TAPS) {
-                h.c_taps_p_Theta->Fill(radian_to_degree(proton->Theta()), promptrandom.FillWeight());
-            }
-
-            for(const auto& fitparticle : fitparticles) {
-                const auto& p = fitparticle.Particle;
-                // select the right set of histograms
-
-                if(p->Type() == ParticleTypeDatabase::Photon) {
-                    auto& h_E =  (p->Candidate->Detector & Detector_t::Type_t::CB ? h.p_cb_g_E : h.p_taps_g_E);
-                    h_E->Fill(fitparticle.Ek.Pull, promptrandom.FillWeight());
+                for(const auto& photon : photons) {
+                    if(photon->Candidate->Detector & Detector_t::Type_t::CB) {
+                        h.c_cb_g_E->Fill(photon->Ek(), promptrandom.FillWeight());
+                        h.c_cb_g_Theta->Fill(radian_to_degree(photon->Theta()), promptrandom.FillWeight());
+                    } else if(photon->Candidate->Detector & Detector_t::Type_t::TAPS) {
+                        h.c_taps_g_E->Fill(photon->Ek(), promptrandom.FillWeight());
+                        h.c_taps_g_Theta->Fill(radian_to_degree(photon->Theta()), promptrandom.FillWeight());
+                    }
                 }
 
-                auto& h_Theta = p->Type() == ParticleTypeDatabase::Photon ?
-                                    (p->Candidate->Detector & Detector_t::Type_t::CB ? h.p_cb_g_Theta : h.p_taps_g_Theta)
-                                  :
-                                    (p->Candidate->Detector & Detector_t::Type_t::CB ? h.p_cb_p_Theta : h.p_taps_p_Theta);
-                h_Theta->Fill(fitparticle.Theta.Pull, promptrandom.FillWeight());
+                if(proton->Candidate->Detector & Detector_t::Type_t::CB) {
+                    h.c_cb_p_Theta->Fill(radian_to_degree(proton->Theta()), promptrandom.FillWeight());
+                } else if(proton->Candidate->Detector & Detector_t::Type_t::TAPS) {
+                    h.c_taps_p_Theta->Fill(radian_to_degree(proton->Theta()), promptrandom.FillWeight());
+                }
 
-                auto& h_Phi = p->Type() == ParticleTypeDatabase::Photon ?
-                                  (p->Candidate->Detector & Detector_t::Type_t::CB ? h.p_cb_g_Phi : h.p_taps_g_Phi)
-                                :
-                                  (p->Candidate->Detector & Detector_t::Type_t::CB ? h.p_cb_p_Phi : h.p_taps_p_Phi);
-                h_Phi->Fill(fitparticle.Phi.Pull, promptrandom.FillWeight());
-            }
+                for(const auto& fitparticle : fitparticles) {
+                    const auto& p = fitparticle.Particle;
+                    // select the right set of histograms
+
+                    if(p->Type() == ParticleTypeDatabase::Photon) {
+                        auto& h_E =  (p->Candidate->Detector & Detector_t::Type_t::CB ? h.p_cb_g_E : h.p_taps_g_E);
+                        h_E->Fill(fitparticle.Ek.Pull, promptrandom.FillWeight());
+                    }
+
+                    auto& h_Theta = p->Type() == ParticleTypeDatabase::Photon ?
+                                        (p->Candidate->Detector & Detector_t::Type_t::CB ? h.p_cb_g_Theta : h.p_taps_g_Theta)
+                                      :
+                                        (p->Candidate->Detector & Detector_t::Type_t::CB ? h.p_cb_p_Theta : h.p_taps_p_Theta);
+                    h_Theta->Fill(fitparticle.Theta.Pull, promptrandom.FillWeight());
+
+                    auto& h_Phi = p->Type() == ParticleTypeDatabase::Photon ?
+                                      (p->Candidate->Detector & Detector_t::Type_t::CB ? h.p_cb_g_Phi : h.p_taps_g_Phi)
+                                    :
+                                      (p->Candidate->Detector & Detector_t::Type_t::CB ? h.p_cb_p_Phi : h.p_taps_p_Phi);
+                    h_Phi->Fill(fitparticle.Phi.Pull, promptrandom.FillWeight());
+                }
+
+            };
+
+            fill_hists(*item.Hists);
+
         }
     }
 }
