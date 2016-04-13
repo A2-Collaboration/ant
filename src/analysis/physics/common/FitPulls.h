@@ -38,13 +38,14 @@ protected:
         TH1D* c_taps_g_E = nullptr;
         TH1D* c_taps_p_Theta = nullptr;
 
-        ChannelHists_t(const HistogramFactory& histFac, const std::string& name);
+        ChannelHists_t(const HistogramFactory& histFac);
     };
 
     struct ChannelItem_t {
         // use unique_ptr to make ctor easier...
         std::unique_ptr<utils::TreeFitter> Fitter;
-        std::unique_ptr<ChannelHists_t>    Hists;
+        std::unique_ptr<ChannelHists_t>    Hists_All;
+        std::unique_ptr<ChannelHists_t>    Hists_Sig;
         unsigned          Multiplicity;
         ChannelItem_t(const HistogramFactory& parent,
                       ParticleTypeTreeDatabase::Channel channel,
@@ -66,7 +67,9 @@ protected:
     TH1D* h_protoncopl;
     TH1D* h_taggtime;
 
-    std::vector<ant::hstack*> hstacks;
+    std::vector<ant::hstack*> hstacks_all;
+    std::vector<ant::hstack*> hstacks_sig;
+
 
     const bool opt_save_after_cut;
     const bool opt_save_only;
