@@ -23,7 +23,7 @@ void HistogramFactory::goto_dir() const
         my_directory->cd();
 }
 
-string HistogramFactory::MakeTitle(const string& title)
+string HistogramFactory::MakeTitle(const string& title) const
 {
     if(title_prefix.empty())
         return title;
@@ -56,7 +56,7 @@ TDirectory *HistogramFactory::mkDirNumbered(const string &name, TDirectory *root
     return dir;
 }
 
-string HistogramFactory::GetNextHistName(const string &name)
+string HistogramFactory::GetNextHistName(const string &name) const
 {
     if(name.empty()) {
         return formatter() << "hist" << setfill('0') << setw(3) << n_unnamed++;
@@ -106,7 +106,7 @@ void HistogramFactory::SetDirDescription(const string &desc)
     my_directory->SetTitle(desc.c_str());
 }
 
-TH1D *HistogramFactory::makeTH1D(const string &title, const string &xlabel, const string &ylabel, const BinSettings &bins, const string &name)
+TH1D *HistogramFactory::makeTH1D(const string &title, const string &xlabel, const string &ylabel, const BinSettings &bins, const string &name) const
 {
     auto r = make<TH1D>(GetNextHistName(name).c_str(), MakeTitle(title).c_str(),
                         bins.Bins(), bins.Start(), bins.Stop());
@@ -118,7 +118,12 @@ TH1D *HistogramFactory::makeTH1D(const string &title, const string &xlabel, cons
 
 
 
-TH2D *HistogramFactory::makeTH2D(const string &title, const string &xlabel, const string &ylabel, const BinSettings &xbins, const BinSettings &ybins, const string &name)
+TH2D *HistogramFactory::makeTH2D(const string &title,
+                                 const string &xlabel,
+                                 const string &ylabel,
+                                 const BinSettings &xbins,
+                                 const BinSettings &ybins,
+                                 const string &name) const
 {
     auto h = make<TH2D>(GetNextHistName(name).c_str(), MakeTitle(title).c_str(),
                          xbins.Bins(), xbins.Start(), xbins.Stop(),
@@ -135,7 +140,7 @@ TH3D *HistogramFactory::makeTH3D(const string &title,
                                  const BinSettings &xbins,
                                  const BinSettings &ybins,
                                  const BinSettings &zbins,
-                                 const string &name)
+                                 const string &name) const
 {
     auto h = make<TH3D>(GetNextHistName(name).c_str(), MakeTitle(title).c_str(),
                        xbins.Bins(), xbins.Start(), xbins.Stop(),

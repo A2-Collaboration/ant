@@ -54,7 +54,7 @@ private:
 
     std::string title_prefix;
 
-    std::string MakeTitle(const std::string& title);
+    std::string MakeTitle(const std::string& title) const;
 
     /**
      * @brief create a new TDirectory. If a TDirectory already exists, append a number (1, 2, 3, ...) at the end
@@ -64,8 +64,8 @@ private:
      */
     static TDirectory* mkDirNumbered(const std::string& name, TDirectory* rootdir);
 
-    unsigned n_unnamed = 0;
-    std::string GetNextHistName(const std::string& name);
+    mutable unsigned n_unnamed = 0;
+    std::string GetNextHistName(const std::string& name) const;
 
 
 public:
@@ -82,7 +82,7 @@ public:
             const std::string& xlabel,
             const std::string& ylabel,
             const BinSettings& bins,
-            const std::string& name="");
+            const std::string& name="") const;
 
     TH2D* makeTH2D(
             const std::string& title,
@@ -90,7 +90,7 @@ public:
             const std::string& ylabel,
             const BinSettings& xbins,
             const BinSettings& ybins,
-            const std::string& name="");
+            const std::string& name="") const;
 
     TH3D* makeTH3D(const std::string& title,
             const std::string& xlabel,
@@ -99,7 +99,7 @@ public:
             const BinSettings& xbins,
             const BinSettings& ybins,
             const BinSettings& zbins,
-            const std::string& name="");
+            const std::string& name="") const;
 
     TTree* makeTTree(const std::string& name);
 
