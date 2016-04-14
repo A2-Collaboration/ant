@@ -106,12 +106,12 @@ sub main {
 
 
     my $basename = basename($inputfiles[0]);
+    my $oldbasename = $basename;
     if(exists $basenames{$basename}) {
-      my $oldbasename = $basename;
       $basename .= '_'.$basenames{$basename};
       warn "Basename '$oldbasename' already seen, changed to '$basename'";
     }
-    $basenames{$basename}++;
+    $basenames{$oldbasename}++;
 
     my $runnumber = extract_runnumber($inputfiles[0]);
     unless(defined $runnumber) {
