@@ -82,6 +82,7 @@ sub main {
   open(my $filelist_fh, "<$filelist") or die "Can't open filelist $filelist: $!\n";
   my $n = 0;
   my @jobs;
+  my %basenames;
  line:
   while (my $line = <$filelist_fh>) {
     $n++;
@@ -105,6 +106,12 @@ sub main {
 
 
     my $basename = basename($inputfiles[0]);
+    if(exists $basenames{$basename}) {
+      my $oldbasename = $basename;
+      $basename .= '_'.$basenames{$basename};
+      warn "Basename '$oldbasename' already seen, changed to '$basename'";
+    }
+    $basenames{$basename}++;
 
     my $runnumber = extract_runnumber($inputfiles[0]);
     unless(defined $runnumber) {
