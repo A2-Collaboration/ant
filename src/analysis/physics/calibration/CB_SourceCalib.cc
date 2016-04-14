@@ -59,23 +59,25 @@ void CB_SourceCalib::ProcessEvent(const TEvent& event, manager_t&)
 
         //cout << cluster.Time << endl;
         //cout << cluster.CentralElement <<endl;
-        for(const TClusterHit& hit : cluster.Hits)
-        {
-            HitsADC_Cluster->Fill(hit.Energy,hit.Channel);
+//                for(const TClusterHit& hit : cluster.Hits)
+//                {
 
-        }
+//                    cout<<hit.Time<< "Hit time" << endl;
+//                    HitsADC_Cluster->Fill(hit.Energy,hit.Channel);
+
+//                }
         //cout << cluster.Hits << "ClusterHits" << endl;
-        TimeHits->Fill(cluster.Time, cluster.CentralElement);
 
-//        if (cluster.Hits.size()==1)
-//        {
-//            //cout << cluster.Hits.size() << "  CLusterHits" << endl;
-//            HitsADC_Cluster->Fill(cluster.Energy,cluster.CentralElement);
-//        }
-//        else
-//        {
-//           VerworfeneHits->Fill(cluster.Energy, cluster.CentralElement);
-//        }
+        if (cluster.Hits.size()==1)
+        {
+            //cout << cluster.Hits << "  CLusterTime" << endl;
+            HitsADC_Cluster->Fill(cluster.Energy,cluster.CentralElement);
+            TimeHits->Fill(cluster.Time, cluster.CentralElement);
+        }
+        else
+        {
+            VerworfeneHits->Fill(cluster.Energy, cluster.CentralElement);
+        }
     }
 
 
@@ -90,14 +92,14 @@ void CB_SourceCalib::ProcessEvent(const TEvent& event, manager_t&)
 //            cout << timings << endl;
 //        }
             // plot the sum of all hits of the cb aginst the ADC-channel
-          if (readhit.ChannelType == Channel_t::Type_t::Integral)
-            {
+//          if (readhit.ChannelType == Channel_t::Type_t::Integral)
+//            {
 
-                const auto& values = adc_converter.Convert(readhit.RawData);
-                KristallHits->Fill(values.at(0));
+//                const auto& values = adc_converter.Convert(readhit.RawData);
+//                KristallHits->Fill(values.at(0));
 
 
-            }
+//            }
 
 //       if (readhit.Channel==483 && readhit.ChannelType == Channel_t::Type_t::Integral )
 //      {
