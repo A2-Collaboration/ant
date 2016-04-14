@@ -48,7 +48,7 @@ TH1* hstack::hist_t::GetPtr(const string& path)
 {
     auto ptr = dynamic_cast<TH1*>(gDirectory->Get(path.c_str()));
     if(ptr == nullptr)
-        LOG(WARNING) << "Could not Get() TH1* for path " << path;
+        VLOG(5) << "Could not Get() TH1* for path " << path;
     return ptr;
 }
 
