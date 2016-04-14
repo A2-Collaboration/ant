@@ -40,6 +40,14 @@ Time::Time(const Detector_t::Type_t& detectorType,
                                 "#",
                                 BinSettings(500,-15,15),
                                 "hCBTriggerTiming");
+    hTimeMultiplicity = HistFac.makeTH2D(detectorName + " - Time Hit Multiplicity",
+                                         "multiplicity",
+                                         detectorName + " channel",
+                                         BinSettings(8),
+                                         BinSettings(Detector->GetNChannels()),
+                                         "hTimeMultiplicity"
+                                         );
+
 
     // handle tagger differently
     isTagger = dynamic_pointer_cast<TaggerDetector_t, Detector_t>(Detector) != nullptr;
@@ -51,30 +59,37 @@ void Time::ProcessEvent(const TEvent& event, manager_t&)
     const double CBTimeAvg = event.Reconstructed().Trigger.CBTiming;
     hCBTriggerTiming->Fill(CBTimeAvg);
 
+    std::map<unsigned, unsigned> multiplicity;
+
     // handle Tagger differently
     if(isTagger)
     {
         for (const auto& tHit: event.Reconstructed().TaggerHits) {
             hTime->Fill(tHit.Time, tHit.Channel);
             hTimeToF->Fill(tHit.Time - CBTimeAvg, tHit.Channel);
+            ++multiplicity[tHit.Channel];
         }
-        return;
     }
-
-    for(const auto& cand: event.Reconstructed().Candidates) {
-        for(const TCluster& cluster: cand.Clusters) {
-            if(cluster.DetectorType != Detector->Type)
-                continue;
-            hTime->Fill(cluster.Time, cluster.CentralElement);
-            const double tof = Detector->GetTimeOfFlight(cluster.Time,
-                                                         cluster.CentralElement,
-                                                         CBTimeAvg);
-            hTimeToF->Fill(tof, cluster.CentralElement);
-            for(const auto& taggerhit : event.Reconstructed().TaggerHits) {
-                const double relative_time = cluster.Time - taggerhit.Time;
-                hTimeToTagger->Fill(relative_time, cluster.CentralElement);
+    else {
+        for(const auto& cand: event.Reconstructed().Candidates) {
+            for(const TCluster& cluster: cand.Clusters) {
+                if(cluster.DetectorType != Detector->Type)
+                    continue;
+                hTime->Fill(cluster.Time, cluster.CentralElement);
+                ++multiplicity[cluster.CentralElement];
+                const double tof = Detector->GetTimeOfFlight(cluster.Time,
+                                                             cluster.CentralElement,
+                                                             CBTimeAvg);
+                hTimeToF->Fill(tof, cluster.CentralElement);
+                for(const auto& taggerhit : event.Reconstructed().TaggerHits) {
+                    const double relative_time = cluster.Time - taggerhit.Time;
+                    hTimeToTagger->Fill(relative_time, cluster.CentralElement);
+                }
             }
         }
+    }
+    for(auto& it_mult : multiplicity) {
+        hTimeMultiplicity->Fill(it_mult.second, it_mult.first);
     }
 }
 
@@ -85,6 +100,7 @@ void Time::ShowResult()
             << drawoption("colz") << hTimeToTagger
             << hCBTriggerTiming
             << drawoption("colz") << hTimeToF
+            << drawoption("colz") << hTimeMultiplicity
             << endc;
 }
 

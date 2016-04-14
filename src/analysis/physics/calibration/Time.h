@@ -13,6 +13,7 @@ protected:
     TH2D* hTime;
     TH2D* hTimeToF;
     TH2D* hTimeToTagger;
+    TH2D* hTimeMultiplicity;
     TH1D* hCBTriggerTiming;
 
     bool isTagger;
