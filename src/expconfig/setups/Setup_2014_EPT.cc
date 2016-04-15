@@ -199,8 +199,9 @@ ant::ExpConfig::Setup::candidatebuilder_config_t Setup_2014_EPT::GetCandidateBui
 
 ant::UnpackerA2GeantConfig::promptrandom_config_t Setup_2014_EPT::GetPromptRandomConfig() const {
     ant::UnpackerA2GeantConfig::promptrandom_config_t conf;
-    conf.RandomPromptRatio = 0.25; // per unit time interval
-    conf.PromptSigma = 2.5;        // in ns
+    conf.RandomPromptRatio = 0.22; // per unit time interval
+    conf.PromptSigma = 0.87;       // in ns
     conf.TimeWindow = {-120, 120};
+    conf.PromptOffset = -0.37;
     return conf;
 }
