@@ -33,8 +33,6 @@ public:
 
     bool Matches(const TID& tid) const override
     {
-        if(!Setup::Matches(tid))
-            return false;
         /// \todo refine time range for this setup describing the 2012-12 Compton beamtime?
         if(!std_ext::time_between(tid.Timestamp, "2012-12-01", "2012-12-31"))
             return false;
@@ -42,7 +40,7 @@ public:
     }
 
 
-    virtual ExpConfig::Reconstruct::candidatebuilder_config_t GetCandidateBuilderConfig() const override {
+    virtual ExpConfig::Setup::candidatebuilder_config_t GetCandidateBuilderConfig() const override {
         candidatebuilder_config_t conf;
         conf.PID_Phi_Epsilon = std_ext::degree_to_radian(2.0);
         conf.CB_ClusterThreshold = 15;

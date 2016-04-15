@@ -76,8 +76,8 @@ struct ReconstructTester : Reconstruct {
     void Initialize(const TID& tid) override {
         Reconstruct::Initialize(tid);
         // replace the clustering with our tester
-        const auto& config = ExpConfig::Reconstruct::Get(tid);
-        clustering = std_ext::make_unique<ClusteringTester>(config);
+        const auto& setup = ExpConfig::Setup::Get(tid);
+        clustering = std_ext::make_unique<ClusteringTester>(setup);
     }
 
 };

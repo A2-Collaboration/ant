@@ -39,8 +39,6 @@ public:
     }
 
     bool Matches(const TID& tid) const override {
-        if(!Setup::Matches(tid))
-            return false;
         if(!std_ext::time_between(tid.Timestamp, "2015-01-27", "2015-02-01"))
             return false;
         return true;

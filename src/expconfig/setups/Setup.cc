@@ -74,19 +74,8 @@ Setup::Setup(const std::string& name, OptionsPtr opt) :
     calibrationDataManager = std::make_shared<calibration::DataManager>(calibrationDataFolder);
 }
 
-bool Setup::Matches(const ant::TID& tid) const {
-    // check that all detectors match
-    for(const auto& detector : detectors) {
-        const auto& ptr = std::dynamic_pointer_cast<ExpConfig::Base, Detector_t>(detector);
-        if(ptr == nullptr)
-            continue;
-        if(!ptr->Matches(tid))
-            return false;
-    }
-    return true;
-}
-
-void Setup::BuildMappings(std::vector<ant::UnpackerAcquConfig::hit_mapping_t>& hit_mappings, std::vector<ant::UnpackerAcquConfig::scaler_mapping_t>& scaler_mappings) const
+void Setup::BuildMappings(std::vector<UnpackerAcquConfig::hit_mapping_t>& hit_mappings,
+                          std::vector<UnpackerAcquConfig::scaler_mapping_t>& scaler_mappings) const
 {
     // the base setup simply asks its underlying
     // detectors for the mappings

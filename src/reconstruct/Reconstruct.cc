@@ -29,10 +29,10 @@ Reconstruct::~Reconstruct() {}
 
 void Reconstruct::Initialize(const TID& tid)
 {
-    const auto& config = ExpConfig::Reconstruct::Get(tid);
+    const auto& setup = ExpConfig::Setup::Get(tid);
 
     // hooks are usually calibrations, which may also be updateable
-    const shared_ptr_list<ReconstructHook::Base>& hooks = config->GetReconstructHooks();
+    const shared_ptr_list<ReconstructHook::Base>& hooks = setup->GetReconstructHooks();
     for(const auto& hook : hooks) {
         std_ext::AddToSharedPtrList<ReconstructHook::DetectorReadHits, ReconstructHook::Base>
                 (hook, hooks_readhits);
@@ -45,7 +45,7 @@ void Reconstruct::Initialize(const TID& tid)
     }
 
     // put the detectors in a map for convenient access
-    const shared_ptr_list<Detector_t>& detectors = config->GetDetectors();
+    const shared_ptr_list<Detector_t>& detectors = setup->GetDetectors();
     for(const auto& detector : detectors) {
         auto ret = sorted_detectors.insert(make_pair(detector->Type, detector));
         if(!ret.second) {
@@ -54,15 +54,15 @@ void Reconstruct::Initialize(const TID& tid)
     }
 
     // init clustering
-    clustering = std_ext::make_unique<Clustering>(config);
+    clustering = std_ext::make_unique<Clustering>(setup);
 
     // init the candidate builder
     /// \todo Make use of different candidate builders maybe?
-    candidatebuilder = std_ext::make_unique<CandidateBuilder>(sorted_detectors, config);
+    candidatebuilder = std_ext::make_unique<CandidateBuilder>(sorted_detectors, setup);
 
     // init the updateable manager
     updateablemanager = std_ext::make_unique<UpdateableManager>(
-                            tid, config->GetUpdateables()
+                            tid, setup->GetUpdateables()
                             );
 
     initialized = true;

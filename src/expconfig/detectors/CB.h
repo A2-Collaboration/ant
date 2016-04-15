@@ -23,11 +23,6 @@ struct CB :
     virtual bool IsIgnored(unsigned channel) const override;
     virtual bool IsHole(unsigned channel) const;
 
-    virtual bool Matches(const TID&) const override {
-        // always match, since CB never changed over A2's lifetime
-        return true;
-    }
-
     // for UnpackerAcquConfig
     virtual void BuildMappings(
             std::vector<hit_mapping_t>&,

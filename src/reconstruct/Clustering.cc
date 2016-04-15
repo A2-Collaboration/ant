@@ -12,7 +12,7 @@ using namespace std;
 using namespace ant;
 using namespace ant::reconstruct;
 
-Clustering::Clustering(const shared_ptr<ExpConfig::Reconstruct>&)
+Clustering::Clustering(const std::shared_ptr<ExpConfig::Setup>&)
 {
 }
 

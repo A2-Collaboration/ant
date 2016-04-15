@@ -14,7 +14,7 @@ namespace reconstruct {
 
 class Clustering {
 public:
-    Clustering(const std::shared_ptr<ExpConfig::Reconstruct>& config);
+    Clustering(const std::shared_ptr<ExpConfig::Setup>& setup);
 
     virtual void Build(const std::shared_ptr<ClusterDetector_t>& clusterdetector,
                        const TClusterHitList& clusterhits,

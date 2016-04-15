@@ -99,14 +99,16 @@ bool UnpackerA2Geant::OpenFile(const string& filename)
     geant->GetEntry(0);
 
 
-    // this unpacker has no chance to make a proper THeaderInfo
-    // so we ask the ExpConfig if it has an idea...
-    const auto& manualName = ExpConfig::Setup::ManualName;
-    if(manualName.empty()) {
-        throw ExpConfig::ExceptionNoConfig("This unpacker requires a manually set setup name");
+    // try to get a config
+    auto setup = ExpConfig::Setup::GetLastFound();
+    if(!setup) {
+        throw ExpConfig::ExceptionNoConfig("No setup found. This unpacker requires a manually set setup name");
     }
-    // actually the given id does not matter since ManualName is set...
-    auto config = ExpConfig::Unpacker<UnpackerA2GeantConfig>::Get(*id);
+    auto config = dynamic_pointer_cast<UnpackerA2GeantConfig, ExpConfig::Setup>(setup);
+    if(!config) {
+        throw ExpConfig::ExceptionNoConfig("Found setup cannot configure this unpacker.");
+    }
+
 
     // find some taggerdetectors
     // needed to create proper tagger hits from incoming photons

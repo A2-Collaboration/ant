@@ -110,7 +110,11 @@ void acqu::FileFormatBase::Setup(reader_t &&reader_, buffer_t &&buffer_) {
     id = TID(timestamp, 0u);
 
     // try to find some config with the id
-    auto config = ExpConfig::Unpacker<UnpackerAcquConfig>::Get(id);
+    auto setup = ExpConfig::Setup::Get(id);
+    auto config = dynamic_pointer_cast<UnpackerAcquConfig, ExpConfig::Setup>(setup);
+    if(!config) {
+        throw ExpConfig::ExceptionNoConfig("Found setup cannot configure this unpacker.");
+    }
 
     // now try to fill the first data buffer
     FillFirstDataBuffer(reader, buffer);

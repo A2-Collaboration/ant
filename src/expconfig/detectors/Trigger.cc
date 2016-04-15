@@ -69,11 +69,6 @@ void Trigger::ApplyTo(TEventData& reconstructed)
 
 }
 
-bool Trigger_2014::Matches(const TID& tid) const {
-    // timepoint roughly to Eta Prime beamtime...
-    return std_ext::time_after(tid.Timestamp, "2014-07-01");
-}
-
 void Trigger_2014::BuildMappings(std::vector<UnpackerAcquConfig::hit_mapping_t>& hit_mappings,
                                  std::vector<UnpackerAcquConfig::scaler_mapping_t>& scaler_mappings) const
 {

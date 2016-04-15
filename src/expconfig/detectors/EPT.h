@@ -80,7 +80,6 @@ struct EPT_2014 : EPT {
     EPT_2014(double beamEnergy) :
         EPT(beamEnergy, elements_init)
     {}
-    virtual bool Matches(const TID& tid) const override;
     static const std::vector<Element_t> elements_init;
 };
 

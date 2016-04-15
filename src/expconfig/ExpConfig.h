@@ -29,17 +29,13 @@ class ExpConfig
 {
 public:
 
-
-    // all configs have a common base and should match via TID
-    class Base {
+    /**
+     * @brief The Setup class provides all static config and info about the experiment
+     */
+    class Setup {
     public:
-        virtual ~Base() = default;
         virtual bool Matches(const TID& header) const = 0;
-    };
 
-    // the ExpConfig::Setup provides general information about the experiment
-    class Setup : public virtual Base {
-    public:
         static std::string ManualName;
 
         virtual std::string GetName() const = 0;
@@ -48,6 +44,22 @@ public:
         virtual std::string GetPIDCutsDirectory() const = 0;
         virtual std::string GetPhysicsFilesDirectory() const = 0;
         virtual std::shared_ptr<calibration::DataManager> GetCalibrationDataManager() const = 0;
+
+        virtual std::list< std::shared_ptr< ReconstructHook::Base > > GetReconstructHooks() const = 0;
+        virtual std::list< std::shared_ptr< Detector_t > > GetDetectors() const = 0;
+        virtual std::list< std::shared_ptr< Updateable_traits> > GetUpdateables() const = 0;
+
+        struct candidatebuilder_config_t {
+            /// @see ant::reconstruct::CandidateBuilder::PID_phi_epsilon
+            double PID_Phi_Epsilon = 0.0;      // in Rad
+            double CB_ClusterThreshold = 15;   // in MeV
+            double TAPS_ClusterThreshold = 20; // in MeV
+            candidatebuilder_config_t() = default;
+        };
+
+        virtual candidatebuilder_config_t GetCandidateBuilderConfig() const {
+            return candidatebuilder_config_t();
+        }
 
         // you may obtain such an Expconfig::Setup via headerInfo, name,
         // get all of them, or the last found one
@@ -61,39 +73,12 @@ public:
         static std::shared_ptr<DetectorType> GetDetector();
 
         static void Cleanup();
+
+        virtual ~Setup() = default;
+
     private:
         friend class ExpConfig;
         static std::shared_ptr<Setup> lastFound;
-    };
-
-    // in order to run the Reconstruction,
-    // the following methods are needed
-    class Reconstruct : public virtual Base {
-    public:
-        virtual std::list< std::shared_ptr< ReconstructHook::Base > > GetReconstructHooks() const = 0;
-        virtual std::list< std::shared_ptr< Detector_t > > GetDetectors() const = 0;
-        virtual std::list< std::shared_ptr< Updateable_traits> > GetUpdateables() const = 0;
-
-        struct candidatebuilder_config_t {
-            /// @see ant::reconstruct::CandidateBuilder::PID_phi_epsilon
-            double PID_Phi_Epsilon = 0.0;      // in Rad
-            double CB_ClusterThreshold = 15;   // in MeV
-            double TAPS_ClusterThreshold = 20; // in MeV
-            candidatebuilder_config_t() = default;
-        };
-
-        virtual candidatebuilder_config_t GetCandidateBuilderConfig() const { return candidatebuilder_config_t(); }
-
-        // factory method to obtain such a type of config
-        static std::shared_ptr<Reconstruct> Get(const TID& header);
-    };
-
-    // each unpacker has its own config,
-    // we enforce this by templates
-    template<class T>
-    class Unpacker : public virtual Base {
-    public:
-        static std::shared_ptr<T> Get(const TID& header);
     };
 
     class Exception : public std::runtime_error {
@@ -113,7 +98,7 @@ private:
 template<typename DetectorType>
 std::shared_ptr<DetectorType> ExpConfig::Setup::GetDetector()
 {
-    auto config = std::dynamic_pointer_cast<Reconstruct, Setup>(GetLastFound());
+    auto config = GetLastFound();
     if(config == nullptr)
         throw ExceptionNoConfig("Could not find setup to search for required detector");
     for(const auto& detector : config->GetDetectors()) {

@@ -44,7 +44,7 @@ protected:
     std::shared_ptr<expconfig::detector::TAPS> taps;
     std::shared_ptr<expconfig::detector::TAPSVeto> tapsveto;
 
-    const ant::ExpConfig::Reconstruct::candidatebuilder_config_t config;
+    const ExpConfig::Setup::candidatebuilder_config_t config;
 
     void Build_PID_CB(
             sorted_clusters_t& sorted_clusters,
@@ -69,7 +69,8 @@ public:
 
     using sorted_detectors_t = std::map<Detector_t::Type_t, std::shared_ptr<Detector_t> >;
 
-    CandidateBuilder(const sorted_detectors_t& sorted_detectors, const std::shared_ptr<ExpConfig::Reconstruct>& _config);
+    CandidateBuilder(const sorted_detectors_t& sorted_detectors,
+                     const std::shared_ptr<ExpConfig::Setup>& setup);
     virtual ~CandidateBuilder() = default;
 
     // this method shall fill the TEvent reference

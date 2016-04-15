@@ -178,12 +178,6 @@ double Setup_2014_EPT::GetElectronBeamEnergy() const {
     return 1604.0;
 }
 
-bool Setup_2014_EPT::Matches(const ant::TID& tid) const {
-    if(!Setup::Matches(tid))
-        return false;
-    return true;
-}
-
 void Setup_2014_EPT::BuildMappings(std::vector<ant::UnpackerAcquConfig::hit_mapping_t>& hit_mappings, std::vector<ant::UnpackerAcquConfig::scaler_mapping_t>& scaler_mappings) const
 {
     // build the mappings from the given detectors
@@ -194,7 +188,7 @@ void Setup_2014_EPT::BuildMappings(std::vector<ant::UnpackerAcquConfig::hit_mapp
     // for example, ignore elements
 }
 
-ant::ExpConfig::Reconstruct::candidatebuilder_config_t Setup_2014_EPT::GetCandidateBuilderConfig() const
+ant::ExpConfig::Setup::candidatebuilder_config_t Setup_2014_EPT::GetCandidateBuilderConfig() const
 {
     candidatebuilder_config_t conf;
     conf.PID_Phi_Epsilon = std_ext::degree_to_radian(2.0);

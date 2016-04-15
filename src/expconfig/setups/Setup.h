@@ -29,7 +29,6 @@ namespace expconfig {
  */
 class Setup :
         public ExpConfig::Setup,
-        public ExpConfig::Reconstruct,
         public UnpackerAcquConfig,
         public UnpackerA2GeantConfig
 {
@@ -91,8 +90,6 @@ protected:
     void AddCalibration(Args&&... args) {
         AddCalibration(std::make_shared<T>(std::forward<Args>(args)...));
     }
-
-    bool Matches(const TID& tid) const override;
 
     void BuildMappings(std::vector<hit_mapping_t>& hit_mappings,
                        std::vector<scaler_mapping_t>& scaler_mappings) const override;

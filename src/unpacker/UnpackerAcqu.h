@@ -39,7 +39,7 @@ private:
 
 // we define some methods here which
 // the configs are required to implement
-class UnpackerAcquConfig : public ExpConfig::Unpacker<UnpackerAcquConfig> {
+class UnpackerAcquConfig {
 public:
 
     template<typename T>
@@ -118,6 +118,9 @@ public:
             std::vector<hit_mapping_t>& hit_mappings,
             std::vector<scaler_mapping_t>& scaler_mappings
             ) const = 0;
+
+protected:
+    ~UnpackerAcquConfig() = default;
 };
 
 } // namespace ant

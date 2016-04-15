@@ -14,11 +14,6 @@ using namespace ant::expconfig::detector;
 
 const std::string EPT::ScalerName = "EPT_Scalers";
 
-bool EPT_2014::Matches(const TID& tid) const {
-    return std_ext::time_between(tid.Timestamp,
-                                 "2014-07-01", "2014-12-31");
-}
-
 bool EPT::TryGetChannelFromPhoton(double photonEnergy, unsigned& channel) const {
     const double electronEnergy = BeamEnergy - photonEnergy;
     for(const Element_t& elem : elements) {

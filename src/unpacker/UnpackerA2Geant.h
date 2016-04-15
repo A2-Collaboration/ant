@@ -101,7 +101,7 @@ private:
 
 // we define some methods here which
 // the configs are required to implement
-class UnpackerA2GeantConfig : public ExpConfig::Unpacker<UnpackerA2GeantConfig> {
+class UnpackerA2GeantConfig {
 public:
     virtual std::list< std::shared_ptr< Detector_t > > GetDetectors() const = 0;
 
@@ -138,6 +138,8 @@ public:
     virtual promptrandom_config_t GetPromptRandomConfig() const {
         return {}; // use default
     }
+protected:
+    ~UnpackerA2GeantConfig() = default;
 };
 
 } // namespace ant

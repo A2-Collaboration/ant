@@ -14,11 +14,10 @@ using namespace std;
 using namespace ant::reconstruct;
 using namespace ant::expconfig;
 
-CandidateBuilder::CandidateBuilder(
-        const CandidateBuilder::sorted_detectors_t& sorted_detectors,
-        const std::shared_ptr<ExpConfig::Reconstruct>& _config
+CandidateBuilder::CandidateBuilder(const CandidateBuilder::sorted_detectors_t& sorted_detectors,
+        const std::shared_ptr<ExpConfig::Setup>& setup
         ) :
-    config(_config->GetCandidateBuilderConfig())
+    config(setup->GetCandidateBuilderConfig())
 {
 
     try {

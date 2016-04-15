@@ -216,8 +216,5 @@ void TAPS::InitClusterElements()
     }
 }
 
-bool TAPS_2013::Matches(const TID& tid) const {
-    return std_ext::time_after(tid.Timestamp, "2013-11-01");
-}
 
 

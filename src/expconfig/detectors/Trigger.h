@@ -76,7 +76,6 @@ struct Trigger_2014 : Trigger {
 
     static const ReferenceTimingHitMapping_t Reference_V1190_TAPSPbWO4;
 
-    virtual bool Matches(const TID& tid) const override;
     virtual void BuildMappings(
             std::vector<hit_mapping_t>&,
             std::vector<scaler_mapping_t>&) const override;

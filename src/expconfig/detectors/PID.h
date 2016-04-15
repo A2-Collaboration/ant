@@ -103,31 +103,26 @@ private:
 
 struct PID_2014 : PID {
     PID_2014() : PID(elements_init) {}
-    virtual bool Matches(const TID& tid) const override;
     static const std::vector<Element_t> elements_init;
 };
 
 struct PID_2009_07 : PID {
     PID_2009_07() : PID(elements_init) {}
-    virtual bool Matches(const TID& tid) const override;
     static const std::vector<Element_t> elements_init;
 };
 
 struct PID_2009_06 : PID {
     PID_2009_06() : PID(elements_init) {}
-    virtual bool Matches(const TID& tid) const override;
     static const std::vector<Element_t> elements_init;
 };
 
 struct PID_2009_05 : PID {
     PID_2009_05() : PID(elements_init) {}
-    virtual bool Matches(const TID& tid) const override;
     static const std::vector<Element_t> elements_init;
 };
 
 struct PID_2004 : PID {
     PID_2004() : PID(elements_init) {}
-    virtual bool Matches(const TID& tid) const override;
     static const std::vector<Element_t> elements_init;
 };
 

@@ -80,27 +80,3 @@ void PID::RotateElements()
         element.Position.SetPhi(std_ext::degree_to_radian(phi_offset0_degrees) + i*dPhi(element.Channel));
     }
 }
-
-bool PID_2004::Matches(const TID& tid) const {
-    return std_ext::time_between(tid.Timestamp, "2004-04-30", "2009-05-09");
-}
-
-
-bool PID_2009_05::Matches(const TID& tid) const {
-    return std_ext::time_between(tid.Timestamp, "2009-05-10", "2009-06-29");
-}
-
-
-bool PID_2009_06::Matches(const TID& tid) const {
-    return std_ext::time_between(tid.Timestamp, "2009-06-30", "2009-07-12");
-}
-
-
-bool PID_2009_07::Matches(const TID& tid) const {
-    return std_ext::time_between(tid.Timestamp, "2009-07-13", "2014-01-25");
-}
-
-
-bool PID_2014::Matches(const TID& tid) const {
-    return std_ext::time_after(tid.Timestamp, "2014-01-26");
-}

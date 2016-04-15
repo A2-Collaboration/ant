@@ -103,7 +103,7 @@ shared_ptr<ExpConfig::Setup> ExpConfig::Setup::GetLastFound()
 
 shared_ptr<Detector_t> ExpConfig::Setup::GetDetector(Detector_t::Type_t type)
 {
-    auto config = std::dynamic_pointer_cast<Reconstruct, Setup>(GetLastFound());
+    auto config = GetLastFound();
     if(config == nullptr)
         throw ExceptionNoConfig("Could not find setup to search for required detector");
     for(const auto& detector : config->GetDetectors()) {
@@ -124,23 +124,6 @@ std::list<string> ExpConfig::Setup::GetNames() {
     return expconfig::SetupRegistry::GetNames();
 }
 
-shared_ptr<ExpConfig::Reconstruct> ExpConfig::Reconstruct::Get(const TID& tid)
-{
-    return Get_<ExpConfig::Reconstruct>(tid);
-}
-
-template<>
-shared_ptr< UnpackerAcquConfig >
-ExpConfig::Unpacker<UnpackerAcquConfig>::Get(const TID& tid) {
-    return Get_< UnpackerAcquConfig >(tid);
-}
-
-template<>
-shared_ptr< UnpackerA2GeantConfig >
-ExpConfig::Unpacker<UnpackerA2GeantConfig>::Get(const TID& tid) {
-
-    return Get_< UnpackerA2GeantConfig >(tid);
-}
 
 } // namespace ant
 

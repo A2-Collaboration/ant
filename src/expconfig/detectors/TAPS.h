@@ -204,7 +204,6 @@ struct TAPS_2013 : TAPS {
              BaF2_elements_init, PbWO4_elements_init)
     {}
 
-    virtual bool Matches(const TID& tid) const override;
 private:
     const static std::vector<BaF2_Element_t>  BaF2_elements_init;
     const static std::vector<PbWO4_Element_t> PbWO4_elements_init;
