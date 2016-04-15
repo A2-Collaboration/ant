@@ -90,9 +90,6 @@ public:
 
     ExpConfig() = delete; // this class is more a wrapper for handling the config
 
-private:
-    template<typename T>
-    static std::shared_ptr<T> Get_(const TID& header);
 };
 
 template<typename DetectorType>
