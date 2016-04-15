@@ -6,6 +6,7 @@
 
 #include "expconfig/ExpConfig.h"
 #include "base/Detector_t.h"
+#include "base/std_ext/math.h"
 
 #include "Rtypes.h"
 
@@ -14,7 +15,6 @@
 #include <map>
 #include <vector>
 #include <cstdint>
-#include <limits>
 
 class TTree;
 
@@ -104,6 +104,40 @@ private:
 class UnpackerA2GeantConfig : public ExpConfig::Unpacker<UnpackerA2GeantConfig> {
 public:
     virtual std::list< std::shared_ptr< Detector_t > > GetDetectors() const = 0;
+
+    /**
+     * @brief The promptrandom_config_t struct
+     *
+     * Contains information about the timing spectrum of the TaggerDetector_t
+     *
+     * Fit the timing spectrum of the tagger with gaus(0)+pol0(3) with ROOT's FitPanel,
+     * then the following parameters are used
+     * p0 = height (not integral)
+     * p1 = position
+     * p2 = sigma
+     * p3 = offset
+     */
+    struct promptrandom_config_t {
+        /**
+         * @brief PromptSigma the sigma of the fit
+         */
+        double PromptSigma = std_ext::NaN;
+        /**
+         * @brief PromptRandomRatio per unit length of time, given by
+         *
+         * offset/(sqrt(2pi)*sigma*height)
+         */
+        double PromptRandomRatio = std_ext::NaN;
+
+        /**
+         * @brief TimeWindowLength
+         */
+        interval<double> TimeWindow = {std_ext::NaN, std_ext::NaN};
+    };
+
+    virtual promptrandom_config_t GetPromptRandomConfig() const {
+        return {}; // use default
+    }
 };
 
 } // namespace ant
