@@ -44,7 +44,7 @@ private:
     std::unique_ptr<WrapTFileInput> inputfile;
     TTree* geant;
 
-    std::list< std::shared_ptr<TaggerDetector_t> >  taggerdetectors;
+    std::shared_ptr<TaggerDetector_t> taggerdetector;
     std::shared_ptr<Detector_t> cb_detector;
     std::shared_ptr<Detector_t> pid_detector;
     std::shared_ptr<Detector_t> taps_detector;

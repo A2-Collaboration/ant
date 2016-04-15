@@ -111,10 +111,9 @@ bool UnpackerA2Geant::OpenFile(const string& filename)
     // find some taggerdetectors
     // needed to create proper tagger hits from incoming photons
     for(const shared_ptr<Detector_t>& detector : config->GetDetectors()) {
-        std_ext::AddToSharedPtrList<TaggerDetector_t, Detector_t>(
-                    detector, taggerdetectors
-                    );
         /// \todo check for multiply defined detectors...
+        if(auto tagger = dynamic_pointer_cast<TaggerDetector_t, Detector_t>(detector))
+            taggerdetector = tagger;
         if(detector->Type == Detector_t::Type_t::CB)
             cb_detector = detector;
         if(detector->Type == Detector_t::Type_t::PID)
@@ -125,7 +124,7 @@ bool UnpackerA2Geant::OpenFile(const string& filename)
             tapsveto_detector = detector;
     }
 
-    if(taggerdetectors.empty())
+    if(!taggerdetector)
         LOG(WARNING) << "No tagger detector found in config, there will be no taggerhits generated";
 
 
@@ -240,18 +239,19 @@ TEvent UnpackerA2Geant::NextEvent() noexcept
     // "reconstruct" a tagger electron from the photon
     const double photon_energy = GeVtoMeV*fbeam[4];
 
-    for(const shared_ptr<TaggerDetector_t>& tagger : taggerdetectors) {
+    if(taggerdetector) {
         // could the photon have been detected?
         unsigned ch;
-        if(!tagger->TryGetChannelFromPhoton(photon_energy, ch))
-            continue;
-        if(tagger->IsIgnored(ch))
-            continue;
-        /// \todo create some random hits here?
-        hits.emplace_back(
-                    LogicalChannel_t{tagger->Type, Channel_t::Type_t::Timing, ch},
-                    vector<double>{0}
-                    );
+        if(taggerdetector->TryGetChannelFromPhoton(photon_energy, ch) &&
+           !taggerdetector->IsIgnored(ch)
+           )
+        {
+            // then insert prompt hit
+            hits.emplace_back(
+                        LogicalChannel_t{taggerdetector->Type, Channel_t::Type_t::Timing, ch},
+                        vector<double>{0}
+                        );
+        }
     }
 
 
