@@ -196,3 +196,11 @@ ant::ExpConfig::Setup::candidatebuilder_config_t Setup_2014_EPT::GetCandidateBui
     conf.TAPS_ClusterThreshold = 20;
     return conf;
 }
+
+ant::UnpackerA2GeantConfig::promptrandom_config_t Setup_2014_EPT::GetPromptRandomConfig() const {
+    ant::UnpackerA2GeantConfig::promptrandom_config_t conf;
+    conf.RandomPromptRatio = 0.25; // per unit time interval
+    conf.PromptSigma = 2.5;        // in ns
+    conf.TimeWindow = {-120, 120};
+    return conf;
+}

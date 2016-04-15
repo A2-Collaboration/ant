@@ -19,6 +19,8 @@ public:
                        std::vector<scaler_mapping_t>& scaler_mappings) const override;
 
     virtual ExpConfig::Setup::candidatebuilder_config_t GetCandidateBuilderConfig() const override;
+
+    virtual UnpackerA2GeantConfig::promptrandom_config_t GetPromptRandomConfig() const override;
 };
 
 }}} // namespace ant::expconfig::setup
