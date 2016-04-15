@@ -11,9 +11,76 @@
 #include "TTree.h"
 
 #include <memory>
+#include <random>
 
 using namespace std;
 using namespace ant;
+
+namespace ant {
+namespace unpacker {
+namespace geant {
+
+struct promptrandom_t {
+
+    using tagger_t = shared_ptr<TaggerDetector_t>;
+
+    promptrandom_t(
+            tagger_t tagger,
+            UnpackerA2GeantConfig::promptrandom_config_t config) :
+        r_prompt(0, config.PromptSigma),
+        n_randoms(static_cast<unsigned>( // round-off error negligble
+                      config.TimeWindow.Length()*config.RandomPromptRatio)
+                  ),
+        r_random_timing(config.TimeWindow.Start(), config.TimeWindow.Stop()),
+        r_random_channel(make_r_tagg_ch(tagger))
+    {
+    }
+
+    double SmearPrompt(double in) {
+        return in + r_prompt(r_gen);
+    }
+
+    struct hit_t {
+        unsigned Channel;
+        double Timing;
+    };
+
+    std::vector<hit_t> GetRandomHits() {
+        vector<hit_t> hits(n_randoms);
+        for(unsigned i=0;i<n_randoms;i++) {
+            auto& hit = hits[i];
+            hit.Timing = r_random_timing(r_gen);
+            hit.Channel = r_random_channel(r_gen);
+        }
+        return hits;
+    }
+
+
+protected:
+
+
+    default_random_engine r_gen;
+
+    normal_distribution<double> r_prompt;
+    const unsigned n_randoms;
+    uniform_real_distribution<double> r_random_timing;
+    discrete_distribution<unsigned> r_random_channel;
+
+    static decltype(r_random_channel) make_r_tagg_ch(tagger_t tagger) {
+        /// \todo check if that channel weighting actually works here
+        vector<double> weights;
+        for(unsigned ch=0;ch<tagger->GetNChannels();ch++) {
+            weights.emplace_back(
+                        tagger->IsIgnored(ch) ? 0.0 : 1.0/tagger->GetPhotonEnergy(ch)
+                        );
+        }
+        return {weights.begin(), weights.end()};
+    }
+};
+
+}}}
+
+using namespace ant::unpacker::geant;
 
 UnpackerA2Geant::UnpackerA2Geant() {}
 
@@ -128,6 +195,13 @@ bool UnpackerA2Geant::OpenFile(const string& filename)
 
     if(!taggerdetector)
         LOG(WARNING) << "No tagger detector found in config, there will be no taggerhits generated";
+    else {
+        // initialize randomness
+        promptrandom = std_ext::make_unique<unpacker::geant::promptrandom_t>(
+                           taggerdetector,
+                           config->GetPromptRandomConfig()
+                           );
+    }
 
 
 
@@ -139,6 +213,12 @@ bool UnpackerA2Geant::OpenFile(const string& filename)
 
     return true;
 }
+
+struct r_t {
+    std::default_random_engine r_gen;
+    std::normal_distribution<double> r_prompt;
+};
+
 
 TEvent UnpackerA2Geant::NextEvent() noexcept
 {
@@ -155,7 +235,7 @@ TEvent UnpackerA2Geant::NextEvent() noexcept
     // however, vertex is some MCTrue information!
     event.MCTrue().Target.Vertex = vec3(fvertex[0], fvertex[1], fvertex[2]);
 
-    const size_t n_total = fnhits+fnpart+fntaps+fnvtaps+fvhits;
+    const auto n_total = static_cast<unsigned>(fnhits+fnpart+fntaps+fnvtaps+fvhits);
 
     // approx. 3 detector read hits per detector, we just want to prevent re-allocation
     vector<TDetectorReadHit>& hits = event.Reconstructed().DetectorReadHits;
@@ -166,7 +246,7 @@ TEvent UnpackerA2Geant::NextEvent() noexcept
 
     // fill CB Hits
     for(int i=0;i<fnhits;i++) {
-        const unsigned ch = icryst[i]; // no -1 here!
+        const auto ch = static_cast<unsigned>(icryst[i]); // no -1 here!
         if(cb_detector->IsIgnored(ch))
             continue;
         const Detector_t::Type_t det = Detector_t::Type_t::CB;
@@ -199,7 +279,7 @@ TEvent UnpackerA2Geant::NextEvent() noexcept
 
     // fill TAPS Hits
     for(int i=0;i<fntaps;i++) {
-        const unsigned ch = ictaps[i]-1;
+        const auto ch = static_cast<unsigned>(ictaps[i]-1);
         if(taps_detector->IsIgnored(ch))
             continue;
         const Detector_t::Type_t det = Detector_t::Type_t::TAPS;
@@ -223,7 +303,7 @@ TEvent UnpackerA2Geant::NextEvent() noexcept
         /// \todo check if -1 here is really correct, for now we throw silly exceptions
         if(ivtaps[i]==0)
             throw Exception("TAPS Veto index should start counting with 1");
-        const unsigned ch = ivtaps[i]-1;
+        const auto ch = static_cast<unsigned>(ivtaps[i]-1);
         if(tapsveto_detector->IsIgnored(ch))
             continue;
         const Detector_t::Type_t det = Detector_t::Type_t::TAPSVeto;
@@ -242,16 +322,26 @@ TEvent UnpackerA2Geant::NextEvent() noexcept
     const double photon_energy = GeVtoMeV*fbeam[4];
 
     if(taggerdetector) {
-        // could the photon have been detected?
+        // could the prompt photon have been detected?
         unsigned ch;
         if(taggerdetector->TryGetChannelFromPhoton(photon_energy, ch) &&
            !taggerdetector->IsIgnored(ch)
            )
         {
-            // then insert prompt hit
+            // then insert (possibly time-smeared) prompt hit
             hits.emplace_back(
                         LogicalChannel_t{taggerdetector->Type, Channel_t::Type_t::Timing, ch},
-                        vector<double>{0}
+                        std::vector<double>{promptrandom->SmearPrompt(0)}
+                        );
+
+
+        }
+
+        // always fill some extra random hits
+        for(auto& hit : promptrandom->GetRandomHits()) {
+            hits.emplace_back(
+                        LogicalChannel_t{taggerdetector->Type, Channel_t::Type_t::Timing, hit.Channel},
+                        std::vector<double>{hit.Timing}
                         );
         }
     }

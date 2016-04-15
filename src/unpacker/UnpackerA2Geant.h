@@ -2,11 +2,8 @@
 
 #include "Unpacker.h"
 
-
-
 #include "expconfig/ExpConfig.h"
 #include "base/Detector_t.h"
-#include "base/std_ext/math.h"
 
 #include "Rtypes.h"
 
@@ -22,8 +19,15 @@ namespace ant {
 
 struct TID;
 class WrapTFileInput;
-class UnpackerA2GeantConfig; // see below
 
+namespace unpacker {
+namespace geant {
+struct promptrandom_t;
+}}
+
+/**
+ * @brief The UnpackerA2Geant class
+ */
 class UnpackerA2Geant : public Unpacker::Module
 {
 public:
@@ -50,6 +54,7 @@ private:
     std::shared_ptr<Detector_t> taps_detector;
     std::shared_ptr<Detector_t> tapsveto_detector;
 
+    std::unique_ptr<unpacker::geant::promptrandom_t> promptrandom;
 
     // keep in syn with A2CBoutput.h in a2geant
     static constexpr int GEANT_MAX_TAPSHITS = 438;
@@ -96,11 +101,11 @@ private:
 
     bool tid_from_file = false;
 
-
 };
 
-// we define some methods here which
-// the configs are required to implement
+/**
+ * @brief The UnpackerA2GeantConfig class provides stuff the A2Geant unpacker needs
+ */
 class UnpackerA2GeantConfig {
 public:
     virtual std::list< std::shared_ptr< Detector_t > > GetDetectors() const = 0;
@@ -121,18 +126,19 @@ public:
         /**
          * @brief PromptSigma the sigma of the fit
          */
-        double PromptSigma = std_ext::NaN;
+        double PromptSigma = 0;
         /**
-         * @brief PromptRandomRatio per unit length of time, given by
+         * @brief RandomPromptRatio per unit time interval (in ns)
          *
+         * can be calculated by
          * offset/(sqrt(2pi)*sigma*height)
          */
-        double PromptRandomRatio = std_ext::NaN;
+        double RandomPromptRatio = 0;
 
         /**
-         * @brief TimeWindowLength
+         * @brief TimeWindowLength is by default the maximum window possible, in ns
          */
-        interval<double> TimeWindow = {std_ext::NaN, std_ext::NaN};
+        interval<double> TimeWindow = interval<double>{-1000, 1000};
     };
 
     virtual promptrandom_config_t GetPromptRandomConfig() const {
