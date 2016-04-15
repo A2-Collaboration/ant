@@ -139,6 +139,11 @@ public:
          * @brief TimeWindowLength is by default the maximum window possible, in ns
          */
         interval<double> TimeWindow = interval<double>{-1000, 1000};
+
+        /**
+         * @brief TimeOffset if the tagger time is determined with some offsetting reference
+         */
+        double PromptOffset = 0;
     };
 
     virtual promptrandom_config_t GetPromptRandomConfig() const {

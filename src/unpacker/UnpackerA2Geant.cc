@@ -27,7 +27,7 @@ struct promptrandom_t {
     promptrandom_t(
             tagger_t tagger,
             UnpackerA2GeantConfig::promptrandom_config_t config) :
-        r_prompt(0, config.PromptSigma),
+        r_prompt(config.PromptOffset, config.PromptSigma),
         n_randoms(static_cast<unsigned>( // round-off error negligble
                       config.TimeWindow.Length()*config.RandomPromptRatio)
                   ),
