@@ -19,7 +19,7 @@ const std::string Trigger::ScalerName::PbGlass       = "PbGlass";
 // so map them here as const static
 const Trigger::ReferenceTimingHitMapping_t Trigger::Reference_CATCH_TaggerCrate = {1000, 1400};
 const Trigger::ReferenceTimingHitMapping_t Trigger::Reference_CATCH_CBCrate = {1001, 2000};
-
+const Trigger::ReferenceTimingHitMapping_t Trigger_2014::Reference_V1190_TAPSPbWO4 = {1002, 29192};
 
 void Trigger::BuildMappings(std::vector<UnpackerAcquConfig::hit_mapping_t>& hit_mappings,
                             std::vector<UnpackerAcquConfig::scaler_mapping_t>&) const {
@@ -85,8 +85,8 @@ void Trigger_2014::BuildMappings(std::vector<UnpackerAcquConfig::hit_mapping_t>&
     /// \todo check when those V1190 modules actually were installed and
     /// move the emplace_back to base class maybe...
     hit_mappings.emplace_back(
-                Reference_V1190_TAPSPbWO4,
-                29192
+                Reference_V1190_TAPSPbWO4.LogicalChannel,
+                Reference_V1190_TAPSPbWO4.AcquRawChannel
                 );
 
     // add the scaler mappings from internal map

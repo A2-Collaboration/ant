@@ -74,10 +74,7 @@ struct Trigger :
 
 struct Trigger_2014 : Trigger {
 
-
-    const LogicalChannel_t Reference_V1190_TAPSPbWO4 = {Type, Channel_t::Type_t::Timing, 1002};
-
-
+    static const ReferenceTimingHitMapping_t Reference_V1190_TAPSPbWO4;
 
     virtual bool Matches(const TID& tid) const override;
     virtual void BuildMappings(
