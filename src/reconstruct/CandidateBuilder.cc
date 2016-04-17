@@ -6,7 +6,7 @@
 #include "expconfig/detectors/TAPS.h"
 #include "expconfig/detectors/TAPSVeto.h"
 #include "base/std_ext/math.h"
-
+#include "base/std_ext/misc.h"
 
 
 using namespace ant;
@@ -14,36 +14,25 @@ using namespace std;
 using namespace ant::reconstruct;
 using namespace ant::expconfig;
 
-CandidateBuilder::CandidateBuilder(const CandidateBuilder::sorted_detectors_t& sorted_detectors,
-        const std::shared_ptr<ExpConfig::Setup>& setup
-        ) :
+template<class T, class List_t>
+T find_detector(const List_t& detectors) {
+    using element_t = typename T::element_type;
+    for(const auto& det : detectors) {
+        if(auto ptr = dynamic_pointer_cast<element_t>(det))
+            return ptr;
+    }
+    VLOG(3) << "Detector not found " << std_ext::getTypeAsString<element_t>();
+    return nullptr;
+}
+
+CandidateBuilder::CandidateBuilder(const std::shared_ptr<ExpConfig::Setup>& setup) :
     config(setup->GetCandidateBuilderConfig())
 {
-
-    try {
-        cb  = dynamic_pointer_cast<detector::CB>(sorted_detectors.at(Detector_t::Type_t::CB));
-    } catch (...) {
-        VLOG(3) << "Detector CB not initialized";
-    }
-
-    try {
-        pid = dynamic_pointer_cast<detector::PID>(sorted_detectors.at(Detector_t::Type_t::PID));
-    } catch (...) {
-        VLOG(3) << "Detector PID not initialized";
-    }
-
-    try {
-        taps = dynamic_pointer_cast<detector::TAPS>(sorted_detectors.at(Detector_t::Type_t::TAPS));
-    } catch (...) {
-        VLOG(3) << "Detector TAPS not initialized";
-    }
-
-    try {
-        tapsveto = dynamic_pointer_cast<detector::TAPSVeto>(sorted_detectors.at(Detector_t::Type_t::TAPSVeto));
-    } catch (...) {
-        VLOG(3) << "Detector TAPSVeto not initialized";
-    }
-
+    const auto& detectors = setup->GetDetectors();
+    cb       = find_detector<decltype(cb)>(detectors);
+    pid      = find_detector<decltype(pid)>(detectors);
+    taps     = find_detector<decltype(taps)>(detectors);
+    tapsveto = find_detector<decltype(tapsveto)>(detectors);
 }
 
 void CandidateBuilder::Build_PID_CB(sorted_clusters_t& sorted_clusters,

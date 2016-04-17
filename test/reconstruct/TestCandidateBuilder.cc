@@ -132,7 +132,7 @@ struct ReconstructTester : Reconstruct {
         Reconstruct::Initialize(tid);
         // replace the candidate builder with our tester
         const auto& setup = ExpConfig::Setup::Get(tid);
-        candidatebuilder = std_ext::make_unique<CandidateBuilderTester>(sorted_detectors, setup);
+        candidatebuilder = std_ext::make_unique<CandidateBuilderTester>(setup);
     }
 };
 
