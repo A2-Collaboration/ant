@@ -132,6 +132,9 @@ void dotest() {
     unsigned nReads = 0;
     unsigned nHits = 0;
     unsigned nCandidates = 0;
+    unsigned nCandidatesCBPID = 0;
+    unsigned nCandidatesTAPSVeto = 0;
+
 
     while(auto event = unpacker->NextEvent()) {
 
@@ -141,12 +144,21 @@ void dotest() {
             nReads++;
         reconstruct.DoReconstruct(event.Reconstructed());
         nCandidates += event.Reconstructed().Candidates.size();
+        for(auto& cand : event.Reconstructed().Candidates) {
+            if(cand.Detector & Detector_t::Type_t::CB &&
+               cand.Detector & Detector_t::Type_t::PID)
+                nCandidatesCBPID++;
+            if(cand.Detector & Detector_t::Type_t::TAPS &&
+               cand.Detector & Detector_t::Type_t::TAPSVeto)
+                nCandidatesTAPSVeto++;
 
+        }
     }
 
-    REQUIRE(nReads == 221);
-    REQUIRE(nHits == 30260);
-    REQUIRE(nCandidates == 862);
-
+    CHECK(nReads == 221);
+    CHECK(nHits == 30260);
+    CHECK(nCandidates == 862);
+    CHECK(nCandidatesCBPID == 136);
+    CHECK(nCandidatesTAPSVeto == 146);
 
 }
