@@ -1,7 +1,13 @@
 #include "KinfitExtract.h"
 #include "TTree.h"
 #include "TH1D.h"
+#include "TH1.h"
 #include "TGraph2D.h"
+#include "TCanvas.h"
+#include "THStack.h"
+#include "TDirectory.h"
+#include "TKey.h"
+#include "TList.h"
 #include "base/std_ext/math.h"
 #include "base/std_ext/memory.h"
 #include "base/std_ext/string.h"
@@ -80,4 +86,75 @@ void KinfitExtract::short_string_test()
     analysis::utils::UncertaintyModels::Optimized n;
     n.load_from_string_simple(s);
     cout << n.to_string_simple() << endl;
+}
+
+void AddMeanRMStoTitle(TH1* h, const std::string& ptitle) {
+    const string title = formatter() << ptitle << "(Mean=" << h->GetMean() << ", RMS=" << h->GetRMS() << ")";
+    h->SetTitle(title.c_str());
+}
+
+THStack* KinfitExtract::DrawPullSame(TH1* data, TH1* mc, const string& title, const bool draw)
+{
+//    std::pair<TH1*, TH1*> maxmin = {data, mc};
+
+//    if(data->GetMaximum() < mc->GetMaximum())
+//        swap(maxmin.first, maxmin.second);
+
+ //   const double max = maxmin.first->GetMaximum();
+
+    data->SetLineColor(kRed);
+    data->Scale(1.0/data->Integral());
+    mc->SetLineColor(kBlue);
+    mc->Scale(1.0/mc->Integral());
+
+    AddMeanRMStoTitle(data, "Data");
+    AddMeanRMStoTitle(mc, "MC");
+
+    auto h = new THStack();
+    h->SetTitle(title.c_str());
+
+    h->Add(data);
+    h->Add(mc);
+
+    if(draw) {
+        auto c = new TCanvas();
+        h->Draw("nostack");
+        c->BuildLegend();
+    }
+
+    return h;
+
+}
+
+void KinfitExtract::DrawPullSameAll(TDirectory* data, TDirectory* mc)
+{
+    auto l = data->GetListOfKeys();
+
+        if(!l)
+            return;
+
+        canvas stacks;
+
+        TKey* key  = nullptr;
+        TIter nextk(l);
+
+        while((key = (TKey*)nextk()))
+        {
+            TH1* data_h = dynamic_cast<TH1*>(key->ReadObj());
+            if ( !data_h )
+                continue;
+
+            TH1* mc_h = nullptr;
+            mc->GetObject(data_h->GetName(), mc_h);
+
+            if(mc_h) {
+                auto stack = DrawPullSame(data_h, mc_h, data_h->GetTitle(), false);
+                if(string_starts_with(string(data_h->GetName()), "p_")) {
+                    stacks << drawoption("nostack") << padoption::Legend << stack;
+                }
+            }
+        }
+
+        stacks << endc;
+
 }
