@@ -1,6 +1,7 @@
 #include "WrapTTree.h"
 
 #include "base/std_ext/vector.h"
+#include "base/Logger.h"
 
 using namespace std;
 using namespace ant;
@@ -42,14 +43,18 @@ bool WrapTTree::Matches(TTree* tree, bool exact) const {
     }
 
     // ensure exact match of branches if required
-    if(exact && branch_names.size() != branches.size())
+    if(exact && branch_names.size() != branches.size()) {
+        LOG(WARNING) << "TTree has wrong number of branches";
         return false;
+    }
 
     // ensure that we find all branches
     for(const ROOT_branch_t& b : branches) {
         /// \todo one could check types here as well, not only names
-        if(!std_ext::contains(branch_names, b.Name))
+        if(!std_ext::contains(branch_names, b.Name)) {
+            LOG(WARNING) << "Branch " << b.Name << " not found";
             return false;
+        }
     }
 
     // all branch names found, so we match
