@@ -196,16 +196,11 @@ bool UnpackerA2Geant::OpenFile(const string& filename)
     if(!taggerdetector)
         LOG(WARNING) << "No tagger detector found in config, there will be no taggerhits generated";
     else {
-
-        const auto PromptRandomCfg = config->GetPromptRandomConfig();
-
-        if(PromptRandomCfg.enabled) {
-            // initialize randomness
-            promptrandom = std_ext::make_unique<unpacker::geant::promptrandom_t>(
-                               taggerdetector,
-                               config->GetPromptRandomConfig()
-                               );
-        }
+        // initialize randomness
+        promptrandom = std_ext::make_unique<unpacker::geant::promptrandom_t>(
+                           taggerdetector,
+                           config->GetPromptRandomConfig()
+                           );
     }
 
 
@@ -336,20 +331,18 @@ TEvent UnpackerA2Geant::NextEvent() noexcept
             // then insert (possibly time-smeared) prompt hit
             hits.emplace_back(
                         LogicalChannel_t{taggerdetector->Type, Channel_t::Type_t::Timing, ch},
-                        std::vector<double>{promptrandom ? promptrandom->SmearPrompt(0): 0}
+                        std::vector<double>{promptrandom->SmearPrompt(0)}
                         );
 
 
         }
 
         // always fill some extra random hits
-        if(promptrandom) {
-            for(auto& hit : promptrandom->GetRandomHits()) {
-                hits.emplace_back(
-                            LogicalChannel_t{taggerdetector->Type, Channel_t::Type_t::Timing, hit.Channel},
-                            std::vector<double>{hit.Timing}
-                            );
-            }
+        for(auto& hit : promptrandom->GetRandomHits()) {
+            hits.emplace_back(
+                        LogicalChannel_t{taggerdetector->Type, Channel_t::Type_t::Timing, hit.Channel},
+                        std::vector<double>{hit.Timing}
+                        );
         }
     }
 

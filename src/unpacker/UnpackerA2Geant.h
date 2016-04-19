@@ -144,11 +144,6 @@ public:
          * @brief TimeOffset if the tagger time is determined with some offsetting reference
          */
         double PromptOffset = 0;
-
-        /**
-         * @brief prompt/random simulation enabled or not
-         */
-        bool enabled = true;
     };
 
     virtual promptrandom_config_t GetPromptRandomConfig() const {
