@@ -109,11 +109,11 @@ OmegaEtaG::OmegaEtaG(const std::string& name, OptionsPtr opts):
 
     steps = HistFac.makeTH1D("steps", "", "", BinSettings(10));
 
-    if(Options->Get<string>("OmegaEtaGMode") == "McTrue") {
+    if(opts->Get<string>("OmegaEtaGMode") == "McTrue") {
         mode = OmegaBase::DataMode::MCTrue;
     }
 
-    VLOG(8) << "mode option is " << Options->Get<string>("OmegaEtaGMode");
+    VLOG(8) << "mode option is " << opts->Get<string>("OmegaEtaGMode");
 }
 
 OmegaEtaG::perDecayhists_t OmegaEtaG::makePerDecayHists(const string &title)

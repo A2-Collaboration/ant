@@ -34,7 +34,6 @@ private:
 
 protected:
     HistogramFactory HistFac;
-    const OptionsPtr Options;
 
 public:
     Physics(const std::string& name, OptionsPtr opts);

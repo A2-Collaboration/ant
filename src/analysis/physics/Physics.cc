@@ -11,8 +11,7 @@ using namespace ant::analysis;
 
 Physics::Physics(const string &name, OptionsPtr opts):
     name_(name),
-    HistFac(name),
-    Options(opts)
+    HistFac(name)
 {
     if(opts)
         HistFac.SetDirDescription(opts->Flatten());
