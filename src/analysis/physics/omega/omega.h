@@ -198,6 +198,7 @@ public:
         ADD_BRANCH_T(unsigned, TaggCh)
 
         ADD_BRANCH_T(double,   KinFitChi2)
+        ADD_BRANCH_T(double,   KinFitProb)
         ADD_BRANCH_T(unsigned, KinFitIterations)
 
         ADD_BRANCH_T(double,   CBSumE)

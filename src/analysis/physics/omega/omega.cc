@@ -719,6 +719,7 @@ void OmegaEtaG2::Analyse(const TEventData &data, const TEvent& event, manager_t&
                 continue;
 
             t.KinFitChi2 = fitres.ChiSquare / fitres.NDoF;
+            t.KinFitProb = fitres.Probability;
             t.KinFitIterations = unsigned(fitres.NIterations);
 
 
