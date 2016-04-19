@@ -313,11 +313,11 @@ struct OmegaHist_t {
             if(f.Tree.bestHyp != 2)
                 return false;
 
-            const auto& etachi2  = f.Tree.etachi2()[f.Tree.iBestEta];
+            const auto& etaprob  = f.Tree.etaprob()[f.Tree.iBestEta];
             const auto& iBestPi0 = f.Tree.iBestPi0;
-            const auto& pi0chi2  = f.Tree.pi0chi2()[iBestPi0];
+            const auto& pi0prob  = f.Tree.pi0prob()[iBestPi0];
 
-            return etachi2 < 10 && (iBestPi0==-1 || pi0chi2 > 10);
+            return etaprob > 0.03 && (iBestPi0==-1 || pi0prob < 0.03);
         };
 
         auto pi0HypCut = [] (const Fill_t& f) {
@@ -325,9 +325,9 @@ struct OmegaHist_t {
                 return false;
 
             const auto& iBestPi0 = f.Tree.iBestPi0;
-            const auto& pi0chi2  = f.Tree.pi0chi2()[iBestPi0];
+            const auto& pi0prob  = f.Tree.pi0prob()[iBestPi0];
 
-            return pi0chi2 < 10;
+            return pi0prob > 0.03;
         };
 
         cuts.emplace_back(MultiCut_t<Fill_t>{
