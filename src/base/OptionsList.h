@@ -28,8 +28,10 @@ protected:
         bool Used = false;
     };
 
-    mutable std::map<std::string, option_t > options;
-    mutable std::set<std::string> notfound;
+    using options_t = std::map<std::string, option_t>;
+    std::unique_ptr< options_t > options;
+    using notfound_t = std::set<std::string>;
+    std::unique_ptr< notfound_t > notfound;
 
     std::string GetOption(const std::string& key) const;
 

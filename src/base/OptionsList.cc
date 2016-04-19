@@ -1,13 +1,19 @@
 #include "OptionsList.h"
-#include "std_ext/string.h"
+
 #include "Logger.h"
+
+
+#include "std_ext/string.h"
+#include "std_ext/memory.h"
 #include <cstdlib>
 
 using namespace std;
 using namespace ant;
 
 OptionsList::OptionsList(std::shared_ptr<const OptionsList> Parent):
-    parent(Parent)
+    parent(Parent),
+    options(std_ext::make_unique<options_t>()),
+    notfound(std_ext::make_unique<notfound_t>())
 {
 }
 
@@ -17,7 +23,7 @@ void OptionsList::SetOption(const string& str, const string delim)
     if( delimiter_pos != str.npos) {
         const std::string key = str.substr(0, delimiter_pos);
         const std::string val = str.substr(delimiter_pos + delim.length(), str.npos);
-        options[key].Value = val;
+        (*options)[key].Value = val;
     } else {
         LOG(WARNING) << "Can't parse option string \"" << str << "\"";
     }
@@ -31,10 +37,10 @@ void OptionsList::SetOptions(const string& str,const string optdelim, const stri
 
 string OptionsList::GetOption(const string& key) const
 {
-    auto entry = options.find(key);
+    auto entry = options->find(key);
 
-    if(entry == options.end()) {
-        notfound.insert(key);
+    if(entry == options->end()) {
+        notfound->insert(key);
         // ask parent
         if(parent) {
             return parent->GetOption(key);
@@ -49,7 +55,7 @@ string OptionsList::GetOption(const string& key) const
 string OptionsList::Flatten() const
 {
     stringstream s;
-    for(const auto& e : options) {
+    for(const auto& e : *options) {
         s << e.first << "=" << e.second.Value << ":";
     }
     return s.str();
@@ -57,13 +63,13 @@ string OptionsList::Flatten() const
 
 std::set<string> OptionsList::GetNotFound() const
 {
-    return notfound;
+    return *notfound;
 }
 
 std::set<string> OptionsList::GetUnused() const
 {
     std::set<string> unused;
-    for(const auto& e : options)
+    for(const auto& e : *options)
         if(!e.second.Used)
             unused.insert(e.first);
     return unused;
