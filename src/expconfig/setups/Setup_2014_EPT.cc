@@ -203,5 +203,6 @@ ant::UnpackerA2GeantConfig::promptrandom_config_t Setup_2014_EPT::GetPromptRando
     conf.PromptSigma = 0.87;       // in ns
     conf.TimeWindow = {-120, 120};
     conf.PromptOffset = -0.37;
+    conf.enabled = Options->Get<bool>("MCTaggerHits",true);
     return conf;
 }
