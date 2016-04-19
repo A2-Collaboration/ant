@@ -63,7 +63,6 @@ public:
     }
 
 protected:
-    const OptionsPtr Options;
 
     Setup(const std::string& name, OptionsPtr opt);
 

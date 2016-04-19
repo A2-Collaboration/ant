@@ -19,7 +19,7 @@ public:
     Setup_2014_07_EPT_Prod(const std::string& name, OptionsPtr opt)
         : Setup_2014_EPT(name, opt)
     {
-        if(!Options->Get<bool>("IncludeBadElements")) {
+        if(!opt->Get<bool>("IncludeBadElements")) {
             // empty elements
             IgnoreDetectorChannels(Detector_t::Type_t::CB, {203,265,267,479,549,565,586,607,677});
             // inverted timewalk spectrum

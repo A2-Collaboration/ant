@@ -66,9 +66,8 @@ std::string Setup::GetPhysicsFilesDirectory() const
     return std::string(ANT_PATH_DATABASE)+"/"+GetName()+"/physics_files";
 }
 
-Setup::Setup(const std::string& name, OptionsPtr opt) :
-    name_(name),
-    Options(opt)
+Setup::Setup(const std::string& name, OptionsPtr) :
+    name_(name)
 {
     std::string calibrationDataFolder = std::string(ANT_PATH_DATABASE)+"/"+GetName()+"/calibration";
     calibrationDataManager = std::make_shared<calibration::DataManager>(calibrationDataFolder);

@@ -88,12 +88,12 @@ Setup_2014_EPT::Setup_2014_EPT(const string& name, OptionsPtr opt) :
     AddHook(convert_CATCH_CB);
     AddHook(convert_V1190_TAPSPbWO4);
 
-    const bool timecuts = !Options->Get<bool>("DisableTimecuts");
+    const bool timecuts = !opt->Get<bool>("DisableTimecuts");
     interval<double> no_timecut(-std_ext::inf, std_ext::inf);
     if(!timecuts)
         LOG(INFO) << "Disabling timecuts";
 
-    const bool thresholds = !Options->Get<bool>("DisableThresholds");
+    const bool thresholds = !opt->Get<bool>("DisableThresholds");
     if(!thresholds)
         LOG(INFO) << "Disabling thresholds";
 

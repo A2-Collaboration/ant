@@ -38,7 +38,7 @@ public:
         const auto& convert_GeSiCa_SADC = make_shared<calibration::converter::GeSiCa_SADC>();
         AddHook(convert_CATCH_CB);
 
-        const bool timecuts = !Options->Get<bool>("DisableTimecuts");
+        const bool timecuts = !opt->Get<bool>("DisableTimecuts");
         interval<double> no_timecut(-std_ext::inf, std_ext::inf);
         if(!timecuts)
             LOG(INFO) << "Disabling timecuts";
