@@ -40,7 +40,8 @@ using namespace ant::expconfig::setup;
 
 
 Setup_2014_EPT::Setup_2014_EPT(const string& name, OptionsPtr opt) :
-    Setup(name, opt)
+    Setup(name, opt),
+    MCTaggerHits(opt->Get<bool>("MCTaggerHits",true))
 {
 
     // setup the detectors of interest
@@ -200,7 +201,7 @@ ant::ExpConfig::Setup::candidatebuilder_config_t Setup_2014_EPT::GetCandidateBui
 ant::UnpackerA2GeantConfig::promptrandom_config_t Setup_2014_EPT::GetPromptRandomConfig() const {
     ant::UnpackerA2GeantConfig::promptrandom_config_t conf;
     // default constructed conf has everything disabled
-    if(Options->Get<bool>("MCTaggerHits",true)) {
+    if(MCTaggerHits) {
         conf.RandomPromptRatio = 0.22; // per unit time interval
         conf.PromptSigma = 0.87;       // in ns
         conf.TimeWindow = {-120, 120};

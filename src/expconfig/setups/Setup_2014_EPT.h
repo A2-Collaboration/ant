@@ -9,6 +9,8 @@ namespace setup {
  */
 class Setup_2014_EPT : public Setup
 {
+    const bool MCTaggerHits;
+
 public:
 
     Setup_2014_EPT(const std::string& name, OptionsPtr opt);
