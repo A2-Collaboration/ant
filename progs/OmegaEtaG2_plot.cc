@@ -305,7 +305,7 @@ struct OmegaHist_t {
         cuttree::Cuts_t<Fill_t> cuts;
 
         cuts.emplace_back(MultiCut_t<Fill_t>{
-                                 {"#chi^{2}<5+mm", [] (const Fill_t& f) { return f.Tree.KinFitChi2<5 && f.Tree.mm().M()<1100 && f.Tree.mm().M() > 780; } }
+                                 {"Prob>0.002+mm", [] (const Fill_t& f) { return f.Tree.KinFitProb>0.002 && f.Tree.mm().M()<1100 && f.Tree.mm().M() > 780; } }
                              });
 
         auto etaHypCut = [] (const Fill_t& f) {
