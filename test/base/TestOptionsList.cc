@@ -12,6 +12,7 @@ using namespace ant;
 void dotest1();
 void dotest2();
 void dotest3();
+void dotest4();
 
 TEST_CASE("OptionsList: Basic", "[base]") {
     dotest1();
@@ -23,6 +24,10 @@ TEST_CASE("OptionsList: Chained", "[base]") {
 
 TEST_CASE("OptionsList: Flags", "[base]") {
     dotest3();
+}
+
+TEST_CASE("OptionsList: Unused/Notfound", "[base]") {
+    dotest4();
 }
 
 
@@ -67,4 +72,24 @@ void dotest3() {
     REQUIRE(opts->Get<bool>("flag4"));
     REQUIRE_FALSE(opts->Get<bool>("flag5"));
     REQUIRE(opts->Get<bool>("flag6"));
+}
+
+void dotest4() {
+    auto opts = std::make_shared<OptionsList>();
+    opts->SetOption("flag1=1");
+    opts->SetOption("flag2=on");
+    opts->SetOption("flag3=oN");
+    opts->SetOption("flag4=truE");
+    opts->SetOption("flag5=no");
+    opts->SetOption("flag6=YES");
+
+    REQUIRE(opts->Get<bool>("flag1"));
+    REQUIRE(opts->Get<bool>("flag3"));
+    REQUIRE(opts->Get<bool>("flag7", true));
+
+    auto notfound = opts->GetNotFound();
+    REQUIRE(notfound.size() == 1);
+
+    auto unused = opts->GetUnused();
+    REQUIRE(unused.size()==4);
 }
