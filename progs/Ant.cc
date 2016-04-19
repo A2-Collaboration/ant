@@ -76,7 +76,7 @@ int main(int argc, char** argv) {
 
                 const string setup_name(argv[2]);
 
-                ExpConfig::Setup::ManualName = setup_name;
+                ExpConfig::Setup::SetManualName(setup_name);
                 const auto setup = ExpConfig::Setup::GetLastFound();
 
                 if(setup) {
@@ -163,9 +163,10 @@ int main(int argc, char** argv) {
     // which could tell us the SetupName
     TAntHeader* previous_AntHeader;
     if(rootfiles->GetObject<TAntHeader>("AntHeader",previous_AntHeader)) {
-        if(!previous_AntHeader->SetupName.empty()) {
-            ExpConfig::Setup::ManualName = previous_AntHeader->SetupName;
-            LOG(INFO) << "Setup name set to '" << ExpConfig::Setup::ManualName << "' from input file";
+        const auto& setupname = previous_AntHeader->SetupName;
+        if(!setupname.empty()) {
+            ExpConfig::Setup::SetManualName(setupname);
+            LOG(INFO) << "Setup name set to '" << setupname << "' from input file";
         }
         else
             LOG(WARNING) << "Found AntHeader in input files, but SetupName was empty";
@@ -173,11 +174,12 @@ int main(int argc, char** argv) {
 
     // override the setup name from cmd line
     if(cmd_setup->isSet()) {
-        ExpConfig::Setup::ManualName = cmd_setup->getValue();
-        if(ExpConfig::Setup::ManualName.empty())
+        const auto& setupname = cmd_setup->getValue();
+        ExpConfig::Setup::SetManualName(setupname, false);
+        if(setupname.empty())
             LOG(INFO) << "Commandline override to auto-search for setup config (might fail)";
         else
-            LOG(INFO) << "Commandline override setup name to '" << ExpConfig::Setup::ManualName << "'";
+            LOG(INFO) << "Commandline override setup name to '" << setupname << "'";
     }
 
 

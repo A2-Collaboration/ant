@@ -19,7 +19,7 @@ TH2CB* makeMeanHist(TH2D* h, interval<double> range) {
 
     TH2CB* cb = new TH2CB(std_ext::formatter() << "cb_" << h->GetName(),
                           std_ext::formatter() << "Mean " << range << " " << h->GetTitle() );
-    ExpConfig::Setup::ManualName = "Setup_2014_07_EPT_Prod";
+
     auto cb_detector = ExpConfig::Setup::GetDetector(Detector_t::Type_t::CB);
 
 
@@ -38,8 +38,10 @@ TH2CB* makeMeanHist(TH2D* h, interval<double> range) {
     return cb;
 }
 
-void CBESum_Check::Analyse(TFile* file)
+void CBESum_Check::Analyse(TFile* file, const char* setupname)
 {
+    ExpConfig::Setup::SetManualName(setupname);
+
     TH2D* h_CBEsum = dynamic_cast<TH2D*>(file->Get("TriggerOverview/CBESum_perCh"));
     TH2D* h_E = dynamic_cast<TH2D*>(file->Get("TriggerOverview/E_perCh"));
     auto cb_CBEsum = makeMeanHist(h_CBEsum, {400, 700});

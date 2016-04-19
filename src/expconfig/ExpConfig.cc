@@ -16,7 +16,7 @@ using namespace std;
 
 namespace ant { // template implementations need explicit namespace
 
-std::string ExpConfig::Setup::ManualName = ""; // default empty
+std::string ExpConfig::Setup::manualName = ""; // default empty
 std::shared_ptr<ExpConfig::Setup> ExpConfig::Setup::lastFound = nullptr; // default nothing found so far
 
 shared_ptr<ExpConfig::Setup> ExpConfig::Setup::Get(const TID& tid)
@@ -24,13 +24,13 @@ shared_ptr<ExpConfig::Setup> ExpConfig::Setup::Get(const TID& tid)
 
     shared_ptr<Setup> config = nullptr;
 
-    if(!Setup::ManualName.empty()) {
-        config = ExpConfig::Setup::Get(Setup::ManualName);
+    if(!manualName.empty()) {
+        config = ExpConfig::Setup::Get(manualName);
         if(config == nullptr) {
             throw Exception(
                         std_ext::formatter()
                         << "Found no config matching name "
-                        << Setup::ManualName
+                        << manualName
                         );
         }
         return config;
@@ -75,8 +75,8 @@ shared_ptr<ExpConfig::Setup> ExpConfig::Setup::Get(const std::string& name)
 shared_ptr<ExpConfig::Setup> ExpConfig::Setup::GetLastFound()
 {
     // try if we have a name
-    if(lastFound==nullptr && !ManualName.empty()) {
-        Get(ManualName);
+    if(lastFound==nullptr && !manualName.empty()) {
+        Get(manualName);
     }
     return lastFound;
 }
@@ -93,10 +93,17 @@ shared_ptr<Detector_t> ExpConfig::Setup::GetDetector(Detector_t::Type_t type)
     throw Exception("Could not find detector in given setup");
 }
 
+void ExpConfig::Setup::SetManualName(const string& setupname, bool required)
+{
+    manualName = setupname;
+    if(required && Get(setupname) == nullptr)
+        throw ExceptionNoConfig("No setup found in registry for manual name "+setupname);
+}
+
 void ExpConfig::Setup::Cleanup()
 {
     lastFound = nullptr;
-    ManualName = "";
+    manualName = "";
     expconfig::SetupRegistry::Destroy();
 }
 

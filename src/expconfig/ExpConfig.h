@@ -36,8 +36,6 @@ public:
     public:
         virtual bool Matches(const TID& header) const = 0;
 
-        static std::string ManualName;
-
         virtual std::string GetName() const = 0;
         virtual double GetElectronBeamEnergy() const = 0;
         virtual std::list< std::shared_ptr< Calibration::PhysicsModule> > GetCalibrations() const = 0;
@@ -72,12 +70,14 @@ public:
         template<typename DetectorType>
         static std::shared_ptr<DetectorType> GetDetector();
 
+        static void SetManualName(const std::string& setupname, bool required = true);
         static void Cleanup();
 
         virtual ~Setup() = default;
 
     private:
         friend class ExpConfig;
+        static std::string manualName;
         static std::shared_ptr<Setup> lastFound;
     };
 

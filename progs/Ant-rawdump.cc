@@ -78,12 +78,11 @@ int main(int argc, char** argv) {
 
     // register some simple Setup and override the setup name
 
-    ExpConfig::Setup::ManualName = "Setup_Raw";
 
     struct MySetup : expconfig::Setup {
 
         MySetup(const PiecewiseInterval<unsigned>& adc_ranges_) :
-            Setup(ExpConfig::Setup::ManualName, nullptr),
+            Setup("Setup_Raw", nullptr),
             ADC_ranges(adc_ranges_) {}
 
         bool Matches(const TID&) const override {
@@ -115,9 +114,12 @@ int main(int argc, char** argv) {
         PiecewiseInterval<unsigned> ADC_ranges;
     };
 
+    auto setup = make_shared<MySetup>(adc_ranges);
+    expconfig::SetupRegistry::AddSetup( setup->GetName(),
+                                        setup);
 
-    expconfig::SetupRegistry::AddSetup( ExpConfig::Setup::ManualName,
-                                        make_shared<MySetup>(adc_ranges));
+    ExpConfig::Setup::SetManualName(setup->GetName());
+
 
     // now we can try to open the files with an unpacker
     std::unique_ptr<Unpacker::Module> unpacker = nullptr;
