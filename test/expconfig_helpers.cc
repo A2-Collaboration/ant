@@ -48,11 +48,10 @@ void ant::test::EnsureSetup() {
 
     REQUIRE(ExpConfig::Setup::GetLastFound() == nullptr);
 
-    ExpConfig::Setup::ManualName = "Setup_Test";
 
     struct Setup_Test : expconfig::Setup {
 
-        Setup_Test() : Setup(ExpConfig::Setup::ManualName, nullptr) {
+        Setup_Test() : Setup("Setup_Test", nullptr) {
 
 
             // setup the detectors of interest
@@ -178,8 +177,10 @@ void ant::test::EnsureSetup() {
         }
     };
 
-    expconfig::SetupRegistry::AddSetup( ExpConfig::Setup::ManualName,
-                                        make_shared<Setup_Test>());
+    auto setup = make_shared<Setup_Test>();
+    expconfig::SetupRegistry::AddSetup(setup->GetName(),
+                                       setup);
+    ExpConfig::Setup::SetManualName(setup->GetName());
 
     REQUIRE(ExpConfig::Setup::GetLastFound() != nullptr);
 
