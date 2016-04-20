@@ -149,11 +149,6 @@ struct SigHist_t : CommonHist_t {
     TH1D* h_AntiEtaFitProb;
     TH1D* h_TreeFitProb;
 
-    TH1D* h_ClusterShape_g1_Pi0;
-    TH1D* h_ClusterShape_g2_Pi0;
-    TH1D* h_ClusterShape_g_Omega;
-    TH1D* h_ClusterShape_g_EtaPrime;
-
     const BinSettings bins_IM_Etap {100, 800,1050};
     const BinSettings bins_IM_Omega{100, 550, 950};
     const BinSettings bins_ClusterShape{30,0,1};
@@ -173,11 +168,6 @@ struct SigHist_t : CommonHist_t {
         h_AntiEtaFitProb = HistFac.makeTH1D("AntiEtaFitProb", "p","",bins_FitProb,"h_AntiEtaFitProb");
         h_TreeFitProb = HistFac.makeTH1D("TreeFitProb", "p","",bins_FitProb,"h_TreeFitProb");
 
-        h_ClusterShape_g1_Pi0 = HistFac.makeTH1D("ClusterShape #gamma_{1} #pi^{0}","","",bins_ClusterShape, "h_ClusterShape_g1_Pi0");
-        h_ClusterShape_g2_Pi0 = HistFac.makeTH1D("ClusterShape #gamma_{2} #pi^{0}","","",bins_ClusterShape, "h_ClusterShape_g2_Pi0");
-        h_ClusterShape_g_Omega = HistFac.makeTH1D("ClusterShape #gamma #omega","","",bins_ClusterShape, "h_ClusterShape_g_Omega");
-        h_ClusterShape_g_EtaPrime = HistFac.makeTH1D("ClusterShape #gamma #eta'","","",bins_ClusterShape, "h_ClusterShape_g_EtaPrime");
-
     }
 
     void Fill(const Fill_t& f) const {
@@ -196,17 +186,12 @@ struct SigHist_t : CommonHist_t {
         h_IM_gg->Fill(tree.IM_gg, f.TaggW());
         h_TreeFitProb->Fill(tree.TreeFitProb, f.TaggW());
 
-        h_ClusterShape_g1_Pi0->Fill(tree.ClusterShape_g1_Pi0, f.TaggW());
-        h_ClusterShape_g2_Pi0->Fill(tree.ClusterShape_g2_Pi0, f.TaggW());
-        h_ClusterShape_g_Omega->Fill(tree.ClusterShape_g_Omega, f.TaggW());
-        h_ClusterShape_g_EtaPrime->Fill(tree.ClusterShape_g_EtaPrime, f.TaggW());
     }
 
     std::vector<TH1*> GetHists() const {
         auto hists = CommonHist_t::GetHists();
         hists.insert(hists.end(), {
-                         h_IM_4g, h_IM_gg, h_AntiPi0FitProb, h_AntiEtaFitProb, h_TreeFitProb,
-                         h_ClusterShape_g1_Pi0, h_ClusterShape_g2_Pi0, h_ClusterShape_g_Omega, h_ClusterShape_g_EtaPrime
+                         h_IM_4g, h_IM_gg, h_AntiPi0FitProb, h_AntiEtaFitProb, h_TreeFitProb
                      });
         return hists;
     }

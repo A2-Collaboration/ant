@@ -75,11 +75,6 @@ struct EtapOmegaG : Physics {
                 ADD_BRANCH_T(double,   TreeFitProb)
                 ADD_BRANCH_T(unsigned, TreeFitIterations)
 
-                ADD_BRANCH_T(double, ClusterShape_g1_Pi0)
-                ADD_BRANCH_T(double, ClusterShape_g2_Pi0)
-                ADD_BRANCH_T(double, ClusterShape_g_Omega)
-                ADD_BRANCH_T(double, ClusterShape_g_EtaPrime)
-
                 ADD_BRANCH_T(double, IM_Pi0_best)
                 ADD_BRANCH_T(double, IM_Pi0_fitted)
 
