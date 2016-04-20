@@ -185,6 +185,9 @@ struct EtapOmegaG : Physics {
 
         struct Tree_t : WrapTTree {
             ADD_BRANCH_T(double,   IM_2g)
+            ADD_BRANCH_T(double,   KinFitChi2)
+            ADD_BRANCH_T(double,   KinFitProb)
+            ADD_BRANCH_T(unsigned, KinFitIterations)
         };
         Tree_t t;
 

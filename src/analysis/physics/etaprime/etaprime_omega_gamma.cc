@@ -665,13 +665,30 @@ EtapOmegaG::Ref_t::Ref_t() :
 
 void EtapOmegaG::Ref_t::ResetBranches()
 {
+    t.KinFitChi2 = std_ext::NaN;
+    t.KinFitProb = std_ext::NaN;
+    t.KinFitIterations = 0;
     t.IM_2g = std_ext::NaN;
 }
 
 void EtapOmegaG::Ref_t::Process(const EtapOmegaG::Particles_t& particles)
 {
-    assert(particles.Photons.size() == 2);
-    t.IM_2g = particles.PhotonSum.M();
+    kinfitter.SetEgammaBeam(particles.PhotonEnergy);
+    kinfitter.SetProton(particles.Proton);
+    kinfitter.SetPhotons(particles.Photons);
+
+    auto result = kinfitter.DoFit();
+
+    if(result.Status != APLCON::Result_Status_t::Success)
+        return;
+    t.KinFitChi2 = result.ChiSquare;
+    t.KinFitProb = result.Probability;
+    t.KinFitIterations = result.NIterations;
+
+    auto photons = kinfitter.GetFittedPhotons();
+
+    assert(photons.size() == 2);
+    t.IM_2g = (*photons.front() + *photons.back()).M();
 }
 
 void EtapOmegaG::ShowResult()
