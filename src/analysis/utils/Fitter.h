@@ -71,7 +71,7 @@ public:
 
     struct FitParticle
     {
-        TParticlePtr Particle;
+        TParticlePtr Particle; // pointer to unfitted value
 
         struct Var_t {
             double Value = 0;
@@ -87,6 +87,8 @@ public:
         Var_t Phi;
 
         FitParticle(const std::string& name): Name(name) {}
+
+        TParticlePtr AsFitted(const ParticleTypeDatabase::Type& type);
 
     protected:
         friend class Fitter;
