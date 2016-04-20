@@ -102,6 +102,9 @@ struct EtapOmegaG : Physics {
             utils::TreeFitter::tree_t fitted_Omega;
             utils::TreeFitter::tree_t fitted_g_Omega;
 
+            utils::TreeFitter::tree_t fitted_EtaPrime;
+            utils::TreeFitter::tree_t fitted_g_EtaPrime;
+
         };
 
         struct Pi0_t : Fit_t {
@@ -167,7 +170,7 @@ struct EtapOmegaG : Physics {
         SharedTree_t t;
         utils::TreeFitter treefitter_Pi0Pi0;
         utils::TreeFitter treefitter_Pi0Eta;
-        void DoAntiPi0Eta(TParticleList photons);
+        void DoAntiPi0Eta(const Particles_t& particles);
         void DoPhotonCombinatorics(TParticleList photons);
 
     };
