@@ -46,9 +46,6 @@ struct EtapOmegaG : Physics {
         ADD_BRANCH_T(double,   TaggT)
         ADD_BRANCH_T(unsigned, TaggCh)
 
-        ADD_BRANCH_T(double,   KinFitChi2)
-        ADD_BRANCH_T(double,   KinFitProb)
-        ADD_BRANCH_T(unsigned, KinFitIterations)
     };
 
     TreeCommon t;
@@ -56,13 +53,11 @@ struct EtapOmegaG : Physics {
     PromptRandom::Switch promptrandom;
     PromptRandom::Switch promptrandom_tight;
 
-    utils::KinFitter kinfitter_2;
-    utils::KinFitter kinfitter_4;
-
-
     struct Particles_t {
+        double         PhotonEnergy;
+        TParticlePtr   Proton;
         TParticleList  Photons;
-        LorentzVec PhotonSum;
+        LorentzVec     PhotonSum;
     };
 
     struct Sig_t {
@@ -185,6 +180,8 @@ struct EtapOmegaG : Physics {
     struct Ref_t {
 
         Ref_t();
+
+        utils::KinFitter kinfitter;
 
         struct Tree_t : WrapTTree {
             ADD_BRANCH_T(double,   IM_2g)

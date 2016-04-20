@@ -96,7 +96,6 @@ struct CommonHist_t {
         h_PIDSumE = HistFac.makeTH1D("PID Sum E","E / MeV","",BinSettings(50,0,10),"h_PIDSumE");
     }
     void Fill(const Fill_t& f) const {
-        h_KinFitProb->Fill(f.Common.KinFitProb, f.TaggW());
         h_CBSumE->Fill(f.Common.CBSumE, f.TaggW());
         h_CBSumVetoE->Fill(f.Common.CBSumVetoE, f.TaggW());
         h_PIDSumE->Fill(f.Common.PIDSumE, f.TaggW());
@@ -116,10 +115,10 @@ struct CommonHist_t {
                               //{"PIDSumE=0", [] (const Fill_t& f) { return f.Common.PIDSumE==0; } },
                               {"PIDSumE<1", [] (const Fill_t& f) { return f.Common.PIDSumE<1; } },
                           });
-        cuts.emplace_back(MultiCut_t<Fill_t>{
-                                 {"KinFitProb>0", [] (const Fill_t& f) { return f.Common.KinFitProb>0; } },
-                                 {"KinFitProb>0.01", [] (const Fill_t& f) { return f.Common.KinFitProb>0.01; } },
-                             });
+//        cuts.emplace_back(MultiCut_t<Fill_t>{
+//                                 {"KinFitProb>0", [] (const Fill_t& f) { return f.Common.KinFitProb>0; } },
+//                                 {"KinFitProb>0.01", [] (const Fill_t& f) { return f.Common.KinFitProb>0.01; } },
+//                             });
         return cuts;
     }
 

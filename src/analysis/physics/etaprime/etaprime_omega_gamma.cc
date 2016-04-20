@@ -34,9 +34,7 @@ APLCON::Fit_Settings_t EtapOmegaG::MakeFitSettings(unsigned max_iterations)
 }
 
 EtapOmegaG::EtapOmegaG(const string& name, OptionsPtr opts) :
-    Physics(name, opts),
-    kinfitter_2("kinfitter_2", 2, utils::UncertaintyModels::MCExtracted::makeAndLoad(), MakeFitSettings(25)),
-    kinfitter_4("kinfitter_4", 4, utils::UncertaintyModels::MCExtracted::makeAndLoad(), MakeFitSettings(25))
+    Physics(name, opts)
 {
     const interval<double> prompt_range{-2.5,1.5};
     promptrandom.AddPromptRange(prompt_range); // slight offset due to CBAvgTime reference
@@ -96,7 +94,8 @@ void EtapOmegaG::ProcessEvent(const TEvent& event, manager_t&)
     // over each TAPS clusters
     /// \todo think about using beta here as in EtapProton?
     t.ProtonTime = std_ext::NaN;
-    TParticlePtr proton;
+    Particles_t particles;
+    TParticlePtr& proton = particles.Proton;
     for(const auto& cand : data.Candidates.get_iter()) {
         if(cand->Detector & Detector_t::Type_t::TAPS) {
             if(!isfinite(t.ProtonTime) || t.ProtonTime < cand->Time) {
@@ -116,8 +115,9 @@ void EtapOmegaG::ProcessEvent(const TEvent& event, manager_t&)
         return;
     h_CommonCuts->Fill("nPhotons==2|4", 1.0);
 
-    Particles_t particles;
-    LorentzVec photon_sum(0,0,0,0);
+
+    LorentzVec& photon_sum = particles.PhotonSum;
+    photon_sum = {0,0,0,0};
     t.nPhotonsCB = 0;
     t.nPhotonsTAPS = 0;
     t.CBSumVetoE = 0;
@@ -201,8 +201,6 @@ void EtapOmegaG::ProcessEvent(const TEvent& event, manager_t&)
         t.MCTrue = 9;
     }
 
-    auto& kinfitter = nPhotons==4 ? kinfitter_4 : kinfitter_2;
-
     // loop over tagger hits, delegate to Ref/Sig
     for(const TTaggerHit& taggerhit : data.TaggerHits) {
         promptrandom.SetTaggerHit(taggerhit.Time - t.CBAvgTime);
@@ -223,33 +221,13 @@ void EtapOmegaG::ProcessEvent(const TEvent& event, manager_t&)
         Sig.ResetBranches();
         Ref.ResetBranches();
 
-        // do kinfit
-        kinfitter.SetEgammaBeam(taggerhit.PhotonEnergy);
-        kinfitter.SetProton(proton);
-        kinfitter.SetPhotons(particles.Photons);
-        const auto& fit_result = kinfitter.DoFit();
+        particles.PhotonEnergy = taggerhit.PhotonEnergy;
 
-        t.KinFitChi2 = std_ext::NaN;
-        t.KinFitProb = std_ext::NaN;
-        t.KinFitIterations = 0;
+        if(t.IsSignal)
+            Sig.Process(particles, ptree_sigref);
+        else
+            Ref.Process(particles);
 
-        if(fit_result.Status == APLCON::Result_Status_t::Success) {
-
-            t.KinFitChi2 = fit_result.ChiSquare;
-            t.KinFitProb = fit_result.Probability;
-            t.KinFitIterations = fit_result.NIterations;
-
-            Particles_t fitted_particles;
-            fitted_particles.Photons = kinfitter.GetFittedPhotons();
-            fitted_particles.PhotonSum = LorentzVec{0,0,0,0};
-            for(const auto& photon : fitted_particles.Photons)
-                fitted_particles.PhotonSum += *photon;
-
-            if(t.IsSignal)
-                Sig.Process(fitted_particles, ptree_sigref);
-            else
-                Ref.Process(fitted_particles);
-        }
 
         t.Tree->Fill();
         Sig.Fill();
@@ -676,7 +654,11 @@ void EtapOmegaG::Sig_t::OmegaPi0_t::Process(const EtapOmegaG::Particles_t& parti
     }
 }
 
-EtapOmegaG::Ref_t::Ref_t()
+EtapOmegaG::Ref_t::Ref_t() :
+    kinfitter("ref_kinfitter",2,
+              utils::UncertaintyModels::MCExtracted::makeAndLoad(),
+              EtapOmegaG::MakeFitSettings(25)
+              )
 {
 
 }
