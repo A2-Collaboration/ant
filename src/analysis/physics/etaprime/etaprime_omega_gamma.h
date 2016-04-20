@@ -195,6 +195,8 @@ struct EtapOmegaG : Physics {
         void Process(const Particles_t& particles);
     };
 
+    using uncertainty_model_t = utils::UncertaintyModels::Optimized_Oli1;
+
     Sig_t Sig;
     Ref_t Ref;
 

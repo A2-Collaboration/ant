@@ -244,12 +244,12 @@ void EtapOmegaG::ProcessEvent(const TEvent& event, manager_t&)
 EtapOmegaG::Sig_t::Sig_t() :
     treefitter_Pi0Pi0("treefit_Pi0Pi0",
                       ParticleTypeTreeDatabase::Get(ParticleTypeTreeDatabase::Channel::TwoPi0_4g),
-                      utils::UncertaintyModels::MCExtracted::makeAndLoad(), {},
+                      make_shared<uncertainty_model_t>(), {},
                       MakeFitSettings(20)
                       ),
     treefitter_Pi0Eta("treefit_Pi0Eta",
                       ParticleTypeTreeDatabase::Get(ParticleTypeTreeDatabase::Channel::Pi0Eta_4g),
-                      utils::UncertaintyModels::MCExtracted::makeAndLoad(), {},
+                      make_shared<uncertainty_model_t>(), {},
                       MakeFitSettings(15)
                       )
 {
@@ -391,7 +391,7 @@ utils::TreeFitter EtapOmegaG::Sig_t::Fit_t::Make(const ParticleTypeDatabase::Typ
     return {
         "sig_treefitter_"+subtree.Name(),
         subtree==Omega->Get() ? Omega : Pi0,
-                utils::UncertaintyModels::MCExtracted::makeAndLoad(),
+                make_shared<uncertainty_model_t>(),
         {},
         MakeFitSettings(15)
     };
@@ -656,7 +656,7 @@ void EtapOmegaG::Sig_t::OmegaPi0_t::Process(const EtapOmegaG::Particles_t& parti
 
 EtapOmegaG::Ref_t::Ref_t() :
     kinfitter("ref_kinfitter",2,
-              utils::UncertaintyModels::MCExtracted::makeAndLoad(),
+              make_shared<uncertainty_model_t>(),
               EtapOmegaG::MakeFitSettings(25)
               )
 {
