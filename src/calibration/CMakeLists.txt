@@ -19,6 +19,7 @@ set(SRCS
     modules/TAPS_Time.cc
     modules/TAPS_ToF.cc
     modules/TAPSVeto_Time.cc
+    modules/CB_SourceCalib.cc
     converters/GeSiCa_SADC.h
     converters/MultiHit.h
     converters/MultiHitReference.cc
@@ -43,6 +44,7 @@ set(SRCS
     fitfunctions/FitTimewalk.cc
     fitfunctions/FitLandau.cc
     fitfunctions/FitLandauPol0.cc
+    fitfunctions/FitGausexpo.cc
     modules/MCEnergySmearing.cc
   )
 
