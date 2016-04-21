@@ -20,6 +20,11 @@ struct timewalk {
     static TF1* getTF1();
 };
 
+struct exponential {
+    static double fct(double* x, double* p);
+    static TF1* getTF1();
+};
+
 
 /**
  *@brief Polynomial of order n
@@ -56,6 +61,18 @@ struct GausPol {
     static TF1* getTF1() {
         return helper::makeTF1(GausPol<order>::fct,order+4); // gaus: 3 pramams, pol: order + 1
     }
+};
+
+struct Gausexpo {
+    static double fct(double *x, double *p) {
+        return gaus::fct(x, &p[0])+exponential::fct(x, &p[3]);
+    }
+
+    static TF1* getTF1() {
+        return helper::makeTF1(Gausexpo::fct, 6 );
+    }
+
+
 };
 
 }

@@ -31,6 +31,11 @@ double timewalk::fct(double* x, double* p)
     return p[0] + p[1]/std::pow(x[0] - p[2], p[3]);
 }
 
+double exponential::fct(double *x, double *p)
+{
+    return p[0]*exp(p[1]+p[2]*x[0]);
+}
+
 TF1* timewalk::getTF1()
 {
     return helper::makeTF1(fct, 4);
