@@ -26,6 +26,7 @@
 #pragma link C++ class ant::histtools+;
 #pragma link C++ class ant::MC::ThetaCBToyMC+;
 #pragma link C++ class ant::KinfitExtract+;
+#pragma link C++ class ant::Math+;
 
 #endif // __CINT__
 
