@@ -380,7 +380,7 @@ int main(int argc, char** argv) {
             throw runtime_error("Cannot find tree "+treename+" in input file");
         if(expected_entries>=0 && t->GetEntries() != expected_entries)
             throw runtime_error("Tree "+treename+" does not have entries=="+to_string(expected_entries));
-        if(wraptree->Matches(t)) {
+        if(wraptree->Matches(t,false)) {
             wraptree->LinkBranches(t);
             return true;
         }
