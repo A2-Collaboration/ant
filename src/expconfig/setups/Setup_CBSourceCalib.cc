@@ -7,7 +7,7 @@
 
 
 #include "calibration/modules/Time.h"
-#include "calibration/modules/CB_Energy.h"
+#include "calibration/modules/CB_SourceCalib.h"
 #include "calibration/converters/MultiHit.h"
 #include "calibration/converters/CATCH_TDC.h"
 #include "calibration/converters/GeSiCa_SADC.h"
@@ -51,17 +51,17 @@ public:
         AddCalibration<calibration::Time>(cb,
                                           calibrationDataManager,
                                           convert_CATCH_CB,
-                                          -700,      // default offset in ns
+                                          -500,      // default offset in ns
                                           std::make_shared<calibration::gui::CBPeakFunction>(),
                                           // before timewalk correction
                                           timecuts ? interval<double>{-1000, 1000} : no_timecut
                                           );
 
-        AddCalibration<calibration::CB_Energy>(cb, calibrationDataManager, convert_GeSiCa_SADC,
-                                               std::vector<double>{0},    // default pedestal
-        std::vector<double>{1.0}, // default gain
-        std::vector<double>{0.0},     // default threshold
-        std::vector<double>{1.0}   // default relative gain
+        AddCalibration<calibration::CB_SourceCalib>(cb, calibrationDataManager, convert_GeSiCa_SADC,
+                                               0,    // default pedestal
+                                               1, // default gain
+                                               0,     // default threshold
+                                               1.0   // default relative gain
                                                );
     }
     bool Matches(const TID&) const override {
