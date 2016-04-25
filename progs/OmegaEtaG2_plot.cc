@@ -234,19 +234,19 @@ struct OmegaHist_t {
 //            h->Fill(f.Tree.p_fitted().E() - ParticleTypeDatabase::Proton.Mass(), radian_to_degree(f.Tree.p_fitted().Theta()), f.TaggW());
 //        });
 
-        AddTH2("Missing Mass / 3#gamma IM", "3#gamma IM [MeV]", "MM [MeV]", IMbins,   MMbins,     "mm_gggIM",
-               [] (TH2D* h, const Fill_t& f) { h->Fill(f.Tree.ggg_fitted().M(), f.Tree.mm().M(), f.TaggW());
-        });
+//        AddTH2("Missing Mass / 3#gamma IM", "3#gamma IM [MeV]", "MM [MeV]", IMbins,   MMbins,     "mm_gggIM",
+//               [] (TH2D* h, const Fill_t& f) { h->Fill(f.Tree.ggg_fitted().M(), f.Tree.mm().M(), f.TaggW());
+//        });
 
 //        AddTH2("Proton PSA", "PSA Angle [#circ]", "PSA Radius",             PSAABins, PSARBins,   "p_PSA",
 //               [] (TH2D* h, const Fill_t& f) {
 //            h->Fill(f.Tree.p_PSA_Angle, f.Tree.p_PSA_Radius, f.TaggW());
 //        });
 
-        AddTH2("3#gamma IM vs 2#gamma IM", "3#gamma IM [MeV]", "max(2#gamma IM) [MeV]", IMbins, IMbins, "ggg_max_gg",
-               [] (TH2D* h, const Fill_t& f) {
-            h->Fill(f.Tree.ggg_fitted().M(), max(f.Tree.ggIM_fitted()), f.TaggW());
-        });
+//        AddTH2("3#gamma IM vs 2#gamma IM", "3#gamma IM [MeV]", "max(2#gamma IM) [MeV]", IMbins, IMbins, "ggg_max_gg",
+//               [] (TH2D* h, const Fill_t& f) {
+//            h->Fill(f.Tree.ggg_fitted().M(), max(f.Tree.ggIM_fitted()), f.TaggW());
+//        });
 
         AddTH1("#pi^{0} Hyp: prob", "prob_{#pi^{0}}","",probbins, "pi0hyp_prob",
                [] (TH1D* h, const Fill_t& f) {
@@ -320,6 +320,18 @@ struct OmegaHist_t {
             return etaprob > 0.03 && (iBestPi0==-1 || pi0prob < 0.03);
         };
 
+        auto etaHypCut2 = [] (const Fill_t& f) {
+
+            if(f.Tree.bestHyp != 2)
+                return false;
+
+            const auto& etaprob  = f.Tree.etaprob()[f.Tree.iBestEta];
+            const auto& iBestPi0 = f.Tree.iBestPi0;
+            const auto& pi0prob  = f.Tree.pi0prob()[iBestPi0];
+
+            return etaprob > 0.4 && (iBestPi0==-1 || pi0prob < 0.03);
+        };
+
         auto pi0HypCut = [] (const Fill_t& f) {
             if(f.Tree.bestHyp != 1)
                 return false;
@@ -331,10 +343,9 @@ struct OmegaHist_t {
         };
 
         cuts.emplace_back(MultiCut_t<Fill_t>{
-                              {"m(3#gamma) cut",        [] (const Fill_t& f) { return f.Tree.ggg_fitted().M()<900 && f.Tree.ggg_fitted().M() > 700; } },
-//                              {"#eta window",           [] (const Fill_t& f) { return Contains( {530.0, 580.0}, f.Tree.ggIM_fitted()) && !Contains( {115.0, 155.0}, f.Tree.ggIM_fitted()); } },
- //                             {"#pi^{0} window",        [] (const Fill_t& f) { return Contains( {125.0, 145.0}, f.Tree.ggIM_fitted()); } },
+//                              {"m(3#gamma) cut",        [] (const Fill_t& f) { return f.Tree.ggg_fitted().M()<900 && f.Tree.ggg_fitted().M() > 700; } },
                               {"#etaHyp",               etaHypCut},
+                              {"#etaHyp2",              etaHypCut2},
                               {"#pi0Hyp",               pi0HypCut}
                           });
         return cuts;
