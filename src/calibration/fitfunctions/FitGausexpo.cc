@@ -43,7 +43,11 @@ ant::calibration::gui::FitGausexpo::FitGausexpo()
     func->SetParName(4, "p_{1}");
     func->SetParName(5, "p_{2}");
 
-
+    AddKnob<KnobsTF1::ParameterKnob>(func->GetParName(0), func, 0, IndicatorProperties::Type_t::slider_horizontal);
+    AddKnob<KnobsTF1::ParameterKnob>(func->GetParName(1), func, 1, IndicatorProperties::Type_t::slider_vertical);
+    AddKnob<KnobsTF1::ReferenceParameterKnob>(func->GetParName(2), func, 2, 1, IndicatorProperties::Type_t::slider_vertical);
+    AddKnob<KnobsTF1::RangeKnob>("min",func,KnobsTF1::RangeKnob::RangeEndType::lower);
+    AddKnob<KnobsTF1::RangeKnob>("max",func,KnobsTF1::RangeKnob::RangeEndType::upper);
 
 
 }
@@ -89,16 +93,16 @@ void gui::FitGausexpo::FitSignal(TH1* hist)
 
 void ant::calibration::gui::FitGausexpo::SetDefaults(TH1 *hist)
 {
-    func->SetParameter(0, hist->GetMaximum());
-    const double max_pos= hist->GetXaxis()->GetBinCenter(hist->GetMaximumBin());
+    func->SetParameter(0, 800);
+    //const double max_pos= hist->GetXaxis()->GetBinCenter(hist->GetMaximumBin());
 
-    auto range = GetRange();
-    func->SetParameter(1, range.Clip(max_pos));
+    //auto range = GetRange();
+    func->SetParameter(1, 60);
 
     func->SetParameter(2, 12);
-    func->SetParameter(3, 1);
-    func->SetParameter(4, 1);
-    func->SetParameter(5,1);
+    func->SetParameter(3, hist->GetMaximum());
+    func->SetParameter(4, 0);
+    func->SetParameter(5, -0.05);
 
     Sync();
 }
