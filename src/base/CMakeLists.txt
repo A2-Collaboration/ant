@@ -128,6 +128,7 @@ set(SRCS_MATH_FUNCTIONS
   math_functions/Faddeeva.h
   math_functions/voigtian.h
   math_functions/voigtian.cc
+  math_functions/AsymGaus.cc
 )
 
 set(SRCS_STD_EXT
