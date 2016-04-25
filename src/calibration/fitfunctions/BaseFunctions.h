@@ -72,8 +72,8 @@ struct Gausexpo {
         return helper::makeTF1(Gausexpo::fct, 6 );
     }
 
-
 };
+
 
 }
 }
