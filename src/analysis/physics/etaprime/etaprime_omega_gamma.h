@@ -71,9 +71,8 @@ struct EtapOmegaG : Physics {
 
             struct BaseTree_t : WrapTTree {
 
-                ADD_BRANCH_T(double,   TreeFitChi2)
-                ADD_BRANCH_T(double,   TreeFitProb)
-                ADD_BRANCH_T(unsigned, TreeFitIterations)
+                ADD_BRANCH_T(double, TreeFitProb)
+                ADD_BRANCH_T(int,    TreeFitIterations)
 
                 ADD_BRANCH_T(double, IM_Pi0_best)
                 ADD_BRANCH_T(double, IM_Pi0_fitted)
@@ -150,13 +149,11 @@ struct EtapOmegaG : Physics {
             ADD_BRANCH_T(std::vector<double>, gg_gg1, 3)
             ADD_BRANCH_T(std::vector<double>, gg_gg2, 3)
 
-            ADD_BRANCH_T(double,   AntiPi0FitChi2)
-            ADD_BRANCH_T(double,   AntiPi0FitProb)
-            ADD_BRANCH_T(unsigned, AntiPi0FitIterations)
+            ADD_BRANCH_T(double, AntiPi0FitProb)
+            ADD_BRANCH_T(int,    AntiPi0FitIterations)
 
-            ADD_BRANCH_T(double,   AntiEtaFitChi2)
-            ADD_BRANCH_T(double,   AntiEtaFitProb)
-            ADD_BRANCH_T(unsigned, AntiEtaFitIterations)
+            ADD_BRANCH_T(double, AntiEtaFitProb)
+            ADD_BRANCH_T(int,    AntiEtaFitIterations)
 
             void Reset();
         };
@@ -183,9 +180,8 @@ struct EtapOmegaG : Physics {
 
         struct Tree_t : WrapTTree {
             ADD_BRANCH_T(double,   IM_2g)
-            ADD_BRANCH_T(double,   KinFitChi2)
             ADD_BRANCH_T(double,   KinFitProb)
-            ADD_BRANCH_T(unsigned, KinFitIterations)
+            ADD_BRANCH_T(int,      KinFitIterations)
         };
         Tree_t t;
 

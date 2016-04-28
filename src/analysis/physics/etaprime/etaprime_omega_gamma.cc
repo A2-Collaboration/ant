@@ -11,6 +11,7 @@
 #include "base/Logger.h"
 #include "base/std_ext/math.h"
 #include "base/std_ext/vector.h"
+#include "base/std_ext/misc.h"
 
 #include <TTree.h>
 
@@ -284,11 +285,9 @@ void EtapOmegaG::Sig_t::SharedTree_t::Reset()
     std::fill(gg_gg1().begin(), gg_gg1().end(), std_ext::NaN);
     std::fill(gg_gg2().begin(), gg_gg2().end(), std_ext::NaN);
 
-    AntiPi0FitChi2 = std_ext::NaN;
     AntiPi0FitProb = std_ext::NaN;
     AntiPi0FitIterations = 0;
 
-    AntiEtaFitChi2 = std_ext::NaN;
     AntiEtaFitProb = std_ext::NaN;
     AntiEtaFitIterations = 0;
 }
@@ -334,11 +333,9 @@ void EtapOmegaG::Sig_t::DoAntiPi0Eta(const Particles_t& particles)
     while(treefitter_Pi0Pi0.NextFit(r)) {
         if(r.Status != APLCON::Result_Status_t::Success)
             continue;
-        if(isfinite(t.AntiPi0FitChi2) && r.ChiSquare>t.AntiPi0FitChi2)
+        if(!std_ext::copy_if_greater(t.AntiPi0FitProb, r.Probability))
             continue;
-        // found fit with better chi2
-        t.AntiPi0FitChi2 = r.ChiSquare;
-        t.AntiPi0FitProb = r.Probability;
+        // found fit with better prob
         t.AntiPi0FitIterations = r.NIterations;
     }
 
@@ -348,11 +345,9 @@ void EtapOmegaG::Sig_t::DoAntiPi0Eta(const Particles_t& particles)
     while(treefitter_Pi0Eta.NextFit(r)) {
         if(r.Status != APLCON::Result_Status_t::Success)
             continue;
-        if(isfinite(t.AntiEtaFitChi2) && r.ChiSquare>t.AntiEtaFitChi2)
+        if(!std_ext::copy_if_greater(t.AntiEtaFitProb, r.Probability))
             continue;
-        // found fit with better chi2
-        t.AntiEtaFitChi2 = r.ChiSquare;
-        t.AntiEtaFitProb = r.Probability;
+        // found fit with better probability
         t.AntiEtaFitIterations = r.NIterations;
     }
 }
@@ -411,7 +406,6 @@ utils::TreeFitter EtapOmegaG::Sig_t::Fit_t::Make(const ParticleTypeDatabase::Typ
 
 void EtapOmegaG::Sig_t::Fit_t::BaseTree_t::Reset()
 {
-    TreeFitChi2 = std_ext::NaN;
     TreeFitProb = std_ext::NaN;
     TreeFitIterations = 0;
 
@@ -454,11 +448,9 @@ void EtapOmegaG::Sig_t::Pi0_t::Process(const EtapOmegaG::Particles_t& particles,
     while(treefitter.NextFit(r)) {
         if(r.Status != APLCON::Result_Status_t::Success)
             continue;
-        if(isfinite(t.TreeFitChi2) && r.ChiSquare>t.TreeFitChi2)
+        if(!std_ext::copy_if_greater(t.TreeFitProb, r.Probability))
             continue;
-        // found fit with better chi2
-        t.TreeFitChi2 = r.ChiSquare;
-        t.TreeFitProb = r.Probability;
+        // found fit with better prob
         t.TreeFitIterations = r.NIterations;
 
         // IM fitted expected to be delta peaks since they were fitted...
@@ -493,7 +485,7 @@ void EtapOmegaG::Sig_t::Pi0_t::Process(const EtapOmegaG::Particles_t& particles,
 
 
     // there was at least one successful fit
-    if(isfinite(t.TreeFitChi2)) {
+    if(isfinite(t.TreeFitProb)) {
 
         // check MC matching
         if(ptree_sigref) {
@@ -570,11 +562,9 @@ void EtapOmegaG::Sig_t::OmegaPi0_t::Process(const EtapOmegaG::Particles_t& parti
     while(treefitter.NextFit(r)) {
         if(r.Status != APLCON::Result_Status_t::Success)
             continue;
-        if(isfinite(t.TreeFitChi2) && r.ChiSquare>t.TreeFitChi2)
+        if(!std_ext::copy_if_greater(t.TreeFitProb, r.Probability))
             continue;
-        // found fit with better chi2
-        t.TreeFitChi2 = r.ChiSquare;
-        t.TreeFitProb = r.Probability;
+        // found fit with better prob
         t.TreeFitIterations = r.NIterations;
 
         // IM fitted expected to be delta peaks since they were fitted...
@@ -606,7 +596,7 @@ void EtapOmegaG::Sig_t::OmegaPi0_t::Process(const EtapOmegaG::Particles_t& parti
 
 
     // there was at least one successful fit
-    if(isfinite(t.TreeFitChi2)) {
+    if(isfinite(t.TreeFitProb)) {
 
         // do that Bachelor photon boosting
         auto do_boost = [] (const LorentzVec& bachelor, const LorentzVec& etaprime) {
@@ -663,7 +653,6 @@ EtapOmegaG::Ref_t::Ref_t() :
 
 void EtapOmegaG::Ref_t::ResetBranches()
 {
-    t.KinFitChi2 = std_ext::NaN;
     t.KinFitProb = std_ext::NaN;
     t.KinFitIterations = 0;
     t.IM_2g = std_ext::NaN;
@@ -679,7 +668,6 @@ void EtapOmegaG::Ref_t::Process(const EtapOmegaG::Particles_t& particles)
 
     if(result.Status != APLCON::Result_Status_t::Success)
         return;
-    t.KinFitChi2 = result.ChiSquare;
     t.KinFitProb = result.Probability;
     t.KinFitIterations = result.NIterations;
 
