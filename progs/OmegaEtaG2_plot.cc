@@ -132,6 +132,10 @@ struct OmegaHist_t {
             } else
                 return -1;
         }
+
+        double BestBachelorE() const {
+            return iBestIndex() != -1 ? Tree.BachelorE_fitted().at(iBestIndex()) : NaN;
+        }
     };
 
     template <typename Hist>
@@ -370,11 +374,24 @@ struct OmegaHist_t {
             return pi0prob > 0.03;
         };
 
+        auto etaBachelorCut = [] (const Fill_t& f) {
+            return interval<double>::CenterWidth(200,40).Contains(f.BestBachelorE());
+        };
+
+        auto pi0BachelorCut = [] (const Fill_t& f) {
+            return interval<double>::CenterWidth(380,40).Contains(f.BestBachelorE());
+        };
+
         cuts.emplace_back(MultiCut_t<Fill_t>{
 //                              {"m(3#gamma) cut",        [] (const Fill_t& f) { return f.Tree.ggg_fitted().M()<900 && f.Tree.ggg_fitted().M() > 700; } },
-                              {"#etaHyp",               etaHypCut},
-                              {"#etaHyp2",              etaHypCut2},
-                              {"#pi0Hyp",               pi0HypCut}
+                              {"etaHyp",               etaHypCut},
+                              {"etaHyp2",              etaHypCut2},
+                              {"pi0Hyp",               pi0HypCut}
+                          });
+
+        cuts.emplace_back(MultiCut_t<Fill_t>{
+                              {"eta-bachelorCut",      etaBachelorCut},
+                              {"pi0-bachelorCut",      pi0BachelorCut}
                           });
         return cuts;
     }
