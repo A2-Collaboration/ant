@@ -117,9 +117,20 @@ struct OmegaHist_t {
 
     struct Fill_t {
         const Tree_t& Tree;
+
         Fill_t(const Tree_t& t) : Tree(t) {}
+
         double TaggW() const {
             return Tree.TaggW;
+        }
+
+        int iBestIndex() const {
+            if(Tree.bestHyp == 2) {
+                return Tree.iBestEta;
+            } else if(Tree.bestHyp == 1) {
+                return Tree.iBestPi0;
+            } else
+                return -1;
         }
     };
 
@@ -211,6 +222,23 @@ struct OmegaHist_t {
             for(const auto& v : f.Tree.BachelorE_fitted())
                 h->Fill(v, f.TaggW());
         });
+
+        AddTH1("Bachelor Photon Energy|Best Hyp",  "E [MeV]",     "",       IMbins,     "bachelorE_bestHyp",
+               [] (TH1D* h, const Fill_t& f) {
+
+            if( f.iBestIndex() != -1 ) {
+                h->Fill(f.Tree.BachelorE_fitted().at(f.iBestIndex()), f.TaggW());
+            }
+        });
+
+        AddTH1("2#gamma sub-IM|Best Hyp",  "2#gamma IM [MeV]",     "",       IMbins,     "gg_IM_bestHyp",
+               [] (TH1D* h, const Fill_t& f) {
+
+            if( f.iBestIndex() != -1 ) {
+                h->Fill(f.Tree.ggIM().at(f.iBestIndex()), f.TaggW());
+            }
+        });
+
 
         AddTH1("Missing Mass",      "MM [MeV]",     "",       MMbins,     "mm",
                [] (TH1D* h, const Fill_t& f) { h->Fill(f.Tree.mm().M(), f.TaggW());
@@ -420,7 +448,7 @@ int main(int argc, char** argv) {
 
     const auto& sanitized_treename = std_ext::replace_str(cmd_tree->getValue(),"/","_");
 
-    auto cuttree = cuttree::Make<MCTrue_Splitter<OmegaHist_t>>(HistFac,
+    auto signal_hists = cuttree::Make<MCTrue_Splitter<OmegaHist_t>>(HistFac,
                                               sanitized_treename,
                                               OmegaHist_t::GetCuts()
                                               );
@@ -438,7 +466,7 @@ int main(int argc, char** argv) {
             break;
 
         tree.Tree->GetEntry(entry);
-        cuttree::Fill<MCTrue_Splitter<OmegaHist_t>>(cuttree, {tree});
+        cuttree::Fill<MCTrue_Splitter<OmegaHist_t>>(signal_hists, {tree});
 
         if(entry % 100000 == 0)
             LOG(INFO) << "Processed " << 100.0*entry/entries << " %";
