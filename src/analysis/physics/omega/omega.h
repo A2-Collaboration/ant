@@ -151,6 +151,14 @@ public:
     void setGamma1(const LorentzVec& value);
 };
 
+struct TagChMultiplicity {
+    TH1D* hTagChMult;
+    unsigned nchannels;
+
+    TagChMultiplicity(HistogramFactory& hf);
+
+    void Fill(const std::vector<TTaggerHit>& t);
+};
 
 class OmegaEtaG2 : public OmegaBase {
 public:
@@ -290,6 +298,8 @@ protected:
 
     const bool   opt_save_after_kinfit = false;
     const double opt_kinfit_chi2cut    = 10.0;
+
+    TagChMultiplicity tagChMult;
 
 public:
 

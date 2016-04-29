@@ -688,6 +688,8 @@ void OmegaEtaG2::Analyse(const TEventData &data, const TEvent& event, manager_t&
     if(data.TaggerHits.size() > 0)
         steps->Fill("6 has TaggHits", 1);
 
+    tagChMult.Fill(data.TaggerHits);
+
     for(const TTaggerHit& TagH : data.TaggerHits) {
 
         promptrandom.SetTaggerHit(TagH.Time - t.CBAvgTime);
@@ -1021,7 +1023,8 @@ OmegaEtaG2::OmegaEtaG2(const std::string& name, OptionsPtr opts):
         model
         ),
     opt_save_after_kinfit(opts->Get("SaveAfterKinfit", false)),
-    opt_kinfit_chi2cut(opts->Get<double>("KinFit_Chi2Cut", 10.0))
+    opt_kinfit_chi2cut(opts->Get<double>("KinFit_Chi2Cut", 10.0)),
+    tagChMult(HistFac)
 
 {
 
@@ -1166,6 +1169,30 @@ void OmegaEtaG2::MyTreeFitter_t::HypTestCombis(const TParticleList& photons, dou
             bestChi2 = chi2;
         }
 
+    }
+}
+
+
+TagChMultiplicity::TagChMultiplicity(HistogramFactory& hf)
+{
+    const auto tagger = ExpConfig::Setup::GetDetector<TaggerDetector_t>();
+    nchannels = tagger->GetNChannels();
+
+    hTagChMult = hf.makeTH1D("Tagger Channel Multiplicity","# hits/event","",BinSettings(10),"tagchmult");
+
+
+}
+
+void TagChMultiplicity::Fill(const std::vector<TTaggerHit>& t)
+{
+    vector<double> counts(nchannels, 0);
+
+    for(const auto& thit : t) {
+        counts.at(thit.Channel)++;
+    }
+
+    for(const auto& m : counts) {
+        hTagChMult->Fill(m);
     }
 }
 
