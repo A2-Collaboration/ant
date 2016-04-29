@@ -7,6 +7,7 @@
 
 #include "TF1.h"
 #include "TH1.h"
+#include "TSpectrum.h"
 
 using namespace std;
 using namespace ant::calibration;
@@ -33,7 +34,7 @@ ant::calibration::gui::FitGausexpo::FitGausexpo()
     func = functions::Gausexpo::getTF1();
     func->SetLineColor(kGreen);
 
-
+    SetRange(ant::interval<double>(25,120));
     func->SetParName(0,"A");
     func->SetParLimits(0, 0.0, 1E+12);
     func->SetParName(1, "x_{0}");
@@ -42,6 +43,8 @@ ant::calibration::gui::FitGausexpo::FitGausexpo()
     func->SetParName(3, "p_{0}");
     func->SetParName(4, "p_{1}");
     func->SetParName(5, "p_{2}");
+
+
 
     AddKnob<KnobsTF1::ParameterKnob>(func->GetParName(0), func, 0, IndicatorProperties::Type_t::slider_horizontal);
     AddKnob<KnobsTF1::ParameterKnob>(func->GetParName(1), func, 1, IndicatorProperties::Type_t::slider_vertical);
@@ -57,6 +60,7 @@ ant::calibration::gui::FitGausexpo::~FitGausexpo()
     delete signal;
     delete bg;
     delete func;
+
 
 }
 
@@ -93,18 +97,32 @@ void gui::FitGausexpo::FitSignal(TH1* hist)
 
 void ant::calibration::gui::FitGausexpo::SetDefaults(TH1 *hist)
 {
-    func->SetParameter(0, 800);
+    /* Idee um Peak zu finden, noch nicht ideal...  */
+      double xp=0;
+      double yp=0;
+      TSpectrum* s = new TSpectrum();
+      double nfound = s->Search(hist);
+      float *xpeaks = s->GetPositionX();
+      for(int p=0; p<nfound; p++){
+             xp = xpeaks[p];
+             int bin = hist->GetXaxis()->FindBin(xp);
+             yp = hist->GetBinContent(bin);
+      }
+
+
+    func->SetParameter(0, yp);
     //const double max_pos= hist->GetXaxis()->GetBinCenter(hist->GetMaximumBin());
 
-    //auto range = GetRange();
-    func->SetParameter(1, 60);
 
-    func->SetParameter(2, 12);
-    func->SetParameter(3, hist->GetMaximum());
+    func->SetParameter(1, xp);
+
+    func->SetParameter(2, 20);
+    func->SetParameter(3, 1);
     func->SetParameter(4, 0);
     func->SetParameter(5, -0.05);
 
     Sync();
+    //delete s;
 }
 
 void ant::calibration::gui::FitGausexpo::SetRange(ant::interval<double> i)
@@ -139,6 +157,7 @@ void ant::calibration::gui::FitGausexpo::Load(const std::vector<double> &data)
 double ant::calibration::gui::FitGausexpo::GetPeakPosition() const
 {
     return func->GetParameter(1);
+
 }
 
 double ant::calibration::gui::FitGausexpo::GetPeakWidth() const

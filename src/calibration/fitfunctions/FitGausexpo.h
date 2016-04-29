@@ -1,6 +1,8 @@
 #pragma once
 
 #include "FitFunction.h"
+#include "TSpectrum.h"
+
 
 
 namespace ant{
@@ -11,6 +13,8 @@ class FitGausexpo: public PeakingFitFunction {
 protected:
     TF1* signal;
     TF1* bg;
+
+
 
 public:
     FitGausexpo();
@@ -25,7 +29,6 @@ public:
     void SetRange(ant::interval<double> i) override;
     ant::interval<double> GetRange() const override;
     virtual void Sync() override;
-
     std::vector<double> Save() const override;
     void Load(const std::vector<double> &data) override;
 
