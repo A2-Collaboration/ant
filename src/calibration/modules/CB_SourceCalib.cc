@@ -93,6 +93,11 @@ gui::CalibModule_traits::DoFitReturn_t CB_SourceCalib::GUI_Gains::DoFit(TH1 *his
         while(retries>0);
         return false;
     };
+    if (fit_loop(5))
+        return DoFitReturn_t::Next;
+
+    LOG(INFO) << "Chi2/dof = " << func->Chi2NDF();
+    return DoFitReturn_t::Display;
 
 
 }
