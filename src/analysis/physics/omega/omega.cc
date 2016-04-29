@@ -744,12 +744,13 @@ void OmegaEtaG2::Analyse(const TEventData &data, const TEvent& event, manager_t&
 
         const auto gggBoost_fitted = -ggg_fitted.BoostVector();
 
-        size_t combindex = 0;
 
         for(const auto& comb : combs) {
             const auto& g1 = photons.at(comb[0]);
             const auto& g2 = photons.at(comb[1]);
             const auto& g3 = photons.at(comb[2]);
+
+            const auto& combindex = comb[2];
 
             const auto gg = *g1 + *g2;
 
@@ -758,15 +759,14 @@ void OmegaEtaG2::Analyse(const TEventData &data, const TEvent& event, manager_t&
             const auto g3_boosted = Boost(*g3, gggBoost);
 
             t.BachelorE().at(combindex) = g3_boosted.E;
-
-            ++combindex;
         }
 
-        combindex = 0;
         for(const auto& comb : combs) {
             const auto& g1 = t.photons_fitted().at(comb[0]);
             const auto& g2 = t.photons_fitted().at(comb[1]);
             const auto& g3 = t.photons_fitted().at(comb[2]);
+
+            const auto& combindex = comb[2];
 
             const auto gg = g1 + g2;
 
@@ -775,8 +775,6 @@ void OmegaEtaG2::Analyse(const TEventData &data, const TEvent& event, manager_t&
             const auto g3_boosted = Boost(g3, gggBoost_fitted);
 
             t.BachelorE_fitted().at(combindex) = g3_boosted.E;
-
-            ++combindex;
         }
 
 

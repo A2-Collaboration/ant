@@ -247,7 +247,8 @@ protected:
     TTree*  tree = nullptr;
     OmegaTree_t t;
 
-    static const std::vector<std::vector<std::size_t>> combs;
+    using combs_t = std::vector<std::vector<std::size_t>>;
+    static const combs_t combs;
 
 
 
