@@ -2,15 +2,14 @@
 
 #include "analysis/physics/Physics.h"
 #include "analysis/utils/A2GeoAcceptance.h"
+#include "analysis/utils/particle_tools.h"
+#include "analysis/utils/Fitter.h"
+#include "analysis/plot/PromptRandomHist.h"
 #include "base/Tree.h"
 #include "base/interval.h"
-#include "analysis/utils/particle_tools.h"
 #include "base/std_ext/math.h"
 #include "base/WrapTTree.h"
 
-#include "analysis/utils/Fitter.h"
-#include "base/interval.h"
-#include "analysis/plot/PromptRandomHist.h"
 #include "TTree.h"
 #include "TLorentzVector.h"
 #include "Rtypes.h"
