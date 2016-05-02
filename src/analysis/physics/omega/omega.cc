@@ -133,13 +133,6 @@ OmegaEtaG::perDecayhists_t OmegaEtaG::makePerDecayHists(const string &title)
     h.nCand = HistFac.makeTH1D(title+": # Photons","Photons/Event","",BinSettings(15),pref+"ncand");
     return h;
 }
-
-LorentzVec Boost(const LorentzVec& lv, const vec3& boost) {
-    LorentzVec b(lv);
-    b.Boost(boost);
-    return b;
-}
-
 void OmegaEtaG::Analyse(const TEventData &data, const TEvent& event, manager_t&)
 {
 

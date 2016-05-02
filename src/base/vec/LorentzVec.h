@@ -152,4 +152,16 @@ struct LorentzVec {
 
 };
 
+/**
+ * @brief Boost a Lorentz vector
+ * @param lv The Lorentz vector to boost
+ * @param boost the boost vector
+ * @return boosted Lorentz vector
+ */
+inline LorentzVec Boost(const LorentzVec& lv, const vec3& boost) {
+    LorentzVec b(lv);
+    b.Boost(boost);
+    return b;
+}
+
 }
