@@ -67,8 +67,6 @@ protected:
 
     virtual void Analyse(const TEventData& data, const TEvent& event, manager_t& manager) =0;
 
-
-
 public:
     OmegaBase(const std::string &name, OptionsPtr opts);
     virtual ~OmegaBase() = default;
@@ -76,59 +74,7 @@ public:
     virtual void ProcessEvent(const TEvent& event, manager_t& manager) override;
     virtual void Finish() override;
     virtual void ShowResult() override;
-
-
 };
-
-class OmegaEtaG: public OmegaBase {
-
-protected:
-
-    TH2D* ggg_gg;
-    TH2D* ggg_gg_bg;    // if not from omega decay
-    TH2D* ggg_gg_all;
-    //TH1D* gg_bg;        // if from omega but not pi0 or eta decay
-
-    TH1D* ggg;
-    TH1D* ggg_omega;
-    TH1D* ggg_bg;
-    TH1D* ggg_omega_pi0oreta;
-
-    TH2D* ggg_gg_omega_eta;
-    TH2D* ggg_gg_omega_pi0;
-
-    TH1D* steps;
-
-    IntervalD omega_range = IntervalD(680,780);
-
-    struct perDecayhists_t {
-        TH1D* gg = nullptr;
-        TH1D* ggg = nullptr;
-        TH1D* mm = nullptr;
-        TH1D* angle_p;
-        TH1D* angle_p_ggg;
-        TH1D* p_phi_diff;
-        TH2D* calc_proton_energy_theta;
-        TH2D* calc_proton_special;
-        TH1D* nCand;
-    };
-
-    perDecayhists_t makePerDecayHists(const std::string &title="");
-
-    std::map<std::string, perDecayhists_t> gg_decays;
-
-    virtual void Analyse(const TEventData& data, const TEvent& event, manager_t&) override;
-
-    BinSettings imbinning = BinSettings(1000);
-    BinSettings mmbinning = BinSettings(1000, 400,1400);
-
-public:
-    OmegaEtaG(const std::string& name, OptionsPtr opts);
-    virtual ~OmegaEtaG() = default;
-    virtual void ShowResult() override;
-};
-
-
 
 class OmegaMCTree : public Physics {
 protected:
