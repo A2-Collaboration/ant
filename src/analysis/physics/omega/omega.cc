@@ -436,13 +436,15 @@ void OmegaEtaG2::Analyse(const TEventData &data, const TEvent& event, manager_t&
 
             if(opt_save_after_kinfit)
                 manager.SaveEvent();
+
+            t.p_fitted = *fitter.GetFittedProton();
+
+            t.photons_fitted().at(0) = *fitter.GetFittedPhotons().at(0);
+            t.photons_fitted().at(1) = *fitter.GetFittedPhotons().at(1);
+            t.photons_fitted().at(2) = *fitter.GetFittedPhotons().at(2);
         }
 
-        t.p_fitted = *fitter.GetFittedProton();
 
-        t.photons_fitted().at(0) = *fitter.GetFittedPhotons().at(0);
-        t.photons_fitted().at(1) = *fitter.GetFittedPhotons().at(1);
-        t.photons_fitted().at(2) = *fitter.GetFittedPhotons().at(2);
 
         const TParticle ggg_fitted(ParticleTypeDatabase::Omega, LVSumL(t.photons_fitted().begin(), t.photons_fitted().end()));
         t.ggg_fitted = ggg_fitted;
@@ -483,6 +485,45 @@ void OmegaEtaG2::Analyse(const TEventData &data, const TEvent& event, manager_t&
         }
 
 
+        // pi0eta test
+        {
+            // proton: E from Fit, Theta and Phi from measurement
+            // TParticle ctor takes Ek, fitted.E() is total E
+            TParticlePtr proton_guess = make_shared<TParticle>(
+                                            ParticleTypeDatabase::Proton,
+                                            t.p_fitted().E()-ParticleTypeDatabase::Proton.Mass(),
+                                            proton->Theta(), proton->Phi());
+
+            const LorentzVec lost_gamma_guess = beam_target - ggg - *proton_guess;
+            TParticlePtr gamma4 = make_shared<TParticle>(ParticleTypeDatabase::Photon, lost_gamma_guess);
+
+            TParticleList photons2 = photons;
+            photons2.emplace_back(gamma4);
+
+            pi0eta_fitter.SetEgammaBeam(TagH.PhotonEnergy);
+
+            // since proton E is unmeasured it makes no difference if
+            // fitted energy is filled in here
+            pi0eta_fitter.SetProton(proton);
+
+            pi0eta_fitter.SetPhotons(photons2);
+
+            // set gamma4 to unmeasured
+            auto& g4_fit = pi0eta_fitter.FitPhotons(3);
+            g4_fit.Ek.Sigma    = 0.0;
+            g4_fit.Theta.Sigma = 0.0;
+            g4_fit.Phi.Sigma   = 0.0;
+
+            // execute!
+            auto fitres = pi0eta_fitter.DoFit();
+
+            if(fitres.Status != APLCON::Result_Status_t::Success)
+                continue;
+
+            t.KinFitChi2 = fitres.ChiSquare / fitres.NDoF;
+            t.KinFitProb = fitres.Probability;
+            t.KinFitIterations = unsigned(fitres.NIterations);
+        }
 
         //===== Hypothesis testing with kinematic fitter ======
 
@@ -715,6 +756,7 @@ OmegaEtaG2::OmegaEtaG2(const std::string& name, OptionsPtr opts):
     proton_theta(degree_to_radian(opts->Get<decltype(proton_theta)>("ProtonThetaRange", {2.0, 45.0}))),
     model(make_shared<utils::UncertaintyModels::Optimized_Oli1>()),
     fitter("OmegaEtaG2", 3, model),
+    pi0eta_fitter("OmegaEtaG2_pi0eta", 4, model),
     fitter_pi0(
         ParticleTypeTreeDatabase::Get(ParticleTypeTreeDatabase::Channel::Omega_gPi0_3g),
         ParticleTypeDatabase::Pi0,
