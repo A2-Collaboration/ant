@@ -115,6 +115,10 @@ struct AccessibleFitter : utils::KinFitter {
     KinFitter::FitParticle& FitPhotons(std::size_t n) {
         return *(Photons.at(n));
     }
+
+    void SetPhoton(size_t i, const TParticlePtr& p) {
+        SetPhotonEkThetaPhi(*Photons.at(i), p);
+    }
 };
 
 class OmegaEtaG2 : public OmegaBase {
@@ -188,6 +192,12 @@ public:
         ADD_BRANCH_T(std::vector<double>,       eta_im,3)
         ADD_BRANCH_T(std::vector<double>,       eta_omega_im,3)
         ADD_BRANCH_T(std::vector<double>,       pi0_omega_im,3)
+
+
+        ADD_BRANCH_T(double,   Pi0EtaFitChi2)
+        ADD_BRANCH_T(double,   Pi0EtaFitProb)
+        ADD_BRANCH_T(unsigned, Pi0EtaFitIterations)
+        ADD_BRANCH_T(TLorentzVector,            lost_gamma_guess)
 
     };
 

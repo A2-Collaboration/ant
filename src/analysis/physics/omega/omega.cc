@@ -495,10 +495,6 @@ void OmegaEtaG2::Analyse(const TEventData &data, const TEvent& event, manager_t&
                                             proton->Theta(), proton->Phi());
 
             const LorentzVec lost_gamma_guess = beam_target - ggg - *proton_guess;
-            TParticlePtr gamma4 = make_shared<TParticle>(ParticleTypeDatabase::Photon, lost_gamma_guess);
-
-            TParticleList photons2 = photons;
-            photons2.emplace_back(gamma4);
 
             pi0eta_fitter.SetEgammaBeam(TagH.PhotonEnergy);
 
@@ -506,23 +502,32 @@ void OmegaEtaG2::Analyse(const TEventData &data, const TEvent& event, manager_t&
             // fitted energy is filled in here
             pi0eta_fitter.SetProton(proton);
 
-            pi0eta_fitter.SetPhotons(photons2);
+            //photons 0..2, measured
+            for(TParticleList::size_type i=0; i<photons.size(); ++i) {
+                pi0eta_fitter.SetPhoton(i, photons.at(i));
+            }
 
-            // set gamma4 to unmeasured
-            auto& g4_fit = pi0eta_fitter.FitPhotons(3);
-            g4_fit.Ek.Sigma    = 0.0;
-            g4_fit.Theta.Sigma = 0.0;
-            g4_fit.Phi.Sigma   = 0.0;
+            // unmeasured photon
+            auto g4p = pi0eta_fitter.FitPhotons(3);
+
+            g4p.Ek.Value    = lost_gamma_guess.E;
+            g4p.Ek.Sigma    = 0.0;
+
+            g4p.Theta.Value = lost_gamma_guess.Theta();
+            g4p.Theta.Sigma = 0.0;
+
+            g4p.Phi.Value   = lost_gamma_guess.Phi();
+            g4p.Phi.Sigma   = 0.0;
 
             // execute!
-            auto fitres = pi0eta_fitter.DoFit();
+            const auto fitres = pi0eta_fitter.DoFit();
 
-            if(fitres.Status != APLCON::Result_Status_t::Success)
-                continue;
+            t.Pi0EtaFitChi2 = fitres.ChiSquare / fitres.NDoF;
+            t.Pi0EtaFitProb = fitres.Probability;
+            t.Pi0EtaFitIterations = unsigned(fitres.NIterations);
 
-            t.KinFitChi2 = fitres.ChiSquare / fitres.NDoF;
-            t.KinFitProb = fitres.Probability;
-            t.KinFitIterations = unsigned(fitres.NIterations);
+            t.lost_gamma_guess = lost_gamma_guess;
+
         }
 
         //===== Hypothesis testing with kinematic fitter ======
@@ -792,6 +797,8 @@ OmegaEtaG2::OmegaEtaG2(const std::string& name, OptionsPtr opts):
     }
 
     fitter.SetupBranches(t.Tree);
+
+    pi0eta_fitter.SetupBranches(t.Tree);
 }
 
 OmegaEtaG2::~OmegaEtaG2()
