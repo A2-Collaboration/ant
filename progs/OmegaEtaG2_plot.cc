@@ -308,6 +308,22 @@ struct OmegaHist_t {
                 h->Fill(f.Tree.pi0_omega_im().at(size_t(i)), f.TaggW());
         });
 
+        AddTH1("Extra Gamma makes #pi^{0}", "m(2#gamma)", "", IMbins, "extaGammaPi0",
+                [] (TH1D* h, const Fill_t& f) {
+
+            h->Fill(f.Tree.bachelor_extra().at(f.iBestIndex()).M(), f.TaggW());
+        });
+
+        AddTH1("verify", "E", "", IMbins, "verify",
+                [] (TH1D* h, const Fill_t& f) {
+            const vector<int> index = {0,1,2};
+            auto boost = - f.Tree.ggg().BoostVector();
+            auto ba = f.Tree.photons().at(index.at(f.iBestIndex()));
+            ba.Boost(boost);
+
+            h->Fill(ba.E(), f.TaggW());
+        });
+
     }
 
     void Fill(const Fill_t& f) const {

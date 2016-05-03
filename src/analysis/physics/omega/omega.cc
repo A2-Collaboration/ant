@@ -452,39 +452,6 @@ void OmegaEtaG2::Analyse(const TEventData &data, const TEvent& event, manager_t&
         const auto gggBoost_fitted = -ggg_fitted.BoostVector();
 
 
-        for(const auto& comb : combs) {
-            const auto& g1 = photons.at(comb[0]);
-            const auto& g2 = photons.at(comb[1]);
-            const auto& g3 = photons.at(comb[2]);
-
-            const auto& combindex = comb[2];
-
-            const auto gg = *g1 + *g2;
-
-            t.ggIM().at(combindex) = gg.M();
-
-            const auto g3_boosted = Boost(*g3, gggBoost);
-
-            t.BachelorE().at(combindex) = g3_boosted.E;
-        }
-
-        for(const auto& comb : combs) {
-            const auto& g1 = t.photons_fitted().at(comb[0]);
-            const auto& g2 = t.photons_fitted().at(comb[1]);
-            const auto& g3 = t.photons_fitted().at(comb[2]);
-
-            const auto& combindex = comb[2];
-
-            const auto gg = g1 + g2;
-
-            t.ggIM_fitted().at(combindex) = gg.M();
-
-            const auto g3_boosted = Boost(g3, gggBoost_fitted);
-
-            t.BachelorE_fitted().at(combindex) = g3_boosted.E;
-        }
-
-
         // pi0eta test
         {
             // proton: E from Fit, Theta and Phi from measurement
@@ -528,7 +495,46 @@ void OmegaEtaG2::Analyse(const TEventData &data, const TEvent& event, manager_t&
 
             t.lost_gamma_guess = lost_gamma_guess;
 
+            t.extra_gamma = LorentzVec::EPThetaPhi(g4p.Ek.Value, g4p.Ek.Value, g4p.Theta.Value, g4p.Phi.Value);
+
         }
+
+        for(const auto& comb : combs) {
+            const auto& g1 = photons.at(comb[0]);
+            const auto& g2 = photons.at(comb[1]);
+            const auto& g3 = photons.at(comb[2]);
+
+            const auto& combindex = comb[2];
+
+            const auto gg = *g1 + *g2;
+
+            t.ggIM().at(combindex) = gg.M();
+
+            const auto g3_boosted = Boost(*g3, gggBoost);
+
+            t.BachelorE().at(combindex) = g3_boosted.E;
+        }
+
+        for(const auto& comb : combs) {
+            const auto& g1 = t.photons_fitted().at(comb[0]);
+            const auto& g2 = t.photons_fitted().at(comb[1]);
+            const auto& g3 = t.photons_fitted().at(comb[2]);
+
+            const auto& combindex = comb[2];
+
+            const auto gg = g1 + g2;
+
+            t.ggIM_fitted().at(combindex) = gg.M();
+
+            const auto g3_boosted = Boost(g3, gggBoost_fitted);
+
+            t.BachelorE_fitted().at(combindex) = g3_boosted.E;
+
+            t.bachelor_extra().at(combindex) = t.extra_gamma() + g3;
+        }
+
+
+
 
         //===== Hypothesis testing with kinematic fitter ======
 

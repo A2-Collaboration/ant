@@ -198,6 +198,8 @@ public:
         ADD_BRANCH_T(double,   Pi0EtaFitProb)
         ADD_BRANCH_T(unsigned, Pi0EtaFitIterations)
         ADD_BRANCH_T(TLorentzVector,            lost_gamma_guess)
+        ADD_BRANCH_T(TLorentzVector,            extra_gamma)
+        ADD_BRANCH_T(std::vector<TLorentzVector>, bachelor_extra, 3)
 
     };
 
