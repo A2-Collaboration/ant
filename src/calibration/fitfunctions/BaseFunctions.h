@@ -69,7 +69,7 @@ struct Gausexpo {
     }
 
     static TF1* getTF1() {
-        return helper::makeTF1(Gausexpo::fct, 6 );
+        return helper::makeTF1(Gausexpo::fct, 5 );
     }
 
 };

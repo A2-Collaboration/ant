@@ -38,7 +38,7 @@ TF1* timewalk::getTF1()
 
 double exponential::fct(double *x, double *p)
 {
-    return p[0]*exp(p[1]+p[2]*x[0]);
+    return exp(p[0]+p[1]*x[0]);
 }
 
 TF1* exponential::getTF1()
