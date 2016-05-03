@@ -7,6 +7,7 @@
 
 
 #include "calibration/modules/Time.h"
+#include "calibration/modules/CB_Energy.h"
 #include "calibration/modules/CB_SourceCalib.h"
 #include "calibration/converters/MultiHit.h"
 #include "calibration/converters/CATCH_TDC.h"
@@ -57,12 +58,12 @@ public:
                                           timecuts ? interval<double>{-1000, 1000} : no_timecut
                                           );
 
-        AddCalibration<calibration::CB_SourceCalib>(cb, calibrationDataManager, convert_GeSiCa_SADC,
-                                               0,    // default pedestal
-                                               1, // default gain
-                                               0,     // default threshold
-                                               1.0   // default relative gain
-                                               );
+        AddCalibration<calibration::CB_SourceCalib>(cb, calibrationDataManager, convert_GeSiCa_SADC);
+//                                               0,    // default pedestal
+//                                               1, // default gain
+//                                               0,     // default threshold
+//                                               1.0   // default relative gain
+//                                               );
     }
     bool Matches(const TID&) const override {
         return false;
