@@ -38,6 +38,9 @@ public:
 
         gui::CalCanvas* canvas;
         TH1* h_projection = nullptr;
+        TH1D* AmBe_peaks = nullptr;
+        TH1D* h_peaks = nullptr;
+
 
         std::map< unsigned, std::vector<double> > fitParameters;
 

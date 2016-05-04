@@ -1,4 +1,4 @@
-
+#include <fstream>
 #include "CB_SourceCalib.h"
 
 #include "calibration/gui/CalCanvas.h"
@@ -10,6 +10,8 @@
 
 #include "root-addons/cbtaps_display/TH2CB.h"
 #include "base/Logger.h"
+
+
 
 using namespace std;
 using namespace ant;
@@ -92,6 +94,11 @@ unsigned CB_SourceCalib::TheGUI::GetNumberOfChannels() const
 void CB_SourceCalib::TheGUI::InitGUI(gui::ManagerWindow_traits * window)
 {
     canvas = window ->AddCalCanvas();
+    h_peaks = new TH1D("h_peaks", "Peak postitions", GetNumberOfChannels(),0,GetNumberOfChannels());
+    h_peaks->SetXTitle("Channel Number");
+    h_peaks->SetYTitle("AmBe Peak");
+    AmBe_peaks= new TH1D("AMBe_peaks", "number of Peaks against the ADC channel", 140,0.,140.);
+
 }
 
 void CB_SourceCalib::TheGUI::StartSlice(const interval<TID> & range)
@@ -112,7 +119,7 @@ gui::CalibModule_traits::DoFitReturn_t CB_SourceCalib::TheGUI::DoFit(TH1 *hist, 
     auto fit_loop = [this] (size_t retries) {
         do {
             func->Fit(h_projection);
-            VLOG(5) << "Chi2/dof = " << func->Chi2NDF();
+            VLOG(8) << "Chi2/dof = " << func->Chi2NDF();
             if(func->Chi2NDF() < AutoStopOnChi2) {
                 return true;
             }
@@ -121,7 +128,7 @@ gui::CalibModule_traits::DoFitReturn_t CB_SourceCalib::TheGUI::DoFit(TH1 *hist, 
         while(retries>0);
         return false;
     };
-    if (fit_loop(5))
+    if (fit_loop(8))
         return DoFitReturn_t::Next;
 
     LOG(INFO) << "Chi2/dof = " << func->Chi2NDF();
@@ -137,10 +144,28 @@ void CB_SourceCalib::TheGUI::DisplayFit()
 void CB_SourceCalib::TheGUI::StoreFit(unsigned channel)
 {
     fitParameters[channel] = func->Save();
+    const double AmBe_Peak= func->GetPeakPosition();
+    h_peaks->SetBinContent(channel+1, AmBe_Peak);
+    AmBe_peaks->Fill(AmBe_Peak);
+    //LOG(INFO) << "Peak-postition:  " << channel  << "  " << AmBe_Peak ;
+    ofstream file;
+    file.open("Peakpositionentest.txt", ios::app);
+    file << "Channel: " << channel << ";" << "Peak: " << AmBe_Peak <<endl;
+
+    //cout << AmBe_Peak <<endl;
 }
 
 bool CB_SourceCalib::TheGUI::FinishSlice()
 {
+    canvas->Clear();
+    canvas->Divide(2,1);
+    canvas->cd(1);
+    h_peaks->SetStats(false);
+    h_peaks->Draw();
+    canvas->cd(2);
+    AmBe_peaks->Draw();
+
+
     return true;
 }
 
