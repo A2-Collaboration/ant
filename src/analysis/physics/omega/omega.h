@@ -73,6 +73,35 @@ public:
     virtual void ProcessEvent(const TEvent& event, manager_t& manager) override;
     virtual void Finish() override;
     virtual void ShowResult() override;
+
+    static double getTime(const TParticlePtr& p) {
+        return p->Candidate != nullptr ? p->Candidate->Time : std_ext::NaN;
+    }
+
+    template <typename it_type>
+    static LorentzVec LVSum(it_type begin, it_type end) {
+        LorentzVec v;
+
+        while(begin!=end) {
+            v += **begin;
+            ++begin;
+        }
+
+        return v;
+    }
+
+    template <typename it_type>
+    static LorentzVec LVSumL(it_type begin, it_type end) {
+        LorentzVec v;
+
+        while(begin!=end) {
+            v += *begin;
+            ++begin;
+        }
+
+        return v;
+    }
+
 };
 
 class OmegaMCTree : public Physics {

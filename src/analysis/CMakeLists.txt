@@ -27,6 +27,7 @@ set(ANALYSIS_PHYSICS
   physics/pi0/DeltaTreeGenerator.cc
   physics/omega/omega.cc
   physics/omega/GeoAcceptance.cc
+  physics/omega/pi0eta.cc
   physics/test/TestAPLCON.cc
   physics/common/DataOverview.cc
   physics/omega/mctrue_acceptance.cc
