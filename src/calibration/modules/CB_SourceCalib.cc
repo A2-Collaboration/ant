@@ -11,6 +11,7 @@
 #include "root-addons/cbtaps_display/TH2CB.h"
 #include "base/Logger.h"
 
+#include "TImage.h"
 
 
 using namespace std;
@@ -97,7 +98,7 @@ void CB_SourceCalib::TheGUI::InitGUI(gui::ManagerWindow_traits * window)
     h_peaks = new TH1D("h_peaks", "Peak postitions", GetNumberOfChannels(),0,GetNumberOfChannels());
     h_peaks->SetXTitle("Channel Number");
     h_peaks->SetYTitle("AmBe Peak");
-    AmBe_peaks= new TH1D("AMBe_peaks", "number of Peaks against the ADC channel", 140,0.,140.);
+    AmBe_peaks= new TH1D("AMBe_peaks", "number of Peaks against the ADC channel", 160,0.,160.);
 
 }
 
@@ -120,7 +121,7 @@ gui::CalibModule_traits::DoFitReturn_t CB_SourceCalib::TheGUI::DoFit(TH1 *hist, 
         do {
             func->Fit(h_projection);
             VLOG(8) << "Chi2/dof = " << func->Chi2NDF();
-            if(func->Chi2NDF() < AutoStopOnChi2) {
+            if(func->Chi2NDF() < AutoStopOnChi2 && func->GetPeakPosition() < 100 && func->GetPeakPosition() >22) {
                 return true;
             }
             retries--;
@@ -145,18 +146,25 @@ void CB_SourceCalib::TheGUI::StoreFit(unsigned channel)
 {
     fitParameters[channel] = func->Save();
     const double AmBe_Peak= func->GetPeakPosition();
+    const double Peak_Error= func->GetPeakError();
     h_peaks->SetBinContent(channel+1, AmBe_Peak);
     AmBe_peaks->Fill(AmBe_Peak);
     //LOG(INFO) << "Peak-postition:  " << channel  << "  " << AmBe_Peak ;
-    ofstream file;
-    file.open("Peakpositionentest.txt", ios::app);
-    file << "Channel: " << channel << ";" << "Peak: " << AmBe_Peak <<endl;
 
-    //cout << AmBe_Peak <<endl;
+    fstream file;
+    file.open("Peakpositionentest.txt", ios::app);
+    file << channel+1 << "\t" << AmBe_Peak << "\t"<< Peak_Error <<endl;
+    canvas->Print("Test.pdf(");
+
+//    TImage *img = TImage::Create();
+//    img->FromPad(canvas);
+//    img->WriteImage("Test22.jpg");
+
 }
 
 bool CB_SourceCalib::TheGUI::FinishSlice()
 {
+    canvas->Print("Test.pdf)");
     canvas->Clear();
     canvas->Divide(2,1);
     canvas->cd(1);
