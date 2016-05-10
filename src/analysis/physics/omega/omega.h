@@ -233,7 +233,8 @@ public:
     };
 
 protected:
-    void Analyse(const TEventData &data, const TEvent& event, manager_t&manager) override;
+    void Analyse(const TEventData &data, const TEvent& event, manager_t& manager) override;
+    void AnalyseMain(const TParticleList& photons, const TParticlePtr& proton, const TEventData &data, const TEvent& event, manager_t& manager);
 
 
     TH1D* missed_channels = nullptr;
@@ -298,6 +299,8 @@ protected:
 
     const bool   opt_save_after_kinfit = false;
     const double opt_kinfit_chi2cut    = 10.0;
+
+    const bool   opt_discard_one       = false;
 
     TagChMultiplicity tagChMult;
 

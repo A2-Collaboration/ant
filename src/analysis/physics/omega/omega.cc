@@ -282,9 +282,6 @@ double getTime(const TParticlePtr& p) {
 void OmegaEtaG2::Analyse(const TEventData &data, const TEvent& event, manager_t& manager)
 {
 
-    const auto& particletree = event.MCTrue().ParticleTree;
-
-    //const auto& mctrue_photons = event.MCTrue().Particles().Get(ParticleTypeDatabase::Photon);
     t.Channel = reaction_channels.identify(event.MCTrue().ParticleTree);
 
     if(t.Channel == ReactionChannelList_t::other_index) {
@@ -342,9 +339,16 @@ void OmegaEtaG2::Analyse(const TEventData &data, const TEvent& event, manager_t&
     if(photons.size() != 3)
         return;
 
+    AnalyseMain(photons, protons.at(0), data, event, manager);
+
+}
+
+void OmegaEtaG2::AnalyseMain(const TParticleList& photons, const TParticlePtr& proton, const TEventData& data, const TEvent& event, manager_t& manager) {
+
+    TH1* steps = stephists.at(t.Channel);
+
     steps->Fill("3 nPhotons nProtons", 1);
 
-    const auto& proton = protons.at(0);
 
     t.photons().at(0) = *photons.at(0);
     t.photons().at(1) = *photons.at(1);
@@ -606,6 +610,8 @@ void OmegaEtaG2::Analyse(const TEventData &data, const TEvent& event, manager_t&
 
         t.ggIM_real = NaN;
         t.ggIM_comb = {NaN, NaN};
+
+        const auto& particletree = event.MCTrue().ParticleTree;
 
         if(particletree && (t.Channel == 1 || t.Channel == 2)) {
             particletree->Map_level([&true_particles] (const TParticlePtr& p, const size_t& level) {
