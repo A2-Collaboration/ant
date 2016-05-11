@@ -28,6 +28,7 @@ set(ANALYSIS_PHYSICS
   physics/omega/omega.cc
   physics/omega/GeoAcceptance.cc
   physics/omega/pi0eta.cc
+  physics/omega/pi0eta_lost_g.cc
   physics/test/TestAPLCON.cc
   physics/common/DataOverview.cc
   physics/omega/mctrue_acceptance.cc
