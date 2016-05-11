@@ -281,6 +281,7 @@ double getTime(const TParticlePtr& p) {
 
 void OmegaEtaG2::Analyse(const TEventData &data, const TEvent& event, manager_t& manager)
 {
+    const unsigned nphotons = opt_discard_one ? 4 : 3;
 
     t.Channel = reaction_channels.identify(event.MCTrue().ParticleTree);
 
@@ -305,7 +306,7 @@ void OmegaEtaG2::Analyse(const TEventData &data, const TEvent& event, manager_t&
 
     const auto n_cands = geoAccepted(data.Candidates);
 
-    if(n_cands != 4) {
+    if(n_cands != nphotons + 1) {
         return;
     }
 
@@ -323,7 +324,7 @@ void OmegaEtaG2::Analyse(const TEventData &data, const TEvent& event, manager_t&
         }
     }
 
-    if(iphotons.size() != 3)
+    if(iphotons.size() != nphotons)
         return;
 
     if(iprotons.size() != 1)
@@ -336,10 +337,19 @@ void OmegaEtaG2::Analyse(const TEventData &data, const TEvent& event, manager_t&
 
     const TParticleList photons = FilterPhotons(getGeoAccepted(iphotons));
 
-    if(photons.size() != 3)
+    if(photons.size() != nphotons)
         return;
 
-    AnalyseMain(photons, protons.at(0), data, event, manager);
+    TParticleList ph;
+    ph.reserve(3);
+    for(auto cobms = utils::makeCombination(photons, 3); !cobms.Done(); ++cobms) {
+
+        ph.clear();
+        for(const auto& x : cobms) {
+            ph.emplace_back(x);
+        }
+        AnalyseMain(ph, protons.at(0), data, event, manager);
+    }
 
 }
 
@@ -786,6 +796,7 @@ OmegaEtaG2::OmegaEtaG2(const std::string& name, OptionsPtr opts):
         ),
     opt_save_after_kinfit(opts->Get("SaveAfterKinfit", false)),
     opt_kinfit_chi2cut(opts->Get<double>("KinFit_Chi2Cut", 10.0)),
+    opt_discard_one(opts->Get("Use4Discard1", false)),
     tagChMult(HistFac)
 
 {
