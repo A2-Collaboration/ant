@@ -2,7 +2,7 @@
 
 #include <algorithm>
 #include <functional>
-
+#include <cmath>
 #include <cxxabi.h>
 
 namespace ant {
