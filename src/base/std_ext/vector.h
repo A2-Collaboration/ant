@@ -2,6 +2,7 @@
 
 #include <vector>
 #include <algorithm>
+#include <numeric>
 
 namespace ant {
 namespace std_ext {
