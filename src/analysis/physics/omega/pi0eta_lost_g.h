@@ -28,8 +28,8 @@ public:
     struct Tree_t : WrapTTree {
         Tree_t();
 
-        ADD_BRANCH_T(std::vector<TLorentzVector>, photon, 3)
-        ADD_BRANCH_T(TLorentzVector, proton)
+//        ADD_BRANCH_T(std::vector<TLorentzVector>, photon, 3)
+//        ADD_BRANCH_T(TLorentzVector, proton)
         ADD_BRANCH_T(double, E)
         ADD_BRANCH_T(double, theta)
         ADD_BRANCH_T(double, phi)
@@ -45,7 +45,7 @@ public:
     Pi0EtaLostG(const std::string& name, OptionsPtr opts);
     virtual ~Pi0EtaLostG();
 
-    void ProcessEvent(const TEvent& event, manager_t& manager) override;
+    void ProcessEvent(const TEvent& event, manager_t&) override;
 };
 
 }

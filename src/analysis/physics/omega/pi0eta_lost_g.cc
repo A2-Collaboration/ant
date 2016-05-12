@@ -24,7 +24,26 @@ Pi0EtaLostG::~Pi0EtaLostG()
 {
 }
 
-void Pi0EtaLostG::ProcessEvent(const TEvent& event, manager_t& manager)
+struct matchpair {
+    size_t a;
+    size_t b;
+    double dist;
+
+    matchpair(size_t index_a, size_t index_b, double distance) noexcept:
+        a(index_a),
+        b(index_b),
+        dist(distance) {}
+
+    bool operator> (const matchpair& o) const noexcept {
+        return dist > o.dist;
+    }
+
+    bool operator< (const matchpair& o) const noexcept {
+        return dist < o.dist;
+    }
+};
+
+void Pi0EtaLostG::ProcessEvent(const TEvent& event, manager_t&)
 {
 
     const auto& mc_cands = event.MCTrue().Particles.GetAll();
@@ -33,7 +52,33 @@ void Pi0EtaLostG::ProcessEvent(const TEvent& event, manager_t& manager)
     if(mc_cands.size() != 5 || re_cands.size() != 4)
         return;
 
-    // find matched and unmatched
+    auto distance_function = [] (const TParticlePtr& p, const TCandidate& c) -> double {
+        return p->Angle(c);
+    };
+
+    const auto matched = utils::match2(mc_cands, re_cands, distance_function);
+
+    auto findUnmatched = [] (const decltype (matched)& l) -> const utils::matchpair& {
+        for(const auto& m : l) {
+            if(!m.matched) {
+                return m;
+            }
+        }
+        throw std::runtime_error("no unmatched particle found!");
+    };
+
+    const auto iUnmatched = findUnmatched(matched);
+
+
+    const auto Unmatched = mc_cands.at(iUnmatched.a);
+
+    t.E        = Unmatched->Ek();
+    t.theta    = Unmatched->Theta();
+    t.phi      = Unmatched->Phi();
+    t.MinAngle = iUnmatched.dist;
+
+    tree->Fill();
+
 }
 
 
