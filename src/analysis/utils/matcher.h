@@ -5,6 +5,7 @@
 #include <algorithm>
 
 #include "base/interval.h"
+#include "base/std_ext/math.h"
 #include <limits>
 
 
@@ -106,5 +107,82 @@ T2 FindMatched(const std::list<utils::scored_match<T1,T2>>& l, const T1& f) {
     }
     return T2();
 }
+
+
+
+struct matchpair {
+    size_t a;
+    size_t b;
+    double dist;
+    bool matched = false;
+
+    matchpair(size_t index_a, size_t index_b, double distance) noexcept:
+        a(index_a),
+        b(index_b),
+        dist(distance) {}
+
+    bool operator> (const matchpair& o) const noexcept {
+        return dist > o.dist;
+    }
+
+    bool operator< (const matchpair& o) const noexcept {
+        return dist < o.dist;
+    }
+};
+
+template <class MatchFunction, typename List1, typename List2>
+std::vector<matchpair>match2(const List1& list1,
+               const List2& list2,
+               MatchFunction f)
+{
+    std::list<matchpair> pairs;
+
+    for(size_t i=0; i<list1.size(); ++i) {
+        for(size_t j=0; j<list2.size(); ++j) {
+            pairs.emplace_back(matchpair(i,j, f(list1.at(i), list2.at(j))));
+        }
+    }
+
+    std::vector<matchpair> bestlist;
+    bestlist.reserve(list1.size());
+    for(size_t i=0;i<list1.size(); ++i) {
+        bestlist.emplace_back(matchpair(i, 99999, std_ext::inf));
+    }
+
+    // save best match for every element in A,
+    // regardless of other matches.
+    for(const auto& m : pairs) {
+        auto& b = bestlist.at(m.a);
+        if(m.dist < b.dist) {
+            b = m;
+        }
+    }
+
+    pairs.sort();
+
+    {
+        auto i = pairs.begin();
+        while(i!=pairs.end()) {
+            auto& b = bestlist.at(i->a);
+            b = *i;
+            b.matched = true;
+
+            for(auto j=next(i); j!=pairs.end();) {
+                if(j->a == b.a || j->b == b.b) {
+                    j = pairs.erase(j);
+                } else {
+                    ++j;
+                }
+            }
+
+            ++i;
+        }
+    }
+
+    return bestlist;
+}
+
+
+
 
 }}} // namespace ant::analysis::utils
