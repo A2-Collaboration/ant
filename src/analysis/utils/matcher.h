@@ -146,7 +146,7 @@ std::vector<matchpair>match2(const List1& list1,
     std::vector<matchpair> bestlist;
     bestlist.reserve(list1.size());
     for(size_t i=0;i<list1.size(); ++i) {
-        bestlist.emplace_back(matchpair(i, 99999, std_ext::inf));
+        bestlist.emplace_back(matchpair(i, std::numeric_limits<size_t>::max(), std_ext::inf));
     }
 
     // save best match for every element in A,
@@ -161,21 +161,22 @@ std::vector<matchpair>match2(const List1& list1,
     pairs.sort();
 
     {
-        auto i = pairs.begin();
-        while(i!=pairs.end()) {
+
+        while(!pairs.empty()) {
+            auto i = pairs.begin();
+
             auto& b = bestlist.at(i->a);
             b = *i;
+
             b.matched = true;
 
-            for(auto j=next(i); j!=pairs.end();) {
-                if(j->a == b.a || j->b == b.b) {
-                    j = pairs.erase(j);
+            while(i!=pairs.end()) {
+                if(i->a == b.a || i->b == b.b) {
+                    i = pairs.erase(i);
                 } else {
-                    ++j;
+                    ++i;
                 }
             }
-
-            ++i;
         }
     }
 
