@@ -609,6 +609,11 @@ void OmegaEtaG2::AnalyseMain(const TParticleList& photons, const TParticlePtr& p
                     t.bestHyp = 2;  // ETA
                 }
 
+            if(opt_save_afteretaHyp
+                    && t.bestHyp == 2
+                    && t.etaprob().at(t.iBestEta) > 0.03 && (t.iBestPi0 ==-1 || t.pi0prob().at(t.iBestPi0) < 0.03))
+                manager.SaveEvent();
+
         }
 
 
@@ -797,6 +802,7 @@ OmegaEtaG2::OmegaEtaG2(const std::string& name, OptionsPtr opts):
     opt_save_after_kinfit(opts->Get("SaveAfterKinfit", false)),
     opt_kinfit_chi2cut(opts->Get<double>("KinFit_Chi2Cut", 10.0)),
     opt_discard_one(opts->Get("Use4Discard1", false)),
+    opt_save_afteretaHyp(opts->Get("SaveAfterEtaHyp", false)),
     tagChMult(HistFac)
 
 {

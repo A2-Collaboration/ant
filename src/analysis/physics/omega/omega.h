@@ -301,6 +301,7 @@ protected:
     const double opt_kinfit_chi2cut    = 10.0;
 
     const bool   opt_discard_one       = false;
+    const bool   opt_save_afteretaHyp  = false;
 
     TagChMultiplicity tagChMult;
 
