@@ -8,18 +8,13 @@
 
 #include <vector>
 #include <iostream>
+#include <cassert>
 #include "analysis/utils/matcher.h"
 
 
 using namespace std;
 using namespace ant;
 using namespace ant::analysis;
-
-void test_matcher2();
-
-TEST_CASE("Analysis: Matcher2", "[analysis]") {
-    test_matcher2();
-}
 
 ostream& operator<<(ostream& stream, const utils::matchpair& m) {
 
@@ -33,26 +28,50 @@ ostream& operator<<(ostream& stream, const utils::matchpair& m) {
     return stream;
 }
 
-void test_matcher2() {
-    const vector<int> va = { 30, 40, 10, 20 };
-    const vector<int> vb = { 11, 22, 34 };
+void test_matcher2(const vector<int>& va, const vector<int>& vb, const vector<pair<int,bool>>& exptected) {
 
-    // 40 will be unmatched, but closest to 34.
+    assert(va.size() == exptected.size());
+
+    cout << endl;
 
     const auto res = utils::match2(va, vb, [] (const int a, const int b) { return abs(a - b);});
 
-//    for(const auto& m : res) {
-//        cout << m << endl;
-//    }
 
-    REQUIRE(res.at(0).matched == true);
-    REQUIRE(res.at(0).b == 2);
-    REQUIRE(res.at(1).matched == false);
-    REQUIRE(res.at(1).b == 2);
-    REQUIRE(res.at(2).matched == true);
-    REQUIRE(res.at(2).b == 0);
-    REQUIRE(res.at(3).matched == true);
-    REQUIRE(res.at(3).b == 1);
+    for(const auto& m : res) {
+        cout << m << endl;
+    }
+
+    for(size_t i=0; i<res.size(); ++i) {
+        REQUIRE(res.at(i).a == i);
+        REQUIRE(res.at(i).matched == exptected.at(i).second);
+        REQUIRE(res.at(i).b == exptected.at(i).first);
+
+    }
+
+    REQUIRE(res.size() == va.size());
+}
 
 
+TEST_CASE("Matcher2: va > vb", "[analysis]") {
+    const vector<int> va       = { 30, 40, 10, 20 };
+    const vector<int> vb       = { 11, 22, 34 };
+    const vector<pair<int,bool>> exp = { {2, true}, {2, false}, {0, true}, {1, true} };
+
+    test_matcher2(va, vb, exp);
+}
+
+TEST_CASE("Matcher2: va = vb, all matched", "[analysis]") {
+    const vector<int> va       = { 30, 40, 10, 20 };
+    const vector<int> vb       = { 11, 22, 34, 39};
+    const vector<pair<int,bool>> exp = { {2, true}, {3, true}, {0, true}, {1, true} };
+
+    test_matcher2(va, vb, exp);
+}
+
+TEST_CASE("Matcher2: va < vb", "[analysis]") {
+    const vector<int> va       = { 30, 40, 10 };
+    const vector<int> vb       = { 11, 22, 34, 39};
+    const vector<pair<int,bool>> exp = { {2, true}, {3, true}, {0, true} };
+
+    test_matcher2(va, vb, exp);
 }
