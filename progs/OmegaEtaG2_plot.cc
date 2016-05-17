@@ -191,6 +191,8 @@ struct OmegaHist_t {
     const BinSettings TaggTime   = BinSettings(200, -25, 25);
     const BinSettings CoplBins   = Bins(300, 0, 30.0);
 
+    const BinSettings dalitzBins = Bins(200, -0.4, 0.4);
+
     HistogramFactory HistFac;
 
     void AddTH1(const string &title, const string &xlabel, const string &ylabel, const BinSettings &bins, const string &name, fillfunc_t<TH1D> f) {
@@ -322,6 +324,30 @@ struct OmegaHist_t {
             ba.Boost(boost);
 
             h->Fill(ba.E(), f.TaggW());
+        });
+
+        AddTH2("Dalitz","X","Y", dalitzBins, dalitzBins, "dalitz",
+               [] (TH2D* h, const Fill_t& f) {
+
+            const auto boost = -f.Tree.ggg_fitted().BoostVector();
+
+            vector<double> T;
+            T.reserve(3);
+            for( const auto& g : f.Tree.photons_fitted()) {
+                TLorentzVector lv = g;
+                lv.Boost(boost);
+                T.push_back(lv.E());
+            }
+            const auto Q = T.at(0) + T.at(1) + T.at(2);
+
+            sort(T.begin(),T.end());
+
+            do {
+                const auto x = (T.at(1) - T.at(0)) / (sqrt(2) * Q);
+                const auto y = T.at(2) / Q - 1.0/3.0;
+                h->Fill(x, y, 1.0);
+            } while (std::next_permutation(T.begin(), T.end()));
+
         });
 
     }
