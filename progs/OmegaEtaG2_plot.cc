@@ -16,6 +16,7 @@
 #include "base/std_ext/string.h"
 #include "base/std_ext/system.h"
 #include "base/std_ext/math.h"
+#include "base/vec/vec2.h"
 
 #include <list>
 #include <vector>
@@ -34,6 +35,64 @@ using namespace std;
 
 volatile static bool interrupt = false;
 double binScale=1.0;
+class OmegaDalitzPlot {
+
+public:
+
+    static double x(double T1, double T2, double T3) noexcept {
+        return (T2 - T1) / (sqrt(2) * (T1+T2+T3));
+    }
+
+    static double y(double T1, double T2, double T3) noexcept {
+        return T3 / (T1+T2+T3) - 1.0/3.0;
+    }
+
+    static vec2 xy(double T1, double T2, double T3) noexcept {
+        return vec2(x(T1,T2,T3),y(T1,T2,T3));
+    }
+
+    static std::vector<double> getDalitzT(const std::vector<TLorentzVector>& photons, const TLorentzVector& omega) {
+
+        const auto boost = -omega.BoostVector();
+
+        vector<double> T;
+        T.reserve(photons.size());
+        for( const auto& g : photons) {
+            TLorentzVector lv = g;
+            lv.Boost(boost);
+            T.push_back(lv.E());
+        }
+
+        sort(T.begin(),T.end());
+
+        return T;
+    }
+
+protected:
+    vec2 calc() {
+        return xy(T.at(0), T.at(1), T.at(2));
+    }
+
+    std::vector<double> T;
+
+public:
+    vec2 var;
+
+    OmegaDalitzPlot(const std::vector<TLorentzVector>& photons, const TLorentzVector& omega):
+        T(getDalitzT(photons,omega)),
+        var(calc())
+    {}
+
+    bool Next() noexcept {
+        const auto r = std::next_permutation(T.begin(), T.end());
+        if(r)
+            var = calc();
+        return r;
+    }
+
+};
+
+
 
 template<typename Hist_t>
 struct MCTrue_Splitter : cuttree::StackedHists_t<Hist_t> {
@@ -329,24 +388,10 @@ struct OmegaHist_t {
         AddTH2("Dalitz","X","Y", dalitzBins, dalitzBins, "dalitz",
                [] (TH2D* h, const Fill_t& f) {
 
-            const auto boost = -f.Tree.ggg_fitted().BoostVector();
-
-            vector<double> T;
-            T.reserve(3);
-            for( const auto& g : f.Tree.photons_fitted()) {
-                TLorentzVector lv = g;
-                lv.Boost(boost);
-                T.push_back(lv.E());
-            }
-            const auto Q = T.at(0) + T.at(1) + T.at(2);
-
-            sort(T.begin(),T.end());
-
+            OmegaDalitzPlot p(f.Tree.photons_fitted(), f.Tree.ggg_fitted());
             do {
-                const auto x = (T.at(1) - T.at(0)) / (sqrt(2) * Q);
-                const auto y = T.at(2) / Q - 1.0/3.0;
-                h->Fill(x, y, 1.0);
-            } while (std::next_permutation(T.begin(), T.end()));
+                h->Fill(p.var.x, p.var.y);
+            } while (p.Next());
 
         });
 
