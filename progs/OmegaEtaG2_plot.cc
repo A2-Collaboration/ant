@@ -34,7 +34,8 @@ using namespace ant::analysis::plot;
 using namespace std;
 
 volatile static bool interrupt = false;
-double binScale=1.0;
+static double binScale=1.0;
+
 class OmegaDalitzPlot {
 
 public:
