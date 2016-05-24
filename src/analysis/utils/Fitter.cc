@@ -41,7 +41,7 @@ const APLCON::Fit_Settings_t Fitter::Fitter::DefaultSettings = Fitter::MakeDefau
 Fitter::Fitter(const string& fittername, const APLCON::Fit_Settings_t& settings, std::shared_ptr<const UncertaintyModel> &uncertainty_model):
     uncertainty(uncertainty_model)
 {
-    aplcon = make_unique<APLCON>(fittername, settings);
+    aplcon = std_ext::make_unique<APLCON>(fittername, settings);
 }
 
 Fitter::~Fitter()

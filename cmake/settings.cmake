@@ -26,7 +26,7 @@ endif()
 
 
 # enable as many warnings as possible
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=gnu++11 -Wall -Wextra -Wnon-virtual-dtor")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++14 -Wall -Wextra -Wnon-virtual-dtor")
 # really no optimization in debug mode
 set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -O0")
 #set(CMAKE_SHARED_LINKER_FLAGS "-Wl,--no-undefined")
