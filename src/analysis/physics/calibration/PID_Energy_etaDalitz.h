@@ -4,6 +4,8 @@
 
 #include "root-addons/cbtaps_display/TH2CB.h"
 
+#include "TLorentzVector.h"
+
 namespace ant {
 namespace analysis {
 namespace physics {

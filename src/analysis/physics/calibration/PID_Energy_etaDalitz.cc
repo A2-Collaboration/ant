@@ -32,7 +32,10 @@ PID_Energy_etaDalitz::PID_Energy_etaDalitz(const string& name, OptionsPtr opts) 
 
 void PID_Energy_etaDalitz::ProcessEvent(const TEvent& event, manager_t&)
 {
-    const auto& cands = event.Reconstructed->Candidates;
+    //const auto& cands = event.Reconstructed().Candidates;
+    const auto& data = event.Reconstructed();
+    const auto& cands = data.Candidates;
+    const auto nCandidates = cands.size();
 
     if(cands.size() != 4)
         return;
@@ -42,7 +45,7 @@ void PID_Energy_etaDalitz::ProcessEvent(const TEvent& event, manager_t&)
     const interval<double> eta_im({ETA_IM-ETA_SIGMA, ETA_IM+ETA_SIGMA});
     const interval<double> coplanarity({-10, 10});
     vector<TCandidatePtr> comb;
-    for( auto p : cands )
+    for( auto p : cands.get_iter() )
         comb.emplace_back(p);
     bool found;
     for( size_t j = 0; j < cands.size(); j++ ) {  // loop to test all different combinations
