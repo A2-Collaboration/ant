@@ -76,7 +76,7 @@ void CandidatesAnalysis::ProcessEvent(const TEvent& event, manager_t&)
 
                 const auto& cluster = ci.FindCaloCluster();
 
-                if(cluster)
+                if(cluster) {
 
                     lateral_moment_taps->Fill(clustertools.LateralMoment(*cluster));
 
@@ -102,6 +102,7 @@ void CandidatesAnalysis::ProcessEvent(const TEvent& event, manager_t&)
                             }
                         }
                     }
+                }
 
             }
 
