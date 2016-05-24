@@ -154,7 +154,8 @@ Set(ROOT_INCLUDES ${ROOT_INCLUDE_DIR})
 #######################################
 
 Find_Program(ROOT_CINT_EXECUTABLE
-  NAMES rootcint
+  NAMES rootcling
+  rootcint
   PATHS ${ROOT_BINARY_DIR}
   NO_DEFAULT_PATH
   )
