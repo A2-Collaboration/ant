@@ -38,6 +38,7 @@ struct EtapOmegaG : Physics {
         ADD_BRANCH_T(double,   ProtonTime)
         ADD_BRANCH_T(double,   PIDSumE)
 
+        ADD_BRANCH_T(double,   PhotonSum)
         ADD_BRANCH_T(double,   ProtonCopl)
         ADD_BRANCH_T(double,   MissingMass)
         ADD_BRANCH_T(double,   TaggW)
