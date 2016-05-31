@@ -31,6 +31,8 @@ APLCON::Fit_Settings_t EtapOmegaG::MakeFitSettings(unsigned max_iterations)
 {
     auto settings = APLCON::Fit_Settings_t::Default;
     settings.MaxIterations = max_iterations;
+//    settings.ConstraintAccuracy = 1.0e-3;
+//    settings.Chi2Accuracy = 1.0e-2;
     return settings;
 }
 
