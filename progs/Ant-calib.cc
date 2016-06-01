@@ -27,7 +27,7 @@ int main(int argc, char** argv) {
     auto cmd_gotoslice = cmd.add<TCLAP::ValueArg<unsigned>>("","gotoslice","Directly skip to specified slice", false, 0, "slice");
     auto cmd_batchmode = cmd.add<TCLAP::SwitchArg>("b","batch","Run in batch mode (no GUI, autosave)",false);
     auto cmd_default = cmd.add<TCLAP::SwitchArg>("","default","Put created TCalibrationData to default range",false);
-    auto cmd_confirmHeaderMissmatch = cmd.add<TCLAP::SwitchArg>("","confirmHeaderMissmatch","Confirm missmatch in Git infos in file headers and use files anyway",false);
+    auto cmd_confirmHeaderMismatch = cmd.add<TCLAP::SwitchArg>("","confirmHeaderMismatch","Confirm mismatch in Git infos in file headers and use files anyway",false);
     // unlabeled multi arg must be the last element added, and interprets everything as a input file
     auto cmd_inputfiles  = cmd.add<TCLAP::UnlabeledMultiArg<string>>("inputfiles","Ant files with histograms",true,"inputfiles");
     cmd.parse(argc, argv);
@@ -58,7 +58,7 @@ int main(int argc, char** argv) {
     auto manager = std_ext::make_unique<Manager>(
                        cmd_inputfiles->getValue(),
                        cmd_averagelength->getValue(),
-                       cmd_confirmHeaderMissmatch->getValue()
+                       cmd_confirmHeaderMismatch->getValue()
                        );
 
     // try to find the requested calibration modules

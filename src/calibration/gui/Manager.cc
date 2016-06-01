@@ -20,10 +20,10 @@ using namespace ant;
 using namespace ant::calibration;
 using namespace ant::calibration::gui;
 
-Manager::Manager(const std::vector<std::string>& inputfiles, unsigned avglength, bool confirmHeaderMissmatch):
+Manager::Manager(const std::vector<std::string>& inputfiles, unsigned avglength, bool confirmHeaderMismatch):
     buffer(avglength),
     state(),
-    confirmed_HeaderMissmatch(confirmHeaderMissmatch)
+    confirmed_HeaderMismatch(confirmHeaderMismatch)
 {
     BuildInputFiles(inputfiles);
 }
@@ -71,7 +71,7 @@ void Manager::BuildInputFiles(const vector<string>& filenames)
 
             if(last_header && !last_header->IsCompatible(*header)) {
                 LOG(WARNING) << *header << " not compatible to " << *last_header;
-                if(!confirmed_HeaderMissmatch) {
+                if(!confirmed_HeaderMismatch) {
                     LOG(WARNING) << "Skipping " << filename;
                     continue;
                 }

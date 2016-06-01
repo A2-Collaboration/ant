@@ -63,12 +63,12 @@ protected:
 
     int nChannels;
 
-    bool confirmed_HeaderMissmatch = false;
+    bool confirmed_HeaderMismatch = false;
 
 public:
     std::string SetupName;
 
-    Manager(const std::vector<std::string>& inputfiles, unsigned avglength, bool confirmHeaderMissmatch=false);
+    Manager(const std::vector<std::string>& inputfiles, unsigned avglength, bool confirmHeaderMismatch=false);
 
     void SetModule(const std::shared_ptr<CalibModule_traits>& module_) {
         module = move(module_);
