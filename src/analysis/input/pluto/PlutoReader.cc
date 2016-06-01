@@ -55,7 +55,8 @@ PlutoReader::PlutoReader(const std::shared_ptr<WrapTFileInput>& rootfiles) :
             tid_from_file = true;
     }
 
-    LOG(INFO) << "MCTrue input active, " << (tid_from_file ? "with" : " WITHOUT") << " TID match check";
+    LOG(INFO) << "MCTrue input active" << (tid_from_file ? ", with TID match check" : "");
+    LOG_IF(!tid_from_file, WARNING) << "No TID match check enabled";
 
     try {
         tagger = ExpConfig::Setup::GetDetector<TaggerDetector_t>();
