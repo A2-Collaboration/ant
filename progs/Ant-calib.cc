@@ -5,6 +5,7 @@
 
 #include "base/Logger.h"
 #include "base/CmdLine.h"
+#include "base/std_ext/string.h"
 
 #include "TROOT.h"
 #include "TRint.h"
@@ -43,6 +44,14 @@ int main(int argc, char** argv) {
     if(cmd_gotoslice->isSet() && cmd_averagelength->getValue()==0) {
         LOG(ERROR) << "Goto slice without averaging makes no sense";
         return 1;
+    }
+
+    for(auto inputfile : cmd_inputfiles->getValue()) {
+        if(std_ext::string_starts_with(inputfile, "-")) {
+            LOG(ERROR) << "Found '" << inputfile << "' with starting - parsed as inputfile, might be wrongly spelled option. "
+                       << "Prepend ./ to use it as inputfile.";
+            return 1;
+        }
     }
 
     // create TRint app early in order to have valid gStyle pointer...
