@@ -37,7 +37,15 @@ APLCON::Fit_Settings_t EtapOmegaG::MakeFitSettings(unsigned max_iterations)
 }
 
 EtapOmegaG::EtapOmegaG(const string& name, OptionsPtr opts) :
-    Physics(name, opts)
+    Physics(name, opts),
+    kinfitter_ref("kinfitter_ref",2,
+              make_shared<uncertainty_model_t>(),
+              EtapOmegaG::MakeFitSettings(25)
+              ),
+    kinfitter_sig("kinfitter_sig",4,
+              make_shared<uncertainty_model_t>(),
+              EtapOmegaG::MakeFitSettings(25)
+              )
 {
     const interval<double> prompt_range{-2.5,1.5};
     promptrandom.AddPromptRange(prompt_range); // slight offset due to CBAvgTime reference
@@ -207,6 +215,8 @@ void EtapOmegaG::ProcessEvent(const TEvent& event, manager_t&)
     }
 
     // loop over tagger hits, delegate to Ref/Sig
+    auto& kinfitter = t.IsSignal ? kinfitter_sig : kinfitter_ref;
+
     for(const TTaggerHit& taggerhit : data.TaggerHits) {
         promptrandom.SetTaggerHit(taggerhit.Time - t.CBAvgTime);
         promptrandom_tight.SetTaggerHit(taggerhit.Time - t.CBAvgTime);
@@ -228,11 +238,29 @@ void EtapOmegaG::ProcessEvent(const TEvent& event, manager_t&)
 
         particles.PhotonEnergy = taggerhit.PhotonEnergy;
 
-        if(t.IsSignal)
-            Sig.Process(particles, ptree_sigref);
-        else
-            Ref.Process(particles);
+        t.KinFitProb = std_ext::NaN;
+        t.KinFitIterations = 0;
 
+
+        kinfitter.SetEgammaBeam(particles.PhotonEnergy);
+        kinfitter.SetProton(particles.Proton);
+        kinfitter.SetPhotons(particles.Photons);
+
+        auto result = kinfitter.DoFit();
+
+        if(result.Status == APLCON::Result_Status_t::Success) {
+
+            t.KinFitProb = result.Probability;
+            t.KinFitIterations = result.NIterations;
+
+            particles.FittedPhotons = kinfitter.GetFittedPhotons();
+
+            if(t.IsSignal)
+                Sig.Process(particles, ptree_sigref);
+            else
+                Ref.Process(particles);
+
+        }
 
         t.Tree->Fill();
         Sig.Fill();
@@ -646,37 +674,13 @@ void EtapOmegaG::Sig_t::OmegaPi0_t::Process(const EtapOmegaG::Particles_t& parti
     }
 }
 
-EtapOmegaG::Ref_t::Ref_t() :
-    kinfitter("ref_kinfitter",2,
-              make_shared<uncertainty_model_t>(),
-              EtapOmegaG::MakeFitSettings(25)
-              )
-{
-
-}
-
 void EtapOmegaG::Ref_t::ResetBranches()
 {
-    t.KinFitProb = std_ext::NaN;
-    t.KinFitIterations = 0;
     t.IM_2g = std_ext::NaN;
 }
 
-void EtapOmegaG::Ref_t::Process(const EtapOmegaG::Particles_t& particles)
-{
-    kinfitter.SetEgammaBeam(particles.PhotonEnergy);
-    kinfitter.SetProton(particles.Proton);
-    kinfitter.SetPhotons(particles.Photons);
-
-    auto result = kinfitter.DoFit();
-
-    if(result.Status != APLCON::Result_Status_t::Success)
-        return;
-    t.KinFitProb = result.Probability;
-    t.KinFitIterations = result.NIterations;
-
-    auto photons = kinfitter.GetFittedPhotons();
-
+void EtapOmegaG::Ref_t::Process(const EtapOmegaG::Particles_t& particles) {
+    const auto& photons = particles.FittedPhotons;
     assert(photons.size() == 2);
     t.IM_2g = (*photons.front() + *photons.back()).M();
 }
