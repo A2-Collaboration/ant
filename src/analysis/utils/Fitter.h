@@ -88,7 +88,6 @@ public:
 
         FitParticle(const std::string& name): Name(name) {}
 
-        TParticlePtr AsFitted(const ParticleTypeDatabase::Type& type);
 
     protected:
         friend class Fitter;
@@ -100,6 +99,7 @@ public:
         void SetupBranches(TTree* tree, const std::string& prefix);
         static ant::LorentzVec GetVector(const std::vector<double>& EkThetaPhi, double m);
 
+        TParticlePtr AsFitted(const ParticleTypeDatabase::Type& type);
 
         std::vector<double*> Addresses()
         {
