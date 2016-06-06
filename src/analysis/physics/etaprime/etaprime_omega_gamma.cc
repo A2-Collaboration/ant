@@ -140,13 +140,7 @@ void EtapOmegaG::ProcessEvent(const TEvent& event, manager_t&)
     assert(particles.Photons.size() == nPhotons);
     assert(nPhotons == t.nPhotonsCB + t.nPhotonsTAPS);
 
-    // don't bother with events having not enough invariant mass
     t.PhotonSum = photon_sum.M();
-    const auto& IM4g_cut = ParticleTypeDatabase::EtaPrime.GetWindow(250);
-    if(!IM4g_cut.Contains(t.PhotonSum))
-        return;
-    h_CommonCuts->Fill("IM 4#gamma ok", 1.0);
-
 
     // don't bother with events where proton coplanarity is not ok
     // we use some rather large window here...
