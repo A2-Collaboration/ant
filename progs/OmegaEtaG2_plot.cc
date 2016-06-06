@@ -26,6 +26,7 @@
 #include "TRint.h"
 
 #include "TStyle.h"
+#include "TCutG.h"
 
 using namespace ant;
 using namespace ant::std_ext;
@@ -417,6 +418,16 @@ struct OmegaHist_t {
         return v;
     }
 
+    static TCutG* makeDalitzCut() {
+        TCutG* c = new TCutG("DalitzCut", 3);
+        c->SetPoint(0, 0.0,  0.2);
+        c->SetPoint(1, -.22, -.11);
+        c->SetPoint(2,  .22, -.11);
+        return c;
+    }
+
+    static TCutG* dalitzCut;
+
     // Sig and Ref channel share some cuts...
     static cuttree::Cuts_t<Fill_t> GetCuts() {
 
@@ -462,6 +473,15 @@ struct OmegaHist_t {
             return pi0prob > 0.03;
         };
 
+        auto DalitzCut = [] (const Fill_t& f) {
+            OmegaDalitzPlot p(f.Tree.photons_fitted(), f.Tree.ggg_fitted());
+            do {
+                if(!dalitzCut->IsInside(p.var.x, p.var.y))
+                    return false;
+            } while (p.Next());
+            return true;
+        };
+
         auto etaBachelorCut = [] (const Fill_t& f) {
             return interval<double>::CenterWidth(200,40).Contains(f.BestBachelorE());
         };
@@ -478,8 +498,7 @@ struct OmegaHist_t {
                           });
 
         cuts.emplace_back(MultiCut_t<Fill_t>{
-                              {"eta-bachelorCut",      etaBachelorCut},
-                              {"pi0-bachelorCut",      pi0BachelorCut}
+                              {"dalitzCut",      DalitzCut}
                           });
         return cuts;
     }
@@ -598,3 +617,5 @@ int main(int argc, char** argv) {
 
     return 0;
 }
+
+TCutG* OmegaHist_t::dalitzCut = OmegaHist_t::makeDalitzCut();
