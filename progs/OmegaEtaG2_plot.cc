@@ -554,8 +554,8 @@ int main(int argc, char** argv) {
     OmegaHist_t::Tree_t tree;
 
     if(!link_branches("OmegaEtaG2/tree", addressof(tree), -1)) {
-        LOG(ERROR) << "Cannot link branches of tree";
-        return 1;
+        LOG(WARNING) << "Cannot link branches of tree";
+       // return 1;
     }
 
     const auto entries = tree.Tree->GetEntries();
