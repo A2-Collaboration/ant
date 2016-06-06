@@ -41,7 +41,7 @@ using namespace ant::expconfig::setup;
 
 Setup_2014_EPT::Setup_2014_EPT(const string& name, OptionsPtr opt) :
     Setup(name, opt),
-    MCTaggerHits(opt->Get<bool>("MCTaggerHits",true))
+    MCTaggerHits(opt->Get<bool>("MCTaggerHits",false))
 {
 
     // setup the detectors of interest
