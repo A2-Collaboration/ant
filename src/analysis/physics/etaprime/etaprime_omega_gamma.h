@@ -65,6 +65,7 @@ struct EtapOmegaG : Physics {
         TParticleList  Photons;
         TParticleList  FittedPhotons;
         LorentzVec     PhotonSum;
+        LorentzVec     FittedPhotonSum;
     };
 
     struct Sig_t {
@@ -99,6 +100,10 @@ struct EtapOmegaG : Physics {
 
             static utils::TreeFitter Make(const ParticleTypeDatabase::Type& subtree);
 
+            static TParticlePtr FindBest(const utils::TreeFitter::tree_t& fitted,
+                                         const Particles_t& particles
+                                         );
+
             utils::ClusterTools clustertools;
             utils::TreeFitter treefitter;
             utils::TreeFitter::tree_t fitted_Pi0;
@@ -124,7 +129,7 @@ struct EtapOmegaG : Physics {
 
             BaseTree_t t;
 
-            void Process(const Particles_t& particles, TParticleTree_t ptree_sigref);
+            void Process(const Particles_t& particles, const TParticleTree_t& ptree_sigref);
         };
 
         struct OmegaPi0_t : Fit_t {
@@ -142,7 +147,7 @@ struct EtapOmegaG : Physics {
 
             BaseTree_t t;
 
-            void Process(const Particles_t& particles, TParticleTree_t ptree_sigref);
+            void Process(const Particles_t& particles, const TParticleTree_t& ptree_sigref);
 
         };
 
@@ -168,14 +173,14 @@ struct EtapOmegaG : Physics {
         void SetupTrees(HistogramFactory HistFac);
         void Fill();
         void ResetBranches();
-        void Process(const Particles_t& particles, TParticleTree_t ptree_sigref);
+        void Process(const Particles_t& particles, const TParticleTree_t& ptree_sigref);
 
     private:
         SharedTree_t t;
         utils::TreeFitter treefitter_Pi0Pi0;
         utils::TreeFitter treefitter_Pi0Eta;
         void DoAntiPi0Eta(const Particles_t& particles);
-        void DoPhotonCombinatorics(TParticleList photons);
+        void DoPhotonCombinatorics(const TParticleList& photons);
 
     };
 

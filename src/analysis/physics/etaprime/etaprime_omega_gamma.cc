@@ -255,6 +255,11 @@ void EtapOmegaG::ProcessEvent(const TEvent& event, manager_t&)
 
             particles.FittedPhotons = kinfitter.GetFittedPhotons();
 
+            particles.FittedPhotonSum = {0,0,0,0};
+
+            for(const auto& photon : particles.FittedPhotons)
+                particles.FittedPhotonSum += *photon;
+
             if(t.IsSignal)
                 Sig.Process(particles, ptree_sigref);
             else
@@ -324,15 +329,15 @@ void EtapOmegaG::Sig_t::SharedTree_t::Reset()
     AntiEtaFitIterations = 0;
 }
 
-void EtapOmegaG::Sig_t::Process(const Particles_t& particles, TParticleTree_t ptree_sigref)
+void EtapOmegaG::Sig_t::Process(const Particles_t& particles, const TParticleTree_t& ptree_sigref)
 {
-    DoPhotonCombinatorics(particles.Photons);
+    DoPhotonCombinatorics(particles.FittedPhotons);
     DoAntiPi0Eta(particles);
     OmegaPi0.Process(particles, ptree_sigref);
     Pi0.Process(particles, ptree_sigref);
 }
 
-void EtapOmegaG::Sig_t::DoPhotonCombinatorics(TParticleList photons)
+void EtapOmegaG::Sig_t::DoPhotonCombinatorics(const TParticleList& photons)
 {
 
     //  ggg combinatorics
@@ -433,7 +438,18 @@ utils::TreeFitter EtapOmegaG::Sig_t::Fit_t::Make(const ParticleTypeDatabase::Typ
     };
 }
 
-
+TParticlePtr EtapOmegaG::Sig_t::Fit_t::FindBest(const utils::TreeFitter::tree_t& fitted, const EtapOmegaG::Particles_t& particles)
+{
+    const auto& fitted_particle = fitted->Get().Leave->Particle;
+    unsigned i = 0;
+    for(const auto& p : particles.Photons) {
+        if(p == fitted_particle)
+            break;
+        i++;
+    }
+    // use at() to have boundary check
+    return particles.FittedPhotons.at(i);
+}
 
 
 void EtapOmegaG::Sig_t::Fit_t::BaseTree_t::Reset()
@@ -462,9 +478,12 @@ void EtapOmegaG::Sig_t::Pi0_t::BaseTree_t::Reset()
 }
 
 void EtapOmegaG::Sig_t::Pi0_t::Process(const EtapOmegaG::Particles_t& particles,
-                                       TParticleTree_t ptree_sigref)
+                                       const TParticleTree_t& ptree_sigref)
 {
     assert(particles.Photons.size() == 4);
+
+    // the EtaPrime
+    t.IM_Pi0gg = particles.FittedPhotonSum.M();
 
     // for MCtrue identification
     TParticlePtr g1_Pi0_best;
@@ -490,8 +509,8 @@ void EtapOmegaG::Sig_t::Pi0_t::Process(const EtapOmegaG::Particles_t& particles,
         t.IM_Pi0_fitted = Pi0_fitted.M();
 
         // have a look at the assigned gammas to Pi0/Omega
-        g1_Pi0_best = fitted_g1_Pi0->Get().Leave->Particle;
-        g2_Pi0_best = fitted_g2_Pi0->Get().Leave->Particle;
+        g1_Pi0_best = FindBest(fitted_g1_Pi0, particles);
+        g2_Pi0_best = FindBest(fitted_g2_Pi0, particles);
 
         const LorentzVec& Pi0_best = *g1_Pi0_best + *g2_Pi0_best;
         t.IM_Pi0_best = Pi0_best.M();
@@ -499,20 +518,17 @@ void EtapOmegaG::Sig_t::Pi0_t::Process(const EtapOmegaG::Particles_t& particles,
         // there are two photon combinations possible
         // for the omega
         assert(t.IM_Pi0g().size() == 2);
-        const TParticlePtr& g1 = fitted_g_Omega->Get().Leave->AsFitted(ParticleTypeDatabase::Photon);
-        const TParticlePtr& g2 = fitted_g_EtaPrime->Get().Leave->AsFitted(ParticleTypeDatabase::Photon);
+        const TParticlePtr& g1 = FindBest(fitted_g_Omega, particles);
+        const TParticlePtr& g2 = FindBest(fitted_g_EtaPrime, particles);
         t.IM_gg = (*g1 + *g2).M();
-        t.IM_Pi0g().front() = (Pi0_fitted + *g1).M();
-        t.IM_Pi0g().back()  = (Pi0_fitted + *g2).M();
+        t.IM_Pi0g().front() = (Pi0_best + *g1).M();
+        t.IM_Pi0g().back()  = (Pi0_best + *g2).M();
         if(t.IM_Pi0g().front() > t.IM_Pi0g().back()) {
             // first IM is higher, then swap
             // we assume that the photon with the lower IM corresponds to
             // the EtaPrime bachelor photon
             std::swap(t.IM_Pi0g().front(), t.IM_Pi0g().back());
         }
-
-        // the EtaPrime
-        t.IM_Pi0gg = fitted_EtaPrime->Get().LVSum.M();
     }
 
 
@@ -526,7 +542,7 @@ void EtapOmegaG::Sig_t::Pi0_t::Process(const EtapOmegaG::Particles_t& particles,
             auto match_bycandidate = [] (const TParticlePtr& mctrue, const TParticlePtr& recon) {
                 return mctrue->Angle(*recon->Candidate); // TCandidate converts into vec3
             };
-            auto matched = utils::match1to1(true_photons, particles.Photons,
+            auto matched = utils::match1to1(true_photons, particles.FittedPhotons,
                                             match_bycandidate,IntervalD(0.0, std_ext::degree_to_radian(15.0)));
             if(matched.size() == 4) {
                 // find the two photons of the pi0
@@ -571,7 +587,8 @@ void EtapOmegaG::Sig_t::OmegaPi0_t::BaseTree_t::Reset()
 }
 
 
-void EtapOmegaG::Sig_t::OmegaPi0_t::Process(const EtapOmegaG::Particles_t& particles, TParticleTree_t ptree_sigref)
+void EtapOmegaG::Sig_t::OmegaPi0_t::Process(const EtapOmegaG::Particles_t& particles,
+                                            const TParticleTree_t& ptree_sigref)
 {
 
     assert(particles.Photons.size() == 4);
@@ -581,8 +598,9 @@ void EtapOmegaG::Sig_t::OmegaPi0_t::Process(const EtapOmegaG::Particles_t& parti
     TParticlePtr g_Omega_best;
     // the EtaPrime bachelor photon is most important to us...
     TParticlePtr g_EtaPrime_best;
-    TParticlePtr g_EtaPrime_fitted;
-    LorentzVec EtaPrime_fitted;
+    const LorentzVec& EtaPrime_fitted = particles.FittedPhotonSum;
+    t.IM_Pi0gg = EtaPrime_fitted.M();
+
 
     // do treefit
     treefitter.SetEgammaBeam(particles.PhotonEnergy);
@@ -604,25 +622,21 @@ void EtapOmegaG::Sig_t::OmegaPi0_t::Process(const EtapOmegaG::Particles_t& parti
         t.IM_Pi0_fitted = fitted_Pi0->Get().LVSum.M();
 
         // have a look at the assigned gammas to Pi0/Omega
-        const auto& g1_Pi0_best = fitted_g1_Pi0->Get().Leave->Particle;
-        const auto& g2_Pi0_best = fitted_g2_Pi0->Get().Leave->Particle;
+        const auto& g1_Pi0_best = FindBest(fitted_g1_Pi0, particles);
+        const auto& g2_Pi0_best = FindBest(fitted_g2_Pi0, particles);
 
         const LorentzVec& Pi0_best = *g1_Pi0_best + *g2_Pi0_best;
         t.IM_Pi0_best = Pi0_best.M();
 
-        g_Omega_best = fitted_g_Omega->Get().Leave->Particle;
+        g_Omega_best = FindBest(fitted_g_Omega, particles);
         const LorentzVec& Omega_best = *g_Omega_best + Pi0_best;
         t.IM_Pi0g_best = Omega_best.M();
 
         // have a look at the EtaPrime bachelor photon
         // the element NOT in the combination is the Bachelor photon
-        g_EtaPrime_best = fitted_g_EtaPrime->Get().Leave->Particle;
+        g_EtaPrime_best = FindBest(fitted_g_EtaPrime, particles);
         t.IM_gg = (*g_EtaPrime_best + *g_Omega_best).M();
 
-        g_EtaPrime_fitted = fitted_g_EtaPrime->Get().Leave->AsFitted(ParticleTypeDatabase::Photon);
-
-        EtaPrime_fitted = fitted_EtaPrime->Get().LVSum;
-        t.IM_Pi0gg = EtaPrime_fitted.M();
     }
 
 
@@ -637,7 +651,7 @@ void EtapOmegaG::Sig_t::OmegaPi0_t::Process(const EtapOmegaG::Particles_t& parti
             return boosted;
         };
 
-        t.Bachelor_E = do_boost(*g_EtaPrime_fitted, EtaPrime_fitted).E;
+        t.Bachelor_E = do_boost(*g_EtaPrime_best, EtaPrime_fitted).E;
 
         // check MC matching
         if(ptree_sigref) {
@@ -647,8 +661,9 @@ void EtapOmegaG::Sig_t::OmegaPi0_t::Process(const EtapOmegaG::Particles_t& parti
             auto match_bycandidate = [] (const TParticlePtr& mctrue, const TParticlePtr& recon) {
                 return mctrue->Angle(*recon->Candidate); // TCandidate converts into vec3
             };
-            auto matched = utils::match1to1(true_photons, particles.Photons,
-                                            match_bycandidate,IntervalD(0.0, std_ext::degree_to_radian(15.0)));
+            auto matched = utils::match1to1(true_photons, particles.FittedPhotons,
+                                            match_bycandidate,
+                                            IntervalD(0.0, std_ext::degree_to_radian(15.0)));
             if(matched.size() == 4) {
                 // do that tedious photon determination (rewriting the matcher somehow would be nice....)
                 auto select_daughter = [] (TParticleTree_t tree, const ParticleTypeDatabase::Type& type) {
@@ -680,9 +695,8 @@ void EtapOmegaG::Ref_t::ResetBranches()
 }
 
 void EtapOmegaG::Ref_t::Process(const EtapOmegaG::Particles_t& particles) {
-    const auto& photons = particles.FittedPhotons;
-    assert(photons.size() == 2);
-    t.IM_2g = (*photons.front() + *photons.back()).M();
+    assert(particles.FittedPhotons.size() == 2);
+    t.IM_2g = particles.FittedPhotonSum.M();
 }
 
 void EtapOmegaG::ShowResult()
