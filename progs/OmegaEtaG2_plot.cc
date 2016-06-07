@@ -446,21 +446,8 @@ struct OmegaHist_t {
 
             const auto& etaprob  = f.Tree.etaprob()[f.Tree.iBestEta];
             const auto& iBestPi0 = f.Tree.iBestPi0;
-            const auto& pi0prob  = f.Tree.pi0prob()[iBestPi0];
 
-            return etaprob > 0.03 && (iBestPi0==-1 || pi0prob < 0.03);
-        };
-
-        auto etaHypCut2 = [] (const Fill_t& f) {
-
-            if(f.Tree.bestHyp != 2)
-                return false;
-
-            const auto& etaprob  = f.Tree.etaprob()[f.Tree.iBestEta];
-            const auto& iBestPi0 = f.Tree.iBestPi0;
-            const auto& pi0prob  = f.Tree.pi0prob()[iBestPi0];
-
-            return etaprob > 0.4 && (iBestPi0==-1 || pi0prob < 0.03);
+            return etaprob > 0.03 && (iBestPi0==-1 || f.Tree.pi0prob()[iBestPi0] < 0.03);
         };
 
         auto pi0HypCut = [] (const Fill_t& f) {
@@ -493,7 +480,6 @@ struct OmegaHist_t {
         cuts.emplace_back(MultiCut_t<Fill_t>{
 //                              {"m(3#gamma) cut",        [] (const Fill_t& f) { return f.Tree.ggg_fitted().M()<900 && f.Tree.ggg_fitted().M() > 700; } },
                               {"etaHyp",               etaHypCut},
-                              {"etaHyp2",              etaHypCut2},
                               {"pi0Hyp",               pi0HypCut}
                           });
 
