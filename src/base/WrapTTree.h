@@ -57,7 +57,7 @@ struct WrapTTree {
      * @param exact if false, the TTree may have additional branches
      * @return true if successful
      */
-    bool Matches(TTree* tree, bool exact = true) const;
+    bool Matches(TTree* tree, bool exact = true, bool nowarn = false) const;
 
     /**
      * @brief operator bool returns true if Tree is not null

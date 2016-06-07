@@ -31,7 +31,7 @@ void WrapTTree::LinkBranches(TTree* tree) {
     }
 }
 
-bool WrapTTree::Matches(TTree* tree, bool exact) const {
+bool WrapTTree::Matches(TTree* tree, bool exact, bool nowarn) const {
 
     if(!tree)
         return false;
@@ -44,7 +44,7 @@ bool WrapTTree::Matches(TTree* tree, bool exact) const {
 
     // ensure exact match of branches if required
     if(exact && branch_names.size() != branches.size()) {
-        LOG(WARNING) << "TTree has wrong number of branches";
+        LOG_IF(!nowarn, WARNING) << "TTree has wrong number of branches";
         return false;
     }
 
