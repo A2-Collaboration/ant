@@ -587,7 +587,7 @@ int main(int argc, char** argv) {
             LOG(INFO) << "No TTY attached. Not starting ROOT shell.";
         }
         else {
-
+            argc=0; // prevent TRint to parse any cmdline
             TRint app("EtapOmegaG_plot",&argc,argv,nullptr,0,true);
 
             if(masterFile)
