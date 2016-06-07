@@ -128,7 +128,7 @@ struct CommonHist_t {
         cuts.emplace_back(MultiCut_t<Fill_t>{
                                  {"KinFitProb>0", [] (const Fill_t& f) { return f.Common.KinFitProb>0; } },
                                  {"KinFitProb>0.01", [] (const Fill_t& f) { return f.Common.KinFitProb>0.01; } },
-                             });
+                          });
         return cuts;
     }
 
@@ -244,11 +244,19 @@ struct SigHist_t : CommonHist_t {
         };
 
         cuts.emplace_back(MultiCut_t<Fill_t>{
-                              {"AntiPi0FitProb<0.002", [] (const Fill_t& f) { return f.Shared.AntiPi0FitProb<0.002; } },
+                              {"AntiPi0FitProb<0.002 || nan", [] (const Fill_t& f) { return std::isnan(f.Shared.AntiPi0FitProb) || f.Shared.AntiPi0FitProb<0.002; } },
+                              {"AntiPi0FitProb<0.0002 || nan", [] (const Fill_t& f) { return std::isnan(f.Shared.AntiPi0FitProb) || f.Shared.AntiPi0FitProb<0.0002; } },
                           });
 
         cuts.emplace_back(MultiCut_t<Fill_t>{
-                              {"AntiEtaFitProb<0.005", [] (const Fill_t& f) { return f.Shared.AntiEtaFitProb<0.005; } },
+                              {"AntiEtaFitProb<0.005 || nan", [] (const Fill_t& f) { return std::isnan(f.Shared.AntiEtaFitProb) || f.Shared.AntiEtaFitProb<0.005; } },
+                              {"AntiEtaFitProb<0.0005 || nan", [] (const Fill_t& f) { return std::isnan(f.Shared.AntiEtaFitProb) || f.Shared.AntiEtaFitProb<0.0005; } },
+                          });
+
+        cuts.emplace_back(MultiCut_t<Fill_t>{
+                              {"TreeFitProb>0.16", [] (const Fill_t& f) { return f.Tree.TreeFitProb>0.16; } },
+                              {"TreeFitProb>0.04", [] (const Fill_t& f) { return f.Tree.TreeFitProb>0.04; } },
+                              //{"TreeFitProb>0.01", [] (const Fill_t& f) { return f.Tree.TreeFitProb>0.01; } },
                           });
 
         cuts.emplace_back(MultiCut_t<Fill_t>{
@@ -256,10 +264,6 @@ struct SigHist_t : CommonHist_t {
                               {"IM_gg", [] (const Fill_t& f) { return 180<f.Tree.IM_gg && f.Tree.IM_gg<460; } },
                           });
 
-        cuts.emplace_back(MultiCut_t<Fill_t>{
-                              {"TreeFitProb>0.04", [] (const Fill_t& f) { return f.Tree.TreeFitProb>0.04; } },
-                              {"TreeFitProb>0.01", [] (const Fill_t& f) { return f.Tree.TreeFitProb>0.01; } },
-                          });
         return cuts;
     }
 };
@@ -329,7 +333,7 @@ struct SigOmegaPi0Hist_t : SigHist_t {
 
     SigOmegaPi0Hist_t(HistogramFactory HistFac) : SigHist_t(HistFac) {
         h_Bachelor_E = HistFac.makeTH1D("E_#gamma in #eta' frame","E_{#gamma} / MeV","",
-                                        BinSettings(150,0,350),"h_Bachelor_E");
+                                        BinSettings(100,100,200),"h_Bachelor_E");
 
     }
 
