@@ -304,14 +304,6 @@ void OmegaEtaG2::Analyse(const TEventData &data, const TEvent& event, manager_t&
 
     steps->Fill("1 CBEsum", 1);
 
-    const auto n_cands = geoAccepted(data.Candidates);
-
-    if(n_cands != nphotons + 1) {
-        return;
-    }
-
-    steps->Fill("2 nCands", 1);
-
 
     TParticleList iphotons;
     TParticleList iprotons;
@@ -324,11 +316,7 @@ void OmegaEtaG2::Analyse(const TEventData &data, const TEvent& event, manager_t&
         }
     }
 
-    if(iphotons.size() != nphotons)
-        return;
-
-    if(iprotons.size() != 1)
-        return;
+    const bool okbefore = (iphotons.size() == nphotons) && (iprotons.size() == 1);
 
     const TParticleList protons = FilterProtons(getGeoAccepted(iprotons));
 
@@ -339,6 +327,11 @@ void OmegaEtaG2::Analyse(const TEventData &data, const TEvent& event, manager_t&
 
     if(photons.size() != nphotons)
         return;
+
+    steps->Fill("2 nCands", 1);
+
+    // event is "clean" if no clusters got rejected
+    t.nCandsClean = okbefore;
 
     TParticleList ph;
     ph.reserve(3);

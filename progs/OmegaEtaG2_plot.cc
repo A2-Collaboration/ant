@@ -477,6 +477,23 @@ struct OmegaHist_t {
             return interval<double>::CenterWidth(380,40).Contains(f.BestBachelorE());
         };
 
+        auto cleanEvent = [] (const Fill_t& f) {
+            return f.Tree.nCandsClean();
+        };
+
+        auto notcleanEvent = [] (const Fill_t& f) {
+            return !f.Tree.nCandsClean();
+        };
+
+        auto dontcareclean = [] (const Fill_t& f) {
+            return true;
+        };
+
+        cuts.emplace_back(MultiCut_t<Fill_t>{
+                              {"clean",         cleanEvent},
+                              {"dontcare",   dontcareclean}
+                          });
+
         cuts.emplace_back(MultiCut_t<Fill_t>{
 //                              {"m(3#gamma) cut",        [] (const Fill_t& f) { return f.Tree.ggg_fitted().M()<900 && f.Tree.ggg_fitted().M() > 700; } },
                               {"etaHyp",               etaHypCut},

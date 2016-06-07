@@ -230,6 +230,8 @@ public:
         ADD_BRANCH_T(TLorentzVector,            extra_gamma)
         ADD_BRANCH_T(std::vector<TLorentzVector>, bachelor_extra, 3)
 
+        ADD_BRANCH_T(bool,     nCandsClean)
+
     };
 
 protected:
