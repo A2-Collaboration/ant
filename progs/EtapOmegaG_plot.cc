@@ -78,11 +78,20 @@ struct CommonHist_t {
         double TaggW() const {
             return Common.TaggW;
         }
+
+        struct LogProb_t {
+            LogProb_t(const double& prob_) : prob(prob_) {}
+            operator double() const { return std::log10(prob); }
+        private:
+            const double& prob;
+        };
+
+        LogProb_t KinFitProb{Common.KinFitProb};
     };
 
 
 
-    const BinSettings bins_FitProb{200, 0, 0.3};
+    const BinSettings bins_FitProb{100, -5, 0};
     TH1D* h_KinFitProb;
     TH1D* h_CBSumE;
     TH1D* h_CBSumVetoE;
@@ -90,12 +99,13 @@ struct CommonHist_t {
 
 
     CommonHist_t(HistogramFactory HistFac) {
-        h_KinFitProb = HistFac.makeTH1D("KinFitProb","p","",bins_FitProb,"h_KinFitProb");
+        h_KinFitProb = HistFac.makeTH1D("KinFitProb","log p","",bins_FitProb,"h_KinFitProb");
         h_CBSumE = HistFac.makeTH1D("CB Sum E","E / MeV","",BinSettings(100,500,1600),"h_CBSumE");
         h_CBSumVetoE = HistFac.makeTH1D("CB Veto Sum E","E / MeV","",BinSettings(50,0,10),"h_CBSumVetoE");
         h_PIDSumE = HistFac.makeTH1D("PID Sum E","E / MeV","",BinSettings(50,0,10),"h_PIDSumE");
     }
     void Fill(const Fill_t& f) const {
+        h_KinFitProb->Fill(f.KinFitProb, f.TaggW());
         h_CBSumE->Fill(f.Common.CBSumE, f.TaggW());
         h_CBSumVetoE->Fill(f.Common.CBSumVetoE, f.TaggW());
         h_PIDSumE->Fill(f.Common.PIDSumE, f.TaggW());
@@ -115,10 +125,10 @@ struct CommonHist_t {
                               //{"PIDSumE=0", [] (const Fill_t& f) { return f.Common.PIDSumE==0; } },
                               {"PIDSumE<1", [] (const Fill_t& f) { return f.Common.PIDSumE<1; } },
                           });
-//        cuts.emplace_back(MultiCut_t<Fill_t>{
-//                                 {"KinFitProb>0", [] (const Fill_t& f) { return f.Common.KinFitProb>0; } },
-//                                 {"KinFitProb>0.01", [] (const Fill_t& f) { return f.Common.KinFitProb>0.01; } },
-//                             });
+        cuts.emplace_back(MultiCut_t<Fill_t>{
+                                 {"KinFitProb>0", [] (const Fill_t& f) { return f.Common.KinFitProb>0; } },
+                                 {"KinFitProb>0.01", [] (const Fill_t& f) { return f.Common.KinFitProb>0.01; } },
+                             });
         return cuts;
     }
 
@@ -139,6 +149,10 @@ struct SigHist_t : CommonHist_t {
             Shared(shared),
             Tree(tree)
         {}
+
+        LogProb_t AntiPi0FitProb{Shared.AntiPi0FitProb};
+        LogProb_t AntiEtaFitProb{Shared.AntiEtaFitProb};
+        LogProb_t TreeFitProb{Tree.TreeFitProb};
     };
 
     TH2D* h_IM_gg_gg;     // Goldhaber plot
@@ -151,7 +165,6 @@ struct SigHist_t : CommonHist_t {
 
     const BinSettings bins_IM_Etap {100, 800,1050};
     const BinSettings bins_IM_Omega{100, 550, 950};
-    const BinSettings bins_ClusterShape{30,0,1};
 
     SigHist_t(HistogramFactory HistFac) : CommonHist_t(HistFac) {
         BinSettings bins_goldhaber(200, 0, 900);
@@ -164,9 +177,9 @@ struct SigHist_t : CommonHist_t {
                                     );
         h_IM_4g = HistFac.makeTH1D("#eta' IM", "IM(#pi^{0}#gamma#gamma) / MeV","",bins_IM_Etap,"h_IM_4g");
         h_IM_gg = HistFac.makeTH1D("#eta' IM", "IM(#gamma#gamma) / MeV","",BinSettings(200,80,700),"h_IM_gg");
-        h_AntiPi0FitProb = HistFac.makeTH1D("AntiPi0FitProb", "p","",bins_FitProb,"h_AntiPi0FitProb");
-        h_AntiEtaFitProb = HistFac.makeTH1D("AntiEtaFitProb", "p","",bins_FitProb,"h_AntiEtaFitProb");
-        h_TreeFitProb = HistFac.makeTH1D("TreeFitProb", "p","",bins_FitProb,"h_TreeFitProb");
+        h_AntiPi0FitProb = HistFac.makeTH1D("AntiPi0FitProb", "log p","",bins_FitProb,"h_AntiPi0FitProb");
+        h_AntiEtaFitProb = HistFac.makeTH1D("AntiEtaFitProb", "log p","",bins_FitProb,"h_AntiEtaFitProb");
+        h_TreeFitProb = HistFac.makeTH1D("TreeFitProb", "log p","",bins_FitProb,"h_TreeFitProb");
 
     }
 
@@ -179,12 +192,12 @@ struct SigHist_t : CommonHist_t {
             h_IM_gg_gg->Fill(s.gg_gg1()[i], s.gg_gg2()[i], f.TaggW());
             h_IM_gg_gg->Fill(s.gg_gg2()[i], s.gg_gg1()[i], f.TaggW());
         }
-        h_AntiPi0FitProb->Fill(s.AntiPi0FitProb, f.TaggW());
-        h_AntiEtaFitProb->Fill(s.AntiEtaFitProb, f.TaggW());
+        h_AntiPi0FitProb->Fill(f.AntiPi0FitProb, f.TaggW());
+        h_AntiEtaFitProb->Fill(f.AntiEtaFitProb, f.TaggW());
 
         h_IM_4g->Fill(tree.IM_Pi0gg, f.TaggW());
         h_IM_gg->Fill(tree.IM_gg, f.TaggW());
-        h_TreeFitProb->Fill(tree.TreeFitProb, f.TaggW());
+        h_TreeFitProb->Fill(f.TreeFitProb, f.TaggW());
 
     }
 
@@ -247,8 +260,6 @@ struct SigHist_t : CommonHist_t {
                               {"TreeFitProb>0.04", [] (const Fill_t& f) { return f.Tree.TreeFitProb>0.04; } },
                               {"TreeFitProb>0.01", [] (const Fill_t& f) { return f.Tree.TreeFitProb>0.01; } },
                           });
-
-
         return cuts;
     }
 };
