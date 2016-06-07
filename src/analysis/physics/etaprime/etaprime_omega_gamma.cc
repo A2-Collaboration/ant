@@ -49,12 +49,12 @@ EtapOmegaG::EtapOmegaG(const string& name, OptionsPtr opts) :
 {
     const interval<double> prompt_range{-2.5,1.5};
     promptrandom.AddPromptRange(prompt_range); // slight offset due to CBAvgTime reference
-    promptrandom.AddRandomRange({-50,-10});  // just ensure to be way off prompt peak
-    promptrandom.AddRandomRange({  10,50});
+    promptrandom.AddRandomRange({-30,-10});  // just ensure to be way off prompt peak
+    promptrandom.AddRandomRange({ 10, 30});
 
     promptrandom_tight.AddPromptRange(prompt_range); // slight offset due to CBAvgTime reference
-    promptrandom_tight.AddRandomRange({-30,-10});  // just ensure to be way off prompt peak
-    promptrandom_tight.AddRandomRange({  10,30});
+    promptrandom_tight.AddRandomRange({-20,-10});  // just ensure to be way off prompt peak
+    promptrandom_tight.AddRandomRange({ 10, 20});
 
 
     h_CommonCuts = HistFac.makeTH1D("Common Cuts", "", "#", BinSettings(15),"h_TotalEvents");
@@ -290,7 +290,7 @@ EtapOmegaG::Sig_t::Sig_t() :
                       ParticleTypeTreeDatabase::Get(ParticleTypeTreeDatabase::Channel::Pi0Eta_4g),
                       4, // enable kinfit
                       make_shared<uncertainty_model_t>(), {},
-                      MakeFitSettings(15)
+                      MakeFitSettings(20)
                       )
 {
 }
