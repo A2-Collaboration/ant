@@ -236,35 +236,36 @@ void EtapOmegaG::ProcessEvent(const TEvent& event, manager_t&)
         Sig.ResetBranches();
         Ref.ResetBranches();
 
-        particles.PhotonEnergy = taggerhit.PhotonEnergy;
-
         t.KinFitProb = std_ext::NaN;
         t.KinFitIterations = 0;
 
+        const auto& missingmass_cut = ParticleTypeDatabase::Proton.GetWindow(300);
+        if(missingmass_cut.Contains(t.MissingMass)) {
+            particles.PhotonEnergy = taggerhit.PhotonEnergy;
 
-        kinfitter.SetEgammaBeam(particles.PhotonEnergy);
-        kinfitter.SetProton(particles.Proton);
-        kinfitter.SetPhotons(particles.Photons);
+            kinfitter.SetEgammaBeam(particles.PhotonEnergy);
+            kinfitter.SetProton(particles.Proton);
+            kinfitter.SetPhotons(particles.Photons);
 
-        auto result = kinfitter.DoFit();
+            auto result = kinfitter.DoFit();
 
-        if(result.Status == APLCON::Result_Status_t::Success) {
+            if(result.Status == APLCON::Result_Status_t::Success) {
 
-            t.KinFitProb = result.Probability;
-            t.KinFitIterations = result.NIterations;
+                t.KinFitProb = result.Probability;
+                t.KinFitIterations = result.NIterations;
 
-            particles.FittedPhotons = kinfitter.GetFittedPhotons();
+                particles.FittedPhotons = kinfitter.GetFittedPhotons();
 
-            particles.FittedPhotonSum = {0,0,0,0};
+                particles.FittedPhotonSum = {0,0,0,0};
 
-            for(const auto& photon : particles.FittedPhotons)
-                particles.FittedPhotonSum += *photon;
+                for(const auto& photon : particles.FittedPhotons)
+                    particles.FittedPhotonSum += *photon;
 
-            if(t.IsSignal)
-                Sig.Process(particles, ptree_sigref);
-            else
-                Ref.Process(particles);
-
+                if(t.IsSignal)
+                    Sig.Process(particles, ptree_sigref);
+                else
+                    Ref.Process(particles);
+            }
         }
 
         t.Tree->Fill();
