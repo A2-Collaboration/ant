@@ -9,6 +9,7 @@
 #include "base/WrapTFile.h"
 #include "base/std_ext/string.h"
 #include "base/std_ext/system.h"
+#include "base/ProgressCounter.h"
 
 #include "TSystem.h"
 #include "TRint.h"
@@ -503,7 +504,14 @@ int main(int argc, char** argv) {
         LOG(INFO) << "Running until " << max_entries;
     }
 
-    for(long long entry=0;entry<max_entries;entry++) {
+    long long entry = 0;
+    ProgressCounter::Interval = 3;
+    ProgressCounter progress(
+                [&entry, entries] (std::chrono::duration<double>) {
+        LOG(INFO) << "Processed " << 100.0*entry/entries << " %";
+    });
+
+    for(entry=0;entry<max_entries;entry++) {
         if(interrupt)
             break;
 
@@ -525,8 +533,7 @@ int main(int argc, char** argv) {
             treeRef.Tree->GetEntry(entry);
             cuttree::Fill<MCRefHist_t>(cuttreeRef, {treeCommon, treeRef});
         }
-        if(entry % 100000 == 0)
-            LOG(INFO) << "Processed " << 100.0*entry/entries << " %";
+        ProgressCounter::Tick();
     }
 
     if(!cmd_batchmode->isSet()) {
