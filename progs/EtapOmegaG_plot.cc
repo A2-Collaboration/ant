@@ -136,8 +136,8 @@ struct CommonHist_t {
                               //{"NoMissingMass", [] (const Fill_t&) { return true; } },
                           });
         cuts.emplace_back(MultiCut_t<Fill_t>{
-                                 {"KinFitProb>0", [] (const Fill_t& f) { return f.Common.KinFitProb>0; } },
-                                 {"KinFitProb>0.01", [] (const Fill_t& f) { return f.Common.KinFitProb>0.01; } },
+                                 {"KinFitProb>0.1", [] (const Fill_t& f) { return f.Common.KinFitProb>0.1; } },
+                                 {"KinFitProb>0.3", [] (const Fill_t& f) { return f.Common.KinFitProb>0.3; } },
                           });
         return cuts;
     }
