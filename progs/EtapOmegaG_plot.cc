@@ -96,6 +96,8 @@ struct CommonHist_t {
     TH1D* h_CBSumE;
     TH1D* h_CBSumVetoE;
     TH1D* h_PIDSumE;
+    TH1D* h_MissingMass;
+
 
 
     CommonHist_t(HistogramFactory HistFac) {
@@ -103,15 +105,18 @@ struct CommonHist_t {
         h_CBSumE = HistFac.makeTH1D("CB Sum E","E / MeV","",BinSettings(100,500,1600),"h_CBSumE");
         h_CBSumVetoE = HistFac.makeTH1D("CB Veto Sum E","E / MeV","",BinSettings(50,0,10),"h_CBSumVetoE");
         h_PIDSumE = HistFac.makeTH1D("PID Sum E","E / MeV","",BinSettings(50,0,10),"h_PIDSumE");
+        h_MissingMass = HistFac.makeTH1D("MissingMass","m / MeV","",BinSettings(200,600,1300),"h_MissingMass");
+
     }
     void Fill(const Fill_t& f) const {
         h_KinFitProb->Fill(f.KinFitProb, f.TaggW());
         h_CBSumE->Fill(f.Common.CBSumE, f.TaggW());
         h_CBSumVetoE->Fill(f.Common.CBSumVetoE, f.TaggW());
         h_PIDSumE->Fill(f.Common.PIDSumE, f.TaggW());
+        h_MissingMass->Fill(f.Common.MissingMass, f.TaggW());
     }
     std::vector<TH1*> GetHists() const {
-        return {h_KinFitProb, h_CBSumE, h_CBSumVetoE, h_PIDSumE};
+        return {h_KinFitProb, h_CBSumE, h_CBSumVetoE, h_PIDSumE, h_MissingMass};
     }
 
     // Sig and Ref channel share some cuts...
@@ -124,6 +129,10 @@ struct CommonHist_t {
                               {"CBSumVeto<0.25", [] (const Fill_t& f) { return f.Common.CBSumVetoE<0.25; } },
                               //{"PIDSumE=0", [] (const Fill_t& f) { return f.Common.PIDSumE==0; } },
                               {"PIDSumE<1", [] (const Fill_t& f) { return f.Common.PIDSumE<1; } },
+                          });
+        cuts.emplace_back(MultiCut_t<Fill_t>{
+                              {"MissingMass", [] (const Fill_t& f) { return f.Common.MissingMass < 1035 && f.Common.MissingMass > 835; } },
+                              //{"NoMissingMass", [] (const Fill_t&) { return true; } },
                           });
         cuts.emplace_back(MultiCut_t<Fill_t>{
                                  {"KinFitProb>0", [] (const Fill_t& f) { return f.Common.KinFitProb>0; } },
@@ -213,35 +222,35 @@ struct SigHist_t : CommonHist_t {
         using cuttree::MultiCut_t;
         auto cuts = cuttree::ConvertCuts<Fill_t, CommonHist_t::Fill_t>(CommonHist_t::GetCuts());
 
-        // Goldhaber cuts reduce pi0pi0 and pi0eta backgrounds
-        auto goldhaber_cut = [] (const Fill_t& f) {
-            const auto& tree = f.Shared;
-            const double pi0 = ParticleTypeDatabase::Pi0.Mass();
-            const double eta = ParticleTypeDatabase::Eta.Mass();
-            const vec2 Pi0Pi0(pi0, pi0);
-            const vec2 EtaPi0(eta, pi0);
+//        // Goldhaber cuts reduce pi0pi0 and pi0eta backgrounds
+//        auto goldhaber_cut = [] (const Fill_t& f) {
+//            const auto& tree = f.Shared;
+//            const double pi0 = ParticleTypeDatabase::Pi0.Mass();
+//            const double eta = ParticleTypeDatabase::Eta.Mass();
+//            const vec2 Pi0Pi0(pi0, pi0);
+//            const vec2 EtaPi0(eta, pi0);
 
-            auto check_within = [] (vec2 im, vec2 center, double radius, double scale) {
-                vec2 diff(im-center);
-                diff.y *= scale;
-                return diff.R() < radius;
-            };
+//            auto check_within = [] (vec2 im, vec2 center, double radius, double scale) {
+//                vec2 diff(im-center);
+//                diff.y *= scale;
+//                return diff.R() < radius;
+//            };
 
-            for(unsigned i=0;i<tree.gg_gg1().size();i++) {
-                const double im1 = tree.gg_gg1()[i];
-                const double im2 = tree.gg_gg2()[i];
-                if(   im1 < pi0+20
-                   && im2 < pi0+20)
-                    return false;
-                if(check_within({im1, im2}, Pi0Pi0, 40, 1.0))
-                    return false;
-                if(check_within({im1, im2}, EtaPi0, 40, 1.5))
-                    return false;
-                if(check_within({im2, im1}, EtaPi0, 40, 1.5))
-                    return false;
-            }
-            return true;
-        };
+//            for(unsigned i=0;i<tree.gg_gg1().size();i++) {
+//                const double im1 = tree.gg_gg1()[i];
+//                const double im2 = tree.gg_gg2()[i];
+//                if(   im1 < pi0+20
+//                   && im2 < pi0+20)
+//                    return false;
+//                if(check_within({im1, im2}, Pi0Pi0, 40, 1.0))
+//                    return false;
+//                if(check_within({im1, im2}, EtaPi0, 40, 1.5))
+//                    return false;
+//                if(check_within({im2, im1}, EtaPi0, 40, 1.5))
+//                    return false;
+//            }
+//            return true;
+//        };
 
         cuts.emplace_back(MultiCut_t<Fill_t>{
                               {"AntiPi0FitProb<0.002 || nan", [] (const Fill_t& f) { return std::isnan(f.Shared.AntiPi0FitProb) || f.Shared.AntiPi0FitProb<0.002; } },
@@ -254,15 +263,16 @@ struct SigHist_t : CommonHist_t {
                           });
 
         cuts.emplace_back(MultiCut_t<Fill_t>{
+                              {"TreeFitProb>0.32", [] (const Fill_t& f) { return f.Tree.TreeFitProb>0.32; } },
                               {"TreeFitProb>0.16", [] (const Fill_t& f) { return f.Tree.TreeFitProb>0.16; } },
                               {"TreeFitProb>0.04", [] (const Fill_t& f) { return f.Tree.TreeFitProb>0.04; } },
-                              //{"TreeFitProb>0.01", [] (const Fill_t& f) { return f.Tree.TreeFitProb>0.01; } },
                           });
 
-        cuts.emplace_back(MultiCut_t<Fill_t>{
-                              {"Goldhaber", goldhaber_cut },
-                              {"IM_gg", [] (const Fill_t& f) { return 180<f.Tree.IM_gg && f.Tree.IM_gg<460; } },
-                          });
+        // those cuts don't seem to help a lot after TreeFitProb and Anti* cuts
+//        cuts.emplace_back(MultiCut_t<Fill_t>{
+//                              {"Goldhaber", goldhaber_cut },
+//                              {"IM_gg", [] (const Fill_t& f) { return 180<f.Tree.IM_gg && f.Tree.IM_gg<460; } },
+//                          });
 
         return cuts;
     }
