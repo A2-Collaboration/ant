@@ -283,6 +283,22 @@ void OmegaEtaG2::Analyse(const TEventData &data, const TEvent& event, manager_t&
 {
     const unsigned nphotons = opt_discard_one ? 4 : 3;
 
+    const unsigned nCandsMin = nphotons  + 1;
+    const unsigned nCandsMax = nCandsMin + 2;
+
+    if(data.Candidates.size() < nCandsMin || data.Candidates.size() > nCandsMax)
+        return;
+
+    t.nCandsInput = data.Candidates.size();
+
+    TCandidatePtrList cands(data.Candidates.size());
+
+    copy(data.Candidates.get_iter().begin(), data.Candidates.get_iter().end(), cands.begin());
+
+    sort(cands.begin(), cands.end(), [] (const TCandidatePtr& a, const TCandidatePtr& b) { return a->CaloEnergy > b->CaloEnergy; });
+
+    cands.resize(nCandsMin);
+
     t.Channel = reaction_channels.identify(event.MCTrue().ParticleTree);
 
     if(t.Channel == ReactionChannelList_t::other_index) {
@@ -304,11 +320,10 @@ void OmegaEtaG2::Analyse(const TEventData &data, const TEvent& event, manager_t&
 
     steps->Fill("1 CBEsum", 1);
 
-
     TParticleList iphotons;
     TParticleList iprotons;
 
-    for(auto p: data.Candidates.get_iter()) {
+    for(auto p: cands) {
         if(p->VetoEnergy < .25) {
             iphotons.emplace_back(make_shared<TParticle>(ParticleTypeDatabase::Photon, p));
         } else {

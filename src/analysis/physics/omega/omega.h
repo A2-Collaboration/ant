@@ -231,6 +231,7 @@ public:
         ADD_BRANCH_T(std::vector<TLorentzVector>, bachelor_extra, 3)
 
         ADD_BRANCH_T(bool,     nCandsClean)
+        ADD_BRANCH_T(unsigned, nCandsInput)
 
     };
 
