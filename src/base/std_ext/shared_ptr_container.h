@@ -188,6 +188,8 @@ public:
 
     void clear() noexcept { c.clear(); }
 
+    void resize(typename c_t::size_type i) { c.resize(i); }
+
     template<class... Args>
     void emplace_back(Args&&... args)
     {
