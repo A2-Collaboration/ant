@@ -360,9 +360,8 @@ void OmegaEtaG2::AnalyseMain(const TParticleList& photons, const TParticlePtr& p
     t.p      = *proton;
     t.p_Time = getTime(proton);
 
-    t.p_PSA_Angle  = std_ext::NaN;
-    t.p_PSA_Radius = std_ext::NaN;
     t.p_detector   = 0;
+    t.p_vetoE      = proton->Candidate->VetoEnergy;
 
     if(proton->Candidate) {
 
@@ -370,8 +369,7 @@ void OmegaEtaG2::AnalyseMain(const TParticleList& photons, const TParticlePtr& p
             t.p_detector = 2;
             const auto& cluster = proton->Candidate->FindCaloCluster();
             if(cluster) {
-                t.p_PSA_Angle  = radian_to_degree(cluster->GetPSAAngle());
-                t.p_PSA_Radius = cluster->GetPSARadius();
+                t.p_shortE     = cluster->ShortEnergy;
             }
         } else if(proton->Candidate->Detector & Detector_t::Type_t::CB) {
             t.p_detector = 1;

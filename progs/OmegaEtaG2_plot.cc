@@ -253,6 +253,7 @@ struct OmegaHist_t {
     const BinSettings CoplBins   = Bins(300, 0, 30.0);
 
     const BinSettings dalitzBins = Bins(200, -0.4, 0.4);
+    const BinSettings evtoEbins  = Bins(150,  0, 15);
 
     HistogramFactory HistFac;
 
@@ -396,6 +397,20 @@ struct OmegaHist_t {
             } while (p.Next());
 
         });
+
+        AddTH2("dEEproton","E [MeV]","dE [MeV]", Ebins, evtoEbins, "dEE",
+               [] (TH2D* h, const Fill_t& f) {
+            h->Fill(f.Tree.p_fitted().Energy() - ParticleTypeDatabase::Proton.Mass(), f.Tree.p_vetoE);
+        });
+
+        AddTH2("PSA (scaled)","PSA Angle [#circ]","PSA Radius [MeV]", Ebins, evtoEbins, "psa",
+               [] (TH2D* h, const Fill_t& f) {
+            const double longE_unfitted = f.Tree.p().Energy();
+            const double longE_fitted   = f.Tree.p_fitted().Energy();
+            const vec2   v(longE_fitted / longE_unfitted * f.Tree.p_shortE, longE_fitted);
+            h->Fill(radian_to_degree(v.Phi()), v.R());
+        });
+
 
     }
 
