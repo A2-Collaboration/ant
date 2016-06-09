@@ -132,7 +132,7 @@ struct CommonHist_t {
                               {"PIDSumE<1", [] (const Fill_t& f) { return f.Common.PIDSumE<1; } },
                           });
         cuts.emplace_back(MultiCut_t<Fill_t>{
-                              {"MissingMass", [] (const Fill_t& f) { return f.Common.MissingMass < 1035 && f.Common.MissingMass > 835; } },
+                              {"MissingMass", [] (const Fill_t& f) { return f.Common.MissingMass < 1085 && f.Common.MissingMass > 785; } },
                               //{"NoMissingMass", [] (const Fill_t&) { return true; } },
                           });
         cuts.emplace_back(MultiCut_t<Fill_t>{
@@ -223,44 +223,14 @@ struct SigHist_t : CommonHist_t {
         using cuttree::MultiCut_t;
         auto cuts = cuttree::ConvertCuts<Fill_t, CommonHist_t::Fill_t>(CommonHist_t::GetCuts());
 
-//        // Goldhaber cuts reduce pi0pi0 and pi0eta backgrounds
-//        auto goldhaber_cut = [] (const Fill_t& f) {
-//            const auto& tree = f.Shared;
-//            const double pi0 = ParticleTypeDatabase::Pi0.Mass();
-//            const double eta = ParticleTypeDatabase::Eta.Mass();
-//            const vec2 Pi0Pi0(pi0, pi0);
-//            const vec2 EtaPi0(eta, pi0);
-
-//            auto check_within = [] (vec2 im, vec2 center, double radius, double scale) {
-//                vec2 diff(im-center);
-//                diff.y *= scale;
-//                return diff.R() < radius;
-//            };
-
-//            for(unsigned i=0;i<tree.gg_gg1().size();i++) {
-//                const double im1 = tree.gg_gg1()[i];
-//                const double im2 = tree.gg_gg2()[i];
-//                if(   im1 < pi0+20
-//                   && im2 < pi0+20)
-//                    return false;
-//                if(check_within({im1, im2}, Pi0Pi0, 40, 1.0))
-//                    return false;
-//                if(check_within({im1, im2}, EtaPi0, 40, 1.5))
-//                    return false;
-//                if(check_within({im2, im1}, EtaPi0, 40, 1.5))
-//                    return false;
-//            }
-//            return true;
-//        };
-
         cuts.emplace_back(MultiCut_t<Fill_t>{
-                              {"AntiPi0FitProb<0.002 || nan", [] (const Fill_t& f) { return std::isnan(f.Shared.AntiPi0FitProb) || f.Shared.AntiPi0FitProb<0.002; } },
-                              {"AntiPi0FitProb<0.0002 || nan", [] (const Fill_t& f) { return std::isnan(f.Shared.AntiPi0FitProb) || f.Shared.AntiPi0FitProb<0.0002; } },
+                              {"AntiPi0FitProb<0.002||nan", [] (const Fill_t& f) { return std::isnan(f.Shared.AntiPi0FitProb) || f.Shared.AntiPi0FitProb<0.002; } },
+                              {"AntiPi0FitProb<0.0002||nan", [] (const Fill_t& f) { return std::isnan(f.Shared.AntiPi0FitProb) || f.Shared.AntiPi0FitProb<0.0002; } },
                           });
 
         cuts.emplace_back(MultiCut_t<Fill_t>{
-                              {"AntiEtaFitProb<0.005 || nan", [] (const Fill_t& f) { return std::isnan(f.Shared.AntiEtaFitProb) || f.Shared.AntiEtaFitProb<0.005; } },
-                              {"AntiEtaFitProb<0.0005 || nan", [] (const Fill_t& f) { return std::isnan(f.Shared.AntiEtaFitProb) || f.Shared.AntiEtaFitProb<0.0005; } },
+                              {"AntiEtaFitProb<0.005||nan", [] (const Fill_t& f) { return std::isnan(f.Shared.AntiEtaFitProb) || f.Shared.AntiEtaFitProb<0.005; } },
+                              {"AntiEtaFitProb<0.0005||nan", [] (const Fill_t& f) { return std::isnan(f.Shared.AntiEtaFitProb) || f.Shared.AntiEtaFitProb<0.0005; } },
                           });
 
         cuts.emplace_back(MultiCut_t<Fill_t>{
@@ -268,12 +238,6 @@ struct SigHist_t : CommonHist_t {
                               {"TreeFitProb>0.16", [] (const Fill_t& f) { return f.Tree.TreeFitProb>0.16; } },
                               {"TreeFitProb>0.04", [] (const Fill_t& f) { return f.Tree.TreeFitProb>0.04; } },
                           });
-
-        // those cuts don't seem to help a lot after TreeFitProb and Anti* cuts
-//        cuts.emplace_back(MultiCut_t<Fill_t>{
-//                              {"Goldhaber", goldhaber_cut },
-//                              {"IM_gg", [] (const Fill_t& f) { return 180<f.Tree.IM_gg && f.Tree.IM_gg<460; } },
-//                          });
 
         return cuts;
     }
