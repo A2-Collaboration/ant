@@ -120,6 +120,10 @@ void EtapOmegaG::ProcessEvent(const TEvent& event, manager_t&)
         return;
     h_CommonCuts->Fill("p in TAPS", 1.0);
 
+    t.ProtonE = proton->Ek();
+    t.ProtonVetoE = proton->Candidate->VetoEnergy;
+    t.ProtonShortE = proton->Candidate->FindCaloCluster()->ShortEnergy;
+
     // remaining candidates are photons
     const auto nPhotons = data.Candidates.size() - 1;
     if(nPhotons != 2 && nPhotons != 4)
@@ -238,6 +242,7 @@ void EtapOmegaG::ProcessEvent(const TEvent& event, manager_t&)
 
         t.KinFitProb = std_ext::NaN;
         t.KinFitIterations = 0;
+        t.FittedProtonE = std_ext::NaN;
 
         const auto& missingmass_cut = ParticleTypeDatabase::Proton.GetWindow(300);
         if(missingmass_cut.Contains(t.MissingMass)) {
@@ -254,8 +259,10 @@ void EtapOmegaG::ProcessEvent(const TEvent& event, manager_t&)
                 t.KinFitProb = result.Probability;
                 t.KinFitIterations = result.NIterations;
 
-                particles.FittedPhotons = kinfitter.GetFittedPhotons();
+                const auto& fitted_proton = kinfitter.GetFittedProton();
+                t.FittedProtonE = fitted_proton->Ek();
 
+                particles.FittedPhotons = kinfitter.GetFittedPhotons();
                 particles.FittedPhotonSum = {0,0,0,0};
 
                 for(const auto& photon : particles.FittedPhotons)
