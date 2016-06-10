@@ -301,7 +301,7 @@ void OmegaEtaG2::Analyse(const TEventData &data, const TEvent& event, manager_t&
     t.CandsunUsedE = 0.0;
     for(size_t i=0; i<cands.size(); ++i) {
 
-        if(i<=nCandsMin)
+        if(i<nCandsMin)
             t.CandsUsedE   += cands.at(i)->CaloEnergy;
         else
             t.CandsunUsedE += cands.at(i)->CaloEnergy;
