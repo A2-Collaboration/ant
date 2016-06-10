@@ -232,6 +232,8 @@ public:
 
         ADD_BRANCH_T(bool,     nCandsClean)
         ADD_BRANCH_T(unsigned, nCandsInput)
+        ADD_BRANCH_T(double,   CandsUsedE)
+        ADD_BRANCH_T(double,   CandsunUsedE)
 
     };
 
