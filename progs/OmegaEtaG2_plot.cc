@@ -231,20 +231,20 @@ struct OmegaHist_t {
     HistMgr<TH1D> h1;
     HistMgr<TH2D> h2;
 
-    const BinSettings Ebins    = Bins(1600, 0, 1600);
+    const BinSettings Ebins    = Bins(1000, 0, 1000);
 
     const BinSettings Chi2Bins = BinSettings(250, 0,   25);
     const BinSettings probbins = BinSettings(250, 0,   1);
 
-    const BinSettings IMbins        = Bins(1600,   0, 1600);
-    const BinSettings gggIMbins     = Bins( 300,   650, 950);
-    const BinSettings MMbins        = Bins(1600, 400, 2000);
+    const BinSettings IMbins        = Bins(1000,   0, 1000);
+    const BinSettings gggIMbins     = Bins( 300, 650,  950);
+    const BinSettings MMbins        = Bins(1000, 400, 1400);
 
-    const BinSettings MMgggIMbins_X = Bins(600, 0, 1200);
-    const BinSettings MMgggIMbins_Y = Bins(750, 500, 2000);
+    const BinSettings MMgggIMbins_X = Bins( 600,   0, 1200);
+    const BinSettings MMgggIMbins_Y = Bins( 750, 500, 2000);
 
-    const BinSettings pThetaBins = Bins( 125, 0,   50);
-    const BinSettings pEbins     = Bins(250,  0, 1000);
+    const BinSettings pThetaBins = Bins( 125,  0,   50);
+    const BinSettings pEbins     = Bins( 250,  0, 1000);
     const BinSettings PSAABins   = Bins(  60, 20,   60);
     const BinSettings PSARBins   = Bins( 100,  0,  450);
     const BinSettings TaggChBins = BinSettings(47);
@@ -401,10 +401,16 @@ struct OmegaHist_t {
             h->Fill(radian_to_degree(v.Phi()), v.R());
         });
 
-        AddTH1("nCands", "# Candidates", "", BinSettings(5,4,8), "nCands",
+        AddTH1("nCands", "# Candidates", "", BinSettings(4,4,8), "nCands",
                 [] (TH1D* h, const Fill_t& f) {
 
             h->Fill(f.Tree.nCandsInput, f.TaggW());
+        });
+
+        AddTH1("Energy of dropped clusters, relative", "dropped E / used E", "", Bins(100,0,.25), "droppedErel",
+                [] (TH1D* h, const Fill_t& f) {
+
+            h->Fill(f.Tree.CandsunUsedE / f.Tree.CandsUsedE, f.TaggW());
         });
 
 
@@ -481,23 +487,23 @@ struct OmegaHist_t {
             return true;
         };
 
-        auto etaBachelorCut = [] (const Fill_t& f) {
-            return interval<double>::CenterWidth(200,40).Contains(f.BestBachelorE());
-        };
+//        auto etaBachelorCut = [] (const Fill_t& f) {
+//            return interval<double>::CenterWidth(200,40).Contains(f.BestBachelorE());
+//        };
 
-        auto pi0BachelorCut = [] (const Fill_t& f) {
-            return interval<double>::CenterWidth(380,40).Contains(f.BestBachelorE());
-        };
+//        auto pi0BachelorCut = [] (const Fill_t& f) {
+//            return interval<double>::CenterWidth(380,40).Contains(f.BestBachelorE());
+//        };
 
         auto cleanEvent = [] (const Fill_t& f) {
-            return f.Tree.nCandsClean();
+            return f.Tree.nCandsInput == 4;
         };
 
-        auto notcleanEvent = [] (const Fill_t& f) {
-            return !f.Tree.nCandsClean();
-        };
+//        auto notcleanEvent = [] (const Fill_t& f) {
+//            return !f.Tree.nCandsClean();
+//        };
 
-        auto dontcareclean = [] (const Fill_t& f) {
+        auto dontcareclean = [] (const Fill_t&) {
             return true;
         };
 
