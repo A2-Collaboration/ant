@@ -100,7 +100,7 @@ void EtapOmegaG::ProcessEvent(const TEvent& event, manager_t&)
         return;
     h_CommonCuts->Fill("CBAvgTime ok",1.0);
 
-    // sort candidates by energy
+    // gather candidates sorted by energy
     TCandidatePtrList candidates;
     bool haveTAPS = false;
     for(const auto& cand : data.Candidates.get_iter()) {
@@ -118,79 +118,15 @@ void EtapOmegaG::ProcessEvent(const TEvent& event, manager_t&)
         return a->CaloEnergy > b->CaloEnergy;
     });
 
+    // fill sig/ref particles
     Particles_t sig_particles;
     Particles_t ref_particles;
-
     bool haveSig = findParticles(candidates, 4, sig_particles, Sig.t, h_CommonCuts_sig);
     bool haveRef = findParticles(candidates, 2, ref_particles, Ref.t, h_CommonCuts_ref);
 
     if(!haveSig && !haveRef)
         return;
     h_CommonCuts->Fill("Sig||Ref",1.0);
-
-    // use struct to gather particles
-
-    // identify the proton here as slowest cluster in TAPS
-    // using CBAvgTime does not help here, since it's constant
-    // over each TAPS clusters
-    /// \todo think about using beta here as in EtapProton?
-    t.ProtonTime = std_ext::NaN;
-    Particles_t particles;
-    TParticlePtr& proton = particles.Proton;
-    for(const auto& cand : data.Candidates.get_iter()) {
-        if(cand->Detector & Detector_t::Type_t::TAPS) {
-            if(!isfinite(t.ProtonTime) || t.ProtonTime < cand->Time) {
-                t.ProtonTime = cand->Time;
-                proton = make_shared<TParticle>(ParticleTypeDatabase::Proton, cand);
-            }
-        }
-    }
-
-    if(!proton)
-        return;
-    h_CommonCuts->Fill("p in TAPS", 1.0);
-
-    t.ProtonE = proton->Ek();
-    t.ProtonVetoE = proton->Candidate->VetoEnergy;
-    t.ProtonShortE = proton->Candidate->FindCaloCluster()->ShortEnergy;
-
-    // remaining candidates are photons
-    const auto nPhotons = data.Candidates.size() - 1;
-    if(nPhotons != 2 && nPhotons != 4)
-        return;
-    h_CommonCuts->Fill("nPhotons==2|4", 1.0);
-
-
-    LorentzVec& photon_sum = particles.PhotonSum;
-    photon_sum = {0,0,0,0};
-    t.nPhotonsCB = 0;
-    t.nPhotonsTAPS = 0;
-    t.CBSumVetoE = 0;
-    for(const auto& cand : data.Candidates.get_iter()) {
-         if(cand.get_ptr() == proton->Candidate)
-             continue;
-         if(cand->Detector & Detector_t::Type_t::CB) {
-             t.nPhotonsCB++;
-             t.CBSumVetoE += cand->VetoEnergy;
-         }
-         if(cand->Detector & Detector_t::Type_t::TAPS)
-             t.nPhotonsTAPS++;
-         auto photon = make_shared<TParticle>(ParticleTypeDatabase::Photon, cand);
-         photon_sum += *photon;
-         particles.Photons.emplace_back(move(photon));
-    }
-    assert(particles.Photons.size() == nPhotons);
-    assert(nPhotons == t.nPhotonsCB + t.nPhotonsTAPS);
-
-    t.PhotonSum = photon_sum.M();
-
-    // don't bother with events where proton coplanarity is not ok
-    // we use some rather large window here...
-    t.ProtonCopl = std_ext::radian_to_degree(vec2::Phi_mpi_pi(proton->Phi() - photon_sum.Phi() - M_PI ));
-    const interval<double> ProtonCopl_cut(-35, 35);
-    if(!ProtonCopl_cut.Contains(t.ProtonCopl))
-        return;
-    h_CommonCuts->Fill("ProtonCopl ok", 1.0);
 
     // sum up the PID energy
     // (might be different to matched CB/PID Veto energy)
@@ -200,11 +136,6 @@ void EtapOmegaG::ProcessEvent(const TEvent& event, manager_t&)
             t.PIDSumE += cl.Energy;
         }
     }
-
-
-
-    // select signal or reference according to nPhotons
-    t.IsSignal = nPhotons == 4; // else nPhotons==2, so reference
 
     // do some MCTrue identification (if available)
     t.MCTrue = 0; // indicate data by default
@@ -242,18 +173,11 @@ void EtapOmegaG::ProcessEvent(const TEvent& event, manager_t&)
         t.MCTrue = 9;
     }
 
-    // loop over tagger hits, delegate to Ref/Sig
-    auto& kinfitter = t.IsSignal ? kinfitter_sig : kinfitter_ref;
-
     for(const TTaggerHit& taggerhit : data.TaggerHits) {
         promptrandom.SetTaggerHit(taggerhit.Time - t.CBAvgTime);
         promptrandom_tight.SetTaggerHit(taggerhit.Time - t.CBAvgTime);
         if(promptrandom.State() == PromptRandom::Case::Outside)
             continue;
-
-        // missing mass
-        const LorentzVec beam_target = taggerhit.GetPhotonBeam() + LorentzVec(0, 0, 0, ParticleTypeDatabase::Proton.Mass());
-        t.MissingMass = (beam_target - photon_sum).M();
 
         t.TaggW = promptrandom.FillWeight();
         t.TaggW_tight = promptrandom_tight.FillWeight();
@@ -264,50 +188,24 @@ void EtapOmegaG::ProcessEvent(const TEvent& event, manager_t&)
         Sig.ResetBranches();
         Ref.ResetBranches();
 
-        t.KinFitProb = std_ext::NaN;
-        t.KinFitIterations = 0;
-        t.FittedProtonE = std_ext::NaN;
+        bool dofill = false;
 
-        const auto& missingmass_cut = ParticleTypeDatabase::Proton.GetWindow(300);
-        if(missingmass_cut.Contains(t.MissingMass)) {
-            particles.PhotonEnergy = taggerhit.PhotonEnergy;
-
-            kinfitter.SetEgammaBeam(particles.PhotonEnergy);
-            kinfitter.SetProton(particles.Proton);
-            kinfitter.SetPhotons(particles.Photons);
-
-            auto result = kinfitter.DoFit();
-
-            if(result.Status == APLCON::Result_Status_t::Success) {
-
-                t.KinFitProb = result.Probability;
-                t.KinFitIterations = result.NIterations;
-
-                const auto& fitted_proton = kinfitter.GetFittedProton();
-                t.FittedProtonE = fitted_proton->Ek();
-
-                particles.FittedPhotons = kinfitter.GetFittedPhotons();
-                particles.FittedPhotonSum = {0,0,0,0};
-
-                for(const auto& photon : particles.FittedPhotons)
-                    particles.FittedPhotonSum += *photon;
-
-                if(t.IsSignal)
-                    Sig.Process(particles, ptree_sigref);
-                else
-                    Ref.Process(particles);
-            }
+        if(haveSig && doKinfit(taggerhit, kinfitter_sig, sig_particles, Sig.t)) {
+            Sig.Process(sig_particles, ptree_sigref);
+            dofill = true;
         }
 
-        t.Tree->Fill();
-        Sig.Fill();
-        Ref.t.Tree->Fill();
-    }
+        if(haveRef && doKinfit(taggerhit, kinfitter_ref, ref_particles, Ref.t)) {
+            Ref.Process(ref_particles);
+            dofill = true;
+        }
 
-    if(nPhotons==2)
-        h_CommonCuts->Fill("nPhotons==2", 1.0);
-    if(nPhotons==4)
-        h_CommonCuts->Fill("nPhotons==4", 1.0);
+        if(dofill) {
+            t.Tree->Fill();
+            Sig.Fill();
+            Ref.t.Tree->Fill();
+        }
+    }
 
 }
 
@@ -317,7 +215,8 @@ bool EtapOmegaG::findParticles(const TCandidatePtrList& candidates,
                                EtapOmegaG::SharedTree_t& t,
                                TH1D* h_CommonCuts)
 {
-    if(candidates.size()<nPhotons+1)
+    t.nCandidates = candidates.size();
+    if(t.nCandidates<nPhotons+1)
         return false;
 
     // identify the proton here as slowest cluster in TAPS
@@ -344,9 +243,17 @@ bool EtapOmegaG::findParticles(const TCandidatePtrList& candidates,
     t.ProtonVetoE = proton->Candidate->VetoEnergy;
     t.ProtonShortE = proton->Candidate->FindCaloCluster()->ShortEnergy;
 
+    // sum up discarded candidates
+    t.DiscardedEk = 0;
+    for(unsigned i=nPhotons+1;i<t.nCandidates;i++) {
+        const auto& cand = candidates[i];
+        t.DiscardedEk += cand->CaloEnergy;
+    }
+
     // remaining candidates are photons
     LorentzVec& photon_sum = particles.PhotonSum;
     photon_sum = {0,0,0,0};
+    t.PhotonsEk = 0;
     t.nPhotonsCB = 0;
     t.nPhotonsTAPS = 0;
     t.CBSumVetoE = 0;
@@ -354,6 +261,7 @@ bool EtapOmegaG::findParticles(const TCandidatePtrList& candidates,
         const auto& cand = candidates[i];
         if(cand == proton->Candidate)
             continue;
+        t.PhotonsEk += cand->CaloEnergy;
         if(cand->Detector & Detector_t::Type_t::CB) {
             t.nPhotonsCB++;
             t.CBSumVetoE += cand->VetoEnergy;
@@ -377,6 +285,47 @@ bool EtapOmegaG::findParticles(const TCandidatePtrList& candidates,
         return false;
     h_CommonCuts->Fill("ProtonCopl ok", 1.0);
 
+    return true;
+}
+
+bool EtapOmegaG::doKinfit(const TTaggerHit& taggerhit,
+                          utils::KinFitter& kinfitter,
+                          EtapOmegaG::Particles_t& particles,
+                          EtapOmegaG::SharedTree_t& t)
+{
+    // missing mass
+    const LorentzVec beam_target = taggerhit.GetPhotonBeam() + LorentzVec(0, 0, 0, ParticleTypeDatabase::Proton.Mass());
+    t.MissingMass = (beam_target - particles.PhotonSum).M();
+
+    t.KinFitProb = std_ext::NaN;
+    t.KinFitIterations = 0;
+    t.FittedProtonE = std_ext::NaN;
+
+    const auto& missingmass_cut = ParticleTypeDatabase::Proton.GetWindow(300);
+    if(!missingmass_cut.Contains(t.MissingMass))
+        return false;
+
+    particles.PhotonEnergy = taggerhit.PhotonEnergy;
+    kinfitter.SetEgammaBeam(particles.PhotonEnergy);
+    kinfitter.SetProton(particles.Proton);
+    kinfitter.SetPhotons(particles.Photons);
+
+    auto result = kinfitter.DoFit();
+
+    if(result.Status != APLCON::Result_Status_t::Success)
+        return false;
+
+    t.KinFitProb = result.Probability;
+    t.KinFitIterations = result.NIterations;
+
+    const auto& fitted_proton = kinfitter.GetFittedProton();
+    t.FittedProtonE = fitted_proton->Ek();
+
+    particles.FittedPhotons = kinfitter.GetFittedPhotons();
+    particles.FittedPhotonSum = {0,0,0,0};
+
+    for(const auto& photon : particles.FittedPhotons)
+        particles.FittedPhotonSum += *photon;
 
     return true;
 }
@@ -803,7 +752,8 @@ void EtapOmegaG::Ref_t::Process(const EtapOmegaG::Particles_t& particles) {
 
 void EtapOmegaG::ShowResult()
 {
-    canvas("Overview") << h_CommonCuts << h_MissedBkg << endc;
+    canvas("Overview") << h_CommonCuts  << h_CommonCuts_sig
+                       << h_CommonCuts_ref << h_MissedBkg << endc;
 }
 
 

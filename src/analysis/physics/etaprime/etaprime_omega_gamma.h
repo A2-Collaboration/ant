@@ -31,33 +31,23 @@ struct EtapOmegaG : Physics {
     // shared among sig/ref analyses
 
     struct TreeCommon : WrapTTree {
-        ADD_BRANCH_T(bool,     IsSignal)
         ADD_BRANCH_T(unsigned, MCTrue)
-        ADD_BRANCH_T(unsigned, nPhotonsCB)
-        ADD_BRANCH_T(unsigned, nPhotonsTAPS)
         ADD_BRANCH_T(double,   CBSumE)
-        ADD_BRANCH_T(double,   CBSumVetoE)
         ADD_BRANCH_T(double,   CBAvgTime)
-        ADD_BRANCH_T(double,   ProtonTime)
-        ADD_BRANCH_T(double,   ProtonE)
-        ADD_BRANCH_T(double,   ProtonVetoE)
-        ADD_BRANCH_T(double,   ProtonShortE)
         ADD_BRANCH_T(double,   PIDSumE)
 
-        ADD_BRANCH_T(double,   PhotonSum)
-        ADD_BRANCH_T(double,   ProtonCopl)
-        ADD_BRANCH_T(double,   MissingMass)
-        ADD_BRANCH_T(double,   FittedProtonE)
         ADD_BRANCH_T(double,   TaggW)
         ADD_BRANCH_T(double,   TaggW_tight)
         ADD_BRANCH_T(double,   TaggE)
         ADD_BRANCH_T(double,   TaggT)
         ADD_BRANCH_T(unsigned, TaggCh)
-        ADD_BRANCH_T(double,   KinFitProb)
-        ADD_BRANCH_T(int,      KinFitIterations)
     };
 
     struct SharedTree_t : WrapTTree {
+        ADD_BRANCH_T(unsigned, nCandidates)
+        ADD_BRANCH_T(double,   PhotonsEk)
+        ADD_BRANCH_T(double,   DiscardedEk)
+
         ADD_BRANCH_T(unsigned, nPhotonsCB)
         ADD_BRANCH_T(unsigned, nPhotonsTAPS)
         ADD_BRANCH_T(double,   CBSumVetoE)
@@ -100,6 +90,12 @@ struct EtapOmegaG : Physics {
                               SharedTree_t& t,
                               TH1D* h_CommonCuts
                               );
+
+    static bool doKinfit(const TTaggerHit& taggerhit,
+                         utils::KinFitter& kinfitter,
+                         Particles_t& particles,
+                         SharedTree_t& t
+                         );
 
     struct Sig_t {
 
