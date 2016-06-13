@@ -73,9 +73,13 @@ struct MCTrue_Splitter : cuttree::StackedHists_t<Hist_t> {
 
 struct CommonHist_t {
     using Tree_t = physics::EtapOmegaG::TreeCommon;
+    using Shared_t = physics::EtapOmegaG::SharedTree_t;
     struct Fill_t {
         const Tree_t& Common;
-        Fill_t(const Tree_t& common) : Common(common) {}
+        const Shared_t& Shared;
+
+        Fill_t(const Tree_t& common, const Shared_t& shared) :
+            Common(common), Shared(shared) {}
         double TaggW() const {
             return Common.TaggW;
         }
@@ -87,7 +91,7 @@ struct CommonHist_t {
             const double& prob;
         };
 
-        LogProb_t KinFitProb{Common.KinFitProb};
+        LogProb_t KinFitProb{Shared.KinFitProb};
     };
 
 
@@ -112,9 +116,9 @@ struct CommonHist_t {
     void Fill(const Fill_t& f) const {
         h_KinFitProb->Fill(f.KinFitProb, f.TaggW());
         h_CBSumE->Fill(f.Common.CBSumE, f.TaggW());
-        h_CBSumVetoE->Fill(f.Common.CBSumVetoE, f.TaggW());
+        h_CBSumVetoE->Fill(f.Shared.CBSumVetoE, f.TaggW());
         h_PIDSumE->Fill(f.Common.PIDSumE, f.TaggW());
-        h_MissingMass->Fill(f.Common.MissingMass, f.TaggW());
+        h_MissingMass->Fill(f.Shared.MissingMass, f.TaggW());
     }
     std::vector<TH1*> GetHists() const {
         return {h_KinFitProb, h_CBSumE, h_CBSumVetoE, h_PIDSumE, h_MissingMass};
@@ -127,17 +131,17 @@ struct CommonHist_t {
         cuts.emplace_back(MultiCut_t<Fill_t>{
                               // Use non-null PID cuts only when PID calibrated...
                               //{"CBSumVeto=0", [] (const Fill_t& f) { return f.Common.CBSumVetoE==0; } },
-                              {"CBSumVeto<0.25", [] (const Fill_t& f) { return f.Common.CBSumVetoE<0.25; } },
+                              {"CBSumVeto<0.25", [] (const Fill_t& f) { return f.Shared.CBSumVetoE<0.25; } },
                               //{"PIDSumE=0", [] (const Fill_t& f) { return f.Common.PIDSumE==0; } },
                               {"PIDSumE<1", [] (const Fill_t& f) { return f.Common.PIDSumE<1; } },
                           });
         cuts.emplace_back(MultiCut_t<Fill_t>{
-                              {"MissingMass", [] (const Fill_t& f) { return f.Common.MissingMass < 1085 && f.Common.MissingMass > 785; } },
+                              {"MissingMass", [] (const Fill_t& f) { return f.Shared.MissingMass < 1085 && f.Shared.MissingMass > 785; } },
                               //{"NoMissingMass", [] (const Fill_t&) { return true; } },
                           });
         cuts.emplace_back(MultiCut_t<Fill_t>{
-                                 {"KinFitProb>0.1", [] (const Fill_t& f) { return f.Common.KinFitProb>0.1; } },
-                                 {"KinFitProb>0.3", [] (const Fill_t& f) { return f.Common.KinFitProb>0.3; } },
+                                 {"KinFitProb>0.1", [] (const Fill_t& f) { return f.Shared.KinFitProb>0.1; } },
+                                 {"KinFitProb>0.3", [] (const Fill_t& f) { return f.Shared.KinFitProb>0.3; } },
                           });
         return cuts;
     }
@@ -155,7 +159,7 @@ struct SigHist_t : CommonHist_t {
         Fill_t(const CommonHist_t::Tree_t& common,
                const SharedTree_t& shared,
                const Tree_t& tree) :
-            CommonHist_t::Fill_t(common),
+            CommonHist_t::Fill_t(common, shared),
             Shared(shared),
             Tree(tree)
         {}
@@ -336,7 +340,7 @@ struct RefHist_t : CommonHist_t {
     struct Fill_t : CommonHist_t::Fill_t {
         const Tree_t& Tree;
         Fill_t(const CommonHist_t::Tree_t& common, const Tree_t& tree) :
-            CommonHist_t::Fill_t(common),
+            CommonHist_t::Fill_t(common, tree),
             Tree(tree)
         {}
     };
@@ -482,7 +486,7 @@ int main(int argc, char** argv) {
         treeCommon.Tree->GetEntry(entry);
 
         // we handle the Ref/Sig cut here to save some reading work
-        if(treeSigShared && treeCommon.IsSignal) {
+        if(treeSigPi0 || treeSigOmegaPi0) {
             treeSigShared.Tree->GetEntry(entry);
             if(treeSigPi0) {
                 treeSigPi0.Tree->GetEntry(entry);
@@ -493,7 +497,7 @@ int main(int argc, char** argv) {
                 cuttree::Fill<MCSigOmegaPi0Hist_t>(cuttreeSigOmegaPi0, {treeCommon, treeSigShared, treeSigOmegaPi0});
             }
         }
-        else if(treeRef && !treeCommon.IsSignal) {
+        else if(treeRef) {
             treeRef.Tree->GetEntry(entry);
             cuttree::Fill<MCRefHist_t>(cuttreeRef, {treeCommon, treeRef});
         }
