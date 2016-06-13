@@ -27,7 +27,10 @@ struct MCTrue_Splitter : cuttree::StackedHists_t<Hist_t> {
     // Hist_t should have that type defined
     using Fill_t = typename Hist_t::Fill_t;
 
-    MCTrue_Splitter(const HistogramFactory& histFac) : cuttree::StackedHists_t<Hist_t>(histFac) {
+    MCTrue_Splitter(const HistogramFactory& histFac,
+                    const cuttree::TreeInfo_t& treeInfo) :
+        cuttree::StackedHists_t<Hist_t>(histFac, treeInfo)
+    {
         using histstyle::Mod_t;
         this->GetHist(0, "Data", Mod_t::MakeDataPoints(kBlack));
         this->GetHist(1, "Sig",  Mod_t::MakeLine(kRed, 2.0));
@@ -103,9 +106,14 @@ struct CommonHist_t {
     TH1D* h_PIDSumE;
     TH1D* h_MissingMass;
 
+    const bool isLeaf = false;
 
 
-    CommonHist_t(HistogramFactory HistFac) {
+    CommonHist_t(HistogramFactory HistFac, cuttree::TreeInfo_t treeInfo) :
+        isLeaf(treeInfo.nDaughters==0)
+    {
+        if(!isLeaf)
+            return;
         h_KinFitProb = HistFac.makeTH1D("KinFitProb","log p","",bins_FitProb,"h_KinFitProb");
         h_CBSumE = HistFac.makeTH1D("CB Sum E","E / MeV","",BinSettings(100,500,1600),"h_CBSumE");
         h_CBSumVetoE = HistFac.makeTH1D("CB Veto Sum E","E / MeV","",BinSettings(50,0,10),"h_CBSumVetoE");
@@ -113,7 +121,11 @@ struct CommonHist_t {
         h_MissingMass = HistFac.makeTH1D("MissingMass","m / MeV","",BinSettings(200,600,1300),"h_MissingMass");
 
     }
+
+
     void Fill(const Fill_t& f) const {
+        if(!isLeaf)
+            return;
         h_KinFitProb->Fill(f.KinFitProb, f.TaggW());
         h_CBSumE->Fill(f.Common.CBSumE, f.TaggW());
         h_CBSumVetoE->Fill(f.Shared.CBSumVetoE, f.TaggW());
@@ -121,6 +133,8 @@ struct CommonHist_t {
         h_MissingMass->Fill(f.Shared.MissingMass, f.TaggW());
     }
     std::vector<TH1*> GetHists() const {
+        if(!isLeaf)
+            return {};
         return {h_KinFitProb, h_CBSumE, h_CBSumVetoE, h_PIDSumE, h_MissingMass};
     }
 
@@ -180,7 +194,7 @@ struct SigHist_t : CommonHist_t {
     const BinSettings bins_IM_Etap {100, 800,1050};
     const BinSettings bins_IM_Omega{100, 550, 950};
 
-    SigHist_t(HistogramFactory HistFac) : CommonHist_t(HistFac) {
+    SigHist_t(HistogramFactory HistFac, cuttree::TreeInfo_t treeInfo) : CommonHist_t(HistFac, treeInfo) {
         BinSettings bins_goldhaber(200, 0, 900);
         const string axislabel_goldhaber("2#gamma IM / MeV");
 
@@ -263,7 +277,7 @@ struct SigPi0Hist_t : SigHist_t {
         {}
     };
 
-    SigPi0Hist_t(HistogramFactory HistFac) : SigHist_t(HistFac) {
+    SigPi0Hist_t(HistogramFactory HistFac, cuttree::TreeInfo_t treeInfo) : SigHist_t(HistFac, treeInfo) {
         h_IM_3g_4g_low = HistFac.makeTH2D("Best #omega vs. #eta' IM",
                                           "IM(#pi^{0}#gamma#gamma) / MeV",
                                           "IM(#pi^{0}#gamma) / MeV",
@@ -310,7 +324,7 @@ struct SigOmegaPi0Hist_t : SigHist_t {
 
     TH1D* h_Bachelor_E;
 
-    SigOmegaPi0Hist_t(HistogramFactory HistFac) : SigHist_t(HistFac) {
+    SigOmegaPi0Hist_t(HistogramFactory HistFac, cuttree::TreeInfo_t treeInfo) : SigHist_t(HistFac, treeInfo) {
         h_Bachelor_E = HistFac.makeTH1D("E_#gamma in #eta' frame","E_{#gamma} / MeV","",
                                         BinSettings(100,100,200),"h_Bachelor_E");
 
@@ -347,7 +361,7 @@ struct RefHist_t : CommonHist_t {
 
     TH1D* h_IM_2g;
 
-    RefHist_t(HistogramFactory HistFac) : CommonHist_t(HistFac) {
+    RefHist_t(HistogramFactory HistFac, cuttree::TreeInfo_t treeInfo) : CommonHist_t(HistFac, treeInfo) {
         h_IM_2g = HistFac.makeTH1D("IM 2g","IM / MeV","",BinSettings(1100,0,1100),"h_IM_2g");
     }
 

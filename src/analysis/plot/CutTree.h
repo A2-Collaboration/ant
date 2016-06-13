@@ -51,6 +51,15 @@ Cuts_t<ToFill_t> ConvertCuts(const Cuts_t<FromFill_t>& from_cuts) {
     return to_cuts;
 }
 
+struct TreeInfo_t {
+    unsigned Level;
+    unsigned nDaughters;
+    unsigned nNeighbors;
+    TreeInfo_t(unsigned level, unsigned daughters, unsigned neighbors) :
+        Level(level), nDaughters(daughters), nNeighbors(neighbors)
+    {}
+};
+
 template<typename Hist_t>
 struct Node_t {
     // Hist_t should have that type defined
@@ -60,9 +69,11 @@ struct Node_t {
     Hist_t Hist;
     typename Cut_t<Fill_t>::Passes_t PassesCut;
 
-    Node_t(const HistogramFactory& parentHistFac, Cut_t<Fill_t> cut) :
+    Node_t(const HistogramFactory& parentHistFac,
+           Cut_t<Fill_t> cut,
+           const TreeInfo_t& treeinfo) :
         HistFac(cut.Name, parentHistFac, cut.Name),
-        Hist(HistFac),
+        Hist(HistFac, treeinfo),
         PassesCut(cut.Passes)
     {}
 
@@ -82,20 +93,32 @@ template<typename Hist_t>
 using Tree_t = typename Tree<Node_t<Hist_t>>::node_t;
 
 template<typename Hist_t>
-void Build(Tree_t<Hist_t> cuttree, CutsIterator_t<Hist_t> first, CutsIterator_t<Hist_t> last) {
+void Build(Tree_t<Hist_t> cuttree,
+           CutsIterator_t<Hist_t> first,
+           CutsIterator_t<Hist_t> last,
+           TreeInfo_t& treeInfo)
+{
     if(first == last)
         return;
+
     const auto& multicut = *first;
+    const auto& next_it = std::next(first);
+
+    treeInfo.Level++;
+    treeInfo.nDaughters = next_it == last ? 0 : next_it->size();
+    treeInfo.nNeighbors = first->size();
+
     for(const auto& cut : multicut) {
-        auto daughter = cuttree->CreateDaughter(cuttree->Get().HistFac, cut);
-        Build<Hist_t>(daughter, std::next(first), last);
+        auto daughter = cuttree->CreateDaughter(cuttree->Get().HistFac, cut, treeInfo);
+        Build<Hist_t>(daughter, next_it, last, treeInfo);
     }
 }
 
 template<typename Hist_t, typename Fill_t = typename Hist_t::Fill_t>
 Tree_t<Hist_t> Make(HistogramFactory histFac, const std::string& name, const Cuts_t<Fill_t>& cuts) {
-    auto cuttree = Tree<Node_t<Hist_t>>::MakeNode(histFac, Cut_t<Fill_t>{name});
-    Build<Hist_t>(cuttree, cuts.begin(), cuts.end());
+    TreeInfo_t treeInfo{0,1,0};
+    auto cuttree = Tree<Node_t<Hist_t>>::MakeNode(histFac, Cut_t<Fill_t>{name}, treeInfo);
+    Build<Hist_t>(cuttree, cuts.begin(), cuts.end(), treeInfo);
     return cuttree;
 }
 
@@ -111,7 +134,8 @@ void Fill(Tree_t<Hist_t> cuttree, const Fill_t& f) {
 template<typename Hist_t>
 struct StackedHists_t {
 protected:
-    StackedHists_t(const HistogramFactory& histFac) :
+    StackedHists_t(const HistogramFactory& histFac, const TreeInfo_t& treeInfo) :
+        TreeInfo(treeInfo),
         HistFac(histFac),
         H("h", HistFac)
     {
@@ -128,6 +152,7 @@ protected:
             it_hist = Hists.emplace_hint(it_hist, key, WrappedHist_t{
                                              name,
                                              H,
+                                             TreeInfo,
                                              histmod
                                          });
 
@@ -140,6 +165,7 @@ protected:
 
 private:
 
+    TreeInfo_t TreeInfo;
     HistogramFactory HistFac; // directory for stacks and H itself
     HistogramFactory H; // directory for mctrue splitted histfacs
 
@@ -148,8 +174,10 @@ private:
         histstyle::Mod_t Modify;
         WrappedHist_t(const std::string& name,
                       const HistogramFactory& parentHistFac,
-                      histstyle::Mod_t mod) :
-            Hist(HistogramFactory(name, parentHistFac, name)), Modify(mod) {}
+                      const TreeInfo_t& treeInfo,
+                      histstyle::Mod_t mod
+                      ) :
+            Hist(HistogramFactory(name, parentHistFac, name), treeInfo), Modify(mod) {}
     };
 
     std::map<unsigned, WrappedHist_t> Hists;

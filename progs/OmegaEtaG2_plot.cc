@@ -104,7 +104,9 @@ struct MCTrue_Splitter : cuttree::StackedHists_t<Hist_t> {
 
     const decltype (physics::OmegaEtaG2::makeChannels()) Channels;
 
-    MCTrue_Splitter(const HistogramFactory& histFac) : cuttree::StackedHists_t<Hist_t>(histFac),
+    MCTrue_Splitter(const HistogramFactory& histFac,
+                    const cuttree::TreeInfo_t& treeInfo) :
+        cuttree::StackedHists_t<Hist_t>(histFac, treeInfo),
       Channels(physics::OmegaEtaG2::makeChannels())
     {
         using histstyle::Mod_t;
@@ -267,7 +269,7 @@ struct OmegaHist_t {
                                     HistFac.makeTH2D(title, xlabel, ylabel, xbins, ybins, name),f));
     }
 
-    OmegaHist_t(const HistogramFactory& hf): HistFac(hf) {
+    OmegaHist_t(const HistogramFactory& hf, cuttree::TreeInfo_t): HistFac(hf) {
 
         AddTH1("KinFitChi2",      "#chi^{2}",             "",       Chi2Bins,   "KinFitChi2",
                [] (TH1D* h, const Fill_t& f) { h->Fill(f.Tree.KinFitChi2, f.TaggW());
