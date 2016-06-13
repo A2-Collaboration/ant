@@ -73,6 +73,7 @@ You may want to add your `ant/build/bin` directory to your `$PATH` variable.
     * `cd` in it and run `cmake .. && make -jN`, replace `N` with the number of threads which should be used
     * set your `$ROOTSYS` accordingly
   * gdb version 7.7 crashes in combination with cereal, so use version 7.10
+  * If using GCC 6.x (ArchLinux users), use the patched ROOTv5 version available [here](https://github.com/A2-Collaboration/root/commits/v5-34-00-patches-A2), which contains the patches from the bug report [ROOT-8180](https://sft.its.cern.ch/jira/browse/ROOT-8180)
 
 # Contributing
 
