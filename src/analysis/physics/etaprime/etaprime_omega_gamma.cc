@@ -180,36 +180,30 @@ void EtapOmegaG::ProcessEvent(const TEvent& event, manager_t&)
     t.MCTrue = 0; // indicate data by default
     TParticleTree_t ptree_sigref = nullptr; // used by Sig_t::Process to check matching
     if(particletree) {
-        auto get_mctrue = [] (ParticleTypeTree expected, TParticleTree_t particletree) -> unsigned {
-            if(particletree->IsEqual(expected, utils::ParticleTools::MatchByParticleName))
-                return 1;
-            unsigned n = 10;
-            for(const auto& ptreeBkg : ptreeBackgrounds) {
-                if(particletree->IsEqual(ptreeBkg.Tree, utils::ParticleTools::MatchByParticleName))
-                    return n;
-                n++;
-            }
-            return 9; // missed background
-        };
-
         // 1=Signal, 2=Reference, 9=MissedBkg, >=10 found in ptreeBackgrounds
-        if(t.IsSignal) {
-            t.MCTrue = get_mctrue(ptreeSignal, particletree);
-            if(t.MCTrue==1)
-                ptree_sigref = particletree;
+        if(particletree->IsEqual(ptreeSignal, utils::ParticleTools::MatchByParticleName)) {
+            t.MCTrue = 1;
+            ptree_sigref = particletree;
+        }
+        else if(particletree->IsEqual(ptreeReference, utils::ParticleTools::MatchByParticleName)) {
+            t.MCTrue = 2;
+            ptree_sigref = particletree;
         }
         else {
-            t.MCTrue = get_mctrue(ptreeReference, particletree);
-            if(t.MCTrue==1) {
-                ptree_sigref = particletree;
+            t.MCTrue = 10;
+            bool found = false;
+            for(const auto& ptreeBkg : ptreeBackgrounds) {
+                if(particletree->IsEqual(ptreeBkg.Tree, utils::ParticleTools::MatchByParticleName)) {
+                    found = true;
+                    break;
+                }
                 t.MCTrue++;
             }
-        }
-
-        // fill histogram of missed bkgs
-        if(t.MCTrue==9) {
-            const auto& decaystr = utils::ParticleTools::GetDecayString(particletree);
-            h_MissedBkg->Fill(decaystr.c_str(), 1.0);
+            if(!found) {
+                t.MCTrue = 9;
+                const auto& decaystr = utils::ParticleTools::GetDecayString(particletree);
+                h_MissedBkg->Fill(decaystr.c_str(), 1.0);
+            }
         }
     }
     else if(!event.MCTrue().ID.IsInvalid()) {
