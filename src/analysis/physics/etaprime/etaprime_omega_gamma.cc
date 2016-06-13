@@ -38,11 +38,11 @@ APLCON::Fit_Settings_t EtapOmegaG::MakeFitSettings(unsigned max_iterations)
 
 EtapOmegaG::EtapOmegaG(const string& name, OptionsPtr opts) :
     Physics(name, opts),
-    kinfitter_ref("kinfitter_ref",2,
+    kinfitter_sig("kinfitter_sig",4,
               make_shared<uncertainty_model_t>(),
               EtapOmegaG::MakeFitSettings(25)
               ),
-    kinfitter_sig("kinfitter_sig",4,
+    kinfitter_ref("kinfitter_ref",2,
               make_shared<uncertainty_model_t>(),
               EtapOmegaG::MakeFitSettings(25)
               )
@@ -57,7 +57,9 @@ EtapOmegaG::EtapOmegaG(const string& name, OptionsPtr opts) :
     promptrandom_tight.AddRandomRange({ 10, 20});
 
 
-    h_CommonCuts = HistFac.makeTH1D("Common Cuts", "", "#", BinSettings(15),"h_TotalEvents");
+    h_CommonCuts = HistFac.makeTH1D("Common Cuts", "", "#", BinSettings(15),"h_CommonCuts");
+    h_CommonCuts_sig = HistFac.makeTH1D("Common Cuts Sig", "", "#", BinSettings(15),"h_CommonCuts_sig");
+    h_CommonCuts_ref = HistFac.makeTH1D("Common Cuts Ref", "", "#", BinSettings(15),"h_CommonCuts_ref");
     h_MissedBkg = HistFac.makeTH1D("Missed Background", "", "#", BinSettings(25),"h_MissedBkg");
 
     t.CreateBranches(HistFac.makeTTree("treeCommon"));
@@ -97,6 +99,34 @@ void EtapOmegaG::ProcessEvent(const TEvent& event, manager_t&)
     if(!isfinite(t.CBAvgTime))
         return;
     h_CommonCuts->Fill("CBAvgTime ok",1.0);
+
+    // sort candidates by energy
+    TCandidatePtrList candidates;
+    bool haveTAPS = false;
+    for(const auto& cand : data.Candidates.get_iter()) {
+        if(cand->Detector & Detector_t::Type_t::TAPS) {
+            haveTAPS = true;
+        }
+        candidates.emplace_back(cand);
+    }
+    if(!haveTAPS)
+        return;
+    h_CommonCuts->Fill("1 in TAPS",1.0);
+
+    std::sort(candidates.begin(), candidates.end(),
+              [] (const TCandidatePtr& a, const TCandidatePtr& b) {
+        return a->CaloEnergy > b->CaloEnergy;
+    });
+
+    Particles_t sig_particles;
+    Particles_t ref_particles;
+
+    bool haveSig = findParticles(candidates, 4, sig_particles, Sig.t, h_CommonCuts_sig);
+    bool haveRef = findParticles(candidates, 2, ref_particles, Ref.t, h_CommonCuts_ref);
+
+    if(!haveSig && !haveRef)
+        return;
+    h_CommonCuts->Fill("Sig||Ref",1.0);
 
     // use struct to gather particles
 
@@ -279,6 +309,76 @@ void EtapOmegaG::ProcessEvent(const TEvent& event, manager_t&)
     if(nPhotons==4)
         h_CommonCuts->Fill("nPhotons==4", 1.0);
 
+}
+
+bool EtapOmegaG::findParticles(const TCandidatePtrList& candidates,
+                               unsigned nPhotons,
+                               EtapOmegaG::Particles_t& particles,
+                               EtapOmegaG::SharedTree_t& t,
+                               TH1D* h_CommonCuts)
+{
+    if(candidates.size()<nPhotons+1)
+        return false;
+
+    // identify the proton here as slowest cluster in TAPS
+    // using CBAvgTime does not help here, since it's constant
+    // over each TAPS clusters
+    /// \todo think about using beta here as in EtapProton?
+    t.ProtonTime = std_ext::NaN;
+    TParticlePtr& proton = particles.Proton;
+    for(unsigned i=0;i<nPhotons+1;i++) {
+        const auto& cand = candidates[i];
+        if(cand->Detector & Detector_t::Type_t::TAPS) {
+            if(!isfinite(t.ProtonTime) || t.ProtonTime < cand->Time) {
+                t.ProtonTime = cand->Time;
+                proton = make_shared<TParticle>(ParticleTypeDatabase::Proton, cand);
+            }
+        }
+    }
+
+    if(!proton)
+        return false;
+    h_CommonCuts->Fill("p in TAPS", 1.0);
+
+    t.ProtonE = proton->Ek();
+    t.ProtonVetoE = proton->Candidate->VetoEnergy;
+    t.ProtonShortE = proton->Candidate->FindCaloCluster()->ShortEnergy;
+
+    // remaining candidates are photons
+    LorentzVec& photon_sum = particles.PhotonSum;
+    photon_sum = {0,0,0,0};
+    t.nPhotonsCB = 0;
+    t.nPhotonsTAPS = 0;
+    t.CBSumVetoE = 0;
+    for(unsigned i=0;i<nPhotons+1;i++) {
+        const auto& cand = candidates[i];
+        if(cand == proton->Candidate)
+            continue;
+        if(cand->Detector & Detector_t::Type_t::CB) {
+            t.nPhotonsCB++;
+            t.CBSumVetoE += cand->VetoEnergy;
+        }
+        if(cand->Detector & Detector_t::Type_t::TAPS)
+            t.nPhotonsTAPS++;
+        auto photon = make_shared<TParticle>(ParticleTypeDatabase::Photon, cand);
+        photon_sum += *photon;
+        particles.Photons.emplace_back(move(photon));
+    }
+    assert(particles.Photons.size() == nPhotons);
+    assert(nPhotons == t.nPhotonsCB + t.nPhotonsTAPS);
+
+    t.PhotonSum = photon_sum.M();
+
+    // don't bother with events where proton coplanarity is not ok
+    // we use some rather large window here...
+    t.ProtonCopl = std_ext::radian_to_degree(vec2::Phi_mpi_pi(proton->Phi() - photon_sum.Phi() - M_PI ));
+    const interval<double> ProtonCopl_cut(-35, 35);
+    if(!ProtonCopl_cut.Contains(t.ProtonCopl))
+        return false;
+    h_CommonCuts->Fill("ProtonCopl ok", 1.0);
+
+
+    return true;
 }
 
 EtapOmegaG::Sig_t::Sig_t() :

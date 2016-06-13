@@ -22,6 +22,9 @@ namespace physics {
 struct EtapOmegaG : Physics {
 
     TH1D* h_CommonCuts;
+    TH1D* h_CommonCuts_sig;
+    TH1D* h_CommonCuts_ref;
+
     TH1D* h_MissedBkg;
 
     // TreeCommon contains things
@@ -54,13 +57,32 @@ struct EtapOmegaG : Physics {
         ADD_BRANCH_T(int,      KinFitIterations)
     };
 
+    struct SharedTree_t : WrapTTree {
+        ADD_BRANCH_T(unsigned, nPhotonsCB)
+        ADD_BRANCH_T(unsigned, nPhotonsTAPS)
+        ADD_BRANCH_T(double,   CBSumVetoE)
+
+        ADD_BRANCH_T(double,   ProtonTime)
+        ADD_BRANCH_T(double,   ProtonE)
+        ADD_BRANCH_T(double,   ProtonVetoE)
+        ADD_BRANCH_T(double,   ProtonShortE)
+
+        ADD_BRANCH_T(double,   PhotonSum)
+        ADD_BRANCH_T(double,   ProtonCopl)
+        ADD_BRANCH_T(double,   MissingMass)
+        ADD_BRANCH_T(double,   FittedProtonE)
+
+        ADD_BRANCH_T(double,   KinFitProb)
+        ADD_BRANCH_T(int,      KinFitIterations)
+    };
+
     TreeCommon t;
 
     PromptRandom::Switch promptrandom;
     PromptRandom::Switch promptrandom_tight;
 
-    utils::KinFitter kinfitter_ref;
     utils::KinFitter kinfitter_sig;
+    utils::KinFitter kinfitter_ref;
 
 
     struct Particles_t {
@@ -71,6 +93,13 @@ struct EtapOmegaG : Physics {
         LorentzVec     PhotonSum;
         LorentzVec     FittedPhotonSum;
     };
+
+    static bool findParticles(const TCandidatePtrList& candidates,
+                              unsigned nPhotons,
+                              Particles_t& particles,
+                              SharedTree_t& t,
+                              TH1D* h_CommonCuts
+                              );
 
     struct Sig_t {
 
@@ -160,7 +189,7 @@ struct EtapOmegaG : Physics {
         Pi0_t Pi0;
         OmegaPi0_t OmegaPi0;
 
-        struct SharedTree_t : WrapTTree {
+        struct SharedTree_t : EtapOmegaG::SharedTree_t {
             ADD_BRANCH_T(std::vector<double>, ggg, 4)
             ADD_BRANCH_T(std::vector<double>, gg_gg1, 3)
             ADD_BRANCH_T(std::vector<double>, gg_gg2, 3)
@@ -179,8 +208,9 @@ struct EtapOmegaG : Physics {
         void ResetBranches();
         void Process(const Particles_t& particles, const TParticleTree_t& ptree_sigref);
 
-    private:
         SharedTree_t t;
+
+    private:
         utils::TreeFitter treefitter_Pi0Pi0;
         utils::TreeFitter treefitter_Pi0Eta;
         void DoAntiPi0Eta(const Particles_t& particles);
@@ -190,7 +220,7 @@ struct EtapOmegaG : Physics {
 
     struct Ref_t {
 
-        struct Tree_t : WrapTTree {
+        struct Tree_t : EtapOmegaG::SharedTree_t {
             ADD_BRANCH_T(double,   IM_2g)
         };
         Tree_t t;
