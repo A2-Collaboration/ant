@@ -150,7 +150,8 @@ KinFitter::KinFitter(
     Beam = std_ext::make_unique<PhotonBeamVector>("Beam");
     aplcon->LinkVariable(Beam->Name,
                          Beam->Adresses() ,
-                         Beam->Adresses_Sigma() );
+                         Beam->Adresses_Sigma(),
+                         Beam->Adresses_Pulls());
 
     Proton = std_ext::make_unique<FitParticle>("Proton");
     LinkVariable(*Proton);
@@ -276,6 +277,9 @@ void KinFitter::SetupBranches(TTree* tree, string branch_prefix)
     tree->Branch((branch_prefix+"_iterations").c_str(),  &result_iterations);
     tree->Branch((branch_prefix+"_status").c_str(),      &result_status);
     tree->Branch((branch_prefix+"_probability").c_str(), &result_probability);
+    tree->Branch((branch_prefix+"_EBeam").c_str(),       &Beam->E);
+    tree->Branch((branch_prefix+"_EBeam_Pull").c_str(),  &Beam->Pull);
+    tree->Branch((branch_prefix+"_EBeam_Sigma").c_str(),  &Beam->Sigma);
 }
 
 APLCON::Result_t KinFitter::DoFit() {

@@ -182,6 +182,7 @@ protected:
         double E_before = std_ext::NaN;
         double E     = std_ext::NaN;
         double Sigma = std_ext::NaN;
+        double Pull  = std_ext::NaN;
 
         const std::string Name;
 
@@ -194,7 +195,12 @@ protected:
 
         std::vector<double*> Adresses_Sigma()
         {
-            return { std::addressof(Sigma)};
+            return { std::addressof(Sigma) };
+        }
+
+        std::vector<double*> Adresses_Pulls()
+        {
+            return { std::addressof(Pull) };
         }
 
     };
