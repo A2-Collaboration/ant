@@ -9,8 +9,11 @@
 #include "base/Logger.h"
 #include "base/std_ext/math.h"
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wmisleading-indentation"
 #include "TGraph.h"
 #include "TFitResult.h"
+#pragma GCC diagnostic pop
 
 #include <limits>
 #include <cmath>

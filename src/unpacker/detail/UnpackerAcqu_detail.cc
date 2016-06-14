@@ -486,10 +486,14 @@ void acqu::FileFormatBase::FillDetectorReadHits(vector<TDetectorReadHit>& hits) 
 
         for(const UnpackerAcquConfig::hit_mapping_t* mapping : hit_mappings_ptr[ch]) {
             using RawChannel_t = UnpackerAcquConfig::RawChannel_t<uint16_t>;
-            if(mapping->RawChannels.size() != 1)
-                throw UnpackerAcqu::Exception("Not implemented");
-            if(mapping->RawChannels[0].Mask != RawChannel_t::NoMask())
-                throw UnpackerAcqu::Exception("Not implemented");
+            if(mapping->RawChannels.size() != 1) {
+                LOG(ERROR) << "Not implemented";
+                continue;
+            }
+            if(mapping->RawChannels[0].Mask != RawChannel_t::NoMask()) {
+                LOG(ERROR) << "Not implemented";
+                continue;
+            }
             std::vector<std::uint8_t> rawData(sizeof(uint16_t)*values.size());
             std::copy(values.begin(), values.end(),
                       reinterpret_cast<uint16_t*>(std::addressof(rawData[0])));

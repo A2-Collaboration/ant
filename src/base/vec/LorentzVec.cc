@@ -1,6 +1,9 @@
 #include "LorentzVec.h"
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wmisleading-indentation"
 #include "TLorentzVector.h"
+#pragma GCC diagnostic pop
 
 using namespace ant;
 

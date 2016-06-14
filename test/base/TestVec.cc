@@ -4,9 +4,12 @@
 #include "base/vec/vec3.h"
 #include "base/vec/LorentzVec.h"
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wmisleading-indentation"
 #include "TVector2.h"
 #include "TVector3.h"
 #include "TLorentzVector.h"
+#pragma GCC diagnostic pop
 
 #include <type_traits>
 #include <iostream>

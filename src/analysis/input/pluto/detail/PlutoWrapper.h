@@ -6,6 +6,7 @@
 #pragma GCC diagnostic ignored "-Wvla"
 #pragma GCC diagnostic ignored "-Wignored-qualifiers"
 #pragma GCC diagnostic ignored "-Weffc++"
+#pragma GCC diagnostic ignored "-Wmisleading-indentation"
 
 #ifdef __clang__
 #pragma clang diagnostic push

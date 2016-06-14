@@ -521,7 +521,7 @@ void acqu::FileFormatMk2::HandleEPICSBuffer(
                 break;
             }
             default:
-                throw UnpackerAcqu::Exception("Not implemented");
+                LOG(ERROR) << "Not implemented";
 
             } // end switch
 

@@ -2,9 +2,12 @@
 
 #include "base/printable.h"
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wmisleading-indentation"
 #include "TVectorT.h"
 #include "TMatrixT.h"
 #include "TVector2.h"
+#pragma GCC diagnostic pop
 
 #include <stack>
 
