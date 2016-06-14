@@ -215,6 +215,17 @@ bool EtapOmegaG::findParticles(const TCandidatePtrList& candidates,
                                EtapOmegaG::SharedTree_t& t,
                                TH1D* h_CommonCuts)
 {
+    t.ProtonE = std_ext::NaN;
+    t.ProtonVetoE = std_ext::NaN;
+    t.ProtonShortE = std_ext::NaN;
+    t.DiscardedEk = std_ext::NaN;
+    t.PhotonsEk = std_ext::NaN;
+    t.nPhotonsCB   = 0;
+    t.nPhotonsTAPS = 0;
+    t.CBSumVetoE = std_ext::NaN;
+    t.PhotonSum  = std_ext::NaN;
+    t.ProtonCopl = std_ext::NaN;
+
     t.nCandidates = candidates.size();
     if(t.nCandidates<nPhotons+1)
         return false;
