@@ -2,6 +2,8 @@
 #include "base/std_ext/vector.h"
 #include "base/std_ext/math.h"
 #include "TH1D.h"
+#include "utils/FitterUncertainties.h"
+
 
 #include "utils/particle_tools.h"
 #include "plot/root_draw.h"

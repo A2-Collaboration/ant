@@ -2,6 +2,7 @@
 
 #include "utils/particle_tools.h"
 #include "utils/matcher.h"
+#include "utils/FitterUncertainties.h"
 
 #include "expconfig/ExpConfig.h"
 

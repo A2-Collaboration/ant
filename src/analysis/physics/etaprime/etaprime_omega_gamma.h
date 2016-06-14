@@ -3,6 +3,7 @@
 #include "analysis/physics/Physics.h"
 #include "analysis/utils/particle_tools.h"
 #include "analysis/utils/Fitter.h"
+#include "analysis/utils/FitterUncertainties.h"
 #include "analysis/utils/ClusterTools.h"
 #include "analysis/plot/PromptRandomHist.h"
 

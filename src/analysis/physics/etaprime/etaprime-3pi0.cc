@@ -6,6 +6,7 @@
 #include "utils/ParticleID.h"
 #include "base/ParticleType.h"
 #include "base/ParticleTypeTree.h"
+#include "utils/FitterUncertainties.h"
 
 #include <algorithm>
 #include <cassert>

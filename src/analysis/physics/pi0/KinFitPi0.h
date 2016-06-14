@@ -6,6 +6,7 @@
 #include "utils/MCSmear.h"
 #include "base/ParticleTypeTree.h"
 #include "TLorentzVector.h"
+#include "utils/FitterUncertainties.h"
 
 class TH1D;
 class TTree;
