@@ -54,7 +54,7 @@ JustPi0::MultiPi0::MultiPi0(HistogramFactory& histFac, unsigned nPi0, bool nofit
     IM_2g_byMM(promptrandom),
     IM_2g_byFit(promptrandom),
     IM_2g_fitted(promptrandom),
-    treefitter("treefit_jusitpi0_"+to_string(nPi0), directPi0, nPi0, model)
+    treefitter("treefit_jusitpi0_"+to_string(nPi0), directPi0, model)
 {
     std::string multiplicity_str = std_ext::formatter() << "m" << multiplicity << "Pi0";
     HistogramFactory HistFac(multiplicity_str, histFac, multiplicity_str);
@@ -322,6 +322,8 @@ ParticleTypeTree JustPi0::MultiPi0::getParticleTree(const unsigned nPi0)
     else if(nPi0==3) {
         return ParticleTypeTreeDatabase::Get(ParticleTypeTreeDatabase::Channel::ThreePi0_6g);
     }
+
+    throw std::runtime_error("Invalid nPi0 specified");
 }
 
 AUTO_REGISTER_PHYSICS(JustPi0)
