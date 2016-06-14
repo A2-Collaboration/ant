@@ -397,7 +397,6 @@ Pi0Eta::MyTreeFitter_t::MyTreeFitter_t(const ParticleTypeTree& ttree, const std:
     treefitter(
         "treefit_pi0eta",
         ttree,
-        4,
         model,
         [] (const ParticleTypeTree& t) { return utils::TreeFitter::nodesetup_t(1.0, (t->Get() == ParticleTypeDatabase::Omega)); }
         )

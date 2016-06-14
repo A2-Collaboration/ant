@@ -240,23 +240,13 @@ public:
         };
     };
 
-    // construct TreeFitter with KinFit
+    // construct TreeFitter always with KinFit
     TreeFitter(const std::string& name,
                ParticleTypeTree ptree,
-               unsigned kinFitGammas,
                UncertaintyModelPtr uncertainty_model,
                nodesetup_t::getter nodeSetup = {},
                const APLCON::Fit_Settings_t& settings = DefaultSettings
               );
-
-    // construct TreeFitter without additional KinFit
-    TreeFitter(const std::string& name,
-               ParticleTypeTree ptree,
-               UncertaintyModelPtr uncertainty_model,
-               nodesetup_t::getter nodeSetup = {},
-               const APLCON::Fit_Settings_t& settings = DefaultSettings
-              ) : TreeFitter(name, ptree, 0, uncertainty_model, nodeSetup, settings)
-    {}
 
     TreeFitter(const TreeFitter&) = delete;
     TreeFitter& operator=(const TreeFitter&) = delete;
@@ -305,6 +295,8 @@ protected:
     using KinFitter::DoFit;
 
     static tree_t MakeTree(ParticleTypeTree ptree);
+    static unsigned CountGammas(ParticleTypeTree ptree);
+
 
     const tree_t tree;
     std::vector<tree_t> tree_leaves;

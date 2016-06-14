@@ -290,30 +290,18 @@ KinFitter::PhotonBeamVector::PhotonBeamVector(const string& name):
 
 TreeFitter::TreeFitter(const string& name,
                        ParticleTypeTree ptree,
-                       unsigned kinFitGammas,
                        std::shared_ptr<const Fitter::UncertaintyModel> uncertainty_model,
                        nodesetup_t::getter nodeSetup,
                        const APLCON::Fit_Settings_t& settings) :
-    KinFitter(name, kinFitGammas, uncertainty_model, settings),
+    KinFitter(name, CountGammas(ptree), uncertainty_model, settings),
     tree(MakeTree(ptree))
 {
     tree->GetUniquePermutations(tree_leaves, permutations);
     current_perm = permutations.end();
 
-    // handle special case of no kinfit
-    if(kinFitGammas==0) {
-        for(unsigned i=0;i<tree_leaves.size();i++) {
-            Photons.emplace_back(make_shared<FitParticle>("Photon"+to_string(i)));
-            LinkVariable(*Photons.back());
-        }
-    }
-    else if(tree_leaves.size()>kinFitGammas)
-        throw Exception("Given ptree has too many leaves for given kinFitGammas");
-
     LOG(INFO) << "Initialized TreeFitter '" << name
               << "' for " << utils::ParticleTools::GetDecayString(ptree, false)
-              << " with " << permutations.size() << " permutations"
-              << (kinFitGammas>0 ? ", including KinFit" : "");
+              << " with " << permutations.size() << " permutations, including KinFit";
 
     // setup fitter variables, collect leave names for constraint
     vector<string> leave_names;
@@ -474,4 +462,11 @@ TreeFitter::tree_t TreeFitter::MakeTree(ParticleTypeTree ptree)
 
     t->Sort();
     return t;
+}
+
+unsigned TreeFitter::CountGammas(ParticleTypeTree ptree)
+{
+    unsigned nGammas = 0;
+    ptree->Map([&nGammas] (const ParticleTypeDatabase::Type& n) { if(n == ParticleTypeDatabase::Photon) nGammas++; });
+    return nGammas;
 }

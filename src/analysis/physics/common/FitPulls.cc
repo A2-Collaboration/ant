@@ -131,7 +131,6 @@ FitPulls::ChannelItem_t::ChannelItem_t(const HistogramFactory& parent,
 
     Fitter = std_ext::make_unique<utils::TreeFitter>("treefitter_" + ptree_name,
                                                      Tree,
-                                                     Multiplicity-1, // assume one particle to be proton
                                                      uncertainty_model);
 
     HistogramFactory histFac(utils::ParticleTools::SanitizeDecayString(ptree_name), parent, ptree_name);

@@ -344,13 +344,11 @@ bool EtapOmegaG::doKinfit(const TTaggerHit& taggerhit,
 EtapOmegaG::Sig_t::Sig_t() :
     treefitter_Pi0Pi0("treefit_Pi0Pi0",
                       ParticleTypeTreeDatabase::Get(ParticleTypeTreeDatabase::Channel::TwoPi0_4g),
-                      4, // enable kinfit
                       make_shared<uncertainty_model_t>(), {},
                       MakeFitSettings(20)
                       ),
     treefitter_Pi0Eta("treefit_Pi0Eta",
                       ParticleTypeTreeDatabase::Get(ParticleTypeTreeDatabase::Channel::Pi0Eta_4g),
-                      4, // enable kinfit
                       make_shared<uncertainty_model_t>(), {},
                       MakeFitSettings(20)
                       )
@@ -493,7 +491,6 @@ utils::TreeFitter EtapOmegaG::Sig_t::Fit_t::Make(const ParticleTypeDatabase::Typ
     return {
         "sig_treefitter_"+subtree.Name(),
         EtapOmegaG::ptreeSignal,
-        4, // include KinFit
         make_shared<uncertainty_model_t>(),
         setupnodes,
         MakeFitSettings(15)
