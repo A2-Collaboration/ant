@@ -96,7 +96,7 @@ template<typename Hist_t>
 void Build(Tree_t<Hist_t> cuttree,
            CutsIterator_t<Hist_t> first,
            CutsIterator_t<Hist_t> last,
-           TreeInfo_t& treeInfo)
+           std::size_t& level)
 {
     if(first == last)
         return;
@@ -104,23 +104,27 @@ void Build(Tree_t<Hist_t> cuttree,
     const auto& multicut = *first;
     const auto& next_it = std::next(first);
 
-    treeInfo.Level++;
-    treeInfo.nDaughters = next_it == last ? 0 : next_it->size();
-    treeInfo.nLevelMultiplicity = first->size();
+    level++;
+
+    const auto nDaughters = next_it == last ? 0 : next_it->size();
 
     for(const auto& cut : multicut) {
-        auto daughter = cuttree->CreateDaughter(cuttree->Get().HistFac, cut, treeInfo);
-        Build<Hist_t>(daughter, next_it, last, treeInfo);
+        auto daughter = cuttree->CreateDaughter(cuttree->Get().HistFac, cut,
+                                                TreeInfo_t{level, nDaughters, multicut.size()});
+        Build<Hist_t>(daughter, next_it, last, level);
     }
+
+    level--;
 }
 
 template<typename Hist_t, typename Fill_t = typename Hist_t::Fill_t>
 Tree_t<Hist_t> Make(HistogramFactory histFac, const std::string& name, const Cuts_t<Fill_t>& cuts) {
     if(cuts.empty())
         return nullptr;
-    TreeInfo_t treeInfo{0,cuts.front().size(),1};
-    auto cuttree = Tree<Node_t<Hist_t>>::MakeNode(histFac, Cut_t<Fill_t>{name}, treeInfo);
-    Build<Hist_t>(cuttree, cuts.begin(), cuts.end(), treeInfo);
+    std::size_t level = 0;
+    auto cuttree = Tree<Node_t<Hist_t>>::MakeNode(histFac, Cut_t<Fill_t>{name},
+                                                  TreeInfo_t{level, cuts.front().size(), 1});
+    Build<Hist_t>(cuttree, cuts.begin(), cuts.end(), level);
     return cuttree;
 }
 
