@@ -502,15 +502,8 @@ utils::TreeFitter EtapOmegaG::Sig_t::Fit_t::Make(const ParticleTypeDatabase::Typ
 
 TParticlePtr EtapOmegaG::Sig_t::Fit_t::FindBest(const utils::TreeFitter::tree_t& fitted, const EtapOmegaG::Particles_t& particles)
 {
-    const auto& fitted_particle = fitted->Get().Leave->Particle;
-    unsigned i = 0;
-    for(const auto& p : particles.Photons) {
-        if(p == fitted_particle)
-            break;
-        i++;
-    }
     // use at() to have boundary check
-    return particles.FittedPhotons.at(i);
+    return particles.FittedPhotons.at(fitted->Get().PhotonLeaveIndex);
 }
 
 
