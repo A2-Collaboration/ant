@@ -4,6 +4,8 @@
 #include "plot/PromptRandomHist.h"
 #include "utils/Fitter.h"
 #include "base/ParticleTypeTree.h"
+#include "TLorentzVector.h"
+#include "TVector2.h"
 
 class TH1D;
 
@@ -29,9 +31,22 @@ protected:
         utils::KinFitter fitter;
 
         TTree* tree;
+        TTree* buffer;
+
+        // branches
         double   Tagg_W;  // tagger prompt/random weight for subtraction
         unsigned Tagg_Ch; // tagger channel
         double   Tagg_E;  // tagger energy
+
+        TLorentzVector b_proton;
+        TLorentzVector b_proton_fitted;
+        TVector2  b_proton_PSA;
+        TVector2  b_proton_PSA1;
+        TVector2  b_proton_PSA2;
+
+        double b_proton_vetoE;
+
+        double gg_IM;
 
         unsigned ProtonMCTrueMatches;
 

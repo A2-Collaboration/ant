@@ -81,6 +81,12 @@ JustPi0::MultiPi0::MultiPi0(HistogramFactory& histFac, unsigned nPi0, bool nofit
     tree->Branch("Tagg_W", addressof(Tagg_W));
     tree->Branch("Tagg_Ch", addressof(Tagg_Ch));
     tree->Branch("Tagg_E", addressof(Tagg_E));
+    tree->Branch("proton",  addressof(b_proton));
+    tree->Branch("proton_fitted", addressof(b_proton_fitted));
+    tree->Branch("proton_PSA",  addressof(b_proton_PSA));
+    tree->Branch("proton_PSA1", addressof(b_proton_PSA1));
+    tree->Branch("proton_PSA2", addressof(b_proton_PSA2));
+    tree->Branch("proton_vetoE", addressof(b_proton_vetoE));
 
     tree->Branch("ProtonMCTrueMatches",addressof(ProtonMCTrueMatches));
 
@@ -95,6 +101,11 @@ JustPi0::MultiPi0::MultiPi0(HistogramFactory& histFac, unsigned nPi0, bool nofit
     else if(multiplicity==3) {
         directPi0 = ParticleTypeTreeDatabase::Get(ParticleTypeTreeDatabase::Channel::ThreePi0_6g);
     }
+
+    buffer = tree->CloneTree();
+    buffer->SetName("buffer");
+    buffer->SetDirectory(nullptr);
+    tree->CopyAddresses(buffer);
 }
 
 void JustPi0::MultiPi0::ProcessData(const TEventData& data, const TParticleTree_t& ptree)
@@ -142,44 +153,50 @@ void JustPi0::MultiPi0::ProcessData(const TEventData& data, const TParticleTree_
     }
 
 
-    // use any candidate as proton, and do the analysis (ignore ParticleID stuff)
+    // iterate over tagger hits
 
-    for(auto i_proton : cands.get_iter()) {
+    for(const TTaggerHit& taggerhit : data.TaggerHits) {
+        steps->Fill("Seen taggerhits",1.0);
 
-        const auto proton = std::make_shared<TParticle>(ParticleTypeDatabase::Proton, i_proton);
-        std::vector<TParticlePtr> photons;
-        for(auto i_photon : cands.get_iter()) {
-            if(i_photon == i_proton)
-                continue;
-            photons.emplace_back(make_shared<TParticle>(ParticleTypeDatabase::Photon, i_photon));
-        }
-        assert(photons.size() == nPhotons_expected);
-
-
-        LorentzVec photon_sum(0,0,0,0);
-        for(const auto& p : photons) {
-            photon_sum += *p;
-        }
-
-        // proton coplanarity
-
-        const double d_phi = std_ext::radian_to_degree(vec2::Phi_mpi_pi(proton->Phi()-photon_sum.Phi() - M_PI ));
-        Proton_Coplanarity->Fill(d_phi);
-
-        const interval<double> Proton_Copl_cut(-19, 19);
-        if(!Proton_Copl_cut.Contains(d_phi))
+        promptrandom.SetTaggerHit(taggerhit.Time);
+        if(promptrandom.State() == PromptRandom::Case::Outside)
             continue;
-        const string copl_str = std_ext::formatter() << "Copl p in " << Proton_Copl_cut;
-        steps->Fill(copl_str.c_str(),1);
 
-        // iterate over tagger hits
+        // clear buffer
+        buffer->Reset();
+        double    best_chi2     = std_ext::inf;
+        Long64_t  best_entry    = -1;
+        Long64_t  current_entry = 0;
 
-        for(const TTaggerHit& taggerhit : data.TaggerHits) {
-            steps->Fill("Seen taggerhits",1.0);
+        // use any candidate as proton, and do the analysis (ignore ParticleID stuff)
 
-            promptrandom.SetTaggerHit(taggerhit.Time);
-            if(promptrandom.State() == PromptRandom::Case::Outside)
+        for(auto i_proton : cands.get_iter()) {
+
+            const auto proton = std::make_shared<TParticle>(ParticleTypeDatabase::Proton, i_proton);
+            std::vector<TParticlePtr> photons;
+            for(auto i_photon : cands.get_iter()) {
+                if(i_photon == i_proton)
+                    continue;
+                photons.emplace_back(make_shared<TParticle>(ParticleTypeDatabase::Photon, i_photon));
+            }
+            assert(photons.size() == nPhotons_expected);
+
+
+            LorentzVec photon_sum(0,0,0,0);
+            for(const auto& p : photons) {
+                photon_sum += *p;
+            }
+
+            // proton coplanarity
+
+            const double d_phi = std_ext::radian_to_degree(vec2::Phi_mpi_pi(proton->Phi()-photon_sum.Phi() - M_PI ));
+            Proton_Coplanarity->Fill(d_phi);
+
+            const interval<double> Proton_Copl_cut(-19, 19);
+            if(!Proton_Copl_cut.Contains(d_phi))
                 continue;
+            const string copl_str = std_ext::formatter() << "Copl p in " << Proton_Copl_cut;
+            steps->Fill(copl_str.c_str(),1);
 
             // simple missing mass cut
             const LorentzVec beam_target = taggerhit.GetPhotonBeam() + LorentzVec(0, 0, 0, ParticleTypeDatabase::Proton.Mass());
@@ -208,7 +225,10 @@ void JustPi0::MultiPi0::ProcessData(const TEventData& data, const TParticleTree_
             fitter.SetPhotons(photons);
             auto fit_result = fitter.DoFit();
 
+            double chi2dof = std_ext::inf;
+
             if(fit_result.Status == APLCON::Result_Status_t::Success) {
+
                 steps->Fill("Fit OK",1.0);
                 h_fitprobability.Fill(fit_result.Probability);
                 const interval<double> fitprob_cut(0.8, 1);
@@ -218,21 +238,52 @@ void JustPi0::MultiPi0::ProcessData(const TEventData& data, const TParticleTree_
                     utils::ParticleTools::FillIMCombinations([this] (double x) {IM_2g_byFit.Fill(x);},  2, photons);
                     utils::ParticleTools::FillIMCombinations([this] (double x) {IM_2g_fitted.Fill(x);},  2, fitter.GetFittedPhotons());
                 }
+
+                chi2dof = fit_result.ChiSquare / fit_result.NDoF;
+
             }
 
             Tagg_E  = taggerhit.PhotonEnergy;
             Tagg_Ch = taggerhit.Channel;
             Tagg_W  = promptrandom.FillWeight();
 
+            b_proton  = *proton;
+            b_proton_fitted = *fitter.GetFittedProton();
+
+            const double b_proton_shortE = proton->Candidate->FindCaloCluster()->ShortEnergy;
+            b_proton_vetoE  = proton->Candidate->VetoEnergy;
+
+            b_proton_PSA    = TVector2(b_proton.Energy()        - ParticleTypeDatabase::Proton.Mass(), b_proton_shortE);
+            b_proton_PSA1   = TVector2(b_proton_fitted.Energy() - ParticleTypeDatabase::Proton.Mass(), b_proton_shortE);
+            b_proton_PSA2   = TVector2(b_proton_PSA1.X(), b_proton_PSA1.X() / b_proton_PSA.X() * b_proton_shortE);
+
 
             ProtonMCTrueMatches = proton->Candidate == proton_mctrue_match;
+
+            if(chi2dof < best_chi2) {
+                best_chi2 = chi2dof;
+                best_entry = current_entry;
+            }
+
+            buffer->Fill();
+            current_entry++;
+
+
+        } // Loop proton
+
+        // save best fit
+        if(best_entry != -1) {
+            buffer->GetEntry(best_entry);
             tree->Fill();
         }
-    }
+
+    } // Loop tagger
+
 }
 
 void JustPi0::MultiPi0::ShowResult()
 {
+    buffer->ResetBranchAddresses();
     canvas(std_ext::formatter() << "JustPi0: " << multiplicity << "Pi0")
             << steps
             << Proton_Coplanarity
