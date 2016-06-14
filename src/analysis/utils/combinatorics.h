@@ -23,8 +23,8 @@ class KofNvector {
 protected:
     const std::vector<T> data;
 
-    typedef std::size_t index_type;
-    typedef std::vector<index_type> index_list;
+    using index_type = std::size_t;
+    using index_list = std::vector<index_type>;
     index_list indices;
     index_list not_indices;
 
@@ -136,7 +136,7 @@ public:
     const_iterator end_not() const { return const_iterator(*this, not_indices.end()); }
 
 
-    const std::vector<T>& Indices() const { return indices; }
+    const index_list& Indices() const { return indices; }
 
     KofNvector<T>& operator++ () { next(); return *this;}
 
