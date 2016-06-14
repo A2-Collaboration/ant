@@ -15,6 +15,7 @@
 
 #include "utils/particle_tools.h"
 #include "utils/matcher.h"
+#include "utils/FitterUncertainties.h"
 
 #include "APLCON.hpp"
 #include "expconfig/ExpConfig.h"
