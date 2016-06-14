@@ -28,6 +28,7 @@ protected:
         const bool skipfit;
         ParticleTypeTree directPi0;
 
+        std::shared_ptr<utils::Fitter::UncertaintyModel> model;
         utils::KinFitter fitter;
 
         TTree* tree;
@@ -46,6 +47,9 @@ protected:
 
         double b_proton_vetoE;
 
+        double treefit_chi2dof;
+        double treefit_prob;
+
         double gg_IM;
 
         unsigned ProtonMCTrueMatches;
@@ -60,6 +64,10 @@ protected:
         PromptRandom::Hist1 IM_2g_byMM;
         PromptRandom::Hist1 IM_2g_byFit;
         PromptRandom::Hist1 IM_2g_fitted;
+
+        utils::TreeFitter treefitter;
+
+        static ParticleTypeTree getParticleTree(const unsigned nPi0);
 
     };
 

@@ -46,12 +46,15 @@ void JustPi0::ShowResult()
 JustPi0::MultiPi0::MultiPi0(HistogramFactory& histFac, unsigned nPi0, bool nofitandnotree) :
     multiplicity(nPi0),
     skipfit(nofitandnotree),
-    fitter(std_ext::formatter() << multiplicity << "Pi0", 2*multiplicity, utils::UncertaintyModels::MCExtracted::makeAndLoad()),
+    directPi0(getParticleTree(multiplicity)),
+    model(utils::UncertaintyModels::MCExtracted::makeAndLoad()),
+    fitter(std_ext::formatter() << multiplicity << "Pi0", 2*multiplicity, model),
     h_missingmass(promptrandom),
     h_fitprobability(promptrandom),
     IM_2g_byMM(promptrandom),
     IM_2g_byFit(promptrandom),
-    IM_2g_fitted(promptrandom)
+    IM_2g_fitted(promptrandom),
+    treefitter("treefit_jusitpi0_"+to_string(nPi0), directPi0, nPi0, model)
 {
     std::string multiplicity_str = std_ext::formatter() << "m" << multiplicity << "Pi0";
     HistogramFactory HistFac(multiplicity_str, histFac, multiplicity_str);
@@ -78,29 +81,24 @@ JustPi0::MultiPi0::MultiPi0(HistogramFactory& histFac, unsigned nPi0, bool nofit
 
     tree = HistFac.makeTTree("tree");
 
-    tree->Branch("Tagg_W", addressof(Tagg_W));
-    tree->Branch("Tagg_Ch", addressof(Tagg_Ch));
-    tree->Branch("Tagg_E", addressof(Tagg_E));
-    tree->Branch("proton",  addressof(b_proton));
-    tree->Branch("proton_fitted", addressof(b_proton_fitted));
-    tree->Branch("proton_PSA",  addressof(b_proton_PSA));
-    tree->Branch("proton_PSA1", addressof(b_proton_PSA1));
-    tree->Branch("proton_PSA2", addressof(b_proton_PSA2));
-    tree->Branch("proton_vetoE", addressof(b_proton_vetoE));
+    tree->Branch("Tagg_W",          addressof(Tagg_W));
+    tree->Branch("Tagg_Ch",         addressof(Tagg_Ch));
+    tree->Branch("Tagg_E",          addressof(Tagg_E));
+
+    tree->Branch("proton",          addressof(b_proton));
+    tree->Branch("proton_fitted",   addressof(b_proton_fitted));
+    tree->Branch("proton_PSA",      addressof(b_proton_PSA));
+    tree->Branch("proton_PSA1",     addressof(b_proton_PSA1));
+    tree->Branch("proton_PSA2",     addressof(b_proton_PSA2));
+    tree->Branch("proton_vetoE",    addressof(b_proton_vetoE));
+
+    tree->Branch("treefit_chi2dof", addressof(treefit_chi2dof));
+    tree->Branch("treefit_prob",    addressof(treefit_prob));
 
     tree->Branch("ProtonMCTrueMatches",addressof(ProtonMCTrueMatches));
 
     fitter.SetupBranches(tree, "Fit");
 
-    if(multiplicity==1) {
-        directPi0 = ParticleTypeTreeDatabase::Get(ParticleTypeTreeDatabase::Channel::Pi0_2g);
-    }
-    else if(multiplicity==2) {
-        directPi0 = ParticleTypeTreeDatabase::Get(ParticleTypeTreeDatabase::Channel::TwoPi0_4g);
-    }
-    else if(multiplicity==3) {
-        directPi0 = ParticleTypeTreeDatabase::Get(ParticleTypeTreeDatabase::Channel::ThreePi0_6g);
-    }
 
     buffer = tree->CloneTree();
     buffer->SetName("buffer");
@@ -225,23 +223,26 @@ void JustPi0::MultiPi0::ProcessData(const TEventData& data, const TParticleTree_
             fitter.SetPhotons(photons);
             auto fit_result = fitter.DoFit();
 
-            double chi2dof = std_ext::inf;
 
-            if(fit_result.Status == APLCON::Result_Status_t::Success) {
 
-                steps->Fill("Fit OK",1.0);
-                h_fitprobability.Fill(fit_result.Probability);
-                const interval<double> fitprob_cut(0.8, 1);
-                if(fitprob_cut.Contains(fit_result.Probability)) {
-                    const string fitprob_str = std_ext::formatter() << "Fit p in " << fitprob_cut;
-                    steps->Fill(fitprob_str.c_str(), 1.0);
-                    utils::ParticleTools::FillIMCombinations([this] (double x) {IM_2g_byFit.Fill(x);},  2, photons);
-                    utils::ParticleTools::FillIMCombinations([this] (double x) {IM_2g_fitted.Fill(x);},  2, fitter.GetFittedPhotons());
-                }
+            if(fit_result.Status != APLCON::Result_Status_t::Success)
+                continue;
 
-                chi2dof = fit_result.ChiSquare / fit_result.NDoF;
-
+            steps->Fill("Fit OK",1.0);
+            h_fitprobability.Fill(fit_result.Probability);
+            const interval<double> fitprob_cut(0.8, 1);
+            if(fitprob_cut.Contains(fit_result.Probability)) {
+                const string fitprob_str = std_ext::formatter() << "Fit p in " << fitprob_cut;
+                steps->Fill(fitprob_str.c_str(), 1.0);
+                utils::ParticleTools::FillIMCombinations([this] (double x) {IM_2g_byFit.Fill(x);},  2, photons);
+                utils::ParticleTools::FillIMCombinations([this] (double x) {IM_2g_fitted.Fill(x);},  2, fitter.GetFittedPhotons());
             }
+
+            const auto chi2dof = fit_result.ChiSquare / fit_result.NDoF;
+            if(chi2dof < 20.0)
+                continue;
+
+            steps->Fill("Chi2 OK",1.0);
 
             Tagg_E  = taggerhit.PhotonEnergy;
             Tagg_Ch = taggerhit.Channel;
@@ -260,14 +261,28 @@ void JustPi0::MultiPi0::ProcessData(const TEventData& data, const TParticleTree_
 
             ProtonMCTrueMatches = proton->Candidate == proton_mctrue_match;
 
-            if(chi2dof < best_chi2) {
-                best_chi2 = chi2dof;
-                best_entry = current_entry;
+            treefitter.SetEgammaBeam(taggerhit.PhotonEnergy);
+            treefitter.SetProton(proton);
+            treefitter.SetPhotons(photons);
+
+            APLCON::Result_t treefitres;
+            while(treefitter.NextFit(treefitres)) {
+
+                treefit_chi2dof = treefitres.Status == APLCON::Result_Status_t::Success ? treefitres.ChiSquare : std_ext::NaN;
+                treefit_prob    = treefitres.Status == APLCON::Result_Status_t::Success ? treefitres.Probability : std_ext::NaN;
+
+                // Fill stuff
+
+
+                if(treefit_chi2dof < best_chi2) {
+                    best_chi2 = treefit_chi2dof;
+                    best_entry = current_entry;
+                }
+
+                buffer->Fill();
+                current_entry++;
+
             }
-
-            buffer->Fill();
-            current_entry++;
-
 
         } // Loop proton
 
@@ -294,6 +309,19 @@ void JustPi0::MultiPi0::ShowResult()
             << IM_2g_fitted.subtracted
             << Proton_Angle_True
             << endc;
+}
+
+ParticleTypeTree JustPi0::MultiPi0::getParticleTree(const unsigned nPi0)
+{
+    if(nPi0==1) {
+        return ParticleTypeTreeDatabase::Get(ParticleTypeTreeDatabase::Channel::Pi0_2g);
+    }
+    else if(nPi0==2) {
+        return ParticleTypeTreeDatabase::Get(ParticleTypeTreeDatabase::Channel::TwoPi0_4g);
+    }
+    else if(nPi0==3) {
+        return ParticleTypeTreeDatabase::Get(ParticleTypeTreeDatabase::Channel::ThreePi0_6g);
+    }
 }
 
 AUTO_REGISTER_PHYSICS(JustPi0)
