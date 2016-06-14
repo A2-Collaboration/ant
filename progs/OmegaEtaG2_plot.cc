@@ -397,10 +397,14 @@ struct OmegaHist_t {
 
         AddTH2("PSA (scaled)","PSA Angle [#circ]","PSA Radius [MeV]", Bins(350,25,60), Bins(400,0,400), "psa",
                [] (TH2D* h, const Fill_t& f) {
-            const double longE_unfitted = f.Tree.p().Energy();
-            const double longE_fitted   = f.Tree.p_fitted().Energy();
+
+            const double longE_unfitted = f.Tree.p().Energy()        - ParticleTypeDatabase::Proton.Mass();
+            const double longE_fitted   = f.Tree.p_fitted().Energy() - ParticleTypeDatabase::Proton.Mass();
+
             const vec2   v(longE_fitted / longE_unfitted * f.Tree.p_shortE, longE_fitted);
+
             h->Fill(radian_to_degree(v.Phi()), v.R());
+
         });
 
         AddTH1("nCands", "# Candidates", "", BinSettings(4,4,8), "nCands",
