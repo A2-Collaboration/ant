@@ -32,7 +32,7 @@ ROOT_GENERATE_DICTIONARY("${SRCS_DICT}"
 list(APPEND SRCS ${ROOT_DICTIONARY})
 
 set_source_files_properties(${ROOT_DICTIONARY} PROPERTIES COMPILE_FLAGS
-  "-Wno-effc++ -Wno-misleading-indentation")
+  "-Wno-effc++")
 if(CMAKE_CXX_COMPILER_ID MATCHES "Clang")
   set_source_files_properties(${ROOT_DICTIONARY} PROPERTIES COMPILE_FLAGS
   "-Wno-effc++ -DR__ACCESS_IN_SYMBOL")

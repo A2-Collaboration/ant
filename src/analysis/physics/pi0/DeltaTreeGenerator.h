@@ -4,13 +4,7 @@
 #include "base/interval.h"
 #include <map>
 #include <string>
-
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wmisleading-indentation"
 #include "TLorentzVector.h"
-#pragma GCC diagnostic pop
-
-
 class TH1;
 class TTree;
 class TClonesArray;

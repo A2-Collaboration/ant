@@ -1,10 +1,6 @@
 #include "vec3.h"
 
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wmisleading-indentation"
 #include "TVector3.h"
-#pragma GCC diagnostic pop
-
 
 using namespace ant;
 

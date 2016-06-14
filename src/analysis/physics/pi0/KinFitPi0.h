@@ -5,11 +5,7 @@
 #include "utils/Fitter.h"
 #include "utils/MCSmear.h"
 #include "base/ParticleTypeTree.h"
-
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wmisleading-indentation"
 #include "TLorentzVector.h"
-#pragma GCC diagnostic pop
 
 class TH1D;
 class TTree;

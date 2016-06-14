@@ -13,7 +13,6 @@
 #pragma GCC diagnostic ignored "-Weffc++"
 #pragma GCC diagnostic ignored "-Wwrite-strings"
 #pragma GCC diagnostic ignored "-Wunused-parameter"
-#pragma GCC diagnostic ignored "-Wmisleading-indentation"
 
 #ifdef __clang__
 #pragma clang diagnostic push

@@ -10,8 +10,6 @@
 #include "expconfig/detectors/CB.h"
 #include "base/Logger.h"
 
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wmisleading-indentation"
 #include "TGraph.h"
 #include "TFitResult.h"
 #include "TObjArray.h"
@@ -19,7 +17,6 @@
 #include "TH1D.h"
 #include "TH2D.h"
 #include "TH3.h"
-#pragma GCC diagnostic pop
 
 
 #include <tree/TCluster.h>

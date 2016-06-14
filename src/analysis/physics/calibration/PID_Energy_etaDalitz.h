@@ -4,10 +4,7 @@
 
 #include "root-addons/cbtaps_display/TH2CB.h"
 
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wmisleading-indentation"
 #include "TLorentzVector.h"
-#pragma GCC diagnostic pop
 
 namespace ant {
 namespace analysis {

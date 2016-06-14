@@ -300,6 +300,9 @@ TEvent UnpackerA2Geant::NextEvent() noexcept
 
     // fill TAPSVeto Hits
     for(int i=0;i<fnvtaps;i++) {
+        /// \todo check if -1 here is really correct, for now we throw silly exceptions
+        if(ivtaps[i]==0)
+            throw Exception("TAPS Veto index should start counting with 1");
         const auto ch = static_cast<unsigned>(ivtaps[i]-1);
         if(tapsveto_detector->IsIgnored(ch))
             continue;

@@ -10,13 +10,9 @@
 #include "base/std_ext/math.h"
 #include "base/WrapTTree.h"
 
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wmisleading-indentation"
 #include "TTree.h"
 #include "TLorentzVector.h"
 #include "Rtypes.h"
-#pragma GCC diagnostic pop
-
 
 #include <map>
 

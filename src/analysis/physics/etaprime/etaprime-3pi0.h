@@ -5,10 +5,7 @@
 #include "analysis/plot/PromptRandomHist.h"
 #include "utils/A2GeoAcceptance.h"
 
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wmisleading-indentation"
 #include "TLorentzVector.h"
-
 
 class TH1D;
 class TTree;
