@@ -309,9 +309,6 @@ TreeFitter::TreeFitter(const string& name,
     KinFitter(name, kinFitGammas, uncertainty_model, settings),
     tree(MakeTree(ptree))
 {
-
-    vector<tree_t> tree_leaves;
-
     tree->GetUniquePermutations(tree_leaves, permutations);
     current_perm = permutations.end();
 
@@ -383,11 +380,12 @@ TreeFitter::TreeFitter(const string& name,
     LOG(INFO) << "Have " << node_constraints.size() << " constraints at " << sum_daughters.size() << " nodes";
 
     // define the constraint
-    auto IM_at_nodes = [tree_leaves, sum_daughters, node_constraints] (const vector<vector<double>>& v) {
-        assert(v.empty() || v.size() == tree_leaves.size());
+    auto tree_leaves_copy = tree_leaves;
+    auto IM_at_nodes = [tree_leaves_copy, sum_daughters, node_constraints] (const vector<vector<double>>& v) {
+        assert(v.empty() || v.size() == tree_leaves_copy.size());
         // assign values v to leaves' LVSum
         for(unsigned i=0;i<v.size();i++) {
-            auto& node = tree_leaves[i]->Get();
+            auto& node = tree_leaves_copy[i]->Get();
             const auto m = node.TypeTree->Get().Mass();
             node.LVSum = FitParticle::GetVector(v[i], m);
         }
@@ -438,9 +436,12 @@ bool TreeFitter::NextFit(APLCON::Result_t& fit_result)
     const auto k = current_perm->size();
     const auto n = Photons.size();
 
-    // by construction, the leaves are 0..k-1
+    // by construction, the photon leaves are 0..k-1
+    const auto& comb_indices = current_comb.Indices();
     for(unsigned i=0;i<k;i++) {
-        const TParticlePtr& p = current_comb.at(current_perm->at(i));
+        const auto perm_idx = current_perm->at(i);
+        tree_leaves[i]->Get().PhotonLeaveIndex = comb_indices[perm_idx];
+        const TParticlePtr& p = current_comb.at(perm_idx);
         SetPhotonEkThetaPhi(*Photons[i], p);
     }
 

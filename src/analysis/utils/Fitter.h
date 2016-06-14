@@ -273,6 +273,7 @@ public:
         const ParticleTypeTree TypeTree;
         LorentzVec LVSum;
         std::shared_ptr<FitParticle> Leave;
+        int PhotonLeaveIndex = -1; // according to list given by SetPhotons
         bool operator<(const node_t& rhs) const {
             return TypeTree->Get() < rhs.TypeTree->Get();
         }
@@ -309,6 +310,7 @@ protected:
     static tree_t MakeTree(ParticleTypeTree ptree);
 
     const tree_t tree;
+    std::vector<tree_t> tree_leaves;
     using permutations_t = std::vector<std::vector<size_t>>;
     permutations_t permutations;
     permutations_t::const_iterator current_perm;
