@@ -52,11 +52,11 @@ Cuts_t<ToFill_t> ConvertCuts(const Cuts_t<FromFill_t>& from_cuts) {
 }
 
 struct TreeInfo_t {
-    unsigned Level;
-    unsigned nDaughters;
-    unsigned nNeighbors;
-    TreeInfo_t(unsigned level, unsigned daughters, unsigned neighbors) :
-        Level(level), nDaughters(daughters), nNeighbors(neighbors)
+    std::size_t Level;
+    std::size_t nDaughters;
+    std::size_t nLevelMultiplicity;
+    TreeInfo_t(std::size_t level, std::size_t  daughters, std::size_t multiplicity) :
+        Level(level), nDaughters(daughters), nLevelMultiplicity(multiplicity)
     {}
 };
 
@@ -106,7 +106,7 @@ void Build(Tree_t<Hist_t> cuttree,
 
     treeInfo.Level++;
     treeInfo.nDaughters = next_it == last ? 0 : next_it->size();
-    treeInfo.nNeighbors = first->size();
+    treeInfo.nLevelMultiplicity = first->size();
 
     for(const auto& cut : multicut) {
         auto daughter = cuttree->CreateDaughter(cuttree->Get().HistFac, cut, treeInfo);
@@ -116,7 +116,9 @@ void Build(Tree_t<Hist_t> cuttree,
 
 template<typename Hist_t, typename Fill_t = typename Hist_t::Fill_t>
 Tree_t<Hist_t> Make(HistogramFactory histFac, const std::string& name, const Cuts_t<Fill_t>& cuts) {
-    TreeInfo_t treeInfo{0,1,0};
+    if(cuts.empty())
+        return nullptr;
+    TreeInfo_t treeInfo{0,cuts.front().size(),1};
     auto cuttree = Tree<Node_t<Hist_t>>::MakeNode(histFac, Cut_t<Fill_t>{name}, treeInfo);
     Build<Hist_t>(cuttree, cuts.begin(), cuts.end(), treeInfo);
     return cuttree;
