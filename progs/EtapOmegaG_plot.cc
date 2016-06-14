@@ -100,11 +100,11 @@ struct CommonHist_t {
 
 
     const BinSettings bins_FitProb{100, -5, 0};
-    TH1D* h_KinFitProb;
-    TH1D* h_CBSumE;
-    TH1D* h_CBSumVetoE;
-    TH1D* h_PIDSumE;
-    TH1D* h_MissingMass;
+    TH1D* h_KinFitProb = nullptr;
+    TH1D* h_CBSumE = nullptr;
+    TH1D* h_CBSumVetoE = nullptr;
+    TH1D* h_PIDSumE = nullptr;
+    TH1D* h_MissingMass = nullptr;
 
     const bool isLeaf = false;
 
@@ -133,8 +133,6 @@ struct CommonHist_t {
         h_MissingMass->Fill(f.Shared.MissingMass, f.TaggW());
     }
     std::vector<TH1*> GetHists() const {
-        if(!isLeaf)
-            return {};
         return {h_KinFitProb, h_CBSumE, h_CBSumVetoE, h_PIDSumE, h_MissingMass};
     }
 

@@ -184,7 +184,13 @@ private:
     std::vector<ant::hstack*> Stacks;
 
     void AddToStack(const WrappedHist_t& hist) {
-        const auto histptrs = hist.Hist.GetHists();
+        auto histptrs = hist.Hist.GetHists();
+        histptrs.erase(
+                    std::remove_if(histptrs.begin(), histptrs.end(),
+                                   [] (TH1* h) { return h==nullptr; }
+                    ),
+                histptrs.end()
+                );
 
         if(Stacks.empty()) {
             for(auto h : histptrs) {
