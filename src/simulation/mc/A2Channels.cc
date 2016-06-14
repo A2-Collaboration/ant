@@ -10,15 +10,7 @@
 #include "TH1D.h"
 
 // Pluto
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wunused-local-typedefs"
-#pragma GCC diagnostic ignored "-Wvla"
-#pragma GCC diagnostic ignored "-Wignored-qualifiers"
-#pragma GCC diagnostic ignored "-Weffc++"
-#pragma GCC diagnostic ignored "-Wwrite-strings"
-#pragma GCC diagnostic ignored "-Wunused-parameter"
 #include "PDecayChannel.h"
-#pragma GCC diagnostic pop
 
 using namespace std;
 using namespace ant::simulation::mc;

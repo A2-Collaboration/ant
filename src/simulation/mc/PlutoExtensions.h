@@ -1,13 +1,6 @@
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wunused-local-typedefs"
-#pragma GCC diagnostic ignored "-Wvla"
-#pragma GCC diagnostic ignored "-Wignored-qualifiers"
-#pragma GCC diagnostic ignored "-Weffc++"
-#pragma GCC diagnostic ignored "-Wwrite-strings"
-#pragma GCC diagnostic ignored "-Wunused-parameter"
-#include "PStaticData.h"
-#pragma GCC diagnostic pop
+#pragma once
 
+#include "PStaticData.h"
 #include "iostream"
 
 namespace ant

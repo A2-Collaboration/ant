@@ -24,7 +24,9 @@ find_package(Pluto REQUIRED)
 find_package(APLCON REQUIRED)
 
 link_directories(${ROOT_LIBRARY_DIR})
-include_directories(
+# including them as SYSTEM prevents
+# many false-positive warnings
+include_directories(SYSTEM
   ${ROOT_INCLUDE_DIR}
   ${PLUTO_INCLUDE_DIR}
   ${APLCON_INCLUDE_DIR}

@@ -1,23 +1,6 @@
 #pragma once
 
-// Switch of some warnings for the Pluto headers
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wunused-local-typedefs"
-#pragma GCC diagnostic ignored "-Wvla"
-#pragma GCC diagnostic ignored "-Wignored-qualifiers"
-#pragma GCC diagnostic ignored "-Weffc++"
-
-#ifdef __clang__
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wvla-extension"
-#endif
-
 #include "PParticle.h"
-
-#ifdef __clang__
-#pragma clang diagnostic pop
-#endif
-#pragma GCC diagnostic pop
 
 #include <ostream>
 #include <vector>
