@@ -107,16 +107,19 @@ struct CommonHist_t {
     TH1D* h_MissingMass = nullptr;
     TH1D* h_DiscardedEk = nullptr;
     TH1D* h_nCandidates = nullptr;
+    TH2D* h_ProtonTOF = nullptr;
+    TH2D* h_ProtonTOFFitted = nullptr;
+    TH2D* h_ProtonVetoE = nullptr;
+    TH2D* h_ProtonShortE = nullptr;
+
 
 
     const bool isLeaf = false;
 
 
     CommonHist_t(HistogramFactory HistFac, cuttree::TreeInfo_t treeInfo) :
-        isLeaf(true)
+        isLeaf(treeInfo.nDaughters==0)
     {
-        if(!isLeaf)
-            return;
         h_KinFitProb = HistFac.makeTH1D("KinFitProb","log p","",bins_FitProb,"h_KinFitProb");
         h_CBSumE = HistFac.makeTH1D("CB Sum E","E / MeV","",BinSettings(100,500,1600),"h_CBSumE");
         h_CBSumVetoE = HistFac.makeTH1D("CB Veto Sum E","E / MeV","",BinSettings(50,0,10),"h_CBSumVetoE");
@@ -124,12 +127,22 @@ struct CommonHist_t {
         h_MissingMass = HistFac.makeTH1D("MissingMass","m / MeV","",BinSettings(200,600,1300),"h_MissingMass");
         h_DiscardedEk = HistFac.makeTH1D("DiscardedEk","E / MeV","",BinSettings(200,0,500),"h_DiscardedEk");
         h_nCandidates = HistFac.makeTH1D("nCandidates","n","",BinSettings(10),"h_nCandidates");
+        if(!isLeaf)
+            return;
+        BinSettings bins_protonE(100,0,600);
+        h_ProtonTOF = HistFac.makeTH2D("ProtonTOF","t","E",
+                                       BinSettings(50,-5,20),bins_protonE,"h_ProtonTOF");
+        h_ProtonTOFFitted = HistFac.makeTH2D("ProtonTOFFitted","t","E fitted",
+                                             BinSettings(50,-5,20),bins_protonE,"h_ProtonTOFFitted");
+        h_ProtonVetoE = HistFac.makeTH2D("ProtonVeto","E fitted","Veto E",
+                                        bins_protonE,BinSettings(50,0,8),"h_ProtonVeto");
+        h_ProtonShortE = HistFac.makeTH2D("ProtonShortE","E fitted","E short",
+                                          bins_protonE,BinSettings(100,0,300),"h_ProtonShortE");
     }
 
 
     void Fill(const Fill_t& f) const {
-        if(!isLeaf)
-            return;
+
         h_KinFitProb->Fill(f.KinFitProb, f.TaggW());
         h_CBSumE->Fill(f.Common.CBSumE, f.TaggW());
         h_CBSumVetoE->Fill(f.Shared.CBSumVetoE, f.TaggW());
@@ -137,7 +150,14 @@ struct CommonHist_t {
         h_MissingMass->Fill(f.Shared.MissingMass, f.TaggW());
         h_DiscardedEk->Fill(f.Shared.DiscardedEk, f.TaggW());
         h_nCandidates->Fill(f.Shared.nCandidates, f.TaggW());
+        if(!isLeaf)
+            return;
+        h_ProtonTOF->Fill(f.Shared.ProtonTime, f.Shared.ProtonE, f.TaggW());
+        h_ProtonTOFFitted->Fill(f.Shared.ProtonTime, f.Shared.FittedProtonE, f.TaggW());
+        h_ProtonVetoE->Fill(f.Shared.FittedProtonE, f.Shared.ProtonVetoE, f.TaggW());
+        h_ProtonShortE->Fill(f.Shared.FittedProtonE, f.Shared.ProtonShortE, f.TaggW());
     }
+
     std::vector<TH1*> GetHists() const {
         return {h_KinFitProb, h_CBSumE, h_CBSumVetoE, h_PIDSumE, h_MissingMass,
                     h_DiscardedEk, h_nCandidates};
@@ -156,11 +176,12 @@ struct CommonHist_t {
                           });
         cuts.emplace_back(MultiCut_t<Fill_t>{
                               {"DiscardedEk==0", [] (const Fill_t& f) { return f.Shared.DiscardedEk == 0; } },
+                              {"DiscardedEk<50", [] (const Fill_t& f) { return f.Shared.DiscardedEk < 50; } },
                           });
-        cuts.emplace_back(MultiCut_t<Fill_t>{
-                              {"MissingMass", [] (const Fill_t& f) { return f.Shared.MissingMass < 1085 && f.Shared.MissingMass > 785; } },
-                              //{"NoMissingMass", [] (const Fill_t&) { return true; } },
-                          });
+//        cuts.emplace_back(MultiCut_t<Fill_t>{
+//                              {"MissingMass", [] (const Fill_t& f) { return f.Shared.MissingMass < 1085 && f.Shared.MissingMass > 785; } },
+//                              //{"NoMissingMass", [] (const Fill_t&) { return true; } },
+//                          });
         cuts.emplace_back(MultiCut_t<Fill_t>{
                                  {"KinFitProb>0.1", [] (const Fill_t& f) { return f.Shared.KinFitProb>0.1; } },
                                  {"KinFitProb>0.3", [] (const Fill_t& f) { return f.Shared.KinFitProb>0.3; } },
