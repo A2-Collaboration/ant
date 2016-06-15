@@ -50,7 +50,10 @@ set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -O0")
 
 if(CMAKE_CXX_COMPILER_ID MATCHES "Clang")
   # disable optimizations to fix clang infinite loop...
-  set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -O1")
+  if(CMAKE_CXX_COMPILER_VERSION VERSION_LESS 3.8)
+    message(STATUS "Disabling optimization for clang <3.8")
+    set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -O1")
+  endif()
 elseif ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
   # for GCC >5.1 add -Wsuggest-override
 else()
