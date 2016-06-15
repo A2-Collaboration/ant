@@ -13,7 +13,4 @@
 
     if(gSystem->Load("@LIBRARY_OUTPUT_PATH@/libanalysis_codes.so") == 0)
         cout << "Ant analysis_codes library successfully loaded" << endl;
-
-    if(gSystem->Load("@LIBRARY_OUTPUT_PATH@/libsmarttree.so") == 0)
-        cout << "Ant smarttree library successfully loaded" << endl;
 }
