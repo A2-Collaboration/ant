@@ -241,6 +241,11 @@ double KinFitter::GetFittedBeamE() const
     return Beam->E;
 }
 
+double KinFitter::GetFittedBeamEPull() const
+{
+    return Beam->Pull;
+}
+
 std::vector<Fitter::FitParticle> KinFitter::GetFitParticles() const
 {
     std::vector<Fitter::FitParticle> particles{*Proton};

@@ -166,6 +166,7 @@ public:
     TParticlePtr GetFittedProton() const;
     TParticleList GetFittedPhotons() const;
     double GetFittedBeamE() const;
+    double GetFittedBeamEPull() const;
 
     std::vector<FitParticle> GetFitParticles() const;
 
