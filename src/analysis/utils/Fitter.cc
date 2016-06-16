@@ -397,6 +397,15 @@ void TreeFitter::SetPhotons(const TParticleList& photons)
     current_comb_ptr = std_ext::make_unique<current_comb_t>(photons, current_perm->size());
 }
 
+std::vector<TreeFitter::tree_t> TreeFitter::GetTreeNodes(const ParticleTypeDatabase::Type& type) const {
+    std::vector<tree_t> nodes;
+    tree->Map_nodes([&nodes, &type] (tree_t t) {
+        if(t->Get().TypeTree->Get() == type)
+            nodes.emplace_back(t);
+    });
+    return nodes;
+}
+
 bool TreeFitter::NextFit(APLCON::Result_t& fit_result)
 {
     assert(!permutations.empty());

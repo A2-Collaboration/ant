@@ -280,6 +280,8 @@ public:
         return treenode;
     }
 
+    std::vector<tree_t> GetTreeNodes(const ParticleTypeDatabase::Type& type) const;
+
     bool NextFit(APLCON::Result_t& fit_result);
 
     using current_comb_t = KofNvector<TParticlePtr>;
