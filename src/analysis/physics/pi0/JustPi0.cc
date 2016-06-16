@@ -49,6 +49,7 @@ JustPi0::MultiPi0::MultiPi0(HistogramFactory& histFac, unsigned nPi0, bool nofit
     directPi0(getParticleTree(multiplicity)),
     model(utils::UncertaintyModels::MCExtracted::makeAndLoad()),
     fitter(std_ext::formatter() << multiplicity << "Pi0", 2*multiplicity, model),
+    b_ggIM(nPi0),
     h_missingmass(promptrandom),
     h_fitprobability(promptrandom),
     IM_2g_byMM(promptrandom),
@@ -108,6 +109,19 @@ JustPi0::MultiPi0::MultiPi0(HistogramFactory& histFac, unsigned nPi0, bool nofit
 
     tree->Branch("fit_BeamE_pull",   addressof(b_fit_beamE_pull));
     tree->Branch("BeamE_fitted",     addressof(b_beamE_fitted));
+
+    tree->Branch("ggIM_fitted",  addressof(b_ggIM));
+
+    const auto pion_nodes = treefitter.GetTreeNodes(ParticleTypeDatabase::Pi0);
+    assert(pion_nodes.size() == nPi0);
+
+    for(const auto& pion_node : pion_nodes) {
+        assert(pion_node->Daughters().size() == 2);
+        auto g1 = pion_node->Daughters().front();
+        auto g2 = pion_node->Daughters().back();
+        pions.emplace_back(make_pair(g1,g2));
+    }
+
 }
 
 void JustPi0::MultiPi0::ProcessData(const TEventData& data, const TParticleTree_t& ptree)
@@ -259,8 +273,8 @@ void JustPi0::MultiPi0::ProcessData(const TEventData& data, const TParticleTree_
                     b_photons_fitted.at(i) = *fitted_photons.at(i);
                 }
 
-                b_beamE_fitted = fitter.GetFittedBeamE();
-                b_beamE_fitted = fitter.GetFittedBeamEPull();
+                b_beamE_fitted   = fitter.GetFittedBeamE();
+                b_fit_beamE_pull = fitter.GetFittedBeamEPull();
 
                 const double b_proton_shortE = proton->Candidate->FindCaloCluster()->ShortEnergy;
                 b_proton_vetoE  = proton->Candidate->VetoEnergy;
@@ -321,11 +335,19 @@ void JustPi0::MultiPi0::ProcessData(const TEventData& data, const TParticleTree_
                     b_treefit_prob    = treefit_prob;
                     b_treefit_chi2dof = treefit_chi2dof;
 
-                }
-                tree->Fill();
-            }
-        }
+                    // Fill stuff
+                    assert(pions.size() == b_ggIM.size());
+                    for(size_t i=0; i<pions.size(); ++i) {
+                     LorentzVec pion = *(selected_photons.at(pions.at(i).first->Get().PhotonLeaveIndex)) +  *(selected_photons.at(pions.at(i).second->Get().PhotonLeaveIndex));
+                     b_ggIM.at(i) = pion.M();
 
+                    }
+
+                }
+            }
+
+            tree->Fill();
+        }
 
     } // Loop tagger
 

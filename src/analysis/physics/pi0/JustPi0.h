@@ -31,6 +31,8 @@ protected:
         std::shared_ptr<utils::Fitter::UncertaintyModel> model;
         utils::KinFitter fitter;
 
+        std::vector<std::pair<utils::TreeFitter::tree_t,utils::TreeFitter::tree_t>> pions;
+
         TTree* tree;
 
         // branches
@@ -42,13 +44,12 @@ protected:
         TVector2  b_proton_PSA;
         TVector2  b_proton_PSA1;
         TVector2  b_proton_PSA2;
+        std::vector<double> b_ggIM;
 
         double b_proton_vetoE;
 
         double b_treefit_chi2dof;
         double b_treefit_prob;
-
-        double b_gg_IM;
 
         unsigned ProtonMCTrueMatches;
 
