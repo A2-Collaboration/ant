@@ -81,29 +81,33 @@ JustPi0::MultiPi0::MultiPi0(HistogramFactory& histFac, unsigned nPi0, bool nofit
 
     tree = HistFac.makeTTree("tree");
 
-    tree->Branch("Tagg_W",          addressof(Tagg_W));
-    tree->Branch("Tagg_Ch",         addressof(Tagg_Ch));
-    tree->Branch("Tagg_E",          addressof(Tagg_E));
+    tree->Branch("Tagg_W",          addressof(b_Tagg_W));
+    tree->Branch("Tagg_Ch",         addressof(b_Tagg_Ch));
+    tree->Branch("Tagg_E",          addressof(b_Tagg_E));
 
-    tree->Branch("proton",          addressof(b_proton));
     tree->Branch("proton_fitted",   addressof(b_proton_fitted));
+    tree->Branch("photons_fitted",  addressof(b_photons_fitted));
+
     tree->Branch("proton_PSA",      addressof(b_proton_PSA));
     tree->Branch("proton_PSA1",     addressof(b_proton_PSA1));
     tree->Branch("proton_PSA2",     addressof(b_proton_PSA2));
     tree->Branch("proton_vetoE",    addressof(b_proton_vetoE));
 
-    tree->Branch("treefit_chi2dof", addressof(treefit_chi2dof));
-    tree->Branch("treefit_prob",    addressof(treefit_prob));
+    tree->Branch("treefit_chi2dof", addressof(b_treefit_chi2dof));
+    tree->Branch("treefit_prob",    addressof(b_treefit_prob));
 
     tree->Branch("ProtonMCTrueMatches",addressof(ProtonMCTrueMatches));
 
-    fitter.SetupBranches(tree, "Fit");
+    tree->Branch("fit_photons_Ek_pulls",    addressof(b_fit_photons_E_pulls));
+    tree->Branch("fit_photons_Theta_pulls", addressof(b_fit_photons_Theta_pulls));
+    tree->Branch("fit_photons_Phi_pulls",   addressof(b_fit_photons_Phi_pulls));
 
+    tree->Branch("fit_proton_Ek_pull",    addressof(b_fit_proton_E_pull));
+    tree->Branch("fit_proton_Theta_pull", addressof(b_fit_proton_Theta_pull));
+    tree->Branch("fit_proton_Phi_pull",   addressof(b_fit_proton_Phi_pull));
 
-    buffer = tree->CloneTree();
-    buffer->SetName("buffer");
-    buffer->SetDirectory(nullptr);
-    tree->CopyAddresses(buffer);
+    tree->Branch("fit_BeamE_pull",   addressof(b_fit_beamE_pull));
+    tree->Branch("BeamE_fitted",     addressof(b_beamE_fitted));
 }
 
 void JustPi0::MultiPi0::ProcessData(const TEventData& data, const TParticleTree_t& ptree)
@@ -154,20 +158,26 @@ void JustPi0::MultiPi0::ProcessData(const TEventData& data, const TParticleTree_
     // iterate over tagger hits
 
     for(const TTaggerHit& taggerhit : data.TaggerHits) {
+
+        bool kinfit_ok = false;
+
+        b_Tagg_E  = taggerhit.PhotonEnergy;
+        b_Tagg_Ch = taggerhit.Channel;
+        b_Tagg_W  = promptrandom.FillWeight();
+
         steps->Fill("Seen taggerhits",1.0);
 
         promptrandom.SetTaggerHit(taggerhit.Time);
         if(promptrandom.State() == PromptRandom::Case::Outside)
             continue;
 
-        // clear buffer
-        buffer->Reset();
-        double    best_chi2     = std_ext::inf;
-        Long64_t  best_entry    = -1;
-        Long64_t  current_entry = 0;
+        double    treefit_best_chi2    = 20.0;  // set to min req chi2
+        double    kinfit_best_chi2     = 20.0;
+
+        TParticlePtr  selected_proton;
+        TParticleList selected_photons;
 
         // use any candidate as proton, and do the analysis (ignore ParticleID stuff)
-
         for(auto i_proton : cands.get_iter()) {
 
             const auto proton = std::make_shared<TParticle>(ParticleTypeDatabase::Proton, i_proton);
@@ -177,8 +187,8 @@ void JustPi0::MultiPi0::ProcessData(const TEventData& data, const TParticleTree_
                     continue;
                 photons.emplace_back(make_shared<TParticle>(ParticleTypeDatabase::Photon, i_photon));
             }
-            assert(photons.size() == nPhotons_expected);
 
+            assert(photons.size() == nPhotons_expected);
 
             LorentzVec photon_sum(0,0,0,0);
             for(const auto& p : photons) {
@@ -224,7 +234,6 @@ void JustPi0::MultiPi0::ProcessData(const TEventData& data, const TParticleTree_
             auto fit_result = fitter.DoFit();
 
 
-
             if(fit_result.Status != APLCON::Result_Status_t::Success)
                 continue;
 
@@ -239,58 +248,84 @@ void JustPi0::MultiPi0::ProcessData(const TEventData& data, const TParticleTree_
             }
 
             const auto chi2dof = fit_result.ChiSquare / fit_result.NDoF;
-            if(chi2dof < 20.0)
-                continue;
 
-            steps->Fill("Chi2 OK",1.0);
+            if(chi2dof < kinfit_best_chi2) {
 
-            Tagg_E  = taggerhit.PhotonEnergy;
-            Tagg_Ch = taggerhit.Channel;
-            Tagg_W  = promptrandom.FillWeight();
+                b_proton_fitted = *fitter.GetFittedProton();
 
-            b_proton  = *proton;
-            b_proton_fitted = *fitter.GetFittedProton();
-
-            const double b_proton_shortE = proton->Candidate->FindCaloCluster()->ShortEnergy;
-            b_proton_vetoE  = proton->Candidate->VetoEnergy;
-
-            b_proton_PSA    = TVector2(b_proton.Energy()        - ParticleTypeDatabase::Proton.Mass(), b_proton_shortE);
-            b_proton_PSA1   = TVector2(b_proton_fitted.Energy() - ParticleTypeDatabase::Proton.Mass(), b_proton_shortE);
-            b_proton_PSA2   = TVector2(b_proton_PSA1.X(), b_proton_PSA1.X() / b_proton_PSA.X() * b_proton_shortE);
-
-
-            ProtonMCTrueMatches = proton->Candidate == proton_mctrue_match;
-
-            treefitter.SetEgammaBeam(taggerhit.PhotonEnergy);
-            treefitter.SetProton(proton);
-            treefitter.SetPhotons(photons);
-
-            APLCON::Result_t treefitres;
-            while(treefitter.NextFit(treefitres)) {
-
-                treefit_chi2dof = treefitres.Status == APLCON::Result_Status_t::Success ? treefitres.ChiSquare : std_ext::NaN;
-                treefit_prob    = treefitres.Status == APLCON::Result_Status_t::Success ? treefitres.Probability : std_ext::NaN;
-
-                // Fill stuff
-
-
-                if(treefit_chi2dof < best_chi2) {
-                    best_chi2 = treefit_chi2dof;
-                    best_entry = current_entry;
+                const auto fitted_photons = fitter.GetFittedPhotons();
+                b_photons_fitted.resize(fitted_photons.size());
+                for(size_t i=0;i<fitted_photons.size();++i) {
+                    b_photons_fitted.at(i) = *fitted_photons.at(i);
                 }
 
-                buffer->Fill();
-                current_entry++;
+                b_beamE_fitted = fitter.GetFittedBeamE();
+                b_beamE_fitted = fitter.GetFittedBeamEPull();
 
+                const double b_proton_shortE = proton->Candidate->FindCaloCluster()->ShortEnergy;
+                b_proton_vetoE  = proton->Candidate->VetoEnergy;
+
+                b_proton_PSA    = TVector2(proton->Ek()                                                  , b_proton_shortE);
+                b_proton_PSA1   = TVector2(b_proton_fitted.Energy() - ParticleTypeDatabase::Proton.Mass(), b_proton_shortE);
+                b_proton_PSA2   = TVector2(b_proton_PSA1.X(), b_proton_PSA1.X() / b_proton_PSA.X() * b_proton_shortE);
+
+                ProtonMCTrueMatches = proton->Candidate == proton_mctrue_match;
+
+                const auto fitparticles = fitter.GetFitParticles();
+
+                b_fit_proton_E_pull     = fitparticles.at(0).Ek.Pull;
+                b_fit_proton_Theta_pull = fitparticles.at(0).Theta.Pull;
+                b_fit_proton_Phi_pull   = fitparticles.at(0).Phi.Pull;
+
+                b_fit_photons_E_pulls.resize(nPhotons_expected);
+                b_fit_photons_Theta_pulls.resize(nPhotons_expected);
+                b_fit_photons_Phi_pulls.resize(nPhotons_expected);
+
+                assert(nPhotons_expected +1 == fitparticles.size());
+
+                for(size_t i=1; i<= nPhotons_expected; ++i) {
+                    b_fit_photons_E_pulls.at(i-1)     = fitparticles.at(i).Ek.Pull;
+                    b_fit_photons_Theta_pulls.at(i-1) = fitparticles.at(i).Theta.Pull;
+                    b_fit_photons_Phi_pulls.at(i-1)   = fitparticles.at(i).Phi.Pull;
+                }
+
+                selected_proton  = proton;
+                selected_photons = photons;
+
+                kinfit_ok = true;
+
+                steps->Fill("Chi2 OK",1.0);
             }
 
         } // Loop proton
 
-        // save best fit
-        if(best_entry != -1) {
-            buffer->GetEntry(best_entry);
-            tree->Fill();
+        if(kinfit_ok) {
+
+            b_treefit_prob    = std_ext::NaN;
+            b_treefit_chi2dof = std_ext::NaN;
+
+            treefitter.SetEgammaBeam(taggerhit.PhotonEnergy);
+            treefitter.SetProton(selected_proton);
+            treefitter.SetPhotons(selected_photons);
+
+            APLCON::Result_t treefitres;
+            while(treefitter.NextFit(treefitres)) {
+
+                const double treefit_chi2dof   = treefitres.Status == APLCON::Result_Status_t::Success ? treefitres.ChiSquare   : std_ext::NaN;
+                const double treefit_prob      = treefitres.Status == APLCON::Result_Status_t::Success ? treefitres.Probability : std_ext::NaN;
+
+                if(treefit_chi2dof < treefit_best_chi2) {
+
+                    treefit_best_chi2 = b_treefit_chi2dof;
+
+                    b_treefit_prob    = treefit_prob;
+                    b_treefit_chi2dof = treefit_chi2dof;
+
+                }
+                tree->Fill();
+            }
         }
+
 
     } // Loop tagger
 
@@ -298,7 +333,7 @@ void JustPi0::MultiPi0::ProcessData(const TEventData& data, const TParticleTree_
 
 void JustPi0::MultiPi0::ShowResult()
 {
-    buffer->ResetBranchAddresses();
+    // buffer->ResetBranchAddresses();
     canvas(std_ext::formatter() << "JustPi0: " << multiplicity << "Pi0")
             << steps
             << Proton_Coplanarity

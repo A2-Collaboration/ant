@@ -32,27 +32,38 @@ protected:
         utils::KinFitter fitter;
 
         TTree* tree;
-        TTree* buffer;
 
         // branches
-        double   Tagg_W;  // tagger prompt/random weight for subtraction
-        unsigned Tagg_Ch; // tagger channel
-        double   Tagg_E;  // tagger energy
+        double   b_Tagg_W;  // tagger prompt/random weight for subtraction
+        unsigned b_Tagg_Ch; // tagger channel
+        double   b_Tagg_E;  // tagger energy
 
-        TLorentzVector b_proton;
-        TLorentzVector b_proton_fitted;
+
         TVector2  b_proton_PSA;
         TVector2  b_proton_PSA1;
         TVector2  b_proton_PSA2;
 
         double b_proton_vetoE;
 
-        double treefit_chi2dof;
-        double treefit_prob;
+        double b_treefit_chi2dof;
+        double b_treefit_prob;
 
-        double gg_IM;
+        double b_gg_IM;
 
         unsigned ProtonMCTrueMatches;
+
+
+        TLorentzVector b_proton_fitted;
+        std::vector<TLorentzVector> b_photons_fitted;
+        double b_beamE_fitted;
+        double b_fit_beamE_pull;
+
+        std::vector<double> b_fit_photons_E_pulls;
+        std::vector<double> b_fit_photons_Theta_pulls;
+        std::vector<double> b_fit_photons_Phi_pulls;
+        double b_fit_proton_E_pull;
+        double b_fit_proton_Theta_pull;
+        double b_fit_proton_Phi_pull;
 
         TH1D* steps;
         TH1D* Proton_Coplanarity;
