@@ -4,6 +4,8 @@
 
 #include "TH1D.h"
 
+class TRandom;
+
 namespace ant {
 
 class WrapTFile;
@@ -265,6 +267,27 @@ protected:
  */
 struct Optimized_Oli1 : Optimized {
     Optimized_Oli1();
+};
+
+/**
+ * @brief Uncertainties from Patrik Adlarson for MC Smearing
+ */
+struct MCSmearingAdlarson : public UncertaintyModel {
+public:
+
+    MCSmearingAdlarson();
+    virtual ~MCSmearingAdlarson();
+
+    Uncertainties_t GetSigmas(const TParticle &particle) const override;
+
+    /**
+     * @brief Create a new instance and return a shared pointer to it
+     * @return
+     */
+    static std::shared_ptr<MCSmearingAdlarson> make();
+
+protected:
+    std::unique_ptr<TRandom> rng;
 };
 
 }}}} // namespace ant::analysis::utils::UncertaintyModels
