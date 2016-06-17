@@ -44,8 +44,10 @@ void SetupLogger() {
            string(msg) == "Using split mode on a class: TLorentzVector with a custom Streamer")
             return; // ignore it for now
 
-
-
+        if(level == kWarning &&
+           string(location) == "TTree::Bronch" &&
+           string(msg) == "Using split mode on a class: TVector2 with a custom Streamer")
+            return; // ignore it for now
 
 
         stringstream ss;

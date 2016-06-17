@@ -22,6 +22,7 @@
 #pragma link C++ class ant::TAntHeader+;
 
 #pragma link C++ class std::vector<TLorentzVector>+;
+#pragma link C++ class std::vector<TVector2>+;
 
 #endif // __CINT__
 
