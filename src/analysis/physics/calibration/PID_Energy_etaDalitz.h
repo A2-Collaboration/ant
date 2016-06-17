@@ -3,6 +3,7 @@
 #include "analysis/physics/Physics.h"
 #include "analysis/utils/Fitter.h"
 #include "analysis/utils/FitterUncertainties.h"
+#include "analysis/utils/particle_tools.h"
 #include "analysis/plot/PromptRandomHist.h"
 #include "base/WrapTTree.h"
 
@@ -17,22 +18,12 @@ namespace physics {
 class PID_Energy_etaDalitz : public Physics {
 
 protected:
-    TH2* eegPID = nullptr;
-    TH1D* steps = nullptr;
-    TH1D* etaIM = nullptr;
-    TH1D* etaIM_fit = nullptr;
-    TH1D* etaIM_cand = nullptr;
-    TH1D* etaIM_final = nullptr;
-    TH1D* MM = nullptr;
-    TH1D* hCopl = nullptr;
-    TH1D* hCopl_final = nullptr;
-    TH1D* pTheta = nullptr;
-    TH1D* protonVeto = nullptr;
-    TH1D* hChi2 = nullptr;
-    TH1D* hProb = nullptr;
-    TH1D* hIter = nullptr;
-    TH2* hEta = nullptr;
-    TH2* hProton = nullptr;
+    TH2* h_eegPID = nullptr;
+    TH1D* h_counts = nullptr;
+    TH1D* h_pTheta = nullptr;
+    TH1D* h_protonVeto = nullptr;
+    TH2* h_eta = nullptr;
+    TH2* h_proton = nullptr;
     static constexpr double ETA_IM = 547.853;
     static constexpr double ETA_SIGMA = 50.;
 
@@ -59,6 +50,30 @@ protected:
         ADD_BRANCH_T(double, CBAvgTime)
     };
 
+    struct PerChannel_t {
+        std::string title;
+        TH2* eegPID = nullptr;
+        TH1D* steps = nullptr;
+        TH1D* etaIM = nullptr;
+        TH1D* etaIM_fit = nullptr;
+        TH1D* etaIM_cand = nullptr;
+        TH1D* etaIM_final = nullptr;
+        TH1D* MM = nullptr;
+        TH1D* hCopl = nullptr;
+        TH1D* hCopl_final = nullptr;
+        TH1D* hChi2 = nullptr;
+        TH1D* hProb = nullptr;
+        TH1D* hIter = nullptr;
+
+        TH2* proton_E_theta = nullptr;
+
+        PerChannel_t(const std::string& Title, HistogramFactory& hf);
+
+        void Show();
+        void Fill(const TEventData& d);
+    };
+
+    std::map<std::string, PerChannel_t> channels;
     Tree_t t;
     PromptRandom::Switch promptrandom;
     utils::KinFitter kinfit;
