@@ -6,6 +6,7 @@
 #include "base/ParticleTypeTree.h"
 #include "TLorentzVector.h"
 #include "TVector2.h"
+#include "base/WrapTTree.h"
 
 class TH1D;
 
@@ -25,6 +26,7 @@ protected:
     protected:
 
         const unsigned multiplicity;
+        const unsigned nPhotons_expected;
         const bool skipfit;
         ParticleTypeTree directPi0;
 
@@ -33,38 +35,49 @@ protected:
 
         std::vector<std::pair<utils::TreeFitter::tree_t,utils::TreeFitter::tree_t>> pions;
 
+        struct MultiPi0Tree : WrapTTree {
+
+            ADD_BRANCH_T(bool,  isMC)
+
+            ADD_BRANCH_T(double,   Tagg_W)
+            ADD_BRANCH_T(unsigned, Tagg_Ch)
+            ADD_BRANCH_T(double,   Tagg_E)
+
+            ADD_BRANCH_T(double, CBAvgTime)
+
+            ADD_BRANCH_T(std::vector<double>, ggIM)
+
+            ADD_BRANCH_T(double, treefit_chi2dof)
+            ADD_BRANCH_T(double, treefit_prob)
+
+            ADD_BRANCH_T(unsigned, ProtonMCTrueMatches)
+
+            ADD_BRANCH_T(TLorentzVector, proton)
+            ADD_BRANCH_T(TLorentzVector, proton_fitted)
+            ADD_BRANCH_T(TVector2,       proton_PSA)
+            ADD_BRANCH_T(double,         proton_vetoE)
+            ADD_BRANCH_T(double,         proton_Time)
+
+
+            ADD_BRANCH_T(std::vector<TLorentzVector>, photons)
+            ADD_BRANCH_T(std::vector<TLorentzVector>, photons_fitted)
+            ADD_BRANCH_T(std::vector<TVector2>, photons_PSA)
+            ADD_BRANCH_T(std::vector<double>, photons_vetoE)
+            ADD_BRANCH_T(std::vector<double>, photons_Time)
+
+            ADD_BRANCH_T(double, beamE_fitted)
+            ADD_BRANCH_T(double, fit_beamE_pull)
+
+            ADD_BRANCH_T(std::vector<double>, fit_photons_E_pulls)
+            ADD_BRANCH_T(std::vector<double>, fit_photons_Theta_pulls)
+            ADD_BRANCH_T(std::vector<double>, fit_photons_Phi_pulls)
+            ADD_BRANCH_T(double, fit_proton_E_pull)
+            ADD_BRANCH_T(double, fit_proton_Theta_pull)
+            ADD_BRANCH_T(double, fit_proton_Phi_pull)
+        };
+
         TTree* tree;
-
-        // branches
-        double   b_Tagg_W;  // tagger prompt/random weight for subtraction
-        unsigned b_Tagg_Ch; // tagger channel
-        double   b_Tagg_E;  // tagger energy
-
-
-        TVector2  b_proton_PSA;
-        TVector2  b_proton_PSA1;
-        TVector2  b_proton_PSA2;
-        std::vector<double> b_ggIM;
-
-        double b_proton_vetoE;
-
-        double b_treefit_chi2dof;
-        double b_treefit_prob;
-
-        unsigned ProtonMCTrueMatches;
-
-
-        TLorentzVector b_proton_fitted;
-        std::vector<TLorentzVector> b_photons_fitted;
-        double b_beamE_fitted;
-        double b_fit_beamE_pull;
-
-        std::vector<double> b_fit_photons_E_pulls;
-        std::vector<double> b_fit_photons_Theta_pulls;
-        std::vector<double> b_fit_photons_Phi_pulls;
-        double b_fit_proton_E_pull;
-        double b_fit_proton_Theta_pull;
-        double b_fit_proton_Phi_pull;
+        MultiPi0Tree t;
 
         TH1D* steps;
         TH1D* Proton_Coplanarity;

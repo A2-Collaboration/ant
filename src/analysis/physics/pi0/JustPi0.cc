@@ -45,11 +45,12 @@ void JustPi0::ShowResult()
 
 JustPi0::MultiPi0::MultiPi0(HistogramFactory& histFac, unsigned nPi0, bool nofitandnotree) :
     multiplicity(nPi0),
+    nPhotons_expected(multiplicity*2),
     skipfit(nofitandnotree),
     directPi0(getParticleTree(multiplicity)),
     model(utils::UncertaintyModels::MCExtracted::makeAndLoad()),
     fitter(std_ext::formatter() << multiplicity << "Pi0", 2*multiplicity, model),
-    b_ggIM(nPi0),
+    tree(histFac.makeTTree("tree")),
     h_missingmass(promptrandom),
     h_fitprobability(promptrandom),
     IM_2g_byMM(promptrandom),
@@ -80,37 +81,17 @@ JustPi0::MultiPi0::MultiPi0(HistogramFactory& histFac, unsigned nPi0, bool nofit
     IM_2g_fitted.MakeHistograms(HistFac, "IM_2g_fitted","IM 2#gamma fitted",bins_IM,"IM / MeV","#");
 
 
-    tree = HistFac.makeTTree("tree");
+    t.CreateBranches(tree);
 
-    tree->Branch("Tagg_W",          addressof(b_Tagg_W));
-    tree->Branch("Tagg_Ch",         addressof(b_Tagg_Ch));
-    tree->Branch("Tagg_E",          addressof(b_Tagg_E));
-
-    tree->Branch("proton_fitted",   addressof(b_proton_fitted));
-    tree->Branch("photons_fitted",  addressof(b_photons_fitted));
-
-    tree->Branch("proton_PSA",      addressof(b_proton_PSA));
-    tree->Branch("proton_PSA1",     addressof(b_proton_PSA1));
-    tree->Branch("proton_PSA2",     addressof(b_proton_PSA2));
-    tree->Branch("proton_vetoE",    addressof(b_proton_vetoE));
-
-    tree->Branch("treefit_chi2dof", addressof(b_treefit_chi2dof));
-    tree->Branch("treefit_prob",    addressof(b_treefit_prob));
-
-    tree->Branch("ProtonMCTrueMatches",addressof(ProtonMCTrueMatches));
-
-    tree->Branch("fit_photons_Ek_pulls",    addressof(b_fit_photons_E_pulls));
-    tree->Branch("fit_photons_Theta_pulls", addressof(b_fit_photons_Theta_pulls));
-    tree->Branch("fit_photons_Phi_pulls",   addressof(b_fit_photons_Phi_pulls));
-
-    tree->Branch("fit_proton_Ek_pull",    addressof(b_fit_proton_E_pull));
-    tree->Branch("fit_proton_Theta_pull", addressof(b_fit_proton_Theta_pull));
-    tree->Branch("fit_proton_Phi_pull",   addressof(b_fit_proton_Phi_pull));
-
-    tree->Branch("fit_BeamE_pull",   addressof(b_fit_beamE_pull));
-    tree->Branch("BeamE_fitted",     addressof(b_beamE_fitted));
-
-    tree->Branch("ggIM_fitted",  addressof(b_ggIM));
+    t.ggIM().resize(nPi0);
+    t.photons().resize(nPhotons_expected);
+    t.photons_fitted().resize(nPhotons_expected);
+    t.photons_PSA().resize(nPhotons_expected);
+    t.photons_vetoE().resize(nPhotons_expected);
+    t.photons_Time().resize(nPhotons_expected);
+    t.fit_photons_E_pulls().resize(nPhotons_expected);
+    t.fit_photons_Theta_pulls().resize(nPhotons_expected);
+    t.fit_photons_Phi_pulls().resize(nPhotons_expected);
 
     const auto pion_nodes = treefitter.GetTreeNodes(ParticleTypeDatabase::Pi0);
     assert(pion_nodes.size() == nPi0);
@@ -124,10 +105,20 @@ JustPi0::MultiPi0::MultiPi0(HistogramFactory& histFac, unsigned nPi0, bool nofit
 
 }
 
+TVector2 getPSAVector(const TParticlePtr& p) {
+    if(p->Candidate) {
+        const auto cluster = p->Candidate->FindCaloCluster();
+        if(cluster) {
+            return {cluster->Energy, cluster->ShortEnergy};
+        }
+    }
+
+    throw std::runtime_error("Incomplete Particle without candiate or CaloCluster");
+
+}
+
 void JustPi0::MultiPi0::ProcessData(const TEventData& data, const TParticleTree_t& ptree)
 {
-    const auto nPhotons_expected = multiplicity*2;
-
     steps->Fill("Seen",1);
 
     // cut on energy sum and number of candidates
@@ -168,6 +159,8 @@ void JustPi0::MultiPi0::ProcessData(const TEventData& data, const TParticleTree_
         proton_mctrue_match = utils::FindMatched(match_all, true_proton);
     }
 
+    t.isMC      = data.ID.isSet(TID::Flags_t::MC);
+    t.CBAvgTime = data.Trigger.CBTiming;
 
     // iterate over tagger hits
 
@@ -175,9 +168,9 @@ void JustPi0::MultiPi0::ProcessData(const TEventData& data, const TParticleTree_
 
         bool kinfit_ok = false;
 
-        b_Tagg_E  = taggerhit.PhotonEnergy;
-        b_Tagg_Ch = taggerhit.Channel;
-        b_Tagg_W  = promptrandom.FillWeight();
+        t.Tagg_E  = taggerhit.PhotonEnergy;
+        t.Tagg_Ch = taggerhit.Channel;
+        t.Tagg_W  = promptrandom.FillWeight();
 
         steps->Fill("Seen taggerhits",1.0);
 
@@ -265,42 +258,41 @@ void JustPi0::MultiPi0::ProcessData(const TEventData& data, const TParticleTree_
 
             if(chi2dof < kinfit_best_chi2) {
 
-                b_proton_fitted = *fitter.GetFittedProton();
+                t.proton_fitted = *fitter.GetFittedProton();
 
-                const auto fitted_photons = fitter.GetFittedPhotons();
-                b_photons_fitted.resize(fitted_photons.size());
-                for(size_t i=0;i<fitted_photons.size();++i) {
-                    b_photons_fitted.at(i) = *fitted_photons.at(i);
-                }
+                t.beamE_fitted   = fitter.GetFittedBeamE();
+                t.fit_beamE_pull = fitter.GetFittedBeamEPull();
 
-                b_beamE_fitted   = fitter.GetFittedBeamE();
-                b_fit_beamE_pull = fitter.GetFittedBeamEPull();
+                t.proton_vetoE  = proton->Candidate->VetoEnergy;
+                t.proton_Time   = proton->Candidate->Time;
 
-                const double b_proton_shortE = proton->Candidate->FindCaloCluster()->ShortEnergy;
-                b_proton_vetoE  = proton->Candidate->VetoEnergy;
+                t.proton_PSA    = getPSAVector(proton);
 
-                b_proton_PSA    = TVector2(proton->Ek()                                                  , b_proton_shortE);
-                b_proton_PSA1   = TVector2(b_proton_fitted.Energy() - ParticleTypeDatabase::Proton.Mass(), b_proton_shortE);
-                b_proton_PSA2   = TVector2(b_proton_PSA1.X(), b_proton_PSA1.X() / b_proton_PSA.X() * b_proton_shortE);
-
-                ProtonMCTrueMatches = proton->Candidate == proton_mctrue_match;
+                t.ProtonMCTrueMatches = proton->Candidate == proton_mctrue_match;
 
                 const auto fitparticles = fitter.GetFitParticles();
 
-                b_fit_proton_E_pull     = fitparticles.at(0).Ek.Pull;
-                b_fit_proton_Theta_pull = fitparticles.at(0).Theta.Pull;
-                b_fit_proton_Phi_pull   = fitparticles.at(0).Phi.Pull;
+                t.fit_proton_E_pull     = fitparticles.at(0).Ek.Pull;
+                t.fit_proton_Theta_pull = fitparticles.at(0).Theta.Pull;
+                t.fit_proton_Phi_pull   = fitparticles.at(0).Phi.Pull;
 
-                b_fit_photons_E_pulls.resize(nPhotons_expected);
-                b_fit_photons_Theta_pulls.resize(nPhotons_expected);
-                b_fit_photons_Phi_pulls.resize(nPhotons_expected);
+                const auto photons_fitted = fitter.GetFittedPhotons();
 
-                assert(nPhotons_expected +1 == fitparticles.size());
+                assert(nPhotons_expected +1  == fitparticles.size());
+                assert(photons.size()        == nPhotons_expected);
+                assert(photons_fitted.size() == nPhotons_expected);
 
-                for(size_t i=1; i<= nPhotons_expected; ++i) {
-                    b_fit_photons_E_pulls.at(i-1)     = fitparticles.at(i).Ek.Pull;
-                    b_fit_photons_Theta_pulls.at(i-1) = fitparticles.at(i).Theta.Pull;
-                    b_fit_photons_Phi_pulls.at(i-1)   = fitparticles.at(i).Phi.Pull;
+                for(size_t i=0; i< nPhotons_expected; ++i) {
+
+                    t.photons().at(i)        = *photons.at(i);
+                    t.photons_fitted().at(i) = *photons_fitted.at(i);
+                    t.photons_PSA().at(i)    = getPSAVector(photons.at(i));
+                    t.photons_vetoE().at(i)  = photons.at(i)->Candidate->VetoEnergy;
+                    t.photons_Time().at(i)   = photons.at(i)->Candidate->Time;
+
+                    t.fit_photons_E_pulls().at(i)     = fitparticles.at(i+1).Ek.Pull;
+                    t.fit_photons_Theta_pulls().at(i) = fitparticles.at(i+1).Theta.Pull;
+                    t.fit_photons_Phi_pulls().at(i)   = fitparticles.at(i+1).Phi.Pull;
                 }
 
                 selected_proton  = proton;
@@ -315,8 +307,8 @@ void JustPi0::MultiPi0::ProcessData(const TEventData& data, const TParticleTree_
 
         if(kinfit_ok) {
 
-            b_treefit_prob    = std_ext::NaN;
-            b_treefit_chi2dof = std_ext::NaN;
+            t.treefit_prob    = std_ext::NaN;
+            t.treefit_chi2dof = std_ext::NaN;
 
             treefitter.SetEgammaBeam(taggerhit.PhotonEnergy);
             treefitter.SetProton(selected_proton);
@@ -330,16 +322,16 @@ void JustPi0::MultiPi0::ProcessData(const TEventData& data, const TParticleTree_
 
                 if(treefit_chi2dof < treefit_best_chi2) {
 
-                    treefit_best_chi2 = b_treefit_chi2dof;
+                    treefit_best_chi2 = treefit_chi2dof;
 
-                    b_treefit_prob    = treefit_prob;
-                    b_treefit_chi2dof = treefit_chi2dof;
+                    t.treefit_prob    = treefit_prob;
+                    t.treefit_chi2dof = treefit_chi2dof;
 
                     // Fill stuff
-                    assert(pions.size() == b_ggIM.size());
+                    assert(pions.size() == t.ggIM().size());
                     for(size_t i=0; i<pions.size(); ++i) {
                      LorentzVec pion = *(selected_photons.at(pions.at(i).first->Get().PhotonLeaveIndex)) +  *(selected_photons.at(pions.at(i).second->Get().PhotonLeaveIndex));
-                     b_ggIM.at(i) = pion.M();
+                     t.ggIM().at(i) = pion.M();
 
                     }
 
