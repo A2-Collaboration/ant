@@ -80,7 +80,13 @@ int main( int argc, char** argv )
     HistogramFactory HistFac("compare_ant_goat");
 
     BinSettings bins_CaloEnergy(200,0,600);
-    auto h_CaloEnergy = HistFac.makeTH2D("h_CaloEnergy CB","Goat","Ant",bins_CaloEnergy,bins_CaloEnergy,"h_CaloEnergy");
+    auto h_CaloEnergy_CB = HistFac.makeTH2D("h_CaloEnergy CB","Goat","Ant",bins_CaloEnergy,bins_CaloEnergy,"h_CaloEnergy_CB");
+    auto h_CaloEnergy_TAPS = HistFac.makeTH2D("h_CaloEnergy TAPS","Goat","Ant",bins_CaloEnergy,bins_CaloEnergy,"h_CaloEnergy_TAPS");
+
+    BinSettings bins_VetoEnergy(30,0,10);
+    auto h_VetoEnergy_CB = HistFac.makeTH2D("h_VetoEnergy CB","Goat","Ant",bins_VetoEnergy,bins_VetoEnergy,"h_VetoEnergy_CB");
+    auto h_VetoEnergy_TAPS = HistFac.makeTH2D("h_VetoEnergy TAPS","Goat","Ant",bins_VetoEnergy,bins_VetoEnergy,"h_VetoEnergy_TAPS");
+
 
     while(entryAnt < treeAnt->GetEntries() && entryGoat < treeGoat->GetEntries()) {
 
@@ -239,43 +245,74 @@ int main( int argc, char** argv )
             TCandidatePtr Goat;
         };
 
-        map<unsigned, candidate_t> candidates;
+        using mapped_candidates_t = map<unsigned, candidate_t>;
+        mapped_candidates_t candidates_cb;
+        mapped_candidates_t candidates_taps;
 
-        for(const auto& c : antRecon.Candidates.get_iter())
+
+        for(const auto& c : antRecon.Candidates.get_iter()) {
             if(c->Detector & Detector_t::Any_t::CB_Apparatus)
-                candidates[c->FindCaloCluster()->CentralElement].Ant = c;
-
-        for(const auto& c : goatRecon.Candidates.get_iter())
-            if(c->Detector & Detector_t::Any_t::CB_Apparatus)
-                candidates[c->FindCaloCluster()->CentralElement].Goat = c;
-
-        if(dump)
-            cout << "<<<< Candidates Event=" << nEvents << endl;
-        for(const auto& it_c : candidates) {
-            auto stringify_c = [] (const TCandidatePtr& c) -> string {
-                if(!c)
-                    return "";
-                return std_ext::formatter()
-                        << "(E=" << c->CaloEnergy
-                        << ",Cl=" << c->ClusterSize
-                        << ",vE=" << c->VetoEnergy
-                        << ",t=" << c->Time
-                        << ")";
-            };
-            const candidate_t& c = it_c.second;
-            if(dump) {
-                cout << "  Ch=" << it_c.first
-                     << " Ant=" << stringify_c(c.Ant)
-                     << " Goat=" << stringify_c(c.Goat)
-                     << endl;
-            }
-            if(c.Ant && c.Goat) {
-                h_CaloEnergy->Fill(c.Ant->CaloEnergy, c.Goat->CaloEnergy);
-            }
+                candidates_cb[c->FindCaloCluster()->CentralElement].Ant = c;
+            else if(c->Detector & Detector_t::Any_t::TAPS_Apparatus)
+                candidates_taps[c->FindCaloCluster()->CentralElement].Ant = c;
         }
 
-        if(dump)
+        for(const auto& c : goatRecon.Candidates.get_iter()) {
+            if(c->Detector & Detector_t::Any_t::CB_Apparatus)
+                candidates_cb[c->FindCaloCluster()->CentralElement].Goat = c;
+            else if(c->Detector & Detector_t::Any_t::TAPS_Apparatus)
+                candidates_taps[c->FindCaloCluster()->CentralElement].Goat = c;
+        }
+
+
+        if(dump) {
+            auto dump_candidates = [] (const mapped_candidates_t& candidates) {
+                for(const auto& it_c : candidates) {
+                    auto stringify_c = [] (const TCandidatePtr& c) -> string {
+                        if(!c)
+                            return "";
+                        return std_ext::formatter()
+                                << "(E=" << c->CaloEnergy
+                                << ",Cl=" << c->ClusterSize
+                                << ",vE=" << c->VetoEnergy
+                                << ",t=" << c->Time
+                                << ")";
+                    };
+                    const candidate_t& c = it_c.second;
+                    cout << "  Ch=" << it_c.first
+                         << " Ant=" << stringify_c(c.Ant)
+                         << " Goat=" << stringify_c(c.Goat)
+                         << endl;
+                }
+            };
+
+
+            cout << "<<<< Candidates CB Event=" << nEvents << endl;
+            dump_candidates(candidates_cb);
             cout << endl << endl;
+
+            cout << "<<<< Candidates TAPS Event=" << nEvents << endl;
+            dump_candidates(candidates_taps);
+            cout << endl << endl;
+        }
+
+
+        for(const auto& it_c : candidates_cb) {
+            const candidate_t& c = it_c.second;
+            if(!c.Ant || !c.Goat)
+                continue;
+            h_CaloEnergy_CB->Fill(c.Ant->CaloEnergy, c.Goat->CaloEnergy);
+            h_VetoEnergy_CB->Fill(c.Ant->VetoEnergy, c.Goat->VetoEnergy);
+
+        }
+
+        for(const auto& it_c : candidates_taps) {
+            const candidate_t& c = it_c.second;
+            if(!c.Ant || !c.Goat)
+                continue;
+            h_CaloEnergy_TAPS->Fill(c.Ant->CaloEnergy, c.Goat->CaloEnergy);
+            h_VetoEnergy_TAPS->Fill(c.Ant->VetoEnergy, c.Goat->VetoEnergy);
+        }
 
         nEvents++;
         if(nEvents==maxevents)
@@ -292,7 +329,10 @@ int main( int argc, char** argv )
         TRint app("Ant",&argc,argv,nullptr,0,true);
 
         canvas("compare_ant_goat") << drawoption("colz")
-                                   << h_CaloEnergy
+                                   << h_CaloEnergy_CB
+                                   << h_CaloEnergy_TAPS
+                                   << h_VetoEnergy_CB
+                                   << h_VetoEnergy_TAPS
                                    << endc;
 
         app.Run(kTRUE); // really important to return...
