@@ -3,7 +3,7 @@
 #include "analysis/physics/Physics.h"
 #include "analysis/utils/particle_tools.h"
 #include "analysis/utils/Fitter.h"
-#include "analysis/utils/ClusterTools.h"
+#include "analysis/utils/MCSmear.h"
 #include "analysis/plot/PromptRandomHist.h"
 
 #include "base/ParticleTypeTree.h"
@@ -71,8 +71,13 @@ struct EtapOmegaG : Physics {
     PromptRandom::Switch promptrandom;
     PromptRandom::Switch promptrandom_tight;
 
+    using fit_uncertainty_model_t = utils::UncertaintyModels::Optimized_Oli1;
+    using mc_uncertainty_model_t = utils::UncertaintyModels::MCSmearingAdlarson;
+
     utils::KinFitter kinfitter_sig;
     utils::KinFitter kinfitter_ref;
+
+    utils::MCSmear mc_smear;
 
 
     struct Particles_t {
@@ -133,7 +138,6 @@ struct EtapOmegaG : Physics {
                                          const Particles_t& particles
                                          );
 
-            utils::ClusterTools clustertools;
             utils::TreeFitter treefitter;
             utils::TreeFitter::tree_t fitted_Pi0;
             utils::TreeFitter::tree_t fitted_g1_Pi0;
@@ -225,7 +229,6 @@ struct EtapOmegaG : Physics {
         void Process(const Particles_t& particles);
     };
 
-    using uncertainty_model_t = utils::UncertaintyModels::Optimized_Oli1;
 
     Sig_t Sig;
     Ref_t Ref;
