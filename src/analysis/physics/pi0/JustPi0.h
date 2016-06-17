@@ -30,7 +30,7 @@ protected:
         const bool skipfit;
         ParticleTypeTree directPi0;
 
-        std::shared_ptr<utils::Fitter::UncertaintyModel> model;
+        utils::UncertaintyModelPtr model;
         utils::KinFitter fitter;
 
         std::vector<std::pair<utils::TreeFitter::tree_t,utils::TreeFitter::tree_t>> pions;

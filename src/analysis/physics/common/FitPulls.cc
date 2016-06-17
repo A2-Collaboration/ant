@@ -2,7 +2,6 @@
 #include "base/std_ext/vector.h"
 #include "base/std_ext/math.h"
 #include "TH1D.h"
-#include "utils/FitterUncertainties.h"
 
 
 #include "utils/particle_tools.h"
@@ -114,7 +113,7 @@ FitPulls::FitPulls(const string& name, OptionsPtr opts) :
 
 FitPulls::ChannelItem_t::ChannelItem_t(const HistogramFactory& parent,
                                      ParticleTypeTreeDatabase::Channel channel,
-                                     utils::Fitter::UncertaintyModelPtr uncertainty_model
+                                     utils::UncertaintyModelPtr uncertainty_model
                                      )
 {
     Tree = ParticleTypeTreeDatabase::Get(channel);

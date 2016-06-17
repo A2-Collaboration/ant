@@ -26,7 +26,7 @@ ant::TParticlePtr MCSmear::Smear(const TParticlePtr& p) const
     return sp;
 }
 
-MCSmear::MCSmear(const std::shared_ptr<const utils::Fitter::UncertaintyModel>& m):
+MCSmear::MCSmear(utils::UncertaintyModelPtr m):
     model(m), rng(std_ext::make_unique<TRandom2>()) {}
 
 MCSmear::~MCSmear() {}

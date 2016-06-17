@@ -105,7 +105,7 @@ protected:
 
     ant::analysis::PromptRandom::Switch promptrandom;
 
-    std::shared_ptr<utils::Fitter::UncertaintyModel> model;
+    utils::UncertaintyModelPtr model;
 
     utils::KinFitter fitter;
 
@@ -122,7 +122,7 @@ protected:
         utils::TreeFitter::tree_t fitted_eta_g1;
         utils::TreeFitter::tree_t fitted_eta_g2;
 
-        MyTreeFitter_t(const ParticleTypeTree& ttree, const std::shared_ptr<const utils::Fitter::UncertaintyModel>& model);
+        MyTreeFitter_t(const ParticleTypeTree& ttree, utils::UncertaintyModelPtr model);
 
         void HypTestCombis(const TParticleList& unfitted, const TParticleList& kinfitted, double& chi2,
                            double& prob,

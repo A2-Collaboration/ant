@@ -1,4 +1,4 @@
-#include "FitterUncertainties.h"
+#include "Uncertainties.h"
 
 #include "expconfig/ExpConfig.h"
 
@@ -21,6 +21,10 @@ using namespace ant;
 using namespace ant::std_ext;
 using namespace ant::analysis;
 using namespace ant::analysis::utils;
+
+UncertaintyModel::~UncertaintyModel()
+{}
+
 
 UncertaintyModels::MCExtracted::angular_sigma::angular_sigma()
 {}
@@ -81,10 +85,10 @@ UncertaintyModels::MCExtracted::angular_sigma::Hist UncertaintyModels::MCExtract
     return h;
 }
 
-Fitter::Uncertainties_t UncertaintyModels::MCExtracted::GetSigmasProton(const TParticle &proton) const
+Uncertainties_t UncertaintyModels::MCExtracted::GetSigmasProton(const TParticle &proton) const
 {
 
-    Fitter::Uncertainties_t sigmas;
+    Uncertainties_t sigmas;
 
     sigmas.sigmaE = 0.0;  // unmeasured
 
@@ -101,9 +105,9 @@ Fitter::Uncertainties_t UncertaintyModels::MCExtracted::GetSigmasProton(const TP
     return sigmas;
 }
 
-Fitter::Uncertainties_t UncertaintyModels::MCExtracted::GetSigmasPhoton(const TParticle &photon) const
+Uncertainties_t UncertaintyModels::MCExtracted::GetSigmasPhoton(const TParticle &photon) const
 {
-    Fitter::Uncertainties_t sigmas;
+    Uncertainties_t sigmas;
 
     const auto& cluster = photon.Candidate->FindCaloCluster();
 
@@ -167,7 +171,7 @@ void UncertaintyModels::MCExtracted::LoadSigmas(const string& filename)
     taps_sigma_phi.Load(  *f, "TAPS_sigma_Phi",   int(nTAPS));
 }
 
-Fitter::Uncertainties_t UncertaintyModels::MCExtracted::GetSigmas(const TParticle &particle) const
+Uncertainties_t UncertaintyModels::MCExtracted::GetSigmas(const TParticle &particle) const
 {
 
     if(particle.Type() == ParticleTypeDatabase::Photon)
@@ -208,7 +212,7 @@ std::shared_ptr<UncertaintyModels::Constant> UncertaintyModels::Constant::make()
     return std::make_shared<Constant>();
 }
 
-Fitter::Uncertainties_t ant::analysis::utils::UncertaintyModels::Constant::GetSigmas(const TParticle &particle) const
+Uncertainties_t ant::analysis::utils::UncertaintyModels::Constant::GetSigmas(const TParticle &particle) const
 {
     if(particle.Candidate->Detector & Detector_t::Type_t::CB) {
 
@@ -241,7 +245,7 @@ UncertaintyModels::ConstantRelativeE::ConstantRelativeE()
 UncertaintyModels::ConstantRelativeE::~ConstantRelativeE()
 {}
 
-Fitter::Uncertainties_t UncertaintyModels::ConstantRelativeE::GetSigmas(const TParticle &particle) const
+Uncertainties_t UncertaintyModels::ConstantRelativeE::GetSigmas(const TParticle &particle) const
 {
     auto s = Constant::GetSigmas(particle);
     s.sigmaE *= particle.Ek();
@@ -268,9 +272,9 @@ UncertaintyModels::ConstantRelativeEpow::ConstantRelativeEpow()
 UncertaintyModels::ConstantRelativeEpow::~ConstantRelativeEpow()
 {}
 
-Fitter::Uncertainties_t UncertaintyModels::ConstantRelativeEpow::GetSigmas(const TParticle &particle) const
+Uncertainties_t UncertaintyModels::ConstantRelativeEpow::GetSigmas(const TParticle &particle) const
 {
-    Fitter::Uncertainties_t s;
+    Uncertainties_t s;
 
     if(particle.Candidate->Detector & Detector_t::Type_t::CB) {
 
@@ -328,12 +332,12 @@ UncertaintyModels::Optimized::Optimized()
 UncertaintyModels::Optimized::~Optimized()
 {}
 
-Fitter::Uncertainties_t UncertaintyModels::Optimized::GetSigmas(const TParticle& particle) const
+Uncertainties_t UncertaintyModels::Optimized::GetSigmas(const TParticle& particle) const
 {
     const auto theta = particle.Theta();
     const auto E     = particle.Ek();
 
-    Fitter::Uncertainties_t s;
+    Uncertainties_t s;
 
     if(particle.Candidate->Detector & Detector_t::Type_t::CB) {
 

@@ -50,7 +50,7 @@ protected:
         unsigned          Multiplicity;
         ChannelItem_t(const HistogramFactory& parent,
                       ParticleTypeTreeDatabase::Channel channel,
-                      utils::Fitter::UncertaintyModelPtr uncertainty_model);
+                      utils::UncertaintyModelPtr uncertainty_model);
     };
 
     std::map<unsigned, std::vector<ChannelItem_t>> treefitters;

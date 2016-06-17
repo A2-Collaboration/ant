@@ -1,6 +1,8 @@
 #pragma once
 
-#include "Fitter.h"
+#include "tree/TParticle.h"
+
+#include "TH1D.h"
 
 namespace ant {
 
@@ -9,27 +11,56 @@ class WrapTFile;
 namespace analysis {
 namespace utils {
 
+/**
+ * @brief Uncertainties for E, theta, and phi
+ */
+struct Uncertainties_t {
+    double sigmaE     = {};
+    double sigmaTheta = {};
+    double sigmaPhi   = {};
+
+    Uncertainties_t() = default;
+    Uncertainties_t(const double E, const double Theta, const double Phi) : sigmaE(E), sigmaTheta(Theta), sigmaPhi(Phi) {}
+
+    bool operator==(const Uncertainties_t& other) const noexcept {
+        return sigmaE == other.sigmaE && sigmaTheta == other.sigmaTheta && sigmaPhi == other.sigmaPhi;
+    }
+};
+
+/**
+ * @brief Virtual base class for different Uncertainty Models for kion fitter.
+ *        Derive and implement the GetSigmas() method.
+ * @see UncertaintyModels::Constant
+ * @see UncertaintyModels::MCExtracted
+ */
+class UncertaintyModel {
+public:
+    virtual ~UncertaintyModel();
+    virtual Uncertainties_t GetSigmas(const TParticle& particle) const =0;
+};
+using UncertaintyModelPtr = std::shared_ptr<const UncertaintyModel>;
+
 namespace UncertaintyModels {
 
 /**
  * @brief Constant/static kin fitter uncertainty model. has a fixed value for {cb,taps}{photon,proton}{E,theta,phi}
  */
-struct Constant : public Fitter::UncertaintyModel {
+struct Constant : public UncertaintyModel {
 public:
 
     struct Exception : std::runtime_error {
         using std::runtime_error::runtime_error;
     };
 
-    Fitter::Uncertainties_t photon_cb;
-    Fitter::Uncertainties_t photon_taps;
-    Fitter::Uncertainties_t proton_cb;
-    Fitter::Uncertainties_t proton_taps;
+    Uncertainties_t photon_cb;
+    Uncertainties_t photon_taps;
+    Uncertainties_t proton_cb;
+    Uncertainties_t proton_taps;
 
     Constant();
     virtual ~Constant();
 
-    Fitter::Uncertainties_t GetSigmas(const TParticle &particle) const override;
+    Uncertainties_t GetSigmas(const TParticle &particle) const override;
 
     /**
      * @brief Create a new instance and return a shared pointer to it
@@ -47,7 +78,7 @@ public:
     ConstantRelativeE();
     virtual ~ConstantRelativeE();
 
-    Fitter::Uncertainties_t GetSigmas(const TParticle &particle) const override;
+    Uncertainties_t GetSigmas(const TParticle &particle) const override;
 
     /**
      * @brief Create a new, empty instance and return a shared pointer to it
@@ -70,7 +101,7 @@ public:
     ConstantRelativeEpow();
     virtual ~ConstantRelativeEpow();
 
-    Fitter::Uncertainties_t GetSigmas(const TParticle &particle) const override;
+    Uncertainties_t GetSigmas(const TParticle &particle) const override;
 
     /**
      * @brief Create a new, empty instance and return a shared pointer to it
@@ -88,7 +119,7 @@ public:
 /**
  * @brief Kin fitter uncertainties, uses histograms. Energy depenent values for each detector element. Histograms can be loaded from root files in setup database.
  */
-class MCExtracted : public Fitter::UncertaintyModel {
+class MCExtracted : public UncertaintyModel {
 public:
     struct angular_sigma {
         using Hist = std::shared_ptr<TH1D>;
@@ -118,8 +149,8 @@ protected:
     angular_sigma taps_sigma_theta;
     angular_sigma taps_sigma_phi;
 
-    Fitter::Uncertainties_t GetSigmasProton(const TParticle &proton) const;
-    Fitter::Uncertainties_t GetSigmasPhoton(const TParticle &photon) const;
+    Uncertainties_t GetSigmasProton(const TParticle &proton) const;
+    Uncertainties_t GetSigmasPhoton(const TParticle &photon) const;
 
 public:
 
@@ -136,7 +167,7 @@ public:
      */
     void LoadSigmas(const std::string& path);
 
-    Fitter::Uncertainties_t GetSigmas(const TParticle &particle) const override;
+    Uncertainties_t GetSigmas(const TParticle &particle) const override;
 
     /**
      * @brief Create an instance of this model and directly load sigmas from ROOT file of current setup
@@ -164,7 +195,7 @@ public:
  *   constant values for now.
  *
  */
-struct Optimized : Fitter::UncertaintyModel {
+struct Optimized : UncertaintyModel {
 
     double cb_photon_theta_const = 0.0;
     double cb_photon_theta_Sin   = 0.0;
@@ -174,7 +205,7 @@ struct Optimized : Fitter::UncertaintyModel {
     double cb_photon_E_exp = 0.0;
     double cb_photon_E_lin = 0.0;
 
-    Fitter::Uncertainties_t cb_proton = {};
+    Uncertainties_t cb_proton = {};
 
 
     double taps_photon_E_rel = 0.0;
@@ -183,7 +214,7 @@ struct Optimized : Fitter::UncertaintyModel {
     double taps_photon_theta = 0.0;
     double taps_photon_phi   = 0.0;
 
-    Fitter::Uncertainties_t taps_proton = {};
+    Uncertainties_t taps_proton = {};
 
     struct Exception : std::runtime_error {
         using std::runtime_error::runtime_error;
@@ -193,7 +224,7 @@ struct Optimized : Fitter::UncertaintyModel {
 
     virtual ~Optimized();
 
-    Fitter::Uncertainties_t GetSigmas(const TParticle& particle) const;
+    Uncertainties_t GetSigmas(const TParticle& particle) const;
     static double dThetaSin(const double theta, const double offset, const double thetapart) noexcept;
 
     static double dE(const double E, const double rel, const double exp, const double reloffset) noexcept;

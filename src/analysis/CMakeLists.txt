@@ -90,7 +90,7 @@ set(ANALYSIS_UTILS
   utils/particle_tools.cc
   utils/TimeSmearingHack.cc
   utils/Fitter.cc
-  utils/FitterUncertainties.cc
+  utils/Uncertainties.cc
   utils/ProtonPermutation.cc
   utils/ClusterTools.cc
   utils/MCSmear.cc

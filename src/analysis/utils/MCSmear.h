@@ -1,6 +1,6 @@
 #pragma once
 #include <memory>
-#include "analysis/utils/Fitter.h"
+#include "analysis/utils/Uncertainties.h"
 #include "tree/TParticle.h"
 #include "tree/TCandidate.h"
 
@@ -12,12 +12,12 @@ namespace analysis {
 namespace utils {
 class MCSmear {
 protected:
-    std::shared_ptr<const utils::Fitter::UncertaintyModel> model;
+    UncertaintyModelPtr model;
     std::unique_ptr<TRandom> rng;
 
 public:
 
-    MCSmear(const std::shared_ptr<const utils::Fitter::UncertaintyModel>& m);
+    MCSmear(UncertaintyModelPtr m);
 
     ~MCSmear();
 

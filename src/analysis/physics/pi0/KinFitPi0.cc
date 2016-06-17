@@ -21,7 +21,7 @@ using namespace std;
 
 
 
-std::shared_ptr<utils::Fitter::UncertaintyModel> KinFitPi0::getModel(const string& model_name) const
+KinFitPi0::UncertaintyModelPtr KinFitPi0::getModel(const string& model_name) const
 {
     if(model_name == "ConstantRelativeE") {
         return utils::UncertaintyModels::ConstantRelativeE::makeMCLongTarget();
@@ -130,7 +130,7 @@ void KinFitPi0::ShowResult()
 
 
 
-KinFitPi0::MultiPi0::MultiPi0(HistogramFactory& histFac, unsigned nPi0, unsigned nTAPS, std::shared_ptr<const utils::Fitter::UncertaintyModel> model) :
+KinFitPi0::MultiPi0::MultiPi0(HistogramFactory& histFac, unsigned nPi0, unsigned nTAPS, utils::UncertaintyModelPtr model) :
     multiplicity(nPi0),
     nPhotons_expected_taps(nTAPS),
     HistFac(std_ext::formatter() << "m" << multiplicity << "Pi0", histFac,

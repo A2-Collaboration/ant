@@ -20,7 +20,6 @@
 #include "base/math_functions/voigtian.h"
 
 #include "analysis/utils/Fitter.h"
-#include "analysis/utils/FitterUncertainties.h"
 
 #include "analysis/plot/HistogramFactories.h"
 #include "base/std_ext/string.h"

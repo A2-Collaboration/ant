@@ -6,7 +6,6 @@
 #include "utils/MCSmear.h"
 #include "base/ParticleTypeTree.h"
 #include "TLorentzVector.h"
-#include "utils/FitterUncertainties.h"
 
 class TH1D;
 class TTree;
@@ -19,7 +18,7 @@ class KinFitPi0 : public Physics {
 protected:
 
     struct MultiPi0 {
-        MultiPi0(HistogramFactory& histFac, unsigned nPi0, unsigned nTAPS, std::shared_ptr<const utils::Fitter::UncertaintyModel> fitter_model=utils::UncertaintyModels::MCExtracted::makeAndLoad());
+        MultiPi0(HistogramFactory& histFac, unsigned nPi0, unsigned nTAPS, utils::UncertaintyModelPtr fitter_model=utils::UncertaintyModels::MCExtracted::makeAndLoad());
 
         void ProcessData(const TEventData& data, const utils::MCSmear& smear, manager_t& manager);
         void ShowResult();
@@ -68,10 +67,13 @@ protected:
 
     std::vector<std::unique_ptr<MultiPi0>> multiPi0;
 
-    std::shared_ptr<utils::Fitter::UncertaintyModel> getModel(const std::string& model_name) const;
+    using UncertaintyModelPtr = std::shared_ptr<utils::UncertaintyModel>;
 
-    std::shared_ptr<utils::Fitter::UncertaintyModel> fitter_model;
-    std::shared_ptr<utils::Fitter::UncertaintyModel> smear_model;
+
+    UncertaintyModelPtr getModel(const std::string& model_name) const;
+
+    UncertaintyModelPtr fitter_model;
+    utils::UncertaintyModelPtr smear_model;
     utils::MCSmear smear;
     const bool opt_useMCSmear  = false;
     const bool opt_sweep_param = false;

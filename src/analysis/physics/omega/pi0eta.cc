@@ -15,7 +15,6 @@
 
 #include "utils/particle_tools.h"
 #include "utils/matcher.h"
-#include "utils/FitterUncertainties.h"
 
 #include "APLCON.hpp"
 #include "expconfig/ExpConfig.h"
@@ -393,7 +392,7 @@ const unsigned Pi0Eta::ReactionChannelList_t::other_index = 1000;
 
 
 
-Pi0Eta::MyTreeFitter_t::MyTreeFitter_t(const ParticleTypeTree& ttree, const std::shared_ptr<const utils::Fitter::UncertaintyModel>& model):
+Pi0Eta::MyTreeFitter_t::MyTreeFitter_t(const ParticleTypeTree& ttree, utils::UncertaintyModelPtr model):
     treefitter(
         "treefit_pi0eta",
         ttree,

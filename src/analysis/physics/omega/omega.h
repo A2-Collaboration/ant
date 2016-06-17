@@ -4,6 +4,7 @@
 #include "analysis/utils/A2GeoAcceptance.h"
 #include "analysis/utils/particle_tools.h"
 #include "analysis/utils/Fitter.h"
+#include "analysis/utils/Uncertainties.h"
 #include "analysis/plot/PromptRandomHist.h"
 #include "base/Tree.h"
 #include "base/interval.h"
@@ -268,7 +269,7 @@ protected:
 
     ant::analysis::PromptRandom::Switch promptrandom;
 
-    std::shared_ptr<utils::Fitter::UncertaintyModel> model;
+    utils::UncertaintyModelPtr model;
 
     utils::KinFitter fitter;
     AccessibleFitter pi0eta_fitter;
@@ -283,7 +284,7 @@ protected:
         utils::TreeFitter::tree_t fitted_g1_X;
         utils::TreeFitter::tree_t fitted_g2_X;
 
-        MyTreeFitter_t(const ParticleTypeTree& ttree, const ParticleTypeDatabase::Type& mesonT, const std::shared_ptr<const utils::Fitter::UncertaintyModel>& model);
+        MyTreeFitter_t(const ParticleTypeTree& ttree, const ParticleTypeDatabase::Type& mesonT, utils::UncertaintyModelPtr model);
 
         void HypTestCombis(const TParticleList& photons, doubles& chi2s, doubles& probs, doubles& ggims, doubles& gggims, int& bestIndex);
     };

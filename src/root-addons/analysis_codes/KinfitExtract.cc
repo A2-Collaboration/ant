@@ -14,7 +14,6 @@
 #include "analysis/plot/root_draw.h"
 
 #include "analysis/utils/Fitter.h"
-#include "analysis/utils/FitterUncertainties.h"
 
 #include <memory>
 

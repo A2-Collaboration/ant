@@ -16,7 +16,6 @@
 
 #include "utils/particle_tools.h"
 #include "utils/matcher.h"
-#include "utils/FitterUncertainties.h"
 
 #include "APLCON.hpp"
 #include "expconfig/ExpConfig.h"
@@ -913,7 +912,7 @@ const unsigned OmegaEtaG2::ReactionChannelList_t::other_index = 1000;
 
 
 
-OmegaEtaG2::MyTreeFitter_t::MyTreeFitter_t(const ParticleTypeTree& ttree, const ParticleTypeDatabase::Type& mesonT, const std::shared_ptr<const utils::Fitter::UncertaintyModel>& model):
+OmegaEtaG2::MyTreeFitter_t::MyTreeFitter_t(const ParticleTypeTree& ttree, const ParticleTypeDatabase::Type& mesonT, utils::UncertaintyModelPtr model):
     treefitter(
         "treefit_"+mesonT.Name(),
         ttree,

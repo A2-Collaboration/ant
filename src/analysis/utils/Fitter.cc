@@ -26,7 +26,7 @@ using namespace ant::analysis::utils;
 
 const APLCON::Fit_Settings_t Fitter::Fitter::DefaultSettings = Fitter::MakeDefaultSettings();
 
-Fitter::Fitter(const string& fittername, const APLCON::Fit_Settings_t& settings, std::shared_ptr<const UncertaintyModel> &uncertainty_model):
+Fitter::Fitter(const string& fittername, const APLCON::Fit_Settings_t& settings, utils::UncertaintyModelPtr uncertainty_model):
     uncertainty(uncertainty_model)
 {
     aplcon = std_ext::make_unique<APLCON>(fittername, settings);
@@ -35,8 +35,6 @@ Fitter::Fitter(const string& fittername, const APLCON::Fit_Settings_t& settings,
 Fitter::~Fitter()
 {}
 
-Fitter::UncertaintyModel::~UncertaintyModel()
-{}
 
 APLCON::Fit_Settings_t Fitter::MakeDefaultSettings()
 {
@@ -122,7 +120,7 @@ LorentzVec Fitter::FitParticle::GetVector(const std::vector<double>& EkThetaPhi,
 KinFitter::KinFitter(
         const std::string& name,
         unsigned numGammas,
-        std::shared_ptr<const Fitter::UncertaintyModel> Uncertainty_model,
+        utils::UncertaintyModelPtr Uncertainty_model,
         const APLCON::Fit_Settings_t& settings) :
     Fitter(name, settings, Uncertainty_model)
 {
@@ -295,7 +293,7 @@ KinFitter::PhotonBeamVector::PhotonBeamVector(const string& name):
 
 TreeFitter::TreeFitter(const string& name,
                        ParticleTypeTree ptree,
-                       std::shared_ptr<const Fitter::UncertaintyModel> uncertainty_model,
+                       utils::UncertaintyModelPtr uncertainty_model,
                        nodesetup_t::getter nodeSetup,
                        const APLCON::Fit_Settings_t& settings) :
     KinFitter(name, CountGammas(ptree), uncertainty_model, settings),

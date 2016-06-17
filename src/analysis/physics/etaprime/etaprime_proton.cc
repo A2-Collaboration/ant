@@ -1,7 +1,6 @@
 #include "etaprime_proton.h"
 #include "base/std_ext/math.h"
 #include "expconfig/ExpConfig.h"
-#include "utils/FitterUncertainties.h"
 
 #include "TTree.h"
 

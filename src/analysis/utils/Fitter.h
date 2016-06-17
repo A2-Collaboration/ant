@@ -4,6 +4,7 @@
 #include "base/ParticleTypeTree.h"
 #include "tree/TParticle.h"
 #include "analysis/utils/combinatorics.h"
+#include "analysis/utils/Uncertainties.h"
 #include "base/std_ext/math.h"
 
 #include "APLCON.hpp"
@@ -30,35 +31,6 @@ public:
     struct Exception : std::runtime_error {
         using std::runtime_error::runtime_error;
     };
-
-    /**
-     * @brief Uncertainties for E, theta, and phi
-     */
-    struct Uncertainties_t {
-        double sigmaE     = {};
-        double sigmaTheta = {};
-        double sigmaPhi   = {};
-
-        Uncertainties_t() = default;
-        Uncertainties_t(const double E, const double Theta, const double Phi) : sigmaE(E), sigmaTheta(Theta), sigmaPhi(Phi) {}
-
-        bool operator==(const Uncertainties_t& other) const noexcept {
-            return sigmaE == other.sigmaE && sigmaTheta == other.sigmaTheta && sigmaPhi == other.sigmaPhi;
-        }
-    };
-
-    /**
-     * @brief Virtual base class for different Uncertainty Models for kion fitter.
-     *        Derive and implement the GetSigmas() method.
-     * @see UncertaintyModels::Constant
-     * @see UncertaintyModels::MCExtracted
-     */
-    class UncertaintyModel {
-    public:
-        virtual ~UncertaintyModel();
-        virtual Uncertainties_t GetSigmas(const TParticle& particle) const =0;
-    };
-    using UncertaintyModelPtr = std::shared_ptr<const Fitter::UncertaintyModel>;
 
     static const APLCON::Fit_Settings_t DefaultSettings;
 
@@ -122,12 +94,13 @@ public:
 protected:
 
     Fitter(const std::string& fittername,
-           const APLCON::Fit_Settings_t& settings, std::shared_ptr<const Fitter::UncertaintyModel>& uncertainty_model);
+           const APLCON::Fit_Settings_t& settings,
+           UncertaintyModelPtr uncertainty_model);
 
     Fitter(Fitter&&) = default;
     Fitter& operator=(Fitter&&) = default;
 
-    std::shared_ptr<const Fitter::UncertaintyModel> uncertainty;
+    UncertaintyModelPtr uncertainty;
     std::unique_ptr<APLCON> aplcon;
 
     void LinkVariable(FitParticle& particle);
@@ -148,7 +121,7 @@ public:
 
     KinFitter(const std::string& name,
               unsigned numGammas,
-              UncertaintyModelPtr Uncertainty_model,
+              UncertaintyModelPtr uncertainty_model,
               const APLCON::Fit_Settings_t& settings = DefaultSettings
               );
 
