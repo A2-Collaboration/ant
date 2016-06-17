@@ -255,7 +255,7 @@ struct Optimized : UncertaintyModel {
     bool operator!=(const Optimized& other) const noexcept;
 
 protected:
-    const static std::string sepatator;
+    const static std::string separator;
 
     void ReadToken(const std::string& token);
 };

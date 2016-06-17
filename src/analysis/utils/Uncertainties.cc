@@ -407,20 +407,20 @@ double numberinput(const string& x) {
 string UncertaintyModels::Optimized::to_string_simple() const
 {
     return formatter()
-            << "cgtc="<< angleoutput(cb_photon_theta_const)  << sepatator
-            << "cgts="<< angleoutput(cb_photon_theta_Sin)    << sepatator
-            << "cgp=" << angleoutput(cb_photon_phi)          << sepatator
-            << "cgEr="<< numberoutput(cb_photon_E_rel)       << sepatator
-            << "cgEe="<< numberoutput(cb_photon_E_exp)       << sepatator
-            << "cgEl="<< numberoutput(cb_photon_E_lin)       << sepatator
-            << "cpt=" << angleoutput(cb_proton.sigmaTheta)   << sepatator
-            << "cpp=" << angleoutput(cb_proton.sigmaPhi)     << sepatator
-            << "tgt=" << angleoutput(taps_photon_theta)      << sepatator
-            << "tgp=" << angleoutput(taps_photon_phi)        << sepatator
-            << "tgEr="<< numberoutput(taps_photon_E_rel)     << sepatator
-            << "tgEe="<< numberoutput(taps_photon_E_exp)     << sepatator
-            << "tgEl="<< numberoutput(taps_photon_E_lin)     << sepatator
-            << "tpt=" << angleoutput(taps_proton.sigmaTheta) << sepatator
+            << "cgtc="<< angleoutput(cb_photon_theta_const)  << separator
+            << "cgts="<< angleoutput(cb_photon_theta_Sin)    << separator
+            << "cgp=" << angleoutput(cb_photon_phi)          << separator
+            << "cgEr="<< numberoutput(cb_photon_E_rel)       << separator
+            << "cgEe="<< numberoutput(cb_photon_E_exp)       << separator
+            << "cgEl="<< numberoutput(cb_photon_E_lin)       << separator
+            << "cpt=" << angleoutput(cb_proton.sigmaTheta)   << separator
+            << "cpp=" << angleoutput(cb_proton.sigmaPhi)     << separator
+            << "tgt=" << angleoutput(taps_photon_theta)      << separator
+            << "tgp=" << angleoutput(taps_photon_phi)        << separator
+            << "tgEr="<< numberoutput(taps_photon_E_rel)     << separator
+            << "tgEe="<< numberoutput(taps_photon_E_exp)     << separator
+            << "tgEl="<< numberoutput(taps_photon_E_lin)     << separator
+            << "tpt=" << angleoutput(taps_proton.sigmaTheta) << separator
             << "tpp=" << angleoutput(taps_proton.sigmaPhi);
 }
 
@@ -542,7 +542,7 @@ void UncertaintyModels::Optimized::load_from_string(const string& data)
 void UncertaintyModels::Optimized::load_from_string_simple(const string& data)
 {
 
-    const auto tokens = std_ext::tokenize_string(data, sepatator);
+    const auto tokens = std_ext::tokenize_string(data, separator);
 
     for(const auto& token : tokens) {
         ReadToken(token);
@@ -640,4 +640,4 @@ UncertaintyModels::Optimized_Oli1::Optimized_Oli1()
 
 }
 
-const std::string UncertaintyModels::Optimized::sepatator = ": ";
+const std::string UncertaintyModels::Optimized::separator = ": ";
