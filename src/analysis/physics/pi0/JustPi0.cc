@@ -49,7 +49,6 @@ JustPi0::MultiPi0::MultiPi0(HistogramFactory& histFac, unsigned nPi0, bool nofit
     directPi0(getParticleTree(multiplicity)),
     model(utils::UncertaintyModels::MCExtracted::makeAndLoad()),
     fitter(std_ext::formatter() << multiplicity << "Pi0", 2*multiplicity, model),
-    tree(histFac.makeTTree("tree")),
     h_missingmass(promptrandom),
     h_fitprobability(promptrandom),
     IM_2g_byMM(promptrandom),
@@ -79,7 +78,7 @@ JustPi0::MultiPi0::MultiPi0(HistogramFactory& histFac, unsigned nPi0, bool nofit
     IM_2g_byFit.MakeHistograms(HistFac, "IM_2g_byFit","IM 2#gamma by Fit",bins_IM,"IM / MeV","#");
     IM_2g_fitted.MakeHistograms(HistFac, "IM_2g_fitted","IM 2#gamma fitted",bins_IM,"IM / MeV","#");
 
-
+    tree = HistFac.makeTTree("tree");
     t.CreateBranches(tree);
 
     t.ggIM().resize(nPi0);
