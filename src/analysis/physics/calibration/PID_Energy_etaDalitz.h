@@ -51,6 +51,7 @@ protected:
 
     struct PerChannel_t {
         std::string title;
+        std::string name;
         TH2* eegPID = nullptr;
         TH1D* steps = nullptr;
         TH1D* etaIM = nullptr;
@@ -66,13 +67,14 @@ protected:
 
         TH2* proton_E_theta = nullptr;
 
-        PerChannel_t(const std::string& Title, HistogramFactory& hf);
+        PerChannel_t(const std::string& Name, const std::string& Title, HistogramFactory& hf);
 
         void Show();
         void Fill(const TEventData& d);
     };
 
     std::map<std::string, PerChannel_t> channels;
+    std::map<std::string, HistogramFactory&> productions;
     Tree_t t;
     PromptRandom::Switch promptrandom;
     utils::KinFitter kinfit;
@@ -80,6 +82,8 @@ protected:
 
     template<typename T>
     void shift_right(std::vector<T>&);
+    void remove_char(std::string&, char);
+    void remove_chars(std::string&, std::initializer_list<char>);
 
 public:
 

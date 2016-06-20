@@ -15,6 +15,17 @@ void PID_Energy_etaDalitz::shift_right(std::vector<T>& v)
     std::rotate(v.begin(), v.end() -1, v.end());
 }
 
+void PID_Energy_etaDalitz::remove_char(std::string& str, char ch)
+{
+    str.erase(std::remove(str.begin(), str.end(), ch), str.end());
+}
+
+void PID_Energy_etaDalitz::remove_chars(std::string& str, std::initializer_list<char> chars)
+{
+    for (const auto ch : chars)
+        remove_char(str, ch);
+}
+
 APLCON::Fit_Settings_t PID_Energy_etaDalitz::MakeFitSettings(unsigned max_iterations)
 {
     auto settings = APLCON::Fit_Settings_t::Default;
@@ -25,28 +36,29 @@ APLCON::Fit_Settings_t PID_Energy_etaDalitz::MakeFitSettings(unsigned max_iterat
 PID_Energy_etaDalitz::Tree_t::Tree_t()
 {}
 
-PID_Energy_etaDalitz::PerChannel_t::PerChannel_t(const string& Title, HistogramFactory& hf):
-    title(Title)
+PID_Energy_etaDalitz::PerChannel_t::PerChannel_t(const std::string& Name, const string& Title, HistogramFactory& hf):
+    title(Title),
+    name(Name)
 {
     auto detector = ExpConfig::Setup::GetDetector(Detector_t::Type_t::PID);
     const BinSettings pid_channels(detector->GetNChannels());
     const BinSettings veto_energy(1000, 0, 10);
     const BinSettings energy(1200);
 
-    eegPID = hf.makeTH2D(title + " PID 2 charged 1 neutral", "PID Energy [MeV]", "#", veto_energy, pid_channels, title + "_eegPID");
-    steps = hf.makeTH1D(title + " Accepted Events", "step", "#", BinSettings(10), title + "_steps");
-    etaIM = hf.makeTH1D(title + " #eta IM all comb", "IM [MeV]", "#", energy, title + "_etaIM");
-    etaIM_fit = hf.makeTH1D(title + " #eta IM fitted", "IM [MeV]", "#", energy, title + "_etaIM_fit");
-    etaIM_cand = hf.makeTH1D(title + " #eta IM candidates", "IM [MeV]", "#", energy, title + "_etaIM_cand");
-    etaIM_final = hf.makeTH1D(title + " #eta IM final", "IM [MeV]", "#", energy, title + "_etaIM_final");
-    MM = hf.makeTH1D(title + " Missing Mass proton", "MM [MeV]", "#", BinSettings(1600), title + "_MM");
-    hCopl = hf.makeTH1D(title + " Coplanarity #eta - proton all comb", "coplanarity [#circ]", "#", BinSettings(720, -180, 180), title + "_hCopl");
-    hCopl_final = hf.makeTH1D(title + " Coplanarity #eta - proton final", "coplanarity [#circ]", "#", BinSettings(720, -180, 180), title + "_hCopl_final");
-    hChi2 = hf.makeTH1D(title + " #chi^{2}", "#chi^{2}", "#", BinSettings(500, 0, 100), title + "_hChi2");
-    hProb = hf.makeTH1D(title + " Probability", "probability", "#", BinSettings(500, 0, 1), title + "_hProb");
-    hIter = hf.makeTH1D(title + " # Iterations", "#iterations", "#", BinSettings(20), title + "_hIter");
+    eegPID = hf.makeTH2D(title + " PID 2 charged 1 neutral", "PID Energy [MeV]", "#", veto_energy, pid_channels, name + "_eegPID");
+    steps = hf.makeTH1D(title + " Accepted Events", "step", "#", BinSettings(10), name + "_steps");
+    etaIM = hf.makeTH1D(title + " IM #eta all comb", "IM [MeV]", "#", energy, name + "_etaIM");
+    etaIM_fit = hf.makeTH1D(title + " IM #eta fitted", "IM [MeV]", "#", energy, name + "_etaIM_fit");
+    etaIM_cand = hf.makeTH1D(title + " IM #eta candidates", "IM [MeV]", "#", energy, name + "_etaIM_cand");
+    etaIM_final = hf.makeTH1D(title + " IM #eta final", "IM [MeV]", "#", energy, name + "_etaIM_final");
+    MM = hf.makeTH1D(title + " Missing Mass proton", "MM [MeV]", "#", BinSettings(1600), name + "_MM");
+    hCopl = hf.makeTH1D(title + " Coplanarity #eta - proton all comb", "coplanarity [#circ]", "#", BinSettings(720, -180, 180), name + "_hCopl");
+    hCopl_final = hf.makeTH1D(title + " Coplanarity #eta - proton final", "coplanarity [#circ]", "#", BinSettings(720, -180, 180), name + "_hCopl_final");
+    hChi2 = hf.makeTH1D(title + " #chi^{2}", "#chi^{2}", "#", BinSettings(500, 0, 100), name + "_hChi2");
+    hProb = hf.makeTH1D(title + " Probability", "probability", "#", BinSettings(500, 0, 1), name + "_hProb");
+    hIter = hf.makeTH1D(title + " # Iterations", "#iterations", "#", BinSettings(20), name + "_hIter");
 
-    proton_E_theta = hf.makeTH2D(title, "E [MeV]", "#vartheta [#circ]", energy, BinSettings(360, 0, 180), title + "_e_theta");
+    proton_E_theta = hf.makeTH2D(title + " proton", "E [MeV]", "#vartheta [#circ]", energy, BinSettings(360, 0, 180), name + "_e_theta");
 }
 
 void PID_Energy_etaDalitz::PerChannel_t::Show()
@@ -101,15 +113,28 @@ void PID_Energy_etaDalitz::ProcessEvent(const TEvent& event, manager_t&)
 {
     const bool MC = event.HasMCTrue();
 
-    std::string decaystring;
-    if (MC)
-        decaystring = utils::ParticleTools::GetProductionChannelString(event.MCTrue().ParticleTree);
-    else
-        decaystring = "data";
+    std::string production = "data";
+    std::string decaystring = "data";
+    std::string decay_name = "data";
+    if (MC) {
+        production = utils::ParticleTools::GetProductionChannelString(event.MCTrue().ParticleTree);
+        remove_char(production, '#');
+        decaystring = utils::ParticleTools::GetDecayString(event.MCTrue().ParticleTree);
+        decay_name = decaystring;
+        remove_chars(decay_name, {'#', '{', '}', '^'});
+    }
+
+    auto prod = productions.find(production);
+    if (prod == productions.end()) {
+        auto hf = new HistogramFactory(production, HistFac, "");
+        productions.insert({production, *hf});
+    }
+    prod = productions.find(production);
+    auto hf = prod->second;
 
     auto c = channels.find(decaystring);
     if (c == channels.end())
-        channels.insert({decaystring, PerChannel_t(decaystring, HistFac)});
+        channels.insert({decaystring, PerChannel_t(decay_name, decaystring, hf)});
 
     c = channels.find(decaystring);
     if (MC)
