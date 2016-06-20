@@ -374,12 +374,6 @@ struct OmegaHist_t {
                 h->Fill(f.Tree.pi0_omega_im().at(size_t(i)), f.TaggW());
         });
 
-        AddTH1("Extra Gamma makes #pi^{0}", "m(2#gamma)", "", IMbins, "extaGammaPi0",
-                [] (TH1D* h, const Fill_t& f) {
-
-            h->Fill(f.Tree.bachelor_extra().at(f.iBestIndex()).M(), f.TaggW());
-        });
-
         AddTH2("Dalitz","X","Y", dalitzBins, dalitzBins, "dalitz",
                [] (TH2D* h, const Fill_t& f) {
 
@@ -393,18 +387,6 @@ struct OmegaHist_t {
         AddTH2("dEEproton","E [MeV]","dE [MeV]", Ebins, evtoEbins, "dEE",
                [] (TH2D* h, const Fill_t& f) {
             h->Fill(f.Tree.p_fitted().Energy() - ParticleTypeDatabase::Proton.Mass(), f.Tree.p_vetoE);
-        });
-
-        AddTH2("PSA (scaled)","PSA Angle [#circ]","PSA Radius [MeV]", Bins(350,25,60), Bins(400,0,400), "psa",
-               [] (TH2D* h, const Fill_t& f) {
-
-            const double longE_unfitted = f.Tree.p().Energy()        - ParticleTypeDatabase::Proton.Mass();
-            const double longE_fitted   = f.Tree.p_fitted().Energy() - ParticleTypeDatabase::Proton.Mass();
-
-            const vec2   v(longE_fitted / longE_unfitted * f.Tree.p_shortE, longE_fitted);
-
-            h->Fill(radian_to_degree(v.Phi()), v.R());
-
         });
 
         AddTH1("nCands", "# Candidates", "", BinSettings(4,4,8), "nCands",

@@ -156,24 +156,30 @@ public:
     struct OmegaTree_t : WrapTTree {
         OmegaTree_t();
 
+        ADD_BRANCH_T(unsigned, nCandsInput)
+        ADD_BRANCH_T(double, CandsUsedE)
+        ADD_BRANCH_T(double, CandsunUsedE)
+
         ADD_BRANCH_T(std::vector<TLorentzVector>, photons, 3)
         ADD_BRANCH_T(std::vector<TLorentzVector>, photons_fitted, 3)
+        ADD_BRANCH_T(std::vector<double>,              photons_Time, 3)
+        ADD_BRANCH_T(std::vector<TVector2>,            photons_PSA, 3)
+        ADD_BRANCH_T(std::vector<int>,                 photons_detector,3)
+        ADD_BRANCH_T(std::vector<double>,              photons_vetoE, 3)
 
-//        ADD_BRANCH_T(std::vector<double>,         photon_E_pulls, 3)
-//        ADD_BRANCH_T(std::vector<double>,         photon_theta_pulls, 3)
-//        ADD_BRANCH_T(std::vector<double>,         photon_phi_pulls, 3)
-//        ADD_BRANCH_T(double,                      beam_E_pull)
-//        ADD_BRANCH_T(double,                      p_theta_pull)
-//        ADD_BRANCH_T(double,                      p_phi_pull)
+        ADD_BRANCH_T(std::vector<double>,         photon_E_pulls, 3)
+        ADD_BRANCH_T(std::vector<double>,         photon_theta_pulls, 3)
+        ADD_BRANCH_T(std::vector<double>,         photon_phi_pulls, 3)
+        ADD_BRANCH_T(double,                      beam_E_pull)
+        ADD_BRANCH_T(double,                      p_theta_pull)
+        ADD_BRANCH_T(double,                      p_phi_pull)
 
+        ADD_BRANCH_T(TLorentzVector,              p_fitted)
         ADD_BRANCH_T(TLorentzVector,              p)
         ADD_BRANCH_T(double,                      p_Time)
-        ADD_BRANCH_T(double,                      p_shortE)
+        ADD_BRANCH_T(TVector2,                    p_PSA)
         ADD_BRANCH_T(int,                         p_detector)
         ADD_BRANCH_T(double,                      p_vetoE)
-
-        ADD_BRANCH_T(TLorentzVector,              p_true)
-        ADD_BRANCH_T(TLorentzVector,              p_fitted)
 
         ADD_BRANCH_T(TLorentzVector,              ggg)
         ADD_BRANCH_T(TLorentzVector,              ggg_fitted)
@@ -198,9 +204,9 @@ public:
 
         ADD_BRANCH_T(double,   KinFitChi2)
         ADD_BRANCH_T(double,   KinFitProb)
-        ADD_BRANCH_T(unsigned, KinFitIterations)
+        ADD_BRANCH_T(int,      KinFitIterations)
 
-        ADD_BRANCH_T(double,   CBSumE)
+        ADD_BRANCH_T(double,   CBESum)
         ADD_BRANCH_T(double,   CBAvgTime)
         ADD_BRANCH_T(unsigned, nPhotonsCB)
         ADD_BRANCH_T(unsigned, nPhotonsTAPS)
@@ -223,25 +229,10 @@ public:
         ADD_BRANCH_T(std::vector<double>,       eta_omega_im,3)
         ADD_BRANCH_T(std::vector<double>,       pi0_omega_im,3)
 
-
-        ADD_BRANCH_T(double,   Pi0EtaFitChi2)
-        ADD_BRANCH_T(double,   Pi0EtaFitProb)
-        ADD_BRANCH_T(unsigned, Pi0EtaFitIterations)
-        ADD_BRANCH_T(TLorentzVector,            lost_gamma_guess)
-        ADD_BRANCH_T(TLorentzVector,            extra_gamma)
-        ADD_BRANCH_T(std::vector<TLorentzVector>, bachelor_extra, 3)
-
-        ADD_BRANCH_T(bool,     nCandsClean)
-        ADD_BRANCH_T(unsigned, nCandsInput)
-        ADD_BRANCH_T(double,   CandsUsedE)
-        ADD_BRANCH_T(double,   CandsunUsedE)
-
     };
 
 protected:
     void Analyse(const TEventData &data, const TEvent& event, manager_t& manager) override;
-    void AnalyseMain(const TParticleList& photons, const TParticlePtr& proton, const TEventData &data, const TEvent& event, manager_t& manager);
-
 
     TH1D* missed_channels = nullptr;
     TH1D* found_channels  = nullptr;
@@ -265,6 +256,13 @@ protected:
     const interval<double> photon_E_cb;
     const interval<double> photon_E_taps;
     const interval<double> proton_theta;
+    const interval<double> cut_missing_mass;
+    const double opt_kinfit_chi2cut;
+
+    const unsigned nphotons    = 3;
+    const unsigned nCandsMin   = nphotons  + 1;
+    const unsigned nExtraCands = 0;
+    const unsigned nCandsMax   = nCandsMin + nExtraCands;
 
 
     ant::analysis::PromptRandom::Switch promptrandom;
@@ -272,7 +270,6 @@ protected:
     utils::UncertaintyModelPtr model;
 
     utils::KinFitter fitter;
-    AccessibleFitter pi0eta_fitter;
 
     using doubles = std::vector<double>;
 
@@ -293,21 +290,10 @@ protected:
     MyTreeFitter_t fitter_pi0;
     MyTreeFitter_t fitter_eta;
 
-    bool AcceptedPhoton(const TParticlePtr& photon);
-    bool AcceptedProton(const TParticlePtr& proton);
+    bool ProtonCheck(const TCandidatePtr& c) const;
+    bool PhotonCheck(const TCandidatePtr& c) const;
 
-    TParticleList FilterPhotons(const TParticleList& list);
-    TParticleList FilterProtons(const TParticleList& list);
-
-
-
-    // Analysis options
-
-    const bool   opt_save_after_kinfit = false;
-    const double opt_kinfit_chi2cut    = 10.0;
-
-    const bool   opt_discard_one       = false;
-    const bool   opt_save_afteretaHyp  = false;
+    const LorentzVec target = LorentzVec(0, 0, 0, ParticleTypeDatabase::Proton.Mass());
 
     TagChMultiplicity tagChMult;
 
