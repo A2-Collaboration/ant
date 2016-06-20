@@ -47,6 +47,8 @@ protected:
 
             ADD_BRANCH_T(std::vector<double>, ggIM)
 
+            ADD_BRANCH_T(double, kinfit_chi2dof)
+            ADD_BRANCH_T(double, kinfit_prob)
             ADD_BRANCH_T(double, treefit_chi2dof)
             ADD_BRANCH_T(double, treefit_prob)
 
@@ -65,8 +67,8 @@ protected:
             ADD_BRANCH_T(std::vector<double>, photons_vetoE)
             ADD_BRANCH_T(std::vector<double>, photons_Time)
 
-            ADD_BRANCH_T(double, beamE_fitted)
-            ADD_BRANCH_T(double, fit_beamE_pull)
+            ADD_BRANCH_T(double, Tagg_E_fitted)
+            ADD_BRANCH_T(double, fit_Tagg_E_pull)
 
             ADD_BRANCH_T(std::vector<double>, fit_photons_E_pulls)
             ADD_BRANCH_T(std::vector<double>, fit_photons_Theta_pulls)

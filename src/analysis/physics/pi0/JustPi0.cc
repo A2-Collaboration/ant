@@ -256,10 +256,14 @@ void JustPi0::MultiPi0::ProcessData(const TEventData& data, const TParticleTree_
 
             if(chi2dof < kinfit_best_chi2) {
 
+                t.kinfit_chi2dof = chi2dof;
+                t.kinfit_prob    = fit_result.Probability;
+
+                t.proton        = *proton;
                 t.proton_fitted = *fitter.GetFittedProton();
 
-                t.beamE_fitted   = fitter.GetFittedBeamE();
-                t.fit_beamE_pull = fitter.GetFittedBeamEPull();
+                t.Tagg_E_fitted   = fitter.GetFittedBeamE();
+                t.fit_Tagg_E_pull = fitter.GetFittedBeamEPull();
 
                 t.proton_vetoE  = proton->Candidate->VetoEnergy;
                 t.proton_Time   = proton->Candidate->Time;
