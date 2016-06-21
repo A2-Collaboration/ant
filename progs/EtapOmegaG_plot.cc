@@ -169,14 +169,14 @@ struct CommonHist_t {
         cuttree::Cuts_t<Fill_t> cuts;
         cuts.emplace_back(MultiCut_t<Fill_t>{
                               // Use non-null PID cuts only when PID calibrated...
-                              //{"CBSumVeto=0", [] (const Fill_t& f) { return f.Common.CBSumVetoE==0; } },
-                              {"CBSumVeto<0.25", [] (const Fill_t& f) { return f.Shared.CBSumVetoE<0.25; } },
-                              //{"PIDSumE=0", [] (const Fill_t& f) { return f.Common.PIDSumE==0; } },
-                              {"PIDSumE<1", [] (const Fill_t& f) { return f.Common.PIDSumE<1; } },
+                              {"CBSumVeto=0", [] (const Fill_t& f) { return f.Shared.CBSumVetoE==0; } },
+//                              {"CBSumVeto<0.25", [] (const Fill_t& f) { return f.Shared.CBSumVetoE<0.25; } },
+                              {"PIDSumE=0", [] (const Fill_t& f) { return f.Common.PIDSumE==0; } },
+//                              {"PIDSumE<1", [] (const Fill_t& f) { return f.Common.PIDSumE<1; } },
                           });
         cuts.emplace_back(MultiCut_t<Fill_t>{
                               {"DiscardedEk=0", [] (const Fill_t& f) { return f.Shared.DiscardedEk == 0; } },
-                              {"DiscardedEk<50", [] (const Fill_t& f) { return f.Shared.DiscardedEk < 50; } },
+//                              {"DiscardedEk<50", [] (const Fill_t& f) { return f.Shared.DiscardedEk < 50; } },
 //                              {"DiscardedEk<100", [] (const Fill_t& f) { return f.Shared.DiscardedEk < 100; } },
                           });
 //        cuts.emplace_back(MultiCut_t<Fill_t>{
@@ -185,8 +185,8 @@ struct CommonHist_t {
 //                          });
         cuts.emplace_back(MultiCut_t<Fill_t>{
                                  {"KinFitProb>0.01", [] (const Fill_t& f) { return f.Shared.KinFitProb>0.01; } },
-                                 {"KinFitProb>0.1", [] (const Fill_t& f) { return f.Shared.KinFitProb>0.1; } },
-                                 {"KinFitProb>0.3", [] (const Fill_t& f) { return f.Shared.KinFitProb>0.3; } },
+//                                 {"KinFitProb>0.1", [] (const Fill_t& f) { return f.Shared.KinFitProb>0.1; } },
+//                                 {"KinFitProb>0.3", [] (const Fill_t& f) { return f.Shared.KinFitProb>0.3; } },
                           });
         return cuts;
     }
@@ -214,32 +214,30 @@ struct SigHist_t : CommonHist_t {
         LogProb_t TreeFitProb{Tree.TreeFitProb};
     };
 
-    TH2D* h_IM_gg_gg;     // Goldhaber plot
     TH1D* h_IM_4g;        // EtaPrime IM
-    TH1D* h_IM_gg;        // EtaPrime IM
+    TH1D* h_IM_gg;
 
     TH1D* h_AntiPi0FitProb;
     TH1D* h_AntiEtaFitProb;
     TH1D* h_TreeFitProb;
 
+    TH2D* h_Pi0EtaFitProb;
+    TH2D* h_Pi0TreeFitProb;
+    TH2D* h_EtaTreeFitProb;
+
+
     const BinSettings bins_IM_Etap {100, 800,1050};
     const BinSettings bins_IM_Omega{100, 550, 950};
 
     SigHist_t(HistogramFactory HistFac, cuttree::TreeInfo_t treeInfo) : CommonHist_t(HistFac, treeInfo) {
-        BinSettings bins_goldhaber(200, 0, 900);
-        const string axislabel_goldhaber("2#gamma IM / MeV");
-
-        h_IM_gg_gg = HistFac.makeTH2D("IM 2#gamma-2#gamma",
-                                    axislabel_goldhaber, axislabel_goldhaber,
-                                    bins_goldhaber, bins_goldhaber,
-                                    "h_IM_gg_gg"
-                                    );
         h_IM_4g = HistFac.makeTH1D("#eta' IM", "IM(#pi^{0}#gamma#gamma) / MeV","",bins_IM_Etap,"h_IM_4g");
         h_IM_gg = HistFac.makeTH1D("#eta' IM", "IM(#gamma#gamma) / MeV","",BinSettings(200,80,700),"h_IM_gg");
         h_AntiPi0FitProb = HistFac.makeTH1D("AntiPi0FitProb", "log p","",bins_FitProb,"h_AntiPi0FitProb");
         h_AntiEtaFitProb = HistFac.makeTH1D("AntiEtaFitProb", "log p","",bins_FitProb,"h_AntiEtaFitProb");
         h_TreeFitProb = HistFac.makeTH1D("TreeFitProb", "log p","",bins_FitProb,"h_TreeFitProb");
-
+        h_Pi0EtaFitProb = HistFac.makeTH2D("Pi0 vs. Eta","Pi0 p","Eta p",bins_FitProb,bins_FitProb,"h_Pi0EtaFitProb");
+        h_Pi0TreeFitProb = HistFac.makeTH2D("Pi0 vs. Tree","Pi0 p","Tree p",bins_FitProb,bins_FitProb,"h_Pi0TreeFitProb");
+        h_EtaTreeFitProb = HistFac.makeTH2D("Eta vs. Tree","Eta p","Tree p",bins_FitProb,bins_FitProb,"h_EtaTreeFitProb");
     }
 
     void Fill(const Fill_t& f) const {
@@ -247,16 +245,19 @@ struct SigHist_t : CommonHist_t {
         const SharedTree_t& s = f.Shared;
         const Tree_t& tree = f.Tree;
 
-        for(unsigned i=0;i<s.gg_gg1().size();i++) {
-            h_IM_gg_gg->Fill(s.gg_gg1()[i], s.gg_gg2()[i], f.TaggW());
-            h_IM_gg_gg->Fill(s.gg_gg2()[i], s.gg_gg1()[i], f.TaggW());
-        }
+//        for(unsigned i=0;i<s.gg_gg1().size();i++) {
+//            h_IM_gg_gg->Fill(s.gg_gg1()[i], s.gg_gg2()[i], f.TaggW());
+//            h_IM_gg_gg->Fill(s.gg_gg2()[i], s.gg_gg1()[i], f.TaggW());
+//        }
         h_AntiPi0FitProb->Fill(f.AntiPi0FitProb, f.TaggW());
         h_AntiEtaFitProb->Fill(f.AntiEtaFitProb, f.TaggW());
 
         h_IM_4g->Fill(tree.IM_Pi0gg, f.TaggW());
         h_IM_gg->Fill(tree.IM_gg, f.TaggW());
         h_TreeFitProb->Fill(f.TreeFitProb, f.TaggW());
+        h_Pi0EtaFitProb->Fill(f.AntiPi0FitProb, f.AntiEtaFitProb, f.TaggW());
+        h_Pi0TreeFitProb->Fill(f.AntiPi0FitProb, f.TreeFitProb, f.TaggW());
+        h_EtaTreeFitProb->Fill(f.AntiEtaFitProb, f.TreeFitProb, f.TaggW());
 
     }
 
