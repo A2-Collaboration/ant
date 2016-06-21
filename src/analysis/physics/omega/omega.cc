@@ -400,6 +400,7 @@ void OmegaEtaG2::Analyse(const TEventData &data, const TEvent& event, manager_t&
 
     tagChMult.Fill(data.TaggerHits);
 
+    auto dcTaggerHitsAccepted = dTaggerHitsAccepted.getHandle();
     unsigned taggerHitsProcessed = 0;
 
     for(const TTaggerHit& TagH : data.TaggerHits) {
@@ -412,6 +413,8 @@ void OmegaEtaG2::Analyse(const TEventData &data, const TEvent& event, manager_t&
             continue;
 
         dCounters.TaggerHitAccepted();
+
+        dcTaggerHitsAccepted.Count();
 
         ++taggerHitsProcessed;
 
@@ -791,6 +794,7 @@ OmegaEtaG2::OmegaEtaG2(const std::string& name, OptionsPtr opts):
         model
         ),
     tagChMult(HistFac),
+    dTaggerHitsAccepted(HistFac.makeTH1D("Tagger Hits Accepted Per Event","","",BinSettings(10),"dTHAcceptedperEvent")),
     dCounters(HistFac)
 
 {

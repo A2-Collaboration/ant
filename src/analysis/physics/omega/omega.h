@@ -295,6 +295,39 @@ protected:
 
     TagChMultiplicity tagChMult;
 
+    class DebugCounter {
+    protected:
+        TH1D*     hist    = nullptr;
+
+    public:
+
+        class Handle {
+        protected:
+            unsigned count = 0;
+            DebugCounter& parent;
+
+            friend class DebugCounter;
+            Handle(DebugCounter& p) noexcept : parent(p) {}
+
+        public:
+
+            Handle(const Handle& other ) noexcept : count(other.count), parent(other.parent) {}
+
+            ~Handle() {
+                parent.hist->Fill(count);
+            }
+
+            void Count() noexcept { ++count; }
+        };
+
+        Handle getHandle() noexcept { return Handle(*this); }
+
+        DebugCounter(TH1D* h) noexcept : hist(h) {}
+
+    };
+
+    DebugCounter dTaggerHitsAccepted;
+
     struct DebugCounters {
 
         struct Values {
