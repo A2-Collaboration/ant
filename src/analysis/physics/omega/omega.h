@@ -297,6 +297,59 @@ protected:
 
     TagChMultiplicity tagChMult;
 
+    struct DebugCounters {
+
+        struct Values {
+            unsigned nTaggerLoops         = 0;
+            unsigned nTaggerHitAccepted   = 0;
+            unsigned nPIDLoopsPerTaggerHit = 0;
+            unsigned nKinfitsPerTaggerHit = 0;
+            unsigned nKinfitsPerEvent     = 0;
+            unsigned nKinFitsOKPerEvent   = 0;
+            unsigned nTreeFitsPerEvent    = 0;
+            unsigned nHighScoresPerPIDLoop =0;
+            unsigned nCoplanarityOKPerPIDLoop = 0;
+            unsigned nMissingMassOKPerPIDLoop = 0;
+            unsigned nParticlesFoundPerTH = 0;
+        };
+
+        Values v;
+
+        void Reset()           noexcept { v = Values(); }
+        void EventStart()      noexcept { Reset(); }
+        void TaggerLoopBegin() noexcept { ++v.nTaggerLoops; v.nKinfitsPerTaggerHit = 0; v.nPIDLoopsPerTaggerHit = 0; v.nParticlesFoundPerTH = 0; }
+        void TaggerHitAccepted() noexcept { ++v.nTaggerHitAccepted; }
+        void KinfitHighscore()   noexcept { ++v.nHighScoresPerPIDLoop; }
+        void TaggerLoopEnd();
+        void PIDLoopBegin()    noexcept { ++v.nPIDLoopsPerTaggerHit;
+                                          v.nHighScoresPerPIDLoop = 0;
+                                          v.nCoplanarityOKPerPIDLoop = 0;
+                                          v.nMissingMassOKPerPIDLoop = 0; }
+        void CoplanarityOK()   noexcept { ++v.nCoplanarityOKPerPIDLoop; }
+        void MissingMassOK()   noexcept { ++v.nMissingMassOKPerPIDLoop; }
+        void KinfitLoopBegin() noexcept { ++v.nKinfitsPerTaggerHit; ++v.nKinfitsPerEvent; }
+        void AfterKinfitLoop();
+        void TreeFit()         noexcept { ++v.nTreeFitsPerEvent; }
+        void ParticlesFound()  noexcept { ++v.nParticlesFoundPerTH; }
+        void EventEnd();
+
+        DebugCounters(HistogramFactory& hf);
+
+        TH1D* hTaggerLoops;
+        TH1D* hPIDLoopsPerTaggerHit;
+        TH1D* hKinfitsPerTaggerHit;
+        TH1D* hKinfitsPerEvent;
+        TH1D* hKinFitsOKPerEvent;
+        TH1D* hTreeFitsPerEvent;
+        TH1D* hHighScoresPerPIDLoop;
+        TH1D* hCoplanarityOKPerPIDLoop;
+        TH1D* hMissingMassOKPerPIDLoop;
+        TH1D* hParticlesFoundPerTH;
+        TH1D* hTaggerHitsAccepted;
+    };
+
+    DebugCounters dCounters;
+
 public:
 
     OmegaEtaG2(const std::string& name, OptionsPtr opts);

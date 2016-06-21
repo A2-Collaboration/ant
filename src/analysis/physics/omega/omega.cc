@@ -339,6 +339,7 @@ static int getDetectorAsInt(const Detector_t::Any_t& d) {
 
 void OmegaEtaG2::Analyse(const TEventData &data, const TEvent& event, manager_t&) {
 
+    dCounters.EventStart();
 
     t.Channel = reaction_channels.identify(event.MCTrue().ParticleTree);
 
@@ -403,10 +404,14 @@ void OmegaEtaG2::Analyse(const TEventData &data, const TEvent& event, manager_t&
 
     for(const TTaggerHit& TagH : data.TaggerHits) {
 
+        dCounters.TaggerLoopBegin();
+
         promptrandom.SetTaggerHit(TagH.Time - t.CBAvgTime);
 
         if(promptrandom.State() == PromptRandom::Case::Outside)
             continue;
+
+        dCounters.TaggerHitAccepted();
 
         ++taggerHitsProcessed;
 
@@ -425,6 +430,8 @@ void OmegaEtaG2::Analyse(const TEventData &data, const TEvent& event, manager_t&
         bool fit_ok = false;
 
         for(auto it_proton = cands.begin(); it_proton != cands.end(); ++it_proton) {
+
+            dCounters.PIDLoopBegin();
 
             //proton acceptance checks
             if(!ProtonCheck(*it_proton))
@@ -447,6 +454,8 @@ void OmegaEtaG2::Analyse(const TEventData &data, const TEvent& event, manager_t&
             if(photons.size() != nphotons)
                 continue;
 
+            dCounters.ParticlesFound();
+
 
             const TParticle ggg(ParticleTypeDatabase::Omega, LVSum(photons.begin(), photons.end()));
 
@@ -456,17 +465,22 @@ void OmegaEtaG2::Analyse(const TEventData &data, const TEvent& event, manager_t&
             if(coplanarity_angle > cut_Copl)
                  continue;
 
+            dCounters.CoplanarityOK();
+
             const LorentzVec beam_target = TagH.GetPhotonBeam() + target; // make global
             const TParticle missing_vector(ParticleTypeDatabase::Proton, beam_target - ggg);
 
             if(!cut_missing_mass.Contains(missing_vector.M()))
                 continue;
 
+            dCounters.MissingMassOK();
+
 
             fitter.SetEgammaBeam(TagH.PhotonEnergy);
             fitter.SetProton(proton);
             fitter.SetPhotons(photons);
 
+            dCounters.KinfitLoopBegin();
             const auto fitres = fitter.DoFit();
 
             if(fitres.Status != APLCON::Result_Status_t::Success)
@@ -475,6 +489,8 @@ void OmegaEtaG2::Analyse(const TEventData &data, const TEvent& event, manager_t&
             const auto chi2dof = fitres.ChiSquare / fitres.NDoF;
 
             if(chi2dof < kinfit_best_chi2) {
+
+                dCounters.KinfitHighscore();
 
                 fit_ok = true;
 
@@ -571,12 +587,15 @@ void OmegaEtaG2::Analyse(const TEventData &data, const TEvent& event, manager_t&
         if(!fit_ok)
             continue;
 
+        dCounters.AfterKinfitLoop();
+
 
         //===== Hypothesis testing with kinematic fitter ======
 
         {
 
             // Kin fit: test pi0 hypothesis
+            dCounters.TreeFit();
 
             fitter_pi0.treefitter.SetEgammaBeam(TagH.PhotonEnergy);
             fitter_pi0.treefitter.SetPhotons(selected_photons);
@@ -592,6 +611,7 @@ void OmegaEtaG2::Analyse(const TEventData &data, const TEvent& event, manager_t&
 
 
             // Kin fit: test eta hypothesis
+            dCounters.TreeFit();
 
             fitter_eta.treefitter.SetEgammaBeam(TagH.PhotonEnergy);
             fitter_eta.treefitter.SetPhotons(selected_photons);
@@ -632,6 +652,7 @@ void OmegaEtaG2::Analyse(const TEventData &data, const TEvent& event, manager_t&
 
         }
 
+        dCounters.TaggerLoopEnd();
         tree->Fill();
 
         // TODO
@@ -708,8 +729,7 @@ void OmegaEtaG2::Analyse(const TEventData &data, const TEvent& event, manager_t&
         }
 
 
-
-    }
+    dCounters.EventEnd();
 
 }
 
@@ -769,7 +789,8 @@ OmegaEtaG2::OmegaEtaG2(const std::string& name, OptionsPtr opts):
         ParticleTypeDatabase::Eta,
         model
         ),
-    tagChMult(HistFac)
+    tagChMult(HistFac),
+    dCounters(HistFac)
 
 {
 
@@ -946,6 +967,47 @@ void TagChMultiplicity::Fill(const std::vector<TTaggerHit>& t)
         hTagChMult->Fill(m);
     }
 }
+
+
+
+void OmegaEtaG2::DebugCounters::TaggerLoopEnd() {
+    hPIDLoopsPerTaggerHit->Fill(v.nPIDLoopsPerTaggerHit);
+    hKinfitsPerTaggerHit->Fill(v.nKinfitsPerTaggerHit);
+    hParticlesFoundPerTH->Fill(v.nParticlesFoundPerTH);
+}
+
+void OmegaEtaG2::DebugCounters::AfterKinfitLoop()
+{
+    ++v.nKinFitsOKPerEvent;
+    hHighScoresPerPIDLoop->Fill(v.nHighScoresPerPIDLoop);
+    hCoplanarityOKPerPIDLoop->Fill(v.nCoplanarityOKPerPIDLoop);
+    hMissingMassOKPerPIDLoop->Fill(v.nMissingMassOKPerPIDLoop);
+}
+
+void OmegaEtaG2::DebugCounters::EventEnd()
+{
+    hTaggerLoops->Fill(v.nTaggerLoops);
+    hKinfitsPerEvent->Fill(v.nKinfitsPerEvent);
+    hKinFitsOKPerEvent->Fill(v.nKinFitsOKPerEvent);
+    hTreeFitsPerEvent->Fill(v.nTreeFitsPerEvent);
+    hTaggerHitsAccepted->Fill(v.nTaggerHitAccepted);
+}
+
+OmegaEtaG2::DebugCounters::DebugCounters(HistogramFactory& hf)
+{
+    hTaggerLoops          = hf.makeTH1D("Number of Tagger Loops per Event",       "n Tagger Loops / Event",   "", BinSettings(20), "hTaggerLoops");
+    hPIDLoopsPerTaggerHit = hf.makeTH1D("Number of PID Loops per Tagger Hit",     "n PID Loops / Tagger Hit", "", BinSettings(10), "hPIDLoops");
+    hKinfitsPerTaggerHit  = hf.makeTH1D("Number of KinFits Loops per Tagger Hit", "n KinFits / Tagger Hit",   "", BinSettings(10), "hKinFitsPerTH");
+    hKinfitsPerEvent      = hf.makeTH1D("Number of KinFits Loops per Event",      "n KinFits / Event",        "", BinSettings(10),"hKinFitsPerEvent");
+    hKinFitsOKPerEvent    = hf.makeTH1D("Number of KinFits OK per Event",         "n KinFits OK / Event",     "", BinSettings(10), "hKinFitsOKPerEvent");
+    hTreeFitsPerEvent     = hf.makeTH1D("Number of TreeFits per Event",           "n Tree Fits / Event",      "", BinSettings(10), "hTreeFitsPerEvent");
+    hHighScoresPerPIDLoop = hf.makeTH1D("Number of Kinfit HighScores per PID Loop","n Kin Fit High Scores / PID Loop","", BinSettings(10), "hKinFitHighScoresPerPIDLoop");
+    hCoplanarityOKPerPIDLoop = hf.makeTH1D("Coplanarity Cut passed per PID Loop", "n Copl Cut passed / PID Loop","", BinSettings(10), "hCoplanarityOKPerPIDLoop");
+    hMissingMassOKPerPIDLoop = hf.makeTH1D("Missing Mass Cut passed per PID Loop", "n MM Cut passed / PID Loop","", BinSettings(10), "hMissingMassOKPerPIDLoop");
+    hParticlesFoundPerTH  = hf.makeTH1D("Set of particles found per Tagger Hit",  "n sets / Tagger Hit",        "", BinSettings(10), "hParticlesFoundPerTH");
+    hTaggerHitsAccepted  = hf.makeTH1D("Number of Tagger Hits accepted per Event","n Tagger Hits accepted / Event","", BinSettings(10), "hTaggerHitsAccepted");
+}
+
 
 AUTO_REGISTER_PHYSICS(OmegaMCTruePlots)
 AUTO_REGISTER_PHYSICS(OmegaMCTree)
