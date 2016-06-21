@@ -14,9 +14,8 @@ while(my $line = <$fh>) {
     my $TDC = $cols[6];
     $ADC =~ s/M\d$//;
     $TDC =~ s/M\d$//;
-    my @xyz = @cols[11..13];
-    printf("{%2d, %8.3f, %03d, %04d}, \n",
-                 $n, $xyz[2], $ADC, $TDC);
+    printf("{%2d, %03d, %04d}, \n",
+                 $n, $ADC, $TDC);
     $n++;
   }
 }
