@@ -121,10 +121,17 @@ struct PID_2009_05 : PID {
     static const std::vector<Element_t> elements_init;
 };
 
+struct PID_2007 : PID {
+    PID_2007() : PID(elements_init) {}
+    static const std::vector<Element_t> elements_init;
+};
+
 struct PID_2004 : PID {
     PID_2004() : PID(elements_init) {}
     static const std::vector<Element_t> elements_init;
 };
+
+
 
 
 }}} // namespace ant::expconfig::detector

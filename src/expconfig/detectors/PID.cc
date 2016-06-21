@@ -1,6 +1,7 @@
 #include "PID.h"
 
 #include "detail/PID_2004_elements.h"
+#include "detail/PID_2007_elements.h"
 #include "detail/PID_2009_05_elements.h"
 #include "detail/PID_2009_06_elements.h"
 #include "detail/PID_2009_07_elements.h"

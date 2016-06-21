@@ -21,11 +21,13 @@ set(SRCS_SETUPS
 set(SRCS_DETECTORS
   detectors/Trigger.cc
   detectors/EPT.cc
+  detectors/Tagger.cc
   detectors/TAPS.cc
   detectors/CB.cc
   detectors/PID.cc
   detectors/TAPSVeto.cc
   detectors/detail/EPT_2014_elements.h
+  detectors/detail/Tagger_2007_1508_elements.h
   detectors/detail/CB_elements.h
   detectors/detail/TAPS_2013_BaF2_elements.h
   detectors/detail/TAPS_2013_PbWO4_elements.h
@@ -33,6 +35,7 @@ set(SRCS_DETECTORS
   detectors/detail/TAPSVeto_2013_BaF2_elements.h
   detectors/detail/TAPSVeto_2014_BaF2_elements.h
   detectors/detail/PID_2004_elements.h
+  detectors/detail/PID_2007_elements.h
   detectors/detail/PID_2009_05_elements.h
   detectors/detail/PID_2009_06_elements.h
   detectors/detail/PID_2009_07_elements.h

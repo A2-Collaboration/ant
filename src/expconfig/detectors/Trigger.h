@@ -90,4 +90,10 @@ protected:
     const scaler_mapping_t scaler_mapping;
 };
 
+struct Trigger_2007 : Trigger {
+    using Trigger::Trigger;
+
+    virtual std::string GetScalerReference(const std::string&) const override;
+};
+
 }}} // namespace ant::expconfig::detector

@@ -124,3 +124,8 @@ Trigger_2014::scaler_mapping_t Trigger_2014::MakeScalerMapping()
 
 
 
+
+string Trigger_2007::GetScalerReference(const string&) const
+{
+    return "";
+}
