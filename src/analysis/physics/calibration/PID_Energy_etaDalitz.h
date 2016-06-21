@@ -64,6 +64,8 @@ protected:
         TH1D* hChi2 = nullptr;
         TH1D* hProb = nullptr;
         TH1D* hIter = nullptr;
+        TH1D* effect_rad = nullptr;
+        TH2D* effect_rad_E = nullptr;
 
         TH2* proton_E_theta = nullptr;
 
@@ -75,15 +77,21 @@ protected:
 
     std::map<std::string, PerChannel_t> channels;
     std::map<std::string, HistogramFactory&> productions;
+
     Tree_t t;
     PromptRandom::Switch promptrandom;
     utils::KinFitter kinfit;
     using uncertainty_model_t = utils::UncertaintyModels::Optimized_Oli1;
 
+    std::shared_ptr<ant::Detector_t> cb;
+
     template<typename T>
     void shift_right(std::vector<T>&);
+
     void remove_char(std::string&, char);
     void remove_chars(std::string&, std::initializer_list<char>);
+
+    double calc_effective_radius(const TCandidatePtr);
 
 public:
 

@@ -26,6 +26,22 @@ void PID_Energy_etaDalitz::remove_chars(std::string& str, std::initializer_list<
         remove_char(str, ch);
 }
 
+double PID_Energy_etaDalitz::calc_effective_radius(const TCandidatePtr cand)
+{
+    TClusterHitList crystals = cand->FindCaloCluster()->Hits;
+    if (crystals.size() < 3)
+        return std_ext::NaN;
+    double effR = 0, e = 0;
+    vec3 central = cb->GetPosition(cand->FindCaloCluster()->CentralElement);
+    for (TClusterHit crystal : crystals) {
+        const double r = std_ext::radian_to_degree(central.Angle(cb->GetPosition(crystal.Channel)));
+        effR += r*r*crystal.Energy;
+        e += crystal.Energy;
+    }
+    effR /= e;
+    return sqrt(effR);
+}
+
 APLCON::Fit_Settings_t PID_Energy_etaDalitz::MakeFitSettings(unsigned max_iterations)
 {
     auto settings = APLCON::Fit_Settings_t::Default;
@@ -57,6 +73,8 @@ PID_Energy_etaDalitz::PerChannel_t::PerChannel_t(const std::string& Name, const 
     hChi2 = hf.makeTH1D(title + " #chi^{2}", "#chi^{2}", "#", BinSettings(500, 0, 100), name + "_hChi2");
     hProb = hf.makeTH1D(title + " Probability", "probability", "#", BinSettings(500, 0, 1), name + "_hProb");
     hIter = hf.makeTH1D(title + " # Iterations", "#iterations", "#", BinSettings(20), name + "_hIter");
+    effect_rad = hf.makeTH1D(title + " Effective Radius", "R", "#", BinSettings(500, 0, 50), name + "effect_rad");
+    effect_rad_E = hf.makeTH2D(title + " Effective Radius vs. Cluster Energy", "E [MeV]", "R", energy, BinSettings(500, 0, 50), name + "effect_rad_E");
 
     proton_E_theta = hf.makeTH2D(title + " proton", "E [MeV]", "#vartheta [#circ]", energy, BinSettings(360, 0, 180), name + "_e_theta");
 }
@@ -93,6 +111,7 @@ PID_Energy_etaDalitz::PID_Energy_etaDalitz(const string& name, OptionsPtr opts) 
     promptrandom.AddRandomRange({-30, -10});
     promptrandom.AddRandomRange({10, 30});
 
+    cb = ExpConfig::Setup::GetDetector(Detector_t::Type_t::CB);
     auto detector = ExpConfig::Setup::GetDetector(Detector_t::Type_t::PID);
 
     t.CreateBranches(HistFac.makeTTree("tree"));
@@ -118,7 +137,7 @@ void PID_Energy_etaDalitz::ProcessEvent(const TEvent& event, manager_t&)
     std::string decay_name = "data";
     if (MC) {
         production = utils::ParticleTools::GetProductionChannelString(event.MCTrue().ParticleTree);
-        remove_char(production, '#');
+        remove_chars(production, {'#', '{', '}', '^'});
         decaystring = utils::ParticleTools::GetDecayString(event.MCTrue().ParticleTree);
         decay_name = decaystring;
         remove_chars(decay_name, {'#', '{', '}', '^'});
@@ -153,7 +172,7 @@ void PID_Energy_etaDalitz::ProcessEvent(const TEvent& event, manager_t&)
     h.steps->Fill("#cands", 1);
 
     TLorentzVector eta;
-    TLorentzVector proton;
+    LorentzVec proton;
     //const interval<double> eta_im({ETA_IM-ETA_SIGMA, ETA_IM+ETA_SIGMA});
     const interval<double> coplanarity({-25, 25});
     TCandidatePtrList comb;
@@ -195,7 +214,7 @@ void PID_Energy_etaDalitz::ProcessEvent(const TEvent& event, manager_t&)
         return;
 
     TParticleList photons;
-    TLorentzVector missing;
+    LorentzVec missing;
     std::vector<utils::Fitter::FitParticle> fitparticles;
     const interval<double> mm({ParticleTypeDatabase::Proton.Mass()-150., ParticleTypeDatabase::Proton.Mass()+150.});
     double min_chi2 = std_ext::inf;
@@ -282,7 +301,7 @@ void PID_Energy_etaDalitz::ProcessEvent(const TEvent& event, manager_t&)
             h.steps->Fill("probability", 1);
 
             h_eta->Fill(eta.E() - eta.M(), std_ext::radian_to_degree(eta.Theta()), t.TaggW);
-            h_proton->Fill(proton.E() - proton.M(), std_ext::radian_to_degree(proton.Theta()), t.TaggW);
+            h_proton->Fill(proton.E - proton.M(), std_ext::radian_to_degree(proton.Theta()), t.TaggW);
 
             auto fitted_photons = kinfit.GetFittedPhotons();
             eta.SetXYZT(0,0,0,0);
@@ -336,7 +355,19 @@ void PID_Energy_etaDalitz::ProcessEvent(const TEvent& event, manager_t&)
     // suppress pi0
     if (eeIM > 130.)
         return;
-    h.steps->Fill("below #pi^{0}", 1);
+    h.steps->Fill("above #pi^{0}", 1);
+
+    // test effective cluster radius to distinguish between leptons and charged pions
+    double effective_radius = calc_effective_radius(l1);
+    if (isfinite(effective_radius)) {
+        h.effect_rad->Fill(effective_radius);
+        h.effect_rad_E->Fill(l1->FindCaloCluster()->Energy, effective_radius);
+    }
+    effective_radius = calc_effective_radius(l2);
+    if (isfinite(effective_radius)) {
+        h.effect_rad->Fill(effective_radius);
+        h.effect_rad_E->Fill(l1->FindCaloCluster()->Energy, effective_radius);
+    }
 
     h.etaIM_final->Fill(eta.M());
     h.hCopl_final->Fill(std_ext::radian_to_degree(abs(eta.Phi() - proton.Phi())) - 180.);
