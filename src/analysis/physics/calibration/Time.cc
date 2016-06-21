@@ -115,6 +115,13 @@ struct EPT_Time : Time {
 };
 AUTO_REGISTER_PHYSICS(EPT_Time)
 
+struct Tagger_Time : Time {
+    Tagger_Time(const std::string& name, OptionsPtr opts) :
+        Time(Detector_t::Type_t::Tagger, name, opts)
+    {}
+};
+AUTO_REGISTER_PHYSICS(Tagger_Time)
+
 struct CB_Time : Time {
     CB_Time(const std::string& name, OptionsPtr opts) :
         Time(Detector_t::Type_t::CB, name, opts)
