@@ -162,24 +162,26 @@ public:
 
         ADD_BRANCH_T(std::vector<TLorentzVector>, photons, 3)
         ADD_BRANCH_T(std::vector<TLorentzVector>, photons_fitted, 3)
-        ADD_BRANCH_T(std::vector<double>,              photons_Time, 3)
-        ADD_BRANCH_T(std::vector<TVector2>,            photons_PSA, 3)
-        ADD_BRANCH_T(std::vector<int>,                 photons_detector,3)
-        ADD_BRANCH_T(std::vector<double>,              photons_vetoE, 3)
+        ADD_BRANCH_T(std::vector<double>,         photons_Time, 3)
+        ADD_BRANCH_T(std::vector<TVector2>,       photons_PSA, 3)
+        ADD_BRANCH_T(std::vector<int>,            photons_detector,3)
+        ADD_BRANCH_T(std::vector<double>,         photons_vetoE, 3)
 
         ADD_BRANCH_T(std::vector<double>,         photon_E_pulls, 3)
         ADD_BRANCH_T(std::vector<double>,         photon_theta_pulls, 3)
         ADD_BRANCH_T(std::vector<double>,         photon_phi_pulls, 3)
-        ADD_BRANCH_T(double,                      beam_E_pull)
-        ADD_BRANCH_T(double,                      p_theta_pull)
-        ADD_BRANCH_T(double,                      p_phi_pull)
 
-        ADD_BRANCH_T(TLorentzVector,              p_fitted)
+
         ADD_BRANCH_T(TLorentzVector,              p)
+        ADD_BRANCH_T(TLorentzVector,              p_fitted)
         ADD_BRANCH_T(double,                      p_Time)
         ADD_BRANCH_T(TVector2,                    p_PSA)
         ADD_BRANCH_T(int,                         p_detector)
         ADD_BRANCH_T(double,                      p_vetoE)
+
+        ADD_BRANCH_T(double,                      p_theta_pull)
+        ADD_BRANCH_T(double,                      p_phi_pull)
+
 
         ADD_BRANCH_T(TLorentzVector,              ggg)
         ADD_BRANCH_T(TLorentzVector,              ggg_fitted)
@@ -193,41 +195,37 @@ public:
         ADD_BRANCH_T(std::vector<double>,         BachelorE, 3)
         ADD_BRANCH_T(std::vector<double>,         BachelorE_fitted, 3)
 
-        ADD_BRANCH_T(double,                      ggIM_real)  // only if Signal/Ref
-        ADD_BRANCH_T(std::vector<double>,         ggIM_comb, 2)  // only if Signal/Ref
+        ADD_BRANCH_T(double,                      TaggW)
+        ADD_BRANCH_T(double,                      TaggE)
+        ADD_BRANCH_T(double,                      TaggT)
+        ADD_BRANCH_T(unsigned,                    TaggCh)
+        ADD_BRANCH_T(double,                      beam_E_fitted)
+        ADD_BRANCH_T(double,                      beam_E_pull)
 
-        ADD_BRANCH_T(double,   TaggW)
-        ADD_BRANCH_T(double,   TaggW_tight)
-        ADD_BRANCH_T(double,   TaggE)
-        ADD_BRANCH_T(double,   TaggT)
-        ADD_BRANCH_T(unsigned, TaggCh)
+        ADD_BRANCH_T(double,                      KinFitChi2)
+        ADD_BRANCH_T(double,                      KinFitProb)
+        ADD_BRANCH_T(int,                         KinFitIterations)
 
-        ADD_BRANCH_T(double,   KinFitChi2)
-        ADD_BRANCH_T(double,   KinFitProb)
-        ADD_BRANCH_T(int,      KinFitIterations)
+        ADD_BRANCH_T(double,                      CBESum)
+        ADD_BRANCH_T(double,                      CBAvgTime)
 
-        ADD_BRANCH_T(double,   CBESum)
-        ADD_BRANCH_T(double,   CBAvgTime)
-        ADD_BRANCH_T(unsigned, nPhotonsCB)
-        ADD_BRANCH_T(unsigned, nPhotonsTAPS)
+        ADD_BRANCH_T(bool,                        p_matched)
 
-        ADD_BRANCH_T(bool,     p_matched)
+        ADD_BRANCH_T(unsigned,                    Channel)
 
-        ADD_BRANCH_T(unsigned,      Channel)
+        ADD_BRANCH_T(std::vector<double>,         pi0chi2, 3)
+        ADD_BRANCH_T(std::vector<double>,         pi0prob, 3)
+        ADD_BRANCH_T(int,                         iBestPi0)
+        ADD_BRANCH_T(std::vector<double>,         etachi2, 3)
+        ADD_BRANCH_T(std::vector<double>,         etaprob, 3)
+        ADD_BRANCH_T(int,                         iBestEta)
 
-        ADD_BRANCH_T(std::vector<double>,       pi0chi2, 3)
-        ADD_BRANCH_T(std::vector<double>,       pi0prob, 3)
-        ADD_BRANCH_T(int,                       iBestPi0)
-        ADD_BRANCH_T(std::vector<double>,       etachi2, 3)
-        ADD_BRANCH_T(std::vector<double>,       etaprob, 3)
-        ADD_BRANCH_T(int,                       iBestEta)
+        ADD_BRANCH_T(int,                         bestHyp)
 
-        ADD_BRANCH_T(int,                        bestHyp)
-
-        ADD_BRANCH_T(std::vector<double>,       pi0_im,3)
-        ADD_BRANCH_T(std::vector<double>,       eta_im,3)
-        ADD_BRANCH_T(std::vector<double>,       eta_omega_im,3)
-        ADD_BRANCH_T(std::vector<double>,       pi0_omega_im,3)
+        ADD_BRANCH_T(std::vector<double>,         pi0_im,3)
+        ADD_BRANCH_T(std::vector<double>,         eta_im,3)
+        ADD_BRANCH_T(std::vector<double>,         eta_omega_im,3)
+        ADD_BRANCH_T(std::vector<double>,         pi0_omega_im,3)
 
     };
 

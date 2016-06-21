@@ -536,6 +536,7 @@ void OmegaEtaG2::Analyse(const TEventData &data, const TEvent& event, manager_t&
 
                 // other
                 t.beam_E_pull = fitter.GetFittedBeamEPull();
+                t.beam_E_fitted = fitter.GetFittedBeamE();
 
                 t.ggg() = ggg;
 
