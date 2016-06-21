@@ -1,5 +1,6 @@
 #include "TAPS.h"
 
+#include "detail/TAPS_2007_BaF2_elements.h"
 #include "detail/TAPS_2013_BaF2_elements.h"
 #include "detail/TAPS_2013_PbWO4_elements.h"
 

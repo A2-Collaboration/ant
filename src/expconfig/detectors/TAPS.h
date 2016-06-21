@@ -210,4 +210,18 @@ private:
 
 }; // TAPS_2013
 
+struct TAPS_2007 : TAPS {
+    TAPS_2007(
+            bool cherenkovInstalled,
+            bool useSensitiveChannels
+            ) :
+        TAPS(cherenkovInstalled, useSensitiveChannels,
+             BaF2_elements_init, {})
+    {}
+
+private:
+    const static std::vector<BaF2_Element_t>  BaF2_elements_init;
+
+}; // TAPS_2007
+
 }}} // namespace ant::expconfig::detector

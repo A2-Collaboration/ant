@@ -4,6 +4,7 @@
 #include "detectors/PID.h"
 #include "detectors/Tagger.h"
 #include "detectors/Trigger.h"
+#include "detectors/TAPS.h"
 #include "detectors/TAPSVeto.h"
 
 #include "calibration/modules/Time.h"
@@ -55,6 +56,9 @@ public:
 
         auto tagger = make_shared<detector::Tagger_2007>();
         AddDetector(tagger);
+
+//        auto taps = make_shared<detector::TAPS_2007>(false, false); // no Cherenkov, don't use sensitive channels
+//        AddDetector(taps);
 
         auto tapsVeto = make_shared<detector::TAPSVeto_2007>(false); // no Cherenkov
         AddDetector(tapsVeto);
