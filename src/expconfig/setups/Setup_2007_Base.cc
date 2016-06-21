@@ -104,6 +104,13 @@ public:
                                           // before timewalk correction
                                           timecuts ? interval<double>{-20, 200} : no_timecut
                                           );
+        AddCalibration<calibration::Time>(pid,
+                                          calibrationDataManager,
+                                          convert_CATCH_CB,
+                                          -325,
+                                          std::make_shared<calibration::gui::FitGaus>(),
+                                          timecuts ? interval<double>{-20, 20} : no_timecut
+                                          );
         AddCalibration<calibration::TAPSVeto_Time>(tapsVeto,
                                                    calibrationDataManager,
                                                    convert_MultiHit16bit,   // for BaF2
@@ -123,14 +130,9 @@ public:
                                                  timecuts ? interval<double>{-10, 20} : no_timecut);
 
         AddCalibration<calibration::PID_Energy>(pid, calibrationDataManager, convert_MultiHit16bit );
-        AddCalibration<calibration::Time>(pid,
-                                          calibrationDataManager,
-                                          convert_CATCH_CB,
-                                          -325,
-                                          std::make_shared<calibration::gui::FitGaus>(),
-                                          timecuts ? interval<double>{-20, 20} : no_timecut
-                                          );
 
+        // the PID calibration is a physics module only
+        AddCalibration<calibration::PID_PhiAngle>(pid, calibrationDataManager);
 
         AddCalibration<calibration::TAPSVeto_Energy>(tapsVeto, calibrationDataManager, convert_MultiHit16bit);
 
