@@ -314,6 +314,7 @@ bool OmegaEtaG2::PhotonCheck(const TCandidatePtr& c) const {
     return false;
 }
 
+
 static TVector2 getPSAVector(const TParticlePtr& p) {
     if(p->Candidate) {
         const auto cluster = p->Candidate->FindCaloCluster();
@@ -401,7 +402,6 @@ void OmegaEtaG2::Analyse(const TEventData &data, const TEvent& event, manager_t&
     tagChMult.Fill(data.TaggerHits);
 
     auto dcTaggerHitsAccepted = dTaggerHitsAccepted.getHandle();
-    unsigned taggerHitsProcessed = 0;
 
     for(const TTaggerHit& TagH : data.TaggerHits) {
 
@@ -416,7 +416,6 @@ void OmegaEtaG2::Analyse(const TEventData &data, const TEvent& event, manager_t&
 
         dcTaggerHitsAccepted.Count();
 
-        ++taggerHitsProcessed;
 
         t.TaggW  = promptrandom.FillWeight();
         t.TaggE  = TagH.PhotonEnergy;
@@ -593,6 +592,8 @@ void OmegaEtaG2::Analyse(const TEventData &data, const TEvent& event, manager_t&
 
         dCounters.AfterKinfitLoop();
 
+        steps->Fill("Kinfit OK", 1.0);
+
 
         //===== Hypothesis testing with kinematic fitter ======
 
@@ -732,6 +733,7 @@ void OmegaEtaG2::Analyse(const TEventData &data, const TEvent& event, manager_t&
 //        }
         }
 
+    } // Tagger Loop
 
     dCounters.EventEnd();
 
