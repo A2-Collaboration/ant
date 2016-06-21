@@ -150,4 +150,26 @@ private:
     const static std::vector<BaF2_Element_t>  BaF2_elements_init;
 }; // TAPSVeto_2014
 
+
+struct TAPSVeto_2007: TAPSVeto {
+    TAPSVeto_2007(
+            bool cherenkovInstalled
+            ) :
+        TAPSVeto(cherenkovInstalled,
+                 BaF2_elements_init, {})
+    {}
+
+protected:
+    TAPSVeto_2007(
+            bool cherenkovInstalled,
+            const std::vector<BaF2_Element_t>& BaF2s
+            ) :
+        TAPSVeto(cherenkovInstalled,
+                 BaF2s, {})
+    {}
+
+private:
+    const static std::vector<BaF2_Element_t>  BaF2_elements_init;
+};
+
 }}} // namespace ant::expconfig::detector

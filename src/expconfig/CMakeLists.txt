@@ -31,6 +31,7 @@ set(SRCS_DETECTORS
   detectors/detail/CB_elements.h
   detectors/detail/TAPS_2013_BaF2_elements.h
   detectors/detail/TAPS_2013_PbWO4_elements.h
+  detectors/detail/TAPSVeto_2007_BaF2_elements.h
   detectors/detail/TAPSVeto_2013_PbWO4_elements.h
   detectors/detail/TAPSVeto_2013_BaF2_elements.h
   detectors/detail/TAPSVeto_2014_BaF2_elements.h

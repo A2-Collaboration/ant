@@ -4,6 +4,7 @@
 #include "detectors/PID.h"
 #include "detectors/Tagger.h"
 #include "detectors/Trigger.h"
+#include "detectors/TAPSVeto.h"
 
 #include "calibration/modules/Time.h"
 #include "calibration/modules/CB_Energy.h"
@@ -55,6 +56,9 @@ public:
         auto tagger = make_shared<detector::Tagger_2007>();
         AddDetector(tagger);
 
+        auto tapsVeto = make_shared<detector::TAPSVeto_2007>(false); // no Cherenkov
+        AddDetector(tapsVeto);
+
         // then calibrations need some rawvalues to "physical" values converters
         // they can be quite different (especially for the COMPASS TCS system), but most of them simply decode the bytes
         // to 16bit signed values
@@ -100,6 +104,12 @@ public:
                                           // before timewalk correction
                                           timecuts ? interval<double>{-20, 200} : no_timecut
                                           );
+        AddCalibration<calibration::TAPSVeto_Time>(tapsVeto,
+                                                   calibrationDataManager,
+                                                   convert_MultiHit16bit,   // for BaF2
+                                                   nullptr,    // for PbWO4
+                                                   timecuts ? interval<double>{-12, 12} : no_timecut
+                                                   );
 
         AddCalibration<calibration::CB_Energy>(cb, calibrationDataManager, convert_GeSiCa_SADC,
                                                0,    // default pedestal
@@ -122,6 +132,7 @@ public:
                                           );
 
 
+        AddCalibration<calibration::TAPSVeto_Energy>(tapsVeto, calibrationDataManager, convert_MultiHit16bit);
 
     }
 

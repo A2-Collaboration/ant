@@ -3,6 +3,7 @@
 
 #include "tree/TID.h"
 
+#include "detail/TAPSVeto_2007_BaF2_elements.h"
 #include "detail/TAPSVeto_2013_BaF2_elements.h"
 #include "detail/TAPSVeto_2013_PbWO4_elements.h"
 #include "detail/TAPSVeto_2014_BaF2_elements.h"
