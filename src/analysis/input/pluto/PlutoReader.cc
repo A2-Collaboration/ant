@@ -249,6 +249,7 @@ void PlutoReader::CopyPluto(TEventData& mctrue)
     // calculate energy sum based on direction of particle
     auto& triggerinfos = mctrue.Trigger;
     triggerinfos.ClusterMultiplicity = 0;
+    triggerinfos.CBTiming = 0;
     double Esum = 0;
     for(const TParticlePtr& particle : mctrue.Particles.GetAll()) {
         if(geometry.DetectorFromAngles(*particle) & Detector_t::Type_t::CB) {
