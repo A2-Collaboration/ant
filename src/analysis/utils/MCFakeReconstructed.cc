@@ -111,14 +111,15 @@ const TEventData& MCFakeReconstructed::Get(const TEventData& mctrue)
             do_calo_veto(*p, *taps, *tapsveto, data);
     }
 
+    data.TaggerHits = mctrue.TaggerHits;
+    data.Trigger = mctrue.Trigger;
+
     // data contains now "perfect" candidates/particles
 
-
     // some simple trigger stuff
-    data.Trigger.CBTiming = 0;
 
 
-    LOG(INFO) << data;
+//    LOG(INFO) << data;
 
 //    for(const auto& cand : data.Candidates) {
 //        cout << *cand.FindCaloCluster() << endl;
