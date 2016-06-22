@@ -16,8 +16,9 @@ protected:
     TH2D* hTimeMultiplicity;
     TH1D* hCBTriggerTiming;
 
-    bool isTagger;
     std::shared_ptr<Detector_t> Detector;
+    bool isTagger;
+
 
 public:
 

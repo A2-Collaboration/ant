@@ -2,6 +2,8 @@
 
 #include "expconfig/ExpConfig.h"
 
+#include "calibration/converters/MultiHitReference.h"
+
 using namespace std;
 using namespace ant;
 using namespace ant::analysis::physics;
@@ -9,14 +11,21 @@ using namespace ant::analysis::physics;
 Time::Time(const Detector_t::Type_t& detectorType,
            const string& name, OptionsPtr opts)
     :
-      Physics(name, opts)
+      Physics(name, opts),
+       Detector(ExpConfig::Setup::GetDetector(detectorType)),
+       isTagger(dynamic_pointer_cast<TaggerDetector_t, Detector_t>(Detector) != nullptr)
 {
-    Detector = ExpConfig::Setup::GetDetector(detectorType);
+
     string detectorName(Detector_t::ToString(Detector->Type));
+
+    // handle tagger differently
+    const BinSettings TimeBins = isTagger ?
+                                     BinSettings::RoundToBinSize(BinSettings(2000,-400,400), calibration::converter::Gains::CATCH_TDC) : BinSettings(2000,-400,400);
+
     hTime = HistFac.makeTH2D(detectorName + " - Time",
                              "time [ns]",
                              detectorName + " channel",
-                             BinSettings(2000,-400,400),
+                             TimeBins,
                              BinSettings(Detector->GetNChannels()),
                              "Time"
                              );
@@ -49,8 +58,7 @@ Time::Time(const Detector_t::Type_t& detectorType,
                                          );
 
 
-    // handle tagger differently
-    isTagger = dynamic_pointer_cast<TaggerDetector_t, Detector_t>(Detector) != nullptr;
+
 
 }
 
