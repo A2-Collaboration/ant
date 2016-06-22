@@ -54,6 +54,14 @@ PlutoReader::PlutoReader(const std::shared_ptr<WrapTFileInput>& rootfiles) :
         if(res==TTree::kMatch)
             tid_from_file = true;
     }
+    else {
+        /// \todo think of some better timestamp?
+        tid = new TID(static_cast<std::uint32_t>(std::time(nullptr)),
+                      0, // start with 0 as lower ID
+                      std::list<TID::Flags_t>{TID::Flags_t::MC, TID::Flags_t::AdHoc} // mark as MC
+                      );
+        tid_from_file = false;
+    }
 
     LOG(INFO) << "MCTrue input active" << (tid_from_file ? ", with TID match check" : "");
     LOG_IF(!tid_from_file, WARNING) << "No TID match check enabled";
@@ -278,28 +286,29 @@ bool PlutoReader::ReadNextEvent(TEvent& event)
 
     // use eventID from file if available
     // also check if it matches with reconstructed TID
-    TID mctrue_tid;
     if(tid_from_file) {
-        mctrue_tid = *tid;
         if(event.HasReconstructed() &&
-           event.Reconstructed().ID != mctrue_tid) {
+           event.Reconstructed().ID != *tid) {
             throw Exception(std_ext::formatter()
                             << "TID mismatch: Reconstructed=" << event.Reconstructed().ID
-                            << " not equal to MCTrue=" << mctrue_tid);
+                            << " not equal to MCTrue=" << *tid);
         }
     }
 
     // ensure MCTrue branch is there, potentially add TID if invalid so far
     if(!event.HasMCTrue()) {
-        event.MakeMCTrue(mctrue_tid);
+        event.MakeMCTrue(*tid);
     }
     else if(event.MCTrue().ID.IsInvalid()) {
-        event.MCTrue().ID = mctrue_tid;
+        event.MCTrue().ID = *tid;
     }
 
     CopyPluto(event.MCTrue());
 
     ++current_entry;
+
+    if(!tid_from_file)
+        ++(*tid);
 
     return true;
 }
