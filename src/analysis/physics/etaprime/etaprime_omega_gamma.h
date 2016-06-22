@@ -17,6 +17,11 @@ class TH3D;
 
 namespace ant {
 namespace analysis {
+
+namespace utils {
+class MCFakeReconstructed;
+}
+
 namespace physics {
 
 struct EtapOmegaG : Physics {
@@ -78,6 +83,7 @@ struct EtapOmegaG : Physics {
     utils::KinFitter kinfitter_ref;
 
     utils::MCSmear mc_smear;
+    std::unique_ptr<utils::MCFakeReconstructed> mc_fake;
 
 
     struct Particles_t {

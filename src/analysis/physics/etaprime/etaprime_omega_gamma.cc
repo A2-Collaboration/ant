@@ -5,6 +5,7 @@
 #include "utils/particle_tools.h"
 #include "utils/matcher.h"
 #include "utils/combinatorics.h"
+#include "analysis/utils/MCFakeReconstructed.h"
 
 #include "expconfig/ExpConfig.h"
 
@@ -46,7 +47,8 @@ EtapOmegaG::EtapOmegaG(const string& name, OptionsPtr opts) :
               make_shared<fit_uncertainty_model_t>(),
               EtapOmegaG::MakeFitSettings(25)
               ),
-    mc_smear(make_shared<mc_uncertainty_model_t>())
+    mc_smear(make_shared<mc_uncertainty_model_t>()),
+    mc_fake(opts->Get<bool>("MCFake", false) ? std_ext::make_unique<utils::MCFakeReconstructed>() : nullptr)
 {
     const interval<double> prompt_range{-2.5,1.5};
     promptrandom.AddPromptRange(prompt_range); // slight offset due to CBAvgTime reference
@@ -76,7 +78,7 @@ void EtapOmegaG::ProcessEvent(const TEvent& event, manager_t&)
     // later we split into ref/sig analysis according to
     // number of photons
 
-    const TEventData& data = event.Reconstructed();
+    const TEventData& data = mc_fake && !event.MCTrue().ID.IsInvalid() ? mc_fake->Get(event.MCTrue()) : event.Reconstructed();
 
     h_CommonCuts->Fill("Seen",1.0);
 
@@ -96,7 +98,7 @@ void EtapOmegaG::ProcessEvent(const TEvent& event, manager_t&)
     h_CommonCuts->Fill("CBEnergySum>550",1.0);
     t.CBSumE = data.Trigger.CBEnergySum;
 
-    t.CBAvgTime = event.Reconstructed().Trigger.CBTiming;
+    t.CBAvgTime = data.Trigger.CBTiming;
     if(!isfinite(t.CBAvgTime))
         return;
     h_CommonCuts->Fill("CBAvgTime ok",1.0);
