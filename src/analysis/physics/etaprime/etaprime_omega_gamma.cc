@@ -177,7 +177,7 @@ void EtapOmegaG::ProcessEvent(const TEvent& event, manager_t&)
     }
 
     // smear the particles
-    if(data.ID.isSet(TID::Flags_t::MC)) {
+    if(!mc_fake && data.ID.isSet(TID::Flags_t::MC)) {
         auto smear_particles = [this] (Particles_t& particles) {
             particles.Proton = mc_smear.Smear(particles.Proton);
             for(auto& p : particles.Photons)
