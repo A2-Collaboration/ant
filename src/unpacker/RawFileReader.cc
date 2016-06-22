@@ -10,6 +10,7 @@
 
 extern "C" {
 #include <lzma.h>
+#include <zlib.h>
 }
 
 using namespace std;

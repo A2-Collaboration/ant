@@ -1,7 +1,8 @@
 include_directories(.)
 
 find_package(LibLZMA REQUIRED)
-include_directories(${LIBLZMA_INCLUDE_DIRS})
+find_package(ZLIB REQUIRED)
+include_directories(${LIBLZMA_INCLUDE_DIRS} ${ZLIB_INCLUDE_DIRS})
 
 set(SRCS
   RawFileReader.cc
@@ -21,5 +22,6 @@ add_library(unpacker ${SRCS})
 target_link_libraries(unpacker expconfig tree base
  ${PLUTO_LIBRARY}  # Pluto is needed for Geant root files including copied TID information
  ${LIBLZMA_LIBRARY}
+ ${ZLIB_LIBRARIES}
 )
 
