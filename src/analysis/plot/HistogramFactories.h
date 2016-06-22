@@ -38,6 +38,16 @@ public:
     unsigned int& Bins()   noexcept { return bins; }
 
     double BinWidth() const { return Length() / bins; }
+
+    /**
+     * @brief Produces BinSettings close to the supplied one, but with a given bin size.
+     *        Slightly modifies the number of bins and boundaries.
+     *        Useful to to counteract binning effects if intrinsic spacing of data is known (for example ADC channel widths).
+     * @param bins Target settings
+     * @param binSize size to match
+     * @return new settings with the given bin size
+     */
+    static BinSettings RoundToBinSize(const BinSettings& bins, const double binSize);
 };
 
 class HistogramFactory {

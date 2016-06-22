@@ -10,6 +10,7 @@
 #include "TH3D.h"
 
 #include <iomanip>
+#include <cmath>
 
 using namespace ant;
 using namespace ant::analysis;
@@ -164,4 +165,21 @@ HistogramFactory::DirStackPush::DirStackPush(): dir(gDirectory)
 HistogramFactory::DirStackPush::~DirStackPush()
 {
     dir->cd();
+}
+
+BinSettings BinSettings::RoundToBinSize(const BinSettings& bins, const double binSize) {
+
+    unsigned nOptBins = unsigned(bins.Length() / binSize);
+
+    const auto factor = unsigned(std::round(double(nOptBins) / double(bins.Bins())));
+
+    if(nOptBins >= binSize) {
+         nOptBins /= factor;
+    } else {
+        nOptBins *= factor;
+    }
+
+    const auto length = binSize * nOptBins * factor;
+
+    return BinSettings(nOptBins, interval<double>::CenterWidth(bins.Center(), length));
 }
