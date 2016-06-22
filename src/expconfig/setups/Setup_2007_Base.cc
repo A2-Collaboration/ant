@@ -57,8 +57,8 @@ public:
         auto tagger = make_shared<detector::Tagger_2007>();
         AddDetector(tagger);
 
-//        auto taps = make_shared<detector::TAPS_2007>(false, false); // no Cherenkov, don't use sensitive channels
-//        AddDetector(taps);
+        auto taps = make_shared<detector::TAPS_2007>(false, false); // no Cherenkov, don't use sensitive channels
+        AddDetector(taps);
 
         auto tapsVeto = make_shared<detector::TAPSVeto_2007>(false); // no Cherenkov
         AddDetector(tapsVeto);
@@ -139,6 +139,21 @@ public:
         AddCalibration<calibration::PID_PhiAngle>(pid, calibrationDataManager);
 
         AddCalibration<calibration::TAPSVeto_Energy>(tapsVeto, calibrationDataManager, convert_MultiHit16bit);
+
+        AddCalibration<calibration::TAPS_Time>(taps,
+                                               calibrationDataManager,
+                                               convert_MultiHit16bit,   // for BaF2
+                                               nullptr, // for PbWO4
+                                               timecuts ? interval<double>{-15, 15} : no_timecut // for BaF2
+
+                                               );
+        AddCalibration<calibration::TAPS_Energy>(taps, calibrationDataManager, convert_MultiHit16bit,
+                                                 100, // default pedestal
+                                                 0.3, // default gain
+                                                 thresholds ? 1 : 0,   // default threshold
+                                                 1.0  // default relative gain
+                                                 );
+        AddCalibration<calibration::TAPS_ShortEnergy>(taps, calibrationDataManager, convert_MultiHit16bit );
 
     }
 
