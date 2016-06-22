@@ -94,6 +94,7 @@ set(ANALYSIS_UTILS
   utils/ProtonPermutation.cc
   utils/ClusterTools.cc
   utils/MCSmear.cc
+  utils/MCFakeReconstructed.cc
   )
 
 set(ANALYSIS_ALL
