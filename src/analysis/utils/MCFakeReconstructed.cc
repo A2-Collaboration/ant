@@ -19,26 +19,10 @@ T find_detector() {
     return ExpConfig::Setup::GetDetector<element_t>();
 }
 
-double get_avg_opening_angle(const ClusterDetector_t& detector) {
-    double sum_angle = 0;
-    for(unsigned ch=0;ch<detector.GetNChannels();ch++) {
-        const ClusterDetector_t::Element_t* elem = detector.GetClusterElement(ch);
-        double sum_angle_neigh = 0;
-        for(unsigned ch_neigh : elem->Neighbours) {
-            const ClusterDetector_t::Element_t* neigh = detector.GetClusterElement(ch_neigh);
-            sum_angle_neigh += elem->Position.Angle(neigh->Position);
-        }
-        sum_angle += sum_angle_neigh / elem->Neighbours.size();
-    }
-    return sum_angle/detector.GetNChannels();
-}
-
 MCFakeReconstructed::MCFakeReconstructed() :
     cb(find_detector<decltype(cb)>()),
-    cb_avg_angle(get_avg_opening_angle(*cb)),
     pid(find_detector<decltype(pid)>()),
     taps(find_detector<decltype(taps)>()),
-    taps_avg_angle(get_avg_opening_angle(*taps)),
     tapsveto(find_detector<decltype(tapsveto)>())
 {
 
@@ -61,19 +45,14 @@ void find_closest_ch(const vec3& pos, const Detector_t& detector,
 }
 
 
-bool do_calo_veto(const TParticle& p,
+void do_calo_veto(const TParticle& p,
                   const ClusterDetector_t& calo,
-                  double max_avg_angle,
                   const Detector_t& veto,
                   TEventData& data)
 {
     unsigned calo_ch;
     double calo_angle;
     find_closest_ch(p.p, calo, calo_ch, calo_angle);
-
-    // Calo determines if this particle could be detected
-    if(calo_angle > max_avg_angle)
-        return false;
 
     data.Clusters.emplace_back(
                 p.p.Unit(),
@@ -117,8 +96,6 @@ bool do_calo_veto(const TParticle& p,
                 );
 
     data.Particles.Add(std::make_shared<TParticle>(p.Type(), std::prev(data.Candidates.end())));
-
-    return true;
 }
 
 const TEventData& MCFakeReconstructed::Get(const TEventData& mctrue)
@@ -127,9 +104,11 @@ const TEventData& MCFakeReconstructed::Get(const TEventData& mctrue)
     TEventData& data = *dataptr;
 
     for(const TParticlePtr& p : mctrue.Particles.GetAll()) {
-        // prefer CB to speed up matching
-        if(!do_calo_veto(*p, *cb, cb_avg_angle, *pid, data))
-            do_calo_veto(*p, *taps, taps_avg_angle, *tapsveto, data);
+        auto type = geo.DetectorFromAngles(*p);
+        if(type & Detector_t::Type_t::CB)
+            do_calo_veto(*p, *cb, *pid, data);
+        else if(type & Detector_t::Type_t::TAPS)
+            do_calo_veto(*p, *taps, *tapsveto, data);
     }
 
     // data contains now "perfect" candidates/particles
