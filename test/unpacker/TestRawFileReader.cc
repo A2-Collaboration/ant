@@ -16,27 +16,42 @@ constexpr streamsize totalSize = 10*BUFSIZ;
 constexpr streamsize chunkSize = totalSize/17;
 constexpr streamsize inbufSize = BUFSIZ;
 
-void dotest(bool, streamsize, streamsize, streamsize);
+enum class eCompress { NoCompress, XZ, GZ };
+
+void dotest(eCompress, streamsize, streamsize, streamsize);
 void doendianness();
 
+
 TEST_CASE("Test RawFileReader: nocompress, one chunk", "[unpacker]") {
-  dotest(false, totalSize, totalSize, inbufSize);
+  dotest(eCompress::NoCompress, totalSize, totalSize, inbufSize);
 }
 
-TEST_CASE("Test RawFileReader: compress, one chunk", "[unpacker]") {
-  dotest(true, totalSize, totalSize, inbufSize);
+TEST_CASE("Test RawFileReader: compress xz, one chunk", "[unpacker]") {
+  dotest(eCompress::XZ, totalSize, totalSize, inbufSize);
+}
+
+TEST_CASE("Test RawFileReader: compress gz, one chunk", "[unpacker]") {
+  dotest(eCompress::GZ, totalSize, totalSize, inbufSize);
 }
 
 TEST_CASE("Test RawFileReader: nocompress, chunks", "[unpacker]") {
-  dotest(false, totalSize, chunkSize, inbufSize);
+  dotest(eCompress::NoCompress, totalSize, chunkSize, inbufSize);
 }
 
-TEST_CASE("Test RawFileReader: compress, chunks", "[unpacker]") {
-  dotest(true, totalSize, chunkSize, inbufSize);
+TEST_CASE("Test RawFileReader: compress xz, chunks", "[unpacker]") {
+  dotest(eCompress::XZ, totalSize, chunkSize, inbufSize);
 }
 
-TEST_CASE("Test RawFileReader: weird stuff", "[unpacker]") {
-  dotest(true, 100, 7, 40); // inputbuffer smaller than output buffers
+TEST_CASE("Test RawFileReader: compress gz, chunks", "[unpacker]") {
+  dotest(eCompress::GZ, totalSize, chunkSize, inbufSize);
+}
+
+TEST_CASE("Test RawFileReader: weird stuff (xz)", "[unpacker]") {
+  dotest(eCompress::XZ, 100, 7, 40); // inputbuffer smaller than output buffers
+}
+
+TEST_CASE("Test RawFileReader: weird stuff (gz)", "[unpacker]") {
+  dotest(eCompress::GZ, 100, 7, 40); // inputbuffer smaller than output buffers
 }
 
 TEST_CASE("Test RawFileReader: uint32_t endianness","[unpacker]") {
@@ -61,7 +76,8 @@ void doendianness() {
   }
 }
 
-void dotest(bool compress,
+
+void dotest(eCompress compress,
             streamsize totalSize,
             streamsize chunkSize,
             streamsize inbufSize) {
@@ -76,11 +92,16 @@ void dotest(bool compress,
   // make a little detour for compression
   // the RawFileReader should be able to decompress it
   // transparently
-  if(compress) {
+  if(compress == eCompress::XZ) {
     //compress it first
     const string& xz_cmd = string("xz ")+f.filename;
     REQUIRE(system(xz_cmd.c_str()) == 0);
     f.filename += ".xz"; // xz changes the filename
+  } else if(compress == eCompress::GZ) {
+      //compress it first
+      const string& gz_cmd = string("gzip ")+f.filename;
+      REQUIRE(system(gz_cmd.c_str()) == 0);
+      f.filename += ".gz"; // gz changes the filename
   }
 
   // then continue reading in the file with the RawFileReader

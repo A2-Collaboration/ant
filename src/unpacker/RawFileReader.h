@@ -206,6 +206,50 @@ private:
     }; // class RawFileReader::XZ
 
 
+    class GZ : public PlainBase {
+    public:
+
+        GZ(const std::string& filename, const size_t inbufsize);
+
+        virtual ~GZ();
+
+        static bool test(std::ifstream& file);
+
+        virtual explicit operator bool() const override {
+            return PlainBase::operator bool() && !decompressFailed;
+        }
+
+        virtual void read(char *s, std::streamsize n) override;
+
+        virtual std::streamsize gcount() const override {
+            return gcount_;
+        }
+
+        virtual std::streamsize gcount_compressed() const override {
+            return gcount_compressed_;
+        }
+
+        virtual bool eof() const override {
+            return eof_;
+        }
+
+    private:
+        std::vector<uint8_t> inbuf;
+        bool decompressFailed;
+        std::streamsize gcount_;
+        std::streamsize gcount_compressed_;
+        bool eof_;
+
+        template<typename T>
+        using deleted_unique_ptr = std::unique_ptr<T, std::function<void(T*)>>;
+
+        struct gz_stream;
+        deleted_unique_ptr<gz_stream> strm;
+        void init_decoder();
+
+    }; // class RawFileReader::GZ
+
+
     // private stuff for RawFileReader
     std::unique_ptr<PlainBase> p;
 

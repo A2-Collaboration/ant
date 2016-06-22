@@ -36,6 +36,8 @@ void RawFileReader::open(const string& filename, const size_t inbufsize) {
 
     if(XZ::test(file)) {
         p = std_ext::make_unique<XZ>(filename, inbufsize);
+    } else if(GZ::test(file)) {
+        p = std_ext::make_unique<GZ>(filename, inbufsize);
     }
     else {
         p = std_ext::make_unique<PlainBase>(filename);
@@ -212,3 +214,141 @@ void RawFileReader::XZ::read(char* s, streamsize n) {
 }
 
 
+
+
+
+struct RawFileReader::GZ::gz_stream : ::z_stream {};
+
+RawFileReader::GZ::GZ(const std::string &filename, const size_t inbufsize) :
+    PlainBase(filename),
+    inbuf(inbufsize),
+    decompressFailed(false),
+    gcount_(0),
+    gcount_compressed_(0),
+    eof_(false),
+    strm(new gz_stream(),
+         [] (gz_stream* strm) { inflateEnd(strm); delete strm; })
+{
+    init_decoder();
+}
+
+RawFileReader::GZ::~GZ() {}
+
+bool RawFileReader::GZ::test(ifstream& file) {
+
+    // check some magic bytes in the beginning
+    // to determine possible compression
+
+    const vector<char> magic_bytes_gz{ static_cast<char>(0x1f), static_cast<char>(0x8b) };
+
+    std::vector<char> file_bytes(magic_bytes_gz.size());
+    file.seekg(0, file.beg); // ensure start of file
+    file.read(file_bytes.data(), file_bytes.size());
+    file.seekg(0, file.beg);
+
+    return file_bytes == magic_bytes_gz;
+}
+
+void RawFileReader::GZ::init_decoder()
+{
+
+    strm->zalloc   = Z_NULL;
+    strm->zfree    = Z_NULL;
+    strm->opaque   = Z_NULL;
+    strm->avail_in = 0;
+    strm->next_in  = Z_NULL;
+
+    //see http://www.zlib.net/manual.html#Basic
+    constexpr int def_window_bits  = 15;
+    constexpr int enable_gzip_bits = 32;
+
+    int ret = inflateInit2(strm.get(), def_window_bits + enable_gzip_bits);
+
+    // Return successfully if the initialization went fine.
+    if (ret == Z_OK) {
+        return;
+    }
+
+    // otherwise throw some exceptions
+    switch (ret) {
+
+    case Z_MEM_ERROR:
+        throw Exception("Memory allocation failed");
+
+    default:
+        throw Exception("Unknown error, possibly a bug");
+    }
+}
+
+void RawFileReader::GZ::read(char* s, streamsize n) {
+
+    auto action = PlainBase::eof() ? Z_FINISH : Z_NO_FLUSH;
+
+    strm->next_out = reinterpret_cast<uint8_t*>(s);
+    strm->avail_out = n;
+
+    gcount_compressed_ = 0;
+
+    while (true) {
+
+        if (strm->avail_in == 0 && !PlainBase::eof()) {
+            // read from the underlying compressed file into buffer
+            PlainBase::read(reinterpret_cast<char*>(inbuf.data()), inbuf.size());
+            strm->next_in = inbuf.data();
+            strm->avail_in = PlainBase::gcount();
+            gcount_compressed_ += strm->avail_in;
+
+            if(PlainBase::eof()) {
+                action = Z_FINISH;
+            }
+            else if (!PlainBase::operator bool()) {
+                throw Exception(string("Error while reading from compressed input file: ")
+                                +string(strerror(errno)));
+            }
+        }
+
+        int ret = inflate(strm.get(), action);
+
+        if(ret == Z_STREAM_END) {
+            gcount_ = n - strm->avail_out; // number of decompressed bytes
+            if(strm->avail_out > 0)
+                eof_ = true;
+            return;
+        }
+
+        if(strm->avail_out == 0) {
+            gcount_ = n;
+            return;
+        }
+
+        if(ret == Z_OK)
+            continue;
+
+        decompressFailed = true;
+
+        // ret indicates some error condition
+        switch (ret) {
+
+        case Z_MEM_ERROR:
+            throw Exception("Memory allocation failed");
+
+        case Z_NEED_DICT:
+        case Z_DATA_ERROR:
+            throw Exception("Compressed file is corrupt");
+
+        case Z_BUF_ERROR:
+            throw Exception("Compressed file is truncated or "
+                            "otherwise corrupt");
+
+        case Z_STREAM_ERROR:
+            throw Exception("Invalid compression level");
+
+        case Z_VERSION_ERROR:
+            throw Exception("Linked against wrong zlib version");
+
+        default:
+            throw Exception("Unknown error, possibly a bug");
+
+        }
+    }
+}
