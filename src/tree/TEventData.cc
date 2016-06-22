@@ -31,7 +31,7 @@ ostream& TEventData::Print(ostream& s) const {
 
     s << ">> Clusters: n=" << Clusters.size() << endl;
     for(auto& i : Clusters)
-        s << i << endl;
+        s << i; // clusters are multiline
 
     s << ">> Candidates: n=" << Candidates.size() << endl;
     for(auto& i : Candidates)
