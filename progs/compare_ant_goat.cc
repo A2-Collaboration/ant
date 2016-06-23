@@ -87,6 +87,7 @@ int main( int argc, char** argv )
     auto h_VetoEnergy_CB = HistFac.makeTH2D("h_VetoEnergy CB","Goat","Ant",bins_VetoEnergy,bins_VetoEnergy,"h_VetoEnergy_CB");
     auto h_VetoEnergy_TAPS = HistFac.makeTH2D("h_VetoEnergy TAPS","Goat","Ant",bins_VetoEnergy,bins_VetoEnergy,"h_VetoEnergy_TAPS");
 
+    auto h_Status = HistFac.makeTH1D("Status","","",BinSettings(10),"h_Status");
 
     while(entryAnt < treeAnt->GetEntries() && entryGoat < treeGoat->GetEntries()) {
 
@@ -135,6 +136,8 @@ int main( int argc, char** argv )
 //            continue;
 //        }
 
+        h_Status->Fill("Seen", 1.0);
+
         if(dump) {
 
             const auto print_dethits = [] (const TEventData& recon, Detector_t::Type_t type) {
@@ -181,63 +184,65 @@ int main( int argc, char** argv )
 
         }
 
-//        auto compare_clusters = [] (
-//                                const TEventData& antRecon,
-//                                const TEventData& goatRecon,
-//                                Detector_t::Type_t type,
-//                                double threshold
-//                                ) {
+        auto compare_clusters = [] (
+                                const TEventData& antRecon,
+                                const TEventData& goatRecon,
+                                Detector_t::Type_t type,
+                                double threshold
+                                ) {
 
-//            // compare clusters Ant/Goat
-//            struct cluster_t {
-//                TClusterPtr Ant;
-//                TClusterPtr Goat;
-//            };
+            // compare clusters Ant/Goat
+            struct cluster_t {
+                TClusterPtr Ant;
+                TClusterPtr Goat;
+            };
 
-//            map<unsigned, cluster_t> clusters;
-//            double antEnergy = 0;
-//            for(auto it_cl = antRecon.Clusters.begin(); it_cl != antRecon.Clusters.end(); ++it_cl)
-//                if(it_cl->DetectorType == type && it_cl->Energy>threshold) {
-//                    antEnergy += it_cl->Energy;
-//                    clusters[it_cl->CentralElement].Ant = it_cl.get_ptr();
-//                }
+            map<unsigned, cluster_t> clusters;
+            double antEnergy = 0;
+            for(auto it_cl = antRecon.Clusters.begin(); it_cl != antRecon.Clusters.end(); ++it_cl)
+                if(it_cl->DetectorType == type && it_cl->Energy>threshold) {
+                    antEnergy += it_cl->Energy;
+                    clusters[it_cl->CentralElement].Ant = it_cl.get_ptr();
+                }
 
-//            double goatEnergy = 0;
-//            for(auto it_cl = goatRecon.Clusters.begin(); it_cl != goatRecon.Clusters.end(); ++it_cl)
-//                if(it_cl->DetectorType == type && it_cl->Energy>threshold) {
-//                    goatEnergy += it_cl->Energy;
-//                    clusters[it_cl->CentralElement].Goat = it_cl.get_ptr();
-//                }
+            double goatEnergy = 0;
+            for(auto it_cl = goatRecon.Clusters.begin(); it_cl != goatRecon.Clusters.end(); ++it_cl)
+                if(it_cl->DetectorType == type && it_cl->Energy>threshold) {
+                    goatEnergy += it_cl->Energy;
+                    clusters[it_cl->CentralElement].Goat = it_cl.get_ptr();
+                }
 
-//            cout << "  EnergySum: " << antEnergy << "/" << goatEnergy << endl;
-//            for(const auto& it_cl : clusters) {
-//                auto stringify_cl = [] (const TClusterPtr& cl) -> string {
-//                    if(!cl)
-//                        return "";
-//                    return std_ext::formatter() << "(E=" << cl->Energy
-//                                                << (cl->HasFlag(TCluster::Flags_t::Split) ? ",S" : "")
-//                                                << ")";
-//                };
-//                const cluster_t& cl = it_cl.second;
+            cout << "  EnergySum: " << antEnergy << "/" << goatEnergy << endl;
+            for(const auto& it_cl : clusters) {
+                auto stringify_cl = [] (const TClusterPtr& cl) -> string {
+                    if(!cl)
+                        return "";
+                    return std_ext::formatter() << "(E=" << cl->Energy
+                                                << (cl->HasFlag(TCluster::Flags_t::Split) ? ",S" : "")
+                                                << ")";
+                };
+                const cluster_t& cl = it_cl.second;
 
-//                cout << "  Ch=" << it_cl.first
-//                     << " Ant=" << stringify_cl(cl.Ant)
-//                     << " Goat=" << stringify_cl(cl.Goat);
-//                if(cl.Ant && cl.Goat)
-//                    cout << " Angle=" << cl.Ant->Position.Angle(cl.Goat->Position);
-//                cout << endl;
-//            }
-//        };
+                cout << "  Ch=" << it_cl.first
+                     << " Ant=" << stringify_cl(cl.Ant)
+                     << " Goat=" << stringify_cl(cl.Goat);
+                if(cl.Ant && cl.Goat)
+                    cout << " Angle=" << cl.Ant->Position.Angle(cl.Goat->Position);
+                cout << endl;
+            }
+        };
 
-//        cout << "<<<< CB Clusters Event=" << nEvents << endl;
-//        compare_clusters(antRecon, goatRecon, Detector_t::Type_t::CB, 25);
+        if(dump) {
+            cout << "<<<< CB Clusters Event=" << nEvents << endl;
+            compare_clusters(antRecon, goatRecon, Detector_t::Type_t::CB, 25);
 
-//        cout << endl;
+            cout << endl;
 
-//        cout << "<<<< PID Clusters Event=" << nEvents << endl;
-//        compare_clusters(antRecon, goatRecon, Detector_t::Type_t::PID, 0);
+            cout << "<<<< PID Clusters Event=" << nEvents << endl;
+            compare_clusters(antRecon, goatRecon, Detector_t::Type_t::PID, 0);
 
-//        cout << endl;
+            cout << endl;
+        }
 
         // compare candidates Ant/Goat
         struct candidate_t {
@@ -299,8 +304,10 @@ int main( int argc, char** argv )
 
         for(const auto& it_c : candidates_cb) {
             const candidate_t& c = it_c.second;
+            h_Status->Fill("CB Cands",1.0);
             if(!c.Ant || !c.Goat)
                 continue;
+            h_Status->Fill("CB Cands match",1.0);
             h_CaloEnergy_CB->Fill(c.Ant->CaloEnergy, c.Goat->CaloEnergy);
             h_VetoEnergy_CB->Fill(c.Ant->VetoEnergy, c.Goat->VetoEnergy);
 
@@ -308,8 +315,10 @@ int main( int argc, char** argv )
 
         for(const auto& it_c : candidates_taps) {
             const candidate_t& c = it_c.second;
+            h_Status->Fill("TAPS Cands",1.0);
             if(!c.Ant || !c.Goat)
                 continue;
+            h_Status->Fill("TAPS Cands match",1.0);
             h_CaloEnergy_TAPS->Fill(c.Ant->CaloEnergy, c.Goat->CaloEnergy);
             h_VetoEnergy_TAPS->Fill(c.Ant->VetoEnergy, c.Goat->VetoEnergy);
         }
@@ -333,6 +342,7 @@ int main( int argc, char** argv )
                                    << h_CaloEnergy_TAPS
                                    << h_VetoEnergy_CB
                                    << h_VetoEnergy_TAPS
+                                   << h_Status
                                    << endc;
 
         app.Run(kTRUE); // really important to return...
