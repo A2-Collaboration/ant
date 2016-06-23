@@ -30,13 +30,14 @@ TAPS_Time::TAPS_Time(shared_ptr<expconfig::detector::TAPS> taps,
                      Calibration::Converter::ptr_t converter_BaF2,
                      Calibration::Converter::ptr_t converter_PbWO4,
                      const interval<double>& timeWindow_BaF2, // default {-inf, inf}
-                     const interval<double>& timeWindow_PbWO4 // default {-inf, inf}
+                     const interval<double>& timeWindow_PbWO4, // default {-inf, inf}
+                     std::shared_ptr<calibration::gui::PeakingFitFunction> fct
                      ) :
     Time(taps,
          calmgr,
          converter_BaF2, // for BaF2
          -170, // for BaF2
-         std::make_shared<TAPSTimeFunction>(),
+         fct,
          timeWindow_BaF2, // for BaF2
          -0.100 // for BaF2
          )
@@ -80,4 +81,10 @@ void TAPSTimeFunction::SetDefaults(TH1 *hist)
         func->SetParameter(3,0.0);
     }
 }
+
+std::shared_ptr<gui::PeakingFitFunction> TAPS_Time::getDefaultFitFct()
+{
+    return make_shared<TAPSTimeFunction>();
+}
+
 
