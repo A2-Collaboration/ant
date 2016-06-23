@@ -139,8 +139,19 @@ public:
     TParticlePtr GetFittedProton() const;
     TParticleList GetFittedPhotons() const;
     double GetFittedBeamE() const;
-    double GetFittedBeamEPull() const;
+    double GetBeamEPull() const;
 
+    double GetProtonEPull() const;
+    double GetProtonThetaPull() const;
+    double GetProtonPhiPull() const;
+    std::vector<double> GetPhotonEPulls() const;
+    std::vector<double> GetPhotonThetaPulls() const;
+    std::vector<double> GetPhotonPhiPulls() const;
+
+    /**
+     * @brief GetFitParticles returns as first item the proton, then all n photons
+     * @return FitParticle contain all info about the fitted state
+     */
     std::vector<FitParticle> GetFitParticles() const;
 
     void SetupBranches(TTree* tree, std::string branch_prefix="");

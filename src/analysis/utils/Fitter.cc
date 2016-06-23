@@ -239,9 +239,49 @@ double KinFitter::GetFittedBeamE() const
     return Beam->E;
 }
 
-double KinFitter::GetFittedBeamEPull() const
+double KinFitter::GetBeamEPull() const
 {
     return Beam->Pull;
+}
+
+double KinFitter::GetProtonEPull() const
+{
+    return Proton->Ek.Pull;
+}
+
+double KinFitter::GetProtonThetaPull() const
+{
+    return Proton->Theta.Pull;
+
+}
+
+double KinFitter::GetProtonPhiPull() const
+{
+    return Proton->Phi.Pull;
+}
+
+std::vector<double> KinFitter::GetPhotonEPulls() const
+{
+    std::vector<double> pulls;
+    for(auto& photon : Photons)
+        pulls.push_back(photon->Ek.Pull);
+    return pulls;
+}
+
+std::vector<double> KinFitter::GetPhotonThetaPulls() const
+{
+    std::vector<double> pulls;
+    for(auto& photon : Photons)
+        pulls.push_back(photon->Theta.Pull);
+    return pulls;
+}
+
+std::vector<double> KinFitter::GetPhotonPhiPulls() const
+{
+    std::vector<double> pulls;
+    for(auto& photon : Photons)
+        pulls.push_back(photon->Phi.Pull);
+    return pulls;
 }
 
 std::vector<Fitter::FitParticle> KinFitter::GetFitParticles() const

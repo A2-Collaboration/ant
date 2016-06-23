@@ -263,7 +263,7 @@ void JustPi0::MultiPi0::ProcessData(const TEventData& data, const TParticleTree_
                 t.proton_fitted = *fitter.GetFittedProton();
 
                 t.Tagg_E_fitted   = fitter.GetFittedBeamE();
-                t.fit_Tagg_E_pull = fitter.GetFittedBeamEPull();
+                t.fit_Tagg_E_pull = fitter.GetBeamEPull();
 
                 t.proton_vetoE  = proton->Candidate->VetoEnergy;
                 t.proton_Time   = proton->Candidate->Time;
