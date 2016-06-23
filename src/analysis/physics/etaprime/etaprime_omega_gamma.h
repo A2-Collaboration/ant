@@ -59,8 +59,10 @@ struct EtapOmegaG : Physics {
 
         ADD_BRANCH_T(double,   ProtonTime)
         ADD_BRANCH_T(double,   ProtonE)
+        ADD_BRANCH_T(double,   ProtonTheta)
         ADD_BRANCH_T(double,   ProtonVetoE)
         ADD_BRANCH_T(double,   ProtonShortE)
+        ADD_BRANCH_T(double,   ProtonTrueAngle)
 
         ADD_BRANCH_T(double,   PhotonSum)
         ADD_BRANCH_T(double,   ProtonCopl)
@@ -69,6 +71,14 @@ struct EtapOmegaG : Physics {
 
         ADD_BRANCH_T(double,   KinFitProb)
         ADD_BRANCH_T(int,      KinFitIterations)
+
+        ADD_BRANCH_T(double,   KinFitBeamEPull)
+        ADD_BRANCH_T(double,   KinFitProtonEPull)
+        ADD_BRANCH_T(double,   KinFitProtonThetaPull)
+        ADD_BRANCH_T(double,   KinFitProtonPhiPull)
+        ADD_BRANCH_T(std::vector<double>,  KinFitPhotonEPulls)
+        ADD_BRANCH_T(std::vector<double>,  KinFitPhotonThetaPulls)
+        ADD_BRANCH_T(std::vector<double>,  KinFitPhotonPhiPulls)
     };
 
     TreeCommon t;
@@ -96,6 +106,7 @@ struct EtapOmegaG : Physics {
 
     static bool findParticles(const TCandidatePtrList& candidates,
                               unsigned nPhotons,
+                              TParticlePtr true_proton,
                               Particles_t& particles,
                               SharedTree_t& t,
                               TH1D* h_CommonCuts
@@ -120,6 +131,14 @@ struct EtapOmegaG : Physics {
 
                 ADD_BRANCH_T(double, TreeFitProb)
                 ADD_BRANCH_T(int,    TreeFitIterations)
+
+                ADD_BRANCH_T(double,   TreeFitBeamEPull)
+                ADD_BRANCH_T(double,   TreeFitProtonEPull)
+                ADD_BRANCH_T(double,   TreeFitProtonThetaPull)
+                ADD_BRANCH_T(double,   TreeFitProtonPhiPull)
+                ADD_BRANCH_T(std::vector<double>,  TreeFitPhotonEPulls)
+                ADD_BRANCH_T(std::vector<double>,  TreeFitPhotonThetaPulls)
+                ADD_BRANCH_T(std::vector<double>,  TreeFitPhotonPhiPulls)
 
                 ADD_BRANCH_T(double, IM_Pi0_best)
                 ADD_BRANCH_T(double, IM_Pi0_fitted)
@@ -202,8 +221,24 @@ struct EtapOmegaG : Physics {
             ADD_BRANCH_T(double, AntiPi0FitProb)
             ADD_BRANCH_T(int,    AntiPi0FitIterations)
 
+            ADD_BRANCH_T(double,   AntiPi0BeamEPull)
+            ADD_BRANCH_T(double,   AntiPi0ProtonEPull)
+            ADD_BRANCH_T(double,   AntiPi0ProtonThetaPull)
+            ADD_BRANCH_T(double,   AntiPi0ProtonPhiPull)
+            ADD_BRANCH_T(std::vector<double>,  AntiPi0PhotonEPulls)
+            ADD_BRANCH_T(std::vector<double>,  AntiPi0PhotonThetaPulls)
+            ADD_BRANCH_T(std::vector<double>,  AntiPi0PhotonPhiPulls)
+
             ADD_BRANCH_T(double, AntiEtaFitProb)
             ADD_BRANCH_T(int,    AntiEtaFitIterations)
+
+            ADD_BRANCH_T(double,   AntiEtaBeamEPull)
+            ADD_BRANCH_T(double,   AntiEtaProtonEPull)
+            ADD_BRANCH_T(double,   AntiEtaProtonThetaPull)
+            ADD_BRANCH_T(double,   AntiEtaProtonPhiPull)
+            ADD_BRANCH_T(std::vector<double>,  AntiEtaPhotonEPulls)
+            ADD_BRANCH_T(std::vector<double>,  AntiEtaPhotonThetaPulls)
+            ADD_BRANCH_T(std::vector<double>,  AntiEtaPhotonPhiPulls)
 
             void Reset();
         };
@@ -227,6 +262,8 @@ struct EtapOmegaG : Physics {
 
         struct Tree_t : EtapOmegaG::SharedTree_t {
             ADD_BRANCH_T(double,   IM_2g)
+
+            void Reset();
         };
         Tree_t t;
 

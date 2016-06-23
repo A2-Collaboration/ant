@@ -130,8 +130,9 @@ void EtapOmegaG::ProcessEvent(const TEvent& event, manager_t&)
     // fill sig/ref particles
     Particles_t sig_particles;
     Particles_t ref_particles;
-    bool haveSig = findParticles(candidates, 4, sig_particles, Sig.t, h_CommonCuts_sig);
-    bool haveRef = findParticles(candidates, 2, ref_particles, Ref.t, h_CommonCuts_ref);
+    auto true_proton = utils::ParticleTools::FindParticle(ParticleTypeDatabase::Proton, particletree);
+    bool haveSig = findParticles(candidates, 4, true_proton, sig_particles, Sig.t, h_CommonCuts_sig);
+    bool haveRef = findParticles(candidates, 2, true_proton, ref_particles, Ref.t, h_CommonCuts_ref);
 
     if(!haveSig && !haveRef)
         return;
@@ -182,7 +183,7 @@ void EtapOmegaG::ProcessEvent(const TEvent& event, manager_t&)
         t.MCTrue = 9;
     }
 
-    // smear the particles
+    // additionally smear the particles in MC
     if(data.ID.isSet(TID::Flags_t::MC)) {
         auto smear_particles = [this] (Particles_t& particles) {
             particles.Proton = mc_smear.Smear(particles.Proton);
@@ -233,13 +234,16 @@ void EtapOmegaG::ProcessEvent(const TEvent& event, manager_t&)
 
 bool EtapOmegaG::findParticles(const TCandidatePtrList& candidates,
                                unsigned nPhotons,
+                               TParticlePtr true_proton,
                                EtapOmegaG::Particles_t& particles,
                                EtapOmegaG::SharedTree_t& t,
                                TH1D* h_CommonCuts)
 {
     t.ProtonE = std_ext::NaN;
+    t.ProtonTheta = std_ext::NaN;
     t.ProtonVetoE = std_ext::NaN;
     t.ProtonShortE = std_ext::NaN;
+    t.ProtonTrueAngle = std_ext::NaN;
     t.DiscardedEk = std_ext::NaN;
     t.PhotonsEk = std_ext::NaN;
     t.nPhotonsCB   = 0;
@@ -273,6 +277,7 @@ bool EtapOmegaG::findParticles(const TCandidatePtrList& candidates,
     h_CommonCuts->Fill("p in TAPS", 1.0);
 
     t.ProtonE = proton->Ek();
+    t.ProtonTheta = std_ext::radian_to_degree(proton->Theta());
     t.ProtonVetoE = proton->Candidate->VetoEnergy;
     t.ProtonShortE = proton->Candidate->FindCaloCluster()->ShortEnergy;
 
@@ -318,6 +323,9 @@ bool EtapOmegaG::findParticles(const TCandidatePtrList& candidates,
         return false;
     h_CommonCuts->Fill("ProtonCopl ok", 1.0);
 
+    if(true_proton)
+        t.ProtonTrueAngle = std_ext::radian_to_degree(proton->Angle(*true_proton));
+
     return true;
 }
 
@@ -332,6 +340,15 @@ bool EtapOmegaG::doKinfit(const TTaggerHit& taggerhit,
 
     t.KinFitProb = std_ext::NaN;
     t.KinFitIterations = 0;
+
+    t.KinFitBeamEPull = std_ext::NaN;
+    t.KinFitProtonEPull = std_ext::NaN;
+    t.KinFitProtonThetaPull = std_ext::NaN;
+    t.KinFitProtonPhiPull = std_ext::NaN;
+    t.KinFitPhotonEPulls().resize(0);
+    t.KinFitPhotonThetaPulls().resize(0);
+    t.KinFitPhotonPhiPulls().resize(0);
+
     t.FittedProtonE = std_ext::NaN;
 
     const auto& missingmass_cut = ParticleTypeDatabase::Proton.GetWindow(300);
@@ -350,6 +367,14 @@ bool EtapOmegaG::doKinfit(const TTaggerHit& taggerhit,
 
     t.KinFitProb = result.Probability;
     t.KinFitIterations = result.NIterations;
+
+    t.KinFitBeamEPull = kinfitter.GetBeamEPull();
+    t.KinFitProtonEPull = kinfitter.GetProtonEPull();
+    t.KinFitProtonThetaPull = kinfitter.GetProtonThetaPull();
+    t.KinFitProtonPhiPull = kinfitter.GetProtonPhiPull();
+    t.KinFitPhotonEPulls = kinfitter.GetPhotonEPulls();
+    t.KinFitPhotonThetaPulls = kinfitter.GetPhotonThetaPulls();
+    t.KinFitPhotonPhiPulls = kinfitter.GetPhotonPhiPulls();
 
     const auto& fitted_proton = kinfitter.GetFittedProton();
     t.FittedProtonE = fitted_proton->Ek();
@@ -407,8 +432,24 @@ void EtapOmegaG::Sig_t::SharedTree_t::Reset()
     AntiPi0FitProb = std_ext::NaN;
     AntiPi0FitIterations = 0;
 
+    AntiPi0BeamEPull = std_ext::NaN;
+    AntiPi0ProtonEPull = std_ext::NaN;
+    AntiPi0ProtonThetaPull = std_ext::NaN;
+    AntiPi0ProtonPhiPull = std_ext::NaN;
+    AntiPi0PhotonEPulls().resize(0);
+    AntiPi0PhotonThetaPulls().resize(0);
+    AntiPi0PhotonPhiPulls().resize(0);
+
     AntiEtaFitProb = std_ext::NaN;
     AntiEtaFitIterations = 0;
+
+    AntiEtaBeamEPull = std_ext::NaN;
+    AntiEtaProtonEPull = std_ext::NaN;
+    AntiEtaProtonThetaPull = std_ext::NaN;
+    AntiEtaProtonPhiPull = std_ext::NaN;
+    AntiEtaPhotonEPulls().resize(0);
+    AntiEtaPhotonThetaPulls().resize(0);
+    AntiEtaPhotonPhiPulls().resize(0);
 }
 
 void EtapOmegaG::Sig_t::Process(const Particles_t& particles, const TParticleTree_t& ptree_sigref)
@@ -456,6 +497,15 @@ void EtapOmegaG::Sig_t::DoAntiPi0Eta(const Particles_t& particles)
             continue;
         // found fit with better prob
         t.AntiPi0FitIterations = r.NIterations;
+
+        const auto& fitter = treefitter_Pi0Pi0;
+        t.AntiPi0BeamEPull = fitter.GetBeamEPull();
+        t.AntiPi0ProtonEPull = fitter.GetProtonEPull();
+        t.AntiPi0ProtonThetaPull = fitter.GetProtonThetaPull();
+        t.AntiPi0ProtonPhiPull = fitter.GetProtonPhiPull();
+        t.AntiPi0PhotonEPulls = fitter.GetPhotonEPulls();
+        t.AntiPi0PhotonThetaPulls = fitter.GetPhotonThetaPulls();
+        t.AntiPi0PhotonPhiPulls = fitter.GetPhotonPhiPulls();
     }
 
     treefitter_Pi0Eta.SetEgammaBeam(particles.PhotonEnergy);
@@ -468,6 +518,15 @@ void EtapOmegaG::Sig_t::DoAntiPi0Eta(const Particles_t& particles)
             continue;
         // found fit with better probability
         t.AntiEtaFitIterations = r.NIterations;
+
+        const auto& fitter = treefitter_Pi0Eta;
+        t.AntiEtaBeamEPull = fitter.GetBeamEPull();
+        t.AntiEtaProtonEPull = fitter.GetProtonEPull();
+        t.AntiEtaProtonThetaPull = fitter.GetProtonThetaPull();
+        t.AntiEtaProtonPhiPull = fitter.GetProtonPhiPull();
+        t.AntiEtaPhotonEPulls = fitter.GetPhotonEPulls();
+        t.AntiEtaPhotonThetaPulls = fitter.GetPhotonThetaPulls();
+        t.AntiEtaPhotonPhiPulls = fitter.GetPhotonPhiPulls();
     }
 }
 
@@ -531,6 +590,14 @@ void EtapOmegaG::Sig_t::Fit_t::BaseTree_t::Reset()
     TreeFitProb = std_ext::NaN;
     TreeFitIterations = 0;
 
+    TreeFitBeamEPull = std_ext::NaN;
+    TreeFitProtonEPull = std_ext::NaN;
+    TreeFitProtonThetaPull = std_ext::NaN;
+    TreeFitProtonPhiPull = std_ext::NaN;
+    TreeFitPhotonEPulls().resize(0);
+    TreeFitPhotonThetaPulls().resize(0);
+    TreeFitPhotonPhiPulls().resize(0);
+
     IM_Pi0_best = std_ext::NaN;
     IM_Pi0_fitted = std_ext::NaN;
     IM_Pi0gg = std_ext::NaN;
@@ -577,6 +644,14 @@ void EtapOmegaG::Sig_t::Pi0_t::Process(const EtapOmegaG::Particles_t& particles,
             continue;
         // found fit with better prob
         t.TreeFitIterations = r.NIterations;
+
+        t.TreeFitBeamEPull = treefitter.GetBeamEPull();
+        t.TreeFitProtonEPull = treefitter.GetProtonEPull();
+        t.TreeFitProtonThetaPull = treefitter.GetProtonThetaPull();
+        t.TreeFitProtonPhiPull = treefitter.GetProtonPhiPull();
+        t.TreeFitPhotonEPulls = treefitter.GetPhotonEPulls();
+        t.TreeFitPhotonThetaPulls = treefitter.GetPhotonThetaPulls();
+        t.TreeFitPhotonPhiPulls = treefitter.GetPhotonPhiPulls();
 
         // IM fitted expected to be delta peaks since they were fitted...
         const LorentzVec& Pi0_fitted = fitted_Pi0->Get().LVSum;
@@ -691,6 +766,14 @@ void EtapOmegaG::Sig_t::OmegaPi0_t::Process(const EtapOmegaG::Particles_t& parti
         // found fit with better prob
         t.TreeFitIterations = r.NIterations;
 
+        t.TreeFitBeamEPull = treefitter.GetBeamEPull();
+        t.TreeFitProtonEPull = treefitter.GetProtonEPull();
+        t.TreeFitProtonThetaPull = treefitter.GetProtonThetaPull();
+        t.TreeFitProtonPhiPull = treefitter.GetProtonPhiPull();
+        t.TreeFitPhotonEPulls = treefitter.GetPhotonEPulls();
+        t.TreeFitPhotonThetaPulls = treefitter.GetPhotonThetaPulls();
+        t.TreeFitPhotonPhiPulls = treefitter.GetPhotonPhiPulls();
+
         // IM fitted expected to be delta peaks since they were fitted...
         t.IM_Pi0g_fitted = fitted_Omega->Get().LVSum.M();
         t.IM_Pi0_fitted = fitted_Pi0->Get().LVSum.M();
@@ -763,9 +846,14 @@ void EtapOmegaG::Sig_t::OmegaPi0_t::Process(const EtapOmegaG::Particles_t& parti
     }
 }
 
+void EtapOmegaG::Ref_t::Tree_t::Reset()
+{
+    IM_2g = std_ext::NaN;
+}
+
 void EtapOmegaG::Ref_t::ResetBranches()
 {
-    t.IM_2g = std_ext::NaN;
+    t.Reset();
 }
 
 void EtapOmegaG::Ref_t::Process(const EtapOmegaG::Particles_t& particles) {
@@ -792,9 +880,5 @@ const std::vector<EtapOmegaG::Background_t> EtapOmegaG::ptreeBackgrounds = {
     {"3Pi0Dalitz", ParticleTypeTreeDatabase::Get(ParticleTypeTreeDatabase::Channel::ThreePi0_4ggEpEm)},
     {"1Eta", ParticleTypeTreeDatabase::Get(ParticleTypeTreeDatabase::Channel::Eta_2g)},
 };
-
-
-
-
 
 AUTO_REGISTER_PHYSICS(EtapOmegaG)
