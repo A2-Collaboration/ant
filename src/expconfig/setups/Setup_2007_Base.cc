@@ -33,11 +33,47 @@
 #include "base/std_ext/math.h"
 #include "base/Logger.h"
 
+#include "TH1.h"
+#include "TF1.h"
+
 using namespace std;
 
 namespace ant {
 namespace expconfig {
 namespace setup {
+
+
+struct tagger_time_calfkt : calibration::gui::FitGausPol0 {
+
+    using FitGausPol0::FitGausPol0;
+    ~tagger_time_calfkt();
+
+    virtual void SetDefaults(TH1* hist) override {
+
+        if(hist) {
+            func->SetParameter(0,hist->GetMaximum());
+            double max_pos = hist->GetXaxis()->GetBinCenter(hist->GetMaximumBin());
+            func->SetParameter(1,max_pos);
+            SetRange({max_pos-50, max_pos+50});
+            func->SetParameter(2,10);
+
+            const auto left  = hist->GetBinContent(hist->FindBin(max_pos-50));
+            const auto right = hist->GetBinContent(hist->FindBin(max_pos+50));
+            func->SetParameter(3,(left+right)/2.0);
+        } else {
+            func->SetParameter(0,100);
+            func->SetParameter(1,100);
+        }
+
+        func->SetParLimits(0,   0, 1E+5);  // positive amplitude
+        func->SetParLimits(2, 2.0, 100.0); // sigma
+
+    }
+};
+
+tagger_time_calfkt::~tagger_time_calfkt()
+{}
+
 
 class Setup_2007_Base : public Setup
 {
@@ -97,7 +133,7 @@ public:
                                           calibrationDataManager,
                                           convert_CATCH_Tagger,
                                           -325, // default offset in ns
-                                          std::make_shared<calibration::gui::FitGausPol0>(),
+                                          std::make_shared<tagger_time_calfkt>(),
                                           timecuts ? interval<double>{-120, 120} : no_timecut
                                           );
         AddCalibration<calibration::Time>(cb,
