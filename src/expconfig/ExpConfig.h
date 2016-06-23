@@ -87,7 +87,9 @@ public:
     class ExceptionNoConfig : public Exception {
         using Exception::Exception;
     };
-
+    class ExceptionNoDetector : public Exception {
+        using Exception::Exception;
+    };
     ExpConfig() = delete; // this class is more a wrapper for handling the config
 
 };
@@ -103,7 +105,7 @@ std::shared_ptr<DetectorType> ExpConfig::Setup::GetDetector()
         if(detector_ != nullptr)
             return detector_;
     }
-    throw Exception("Could not find detector in given setup");
+    throw ExceptionNoDetector("Could not find detector in given setup");
 }
 
 } // namespace ant

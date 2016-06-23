@@ -90,7 +90,7 @@ shared_ptr<Detector_t> ExpConfig::Setup::GetDetector(Detector_t::Type_t type)
         if(detector->Type == type)
             return detector;
     }
-    throw Exception("Could not find detector in given setup");
+    throw ExceptionNoDetector("Could not find detector in given setup");
 }
 
 void ExpConfig::Setup::SetManualName(const string& setupname, bool required)
