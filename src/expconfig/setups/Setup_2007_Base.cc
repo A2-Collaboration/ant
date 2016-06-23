@@ -43,10 +43,15 @@ namespace expconfig {
 namespace setup {
 
 
-struct tagger_time_calfkt : calibration::gui::FitGausPol0 {
+struct ImprovedTimeFct2007 : calibration::gui::FitGausPol0 {
 
-    using FitGausPol0::FitGausPol0;
-    ~tagger_time_calfkt();
+    const double window_size; //ns around max
+
+    ImprovedTimeFct2007(const double window = 50.0):
+        calibration::gui::FitGausPol0(),
+        window_size(window) {}
+
+    ~ImprovedTimeFct2007();
 
     virtual void SetDefaults(TH1* hist) override {
 
@@ -54,7 +59,7 @@ struct tagger_time_calfkt : calibration::gui::FitGausPol0 {
             func->SetParameter(0,hist->GetMaximum());
             double max_pos = hist->GetXaxis()->GetBinCenter(hist->GetMaximumBin());
             func->SetParameter(1,max_pos);
-            SetRange({max_pos-50, max_pos+50});
+            SetRange({max_pos - window_size/2.0, max_pos + window_size/2.0});
             func->SetParameter(2,10);
 
             const auto left  = hist->GetBinContent(hist->FindBin(max_pos-50));
@@ -71,7 +76,7 @@ struct tagger_time_calfkt : calibration::gui::FitGausPol0 {
     }
 };
 
-tagger_time_calfkt::~tagger_time_calfkt()
+ImprovedTimeFct2007::~ImprovedTimeFct2007()
 {}
 
 
@@ -133,7 +138,7 @@ public:
                                           calibrationDataManager,
                                           convert_CATCH_Tagger,
                                           -325, // default offset in ns
-                                          std::make_shared<tagger_time_calfkt>(),
+                                          std::make_shared<ImprovedTimeFct2007>(),
                                           timecuts ? interval<double>{-120, 120} : no_timecut
                                           );
         AddCalibration<calibration::Time>(cb,
@@ -154,8 +159,10 @@ public:
         AddCalibration<calibration::TAPSVeto_Time>(tapsVeto,
                                                    calibrationDataManager,
                                                    convert_MultiHit16bit,   // for BaF2
-                                                   nullptr,    // for PbWO4
-                                                   timecuts ? interval<double>{-12, 12} : no_timecut
+                                                   nullptr,                 // for PbWO4
+                                                   timecuts ? interval<double>{-12, 12} : no_timecut,
+                                                   no_timecut,
+                                                   std::make_shared<ImprovedTimeFct2007>(30.0)
                                                    );
 
         AddCalibration<calibration::CB_Energy>(cb, calibrationDataManager, convert_GeSiCa_SADC,
@@ -180,15 +187,18 @@ public:
                                                calibrationDataManager,
                                                convert_MultiHit16bit,   // for BaF2
                                                nullptr, // for PbWO4
-                                               timecuts ? interval<double>{-15, 15} : no_timecut // for BaF2
-
+                                               timecuts ? interval<double>{-15, 15} : no_timecut, // for BaF2
+                                               no_timecut,
+                                               std::make_shared<ImprovedTimeFct2007>(30.0)
                                                );
+
         AddCalibration<calibration::TAPS_Energy>(taps, calibrationDataManager, convert_MultiHit16bit,
                                                  100, // default pedestal
                                                  0.3, // default gain
                                                  thresholds ? 1 : 0,   // default threshold
                                                  1.0  // default relative gain
                                                  );
+
         AddCalibration<calibration::TAPS_ShortEnergy>(taps, calibrationDataManager, convert_MultiHit16bit );
 
     }
