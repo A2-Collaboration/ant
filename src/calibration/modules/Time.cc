@@ -160,6 +160,8 @@ void Time::TheGUI::InitGUI(gui::ManagerWindow_traits* window)
     window->AddNumberEntry("Stop at Channel", AutoStopAtChannel);
     window->AddNumberEntry("time in [ - t_0 , t_0 ]", HardTimeCut);
 
+    window->AddCheckBox("Skip empty channels", SkipEmptyChannels);
+
     theCanvas = window->AddCalCanvas();
     times = new TH1D("times","Times",
                      1000, -400 ,400);
@@ -199,6 +201,14 @@ gui::CalibModule_traits::DoFitReturn_t Time::TheGUI::DoFit(TH1* hist, unsigned c
     TH2* hist2 = dynamic_cast<TH2*>(hist);
 
     times = hist2->ProjectionX("times",channel+1,channel+1);
+
+    if(times->GetEntries() == 0 && SkipEmptyChannels) {
+        channelWasEmpty = true;
+        return DoFitReturn_t::Next;
+    } else {
+        channelWasEmpty = false;
+    }
+
     if (HardTimeCut > 0 )
         times->GetXaxis()->SetRangeUser(-fabs(HardTimeCut),fabs(HardTimeCut));
 
@@ -252,7 +262,7 @@ void Time::TheGUI::DisplayFit()
 void Time::TheGUI::StoreFit(unsigned channel)
 {
     const double oldOffset = previousOffsets[channel];
-    const double timePeak = fitFunction->GetPeakPosition();
+    const double timePeak = !channelWasEmpty ? fitFunction->GetPeakPosition() : 0.0 ;
 
     timePeaks->SetBinContent(channel+1,timePeak);
 
@@ -269,8 +279,10 @@ void Time::TheGUI::StoreFit(unsigned channel)
               << " (" << relative_change << " %)";
 
 
-    // don't forget the fit parameters
-    fitParams[channel] = fitFunction->Save();
+    if(!channelWasEmpty) {
+        // don't forget the fit parameters
+        fitParams[channel] = fitFunction->Save();
+    }
 
     theCanvas->Clear();
     theCanvas->Update();

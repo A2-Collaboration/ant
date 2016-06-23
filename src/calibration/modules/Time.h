@@ -51,11 +51,14 @@ public:
         std::vector<double> previousOffsets;
 
         bool IgnorePreviousFitParameters = false;
+        bool SkipEmptyChannels = false;
 
         double AutoStopOnChi2 = 6.0;
         double AutoStopOnPeakPos = 6;
         double AutoStopAtChannel = -1;
-        double HardTimeCut = 150;
+        double HardTimeCut = -1;
+
+        bool channelWasEmpty = false;
 
 
     public:
