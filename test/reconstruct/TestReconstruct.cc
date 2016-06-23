@@ -156,7 +156,7 @@ void dotest() {
     }
 
     CHECK(nReads == 221);
-    CHECK(nHits == 30260);
+    CHECK(nHits == 30254);
     CHECK(nCandidates == 862);
     CHECK(nCandidatesCBPID == 136);
     CHECK(nCandidatesTAPSVeto == 146);

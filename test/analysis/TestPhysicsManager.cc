@@ -8,9 +8,9 @@
 
 #include "unpacker/Unpacker.h"
 #include "reconstruct/Reconstruct.h"
+#include "expconfig/ExpConfig.h"
 #include "tree/TAntHeader.h"
 
-#include "base/Logger.h"
 #include "base/tmpfile_t.h"
 #include "base/WrapTFile.h"
 
@@ -268,7 +268,17 @@ void dotest_runall() {
 
     for(auto name : PhysicsRegistry::GetList()) {
         PhysicsManager pm;
-        REQUIRE_NOTHROW(pm.AddPhysics(PhysicsRegistry::Create(name)));
+        INFO(name);
+        try {
+            pm.AddPhysics(PhysicsRegistry::Create(name));
+        }
+        catch(ExpConfig::ExceptionNoDetector) {
+            // ignore silently if test setup did not provide detector
+            continue;
+        }
+        catch(...) {
+            FAIL("Unexpected exception while creating physics class");
+        }
         auto unpacker = Unpacker::Get(string(TEST_BLOBS_DIRECTORY)+"/Acqu_twoscalerblocks.dat.xz");
         auto reconstruct = std_ext::make_unique<Reconstruct>();
         list< unique_ptr<analysis::input::DataReader> > readers;

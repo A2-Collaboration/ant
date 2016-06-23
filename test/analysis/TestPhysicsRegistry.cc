@@ -2,6 +2,7 @@
 #include "expconfig_helpers.h"
 
 #include "analysis/physics/Physics.h"
+#include "expconfig/ExpConfig.h"
 
 #include "base/OptionsList.h"
 #include "base/WrapTFile.h"
@@ -61,6 +62,9 @@ void dotest() {
         }
         catch(WrapTFile::Exception) {
             // ignore silently if Physics classes can't load some files...
+        }
+        catch(ExpConfig::ExceptionNoDetector) {
+            // ignore silently if test setup did not provide detector
         }
         catch(...) {
             FAIL("Unexpected exception");

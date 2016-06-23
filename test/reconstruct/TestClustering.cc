@@ -116,7 +116,7 @@ void dotest_statistical() {
     }
 
     CHECK(nClusters == 3261);
-    CHECK(nClusterHits == 5800);
+    CHECK(nClusterHits == 5801);
     CHECK(nSplitClusters == 117);
     CHECK(nSplitClusterHits == 679);
     CHECK(nTouchesHole_CB == 220);
