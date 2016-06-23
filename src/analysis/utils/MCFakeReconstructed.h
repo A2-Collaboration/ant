@@ -21,6 +21,7 @@ namespace utils {
 class MCFakeReconstructed {
 public:
     MCFakeReconstructed();
+    virtual ~MCFakeReconstructed();
 
     /**
      * @brief Get returns best-effort faked reconstructed from the given mctrue

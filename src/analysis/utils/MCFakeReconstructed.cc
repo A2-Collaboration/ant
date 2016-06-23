@@ -28,13 +28,17 @@ MCFakeReconstructed::MCFakeReconstructed() :
 
 }
 
+MCFakeReconstructed::~MCFakeReconstructed()
+{
+
+}
 
 
-void find_closest_ch(const vec3& pos, const Detector_t& detector,
-                     unsigned& min_ch, double& min_angle) {
+
+unsigned find_closest_ch(const vec3& pos, const Detector_t& detector) {
     // assume to have at least one channel...
-    min_ch = 0;
-    min_angle = pos.Angle(detector.GetPosition(min_ch));
+    unsigned min_ch = 0;
+    double min_angle = pos.Angle(detector.GetPosition(min_ch));
     for(unsigned ch=1;ch<detector.GetNChannels();ch++) {
         const double angle = pos.Angle(detector.GetPosition(ch));
         if(angle < min_angle) {
@@ -42,6 +46,7 @@ void find_closest_ch(const vec3& pos, const Detector_t& detector,
             min_angle = angle;
         }
     }
+    return min_ch;
 }
 
 
@@ -50,9 +55,7 @@ void do_calo_veto(const TParticle& p,
                   const Detector_t& veto,
                   TEventData& data)
 {
-    unsigned calo_ch;
-    double calo_angle;
-    find_closest_ch(p.p, calo, calo_ch, calo_angle);
+    auto calo_ch = find_closest_ch(p.p, calo);
 
     data.Clusters.emplace_back(
                 p.p.Unit(),
@@ -69,9 +72,7 @@ void do_calo_veto(const TParticle& p,
     const double vetoE = p.Type().Charged() ? 1 : 0;
 
     if(vetoE>0) {
-        unsigned veto_ch;
-        double veto_angle;
-        find_closest_ch(p.p, veto, veto_ch, veto_angle);
+        auto veto_ch = find_closest_ch(p.p, veto);
         data.Clusters.emplace_back(
                     veto.GetPosition(veto_ch).Unit(),
                     vetoE,
@@ -95,7 +96,8 @@ void do_calo_veto(const TParticle& p,
                         : TClusterList{std::prev(data.Clusters.end())}
                 );
 
-    data.Particles.Add(std::make_shared<TParticle>(p.Type(), std::prev(data.Candidates.end())));
+    data.Particles.Add(std::make_shared<TParticle>(p.Type(),
+                                                   std::prev(data.Candidates.end())));
 }
 
 const TEventData& MCFakeReconstructed::Get(const TEventData& mctrue)
@@ -111,19 +113,10 @@ const TEventData& MCFakeReconstructed::Get(const TEventData& mctrue)
             do_calo_veto(*p, *taps, *tapsveto, data);
     }
 
-    data.TaggerHits = mctrue.TaggerHits;
+    // copy most of the trigger stuff
+    // CBESum is going to be smeared as well
     data.Trigger = mctrue.Trigger;
-
-    // data contains now "perfect" candidates/particles
-
-    // some simple trigger stuff
-
-
-//    LOG(INFO) << data;
-
-//    for(const auto& cand : data.Candidates) {
-//        cout << *cand.FindCaloCluster() << endl;
-//    }
+    data.TaggerHits = mctrue.TaggerHits;
 
     return data;
 }
