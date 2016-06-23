@@ -37,18 +37,24 @@ APLCON::Fit_Settings_t EtapOmegaG::MakeFitSettings(unsigned max_iterations)
     return settings;
 }
 
+const utils::UncertaintyModelPtr EtapOmegaG::fit_uncertainty_model = make_shared<utils::UncertaintyModels::Optimized_Oli1>();
+
 EtapOmegaG::EtapOmegaG(const string& name, OptionsPtr opts) :
     Physics(name, opts),
     kinfitter_sig("kinfitter_sig",4,
-              make_shared<fit_uncertainty_model_t>(),
-              EtapOmegaG::MakeFitSettings(25)
-              ),
+                  fit_uncertainty_model,
+                  EtapOmegaG::MakeFitSettings(25)
+                  ),
     kinfitter_ref("kinfitter_ref",2,
-              make_shared<fit_uncertainty_model_t>(),
-              EtapOmegaG::MakeFitSettings(25)
-              ),
-    mc_smear(make_shared<mc_uncertainty_model_t>()),
-    mc_fake(opts->Get<bool>("MCFake", false) ? std_ext::make_unique<utils::MCFakeReconstructed>() : nullptr)
+                  fit_uncertainty_model,
+                  EtapOmegaG::MakeFitSettings(25)
+                  ),
+    mc_smear(opts->Get<bool>("MCFake", false) ?
+                 fit_uncertainty_model
+               : make_shared<utils::UncertaintyModels::MCSmearingAdlarson>()),
+    mc_fake(opts->Get<bool>("MCFake", false) ?
+                std_ext::make_unique<utils::MCFakeReconstructed>()
+              : nullptr)
 {
     const interval<double> prompt_range{-2.5,1.5};
     promptrandom.AddPromptRange(prompt_range); // slight offset due to CBAvgTime reference
@@ -177,7 +183,7 @@ void EtapOmegaG::ProcessEvent(const TEvent& event, manager_t&)
     }
 
     // smear the particles
-    if(!mc_fake && data.ID.isSet(TID::Flags_t::MC)) {
+    if(data.ID.isSet(TID::Flags_t::MC)) {
         auto smear_particles = [this] (Particles_t& particles) {
             particles.Proton = mc_smear.Smear(particles.Proton);
             for(auto& p : particles.Photons)
@@ -360,12 +366,12 @@ bool EtapOmegaG::doKinfit(const TTaggerHit& taggerhit,
 EtapOmegaG::Sig_t::Sig_t() :
     treefitter_Pi0Pi0("treefit_Pi0Pi0",
                       ParticleTypeTreeDatabase::Get(ParticleTypeTreeDatabase::Channel::TwoPi0_4g),
-                      make_shared<fit_uncertainty_model_t>(), {},
+                      fit_uncertainty_model, {},
                       MakeFitSettings(20)
                       ),
     treefitter_Pi0Eta("treefit_Pi0Eta",
                       ParticleTypeTreeDatabase::Get(ParticleTypeTreeDatabase::Channel::Pi0Eta_4g),
-                      make_shared<fit_uncertainty_model_t>(), {},
+                      fit_uncertainty_model, {},
                       MakeFitSettings(20)
                       )
 {
@@ -507,7 +513,7 @@ utils::TreeFitter EtapOmegaG::Sig_t::Fit_t::Make(const ParticleTypeDatabase::Typ
     return {
         "sig_treefitter_"+subtree.Name(),
         EtapOmegaG::ptreeSignal,
-        make_shared<fit_uncertainty_model_t>(),
+        fit_uncertainty_model,
         setupnodes,
         MakeFitSettings(15)
     };

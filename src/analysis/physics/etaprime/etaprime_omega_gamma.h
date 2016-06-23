@@ -76,8 +76,7 @@ struct EtapOmegaG : Physics {
     PromptRandom::Switch promptrandom;
     PromptRandom::Switch promptrandom_tight;
 
-    using fit_uncertainty_model_t = utils::UncertaintyModels::Optimized_Oli1;
-    using mc_uncertainty_model_t = utils::UncertaintyModels::MCSmearingAdlarson;
+    static const utils::UncertaintyModelPtr fit_uncertainty_model;
 
     utils::KinFitter kinfitter_sig;
     utils::KinFitter kinfitter_ref;
