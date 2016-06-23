@@ -101,14 +101,15 @@ RawFileReader::XZ::XZ(const std::string &filename, const size_t inbufsize) :
 RawFileReader::XZ::~XZ() {}
 
 bool RawFileReader::XZ::test(ifstream& file) {
+
+    const vector<char> magic_bytes_xz{ static_cast<char>(0xFD), '7', 'z', 'X', 'Z', 0x00 };
+
     // check some magic bytes in the beginning
     // to determine possible compression
-    std::vector<char> file_bytes(6);
+    std::vector<char> file_bytes(magic_bytes_xz.size());
     file.seekg(0, file.beg); // ensure start of file
     file.read(file_bytes.data(), file_bytes.size());
 
-
-    vector<char> magic_bytes_xz{ static_cast<char>(0xFD), '7', 'z', 'X', 'Z', 0x00 };
 
     return file_bytes == magic_bytes_xz;
 }
