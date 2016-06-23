@@ -25,7 +25,7 @@ MCFakeReconstructed::MCFakeReconstructed() :
     taps(find_detector<decltype(taps)>()),
     tapsveto(find_detector<decltype(tapsveto)>())
 {
-
+    LOG(WARNING) << "MCFakeReconstructed in use";
 }
 
 MCFakeReconstructed::~MCFakeReconstructed()
