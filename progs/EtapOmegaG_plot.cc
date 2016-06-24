@@ -252,8 +252,8 @@ struct SigHist_t : CommonHist_t {
         h_AntiPi0FitProb->Fill(f.AntiPi0FitProb, f.TaggW());
         h_AntiEtaFitProb->Fill(f.AntiEtaFitProb, f.TaggW());
 
-        h_IM_4g->Fill(tree.IM_Pi0gg, f.TaggW());
-        h_IM_gg->Fill(tree.IM_gg, f.TaggW());
+        h_IM_4g->Fill(tree.IM_Pi0gg_best, f.TaggW());
+        h_IM_gg->Fill(tree.IM_gg_best, f.TaggW());
         h_TreeFitProb->Fill(f.TreeFitProb, f.TaggW());
         h_Pi0EtaFitProb->Fill(f.AntiPi0FitProb, f.AntiEtaFitProb, f.TaggW());
         h_Pi0TreeFitProb->Fill(f.AntiPi0FitProb, f.TreeFitProb, f.TaggW());
@@ -325,8 +325,8 @@ struct SigPi0Hist_t : SigHist_t {
     void Fill(const Fill_t& f) const {
         SigHist_t::Fill(f);
         const Tree_t& pi0 = f.Pi0;
-        h_IM_3g_4g_low->Fill(pi0.IM_Pi0gg, pi0.IM_Pi0g()[0], f.TaggW());
-        h_IM_3g_4g_high->Fill(pi0.IM_Pi0gg, pi0.IM_Pi0g()[1], f.TaggW());
+        h_IM_3g_4g_low->Fill(pi0.IM_Pi0gg_best, pi0.IM_Pi0g_best()[0], f.TaggW());
+        h_IM_3g_4g_high->Fill(pi0.IM_Pi0gg_best, pi0.IM_Pi0g_best()[1], f.TaggW());
     }
 
     static cuttree::Cuts_t<Fill_t> GetCuts() {
@@ -334,7 +334,7 @@ struct SigPi0Hist_t : SigHist_t {
         auto cuts = cuttree::ConvertCuts<Fill_t, SigHist_t::Fill_t>(SigHist_t::GetCuts());
         cuts.emplace_back(MultiCut_t<Fill_t>{
                               {"IM_Pi0g[1]>650", [] (const Fill_t& f) {
-                                   return f.Pi0.IM_Pi0g()[1] > 650;
+                                   return f.Pi0.IM_Pi0g_best()[1] > 650;
                                }},
                           });
         return cuts;
@@ -354,24 +354,29 @@ struct SigOmegaPi0Hist_t : SigHist_t {
         {}
     };
 
-    TH1D* h_Bachelor_E;
+    TH1D* h_Bachelor_E_best;
+    TH1D* h_Bachelor_E_fitted;
+
 
     SigOmegaPi0Hist_t(HistogramFactory HistFac, cuttree::TreeInfo_t treeInfo) : SigHist_t(HistFac, treeInfo) {
-        h_Bachelor_E = HistFac.makeTH1D("E_#gamma in #eta' frame","E_{#gamma} / MeV","",
-                                        BinSettings(100,100,200),"h_Bachelor_E");
-
+        BinSettings bins_BachelorE(100,100,200);
+        h_Bachelor_E_best = HistFac.makeTH1D("E_#gamma in #eta' frame","E_{#gamma} / MeV","",
+                                             bins_BachelorE,"h_Bachelor_E_best");
+        h_Bachelor_E_fitted = HistFac.makeTH1D("E_#gamma in #eta' frame","E_{#gamma} / MeV","",
+                                               bins_BachelorE,"h_Bachelor_E_fitted");
     }
 
     std::vector<TH1*> GetHists() const {
         auto hists = SigHist_t::GetHists();
-        hists.insert(hists.end(), {h_Bachelor_E});
+        hists.insert(hists.end(), {h_Bachelor_E_best});
         return hists;
     }
 
     void Fill(const Fill_t& f) const {
         SigHist_t::Fill(f);
         const Tree_t& omegapi0 = f.OmegaPi0;
-        h_Bachelor_E->Fill(omegapi0.Bachelor_E, f.TaggW());
+        h_Bachelor_E_best->Fill(omegapi0.Bachelor_E_best, f.TaggW());
+        h_Bachelor_E_fitted->Fill(omegapi0.Bachelor_E_fitted, f.TaggW());
     }
 
     static cuttree::Cuts_t<Fill_t> GetCuts() {

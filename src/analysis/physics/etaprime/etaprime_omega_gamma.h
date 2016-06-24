@@ -146,12 +146,14 @@ struct EtapOmegaG : Physics {
                 ADD_BRANCH_T(std::vector<double>,  TreeFitPhotonThetaPulls)
                 ADD_BRANCH_T(std::vector<double>,  TreeFitPhotonPhiPulls)
 
-                ADD_BRANCH_T(double, IM_Pi0_best)
                 ADD_BRANCH_T(double, IM_Pi0_fitted)
+                ADD_BRANCH_T(double, IM_Pi0_best)
 
-                ADD_BRANCH_T(double, IM_Pi0gg)
+                ADD_BRANCH_T(double, IM_Pi0gg_fitted)
+                ADD_BRANCH_T(double, IM_Pi0gg_best)
 
-                ADD_BRANCH_T(double, IM_gg)
+                ADD_BRANCH_T(double, IM_gg_fitted)
+                ADD_BRANCH_T(double, IM_gg_best)
 
                 ADD_BRANCH_T(unsigned, MCTrueMatch)
 
@@ -167,6 +169,7 @@ struct EtapOmegaG : Physics {
             static TParticlePtr FindBest(const utils::TreeFitter::tree_t& fitted,
                                          const Particles_t& particles
                                          );
+
 
             utils::TreeFitter treefitter;
             utils::TreeFitter::tree_t fitted_Pi0;
@@ -186,7 +189,12 @@ struct EtapOmegaG : Physics {
             Pi0_t(params_t params);
 
             struct BaseTree_t : Fit_t::BaseTree_t {
-                ADD_BRANCH_T(std::vector<double>, IM_Pi0g, 2)
+                ADD_BRANCH_T(std::vector<double>, IM_Pi0g_fitted, 2)
+                ADD_BRANCH_T(std::vector<double>, IM_Pi0g_best, 2)
+
+                ADD_BRANCH_T(std::vector<double>, Bachelor_E_fitted, 2)
+                ADD_BRANCH_T(std::vector<double>, Bachelor_E_best, 2)
+
                 void Reset();
             };
 
@@ -203,7 +211,8 @@ struct EtapOmegaG : Physics {
                 ADD_BRANCH_T(double, IM_Pi0g_fitted)
                 ADD_BRANCH_T(double, IM_Pi0g_best)
 
-                ADD_BRANCH_T(double, Bachelor_E)
+                ADD_BRANCH_T(double, Bachelor_E_fitted)
+                ADD_BRANCH_T(double, Bachelor_E_best)
 
                 void Reset();
             };
