@@ -26,7 +26,7 @@ Etap3pi0::Etap3pi0(const std::string& name, OptionsPtr opts) :
     reference_tree(ParticleTypeTreeDatabase::Get(ParticleTypeTreeDatabase::Channel::EtaPrime_2Pi0Eta_6g)),
     bkg_tree(ParticleTypeTreeDatabase::Get(ParticleTypeTreeDatabase::Channel::ThreePi0_6g)),
     fitterSig("fitterSig",utils::ParticleTools::GetProducedParticle(signal_tree),
-              utils::UncertaintyModels::MCExtracted::makeAndLoad(),
+              utils::UncertaintyModels::MCExtracted::makeAndLoad(), false,
               [] (ParticleTypeTree tree)
               {
                 if(tree->Get() == ParticleTypeDatabase::EtaPrime)
@@ -35,7 +35,7 @@ Etap3pi0::Etap3pi0(const std::string& name, OptionsPtr opts) :
                     return utils::TreeFitter::nodesetup_t{};
                } ),
     fitterRef("fitterRef",utils::ParticleTools::GetProducedParticle(reference_tree),
-              utils::UncertaintyModels::MCExtracted::makeAndLoad(),
+              utils::UncertaintyModels::MCExtracted::makeAndLoad(), false,
               [] (ParticleTypeTree tree)
               {
                 if(tree->Get() == ParticleTypeDatabase::EtaPrime)

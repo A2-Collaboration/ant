@@ -128,7 +128,7 @@ KinFitter::KinFitter(const std::string& name,
         throw Exception("No gammas are not allowed");
 
     if(fit_Z_vertex)
-        throw Exception("Not implemented yet");
+        throw Exception("Z vertex fitting not implemented yet");
 
     for(unsigned i=0; i<numGammas;++i) {
         Photons.emplace_back(make_shared<FitParticle>("Photon"+to_string(i)));

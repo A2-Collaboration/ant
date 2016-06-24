@@ -899,7 +899,7 @@ OmegaEtaG2::MyTreeFitter_t::MyTreeFitter_t(const ParticleTypeTree& ttree, const 
     treefitter(
         "treefit_"+mesonT.Name(),
         ttree,
-        model,
+        model, false,
         [] (const ParticleTypeTree& t) { return utils::TreeFitter::nodesetup_t(1.0, (t->Get() == ParticleTypeDatabase::Omega)); }
         )
 {
