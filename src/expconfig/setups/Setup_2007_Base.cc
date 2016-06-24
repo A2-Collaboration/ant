@@ -1,5 +1,7 @@
 #include "Setup.h"
 
+#include "Setup_2007_Base.h"
+
 #include "detectors/CB.h"
 #include "detectors/PID.h"
 #include "detectors/Tagger.h"
@@ -79,12 +81,8 @@ struct ImprovedTimeFct2007 : calibration::gui::FitGausPol0 {
 ImprovedTimeFct2007::~ImprovedTimeFct2007()
 {}
 
-
-class Setup_2007_Base : public Setup
-{
-public:
-
-    Setup_2007_Base(const std::string& name, OptionsPtr opt) : Setup(name, opt)
+Setup_2007_Base::Setup_2007_Base(const std::string& name, OptionsPtr opt) : Setup(name, opt),
+    MCTaggerHits(opt->Get<bool>("MCTaggerHits",false))
     {
         auto cb = make_shared<detector::CB>();
         AddDetector(cb);
@@ -203,29 +201,20 @@ public:
 
     }
 
-    virtual double GetElectronBeamEnergy() const override {
+double Setup_2007_Base::GetElectronBeamEnergy() const {
         return 1508.0;
-    }
+}
 
-    bool Matches(const TID& tid) const override
-    {
-        /// \todo This is for all of 2007 for now. for testing.
-        if(!std_ext::time_between(tid.Timestamp, "2007-01-016", "2007-12-31"))
-            return false;
-        return true;
-    }
-
-
-    virtual ExpConfig::Setup::candidatebuilder_config_t GetCandidateBuilderConfig() const override {
+ExpConfig::Setup::candidatebuilder_config_t Setup_2007_Base::GetCandidateBuilderConfig() const {
         candidatebuilder_config_t conf;
         conf.PID_Phi_Epsilon = std_ext::degree_to_radian(2.0);
         conf.CB_ClusterThreshold = 15;
         conf.TAPS_ClusterThreshold = 20;
         return conf;
     }
-};
 
-AUTO_REGISTER_SETUP(Setup_2007_Base)
+
+//AUTO_REGISTER_SETUP(Setup_2007_Base)
 
 
 }}} // namespace ant::expconfig::setup

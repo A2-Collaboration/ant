@@ -16,6 +16,7 @@ set(SRCS_SETUPS
   setups/Setup_2015_01_Pion.cc
   setups/Setup_CBSourceCalib.cc
   setups/Setup_2007_Base.cc
+  setups/Setup_2007_06.cc
   )
 
 set(SRCS_DETECTORS
