@@ -124,10 +124,8 @@ KinFitter::KinFitter(
         const APLCON::Fit_Settings_t& settings) :
     Fitter(name, settings, Uncertainty_model)
 {
-    // nothing to do in this special case
-    // used by "KinFit-free" TreeFitter
     if(numGammas==0)
-        return;
+        throw Exception("No gammas are not allowed");
 
     for(unsigned i=0; i<numGammas;++i) {
         Photons.emplace_back(make_shared<FitParticle>("Photon"+to_string(i)));
