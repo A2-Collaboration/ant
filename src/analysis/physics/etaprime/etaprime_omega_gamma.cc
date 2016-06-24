@@ -49,9 +49,14 @@ EtapOmegaG::EtapOmegaG(const string& name, OptionsPtr opts) :
                   fit_uncertainty_model,
                   EtapOmegaG::MakeFitSettings(25)
                   ),
-    mc_smear(opts->Get<bool>("MCFake", false) ?
-                 fit_uncertainty_model
-               : make_shared<utils::UncertaintyModels::MCSmearingAdlarson>()),
+    mc_smear(opts->Get<bool>("MCFake", false) | opts->Get<bool>("MCSmear", true) ? // use | to force evaluation of both opts!
+                 std_ext::make_unique<utils::MCSmear>(
+                     opts->Get<bool>("MCFake", false) ?
+                     fit_uncertainty_model
+                     : make_shared<utils::UncertaintyModels::MCSmearingAdlarson>()
+                         )
+               : nullptr
+                 ),
     mc_fake(opts->Get<bool>("MCFake", false) ?
                 std_ext::make_unique<utils::MCFakeReconstructed>()
               : nullptr)
@@ -184,11 +189,11 @@ void EtapOmegaG::ProcessEvent(const TEvent& event, manager_t&)
     }
 
     // additionally smear the particles in MC
-    if(data.ID.isSet(TID::Flags_t::MC)) {
+    if(mc_smear && data.ID.isSet(TID::Flags_t::MC)) {
         auto smear_particles = [this] (Particles_t& particles) {
-            particles.Proton = mc_smear.Smear(particles.Proton);
+            particles.Proton = mc_smear->Smear(particles.Proton);
             for(auto& p : particles.Photons)
-                p = mc_smear.Smear(p);
+                p = mc_smear->Smear(p);
         };
         if(haveSig)
             smear_particles(sig_particles);

@@ -91,7 +91,7 @@ struct EtapOmegaG : Physics {
     utils::KinFitter kinfitter_sig;
     utils::KinFitter kinfitter_ref;
 
-    utils::MCSmear mc_smear;
+    std::unique_ptr<utils::MCSmear>             mc_smear;
     std::unique_ptr<utils::MCFakeReconstructed> mc_fake;
 
 
