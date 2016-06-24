@@ -80,9 +80,9 @@ void Fitter::FitParticle::Var_t::SetupBranches(TTree* tree, const string& prefix
     tree->Branch((prefix+"_sigma").c_str(), addressof(Sigma));
 }
 
-TParticlePtr Fitter::FitParticle::AsFitted(const ParticleTypeDatabase::Type& type)
+TParticlePtr Fitter::FitParticle::AsFitted()
 {
-    auto p = make_shared<TParticle>(type,
+    auto p = make_shared<TParticle>(Particle->Type(),
                                     Ek.Value,
                                     Theta.Value,
                                     Phi.Value);
@@ -224,14 +224,14 @@ void KinFitter::SetPhotons(const TParticleList& photons)
 
 TParticlePtr KinFitter::GetFittedProton() const
 {
-    return Proton->AsFitted(ParticleTypeDatabase::Proton);
+    return Proton->AsFitted();
 }
 
 TParticleList KinFitter::GetFittedPhotons() const
 {
     TParticleList photons;
     for(unsigned i=0;i<Photons.size();i++) {
-        photons.emplace_back(Photons[i]->AsFitted(ParticleTypeDatabase::Photon));
+        photons.emplace_back(Photons[i]->AsFitted());
     }
     return photons;
 }
