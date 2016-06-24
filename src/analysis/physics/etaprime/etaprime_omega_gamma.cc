@@ -37,29 +37,37 @@ APLCON::Fit_Settings_t EtapOmegaG::MakeFitSettings(unsigned max_iterations)
     return settings;
 }
 
-const utils::UncertaintyModelPtr EtapOmegaG::fit_uncertainty_model = make_shared<utils::UncertaintyModels::Optimized_Oli1>();
+EtapOmegaG::params_t::params_t(utils::UncertaintyModelPtr fit_uncertainty_model, bool fit_Z_vertex) :
+    Fit_uncertainty_model(fit_uncertainty_model),
+    Fit_Z_vertex(fit_Z_vertex)
+{
+
+}
 
 EtapOmegaG::EtapOmegaG(const string& name, OptionsPtr opts) :
     Physics(name, opts),
+    params(make_shared<utils::UncertaintyModels::Optimized_Oli1>(),
+           opts->Get<bool>("FitZVertex", false)),
     kinfitter_sig("kinfitter_sig",4,
-                  fit_uncertainty_model,
+                  params.Fit_uncertainty_model, params.Fit_Z_vertex,
                   EtapOmegaG::MakeFitSettings(25)
                   ),
     kinfitter_ref("kinfitter_ref",2,
-                  fit_uncertainty_model,
+                  params.Fit_uncertainty_model, params.Fit_Z_vertex,
                   EtapOmegaG::MakeFitSettings(25)
                   ),
     mc_smear(opts->Get<bool>("MCFake", false) | opts->Get<bool>("MCSmear", true) ? // use | to force evaluation of both opts!
                  std_ext::make_unique<utils::MCSmear>(
                      opts->Get<bool>("MCFake", false) ?
-                     fit_uncertainty_model
+                     params.Fit_uncertainty_model
                      : make_shared<utils::UncertaintyModels::MCSmearingAdlarson>()
                          )
                : nullptr
                  ),
     mc_fake(opts->Get<bool>("MCFake", false) ?
                 std_ext::make_unique<utils::MCFakeReconstructed>()
-              : nullptr)
+              : nullptr),
+    Sig(params)
 {
     if(mc_smear)
         LOG(INFO) << "Additional MC Smearing enabled";
@@ -396,15 +404,17 @@ bool EtapOmegaG::doKinfit(const TTaggerHit& taggerhit,
     return true;
 }
 
-EtapOmegaG::Sig_t::Sig_t() :
+EtapOmegaG::Sig_t::Sig_t(params_t params) :
+    Pi0(params),
+    OmegaPi0(params),
     treefitter_Pi0Pi0("treefit_Pi0Pi0",
                       ParticleTypeTreeDatabase::Get(ParticleTypeTreeDatabase::Channel::TwoPi0_4g),
-                      fit_uncertainty_model, {},
+                      params.Fit_uncertainty_model, params.Fit_Z_vertex, {},
                       MakeFitSettings(20)
                       ),
     treefitter_Pi0Eta("treefit_Pi0Eta",
                       ParticleTypeTreeDatabase::Get(ParticleTypeTreeDatabase::Channel::Pi0Eta_4g),
-                      fit_uncertainty_model, {},
+                      params.Fit_uncertainty_model, params.Fit_Z_vertex, {},
                       MakeFitSettings(20)
                       )
 {
@@ -563,7 +573,7 @@ EtapOmegaG::Sig_t::Fit_t::Fit_t(utils::TreeFitter fitter) :
     fitted_g_EtaPrime = find_photons(fitted_EtaPrime).at(0);
 }
 
-utils::TreeFitter EtapOmegaG::Sig_t::Fit_t::Make(const ParticleTypeDatabase::Type& subtree)
+utils::TreeFitter EtapOmegaG::Sig_t::Fit_t::Make(const ParticleTypeDatabase::Type& subtree, params_t params)
 {
     auto setupnodes = [&subtree] (const ParticleTypeTree& t) {
         utils::TreeFitter::nodesetup_t nodesetup;
@@ -580,7 +590,8 @@ utils::TreeFitter EtapOmegaG::Sig_t::Fit_t::Make(const ParticleTypeDatabase::Typ
     return {
         "sig_treefitter_"+subtree.Name(),
         EtapOmegaG::ptreeSignal,
-        fit_uncertainty_model,
+        params.Fit_uncertainty_model,
+        params.Fit_Z_vertex,
         setupnodes,
         MakeFitSettings(15)
     };
@@ -614,8 +625,8 @@ void EtapOmegaG::Sig_t::Fit_t::BaseTree_t::Reset()
     MCTrueMatch = 0;
 }
 
-EtapOmegaG::Sig_t::Pi0_t::Pi0_t() :
-    Fit_t(Fit_t::Make(ParticleTypeDatabase::Pi0))
+EtapOmegaG::Sig_t::Pi0_t::Pi0_t(params_t params) :
+    Fit_t(Fit_t::Make(ParticleTypeDatabase::Pi0, params))
 {
 
 }
@@ -729,8 +740,8 @@ void EtapOmegaG::Sig_t::Pi0_t::Process(const EtapOmegaG::Particles_t& particles,
 }
 
 
-EtapOmegaG::Sig_t::OmegaPi0_t::OmegaPi0_t() :
-    Fit_t(Fit_t::Make(ParticleTypeDatabase::Omega))
+EtapOmegaG::Sig_t::OmegaPi0_t::OmegaPi0_t(params_t params) :
+    Fit_t(Fit_t::Make(ParticleTypeDatabase::Omega, params))
 {
 
 }
@@ -888,5 +899,9 @@ const std::vector<EtapOmegaG::Background_t> EtapOmegaG::ptreeBackgrounds = {
     {"3Pi0Dalitz", ParticleTypeTreeDatabase::Get(ParticleTypeTreeDatabase::Channel::ThreePi0_4ggEpEm)},
     {"1Eta", ParticleTypeTreeDatabase::Get(ParticleTypeTreeDatabase::Channel::Eta_2g)},
 };
+
+
+
+
 
 AUTO_REGISTER_PHYSICS(EtapOmegaG)

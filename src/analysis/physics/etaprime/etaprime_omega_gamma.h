@@ -86,7 +86,13 @@ struct EtapOmegaG : Physics {
     PromptRandom::Switch promptrandom;
     PromptRandom::Switch promptrandom_tight;
 
-    static const utils::UncertaintyModelPtr fit_uncertainty_model;
+    struct params_t {
+        const utils::UncertaintyModelPtr Fit_uncertainty_model;
+        const bool Fit_Z_vertex;
+        params_t(utils::UncertaintyModelPtr fit_uncertainty_model, bool fit_Z_vertex);
+    };
+
+    const params_t params;
 
     utils::KinFitter kinfitter_sig;
     utils::KinFitter kinfitter_ref;
@@ -156,7 +162,7 @@ struct EtapOmegaG : Physics {
 
             Fit_t(utils::TreeFitter fitter);
 
-            static utils::TreeFitter Make(const ParticleTypeDatabase::Type& subtree);
+            static utils::TreeFitter Make(const ParticleTypeDatabase::Type& subtree, params_t params);
 
             static TParticlePtr FindBest(const utils::TreeFitter::tree_t& fitted,
                                          const Particles_t& particles
@@ -177,7 +183,7 @@ struct EtapOmegaG : Physics {
 
         struct Pi0_t : Fit_t {
 
-            Pi0_t();
+            Pi0_t(params_t params);
 
             struct BaseTree_t : Fit_t::BaseTree_t {
                 ADD_BRANCH_T(std::vector<double>, IM_Pi0g, 2)
@@ -191,7 +197,7 @@ struct EtapOmegaG : Physics {
 
         struct OmegaPi0_t : Fit_t {
 
-            OmegaPi0_t();
+            OmegaPi0_t(params_t params);
 
             struct BaseTree_t : Fit_t::BaseTree_t {
                 ADD_BRANCH_T(double, IM_Pi0g_fitted)
@@ -208,7 +214,7 @@ struct EtapOmegaG : Physics {
 
         };
 
-        Sig_t();
+        Sig_t(params_t params);
 
         Pi0_t Pi0;
         OmegaPi0_t OmegaPi0;
