@@ -210,15 +210,15 @@ bool PID_PhiAngle::TheGUI::FinishSlice()
 
    for(size_t ch=0;ch<GetNumberOfChannels();ch++) {
 
-       auto angle = angles[ch];
+//       auto angle = angles[ch];
 
        // always make sure values increase (wrap around)
        /// @todo what to do if slope is negative?
        if(ch!=0)
-           while(angles[ch-1] > angle)
-               angle += 360.0;
+           while(angles[ch-1] > angles[ch])
+               angles[ch] += 360.0;
 
-       h_result->SetPoint(ch, ch, angle);
+       h_result->SetPoint(ch, ch, angles[ch]);
    }
 
    TFitResultPtr r = h_result->Fit("pol1","QS");
