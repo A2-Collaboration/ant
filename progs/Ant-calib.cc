@@ -29,6 +29,7 @@ int main(int argc, char** argv) {
     auto cmd_batchmode = cmd.add<TCLAP::SwitchArg>("b","batch","Run in batch mode (no GUI, autosave)",false);
     auto cmd_default = cmd.add<TCLAP::SwitchArg>("","default","Put created TCalibrationData to default range",false);
     auto cmd_confirmHeaderMismatch = cmd.add<TCLAP::SwitchArg>("","confirmHeaderMismatch","Confirm mismatch in Git infos in file headers and use files anyway",false);
+    auto cmd_setupname = cmd.add<TCLAP::ValueArg<string>>("s","setup","Override setup name", false, "", "setup");
     // unlabeled multi arg must be the last element added, and interprets everything as a input file
     auto cmd_inputfiles  = cmd.add<TCLAP::UnlabeledMultiArg<string>>("inputfiles","Ant files with histograms",true,"inputfiles");
     cmd.parse(argc, argv);
@@ -74,9 +75,10 @@ int main(int argc, char** argv) {
     // the gui manager already scanned the files and provides a hint
     // for the SetupName
 
-    auto setup = ExpConfig::Setup::Get(manager->SetupName);
+    const auto setup_name = cmd_setupname->isSet() ? cmd_setupname->getValue() : manager->SetupName;
+    auto setup = ExpConfig::Setup::Get(setup_name);
     if(setup == nullptr) {
-        LOG(ERROR) << "Did not find setup instance for name '" << manager->SetupName << "' (extracted from input files)";
+        LOG(ERROR) << "Did not find setup instance for name " << setup_name;
         return 1;
     }
 
