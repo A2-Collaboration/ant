@@ -95,8 +95,8 @@ sub main {
         warn "Warning: Inputfile $inputfile does not exist, skipping.";
         next line;
       }
-      unless($inputfile =~ /\.(dat|dat\.xz|root)$/) {
-        warn "Warning: Inputfile $inputfile does not end with .dat[.xz] or .root, skipping";
+      unless($inputfile =~ /\.(dat|dat\.xz|dat\.gz|root)$/) {
+        warn "Warning: Inputfile $inputfile does not end with .dat[.xz|.gz] or .root, skipping";
         next line;
       }
       push(@inputfiles, $inputfile);
