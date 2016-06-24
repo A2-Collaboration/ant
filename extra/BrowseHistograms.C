@@ -3,9 +3,9 @@
 
 
 
-const char fFileDir[] = "analysis";
+const char fFileDir[] = ".";
+char* fHistName = "not set";
 //const char fHistName[] = "CaLib_CB_Time_Ind";
-const char fHistName[] = "CaLib_TAPS_Time_Ind";
 //const char fHistName[] = "CaLib_Veto_Time_Ind";
 //const char fHistName[] = "CaLib_PID_Time_Ind";
 //const char fHistName[] = "CaLib_Tagger_Time_Ind";
@@ -120,9 +120,11 @@ void DrawCurrHistogram() {
 
 }
 
-void BrowseHistograms() {
+void BrowseHistograms(const char* histname) {
 
-  TSystemDirectory dir(fFileDir,fFileDir);
+    fHistName=histname;
+
+  TSystemDirectory dir(".",".");
   TList *files = dir.GetListOfFiles();
   if (!files) {
     cerr << "Error: No files found in " << fFileDir << endl;
