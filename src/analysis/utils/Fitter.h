@@ -122,6 +122,7 @@ public:
     KinFitter(const std::string& name,
               unsigned numGammas,
               UncertaintyModelPtr uncertainty_model,
+              bool fit_Z_vertex = false,
               const APLCON::Fit_Settings_t& settings = DefaultSettings
               );
 
@@ -229,6 +230,7 @@ public:
     TreeFitter(const std::string& name,
                ParticleTypeTree ptree,
                UncertaintyModelPtr uncertainty_model,
+               bool fit_Z_vertex = false,
                nodesetup_t::getter nodeSetup = {},
                const APLCON::Fit_Settings_t& settings = DefaultSettings
               );

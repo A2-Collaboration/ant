@@ -103,7 +103,7 @@ void PID_Energy_etaDalitz::PerChannel_t::Fill(const TEventData& d)
 PID_Energy_etaDalitz::PID_Energy_etaDalitz(const string& name, OptionsPtr opts) :
     Physics(name, opts),
     kinfit("kinfit", 3,
-           make_shared<uncertainty_model_t>(),
+           make_shared<uncertainty_model_t>(), false,
            PID_Energy_etaDalitz::MakeFitSettings(20)
            )
 {

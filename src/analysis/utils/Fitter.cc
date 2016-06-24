@@ -117,11 +117,11 @@ LorentzVec Fitter::FitParticle::GetVector(const std::vector<double>& EkThetaPhi,
  * @param Uncertainty_model model to predict uncertainties
  * @param settings
  */
-KinFitter::KinFitter(
-        const std::string& name,
-        unsigned numGammas,
-        utils::UncertaintyModelPtr Uncertainty_model,
-        const APLCON::Fit_Settings_t& settings) :
+KinFitter::KinFitter(const std::string& name,
+                     unsigned numGammas,
+                     utils::UncertaintyModelPtr Uncertainty_model,
+                     bool fit_Z_vertex,
+                     const APLCON::Fit_Settings_t& settings) :
     Fitter(name, settings, Uncertainty_model)
 {
     if(numGammas==0)
@@ -157,9 +157,9 @@ KinFitter::KinFitter(
 
         //  Beam-LV:
         const LorentzVec beam(0, 0, Ebeam, Ebeam);
-        const LorentzVec tg(0,0,0,ParticleTypeDatabase::Proton.Mass());
+        const LorentzVec target(0,0,0,ParticleTypeDatabase::Proton.Mass());
 
-        LorentzVec constraint = tg + beam;
+        LorentzVec constraint = target + beam;
 
         constraint -= FitParticle::GetVector(proton, ParticleTypeDatabase::Proton.Mass());
 
@@ -171,7 +171,8 @@ KinFitter::KinFitter(
                { constraint.p.x,
                  constraint.p.y,
                  constraint.p.z,
-                 constraint.E} );
+                 constraint.E }
+               );
     };
 
     aplcon->AddConstraint("LInv",namesLInv,LorentzInvariance);
@@ -332,9 +333,10 @@ KinFitter::PhotonBeamVector::PhotonBeamVector(const string& name):
 TreeFitter::TreeFitter(const string& name,
                        ParticleTypeTree ptree,
                        utils::UncertaintyModelPtr uncertainty_model,
+                       bool fit_Z_vertex,
                        nodesetup_t::getter nodeSetup,
                        const APLCON::Fit_Settings_t& settings) :
-    KinFitter(name, CountGammas(ptree), uncertainty_model, settings),
+    KinFitter(name, CountGammas(ptree), uncertainty_model, fit_Z_vertex, settings),
     tree(MakeTree(ptree))
 {
     tree->GetUniquePermutations(tree_leaves, permutations);
