@@ -61,6 +61,9 @@ EtapOmegaG::EtapOmegaG(const string& name, OptionsPtr opts) :
                 std_ext::make_unique<utils::MCFakeReconstructed>()
               : nullptr)
 {
+    if(mc_smear)
+        LOG(INFO) << "Additional MC Smearing enabled";
+
     const interval<double> prompt_range{-2.5,1.5};
     promptrandom.AddPromptRange(prompt_range); // slight offset due to CBAvgTime reference
     promptrandom.AddRandomRange({-30,-10});  // just ensure to be way off prompt peak
