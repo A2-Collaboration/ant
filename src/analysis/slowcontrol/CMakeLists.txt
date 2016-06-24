@@ -8,7 +8,7 @@ set(SLOWCONTROL
 set(SLOWCONTROL_PROCESSORS
   SlowControlProcessors.cc
   processors/Processor.h
-  processors/AcquScalerProcessor.h
+  processors/AcquScalerProcessor.cc
   processors/ExpTrigger.h
   processors/Beampolmon.h
   processors/EPT_Scalers.h
