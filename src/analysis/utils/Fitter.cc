@@ -127,6 +127,9 @@ KinFitter::KinFitter(const std::string& name,
     if(numGammas==0)
         throw Exception("No gammas are not allowed");
 
+    if(fit_Z_vertex)
+        throw Exception("Not implemented yet");
+
     for(unsigned i=0; i<numGammas;++i) {
         Photons.emplace_back(make_shared<FitParticle>("Photon"+to_string(i)));
     }
@@ -164,7 +167,7 @@ KinFitter::KinFitter(const std::string& name,
         constraint -= FitParticle::GetVector(proton, ParticleTypeDatabase::Proton.Mass());
 
         const auto s = values.size();
-        for ( unsigned photon = 0 ; photon < s-2 ; ++ photon)
+        for(unsigned photon=0; photon<s-2; ++photon)
             constraint -= FitParticle::GetVector(values[photon + 2], ParticleTypeDatabase::Photon.Mass());
 
         return vector<double>(
