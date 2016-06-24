@@ -136,7 +136,7 @@ Setup_2007_Base::Setup_2007_Base(const std::string& name, OptionsPtr opt) : Setu
                                           calibrationDataManager,
                                           convert_CATCH_Tagger,
                                           -325, // default offset in ns
-                                          std::make_shared<ImprovedTimeFct2007>(),
+                                          std::make_shared<ImprovedTimeFct2007>(100.0),
                                           timecuts ? interval<double>{-120, 120} : no_timecut
                                           );
         AddCalibration<calibration::Time>(cb,
