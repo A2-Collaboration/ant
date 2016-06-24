@@ -84,6 +84,7 @@ void PhysicsManager::ReadFrom(
     treeEventPtr = nullptr;
     treeEvents->Branch("data", addressof(treeEventPtr));
 
+    long long nEventsRead = 0;
     long long nEventsProcessed = 0;
     long long nEventsAnalyzed = 0;
     long long nEventsSaved = 0;
@@ -118,6 +119,8 @@ void PhysicsManager::ReadFrom(
                 reached_maxevents = true;
                 break;
             }
+            nEventsRead++;
+
             // dump it into slowcontrol until full...
             if(slowcontrol_mgr->ProcessEvent(move(event)))
                 break;
@@ -130,7 +133,9 @@ void PhysicsManager::ReadFrom(
         }
 
         // read the slowcontrol_mgr's buffer and process the events
-        while(auto buffered_event = slowcontrol_mgr->PopEvent()) {
+        while(auto buf_event = slowcontrol_mgr->PopEvent()) {
+
+            TEvent& event = buf_event.Event;
 
             if(interrupt) {
                 VLOG(3) << "Processing interrupted";
@@ -153,8 +158,7 @@ void PhysicsManager::ReadFrom(
                         break;
                 }
 
-                TEvent& event = buffered_event.Event;
-                if(!reached_maxevents && !event.SavedForSlowControls) {
+                if(!reached_maxevents && !buf_event.WantsSkip) {
                     ProcessEvent(event, manager);
 
                     // prefer Reconstructed ID, but at least one branch should be non-null
@@ -170,7 +174,8 @@ void PhysicsManager::ReadFrom(
                 }
             }
 
-            SaveEvent(move(buffered_event), manager);
+            // SaveEvent is the sink for events
+            SaveEvent(move(event), manager);
 
             nEventsProcessed++;
         }
@@ -186,7 +191,10 @@ void PhysicsManager::ReadFrom(
 
     string processed_str;
     if(nEventsProcessed != nEventsAnalyzed)
-        processed_str = std_ext::formatter() << " (" << nEventsProcessed << " processed)";
+        processed_str += std_ext::formatter() << " (" << nEventsProcessed << " processed)";
+    if(nEventsRead != nEventsAnalyzed)
+        processed_str += std_ext::formatter() << " (" << nEventsRead << " read)";
+
 
     LOG(INFO) << "Analyzed " << nEventsAnalyzed << " events"
               << processed_str << ", speed "
@@ -266,23 +274,17 @@ void PhysicsManager::ProcessEvent(TEvent& event, physics::manager_t& manager)
     event.ClearTempBranches();
 }
 
-void PhysicsManager::SaveEvent(slowcontrol::event_t buffered_event, const physics::manager_t& manager)
+void PhysicsManager::SaveEvent(TEvent event, const physics::manager_t& manager)
 {
-    auto& event = buffered_event.Event;
-
-    if(manager.saveEvent || buffered_event.Save || event.SavedForSlowControls) {
-        if(!buffered_event.Save && treeEvents->GetCurrentFile() == nullptr)
+    if(manager.saveEvent || event.SavedForSlowControls) {
+        // only warn if manager says it should save
+        if(!treeEvents->GetCurrentFile() && manager.saveEvent)
             LOG_N_TIMES(1, WARNING) << "Writing treeEvents to memory. Might be a lot of data!";
 
 
         // always keep read hits if saving for slowcontrol
-        if(!manager.keepReadHits && !buffered_event.Save)
+        if(!manager.keepReadHits && !event.SavedForSlowControls)
             event.ClearDetectorReadHits();
-
-        // indicate that this event was saved for slowcontrol purposes only
-        if(!manager.saveEvent && buffered_event.Save) {
-            event.SavedForSlowControls = true;
-        }
 
         treeEventPtr = addressof(event);
         treeEvents->Fill();

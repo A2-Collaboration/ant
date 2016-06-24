@@ -13,11 +13,11 @@ namespace analysis {
 namespace slowcontrol {
 
 struct event_t {
-    bool   Save;  // indicates that slowcontrol processors found this interesting
+    bool   WantsSkip;  // indicates event which should not be processed by physics
     TEvent Event;
     event_t() {}
-    event_t(bool save, TEvent event) :
-        Save(save), Event(std::move(event))
+    event_t(bool wantsSkip, TEvent event) :
+        WantsSkip(wantsSkip), Event(std::move(event))
     {}
     explicit operator bool() const {
         return static_cast<bool>(Event);
@@ -35,15 +35,13 @@ protected:
     std::queue<slowcontrol::event_t> eventbuffer;
 
     using buffer_t = std::queue<TID>;
-    std::map<std::shared_ptr<slowcontrol::Processor>, buffer_t> slowcontrol;
+    using ProcessorPtr = std::shared_ptr<slowcontrol::Processor>;
+    std::map<ProcessorPtr, buffer_t> slowcontrol;
+
+    void AddProcessor(ProcessorPtr p);
+
+
     bool all_complete = false;
-
-    void AddProcessor(std::shared_ptr<slowcontrol::Processor> p);
-
-    static TID min(const TID& a, const TID& b);
-
-    TID PopBuffers(const TID& id);
-
     TID changepoint;
 
 public:

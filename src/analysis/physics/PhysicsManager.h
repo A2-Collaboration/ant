@@ -46,7 +46,7 @@ protected:
     std::unique_ptr<SlowControlManager> slowcontrol_mgr;
 
     virtual void ProcessEvent(TEvent& event, physics::manager_t& manager);
-    virtual void SaveEvent(slowcontrol::event_t event, const physics::manager_t& manager);
+    virtual void SaveEvent(TEvent event, const physics::manager_t& manager);
 
     struct interrupt_t {
         interrupt_t(volatile bool* interrupt_) :

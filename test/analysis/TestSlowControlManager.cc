@@ -49,7 +49,6 @@ struct TestPhysics : Physics
 
     virtual void ProcessEvent(const TEvent& event, physics::manager_t& manager) override
     {
-        REQUIRE_FALSE(event.SavedForSlowControls);
         auto taggerscalers = slowcontrol::Variables::TaggerScalers->Get();
         REQUIRE(taggerscalers.size() == 47);
         if(event.Reconstructed().SlowControls.empty())
@@ -79,7 +78,7 @@ void dotest_ScalerBlobs()
         // quick check if TTree was there...
         auto tree = outfile.GetSharedClone<TTree>("treeEvents");
         REQUIRE(tree != nullptr);
-        REQUIRE(tree->GetEntries() == 422);
+        REQUIRE(tree->GetEntries() == 212);
     }
 
     // read in file with AntReader, write to stage2
@@ -102,7 +101,7 @@ void dotest_ScalerBlobs()
         // quick check if TTree was there...
         auto tree = outfile.GetSharedClone<TTree>("treeEvents");
         REQUIRE(tree != nullptr);
-        REQUIRE(tree->GetEntries() == 422);
+        REQUIRE(tree->GetEntries() == 212);
     }
 
     // read in file with AntReader

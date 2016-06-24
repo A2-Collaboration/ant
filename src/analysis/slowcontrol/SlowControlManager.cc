@@ -14,93 +14,100 @@ using namespace ant::analysis;
 using namespace ant::analysis::slowcontrol;
 
 
-void SlowControlManager::AddProcessor(std::shared_ptr<Processor> p)
+void SlowControlManager::AddProcessor(ProcessorPtr p)
 {
     slowcontrol.insert({p, buffer_t()});
-}
-
-TID SlowControlManager::min(const TID& a, const TID& b)
-{
-    if(a.IsInvalid())
-        return b;
-    if(!b.IsInvalid())
-        return a;
-    return std::min(a,b);
-}
-
-TID SlowControlManager::PopBuffers(const TID& id)
-{
-    TID next;
-
-    all_complete = true;
-    for(auto& s : slowcontrol) {
-        if(!s.second.empty() && s.second.front() == id) {
-            s.second.pop();
-            s.first->PopQueue();
-        }
-
-        if(!s.second.empty()) {
-            next = min(next, s.second.front());
-        } else {
-            all_complete = false;
-        }
-    }
-
-    return next;
 }
 
 SlowControlManager::SlowControlManager()
 {
     unsigned nRegistered = 0;
-    for(VariablePtr var : Variables::All)
+    for(VariablePtr var : Variables::All) {
+        if(var->GetProcessors().empty())
+            continue;
 
+        nRegistered++;
+        for(auto& p : var->GetProcessors())
+            AddProcessor(p);
+    }
 
-        if(!var->GetProcessors().empty()) {
-
-            nRegistered++;
-
-            for(auto& p : var->GetProcessors()) {
-                AddProcessor(p);
-            }
-
-        }
-
-    LOG(INFO) << "Have " << nRegistered << " registered slowcontrol variables and " << slowcontrol.size() << " processors";
+    LOG_IF(nRegistered>0, INFO)
+            << "Have " << nRegistered
+            << " registered slowcontrol variables using "
+            << slowcontrol.size() << " processors";
 }
 
 bool SlowControlManager::ProcessEvent(TEvent event)
 {
+
+    // at a changepoint, pop the slow control
+    if(!changepoint.IsInvalid()) {
+        for(auto& sl : slowcontrol) {
+            const ProcessorPtr& p = sl.first;
+            buffer_t& tid_buffer = sl.second;
+
+            assert(!tid_buffer.empty());
+
+            if(tid_buffer.front() == changepoint) {
+                tid_buffer.pop();
+                p->PopQueue();
+            }
+        }
+        changepoint = {};
+    }
+
     if(!event.HasReconstructed())
         return true;
 
-    TEventData& reconstructed = event.Reconstructed();
+    // always process the event
+    {
+        TEventData& reconstructed = event.Reconstructed();
 
-    physics::manager_t manager;
+        physics::manager_t manager;
+        bool wants_skip = false;
+        all_complete = true;
 
-    all_complete = true;
-    bool wants_skip = false;
+        for(auto& sl : slowcontrol) {
+            const ProcessorPtr& p = sl.first;
+            buffer_t& tid_buffer = sl.second;
 
-    for(auto& sl : slowcontrol) {
+            const auto result = p->ProcessEventData(reconstructed, manager);
 
-        const auto result = sl.first->ProcessEventData(reconstructed, manager);
+            if(result == slowcontrol::Processor::return_t::Complete) {
+                tid_buffer.push(reconstructed.ID);
+            }
+            else if(result == slowcontrol::Processor::return_t::Skip) {
+                wants_skip = true;
+            }
 
-        if(result == slowcontrol::Processor::return_t::Complete) {
-            sl.second.push(reconstructed.ID);
+            all_complete &= !tid_buffer.empty();
         }
-        else if(result == slowcontrol::Processor::return_t::Skip) {
-            wants_skip = true;
+
+        // SavedForSlowControls might already be true from previous filter runs
+        event.SavedForSlowControls |= manager.saveEvent;
+
+        if(!wants_skip || event.SavedForSlowControls) {
+            // a skipped event could still be saved in order to trigger
+            // slow control processsors (see for example AcquScalerProcessor),
+            // but should NOT be processed by physics classes. Mark the event accordingly in eventbuffer
+            eventbuffer.emplace(wants_skip, std::move(event));
         }
 
-        all_complete &= !sl.second.empty();
     }
 
-    // a skipped event could still be saved in order to trigger
-    // slow control processsors (see for example AcquScalerProcessor),
-    // but should NOT be processed by physics classes. Mark the event accordingly.
-    if(wants_skip && !event.SavedForSlowControls)
-        event.SavedForSlowControls = manager.saveEvent;
+    // update the changepoint
+    if(all_complete) {
+        for(auto& sl : slowcontrol) {
+            const ProcessorPtr& p = sl.first;
+            buffer_t& tid_buffer = sl.second;
 
-    eventbuffer.emplace(manager.saveEvent, std::move(event));
+            assert(!tid_buffer.empty());
+
+            changepoint = changepoint.IsInvalid() ?
+                              tid_buffer.front() :
+                              std::min(changepoint, tid_buffer.front());
+        }
+    }
 
     return all_complete;
 }
@@ -110,12 +117,34 @@ event_t SlowControlManager::PopEvent() {
     if(!all_complete || eventbuffer.empty())
         return {};
 
-    auto i = std::move(eventbuffer.front());
+    const auto& id = eventbuffer.front().Event.Reconstructed().ID;
+
+    // at a changepoint, we still analyse the event, but stop afterwards
+    if(id == changepoint)
+        all_complete = false;
+
+//    {
+//        TID min_tid;
+//        for(auto& sl : slowcontrol) {
+//            const ProcessorPtr& p = sl.first;
+//            buffer_t& tid_buffer = sl.second;
+
+//            if(tid_buffer.front() == id) {
+//                tid_buffer.pop();
+//                p->PopQueue();
+
+//            }
+//            if(tid_buffer.empty())
+//                all_complete = false;
+//            else
+//                min_tid = min_tid.IsInvalid() ?
+//                              tid_buffer.front() :
+//                              std::min(min_tid, tid_buffer.front());
+//        }
+//        changepoint = min_tid;
+//    }
+
+    auto event = std::move(eventbuffer.front());
     eventbuffer.pop();
-
-    if(i.Event.Reconstructed().ID == changepoint) {
-        changepoint = PopBuffers(changepoint);
-    }
-
-    return i;
+    return event;
 }
