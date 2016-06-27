@@ -67,7 +67,7 @@ public:
 
         const std::string Name;
         void SetupBranches(TTree* tree, const std::string& prefix);
-        static ant::LorentzVec GetVector(const std::vector<double>& EkThetaPhi, double m);
+        ant::LorentzVec GetVector(const std::vector<double>& EkThetaPhi, double z_vertex);
 
 
         std::vector<double*> Addresses()

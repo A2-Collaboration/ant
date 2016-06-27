@@ -1,5 +1,7 @@
 #include "Fitter.h"
 
+#include "expconfig/ExpConfig.h"
+
 #include "utils/particle_tools.h"
 
 #include "base/std_ext/memory.h"
@@ -97,15 +99,58 @@ void Fitter::FitParticle::SetupBranches(TTree* tree, const string& prefix)
     Phi.SetupBranches(tree, prefix+"_"+Name+"_Phi");
 }
 
-LorentzVec Fitter::FitParticle::GetVector(const std::vector<double>& EkThetaPhi, const double m)
+LorentzVec Fitter::FitParticle::GetVector(const std::vector<double>& EkThetaPhi,
+                                          const double z_vertex)
 {
-    const mev_t E = EkThetaPhi[0] + m;
-    const mev_t p = m == 0.0 ? E : sqrt( sqr(E) - sqr(m) );
+    const mev_t& Ek = EkThetaPhi[0];
+    const double& theta = EkThetaPhi[1];
+    const double& phi   = EkThetaPhi[2];
 
-    const double& theta_ = EkThetaPhi[1];
-    const double& phi_   = EkThetaPhi[2];
 
-    return LorentzVec::EPThetaPhi(E, p, theta_, phi_);
+    const mev_t& E = Ek + Particle->Type().Mass();
+    const mev_t& p = sqrt( sqr(E) - sqr(Particle->Type().Mass()) );
+
+    if(z_vertex == 0.0)
+        return LorentzVec::EPThetaPhi(E, p, theta, phi);
+
+    return {};
+
+//    auto taps = ExpConfig::Setup::GetDetector();
+
+//    double X0       = 2.588;
+//    double X0_TAPS  = 2.026;
+//    double Ec       = 13.3;
+//    double Ec_TAPS  = 13.7;
+//    constexpr double R_CB = 25.4;
+//    constexpr double Z_TAPS = 145.7;
+//    double E, P, th, ph;
+//    double Px, Py, Pz;
+//    double R;
+//    TLorentzVector LVmod(0.0, 0.0, 0.0, 0.0);
+
+//    if(idet == 1){ // CB
+//        E = EkPThPhi[0];
+//        P = EkPThPhi[1];
+
+//        R  = R_CB + X0*TMath::Log(E/Ec)/TMath::Log(2.);
+//        th = TMath::ACos(( R*TMath::Cos(EkPThPhi[2]) - v_z)/ R );
+//        ph = EkPThPhi[3];
+
+
+//    }
+//    else{   // TAPS
+//        E = EkPThPhi[0];
+//        P = EkPThPhi[1];
+
+//        if(mass > 900.)
+//            R  =    X0_TAPS*TMath::Log((E-MASS_PROTON)/Ec_TAPS)/TMath::Log(2.);
+//        else
+//            R  =    X0_TAPS*TMath::Log(E/Ec_TAPS)/TMath::Log(2.);
+//        th = TMath::ATan( EkPThPhi[2] / (Z_TAPS - v_z + R));
+
+
+//    }
+//    return LVmod;
 }
 
 
@@ -171,7 +216,9 @@ KinFitter::KinFitter(const std::string& name,
     {
 
         const auto  n = fit_particles.size();
-        const auto& Ebeam  = values[n+0][0]; // n serves as an offset here
+        // n serves as an offset here
+        const auto& Ebeam    = values[n+0][0];
+        const auto  z_vertex = fit_Z_vertex ? values[n+1][0] : 0;
 
         // Beam-LV:
         // beam    LorentzVec(0.0, 0.0, PhotonEnergy(), PhotonEnergy());
@@ -182,7 +229,7 @@ KinFitter::KinFitter(const std::string& name,
         LorentzVec constraint = target + beam;
 
         for(size_t i=0;i<n;i++)
-            constraint -= FitParticle::GetVector(values[i], fit_particles[i]->Particle->Type().Mass());
+            constraint -= fit_particles[i]->GetVector(values[i], z_vertex); // fit_particles[i]->Particle->Type().Mass());
 
         return vector<double>(
                { constraint.p.x,
@@ -415,9 +462,8 @@ TreeFitter::TreeFitter(const string& name,
         assert(v.empty() || v.size() == tree_leaves_copy.size());
         // assign values v to leaves' LVSum
         for(unsigned i=0;i<v.size();i++) {
-            auto& node = tree_leaves_copy[i]->Get();
-            const auto m = node.TypeTree->Get().Mass();
-            node.LVSum = FitParticle::GetVector(v[i], m);
+            node_t& node = tree_leaves_copy[i]->Get();
+            node.LVSum = node.Leave->GetVector(v[i], 0.0);
         }
 
         // sum daughters' Particle
