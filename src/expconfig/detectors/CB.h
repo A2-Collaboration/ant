@@ -16,6 +16,11 @@ struct CB :
     virtual vec3 GetPosition(unsigned channel) const override {
         return elements[channel].Position;
     }
+
+    virtual double GetInnerRadius() const {
+        return 25.4; // the famous 10 inch
+    }
+
     virtual unsigned GetNChannels() const override {
         return elements.size();
     }
@@ -46,7 +51,9 @@ protected:
                 channel,
                 position,
                 neighbours,
-                4.8 /// \todo use best value from S. Lohse diploma thesis?
+                4.8, /// \todo use best value from S. Lohse diploma thesis?
+                13.3, // critical energy
+                2.588 // radiation length
                 ),
             ADC(adc),
             TDC(tdc),

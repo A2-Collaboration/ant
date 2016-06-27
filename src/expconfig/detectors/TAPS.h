@@ -120,7 +120,9 @@ protected:
                 vec3(pos_xy.x, pos_xy.y, // z-component set by BuildClusterElements()
                      std::numeric_limits<double>::quiet_NaN()),
                 neighbours,
-                3.4 /// \todo use best value from S. Lohse diploma thesis?
+                3.4, /// \todo use best value from S. Lohse diploma thesis?
+                13.7, // critical energy
+                2.026 // radiation length
                 ),
             TAC(tac),
             LG(lg),
@@ -149,7 +151,9 @@ protected:
                 vec3(pos_xy.x, pos_xy.y, // z-component set by InitClusterElements()
                      std::numeric_limits<double>::quiet_NaN()),
                 neighbours,
-                2.2 /// \todo use best value from S. Lohse diploma thesis?
+                2.2, /// \todo use best value from S. Lohse diploma thesis?
+                9.6, // critical energy
+                0.89 // radiation length
                 ),
             TDC(tdc),
             QDCH(qdch),

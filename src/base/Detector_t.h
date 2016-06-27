@@ -129,15 +129,21 @@ struct ClusterDetector_t : Detector_t {
                 const vec3& position,
                 const std::vector<unsigned>& neighbours,
                 double moliereRadius,
+                double criticalE,
+                double radiationLength,
                 bool touchesHole = false
                 ) :
             Detector_t::Element_t(channel, position),
             Neighbours(neighbours),
             MoliereRadius(moliereRadius),
+            CriticalE(criticalE),
+            RadiationLength(radiationLength),
             TouchesHole(touchesHole)
         {}
         std::vector<unsigned> Neighbours;
         double MoliereRadius;
+        double CriticalE;       // in MeV
+        double RadiationLength; // X0 in cm
         bool TouchesHole;
     };
 
