@@ -98,7 +98,6 @@ bool SlowControlManager::ProcessEvent(TEvent event)
     // update the changepoint
     if(all_complete) {
         for(auto& sl : slowcontrol) {
-            const ProcessorPtr& p = sl.first;
             buffer_t& tid_buffer = sl.second;
 
             assert(!tid_buffer.empty());
