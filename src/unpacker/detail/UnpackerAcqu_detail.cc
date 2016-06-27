@@ -504,7 +504,7 @@ void acqu::FileFormatBase::FillDetectorReadHits(vector<TDetectorReadHit>& hits) 
 
     if(hits.empty()) {
         /// \todo Improve message, maybe add TUnpackerMessage then?
-        LOG(WARNING) << "Found event with no hits at all";
+        LOG(DEBUG) << "Found event with no hits at all";
     }
 
 }
