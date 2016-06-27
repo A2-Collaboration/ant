@@ -167,24 +167,15 @@ protected:
         double Sigma = std_ext::NaN;
         double Pull  = std_ext::NaN;
 
-        const std::string Name;
+        const std::string Name = "Beam";
+    };
 
-        PhotonBeamVector(const std::string& name);
+    struct Z_Vertex_t {
+        double Value = std_ext::NaN;
+        double Sigma = std_ext::NaN;
+        double Pull  = std_ext::NaN;
 
-        std::vector<double*> Adresses()
-        {
-            return { std::addressof(E) };
-        }
-
-        std::vector<double*> Adresses_Sigma()
-        {
-            return { std::addressof(Sigma) };
-        }
-
-        std::vector<double*> Adresses_Pulls()
-        {
-            return { std::addressof(Pull) };
-        }
+        const std::string Name = "ZVertex";
 
     };
 
@@ -193,8 +184,9 @@ protected:
     // A move/copy of those members may not happen, so we just
     // point to their fixed location in memory.
     std::vector<std::shared_ptr<FitParticle>> Photons;
-    std::unique_ptr<FitParticle> Proton;
+    std::shared_ptr<FitParticle> Proton;
     std::unique_ptr<PhotonBeamVector> Beam;
+    std::unique_ptr<Z_Vertex_t> Z_Vertex;
 
 private:
     double result_chi2ndof       =  0.0;
@@ -257,14 +249,7 @@ public:
 
     virtual void SetPhotons(const TParticleList& photons) override;
 
-    tree_t GetTreeNode(const ParticleTypeDatabase::Type& type) const {
-        tree_t treenode = nullptr;
-        tree->Map_nodes([&treenode, &type] (tree_t t) {
-            if(t->Get().TypeTree->Get() == type)
-                treenode = t;
-        });
-        return treenode;
-    }
+    tree_t GetTreeNode(const ParticleTypeDatabase::Type& type) const;
 
     std::vector<tree_t> GetTreeNodes(const ParticleTypeDatabase::Type& type) const;
 

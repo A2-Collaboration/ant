@@ -134,41 +134,55 @@ KinFitter::KinFitter(const std::string& name,
         Photons.emplace_back(make_shared<FitParticle>("Photon"+to_string(i)));
     }
 
-    Beam = std_ext::make_unique<PhotonBeamVector>("Beam");
-    aplcon->LinkVariable(Beam->Name,
-                         Beam->Adresses() ,
-                         Beam->Adresses_Sigma(),
-                         Beam->Adresses_Pulls());
 
-    Proton = std_ext::make_unique<FitParticle>("Proton");
+
+    Proton = std::make_shared<FitParticle>("Proton");
     LinkVariable(*Proton);
 
-    vector<string> namesLInv      = { Beam->Name, Proton->Name };
+    vector<string> variable_names      = {Proton->Name};
+    vector<std::shared_ptr<FitParticle>> fit_particles{Proton};
 
     for ( auto& photon: Photons)
     {
         LinkVariable(*photon);
-        namesLInv.push_back(photon->Name);
+        variable_names.emplace_back(photon->Name);
+        fit_particles.emplace_back(photon);
     }
 
-    auto LorentzInvariance = [] (const vector<vector<double>>& values)
+    Beam = std_ext::make_unique<PhotonBeamVector>();
+    aplcon->LinkVariable(Beam->Name,
+                         {std::addressof(Beam->E)},
+                         {std::addressof(Beam->Sigma)},
+                         {std::addressof(Beam->Pull)}
+                         );
+    variable_names.emplace_back(Beam->Name);
+
+    if(fit_Z_vertex) {
+        Z_Vertex = std_ext::make_unique<Z_Vertex_t>();
+        aplcon->LinkVariable(Z_Vertex->Name,
+                             {std::addressof(Z_Vertex->Value)},
+                             {std::addressof(Z_Vertex->Sigma)},
+                             {std::addressof(Z_Vertex->Pull)}
+                             );
+        variable_names.emplace_back(Z_Vertex->Name);
+    }
+
+    auto LorentzInvariance = [fit_Z_vertex, fit_particles] (const vector<vector<double>>& values)
     {
+
+        const auto  n = fit_particles.size();
+        const auto& Ebeam  = values[n+0][0]; // n serves as an offset here
+
+        // Beam-LV:
         // beam    LorentzVec(0.0, 0.0, PhotonEnergy(), PhotonEnergy());
         // target  LorentzVec(0.0, 0.0, 0.0, ParticleTypeDatabase::Proton.Mass())
-        const auto& Ebeam  = values[0][0];
-        const auto& proton = values[1];
-
-        //  Beam-LV:
         const LorentzVec beam(0, 0, Ebeam, Ebeam);
         const LorentzVec target(0,0,0,ParticleTypeDatabase::Proton.Mass());
 
         LorentzVec constraint = target + beam;
 
-        constraint -= FitParticle::GetVector(proton, ParticleTypeDatabase::Proton.Mass());
-
-        const auto s = values.size();
-        for(unsigned photon=0; photon<s-2; ++photon)
-            constraint -= FitParticle::GetVector(values[photon + 2], ParticleTypeDatabase::Photon.Mass());
+        for(size_t i=0;i<n;i++)
+            constraint -= FitParticle::GetVector(values[i], fit_particles[i]->Particle->Type().Mass());
 
         return vector<double>(
                { constraint.p.x,
@@ -178,7 +192,7 @@ KinFitter::KinFitter(const std::string& name,
                );
     };
 
-    aplcon->AddConstraint("LInv",namesLInv,LorentzInvariance);
+    aplcon->AddConstraint("LInv", variable_names, LorentzInvariance);
 
 }
 
@@ -327,12 +341,6 @@ APLCON::Result_t KinFitter::DoFit() {
     return res;
 }
 
-KinFitter::PhotonBeamVector::PhotonBeamVector(const string& name):
-    Name(name)
-{
-
-}
-
 TreeFitter::TreeFitter(const string& name,
                        ParticleTypeTree ptree,
                        utils::UncertaintyModelPtr uncertainty_model,
@@ -436,6 +444,15 @@ void TreeFitter::SetPhotons(const TParticleList& photons)
 
     current_perm = permutations.begin();
     current_comb_ptr = std_ext::make_unique<current_comb_t>(photons, current_perm->size());
+}
+
+TreeFitter::tree_t TreeFitter::GetTreeNode(const ParticleTypeDatabase::Type& type) const {
+    tree_t treenode = nullptr;
+    tree->Map_nodes([&treenode, &type] (tree_t t) {
+        if(t->Get().TypeTree->Get() == type)
+            treenode = t;
+    });
+    return treenode;
 }
 
 std::vector<TreeFitter::tree_t> TreeFitter::GetTreeNodes(const ParticleTypeDatabase::Type& type) const {
