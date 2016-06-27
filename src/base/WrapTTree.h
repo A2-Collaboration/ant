@@ -103,11 +103,20 @@ protected:
     template<typename T>
     friend struct Branch_t;
 
-    struct ROOT_branch_t {
+    struct ROOT_branchinfo_t {
+        std::string Name;
+        TClass*   ROOTClass = nullptr;
+        EDataType ROOTType  = kOther_t;
+        ROOT_branchinfo_t(const std::string& name) : Name(name) {}
+        bool operator==(const ROOT_branchinfo_t& other) {
+            return Name == other.Name;
+        }
+    };
+
+    struct ROOT_branch_t : ROOT_branchinfo_t {
         template<typename T>
         static ROOT_branch_t Make(const std::string& name, T** valuePtr) {
-            ROOT_branch_t b;
-            b.Name = name;
+            ROOT_branch_t b(name);
             b.ValuePtr = (void**)valuePtr;
             // the following is copied from TTree::SetBranchAddress<T>
             b.ROOTClass = TClass::GetClass(typeid(T));
@@ -115,10 +124,9 @@ protected:
             if (b.ROOTClass==0) b.ROOTType = TDataType::GetType(typeid(T));
             return b;
         }
-        std::string Name;
-        TClass* ROOTClass;
-        EDataType ROOTType;
         void** ValuePtr;
+    protected:
+        using ROOT_branchinfo_t::ROOT_branchinfo_t;
     };
 
     std::vector<ROOT_branch_t> branches;

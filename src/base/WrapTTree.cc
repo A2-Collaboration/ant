@@ -36,23 +36,35 @@ bool WrapTTree::Matches(TTree* tree, bool exact, bool nowarn) const {
     if(!tree)
         return false;
     // get all branches from TTree
-    vector<string> branch_names;
+
+    vector<ROOT_branchinfo_t> treebranches;
     for(int i=0;i<tree->GetNbranches();i++) {
         TBranch* b = dynamic_cast<TBranch*>(tree->GetListOfBranches()->At(i));
-        branch_names.emplace_back(b->GetName());
+        treebranches.emplace_back(b->GetName());
+        ROOT_branchinfo_t& info = treebranches.back();
+        if (b->GetExpectedType(info.ROOTClass,info.ROOTType) != 0) {
+            LOG(ERROR) << "Given branch did not tell expected class/type";
+            return false;
+        }
     }
 
     // ensure exact match of branches if required
-    if(exact && branch_names.size() != branches.size()) {
+    if(exact && treebranches.size() != branches.size()) {
         LOG_IF(!nowarn, WARNING) << "TTree has wrong number of branches";
         return false;
     }
 
     // ensure that we find all branches
     for(const ROOT_branch_t& b : branches) {
-        /// \todo one could check types here as well, not only names
-        if(!std_ext::contains(branch_names, b.Name)) {
-            LOG(WARNING) << "Branch " << b.Name << " not found";
+        auto it_treebranch = std::find(treebranches.begin(), treebranches.end(), b);
+        if(it_treebranch == treebranches.end()) {
+            LOG_IF(!nowarn, WARNING) << "Did not find branch " << b.Name << " in tree";
+            return false;
+        }
+
+        if( b.ROOTType != it_treebranch->ROOTType ||
+           (b.ROOTType == kOther_t && !b.ROOTClass->InheritsFrom(it_treebranch->ROOTClass) )) {
+            LOG_IF(!nowarn, WARNING) << "Branch " << b.Name << " has wrong type";
             return false;
         }
     }
