@@ -340,8 +340,8 @@ struct SigPi0Hist_t : SigHist_t {
         const Tree_t& pi0 = f.Pi0;
         h_IM_3g_4g_low_best->Fill(pi0.IM_Pi0gg_best, pi0.IM_Pi0g_best()[0], f.TaggW());
         h_IM_3g_4g_high_best->Fill(pi0.IM_Pi0gg_best, pi0.IM_Pi0g_best()[1], f.TaggW());
-        h_Bachelor_E_best->Fill(pi0.Bachelor_E_best()[1], f.TaggW());
-        h_Bachelor_E_fitted->Fill(pi0.Bachelor_E_fitted()[1], f.TaggW());
+        h_Bachelor_E_best->Fill(pi0.Bachelor_E_best()[0], f.TaggW());
+        h_Bachelor_E_fitted->Fill(pi0.Bachelor_E_fitted()[0], f.TaggW());
     }
 
     static cuttree::Cuts_t<Fill_t> GetCuts() {
