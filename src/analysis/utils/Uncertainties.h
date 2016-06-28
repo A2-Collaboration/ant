@@ -270,6 +270,13 @@ struct Optimized_Oli1 : Optimized {
 };
 
 /**
+ * @brief Values for the optimized model, better suitable for KinFit
+ */
+struct Optimized_Andi1 : Optimized_Oli1 {
+    Optimized_Andi1();
+};
+
+/**
  * @brief Uncertainties from Patrik Adlarson for MC Smearing
  */
 struct MCSmearingAdlarson : public UncertaintyModel {
