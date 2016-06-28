@@ -34,20 +34,16 @@ APLCON::Fit_Settings_t EtapOmegaG::MakeFitSettings(unsigned max_iterations)
     settings.MaxIterations = max_iterations;
 //    settings.ConstraintAccuracy = 1.0e-3;
 //    settings.Chi2Accuracy = 1.0e-2;
+//    settings.DebugLevel = 5;
     return settings;
-}
-
-EtapOmegaG::params_t::params_t(utils::UncertaintyModelPtr fit_uncertainty_model, bool fit_Z_vertex) :
-    Fit_uncertainty_model(fit_uncertainty_model),
-    Fit_Z_vertex(fit_Z_vertex)
-{
-
 }
 
 EtapOmegaG::EtapOmegaG(const string& name, OptionsPtr opts) :
     Physics(name, opts),
     params(make_shared<utils::UncertaintyModels::Optimized_Oli1>(),
-           opts->Get<bool>("FitZVertex", false)),
+           opts->Get<bool>("FitZVertex", true), // flag to enable z vertex
+           0.0 // Z_vertex_sigma, =0 means unmeasured
+           ),
     kinfitter_sig("kinfitter_sig",4,
                   params.Fit_uncertainty_model, params.Fit_Z_vertex,
                   EtapOmegaG::MakeFitSettings(25)
@@ -92,6 +88,11 @@ EtapOmegaG::EtapOmegaG(const string& name, OptionsPtr opts) :
     Sig.SetupTrees(HistFac);
     Ref.t.CreateBranches(HistFac.makeTTree("Ref"));
 
+    if(params.Fit_Z_vertex) {
+        LOG(INFO) << "Fit Z vertex enabled with sigma=" << params.Z_vertex_sigma;
+        kinfitter_sig.SetZVertexSigma(params.Z_vertex_sigma);
+        kinfitter_ref.SetZVertexSigma(params.Z_vertex_sigma);
+    }
 }
 
 void EtapOmegaG::ProcessEvent(const TEvent& event, manager_t&)
@@ -165,6 +166,7 @@ void EtapOmegaG::ProcessEvent(const TEvent& event, manager_t&)
 
     // do some MCTrue identification (if available)
     t.MCTrue = 0; // indicate data by default
+    t.TrueZVertex = event.MCTrue().Target.Vertex.z; // NaN in case of data
     TParticleTree_t ptree_sigref = nullptr; // used by Sig_t::Process to check matching
     if(particletree) {
         // 1=Signal, 2=Reference, 9=MissedBkg, >=10 found in ptreeBackgrounds
@@ -356,6 +358,7 @@ bool EtapOmegaG::doKinfit(const TTaggerHit& taggerhit,
 
     t.KinFitProb = std_ext::NaN;
     t.KinFitIterations = 0;
+    t.KinFitZVertex = std_ext::NaN;
 
     t.KinFitBeamEPull = std_ext::NaN;
     t.KinFitProtonEPull = std_ext::NaN;
@@ -383,6 +386,7 @@ bool EtapOmegaG::doKinfit(const TTaggerHit& taggerhit,
 
     t.KinFitProb = result.Probability;
     t.KinFitIterations = result.NIterations;
+    t.KinFitZVertex = kinfitter.GetFittedZVertex();
 
     t.KinFitBeamEPull = kinfitter.GetBeamEPull();
     t.KinFitProtonEPull = kinfitter.GetProtonEPull();
@@ -418,6 +422,10 @@ EtapOmegaG::Sig_t::Sig_t(params_t params) :
                       MakeFitSettings(20)
                       )
 {
+    if(params.Fit_Z_vertex) {
+        treefitter_Pi0Pi0.SetZVertexSigma(params.Z_vertex_sigma);
+        treefitter_Pi0Eta.SetZVertexSigma(params.Z_vertex_sigma);
+    }
 }
 
 void EtapOmegaG::Sig_t::SetupTrees(HistogramFactory HistFac)
@@ -454,6 +462,7 @@ void EtapOmegaG::Sig_t::SharedTree_t::Reset()
 
     AntiPi0FitProb = std_ext::NaN;
     AntiPi0FitIterations = 0;
+    AntiPi0FitZVertex = std_ext::NaN;
 
     AntiPi0BeamEPull = std_ext::NaN;
     AntiPi0ProtonEPull = std_ext::NaN;
@@ -465,6 +474,7 @@ void EtapOmegaG::Sig_t::SharedTree_t::Reset()
 
     AntiEtaFitProb = std_ext::NaN;
     AntiEtaFitIterations = 0;
+    AntiEtaFitZVertex = std_ext::NaN;
 
     AntiEtaBeamEPull = std_ext::NaN;
     AntiEtaProtonEPull = std_ext::NaN;
@@ -522,6 +532,7 @@ void EtapOmegaG::Sig_t::DoAntiPi0Eta(const Particles_t& particles)
         t.AntiPi0FitIterations = r.NIterations;
 
         const auto& fitter = treefitter_Pi0Pi0;
+        t.AntiPi0FitZVertex = fitter.GetFittedZVertex();
         t.AntiPi0BeamEPull = fitter.GetBeamEPull();
         t.AntiPi0ProtonEPull = fitter.GetProtonEPull();
         t.AntiPi0ProtonThetaPull = fitter.GetProtonThetaPull();
@@ -543,6 +554,7 @@ void EtapOmegaG::Sig_t::DoAntiPi0Eta(const Particles_t& particles)
         t.AntiEtaFitIterations = r.NIterations;
 
         const auto& fitter = treefitter_Pi0Eta;
+        t.AntiEtaFitZVertex = fitter.GetFittedZVertex();
         t.AntiEtaBeamEPull = fitter.GetBeamEPull();
         t.AntiEtaProtonEPull = fitter.GetProtonEPull();
         t.AntiEtaProtonThetaPull = fitter.GetProtonThetaPull();
@@ -592,7 +604,7 @@ utils::TreeFitter EtapOmegaG::Sig_t::Fit_t::Make(const ParticleTypeDatabase::Typ
         return nodesetup;
     };
 
-    return {
+    utils::TreeFitter treefitter{
         "sig_treefitter_"+subtree.Name(),
         EtapOmegaG::ptreeSignal,
         params.Fit_uncertainty_model,
@@ -600,6 +612,9 @@ utils::TreeFitter EtapOmegaG::Sig_t::Fit_t::Make(const ParticleTypeDatabase::Typ
         setupnodes,
         MakeFitSettings(15)
     };
+    if(params.Fit_Z_vertex)
+        treefitter.SetZVertexSigma(params.Z_vertex_sigma);
+    return treefitter;
 }
 
 TParticlePtr EtapOmegaG::Sig_t::Fit_t::FindBest(const utils::TreeFitter::tree_t& fitted,
@@ -613,6 +628,7 @@ void EtapOmegaG::Sig_t::Fit_t::BaseTree_t::Reset()
 {
     TreeFitProb = std_ext::NaN;
     TreeFitIterations = 0;
+    TreeFitZVertex = std_ext::NaN;
 
     TreeFitBeamEPull = std_ext::NaN;
     TreeFitProtonEPull = std_ext::NaN;
@@ -678,6 +694,7 @@ void EtapOmegaG::Sig_t::Pi0_t::Process(const EtapOmegaG::Particles_t& particles,
         // found fit with better prob
         t.TreeFitIterations = r.NIterations;
 
+        t.TreeFitZVertex = treefitter.GetFittedZVertex();
         t.TreeFitBeamEPull = treefitter.GetBeamEPull();
         t.TreeFitProtonEPull = treefitter.GetProtonEPull();
         t.TreeFitProtonThetaPull = treefitter.GetProtonThetaPull();
@@ -829,6 +846,7 @@ void EtapOmegaG::Sig_t::OmegaPi0_t::Process(const EtapOmegaG::Particles_t& parti
             continue;
         // found fit with better prob
         t.TreeFitIterations = r.NIterations;
+        t.TreeFitZVertex = treefitter.GetFittedZVertex();
 
         t.TreeFitBeamEPull = treefitter.GetBeamEPull();
         t.TreeFitProtonEPull = treefitter.GetProtonEPull();

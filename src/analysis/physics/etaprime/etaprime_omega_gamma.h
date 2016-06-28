@@ -37,6 +37,7 @@ struct EtapOmegaG : Physics {
 
     struct TreeCommon : WrapTTree {
         ADD_BRANCH_T(unsigned, MCTrue)
+        ADD_BRANCH_T(double,   TrueZVertex)
         ADD_BRANCH_T(double,   CBSumE)
         ADD_BRANCH_T(double,   CBAvgTime)
         ADD_BRANCH_T(double,   PIDSumE)
@@ -71,6 +72,7 @@ struct EtapOmegaG : Physics {
 
         ADD_BRANCH_T(double,   KinFitProb)
         ADD_BRANCH_T(int,      KinFitIterations)
+        ADD_BRANCH_T(double,   KinFitZVertex)
 
         ADD_BRANCH_T(double,   KinFitBeamEPull)
         ADD_BRANCH_T(double,   KinFitProtonEPull)
@@ -89,7 +91,13 @@ struct EtapOmegaG : Physics {
     struct params_t {
         const utils::UncertaintyModelPtr Fit_uncertainty_model;
         const bool Fit_Z_vertex;
-        params_t(utils::UncertaintyModelPtr fit_uncertainty_model, bool fit_Z_vertex);
+        const double Z_vertex_sigma;
+        params_t(utils::UncertaintyModelPtr fit_uncertainty_model,
+                 bool fit_Z_vertex, double Z_vertex_sigma) :
+            Fit_uncertainty_model(fit_uncertainty_model),
+            Fit_Z_vertex(fit_Z_vertex),
+            Z_vertex_sigma(Z_vertex_sigma)
+        {}
     };
 
     const params_t params;
@@ -137,6 +145,7 @@ struct EtapOmegaG : Physics {
 
                 ADD_BRANCH_T(double, TreeFitProb)
                 ADD_BRANCH_T(int,    TreeFitIterations)
+                ADD_BRANCH_T(double, TreeFitZVertex)
 
                 ADD_BRANCH_T(double,   TreeFitBeamEPull)
                 ADD_BRANCH_T(double,   TreeFitProtonEPull)
@@ -235,6 +244,7 @@ struct EtapOmegaG : Physics {
 
             ADD_BRANCH_T(double, AntiPi0FitProb)
             ADD_BRANCH_T(int,    AntiPi0FitIterations)
+            ADD_BRANCH_T(double, AntiPi0FitZVertex)
 
             ADD_BRANCH_T(double,   AntiPi0BeamEPull)
             ADD_BRANCH_T(double,   AntiPi0ProtonEPull)
@@ -246,6 +256,8 @@ struct EtapOmegaG : Physics {
 
             ADD_BRANCH_T(double, AntiEtaFitProb)
             ADD_BRANCH_T(int,    AntiEtaFitIterations)
+            ADD_BRANCH_T(double, AntiEtaFitZVertex)
+
 
             ADD_BRANCH_T(double,   AntiEtaBeamEPull)
             ADD_BRANCH_T(double,   AntiEtaProtonEPull)
