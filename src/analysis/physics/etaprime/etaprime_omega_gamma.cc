@@ -40,8 +40,10 @@ APLCON::Fit_Settings_t EtapOmegaG::MakeFitSettings(unsigned max_iterations)
 
 EtapOmegaG::EtapOmegaG(const string& name, OptionsPtr opts) :
     Physics(name, opts),
-    params(make_shared<utils::UncertaintyModels::Optimized_Oli1>(),
-           opts->Get<bool>("FitZVertex", true), // flag to enable z vertex
+    fit_Z_vertex(opts->Get<bool>("FitZVertex", true)),
+    params(fit_Z_vertex ? make_shared<utils::UncertaintyModels::Optimized_Andi1>() :
+                          make_shared<utils::UncertaintyModels::Optimized_Oli1>(),
+           fit_Z_vertex, // flag to enable z vertex
            0.0 // Z_vertex_sigma, =0 means unmeasured
            ),
     kinfitter_sig("kinfitter_sig",4,
