@@ -137,13 +137,13 @@ LorentzVec Fitter::FitParticle::GetVector(const std::vector<double>& EkThetaPhi,
         throw Exception("No calo cluster found");
 
     if(calocluster->DetectorType == Detector_t::Type_t::CB) {
-        auto cb = ExpConfig::Setup::GetDetector<expconfig::detector::CB>();
+        static auto cb = ExpConfig::Setup::GetDetector<expconfig::detector::CB>();
         auto elem = cb->GetClusterElement(calocluster->CentralElement);
         const auto R  = cb->GetInnerRadius() + elem->RadiationLength*std::log2(Ek/elem->CriticalE);
         theta_corr = std::acos(( R*std::cos(theta) - z_vertex) / R );
     }
     else if(calocluster->DetectorType == Detector_t::Type_t::TAPS) {
-        auto taps = ExpConfig::Setup::GetDetector<expconfig::detector::TAPS>();
+        static auto taps = ExpConfig::Setup::GetDetector<expconfig::detector::TAPS>();
         auto elem = taps->GetClusterElement(calocluster->CentralElement);
         const auto Z  =  taps->GetZPosition() + elem->RadiationLength*std::log2(Ek/elem->CriticalE);
         theta_corr = std::atan( Z*std::tan(theta) / (Z - z_vertex));
