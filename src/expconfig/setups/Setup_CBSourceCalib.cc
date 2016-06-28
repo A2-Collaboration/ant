@@ -58,10 +58,10 @@ public:
                                           );
 
         AddCalibration<calibration::CB_Energy>(cb, calibrationDataManager, convert_GeSiCa_SADC,
-                                               0,    // default pedestal
-                                               1, // default gain
-                                               0,     // default threshold
-                                               1.0   // default relative gain
+                                               std::vector<double>{0},    // default pedestal
+        std::vector<double>{1.0}, // default gain
+        std::vector<double>{0.0},     // default threshold
+        std::vector<double>{1.0}   // default relative gain
                                                );
     }
     bool Matches(const TID&) const override {

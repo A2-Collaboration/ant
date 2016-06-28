@@ -22,10 +22,10 @@ TAPSVeto_Energy::TAPSVeto_Energy(std::shared_ptr<expconfig::detector::TAPSVeto> 
     Energy(Detector_t::Type_t::TAPSVeto,
            calmgr,
            converter,
-           defaultPedestal,
-           defaultGain_BaF2,
-           defaultThreshold,
-           defaultRelativeGain),
+           {defaultPedestal},
+           {},   /* gains are set below */
+           {defaultThreshold},
+           {defaultRelativeGain}),
     tapsveto_detector(tapsveto)
 {
     Gains.DefaultValues.clear();

@@ -27,10 +27,10 @@ using namespace ant::calibration;
 Energy::Energy(Detector_t::Type_t detectorType,
                std::shared_ptr<DataManager> calmgr,
                Calibration::Converter::ptr_t converter,
-               double defaultPedestal,
-               double defaultGain,
-               double defaultThreshold,
-               double defaultRelativeGain,
+               std::vector<double> defaultPedestals,
+               std::vector<double> defaultGains,
+               std::vector<double> defaultThresholds,
+               std::vector<double> defaultRelativeGains,
                Channel_t::Type_t channelType) :
     Calibration::Module(
         std_ext::formatter()
@@ -43,10 +43,10 @@ Energy::Energy(Detector_t::Type_t detectorType,
     ChannelType(channelType),
     calibrationManager(calmgr),
     Converter(move(converter)),
-    Pedestals(defaultPedestal, "Pedestals"),
-    Gains(defaultGain, "Gains", "ggIM"),
-    Thresholds(defaultThreshold, "Thresholds"),
-    RelativeGains(defaultRelativeGain, "RelativeGains", "ggIM")
+    Pedestals(defaultPedestals, "Pedestals"),
+    Gains(defaultGains, "Gains", "ggIM"),
+    Thresholds(defaultThresholds, "Thresholds"),
+    RelativeGains(defaultRelativeGains, "RelativeGains", "ggIM")
 {
     if(Converter==nullptr)
         throw std::runtime_error("Given converter should not be nullptr");
@@ -109,16 +109,17 @@ void Energy::ApplyTo(const readhits_t& hits)
 }
 
 double Energy::CalibType::Get(unsigned channel) const {
+
     if(Values.empty()) {
-        if(DefaultValues.empty()) {
-            return DefaultValue;
+        if(DefaultValues.size() == 1) {
+            return DefaultValues.front();
         }
         else {
-            return DefaultValues[channel];
+            return DefaultValues.at(channel);
         }
     }
     else {
-        return Values[channel];
+        return Values.at(channel);
     }
 }
 
@@ -194,8 +195,11 @@ void Energy::GUI_CalibType::InitGUI(gui::ManagerWindow_traits* window) {
 void Energy::GUI_CalibType::StartSlice(const interval<TID>& range)
 {
     // always make sure the values are large enough
-    std::vector<double>& values = calibType.Values;
-    values.resize(GetNumberOfChannels(), calibType.DefaultValue);
+    std::vector<double>  values;
+    values.resize(GetNumberOfChannels());
+    for(size_t i=0; i<values.size(); ++i) {
+        values[i] = calibType.Get(i);
+    }
 
     TCalibrationData cdata;
     if(calibrationManager->GetData(GetName(), range.Start(), cdata)) {
@@ -217,6 +221,8 @@ void Energy::GUI_CalibType::StartSlice(const interval<TID>& range)
     else {
         LOG(INFO) << GetName() << ": No previous values found, built from default value";
     }
+
+    calibType.Values = values;
 
     // save a copy for comparison at finish stage
     previousValues = calibType.Values;

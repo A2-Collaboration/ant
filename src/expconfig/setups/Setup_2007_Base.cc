@@ -164,17 +164,21 @@ Setup_2007_Base::Setup_2007_Base(const std::string& name, OptionsPtr opt) : Setu
                                                    );
 
         AddCalibration<calibration::CB_Energy>(cb, calibrationDataManager, convert_GeSiCa_SADC,
-                                               0,    // default pedestal
-                                               0.07, // default gain
-                                               thresholds ? 2 : 0,    // default threshold
-                                               1.0   // default relative gain
+                                               std::vector<double>{0.0},    // default pedestal
+                                               std::vector<double>{0.07}, // default gain
+                                               std::vector<double>{thresholds ? 2.0 : 0.0},    // default threshold
+                                               std::vector<double>{1.0}   // default relative gain
                                                );
 
         // CB timing needs timewalk correction
         AddCalibration<calibration::CB_TimeWalk>(cb, calibrationDataManager,
                                                  timecuts ? interval<double>{-10, 20} : no_timecut);
 
-        AddCalibration<calibration::PID_Energy>(pid, calibrationDataManager, convert_MultiHit16bit );
+        AddCalibration<calibration::PID_Energy>(pid,
+                                                calibrationDataManager,
+                                                convert_MultiHit16bit,
+                                                std::vector<double>{50,53,30,30,27,45,30,16,40,37,39,33,24,42,38,70,20,23,43,40,19,28,38,37} /* default pedestals from Acqu */
+                                                );
 
         // the PID calibration is a physics module only
         AddCalibration<calibration::PID_PhiAngle>(pid, calibrationDataManager);
@@ -191,10 +195,10 @@ Setup_2007_Base::Setup_2007_Base(const std::string& name, OptionsPtr opt) : Setu
                                                );
 
         AddCalibration<calibration::TAPS_Energy>(taps, calibrationDataManager, convert_MultiHit16bit,
-                                                 100, // default pedestal
-                                                 0.3, // default gain
-                                                 thresholds ? 1 : 0,   // default threshold
-                                                 1.0  // default relative gain
+                                                 std::vector<double>{100.0}, // default pedestal
+                                                 std::vector<double>{0.3}, // default gain
+                                                 std::vector<double>{thresholds ? 1.0 : 0.0},   // default threshold
+                                                 std::vector<double>{1.0}  // default relative gain
                                                  );
 
         AddCalibration<calibration::TAPS_ShortEnergy>(taps, calibrationDataManager, convert_MultiHit16bit );

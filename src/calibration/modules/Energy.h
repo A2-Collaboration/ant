@@ -36,10 +36,10 @@ protected:
     Energy(Detector_t::Type_t detectorType,
            std::shared_ptr<DataManager> calmgr,
            Calibration::Converter::ptr_t converter,
-           double defaultPedestal,
-           double defaultGain,
-           double defaultThreshold,
-           double defaultRelativeGain,
+           std::vector<double> defaultPedestals,
+           std::vector<double> defaultGains,
+           std::vector<double> defaultThresholds,
+           std::vector<double> defaultRelativeGains,
            Channel_t::Type_t channelType = Channel_t::Type_t::Integral
            );
     virtual ~Energy();
@@ -51,7 +51,6 @@ protected:
     struct CalibType
     {
         // see also implementation of Get method
-        const double        DefaultValue;
         std::vector<double> DefaultValues; // if empty, channel-independent DefaultValue is used
         std::vector<double> Values;        // if empty, channel-dependent DefaultValues[ch] is used
         const std::string   Name;
@@ -59,11 +58,12 @@ protected:
 
         double Get(unsigned channel) const;
 
-        CalibType(double defaultValue, const std::string& name) :
-            CalibType(defaultValue, name, name)
+        CalibType(const std::vector<double>& defaultValues, const std::string& name) :
+            CalibType(defaultValues, name, name)
         {}
-        CalibType(double defaultValue, const std::string& name, const std::string& histname) :
-            DefaultValue(defaultValue),
+
+        CalibType(const std::vector<double>& defaultValues, const std::string& name, const std::string& histname) :
+            DefaultValues(defaultValues),
             Values(),
             Name(name),
             HistogramName(histname)

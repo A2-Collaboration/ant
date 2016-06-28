@@ -53,10 +53,10 @@ public:
             std::shared_ptr<expconfig::detector::CB> cb,
             std::shared_ptr<DataManager> calmgr,
             Calibration::Converter::ptr_t converter,
-            double defaultPedestal,
-            double defaultGain,
-            double defaultThreshold,
-            double defaultRelativeGain);
+            const std::vector<double>& defaultPedestals,
+            const std::vector<double>& defaultGains,
+            const std::vector<double>& defaultThresholds,
+            const std::vector<double>& defaultRelativeGains);
 
     virtual void GetGUIs(std::list<std::unique_ptr<gui::CalibModule_traits> >& guis) override;
 

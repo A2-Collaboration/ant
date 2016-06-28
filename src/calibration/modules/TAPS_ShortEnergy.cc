@@ -22,17 +22,17 @@ using namespace ant::calibration;
 TAPS_ShortEnergy::TAPS_ShortEnergy(std::shared_ptr<expconfig::detector::TAPS> taps,
         std::shared_ptr<DataManager> calmgr,
         Calibration::Converter::ptr_t converter,
-        double defaultPedestal,
-        double defaultGain,
-        double defaultThreshold,
-        double defaultRelativeGain) :
+        const std::vector<double>& defaultPedestals,
+        const std::vector<double>& defaultGains,
+        const std::vector<double>& defaultThresholds,
+        const std::vector<double>& defaultRelativeGains) :
     Energy(Detector_t::Type_t::TAPS,
            calmgr,
            converter,
-           defaultPedestal,
-           defaultGain,
-           defaultThreshold,
-           defaultRelativeGain,
+           defaultPedestals,
+           defaultGains,
+           defaultThresholds,
+           defaultRelativeGains,
            Channel_t::Type_t::IntegralShort),
     taps_detector(taps)
 {

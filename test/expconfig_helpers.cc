@@ -135,19 +135,19 @@ void ant::test::EnsureSetup() {
                                                        );
 
             AddCalibration<calibration::CB_Energy>(cb, calibrationDataManager, convert_GeSiCa_SADC,
-                                                   0,    // default pedestal
-                                                   0.07, // default gain
-                                                   2,    // default threshold
-                                                   1.0   // default relative gain
+                                                   std::vector<double>{0.0},    // default pedestal
+                                                   std::vector<double>{0.07}, // default gain
+                                                   std::vector<double>{2.0},    // default threshold
+                                                   std::vector<double>{1.0}   // default relative gain
                                                    );
 
             AddCalibration<calibration::PID_Energy>(pid, calibrationDataManager, convert_MultiHit16bit );
 
             AddCalibration<calibration::TAPS_Energy>(taps, calibrationDataManager, convert_MultiHit16bit,
-                                                     100, // default pedestal
-                                                     0.3, // default gain
-                                                     1,   // default threshold
-                                                     1.0  // default relative gain
+                                                     std::vector<double>{100.0}, // default pedestal
+                                                     std::vector<double>{0.3}, // default gain
+                                                     std::vector<double>{1.0},   // default threshold
+                                                     std::vector<double>{1.0}  // default relative gain
                                                      );
 
             AddCalibration<calibration::TAPS_ShortEnergy>(taps, calibrationDataManager, convert_MultiHit16bit );
