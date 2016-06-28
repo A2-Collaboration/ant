@@ -38,14 +38,18 @@ public:
     Fitter& operator=(const Fitter&) = delete;
     virtual ~Fitter();
 
+    struct FitVariable {
+        // initialize everything at zero, important for Z Vertex
+        double Value = 0;
+        double Sigma = 0;
+        double Pull = 0;
+    };
+
     struct FitParticle
     {
         TParticlePtr Particle; // pointer to unfitted value
 
-        struct Var_t {
-            double Value = 0;
-            double Sigma = 0;
-            double Pull = 0;
+        struct Var_t : FitVariable {
         protected:
             friend struct FitParticle;
             void SetupBranches(TTree* tree, const std::string& prefix);
@@ -55,7 +59,8 @@ public:
         Var_t Theta;
         Var_t Phi;
 
-        FitParticle(const std::string& name): Name(name) {}
+        FitParticle(const std::string& name, std::shared_ptr<FitVariable> z_vertex);
+        virtual ~FitParticle();
 
         TParticlePtr AsFitted();
 
@@ -66,6 +71,8 @@ public:
 
 
         const std::string Name;
+        std::shared_ptr<FitVariable> Z_Vertex;
+
         void SetupBranches(TTree* tree, const std::string& prefix);
         ant::LorentzVec GetVector(const std::vector<double>& EkThetaPhi, double z_vertex);
 
@@ -134,17 +141,21 @@ public:
     KinFitter& operator=(KinFitter&&) = default;
 
     void SetEgammaBeam(double ebeam);
+    void SetZVertexSigma(double sigma);
     void SetProton(const TParticlePtr& proton);
     virtual void SetPhotons(const TParticleList& photons);
 
     TParticlePtr GetFittedProton() const;
     TParticleList GetFittedPhotons() const;
     double GetFittedBeamE() const;
+    double GetFittedZVertex() const;
+
     double GetBeamEPull() const;
 
     double GetProtonEPull() const;
     double GetProtonThetaPull() const;
     double GetProtonPhiPull() const;
+
     std::vector<double> GetPhotonEPulls() const;
     std::vector<double> GetPhotonThetaPulls() const;
     std::vector<double> GetPhotonPhiPulls() const;
@@ -161,22 +172,14 @@ public:
 
 protected:
 
-    struct PhotonBeamVector {
-        double E_before = std_ext::NaN;
-        double E     = std_ext::NaN;
-        double Sigma = std_ext::NaN;
-        double Pull  = std_ext::NaN;
-
+    struct BeamE_t : FitVariable {
+        double Value_before = std_ext::NaN;
         const std::string Name = "Beam";
     };
 
-    struct Z_Vertex_t {
-        double Value = std_ext::NaN;
-        double Sigma = std_ext::NaN;
-        double Pull  = std_ext::NaN;
-
+    struct Z_Vertex_t : FitVariable {
+        double Sigma_before = std_ext::NaN;
         const std::string Name = "ZVertex";
-
     };
 
     // it's pretty important that those things are pointers,
@@ -185,8 +188,8 @@ protected:
     // point to their fixed location in memory.
     std::vector<std::shared_ptr<FitParticle>> Photons;
     std::shared_ptr<FitParticle> Proton;
-    std::unique_ptr<PhotonBeamVector> Beam;
-    std::unique_ptr<Z_Vertex_t> Z_Vertex;
+    std::unique_ptr<BeamE_t>    BeamE;
+    std::shared_ptr<Z_Vertex_t> Z_Vertex;
 
 private:
     double result_chi2ndof       =  0.0;

@@ -1,6 +1,8 @@
 #include "Fitter.h"
 
 #include "expconfig/ExpConfig.h"
+#include "expconfig/detectors/CB.h"
+#include "expconfig/detectors/TAPS.h"
 
 #include "utils/particle_tools.h"
 
@@ -82,12 +84,25 @@ void Fitter::FitParticle::Var_t::SetupBranches(TTree* tree, const string& prefix
     tree->Branch((prefix+"_sigma").c_str(), addressof(Sigma));
 }
 
+Fitter::FitParticle::FitParticle(const string& name, std::shared_ptr<Fitter::FitVariable> z_vertex) :
+    Name(name), Z_Vertex(z_vertex)
+{
+
+}
+
+Fitter::FitParticle::~FitParticle()
+{
+
+}
+
 TParticlePtr Fitter::FitParticle::AsFitted()
 {
+    const auto z_vertex = Z_Vertex ? Z_Vertex->Value : 0;
+
     auto p = make_shared<TParticle>(Particle->Type(),
-                                    Ek.Value,
-                                    Theta.Value,
-                                    Phi.Value);
+                                    GetVector({Ek.Value, Theta.Value, Phi.Value},
+                                              z_vertex
+                                              ));
     p->Candidate = Particle->Candidate;
     return p;
 }
@@ -103,8 +118,8 @@ LorentzVec Fitter::FitParticle::GetVector(const std::vector<double>& EkThetaPhi,
                                           const double z_vertex)
 {
     const mev_t& Ek = EkThetaPhi[0];
-    const double& theta = EkThetaPhi[1];
-    const double& phi   = EkThetaPhi[2];
+    const radian_t& theta = EkThetaPhi[1];
+    const radian_t& phi   = EkThetaPhi[2];
 
 
     const mev_t& E = Ek + Particle->Type().Mass();
@@ -113,44 +128,31 @@ LorentzVec Fitter::FitParticle::GetVector(const std::vector<double>& EkThetaPhi,
     if(z_vertex == 0.0)
         return LorentzVec::EPThetaPhi(E, p, theta, phi);
 
-    return {};
 
-//    auto taps = ExpConfig::Setup::GetDetector();
+    double theta_corr = std_ext::NaN;
 
-//    double X0       = 2.588;
-//    double X0_TAPS  = 2.026;
-//    double Ec       = 13.3;
-//    double Ec_TAPS  = 13.7;
-//    constexpr double R_CB = 25.4;
-//    constexpr double Z_TAPS = 145.7;
-//    double E, P, th, ph;
-//    double Px, Py, Pz;
-//    double R;
-//    TLorentzVector LVmod(0.0, 0.0, 0.0, 0.0);
+    auto calocluster = Particle->Candidate->FindCaloCluster();
 
-//    if(idet == 1){ // CB
-//        E = EkPThPhi[0];
-//        P = EkPThPhi[1];
+    if(!calocluster)
+        throw Exception("No calo cluster found");
 
-//        R  = R_CB + X0*TMath::Log(E/Ec)/TMath::Log(2.);
-//        th = TMath::ACos(( R*TMath::Cos(EkPThPhi[2]) - v_z)/ R );
-//        ph = EkPThPhi[3];
+    if(calocluster->DetectorType == Detector_t::Type_t::CB) {
+        auto cb = ExpConfig::Setup::GetDetector<expconfig::detector::CB>();
+        auto elem = cb->GetClusterElement(calocluster->CentralElement);
+        const auto R  = cb->GetInnerRadius() + elem->RadiationLength*std::log2(Ek/elem->CriticalE);
+        theta_corr = std::acos(( R*std::cos(theta) - z_vertex) / R );
+    }
+    else if(calocluster->DetectorType == Detector_t::Type_t::TAPS) {
+        auto taps = ExpConfig::Setup::GetDetector<expconfig::detector::TAPS>();
+        auto elem = taps->GetClusterElement(calocluster->CentralElement);
+        const auto Z  =  taps->GetZPosition() + elem->RadiationLength*std::log2(Ek/elem->CriticalE);
+        theta_corr = std::atan( Z*std::tan(theta) / (Z - z_vertex));
+    }
+    else {
+        throw Exception("Unknown calo cluster encountered");
+    }
 
-
-//    }
-//    else{   // TAPS
-//        E = EkPThPhi[0];
-//        P = EkPThPhi[1];
-
-//        if(mass > 900.)
-//            R  =    X0_TAPS*TMath::Log((E-MASS_PROTON)/Ec_TAPS)/TMath::Log(2.);
-//        else
-//            R  =    X0_TAPS*TMath::Log(E/Ec_TAPS)/TMath::Log(2.);
-//        th = TMath::ATan( EkPThPhi[2] / (Z_TAPS - v_z + R));
-
-
-//    }
-//    return LVmod;
+    return LorentzVec::EPThetaPhi(E, p, theta_corr, phi);
 }
 
 
@@ -173,15 +175,15 @@ KinFitter::KinFitter(const std::string& name,
         throw Exception("No gammas are not allowed");
 
     if(fit_Z_vertex)
-        throw Exception("Z vertex fitting not implemented yet");
+        Z_Vertex = std::make_shared<Z_Vertex_t>();
 
     for(unsigned i=0; i<numGammas;++i) {
-        Photons.emplace_back(make_shared<FitParticle>("Photon"+to_string(i)));
+        Photons.emplace_back(make_shared<FitParticle>("Photon"+to_string(i), Z_Vertex));
     }
 
 
 
-    Proton = std::make_shared<FitParticle>("Proton");
+    Proton = std::make_shared<FitParticle>("Proton", Z_Vertex);
     LinkVariable(*Proton);
 
     vector<string> variable_names      = {Proton->Name};
@@ -194,16 +196,15 @@ KinFitter::KinFitter(const std::string& name,
         fit_particles.emplace_back(photon);
     }
 
-    Beam = std_ext::make_unique<PhotonBeamVector>();
-    aplcon->LinkVariable(Beam->Name,
-                         {std::addressof(Beam->E)},
-                         {std::addressof(Beam->Sigma)},
-                         {std::addressof(Beam->Pull)}
+    BeamE = std_ext::make_unique<BeamE_t>();
+    aplcon->LinkVariable(BeamE->Name,
+                         {std::addressof(BeamE->Value)},
+                         {std::addressof(BeamE->Sigma)},
+                         {std::addressof(BeamE->Pull)}
                          );
-    variable_names.emplace_back(Beam->Name);
+    variable_names.emplace_back(BeamE->Name);
 
     if(fit_Z_vertex) {
-        Z_Vertex = std_ext::make_unique<Z_Vertex_t>();
         aplcon->LinkVariable(Z_Vertex->Name,
                              {std::addressof(Z_Vertex->Value)},
                              {std::addressof(Z_Vertex->Sigma)},
@@ -218,7 +219,7 @@ KinFitter::KinFitter(const std::string& name,
         const auto  n = fit_particles.size();
         // n serves as an offset here
         const auto& Ebeam    = values[n+0][0];
-        const auto  z_vertex = fit_Z_vertex ? values[n+1][0] : 0;
+        const auto  z_vertex = fit_Z_vertex ? values[n+1][0] : 0.0;
 
         // Beam-LV:
         // beam    LorentzVec(0.0, 0.0, PhotonEnergy(), PhotonEnergy());
@@ -229,7 +230,7 @@ KinFitter::KinFitter(const std::string& name,
         LorentzVec constraint = target + beam;
 
         for(size_t i=0;i<n;i++)
-            constraint -= fit_particles[i]->GetVector(values[i], z_vertex); // fit_particles[i]->Particle->Type().Mass());
+            constraint -= fit_particles[i]->GetVector(values[i], z_vertex);
 
         return vector<double>(
                { constraint.p.x,
@@ -250,9 +251,17 @@ KinFitter::~KinFitter()
 
 void KinFitter::SetEgammaBeam(const double ebeam)
 {
-    Beam->E        = ebeam;
-    Beam->E_before = ebeam;
-    Beam->Sigma = fct_TaggerEGausSigma(ebeam);
+    BeamE->Value        = ebeam;
+    BeamE->Value_before = ebeam;
+    BeamE->Sigma = fct_TaggerEGausSigma(ebeam);
+}
+
+void KinFitter::SetZVertexSigma(double sigma)
+{
+    if(!Z_Vertex)
+        throw Exception("Z Vertex fitting not enabled");
+    Z_Vertex->Sigma = sigma;
+    Z_Vertex->Sigma_before = sigma;
 }
 
 void KinFitter::SetProton(const TParticlePtr& proton)
@@ -299,12 +308,20 @@ TParticleList KinFitter::GetFittedPhotons() const
 
 double KinFitter::GetFittedBeamE() const
 {
-    return Beam->E;
+    return BeamE->Value;
+}
+
+double KinFitter::GetFittedZVertex() const
+{
+    if(Z_Vertex)
+        return Z_Vertex->Value;
+    else
+        return std_ext::NaN; // ignore silently
 }
 
 double KinFitter::GetBeamEPull() const
 {
-    return Beam->Pull;
+    return BeamE->Pull;
 }
 
 double KinFitter::GetProtonEPull() const
@@ -371,12 +388,18 @@ void KinFitter::SetupBranches(TTree* tree, string branch_prefix)
     tree->Branch((branch_prefix+"_iterations").c_str(),  &result_iterations);
     tree->Branch((branch_prefix+"_status").c_str(),      &result_status);
     tree->Branch((branch_prefix+"_probability").c_str(), &result_probability);
-    tree->Branch((branch_prefix+"_EBeam").c_str(),       &Beam->E);
-    tree->Branch((branch_prefix+"_EBeam_Pull").c_str(),  &Beam->Pull);
-    tree->Branch((branch_prefix+"_EBeam_Sigma").c_str(),  &Beam->Sigma);
+    tree->Branch((branch_prefix+"_EBeam").c_str(),       &BeamE->Value);
+    tree->Branch((branch_prefix+"_EBeam_Pull").c_str(),  &BeamE->Pull);
+    tree->Branch((branch_prefix+"_EBeam_Sigma").c_str(),  &BeamE->Sigma);
 }
 
 APLCON::Result_t KinFitter::DoFit() {
+    if(Z_Vertex) {
+        if(!std::isfinite(Z_Vertex->Sigma_before))
+            throw Exception("Z Vertex sigma not set although enabled");
+        Z_Vertex->Value = 0;
+        Z_Vertex->Sigma = Z_Vertex->Sigma_before;
+    }
 
     const auto res = aplcon->DoFit();
 
@@ -404,12 +427,18 @@ TreeFitter::TreeFitter(const string& name,
               << "' for " << utils::ParticleTools::GetDecayString(ptree, false)
               << " with " << permutations.size() << " permutations, including KinFit";
 
-    // setup fitter variables, collect leave names for constraint
-    vector<string> leave_names;
+    // setup fitter variables, collect leave names and particles for constraint
+    // similar to KinFitter ctor
+    vector<string> variable_names;
     for(unsigned i=0;i<tree_leaves.size();i++) {
         node_t& node = tree_leaves[i]->Get();
         node.Leave = Photons[i]; // link via shared_ptr
-        leave_names.emplace_back(node.Leave->Name);
+        variable_names.emplace_back(node.Leave->Name);
+    }
+
+    // the variable is already setup in KinFitter ctor
+    if(fit_Z_vertex) {
+        variable_names.emplace_back(Z_Vertex->Name);
     }
 
     // prepare the calculation at each constraint
@@ -458,12 +487,16 @@ TreeFitter::TreeFitter(const string& name,
 
     // define the constraint
     auto tree_leaves_copy = tree_leaves;
-    auto IM_at_nodes = [tree_leaves_copy, sum_daughters, node_constraints] (const vector<vector<double>>& v) {
-        assert(v.empty() || v.size() == tree_leaves_copy.size());
+    auto IM_at_nodes = [fit_Z_vertex, tree_leaves_copy,
+                       sum_daughters, node_constraints] (const vector<vector<double>>& v) {
+        const auto  n = tree_leaves_copy.size();
+        // n serves as an offset here
+        const auto  z_vertex = fit_Z_vertex ? v[n+0][0] : 0.0;
+
         // assign values v to leaves' LVSum
-        for(unsigned i=0;i<v.size();i++) {
+        for(unsigned i=0;i<n;i++) {
             node_t& node = tree_leaves_copy[i]->Get();
-            node.LVSum = node.Leave->GetVector(v[i], 0.0);
+            node.LVSum = node.Leave->GetVector(v[i], z_vertex);
         }
 
         // sum daughters' Particle
@@ -477,7 +510,7 @@ TreeFitter::TreeFitter(const string& name,
         return IM_diff;
     };
 
-    aplcon->AddConstraint("IM_at_nodes",leave_names, IM_at_nodes);
+    aplcon->AddConstraint("IM_at_nodes", variable_names, IM_at_nodes);
 }
 
 TreeFitter::~TreeFitter()
@@ -490,24 +523,6 @@ void TreeFitter::SetPhotons(const TParticleList& photons)
 
     current_perm = permutations.begin();
     current_comb_ptr = std_ext::make_unique<current_comb_t>(photons, current_perm->size());
-}
-
-TreeFitter::tree_t TreeFitter::GetTreeNode(const ParticleTypeDatabase::Type& type) const {
-    tree_t treenode = nullptr;
-    tree->Map_nodes([&treenode, &type] (tree_t t) {
-        if(t->Get().TypeTree->Get() == type)
-            treenode = t;
-    });
-    return treenode;
-}
-
-std::vector<TreeFitter::tree_t> TreeFitter::GetTreeNodes(const ParticleTypeDatabase::Type& type) const {
-    std::vector<tree_t> nodes;
-    tree->Map_nodes([&nodes, &type] (tree_t t) {
-        if(t->Get().TypeTree->Get() == type)
-            nodes.emplace_back(t);
-    });
-    return nodes;
 }
 
 bool TreeFitter::NextFit(APLCON::Result_t& fit_result)
@@ -549,17 +564,33 @@ bool TreeFitter::NextFit(APLCON::Result_t& fit_result)
         ++it_not_comb;
     }
 
-    if(Proton && Beam) {
-        SetProton(Proton->Particle);
-        SetEgammaBeam(Beam->E_before);
-    }
-
+    // restore previous values
+    SetProton(Proton->Particle);
+    SetEgammaBeam(BeamE->Value_before);
 
     fit_result = KinFitter::DoFit();
 
     ++current_perm;
 
     return true;
+}
+
+TreeFitter::tree_t TreeFitter::GetTreeNode(const ParticleTypeDatabase::Type& type) const {
+    tree_t treenode = nullptr;
+    tree->Map_nodes([&treenode, &type] (tree_t t) {
+        if(t->Get().TypeTree->Get() == type)
+            treenode = t;
+    });
+    return treenode;
+}
+
+std::vector<TreeFitter::tree_t> TreeFitter::GetTreeNodes(const ParticleTypeDatabase::Type& type) const {
+    std::vector<tree_t> nodes;
+    tree->Map_nodes([&nodes, &type] (tree_t t) {
+        if(t->Get().TypeTree->Get() == type)
+            nodes.emplace_back(t);
+    });
+    return nodes;
 }
 
 TreeFitter::tree_t TreeFitter::MakeTree(ParticleTypeTree ptree)
