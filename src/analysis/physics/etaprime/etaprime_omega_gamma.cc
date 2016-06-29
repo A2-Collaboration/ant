@@ -953,11 +953,20 @@ void EtapOmegaG::ShowResult()
                        << h_CommonCuts_ref << h_MissedBkg << endc;
     if(fit_Z_vertex) {
         Ref.t.Tree->AddFriend(t.Tree);
+        Sig.Pi0.t.Tree->AddFriend(t.Tree);
+        Sig.Pi0.t.Tree->AddFriend(Sig.t.Tree);
+        Sig.OmegaPi0.t.Tree->AddFriend(t.Tree);
+        Sig.OmegaPi0.t.Tree->AddFriend(Sig.t.Tree);
         canvas("Z Vertex")
                 << drawoption("colz")
                 << TTree_drawable(Ref.t.Tree, "KinFitZVertex:TrueZVertex >> h1(100,-5,5,100,-5,5)","KinFitProb>0.01")
                 << TTree_drawable(Ref.t.Tree, "IM_2g:TrueZVertex >> h2(100,-5,5,200,900,1000)","KinFitProb>0.01")
+                << TTree_drawable(Sig.Pi0.t.Tree, "KinFitZVertex:TrueZVertex >> h3(100,-5,5,100,-5,5)","KinFitProb>0.01")
+                << TTree_drawable(Sig.Pi0.t.Tree, "IM_Pi0gg_fitted:TrueZVertex >> h4(100,-5,5,200,900,1000)","KinFitProb>0.01")
+                << TTree_drawable(Sig.OmegaPi0.t.Tree, "KinFitZVertex:TrueZVertex >> h5(100,-5,5,100,-5,5)","KinFitProb>0.01")
+                << TTree_drawable(Sig.OmegaPi0.t.Tree, "IM_Pi0gg_fitted:TrueZVertex >> h6(100,-5,5,200,900,1000)","KinFitProb>0.01")
                 << endc;
+
     }
 }
 
