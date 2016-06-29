@@ -3,14 +3,14 @@
 #include "base/std_ext/string.h"
 #include "base/Logger.h"
 
-#include "TH1D.h"
-#include "TH2D.h"
+#include "TH1.h"
 #include "TObject.h"
 #include "TNamed.h"
 #include "TCanvas.h"
 #include "TROOT.h"
 #include "THStack.h"
 #include "TVirtualPad.h"
+#include "TTree.h"
 
 #include <iostream>
 #include <sstream>
@@ -123,9 +123,9 @@ void canvas::AddDrawable(std::unique_ptr<root_drawable_traits> drawable)
     addobject = false;
 }
 
-canvas& canvas::operator<<(root_drawable_traits& drawable)
+canvas& canvas::operator<<(const root_drawable_traits& drawable)
 {
-    using container_t = drawable_container<root_drawable_traits*>;
+    using container_t = drawable_container<const root_drawable_traits*>;
     AddDrawable(std_ext::make_unique<container_t>(addressof(drawable)));
     return *this;
 }
@@ -225,3 +225,15 @@ canvas& canvas::operator>>(const string& filename)
 }
 
 const std::vector<Color_t> ColorPalette::Colors = {kRed, kGreen+1, kBlue, kYellow+1, kMagenta, kCyan, kOrange, kPink+9, kSpring+10, kGray};
+
+
+TTree_drawable::TTree_drawable(TTree* tree, const string& formula, const string& cut) :
+    Tree(tree), Formula(formula), Cut(cut)
+{
+
+}
+
+void TTree_drawable::Draw(const string& option) const
+{
+    Tree->Draw(Formula.c_str(), Cut.c_str(), option.c_str());
+}

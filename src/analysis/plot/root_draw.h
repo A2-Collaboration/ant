@@ -9,12 +9,10 @@
 
 #include "Rtypes.h"
 
-class THStack;
-class TH1;
-class TH1D;
 class TCanvas;
 class TObject;
 class TVirtualPad;
+class TTree;
 
 namespace ant {
 
@@ -23,6 +21,15 @@ class canvas;
 struct root_drawable_traits {
     virtual void Draw(const std::string& option) const =0;
     virtual ~root_drawable_traits() = default;
+};
+
+struct TTree_drawable : root_drawable_traits {
+    TTree_drawable(TTree* tree, const std::string& formula, const std::string& cut = "");
+    virtual void Draw(const std::string& option) const override;
+protected:
+    TTree* Tree;
+    std::string Formula;
+    std::string Cut;
 };
 
 struct canvas_modifier {};
@@ -155,7 +162,7 @@ public:
 
     void cd();
 
-    canvas& operator<< (root_drawable_traits& drawable);
+    canvas& operator<< (const root_drawable_traits& drawable);
 
     canvas& operator<< (TObject* hist);
 
