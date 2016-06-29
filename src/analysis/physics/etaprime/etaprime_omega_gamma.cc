@@ -951,6 +951,14 @@ void EtapOmegaG::ShowResult()
 {
     canvas("Overview") << h_CommonCuts  << h_CommonCuts_sig
                        << h_CommonCuts_ref << h_MissedBkg << endc;
+    if(fit_Z_vertex) {
+        Ref.t.Tree->AddFriend(t.Tree);
+        canvas("Z Vertex")
+                << drawoption("colz")
+                << TTree_drawable(Ref.t.Tree, "KinFitZVertex:TrueZVertex >> h1(100,-5,5,100,-5,5)","KinFitProb>0.01")
+                << TTree_drawable(Ref.t.Tree, "IM_2g:TrueZVertex >> h2(100,-5,5,200,900,1000)","KinFitProb>0.01")
+                << endc;
+    }
 }
 
 
