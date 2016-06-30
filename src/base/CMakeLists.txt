@@ -27,6 +27,7 @@ set(SRCS_BASE
   TF1Ext.h
   TH1Ext.h
   WrapTTree.cc
+  Interpolator.cc
   )
 
 set(SRCS_VEC
@@ -145,6 +146,15 @@ set(SRCS_STD_EXT
   std_ext/shared_ptr_container.h
 )
 
+set(SRCS_INTERP2D
+  detail/interp2d/interp2d_spline.c
+  detail/interp2d/interp2d.c
+  detail/interp2d/interp2d_spline.h
+  detail/interp2d/bicubic.c
+  detail/interp2d/bilinear.c
+  detail/interp2d/interp2d.h
+)
+
 set(SRCS
   ${SRCS_BASE}
   ${SRCS_CEREAL}
@@ -152,12 +162,18 @@ set(SRCS
   ${SRCS_MATH_FUNCTIONS}
   ${SRCS_STD_EXT}
   ${SRCS_VEC}
+  ${SRCS_INTERP2D}
 )
+
+
 
 append_header_files(SRCS)
 
 set_source_files_properties(detail/format.cc
         PROPERTIES COMPILE_FLAGS -Wno-effc++)
 
+find_package(GSL REQUIRED)
+include_directories(${GSL_INCLUDE_DIR})      
+
 add_library(base ${SRCS})
-target_link_libraries(base ${ROOT_LIBRARIES})
+target_link_libraries(base ${ROOT_LIBRARIES} ${GSL_LIBRARIES})
