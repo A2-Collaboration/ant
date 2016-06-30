@@ -43,6 +43,7 @@ void JustPi0::ShowResult()
 
 
 JustPi0::MultiPi0::MultiPi0(HistogramFactory& histFac, unsigned nPi0, bool nofitandnotree) :
+    HistFac(std_ext::formatter() << "m" << multiplicity << "Pi0", histFac, std_ext::formatter() << "m" << multiplicity << "Pi0"),
     multiplicity(nPi0),
     nPhotons_expected(multiplicity*2),
     skipfit(nofitandnotree),
@@ -54,11 +55,9 @@ JustPi0::MultiPi0::MultiPi0(HistogramFactory& histFac, unsigned nPi0, bool nofit
     IM_2g_byMM(promptrandom),
     IM_2g_byFit(promptrandom),
     IM_2g_fitted(promptrandom),
-    treefitter("treefit_jusitpi0_"+to_string(nPi0), directPi0, model)
+    treefitter("treefit_jusitpi0_"+to_string(nPi0), directPi0, model),
+    pullOut(HistFac)
 {
-    std::string multiplicity_str = std_ext::formatter() << "m" << multiplicity << "Pi0";
-    HistogramFactory HistFac(multiplicity_str, histFac, multiplicity_str);
-
     promptrandom.AddPromptRange({-2.5,2.5});
     promptrandom.AddRandomRange({-50,-5});
     promptrandom.AddRandomRange({  5,50});
@@ -74,7 +73,7 @@ JustPi0::MultiPi0::MultiPi0(HistogramFactory& histFac, unsigned nPi0, bool nofit
 
     BinSettings bins_IM(1400,0,1400);
 
-    IM_2g_byMM.MakeHistograms(HistFac, "IM_2g_byMM","IM 2#gamma by MM",bins_IM,"IM / MeV","#");
+    IM_2g_byMM.MakeHistograms(HistFac, "IM_2g_byMM","IM 2#gamma by HistFac(multiplicity_str, histFac, multiplicity_str);MM",bins_IM,"IM / MeV","#");
     IM_2g_byFit.MakeHistograms(HistFac, "IM_2g_byFit","IM 2#gamma by Fit",bins_IM,"IM / MeV","#");
     IM_2g_fitted.MakeHistograms(HistFac, "IM_2g_fitted","IM 2#gamma fitted",bins_IM,"IM / MeV","#");
 
@@ -100,7 +99,6 @@ JustPi0::MultiPi0::MultiPi0(HistogramFactory& histFac, unsigned nPi0, bool nofit
         auto g2 = pion_node->Daughters().back();
         pions.emplace_back(make_pair(g1,g2));
     }
-
 }
 
 TVector2 getPSAVector(const TParticlePtr& p) {
@@ -181,6 +179,8 @@ void JustPi0::MultiPi0::ProcessData(const TEventData& data, const TParticleTree_
 
         TParticlePtr  selected_proton;
         TParticleList selected_photons;
+
+        std::vector<utils::Fitter::FitParticle> best_fitParticles;
 
         // use any candidate as proton, and do the analysis (ignore ParticleID stuff)
         for(auto i_proton : cands.get_iter()) {
@@ -272,15 +272,15 @@ void JustPi0::MultiPi0::ProcessData(const TEventData& data, const TParticleTree_
 
                 t.ProtonMCTrueMatches = proton->Candidate == proton_mctrue_match;
 
-                const auto fitparticles = fitter.GetFitParticles();
+                best_fitParticles = fitter.GetFitParticles();
 
-                t.fit_proton_E_pull     = fitparticles.at(0).Ek.Pull;
-                t.fit_proton_Theta_pull = fitparticles.at(0).Theta.Pull;
-                t.fit_proton_Phi_pull   = fitparticles.at(0).Phi.Pull;
+                t.fit_proton_E_pull     = best_fitParticles.at(0).Ek.Pull;
+                t.fit_proton_Theta_pull = best_fitParticles.at(0).Theta.Pull;
+                t.fit_proton_Phi_pull   = best_fitParticles.at(0).Phi.Pull;
 
                 const auto photons_fitted = fitter.GetFittedPhotons();
 
-                assert(nPhotons_expected +1  == fitparticles.size());
+                assert(nPhotons_expected +1  == best_fitParticles.size());
                 assert(photons.size()        == nPhotons_expected);
                 assert(photons_fitted.size() == nPhotons_expected);
 
@@ -292,9 +292,9 @@ void JustPi0::MultiPi0::ProcessData(const TEventData& data, const TParticleTree_
                     t.photons_vetoE().at(i)  = photons.at(i)->Candidate->VetoEnergy;
                     t.photons_Time().at(i)   = photons.at(i)->Candidate->Time;
 
-                    t.fit_photons_E_pulls().at(i)     = fitparticles.at(i+1).Ek.Pull;
-                    t.fit_photons_Theta_pulls().at(i) = fitparticles.at(i+1).Theta.Pull;
-                    t.fit_photons_Phi_pulls().at(i)   = fitparticles.at(i+1).Phi.Pull;
+                    t.fit_photons_E_pulls().at(i)     = best_fitParticles.at(i+1).Ek.Pull;
+                    t.fit_photons_Theta_pulls().at(i) = best_fitParticles.at(i+1).Theta.Pull;
+                    t.fit_photons_Phi_pulls().at(i)   = best_fitParticles.at(i+1).Phi.Pull;
                 }
 
                 selected_proton  = proton;
@@ -308,6 +308,9 @@ void JustPi0::MultiPi0::ProcessData(const TEventData& data, const TParticleTree_
         } // Loop proton
 
         if(kinfit_ok) {
+
+
+            pullOut.Fill(best_fitParticles);
 
             t.treefit_prob    = std_ext::NaN;
             t.treefit_chi2dof = std_ext::NaN;

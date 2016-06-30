@@ -7,6 +7,7 @@
 #include "TLorentzVector.h"
 #include "TVector2.h"
 #include "base/WrapTTree.h"
+#include "utils/PullsWriter.h"
 
 class TH1D;
 
@@ -24,6 +25,8 @@ protected:
         void ShowResult();
 
     protected:
+
+        HistogramFactory HistFac;
 
         const unsigned multiplicity;
         const unsigned nPhotons_expected;
@@ -95,6 +98,8 @@ protected:
         utils::TreeFitter treefitter;
 
         static ParticleTypeTree getParticleTree(const unsigned nPi0);
+
+        utils::PullOutput pullOut;
 
     };
 
