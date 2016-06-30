@@ -96,6 +96,7 @@ set(ANALYSIS_UTILS
   utils/ClusterTools.cc
   utils/MCSmear.cc
   utils/MCFakeReconstructed.cc
+  utils/PullsWriter.cc
   )
 
 set(ANALYSIS_ALL
