@@ -70,6 +70,8 @@ struct EtapOmegaG : Physics {
         ADD_BRANCH_T(double,   MissingMass)
         ADD_BRANCH_T(double,   FittedProtonE)
 
+        ADD_BRANCH_T(std::vector<double>,  PhotonThetas)
+
         ADD_BRANCH_T(double,   KinFitProb)
         ADD_BRANCH_T(int,      KinFitIterations)
         ADD_BRANCH_T(double,   KinFitZVertex)

@@ -270,6 +270,7 @@ bool EtapOmegaG::findParticles(const TCandidatePtrList& candidates,
     t.nPhotonsTAPS = 0;
     t.CBSumVetoE = std_ext::NaN;
     t.PhotonSum  = std_ext::NaN;
+    t.PhotonThetas().resize(0);
     t.ProtonCopl = std_ext::NaN;
 
     t.nCandidates = candidates.size();
@@ -328,6 +329,7 @@ bool EtapOmegaG::findParticles(const TCandidatePtrList& candidates,
             t.nPhotonsTAPS++;
         auto photon = make_shared<TParticle>(ParticleTypeDatabase::Photon, cand);
         photon_sum += *photon;
+        t.PhotonThetas().emplace_back(std_ext::radian_to_degree(cand->Theta));
         particles.Photons.emplace_back(move(photon));
     }
     assert(particles.Photons.size() == nPhotons);
@@ -450,6 +452,7 @@ void EtapOmegaG::Sig_t::ResetBranches()
     OmegaPi0.t.Reset();
     Pi0.t.Reset();
 }
+
 
 template<typename T>
 void fill_NaN(T& v) {
@@ -951,7 +954,7 @@ void EtapOmegaG::ShowResult()
 {
     canvas("Overview") << h_CommonCuts  << h_CommonCuts_sig
                        << h_CommonCuts_ref << h_MissedBkg << endc;
-    if(fit_Z_vertex) {
+//    if(fit_Z_vertex) {
         Ref.t.Tree->AddFriend(t.Tree);
         Sig.Pi0.t.Tree->AddFriend(t.Tree);
         Sig.Pi0.t.Tree->AddFriend(Sig.t.Tree);
@@ -967,8 +970,9 @@ void EtapOmegaG::ShowResult()
                 << drawoption("colz")
                 << TTree_drawable(Ref.t.Tree, "KinFitZVertex:TrueZVertex >> h1(100,-5,5,100,-5,5)","KinFitProb>0.01")
                 << TTree_drawable(Ref.t.Tree, "IM_2g:TrueZVertex >> h2(100,-5,5,200,900,1000)","KinFitProb>0.01")
+                << TTree_drawable(Ref.t.Tree, "KinFitPhotonThetaPulls:PhotonThetas >> h3(100,5,175,50,-3,3)","KinFitProb>0.01")
                 << endc;
-    }
+//    }
 }
 
 
