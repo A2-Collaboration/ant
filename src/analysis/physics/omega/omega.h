@@ -135,22 +135,6 @@ struct TagChMultiplicity {
     void Fill(const std::vector<TTaggerHit>& t);
 };
 
-/**
- * @brief Hacked up version of the Kin fitter that allows access to the fit particles
- */
-struct AccessibleFitter : utils::KinFitter {
-
-    using KinFitter::KinFitter;
-
-    KinFitter::FitParticle& FitPhotons(std::size_t n) {
-        return *(Photons.at(n));
-    }
-
-    void SetPhoton(size_t i, const TParticlePtr& p) {
-        SetPhotonEkThetaPhi(*Photons.at(i), p);
-    }
-};
-
 class OmegaEtaG2 : public OmegaBase {
 public:
     struct OmegaTree_t : WrapTTree {
