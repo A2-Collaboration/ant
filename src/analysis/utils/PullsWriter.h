@@ -1,3 +1,5 @@
+#pragma once
+
 #include "base/WrapTTree.h"
 #include "analysis/utils/Fitter.h"
 
@@ -16,6 +18,11 @@ public:
         ADD_BRANCH_T(double, E)
         ADD_BRANCH_T(double, Theta)
         ADD_BRANCH_T(double, Phi)
+
+        /// \todo Fill with previous values
+        ADD_BRANCH_T(double, SigmaE)
+        ADD_BRANCH_T(double, SigmaTheta)
+        ADD_BRANCH_T(double, SigmaPhi)
 
         ADD_BRANCH_T(double, PullE)
         ADD_BRANCH_T(double, PullTheta)
