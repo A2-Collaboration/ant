@@ -21,7 +21,10 @@ using namespace std;
 JustPi0::JustPi0(const string& name, OptionsPtr opts) :
     Physics(name, opts)
 {
-    for(unsigned mult=1;mult<=opts->Get<unsigned>("nPi0",1);mult++) {
+    auto pi0_range = opts->Get<interval<unsigned>>("nPi0",{1,2});
+    if(!pi0_range.IsSane())
+        throw runtime_error("Given Pi0 range not sane");
+    for(unsigned mult=pi0_range.Start();mult<=pi0_range.Stop();mult++) {
         multiPi0.emplace_back(std_ext::make_unique<MultiPi0>(HistFac, mult, opts->Get<bool>("SkipFitAndTree", false)));
     }
 }
@@ -49,15 +52,19 @@ JustPi0::MultiPi0::MultiPi0(HistogramFactory& histFac, unsigned nPi0, bool nofit
     skipfit(nofitandnotree),
     directPi0(getParticleTree(multiplicity)),
     model(make_shared<utils::UncertaintyModels::Optimized_Oli1>()),
-    fitter(std_ext::formatter() << multiplicity << "Pi0", 2*multiplicity, model),
+    fitter(std_ext::formatter() << multiplicity << "Pi0", 2*multiplicity, model, true),
     h_missingmass(promptrandom),
     h_fitprobability(promptrandom),
     IM_2g_byMM(promptrandom),
     IM_2g_byFit(promptrandom),
     IM_2g_fitted(promptrandom),
-    treefitter("treefit_jusitpi0_"+to_string(nPi0), directPi0, model),
+    treefitter("treefit_jusitpi0_"+to_string(nPi0), directPi0, model, true),
     pullOut(HistFac)
 {
+    fitter.SetZVertexSigma(0);
+    treefitter.SetZVertexSigma(0);
+
+
     promptrandom.AddPromptRange({-2.5,2.5});
     promptrandom.AddRandomRange({-50,-5});
     promptrandom.AddRandomRange({  5,50});
