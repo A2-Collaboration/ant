@@ -11,6 +11,7 @@
 
 #include "TTree.h"
 #include "TRint.h"
+#include "TH3D.h"
 
 using namespace ant;
 using namespace std;
@@ -30,9 +31,10 @@ int main( int argc, char** argv )
     TCLAP::CmdLine cmd("Ant-makeSigmas", ' ', "0.1");
 
     auto cmd_input = cmd.add<TCLAP::ValueArg<string>>("i","input","pull trees",true,"","rootfile");
-    auto cmd_output = cmd.add<TCLAP::ValueArg<string>>("o","","sigma hists",true,"","rootfile");
+    auto cmd_output = cmd.add<TCLAP::ValueArg<string>>("o","","sigma hists",false,"","rootfile");
     auto cmd_batchmode = cmd.add<TCLAP::MultiSwitchArg>("b","batch","Run in batch mode (no ROOT shell afterwards)",false);
     auto cmd_maxevents = cmd.add<TCLAP::MultiArg<int>>("m","maxevents","Process only max events",false,"maxevents");
+    auto cmd_tree = cmd.add<TCLAP::ValueArg<string>>("t","tree","Treename",false,"JustPi0/m2Pi0/pulls_photon_cb","treename");
 
 
     cmd.parse(argc, argv);
@@ -40,13 +42,16 @@ int main( int argc, char** argv )
     WrapTFileInput input(cmd_input->getValue());
 
     TTree* tree;
-    if(!input.GetObject("pulls_photon_cb", tree)) {
+    if(!input.GetObject(cmd_tree->getValue(), tree)) {
         LOG(ERROR) << "Cannot find tree in " << cmd_input->getValue();
         exit(EXIT_FAILURE);
     }
 
-    using pulltree_t = utils::PullOutput::PullTree_t;
-    pulltree_t pulltree;
+    utils::PullsWriter::PullTree_t pulltree;
+    if(!pulltree.Matches(tree)) {
+        LOG(ERROR) << "Given tree is not a PullTree_t";
+        exit(EXIT_FAILURE);
+    }
     pulltree.LinkBranches(tree);
     auto entries = pulltree.Tree->GetEntries();
 
@@ -57,7 +62,69 @@ int main( int argc, char** argv )
                                                      true); // cd into masterFile upon creation
     }
 
-    HistogramFactory HistFac("IterativePulls");
+    struct hist_settings_t {
+        string name;
+        BinSettings bins_cosTheta{0};
+        BinSettings bins_E{0};
+    };
+
+    auto get_hist_settings = [] (const std::string& treename) {
+        hist_settings_t s;
+        BinSettings bins_cosTheta_cb{15, std::cos(std_ext::degree_to_radian(160.0)), std::cos(std_ext::degree_to_radian(20.0))};
+        BinSettings bins_cosTheta_taps{10, std::cos(std_ext::degree_to_radian(25.0)), std::cos(std_ext::degree_to_radian(0.0))};
+        if(std_ext::string_ends_with(treename, "pulls_photon_cb")) {
+            s.name = "sigma_photon_cb";
+            s.bins_cosTheta = bins_cosTheta_cb;
+            s.bins_E = {10, 0, 800};
+        }
+        if(std_ext::string_ends_with(treename, "pulls_photon_taps")) {
+            s.name = "sigma_photon_taps";
+            s.bins_cosTheta = bins_cosTheta_taps;
+            s.bins_E = {10, 0, 800};
+        }
+        if(std_ext::string_ends_with(treename, "pulls_proton_cb")) {
+            s.name = "sigma_proton_cb";
+            s.bins_cosTheta = bins_cosTheta_cb;
+            s.bins_E = {5, 0, 400};
+        }
+        if(std_ext::string_ends_with(treename, "pulls_proton_taps")) {
+            s.name = "sigma_proton_taps";
+            s.bins_cosTheta = bins_cosTheta_taps;
+            s.bins_E = {5, 0, 400};
+        }
+        return s;
+    };
+
+    const hist_settings_t& hist_settings = get_hist_settings(cmd_tree->getValue());
+    if(hist_settings.name.empty()) {
+        LOG(ERROR) << "Could not identify pulltree name";
+        exit(EXIT_FAILURE);
+    }
+    HistogramFactory HistFac(hist_settings.name);
+
+    BinSettings bins_pulls(50,-3,3);
+
+    auto h_pullsE = HistFac.makeTH3D("Pulls Ek","cos #theta","Ek","Pulls",
+                                     hist_settings.bins_cosTheta,
+                                     hist_settings.bins_E,
+                                     bins_pulls,
+                                     "h_pullsE"
+                                     );
+
+    auto h_pullsTheta = HistFac.makeTH3D("Pulls Ek","cos #theta","Ek","Pulls",
+                                     hist_settings.bins_cosTheta,
+                                     hist_settings.bins_E,
+                                     bins_pulls,
+                                     "h_pullsTheta"
+                                     );
+
+    auto h_pullsPhi = HistFac.makeTH3D("Pulls Ek","cos #theta","Ek","Pulls",
+                                     hist_settings.bins_cosTheta,
+                                     hist_settings.bins_E,
+                                     bins_pulls,
+                                     "h_pullsPhi"
+                                     );
+
 
     LOG(INFO) << "Tree entries=" << entries;
     auto max_entries = entries;
@@ -79,7 +146,14 @@ int main( int argc, char** argv )
 
         pulltree.Tree->GetEntry(entry);
 
+        h_pullsE->Fill(cos(pulltree.Theta), pulltree.E, pulltree.PullE, pulltree.TaggW);
+        h_pullsTheta->Fill(cos(pulltree.Theta), pulltree.E, pulltree.PullTheta, pulltree.TaggW);
+        h_pullsPhi->Fill(cos(pulltree.Theta), pulltree.E, pulltree.PullPhi, pulltree.TaggW);
+
     }
+
+    h_pullsE->FitSlicesZ();
+
 
     if(!cmd_batchmode->isSet()) {
         if(!std_ext::system::isInteractive()) {
