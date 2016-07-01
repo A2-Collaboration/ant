@@ -9,6 +9,7 @@ class TRandom;
 namespace ant {
 
 class WrapTFile;
+class Interpolator2D;
 
 namespace analysis {
 namespace utils {
@@ -295,6 +296,44 @@ public:
 
 protected:
     std::unique_ptr<TRandom> rng;
+};
+
+/**
+ * @brief Uncertainties with interpolated surfaces in (E,theta) plane,
+ * determined with iterative procedure
+ */
+struct Interpolated : public UncertaintyModel {
+public:
+
+    Interpolated(UncertaintyModelPtr starting_uncertainty_);
+    virtual ~Interpolated();
+
+    Uncertainties_t GetSigmas(const TParticle &particle) const override;
+
+    void LoadSigmas(const std::string& filename);
+
+    struct Exception : std::runtime_error {
+        using std::runtime_error::runtime_error;
+    };
+
+protected:
+    UncertaintyModelPtr starting_uncertainty;
+
+    bool loaded_sigmas = false;
+
+    struct EkThetaPhi {
+        using interpolator_ptr_t = std::unique_ptr<const Interpolator2D>;
+        interpolator_ptr_t E;
+        interpolator_ptr_t Theta;
+        interpolator_ptr_t Phi;
+
+        Uncertainties_t GetUncertainties(const TParticle& particle) const;
+    };
+
+    EkThetaPhi cb_photon;
+    EkThetaPhi taps_photon;
+    EkThetaPhi cb_proton;
+    EkThetaPhi taps_proton;
 };
 
 }}}} // namespace ant::analysis::utils::UncertaintyModels

@@ -6,6 +6,7 @@
 #include "base/Paths.h"
 #include "base/Logger.h"
 #include "base/std_ext/system.h"
+#include "base/Interpolator.h"
 
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wnon-virtual-dtor"
@@ -746,3 +747,72 @@ std::shared_ptr<UncertaintyModels::MCSmearingAdlarson> UncertaintyModels::MCSmea
 
 
 
+
+UncertaintyModels::Interpolated::Interpolated(UncertaintyModelPtr starting_uncertainty_) :
+    starting_uncertainty(starting_uncertainty_)
+{
+
+}
+
+UncertaintyModels::Interpolated::~Interpolated()
+{
+
+}
+
+Uncertainties_t UncertaintyModels::Interpolated::GetSigmas(const TParticle& particle) const
+{
+    // use starting model if nothing was loaded so far
+    if(!loaded_sigmas) {
+        return starting_uncertainty->GetSigmas(particle);
+    }
+
+
+    if(particle.Candidate->Detector & Detector_t::Type_t::CB) {
+
+        if(particle.Type() == ParticleTypeDatabase::Photon) {
+
+            return cb_photon.GetUncertainties(particle);
+
+        } else if(particle.Type() == ParticleTypeDatabase::Proton) {
+
+            return cb_proton.GetUncertainties(particle);
+
+        } else {
+            throw Exception("Unexpected Particle in CB: " + particle.Type().Name());
+        }
+
+    } else if(particle.Candidate->Detector & Detector_t::Type_t::TAPS) {
+
+        if(particle.Type() == ParticleTypeDatabase::Photon) {
+
+            return taps_photon.GetUncertainties(particle);
+
+        } else if(particle.Type() == ParticleTypeDatabase::Proton) {
+
+            return taps_proton.GetUncertainties(particle);
+
+        } else {
+            throw Exception("Unexpected Particle: " + particle.Type().Name());
+        }
+    }
+    else {
+        throw Exception("Unexpected Detector: " + string(particle.Candidate->Detector));
+    }
+}
+
+void UncertaintyModels::Interpolated::LoadSigmas(const string& filename)
+{
+
+}
+
+Uncertainties_t UncertaintyModels::Interpolated::EkThetaPhi::GetUncertainties(const TParticle& particle) const
+{
+    auto theta = particle.Theta();
+    auto Ek = particle.Ek();
+
+    return {
+        E->GetPoint(theta, Ek),
+        Theta->GetPoint(theta, Ek),
+        Phi->GetPoint(theta, Ek)
+    };
+}
