@@ -19,7 +19,7 @@ using namespace std;
 //        throw std::runtime_error("Invalid Data");
 //}
 
-PullOutput::PullTree_t&PullOutput::getProtonTree(const Fitter::FitParticle& particle)
+PullsWriter::PullTree_t&PullsWriter::getPullTree(const Fitter::FitParticle& particle)
 {
     const auto& det = particle.Particle->Candidate->Detector;
 
@@ -46,7 +46,7 @@ PullOutput::PullTree_t&PullOutput::getProtonTree(const Fitter::FitParticle& part
         throw std::runtime_error("Unexpected Particle type in fitter!");
 }
 
-PullOutput::PullOutput(HistogramFactory& histfac)
+PullsWriter::PullsWriter(HistogramFactory& histfac)
 {
     photons_cb.CreateBranches(  histfac.makeTTree("pulls_photon_cb"));
     photons_taps.CreateBranches(histfac.makeTTree("pulls_photon_taps"));
@@ -55,24 +55,33 @@ PullOutput::PullOutput(HistogramFactory& histfac)
 
 }
 
-PullOutput::~PullOutput()
+PullsWriter::~PullsWriter()
 {}
 
-void PullOutput::Fill(const std::vector<Fitter::FitParticle>& fitParticles)
+void PullsWriter::Fill(const std::vector<Fitter::FitParticle>& fitParticles,
+                       double tagger_weight, double fitprob)
 {
 
-    for(const auto& p : fitParticles) {
+    for(const Fitter::FitParticle& p : fitParticles) {
 
-        auto& tree = getProtonTree(p);
+        auto& tree = getPullTree(p);
 
-        ///@todo replace by initial values
-        tree.E     = p.Ek.Value;
-        tree.Theta = p.Theta.Value;
-        tree.Phi   = p.Phi.Value;
+        tree.TaggW = tagger_weight;
+        tree.FitProb = fitprob;
+
+        tree.E     = p.Ek.Value_before;
+        tree.Theta = p.Theta.Value_before;
+        tree.Phi   = p.Phi.Value_before;
+
+        tree.SigmaE = p.Ek.Sigma_before;
+        tree.SigmaTheta = p.Theta.Sigma_before;
+        tree.SigmaPhi = p.Phi.Sigma_before;
 
         tree.PullE     = p.Ek.Pull;
         tree.PullTheta = p.Theta.Pull;
         tree.PullPhi   = p.Phi.Pull;
+
+        tree.Multiplicity = fitParticles.size();
 
         tree.Tree->Fill();
 

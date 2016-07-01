@@ -10,10 +10,13 @@ class HistogramFactory;
 
 namespace utils {
 
-class PullOutput {
+class PullsWriter {
 
 public:
     struct PullTree_t : WrapTTree {
+
+        ADD_BRANCH_T(double, FitProb)
+        ADD_BRANCH_T(double, TaggW) // for prompt-random subtraction
 
         ADD_BRANCH_T(double, E)
         ADD_BRANCH_T(double, Theta)
@@ -38,14 +41,15 @@ protected:
     PullTree_t proton_cb;
     PullTree_t proton_taps;
 
-    PullTree_t& getProtonTree(const ant::analysis::utils::Fitter::FitParticle& particle);
+    PullTree_t& getPullTree(const ant::analysis::utils::Fitter::FitParticle& particle);
 
 public:
 
-    PullOutput(ant::analysis::HistogramFactory& histfac);
-    ~PullOutput();
+    PullsWriter(ant::analysis::HistogramFactory& histfac);
+    ~PullsWriter();
 
-    void Fill(const std::vector<Fitter::FitParticle>& fitParticles);
+    void Fill(const std::vector<Fitter::FitParticle>& fitParticles,
+              double tagger_weight, double fitprob);
 
 };
 
