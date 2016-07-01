@@ -26,9 +26,8 @@ protected:
 
     protected:
 
-        HistogramFactory HistFac;
-
         const unsigned multiplicity;
+        HistogramFactory HistFac;
         const unsigned nPhotons_expected;
         const bool skipfit;
         ParticleTypeTree directPi0;
@@ -99,7 +98,7 @@ protected:
 
         static ParticleTypeTree getParticleTree(const unsigned nPi0);
 
-        utils::PullOutput pullOut;
+        utils::PullsWriter pullOut;
 
     };
 

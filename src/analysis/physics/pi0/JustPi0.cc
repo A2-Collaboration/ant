@@ -43,12 +43,12 @@ void JustPi0::ShowResult()
 
 
 JustPi0::MultiPi0::MultiPi0(HistogramFactory& histFac, unsigned nPi0, bool nofitandnotree) :
-    HistFac(std_ext::formatter() << "m" << multiplicity << "Pi0", histFac, std_ext::formatter() << "m" << multiplicity << "Pi0"),
     multiplicity(nPi0),
+    HistFac(std_ext::formatter() << "m" << multiplicity << "Pi0", histFac, std_ext::formatter() << "m" << multiplicity << "Pi0"),
     nPhotons_expected(multiplicity*2),
     skipfit(nofitandnotree),
     directPi0(getParticleTree(multiplicity)),
-    model(utils::UncertaintyModels::MCExtracted::makeAndLoad()),
+    model(make_shared<utils::UncertaintyModels::Optimized_Oli1>()),
     fitter(std_ext::formatter() << multiplicity << "Pi0", 2*multiplicity, model),
     h_missingmass(promptrandom),
     h_fitprobability(promptrandom),
@@ -310,7 +310,6 @@ void JustPi0::MultiPi0::ProcessData(const TEventData& data, const TParticleTree_
         if(kinfit_ok) {
 
 
-            pullOut.Fill(best_fitParticles);
 
             t.treefit_prob    = std_ext::NaN;
             t.treefit_chi2dof = std_ext::NaN;
@@ -343,8 +342,10 @@ void JustPi0::MultiPi0::ProcessData(const TEventData& data, const TParticleTree_
                 }
             }
 
+            pullOut.Fill(best_fitParticles, t.Tagg_W, t.treefit_chi2dof);
+
             tree->Fill();
-        }
+        } // end KinFit ok
 
     } // Loop tagger
 
