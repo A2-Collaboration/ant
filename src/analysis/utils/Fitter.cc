@@ -55,20 +55,20 @@ void Fitter::LinkVariable(Fitter::FitParticle& particle)
                          particle.Addresses_Pulls());
 }
 
-void Fitter::SetPhotonEkThetaPhi(FitParticle& photon, const TParticlePtr& p) const
+void Fitter::FitParticle::SetEkThetaPhi(const TParticlePtr& p,
+                                        const UncertaintyModelPtr& uncertainty)
 {
-    photon.Particle = p;
-
-    photon.Ek.Value     = p->Ek();
-    photon.Theta.Value  = p->Theta();
-    photon.Phi.Value    = p->Phi();
-
     const auto sigmas = uncertainty->GetSigmas(*p);
 
-    photon.Ek.Sigma    = sigmas.sigmaE;
-    photon.Theta.Sigma = sigmas.sigmaTheta;
-    photon.Phi.Sigma   = sigmas.sigmaPhi;
+    Particle = p;
 
+    Ek.SetValue(p->Ek());
+    Theta.SetValue(p->Theta());
+    Phi.SetValue(p->Phi());
+
+    Ek.SetSigma(sigmas.sigmaE);
+    Theta.SetSigma(sigmas.sigmaTheta);
+    Phi.SetSigma(sigmas.sigmaPhi);
 }
 
 double Fitter::fct_TaggerEGausSigma(double)
@@ -267,20 +267,9 @@ void KinFitter::SetZVertexSigma(double sigma)
 void KinFitter::SetProton(const TParticlePtr& proton)
 {
     if (proton->Candidate == nullptr)
-        throw Exception(aplcon->GetName() + ": Proton-Candidate for Kinfitter not set!");
+        throw Exception(aplcon->GetName() + ": Proton Candidate for Kinfitter not set!");
 
-
-    Proton->Ek.Value    = proton->Ek();
-    Proton->Theta.Value = proton->Theta();
-    Proton->Phi.Value   = proton->Phi();
-
-    const auto sigmas = uncertainty->GetSigmas(*proton);
-
-    Proton->Ek.Sigma    = sigmas.sigmaE;
-    Proton->Theta.Sigma = sigmas.sigmaTheta;
-    Proton->Phi.Sigma   = sigmas.sigmaPhi;
-
-    Proton->Particle = proton;
+    Proton->SetEkThetaPhi(proton, uncertainty);
 }
 
 void KinFitter::SetPhotons(const TParticleList& photons)
@@ -288,8 +277,11 @@ void KinFitter::SetPhotons(const TParticleList& photons)
     if(Photons.size() != photons.size())
         throw Exception("Given number of photons does not match configured fitter");
 
-    for ( unsigned i = 0 ; i < Photons.size() ; ++ i)
-        SetPhotonEkThetaPhi(*Photons[i], photons[i]);
+    for ( unsigned i = 0 ; i < Photons.size() ; ++ i) {
+        if(photons[i]->Candidate == nullptr)
+            throw Exception(aplcon->GetName() + ": Photon Candidate for Kinfitter not set!");
+        Photons[i]->SetEkThetaPhi(photons[i], uncertainty);
+    }
 }
 
 TParticlePtr KinFitter::GetFittedProton() const
@@ -551,7 +543,7 @@ bool TreeFitter::NextFit(APLCON::Result_t& fit_result)
         const auto perm_idx = current_perm->at(i);
         tree_leaves[i]->Get().PhotonLeaveIndex = comb_indices[perm_idx];
         const TParticlePtr& p = current_comb.at(perm_idx);
-        SetPhotonEkThetaPhi(*Photons[i], p);
+        Photons[i]->SetEkThetaPhi(p, uncertainty);
     }
 
     auto it_not_comb = current_comb.begin_not();
@@ -560,7 +552,7 @@ bool TreeFitter::NextFit(APLCON::Result_t& fit_result)
 
     // and by construction, the non-leaves are from k..n-1
     for(auto i=k;i<n;i++) {
-        SetPhotonEkThetaPhi(*Photons[i], *it_not_comb);
+        Photons[i]->SetEkThetaPhi(*it_not_comb, uncertainty);
         ++it_not_comb;
     }
 

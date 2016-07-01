@@ -39,10 +39,20 @@ public:
     virtual ~Fitter();
 
     struct FitVariable {
-        // initialize everything at zero, important for Z Vertex
+        // initialize linked values at zero, important for Z Vertex
         double Value = 0;
+        double Value_before = std_ext::NaN;
         double Sigma = 0;
+        double Sigma_before = std_ext::NaN;
         double Pull = 0;
+        void SetValue(double v) {
+            Value = v;
+            Value_before = v;
+        }
+        void SetSigma(double s) {
+            Sigma = s;
+            Sigma_before = s;
+        }
     };
 
     struct FitParticle
@@ -69,6 +79,7 @@ public:
         friend class KinFitter;
         friend class TreeFitter;
 
+        void SetEkThetaPhi(const TParticlePtr& p, const UncertaintyModelPtr& uncertainty);
 
         const std::string Name;
         std::shared_ptr<FitVariable> Z_Vertex;
@@ -112,7 +123,6 @@ protected:
 
     void LinkVariable(FitParticle& particle);
 
-    void SetPhotonEkThetaPhi(FitParticle& photon, const TParticlePtr& p) const;
 
     static double fct_TaggerEGausSigma(double E);
 
@@ -173,12 +183,10 @@ public:
 protected:
 
     struct BeamE_t : FitVariable {
-        double Value_before = std_ext::NaN;
         const std::string Name = "Beam";
     };
 
     struct Z_Vertex_t : FitVariable {
-        double Sigma_before = std_ext::NaN;
         const std::string Name = "ZVertex";
     };
 
