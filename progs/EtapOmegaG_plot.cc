@@ -459,14 +459,14 @@ int main(int argc, char** argv) {
 
     WrapTFileInput input(cmd_input->getValue());
 
-    auto link_branches = [&input] (const string treename, WrapTTree* wraptree, long long expected_entries) {
+    auto link_branches = [&input] (const string treename, WrapTTree& wraptree, long long expected_entries) {
         TTree* t;
         if(!input.GetObject(treename,t))
             throw runtime_error("Cannot find tree "+treename+" in input file");
         if(expected_entries>=0 && t->GetEntries() != expected_entries)
             throw runtime_error("Tree "+treename+" does not have entries=="+to_string(expected_entries));
-        if(wraptree->Matches(t, true, true)) {
-            wraptree->LinkBranches(t);
+        if(wraptree.Matches(t, true, true)) {
+            wraptree.LinkBranches(t);
             return true;
         }
         return false;
@@ -474,7 +474,7 @@ int main(int argc, char** argv) {
 
 
     CommonHist_t::Tree_t treeCommon;
-    if(!link_branches("EtapOmegaG/treeCommon", addressof(treeCommon), -1)) {
+    if(!link_branches("EtapOmegaG/treeCommon", treeCommon, -1)) {
         LOG(ERROR) << "Cannot link branches of treeCommon";
         return 1;
     }
@@ -489,13 +489,13 @@ int main(int argc, char** argv) {
 
     // auto-detect which tree "type" to use
     const auto& treename = cmd_tree->getValue();
-    if(link_branches("EtapOmegaG/"+treename, addressof(treeSigPi0), entries)) {
+    if(link_branches("EtapOmegaG/"+treename, treeSigPi0, entries)) {
         LOG(INFO) << "Identified " << treename << " as signal tree (Pi0)";
     }
-    else if(link_branches("EtapOmegaG/"+treename, addressof(treeSigOmegaPi0), entries)) {
+    else if(link_branches("EtapOmegaG/"+treename, treeSigOmegaPi0, entries)) {
         LOG(INFO) << "Identified " << treename << " as signal tree (OmegaPi0)";
     }
-    else if(link_branches("EtapOmegaG/"+treename, addressof(treeRef), entries)) {
+    else if(link_branches("EtapOmegaG/"+treename, treeRef, entries)) {
         LOG(INFO) << "Identified " << treename << " as reference tree";
     }
     else {
@@ -505,7 +505,7 @@ int main(int argc, char** argv) {
 
     SigHist_t::SharedTree_t treeSigShared;
     if(treeSigPi0 || treeSigOmegaPi0) {
-        if(!link_branches("EtapOmegaG/SigShared", addressof(treeSigShared), entries)) {
+        if(!link_branches("EtapOmegaG/SigShared", treeSigShared, entries)) {
             LOG(ERROR) << "Cannot find SigShared tree";
             return 1;
         }
