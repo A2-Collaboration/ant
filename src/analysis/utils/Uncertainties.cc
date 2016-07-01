@@ -807,12 +807,12 @@ void UncertaintyModels::Interpolated::LoadSigmas(const string& filename)
 
 Uncertainties_t UncertaintyModels::Interpolated::EkThetaPhi::GetUncertainties(const TParticle& particle) const
 {
-    auto theta = particle.Theta();
+    auto costheta = std::cos(particle.Theta());
     auto Ek = particle.Ek();
 
     return {
-        E->GetPoint(theta, Ek),
-        Theta->GetPoint(theta, Ek),
-        Phi->GetPoint(theta, Ek)
+        E->GetPoint(costheta, Ek),
+        Theta->GetPoint(costheta, Ek),
+        Phi->GetPoint(costheta, Ek)
     };
 }
