@@ -12,6 +12,7 @@
 #include "TTree.h"
 #include "TRint.h"
 #include "TH3D.h"
+#include "TF1.h"
 
 using namespace ant;
 using namespace std;
@@ -152,8 +153,11 @@ int main( int argc, char** argv )
 
     }
 
-    h_pullsE->FitSlicesZ();
-
+    // important to call FitSlicesZ with already created function,
+    // otherwise gROOT global is used which forces the creation of default TApplication
+    // leading to weird side effects with other globals such as gStyle when instantiating TRint below
+    auto tf1_gaus = new TF1("gaus","gaus");
+    h_pullsE->FitSlicesZ(tf1_gaus);
 
     if(!cmd_batchmode->isSet()) {
         if(!std_ext::system::isInteractive()) {
