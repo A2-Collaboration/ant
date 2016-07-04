@@ -8,17 +8,71 @@
 #include "base/CmdLine.h"
 #include "base/WrapTFile.h"
 #include "base/ProgressCounter.h"
+#include "base/std_ext/string.h"
 
 #include "TTree.h"
 #include "TRint.h"
 #include "TH3D.h"
 #include "TF1.h"
+#include "TCanvas.h"
 
 using namespace ant;
 using namespace std;
 using namespace ant::analysis;
+using namespace ant::std_ext;
 static volatile bool interrupt = false;
 
+BinSettings getBins(const TAxis* axis) {
+    return BinSettings(axis->GetNbins(), axis->GetXmin(), axis->GetXmax());
+}
+
+TH1D* projectZ(const TH3D* hist, const int x, const int y, HistogramFactory& hf) {
+
+    const string name = formatter() << hist->GetName() << "_z_" << x << "_" << y;
+
+    const auto bins = getBins(hist->GetZaxis());
+
+    auto h = hf.makeTH1D(name.c_str(), hist->GetZaxis()->GetTitle(), "", bins, name.c_str());
+
+    for(int z = 0; z < bins.Bins(); ++z) {
+        h->SetBinContent(z, hist->GetBinContent(x,y, z));
+        h->SetBinError(z, hist->GetBinError(x,y,z));
+    }
+
+    return h;
+}
+
+void FitSlicesZ(const TH3D* hist, HistogramFactory& hf_) {
+
+    HistogramFactory hf(formatter() << hist->GetName() << "_FitZ", hf_);
+
+    const int nx = hist->GetNbinsX();
+    const int ny = hist->GetNbinsY();
+
+    TCanvas* c = new TCanvas();
+    c->Divide(nx,ny);
+
+    int pad_number = 1;
+    for(int x=0; x<nx; ++x) {
+        for(int y=0; y<ny; ++y) {
+
+            c->cd(pad_number++);
+
+            TH1D* slice = projectZ(hist, x, y, hf);
+
+            //slice->Draw();
+
+            auto tf1_gaus = new TF1("gaus","gaus");
+            tf1_gaus->SetParameter(0, slice->GetMaximum());
+            tf1_gaus->SetParameter(1, slice->GetBinCenter(slice->GetMaximumBin()));
+            tf1_gaus->SetParameter(2, slice->GetRMS());
+
+            slice->Fit(tf1_gaus);
+
+        }
+    }
+
+}
 
 int main( int argc, char** argv )
 {
@@ -103,23 +157,23 @@ int main( int argc, char** argv )
     }
     HistogramFactory HistFac(hist_settings.name);
 
-    BinSettings bins_pulls(50,-3,3);
+    BinSettings bins_pulls(50,-5,5);
 
-    auto h_pullsE = HistFac.makeTH3D("Pulls Ek","cos #theta","Ek","Pulls",
+    auto h_pullsE = HistFac.makeTH3D("Pulls Ek","cos #theta","Ek","Pulls Ek",
                                      hist_settings.bins_cosTheta,
                                      hist_settings.bins_E,
                                      bins_pulls,
                                      "h_pullsE"
                                      );
 
-    auto h_pullsTheta = HistFac.makeTH3D("Pulls Ek","cos #theta","Ek","Pulls",
+    auto h_pullsTheta = HistFac.makeTH3D("Pulls Theta","cos #theta","Ek","Pulls #theta",
                                      hist_settings.bins_cosTheta,
                                      hist_settings.bins_E,
                                      bins_pulls,
                                      "h_pullsTheta"
                                      );
 
-    auto h_pullsPhi = HistFac.makeTH3D("Pulls Ek","cos #theta","Ek","Pulls",
+    auto h_pullsPhi = HistFac.makeTH3D("Pulls Phi","cos #theta","Ek","Pulls #phi",
                                      hist_settings.bins_cosTheta,
                                      hist_settings.bins_E,
                                      bins_pulls,
@@ -147,17 +201,26 @@ int main( int argc, char** argv )
 
         pulltree.Tree->GetEntry(entry);
 
-        h_pullsE->Fill(cos(pulltree.Theta), pulltree.E, pulltree.PullE, pulltree.TaggW);
-        h_pullsTheta->Fill(cos(pulltree.Theta), pulltree.E, pulltree.PullTheta, pulltree.TaggW);
-        h_pullsPhi->Fill(cos(pulltree.Theta), pulltree.E, pulltree.PullPhi, pulltree.TaggW);
+        if(pulltree.FitProb > .1 ) {
+
+            h_pullsE->Fill(cos(pulltree.Theta), pulltree.E, pulltree.PullE, pulltree.TaggW);
+            h_pullsTheta->Fill(cos(pulltree.Theta), pulltree.E, pulltree.PullTheta, pulltree.TaggW);
+            h_pullsPhi->Fill(cos(pulltree.Theta), pulltree.E, pulltree.PullPhi, pulltree.TaggW);
+
+        }
 
     }
 
     // important to call FitSlicesZ with already created function,
     // otherwise gROOT global is used which forces the creation of default TApplication
     // leading to weird side effects with other globals such as gStyle when instantiating TRint below
-    auto tf1_gaus = new TF1("gaus","gaus");
-    h_pullsE->FitSlicesZ(tf1_gaus);
+   // auto tf1_gaus = new TF1("gaus","gaus");
+
+    //h_pullsE->FitSlicesZ(tf1_gaus);
+//    h_pullsTheta->FitSlicesZ(tf1_gaus);
+//    h_pullsPhi->FitSlicesZ(tf1_gaus);
+
+
 
     if(!cmd_batchmode->isSet()) {
         if(!std_ext::system::isInteractive()) {
@@ -166,6 +229,8 @@ int main( int argc, char** argv )
         else {
             argc=1; // prevent TRint to parse any cmdline except prog name
             TRint app("Ant-makeSigmas",&argc,argv,nullptr,0,true);
+
+            FitSlicesZ(h_pullsTheta, HistFac);
 
             if(masterFile)
                 LOG(INFO) << "Stopped running, but close ROOT properly to write data to disk.";
