@@ -19,11 +19,15 @@ void add_Pi0_2g(ParticleTypeTree& t) {
     add_Type_2g(t, ParticleTypeDatabase::Pi0);
 }
 
-void add_Pi0_gEpEm(ParticleTypeTree& t) {
-    auto d = t->CreateDaughter(ParticleTypeDatabase::Pi0);
+void add_Type_Dalitz(ParticleTypeTree& t, const ParticleTypeDatabase::Type& type) {
+    auto d = t->CreateDaughter(type);
     d->CreateDaughter(ParticleTypeDatabase::Photon);
     d->CreateDaughter(ParticleTypeDatabase::ePlus);
     d->CreateDaughter(ParticleTypeDatabase::eMinus);
+}
+
+void add_Pi0_gEpEm(ParticleTypeTree& t) {
+    add_Type_Dalitz(t, ParticleTypeDatabase::Pi0);
 }
 
 ParticleTypeTree ParticleTypeTreeDatabase::Get(ParticleTypeTreeDatabase::Channel channel)
@@ -75,6 +79,9 @@ ParticleTypeTreeDatabase::database_t ParticleTypeTreeDatabase::CreateDatabase()
     database[Channel::Eta_2g] = GetBaseTree();
     add_Type_2g(database[Channel::Eta_2g],ParticleTypeDatabase::Eta);
 
+    database[Channel::Eta_eeg] = GetBaseTree();
+    add_Type_Dalitz(database[Channel::Eta_eeg], ParticleTypeDatabase::Eta);
+
     {
         database[Channel::Omega_Pi0PiPPiM_2g] = GetBaseTree();
         auto& base = database[Channel::Omega_Pi0PiPPiM_2g];
@@ -120,6 +127,21 @@ ParticleTypeTreeDatabase::database_t ParticleTypeTreeDatabase::CreateDatabase()
         return t;
     };
     database[Channel::EtaPrime_gOmega_ggPi0_4g] = make_EtaPrime_gOmega_ggPi0_4g();
+
+
+    database[Channel::EtaPrime_eeg] = GetBaseTree();
+    add_Type_Dalitz(database[Channel::EtaPrime_eeg], ParticleTypeDatabase::EtaPrime);
+
+    auto make_EtaPrime_gRho_gPiPi = [] () {
+        auto t = GetBaseTree();
+        auto etap = t->CreateDaughter(ParticleTypeDatabase::EtaPrime);
+        etap->CreateDaughter(ParticleTypeDatabase::Photon);
+        auto rho = etap->CreateDaughter(ParticleTypeDatabase::Rho);
+        rho->CreateDaughter(ParticleTypeDatabase::PiPlus);
+        rho->CreateDaughter(ParticleTypeDatabase::PiMinus);
+        return t;
+    };
+    database[Channel::EtaPrime_gRho_gPiPi] = make_EtaPrime_gRho_gPiPi();
 
     // do not sort them here, since references to ParticleTypeDatabase::Type's might not be initialized yet!
 

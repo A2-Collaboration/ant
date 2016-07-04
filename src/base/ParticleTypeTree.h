@@ -19,13 +19,16 @@ public:
         ThreePi0_4ggEpEm,
         Pi0Eta_4g,
         Eta_2g,
+        Eta_eeg,
         Omega_gEta_3g,
         Omega_gPi0_3g,
         Omega_Pi0PiPPiM_2g,
         EtaPrime_2g,
         EtaPrime_3Pi0_6g,
         EtaPrime_2Pi0Eta_6g,
-        EtaPrime_gOmega_ggPi0_4g
+        EtaPrime_gOmega_ggPi0_4g,
+        EtaPrime_eeg,
+        EtaPrime_gRho_gPiPi
     };
 
 
