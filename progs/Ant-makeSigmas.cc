@@ -164,8 +164,7 @@ int main( int argc, char** argv )
             LOG(INFO) << "No TTY attached. Not starting ROOT shell.";
         }
         else {
-
-            argc=0; // prevent TRint to parse any cmdline
+            argc=1; // prevent TRint to parse any cmdline except prog name
             TRint app("Ant-makeSigmas",&argc,argv,nullptr,0,true);
 
             if(masterFile)
