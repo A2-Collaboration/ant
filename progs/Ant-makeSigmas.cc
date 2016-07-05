@@ -24,6 +24,85 @@ using namespace ant::analysis;
 using namespace ant::std_ext;
 static volatile bool interrupt = false;
 
+
+bool IsBinValid(const TH2D* hist, const int x, const int y) {
+    return (x>0 && x <=hist->GetNbinsX()) && (y>0 && y <=hist->GetNbinsY());
+}
+
+const std::vector<std::pair<int,int>> neighbors = {{+1,0},{-1,0},{0,+1},{0,-1}};
+
+double getNeighborAverage(const TH2D* hist, const int x, const int y) {
+
+    double sum = {};
+    unsigned n = 0;
+
+    for(const auto& d : neighbors) {
+        const auto bx = x + d.first;
+        const auto by = y + d.second;
+
+        if(IsBinValid(hist,bx,by)) {
+            const auto v = hist->GetBinContent(bx,by);
+            if(std::isfinite(v)) {
+                sum += v;
+                ++n;
+            }
+        }
+    }
+
+    return n>0 ? sum / n : 0.0;
+}
+
+unsigned getNeighborCount(const TH2D* hist, const int x, const int y) {
+
+    unsigned n = 0;
+
+    for(const auto& d : neighbors) {
+        const auto bx = x + d.first;
+        const auto by = y + d.second;
+
+        const auto valid = IsBinValid(hist,bx,by);
+        if( valid && isfinite(hist->GetBinContent(bx,by))) {
+            ++n;
+        }
+    }
+
+    return n;
+}
+
+void fillNeighborAverages(TH2D* hist) {
+
+
+    unsigned neighbors=0;
+
+    do {
+        neighbors=0;
+        int p_x =0;
+        int p_y =0;
+
+        for(int x=1; x<=hist->GetNbinsX(); ++x) {
+            for(int y=1; y<=hist->GetNbinsY(); ++y) {
+
+                if(std::isnan(hist->GetBinContent(x,y))) {
+                    const auto n = getNeighborCount(hist, x,y);
+                    if(n>neighbors) {
+                        neighbors = n;
+                        p_x = x;
+                        p_y = y;
+                    }
+                }
+            }
+        }
+
+        // if updatable bin found
+        if(neighbors > 0) {
+            const auto a = getNeighborAverage(hist,p_x,p_y);
+            hist->SetBinContent(p_x,p_y, a);
+        }
+    } while(neighbors != 0);
+}
+
+
+
 BinSettings getBins(const TAxis* axis) {
     return BinSettings(axis->GetNbins(), axis->GetXmin(), axis->GetXmax());
 }
@@ -135,7 +214,7 @@ void FitSlicesZ(const TH3D* hist, HistogramFactory& hf_, const bool do_fit=false
 
             slice->Draw();
 
-            if(slice->Integral() > 500.0) {
+            if(slice->Integral() > 5.0) {
                 const auto rms = slice->GetRMS();
                 const auto mean = slice->GetMean();
 
@@ -184,7 +263,12 @@ void FitSlicesZ(const TH3D* hist, HistogramFactory& hf_, const bool do_fit=false
 
         }
     }
+
+    fillNeighborAverages(h_RMS);
+    new TCanvas();
+    h_RMS->Draw("text");
 }
+
 
 
 
