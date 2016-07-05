@@ -11,7 +11,8 @@
 #include "root-addons/cbtaps_display/TH2CB.h"
 #include "base/Logger.h"
 
-#include "TImage.h"
+
+
 
 
 using namespace std;
@@ -99,6 +100,7 @@ void CB_SourceCalib::TheGUI::InitGUI(gui::ManagerWindow_traits * window)
     h_peaks->SetXTitle("Channel Number");
     h_peaks->SetYTitle("AmBe Peak");
     AmBe_peaks= new TH1D("AMBe_peaks", "number of Peaks against the ADC channel", 160,0.,160.);
+    AmBe_peaks_cb= new TH2CB("h_peaks_cb", "Peakpositionen im CB");
 
 }
 
@@ -113,15 +115,17 @@ gui::CalibModule_traits::DoFitReturn_t CB_SourceCalib::TheGUI::DoFit(TH1 *hist, 
         return DoFitReturn_t::Skip;
 
     TH2* hist2 = dynamic_cast<TH2*>(hist);
-
     h_projection = hist2->ProjectionX("h_projection",channel+1,channel+1);
+    sprintf(Histname, "AmBe-Peak of channel %d", channel);
+    h_projection->SetTitle(Histname);
+
 
     func->SetDefaults(h_projection);
     auto fit_loop = [this] (size_t retries) {
         do {
             func->Fit(h_projection);
             VLOG(8) << "Chi2/dof = " << func->Chi2NDF();
-            if(func->Chi2NDF() < AutoStopOnChi2 && func->GetPeakPosition() < 100 && func->GetPeakPosition() >22) {
+            if(func->Chi2NDF() < AutoStopOnChi2 && func->GetPeakPosition() < 99 && func->GetPeakPosition() >22) {
                 return true;
             }
             retries--;
@@ -140,6 +144,7 @@ gui::CalibModule_traits::DoFitReturn_t CB_SourceCalib::TheGUI::DoFit(TH1 *hist, 
 void CB_SourceCalib::TheGUI::DisplayFit()
 {
     canvas->Show(h_projection, func.get());
+
 }
 
 void CB_SourceCalib::TheGUI::StoreFit(unsigned channel)
@@ -147,31 +152,32 @@ void CB_SourceCalib::TheGUI::StoreFit(unsigned channel)
     fitParameters[channel] = func->Save();
     const double AmBe_Peak= func->GetPeakPosition();
     const double Peak_Error= func->GetPeakError();
+    const double AmBe_PeakWidth= func->GetPeakWidth();
+    const double AmBe_PeakWidtherr= func->GetPeakWidtherr();
+    const double Chi2NDF= func->Chi2NDF();
     h_peaks->SetBinContent(channel+1, AmBe_Peak);
     AmBe_peaks->Fill(AmBe_Peak);
-    //LOG(INFO) << "Peak-postition:  " << channel  << "  " << AmBe_Peak ;
+    AmBe_peaks_cb->SetElements(*h_peaks);
 
     fstream file;
-    file.open("Peakpositionentest.txt", ios::app);
-    file << channel+1 << "\t" << AmBe_Peak << "\t"<< Peak_Error <<endl;
-    canvas->Print("Test.pdf(");
+    file.open("Peakpositionenliste.txt", ios::app);
+    file << channel << "\t" << AmBe_Peak << "\t"<< Peak_Error << "\t" << AmBe_PeakWidth << "\t" << AmBe_PeakWidtherr << "\t" << Chi2NDF << endl;
+    canvas->Print("Fits.pdf(");
 
-//    TImage *img = TImage::Create();
-//    img->FromPad(canvas);
-//    img->WriteImage("Test22.jpg");
 
 }
 
 bool CB_SourceCalib::TheGUI::FinishSlice()
 {
-    canvas->Print("Test.pdf)");
+    canvas->Print("Fits.pdf)");
     canvas->Clear();
     canvas->Divide(2,1);
     canvas->cd(1);
     h_peaks->SetStats(false);
     h_peaks->Draw();
     canvas->cd(2);
-    AmBe_peaks->Draw();
+    //AmBe_peaks->Draw();
+    AmBe_peaks_cb->Draw("colz");
 
 
     return true;
@@ -184,7 +190,7 @@ void CB_SourceCalib::TheGUI::StoreFinishSlice(const interval<TID> &range)
 
 std::string CB_SourceCalib::TheGUI::GetName() const
 {
-    return "bla";
+    return "CB-SourceCalib";
 }
 
 

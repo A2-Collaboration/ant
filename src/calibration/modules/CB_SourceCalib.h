@@ -40,11 +40,13 @@ public:
         TH1* h_projection = nullptr;
         TH1D* AmBe_peaks = nullptr;
         TH1D* h_peaks = nullptr;
+        TH2CB* AmBe_peaks_cb = nullptr;
 
 
         std::map< unsigned, std::vector<double> > fitParameters;
 
         double AutoStopOnChi2 = 6;
+        char Histname[100];
 
     public:
         TheGUI(const std::string& basename,
