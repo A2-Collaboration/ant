@@ -16,9 +16,9 @@ class CB_SourceCalib : public Physics {
 protected:
     TH2* HitsADC = nullptr;
     TH2* TimeHits = nullptr;
-    TH2* HitsADC_Cluster = nullptr;
+    TH2* HitsADC_Clusters1 = nullptr;
     TH2* VerworfeneHits = nullptr;
-    TH1* KristallHits = nullptr;
+    TH2* HitsADC_Cluster = nullptr;
     TH2CB* h_cbdisplay = nullptr;
     calibration::converter::GeSiCa_SADC adc_converter;
     calibration::converter::CATCH_TDC   tdc_converter;
