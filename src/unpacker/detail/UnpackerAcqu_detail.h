@@ -111,7 +111,6 @@ protected:
 
     Info info;
     TID id;
-    unsigned AcquID_last = 0;
     using scalers_t = std::map<uint32_t, std::vector<uint32_t> >;
 
     // we so some more effort for the hits,
@@ -137,11 +136,10 @@ protected:
     // Mk1/Mk2 specific methods
     virtual void FillInfo(reader_t& reader, buffer_t& buffer, Info& info) = 0;
     virtual void FillFirstDataBuffer(reader_t& reader, buffer_t& buffer) const = 0;
-    virtual void UnpackEvent(queue_t& queue, it_t& it, const it_t& it_endbuffer, bool& good) noexcept = 0;
+    virtual bool UnpackDataBuffer(queue_t& queue, it_t& it, const it_t& it_endbuffer) noexcept = 0;
 
     // things shared by Mk1/Mk2
     std::uint32_t GetDataBufferMarker() const;
-    bool UnpackDataBuffer(queue_t& queue, it_t& it, const it_t& it_endbuffer) noexcept;
     bool SearchFirstDataBuffer(reader_t& reader, buffer_t& buffer, size_t offset) const;
     void FillDetectorReadHits(std::vector<TDetectorReadHit>& hits) const noexcept;
     void FillSlowControls(const scalers_t& scalers, std::vector<TSlowControl>& slowcontrols) const noexcept;
