@@ -399,9 +399,9 @@ void PID_Energy_etaDalitz::ProcessEvent(const TEvent& event, manager_t&)
     const double eeIM = (TParticle(ParticleTypeDatabase::eMinus, l1) + TParticle(ParticleTypeDatabase::eMinus, l2)).M();
     h_IMtest->Fill(eta.M(), eeIM);
     // suppress pi0
-    if (eeIM > 130.)
-        return;
-    h.steps->Fill("above #pi^{0}", 1);
+//    if (eeIM < 130.)
+//        return;
+//    h.steps->Fill("above #pi^{0}", 1);
 
     // test effective cluster radius to distinguish between leptons and charged pions
     double effective_radius = calc_effective_radius(l1);
