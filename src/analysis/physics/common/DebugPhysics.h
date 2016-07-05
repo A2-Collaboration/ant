@@ -9,6 +9,7 @@ namespace physics {
 
 class DebugPhysics: public Physics {
 protected:
+    const bool noDump;
     const unsigned writeEvents;
     const bool keepReadHits;
     const bool requestSlowControl;
