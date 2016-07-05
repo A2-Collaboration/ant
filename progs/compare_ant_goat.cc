@@ -308,8 +308,8 @@ int main( int argc, char** argv )
             if(!c.Ant || !c.Goat)
                 continue;
             h_Status->Fill("CB Cands match",1.0);
-            h_CaloEnergy_CB->Fill(c.Ant->CaloEnergy, c.Goat->CaloEnergy);
-            h_VetoEnergy_CB->Fill(c.Ant->VetoEnergy, c.Goat->VetoEnergy);
+            h_CaloEnergy_CB->Fill(c.Goat->CaloEnergy, c.Ant->CaloEnergy);
+            h_VetoEnergy_CB->Fill(c.Goat->VetoEnergy, c.Ant->VetoEnergy);
 
         }
 
@@ -319,8 +319,8 @@ int main( int argc, char** argv )
             if(!c.Ant || !c.Goat)
                 continue;
             h_Status->Fill("TAPS Cands match",1.0);
-            h_CaloEnergy_TAPS->Fill(c.Ant->CaloEnergy, c.Goat->CaloEnergy);
-            h_VetoEnergy_TAPS->Fill(c.Ant->VetoEnergy, c.Goat->VetoEnergy);
+            h_CaloEnergy_TAPS->Fill(c.Goat->CaloEnergy, c.Ant->CaloEnergy);
+            h_VetoEnergy_TAPS->Fill(c.Goat->VetoEnergy, c.Ant->VetoEnergy);
         }
 
         nEvents++;
