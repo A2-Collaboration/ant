@@ -21,10 +21,14 @@ protected:
     TH1D* h_counts = nullptr;
     TH1D* h_pTheta = nullptr;
     TH1D* h_protonVeto = nullptr;
+    TH1D* h_etaIM_final = nullptr;
+    TH2D* h_IMtest = nullptr;
     TH2* h_eta = nullptr;
     TH2* h_proton = nullptr;
     static constexpr double ETA_IM = 547.853;
     static constexpr double ETA_SIGMA = 50.;
+    // which fit should be used?
+    static constexpr bool USE_TREEFIT = true;
 
     struct Tree_t : WrapTTree {
         Tree_t();
@@ -81,6 +85,7 @@ protected:
     Tree_t t;
     PromptRandom::Switch promptrandom;
     utils::KinFitter kinfit;
+    utils::TreeFitter treefitter_eta;
     using uncertainty_model_t = utils::UncertaintyModels::Optimized_Oli1;
 
     std::shared_ptr<ant::Detector_t> cb;
@@ -92,6 +97,9 @@ protected:
     void remove_chars(std::string&, std::initializer_list<char>);
 
     double calc_effective_radius(const TCandidatePtr);
+
+    ParticleTypeTree base_tree();
+    ParticleTypeTree eta_3g();
 
 public:
 

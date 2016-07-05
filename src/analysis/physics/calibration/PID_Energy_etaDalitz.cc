@@ -42,6 +42,23 @@ double PID_Energy_etaDalitz::calc_effective_radius(const TCandidatePtr cand)
     return sqrt(effR);
 }
 
+ParticleTypeTree PID_Energy_etaDalitz::base_tree()
+{
+    ParticleTypeTree t = Tree<typename ParticleTypeTree::element_type::type>::MakeNode(ParticleTypeDatabase::BeamProton);
+    t->CreateDaughter(ParticleTypeDatabase::Proton);
+    return t;
+}
+
+ParticleTypeTree PID_Energy_etaDalitz::eta_3g()
+{
+    auto t = base_tree();
+    auto eta = t->CreateDaughter(ParticleTypeDatabase::Eta);
+    eta->CreateDaughter(ParticleTypeDatabase::Photon);
+    eta->CreateDaughter(ParticleTypeDatabase::Photon);
+    eta->CreateDaughter(ParticleTypeDatabase::Photon);
+    return t;
+}
+
 APLCON::Fit_Settings_t PID_Energy_etaDalitz::MakeFitSettings(unsigned max_iterations)
 {
     auto settings = APLCON::Fit_Settings_t::Default;
@@ -103,9 +120,11 @@ void PID_Energy_etaDalitz::PerChannel_t::Fill(const TEventData& d)
 PID_Energy_etaDalitz::PID_Energy_etaDalitz(const string& name, OptionsPtr opts) :
     Physics(name, opts),
     kinfit("kinfit", 3,
-           make_shared<uncertainty_model_t>(), false,
-           PID_Energy_etaDalitz::MakeFitSettings(20)
-           )
+           make_shared<uncertainty_model_t>(), false, MakeFitSettings(20)
+           ),
+    treefitter_eta("treefitter_eta", eta_3g(),
+                   make_shared<uncertainty_model_t>(), false, {}, MakeFitSettings(20)
+                   )
 {
     promptrandom.AddPromptRange({-5, 5});
     promptrandom.AddRandomRange({-30, -10});
@@ -124,6 +143,8 @@ PID_Energy_etaDalitz::PID_Energy_etaDalitz(const string& name, OptionsPtr opts) 
     h_counts = HistFac.makeTH1D("Events per Channel", "channel", "#", BinSettings(20), "h_counts");
     h_pTheta = HistFac.makeTH1D("#vartheta proton candidate", "#vartheta_{p} [#circ]", "#", BinSettings(720, 0, 180), "h_pTheta");
     h_protonVeto = HistFac.makeTH1D("Veto energy identified proton", "Veto [MeV]", "#", energybins, "h_protonVeto");
+    h_etaIM_final = HistFac.makeTH1D("IM #eta final", "IM [MeV]", "#", BinSettings(1200), "h_etaIM_final");
+    h_IMtest = HistFac.makeTH2D("IM(e+e-) vs IM(e+e-g)", "IM(e+e-g) [MeV]", "IM(e+e-) [MeV]", BinSettings(1200), BinSettings(1200), "h_IMtest");
     h_eta = HistFac.makeTH2D("Kinematics #eta", "Energy [MeV]", "#vartheta [#circ]", BinSettings(1200), BinSettings(360, 0, 180), "h_eta");
     h_proton = HistFac.makeTH2D("Kinematics p", "Energy [MeV]", "#vartheta [#circ]", BinSettings(1200), BinSettings(160, 0, 80), "h_proton");
 }
@@ -136,9 +157,9 @@ void PID_Energy_etaDalitz::ProcessEvent(const TEvent& event, manager_t&)
     std::string decaystring = "data";
     std::string decay_name = "data";
     if (MC) {
-        production = utils::ParticleTools::GetProductionChannelString(event.MCTrue().ParticleTree);
+        production = std_ext::string_sanitize(utils::ParticleTools::GetProductionChannelString(event.MCTrue().ParticleTree).c_str());
         remove_chars(production, {'#', '{', '}', '^'});
-        decaystring = utils::ParticleTools::GetDecayString(event.MCTrue().ParticleTree);
+        decaystring = std_ext::string_sanitize(utils::ParticleTools::GetDecayString(event.MCTrue().ParticleTree).c_str());
         decay_name = decaystring;
         remove_chars(decay_name, {'#', '{', '}', '^'});
     }
@@ -217,7 +238,7 @@ void PID_Energy_etaDalitz::ProcessEvent(const TEvent& event, manager_t&)
     LorentzVec missing;
     std::vector<utils::Fitter::FitParticle> fitparticles;
     const interval<double> mm({ParticleTypeDatabase::Proton.Mass()-150., ParticleTypeDatabase::Proton.Mass()+150.});
-    double min_chi2 = std_ext::inf;
+    double best_prob = -std_ext::inf;
     size_t best_comb = cands.size();
     for (const TTaggerHit& taggerhit : data.TaggerHits) {  // loop over all tagger hits
         promptrandom.SetTaggerHit(taggerhit.Time - t.CBAvgTime);
@@ -274,27 +295,52 @@ void PID_Energy_etaDalitz::ProcessEvent(const TEvent& event, manager_t&)
             }
             h.steps->Fill("missing mass", 1);
 
-            kinfit.SetEgammaBeam(taggerhit.PhotonEnergy);
-            const auto& p = make_shared<TParticle>(ParticleTypeDatabase::Proton, comb.back());
-            kinfit.SetProton(p);
-            kinfit.SetPhotons(photons);
+            APLCON::Result_t r;
+            TParticleList fitted_photons;
 
-            auto result = kinfit.DoFit();
+            if (USE_TREEFIT) {
+                treefitter_eta.SetEgammaBeam(taggerhit.PhotonEnergy);
+                const auto& p = make_shared<TParticle>(ParticleTypeDatabase::Proton, comb.back());
+                treefitter_eta.SetProton(p);
+                treefitter_eta.SetPhotons(photons);
 
-            if (result.Status != APLCON::Result_Status_t::Success) {
-                shift_right(comb);
-                continue;
+                // works this way because only one combination needs to be fitted
+                while (treefitter_eta.NextFit(r))
+                    if(r.Status != APLCON::Result_Status_t::Success)
+                        continue;
+
+                if (r.Status != APLCON::Result_Status_t::Success) {
+                    shift_right(comb);
+                    continue;
+                }
+                h.steps->Fill("treefit", 1);
+
+                fitted_photons = treefitter_eta.GetFittedPhotons();
+            } else {
+                kinfit.SetEgammaBeam(taggerhit.PhotonEnergy);
+                const auto& p = make_shared<TParticle>(ParticleTypeDatabase::Proton, comb.back());
+                kinfit.SetProton(p);
+                kinfit.SetPhotons(photons);
+
+                r = kinfit.DoFit();
+
+                if (r.Status != APLCON::Result_Status_t::Success) {
+                    shift_right(comb);
+                    continue;
+                }
+                h.steps->Fill("kinfit", 1);
+
+                fitted_photons = kinfit.GetFittedPhotons();
             }
-            h.steps->Fill("kinfit", 1);
 
-            const double chi2 = result.ChiSquare;
-            const double prob = result.Probability;
-            const int iterations = result.NIterations;
+            const double chi2 = r.ChiSquare;
+            const double prob = r.Probability;
+            const int iterations = r.NIterations;
             h.hChi2->Fill(chi2);
             h.hProb->Fill(prob);
             h.hIter->Fill(iterations);
 
-            if (prob < .1) {
+            if (prob < .05) {
                 shift_right(comb);
                 continue;
             }
@@ -303,18 +349,17 @@ void PID_Energy_etaDalitz::ProcessEvent(const TEvent& event, manager_t&)
             h_eta->Fill(eta.E() - eta.M(), std_ext::radian_to_degree(eta.Theta()), t.TaggW);
             h_proton->Fill(proton.E - proton.M(), std_ext::radian_to_degree(proton.Theta()), t.TaggW);
 
-            auto fitted_photons = kinfit.GetFittedPhotons();
             eta.SetXYZT(0,0,0,0);
             for (const auto& g : fitted_photons)
                 eta += *g;
             t.eta_fit = eta;
             h.etaIM_fit->Fill(eta.M(), t.TaggW);
 
-            if (chi2 < min_chi2) {
-                min_chi2 = chi2;
+            if (prob > best_prob) {
+                best_prob = prob;
                 best_comb = i;
             }
-            t.chi2 = chi2/result.NDoF;
+            t.chi2 = chi2/r.NDoF;
             t.probability = prob;
             t.iterations = iterations;
 
@@ -322,7 +367,7 @@ void PID_Energy_etaDalitz::ProcessEvent(const TEvent& event, manager_t&)
         }
     }
 
-    if (best_comb >= cands.size() || !isfinite(min_chi2))
+    if (best_comb >= cands.size() || !isfinite(best_prob))
         return;
     h.steps->Fill("best comb", 1);
 
@@ -352,6 +397,7 @@ void PID_Energy_etaDalitz::ProcessEvent(const TEvent& event, manager_t&)
         return;
     h.steps->Fill("distinct PID", 1);
     const double eeIM = (TParticle(ParticleTypeDatabase::eMinus, l1) + TParticle(ParticleTypeDatabase::eMinus, l2)).M();
+    h_IMtest->Fill(eta.M(), eeIM);
     // suppress pi0
     if (eeIM > 130.)
         return;
@@ -370,6 +416,7 @@ void PID_Energy_etaDalitz::ProcessEvent(const TEvent& event, manager_t&)
     }
 
     h.etaIM_final->Fill(eta.M());
+    h_etaIM_final->Fill(eta.M());
     h.hCopl_final->Fill(std_ext::radian_to_degree(abs(eta.Phi() - proton.Phi())) - 180.);
     for (const TCandidatePtr& c : comb)
         if (c->VetoEnergy) {
