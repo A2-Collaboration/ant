@@ -60,7 +60,9 @@ void acqu::FileFormatMk1::FillFirstDataBuffer(reader_t& reader, buffer_t& buffer
 bool acqu::FileFormatMk1::UnpackDataBuffer(UnpackerAcquFileFormat::queue_t& queue, it_t& it,
                                            const it_t& it_endbuffer) noexcept
 {
-    const size_t buffersize_bytes = 4*distance(it, it_endbuffer);
+    // at least 4 words should be in buffer...
+    if(distance(it, it_endbuffer)<4)
+        return false;
 
     // check header word
     if(*it != GetDataBufferMarker()) {
@@ -72,22 +74,114 @@ bool acqu::FileFormatMk1::UnpackDataBuffer(UnpackerAcquFileFormat::queue_t& queu
     }
     it++;
 
-    // this makes life complicated...sigh
-    assert(acqu::EBufferEnd == acqu::EEndEvent);
-
     // scan for EndEvent markers in between
-    std::vector<std::size_t> endevent_markers;
-    for(auto it_ = it; it_ != it_endbuffer; ++it_) {
-        if(*it_ == acqu::EEndEvent)
-            endevent_markers.emplace_back(std::distance(it, it_));
+    std::vector<it_t> endevent_markers;
+    {
+        // this degenerate choice of markers makes decoding kinda complicated
+        // additionally, scaler reads can mimick this marker...sigh
+        assert(acqu::EBufferEnd == acqu::EEndEvent);
+
+        // so we search for places were we find a possible EEndEvent candidate
+        // which must be followed by the current event number
+        // the very first one is given by first word in the data buffer after the marker
+        auto event_id = *it;
+        for(auto it_ = it; it_ != std::prev(it_endbuffer); ++it_) {
+            auto it_next = std::next(it_);
+
+            if(*it_ == acqu::EEndEvent &&
+               *it_next == event_id+1) {
+                endevent_markers.emplace_back(it_);
+                ++event_id;
+            }
+        }
+
+        if(endevent_markers.empty()) {
+            LogMessage(TUnpackerMessage::Level_t::DataError,
+                       "No EEndEvent marker candidates found"
+                       );
+            return false;
+        }
+
+        // the last event marker is a bit harder to find
+        // we assume that there are no super-short events with event nr only for example
+        if(std::distance(endevent_markers.back(), it_endbuffer)<3) {
+            LogMessage(TUnpackerMessage::Level_t::DataError,
+                       std_ext::formatter() <<
+                       "Last but one event is too close to end of buffer"
+                       );
+            return false;
+        }
+
+
+        bool found_threetimes0xffffffff = false;
+        // either its end is marked as the first appearance of three times 0xffffffff
+        for(auto it_ = endevent_markers.back(); it_ != std::prev(it_endbuffer,2); ++it_) {
+            auto it_next = std::next(it_);
+            auto it_nextnext = std::next(it_next);
+            if(*it_ == acqu::EEndEvent &&
+               *it_next == acqu::EBufferEnd &&
+               *it_nextnext == acqu::EBufferEnd) {
+                endevent_markers.emplace_back(it_);
+                found_threetimes0xffffffff = true;
+                // important to stop after the first occurence since rest of buffer is filled
+                // with garbage from previous buffers (acqu does not clear buffers....sigh)
+                break;
+            }
+        }
+
+        // or the last event just fit into the buffer, then only one (or two?) 0xffffffff
+        // at the very end are there
+        if(!found_threetimes0xffffffff) {
+            auto it_prevprev = std::prev(it_endbuffer, 2);
+            auto it_prev = std::prev(it_endbuffer, 1);
+
+            // prefer the second last one as end of event marker
+            if(*it_prevprev == acqu::EEndEvent) {
+                endevent_markers.emplace_back(it_prevprev);
+            }
+            else if(*it_prev == acqu::EEndEvent) {
+                endevent_markers.emplace_back(it_prev);
+            }
+            else {
+                // unexpected end of event, stop unpacking...
+                LogMessage(TUnpackerMessage::Level_t::DataError,
+                           std_ext::formatter() <<
+                           "Last event did not have event buffer marker as last word but 0x" << hex << *it_prev
+                           );
+                return false;
+            }
+
+            // notify about this special case
+            LogMessage(TUnpackerMessage::Level_t::Info,
+                       std_ext::formatter()
+                       << "Buffer was exactly filled with " << endevent_markers.size()
+                       << " events, no buffer endmarker present"
+                       );
+        }
     }
 
-    cout << endl;
-    for(auto offset : endevent_markers) {
-        cout << setfill('0') << setw(5) << offset << " ";
+
+    for(auto it_end : endevent_markers) {
+        // if buffers are discarded in between, this can happen...
+        if(id.Lower != *it) {
+            VLOG(9) << "Ant TID out-of-sync with Acqu event id " << *it;
+        }
+
+        bool good = false;
+        UnpackEvent(queue, it, it_end, good);
+        if(!good)
+            return false;
+
+        it = std::next(it_end);
+        ++id;
     }
 
-    cout << endl;
+//    cout << endl;
+//    for(auto offset : endevent_markers) {
+//        cout << setfill('0') << setw(4) << std::distance(it, offset) << " ";
+//    }
+
+//    cout << endl;
 
 //    // now loop over buffer contents, aka single events
 //    unsigned nEventsInBuffer = 0;
@@ -140,42 +234,29 @@ bool acqu::FileFormatMk1::UnpackDataBuffer(UnpackerAcquFileFormat::queue_t& queu
 //        return false;
 //    }
 
-    queue.emplace_back(id);
+//    queue.emplace_back(id);
 
 
     return true;
 }
 
-void acqu::FileFormatMk1::UnpackEvent(queue_t& queue,
-                                      it_t& it, const it_t& it_endbuffer,
-                                      bool& good) noexcept
+void acqu::FileFormatMk1::UnpackEvent(queue_t& queue, it_t it, const it_t& it_end, bool& good) noexcept
 {
-    // Mk1 format does not tell us about the event length
-    // so we scan before we try to unpack anything
-    auto it_endevent = it;
-    while(it_endevent != it_endbuffer &&
-          *it_endevent != acqu::EEndEvent) {
-        it_endevent++;
-    }
-    // check proper EEndEvent
-    if(it == it_endbuffer) {
-        LogMessage(TUnpackerMessage::Level_t::DataError,
-                   std_ext::formatter() <<
-                   "While unpacking event, found premature end of buffer."
-                   );
-        return;
-    }
+
 
     /// \todo Scan mappings if there's an ADC channel defined which mimicks those blocks
     queue.emplace_back(id);
     TEventData& eventdata = queue.back().Reconstructed();
-//    eventdata.Trigger.DAQEventID = AcquID_last;
+
+    // expect the first word to be the event id
+    eventdata.Trigger.DAQEventID = *it;
+    ++it;
 
     hit_storage.clear();
     // there might be more than one scaler block in each event, so
     // so collect them first in this map
     scalers_t scalers;
-    while(it != it_endevent) {
+    while(it != it_end) {
         // note that the Handle* methods move the iterator
         // themselves and set good to true if nothing went wrong
 
@@ -186,11 +267,11 @@ void acqu::FileFormatMk1::UnpackEvent(queue_t& queue,
             // Scaler read in this event
             HandleScalerBuffer(
                         scalers,
-                        it, it_endevent, good);
+                        it, it_end, good);
             break;
         case acqu::EReadError:
             // read error block, some hardware-related information
-            HandleDAQError(eventdata.Trigger.DAQErrors, it, it_endevent, good);
+            HandleDAQError(eventdata.Trigger.DAQErrors, it, it_end, good);
             break;
         default:
             // unfortunately, normal hits don't have a marker
@@ -213,13 +294,10 @@ void acqu::FileFormatMk1::UnpackEvent(queue_t& queue,
             return;
     }
 
-
-
     // hit_storage is member variable for better memory allocation performance
     FillDetectorReadHits(eventdata.DetectorReadHits);
     FillSlowControls(scalers, eventdata.SlowControls);
 
-    it++; // go to start word of next event (if any)
 }
 
 void acqu::FileFormatMk1::HandleDAQError(vector<TDAQError>& errors,
@@ -260,6 +338,35 @@ void acqu::FileFormatMk1::HandleScalerBuffer(
 {
     // ignore Scaler buffer marker
     it++;
+
+    cout << endl;
+    cout << "Scaler block at TID=" << id << endl;
+
+    auto it_endscaler = it_end;
+//    if(distance(it_endscaler, it_end)<nScalers) {
+//        cout << "WARNING: Scaler block too short, max length=" << distance(it_endscaler, it_end) << endl << endl;
+//        it_endscaler = it_end;
+//    }
+//    else {
+//        std::advance(it_endscaler, nScalers);
+//    }
+
+
+
+    unsigned n = 0;
+    while(it != it_endscaler) {
+        cout << hex << setw(8) << setfill('0') << *it << " ";
+        ++it;
+        ++n;
+        if(n % 8 == 0)
+            cout << endl;
+    }
+
+    cout << endl << endl;
+
+
+    good = true;
+    return;
 
     if(distance(it, it_end)<nScalers) {
         LogMessage(TUnpackerMessage::Level_t::DataError,

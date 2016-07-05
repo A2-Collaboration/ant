@@ -22,7 +22,7 @@ protected:
     virtual void FillFirstDataBuffer(reader_t& reader, buffer_t& buffer) const override;
     virtual bool UnpackDataBuffer(queue_t& queue, it_t& it, const it_t& it_endbuffer) noexcept override;
 
-    void UnpackEvent(queue_t& queue, it_t& it, const it_t& it_endbuffer, bool& good) noexcept;
+    void UnpackEvent(queue_t& queue, it_t it, const it_t& it_end, bool& good) noexcept;
     void HandleDAQError(std::vector<TDAQError>& errors,
                         it_t& it, const it_t& it_end, bool& good) const noexcept;
     void HandleScalerBuffer(scalers_t& scalers,
