@@ -14,7 +14,6 @@ class FileFormatMk1 : public FileFormatBase {
 
 protected:
 
-    unsigned AcquID_last = 0;
     unsigned nScalers;
 
     virtual size_t SizeOfHeader() const override;

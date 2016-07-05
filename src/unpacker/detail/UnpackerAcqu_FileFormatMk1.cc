@@ -72,56 +72,76 @@ bool acqu::FileFormatMk1::UnpackDataBuffer(UnpackerAcquFileFormat::queue_t& queu
     }
     it++;
 
-    // now loop over buffer contents, aka single events
-    unsigned nEventsInBuffer = 0;
-    while(it != it_endbuffer && *it != acqu::EBufferEnd) {
+    // this makes life complicated...sigh
+    assert(acqu::EBufferEnd == acqu::EEndEvent);
 
-        // extract and check serial ID
-        const unsigned acquID = *it;
-        if(AcquID_last>acquID) {
-            VLOG(8) << "Overflow of Acqu EventId detected from "
-                    << AcquID_last << " to " << acquID;
-        }
-        AcquID_last = acquID;
-        it++;
-
-        bool good = false;
-        UnpackEvent(queue, it, it_endbuffer, good);
-        if(!good)
-            return false;
-        // append the messages to some successfully unpacked event
-        AppendMessagesToEvent(queue.back());
-
-        // increment official unique event ID
-        ++id;
-        nEventsInBuffer++;
+    // scan for EndEvent markers in between
+    std::vector<std::size_t> endevent_markers;
+    for(auto it_ = it; it_ != it_endbuffer; ++it_) {
+        if(*it_ == acqu::EEndEvent)
+            endevent_markers.emplace_back(std::distance(it, it_));
     }
 
-    // we reached the end of buffer before finding the acqu::EBufferEnd
-    if(it == it_endbuffer) {
-        // there's one exception when the sum of the events
-        // inside one buffer fit exactly into the buffer,
-        // then only the end marker for the event is present
-        // but there's no way to detect this properly, since
-        // acqu::EEndEvent == acqu::EBufferEnd (grrrrr)
-        if(*next(it,-1) == acqu::EEndEvent) {
-            LogMessage(TUnpackerMessage::Level_t::Info,
-                       std_ext::formatter()
-                       << "Buffer was exactly filled with " << nEventsInBuffer
-                       << " events, no buffer endmarker present"
-                       );
-            return true;
-        }
-
-        LogMessage(TUnpackerMessage::Level_t::DataError,
-                   std_ext::formatter()
-                   << "Buffer did not have proper end buffer marker:"
-                   << "  1. lastword=0x" << hex << setw(8) << setfill('0') << *next(it,-1)
-                   << ", 2. lastword=0x" << hex << setw(8) << setfill('0') << *next(it,-2)
-                   << ", buffersize_bytes=0x" << buffersize_bytes
-                   );
-        return false;
+    cout << endl;
+    for(auto offset : endevent_markers) {
+        cout << setfill('0') << setw(5) << offset << " ";
     }
+
+    cout << endl;
+
+//    // now loop over buffer contents, aka single events
+//    unsigned nEventsInBuffer = 0;
+//    while(it != it_endbuffer && *it != acqu::EBufferEnd) {
+
+//        // extract and check serial ID
+//        const unsigned acquID = *it;
+//        if(AcquID_last>acquID) {
+//            VLOG(8) << "Overflow of Acqu EventId detected from "
+//                    << AcquID_last << " to " << acquID;
+//        }
+//        AcquID_last = acquID;
+//        it++;
+
+//        bool good = false;
+//        UnpackEvent(queue, it, it_endbuffer, good);
+//        if(!good)
+//            return false;
+//        // append the messages to some successfully unpacked event
+//        AppendMessagesToEvent(queue.back());
+
+//        // increment official unique event ID
+//        ++id;
+//        nEventsInBuffer++;
+//    }
+
+//    // we reached the end of buffer before finding the acqu::EBufferEnd
+//    if(it == it_endbuffer) {
+//        // there's one exception when the sum of the events
+//        // inside one buffer fit exactly into the buffer,
+//        // then only the end marker for the event is present
+//        // but there's no way to detect this properly, since
+//        // acqu::EEndEvent == acqu::EBufferEnd (grrrrr)
+//        if(*next(it,-1) == acqu::EEndEvent) {
+//            LogMessage(TUnpackerMessage::Level_t::Info,
+//                       std_ext::formatter()
+//                       << "Buffer was exactly filled with " << nEventsInBuffer
+//                       << " events, no buffer endmarker present"
+//                       );
+//            return true;
+//        }
+
+//        LogMessage(TUnpackerMessage::Level_t::DataError,
+//                   std_ext::formatter()
+//                   << "Buffer did not have proper end buffer marker:"
+//                   << "  1. lastword=0x" << hex << setw(8) << setfill('0') << *next(it,-1)
+//                   << ", 2. lastword=0x" << hex << setw(8) << setfill('0') << *next(it,-2)
+//                   << ", buffersize_bytes=0x" << buffersize_bytes
+//                   );
+//        return false;
+//    }
+
+    queue.emplace_back(id);
+
 
     return true;
 }
@@ -149,7 +169,7 @@ void acqu::FileFormatMk1::UnpackEvent(queue_t& queue,
     /// \todo Scan mappings if there's an ADC channel defined which mimicks those blocks
     queue.emplace_back(id);
     TEventData& eventdata = queue.back().Reconstructed();
-    eventdata.Trigger.DAQEventID = AcquID_last;
+//    eventdata.Trigger.DAQEventID = AcquID_last;
 
     hit_storage.clear();
     // there might be more than one scaler block in each event, so
