@@ -128,6 +128,15 @@ public:
         return t;
     }
 
+    template <typename T>
+    T clone(const T obj, const std::string& newName) {
+        DirStackPush dirstack(*this);
+
+        auto a = dynamic_cast<T>(obj->Clone(newName.c_str()));
+
+        return a;
+    }
+
 };
 
 }
