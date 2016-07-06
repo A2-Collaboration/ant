@@ -130,17 +130,19 @@ void acqu::FileFormatMk2::UnpackEvent(
 {
     // extract and check eventLength
     const unsigned eventLength = *it/sizeof(decltype(*it));
-
-    const auto it_endevent = next(it, eventLength);
-    if(it_endevent == it_endbuffer) {
-        LogMessage(TUnpackerMessage::Level_t::DataError,
-                   std_ext::formatter() <<
-                   "Event with size 0x" << eventLength
-                   << " too big to fit in buffer of remaining size "
-                   << distance(it, it_endbuffer)
-                   );
-        return;
+    {
+        const auto nRemainingWords = std::distance(it, it_endbuffer);
+        if(nRemainingWords < eventLength) {
+            LogMessage(TUnpackerMessage::Level_t::DataError,
+                       std_ext::formatter() <<
+                       "Event with size 0x" << eventLength
+                       << " too big to fit in buffer of remaining size "
+                       << nRemainingWords
+                       );
+            return;
+        }
     }
+    const auto it_endevent = next(it, eventLength);
     if(*it_endevent != acqu::EEndEvent) {
         LogMessage(TUnpackerMessage::Level_t::DataError,
                    std_ext::formatter() <<
@@ -154,7 +156,6 @@ void acqu::FileFormatMk2::UnpackEvent(
     // now work on one event inside buffer
 
     /// \todo Scan mappings if there's an ADC channel defined which mimicks those blocks
-    eventdata.Trigger.DAQEventID = AcquID_last;
 
     hit_storage.clear();
     // there might be more than one scaler block in each event, so

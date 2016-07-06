@@ -429,20 +429,26 @@ bool acqu::FileFormatBase::UnpackDataBuffer(UnpackerAcquFileFormat::queue_t& que
         }
 
         AcquID_last = acquID;
-        it++;
+        ++it;
 
         queue.emplace_back(id);
+        TEventData& eventdata = queue.back().Reconstructed();
 
-        bool good = false;
-        UnpackEvent(queue.back().Reconstructed(), it, it_endbuffer, good);
-        if(!good)
-            return false;
+        // expect the first word to be the event id
+        eventdata.Trigger.DAQEventID = AcquID_last;
+
+        {
+            bool good = false;
+            UnpackEvent(eventdata, it, it_endbuffer, good);
+            if(!good)
+                return false;
+        }
         // append the messages to some successfully unpacked event
         AppendMessagesToEvent(queue.back());
 
         // increment official unique event ID
         ++id;
-        nEventsInBuffer++;
+        ++nEventsInBuffer;
     }
 
     // we reached the end of buffer before finding the acqu::EBufferEnd

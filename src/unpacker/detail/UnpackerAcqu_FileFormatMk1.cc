@@ -147,10 +147,6 @@ void acqu::FileFormatMk1::UnpackEvent(TEventData& eventdata, it_t& it, const it_
 {
     /// \todo Scan mappings if there's an ADC channel defined which mimicks those markers
 
-    // expect the first word to be the event id
-    eventdata.Trigger.DAQEventID = *it;
-    ++it;
-
     hit_storage.clear();
     // there might be more than one scaler block in each event, so
     // so collect them first in this map
