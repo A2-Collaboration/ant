@@ -17,21 +17,21 @@ public:
 
 protected:
 
-    std::list<unsigned> ScalerBlockSizes;
+    using ScalerBlockSizes_t = std::list<unsigned>;
+    ScalerBlockSizes_t ScalerBlockSizes;
 
     virtual size_t SizeOfHeader() const override;
     virtual bool InspectHeader(const std::vector<std::uint32_t>& buffer) const override;
     virtual void FillInfo(reader_t& reader, buffer_t& buffer, Info& info) override;
     virtual void FillFirstDataBuffer(reader_t& reader, buffer_t& buffer) const override;
-    virtual bool UnpackDataBuffer(queue_t& queue, it_t& it, const it_t& it_endbuffer) noexcept override;
+    virtual void UnpackEvent(TEventData& eventdata, it_t& it, const it_t& it_endbuffer, bool& good) noexcept override;
 
     void FindScalerBlocks(const std::vector<std::string>& scaler_modnames);
 
-    void UnpackEvent(queue_t& queue, it_t it, const it_t& it_end, bool& good) noexcept;
     void HandleDAQError(std::vector<TDAQError>& errors,
                         it_t& it, const it_t& it_end, bool& good) const noexcept;
-    void HandleScalerBuffer(scalers_t& scalers,
-                            it_t& it, const it_t& it_end, bool& good) const noexcept;
+    void HandleScalerBuffer(ScalerBlockSizes_t::const_iterator& it_scalerblock,
+                            scalers_t& scalers, it_t& it, const it_t& it_end, bool& good) const noexcept;
 };
 
 }}} // namespace ant::unpacker::acqu

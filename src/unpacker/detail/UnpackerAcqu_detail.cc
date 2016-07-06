@@ -399,7 +399,80 @@ bool acqu::FileFormatBase::SearchFirstDataBuffer(reader_t& reader, buffer_t& buf
     return true;
 }
 
+bool acqu::FileFormatBase::UnpackDataBuffer(UnpackerAcquFileFormat::queue_t& queue, it_t& it,
+                                           const it_t& it_endbuffer) noexcept
+{
+    const size_t buffersize_bytes = 4*distance(it, it_endbuffer);
 
+    // check header word
+    if(*it != GetDataBufferMarker()) {
+        LogMessage(TUnpackerMessage::Level_t::DataError,
+                   std_ext::formatter() <<
+                   "Buffer starts with unexpected header word 0x" << hex << *it << dec
+                   );
+        return false;
+    }
+    it++;
+
+    // now loop over buffer contents, aka single events
+    unsigned nEventsInBuffer = 0;
+    while(it != it_endbuffer && *it != acqu::EBufferEnd) {
+
+        // extract and check serial ID
+        const unsigned acquID = *it;
+        if(AcquID_last>acquID) {
+            VLOG(8) << "Overflow of Acqu EventId detected from "
+                    << AcquID_last << " to " << acquID;
+        }
+        if(id.Lower>0 && acquID != AcquID_last+1) {
+            LOG(WARNING) << "AcquID=" << acquID << " not consecutive from last AcquID=" << AcquID_last;
+        }
+
+        AcquID_last = acquID;
+        it++;
+
+        queue.emplace_back(id);
+
+        bool good = false;
+        UnpackEvent(queue.back().Reconstructed(), it, it_endbuffer, good);
+        if(!good)
+            return false;
+        // append the messages to some successfully unpacked event
+        AppendMessagesToEvent(queue.back());
+
+        // increment official unique event ID
+        ++id;
+        nEventsInBuffer++;
+    }
+
+    // we reached the end of buffer before finding the acqu::EBufferEnd
+    if(it == it_endbuffer) {
+        // there's one exception when the sum of the events
+        // inside one buffer fit exactly into the buffer,
+        // then only the end marker for the event is present
+        // but there's no way to detect this properly, since
+        // acqu::EEndEvent == acqu::EBufferEnd (grrrrr)
+        if(*next(it,-1) == acqu::EEndEvent) {
+            LogMessage(TUnpackerMessage::Level_t::Info,
+                       std_ext::formatter()
+                       << "Buffer was exactly filled with " << nEventsInBuffer
+                       << " events, no buffer endmarker present"
+                       );
+            return true;
+        }
+
+        LogMessage(TUnpackerMessage::Level_t::DataError,
+                   std_ext::formatter()
+                   << "Buffer did not have proper end buffer marker:"
+                   << "  1. lastword=0x" << hex << setw(8) << setfill('0') << *next(it,-1)
+                   << ", 2. lastword=0x" << hex << setw(8) << setfill('0') << *next(it,-2)
+                   << ", buffersize_bytes=0x" << buffersize_bytes
+                   );
+        return false;
+    }
+
+    return true;
+}
 
 void acqu::FileFormatBase::FillDetectorReadHits(const hit_storage_t& hit_storage,
                                                 const hit_mappings_ptr_t& hit_mappings_ptr,
