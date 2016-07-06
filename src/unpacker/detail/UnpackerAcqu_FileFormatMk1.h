@@ -31,7 +31,8 @@ protected:
     void HandleDAQError(std::vector<TDAQError>& errors,
                         it_t& it, const it_t& it_end, bool& good) const noexcept;
     void HandleScalerBuffer(ScalerBlockSizes_t::const_iterator& it_scalerblock,
-                            scalers_t& scalers, it_t& it, const it_t& it_end, bool& good) const noexcept;
+                            scalers_t& scalers, it_t& it, const it_t& it_end, bool& good,
+                            std::vector<TDAQError>& errors) const noexcept;
 };
 
 }}} // namespace ant::unpacker::acqu

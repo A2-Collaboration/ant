@@ -76,7 +76,6 @@ void acqu::FileFormatMk1::FillInfo(reader_t& reader, buffer_t& buffer, Info& inf
             throw Exception("Invalid fModIndex encountered");
         }
         const acqu::ModuleInfo_t* m = ModuleInfo_offset + scalerinfo->fModIndex;
-
         scaler_modnames.emplace_back(m->fName);
     }
 
@@ -115,7 +114,9 @@ void acqu::FileFormatMk1::FindScalerBlocks(const std::vector<string>& scaler_mod
     }
 
     if(block_offsets.empty()) {
-        throw Exception("No scaler blocks beginning with LRS2551 found");
+        // default is assuming just one single block
+        ScalerBlockSizes.push_back(scaler_modnames.size());
+        return;
     }
 
     if(block_offsets.front() != 0) {
@@ -161,7 +162,8 @@ void acqu::FileFormatMk1::UnpackEvent(TEventData& eventdata, it_t& it, const it_
         switch(*it) {
         case acqu::EScalerBuffer:
             // Scaler read in this event
-            HandleScalerBuffer(it_scalerblock, scalers, it, it_endbuffer, good);
+            HandleScalerBuffer(it_scalerblock, scalers, it, it_endbuffer, good,
+                               eventdata.Trigger.DAQErrors);
             break;
         case acqu::EReadError:
             // read error block, some hardware-related information
@@ -238,8 +240,8 @@ void acqu::FileFormatMk1::HandleScalerBuffer(
         ScalerBlockSizes_t::const_iterator& it_scalerblock,
         scalers_t& scalers,
         it_t& it, const it_t& it_end,
-        bool& good
-        ) const noexcept
+        bool& good,
+        std::vector<TDAQError>& errors) const noexcept
 {
 
     // skip Scaler buffer marker
@@ -262,6 +264,14 @@ void acqu::FileFormatMk1::HandleScalerBuffer(
     auto scalerIndex = std::accumulate(ScalerBlockSizes.cbegin(), it_scalerblock, 0);
 
     while(it != it_endscaler) {
+        // within a scaler block, there might be error blocks
+        if(*it == acqu::EReadError) {
+            HandleDAQError(errors, it, it_end, good);
+            if(!good)
+                return;
+            good = false;
+        }
+
         scalers[scalerIndex].push_back(*it);
         ++scalerIndex;
         ++it;
