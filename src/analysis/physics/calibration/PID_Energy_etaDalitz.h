@@ -71,6 +71,8 @@ protected:
         TH1D* hIter = nullptr;
         TH1D* effect_rad = nullptr;
         TH2D* effect_rad_E = nullptr;
+        TH1D* cluster_size = nullptr;
+        TH2D* cluster_size_E = nullptr;
 
         TH2* proton_E_theta = nullptr;
 

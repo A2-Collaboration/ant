@@ -93,6 +93,8 @@ PID_Energy_etaDalitz::PerChannel_t::PerChannel_t(const std::string& Name, const 
     hIter = hf.makeTH1D(title + " # Iterations", "#iterations", "#", BinSettings(20), name + "_hIter");
     effect_rad = hf.makeTH1D(title + " Effective Radius", "R", "#", BinSettings(500, 0, 50), name + "effect_rad");
     effect_rad_E = hf.makeTH2D(title + " Effective Radius vs. Cluster Energy", "E [MeV]", "R", energy, BinSettings(500, 0, 50), name + "effect_rad_E");
+    cluster_size = hf.makeTH1D(title + " Cluster Size", "N", "#", BinSettings(50), name + "cluster_size");
+    cluster_size_E = hf.makeTH2D(title + " Cluster Size vs. Cluster Energy", "E [MeV]", "N", energy, BinSettings(50), name + "cluster_size_E");
 
     proton_E_theta = hf.makeTH2D(title + " proton", "E [MeV]", "#vartheta [#circ]", energy, BinSettings(360, 0, 180), name + "_e_theta");
 }
@@ -414,8 +416,14 @@ void PID_Energy_etaDalitz::ProcessEvent(const TEvent& event, manager_t&)
     effective_radius = calc_effective_radius(l2);
     if (isfinite(effective_radius)) {
         h.effect_rad->Fill(effective_radius);
-        h.effect_rad_E->Fill(l1->FindCaloCluster()->Energy, effective_radius);
+        h.effect_rad_E->Fill(l2->FindCaloCluster()->Energy, effective_radius);
     }
+
+    // test cluster size compared to energy
+    h.cluster_size->Fill(l1->ClusterSize);
+    h.cluster_size->Fill(l2->ClusterSize);
+    h.cluster_size_E->Fill(l1->FindCaloCluster()->Energy, l1->ClusterSize);
+    h.cluster_size_E->Fill(l2->FindCaloCluster()->Energy, l2->ClusterSize);
 
     h.etaIM_final->Fill(eta.M());
     h_etaIM_final->Fill(eta.M());
