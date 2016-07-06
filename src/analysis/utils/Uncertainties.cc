@@ -806,7 +806,7 @@ std::vector<double> getBinPositions(const TAxis* axis) {
     vector<double> bins(size_t(axis->GetNbins()));
 
     for(int i=1; i<=axis->GetNbins(); ++i) {
-        bins.at(size_t(i)) = axis->GetBinCenter(i);
+        bins.at(size_t(i-1)) = axis->GetBinCenter(i);
     }
 
     return bins;
