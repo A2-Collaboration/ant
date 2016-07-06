@@ -86,14 +86,14 @@ protected:
     // contains what we now about the file
     struct Info {
         struct HardwareModule {
+            /// \todo think about module types, such as scaler normal tdc/qdc
             std::string Identifier; // some more or less unique identifier of the module
             unsigned Index; // non-unique! Within VME it is however
             unsigned Bits;
             unsigned FirstRawChannel;
             unsigned NRawChannels;
         };
-        std::vector<HardwareModule> ADCModules; // appear only in normal event
-        std::vector<HardwareModule> ScalerModules; // appear only in scaler blocks
+        std::vector<HardwareModule> Modules; // appear only in normal event
 
         std::tm Time;
         std::string Description;

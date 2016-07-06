@@ -98,8 +98,7 @@ void acqu::FileFormatBase::Setup(reader_t &&reader_, buffer_t &&buffer_) {
                << "OutFile='" << info.OutFile << "' "
                << "RunNumber=" << info.RunNumber << " "
                << "RecordLength=" << info.RecordLength << " "
-               << "NADCModules=" << info.ADCModules.size() << " "
-               << "NScalerModules=" << info.ScalerModules.size()
+               << "nModules=" << info.Modules.size() << " "
                );
 
     // guessing the timestamp from the Acqu header

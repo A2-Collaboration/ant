@@ -66,10 +66,8 @@ void acqu::FileFormatMk2::FillInfo(reader_t &reader, buffer_t &buffer, Info &inf
     // add modules to lists
     /// \todo Check for overlapping of raw channels?
 
-    unsigned totalADCs = 0;
-    unsigned totalScalers = 0;
     for(unsigned i=0;i<nModules;i++) {
-        const auto buffer_ptr = &buffer[infoSize+i*moduleSize];
+        const auto buffer_ptr = addressof(buffer[infoSize+i*moduleSize]);
         const acqu::ModuleInfoMk2_t* m =
                 reinterpret_cast<const acqu::ModuleInfoMk2_t*>(buffer_ptr);
         auto it = ModuleIDToString.find(m->fModID);
@@ -89,20 +87,16 @@ void acqu::FileFormatMk2::FillInfo(reader_t &reader, buffer_t &buffer, Info &inf
 
         // ADC and Scaler will be added twice!
         if(m->fModType & acqu::EDAQ_ADC) {
-            totalADCs += m->fNChannel;
             module.NRawChannels = m->fNChannel;
-            info.ADCModules.emplace_back(module);
+            info.Modules.emplace_back(module);
         }
         if(m->fModType & acqu::EDAQ_Scaler) {
-            totalScalers += m->fNScChannel;
             module.NRawChannels = m->fNScChannel;
-            info.ScalerModules.emplace_back(module);
+            info.Modules.emplace_back(module);
         }
     }
-    VLOG(9) << "Header says: Have " << info.ADCModules.size() << " ADC modules with "
-            << totalADCs << " channels";
-    VLOG(9) << "Header says: Have " << info.ScalerModules.size() << " Scaler modules with "
-            << totalScalers << " channels";
+
+    VLOG(9) << "Header says: Have " << info.Modules.size() << " modules";
 
     LogMessage(TUnpackerMessage::Level_t::Info,
                "Acqu Mk2 header successfully unpacked"
