@@ -22,7 +22,7 @@ protected:
     TH1D* h_pTheta = nullptr;
     TH1D* h_protonVeto = nullptr;
     TH1D* h_etaIM_final = nullptr;
-    TH2D* h_IMtest = nullptr;
+    TH2D* h_IM2d = nullptr;
     TH2* h_eta = nullptr;
     TH2* h_proton = nullptr;
     static constexpr double ETA_IM = 547.853;
@@ -62,6 +62,7 @@ protected:
         TH1D* etaIM_fit = nullptr;
         TH1D* etaIM_cand = nullptr;
         TH1D* etaIM_final = nullptr;
+        TH2D* IM2d = nullptr;
         TH1D* MM = nullptr;
         TH1D* hCopl = nullptr;
         TH1D* hCopl_final = nullptr;

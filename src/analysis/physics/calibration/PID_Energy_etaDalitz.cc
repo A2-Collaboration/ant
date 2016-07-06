@@ -84,6 +84,7 @@ PID_Energy_etaDalitz::PerChannel_t::PerChannel_t(const std::string& Name, const 
     etaIM_fit = hf.makeTH1D(title + " IM #eta fitted", "IM [MeV]", "#", energy, name + "_etaIM_fit");
     etaIM_cand = hf.makeTH1D(title + " IM #eta candidates", "IM [MeV]", "#", energy, name + "_etaIM_cand");
     etaIM_final = hf.makeTH1D(title + " IM #eta final", "IM [MeV]", "#", energy, name + "_etaIM_final");
+    IM2d = hf.makeTH2D(title + " IM(e+e-) vs IM(e+e-g)", "IM(e+e-g) [MeV]", "IM(e+e-) [MeV]", BinSettings(1200), BinSettings(1200), name + "_IM2d");
     MM = hf.makeTH1D(title + " Missing Mass proton", "MM [MeV]", "#", BinSettings(1600), name + "_MM");
     hCopl = hf.makeTH1D(title + " Coplanarity #eta - proton all comb", "coplanarity [#circ]", "#", BinSettings(720, -180, 180), name + "_hCopl");
     hCopl_final = hf.makeTH1D(title + " Coplanarity #eta - proton final", "coplanarity [#circ]", "#", BinSettings(720, -180, 180), name + "_hCopl_final");
@@ -144,7 +145,7 @@ PID_Energy_etaDalitz::PID_Energy_etaDalitz(const string& name, OptionsPtr opts) 
     h_pTheta = HistFac.makeTH1D("#vartheta proton candidate", "#vartheta_{p} [#circ]", "#", BinSettings(720, 0, 180), "h_pTheta");
     h_protonVeto = HistFac.makeTH1D("Veto energy identified proton", "Veto [MeV]", "#", energybins, "h_protonVeto");
     h_etaIM_final = HistFac.makeTH1D("IM #eta final", "IM [MeV]", "#", BinSettings(1200), "h_etaIM_final");
-    h_IMtest = HistFac.makeTH2D("IM(e+e-) vs IM(e+e-g)", "IM(e+e-g) [MeV]", "IM(e+e-) [MeV]", BinSettings(1200), BinSettings(1200), "h_IMtest");
+    h_IM2d = HistFac.makeTH2D("IM(e+e-) vs IM(e+e-g)", "IM(e+e-g) [MeV]", "IM(e+e-) [MeV]", BinSettings(1200), BinSettings(1200), "h_IM2d");
     h_eta = HistFac.makeTH2D("Kinematics #eta", "Energy [MeV]", "#vartheta [#circ]", BinSettings(1200), BinSettings(360, 0, 180), "h_eta");
     h_proton = HistFac.makeTH2D("Kinematics p", "Energy [MeV]", "#vartheta [#circ]", BinSettings(1200), BinSettings(160, 0, 80), "h_proton");
 }
@@ -397,7 +398,8 @@ void PID_Energy_etaDalitz::ProcessEvent(const TEvent& event, manager_t&)
         return;
     h.steps->Fill("distinct PID", 1);
     const double eeIM = (TParticle(ParticleTypeDatabase::eMinus, l1) + TParticle(ParticleTypeDatabase::eMinus, l2)).M();
-    h_IMtest->Fill(eta.M(), eeIM);
+    h_IM2d->Fill(eta.M(), eeIM);
+    h.IM2d->Fill(eta.M(), eeIM);
     // suppress pi0
 //    if (eeIM < 130.)
 //        return;
