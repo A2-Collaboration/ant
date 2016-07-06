@@ -2,6 +2,7 @@
 
 #include "utils/particle_tools.h"
 #include "utils/matcher.h"
+#include "utils/Uncertainties.h"
 
 #include "expconfig/ExpConfig.h"
 
@@ -24,8 +25,13 @@ JustPi0::JustPi0(const string& name, OptionsPtr opts) :
     auto pi0_range = opts->Get<interval<unsigned>>("nPi0",{1,2});
     if(!pi0_range.IsSane())
         throw runtime_error("Given Pi0 range not sane");
+
+    auto default_model = make_shared<utils::UncertaintyModels::Optimized_Oli1>();
+
+    utils::UncertaintyModelPtr model = utils::UncertaintyModels::Interpolated::makeAndLoad(default_model);
+
     for(unsigned mult=pi0_range.Start();mult<=pi0_range.Stop();mult++) {
-        multiPi0.emplace_back(std_ext::make_unique<MultiPi0>(HistFac, mult, opts->Get<bool>("SkipFitAndTree", false)));
+        multiPi0.emplace_back(std_ext::make_unique<MultiPi0>(HistFac, mult, model, opts->Get<bool>("SkipFitAndTree", false)));
     }
 }
 
@@ -45,13 +51,13 @@ void JustPi0::ShowResult()
 
 
 
-JustPi0::MultiPi0::MultiPi0(HistogramFactory& histFac, unsigned nPi0, bool nofitandnotree) :
+JustPi0::MultiPi0::MultiPi0(HistogramFactory& histFac, unsigned nPi0, utils::UncertaintyModelPtr FitterModel, bool nofitandnotree) :
     multiplicity(nPi0),
     HistFac(std_ext::formatter() << "m" << multiplicity << "Pi0", histFac, std_ext::formatter() << "m" << multiplicity << "Pi0"),
     nPhotons_expected(multiplicity*2),
     skipfit(nofitandnotree),
     directPi0(getParticleTree(multiplicity)),
-    model(make_shared<utils::UncertaintyModels::Optimized_Oli1>()),
+    model(FitterModel),
     fitter(std_ext::formatter() << multiplicity << "Pi0", 2*multiplicity, model, true),
     h_missingmass(promptrandom),
     h_fitprobability(promptrandom),

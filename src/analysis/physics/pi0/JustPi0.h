@@ -19,7 +19,7 @@ class JustPi0 : public Physics {
 protected:
 
     struct MultiPi0 {
-        MultiPi0(HistogramFactory& histFac, unsigned nPi0, bool nofitandnotree = false);
+        MultiPi0(HistogramFactory& histFac, unsigned nPi0, utils::UncertaintyModelPtr FitterModel, bool nofitandnotree = false);
 
         void ProcessData(const TEventData& data, const TParticleTree_t& ptree);
         void ShowResult();
