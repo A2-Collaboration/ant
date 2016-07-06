@@ -511,7 +511,7 @@ void acqu::FileFormatBase::FillDetectorReadHits(const hit_storage_t& hit_storage
 
     if(hits.empty()) {
         /// \todo Improve message, maybe add TUnpackerMessage then?
-        LOG(DEBUG) << "Found event with no hits at all";
+        LOG_N_TIMES(1000, WARNING) << "Found event with no hits at all";
     }
 
 }
