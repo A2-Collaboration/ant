@@ -290,8 +290,8 @@ void acqu::FileFormatMk2::UnpackEvent(
     }
 
     // hit_storage is member variable for better memory allocation performance
-    FillDetectorReadHits(eventdata.DetectorReadHits);
-    FillSlowControls(scalers, eventdata.SlowControls);
+    FillDetectorReadHits(hit_storage, hit_mappings_ptr, eventdata.DetectorReadHits);
+    FillSlowControls(scalers, scaler_mappings, eventdata.SlowControls);
 
     it++; // go to start word of next event (if any)
 }

@@ -402,7 +402,9 @@ bool acqu::FileFormatBase::SearchFirstDataBuffer(reader_t& reader, buffer_t& buf
 
 
 
-void acqu::FileFormatBase::FillDetectorReadHits(vector<TDetectorReadHit>& hits) const noexcept
+void acqu::FileFormatBase::FillDetectorReadHits(const hit_storage_t& hit_storage,
+                                                const hit_mappings_ptr_t& hit_mappings_ptr,
+                                                vector<TDetectorReadHit>& hits) noexcept
 {
     // the order of hits corresponds to the given mappings
     hits.reserve(2*hit_storage.size());
@@ -442,8 +444,8 @@ void acqu::FileFormatBase::FillDetectorReadHits(vector<TDetectorReadHit>& hits) 
 
 }
 
-void acqu::FileFormatBase::FillSlowControls(const scalers_t& scalers,
-                                           vector<TSlowControl>& slowcontrols) const noexcept
+void acqu::FileFormatBase::FillSlowControls(const scalers_t& scalers, const scaler_mappings_t& scaler_mappings,
+                                           vector<TSlowControl>& slowcontrols) noexcept
 {
     if(scalers.empty())
         return;

@@ -295,8 +295,8 @@ void acqu::FileFormatMk1::UnpackEvent(queue_t& queue, it_t it, const it_t& it_en
     }
 
     // hit_storage is member variable for better memory allocation performance
-    FillDetectorReadHits(eventdata.DetectorReadHits);
-    FillSlowControls(scalers, eventdata.SlowControls);
+    FillDetectorReadHits(hit_storage, hit_mappings_ptr, eventdata.DetectorReadHits);
+    FillSlowControls(scalers, scaler_mappings, eventdata.SlowControls);
 
 }
 

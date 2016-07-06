@@ -117,11 +117,13 @@ protected:
     // especially keeping storage_hits over multiple
     // events makes it considerably faster
     std::vector<UnpackerAcquConfig::hit_mapping_t> hit_mappings;
-    std::vector< std::vector< const UnpackerAcquConfig::hit_mapping_t* > > hit_mappings_ptr;
-    using hits_t = std_ext::mapped_vectors<std::uint16_t, std::uint16_t>;
-    hits_t hit_storage;
+    using hit_mappings_ptr_t = std::vector< std::vector< const UnpackerAcquConfig::hit_mapping_t* > >;
+    hit_mappings_ptr_t hit_mappings_ptr;
+    using hit_storage_t = std_ext::mapped_vectors<std::uint16_t, std::uint16_t>;
+    hit_storage_t hit_storage;
 
-    std::vector<UnpackerAcquConfig::scaler_mapping_t> scaler_mappings;
+    using scaler_mappings_t = std::vector<UnpackerAcquConfig::scaler_mapping_t>;
+    scaler_mappings_t scaler_mappings;
 
 
     // this class already implements some stuff
@@ -141,8 +143,10 @@ protected:
     // things shared by Mk1/Mk2
     std::uint32_t GetDataBufferMarker() const;
     bool SearchFirstDataBuffer(reader_t& reader, buffer_t& buffer, size_t offset) const;
-    void FillDetectorReadHits(std::vector<TDetectorReadHit>& hits) const noexcept;
-    void FillSlowControls(const scalers_t& scalers, std::vector<TSlowControl>& slowcontrols) const noexcept;
+    static void FillDetectorReadHits(const hit_storage_t& hit_storage, const hit_mappings_ptr_t& hit_mappings_ptr,
+                                     std::vector<TDetectorReadHit>& hits) noexcept;
+    static void FillSlowControls(const scalers_t& scalers, const scaler_mappings_t& scaler_mappings,
+                                 std::vector<TSlowControl>& slowcontrols) noexcept;
 
 };
 
