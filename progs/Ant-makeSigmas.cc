@@ -10,6 +10,8 @@
 #include "base/ProgressCounter.h"
 #include "base/std_ext/string.h"
 
+#include "analysis/plot/root_draw.h"
+
 #include "TTree.h"
 #include "TRint.h"
 #include "TH3D.h"
@@ -128,7 +130,7 @@ TH1D* projectZ(const TH3D* hist, const int x, const int y, HistogramFactory& hf)
     auto h = hf.makeTH1D(name.c_str(), hist->GetZaxis()->GetTitle(), "", bins, name.c_str());
     h->Reset();
 
-    for(int z = 0; z < bins.Bins(); ++z) {
+    for(int z = 0; z < int(bins.Bins()); ++z) {
         const auto v = hist->GetBinContent(x, y, z);
         if(v != .0) {
             h->Fill(axis->GetBinCenter(z), v);
@@ -143,15 +145,49 @@ vec2 maximum(const TH1D* hist) {
     return vec2( hist->GetBinCenter(hist->GetMaximumBin()), hist->GetMaximum() );
 }
 
-void ClearHistogram(TH2D* hist) {
-    for(int x=0; x<=hist->GetNbinsX(); ++x) {
-        for(int y=0; y<=hist->GetNbinsY(); ++y) {
-            hist->SetBinContent(x,y, std_ext::NaN);
+void ClearHistogram(TH2D* hist, const double v=0.0) {
+    for(int x=1; x<=hist->GetNbinsX(); ++x) {
+        for(int y=1; y<=hist->GetNbinsY(); ++y) {
+            hist->SetBinContent(x,y, v);
         }
     }
 }
 
-void FitSlicesZ(const TH3D* hist, HistogramFactory& hf_, const bool do_fit=false) {
+interval<double> getZRange(const TH2& hist) {
+    return {hist.GetMinimum(), hist.GetMaximum()};
+}
+
+void MakeSameZRange(std::vector<TH2*> hists) {
+
+    if(hists.empty())
+        return;
+
+
+    auto b1 = getZRange(*hists.front());
+
+    for(auto it=next(hists.begin()); it!=hists.end(); ++it) {
+        b1.Extend(getZRange(**it));
+    }
+
+    for(auto h : hists) {
+        h->SetMinimum(b1.Start());
+        h->SetMaximum(b1.Stop());
+    }
+
+}
+
+struct FitSlices1DHists {
+    TH2D* Mean    = nullptr;
+    TH2D* RMS     = nullptr;
+    TH2D* Entries = nullptr;
+
+    TH2D* chi2dof = nullptr;
+
+
+    std::vector<TH2D*> parameter = {};
+};
+
+FitSlices1DHists FitSlicesZ(const TH3D* hist, HistogramFactory& hf_, const bool do_fit=false, const double min_intragral=1000.0) {
 
     HistogramFactory hf(formatter() << hist->GetName() << "_FitZ", hf_);
 
@@ -159,10 +195,12 @@ void FitSlicesZ(const TH3D* hist, HistogramFactory& hf_, const bool do_fit=false
     const auto ybins = getBins(hist->GetYaxis());
     const auto zbins = getBins(hist->GetZaxis());
 
-    vector<TH2D*> parmhists(3, nullptr);
+    FitSlices1DHists result;
 
-    for(size_t p=0; p<parmhists.size(); ++p) {
-        parmhists.at(p) = hf.makeTH2D(
+    result.parameter.reserve(3);
+
+    for(size_t p=0; p<result.parameter.size(); ++p) {
+        result.parameter.at(p) = hf.makeTH2D(
                               formatter() << hist->GetTitle() << ": Parameter " << p,
                               hist->GetXaxis()->GetTitle(),
                               hist->GetYaxis()->GetTitle(),
@@ -171,42 +209,55 @@ void FitSlicesZ(const TH3D* hist, HistogramFactory& hf_, const bool do_fit=false
                               formatter() << hist->GetName() << "_z_Parm" << p );
     }
 
-    TH2D* h_chi2 = hf.makeTH2D(
+    result.chi2dof  = hf.makeTH2D(
                        formatter() << hist->GetTitle() << ":Chi2",
                        hist->GetXaxis()->GetTitle(),
                        hist->GetYaxis()->GetTitle(),
                        xbins,
                        ybins,
                        formatter() << hist->GetName() << "_z_Chi2" );
+    result.chi2dof->SetStats(false);
 
-    TH2D* h_RMS  = hf.makeTH2D(
+    result.RMS  = hf.makeTH2D(
                        formatter() << hist->GetTitle() << ": RMS",
                        hist->GetXaxis()->GetTitle(),
                        hist->GetYaxis()->GetTitle(),
                        xbins,
                        ybins,
                        formatter() << hist->GetName() << "_z_RMS" );
-    ClearHistogram(h_RMS);
+    ClearHistogram(result.RMS, std_ext::NaN);
+    result.RMS->SetStats(false);
 
-    TH2D* h_Mean  = hf.makeTH2D(
+    result.Mean  = hf.makeTH2D(
                        formatter() << hist->GetTitle() << ": Mean",
                        hist->GetXaxis()->GetTitle(),
                        hist->GetYaxis()->GetTitle(),
                        xbins,
                        ybins,
                        formatter() << hist->GetName() << "_z_Mean" );
-    ClearHistogram(h_Mean);
+    ClearHistogram(result.Mean, std_ext::NaN);
+    result.Mean->SetStats(false);
+
+    result.Entries  = hf.makeTH2D(
+                       formatter() << hist->GetTitle() << ": Entries",
+                       hist->GetXaxis()->GetTitle(),
+                       hist->GetYaxis()->GetTitle(),
+                       xbins,
+                       ybins,
+                       formatter() << hist->GetName() << "_z_Entries" );
+    result.Entries->SetStats(false);
 
     TCanvas* c = new TCanvas();
     const string c_title = formatter() << hist->GetTitle() << " Fits";
     c->SetTitle(c_title.c_str());
-    c->Divide(xbins.Bins(), ybins.Bins());
+    c->Divide(int(xbins.Bins()), int(ybins.Bins()));
 
 
-    for(int x=0; x<xbins.Bins(); ++x) {
-        for(int y=0; y<ybins.Bins(); ++y) {
+    for(int x=0; x < int(xbins.Bins()); ++x) {
+        for(int y=0; y < int(ybins.Bins()); ++y) {
 
-            auto pad = c->cd(1+x+(ybins.Bins()-y-1)*xbins.Bins());
+            const int padno = int(1+x+(ybins.Bins()-y-1)*xbins.Bins());
+            auto pad = c->cd(padno);
 
             //pad->SetMargin(0.01,0.01,0.01,0.01);
 
@@ -214,12 +265,15 @@ void FitSlicesZ(const TH3D* hist, HistogramFactory& hf_, const bool do_fit=false
 
             slice->Draw();
 
-            if(slice->Integral() > 5.0) {
+            const auto integral = slice->Integral();
+            result.Entries->SetBinContent(x+1,y+1, integral);
+
+            if(integral > min_intragral) {
                 const auto rms = slice->GetRMS();
                 const auto mean = slice->GetMean();
 
-                h_RMS->SetBinContent(x+1,y+1, rms);
-                h_Mean->SetBinContent(x+1,y+1, mean);
+                result.RMS->SetBinContent(x+1,y+1, rms);
+                result.Mean->SetBinContent(x+1,y+1, mean);
 
                 if(do_fit) {
 
@@ -240,17 +294,17 @@ void FitSlicesZ(const TH3D* hist, HistogramFactory& hf_, const bool do_fit=false
 
                     const auto chi2 = tf1_gaus->GetChisquare() / tf1_gaus->GetNDF();
 
-                    h_chi2->SetBinContent(x+1,y+1, chi2);
+                    result.chi2dof->SetBinContent(x+1,y+1, chi2);
 
                     if(chi2 > .0) {
 
-                        if(tf1_gaus->GetNpar() != parmhists.size())
+                        if(size_t(tf1_gaus->GetNpar()) != result.parameter.size())
                             throw std::runtime_error("Wrong number pf parameters");
 
-                        for(size_t p=0; p<parmhists.size(); ++p) {
-                            auto h =  parmhists.at(p);
-                            h->SetBinContent(x+1, y+1, tf1_gaus->GetParameter(p));
-                            h->SetBinError(x+1,y+1,tf1_gaus->GetParError(p));
+                        for(size_t p=0; p<result.parameter.size(); ++p) {
+                            auto h =  result.parameter.at(p);
+                            h->SetBinContent(x+1, y+1, tf1_gaus->GetParameter(int(p)));
+                            h->SetBinError  (x+1, y+1, tf1_gaus->GetParError (int(p)));
                         }
                     } else {
                         pad->SetFillColor(kYellow);
@@ -264,11 +318,39 @@ void FitSlicesZ(const TH3D* hist, HistogramFactory& hf_, const bool do_fit=false
         }
     }
 
-    fillNeighborAverages(h_RMS);
-    new TCanvas();
-    h_RMS->Draw("text");
+    return result;
 }
 
+struct NewSigamsResult_t {
+    TH2D* newSigmas = nullptr;
+    TH2D* oldSigmas = nullptr;
+    TH2D* pulls     = nullptr;
+};
+
+NewSigamsResult_t makeNewSigmas(const TH3D* pulls, const TH3D* sigmas, HistogramFactory& hf, const string& output_name, const double integral_cut) {
+    const string newTitle = formatter() << "new " << sigmas->GetTitle();
+
+    auto pull_values  = FitSlicesZ(pulls,  hf, false, integral_cut);
+    auto sigma_values = FitSlicesZ(sigmas, hf, false, integral_cut);
+
+    NewSigamsResult_t result;
+
+    result.oldSigmas = sigma_values.Mean;
+    result.pulls     = pull_values.RMS;
+
+    result.newSigmas = hf.clone(result.oldSigmas, output_name);
+    assert(result.newSigmas);
+
+    result.newSigmas->Multiply(result.pulls);
+
+    fillNeighborAverages(result.newSigmas);
+
+    result.newSigmas->SetTitle(newTitle.c_str());
+
+    MakeSameZRange( {result.newSigmas,result.oldSigmas} );
+
+    return result;
+}
 
 
 
@@ -283,16 +365,18 @@ int main( int argc, char** argv )
 
     TCLAP::CmdLine cmd("Ant-makeSigmas", ' ', "0.1");
 
-    auto cmd_input       = cmd.add<TCLAP::ValueArg<string>>("i","input","pull trees",true,"","rootfile");
-    auto cmd_output      = cmd.add<TCLAP::ValueArg<string>>("o","","sigma hists",false,"","rootfile");
-    auto cmd_batchmode   = cmd.add<TCLAP::MultiSwitchArg>("b","batch","Run in batch mode (no ROOT shell afterwards)",false);
-    auto cmd_maxevents   = cmd.add<TCLAP::MultiArg<int>>("m","maxevents","Process only max events",false,"maxevents");
-    auto cmd_tree        = cmd.add<TCLAP::ValueArg<string>>("t","tree","Treename",false,"JustPi0/m2Pi0/pulls_photon_cb","treename");
-    auto cmd_fitprob_cut = cmd.add<TCLAP::ValueArg<double>>("","fitprob_cut","Min. required Fit Probability",false,0.01,"probability");
+    auto cmd_input        = cmd.add<TCLAP::ValueArg<string>>("i","input",      "pull trees",                                     true,  "", "rootfile");
+    auto cmd_output       = cmd.add<TCLAP::ValueArg<string>>("o","",           "sigma hists",                                    false, "", "rootfile");
+    auto cmd_batchmode    = cmd.add<TCLAP::MultiSwitchArg>  ("b","batch",      "Run in batch mode (no ROOT shell afterwards)",   false);
+    auto cmd_maxevents    = cmd.add<TCLAP::MultiArg<int>>   ("m","maxevents",  "Process only max events",                        false, "maxevents");
+    auto cmd_tree         = cmd.add<TCLAP::ValueArg<string>>("t","tree",       "Treename",false,"JustPi0/m2Pi0/pulls_photon_cb","treename");
+    auto cmd_fitprob_cut  = cmd.add<TCLAP::ValueArg<double>>("", "fitprob_cut","Min. required Fit Probability",                  false, 0.01,"probability");
+    auto cmd_integral_cut = cmd.add<TCLAP::ValueArg<double>>("", "integral_cut","Min. required integral in Bins",                false, 100.0,"integral");
 
     cmd.parse(argc, argv);
 
-    const auto fitprob_cut = cmd_fitprob_cut->getValue();
+    const auto fitprob_cut  = cmd_fitprob_cut->getValue();
+    const auto integral_cut = cmd_integral_cut->getValue();
 
     WrapTFileInput input(cmd_input->getValue());
 
@@ -447,13 +531,17 @@ int main( int argc, char** argv )
             argc=1; // prevent TRint to parse any cmdline except prog name
             TRint app("Ant-makeSigmas",&argc,argv,nullptr,0,true);
 
-            FitSlicesZ(h_pullsE, HistFac);
-            FitSlicesZ(h_pullsTheta, HistFac);
-            FitSlicesZ(h_pullsPhi, HistFac);
+            auto new_E     = makeNewSigmas(h_pullsE,     h_sigmasE,     HistFac, "sigma_E",    integral_cut);
+            auto new_Theta = makeNewSigmas(h_pullsTheta, h_sigmasTheta, HistFac, "sigma_Theta",integral_cut);
+            auto new_Phi   = makeNewSigmas(h_pullsPhi,   h_sigmasPhi,   HistFac, "sigma_Phi",  integral_cut);
 
-            FitSlicesZ(h_sigmasE, HistFac);
-            FitSlicesZ(h_sigmasTheta, HistFac);
-            FitSlicesZ(h_sigmasPhi, HistFac);
+            canvas summary(cmd_tree->getValue());
+            summary << drawoption("colz");
+
+            for( auto r : {new_E, new_Theta, new_Phi}) {
+                summary << r.newSigmas << r.oldSigmas << r.pulls;
+            }
+            summary << endc;
 
             if(masterFile)
                 LOG(INFO) << "Stopped running, but close ROOT properly to write data to disk.";
