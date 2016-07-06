@@ -316,6 +316,8 @@ public:
         using std::runtime_error::runtime_error;
     };
 
+    static std::shared_ptr<Interpolated> makeAndLoad(UncertaintyModelPtr default_model);
+
 protected:
     UncertaintyModelPtr starting_uncertainty;
 
@@ -328,6 +330,9 @@ protected:
         interpolator_ptr_t Phi;
 
         Uncertainties_t GetUncertainties(const TParticle& particle) const;
+
+        void Load(ant::WrapTFile& file, const std::string& prefix);
+        static std::unique_ptr<const Interpolator2D> LoadInterpolator(ant::WrapTFile& file, const std::string& prefix);
     };
 
     EkThetaPhi cb_photon;

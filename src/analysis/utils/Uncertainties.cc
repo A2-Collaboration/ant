@@ -15,6 +15,7 @@
 
 #include "TTree.h"
 #include "TH1D.h"
+#include "TH2D.h"
 #include "TF1.h"
 #include "TRandom2.h"
 #include "TMath.h"
@@ -800,9 +801,76 @@ Uncertainties_t UncertaintyModels::Interpolated::GetSigmas(const TParticle& part
     }
 }
 
+std::vector<double> getBinPositions(const TAxis* axis) {
+
+    vector<double> bins(size_t(axis->GetNbins()));
+
+    for(int i=1; i<=axis->GetNbins(); ++i) {
+        bins.at(size_t(i)) = axis->GetBinCenter(i);
+    }
+
+    return bins;
+}
+
+std::vector<double> getBinContents(const TH2D* hist) {
+    const auto nx = hist->GetNbinsX();
+    const auto ny = hist->GetNbinsY();
+
+    assert(nx>0);
+    assert(ny>0);
+
+    vector<double> z(size_t(nx*ny));
+
+    for(int x=1; x<=nx;++x) {
+        for(int y=1; y<ny+1; ++y) {
+            z.at(size_t((x-1)+nx*(y-1))) = hist->GetBinContent(x,y);
+        }
+    }
+
+    return z;
+}
+
+std::unique_ptr<const Interpolator2D> makeInterpolator(const TH2D* hist) {
+
+    const vector<double> x = getBinPositions(hist->GetXaxis());
+    const vector<double> y = getBinPositions(hist->GetYaxis());
+    const vector<double> z = getBinContents(hist);
+
+    return std_ext::make_unique<Interpolator2D>(x,y,z);
+}
+
 void UncertaintyModels::Interpolated::LoadSigmas(const string& filename)
 {
+    try {
 
+        WrapTFileInput f(filename);
+
+        cb_photon.Load  (f, "sigma_photon_cb");
+        cb_proton.Load  (f, "sigma_proton_cb");
+        taps_photon.Load(f, "sigma_photon_taps");
+        taps_proton.Load(f, "sigma_proton_taps");
+
+        loaded_sigmas = true;
+
+    } catch (WrapTFile::Exception& e) {
+        LOG(WARNING) << "Can't open uncertainty histogram file: " << filename <<". Default model will be used: " << e.what();
+    }
+
+}
+
+std::shared_ptr<UncertaintyModels::Interpolated> UncertaintyModels::Interpolated::makeAndLoad(UncertaintyModelPtr default_model)
+{
+    auto s = std::make_shared<Interpolated>(default_model);
+
+    const auto setup = ant::ExpConfig::Setup::GetLastFound();
+
+    if(!setup) {
+        throw std::runtime_error("No Setup found");
+    }
+
+    s->LoadSigmas(setup->GetPhysicsFilesDirectory()+"/interpolated_sigmas.root");
+
+    return s;
 }
 
 Uncertainties_t UncertaintyModels::Interpolated::EkThetaPhi::GetUncertainties(const TParticle& particle) const
@@ -815,4 +883,25 @@ Uncertainties_t UncertaintyModels::Interpolated::EkThetaPhi::GetUncertainties(co
         Theta->GetPoint(costheta, Ek),
         Phi->GetPoint(costheta, Ek)
     };
+}
+
+void UncertaintyModels::Interpolated::EkThetaPhi::Load(WrapTFile& file, const std::string& prefix)
+{
+    E     = LoadInterpolator(file, prefix+"/sigma_E");
+    Theta = LoadInterpolator(file, prefix+"/sigma_Theta");
+    Phi   = LoadInterpolator(file, prefix+"/sigma_Phi");
+
+}
+
+std::unique_ptr<const Interpolator2D> UncertaintyModels::Interpolated::EkThetaPhi::LoadInterpolator(WrapTFile& file, const string& hname)
+{
+    TH2D* h = nullptr;
+
+    file.GetObject(hname, h);
+
+    if(!h)
+        throw(std::runtime_error("Histogram not found: "+hname));
+
+    return makeInterpolator(h);
+
 }
