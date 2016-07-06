@@ -159,8 +159,10 @@ TTree*HistogramFactory::makeTTree(const string& name)
     return t;
 }
 
-HistogramFactory::DirStackPush::DirStackPush(): dir(gDirectory)
-{}
+HistogramFactory::DirStackPush::DirStackPush(const HistogramFactory& hf): dir(gDirectory)
+{
+    hf.goto_dir();
+}
 
 HistogramFactory::DirStackPush::~DirStackPush()
 {

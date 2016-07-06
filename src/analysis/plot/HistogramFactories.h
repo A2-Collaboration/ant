@@ -56,11 +56,7 @@ private:
     TDirectory* my_directory = nullptr;
     void goto_dir() const;
 
-    struct DirStackPush {
-        TDirectory* dir;
-        DirStackPush();
-        ~DirStackPush();
-    };
+
 
     std::string title_prefix;
 
@@ -79,6 +75,15 @@ private:
 
 
 public:
+    struct DirStackPush {
+    private:
+        TDirectory* dir;
+    public:
+        DirStackPush(const HistogramFactory& hf);
+        ~DirStackPush();
+    };
+
+
     HistogramFactory(const std::string& directory_name, TDirectory* root=nullptr, const std::string& title_prefix_ = "");
     HistogramFactory(const std::string& directory_name, const HistogramFactory &parent, const std::string& title_prefix_ = "");
 
@@ -117,8 +122,7 @@ public:
     T* make(Args&&... args) const {
 
         // save current dir and cd back to it on exit
-        DirStackPush dirstack;
-        goto_dir();
+        DirStackPush dirstack(*this);
 
         auto t = new T(std::forward<Args>(args)...);
         return t;
