@@ -11,6 +11,8 @@
 
 #include "base/Logger.h"
 
+#include <numeric>
+
 using namespace std;
 using namespace ant;
 using namespace ant::unpacker;
@@ -28,6 +30,7 @@ bool acqu::FileFormatMk1::InspectHeader(const vector<uint32_t>& buffer) const
 void acqu::FileFormatMk1::FillInfo(reader_t& reader, buffer_t& buffer, Info& info)
 {
 
+    // first 32bit word is header marker, that's why
     const acqu::AcquExptInfo_t* h = reinterpret_cast<const acqu::AcquExptInfo_t*>(buffer.data()+1);
 
     info.Format = Info::Format_t::Mk1;
@@ -38,13 +41,99 @@ void acqu::FileFormatMk1::FillInfo(reader_t& reader, buffer_t& buffer, Info& inf
     info.RunNumber = static_cast<unsigned>(h->fRun);
     info.RecordLength = static_cast<unsigned>(h->fRecLen);
 
-    nScalers = h->fNscaler;
+    const auto maxADCIndex = h->fNspect;
+    const auto maxScalerIndex = h->fNscaler;
+    const auto nModules = h->fNmodule;
 
+    // see TDAQsupervise::CreateMk1Header( void* buff ) in Acqu
+    const size_t minBytes = 4 // dont't forget the 32bit start marker
+                            + sizeof(acqu::AcquExptInfo_t) // not multiple of 4!
+                            + sizeof(acqu::ADCInfo_t)*(maxADCIndex + maxScalerIndex)
+                            + sizeof(acqu::ModuleInfo_t)*nModules;
 
-    /// \todo parse some more stuff from the Mk1 header here,
-    /// but don't forget to read enough into the buffer using reader
-    (void)reader; // prevent unused variable warning for now...
+    // the pointer h is only up to now, since buffer might be relocated
+    // since AcquExptInfo_t is not word-aligned (4byte), we need to count in bytes...
+    reader->expand_buffer(buffer, minBytes/4+1);
+    auto ADCInfo_offset =
+            reinterpret_cast<const acqu::ADCInfo_t*>(
+                reinterpret_cast<const acqu::AcquExptInfo_t*>(
+                    buffer.data()
+                    +1 // skip 4byte long header word
+                    )
+                +1 // skip AcquExptInfo_t
+                );
 
+    auto ScalerInfo_offset = ADCInfo_offset + maxADCIndex;
+    auto ModuleInfo_offset = reinterpret_cast<const acqu::ModuleInfo_t*>(ScalerInfo_offset + maxScalerIndex);
+
+    /// \todo ADCs could be checked against hit mappings
+//    for(unsigned i=0;i<maxADCIndex;i++) {
+//        const acqu::ADCInfo_t* adcinfo = ADCInfo_offset + i;
+//        cout << "ADC i=" << i << " ModIndex=" << adcinfo->fModIndex << " SubAddr=" << adcinfo->fModSubAddr << endl;
+//    }
+
+    // use ADCInfos of scalers to determine split of scaler buffers
+    vector<string> scaler_modnames;
+    for(unsigned i=0;i<maxScalerIndex;i++) {
+        const acqu::ADCInfo_t* scalerinfo = ScalerInfo_offset + i;
+        if(scalerinfo->fModIndex >= nModules) {
+            throw Exception("Invalid fModIndex encountered");
+        }
+        const acqu::ModuleInfo_t* m = ModuleInfo_offset + scalerinfo->fModIndex;
+
+        scaler_modnames.emplace_back(m->fName);
+//        cout << "Scaler i=" << i << " ModName=" << m->fName << " SubAddr=" << scalerinfo->fModSubAddr << endl;
+    }
+
+    FindScalerBlocks(scaler_modnames);
+
+    for(unsigned i=0;i<nModules;i++) {
+        const acqu::ModuleInfo_t* m = ModuleInfo_offset + i;
+
+        Info::HardwareModule module;
+        module.Identifier = m->fName;
+        module.Index = m->fBusType; // is fIndex according to TDAQmodule::ReadHeader( ModuleInfo_t* mod )
+        module.Bits = m->fBits;
+        module.FirstRawChannel = m->fAmin;
+        module.NRawChannels =  m->fAmax - m->fAmin + 1;
+        info.Modules.emplace_back(move(module));
+    }
+
+    VLOG(9) << "Header says: Have " << info.Modules.size() << " modules";
+}
+
+void acqu::FileFormatMk1::FindScalerBlocks(const std::vector<string>& scaler_modnames)
+{
+    /// \todo the heuristic here test only with 2007 data, where it produces the meaningful values
+    // search for "LRS2551" as indicator of scaler block
+    // then calculate scaler block sizes
+    vector<unsigned> block_offsets;
+    auto it = scaler_modnames.begin();
+    while(it != scaler_modnames.end()) {
+        if(*it == "LRS2551") {
+            block_offsets.emplace_back(std::distance(scaler_modnames.begin(), it));
+        }
+        do {
+            ++it;
+        }
+        while(it != scaler_modnames.end() && *it == *std::prev(it));
+    }
+
+    if(block_offsets.empty()) {
+        throw Exception("No scaler blocks beginning with LRS2551 found");
+    }
+
+    if(block_offsets.front() != 0) {
+        throw Exception("Unexpected first scaler block found");
+    }
+
+    // contains at least two elements
+    block_offsets.push_back(scaler_modnames.size());
+
+    ScalerBlockSizes.resize(block_offsets.size());
+    std::adjacent_difference(block_offsets.begin(), block_offsets.end(),
+                             ScalerBlockSizes.begin());
+    ScalerBlockSizes.pop_front();
 }
 
 void acqu::FileFormatMk1::FillFirstDataBuffer(reader_t& reader, buffer_t& buffer) const
@@ -240,6 +329,8 @@ bool acqu::FileFormatMk1::UnpackDataBuffer(UnpackerAcquFileFormat::queue_t& queu
     return true;
 }
 
+
+
 void acqu::FileFormatMk1::UnpackEvent(queue_t& queue, it_t it, const it_t& it_end, bool& good) noexcept
 {
 
@@ -366,23 +457,23 @@ void acqu::FileFormatMk1::HandleScalerBuffer(
 
 
     good = true;
-    return;
+//    return;
 
-    if(distance(it, it_end)<nScalers) {
-        LogMessage(TUnpackerMessage::Level_t::DataError,
-                   "Mk1 scaler block not completely present in buffer"
-                   );
-        return;
-    }
+//    if(distance(it, it_end)<nScalers) {
+//        LogMessage(TUnpackerMessage::Level_t::DataError,
+//                   "Mk1 scaler block not completely present in buffer"
+//                   );
+//        return;
+//    }
 
-    /// \todo check if that scaler block decoding makes any sense
-    /// we assume that a scaler block comes last in event
-    /// also what the hell is Acqu doing with the SplitScaler stuff?!
+//    /// \todo check if that scaler block decoding makes any sense
+//    /// we assume that a scaler block comes last in event
+//    /// also what the hell is Acqu doing with the SplitScaler stuff?!
 
-    for(uint32_t scalerIndex = 0; scalerIndex < nScalers; scalerIndex++) {
-        scalers[scalerIndex].push_back(*it);
-        it++;
-    }
+//    for(uint32_t scalerIndex = 0; scalerIndex < nScalers; scalerIndex++) {
+//        scalers[scalerIndex].push_back(*it);
+//        it++;
+//    }
 
-    good = true;
+//    good = true;
 }
