@@ -114,6 +114,7 @@ append_header_files(ANALYSIS_ALL)
 add_library(analysis ${ANALYSIS_ALL})
 target_link_libraries(analysis
   ${ROOT_LIBRARIES}
+  HistPainter
   ${PLUTO_LIBRARY}
   ${APLCON_LIBRARY}
   base
