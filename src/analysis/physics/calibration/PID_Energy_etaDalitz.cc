@@ -59,6 +59,11 @@ ParticleTypeTree PID_Energy_etaDalitz::eta_3g()
     return t;
 }
 
+double PID_Energy_etaDalitz::linear_cut(const double x) const
+{
+    return 1.15*x - 170;
+}
+
 APLCON::Fit_Settings_t PID_Energy_etaDalitz::MakeFitSettings(unsigned max_iterations)
 {
     auto settings = APLCON::Fit_Settings_t::Default;
@@ -426,6 +431,10 @@ void PID_Energy_etaDalitz::ProcessEvent(const TEvent& event, manager_t&)
     const double eeIM = (TParticle(ParticleTypeDatabase::eMinus, l1) + TParticle(ParticleTypeDatabase::eMinus, l2)).M();
     h_IM2d->Fill(eta.M(), eeIM);
     h.IM2d->Fill(eta.M(), eeIM);
+    // apply IM(e+e-g) dependent cut on IM(e+e-)
+    if (eeIM > linear_cut(eta.M()))
+        return;
+    h.steps->Fill("2D IM cut", 1);
     // suppress pi0
 //    if (eeIM < 130.)
 //        return;

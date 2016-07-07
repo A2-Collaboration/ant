@@ -106,6 +106,8 @@ protected:
     ParticleTypeTree base_tree();
     ParticleTypeTree eta_3g();
 
+    double linear_cut(const double) const;
+
 public:
 
     PID_Energy_etaDalitz(const std::string& name, OptionsPtr opts);
