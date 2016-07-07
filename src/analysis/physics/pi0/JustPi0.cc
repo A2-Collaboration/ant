@@ -3,7 +3,7 @@
 #include "utils/particle_tools.h"
 #include "utils/matcher.h"
 #include "utils/Uncertainties.h"
-
+#include "base/Logger.h"
 #include "expconfig/ExpConfig.h"
 
 #include "TH1D.h"
@@ -28,7 +28,7 @@ JustPi0::JustPi0(const string& name, OptionsPtr opts) :
 
     auto default_model = make_shared<utils::UncertaintyModels::Optimized_Oli1>();
 
-    utils::UncertaintyModelPtr model = utils::UncertaintyModels::Interpolated::makeAndLoad(default_model);
+    model = utils::UncertaintyModels::Interpolated::makeAndLoad(default_model);
 
     for(unsigned mult=pi0_range.Start();mult<=pi0_range.Stop();mult++) {
         multiPi0.emplace_back(std_ext::make_unique<MultiPi0>(HistFac, mult, model, opts->Get<bool>("SkipFitAndTree", false)));
@@ -46,6 +46,15 @@ void JustPi0::ShowResult()
 {
     for(auto& m : multiPi0)
         m->ShowResult();
+}
+
+void JustPi0::Finish()
+{
+    auto interpolated = dynamic_pointer_cast<const utils::UncertaintyModels::Interpolated>(model);
+
+    if(interpolated) {
+        LOG(INFO) << "Interpolated Uncertainty Model Statistics:\n" << *interpolated;
+    }
 }
 
 

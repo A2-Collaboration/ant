@@ -102,6 +102,7 @@ protected:
 
     };
 
+    utils::UncertaintyModelPtr model;
     std::vector<std::unique_ptr<MultiPi0>> multiPi0;
 
 public:
@@ -109,6 +110,7 @@ public:
 
     virtual void ProcessEvent(const TEvent& event, manager_t& manager) override;
     virtual void ShowResult() override;
+    virtual void Finish() override;
 };
 
 }}}
