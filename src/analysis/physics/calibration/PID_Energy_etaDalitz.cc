@@ -154,7 +154,7 @@ PID_Energy_etaDalitz::PID_Energy_etaDalitz(const string& name, OptionsPtr opts) 
 
 void PID_Energy_etaDalitz::ProcessEvent(const TEvent& event, manager_t&)
 {
-    const bool MC = event.HasMCTrue();
+    const bool MC = event.MCTrue().ParticleTree != nullptr;
 
     std::string production = "data";
     std::string decaystring = "data";
