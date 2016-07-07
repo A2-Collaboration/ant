@@ -266,10 +266,15 @@ void acqu::FileFormatMk1::HandleScalerBuffer(
     while(it != it_endscaler) {
         // within a scaler block, there might be error blocks
         if(*it == acqu::EReadError) {
-            HandleDAQError(errors, it, it_end, good);
+            auto it_ = it;
+            HandleDAQError(errors, it_, it_end, good);
             if(!good)
                 return;
             good = false;
+            std::advance(it_endscaler, std::distance(it, it_));
+            it = it_;
+            if(it==it_end || it==it_endscaler)
+                return;
         }
 
         scalers[scalerIndex].push_back(*it);
