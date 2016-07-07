@@ -18,6 +18,8 @@ class PID_Energy_etaDalitz : public Physics {
 
 protected:
     TH2* h_eegPID = nullptr;
+    TH2* h_eegPID_proton = nullptr;
+    TH2* h_eegPID_combined = nullptr;
     TH1D* h_counts = nullptr;
     TH1D* h_pTheta = nullptr;
     TH1D* h_protonVeto = nullptr;

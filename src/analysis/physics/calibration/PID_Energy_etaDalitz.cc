@@ -143,6 +143,10 @@ PID_Energy_etaDalitz::PID_Energy_etaDalitz(const string& name, OptionsPtr opts) 
 
     h_eegPID = HistFac.makeTH2D("PID 2 charged 1 neutral", "PID Energy [MeV]", "#",
                                 energybins, pid_channels, "h_eegPID");
+    h_eegPID_proton = HistFac.makeTH2D("PID proton candidate", "PID Energy [MeV]", "#",
+                                       energybins, pid_channels, "h_eegPID_proton");
+    h_eegPID_combined = HistFac.makeTH2D("PID all entries", "PID Energy [MeV]", "#",
+                                         energybins, pid_channels, "h_eegPID_combined");
     h_counts = HistFac.makeTH1D("Events per Channel", "channel", "#", BinSettings(20), "h_counts");
     h_pTheta = HistFac.makeTH1D("#vartheta proton candidate", "#vartheta_{p} [#circ]", "#", BinSettings(720, 0, 180), "h_pTheta");
     h_protonVeto = HistFac.makeTH1D("Veto energy identified proton", "Veto [MeV]", "#", energybins, "h_protonVeto");
@@ -385,6 +389,10 @@ void PID_Energy_etaDalitz::ProcessEvent(const TEvent& event, manager_t&)
     h.etaIM_cand->Fill(eta.M());
     h_protonVeto->Fill(comb.back()->VetoEnergy);
     h_pTheta->Fill(std_ext::radian_to_degree(comb.back()->Theta));
+    if (comb.back()->VetoEnergy) {
+        h_eegPID_proton->Fill(comb.back()->VetoEnergy, comb.back()->FindVetoCluster()->CentralElement);
+        h_eegPID_combined->Fill(comb.back()->VetoEnergy, comb.back()->FindVetoCluster()->CentralElement);
+    }
     // at this point a possible eta Dalitz candidate was found, work only with eta final state
     comb.pop_back();
 
@@ -432,6 +440,7 @@ void PID_Energy_etaDalitz::ProcessEvent(const TEvent& event, manager_t&)
         if (c->VetoEnergy) {
             h.eegPID->Fill(c->VetoEnergy, c->FindVetoCluster()->CentralElement);
             h_eegPID->Fill(c->VetoEnergy, c->FindVetoCluster()->CentralElement);
+            h_eegPID_combined->Fill(c->VetoEnergy, c->FindVetoCluster()->CentralElement);
             //h_eegPID->Fill(c->VetoEnergy*sin(c->Theta), c->FindVetoCluster()->CentralElement);
         }
     h_counts->Fill(decaystring.c_str(), 1);
