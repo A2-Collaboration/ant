@@ -803,14 +803,34 @@ Uncertainties_t UncertaintyModels::Interpolated::GetSigmas(const TParticle& part
 
 std::vector<double> getBinPositions(const TAxis* axis) {
 
-    vector<double> bins(size_t(axis->GetNbins()));
+    assert(axis->GetNbins() >= 2);
+
+    vector<double> bins(size_t(axis->GetNbins())+2);
 
     for(int i=1; i<=axis->GetNbins(); ++i) {
-        bins.at(size_t(i-1)) = axis->GetBinCenter(i);
+        bins.at(size_t(i)) = axis->GetBinCenter(i);
     }
+
+    bins.front() = bins.at(1) - (bins.at(2)-bins.at(1));
+    bins.back()  = bins.at(bins.size()-2) + (bins.at(bins.size()-2)-bins.at(bins.size()-3));
 
     return bins;
 }
+
+struct xy_array {
+
+    unsigned width;
+    unsigned height;
+    std::vector<double> data;
+
+    xy_array(const unsigned w, const unsigned h, const double default_value=0.0):
+        width(w), height(h), data(w*h, default_value) {}
+
+    size_t bin(const unsigned x, const unsigned y) { return x + y*width; }
+
+    double& at(const unsigned x, const unsigned y) { return data.at(bin(x,y)); }
+
+};
 
 std::vector<double> getBinContents(const TH2D* hist) {
     const auto nx = hist->GetNbinsX();
@@ -834,9 +854,40 @@ std::unique_ptr<const Interpolator2D> makeInterpolator(const TH2D* hist) {
 
     const vector<double> x = getBinPositions(hist->GetXaxis());
     const vector<double> y = getBinPositions(hist->GetYaxis());
-    const vector<double> z = getBinContents(hist);
 
-    return std_ext::make_unique<Interpolator2D>(x,y,z);
+    xy_array z(unsigned(hist->GetNbinsX())+2, unsigned(hist->GetNbinsY())+2);
+
+    assert(z.width  == x.size());
+    assert(z.height == y.size());
+
+    for(int x=1; x<=hist->GetNbinsX(); ++x) {
+        for(int y=1; y<=hist->GetNbinsY(); ++y) {
+            z.at(x,y) = hist->GetBinContent(x,y);
+        }
+    }
+
+
+    // fill borders:
+
+    // top and botton rows
+    for(unsigned x=1; x<z.width-1; ++x) {
+        z.at(x,0) = z.at(x,1);
+        z.at(x,z.height-1) = z.at(x,z.height-2);
+    }
+
+    // first and last column
+    for(unsigned y=1; y<z.height-1; ++y) {
+        z.at(0,y) = z.at(1,y);
+        z.at(z.width-1,y) = z.at(z.width-2,y);
+    }
+
+    //corners
+    z.at(0,0) = z.at(1,1);
+    z.at(z.width-1, 0) = z.at(z.width-2, 1);
+    z.at(0, z.height-1) = z.at(1, z.height-2);
+    z.at(z.width-1, z.height-1) = z.at(z.width-2, z.height-2);
+
+    return std_ext::make_unique<Interpolator2D>(x,y,z.data);
 }
 
 void UncertaintyModels::Interpolated::LoadSigmas(const string& filename)
