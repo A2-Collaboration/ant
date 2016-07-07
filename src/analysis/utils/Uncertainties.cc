@@ -8,6 +8,8 @@
 #include "base/std_ext/system.h"
 #include "base/Interpolator.h"
 
+#include <ostream>
+
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wnon-virtual-dtor"
 #include "base/cereal/archives/json.hpp"
@@ -909,6 +911,8 @@ void UncertaintyModels::Interpolated::LoadSigmas(const string& filename)
 
 }
 
+
+
 std::shared_ptr<UncertaintyModels::Interpolated> UncertaintyModels::Interpolated::makeAndLoad(UncertaintyModelPtr default_model)
 {
     auto s = std::make_shared<Interpolated>(default_model);
@@ -924,23 +928,32 @@ std::shared_ptr<UncertaintyModels::Interpolated> UncertaintyModels::Interpolated
     return s;
 }
 
+ostream&UncertaintyModels::Interpolated::Print(ostream& stream) const
+{
+    stream << "Photon CB:\n"   << cb_photon   << "\n";
+    stream << "Proton CB:\n"   << cb_proton   << "\n";
+    stream << "Photon TAPS:\n" << taps_photon << "\n";
+    stream << "Proton TAPS:\n" << taps_proton << "\n";
+    return stream;
+}
+
 Uncertainties_t UncertaintyModels::Interpolated::EkThetaPhi::GetUncertainties(const TParticle& particle) const
 {
     auto costheta = std::cos(particle.Theta());
     auto Ek = particle.Ek();
 
     return {
-        E->GetPoint(costheta, Ek),
-        Theta->GetPoint(costheta, Ek),
-        Phi->GetPoint(costheta, Ek)
+        E.GetPoint(costheta, Ek),
+        Theta.GetPoint(costheta, Ek),
+        Phi.GetPoint(costheta, Ek)
     };
 }
 
 void UncertaintyModels::Interpolated::EkThetaPhi::Load(WrapTFile& file, const std::string& prefix)
 {
-    E     = LoadInterpolator(file, prefix+"/sigma_E");
-    Theta = LoadInterpolator(file, prefix+"/sigma_Theta");
-    Phi   = LoadInterpolator(file, prefix+"/sigma_Phi");
+    E.setInterpolator(LoadInterpolator(file, prefix+"/sigma_E"));
+    Theta.setInterpolator(LoadInterpolator(file, prefix+"/sigma_Theta"));
+    Phi.setInterpolator(LoadInterpolator(file, prefix+"/sigma_Phi"));
 
 }
 
@@ -956,3 +969,67 @@ std::unique_ptr<const Interpolator2D> UncertaintyModels::Interpolated::EkThetaPh
     return makeInterpolator(h);
 
 }
+
+ostream&UncertaintyModels::Interpolated::EkThetaPhi::Print(ostream& stream) const
+{
+    stream << "E:\t"     << E     << "\n";
+    stream << "Theta:\t" << Theta << "\n";
+    stream << "Phi:\t"   << Phi   << "\n";
+    return stream;
+}
+
+UncertaintyModels::Interpolated::ClippedInterpolatorWrapper::ClippedInterpolatorWrapper(UncertaintyModels::Interpolated::ClippedInterpolatorWrapper::interpolator_ptr_t i):
+    interp(move(i)), xrange(interp->getXRange()), yrange(interp->getYRange())
+{}
+
+UncertaintyModels::Interpolated::ClippedInterpolatorWrapper::ClippedInterpolatorWrapper(): interp(nullptr), xrange({0,0}), yrange({0,0})
+{}
+
+UncertaintyModels::Interpolated::ClippedInterpolatorWrapper::~ClippedInterpolatorWrapper()
+{}
+
+double UncertaintyModels::Interpolated::ClippedInterpolatorWrapper::GetPoint(double x, double y) const
+{
+    x = xrange.clip(x);
+    y = yrange.clip(y);
+    return interp->GetPoint(x,y);
+}
+
+void UncertaintyModels::Interpolated::ClippedInterpolatorWrapper::setInterpolator(UncertaintyModels::Interpolated::ClippedInterpolatorWrapper::interpolator_ptr_t i) {
+    interp = move(i);
+    xrange = interp->getXRange();
+    yrange = interp->getYRange();
+}
+
+ostream&UncertaintyModels::Interpolated::ClippedInterpolatorWrapper::Print(ostream& stream) const
+{
+    stream << "Theta Range: " << xrange << " E Range: " << yrange;
+    return stream;
+}
+
+
+double UncertaintyModels::Interpolated::ClippedInterpolatorWrapper::boundsCheck_t::clip(double v) const
+{
+    if(v < range.Start()) {
+        underflow++;
+        return range.Start();
+    }
+
+    if(v > range.Stop()) {
+        overflow++;
+        return range.Stop();
+    }
+
+    unclipped++;
+
+    return v;
+}
+
+ostream& UncertaintyModels::Interpolated::ClippedInterpolatorWrapper::boundsCheck_t::Print(ostream& stream) const
+{
+    stream << range << "-> [" << underflow << "|" << unclipped << "|" << overflow << "]";
+    return stream;
+}
+
+
+

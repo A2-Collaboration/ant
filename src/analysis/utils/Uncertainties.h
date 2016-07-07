@@ -1,6 +1,7 @@
 #pragma once
 
 #include "tree/TParticle.h"
+#include "base/printable.h"
 
 #include "TH1D.h"
 
@@ -302,7 +303,7 @@ protected:
  * @brief Uncertainties with interpolated surfaces in (E,theta) plane,
  * determined with iterative procedure
  */
-struct Interpolated : public UncertaintyModel {
+struct Interpolated : public UncertaintyModel, public ant::printable_traits {
 public:
 
     Interpolated(UncertaintyModelPtr starting_uncertainty_);
@@ -318,21 +319,57 @@ public:
 
     static std::shared_ptr<Interpolated> makeAndLoad(UncertaintyModelPtr default_model);
 
+    struct ClippedInterpolatorWrapper : ant::printable_traits {
+        using interpolator_ptr_t = std::unique_ptr<const Interpolator2D>;
+
+        interpolator_ptr_t interp;
+
+        struct boundsCheck_t : ant::printable_traits {
+            interval<double> range;
+            mutable unsigned underflow = 0;
+            mutable unsigned unclipped = 0;
+            mutable unsigned overflow  = 0;
+
+            double clip(double v) const;
+
+            boundsCheck_t(const interval<double> r): range(r) {}
+
+            std::ostream& Print(std::ostream& stream) const override;
+        };
+
+        boundsCheck_t xrange;
+        boundsCheck_t yrange;
+
+        ClippedInterpolatorWrapper(interpolator_ptr_t i);
+        ClippedInterpolatorWrapper();
+        ~ClippedInterpolatorWrapper();
+        double GetPoint(double x, double y) const;
+
+        void setInterpolator(interpolator_ptr_t i);
+
+        std::ostream& Print(std::ostream& stream) const override;
+
+    };
+
+    std::ostream& Print(std::ostream& stream) const override;
+
 protected:
     UncertaintyModelPtr starting_uncertainty;
 
     bool loaded_sigmas = false;
 
-    struct EkThetaPhi {
-        using interpolator_ptr_t = std::unique_ptr<const Interpolator2D>;
-        interpolator_ptr_t E;
-        interpolator_ptr_t Theta;
-        interpolator_ptr_t Phi;
+    struct EkThetaPhi : ant::printable_traits {
+
+        ClippedInterpolatorWrapper E;
+        ClippedInterpolatorWrapper Theta;
+        ClippedInterpolatorWrapper Phi;
 
         Uncertainties_t GetUncertainties(const TParticle& particle) const;
 
         void Load(ant::WrapTFile& file, const std::string& prefix);
         static std::unique_ptr<const Interpolator2D> LoadInterpolator(ant::WrapTFile& file, const std::string& prefix);
+
+        std::ostream& Print(std::ostream& stream) const override;
     };
 
     EkThetaPhi cb_photon;
