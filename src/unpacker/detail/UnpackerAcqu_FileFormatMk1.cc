@@ -76,6 +76,9 @@ void acqu::FileFormatMk1::FillInfo(reader_t& reader, buffer_t& buffer, Info& inf
             throw Exception("Invalid fModIndex encountered");
         }
         const acqu::ModuleInfo_t* m = ModuleInfo_offset + scalerinfo->fModIndex;
+//        cout << "i=" << i << " ModIndex=" << scalerinfo->fModIndex << " ModSubAddr=" << scalerinfo->fModSubAddr
+//             << " ModType=" << m->fModType << " Bits=" << m->fBits << " ModAmax=" << m->fAmax
+//             << endl;
         scaler_modnames.emplace_back(m->fName);
     }
 
@@ -115,8 +118,8 @@ void acqu::FileFormatMk1::FindScalerBlocks(const std::vector<string>& scaler_mod
 
     if(block_offsets.empty()) {
         // default is assuming just one single block
-        ScalerBlockSizes.push_back(scaler_modnames.size());
-        return;
+        // ScalerBlockSizes.push_back(scaler_modnames.size());
+        throw Exception("Scaler block detection not implemented");
     }
 
     if(block_offsets.front() != 0) {
