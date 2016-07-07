@@ -382,6 +382,27 @@ void PID_Energy_etaDalitz::ProcessEvent(const TEvent& event, manager_t&)
     while (best_comb-- > 0)
         shift_right(comb);
 
+    // sort the eta final state according to their Veto energies
+    sort(comb.begin(), comb.end()-1,
+         [] (const TCandidatePtr& a, const TCandidatePtr& b) {
+            return a->VetoEnergy > b->VetoEnergy;
+         });
+
+    // do an anti pi0 cut on the combinations e+g and e-g
+    // (assuming the photon deposited the least energy in the PIDs)
+    const interval<double> pion_cut(102., 170.);
+    TLorentzVector pi0;
+    const std::vector<std::array<size_t, 2>> pi0_combs = {{0, 2}, {1, 2}};
+    for (const auto pi0_comb : pi0_combs) {
+        pi0 = TLorentzVector(0., 0., 0., 0.);
+        for (const auto idx : pi0_comb)
+            pi0 += TParticle(ParticleTypeDatabase::Photon, comb.at(idx));
+        // apply an anti pion cut
+        if (pion_cut.Contains(pi0.M()))
+            return;
+    }
+    h.steps->Fill("anti #pi^{0} cut", 1);
+
     proton = TParticle(ParticleTypeDatabase::Proton, comb.back());
     eta.SetXYZT(0,0,0,0);
     for (size_t i = 0; i < comb.size()-1; i++)
@@ -395,11 +416,6 @@ void PID_Energy_etaDalitz::ProcessEvent(const TEvent& event, manager_t&)
     }
     // at this point a possible eta Dalitz candidate was found, work only with eta final state
     comb.pop_back();
-
-    sort(comb.begin(), comb.end(),
-         [] (const TCandidatePtr& a, const TCandidatePtr& b) {
-            return a->VetoEnergy > b->VetoEnergy;
-         });
 
     const TCandidatePtr& l1 = comb.at(0);
     const TCandidatePtr& l2 = comb.at(1);
