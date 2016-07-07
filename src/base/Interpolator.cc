@@ -42,3 +42,13 @@ double Interpolator2D::GetPoint(double x, double y) const
     return interp2d_eval(interp.get(), X.data(), Y.data(), Z.data(), x, y,
                          xa.get(), ya.get());
 }
+
+interval<double> Interpolator2D::getXRange() const
+{
+    return { interp->xmin, interp->xmax };
+}
+
+interval<double> Interpolator2D::getYRange() const
+{
+    return { interp->ymin, interp->ymax };
+}

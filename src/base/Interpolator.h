@@ -3,6 +3,7 @@
 #include <vector>
 #include <stdexcept>
 #include <memory>
+#include "base/interval.h"
 
 namespace ant {
 
@@ -22,6 +23,10 @@ public:
     struct Exception : std::runtime_error {
         using std::runtime_error::runtime_error; // use base class constructor
     };
+
+    interval<double> getXRange() const;
+    interval<double> getYRange() const;
+
 
 private:
 
