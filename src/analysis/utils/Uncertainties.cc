@@ -917,12 +917,9 @@ std::unique_ptr<const Interpolator2D> makeInterpolator(TH2D* hist) {
         }
     }
 
-    for(unsigned d=1; d<=min(pad_x,pad_y); ++d) {
-        grid.z.at(pad_x-d,      pad_y-d)      = grid.z.at(pad_x-d+1,    pad_y-d+1);
-        grid.z.at(pad_x+nx+d-1, pad_y-d)      = grid.z.at(pad_x+nx+d-2, pad_y-d+1);
-        grid.z.at(pad_x+nx+d-1, pad_y+ny+d-1) = grid.z.at(pad_x+nx+d-2, pad_y+ny+d-2);
-        grid.z.at(pad_x-d,      pad_y+ny+d-1) = grid.z.at(pad_x-d+1,    pad_y+ny+d-2);
-    }
+    //flood fill averages the rest
+    FloodFillAverages::fillNeighborAverages(grid.z);
+
 
 
     return std_ext::make_unique<Interpolator2D>(grid.x,grid.y, grid.z.Data());
