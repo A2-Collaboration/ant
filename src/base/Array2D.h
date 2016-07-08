@@ -79,4 +79,18 @@ public:
     std::size_t Size() const override;
 };
 
+
+struct FloodFillAverages {
+
+    const static std::vector<std::pair<int,int>> neighbors4;
+
+    static double getNeighborAverage(const Array2DBase& hist, const unsigned x, const unsigned y);
+
+    static unsigned getNeighborCount(const Array2DBase& hist, const unsigned x, const unsigned y);
+
+    static void fillNeighborAverages(Array2DBase& hist);
+
+    static bool IsBinValid(const Array2DBase& hist, int x, int y);
+};
+
 }

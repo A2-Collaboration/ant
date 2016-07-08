@@ -128,3 +128,84 @@ void Array2DBase::CopyRect(const Array2DBase& src, const ant::interval2D<unsigne
         }
     }
 }
+
+double FloodFillAverages::getNeighborAverage(const Array2DBase& hist, const unsigned x, const unsigned y) {
+
+    double sum = {};
+    unsigned n = 0;
+
+    for(const auto& d : neighbors4) {
+        const int bx = int(x) + d.first;
+        const int by = int(y) + d.second;
+
+        if(IsBinValid(hist,bx,by)) {
+            const auto v = hist.Get(bx,by);
+            if(std::isfinite(v)) {
+                sum += v;
+                ++n;
+            }
+        }
+    }
+
+    return n>0 ? sum / n : 0.0;
+}
+
+unsigned FloodFillAverages::getNeighborCount(const Array2DBase& hist, const unsigned x, const unsigned y) {
+
+    unsigned n = 0;
+
+    for(const auto& d : neighbors4) {
+        const int bx = x + d.first;
+        const int by = y + d.second;
+
+        const auto valid = IsBinValid(hist,bx,by);
+        if( valid && isfinite(hist.Get(unsigned(bx),unsigned(by)))) {
+            ++n;
+        }
+    }
+
+    return n;
+}
+
+void FloodFillAverages::fillNeighborAverages(Array2DBase& hist) {
+
+
+    unsigned neighbors=0;
+
+    do {
+        neighbors=0;
+        unsigned p_x =0;
+        unsigned p_y =0;
+
+        for(unsigned x=0; x<hist.Width(); ++x) {
+            for(unsigned y=0; y<hist.Height(); ++y) {
+
+                if(std::isnan(hist.Get(x,y))) {
+                    const auto n = getNeighborCount(hist, x, y);
+                    if(n>neighbors) {
+                        neighbors = n;
+                        p_x = x;
+                        p_y = y;
+                    }
+                }
+            }
+        }
+
+        // if updatable bin found
+        if(neighbors > 0) {
+            const auto a = getNeighborAverage(hist,p_x,p_y);
+            hist.Set(p_x,p_y, a);
+        }
+    } while(neighbors != 0);
+}
+
+bool FloodFillAverages::IsBinValid(const Array2DBase& hist, int x, int y)
+{
+    return (x>=0) && (y>=0)
+            && (unsigned(x)<hist.Width())
+            && (unsigned(y)<hist.Height())
+            && (isfinite(hist.Get(unsigned(x),unsigned(y))));
+}
+
+// up, down, right, left
+const std::vector<std::pair<int,int>> FloodFillAverages::neighbors4 = {{+1,0},{-1,0},{0,+1},{0,-1}};
