@@ -856,7 +856,7 @@ std::vector<double> getBinContents(const TH2D* hist) {
     return z;
 }
 
-std::unique_ptr<const Interpolator2D> makeInterpolator(const TH2D* hist) {
+std::unique_ptr<const Interpolator2D> makeInterpolator(TH2D* hist) {
 
     const unsigned nx = unsigned(hist->GetNbinsX());
     const unsigned pad_x = nx > 3 ? 1 : 2;
@@ -864,7 +864,7 @@ std::unique_ptr<const Interpolator2D> makeInterpolator(const TH2D* hist) {
     const unsigned ny = unsigned(hist->GetNbinsY());
     const unsigned pad_y = ny > 3 ? 1 : 2;
 
-    OrnderedGrid2D grid(nx+pad_x*2, ny+pad_y*2);
+    OrnderedGrid2D grid(nx+pad_x*2, ny+pad_y*2, std_ext::NaN);
 
     // extend x bin positions
     {
@@ -895,11 +895,8 @@ std::unique_ptr<const Interpolator2D> makeInterpolator(const TH2D* hist) {
     }
 
     // copy data to the "middle". leave some borders around
-    for(unsigned x=0; x <nx; ++x) {
-        for(unsigned y=0; y<ny; ++y) {
-            grid.z.at(x+pad_x,y+pad_y) = hist->GetBinContent(int(x+1),int(y+1));
-        }
-    }
+    grid.z.CopyRect(Array2D_TH2D(hist), pad_x, pad_y);
+
 
 
     // fill borders:
