@@ -96,23 +96,35 @@ double Array2D::Get(const unsigned x, const unsigned y) const {
 
 Array2DBase::~Array2DBase() {}
 
-template <typename T>
-struct interval2D {
-    interval<T> x;
-    interval<T> y;
 
-    interval2D(const interval<T>& xi, const interval<T>& yi): x(xi), y(yi) {}
 
-    void Clip(const interval2D<T>& other) {
-        x = intersect(x, other.x);
-        y = intersect(y, other.y);
-    }
-};
-
-void CopyRect(const Array2DBase& src, Array2DBase& dst, const unsigned x, const unsigned y)
+void Array2DBase::CopyRect(const ant::Array2DBase& src, const unsigned x, const unsigned y)
 {
-    auto dst_bounds = interval2D<unsigned>({0, dst.Width()}, {0, dst.Height()});
+    auto dst_bounds = interval2D<unsigned>({0, this->Width()}, {0, this->Height()});
     auto target     = interval2D<unsigned>({x, x+src.Width()}, {y, y+src.Height()});
     target.Clip(dst_bounds);
 
+    for(unsigned px=target.x.Start(); px<target.x.Stop(); ++px) {
+        for(unsigned py=target.y.Start(); py<target.y.Stop(); ++py) {
+            this->Set(px,py, src.Get(px-x, py-y));
+        }
+    }
+
+}
+
+void Array2DBase::CopyRect(const Array2DBase& src, const ant::interval2D<unsigned>& src_rect, const unsigned x, const unsigned y)
+{
+    const auto dst_bounds = interval2D<unsigned>({0, this->Width()}, {0, this->Height()});
+    const auto src_bounds = interval2D<unsigned>({0, src.Width()}, {0, src.Height()});
+    interval2D<unsigned> src_rect_ = src_rect;
+    src_rect_.Clip(src_bounds);
+
+    auto target = interval2D<unsigned>(src_rect_.x+x, src_rect_.y+y);
+    target.Clip(dst_bounds);
+
+    for(unsigned px=target.x.Start(); px<target.x.Stop(); ++px) {
+        for(unsigned py=target.y.Start(); py<target.y.Stop(); ++py) {
+            this->Set(px,py, src.Get(px-x, py-y));
+        }
+    }
 }

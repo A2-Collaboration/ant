@@ -1,8 +1,23 @@
 #include <vector>
+#include "base/interval.h"
 
 class TH2D;
 
 namespace ant {
+
+template <typename T>
+struct interval2D {
+    ant::interval<T> x;
+    ant::interval<T> y;
+
+    interval2D(const ant::interval<T>& xi, const ant::interval<T>& yi): x(xi), y(yi) {}
+
+    void Clip(const interval2D<T>& other) {
+        x = intersect(x, other.x);
+        y = intersect(y, other.y);
+    }
+};
+
 
 struct Array2DBase {
 
@@ -12,6 +27,9 @@ struct Array2DBase {
     virtual unsigned Width() const =0;
     virtual unsigned Height() const =0;
     virtual std::size_t Size() const =0;
+
+    void CopyRect(const Array2DBase& src, const unsigned x, const unsigned y);
+    void CopyRect(const Array2DBase& src, const ant::interval2D<unsigned>& src_rect, const unsigned x, const unsigned y);
 
     virtual ~Array2DBase();
 
@@ -60,7 +78,5 @@ public:
     unsigned Height() const override;
     std::size_t Size() const override;
 };
-
-static void CopyRect(const ant::Array2DBase& src, ant::Array2DBase& dst, const unsigned x, const unsigned y);
 
 }
