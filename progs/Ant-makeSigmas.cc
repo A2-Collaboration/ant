@@ -9,6 +9,7 @@
 #include "base/WrapTFile.h"
 #include "base/ProgressCounter.h"
 #include "base/std_ext/string.h"
+#include "base/Array2D.h"
 
 #include "analysis/plot/root_draw.h"
 
@@ -343,7 +344,11 @@ NewSigamsResult_t makeNewSigmas(const TH3D* pulls, const TH3D* sigmas, Histogram
 
     result.newSigmas->Multiply(result.pulls);
 
-    fillNeighborAverages(result.newSigmas);
+    //fillNeighborAverages(result.newSigmas);
+    {
+        auto wrapper = Array2D_TH2D(result.newSigmas);
+        FloodFillAverages::fillNeighborAverages(wrapper);
+    }
 
     result.newSigmas->SetTitle(newTitle.c_str());
 
