@@ -54,6 +54,9 @@ ParticleTypeTreeDatabase::database_t ParticleTypeTreeDatabase::CreateDatabase()
     database[Channel::Pi0_2g] = GetBaseTree();
     add_Pi0_2g(database[Channel::Pi0_2g]);
 
+    database[Channel::Pi0_eeg] = GetBaseTree();
+    add_Type_Dalitz(database[Channel::Pi0_eeg], ParticleTypeDatabase::Pi0);
+
     database[Channel::TwoPi0_4g] = GetBaseTree();
     add_Pi0_2g(database[Channel::TwoPi0_4g]);
     add_Pi0_2g(database[Channel::TwoPi0_4g]);
@@ -75,6 +78,14 @@ ParticleTypeTreeDatabase::database_t ParticleTypeTreeDatabase::CreateDatabase()
     database[Channel::Pi0Eta_4g] = GetBaseTree();
     add_Pi0_2g(database[Channel::Pi0Eta_4g]);
     add_Type_2g(database[Channel::Pi0Eta_4g], ParticleTypeDatabase::Eta);
+
+    {
+        database[Channel::Pi0PiPi_2gPiPi] = GetBaseTree();
+        auto& base = database[Channel::Pi0PiPi_2gPiPi];
+        add_Pi0_2g(base);
+        base->CreateDaughter(ParticleTypeDatabase::PiPlus);
+        base->CreateDaughter(ParticleTypeDatabase::PiMinus);
+    }
 
     database[Channel::Eta_2g] = GetBaseTree();
     add_Type_2g(database[Channel::Eta_2g],ParticleTypeDatabase::Eta);
@@ -142,6 +153,16 @@ ParticleTypeTreeDatabase::database_t ParticleTypeTreeDatabase::CreateDatabase()
         return t;
     };
     database[Channel::EtaPrime_gRho_gPiPi] = make_EtaPrime_gRho_gPiPi();
+
+
+    auto make_Rho_PiPi = [] () {
+        auto t = GetBaseTree();
+        auto rho = t->CreateDaughter(ParticleTypeDatabase::Rho);
+        rho->CreateDaughter(ParticleTypeDatabase::PiPlus);
+        rho->CreateDaughter(ParticleTypeDatabase::PiMinus);
+        return t;
+    };
+    database[Channel::Rho_PiPi] = make_Rho_PiPi();
 
     // do not sort them here, since references to ParticleTypeDatabase::Type's might not be initialized yet!
 
