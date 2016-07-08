@@ -187,7 +187,7 @@ struct FitSlices1DHists {
     std::vector<TH2D*> parameter = {};
 };
 
-FitSlices1DHists FitSlicesZ(const TH3D* hist, HistogramFactory& hf_, const bool do_fit=false, const double min_intragral=1000.0) {
+FitSlices1DHists FitSlicesZ(const TH3D* hist, HistogramFactory& hf_, const bool do_fit=false, const string& title="", const double min_intragral=1000.0) {
 
     HistogramFactory hf(formatter() << hist->GetName() << "_FitZ", hf_);
 
@@ -248,7 +248,7 @@ FitSlices1DHists FitSlicesZ(const TH3D* hist, HistogramFactory& hf_, const bool 
     result.Entries->SetStats(false);
 
     TCanvas* c = new TCanvas();
-    const string c_title = formatter() << hist->GetTitle() << " Fits";
+    const string c_title = formatter() << title << ": " << hist->GetTitle() << " Fits";
     c->SetTitle(c_title.c_str());
     c->Divide(int(xbins.Bins()), int(ybins.Bins()));
 
@@ -327,11 +327,11 @@ struct NewSigamsResult_t {
     TH2D* pulls     = nullptr;
 };
 
-NewSigamsResult_t makeNewSigmas(const TH3D* pulls, const TH3D* sigmas, HistogramFactory& hf, const string& output_name, const double integral_cut) {
+NewSigamsResult_t makeNewSigmas(const TH3D* pulls, const TH3D* sigmas, HistogramFactory& hf, const string& output_name, const string& treename, const double integral_cut) {
     const string newTitle = formatter() << "new " << sigmas->GetTitle();
 
-    auto pull_values  = FitSlicesZ(pulls,  hf, false, integral_cut);
-    auto sigma_values = FitSlicesZ(sigmas, hf, false, integral_cut);
+    auto pull_values  = FitSlicesZ(pulls,  hf, false, treename, integral_cut);
+    auto sigma_values = FitSlicesZ(sigmas, hf, false, treename, integral_cut);
 
     NewSigamsResult_t result;
 
@@ -414,22 +414,22 @@ int main( int argc, char** argv )
         if(std_ext::string_ends_with(treename, "pulls_photon_cb")) {
             s.name = "sigma_photon_cb";
             s.bins_cosTheta = bins_cosTheta_cb;
-            s.bins_E = {10, 0, 800};
+            s.bins_E = {10, 0, 1000};
         }
         if(std_ext::string_ends_with(treename, "pulls_photon_taps")) {
             s.name = "sigma_photon_taps";
             s.bins_cosTheta = bins_cosTheta_taps;
-            s.bins_E = {10, 0, 800};
+            s.bins_E = {10, 0, 1000};
         }
         if(std_ext::string_ends_with(treename, "pulls_proton_cb")) {
             s.name = "sigma_proton_cb";
             s.bins_cosTheta = bins_cosTheta_cb;
-            s.bins_E = {5, 0, 400};
+            s.bins_E = {1, 0, 1000};
         }
         if(std_ext::string_ends_with(treename, "pulls_proton_taps")) {
             s.name = "sigma_proton_taps";
             s.bins_cosTheta = bins_cosTheta_taps;
-            s.bins_E = {5, 0, 400};
+            s.bins_E = {1, 0, 1000};
         }
         return s;
     };
@@ -531,9 +531,9 @@ int main( int argc, char** argv )
             argc=1; // prevent TRint to parse any cmdline except prog name
             TRint app("Ant-makeSigmas",&argc,argv,nullptr,0,true);
 
-            auto new_E     = makeNewSigmas(h_pullsE,     h_sigmasE,     HistFac, "sigma_E",    integral_cut);
-            auto new_Theta = makeNewSigmas(h_pullsTheta, h_sigmasTheta, HistFac, "sigma_Theta",integral_cut);
-            auto new_Phi   = makeNewSigmas(h_pullsPhi,   h_sigmasPhi,   HistFac, "sigma_Phi",  integral_cut);
+            auto new_E     = makeNewSigmas(h_pullsE,     h_sigmasE,     HistFac, "sigma_E",    cmd_tree->getValue(), integral_cut);
+            auto new_Theta = makeNewSigmas(h_pullsTheta, h_sigmasTheta, HistFac, "sigma_Theta",cmd_tree->getValue(), integral_cut);
+            auto new_Phi   = makeNewSigmas(h_pullsPhi,   h_sigmasPhi,   HistFac, "sigma_Phi",  cmd_tree->getValue(), integral_cut);
 
             canvas summary(cmd_tree->getValue());
             summary << drawoption("colz");
