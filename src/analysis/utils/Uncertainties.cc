@@ -778,7 +778,9 @@ Uncertainties_t UncertaintyModels::Interpolated::GetSigmas(const TParticle& part
 
         } else if(particle.Type() == ParticleTypeDatabase::Proton) {
 
-            return cb_proton.GetUncertainties(particle);
+            auto u = cb_proton.GetUncertainties(particle);
+            u.sigmaE = 0.0;
+            return u;
 
         } else {
             throw Exception("Unexpected Particle in CB: " + particle.Type().Name());
@@ -792,7 +794,9 @@ Uncertainties_t UncertaintyModels::Interpolated::GetSigmas(const TParticle& part
 
         } else if(particle.Type() == ParticleTypeDatabase::Proton) {
 
-            return taps_proton.GetUncertainties(particle);
+            auto u = taps_proton.GetUncertainties(particle);
+            u.sigmaE = 0.0;
+            return u;
 
         } else {
             throw Exception("Unexpected Particle: " + particle.Type().Name());
@@ -805,7 +809,7 @@ Uncertainties_t UncertaintyModels::Interpolated::GetSigmas(const TParticle& part
 
 std::vector<double> getBinPositions(const TAxis* axis) {
 
-    assert(axis->GetNbins() >= 2);
+    assert(axis->GetNbins() >= 1);
 
     vector<double> bins(size_t(axis->GetNbins())+2);
 
@@ -813,8 +817,10 @@ std::vector<double> getBinPositions(const TAxis* axis) {
         bins.at(size_t(i)) = axis->GetBinCenter(i);
     }
 
-    bins.front() = bins.at(1) - (bins.at(2)-bins.at(1));
-    bins.back()  = bins.at(bins.size()-2) + (bins.at(bins.size()-2)-bins.at(bins.size()-3));
+    const auto binwidth = axis->GetBinWidth(1); //assume equal bin sizes everywhere
+
+    bins.front() = bins.at(1) - binwidth;
+    bins.back()  = bins.at(bins.size()-2) + binwidth;
 
     return bins;
 }
@@ -831,6 +837,18 @@ struct xy_array {
     size_t bin(const unsigned x, const unsigned y) { return x + y*width; }
 
     double& at(const unsigned x, const unsigned y) { return data.at(bin(x,y)); }
+
+};
+
+struct OrnderedGrid2D {
+    vector<double> x;
+    vector<double> y;
+    xy_array       z;
+
+    OrnderedGrid2D(const unsigned nx, const unsigned ny, const double dflt=0.0):
+        x(nx),
+        y(ny),
+        z(nx, ny, dflt) {}
 
 };
 
@@ -854,17 +872,46 @@ std::vector<double> getBinContents(const TH2D* hist) {
 
 std::unique_ptr<const Interpolator2D> makeInterpolator(const TH2D* hist) {
 
-    const vector<double> x = getBinPositions(hist->GetXaxis());
-    const vector<double> y = getBinPositions(hist->GetYaxis());
+    const unsigned nx = unsigned(hist->GetNbinsX());
+    const unsigned pad_x = nx > 3 ? 1 : 2;
 
-    xy_array z(unsigned(hist->GetNbinsX())+2, unsigned(hist->GetNbinsY())+2);
+    const unsigned ny = unsigned(hist->GetNbinsY());
+    const unsigned pad_y = ny > 3 ? 1 : 2;
 
-    assert(z.width  == x.size());
-    assert(z.height == y.size());
+    OrnderedGrid2D grid(nx+pad_x*2, ny+pad_y*2);
 
-    for(int x=1; x<=hist->GetNbinsX(); ++x) {
-        for(int y=1; y<=hist->GetNbinsY(); ++y) {
-            z.at(x,y) = hist->GetBinContent(x,y);
+    // extend x bin positions
+    {
+        double avgBinWidth = .0;
+        for(unsigned x=0; x<nx; ++x) {
+            grid.x.at(x+pad_x) = hist->GetXaxis()->GetBinCenter(int(x+1));
+            avgBinWidth += hist->GetXaxis()->GetBinWidth(int(x+1));
+        }
+        avgBinWidth /= nx;
+        for(unsigned x=1; x<=pad_x;++x) {
+            grid.x.at(pad_x-x)    = grid.x.at(pad_x-x+1)    - avgBinWidth;
+            grid.x.at(pad_x+nx+x-1) = grid.x.at(pad_x+nx+x-2) + avgBinWidth;
+        }
+    }
+
+    // eytend y bin positions
+    {
+        double avgBinWidth = .0;
+        for(unsigned y=0; y<ny; ++y) {
+            grid.y.at(y+pad_y) = hist->GetYaxis()->GetBinCenter(int(y+1));
+            avgBinWidth += hist->GetYaxis()->GetBinWidth(int(y+1));
+        }
+        avgBinWidth /= ny;
+        for(unsigned y=1; y<=pad_y;++y) {
+            grid.y.at(pad_y-y)    = grid.y.at(pad_y-y+1)    - avgBinWidth;
+            grid.y.at(pad_y+ny+y-1) = grid.y.at(pad_y+ny+y-2) + avgBinWidth;
+        }
+    }
+
+    // copy data to the "middle". leave some borders around
+    for(unsigned x=0; x <nx; ++x) {
+        for(unsigned y=0; y<ny; ++y) {
+            grid.z.at(x+pad_x,y+pad_y) = hist->GetBinContent(int(x+1),int(y+1));
         }
     }
 
@@ -872,24 +919,30 @@ std::unique_ptr<const Interpolator2D> makeInterpolator(const TH2D* hist) {
     // fill borders:
 
     // top and botton rows
-    for(unsigned x=1; x<z.width-1; ++x) {
-        z.at(x,0) = z.at(x,1);
-        z.at(x,z.height-1) = z.at(x,z.height-2);
+    for(unsigned y=1; y<=pad_y; ++y ) {
+        for(unsigned x=0; x<nx; ++x) {
+            grid.z.at(x+pad_x,pad_y-y)       = grid.z.at(x+pad_x,pad_y-y+1);
+            grid.z.at(x+pad_x,pad_y+ny+y-1)    = grid.z.at(x+pad_x,pad_y+ny+y-2);
+        }
     }
 
     // first and last column
-    for(unsigned y=1; y<z.height-1; ++y) {
-        z.at(0,y) = z.at(1,y);
-        z.at(z.width-1,y) = z.at(z.width-2,y);
+    for(unsigned x=1; x<=pad_x; ++x ) {
+        for(unsigned y=0; y<ny; ++y) {
+            grid.z.at(pad_x-x,   y+pad_y)      = grid.z.at(pad_x-x+1,   y+pad_y);
+            grid.z.at(pad_x+nx+x-1,y+pad_y)    = grid.z.at(pad_x+nx+x-2,y+pad_y);
+        }
     }
 
-    //corners
-    z.at(0,0) = z.at(1,1);
-    z.at(z.width-1, 0) = z.at(z.width-2, 1);
-    z.at(0, z.height-1) = z.at(1, z.height-2);
-    z.at(z.width-1, z.height-1) = z.at(z.width-2, z.height-2);
+    for(unsigned d=1; d<=min(pad_x,pad_y); ++d) {
+        grid.z.at(pad_x-d,      pad_y-d)      = grid.z.at(pad_x-d+1,    pad_y-d+1);
+        grid.z.at(pad_x+nx+d-1, pad_y-d)      = grid.z.at(pad_x+nx+d-2, pad_y-d+1);
+        grid.z.at(pad_x+nx+d-1, pad_y+ny+d-1) = grid.z.at(pad_x+nx+d-2, pad_y+ny+d-2);
+        grid.z.at(pad_x-d,      pad_y+ny+d-1) = grid.z.at(pad_x-d+1,    pad_y+ny+d-2);
+    }
 
-    return std_ext::make_unique<Interpolator2D>(x,y,z.data);
+
+    return std_ext::make_unique<Interpolator2D>(grid.x,grid.y, grid.z.data);
 }
 
 void UncertaintyModels::Interpolated::LoadSigmas(const string& filename)
