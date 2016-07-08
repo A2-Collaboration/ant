@@ -937,6 +937,7 @@ void UncertaintyModels::Interpolated::LoadSigmas(const string& filename)
         taps_proton.Load(f, "sigma_proton_taps");
 
         loaded_sigmas = true;
+        VLOG(5) << "Successfully loaded interpolation data for Uncertainty Model from " << filename;
 
     } catch (WrapTFile::Exception& e) {
         LOG(WARNING) << "Can't open uncertainty histogram file: " << filename <<". Default model will be used: " << e.what();
