@@ -28,6 +28,7 @@ set(SRCS_BASE
   TH1Ext.h
   WrapTTree.cc
   Interpolator.cc
+  Array2D.cc
   )
 
 set(SRCS_VEC

@@ -7,6 +7,7 @@
 #include "base/Logger.h"
 #include "base/std_ext/system.h"
 #include "base/Interpolator.h"
+#include "base/Array2D.h"
 
 #include <ostream>
 
@@ -825,25 +826,10 @@ std::vector<double> getBinPositions(const TAxis* axis) {
     return bins;
 }
 
-struct xy_array {
-
-    unsigned width;
-    unsigned height;
-    std::vector<double> data;
-
-    xy_array(const unsigned w, const unsigned h, const double default_value=0.0):
-        width(w), height(h), data(w*h, default_value) {}
-
-    size_t bin(const unsigned x, const unsigned y) { return x + y*width; }
-
-    double& at(const unsigned x, const unsigned y) { return data.at(bin(x,y)); }
-
-};
-
 struct OrnderedGrid2D {
     vector<double> x;
     vector<double> y;
-    xy_array       z;
+    Array2D        z;
 
     OrnderedGrid2D(const unsigned nx, const unsigned ny, const double dflt=0.0):
         x(nx),
@@ -942,7 +928,7 @@ std::unique_ptr<const Interpolator2D> makeInterpolator(const TH2D* hist) {
     }
 
 
-    return std_ext::make_unique<Interpolator2D>(grid.x,grid.y, grid.z.data);
+    return std_ext::make_unique<Interpolator2D>(grid.x,grid.y, grid.z.Data());
 }
 
 void UncertaintyModels::Interpolated::LoadSigmas(const string& filename)
