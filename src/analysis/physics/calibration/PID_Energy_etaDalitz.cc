@@ -622,6 +622,6 @@ unsigned PID_Energy_etaDalitz::ReactionChannelList_t::identify(const ant::TParti
 
 const PID_Energy_etaDalitz::ReactionChannelList_t PID_Energy_etaDalitz::reaction_channels = PID_Energy_etaDalitz::makeChannels();
 
-constexpr unsigned PID_Energy_etaDalitz::ReactionChannelList_t::other_index = 1000;
+const unsigned PID_Energy_etaDalitz::ReactionChannelList_t::other_index = 1000;
 
 AUTO_REGISTER_PHYSICS(PID_Energy_etaDalitz)
