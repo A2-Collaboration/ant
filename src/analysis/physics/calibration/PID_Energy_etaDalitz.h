@@ -16,44 +16,76 @@ namespace physics {
 
 class PID_Energy_etaDalitz : public Physics {
 
+public:
+    struct Tree_t : WrapTTree {
+        Tree_t();
+
+        ADD_BRANCH_T(unsigned,                    nCands)
+
+        ADD_BRANCH_T(std::vector<TLorentzVector>, photons, 3)
+        ADD_BRANCH_T(std::vector<TLorentzVector>, photons_fitted, 3)
+        ADD_BRANCH_T(std::vector<double>,         photons_Time, 3)
+        ADD_BRANCH_T(std::vector<TVector2>,       photons_PSA, 3)
+        ADD_BRANCH_T(std::vector<int>,            photons_detector,3)
+        ADD_BRANCH_T(std::vector<double>,         photons_vetoE, 3)
+
+        ADD_BRANCH_T(std::vector<double>,         photon_E_pulls, 3)
+        ADD_BRANCH_T(std::vector<double>,         photon_theta_pulls, 3)
+        ADD_BRANCH_T(std::vector<double>,         photon_phi_pulls, 3)
+
+        ADD_BRANCH_T(TLorentzVector,              p)
+        ADD_BRANCH_T(TLorentzVector,              p_fitted)
+        ADD_BRANCH_T(double,                      p_Time)
+        ADD_BRANCH_T(TVector2,                    p_PSA)
+        ADD_BRANCH_T(int,                         p_detector)
+        ADD_BRANCH_T(double,                      p_vetoE)
+
+        ADD_BRANCH_T(double,                      p_theta_pull)
+        ADD_BRANCH_T(double,                      p_phi_pull)
+
+        ADD_BRANCH_T(double,                      TaggW)
+        ADD_BRANCH_T(double,                      TaggE)
+        ADD_BRANCH_T(double,                      TaggT)
+        ADD_BRANCH_T(unsigned,                    TaggCh)
+        ADD_BRANCH_T(double,                      beam_E_fitted)
+        ADD_BRANCH_T(double,                      beam_E_pull)
+
+        ADD_BRANCH_T(double,                      chi2)
+        ADD_BRANCH_T(double,                      probability)
+        ADD_BRANCH_T(unsigned,                    iterations)
+        ADD_BRANCH_T(unsigned,                    DoF)
+
+        ADD_BRANCH_T(double,                      CBSumE)
+        ADD_BRANCH_T(double,                      CBAvgTime)
+
+        ADD_BRANCH_T(unsigned,                    channel)
+
+        ADD_BRANCH_T(TLorentzVector,              eta)
+        ADD_BRANCH_T(TLorentzVector,              eta_fit)
+        ADD_BRANCH_T(TLorentzVector,              mm)
+        ADD_BRANCH_T(double,                      copl)
+    };
+
 protected:
     TH2* h_eegPID = nullptr;
     TH2* h_eegPID_proton = nullptr;
     TH2* h_eegPID_combined = nullptr;
-    TH1D* h_counts = nullptr;
     TH1D* h_pTheta = nullptr;
     TH1D* h_protonVeto = nullptr;
     TH1D* h_etaIM_final = nullptr;
     TH2D* h_IM2d = nullptr;
     TH2* h_eta = nullptr;
     TH2* h_proton = nullptr;
+
+    TH1D* h_counts = nullptr;
+    TH1D* missed_channels = nullptr;
+    TH1D* found_channels  = nullptr;
+
+    static constexpr unsigned N_FINAL_STATE = 4;
     static constexpr double ETA_IM = 547.853;
     static constexpr double ETA_SIGMA = 50.;
     // which fit should be used?
     static constexpr bool USE_TREEFIT = true;
-
-    struct Tree_t : WrapTTree {
-        Tree_t();
-
-        ADD_BRANCH_T(TLorentzVector, eta)
-        ADD_BRANCH_T(TLorentzVector, eta_fit)
-        ADD_BRANCH_T(TLorentzVector, missing_momentum)
-        ADD_BRANCH_T(double, copl)
-        ADD_BRANCH_T(double, copl_final)
-
-        ADD_BRANCH_T(double, TaggW)
-        ADD_BRANCH_T(double, TaggE)
-        ADD_BRANCH_T(double, TaggT)
-        ADD_BRANCH_T(unsigned, TaggCh)
-
-        ADD_BRANCH_T(double, chi2)
-        ADD_BRANCH_T(double, probability)
-        ADD_BRANCH_T(unsigned, iterations)
-
-        ADD_BRANCH_T(unsigned, nCands)
-        ADD_BRANCH_T(double, CBSumE)
-        ADD_BRANCH_T(double, CBAvgTime)
-    };
 
     struct PerChannel_t {
         std::string title;
@@ -116,6 +148,29 @@ public:
 
     virtual void ProcessEvent(const TEvent& event, manager_t& manager) override;
     virtual void ShowResult() override;
+
+    using decaytree_t = ant::Tree<const ParticleTypeDatabase::Type&>;
+
+    struct ReactionChannel_t {
+        std::string name = "";
+        std::shared_ptr<decaytree_t> tree = nullptr;
+        int color = kBlack;
+
+        ReactionChannel_t() = default;
+        ReactionChannel_t(const std::string& n);
+        ReactionChannel_t(const std::shared_ptr<decaytree_t>& t, const int c);
+        ReactionChannel_t(const std::shared_ptr<decaytree_t>& t, const std::string& n, const int c);
+        ~ReactionChannel_t();
+    };
+
+    struct ReactionChannelList_t {
+        static const unsigned other_index;
+        std::map<unsigned, ReactionChannel_t> channels;
+        unsigned identify(const TParticleTree_t &tree) const;
+    };
+
+    static ReactionChannelList_t makeChannels();
+    static const ReactionChannelList_t reaction_channels;
 };
 
 }}} // namespace ant::analysis::physics

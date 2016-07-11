@@ -125,9 +125,30 @@ void PID_Energy_etaDalitz::PerChannel_t::Fill(const TEventData& d)
     }
 }
 
+static TVector2 getPSAVector(const TParticlePtr& p)
+{
+    if (p->Candidate) {
+        const auto cluster = p->Candidate->FindCaloCluster();
+        if (cluster)
+            return {cluster->Energy, cluster->ShortEnergy};
+    }
+
+    throw std::runtime_error("Incomplete Particle without candiate or CaloCluster");
+}
+
+static int getDetectorAsInt(const Detector_t::Any_t& d)
+{
+    if (d & Detector_t::Type_t::CB)
+        return 1;
+    else if (d & Detector_t::Type_t::TAPS)
+        return 2;
+
+    return 0;
+}
+
 PID_Energy_etaDalitz::PID_Energy_etaDalitz(const string& name, OptionsPtr opts) :
     Physics(name, opts),
-    kinfit("kinfit", 3,
+    kinfit("kinfit", N_FINAL_STATE-1,
            make_shared<uncertainty_model_t>(), false, MakeFitSettings(20)
            ),
     treefitter_eta("treefitter_eta", eta_3g(),
@@ -143,6 +164,10 @@ PID_Energy_etaDalitz::PID_Energy_etaDalitz(const string& name, OptionsPtr opts) 
 
     t.CreateBranches(HistFac.makeTTree("tree"));
 
+    h_counts = HistFac.makeTH1D("Events per Channel", "channel", "#", BinSettings(20), "h_counts");
+    missed_channels = HistFac.makeTH1D("Unlisted Channels", "", "Total Events seen", BinSettings(20), "missed_channels");
+    found_channels  = HistFac.makeTH1D("Listed Channels", "", "Total Events seen", BinSettings(20), "found_channels");
+
     const BinSettings pid_channels(detector->GetNChannels());
     const BinSettings energybins(1000, 0, 10);
 
@@ -152,7 +177,6 @@ PID_Energy_etaDalitz::PID_Energy_etaDalitz(const string& name, OptionsPtr opts) 
                                        energybins, pid_channels, "h_eegPID_proton");
     h_eegPID_combined = HistFac.makeTH2D("PID all entries", "PID Energy [MeV]", "#",
                                          energybins, pid_channels, "h_eegPID_combined");
-    h_counts = HistFac.makeTH1D("Events per Channel", "channel", "#", BinSettings(20), "h_counts");
     h_pTheta = HistFac.makeTH1D("#vartheta proton candidate", "#vartheta_{p} [#circ]", "#", BinSettings(720, 0, 180), "h_pTheta");
     h_protonVeto = HistFac.makeTH1D("Veto energy identified proton", "Veto [MeV]", "#", energybins, "h_protonVeto");
     h_etaIM_final = HistFac.makeTH1D("IM #eta final", "IM [MeV]", "#", BinSettings(1200), "h_etaIM_final");
@@ -164,6 +188,13 @@ PID_Energy_etaDalitz::PID_Energy_etaDalitz(const string& name, OptionsPtr opts) 
 void PID_Energy_etaDalitz::ProcessEvent(const TEvent& event, manager_t&)
 {
     const bool MC = event.MCTrue().ParticleTree != nullptr;
+    t.channel = reaction_channels.identify(event.MCTrue().ParticleTree);
+
+    if (t.channel == ReactionChannelList_t::other_index) {
+        if (MC)
+            missed_channels->Fill(utils::ParticleTools::GetDecayString(event.MCTrue().ParticleTree).c_str(), 1);
+    } else
+        found_channels->Fill(t.channel);
 
     std::string production = "data";
     std::string decaystring = "data";
@@ -200,12 +231,15 @@ void PID_Energy_etaDalitz::ProcessEvent(const TEvent& event, manager_t&)
     t.nCands = cands.size();
     h.steps->Fill("seen", 1);
 
-    if (cands.size() != 4)
+    t.CBSumE = data.Trigger.CBEnergySum;
+
+    if (cands.size() != N_FINAL_STATE)
         return;
     h.steps->Fill("#cands", 1);
 
     TLorentzVector eta;
-    LorentzVec proton;
+    TLorentzVector eta_fit;
+    TParticlePtr proton;
     //const interval<double> eta_im({ETA_IM-ETA_SIGMA, ETA_IM+ETA_SIGMA});
     const interval<double> coplanarity({-25, 25});
     TCandidatePtrList comb;
@@ -279,17 +313,15 @@ void PID_Energy_etaDalitz::ProcessEvent(const TEvent& event, manager_t&)
             h.steps->Fill("2 PIDs", 1);
 
             photons.clear();
-            proton = TParticle(ParticleTypeDatabase::Proton, comb.back());
+            proton = make_shared<TParticle>(ParticleTypeDatabase::Proton, comb.back());
             eta.SetXYZT(0,0,0,0);
             for (size_t j = 0; j < comb.size()-1; j++) {
                 photons.emplace_back(make_shared<TParticle>(ParticleTypeDatabase::Photon, comb.at(j)));
                 eta += TParticle(ParticleTypeDatabase::Photon, comb.at(j));
             }
-            t.eta = eta;
             h.etaIM->Fill(eta.M(), t.TaggW);
 
-            const double copl = std_ext::radian_to_degree(abs(eta.Phi() - proton.Phi())) - 180.;
-            t.copl = copl;
+            const double copl = std_ext::radian_to_degree(abs(eta.Phi() - proton->Phi())) - 180.;
             h.hCopl->Fill(copl, t.TaggW);
             if (!coplanarity.Contains(copl)) {
                 shift_right(comb);
@@ -299,7 +331,6 @@ void PID_Energy_etaDalitz::ProcessEvent(const TEvent& event, manager_t&)
 
             missing = taggerhit.GetPhotonBeam() + LorentzVec(0, 0, 0, ParticleTypeDatabase::Proton.Mass());
             missing -= eta;
-            t.missing_momentum = missing;
             h.MM->Fill(missing.M(), t.TaggW);
             if (!mm.Contains(missing.M())) {
                 shift_right(comb);
@@ -309,11 +340,13 @@ void PID_Energy_etaDalitz::ProcessEvent(const TEvent& event, manager_t&)
 
             APLCON::Result_t r;
             TParticleList fitted_photons;
+            TParticlePtr fitted_proton;
+            double fitted_beam, beam_pull;
+            decltype(kinfit.GetFitParticles()) fit_particles;
 
             if (USE_TREEFIT) {
                 treefitter_eta.SetEgammaBeam(taggerhit.PhotonEnergy);
-                const auto& p = make_shared<TParticle>(ParticleTypeDatabase::Proton, comb.back());
-                treefitter_eta.SetProton(p);
+                treefitter_eta.SetProton(proton);
                 treefitter_eta.SetPhotons(photons);
 
                 // works this way because only one combination needs to be fitted
@@ -328,10 +361,13 @@ void PID_Energy_etaDalitz::ProcessEvent(const TEvent& event, manager_t&)
                 h.steps->Fill("treefit", 1);
 
                 fitted_photons = treefitter_eta.GetFittedPhotons();
+                fitted_proton   = treefitter_eta.GetFittedProton();
+                fitted_beam = treefitter_eta.GetFittedBeamE();
+                beam_pull = treefitter_eta.GetBeamEPull();
+                fit_particles = treefitter_eta.GetFitParticles();
             } else {
                 kinfit.SetEgammaBeam(taggerhit.PhotonEnergy);
-                const auto& p = make_shared<TParticle>(ParticleTypeDatabase::Proton, comb.back());
-                kinfit.SetProton(p);
+                kinfit.SetProton(proton);
                 kinfit.SetPhotons(photons);
 
                 r = kinfit.DoFit();
@@ -343,6 +379,10 @@ void PID_Energy_etaDalitz::ProcessEvent(const TEvent& event, manager_t&)
                 h.steps->Fill("kinfit", 1);
 
                 fitted_photons = kinfit.GetFittedPhotons();
+                fitted_proton   = kinfit.GetFittedProton();
+                fitted_beam = kinfit.GetFittedBeamE();
+                beam_pull = kinfit.GetBeamEPull();
+                fit_particles = kinfit.GetFitParticles();
             }
 
             const double chi2 = r.ChiSquare;
@@ -359,21 +399,55 @@ void PID_Energy_etaDalitz::ProcessEvent(const TEvent& event, manager_t&)
             h.steps->Fill("probability", 1);
 
             h_eta->Fill(eta.E() - eta.M(), std_ext::radian_to_degree(eta.Theta()), t.TaggW);
-            h_proton->Fill(proton.E - proton.M(), std_ext::radian_to_degree(proton.Theta()), t.TaggW);
+            h_proton->Fill(proton->E - proton->M(), std_ext::radian_to_degree(proton->Theta()), t.TaggW);
 
-            eta.SetXYZT(0,0,0,0);
+            eta_fit.SetXYZT(0,0,0,0);
             for (const auto& g : fitted_photons)
-                eta += *g;
-            t.eta_fit = eta;
-            h.etaIM_fit->Fill(eta.M(), t.TaggW);
+                eta_fit += *g;
+            h.etaIM_fit->Fill(eta_fit.M(), t.TaggW);
 
             if (prob > best_prob) {
                 best_prob = prob;
                 best_comb = i;
+
+                assert(fit_particles.size() == N_FINAL_STATE);
+
+                // update tree branches
+                t.chi2 = chi2;
+                t.probability = prob;
+                t.iterations = iterations;
+                t.DoF = r.NDoF;
+
+                t.beam_E_pull = beam_pull;
+                t.beam_E_fitted = fitted_beam;
+
+                t.p          = *proton;
+                t.p_fitted   = *fitted_proton;
+                t.p_Time     = proton->Candidate->Time;
+                t.p_PSA      = getPSAVector(proton);
+                t.p_vetoE    = proton->Candidate->VetoEnergy;
+                t.p_detector = getDetectorAsInt(proton->Candidate->Detector);
+
+                t.p_theta_pull  = fit_particles.at(0).Theta.Pull;
+                t.p_phi_pull    = fit_particles.at(0).Phi.Pull;
+
+                for (size_t i = 0; i < N_FINAL_STATE-1; ++i) {
+                    t.photons().at(i)            = *(photons.at(i));
+                    t.photons_fitted().at(i)     = *(fitted_photons.at(i));
+                    t.photons_Time().at(i)       = photons.at(i)->Candidate->Time;
+                    t.photons_vetoE().at(i)      = photons.at(i)->Candidate->VetoEnergy;
+                    t.photons_PSA().at(i)        = getPSAVector(photons.at(i));
+                    t.photons_detector().at(i)   = getDetectorAsInt(photons.at(i)->Candidate->Detector);
+                    t.photon_E_pulls().at(i)     = fit_particles.at(i+1).Ek.Pull;
+                    t.photon_theta_pulls().at(i) = fit_particles.at(i+1).Theta.Pull;
+                    t.photon_phi_pulls().at(i)   = fit_particles.at(i+1).Phi.Pull;
+                }
+
+                t.eta = eta;
+                t.eta_fit = eta_fit;
+                t.mm = missing;
+                t.copl = copl;
             }
-            t.chi2 = chi2/r.NDoF;
-            t.probability = prob;
-            t.iterations = iterations;
 
             shift_right(comb);
         }
@@ -408,7 +482,7 @@ void PID_Energy_etaDalitz::ProcessEvent(const TEvent& event, manager_t&)
     }
     h.steps->Fill("anti #pi^{0} cut", 1);
 
-    proton = TParticle(ParticleTypeDatabase::Proton, comb.back());
+    proton = make_shared<TParticle>(ParticleTypeDatabase::Proton, comb.back());
     eta.SetXYZT(0,0,0,0);
     for (size_t i = 0; i < comb.size()-1; i++)
         eta += TParticle(ParticleTypeDatabase::Photon, comb.at(i));
@@ -460,7 +534,7 @@ void PID_Energy_etaDalitz::ProcessEvent(const TEvent& event, manager_t&)
 
     h.etaIM_final->Fill(eta.M());
     h_etaIM_final->Fill(eta.M());
-    h.hCopl_final->Fill(std_ext::radian_to_degree(abs(eta.Phi() - proton.Phi())) - 180.);
+    h.hCopl_final->Fill(std_ext::radian_to_degree(abs(eta.Phi() - proton->Phi())) - 180.);
     for (const TCandidatePtr& c : comb)
         if (c->VetoEnergy) {
             h.eegPID->Fill(c->VetoEnergy, c->FindVetoCluster()->CentralElement);
@@ -479,5 +553,66 @@ void PID_Energy_etaDalitz::ShowResult()
     for (auto& entry : channels)
         entry.second.Show();
 }
+
+PID_Energy_etaDalitz::ReactionChannel_t::~ReactionChannel_t()
+{}
+
+PID_Energy_etaDalitz::ReactionChannel_t::ReactionChannel_t(const string &n):
+    name(n)
+{}
+
+PID_Energy_etaDalitz::ReactionChannel_t::ReactionChannel_t(const std::shared_ptr<PID_Energy_etaDalitz::decaytree_t> &t, const int c):
+    name(utils::ParticleTools::GetDecayString(t)),
+    tree(t),
+    color(c)
+{}
+
+PID_Energy_etaDalitz::ReactionChannel_t::ReactionChannel_t(const std::shared_ptr<PID_Energy_etaDalitz::decaytree_t> &t, const string &n, const int c):
+    name(n),
+    tree(t),
+    color(c)
+{}
+
+PID_Energy_etaDalitz::ReactionChannelList_t PID_Energy_etaDalitz::makeChannels()
+{
+    ReactionChannelList_t m;
+
+    m.channels[0] = ReactionChannel_t("Data");
+    m.channels[1] = {ParticleTypeTreeDatabase::Get(ParticleTypeTreeDatabase::Channel::Eta_eeg), kRed};  // signal
+    m.channels[2] = ReactionChannel_t("Sum MC");
+    m.channels[3] = ReactionChannel_t("MC BackG");
+
+    m.channels[10] = {ParticleTypeTreeDatabase::Get(ParticleTypeTreeDatabase::Channel::Eta_2g),         "#eta #rightarrow #gamma #gamma", kYellow};
+    m.channels[11] = {ParticleTypeTreeDatabase::Get(ParticleTypeTreeDatabase::Channel::Pi0_2g),         "#pi^{0}", kYellow};
+    m.channels[12] = {ParticleTypeTreeDatabase::Get(ParticleTypeTreeDatabase::Channel::Rho_PiPi),       "#rho #rightarrow #pi^{+} #pi^{-}", kYellow};
+    m.channels[13] = {ParticleTypeTreeDatabase::Get(ParticleTypeTreeDatabase::Channel::TwoPi0_4g),      "#pi^{0} #pi^{0}", kOrange};
+    m.channels[14] = {ParticleTypeTreeDatabase::Get(ParticleTypeTreeDatabase::Channel::Pi0PiPi_2gPiPi), "#pi^{0} #pi^{+} #pi^{-}", kYellow};
+    m.channels[15] = {ParticleTypeTreeDatabase::Get(ParticleTypeTreeDatabase::Channel::Pi0_eeg),        "#pi^{0} #rightarrow e^{+} e^{-} #gamma", kYellow};
+    m.channels[16] = {ParticleTypeTreeDatabase::Get(ParticleTypeTreeDatabase::Channel::TwoPi0_2ggEpEm), "#pi^{0} #pi^{0} #rightarrow 2#gamma e^{+} e^{-} #gamma",kGreen-9};
+    m.channels[m.other_index] = ReactionChannel_t(nullptr, "Others", kCyan);
+
+    return m;
+}
+
+unsigned PID_Energy_etaDalitz::ReactionChannelList_t::identify(const ant::TParticleTree_t& tree) const
+{
+    if (!tree)
+        return 0;
+
+    for (const auto& c : channels) {
+
+        if (!c.second.tree)
+            continue;
+
+        if (tree->IsEqual(c.second.tree, utils::ParticleTools::MatchByParticleName))
+            return c.first;
+    }
+
+    return other_index;
+}
+
+const PID_Energy_etaDalitz::ReactionChannelList_t PID_Energy_etaDalitz::reaction_channels = PID_Energy_etaDalitz::makeChannels();
+
+constexpr unsigned PID_Energy_etaDalitz::ReactionChannelList_t::other_index = 1000;
 
 AUTO_REGISTER_PHYSICS(PID_Energy_etaDalitz)
