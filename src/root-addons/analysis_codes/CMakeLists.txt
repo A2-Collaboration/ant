@@ -14,7 +14,7 @@ set(DICT_HEADERS
     ThetaCBToyMC.h
     KinfitExtract.h
     Math.h
-    InterpolatedSigmas.h
+    InterpolatedPulls.h
   )
 
 set(SRCS
@@ -32,7 +32,7 @@ set(SRCS
     ThetaCBToyMC.cc
     KinfitExtract.cc
     Math.cc
-    InterpolatedSigmas.cc
+    InterpolatedPulls.cc
   )
 
 set(ROOT_DICTIONARY "${CMAKE_CURRENT_BINARY_DIR}/G__analysis_codes.cc")

@@ -6,7 +6,7 @@ class TDirectory;
 
 namespace ant {
 
-struct InterpolatedSigamas {
+struct InterpolatedPulls {
 
     static void PlotDirectory(TDirectory* dir, const std::string& prefix, const int cols, const int rows, const std::string& title="", TDirectory* dir2=nullptr);
     static void PlotPullSigmas(const std::string& treename, TDirectory* dir);

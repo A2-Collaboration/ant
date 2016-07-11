@@ -1,4 +1,4 @@
-#include "InterpolatedSigmas.h"
+#include "InterpolatedPulls.h"
 
 #include "base/std_ext/string.h"
 #include <string>
@@ -31,43 +31,53 @@ T* getObj(TDirectory* d, const string& name) {
 }
 
 
-void InterpolatedSigamas::PlotDirectory(TDirectory* dir, const string& prefix, const int cols, const int rows, const string& title, TDirectory* dir2) {
+void InterpolatedPulls::PlotDirectory(TDirectory* dir, const string& prefix, const int cols, const int rows, const string& title, TDirectory* dir2) {
 
     auto c = new TCanvas();
     c->SetTitle(title.c_str());
-    c->Divide(cols, rows);
+    c->Divide(cols, rows, 0, 0);
 
     for(int y=0; y< rows; ++y) {
         for(int x=0; x< cols; ++x) {
 
+            c->cd( 1 + x + (rows-y-1)*cols);
+
             const string name = std_ext::formatter() << prefix << "_" << x+1 << "_" << y+1;
 
             TH1* h1 = nullptr;
+            TH1* h2 = nullptr;
+
             h1 = getObj<TH1>(dir, name);
 
-            TH1* h2 = nullptr;
+            if(!h1)
+                continue;
+
+            h1->SetStats(false);
+
             if(dir2) {
                 h2 = getObj<TH1>(dir2, name);
-            }
+                if(!h2)
+                    continue;
 
-            c->cd( 1 + x + (rows-y-1)*cols);
+                h2->SetStats(false);
 
-            if(!dir2 && h1) {
-                h1->Draw();
-            } else if(dir2 && h1 && h2) {
                 THStack* s = new THStack();
                 s->Add(h1);
                 h1->SetLineColor(kRed);
                 s->Add(h2);
                 h2->SetLineColor(kBlue);
                 s->Draw();
+
+            } else {
+                h1->Draw();
             }
+
         }
     }
 
 }
 
-void InterpolatedSigamas::PlotPullSigmas(const string& treename, TDirectory* dir)
+void InterpolatedPulls::PlotPullSigmas(const string& treename, TDirectory* dir)
 {
     canvas c(treename);
     c << drawoption("colz");
@@ -94,7 +104,7 @@ void InterpolatedSigamas::PlotPullSigmas(const string& treename, TDirectory* dir
 
 }
 
-void InterpolatedSigamas::PlotComparePulls(TDirectory* red, TDirectory* blue)
+void InterpolatedPulls::PlotComparePulls(TDirectory* red, TDirectory* blue)
 {
     for(const auto& particle : {"photon", "proton"}) {
         for(const auto& det : {"cb", "taps"}) {
@@ -105,6 +115,9 @@ void InterpolatedSigamas::PlotComparePulls(TDirectory* red, TDirectory* blue)
             d_red  = getObj<TDirectory>(red,  treename);
             d_blue = getObj<TDirectory>(blue, treename);
 
+            if(!d_red || !d_blue)
+                continue;
+
             for(const auto& varname : {"E", "Theta", "Phi"}) {
                 TDirectory* d_var_red  = nullptr;
                 TDirectory* d_var_blue = nullptr;
@@ -114,6 +127,9 @@ void InterpolatedSigamas::PlotComparePulls(TDirectory* red, TDirectory* blue)
 
                 d_var_red  = getObj<TDirectory>(d_red,  var_d_name);
                 d_var_blue = getObj<TDirectory>(d_blue, var_d_name);
+
+                if(!d_var_red || !d_var_blue)
+                    continue;
 
                 PlotDirectory(d_var_red, var_h_name, 15, 10, formatter() << particle << " " << det << " " <<  varname, d_var_blue);
             }
