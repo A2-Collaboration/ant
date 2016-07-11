@@ -27,6 +27,7 @@
 #pragma link C++ class ant::MC::ThetaCBToyMC+;
 #pragma link C++ class ant::KinfitExtract+;
 #pragma link C++ class ant::Math+;
+#pragma link C++ class ant::InterpolatedSigamas+;
 
 #endif // __CINT__
 
