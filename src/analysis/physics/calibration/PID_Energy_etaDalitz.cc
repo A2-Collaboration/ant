@@ -392,11 +392,13 @@ void PID_Energy_etaDalitz::ProcessEvent(const TEvent& event, manager_t&)
             h.hProb->Fill(prob);
             h.hIter->Fill(iterations);
 
-            if (prob < .05) {
-                shift_right(comb);
-                continue;
+            if (PROBABILITY_CUT) {
+                if (prob < PROBABILITY) {
+                    shift_right(comb);
+                    continue;
+                }
+                h.steps->Fill("probability", 1);
             }
-            h.steps->Fill("probability", 1);
 
             h_eta->Fill(eta.E() - eta.M(), std_ext::radian_to_degree(eta.Theta()), t.TaggW);
             h_proton->Fill(proton->E - proton->M(), std_ext::radian_to_degree(proton->Theta()), t.TaggW);
@@ -469,18 +471,20 @@ void PID_Energy_etaDalitz::ProcessEvent(const TEvent& event, manager_t&)
 
     // do an anti pi0 cut on the combinations e+g and e-g
     // (assuming the photon deposited the least energy in the PIDs)
-    const interval<double> pion_cut(102., 170.);
-    TLorentzVector pi0;
-    const std::vector<std::array<size_t, 2>> pi0_combs = {{0, 2}, {1, 2}};
-    for (const auto pi0_comb : pi0_combs) {
-        pi0 = TLorentzVector(0., 0., 0., 0.);
-        for (const auto idx : pi0_comb)
-            pi0 += TParticle(ParticleTypeDatabase::Photon, comb.at(idx));
-        // apply an anti pion cut
-        if (pion_cut.Contains(pi0.M()))
-            return;
+    if (ANTI_PI0_CUT) {
+        const interval<double> pion_cut(ANTI_PI0_LOW, ANTI_PI0_HIGH);
+        TLorentzVector pi0;
+        const std::vector<std::array<size_t, 2>> pi0_combs = {{0, 2}, {1, 2}};
+        for (const auto pi0_comb : pi0_combs) {
+            pi0 = TLorentzVector(0., 0., 0., 0.);
+            for (const auto idx : pi0_comb)
+                pi0 += TParticle(ParticleTypeDatabase::Photon, comb.at(idx));
+            // apply an anti pion cut
+            if (pion_cut.Contains(pi0.M()))
+                return;
+        }
+        h.steps->Fill("anti #pi^{0} cut", 1);
     }
-    h.steps->Fill("anti #pi^{0} cut", 1);
 
     proton = make_shared<TParticle>(ParticleTypeDatabase::Proton, comb.back());
     eta.SetXYZT(0,0,0,0);
@@ -506,13 +510,17 @@ void PID_Energy_etaDalitz::ProcessEvent(const TEvent& event, manager_t&)
     h_IM2d->Fill(eta.M(), eeIM);
     h.IM2d->Fill(eta.M(), eeIM);
     // apply IM(e+e-g) dependent cut on IM(e+e-)
-    if (eeIM > linear_cut(eta.M()))
-        return;
-    h.steps->Fill("2D IM cut", 1);
-    // suppress pi0
-//    if (eeIM < 130.)
-//        return;
-//    h.steps->Fill("above #pi^{0}", 1);
+    if (IM2D_LINEAR_CUT) {
+        if (eeIM > linear_cut(eta.M()))
+            return;
+        h.steps->Fill("2D IM cut", 1);
+    }
+    // suppress IM(e+e-) region below pi0
+    if (LEPTON_PI0_CUT) {
+        if (eeIM < LEPTON_PI0_THRESH)
+            return;
+        h.steps->Fill("above #pi^{0}", 1);
+    }
 
     // test effective cluster radius to distinguish between leptons and charged pions
     double effective_radius = calc_effective_radius(l1);

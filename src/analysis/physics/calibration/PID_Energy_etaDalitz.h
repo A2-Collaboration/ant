@@ -84,6 +84,15 @@ protected:
     static constexpr unsigned N_FINAL_STATE = 4;
     static constexpr double ETA_IM = 547.853;
     static constexpr double ETA_SIGMA = 50.;
+    // cuts
+    static constexpr bool PROBABILITY_CUT = false;
+    static constexpr double PROBABILITY = .02;
+    static constexpr bool ANTI_PI0_CUT = false;
+    static constexpr double ANTI_PI0_LOW = 102.;
+    static constexpr double ANTI_PI0_HIGH = 170.;
+    static constexpr bool IM2D_LINEAR_CUT = false;
+    static constexpr bool LEPTON_PI0_CUT = false;
+    static constexpr double LEPTON_PI0_THRESH = 130.;
     // which fit should be used?
     static constexpr bool USE_TREEFIT = true;
 
