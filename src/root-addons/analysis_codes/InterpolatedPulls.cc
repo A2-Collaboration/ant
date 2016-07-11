@@ -136,3 +136,16 @@ void InterpolatedPulls::PlotComparePulls(TDirectory* red, TDirectory* blue)
         }
     }
 }
+
+void InterpolatedPulls::PlotAllSigams(TDirectory* dir)
+{
+    for(const auto& particle : {"photon", "proton"}) {
+        for(const auto& det : {"cb", "taps"}) {
+            const string treename = formatter() << "sigma_" << particle << "_" << det;
+            TDirectory* d = nullptr;
+            d = getObj<TDirectory>(dir, treename);
+            if(d)
+                PlotPullSigmas(formatter() << dir->GetName() << ": sigma_" << particle << "_" << det, d);
+        }
+    }
+}

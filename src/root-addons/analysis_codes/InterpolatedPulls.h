@@ -1,8 +1,8 @@
 #pragma once
 #include <string>
+#include "TDirectory.h"
 
 class TH2;
-class TDirectory;
 
 namespace ant {
 
@@ -12,6 +12,7 @@ struct InterpolatedPulls {
     static void PlotPullSigmas(const std::string& treename, TDirectory* dir);
 
     static void PlotComparePulls(TDirectory* red, TDirectory* blue);
+    static void PlotAllSigams(TDirectory* dir=gDirectory);
 
 };
 
