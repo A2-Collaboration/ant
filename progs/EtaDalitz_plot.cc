@@ -201,18 +201,20 @@ struct Hist_t {
 
         AddTH1("3 photon IM",      "3#gamma IM [MeV]",    "",       IMbins,     "etaIM",
                [] (TH1D* h, const Fill_t& f) {
-            TLorentzVector eta(0,0,0,0);
-            for(const auto& g : f.Tree.photons())
-                eta += g;
-            h->Fill(eta.M(), f.TaggW());
+//            TLorentzVector eta(0,0,0,0);
+//            for(const auto& g : f.Tree.photons())
+//                eta += g;
+//            h->Fill(eta.M(), f.TaggW());
+            h->Fill(f.Tree.eta().M(), f.TaggW());
         });
 
         AddTH1("3 photon IM fitted",  "3#gamma IM fit [MeV]", "",    IMbins,     "etaIM_fitted",
                [] (TH1D* h, const Fill_t& f) {
-            TLorentzVector eta(0,0,0,0);
-            for(const auto& g : f.Tree.photons_fitted())
-                eta += g;
-            h->Fill(eta.M(), f.TaggW());
+//            TLorentzVector eta(0,0,0,0);
+//            for(const auto& g : f.Tree.photons_fitted())
+//                eta += g;
+//            h->Fill(eta.M(), f.TaggW());
+            h->Fill(f.Tree.eta_fit().M(), f.TaggW());
         });
 
         AddTH1("Missing Mass",      "MM [MeV]",     "",       MMbins,     "mm",
@@ -266,6 +268,55 @@ struct Hist_t {
                               {"Prob>0.02", [] (const Fill_t& f) { return f.Tree.probability > .02; }},
                               {"Prob>0.05", [] (const Fill_t& f) { return f.Tree.probability > .05; }}
                              });
+
+        auto antiPi0Cut = [] (const Fill_t& f, const double low = 102., const double high = 170.) {
+            const interval<double> pion_cut(low, high);
+            TLorentzVector pi0;
+            const std::vector<std::array<size_t, 2>> pi0_combs = {{0, 2}, {1, 2}};
+
+            for (const auto pi0_comb : pi0_combs) {
+                pi0 = TLorentzVector(0., 0., 0., 0.);
+
+                for (const auto idx : pi0_comb)
+                    pi0 += TParticle(ParticleTypeDatabase::Photon, f.Tree.photons().at(idx));
+
+                // check anti pi^0 cut
+                if (pion_cut.Contains(pi0.M()))
+                    return false;
+            }
+
+            return true;
+        };
+
+        auto IM2d_lin_cut = [] (const Fill_t& f) {
+            const auto photons = f.Tree.photons();
+            const auto vetos = f.Tree.photons_vetoE();
+
+            const unsigned size = photons.size();
+            unsigned idx[size];
+            for (unsigned i = 0; i < size; i++)
+                idx[i] = i;
+
+            // sort idx according to the photons' veto energies
+            sort(idx, idx+size, [vetos] (unsigned i, unsigned j) { return vetos[i] > vetos[j]; });
+
+            // IM of the two clusters with the highest veto energies (e+ and e-)
+            const double eeIM = (photons.at(idx[0]) + photons.at(idx[1])).M();
+
+            return eeIM < (1.15*f.Tree.eta().M() - 170);
+        };
+
+        cuts.emplace_back(MultiCut_t<Fill_t>{
+                              {"anti pi0", antiPi0Cut}
+                          });
+
+        cuts.emplace_back(MultiCut_t<Fill_t>{
+                              {"lin cut",  IM2d_lin_cut}
+                          });
+
+        cuts.emplace_back(MultiCut_t<Fill_t>{
+                              {"MM < 1030",  [] (const Fill_t& f) { return f.Tree.mm().M() < 1030; }}
+                          });
 
         auto cleanEvent = [] (const Fill_t& f) {
             return f.Tree.nCands == 4;
