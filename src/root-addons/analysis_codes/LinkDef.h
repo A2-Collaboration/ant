@@ -28,6 +28,8 @@
 #pragma link C++ class ant::KinfitExtract+;
 #pragma link C++ class ant::Math+;
 #pragma link C++ class ant::InterpolatedPulls+;
+#pragma link C++ class ant::InterpolatedPulls+;
+#pragma link C++ class ant::ConvergencePlot+;
 
 #endif // __CINT__
 

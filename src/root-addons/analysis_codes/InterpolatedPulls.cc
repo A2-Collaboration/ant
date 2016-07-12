@@ -13,6 +13,12 @@
 #include "base/TH1Ext.h"
 #include "THStack.h"
 #include "TClass.h"
+#include <list>
+#include "tree/TCandidate.h"
+#include "tree/TParticle.h"
+#include "analysis/plot/HistogramFactories.h"
+
+#include "analysis/utils/Uncertainties.h"
 
 #include "analysis/plot/root_draw.h"
 
@@ -149,3 +155,121 @@ void InterpolatedPulls::PlotAllSigams(TDirectory* dir)
         }
     }
 }
+
+void scanModel(analysis::utils::UncertaintyModelPtr model,  const Detector_t::Type_t det, const ParticleTypeDatabase::Type& particle) {
+
+    const double xmin = det & Detector_t::Type_t::TAPS ? 0.9 : -0.9;
+    const double xmax = det & Detector_t::Type_t::TAPS ? 1.0 :  0.9;
+
+    const string E_title = formatter() << particle.Name() << " " << Detector_t::ToString(det) << " E, interpolated";
+    TH2D* h_E     = new TH2D("", E_title.c_str(),     100, xmin, xmax, 100, 0, 1000);
+
+    const string Theta_title = formatter() << particle.Name() << " " << Detector_t::ToString(det) << " Theta, interpolated";
+    TH2D* h_Theta = new TH2D("",Theta_title.c_str(),  100, xmin, xmax, 100, 0, 1000);
+
+    const string Phi_title = formatter() << particle.Name() << " " << Detector_t::ToString(det) << " Phi, interpolated";
+    TH2D* h_Phi   = new TH2D("", Phi_title.c_str(),   100, xmin, xmax, 100, 0, 1000);
+
+    for(int x=1; x<h_E->GetNbinsX(); ++x) {
+        for(int y=1; y<h_E->GetNbinsY(); ++y) {
+            const auto Theta = acos(h_E->GetXaxis()->GetBinCenter(x));
+            const auto E     = h_E->GetYaxis()->GetBinCenter(y);
+
+            auto cand = make_shared<TCandidate>(det,
+                                                E,
+                                                Theta,
+                                                0.0, // Phi
+                                                0.0, // Time
+                                                1,   // cluster size
+                                                0.0, // veto
+                                                0.0, // tracker
+                                                TClusterList{}   // Cluster List
+                                                );
+
+            const auto part = TParticle(particle, cand);
+
+            const auto v = model->GetSigmas(part);
+
+            h_E->SetBinContent(     x, y, v.sigmaE);
+            h_Theta->SetBinContent( x, y, v.sigmaTheta);
+            h_Phi->SetBinContent(   x, y, v.sigmaPhi);
+        }
+    }
+
+    canvas() << drawoption("colz") << h_E << h_Theta << h_Phi << endr << endc;
+}
+
+void InterpolatedPulls::TestInterpolation(const string& filename)
+{
+    auto dflt = make_shared<analysis::utils::UncertaintyModels::Optimized_Oli1>();
+    auto model = make_shared<analysis::utils::UncertaintyModels::Interpolated>(dflt);
+    model->LoadSigmas(filename);
+
+    scanModel(model, Detector_t::Type_t::CB,   ParticleTypeDatabase::Photon);
+    scanModel(model, Detector_t::Type_t::TAPS, ParticleTypeDatabase::Photon);
+    scanModel(model, Detector_t::Type_t::CB,   ParticleTypeDatabase::Proton);
+    scanModel(model, Detector_t::Type_t::TAPS, ParticleTypeDatabase::Proton);
+
+}
+
+class DirList : public std::list<TDirectory*> {
+    using std::list<TDirectory*>::list;
+};
+
+ConvergencePlot::ConvergencePlot():
+    list(new DirList())
+{}
+
+ConvergencePlot::~ConvergencePlot()
+{
+    delete list;
+}
+
+void ConvergencePlot::Add(TDirectory* dir)
+{
+    list->push_back(dir);
+}
+
+void ConvergencePlot::Plot()
+{
+
+    for(const auto& particle : {"photon"}) {
+        for(const auto& det : {"cb", "taps"}) {
+            for(const auto& n : {"E","Theta", "Phi"}) {
+
+                vector<TH2*> hists;
+
+                for(auto dir : *list) {
+
+                    TH2* pulls = nullptr;
+
+                    pulls     = getObj<TH2>(dir, formatter() << "sigma_" << particle << "_" << det << "/h_pulls" << n <<"_FitZ/h_pulls" << n << "_z_RMS");
+
+                    if(!pulls)
+                        return;
+
+                    hists.push_back(pulls);
+
+
+                }
+
+                TH2Ext::MakeSameZRange(hists);
+
+                const string title = formatter() << particle << " " << det << " " << n;
+
+                TCanvas* c = new TCanvas();
+                c->SetTitle(title.c_str());
+                c->Divide(hists.size(),1);
+
+                int p=1;
+                for(auto h : hists) {
+                    c->cd(p++);
+                    h->Draw("colz");
+                }
+
+            }
+        }
+    }
+}
+
+

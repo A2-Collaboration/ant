@@ -3,6 +3,7 @@
 #include "TDirectory.h"
 
 class TH2;
+class DirList;
 
 namespace ant {
 
@@ -13,6 +14,21 @@ struct InterpolatedPulls {
 
     static void PlotComparePulls(TDirectory* red, TDirectory* blue);
     static void PlotAllSigams(TDirectory* dir=gDirectory);
+
+    static void TestInterpolation(const std::string& filename);
+
+};
+
+struct ConvergencePlot {
+
+    DirList* list=nullptr;
+
+    ConvergencePlot();
+    ~ConvergencePlot();
+
+    void Add(TDirectory* dir);
+
+    void Plot();
 
 };
 
