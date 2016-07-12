@@ -431,7 +431,9 @@ void PID_Energy_etaDalitz::ProcessEvent(const TEvent& event, manager_t&)
                 t.p_detector    = getDetectorAsInt(proton->Candidate->Detector);
                 t.p_clusterSize = proton->Candidate->ClusterSize;
                 t.p_centralElem = proton->Candidate->FindCaloCluster()->CentralElement;
-                t.p_vetoChannel = proton->Candidate->FindVetoCluster()->CentralElement;
+                t.p_vetoChannel = -1;
+                if (proton->Candidate->VetoEnergy)
+                    t.p_vetoChannel = proton->Candidate->FindVetoCluster()->CentralElement;
 
                 t.p_theta_pull  = fit_particles.at(0).Theta.Pull;
                 t.p_phi_pull    = fit_particles.at(0).Phi.Pull;
@@ -445,7 +447,10 @@ void PID_Energy_etaDalitz::ProcessEvent(const TEvent& event, manager_t&)
                     t.photons_detector().at(i)    = getDetectorAsInt(photons.at(i)->Candidate->Detector);
                     t.photons_clusterSize().at(i) = photons.at(i)->Candidate->ClusterSize;
                     t.photons_centralElem().at(i) = photons.at(i)->Candidate->FindCaloCluster()->CentralElement;
-                    t.photons_vetoChannel().at(i) = photons.at(i)->Candidate->FindVetoCluster()->CentralElement;
+                    t.photons_vetoChannel().at(i) = -1;
+                    if (photons.at(i)->Candidate->VetoEnergy)
+                        t.photons_vetoChannel().at(i) = photons.at(i)->Candidate->FindVetoCluster()->CentralElement;
+
                     t.photon_E_pulls().at(i)      = fit_particles.at(i+1).Ek.Pull;
                     t.photon_theta_pulls().at(i)  = fit_particles.at(i+1).Theta.Pull;
                     t.photon_phi_pulls().at(i)    = fit_particles.at(i+1).Phi.Pull;
