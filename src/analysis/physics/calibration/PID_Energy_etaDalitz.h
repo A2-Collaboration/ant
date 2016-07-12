@@ -26,8 +26,11 @@ public:
         ADD_BRANCH_T(std::vector<TLorentzVector>, photons_fitted, 3)
         ADD_BRANCH_T(std::vector<double>,         photons_Time, 3)
         ADD_BRANCH_T(std::vector<TVector2>,       photons_PSA, 3)
-        ADD_BRANCH_T(std::vector<int>,            photons_detector,3)
+        ADD_BRANCH_T(std::vector<int>,            photons_detector, 3)
+        ADD_BRANCH_T(std::vector<int>,            photons_clusterSize, 3)
+        ADD_BRANCH_T(std::vector<int>,            photons_centralElem, 3)
         ADD_BRANCH_T(std::vector<double>,         photons_vetoE, 3)
+        ADD_BRANCH_T(std::vector<int>,            photons_vetoChannel, 3)
 
         ADD_BRANCH_T(std::vector<double>,         photon_E_pulls, 3)
         ADD_BRANCH_T(std::vector<double>,         photon_theta_pulls, 3)
@@ -38,7 +41,10 @@ public:
         ADD_BRANCH_T(double,                      p_Time)
         ADD_BRANCH_T(TVector2,                    p_PSA)
         ADD_BRANCH_T(int,                         p_detector)
+        ADD_BRANCH_T(int,                         p_clusterSize, 3)
+        ADD_BRANCH_T(int,                         p_centralElem, 3)
         ADD_BRANCH_T(double,                      p_vetoE)
+        ADD_BRANCH_T(int,                         p_vetoChannel, 3)
 
         ADD_BRANCH_T(double,                      p_theta_pull)
         ADD_BRANCH_T(double,                      p_phi_pull)

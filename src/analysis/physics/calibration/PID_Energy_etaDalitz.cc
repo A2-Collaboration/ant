@@ -423,26 +423,32 @@ void PID_Energy_etaDalitz::ProcessEvent(const TEvent& event, manager_t&)
                 t.beam_E_pull = beam_pull;
                 t.beam_E_fitted = fitted_beam;
 
-                t.p          = *proton;
-                t.p_fitted   = *fitted_proton;
-                t.p_Time     = proton->Candidate->Time;
-                t.p_PSA      = getPSAVector(proton);
-                t.p_vetoE    = proton->Candidate->VetoEnergy;
-                t.p_detector = getDetectorAsInt(proton->Candidate->Detector);
+                t.p             = *proton;
+                t.p_fitted      = *fitted_proton;
+                t.p_Time        = proton->Candidate->Time;
+                t.p_PSA         = getPSAVector(proton);
+                t.p_vetoE       = proton->Candidate->VetoEnergy;
+                t.p_detector    = getDetectorAsInt(proton->Candidate->Detector);
+                t.p_clusterSize = proton->Candidate->ClusterSize;
+                t.p_centralElem = proton->Candidate->FindCaloCluster()->CentralElement;
+                t.p_vetoChannel = proton->Candidate->FindVetoCluster()->CentralElement;
 
                 t.p_theta_pull  = fit_particles.at(0).Theta.Pull;
                 t.p_phi_pull    = fit_particles.at(0).Phi.Pull;
 
                 for (size_t i = 0; i < N_FINAL_STATE-1; ++i) {
-                    t.photons().at(i)            = *(photons.at(i));
-                    t.photons_fitted().at(i)     = *(fitted_photons.at(i));
-                    t.photons_Time().at(i)       = photons.at(i)->Candidate->Time;
-                    t.photons_vetoE().at(i)      = photons.at(i)->Candidate->VetoEnergy;
-                    t.photons_PSA().at(i)        = getPSAVector(photons.at(i));
-                    t.photons_detector().at(i)   = getDetectorAsInt(photons.at(i)->Candidate->Detector);
-                    t.photon_E_pulls().at(i)     = fit_particles.at(i+1).Ek.Pull;
-                    t.photon_theta_pulls().at(i) = fit_particles.at(i+1).Theta.Pull;
-                    t.photon_phi_pulls().at(i)   = fit_particles.at(i+1).Phi.Pull;
+                    t.photons().at(i)             = *(photons.at(i));
+                    t.photons_fitted().at(i)      = *(fitted_photons.at(i));
+                    t.photons_Time().at(i)        = photons.at(i)->Candidate->Time;
+                    t.photons_vetoE().at(i)       = photons.at(i)->Candidate->VetoEnergy;
+                    t.photons_PSA().at(i)         = getPSAVector(photons.at(i));
+                    t.photons_detector().at(i)    = getDetectorAsInt(photons.at(i)->Candidate->Detector);
+                    t.photons_clusterSize().at(i) = photons.at(i)->Candidate->ClusterSize;
+                    t.photons_centralElem().at(i) = photons.at(i)->Candidate->FindCaloCluster()->CentralElement;
+                    t.photons_vetoChannel().at(i) = photons.at(i)->Candidate->FindVetoCluster()->CentralElement;
+                    t.photon_E_pulls().at(i)      = fit_particles.at(i+1).Ek.Pull;
+                    t.photon_theta_pulls().at(i)  = fit_particles.at(i+1).Theta.Pull;
+                    t.photon_phi_pulls().at(i)    = fit_particles.at(i+1).Phi.Pull;
                 }
 
                 t.eta = eta;
