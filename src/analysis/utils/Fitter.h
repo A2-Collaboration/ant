@@ -72,7 +72,7 @@ public:
         FitParticle(const std::string& name, std::shared_ptr<FitVariable> z_vertex);
         virtual ~FitParticle();
 
-        TParticlePtr AsFitted();
+        TParticlePtr AsFitted() const;
 
     protected:
         friend class Fitter;
@@ -85,7 +85,7 @@ public:
         std::shared_ptr<FitVariable> Z_Vertex;
 
         void SetupBranches(TTree* tree, const std::string& prefix);
-        ant::LorentzVec GetVector(const std::vector<double>& EkThetaPhi, double z_vertex);
+        ant::LorentzVec GetVector(const std::vector<double>& EkThetaPhi, double z_vertex) const;
 
 
         std::vector<double*> Addresses()

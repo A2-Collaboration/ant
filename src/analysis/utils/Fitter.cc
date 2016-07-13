@@ -95,7 +95,7 @@ Fitter::FitParticle::~FitParticle()
 
 }
 
-TParticlePtr Fitter::FitParticle::AsFitted()
+TParticlePtr Fitter::FitParticle::AsFitted() const
 {
     const auto z_vertex = Z_Vertex ? Z_Vertex->Value : 0;
 
@@ -115,7 +115,7 @@ void Fitter::FitParticle::SetupBranches(TTree* tree, const string& prefix)
 }
 
 LorentzVec Fitter::FitParticle::GetVector(const std::vector<double>& EkThetaPhi,
-                                          const double z_vertex)
+                                          const double z_vertex) const
 {
     const mev_t& Ek = EkThetaPhi[0];
     const radian_t& theta = EkThetaPhi[1];
