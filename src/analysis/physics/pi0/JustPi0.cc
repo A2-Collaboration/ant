@@ -364,7 +364,7 @@ void JustPi0::MultiPi0::ProcessData(const TEventData& data, const TParticleTree_
                 }
             }
 
-            pullOut.Fill(best_fitParticles, t.Tagg_W, t.treefit_chi2dof);
+            pullOut.Fill(best_fitParticles, t.Tagg_W, t.treefit_prob);
 
             tree->Fill();
         } // end KinFit ok
