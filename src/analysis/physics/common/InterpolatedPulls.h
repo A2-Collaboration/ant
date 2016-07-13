@@ -5,6 +5,8 @@
 #include "utils/Fitter.h"
 
 class TH1D;
+class TH2D;
+
 
 namespace ant {
 namespace analysis {
@@ -16,6 +18,24 @@ protected:
     PromptRandom::Switch promptrandom;
 
     TH1D* steps;
+    TH1D* h_missingmass;
+    TH1D* h_missingmass_cut;
+    TH2D* h_IM_gg_gg;
+    TH2D* h_IM_gg_gg_cut;
+
+    TH1D* h_zvertex;
+
+    TH2D* h_proton_E_theta;
+
+    TH2D* h_ToF_E_photon_taps;
+    TH2D* h_ToF_E_proton_taps;
+    TH2D* h_PSA_photon_taps;
+    TH2D* h_PSA_proton_taps;
+
+    TH2D* h_E_vetoE_photon_cb;
+    TH2D* h_E_vetoE_photon_taps;
+    TH2D* h_E_vetoE_proton_cb;
+    TH2D* h_E_vetoE_proton_taps;
 
     utils::UncertaintyModelPtr model;
     utils::KinFitter fitter;
