@@ -17,10 +17,12 @@
 #include "tree/TCandidate.h"
 #include "tree/TParticle.h"
 #include "analysis/plot/HistogramFactories.h"
-
+#include "Rtypes.h"
+#include "TROOT.h"
 #include "analysis/utils/Uncertainties.h"
-
+#include "TGraph.h"
 #include "analysis/plot/root_draw.h"
+#include "TLine.h"
 
 using namespace std;
 using namespace ant;
@@ -74,9 +76,14 @@ std::pair<int,int> findMaxXY(TDirectory* dir, const string& prefix) {
 
 }
 
-void InterpolatedPulls::PlotDirectory(TDirectory* dir, const string& prefix, const string& title, TDirectory* dir2) {
+void InterpolatedPulls::PlotDirectory(list<TDirectory*> dirs, const string& prefix, const string& title) {
 
-    auto hist2d = getObj<TH2>(dir, std_ext::formatter() << prefix << "_Mean");
+    const vector<Color_t> colors = {kRed, kBlue, kGreen, kBlack};
+
+    if(dirs.empty())
+        return;
+
+    auto hist2d = getObj<TH2>(dirs.front(), std_ext::formatter() << prefix << "_Mean");
     const auto cols = hist2d->GetNbinsX();
     const auto rows = hist2d->GetNbinsY();
 
@@ -91,33 +98,23 @@ void InterpolatedPulls::PlotDirectory(TDirectory* dir, const string& prefix, con
 
             const string name = std_ext::formatter() << prefix << "_" << x+1 << "_" << y+1;
 
-            TH1* h1 = nullptr;
-            TH1* h2 = nullptr;
+            THStack* s = new THStack();
 
-            h1 = getObj<TH1>(dir, name);
+            size_t c=0;
+            for(auto d : dirs) {
 
-            if(!h1)
-                continue;
+                auto h1 = getObj<TH1>(d, name);
+                if(h1) {
 
-            h1->SetStats(false);
-
-            if(dir2) {
-                h2 = getObj<TH1>(dir2, name);
-                if(!h2)
-                    continue;
-
-                h2->SetStats(false);
-
-                THStack* s = new THStack();
-                s->Add(h1);
-                h1->SetLineColor(kRed);
-                s->Add(h2);
-                h2->SetLineColor(kBlue);
-                s->Draw();
-
-            } else {
-                h1->Draw();
+                    s->Add(h1);
+                    h1->SetLineColor(colors.at(c));
+                    h1->SetStats(false);
+                    c = (c+1) % colors.size();
+                }
             }
+
+            s->Draw("nostack");
+
 
         }
     }
@@ -178,7 +175,51 @@ void InterpolatedPulls::PlotComparePulls(TDirectory* red, TDirectory* blue)
                 if(!d_var_red || !d_var_blue)
                     continue;
 
-                PlotDirectory(d_var_red, var_h_name, formatter() << particle << " " << det << " " <<  varname, d_var_blue);
+                PlotDirectory( {d_var_red, d_var_blue}, var_h_name, formatter() << particle << " " << det << " " <<  varname);
+            }
+        }
+    }
+}
+
+void InterpolatedPulls::PlotComparePulls2()
+{
+    auto files = gROOT->GetListOfFiles();
+
+    for(const auto& particle : {"photon", "proton"}) {
+        for(const auto& det : {"cb", "taps"}) {
+            const string treename = formatter() << "sigma_" << particle << "_" << det;
+
+            list<TDirectory*> dirs;
+            for(int i=0; i<files->GetEntries(); ++i) {
+                auto f = dynamic_cast<TDirectory*>(files->At(i));
+                if(!f)
+                    throw std::runtime_error("Found something odd in list of files");
+
+                auto d = getObj<TDirectory>(f,  treename);
+
+                if(d)
+                    dirs.push_back(d);
+            }
+
+            if(dirs.empty())
+                continue;
+
+            for(const auto& varname : {"E", "Theta", "Phi"}) {
+
+                list<TDirectory*> var_dirs;
+
+
+                const string var_d_name = formatter() << "h_pulls" << varname << "_FitZ";
+                const string var_h_name = formatter() << "h_pulls" << varname << "_z";
+
+                for( auto d: dirs) {
+                    auto vd = getObj<TDirectory>(d,  var_d_name);
+                    if(vd)
+                        var_dirs.push_back(vd);
+
+                }
+
+                PlotDirectory(var_dirs, var_h_name, formatter() << particle << " " << det << " " <<  varname);
             }
         }
     }
@@ -251,6 +292,102 @@ void InterpolatedPulls::TestInterpolation(const string& filename)
     scanModel(model, Detector_t::Type_t::CB,   ParticleTypeDatabase::Proton);
     scanModel(model, Detector_t::Type_t::TAPS, ParticleTypeDatabase::Proton);
 
+}
+
+TGraph* makeGraph(const std::vector<vec2>& points) {
+    if(points.empty())
+        return nullptr;
+    auto g = new TGraph(int(points.size()));
+    for(size_t p=0; p<points.size(); ++p) {
+        const auto& v = points.at(p);
+        g->SetPoint(int(p), v.x, v.y);
+    }
+    return g;
+}
+
+TCanvas* InterpolatedPulls::ConvergencePlots(std::list<TH2*> hists)
+{
+    if(hists.empty())
+        return nullptr;
+
+    const auto cols = hists.front()->GetNbinsX();
+    const auto rows = hists.front()->GetNbinsY();
+
+    TCanvas* c = new TCanvas();
+    c->Divide(cols, rows, 0, 0);
+
+    for(int x=0; x<cols; ++x) {
+        for(int y=0; y<rows; ++y) {
+            c->cd( 1 + x + (rows-y-1)*cols);
+
+            vector<vec2> pnts;
+
+            int p=0;
+            for(auto h : hists) {
+                const auto v = h->GetBinContent(x+1,y+1);
+                if(isfinite(v))
+                    pnts.emplace_back(vec2(p,v));
+                ++p;
+            }
+            auto g = makeGraph(pnts);
+            if(g) {
+                g->GetYaxis()->SetRangeUser(0.5, 1.5);
+                g->SetTitle("");
+                g->Draw("ALP");
+                TLine* l = new TLine(g->GetXaxis()->GetXmin(), 1, g->GetXaxis()->GetXmax(), 1);
+                l->SetLineColor(kGray);
+                l->Draw();
+            }
+        }
+    }
+
+    return c;
+
+}
+
+void InterpolatedPulls::ConvergencePlots2()
+{
+    auto files = gROOT->GetListOfFiles();
+
+    for(const auto& particle : {"photon", "proton"}) {
+        for(const auto& det : {"cb", "taps"}) {
+            const string treename = formatter() << "sigma_" << particle << "_" << det;
+
+            list<TDirectory*> dirs;
+            for(int i=0; i<files->GetEntries(); ++i) {
+                auto f = dynamic_cast<TDirectory*>(files->At(i));
+                if(!f)
+                    throw std::runtime_error("Found something odd in list of files");
+
+                auto d = getObj<TDirectory>(f,  treename);
+
+                if(d)
+                    dirs.push_back(d);
+            }
+
+            if(dirs.empty())
+                continue;
+
+            for(const auto& varname : {"E", "Theta", "Phi"}) {
+
+                list<TH2*> var_hists;
+
+
+                const string var_d_name = formatter() << "h_pulls" << varname <<"_FitZ/h_pulls" << varname << "_z_RMS";
+
+                for( auto d: dirs) {
+                    auto vd = getObj<TH2>(d,  var_d_name);
+                    if(vd)
+                        var_hists.push_back(vd);
+
+                }
+
+                auto c = ConvergencePlots(var_hists);
+                const string title = formatter() << particle << " " << det << " " << varname;
+                c->SetTitle(title.c_str());
+            }
+        }
+    }
 }
 
 class DirList : public std::list<TDirectory*> {

@@ -31,5 +31,7 @@
 #pragma link C++ class ant::InterpolatedPulls+;
 #pragma link C++ class ant::ConvergencePlot+;
 
+#pragma link C++ class std::list<TDirectory*>+;
+
 #endif // __CINT__
 
