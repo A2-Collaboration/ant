@@ -17,6 +17,7 @@
 #include "base/std_ext/system.h"
 #include "base/std_ext/math.h"
 #include "base/vec/vec2.h"
+#include "base/ProgressCounter.h"
 
 #include "expconfig/ExpConfig.h"
 
@@ -36,7 +37,7 @@ using namespace ant::analysis;
 using namespace ant::analysis::plot;
 using namespace std;
 
-volatile static bool interrupt = false;
+volatile sig_atomic_t interrupt = false;
 static double binScale = 1.;
 
 
@@ -360,8 +361,6 @@ int main(int argc, char** argv)
 {
     SetupLogger();
 
-    signal(SIGINT, [] (int) { interrupt = true; });
-
     TCLAP::CmdLine cmd("plot", ' ', "0.1");
     auto cmd_input = cmd.add<TCLAP::ValueArg<string>>("i", "input", "Input file", true, "", "input");
     auto cmd_batchmode = cmd.add<TCLAP::MultiSwitchArg>("b", "batch", "Run in batch mode (no ROOT shell afterwards)", false);
@@ -373,6 +372,20 @@ int main(int argc, char** argv)
     auto cmd_binscale = cmd.add<TCLAP::ValueArg<double>>("B", "bin-scale", "Bin Scaling", false, 1.0, "bins");
 
     cmd.parse(argc, argv);
+
+
+    // open the TRint app as early as possible to prevent ROOT to create a new one automatically
+    // which will cause problems because of bad ROOT internal data / pointer handling, might cause segfaults
+    argc = 0;  // prevent TRint to parse any cmdline
+    TRint app("EtaDalitz_plot", &argc, argv, nullptr, 0, true);
+
+
+    // set signal handler after starting TRint, otherwise it will be overwritten with ROOT handlers
+    signal(SIGINT, [] (int) {
+        LOG(WARNING) << "Processing interrupted";
+        interrupt = true;
+    });
+
 
     // general styling settings for transparence
     gStyle->SetFillColor(0);
@@ -391,12 +404,6 @@ int main(int argc, char** argv)
     }
 
 
-    // open the TRint app as early as possible to prevent ROOT to create a new one automatically
-    // which will cause problems because of bad ROOT internal data / pointer handling, might cause segfaults
-    argc = 0;  // prevent TRint to parse any cmdline
-    TRint app("EtaDalitz_plot", &argc, argv, nullptr, 0, true);
-
-
     WrapTFileInput input;
     string setup_name;
     try {
@@ -413,7 +420,7 @@ int main(int argc, char** argv)
         setup_name = header->SetupName;
 
     } catch (const std::runtime_error& e) {
-        LOG(WARNING) << "Can't open " << cmd_input->getValue() << " " << e.what();
+        LOG(ERROR) << "Can't open " << cmd_input->getValue() << " " << e.what();
     }
 
     if (setup_name.empty())
@@ -439,7 +446,7 @@ int main(int argc, char** argv)
     Hist_t::Tree_t tree;
 
     if (!link_branches("PID_Energy_etaDalitz/tree", addressof(tree), -1)) {
-        LOG(WARNING) << "Cannot link branches of tree";
+        LOG(ERROR) << "Cannot link branches of tree";
         //return 1;
     }
 
@@ -462,7 +469,7 @@ int main(int argc, char** argv)
                                               Hist_t::GetCuts()
                                               );
 
-    LOG(INFO) << "Tree entries=" << entries;
+    LOG(INFO) << "Tree entries = " << entries;
 
     auto max_entries = entries;
     if (cmd_maxevents->isSet() && cmd_maxevents->getValue().back() < entries) {
@@ -470,16 +477,31 @@ int main(int argc, char** argv)
         LOG(INFO) << "Running until " << max_entries;
     }
 
-    for (long long entry = 0; entry < max_entries; entry++) {
+    long long entry = 0;
+    double last_percent = 0;
+    ProgressCounter::Interval = 3;
+    ProgressCounter progress(
+                [&entry, entries, &last_percent] (std::chrono::duration<double> elapsed) {
+        const double percent = 100.*entry/entries;
+        const double speed = (percent - last_percent)/elapsed.count();
+        LOG(INFO) << setw(2) << setprecision(4) << "Processed " << percent << " %, ETA: " << ProgressCounter::TimeToStr((100-percent)/speed);
+        last_percent = percent;
+    });
+
+    while (entry < max_entries) {
         if (interrupt)
             break;
 
         tree.Tree->GetEntry(entry);
         cuttree::Fill<MCTrue_Splitter<Hist_t>>(signal_hists, {tree});
 
-        if (entry % 100000 == 0)
-            LOG(INFO) << "Processed " << 100.0*entry/entries << " %";
+        entry++;
+
+        ProgressCounter::Tick();
     }
+
+    LOG(INFO) << "Analyzed " << entry << " events, speed "
+              << entry/progress.GetTotalSecs() << " event/s";
 
     if (!cmd_batchmode->isSet()) {
         if (!std_ext::system::isInteractive())
