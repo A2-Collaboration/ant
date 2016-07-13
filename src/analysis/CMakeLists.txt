@@ -58,6 +58,7 @@ set(ANALYSIS_PHYSICS
   physics/pi0/RarePion.cc
   physics/pi0/KinFitPi0.cc
   physics/common/FitPulls.cc
+  physics/common/InterpolatedPulls.cc
   )
 
 set(ANALYSIS_PHYSICS_CALIBRATION
