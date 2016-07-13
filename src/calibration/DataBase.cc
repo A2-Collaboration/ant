@@ -148,8 +148,8 @@ void DataBase::handleStrictRange(const TCalibrationData& cdata) const
         // if range overlaps, then they must exactly match
         // anything else is not allowed right now
         if(*it_range != range) {
-            if(it_range->Stop().Lower +1 == range.Stop().Lower) {
-                LOG(WARNING) << "Fixing TCalibrationData range: Off by one to database";
+            if(std_ext::abs_diff(it_range->Stop().Lower, range.Stop().Lower) < 100) {
+                LOG(WARNING) << "Fixing TCalibrationData range: " << *it_range  << " to " << range;
 
                 const auto oldfolder = Layout.GetRangeFolder(calibrationID, *it_range);
                 const auto newfolder = Layout.GetRangeFolder(calibrationID, range);
