@@ -20,6 +20,8 @@
 
 #include "expconfig/ExpConfig.h"
 
+#include "tree/TAntHeader.h"
+
 #include <list>
 #include <vector>
 #include <algorithm>
@@ -389,7 +391,36 @@ int main(int argc, char** argv)
     }
 
 
-    WrapTFileInput input(cmd_input->getValue());
+    // open the TRint app as early as possible to prevent ROOT to create a new one automatically
+    // which will cause problems because of bad ROOT internal data / pointer handling, might cause segfaults
+    argc = 0;  // prevent TRint to parse any cmdline
+    TRint app("EtaDalitz_plot", &argc, argv, nullptr, 0, true);
+
+
+    WrapTFileInput input;
+    string setup_name;
+    try {
+
+        input.OpenFile(cmd_input->getValue());
+
+        auto header = input.GetSharedClone<TAntHeader>("AntHeader");
+
+        if (!header) {
+            LOG(WARNING) << "No TAntHeader found in " << cmd_input->getValue();
+            return 1;
+        }
+
+        setup_name = header->SetupName;
+
+    } catch (const std::runtime_error& e) {
+        LOG(WARNING) << "Can't open " << cmd_input->getValue() << " " << e.what();
+    }
+
+    if (setup_name.empty())
+        setup_name = "Setup_2014_07_EPT_Prod";
+
+    ExpConfig::Setup::Get(setup_name);
+
 
     auto link_branches = [&input] (const string treename, WrapTTree* wraptree, long long expected_entries) {
         TTree* t;
@@ -409,7 +440,7 @@ int main(int argc, char** argv)
 
     if (!link_branches("PID_Energy_etaDalitz/tree", addressof(tree), -1)) {
         LOG(WARNING) << "Cannot link branches of tree";
-       //return 1;
+        //return 1;
     }
 
     const auto entries = tree.Tree->GetEntries();
@@ -454,9 +485,6 @@ int main(int argc, char** argv)
         if (!std_ext::system::isInteractive())
             LOG(INFO) << "No TTY attached. Not starting ROOT shell.";
         else {
-            argc = 0;  // prevent TRint to parse any cmdline
-            TRint app("EtaDalitz_plot", &argc, argv, nullptr, 0, true);
-
             if (masterFile)
                 LOG(INFO) << "Stopped running, but close ROOT properly to write data to disk.";
 
