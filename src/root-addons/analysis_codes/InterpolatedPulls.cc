@@ -36,8 +36,51 @@ T* getObj(TDirectory* d, const string& name) {
     return h;
 }
 
+std::pair<int,int> findMaxXY(TDirectory* dir, const string& prefix) {
+    int nx=-1;
+    int x=-1;
+    bool row_ok=false;
+    bool cell_ok=false;
+    int y=-1;
 
-void InterpolatedPulls::PlotDirectory(TDirectory* dir, const string& prefix, const int cols, const int rows, const string& title, TDirectory* dir2) {
+    do {
+        ++y;
+        row_ok=false;
+        x=0;
+        do {
+
+            cell_ok = getObj<TH1>(dir, std_ext::formatter() << prefix << "_" << x +1 << "_" << y+1) != nullptr;
+
+            if(cell_ok) {
+                row_ok=true;
+                ++x;
+            }
+
+        } while (cell_ok);
+
+        if(nx==-1) {
+            nx=x;
+        } else if(row_ok) {
+            if(nx != x) {
+                cerr << "Row length mismatch! previous had " << nx << ", this has " << x << endl;
+                return {-1,-1};
+            }
+        }
+
+
+    } while (row_ok);
+
+    return {nx, y};
+
+}
+
+void InterpolatedPulls::PlotDirectory(TDirectory* dir, const string& prefix, const string& title, TDirectory* dir2) {
+
+    const auto m = findMaxXY(dir, prefix);
+    cout << m.first << " " << m.second << endl;
+
+    const auto& cols = m.first;
+    const auto& rows = m.second;
 
     auto c = new TCanvas();
     c->SetTitle(title.c_str());
@@ -137,7 +180,7 @@ void InterpolatedPulls::PlotComparePulls(TDirectory* red, TDirectory* blue)
                 if(!d_var_red || !d_var_blue)
                     continue;
 
-                PlotDirectory(d_var_red, var_h_name, 15, 10, formatter() << particle << " " << det << " " <<  varname, d_var_blue);
+                PlotDirectory(d_var_red, var_h_name, formatter() << particle << " " << det << " " <<  varname, d_var_blue);
             }
         }
     }
