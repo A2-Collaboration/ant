@@ -76,11 +76,9 @@ std::pair<int,int> findMaxXY(TDirectory* dir, const string& prefix) {
 
 void InterpolatedPulls::PlotDirectory(TDirectory* dir, const string& prefix, const string& title, TDirectory* dir2) {
 
-    const auto m = findMaxXY(dir, prefix);
-    cout << m.first << " " << m.second << endl;
-
-    const auto& cols = m.first;
-    const auto& rows = m.second;
+    auto hist2d = getObj<TH2>(dir, std_ext::formatter() << prefix << "_Mean");
+    const auto cols = hist2d->GetNbinsX();
+    const auto rows = hist2d->GetNbinsY();
 
     auto c = new TCanvas();
     c->SetTitle(title.c_str());
