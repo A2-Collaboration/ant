@@ -22,5 +22,10 @@ constexpr inline T radian_to_degree(const T& radian) noexcept {
 template <typename T>
 constexpr inline T sqr(const T& x) noexcept { return x*x; }
 
+template<typename T>
+constexpr inline T abs_diff(T a, T b) noexcept {
+  return a > b ? a - b : b - a;
+}
+
 }} // namespace ant::std_ext
 
