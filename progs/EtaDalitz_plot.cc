@@ -18,6 +18,8 @@
 #include "base/std_ext/math.h"
 #include "base/vec/vec2.h"
 
+#include "expconfig/ExpConfig.h"
+
 #include <list>
 #include <vector>
 #include <algorithm>
@@ -153,13 +155,16 @@ struct Hist_t {
     HistMgr<TH1D> h1;
     HistMgr<TH2D> h2;
 
-    const BinSettings Ebins    = Bins(1000, 0, 1000);
+    const BinSettings pid_channels = BinSettings(
+                ExpConfig::Setup::GetDetector(Detector_t::Type_t::PID)->GetNChannels());
 
-    const BinSettings Chi2Bins = BinSettings(250, 0,   25);
-    const BinSettings probbins = BinSettings(250, 0,   1);
+    const BinSettings Ebins    = Bins(1200, 0, 1200);
 
-    const BinSettings IMbins   = Bins(1000,   0, 1000);
-    const BinSettings MMbins   = Bins(1000, 400, 1400);
+    const BinSettings Chi2Bins = BinSettings(250, 0, 25);
+    const BinSettings probbins = BinSettings(250, 0,  1);
+
+    const BinSettings IMbins   = Bins(1200,   0, 1200);
+    const BinSettings MMbins   = Bins(1200, 400, 1600);
 
     const BinSettings pThetaBins = Bins( 125,  0,   50);
     const BinSettings pEbins     = Bins( 250,  0, 1000);
@@ -167,10 +172,10 @@ struct Hist_t {
     const BinSettings PSARBins   = Bins( 100,  0,  450);
     const BinSettings TaggChBins = BinSettings(47);
 
-    const BinSettings TaggTime   = BinSettings(200, -25, 25);
-    const BinSettings CoplBins   = Bins(300, 0, 30.0);
+    const BinSettings TaggTime   = BinSettings(240, -30, 30);
+    const BinSettings CoplBins   = Bins(300, 0, 30);
 
-    const BinSettings evtoEbins  = Bins(150,  0, 15);
+    const BinSettings vetoEbins  = Bins(200, 0, 10);
 
     HistogramFactory HistFac;
 
@@ -191,15 +196,15 @@ struct Hist_t {
 
     Hist_t(const HistogramFactory& hf, cuttree::TreeInfo_t): HistFac(hf) {
 
-        AddTH1("KinFitChi2",      "#chi^{2}",             "",       Chi2Bins,   "KinFitChi2",
+        AddTH1("KinFitChi2", "#chi^{2}", "#", Chi2Bins, "KinFitChi2",
                [] (TH1D* h, const Fill_t& f) { h->Fill(f.Tree.chi2, f.TaggW());
         });
 
-        AddTH1("KinFitProb",      "probability",          "",       probbins,   "KinFitProb",
+        AddTH1("KinFitProb", "probability", "#", probbins, "KinFitProb",
                [] (TH1D* h, const Fill_t& f) { h->Fill(f.Tree.probability, f.TaggW());
         });
 
-        AddTH1("3 photon IM",      "3#gamma IM [MeV]",    "",       IMbins,     "etaIM",
+        AddTH1("3 photon IM", "3#gamma IM [MeV]", "#", IMbins, "etaIM",
                [] (TH1D* h, const Fill_t& f) {
 //            TLorentzVector eta(0,0,0,0);
 //            for(const auto& g : f.Tree.photons())
@@ -208,7 +213,7 @@ struct Hist_t {
             h->Fill(f.Tree.eta().M(), f.TaggW());
         });
 
-        AddTH1("3 photon IM fitted",  "3#gamma IM fit [MeV]", "",    IMbins,     "etaIM_fitted",
+        AddTH1("3 photon IM fitted",  "3#gamma IM fit [MeV]", "#", IMbins, "etaIM_fitted",
                [] (TH1D* h, const Fill_t& f) {
 //            TLorentzVector eta(0,0,0,0);
 //            for(const auto& g : f.Tree.photons_fitted())
@@ -217,20 +222,32 @@ struct Hist_t {
             h->Fill(f.Tree.eta_fit().M(), f.TaggW());
         });
 
-        AddTH1("Missing Mass",      "MM [MeV]",     "",       MMbins,     "mm",
+        AddTH1("Missing Mass", "MM [MeV]", "", MMbins, "mm",
                [] (TH1D* h, const Fill_t& f) { h->Fill(f.Tree.mm().M(), f.TaggW());
         });
 
-        AddTH1("Tagger Time - CB Average Time", "t [ns]", "",       TaggTime,   "TaggTime",
+        AddTH2("PID 2 charged 1 neutral", "PID Energy [MeV]", "PID Channel", vetoEbins, pid_channels, "eegPID",
+               [] (TH2D* h, const Fill_t& f) {
+            for (unsigned i = 0; i < f.Tree.photons().size(); i++)
+                h->Fill(f.Tree.photons_vetoE().at(i), f.Tree.photons_vetoChannel().at(i), f.TaggW());
+        });
+
+        AddTH2("Cluster Size vs. Energy", "Energy [MeV]", "Cluster Size", Ebins, BinSettings(50), "clusterSize_E",
+               [] (TH2D* h, const Fill_t& f) {
+            for (unsigned i = 0; i < f.Tree.photons().size(); i++)
+                h->Fill(f.Tree.photons().at(i).Energy(), f.Tree.photons_clusterSize().at(i), f.TaggW());
+        });
+
+        AddTH1("Tagger Time - CB Average Time", "t [ns]", "#", TaggTime, "TaggTime",
                [] (TH1D* h, const Fill_t& f) { h->Fill(f.Tree.TaggT - f.Tree.CBAvgTime);
         });
 
-        AddTH2("dEvEproton","E [MeV]","dE [MeV]", Ebins, evtoEbins, "dEvE",
+        AddTH2("dEvEproton", "E [MeV]", "dE [MeV]", Ebins, vetoEbins, "dEvE",
                [] (TH2D* h, const Fill_t& f) {
             h->Fill(f.Tree.p_fitted().Energy() - ParticleTypeDatabase::Proton.Mass(), f.Tree.p_vetoE);
         });
 
-        AddTH1("nCands", "# Candidates", "", BinSettings(4,4,8), "nCands",
+        AddTH1("nCands", "# Candidates", "#", BinSettings(4, 3, 7), "nCands",
                 [] (TH1D* h, const Fill_t& f) {
 
             h->Fill(f.Tree.nCands, f.TaggW());
