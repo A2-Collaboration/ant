@@ -54,14 +54,14 @@ unsigned dotest_store(const string& foldername)
     };
 
     calibman.Add(mdata( 4,  4, 1), Calibration::AddMode_t::StrictRange);
-    REQUIRE_THROWS_AS(calibman.Add(mdata( 2,  8, 2), Calibration::AddMode_t::StrictRange),
+    REQUIRE_THROWS_AS(calibman.Add(mdata( 2,  108, 2), Calibration::AddMode_t::StrictRange),
                       DataBase::Exception);
-    REQUIRE_THROWS_AS(calibman.Add(mdata( 3,  6, 3), Calibration::AddMode_t::StrictRange),
+    REQUIRE_THROWS_AS(calibman.Add(mdata( 3,  106, 3), Calibration::AddMode_t::StrictRange),
                       DataBase::Exception);
     calibman.Add(mdata( 5,  7, 4), Calibration::AddMode_t::StrictRange);
     calibman.Add(mdata(13, 20, 5), Calibration::AddMode_t::StrictRange);
     calibman.Add(mdata(22, 24, 6), Calibration::AddMode_t::StrictRange);
-    REQUIRE_THROWS_AS(calibman.Add(mdata(14, 14, 7), Calibration::AddMode_t::StrictRange),
+    REQUIRE_THROWS_AS(calibman.Add(mdata(14, 124, 7), Calibration::AddMode_t::StrictRange),
                       DataBase::Exception);
 
     // three times the Add failed above
