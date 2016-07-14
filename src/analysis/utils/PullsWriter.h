@@ -48,7 +48,12 @@ public:
     PullsWriter(ant::analysis::HistogramFactory& histfac);
     ~PullsWriter();
 
+    using smear_sigmas_t = std::map<TParticlePtr, Uncertainties_t>;
+
     void Fill(const std::vector<Fitter::FitParticle>& fitParticles,
+              double tagger_weight, double fitprob);
+    void Fill(const std::vector<Fitter::FitParticle>& fitParticles,
+              const smear_sigmas_t& smear_sigmas,
               double tagger_weight, double fitprob);
 
 };

@@ -61,6 +61,13 @@ PullsWriter::~PullsWriter()
 void PullsWriter::Fill(const std::vector<Fitter::FitParticle>& fitParticles,
                        double tagger_weight, double fitprob)
 {
+    Fill(fitParticles, {}, tagger_weight, fitprob);
+}
+
+void PullsWriter::Fill(const std::vector<Fitter::FitParticle>& fitParticles,
+                       const smear_sigmas_t& smear_sigmas,
+                       double tagger_weight, double fitprob)
+{
 
     for(const Fitter::FitParticle& p : fitParticles) {
 
@@ -73,9 +80,18 @@ void PullsWriter::Fill(const std::vector<Fitter::FitParticle>& fitParticles,
         tree.Theta = p.Theta.Value_before;
         tree.Phi   = p.Phi.Value_before;
 
-        tree.SigmaE = p.Ek.Sigma_before;
-        tree.SigmaTheta = p.Theta.Sigma_before;
-        tree.SigmaPhi = p.Phi.Sigma_before;
+        const auto it_smear = smear_sigmas.find(p.Particle);
+        if(it_smear == smear_sigmas.end()) {
+            tree.SigmaE = p.Ek.Sigma_before;
+            tree.SigmaTheta = p.Theta.Sigma_before;
+            tree.SigmaPhi = p.Phi.Sigma_before;
+        }
+        else {
+            const Uncertainties_t& u = it_smear->second;
+            tree.SigmaE = u.sigmaE;
+            tree.SigmaTheta = u.sigmaTheta;
+            tree.SigmaPhi = u.sigmaPhi;
+        }
 
         tree.PullE     = p.Ek.Pull;
         tree.PullTheta = p.Theta.Pull;
