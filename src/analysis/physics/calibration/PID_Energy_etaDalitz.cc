@@ -603,13 +603,13 @@ PID_Energy_etaDalitz::ReactionChannelList_t PID_Energy_etaDalitz::makeChannels()
     m.channels[3] = ReactionChannel_t("MC BackG");
 
     m.channels[10] = {ParticleTypeTreeDatabase::Get(ParticleTypeTreeDatabase::Channel::Eta_2g),         "#eta #rightarrow #gamma #gamma", kOrange};
-    m.channels[11] = {ParticleTypeTreeDatabase::Get(ParticleTypeTreeDatabase::Channel::Pi0_2g),         "#pi^{0}", kRed+2};
-    m.channels[12] = {ParticleTypeTreeDatabase::Get(ParticleTypeTreeDatabase::Channel::Rho_PiPi),       "#rho #rightarrow #pi^{+} #pi^{-}", kSpring+9};
-    m.channels[13] = {ParticleTypeTreeDatabase::Get(ParticleTypeTreeDatabase::Channel::TwoPi0_4g),      "#pi^{0} #pi^{0}", kGreen+2};
-    m.channels[14] = {ParticleTypeTreeDatabase::Get(ParticleTypeTreeDatabase::Channel::Pi0PiPi_2gPiPi), "#pi^{0} #pi^{+} #pi^{-}", kAzure+2};
-    m.channels[15] = {ParticleTypeTreeDatabase::Get(ParticleTypeTreeDatabase::Channel::Pi0_eeg),        "#pi^{0} #rightarrow e^{+} e^{-} #gamma", kViolet+3};
-    m.channels[16] = {ParticleTypeTreeDatabase::Get(ParticleTypeTreeDatabase::Channel::TwoPi0_2ggEpEm), "#pi^{0} #pi^{0} #rightarrow 2#gamma e^{+} e^{-} #gamma", kGreen-7};
-    m.channels[m.other_index] = ReactionChannel_t(nullptr, "Others", kTeal-1);
+    m.channels[11] = {ParticleTypeTreeDatabase::Get(ParticleTypeTreeDatabase::Channel::Pi0_2g),         "#pi^{0}", kOrange+6};
+    m.channels[12] = {ParticleTypeTreeDatabase::Get(ParticleTypeTreeDatabase::Channel::Rho_PiPi),       "#rho #rightarrow #pi^{+} #pi^{-}", kTeal};
+    m.channels[13] = {ParticleTypeTreeDatabase::Get(ParticleTypeTreeDatabase::Channel::TwoPi0_4g),      "#pi^{0} #pi^{0}", kGreen-4};
+    m.channels[14] = {ParticleTypeTreeDatabase::Get(ParticleTypeTreeDatabase::Channel::Pi0PiPi_2gPiPi), "#pi^{0} #pi^{+} #pi^{-}", kAzure+1};
+    m.channels[15] = {ParticleTypeTreeDatabase::Get(ParticleTypeTreeDatabase::Channel::Pi0_eeg),        "#pi^{0} #rightarrow e^{+} e^{-} #gamma", kViolet-4};
+    m.channels[16] = {ParticleTypeTreeDatabase::Get(ParticleTypeTreeDatabase::Channel::TwoPi0_2ggEpEm), "#pi^{0} #pi^{0} #rightarrow 2#gamma e^{+} e^{-} #gamma", kSpring+10};
+    m.channels[m.other_index] = ReactionChannel_t(nullptr, "Others", kCyan-6);
 
     return m;
 }
