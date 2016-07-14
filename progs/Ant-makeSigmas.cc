@@ -387,7 +387,7 @@ int main( int argc, char** argv )
 
     TTree* tree;
     if(!input.GetObject(cmd_tree->getValue(), tree)) {
-        LOG(ERROR) << "Cannot find tree in " << cmd_input->getValue();
+        LOG(ERROR) << "Cannot find tree " << cmd_tree->getValue() << " in " << cmd_input->getValue();
         exit(EXIT_FAILURE);
     }
 
