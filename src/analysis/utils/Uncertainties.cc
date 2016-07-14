@@ -647,14 +647,6 @@ UncertaintyModels::Optimized_Oli1::Optimized_Oli1()
 
 }
 
-UncertaintyModels::Optimized_Andi1::Optimized_Andi1() :
-    Optimized_Oli1()
-{
-    /// \todo really test this...
-//    cb_photon_theta_const = degree_to_radian(1.5);
-//    cb_photon_theta_Sin   = 0;
-}
-
 const std::string UncertaintyModels::Optimized::separator = ": ";
 
 
