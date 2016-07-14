@@ -306,11 +306,20 @@ public:
 
     void LoadSigmas(const std::string& filename);
 
+    bool HasLoadedSigmas() const {
+        return loaded_sigmas;
+    }
+
     struct Exception : std::runtime_error {
         using std::runtime_error::runtime_error;
     };
 
-    static std::shared_ptr<Interpolated> makeAndLoad(UncertaintyModelPtr default_model);
+    enum class Mode_t {
+        Fit, MCSmear
+    };
+
+    static std::shared_ptr<Interpolated> makeAndLoad(UncertaintyModelPtr default_model,
+                                                     Mode_t mode = Mode_t::Fit);
 
     struct ClippedInterpolatorWrapper : ant::printable_traits {
         using interpolator_ptr_t = std::unique_ptr<const Interpolator2D>;

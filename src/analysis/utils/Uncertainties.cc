@@ -932,14 +932,14 @@ void UncertaintyModels::Interpolated::LoadSigmas(const string& filename)
         VLOG(5) << "Successfully loaded interpolation data for Uncertainty Model from " << filename;
 
     } catch (WrapTFile::Exception& e) {
-        LOG(WARNING) << "Can't open uncertainty histogram file: " << filename <<". Default model will be used: " << e.what();
+        LOG(WARNING) << "Can't open uncertainty histogram file (using default model instead): " << e.what();
     }
 
 }
 
 
 
-std::shared_ptr<UncertaintyModels::Interpolated> UncertaintyModels::Interpolated::makeAndLoad(UncertaintyModelPtr default_model)
+std::shared_ptr<UncertaintyModels::Interpolated> UncertaintyModels::Interpolated::makeAndLoad(UncertaintyModelPtr default_model, Mode_t mode)
 {
     auto s = std::make_shared<Interpolated>(default_model);
 
@@ -949,8 +949,13 @@ std::shared_ptr<UncertaintyModels::Interpolated> UncertaintyModels::Interpolated
         throw std::runtime_error("No Setup found");
     }
 
-    s->LoadSigmas(setup->GetPhysicsFilesDirectory()+"/interpolated_sigmas.root");
-
+    s->LoadSigmas(
+                std_ext::formatter()
+                << setup->GetPhysicsFilesDirectory()
+                << "/interpolated_sigmas"
+                << (mode == Mode_t::MCSmear ? "_mc" : "")
+                << ".root"
+                );
     return s;
 }
 
