@@ -34,6 +34,9 @@ struct cc_shared_ptr {
     bool operator!=(const cc_shared_ptr& other) const noexcept {
         return ptr != other.ptr;
     }
+    bool operator<(const cc_shared_ptr& other) const noexcept {
+        return ptr < other.ptr;
+    }
     explicit operator bool() const noexcept {
         return static_cast<bool>(ptr);
     }
