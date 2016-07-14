@@ -27,16 +27,10 @@ InterpolatedPulls::InterpolatedPulls(const string& name, OptionsPtr opts) :
                  utils::UncertaintyModels::Interpolated::Mode_t::MCSmear
                  )
              ),
-    mc_smear(opts->Get<bool>("MCSmear", false) ?
-                 std_ext::make_unique<utils::MCSmear>(mc_model)
-               : nullptr),
+    mc_smear(std_ext::make_unique<utils::MCSmear>(mc_model)),
     pullswriter(HistFac)
 {
     fitter.SetZVertexSigma(0); // use unmeasured z vertex
-
-    if(!fit_model->HasLoadedSigmas() && mc_smear) {
-        LOG(WARNING) << "Without having a properly loaded fit model, working on MC Smear makes no sense!";
-    }
 
     promptrandom.AddPromptRange({-2.5,2.5});
     promptrandom.AddRandomRange({-50,-5});
@@ -146,6 +140,9 @@ void InterpolatedPulls::ProcessEvent(const TEvent& event, manager_t&)
             utils::PullsWriter::smear_sigmas_t smearSigmas;
 
             if(mc_smear && data.ID.isSet(TID::Flags_t::MC)) {
+                if(!fit_model->HasLoadedSigmas()) {
+                    LOG_N_TIMES(1, ERROR) << "Without having a properly loaded fit model, working on MC Smear makes no sense! YOU HAVE BEEN WARNED.";
+                }
                 {
                     utils::Uncertainties_t sigmas;
                     proton = mc_smear->Smear(proton, sigmas);
