@@ -3,10 +3,10 @@
 #include "plot/PromptRandomHist.h"
 #include "utils/PullsWriter.h"
 #include "utils/Fitter.h"
+#include "utils/MCSmear.h"
 
 class TH1D;
 class TH2D;
-
 
 namespace ant {
 namespace analysis {
@@ -37,8 +37,13 @@ protected:
     TH2D* h_E_vetoE_proton_cb;
     TH2D* h_E_vetoE_proton_taps;
 
-    utils::UncertaintyModelPtr model;
+    using model_t = std::shared_ptr<const utils::UncertaintyModels::Interpolated>;
+
+    model_t fit_model;
     utils::KinFitter fitter;
+
+    model_t mc_model;
+    std::unique_ptr<utils::MCSmear> mc_smear;
 
     utils::PullsWriter pullswriter;
 

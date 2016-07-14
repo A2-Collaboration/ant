@@ -11,15 +11,31 @@ using namespace std;
 
 InterpolatedPulls::InterpolatedPulls(const string& name, OptionsPtr opts) :
     Physics(name, opts),
-    model(utils::UncertaintyModels::Interpolated::makeAndLoad(
-              // use OptimizedOli1 as default
-              make_shared<utils::UncertaintyModels::Optimized_Oli1>()
+    fit_model(utils::UncertaintyModels::Interpolated::makeAndLoad(
+                  // use OptimizedOli1 as starting point
+                  make_shared<utils::UncertaintyModels::Optimized_Oli1>(),
+                  utils::UncertaintyModels::Interpolated::Mode_t::Fit
               )
           ),
-    fitter("KinFit", 4, model, true),
+    fitter("KinFit", 4, fit_model,
+           true // enable Z vertex
+           ),
+    mc_model(utils::UncertaintyModels::Interpolated::makeAndLoad(
+                 // use Patrik Adlarson's MCSmearing as starting point
+                 make_shared<utils::UncertaintyModels::MCSmearingAdlarson>(),
+                 utils::UncertaintyModels::Interpolated::Mode_t::MCSmear
+                 )
+             ),
+    mc_smear(opts->Get<bool>("MCSmear", false) ?
+                 std_ext::make_unique<utils::MCSmear>(mc_model)
+               : nullptr),
     pullswriter(HistFac)
 {
-    fitter.SetZVertexSigma(0);
+    fitter.SetZVertexSigma(0); // use unmeasured z vertex
+
+    if(!fit_model->HasLoadedSigmas() && mc_smear) {
+        LOG(WARNING) << "Without having a properly loaded fit model, working on MC Smear makes no sense!";
+    }
 
     promptrandom.AddPromptRange({-2.5,2.5});
     promptrandom.AddRandomRange({-50,-5});
@@ -102,13 +118,14 @@ void InterpolatedPulls::ProcessEvent(const TEvent& event, manager_t&)
         double best_prob = std_ext::NaN;
         std::vector<utils::Fitter::FitParticle> best_fitParticles;
         double best_zvertex = std_ext::NaN;
+        utils::PullsWriter::smear_sigmas_t best_smearSigmas;
 
         // use any candidate as proton, and do the analysis (ignore ParticleID stuff)
         for(auto i_proton : cands.get_iter()) {
 
             steps->Fill("Seen protons",1.0);
 
-            const auto proton = std::make_shared<TParticle>(ParticleTypeDatabase::Proton, i_proton);
+            TParticlePtr proton = std::make_shared<TParticle>(ParticleTypeDatabase::Proton, i_proton);
             std::vector<TParticlePtr> photons;
             for(auto i_photon : cands.get_iter()) {
                 if(i_photon == i_proton)
@@ -120,6 +137,22 @@ void InterpolatedPulls::ProcessEvent(const TEvent& event, manager_t&)
             LorentzVec photon_sum(0,0,0,0);
             for(const auto& p : photons) {
                 photon_sum += *p;
+            }
+
+            // do MC smearing and track the used sigmas
+            utils::PullsWriter::smear_sigmas_t smearSigmas;
+
+            if(mc_smear && data.ID.isSet(TID::Flags_t::MC)) {
+                {
+                    utils::Uncertainties_t sigmas;
+                    proton = mc_smear->Smear(proton, sigmas);
+                    smearSigmas.emplace(proton, sigmas);
+                }
+                for(auto& p : photons) {
+                    utils::Uncertainties_t sigmas;
+                    p = mc_smear->Smear(p, sigmas);
+                    smearSigmas.emplace(p, sigmas);
+                }
             }
 
             // proton coplanarity
@@ -198,6 +231,7 @@ void InterpolatedPulls::ProcessEvent(const TEvent& event, manager_t&)
 
             best_fitParticles = fitter.GetFitParticles();
             best_zvertex = fitter.GetFittedZVertex();
+            best_smearSigmas = smearSigmas;
         }
 
         if(!isfinite(best_prob))
@@ -207,7 +241,7 @@ void InterpolatedPulls::ProcessEvent(const TEvent& event, manager_t&)
 
         h_zvertex->Fill(best_zvertex, TaggW);
 
-        pullswriter.Fill(best_fitParticles, TaggW, best_prob);
+        pullswriter.Fill(best_fitParticles, best_smearSigmas, TaggW, best_prob);
 
         // fill the many check hists
         for(const utils::Fitter::FitParticle& fitparticle : best_fitParticles) {
@@ -259,10 +293,11 @@ void InterpolatedPulls::ShowResult()
 
 void InterpolatedPulls::Finish()
 {
-    auto interpolated = dynamic_pointer_cast<const utils::UncertaintyModels::Interpolated>(model);
-
-    if(interpolated) {
-        LOG(INFO) << "Interpolated Uncertainty Model Statistics:\n" << *interpolated;
+    if(fit_model) {
+        LOG(INFO) << "Fit Model Statistics:\n" << *fit_model;
+    }
+    if(mc_model) {
+        LOG(INFO) << "MC Model Statistics:\n" << *fit_model;
     }
 }
 
