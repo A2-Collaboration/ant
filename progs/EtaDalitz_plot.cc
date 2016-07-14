@@ -49,6 +49,8 @@ struct MCTrue_Splitter : cuttree::StackedHists_t<Hist_t> {
 
     const decltype(physics::PID_Energy_etaDalitz::makeChannels()) channels;
 
+    constexpr static Color_t bkg_color = kGray+1;
+
     MCTrue_Splitter(const HistogramFactory& histFac,
                     const cuttree::TreeInfo_t& treeInfo) :
         cuttree::StackedHists_t<Hist_t>(histFac, treeInfo),
@@ -61,7 +63,7 @@ struct MCTrue_Splitter : cuttree::StackedHists_t<Hist_t> {
         // mctrue is never >= 3 (and < 9) in tree, use this to sum up all MC and all bkg MC
         // see also Fill()
         this->GetHist(2, "Sum_MC", Mod_t::MakeLine(kBlack, 1));
-        this->GetHist(3, "Bkg_MC", Mod_t::MakeFill(kGray+1, -1));
+        this->GetHist(3, "Bkg_MC", Mod_t::MakeFill(bkg_color, -1));
     }
 
     void Fill(const Fill_t& f) {
@@ -79,11 +81,19 @@ struct MCTrue_Splitter : cuttree::StackedHists_t<Hist_t> {
             return string("Unknown Decay");
         };
 
-        using histstyle::Mod_t;
+        auto get_color = [] (const unsigned mctrue) -> short {
+            const auto entry = physics::PID_Energy_etaDalitz::reaction_channels.channels.find(int(mctrue));
+
+            if (entry != physics::PID_Energy_etaDalitz::reaction_channels.channels.end())
+                return entry->second.color;
+
+            return histstyle::color_t::Get(mctrue-10);
+        };
+
         const Hist_t& hist = mctrue < 10 ? this->GetHist(mctrue)
                                          : this->GetHist(mctrue,
                                                          get_bkg_name(mctrue),
-                                                         Mod_t::MakeLine(histstyle::color_t::Get(mctrue-10), 1, kGray+1)
+                                                         Mod_t::MakeLine(get_color(mctrue), 1, bkg_color)
                                                          );
 
         hist.Fill(f);
