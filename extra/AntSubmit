@@ -24,7 +24,7 @@ my $no_log = 0;
 my $no_test = 0;
 my $no_qsub = 0;
 my $queue = 'dflt';
-my $walltime = '3:00:00';
+my $walltime = '2:00:00'; # dflt_short has 2h walltime
 
 # parse options
 Getopt::Long::Configure(qw(gnu_getopt));
