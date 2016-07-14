@@ -20,6 +20,7 @@ protected:
     TH1D* steps;
     TH1D* h_missingmass;
     TH1D* h_missingmass_cut;
+    TH1D* h_missingmass_best;
     TH2D* h_IM_gg_gg;
     TH2D* h_IM_gg_gg_cut;
 
