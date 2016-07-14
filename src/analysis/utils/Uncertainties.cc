@@ -623,27 +623,27 @@ void UncertaintyModels::Optimized::ReadToken(const string& token)
     }
 }
 
-UncertaintyModels::Optimized_Oli1::Optimized_Oli1()
+UncertaintyModels::Optimized_Oli1::Optimized_Oli1(double relative_scale)
 {
-    cb_photon_theta_const = degree_to_radian(1.1);
-    cb_photon_theta_Sin   = degree_to_radian(3.9);
-    cb_photon_phi         = degree_to_radian(4.1); // as average from dTheta over theta
+    cb_photon_theta_const = relative_scale*degree_to_radian(1.1);
+    cb_photon_theta_Sin   = relative_scale*degree_to_radian(3.9);
+    cb_photon_phi         = relative_scale*degree_to_radian(4.1); // as average from dTheta over theta
 
-    cb_photon_E_rel       =  0.02;  // 2% of E
+    cb_photon_E_rel       =  relative_scale*0.02;  // 2% of E
     cb_photon_E_exp       = -0.25;  // dev by 4th root of E (in GeV)
     cb_photon_E_lin       =  0.0;   // no linear part
 
-    cb_proton   = { 0.0, degree_to_radian(5.5), degree_to_radian(5.3)};
+    cb_proton   = { 0.0, relative_scale*degree_to_radian(5.5), relative_scale*degree_to_radian(5.3)};
 
-    taps_photon_E_rel =  0.03;    // 3% of E
+    taps_photon_E_rel =  relative_scale*0.03;    // 3% of E
     taps_photon_E_exp = -0.5;     // dev by sqrt
-    taps_photon_E_lin =  0.018;   // 1.8% of E as linear part
+    taps_photon_E_lin =  relative_scale*0.018;   // 1.8% of E as linear part
 
-    taps_photon_theta = degree_to_radian(2.5);
-    taps_photon_phi   = degree_to_radian(2.0);
+    taps_photon_theta = relative_scale*degree_to_radian(2.5);
+    taps_photon_phi   = relative_scale*degree_to_radian(2.0);
 
 
-    taps_proton = { 0.0, degree_to_radian(2.8), degree_to_radian(4.45)};
+    taps_proton = { 0.0, relative_scale*degree_to_radian(2.8), relative_scale*degree_to_radian(4.45)};
 
 }
 
