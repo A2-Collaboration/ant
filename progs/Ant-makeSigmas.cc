@@ -552,34 +552,31 @@ int main( int argc, char** argv )
 
     }
 
-    if(!cmd_batchmode->isSet()) {
-        if(!std_ext::system::isInteractive()) {
-            LOG(INFO) << "No TTY attached. Not starting ROOT shell.";
+    argc=1; // prevent TRint to parse any cmdline except prog name
+    auto app = cmd_batchmode->isSet() || !std_ext::system::isInteractive()
+               ? nullptr
+               : std_ext::make_unique<TRint>("Ant-makeSigmas",&argc,argv,nullptr,0,true);
+
+    auto new_E     = makeNewSigmas(h_pullsE,     h_sigmasE,     HistFac, "sigma_E",    cmd_tree->getValue(), integral_cut, mode);
+    auto new_Theta = makeNewSigmas(h_pullsTheta, h_sigmasTheta, HistFac, "sigma_Theta",cmd_tree->getValue(), integral_cut, mode);
+    auto new_Phi   = makeNewSigmas(h_pullsPhi,   h_sigmasPhi,   HistFac, "sigma_Phi",  cmd_tree->getValue(), integral_cut, mode);
+
+    if(app) {
+        canvas summary(cmd_tree->getValue());
+        summary << drawoption("colz");
+
+        for( auto r : {new_E, new_Theta, new_Phi}) {
+            summary << r.newSigmas << r.oldSigmas << r.pulls;
         }
-        else {
-            argc=1; // prevent TRint to parse any cmdline except prog name
-            TRint app("Ant-makeSigmas",&argc,argv,nullptr,0,true);
+        summary << endc;
 
-            auto new_E     = makeNewSigmas(h_pullsE,     h_sigmasE,     HistFac, "sigma_E",    cmd_tree->getValue(), integral_cut, mode);
-            auto new_Theta = makeNewSigmas(h_pullsTheta, h_sigmasTheta, HistFac, "sigma_Theta",cmd_tree->getValue(), integral_cut, mode);
-            auto new_Phi   = makeNewSigmas(h_pullsPhi,   h_sigmasPhi,   HistFac, "sigma_Phi",  cmd_tree->getValue(), integral_cut, mode);
+        if(masterFile)
+            LOG(INFO) << "Stopped running, but close ROOT properly to write data to disk.";
 
-            canvas summary(cmd_tree->getValue());
-            summary << drawoption("colz");
-
-            for( auto r : {new_E, new_Theta, new_Phi}) {
-                summary << r.newSigmas << r.oldSigmas << r.pulls;
-            }
-            summary << endc;
-
-            if(masterFile)
-                LOG(INFO) << "Stopped running, but close ROOT properly to write data to disk.";
-
-            app.Run(kTRUE); // really important to return...
-            if(masterFile)
-                LOG(INFO) << "Writing output file...";
-            masterFile = nullptr;   // and to destroy the master WrapTFile before TRint is destroyed
-        }
+        app->Run(kTRUE); // really important to return...
+        if(masterFile)
+            LOG(INFO) << "Writing output file...";
+        masterFile = nullptr;   // and to destroy the master WrapTFile before TRint is destroyed
     }
 
 }
