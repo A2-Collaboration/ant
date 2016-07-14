@@ -22,8 +22,8 @@ InterpolatedPulls::InterpolatedPulls(const string& name, OptionsPtr opts) :
            true // enable Z vertex
            ),
     mc_model(utils::UncertaintyModels::Interpolated::makeAndLoad(
-                 // use Patrik Adlarson's MCSmearing as starting point
-                 make_shared<utils::UncertaintyModels::MCSmearingAdlarson>(),
+                 // use scaled down version as starting point
+                 make_shared<utils::UncertaintyModels::Optimized_Oli1>(0.3),
                  utils::UncertaintyModels::Interpolated::Mode_t::MCSmear
                  )
              ),
