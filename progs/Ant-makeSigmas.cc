@@ -395,13 +395,16 @@ int main( int argc, char** argv )
 
     Mode_t mode;
     // order of checking is important due to default
-    if(cmd_divide->isSet()) {
+    if(cmd_divide->getValue()) {
         LOG(INFO) << "Divide mode selected, for MCSmear sigmas";
         mode = Mode_t::Divide;
     }
-    else if(cmd_multiply->isSet()) {
+    else if(cmd_multiply->getValue()) {
         LOG(INFO) << "Multiply mode selected, for fitter sigmas";
         mode = Mode_t::Multiply;
+    }
+    else {
+        throw runtime_error("Should never happen");
     }
 
     const auto fitprob_cut  = cmd_fitprob_cut->getValue();
