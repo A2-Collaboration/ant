@@ -3,6 +3,7 @@
 #include "plot/root_draw.h"
 #include "base/std_ext/misc.h"
 #include "base/Logger.h"
+#include "utils/particle_tools.h"
 
 using namespace ant;
 using namespace ant::analysis;
@@ -41,7 +42,7 @@ InterpolatedPulls::InterpolatedPulls(const string& name, OptionsPtr opts) :
     promptrandom.AddRandomRange({-50,-5});
     promptrandom.AddRandomRange({  5,50});
 
-    steps = HistFac.makeTH1D("Steps","","#",BinSettings(15),"steps");
+    steps = HistFac.makeTH1D("Steps","","#",BinSettings(10),"steps");
 
     BinSettings bins_MM(200,640,1240);
     BinSettings bins_E(300,0,1000);
@@ -290,6 +291,24 @@ void InterpolatedPulls::ProcessEvent(const TEvent& event, manager_t&)
             const LorentzVec& best_missing = taggerhit.GetPhotonBeam() + LorentzVec(0, 0, 0, ParticleTypeDatabase::Proton.Mass()) - best_photon_sum;
             h_missingmass_best->Fill(best_missing.M(), TaggW);
         }
+
+        // check some MCTrue stuff if available
+        auto& particletree = event.MCTrue().ParticleTree;
+        if(particletree) {
+            steps->Fill("MCTrue",1);
+            // 1=Signal, 2=Reference, 9=MissedBkg, >=10 found in ptreeBackgrounds
+            if(particletree->IsEqual(ParticleTypeTreeDatabase::Get(ParticleTypeTreeDatabase::Channel::TwoPi0_4g),
+                                     utils::ParticleTools::MatchByParticleName)) {
+                steps->Fill("MC #pi^{0}#pi^{0}",1);
+            }
+            else if(particletree->IsEqual(ParticleTypeTreeDatabase::Get(ParticleTypeTreeDatabase::Channel::Pi0Eta_4g),
+                                          utils::ParticleTools::MatchByParticleName)) {
+                steps->Fill("MC #pi^{0}#eta",1);
+            }
+            else {
+                steps->Fill("MC Bkg",1);
+            }
+        }
     }
 
 }
@@ -305,7 +324,7 @@ void InterpolatedPulls::Finish()
         LOG(INFO) << "Fit Model Statistics:\n" << *fit_model;
     }
     if(mc_model) {
-        LOG(INFO) << "MC Model Statistics:\n" << *fit_model;
+        LOG(INFO) << "MC Model Statistics:\n" << *mc_model;
     }
 }
 
