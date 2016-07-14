@@ -328,7 +328,12 @@ struct NewSigamsResult_t {
     TH2D* pulls     = nullptr;
 };
 
-NewSigamsResult_t makeNewSigmas(const TH3D* pulls, const TH3D* sigmas, HistogramFactory& hf, const string& output_name, const string& treename, const double integral_cut) {
+enum class Mode_t {
+    Multiply, Divide
+};
+
+NewSigamsResult_t makeNewSigmas(const TH3D* pulls, const TH3D* sigmas, HistogramFactory& hf, const string& output_name,
+                                const string& treename, const double integral_cut, Mode_t mode) {
     const string newTitle = formatter() << "new " << sigmas->GetTitle();
 
     auto pull_values  = FitSlicesZ(pulls,  hf, false, treename, integral_cut);
@@ -342,7 +347,12 @@ NewSigamsResult_t makeNewSigmas(const TH3D* pulls, const TH3D* sigmas, Histogram
     result.newSigmas = hf.clone(result.oldSigmas, output_name);
     assert(result.newSigmas);
 
-    result.newSigmas->Multiply(result.pulls);
+    if(mode == Mode_t::Multiply)
+        result.newSigmas->Multiply(result.pulls);
+    else if(mode == Mode_t::Divide)
+        result.newSigmas->Divide(result.pulls);
+    else
+        throw runtime_error("Unknown mode given");
 
     //fillNeighborAverages(result.newSigmas);
     {
@@ -378,7 +388,21 @@ int main( int argc, char** argv )
     auto cmd_fitprob_cut  = cmd.add<TCLAP::ValueArg<double>>("", "fitprob_cut","Min. required Fit Probability",                  false, 0.01,"probability");
     auto cmd_integral_cut = cmd.add<TCLAP::ValueArg<double>>("", "integral_cut","Min. required integral in Bins",                false, 100.0,"integral");
 
+    auto cmd_multiply = cmd.add<TCLAP::SwitchArg>("", "multiply", "newSigmas = oldSigmas*pulls (for FitUncertainty)", true);
+    auto cmd_divide = cmd.add<TCLAP::SwitchArg>("", "divide", "newSigmas = oldSigmas/pulls (for MCSmear)", false);
+
     cmd.parse(argc, argv);
+
+    Mode_t mode;
+    // order of checking is important due to default
+    if(cmd_divide->isSet()) {
+        LOG(INFO) << "Divide mode selected, for MCSmear sigmas";
+        mode = Mode_t::Divide;
+    }
+    else if(cmd_multiply->isSet()) {
+        LOG(INFO) << "Multiply mode selected, for fitter sigmas";
+        mode = Mode_t::Multiply;
+    }
 
     const auto fitprob_cut  = cmd_fitprob_cut->getValue();
     const auto integral_cut = cmd_integral_cut->getValue();
@@ -536,9 +560,9 @@ int main( int argc, char** argv )
             argc=1; // prevent TRint to parse any cmdline except prog name
             TRint app("Ant-makeSigmas",&argc,argv,nullptr,0,true);
 
-            auto new_E     = makeNewSigmas(h_pullsE,     h_sigmasE,     HistFac, "sigma_E",    cmd_tree->getValue(), integral_cut);
-            auto new_Theta = makeNewSigmas(h_pullsTheta, h_sigmasTheta, HistFac, "sigma_Theta",cmd_tree->getValue(), integral_cut);
-            auto new_Phi   = makeNewSigmas(h_pullsPhi,   h_sigmasPhi,   HistFac, "sigma_Phi",  cmd_tree->getValue(), integral_cut);
+            auto new_E     = makeNewSigmas(h_pullsE,     h_sigmasE,     HistFac, "sigma_E",    cmd_tree->getValue(), integral_cut, mode);
+            auto new_Theta = makeNewSigmas(h_pullsTheta, h_sigmasTheta, HistFac, "sigma_Theta",cmd_tree->getValue(), integral_cut, mode);
+            auto new_Phi   = makeNewSigmas(h_pullsPhi,   h_sigmasPhi,   HistFac, "sigma_Phi",  cmd_tree->getValue(), integral_cut, mode);
 
             canvas summary(cmd_tree->getValue());
             summary << drawoption("colz");
