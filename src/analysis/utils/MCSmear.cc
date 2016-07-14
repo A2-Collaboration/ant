@@ -10,15 +10,20 @@ using namespace std;
 using namespace ant;
 using namespace ant::analysis::utils;
 
-ant::TParticlePtr MCSmear::Smear(const TParticlePtr& p) const
+MCSmear::MCSmear(utils::UncertaintyModelPtr m):
+    model(m), rng(std_ext::make_unique<TRandom2>()) {}
+
+MCSmear::~MCSmear() {}
+
+ant::TParticlePtr MCSmear::Smear(const TParticlePtr& p, Uncertainties_t& sigmas) const
 {
     const auto& type = p->Type();
 
-    const auto sigma = model->GetSigmas(*p);
+    sigmas = model->GetSigmas(*p);
 
-    const double E     = rng->Gaus(p->Ek(),    sigma.sigmaE);
-    const double Theta = rng->Gaus(p->Theta(), sigma.sigmaTheta);
-    const double Phi   = rng->Gaus(p->Phi(),   sigma.sigmaPhi);
+    const double E     = rng->Gaus(p->Ek(),    sigmas.sigmaE);
+    const double Theta = rng->Gaus(p->Theta(), sigmas.sigmaTheta);
+    const double Phi   = rng->Gaus(p->Phi(),   sigmas.sigmaPhi);
 
     auto sp = make_shared<TParticle>(type, E, Theta, Phi);
     sp->Candidate = p->Candidate;
@@ -26,7 +31,8 @@ ant::TParticlePtr MCSmear::Smear(const TParticlePtr& p) const
     return sp;
 }
 
-MCSmear::MCSmear(utils::UncertaintyModelPtr m):
-    model(m), rng(std_ext::make_unique<TRandom2>()) {}
-
-MCSmear::~MCSmear() {}
+TParticlePtr MCSmear::Smear(const TParticlePtr& p) const
+{
+    Uncertainties_t sigmas;
+    return Smear(p, sigmas);
+}

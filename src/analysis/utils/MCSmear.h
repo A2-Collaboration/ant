@@ -23,6 +23,9 @@ public:
 
     ant::TParticlePtr  Smear(const ant::TParticlePtr& p) const;
 
+    ant::TParticlePtr  Smear(const ant::TParticlePtr& p, Uncertainties_t& sigmas) const;
+
+
 };
 
 }
