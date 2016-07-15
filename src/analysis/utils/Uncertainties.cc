@@ -946,7 +946,7 @@ std::shared_ptr<UncertaintyModels::Interpolated> UncertaintyModels::Interpolated
     const auto setup = ant::ExpConfig::Setup::GetLastFound();
 
     if(!setup) {
-        throw std::runtime_error("No Setup found");
+        throw ExpConfig::ExceptionNoConfig("No Setup found");
     }
 
     s->LoadSigmas(
@@ -956,7 +956,15 @@ std::shared_ptr<UncertaintyModels::Interpolated> UncertaintyModels::Interpolated
                 << (mode == Mode_t::MCSmear ? "_mc" : "")
                 << ".root"
                 );
+    if(!default_model && !s->HasLoadedSigmas()) {
+        throw Exception("No default model provided and sigmas could not be loaded");
+    }
     return s;
+}
+
+std::shared_ptr<UncertaintyModels::Interpolated> UncertaintyModels::Interpolated::makeAndLoad(UncertaintyModels::Interpolated::Mode_t mode)
+{
+    return makeAndLoad(nullptr, mode);
 }
 
 ostream&UncertaintyModels::Interpolated::Print(ostream& stream) const

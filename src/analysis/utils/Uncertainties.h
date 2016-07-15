@@ -320,6 +320,7 @@ public:
 
     static std::shared_ptr<Interpolated> makeAndLoad(UncertaintyModelPtr default_model,
                                                      Mode_t mode = Mode_t::Fit);
+    static std::shared_ptr<Interpolated> makeAndLoad(Mode_t mode = Mode_t::Fit);
 
     struct ClippedInterpolatorWrapper : ant::printable_traits {
         using interpolator_ptr_t = std::unique_ptr<const Interpolator2D>;
