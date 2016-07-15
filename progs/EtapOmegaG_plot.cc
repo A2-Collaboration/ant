@@ -167,13 +167,13 @@ struct CommonHist_t {
     static cuttree::Cuts_t<Fill_t> GetCuts() {
         using cuttree::MultiCut_t;
         cuttree::Cuts_t<Fill_t> cuts;
-        cuts.emplace_back(MultiCut_t<Fill_t>{
-                              // Use non-null PID cuts only when PID calibrated...
-                              {"CBSumVeto=0", [] (const Fill_t& f) { return f.Shared.CBSumVetoE==0; } },
-//                              {"CBSumVeto<0.25", [] (const Fill_t& f) { return f.Shared.CBSumVetoE<0.25; } },
-                              {"PIDSumE=0", [] (const Fill_t& f) { return f.Common.PIDSumE==0; } },
-//                              {"PIDSumE<1", [] (const Fill_t& f) { return f.Common.PIDSumE<1; } },
-                          });
+//        cuts.emplace_back(MultiCut_t<Fill_t>{
+//                              // Use non-null PID cuts only when PID calibrated...
+//                              {"CBSumVeto=0", [] (const Fill_t& f) { return f.Shared.CBSumVetoE==0; } },
+////                              {"CBSumVeto<0.25", [] (const Fill_t& f) { return f.Shared.CBSumVetoE<0.25; } },
+//                              {"PIDSumE=0", [] (const Fill_t& f) { return f.Common.PIDSumE==0; } },
+////                              {"PIDSumE<1", [] (const Fill_t& f) { return f.Common.PIDSumE<1; } },
+//                          });
         cuts.emplace_back(MultiCut_t<Fill_t>{
                               {"DiscardedEk=0", [] (const Fill_t& f) { return f.Shared.DiscardedEk == 0; } },
 //                              {"DiscardedEk<50", [] (const Fill_t& f) { return f.Shared.DiscardedEk < 50; } },
