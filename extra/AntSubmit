@@ -25,6 +25,7 @@ my $no_test = 0;
 my $no_qsub = 0;
 my $queue = 'dflt';
 my $walltime = '2:00:00'; # dflt_short has 2h walltime
+my $priority = 0; # job priority for qsub
 
 # parse options
 Getopt::Long::Configure(qw(gnu_getopt));
@@ -38,7 +39,8 @@ GetOptions(
            'no_test' => \$no_test,
            'no_qsub' => \$no_qsub,
            'queue=s' => \$queue,
-           'walltime=s' => \$walltime
+           'walltime=s' => \$walltime,
+           'priority=s' => \$priority
           ) or print_help();
 if ($help) {
   print_help();
@@ -283,7 +285,7 @@ sub create_submission {
   $qsub_cmd .= " -j oe -o '$logfile'";
 
   # misc stuff: batch quque, -V take over environment, walltime...
-  $qsub_cmd .= " -z -q $queue -V -l ncpus=1 -l walltime=$walltime";
+  $qsub_cmd .= " -z -q $queue -V -l ncpus=1 -l walltime=$walltime -p $priority";
 
   return [$qsub_cmd, $ant_cmd];
 }
@@ -318,7 +320,8 @@ Options:
   --no_test   Do not run first job as test before submission
   --no_qsub   Do not submit, but dumb Ant commands on STDOUT
   --queue     Set job queue (default: 'batch')
-  --walltime  Set walltime (default: 3:00:00)
+  --walltime  Set walltime (default: 2:00:00, for dflt_short)
+  --priority  Job priority, higher the better (default: 0)
 __EOF
   exit 255;
 }
