@@ -210,11 +210,19 @@ struct Hist_t {
     Hist_t(const HistogramFactory& hf, cuttree::TreeInfo_t): HistFac(hf) {
 
         AddTH1("KinFitChi2", "#chi^{2}", "#", Chi2Bins, "KinFitChi2",
-               [] (TH1D* h, const Fill_t& f) { h->Fill(f.Tree.chi2, f.TaggW());
+               [] (TH1D* h, const Fill_t& f) { h->Fill(f.Tree.kinfit_chi2, f.TaggW());
+        });
+
+        AddTH1("TreeFitChi2", "#chi^{2}", "#", Chi2Bins, "TreeFitChi2",
+               [] (TH1D* h, const Fill_t& f) { h->Fill(f.Tree.treefit_chi2, f.TaggW());
         });
 
         AddTH1("KinFitProb", "probability", "#", probbins, "KinFitProb",
-               [] (TH1D* h, const Fill_t& f) { h->Fill(f.Tree.probability, f.TaggW());
+               [] (TH1D* h, const Fill_t& f) { h->Fill(f.Tree.kinfit_probability, f.TaggW());
+        });
+
+        AddTH1("TreeFitProb", "probability", "#", probbins, "TreeFitProb",
+               [] (TH1D* h, const Fill_t& f) { h->Fill(f.Tree.treefit_probability, f.TaggW());
         });
 
         AddTH1("3 photon IM", "3#gamma IM [MeV]", "#", IMbins, "etaIM",
@@ -226,13 +234,14 @@ struct Hist_t {
             h->Fill(f.Tree.eta().M(), f.TaggW());
         });
 
-        AddTH1("3 photon IM fitted",  "3#gamma IM fit [MeV]", "#", IMbins, "etaIM_fitted",
+        AddTH1("3 photon IM kinfitted",  "3#gamma IM fit [MeV]", "#", IMbins, "etaIM_kinfitted",
                [] (TH1D* h, const Fill_t& f) {
-//            TLorentzVector eta(0,0,0,0);
-//            for(const auto& g : f.Tree.photons_fitted())
-//                eta += g;
-//            h->Fill(eta.M(), f.TaggW());
-            h->Fill(f.Tree.eta_fit().M(), f.TaggW());
+            h->Fill(f.Tree.eta_kinfit().M(), f.TaggW());
+        });
+
+        AddTH1("3 photon IM treefitted",  "3#gamma IM fit [MeV]", "#", IMbins, "etaIM_treefitted",
+               [] (TH1D* h, const Fill_t& f) {
+            h->Fill(f.Tree.eta_treefit().M(), f.TaggW());
         });
 
         AddTH1("Missing Mass", "MM [MeV]", "", MMbins, "mm",
@@ -257,7 +266,7 @@ struct Hist_t {
 
         AddTH2("dEvEproton", "E [MeV]", "dE [MeV]", Ebins, vetoEbins, "dEvE",
                [] (TH2D* h, const Fill_t& f) {
-            h->Fill(f.Tree.p_fitted().Energy() - ParticleTypeDatabase::Proton.Mass(), f.Tree.p_vetoE);
+            h->Fill(f.Tree.p_kinfitted().Energy() - ParticleTypeDatabase::Proton.Mass(), f.Tree.p_vetoE);
         });
 
         AddTH1("nCands", "# Candidates", "#", BinSettings(4, 3, 7), "nCands",
@@ -295,8 +304,12 @@ struct Hist_t {
 
         cuts.emplace_back(MultiCut_t<Fill_t>{
                                  //{"Prob>0.02+mm", [] (const Fill_t& f) { return f.Tree.probability > 0.02 && f.Tree.mm().M()<1100 && f.Tree.mm().M() > 780; } }
-                              {"Prob>0.02", [] (const Fill_t& f) { return f.Tree.probability > .02; }},
-                              {"Prob>0.05", [] (const Fill_t& f) { return f.Tree.probability > .05; }}
+                              {"KinFitProb>0.001", [] (const Fill_t& f) { return f.Tree.kinfit_probability > .001; }},
+                              {"KinFitProb>0.02", [] (const Fill_t& f) { return f.Tree.kinfit_probability > .02; }},
+                              {"KinFitProb>0.05", [] (const Fill_t& f) { return f.Tree.kinfit_probability > .05; }},
+                              {"TreeFitProb>0.001", [] (const Fill_t& f) { return f.Tree.treefit_probability > .001; }},
+                              {"TreeFitProb>0.02", [] (const Fill_t& f) { return f.Tree.treefit_probability > .02; }},
+                              {"TreeFitProb>0.05", [] (const Fill_t& f) { return f.Tree.treefit_probability > .05; }}
                              });
 
         auto antiPi0Cut = [] (const Fill_t& f, const double low = 102., const double high = 170.) {
@@ -398,10 +411,10 @@ int main(int argc, char** argv)
 
 
     // general styling settings for transparence
-    gStyle->SetFillColor(0);
-    gStyle->SetFillStyle(0);
-    gStyle->SetFrameFillColor(0);
-    gStyle->SetFrameFillStyle(0);
+//    gStyle->SetFillColor(0);
+//    gStyle->SetFillStyle(0);
+//    gStyle->SetFrameFillColor(0);
+//    gStyle->SetFrameFillStyle(0);
 
     if (cmd_pres->isSet()) {
         gStyle->SetLabelSize(.05f, "XYZ");
