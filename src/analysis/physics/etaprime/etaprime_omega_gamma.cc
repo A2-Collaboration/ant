@@ -41,10 +41,7 @@ APLCON::Fit_Settings_t EtapOmegaG::MakeFitSettings(unsigned max_iterations)
 EtapOmegaG::EtapOmegaG(const string& name, OptionsPtr opts) :
     Physics(name, opts),
     fit_Z_vertex(opts->Get<bool>("FitZVertex", true)),
-    params(utils::UncertaintyModels::Interpolated::makeAndLoad(
-               // use OptimizedOli1 as default
-               make_shared<utils::UncertaintyModels::Optimized_Oli1>()
-               ),
+    params(utils::UncertaintyModels::Interpolated::makeAndLoad(utils::UncertaintyModels::Interpolated::Mode_t::Fit),
            fit_Z_vertex, // flag to enable z vertex
            0.0 // Z_vertex_sigma, =0 means unmeasured
            ),
@@ -60,7 +57,7 @@ EtapOmegaG::EtapOmegaG(const string& name, OptionsPtr opts) :
                  std_ext::make_unique<utils::MCSmear>(
                      opts->Get<bool>("MCFake", false) ?
                      params.Fit_uncertainty_model
-                     : make_shared<utils::UncertaintyModels::MCSmearingAdlarson>()
+                     : utils::UncertaintyModels::Interpolated::makeAndLoad(utils::UncertaintyModels::Interpolated::Mode_t::MCSmear)
                          )
                : nullptr
                  ),
