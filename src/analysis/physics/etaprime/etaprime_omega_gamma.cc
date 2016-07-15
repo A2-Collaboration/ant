@@ -43,7 +43,8 @@ EtapOmegaG::EtapOmegaG(const string& name, OptionsPtr opts) :
     fit_Z_vertex(opts->Get<bool>("FitZVertex", true)),
     params(utils::UncertaintyModels::Interpolated::makeAndLoad(
                // use OptimizedOli1 as default
-               make_shared<utils::UncertaintyModels::Optimized_Oli1>()
+               make_shared<utils::UncertaintyModels::Optimized_Oli1>(),
+               utils::UncertaintyModels::Interpolated::Mode_t::Fit
                ),
            fit_Z_vertex, // flag to enable z vertex
            0.0 // Z_vertex_sigma, =0 means unmeasured
@@ -56,14 +57,19 @@ EtapOmegaG::EtapOmegaG(const string& name, OptionsPtr opts) :
                   params.Fit_uncertainty_model, params.Fit_Z_vertex,
                   EtapOmegaG::MakeFitSettings(25)
                   ),
-    mc_smear(opts->Get<bool>("MCFake", false) | opts->Get<bool>("MCSmear", true) ? // use | to force evaluation of both opts!
-                 std_ext::make_unique<utils::MCSmear>(
-                     opts->Get<bool>("MCFake", false) ?
-                     params.Fit_uncertainty_model
-                     : make_shared<utils::UncertaintyModels::MCSmearingAdlarson>()
-                         )
-               : nullptr
-                 ),
+    mc_smear(opts->Get<bool>("MCFake", false) | opts->Get<bool>("MCSmear", true)
+             ? // use | to force evaluation of both opts!
+               std_ext::make_unique<utils::MCSmear>(
+                   opts->Get<bool>("MCFake", false) ?
+                       params.Fit_uncertainty_model // in Fake mode use same model as fitter
+                     : utils::UncertaintyModels::Interpolated::makeAndLoad(
+                           // use Adlarson as default (30% version of Oli is maybe better?)
+                           make_shared<utils::UncertaintyModels::MCSmearingAdlarson>(),
+                           utils::UncertaintyModels::Interpolated::Mode_t::MCSmear
+                           )
+                       )
+             : nullptr // no MCSmear
+               ),
     mc_fake(opts->Get<bool>("MCFake", false) ?
                 std_ext::make_unique<utils::MCFakeReconstructed>()
               : nullptr),
@@ -963,16 +969,16 @@ void EtapOmegaG::ShowResult()
         Sig.OmegaPi0.t.Tree->AddFriend(t.Tree);
         Sig.OmegaPi0.t.Tree->AddFriend(Sig.t.Tree);
 //        canvas("Z Vertex Sig")
-//                << TTree_drawable(Sig.Pi0.t.Tree, "KinFitZVertex:TrueZVertex >> h3(100,-5,5,100,-5,5)","KinFitProb>0.01")
-//                << TTree_drawable(Sig.Pi0.t.Tree, "IM_Pi0gg_fitted:TrueZVertex >> h4(100,-5,5,200,900,1000)","KinFitProb>0.01")
-//                << TTree_drawable(Sig.OmegaPi0.t.Tree, "KinFitZVertex:TrueZVertex >> h5(100,-5,5,100,-5,5)","KinFitProb>0.01")
-//                << TTree_drawable(Sig.OmegaPi0.t.Tree, "IM_Pi0gg_fitted:TrueZVertex >> h6(100,-5,5,200,900,1000)","KinFitProb>0.01")
+//                << TTree_drawable(Sig.Pi0.t.Tree, "KinFitZVertex:TrueZVertex >> h3(100,-5,5,100,-5,5)","KinFitProb>0.1")
+//                << TTree_drawable(Sig.Pi0.t.Tree, "IM_Pi0gg_fitted:TrueZVertex >> h4(100,-5,5,200,900,1000)","KinFitProb>0.1")
+//                << TTree_drawable(Sig.OmegaPi0.t.Tree, "KinFitZVertex:TrueZVertex >> h5(100,-5,5,100,-5,5)","KinFitProb>0.1")
+//                << TTree_drawable(Sig.OmegaPi0.t.Tree, "IM_Pi0gg_fitted:TrueZVertex >> h6(100,-5,5,200,900,1000)","KinFitProb>0.1")
 //                << endc;
         canvas("Z Vertex Ref")
                 << drawoption("colz")
-                << TTree_drawable(Ref.t.Tree, "KinFitZVertex:TrueZVertex >> h1(100,-5,5,100,-5,5)","KinFitProb>0.01")
+                << TTree_drawable(Ref.t.Tree, "KinFitZVertex:TrueZVertex >> h1(100,-5,5,100,-5,5)","KinFitProb>0.1")
                 << TTree_drawable(Ref.t.Tree, "IM_2g:TrueZVertex >> h2(100,-5,5,200,900,1000)","KinFitProb>0.01")
-                << TTree_drawable(Ref.t.Tree, "KinFitPhotonThetaPulls:PhotonThetas >> h3(100,5,175,50,-3,3)","KinFitProb>0.01")
+                << TTree_drawable(Ref.t.Tree, "KinFitPhotonThetaPulls:PhotonThetas >> h3(100,5,175,50,-3,3)","KinFitProb>0.1")
                 << endc;
 //    }
 }
