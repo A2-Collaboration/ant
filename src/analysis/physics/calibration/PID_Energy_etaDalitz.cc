@@ -190,6 +190,8 @@ PID_Energy_etaDalitz::PID_Energy_etaDalitz(const string& name, OptionsPtr opts) 
     h_IM2d = HistFac.makeTH2D("IM(e+e-) vs IM(e+e-g)", "IM(e+e-g) [MeV]", "IM(e+e-) [MeV]", BinSettings(1200), BinSettings(1200), "h_IM2d");
     h_eta = HistFac.makeTH2D("Kinematics #eta", "Energy [MeV]", "#vartheta [#circ]", BinSettings(1200), BinSettings(360, 0, 180), "h_eta");
     h_proton = HistFac.makeTH2D("Kinematics p", "Energy [MeV]", "#vartheta [#circ]", BinSettings(1200), BinSettings(160, 0, 80), "h_proton");
+    h_kin_tree_fit_corr = HistFac.makeTH2D("Fit Correlation", "kinfit best comb", "treefit best comb",
+                                           BinSettings(N_FINAL_STATE+1), BinSettings(N_FINAL_STATE+1), "h_kin_tree_fit_corr");
 }
 
 void PID_Energy_etaDalitz::ProcessEvent(const TEvent& event, manager_t&)
@@ -293,6 +295,9 @@ void PID_Energy_etaDalitz::ProcessEvent(const TEvent& event, manager_t&)
     const interval<double> mm({ParticleTypeDatabase::Proton.Mass()-150., ParticleTypeDatabase::Proton.Mass()+150.});
     double best_prob_fit = -std_ext::inf;
     size_t best_comb_fit = cands.size();
+    // fit debug
+    double best_prob_kinfit = -std_ext::inf, best_prob_treefit = -std_ext::inf;
+    unsigned best_comb_kinfit = cands.size(), best_comb_treefit = cands.size();
     for (const TTaggerHit& taggerhit : data.TaggerHits) {  // loop over all tagger hits
         promptrandom.SetTaggerHit(taggerhit.Time - t.CBAvgTime);
         if (promptrandom.State() == PromptRandom::Case::Outside)
@@ -398,6 +403,16 @@ void PID_Energy_etaDalitz::ProcessEvent(const TEvent& event, manager_t&)
             const int kinfit_iterations = kinfit_result.NIterations;
 
 
+            // fit debug
+            if (kinfit_prob > best_prob_kinfit) {
+                best_prob_kinfit = kinfit_prob;
+                best_comb_kinfit = i;
+            }
+            if (treefit_prob > best_prob_treefit) {
+                best_prob_treefit = treefit_prob;
+                best_comb_treefit = i;
+            }
+
 
             h.treefitChi2->Fill(treefit_chi2);
             h.treefitProb->Fill(treefit_prob);
@@ -502,6 +517,9 @@ void PID_Energy_etaDalitz::ProcessEvent(const TEvent& event, manager_t&)
             shift_right(comb);
         }
     }
+
+    // fit debug
+    h_kin_tree_fit_corr->Fill(best_comb_kinfit, best_comb_treefit);
 
     if (best_comb_fit >= cands.size() || !isfinite(best_prob_fit))
         return;
