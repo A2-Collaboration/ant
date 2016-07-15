@@ -4,6 +4,18 @@
 
 using namespace ant;
 
+void TH2Ext::MakeSameZRange(std::vector<TH2*> hists, const ant::interval<double>& range) {
+
+    if(hists.empty())
+        return;
+
+    for(auto h : hists) {
+        h->SetMinimum(range.Start());
+        h->SetMaximum(range.Stop());
+    }
+
+}
+
 void TH2Ext::MakeSameZRange(std::vector<TH2*> hists) {
 
     if(hists.empty())
@@ -16,10 +28,7 @@ void TH2Ext::MakeSameZRange(std::vector<TH2*> hists) {
         b1.Extend(getZRange(**it));
     }
 
-    for(auto h : hists) {
-        h->SetMinimum(b1.Start());
-        h->SetMaximum(b1.Stop());
-    }
+    MakeSameZRange(hists, b1);
 
 }
 

@@ -14,6 +14,7 @@ double GetMaxPos(TH1* hist);
 
 struct TH2Ext {
     static void MakeSameZRange(std::vector<TH2*> hists);
+    static void MakeSameZRange(std::vector<TH2*> hists, const ant::interval<double>& range);
 
     static void ClearHistogram(TH2D* hist, const double v=0.0);
 
