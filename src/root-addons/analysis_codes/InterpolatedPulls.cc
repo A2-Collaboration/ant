@@ -408,10 +408,10 @@ void ConvergencePlot::Add(TDirectory* dir)
     list->push_back(dir);
 }
 
-void ConvergencePlot::Plot()
+void ConvergencePlot::Plot(const double min, const double max, const int ww, const int wh)
 {
 
-    for(const auto& particle : {"photon"}) {
+    for(const auto& particle : {"photon","proton"}) {
         for(const auto& det : {"cb", "taps"}) {
             for(const auto& n : {"E","Theta", "Phi"}) {
 
@@ -431,19 +431,30 @@ void ConvergencePlot::Plot()
 
                 }
 
+                if(min != max) {
+                    TH2Ext::MakeSameZRange(hists, {min,max});
+                }
+
                 TH2Ext::MakeSameZRange(hists);
 
                 const string title = formatter() << particle << " " << det << " " << n;
 
                 TCanvas* c = new TCanvas();
                 c->SetTitle(title.c_str());
-                c->Divide(hists.size(),1);
+                c->Divide(int(hists.size()),1);
+
+                if(ww>0 && wh>0) {
+                    c->SetCanvasSize(ww,wh);
+                }
 
                 int p=1;
                 for(auto h : hists) {
                     c->cd(p++);
                     h->Draw("colz");
                 }
+
+                const string fname = formatter() << "conv_col_" << particle << "_" << det << "_" << n;
+                c->SaveMultiImages(fname.c_str());
 
             }
         }

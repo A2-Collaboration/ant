@@ -34,7 +34,7 @@ struct ConvergencePlot {
 
     void Add(TDirectory* dir);
 
-    void Plot();
+    void Plot(const double min=0.0, const double max=0.0, const int ww=-1, const int wh=-1);
 
 };
 
