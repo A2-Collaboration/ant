@@ -86,16 +86,20 @@ PID_Energy_etaDalitz::PerChannel_t::PerChannel_t(const std::string& Name, const 
     eegPID = hf.makeTH2D(title + " PID 2 charged 1 neutral", "PID Energy [MeV]", "#", veto_energy, pid_channels, name + " eegPID");
     steps = hf.makeTH1D(title + " Accepted Events", "step", "#", BinSettings(10), name + " steps");
     etaIM = hf.makeTH1D(title + " IM #eta all comb", "IM [MeV]", "#", energy, name + " etaIM");
-    etaIM_fit = hf.makeTH1D(title + " IM #eta fitted", "IM [MeV]", "#", energy, name + " etaIM_fit");
+    etaIM_kinfit = hf.makeTH1D(title + " IM #eta kinfitted", "IM [MeV]", "#", energy, name + " etaIM_kinfit");
+    etaIM_treefit = hf.makeTH1D(title + " IM #eta treefitted", "IM [MeV]", "#", energy, name + " etaIM_treefit");
     etaIM_cand = hf.makeTH1D(title + " IM #eta candidates", "IM [MeV]", "#", energy, name + " etaIM_cand");
     etaIM_final = hf.makeTH1D(title + " IM #eta final", "IM [MeV]", "#", energy, name + " etaIM_final");
     IM2d = hf.makeTH2D(title + " IM(e+e-) vs IM(e+e-g)", "IM(e+e-g) [MeV]", "IM(e+e-) [MeV]", BinSettings(1200), BinSettings(1200), name + " IM2d");
     MM = hf.makeTH1D(title + " Missing Mass proton", "MM [MeV]", "#", BinSettings(1600), name + " MM");
     hCopl = hf.makeTH1D(title + " Coplanarity #eta - proton all comb", "coplanarity [#circ]", "#", BinSettings(720, -180, 180), name + " hCopl");
     hCopl_final = hf.makeTH1D(title + " Coplanarity #eta - proton final", "coplanarity [#circ]", "#", BinSettings(720, -180, 180), name + " hCopl_final");
-    hChi2 = hf.makeTH1D(title + " #chi^{2}", "#chi^{2}", "#", BinSettings(500, 0, 100), name + " hChi2");
-    hProb = hf.makeTH1D(title + " Probability", "probability", "#", BinSettings(500, 0, 1), name + " hProb");
-    hIter = hf.makeTH1D(title + " # Iterations", "#iterations", "#", BinSettings(20), name + " hIter");
+    treefitChi2 = hf.makeTH1D(title + " treefitted #chi^{2}", "#chi^{2}", "#", BinSettings(500, 0, 100), name + " treefitChi2");
+    treefitProb = hf.makeTH1D(title + " treefitted Probability", "probability", "#", BinSettings(500, 0, 1), name + " treefitProb");
+    treefitIter = hf.makeTH1D(title + " treefitted # Iterations", "#iterations", "#", BinSettings(20), name + " treefitIter");
+    kinfitChi2 = hf.makeTH1D(title + " kinfitted #chi^{2}", "#chi^{2}", "#", BinSettings(500, 0, 100), name + " kinfitChi2");
+    kinfitProb = hf.makeTH1D(title + " kinfitted Probability", "probability", "#", BinSettings(500, 0, 1), name + " kinfitProb");
+    kinfitIter = hf.makeTH1D(title + " kinfitted # Iterations", "#iterations", "#", BinSettings(20), name + " kinfitIter");
     effect_rad = hf.makeTH1D(title + " Effective Radius", "R", "#", BinSettings(500, 0, 50), name + " effect_rad");
     effect_rad_E = hf.makeTH2D(title + " Effective Radius vs. Cluster Energy", "E [MeV]", "R", energy, BinSettings(500, 0, 50), name + " effect_rad_E");
     cluster_size = hf.makeTH1D(title + " Cluster Size", "N", "#", BinSettings(50), name + " cluster_size");
@@ -108,11 +112,14 @@ void PID_Energy_etaDalitz::PerChannel_t::Show()
 {
     //canvas("Per Channel: " + title) << drawoption("colz") << eegPID << endc;
     canvas("Per Channel: " + title) << steps
-                                    << etaIM_fit
+                                    << etaIM_kinfit
+                                    << etaIM_treefit
                                     << etaIM_final
                                     << hCopl_final
-                                    << hChi2
-                                    << hProb
+                                    << kinfitChi2
+                                    << kinfitProb
+                                    << treefitChi2
+                                    << treefitProb
                                     << endc;
 }
 
@@ -149,10 +156,10 @@ static int getDetectorAsInt(const Detector_t::Any_t& d)
 PID_Energy_etaDalitz::PID_Energy_etaDalitz(const string& name, OptionsPtr opts) :
     Physics(name, opts),
     kinfit("kinfit", N_FINAL_STATE-1,
-           make_shared<uncertainty_model_t>(), false, MakeFitSettings(20)
+           make_shared<const uncertainty_model_t>(), false, MakeFitSettings(20)
            ),
     treefitter_eta("treefitter_eta", eta_3g(),
-                   make_shared<uncertainty_model_t>(), false, {}, MakeFitSettings(20)
+                   make_shared<const uncertainty_model_t>(), false, {}, MakeFitSettings(20)
                    )
 {
     promptrandom.AddPromptRange({-5, 5});
@@ -238,7 +245,8 @@ void PID_Energy_etaDalitz::ProcessEvent(const TEvent& event, manager_t&)
     h.steps->Fill("#cands", 1);
 
     TLorentzVector eta;
-    TLorentzVector eta_fit;
+    TLorentzVector eta_kinfit;
+    TLorentzVector eta_treefit;
     TParticlePtr proton;
     //const interval<double> eta_im({ETA_IM-ETA_SIGMA, ETA_IM+ETA_SIGMA});
     const interval<double> coplanarity({-25, 25});
@@ -282,10 +290,9 @@ void PID_Energy_etaDalitz::ProcessEvent(const TEvent& event, manager_t&)
 
     TParticleList photons;
     LorentzVec missing;
-    std::vector<utils::Fitter::FitParticle> fitparticles;
     const interval<double> mm({ParticleTypeDatabase::Proton.Mass()-150., ParticleTypeDatabase::Proton.Mass()+150.});
-    double best_prob = -std_ext::inf;
-    size_t best_comb = cands.size();
+    double best_prob_fit = -std_ext::inf;
+    size_t best_comb_fit = cands.size();
     for (const TTaggerHit& taggerhit : data.TaggerHits) {  // loop over all tagger hits
         promptrandom.SetTaggerHit(taggerhit.Time - t.CBAvgTime);
         if (promptrandom.State() == PromptRandom::Case::Outside)
@@ -338,59 +345,69 @@ void PID_Energy_etaDalitz::ProcessEvent(const TEvent& event, manager_t&)
             }
             h.steps->Fill("missing mass", 1);
 
-            APLCON::Result_t r;
-            TParticleList fitted_photons;
-            TParticlePtr fitted_proton;
-            double fitted_beam, beam_pull;
-            decltype(kinfit.GetFitParticles()) fit_particles;
+            /* now start with the kinematic fitting */
+            // treefit
+            APLCON::Result_t treefit_result;
 
-            if (USE_TREEFIT) {
-                treefitter_eta.SetEgammaBeam(taggerhit.PhotonEnergy);
-                treefitter_eta.SetProton(proton);
-                treefitter_eta.SetPhotons(photons);
+            treefitter_eta.SetEgammaBeam(taggerhit.PhotonEnergy);
+            treefitter_eta.SetProton(proton);
+            treefitter_eta.SetPhotons(photons);
 
-                // works this way because only one combination needs to be fitted
-                while (treefitter_eta.NextFit(r))
-                    if(r.Status != APLCON::Result_Status_t::Success)
-                        continue;
-
-                if (r.Status != APLCON::Result_Status_t::Success) {
-                    shift_right(comb);
+            // works this way because only one combination needs to be fitted
+            while (treefitter_eta.NextFit(treefit_result))
+                if (treefit_result.Status != APLCON::Result_Status_t::Success)
                     continue;
-                }
-                h.steps->Fill("treefit", 1);
 
-                fitted_photons = treefitter_eta.GetFittedPhotons();
-                fitted_proton   = treefitter_eta.GetFittedProton();
-                fitted_beam = treefitter_eta.GetFittedBeamE();
-                beam_pull = treefitter_eta.GetBeamEPull();
-                fit_particles = treefitter_eta.GetFitParticles();
-            } else {
-                kinfit.SetEgammaBeam(taggerhit.PhotonEnergy);
-                kinfit.SetProton(proton);
-                kinfit.SetPhotons(photons);
-
-                r = kinfit.DoFit();
-
-                if (r.Status != APLCON::Result_Status_t::Success) {
-                    shift_right(comb);
-                    continue;
-                }
-                h.steps->Fill("kinfit", 1);
-
-                fitted_photons = kinfit.GetFittedPhotons();
-                fitted_proton   = kinfit.GetFittedProton();
-                fitted_beam = kinfit.GetFittedBeamE();
-                beam_pull = kinfit.GetBeamEPull();
-                fit_particles = kinfit.GetFitParticles();
+            if (treefit_result.Status != APLCON::Result_Status_t::Success) {
+                shift_right(comb);
+                continue;
             }
+            h.steps->Fill("treefit", 1);
 
-            const double chi2 = r.ChiSquare;
-            const double prob = r.Probability;
-            const int iterations = r.NIterations;
-            h.hChi2->Fill(chi2);
-            h.hProb->Fill(prob);
-            h.hIter->Fill(iterations);
+            auto treefitted_photons = treefitter_eta.GetFittedPhotons();
+            auto treefitted_proton   = treefitter_eta.GetFittedProton();
+            auto treefitted_beam = treefitter_eta.GetFittedBeamE();
+            auto treefitted_beam_pull = treefitter_eta.GetBeamEPull();
+            auto treefit_particles = treefitter_eta.GetFitParticles();
+
+            // kinfit
+            kinfit.SetEgammaBeam(taggerhit.PhotonEnergy);
+            kinfit.SetProton(proton);
+            kinfit.SetPhotons(photons);
+
+            auto kinfit_result = kinfit.DoFit();
+
+            if (kinfit_result.Status != APLCON::Result_Status_t::Success) {
+                shift_right(comb);
+                continue;
+            }
+            h.steps->Fill("kinfit", 1);
+
+            auto kinfitted_photons = kinfit.GetFittedPhotons();
+            auto kinfitted_proton   = kinfit.GetFittedProton();
+            auto kinfitted_beam = kinfit.GetFittedBeamE();
+            auto kinfitted_beam_pull = kinfit.GetBeamEPull();
+            auto kinfit_particles = kinfit.GetFitParticles();
+
+
+            const double treefit_chi2 = treefit_result.ChiSquare;
+            const double treefit_prob = treefit_result.Probability;
+            const int treefit_iterations = treefit_result.NIterations;
+            const double kinfit_chi2 = kinfit_result.ChiSquare;
+            const double kinfit_prob = kinfit_result.Probability;
+            const int kinfit_iterations = kinfit_result.NIterations;
+
+
+
+            h.treefitChi2->Fill(treefit_chi2);
+            h.treefitProb->Fill(treefit_prob);
+            h.treefitIter->Fill(treefit_iterations);
+            h.kinfitChi2->Fill(kinfit_chi2);
+            h.kinfitProb->Fill(kinfit_prob);
+            h.kinfitIter->Fill(kinfit_iterations);
+
+            // determine which probability should be used to find the best candidate combination
+            double prob = USE_TREEFIT ? treefit_prob : kinfit_prob;
 
             if (PROBABILITY_CUT) {
                 if (prob < PROBABILITY) {
@@ -403,28 +420,41 @@ void PID_Energy_etaDalitz::ProcessEvent(const TEvent& event, manager_t&)
             h_eta->Fill(eta.E() - eta.M(), std_ext::radian_to_degree(eta.Theta()), t.TaggW);
             h_proton->Fill(proton->E - proton->M(), std_ext::radian_to_degree(proton->Theta()), t.TaggW);
 
-            eta_fit.SetXYZT(0,0,0,0);
-            for (const auto& g : fitted_photons)
-                eta_fit += *g;
-            h.etaIM_fit->Fill(eta_fit.M(), t.TaggW);
+            eta_kinfit.SetXYZT(0,0,0,0);
+            for (const auto& g : kinfitted_photons)
+                eta_kinfit += *g;
+            h.etaIM_kinfit->Fill(eta_kinfit.M(), t.TaggW);
+            eta_treefit.SetXYZT(0,0,0,0);
+            for (const auto& g : treefitted_photons)
+                eta_treefit += *g;
+            h.etaIM_treefit->Fill(eta_treefit.M(), t.TaggW);
 
-            if (prob > best_prob) {
-                best_prob = prob;
-                best_comb = i;
 
-                assert(fit_particles.size() == N_FINAL_STATE);
+            if (prob > best_prob_fit) {
+                best_prob_fit = prob;
+                best_comb_fit = i;
+
+                assert(kinfit_particles.size() == N_FINAL_STATE &&
+                       treefit_particles.size() == N_FINAL_STATE);
 
                 // update tree branches
-                t.chi2 = chi2;
-                t.probability = prob;
-                t.iterations = iterations;
-                t.DoF = r.NDoF;
+                t.kinfit_chi2 = kinfit_chi2;
+                t.kinfit_probability = kinfit_prob;
+                t.kinfit_iterations = kinfit_iterations;
+                t.kinfit_DoF = kinfit_result.NDoF;
+                t.treefit_chi2 = treefit_chi2;
+                t.treefit_probability = treefit_prob;
+                t.treefit_iterations = treefit_iterations;
+                t.treefit_DoF = treefit_result.NDoF;
 
-                t.beam_E_pull = beam_pull;
-                t.beam_E_fitted = fitted_beam;
+                t.beam_E_kinfitted = kinfitted_beam;
+                t.beam_kinfit_E_pull = kinfitted_beam_pull;
+                t.beam_E_treefitted = treefitted_beam;
+                t.beam_treefit_E_pull = treefitted_beam_pull;
 
                 t.p             = *proton;
-                t.p_fitted      = *fitted_proton;
+                t.p_kinfitted   = *kinfitted_proton;
+                t.p_treefitted  = *treefitted_proton;
                 t.p_Time        = proton->Candidate->Time;
                 t.p_PSA         = getPSAVector(proton);
                 t.p_vetoE       = proton->Candidate->VetoEnergy;
@@ -435,12 +465,15 @@ void PID_Energy_etaDalitz::ProcessEvent(const TEvent& event, manager_t&)
                 if (proton->Candidate->VetoEnergy)
                     t.p_vetoChannel = proton->Candidate->FindVetoCluster()->CentralElement;
 
-                t.p_theta_pull  = fit_particles.at(0).Theta.Pull;
-                t.p_phi_pull    = fit_particles.at(0).Phi.Pull;
+                t.p_kinfit_theta_pull  = kinfit_particles.at(0).Theta.Pull;
+                t.p_kinfit_phi_pull    = kinfit_particles.at(0).Phi.Pull;
+                t.p_treefit_theta_pull = treefit_particles.at(0).Theta.Pull;
+                t.p_treefit_phi_pull   = treefit_particles.at(0).Phi.Pull;
 
                 for (size_t i = 0; i < N_FINAL_STATE-1; ++i) {
                     t.photons().at(i)             = *(photons.at(i));
-                    t.photons_fitted().at(i)      = *(fitted_photons.at(i));
+                    t.photons_kinfitted().at(i)   = *(kinfitted_photons.at(i));
+                    t.photons_treefitted().at(i)  = *(treefitted_photons.at(i));
                     t.photons_Time().at(i)        = photons.at(i)->Candidate->Time;
                     t.photons_vetoE().at(i)       = photons.at(i)->Candidate->VetoEnergy;
                     t.photons_PSA().at(i)         = getPSAVector(photons.at(i));
@@ -451,13 +484,17 @@ void PID_Energy_etaDalitz::ProcessEvent(const TEvent& event, manager_t&)
                     if (photons.at(i)->Candidate->VetoEnergy)
                         t.photons_vetoChannel().at(i) = photons.at(i)->Candidate->FindVetoCluster()->CentralElement;
 
-                    t.photon_E_pulls().at(i)      = fit_particles.at(i+1).Ek.Pull;
-                    t.photon_theta_pulls().at(i)  = fit_particles.at(i+1).Theta.Pull;
-                    t.photon_phi_pulls().at(i)    = fit_particles.at(i+1).Phi.Pull;
+                    t.photon_kinfit_E_pulls().at(i)      = kinfit_particles.at(i+1).Ek.Pull;
+                    t.photon_kinfit_theta_pulls().at(i)  = kinfit_particles.at(i+1).Theta.Pull;
+                    t.photon_kinfit_phi_pulls().at(i)    = kinfit_particles.at(i+1).Phi.Pull;
+                    t.photon_treefit_E_pulls().at(i)     = treefit_particles.at(i+1).Ek.Pull;
+                    t.photon_treefit_theta_pulls().at(i) = treefit_particles.at(i+1).Theta.Pull;
+                    t.photon_treefit_phi_pulls().at(i)   = treefit_particles.at(i+1).Phi.Pull;
                 }
 
                 t.eta = eta;
-                t.eta_fit = eta_fit;
+                t.eta_kinfit = eta_kinfit;
+                t.eta_treefit = eta_treefit;
                 t.mm = missing;
                 t.copl = copl;
             }
@@ -466,12 +503,12 @@ void PID_Energy_etaDalitz::ProcessEvent(const TEvent& event, manager_t&)
         }
     }
 
-    if (best_comb >= cands.size() || !isfinite(best_prob))
+    if (best_comb_fit >= cands.size() || !isfinite(best_prob_fit))
         return;
     h.steps->Fill("best comb", 1);
 
     // restore combinations with best chi2
-    while (best_comb-- > 0)
+    while (best_comb_fit-- > 0)
         shift_right(comb);
 
     // sort the eta final state according to their Veto energies

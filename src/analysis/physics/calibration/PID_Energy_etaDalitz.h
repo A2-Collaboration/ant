@@ -23,7 +23,8 @@ public:
         ADD_BRANCH_T(unsigned,                    nCands)
 
         ADD_BRANCH_T(std::vector<TLorentzVector>, photons, 3)
-        ADD_BRANCH_T(std::vector<TLorentzVector>, photons_fitted, 3)
+        ADD_BRANCH_T(std::vector<TLorentzVector>, photons_kinfitted, 3)
+        ADD_BRANCH_T(std::vector<TLorentzVector>, photons_treefitted, 3)
         ADD_BRANCH_T(std::vector<double>,         photons_Time, 3)
         ADD_BRANCH_T(std::vector<TVector2>,       photons_PSA, 3)
         ADD_BRANCH_T(std::vector<int>,            photons_detector, 3)
@@ -32,12 +33,16 @@ public:
         ADD_BRANCH_T(std::vector<double>,         photons_vetoE, 3)
         ADD_BRANCH_T(std::vector<int>,            photons_vetoChannel, 3)
 
-        ADD_BRANCH_T(std::vector<double>,         photon_E_pulls, 3)
-        ADD_BRANCH_T(std::vector<double>,         photon_theta_pulls, 3)
-        ADD_BRANCH_T(std::vector<double>,         photon_phi_pulls, 3)
+        ADD_BRANCH_T(std::vector<double>,         photon_kinfit_E_pulls, 3)
+        ADD_BRANCH_T(std::vector<double>,         photon_kinfit_theta_pulls, 3)
+        ADD_BRANCH_T(std::vector<double>,         photon_kinfit_phi_pulls, 3)
+        ADD_BRANCH_T(std::vector<double>,         photon_treefit_E_pulls, 3)
+        ADD_BRANCH_T(std::vector<double>,         photon_treefit_theta_pulls, 3)
+        ADD_BRANCH_T(std::vector<double>,         photon_treefit_phi_pulls, 3)
 
         ADD_BRANCH_T(TLorentzVector,              p)
-        ADD_BRANCH_T(TLorentzVector,              p_fitted)
+        ADD_BRANCH_T(TLorentzVector,              p_kinfitted)
+        ADD_BRANCH_T(TLorentzVector,              p_treefitted)
         ADD_BRANCH_T(double,                      p_Time)
         ADD_BRANCH_T(TVector2,                    p_PSA)
         ADD_BRANCH_T(int,                         p_detector)
@@ -46,20 +51,28 @@ public:
         ADD_BRANCH_T(double,                      p_vetoE)
         ADD_BRANCH_T(int,                         p_vetoChannel, 3)
 
-        ADD_BRANCH_T(double,                      p_theta_pull)
-        ADD_BRANCH_T(double,                      p_phi_pull)
+        ADD_BRANCH_T(double,                      p_kinfit_theta_pull)
+        ADD_BRANCH_T(double,                      p_kinfit_phi_pull)
+        ADD_BRANCH_T(double,                      p_treefit_theta_pull)
+        ADD_BRANCH_T(double,                      p_treefit_phi_pull)
 
         ADD_BRANCH_T(double,                      TaggW)
         ADD_BRANCH_T(double,                      TaggE)
         ADD_BRANCH_T(double,                      TaggT)
         ADD_BRANCH_T(unsigned,                    TaggCh)
-        ADD_BRANCH_T(double,                      beam_E_fitted)
-        ADD_BRANCH_T(double,                      beam_E_pull)
+        ADD_BRANCH_T(double,                      beam_E_kinfitted)
+        ADD_BRANCH_T(double,                      beam_E_treefitted)
+        ADD_BRANCH_T(double,                      beam_kinfit_E_pull)
+        ADD_BRANCH_T(double,                      beam_treefit_E_pull)
 
-        ADD_BRANCH_T(double,                      chi2)
-        ADD_BRANCH_T(double,                      probability)
-        ADD_BRANCH_T(unsigned,                    iterations)
-        ADD_BRANCH_T(unsigned,                    DoF)
+        ADD_BRANCH_T(double,                      kinfit_chi2)
+        ADD_BRANCH_T(double,                      kinfit_probability)
+        ADD_BRANCH_T(unsigned,                    kinfit_iterations)
+        ADD_BRANCH_T(unsigned,                    kinfit_DoF)
+        ADD_BRANCH_T(double,                      treefit_chi2)
+        ADD_BRANCH_T(double,                      treefit_probability)
+        ADD_BRANCH_T(unsigned,                    treefit_iterations)
+        ADD_BRANCH_T(unsigned,                    treefit_DoF)
 
         ADD_BRANCH_T(double,                      CBSumE)
         ADD_BRANCH_T(double,                      CBAvgTime)
@@ -67,7 +80,8 @@ public:
         ADD_BRANCH_T(unsigned,                    channel)
 
         ADD_BRANCH_T(TLorentzVector,              eta)
-        ADD_BRANCH_T(TLorentzVector,              eta_fit)
+        ADD_BRANCH_T(TLorentzVector,              eta_kinfit)
+        ADD_BRANCH_T(TLorentzVector,              eta_treefit)
         ADD_BRANCH_T(TLorentzVector,              mm)
         ADD_BRANCH_T(double,                      copl)
     };
@@ -99,7 +113,7 @@ protected:
     static constexpr bool IM2D_LINEAR_CUT = false;
     static constexpr bool LEPTON_PI0_CUT = false;
     static constexpr double LEPTON_PI0_THRESH = 130.;
-    // which fit should be used?
+    // which fit should be used to determine best candidate combination?
     static constexpr bool USE_TREEFIT = true;
 
     struct PerChannel_t {
@@ -108,16 +122,20 @@ protected:
         TH2* eegPID = nullptr;
         TH1D* steps = nullptr;
         TH1D* etaIM = nullptr;
-        TH1D* etaIM_fit = nullptr;
+        TH1D* etaIM_kinfit = nullptr;
+        TH1D* etaIM_treefit = nullptr;
         TH1D* etaIM_cand = nullptr;
         TH1D* etaIM_final = nullptr;
         TH2D* IM2d = nullptr;
         TH1D* MM = nullptr;
         TH1D* hCopl = nullptr;
         TH1D* hCopl_final = nullptr;
-        TH1D* hChi2 = nullptr;
-        TH1D* hProb = nullptr;
-        TH1D* hIter = nullptr;
+        TH1D* treefitChi2 = nullptr;
+        TH1D* treefitProb = nullptr;
+        TH1D* treefitIter = nullptr;
+        TH1D* kinfitChi2 = nullptr;
+        TH1D* kinfitProb = nullptr;
+        TH1D* kinfitIter = nullptr;
         TH1D* effect_rad = nullptr;
         TH2D* effect_rad_E = nullptr;
         TH1D* cluster_size = nullptr;
