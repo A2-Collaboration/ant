@@ -454,7 +454,12 @@ void ConvergencePlot::Plot(const double min, const double max, const int ww, con
                 }
 
                 const string fname = formatter() << "conv_col_" << particle << "_" << det << "_" << n;
-                c->SaveMultiImages(fname.c_str());
+                auto save_multiimages = [] (TCanvas* c, const char* basename) {
+                    c->SaveAs(Form("%s.pdf", basename));
+                    c->SaveAs(Form("%s.png", basename));
+                    c->SaveAs(Form("%s.root", basename));
+                };
+                save_multiimages(c, fname.c_str());
 
             }
         }
