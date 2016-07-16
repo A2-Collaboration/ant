@@ -92,6 +92,9 @@ EtapOmegaG::EtapOmegaG(const string& name, OptionsPtr opts) :
     h_CommonCuts_ref = HistFac.makeTH1D("Common Cuts Ref", "", "#", BinSettings(15),"h_CommonCuts_ref");
     h_MissedBkg = HistFac.makeTH1D("Missed Background", "", "#", BinSettings(25),"h_MissedBkg");
 
+    h_LostPhotons_sig = HistFac.makeTH1D("LostPhotons Sig", "#theta", "#", BinSettings(200,0,180),"h_LostPhotons_sig");
+    h_LostPhotons_ref = HistFac.makeTH1D("LostPhotons Ref", "#theta", "#", BinSettings(200,0,180),"h_LostPhotons_ref");
+
     t.CreateBranches(HistFac.makeTTree("treeCommon"));
 
     Sig.SetupTrees(HistFac);
@@ -110,12 +113,15 @@ void EtapOmegaG::ProcessEvent(const TEvent& event, manager_t&)
     // later we split into ref/sig analysis according to
     // number of photons
 
-    const TEventData& data = mc_fake && !event.MCTrue().ID.IsInvalid() ? mc_fake->Get(event.MCTrue()) : event.Reconstructed();
+    const bool have_MCTrue = !event.MCTrue().ID.IsInvalid();
+
+    const TEventData& data = mc_fake && have_MCTrue ? mc_fake->Get(event.MCTrue()) : event.Reconstructed();
 
     h_CommonCuts->Fill("Seen",1.0);
 
     auto& particletree = event.MCTrue().ParticleTree;
 
+    // Count EtaPrimes in MC sample
     h_CommonCuts->Fill("MCTrue #eta'", 0); // ensure the bin is there...
     if(particletree) {
         // note: this might also match to g p -> eta' eta' p,
@@ -124,6 +130,65 @@ void EtapOmegaG::ProcessEvent(const TEvent& event, manager_t&)
             h_CommonCuts->Fill("MCTrue #eta'", 1);
         }
     }
+
+    // do some MCTrue identification (if available)
+    t.MCTrue = 0; // indicate data by default
+    t.TrueZVertex = event.MCTrue().Target.Vertex.z; // NaN in case of data
+    TParticleTree_t ptree_sigref = nullptr; // used by Sig_t::Process to check matching
+    if(particletree) {
+        // 1=Signal, 2=Reference, 9=MissedBkg, >=10 found in ptreeBackgrounds
+        if(particletree->IsEqual(ptreeSignal, utils::ParticleTools::MatchByParticleName)) {
+            t.MCTrue = 1;
+            ptree_sigref = particletree;
+        }
+        else if(particletree->IsEqual(ptreeReference, utils::ParticleTools::MatchByParticleName)) {
+            t.MCTrue = 2;
+            ptree_sigref = particletree;
+        }
+        else {
+            t.MCTrue = 10;
+            bool found = false;
+            for(const auto& ptreeBkg : ptreeBackgrounds) {
+                if(particletree->IsEqual(ptreeBkg.Tree, utils::ParticleTools::MatchByParticleName)) {
+                    found = true;
+                    break;
+                }
+                t.MCTrue++;
+            }
+            if(!found) {
+                t.MCTrue = 9;
+                const auto& decaystr = utils::ParticleTools::GetDecayString(particletree);
+                h_MissedBkg->Fill(decaystr.c_str(), 1.0);
+            }
+        }
+    }
+    else if(have_MCTrue) {
+        // in rare cases, the particletree is not available, although we're running on MCTrue
+        // mark this as other MC background
+        t.MCTrue = 9;
+    }
+
+    // do some additional counting if true signal/ref event
+    if(t.MCTrue == 1 || t.MCTrue == 2) {
+        auto h_cut = t.MCTrue == 1 ? h_CommonCuts_sig : h_CommonCuts_ref;
+        auto h_lost = t.MCTrue == 1 ? h_LostPhotons_sig : h_LostPhotons_ref;
+        h_cut->Fill("MCTrue seen", 1.0);
+        bool photons_accepted = true;
+        for(const TParticlePtr& p : event.MCTrue().Particles.Get(ParticleTypeDatabase::Photon)) {
+            if(geometry.DetectorFromAngles(*p) == Detector_t::Any_t::None) {
+                h_lost->Fill(std_ext::radian_to_degree(p->Theta()));
+                photons_accepted = false;
+            }
+        }
+        if(photons_accepted) {
+            h_cut->Fill("MCTrue Photon ok", 1.0);
+        }
+        auto proton = event.MCTrue().Particles.Get(ParticleTypeDatabase::Photon).front();
+        if(geometry.DetectorFromAngles(*proton) != Detector_t::Any_t::None)
+            h_cut->Fill("MCTrue Proton ok", 1.0);
+    }
+
+    // start now with some cuts
 
     if(data.Trigger.CBEnergySum<=550)
         return;
@@ -173,42 +238,7 @@ void EtapOmegaG::ProcessEvent(const TEvent& event, manager_t&)
         }
     }
 
-    // do some MCTrue identification (if available)
-    t.MCTrue = 0; // indicate data by default
-    t.TrueZVertex = event.MCTrue().Target.Vertex.z; // NaN in case of data
-    TParticleTree_t ptree_sigref = nullptr; // used by Sig_t::Process to check matching
-    if(particletree) {
-        // 1=Signal, 2=Reference, 9=MissedBkg, >=10 found in ptreeBackgrounds
-        if(particletree->IsEqual(ptreeSignal, utils::ParticleTools::MatchByParticleName)) {
-            t.MCTrue = 1;
-            ptree_sigref = particletree;
-        }
-        else if(particletree->IsEqual(ptreeReference, utils::ParticleTools::MatchByParticleName)) {
-            t.MCTrue = 2;
-            ptree_sigref = particletree;
-        }
-        else {
-            t.MCTrue = 10;
-            bool found = false;
-            for(const auto& ptreeBkg : ptreeBackgrounds) {
-                if(particletree->IsEqual(ptreeBkg.Tree, utils::ParticleTools::MatchByParticleName)) {
-                    found = true;
-                    break;
-                }
-                t.MCTrue++;
-            }
-            if(!found) {
-                t.MCTrue = 9;
-                const auto& decaystr = utils::ParticleTools::GetDecayString(particletree);
-                h_MissedBkg->Fill(decaystr.c_str(), 1.0);
-            }
-        }
-    }
-    else if(!event.MCTrue().ID.IsInvalid()) {
-        // in rare cases, the particletree is not available, although we're running on MCTrue
-        // mark this as other MC background
-        t.MCTrue = 9;
-    }
+
 
     // additionally smear the particles in MC
     if(mc_smear && data.ID.isSet(TID::Flags_t::MC)) {
@@ -967,8 +997,10 @@ void EtapOmegaG::Ref_t::Process(const EtapOmegaG::Particles_t& particles) {
 
 void EtapOmegaG::ShowResult()
 {
-    canvas("Overview") << h_CommonCuts  << h_CommonCuts_sig
-                       << h_CommonCuts_ref << h_MissedBkg << endc;
+    canvas("Overview") << h_CommonCuts << h_MissedBkg
+                       << h_CommonCuts_sig << h_CommonCuts_ref
+                       << h_LostPhotons_sig << h_LostPhotons_ref
+                       << endc;
     Ref.t.Tree->AddFriend(t.Tree);
     Sig.Pi0.t.Tree->AddFriend(t.Tree);
     Sig.Pi0.t.Tree->AddFriend(Sig.t.Tree);

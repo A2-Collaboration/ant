@@ -4,6 +4,7 @@
 #include "analysis/utils/particle_tools.h"
 #include "analysis/utils/Fitter.h"
 #include "analysis/utils/MCSmear.h"
+#include "analysis/utils/A2GeoAcceptance.h"
 #include "analysis/plot/PromptRandomHist.h"
 
 #include "base/ParticleTypeTree.h"
@@ -30,6 +31,8 @@ struct EtapOmegaG : Physics {
     TH1D* h_CommonCuts_sig;
     TH1D* h_CommonCuts_ref;
 
+    TH1D* h_LostPhotons_sig;
+    TH1D* h_LostPhotons_ref;
     TH1D* h_MissedBkg;
 
     // TreeCommon contains things
@@ -110,6 +113,7 @@ struct EtapOmegaG : Physics {
     std::unique_ptr<utils::MCSmear>             mc_smear;
     std::unique_ptr<utils::MCFakeReconstructed> mc_fake;
 
+    utils::A2SimpleGeometry geometry;
 
     struct Particles_t {
         double         PhotonEnergy;
