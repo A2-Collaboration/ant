@@ -132,8 +132,8 @@ struct EtapOmegaG : Physics {
     static bool doKinfit(const TTaggerHit& taggerhit,
                          utils::KinFitter& kinfitter,
                          Particles_t& particles,
-                         SharedTree_t& t
-                         );
+                         SharedTree_t& t,
+                         TH1D* h_CommonCuts);
 
     struct Sig_t {
 

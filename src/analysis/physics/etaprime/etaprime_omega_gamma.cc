@@ -241,12 +241,12 @@ void EtapOmegaG::ProcessEvent(const TEvent& event, manager_t&)
 
         bool dofill = false;
 
-        if(haveSig && doKinfit(taggerhit, kinfitter_sig, sig_particles, Sig.t)) {
+        if(haveSig && doKinfit(taggerhit, kinfitter_sig, sig_particles, Sig.t, h_CommonCuts_sig)) {
             Sig.Process(sig_particles, ptree_sigref);
             dofill = true;
         }
 
-        if(haveRef && doKinfit(taggerhit, kinfitter_ref, ref_particles, Ref.t)) {
+        if(haveRef && doKinfit(taggerhit, kinfitter_ref, ref_particles, Ref.t, h_CommonCuts_ref)) {
             Ref.Process(ref_particles);
             dofill = true;
         }
@@ -281,9 +281,12 @@ bool EtapOmegaG::findParticles(const TCandidatePtrList& candidates,
     t.PhotonThetas().resize(0);
     t.ProtonCopl = std_ext::NaN;
 
+    h_CommonCuts->Fill("Seen", 1.0);
+
     t.nCandidates = candidates.size();
     if(t.nCandidates<nPhotons+1)
         return false;
+    h_CommonCuts->Fill("nCands ok", 1.0);
 
     // identify the proton here as slowest cluster in TAPS
     // using CBAvgTime does not help here, since it's constant
@@ -362,7 +365,8 @@ bool EtapOmegaG::findParticles(const TCandidatePtrList& candidates,
 bool EtapOmegaG::doKinfit(const TTaggerHit& taggerhit,
                           utils::KinFitter& kinfitter,
                           EtapOmegaG::Particles_t& particles,
-                          EtapOmegaG::SharedTree_t& t)
+                          EtapOmegaG::SharedTree_t& t,
+                          TH1D* h_CommonCuts)
 {
     // missing mass
     const LorentzVec beam_target = taggerhit.GetPhotonBeam() + LorentzVec(0, 0, 0, ParticleTypeDatabase::Proton.Mass());
@@ -385,6 +389,7 @@ bool EtapOmegaG::doKinfit(const TTaggerHit& taggerhit,
     const auto& missingmass_cut = ParticleTypeDatabase::Proton.GetWindow(300);
     if(!missingmass_cut.Contains(t.MissingMass))
         return false;
+    h_CommonCuts->Fill("MM ok", 1.0);
 
     particles.PhotonEnergy = taggerhit.PhotonEnergy;
     kinfitter.SetEgammaBeam(particles.PhotonEnergy);
@@ -416,6 +421,8 @@ bool EtapOmegaG::doKinfit(const TTaggerHit& taggerhit,
 
     for(const auto& photon : particles.FittedPhotons)
         particles.FittedPhotonSum += *photon;
+
+    h_CommonCuts->Fill("KinFit ok", 1.0);
 
     return true;
 }
@@ -974,12 +981,12 @@ void EtapOmegaG::ShowResult()
 //                << TTree_drawable(Sig.OmegaPi0.t.Tree, "KinFitZVertex:TrueZVertex >> h5(100,-5,5,100,-5,5)","KinFitProb>0.1")
 //                << TTree_drawable(Sig.OmegaPi0.t.Tree, "IM_Pi0gg_fitted:TrueZVertex >> h6(100,-5,5,200,900,1000)","KinFitProb>0.1")
 //                << endc;
-        canvas("Z Vertex Ref")
-                << drawoption("colz")
-                << TTree_drawable(Ref.t.Tree, "KinFitZVertex:TrueZVertex >> h1(100,-5,5,100,-5,5)","KinFitProb>0.1")
-                << TTree_drawable(Ref.t.Tree, "IM_2g:TrueZVertex >> h2(100,-5,5,200,900,1000)","KinFitProb>0.01")
-                << TTree_drawable(Ref.t.Tree, "KinFitPhotonThetaPulls:PhotonThetas >> h3(100,5,175,50,-3,3)","KinFitProb>0.1")
-                << endc;
+//        canvas("Z Vertex Ref")
+//                << drawoption("colz")
+//                << TTree_drawable(Ref.t.Tree, "KinFitZVertex:TrueZVertex >> h1(100,-5,5,100,-5,5)","KinFitProb>0.1")
+//                << TTree_drawable(Ref.t.Tree, "IM_2g:TrueZVertex >> h2(100,-5,5,200,900,1000)","KinFitProb>0.01")
+//                << TTree_drawable(Ref.t.Tree, "KinFitPhotonThetaPulls:PhotonThetas >> h3(100,5,175,50,-3,3)","KinFitProb>0.1")
+//                << endc;
 //    }
 }
 
