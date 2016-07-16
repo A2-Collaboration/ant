@@ -381,7 +381,7 @@ bool EtapOmegaG::findParticles(const TCandidatePtrList& candidates,
     // don't bother with events where proton coplanarity is not ok
     // we use some rather large window here...
     t.ProtonCopl = std_ext::radian_to_degree(vec2::Phi_mpi_pi(proton->Phi() - photon_sum.Phi() - M_PI ));
-    const interval<double> ProtonCopl_cut(-35, 35);
+    const interval<double> ProtonCopl_cut(-45, 45);
     if(!ProtonCopl_cut.Contains(t.ProtonCopl))
         return false;
     h_CommonCuts->Fill("ProtonCopl ok", 1.0);
