@@ -222,6 +222,10 @@ struct SigHist_t : CommonHist_t {
     TH1D* h_AntiEtaFitProb;
     TH1D* h_TreeFitProb;
 
+    TH1D* h_AntiPi0ZVertex;
+    TH1D* h_AntiEtaZVertex;
+    TH1D* h_TreeZVertex;
+
     TH2D* h_Pi0EtaFitProb;
     TH2D* h_Pi0TreeFitProb;
     TH2D* h_EtaTreeFitProb;
@@ -229,17 +233,23 @@ struct SigHist_t : CommonHist_t {
     TH1D* h_Bachelor_E_fitted;
     TH1D* h_Bachelor_E_best;
 
-
     const BinSettings bins_IM_Etap {100, 800,1050};
     const BinSettings bins_IM_Omega{100, 550, 950};
+    const BinSettings bins_ZVertex{100, -15, 15};
 
     SigHist_t(HistogramFactory HistFac, cuttree::TreeInfo_t treeInfo) : CommonHist_t(HistFac, treeInfo) {
         h_IM_4g_fitted = HistFac.makeTH1D("#eta' IM", "IM(#pi^{0}#gamma#gamma) / MeV","",bins_IM_Etap,"h_IM_4g_fitted");
         h_IM_4g_best = HistFac.makeTH1D("#eta' IM", "IM(#pi^{0}#gamma#gamma) / MeV","",bins_IM_Etap,"h_IM_4g_best");
         h_IM_gg_best = HistFac.makeTH1D("#eta' IM", "IM(#gamma#gamma) / MeV","",BinSettings(200,80,700),"h_IM_gg_best");
+
         h_AntiPi0FitProb = HistFac.makeTH1D("AntiPi0FitProb", "log p","",bins_FitProb,"h_AntiPi0FitProb");
         h_AntiEtaFitProb = HistFac.makeTH1D("AntiEtaFitProb", "log p","",bins_FitProb,"h_AntiEtaFitProb");
         h_TreeFitProb = HistFac.makeTH1D("TreeFitProb", "log p","",bins_FitProb,"h_TreeFitProb");
+
+        h_AntiPi0ZVertex = HistFac.makeTH1D("AntiPi0ZVertex", "z / cm","",bins_ZVertex,"h_AntiPi0ZVertex");
+        h_AntiEtaZVertex = HistFac.makeTH1D("AntiEtaZVertex", "z / cm","",bins_ZVertex,"h_AntiEtaZVertex");
+        h_TreeZVertex = HistFac.makeTH1D("TreeZVertex", "z / cm","",bins_ZVertex,"h_TreeZVertex");
+
         h_Pi0EtaFitProb = HistFac.makeTH2D("Pi0 vs. Eta","Pi0 p","Eta p",bins_FitProb,bins_FitProb,"h_Pi0EtaFitProb");
         h_Pi0TreeFitProb = HistFac.makeTH2D("Pi0 vs. Tree","Pi0 p","Tree p",bins_FitProb,bins_FitProb,"h_Pi0TreeFitProb");
         h_EtaTreeFitProb = HistFac.makeTH2D("Eta vs. Tree","Eta p","Tree p",bins_FitProb,bins_FitProb,"h_EtaTreeFitProb");
@@ -260,13 +270,19 @@ struct SigHist_t : CommonHist_t {
 //            h_IM_gg_gg->Fill(s.gg_gg1()[i], s.gg_gg2()[i], f.TaggW());
 //            h_IM_gg_gg->Fill(s.gg_gg2()[i], s.gg_gg1()[i], f.TaggW());
 //        }
-        h_AntiPi0FitProb->Fill(f.AntiPi0FitProb, f.TaggW());
-        h_AntiEtaFitProb->Fill(f.AntiEtaFitProb, f.TaggW());
 
         h_IM_4g_fitted->Fill(tree.IM_Pi0gg_fitted, f.TaggW());
         h_IM_4g_best->Fill(tree.IM_Pi0gg_best, f.TaggW());
         h_IM_gg_best->Fill(tree.IM_gg_best, f.TaggW());
+
+        h_AntiPi0FitProb->Fill(f.AntiPi0FitProb, f.TaggW());
+        h_AntiEtaFitProb->Fill(f.AntiEtaFitProb, f.TaggW());
         h_TreeFitProb->Fill(f.TreeFitProb, f.TaggW());
+
+        h_AntiPi0ZVertex->Fill(s.AntiPi0FitZVertex, f.TaggW());
+        h_AntiEtaZVertex->Fill(s.AntiEtaFitZVertex, f.TaggW());
+        h_TreeZVertex->Fill(tree.TreeFitZVertex, f.TaggW());
+
         h_Pi0EtaFitProb->Fill(f.AntiPi0FitProb, f.AntiEtaFitProb, f.TaggW());
         h_Pi0TreeFitProb->Fill(f.AntiPi0FitProb, f.TreeFitProb, f.TaggW());
         h_EtaTreeFitProb->Fill(f.AntiEtaFitProb, f.TreeFitProb, f.TaggW());
@@ -276,7 +292,9 @@ struct SigHist_t : CommonHist_t {
     std::vector<TH1*> GetHists() const {
         auto hists = CommonHist_t::GetHists();
         hists.insert(hists.end(), {
-                         h_IM_4g_fitted, h_IM_4g_best, h_IM_gg_best, h_AntiPi0FitProb, h_AntiEtaFitProb, h_TreeFitProb,
+                         h_IM_4g_fitted, h_IM_4g_best, h_IM_gg_best,
+                         h_AntiPi0FitProb, h_AntiEtaFitProb, h_TreeFitProb,
+                         h_AntiPi0ZVertex, h_AntiEtaZVertex, h_TreeZVertex,
                          h_Bachelor_E_fitted, h_Bachelor_E_best
                      });
         return hists;
@@ -287,12 +305,12 @@ struct SigHist_t : CommonHist_t {
         auto cuts = cuttree::ConvertCuts<Fill_t, CommonHist_t::Fill_t>(CommonHist_t::GetCuts());
 
         cuts.emplace_back(MultiCut_t<Fill_t>{
-                              {"AntiPi0FitProb<0.002||nan", [] (const Fill_t& f) { return std::isnan(f.Shared.AntiPi0FitProb) || f.Shared.AntiPi0FitProb<0.002; } },
+                              {"AntiPi0FitProb<0.02||nan", [] (const Fill_t& f) { return std::isnan(f.Shared.AntiPi0FitProb) || f.Shared.AntiPi0FitProb<0.002; } },
                               {"AntiPi0FitProb<0.0002||nan", [] (const Fill_t& f) { return std::isnan(f.Shared.AntiPi0FitProb) || f.Shared.AntiPi0FitProb<0.0002; } },
                           });
 
         cuts.emplace_back(MultiCut_t<Fill_t>{
-                              {"AntiEtaFitProb<0.005||nan", [] (const Fill_t& f) { return std::isnan(f.Shared.AntiEtaFitProb) || f.Shared.AntiEtaFitProb<0.005; } },
+                              {"AntiEtaFitProb<0.05||nan", [] (const Fill_t& f) { return std::isnan(f.Shared.AntiEtaFitProb) || f.Shared.AntiEtaFitProb<0.005; } },
                               {"AntiEtaFitProb<0.0005||nan", [] (const Fill_t& f) { return std::isnan(f.Shared.AntiEtaFitProb) || f.Shared.AntiEtaFitProb<0.0005; } },
                           });
 
