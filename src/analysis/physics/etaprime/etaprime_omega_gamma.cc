@@ -40,13 +40,12 @@ APLCON::Fit_Settings_t EtapOmegaG::MakeFitSettings(unsigned max_iterations)
 
 EtapOmegaG::EtapOmegaG(const string& name, OptionsPtr opts) :
     Physics(name, opts),
-    fit_Z_vertex(opts->Get<bool>("FitZVertex", true)),
     params(utils::UncertaintyModels::Interpolated::makeAndLoad(
                // use OptimizedOli1 as default
                make_shared<utils::UncertaintyModels::Optimized_Oli1>(),
                utils::UncertaintyModels::Interpolated::Mode_t::Fit
                ),
-           fit_Z_vertex, // flag to enable z vertex
+           true, // flag to enable z vertex
            0.0 // Z_vertex_sigma, =0 means unmeasured
            ),
     kinfitter_sig("kinfitter_sig",4,
@@ -970,25 +969,29 @@ void EtapOmegaG::ShowResult()
 {
     canvas("Overview") << h_CommonCuts  << h_CommonCuts_sig
                        << h_CommonCuts_ref << h_MissedBkg << endc;
-//    if(fit_Z_vertex) {
-        Ref.t.Tree->AddFriend(t.Tree);
-        Sig.Pi0.t.Tree->AddFriend(t.Tree);
-        Sig.Pi0.t.Tree->AddFriend(Sig.t.Tree);
-        Sig.OmegaPi0.t.Tree->AddFriend(t.Tree);
-        Sig.OmegaPi0.t.Tree->AddFriend(Sig.t.Tree);
-//        canvas("Z Vertex Sig")
-//                << TTree_drawable(Sig.Pi0.t.Tree, "KinFitZVertex:TrueZVertex >> h3(100,-5,5,100,-5,5)","KinFitProb>0.1")
-//                << TTree_drawable(Sig.Pi0.t.Tree, "IM_Pi0gg_fitted:TrueZVertex >> h4(100,-5,5,200,900,1000)","KinFitProb>0.1")
-//                << TTree_drawable(Sig.OmegaPi0.t.Tree, "KinFitZVertex:TrueZVertex >> h5(100,-5,5,100,-5,5)","KinFitProb>0.1")
-//                << TTree_drawable(Sig.OmegaPi0.t.Tree, "IM_Pi0gg_fitted:TrueZVertex >> h6(100,-5,5,200,900,1000)","KinFitProb>0.1")
-//                << endc;
-//        canvas("Z Vertex Ref")
-//                << drawoption("colz")
-//                << TTree_drawable(Ref.t.Tree, "KinFitZVertex:TrueZVertex >> h1(100,-5,5,100,-5,5)","KinFitProb>0.1")
-//                << TTree_drawable(Ref.t.Tree, "IM_2g:TrueZVertex >> h2(100,-5,5,200,900,1000)","KinFitProb>0.01")
-//                << TTree_drawable(Ref.t.Tree, "KinFitPhotonThetaPulls:PhotonThetas >> h3(100,5,175,50,-3,3)","KinFitProb>0.1")
-//                << endc;
-//    }
+    Ref.t.Tree->AddFriend(t.Tree);
+    Sig.Pi0.t.Tree->AddFriend(t.Tree);
+    Sig.Pi0.t.Tree->AddFriend(Sig.t.Tree);
+    Sig.OmegaPi0.t.Tree->AddFriend(t.Tree);
+    Sig.OmegaPi0.t.Tree->AddFriend(Sig.t.Tree);
+
+    canvas("Signal") << TTree_drawable(Sig.OmegaPi0.t.Tree, "Bachelor_E_fitted >> h_sig1(100,100,200)",
+                                       "DiscardedEk==0 && KinFitProb>0.01 && !(AntiPi0FitProb>0.0002) && !(AntiEtaFitProb>0.0005) && TreeFitProb>0.32")
+                     << endc;
+    canvas("Z Vertex Sig")
+            << drawoption("colz")
+            << TTree_drawable(Sig.Pi0.t.Tree, "KinFitZVertex:TrueZVertex >> h1_sig(100,-5,5,100,-5,5)","KinFitProb>0.1")
+            << TTree_drawable(Sig.Pi0.t.Tree, "IM_Pi0gg_fitted:TrueZVertex >> h2_sig(100,-5,5,200,900,1000)","KinFitProb>0.1")
+            << TTree_drawable(Sig.OmegaPi0.t.Tree, "KinFitZVertex:TrueZVertex >> h3_sig(100,-5,5,100,-5,5)","KinFitProb>0.1")
+            << TTree_drawable(Sig.OmegaPi0.t.Tree, "IM_Pi0gg_fitted:TrueZVertex >> h4_sig(100,-5,5,200,900,1000)","KinFitProb>0.1")
+            << endc;
+    canvas("Z Vertex Ref")
+            << drawoption("colz")
+            << TTree_drawable(Ref.t.Tree, "KinFitZVertex:TrueZVertex >> h1_ref(100,-5,5,100,-5,5)","KinFitProb>0.1")
+            << TTree_drawable(Ref.t.Tree, "IM_2g:TrueZVertex >> h2_ref(100,-5,5,200,900,1000)","KinFitProb>0.01")
+            << TTree_drawable(Ref.t.Tree, "KinFitPhotonThetaPulls:PhotonThetas >> h3_ref(100,5,175,50,-3,3)","KinFitProb>0.1")
+            << endc;
+
 }
 
 

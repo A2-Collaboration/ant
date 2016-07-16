@@ -102,7 +102,6 @@ struct EtapOmegaG : Physics {
         {}
     };
 
-    const bool fit_Z_vertex;
     const params_t params;
 
     utils::KinFitter kinfitter_sig;
