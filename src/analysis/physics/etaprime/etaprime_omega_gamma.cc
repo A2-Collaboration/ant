@@ -287,6 +287,7 @@ bool EtapOmegaG::findParticles(const TCandidatePtrList& candidates,
     if(t.nCandidates<nPhotons+1)
         return false;
     h_CommonCuts->Fill("nCands ok", 1.0);
+    h_CommonCuts->Fill("nCands exact", t.nCandidates==(nPhotons+1));
 
     // identify the proton here as slowest cluster in TAPS
     // using CBAvgTime does not help here, since it's constant
