@@ -40,7 +40,7 @@ protected:
     TID*            tid = nullptr;
     bool tid_from_file = false;
 
-    Long64_t    current_entry = 0;
+    long long current_entry = 0;
 
     void CopyPluto(TEventData& mctrue);
 

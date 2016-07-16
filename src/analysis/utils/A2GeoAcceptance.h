@@ -1,7 +1,6 @@
 #pragma once
 
 #include "base/interval.h"
-#include "TMath.h"
 #include "base/Detector_t.h"
 
 namespace ant {
