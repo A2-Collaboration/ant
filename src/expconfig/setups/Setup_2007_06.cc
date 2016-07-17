@@ -18,13 +18,23 @@ public:
         : Setup_2007_Base(name, opt)
     {
         IgnoreDetectorChannels(Detector_t::Type_t::CB,     {518, 540});
+        IgnoreDetectorChannels(Detector_t::Type_t::CB,     {125}); // uncalibrateable
 
+        // Tagger sections were switched off
         vector<unsigned> switched_off;
         switched_off.reserve(352-224);
         for(unsigned i=224; i<352; ++i) switched_off.push_back(i);
-
         IgnoreDetectorChannels(Detector_t::Type_t::Tagger, switched_off);
+
+        // Noisy channel
         IgnoreDetectorChannel(Detector_t::Type_t::Tagger, 27);
+
+        //TAPS: No Peak in calibration
+        IgnoreDetectorChannels(Detector_t::Type_t::TAPS, {55, 62, 63, 121, 127 ,190, 191, 247,255,301,302,311,312,313,318, 319,365});
+
+        //TAPS: No Entries?
+        IgnoreDetectorChannels(Detector_t::Type_t::TAPS, {109, 119, 120, 173, 383});
+
     }
 
 
