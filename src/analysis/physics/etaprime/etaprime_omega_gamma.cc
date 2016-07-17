@@ -117,6 +117,8 @@ void EtapOmegaG::ProcessEvent(const TEvent& event, manager_t&)
 
     const TEventData& data = mc_fake && have_MCTrue ? mc_fake->Get(event.MCTrue()) : event.Reconstructed();
 
+    const bool is_MC = data.ID.isSet(TID::Flags_t::MC);
+
     h_CommonCuts->Fill("Seen",1.0);
 
     auto& particletree = event.MCTrue().ParticleTree;
@@ -190,9 +192,13 @@ void EtapOmegaG::ProcessEvent(const TEvent& event, manager_t&)
 
     // start now with some cuts
 
-    if(data.Trigger.CBEnergySum<=550)
-        return;
-    h_CommonCuts->Fill("CBEnergySum>550",1.0);
+    // very simple trigger simulation for MC
+    /// \todo Investigate trigger behaviour with pi0pi0 sample?
+    if(is_MC) {
+        if(data.Trigger.CBEnergySum<=550)
+            return;
+        h_CommonCuts->Fill("MC CBEnergySum>550",1.0);
+    }
     t.CBSumE = data.Trigger.CBEnergySum;
 
     t.CBAvgTime = data.Trigger.CBTiming;
@@ -241,7 +247,7 @@ void EtapOmegaG::ProcessEvent(const TEvent& event, manager_t&)
 
 
     // additionally smear the particles in MC
-    if(mc_smear && data.ID.isSet(TID::Flags_t::MC)) {
+    if(mc_smear && is_MC) {
         auto smear_particles = [this] (Particles_t& particles) {
             particles.Proton = mc_smear->Smear(particles.Proton);
             for(auto& p : particles.Photons)
