@@ -163,7 +163,7 @@ struct CommonHist_t {
                     h_DiscardedEk, h_nCandidates};
     }
 
-    // Sig and Ref channel share some cuts...
+    // Sig and Ref channel (can) share some cuts...
     static cuttree::Cuts_t<Fill_t> GetCuts() {
         using cuttree::MultiCut_t;
         cuttree::Cuts_t<Fill_t> cuts;
@@ -183,11 +183,7 @@ struct CommonHist_t {
 //                              {"MissingMass", [] (const Fill_t& f) { return f.Shared.MissingMass < 1085 && f.Shared.MissingMass > 785; } },
 //                              //{"NoMissingMass", [] (const Fill_t&) { return true; } },
 //                          });
-//        cuts.emplace_back(MultiCut_t<Fill_t>{
-//                                 {"KinFitProb>0.01", [] (const Fill_t& f) { return f.Shared.KinFitProb>0.01; } },
-////                                 {"KinFitProb>0.1", [] (const Fill_t& f) { return f.Shared.KinFitProb>0.1; } },
-////                                 {"KinFitProb>0.3", [] (const Fill_t& f) { return f.Shared.KinFitProb>0.3; } },
-//                          });
+
         return cuts;
     }
 
@@ -446,7 +442,15 @@ struct RefHist_t : CommonHist_t {
     }
 
     static cuttree::Cuts_t<Fill_t> GetCuts() {
-        return cuttree::ConvertCuts<Fill_t, CommonHist_t::Fill_t>(CommonHist_t::GetCuts());
+        using cuttree::MultiCut_t;
+        auto cuts = cuttree::ConvertCuts<Fill_t, CommonHist_t::Fill_t>(CommonHist_t::GetCuts());
+
+        cuts.emplace_back(MultiCut_t<Fill_t>{
+                              {"KinFitProb>0.01", [] (const Fill_t& f) { return f.Shared.KinFitProb>0.01; } },
+//                                 {"KinFitProb>0.1", [] (const Fill_t& f) { return f.Shared.KinFitProb>0.1; } },
+//                                 {"KinFitProb>0.3", [] (const Fill_t& f) { return f.Shared.KinFitProb>0.3; } },
+                          });
+        return cuts;
     }
 };
 
