@@ -183,7 +183,8 @@ Setup_2007_Base::Setup_2007_Base(const std::string& name, OptionsPtr opt) : Setu
         // the PID calibration is a physics module only
         AddCalibration<calibration::PID_PhiAngle>(pid, calibrationDataManager);
 
-        AddCalibration<calibration::TAPSVeto_Energy>(tapsVeto, calibrationDataManager, convert_MultiHit16bit);
+        AddCalibration<calibration::TAPSVeto_Energy>(tapsVeto, calibrationDataManager, convert_MultiHit16bit,
+                                                     100.0, 0.010, 0.050, 0.1, 2.5); // increased default gain
 
         AddCalibration<calibration::TAPS_Time>(taps,
                                                calibrationDataManager,
