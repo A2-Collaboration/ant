@@ -316,6 +316,14 @@ double KinFitter::GetBeamEPull() const
     return BeamE->Pull;
 }
 
+double KinFitter::GetZVertexPull() const
+{
+    if(Z_Vertex)
+        return Z_Vertex->Pull;
+    else
+        return std_ext::NaN; // ignore silently
+}
+
 double KinFitter::GetProtonEPull() const
 {
     return Proton->Ek.Pull;

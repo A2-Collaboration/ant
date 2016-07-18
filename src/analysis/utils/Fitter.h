@@ -161,6 +161,7 @@ public:
     double GetFittedZVertex() const;
 
     double GetBeamEPull() const;
+    double GetZVertexPull() const;
 
     double GetProtonEPull() const;
     double GetProtonThetaPull() const;
