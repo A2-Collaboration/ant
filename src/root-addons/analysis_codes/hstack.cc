@@ -159,6 +159,12 @@ bool hstack::hist_t::isDataHist() const
 void hstack::buildIntelliTitle()
 {
     vector<string> title_parts = std_ext::tokenize_string(origtitle, ": ");
+
+    if(!GlobalOptions.IgnoreRemainingTitleParts && title_parts.size()>=2) {
+        const std::string& remaining_title = title_parts.front()+": "+title_parts.back();
+        SetTitle(remaining_title.c_str());
+    }
+
     if(title_parts.size()<3)
         return;
 
@@ -422,6 +428,8 @@ void hstack::UseIntelliLegend(bool flag) { GlobalOptions.UseIntelliLegend = flag
 bool hstack::GetUseIntelliLegend() const { return GlobalOptions.UseIntelliLegend; }
 void hstack::UseIntelliTitle(bool flag) { GlobalOptions.UseIntelliTitle = flag; gPad->Modified(); gPad->Update(); }
 bool hstack::GetUseIntelliTitle() const { return GlobalOptions.UseIntelliTitle; }
+void hstack::IgnoreRemainingTitleParts(bool flag) { GlobalOptions.IgnoreRemainingTitleParts = flag; gPad->Modified(); gPad->Update(); }
+bool hstack::GetIgnoreRemainingTitleParts() const { return GlobalOptions.IgnoreRemainingTitleParts; }
 void hstack::IgnoreEmptyHist(bool flag) { GlobalOptions.IgnoreEmptyHist = flag; gPad->Modified(); gPad->Update();}
 bool hstack::GetIgnoreEmptyHist() const { return GlobalOptions.IgnoreEmptyHist; }
 void hstack::ShowEntriesInLegend(bool flag) { GlobalOptions.ShowEntriesInLegend = flag; gPad->Modified(); gPad->Update(); }

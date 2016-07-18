@@ -59,6 +59,7 @@ struct hstack : THStack
         std::string HistThresholdMatches = "Bkg_";
         bool ShowEntriesInLegend = true;
         bool UseIntelliTitle = true;
+        bool IgnoreRemainingTitleParts = false;
         bool FixLegendPosition = false;
     };
 
@@ -167,6 +168,9 @@ public:
 
     virtual void UseIntelliTitle(bool flag); // *TOGGLE* *GETTER=GetUseIntelliTitle
     virtual bool GetUseIntelliTitle() const;
+
+    virtual void IgnoreRemainingTitleParts(bool flag); // *TOGGLE* *GETTER=GetIgnoreRemainingTitleParts
+    virtual bool GetIgnoreRemainingTitleParts() const;
 
     virtual void IgnoreEmptyHist(bool flag); // *TOGGLE* *GETTER=GetIgnoreEmptyHist
     virtual bool GetIgnoreEmptyHist() const;
