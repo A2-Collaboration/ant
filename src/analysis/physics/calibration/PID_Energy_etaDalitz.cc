@@ -5,6 +5,8 @@
 #include "expconfig/ExpConfig.h"
 #include "expconfig/detectors/CB.h"
 
+#include "base/Logger.h"
+
 using namespace std;
 using namespace ant;
 using namespace ant::analysis::physics;
@@ -156,10 +158,12 @@ static int getDetectorAsInt(const Detector_t::Any_t& d)
 PID_Energy_etaDalitz::PID_Energy_etaDalitz(const string& name, OptionsPtr opts) :
     Physics(name, opts),
     kinfit("kinfit", N_FINAL_STATE-1,
-           make_shared<const uncertainty_model_t>(), false, MakeFitSettings(20)
+           make_shared<const uncertainty_model_t>(),
+           USE_Z_VERTEX, MakeFitSettings(20)
            ),
     treefitter_eta("treefitter_eta", eta_3g(),
-                   make_shared<const uncertainty_model_t>(), false, {}, MakeFitSettings(20)
+                   make_shared<const uncertainty_model_t>(),
+                   USE_Z_VERTEX, {}, MakeFitSettings(20)
                    )
 {
     promptrandom.AddPromptRange({-5, 5});
@@ -192,12 +196,21 @@ PID_Energy_etaDalitz::PID_Energy_etaDalitz(const string& name, OptionsPtr opts) 
     h_proton = HistFac.makeTH2D("Kinematics p", "Energy [MeV]", "#vartheta [#circ]", BinSettings(1200), BinSettings(160, 0, 80), "h_proton");
     h_kin_tree_fit_corr = HistFac.makeTH2D("Fit Correlation", "kinfit best comb", "treefit best comb",
                                            BinSettings(N_FINAL_STATE+1), BinSettings(N_FINAL_STATE+1), "h_kin_tree_fit_corr");
+
+    if (USE_Z_VERTEX) {
+        LOG(INFO) << "Fit Z vertex enabled with sigma = " << SIGMA_Z;
+        kinfit.SetZVertexSigma(SIGMA_Z);
+        treefitter_eta.SetZVertexSigma(SIGMA_Z);
+    }
 }
 
 void PID_Energy_etaDalitz::ProcessEvent(const TEvent& event, manager_t&)
 {
     const bool MC = event.MCTrue().ParticleTree != nullptr;
+    t.MCtrue = MC;
     t.channel = reaction_channels.identify(event.MCTrue().ParticleTree);
+    if (MC)
+        t.trueZVertex = event.MCTrue().Target.Vertex.z;
 
     if (t.channel == ReactionChannelList_t::other_index) {
         if (MC)
@@ -466,6 +479,10 @@ void PID_Energy_etaDalitz::ProcessEvent(const TEvent& event, manager_t&)
                 t.beam_kinfit_E_pull = kinfitted_beam_pull;
                 t.beam_E_treefitted = treefitted_beam;
                 t.beam_treefit_E_pull = treefitted_beam_pull;
+                t.kinfit_ZVertex = kinfit.GetFittedZVertex();
+                t.kinfit_ZVertex_pull = kinfit.GetZVertexPull();
+                t.treefit_ZVertex = treefitter_eta.GetFittedZVertex();
+                t.treefit_ZVertex_pull = treefitter_eta.GetZVertexPull();
 
                 t.p             = *proton;
                 t.p_kinfitted   = *kinfitted_proton;

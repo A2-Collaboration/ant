@@ -60,10 +60,15 @@ public:
         ADD_BRANCH_T(double,                      TaggE)
         ADD_BRANCH_T(double,                      TaggT)
         ADD_BRANCH_T(unsigned,                    TaggCh)
+
         ADD_BRANCH_T(double,                      beam_E_kinfitted)
         ADD_BRANCH_T(double,                      beam_E_treefitted)
         ADD_BRANCH_T(double,                      beam_kinfit_E_pull)
         ADD_BRANCH_T(double,                      beam_treefit_E_pull)
+        ADD_BRANCH_T(double,                      kinfit_ZVertex)
+        ADD_BRANCH_T(double,                      kinfit_ZVertex_pull)
+        ADD_BRANCH_T(double,                      treefit_ZVertex)
+        ADD_BRANCH_T(double,                      treefit_ZVertex_pull)
 
         ADD_BRANCH_T(double,                      kinfit_chi2)
         ADD_BRANCH_T(double,                      kinfit_probability)
@@ -78,6 +83,8 @@ public:
         ADD_BRANCH_T(double,                      CBAvgTime)
 
         ADD_BRANCH_T(unsigned,                    channel)
+        ADD_BRANCH_T(bool,                        MCtrue)
+        ADD_BRANCH_T(double,                      trueZVertex)
 
         ADD_BRANCH_T(TLorentzVector,              eta)
         ADD_BRANCH_T(TLorentzVector,              eta_kinfit)
@@ -116,6 +123,9 @@ protected:
     static constexpr double LEPTON_PI0_THRESH = 130.;
     // which fit should be used to determine best candidate combination?
     static constexpr bool USE_TREEFIT = true;
+    // should the z vertex be taken into account?
+    static constexpr bool USE_Z_VERTEX = true;
+    static constexpr double SIGMA_Z = 3.4;
 
     struct PerChannel_t {
         std::string title;
