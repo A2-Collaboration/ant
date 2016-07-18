@@ -98,6 +98,7 @@ void GoatReader::CopyTrigger(TEventData& recon)
     ti.DAQEventID = eventParameters.EventNumber;
     ti.CBEnergySum = trigger.GetEnergySum();
     ti.ClusterMultiplicity = trigger.GetMultiplicity();
+    ti.CBTiming = 0; /// \todo Improve timing here
 
     for( int err=0; err < trigger.GetNErrors(); ++err) {
         ti.DAQErrors.emplace_back(
