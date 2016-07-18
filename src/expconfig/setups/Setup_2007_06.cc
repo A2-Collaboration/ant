@@ -30,10 +30,13 @@ public:
         IgnoreDetectorChannel(Detector_t::Type_t::Tagger, 27);
 
         //TAPS: No Peak in calibration
-        IgnoreDetectorChannels(Detector_t::Type_t::TAPS, {55, 62, 63, 121, 127 ,190, 191, 247,255,301,302,311,312,313,318, 319,365});
+        IgnoreDetectorChannels(Detector_t::Type_t::TAPS, {55, 62, 63, 121, 127 ,190, 191, 247, 255, 301, 302, 311, 312, 313, 318, 319, 365});
 
         //TAPS: No Entries?
         IgnoreDetectorChannels(Detector_t::Type_t::TAPS, {109, 119, 120, 173, 383});
+
+        // TAPSVeto: no entries in calibrationn
+        IgnoreDetectorChannels(Detector_t::Type_t::TAPSVeto, {27, 28, 55, 56, 62, 63, 109, 119, 120, 121, 127, 162, 173, 190, 191, 247, 253, 255, 301, 302, 311, 312, 313, 318, 319, 365, 375, 383});
 
     }
 
