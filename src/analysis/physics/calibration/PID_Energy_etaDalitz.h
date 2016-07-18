@@ -123,9 +123,6 @@ protected:
     static constexpr double LEPTON_PI0_THRESH = 130.;
     // which fit should be used to determine best candidate combination?
     static constexpr bool USE_TREEFIT = true;
-    // should the z vertex be taken into account?
-    static constexpr bool USE_Z_VERTEX = true;
-    static constexpr double SIGMA_Z = 3.4;
 
     struct PerChannel_t {
         std::string title;
@@ -173,6 +170,8 @@ protected:
 
     template<typename T>
     void shift_right(std::vector<T>&);
+
+    bool has_option(const OptionsPtr, const std::string&) const;
 
     void remove_char(std::string&, char);
     void remove_chars(std::string&, std::initializer_list<char>);

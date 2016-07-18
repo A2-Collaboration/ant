@@ -17,6 +17,16 @@ void PID_Energy_etaDalitz::shift_right(std::vector<T>& v)
     std::rotate(v.begin(), v.end() -1, v.end());
 }
 
+bool PID_Energy_etaDalitz::has_option(const OptionsPtr opts, const std::string& option) const
+{
+    std::string s  = opts->Flatten();
+
+    if (s.find(option) != std::string::npos)
+        return true;
+
+    return false;
+}
+
 void PID_Energy_etaDalitz::remove_char(std::string& str, char ch)
 {
     str.erase(std::remove(str.begin(), str.end(), ch), str.end());
@@ -159,11 +169,11 @@ PID_Energy_etaDalitz::PID_Energy_etaDalitz(const string& name, OptionsPtr opts) 
     Physics(name, opts),
     kinfit("kinfit", N_FINAL_STATE-1,
            make_shared<const uncertainty_model_t>(),
-           USE_Z_VERTEX, MakeFitSettings(20)
+           has_option(opts, "SigmaZ"), MakeFitSettings(20)
            ),
     treefitter_eta("treefitter_eta", eta_3g(),
                    make_shared<const uncertainty_model_t>(),
-                   USE_Z_VERTEX, {}, MakeFitSettings(20)
+                   has_option(opts, "SigmaZ"), {}, MakeFitSettings(20)
                    )
 {
     promptrandom.AddPromptRange({-5, 5});
@@ -197,10 +207,12 @@ PID_Energy_etaDalitz::PID_Energy_etaDalitz(const string& name, OptionsPtr opts) 
     h_kin_tree_fit_corr = HistFac.makeTH2D("Fit Correlation", "kinfit best comb", "treefit best comb",
                                            BinSettings(N_FINAL_STATE+1), BinSettings(N_FINAL_STATE+1), "h_kin_tree_fit_corr");
 
-    if (USE_Z_VERTEX) {
-        LOG(INFO) << "Fit Z vertex enabled with sigma = " << SIGMA_Z;
-        kinfit.SetZVertexSigma(SIGMA_Z);
-        treefitter_eta.SetZVertexSigma(SIGMA_Z);
+    if (has_option(opts, "SigmaZ")) {
+        double sigma_z = 0.;
+        std_ext::copy_if_greater(sigma_z, opts->Get<double>("SigmaZ", 0.));
+        LOG(INFO) << "Fit Z vertex enabled with sigma = " << sigma_z;
+        kinfit.SetZVertexSigma(sigma_z);
+        treefitter_eta.SetZVertexSigma(sigma_z);
     }
 }
 
