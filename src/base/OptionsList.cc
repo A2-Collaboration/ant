@@ -35,6 +35,16 @@ void OptionsList::SetOptions(const string& str,const string optdelim, const stri
         SetOption(option, valdelim);
 }
 
+bool OptionsList::HasOption(const string& key) const
+{
+    const auto entry = options->find(key);
+
+    if(entry == options->end())
+        return false;
+
+    return true;
+}
+
 string OptionsList::GetOption(const string& key) const
 {
     auto entry = options->find(key);

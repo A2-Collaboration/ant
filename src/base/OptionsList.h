@@ -41,6 +41,8 @@ public:
     void SetOption(const std::string& str, const std::string delim="=");
     void SetOptions(const std::string& str, const std::string optdelim=",", const std::string valdelim="=");
 
+    bool HasOption(const std::string& key) const;
+
     /**
      * @brief Flatten
      * @return the instance as string representation
