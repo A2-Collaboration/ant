@@ -59,6 +59,7 @@ set(ANALYSIS_PHYSICS
   physics/pi0/KinFitPi0.cc
   physics/common/FitPulls.cc
   physics/common/InterpolatedPulls.cc
+  physics/etaprime/etaprime_ept.cc
   )
 
 set(ANALYSIS_PHYSICS_CALIBRATION
