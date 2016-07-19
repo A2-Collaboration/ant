@@ -17,15 +17,19 @@ class TH2D;
 class TH3D;
 
 namespace ant {
-namespace analysis {
 
-namespace utils {
-class MCFakeReconstructed;
+namespace expconfig {
+namespace detector {
+struct EPT;
+}
 }
 
+namespace analysis {
 namespace physics {
 
 struct EtapEPT : Physics {
+
+    std::shared_ptr<expconfig::detector::EPT> EPT;
 
     TH1D* h_Cuts;
 
@@ -39,8 +43,11 @@ struct EtapEPT : Physics {
 
         ADD_BRANCH_T(double,   TaggW)
         ADD_BRANCH_T(double,   TaggE)
+        ADD_BRANCH_T(double,   TaggE_)
         ADD_BRANCH_T(double,   TaggT)
         ADD_BRANCH_T(unsigned, TaggCh)
+        ADD_BRANCH_T(unsigned, TaggCh_)
+
 
         ADD_BRANCH_T(unsigned, nCandidates)
         ADD_BRANCH_T(double,   PhotonsEk)
@@ -55,7 +62,6 @@ struct EtapEPT : Physics {
         ADD_BRANCH_T(double,   ProtonTheta)
         ADD_BRANCH_T(double,   ProtonVetoE)
         ADD_BRANCH_T(double,   ProtonShortE)
-        ADD_BRANCH_T(double,   ProtonTrueAngle)
 
         ADD_BRANCH_T(double,   PhotonSum)
         ADD_BRANCH_T(double,   ProtonCopl)

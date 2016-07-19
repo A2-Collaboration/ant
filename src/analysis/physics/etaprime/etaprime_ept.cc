@@ -8,6 +8,7 @@
 #include "analysis/utils/MCFakeReconstructed.h"
 
 #include "expconfig/ExpConfig.h"
+#include "expconfig/detectors/EPT.h"
 
 #include "base/Logger.h"
 #include "base/std_ext/math.h"
@@ -36,6 +37,7 @@ APLCON::Fit_Settings_t EtapEPT::MakeFitSettings(unsigned max_iterations)
 
 EtapEPT::EtapEPT(const string& name, OptionsPtr opts) :
     Physics(name, opts),
+    EPT(ExpConfig::Setup::GetDetector<expconfig::detector::EPT>()),
     kinfitter("kinfitter",2,
               utils::UncertaintyModels::Interpolated::makeAndLoad(
                   // use OptimizedOli1 as default
@@ -114,12 +116,17 @@ void EtapEPT::ProcessEvent(const TEvent& event, manager_t&)
         t.TaggCh = taggerhit.Channel;
 
 
-        if(doKinfit(taggerhit, kinfitter, particles, t, h_Cuts)) {
-            t.IM_2g = particles.FittedPhotonSum.M();
-            t.Tree->Fill();
+        for(unsigned ch=0;ch<EPT->GetNChannels();ch++) {
+            TTaggerHit taggerhit_(ch, EPT->GetPhotonEnergy(ch), taggerhit.Time);
+            t.TaggCh_ = taggerhit_.Channel;
+            t.TaggE_ = taggerhit_.PhotonEnergy;
+
+            if(doKinfit(taggerhit_, kinfitter, particles, t, h_Cuts)) {
+                t.IM_2g = particles.FittedPhotonSum.M();
+                t.Tree->Fill();
+            }
         }
     }
-
 }
 
 bool EtapEPT::findParticles(const TCandidatePtrList& candidates,
@@ -132,7 +139,6 @@ bool EtapEPT::findParticles(const TCandidatePtrList& candidates,
     t.ProtonTheta = std_ext::NaN;
     t.ProtonVetoE = std_ext::NaN;
     t.ProtonShortE = std_ext::NaN;
-    t.ProtonTrueAngle = std_ext::NaN;
     t.DiscardedEk = std_ext::NaN;
     t.PhotonsEk = std_ext::NaN;
     t.nPhotonsCB   = 0;
@@ -142,7 +148,7 @@ bool EtapEPT::findParticles(const TCandidatePtrList& candidates,
     t.PhotonThetas().resize(0);
     t.ProtonCopl = std_ext::NaN;
 
-    h_CommonCuts->Fill("Seen", 1.0);
+    h_CommonCuts->Fill("Seen Particles", 1.0);
 
     t.nCandidates = candidates.size();
     if(t.nCandidates<nPhotons+1)
@@ -227,6 +233,8 @@ bool EtapEPT::doKinfit(const TTaggerHit& taggerhit,
                           EtapEPT::Tree_t& t,
                           TH1D* h_CommonCuts)
 {
+    h_CommonCuts->Fill("Seen KinFit", 1.0);
+
     // missing mass
     const LorentzVec beam_target = taggerhit.GetPhotonBeam() + LorentzVec(0, 0, 0, ParticleTypeDatabase::Proton.Mass());
     t.MissingMass = (beam_target - particles.PhotonSum).M();
@@ -288,7 +296,14 @@ bool EtapEPT::doKinfit(const TTaggerHit& taggerhit,
 
 void EtapEPT::ShowResult()
 {
-    canvas("Overview") << h_Cuts << endc;
+    canvas("Overview")
+            << h_Cuts
+            << TTree_drawable(t.Tree, "IM_2g >> h1(200,800,1050)","")
+            << TTree_drawable(t.Tree, "IM_2g >> h2(200,800,1050)","TaggCh==TaggCh_")
+            << TTree_drawable(t.Tree, "IM_2g >> h3(200,800,1050)","TaggW*(KinFitProb>0.01)")
+            << TTree_drawable(t.Tree, "IM_2g >> h4(200,800,1050)","TaggW*(KinFitProb>0.01 && TaggCh == TaggCh_)")
+            << endc;
+
 }
 
 AUTO_REGISTER_PHYSICS(EtapEPT)
