@@ -36,41 +36,27 @@ APLCON::Fit_Settings_t EtapEPT::MakeFitSettings(unsigned max_iterations)
 
 EtapEPT::EtapEPT(const string& name, OptionsPtr opts) :
     Physics(name, opts),
-    params(utils::UncertaintyModels::Interpolated::makeAndLoad(
-               // use OptimizedOli1 as default
-               make_shared<utils::UncertaintyModels::Optimized_Oli1>(),
-               utils::UncertaintyModels::Interpolated::Mode_t::Fit
-               ),
-           true, // flag to enable z vertex
-           0.0 // Z_vertex_sigma, =0 means unmeasured
-           ),
-    kinfitter_ref("kinfitter_ref",2,
-                  params.Fit_uncertainty_model, params.Fit_Z_vertex,
-                  EtapEPT::MakeFitSettings(25)
-                  )
+    kinfitter("kinfitter",2,
+              utils::UncertaintyModels::Interpolated::makeAndLoad(
+                  // use OptimizedOli1 as default
+                  make_shared<utils::UncertaintyModels::Optimized_Oli1>(),
+                  utils::UncertaintyModels::Interpolated::Mode_t::Fit
+                  ),
+              true,
+              EtapEPT::MakeFitSettings(25)
+              )
 {
+    promptrandom.AddPromptRange({ -7,  7});
+    promptrandom.AddRandomRange({-65,-15});  // just ensure to be way off prompt peak
+    promptrandom.AddRandomRange({ 15, 65});
 
+    h_Cuts = HistFac.makeTH1D("Cuts", "", "#", BinSettings(15),"h_Cuts");
 
-    const interval<double> prompt_range{-2.5,1.5};
-    promptrandom.AddPromptRange(prompt_range); // slight offset due to CBAvgTime reference
-    promptrandom.AddRandomRange({-30,-10});  // just ensure to be way off prompt peak
-    promptrandom.AddRandomRange({ 10, 30});
+    t.CreateBranches(HistFac.makeTTree("tree"));
 
-    promptrandom_tight.AddPromptRange(prompt_range); // slight offset due to CBAvgTime reference
-    promptrandom_tight.AddRandomRange({-20,-10});  // just ensure to be way off prompt peak
-    promptrandom_tight.AddRandomRange({ 10, 20});
+    kinfitter.SetZVertexSigma(0.0);
+    LOG(INFO) << "Fit Z vertex enabled with sigma=0";
 
-
-    h_CommonCuts = HistFac.makeTH1D("Common Cuts", "", "#", BinSettings(15),"h_CommonCuts");
-
-    t.CreateBranches(HistFac.makeTTree("treeCommon"));
-
-    Ref.t.CreateBranches(HistFac.makeTTree("Ref"));
-
-    if(params.Fit_Z_vertex) {
-        LOG(INFO) << "Fit Z vertex enabled with sigma=" << params.Z_vertex_sigma;
-        kinfitter_ref.SetZVertexSigma(params.Z_vertex_sigma);
-    }
 }
 
 void EtapEPT::ProcessEvent(const TEvent& event, manager_t&)
@@ -78,19 +64,11 @@ void EtapEPT::ProcessEvent(const TEvent& event, manager_t&)
 
     const TEventData& data = event.Reconstructed();
 
-
-    h_CommonCuts->Fill("Seen",1.0);
-
+    h_Cuts->Fill("Seen",1.0);
 
     // start now with some cuts
-
-
     t.CBSumE = data.Trigger.CBEnergySum;
-
     t.CBAvgTime = data.Trigger.CBTiming;
-    if(!isfinite(t.CBAvgTime))
-        return;
-    h_CommonCuts->Fill("CBAvgTime ok",1.0);
 
     // gather candidates sorted by energy
     TCandidatePtrList candidates;
@@ -103,20 +81,18 @@ void EtapEPT::ProcessEvent(const TEvent& event, manager_t&)
     }
     if(!haveTAPS)
         return;
-    h_CommonCuts->Fill("1 in TAPS",1.0);
+    h_Cuts->Fill("1 in TAPS",1.0);
 
     std::sort(candidates.begin(), candidates.end(),
               [] (const TCandidatePtr& a, const TCandidatePtr& b) {
         return a->CaloEnergy > b->CaloEnergy;
     });
 
-    // fill sig/ref particles
-    Particles_t ref_particles;
-    bool haveRef = findParticles(candidates, 2, ref_particles, Ref.t, h_CommonCuts);
+    // fill particles
+    Particles_t particles;
 
-    if(!haveRef)
+    if(!findParticles(candidates, 2, particles, t, h_Cuts))
         return;
-    h_CommonCuts->Fill("Ref",1.0);
 
     // sum up the PID energy
     // (might be different to matched CB/PID Veto energy)
@@ -128,29 +104,19 @@ void EtapEPT::ProcessEvent(const TEvent& event, manager_t&)
     }
 
     for(const TTaggerHit& taggerhit : data.TaggerHits) {
-        promptrandom.SetTaggerHit(taggerhit.Time - t.CBAvgTime);
-        promptrandom_tight.SetTaggerHit(taggerhit.Time - t.CBAvgTime);
+        promptrandom.SetTaggerHit(taggerhit.Time);
         if(promptrandom.State() == PromptRandom::Case::Outside)
             continue;
 
         t.TaggW = promptrandom.FillWeight();
-        t.TaggW_tight = promptrandom_tight.FillWeight();
         t.TaggE = taggerhit.PhotonEnergy;
         t.TaggT = taggerhit.Time;
         t.TaggCh = taggerhit.Channel;
 
-        Ref.ResetBranches();
 
-        bool dofill = false;
-
-        if(haveRef && doKinfit(taggerhit, kinfitter_ref, ref_particles, Ref.t, h_CommonCuts)) {
-            Ref.Process(ref_particles);
-            dofill = true;
-        }
-
-        if(dofill) {
+        if(doKinfit(taggerhit, kinfitter, particles, t, h_Cuts)) {
+            t.IM_2g = particles.FittedPhotonSum.M();
             t.Tree->Fill();
-            Ref.t.Tree->Fill();
         }
     }
 
@@ -159,7 +125,7 @@ void EtapEPT::ProcessEvent(const TEvent& event, manager_t&)
 bool EtapEPT::findParticles(const TCandidatePtrList& candidates,
                                unsigned nPhotons,
                                EtapEPT::Particles_t& particles,
-                               EtapEPT::SharedTree_t& t,
+                               EtapEPT::Tree_t& t,
                                TH1D* h_CommonCuts)
 {
     t.ProtonE = std_ext::NaN;
@@ -258,7 +224,7 @@ bool EtapEPT::findParticles(const TCandidatePtrList& candidates,
 bool EtapEPT::doKinfit(const TTaggerHit& taggerhit,
                           utils::KinFitter& kinfitter,
                           EtapEPT::Particles_t& particles,
-                          EtapEPT::SharedTree_t& t,
+                          EtapEPT::Tree_t& t,
                           TH1D* h_CommonCuts)
 {
     // missing mass
@@ -320,24 +286,9 @@ bool EtapEPT::doKinfit(const TTaggerHit& taggerhit,
     return true;
 }
 
-void EtapEPT::Ref_t::Tree_t::Reset()
-{
-    IM_2g = std_ext::NaN;
-}
-
-void EtapEPT::Ref_t::ResetBranches()
-{
-    t.Reset();
-}
-
-void EtapEPT::Ref_t::Process(const EtapEPT::Particles_t& particles) {
-    assert(particles.FittedPhotons.size() == 2);
-    t.IM_2g = particles.FittedPhotonSum.M();
-}
-
 void EtapEPT::ShowResult()
 {
-    canvas("Overview") << h_CommonCuts << endc;
+    canvas("Overview") << h_Cuts << endc;
 }
 
 AUTO_REGISTER_PHYSICS(EtapEPT)
