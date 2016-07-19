@@ -49,6 +49,7 @@ option(AntProgs_EtapOmegaG "Build EtaPrime Omega Gamma tools" OFF)
 
 if(AntProgs_EtapOmegaG)
     add_ant_executable(EtapOmegaG_plot)
+    add_ant_executable(EtapEPT_plot)
 endif()
 
 option(AntProgs_Dalitz "Build eta/eta' Dalitz analysis tools" OFF)
