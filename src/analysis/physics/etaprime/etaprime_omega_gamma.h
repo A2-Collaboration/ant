@@ -105,6 +105,7 @@ struct EtapOmegaG : Physics {
         {}
     };
 
+    const bool disable_Sig;
     const params_t params;
 
     utils::KinFitter kinfitter_sig;

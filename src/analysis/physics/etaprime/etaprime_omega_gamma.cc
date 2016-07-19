@@ -40,6 +40,7 @@ APLCON::Fit_Settings_t EtapOmegaG::MakeFitSettings(unsigned max_iterations)
 
 EtapOmegaG::EtapOmegaG(const string& name, OptionsPtr opts) :
     Physics(name, opts),
+    disable_Sig(opts->Get<bool>("DisableSig", false)),
     params(utils::UncertaintyModels::Interpolated::makeAndLoad(
                // use OptimizedOli1 as default
                make_shared<utils::UncertaintyModels::Optimized_Oli1>(),
@@ -228,7 +229,7 @@ void EtapOmegaG::ProcessEvent(const TEvent& event, manager_t&)
     Particles_t sig_particles;
     Particles_t ref_particles;
     auto true_proton = utils::ParticleTools::FindParticle(ParticleTypeDatabase::Proton, particletree);
-    bool haveSig = findParticles(candidates, 4, true_proton, sig_particles, Sig.t, h_CommonCuts_sig);
+    bool haveSig = disable_Sig ? false : findParticles(candidates, 4, true_proton, sig_particles, Sig.t, h_CommonCuts_sig);
     bool haveRef = findParticles(candidates, 2, true_proton, ref_particles, Ref.t, h_CommonCuts_ref);
 
     if(!haveSig && !haveRef)
@@ -1012,6 +1013,9 @@ void EtapOmegaG::ShowResult()
     Sig.Pi0.t.Tree->AddFriend(Sig.t.Tree);
     Sig.OmegaPi0.t.Tree->AddFriend(t.Tree);
     Sig.OmegaPi0.t.Tree->AddFriend(Sig.t.Tree);
+
+    if(disable_Sig)
+        return;
 
     canvas("Signal") << TTree_drawable(Sig.OmegaPi0.t.Tree, "Bachelor_E_fitted >> h_sig1(100,100,200)",
                                        "DiscardedEk==0 && KinFitProb>0.01 && !(AntiPi0FitProb>0.0002) && !(AntiEtaFitProb>0.0005) && TreeFitProb>0.32")
