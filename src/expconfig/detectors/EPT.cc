@@ -14,6 +14,17 @@ using namespace ant::expconfig::detector;
 
 const std::string EPT::ScalerName = "EPT_Scalers";
 
+EPT::EPT(double beamEnergy, const std::vector<EPT::Element_t>& elements_init) :
+    TaggerDetector_t(
+        Detector_t::Type_t::EPT,
+        beamEnergy,
+        3.2 // electronEnergyWidth
+        ),
+    elements(elements_init)
+{
+    assert(elements.size()==47);
+}
+
 bool EPT::TryGetChannelFromPhoton(double photonEnergy, unsigned& channel) const {
     const double electronEnergy = BeamEnergy - photonEnergy;
     for(const Element_t& elem : elements) {
@@ -61,6 +72,8 @@ void EPT::BuildMappings(
     // map the scalers
     scaler_mappings.emplace_back(EPT::ScalerName, scaler_entries);
 }
+
+
 
 
 

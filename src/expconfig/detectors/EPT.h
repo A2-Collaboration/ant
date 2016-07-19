@@ -3,8 +3,6 @@
 #include "base/Detector_t.h"
 #include "unpacker/UnpackerAcqu.h"
 
-#include <cassert>
-
 namespace ant {
 namespace expconfig {
 namespace detector {
@@ -62,16 +60,7 @@ protected:
     };
 
     EPT(double beamEnergy,
-        const std::vector<Element_t>& elements_init) :
-        TaggerDetector_t(
-            Detector_t::Type_t::EPT,
-            beamEnergy,
-            3.2 // electronEnergyWidth
-            ),
-        elements(elements_init)
-    {
-        assert(elements.size()==47);
-    }
+        const std::vector<Element_t>& elements_init);
 
     std::vector<Element_t> elements;
 };
