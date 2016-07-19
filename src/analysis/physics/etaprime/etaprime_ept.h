@@ -1,16 +1,10 @@
 #pragma once
 
 #include "analysis/physics/Physics.h"
-#include "analysis/utils/particle_tools.h"
 #include "analysis/utils/Fitter.h"
-#include "analysis/utils/MCSmear.h"
-#include "analysis/utils/A2GeoAcceptance.h"
 #include "analysis/plot/PromptRandomHist.h"
 
-#include "base/ParticleTypeTree.h"
 #include "base/WrapTTree.h"
-
-#include <cassert>
 
 class TH1D;
 class TH2D;
