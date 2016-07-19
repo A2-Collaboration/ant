@@ -3,6 +3,9 @@
 #include "analysis/plot/CutTree.h"
 #include "analysis/physics/etaprime/etaprime_omega_gamma.h"
 
+#include "expconfig/ExpConfig.h"
+#include "expconfig/detectors/EPT.h"
+
 #include "base/CmdLine.h"
 #include "base/interval.h"
 #include "base/printable.h"
@@ -424,15 +427,43 @@ struct RefHist_t : CommonHist_t {
     };
 
     TH1D* h_IM_2g;
+    TH1D* h_IM_2g_prompt;
+    TH1D* h_IM_2g_random;
+
+    TH2D* h_IM_2g_TaggCh;
+    TH2D* h_IM_2g_TaggE;
+
+    TH1D* h_TaggT;
 
     RefHist_t(HistogramFactory HistFac, cuttree::TreeInfo_t treeInfo) : CommonHist_t(HistFac, treeInfo) {
-        h_IM_2g = HistFac.makeTH1D("IM 2g","IM / MeV","",BinSettings(1100,0,1100),"h_IM_2g");
+        BinSettings bins_im(200,800,1050);
+        BinSettings bins_im_wide(1100,0,1100);
+
+        h_IM_2g = HistFac.makeTH1D("IM 2g","IM / MeV","",bins_im_wide,"h_IM_2g");
+        h_IM_2g_prompt = HistFac.makeTH1D("IM 2g prompt","IM / MeV","",bins_im_wide,"h_IM_2g_prompt");
+        h_IM_2g_random = HistFac.makeTH1D("IM 2g random","IM / MeV","",bins_im_wide,"h_IM_2g_random");
+
+        auto ept = ExpConfig::Setup::GetDetector<expconfig::detector::EPT>();
+
+        h_IM_2g_TaggCh = HistFac.makeTH2D("IM 2g vs. TaggCh","IM / MeV","Tagger Channel",
+                                          bins_im, BinSettings(ept->GetNChannels()), "h_IM_2g_TaggCh");
+        h_IM_2g_TaggE = HistFac.makeTH2D("IM 2g vs. TaggE","IM / MeV","Photon E / MeV",
+                                          bins_im, BinSettings(47, 1422, 1585), "h_IM_2g_TaggE");
+
+        h_TaggT = HistFac.makeTH1D("Tagger Time","t / ns","",BinSettings(400,-50,50),"h_TaggT");
     }
 
     void Fill(const Fill_t& f) const {
         CommonHist_t::Fill(f);
         const Tree_t& tree = f.Tree;
         h_IM_2g->Fill(tree.IM_2g, f.TaggW());
+        h_IM_2g_prompt->Fill(tree.IM_2g, f.TaggW()>0);
+        h_IM_2g_random->Fill(tree.IM_2g, f.TaggW()<0);
+
+        h_IM_2g_TaggCh->Fill(tree.IM_2g, f.Common.TaggCh, f.TaggW());
+        h_IM_2g_TaggE->Fill(tree.IM_2g,  f.Common.TaggE, f.TaggW());
+
+        h_TaggT->Fill(f.Common.TaggT-f.Common.CBAvgTime, f.TaggW()<0 ? -1.0 : 1.0);
     }
 
     std::vector<TH1*> GetHists() const {
@@ -476,8 +507,16 @@ int main(int argc, char** argv) {
     auto cmd_output = cmd.add<TCLAP::ValueArg<string>>("o","output","Output file",false,"","filename");
 
     auto cmd_tree = cmd.add<TCLAP::ValueArg<string>>("t","tree","Tree name",false,"SigOmegaPi0","treename");
+    auto cmd_setupname = cmd.add<TCLAP::ValueArg<string>>("s","setup","Override setup name", false, "Setup_2014_07_EPT_Prod", "setup");
 
     cmd.parse(argc, argv);
+
+    const auto setup_name = cmd_setupname->getValue() ;
+    auto setup = ExpConfig::Setup::Get(setup_name);
+    if(setup == nullptr) {
+        LOG(ERROR) << "Did not find setup instance for name " << setup_name;
+        return 1;
+    }
 
     WrapTFileInput input(cmd_input->getValue());
 
