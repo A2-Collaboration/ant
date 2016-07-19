@@ -171,8 +171,6 @@ protected:
     template<typename T>
     void shift_right(std::vector<T>&);
 
-    bool has_option(const OptionsPtr, const std::string&) const;
-
     void remove_char(std::string&, char);
     void remove_chars(std::string&, std::initializer_list<char>);
 
