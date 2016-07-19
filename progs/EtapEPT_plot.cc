@@ -31,17 +31,27 @@ volatile bool interrupt = false;
 struct Hist_t {
     using Fill_t = physics::EtapEPT::Tree_t;
 
-    TH1D* h_IM_2g;
+    std::vector<TH2D*> h_IM_2g;
 
     Hist_t(HistogramFactory HistFac, cuttree::TreeInfo_t)
     {
-        h_IM_2g = HistFac.makeTH1D("IM 2g","IM / MeV","",BinSettings(100,800,1050),"h_IM_2g");
+        HistogramFactory h("h", HistFac);
+        auto ept = ExpConfig::Setup::GetDetector<expconfig::detector::EPT>();
+        for(unsigned ch=0;ch<ept->GetNChannels();ch++) {
+            h_IM_2g.push_back(
+                        h.makeTH2D(std_ext::formatter() << "IM 2g Ch=" << ch,
+                                   "IM / MeV","",
+                                   BinSettings(100,800,1050),
+                                   BinSettings(ept->GetNChannels()),
+                                   "h_IM_2g_Ch"+to_string(ch))
+                        );
+        }
     }
 
 
     void Fill(const Fill_t& f) const
     {
-        h_IM_2g->Fill(f.IM_2g, f.TaggW);
+        h_IM_2g[f.TaggCh]->Fill(f.IM_2g, f.TaggCh_, f.TaggW);
     }
 
     // Sig and Ref channel (can) share some cuts...
@@ -59,6 +69,11 @@ struct Hist_t {
                               {"DiscardedEk=0", [] (const Fill_t& f) { return f.DiscardedEk == 0; } },
                               {"DiscardedEk<50", [] (const Fill_t& f) { return f.DiscardedEk < 50; } },
 //                              {"DiscardedEk<100", [] (const Fill_t& f) { return f.Shared.DiscardedEk < 100; } },
+                          });
+        cuts.emplace_back(MultiCut_t<Fill_t>{
+                              {"KinFitProb>0.01", [] (const Fill_t& f) { return f.KinFitProb>0.01; } },
+//                                 {"KinFitProb>0.1", [] (const Fill_t& f) { return f.Shared.KinFitProb>0.1; } },
+//                                 {"KinFitProb>0.3", [] (const Fill_t& f) { return f.Shared.KinFitProb>0.3; } },
                           });
         return cuts;
     }
@@ -79,17 +94,18 @@ int main(int argc, char** argv) {
 
     cmd.parse(argc, argv);
 
-    const auto setup_name = cmd_setupname->getValue() ;
+    const auto setup_name = cmd_setupname->getValue();
     auto setup = ExpConfig::Setup::Get(setup_name);
     if(setup == nullptr) {
         LOG(ERROR) << "Did not find setup instance for name " << setup_name;
         return 1;
     }
 
+
+
     WrapTFileInput input(cmd_input->getValue());
 
     physics::EtapEPT::Tree_t tree;
-
     {
         TTree* t;
         if(!input.GetObject("EtapEPT/tree",t)) {
