@@ -36,6 +36,7 @@ struct EtapEPT : Physics {
         ADD_BRANCH_T(double,   PIDSumE)
 
         ADD_BRANCH_T(double,   TaggW)
+        ADD_BRANCH_T(double,   TaggW_wide)
         ADD_BRANCH_T(double,   TaggE)
         ADD_BRANCH_T(double,   TaggE_)
         ADD_BRANCH_T(double,   TaggT)
@@ -83,6 +84,7 @@ struct EtapEPT : Physics {
     Tree_t t;
 
     PromptRandom::Switch promptrandom;
+    PromptRandom::Switch promptrandom_wide;
 
     utils::KinFitter kinfitter;
 

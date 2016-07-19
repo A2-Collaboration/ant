@@ -48,9 +48,13 @@ EtapEPT::EtapEPT(const string& name, OptionsPtr opts) :
               EtapEPT::MakeFitSettings(25)
               )
 {
-    promptrandom.AddPromptRange({ -7,  7});
-    promptrandom.AddRandomRange({-65,-15});  // just ensure to be way off prompt peak
-    promptrandom.AddRandomRange({ 15, 65});
+    promptrandom.AddPromptRange({-2.5,1.5}); // slight offset due to CBAvgTime reference
+    promptrandom.AddRandomRange({-30,-10});  // just ensure to be way off prompt peak
+    promptrandom.AddRandomRange({ 10, 30});
+
+    promptrandom_wide.AddPromptRange({ -7,  7});
+    promptrandom_wide.AddRandomRange({-65,-15});  // just ensure to be way off prompt peak
+    promptrandom_wide.AddRandomRange({ 15, 65});
 
     h_Cuts = HistFac.makeTH1D("Cuts", "", "#", BinSettings(15),"h_Cuts");
 
@@ -106,11 +110,14 @@ void EtapEPT::ProcessEvent(const TEvent& event, manager_t&)
     }
 
     for(const TTaggerHit& taggerhit : data.TaggerHits) {
-        promptrandom.SetTaggerHit(taggerhit.Time);
-        if(promptrandom.State() == PromptRandom::Case::Outside)
+        promptrandom.SetTaggerHit(taggerhit.Time-t.CBAvgTime);
+        promptrandom_wide.SetTaggerHit(taggerhit.Time);
+        if(promptrandom.State() == PromptRandom::Case::Outside &&
+           promptrandom_wide.State() == PromptRandom::Case::Outside)
             continue;
 
         t.TaggW = promptrandom.FillWeight();
+        t.TaggW_wide = promptrandom_wide.FillWeight();
         t.TaggE = taggerhit.PhotonEnergy;
         t.TaggT = taggerhit.Time;
         t.TaggCh = taggerhit.Channel;
@@ -302,6 +309,7 @@ void EtapEPT::ShowResult()
             << TTree_drawable(t.Tree, "IM_2g >> h2(200,800,1050)","TaggCh==TaggCh_")
             << TTree_drawable(t.Tree, "IM_2g >> h3(200,800,1050)","TaggW*(KinFitProb>0.01)")
             << TTree_drawable(t.Tree, "IM_2g >> h4(200,800,1050)","TaggW*(KinFitProb>0.01 && TaggCh == TaggCh_)")
+            << TTree_drawable(t.Tree, "IM_2g >> h5(200,800,1050)","TaggW_wide*(KinFitProb>0.01 && TaggCh == TaggCh_)")
             << endc;
 
 }
