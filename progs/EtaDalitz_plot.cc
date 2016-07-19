@@ -188,6 +188,8 @@ struct Hist_t {
     const BinSettings TaggTime   = BinSettings(240, -30, 30);
     const BinSettings CoplBins   = Bins(300, 0, 30);
 
+    const BinSettings zVertex    = Bins(100, -15, 15);
+
     const BinSettings vetoEbins  = Bins(200, 0, 10);
 
     HistogramFactory HistFac;
@@ -239,13 +241,21 @@ struct Hist_t {
             h->Fill(f.Tree.eta_kinfit().M(), f.TaggW());
         });
 
-        AddTH1("3 photon IM treefitted",  "3#gamma IM fit [MeV]", "#", IMbins, "etaIM_treefitted",
-               [] (TH1D* h, const Fill_t& f) {
-            h->Fill(f.Tree.eta_treefit().M(), f.TaggW());
-        });
+//        AddTH1("3 photon IM treefitted",  "3#gamma IM fit [MeV]", "#", IMbins, "etaIM_treefitted",
+//               [] (TH1D* h, const Fill_t& f) {
+//            h->Fill(f.Tree.eta_treefit().M(), f.TaggW());
+//        });
 
         AddTH1("Missing Mass", "MM [MeV]", "", MMbins, "mm",
                [] (TH1D* h, const Fill_t& f) { h->Fill(f.Tree.mm().M(), f.TaggW());
+        });
+
+        AddTH1("Z Vertex Kinfit", "z [cm]", "#", zVertex, "v_z_kinfit",
+               [] (TH1D* h, const Fill_t& f) { h->Fill(f.Tree.kinfit_ZVertex, f.TaggW());
+        });
+
+        AddTH1("Z Vertex Treefit", "z [cm]", "#", zVertex, "v_z_treefit",
+               [] (TH1D* h, const Fill_t& f) { h->Fill(f.Tree.treefit_ZVertex, f.TaggW());
         });
 
         AddTH2("PID 2 charged 1 neutral", "PID Energy [MeV]", "PID Channel", vetoEbins, pid_channels, "eegPID",
@@ -269,11 +279,10 @@ struct Hist_t {
             h->Fill(f.Tree.p_kinfitted().Energy() - ParticleTypeDatabase::Proton.Mass(), f.Tree.p_vetoE);
         });
 
-        AddTH1("nCands", "# Candidates", "#", BinSettings(4, 3, 7), "nCands",
-                [] (TH1D* h, const Fill_t& f) {
-
-            h->Fill(f.Tree.nCands, f.TaggW());
-        });
+//        AddTH1("nCands", "# Candidates", "#", BinSettings(4, 3, 7), "nCands",
+//                [] (TH1D* h, const Fill_t& f) {
+//            h->Fill(f.Tree.nCands, f.TaggW());
+//        });
 
     }
 
@@ -307,9 +316,9 @@ struct Hist_t {
                               {"KinFitProb>0.001", [] (const Fill_t& f) { return f.Tree.kinfit_probability > .001; }},
                               {"KinFitProb>0.02", [] (const Fill_t& f) { return f.Tree.kinfit_probability > .02; }},
                               {"KinFitProb>0.05", [] (const Fill_t& f) { return f.Tree.kinfit_probability > .05; }},
-                              {"TreeFitProb>0.001", [] (const Fill_t& f) { return f.Tree.treefit_probability > .001; }},
-                              {"TreeFitProb>0.02", [] (const Fill_t& f) { return f.Tree.treefit_probability > .02; }},
-                              {"TreeFitProb>0.05", [] (const Fill_t& f) { return f.Tree.treefit_probability > .05; }}
+//                              {"TreeFitProb>0.001", [] (const Fill_t& f) { return f.Tree.treefit_probability > .001; }},
+//                              {"TreeFitProb>0.02", [] (const Fill_t& f) { return f.Tree.treefit_probability > .02; }},
+//                              {"TreeFitProb>0.05", [] (const Fill_t& f) { return f.Tree.treefit_probability > .05; }}
                              });
 
         auto antiPi0Cut = [] (const Fill_t& f, const double low = 102., const double high = 170.) {
@@ -358,10 +367,13 @@ struct Hist_t {
                           });
 
         cuts.emplace_back(MultiCut_t<Fill_t>{
-                              {"MM < 1030",  [] (const Fill_t& f) { return f.Tree.mm().M() < 1030; }}
+                              {"MM < 1030",  [] (const Fill_t& f) { return f.Tree.mm().M() < 1030; }},
+                              {"MM < 1010",  [] (const Fill_t& f) { return f.Tree.mm().M() < 1010; }},
+                              {"MM < 1000",  [] (const Fill_t& f) { return f.Tree.mm().M() < 1000; }},
+                              {"MM < 990",  [] (const Fill_t& f) { return f.Tree.mm().M() < 990; }}
                           });
 
-        auto cleanEvent = [] (const Fill_t& f) {
+/*        auto cleanEvent = [] (const Fill_t& f) {
             return f.Tree.nCands == 4;
         };
 
@@ -373,6 +385,15 @@ struct Hist_t {
                               {"clean",         cleanEvent},
                               {"dontcare",   dontcareclean}
                           });
+*/
+        cuts.emplace_back(MultiCut_t<Fill_t>{
+                              {"TreeFitProb>0.001", [] (const Fill_t& f) { return f.Tree.treefit_probability > .001; }},
+                              {"TreeFitProb>0.005", [] (const Fill_t& f) { return f.Tree.treefit_probability > .005; }},
+                              {"TreeFitProb>0.01", [] (const Fill_t& f) { return f.Tree.treefit_probability > .01; }},
+                              {"TreeFitProb>0.02", [] (const Fill_t& f) { return f.Tree.treefit_probability > .02; }},
+                              {"TreeFitProb>0.05", [] (const Fill_t& f) { return f.Tree.treefit_probability > .05; }}
+                             });
+
 
         return cuts;
     }
