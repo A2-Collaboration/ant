@@ -25,4 +25,4 @@ echo "Running ${COMMAND} on all chains..."
 echo $JOBFILES | tr ' ' '\n' | parallel --results mapreduce_logs $COMMAND -i chain_{}.root -o out_{}.root
 
 echo "Merging results..."
-echo Ant-hadd $OUT $(for i in $JOBFILES; do echo out_$i.root; done | xargs)
+Ant-hadd -f $OUT $(for i in $JOBFILES; do echo out_$i.root; done | xargs)
