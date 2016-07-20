@@ -78,10 +78,10 @@ EtapOmegaG::EtapOmegaG(const string& name, OptionsPtr opts) :
     if(mc_smear)
         LOG(INFO) << "Additional MC Smearing enabled";
 
-    const interval<double> prompt_range{-2.5,1.5};
+    const interval<double> prompt_range{-3.0,1.5};
     promptrandom.AddPromptRange(prompt_range); // slight offset due to CBAvgTime reference
-    promptrandom.AddRandomRange({-30,-10});  // just ensure to be way off prompt peak
-    promptrandom.AddRandomRange({ 10, 30});
+    promptrandom.AddRandomRange({-35,-10});  // just ensure to be way off prompt peak
+    promptrandom.AddRandomRange({ 10, 35});
 
     promptrandom_tight.AddPromptRange(prompt_range); // slight offset due to CBAvgTime reference
     promptrandom_tight.AddRandomRange({-20,-10});  // just ensure to be way off prompt peak
