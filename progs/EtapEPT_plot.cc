@@ -120,7 +120,7 @@ struct Hist_t {
                               {"DiscardedEk<50", [] (const Fill_t& f) { return f.DiscardedEk < 50; } },
                           });
         cuts.emplace_back(MultiCut_t<Fill_t>{
-                              {"KinFitProb>0.01", [] (const Fill_t& f) { return f.KinFitProb>0.01; } },
+                              {"KinFitProb>0.1", [] (const Fill_t& f) { return f.KinFitProb>0.1; } },
                           });
 
         cuts.emplace_back(MultiCut_t<Fill_t>{
