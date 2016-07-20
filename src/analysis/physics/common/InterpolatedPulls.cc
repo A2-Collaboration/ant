@@ -32,9 +32,9 @@ InterpolatedPulls::InterpolatedPulls(const string& name, OptionsPtr opts) :
 {
     fitter.SetZVertexSigma(0); // use unmeasured z vertex
 
-    promptrandom.AddPromptRange({-2.5,2.5});
-    promptrandom.AddRandomRange({-50,-5});
-    promptrandom.AddRandomRange({  5,50});
+    promptrandom.AddPromptRange({ -7,   7});
+    promptrandom.AddRandomRange({-65, -15});
+    promptrandom.AddRandomRange({ 15,  65});
 
     steps = HistFac.makeTH1D("Steps","","#",BinSettings(10),"steps");
 
