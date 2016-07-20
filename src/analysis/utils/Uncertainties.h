@@ -319,7 +319,8 @@ public:
     };
 
     static std::shared_ptr<Interpolated> makeAndLoad(UncertaintyModelPtr default_model,
-                                                     Mode_t mode = Mode_t::Fit);
+                                                     Mode_t mode = Mode_t::Fit,
+                                                     bool use_proton_sigmaE = false);
     static std::shared_ptr<Interpolated> makeAndLoad(Mode_t mode = Mode_t::Fit);
 
     struct ClippedInterpolatorWrapper : ant::printable_traits {

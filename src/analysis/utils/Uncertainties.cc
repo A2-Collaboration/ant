@@ -801,7 +801,11 @@ Uncertainties_t UncertaintyModels::Interpolated::HandleProtonUncertainty(const E
 {
     auto u = proton.GetUncertainties(particle);
 
-    if(!use_proton_sigmaE) {
+
+    if(!use_proton_sigmaE
+       || !std::isfinite(u.sigmaE) || u.sigmaE < 1e-5  // sanitize interpolation
+       )
+    {
         if(starting_uncertainty) {
             // fallback to starting_model, but only for energy!
             auto u_starting = starting_uncertainty->GetSigmas(particle);
@@ -811,10 +815,6 @@ Uncertainties_t UncertaintyModels::Interpolated::HandleProtonUncertainty(const E
             u.sigmaE = 0;
         }
     }
-
-    // sanitize interpolation
-    if(!std::isfinite(u.sigmaE) || u.sigmaE < 1e-5) // less than 1e-5 MeV...
-        u.sigmaE = 0;
 
     return u;
 }
@@ -958,9 +958,11 @@ void UncertaintyModels::Interpolated::LoadSigmas(const string& filename)
 
 
 
-std::shared_ptr<UncertaintyModels::Interpolated> UncertaintyModels::Interpolated::makeAndLoad(UncertaintyModelPtr default_model, Mode_t mode)
+std::shared_ptr<UncertaintyModels::Interpolated> UncertaintyModels::Interpolated::makeAndLoad(
+        UncertaintyModelPtr default_model,
+        Mode_t mode, bool use_proton_sigmaE)
 {
-    auto s = std::make_shared<Interpolated>(default_model);
+    auto s = std::make_shared<Interpolated>(default_model, use_proton_sigmaE);
 
     const auto setup = ant::ExpConfig::Setup::GetLastFound();
 
