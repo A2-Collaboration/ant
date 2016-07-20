@@ -31,19 +31,34 @@ volatile bool interrupt = false;
 struct Hist_t {
     using Fill_t = physics::EtapEPT::Tree_t;
 
-    std::vector<TH2D*> h_IM_2g;
+    TH2D* h_IM_2g;
+    TH2D* h_IM_2g_wide;
+    std::vector<TH2D*> h_IM_2g_Ch;
 
     Hist_t(HistogramFactory HistFac, cuttree::TreeInfo_t)
     {
-        HistogramFactory h("h", HistFac);
+        BinSettings bins_IM(500,0,1100);
         auto ept = ExpConfig::Setup::GetDetector<expconfig::detector::EPT>();
-        for(unsigned ch=0;ch<ept->GetNChannels();ch++) {
-            h_IM_2g.push_back(
-                        h.makeTH2D(std_ext::formatter() << "IM 2g Ch=" << ch,
+
+        h_IM_2g = HistFac.makeTH2D("IM 2g",
                                    "IM / MeV","",
-                                   BinSettings(100,800,1050),
+                                   bins_IM,
                                    BinSettings(ept->GetNChannels()),
-                                   "h_IM_2g_Ch"+to_string(ch))
+                                   "h_IM_2g");
+        h_IM_2g_wide = HistFac.makeTH2D("IM 2g",
+                                   "IM / MeV","",
+                                   bins_IM,
+                                   BinSettings(ept->GetNChannels()),
+                                   "h_IM_2g_wide");
+
+        HistogramFactory h_Ch("Ch", HistFac);
+        for(unsigned ch=0;ch<ept->GetNChannels();ch++) {
+            h_IM_2g_Ch.push_back(
+                        h_Ch.makeTH2D(std_ext::formatter() << "IM 2g Ch=" << ch,
+                                      "IM / MeV","",
+                                      bins_IM,
+                                      BinSettings(ept->GetNChannels()),
+                                      "h_IM_2g_Ch"+to_string(ch))
                         );
         }
     }
@@ -51,7 +66,9 @@ struct Hist_t {
 
     void Fill(const Fill_t& f) const
     {
-        h_IM_2g[f.TaggCh]->Fill(f.IM_2g, f.TaggCh_, f.TaggW);
+        h_IM_2g->Fill(f.IM_2g, f.TaggCh, f.TaggW);
+        h_IM_2g_wide->Fill(f.IM_2g, f.TaggCh, f.TaggW_wide);
+        h_IM_2g_Ch[f.TaggCh]->Fill(f.IM_2g, f.TaggCh_, f.TaggW);
     }
 
     // Sig and Ref channel (can) share some cuts...
