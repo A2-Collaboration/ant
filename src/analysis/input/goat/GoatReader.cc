@@ -5,6 +5,9 @@
 #include "tree/TEvent.h"
 #include "tree/TEventData.h"
 
+#include "expconfig/ExpConfig.h"
+#include "expconfig/detectors/Trigger.h"
+
 #include "base/WrapTFile.h"
 #include "base/Logger.h"
 #include "base/std_ext/memory.h"
@@ -98,7 +101,7 @@ void GoatReader::CopyTrigger(TEventData& recon)
     ti.DAQEventID = eventParameters.EventNumber;
     ti.CBEnergySum = trigger.GetEnergySum();
     ti.ClusterMultiplicity = trigger.GetMultiplicity();
-    ti.CBTiming = 0; /// \todo Improve timing here
+    ti.CBTiming = 0; // Timing is set after event is completely copied
 
     for( int err=0; err < trigger.GetNErrors(); ++err) {
         ti.DAQErrors.emplace_back(
@@ -229,7 +232,8 @@ public:
 
 GoatReader::GoatReader(const std::shared_ptr<WrapTFileInput>& rootfiles):
     files(rootfiles),
-    trees(std_ext::make_unique<TreeManager>())
+    trees(std_ext::make_unique<TreeManager>()),
+    det_trigger(ExpConfig::Setup::GetDetector<expconfig::detector::Trigger>())
 {
     /// \todo find a smart way to manage trees and modules:
     //   if module does not init or gets removed-> remove also the tree from the list
@@ -283,6 +287,9 @@ bool GoatReader::ReadNextEvent(TEvent& event)
     CopyParticles(recon, pichagred, ParticleTypeDatabase::eCharged);
     CopyParticles(recon, echarged, ParticleTypeDatabase::PiCharged);
     CopyParticles(recon, neutrons, ParticleTypeDatabase::Neutron);
+
+    // calculate trigger avg timing
+    recon.Trigger.CBTiming = det_trigger->GetCBTiming(recon);
 
     ++current_entry;
     return true;

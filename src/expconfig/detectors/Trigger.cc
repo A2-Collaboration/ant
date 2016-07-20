@@ -56,18 +56,23 @@ void Trigger::ApplyTo(TEventData& reconstructed)
         triggerinfos.CBTiming = 0;
     }
     else {
-        double TimeEsum = 0.0;
-        double TimeE = 0.0;
-        for(const TCluster& cluster : reconstructed.Clusters) {
-            if(cluster.DetectorType != Detector_t::Type_t::CB)
-                continue;
-            if(!isfinite(cluster.Energy) || !isfinite(cluster.Time))
-                continue;
-            TimeEsum += cluster.Energy;
-            TimeE += cluster.Energy*cluster.Time;
-        }
-        triggerinfos.CBTiming = TimeE/TimeEsum;
+        triggerinfos.CBTiming = GetCBTiming(reconstructed);
     }
+}
+
+double Trigger::GetCBTiming(const TEventData& reconstructed)
+{
+    double TimeEsum = 0.0;
+    double TimeE = 0.0;
+    for(const TCluster& cluster : reconstructed.Clusters) {
+        if(cluster.DetectorType != Detector_t::Type_t::CB)
+            continue;
+        if(!isfinite(cluster.Energy) || !isfinite(cluster.Time))
+            continue;
+        TimeEsum += cluster.Energy;
+        TimeE += cluster.Energy*cluster.Time;
+    }
+    return TimeE/TimeEsum;
 }
 
 void Trigger_2014::BuildMappings(std::vector<UnpackerAcquConfig::hit_mapping_t>& hit_mappings,

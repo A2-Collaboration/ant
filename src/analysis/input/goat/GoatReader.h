@@ -26,6 +26,11 @@ namespace ant {
 class WrapTFileInput;
 struct TEventData;
 
+namespace expconfig {
+namespace detector {
+struct Trigger;
+}}
+
 namespace analysis {
 namespace input {
 
@@ -54,6 +59,7 @@ protected:
     std::shared_ptr<WrapTFileInput>    files;
     std::unique_ptr<TreeManager>   trees;
 
+    std::shared_ptr<expconfig::detector::Trigger> det_trigger;
 
     TriggerInput        trigger;
     EventParameters     eventParameters;
