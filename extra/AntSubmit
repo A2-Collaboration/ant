@@ -297,7 +297,11 @@ sub submit_job {
   # open pipe to qsub
   open(my $qsub_pipe, "| $qsub_cmd")
     or die "Can't open pipe to $QSUB_BIN: $!";
-  print $qsub_pipe $ant_cmd;
+  print $qsub_pipe <<__BATCHSCRIPT;
+echo QSUB_CMD="$qsub_cmd"
+echo ANT_CMD="$ant_cmd"
+$ant_cmd
+__BATCHSCRIPT
   close $qsub_pipe or die "Cannot close pipe to $QSUB_BIN";
 }
 
