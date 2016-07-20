@@ -40,6 +40,7 @@ protected:
 
     using model_t = std::shared_ptr<const utils::UncertaintyModels::Interpolated>;
 
+    const bool TAPS_proton_meas;
     model_t fit_model;
     utils::KinFitter fitter;
 

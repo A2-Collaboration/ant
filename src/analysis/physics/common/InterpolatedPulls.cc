@@ -12,10 +12,12 @@ using namespace std;
 
 InterpolatedPulls::InterpolatedPulls(const string& name, OptionsPtr opts) :
     Physics(name, opts),
+    TAPS_proton_meas(opts->Get<bool>("TAPSProtonMeas", false)),
     fit_model(utils::UncertaintyModels::Interpolated::makeAndLoad(
                   // use OptimizedOli1 as starting point
-                  make_shared<utils::UncertaintyModels::Optimized_Oli1>(),
-                  utils::UncertaintyModels::Interpolated::Mode_t::Fit
+                  make_shared<utils::UncertaintyModels::Optimized_Oli1>(1.0, TAPS_proton_meas),
+                  utils::UncertaintyModels::Interpolated::Mode_t::Fit,
+                  TAPS_proton_meas
               )
           ),
     fitter("KinFit", 4, fit_model,
@@ -30,6 +32,9 @@ InterpolatedPulls::InterpolatedPulls(const string& name, OptionsPtr opts) :
     mc_smear(std_ext::make_unique<utils::MCSmear>(mc_model)),
     pullswriter(HistFac)
 {
+    if(TAPS_proton_meas)
+        LOG(INFO) << "Running with measured proton in TAPS";
+
     fitter.SetZVertexSigma(0); // use unmeasured z vertex
 
     promptrandom.AddPromptRange({ -7,   7});
