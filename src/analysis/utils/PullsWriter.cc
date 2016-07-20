@@ -8,22 +8,12 @@ using namespace ant::analysis;
 using namespace ant::analysis::utils;
 using namespace std;
 
-//template <typename val, typename data>
-//data& Sel(const val& V, const val& A, const val& B, data& dA, data& dB) {
-
-//    if(V == A) {
-//        return dA;
-//    } else if(V == B) {
-//        return dB;
-//    } else
-//        throw std::runtime_error("Invalid Data");
-//}
-
-PullsWriter::PullTree_t&PullsWriter::getPullTree(const Fitter::FitParticle& particle)
+PullsWriter::PullTree_t& PullsWriter::getPullTree(const Fitter::FitParticle& particle)
 {
     const auto& det = particle.Particle->Candidate->Detector;
 
-    if(particle.Particle->Type() == ParticleTypeDatabase::Photon) {
+    if(particle.Particle->Type() == ParticleTypeDatabase::Photon)
+    {
 
         if(det & Detector_t::Type_t::CB) {
             return photons_cb;
@@ -32,7 +22,9 @@ PullsWriter::PullTree_t&PullsWriter::getPullTree(const Fitter::FitParticle& part
         } else
             throw std::runtime_error("Unexpected detector type in fitter");
 
-    } if(particle.Particle->Type() == ParticleTypeDatabase::Proton) {
+    }
+    else if(particle.Particle->Type() == ParticleTypeDatabase::Proton)
+    {
 
         if(det & Detector_t::Type_t::CB) {
             return proton_cb;
@@ -41,8 +33,8 @@ PullsWriter::PullTree_t&PullsWriter::getPullTree(const Fitter::FitParticle& part
         } else
             throw std::runtime_error("Unexpected detector type in fitter");
 
-
-    } else
+    }
+    else
         throw std::runtime_error("Unexpected Particle type in fitter!");
 }
 
