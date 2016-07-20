@@ -744,8 +744,9 @@ std::shared_ptr<UncertaintyModels::MCSmearingAdlarson> UncertaintyModels::MCSmea
 
 
 
-UncertaintyModels::Interpolated::Interpolated(UncertaintyModelPtr starting_uncertainty_) :
-    starting_uncertainty(starting_uncertainty_)
+UncertaintyModels::Interpolated::Interpolated(UncertaintyModelPtr starting_uncertainty_, bool use_proton_sigmaE_) :
+    starting_uncertainty(starting_uncertainty_),
+    use_proton_sigmaE(use_proton_sigmaE_)
 {
 
 }
@@ -762,7 +763,6 @@ Uncertainties_t UncertaintyModels::Interpolated::GetSigmas(const TParticle& part
         return starting_uncertainty->GetSigmas(particle);
     }
 
-
     if(particle.Candidate->Detector & Detector_t::Type_t::CB) {
 
         if(particle.Type() == ParticleTypeDatabase::Photon) {
@@ -771,9 +771,7 @@ Uncertainties_t UncertaintyModels::Interpolated::GetSigmas(const TParticle& part
 
         } else if(particle.Type() == ParticleTypeDatabase::Proton) {
 
-            auto u = cb_proton.GetUncertainties(particle);
-            u.sigmaE = 0.0;
-            return u;
+            return HandleProtonUncertainty(cb_proton, particle);
 
         } else {
             throw Exception("Unexpected Particle in CB: " + particle.Type().Name());
@@ -787,9 +785,7 @@ Uncertainties_t UncertaintyModels::Interpolated::GetSigmas(const TParticle& part
 
         } else if(particle.Type() == ParticleTypeDatabase::Proton) {
 
-            auto u = taps_proton.GetUncertainties(particle);
-            u.sigmaE = 0.0;
-            return u;
+            return HandleProtonUncertainty(taps_proton, particle);
 
         } else {
             throw Exception("Unexpected Particle: " + particle.Type().Name());
@@ -798,6 +794,25 @@ Uncertainties_t UncertaintyModels::Interpolated::GetSigmas(const TParticle& part
     else {
         throw Exception("Unexpected Detector: " + string(particle.Candidate->Detector));
     }
+}
+
+Uncertainties_t UncertaintyModels::Interpolated::HandleProtonUncertainty(const EkThetaPhi& proton,
+                                                                         const TParticle& particle) const
+{
+    auto u = proton.GetUncertainties(particle);
+
+    if(!use_proton_sigmaE) {
+        if(starting_uncertainty) {
+            // fallback to starting_model, but only for energy!
+            auto u_starting = starting_uncertainty->GetSigmas(particle);
+            u.sigmaE = u_starting.sigmaE;
+        }
+        else {
+            u.sigmaE = 0;
+        }
+    }
+
+    return u;
 }
 
 std::vector<double> getBinPositions(const TAxis* axis) {

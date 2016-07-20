@@ -299,7 +299,7 @@ protected:
 struct Interpolated : public UncertaintyModel, public ant::printable_traits {
 public:
 
-    Interpolated(UncertaintyModelPtr starting_uncertainty_);
+    Interpolated(UncertaintyModelPtr starting_uncertainty_, bool use_proton_sigmaE_ = false);
     virtual ~Interpolated();
 
     Uncertainties_t GetSigmas(const TParticle &particle) const override;
@@ -357,9 +357,12 @@ public:
     std::ostream& Print(std::ostream& stream) const override;
 
 protected:
-    UncertaintyModelPtr starting_uncertainty;
+    const UncertaintyModelPtr starting_uncertainty;
+    const bool use_proton_sigmaE;
 
     bool loaded_sigmas = false;
+
+
 
     struct EkThetaPhi : ant::printable_traits {
 
@@ -374,6 +377,8 @@ protected:
 
         std::ostream& Print(std::ostream& stream) const override;
     };
+
+    Uncertainties_t HandleProtonUncertainty(const EkThetaPhi& proton, const TParticle& particle) const;
 
     EkThetaPhi cb_photon;
     EkThetaPhi taps_photon;
