@@ -35,10 +35,40 @@ struct Hist_t {
     TH2D* h_IM_2g_wide;
     std::vector<TH2D*> h_IM_2g_Ch;
 
+    TH2D* h_BeamPull;
+    TH2D* h_BeamPull_wide;
+    std::vector<TH2D*> h_BeamPull_Ch;
+
+    TH1D* h_KinFitProb;
+
     Hist_t(HistogramFactory HistFac, cuttree::TreeInfo_t)
     {
-        BinSettings bins_IM(500,0,1100);
         auto ept = ExpConfig::Setup::GetDetector<expconfig::detector::EPT>();
+
+        HistogramFactory HistFac_IM_2g("IM_2g_Ch", HistFac);
+        HistogramFactory HistFac_BeamPull("BeamPull_Ch", HistFac);
+
+        BinSettings bins_IM(500,0,1100);
+        BinSettings bins_pull(100,-5,5);
+
+        for(unsigned ch=0;ch<ept->GetNChannels();ch++) {
+            h_IM_2g_Ch.push_back(
+                        HistFac_IM_2g.makeTH2D(
+                            std_ext::formatter() << "IM 2g Ch=" << ch,
+                            "IM / MeV","",
+                            bins_IM,
+                            BinSettings(ept->GetNChannels()),
+                            "h_IM_2g_Ch"+to_string(ch))
+                        );
+            h_BeamPull_Ch.push_back(
+                        HistFac_BeamPull.makeTH2D(
+                            std_ext::formatter() << "Beam Pull Ch=" << ch,
+                            "Pull","",
+                            bins_pull,
+                            BinSettings(ept->GetNChannels()),
+                            "h_BeamPull_Ch"+to_string(ch))
+                        );
+        }
 
         h_IM_2g = HistFac.makeTH2D("IM 2g",
                                    "IM / MeV","",
@@ -51,16 +81,19 @@ struct Hist_t {
                                    BinSettings(ept->GetNChannels()),
                                    "h_IM_2g_wide");
 
-        HistogramFactory h_Ch("Ch", HistFac);
-        for(unsigned ch=0;ch<ept->GetNChannels();ch++) {
-            h_IM_2g_Ch.push_back(
-                        h_Ch.makeTH2D(std_ext::formatter() << "IM 2g Ch=" << ch,
-                                      "IM / MeV","",
-                                      bins_IM,
-                                      BinSettings(ept->GetNChannels()),
-                                      "h_IM_2g_Ch"+to_string(ch))
-                        );
-        }
+        h_BeamPull = HistFac.makeTH2D("IM 2g",
+                                   "IM / MeV","",
+                                   bins_pull,
+                                   BinSettings(ept->GetNChannels()),
+                                   "h_BeamPull");
+        h_BeamPull_wide = HistFac.makeTH2D("IM 2g",
+                                   "IM / MeV","",
+                                   bins_pull,
+                                   BinSettings(ept->GetNChannels()),
+                                   "h_BeamPull_wide");
+
+        h_KinFitProb = HistFac.makeTH1D("KinFitProb","p","",BinSettings(200,0,1),"h_KinFitProb");
+
     }
 
 
@@ -69,29 +102,33 @@ struct Hist_t {
         h_IM_2g->Fill(f.IM_2g, f.TaggCh, f.TaggW);
         h_IM_2g_wide->Fill(f.IM_2g, f.TaggCh, f.TaggW_wide);
         h_IM_2g_Ch[f.TaggCh]->Fill(f.IM_2g, f.TaggCh_, f.TaggW);
+
+        h_BeamPull->Fill(f.KinFitBeamEPull, f.TaggCh, f.TaggW);
+        h_BeamPull_wide->Fill(f.KinFitBeamEPull, f.TaggCh, f.TaggW_wide);
+        h_BeamPull_Ch[f.TaggCh]->Fill(f.KinFitBeamEPull, f.TaggCh_, f.TaggW);
+
+        h_KinFitProb->Fill(f.KinFitProb, f.TaggW);
     }
 
     // Sig and Ref channel (can) share some cuts...
     static cuttree::Cuts_t<Fill_t> GetCuts() {
         using cuttree::MultiCut_t;
         cuttree::Cuts_t<Fill_t> cuts;
-//        cuts.emplace_back(MultiCut_t<Fill_t>{
-//                              // Use non-null PID cuts only when PID calibrated...
-//                              {"CBSumVeto=0", [] (const Fill_t& f) { return f.Shared.CBSumVetoE==0; } },
-////                              {"CBSumVeto<0.25", [] (const Fill_t& f) { return f.Shared.CBSumVetoE<0.25; } },
-//                              {"PIDSumE=0", [] (const Fill_t& f) { return f.Common.PIDSumE==0; } },
-////                              {"PIDSumE<1", [] (const Fill_t& f) { return f.Common.PIDSumE<1; } },
-//                          });
+
         cuts.emplace_back(MultiCut_t<Fill_t>{
                               {"DiscardedEk=0", [] (const Fill_t& f) { return f.DiscardedEk == 0; } },
                               {"DiscardedEk<50", [] (const Fill_t& f) { return f.DiscardedEk < 50; } },
-//                              {"DiscardedEk<100", [] (const Fill_t& f) { return f.Shared.DiscardedEk < 100; } },
                           });
         cuts.emplace_back(MultiCut_t<Fill_t>{
                               {"KinFitProb>0.01", [] (const Fill_t& f) { return f.KinFitProb>0.01; } },
-//                                 {"KinFitProb>0.1", [] (const Fill_t& f) { return f.Shared.KinFitProb>0.1; } },
-//                                 {"KinFitProb>0.3", [] (const Fill_t& f) { return f.Shared.KinFitProb>0.3; } },
                           });
+
+        cuts.emplace_back(MultiCut_t<Fill_t>{
+                              {"IM Pi0", [] (const Fill_t& f) { return ParticleTypeDatabase::Pi0.GetWindow(30).Contains(f.IM_2g); } },
+                              {"IM Eta", [] (const Fill_t& f) { return ParticleTypeDatabase::Eta.GetWindow(50).Contains(f.IM_2g); } },
+                              {"IM EtaP", [] (const Fill_t& f) { return ParticleTypeDatabase::EtaPrime.GetWindow(50).Contains(f.IM_2g); } },
+                          });
+
         return cuts;
     }
 };
