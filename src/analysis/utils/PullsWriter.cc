@@ -61,6 +61,10 @@ void PullsWriter::Fill(const std::vector<Fitter::FitParticle>& fitParticles,
                        double tagger_weight, double fitprob)
 {
 
+    const Fitter::FitParticle& proton = fitParticles.front();
+    if(proton.Particle->Type() != ParticleTypeDatabase::Proton)
+        throw std::runtime_error("First particle given is not a proton");
+
     for(const Fitter::FitParticle& p : fitParticles) {
 
         auto& tree = getPullTree(p);
@@ -71,6 +75,9 @@ void PullsWriter::Fill(const std::vector<Fitter::FitParticle>& fitParticles,
         tree.E     = p.Ek.Value_before;
         tree.Theta = p.Theta.Value_before;
         tree.Phi   = p.Phi.Value_before;
+        tree.ProtonTheta =  proton.Theta.Value_before;
+        tree.ProtonE = proton.Ek.Value_before;
+        tree.ProtonTime = proton.Particle->Candidate->Time;
 
         const auto it_smear = smear_sigmas.find(p.Particle);
         if(it_smear == smear_sigmas.end()) {
