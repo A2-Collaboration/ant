@@ -268,7 +268,7 @@ protected:
  * @brief Values for the optimized model, obtainded from KinFitPi0 on data
  */
 struct Optimized_Oli1 : Optimized {
-    Optimized_Oli1(double relative_scale = 1.0);
+    Optimized_Oli1(double relative_scale = 1.0, bool use_measured_proton_TAPS = false);
 };
 
 /**

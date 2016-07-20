@@ -623,7 +623,7 @@ void UncertaintyModels::Optimized::ReadToken(const string& token)
     }
 }
 
-UncertaintyModels::Optimized_Oli1::Optimized_Oli1(double relative_scale)
+UncertaintyModels::Optimized_Oli1::Optimized_Oli1(double relative_scale, bool use_measured_proton_TAPS)
 {
     cb_photon_theta_const = relative_scale*degree_to_radian(1.1);
     cb_photon_theta_Sin   = relative_scale*degree_to_radian(3.9);
@@ -643,7 +643,7 @@ UncertaintyModels::Optimized_Oli1::Optimized_Oli1(double relative_scale)
     taps_photon_phi   = relative_scale*degree_to_radian(2.0);
 
 
-    taps_proton = { 0.0, relative_scale*degree_to_radian(2.8), relative_scale*degree_to_radian(4.45)};
+    taps_proton = { use_measured_proton_TAPS ? 30.0 : 0.0, relative_scale*degree_to_radian(2.8), relative_scale*degree_to_radian(4.45)};
 
 }
 
@@ -811,6 +811,10 @@ Uncertainties_t UncertaintyModels::Interpolated::HandleProtonUncertainty(const E
             u.sigmaE = 0;
         }
     }
+
+    // sanitize interpolation
+    if(!std::isfinite(u.sigmaE) || u.sigmaE < 1e-5) // less than 1e-5 MeV...
+        u.sigmaE = 0;
 
     return u;
 }
