@@ -783,7 +783,11 @@ OmegaEtaG2::OmegaEtaG2(const std::string& name, OptionsPtr opts):
     cut_missing_mass(             opts->Get<decltype(cut_missing_mass)>("MissingMassWindow",{800.0, 1000.0})),
     opt_kinfit_chi2cut(           opts->Get<double>(                    "KinFit_Chi2Cut",        10.0)),
 
-    model(make_shared<utils::UncertaintyModels::Optimized_Oli1>()),
+    model(utils::UncertaintyModels::Interpolated::makeAndLoad(
+              make_shared<utils::UncertaintyModels::Optimized_Oli1>(),
+              utils::UncertaintyModels::Interpolated::Mode_t::Fit,
+              false)
+              ),
     fitter("OmegaEtaG2", 3, model),
     fitter_pi0(
         ParticleTypeTreeDatabase::Get(ParticleTypeTreeDatabase::Channel::Omega_gPi0_3g),
