@@ -75,7 +75,8 @@ private:
     // the storage must be mutable
     mutable std::vector<TUnpackerMessage>  messages;
     signed trueRecordLength;
-    unsigned unpackedBuffers;
+    unsigned nUnpackedBuffers;
+    unsigned nEventsInBuffer;
     time_t GetTimeStamp();
 protected:
 
@@ -135,7 +136,7 @@ protected:
 
     // unpacker messages handling
     void LogMessage(TUnpackerMessage::Level_t level,
-                    const std::string& msg) const;
+                    const std::string& msg, bool emit_warning = false) const;
     void AppendMessagesToEvent(TEvent& event) const;
 
     // Mk1/Mk2 specific methods

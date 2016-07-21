@@ -117,7 +117,7 @@ void acqu::FileFormatBase::Setup(reader_t &&reader_, buffer_t &&buffer_) {
 
     // now try to fill the first data buffer
     FillFirstDataBuffer(reader, buffer);
-    unpackedBuffers = 0; // not yet unpacked
+    nUnpackedBuffers = 0; // not yet unpacked
 
     // remember the record length size
     trueRecordLength = buffer.size();
@@ -204,7 +204,8 @@ time_t acqu::FileFormatBase::GetTimeStamp()
 
 void acqu::FileFormatBase::LogMessage(
         TUnpackerMessage::Level_t level,
-        const string& msg
+        const string& msg,
+        bool emit_warning
         ) const
 {
 
@@ -222,9 +223,13 @@ void acqu::FileFormatBase::LogMessage(
         break;
     }
 
-    VLOG(levelnum) << "Buffer n=" << unpackedBuffers
-                   << " [TUnpackerMessage] " << messages.back().Message ;
-
+    const string& msg_ = std_ext::formatter()
+                         << "(nUnpackedBuffers=" << nUnpackedBuffers << ", nEventsInBuffer=" << nEventsInBuffer << ")"
+                         << " [TUnpackerMessage] " << messages.back().Message;
+    if(emit_warning)
+        LOG(WARNING) << msg_;
+    else
+        VLOG(levelnum) << msg_;
 }
 
 void acqu::FileFormatBase::AppendMessagesToEvent(TEvent& event) const
@@ -241,7 +246,7 @@ void acqu::FileFormatBase::AppendMessagesToEvent(TEvent& event) const
 
 void acqu::FileFormatBase::FillEvents(queue_t& queue) noexcept
 {
-    logger::DebugInfo::nUnpackedBuffers = unpackedBuffers;
+    logger::DebugInfo::nUnpackedBuffers = nUnpackedBuffers;
 
     // this method never throws exceptions, but just adds TUnpackerMessage to event
     // if something strange while unpacking is encountered
@@ -251,7 +256,7 @@ void acqu::FileFormatBase::FillEvents(queue_t& queue) noexcept
     if(buffer.empty()) {
         // still issue some TEvent if there are messages left or
         // it's the very first buffer now, then the data consisted of header-only data
-        if(!messages.empty() || unpackedBuffers==0) {
+        if(!messages.empty() || nUnpackedBuffers==0) {
             queue.emplace_back(id);
             AppendMessagesToEvent(queue.back());
         }
@@ -264,7 +269,7 @@ void acqu::FileFormatBase::FillEvents(queue_t& queue) noexcept
     queue_t queue_buffer;
     if(!UnpackDataBuffer(queue_buffer, it, buffer.cend())) {
         // handle errors on buffer scale
-        LOG(WARNING) << "Error while unpacking buffer n=" << unpackedBuffers
+        LOG(WARNING) << "Error while unpacking buffer n=" << nUnpackedBuffers
                      << ", discarding all unpacked data from buffer.";
 
         // add an datadiscard message to an empty event
@@ -272,7 +277,7 @@ void acqu::FileFormatBase::FillEvents(queue_t& queue) noexcept
                     TUnpackerMessage::Level_t::DataDiscard,
                     "Discarded buffer number {}"
                     );
-        messages.back().Payload.push_back(unpackedBuffers);
+        messages.back().Payload.push_back(nUnpackedBuffers);
 
         queue.emplace_back(id);
         AppendMessagesToEvent(queue.back());
@@ -285,7 +290,7 @@ void acqu::FileFormatBase::FillEvents(queue_t& queue) noexcept
         queue.splice(queue.end(), move(queue_buffer));
     }
 
-    unpackedBuffers++;
+    nUnpackedBuffers++;
 
 
     // refill the buffer
@@ -415,17 +420,21 @@ bool acqu::FileFormatBase::UnpackDataBuffer(UnpackerAcquFileFormat::queue_t& que
     it++;
 
     // now loop over buffer contents, aka single events
-    unsigned nEventsInBuffer = 0;
+    nEventsInBuffer = 0;
     while(it != it_endbuffer && *it != acqu::EBufferEnd) {
 
-        // extract and check serial ID
+        // extract and check serial ID (first word of event)
         const unsigned acquID = *it;
         if(AcquID_last>acquID) {
             VLOG(8) << "Overflow of Acqu EventId detected from "
                     << AcquID_last << " to " << acquID;
         }
         if(id.Lower>0 && acquID != AcquID_last+1) {
-            LOG(WARNING) << "AcquID=" << acquID << " not consecutive from last AcquID=" << AcquID_last;
+            LogMessage(TUnpackerMessage::Level_t::DataError,
+                       std_ext::formatter()
+                       << "AcquID=" << acquID << " not consecutive from last AcquID=" << AcquID_last,
+                       true // emit warning
+                       );
         }
 
         AcquID_last = acquID;
@@ -434,7 +443,6 @@ bool acqu::FileFormatBase::UnpackDataBuffer(UnpackerAcquFileFormat::queue_t& que
         queue.emplace_back(id);
         TEventData& eventdata = queue.back().Reconstructed();
 
-        // expect the first word to be the event id
         eventdata.Trigger.DAQEventID = AcquID_last;
 
         {
@@ -443,6 +451,14 @@ bool acqu::FileFormatBase::UnpackDataBuffer(UnpackerAcquFileFormat::queue_t& que
             if(!good)
                 return false;
         }
+
+        if(eventdata.DetectorReadHits.empty()) {
+            LogMessage(TUnpackerMessage::Level_t::Info,
+                       "Unpacked event with completely empty DetectorReadHits",
+                       true // emit warning
+                       );
+        }
+
         // append the messages to some successfully unpacked event
         AppendMessagesToEvent(queue.back());
 
@@ -458,7 +474,7 @@ bool acqu::FileFormatBase::UnpackDataBuffer(UnpackerAcquFileFormat::queue_t& que
         // then only the end marker for the event is present
         // but there's no way to detect this properly, since
         // acqu::EEndEvent == acqu::EBufferEnd (grrrrr)
-        if(*next(it,-1) == acqu::EEndEvent) {
+        if(*prev(it) == acqu::EEndEvent) {
             LogMessage(TUnpackerMessage::Level_t::Info,
                        std_ext::formatter()
                        << "Buffer was exactly filled with " << nEventsInBuffer
@@ -514,12 +530,6 @@ void acqu::FileFormatBase::FillDetectorReadHits(const hit_storage_t& hit_storage
             hits.emplace_back(mapping->LogicalChannel, move(rawData));
         }
     }
-
-    if(hits.empty()) {
-        /// \todo Improve message, maybe add TUnpackerMessage then?
-        LOG_N_TIMES(1000, WARNING) << "Found event with no hits at all";
-    }
-
 }
 
 void acqu::FileFormatBase::FillSlowControls(const scalers_t& scalers, const scaler_mappings_t& scaler_mappings,
