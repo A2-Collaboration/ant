@@ -37,6 +37,7 @@ if(AntProgs_SimpleTools)
     add_ant_executable(processEtapTree)
     add_ant_executable(show_cocktail_database)
     add_ant_executable(compare_ant_goat)
+    add_ant_executable(compare_tree_events)
 endif()
 
 option(AntProgs_XmasCB "Crystal Ball Christmas ornaments" OFF)
