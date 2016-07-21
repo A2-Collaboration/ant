@@ -271,9 +271,19 @@ struct OmegaHist_t {
 
     OmegaHist_t(const HistogramFactory& hf, cuttree::TreeInfo_t): HistFac(hf) {
 
-        AddTH1("KinFitChi2",      "#chi^{2}",             "",       Chi2Bins,   "KinFitChi2",
-               [] (TH1D* h, const Fill_t& f) { h->Fill(f.Tree.KinFitChi2, f.TaggW());
+
+        // ====== KinFit =======
+
+//        AddTH1("KinFitChi2",      "#chi^{2}",             "",       Chi2Bins,   "KinFitChi2",
+//               [] (TH1D* h, const Fill_t& f) { h->Fill(f.Tree.KinFitChi2, f.TaggW());
+//        });
+
+        AddTH1("KinFit Probability",      "probability",             "",       probbins,   "KinFitProb",
+               [] (TH1D* h, const Fill_t& f) { h->Fill(f.Tree.KinFitProb, f.TaggW());
         });
+
+
+        // ======= Values after KinFit ======
 
         AddTH1("3#gamma IM",      "3#gamma IM [MeV]",     "",       IMbins,     "ggg_IM",
                [] (TH1D* h, const Fill_t& f) { h->Fill(f.Tree.ggg_fitted().M(), f.TaggW());
@@ -309,28 +319,10 @@ struct OmegaHist_t {
             }
         });
 
-
-        AddTH1("Missing Mass",      "MM [MeV]",     "",       MMbins,     "mm",
-               [] (TH1D* h, const Fill_t& f) { h->Fill(f.Tree.mm().M(), f.TaggW());
+        AddTH2("Proton #theta vs. E_{k}", "E_{k} [MeV]", "#theta [#circ]",  pEbins,   pThetaBins, "p_theta_E",
+               [] (TH2D* h, const Fill_t& f) {
+            h->Fill(f.Tree.p_fitted().E() - ParticleTypeDatabase::Proton.Mass(), radian_to_degree(f.Tree.p_fitted().Theta()), f.TaggW());
         });
-
-
-//        AddTH1("Tagger Channels", "Channel",              "# hits", TaggChBins, "TaggCh",
-//               [] (TH1D* h, const Fill_t& f) { h->Fill(f.Tree.TaggCh, f.TaggW());
-//        });
-
-//        AddTH1("Coplanarity Angle", "Coplanarity angle [#circ]", "", CoplBins, "CoplAngle",
-//               [] (TH1D* h, const Fill_t& f) { h->Fill(radian_to_degree(f.Tree.copl_angle()), f.TaggW());
-//        });
-
-        AddTH1("Tagger Time - CB Average Time", "t [ns]", "",       TaggTime,   "TaggTime",
-               [] (TH1D* h, const Fill_t& f) { h->Fill(f.Tree.TaggT - f.Tree.CBAvgTime);
-        });
-
-//        AddTH2("Proton #theta vs. E_{k}", "E_{k} [MeV]", "#theta [#circ]",  pEbins,   pThetaBins, "p_theta_E",
-//               [] (TH2D* h, const Fill_t& f) {
-//            h->Fill(f.Tree.p_fitted().E() - ParticleTypeDatabase::Proton.Mass(), radian_to_degree(f.Tree.p_fitted().Theta()), f.TaggW());
-//        });
 
 //        AddTH2("Missing Mass / 3#gamma IM", "3#gamma IM [MeV]", "MM [MeV]", IMbins,   MMbins,     "mm_gggIM",
 //               [] (TH2D* h, const Fill_t& f) { h->Fill(f.Tree.ggg_fitted().M(), f.Tree.mm().M(), f.TaggW());
@@ -345,6 +337,19 @@ struct OmegaHist_t {
 //               [] (TH2D* h, const Fill_t& f) {
 //            h->Fill(f.Tree.ggg_fitted().M(), max(f.Tree.ggIM_fitted()), f.TaggW());
 //        });
+
+
+        AddTH2("Dalitz","X","Y", dalitzBins, dalitzBins, "dalitz",
+               [] (TH2D* h, const Fill_t& f) {
+
+            OmegaDalitzPlot p(f.Tree.photons_fitted(), f.Tree.ggg_fitted());
+            do {
+                h->Fill(p.var.x, p.var.y);
+            } while (p.Next());
+        });
+
+
+        // ===== Tree Fit =====
 
         AddTH1("#pi^{0} Hyp: prob", "prob_{#pi^{0}}","",probbins, "pi0hyp_prob",
                [] (TH1D* h, const Fill_t& f) {
@@ -369,25 +374,29 @@ struct OmegaHist_t {
 
         AddTH1("#pi^{0} Hyp: #omega IM", "m(#omega_{#pi^{0}}})","",IMbins, "pi0hyp_omega",
                [] (TH1D* h, const Fill_t& f) {
-            const auto& i = f.Tree.iBestEta;
+            const auto& i = f.Tree.iBestPi0;
             if(i >= 0)
                 h->Fill(f.Tree.pi0_omega_im().at(size_t(i)), f.TaggW());
         });
 
-        AddTH2("Dalitz","X","Y", dalitzBins, dalitzBins, "dalitz",
-               [] (TH2D* h, const Fill_t& f) {
 
-            OmegaDalitzPlot p(f.Tree.photons_fitted(), f.Tree.ggg_fitted());
-            do {
-                h->Fill(p.var.x, p.var.y);
-            } while (p.Next());
 
-        });
+        // ====== Crosscheck plots =======
 
         AddTH2("dEEproton","E [MeV]","dE [MeV]", Ebins, evtoEbins, "dEE",
                [] (TH2D* h, const Fill_t& f) {
             h->Fill(f.Tree.p_fitted().Energy() - ParticleTypeDatabase::Proton.Mass(), f.Tree.p_vetoE);
         });
+
+        AddTH2("dEEphoton","E [MeV]","dE [MeV]", Ebins, evtoEbins, "dEE",
+               [] (TH2D* h, const Fill_t& f) {
+            for(size_t i=0; i<f.Tree.photons_fitted().size(); ++i) {
+                h->Fill(f.Tree.photons_fitted().at(i).Energy(), f.Tree.photons_vetoE().at(i));
+            }
+        });
+
+
+        // ===== Entry Cuts ======
 
         AddTH1("nCands", "# Candidates", "", BinSettings(4,4,8), "nCands",
                 [] (TH1D* h, const Fill_t& f) {
@@ -399,6 +408,22 @@ struct OmegaHist_t {
                 [] (TH1D* h, const Fill_t& f) {
 
             h->Fill(f.Tree.CandsunUsedE / f.Tree.CandsUsedE, f.TaggW());
+        });
+
+        AddTH1("Missing Mass",      "MM [MeV]",     "",       MMbins,     "mm",
+               [] (TH1D* h, const Fill_t& f) { h->Fill(f.Tree.mm().M(), f.TaggW());
+        });
+
+        //        AddTH1("Tagger Channels", "Channel",              "# hits", TaggChBins, "TaggCh",
+        //               [] (TH1D* h, const Fill_t& f) { h->Fill(f.Tree.TaggCh, f.TaggW());
+        //        });
+
+        //        AddTH1("Coplanarity Angle", "Coplanarity angle [#circ]", "", CoplBins, "CoplAngle",
+        //               [] (TH1D* h, const Fill_t& f) { h->Fill(radian_to_degree(f.Tree.copl_angle()), f.TaggW());
+        //        });
+
+        AddTH1("Tagger Time - CB Average Time", "t [ns]", "",       TaggTime,   "TaggTime",
+               [] (TH1D* h, const Fill_t& f) { h->Fill(f.Tree.TaggT - f.Tree.CBAvgTime);
         });
 
 
