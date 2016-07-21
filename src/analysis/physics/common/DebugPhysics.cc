@@ -39,16 +39,18 @@ void DebugPhysics::ProcessEvent(const TEvent& event, manager_t& manager)
             LOG(INFO) << "Tagger Scalers: " << slowcontrol::Variables::TaggerScalers->Get();
     }
     seenEvents++;
+    lastTID = event.Reconstructed().ID;
 }
 
 void DebugPhysics::Finish()
 {
-    LOG(INFO) << "Seen " << seenEvents << " Events";
+    LOG(INFO) << "Seen " << seenEvents << "=0x" << hex << seenEvents << dec
+              << " Events, last TID " << lastTID;
 }
 
 void DebugPhysics::ShowResult()
 {
-    LOG(INFO) << "Nop";
+    LOG(INFO) << "ShowResult called";
 }
 
 

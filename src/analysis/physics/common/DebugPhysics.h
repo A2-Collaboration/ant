@@ -14,6 +14,7 @@ protected:
     const bool keepReadHits;
     const bool requestSlowControl;
     unsigned seenEvents = 0;
+    TID lastTID;
 public:
     DebugPhysics(const std::string& name, OptionsPtr opts=nullptr);
     virtual ~DebugPhysics();
