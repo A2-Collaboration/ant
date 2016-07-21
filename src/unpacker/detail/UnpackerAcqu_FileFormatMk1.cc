@@ -149,8 +149,9 @@ void acqu::FileFormatMk1::FillFirstDataBuffer(reader_t& reader, buffer_t& buffer
 
 void acqu::FileFormatMk1::UnpackEvent(TEventData& eventdata, it_t& it, const it_t& it_endbuffer, bool& good) noexcept
 {
-    /// \todo Scan mappings if there's an ADC channel defined which mimicks those markers
+    assert(std::distance(it, it_endbuffer)>0);
 
+    /// \todo Scan mappings if there's an ADC channel defined which mimicks those markers
     hit_storage.clear();
     // there might be more than one scaler block in each event, so
     // so collect them first in this map
@@ -191,6 +192,15 @@ void acqu::FileFormatMk1::UnpackEvent(TEventData& eventdata, it_t& it, const it_
         /// \todo Implement more fine-grained unpacking error handling
         if(!good)
             return;
+    }
+
+
+    if(it == it_endbuffer) {
+        LogMessage(TUnpackerMessage::Level_t::DataError,
+                   "Reached end of buffer without proper end marker"
+                   );
+        good = false;
+        return;
     }
 
     if(!scalers.empty() && it_scalerblock != ScalerBlockSizes.cend()) {
@@ -254,7 +264,8 @@ void acqu::FileFormatMk1::HandleScalerBuffer(
 
     if(nWordsRemaining < *it_scalerblock) {
         LogMessage(TUnpackerMessage::Level_t::DataError,
-                   "Expected scaler block not completely present in event"
+                   "Expected scaler block not completely present in event",
+                   true // emit warning
                    );
         return;
     }
@@ -274,7 +285,15 @@ void acqu::FileFormatMk1::HandleScalerBuffer(
             if(!good)
                 return;
             good = false;
-            std::advance(it_endscaler, std::distance(it, it_));
+            const auto nWords_error = std::distance(it, it_);
+            if(std::distance(it_endscaler, it_end) < nWords_error) {
+                LogMessage(TUnpackerMessage::Level_t::DataError,
+                           "Scaler block had error marker but not completely present in event",
+                           true // emit warning
+                           );
+                return;
+            }
+            std::advance(it_endscaler, nWords_error);
             it = it_;
             if(it==it_end || it==it_endscaler)
                 return;
@@ -284,6 +303,8 @@ void acqu::FileFormatMk1::HandleScalerBuffer(
         ++scalerIndex;
         ++it;
     }
+
+    assert(scalers.size() == std::accumulate(ScalerBlockSizes.cbegin(), std::next(it_scalerblock), 0u));
 
     // go past last scaler, and to next scaler block (if any)
     ++it;
