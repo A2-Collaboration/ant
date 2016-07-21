@@ -1,6 +1,7 @@
 add_ant_test(RawFileReader)
 add_ant_test(UnpackerAcqu expconfig)
 add_ant_test(UnpackerAcquScaler expconfig)
+add_ant_test(UnpackerAcquMk1 expconfig)
 add_ant_test(UnpackerAcquTID expconfig)
 add_ant_test(TreeWriter)
 add_ant_test(UnpackerA2Geant expconfig)
