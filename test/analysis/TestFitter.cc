@@ -163,15 +163,28 @@ void dotest(bool z_vertex, bool proton_unmeas, bool smeared) {
         REQUIRE(fitparticles.size() == 3);
         REQUIRE(fitparticles.front().Particle->Type() == ParticleTypeDatabase::Proton);
         auto it_fitparticle = fitparticles.begin();
+        auto fitted_proton = it_fitparticle->AsFitted();
         pulls_Proton.Fill(*it_fitparticle);
         ++it_fitparticle;
-        LorentzVec photon_sum{0,0,0,0};
+        LorentzVec fitted_photon_sum{0,0,0,0};
         while (it_fitparticle != fitparticles.end()) {
             pulls_Photons.Fill(*it_fitparticle);
-            photon_sum += *it_fitparticle->AsFitted();
+            fitted_photon_sum += *it_fitparticle->AsFitted();
             ++it_fitparticle;
         }
-        REQUIRE(photon_sum.M() < beam->Ek());
+
+        // check some kinematics
+
+        auto fitted_beam = kinfitter.GetFittedBeamParticle();
+        auto constraint = *fitted_beam - *fitted_proton - fitted_photon_sum;
+
+        REQUIRE(constraint.E == Approx(0));
+        REQUIRE(constraint.p.x == Approx(0));
+        REQUIRE(constraint.p.y == Approx(0));
+        REQUIRE(constraint.p.z == Approx(0));
+
+        REQUIRE(fitted_photon_sum.M() < fitted_beam->Ek());
+
     }
 
     CHECK(nEvents==1000);
