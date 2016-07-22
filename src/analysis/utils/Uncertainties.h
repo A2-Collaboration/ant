@@ -2,6 +2,7 @@
 
 #include "tree/TParticle.h"
 #include "base/printable.h"
+#include "base/Detector_t.h"
 
 #include "TH1D.h"
 
@@ -39,8 +40,12 @@ struct Uncertainties_t {
  */
 class UncertaintyModel {
 public:
+    UncertaintyModel();
     virtual ~UncertaintyModel();
     virtual Uncertainties_t GetSigmas(const TParticle& particle) const =0;
+    virtual double GetBeamEnergySigma(double photon_energy) const;
+protected:
+    std::shared_ptr<TaggerDetector_t> tagger;
 };
 using UncertaintyModelPtr = std::shared_ptr<const UncertaintyModel>;
 
