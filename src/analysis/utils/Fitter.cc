@@ -215,16 +215,11 @@ KinFitter::KinFitter(const std::string& name,
 
         const auto  n = fit_particles.size();
         // n serves as an offset here
-        const auto& Ebeam    = values[n+0][0];
+        const auto& BeamE    = values[n+0][0];
         const auto  z_vertex = fit_Z_vertex ? values[n+1][0] : 0.0;
 
-        // Beam-LV:
-        // beam    LorentzVec(0.0, 0.0, PhotonEnergy(), PhotonEnergy());
-        // target  LorentzVec(0.0, 0.0, 0.0, ParticleTypeDatabase::Proton.Mass())
-        const LorentzVec beam(0, 0, Ebeam, Ebeam);
-        const LorentzVec target(0,0,0,ParticleTypeDatabase::Proton.Mass());
-
-        LorentzVec diff = target + beam; // incoming
+        // start with the incoming particle
+        auto diff = MakeBeamLorentzVec(BeamE);
 
         for(size_t i=0;i<n;i++)
             diff -= fit_particles[i]->GetVector(values[i], z_vertex); // minus outgoing
@@ -293,6 +288,12 @@ TParticleList KinFitter::GetFittedPhotons() const
 double KinFitter::GetFittedBeamE() const
 {
     return BeamE->Value;
+}
+
+TParticlePtr KinFitter::GetFittedBeamParticle() const
+{
+    return std::make_shared<TParticle>(ParticleTypeDatabase::BeamProton,
+                                       MakeBeamLorentzVec(GetFittedBeamE()));
 }
 
 double KinFitter::GetFittedZVertex() const
@@ -402,6 +403,19 @@ APLCON::Result_t KinFitter::DoFit() {
 
     return res;
 }
+
+LorentzVec KinFitter::MakeBeamLorentzVec(double BeamE)
+{
+    // Beam Lorentz vector:
+    // beam    LorentzVec(0.0, 0.0, PhotonEnergy(), PhotonEnergy());
+    // target  LorentzVec(0.0, 0.0, 0.0, ParticleTypeDatabase::Proton.Mass())
+    const LorentzVec beam(0, 0, BeamE, BeamE);
+    /// \todo Target is always assumed proton...
+    const LorentzVec target(0,0,0, ParticleTypeDatabase::Proton.Mass());
+
+    return target + beam;
+}
+
 
 TreeFitter::TreeFitter(const string& name,
                        ParticleTypeTree ptree,

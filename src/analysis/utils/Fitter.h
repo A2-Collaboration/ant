@@ -155,6 +155,7 @@ public:
     TParticlePtr GetFittedProton() const;
     TParticleList GetFittedPhotons() const;
     double GetFittedBeamE() const;
+    TParticlePtr GetFittedBeamParticle() const;
     double GetFittedZVertex() const;
 
     double GetBeamEPull() const;
@@ -196,6 +197,8 @@ protected:
     std::shared_ptr<FitParticle> Proton;
     std::unique_ptr<BeamE_t>    BeamE;
     std::shared_ptr<Z_Vertex_t> Z_Vertex;
+
+    static LorentzVec MakeBeamLorentzVec(double BeamE);
 
 private:
     double result_chi2ndof       =  0.0;
