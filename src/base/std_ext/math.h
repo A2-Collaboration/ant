@@ -27,5 +27,25 @@ constexpr inline T abs_diff(T a, T b) noexcept {
   return a > b ? a - b : b - a;
 }
 
+template<class T>
+struct RMS_t {
+    unsigned n = 0;
+    T sum{};
+    T sum2{};
+    void Add(const T& v) {
+        ++n;
+        sum += v;
+        sum2 += std_ext::sqr(v);
+    }
+    T GetMean() const {
+        return sum/n;
+    }
+    T GetRMS() const {
+        return std::sqrt( sum2/n - std_ext::sqr(GetMean()) );
+    }
+};
+
+using RMS = RMS_t<double>;
+
 }} // namespace ant::std_ext
 

@@ -70,27 +70,10 @@ struct TestUncertaintyModel : utils::UncertaintyModel {
     }
 };
 
-struct RMS_t {
-    unsigned n = 0;
-    double sum = 0;
-    double sum2 = 0;
-    void Add(double v) {
-        ++n;
-        sum += v;
-        sum2 += std_ext::sqr(v);
-    }
-    double GetMean() const {
-        return sum/n;
-    }
-    double GetRMS() const {
-        return std::sqrt( sum2/n - std_ext::sqr(GetMean()) );
-    }
-};
-
 struct Pulls_t {
-    RMS_t Ek;
-    RMS_t Theta;
-    RMS_t Phi;
+    std_ext::RMS Ek;
+    std_ext::RMS Theta;
+    std_ext::RMS Phi;
 
     void Fill(const utils::Fitter::FitParticle& p) {
         Ek.Add(p.Ek.Pull);
@@ -123,9 +106,9 @@ void dotest(bool z_vertex, bool proton_unmeas, bool smeared) {
     unsigned nFitOk = 0;
     unsigned nFitIterations = 0;
 
-    RMS_t   pulls_Beam;
-    Pulls_t pulls_Photons;
-    Pulls_t pulls_Proton;
+    std_ext::RMS pulls_Beam;
+    Pulls_t      pulls_Photons;
+    Pulls_t      pulls_Proton;
 
     while(true) {
         TEvent event;
