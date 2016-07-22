@@ -23,14 +23,15 @@ using namespace ant;
 using namespace ant::analysis;
 using namespace ant::analysis::input;
 
-void dotest_read();
+void dotest_read_unpacker();
 
-TEST_CASE("AntReader: Simply read", "[analysis]") {
+TEST_CASE("AntReader: Read from unpacker", "[analysis]") {
     test::EnsureSetup();
-    dotest_read();
+    dotest_read_unpacker();
 }
 
-void dotest_read() {
+
+void dotest_read_unpacker() {
     auto unpacker = Unpacker::Get(string(TEST_BLOBS_DIRECTORY)+"/Acqu_oneevent-big.dat.xz");
     auto reconstruct = std_ext::make_unique<Reconstruct>();
     AntReader reader(nullptr, move(unpacker), move(reconstruct));
@@ -57,5 +58,3 @@ void dotest_read() {
     REQUIRE(nCandidates == 862);
 
 }
-
-
