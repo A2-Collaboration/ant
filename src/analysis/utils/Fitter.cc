@@ -71,12 +71,6 @@ void Fitter::FitParticle::SetEkThetaPhi(const TParticlePtr& p,
     Phi.SetSigma(sigmas.sigmaPhi);
 }
 
-double Fitter::fct_TaggerEGausSigma(double)
-{
-    return  3.0/sqrt(12.0);
-}
-
-
 void Fitter::FitParticle::Var_t::SetupBranches(TTree* tree, const string& prefix)
 {
     tree->Branch(prefix.c_str(), addressof(Value));
@@ -256,7 +250,7 @@ void KinFitter::SetEgammaBeam(const double ebeam)
 {
     BeamE->Value        = ebeam;
     BeamE->Value_before = ebeam;
-    BeamE->Sigma = fct_TaggerEGausSigma(ebeam);
+    BeamE->Sigma = uncertainty->GetBeamEnergySigma(ebeam);
 }
 
 void KinFitter::SetZVertexSigma(double sigma)

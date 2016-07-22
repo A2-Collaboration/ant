@@ -123,9 +123,6 @@ protected:
 
     void LinkVariable(FitParticle& particle);
 
-
-    static double fct_TaggerEGausSigma(double E);
-
 private:
     static APLCON::Fit_Settings_t MakeDefaultSettings();
 
