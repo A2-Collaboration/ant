@@ -210,7 +210,7 @@ KinFitter::KinFitter(const std::string& name,
         variable_names.emplace_back(Z_Vertex->Name);
     }
 
-    auto LorentzInvariance = [fit_Z_vertex, fit_particles] (const vector<vector<double>>& values)
+    auto EnergyMomentum = [fit_Z_vertex, fit_particles] (const vector<vector<double>>& values)
     {
 
         const auto  n = fit_particles.size();
@@ -224,20 +224,20 @@ KinFitter::KinFitter(const std::string& name,
         const LorentzVec beam(0, 0, Ebeam, Ebeam);
         const LorentzVec target(0,0,0,ParticleTypeDatabase::Proton.Mass());
 
-        LorentzVec constraint = target + beam;
+        LorentzVec diff = target + beam; // incoming
 
         for(size_t i=0;i<n;i++)
-            constraint -= fit_particles[i]->GetVector(values[i], z_vertex);
+            diff -= fit_particles[i]->GetVector(values[i], z_vertex); // minus outgoing
 
         return vector<double>(
-               { constraint.p.x,
-                 constraint.p.y,
-                 constraint.p.z,
-                 constraint.E }
+               { diff.p.x,
+                 diff.p.y,
+                 diff.p.z,
+                 diff.E }
                );
     };
 
-    aplcon->AddConstraint("LInv", variable_names, LorentzInvariance);
+    aplcon->AddConstraint("E-p", variable_names, EnergyMomentum);
 
 }
 
