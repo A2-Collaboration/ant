@@ -19,13 +19,14 @@ T find_detector() {
     return ExpConfig::Setup::GetDetector<element_t>();
 }
 
-MCFakeReconstructed::MCFakeReconstructed() :
+MCFakeReconstructed::MCFakeReconstructed(bool fakeComplete4Pi) :
+    FakeComplete4Pi(fakeComplete4Pi),
     cb(find_detector<decltype(cb)>()),
     pid(find_detector<decltype(pid)>()),
     taps(find_detector<decltype(taps)>()),
     tapsveto(find_detector<decltype(tapsveto)>())
 {
-    LOG(WARNING) << "MCFakeReconstructed in use";
+    LOG(WARNING) << "MCFakeReconstructed in use" << (FakeComplete4Pi ? ", with 4pi complete" : "");
 }
 
 MCFakeReconstructed::~MCFakeReconstructed()
@@ -111,6 +112,9 @@ const TEventData& MCFakeReconstructed::Get(const TEventData& mctrue)
             do_calo_veto(*p, *cb, *pid, data);
         else if(type & Detector_t::Type_t::TAPS)
             do_calo_veto(*p, *taps, *tapsveto, data);
+        else if(FakeComplete4Pi)
+            do_calo_veto(*p, *cb, *pid, data); // assume lost particle is in CB
+
     }
 
     // copy most of the trigger stuff

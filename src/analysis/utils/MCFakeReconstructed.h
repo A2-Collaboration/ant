@@ -20,7 +20,7 @@ namespace utils {
 
 class MCFakeReconstructed {
 public:
-    MCFakeReconstructed();
+    MCFakeReconstructed(bool fakeComplete4Pi = false);
     virtual ~MCFakeReconstructed();
 
     /**
@@ -30,6 +30,7 @@ public:
      */
     const TEventData& Get(const TEventData& mctrue);
 protected:
+    const bool FakeComplete4Pi;
     std::unique_ptr<TEventData> dataptr;
     A2SimpleGeometry geo;
 
