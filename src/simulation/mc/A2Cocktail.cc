@@ -163,7 +163,7 @@ A2Cocktail::A2Cocktail(const string& outfile,
     sort(_energies.begin(), _energies.end());
     _energyFunction = TF1("beamEnergy",energyDistribution.c_str(),_energies.front(),_energies.back());
     init(filenames);
-    UpdatePluteDataBase();
+    UpdatePlutoDataBase();
 }
 
 

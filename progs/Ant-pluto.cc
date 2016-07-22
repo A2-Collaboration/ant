@@ -233,7 +233,7 @@ void PlutoAction::Run() const
 
     makeDistributionManager()->Add(smear);
 
-    ant::simulation::mc::UpdatePluteDataBase();
+    ant::simulation::mc::UpdatePlutoDataBase();
 
     // remove file ending because pluto attaches a ".root"...
     string outfile_clean(outfile);

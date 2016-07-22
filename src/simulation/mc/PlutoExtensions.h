@@ -18,7 +18,7 @@ namespace mc
  *        very beginnig when including any Pluto-Objects using the
  *        Pluto-Database.
  */
-void UpdatePluteDataBase()
+void UpdatePlutoDataBase()
 {
     PStaticData* sdata = makeStaticData();
 
