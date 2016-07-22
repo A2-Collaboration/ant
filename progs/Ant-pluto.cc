@@ -136,8 +136,8 @@ int main( int argc, char** argv ) {
 
     // reaction simulation options
 //    auto cmd_usePluto = cmd.add<TCLAP::SwitchArg>        ("", "pluto", "Use pluto", false);
-    auto cmd_reaction = cmd.add<TCLAP::ValueArg<string>> ("", "reaction", "Reaction string in PLUTO notation", false, "", "string (Pluto Rection)");
-    auto cmd_noUnstable = cmd.add<TCLAP::SwitchArg>("", "no-unstable", "Don't unstable particles", false);
+    auto cmd_reaction = cmd.add<TCLAP::ValueArg<string>> ("", "reaction", "g p decay string , e.g. 'p pi0 [g g]", false, "", "g p decay string");
+    auto cmd_noUnstable = cmd.add<TCLAP::SwitchArg>("", "no-unstable", "Don't save unstable/intermediate particles", false);
     auto cmd_noBulk = cmd.add<TCLAP::SwitchArg>      ("", "no-bulk", "Disable bulk decay of particles", false);
 
     // random gun options
