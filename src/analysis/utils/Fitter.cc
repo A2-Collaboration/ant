@@ -131,6 +131,9 @@ LorentzVec Fitter::FitParticle::GetVector(const std::vector<double>& EkThetaPhi,
 
     double theta_corr = std_ext::NaN;
 
+    if(!Particle->Candidate)
+        throw Exception("Z Vertex fitting requires particles with candidates");
+
     auto calocluster = Particle->Candidate->FindCaloCluster();
 
     if(!calocluster)
@@ -266,9 +269,6 @@ void KinFitter::SetZVertexSigma(double sigma)
 
 void KinFitter::SetProton(const TParticlePtr& proton)
 {
-    if (proton->Candidate == nullptr)
-        throw Exception(aplcon->GetName() + ": Proton Candidate for Kinfitter not set!");
-
     Proton->SetEkThetaPhi(proton, uncertainty);
 }
 
@@ -278,8 +278,6 @@ void KinFitter::SetPhotons(const TParticleList& photons)
         throw Exception("Given number of photons does not match configured fitter");
 
     for ( unsigned i = 0 ; i < Photons.size() ; ++ i) {
-        if(photons[i]->Candidate == nullptr)
-            throw Exception(aplcon->GetName() + ": Photon Candidate for Kinfitter not set!");
         Photons[i]->SetEkThetaPhi(photons[i], uncertainty);
     }
 }
