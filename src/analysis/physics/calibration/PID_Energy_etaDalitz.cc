@@ -157,12 +157,15 @@ static int getDetectorAsInt(const Detector_t::Any_t& d)
 
 PID_Energy_etaDalitz::PID_Energy_etaDalitz(const string& name, OptionsPtr opts) :
     Physics(name, opts),
-    kinfit("kinfit", N_FINAL_STATE-1,
-           make_shared<const uncertainty_model_t>(),
+    model(utils::UncertaintyModels::Interpolated::makeAndLoad(
+              make_shared<const uncertainty_model_t>(),
+              utils::UncertaintyModels::Interpolated::Mode_t::Fit,
+              false)
+          ),
+    kinfit("kinfit", N_FINAL_STATE-1, model,
            opts->HasOption("SigmaZ"), MakeFitSettings(20)
            ),
-    treefitter_eta("treefitter_eta", eta_3g(),
-                   make_shared<const uncertainty_model_t>(),
+    treefitter_eta("treefitter_eta", eta_3g(), model,
                    opts->HasOption("SigmaZ"), {}, MakeFitSettings(20)
                    )
 {

@@ -162,9 +162,10 @@ protected:
 
     Tree_t t;
     PromptRandom::Switch promptrandom;
+    using uncertainty_model_t = utils::UncertaintyModels::Optimized_Oli1;
+    utils::UncertaintyModelPtr model;
     utils::KinFitter kinfit;
     utils::TreeFitter treefitter_eta;
-    using uncertainty_model_t = utils::UncertaintyModels::Optimized_Oli1;
 
     std::shared_ptr<ant::Detector_t> cb;
 
