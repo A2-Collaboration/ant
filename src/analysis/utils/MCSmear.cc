@@ -19,18 +19,36 @@ ant::TParticlePtr MCSmear::Smear(const TParticlePtr& p, Uncertainties_t& sigmas)
 {
     const auto& type = p->Type();
 
-    const bool isBeam = type == ParticleTypeDatabase::BeamTarget;
+    shared_ptr<TParticle> smeared;
 
-    sigmas = isBeam ? Uncertainties_t{ model->GetBeamEnergySigma(p->Ek()), std_ext::NaN, std_ext::NaN}
-                    : model->GetSigmas(*p);
+    if(type == ParticleTypeDatabase::BeamTarget) {
+        sigmas = { model->GetBeamEnergySigma(p->Ek()), std_ext::NaN, std_ext::NaN};
 
-    const double Ek    = rng->Gaus(p->Ek(), sigmas.sigmaE);
-    const double Theta = isBeam ? p->Theta() : rng->Gaus(p->Theta(), sigmas.sigmaTheta);
-    const double Phi   = isBeam ? p->Phi()   : rng->Gaus(p->Phi(),   sigmas.sigmaPhi);
+        // be careful about this composite particle
+        // beamparticle = gamma + nucleon (at rest)
 
-    auto sp = make_shared<TParticle>(type, Ek, Theta, Phi);
-    sp->Candidate = p->Candidate;
-    return sp;
+        const double Ek = rng->Gaus(p->Ek(), sigmas.sigmaE); // photon energy
+
+        smeared = make_shared<TParticle>(
+                      type,
+                      // spatial components are given by photon direction,
+                      // time component is sum of resting target and photon energy
+                      LorentzVec::EPThetaPhi(Ek + type.Mass(), Ek, p->Theta(), p->Phi())
+                      );
+    }
+    else {
+        sigmas = model->GetSigmas(*p);
+
+        const double Ek    = rng->Gaus(p->Ek(),    sigmas.sigmaE);
+        const double Theta = rng->Gaus(p->Theta(), sigmas.sigmaTheta);
+        const double Phi   = rng->Gaus(p->Phi(),   sigmas.sigmaPhi);
+
+        smeared = make_shared<TParticle>(type, Ek, Theta, Phi);
+        smeared->Candidate = p->Candidate;
+    }
+
+
+    return smeared;
 }
 
 TParticlePtr MCSmear::Smear(const TParticlePtr& p) const
