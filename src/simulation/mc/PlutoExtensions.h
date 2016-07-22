@@ -1,7 +1,8 @@
 #pragma once
 
 #include "PStaticData.h"
-#include "iostream"
+#include "base/Logger.h"
+#include <iostream>
 
 namespace ant
 {
@@ -22,9 +23,10 @@ void UpdatePluteDataBase()
     PStaticData* sdata = makeStaticData();
 
 
-    std::cout << "=============================================" << endl;
-    std::cout << "omega before change:" << endl;
-    listParticle("w");
+    VLOG(5) << "=============================================" << endl;
+    VLOG(5) << "omega before change:" << endl;
+    if(VLOG_IS_ON(5)) listParticle("w");
+
 
     // additional omega decays (from PDG Booklet 2014)
     sdata->AddDecay("w --> eta + g",        "w", "eta,g",           4.6E-4);
@@ -42,13 +44,14 @@ void UpdatePluteDataBase()
     sdata->AddDecay("w --> pi0 pi0 pi0",    "w", "pi0,pi0,pi0",     2.3E-4);    // upper limit
 
 
-    std::cout << "=============================================" << endl;
-    std::cout << "omega after change:" << endl;
-    listParticle("w");
+    VLOG(5) << "=============================================" << endl;
+    VLOG(5) << "omega after change:" << endl;
+    if(VLOG_IS_ON(5)) listParticle("w");
 
-    std::cout << "=============================================" << endl;
-    std::cout << "eta' before change:" << endl;
-    listParticle("eta'");
+    VLOG(5) << "=============================================" << endl;
+    VLOG(5) << "eta' before change:" << endl;
+    if(VLOG_IS_ON(5)) listParticle("eta'");
+
     // newer Decay BRs for eta' (PDG particle listings)
     sdata->SetDecayBR("eta'", "pi+,pi-,eta",    0.429,    1);   // Mode flag:   ( see Pluto-source)
     sdata->SetDecayBR("eta'", "rho0,g",         0.291,    1);   // 0: Add the new b.r. to the existing ones + re-weighting
@@ -63,13 +66,13 @@ void UpdatePluteDataBase()
     sdata->AddDecay("eta' --> pi+ pi- pi0",     "eta'", "pi+,pi-,pi0",     3.8E-4);
     sdata->AddDecay("eta' --> pi+ pi- e+ e-",   "eta'", "pi+,pi-,e+,e-",   2.4E-3);
 
-    std::cout << "=============================================" << endl;
-    std::cout << "eta' after change:" << endl;
-    listParticle("eta'");
+    VLOG(5) << "=============================================" << endl;
+    VLOG(5) << "eta' after change:" << endl;
+    if(VLOG_IS_ON(5)) listParticle("eta'");
 
-    std::cout << "=============================================" << endl;
-    std::cout << "rho0 before change:" << endl;
-    listParticle("rho0");
+    VLOG(5) << "=============================================" << endl;
+    VLOG(5) << "rho0 before change:" << endl;
+    if(VLOG_IS_ON(5)) listParticle("rho0");
     // additional rho decays ( PDG 2016)
     sdata->AddDecay("rho0 --> pi+ pi- g",           "rho0", "pi+,pi-,g",            9.9E-3);
     sdata->AddDecay("rho0 --> pi0 g",               "rho0", "pi0,g",                6.0E-4);
@@ -78,9 +81,9 @@ void UpdatePluteDataBase()
     sdata->AddDecay("rho0 --> pi0 pi0 g",           "rho0", "pi0,pi0,g",            4.5E-5);
     sdata->AddDecay("rho0 --> pi+ pi- pi0 pi0 g",   "rho0", "pi+,pi-,pi0,pi0,g",    1.6E-5);
     sdata->AddDecay("rho0 --> pi+ pi- pi+ pi- g",   "rho0", "pi+,pi-,pi+,pi-,g",    1.8E-5);
-    std::cout << "=============================================" << endl;
-    std::cout << "rho0 after change:" << endl;
-    listParticle("rho0");
+    VLOG(5) << "=============================================" << endl;
+    VLOG(5) << "rho0 after change:" << endl;
+    if(VLOG_IS_ON(5)) listParticle("rho0");
 }
 
 }
