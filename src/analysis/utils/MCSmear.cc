@@ -19,15 +19,17 @@ ant::TParticlePtr MCSmear::Smear(const TParticlePtr& p, Uncertainties_t& sigmas)
 {
     const auto& type = p->Type();
 
-    sigmas = model->GetSigmas(*p);
+    const bool isBeam = type == ParticleTypeDatabase::BeamTarget;
 
-    const double E     = rng->Gaus(p->Ek(),    sigmas.sigmaE);
-    const double Theta = rng->Gaus(p->Theta(), sigmas.sigmaTheta);
-    const double Phi   = rng->Gaus(p->Phi(),   sigmas.sigmaPhi);
+    sigmas = isBeam ? Uncertainties_t{ model->GetBeamEnergySigma(p->Ek()), std_ext::NaN, std_ext::NaN}
+                    : model->GetSigmas(*p);
 
-    auto sp = make_shared<TParticle>(type, E, Theta, Phi);
+    const double Ek    = rng->Gaus(p->Ek(), sigmas.sigmaE);
+    const double Theta = isBeam ? p->Theta() : rng->Gaus(p->Theta(), sigmas.sigmaTheta);
+    const double Phi   = isBeam ? p->Phi()   : rng->Gaus(p->Phi(),   sigmas.sigmaPhi);
+
+    auto sp = make_shared<TParticle>(type, Ek, Theta, Phi);
     sp->Candidate = p->Candidate;
-
     return sp;
 }
 
