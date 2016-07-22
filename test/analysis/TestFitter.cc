@@ -11,6 +11,7 @@
 #include "analysis/utils/Fitter.h"
 
 #include "analysis/utils/MCFakeReconstructed.h"
+#include "analysis/utils/MCSmear.h"
 
 #include <iostream>
 
@@ -19,23 +20,40 @@ using namespace ant;
 using namespace ant::analysis;
 using namespace ant::analysis::input;
 
-void dotest_ideal(bool, bool);
+void dotest(bool, bool, bool);
+
 
 TEST_CASE("Fitter: Ideal KinFitter, z vertex fixed, proton measured", "[analysis]") {
-    dotest_ideal(false, false);
+    dotest(false, false, false);
 }
 
 TEST_CASE("Fitter: Ideal KinFitter, z vertex fixed, proton UNmeasured", "[analysis]") {
-    dotest_ideal(false, true);
+    dotest(false, true, false);
 }
 
 TEST_CASE("Fitter: Ideal KinFitter, z vertex free, proton measured", "[analysis]") {
-    dotest_ideal(true, false);
+    dotest(true, false, false);
 }
 
 TEST_CASE("Fitter: Ideal KinFitter, z vertex free, proton UNmeasured", "[analysis]") {
-    dotest_ideal(true, true);
+    dotest(true, true, false);
 }
+
+TEST_CASE("Fitter: Smeared KinFitter, z vertex fixed, proton measured", "[analysis]") {
+    dotest(false, false, true);
+}
+
+TEST_CASE("Fitter: Smeared KinFitter, z vertex fixed, proton UNmeasured", "[analysis]") {
+    dotest(false, true, true);
+}
+
+//TEST_CASE("Fitter: Smeared KinFitter, z vertex free, proton measured", "[analysis]") {
+//    dotest(true, false, true);
+//}
+
+//TEST_CASE("Fitter: Smeared KinFitter, z vertex free, proton UNmeasured", "[analysis]") {
+//    dotest(true, true, true);
+//}
 
 struct TestUncertaintyModel : utils::UncertaintyModel {
     const bool ProtonUnmeasured;
@@ -49,23 +67,25 @@ struct TestUncertaintyModel : utils::UncertaintyModel {
     }
 };
 
-void dotest_ideal(bool z_vertex, bool proton_unmeas) {
+void dotest(bool z_vertex, bool proton_unmeas, bool smeared) {
 
     auto rootfile = make_shared<WrapTFileInput>(string(TEST_BLOBS_DIRECTORY)+"/Pluto_Etap2g.root");
     PlutoReader reader(rootfile);
 
     REQUIRE_FALSE(reader.IsSource());
 
+    auto model = make_shared<TestUncertaintyModel>(proton_unmeas);
+
     utils::KinFitter kinfitter("kinfitter", 2,
-                               make_shared<TestUncertaintyModel>(proton_unmeas),
-                               z_vertex);
+                               model, z_vertex);
     if(z_vertex) {
-        kinfitter.SetZVertexSigma(0);
+        kinfitter.SetZVertexSigma(5.0);
         test::EnsureSetup(); // needed for MCFake
     }
 
     // use mc_fake with complete 4pi (no lost photons)
     auto mc_fake = z_vertex ? std_ext::make_unique<utils::MCFakeReconstructed>(true) : nullptr;
+    auto mc_smear = smeared ? std_ext::make_unique<utils::MCSmear>(model) : nullptr;
 
     unsigned nEvents = 0;
     unsigned nFitOk = 0;
@@ -81,15 +101,23 @@ void dotest_ideal(bool z_vertex, bool proton_unmeas) {
         const TEventData& eventdata = z_vertex ? mc_fake->Get(event.MCTrue()) : event.MCTrue();
 
         const TParticlePtr& beam = event.MCTrue().ParticleTree->Get();
-        auto& protons = eventdata.Particles.Get(ParticleTypeDatabase::Proton);
-        auto& photons = eventdata.Particles.Get(ParticleTypeDatabase::Photon);
+        TParticleList protons = eventdata.Particles.Get(ParticleTypeDatabase::Proton);
+        TParticleList photons = eventdata.Particles.Get(ParticleTypeDatabase::Photon);
 
         REQUIRE(beam->Type() == ParticleTypeDatabase::BeamProton);
         REQUIRE(protons.size() == 1);
         REQUIRE(photons.size() == 2);
 
+        TParticlePtr proton = protons.front();
+
+        if(smeared) {
+            proton = mc_smear->Smear(proton);
+            for(auto& photon : photons)
+                photon = mc_smear->Smear(photon);
+        }
+
         kinfitter.SetEgammaBeam(beam->Ek());
-        kinfitter.SetProton(protons.front());
+        kinfitter.SetProton(proton);
         kinfitter.SetPhotons(photons);
 
         const APLCON::Result_t& res = kinfitter.DoFit();
@@ -98,14 +126,17 @@ void dotest_ideal(bool z_vertex, bool proton_unmeas) {
             continue;
         nFitOk++;
 
-        REQUIRE(res.NIterations == 2);
+        if(!smeared) // in ideal conditions, the fitter should converge immediately
+            REQUIRE(res.NIterations == 2);
 
         nFitIterations += res.NIterations;
 
         if(z_vertex)
-            REQUIRE(kinfitter.GetFittedZVertex() == Approx(0.0).epsilon(1e-2)); // epsilon is quite high
+            REQUIRE(kinfitter.GetFittedZVertex() == Approx(0.0).epsilon(1e-3)); // epsilon is quite high
     }
 
     CHECK(nEvents==500);
     CHECK(nFitOk==nEvents);
+    if(smeared)
+        CHECK(nFitIterations > nEvents*2);
 }
