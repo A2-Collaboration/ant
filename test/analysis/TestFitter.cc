@@ -123,7 +123,7 @@ void dotest(bool z_vertex, bool proton_unmeas, bool smeared) {
     unsigned nFitOk = 0;
     unsigned nFitIterations = 0;
 
-    RMS_t pulls_Beam;
+    RMS_t   pulls_Beam;
     Pulls_t pulls_Photons;
     Pulls_t pulls_Proton;
 
@@ -137,7 +137,7 @@ void dotest(bool z_vertex, bool proton_unmeas, bool smeared) {
 
         const TEventData& eventdata = z_vertex ? mc_fake->Get(event.MCTrue()) : event.MCTrue();
 
-        const TParticlePtr& beam = event.MCTrue().ParticleTree->Get();
+        TParticlePtr beam = event.MCTrue().ParticleTree->Get();
         TParticleList protons = eventdata.Particles.Get(ParticleTypeDatabase::Proton);
         TParticleList photons = eventdata.Particles.Get(ParticleTypeDatabase::Photon);
 
@@ -148,6 +148,7 @@ void dotest(bool z_vertex, bool proton_unmeas, bool smeared) {
         TParticlePtr proton = protons.front();
 
         if(smeared) {
+            beam = mc_smear->Smear(beam);
             proton = mc_smear->Smear(proton);
             for(auto& photon : photons)
                 photon = mc_smear->Smear(photon);
@@ -173,16 +174,21 @@ void dotest(bool z_vertex, bool proton_unmeas, bool smeared) {
         else
             REQUIRE(std::isnan(kinfitter.GetFittedZVertex()));
 
+        pulls_Beam.Add(kinfitter.GetBeamEPull());
+
         const auto& fitparticles = kinfitter.GetFitParticles();
         REQUIRE(fitparticles.size() == 3);
         REQUIRE(fitparticles.front().Particle->Type() == ParticleTypeDatabase::Proton);
         auto it_fitparticle = fitparticles.begin();
         pulls_Proton.Fill(*it_fitparticle);
         ++it_fitparticle;
+        LorentzVec photon_sum{0,0,0,0};
         while (it_fitparticle != fitparticles.end()) {
             pulls_Photons.Fill(*it_fitparticle);
+            photon_sum += *it_fitparticle->AsFitted();
             ++it_fitparticle;
         }
+        REQUIRE(photon_sum.M() < beam->Ek());
     }
 
     CHECK(nEvents==1000);
@@ -190,12 +196,16 @@ void dotest(bool z_vertex, bool proton_unmeas, bool smeared) {
 
     if(smeared) {
         CHECK(nFitIterations > nEvents*2); // fitter should take longer to converge
+
+        CHECK(pulls_Beam.GetMean() == Approx(0).epsilon(0.12));
+        CHECK(pulls_Beam.GetRMS() == Approx(1).epsilon(0.03));
+
         if(proton_unmeas) {
             CHECK(pulls_Proton.Ek.GetMean() == Approx(0));
             CHECK(pulls_Proton.Ek.GetRMS() == Approx(0));
         }
         else {
-            CHECK(pulls_Proton.Ek.GetMean() == Approx(0).epsilon(0.06));
+            CHECK(pulls_Proton.Ek.GetMean() == Approx(0).epsilon(0.09));
             CHECK(pulls_Proton.Ek.GetRMS() == Approx(1).epsilon(0.15));
         }
 
@@ -204,16 +214,18 @@ void dotest(bool z_vertex, bool proton_unmeas, bool smeared) {
         CHECK(pulls_Proton.Phi.GetMean() == Approx(0).epsilon(0.04));
         CHECK(pulls_Proton.Phi.GetRMS() == Approx(1).epsilon(0.02));
 
-        CHECK(pulls_Photons.Ek.GetMean() == Approx(0).epsilon(0.04));
+        CHECK(pulls_Photons.Ek.GetMean() == Approx(0).epsilon(0.07));
         CHECK(pulls_Photons.Ek.GetRMS() == Approx(1).epsilon(0.01));
-        CHECK(pulls_Photons.Theta.GetMean() == Approx(0).epsilon(0.03));
+        CHECK(pulls_Photons.Theta.GetMean() == Approx(0).epsilon(0.05));
         CHECK(pulls_Photons.Theta.GetRMS() == Approx(1).epsilon(0.04));
-        CHECK(pulls_Photons.Phi.GetMean() == Approx(0).epsilon(0.003));
-        CHECK(pulls_Photons.Phi.GetRMS() == Approx(1).epsilon(0.01));
+        CHECK(pulls_Photons.Phi.GetMean() == Approx(0).epsilon(0.009));
+        CHECK(pulls_Photons.Phi.GetRMS() == Approx(1).epsilon(0.03));
     }
     else {
         // unsmeared, so all pulls should be delta peaks...
         constexpr double eps = 1e-3;
+        CHECK(pulls_Beam.GetMean() == Approx(0).epsilon(eps));
+        CHECK(pulls_Beam.GetRMS() == Approx(0).epsilon(eps));
         CHECK(pulls_Proton.Ek.GetMean() == Approx(0).epsilon(eps));
         CHECK(pulls_Proton.Ek.GetRMS() == Approx(0).epsilon(eps));
         CHECK(pulls_Proton.Theta.GetMean() == Approx(0).epsilon(eps));
