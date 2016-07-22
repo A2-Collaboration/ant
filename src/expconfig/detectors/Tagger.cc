@@ -14,19 +14,6 @@ using namespace ant::expconfig::detector;
 
 const std::string Tagger::ScalerName = "Tagger_Scalers";
 
-bool Tagger::TryGetChannelFromPhoton(double photonEnergy, unsigned& channel) const {
-    const double electronEnergy = BeamEnergy - photonEnergy;
-    for(const Element_t& elem : elements) {
-        const double lower = elem.ElectronEnergy - ElectronEnergyWidth/2;
-        const double upper = elem.ElectronEnergy + ElectronEnergyWidth/2;
-        if(electronEnergy >= lower && electronEnergy < upper) {
-            channel = elem.Channel;
-            return true;
-        }
-    }
-    return false;
-}
-
 void Tagger::BuildMappings(
         vector<UnpackerAcquConfig::hit_mapping_t> &hit_mappings,
         vector<UnpackerAcquConfig::scaler_mapping_t>& scaler_mappings) const

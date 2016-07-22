@@ -16,6 +16,9 @@ struct Tagger :
     virtual double GetPhotonEnergy(unsigned channel) const override {
         return BeamEnergy - elements[channel].ElectronEnergy;
     }
+    virtual double GetPhotonEnergyWidth(unsigned) const override {
+        return 3.2; /// \todo Find better approximation for tagger here!
+    }
     virtual unsigned GetNChannels() const override {
         return unsigned(elements.size());
     }
@@ -25,9 +28,6 @@ struct Tagger :
     virtual bool IsIgnored(unsigned channel) const override {
         return elements[channel].Ignored;
     }
-
-    virtual bool TryGetChannelFromPhoton(double photonEnergy, unsigned& channel) const override;
-
 
     // for UnpackerAcquConfig
     virtual void BuildMappings(std::vector<hit_mapping_t>&,
@@ -65,8 +65,7 @@ protected:
         const std::vector<Element_t>& elements_init) :
         TaggerDetector_t(
             Detector_t::Type_t::Tagger,
-            beamEnergy,
-            3.2 // electronEnergyWidth FIXME
+            beamEnergy
             ),
         elements(elements_init)
     {

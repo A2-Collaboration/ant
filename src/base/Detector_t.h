@@ -157,8 +157,9 @@ protected:
 struct TaggerDetector_t : Detector_t {
 
     virtual double GetPhotonEnergy(unsigned channel) const = 0;
+    virtual double GetPhotonEnergyWidth(unsigned channel) const = 0;
 
-    virtual bool TryGetChannelFromPhoton(double photonEnergy, unsigned& channel) const = 0;
+    bool TryGetChannelFromPhoton(double photonEnergy, unsigned& channel) const;
 
     virtual vec3 GetPosition(unsigned) const final {
         throw Exception("You cannot ask a TaggerDetector_t for its position");
@@ -178,15 +179,12 @@ protected:
     };
 
     double BeamEnergy;
-    double ElectronEnergyWidth;
 
     TaggerDetector_t(const Type_t& type,
-                     double beamEnergy,
-                     double electronEnergyWidth
+                     double beamEnergy
                      ) :
         Detector_t(type),
-        BeamEnergy(beamEnergy),
-        ElectronEnergyWidth(electronEnergyWidth)
+        BeamEnergy(beamEnergy)
     {}
 };
 

@@ -1,5 +1,7 @@
 #include "Detector_t.h"
 
+#include "base/interval.h"
+
 #include <sstream>
 
 using namespace ant;
@@ -104,4 +106,16 @@ const char* ant::Channel_t::ToString(const Type_t& type)
         return "Raw";
     }
     throw std::runtime_error("Not implemented");
+}
+
+
+bool TaggerDetector_t::TryGetChannelFromPhoton(double photonEnergy, unsigned& channel) const
+{
+    for(channel=0;channel<GetNChannels();++channel) {
+        const auto& i = interval<double>::CenterWidth(GetPhotonEnergy(channel),
+                                                      GetPhotonEnergyWidth(channel));
+        if(i.Contains(photonEnergy))
+            return true;
+    }
+    return false;
 }

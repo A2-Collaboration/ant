@@ -17,25 +17,11 @@ const std::string EPT::ScalerName = "EPT_Scalers";
 EPT::EPT(double beamEnergy, const std::vector<EPT::Element_t>& elements_init) :
     TaggerDetector_t(
         Detector_t::Type_t::EPT,
-        beamEnergy,
-        3.2 // electronEnergyWidth
+        beamEnergy
         ),
     elements(elements_init)
 {
     assert(elements.size()==47);
-}
-
-bool EPT::TryGetChannelFromPhoton(double photonEnergy, unsigned& channel) const {
-    const double electronEnergy = BeamEnergy - photonEnergy;
-    for(const Element_t& elem : elements) {
-        const double lower = elem.ElectronEnergy - ElectronEnergyWidth/2;
-        const double upper = elem.ElectronEnergy + ElectronEnergyWidth/2;
-        if(electronEnergy >= lower && electronEnergy < upper) {
-            channel = elem.Channel;
-            return true;
-        }
-    }
-    return false;
 }
 
 void EPT::BuildMappings(
