@@ -82,6 +82,20 @@ struct Pulls_t {
     }
 };
 
+struct Constraint_t {
+    std_ext::RMS E;
+    std_ext::RMS px;
+    std_ext::RMS py;
+    std_ext::RMS pz;
+
+    void Fill(const LorentzVec& v) {
+        E.Add(v.E);
+        px.Add(v.p.x);
+        py.Add(v.p.y);
+        pz.Add(v.p.z);
+    }
+};
+
 void dotest(bool z_vertex, bool proton_unmeas, bool smeared) {
 
     auto rootfile = make_shared<WrapTFileInput>(string(TEST_BLOBS_DIRECTORY)+"/Pluto_Etap2g.root");
@@ -109,6 +123,8 @@ void dotest(bool z_vertex, bool proton_unmeas, bool smeared) {
     std_ext::RMS pulls_Beam;
     Pulls_t      pulls_Photons;
     Pulls_t      pulls_Proton;
+    Constraint_t constraint_before;
+    Constraint_t constraint_after;
 
     while(true) {
         TEvent event;
@@ -130,12 +146,22 @@ void dotest(bool z_vertex, bool proton_unmeas, bool smeared) {
 
         TParticlePtr proton = protons.front();
 
+        LorentzVec constraint_unsmeared = *beam - *proton - *photons.front() - *photons.back();
+
+        REQUIRE(constraint_unsmeared.E == Approx(0).epsilon(1e-3));
+        REQUIRE(constraint_unsmeared.p.x == Approx(0).epsilon(1e-3));
+        REQUIRE(constraint_unsmeared.p.y == Approx(0).epsilon(1e-3));
+        REQUIRE(constraint_unsmeared.p.z == Approx(0).epsilon(1e-3));
+
         if(smeared) {
             beam = mc_smear->Smear(beam);
             proton = mc_smear->Smear(proton);
             for(auto& photon : photons)
                 photon = mc_smear->Smear(photon);
         }
+
+        LorentzVec constraint_smeared = *beam - *proton - *photons.front() - *photons.back();
+        constraint_before.Fill(constraint_smeared);
 
         kinfitter.SetEgammaBeam(beam->Ek());
         kinfitter.SetProton(proton);
@@ -176,12 +202,7 @@ void dotest(bool z_vertex, bool proton_unmeas, bool smeared) {
         // check some kinematics
 
         auto fitted_beam = kinfitter.GetFittedBeamParticle();
-        auto constraint = *fitted_beam - *fitted_proton - fitted_photon_sum;
-
-        REQUIRE(constraint.E == Approx(0));
-        REQUIRE(constraint.p.x == Approx(0));
-        REQUIRE(constraint.p.y == Approx(0));
-        REQUIRE(constraint.p.z == Approx(0));
+        constraint_after.Fill(*fitted_beam - *fitted_proton - fitted_photon_sum);
 
         REQUIRE(fitted_photon_sum.M() < fitted_beam->Ek());
 
@@ -190,8 +211,26 @@ void dotest(bool z_vertex, bool proton_unmeas, bool smeared) {
     CHECK(nEvents==1000);
     CHECK(nFitOk==nEvents);
 
+    CHECK(constraint_after.E.GetMean() == Approx(0));
+    CHECK(constraint_after.E.GetRMS() == Approx(0));
+    CHECK(constraint_after.px.GetMean() == Approx(0));
+    CHECK(constraint_after.px.GetRMS() == Approx(0));
+    CHECK(constraint_after.py.GetMean() == Approx(0));
+    CHECK(constraint_after.py.GetRMS() == Approx(0));
+    CHECK(constraint_after.pz.GetMean() == Approx(0));
+    CHECK(constraint_after.pz.GetRMS() == Approx(0));
+
     if(smeared) {
         CHECK(nFitIterations > nEvents*2); // fitter should take longer to converge
+
+        CHECK(constraint_before.E.GetMean() == Approx(0.0).scale(constraint_before.E.GetRMS()).epsilon(0.1));
+        CHECK(constraint_before.E.GetRMS() == Approx(40.0).epsilon(0.2));
+        CHECK(constraint_before.px.GetMean() == Approx(0.0).scale(constraint_before.px.GetRMS()).epsilon(0.1));
+        CHECK(constraint_before.px.GetRMS() == Approx(40.0).epsilon(0.2));
+        CHECK(constraint_before.py.GetMean() == Approx(0.0).scale(constraint_before.py.GetRMS()).epsilon(0.1));
+        CHECK(constraint_before.py.GetRMS() == Approx(40.0).epsilon(0.2));
+        CHECK(constraint_before.pz.GetMean() == Approx(0.0).scale(constraint_before.pz.GetRMS()).epsilon(0.1));
+        CHECK(constraint_before.pz.GetRMS() == Approx(40.0).epsilon(0.2));
 
         CHECK(pulls_Beam.GetMean() == Approx(0).epsilon(0.12));
         CHECK(pulls_Beam.GetRMS() == Approx(1).epsilon(0.03));
@@ -201,39 +240,51 @@ void dotest(bool z_vertex, bool proton_unmeas, bool smeared) {
             CHECK(pulls_Proton.Ek.GetRMS() == Approx(0));
         }
         else {
-            CHECK(pulls_Proton.Ek.GetMean() == Approx(0).epsilon(0.09));
-            CHECK(pulls_Proton.Ek.GetRMS() == Approx(1).epsilon(0.15));
+            CHECK(pulls_Proton.Ek.GetMean() == Approx(0).scale(pulls_Proton.Ek.GetRMS()).epsilon(0.1));
+            CHECK(pulls_Proton.Ek.GetRMS() == Approx(1).epsilon(0.04));
         }
 
-        CHECK(pulls_Proton.Theta.GetMean() == Approx(0).epsilon(0.06));
-        CHECK(pulls_Proton.Theta.GetRMS() == Approx(1).epsilon(0.06));
-        CHECK(pulls_Proton.Phi.GetMean() == Approx(0).epsilon(0.04));
-        CHECK(pulls_Proton.Phi.GetRMS() == Approx(1).epsilon(0.02));
+        CHECK(pulls_Proton.Theta.GetMean() == Approx(0).scale(pulls_Proton.Theta.GetRMS()).epsilon(0.1));
+        CHECK(pulls_Proton.Theta.GetRMS() == Approx(1).epsilon(0.006));
+        CHECK(pulls_Proton.Phi.GetMean() == Approx(0).scale(pulls_Proton.Phi.GetRMS()).epsilon(0.1));
+        CHECK(pulls_Proton.Phi.GetRMS() == Approx(1).epsilon(0.01));
 
-        CHECK(pulls_Photons.Ek.GetMean() == Approx(0).epsilon(0.07));
+        CHECK(pulls_Photons.Ek.GetMean() == Approx(0).scale(pulls_Photons.Ek.GetRMS()).epsilon(0.1));
         CHECK(pulls_Photons.Ek.GetRMS() == Approx(1).epsilon(0.01));
-        CHECK(pulls_Photons.Theta.GetMean() == Approx(0).epsilon(0.05));
-        CHECK(pulls_Photons.Theta.GetRMS() == Approx(1).epsilon(0.04));
-        CHECK(pulls_Photons.Phi.GetMean() == Approx(0).epsilon(0.009));
+        CHECK(pulls_Photons.Theta.GetMean() == Approx(0).scale(pulls_Photons.Theta.GetRMS()).epsilon(0.1));
+        CHECK(pulls_Photons.Theta.GetRMS() == Approx(1).epsilon(0.02));
+        CHECK(pulls_Photons.Phi.GetMean() == Approx(0).scale(pulls_Photons.Phi.GetRMS()).epsilon(0.1));
         CHECK(pulls_Photons.Phi.GetRMS() == Approx(1).epsilon(0.03));
     }
     else {
-        // unsmeared, so all pulls should be delta peaks...
-        constexpr double eps = 1e-3;
-        CHECK(pulls_Beam.GetMean() == Approx(0).epsilon(eps));
-        CHECK(pulls_Beam.GetRMS() == Approx(0).epsilon(eps));
-        CHECK(pulls_Proton.Ek.GetMean() == Approx(0).epsilon(eps));
-        CHECK(pulls_Proton.Ek.GetRMS() == Approx(0).epsilon(eps));
-        CHECK(pulls_Proton.Theta.GetMean() == Approx(0).epsilon(eps));
-        CHECK(pulls_Proton.Theta.GetRMS() == Approx(0).epsilon(eps));
-        CHECK(pulls_Proton.Phi.GetMean() == Approx(0).epsilon(eps));
-        CHECK(pulls_Proton.Phi.GetRMS() == Approx(0).epsilon(eps));
 
-        CHECK(pulls_Photons.Ek.GetMean() == Approx(0).epsilon(eps));
-        CHECK(pulls_Photons.Ek.GetRMS() == Approx(0).epsilon(eps));
-        CHECK(pulls_Photons.Theta.GetMean() == Approx(0).epsilon(eps));
-        CHECK(pulls_Photons.Theta.GetRMS() == Approx(0).epsilon(eps));
-        CHECK(pulls_Photons.Phi.GetMean() == Approx(0).epsilon(eps));
-        CHECK(pulls_Photons.Phi.GetRMS() == Approx(0).epsilon(eps));
+        // unsmeared, so all pulls and constraint_before should be delta peaks aka mean=RMS=0
+
+        constexpr double eps_constraint = 4e-4;
+        CHECK(constraint_before.E.GetMean() == Approx(0).epsilon(eps_constraint));
+        CHECK(constraint_before.E.GetRMS() == Approx(0).epsilon(eps_constraint));
+        CHECK(constraint_before.px.GetMean() == Approx(0).epsilon(eps_constraint));
+        CHECK(constraint_before.px.GetRMS() == Approx(0).epsilon(eps_constraint));
+        CHECK(constraint_before.py.GetMean() == Approx(0).epsilon(eps_constraint));
+        CHECK(constraint_before.py.GetRMS() == Approx(0).epsilon(eps_constraint));
+        CHECK(constraint_before.pz.GetMean() == Approx(0).epsilon(eps_constraint));
+        CHECK(constraint_before.pz.GetRMS() == Approx(0).epsilon(eps_constraint));
+
+        constexpr double eps_pulls = 1e-3;
+        CHECK(pulls_Beam.GetMean() == Approx(0).epsilon(eps_pulls));
+        CHECK(pulls_Beam.GetRMS() == Approx(0).epsilon(eps_pulls));
+        CHECK(pulls_Proton.Ek.GetMean() == Approx(0).epsilon(eps_pulls));
+        CHECK(pulls_Proton.Ek.GetRMS() == Approx(0).epsilon(eps_pulls));
+        CHECK(pulls_Proton.Theta.GetMean() == Approx(0).epsilon(eps_pulls));
+        CHECK(pulls_Proton.Theta.GetRMS() == Approx(0).epsilon(eps_pulls));
+        CHECK(pulls_Proton.Phi.GetMean() == Approx(0).epsilon(eps_pulls));
+        CHECK(pulls_Proton.Phi.GetRMS() == Approx(0).epsilon(eps_pulls));
+
+        CHECK(pulls_Photons.Ek.GetMean() == Approx(0).epsilon(eps_pulls));
+        CHECK(pulls_Photons.Ek.GetRMS() == Approx(0).epsilon(eps_pulls));
+        CHECK(pulls_Photons.Theta.GetMean() == Approx(0).epsilon(eps_pulls));
+        CHECK(pulls_Photons.Theta.GetRMS() == Approx(0).epsilon(eps_pulls));
+        CHECK(pulls_Photons.Phi.GetMean() == Approx(0).epsilon(eps_pulls));
+        CHECK(pulls_Photons.Phi.GetRMS() == Approx(0).epsilon(eps_pulls));
     }
 }
