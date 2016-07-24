@@ -46,13 +46,13 @@ TEST_CASE("Fitter: Smeared KinFitter, z vertex fixed, proton UNmeasured", "[anal
     dotest(false, true, true);
 }
 
-//TEST_CASE("Fitter: Smeared KinFitter, z vertex free, proton measured", "[analysis]") {
-//    dotest(true, false, true);
-//}
+TEST_CASE("Fitter: Smeared KinFitter, z vertex free, proton measured", "[analysis]") {
+    dotest(true, false, true);
+}
 
-//TEST_CASE("Fitter: Smeared KinFitter, z vertex free, proton UNmeasured", "[analysis]") {
-//    dotest(true, true, true);
-//}
+TEST_CASE("Fitter: Smeared KinFitter, z vertex free, proton UNmeasured", "[analysis]") {
+    dotest(true, true, true);
+}
 
 struct TestUncertaintyModel : utils::UncertaintyModel {
     const bool ProtonUnmeasured;
@@ -127,6 +127,7 @@ void dotest(bool z_vertex, bool proton_unmeas, bool smeared) {
     Constraint_t constraint_after;
 
     std_ext::RMS fit_prob;
+    std_ext::RMS fitted_z_vertex;
     std_ext::RMS IM_2g_before;
     std_ext::RMS IM_2g_after;
 
@@ -187,7 +188,7 @@ void dotest(bool z_vertex, bool proton_unmeas, bool smeared) {
         nFitIterations += res.NIterations;
 
         if(z_vertex)
-            CHECK(kinfitter.GetFittedZVertex() == Approx(0.0).epsilon(6e-3));
+            fitted_z_vertex.Add(kinfitter.GetFittedZVertex());
         else
             REQUIRE(std::isnan(kinfitter.GetFittedZVertex()));
 
@@ -218,7 +219,12 @@ void dotest(bool z_vertex, bool proton_unmeas, bool smeared) {
     }
 
     CHECK(nEvents==1000);
-    CHECK(nFitOk==nEvents);
+
+    if(smeared && z_vertex)
+        //  smearing and free z vertex does not always converge
+        CHECK(nFitOk==Approx(0.98*nEvents).epsilon(0.01));
+    else
+        CHECK(nFitOk==nEvents);
 
     CHECK(constraint_after.E.GetMean() == Approx(0));
     CHECK(constraint_after.E.GetRMS() == Approx(0));
@@ -262,7 +268,7 @@ void dotest(bool z_vertex, bool proton_unmeas, bool smeared) {
         CHECK(pulls_Proton.Phi.GetRMS() == Approx(1).epsilon(0.01));
 
         CHECK(pulls_Photons.Ek.GetMean() == Approx(0).scale(pulls_Photons.Ek.GetRMS()).epsilon(0.1));
-        CHECK(pulls_Photons.Ek.GetRMS() == Approx(1).epsilon(0.01));
+        CHECK(pulls_Photons.Ek.GetRMS() == Approx(1).epsilon(0.03));
         CHECK(pulls_Photons.Theta.GetMean() == Approx(0).scale(pulls_Photons.Theta.GetRMS()).epsilon(0.1));
         CHECK(pulls_Photons.Theta.GetRMS() == Approx(1).epsilon(0.02));
         CHECK(pulls_Photons.Phi.GetMean() == Approx(0).scale(pulls_Photons.Phi.GetRMS()).epsilon(0.1));
@@ -270,15 +276,34 @@ void dotest(bool z_vertex, bool proton_unmeas, bool smeared) {
 
         CHECK(IM_2g_before.GetMean() == Approx(ParticleTypeDatabase::EtaPrime.Mass()).epsilon(0.003));
         CHECK(IM_2g_after.GetMean() == Approx(ParticleTypeDatabase::EtaPrime.Mass()).epsilon(0.003));
-        // fitting should improve resolution!
-        CHECK(IM_2g_after.GetRMS() < 0.22*IM_2g_before.GetRMS());
+
+
+        if(z_vertex) {
+            CHECK(fitted_z_vertex.GetMean() == Approx(0.0).scale(fitted_z_vertex.GetRMS()).epsilon(0.08));
+            if(proton_unmeas)
+                CHECK(fitted_z_vertex.GetRMS() ==  Approx(1.8).epsilon(0.03));
+            else
+                CHECK(fitted_z_vertex.GetRMS() ==  Approx(1.3).epsilon(0.03));
+
+            // fitting should improve resolution considerably, but free z vertex worsens it
+            CHECK(IM_2g_after.GetRMS() < 0.34*IM_2g_before.GetRMS());
+        }
+        else {
+            // fitting should improve resolution considerably
+            CHECK(IM_2g_after.GetRMS() < 0.22*IM_2g_before.GetRMS());
+        }
     }
     else {
         // probability peaks at 1
         CHECK(fit_prob.GetMean() == Approx(1.0));
         CHECK(fit_prob.GetRMS() ==  Approx(0.0));
 
-        // unsmeared, so all pulls and constraint_before should be delta peaks aka mean=RMS=0
+        // unsmeared, so all pulls and constraint_before and fitted_z_vertex should be delta peaks aka mean=RMS=0
+
+        if(z_vertex) {
+            CHECK(fitted_z_vertex.GetMean() == Approx(0.0));
+            CHECK(fitted_z_vertex.GetRMS() ==  Approx(0.0).epsilon(1e-3));
+        }
 
         constexpr double eps_constraint = 4e-4;
         CHECK(constraint_before.E.GetMean() == Approx(0).epsilon(eps_constraint));
