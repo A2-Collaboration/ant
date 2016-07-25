@@ -383,12 +383,12 @@ struct OmegaHist_t {
 
         // ====== Crosscheck plots =======
 
-        AddTH2("dEEproton","E [MeV]","dE [MeV]", Ebins, evtoEbins, "dEE",
+        AddTH2("dEEproton","E [MeV]","dE [MeV]", Ebins, evtoEbins, "dEE_proton",
                [] (TH2D* h, const Fill_t& f) {
             h->Fill(f.Tree.p_fitted().Energy() - ParticleTypeDatabase::Proton.Mass(), f.Tree.p_vetoE);
         });
 
-        AddTH2("dEEphoton","E [MeV]","dE [MeV]", Ebins, evtoEbins, "dEE",
+        AddTH2("dEEphoton","E [MeV]","dE [MeV]", Ebins, evtoEbins, "dEE_pohton",
                [] (TH2D* h, const Fill_t& f) {
             for(size_t i=0; i<f.Tree.photons_fitted().size(); ++i) {
                 h->Fill(f.Tree.photons_fitted().at(i).Energy(), f.Tree.photons_vetoE().at(i));
