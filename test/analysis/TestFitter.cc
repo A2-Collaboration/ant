@@ -199,13 +199,22 @@ void dotest(bool z_vertex, bool proton_unmeas, bool smeared) {
         REQUIRE(fitparticles.front().Particle->Type() == ParticleTypeDatabase::Proton);
         auto it_fitparticle = fitparticles.begin();
         auto fitted_proton = it_fitparticle->AsFitted();
+        auto fitted_proton_ = kinfitter.GetFittedProton();
+        REQUIRE(fitted_proton_->Type() == fitted_proton->Type());
+        REQUIRE(*fitted_proton_ == *fitted_proton);
         pulls_Proton.Fill(*it_fitparticle);
         ++it_fitparticle;
         LorentzVec fitted_photon_sum{0,0,0,0};
+        auto fitted_photons = kinfitter.GetFittedPhotons();
+        REQUIRE(std::distance(it_fitparticle, fitparticles.end()) == fitted_photons.size());
+        auto it_fitted_photon = fitted_photons.begin();
         while (it_fitparticle != fitparticles.end()) {
             pulls_Photons.Fill(*it_fitparticle);
-            fitted_photon_sum += *it_fitparticle->AsFitted();
+            auto fitted_photon = it_fitparticle->AsFitted();
+            fitted_photon_sum += *fitted_photon;
+            REQUIRE(**it_fitted_photon == *fitted_photon); // compare LorentzVec doubles...
             ++it_fitparticle;
+            ++it_fitted_photon;
         }
 
         // check some kinematics
@@ -213,7 +222,7 @@ void dotest(bool z_vertex, bool proton_unmeas, bool smeared) {
         auto fitted_beam = kinfitter.GetFittedBeamParticle();
         constraint_after.Fill(*fitted_beam - *fitted_proton - fitted_photon_sum);
 
-        REQUIRE(fitted_photon_sum.M() < (fitted_beam->M() - ParticleTypeDatabase::Proton.Mass()) );
+        REQUIRE(fitted_photon_sum.M() < (fitted_beam->M() - fitted_beam->Type().Mass()) );
         IM_2g_after.Add(fitted_photon_sum.M());
 
     }
