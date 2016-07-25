@@ -213,7 +213,7 @@ void dotest(bool z_vertex, bool proton_unmeas, bool smeared) {
         auto fitted_beam = kinfitter.GetFittedBeamParticle();
         constraint_after.Fill(*fitted_beam - *fitted_proton - fitted_photon_sum);
 
-        REQUIRE(fitted_photon_sum.M() < fitted_beam->M());
+        REQUIRE(fitted_photon_sum.M() < (fitted_beam->M() - ParticleTypeDatabase::Proton.Mass()) );
         IM_2g_after.Add(fitted_photon_sum.M());
 
     }
