@@ -351,28 +351,28 @@ struct OmegaHist_t {
 
         // ===== Tree Fit =====
 
-        AddTH1("#pi^{0} Hyp: prob", "prob_{#pi^{0}}","",probbins, "pi0hyp_prob",
+        AddTH1("#pi^{0} Hyp: prob", "prob_{#pi^{0}}", "", probbins, "pi0hyp_prob",
                [] (TH1D* h, const Fill_t& f) {
             const auto& i = f.Tree.iBestPi0;
             if(i >= 0)
                 h->Fill(f.Tree.pi0prob().at(size_t(i)), f.TaggW());
         });
 
-        AddTH1("#eta Hyp: prob", "#chi^{2}_{#eta}","",probbins, "etahyp_prob",
+        AddTH1("#eta Hyp: prob", "#chi^{2}_{#eta}", "", probbins, "etahyp_prob",
                [] (TH1D* h, const Fill_t& f) {
             const auto& i = f.Tree.iBestEta;
             if(i >= 0)
                 h->Fill(f.Tree.etaprob().at(size_t(i)), f.TaggW());
         });
 
-        AddTH1("#eta Hyp: #omega IM", "m(#omega_{#eta})","",IMbins, "etahyp_omega",
+        AddTH1("#eta Hyp: #omega IM", "m(#omega_{#eta})", "", IMbins, "etahyp_omega",
                [] (TH1D* h, const Fill_t& f) {
             const auto& i = f.Tree.iBestEta;
             if(i >= 0)
                 h->Fill(f.Tree.eta_omega_im().at(size_t(i)), f.TaggW());
         });
 
-        AddTH1("#pi^{0} Hyp: #omega IM", "m(#omega_{#pi^{0}}})","",IMbins, "pi0hyp_omega",
+        AddTH1("#pi^{0} Hyp: #omega IM", "m(#omega_{#pi^{0}}})", "", IMbins, "pi0hyp_omega",
                [] (TH1D* h, const Fill_t& f) {
             const auto& i = f.Tree.iBestPi0;
             if(i >= 0)
@@ -383,12 +383,12 @@ struct OmegaHist_t {
 
         // ====== Crosscheck plots =======
 
-        AddTH2("dEEproton","E [MeV]","dE [MeV]", Ebins, evtoEbins, "dEE_proton",
+        AddTH2("dEEproton", "E [MeV]", "dE [MeV]", Ebins, evtoEbins, "dEE_proton",
                [] (TH2D* h, const Fill_t& f) {
             h->Fill(f.Tree.p_fitted().Energy() - ParticleTypeDatabase::Proton.Mass(), f.Tree.p_vetoE);
         });
 
-        AddTH2("dEEphoton","E [MeV]","dE [MeV]", Ebins, evtoEbins, "dEE_pohton",
+        AddTH2("dEEphoton", "E [MeV]", "dE [MeV]", Ebins, evtoEbins, "dEE_photon",
                [] (TH2D* h, const Fill_t& f) {
             for(size_t i=0; i<f.Tree.photons_fitted().size(); ++i) {
                 h->Fill(f.Tree.photons_fitted().at(i).Energy(), f.Tree.photons_vetoE().at(i));
@@ -467,7 +467,7 @@ struct OmegaHist_t {
         cuttree::Cuts_t<Fill_t> cuts;
 
         cuts.emplace_back(MultiCut_t<Fill_t>{
-                                 {"Prob>0.002+mm", [] (const Fill_t& f) { return f.Tree.KinFitProb>0.002 && f.Tree.mm().M()<1100 && f.Tree.mm().M() > 780; } }
+                                 {"Prob>0.1+mm", [] (const Fill_t& f) { return f.Tree.KinFitProb>0.1 && f.Tree.mm().M()<1100 && f.Tree.mm().M() > 780; } }
                              });
 
         auto etaHypCut = [] (const Fill_t& f) {
@@ -521,8 +521,8 @@ struct OmegaHist_t {
         };
 
         cuts.emplace_back(MultiCut_t<Fill_t>{
-                              {"clean",         cleanEvent},
-                              {"dontcare",   dontcareclean}
+                              {"clean",         cleanEvent}
+//                              {"dontcare",   dontcareclean}
                           });
 
         cuts.emplace_back(MultiCut_t<Fill_t>{
