@@ -41,6 +41,13 @@ struct Hist_t {
 
     TH1D* h_KinFitProb;
 
+    TH2D* h_BeamE;
+    TH2D* h_MissingMass;
+    TH2D* h_MissingMass_prompt;
+    TH2D* h_MissingMass_random;
+
+
+
     Hist_t(HistogramFactory HistFac, cuttree::TreeInfo_t)
     {
         auto ept = ExpConfig::Setup::GetDetector<expconfig::detector::EPT>();
@@ -94,6 +101,30 @@ struct Hist_t {
 
         h_KinFitProb = HistFac.makeTH1D("KinFitProb","p","",BinSettings(200,0,1),"h_KinFitProb");
 
+
+        h_BeamE = HistFac.makeTH2D("Beam Energy",
+                                   "E_{#gamma} / MeV","",
+                                   BinSettings(100,1420,1580),
+                                   BinSettings(ept->GetNChannels()),
+                                   "h_BeamE");
+
+        BinSettings bins_MM(400,750,1100);
+
+        h_MissingMass = HistFac.makeTH2D("Missing Mass",
+                                         "MM / MeV","",
+                                         bins_MM,
+                                         BinSettings(ept->GetNChannels()),
+                                         "h_MissingMass");
+        h_MissingMass_prompt = HistFac.makeTH2D("Missing Mass",
+                                         "MM / MeV","",
+                                         bins_MM,
+                                         BinSettings(ept->GetNChannels()),
+                                         "h_MissingMass_prompt");
+        h_MissingMass_random = HistFac.makeTH2D("Missing Mass",
+                                         "MM / MeV","",
+                                         bins_MM,
+                                         BinSettings(ept->GetNChannels()),
+                                         "h_MissingMass_random");
     }
 
 
@@ -108,6 +139,11 @@ struct Hist_t {
         h_BeamPull_Ch[f.TaggCh]->Fill(f.KinFitBeamEPull, f.TaggCh_, f.TaggW);
 
         h_KinFitProb->Fill(f.KinFitProb, f.TaggW);
+
+        h_BeamE->Fill(f.TaggE, f.TaggCh, f.TaggW);
+        h_MissingMass->Fill(f.MissingMass, f.TaggCh, f.TaggW);
+        h_MissingMass_prompt->Fill(f.MissingMass, f.TaggCh, f.TaggW>0);
+        h_MissingMass_random->Fill(f.MissingMass, f.TaggCh, f.TaggW<0);
     }
 
     // Sig and Ref channel (can) share some cuts...
