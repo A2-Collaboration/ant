@@ -444,11 +444,16 @@ struct RefHist_t : CommonHist_t {
         h_IM_2g_random = HistFac.makeTH1D("IM 2g random","IM / MeV","",bins_im_wide,"h_IM_2g_random");
 
         auto ept = ExpConfig::Setup::GetDetector<expconfig::detector::EPT>();
+        vector<double> photon_energies;
+        for(unsigned ch=0;ch<ept->GetNChannels();ch++) {
+            photon_energies.emplace_back(ept->GetPhotonEnergy(ch));
+        }
+        std::sort(photon_energies.begin(), photon_energies.end());
 
         h_IM_2g_TaggCh = HistFac.makeTH2D("IM 2g vs. TaggCh","IM / MeV","Tagger Channel",
                                           bins_im, BinSettings(ept->GetNChannels()), "h_IM_2g_TaggCh");
         h_IM_2g_TaggE = HistFac.makeTH2D("IM 2g vs. TaggE","IM / MeV","Photon E / MeV",
-                                          bins_im, BinSettings(47, 1422, 1585), "h_IM_2g_TaggE");
+                                          bins_im, BinSettings::Make(photon_energies), "h_IM_2g_TaggE");
 
         h_TaggT = HistFac.makeTH1D("Tagger Time","t / ns","",BinSettings(400,-50,50),"h_TaggT");
     }
@@ -477,9 +482,12 @@ struct RefHist_t : CommonHist_t {
         auto cuts = cuttree::ConvertCuts<Fill_t, CommonHist_t::Fill_t>(CommonHist_t::GetCuts());
 
         cuts.emplace_back(MultiCut_t<Fill_t>{
+                              {"Prompt==1", [] (const Fill_t& f) { return f.Common.TaggNPrompt==1; } },
+                              {"PromptDontCare", [] (const Fill_t&) { return true; } },
+                          });
+
+        cuts.emplace_back(MultiCut_t<Fill_t>{
                               {"KinFitProb>0.01", [] (const Fill_t& f) { return f.Shared.KinFitProb>0.01; } },
-//                                 {"KinFitProb>0.1", [] (const Fill_t& f) { return f.Shared.KinFitProb>0.1; } },
-//                                 {"KinFitProb>0.3", [] (const Fill_t& f) { return f.Shared.KinFitProb>0.3; } },
                           });
         return cuts;
     }
