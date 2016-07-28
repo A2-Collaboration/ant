@@ -795,9 +795,9 @@ OmegaEtaG2::OmegaEtaG2(const std::string& name, OptionsPtr opts):
     cut_ESum(                     opts->Get<double>(                    "CBESum",               550.0)),
     cut_Copl(    degree_to_radian(opts->Get<double>(                    "CoplAngle",             15.0))),
     photon_E_cb(                  opts->Get<decltype(photon_E_cb)>  (   "PhotonECB",        { 50.0, 1600.0})),
-    photon_E_taps(                opts->Get<decltype(photon_E_taps)>(   "PhotonETAPS",      {200.0, 1600.0})),
-    proton_theta(degree_to_radian(opts->Get<decltype(proton_theta)> (   "ProtonThetaRange", {  2.0,   45.0}))),
-    cut_missing_mass(             opts->Get<decltype(cut_missing_mass)>("MissingMassWindow",{800.0, 1000.0})),
+    photon_E_taps(                opts->Get<decltype(photon_E_taps)>(   "PhotonETAPS",      {100.0, 1600.0})),
+    proton_theta(degree_to_radian(opts->Get<decltype(proton_theta)> (   "ProtonThetaRange", {  4.0,   45.0}))),
+    cut_missing_mass(             opts->Get<decltype(cut_missing_mass)>("MissingMassWindow",{780.0, 1200.0})),
     opt_kinfit_chi2cut(           opts->Get<double>(                    "KinFit_Chi2Cut",        10.0)),
     opt_FitZVertex(               opts->Get<bool>(                      "KinFit_FitVertex",     false)),
 

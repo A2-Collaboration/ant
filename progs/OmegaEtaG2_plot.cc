@@ -466,9 +466,7 @@ struct OmegaHist_t {
 
         cuttree::Cuts_t<Fill_t> cuts;
 
-        cuts.emplace_back(MultiCut_t<Fill_t>{
-                                 {"Prob>0.1+mm", [] (const Fill_t& f) { return f.Tree.KinFitProb>0.1 && f.Tree.mm().M()<1100 && f.Tree.mm().M() > 780; } }
-                             });
+
 
         auto etaHypCut = [] (const Fill_t& f) {
 
@@ -520,20 +518,34 @@ struct OmegaHist_t {
             return true;
         };
 
-        cuts.emplace_back(MultiCut_t<Fill_t>{
-                              {"clean",         cleanEvent}
-//                              {"dontcare",   dontcareclean}
-                          });
+//        cuts.emplace_back(MultiCut_t<Fill_t>{
+//                              {"clean",         cleanEvent}
+////                              {"dontcare",   dontcareclean}
+//                          });
+
+        auto dEECut = [] (const Fill_t& f) {
+            for(const auto& photonVetoE : f.Tree.photons_vetoE()) {
+                if (photonVetoE > .1) return false;
+            }
+            return f.Tree.p_vetoE > .25;
+        };
 
         cuts.emplace_back(MultiCut_t<Fill_t>{
-//                              {"m(3#gamma) cut",        [] (const Fill_t& f) { return f.Tree.ggg_fitted().M()<900 && f.Tree.ggg_fitted().M() > 700; } },
+                                 {"Prob>0.1+mm", [] (const Fill_t& f) { return f.Tree.KinFitProb>0.1 && f.Tree.mm().M()<1100 && f.Tree.mm().M() > 780; } }
+                             });
+
+        cuts.emplace_back(MultiCut_t<Fill_t>{
+                                 {"dEECut", dEECut }
+                             });
+
+        cuts.emplace_back(MultiCut_t<Fill_t>{
                               {"etaHyp",               etaHypCut},
                               {"pi0Hyp",               pi0HypCut}
                           });
 
-        cuts.emplace_back(MultiCut_t<Fill_t>{
-                              {"dalitzCut",      DalitzCut}
-                          });
+//        cuts.emplace_back(MultiCut_t<Fill_t>{
+//                              {"dalitzCut",      DalitzCut}
+//                          });
         return cuts;
     }
 
