@@ -741,6 +741,21 @@ void OmegaEtaG2::Analyse(const TEventData &data, const TEvent& event, manager_t&
 
 }
 
+utils::UncertaintyModelPtr OmegaEtaG2::getModel(const string& modelname)
+{
+    if(modelname == "Oli1") {
+        return make_shared<utils::UncertaintyModels::Optimized_Oli1>();
+    } else if (modelname == "Interpolated") {
+        return utils::UncertaintyModels::Interpolated::makeAndLoad(
+                      make_shared<utils::UncertaintyModels::Optimized_Oli1>(),
+                      utils::UncertaintyModels::Interpolated::Mode_t::Fit,
+                      false);
+
+    }
+
+    throw std::runtime_error("Invalid model name " + modelname);
+}
+
 size_t OmegaEtaG2::CombIndex(const TParticleList& orig, const MyTreeFitter_t& f)
 {
     for(size_t i=0; i<orig.size(); ++i) {
@@ -784,25 +799,21 @@ OmegaEtaG2::OmegaEtaG2(const std::string& name, OptionsPtr opts):
     proton_theta(degree_to_radian(opts->Get<decltype(proton_theta)> (   "ProtonThetaRange", {  2.0,   45.0}))),
     cut_missing_mass(             opts->Get<decltype(cut_missing_mass)>("MissingMassWindow",{800.0, 1000.0})),
     opt_kinfit_chi2cut(           opts->Get<double>(                    "KinFit_Chi2Cut",        10.0)),
-    opt_FixZVertex(               opts->Get<bool>(                      "KinFit_FixVertex",     true)),
+    opt_FitZVertex(               opts->Get<bool>(                      "KinFit_FitVertex",     false)),
 
-    model(utils::UncertaintyModels::Interpolated::makeAndLoad(
-              make_shared<utils::UncertaintyModels::Optimized_Oli1>(),
-              utils::UncertaintyModels::Interpolated::Mode_t::Fit,
-              false)
-              ),
-    fitter("OmegaEtaG2", 3, model, opt_FixZVertex),
+    model(getModel(opts->Get<string>("Model", "Oli1"))),
+    fitter("OmegaEtaG2", 3, model, opt_FitZVertex),
     fitter_pi0(
         ParticleTypeTreeDatabase::Get(ParticleTypeTreeDatabase::Channel::Omega_gPi0_3g),
         ParticleTypeDatabase::Pi0,
         model,
-        opt_FixZVertex
+        opt_FitZVertex
         ),
     fitter_eta(
         ParticleTypeTreeDatabase::Get(ParticleTypeTreeDatabase::Channel::Omega_gEta_3g),
         ParticleTypeDatabase::Eta,
         model,
-        opt_FixZVertex
+        opt_FitZVertex
         ),
     tagChMult(HistFac),
     dTaggerHitsAccepted(HistFac.makeTH1D("Tagger Hits Accepted Per Event","","",BinSettings(10),"dTHAcceptedperEvent")),

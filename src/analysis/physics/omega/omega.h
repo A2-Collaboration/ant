@@ -217,6 +217,8 @@ public:
 protected:
     void Analyse(const TEventData &data, const TEvent& event, manager_t& manager) override;
 
+    static utils::UncertaintyModelPtr getModel(const std::string& modelname);
+
     TH1D* missed_channels = nullptr;
     TH1D* found_channels  = nullptr;
 
@@ -241,7 +243,7 @@ protected:
     const interval<double> proton_theta;
     const interval<double> cut_missing_mass;
     const double opt_kinfit_chi2cut;
-    const bool   opt_FixZVertex;
+    const bool   opt_FitZVertex;
 
     const unsigned nphotons    = 3;
     const unsigned nCandsMin   = nphotons  + 1;
