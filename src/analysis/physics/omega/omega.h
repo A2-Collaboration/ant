@@ -240,6 +240,7 @@ protected:
     const interval<double> proton_theta;
     const interval<double> cut_missing_mass;
     const double opt_kinfit_chi2cut;
+    const bool   opt_FixZVertex;
 
     const unsigned nphotons    = 3;
     const unsigned nCandsMin   = nphotons  + 1;
@@ -263,7 +264,7 @@ protected:
         utils::TreeFitter::tree_t fitted_g1_X;
         utils::TreeFitter::tree_t fitted_g2_X;
 
-        MyTreeFitter_t(const ParticleTypeTree& ttree, const ParticleTypeDatabase::Type& mesonT, utils::UncertaintyModelPtr model);
+        MyTreeFitter_t(const ParticleTypeTree& ttree, const ParticleTypeDatabase::Type& mesonT, utils::UncertaintyModelPtr model, const bool fix_z_vertex);
 
         void HypTestCombis(const TParticleList& photons, doubles& chi2s, doubles& probs, doubles& ggims, doubles& gggims, int& bestIndex);
     };

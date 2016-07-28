@@ -782,22 +782,25 @@ OmegaEtaG2::OmegaEtaG2(const std::string& name, OptionsPtr opts):
     proton_theta(degree_to_radian(opts->Get<decltype(proton_theta)> (   "ProtonThetaRange", {  2.0,   45.0}))),
     cut_missing_mass(             opts->Get<decltype(cut_missing_mass)>("MissingMassWindow",{800.0, 1000.0})),
     opt_kinfit_chi2cut(           opts->Get<double>(                    "KinFit_Chi2Cut",        10.0)),
+    opt_FixZVertex(               opts->Get<bool>(                      "KinFit_FixVertex",     true)),
 
     model(utils::UncertaintyModels::Interpolated::makeAndLoad(
               make_shared<utils::UncertaintyModels::Optimized_Oli1>(),
               utils::UncertaintyModels::Interpolated::Mode_t::Fit,
               false)
               ),
-    fitter("OmegaEtaG2", 3, model),
+    fitter("OmegaEtaG2", 3, model, opt_FixZVertex),
     fitter_pi0(
         ParticleTypeTreeDatabase::Get(ParticleTypeTreeDatabase::Channel::Omega_gPi0_3g),
         ParticleTypeDatabase::Pi0,
-        model
+        model,
+        opt_FixZVertex
         ),
     fitter_eta(
         ParticleTypeTreeDatabase::Get(ParticleTypeTreeDatabase::Channel::Omega_gEta_3g),
         ParticleTypeDatabase::Eta,
-        model
+        model,
+        opt_FixZVertex
         ),
     tagChMult(HistFac),
     dTaggerHitsAccepted(HistFac.makeTH1D("Tagger Hits Accepted Per Event","","",BinSettings(10),"dTHAcceptedperEvent")),
@@ -899,11 +902,11 @@ const unsigned OmegaEtaG2::ReactionChannelList_t::other_index = 1000;
 
 
 
-OmegaEtaG2::MyTreeFitter_t::MyTreeFitter_t(const ParticleTypeTree& ttree, const ParticleTypeDatabase::Type& mesonT, utils::UncertaintyModelPtr model):
+OmegaEtaG2::MyTreeFitter_t::MyTreeFitter_t(const ParticleTypeTree& ttree, const ParticleTypeDatabase::Type& mesonT, utils::UncertaintyModelPtr model, const bool fix_z_vertex):
     treefitter(
         "treefit_"+mesonT.Name(),
         ttree,
-        model, false,
+        model, fix_z_vertex,
         [] (const ParticleTypeTree& t) { return utils::TreeFitter::nodesetup_t(1.0, (t->Get() == ParticleTypeDatabase::Omega)); }
         )
 {
