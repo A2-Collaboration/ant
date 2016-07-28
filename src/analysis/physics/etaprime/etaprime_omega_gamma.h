@@ -46,10 +46,12 @@ struct EtapOmegaG : Physics {
         ADD_BRANCH_T(double,   PIDSumE)
 
         ADD_BRANCH_T(double,   TaggW)
-        ADD_BRANCH_T(double,   TaggW_tight)
         ADD_BRANCH_T(double,   TaggE)
         ADD_BRANCH_T(double,   TaggT)
         ADD_BRANCH_T(unsigned, TaggCh)
+
+        ADD_BRANCH_T(unsigned, TaggNPrompt)
+        ADD_BRANCH_T(unsigned, TaggNRandom)
     };
 
     struct SharedTree_t : WrapTTree {
@@ -91,7 +93,6 @@ struct EtapOmegaG : Physics {
     TreeCommon t;
 
     PromptRandom::Switch promptrandom;
-    PromptRandom::Switch promptrandom_tight;
 
     struct params_t {
         const utils::UncertaintyModelPtr Fit_uncertainty_model;

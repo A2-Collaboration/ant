@@ -83,11 +83,6 @@ EtapOmegaG::EtapOmegaG(const string& name, OptionsPtr opts) :
     promptrandom.AddRandomRange({-35,-10});  // just ensure to be way off prompt peak
     promptrandom.AddRandomRange({ 10, 35});
 
-    promptrandom_tight.AddPromptRange(prompt_range); // slight offset due to CBAvgTime reference
-    promptrandom_tight.AddRandomRange({-20,-10});  // just ensure to be way off prompt peak
-    promptrandom_tight.AddRandomRange({ 10, 20});
-
-
     h_CommonCuts = HistFac.makeTH1D("Common Cuts", "", "#", BinSettings(15),"h_CommonCuts");
     h_CommonCuts_sig = HistFac.makeTH1D("Common Cuts Sig", "", "#", BinSettings(15),"h_CommonCuts_sig");
     h_CommonCuts_ref = HistFac.makeTH1D("Common Cuts Ref", "", "#", BinSettings(15),"h_CommonCuts_ref");
@@ -260,14 +255,20 @@ void EtapOmegaG::ProcessEvent(const TEvent& event, manager_t&)
             smear_particles(ref_particles);
     }
 
+    t.TaggNPrompt = 0;
+    t.TaggNRandom = 0;
+
     for(const TTaggerHit& taggerhit : data.TaggerHits) {
         promptrandom.SetTaggerHit(taggerhit.Time - t.CBAvgTime);
-        promptrandom_tight.SetTaggerHit(taggerhit.Time - t.CBAvgTime);
         if(promptrandom.State() == PromptRandom::Case::Outside)
             continue;
 
+        if(promptrandom.State() == PromptRandom::Case::Prompt)
+            t.TaggNPrompt()++;
+        if(promptrandom.State() == PromptRandom::Case::Random)
+            t.TaggNRandom()++;
+
         t.TaggW = promptrandom.FillWeight();
-        t.TaggW_tight = promptrandom_tight.FillWeight();
         t.TaggE = taggerhit.PhotonEnergy;
         t.TaggT = taggerhit.Time;
         t.TaggCh = taggerhit.Channel;
