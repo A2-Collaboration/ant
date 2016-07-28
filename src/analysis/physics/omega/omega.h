@@ -185,6 +185,7 @@ public:
         ADD_BRANCH_T(unsigned,                    TaggCh)
         ADD_BRANCH_T(double,                      beam_E_fitted)
         ADD_BRANCH_T(double,                      beam_E_pull)
+        ADD_BRANCH_T(double,                      zVertex)
 
         ADD_BRANCH_T(double,                      KinFitChi2)
         ADD_BRANCH_T(double,                      KinFitProb)

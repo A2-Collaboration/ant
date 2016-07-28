@@ -540,6 +540,8 @@ void OmegaEtaG2::Analyse(const TEventData &data, const TEvent& event, manager_t&
                 t.beam_E_pull = fitter.GetBeamEPull();
                 t.beam_E_fitted = fitter.GetFittedBeamE();
 
+                t.zVertex = fitter.GetFittedZVertex();
+
                 t.ggg() = ggg;
 
                 const TParticle ggg_fitted(ParticleTypeDatabase::Omega, LVSum(fitted_photons.begin(), fitted_photons.end()));
