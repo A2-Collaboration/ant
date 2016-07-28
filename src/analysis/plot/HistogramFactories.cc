@@ -12,6 +12,7 @@
 #include <iomanip>
 #include <cmath>
 #include <algorithm>
+#include <numeric>
 
 using namespace ant;
 using namespace ant::analysis;
