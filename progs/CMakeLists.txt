@@ -24,6 +24,7 @@ add_ant_executable(Ant-rawdump)
 add_ant_executable(Ant-info)
 add_ant_executable(Ant-treeTool)
 add_ant_executable(Ant-makeSigmas)
+add_ant_executable(Ant-compareHists)
 
 option(AntProgs_Omega "Build Omega Analysis Tools" OFF)
 
