@@ -199,6 +199,10 @@ struct OmegaHist_t {
         double BestBachelorE() const {
             return iBestIndex() != -1 ? Tree.BachelorE_fitted().at(iBestIndex()) : NaN;
         }
+
+        size_t BachelorIndex() const {
+            return iBestIndex();
+        }
     };
 
     template <typename Hist>
@@ -256,6 +260,8 @@ struct OmegaHist_t {
 
     const BinSettings dalitzBins = Bins(200, -0.4, 0.4);
     const BinSettings evtoEbins  = Bins(150,  0, 15);
+
+    const BinSettings pullBins   = Bins(100,-5,5);
 
     HistogramFactory HistFac;
 
@@ -424,9 +430,98 @@ struct OmegaHist_t {
 
         AddTH1("Tagger Time - CB Average Time", "t [ns]", "",       TaggTime,   "TaggTime",
                [] (TH1D* h, const Fill_t& f) { h->Fill(f.Tree.TaggT - f.Tree.CBAvgTime);
+        // ===== Pulls =====
+
+
+        AddTH1("Pull: Photon CB E", "", "",       pullBins,   "Pull_Photon_CB_E",
+               [] (TH1D* h, const Fill_t& f) {
+            for(size_t i=0; i < 3; ++i) {
+                if(f.Tree.photons_detector().at(i) == 1)
+                    h->Fill(f.Tree.photon_E_pulls().at(i),  f.TaggW());
+            }
+        });
+
+        AddTH1("Pull: Photon CB Theta", "", "",       pullBins,   "Pull_Photon_CB_Theta",
+               [] (TH1D* h, const Fill_t& f) {
+            for(size_t i=0; i < 3; ++i) {
+                if(f.Tree.photons_detector().at(i) == 1)
+                    h->Fill(f.Tree.photon_theta_pulls().at(i),  f.TaggW());
+            }
+        });
+
+        AddTH1("Pull: Photon CB Phi", "", "",       pullBins,   "Pull_Photon_CB_Phi",
+               [] (TH1D* h, const Fill_t& f) {
+            for(size_t i=0; i < 3; ++i) {
+                if(f.Tree.photons_detector().at(i) == 1)
+                    h->Fill(f.Tree.photon_phi_pulls().at(i),  f.TaggW());
+            }
         });
 
 
+
+        AddTH1("Pull: Photon TAPS E", "", "",       pullBins,   "Pull_Photon_TAPS_E",
+               [] (TH1D* h, const Fill_t& f) {
+            for(size_t i=0; i < 3; ++i) {
+                if(f.Tree.photons_detector().at(i) == 2)
+                    h->Fill(f.Tree.photon_E_pulls().at(i),  f.TaggW());
+            }
+        });
+
+        AddTH1("Pull: Photon TAPS Theta", "", "",       pullBins,   "Pull_Photon_TAPS_Theta",
+               [] (TH1D* h, const Fill_t& f) {
+            for(size_t i=0; i < 3; ++i) {
+                if(f.Tree.photons_detector().at(i) == 2)
+                    h->Fill(f.Tree.photon_theta_pulls().at(i),  f.TaggW());
+            }
+        });
+
+        AddTH1("Pull: Photon TAPS Phi", "", "",       pullBins,   "Pull_Photon_TAPS_Phi",
+               [] (TH1D* h, const Fill_t& f) {
+            for(size_t i=0; i < 3; ++i) {
+                if(f.Tree.photons_detector().at(i) == 2)
+                    h->Fill(f.Tree.photon_phi_pulls().at(i),  f.TaggW());
+            }
+        });
+
+        AddTH1("Pull: Proton CB Theta", "", "",       pullBins,   "Pull_Proton_CB_Theta",
+               [] (TH1D* h, const Fill_t& f) {
+                if(f.Tree.p_detector == 1)
+                    h->Fill(f.Tree.p_theta_pull,  f.TaggW());
+        });
+        AddTH1("Pull: Proton CB Phi", "", "",       pullBins,   "Pull_Proton_CB_Phi",
+               [] (TH1D* h, const Fill_t& f) {
+                if(f.Tree.p_detector == 1)
+                    h->Fill(f.Tree.p_phi_pull,  f.TaggW());
+        });
+
+
+        AddTH1("Pull: Proton TAPS Theta", "", "",       pullBins,   "Pull_Proton_TAPS_Theta",
+               [] (TH1D* h, const Fill_t& f) {
+                if(f.Tree.p_detector == 2)
+                    h->Fill(f.Tree.p_theta_pull,  f.TaggW());
+        });
+        AddTH1("Pull: Proton TAPS Phi", "", "",       pullBins,   "Pull_Proton_TAPS_Phi",
+               [] (TH1D* h, const Fill_t& f) {
+                if(f.Tree.p_detector == 2)
+                    h->Fill(f.Tree.p_phi_pull,  f.TaggW());
+        });
+
+        AddTH1("Pull: Bachelor Photon E", "", "",       pullBins,   "Pull_BachelorProton_E",
+               [] (TH1D* h, const Fill_t& f) {
+                if(f.iBestIndex()!= -1)
+                    h->Fill(f.Tree.photon_E_pulls().at(f.iBestIndex()),  f.TaggW());
+        });
+
+        AddTH1("Bachelor Photon E xcheck", "", "",       Ebins,   "BachelorPhoton_Echeck",
+               [] (TH1D* h, const Fill_t& f) {
+                if(f.BachelorIndex()!= -1) {
+                    TVector3 boost = -f.Tree.ggg_fitted().BoostVector();
+                    TLorentzVector x = f.Tree.photons_fitted().at(f.BachelorIndex());
+                    x.Boost(boost);
+                    h->Fill(x.E(),  f.TaggW());
+                }
+
+        });
 
     }
 
