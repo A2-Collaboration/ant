@@ -339,10 +339,10 @@ struct OmegaHist_t {
 //            h->Fill(f.Tree.p_PSA_Angle, f.Tree.p_PSA_Radius, f.TaggW());
 //        });
 
-//        AddTH2("3#gamma IM vs 2#gamma IM", "3#gamma IM [MeV]", "max(2#gamma IM) [MeV]", IMbins, IMbins, "ggg_max_gg",
-//               [] (TH2D* h, const Fill_t& f) {
-//            h->Fill(f.Tree.ggg_fitted().M(), max(f.Tree.ggIM_fitted()), f.TaggW());
-//        });
+        AddTH2("3#gamma IM vs 2#gamma IM", "3#gamma IM [MeV]", "max(2#gamma IM) [MeV]", IMbins, IMbins, "ggg_max_gg",
+               [] (TH2D* h, const Fill_t& f) {
+            h->Fill(f.Tree.ggg_fitted().M(), max(f.Tree.ggIM_fitted()), f.TaggW());
+        });
 
 
         AddTH2("Dalitz","X","Y", dalitzBins, dalitzBins, "dalitz",
@@ -418,18 +418,20 @@ struct OmegaHist_t {
 
         AddTH1("Missing Mass",      "MM [MeV]",     "",       MMbins,     "mm",
                [] (TH1D* h, const Fill_t& f) { h->Fill(f.Tree.mm().M(), f.TaggW());
-        });
+                                             });
 
         //        AddTH1("Tagger Channels", "Channel",              "# hits", TaggChBins, "TaggCh",
         //               [] (TH1D* h, const Fill_t& f) { h->Fill(f.Tree.TaggCh, f.TaggW());
         //        });
 
-        //        AddTH1("Coplanarity Angle", "Coplanarity angle [#circ]", "", CoplBins, "CoplAngle",
-        //               [] (TH1D* h, const Fill_t& f) { h->Fill(radian_to_degree(f.Tree.copl_angle()), f.TaggW());
-        //        });
+        AddTH1("Coplanarity Angle", "Coplanarity angle [#circ]", "", CoplBins, "CoplAngle",
+               [] (TH1D* h, const Fill_t& f) { h->Fill(radian_to_degree(f.Tree.copl_angle()), f.TaggW());
+                                             });
 
         AddTH1("Tagger Time - CB Average Time", "t [ns]", "",       TaggTime,   "TaggTime",
                [] (TH1D* h, const Fill_t& f) { h->Fill(f.Tree.TaggT - f.Tree.CBAvgTime);
+                                             });
+
         // ===== Pulls =====
 
 
@@ -571,7 +573,7 @@ struct OmegaHist_t {
             const auto& etaprob  = f.Tree.etaprob()[f.Tree.iBestEta];
             const auto& iBestPi0 = f.Tree.iBestPi0;
 
-            return etaprob > 0.03 && (iBestPi0==-1 || f.Tree.pi0prob()[iBestPi0] < 0.03);
+            return etaprob > 0.1 && (iBestPi0==-1 || f.Tree.pi0prob()[iBestPi0] < 0.3);
         };
 
         auto pi0HypCut = [] (const Fill_t& f) {
@@ -581,7 +583,7 @@ struct OmegaHist_t {
             const auto& iBestPi0 = f.Tree.iBestPi0;
             const auto& pi0prob  = f.Tree.pi0prob()[iBestPi0];
 
-            return pi0prob > 0.03;
+            return pi0prob > 0.1;
         };
 
         auto DalitzCut = [] (const Fill_t& f) {
@@ -609,7 +611,7 @@ struct OmegaHist_t {
 //            return !f.Tree.nCandsClean();
 //        };
 
-        auto dontcareclean = [] (const Fill_t&) {
+        auto dontcare = [] (const Fill_t&) {
             return true;
         };
 
@@ -630,7 +632,8 @@ struct OmegaHist_t {
                              });
 
         cuts.emplace_back(MultiCut_t<Fill_t>{
-                                 {"dEECut", dEECut }
+                                 {"dEECut", dEECut },
+                                 {"nodEECut", dontcare }
                              });
 
         cuts.emplace_back(MultiCut_t<Fill_t>{
