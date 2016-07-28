@@ -33,10 +33,6 @@ std::unique_ptr<Physics> PhysicsRegistry::Create(const string& name, OptionsPtr 
     // this may throw an exception
     std::unique_ptr<Physics> physics = creator->second(name, opts);
 
-
-    if(physics->GetName() != name)
-        throw Exception(std_ext::formatter()
-                        << "Physics name " << name << " does not match GetName() " << physics->GetName());
     return physics;
 }
 

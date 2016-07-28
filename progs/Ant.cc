@@ -292,8 +292,10 @@ int main(int argc, char** argv) {
 
     for(const auto& classname : cmd_physicsclasses->getValue()) {
         try {
-            pm.AddPhysics( analysis::PhysicsRegistry::Create(classname, popts) );
-            LOG(INFO) << "Activated physics class '" << classname << "'";
+            auto physicsclass = analysis::PhysicsRegistry::Create(classname, popts);
+            const auto instancename = physicsclass->GetName();
+            pm.AddPhysics( move(physicsclass) );
+            LOG(INFO) << "Activated physics class '" << classname << "' as instance '" << instancename << "'";
         } catch (const std::exception& e) {
             LOG(ERROR) << "Error while activating physics class \"" << classname << "\": " << e.what();
             return 1;
@@ -312,8 +314,10 @@ int main(int argc, char** argv) {
         auto options = make_shared<OptionsList>(popts);
         options->SetOptions(optstr);
         try {
-            pm.AddPhysics( analysis::PhysicsRegistry::Create(physicsname, options) );
-            LOG(INFO) << "Activated physics class '" << physicsname << "' with options " << optstr;
+            auto physicsclass = analysis::PhysicsRegistry::Create(physicsname, options);
+            const auto instancename = physicsclass->GetName();
+            pm.AddPhysics( move(physicsclass) );
+            LOG(INFO) << "Activated physics class '" << physicsname << "' as instance '" << instancename << "' with options " << optstr;
         } catch (...) {
             LOG(ERROR) << "Physics class '" << line << "' not found";
             return 1;
