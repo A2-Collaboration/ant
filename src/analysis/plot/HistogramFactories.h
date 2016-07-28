@@ -48,6 +48,13 @@ public:
      * @return new settings with the given bin size
      */
     static BinSettings RoundToBinSize(const BinSettings& bins, const double binSize);
+
+    /**
+     * @brief Make creates optimal BinSettings for given x_values
+     * @param x_values strictly monotonic list of possible values
+     * @return optimal BinSettings
+     */
+    static BinSettings Make(const std::vector<double>& x_values);
 };
 
 class HistogramFactory {
