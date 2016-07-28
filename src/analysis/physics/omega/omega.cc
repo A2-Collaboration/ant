@@ -772,7 +772,7 @@ OmegaEtaG2::ReactionChannelList_t OmegaEtaG2::makeChannels()
 }
 
 OmegaEtaG2::OmegaEtaG2(const std::string& name, OptionsPtr opts):
-    OmegaBase(name, opts),
+    OmegaBase(opts->Get<string>("Name", name), opts),
     tree(HistFac.makeTTree("tree")),
 
     cut_ESum(                     opts->Get<double>(                    "CBESum",               550.0)),
