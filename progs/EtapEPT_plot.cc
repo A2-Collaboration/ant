@@ -130,13 +130,18 @@ struct Hist_t {
 
     void Fill(const Fill_t& f) const
     {
+        h_BeamPull_Ch[f.TaggCh]->Fill(f.KinFitBeamEPull, f.TaggCh_, f.TaggW);
+        h_IM_2g_Ch[f.TaggCh]->Fill(f.IM_2g, f.TaggCh_, f.TaggW);
+
+        if(f.TaggCh != f.TaggCh_)
+            return;
+
         h_IM_2g->Fill(f.IM_2g, f.TaggCh, f.TaggW);
         h_IM_2g_wide->Fill(f.IM_2g, f.TaggCh, f.TaggW_wide);
-        h_IM_2g_Ch[f.TaggCh]->Fill(f.IM_2g, f.TaggCh_, f.TaggW);
+
 
         h_BeamPull->Fill(f.KinFitBeamEPull, f.TaggCh, f.TaggW);
         h_BeamPull_wide->Fill(f.KinFitBeamEPull, f.TaggCh, f.TaggW_wide);
-        h_BeamPull_Ch[f.TaggCh]->Fill(f.KinFitBeamEPull, f.TaggCh_, f.TaggW);
 
         h_KinFitProb->Fill(f.KinFitProb, f.TaggW);
 
@@ -156,7 +161,7 @@ struct Hist_t {
                               {"DiscardedEk<50", [] (const Fill_t& f) { return f.DiscardedEk < 50; } },
                           });
         cuts.emplace_back(MultiCut_t<Fill_t>{
-                              {"KinFitProb>0.1", [] (const Fill_t& f) { return f.KinFitProb>0.1; } },
+                              {"KinFitProb>0.01", [] (const Fill_t& f) { return f.KinFitProb>0.01; } },
                           });
 
         cuts.emplace_back(MultiCut_t<Fill_t>{
