@@ -21,7 +21,7 @@ InterpolatedPulls::InterpolatedPulls(const string& name, OptionsPtr opts) :
               )
           ),
     fitter("KinFit", 4, fit_model,
-           true // enable Z vertex
+           opts->Get<bool>("FitZVertex", true) // enable Z vertex by default
            ),
     mc_model(utils::UncertaintyModels::Interpolated::makeAndLoad(
                  // use scaled down version as starting point
@@ -35,7 +35,12 @@ InterpolatedPulls::InterpolatedPulls(const string& name, OptionsPtr opts) :
     if(TAPS_proton_meas)
         LOG(INFO) << "Running with measured proton in TAPS";
 
-    fitter.SetZVertexSigma(0); // use unmeasured z vertex
+    if(fitter.IsZVertexFitEnabled()) {
+        fitter.SetZVertexSigma(0); // use unmeasured z vertex
+        LOG(INFO) << "Running with unmeasured Z Vertex";
+    } else {
+        LOG(INFO) << "Running with fixed Z Vertex";
+    }
 
     promptrandom.AddPromptRange({ -7,   7});
     promptrandom.AddRandomRange({-65, -15});
