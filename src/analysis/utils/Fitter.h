@@ -152,6 +152,8 @@ public:
     void SetProton(const TParticlePtr& proton);
     virtual void SetPhotons(const TParticleList& photons);
 
+    bool IsZVertexFitEnabled() const noexcept;
+
     TParticlePtr GetFittedProton() const;
     TParticleList GetFittedPhotons() const;
     double GetFittedBeamE() const;

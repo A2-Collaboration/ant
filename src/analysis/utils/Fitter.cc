@@ -271,6 +271,11 @@ void KinFitter::SetPhotons(const TParticleList& photons)
     }
 }
 
+bool KinFitter::IsZVertexFitEnabled() const noexcept
+{
+    return Z_Vertex != nullptr;
+}
+
 TParticlePtr KinFitter::GetFittedProton() const
 {
     return Proton->AsFitted();
