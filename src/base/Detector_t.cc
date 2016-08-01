@@ -3,6 +3,7 @@
 #include "base/interval.h"
 
 #include <sstream>
+#include "base/std_ext/string.h"
 
 using namespace ant;
 
@@ -108,6 +109,25 @@ const char* ant::Channel_t::ToString(const Type_t& type)
     throw std::runtime_error("Not implemented");
 }
 
+
+double TaggerDetector_t::GetPhotonEnergyWidth(unsigned channel) const
+{
+
+    if(channel >= GetNChannels())
+        throw std::out_of_range(std_ext::formatter() << "Tagger channel index out of range: " << channel << " (" << GetNChannels() << ")");
+
+    if(channel == 0) {
+        return (GetPhotonEnergy(channel+1) - GetPhotonEnergy(channel));
+
+    } else if(channel == GetNChannels() -1) {
+        return (GetPhotonEnergy(channel) - GetPhotonEnergy(channel-1));
+    } else {
+        // =  (E(ch+1) - central)/2 + (central - E(ch-1))/2
+        return (GetPhotonEnergy(channel+1) - GetPhotonEnergy(channel-1)) / 2.0;
+    }
+
+
+}
 
 bool TaggerDetector_t::TryGetChannelFromPhoton(double photonEnergy, unsigned& channel) const
 {

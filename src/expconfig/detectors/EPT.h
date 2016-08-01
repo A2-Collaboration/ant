@@ -14,9 +14,7 @@ struct EPT :
     virtual double GetPhotonEnergy(unsigned channel) const override {
         return BeamEnergy - elements[channel].ElectronEnergy;
     }
-    virtual double GetPhotonEnergyWidth(unsigned) const override {
-        return 3.0; // 3 MeV width, approximately constant for EPT
-    }
+
     virtual unsigned GetNChannels() const override {
         return elements.size();
     }

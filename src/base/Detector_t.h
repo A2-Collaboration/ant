@@ -157,7 +157,18 @@ protected:
 struct TaggerDetector_t : Detector_t {
 
     virtual double GetPhotonEnergy(unsigned channel) const = 0;
-    virtual double GetPhotonEnergyWidth(unsigned channel) const = 0;
+
+    /**
+     * @brief GetPhotonEnergyWidth
+     * @param channel
+     * @return Width of channel in MeV
+     *
+     * Calculates the with from the distance to the neighbor channels.
+     * Override if this is not what you want for your tagger.
+     *
+     * @note Only works for taggers with more than one channel.
+     */
+    virtual double GetPhotonEnergyWidth(unsigned channel) const;
 
     bool TryGetChannelFromPhoton(double photonEnergy, unsigned& channel) const;
 
