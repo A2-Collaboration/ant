@@ -8,6 +8,7 @@
 
 #include "TCanvas.h"
 #include "TGraph2D.h"
+#include "TGraphErrors.h"
 
 using namespace std;
 using namespace ant;
@@ -272,4 +273,55 @@ void DetectorPlots::PlotCBTAPSDetectorPositions(const string& setup_name, double
     graph->GetYaxis()->SetTitle("Y");
     graph->GetZaxis()->SetTitle("Z");
     graph->Draw("P0");
+}
+
+void DetectorPlots::PlotTaggerChannelEnergy(const string& setup_name)
+{
+    const auto setup = ExpConfig::Setup::Get(setup_name);
+    if(!setup) {
+        cerr << "Setup \"" << setup_name << "\" not found!" << endl;
+        return;
+    }
+
+    auto tagger = dynamic_pointer_cast<TaggerDetector_t>(setup->GetDetector(Detector_t::Type_t::Tagger));
+    if(!tagger) {
+        cerr << "No Tagger defined in Setup!" << endl;
+        return;
+    }
+
+    const auto n = tagger->GetNChannels();
+    auto g = new TGraphErrors(int(n));
+
+    for(unsigned i=0; i<n; ++i) {
+        g->SetPoint(     int(i), i, tagger->GetPhotonEnergy(i));
+        g->SetPointError(int(i), 0, tagger->GetPhotonEnergyWidth(i));
+    }
+
+    new TCanvas();
+    g->Draw("AP");
+}
+
+void DetectorPlots::PlotTaggerChannelEnergyWidth(const string& setup_name)
+{
+    const auto setup = ExpConfig::Setup::Get(setup_name);
+    if(!setup) {
+        cerr << "Setup \"" << setup_name << "\" not found!" << endl;
+        return;
+    }
+
+    auto tagger = dynamic_pointer_cast<TaggerDetector_t>(setup->GetDetector(Detector_t::Type_t::Tagger));
+    if(!tagger) {
+        cerr << "No Tagger defined in Setup!" << endl;
+        return;
+    }
+
+    const auto n = tagger->GetNChannels();
+    auto g = new TGraph(int(n));
+
+    for(unsigned i=0; i<n; ++i) {
+        g->SetPoint(int(i), i, tagger->GetPhotonEnergyWidth(i));
+    }
+
+    new TCanvas();
+    g->Draw("AP");
 }

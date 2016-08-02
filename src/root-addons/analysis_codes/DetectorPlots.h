@@ -37,6 +37,9 @@ public:
 
     static void          PlotCBTAPSDetectorPositions(const std::string& setup_name, double CB_gap = 0.0);
 
+    static void          PlotTaggerChannelEnergy(const std::string& setup_name);
+    static void          PlotTaggerChannelEnergyWidth(const std::string& setup_name);
+
 };
 
 #endif
