@@ -104,7 +104,7 @@ void CB_SourceCalib::TheGUI::InitGUI(gui::ManagerWindow_traits * window)
 
 }
 
-void CB_SourceCalib::TheGUI::StartSlice(const interval<TID> & range)
+void CB_SourceCalib::TheGUI::StartSlice(const interval<TID>&)
 {
 
 }
@@ -183,7 +183,7 @@ bool CB_SourceCalib::TheGUI::FinishSlice()
     return true;
 }
 
-void CB_SourceCalib::TheGUI::StoreFinishSlice(const interval<TID> &range)
+void CB_SourceCalib::TheGUI::StoreFinishSlice(const interval<TID>&)
 {
 
 }
