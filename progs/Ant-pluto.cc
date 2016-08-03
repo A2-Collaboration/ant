@@ -26,7 +26,7 @@
 #include "base/std_ext/string.h"
 #include "base/WrapTFile.h"
 #include "base/vec/vec3.h"
-#include "simulation/mc/PlutoExtensions.h"
+#include "mc/pluto/PlutoExtensions.h"
 
 
 // pluto++
@@ -233,7 +233,7 @@ void PlutoAction::Run() const
 
     makeDistributionManager()->Add(smear);
 
-    ant::simulation::mc::UpdatePlutoDataBase();
+    ant::mc::pluto::UpdatePlutoDataBase();
 
     // remove file ending because pluto attaches a ".root"...
     string outfile_clean(outfile);

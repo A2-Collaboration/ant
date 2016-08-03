@@ -11,7 +11,7 @@
 
 using namespace std;
 using namespace ant;
-using namespace ant::simulation::mc::utils;
+using namespace ant::mc::pluto::utils;
 
 const string PlutoTID::tidtree_name("data_tid");
 const string PlutoTID::geant_tidtree_name("h12_tid");

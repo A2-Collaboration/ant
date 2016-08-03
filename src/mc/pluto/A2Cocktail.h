@@ -22,9 +22,9 @@ class PPlutoBulkDecay;
 
 namespace ant
 {
-namespace simulation
-{
 namespace mc
+{
+namespace pluto
 {
 
 

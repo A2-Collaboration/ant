@@ -9,7 +9,7 @@
   * This should be used with caution and if you are very sure that the pluto and geant file belong together.
   */
 
-#include "simulation/mc/utils/PlutoTID.h"
+#include "mc/pluto/utils/PlutoTID.h"
 #include "base/Logger.h"
 
 #include <iostream>
@@ -21,10 +21,10 @@ int main (int argc, char** argv)
     SetupLogger();
 
     if(argc == 2) {
-        ant::simulation::mc::utils::PlutoTID::AddTID(std::string(argv[1]));
+        ant::mc::pluto::utils::PlutoTID::AddTID(std::string(argv[1]));
         return EXIT_SUCCESS ;
     } else if(argc == 4 && string(argv[1]) == "--copy-to-geant") {
-        ant::simulation::mc::utils::PlutoTID::CopyTIDPlutoGeant(argv[2], argv[3]);
+        ant::mc::pluto::utils::PlutoTID::CopyTIDPlutoGeant(argv[2], argv[3]);
         return EXIT_SUCCESS;
     }
 

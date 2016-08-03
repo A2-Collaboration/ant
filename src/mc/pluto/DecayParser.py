@@ -77,10 +77,10 @@ def main():
         '#include "A2Channels.h"',
         '#include <vector>',
         '',
-        'ant::simulation::mc::XsecList ' + functionName + '()',
+        'ant::mc::pluto::XsecList ' + functionName + '()',
         '{',
-        '      ant::simulation::mc::ParticleData pdata;',
-        '      ant::simulation::mc::XsecList XList;',
+        '      ant::mc::pluto::ParticleData pdata;',
+        '      ant::mc::pluto::XsecList XList;',
         '',
         '' ] )
 

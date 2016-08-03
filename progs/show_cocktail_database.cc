@@ -4,7 +4,7 @@
 #include <vector>
 
 
-#include "simulation/mc/A2Channels.h"
+#include "mc/pluto/A2Channels.h"
 
 #include "expconfig/ExpConfig.h"
 
@@ -26,7 +26,7 @@
 
 using namespace std;
 using namespace ant;
-using namespace ant::simulation::mc;
+using namespace ant::mc::pluto;
 
 int main( int argc, char** argv )
 {

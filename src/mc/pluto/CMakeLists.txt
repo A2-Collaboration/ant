@@ -5,7 +5,7 @@ set(XSECTION_DATA      ${CMAKE_CURRENT_SOURCE_DIR}/xsections.dat)
 set(XSECTION_PARSER    ${CMAKE_CURRENT_SOURCE_DIR}/DecayParser.py)
 set(XSECTION_DATA_SRC  ${CMAKE_CURRENT_BINARY_DIR}/chgen.h)
 
-set(SIMULATION_MC
+set(MC_PLUTO
   A2Channels.cc
   A2Cocktail.cc
   PlutoExtensions.h
@@ -21,12 +21,12 @@ ADD_CUSTOM_COMMAND(
         DEPENDS ${XSECTION_DATA} ${XSECTION_PARSER}
 )
 
-add_library( mc
-  ${SIMULATION_MC}
+add_library( pluto
+  ${MC_PLUTO}
   ${XSECTION_DATA_SRC}
 )
 
-target_link_libraries( mc
+target_link_libraries(pluto
   ${ROOT_LIBRARIES}
   ${PLUTO_LIBRARY}
   MathMore

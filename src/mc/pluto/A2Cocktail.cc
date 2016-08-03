@@ -12,7 +12,7 @@
 #include "PParticle.h"
 
 using namespace std;
-using namespace ant::simulation::mc;
+using namespace ant::mc::pluto;
 
 
 void FixedEnergyCocktail::_makeDecays()

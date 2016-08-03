@@ -1,5 +1,5 @@
 #include "A2Channels.h"
-#include "simulation/mc/chgen.h"
+#include "mc/pluto/chgen.h"
 
 #include <list>
 #include <iostream>
@@ -13,7 +13,7 @@
 #include "PDecayChannel.h"
 
 using namespace std;
-using namespace ant::simulation::mc;
+using namespace ant::mc::pluto;
 
 
 double A2ChannelManager::Xsection(const string &name, const double Egamma) const

@@ -3,10 +3,8 @@
 #include <string>
 
 namespace ant {
-namespace simulation
-{
-namespace mc
-{
+namespace mc {
+namespace pluto {
 namespace utils
 {
 
