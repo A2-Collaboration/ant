@@ -40,6 +40,12 @@ SlowControlManager::SlowControlManager()
 bool SlowControlManager::ProcessEvent(TEvent event)
 {
 
+    if(!event.HasReconstructed()) {
+        eventbuffer.emplace(false, std::move(event));
+        all_complete = true;
+        return true;
+    }
+
     // at a changepoint, pop the slow control
     if(!changepoint.IsInvalid()) {
         for(auto& sl : slowcontrol) {
@@ -55,9 +61,6 @@ bool SlowControlManager::ProcessEvent(TEvent event)
         }
         changepoint = {};
     }
-
-    if(!event.HasReconstructed())
-        return true;
 
     // always process the event
     {
@@ -116,11 +119,13 @@ event_t SlowControlManager::PopEvent() {
     if(!all_complete || eventbuffer.empty())
         return {};
 
-    const auto& id = eventbuffer.front().Event.Reconstructed().ID;
+    if(eventbuffer.front().Event.HasReconstructed()) {
+        const auto& id = eventbuffer.front().Event.Reconstructed().ID;
 
-    // at a changepoint, we still analyse the event, but stop afterwards
-    if(id == changepoint)
-        all_complete = false;
+        // at a changepoint, we still analyse the event, but stop afterwards
+        if(id == changepoint)
+            all_complete = false;
+    }
 
 //    {
 //        TID min_tid;
