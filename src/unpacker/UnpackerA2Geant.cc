@@ -247,6 +247,10 @@ TEvent UnpackerA2Geant::NextEvent() noexcept
     // fill CB Hits
     for(int i=0;i<fnhits;i++) {
         const auto ch = static_cast<unsigned>(icryst[i]); // no -1 here!
+
+        if(ch >= cb_detector->GetNChannels())
+            throw Exception("CB channel number out of bounds " + to_string(ch) + " / " + to_string(cb_detector->GetNChannels()));
+
         if(cb_detector->IsIgnored(ch))
             continue;
         const Detector_t::Type_t det = Detector_t::Type_t::CB;
@@ -264,6 +268,10 @@ TEvent UnpackerA2Geant::NextEvent() noexcept
     for(int i=0;i<fvhits;i++) {
         /// @todo Make PID channel mapping/rotation a Setup option?
         const unsigned ch = (23 - (iveto[i]-1) + 11) % 24;
+
+        if(ch >= pid_detector->GetNChannels())
+            throw Exception("PID channel number out of bounds " + to_string(ch) + " / " + to_string(pid_detector->GetNChannels()));
+
         if(pid_detector->IsIgnored(ch))
             continue;
         const Detector_t::Type_t det = Detector_t::Type_t::PID;
@@ -280,6 +288,10 @@ TEvent UnpackerA2Geant::NextEvent() noexcept
     // fill TAPS Hits
     for(int i=0;i<fntaps;i++) {
         const auto ch = static_cast<unsigned>(ictaps[i]-1);
+
+        if(ch >= taps_detector->GetNChannels())
+            throw Exception("TAPS channel number out of bounds " + to_string(ch) + " / " + to_string(taps_detector->GetNChannels()));
+
         if(taps_detector->IsIgnored(ch))
             continue;
         const Detector_t::Type_t det = Detector_t::Type_t::TAPS;
@@ -301,6 +313,10 @@ TEvent UnpackerA2Geant::NextEvent() noexcept
     // fill TAPSVeto Hits
     for(int i=0;i<fnvtaps;i++) {
         const auto ch = static_cast<unsigned>(ivtaps[i]-1);
+
+        if(ch >= tapsveto_detector->GetNChannels())
+            throw Exception("TAPS channel number out of bounds " + to_string(ch) + " / " + to_string(tapsveto_detector->GetNChannels()));
+
         if(tapsveto_detector->IsIgnored(ch))
             continue;
         const Detector_t::Type_t det = Detector_t::Type_t::TAPSVeto;
