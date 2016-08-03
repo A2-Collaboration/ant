@@ -71,7 +71,7 @@ void ProtonTagger::ProcessEvent(const TEvent& event, manager_t&)
 
     b_cbtime = TimeAverage({cb_photons.at(0)->Candidate,cb_photons.at(1)->Candidate});
 
-    const LorentzVec target(0,0,0,ParticleTypeDatabase::Proton.Mass());
+    const LorentzVec target({0,0,0},ParticleTypeDatabase::Proton.Mass());
 
     for(const auto& t : event.Reconstructed().TaggerHits) {
 

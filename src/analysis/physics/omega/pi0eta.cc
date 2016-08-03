@@ -148,7 +148,7 @@ void Pi0Eta::Analyse(const TEventData &data, const TEvent& event, manager_t& man
         t.TaggCh = TagH.Channel;
         t.TaggT  = TagH.Time;
 
-        const LorentzVec beam_target = TagH.GetPhotonBeam() + LorentzVec(0, 0, 0, ParticleTypeDatabase::Proton.Mass()); // make global
+        const LorentzVec beam_target = TagH.GetPhotonBeam() + LorentzVec({0, 0, 0}, ParticleTypeDatabase::Proton.Mass()); // make global
         const TParticle missing(ParticleTypeDatabase::Proton, beam_target - gggg);
 
         t.mm = missing;

@@ -204,7 +204,7 @@ void dotest(bool z_vertex, bool proton_unmeas, bool smeared) {
         REQUIRE(*fitted_proton_ == *fitted_proton);
         pulls_Proton.Fill(*it_fitparticle);
         ++it_fitparticle;
-        LorentzVec fitted_photon_sum{0,0,0,0};
+        LorentzVec fitted_photon_sum{{0,0,0},0};
         auto fitted_photons = kinfitter.GetFittedPhotons();
         REQUIRE(std::distance(it_fitparticle, fitparticles.end()) == fitted_photons.size());
         auto it_fitted_photon = fitted_photons.begin();

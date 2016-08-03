@@ -61,7 +61,7 @@ struct TTaggerHit : printable_traits
     }
 
     LorentzVec GetPhotonBeam() const {
-        return {0.0, 0.0, PhotonEnergy, PhotonEnergy};
+        return {{0.0, 0.0, PhotonEnergy}, PhotonEnergy};
     }
 
 

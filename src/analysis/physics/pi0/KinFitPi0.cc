@@ -250,7 +250,7 @@ void KinFitPi0::MultiPi0::ProcessData(const TEventData& data, const utils::MCSme
         }
 
 
-        LorentzVec photon_sum(0,0,0,0);
+        LorentzVec photon_sum({0,0,0},0);
         for(const auto& p : photons) {
             photon_sum += *p;
         }
@@ -285,7 +285,7 @@ void KinFitPi0::MultiPi0::ProcessData(const TEventData& data, const utils::MCSme
             b_tagw = promptrandom.FillWeight();
 
             // simple missing mass cut
-            const LorentzVec beam_target = taggerhit.GetPhotonBeam() + LorentzVec(0, 0, 0, ParticleTypeDatabase::Proton.Mass());
+            const LorentzVec beam_target = taggerhit.GetPhotonBeam() + LorentzVec({0, 0, 0}, ParticleTypeDatabase::Proton.Mass());
             const LorentzVec missing = beam_target - photon_sum;
             const double missing_mass = missing.M();
 

@@ -217,7 +217,7 @@ void JustPi0::MultiPi0::ProcessData(const TEventData& data, const TParticleTree_
 
             assert(photons.size() == nPhotons_expected);
 
-            LorentzVec photon_sum(0,0,0,0);
+            LorentzVec photon_sum({0,0,0},0);
             for(const auto& p : photons) {
                 photon_sum += *p;
             }
@@ -234,7 +234,7 @@ void JustPi0::MultiPi0::ProcessData(const TEventData& data, const TParticleTree_
             steps->Fill(copl_str.c_str(),1);
 
             // simple missing mass cut
-            const LorentzVec beam_target = taggerhit.GetPhotonBeam() + LorentzVec(0, 0, 0, ParticleTypeDatabase::Proton.Mass());
+            const LorentzVec beam_target = taggerhit.GetPhotonBeam() + LorentzVec({0, 0, 0}, ParticleTypeDatabase::Proton.Mass());
             const LorentzVec missing = beam_target - photon_sum;
             const double missing_mass = missing.M();
 

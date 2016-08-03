@@ -414,9 +414,9 @@ LorentzVec KinFitter::MakeBeamLorentzVec(double BeamE)
     // Beam Lorentz vector:
     // beam    LorentzVec(0.0, 0.0, PhotonEnergy(), PhotonEnergy());
     // target  LorentzVec(0.0, 0.0, 0.0, ParticleTypeDatabase::Proton.Mass())
-    const LorentzVec beam(0, 0, BeamE, BeamE);
+    const LorentzVec beam({0, 0, BeamE}, BeamE);
     /// \todo Target is always assumed proton...
-    const LorentzVec target(0,0,0, ParticleTypeDatabase::Proton.Mass());
+    const LorentzVec target({0,0,0}, ParticleTypeDatabase::Proton.Mass());
 
     return target + beam;
 }
@@ -473,7 +473,7 @@ TreeFitter::TreeFitter(const string& name,
         // always sum up the tree nodes
         sum_daughters.emplace_back([tnode] () {
             node_t& node = tnode->Get();
-            node.LVSum = LorentzVec{0,0,0,0};
+            node.LVSum = LorentzVec{{0,0,0},0};
             assert(!tnode->Daughters().empty());
             for(const auto& d : tnode->Daughters())
                 node.LVSum += d->Get().LVSum;

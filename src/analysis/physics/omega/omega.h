@@ -280,7 +280,7 @@ protected:
     bool ProtonCheck(const TCandidatePtr& c) const;
     bool PhotonCheck(const TCandidatePtr& c) const;
 
-    const LorentzVec target = LorentzVec(0, 0, 0, ParticleTypeDatabase::Proton.Mass());
+    const LorentzVec target = LorentzVec({0, 0, 0}, ParticleTypeDatabase::Proton.Mass());
 
     TagChMultiplicity tagChMult;
 

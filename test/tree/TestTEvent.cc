@@ -87,8 +87,8 @@ void dotest() {
   auto candidate0 = std::next(candidates.begin(), 0);
 
   auto particle0 = make_shared<TParticle>(ParticleTypeDatabase::Photon, candidate0.get_ptr());
-  auto particle1 = make_shared<TParticle>(ParticleTypeDatabase::Photon, LorentzVec(7,8,9,10));
-  auto particle2 = make_shared<TParticle>(ParticleTypeDatabase::Pi0, LorentzVec(3,4,5,6));
+  auto particle1 = make_shared<TParticle>(ParticleTypeDatabase::Photon, LorentzVec({7,8,9},10));
+  auto particle2 = make_shared<TParticle>(ParticleTypeDatabase::Pi0, LorentzVec({3,4,5},6));
 
 
   eventdata.Particles.Add(particle0);

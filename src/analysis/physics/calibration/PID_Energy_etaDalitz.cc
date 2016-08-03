@@ -359,7 +359,7 @@ void PID_Energy_etaDalitz::ProcessEvent(const TEvent& event, manager_t&)
             }
             h.steps->Fill("coplanarity", 1);
 
-            missing = taggerhit.GetPhotonBeam() + LorentzVec(0, 0, 0, ParticleTypeDatabase::Proton.Mass());
+            missing = taggerhit.GetPhotonBeam() + LorentzVec({0, 0, 0}, ParticleTypeDatabase::Proton.Mass());
             missing -= eta;
             h.MM->Fill(missing.M(), t.TaggW);
             if (!mm.Contains(missing.M())) {

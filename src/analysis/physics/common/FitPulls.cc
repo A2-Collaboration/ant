@@ -146,13 +146,13 @@ bool FitPulls::findProton(const TCandidateList& cands,
     // find the candidate which gives the closest missing mass to proton
     auto min_mm = std::numeric_limits<double>::infinity();
     for(auto& cand_proton : cands.get_iter()) {
-        LorentzVec photon_sum_tmp(0,0,0,0);
+        LorentzVec photon_sum_tmp({0,0,0},0);
         for(auto& cand : cands.get_iter()) {
             if(cand == cand_proton)
                 continue;
             photon_sum_tmp += TParticle(ParticleTypeDatabase::Photon, cand.get_ptr());
         }
-        const LorentzVec beam_target = taggerhit.GetPhotonBeam() + LorentzVec(0, 0, 0, ParticleTypeDatabase::Proton.Mass());
+        const LorentzVec beam_target = taggerhit.GetPhotonBeam() + LorentzVec({0, 0, 0}, ParticleTypeDatabase::Proton.Mass());
         const LorentzVec missing = beam_target - photon_sum_tmp;
         const double mm = abs(missing.M() - ParticleTypeDatabase::Proton.Mass());
         if(mm < min_mm) {

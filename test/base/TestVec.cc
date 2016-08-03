@@ -91,9 +91,9 @@ void do_test_lv() {
     REQUIRE(std::is_nothrow_move_assignable<LorentzVec>::value);
 
     const TLorentzVector a(1,2,3,4);
-    const LorentzVec     b(1,2,3,4);
+    const LorentzVec     b({1,2,3},4);
     const TLorentzVector a2(3,2,4,4);
-    const LorentzVec     b2(3,2,4,4);
+    const LorentzVec     b2({3,2,4},4);
 
     REQUIRE(a == b);
 

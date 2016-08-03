@@ -21,7 +21,7 @@ DeltaPlusPhysics::DeltaPlusPhysics(const string& name, OptionsPtr opts):
     pi0_cut(110,150),
     prompt_window(-8,8),
     random_window(-16,16),
-    target(0,0,0,ParticleTypeDatabase::Proton.Mass())
+    target({0,0,0},ParticleTypeDatabase::Proton.Mass())
 {
     cout << "DeltaPlusPhysics:\n";
     cout << "Prompt window: " << prompt_window << " ns\n";
@@ -73,7 +73,7 @@ void DeltaPlusPhysics::ProcessEvent(const TEvent& event, manager_t&)
                 h["pi0angle_noboost"]->Fill(pi0.Theta());
 
                 // construct beam photon 4-vector and, using this, the delta restframe
-                const LorentzVec beam(0, 0, taggerhit.PhotonEnergy, taggerhit.PhotonEnergy);
+                const LorentzVec beam({0, 0, taggerhit.PhotonEnergy}, taggerhit.PhotonEnergy);
                 const LorentzVec delta_beam(beam + target);
                 const auto boost = -(delta_beam.BoostVector());
 

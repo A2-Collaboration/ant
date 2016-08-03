@@ -184,7 +184,7 @@ void EtapProton::ProcessEvent(const TEvent& event, manager_t& manager)
             continue;
 
         // simple missing mass cut
-        const auto beam_target = taggerhit.GetPhotonBeam() + LorentzVec(0, 0, 0, ParticleTypeDatabase::Proton.Mass());
+        const auto beam_target = taggerhit.GetPhotonBeam() + LorentzVec({0, 0, 0}, ParticleTypeDatabase::Proton.Mass());
         b_Missing = beam_target - b_PhotonSum;
 
         b_TaggW = promptrandom.FillWeight();

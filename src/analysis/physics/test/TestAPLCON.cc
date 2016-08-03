@@ -49,7 +49,7 @@ void TestAPLCON::FitParticle::Smear() {
 }
 
 void TestAPLCON::FillIM(TH1D *h, const std::vector<TestAPLCON::FitParticle> &photons) {
-    LorentzVec sum(0,0,0,0);
+    LorentzVec sum({0,0,0},0);
     for(const auto& p : photons) {
         sum += FitParticle::Make(p, ParticleTypeDatabase::Photon.Mass());
     }
@@ -140,7 +140,7 @@ TestAPLCON::TestAPLCON(const string& name, OptionsPtr opts) :
     // Constraint: Incoming 4-vector = Outgoing 4-vector
     auto EnergyMomentumBalance = [] (const vector< vector<double> >& particles) -> vector<double>
     {
-        const LorentzVec target(0,0,0, ParticleTypeDatabase::Proton.Mass());
+        const LorentzVec target({0,0,0}, ParticleTypeDatabase::Proton.Mass());
         // assume first particle is beam photon
         LorentzVec diff = target + FitParticle::Make(particles[0], ParticleTypeDatabase::Photon.Mass());
         // assume second particle outgoing proton
@@ -159,7 +159,7 @@ TestAPLCON::TestAPLCON(const string& name, OptionsPtr opts) :
     // make lambda catch also this with [&] specification
     auto RequireIM = [&] (const vector< vector<double> >& photons) -> double
     {
-        LorentzVec sum(0,0,0,0);
+        LorentzVec sum({0,0,0},0);
         for(const auto& p : photons) {
             sum += FitParticle::Make(p, ParticleTypeDatabase::Photon.Mass());
         }
@@ -183,7 +183,7 @@ TestAPLCON::TestAPLCON(const string& name, OptionsPtr opts) :
         photons.resize(photons.size()-1); // get rid of last element
         // correct each photon's theta angle,
         // then calculate invariant mass of all photons
-        LorentzVec sum(0,0,0,0);
+        LorentzVec sum({0,0,0},0);
         for(auto& p : photons) {
             const double theta = p[1]; // second element is theta
             const double theta_p = std::atan2( R*sin(theta), R*cos(theta) - v_z);

@@ -360,7 +360,7 @@ bool EtapOmegaG::findParticles(const TCandidatePtrList& candidates,
 
     // remaining candidates are photons
     LorentzVec& photon_sum = particles.PhotonSum;
-    photon_sum = {0,0,0,0};
+    photon_sum = {{0,0,0},0};
     t.PhotonsEk = 0;
     t.nPhotonsCB = 0;
     t.nPhotonsTAPS = 0;
@@ -407,7 +407,7 @@ bool EtapOmegaG::doKinfit(const TTaggerHit& taggerhit,
                           TH1D* h_CommonCuts)
 {
     // missing mass
-    const LorentzVec beam_target = taggerhit.GetPhotonBeam() + LorentzVec(0, 0, 0, ParticleTypeDatabase::Proton.Mass());
+    const LorentzVec beam_target = taggerhit.GetPhotonBeam() + LorentzVec({0, 0, 0}, ParticleTypeDatabase::Proton.Mass());
     t.MissingMass = (beam_target - particles.PhotonSum).M();
 
     t.KinFitProb = std_ext::NaN;
@@ -455,7 +455,7 @@ bool EtapOmegaG::doKinfit(const TTaggerHit& taggerhit,
     t.FittedProtonE = fitted_proton->Ek();
 
     particles.FittedPhotons = kinfitter.GetFittedPhotons();
-    particles.FittedPhotonSum = {0,0,0,0};
+    particles.FittedPhotonSum = {{0,0,0},0};
 
     for(const auto& photon : particles.FittedPhotons)
         particles.FittedPhotonSum += *photon;

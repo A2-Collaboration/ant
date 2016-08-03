@@ -141,7 +141,7 @@ void InterpolatedPulls::ProcessEvent(const TEvent& event, manager_t&)
             }
 
 
-            LorentzVec photon_sum(0,0,0,0);
+            LorentzVec photon_sum({0,0,0},0);
             for(const auto& p : photons) {
                 photon_sum += *p;
             }
@@ -172,7 +172,7 @@ void InterpolatedPulls::ProcessEvent(const TEvent& event, manager_t&)
             steps->Fill("Copl p in [-20;20]",1);
 
             // missing mass
-            const LorentzVec& beam_target = taggerhit.GetPhotonBeam() + LorentzVec(0, 0, 0, ParticleTypeDatabase::Proton.Mass());
+            const LorentzVec& beam_target = taggerhit.GetPhotonBeam() + LorentzVec({0, 0, 0}, ParticleTypeDatabase::Proton.Mass());
             const LorentzVec& missing = beam_target - photon_sum;
             const double missing_mass = missing.M();
             h_missingmass->Fill(missing_mass, TaggW);
@@ -254,7 +254,7 @@ void InterpolatedPulls::ProcessEvent(const TEvent& event, manager_t&)
         pullswriter.Fill(best_fitParticles, best_smearSigmas, TaggW, best_prob);
 
         // fill the many check hists
-        LorentzVec best_photon_sum(0,0,0,0);
+        LorentzVec best_photon_sum({0,0,0},0);
         for(const utils::Fitter::FitParticle& fitparticle : best_fitParticles) {
             const TCandidatePtr& cand = fitparticle.Particle->Candidate;
             const TParticlePtr& fitted = fitparticle.AsFitted();
@@ -295,7 +295,7 @@ void InterpolatedPulls::ProcessEvent(const TEvent& event, manager_t&)
         }
 
         if(best_prob>0.01) {
-            const LorentzVec& best_missing = taggerhit.GetPhotonBeam() + LorentzVec(0, 0, 0, ParticleTypeDatabase::Proton.Mass()) - best_photon_sum;
+            const LorentzVec& best_missing = taggerhit.GetPhotonBeam() + LorentzVec({0, 0, 0}, ParticleTypeDatabase::Proton.Mass()) - best_photon_sum;
             h_missingmass_best->Fill(best_missing.M(), TaggW);
         }
 

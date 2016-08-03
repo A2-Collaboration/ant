@@ -18,8 +18,6 @@ struct LorentzVec {
     LorentzVec(LorentzVec&&) noexcept = default;
     LorentzVec(const vec3& p_, const double E_) noexcept:
         p(p_), E(E_) {}
-    LorentzVec(const double px, const double py, const double pz, const double _E) noexcept :
-        p(px,py,pz), E(_E) {}
 
     LorentzVec& operator=(const LorentzVec&) noexcept = default;
     LorentzVec& operator=(LorentzVec&&) noexcept = default;
