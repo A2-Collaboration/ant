@@ -197,10 +197,10 @@ struct OmegaHist_t {
         }
 
         double BestBachelorE() const {
-            return iBestIndex() != -1 ? Tree.BachelorE_fitted().at(iBestIndex()) : NaN;
+            return iBestIndex() != -1 ? Tree.BachelorE_fitted().at(size_t(iBestIndex())) : NaN;
         }
 
-        size_t BachelorIndex() const {
+        int BachelorIndex() const {
             return iBestIndex();
         }
     };
@@ -586,14 +586,14 @@ struct OmegaHist_t {
             return pi0prob > 0.1;
         };
 
-        auto DalitzCut = [] (const Fill_t& f) {
-            OmegaDalitzPlot p(f.Tree.photons_fitted(), f.Tree.ggg_fitted());
-            do {
-                if(!dalitzCut->IsInside(p.var.x, p.var.y))
-                    return false;
-            } while (p.Next());
-            return true;
-        };
+//        auto DalitzCut = [] (const Fill_t& f) {
+//            OmegaDalitzPlot p(f.Tree.photons_fitted(), f.Tree.ggg_fitted());
+//            do {
+//                if(!dalitzCut->IsInside(p.var.x, p.var.y))
+//                    return false;
+//            } while (p.Next());
+//            return true;
+//        };
 
 //        auto etaBachelorCut = [] (const Fill_t& f) {
 //            return interval<double>::CenterWidth(200,40).Contains(f.BestBachelorE());
@@ -603,9 +603,9 @@ struct OmegaHist_t {
 //            return interval<double>::CenterWidth(380,40).Contains(f.BestBachelorE());
 //        };
 
-        auto cleanEvent = [] (const Fill_t& f) {
-            return f.Tree.nCandsInput == 4;
-        };
+//        auto cleanEvent = [] (const Fill_t& f) {
+//            return f.Tree.nCandsInput == 4;
+//        };
 
 //        auto notcleanEvent = [] (const Fill_t& f) {
 //            return !f.Tree.nCandsClean();
