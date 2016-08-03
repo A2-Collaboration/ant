@@ -33,6 +33,7 @@ public:
     struct PerChannel_t {
         std::string title;
         TH2D* proton_E_theta = nullptr;
+        TH2D* photons_E_theta = nullptr;
 
         PerChannel_t(const std::string& Title, HistogramFactory& hf);
 

@@ -101,7 +101,8 @@ string to_string(const OmegaBase::DataMode &m)
 OmegaMCTruePlots::PerChannel_t::PerChannel_t(const string& Title, HistogramFactory& hf):
     title(Title)
 {
-    proton_E_theta = hf.makeTH2D(title,"E [MeV]","#theta [#circ]",BinSettings(1000),BinSettings(360,0,180), title+"_e_theta");
+    proton_E_theta  = hf.makeTH2D(title+" Proton" ,"E [MeV]","#theta [#circ]",BinSettings(800,0,1600),BinSettings(180,0,180), title+"_proton_e_theta");
+    photons_E_theta = hf.makeTH2D(title+" Photons","E [MeV]","#theta [#circ]",BinSettings(800,0,1600),BinSettings(180,0,180), title+"_photon_e_theta");
 }
 
 void OmegaMCTruePlots::PerChannel_t::Show()
@@ -114,7 +115,11 @@ void OmegaMCTruePlots::PerChannel_t::Fill(const TEventData& d)
     const auto& protons = d.Particles.Get(ParticleTypeDatabase::Proton);
     if(!protons.empty()) {
         const auto& p = protons.at(0);
-        proton_E_theta->Fill(p->Ek(), p->Theta()*TMath::RadToDeg());
+        proton_E_theta->Fill(p->Ek(), radian_to_degree(p->Theta()));
+    }
+
+    for(const auto& photon : d.Particles.Get(ParticleTypeDatabase::Photon)) {
+        photons_E_theta->Fill(photon->Ek(),  radian_to_degree(photon->Theta()));
     }
 }
 
@@ -166,6 +171,14 @@ void OmegaMCTruePlots::ShowResult()
     }
 
     c << endc;
+
+    canvas photons("OmegaMCTrue photons E Theta");
+    photons << drawoption("colz");
+
+    for(auto& entry : channels) {
+        photons << entry.second.photons_E_theta;
+    }
+    photons << endc;
 }
 
 
