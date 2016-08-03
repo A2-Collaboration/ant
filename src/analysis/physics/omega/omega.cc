@@ -195,10 +195,10 @@ void OmegaMCTree::setGamma1(const LorentzVec& value)
 
 OmegaMCTree::OmegaMCTree(const std::string& name, OptionsPtr opts): Physics(name, opts) {
     tree=new TTree("omegatree","omgega eta gamma MC true");
-    tree->Branch("p", &proton_vector);
-    tree->Branch("omega", &omega_vector);
+    tree->Branch("p",      &proton_vector);
+    tree->Branch("omega",  &omega_vector);
     tree->Branch("gamma1", &gamma1_vector);
-    tree->Branch("eta", &eta_vector);
+    tree->Branch("eta",    &eta_vector);
     tree->Branch("gamma2", &gamma2_vector);
     tree->Branch("gamma3", &gamma3_vector);
 }
