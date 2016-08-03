@@ -25,11 +25,11 @@ struct TAPS :
     }
     virtual void SetIgnored(unsigned channel) override;
     virtual bool IsIgnored(unsigned channel) const override {
-        return clusterelements[channel]->Ignored;
+        return clusterelements.at(channel)->Ignored;
     }
 
     void SetToFOffset(unsigned channel, double value) {
-        clusterelements[channel]->ToFOffset = value;
+        clusterelements.at(channel)->ToFOffset = value;
     }
 
     /**
@@ -41,7 +41,7 @@ struct TAPS :
      * @return time in nanoseconds
      */
     virtual double GetTimeOfFlight(double clustertime, unsigned channel, double trigger_reftime) const override {
-        return clustertime - clusterelements[channel]->ToFOffset - trigger_reftime;
+        return clustertime - clusterelements.at(channel)->ToFOffset - trigger_reftime;
     }
 
     /**
@@ -57,7 +57,7 @@ struct TAPS :
 
     // for ClusterDetector_t
     virtual const ClusterDetector_t::Element_t* GetClusterElement(unsigned channel) const override {
-        return clusterelements[channel];
+        return clusterelements.at(channel);
     }
 
     /**
