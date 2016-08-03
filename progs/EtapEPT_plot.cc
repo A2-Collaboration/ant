@@ -31,22 +31,19 @@ volatile bool interrupt = false;
 struct Hist_t {
     using Fill_t = physics::EtapEPT::Tree_t;
 
-    TH2D* h_IM_2g;
-    TH2D* h_IM_2g_wide;
+    TH1D* h_IM_2g;
+    TH2D* h_IM_2g_TaggCh;
+    TH2D* h_IM_2g_ThetaProton;
+    TH2D* h_IM_2g_ThetaPhotons;
+
     std::vector<TH2D*> h_IM_2g_Ch;
 
     TH2D* h_BeamPull;
-    TH2D* h_BeamPull_wide;
     std::vector<TH2D*> h_BeamPull_Ch;
 
     TH1D* h_KinFitProb;
 
-    TH2D* h_BeamE;
     TH2D* h_MissingMass;
-    TH2D* h_MissingMass_prompt;
-    TH2D* h_MissingMass_random;
-
-
 
     Hist_t(HistogramFactory HistFac, cuttree::TreeInfo_t)
     {
@@ -55,8 +52,10 @@ struct Hist_t {
         HistogramFactory HistFac_IM_2g("IM_2g_Ch", HistFac);
         HistogramFactory HistFac_BeamPull("BeamPull_Ch", HistFac);
 
-        BinSettings bins_IM(500,0,1100);
+        BinSettings bins_IM(150,800,1050);
         BinSettings bins_pull(100,-5,5);
+        BinSettings bins_ThetaProton(40, 0, 40);
+        BinSettings bins_ThetaPhotons(80, 0, 120);
 
         for(unsigned ch=0;ch<ept->GetNChannels();ch++) {
             h_IM_2g_Ch.push_back(
@@ -77,54 +76,45 @@ struct Hist_t {
                         );
         }
 
-        h_IM_2g = HistFac.makeTH2D("IM 2g",
+        h_IM_2g = HistFac.makeTH1D("IM 2g",
                                    "IM / MeV","",
                                    bins_IM,
-                                   BinSettings(ept->GetNChannels()),
                                    "h_IM_2g");
-        h_IM_2g_wide = HistFac.makeTH2D("IM 2g",
-                                   "IM / MeV","",
+
+        h_IM_2g_TaggCh = HistFac.makeTH2D("IM 2g",
+                                   "IM / MeV","TaggCh",
                                    bins_IM,
                                    BinSettings(ept->GetNChannels()),
-                                   "h_IM_2g_wide");
+                                   "h_IM_2g_TaggCh");
+
+        h_IM_2g_ThetaProton = HistFac.makeTH2D("IM 2g",
+                                   "IM / MeV","#theta / #circ",
+                                   bins_IM,
+                                   bins_ThetaProton,
+                                   "h_IM_2g_ThetaProton");
+
+        h_IM_2g_ThetaPhotons = HistFac.makeTH2D(
+                                   "IM 2g",
+                                   "IM / MeV","#theta / #circ",
+                                   bins_IM,
+                                   bins_ThetaPhotons,
+                                   "h_IM_2g_ThetaPhotons");
 
         h_BeamPull = HistFac.makeTH2D("IM 2g",
                                    "IM / MeV","",
                                    bins_pull,
                                    BinSettings(ept->GetNChannels()),
                                    "h_BeamPull");
-        h_BeamPull_wide = HistFac.makeTH2D("IM 2g",
-                                   "IM / MeV","",
-                                   bins_pull,
-                                   BinSettings(ept->GetNChannels()),
-                                   "h_BeamPull_wide");
 
         h_KinFitProb = HistFac.makeTH1D("KinFitProb","p","",BinSettings(200,0,1),"h_KinFitProb");
 
-
-        h_BeamE = HistFac.makeTH2D("Beam Energy",
-                                   "E_{#gamma} / MeV","",
-                                   BinSettings(100,1420,1580),
-                                   BinSettings(ept->GetNChannels()),
-                                   "h_BeamE");
-
-        BinSettings bins_MM(400,750,1100);
+        BinSettings bins_MM(150,790,1090);
 
         h_MissingMass = HistFac.makeTH2D("Missing Mass",
                                          "MM / MeV","",
                                          bins_MM,
                                          BinSettings(ept->GetNChannels()),
                                          "h_MissingMass");
-        h_MissingMass_prompt = HistFac.makeTH2D("Missing Mass",
-                                         "MM / MeV","",
-                                         bins_MM,
-                                         BinSettings(ept->GetNChannels()),
-                                         "h_MissingMass_prompt");
-        h_MissingMass_random = HistFac.makeTH2D("Missing Mass",
-                                         "MM / MeV","",
-                                         bins_MM,
-                                         BinSettings(ept->GetNChannels()),
-                                         "h_MissingMass_random");
     }
 
 
@@ -136,19 +126,15 @@ struct Hist_t {
         if(f.TaggCh != f.TaggCh_)
             return;
 
-        h_IM_2g->Fill(f.IM_2g, f.TaggCh, f.TaggW);
-        h_IM_2g_wide->Fill(f.IM_2g, f.TaggCh, f.TaggW_wide);
-
-
+        h_IM_2g->Fill(f.IM_2g, f.TaggW);
+        h_IM_2g_TaggCh->Fill(f.IM_2g, f.TaggCh, f.TaggW);
+        h_IM_2g_ThetaProton->Fill(f.IM_2g, f.ProtonTheta, f.TaggW);
+        for(const auto& PhotonTheta : f.PhotonThetas()) {
+            h_IM_2g_ThetaPhotons->Fill(f.IM_2g, PhotonTheta, f.TaggW);
+        }
         h_BeamPull->Fill(f.KinFitBeamEPull, f.TaggCh, f.TaggW);
-        h_BeamPull_wide->Fill(f.KinFitBeamEPull, f.TaggCh, f.TaggW_wide);
-
         h_KinFitProb->Fill(f.KinFitProb, f.TaggW);
-
-        h_BeamE->Fill(f.TaggE, f.TaggCh, f.TaggW);
         h_MissingMass->Fill(f.MissingMass, f.TaggCh, f.TaggW);
-        h_MissingMass_prompt->Fill(f.MissingMass, f.TaggCh, f.TaggW>0);
-        h_MissingMass_random->Fill(f.MissingMass, f.TaggCh, f.TaggW<0);
     }
 
     // Sig and Ref channel (can) share some cuts...
@@ -165,8 +151,6 @@ struct Hist_t {
                           });
 
         cuts.emplace_back(MultiCut_t<Fill_t>{
-                              {"IM Pi0", [] (const Fill_t& f) { return ParticleTypeDatabase::Pi0.GetWindow(30).Contains(f.IM_2g); } },
-                              {"IM Eta", [] (const Fill_t& f) { return ParticleTypeDatabase::Eta.GetWindow(50).Contains(f.IM_2g); } },
                               {"IM EtaP", [] (const Fill_t& f) { return ParticleTypeDatabase::EtaPrime.GetWindow(50).Contains(f.IM_2g); } },
                           });
 
