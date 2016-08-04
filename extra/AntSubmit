@@ -291,7 +291,11 @@ sub create_submission {
   my $ant_args = $ANT_ARGS;
   my $repl = $job->{replacements};
   for my $key (keys %{$repl}) {
-    $ant_args =~ s/\Q$key\E/$repl->{$key}/g;
+    my $subst = $repl->{$key};
+    if(-f $subst) {
+      $subst = abs_path($subst);
+    }
+    $ant_args =~ s/\Q$key\E/$subst/g;
   }
 
   my $ant_cmd = "$ANT_BIN $ant_args";
