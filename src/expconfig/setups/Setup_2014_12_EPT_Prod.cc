@@ -22,7 +22,6 @@ public:
         IgnoreDetectorChannel(Detector_t::Type_t::CB,  41); /// odd time walk and energy
         IgnoreDetectorChannel(Detector_t::Type_t::CB, 125); /// odd time [walk] and energy
         IgnoreDetectorChannel(Detector_t::Type_t::CB, 265); /// few entries
-        IgnoreDetectorChannel(Detector_t::Type_t::CB, 418); /// odd time spectrum
         IgnoreDetectorChannel(Detector_t::Type_t::CB, 547); /// few entries
         IgnoreDetectorChannel(Detector_t::Type_t::CB, 549); /// no entries
         IgnoreDetectorChannel(Detector_t::Type_t::CB, 557); /// double peak in time
@@ -37,9 +36,44 @@ public:
         IgnoreDetectorChannel(Detector_t::Type_t::CB, 679); /// no entries
         IgnoreDetectorChannel(Detector_t::Type_t::CB, 696); /// odd time walk
 
-        //IgnoreDetectorChannels(Detector_t::Type_t::TAPSVeto, {36,41,195,203,242,243,254,256,288,292,307,337,349,356,                /// few stat
-                                                             //128,129,130,287,320,                                                   /// noise
-                                                             //192,263,321});                                                         /// empty
+        IgnoreDetectorChannels(Detector_t::Type_t::TAPSVeto, {36,41,195,203,242,243,254,256,288,292,307,337,349,356,                /// few stat
+                                                             128,129,130,287,320,                                                   /// noise
+                                                             192,263,321});                                                         /// empty
+        IgnoreDetectorChannels(Detector_t::Type_t::TAPS, {
+                                   0,
+                                   2,
+                                   3,
+                                   64,
+                                   73,
+                                   74,
+                                   127,
+                                   137,
+                                   144,
+                                   145,
+                                   146,
+                                   147,
+                                   200,
+                                   217,
+                                   218,
+                                   220,
+                                   222,
+                                   273,
+                                   274,
+                                   283,
+                                   284,
+                                   291,
+                                   295,
+                                   346,
+                                   356,
+                                   357,
+                                   358,
+                                   363,
+                                   364,
+                                   367,
+                                   368,
+                                   419,
+                                   437
+                               });
     }
 
 
