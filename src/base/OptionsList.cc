@@ -38,10 +38,13 @@ void OptionsList::SetOptions(const string& str,const string optdelim, const stri
 bool OptionsList::HasOption(const string& key) const
 {
     const auto entry = options->find(key);
-
-    if(entry == options->end())
+    if(entry == options->end()) {
+        notfound->insert(key);
+        if(parent) {
+            return parent->HasOption(key);
+        }
         return false;
-
+    }
     return true;
 }
 
