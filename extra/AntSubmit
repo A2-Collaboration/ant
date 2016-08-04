@@ -24,8 +24,8 @@ my $no_log = 0;
 my $no_test = 0;
 my $no_qsub = 0;
 my $queue = 'dflt';
-my $walltime = '2:00:00'; # dflt_short has 2h walltime
-my $priority = 0; # job priority for qsub
+my $walltime = '2:00:00';       # dflt_short has 2h walltime
+my $priority = 0;               # job priority for qsub
 
 # parse options
 Getopt::Long::Configure(qw(gnu_getopt));
@@ -80,6 +80,9 @@ sub main {
     $ANT_ARGS .= " $arg";
   }
 
+  # look for replacements inside ant args
+  my @ant_args_repl = ($ANT_ARGS =~ m/\{\d+\}/g);
+
   # read in the filelist, check for more errors
   open(my $filelist_fh, "<$filelist") or die "Can't open filelist $filelist: $!\n";
   my $n = 0;
@@ -91,12 +94,36 @@ sub main {
     # remove leading and trailing whitespace
     $line =~ s/^\s+//;
     $line =~ s/\s+$//;
-    my @inputfiles;
+    my @files;
     for my $inputfile (parse_line('\s+',0,$line)) {
       unless(-f $inputfile) {
         warn "Warning: Inputfile $inputfile does not exist, skipping.";
         next line;
       }
+      push(@files, $inputfile);
+    }
+
+    next line if @files==0;
+
+    # check for replacements
+    my %replacements;           # use hash to have unique replacements
+    for my $repl (@ant_args_repl) {
+      # remove {...}, extract number, starting from 1
+      my $num = substr($repl, 1, length($repl)-2);
+      if ($num > @files) {
+        warn "Warning: Requested replacement {$num} exceeds number of columns, skipping";
+        next line;
+      }
+      $replacements{$repl} = $files[$num-1];
+    }
+
+    # obtain inputfiles as leftover from replacements
+    my @inputfiles;
+    for (my $i=0;$i<@files;$i++) {
+      if (exists $replacements{'{'.($i+1).'}'}) {
+        next;
+      }
+      my $inputfile = $files[$i];
       unless($inputfile =~ /\.(dat|dat\.xz|dat\.gz|root)$/) {
         warn "Warning: Inputfile $inputfile does not end with .dat[.xz|.gz] or .root, skipping";
         next line;
@@ -104,12 +131,14 @@ sub main {
       push(@inputfiles, $inputfile);
     }
 
-    next line if @inputfiles==0;
-
+    if (@inputfiles==0) {
+      warn "Warning: No inputfiles left over after replacements, skipping.";
+      next line;
+    }
 
     my $basename = basename($inputfiles[0]);
     my $oldbasename = $basename;
-    if(exists $basenames{$basename}) {
+    if (exists $basenames{$basename}) {
       $basename .= '_'.$basenames{$basename};
       warn "Basename '$oldbasename' already seen, changed to '$basename'";
     }
@@ -122,6 +151,7 @@ sub main {
     }
     push(@jobs, {
                  'inputfiles' => \@inputfiles,
+                 'replacements' => \%replacements,
                  'jobnumber' => $runnumber,
                  'logfile' => "$LOG_DIR/".$jobtag."_$basename.log",
                  'outputfile' => "$OUT_DIR/".$jobtag."_$basename.root"
@@ -164,12 +194,11 @@ sub main {
     unlink $ant_outputfile_test;
   }
 
-  if($no_qsub) {
+  if ($no_qsub) {
     for my $sub (@submissions) {
       print STDOUT $sub->[1],"\n";
     }
-  }
-  else {
+  } else {
     # finally submit the jobs
     my $submitted = 0;
     for my $sub (@submissions) {
@@ -194,8 +223,6 @@ sub prepare_dir {
   my $dir = shift;
   my @jobs = @{shift()};
 
-
-  
   unless(-d $dir) {
     mkpath([$dir]) == 1 or die "Cannot create folder '$dir'";
   } else {
@@ -207,20 +234,18 @@ sub prepare_dir {
       }
       mkpath([$backupdir]) == 1 or die "Cannot create folder '$backupdir'";
     }
-    
+
     my $n_files = 0;
     for my $job (@jobs) {
       my $file = $job->{$tag};
       if (-f $file) {
-        if($clean) {
+        if ($clean) {
           unlink $file or die "Cannot delete file $file: $!";
-        }
-        elsif($backup) {
+        } elsif ($backup) {
           my $basename = basename($file);
           my $backupfile = "$backupdir/$basename";
           rename $file,$backupfile or die "Cannot move $file to $backupfile: $!";
-        }
-        else {
+        } else {
           die "File $file already exists. Use --clean or --backup?\n";
         }
         $n_files++;
@@ -228,8 +253,7 @@ sub prepare_dir {
     }
     if ($clean) {
       printf(STDERR "%04d %s cleaned\n", $n_files, $tag.'s', );
-    }
-    elsif($backup) {
+    } elsif ($backup) {
       printf(STDERR "%04d %s backuped to %s\n", $n_files, $tag.'s', $backupdir);
     }
   }
@@ -264,7 +288,13 @@ sub create_submission {
   my $logfile = abs_path($job->{logfile});
   my $user = $ENV{USER};
 
-  my $ant_cmd = "$ANT_BIN $ANT_ARGS";
+  my $ant_args = $ANT_ARGS;
+  my $repl = $job->{replacements};
+  for my $key (keys %{$repl}) {
+    $ant_args =~ s/\Q$key\E/$repl->{$key}/g;
+  }
+
+  my $ant_cmd = "$ANT_BIN $ant_args";
 
   for my $inputfile (@{$job->{inputfiles}}) {
     $inputfile = abs_path($inputfile);
@@ -312,7 +342,10 @@ sub print_help {
 Usage: AntSubmit [--clean|--backup] [--tag jobtag] [--filelist filename] -- [optional Ant arguments]
 
 Submit jobs running Ant on files in read from STDIN (or from file list
-specified by --filelist), output goes to current directory.
+specified by --filelist), output goes to current directory. Reads
+Antrc for arguments to Ant. You may use {n}, where n denotes the
+column, inside the Ant argument. This string is replaced then by the
+n-th column of given files, and not used as input file to Ant.
 
 Options:
 
