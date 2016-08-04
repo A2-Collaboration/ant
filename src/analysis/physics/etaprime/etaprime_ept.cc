@@ -38,6 +38,7 @@ APLCON::Fit_Settings_t EtapEPT::MakeFitSettings(unsigned max_iterations)
 EtapEPT::EtapEPT(const string& name, OptionsPtr opts) :
     Physics(name, opts),
     EPT(ExpConfig::Setup::GetDetector<expconfig::detector::EPT>()),
+    noTaggChPerm(opts->Get<bool>("NoTaggChPerm", false)),
     kinfitter("kinfitter",2,
               utils::UncertaintyModels::Interpolated::makeAndLoad(
                   // use OptimizedOli1 as default
@@ -124,6 +125,8 @@ void EtapEPT::ProcessEvent(const TEvent& event, manager_t&)
 
 
         for(unsigned ch=0;ch<EPT->GetNChannels();ch++) {
+            if(noTaggChPerm && ch != t.TaggCh())
+                continue;
             TTaggerHit taggerhit_(ch, EPT->GetPhotonEnergy(ch), taggerhit.Time);
             t.TaggCh_ = taggerhit_.Channel;
             t.TaggE_ = taggerhit_.PhotonEnergy;
