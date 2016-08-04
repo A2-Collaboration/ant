@@ -34,6 +34,7 @@ class Setup :
 {
 private:
     const std::string name_;
+    const bool includeIgnoredElements;
 
 public:
     virtual std::list< std::shared_ptr< Calibration::PhysicsModule> > GetCalibrations() const override;
@@ -64,7 +65,7 @@ public:
 
 protected:
 
-    Setup(const std::string& name, OptionsPtr opt);
+    Setup(const std::string& name, OptionsPtr opts);
 
     void AddDetector(const std::shared_ptr<Detector_t>& detector) {
         detectors.push_back(detector);

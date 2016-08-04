@@ -66,8 +66,9 @@ std::string Setup::GetPhysicsFilesDirectory() const
     return std::string(ANT_PATH_DATABASE)+"/"+GetName()+"/physics_files";
 }
 
-Setup::Setup(const std::string& name, OptionsPtr) :
-    name_(name)
+Setup::Setup(const std::string& name, OptionsPtr opts) :
+    name_(name),
+    includeIgnoredElements(opts->Get<bool>("IncludeIgnoredElements", false))
 {
     std::string calibrationDataFolder = std::string(ANT_PATH_DATABASE)+"/"+GetName()+"/calibration";
     calibrationDataManager = std::make_shared<calibration::DataManager>(calibrationDataFolder);
@@ -90,6 +91,10 @@ void Setup::BuildMappings(std::vector<UnpackerAcquConfig::hit_mapping_t>& hit_ma
 }
 
 void Setup::IgnoreDetectorChannel(ant::Detector_t::Type_t type, unsigned channel) {
+    if(includeIgnoredElements) {
+        LOG_N_TIMES(1, WARNING) << "Ignored elements requested to be included nonetheless";
+        return;
+    }
     for(auto& detector : detectors) {
         if(detector->Type == type) {
             detector->SetIgnored(channel);
