@@ -5,17 +5,38 @@
 #include "base/Logger.h"
 #include "expconfig/ExpConfig.h"
 
+#include <fstream>
+
 using namespace std;
 using namespace ant;
 using namespace ant::analysis;
 using namespace ant::analysis::physics;
 
+list<unsigned> DebugPhysics::LoadWriteEventList(const string& filename)
+{
+    list<unsigned> eventNumbers;
+    ifstream infile(filename.c_str());
+    if(!infile.is_open()) {
+        throw std::runtime_error("Cannot open "+filename+" for reading event number list");
+        return eventNumbers;
+    }
+    {
+        unsigned num;
+        while(infile >> num)
+            eventNumbers.push_back(num);
+    }
+    eventNumbers.sort();
+    LOG(INFO) << "Read " << eventNumbers.size() << " event numbers";
+    return eventNumbers;
+}
+
 DebugPhysics::DebugPhysics(const std::string& name, OptionsPtr opts) :
     Physics(name, opts),
-    noDump(opts->Get<bool>("NoDump", false)),
     writeEvents(opts->Get<unsigned>("WriteEvents", 0)),
+    writeEventList(opts->HasOption("WriteEventList") ? LoadWriteEventList(opts->Get<string>("WriteEventList")) : list<unsigned>{}),
     keepReadHits(opts->Get<bool>("KeepReadHits", false)),
-    requestSlowControl(opts->Get<bool>("RequestSlowControl", false))
+    requestSlowControl(opts->Get<bool>("RequestSlowControl", false)),
+    noDump(opts->Get<bool>("NoDump", false) || opts->HasOption("WriteEventList") || opts->HasOption("WriteEvents"))
 {
     if(requestSlowControl)
         slowcontrol::Variables::TaggerScalers->Request();
@@ -32,7 +53,13 @@ void DebugPhysics::ProcessEvent(const TEvent& event, manager_t& manager)
         if(requestSlowControl)
             LOG_N_TIMES(1, INFO) <<  "First Tagger Scalers: " << slowcontrol::Variables::TaggerScalers->Get();
     }
-    else if(!writeEvents && !noDump) {
+    else if(!writeEventList.empty() && writeEventList.front() == event.Reconstructed().Trigger.DAQEventID) {
+        manager.SaveEvent();
+        if(keepReadHits)
+            manager.KeepDetectorReadHits();
+        writeEventList.pop_front();
+    }
+    else if(!noDump) {
         LOG(INFO) << event;
         // only access slowcontrol if it was actually requested in the beginning
         if(requestSlowControl)

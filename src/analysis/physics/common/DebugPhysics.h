@@ -9,12 +9,15 @@ namespace physics {
 
 class DebugPhysics: public Physics {
 protected:
-    const bool noDump;
     const unsigned writeEvents;
+    std::list<unsigned> writeEventList;
     const bool keepReadHits;
     const bool requestSlowControl;
+    const bool noDump;
+
     unsigned seenEvents = 0;
     TID lastTID;
+    static std::list<unsigned> LoadWriteEventList(const std::string& filename);
 public:
     DebugPhysics(const std::string& name, OptionsPtr opts=nullptr);
     virtual ~DebugPhysics();
