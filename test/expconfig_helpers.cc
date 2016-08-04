@@ -51,7 +51,7 @@ void ant::test::EnsureSetup() {
 
     struct Setup_Test : expconfig::Setup {
 
-        Setup_Test() : Setup("Setup_Test", nullptr) {
+        Setup_Test() : Setup("Setup_Test", make_shared<OptionsList>()) {
 
 
             // setup the detectors of interest
