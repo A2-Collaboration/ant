@@ -586,6 +586,10 @@ struct OmegaHist_t {
             return pi0prob > 0.3;
         };
 
+        auto wmasscut = [] (const Fill_t& f) {
+            return interval<double>(700,900).Contains(f.Tree.ggg().M());
+        };
+
 //        auto DalitzCut = [] (const Fill_t& f) {
 //            OmegaDalitzPlot p(f.Tree.photons_fitted(), f.Tree.ggg_fitted());
 //            do {
@@ -629,6 +633,10 @@ struct OmegaHist_t {
 
         cuts.emplace_back(MultiCut_t<Fill_t>{
                                  {"Prob+mm", [] (const Fill_t& f) { return f.Tree.KinFitProb>0.1 && f.Tree.mm().M()<1100 && f.Tree.mm().M() > 780; } }
+                             });
+
+        cuts.emplace_back(MultiCut_t<Fill_t>{
+                                 {"#omega mass", wmasscut}
                              });
 
         cuts.emplace_back(MultiCut_t<Fill_t>{
