@@ -72,11 +72,11 @@ DisplayClustering::DisplayClustering(TFile* file)
 
     cd(1);
     h_cb = new TH2CB("h_cb","CB");
-    h_cb->Draw();
+    h_cb->Draw("colz");
 
     cd(2);
     h_taps = new TH2TAPS("h_taps","TAPS");
-    h_taps->Draw();
+    h_taps->Draw("colz");
 
     impl = new detail::Implementation();
 
@@ -109,7 +109,24 @@ void DisplayClustering::Display()
     }
     cout << endl;
 
+    h_cb->ResetElements();
+    h_taps->ResetElements();
 
+    for(auto& cluster : recon.Clusters) {
+        auto h = cluster.DetectorType == Detector_t::Type_t::CB ?
+                     dynamic_cast<TH2Crystals*>(h_cb) : h_taps;
+        for(auto& hit : cluster.Hits) {
+            h->SetElement(hit.Channel, hit.Energy);
+        }
+    }
+
+    cd(1);
+    gPad->Modified();
+    gPad->Update();
+
+    cd(2);
+    gPad->Modified();
+    gPad->Update();
 }
 
 void DisplayClustering::Next()
