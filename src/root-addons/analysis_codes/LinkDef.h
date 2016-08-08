@@ -16,11 +16,6 @@
 #pragma link C++ class BrowseHistogramsCanvas+;
 #pragma link C++ class PlotTimings+;
 
-#pragma link C++ class TestClass+;
-#pragma link C++ class std::vector<TestClass*>+;
-#pragma link C++ class TestClassContainer+;
-#pragma link C++ class PtrTest+;
-
 #pragma link C++ class ant::hstack-; // has its own Streamer implementation with cereal
 
 #pragma link C++ class ant::histtools+;

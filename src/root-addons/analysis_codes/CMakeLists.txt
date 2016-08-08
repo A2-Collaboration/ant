@@ -7,7 +7,6 @@ set(DICT_HEADERS
     TAPSEnergy_Check.h
     DetectorPlots.h
     BrowseHistograms.h
-    RootPointerFun.h
     PlotTimings.h
     hstack.h
     histtools.h
@@ -25,7 +24,6 @@ set(SRCS
     TAPSEnergy_Check.cc
     DetectorPlots.cc
     BrowseHistograms.cc
-    RootPointerFun.cc
     PlotTimings.cc
     hstack.cc
     histtools.cc
