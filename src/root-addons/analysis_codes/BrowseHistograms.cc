@@ -70,6 +70,8 @@ void BrowseHistogramsCanvas::SetOption(const std::string& option)
 
 void BrowseHistogramsCanvas::DrawCurrent()
 {
+    if(hists.empty())
+        return;
     this->cd();
     (*current)->Draw(draw_option.c_str());
     Modified();
