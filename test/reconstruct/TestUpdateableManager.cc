@@ -14,6 +14,8 @@ void dotest3();
 void dotest4();
 void dotest5();
 void dotest6();
+void dotest7();
+
 
 TEST_CASE("UpdateableManager: Simple combinations", "[reconstruct]") {
     dotest1();
@@ -35,8 +37,12 @@ TEST_CASE("UpdateableManager: Unallowed things", "[reconstruct]") {
     dotest5();
 }
 
-TEST_CASE("UpdateableManager: Multiple updateables", "[reconstruct]") {
+TEST_CASE("UpdateableManager: Multiple updateables I", "[reconstruct]") {
     dotest6();
+}
+
+TEST_CASE("UpdateableManager: Multiple updateables II", "[reconstruct]") {
+    dotest7();
 }
 
 // implement some testable Updateable item
@@ -159,3 +165,23 @@ void dotest6() {
 
 }
 
+void dotest7() {
+    auto item1 = make_shared<UpdateableItem>(list<TID>{p[0], p[2], p[4]});
+    auto item2 = make_shared<UpdateableItem>(list<TID>{p[0], p[2], p[4]});
+
+    UpdateableManager manager(p[0], {item1, item2});
+
+    REQUIRE(item1->UpdatePoints == vector<TID>{p[0]});
+    REQUIRE(item2->UpdatePoints == vector<TID>{p[0]});
+
+    manager.UpdateParameters(p[1]);
+
+    REQUIRE(item1->UpdatePoints == vector<TID>{p[0]});
+    REQUIRE(item2->UpdatePoints == vector<TID>{p[0]});
+
+    manager.UpdateParameters(p[3]);
+
+    vector<TID> expected{p[0],p[2]};
+    REQUIRE(item1->UpdatePoints == expected);
+    REQUIRE(item2->UpdatePoints == expected);
+}
