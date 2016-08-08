@@ -310,6 +310,11 @@ string DataBase::OnDiskLayout::GetCurrentFile(const DataBase::OnDiskLayout::Rang
 
 std::list<DataBase::OnDiskLayout::Range_t> DataBase::OnDiskLayout::GetDataRanges(const string& calibrationID) const
 {
+
+    auto it_cached_range = cached_ranges.find(calibrationID);
+    if(it_cached_range != cached_ranges.end())
+        return it_cached_range->second;
+
     list<Range_t> ranges;
     for(auto daydir : system::lsFiles(GetFolder(calibrationID, Type_t::DataRanges),"",true)) {
         for(auto tidRangeDir : system::lsFiles(daydir, "", true, true)) {
@@ -317,8 +322,17 @@ std::list<DataBase::OnDiskLayout::Range_t> DataBase::OnDiskLayout::GetDataRanges
             ranges.emplace_back(tidRange, daydir+"/"+tidRangeDir);
         }
     }
+
+    if(EnableCaching)
+        cached_ranges.emplace(calibrationID, ranges);
+
     return ranges;
 }
+
+bool DataBase::OnDiskLayout::EnableCaching = false;
+
+DataBase::OnDiskLayout::OnDiskLayout(const string& calibrationDataFolder) :
+    CalibrationDataFolder(calibrationDataFolder) {}
 
 string DataBase::OnDiskLayout::GetFolder(const string& calibrationID, DataBase::OnDiskLayout::Type_t type) const
 {

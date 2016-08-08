@@ -15,6 +15,7 @@
 #include "expconfig/setups/SetupRegistry.h"
 
 #include "calibration/DataManager.h"
+#include "calibration/DataBase.h"
 
 #include "unpacker/Unpacker.h"
 #include "unpacker/RawFileReader.h"
@@ -128,6 +129,9 @@ int main(int argc, char** argv) {
     // progress updates only when running interactively
     if(std_ext::system::isInteractive())
         ProgressCounter::Interval = 3;
+
+    // enable caching of the calibration database
+    ant::calibration::DataBase::OnDiskLayout::EnableCaching = true;
 
     // check if input files are readable
     for(const auto& inputfile : cmd_input->getValue()) {

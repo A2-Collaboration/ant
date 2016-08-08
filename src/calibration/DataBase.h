@@ -5,9 +5,9 @@
 #include "base/interval.h"
 #include "Calibration.h"
 
-#include <set>
 #include <list>
 #include <stdexcept>
+#include <memory>
 
 namespace ant {
 
@@ -38,10 +38,16 @@ public:
 
     struct OnDiskLayout {
 
+        /**
+         * @brief EnableCaching if true, the OnDiskLayout does not scan the folder structure
+         * every time GetDataRanges is called. Note that this should only be enabled globally if
+         * only read accesses are executed. The cache prevents changes to be seen made by new items!
+         */
+        static bool EnableCaching;
+
         const std::string CalibrationDataFolder;
 
-        OnDiskLayout(const std::string& calibrationDataFolder) :
-            CalibrationDataFolder(calibrationDataFolder) {}
+        OnDiskLayout(const std::string& calibrationDataFolder);
 
         enum class Type_t {
             DataDefault, DataRanges, MC
@@ -63,11 +69,13 @@ public:
             {}
         };
         std::string GetCurrentFile(const Range_t& range) const;
-        std::list<Range_t> GetDataRanges(const std::string& calibrationID) const;
+        using DataRanges_t = std::list<Range_t>;
+        DataRanges_t GetDataRanges(const std::string& calibrationID) const;
 
     protected:
         std::string makeTIDString(const TID& tid) const;
         interval<TID> parseTIDRange(const std::string& tidRangeStr) const;
+        mutable std::map<std::string, DataRanges_t> cached_ranges;
     };
 
 
