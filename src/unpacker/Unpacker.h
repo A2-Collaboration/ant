@@ -44,7 +44,7 @@ public:
     class Module {
     public:
         virtual ~Module() = default;
-        virtual TEvent NextEvent() noexcept = 0;
+        virtual TEvent NextEvent() = 0;
         virtual double PercentDone() const = 0;
     protected:
         friend class Unpacker;

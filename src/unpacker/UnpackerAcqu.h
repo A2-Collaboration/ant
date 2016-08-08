@@ -21,7 +21,7 @@ class UnpackerAcqu : public Unpacker::Module
 public:
     UnpackerAcqu();
     virtual bool OpenFile(const std::string& filename) override;
-    virtual TEvent NextEvent() noexcept override;
+    virtual TEvent NextEvent() override;
 
     class Exception : public Unpacker::Exception {
         using Unpacker::Exception::Exception; // use base class constructor

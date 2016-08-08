@@ -220,7 +220,7 @@ struct r_t {
 };
 
 
-TEvent UnpackerA2Geant::NextEvent() noexcept
+TEvent UnpackerA2Geant::NextEvent()
 {
     if(current_entry>=geant->GetEntriesFast()-1)
         return {};

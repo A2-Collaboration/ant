@@ -30,7 +30,7 @@ bool UnpackerAcqu::OpenFile(const std::string &filename)
     return true;
 }
 
-TEvent UnpackerAcqu::NextEvent() noexcept
+TEvent UnpackerAcqu::NextEvent()
 {
     // check if we need to replenish the queue
     if(queue.empty()) {
