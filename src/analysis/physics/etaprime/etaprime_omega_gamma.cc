@@ -406,6 +406,8 @@ bool EtapOmegaG::doKinfit(const TTaggerHit& taggerhit,
                           EtapOmegaG::SharedTree_t& t,
                           TH1D* h_CommonCuts)
 {
+    h_CommonCuts->Fill("Seen Tagger", 1.0);
+
     // missing mass
     const LorentzVec beam_target = taggerhit.GetPhotonBeam() + LorentzVec({0, 0, 0}, ParticleTypeDatabase::Proton.Mass());
     t.MissingMass = (beam_target - particles.PhotonSum).M();
