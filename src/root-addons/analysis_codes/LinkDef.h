@@ -23,8 +23,9 @@
 #pragma link C++ class ant::KinfitExtract+;
 #pragma link C++ class ant::Math+;
 #pragma link C++ class ant::InterpolatedPulls+;
-#pragma link C++ class ant::InterpolatedPulls+;
 #pragma link C++ class ant::ConvergencePlot+;
+#pragma link C++ class ant::DisplayClustering+;
+
 
 #pragma link C++ class std::list<TDirectory*>+;
 

@@ -14,6 +14,7 @@ set(DICT_HEADERS
     KinfitExtract.h
     Math.h
     InterpolatedPulls.h
+    DisplayClustering.h
   )
 
 set(SRCS
@@ -31,6 +32,7 @@ set(SRCS
     KinfitExtract.cc
     Math.cc
     InterpolatedPulls.cc
+    DisplayClustering.cc
   )
 
 set(ROOT_DICTIONARY "${CMAKE_CURRENT_BINARY_DIR}/G__analysis_codes.cc")
