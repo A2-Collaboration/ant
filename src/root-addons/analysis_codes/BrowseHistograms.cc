@@ -6,7 +6,7 @@
 #include <iostream>
 
 using namespace std;
-
+using namespace ant;
 
 BrowseHistogramsCanvas::BrowseHistogramsCanvas(TDirectory* dir):
     draw_option("colz")

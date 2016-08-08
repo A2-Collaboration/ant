@@ -4,6 +4,9 @@
 class TTree;
 class TH2;
 
+namespace ant {
+
+
 class SymmetricPi0 {
 public:
 
@@ -11,5 +14,6 @@ public:
     static void findMax(TH2* h);
 };
 
+}
 
 #endif

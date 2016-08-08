@@ -7,6 +7,7 @@ class TTree;
 class TCut;
 class TF1;
 
+namespace ant {
 
 
 class ExtractResolutions {
@@ -27,5 +28,7 @@ public:
     static TF1* SigmaFit();
     static TF1* Voigtian();
 };
+
+}
 
 #endif

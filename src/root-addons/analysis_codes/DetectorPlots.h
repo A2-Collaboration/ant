@@ -6,7 +6,6 @@
 namespace ant {
 class TH2CB;
 class TH2TAPS;
-}
 
 class DetectorPlots {
 public:
@@ -41,5 +40,7 @@ public:
     static void          PlotTaggerChannelEnergyWidth(const std::string& setup_name);
 
 };
+
+}
 
 #endif

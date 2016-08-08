@@ -8,6 +8,8 @@ class TH1;
 #include "TDirectory.h"
 #include "TCanvas.h"
 
+namespace ant {
+
 class BrowseHistogramsCanvas : public TCanvas {
 protected:
     typedef std::list<TH1*> hlist;
@@ -31,5 +33,7 @@ public:
 
     ClassDef(BrowseHistogramsCanvas, 1)
 };
+
+}
 
 #endif
