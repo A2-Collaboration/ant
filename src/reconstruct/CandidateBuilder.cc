@@ -8,31 +8,23 @@
 #include "base/std_ext/math.h"
 #include "base/std_ext/misc.h"
 
-
 using namespace ant;
 using namespace std;
 using namespace ant::reconstruct;
 using namespace ant::expconfig;
 
-template<class T, class List_t>
-T find_detector(const List_t& detectors) {
-    using element_t = typename T::element_type;
-    for(const auto& det : detectors) {
-        if(auto ptr = dynamic_pointer_cast<element_t>(det))
-            return ptr;
-    }
-    VLOG(3) << "Detector not found " << std_ext::getTypeAsString<element_t>();
-    return nullptr;
-}
+template<typename T>
+struct det_type {
+    using type = typename T::element_type;
+};
 
 CandidateBuilder::CandidateBuilder(const std::shared_ptr<ExpConfig::Setup>& setup) :
     config(setup->GetCandidateBuilderConfig())
 {
-    const auto& detectors = setup->GetDetectors();
-    cb       = find_detector<decltype(cb)>(detectors);
-    pid      = find_detector<decltype(pid)>(detectors);
-    taps     = find_detector<decltype(taps)>(detectors);
-    tapsveto = find_detector<decltype(tapsveto)>(detectors);
+    cb       = setup->GetDetector<det_type<decltype(cb)>::type>();
+    pid      = setup->GetDetector<det_type<decltype(pid)>::type>();
+    taps     = setup->GetDetector<det_type<decltype(taps)>::type>();
+    tapsveto = setup->GetDetector<det_type<decltype(tapsveto)>::type>();
 }
 
 void CandidateBuilder::Build_PID_CB(sorted_clusters_t& sorted_clusters,
