@@ -70,9 +70,7 @@ protected:
         /// \todo check if that channel weighting actually works here
         vector<double> weights;
         for(unsigned ch=0;ch<tagger->GetNChannels();ch++) {
-            weights.emplace_back(
-                        tagger->IsIgnored(ch) ? 0.0 : 1.0/tagger->GetPhotonEnergy(ch)
-                        );
+            weights.emplace_back(1.0/tagger->GetPhotonEnergy(ch));
         }
         return {weights.begin(), weights.end()};
     }
@@ -251,8 +249,6 @@ TEvent UnpackerA2Geant::NextEvent()
         if(ch >= cb_detector->GetNChannels())
             throw Exception("CB channel number out of bounds " + to_string(ch) + " / " + to_string(cb_detector->GetNChannels()));
 
-        if(cb_detector->IsIgnored(ch))
-            continue;
         const Detector_t::Type_t det = Detector_t::Type_t::CB;
         hits.emplace_back(
                     LogicalChannel_t{det, Channel_t::Type_t::Integral, ch},
@@ -272,8 +268,6 @@ TEvent UnpackerA2Geant::NextEvent()
         if(ch >= pid_detector->GetNChannels())
             throw Exception("PID channel number out of bounds " + to_string(ch) + " / " + to_string(pid_detector->GetNChannels()));
 
-        if(pid_detector->IsIgnored(ch))
-            continue;
         const Detector_t::Type_t det = Detector_t::Type_t::PID;
         hits.emplace_back(
                     LogicalChannel_t{det, Channel_t::Type_t::Integral, ch},
@@ -292,8 +286,6 @@ TEvent UnpackerA2Geant::NextEvent()
         if(ch >= taps_detector->GetNChannels())
             throw Exception("TAPS channel number out of bounds " + to_string(ch) + " / " + to_string(taps_detector->GetNChannels()));
 
-        if(taps_detector->IsIgnored(ch))
-            continue;
         const Detector_t::Type_t det = Detector_t::Type_t::TAPS;
         hits.emplace_back(
                     LogicalChannel_t{det, Channel_t::Type_t::Integral, ch},
@@ -317,8 +309,6 @@ TEvent UnpackerA2Geant::NextEvent()
         if(ch >= tapsveto_detector->GetNChannels())
             throw Exception("TAPS channel number out of bounds " + to_string(ch) + " / " + to_string(tapsveto_detector->GetNChannels()));
 
-        if(tapsveto_detector->IsIgnored(ch))
-            continue;
         const Detector_t::Type_t det = Detector_t::Type_t::TAPSVeto;
         hits.emplace_back(
                     LogicalChannel_t{det, Channel_t::Type_t::Integral, ch},
@@ -337,9 +327,7 @@ TEvent UnpackerA2Geant::NextEvent()
     if(taggerdetector) {
         // could the prompt photon have been detected?
         unsigned ch;
-        if(taggerdetector->TryGetChannelFromPhoton(photon_energy, ch) &&
-           !taggerdetector->IsIgnored(ch)
-           )
+        if(taggerdetector->TryGetChannelFromPhoton(photon_energy, ch))
         {
             // then insert (possibly time-smeared) prompt hit
             hits.emplace_back(

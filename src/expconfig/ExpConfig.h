@@ -59,6 +59,8 @@ public:
             return candidatebuilder_config_t();
         }
 
+        virtual bool GetIncludeIgnoredElements() const = 0;
+
         // you may obtain such an Expconfig::Setup via headerInfo, name,
         // get all of them, or the last found one
         static std::shared_ptr<Setup> Get(const TID& header);

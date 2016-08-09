@@ -23,9 +23,6 @@ void Tagger::BuildMappings(
 
     for(const Element_t& element : elements) {
 
-        if(element.Ignored)
-            continue;
-
         // TDC/scaler information is most important
         hit_mappings.emplace_back(Type,
                                   Channel_t::Type_t::Timing,

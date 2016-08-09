@@ -65,6 +65,8 @@ void Reconstruct::Initialize(const TID& tid)
                             tid, setup->GetUpdateables()
                             );
 
+    includeIgnoredElements = setup->GetIncludeIgnoredElements();
+
     initialized = true;
 }
 
@@ -163,6 +165,9 @@ void Reconstruct::BuildHits(sorted_bydetectortype_t<TClusterHit>& sorted_cluster
         map<unsigned, TClusterHit> hits;
 
         for(const TDetectorReadHit& readhit : readhits) {
+            if(!includeIgnoredElements && detector.Detector->IsIgnored(readhit.Channel))
+                continue;
+
             // ignore uncalibrated items
             if(readhit.Values.empty())
                 continue;
@@ -209,6 +214,9 @@ void Reconstruct::HandleTagger(const shared_ptr<TaggerDetector_t>& taggerdetecto
     map<unsigned, taggerhit_t > hits;
 
     for(const TDetectorReadHit& readhit : readhits) {
+        if(!includeIgnoredElements && taggerdetector->IsIgnored(readhit.Channel))
+            continue;
+
         // ignore uncalibrated items
         if(readhit.Values.empty())
             continue;

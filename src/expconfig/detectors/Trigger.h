@@ -29,7 +29,8 @@ struct Trigger :
         throw Exception("The trigger detector cannot ignore channels.");
     }
     virtual bool IsIgnored(unsigned) const override {
-        throw Exception("The trigger detector knows nothing about ignored channels.");
+        // the trigger does not ignore any channels
+        return false;
     }
 
     struct ReferenceTimingHitMapping_t {

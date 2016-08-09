@@ -16,9 +16,6 @@ void TAPSVeto::BuildMappings(vector<UnpackerAcquConfig::hit_mapping_t> &hit_mapp
                              vector<UnpackerAcquConfig::scaler_mapping_t>&) const {
     for(const BaF2_Element_t& element : BaF2_elements)  {
 
-        if(element.Ignored)
-            continue;
-
         // TAC provides timing information
 
         hit_mappings.emplace_back(Type,
@@ -41,9 +38,6 @@ void TAPSVeto::BuildMappings(vector<UnpackerAcquConfig::hit_mapping_t> &hit_mapp
     // the PbWO4 are a bit simpler
 
     for(const PbWO4_Element_t& element : PbWO4_elements)  {
-
-        if(element.Ignored)
-            continue;
 
         hit_mappings.emplace_back(Type,
                                   Channel_t::Type_t::Timing,

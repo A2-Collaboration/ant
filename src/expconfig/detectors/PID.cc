@@ -44,9 +44,6 @@ void PID::BuildMappings(vector<UnpackerAcquConfig::hit_mapping_t>& hit_mappings,
 {
     for(const Element_t& element : elements)
     {
-        if(element.Ignored)
-            continue;
-
         hit_mappings.emplace_back(Type,
                                   Channel_t::Type_t::Integral,
                                   element.Channel,

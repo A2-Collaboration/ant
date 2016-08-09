@@ -63,6 +63,10 @@ public:
         return std::numeric_limits<double>::quiet_NaN();
     }
 
+    virtual bool GetIncludeIgnoredElements() const override {
+        return includeIgnoredElements;
+    }
+
 protected:
 
     Setup(const std::string& name, OptionsPtr opts);

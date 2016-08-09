@@ -75,8 +75,8 @@ void CB::BuildMappings(vector<UnpackerAcquConfig::hit_mapping_t> &hit_mappings,
     // no scalers
     unsigned true_elements = 0;
     for(const Element_t& element : elements)  {
-        // exclude ignored elements from mapping
-        if(IsIgnored(element.Channel))
+        // exclude holes from mapping
+        if(element.IsHole)
             continue;
 
         hit_mappings.emplace_back(Type,
@@ -92,8 +92,7 @@ void CB::BuildMappings(vector<UnpackerAcquConfig::hit_mapping_t> &hit_mappings,
         true_elements++;
     }
 
-    assert(true_elements <= 672);
-    assert(true_elements == GetNChannels() - ignoredChannels.size());
+    assert(true_elements == 672);
 }
 
 

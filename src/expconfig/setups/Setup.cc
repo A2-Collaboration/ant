@@ -72,6 +72,7 @@ Setup::Setup(const std::string& name, OptionsPtr opts) :
 {
     std::string calibrationDataFolder = std::string(ANT_PATH_DATABASE)+"/"+GetName()+"/calibration";
     calibrationDataManager = std::make_shared<calibration::DataManager>(calibrationDataFolder);
+    LOG_IF(includeIgnoredElements, WARNING) << "Including ignored detector elements";
 }
 
 void Setup::BuildMappings(std::vector<UnpackerAcquConfig::hit_mapping_t>& hit_mappings,
@@ -91,10 +92,6 @@ void Setup::BuildMappings(std::vector<UnpackerAcquConfig::hit_mapping_t>& hit_ma
 }
 
 void Setup::IgnoreDetectorChannel(ant::Detector_t::Type_t type, unsigned channel) {
-    if(includeIgnoredElements) {
-        LOG_N_TIMES(1, WARNING) << "Ignored elements requested to be included nonetheless";
-        return;
-    }
     for(auto& detector : detectors) {
         if(detector->Type == type) {
             detector->SetIgnored(channel);
