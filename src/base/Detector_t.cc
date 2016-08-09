@@ -112,28 +112,28 @@ const char* ant::Channel_t::ToString(const Type_t& type)
 
 double TaggerDetector_t::GetPhotonEnergyWidth(unsigned channel) const
 {
-
     if(channel >= GetNChannels())
         throw std::out_of_range(std_ext::formatter() << "Tagger channel index out of range: " << channel << " (" << GetNChannels() << ")");
 
     if(channel == 0) {
-        return (GetPhotonEnergy(channel+1) - GetPhotonEnergy(channel));
-
-    } else if(channel == GetNChannels() -1) {
-        return (GetPhotonEnergy(channel) - GetPhotonEnergy(channel-1));
-    } else {
-        // =  (E(ch+1) - central)/2 + (central - E(ch-1))/2
-        return (GetPhotonEnergy(channel+1) - GetPhotonEnergy(channel-1)) / 2.0;
+        return std::abs(GetPhotonEnergy(channel+1) - GetPhotonEnergy(channel));
     }
-
-
+    else if(channel == GetNChannels() -1) {
+        return std::abs(GetPhotonEnergy(channel) - GetPhotonEnergy(channel-1));
+    }
+    else {
+        // =  (E(ch+1) - central)/2 + (central - E(ch-1))/2
+        return std::abs(GetPhotonEnergy(channel+1) - GetPhotonEnergy(channel-1)) / 2.0;
+    }
 }
 
 bool TaggerDetector_t::TryGetChannelFromPhoton(double photonEnergy, unsigned& channel) const
 {
     for(channel=0;channel<GetNChannels();++channel) {
-        const auto& i = interval<double>::CenterWidth(GetPhotonEnergy(channel),
-                                                      GetPhotonEnergyWidth(channel));
+        const auto& i = interval<double>::CenterWidth(
+                            GetPhotonEnergy(channel),
+                            GetPhotonEnergyWidth(channel)
+                            );
         if(i.Contains(photonEnergy))
             return true;
     }
