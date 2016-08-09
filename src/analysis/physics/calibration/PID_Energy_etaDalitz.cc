@@ -54,7 +54,7 @@ ParticleTypeTree PID_Energy_etaDalitz::base_tree()
 ParticleTypeTree PID_Energy_etaDalitz::eta_3g()
 {
     auto t = base_tree();
-    auto eta = t->CreateDaughter(ParticleTypeDatabase::Eta);
+    auto eta = t->CreateDaughter(ParticleTypeDatabase::Pi0);
     eta->CreateDaughter(ParticleTypeDatabase::Photon);
     eta->CreateDaughter(ParticleTypeDatabase::Photon);
     eta->CreateDaughter(ParticleTypeDatabase::Photon);
@@ -169,7 +169,8 @@ PID_Energy_etaDalitz::PID_Energy_etaDalitz(const string& name, OptionsPtr opts) 
                    opts->HasOption("SigmaZ"), {}, MakeFitSettings(20)
                    )
 {
-    promptrandom.AddPromptRange({-5, 5});
+    //promptrandom.AddPromptRange({-5, 5});
+    promptrandom.AddPromptRange({-3, 2});
     promptrandom.AddRandomRange({-30, -10});
     promptrandom.AddRandomRange({10, 30});
 
@@ -177,6 +178,11 @@ PID_Energy_etaDalitz::PID_Energy_etaDalitz(const string& name, OptionsPtr opts) 
     auto detector = ExpConfig::Setup::GetDetector(Detector_t::Type_t::PID);
 
     t.CreateBranches(HistFac.makeTTree("tree"));
+
+    const BinSettings tagger_time_bins(2000, -200, 200);
+
+    h_tagger_time = HistFac.makeTH1D("Tagger Time", "t [ns]", "#", tagger_time_bins, "h_tagger_time");
+    h_tagger_time_CBavg = HistFac.makeTH1D("Tagger Time - CB avg time", "t [ns]", "#", tagger_time_bins, "h_tagger_time_CBavg");
 
     h_counts = HistFac.makeTH1D("Events per Channel", "channel", "#", BinSettings(20), "h_counts");
     missed_channels = HistFac.makeTH1D("Unlisted Channels", "", "Total Events seen", BinSettings(20), "missed_channels");
@@ -317,6 +323,11 @@ void PID_Energy_etaDalitz::ProcessEvent(const TEvent& event, manager_t&)
     double best_prob_kinfit = -std_ext::inf, best_prob_treefit = -std_ext::inf;
     unsigned best_comb_kinfit = cands.size(), best_comb_treefit = cands.size();
     for (const TTaggerHit& taggerhit : data.TaggerHits) {  // loop over all tagger hits
+        if (!MC) {
+            h_tagger_time->Fill(taggerhit.Time);
+            h_tagger_time_CBavg->Fill(taggerhit.Time - t.CBAvgTime);
+        }
+
         promptrandom.SetTaggerHit(taggerhit.Time - t.CBAvgTime);
         if (promptrandom.State() == PromptRandom::Case::Outside)
             continue;
@@ -329,7 +340,7 @@ void PID_Energy_etaDalitz::ProcessEvent(const TEvent& event, manager_t&)
 
         for (size_t i = 0; i < cands.size(); i++) {  // loop to test all different combinations
             // ensure the possible proton candidate is kinematically allowed
-            if (std_ext::radian_to_degree(comb.back()->Theta) > 60.) {
+            if (std_ext::radian_to_degree(comb.back()->Theta) > 90.) {
                 shift_right(comb);
                 continue;
             }
@@ -381,7 +392,7 @@ void PID_Energy_etaDalitz::ProcessEvent(const TEvent& event, manager_t&)
                 if (treefit_result.Status != APLCON::Result_Status_t::Success)
                     continue;
 
-            if (treefit_result.Status != APLCON::Result_Status_t::Success) {
+            if (USE_TREEFIT && treefit_result.Status != APLCON::Result_Status_t::Success) {
                 shift_right(comb);
                 continue;
             }
@@ -400,14 +411,14 @@ void PID_Energy_etaDalitz::ProcessEvent(const TEvent& event, manager_t&)
 
             auto kinfit_result = kinfit.DoFit();
 
-            if (kinfit_result.Status != APLCON::Result_Status_t::Success) {
+            if (!USE_TREEFIT && kinfit_result.Status != APLCON::Result_Status_t::Success) {
                 shift_right(comb);
                 continue;
             }
             h.steps->Fill("kinfit", 1);
 
             auto kinfitted_photons = kinfit.GetFittedPhotons();
-            auto kinfitted_proton   = kinfit.GetFittedProton();
+            auto kinfitted_proton = kinfit.GetFittedProton();
             auto kinfitted_beam = kinfit.GetFittedBeamE();
             auto kinfitted_beam_pull = kinfit.GetBeamEPull();
             auto kinfit_particles = kinfit.GetFitParticles();

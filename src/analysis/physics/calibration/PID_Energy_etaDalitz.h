@@ -94,6 +94,9 @@ public:
     };
 
 protected:
+    TH1D* h_tagger_time;
+    TH1D* h_tagger_time_CBavg;
+
     TH2* h_eegPID = nullptr;
     TH2* h_eegPID_proton = nullptr;
     TH2* h_eegPID_combined = nullptr;
@@ -122,7 +125,7 @@ protected:
     static constexpr bool LEPTON_PI0_CUT = false;
     static constexpr double LEPTON_PI0_THRESH = 130.;
     // which fit should be used to determine best candidate combination?
-    static constexpr bool USE_TREEFIT = true;
+    static constexpr bool USE_TREEFIT = false;
 
     struct PerChannel_t {
         std::string title;
