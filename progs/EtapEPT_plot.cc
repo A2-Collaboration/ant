@@ -31,10 +31,64 @@ volatile bool interrupt = false;
 struct Hist_t {
     using Fill_t = physics::EtapEPT::Tree_t;
 
-    TH1D* h_IM_2g;
-    TH2D* h_IM_2g_TaggCh;
-    TH2D* h_IM_2g_ThetaProton;
-    TH2D* h_IM_2g_ThetaPhotons;
+
+    struct IM_2g_t {
+
+        static BinSettings GetBins() {
+            return {150,800,1050};
+        }
+
+        IM_2g_t(HistogramFactory HistFac) {
+
+            auto ept = ExpConfig::Setup::GetDetector<expconfig::detector::EPT>();
+
+            BinSettings bins_ThetaProton(40, 0, 40);
+            BinSettings bins_ThetaPhotons(80, 0, 120);
+
+            h = HistFac.makeTH1D(
+                    "IM 2g",
+                    "IM / MeV","",
+                    GetBins(),
+                    "h");
+
+            h_TaggCh = HistFac.makeTH2D(
+                           "IM 2g",
+                           "IM / MeV","TaggCh",
+                           GetBins(),
+                           BinSettings(ept->GetNChannels()),
+                           "h_TaggCh");
+
+            h_ThetaProton = HistFac.makeTH2D(
+                                "IM 2g",
+                                "IM / MeV","#theta / #circ",
+                                GetBins(),
+                                bins_ThetaProton,
+                                "h_ThetaProton");
+
+            h_ThetaPhotons = HistFac.makeTH2D(
+                                 "IM 2g",
+                                 "IM / MeV","#theta / #circ",
+                                 GetBins(),
+                                 bins_ThetaPhotons,
+                                 "h_ThetaPhotons");
+        }
+
+        void Fill(double IM_2g, const Fill_t& f) const {
+            h->Fill(IM_2g, f.TaggW);
+            h_TaggCh->Fill(IM_2g, f.TaggCh, f.TaggW);
+            h_ThetaProton->Fill(IM_2g, f.ProtonTheta, f.TaggW);
+            for(const auto& PhotonTheta : f.PhotonThetas()) {
+                h_ThetaPhotons->Fill(IM_2g, PhotonTheta, f.TaggW);
+            }
+        }
+
+        TH1D* h;
+        TH2D* h_TaggCh;
+        TH2D* h_ThetaProton;
+        TH2D* h_ThetaPhotons;
+    };
+
+
 
     std::vector<TH2D*> h_IM_2g_Ch;
 
@@ -45,24 +99,30 @@ struct Hist_t {
 
     TH2D* h_MissingMass;
 
-    Hist_t(HistogramFactory HistFac, cuttree::TreeInfo_t)
+    IM_2g_t IM_2g;
+    IM_2g_t IM_2g_raw;
+
+    TH2D* h_IM_2g_raw_fitted;
+
+    Hist_t(HistogramFactory HistFac, cuttree::TreeInfo_t) :
+        IM_2g(HistogramFactory("IM_2g",HistFac)),
+        IM_2g_raw(HistogramFactory("IM_2g_raw",HistFac))
+
     {
         auto ept = ExpConfig::Setup::GetDetector<expconfig::detector::EPT>();
 
         HistogramFactory HistFac_IM_2g("IM_2g_Ch", HistFac);
         HistogramFactory HistFac_BeamPull("BeamPull_Ch", HistFac);
 
-        BinSettings bins_IM(150,800,1050);
         BinSettings bins_pull(100,-5,5);
-        BinSettings bins_ThetaProton(40, 0, 40);
-        BinSettings bins_ThetaPhotons(80, 0, 120);
+
 
         for(unsigned ch=0;ch<ept->GetNChannels();ch++) {
             h_IM_2g_Ch.push_back(
                         HistFac_IM_2g.makeTH2D(
                             std_ext::formatter() << "IM 2g Ch=" << ch,
                             "IM / MeV","",
-                            bins_IM,
+                            IM_2g_t::GetBins(),
                             BinSettings(ept->GetNChannels()),
                             "h_IM_2g_Ch"+to_string(ch))
                         );
@@ -76,29 +136,7 @@ struct Hist_t {
                         );
         }
 
-        h_IM_2g = HistFac.makeTH1D("IM 2g",
-                                   "IM / MeV","",
-                                   bins_IM,
-                                   "h_IM_2g");
 
-        h_IM_2g_TaggCh = HistFac.makeTH2D("IM 2g",
-                                   "IM / MeV","TaggCh",
-                                   bins_IM,
-                                   BinSettings(ept->GetNChannels()),
-                                   "h_IM_2g_TaggCh");
-
-        h_IM_2g_ThetaProton = HistFac.makeTH2D("IM 2g",
-                                   "IM / MeV","#theta / #circ",
-                                   bins_IM,
-                                   bins_ThetaProton,
-                                   "h_IM_2g_ThetaProton");
-
-        h_IM_2g_ThetaPhotons = HistFac.makeTH2D(
-                                   "IM 2g",
-                                   "IM / MeV","#theta / #circ",
-                                   bins_IM,
-                                   bins_ThetaPhotons,
-                                   "h_IM_2g_ThetaPhotons");
 
         h_BeamPull = HistFac.makeTH2D("IM 2g",
                                    "IM / MeV","",
@@ -115,6 +153,9 @@ struct Hist_t {
                                          bins_MM,
                                          BinSettings(ept->GetNChannels()),
                                          "h_MissingMass");
+
+        h_IM_2g_raw_fitted = HistFac.makeTH2D("IM 2#gamma raw vs. fitted","IM raw","IM fitted",
+                                              IM_2g_t::GetBins(), IM_2g_t::GetBins(), "h_IM_2g_raw_fitted");
     }
 
 
@@ -126,12 +167,10 @@ struct Hist_t {
         if(f.TaggCh != f.TaggCh_)
             return;
 
-        h_IM_2g->Fill(f.IM_2g, f.TaggW);
-        h_IM_2g_TaggCh->Fill(f.IM_2g, f.TaggCh, f.TaggW);
-        h_IM_2g_ThetaProton->Fill(f.IM_2g, f.ProtonTheta, f.TaggW);
-        for(const auto& PhotonTheta : f.PhotonThetas()) {
-            h_IM_2g_ThetaPhotons->Fill(f.IM_2g, PhotonTheta, f.TaggW);
-        }
+        IM_2g.Fill(f.IM_2g, f);
+        IM_2g_raw.Fill(f.PhotonSum, f);
+        h_IM_2g_raw_fitted->Fill(f.PhotonSum, f.IM_2g, f.TaggW);
+
         h_BeamPull->Fill(f.KinFitBeamEPull, f.TaggCh, f.TaggW);
         h_KinFitProb->Fill(f.KinFitProb, f.TaggW);
         h_MissingMass->Fill(f.MissingMass, f.TaggCh, f.TaggW);
