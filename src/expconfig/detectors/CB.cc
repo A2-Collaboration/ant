@@ -47,6 +47,8 @@ CB::CB() :
 }
 
 void CB::SetIgnored(unsigned channel) {
+    if(IsIgnored(channel))
+        return;
     ignoredChannels.push_back(channel);
     SetTouchesHoleOfNeighbours(channel);
 }
