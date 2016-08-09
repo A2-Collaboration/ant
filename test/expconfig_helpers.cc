@@ -42,7 +42,7 @@ using namespace std;
 using namespace ant::test;
 using namespace ant::expconfig;
 
-void ant::test::EnsureSetup() {
+void ant::test::EnsureSetup(bool includeIgnored) {
 
     ExpConfig::Setup::Cleanup();
 
@@ -51,7 +51,14 @@ void ant::test::EnsureSetup() {
 
     struct Setup_Test : expconfig::Setup {
 
-        Setup_Test() : Setup("Setup_Test", make_shared<OptionsList>()) {
+        static OptionsPtr MakeOptions(bool includeIgnored) {
+            auto options = make_shared<OptionsList>();
+            if(includeIgnored)
+                options->SetOption("IncludeIgnoredElements=1");
+            return options;
+        }
+
+        Setup_Test(bool includeIgnored) : Setup("Setup_Test", MakeOptions(includeIgnored)) {
 
 
             // setup the detectors of interest
@@ -177,7 +184,7 @@ void ant::test::EnsureSetup() {
         }
     };
 
-    auto setup = make_shared<Setup_Test>();
+    auto setup = make_shared<Setup_Test>(includeIgnored);
     expconfig::SetupRegistry::AddSetup(setup->GetName(),
                                        setup);
     ExpConfig::Setup::SetManualName(setup->GetName());

@@ -3,6 +3,6 @@
 namespace ant {
 namespace test {
 
-void EnsureSetup();
+void EnsureSetup(bool includeIgnored = false);
 
 }}
