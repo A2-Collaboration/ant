@@ -20,7 +20,9 @@ using namespace ant::reconstruct;
 
 void dotest_sanity();
 void dotest_ignoredelements_raw();
+void dotest_ignoredelements_raw_include();
 void dotest_ignoredelements_geant();
+void dotest_ignoredelements_geant_include();
 
 
 TEST_CASE("Reconstruct: Chain sanity checks", "[reconstruct]") {
@@ -33,9 +35,19 @@ TEST_CASE("Reconstruct: Ignored elements raw data", "[reconstruct]") {
     dotest_ignoredelements_raw();
 }
 
+TEST_CASE("Reconstruct: Include Ignored elements with raw data", "[reconstruct]") {
+    test::EnsureSetup(true);
+    dotest_ignoredelements_raw_include();
+}
+
 TEST_CASE("Reconstruct: Ignored elements geant", "[reconstruct]") {
     test::EnsureSetup();
     dotest_ignoredelements_geant();
+}
+
+TEST_CASE("Reconstruct: Include ignored elements with geant", "[reconstruct]") {
+    test::EnsureSetup(true);
+    dotest_ignoredelements_geant_include();
 }
 
 template<typename T>
@@ -233,6 +245,33 @@ void dotest_ignoredelements_raw() {
     CHECK(clusterHits_after2.empty());
 }
 
+void dotest_ignoredelements_raw_include() {
+    auto clusterHits_before = getReconstructedHits(false);
+    CHECK(clusterHits_before.size() == 5);
+    CHECK(clusterHits_before[Detector_t::Type_t::CB] == 3452);
+    CHECK(clusterHits_before[Detector_t::Type_t::TAPS] == 713);
+    CHECK(clusterHits_before[Detector_t::Type_t::PID] == 689);
+    CHECK(clusterHits_before[Detector_t::Type_t::TAPSVeto] == 947);
+    CHECK(clusterHits_before[Detector_t::Type_t::EPT] == 6272);
+
+    // ignore all elements in each detector type
+    for(const auto& item : clusterHits_before) {
+        auto det = ExpConfig::Setup::GetDetector(item.first);
+        for(unsigned ch=0;ch<det->GetNChannels();ch++) {
+            det->SetIgnored(ch);
+        }
+    }
+
+    // nothing should have changed
+    auto clusterHits_after2 = getReconstructedHits(false);
+    CHECK(clusterHits_after2.size() == 5);
+    CHECK(clusterHits_after2[Detector_t::Type_t::CB] == 3452);
+    CHECK(clusterHits_after2[Detector_t::Type_t::TAPS] == 713);
+    CHECK(clusterHits_after2[Detector_t::Type_t::PID] == 689);
+    CHECK(clusterHits_after2[Detector_t::Type_t::TAPSVeto] == 947);
+    CHECK(clusterHits_after2[Detector_t::Type_t::EPT] == 6272);
+}
+
 void dotest_ignoredelements_geant() {
     auto clusterHits_before = getReconstructedHits(true);
     CHECK(clusterHits_before.size() == 4);
@@ -270,4 +309,31 @@ void dotest_ignoredelements_geant() {
     // nothing should be returned
     auto clusterHits_after2 = getReconstructedHits(true);
     CHECK(clusterHits_after2.empty());
+}
+
+void dotest_ignoredelements_geant_include() {
+    auto clusterHits_before = getReconstructedHits(true);
+    CHECK(clusterHits_before.size() == 4);
+    CHECK(clusterHits_before[Detector_t::Type_t::CB] == 83);
+    CHECK(clusterHits_before[Detector_t::Type_t::TAPS] == 26);
+    CHECK(clusterHits_before[Detector_t::Type_t::PID] == 1);
+    CHECK(clusterHits_before[Detector_t::Type_t::TAPSVeto] == 8);
+//    CHECK(clusterHits_before[Detector_t::Type_t::EPT] == 6272);
+
+    // ignore all elements in each detector type
+    for(const auto& item : clusterHits_before) {
+        auto det = ExpConfig::Setup::GetDetector(item.first);
+        for(unsigned ch=0;ch<det->GetNChannels();ch++) {
+            det->SetIgnored(ch);
+        }
+    }
+
+    // nothing should have changes
+    auto clusterHits_after2 = getReconstructedHits(true);
+    CHECK(clusterHits_after2.size() == 4);
+    CHECK(clusterHits_after2[Detector_t::Type_t::CB] == 83);
+    CHECK(clusterHits_after2[Detector_t::Type_t::TAPS] == 26);
+    CHECK(clusterHits_after2[Detector_t::Type_t::PID] == 1);
+    CHECK(clusterHits_after2[Detector_t::Type_t::TAPSVeto] == 8);
+//    CHECK(clusterHits_before[Detector_t::Type_t::EPT] == 6272);
 }
