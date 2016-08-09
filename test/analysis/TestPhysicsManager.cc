@@ -43,6 +43,7 @@ TEST_CASE("PhysicsManager: Pluto/Geant Input", "[analysis]") {
     test::EnsureSetup();
     dotest_plutogeant();
 }
+
 TEST_CASE("PhysicsManager: Run all physics", "[analysis]") {
     test::EnsureSetup();
     dotest_runall();
@@ -54,10 +55,12 @@ struct TestPhysics : Physics
     bool showCalled = false;
     bool nowrite    = false;
     unsigned seenEvents = 0;
+    unsigned seenTaggerHits = 0;
     unsigned seenCandidates = 0;
     unsigned seenMCTrue = 0;
     unsigned seenTrueTargetPos = 0;
     unsigned seenReconTargetPosNaN = 0;
+
 
 
     TestPhysics(bool nowrite_ = false) :
@@ -70,6 +73,7 @@ struct TestPhysics : Physics
     virtual void ProcessEvent(const TEvent& event, physics::manager_t& manager) override
     {
         seenEvents++;
+        seenTaggerHits += event.Reconstructed().TaggerHits.size();
         seenCandidates += event.Reconstructed().Candidates.size();
         seenMCTrue += event.MCTrue().Particles.GetAll().size();
         // make sure it's non-zero and not nan only for MCTrue
@@ -229,8 +233,9 @@ void dotest_raw_nowrite()
     REQUIRE(physics->finishCalled);
     REQUIRE_FALSE(physics->showCalled);
 
-    REQUIRE(physics->seenEvents == expectedEvents);
-    REQUIRE(physics->seenCandidates == 862);
+    CHECK(physics->seenEvents == expectedEvents);
+    CHECK(physics->seenTaggerHits == 6272);
+    CHECK(physics->seenCandidates == 862);
 
     // the PhysicsManager should not create a TTree...
     REQUIRE(outfile.GetSharedClone<TTree>("treeEvents") == nullptr);
@@ -257,11 +262,12 @@ void dotest_plutogeant()
 
     std::shared_ptr<TestPhysics> physics = pm.GetTestPhysicsModule();
 
-    REQUIRE(physics->seenEvents == 10);
-    REQUIRE(physics->seenCandidates == 10);
-    REQUIRE(physics->seenMCTrue == 10);
-    REQUIRE(physics->seenTrueTargetPos == 5);
-    REQUIRE(physics->seenReconTargetPosNaN == 10);
+    CHECK(physics->seenEvents == 100);
+    CHECK(physics->seenTaggerHits == 100);
+    CHECK(physics->seenCandidates == 309);
+    CHECK(physics->seenMCTrue == 300);
+    CHECK(physics->seenTrueTargetPos == 46);
+    CHECK(physics->seenReconTargetPosNaN == 100);
 }
 
 void dotest_runall() {

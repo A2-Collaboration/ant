@@ -36,7 +36,7 @@ void dotest_readall() {
         REQUIRE(event.HasReconstructed());
     }
 
-    REQUIRE(nEvents==10);
+    REQUIRE(nEvents==100);
 }
 
 void dotest_single() {
@@ -53,6 +53,6 @@ void dotest_single() {
     TEventData& recon = event.Reconstructed();
     TEventData& mctrue = event.MCTrue();
 
-    REQUIRE(mctrue.Target.Vertex.z == Approx(-1.77843));
+    REQUIRE(mctrue.Target.Vertex.z == Approx(-3.50488));
     REQUIRE(std::isnan(recon.Target.Vertex.z));
 }
