@@ -36,10 +36,7 @@ void dotest_build() {
     auto cb_detector = ExpConfig::Setup::GetDetector<expconfig::detector::CB>();
     REQUIRE(cb_detector != nullptr);
 
-    // build some readhits
-//    auto make_readhit = [] (unsigned channel, double energy) {
-
-//    };
+    /// \todo Implement building detector hits
 }
 
 struct ClusteringTester : Clustering {
