@@ -3,6 +3,7 @@
 #include "analysis/physics/Physics.h"
 #include "analysis/utils/Fitter.h"
 #include "analysis/plot/PromptRandomHist.h"
+#include "analysis/utils/MCSmear.h"
 
 #include "base/WrapTTree.h"
 
@@ -88,6 +89,9 @@ struct EtapEPT : Physics {
     PromptRandom::Switch promptrandom_wide;
 
     utils::KinFitter kinfitter;
+
+    std::unique_ptr<utils::MCSmear> mc_smear;
+
 
     struct Particles_t {
         double         PhotonEnergy;

@@ -47,8 +47,21 @@ EtapEPT::EtapEPT(const string& name, OptionsPtr opts) :
                   ),
               true,
               EtapEPT::MakeFitSettings(25)
-              )
+              ),
+    mc_smear(opts->Get<bool>("MCSmear", true) ?
+                 std_ext::make_unique<utils::MCSmear>(
+                     utils::UncertaintyModels::Interpolated::makeAndLoad(
+                         // use Adlarson as default (30% version of Oli is maybe better?)
+                         make_shared<utils::UncertaintyModels::MCSmearingAdlarson>(),
+                         utils::UncertaintyModels::Interpolated::Mode_t::MCSmear
+                         )
+                     )
+               : nullptr // no MCSmear
+             )
 {
+    if(mc_smear)
+        LOG(INFO) << "Additional MC Smearing enabled";
+
     promptrandom.AddPromptRange({-2.5,1.5}); // slight offset due to CBAvgTime reference
     promptrandom.AddRandomRange({-30,-10});  // just ensure to be way off prompt peak
     promptrandom.AddRandomRange({ 10, 30});
@@ -109,6 +122,14 @@ void EtapEPT::ProcessEvent(const TEvent& event, manager_t&)
             t.PIDSumE += cl.Energy;
         }
     }
+
+
+    if(mc_smear && data.ID.isSet(TID::Flags_t::MC)) {
+        particles.Proton = mc_smear->Smear(particles.Proton);
+        for(auto& p : particles.Photons)
+            p = mc_smear->Smear(p);
+    }
+
 
     for(const TTaggerHit& taggerhit : data.TaggerHits) {
         promptrandom.SetTaggerHit(taggerhit.Time-t.CBAvgTime);
