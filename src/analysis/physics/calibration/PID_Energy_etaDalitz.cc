@@ -549,6 +549,8 @@ void PID_Energy_etaDalitz::ProcessEvent(const TEvent& event, manager_t&)
 
             shift_right(comb);
         }
+
+        t.Tree->Fill();
     }
 
     // fit debug
@@ -650,8 +652,6 @@ void PID_Energy_etaDalitz::ProcessEvent(const TEvent& event, manager_t&)
             //h_eegPID->Fill(c->VetoEnergy*sin(c->Theta), c->FindVetoCluster()->CentralElement);
         }
     h_counts->Fill(decaystring.c_str(), 1);
-
-    t.Tree->Fill();
 }
 
 void PID_Energy_etaDalitz::ShowResult()
