@@ -22,7 +22,7 @@ namespace ant {
  *
  * ... in constructor, setup for "writing" ...
  *
- *    treeTest.AddBranches(HistFac.makeTTree("test"));
+ *    treeTest.CreateBranches(HistFac.makeTTree("test"));
  *
  * ... get/set branches via operator() ...
  *
