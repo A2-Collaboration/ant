@@ -181,7 +181,7 @@ void dotest_sanity() {
     }
 
     CHECK(nReads == 221);
-    CHECK(nHits == 30254);
+    CHECK(nHits == 32243);
     CHECK(nCandidates == 862);
     CHECK(nCandidatesCBPID == 136);
     CHECK(nCandidatesTAPSVeto == 146);

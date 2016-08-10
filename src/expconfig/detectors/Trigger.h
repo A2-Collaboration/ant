@@ -4,6 +4,7 @@
 #include "unpacker/UnpackerAcqu.h"
 #include "reconstruct/Reconstruct_traits.h"
 
+#include <bitset>
 #include <stdexcept>
 
 namespace ant {
@@ -75,7 +76,10 @@ struct Trigger :
 };
 
 
-struct Trigger_2014 : Trigger {
+struct Trigger_2014 :
+        Trigger,
+        ReconstructHook::DetectorReadHits
+{
 
     static const ReferenceTimingHitMapping_t Reference_V1190_TAPSPbWO4;
 
@@ -85,12 +89,34 @@ struct Trigger_2014 : Trigger {
 
     virtual std::string GetScalerReference(const std::string& scalername) const override;
 
-    Trigger_2014() : scaler_mapping(MakeScalerMapping()) {}
+    virtual void ApplyTo(const readhits_t& hits) override;
+
+    Trigger_2014() :
+        patterns(9), // VUPROMs give nine 16bit values as trigger patterns
+        scaler_mapping(MakeScalerMapping())
+    {}
+
+    /// \todo once more about the old trigger system is known,
+    /// those methods could be generalized and/or put into base class (possibly virtual)
+
+    /// \todo since those patterns might be needed in Reconstruct, it might be better NOT to
+    /// use those methods too much
+
+    std::bitset<16> GetL1Pattern() const;
+    std::bitset<16> GetL2Pattern() const;
+    std::bitset<64> GetMultiplicityPattern() const;
+    std::uint16_t   GetMultiplicityValue() const;
+    std::bitset<16> GetHelicityPattern() const;
+    std::bitset<16> GetTriggerFiredPattern() const;
 
 protected:
+    std::vector<std::bitset<16>> patterns;
+
     using scaler_mapping_t = std::map<std::string, unsigned>;
     static scaler_mapping_t MakeScalerMapping();
     const scaler_mapping_t scaler_mapping;
+
+
 };
 
 struct Trigger_2007 : Trigger {

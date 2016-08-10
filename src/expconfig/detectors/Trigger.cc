@@ -81,6 +81,15 @@ void Trigger_2014::BuildMappings(std::vector<UnpackerAcquConfig::hit_mapping_t>&
     // call base method for mappings which have never changed over the years
     Trigger::BuildMappings(hit_mappings, scaler_mappings);
 
+    // the patterns are read here from the VUPROM, fBaseIndex is 0 in that ReadIRQ method
+    // https://github.com/A2-Collaboration/acqu/blob/daq-master/acqu_core/AcquDAQ/src/TVME_VUPROM.cc
+    for(unsigned j=0;j<patterns.size();j++) {
+        hit_mappings.emplace_back(
+                    LogicalChannel_t{Detector_t::Type_t::Trigger, Channel_t::Type_t::BitPattern, j},
+                    j
+                    );
+    }
+
     // The PbWO4 timings also have some reference,
     // but they are quite new...
     /// \todo check when those V1190 modules actually were installed and
@@ -94,6 +103,54 @@ void Trigger_2014::BuildMappings(std::vector<UnpackerAcquConfig::hit_mapping_t>&
     for(const auto& m : scaler_mapping) {
         scaler_mappings.emplace_back(m.first, m.second);
     }
+}
+
+void ant::expconfig::detector::Trigger_2014::ApplyTo(const ReconstructHook::Base::readhits_t& hits)
+{
+    std::fill(patterns.begin(), patterns.end(), 0); // clear all patterns
+    auto& dethits = hits.get_item(Type);
+    for(TDetectorReadHit& readhit : dethits) {
+        if(readhit.ChannelType != Channel_t::Type_t::BitPattern)
+            continue;
+        assert(readhit.Channel < patterns.size());
+        assert(readhit.RawData.size() == 2); // expect 2 bytes
+        patterns[readhit.Channel] = *reinterpret_cast<const uint16_t*>(addressof(readhit.RawData[0]));
+    }
+}
+
+std::bitset<16> Trigger_2014::GetL1Pattern() const
+{
+    return patterns.at(0);
+}
+
+std::bitset<16> Trigger_2014::GetL2Pattern() const
+{
+    return patterns.at(1);
+}
+
+std::bitset<64> Trigger_2014::GetMultiplicityPattern() const
+{
+    /// \todo check if this is the right byte-order for the multiplicty pattern
+    return std::bitset<64>(
+            patterns.at(5).to_string() +
+            patterns.at(4).to_string() +
+            patterns.at(3).to_string() +
+            patterns.at(2).to_string());
+}
+
+uint16_t Trigger_2014::GetMultiplicityValue() const
+{
+    return patterns.at(6).to_ulong();
+}
+
+std::bitset<16> Trigger_2014::GetHelicityPattern() const
+{
+    return patterns.at(7);
+}
+
+std::bitset<16> Trigger_2014::GetTriggerFiredPattern() const
+{
+    return patterns.at(8);
 }
 
 string Trigger_2014::GetScalerReference(const string& scalername) const
@@ -134,3 +191,5 @@ string Trigger_2007::GetScalerReference(const string&) const
 {
     return "";
 }
+
+
