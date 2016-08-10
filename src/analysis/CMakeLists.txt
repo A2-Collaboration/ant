@@ -37,7 +37,7 @@ set(ANALYSIS_PHYSICS
   physics/common/ParticleIDCheck.cc
   physics/common/ProtonCheck.cc
   physics/common/DebugPhysics.cc
-  physics/common/DebugTaggerScalars.cc
+  physics/common/ProcessTaggEff.cc
   physics/common/ReconstructCheck.cc
   physics/common/MCSmearing.cc
   physics/tpc/PhysicsStats.cc
