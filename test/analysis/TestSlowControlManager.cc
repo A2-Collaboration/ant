@@ -2,10 +2,12 @@
 #include "catch_config.h"
 #include "expconfig_helpers.h"
 
+#include "analysis/slowcontrol/SlowControlManager.h"
+
 #include "analysis/physics/PhysicsManager.h"
 #include "analysis/input/ant/AntReader.h"
-#include "analysis/input/pluto/PlutoReader.h"
 
+#include "analysis/slowcontrol/SlowControlProcessors.h"
 #include "analysis/slowcontrol/SlowControlVariables.h"
 
 #include "unpacker/Unpacker.h"
@@ -28,10 +30,10 @@ using namespace ant::analysis;
 void dotest_ScalerBlobs();
 void dotest_FakeReader();
 
-TEST_CASE("SlowControlManager: Two scaler blob", "[analysis]") {
-    test::EnsureSetup();
-    dotest_ScalerBlobs();
-}
+//TEST_CASE("SlowControlManager: Two scaler blob", "[analysis]") {
+//    test::EnsureSetup();
+//    dotest_ScalerBlobs();
+//}
 
 TEST_CASE("SlowControlManager: FakeReader", "[analysis]") {
     dotest_FakeReader();
@@ -39,8 +41,6 @@ TEST_CASE("SlowControlManager: FakeReader", "[analysis]") {
 
 struct TestPhysics : Physics
 {
-
-
     TestPhysics() :
         Physics("TestPhysics", nullptr)
     {
@@ -120,69 +120,130 @@ void dotest_ScalerBlobs()
 
 }
 
-class SLCFakeReader : public ant::analysis::input::DataReader {
-public:
-    using pattern_t = std::list<std::list<TSlowControl>>;
-protected:
-    const pattern_t pattern;
-    pattern_t::const_iterator i;
+// define some test processors
 
-public:
-    SLCFakeReader(const pattern_t& p):
-        pattern(p),
-        i(pattern.cbegin())
-    {}
+unsigned maxEvents = 16; // TIDs from 0x0 to 0xf, good for debugging
 
-    bool IsSource() override { return true; }
-    bool ReadNextEvent(TEvent &event) override;
-    double PercentDone() const override { return 0.0; }
-
-
+struct TestProcessor : slowcontrol::Processor {
+    unsigned nProcessed = 0;
+    unsigned nPopped = 0;
+    unsigned nCompleted = 0;
+    virtual return_t ProcessEventData(const TEventData&, physics::manager_t&) override {
+        nProcessed++;
+        return {};
+    }
+    virtual void PopQueue() override {
+        nPopped++;
+    }
+    virtual ~TestProcessor() {
+        REQUIRE(nProcessed==maxEvents);
+        REQUIRE(nCompleted>0);
+    }
 };
 
-bool SLCFakeReader::ReadNextEvent(TEvent &event)
-{
-    if(i==pattern.cend())
-        return false;
+struct TestProcessor1 : TestProcessor {
 
-    for(const auto& s : *i) {
-        event.Reconstructed().SlowControls.push_back(s);
+    virtual return_t ProcessEventData(const TEventData& recon, physics::manager_t& manager) override
+    {
+        TestProcessor::ProcessEventData(recon, manager);
+        if(recon.ID.Timestamp < 0x2)
+            return return_t::Skip;
+        if(recon.ID.Timestamp == 0x6 || recon.ID.Timestamp == 0x9) {
+            manager.SaveEvent();
+            nCompleted++;
+            return return_t::Complete;
+        }
+        return return_t::Buffer;
     }
+    virtual ~TestProcessor1() {
+        REQUIRE(nPopped==0);
+    }
+};
 
-    ++i;
+struct TestProcessor2 : TestProcessor {
 
-    return true;
-}
+    virtual return_t ProcessEventData(const TEventData& recon, physics::manager_t& manager) override
+    {
+        TestProcessor::ProcessEventData(recon, manager);
+        if(recon.ID.Timestamp < 0x5)
+            return return_t::Skip;
+        if(recon.ID.Timestamp == 0x6 || recon.ID.Timestamp == 0xa) {
+            manager.SaveEvent();
+            nCompleted++;
+            return return_t::Complete;
+        }
+        return return_t::Buffer;
+    }
+};
 
-TSlowControl makeAcqu(const std::string& name, const int value) {
-    TSlowControl s(TSlowControl::Type_t::AcquScaler,TSlowControl::Validity_t::Backward,0, name, "Auto Gen");
-    s.Payload_Int.push_back(TKeyValue<int64_t>(0,value));
-    return s;
-}
+struct TestProcessor3 : TestProcessor {
+
+    virtual return_t ProcessEventData(const TEventData& recon, physics::manager_t& manager) override
+    {
+        TestProcessor::ProcessEventData(recon, manager);
+        if(recon.ID.Timestamp == 0x0) {
+            manager.SaveEvent();
+            nCompleted++;
+            return return_t::Complete;
+        }
+        return return_t::Process;
+    }
+};
+
+struct TestProcessor4 : TestProcessor {
+
+    virtual return_t ProcessEventData(const TEventData& recon, physics::manager_t& manager) override
+    {
+        TestProcessor::ProcessEventData(recon, manager);
+        if(recon.ID.Timestamp < 0x2) {
+            manager.SaveEvent();
+            return return_t::Skip;
+        }
+        else if(recon.ID.Timestamp == 0x2) {
+            nCompleted++;
+            return return_t::Complete;
+        }
+        return return_t::Process;
+    }
+};
+
+struct TestSlowControlManager : SlowControlManager {
+    TestSlowControlManager() : SlowControlManager() {
+        // previous tests might have requested static slowcontrol variables
+        // and the default ctor searches for it...
+        slowcontrol.clear();
+        // we add our own test processors
+        AddProcessor(make_shared<TestProcessor1>());
+        AddProcessor(make_shared<TestProcessor2>());
+        AddProcessor(make_shared<TestProcessor3>());
+        AddProcessor(make_shared<TestProcessor4>());
+        REQUIRE(slowcontrol.size() == 4);
+    }
+};
 
 void dotest_FakeReader() {
-    SLCFakeReader reader({
-                             {makeAcqu("A", 0)},
-                             {},
-                             {},
-                             {makeAcqu("A", 1)},
-                             {},
-                             {makeAcqu("A", 2),makeAcqu("B",1)},
-                             {}
-                         });
 
-    TID tid(time(nullptr), 0, {TID::Flags_t::AdHoc});
-    do {
+    TestSlowControlManager scm;
 
-        TEvent e(tid);
-        ++tid;
-
-        if(reader.ReadNextEvent(e)) {
-            cout << e << endl;
-
-        } else {
-            break;
+    // this is basically how PhysicsManager drives the SlowControlManager
+    unsigned nEventsRead=0;
+    unsigned nEventsPopped = 0;
+    while(nEventsRead<maxEvents) {
+        while(nEventsRead<maxEvents) {
+            TEvent event;
+            event.MakeReconstructed(nEventsRead);
+            ++nEventsRead; // break might occur, but increase i
+            if(scm.ProcessEvent(move(event)))
+                break;
         }
-    } while(true);
+
+        while(auto event = scm.PopEvent()) {
+            REQUIRE(event.Event.HasReconstructed());
+            nEventsPopped++;
+        }
+    }
+
+    CHECK(nEventsPopped == maxEvents);
+    CHECK(nEventsRead == maxEvents);
 
 }

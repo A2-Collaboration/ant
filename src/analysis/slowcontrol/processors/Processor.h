@@ -9,9 +9,10 @@ namespace slowcontrol {
 
 struct Processor {
     enum class return_t {
+        Process,   // event processable without forward buffering
+        Complete,  // this event made the processor complete
         Buffer,    // buffer more events
-        Complete,  // this event made
-        Skip       // skip that whole event
+        Skip,      // skip that whole event (unprocessable)
     };
 
     virtual return_t ProcessEventData(const TEventData& recon, physics::manager_t& manager) =0;
