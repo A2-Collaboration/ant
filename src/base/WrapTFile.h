@@ -14,6 +14,7 @@
 #include <memory>
 #include <string>
 #include <list>
+#include <set>
 #include <stdexcept>
 #include <functional>
 
@@ -59,16 +60,20 @@ public:
             if(!keys)
                 return {};
 
-            T* objectPtr = nullptr;
-            TKey* key = nullptr;
+            // first create a unique list of names,
+            // this prevents object with different cycles
+            std::set<std::string> names;
             TIter nextk(keys);
-
-            while((key = (TKey*)nextk()))
+            while(auto key = dynamic_cast<TKey*>(nextk()))
             {
-                objectPtr = dynamic_cast<T*>(key->ReadObj());
-                if ( !objectPtr )
-                    continue;
-                theList.push_back(objectPtr);
+                names.emplace(key->GetName());
+            }
+
+            for(auto& name : names) {
+                T* objectPtr = nullptr;
+                file->GetObject(name.c_str(), objectPtr);
+                if(objectPtr != nullptr)
+                    theList.push_back(objectPtr);
             }
         }
         return theList;
