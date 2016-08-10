@@ -11,28 +11,56 @@ using namespace ant::analysis;
 using namespace ant::analysis::physics;
 
 ProcessTaggEff::ProcessTaggEff(const std::string& name, OptionsPtr opts) :
-    Physics(name, opts)
+    Physics(name, opts),
+    fillDebug(opts->Get<bool>("fillDebug", false))
 {
-        slowcontrol::Variables::TaggerScalers->Request();
-        byChannel = HistFac.makeTH1D("Tagger Scalars","channel","#",48);
-        mainTree.CreateBranches(HistFac.makeTTree("mainTree"));
+    auto Tagger = ExpConfig::Setup::GetDetector<TaggerDetector_t>();
+    if (!Tagger) throw std::runtime_error("No Tagger found");
+    auto nchannels = Tagger->GetNChannels();
+
+    slowcontrol::Variables::TaggerScalers->Request();
+    byChannel = HistFac.makeTH1D("","channel","Frequency [Hz]",nchannels,"TaggerFreqs");
+    mainTree.CreateBranches(HistFac.makeTTree("mainTree"));
+    mainTree.TaggFreqs().resize(nchannels);
+
+    if (fillDebug)
+    {
+        debugTree.CreateBranches(HistFac.makeTTree("debugTree"));
+        debugTree.TaggFreqs().resize(nchannels);
+    }
+
 }
 
 ProcessTaggEff::~ProcessTaggEff() {}
 
 void ProcessTaggEff::ProcessEvent(const TEvent& ev, manager_t& )
 {
-    mainTree.AvgLGFreq = 0; // LG not implemented yet.
-    if ( seenEvents == 0 ) mainTree.StartID = ev.Reconstructed().ID;
+    mainTree.LGFreq = 0; // LG not implemented yet.
+    if ( seenEvents == 0 )
+        mainTree.EvID = ev.Reconstructed().ID;
+
+    if (fillDebug)
+    {
+        debugTree.LGFreq = 0;
+        debugTree.EvID = ev.Reconstructed().ID;
+    }
 
     const auto scalars = slowcontrol::Variables::TaggerScalers->Get();
     unsigned channel = 0;
     for (const auto& value: scalars)
     {
         byChannel->Fill(channel,value);
-        mainTree.AvgTaggFreqs().at(channel) = value;
+
+        mainTree.TaggFreqs().at(channel) += value;
+
+        if (fillDebug) debugTree.TaggFreqs().at(channel) = value;
+
         channel++;
     }
+
+    if (fillDebug)
+        debugTree.Tree->Fill();
+
     seenEvents++;
 }
 
@@ -40,13 +68,13 @@ void ProcessTaggEff::Finish()
 {
     // normalize
     byChannel->Scale(1./seenEvents);
-    for (auto& freq: mainTree.AvgTaggFreqs())
+    for (auto& freq: mainTree.TaggFreqs())
         freq = freq / (1. * seenEvents);
-    mainTree.AvgLGFreq = mainTree.AvgLGFreq / (1. * seenEvents);
-
+    mainTree.LGFreq = mainTree.LGFreq / (1. * seenEvents);
     mainTree.Tree->Fill();
 
-    LOG(INFO) << "Seen " << seenEvents << " Events";
+
+    LOG(INFO) << "Filled Tree for " << seenEvents << " events, starting at "<< std_ext::to_iso8601(mainTree.EvID().Timestamp) << "." << endl;
 }
 
 void ProcessTaggEff::ShowResult()

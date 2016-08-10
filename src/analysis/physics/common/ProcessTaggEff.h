@@ -12,17 +12,19 @@ namespace physics {
 
 struct ProcessTaggEff: public Physics {
 
+    bool fillDebug;
     unsigned seenEvents = 0;
     TH1D* byChannel;
 
 
     struct TreeData : WrapTTree {
-        ADD_BRANCH_T(TID, StartID)
-        ADD_BRANCH_T(std::vector<double>,   AvgTaggFreqs)
-        ADD_BRANCH_T(double,   AvgLGFreq)
+        ADD_BRANCH_T(TID, EvID)
+        ADD_BRANCH_T(std::vector<double>,   TaggFreqs)
+        ADD_BRANCH_T(double,   LGFreq)
     };
 
     TreeData mainTree;
+    TreeData debugTree;
 
     ProcessTaggEff(const std::string& name, OptionsPtr opts=nullptr);
     virtual ~ProcessTaggEff();
