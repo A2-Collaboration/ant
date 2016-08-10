@@ -1,5 +1,5 @@
 add_ant_test(AntReader unpacker expconfig reconstruct)
-add_ant_test(GoatReader)
+add_ant_test(GoatReader expconfig)
 add_ant_test(PhysicsManager unpacker expconfig reconstruct)
 add_ant_test(ParticleID)
 add_ant_test(PhysicsRegistry expconfig)

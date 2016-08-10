@@ -39,10 +39,6 @@ class TreeManager;
 class GoatReader: public DataReader {
 protected:
 
-    class InputWrapper {
-
-    };
-
     class ModuleManager: public std::list<BaseInputModule*> {
     public:
         ModuleManager() = default;
