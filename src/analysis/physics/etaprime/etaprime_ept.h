@@ -81,7 +81,7 @@ struct EtapEPT : Physics {
         ADD_BRANCH_T(double,   IM_2g)
     };
 
-    const bool noTaggChPerm;
+    const bool taggChPerm;
 
     Tree_t t;
 

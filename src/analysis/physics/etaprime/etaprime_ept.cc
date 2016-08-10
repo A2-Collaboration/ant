@@ -38,14 +38,14 @@ APLCON::Fit_Settings_t EtapEPT::MakeFitSettings(unsigned max_iterations)
 EtapEPT::EtapEPT(const string& name, OptionsPtr opts) :
     Physics(name, opts),
     EPT(ExpConfig::Setup::GetDetector<expconfig::detector::EPT>()),
-    noTaggChPerm(opts->Get<bool>("NoTaggChPerm", false)),
+    taggChPerm(opts->Get<bool>("TaggChPerm", false)),
     kinfitter("kinfitter",2,
               utils::UncertaintyModels::Interpolated::makeAndLoad(
                   // use OptimizedOli1 as default
                   make_shared<utils::UncertaintyModels::Optimized_Oli1>(),
                   utils::UncertaintyModels::Interpolated::Mode_t::Fit
                   ),
-              true,
+              opts->Get<bool>("EnableZVertex", true),
               EtapEPT::MakeFitSettings(25)
               ),
     mc_smear(opts->Get<bool>("MCSmear", true) ?
@@ -74,8 +74,14 @@ EtapEPT::EtapEPT(const string& name, OptionsPtr opts) :
 
     t.CreateBranches(HistFac.makeTTree("tree"));
 
-    kinfitter.SetZVertexSigma(0.0);
-    LOG(INFO) << "Fit Z vertex enabled with sigma=0";
+    if(kinfitter.IsZVertexFitEnabled()) {
+        double sigma = opts->Get<double>("ZVertexSigma", 0.0);
+        kinfitter.SetZVertexSigma(sigma);
+        LOG(INFO) << "Fit Z vertex enabled with sigma=" << sigma;
+    }
+    else if(opts->HasOption("ZVertexSigma")) {
+        throw std::runtime_error("ZVertex not enabled but sigma provided");
+    }
 
 }
 
@@ -146,7 +152,7 @@ void EtapEPT::ProcessEvent(const TEvent& event, manager_t&)
 
 
         for(unsigned ch=0;ch<EPT->GetNChannels();ch++) {
-            if(noTaggChPerm && ch != t.TaggCh())
+            if(!taggChPerm && ch != t.TaggCh())
                 continue;
             TTaggerHit taggerhit_(ch, EPT->GetPhotonEnergy(ch), taggerhit.Time);
             t.TaggCh_ = taggerhit_.Channel;
