@@ -89,8 +89,15 @@ void EtapEPT::ProcessEvent(const TEvent& event, manager_t&)
 {
 
     const TEventData& data = event.Reconstructed();
+    const bool is_MC = data.ID.isSet(TID::Flags_t::MC);
 
     h_Cuts->Fill("Seen",1.0);
+    if(is_MC) {
+        if(data.Trigger.CBEnergySum<=550)
+            return;
+        h_Cuts->Fill("MC CBEnergySum>550",1.0);
+    }
+
 
     // start now with some cuts
     t.CBSumE = data.Trigger.CBEnergySum;
@@ -130,7 +137,7 @@ void EtapEPT::ProcessEvent(const TEvent& event, manager_t&)
     }
 
 
-    if(mc_smear && data.ID.isSet(TID::Flags_t::MC)) {
+    if(mc_smear && is_MC) {
         particles.Proton = mc_smear->Smear(particles.Proton);
         for(auto& p : particles.Photons)
             p = mc_smear->Smear(p);
