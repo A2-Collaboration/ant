@@ -21,8 +21,8 @@ inline void concatenate(T& dest, const U& src) {
     dest.insert(dest.end(), src.begin(), src.end());
 }
 
-template<typename T>
-inline bool contains(const std::vector<T> v, const T& val) {
+template<typename T, typename U>
+inline bool contains(const std::vector<T>& v, const U& val) {
   return std::find(v.cbegin(), v.cend(), val) != v.cend();
 }
 
