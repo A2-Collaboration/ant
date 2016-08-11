@@ -1,6 +1,7 @@
 #include "catch.hpp"
 #include "catch_config.h"
 #include "expconfig_helpers.h"
+#include "stealer.h"
 
 #include "analysis/slowcontrol/SlowControlManager.h"
 
@@ -108,30 +109,65 @@ TEST_CASE("SlowControlManager: Processors {1,2,3,4}", "[analysis]") {
     CHECK(r.nEventsSavedForSC == 8);
 }
 
+// see https://github.com/zjx20/stealer for STEALER usage
+
+STEALER(stealer_Variable_t, slowcontrol::Variable,
+        STEAL_METHOD(list<std::shared_ptr<slowcontrol::Processor>>, GetNeededProcessors)
+);
+
+using AcquProcessor_t = slowcontrol::processor::AcquScalerVector;
+STEALER(stealer_AcquProcessor_t, AcquProcessor_t,
+        STEAL_FIELD(bool, firstScalerSeen),
+        STEAL_FIELD(std::queue<AcquProcessor_t::value_t>, queue),
+);
+
+void reset_acquprocessors(std::shared_ptr<slowcontrol::Variable> var) {
+    stealer_Variable_t var_(*var);
+    for(auto& proc : var_.GetNeededProcessors()) {
+        auto acquproc = dynamic_pointer_cast<AcquProcessor_t, slowcontrol::Processor>(proc);
+        if(!acquproc)
+            continue;
+        stealer_AcquProcessor_t proc_(*acquproc);
+        proc_.firstScalerSeen = false;
+        proc_.queue = std::queue<AcquProcessor_t::value_t>();
+    }
+}
 
 struct TestPhysics : Physics
 {
     unsigned nChanged = 0;
+    bool firstEvent = true;
 
     TestPhysics() :
         Physics("TestPhysics", nullptr)
     {
+        // important since we run SlowControlManager several times
+        reset_acquprocessors(slowcontrol::Variables::TaggerScalers);
         slowcontrol::Variables::TaggerScalers->Request();
     }
 
     virtual void ProcessEvent(const TEvent& event, physics::manager_t& manager) override
     {
-        nChanged += slowcontrol::Variables::TaggerScalers->HasChanged();
+        if(slowcontrol::Variables::TaggerScalers->HasChanged()) {
+            CHECK(firstEvent);
+            nChanged++;
+            CHECK(event.Reconstructed().ID.Lower==185);
+        }
         auto taggerscalers = slowcontrol::Variables::TaggerScalers->Get();
         REQUIRE(taggerscalers.size() == 47);
         if(event.Reconstructed().SlowControls.empty())
             manager.SaveEvent();
+        if(!event.Reconstructed().SlowControls.empty())
+            CHECK(event.Reconstructed().ID.Lower==395);
+        firstEvent = false;
     }
 
     ~TestPhysics() {
         REQUIRE(nChanged==1);
     }
 };
+
+
 
 void dotest_ScalerBlobs()
 {
