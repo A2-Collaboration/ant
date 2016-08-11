@@ -23,11 +23,11 @@ SlowControlManager::SlowControlManager()
 {
     unsigned nRegistered = 0;
     for(VariablePtr var : Variables::All) {
-        if(var->GetProcessors().empty())
+        if(!var->requested)
             continue;
 
         nRegistered++;
-        for(auto& p : var->GetProcessors())
+        for(auto& p : var->GetNeededProcessors())
             AddProcessor(p);
     }
 
