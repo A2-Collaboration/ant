@@ -14,6 +14,7 @@ set(SLOWCONTROL_PROCESSORS
   processors/EPT_Scalers.h
   processors/Tagger_Scalers.h
   processors/PairSpec.h
+  processors/PbGlass.h
 )
 
 set(SLOWCONTROL_VARIABLES

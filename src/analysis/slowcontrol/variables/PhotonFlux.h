@@ -20,7 +20,7 @@ struct PhotonFlux : Variable {
 protected:
 
     enum class mode_t {
-        LeadGlass
+        PbGlass
     };
 
     mode_t mode;
