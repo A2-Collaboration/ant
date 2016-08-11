@@ -162,7 +162,7 @@ std::vector<double> ant::calibration::gui::FitGausexpo::Save() const
 }
 
 
-void ant::calibration::gui::FitGausexpo::Load(const std::vector<double> &data)
+void ant::calibration::gui::FitGausexpo::Load(const std::vector<double>&)
 {
 
 }

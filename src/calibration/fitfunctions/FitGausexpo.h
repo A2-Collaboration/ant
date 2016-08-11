@@ -30,7 +30,7 @@ public:
     ant::interval<double> GetRange() const override;
     virtual void Sync() override;
     std::vector<double> Save() const override;
-    void Load(const std::vector<double> &data) override;
+    void Load(const std::vector<double> &) override;
 
     virtual double GetPeakPosition() const override;
     virtual double GetPeakWidth() const override;
