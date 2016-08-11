@@ -23,6 +23,10 @@ struct Beampolmon : Processor {
     virtual void PopQueue() override {
         Reference_1MHz.PopQueue();
     }
+    virtual void Reset() override {
+        Reference_1MHz.Reset();
+    }
+
 };
 
 

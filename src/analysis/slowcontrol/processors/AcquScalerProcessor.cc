@@ -40,6 +40,12 @@ void AcquScalerVector::PopQueue() {
     queue.pop();
 }
 
+void AcquScalerVector::Reset()
+{
+    firstScalerSeen = false;
+    queue = std::queue<value_t>{};
+}
+
 AcquScalerVector::value_t AcquScalerVector::Get() const {
     // if this assert fails, probably a physics class forgot
     // to request the slowcontrol variable in its constructor
