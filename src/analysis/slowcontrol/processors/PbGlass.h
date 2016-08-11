@@ -23,6 +23,9 @@ struct PbGlass : Processor {
     virtual void PopQueue() override {
         PbGlassAcqu.PopQueue();
     }
+    virtual void Reset() override {
+        PbGlassAcqu.Reset();
+    }
 };
 
 
