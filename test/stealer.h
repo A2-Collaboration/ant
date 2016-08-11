@@ -336,7 +336,7 @@
 #define _STEALER_PREPARE_FIELDS(...) _STEALER_FILTER_FIELDS(_STEALER_PREPARE_FIELD_DO, __VA_ARGS__)
 #define _STEALER_PREPARE_FIELD_DO(id,clz,type,name) struct _STEALER_SLOT(id) { typedef type value_type; typedef value_type(clz::*shape); friend shape _STEALER_REPRODUCE(_STEALER_SLOT(id)*); }; template struct stealer::_STEALER_MOULD<_STEALER_SLOT(id), &clz::name>;
 #define _STEALER_PREPARE_METHODS(...) _STEALER_FILTER_METHODS(_STEALER_PREPARE_METHOD_DO, __VA_ARGS__)
-#define _STEALER_PREPARE_METHOD_DO(id,clz,ret_type,name,...) struct _STEALER_SLOT(id) { typedef ret_type return_type; typedef ret_type(clz::*shape)(__VA_ARGS__); friend shape _STEALER_REPRODUCE(_STEALER_SLOT(id)*); }; template struct stealer::_STEALER_MOULD<_STEALER_SLOT(id), &clz::name>;
+#define _STEALER_PREPARE_METHOD_DO(id,clz,ret_type,name,...) struct _STEALER_SLOT(id) { typedef ret_type return_type; typedef ret_type(clz::*shape)(__VA_ARGS__) const; friend shape _STEALER_REPRODUCE(_STEALER_SLOT(id)*); }; template struct stealer::_STEALER_MOULD<_STEALER_SLOT(id), &clz::name>;
 #define _STEALER_PREPROCESS_ARGS(clz,...) PP_FOR(PP_SIZE(__VA_ARGS__), _STEALER_PREPROCESS_ARGS_DO, PP_COMMA, clz, __VA_ARGS__)
 #define _STEALER_PREPROCESS_ARGS_DO(i,...) _STEALER_PREPROCESS_ARGS_DO_I( _STEALER_PREPROCESS_ARGS_DO_II(i, __VA_ARGS__))
 #define _STEALER_PREPROCESS_ARGS_DO_I(...) __VA_ARGS__
