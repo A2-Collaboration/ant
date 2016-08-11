@@ -19,6 +19,13 @@ struct Variable {
         requested = true;
     }
 
+    virtual bool HasChanged() {
+        for(auto& p : GetNeededProcessors())
+            if(p->HasChanged())
+               return true;
+        return false;
+    }
+
     virtual ~Variable() = default;
 
 protected:
