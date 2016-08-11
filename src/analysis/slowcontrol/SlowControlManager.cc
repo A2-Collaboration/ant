@@ -41,10 +41,7 @@ SlowControlManager::SlowControlManager()
 bool SlowControlManager::processor_t::IsComplete() {
     if(Type == type_t::Unknown)
         return false;
-    if(Type == type_t::Forward)
-        return true;
-    // Type == Backward
-    return !TIDs.empty();
+    return !CompletionPoints.empty();
 }
 
 bool SlowControlManager::ProcessEvent(TEvent event)
@@ -62,26 +59,19 @@ bool SlowControlManager::ProcessEvent(TEvent event)
         const auto result = p.Processor->ProcessEventData(reconstructed, manager);
 
         if(result == slowcontrol::Processor::return_t::Complete) {
-            // forward processors become complete first before
-            // they request processing events, as opposed to backward processors,
-            // which buffer at least one event before becoming complete
-
-            if(p.Type == processor_t::type_t::Unknown)
-                p.Type = processor_t::type_t::Forward;
-            else
-                p.TIDs.push(reconstructed.ID);
+            p.CompletionPoints.push_back(reconstructed.ID);
         }
         else if(result == slowcontrol::Processor::return_t::Skip) {
             wants_skip = true;
         }
         else if(result == slowcontrol::Processor::return_t::Process) {
             if(p.Type == processor_t::type_t::Backward)
-                throw std::runtime_error("Changing types of processor is not implemented");
+                throw std::runtime_error("Backward+Forward processor is not supported");
             p.Type = processor_t::type_t::Forward;
         }
         else if(result == slowcontrol::Processor::return_t::Buffer) {
             if(p.Type == processor_t::type_t::Forward)
-                throw std::runtime_error("Changing types of processor is not implemented");
+                throw std::runtime_error("Backward+Forward processor is not supported");
             p.Type = processor_t::type_t::Backward;
         }
 
@@ -109,28 +99,49 @@ event_t SlowControlManager::PopEvent() {
 
     auto& front = eventbuffer.front();
     if(front.Event.HasReconstructed()) {
-        // check first if all processors are still complete
-        for(auto& p : processors) {
-            if(!p.IsComplete()) {
-                return {};
-            }
-        }
 
+
+        // check first if all processors are still complete
+        // otherwise go back to filling
+        for(auto& p : processors)
+            if(!p.IsComplete())
+                return {};
+
+        // check for potential pop/change points
         const auto& id = front.Event.Reconstructed().ID;
         for(auto& p : processors) {
+            auto proc = p.Processor;
 
             if(p.Type == processor_t::type_t::Backward) {
-                if(p.TIDs.front() == id) {
-                    p.TIDs.pop();
-                    auto proc = p.Processor;
-                    front.DeferredActions.emplace_back([proc] () { proc->PopQueue(); } );
+                if(p.CompletionPoints.front() == id) {
+                    p.CompletionPoints.pop_front();
+                    front.DeferredActions.emplace_back(
+                                [proc] () {
+                        proc->PopQueue();
+                        proc->SetHasChanged(true);
+                    });
+
                 }
             }
             else if(p.Type == processor_t::type_t::Forward) {
-                if(!p.TIDs.empty() && p.TIDs.front() == id) {
-                    p.TIDs.pop();
-                    p.Processor->PopQueue();
+                // handle changing the processor's value
+                if(p.CompletionPoints.size()>1) {
+                    auto second_to_front = std::next(p.CompletionPoints.begin());
+                    if(*second_to_front == id) {
+                        p.CompletionPoints.pop_front();
+                        proc->PopQueue();
+                        proc->SetHasChanged(true);
+                    }
                 }
+            }
+
+            // upkeep HasChanged until non-skipped event is popped
+            // this works for forward/backward
+            if(proc->HasChanged() && !front.WantsSkip) {
+                front.DeferredActions.emplace_back(
+                            [proc] () {
+                    proc->SetHasChanged(false);
+                });
             }
         }
     }

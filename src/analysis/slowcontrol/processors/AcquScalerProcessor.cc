@@ -42,6 +42,9 @@ void AcquScalerVector::PopQueue() {
 
 void AcquScalerVector::Reset()
 {
+    /// \todo Maybe remove this reset stuff again? It's just for getting the one test run
+    /// re-using statically initialized processors...args
+    hasChanged = true;
     firstScalerSeen = false;
     queue = std::queue<value_t>{};
 }

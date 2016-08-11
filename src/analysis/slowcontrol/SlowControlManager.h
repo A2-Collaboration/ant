@@ -2,7 +2,7 @@
 
 #include "SlowControlProcessors.h"
 #include "tree/TEvent.h"
-#include <map>
+#include <list>
 #include <queue>
 #include <memory>
 #include <functional>
@@ -58,7 +58,7 @@ protected:
     struct processor_t {
         processor_t(ProcessorPtr proc) : Processor(proc) {}
         ProcessorPtr    Processor;
-        std::queue<TID> TIDs;
+        std::list<TID>  CompletionPoints;
 
         enum class type_t {
             Unknown, Backward, Forward

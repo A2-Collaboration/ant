@@ -15,8 +15,10 @@ struct Processor {
         Skip,      // skip that whole event (unprocessable)
     };
 
-    virtual return_t ProcessEventData(const TEventData& recon, physics::manager_t& manager) =0;
+    bool HasChanged() const { return hasChanged; }
+    void SetHasChanged(bool value) { hasChanged = value; }
 
+    virtual return_t ProcessEventData(const TEventData& recon, physics::manager_t& manager) =0;
     virtual void PopQueue() = 0;
     virtual void Reset() = 0;
 
@@ -25,6 +27,11 @@ struct Processor {
     };
 
     virtual ~Processor() = default;
+
+protected:
+    // by default, the processor is in changed state
+    // simplifies SlowControlManager for first completion
+    bool hasChanged = true;
 };
 
 }}}

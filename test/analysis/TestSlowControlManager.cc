@@ -216,7 +216,7 @@ struct procvalue_t : printable_traits {
     }
 
     bool operator==(const procvalue_t& o) const {
-        return Value == o.Value;
+        return Value == o.Value && HasChanged == o.HasChanged;
     }
 
 };
@@ -436,28 +436,26 @@ result_t run_TestSlowControlManager(const vector<unsigned>& enabled) {
         explicit value_t(TID id) : ID(id) {}
         TID ID;
         vector<procvalue_t> ProcValues;
-        std::ostream& operator<<(std::ostream& s) const {
-            return s; // << hex << ID.Timestamp << dec << ProcValues;
-        }
 
         ostream& Print(ostream& s) const override {
             return s << hex << ID.Timestamp << dec << " " << ProcValues;
         }
 
+        bool WantsSkip() const {
+            for(auto& v : ProcValues)
+                if(v.Value == 0) // Value 0 means skip
+                    return true;
+            return false;
+        }
+
         bool operator==(const value_t& o) const {
-            if(ID != o.ID || ProcValues.size() != o.ProcValues.size())
+            if(ID != o.ID
+               || ProcValues.size() != o.ProcValues.size()
+               || WantsSkip() != o.WantsSkip())
+            {
                 return false;
-            bool a_wantsskip = false;
-            bool b_wantsskip = false;
-            for(unsigned i=0;i<ProcValues.size();i++) {
-                auto& a = ProcValues.at(i);
-                auto& b = o.ProcValues.at(i);
-                a_wantsskip |= a.Value==0;
-                b_wantsskip |= b.Value==0;
             }
-            if(a_wantsskip != b_wantsskip)
-                return false;
-            if(a_wantsskip)
+            if(WantsSkip())
                 return true;
             // no skip wanted, then ProcValues should match
             return ProcValues == o.ProcValues;
@@ -488,8 +486,28 @@ result_t run_TestSlowControlManager(const vector<unsigned>& enabled) {
             values_expected.emplace_back(tid);
 
             for(auto& p : scm.GetTestProcessors()) {
-                values.back().ProcValues.emplace_back(event.WantsSkip ? 0 : p->Get());
+                values.back().ProcValues.emplace_back(event.WantsSkip ? 0 : p->Get(), p->HasChanged());
                 values_expected.back().ProcValues.emplace_back( p->GetExpected().at(tid.Timestamp) );
+            }
+        }
+    }
+
+    // propagate hasChanged flag forward to non-skipped events
+    // this depends on how many processors are actually activated
+    // so it must be done after running the manager
+    if(values_expected.size()>1) {
+        for(auto it = values_expected.begin();
+            it != std::prev(values_expected.end());
+            ++it)
+        {
+            if(it->WantsSkip()) {
+                auto& ProcValues = it->ProcValues;
+                auto& next_ProcValues = std::next(it)->ProcValues;
+                REQUIRE(ProcValues.size() == next_ProcValues.size());
+                for(unsigned i=0;i<ProcValues.size();i++) {
+                    if(ProcValues[i].HasChanged)
+                        next_ProcValues[i].HasChanged = ProcValues[i].HasChanged;
+                }
             }
         }
     }
