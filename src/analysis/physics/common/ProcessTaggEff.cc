@@ -19,6 +19,7 @@ ProcessTaggEff::ProcessTaggEff(const std::string& name, OptionsPtr opts) :
     auto nchannels = Tagger->GetNChannels();
 
     slowcontrol::Variables::TaggerScalers->Request();
+    slowcontrol::Variables::PhotonFlux->Request();
     byChannel = HistFac.makeTH1D("","channel","Frequency [Hz]",nchannels,"TaggerFreqs");
     mainTree.CreateBranches(HistFac.makeTTree("mainTree"));
     mainTree.TaggFreqs().resize(nchannels);
@@ -35,13 +36,13 @@ ProcessTaggEff::~ProcessTaggEff() {}
 
 void ProcessTaggEff::ProcessEvent(const TEvent& ev, manager_t& )
 {
-    mainTree.LGFreq = 0; // LG not implemented yet.
+    mainTree.LGFreq += slowcontrol::Variables::PhotonFlux->Get();
     if ( seenEvents == 0 )
         mainTree.EvID = ev.Reconstructed().ID;
 
     if (fillDebug)
     {
-        debugTree.LGFreq = 0;
+        debugTree.LGFreq = slowcontrol::Variables::PhotonFlux->Get();
         debugTree.EvID = ev.Reconstructed().ID;
     }
 
