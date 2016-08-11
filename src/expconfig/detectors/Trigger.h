@@ -62,12 +62,16 @@ struct Trigger :
 
     // Define some scaler names of commonly used scalers
     struct ScalerName {
-        static const std::string Exptrigger_1MHz;
-        static const std::string Beampolmon_1MHz;
         static const std::string TotalLivetime;
-        static const std::string FaradayCup;
-        static const std::string IonChamber;
+        static const std::string Exptrigger_1MHz;
+
+        static const std::string PairSpecGate;
+        static const std::string TaggerReferenceOR;
         static const std::string PbGlass;
+        static const std::string Paddle;
+        static const std::string IonChamber;
+        static const std::string FaradayCup;
+        static const std::string Beampolmon_1MHz;
     };
 
     // base class knows nothing about scaler references

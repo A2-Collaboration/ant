@@ -7,13 +7,16 @@ using namespace std;
 using namespace ant;
 using namespace ant::expconfig::detector;
 
+const std::string Trigger::ScalerName::TotalLivetime   = "TotalLivetime";
 const std::string Trigger::ScalerName::Exptrigger_1MHz = "Exptrigger_1Mhz";
-const std::string Trigger::ScalerName::Beampolmon_1MHz = "Beampolmon_1Mhz";
 
-const std::string Trigger::ScalerName::TotalLivetime = "TotalLivetime";
-const std::string Trigger::ScalerName::FaradayCup    = "FaradayCup";
-const std::string Trigger::ScalerName::IonChamber    = "IonChamber";
-const std::string Trigger::ScalerName::PbGlass       = "PbGlass";
+const std::string Trigger::ScalerName::PairSpecGate      = "PairSpecGate";
+const std::string Trigger::ScalerName::TaggerReferenceOR = "TaggerReferenceOR";
+const std::string Trigger::ScalerName::PbGlass           = "PbGlass";
+const std::string Trigger::ScalerName::Paddle            = "Paddle";
+const std::string Trigger::ScalerName::IonChamber        = "IonChamber";
+const std::string Trigger::ScalerName::FaradayCup        = "FaradayCup";
+const std::string Trigger::ScalerName::Beampolmon_1MHz   = "Beampolmon_1Mhz";
 
 // the CATCH TDC reference channels have never changed
 // so map them here as const static
@@ -174,12 +177,17 @@ Trigger_2014::scaler_mapping_t Trigger_2014::MakeScalerMapping()
     // build the mapping from human-readable names
     // to Acqu scaler indices
     scaler_mapping_t m;
-    m[ScalerName::Exptrigger_1MHz] = 191;
-    m[ScalerName::Beampolmon_1MHz] = 315;
     m[ScalerName::TotalLivetime]   = 190;
-    m[ScalerName::FaradayCup]      = 313;
-    m[ScalerName::IonChamber]      = 312;
-    m[ScalerName::PbGlass]         = 311;
+    m[ScalerName::Exptrigger_1MHz] = 191;
+
+    m[ScalerName::PairSpecGate]      = 308;
+    m[ScalerName::TaggerReferenceOR] = 309;
+    m[ScalerName::PbGlass]           = 310;
+    m[ScalerName::Paddle]            = 311;
+    m[ScalerName::IonChamber]        = 312;
+    m[ScalerName::FaradayCup]        = 313;
+                                    // 314 is unused
+    m[ScalerName::Beampolmon_1MHz]   = 315;
     return m;
 }
 
