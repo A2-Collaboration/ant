@@ -500,20 +500,5 @@ result_t run_TestSlowControlManager(const vector<unsigned>& enabled) {
         CHECK(values[i] == values_expected[i]);
     }
 
-//    CHECK(r.nEventsRead == maxEvents);
-//    CHECK(r.nEventsPopped == 15);
-//    CHECK(r.nEventsSkipped == 2);
-//    CHECK(r.nEventsSavedForSC == 7);
-
-//    cout << "Values: " << endl;
-//    for(auto& v : values) {
-//        cout << v << endl;
-//    }
-
-//    cout << "Expected Values: " << endl;
-//    for(auto& v : values_expected) {
-//        cout << v << endl;
-//    }
-
     return r;
 }
