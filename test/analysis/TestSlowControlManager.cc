@@ -141,9 +141,12 @@ struct TestPhysics : Physics
     TestPhysics() :
         Physics("TestPhysics", nullptr)
     {
-        // important since we run SlowControlManager several times
+        // resetting important since we run SlowControlManager several times
+        reset_acquprocessors(slowcontrol::Variables::PhotonFlux);
+        slowcontrol::Variables::PhotonFlux->Request();
         reset_acquprocessors(slowcontrol::Variables::TaggerScalers);
         slowcontrol::Variables::TaggerScalers->Request();
+
     }
 
     virtual void ProcessEvent(const TEvent& event, physics::manager_t& manager) override
@@ -152,6 +155,9 @@ struct TestPhysics : Physics
             CHECK(firstEvent);
             nChanged++;
             CHECK(event.Reconstructed().ID.Lower==185);
+        }
+        if(slowcontrol::Variables::PhotonFlux->HasChanged()) {
+            CHECK(firstEvent);
         }
         auto taggerscalers = slowcontrol::Variables::TaggerScalers->Get();
         REQUIRE(taggerscalers.size() == 47);
