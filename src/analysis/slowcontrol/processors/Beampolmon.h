@@ -12,20 +12,17 @@ namespace processor {
 struct Beampolmon : Processor {
 
     AcquScalerScalar Reference_1MHz;
+    AcquScalerScalar PbGlass;
 
     Beampolmon() :
-         Reference_1MHz(expconfig::detector::Trigger::ScalerName::Beampolmon_1MHz)
+         Reference_1MHz(expconfig::detector::Trigger::ScalerName::Beampolmon_1MHz),
+         PbGlass(expconfig::detector::Trigger::ScalerName::PbGlass)
     {}
 
-    virtual return_t ProcessEventData(const TEventData& recon, physics::manager_t& manager) override {
-        return Reference_1MHz.ProcessEventData(recon, manager);
-    }
-    virtual void PopQueue() override {
-        Reference_1MHz.PopQueue();
-    }
-    virtual void Reset() override {
-        Reference_1MHz.Reset();
-    }
+    virtual return_t ProcessEventData(const TEventData& recon, physics::manager_t& manager) override;
+
+    virtual void PopQueue() override;
+    virtual void Reset() override;
 
 };
 

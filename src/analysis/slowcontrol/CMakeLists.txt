@@ -10,11 +10,10 @@ set(SLOWCONTROL_PROCESSORS
   processors/Processor.h
   processors/AcquScalerProcessor.cc
   processors/ExpTrigger.h
-  processors/Beampolmon.h
+  processors/Beampolmon.cc
   processors/EPT_Scalers.h
   processors/Tagger_Scalers.h
   processors/PairSpec.h
-  processors/PbGlass.h
 )
 
 set(SLOWCONTROL_VARIABLES

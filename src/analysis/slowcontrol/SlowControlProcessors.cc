@@ -8,4 +8,4 @@ using namespace ant::analysis::slowcontrol;
 
 DEFINE_PROCESSOR(EPT_Scalers)
 DEFINE_PROCESSOR(Beampolmon)
-DEFINE_PROCESSOR(PbGlass)
+
