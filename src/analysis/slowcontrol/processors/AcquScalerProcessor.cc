@@ -40,15 +40,6 @@ void AcquScalerVector::PopQueue() {
     queue.pop();
 }
 
-void AcquScalerVector::Reset()
-{
-    /// \todo Maybe remove this reset stuff again? It's just for getting the one test run
-    /// re-using statically initialized processors...args
-    hasChanged = true;
-    firstScalerSeen = false;
-    queue = std::queue<value_t>{};
-}
-
 AcquScalerVector::value_t AcquScalerVector::Get() const {
     // if this assert fails, probably a physics class forgot
     // to request the slowcontrol variable in its constructor

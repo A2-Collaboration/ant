@@ -16,7 +16,6 @@ using namespace ant::analysis::slowcontrol;
 
 void SlowControlManager::AddProcessor(ProcessorPtr p)
 {
-    p->Reset();
     processors.emplace_back(p);
 }
 
@@ -38,7 +37,7 @@ SlowControlManager::SlowControlManager()
             << processors.size() << " processors";
 }
 
-bool SlowControlManager::processor_t::IsComplete() {
+bool SlowControlManager::processor_t::IsComplete() const {
     if(Type == type_t::Unknown)
         return false;
     return !CompletionPoints.empty();

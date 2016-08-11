@@ -20,7 +20,6 @@ struct AcquScalerVector : Processor {
     virtual return_t ProcessEventData(const TEventData& recon,  physics::manager_t& manager) override;
 
     virtual void PopQueue() override;
-    virtual void Reset() override;
 
     value_t Get() const;
 

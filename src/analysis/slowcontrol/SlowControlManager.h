@@ -16,7 +16,7 @@ namespace slowcontrol {
 struct event_t {
     // WantsSkip indicates event which should not be processed by physics class,
     // but could still be saved in treeEvents by PhysicsManager
-    bool   WantsSkip = false;
+    const bool WantsSkip = false;
     TEvent Event;
     event_t() {}
     event_t(bool wantsSkip, TEvent event) :
@@ -65,7 +65,7 @@ protected:
         };
         type_t Type = type_t::Unknown;
 
-        bool IsComplete();
+        bool IsComplete() const;
     };
 
     std::vector<processor_t> processors;

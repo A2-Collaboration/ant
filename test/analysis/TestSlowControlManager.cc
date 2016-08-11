@@ -111,6 +111,8 @@ TEST_CASE("SlowControlManager: Processors {1,2,3,4}", "[analysis]") {
 
 struct TestPhysics : Physics
 {
+    unsigned nChanged = 0;
+
     TestPhysics() :
         Physics("TestPhysics", nullptr)
     {
@@ -119,10 +121,15 @@ struct TestPhysics : Physics
 
     virtual void ProcessEvent(const TEvent& event, physics::manager_t& manager) override
     {
+        nChanged += slowcontrol::Variables::TaggerScalers->HasChanged();
         auto taggerscalers = slowcontrol::Variables::TaggerScalers->Get();
         REQUIRE(taggerscalers.size() == 47);
         if(event.Reconstructed().SlowControls.empty())
             manager.SaveEvent();
+    }
+
+    ~TestPhysics() {
+        REQUIRE(nChanged==1);
     }
 };
 
@@ -234,9 +241,6 @@ struct TestProcessor : slowcontrol::Processor {
         nPopped++;
         REQUIRE_FALSE(q.empty());
         q.pop();
-    }
-    virtual void Reset() override {
-        q = queue<unsigned>{};
     }
     void EmplaceQueue() {
         nCompleted++;

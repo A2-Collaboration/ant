@@ -25,7 +25,3 @@ void Beampolmon::PopQueue() {
     PbGlass.PopQueue();
 }
 
-void Beampolmon::Reset() {
-    Reference_1MHz.Reset();
-    PbGlass.Reset();
-}
