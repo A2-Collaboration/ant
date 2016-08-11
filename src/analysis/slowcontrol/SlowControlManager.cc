@@ -49,23 +49,15 @@ bool SlowControlManager::processor_t::IsComplete() {
 
 bool SlowControlManager::ProcessEvent(TEvent event)
 {
-
-    if(!event.HasReconstructed()) {
-        eventbuffer.emplace(false, std::move(event));
-        if(!processors.empty())
-            throw std::runtime_error("Running slowcontrol without reconstructed events not implemented");
-        return true;
-    }
-
-    // process the reconstructed event
-
-    TEventData& reconstructed = event.Reconstructed();
+    // process the reconstructed event (if any)
 
     physics::manager_t manager;
     bool wants_skip = false;
     bool all_complete = true;
 
     for(auto& p : processors) {
+
+        TEventData& reconstructed = event.Reconstructed();
 
         const auto result = p.Processor->ProcessEventData(reconstructed, manager);
 

@@ -27,6 +27,7 @@ using namespace ant::analysis;
 void dotest_raw();
 void dotest_raw_nowrite();
 void dotest_plutogeant();
+void dotest_pluto();
 void dotest_runall();
 
 TEST_CASE("PhysicsManager: Raw Input", "[analysis]") {
@@ -42,6 +43,11 @@ TEST_CASE("PhysicsManager: Raw Input without TEvent writing", "[analysis]") {
 TEST_CASE("PhysicsManager: Pluto/Geant Input", "[analysis]") {
     test::EnsureSetup();
     dotest_plutogeant();
+}
+
+TEST_CASE("PhysicsManager: Pluto only Input", "[analysis]") {
+    test::EnsureSetup();
+    dotest_pluto();
 }
 
 TEST_CASE("PhysicsManager: Run all physics", "[analysis]") {
@@ -267,6 +273,31 @@ void dotest_plutogeant()
     CHECK(physics->seenCandidates == 309);
     CHECK(physics->seenMCTrue == 300);
     CHECK(physics->seenTrueTargetPos == 46);
+    CHECK(physics->seenReconTargetPosNaN == 100);
+}
+
+void dotest_pluto()
+{
+    tmpfile_t tmpfile;
+    WrapTFileOutput outfile(tmpfile.filename, WrapTFileOutput::mode_t::recreate, true);
+
+    PhysicsManagerTester pm;
+    pm.AddPhysics<TestPhysics>();
+
+    // make some meaningful input for the physics manager
+    list< unique_ptr<analysis::input::DataReader> > readers;
+    auto plutofile = std::make_shared<WrapTFileInput>(string(TEST_BLOBS_DIRECTORY)+"/Pluto_with_TID.root");
+    readers.push_back(std_ext::make_unique<analysis::input::PlutoReader>(plutofile));
+
+    pm.ReadFrom(move(readers), numeric_limits<long long>::max());
+
+    std::shared_ptr<TestPhysics> physics = pm.GetTestPhysicsModule();
+
+    CHECK(physics->seenEvents == 100);
+    CHECK(physics->seenTaggerHits == 0); // recon only
+    CHECK(physics->seenCandidates == 0); // recon only
+    CHECK(physics->seenMCTrue == 300);
+    CHECK(physics->seenTrueTargetPos == 0); // pluto does not know anything about target
     CHECK(physics->seenReconTargetPosNaN == 100);
 }
 
