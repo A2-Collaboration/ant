@@ -2,6 +2,7 @@
 
 #include "variables/Variable.h"
 #include "variables/TaggerScalers.h"
+#include "variables/PhotonFlux.h"
 
 #include <memory>
 
@@ -25,6 +26,7 @@ struct Variables {
 
 
     static const std::shared_ptr<variable::TaggerScalers> TaggerScalers;
+    static const std::shared_ptr<variable::PhotonFlux>    PhotonFlux;
 };
 
 }}}

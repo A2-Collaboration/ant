@@ -22,7 +22,7 @@ set(SLOWCONTROL_VARIABLES
   variables/TaggerScalers.cc
   variables/TotalLivetime.h
   variables/BeamCurrent.h
-  variables/PhotonFlux.h
+  variables/PhotonFlux.cc
 )
 
 # since the processors and the variables are

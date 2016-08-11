@@ -11,3 +11,4 @@ list<VariablePtr> Variables::All;
     Variables::AddToAll addToAll ## var (Variables::var);
 
 DEFINE_VARIABLE(TaggerScalers)
+DEFINE_VARIABLE(PhotonFlux)
