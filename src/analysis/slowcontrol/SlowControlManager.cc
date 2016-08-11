@@ -16,7 +16,8 @@ using namespace ant::analysis::slowcontrol;
 
 void SlowControlManager::AddProcessor(ProcessorPtr p)
 {
-    slowcontrol.insert({p, buffer_t()});
+    p->Reset();
+    processors.emplace_back(p);
 }
 
 SlowControlManager::SlowControlManager()
@@ -34,7 +35,16 @@ SlowControlManager::SlowControlManager()
     LOG_IF(nRegistered>0, INFO)
             << "Have " << nRegistered
             << " registered slowcontrol variables using "
-            << slowcontrol.size() << " processors";
+            << processors.size() << " processors";
+}
+
+bool SlowControlManager::processor_t::IsComplete() {
+    if(Type == type_t::Unknown)
+        return false;
+    if(Type == type_t::Forward)
+        return true;
+    // Type == Backward
+    return !TIDs.empty();
 }
 
 bool SlowControlManager::ProcessEvent(TEvent event)
@@ -42,73 +52,59 @@ bool SlowControlManager::ProcessEvent(TEvent event)
 
     if(!event.HasReconstructed()) {
         eventbuffer.emplace(false, std::move(event));
-        all_complete = true;
+        if(!processors.empty())
+            throw std::runtime_error("Running slowcontrol without reconstructed events not implemented");
         return true;
     }
 
-    // at a changepoint, pop the slow control
-    if(!changepoint.IsInvalid()) {
-        for(auto& sl : slowcontrol) {
-            const ProcessorPtr& p = sl.first;
-            buffer_t& tid_buffer = sl.second;
+    // process the reconstructed event
 
-            assert(!tid_buffer.empty());
+    TEventData& reconstructed = event.Reconstructed();
 
-            if(tid_buffer.front() == changepoint) {
-                tid_buffer.pop();
-                p->PopQueue();
-            }
+    physics::manager_t manager;
+    bool wants_skip = false;
+    bool all_complete = true;
+
+    for(auto& p : processors) {
+
+        const auto result = p.Processor->ProcessEventData(reconstructed, manager);
+
+        if(result == slowcontrol::Processor::return_t::Complete) {
+            // forward processors become complete first before
+            // they request processing events, as opposed to backward processors,
+            // which buffer at least one event before becoming complete
+
+            if(p.Type == processor_t::type_t::Unknown)
+                p.Type = processor_t::type_t::Forward;
+            else
+                p.TIDs.push(reconstructed.ID);
         }
-        changepoint = {};
+        else if(result == slowcontrol::Processor::return_t::Skip) {
+            wants_skip = true;
+        }
+        else if(result == slowcontrol::Processor::return_t::Process) {
+            if(p.Type == processor_t::type_t::Backward)
+                throw std::runtime_error("Changing types of processor is not implemented");
+            p.Type = processor_t::type_t::Forward;
+        }
+        else if(result == slowcontrol::Processor::return_t::Buffer) {
+            if(p.Type == processor_t::type_t::Forward)
+                throw std::runtime_error("Changing types of processor is not implemented");
+            p.Type = processor_t::type_t::Backward;
+        }
+
+        all_complete &= p.IsComplete();
     }
 
-    // always process the event
-    {
-        TEventData& reconstructed = event.Reconstructed();
+    // SavedForSlowControls might already be true from previous filter runs
+    // so don't reset it (best we can do here, filtering and slowcontrol stuff is tricky)
+    event.SavedForSlowControls |= manager.saveEvent;
 
-        physics::manager_t manager;
-        bool wants_skip = false;
-        all_complete = true;
-
-        for(auto& sl : slowcontrol) {
-            const ProcessorPtr& p = sl.first;
-            buffer_t& tid_buffer = sl.second;
-
-            const auto result = p->ProcessEventData(reconstructed, manager);
-
-            if(result == slowcontrol::Processor::return_t::Complete) {
-                tid_buffer.push(reconstructed.ID);
-            }
-            else if(result == slowcontrol::Processor::return_t::Skip) {
-                wants_skip = true;
-            }
-
-            all_complete &= !tid_buffer.empty();
-        }
-
-        // SavedForSlowControls might already be true from previous filter runs
-        event.SavedForSlowControls |= manager.saveEvent;
-
-        if(!wants_skip || event.SavedForSlowControls) {
-            // a skipped event could still be saved in order to trigger
-            // slow control processsors (see for example AcquScalerProcessor),
-            // but should NOT be processed by physics classes. Mark the event accordingly in eventbuffer
-            eventbuffer.emplace(wants_skip, std::move(event));
-        }
-
-    }
-
-    // update the changepoint
-    if(all_complete) {
-        for(auto& sl : slowcontrol) {
-            buffer_t& tid_buffer = sl.second;
-
-            assert(!tid_buffer.empty());
-
-            changepoint = changepoint.IsInvalid() ?
-                              tid_buffer.front() :
-                              std::min(changepoint, tid_buffer.front());
-        }
+    if(!wants_skip || event.SavedForSlowControls) {
+        // a skipped event could still be saved in order to trigger
+        // slow control processsors (see for example AcquScalerProcessor),
+        // but should NOT be processed by physics classes. Mark the event accordingly in eventbuffer
+        eventbuffer.emplace(wants_skip, std::move(event));
     }
 
     return all_complete;
@@ -116,39 +112,39 @@ bool SlowControlManager::ProcessEvent(TEvent event)
 
 event_t SlowControlManager::PopEvent() {
 
-    if(!all_complete || eventbuffer.empty())
+    if(eventbuffer.empty())
         return {};
 
-    if(eventbuffer.front().Event.HasReconstructed()) {
-        const auto& id = eventbuffer.front().Event.Reconstructed().ID;
+    auto& front = eventbuffer.front();
+    if(front.Event.HasReconstructed()) {
+        // check first if all processors are still complete
+        for(auto& p : processors) {
+            if(!p.IsComplete()) {
+                return {};
+            }
+        }
 
-        // at a changepoint, we still analyse the event, but stop afterwards
-        if(id == changepoint)
-            all_complete = false;
+        const auto& id = front.Event.Reconstructed().ID;
+        for(auto& p : processors) {
+
+            if(p.Type == processor_t::type_t::Backward) {
+                if(p.TIDs.front() == id) {
+                    p.TIDs.pop();
+                    front.PopAfter.push_back(p.Processor);
+                }
+            }
+            else if(p.Type == processor_t::type_t::Forward) {
+                if(!p.TIDs.empty() && p.TIDs.front() == id) {
+                    p.TIDs.pop();
+                    p.Processor->PopQueue();
+                }
+            }
+        }
     }
-
-//    {
-//        TID min_tid;
-//        for(auto& sl : slowcontrol) {
-//            const ProcessorPtr& p = sl.first;
-//            buffer_t& tid_buffer = sl.second;
-
-//            if(tid_buffer.front() == id) {
-//                tid_buffer.pop();
-//                p->PopQueue();
-
-//            }
-//            if(tid_buffer.empty())
-//                all_complete = false;
-//            else
-//                min_tid = min_tid.IsInvalid() ?
-//                              tid_buffer.front() :
-//                              std::min(min_tid, tid_buffer.front());
-//        }
-//        changepoint = min_tid;
-//    }
 
     auto event = std::move(eventbuffer.front());
     eventbuffer.pop();
     return event;
 }
+
+

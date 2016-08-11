@@ -13,15 +13,32 @@ namespace analysis {
 namespace slowcontrol {
 
 struct event_t {
-    bool   WantsSkip;  // indicates event which should not be processed by physics
+    // WantsSkip indicates event which should not be processed by physics class,
+    // but could still be saved in treeEvents by PhysicsManager
+    bool   WantsSkip = false;
     TEvent Event;
     event_t() {}
     event_t(bool wantsSkip, TEvent event) :
         WantsSkip(wantsSkip), Event(std::move(event))
     {}
+    event_t& operator=(event_t&&) = default;
+    event_t(event_t&&) = default;
+
+    // makes "while(auto e = scm.PopEvent()) {}" loops possible
     explicit operator bool() const {
         return static_cast<bool>(Event);
     }
+
+    ~event_t() {
+        for(auto& p : PopAfter)
+            p->PopQueue();
+    }
+
+protected:
+    // PopAfter contains processors which should change after the
+    // event is destroyed. This should only be accessed by SlowControlManager.
+    friend class ant::analysis::SlowControlManager;
+    std::list<std::shared_ptr<slowcontrol::Processor>> PopAfter;
 };
 
 } // namespace slowcontrol
@@ -34,15 +51,24 @@ protected:
 
     std::queue<slowcontrol::event_t> eventbuffer;
 
-    using buffer_t = std::queue<TID>;
     using ProcessorPtr = std::shared_ptr<slowcontrol::Processor>;
-    std::map<ProcessorPtr, buffer_t> slowcontrol;
+
+    struct processor_t {
+        processor_t(ProcessorPtr proc) : Processor(proc) {}
+        ProcessorPtr    Processor;
+        std::queue<TID> TIDs;
+
+        enum class type_t {
+            Unknown, Backward, Forward
+        };
+        type_t Type = type_t::Unknown;
+
+        bool IsComplete();
+    };
+
+    std::vector<processor_t> processors;
 
     void AddProcessor(ProcessorPtr p);
-
-
-    bool all_complete = false;
-    TID changepoint;
 
 public:
     SlowControlManager();

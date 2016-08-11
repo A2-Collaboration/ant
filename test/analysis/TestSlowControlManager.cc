@@ -13,15 +13,16 @@
 #include "unpacker/Unpacker.h"
 #include "reconstruct/Reconstruct.h"
 
-#include "base/Logger.h"
 #include "base/tmpfile_t.h"
 #include "base/WrapTFile.h"
+#include "base/std_ext/vector.h"
 
 #include "TTree.h"
 
 
 #include <iostream>
 #include <list>
+#include <queue>
 
 using namespace std;
 using namespace ant;
@@ -30,14 +31,83 @@ using namespace ant::analysis;
 void dotest_ScalerBlobs();
 void dotest_FakeReader();
 
-//TEST_CASE("SlowControlManager: Two scaler blob", "[analysis]") {
-//    test::EnsureSetup();
-//    dotest_ScalerBlobs();
-//}
-
-TEST_CASE("SlowControlManager: FakeReader", "[analysis]") {
-    dotest_FakeReader();
+TEST_CASE("SlowControlManager: Two scaler blob", "[analysis]") {
+    test::EnsureSetup();
+    dotest_ScalerBlobs();
 }
+
+struct result_t {
+    unsigned nEventsRead = 0;
+    unsigned nEventsPopped = 0;
+    unsigned nEventsSkipped = 0;
+    unsigned nEventsSavedForSC = 0;
+};
+
+result_t run_TestSlowControlManager(const vector<unsigned>& enabled);
+
+TEST_CASE("SlowControlManager: Processors {1}", "[analysis]") {
+    auto r = run_TestSlowControlManager({1});
+    CHECK(r.nEventsPopped == 15);
+    CHECK(r.nEventsSkipped == 1);
+    CHECK(r.nEventsSavedForSC == 4);
+}
+
+TEST_CASE("SlowControlManager: Processors {2}", "[analysis]") {
+    auto r = run_TestSlowControlManager({2});
+    CHECK(r.nEventsPopped == 14);
+    CHECK(r.nEventsSkipped == 1);
+    CHECK(r.nEventsSavedForSC == 4);
+}
+
+TEST_CASE("SlowControlManager: Processors {3}", "[analysis]") {
+    auto r = run_TestSlowControlManager({3});
+    CHECK(r.nEventsPopped == 16);
+    CHECK(r.nEventsSkipped == 0);
+    CHECK(r.nEventsSavedForSC == 3);
+}
+
+TEST_CASE("SlowControlManager: Processors {4}", "[analysis]") {
+    auto r = run_TestSlowControlManager({4});
+    CHECK(r.nEventsPopped == 16);
+    CHECK(r.nEventsSkipped == 2);
+    CHECK(r.nEventsSavedForSC == 2);
+}
+
+TEST_CASE("SlowControlManager: Processors {1,2}", "[analysis]") {
+    auto r = run_TestSlowControlManager({1,2});
+    CHECK(r.nEventsPopped == 15);
+    CHECK(r.nEventsSkipped == 2);
+    CHECK(r.nEventsSavedForSC == 6);
+}
+
+TEST_CASE("SlowControlManager: Processors {3,4}", "[analysis]") {
+    auto r = run_TestSlowControlManager({3,4});
+    CHECK(r.nEventsPopped == 16);
+    CHECK(r.nEventsSkipped == 2);
+    CHECK(r.nEventsSavedForSC == 4);
+}
+
+TEST_CASE("SlowControlManager: Processors {1,4}", "[analysis]") {
+    auto r = run_TestSlowControlManager({1,4});
+    CHECK(r.nEventsPopped == 16);
+    CHECK(r.nEventsSkipped == 2);
+    CHECK(r.nEventsSavedForSC == 5);
+}
+
+TEST_CASE("SlowControlManager: Processors {2,3}", "[analysis]") {
+    auto r = run_TestSlowControlManager({2,3});
+    CHECK(r.nEventsPopped == 15);
+    CHECK(r.nEventsSkipped == 2);
+    CHECK(r.nEventsSavedForSC == 6);
+}
+
+TEST_CASE("SlowControlManager: Processors {1,2,3,4}", "[analysis]") {
+    auto r = run_TestSlowControlManager({1,2,3,4});
+    CHECK(r.nEventsPopped == 16);
+    CHECK(r.nEventsSkipped == 3);
+    CHECK(r.nEventsSavedForSC == 8);
+}
+
 
 struct TestPhysics : Physics
 {
@@ -124,20 +194,73 @@ void dotest_ScalerBlobs()
 
 unsigned maxEvents = 16; // TIDs from 0x0 to 0xf, good for debugging
 
+// the processors should behave as follows
+//
+// S=Skip, B=Buffer, C=Complete, P=Process
+//
+// TID Timestamp    0 1 2 3 4 5 6 7 8 9 a b c d e f
+// TestProcessor1   S S B B B B C B B C B B B B B C
+// TestProcessor2   S S S B B B C B B B C B B B B C
+// TestProcessor3   C P P P C P P P P P P P P P P C
+// TestProcessor4   S S C P P P P P P P P P C P P P
+
+struct procvalue_t : printable_traits {
+    procvalue_t(unsigned value, bool hasChanged = false) :
+        Value(value), HasChanged(hasChanged)
+    {}
+    const unsigned Value;
+    bool  HasChanged;
+
+    ostream& Print(ostream& s) const override {
+        return s << (HasChanged ? "'" : " ") << (Value==0 ? "S" : to_string(Value));
+    }
+
+    bool operator==(const procvalue_t& o) const {
+        return Value == o.Value;
+    }
+
+};
+
 struct TestProcessor : slowcontrol::Processor {
     unsigned nProcessed = 0;
     unsigned nPopped = 0;
     unsigned nCompleted = 0;
+    queue<unsigned> q;
     virtual return_t ProcessEventData(const TEventData&, physics::manager_t&) override {
         nProcessed++;
         return {};
     }
     virtual void PopQueue() override {
         nPopped++;
+        REQUIRE_FALSE(q.empty());
+        q.pop();
     }
+    virtual void Reset() override {
+        q = queue<unsigned>{};
+    }
+    void EmplaceQueue() {
+        nCompleted++;
+        q.emplace(nCompleted);
+    }
+    virtual unsigned Get() const {
+        if(q.empty())
+           return 0;
+        return q.front();
+    }
+    virtual vector<procvalue_t> GetExpected() const = 0;
+
     virtual ~TestProcessor() {
-        REQUIRE(nProcessed==maxEvents);
-        REQUIRE(nCompleted>0);
+        CHECK(nProcessed==maxEvents);
+        CHECK(nCompleted>0);
+    }
+protected:
+    static vector<procvalue_t> MarkChanged(vector<procvalue_t> v) {
+        REQUIRE_FALSE(v.empty());
+        for(auto it=next(v.begin()); it != v.end(); ++it) {
+            if(it->Value != prev(it)->Value)
+                it->HasChanged = true;
+        }
+        return v;
     }
 };
 
@@ -146,17 +269,34 @@ struct TestProcessor1 : TestProcessor {
     virtual return_t ProcessEventData(const TEventData& recon, physics::manager_t& manager) override
     {
         TestProcessor::ProcessEventData(recon, manager);
-        if(recon.ID.Timestamp < 0x2)
+        if(recon.ID.Timestamp < 0x2) {
+            if(recon.ID.Timestamp == 0x1)
+                manager.SaveEvent();
             return return_t::Skip;
-        if(recon.ID.Timestamp == 0x6 || recon.ID.Timestamp == 0x9) {
+        }
+        if(recon.ID.Timestamp == 0x6 || recon.ID.Timestamp == 0x9 || recon.ID.Timestamp == 0xf) {
             manager.SaveEvent();
-            nCompleted++;
+            EmplaceQueue();
             return return_t::Complete;
         }
         return return_t::Buffer;
     }
+
+    virtual vector<procvalue_t> GetExpected() const override {
+        return MarkChanged({
+         // 0    1    2    3
+            {0}, {0}, {1}, {1},
+         // 4    5    6    7
+            {1}, {1}, {1}, {2},
+         // 8    9    a    b
+            {2}, {2}, {3}, {3},
+         // c    d    e    f
+            {3}, {3}, {3}, {3},
+        });
+    }
+
     virtual ~TestProcessor1() {
-        REQUIRE(nPopped==0);
+        REQUIRE(nPopped==3);
     }
 };
 
@@ -165,14 +305,34 @@ struct TestProcessor2 : TestProcessor {
     virtual return_t ProcessEventData(const TEventData& recon, physics::manager_t& manager) override
     {
         TestProcessor::ProcessEventData(recon, manager);
-        if(recon.ID.Timestamp < 0x5)
+        if(recon.ID.Timestamp < 0x3) {
+            if(recon.ID.Timestamp == 0x2)
+                manager.SaveEvent();
             return return_t::Skip;
-        if(recon.ID.Timestamp == 0x6 || recon.ID.Timestamp == 0xa) {
+        }
+        if(recon.ID.Timestamp == 0x6 || recon.ID.Timestamp == 0xa || recon.ID.Timestamp == 0xf) {
             manager.SaveEvent();
-            nCompleted++;
+            EmplaceQueue();
             return return_t::Complete;
         }
         return return_t::Buffer;
+    }
+
+    virtual vector<procvalue_t> GetExpected() const override {
+        return MarkChanged({
+         // 0    1    2    3
+            {0}, {0}, {0}, {1},
+         // 4    5    6    7
+            {1}, {1}, {1}, {2},
+         // 8    9    a    b
+            {2}, {2}, {2}, {3},
+         // c    d    e    f
+            {3}, {3}, {3}, {3},
+        });
+    }
+
+    virtual ~TestProcessor2() {
+        REQUIRE(nPopped==3);
     }
 };
 
@@ -181,12 +341,29 @@ struct TestProcessor3 : TestProcessor {
     virtual return_t ProcessEventData(const TEventData& recon, physics::manager_t& manager) override
     {
         TestProcessor::ProcessEventData(recon, manager);
-        if(recon.ID.Timestamp == 0x0) {
+        if(recon.ID.Timestamp == 0x0 || recon.ID.Timestamp == 0x4 || recon.ID.Timestamp == 0xf) {
             manager.SaveEvent();
-            nCompleted++;
+            EmplaceQueue();
             return return_t::Complete;
         }
         return return_t::Process;
+    }
+
+    virtual vector<procvalue_t> GetExpected() const override {
+        return MarkChanged({
+         // manually mark the first item as HasChanged
+         // 0          1    2    3
+            {1, true}, {1}, {1}, {1},
+         // 4    5    6    7
+            {2}, {2}, {2}, {2},
+         // 8    9    a    b
+            {2}, {2}, {2}, {2},
+         // c    d    e    f
+            {2}, {2}, {2}, {3},
+        });
+    }
+    virtual ~TestProcessor3() {
+        REQUIRE(nPopped==2);
     }
 };
 
@@ -199,51 +376,144 @@ struct TestProcessor4 : TestProcessor {
             manager.SaveEvent();
             return return_t::Skip;
         }
-        else if(recon.ID.Timestamp == 0x2) {
-            nCompleted++;
+        else if(recon.ID.Timestamp == 0x2 || recon.ID.Timestamp == 0xc) {
+            EmplaceQueue();
             return return_t::Complete;
         }
         return return_t::Process;
     }
+
+    virtual vector<procvalue_t> GetExpected() const override {
+        return MarkChanged({
+         // 0    1    2    3
+            {0}, {0}, {1}, {1},
+         // 4    5    6    7
+            {1}, {1}, {1}, {1},
+         // 8    9    a    b
+            {1}, {1}, {1}, {1},
+         // c    d    e    f
+            {2}, {2}, {2}, {2},
+        });
+    }
+    virtual ~TestProcessor4() {
+        REQUIRE(nPopped==1);
+    }
 };
 
 struct TestSlowControlManager : SlowControlManager {
-    TestSlowControlManager() : SlowControlManager() {
+    TestSlowControlManager(const vector<unsigned>& enabled) : SlowControlManager() {
         // previous tests might have requested static slowcontrol variables
         // and the default ctor searches for it...
-        slowcontrol.clear();
+        processors.clear();
         // we add our own test processors
-        AddProcessor(make_shared<TestProcessor1>());
-        AddProcessor(make_shared<TestProcessor2>());
-        AddProcessor(make_shared<TestProcessor3>());
-        AddProcessor(make_shared<TestProcessor4>());
-        REQUIRE(slowcontrol.size() == 4);
+        if(std_ext::contains(enabled, 1))
+            AddProcessor(make_shared<TestProcessor1>());
+        if(std_ext::contains(enabled, 2))
+            AddProcessor(make_shared<TestProcessor2>());
+        if(std_ext::contains(enabled, 3))
+            AddProcessor(make_shared<TestProcessor3>());
+        if(std_ext::contains(enabled, 4))
+            AddProcessor(make_shared<TestProcessor4>());
+        CHECK(processors.size() == enabled.size());
+    }
+
+    std::vector<std::shared_ptr<TestProcessor>> GetTestProcessors() const {
+        std::vector<std::shared_ptr<TestProcessor>> testprocs;
+        for(auto& p : processors)
+            testprocs.emplace_back(dynamic_pointer_cast<TestProcessor, slowcontrol::Processor>(p.Processor));
+        return testprocs;
     }
 };
 
-void dotest_FakeReader() {
-
-    TestSlowControlManager scm;
+result_t run_TestSlowControlManager(const vector<unsigned>& enabled) {
+    TestSlowControlManager scm(enabled);
 
     // this is basically how PhysicsManager drives the SlowControlManager
-    unsigned nEventsRead=0;
-    unsigned nEventsPopped = 0;
-    while(nEventsRead<maxEvents) {
-        while(nEventsRead<maxEvents) {
+
+    result_t r;
+
+    struct value_t : printable_traits {
+        explicit value_t(TID id) : ID(id) {}
+        TID ID;
+        vector<procvalue_t> ProcValues;
+        std::ostream& operator<<(std::ostream& s) const {
+            return s; // << hex << ID.Timestamp << dec << ProcValues;
+        }
+
+        ostream& Print(ostream& s) const override {
+            return s << hex << ID.Timestamp << dec << " " << ProcValues;
+        }
+
+        bool operator==(const value_t& o) const {
+            if(ID != o.ID || ProcValues.size() != o.ProcValues.size())
+                return false;
+            bool a_wantsskip = false;
+            bool b_wantsskip = false;
+            for(unsigned i=0;i<ProcValues.size();i++) {
+                auto& a = ProcValues.at(i);
+                auto& b = o.ProcValues.at(i);
+                a_wantsskip |= a.Value==0;
+                b_wantsskip |= b.Value==0;
+            }
+            if(a_wantsskip != b_wantsskip)
+                return false;
+            if(a_wantsskip)
+                return true;
+            // no skip wanted, then ProcValues should match
+            return ProcValues == o.ProcValues;
+        }
+    };
+
+    vector<value_t> values;
+    vector<value_t> values_expected;
+    while(r.nEventsRead<maxEvents) {
+        while(r.nEventsRead<maxEvents) {
+            TID tid(r.nEventsRead);
+            ++r.nEventsRead;
+
             TEvent event;
-            event.MakeReconstructed(nEventsRead);
-            ++nEventsRead; // break might occur, but increase i
+            event.MakeReconstructed(tid);
             if(scm.ProcessEvent(move(event)))
-                break;
+                break; // became complete, so start popping events
         }
 
         while(auto event = scm.PopEvent()) {
+
             REQUIRE(event.Event.HasReconstructed());
-            nEventsPopped++;
+            r.nEventsPopped++;
+            r.nEventsSkipped += event.WantsSkip;
+            r.nEventsSavedForSC += event.Event.SavedForSlowControls;
+            const auto& tid = event.Event.Reconstructed().ID;
+            values.emplace_back(tid);
+            values_expected.emplace_back(tid);
+
+            for(auto& p : scm.GetTestProcessors()) {
+                values.back().ProcValues.emplace_back(event.WantsSkip ? 0 : p->Get());
+                values_expected.back().ProcValues.emplace_back( p->GetExpected().at(tid.Timestamp) );
+            }
         }
     }
 
-    CHECK(nEventsPopped == maxEvents);
-    CHECK(nEventsRead == maxEvents);
+    CHECK(values.size() == values_expected.size());
+    CHECK_FALSE(values.empty());
+    for(unsigned i=0;i<values.size();i++) {
+        CHECK(values[i] == values_expected[i]);
+    }
 
+//    CHECK(r.nEventsRead == maxEvents);
+//    CHECK(r.nEventsPopped == 15);
+//    CHECK(r.nEventsSkipped == 2);
+//    CHECK(r.nEventsSavedForSC == 7);
+
+//    cout << "Values: " << endl;
+//    for(auto& v : values) {
+//        cout << v << endl;
+//    }
+
+//    cout << "Expected Values: " << endl;
+//    for(auto& v : values_expected) {
+//        cout << v << endl;
+//    }
+
+    return r;
 }
