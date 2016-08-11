@@ -5,6 +5,7 @@
 #include <map>
 #include <queue>
 #include <memory>
+#include <functional>
 
 namespace ant {
 
@@ -30,15 +31,16 @@ struct event_t {
     }
 
     ~event_t() {
-        for(auto& p : PopAfter)
-            p->PopQueue();
+        for(auto& action : DeferredActions)
+            action();
     }
 
 protected:
     // PopAfter contains processors which should change after the
     // event is destroyed. This should only be accessed by SlowControlManager.
     friend class ant::analysis::SlowControlManager;
-    std::list<std::shared_ptr<slowcontrol::Processor>> PopAfter;
+    using action_t = std::function<void(void)>;
+    std::list<action_t> DeferredActions;
 };
 
 } // namespace slowcontrol

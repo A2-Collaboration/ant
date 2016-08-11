@@ -122,7 +122,8 @@ event_t SlowControlManager::PopEvent() {
             if(p.Type == processor_t::type_t::Backward) {
                 if(p.TIDs.front() == id) {
                     p.TIDs.pop();
-                    front.PopAfter.push_back(p.Processor);
+                    auto proc = p.Processor;
+                    front.DeferredActions.emplace_back([proc] () { proc->PopQueue(); } );
                 }
             }
             else if(p.Type == processor_t::type_t::Forward) {
