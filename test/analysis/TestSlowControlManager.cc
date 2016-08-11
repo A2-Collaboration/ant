@@ -121,8 +121,8 @@ STEALER(stealer_AcquProcessor_t, AcquProcessor_t,
         STEAL_FIELD(std::queue<AcquProcessor_t::value_t>, queue),
 );
 
-void reset_acquprocessors(std::shared_ptr<slowcontrol::Variable> var) {
-    stealer_Variable_t var_(*var);
+void reset_acquprocessors(std::shared_ptr<const slowcontrol::Variable> var) {
+    stealer_Variable_t var_(*const_pointer_cast<slowcontrol::Variable>(var));
     for(auto& proc : var_.GetNeededProcessors()) {
         auto acquproc = dynamic_pointer_cast<AcquProcessor_t, slowcontrol::Processor>(proc);
         if(!acquproc)

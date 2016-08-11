@@ -16,6 +16,7 @@ using namespace ant::analysis::slowcontrol;
 
 void SlowControlManager::AddProcessor(ProcessorPtr p)
 {
+    p->Init();
     processors.emplace_back(p);
 }
 
@@ -27,6 +28,8 @@ SlowControlManager::SlowControlManager()
             continue;
 
         nRegistered++;
+
+        var->Init();
         for(auto& p : var->GetNeededProcessors())
             AddProcessor(p);
     }

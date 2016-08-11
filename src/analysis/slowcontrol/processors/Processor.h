@@ -18,6 +18,7 @@ struct Processor {
     bool HasChanged() const { return hasChanged; }
     void SetHasChanged(bool value) { hasChanged = value; }
 
+    virtual void Init() {} // accessing the ExpConfig in the ctor is too early
     virtual return_t ProcessEventData(const TEventData& recon, physics::manager_t& manager) =0;
     virtual void PopQueue() = 0;
 

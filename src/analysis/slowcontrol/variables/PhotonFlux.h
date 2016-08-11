@@ -13,7 +13,9 @@ namespace variable {
 
 struct PhotonFlux : Variable {
 
-    virtual std::list<ProcessorPtr> GetNeededProcessors() override;
+
+    virtual void Init() override;
+    virtual std::list<ProcessorPtr> GetNeededProcessors() const override;
 
     double Get() const;
 

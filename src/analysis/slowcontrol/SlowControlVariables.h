@@ -10,23 +10,23 @@ namespace ant {
 namespace analysis {
 namespace slowcontrol {
 
+struct AddToAll;
+
 // keep list of available variables here, to be used by physics classes
 struct Variables {
+
+    static const std::shared_ptr<const variable::TaggerScalers> TaggerScalers;
+    static const std::shared_ptr<const variable::PhotonFlux>    PhotonFlux;
+
+
+protected:
     // holds a list of shared_ptr of the static variables below
-    // see SlowControlVariables.cc how this is filled
+    // see SlowControlVariables.cc how this is filled using AddToAll
     // the list is used by the SlowControlManager to check which
     // variables were requested
+    friend class ant::analysis::SlowControlManager;
+    friend struct ant::analysis::slowcontrol::AddToAll;
     static std::list<VariablePtr> All;
-
-    struct AddToAll {
-        AddToAll(const VariablePtr& var) {
-            All.push_back(var);
-        }
-    };
-
-
-    static const std::shared_ptr<variable::TaggerScalers> TaggerScalers;
-    static const std::shared_ptr<variable::PhotonFlux>    PhotonFlux;
 };
 
 }}}

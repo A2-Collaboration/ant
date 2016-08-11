@@ -10,9 +10,13 @@ using namespace std;
 using namespace ant::analysis::slowcontrol;
 using namespace ant::analysis::slowcontrol::variable;
 
-list<Variable::ProcessorPtr> PhotonFlux::GetNeededProcessors()
+void PhotonFlux::Init()
 {
     mode = mode_t::PbGlass;
+}
+
+list<Variable::ProcessorPtr> PhotonFlux::GetNeededProcessors() const
+{
     return {Processors::Beampolmon};
 }
 

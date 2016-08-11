@@ -15,11 +15,11 @@ namespace slowcontrol {
 struct Variable {
 
     // to be called by physics classes
-    virtual void Request() {
+    virtual void Request() const {
         requested = true;
     }
 
-    virtual bool HasChanged() {
+    virtual bool HasChanged() const {
         for(auto& p : GetNeededProcessors())
             if(p->HasChanged())
                return true;
@@ -31,9 +31,11 @@ struct Variable {
 protected:
     friend class ant::analysis::SlowControlManager;
 
-    bool requested = false;
+    mutable bool requested = false;
+    virtual void Init() {} // accessing the ExpConfig in the ctor is too early
+
     using ProcessorPtr = std::shared_ptr<Processor>;
-    virtual std::list<ProcessorPtr> GetNeededProcessors() =0;
+    virtual std::list<ProcessorPtr> GetNeededProcessors() const =0;
 };
 
 using VariablePtr = std::shared_ptr<Variable>;

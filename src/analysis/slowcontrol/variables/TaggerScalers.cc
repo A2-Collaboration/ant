@@ -8,19 +8,24 @@ using namespace std;
 using namespace ant::analysis::slowcontrol;
 using namespace ant::analysis::slowcontrol::variable;
 
-list<Variable::ProcessorPtr> TaggerScalers::GetNeededProcessors()
+void TaggerScalers::Init()
 {
     auto taggerdetector = ExpConfig::Setup::GetDetector<TaggerDetector_t>();
     if(!taggerdetector)
-        return {};
+        return;
+    nChannels = taggerdetector->GetNChannels();
     if(taggerdetector->Type == Detector_t::Type_t::EPT) {
+        mode = mode_t::EPT_2014;
+    }
+}
+
+list<Variable::ProcessorPtr> TaggerScalers::GetNeededProcessors() const
+{
+    if(mode == mode_t::EPT_2014) {
         /// \todo check how EPT_2012 scalers were recorded
         /// for 2014, we know that EPT_Scalers are in Beampolmon VUPROMs
-        mode = mode_t::EPT_2014;
-        nChannels = taggerdetector->GetNChannels();
         return {Processors::EPT_Scalers, Processors::Beampolmon};
     }
-
     return {};
 }
 

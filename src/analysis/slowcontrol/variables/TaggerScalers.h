@@ -13,7 +13,8 @@ namespace variable {
 
 struct TaggerScalers : Variable {
 
-    virtual std::list<ProcessorPtr> GetNeededProcessors() override;
+    virtual void Init() override;
+    virtual std::list<ProcessorPtr> GetNeededProcessors() const override;
 
     /**
      * @brief Get returns the tagger current scaler frequencies
