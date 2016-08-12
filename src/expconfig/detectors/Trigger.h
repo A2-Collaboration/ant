@@ -93,6 +93,7 @@ struct Trigger_2014 :
 
     virtual std::string GetScalerReference(const std::string& scalername) const override;
 
+    using Trigger::ApplyTo;
     virtual void ApplyTo(const readhits_t& hits) override;
 
     Trigger_2014() :
