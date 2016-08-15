@@ -36,8 +36,8 @@ ProcessTaggEff::~ProcessTaggEff() {}
 
 void ProcessTaggEff::ProcessEvent(const TEvent& ev, manager_t& )
 {
-    if(slowcontrol::Variables::PhotonFlux->HasChanged())
-        LOG(INFO) << ev.Reconstructed().ID.Lower << " " << slowcontrol::Variables::PhotonFlux->Get();
+//    if(slowcontrol::Variables::PhotonFlux->HasChanged())
+//        LOG(INFO) << ev.Reconstructed().ID.Lower << " " << slowcontrol::Variables::PhotonFlux->Get();
 
     mainTree.LGFreq += slowcontrol::Variables::PhotonFlux->Get();
     if ( seenEvents == 0 )
