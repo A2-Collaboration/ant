@@ -23,8 +23,6 @@
 #include "calibration/modules/TAPSVeto_Energy.h"
 #include "calibration/modules/TAPSVeto_Time.h"
 
-#include "calibration/modules/MCEnergySmearing.h"
-
 #include "calibration/fitfunctions/FitGaus.h"
 #include "calibration/fitfunctions/FitGausPol0.h"
 #include "calibration/fitfunctions/FitGausPol3.h"
@@ -167,12 +165,6 @@ Setup_2014_EPT::Setup_2014_EPT(const string& name, OptionsPtr opt) :
     // CB timing needs timewalk correction
     AddCalibration<calibration::CB_TimeWalk>(cb, calibrationDataManager,
                                              timecuts ? interval<double>{-10, 20} : no_timecut);
-
-    if(opt->Get<bool>("MCSmearing", false)) {
-        AddHook(make_shared<calibration::MCEnergySmearing>(Detector_t::Type_t::CB,   1.05830, 0.3));
-        AddHook(make_shared<calibration::MCEnergySmearing>(Detector_t::Type_t::TAPS, 1.05830, 0.3));
-    }
-
 }
 
 double Setup_2014_EPT::GetElectronBeamEnergy() const {

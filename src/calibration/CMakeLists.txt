@@ -45,7 +45,6 @@ set(SRCS
     fitfunctions/FitLandau.cc
     fitfunctions/FitLandauPol0.cc
     fitfunctions/FitGausexpo.cc
-    modules/MCEnergySmearing.cc
   )
 
 append_header_files(SRCS)
