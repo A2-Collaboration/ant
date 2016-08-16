@@ -11,8 +11,7 @@ using namespace ant::analysis;
 using namespace ant::analysis::physics;
 
 ProcessTaggEff::ProcessTaggEff(const std::string& name, OptionsPtr opts) :
-    Physics(name, opts),
-    fillDebug(opts->Get<bool>("fillDebug", false))
+    Physics(name, opts)
 {
     auto Tagger = ExpConfig::Setup::GetDetector<TaggerDetector_t>();
     if (!Tagger) throw std::runtime_error("No Tagger found");
@@ -20,70 +19,55 @@ ProcessTaggEff::ProcessTaggEff(const std::string& name, OptionsPtr opts) :
 
     slowcontrol::Variables::TaggerScalers->Request();
     slowcontrol::Variables::PhotonFlux->Request();
-    byChannel = HistFac.makeTH1D("","channel","Frequency [Hz]",nchannels,"TaggerFreqs");
-    mainTree.CreateBranches(HistFac.makeTTree("mainTree"));
-    mainTree.TaggFreqs().resize(nchannels);
+    taggerChannels = HistFac.makeTH1D("","channel","Frequency [Hz]",nchannels,"TaggerFreqs");
 
-    if (fillDebug)
-    {
-        debugTree.CreateBranches(HistFac.makeTTree("debugTree"));
-        debugTree.TaggFreqs().resize(nchannels);
-    }
+    scalarReads.CreateBranches(HistFac.makeTTree("scalarReads"));
 
+    scalarReads.TaggRates().resize(nchannels);
+    scalarReads.TDCHits().resize(nchannels);
+    scalarReads.CoincidentTDCHits().resize(nchannels);
+    scalarReads.TaggTimings().resize(nchannels);
 }
+
 
 ProcessTaggEff::~ProcessTaggEff() {}
 
 void ProcessTaggEff::ProcessEvent(const TEvent& ev, manager_t& )
 {
-//    if(slowcontrol::Variables::PhotonFlux->HasChanged())
-//        LOG(INFO) << ev.Reconstructed().ID.Lower << " " << slowcontrol::Variables::PhotonFlux->Get();
+    scalarReads.nEvtsPerRead++;
 
-    mainTree.LGFreq += slowcontrol::Variables::PhotonFlux->Get();
-    if ( seenEvents == 0 )
-        mainTree.EvID = ev.Reconstructed().ID;
-
-    if (fillDebug)
+    if(slowcontrol::Variables::PhotonFlux->HasChanged())
     {
-        debugTree.LGFreq = slowcontrol::Variables::PhotonFlux->Get();
-        debugTree.EvID = ev.Reconstructed().ID;
+
+        const auto scalars = slowcontrol::Variables::TaggerScalers->Get();
+        unsigned channel = 0;
+        for (const auto& value: scalars)
+        {
+            taggerChannels->Fill(channel,value * scalarReads.nEvtsPerRead);
+            scalarReads.TaggRates().at(channel) = value;
+            channel++;
+        }
+
+        scalarReads.LGRate += slowcontrol::Variables::PhotonFlux->Get();
+        scalarReads.LastID = ev.Reconstructed().ID;
+        scalarReads.Tree->Fill();
+        LOG(INFO) << "ScalarRead ==>  "
+                  << "n = " << scalarReads.nEvtsPerRead << ", "
+                  << "N = " << scalarReads.LastID().Lower;
+        scalarReads.nEvtsPerRead = 0;
     }
-
-    const auto scalars = slowcontrol::Variables::TaggerScalers->Get();
-    unsigned channel = 0;
-    for (const auto& value: scalars)
-    {
-        byChannel->Fill(channel,value);
-
-        mainTree.TaggFreqs().at(channel) += value;
-
-        if (fillDebug) debugTree.TaggFreqs().at(channel) = value;
-
-        channel++;
-    }
-
-    if (fillDebug)
-        debugTree.Tree->Fill();
 
     seenEvents++;
 }
 
 void ProcessTaggEff::Finish()
 {
-    // normalize
-    byChannel->Scale(1./seenEvents);
-    for (auto& freq: mainTree.TaggFreqs())
-        freq = freq / (1. * seenEvents);
-    mainTree.LGFreq = mainTree.LGFreq / (1. * seenEvents);
-    mainTree.Tree->Fill();
-
-
-    LOG(INFO) << "Filled Tree for " << seenEvents << " events, starting at "<< std_ext::to_iso8601(mainTree.EvID().Timestamp) << "." << endl;
+    LOG(INFO) << "Filled Tree for " << seenEvents << "." << endl; // << " events, starting at "<< std_ext::to_iso8601(mainTree.EvID().Timestamp) << "." << endl;
 }
 
 void ProcessTaggEff::ShowResult()
 {
-    byChannel->Draw();
+    taggerChannels->Draw();
 }
 
 AUTO_REGISTER_PHYSICS(ProcessTaggEff)
