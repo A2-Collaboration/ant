@@ -112,7 +112,7 @@ TEST_CASE("SlowControlManager: Processors {1,2,3,4}", "[analysis]") {
 // see https://github.com/zjx20/stealer for STEALER usage
 
 STEALER(stealer_Variable_t, slowcontrol::Variable,
-        STEAL_METHOD(list<std::shared_ptr<slowcontrol::Processor>>, GetNeededProcessors)
+        STEAL_CONST_METHOD(list<std::shared_ptr<slowcontrol::Processor>>, GetNeededProcessors)
 );
 
 using AcquProcessor_t = slowcontrol::processor::AcquScalerVector;
