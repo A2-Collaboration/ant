@@ -55,7 +55,8 @@ bool DataBase::GetItem(const string& calibrationID,
 
     if(it_range != ranges.end()) {
         if(loadFile(it_range->FolderPath+"/current", theData)) {
-            LOG(INFO) << "Loaded data for " << calibrationID << " for changepoint " << currentPoint << " from " << it_range->FolderPath;
+            LOG(INFO) << "Loaded data for " << calibrationID << " for changepoint " << currentPoint
+                      << " from " << Layout.RemoveCalibrationDataFolder(it_range->FolderPath);
             // next change point is given by found range
             nextChangePoint = it_range->Stop();
             ++nextChangePoint;
@@ -301,6 +302,14 @@ string DataBase::OnDiskLayout::GetRangeFolder(const string& calibrationID, const
     const string& stop = makeTIDString(range.Stop());
     const string& day = start.substr(0, start.find('T'));
     return GetFolder(calibrationID, Type_t::DataRanges)+"/"+day+"/"+start+"-"+stop;
+}
+
+string DataBase::OnDiskLayout::RemoveCalibrationDataFolder(const string& path) const
+{
+    auto pos = path.find(CalibrationDataFolder);
+    if(pos == string::npos)
+        return path;
+    return path.substr(CalibrationDataFolder.length()+1);
 }
 
 string DataBase::OnDiskLayout::GetCurrentFile(const DataBase::OnDiskLayout::Range_t& range) const

@@ -56,6 +56,7 @@ public:
         std::string GetFolder(const std::string& calibrationID, Type_t type) const;
         std::string GetCurrentFile(const std::string& calibrationID, Type_t type) const;
         std::string GetRangeFolder(const std::string& calibrationID, const interval<TID>& range) const;
+        std::string RemoveCalibrationDataFolder(const std::string& path) const;
 
         struct Range_t : interval<TID> {
             std::string FolderPath;
