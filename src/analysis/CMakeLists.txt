@@ -60,6 +60,7 @@ set(ANALYSIS_PHYSICS
   physics/common/FitPulls.cc
   physics/common/InterpolatedPulls.cc
   physics/etaprime/etaprime_ept.cc
+  physics/common/ReconstructCheck.cc
   )
 
 set(ANALYSIS_PHYSICS_CALIBRATION
