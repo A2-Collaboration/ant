@@ -17,7 +17,7 @@ struct hstack;
 namespace analysis {
 namespace physics {
 
-class ReconstructCheck : public Physics {
+class MCReconstructCheck : public Physics {
 protected:
 
     TH2D* EnergyRec_cb;
@@ -140,7 +140,7 @@ protected:
     unsigned b_Cal = 0;
 
 public:
-    ReconstructCheck(const std::string& name, OptionsPtr opts);
+    MCReconstructCheck(const std::string& name, OptionsPtr opts);
 
     virtual void ProcessEvent(const TEvent& event, manager_t& manager) override;
     virtual void Finish() override;

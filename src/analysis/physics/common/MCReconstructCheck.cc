@@ -1,4 +1,4 @@
-#include "physics/common/ReconstructCheck.h"
+#include "physics/common/MCReconstructCheck.h"
 
 #include "plot/root_draw.h"
 #include "root-addons/analysis_codes/hstack.h"
@@ -20,7 +20,7 @@ using namespace ant::analysis;
 using namespace ant::analysis::physics;
 
 
-ReconstructCheck::ReconstructCheck(const std::string& name, OptionsPtr opts):
+MCReconstructCheck::MCReconstructCheck(const std::string& name, OptionsPtr opts):
     Physics(name,opts),
     cb_group(HistFac, "CB", histgroup::detectortype::CB),
     taps_group(HistFac,"TAPS",histgroup::detectortype::TAPS),
@@ -60,7 +60,7 @@ Detector_t::Any_t GetCommonDetector(const TCandidateList& cands) {
     return common_detetctor;
 }
 
-void ReconstructCheck::ProcessEvent(const TEvent& event, manager_t&)
+void MCReconstructCheck::ProcessEvent(const TEvent& event, manager_t&)
 {
     if(event.MCTrue().Particles.GetAll().size() == 1) {
 
@@ -114,16 +114,16 @@ void ReconstructCheck::ProcessEvent(const TEvent& event, manager_t&)
 }
 
 
-void ReconstructCheck::Finish()
+void MCReconstructCheck::Finish()
 {
     cb_group.Finish();
     taps_group.Finish();
     all_group.Finish();
     tapsveto.Finish();
-    LOG(INFO) << "ReconstructCheck Finish";
+    LOG(INFO) << "MCReconstructCheck Finish";
 }
 
-void ReconstructCheck::ShowResult()
+void MCReconstructCheck::ShowResult()
 {
     cb_group.ShowResult();
     taps_group.ShowResult();
@@ -139,7 +139,7 @@ void LabelBins(TAxis* x) {
     }
 }
 
-std::unique_ptr<ReconstructCheck::PositionMap> ReconstructCheck::histgroup::makePosMap(HistogramFactory& f, ReconstructCheck::histgroup::detectortype d, const string& name, const string title)
+std::unique_ptr<MCReconstructCheck::PositionMap> MCReconstructCheck::histgroup::makePosMap(HistogramFactory& f, MCReconstructCheck::histgroup::detectortype d, const string& name, const string title)
 {
     std::unique_ptr<PositionMap> ptr;
     switch (d) {
@@ -154,7 +154,7 @@ std::unique_ptr<ReconstructCheck::PositionMap> ReconstructCheck::histgroup::make
     return ptr;
 }
 
-ReconstructCheck::histgroup::histgroup(const HistogramFactory& parent, const string& prefix, detectortype d): Prefix(prefix)
+MCReconstructCheck::histgroup::histgroup(const HistogramFactory& parent, const string& prefix, detectortype d): Prefix(prefix)
 {
     HistogramFactory HistFac(prefix, parent, prefix);
 
@@ -222,7 +222,7 @@ ReconstructCheck::histgroup::histgroup(const HistogramFactory& parent, const str
 
 }
 
-void ReconstructCheck::histgroup::ShowResult() const
+void MCReconstructCheck::histgroup::ShowResult() const
 {
 
     canvas c(Prefix);
@@ -241,7 +241,7 @@ void Norm(TH1* hist) {
     hist->Scale(1.0/hist->GetEntries());
 }
 
-void ReconstructCheck::histgroup::Finish()
+void MCReconstructCheck::histgroup::Finish()
 {
     Norm(nPerEvent);
     Norm(splitPerEvent);
@@ -266,7 +266,7 @@ TCandidatePtrList CandidatesByDetector(const Detector_t::Any_t& detector, const 
 }
 
 
-void ReconstructCheck::histgroup::Fill(const TParticlePtr& mctrue, const TCandidateList& cand, const TClusterList& all_clusters)
+void MCReconstructCheck::histgroup::Fill(const TParticlePtr& mctrue, const TCandidateList& cand, const TClusterList& all_clusters)
 {
     const auto mc_phi = std_ext::radian_to_degree(mctrue->Phi());
     const auto mc_theta = mctrue->Theta();
@@ -346,24 +346,24 @@ void ReconstructCheck::histgroup::Fill(const TParticlePtr& mctrue, const TCandid
 
 
 
-void ReconstructCheck::PositionMapCB::Fill(const double theta, const double phi, const double v)
+void MCReconstructCheck::PositionMapCB::Fill(const double theta, const double phi, const double v)
 {
     maphist->Fill(cos(theta),phi,v);
 }
 
-void ReconstructCheck::PositionMap::Draw(const string&) const
+void MCReconstructCheck::PositionMap::Draw(const string&) const
 {
     maphist->Draw("colz");
 }
 
-ReconstructCheck::PositionMapCB::PositionMapCB(HistogramFactory &f, const string &name, const string &title)
+MCReconstructCheck::PositionMapCB::PositionMapCB(HistogramFactory &f, const string &name, const string &title)
 {
     const BinSettings costheta(360,-1,1);
     const BinSettings phi(360,-180,180);
     maphist = f.makeTH2D(title,"cos(#theta_{True})","#phi [#circ]",costheta,phi,name);
 }
 
-ReconstructCheck::PositionMapTAPS::PositionMapTAPS(HistogramFactory &f, const string &name, const string& title)
+MCReconstructCheck::PositionMapTAPS::PositionMapTAPS(HistogramFactory &f, const string &name, const string& title)
 {
     const auto l   = 70.0; //cm
     const auto res =   .5; //cm
@@ -373,7 +373,7 @@ ReconstructCheck::PositionMapTAPS::PositionMapTAPS(HistogramFactory &f, const st
     maphist = f.makeTH2D(title,"x [cm]","y [cm]",bins, bins, name);
 }
 
-void ReconstructCheck::PositionMapTAPS::Fill(const double theta, const double phi, const double v)
+void MCReconstructCheck::PositionMapTAPS::Fill(const double theta, const double phi, const double v)
 {
     constexpr const auto tapsdist = 145.0; //cm
     constexpr const auto max_theta = std_ext::degree_to_radian(25.0);
@@ -386,7 +386,7 @@ void ReconstructCheck::PositionMapTAPS::Fill(const double theta, const double ph
     }
 }
 
-void ReconstructCheck::PositionMapTAPS::Draw(const string&) const
+void MCReconstructCheck::PositionMapTAPS::Draw(const string&) const
 {
     maphist->Draw("colz");
     auto taps = new TH2TAPS();
@@ -395,20 +395,20 @@ void ReconstructCheck::PositionMapTAPS::Draw(const string&) const
 
 
 
-ReconstructCheck::TAPSVetoMatch::TAPSVetoMatch(HistogramFactory& f)
+MCReconstructCheck::TAPSVetoMatch::TAPSVetoMatch(HistogramFactory& f)
 {
     const auto nchannels = 384;
 
     vetoElement_dist = f.makeTH2D("Veto TAPS Cluster dist","Veto Element","Dist [cm]",BinSettings(nchannels),BinSettings(100,0,20),"tapsveto_cluster_dist");
 }
 
-void ReconstructCheck::TAPSVetoMatch::ShowResult()
+void MCReconstructCheck::TAPSVetoMatch::ShowResult()
 {
     canvas c("TAPS Veto");
     c << vetoElement_dist << endc;
 }
 
-void ReconstructCheck::TAPSVetoMatch::Fill(const TCandidateList& cands, const TClusterList& all_clusters)
+void MCReconstructCheck::TAPSVetoMatch::Fill(const TCandidateList& cands, const TClusterList& all_clusters)
 {
     using namespace ant::std_ext;
 
@@ -438,4 +438,4 @@ void ReconstructCheck::TAPSVetoMatch::Fill(const TCandidateList& cands, const TC
 
 }
 
-AUTO_REGISTER_PHYSICS(ReconstructCheck)
+AUTO_REGISTER_PHYSICS(MCReconstructCheck)
