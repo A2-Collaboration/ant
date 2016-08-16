@@ -22,4 +22,4 @@ struct AddToAll {
     AddToAll addToAll ## var (Variables::var);
 
 DEFINE_VARIABLE(TaggerScalers)
-DEFINE_VARIABLE(PhotonFlux)
+DEFINE_VARIABLE(FreeRates)

@@ -11,22 +11,11 @@ namespace analysis {
 namespace slowcontrol {
 namespace variable {
 
-struct PhotonFlux : Variable {
+struct FreeRates : Variable {
 
-
-    virtual void Init() override;
     virtual std::list<ProcessorPtr> GetNeededProcessors() const override;
 
-    double Get() const;
-
-protected:
-
-    enum class mode_t {
-        PbGlass
-    };
-
-    mode_t mode;
-
+    double GetPbGlass() const;
 };
 
 }}}} // namespace ant::analysis::slowcontrol::processor

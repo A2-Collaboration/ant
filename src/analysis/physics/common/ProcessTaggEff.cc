@@ -18,7 +18,7 @@ ProcessTaggEff::ProcessTaggEff(const std::string& name, OptionsPtr opts) :
     auto nchannels = Tagger->GetNChannels();
 
     slowcontrol::Variables::TaggerScalers->Request();
-    slowcontrol::Variables::PhotonFlux->Request();
+    slowcontrol::Variables::FreeRates->Request();
     taggerChannels = HistFac.makeTH1D("","channel","Frequency [Hz]",nchannels,"TaggerFreqs");
 
     scalarReads.CreateBranches(HistFac.makeTTree("scalarReads"));
@@ -36,7 +36,7 @@ void ProcessTaggEff::ProcessEvent(const TEvent& ev, manager_t& )
 {
     scalarReads.nEvtsPerRead++;
 
-    if(slowcontrol::Variables::PhotonFlux->HasChanged())
+    if(slowcontrol::Variables::FreeRates->HasChanged())
     {
 
         const auto scalars = slowcontrol::Variables::TaggerScalers->Get();
@@ -48,7 +48,7 @@ void ProcessTaggEff::ProcessEvent(const TEvent& ev, manager_t& )
             channel++;
         }
 
-        scalarReads.LGRate += slowcontrol::Variables::PhotonFlux->Get();
+        scalarReads.LGRate += slowcontrol::Variables::FreeRates->GetPbGlass();
         scalarReads.LastID = ev.Reconstructed().ID;
         scalarReads.Tree->Fill();
         LOG(INFO) << "ScalarRead ==>  "

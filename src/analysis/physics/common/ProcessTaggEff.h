@@ -21,7 +21,7 @@ struct ProcessTaggEff: public Physics {
         ADD_BRANCH_T(TID,   LastID)
         ADD_BRANCH_T(int,   nEvtsPerRead)
 
-        ADD_BRANCH_T(double,    ExpLifeTime)
+        ADD_BRANCH_T(double,    ExpLivetime)
         ADD_BRANCH_T(double,    ExpTriggerRate)
         ADD_BRANCH_T(int,       Exp1MHz)
 

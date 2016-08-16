@@ -2,7 +2,7 @@
 
 #include "variables/Variable.h"
 #include "variables/TaggerScalers.h"
-#include "variables/PhotonFlux.h"
+#include "variables/ScalarRates.h"
 
 #include <memory>
 
@@ -16,7 +16,7 @@ struct AddToAll;
 struct Variables {
 
     static const std::shared_ptr<const variable::TaggerScalers> TaggerScalers;
-    static const std::shared_ptr<const variable::PhotonFlux>    PhotonFlux;
+    static const std::shared_ptr<const variable::FreeRates>   FreeRates;
 
 
 protected:

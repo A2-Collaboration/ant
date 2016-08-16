@@ -142,8 +142,8 @@ struct TestPhysics : Physics
         Physics("TestPhysics", nullptr)
     {
         // resetting important since we run SlowControlManager several times
-        reset_acquprocessors(slowcontrol::Variables::PhotonFlux);
-        slowcontrol::Variables::PhotonFlux->Request();
+        reset_acquprocessors(slowcontrol::Variables::FreeRates);
+        slowcontrol::Variables::FreeRates->Request();
         reset_acquprocessors(slowcontrol::Variables::TaggerScalers);
         slowcontrol::Variables::TaggerScalers->Request();
 
@@ -156,7 +156,7 @@ struct TestPhysics : Physics
             nChanged++;
             CHECK(event.Reconstructed().ID.Lower==185);
         }
-        if(slowcontrol::Variables::PhotonFlux->HasChanged()) {
+        if(slowcontrol::Variables::FreeRates->HasChanged()) {
             CHECK(firstEvent);
         }
         auto taggerscalers = slowcontrol::Variables::TaggerScalers->Get();
