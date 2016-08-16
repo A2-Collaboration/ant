@@ -404,6 +404,7 @@ int main(int argc, char** argv) {
 
     // this method does the hard work...
     pm.ReadFrom(move(readers), maxevents);
+    rootfiles = nullptr; // cleanup opened ROOT files for reading
 
     TAntHeader* header = new TAntHeader();
     gDirectory->Add(header);
