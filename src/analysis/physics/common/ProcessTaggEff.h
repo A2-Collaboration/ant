@@ -27,7 +27,7 @@ struct ProcessTaggEff: public Physics {
 
         ADD_BRANCH_T(int,   BeamPolMon1MHz)
 
-        ADD_BRANCH_T(double,              LGRate)
+        ADD_BRANCH_T(double,              PbRate)
         ADD_BRANCH_T(std::vector<double>, TaggRates)
 
         ADD_BRANCH_T(std::vector<int>,                  TDCHits)
@@ -44,6 +44,8 @@ struct ProcessTaggEff: public Physics {
     virtual void ProcessEvent(const TEvent& ev, manager_t&) override;
     virtual void Finish() override;
     virtual void ShowResult() override;
+
+    void processBlock(const TEvent& ev);
 };
 
 }}} // namespace ant::analysis::physics

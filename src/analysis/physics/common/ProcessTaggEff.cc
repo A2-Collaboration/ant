@@ -35,21 +35,11 @@ ProcessTaggEff::~ProcessTaggEff() {}
 void ProcessTaggEff::ProcessEvent(const TEvent& ev, manager_t& )
 {
     scalarReads.nEvtsPerRead++;
+    seenEvents++;
 
     if(slowcontrol::Variables::FreeRates->HasChanged())
     {
-
-        const auto scalars = slowcontrol::Variables::TaggerScalers->Get();
-        unsigned channel = 0;
-        for (const auto& value: scalars)
-        {
-            taggerChannels->Fill(channel,value * scalarReads.nEvtsPerRead);
-            scalarReads.TaggRates().at(channel) = value;
-            channel++;
-        }
-
-        scalarReads.LGRate += slowcontrol::Variables::FreeRates->GetPbGlass();
-        scalarReads.LastID = ev.Reconstructed().ID;
+        processBlock(ev);
         scalarReads.Tree->Fill();
         LOG(INFO) << "ScalarRead ==>  "
                   << "n = " << scalarReads.nEvtsPerRead << ", "
@@ -57,7 +47,6 @@ void ProcessTaggEff::ProcessEvent(const TEvent& ev, manager_t& )
         scalarReads.nEvtsPerRead = 0;
     }
 
-    seenEvents++;
 }
 
 void ProcessTaggEff::Finish()
@@ -68,6 +57,20 @@ void ProcessTaggEff::Finish()
 void ProcessTaggEff::ShowResult()
 {
     taggerChannels->Draw();
+}
+
+void ProcessTaggEff::processBlock(const TEvent& ev)
+{
+    const auto scalars = slowcontrol::Variables::TaggerScalers->Get();
+    unsigned channel = 0;
+    for (const auto& value: scalars)
+    {
+        taggerChannels->Fill(channel,value);
+        scalarReads.TaggRates().at(channel) = value;
+        channel++;
+    }
+    scalarReads.PbRate = slowcontrol::Variables::FreeRates->GetPbGlass();
+    scalarReads.LastID = ev.Reconstructed().ID;
 }
 
 AUTO_REGISTER_PHYSICS(ProcessTaggEff)
