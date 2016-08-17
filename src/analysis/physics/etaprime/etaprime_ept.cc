@@ -342,11 +342,11 @@ void EtapEPT::ShowResult()
 {
     canvas("Overview")
             << h_Cuts
-            << TTree_drawable(t.Tree, "IM_2g >> h1(200,800,1050)","")
-            << TTree_drawable(t.Tree, "IM_2g >> h2(200,800,1050)","TaggCh==TaggCh_")
-            << TTree_drawable(t.Tree, "IM_2g >> h3(200,800,1050)","TaggW*(KinFitProb>0.01)")
-            << TTree_drawable(t.Tree, "IM_2g >> h4(200,800,1050)","TaggW*(KinFitProb>0.01 && TaggCh == TaggCh_)")
-            << TTree_drawable(t.Tree, "IM_2g >> h5(200,800,1050)","TaggW_wide*(KinFitProb>0.01 && TaggCh == TaggCh_)")
+            << TTree_drawable(t.Tree, "IM_2g >> h1(150,800,1050)","")
+            << TTree_drawable(t.Tree, "IM_2g >> h2(150,800,1050)","TaggCh==TaggCh_")
+            << TTree_drawable(t.Tree, "IM_2g >> h3(150,800,1050)","TaggW*(KinFitProb>0.01)")
+            << TTree_drawable(t.Tree, "IM_2g >> h4(150,800,1050)","TaggW*(KinFitProb>0.01 && TaggCh == TaggCh_)")
+            << TTree_drawable(t.Tree, "IM_2g >> h5(150,800,1050)","TaggW_wide*(KinFitProb>0.01 && TaggCh == TaggCh_)")
             << endc;
 
 }
