@@ -12,6 +12,7 @@
 #include "base/printable.h"
 #include "base/interval.h"
 #include <memory>
+#include <map>
 #else
 // disable the override keyword
 #define override

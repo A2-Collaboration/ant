@@ -3,7 +3,6 @@
 #include <string>
 #include <list>
 #include <vector>
-#include <map>
 #include <memory>
 #include <functional>
 
@@ -32,21 +31,19 @@ protected:
     std::string Cut;
 };
 
-struct canvas_modifier {};
-
-struct endcanvas : canvas_modifier {};
+struct endcanvas {};
 
 extern const endcanvas endc;
 
-struct endrow : canvas_modifier {};
+struct endrow {};
 
 extern const endrow endr;
 
-struct samepad_t : canvas_modifier {};
+struct samepad_t {};
 
 extern const samepad_t samepad;
 
-struct drawoption : canvas_modifier {
+struct drawoption {
     drawoption(const std::string& opt=""): option(opt) {}
     const std::string& Option() const { return option; }
 protected:
@@ -55,12 +52,12 @@ protected:
 
 using padmodifier_t = std::function<void(TVirtualPad*)>;
 
-struct padoption : canvas_modifier, padmodifier_t {
+struct padoption : padmodifier_t {
 
 protected:
     struct permanent {
-        permanent(const padmodifier_t& m) : Modifier(std::addressof(m)) {}
-        const padmodifier_t* Modifier;
+        permanent(const padmodifier_t& m) : Modifier(m) {}
+        const padmodifier_t Modifier;
     };
 
     using padmodifier_t::padmodifier_t;
@@ -111,25 +108,10 @@ protected:
     TCanvas* CreateTCanvas(const std::string& title="");
     TCanvas* FindTCanvas();
 
-    template<typename T>
-    struct drawable_container :  root_drawable_traits {
-        T Object;
-
-        drawable_container(T object) :
-            Object(object)  {}
-
-        void Draw(const std::string& option) const {
-            Object->Draw(option.c_str());
-        }
-
-        drawable_container(const drawable_container&) = delete;
-        drawable_container& operator= (const drawable_container&) = delete;
-    };
-
     struct DrawableItem {
-        std::unique_ptr<root_drawable_traits> Drawable;
+        std::shared_ptr<root_drawable_traits> Drawable;
         std::string Option;
-        DrawableItem(std::unique_ptr<root_drawable_traits> drawable,
+        DrawableItem(std::shared_ptr<root_drawable_traits> drawable,
                      const std::string& option) :
             Drawable(move(drawable)),
             Option(option)
@@ -139,7 +121,7 @@ protected:
 
     struct pad_t  {
         std::list<DrawableItem> DrawableItems;     // objects to draw on pad (empty indicates end row)
-        using PadOptions_t = std::list<const padmodifier_t*>;
+        using PadOptions_t = std::list<padmodifier_t>;
         PadOptions_t PadOptions; // pad options
         pad_t(const PadOptions_t& options) : PadOptions(options) {}
         pad_t() {}
@@ -148,12 +130,12 @@ protected:
     std::list<pad_t> pads;
 
     std::string current_drawoption;
-    std::list<const padmodifier_t*> global_padoptions;
-    std::list<const padmodifier_t*> onetime_padoptions;
+    std::list<padmodifier_t> global_padoptions;
+    std::list<padmodifier_t> onetime_padoptions;
 
 
     void DrawObjs(TCanvas* c, unsigned cols, unsigned rows);
-    void AddDrawable(std::unique_ptr<root_drawable_traits> drawable);
+    void AddDrawable(std::shared_ptr<root_drawable_traits> drawable);
 
 public:
 
@@ -162,7 +144,20 @@ public:
 
     void cd();
 
-    canvas& operator<< (const root_drawable_traits& drawable);
+    template<typename Drawable>
+    // use SFINAE/enable_if to restrict this templated operator to types deriving from root_drawable_traits only
+    // the return type of this operator<< is simply "canvas&" as for all others
+    typename std::enable_if<std::is_base_of<root_drawable_traits, Drawable>::value, canvas>::type&
+    operator<< (const Drawable& drawable) {
+        // the type Drawable must be copyable, we use that here
+        AddDrawable(std::make_shared<Drawable>(drawable));
+        return *this;
+    }
+
+    canvas& operator<< (const std::shared_ptr<root_drawable_traits>& drawable) {
+        AddDrawable(drawable);
+        return *this;
+    }
 
     canvas& operator<< (TObject* hist);
 

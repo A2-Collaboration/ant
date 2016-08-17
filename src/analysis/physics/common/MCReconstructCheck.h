@@ -56,9 +56,9 @@ protected:
         TH1D* nPerEvent;
         TH2D* nPerEventPerE;
         TH1D* splitPerEvent;
-        std::unique_ptr<PositionMap> splitFlagPos;
-        std::unique_ptr<PositionMap> splitPos;
-        std::unique_ptr<PositionMap> touchesholeFlagPos;
+        std::shared_ptr<PositionMap> splitFlagPos;
+        std::shared_ptr<PositionMap> splitPos;
+        std::shared_ptr<PositionMap> touchesholeFlagPos;
 
         std::vector<TH1D*> mult2_split_angles;
         ant::hstack* splitstack;
@@ -68,7 +68,7 @@ protected:
         TH2D* cluserSize_true;
         TH2D* dEE;
         TH2D* dEE_true;
-        std::unique_ptr<PositionMap> posCharged;
+        std::shared_ptr<PositionMap> posCharged;
         TH1D* unmatched_veto;
         TH1D* veto_cand_phi_diff;
 
@@ -78,11 +78,11 @@ protected:
         TH2D* phiinout;
         TH2D* anglediff;
 
-        std::unique_ptr<PositionMap> mult1_positions;
-        std::unique_ptr<PositionMap> energy_recov;
+        std::shared_ptr<PositionMap> mult1_positions;
+        std::shared_ptr<PositionMap> energy_recov;
 
-        std::unique_ptr<PositionMap> input_positions;
-        std::unique_ptr<PositionMap> mult1_chargedPos;
+        std::shared_ptr<PositionMap> input_positions;
+        std::shared_ptr<PositionMap> mult1_chargedPos;
 
 
 
@@ -90,7 +90,7 @@ protected:
             All, CB, TAPS
         };
 
-        std::unique_ptr<PositionMap> makePosMap(HistogramFactory& f, detectortype d, const std::string& name, const std::string title="");
+        std::shared_ptr<PositionMap> makePosMap(HistogramFactory& f, detectortype d, const std::string& name, const std::string title="");
 
         histgroup(const HistogramFactory& parent, const std::string& prefix, detectortype d=detectortype::All);
         void Fill(const TParticlePtr& mctrue, const TCandidateList& cand, const TClusterList& all_clusters);

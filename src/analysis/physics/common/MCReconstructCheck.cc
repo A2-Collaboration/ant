@@ -139,19 +139,16 @@ void LabelBins(TAxis* x) {
     }
 }
 
-std::unique_ptr<MCReconstructCheck::PositionMap> MCReconstructCheck::histgroup::makePosMap(HistogramFactory& f, MCReconstructCheck::histgroup::detectortype d, const string& name, const string title)
+std::shared_ptr<MCReconstructCheck::PositionMap> MCReconstructCheck::histgroup::makePosMap(HistogramFactory& f, MCReconstructCheck::histgroup::detectortype d, const string& name, const string title)
 {
-    std::unique_ptr<PositionMap> ptr;
     switch (d) {
     case detectortype::All:
     case detectortype::CB:
-        ptr = std_ext::make_unique<PositionMapCB>(f,name,title);
-        break;
+        return std::make_shared<PositionMapCB>(f,name,title);
     case detectortype::TAPS:
-        ptr = std_ext::make_unique<PositionMapTAPS>(f,name,title);
+        return std::make_shared<PositionMapTAPS>(f,name,title);
     }
-
-    return ptr;
+    return nullptr;
 }
 
 MCReconstructCheck::histgroup::histgroup(const HistogramFactory& parent, const string& prefix, detectortype d): Prefix(prefix)
@@ -228,12 +225,12 @@ void MCReconstructCheck::histgroup::ShowResult() const
     canvas c(Prefix);
 
     c << drawoption("colz") << nPerEvent << nPerEventPerE << splitPerEvent
-      << *splitFlagPos << *splitPos << *touchesholeFlagPos
-      << cluserSize << cluserSize_true << dEE << dEE_true << nCharged << *posCharged << unmatched_veto
+      << splitFlagPos << splitPos << touchesholeFlagPos
+      << cluserSize << cluserSize_true << dEE << dEE_true << nCharged << posCharged << unmatched_veto
       << drawoption("nostack") << padoption::Legend << splitstack
-      << drawoption("colz") << *energy_recov
+      << drawoption("colz") << energy_recov
       << padoption::LogZ << energyinout
-      << thetainout << *input_positions << *mult1_chargedPos
+      << thetainout << input_positions << mult1_chargedPos
       << endc;
 }
 

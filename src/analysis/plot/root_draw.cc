@@ -1,5 +1,4 @@
 #include "plot/root_draw.h"
-#include "base/std_ext/memory.h"
 #include "base/std_ext/string.h"
 #include "base/Logger.h"
 
@@ -86,8 +85,7 @@ void canvas::DrawObjs(TCanvas* c, unsigned cols, unsigned rows)
             }
             // set pad options
             for(const auto& option : p.PadOptions) {
-
-                (*option)(vpad);
+                option(vpad);
             }
 
             ++pad;
@@ -105,7 +103,7 @@ void canvas::cd()
 }
 
 
-void canvas::AddDrawable(std::unique_ptr<root_drawable_traits> drawable)
+void canvas::AddDrawable(std::shared_ptr<root_drawable_traits> drawable)
 {
     onetime_padoptions.insert(onetime_padoptions.end(),
                               global_padoptions.begin(),
@@ -123,17 +121,17 @@ void canvas::AddDrawable(std::unique_ptr<root_drawable_traits> drawable)
     addobject = false;
 }
 
-canvas& canvas::operator<<(const root_drawable_traits& drawable)
-{
-    using container_t = drawable_container<const root_drawable_traits*>;
-    AddDrawable(std_ext::make_unique<container_t>(addressof(drawable)));
-    return *this;
-}
-
 canvas& canvas::operator<<(TObject* hist)
 {
-    using container_t = drawable_container<TObject*>;
-    AddDrawable(std_ext::make_unique<container_t>(hist));
+    struct TObject_wrapper : root_drawable_traits {
+        TObject* h;
+        TObject_wrapper(TObject* h_) : h(h_) {}
+        virtual ~TObject_wrapper() = default;
+        virtual void Draw(const std::string& option) const {
+            h->Draw(option.c_str());
+        }
+    };
+    AddDrawable(std::make_shared<TObject_wrapper>(hist));
     return *this;
 }
 
@@ -160,20 +158,23 @@ canvas& canvas::operator<<(const drawoption& c)
 
 canvas&canvas::operator<<(const padoption& c)
 {
-    onetime_padoptions.emplace_back(std::addressof(c));
+    onetime_padoptions.emplace_back(c);
     return *this;
 }
 
 canvas& canvas::operator<<(const padoption::enable& c)
 {
-
     global_padoptions.emplace_back(c.Modifier);
     return *this;
 }
 
 canvas& canvas::operator<<(const padoption::disable& c)
 {
-    global_padoptions.remove(c.Modifier);
+    // checking std::function for equality is a bit difficult
+    global_padoptions.remove_if([c] (const padmodifier_t& mod) {
+        typedef void (fnType)(TVirtualPad*);
+        return mod.template target<fnType>() == c.Modifier.template target<fnType>();
+    });
     return *this;
 }
 
