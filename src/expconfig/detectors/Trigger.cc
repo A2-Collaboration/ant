@@ -9,6 +9,8 @@ using namespace ant::expconfig::detector;
 
 const std::string Trigger::ScalerName::TotalLivetime   = "TotalLivetime";
 const std::string Trigger::ScalerName::Exptrigger_1MHz = "Exptrigger_1Mhz";
+const std::string Trigger::ScalerName::ExpTrigger      = "ExpTrigger";
+const std::string Trigger::ScalerName::L1Trigger       = "L1Trigger";
 
 const std::string Trigger::ScalerName::PairSpecGate      = "PairSpecGate";
 const std::string Trigger::ScalerName::TaggerReferenceOR = "TaggerReferenceOR";
@@ -177,8 +179,10 @@ Trigger_2014::scaler_mapping_t Trigger_2014::MakeScalerMapping()
     // build the mapping from human-readable names
     // to Acqu scaler indices
     scaler_mapping_t m;
-    m[ScalerName::TotalLivetime]   = 190;
-    m[ScalerName::Exptrigger_1MHz] = 191;
+    m[ScalerName::TotalLivetime]   = 190;   // live counter vme-exptrigger
+    m[ScalerName::Exptrigger_1MHz] = 191;   // free clock
+    m[ScalerName::ExpTrigger]      = 192;
+    m[ScalerName::L1Trigger]       = 194;
 
     m[ScalerName::PairSpecGate]      = 308;
     m[ScalerName::TaggerReferenceOR] = 309;
@@ -187,7 +191,7 @@ Trigger_2014::scaler_mapping_t Trigger_2014::MakeScalerMapping()
     m[ScalerName::IonChamber]        = 312;
     m[ScalerName::FaradayCup]        = 313;
                                     // 314 is unused
-    m[ScalerName::Beampolmon_1MHz]   = 315;
+    m[ScalerName::Beampolmon_1MHz]   = 315; // live counter vme-beampolmon
     return m;
 }
 

@@ -9,7 +9,7 @@ set(SLOWCONTROL_PROCESSORS
   SlowControlProcessors.cc
   processors/Processor.h
   processors/AcquScalerProcessor.cc
-  processors/ExpTrigger.h
+  processors/ExpTrigger.cc
   processors/Beampolmon.cc
   processors/EPT_Scalers.h
   processors/Tagger_Scalers.h

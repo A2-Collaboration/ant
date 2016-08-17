@@ -64,6 +64,8 @@ struct Trigger :
     struct ScalerName {
         static const std::string TotalLivetime;
         static const std::string Exptrigger_1MHz;
+        static const std::string ExpTrigger;
+        static const std::string L1Trigger;
 
         static const std::string PairSpecGate;
         static const std::string TaggerReferenceOR;
