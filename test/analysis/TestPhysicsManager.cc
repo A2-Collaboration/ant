@@ -6,6 +6,8 @@
 #include "analysis/input/ant/AntReader.h"
 #include "analysis/input/pluto/PlutoReader.h"
 
+#include "analysis/utils/Uncertainties.h"
+
 #include "unpacker/Unpacker.h"
 #include "reconstruct/Reconstruct.h"
 #include "expconfig/ExpConfig.h"
@@ -311,6 +313,10 @@ void dotest_runall() {
         }
         catch(ExpConfig::ExceptionNoDetector) {
             // ignore silently if test setup did not provide detector
+            continue;
+        }
+        catch(utils::UncertaintyModel::Exception) {
+            // ignore silently if class cannot load uncertainty model
             continue;
         }
         catch(...) {
