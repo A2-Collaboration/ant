@@ -40,6 +40,7 @@ TEST_CASE("SlowControlManager: Two scaler blob", "[analysis]") {
 struct result_t {
     unsigned nEventsRead = 0;
     unsigned nEventsPopped = 0;
+    unsigned nContextSwitched = 0;
     unsigned nEventsSkipped = 0;
     unsigned nEventsSavedForSC = 0;
 };
@@ -49,6 +50,7 @@ result_t run_TestSlowControlManager(const vector<unsigned>& enabled);
 TEST_CASE("SlowControlManager: Processors {1}", "[analysis]") {
     auto r = run_TestSlowControlManager({1});
     CHECK(r.nEventsPopped == 15);
+    CHECK(r.nContextSwitched == 3);
     CHECK(r.nEventsSkipped == 1);
     CHECK(r.nEventsSavedForSC == 4);
 }
@@ -56,6 +58,7 @@ TEST_CASE("SlowControlManager: Processors {1}", "[analysis]") {
 TEST_CASE("SlowControlManager: Processors {2}", "[analysis]") {
     auto r = run_TestSlowControlManager({2});
     CHECK(r.nEventsPopped == 14);
+    CHECK(r.nContextSwitched == 3);
     CHECK(r.nEventsSkipped == 1);
     CHECK(r.nEventsSavedForSC == 4);
 }
@@ -63,6 +66,7 @@ TEST_CASE("SlowControlManager: Processors {2}", "[analysis]") {
 TEST_CASE("SlowControlManager: Processors {3}", "[analysis]") {
     auto r = run_TestSlowControlManager({3});
     CHECK(r.nEventsPopped == 16);
+    CHECK(r.nContextSwitched == 15);
     CHECK(r.nEventsSkipped == 0);
     CHECK(r.nEventsSavedForSC == 3);
 }
@@ -70,6 +74,7 @@ TEST_CASE("SlowControlManager: Processors {3}", "[analysis]") {
 TEST_CASE("SlowControlManager: Processors {4}", "[analysis]") {
     auto r = run_TestSlowControlManager({4});
     CHECK(r.nEventsPopped == 16);
+    CHECK(r.nContextSwitched == 13);
     CHECK(r.nEventsSkipped == 2);
     CHECK(r.nEventsSavedForSC == 2);
 }
@@ -77,6 +82,7 @@ TEST_CASE("SlowControlManager: Processors {4}", "[analysis]") {
 TEST_CASE("SlowControlManager: Processors {1,2}", "[analysis]") {
     auto r = run_TestSlowControlManager({1,2});
     CHECK(r.nEventsPopped == 15);
+    CHECK(r.nContextSwitched == 3);
     CHECK(r.nEventsSkipped == 2);
     CHECK(r.nEventsSavedForSC == 6);
 }
@@ -84,6 +90,7 @@ TEST_CASE("SlowControlManager: Processors {1,2}", "[analysis]") {
 TEST_CASE("SlowControlManager: Processors {3,4}", "[analysis]") {
     auto r = run_TestSlowControlManager({3,4});
     CHECK(r.nEventsPopped == 16);
+    CHECK(r.nContextSwitched == 13);
     CHECK(r.nEventsSkipped == 2);
     CHECK(r.nEventsSavedForSC == 4);
 }
@@ -91,6 +98,7 @@ TEST_CASE("SlowControlManager: Processors {3,4}", "[analysis]") {
 TEST_CASE("SlowControlManager: Processors {1,4}", "[analysis]") {
     auto r = run_TestSlowControlManager({1,4});
     CHECK(r.nEventsPopped == 16);
+    CHECK(r.nContextSwitched == 3);
     CHECK(r.nEventsSkipped == 2);
     CHECK(r.nEventsSavedForSC == 5);
 }
@@ -98,6 +106,7 @@ TEST_CASE("SlowControlManager: Processors {1,4}", "[analysis]") {
 TEST_CASE("SlowControlManager: Processors {2,3}", "[analysis]") {
     auto r = run_TestSlowControlManager({2,3});
     CHECK(r.nEventsPopped == 15);
+    CHECK(r.nContextSwitched == 3);
     CHECK(r.nEventsSkipped == 2);
     CHECK(r.nEventsSavedForSC == 6);
 }
@@ -105,6 +114,7 @@ TEST_CASE("SlowControlManager: Processors {2,3}", "[analysis]") {
 TEST_CASE("SlowControlManager: Processors {1,2,3,4}", "[analysis]") {
     auto r = run_TestSlowControlManager({1,2,3,4});
     CHECK(r.nEventsPopped == 16);
+    CHECK(r.nContextSwitched == 3);
     CHECK(r.nEventsSkipped == 3);
     CHECK(r.nEventsSavedForSC == 8);
 }
@@ -520,6 +530,8 @@ result_t run_TestSlowControlManager(const vector<unsigned>& enabled) {
             if(scm.ProcessEvent(move(event)))
                 break; // became complete, so start popping events
         }
+
+        r.nContextSwitched++;
 
         while(auto event = scm.PopEvent()) {
 
