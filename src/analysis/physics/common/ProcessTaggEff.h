@@ -44,6 +44,7 @@ struct ProcessTaggEff: public Physics {
     virtual void ShowResult() override;
 
     void processBlock(const TEvent& ev);
+    void processTaggerHits(const TEvent& ev);
 };
 
 }}} // namespace ant::analysis::physics

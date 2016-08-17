@@ -36,6 +36,8 @@ void ProcessTaggEff::ProcessEvent(const TEvent& ev, manager_t& )
     scalerReads.nEvtsPerRead++;
     seenEvents++;
 
+    processTaggerHits(ev);
+
     if(slowcontrol::Variables::FreeRates->HasChanged())
     {
         processBlock(ev);
@@ -80,6 +82,14 @@ void ProcessTaggEff::processBlock(const TEvent& ev)
     scalerReads.LastID = ev.Reconstructed().ID;
     scalerReads.ExpTriggerRate = slowcontrol::Variables::FreeRates->GetExpTrigger();
     scalerReads.L1TriggerRate = slowcontrol::Variables::FreeRates->GetL1Trigger();
+}
+
+void ProcessTaggEff::processTaggerHits(const TEvent &ev)
+{
+    for (const auto& taggerhit: ev.Reconstructed().TaggerHits)
+    {
+        scalerReads.TaggTimings().at(taggerhit.Channel).emplace_back(taggerhit.Time);
+    }
 }
 
 AUTO_REGISTER_PHYSICS(ProcessTaggEff)
