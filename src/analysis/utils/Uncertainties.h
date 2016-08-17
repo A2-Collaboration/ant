@@ -44,6 +44,9 @@ public:
     virtual ~UncertaintyModel();
     virtual Uncertainties_t GetSigmas(const TParticle& particle) const =0;
     virtual double GetBeamEnergySigma(double photon_energy) const;
+    struct Exception : std::runtime_error {
+        using std::runtime_error::runtime_error;
+    };
 protected:
     std::shared_ptr<TaggerDetector_t> tagger;
 };
@@ -56,10 +59,6 @@ namespace UncertaintyModels {
  */
 struct Constant : public UncertaintyModel {
 public:
-
-    struct Exception : std::runtime_error {
-        using std::runtime_error::runtime_error;
-    };
 
     Uncertainties_t photon_cb;
     Uncertainties_t photon_taps;
@@ -163,10 +162,6 @@ protected:
 
 public:
 
-    struct Exception : std::runtime_error {
-        using std::runtime_error::runtime_error;
-    };
-
     MCExtracted();
     virtual ~MCExtracted();
 
@@ -224,10 +219,6 @@ struct Optimized : UncertaintyModel {
     double taps_photon_phi   = 0.0;
 
     Uncertainties_t taps_proton = {};
-
-    struct Exception : std::runtime_error {
-        using std::runtime_error::runtime_error;
-    };
 
     Optimized();
 
@@ -314,10 +305,6 @@ public:
     bool HasLoadedSigmas() const {
         return loaded_sigmas;
     }
-
-    struct Exception : std::runtime_error {
-        using std::runtime_error::runtime_error;
-    };
 
     enum class Mode_t {
         Fit, MCSmear
