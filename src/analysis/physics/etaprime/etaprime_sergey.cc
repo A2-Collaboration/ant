@@ -148,6 +148,9 @@ void EtapSergey::ProcessEvent(const TEvent& event, manager_t&)
         if(!isfinite(best_prob))
             continue;
 
+        if(best_prob<0.01)
+            continue;
+
         steps->Fill("Fill",1);
 
         t.Tree->Fill();
@@ -158,7 +161,8 @@ void EtapSergey::ProcessEvent(const TEvent& event, manager_t&)
 
 void EtapSergey::ShowResult()
 {
-    canvas(GetName())
+    canvas(GetName()) << steps << endc;
+    canvas(GetName()+" Eta")
             << TTree_drawable(t.Tree, "PhotonSum >> h1(150,400,700)","TaggW*(KinFitProb>0.01)")
             << TTree_drawable(t.Tree, "PhotonSum >> h2(150,400,700)","(TaggW<0)*(KinFitProb>0.01)")
             << TTree_drawable(t.Tree, "PhotonSum >> h3(150,400,700)","(TaggW>0)*(KinFitProb>0.01)")
