@@ -4,6 +4,8 @@
 #include "analysis/physics/Physics.h"
 #include "expconfig/ExpConfig.h"
 
+#include "analysis/utils/Uncertainties.h"
+
 #include "base/OptionsList.h"
 #include "base/WrapTFile.h"
 #include "base/tmpfile_t.h"
@@ -65,6 +67,10 @@ void dotest() {
         }
         catch(ExpConfig::ExceptionNoDetector) {
             // ignore silently if test setup did not provide detector
+        }
+        catch(utils::UncertaintyModel::Exception) {
+            // ignore silently if class cannot load uncertainty model
+            continue;
         }
         catch(...) {
             FAIL("Unexpected exception");
