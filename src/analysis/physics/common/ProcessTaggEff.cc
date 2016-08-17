@@ -1,7 +1,7 @@
 #include "ProcessTaggEff.h"
 
 #include "slowcontrol/SlowControlVariables.h"
-
+#include "plot/root_draw.h"
 #include "base/Logger.h"
 #include "expconfig/ExpConfig.h"
 
@@ -19,14 +19,13 @@ ProcessTaggEff::ProcessTaggEff(const std::string& name, OptionsPtr opts) :
 
     slowcontrol::Variables::TaggerScalers->Request();
     slowcontrol::Variables::FreeRates->Request();
-    taggerChannels = HistFac.makeTH1D("","channel","Frequency [Hz]",nchannels,"TaggerFreqs");
 
-    scalarReads.CreateBranches(HistFac.makeTTree("scalarReads"));
+    scalerReads.CreateBranches(HistFac.makeTTree("scalerReads"));
 
-    scalarReads.TaggRates().resize(nchannels);
-    scalarReads.TDCHits().resize(nchannels);
-    scalarReads.CoincidentTDCHits().resize(nchannels);
-    scalarReads.TaggTimings().resize(nchannels);
+    scalerReads.TaggRates().resize(nchannels);
+    scalerReads.TDCHits().resize(nchannels);
+    scalerReads.CoincidentTDCHits().resize(nchannels);
+    scalerReads.TaggTimings().resize(nchannels);
 }
 
 
@@ -34,19 +33,18 @@ ProcessTaggEff::~ProcessTaggEff() {}
 
 void ProcessTaggEff::ProcessEvent(const TEvent& ev, manager_t& )
 {
-    scalarReads.nEvtsPerRead++;
+    scalerReads.nEvtsPerRead++;
     seenEvents++;
 
     if(slowcontrol::Variables::FreeRates->HasChanged())
     {
         processBlock(ev);
-        scalarReads.Tree->Fill();
-        LOG(INFO) << "ScalarRead ==>  "
-                  << "n = " << scalarReads.nEvtsPerRead << ", "
-                  << "N = " << scalarReads.LastID().Lower;
-        scalarReads.nEvtsPerRead = 0;
+        scalerReads.Tree->Fill();
+        LOG(INFO) << "ScalerRead ==>  "
+                  << "n = " << scalerReads.nEvtsPerRead << ", "
+                  << "N = " << scalerReads.LastID().Lower;
+        scalerReads.nEvtsPerRead = 0;
     }
-
 }
 
 void ProcessTaggEff::Finish()
@@ -56,21 +54,32 @@ void ProcessTaggEff::Finish()
 
 void ProcessTaggEff::ShowResult()
 {
-    taggerChannels->Draw();
+    canvas("check") << TTree_drawable(scalerReads.Tree, "PbRate")
+                    << TTree_drawable(scalerReads.Tree, "ExpLivetime")
+                    << TTree_drawable(scalerReads.Tree, "ExpTriggerRate")
+                    << TTree_drawable(scalerReads.Tree, "ExpTriggerRate/L1TriggerRate")
+                    << TTree_drawable(scalerReads.Tree, "ExpTriggerRate / PbRate")
+                    << TTree_drawable(scalerReads.Tree, "ExpLivetime * PbRate / ExpTriggerRate")
+                    << endc;
 }
 
 void ProcessTaggEff::processBlock(const TEvent& ev)
 {
-    const auto scalars = slowcontrol::Variables::TaggerScalers->Get();
+    const auto Scalers = slowcontrol::Variables::TaggerScalers->Get();
     unsigned channel = 0;
-    for (const auto& value: scalars)
+    for (const auto& value: Scalers)
     {
-        taggerChannels->Fill(channel,value);
-        scalarReads.TaggRates().at(channel) = value;
+        scalerReads.TaggRates().at(channel) = value;
         channel++;
     }
-    scalarReads.PbRate = slowcontrol::Variables::FreeRates->GetPbGlass();
-    scalarReads.LastID = ev.Reconstructed().ID;
+
+    scalerReads.Exp1MHz = slowcontrol::Variables::FreeRates->GetExpClock();
+    scalerReads.BeamPolMon1MHz = slowcontrol::Variables::FreeRates->GetBeampolmonClock();
+    scalerReads.ExpLivetime = slowcontrol::Variables::FreeRates->GetExpLivetime();
+    scalerReads.PbRate = slowcontrol::Variables::FreeRates->GetPbGlass();
+    scalerReads.LastID = ev.Reconstructed().ID;
+    scalerReads.ExpTriggerRate = slowcontrol::Variables::FreeRates->GetExpTrigger();
+    scalerReads.L1TriggerRate = slowcontrol::Variables::FreeRates->GetL1Trigger();
 }
 
 AUTO_REGISTER_PHYSICS(ProcessTaggEff)

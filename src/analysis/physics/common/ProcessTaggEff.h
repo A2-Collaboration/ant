@@ -14,18 +14,16 @@ struct ProcessTaggEff: public Physics {
 
     unsigned seenEvents = 0;
 
-    TH1D* taggerChannels;
-
-
     struct TreeScalarReads : WrapTTree {
         ADD_BRANCH_T(TID,   LastID)
         ADD_BRANCH_T(int,   nEvtsPerRead)
 
         ADD_BRANCH_T(double,    ExpLivetime)
         ADD_BRANCH_T(double,    ExpTriggerRate)
-        ADD_BRANCH_T(int,       Exp1MHz)
+        ADD_BRANCH_T(double,    L1TriggerRate)
+        ADD_BRANCH_T(double,       Exp1MHz)
 
-        ADD_BRANCH_T(int,   BeamPolMon1MHz)
+        ADD_BRANCH_T(double,   BeamPolMon1MHz)
 
         ADD_BRANCH_T(double,              PbRate)
         ADD_BRANCH_T(std::vector<double>, TaggRates)
@@ -36,7 +34,7 @@ struct ProcessTaggEff: public Physics {
 
     };
 
-    TreeScalarReads scalarReads;
+    TreeScalarReads scalerReads;
 
     ProcessTaggEff(const std::string& name, OptionsPtr opts=nullptr);
     virtual ~ProcessTaggEff();
