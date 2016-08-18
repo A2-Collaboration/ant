@@ -1,5 +1,4 @@
 #include "catch.hpp"
-#include "catch_config.h"
 
 #include "base/enumfield.h"
 
