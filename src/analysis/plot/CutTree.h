@@ -119,11 +119,9 @@ void Build(Tree_t<Hist_t> cuttree,
 
 template<typename Hist_t, typename Fill_t = typename Hist_t::Fill_t>
 Tree_t<Hist_t> Make(HistogramFactory histFac, const std::string& name, const Cuts_t<Fill_t>& cuts) {
-    if(cuts.empty())
-        return nullptr;
     std::size_t level = 0;
     auto cuttree = Tree<Node_t<Hist_t>>::MakeNode(histFac, Cut_t<Fill_t>{name},
-                                                  TreeInfo_t{level, cuts.front().size(), 1});
+                                                  TreeInfo_t{level, cuts.empty() ? 0 : cuts.front().size(), 1});
     Build<Hist_t>(cuttree, cuts.begin(), cuts.end(), level);
     return cuttree;
 }
