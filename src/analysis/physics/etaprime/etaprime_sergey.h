@@ -1,7 +1,7 @@
 #include "analysis/physics/Physics.h"
 
-#include "plot/PromptRandomHist.h"
-#include "utils/Fitter.h"
+#include "analysis/plot/PromptRandomHist.h"
+#include "analysis/utils/Fitter.h"
 #include "base/WrapTTree.h"
 
 class TH1D;
@@ -11,11 +11,7 @@ namespace analysis {
 namespace physics {
 
 class EtapSergey : public Physics {
-protected:
-
-    PromptRandom::Switch promptrandom;
-
-    TH1D* steps;
+public:
 
     struct Tree_t : WrapTTree {
 
@@ -50,6 +46,12 @@ protected:
         ADD_BRANCH_T(std::vector<double>,  FittedPhotonsTheta)
         ADD_BRANCH_T(double,   FittedPhotonSum)
     };
+
+protected:
+
+    PromptRandom::Switch promptrandom;
+
+    TH1D* steps;
 
     Tree_t t;
 
