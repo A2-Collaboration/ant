@@ -3,6 +3,7 @@
 #include "base/interval.h"
 
 #include <string>
+#include <vector>
 
 class TDirectory;
 class TH1D;
