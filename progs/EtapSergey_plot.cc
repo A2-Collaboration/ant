@@ -155,9 +155,11 @@ struct Hist_t {
         using cuttree::MultiCut_t;
         cuttree::Cuts_t<Fill_t> cuts;
 
-//        cuts.emplace_back(MultiCut_t<Fill_t>{
-//                              {"IM EtaP", [] (const Fill_t& f) { return ParticleTypeDatabase::EtaPrime.GetWindow(50).Contains(f.IM_2g); } },
-//                          });
+        cuts.emplace_back(MultiCut_t<Fill_t>{
+                              {"+3<ZVertex<+5", [] (const Fill_t& f) { return f.TrueZVertex>+3 && f.TrueZVertex<+5; } },
+                              {"-1<ZVertex<+1", [] (const Fill_t& f) { return f.TrueZVertex>-1 && f.TrueZVertex<+1; } },
+                              {"-5<ZVertex<-3", [] (const Fill_t& f) { return f.TrueZVertex>-5 && f.TrueZVertex<-3; } },
+                          });
 
         return cuts;
     }

@@ -4,6 +4,9 @@
 #include "analysis/utils/Fitter.h"
 #include "base/WrapTTree.h"
 
+#include "analysis/utils/MCFakeReconstructed.h"
+#include "analysis/utils/MCSmear.h"
+
 class TH1D;
 
 namespace ant {
@@ -14,6 +17,7 @@ class EtapSergey : public Physics {
 public:
 
     struct Tree_t : WrapTTree {
+        ADD_BRANCH_T(double,   TrueZVertex)
 
         ADD_BRANCH_T(double,   TaggW)
         ADD_BRANCH_T(double,   TaggE)
@@ -45,6 +49,8 @@ public:
         ADD_BRANCH_T(std::vector<double>,  FittedPhotonsE)
         ADD_BRANCH_T(std::vector<double>,  FittedPhotonsTheta)
         ADD_BRANCH_T(double,   FittedPhotonSum)
+
+        ADD_BRANCH_T(double,   FittedZVertex)
     };
 
 protected:
@@ -59,6 +65,9 @@ protected:
 
     const model_t fit_model;
     utils::KinFitter fitter;
+
+    std::unique_ptr<utils::MCSmear>             mc_smear;
+    std::unique_ptr<utils::MCFakeReconstructed> mc_fake;
 
 public:
     EtapSergey(const std::string& name, OptionsPtr opts);

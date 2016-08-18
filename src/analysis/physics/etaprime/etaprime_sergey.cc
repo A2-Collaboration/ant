@@ -12,10 +12,28 @@ using namespace std;
 
 EtapSergey::EtapSergey(const string& name, OptionsPtr opts) :
     Physics(name, opts),
-    fit_model(utils::UncertaintyModels::Interpolated::makeAndLoad()
-          ),
-    fitter("KinFit", 2, fit_model)
+    fit_model(
+        utils::UncertaintyModels::Interpolated::makeAndLoad(
+            utils::UncertaintyModels::Interpolated::Mode_t::Fit)
+        ),
+    fitter("KinFit", 2, fit_model, opts->Get<bool>("EnableZVertex", true)),
+    mc_smear(opts->Get<bool>("MCFake", false) | opts->Get<bool>("MCSmear", true)
+             ? // use | to force evaluation of both opts!
+               std_ext::make_unique<utils::MCSmear>(
+                   opts->Get<bool>("MCFake", false) ?
+                       fit_model // in Fake mode use same model as fitter
+                     : utils::UncertaintyModels::Interpolated::makeAndLoad(
+                           utils::UncertaintyModels::Interpolated::Mode_t::MCSmear
+                           )
+                       )
+             : nullptr // no MCSmear
+               ),
+    mc_fake(opts->Get<bool>("MCFake", false) ?
+                std_ext::make_unique<utils::MCFakeReconstructed>()
+              : nullptr)
 {
+    if(fitter.IsZVertexFitEnabled())
+        fitter.SetZVertexSigma(0);
     promptrandom.AddPromptRange({ -7,   7});
     promptrandom.AddRandomRange({-65, -15});
     promptrandom.AddRandomRange({ 15,  65});
@@ -32,13 +50,16 @@ void EtapSergey::ProcessEvent(const TEvent& event, manager_t&)
 
     steps->Fill("Seen",1);
 
+    t.TrueZVertex = std_ext::NaN;
     if(is_MC) {
         if(data.Trigger.CBEnergySum <= 550)
             return;
         steps->Fill("MC CBESum>550MeV",1);
+        t.TrueZVertex = event.MCTrue().Target.Vertex.z;
     }
 
     const auto& cands = data.Candidates;
+
     if(cands.size() != 3)
         return;
     steps->Fill("nCands==3",1);
@@ -143,6 +164,8 @@ void EtapSergey::ProcessEvent(const TEvent& event, manager_t&)
                 fitted_photon_sum += *photon;
             }
             t.FittedPhotonSum = fitted_photon_sum.M();
+
+            t.FittedZVertex = fitter.GetFittedZVertex();
         }
 
         if(!isfinite(best_prob))
@@ -164,11 +187,12 @@ void EtapSergey::ShowResult()
     canvas(GetName()) << steps << endc;
     canvas(GetName()+" Eta")
             << TTree_drawable(t.Tree, "PhotonSum >> h1(150,400,700)","TaggW*(KinFitProb>0.01)")
-            << TTree_drawable(t.Tree, "PhotonSum >> h2(150,400,700)","(TaggW<0)*(KinFitProb>0.01)")
-            << TTree_drawable(t.Tree, "PhotonSum >> h3(150,400,700)","(TaggW>0)*(KinFitProb>0.01)")
-            << TTree_drawable(t.Tree, "FittedPhotonSum >> h4(150,400,700)","TaggW*(KinFitProb>0.01)")
-            << TTree_drawable(t.Tree, "FittedPhotonSum >> h5(150,400,700)","(TaggW<0)*(KinFitProb>0.01)")
-            << TTree_drawable(t.Tree, "FittedPhotonSum >> h6(150,400,700)","(TaggW>0)*(KinFitProb>0.01)")
+            << TTree_drawable(t.Tree, "FittedPhotonSum >> h2(150,400,700)","TaggW*(KinFitProb>0.01)")
+            << drawoption("colz")
+            << TTree_drawable(t.Tree, "PhotonsTheta:PhotonSum >> h3(150,400,700,80,0,120)","TaggW*(KinFitProb>0.01)")
+            << TTree_drawable(t.Tree, "PhotonsTheta:FittedPhotonSum >> h4(150,400,700,80,0,120)","TaggW*(KinFitProb>0.01)")
+            << TTree_drawable(t.Tree, "TrueZVertex:FittedPhotonSum >> h5(150,400,700,20,-5,5)","TaggW*(KinFitProb>0.01)")
+            << TTree_drawable(t.Tree, "TrueZVertex:FittedZVertex >> h6(20,-5,5,20,-5,5)","TaggW*(KinFitProb>0.01)")
             << endc;
 }
 
