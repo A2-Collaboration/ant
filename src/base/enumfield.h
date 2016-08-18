@@ -1,5 +1,7 @@
 #pragma once
 
+#include <type_traits>
+
 namespace ant {
 
 template <typename EnumClass, typename FieldType=unsigned>
