@@ -63,6 +63,14 @@ void ProcessTaggEff::ShowResult()
                     << TTree_drawable(scalerReads.Tree, "ExpTriggerRate / PbRate")
                     << TTree_drawable(scalerReads.Tree, "ExpLivetime * PbRate / ExpTriggerRate")
                     << endc;
+
+    canvas("check2") << TTree_drawable(scalerReads.Tree, "PbRate")
+                    << TTree_drawable(scalerReads.Tree, "ExpLivetime")
+                    << TTree_drawable(scalerReads.Tree, "ExpTriggerRate")
+                    << TTree_drawable(scalerReads.Tree, "ExpLivetime / ExpTriggerRate>>deadtime(50,0,0)")
+                    << TTree_drawable(scalerReads.Tree, "ExpTriggerRate / ( 1 - ExpLivetime)>>calcPbrate(50,0,0)")
+                    << TTree_drawable(scalerReads.Tree, "PbRate / ( 1 + PbRate * (ExpLivetime / ExpTriggerRate))>>calcTrigger(50,0,0)")
+                    << endc;
 }
 
 void ProcessTaggEff::processBlock(const TEvent& ev)
