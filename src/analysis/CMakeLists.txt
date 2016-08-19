@@ -48,6 +48,7 @@ set(ANALYSIS_PHYSICS
   physics/common/ProtonTagger.cc
   physics/common/ExtractTimings.cc
   physics/misc/XMasCB.cc
+  physics/misc/debugScalers.cc
   physics/common/ExtractResolutions.cc
   physics/pi0/JustPi0.cc
   physics/etaprime/etaprime_proton.cc
