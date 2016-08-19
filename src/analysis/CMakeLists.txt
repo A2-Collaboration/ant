@@ -62,6 +62,7 @@ set(ANALYSIS_PHYSICS
   physics/etaprime/etaprime_ept.cc
   physics/common/ReconstructCheck.cc
   physics/etaprime/etaprime_sergey.cc
+  physics/common/ExtractShowerDepth.cc
   )
 
 set(ANALYSIS_PHYSICS_CALIBRATION
