@@ -6,14 +6,25 @@
 #include <cmath>
 #include <ostream>
 
+
+#include "TH1D.h"
+#include "TRint.h"
+#include "analysis/plot/root_draw.h"
+
+
+
 using namespace std;
 using namespace ant;
 
-default_random_engine r_gen;
-uniform_real_distribution<double> r_zero_one;
+static default_random_engine r_gen;
+static uniform_real_distribution<double> r_zero_one;
 
-double get_poisson_time(const double lambda) {
-    return -std::log(r_zero_one(r_gen))/lambda;
+double get_next_time(const double rate) {
+//    uniform_real_distribution<double> r(0,2.0/rate);
+//    normal_distribution<double> r(1.0/rate,2.0 / rate);
+//    return r(r_gen);
+
+    return -std::log(1.0-r_zero_one(r_gen))/rate;
 }
 
 ostream& operator<<(ostream& s, const std_ext::RMS& rms) {
@@ -38,32 +49,45 @@ int main( int argc, char** argv )
 
     LOG(INFO) << "Dead time: " << DeadTime;
 
-    std_ext::RMS RMS_poisson_time;
+    std_ext::RMS RMS_next_time;
     unsigned nHits = 0;
     unsigned nEvents = 0;
-    {
-        double total_time = 0.0;
-        double system_dead_until = 0.0;
 
-        while(total_time<MaxTotalTime) {
-            auto poisson_time = get_poisson_time(PbGlassRate);
-            RMS_poisson_time.Add(poisson_time);
+    double total_time = 0.0;
+    double system_dead_until = 0.0;
 
-            if(total_time>=system_dead_until) {
-                nEvents++;
+    int fake_argc=1;
+    char* fake_argv[2];
+    fake_argv[0] = argv[0];
+    auto app = new TRint("Ant-simulate_livetime",&fake_argc,fake_argv);
+    TH1D* h = new TH1D("I1","I1(t)",50,0,0);
+    TH1D* g = new TH1D("t","t",1000,0,50.0/PbGlassRate);
+    TH1D* i = new TH1D("tm","t_measure",1000,0,50.0/PbGlassRate);
 
-                system_dead_until = total_time + DeadTime;
-            }
+    while(total_time<MaxTotalTime) {
+        auto next_time = get_next_time(PbGlassRate);
+        h->Fill(next_time);
+        RMS_next_time.Add(next_time);
 
-            total_time += poisson_time;
-            nHits++;
+        if(total_time>=system_dead_until) {
+            nEvents++;
+            i->Fill(total_time);
+            system_dead_until = total_time + DeadTime;
         }
+
+        total_time += next_time;
+        g->Fill(total_time);
+        nHits++;
     }
 
-    LOG(INFO) << RMS_poisson_time;
-    LOG(INFO) << "Hits=" << nHits << " Events=" << nEvents;
-    const double EffectiveLiveTime = (double)nEvents/nHits;
-    LOG(INFO) << "Effective Livetime " << EffectiveLiveTime;
+    LOG(INFO) << "Average Pb-glass rate: " << 1.0/RMS_next_time.GetMean();
+//    LOG(INFO) << "Hits=" << nHits << " Events=" << nEvents;
+    const double EffectiveRate = nEvents/total_time;
+    LOG(INFO) << "Trigger rate " << EffectiveRate;
+
+    i->SetLineColor(kRed);
+    canvas("check") << h << g << samepad << i << endc;
+    app->Run(kTRUE);
 
     return EXIT_SUCCESS;
 }
