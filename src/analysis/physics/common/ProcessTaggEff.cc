@@ -5,6 +5,7 @@
 #include "base/Logger.h"
 #include "expconfig/ExpConfig.h"
 
+
 using namespace std;
 using namespace ant;
 using namespace ant::analysis;
@@ -24,7 +25,7 @@ ProcessTaggEff::ProcessTaggEff(const std::string& name, OptionsPtr opts) :
 
     scalerReads.TaggRates().resize(nchannels);
     scalerReads.TDCHits().resize(nchannels);
-    scalerReads.CoincidentTDCHits().resize(nchannels);
+//    scalerReads.CoincidentTDCHits().resize(nchannels);
     scalerReads.TaggTimings().resize(nchannels);
 }
 
@@ -56,21 +57,10 @@ void ProcessTaggEff::Finish()
 
 void ProcessTaggEff::ShowResult()
 {
+    const HistogramFactory histFac("hfac");
     canvas("check") << TTree_drawable(scalerReads.Tree, "PbRate")
-                    << TTree_drawable(scalerReads.Tree, "ExpLivetime")
-                    << TTree_drawable(scalerReads.Tree, "ExpTriggerRate")
-                    << TTree_drawable(scalerReads.Tree, "ExpTriggerRate/L1TriggerRate")
-                    << TTree_drawable(scalerReads.Tree, "ExpTriggerRate / PbRate")
-                    << TTree_drawable(scalerReads.Tree, "ExpLivetime * PbRate / ExpTriggerRate")
-                    << endc;
-
-    canvas("check2") << TTree_drawable(scalerReads.Tree, "PbRate")
-                    << TTree_drawable(scalerReads.Tree, "ExpLivetime")
-                    << TTree_drawable(scalerReads.Tree, "ExpTriggerRate")
-                    << TTree_drawable(scalerReads.Tree, "ExpLivetime / ExpTriggerRate>>deadtime(50,0,0)")
-                    << TTree_drawable(scalerReads.Tree, "ExpTriggerRate / ( 1 - ExpLivetime)>>calcPbrate(50,0,0)")
-                    << TTree_drawable(scalerReads.Tree, "PbRate / ( 1 + PbRate * (ExpLivetime / ExpTriggerRate))>>calcTrigger(50,0,0)")
-                    << endc;
+                    << TTree_drawable(scalerReads.Tree, "TDCHits")
+                    <<  endc;
 }
 
 void ProcessTaggEff::processBlock(const TEvent& ev)
@@ -83,19 +73,18 @@ void ProcessTaggEff::processBlock(const TEvent& ev)
         channel++;
     }
 
-    scalerReads.Exp1MHz = slowcontrol::Variables::FreeRates->GetExpClock();
-    scalerReads.BeamPolMon1MHz = slowcontrol::Variables::FreeRates->GetBeampolmonClock();
+
     scalerReads.ExpLivetime = slowcontrol::Variables::FreeRates->GetExpLivetime();
     scalerReads.PbRate = slowcontrol::Variables::FreeRates->GetPbGlass();
     scalerReads.LastID = ev.Reconstructed().ID;
     scalerReads.ExpTriggerRate = slowcontrol::Variables::FreeRates->GetExpTrigger();
-    scalerReads.L1TriggerRate = slowcontrol::Variables::FreeRates->GetL1Trigger();
 }
 
 void ProcessTaggEff::processTaggerHits(const TEvent &ev)
 {
     for (const auto& taggerhit: ev.Reconstructed().TaggerHits)
     {
+        scalerReads.TDCHits().at(taggerhit.Channel)++;
         scalerReads.TaggTimings().at(taggerhit.Channel).emplace_back(taggerhit.Time);
     }
 }

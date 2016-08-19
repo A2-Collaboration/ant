@@ -20,18 +20,13 @@ struct ProcessTaggEff: public Physics {
 
         ADD_BRANCH_T(double,    ExpLivetime)
         ADD_BRANCH_T(double,    ExpTriggerRate)
-        ADD_BRANCH_T(double,    L1TriggerRate)
-        ADD_BRANCH_T(double,       Exp1MHz)
-
-        ADD_BRANCH_T(double,   BeamPolMon1MHz)
 
         ADD_BRANCH_T(double,              PbRate)
         ADD_BRANCH_T(std::vector<double>, TaggRates)
 
         ADD_BRANCH_T(std::vector<int>,                  TDCHits)
-        ADD_BRANCH_T(std::vector<int>,                  CoincidentTDCHits)
+//        ADD_BRANCH_T(std::vector<int>,                  CoincidentTDCHits)
         ADD_BRANCH_T(std::vector<std::vector<double>>,  TaggTimings)
-
     };
 
     TreeScalarReads scalerReads;
