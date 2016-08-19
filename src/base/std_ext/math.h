@@ -41,7 +41,7 @@ struct RMS_t {
         return sum/n;
     }
     T GetRMS() const {
-        return std::sqrt( sum2/n - std_ext::sqr(GetMean()) );
+        return std::sqrt(std::abs(sum2/n - std_ext::sqr(GetMean())));
     }
 };
 
