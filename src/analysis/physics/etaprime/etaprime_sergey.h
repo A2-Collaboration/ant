@@ -61,9 +61,8 @@ protected:
 
     Tree_t t;
 
-    using model_t = std::shared_ptr<const utils::UncertaintyModels::Interpolated>;
 
-    const model_t fit_model;
+    const utils::UncertaintyModelPtr fit_model;
     utils::KinFitter fitter;
 
     std::unique_ptr<utils::MCSmear>             mc_smear;
