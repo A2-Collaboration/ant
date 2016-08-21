@@ -32,8 +32,15 @@ EtapSergey::EtapSergey(const string& name, OptionsPtr opts) :
                 std_ext::make_unique<utils::MCFakeReconstructed>()
               : nullptr)
 {
-    if(fitter.IsZVertexFitEnabled())
-        fitter.SetZVertexSigma(0);
+    if(fitter.IsZVertexFitEnabled()) {
+        double sigma = opts->Get<double>("ZVertexSigma", 0.0);
+        fitter.SetZVertexSigma(sigma);
+        LOG(INFO) << "Fit Z vertex enabled with sigma=" << sigma;
+    }
+    else if(opts->HasOption("ZVertexSigma")) {
+        throw std::runtime_error("ZVertex not enabled but sigma provided");
+    }
+
     promptrandom.AddPromptRange({ -7,   7});
     promptrandom.AddRandomRange({-65, -15});
     promptrandom.AddRandomRange({ 15,  65});
