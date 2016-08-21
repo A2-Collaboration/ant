@@ -1020,21 +1020,21 @@ void EtapOmegaG::ShowResult()
     if(disable_Sig)
         return;
 
-    canvas("Signal") << TTree_drawable(Sig.OmegaPi0.t.Tree, "Bachelor_E_fitted >> h_sig1(100,100,200)",
+    canvas("Signal") << TTree_drawable(Sig.OmegaPi0.t.Tree, "Bachelor_E_fitted >> (100,100,200)",
                                        "DiscardedEk==0 && KinFitProb>0.01 && !(AntiPi0FitProb>0.0002) && !(AntiEtaFitProb>0.0005) && TreeFitProb>0.32")
                      << endc;
     canvas("Z Vertex Sig")
             << drawoption("colz")
-            << TTree_drawable(Sig.Pi0.t.Tree, "KinFitZVertex:TrueZVertex >> h1_sig(100,-5,5,100,-5,5)","KinFitProb>0.1")
-            << TTree_drawable(Sig.Pi0.t.Tree, "IM_Pi0gg_fitted:TrueZVertex >> h2_sig(100,-5,5,200,900,1000)","KinFitProb>0.1")
-            << TTree_drawable(Sig.OmegaPi0.t.Tree, "KinFitZVertex:TrueZVertex >> h3_sig(100,-5,5,100,-5,5)","KinFitProb>0.1")
-            << TTree_drawable(Sig.OmegaPi0.t.Tree, "IM_Pi0gg_fitted:TrueZVertex >> h4_sig(100,-5,5,200,900,1000)","KinFitProb>0.1")
+            << TTree_drawable(Sig.Pi0.t.Tree, "KinFitZVertex:TrueZVertex >> (100,-5,5,100,-5,5)","KinFitProb>0.1")
+            << TTree_drawable(Sig.Pi0.t.Tree, "IM_Pi0gg_fitted:TrueZVertex >> (100,-5,5,200,900,1000)","KinFitProb>0.1")
+            << TTree_drawable(Sig.OmegaPi0.t.Tree, "KinFitZVertex:TrueZVertex >> (100,-5,5,100,-5,5)","KinFitProb>0.1")
+            << TTree_drawable(Sig.OmegaPi0.t.Tree, "IM_Pi0gg_fitted:TrueZVertex >> (100,-5,5,200,900,1000)","KinFitProb>0.1")
             << endc;
     canvas("Z Vertex Ref")
             << drawoption("colz")
-            << TTree_drawable(Ref.t.Tree, "KinFitZVertex:TrueZVertex >> h1_ref(100,-5,5,100,-5,5)","KinFitProb>0.1")
-            << TTree_drawable(Ref.t.Tree, "IM_2g:TrueZVertex >> h2_ref(100,-5,5,200,900,1000)","KinFitProb>0.01")
-            << TTree_drawable(Ref.t.Tree, "KinFitPhotonThetaPulls:PhotonThetas >> h3_ref(100,5,175,50,-3,3)","KinFitProb>0.1")
+            << TTree_drawable(Ref.t.Tree, "KinFitZVertex:TrueZVertex >> (100,-5,5,100,-5,5)","KinFitProb>0.1")
+            << TTree_drawable(Ref.t.Tree, "IM_2g:TrueZVertex >> (100,-5,5,200,900,1000)","KinFitProb>0.01")
+            << TTree_drawable(Ref.t.Tree, "KinFitPhotonThetaPulls:PhotonThetas >> (100,5,175,50,-3,3)","KinFitProb>0.1")
             << endc;
 
 }

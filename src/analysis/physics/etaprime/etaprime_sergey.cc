@@ -186,13 +186,13 @@ void EtapSergey::ShowResult()
 {
     canvas(GetName()) << steps << endc;
     canvas(GetName()+" Eta")
-            << TTree_drawable(t.Tree, "PhotonSum >> h1(150,400,700)","TaggW*(KinFitProb>0.01)")
-            << TTree_drawable(t.Tree, "FittedPhotonSum >> h2(150,400,700)","TaggW*(KinFitProb>0.01)")
+            << TTree_drawable(t.Tree, "PhotonSum >> (150,400,700)","TaggW*(KinFitProb>0.01)")
+            << TTree_drawable(t.Tree, "FittedPhotonSum >> (150,400,700)","TaggW*(KinFitProb>0.01)")
             << drawoption("colz")
-            << TTree_drawable(t.Tree, "PhotonsTheta:PhotonSum >> h3(150,400,700,80,0,120)","TaggW*(KinFitProb>0.01)")
-            << TTree_drawable(t.Tree, "PhotonsTheta:FittedPhotonSum >> h4(150,400,700,80,0,120)","TaggW*(KinFitProb>0.01)")
-            << TTree_drawable(t.Tree, "TrueZVertex:FittedPhotonSum >> h5(150,400,700,20,-5,5)","TaggW*(KinFitProb>0.01)")
-            << TTree_drawable(t.Tree, "TrueZVertex:FittedZVertex >> h6(20,-5,5,20,-5,5)","TaggW*(KinFitProb>0.01)")
+            << TTree_drawable(t.Tree, "PhotonsTheta:PhotonSum >> (150,400,700,80,0,120)","TaggW*(KinFitProb>0.01)")
+            << TTree_drawable(t.Tree, "PhotonsTheta:FittedPhotonSum >> (150,400,700,80,0,120)","TaggW*(KinFitProb>0.01)")
+            << TTree_drawable(t.Tree, "TrueZVertex:FittedPhotonSum >> (150,400,700,20,-5,5)","TaggW*(KinFitProb>0.01)")
+            << TTree_drawable(t.Tree, "TrueZVertex:FittedZVertex >> (20,-5,5,20,-5,5)","TaggW*(KinFitProb>0.01)")
             << endc;
 }
 
