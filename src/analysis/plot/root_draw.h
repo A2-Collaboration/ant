@@ -25,10 +25,12 @@ struct root_drawable_traits {
 struct TTree_drawable : root_drawable_traits {
     TTree_drawable(TTree* tree, const std::string& formula, const std::string& cut = "");
     virtual void Draw(const std::string& option) const override;
+    static unsigned nInstances;
+    static std::string InsertAutoHistName(const std::string& formula);
 protected:
     TTree* Tree;
-    std::string Formula;
-    std::string Cut;
+    const std::string Formula;
+    const std::string Cut;
 };
 
 struct endcanvas {};

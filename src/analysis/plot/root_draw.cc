@@ -227,14 +227,36 @@ canvas& canvas::operator>>(const string& filename)
 
 const std::vector<Color_t> ColorPalette::Colors = {kRed, kGreen+1, kBlue, kYellow+1, kMagenta, kCyan, kOrange, kPink+9, kSpring+10, kGray};
 
+unsigned TTree_drawable::nInstances = 0;
 
 TTree_drawable::TTree_drawable(TTree* tree, const string& formula, const string& cut) :
-    Tree(tree), Formula(formula), Cut(cut)
+    Tree(tree), Formula(InsertAutoHistName(formula)), Cut(cut)
 {
+    nInstances++;
+}
 
+string TTree_drawable::InsertAutoHistName(const string& formula)
+{
+    auto pos_shift_op = formula.find(">>");
+    // search after >> operator for opening parenthesis, which indicates binning statement
+    auto pos_opening_parenthesis = formula.find("(", pos_shift_op);
+    // between the >> operator and the binning, there should be the histname
+    // use string_sanitize to get rid of possible leading/trailing whitespace
+    auto pos_behind_shift_op = pos_shift_op+2;
+    auto histname = std_ext::string_sanitize(formula.substr(pos_behind_shift_op, pos_opening_parenthesis-pos_behind_shift_op));
+    // do not touch formulas with existing histnames
+    if(histname != "") {
+        return formula;
+    }
+    // insert some auto generated histname
+    auto binning_statement = formula.substr(pos_opening_parenthesis);
+    auto formula_clean = formula.substr(0, pos_shift_op);
+    return std_ext::formatter() << formula_clean << ">> htemp" << nInstances << binning_statement;
 }
 
 void TTree_drawable::Draw(const string& option) const
 {
     Tree->Draw(Formula.c_str(), Cut.c_str(), option.c_str());
 }
+
+
