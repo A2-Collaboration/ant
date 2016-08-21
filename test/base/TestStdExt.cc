@@ -77,6 +77,13 @@ void TestString() {
     REQUIRE_NOTHROW(s=std_ext::string_sanitize(str2));
     REQUIRE(s == string("Hallo"));
 
+    REQUIRE(std_ext::string_sanitize("   ") == "");
+    REQUIRE(std_ext::string_sanitize(" b  \n\t") == "b");
+    REQUIRE(std_ext::string_sanitize("abc") == "abc");
+    REQUIRE(std_ext::string_sanitize("") == "");
+    REQUIRE(std_ext::string_sanitize("a") == "a");
+    REQUIRE(std_ext::string_sanitize("a b") == "a b");
+
     // formatter
     REQUIRE_NOTHROW(s = std_ext::formatter() << "hallo" << 2 << 5 << "du " << setw(3) << 1);
     REQUIRE(s == string("hallo25du   1"));

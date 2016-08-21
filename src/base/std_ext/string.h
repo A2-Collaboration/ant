@@ -56,16 +56,14 @@ inline std::string replace_str(const std::string& input,
  * @param in
  * @return
  */
-inline std::string string_sanitize(const char* in) {
-  std::string s(in);
-  const std::string whitespace = " \t\f\v\n\r";
-  int start = s.find_first_not_of(whitespace);
-  int end = s.find_last_not_of(whitespace);
-  if(start == -1 && end == -1)
-    return std::string("");
-  s.erase(0,start);
+inline std::string string_sanitize(std::string s) {
+  constexpr auto whitespace = " \t\f\v\n\r";
+  auto start = s.find_first_not_of(whitespace);
+  auto end = s.find_last_not_of(whitespace);
+  if(start == std::string::npos && end == std::string::npos)
+    return "";
+  s.erase(0, start);
   s.erase((end - start) + 1);
-  s.erase(std::remove(s.begin(), s.end(), '\n'), s.end());
   return s;
 }
 
