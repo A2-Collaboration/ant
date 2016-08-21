@@ -18,9 +18,13 @@ public:
         ADD_BRANCH_T(double, Theta)
         ADD_BRANCH_T(double, Ek)
         ADD_BRANCH_T(double, ThetaCorr)
+        ADD_BRANCH_T(double, ShowerDepth)
+        ADD_BRANCH_T(double, RadiationLength)
     };
 
 protected:
+
+    const double param1;
 
     TH1D* steps;
     Tree_t t;
