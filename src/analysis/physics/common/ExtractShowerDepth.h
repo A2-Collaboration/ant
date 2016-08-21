@@ -17,6 +17,7 @@ public:
         ADD_BRANCH_T(double, TrueEk)
         ADD_BRANCH_T(double, Theta)
         ADD_BRANCH_T(double, Ek)
+        ADD_BRANCH_T(double, ThetaCorr)
     };
 
 protected:
