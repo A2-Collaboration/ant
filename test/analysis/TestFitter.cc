@@ -231,7 +231,7 @@ void dotest(bool z_vertex, bool proton_unmeas, bool smeared) {
 
     if(smeared && z_vertex)
         //  smearing and free z vertex does not always converge
-        CHECK(nFitOk==Approx(0.98*nEvents).epsilon(0.01));
+        CHECK(nFitOk==Approx(0.99*nEvents).epsilon(0.01));
     else
         CHECK(nFitOk==nEvents);
 
@@ -279,23 +279,23 @@ void dotest(bool z_vertex, bool proton_unmeas, bool smeared) {
         CHECK(pulls_Photons.Ek.GetMean() == Approx(0).scale(pulls_Photons.Ek.GetRMS()).epsilon(0.1));
         CHECK(pulls_Photons.Ek.GetRMS() == Approx(1).epsilon(0.03));
         CHECK(pulls_Photons.Theta.GetMean() == Approx(0).scale(pulls_Photons.Theta.GetRMS()).epsilon(0.1));
-        CHECK(pulls_Photons.Theta.GetRMS() == Approx(1).epsilon(0.02));
+        CHECK(pulls_Photons.Theta.GetRMS() == Approx(1).epsilon(0.05));
         CHECK(pulls_Photons.Phi.GetMean() == Approx(0).scale(pulls_Photons.Phi.GetRMS()).epsilon(0.1));
         CHECK(pulls_Photons.Phi.GetRMS() == Approx(1).epsilon(0.03));
 
         CHECK(IM_2g_before.GetMean() == Approx(ParticleTypeDatabase::EtaPrime.Mass()).epsilon(0.003));
-        CHECK(IM_2g_after.GetMean() == Approx(ParticleTypeDatabase::EtaPrime.Mass()).epsilon(0.003));
+        CHECK(IM_2g_after.GetMean() == Approx(ParticleTypeDatabase::EtaPrime.Mass()).epsilon(0.005));
 
 
         if(z_vertex) {
             CHECK(fitted_z_vertex.GetMean() == Approx(0.0).scale(fitted_z_vertex.GetRMS()).epsilon(0.08));
             if(proton_unmeas)
-                CHECK(fitted_z_vertex.GetRMS() ==  Approx(1.8).epsilon(0.03));
+                CHECK(fitted_z_vertex.GetRMS() ==  Approx(4.8).epsilon(0.01));
             else
-                CHECK(fitted_z_vertex.GetRMS() ==  Approx(1.3).epsilon(0.03));
+                CHECK(fitted_z_vertex.GetRMS() ==  Approx(4.0).epsilon(0.01));
 
             // fitting should improve resolution considerably, but free z vertex worsens it
-            CHECK(IM_2g_after.GetRMS() < 0.34*IM_2g_before.GetRMS());
+            CHECK(IM_2g_after.GetRMS() < 0.51*IM_2g_before.GetRMS());
         }
         else {
             // fitting should improve resolution considerably
@@ -310,8 +310,8 @@ void dotest(bool z_vertex, bool proton_unmeas, bool smeared) {
         // unsmeared, so all pulls and constraint_before and fitted_z_vertex should be delta peaks aka mean=RMS=0
 
         if(z_vertex) {
-            CHECK(fitted_z_vertex.GetMean() == Approx(0.0));
-            CHECK(fitted_z_vertex.GetRMS() ==  Approx(0.0).epsilon(1e-3));
+            CHECK(fitted_z_vertex.GetMean() == Approx(0.0).scale(10));
+            CHECK(fitted_z_vertex.GetRMS() ==  Approx(0.0).epsilon(1e-3).scale(10));
         }
 
         constexpr double eps_constraint = 4e-4;

@@ -136,7 +136,7 @@ LorentzVec Fitter::FitParticle::GetVector(const std::vector<double>& EkThetaPhi,
     if(calocluster->DetectorType == Detector_t::Type_t::CB) {
         static auto cb = ExpConfig::Setup::GetDetector<expconfig::detector::CB>();
         auto elem = cb->GetClusterElement(calocluster->CentralElement);
-        const auto R  = cb->GetInnerRadius() + elem->RadiationLength*std::log2(Ek/elem->CriticalE);
+        const auto R  = cb->GetInnerRadius() + elem->RadiationLength*std::log2(Ek/elem->CriticalE)/std::pow(std::sin(theta),3.0);
         theta_corr = std::acos(( R*std::cos(theta) - z_vertex) / R );
     }
     else if(calocluster->DetectorType == Detector_t::Type_t::TAPS) {
