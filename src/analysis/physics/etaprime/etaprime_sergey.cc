@@ -15,6 +15,7 @@ EtapSergey::EtapSergey(const string& name, OptionsPtr opts) :
     fit_model(
         utils::UncertaintyModels::Interpolated::makeAndLoad(
             utils::UncertaintyModels::Interpolated::Mode_t::Fit)
+//        std::make_shared<utils::UncertaintyModels::Optimized_Oli1>()
         ),
     fitter("KinFit", 2, fit_model, opts->Get<bool>("EnableZVertex", true)),
     mc_smear(opts->Get<bool>("MCFake", false) | opts->Get<bool>("MCSmear", true)
@@ -191,8 +192,15 @@ void EtapSergey::ProcessEvent(const TEvent& event, manager_t&)
 
 void EtapSergey::ShowResult()
 {
-    canvas(GetName()) << steps << endc;
-    canvas(GetName()+" Eta")
+    canvas("Overview") << steps << endc;
+    canvas("EtaPrime")
+            << TTree_drawable(t.Tree, "PhotonSum >> (150,800,1050)","TaggW*(KinFitProb>0.01)")
+            << TTree_drawable(t.Tree, "FittedPhotonSum >> (150,800,1050)","TaggW*(KinFitProb>0.01)")
+            << drawoption("colz")
+            << TTree_drawable(t.Tree, "PhotonsTheta:PhotonSum >> (150,800,1050,80,0,120)","TaggW*(KinFitProb>0.01)")
+            << TTree_drawable(t.Tree, "PhotonsTheta:FittedPhotonSum >> (150,800,1050,80,0,120)","TaggW*(KinFitProb>0.01)")
+            << endc;
+    canvas("Eta")
             << TTree_drawable(t.Tree, "PhotonSum >> (150,400,700)","TaggW*(KinFitProb>0.01)")
             << TTree_drawable(t.Tree, "FittedPhotonSum >> (150,400,700)","TaggW*(KinFitProb>0.01)")
             << drawoption("colz")
