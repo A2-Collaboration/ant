@@ -13,7 +13,8 @@ using namespace std;
 
 ExtractShowerDepth::ExtractShowerDepth(const string& name, OptionsPtr opts) :
     Physics(name, opts),
-    param1(opts->Get<double>("param1", 3.0))
+    MaxTheta(opts->Get<double>("MaxTheta", 180.0)),
+    CB_param1(opts->Get<double>("CB_param1", 3.0))
 {
 
     steps = HistFac.makeTH1D("Steps","","#",BinSettings(10),"steps");
@@ -65,7 +66,7 @@ void ExtractShowerDepth::ProcessEvent(const TEvent& event, manager_t&)
         t.ShowerDepth = z_vertex / (std::cos(theta) - std::cos(theta_true)) - cb->GetInnerRadius();
         t.RadiationLength = t.ShowerDepth / (elem->RadiationLength*std::log2(Ek/elem->CriticalE));
 
-        const auto R  = cb->GetInnerRadius() + 1.0*elem->RadiationLength*std::log2(Ek/elem->CriticalE)/std::pow(std::sin(theta),param1);
+        const auto R  = cb->GetInnerRadius() + 1.0*elem->RadiationLength*std::log2(Ek/elem->CriticalE)/std::pow(std::sin(theta),CB_param1);
         t.ThetaCorr = std::acos(( R*std::cos(theta) - z_vertex) / R );
     }
     else if(calocluster->DetectorType == Detector_t::Type_t::TAPS) {
@@ -82,61 +83,18 @@ void ExtractShowerDepth::ProcessEvent(const TEvent& event, manager_t&)
 
 void ExtractShowerDepth::ShowResult()
 {
+    const string bins_theta = "180,0,"+to_string(MaxTheta);
     canvas("Overview") << steps
                        << drawoption("colz")
                        << TTree_drawable(t.Tree, "Ek:TrueEk >> (1000,0,1600,1000,0,1600)","")
-                       << TTree_drawable(t.Tree, "Theta:TrueTheta >> (180,0,180,180,0,180)","")
-                       << TTree_drawable(t.Tree, "ThetaCorr:TrueTheta >> (180,0,180,180,0,180)","")
+                       << TTree_drawable(t.Tree, "Theta:TrueTheta >>("+bins_theta+","+bins_theta+")","")
+                       << TTree_drawable(t.Tree, "ThetaCorr:TrueTheta >>("+bins_theta+","+bins_theta+")","")
                        << endc;
-    const string bins_theta = ">>(180,0,180,40,-10,10)";
+    const string bins_theta_op = ">>("+bins_theta+",";
     {
         string formula = "(Theta-TrueTheta):TrueTheta";
-        canvas("ZVertex")
-                << drawoption("colz")
-                << TTree_drawable(t.Tree, formula+bins_theta,"")
-                << TTree_drawable(t.Tree, formula+bins_theta,"-3<TrueZVertex && TrueZVertex<-2")
-                << TTree_drawable(t.Tree, formula+bins_theta,"-2<TrueZVertex && TrueZVertex<-1")
-                << TTree_drawable(t.Tree, formula+bins_theta,"-1<TrueZVertex && TrueZVertex<+0")
-                << TTree_drawable(t.Tree, formula+bins_theta,"+0<TrueZVertex && TrueZVertex<+1")
-                << TTree_drawable(t.Tree, formula+bins_theta,"+1<TrueZVertex && TrueZVertex<+2")
-                << TTree_drawable(t.Tree, formula+bins_theta,"+2<TrueZVertex && TrueZVertex<+3")
-                << endc;
-    }
-    {
-        string formula = "(ThetaCorr-TrueTheta):TrueTheta";
-        canvas("ZVertex ThetaCorr "+to_string(param1))
-                << drawoption("colz")
-                << TTree_drawable(t.Tree, formula+bins_theta,"")
-                << TTree_drawable(t.Tree, formula+bins_theta,"-5<TrueZVertex && TrueZVertex<-4")
-                << TTree_drawable(t.Tree, formula+bins_theta,"-4<TrueZVertex && TrueZVertex<-3")
-                << TTree_drawable(t.Tree, formula+bins_theta,"-3<TrueZVertex && TrueZVertex<-2")
-                << TTree_drawable(t.Tree, formula+bins_theta,"-2<TrueZVertex && TrueZVertex<-1")
-                << TTree_drawable(t.Tree, formula+bins_theta,"-1<TrueZVertex && TrueZVertex<+0")
-                << TTree_drawable(t.Tree, formula+bins_theta,"+0<TrueZVertex && TrueZVertex<+1")
-                << TTree_drawable(t.Tree, formula+bins_theta,"+1<TrueZVertex && TrueZVertex<+2")
-                << TTree_drawable(t.Tree, formula+bins_theta,"+2<TrueZVertex && TrueZVertex<+3")
-                << TTree_drawable(t.Tree, formula+bins_theta,"+3<TrueZVertex && TrueZVertex<+4")
-                << TTree_drawable(t.Tree, formula+bins_theta,"+4<TrueZVertex && TrueZVertex<+5")
-                << endc;
-    }
-    {
-        string formula = "ShowerDepth:TrueTheta";
-        string bins = ">>(180,0,180,40,0,30)";
-        canvas("ZVertex ShowerDepth")
-                << drawoption("colz")
-                << TTree_drawable(t.Tree, formula+bins,"")
-                << TTree_drawable(t.Tree, formula+bins,"-3<TrueZVertex && TrueZVertex<-2")
-                << TTree_drawable(t.Tree, formula+bins,"-2<TrueZVertex && TrueZVertex<-1")
-                << TTree_drawable(t.Tree, formula+bins,"-1<TrueZVertex && TrueZVertex<+0")
-                << TTree_drawable(t.Tree, formula+bins,"+0<TrueZVertex && TrueZVertex<+1")
-                << TTree_drawable(t.Tree, formula+bins,"+1<TrueZVertex && TrueZVertex<+2")
-                << TTree_drawable(t.Tree, formula+bins,"+2<TrueZVertex && TrueZVertex<+3")
-                << endc;
-    }
-    {
-        string formula = "RadiationLength:Theta";
-        string bins = ">>(180,0,180,40,0,5)";
-        canvas("ZVertex RadiationLength")
+        string bins = bins_theta_op+"40,-10,10)";
+        canvas("Theta")
                 << drawoption("colz")
                 << TTree_drawable(t.Tree, formula+bins,"")
                 << TTree_drawable(t.Tree, formula+bins,"-5<TrueZVertex && TrueZVertex<-4")
@@ -153,25 +111,76 @@ void ExtractShowerDepth::ShowResult()
     }
     {
         string formula = "(ThetaCorr-TrueTheta):TrueTheta";
-        canvas("ZVertex Energy ThetaCorr")
+        string bins = bins_theta_op+"40,-10,10)";
+        canvas("ThetaCorr "+to_string(CB_param1))
                 << drawoption("colz")
-                << TTree_drawable(t.Tree, formula+bins_theta,"")
-                << TTree_drawable(t.Tree, formula+bins_theta,"-3<TrueZVertex && TrueZVertex<-2 &&  000<TrueEk && TrueEk<100")
-                << TTree_drawable(t.Tree, formula+bins_theta,"-3<TrueZVertex && TrueZVertex<-2 &&  100<TrueEk && TrueEk<200")
-                << TTree_drawable(t.Tree, formula+bins_theta,"-3<TrueZVertex && TrueZVertex<-2 &&  200<TrueEk && TrueEk<300")
-                << TTree_drawable(t.Tree, formula+bins_theta,"-3<TrueZVertex && TrueZVertex<-2 &&  300<TrueEk && TrueEk<400")
-                << TTree_drawable(t.Tree, formula+bins_theta,"-3<TrueZVertex && TrueZVertex<-2 &&  400<TrueEk && TrueEk<500")
-                << TTree_drawable(t.Tree, formula+bins_theta,"-3<TrueZVertex && TrueZVertex<-2 &&  500<TrueEk && TrueEk<600")
-                << TTree_drawable(t.Tree, formula+bins_theta,"-3<TrueZVertex && TrueZVertex<-2 &&  600<TrueEk && TrueEk<700")
-                << TTree_drawable(t.Tree, formula+bins_theta,"-3<TrueZVertex && TrueZVertex<-2 &&  700<TrueEk && TrueEk<800")
-                << TTree_drawable(t.Tree, formula+bins_theta,"-3<TrueZVertex && TrueZVertex<-2 &&  800<TrueEk && TrueEk<900")
-                << TTree_drawable(t.Tree, formula+bins_theta,"-3<TrueZVertex && TrueZVertex<-2 &&  900<TrueEk && TrueEk<1000")
-                << TTree_drawable(t.Tree, formula+bins_theta,"-3<TrueZVertex && TrueZVertex<-2 && 1000<TrueEk && TrueEk<1100")
-                << TTree_drawable(t.Tree, formula+bins_theta,"-3<TrueZVertex && TrueZVertex<-2 && 1100<TrueEk && TrueEk<1200")
-                << TTree_drawable(t.Tree, formula+bins_theta,"-3<TrueZVertex && TrueZVertex<-2 && 1200<TrueEk && TrueEk<1300")
-                << TTree_drawable(t.Tree, formula+bins_theta,"-3<TrueZVertex && TrueZVertex<-2 && 1300<TrueEk && TrueEk<1400")
-                << TTree_drawable(t.Tree, formula+bins_theta,"-3<TrueZVertex && TrueZVertex<-2 && 1400<TrueEk && TrueEk<1500")
-                << TTree_drawable(t.Tree, formula+bins_theta,"-3<TrueZVertex && TrueZVertex<-2 && 1500<TrueEk && TrueEk<1600")
+                << TTree_drawable(t.Tree, formula+bins,"")
+                << TTree_drawable(t.Tree, formula+bins,"-5<TrueZVertex && TrueZVertex<-4")
+                << TTree_drawable(t.Tree, formula+bins,"-4<TrueZVertex && TrueZVertex<-3")
+                << TTree_drawable(t.Tree, formula+bins,"-3<TrueZVertex && TrueZVertex<-2")
+                << TTree_drawable(t.Tree, formula+bins,"-2<TrueZVertex && TrueZVertex<-1")
+                << TTree_drawable(t.Tree, formula+bins,"-1<TrueZVertex && TrueZVertex<+0")
+                << TTree_drawable(t.Tree, formula+bins,"+0<TrueZVertex && TrueZVertex<+1")
+                << TTree_drawable(t.Tree, formula+bins,"+1<TrueZVertex && TrueZVertex<+2")
+                << TTree_drawable(t.Tree, formula+bins,"+2<TrueZVertex && TrueZVertex<+3")
+                << TTree_drawable(t.Tree, formula+bins,"+3<TrueZVertex && TrueZVertex<+4")
+                << TTree_drawable(t.Tree, formula+bins,"+4<TrueZVertex && TrueZVertex<+5")
+                << endc;
+    }
+    {
+        string formula = "ShowerDepth:TrueTheta";
+        string bins = bins_theta_op+"40,0,30)";
+        canvas("ShowerDepth")
+                << drawoption("colz")
+                << TTree_drawable(t.Tree, formula+bins,"")
+                << TTree_drawable(t.Tree, formula+bins,"-3<TrueZVertex && TrueZVertex<-2")
+                << TTree_drawable(t.Tree, formula+bins,"-2<TrueZVertex && TrueZVertex<-1")
+                << TTree_drawable(t.Tree, formula+bins,"-1<TrueZVertex && TrueZVertex<+0")
+                << TTree_drawable(t.Tree, formula+bins,"+0<TrueZVertex && TrueZVertex<+1")
+                << TTree_drawable(t.Tree, formula+bins,"+1<TrueZVertex && TrueZVertex<+2")
+                << TTree_drawable(t.Tree, formula+bins,"+2<TrueZVertex && TrueZVertex<+3")
+                << endc;
+    }
+    {
+        string formula = "RadiationLength:Theta";
+        string bins = bins_theta_op+"40,0,5)";
+        canvas("RadiationLength")
+                << drawoption("colz")
+                << TTree_drawable(t.Tree, formula+bins,"")
+                << TTree_drawable(t.Tree, formula+bins,"-5<TrueZVertex && TrueZVertex<-4")
+                << TTree_drawable(t.Tree, formula+bins,"-4<TrueZVertex && TrueZVertex<-3")
+                << TTree_drawable(t.Tree, formula+bins,"-3<TrueZVertex && TrueZVertex<-2")
+                << TTree_drawable(t.Tree, formula+bins,"-2<TrueZVertex && TrueZVertex<-1")
+                << TTree_drawable(t.Tree, formula+bins,"-1<TrueZVertex && TrueZVertex<+0")
+                << TTree_drawable(t.Tree, formula+bins,"+0<TrueZVertex && TrueZVertex<+1")
+                << TTree_drawable(t.Tree, formula+bins,"+1<TrueZVertex && TrueZVertex<+2")
+                << TTree_drawable(t.Tree, formula+bins,"+2<TrueZVertex && TrueZVertex<+3")
+                << TTree_drawable(t.Tree, formula+bins,"+3<TrueZVertex && TrueZVertex<+4")
+                << TTree_drawable(t.Tree, formula+bins,"+4<TrueZVertex && TrueZVertex<+5")
+                << endc;
+    }
+    {
+        string formula = "(ThetaCorr-TrueTheta):TrueTheta";
+        string bins = bins_theta_op+"40,-10,10)";
+        canvas("ThetaCorr Energy")
+                << drawoption("colz")
+                << TTree_drawable(t.Tree, formula+bins,"")
+                << TTree_drawable(t.Tree, formula+bins,"-3<TrueZVertex && TrueZVertex<-2 &&  000<TrueEk && TrueEk<100")
+                << TTree_drawable(t.Tree, formula+bins,"-3<TrueZVertex && TrueZVertex<-2 &&  100<TrueEk && TrueEk<200")
+                << TTree_drawable(t.Tree, formula+bins,"-3<TrueZVertex && TrueZVertex<-2 &&  200<TrueEk && TrueEk<300")
+                << TTree_drawable(t.Tree, formula+bins,"-3<TrueZVertex && TrueZVertex<-2 &&  300<TrueEk && TrueEk<400")
+                << TTree_drawable(t.Tree, formula+bins,"-3<TrueZVertex && TrueZVertex<-2 &&  400<TrueEk && TrueEk<500")
+                << TTree_drawable(t.Tree, formula+bins,"-3<TrueZVertex && TrueZVertex<-2 &&  500<TrueEk && TrueEk<600")
+                << TTree_drawable(t.Tree, formula+bins,"-3<TrueZVertex && TrueZVertex<-2 &&  600<TrueEk && TrueEk<700")
+                << TTree_drawable(t.Tree, formula+bins,"-3<TrueZVertex && TrueZVertex<-2 &&  700<TrueEk && TrueEk<800")
+                << TTree_drawable(t.Tree, formula+bins,"-3<TrueZVertex && TrueZVertex<-2 &&  800<TrueEk && TrueEk<900")
+                << TTree_drawable(t.Tree, formula+bins,"-3<TrueZVertex && TrueZVertex<-2 &&  900<TrueEk && TrueEk<1000")
+                << TTree_drawable(t.Tree, formula+bins,"-3<TrueZVertex && TrueZVertex<-2 && 1000<TrueEk && TrueEk<1100")
+                << TTree_drawable(t.Tree, formula+bins,"-3<TrueZVertex && TrueZVertex<-2 && 1100<TrueEk && TrueEk<1200")
+                << TTree_drawable(t.Tree, formula+bins,"-3<TrueZVertex && TrueZVertex<-2 && 1200<TrueEk && TrueEk<1300")
+                << TTree_drawable(t.Tree, formula+bins,"-3<TrueZVertex && TrueZVertex<-2 && 1300<TrueEk && TrueEk<1400")
+                << TTree_drawable(t.Tree, formula+bins,"-3<TrueZVertex && TrueZVertex<-2 && 1400<TrueEk && TrueEk<1500")
+                << TTree_drawable(t.Tree, formula+bins,"-3<TrueZVertex && TrueZVertex<-2 && 1500<TrueEk && TrueEk<1600")
                 << endc;
     }
 }

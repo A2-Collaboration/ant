@@ -24,7 +24,8 @@ public:
 
 protected:
 
-    const double param1;
+    const double MaxTheta;
+    const double CB_param1;
 
     TH1D* steps;
     Tree_t t;
