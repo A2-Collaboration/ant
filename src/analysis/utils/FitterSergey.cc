@@ -2273,8 +2273,10 @@ APLCON::Result_t FitterSergey::DoFit()
     auto delP = 1.3 *MeVtoGeV; // approximate value taken from gdb
     Sbeam[0] = delP / Beampr[1];
 
-    Target[0] = 0.;
-    Target[1] = 10.;
+    auto IfZfree = ZVertexSigma == 0 ? 1 : 0; // measured Z vertex
+
+    Target[0] = 0.; // center of target
+    Target[1] = IfZfree ? 10.0 : ZVertexSigma/0.333;  // target length (0.333*length = sigma)
 
     ierr = fKfit.Kfilbm(Amastag, 1, Beampr, Sbeam, Target);
     if (ierr != 0)
@@ -2290,7 +2292,7 @@ APLCON::Result_t FitterSergey::DoFit()
         Pacst[0] = 0; // photon mass
         Pacst[1] = Photon->E *MeVtoGeV; // photon energy
         Pacst[3] = Photon->Phi();
-        Pacst[5] = Photon->E; // cluster energy
+        Pacst[5] = Photon->E *MeVtoGeV; // cluster energy
 
         if(Photon->Candidate->Detector & Detector_t::Type_t::CB) {
             Pacst[4] = fKfit.DepthShowCB(Photon->Ek() *MeVtoGeV, 1);
@@ -2319,10 +2321,10 @@ APLCON::Result_t FitterSergey::DoFit()
 
     // setup the proton
 
-    Pacst[0] = Proton->Type().Mass(); // proton mass
+    Pacst[0] = Proton->Type().Mass() *MeVtoGeV; // proton mass
     Pacst[1] = 0.;      // proton kinetic energy
     Pacst[3] = Proton->Phi();
-    Pacst[5] = Proton->E; // cluster energy, probably unused anyway?
+    Pacst[5] = Proton->Ek() *MeVtoGeV; // cluster energy, probably unused anyway?
 
     if(Proton->Candidate->Detector & Detector_t::Type_t::CB) {
         Pacst[4] = fKfit.DepthShowCB(Proton->Ek() *MeVtoGeV, 14);
@@ -2366,7 +2368,6 @@ APLCON::Result_t FitterSergey::DoFit()
 
     auto Nptall = Npart + Ndecay + 1;
 
-    auto IfZfree = 0; // measured Z vertex
 
     ierr = fKfit.Kinfit(Nptall, Ndecay, Idecfl, Dkind, Amsdec, Jdecay,
                              Ldecay, Idecay, IfZfree);
@@ -2374,9 +2375,10 @@ APLCON::Result_t FitterSergey::DoFit()
         printf(" Kinfit error = %d\n", ierr);
 
     auto r = APLCON::Result_t::Default;
-    r.Status = ierr == 0 ? APLCON::Result_Status_t::Success : APLCON::Result_Status_t::_Unknown;
     r.ChiSquare = fKfit.Chisq();
     r.NDoF = fKfit.NDF();
+    // use some heuristic to determine successful fit...
+    r.Status = r.ChiSquare < 100000 ? APLCON::Result_Status_t::Success : APLCON::Result_Status_t::_Unknown;
     r.Probability = TMath::Prob(r.ChiSquare, r.NDoF);
     return r;
 }
@@ -2384,7 +2386,9 @@ APLCON::Result_t FitterSergey::DoFit()
 TParticlePtr FitterSergey::GetFittedProton() const
 {
     auto& fKfit = *I;
-    return make_shared<TParticle>(ParticleTypeDatabase::Proton, fKfit.Particle(14, 1));
+    auto proton = make_shared<TParticle>(ParticleTypeDatabase::Proton, fKfit.Particle(14, 1));
+    *proton *= 1000.0; // GeV to Mev
+    return proton;
 }
 
 TParticleList FitterSergey::GetFittedPhotons() const
@@ -2392,8 +2396,10 @@ TParticleList FitterSergey::GetFittedPhotons() const
     auto& fKfit = *I;
     TParticleList photons;
     for(unsigned i=0;i<Photons.size();i++) {
-        photons.emplace_back(make_shared<TParticle>(ParticleTypeDatabase::Photon,
-                                                    fKfit.Particle(1, i+1)));
+        auto photon = make_shared<TParticle>(ParticleTypeDatabase::Photon,
+                                             fKfit.Particle(1, i+1));
+        *photon *= 1000.0; // GeV to Mev
+        photons.emplace_back(photon);
     }
     return photons;
 }
