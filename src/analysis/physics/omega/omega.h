@@ -271,6 +271,7 @@ protected:
         MyTreeFitter_t(const ParticleTypeTree& ttree, const ParticleTypeDatabase::Type& mesonT, utils::UncertaintyModelPtr model, const bool fix_z_vertex);
 
         void HypTestCombis(const TParticleList& photons, doubles& chi2s, doubles& probs, doubles& ggims, doubles& gggims, int& bestIndex);
+        ~MyTreeFitter_t();
     };
     static size_t CombIndex(const ant::TParticleList& orig, const MyTreeFitter_t&);
 

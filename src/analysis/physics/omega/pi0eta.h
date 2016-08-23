@@ -129,6 +129,7 @@ protected:
                            TLorentzVector& pi0,
                            TLorentzVector& eta,
                            TLorentzVector& gggg);
+        ~MyTreeFitter_t();
     };
 
     MyTreeFitter_t treefitter;

@@ -459,4 +459,9 @@ void Pi0Eta::MyTreeFitter_t::HypTestCombis(const TParticleList& unfitted, const 
     }
 }
 
+Pi0Eta::MyTreeFitter_t::~MyTreeFitter_t()
+{
+
+}
+
 AUTO_REGISTER_PHYSICS(Pi0Eta)

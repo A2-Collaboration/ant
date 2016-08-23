@@ -984,6 +984,11 @@ void OmegaEtaG2::MyTreeFitter_t::HypTestCombis(const TParticleList& photons, dou
     }
 }
 
+OmegaEtaG2::MyTreeFitter_t::~MyTreeFitter_t()
+{
+
+}
+
 
 TagChMultiplicity::TagChMultiplicity(HistogramFactory& hf)
 {
