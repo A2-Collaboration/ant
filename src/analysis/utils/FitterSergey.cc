@@ -2235,6 +2235,16 @@ void FitterSergey::SetPhotons(const TParticleList& photons)
     Photons = photons;
 }
 
+void FitterSergey::SetZVertexSigma(double sigma)
+{
+    ZVertexSigma = sigma;
+}
+
+bool FitterSergey::IsZVertexFitEnabled() const noexcept
+{
+    return true;
+}
+
 APLCON::Result_t FitterSergey::DoFit()
 {
     constexpr double MeVtoGeV = 1.0 / 1000.0;
