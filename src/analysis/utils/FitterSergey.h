@@ -20,6 +20,7 @@ class FitterSergey : public Fitter_traits {
     class TA2KFitC;
     std::unique_ptr<TA2KFitC> I;
 
+    double ZVertexSigma;
     double Ebeam;
     TParticlePtr Proton;
     TParticleList Photons;
@@ -31,6 +32,8 @@ public:
     virtual void SetEgammaBeam(double ebeam) override;
     virtual void SetProton(const TParticlePtr& proton) override;
     virtual void SetPhotons(const TParticleList& photons) override;
+    virtual void SetZVertexSigma(double sigma) override;
+    virtual bool IsZVertexFitEnabled() const noexcept override;
 
     virtual APLCON::Result_t DoFit() override;
 

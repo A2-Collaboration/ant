@@ -150,11 +150,11 @@ public:
     KinFitter& operator=(KinFitter&&) = default;
 
     virtual void SetEgammaBeam(double ebeam) override;
-    void SetZVertexSigma(double sigma);
+    virtual void SetZVertexSigma(double sigma) override;
     virtual void SetProton(const TParticlePtr& proton) override;
     virtual void SetPhotons(const TParticleList& photons) override;
 
-    bool IsZVertexFitEnabled() const noexcept;
+    virtual bool IsZVertexFitEnabled() const noexcept override;
 
     virtual TParticlePtr GetFittedProton() const override;
     virtual TParticleList GetFittedPhotons() const override;

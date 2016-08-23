@@ -11,6 +11,8 @@ struct Fitter_traits {
     virtual void SetEgammaBeam(double ebeam) =0;
     virtual void SetProton(const TParticlePtr& proton) =0;
     virtual void SetPhotons(const TParticleList& photons) =0;
+    virtual void SetZVertexSigma(double sigma) =0;
+    virtual bool IsZVertexFitEnabled() const noexcept =0;
 
     virtual APLCON::Result_t DoFit() =0;
 
