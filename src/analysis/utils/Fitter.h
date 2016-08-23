@@ -7,6 +7,8 @@
 #include "analysis/utils/Uncertainties.h"
 #include "base/std_ext/math.h"
 
+#include "Fitter_traits.h"
+
 #include "APLCON.hpp"
 
 #include <stdexcept>
@@ -129,7 +131,7 @@ private:
 };
 
 
-class KinFitter : public Fitter
+class KinFitter : public Fitter, public Fitter_traits
 {
 public:
 
@@ -147,18 +149,18 @@ public:
     KinFitter(KinFitter&&) = default;
     KinFitter& operator=(KinFitter&&) = default;
 
-    void SetEgammaBeam(double ebeam);
+    virtual void SetEgammaBeam(double ebeam) override;
     void SetZVertexSigma(double sigma);
-    void SetProton(const TParticlePtr& proton);
-    virtual void SetPhotons(const TParticleList& photons);
+    virtual void SetProton(const TParticlePtr& proton) override;
+    virtual void SetPhotons(const TParticleList& photons) override;
 
     bool IsZVertexFitEnabled() const noexcept;
 
-    TParticlePtr GetFittedProton() const;
-    TParticleList GetFittedPhotons() const;
-    double GetFittedBeamE() const;
+    virtual TParticlePtr GetFittedProton() const override;
+    virtual TParticleList GetFittedPhotons() const override;
+    virtual double GetFittedBeamE() const override;
     TParticlePtr GetFittedBeamParticle() const;
-    double GetFittedZVertex() const;
+    virtual double GetFittedZVertex() const override;
 
     double GetBeamEPull() const;
     double GetZVertexPull() const;
@@ -179,7 +181,7 @@ public:
 
     void SetupBranches(TTree* tree, std::string branch_prefix="");
 
-    APLCON::Result_t DoFit();
+    virtual APLCON::Result_t DoFit() override;
 
 protected:
 
