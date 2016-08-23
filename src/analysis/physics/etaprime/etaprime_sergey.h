@@ -63,7 +63,7 @@ protected:
 
 
     const utils::UncertaintyModelPtr fit_model;
-    utils::KinFitter fitter;
+    std::unique_ptr<utils::Fitter_traits> fitter;
 
     std::unique_ptr<utils::MCSmear>             mc_smear;
     std::unique_ptr<utils::MCFakeReconstructed> mc_fake;

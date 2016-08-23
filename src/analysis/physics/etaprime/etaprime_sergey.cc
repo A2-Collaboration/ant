@@ -1,5 +1,6 @@
 #include "etaprime_sergey.h"
 
+#include "utils/FitterSergey.h"
 #include "plot/root_draw.h"
 #include "base/std_ext/misc.h"
 #include "base/Logger.h"
@@ -10,6 +11,12 @@ using namespace ant::analysis;
 using namespace ant::analysis::physics;
 using namespace std;
 
+unique_ptr<utils::Fitter_traits> makeFitter(OptionsPtr opts, utils::UncertaintyModelPtr fit_model) {
+    if(opts->Get<bool>("UseFitterSergey", false))
+        return std_ext::make_unique<utils::FitterSergey>();
+    return std_ext::make_unique<utils::KinFitter>("KinFit", 2, fit_model, opts->Get<bool>("EnableZVertex", true));
+}
+
 EtapSergey::EtapSergey(const string& name, OptionsPtr opts) :
     Physics(name, opts),
     fit_model(
@@ -17,7 +24,7 @@ EtapSergey::EtapSergey(const string& name, OptionsPtr opts) :
             utils::UncertaintyModels::Interpolated::Mode_t::Fit)
 //        std::make_shared<utils::UncertaintyModels::Optimized_Oli1>()
         ),
-    fitter("KinFit", 2, fit_model, opts->Get<bool>("EnableZVertex", true)),
+    fitter(makeFitter(opts, fit_model)),
     mc_smear(opts->Get<bool>("MCFake", false) | opts->Get<bool>("MCSmear", true)
              ? // use | to force evaluation of both opts!
                std_ext::make_unique<utils::MCSmear>(
@@ -33,9 +40,9 @@ EtapSergey::EtapSergey(const string& name, OptionsPtr opts) :
                 std_ext::make_unique<utils::MCFakeReconstructed>()
               : nullptr)
 {
-    if(fitter.IsZVertexFitEnabled()) {
+    if(fitter->IsZVertexFitEnabled()) {
         double sigma = opts->Get<double>("ZVertexSigma", 0.0);
-        fitter.SetZVertexSigma(sigma);
+        fitter->SetZVertexSigma(sigma);
         LOG(INFO) << "Fit Z vertex enabled with sigma=" << sigma;
     }
     else if(opts->HasOption("ZVertexSigma")) {
@@ -117,10 +124,10 @@ void EtapSergey::ProcessEvent(const TEvent& event, manager_t&)
 
             // do the fitting
 
-            fitter.SetEgammaBeam(taggerhit.PhotonEnergy);
-            fitter.SetProton(proton);
-            fitter.SetPhotons(photons);
-            const auto& fit_result = fitter.DoFit();
+            fitter->SetEgammaBeam(taggerhit.PhotonEnergy);
+            fitter->SetProton(proton);
+            fitter->SetPhotons(photons);
+            const auto& fit_result = fitter->DoFit();
 
             if(fit_result.Status != APLCON::Result_Status_t::Success)
                 continue;
@@ -157,12 +164,12 @@ void EtapSergey::ProcessEvent(const TEvent& event, manager_t&)
             t.KinFitIterations = fit_result.NIterations;
 
 
-            auto fitted_proton = fitter.GetFittedProton();
+            auto fitted_proton = fitter->GetFittedProton();
             t.FittedProtonE =  fitted_proton->Ek();
             t.FittedProtonTheta = std_ext::radian_to_degree(fitted_proton->Theta());
 
 
-            auto fitted_photons = fitter.GetFittedPhotons();
+            auto fitted_photons = fitter->GetFittedPhotons();
             t.FittedPhotonsTheta().resize(0);
             t.FittedPhotonsE().resize(0);
             LorentzVec fitted_photon_sum({0,0,0},0);
@@ -173,7 +180,7 @@ void EtapSergey::ProcessEvent(const TEvent& event, manager_t&)
             }
             t.FittedPhotonSum = fitted_photon_sum.M();
 
-            t.FittedZVertex = fitter.GetFittedZVertex();
+            t.FittedZVertex = fitter->GetFittedZVertex();
         }
 
         if(!isfinite(best_prob))
