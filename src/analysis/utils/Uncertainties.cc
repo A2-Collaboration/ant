@@ -1,6 +1,8 @@
 #include "Uncertainties.h"
 
 #include "expconfig/ExpConfig.h"
+#include "expconfig/detectors/CB.h"
+#include "expconfig/detectors/TAPS.h"
 
 #include "base/WrapTFile.h"
 #include "base/Paths.h"
@@ -365,45 +367,59 @@ UncertaintyModels::Optimized::~Optimized()
 
 Uncertainties_t UncertaintyModels::Optimized::GetSigmas(const TParticle& particle) const
 {
+    if(!particle.Candidate)
+        throw Exception("No candidate attached to particle");
+
+    auto calocluster = particle.Candidate->FindCaloCluster();
+
+    if(!calocluster)
+        throw Exception("No calo cluster found");
+
     const auto theta = particle.Theta();
-    const auto E     = particle.Ek();
+    const auto Ek     = particle.Ek();
 
     Uncertainties_t s;
 
     if(particle.Candidate->Detector & Detector_t::Type_t::CB) {
 
         if(particle.Type() == ParticleTypeDatabase::Photon) {
-
-            s.sigmaE     = dE(E, cb_photon_E_rel, cb_photon_E_exp, cb_photon_E_lin);
+            s.sigmaE     = dE(Ek, cb_photon_E_rel, cb_photon_E_exp, cb_photon_E_lin);
             s.sigmaTheta = dThetaSin(theta, cb_photon_theta_const, cb_photon_theta_Sin);
             s.sigmaPhi   = cb_photon_phi / sin(theta);
-
         } else if(particle.Type() == ParticleTypeDatabase::Proton) {
-
             s = cb_proton;
-
         } else {
             throw Exception("Unexpected Particle: " + particle.Type().Name());
         }
 
-    } else if(particle.Candidate->Detector & Detector_t::Type_t::TAPS) {
+        static auto cb = ExpConfig::Setup::GetDetector<expconfig::detector::CB>();
+        auto elem = cb->GetClusterElement(calocluster->CentralElement);
+        s.ShowerDepth = elem->RadiationLength*std::log2(Ek/elem->CriticalE)/std::pow(std::sin(theta),3.0);
+        s.sigmaCB_R = 10; // in cm
+    }
+    else if(particle.Candidate->Detector & Detector_t::Type_t::TAPS) {
 
         if(particle.Type() == ParticleTypeDatabase::Photon) {
-
-            s.sigmaE     = dE(E, taps_photon_E_rel, taps_photon_E_exp, taps_photon_E_lin);
+            s.sigmaE     = dE(Ek, taps_photon_E_rel, taps_photon_E_exp, taps_photon_E_lin);
             s.sigmaTheta = taps_photon_theta;
             s.sigmaPhi   = taps_photon_phi;
-
         } else if(particle.Type() == ParticleTypeDatabase::Proton) {
             s = taps_proton;
-
         } else {
             throw Exception("Unexpected Particle: " + particle.Type().Name());
         }
+
+        static auto taps = ExpConfig::Setup::GetDetector<expconfig::detector::TAPS>();
+        auto elem = taps->GetClusterElement(calocluster->CentralElement);
+        s.ShowerDepth = elem->RadiationLength*std::log2(Ek/elem->CriticalE);
+        s.sigmaTAPS_Lz  = 2; // in cm
+        s.sigmaTAPS_Rxy = 1; // in cm
     }
     else {
         throw Exception("Unexpected Detector: " + string(particle.Candidate->Detector));
     }
+
+    s.Detector = particle.Candidate->Detector;
 
     return s;
 }

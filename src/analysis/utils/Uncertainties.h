@@ -21,10 +21,13 @@ namespace utils {
  * and some CB/TAPS specific values
  */
 struct Uncertainties_t {
+
     double sigmaE;
     double sigmaTheta;
     double sigmaPhi;
 
+    Detector_t::Any_t Detector;
+    double ShowerDepth;
     double sigmaCB_R;
     double sigmaTAPS_Rxy;
     double sigmaTAPS_Lz;
@@ -32,10 +35,13 @@ struct Uncertainties_t {
     Uncertainties_t(double E = std_ext::NaN,
                     double Theta = std_ext::NaN,
                     double Phi = std_ext::NaN,
+                    Detector_t::Any_t detector = Detector_t::Any_t::None,
+                    double showerDepth = std_ext::NaN,
                     double CB_R = std_ext::NaN,
                     double TAPS_Rxy = std_ext::NaN,
                     double TAPS_Lz = std_ext::NaN) :
         sigmaE(E), sigmaTheta(Theta), sigmaPhi(Phi),
+        Detector(detector), ShowerDepth(showerDepth),
         sigmaCB_R(CB_R), sigmaTAPS_Rxy(TAPS_Rxy), sigmaTAPS_Lz(TAPS_Lz)
     {}
 };
