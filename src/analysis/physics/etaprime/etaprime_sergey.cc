@@ -41,7 +41,8 @@ EtapSergey::EtapSergey(const string& name, OptionsPtr opts) :
               : nullptr)
 {
     if(fitter->IsZVertexFitEnabled()) {
-        double sigma = opts->Get<double>("ZVertexSigma", 0.0);
+        // using a measured z vertex is probably better...
+        double sigma = opts->Get<double>("ZVertexSigma", 3.0);
         fitter->SetZVertexSigma(sigma);
         LOG(INFO) << "Fit Z vertex enabled with sigma=" << sigma;
     }
