@@ -332,14 +332,15 @@ private:
 
         ************************************************************************/
 
-        Int_t I, II, J, IJ, IA, K, NM, M, JK, IK, NRANK, JRET;
-        static Int_t MXF, IRET, IUNPH;
+        Int_t I, II, J, IJ, IA, K, NM, M, JK, IK, JRET;
+        static Int_t IRET, IUNPH;
         static Int_t ICNT = 0, NXF = 0, NCST = 0;
         static const Int_t NDIMR = NXMAX + NFMAX;
         static const Int_t NDIMW = (NDIMR + NDIMR * NDIMR) / 2;
         static Float_t XS[NXMAX], DX[NXMAX], DXP[NXMAX], R[NDIMR], W[NDIMW];
         static Int_t NRD[NXMAX];
         Float_t SWII, SUM, WJK, FTEST;
+        FTEST = 0.;
         static Float_t FTESTP = 0.;
         static Float_t CHSQP = 0.;
 
@@ -350,7 +351,6 @@ private:
         //     initialization----------------------------------------------------
         //     define loop parameters
         NXF = NX + MYF;
-        MXF = (NXF * NXF + NXF) / 2;
 
         SIMMAT(VX);
         //     count nr of degrees of freedom
@@ -514,7 +514,7 @@ L40:
 
         //     complete matrix inversion and calculate chisquare
 
-        NRANK = SMINVv(W, R, -NXF, 1);
+        SMINVv(W, R, -NXF, 1);
         //     Chi**2 calculation
         CHSQP = CHSQ;
         CHSQ = 0.;
@@ -989,12 +989,11 @@ public:
       parameters
       ************************************************************************/
         Int_t il, ierr;
-        Float_t cstmas, eng, einv, Ecl, Scst[4];
+        Float_t eng, einv, Ecl, Scst[4];
         Double_t tancl;
 
         ierr = 0;
         fMass[Npart] = Pacst[0];
-        cstmas = (Float_t)Pacst[0];
         eng = (Float_t)Pacst[1];
         Ecl = (Float_t)Pacst[5];
         if (Npart == 1) {
@@ -1096,13 +1095,13 @@ public:
         Int_t i, j, k, ierr;
         Int_t Nunme, NY, NF, NFF, IV, ISV, I, J, IY, K, I2;
         Int_t Isecvt[NPMAX], lclsec, jdecfl, idechk, ideca, Lpart, Iunmea;
-        Int_t IFIRSL, NZDIV, IZPOS, IfZfree;
+        Int_t NZDIV, IZPOS, IfZfree;
         Int_t ICDEC, IFSCND, LLDEC, IDE, INDE, IEF;
 
-        Float_t Y[NXMAX], F[NFMAX], WBEST[2], ZBEST[2], ZBESTM;
+        Float_t Y[NXMAX], F[NFMAX], WBEST[2], ZBEST[2];
         Float_t ZV1, ZV2, DZMV, VRT[3], VRTN[3];
         Float_t RLPED[3], DLPED[3], RTPGAM[3], RDNPED, VRTSEC[3];
-        Float_t FF, RDNPBS, RDINI, RDNSEC, YSTP;
+        Float_t FF, RDINI, RDNSEC, YSTP;
         const Int_t NVY = (NXMAX + NXMAX * NXMAX) / 2;
         Float_t VY[NVY];
         Double_t EPRIMV, PRIMV[3], PMISS[3], PPMISS, EMISS, MMISS2;
@@ -1197,8 +1196,6 @@ L111:
         WBEST[0] = WBEST[1] = 0.;
         ZBEST[0] = ZBEST[1] = 0.;
 
-        ZBESTM = 0.;
-        IFIRSL = 1;
         ZV1 = fPlim[IV][0];
         ZV2 = fPlim[IV][1];
         DZMV = 0.25;
@@ -1310,7 +1307,6 @@ L111:
             VRT[2] = Y[IV];
             for (i = 0; i < 3; i++)
                 VRTN[i] = -VRT[i];
-            RDNPBS = 0.;
             IZPOS = 0;
             RDINI = -7.;
 
@@ -1390,7 +1386,6 @@ L122:
                 if (WBEST[1] < 1. / FF) {
                     WBEST[1] = 1. / FF;
                     ZBEST[1] = Y[ISV + 3];
-                    RDNPBS = RDNSEC;
                     if (Iunmea > 0 && fKind[Iunmea] < 0 && Isecvt[Iunmea] != 0)
                         Y[Iunmea * 4] = 1. / (EMISS - fMMiss);
                 }
@@ -1431,8 +1426,8 @@ L122:
                 SIMSTP(IV, 1.8);
             }
             SMTOS(fCov, 1, VY, K + 1, 4);
-            for (j = K; j < K + 4; j++)
-                SIMLIM(j, fPlim[j][0], fPlim[j][1]);
+//            for (j = K; j < K + 4; j++)
+//                SIMLIM(j, fPlim[j][0], fPlim[j][1]);
         }
 
         if (Iunmea > 0 && fKind[Iunmea] < 0) {
@@ -1742,7 +1737,6 @@ L11:
     void Trevcmf(TLorentzVector Beam, Double_t Mastg, Double_t Vel[4]) {
         Double_t Pbm = Beam.P();
         Double_t Etot = Beam.E() + Mastg;
-        Double_t Ecmf = sqrt(Etot * Etot - Pbm * Pbm);
         Double_t Beta = Pbm / Etot;
         Vel[0] = Beam.Px() / Etot;
         Vel[1] = Beam.Py() / Etot;
@@ -2145,7 +2139,7 @@ L11:
     }
 
     Double_t dEovEclTAPSAdd(Double_t Ecl, Int_t IPart) { // TAPS dE/E
-        Double_t Er0 = dEovEclTAPSInit(Ecl, IPart);
+        dEovEclTAPSInit(Ecl, IPart);
         Double_t Era = 0.031 + 0.04 * Ecl; // pi0 Apr'13
         if (IPart == 14) {                 // proton
             Era = 0.;
@@ -2284,8 +2278,8 @@ APLCON::Result_t FitterSergey::DoFit()
 
     // setup the photons
 
-    Int_t Pkind;
-    Double_t Pacst[6];
+    Int_t Pkind = 0;
+    Double_t Pacst[6] = {};
     Int_t Npart = 1; // start counting at 1, 0 is beam particle
 
     for(const auto& Photon : Photons) {
