@@ -1,3 +1,4 @@
+#include <assert.h>
 
 #include "analysis/plot/HistogramFactories.h"
 
@@ -29,8 +30,10 @@ using namespace ant::analysis;
 using namespace ant::std_ext;
 static volatile bool interrupt = false;
 
-string processFiles(const string& bkg1, const string& run, const string& bkg2)
+
+class taggEffTriple_t
 {
+protected:
     struct treeContainer_t
     {
         WrapTFileInput wrapFile;
@@ -48,24 +51,71 @@ string processFiles(const string& bkg1, const string& run, const string& bkg2)
                            << " in file " << filename;
                 exit(EXIT_FAILURE);
             }
+
+            wrapTree.LinkBranches(wrapTree.Tree);
+
             ant::TAntHeader* h;
             wrapFile.GetObject("AntHeader",h);
             setupName = h->SetupName;
         }
     };
 
-    treeContainer_t tree_bkg1(bkg1);
-    treeContainer_t tree_bkg2(bkg2);
-    treeContainer_t tree_run(run);
+    treeContainer_t bkg1tree;
+    treeContainer_t runtree;
+    treeContainer_t bkg2tree;
 
-    if ( !(tree_bkg1.setupName == tree_bkg2.setupName &&
-         tree_bkg2.setupName == tree_run.setupName ) )
+public:
+
+    taggEffTriple_t(const string& bkg1, const string& run, const string& bkg2):
+        bkg1tree(bkg1),
+        runtree(run),
+        bkg2tree(bkg2)
     {
-        LOG(ERROR) << "Files in TaggEff-triple not from same Setup!";
-        exit(EXIT_FAILURE);
+
+        if ( !(bkg1tree.setupName == bkg2tree.setupName &&
+             bkg2tree.setupName == runtree.setupName ) )
+        {
+            LOG(ERROR) << "Files in TaggEff-triple not from same Setup!";
+            exit(EXIT_FAILURE);
+        }
+
+        ExpConfig::Setup::SetManualName(bkg1tree.setupName);
+
     }
 
-    return tree_bkg1.setupName; // any is ok it is checked
+    string const SetupName() const{ return bkg1tree.setupName;}
+
+    // TODO: calibration data
+    vector<double> const Get()
+    {
+        auto tagger = ExpConfig::Setup::GetDetector<TaggerDetector_t>();
+
+        //found setup should match
+        assert(tagger->GetNchannels() == bkg1tree.wrapTree.TDCHits().size());
+
+//        for (int i = 0 ; i < tagger->GetNChannels() ; ++i )
+//            calcTaggeff(i)
+
+        return {};
+    }
+
+};
+
+
+string processFiles(const string& bkg1, const string& run, const string& bkg2)
+{
+
+    taggEffTriple_t taggEff(bkg1,run,bkg2);
+
+    cout << "TaggEff by channel:" << endl;
+    for (const auto eff: taggEff.Get())
+        cout << eff << "  ";
+    cout << endl;
+
+
+
+
+    return taggEff.SetupName(); // any is ok, it is checked
 }
 
 bool processCSV(const string& csvFile)
