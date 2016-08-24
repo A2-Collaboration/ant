@@ -76,9 +76,9 @@ struct Pulls_t {
     std_ext::RMS Phi;
 
     void Fill(const utils::Fitter::FitParticle& p) {
-        Ek.Add(p.Ek.Pull);
-        Theta.Add(p.Theta.Pull);
-        Phi.Add(p.Phi.Pull);
+//        Ek.Add(p.Ek.Pull);
+//        Theta.Add(p.Theta.Pull);
+//        Phi.Add(p.Phi.Pull);
     }
 };
 

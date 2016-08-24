@@ -72,18 +72,18 @@ void PullsWriter::Fill(const std::vector<Fitter::FitParticle>& fitParticles,
         tree.TaggW = tagger_weight;
         tree.FitProb = fitprob;
 
-        tree.E     = p.Ek.Value_before;
-        tree.Theta = p.Theta.Value_before;
-        tree.Phi   = p.Phi.Value_before;
-        tree.ProtonTheta =  proton.Theta.Value_before;
-        tree.ProtonE = proton.Ek.Value_before;
+//        tree.E     = p.Ek.Value_before;
+//        tree.Theta = p.Theta.Value_before;
+//        tree.Phi   = p.Phi.Value_before;
+//        tree.ProtonTheta =  proton.Theta.Value_before;
+//        tree.ProtonE = proton.Ek.Value_before;
         tree.ProtonTime = proton.Particle->Candidate->Time;
 
         const auto it_smear = smear_sigmas.find(p.Particle);
         if(it_smear == smear_sigmas.end()) {
-            tree.SigmaE = p.Ek.Sigma_before;
-            tree.SigmaTheta = p.Theta.Sigma_before;
-            tree.SigmaPhi = p.Phi.Sigma_before;
+//            tree.SigmaE = p.Ek.Sigma_before;
+//            tree.SigmaTheta = p.Theta.Sigma_before;
+//            tree.SigmaPhi = p.Phi.Sigma_before;
         }
         else {
             const Uncertainties_t& u = it_smear->second;
@@ -92,9 +92,9 @@ void PullsWriter::Fill(const std::vector<Fitter::FitParticle>& fitParticles,
             tree.SigmaPhi = u.sigmaPhi;
         }
 
-        tree.PullE     = p.Ek.Pull;
-        tree.PullTheta = p.Theta.Pull;
-        tree.PullPhi   = p.Phi.Pull;
+//        tree.PullE     = p.Ek.Pull;
+//        tree.PullTheta = p.Theta.Pull;
+//        tree.PullPhi   = p.Phi.Pull;
 
         tree.Multiplicity = fitParticles.size();
 
