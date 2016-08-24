@@ -18,14 +18,26 @@ namespace utils {
 
 /**
  * @brief Uncertainties for E, theta, and phi
+ * and some CB/TAPS specific values
  */
 struct Uncertainties_t {
-    double sigmaE     = {};
-    double sigmaTheta = {};
-    double sigmaPhi   = {};
+    double sigmaE;
+    double sigmaTheta;
+    double sigmaPhi;
 
-    Uncertainties_t() = default;
-    Uncertainties_t(double E, double Theta, double Phi) : sigmaE(E), sigmaTheta(Theta), sigmaPhi(Phi) {}
+    double sigmaCB_R;
+    double sigmaTAPS_Rxy;
+    double sigmaTAPS_Lz;
+
+    Uncertainties_t(double E = std_ext::NaN,
+                    double Theta = std_ext::NaN,
+                    double Phi = std_ext::NaN,
+                    double CB_R = std_ext::NaN,
+                    double TAPS_Rxy = std_ext::NaN,
+                    double TAPS_Lz = std_ext::NaN) :
+        sigmaE(E), sigmaTheta(Theta), sigmaPhi(Phi),
+        sigmaCB_R(CB_R), sigmaTAPS_Rxy(TAPS_Rxy), sigmaTAPS_Lz(TAPS_Lz)
+    {}
 };
 
 /**
