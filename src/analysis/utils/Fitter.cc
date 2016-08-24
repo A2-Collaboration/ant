@@ -45,22 +45,11 @@ APLCON::Fit_Settings_t Fitter::MakeDefaultSettings()
     return settings;
 }
 
-void Fitter::FitParticle::Set(const TParticlePtr& p,
-                              const UncertaintyModel& uncertainty)
-{
-    const auto sigmas = uncertainty.GetSigmas(*p);
-
-    Particle = p;
-
-    Vars[0].SetValueSigma(p->Ek(), sigmas.sigmaE);
-    Vars[1].SetValueSigma(p->Theta(), sigmas.sigmaTheta);
-    Vars[2].SetValueSigma(p->Phi(), sigmas.sigmaPhi);
-}
-
 Fitter::FitParticle::FitParticle(const string& name,
                                  APLCON& aplcon,
                                  std::shared_ptr<Fitter::FitVariable> z_vertex) :
-    Vars(3),
+    Detector(Detector_t::Any_t::None),
+    Vars(4), // it's a lucky coincidence that any particle is parametrized by 4 values
     Name(name),
     Z_Vertex(z_vertex)
 {
@@ -102,46 +91,73 @@ TParticlePtr Fitter::FitParticle::AsFitted() const
     return p;
 }
 
-LorentzVec Fitter::FitParticle::GetLorentzVec(const std::vector<double>& vars,
-                                          const double z_vertex) const
+void Fitter::FitParticle::Set(const TParticlePtr& p,
+                              const UncertaintyModel& uncertainty)
 {
-    const mev_t& Ek       = vars[0];
-    const radian_t& theta = vars[1];
-    const radian_t& phi   = vars[2];
+    Particle = p;
+    const auto sigmas = uncertainty.GetSigmas(*p);
+    Detector = sigmas.Detector;
 
+    // the parametrization, and thus the meaning of the linked fitter variables,
+    // depends on the calorimeter
+    if(Detector & Detector_t::Type_t::CB)
+    {
+        static auto cb = ExpConfig::Setup::GetDetector<expconfig::detector::CB>();
+
+        Vars[0].SetValueSigma(p->Ek(),    sigmas.sigmaE);
+        Vars[1].SetValueSigma(p->Theta(), sigmas.sigmaTheta);
+        Vars[2].SetValueSigma(p->Phi(),   sigmas.sigmaPhi);
+
+        const auto& CB_R = cb->GetInnerRadius() + sigmas.ShowerDepth;
+        Vars[3].SetValueSigma(CB_R, sigmas.sigmaCB_R);
+    }
+    else if(Detector & Detector_t::Type_t::TAPS)
+    {
+        static auto taps = ExpConfig::Setup::GetDetector<expconfig::detector::TAPS>();
+
+        Vars[0].SetValueSigma(p->Ek(),  sigmas.sigmaE);
+
+        const auto& TAPS_Lz = taps->GetZPosition() + sigmas.ShowerDepth;
+        const auto& TAPS_Rxy = std::tan(p->Theta())*TAPS_Lz;
+
+        Vars[1].SetValueSigma(TAPS_Rxy, sigmas.sigmaTAPS_Rxy);
+        Vars[2].SetValueSigma(p->Phi(), sigmas.sigmaPhi);
+        Vars[3].SetValueSigma(TAPS_Lz,  sigmas.sigmaTAPS_Lz);
+    }
+    else {
+        throw Exception("Unknown/none detector type provided from uncertainty model");
+    }
+}
+
+LorentzVec Fitter::FitParticle::GetLorentzVec(const std::vector<double>& vars,
+                                              const double z_vertex) const
+{
+    double theta_corr = std_ext::NaN;
+
+    if(Detector & Detector_t::Type_t::CB)
+    {
+        // for CB, parametrization is (Ek, theta, phi, CB_R)
+        const radian_t& theta = vars[1];
+        const auto&     CB_R  = vars[3];
+        theta_corr = std::acos(( CB_R*std::cos(theta) - z_vertex) / CB_R );
+
+    }
+    else if(Detector & Detector_t::Type_t::TAPS)
+    {
+        // for TAPS, parametrization is (Ek, TAPS_Rxy, phi, TAPS_Lz)
+        const auto& TAPS_Rxy = vars[1];
+        const auto& TAPS_Lz  = vars[3];
+        theta_corr = std::atan(TAPS_Rxy / (TAPS_Lz - z_vertex));
+    }
+    else {
+        throw Exception("Unknown/none detector type provided from uncertainty model");
+    }
+
+    const mev_t& Ek       = vars[0];
+    const radian_t& phi   = vars[2];
 
     const mev_t& E = Ek + Particle->Type().Mass();
     const mev_t& p = sqrt( sqr(E) - sqr(Particle->Type().Mass()) );
-
-    if(z_vertex == 0.0)
-        return LorentzVec::EPThetaPhi(E, p, theta, phi);
-
-
-    double theta_corr = std_ext::NaN;
-
-    if(!Particle->Candidate)
-        throw Exception("Z Vertex fitting requires particles with candidates");
-
-    auto calocluster = Particle->Candidate->FindCaloCluster();
-
-    if(!calocluster)
-        throw Exception("No calo cluster found");
-
-    if(calocluster->DetectorType == Detector_t::Type_t::CB) {
-        static auto cb = ExpConfig::Setup::GetDetector<expconfig::detector::CB>();
-        auto elem = cb->GetClusterElement(calocluster->CentralElement);
-        const auto R  = cb->GetInnerRadius() + elem->RadiationLength*std::log2(Ek/elem->CriticalE)/std::pow(std::sin(theta),3.0);
-        theta_corr = std::acos(( R*std::cos(theta) - z_vertex) / R );
-    }
-    else if(calocluster->DetectorType == Detector_t::Type_t::TAPS) {
-        static auto taps = ExpConfig::Setup::GetDetector<expconfig::detector::TAPS>();
-        auto elem = taps->GetClusterElement(calocluster->CentralElement);
-        const auto Z  =  taps->GetZPosition() + elem->RadiationLength*std::log2(Ek/elem->CriticalE);
-        theta_corr = std::atan( Z*std::tan(theta) / (Z - z_vertex));
-    }
-    else {
-        throw Exception("Unknown calo cluster encountered");
-    }
 
     return LorentzVec::EPThetaPhi(E, p, theta_corr, phi);
 }

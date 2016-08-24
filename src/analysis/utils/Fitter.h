@@ -57,7 +57,8 @@ public:
 
     struct FitParticle
     {
-        TParticlePtr Particle; // pointer to unfitted value
+        TParticlePtr      Particle;      // pointer to unfitted particle
+        Detector_t::Any_t Detector; // remember detector type provided by uncertainty model
 
         std::vector<FitVariable> Vars;
 
@@ -69,22 +70,22 @@ public:
         virtual ~FitParticle();
 
     protected:
-        template<typename T>
-        std::vector< typename std::result_of<T(double&)>::type >
-        vectorize(double FitVariable::* member, T f)
-        {
+//        template<typename T>
+//        std::vector< typename std::result_of<T(double&)>::type >
+//        vectorize(double FitVariable::* member, T f)
+//        {
 
-        };
+//        };
 
-        template<typename T>
-        std::vector< typename std::result_of<T(double)>::type >
-        vectorize(double FitVariable::* member, T f) const
-        {
-            std::vector<typename std::result_of<T(double)>::type> ptrs(Vars.size());
-            std::transform(Vars.begin(), Vars.end(), ptrs.begin(),
-                           [member, f] (FitVariable& v) { return f(v.*member); });
-            return ptrs;
-        };
+//        template<typename T>
+//        std::vector< typename std::result_of<T(double)>::type >
+//        vectorize(double FitVariable::* member, T f) const
+//        {
+//            std::vector<typename std::result_of<T(double)>::type> ptrs(Vars.size());
+//            std::transform(Vars.begin(), Vars.end(), ptrs.begin(),
+//                           [member, f] (FitVariable& v) { return f(v.*member); });
+//            return ptrs;
+//        };
 
         friend class Fitter;
         friend class KinFitter;
