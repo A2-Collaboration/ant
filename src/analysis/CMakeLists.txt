@@ -57,7 +57,6 @@ set(ANALYSIS_PHYSICS
   physics/omega/FindProton.cc
   physics/misc/GoatComparison.cc
   physics/pi0/RarePion.cc
-  physics/pi0/KinFitPi0.cc
   physics/common/FitPulls.cc
   physics/common/InterpolatedPulls.cc
   physics/etaprime/etaprime_ept.cc
