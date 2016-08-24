@@ -14,8 +14,6 @@
 
 #include "APLCON.hpp" // external project
 
-#include "TTree.h"
-
 #include <cassert>
 #include <functional>
 #include <cmath>
@@ -47,46 +45,38 @@ APLCON::Fit_Settings_t Fitter::MakeDefaultSettings()
     return settings;
 }
 
-void Fitter::FitParticle::SetEkThetaPhi(const TParticlePtr& p,
-                                        const UncertaintyModelPtr& uncertainty)
+void Fitter::FitParticle::Set(const TParticlePtr& p,
+                              const UncertaintyModel& uncertainty)
 {
-    const auto sigmas = uncertainty->GetSigmas(*p);
+    const auto sigmas = uncertainty.GetSigmas(*p);
 
     Particle = p;
 
-    Ek.SetValue(p->Ek());
-    Theta.SetValue(p->Theta());
-    Phi.SetValue(p->Phi());
-
-    Ek.SetSigma(sigmas.sigmaE);
-    Theta.SetSigma(sigmas.sigmaTheta);
-    Phi.SetSigma(sigmas.sigmaPhi);
-}
-
-void Fitter::FitParticle::Var_t::SetupBranches(TTree* tree, const string& prefix)
-{
-    tree->Branch(prefix.c_str(), addressof(Value));
-    tree->Branch((prefix+"_pull").c_str(), addressof(Pull));
-    tree->Branch((prefix+"_sigma").c_str(), addressof(Sigma));
+    Vars[0].SetValueSigma(p->Ek(), sigmas.sigmaE);
+    Vars[1].SetValueSigma(p->Theta(), sigmas.sigmaTheta);
+    Vars[2].SetValueSigma(p->Phi(), sigmas.sigmaPhi);
 }
 
 Fitter::FitParticle::FitParticle(const string& name,
                                  APLCON& aplcon,
                                  std::shared_ptr<Fitter::FitVariable> z_vertex) :
-    Name(name), Z_Vertex(z_vertex)
+    Vars(3),
+    Name(name),
+    Z_Vertex(z_vertex)
 {
+    auto vectorize = [] (vector<FitVariable>& vars, double FitVariable::* member) {
+        vector<double*> ptrs(vars.size());
+        transform(vars.begin(), vars.end(), ptrs.begin(),
+                  [member] (FitVariable& v) { return std::addressof(v.*member); });
+        return ptrs;
+    };
+
     aplcon.LinkVariable(
                 Name,
-    { std::addressof(Ek.Value),
-      std::addressof(Theta.Value),
-      std::addressof(Phi.Value) },
-    { std::addressof(Ek.Sigma),
-      std::addressof(Theta.Sigma),
-      std::addressof(Phi.Sigma) },
-    { std::addressof(Ek.Pull),
-      std::addressof(Theta.Pull),
-      std::addressof(Phi.Pull) }
-                        );
+                vectorize(Vars, &FitVariable::Value),
+                vectorize(Vars, &FitVariable::Sigma),
+                vectorize(Vars, &FitVariable::Pull)
+                );
 }
 
 Fitter::FitParticle::~FitParticle()
@@ -98,27 +88,26 @@ TParticlePtr Fitter::FitParticle::AsFitted() const
 {
     const auto z_vertex = Z_Vertex ? Z_Vertex->Value : 0;
 
+    auto vectorize = [] (const vector<FitVariable>& vars) {
+        vector<double> values(vars.size());
+        transform(vars.begin(), vars.end(), values.begin(),
+                  [] (const FitVariable& v) { return v.Value; });
+        return values;
+    };
+
     auto p = make_shared<TParticle>(Particle->Type(),
-                                    GetVector({Ek.Value, Theta.Value, Phi.Value},
-                                              z_vertex
-                                              ));
+                                    GetLorentzVec(vectorize(Vars), z_vertex)
+                                    );
     p->Candidate = Particle->Candidate;
     return p;
 }
 
-void Fitter::FitParticle::SetupBranches(TTree* tree, const string& prefix)
-{
-    Ek.SetupBranches(tree, prefix+"_"+Name+"_Ek");
-    Theta.SetupBranches(tree, prefix+"_"+Name+"_Theta");
-    Phi.SetupBranches(tree, prefix+"_"+Name+"_Phi");
-}
-
-LorentzVec Fitter::FitParticle::GetVector(const std::vector<double>& EkThetaPhi,
+LorentzVec Fitter::FitParticle::GetLorentzVec(const std::vector<double>& vars,
                                           const double z_vertex) const
 {
-    const mev_t& Ek = EkThetaPhi[0];
-    const radian_t& theta = EkThetaPhi[1];
-    const radian_t& phi   = EkThetaPhi[2];
+    const mev_t& Ek       = vars[0];
+    const radian_t& theta = vars[1];
+    const radian_t& phi   = vars[2];
 
 
     const mev_t& E = Ek + Particle->Type().Mass();
@@ -223,7 +212,7 @@ KinFitter::KinFitter(const std::string& name,
         auto diff = MakeBeamLorentzVec(BeamE);
 
         for(size_t i=0;i<n;i++)
-            diff -= fit_particles[i]->GetVector(values[i], z_vertex); // minus outgoing
+            diff -= fit_particles[i]->GetLorentzVec(values[i], z_vertex); // minus outgoing
 
         return vector<double>(
                { diff.p.x,
@@ -259,7 +248,7 @@ void KinFitter::SetZVertexSigma(double sigma)
 
 void KinFitter::SetProton(const TParticlePtr& proton)
 {
-    Proton->SetEkThetaPhi(proton, uncertainty);
+    Proton->Set(proton, *uncertainty);
 }
 
 void KinFitter::SetPhotons(const TParticleList& photons)
@@ -268,7 +257,7 @@ void KinFitter::SetPhotons(const TParticleList& photons)
         throw Exception("Given number of photons does not match configured fitter");
 
     for ( unsigned i = 0 ; i < Photons.size() ; ++ i) {
-        Photons[i]->SetEkThetaPhi(photons[i], uncertainty);
+        Photons[i]->Set(photons[i], *uncertainty);
     }
 }
 
@@ -325,41 +314,40 @@ double KinFitter::GetZVertexPull() const
 
 double KinFitter::GetProtonEPull() const
 {
-    return Proton->Ek.Pull;
+//    return Proton->Ek.Pull;
 }
 
 double KinFitter::GetProtonThetaPull() const
 {
-    return Proton->Theta.Pull;
-
+//    return Proton->Theta.Pull;
 }
 
 double KinFitter::GetProtonPhiPull() const
 {
-    return Proton->Phi.Pull;
+//    return Proton->Phi.Pull;
 }
 
 std::vector<double> KinFitter::GetPhotonEPulls() const
 {
     std::vector<double> pulls;
-    for(auto& photon : Photons)
-        pulls.push_back(photon->Ek.Pull);
+//    for(auto& photon : Photons)
+//        pulls.push_back(photon->Ek.Pull);
     return pulls;
 }
 
 std::vector<double> KinFitter::GetPhotonThetaPulls() const
 {
     std::vector<double> pulls;
-    for(auto& photon : Photons)
-        pulls.push_back(photon->Theta.Pull);
+//    for(auto& photon : Photons)
+//        pulls.push_back(photon->Theta.Pull);
     return pulls;
 }
 
 std::vector<double> KinFitter::GetPhotonPhiPulls() const
 {
     std::vector<double> pulls;
-    for(auto& photon : Photons)
-        pulls.push_back(photon->Phi.Pull);
+//    for(auto& photon : Photons)
+//        pulls.push_back(photon->Phi.Pull);
     return pulls;
 }
 
@@ -371,26 +359,6 @@ std::vector<Fitter::FitParticle> KinFitter::GetFitParticles() const
     return particles;
 }
 
-
-
-void KinFitter::SetupBranches(TTree* tree, string branch_prefix)
-{
-    if(branch_prefix.empty())
-        branch_prefix = aplcon->GetName();
-
-    Proton->SetupBranches(tree, branch_prefix);
-    for(auto& p : Photons) {
-        p->SetupBranches(tree, branch_prefix);
-    }
-
-    tree->Branch((branch_prefix+"_chi2dof").c_str(),     &result_chi2ndof);
-    tree->Branch((branch_prefix+"_iterations").c_str(),  &result_iterations);
-    tree->Branch((branch_prefix+"_status").c_str(),      &result_status);
-    tree->Branch((branch_prefix+"_probability").c_str(), &result_probability);
-    tree->Branch((branch_prefix+"_EBeam").c_str(),       &BeamE->Value);
-    tree->Branch((branch_prefix+"_EBeam_Pull").c_str(),  &BeamE->Pull);
-    tree->Branch((branch_prefix+"_EBeam_Sigma").c_str(),  &BeamE->Sigma);
-}
 
 APLCON::Result_t KinFitter::DoFit() {
     if(Z_Vertex) {
@@ -508,7 +476,7 @@ TreeFitter::TreeFitter(const string& name,
         // assign values v to leaves' LVSum
         for(unsigned i=0;i<n;i++) {
             node_t& node = tree_leaves_copy[i]->Get();
-            node.LVSum = node.Leave->GetVector(v[i], z_vertex);
+            node.LVSum = node.Leave->GetLorentzVec(v[i], z_vertex);
         }
 
         // sum daughters' Particle
@@ -563,7 +531,7 @@ bool TreeFitter::NextFit(APLCON::Result_t& fit_result)
         const auto perm_idx = current_perm->at(i);
         tree_leaves[i]->Get().PhotonLeaveIndex = comb_indices[perm_idx];
         const TParticlePtr& p = current_comb.at(perm_idx);
-        Photons[i]->SetEkThetaPhi(p, uncertainty);
+        Photons[i]->Set(p, *uncertainty);
     }
 
     auto it_not_comb = current_comb.begin_not();
@@ -572,7 +540,7 @@ bool TreeFitter::NextFit(APLCON::Result_t& fit_result)
 
     // and by construction, the non-leaves are from k..n-1
     for(auto i=k;i<n;i++) {
-        Photons[i]->SetEkThetaPhi(*it_not_comb, uncertainty);
+        Photons[i]->Set(*it_not_comb, *uncertainty);
         ++it_not_comb;
     }
 

@@ -17,8 +17,8 @@
 #include <memory>
 #include <set>
 #include <functional>
+#include <type_traits>
 
-class TTree;
 class TH1D;
 class TF1;
 
@@ -47,11 +47,9 @@ public:
         double Sigma = 0;
         double Sigma_before = std_ext::NaN;
         double Pull = 0;
-        void SetValue(double v) {
+        void SetValueSigma(double v, double s) {
             Value = v;
             Value_before = v;
-        }
-        void SetSigma(double s) {
             Sigma = s;
             Sigma_before = s;
         }
@@ -61,15 +59,7 @@ public:
     {
         TParticlePtr Particle; // pointer to unfitted value
 
-        struct Var_t : FitVariable {
-        protected:
-            friend struct FitParticle;
-            void SetupBranches(TTree* tree, const std::string& prefix);
-        };
-
-        Var_t Ek;
-        Var_t Theta;
-        Var_t Phi;
+        std::vector<FitVariable> Vars;
 
         TParticlePtr AsFitted() const;
 
@@ -79,17 +69,33 @@ public:
         virtual ~FitParticle();
 
     protected:
+        template<typename T>
+        std::vector< typename std::result_of<T(double&)>::type >
+        vectorize(double FitVariable::* member, T f)
+        {
+
+        };
+
+        template<typename T>
+        std::vector< typename std::result_of<T(double)>::type >
+        vectorize(double FitVariable::* member, T f) const
+        {
+            std::vector<typename std::result_of<T(double)>::type> ptrs(Vars.size());
+            std::transform(Vars.begin(), Vars.end(), ptrs.begin(),
+                           [member, f] (FitVariable& v) { return f(v.*member); });
+            return ptrs;
+        };
+
         friend class Fitter;
         friend class KinFitter;
         friend class TreeFitter;
 
-        void SetEkThetaPhi(const TParticlePtr& p, const UncertaintyModelPtr& uncertainty);
+        void Set(const TParticlePtr& p, const UncertaintyModel& uncertainty);
 
         const std::string Name;
-        std::shared_ptr<FitVariable> Z_Vertex;
+        const std::shared_ptr<const FitVariable> Z_Vertex;
 
-        void SetupBranches(TTree* tree, const std::string& prefix);
-        ant::LorentzVec GetVector(const std::vector<double>& EkThetaPhi, double z_vertex) const;
+        ant::LorentzVec GetLorentzVec(const std::vector<double>& EkThetaPhi, double z_vertex) const;
     };
 
 protected:
@@ -157,8 +163,6 @@ public:
      * @return FitParticle contain all info about the fitted state
      */
     std::vector<FitParticle> GetFitParticles() const;
-
-    void SetupBranches(TTree* tree, std::string branch_prefix="");
 
     virtual APLCON::Result_t DoFit() override;
 
