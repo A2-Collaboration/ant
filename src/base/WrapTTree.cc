@@ -12,7 +12,7 @@ void WrapTTree::CreateBranches(TTree* tree) {
     struct TTree_trick : TTree {
         using TTree::BranchImpRef;
     };
-    auto tree_trick = (TTree_trick*)Tree;
+    auto tree_trick = dynamic_cast<TTree_trick*>(Tree);
     for(const auto& b : branches) {
         // dereference ValuePtr here to pointer to value
         tree_trick->BranchImpRef(b.Name.c_str(), b.ROOTClass, b.ROOTType, *b.ValuePtr, 32000, 99);
