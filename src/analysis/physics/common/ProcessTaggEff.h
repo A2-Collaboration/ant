@@ -12,6 +12,7 @@ namespace physics {
 
 struct ProcessTaggEff: public Physics {
 
+
     unsigned seenEvents = 0;
 
     struct TreeScalarReads : WrapTTree {
@@ -30,6 +31,9 @@ struct ProcessTaggEff: public Physics {
     };
 
     TreeScalarReads scalerReads;
+
+    static constexpr auto treeName()        {return "scalerReads";}
+    static constexpr auto treeAccessName()  {return "ProcessTaggEff/scalerReads";}
 
     ProcessTaggEff(const std::string& name, OptionsPtr opts=nullptr);
     virtual ~ProcessTaggEff();

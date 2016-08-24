@@ -21,7 +21,7 @@ ProcessTaggEff::ProcessTaggEff(const std::string& name, OptionsPtr opts) :
     slowcontrol::Variables::TaggerScalers->Request();
     slowcontrol::Variables::FreeRates->Request();
 
-    scalerReads.CreateBranches(HistFac.makeTTree("scalerReads"));
+    scalerReads.CreateBranches(HistFac.makeTTree(treeName()));
 
     scalerReads.TaggRates().resize(nchannels);
     scalerReads.TDCHits().resize(nchannels);
