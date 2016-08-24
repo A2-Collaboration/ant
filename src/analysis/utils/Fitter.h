@@ -71,10 +71,12 @@ public:
         Var_t Theta;
         Var_t Phi;
 
-        FitParticle(const std::string& name, std::shared_ptr<FitVariable> z_vertex);
-        virtual ~FitParticle();
-
         TParticlePtr AsFitted() const;
+
+        FitParticle(const std::string& name,
+                    APLCON& aplcon,
+                    std::shared_ptr<FitVariable> z_vertex);
+        virtual ~FitParticle();
 
     protected:
         friend class Fitter;
@@ -88,27 +90,6 @@ public:
 
         void SetupBranches(TTree* tree, const std::string& prefix);
         ant::LorentzVec GetVector(const std::vector<double>& EkThetaPhi, double z_vertex) const;
-
-
-        std::vector<double*> Addresses()
-        {
-            return { std::addressof(Ek.Value),
-                     std::addressof(Theta.Value),
-                     std::addressof(Phi.Value)};
-        }
-        std::vector<double*> Addresses_Sigma()
-        {
-            return { std::addressof(Ek.Sigma),
-                     std::addressof(Theta.Sigma),
-                     std::addressof(Phi.Sigma)};
-        }
-
-        std::vector<double*> Addresses_Pulls()
-        {
-            return { std::addressof(Ek.Pull),
-                     std::addressof(Theta.Pull),
-                     std::addressof(Phi.Pull)};
-        }
     };
 
 protected:
@@ -122,8 +103,6 @@ protected:
 
     UncertaintyModelPtr uncertainty;
     std::unique_ptr<APLCON> aplcon;
-
-    void LinkVariable(FitParticle& particle);
 
 private:
     static APLCON::Fit_Settings_t MakeDefaultSettings();

@@ -47,14 +47,6 @@ APLCON::Fit_Settings_t Fitter::MakeDefaultSettings()
     return settings;
 }
 
-void Fitter::LinkVariable(Fitter::FitParticle& particle)
-{
-    aplcon->LinkVariable(particle.Name,
-                         particle.Addresses(),
-                         particle.Addresses_Sigma(),
-                         particle.Addresses_Pulls());
-}
-
 void Fitter::FitParticle::SetEkThetaPhi(const TParticlePtr& p,
                                         const UncertaintyModelPtr& uncertainty)
 {
@@ -78,10 +70,23 @@ void Fitter::FitParticle::Var_t::SetupBranches(TTree* tree, const string& prefix
     tree->Branch((prefix+"_sigma").c_str(), addressof(Sigma));
 }
 
-Fitter::FitParticle::FitParticle(const string& name, std::shared_ptr<Fitter::FitVariable> z_vertex) :
+Fitter::FitParticle::FitParticle(const string& name,
+                                 APLCON& aplcon,
+                                 std::shared_ptr<Fitter::FitVariable> z_vertex) :
     Name(name), Z_Vertex(z_vertex)
 {
-
+    aplcon.LinkVariable(
+                Name,
+    { std::addressof(Ek.Value),
+      std::addressof(Theta.Value),
+      std::addressof(Phi.Value) },
+    { std::addressof(Ek.Sigma),
+      std::addressof(Theta.Sigma),
+      std::addressof(Phi.Sigma) },
+    { std::addressof(Ek.Pull),
+      std::addressof(Theta.Pull),
+      std::addressof(Phi.Pull) }
+                        );
 }
 
 Fitter::FitParticle::~FitParticle()
@@ -175,20 +180,16 @@ KinFitter::KinFitter(const std::string& name,
         Z_Vertex = std::make_shared<Z_Vertex_t>();
 
     for(unsigned i=0; i<numGammas;++i) {
-        Photons.emplace_back(make_shared<FitParticle>("Photon"+to_string(i), Z_Vertex));
+        Photons.emplace_back(make_shared<FitParticle>("Photon"+to_string(i), *aplcon, Z_Vertex));
     }
 
-
-
-    Proton = std::make_shared<FitParticle>("Proton", Z_Vertex);
-    LinkVariable(*Proton);
+    Proton = std::make_shared<FitParticle>("Proton", *aplcon, Z_Vertex);
 
     vector<string> variable_names      = {Proton->Name};
     vector<std::shared_ptr<FitParticle>> fit_particles{Proton};
 
     for ( auto& photon: Photons)
     {
-        LinkVariable(*photon);
         variable_names.emplace_back(photon->Name);
         fit_particles.emplace_back(photon);
     }
