@@ -20,9 +20,9 @@ unique_ptr<utils::Fitter_traits> makeFitter(OptionsPtr opts, utils::UncertaintyM
 EtapSergey::EtapSergey(const string& name, OptionsPtr opts) :
     Physics(name, opts),
     fit_model(
-        utils::UncertaintyModels::Interpolated::makeAndLoad(
-            utils::UncertaintyModels::Interpolated::Mode_t::Fit)
-//        std::make_shared<utils::UncertaintyModels::Optimized_Oli1>()
+//        utils::UncertaintyModels::Interpolated::makeAndLoad(
+//            utils::UncertaintyModels::Interpolated::Mode_t::Fit)
+        std::make_shared<utils::UncertaintyModels::Optimized_Oli1>()
         ),
     fitter(makeFitter(opts, fit_model)),
     mc_smear(opts->Get<bool>("MCFake", false) | opts->Get<bool>("MCSmear", true)
