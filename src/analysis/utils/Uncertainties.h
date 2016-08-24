@@ -25,18 +25,15 @@ struct Uncertainties_t {
     double sigmaPhi   = {};
 
     Uncertainties_t() = default;
-    Uncertainties_t(const double E, const double Theta, const double Phi) : sigmaE(E), sigmaTheta(Theta), sigmaPhi(Phi) {}
-
-    bool operator==(const Uncertainties_t& other) const noexcept {
-        return sigmaE == other.sigmaE && sigmaTheta == other.sigmaTheta && sigmaPhi == other.sigmaPhi;
-    }
+    Uncertainties_t(double E, double Theta, double Phi) : sigmaE(E), sigmaTheta(Theta), sigmaPhi(Phi) {}
 };
 
 /**
- * @brief Virtual base class for different Uncertainty Models for kion fitter.
- *        Derive and implement the GetSigmas() method.
+ * @brief Virtual base class for different Uncertainty Models for fitter.
+ *        Implement at least the GetSigmas() method.
  * @see UncertaintyModels::Constant
  * @see UncertaintyModels::MCExtracted
+ * @see UncertaintyModels::Interpolated
  */
 class UncertaintyModel {
 public:
@@ -78,7 +75,8 @@ public:
 };
 
 /**
- * @brief Simple kin fitter uncertainty model. has a fixed value for {cb,taps}{photon,proton}{theta,phi}, Energries are relative values and get multipied with the particle energy on GetSigmas()
+ * @brief Simple kin fitter uncertainty model. has a fixed value for {cb,taps}{photon,proton}{theta,phi},
+ * Energies are relative values and get multipied with the particle energy on GetSigmas()
  */
 struct ConstantRelativeE : public Constant {
 public:
@@ -125,7 +123,8 @@ public:
 };
 
 /**
- * @brief Kin fitter uncertainties, uses histograms. Energy depenent values for each detector element. Histograms can be loaded from root files in setup database.
+ * @brief Kin fitter uncertainties, uses histograms. Energy dependent values for each detector element.
+ * Histograms can be loaded from root files in setup database.
  */
 class MCExtracted : public UncertaintyModel {
 public:
@@ -269,6 +268,8 @@ struct Optimized_Oli1 : Optimized {
 
 /**
  * @brief Uncertainties from Patrik Adlarson for MC Smearing
+ *
+ * It uses a random generator, for whatever reason.
  */
 struct MCSmearingAdlarson : public UncertaintyModel {
 public:
@@ -291,6 +292,8 @@ protected:
 /**
  * @brief Uncertainties with interpolated surfaces in (E,theta) plane,
  * determined with iterative procedure
+ * @see progs/Ant-makeSigmas.cc
+ * @see src/analysis/physics/common/InterpolatedPulls.h
  */
 struct Interpolated : public UncertaintyModel, public ant::printable_traits {
 public:

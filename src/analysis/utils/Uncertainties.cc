@@ -581,29 +581,6 @@ void UncertaintyModels::Optimized::load_from_string_simple(const string& data)
 
 }
 
-bool UncertaintyModels::Optimized::operator==(const UncertaintyModels::Optimized& other) const noexcept
-{
-    return
-               cb_photon_theta_const == other.cb_photon_theta_const
-            && cb_photon_theta_Sin   == other.cb_photon_theta_Sin
-            && cb_photon_phi         == other.cb_photon_phi
-            && cb_photon_E_rel       == other.cb_photon_E_rel
-            && cb_photon_E_exp       == other.cb_photon_E_exp
-            && cb_photon_E_lin       == other.cb_photon_E_lin
-            && cb_proton             == other.cb_proton
-            && taps_photon_E_rel     == other.taps_photon_E_rel
-            && taps_photon_E_exp     == other.taps_photon_E_exp
-            && taps_photon_E_lin     == other.taps_photon_E_lin
-            && taps_photon_theta     == other.taps_photon_theta
-            && taps_photon_phi       == other.taps_photon_phi
-            && taps_proton           == other.taps_proton;
-
-}
-
-bool UncertaintyModels::Optimized::operator!=(const UncertaintyModels::Optimized& other) const noexcept
-{
-    return !(*this == other);
-}
 
 void UncertaintyModels::Optimized::ReadToken(const string& token)
 {
