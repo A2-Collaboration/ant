@@ -61,9 +61,11 @@ protected:
 
     Tree_t t;
 
+    const bool useFitterSergey;
 
     const utils::UncertaintyModelPtr fit_model;
-    std::unique_ptr<utils::Fitter_traits> fitter;
+    std::unique_ptr<utils::Fitter_traits> fitter_ant;
+    std::unique_ptr<utils::Fitter_traits> fitter_sergey;
 
     std::unique_ptr<utils::MCSmear>             mc_smear;
     std::unique_ptr<utils::MCFakeReconstructed> mc_fake;
