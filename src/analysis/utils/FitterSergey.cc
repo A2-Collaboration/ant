@@ -2025,44 +2025,9 @@ L11:
         return Er0;
     }
 
-    Double_t dEovEclCBAdd(Double_t Ecl, Int_t IPart) { // CB dE/E
-        Double_t Era = 0.0145 / pow(Ecl - 0.01, 0.1); // res1
-        Era += 0.0035 * Ecl; // res4
-        if (fTypDat == 2)
-            Era += 0.007; // Eta runs
-        if (fTypDat == 4)
-            Era += 0.003; // Eta runs 2007, pi0 2008
-        if (fTypDat == 5)
-            Era += 0.007; // Eta runs April 09
-        if (fTypDat == 6)
-            Era += 0.007; // Butanol runs May-June 10
-        if (fTypDat == 7)
-            Era += 0.022; // EPT runs May-August 12
-        if (fTypDat == 8)
-            Era += 0.009; // December 12, March 13
-        if (fTypDat == 9)
-            Era = 0.055; // April 13 res1 //test pi0->e+e-g
-        if (fTypDat == 4)
-            Era = 0.0255; // Eta runs 2007
-        if (fTypDat == 3)
-            Era = 0.0255; // pi0 2008
-        if (fTypDat == 6)
-            Era = 0.028; // runs 21860-21895 April 09
-        // if( fTypDat==5 ) Era = 0.0305;  // Eta runs April 09
-        if (fTypDat == 5)
-            Era = 0.0295 + 0.0035 * Ecl; // Eta runs April 09
-        if (fTypDat == 10)
-            Era = 0.052; // EPT Aug 2014 res4
-        if (fTypDat == 11)
-            Era = 0.052; // EPT Oct 2014 res4
-        if (fTypDat == 7)
-            Era = 0.045 + 0.0015 * Ecl; // EPT 2012 res2
-        if (IPart == 14) {            // proton
-            Era = 0.;
-        }
-        if (fMCsmear == 0 || fMCsmear == 2)
-            Era = 0.;
-        return Era;
+    Double_t dEovEclCBAdd(Double_t, Int_t) { // CB dE/E
+        return 0.052; // EPT Aug 2014 res4
+
     }
     Double_t ELossPID(Double_t Ecl, Double_t Thetacl, Int_t IPart) {
         Double_t p[4] = {7.71580e-02, 1.02080e-01, 1.96421, 9.59329e-01};
@@ -2139,7 +2104,6 @@ L11:
     }
 
     Double_t dEovEclTAPSAdd(Double_t Ecl, Int_t IPart) { // TAPS dE/E
-        dEovEclTAPSInit(Ecl, IPart);
         Double_t Era = 0.031 + 0.04 * Ecl; // pi0 Apr'13
         if (IPart == 14) {                 // proton
             Era = 0.;
@@ -2243,7 +2207,7 @@ APLCON::Result_t FitterSergey::DoFit()
 {
     constexpr double MeVtoGeV = 1.0 / 1000.0;
 
-    auto& fKfit = *I; // some shortcut...
+    TA2KFitC& fKfit = *I; // some shortcut...
 
     auto fData = 10; // Aug 2014 beamtime...
     auto ifmcsmear = 3;
