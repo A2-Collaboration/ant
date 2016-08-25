@@ -26,11 +26,6 @@ Double_t Vmod(Double_t x[], Int_t nx) {
         vm = sqrt(vm);
     return vm;
 }
-void Vsubf(Float_t a[], Float_t b[], Float_t c[], Int_t n) {
-    Int_t i;
-    for (i = 0; i < n; i++)
-        c[i] = a[i] - b[i];
-}
 void Vsub(Double_t a[], Double_t b[], Double_t c[], Int_t n) {
     Int_t i;
     for (i = 0; i < n; i++)
@@ -40,34 +35,6 @@ void Ptpxyz(Double_t vm[3], Double_t ph3[3]) {
     ph3[0] = vm[0] * sin(vm[1]) * cos(vm[2]);
     ph3[1] = vm[0] * sin(vm[1]) * sin(vm[2]);
     ph3[2] = vm[0] * cos(vm[1]);
-}
-void Ptpxyzf(Float_t vm[3], Float_t ph3[3]) {
-    ph3[0] = vm[0] * sinf(vm[1]) * cosf(vm[2]);
-    ph3[1] = vm[0] * sinf(vm[1]) * sinf(vm[2]);
-    ph3[2] = vm[0] * cosf(vm[1]);
-}
-void Pxyztp(Double_t PXYZ[3], Double_t PTP[3]) {
-    Double_t VPMOD, VPMOD2, COSTHE, COSPHI, PHI;
-    const Double_t PI = 3.14159265;
-
-    VPMOD = Vmod(PXYZ, 3);
-    PTP[0] = VPMOD;
-    if (VPMOD < 0.000001)
-        VPMOD = 0.000001;
-    COSTHE = PXYZ[2] / VPMOD;
-    PTP[1] = acos(COSTHE);
-    VPMOD2 = VPMOD * sqrt(1. - COSTHE * COSTHE);
-    if (VPMOD2 < 0.0000001)
-        VPMOD2 = 0.0000001;
-    COSPHI = PXYZ[0] / VPMOD2;
-    if (COSPHI > 1.)
-        COSPHI = 1.;
-    if (COSPHI < -1.)
-        COSPHI = -1.;
-    PHI = acos(COSPHI);
-    if (PXYZ[1] < 0.)
-        PHI = PI * 2. - PHI;
-    PTP[2] = PHI;
 }
 void Pxyztpf(Float_t PXYZ[3], Float_t PTP[3]) {
     Float_t VPMOD, VPMOD2, COSTHE, COSPHI, PHI;
@@ -1019,30 +986,26 @@ public:
         return ierr;
     }
 
-    Int_t Kinfit(Int_t Nptall, Int_t Ndecay,
-                 Int_t Ikind[NDMAX], Double_t Amsdec[NDMAX],
-                 Int_t Jdecay[NDMAX], Int_t Ldecay[NDMAX],
-                 Int_t Idecay[NDMAX][10], Int_t Ifzfree) {
+    Int_t Kinfit(Int_t Nptall, Int_t Ifzfree) {
         Int_t i, j, k, ierr;
-        Int_t Nunme, NY, NF, NFF, IV, ISV, I, J, IY, K, I2;
-        Int_t Isecvt[NPMAX], lclsec, jdecfl, idechk, ideca, Lpart, Iunmea;
+        Int_t Nunme, NY, NF, IV, I, J, IY, K, I2;
+        Int_t Isecvt[NPMAX], lclsec, jdecfl, Lpart, Iunmea;
         Int_t NZDIV, IZPOS, IfZfree;
-        Int_t ICDEC, IFSCND, LLDEC, IDE, INDE, IEF;
+        Int_t IEF;
 
         Float_t Y[NXMAX], F[NFMAX], WBEST[2], ZBEST[2];
-        Float_t ZV1, ZV2, DZMV, VRT[3], VRTN[3];
-        Float_t RLPED[3], DLPED[3], RTPGAM[3], RDNPED, VRTSEC[3];
-        Float_t FF, RDINI, RDNSEC, YSTP;
+        Float_t ZV1, ZV2, DZMV, VRT[3];
+        Float_t RLPED[3], DLPED[3], RTPGAM[3], RDNPED;
+        Float_t FF, YSTP;
         const Int_t NVY = (NXMAX + NXMAX * NXMAX) / 2;
         Float_t VY[NVY];
-        Double_t EPRIMV, PRIMV[3], PMISS[3], PPMISS, EMISS, MMISS2;
+        Double_t EPRIMV, PRIMV[3], PMISS[3], PPMISS, EMISS;
         Double_t EBM, PB, EINIT, PBM[3];
-        Double_t EPAR, PPAR, ETOT, PDEC[3], PPDEC, EDEC, PJPAR;
-        Double_t PDTP[3], ESECV, PSECV[3], PRES[3], ERES;
+        Double_t EPAR, PPAR, PDEC[3], PJPAR;
 
         ierr = 0;
         fNptall = Nptall;
-        Lpart = Nptall - Ndecay;
+        Lpart = Nptall;
         Nunme = 0;
         Iunmea = 0;
         fNpmeas = 1;
@@ -1061,7 +1024,7 @@ public:
                 IfZfree = 0;
             if (fLcst < 3)
                 IfZfree = 0;
-            if (Ndecay == 0 && fNpmeas < Lpart)
+            if (fNpmeas < Lpart)
                 IfZfree = 0;
         }
 
@@ -1075,17 +1038,10 @@ public:
         NF = 1;
         if (fNpmeas == Lpart)
             NF += 3;
-        NF += Ndecay;
 
         //   filling the hypothesis on the decay chain
         for (i = 0; i < NPMAX; i++)
             Isecvt[i] = 0;
-        if (Ndecay > 0) {
-            for (j = 0; j < Ndecay; j++) {
-                fMass[Lpart + j] = Amsdec[j];
-                fKind[Lpart + j] = -Ikind[j] - 1000; // for the decay hypotheses
-            }
-        }
 
         lclsec = 0;
         jdecfl = 0;
@@ -1098,7 +1054,6 @@ public:
         }
         // index of primary and secondary vertex
         IV = 3;
-        ISV = fNpmeas * 4;
 
         // search for the initial vertex Z coordinate when it is a free parameter
         WBEST[0] = WBEST[1] = 0.;
@@ -1216,8 +1171,6 @@ public:
                 SIMSTP(IV, 1.8);
             }
             SMTOS(fCov, 1, VY, K + 1, 4);
-//            for (j = K; j < K + 4; j++)
-//                SIMLIM(j, fPlim[j][0], fPlim[j][1]);
         }
 
         if (Iunmea > 0 && fKind[Iunmea] < 0) {
@@ -1282,77 +1235,12 @@ L11:
 
         Vsub(PBM, PRIMV, PMISS, 3);
 
-        if (Isecvt[Iunmea] == 0 && Iunmea == fNpmeas) {
-            //  the energy constraint calculation in case of fully unmeasured particle
-            Pxyztp(PMISS, PDTP);
-            if (PDTP[0] < 0.000001)
-                PDTP[0] = 0.000001;
-            EMISS = sqrt(PDTP[0] * PDTP[0] + fMMiss * fMMiss);
-            fProut[Iunmea][0] = EMISS - fMMiss;
-            fProut[Iunmea][1] = PDTP[1];
-            fProut[Iunmea][2] = PDTP[2];
-            F[0] = EINIT - EPRIMV - EMISS;
-            NFF = 1;
-        } else {
-            // the energy and 3-momentum constraints calculation in case of all measured
-            // particles
-            F[0] = EINIT - EPRIMV;
-            for (J = 0; J < 3; J++)
-                F[J + 1] = PMISS[J];
-            NFF = 4;
-        }
+        // the energy and 3-momentum constraints calculation in case of all measured
+        // particles
+        F[0] = EINIT - EPRIMV;
+        for (J = 0; J < 3; J++)
+            F[J + 1] = PMISS[J];
 
-
-        ICDEC = 0;
-        // calculation of the constraints due to decaying particles
-        //  (1 more constraint for every decaying particle)
-        IFSCND = 0;
-        if (Ndecay - IFSCND > 0) {
-            for (I = Lpart; I < Nptall; I++) {
-                if (I != jdecfl) {
-                    K = I - Lpart;
-                    LLDEC = Ldecay[K];
-                    ICDEC++;
-                    ERES = 0.;
-                    for (J = 0; J < 3; J++)
-                        PRES[J] = 0.;
-                    for (IDE = 0; IDE < LLDEC; IDE++) {
-                        INDE = Idecay[K][IDE];
-                        I2 = INDE * 4;
-                        if (INDE < fNpmeas) {
-                            if (Y[I2] < 0.000001)
-                                Y[I2] = 0.000001;
-                            EDEC = 1. / Y[I2] + fMass[INDE];
-                        } else {
-                            if (fProut[INDE][0] < 0.000001)
-                                fProut[INDE][0] = 0.000001;
-                            EDEC = fProut[INDE][0] + fMass[INDE];
-                        }
-                        PDTP[0] = sqrt(EDEC * EDEC - fMass[INDE] * fMass[INDE]);
-                        PDTP[1] = fProut[INDE][1];
-                        PDTP[2] = fProut[INDE][2];
-                        Ptpxyz(PDTP, PDEC);
-                        for (J = 0; J < 3; J++)
-                            PRES[J] += PDEC[J];
-                        ERES += EDEC;
-                    }
-
-                    Pxyztp(PRES, PDTP);
-                    if (PDTP[0] < 0.000001)
-                        PDTP[0] = 0.000001;
-                    fProut[I][0] = sqrt(PDTP[0] * PDTP[0] + fMass[I] * fMass[I]) - fMass[I];
-                    fProut[I][1] = PDTP[1];
-                    fProut[I][2] = PDTP[2];
-                    MMISS2 = ERES * ERES - PDTP[0] * PDTP[0];
-
-                    if (MMISS2 < 0.000001)
-                        F[NFF] = fMass[I] * fMass[I] - MMISS2;
-                    else
-                        F[NFF] = fMass[I] - sqrt(MMISS2);
-                    NFF++;
-                }
-            }
-        }
 
         IEF = APLCON(Y, VY, F);
 
@@ -1403,6 +1291,7 @@ L11:
         }
         return ierr;
     }
+
     TLorentzVector NewLVec(TVector3 Vcl, Double_t Ekin, Double_t Pmass) {
         TLorentzVector LVnew;
         Double_t vm[3], ph3[3];
@@ -2002,26 +1891,8 @@ APLCON::Result_t FitterSergey::DoFit()
       printf(" Kfilcst error = %d\n", ierr);
 
     // start handling the Kinfit call
-    auto Ndecay = 0; // ihyp = 0, no addtional IM constraints
-    Int_t Dkind[10]; // irrelevant since Ndecay = 0
-    Double_t Amsdec[10]; // irrelevant since Ndecay = 0
-
-    auto ide = 0;
-    Int_t Jdecay[10];
-    Int_t Idecay[10][10];
-    Int_t Ldecay[10];
-
-    auto Ngam = Photons.size();
-    Jdecay[ide] = Ngam + 2 + ide;
-    Ldecay[ide] = 2;
-    for(Int_t m = 0; m < Ldecay[ide]; m++)
-      Idecay[ide][m] = m + 1;
-
-    auto Nptall = Npart + Ndecay + 1;
-
-
-    ierr = fKfit.Kinfit(Nptall, Ndecay, Dkind, Amsdec, Jdecay,
-                             Ldecay, Idecay, IfZfree);
+    auto Nptall = Npart + 1;
+    ierr = fKfit.Kinfit(Nptall, IfZfree);
     if (ierr != 0)
         printf(" Kinfit error = %d\n", ierr);
 
