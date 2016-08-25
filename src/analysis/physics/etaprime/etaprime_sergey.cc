@@ -22,7 +22,7 @@ EtapSergey::EtapSergey(const string& name, OptionsPtr opts) :
     fit_model(
 //        utils::UncertaintyModels::Interpolated::makeAndLoad(
 //            utils::UncertaintyModels::Interpolated::Mode_t::Fit)
-        std::make_shared<utils::UncertaintyModels::Optimized_Oli1>()
+        std::make_shared<utils::UncertaintyModels::FitterSergey>()
         ),
     fitter(makeFitter(opts, fit_model)),
     mc_smear(opts->Get<bool>("MCFake", false) | opts->Get<bool>("MCSmear", true)
