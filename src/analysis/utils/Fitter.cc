@@ -249,9 +249,7 @@ KinFitter::~KinFitter()
 
 void KinFitter::SetEgammaBeam(const double ebeam)
 {
-    BeamE->Value        = ebeam;
-    BeamE->Value_before = ebeam;
-    BeamE->Sigma = uncertainty->GetBeamEnergySigma(ebeam);
+    BeamE->SetValueSigma(ebeam, uncertainty->GetBeamEnergySigma(ebeam));
 }
 
 void KinFitter::SetZVertexSigma(double sigma)
