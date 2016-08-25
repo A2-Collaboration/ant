@@ -1178,7 +1178,7 @@ Uncertainties_t UncertaintyModels::FitterSergey::GetSigmas(const TParticle& part
                 return sdep;
             };
 
-            u.sigmaE = dEovEclCB(Ek/1000.0);
+            u.sigmaE = dEovEclCB(Ek/1000.0)*Ek;
             u.sigmaTheta = dThetaCB(Ek/1000.0);
             u.ShowerDepth = DepthShowCB(Ek/1000.0);
             u.sigmaCB_R = dDepthShowCB(Ek/1000.0);
@@ -1276,7 +1276,7 @@ Uncertainties_t UncertaintyModels::FitterSergey::GetSigmas(const TParticle& part
                 return p[0] / pow(Ecl + p[1], p[2]) + p[3];
             };
 
-            u.sigmaE = dEovEclTAPS(Ek/1000.0);
+            u.sigmaE = dEovEclTAPS(Ek/1000.0)*Ek;
             u.sigmaTAPS_Rxy = dTanThTAPS(Ek/1000.0);
             u.ShowerDepth = DepthShowTAPS(Ek/1000.0);
             u.sigmaTAPS_Lz = dDepthShowTAPS(Ek/1000.0);
