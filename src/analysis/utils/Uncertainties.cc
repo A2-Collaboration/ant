@@ -1110,3 +1110,232 @@ ostream& UncertaintyModels::Interpolated::ClippedInterpolatorWrapper::boundsChec
 
 
 
+
+
+UncertaintyModels::FitterSergey::FitterSergey()
+{
+
+}
+
+UncertaintyModels::FitterSergey::~FitterSergey()
+{
+
+}
+
+Uncertainties_t UncertaintyModels::FitterSergey::GetSigmas(const TParticle& particle) const
+{
+    if(!particle.Candidate)
+        throw Exception("No candidate attached to particle");
+
+    auto calocluster = particle.Candidate->FindCaloCluster();
+
+    if(!calocluster)
+        throw Exception("No calo cluster found");
+
+    const auto& Theta = particle.Theta();
+    const auto& Ek     = particle.Ek();
+
+    Uncertainties_t u;
+    u.Detector = particle.Candidate->Detector;
+
+    if(u.Detector & Detector_t::Type_t::CB)
+    {
+        if(particle.Type() == ParticleTypeDatabase::Photon) {
+
+            auto dEovEclCB = [] (double Ecl) {
+                auto dEovEclCBInit = [] (double Ecl) {
+                    Double_t p[5] = {5.69464e-05, 1.48943e-01, 3.41725, 1.11244e-02,
+                                     -1.77329e-03};
+                    p[0] = 0.014; // res1
+                    p[1] = 0.0025;
+                    p[2] = 0.35;
+                    p[3] = 0.;
+                    p[4] = 0.0032;
+                    Double_t Er0 = p[0] / pow(Ecl + p[1], p[2]) + p[3] + p[4] * Ecl;
+                    return Er0;
+                };
+                Double_t Er0 = dEovEclCBInit(Ecl);
+                Double_t Era = 0.052;
+                return sqrt(pow(Er0, 2) + pow(Era, 2));
+            };
+
+            auto dThetaCB = [] (double Ecl) {
+                Double_t p[4] = {7.69518e-03, 4.86197e-01, 1.79483, 1.57948e-02}; // photon
+                Double_t dTh = p[0] / pow(Ecl + p[1], p[2]) + p[3];
+                return dTh;
+            };
+
+            auto DepthShowCB = [] (double Ecl) {
+                Double_t p[4] = {-3.36631, 9.40334e-02, 5.35372e-01, 4.36397e+01}; // photon
+                return p[0] / pow(Ecl + p[1], p[2]) + p[3];
+            };
+
+            auto dDepthShowCB = [] (double Ecl) {
+                Double_t sdep;
+                Double_t p[4] = {1.76634e-01, 0., 6.26983e-01, 2.48218}; // photon
+                sdep = p[0] / pow(Ecl + p[1], p[2]) + p[3];
+                sdep *= 1.05;
+                return sdep;
+            };
+
+            u.sigmaE = dEovEclCB(Ek/1000.0);
+            u.sigmaTheta = dThetaCB(Ek/1000.0);
+            u.ShowerDepth = DepthShowCB(Ek/1000.0);
+            u.sigmaCB_R = dDepthShowCB(Ek/1000.0);
+        }
+        else if(particle.Type() == ParticleTypeDatabase::Proton) {
+            auto dThetaCB = [] (double Ecl) {
+                Double_t p[4] = {7.69518e-03, 4.86197e-01, 1.79483, 1.57948e-02}; // photon
+                p[0] = 1.38476e-04;
+                p[1] = 5.30098e-01;
+                p[2] = 7.61558;
+                p[3] = 3.75841e-02; // all angles
+                p[3] += 0.004;
+                Double_t dTh = p[0] / pow(Ecl + p[1], p[2]) + p[3];
+                dTh *= 1.25;
+                return dTh;
+            };
+
+            auto DepthShowCB = [] (double Ecl) {
+               Double_t p[4] = {-3.36631, 9.40334e-02, 5.35372e-01, 4.36397e+01}; // photon
+               p[0] = 2.52512e+01;
+               p[1] = 6.44248;
+               p[2] = 1.96292e+02;
+               p[3] = -1.61958e+02;
+               return p[0] + Ecl * p[1] + Ecl * Ecl * p[2] + Ecl * Ecl * Ecl * p[3];
+            };
+
+            auto dDepthShowCB = [] (double Ecl) {
+                Double_t sdep;
+                Double_t p[4] = {1.76634e-01, 0., 6.26983e-01, 2.48218}; // photon
+                p[0] = 3.5783e-02;
+                p[1] = 3.47172e-01;
+                p[2] = 1.50307;
+                p[3] = -4.88434e-01;
+                sdep = p[0] + Ecl * p[1] + Ecl * Ecl * p[2] + Ecl * Ecl * Ecl * p[3];
+                sdep *= 1.05;
+                return sdep;
+            };
+
+            u.sigmaE = 0; // proton Ek is unmeasured
+            u.sigmaTheta = dThetaCB(Ek/1000.0);
+            u.ShowerDepth = DepthShowCB(Ek/1000.0);
+            u.sigmaCB_R = dDepthShowCB(Ek/1000.0);
+
+        }
+        else {
+            throw Exception("Unexpected Particle: " + particle.Type().Name());
+        }
+
+        // Sergey's CB shower depths include the inner CB radius, but Ant uncertainties do not
+        static auto cb = ExpConfig::Setup::GetDetector<expconfig::detector::CB>();
+        u.ShowerDepth -= cb->GetInnerRadius();
+
+        u.sigmaPhi = u.sigmaTheta / sin(Theta);
+    }
+    else if(u.Detector & Detector_t::Type_t::TAPS)
+    {
+        const auto& TAPS_Rxy = particle.Candidate->FindCaloCluster()->Position.XY().R();
+
+        if(particle.Type() == ParticleTypeDatabase::Photon) {
+
+            auto dEovEclTAPS = [] (double Ecl) {
+                auto dEovEclTAPSInit = [] (double Ecl) {
+                    Double_t p[4] = {1.88319e-04, 1.42657, 3.96356e-02, 1.52351e-02};
+                    p[3] *= 1.8;
+                    Double_t Er0 = p[0] / pow(Ecl - 0.002, p[1]) + p[2] + p[3] * Ecl;
+                    return Er0;
+                };
+                auto dEovEclTAPSAdd = [] (double Ecl) {
+                    Double_t Era = 0.031 + 0.04 * Ecl; // pi0 Apr'13
+                    return Era;
+                };
+                Double_t Er0 = dEovEclTAPSInit(Ecl);
+                Double_t Era = dEovEclTAPSAdd(Ecl);
+                return sqrt(pow(Er0, 2) + pow(Era, 2));
+            };
+
+            auto dTanThTAPS = [] (double Ecl) {
+                Double_t p[5] = {3.28138e+02, 0., 7.29002e-04, -3.27381e+02, 0.}; // photon
+                Double_t dtan = p[0] / pow(Ecl + p[1], p[2]) + p[3];
+                dtan *= 0.85;
+                return dtan;
+            };
+
+
+            auto DepthShowTAPS = [] (double Ecl) {
+                Double_t p[4] = {-2.99791e+01, 1.75852e-03, 4.99643e-02,
+                                 4.14362e+01}; // photon gauss fit
+                p[0] *= 0.978; // 0.98 // pi0
+                return p[0] / pow(Ecl + p[1], p[2]) + p[3];
+            };
+
+            auto dDepthShowTAPS = [] (double Ecl) {
+                Double_t p[4] = {2.83139, 0., 1.02537e-01,
+                                 -7.53507e-01}; // photon gauss sigmas fit
+                return p[0] / pow(Ecl + p[1], p[2]) + p[3];
+            };
+
+            u.sigmaE = dEovEclTAPS(Ek/1000.0);
+            u.sigmaTAPS_Rxy = dTanThTAPS(Ek/1000.0);
+            u.ShowerDepth = DepthShowTAPS(Ek/1000.0);
+            u.sigmaTAPS_Lz = dDepthShowTAPS(Ek/1000.0);
+        }
+        else if(particle.Type() == ParticleTypeDatabase::Proton) {
+
+
+            auto dTanThTAPS = [] (double Ecl, double RadCl) {
+                Double_t p[5] = {3.28138e+02, 0., 7.29002e-04, -3.27381e+02, 0.}; // photon
+                Double_t dtan = p[0] / pow(Ecl + p[1], p[2]) + p[3];
+                dtan *= 0.85;
+                p[0] = 3.27709e+02;
+                p[1] = 4.99670e-02;
+                p[2] = 5.55520e-03;
+                p[3] = -3.27819e+02;
+                dtan = p[0] / pow(Ecl + p[1], p[2]) + p[3];
+                if (RadCl > 41.)
+                    dtan *= 1.3;
+                return dtan;
+            };
+
+
+            auto DepthShowTAPS = [] (double Ecl) {
+                Double_t p[4] = {-2.99791e+01, 1.75852e-03, 4.99643e-02,
+                                 4.14362e+01}; // photon gauss fit
+                p[0] = -1.73216e-02;
+                p[1] = 3.83753;
+                p[2] = 1.54891e+02;
+                p[3] = -1.328e+02;
+                Double_t dprot =
+                        p[0] + Ecl * p[1] + Ecl * Ecl * p[2] + Ecl * Ecl * Ecl * p[3];
+                return dprot * 1.05; // pi0
+            };
+
+            auto dDepthShowTAPS = [] (double Ecl) {
+                Double_t p[4] = {2.83139, 0., 1.02537e-01,
+                                 -7.53507e-01}; // photon gauss sigmas fit
+                p[0] = 8.43187e-03;
+                p[1] = 3.63264e-01;
+                p[2] = 7.17476e-01;
+                p[3] = 7.33715;
+                return p[0] + Ecl * p[1] + Ecl * Ecl * p[2] + Ecl * Ecl * Ecl * p[3];
+            };
+
+            u.sigmaE = 0;
+            u.sigmaTAPS_Rxy = dTanThTAPS(Ek/1000.0, TAPS_Rxy);
+            u.ShowerDepth = DepthShowTAPS(Ek/1000.0);
+            u.sigmaTAPS_Lz = dDepthShowTAPS(Ek/1000.0);
+        }
+        else {
+            throw Exception("Unexpected Particle: " + particle.Type().Name());
+        }
+
+        u.sigmaPhi = u.sigmaTAPS_Rxy / TAPS_Rxy;
+    }
+    else {
+        throw Exception("Unexpected Detector: " + string(particle.Candidate->Detector));
+    }
+
+
+    return u;
+}

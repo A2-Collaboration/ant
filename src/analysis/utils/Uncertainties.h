@@ -308,6 +308,17 @@ protected:
 };
 
 /**
+ * @brief Uncertainties from Sergey's fitter
+ */
+struct FitterSergey : public UncertaintyModel {
+public:
+    FitterSergey();
+    virtual ~FitterSergey();
+
+    Uncertainties_t GetSigmas(const TParticle& particle) const override;
+};
+
+/**
  * @brief Uncertainties with interpolated surfaces in (E,theta) plane,
  * determined with iterative procedure
  * @see progs/Ant-makeSigmas.cc
