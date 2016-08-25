@@ -2401,7 +2401,7 @@ TParticleList FitterSergey::GetFittedPhotons() const
 double FitterSergey::GetFittedBeamE() const
 {
     auto& fKfit = *I;
-    return fKfit.BeamE();
+    return 1000.0*fKfit.BeamE();
 }
 
 double FitterSergey::GetFittedZVertex() const
