@@ -99,7 +99,8 @@ void Fitter::FitParticle::Set(const TParticlePtr& p,
     const auto sigmas = uncertainty.GetSigmas(*p);
     Detector = sigmas.Detector;
 
-    Vars[0].SetValueSigma(p->Ek()/1000.0, sigmas.sigmaE/1000.0);
+    const auto inverse_sigmaE = sigmas.sigmaE/p->Ek()/p->Ek();
+    Vars[0].SetValueSigma(1000.0/p->Ek(), inverse_sigmaE*1000.0);
     Vars[2].SetValueSigma(p->Phi(),       sigmas.sigmaPhi);
 
     // the parametrization, and thus the meaning of the linked fitter variables,
@@ -148,7 +149,7 @@ LorentzVec Fitter::FitParticle::GetLorentzVec(const std::vector<double>& vars,
         throw Exception("Unknown/none detector type provided from uncertainty model");
     }
 
-    const mev_t& Ek       = vars[0];
+    const mev_t& Ek       = 1.0/vars[0];
     const radian_t& phi   = vars[2];
 
     const mev_t& E = Ek + Particle->Type().Mass()/1000.0;
@@ -379,13 +380,13 @@ APLCON::Result_t KinFitter::DoFit() {
         Z_Vertex->Sigma = Z_Vertex->Sigma_before;
     }
 
-    double missing_E = BeamE->Value;
-    for(auto& photon : Photons) {
-        missing_E -= photon->Particle->Ek()/1000.0;
-    }
-    // asumme that 0th component is Ek
-    Proton->Vars[0].Value = missing_E;
-    Proton->Vars[0].Value_before = missing_E;
+//    double missing_E = BeamE->Value;
+//    for(auto& photon : Photons) {
+//        missing_E -= photon->Particle->Ek()/1000.0;
+//    }
+//    // asumme that 0th component is Ek
+//    Proton->Vars[0].Value = missing_E;
+//    Proton->Vars[0].Value_before = missing_E;
 
     const auto res = aplcon->DoFit();
 
