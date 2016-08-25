@@ -65,7 +65,7 @@ protected:
 
         struct means_t {
             vector<double> electrons;
-            vector<double> livetime;
+            double livetime = 0;
             vector<double> tdcs;
         };
 
@@ -73,19 +73,28 @@ protected:
         {
             means_t means;
             means.electrons.resize(nchannels);
-            means.livetime.resize(nchannels);
             means.tdcs.resize(nchannels);
 
+            auto nentries = wrapTree.Tree->GetEntries();
 
-            vector<double> electrons;
-            for (auto entry = 0 ; entry < wrapTree.Tree->GetEntries() ; ++entry)
+            for (auto entry = 0 ; entry < nentries ; ++entry)
             {
                 wrapTree.Tree->GetEntry(entry);
                 for ( auto channel = 0u ; channel < wrapTree.TaggRates().size(); ++channel)
                 {
-                    electrons.at(channel) += 1.0 * wrapTree.TaggRates().at(channel);
+                    means.electrons.at(channel) += 1.0 * wrapTree.TaggRates().at(channel);
+                    means.tdcs.at(channel)      += 1.0 * wrapTree.TDCHits().at(channel);
                 }
+                means.livetime += 1.0 * wrapTree.ExpLivetime;
+
             }
+
+            means.livetime = means.livetime / nentries;
+            for (auto& e: means.electrons)
+                e = e / nentries;
+            for (auto& t: means.tdcs)
+                t = t / nentries;
+
             return means;
         }
 
@@ -112,12 +121,6 @@ public:
             exit(EXIT_FAILURE);
         }
 
-
-
-        cout << "bkg1  " << bkg1.wrapTree.Tree->GetEntries() << endl;
-        cout << "run  " << run.wrapTree.Tree->GetEntries() << endl;
-        cout << "bkg2  " << bkg2.wrapTree.Tree->GetEntries() << endl;
-
     }
 
     string SetupName() const{ return bkg1.setupName;}
@@ -125,43 +128,23 @@ public:
     // TODO: calibration data
     vector<double> const GetTaggEff()
     {
-        const auto nchannels = ExpConfig::Setup::GetDetector<TaggerDetector_t>()->GetNChannels();
-        vector<double> electrons(nchannels,0);
-        vector<double> electronBkg(nchannels,0);
 
-        for (auto entry = 0 ; entry < run.wrapTree.Tree->GetEntries() ; ++entry)
-        {
-            run.wrapTree.Tree->GetEntry(entry);
-            for ( auto channel = 0u ; channel < nchannels ; ++channel)
-            {
-                electrons.at(channel) += 1.0 * run.wrapTree.TaggRates().at(channel);
-            }
-        }
 
-        for (auto entry = 0 ; entry < bkg1.wrapTree.Tree->GetEntries() ; ++entry)
-        {
-            bkg1.wrapTree.Tree->GetEntry(entry);
-            for ( auto channel = 0u ; channel < nchannels ; ++channel)
-            {
-                electronBkg.at(channel) += bkg1.wrapTree.TaggRates().at(channel);
-            }
-        }
+        treeContainer_t::means_t m_bkg1 = bkg1.getMeans();
+        treeContainer_t::means_t m_run = run.getMeans();
+        treeContainer_t::means_t m_bkg2 = bkg2.getMeans();
 
-        for (auto entry = 0 ; entry < bkg2.wrapTree.Tree->GetEntries() ; ++entry)
-        {
-            bkg2.wrapTree.Tree->GetEntry(entry);
-            for ( auto channel = 0u ; channel < nchannels ; ++channel)
-            {
-                electronBkg.at(channel) += bkg2.wrapTree.TaggRates().at(channel);
-            }
-        }
+        auto nchannels = bkg1.nchannels;
+
 
         vector<double> result(nchannels,0);
+
         for (auto channel = 0u ; channel < nchannels ; ++channel)
         {
-            result.at(channel) = electrons.at(channel) + ( electronBkg.at(channel) / 2.0 );
+            result.at(channel) = m_run.livetime * m_run.electrons.at(channel)
+                                 - ( (m_bkg1.livetime * m_bkg1.electrons.at(channel) + m_bkg2.livetime * m_bkg2.electrons.at(channel) )/ 2.0 );
+            result.at(channel) *= 1.0 / m_run.tdcs.at(channel);
         }
-
 
         return result;
     }
@@ -171,16 +154,13 @@ public:
 
 string processFiles(const string& bkg1, const string& run, const string& bkg2)
 {
-
     taggEffTriple_t taggEff(bkg1,run,bkg2);
 
     cout << "TaggEff by channel:" << endl;
     for (const auto eff: taggEff.GetTaggEff())
         cout << eff << "  ";
-    cout << endl;
 
-
-
+    cout << endl << endl;
 
     return taggEff.SetupName(); // any is ok, it is checked
 }
