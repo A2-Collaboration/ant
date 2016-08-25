@@ -382,6 +382,14 @@ APLCON::Result_t KinFitter::DoFit() {
         Z_Vertex->Sigma = Z_Vertex->Sigma_before;
     }
 
+    double missing_E = BeamE->Value;
+    for(auto& photon : Photons) {
+        missing_E -= photon->Particle->Ek();
+    }
+    // asumme that 0th component is Ek
+    Proton->Vars[0].Value = missing_E;
+    Proton->Vars[0].Value_before = missing_E;
+
     const auto res = aplcon->DoFit();
 
     result_chi2ndof    = res.ChiSquare / res.NDoF;
