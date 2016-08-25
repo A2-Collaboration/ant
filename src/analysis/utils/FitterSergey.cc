@@ -218,17 +218,7 @@ private:
         }
     }
 
-    void SIMLIM(Int_t IA, Float_t XLOW, Float_t XHIG) {
-        /************************************************************************
-            define limits for variable X(IA)
-        ************************************************************************/
 
-        if (IA < 0 || IA >= NX)
-            return;
-        //     lower or upper limit of X(IA)
-        XL[IA][0] = (XLOW < XHIG) ? XLOW : XHIG;
-        XL[IA][1] = (XLOW >= XHIG) ? XLOW : XHIG;
-    }
     void SIMSTP(Int_t IA, Float_t STEP) {
         /************************************************************************
              define step size for num.dif. of variable X(IA)
@@ -917,8 +907,6 @@ public:
 
                 Target[2] = z coordinate of the target center, length of the target
 
-                Idecfl - flag of secondary vertex: = 0 - no sec.vertex != 0 - there is
-        one.
 
            Function returns ierr parameters:
 
@@ -1031,36 +1019,7 @@ public:
         return ierr;
     }
 
-    Int_t Kfilunm(Int_t Npart, Int_t Ikind, Double_t Amas) {
-        /************************************************************************
-              serves to inform KINFIT about unmeasured particle
-
-             Must be called after all KFILCST calls.
-
-            Input parameters:
-
-            Npart - sequence number of the particle submitted to KINFIT input;
-                    must be equal   2 + Number of clusters
-
-            Ikind = GEANT index of the particle
-
-            Amas - mass of the unmeasured hadron
-
-           Function returns ierr parameters:
-
-           ierr = 0 when all is correct; >0 in case of the error of the input
-        parameters
-        ************************************************************************/
-        Int_t ierr;
-
-        ierr = 0;
-        fKind[Npart] = Ikind + 1000; // FOR UNMEASURED PARTICLE
-        fMass[Npart] = Amas;
-        return ierr;
-    }
-
-
-    Int_t Kinfit(Int_t Nptall, Int_t Ndecay, Int_t Idecfl,
+    Int_t Kinfit(Int_t Nptall, Int_t Ndecay,
                  Int_t Ikind[NDMAX], Double_t Amsdec[NDMAX],
                  Int_t Jdecay[NDMAX], Int_t Ldecay[NDMAX],
                  Int_t Idecay[NDMAX][10], Int_t Ifzfree) {
@@ -1113,13 +1072,8 @@ public:
             return ierr = 1;
         }
         NY = fNpmeas * 4;
-        if (Idecfl > 0)
-            NY += 4;
-
         NF = 1;
         if (fNpmeas == Lpart)
-            NF += 3;
-        if (Idecfl > 0)
             NF += 3;
         NF += Ndecay;
 
@@ -1135,25 +1089,7 @@ public:
 
         lclsec = 0;
         jdecfl = 0;
-        if (Idecfl > 0) {
-            jdecfl = Jdecay[Idecfl - 1];
-            Isecvt[Lpart + Idecfl - 1] = 1;
-            idechk = Idecfl;
-L111:
-            for (k = 0; k < Ldecay[idechk - 1]; k++) {
-                ideca = Idecay[idechk - 1][k];
-                Isecvt[ideca] = 1;
-            }
-            while (idechk > 1) {
-                idechk--;
-                if (Isecvt[Lpart + idechk - 1] > 0)
-                    goto L111;
-            }
 
-            for (i = 1; i <= fLcst; i++)
-                if (Isecvt[i] != .0)
-                    lclsec++;
-        }
         //  beam information and cluster information
         for (i = 0; i <= fLcst; i++) {
             j = i * 4;
@@ -1233,7 +1169,7 @@ L111:
             //  the energy constraint calculation
 
             EMISS = 0.;
-            if (Idecfl > 0 || Iunmea > 0) {
+            if (Iunmea > 0) {
                 Vsub(PBM, PRIMV, PMISS, 3);
                 PPMISS = Vmod(PMISS, 3);
                 if (PPMISS < 0.000001)
@@ -1251,129 +1187,11 @@ L111:
                 ZBEST[0] = Y[IV];
                 if (Iunmea > 0 && fKind[Iunmea] < 0 && Isecvt[Iunmea] == 0)
                     Y[Iunmea * 4] = 1. / (EMISS - fMMiss);
-                if (Idecfl > 0) {
-                    if (Iunmea > 0 && Isecvt[Iunmea] == 0)
-                        Pxyztp(PDEC, PDTP);
-                    else
-                        Pxyztp(PMISS, PDTP);
-                    if (PDTP[0] < 0.000001)
-                        PDTP[0] = 0.000001;
-                    Y[ISV] = 1. / (sqrt(PDTP[0] * PDTP[0] + fMass[jdecfl] * fMass[jdecfl]) -
-                            fMass[jdecfl]);
-                    Y[ISV + 1] = PDTP[1];
-                    Y[ISV + 2] = PDTP[2];
-                }
+
             }
         } //    end of the primary vertex loop
 
         Y[IV] = ZBEST[0];
-
-        if (Idecfl > 0) { //  secondary vertex
-
-            for (I = 0; I < 3; I++)
-                PMISS[I] = Y[ISV + I];
-            PMISS[0] += fMass[jdecfl];
-            Ptpxyz(PMISS, PDEC);
-            EDEC = sqrt(PMISS[0] * PMISS[0] + fMass[jdecfl] * fMass[jdecfl]);
-
-            VRT[2] = Y[IV];
-            for (i = 0; i < 3; i++)
-                VRTN[i] = -VRT[i];
-            IZPOS = 0;
-            RDINI = -7.;
-
-L122:
-            Y[ISV + 3] = RDINI + DZMV * (Float_t)IZPOS;
-            if (fabsf(Y[ISV + 3]) < 0.00001)
-                for (i = 0; i < 3; i++)
-                    VRTSEC[i] = VRT[i];
-            else {
-                RLPED[0] = Y[ISV + 3];
-                RLPED[1] = Y[ISV + 1];
-                RLPED[2] = Y[ISV + 2];
-                Dvpxyz(1, RLPED, VRTN, VRTSEC);
-            }
-            RDNSEC = Vmodf(VRTSEC, 3);
-            if (RDNSEC < 20.5) {
-                ESECV = 0.;
-                for (i = 0; i < 3; i++)
-                    PSECV[i] = 0.;
-
-                //   loop on clusters from the secondary vertex
-                for (I = 1; I <= fLcst; I++) {
-                    if (Isecvt[I] != 0) {
-                        IY = I * 4;
-                        RLPED[0] = Y[IY + 3];
-                        RLPED[1] = Y[IY + 1];
-                        RLPED[2] = Y[IY + 2];
-                        Dvpxyz(fCalor[I], RLPED, VRTSEC, DLPED);
-
-                        Pxyztpf(DLPED, RTPGAM);
-
-                        RDNPED = Vmodf(DLPED, 3);
-                        if (RDNPED < 0.00001)
-                            RDNPED = 0.00001;
-
-                        if (I == Iunmea && fKind[Iunmea] < 0) {
-                            Vsub(PDEC, PSECV, PMISS, 3);
-                            PPMISS = Vmod(PMISS, 3);
-                            if (PPMISS < 0.000001)
-                                PPMISS = 0.000001;
-                            PPAR = PPMISS;
-                            EPAR = sqrt(PPAR * PPAR + fMMiss * fMMiss);
-                            EMISS = EPAR;
-                        } else {
-                            if (Y[IY] < 0.000001)
-                                Y[IY] = 0.000001;
-                            EPAR = 1. / Y[IY] + fMass[I];
-                            PPAR = sqrt(EPAR * EPAR - fMass[I] * fMass[I]);
-                        }
-                        ESECV += EPAR;
-                        for (J = 0; J < 3; J++) {
-                            PJPAR = PPAR * DLPED[J] / RDNPED;
-                            PSECV[J] += PJPAR;
-                        }
-                    }
-                }
-
-                //  the energy constraint calculation for particle decaying inflight
-
-                if (Isecvt[Iunmea] != 0 && Iunmea == fNpmeas) {
-                    Vsub(PDEC, PSECV, PMISS, 3);
-                    PPMISS = Vmod(PMISS, 3);
-                    if (PPMISS < 0.000001)
-                        PPMISS = 0.000001;
-                    EMISS = sqrt(PPMISS * PPMISS + fMMiss * fMMiss);
-                    ETOT = ESECV + EMISS;
-                    PPDEC = Vmod(PDEC, 3);
-                    MMISS2 = ETOT * ETOT - PPDEC * PPDEC;
-                } else {
-                    PPDEC = Vmod(PSECV, 3);
-                    MMISS2 = ESECV * ESECV - PPDEC * PPDEC;
-                }
-
-                F[1] = MMISS2 - fMass[jdecfl] * fMass[jdecfl];
-
-                FF = fabsf(F[1]) + 0.0000001;
-                if (WBEST[1] < 1. / FF) {
-                    WBEST[1] = 1. / FF;
-                    ZBEST[1] = Y[ISV + 3];
-                    if (Iunmea > 0 && fKind[Iunmea] < 0 && Isecvt[Iunmea] != 0)
-                        Y[Iunmea * 4] = 1. / (EMISS - fMMiss);
-                }
-
-                IZPOS++;
-                goto L122;
-            } else {
-                if (Y[ISV + 3] < 0.) {
-                    IZPOS++;
-                    goto L122;
-                }
-            } //  the secondary vertex radius is more than 23 cm
-
-            Y[ISV + 3] = ZBEST[1];
-
-        } //    end of the secondary vertex search
 
         SIMNIT(NY, NF, 0.01);
 
@@ -1408,17 +1226,6 @@ L122:
             SIMSTP(K, YSTP);
         }
 
-        if (Idecfl > 0) {
-            SIMSTP(ISV, 0.06 * Y[ISV]);
-            SIMLIM(ISV, 0., 200.);
-            SIMSTP(ISV + 1, 0.04);
-            SIMLIM(ISV + 1, 0., 0.);
-            SIMSTP(ISV + 2, 0.05);
-            SIMLIM(ISV + 2, 0., 0.);
-            SIMSTP(ISV + 3, 2.5);
-            SIMLIM(ISV + 3, -15., 40.);
-        }
-
         //     MAIN FITTING LOOP
 L11:
         //     The values of the constraint equations F(J) are computed
@@ -1437,16 +1244,6 @@ L11:
         VRT[0] = Y[1];
         VRT[1] = Y[2];
         VRT[2] = Y[IV];
-
-        if (Idecfl > 0) {
-            for (i = 0; i < 3; i++)
-                VRTN[i] = -VRT[i];
-            RLPED[0] = Y[ISV + 3];
-            RLPED[1] = Y[ISV + 1];
-            RLPED[2] = Y[ISV + 2];
-            Dvpxyz(1, RLPED, VRTN, VRTSEC);
-            RDNSEC = Vmodf(VRTSEC, 3);
-        }
 
         EPRIMV = 0.;
         for (i = 0; i < 3; i++)
@@ -1483,21 +1280,6 @@ L11:
             }
         }
 
-        if (Idecfl > 0) {
-            if (Y[ISV] < 0.000001)
-                Y[ISV] = 0.000001;
-            EDEC = 1. / Y[ISV] + fMass[jdecfl];
-            EPRIMV += EDEC;
-            PDTP[0] = sqrt(EDEC * EDEC - fMass[jdecfl] * fMass[jdecfl]);
-            PDTP[1] = Y[ISV + 1];
-            PDTP[2] = Y[ISV + 2];
-            for (j = 0; j < 3; j++)
-                fProut[jdecfl][j] = Y[ISV + j];
-            Ptpxyz(PDTP, PDEC);
-            for (J = 0; J < 3; J++)
-                PRIMV[J] += PDEC[J];
-        }
-
         Vsub(PBM, PRIMV, PMISS, 3);
 
         if (Isecvt[Iunmea] == 0 && Iunmea == fNpmeas) {
@@ -1520,68 +1302,11 @@ L11:
             NFF = 4;
         }
 
-        if (Idecfl > 0) {
-
-            ESECV = 0.;
-            for (i = 0; i < 3; i++)
-                PSECV[i] = 0.;
-
-            //   loop on clusters from the secondary vertex
-            for (I = 1; I <= fLcst; I++) {
-                if (Isecvt[I] != 0) {
-                    IY = I * 4;
-                    RLPED[0] = Y[IY + 3];
-                    RLPED[1] = Y[IY + 1];
-                    RLPED[2] = Y[IY + 2];
-                    Dvpxyz(fCalor[I], RLPED, VRTSEC, DLPED);
-
-                    Pxyztpf(DLPED, RTPGAM);
-
-                    RDNPED = Vmodf(DLPED, 3);
-                    if (RDNPED < 0.00001)
-                        RDNPED = 0.00001;
-
-                    if (Y[IY] < 0.000001)
-                        Y[IY] = 0.000001;
-                    EPAR = 1. / Y[IY] + fMass[I];
-                    ESECV += EPAR;
-                    PPAR = sqrt(EPAR * EPAR - fMass[I] * fMass[I]);
-                    for (J = 0; J < 3; J++) {
-                        PJPAR = PPAR * DLPED[J] / RDNPED;
-                        PSECV[J] += PJPAR;
-                    }
-                }
-            }
-
-            Vsub(PDEC, PSECV, PMISS, 3);
-            if (Isecvt[Iunmea] != 0 && Iunmea == fNpmeas) {
-                //  the energy constraint calculation in case of unmeasured particle
-                Pxyztp(PMISS, PDTP);
-                if (PDTP[0] < 0.000001)
-                    PDTP[0] = 0.000001;
-                EMISS = sqrt(PDTP[0] * PDTP[0] + fMMiss * fMMiss);
-                fProut[Iunmea][0] = EMISS - fMMiss;
-                fProut[Iunmea][1] = PDTP[1];
-                fProut[Iunmea][2] = PDTP[2];
-                F[NFF] = EDEC - ESECV - EMISS;
-                NFF++;
-            } else {
-                // the energy and 3-momentum constraints calculation in case of measured
-                // hadron
-                F[NFF] = EDEC - ESECV;
-                NFF++;
-                for (J = 0; J < 3; J++)
-                    F[NFF + J] = PMISS[J];
-                NFF += 3;
-            }
-        }
 
         ICDEC = 0;
         // calculation of the constraints due to decaying particles
         //  (1 more constraint for every decaying particle)
         IFSCND = 0;
-        if (Idecfl > 0)
-            IFSCND = 1;
         if (Ndecay - IFSCND > 0) {
             for (I = Lpart; I < Nptall; I++) {
                 if (I != jdecfl) {
@@ -1654,9 +1379,6 @@ L11:
                 fPulls[i] = A[i];
 
             fChisq = (Double_t)CHSQ;
-
-            if (Idecfl > 0)
-                fDeclen = (Double_t)Y[ISV + 3];
         }
         fNDF = ND;
         if (fChisq >= 100000.)
@@ -2280,7 +2002,6 @@ APLCON::Result_t FitterSergey::DoFit()
       printf(" Kfilcst error = %d\n", ierr);
 
     // start handling the Kinfit call
-    auto Idecfl = 0;
     auto Ndecay = 0; // ihyp = 0, no addtional IM constraints
     Int_t Dkind[10]; // irrelevant since Ndecay = 0
     Double_t Amsdec[10]; // irrelevant since Ndecay = 0
@@ -2299,7 +2020,7 @@ APLCON::Result_t FitterSergey::DoFit()
     auto Nptall = Npart + Ndecay + 1;
 
 
-    ierr = fKfit.Kinfit(Nptall, Ndecay, Idecfl, Dkind, Amsdec, Jdecay,
+    ierr = fKfit.Kinfit(Nptall, Ndecay, Dkind, Amsdec, Jdecay,
                              Ldecay, Idecay, IfZfree);
     if (ierr != 0)
         printf(" Kinfit error = %d\n", ierr);
