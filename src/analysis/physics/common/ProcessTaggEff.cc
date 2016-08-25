@@ -78,6 +78,10 @@ void ProcessTaggEff::processBlock(const TEvent& ev)
     scalerReads.PbRate = slowcontrol::Variables::FreeRates->GetPbGlass();
     scalerReads.LastID = ev.Reconstructed().ID;
     scalerReads.ExpTriggerRate = slowcontrol::Variables::FreeRates->GetExpTrigger();
+    for (auto& nhits: scalerReads.TDCHits())
+        nhits = 0;
+    for (auto& taggerhits: scalerReads.TaggTimings())
+        taggerhits.clear();
 }
 
 void ProcessTaggEff::processTaggerHits(const TEvent &ev)
