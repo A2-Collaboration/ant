@@ -87,6 +87,7 @@ TParticlePtr Fitter::FitParticle::AsFitted() const
     auto p = make_shared<TParticle>(Particle->Type(),
                                     GetLorentzVec(vectorize(Vars), z_vertex)
                                     );
+    *p *= 1000.0;
     p->Candidate = Particle->Candidate;
     return p;
 }
@@ -98,30 +99,24 @@ void Fitter::FitParticle::Set(const TParticlePtr& p,
     const auto sigmas = uncertainty.GetSigmas(*p);
     Detector = sigmas.Detector;
 
+    Vars[0].SetValueSigma(p->Ek()/1000.0, sigmas.sigmaE/1000.0);
+    Vars[2].SetValueSigma(p->Phi(),       sigmas.sigmaPhi);
+
     // the parametrization, and thus the meaning of the linked fitter variables,
     // depends on the calorimeter
     if(Detector & Detector_t::Type_t::CB)
     {
         static auto cb = ExpConfig::Setup::GetDetector<expconfig::detector::CB>();
-
-        Vars[0].SetValueSigma(p->Ek(),    sigmas.sigmaE);
         Vars[1].SetValueSigma(p->Theta(), sigmas.sigmaTheta);
-        Vars[2].SetValueSigma(p->Phi(),   sigmas.sigmaPhi);
-
         const auto& CB_R = cb->GetInnerRadius() + sigmas.ShowerDepth;
         Vars[3].SetValueSigma(CB_R, sigmas.sigmaCB_R);
     }
     else if(Detector & Detector_t::Type_t::TAPS)
     {
         static auto taps = ExpConfig::Setup::GetDetector<expconfig::detector::TAPS>();
-
-        Vars[0].SetValueSigma(p->Ek(),  sigmas.sigmaE);
-
         const auto& TAPS_Lz = taps->GetZPosition() + sigmas.ShowerDepth;
         const auto& TAPS_Rxy = std::tan(p->Theta())*TAPS_Lz;
-
         Vars[1].SetValueSigma(TAPS_Rxy, sigmas.sigmaTAPS_Rxy);
-        Vars[2].SetValueSigma(p->Phi(), sigmas.sigmaPhi);
         Vars[3].SetValueSigma(TAPS_Lz,  sigmas.sigmaTAPS_Lz);
     }
     else {
@@ -156,8 +151,8 @@ LorentzVec Fitter::FitParticle::GetLorentzVec(const std::vector<double>& vars,
     const mev_t& Ek       = vars[0];
     const radian_t& phi   = vars[2];
 
-    const mev_t& E = Ek + Particle->Type().Mass();
-    const mev_t& p = sqrt( sqr(E) - sqr(Particle->Type().Mass()) );
+    const mev_t& E = Ek + Particle->Type().Mass()/1000.0;
+    const mev_t& p = sqrt( sqr(E) - sqr(Particle->Type().Mass()/1000.0) );
 
     return LorentzVec::EPThetaPhi(E, p, theta_corr, phi);
 }
@@ -249,7 +244,7 @@ KinFitter::~KinFitter()
 
 void KinFitter::SetEgammaBeam(const double ebeam)
 {
-    BeamE->SetValueSigma(ebeam, uncertainty->GetBeamEnergySigma(ebeam));
+    BeamE->SetValueSigma(ebeam/1000.0, uncertainty->GetBeamEnergySigma(ebeam)/1000.0);
 }
 
 void KinFitter::SetZVertexSigma(double sigma)
@@ -296,13 +291,15 @@ TParticleList KinFitter::GetFittedPhotons() const
 
 double KinFitter::GetFittedBeamE() const
 {
-    return BeamE->Value;
+    return BeamE->Value*1000.0;
 }
 
 TParticlePtr KinFitter::GetFittedBeamParticle() const
 {
-    return std::make_shared<TParticle>(ParticleTypeDatabase::BeamProton,
-                                       MakeBeamLorentzVec(GetFittedBeamE()));
+    auto p = std::make_shared<TParticle>(ParticleTypeDatabase::BeamProton,
+                                         MakeBeamLorentzVec(BeamE->Value));
+    *p *= 1000.0;
+    return p;
 }
 
 double KinFitter::GetFittedZVertex() const
@@ -384,7 +381,7 @@ APLCON::Result_t KinFitter::DoFit() {
 
     double missing_E = BeamE->Value;
     for(auto& photon : Photons) {
-        missing_E -= photon->Particle->Ek();
+        missing_E -= photon->Particle->Ek()/1000.0;
     }
     // asumme that 0th component is Ek
     Proton->Vars[0].Value = missing_E;
@@ -407,7 +404,7 @@ LorentzVec KinFitter::MakeBeamLorentzVec(double BeamE)
     // target  LorentzVec(0.0, 0.0, 0.0, ParticleTypeDatabase::Proton.Mass())
     const LorentzVec beam({0, 0, BeamE}, BeamE);
     /// \todo Target is always assumed proton...
-    const LorentzVec target({0,0,0}, ParticleTypeDatabase::Proton.Mass());
+    const LorentzVec target({0,0,0}, ParticleTypeDatabase::Proton.Mass()/1000.0);
 
     return target + beam;
 }
@@ -480,7 +477,7 @@ TreeFitter::TreeFitter(const string& name,
         node_constraints.emplace_back([tnode, IM_Sigma] () {
             node_t& node = tnode->Get();
             const double IM_calc = node.LVSum.M();
-            const double IM_expected = tnode->Get().TypeTree->Get().Mass();
+            const double IM_expected = tnode->Get().TypeTree->Get().Mass()/1000.0;
             return (IM_calc - IM_expected)/IM_Sigma;
         });
     });
