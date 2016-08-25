@@ -947,16 +947,6 @@ public:
         fErrSq[Npart][3] = (Float_t)(0.333 * 0.333 * Target[1] * Target[1]);
 
         il = Npart * 4;
-        fPlim[il][0] = 0.;
-        fPlim[il][1] = 1000.;
-        if (fMass[Npart] > 0.) {
-            fPlim[il][0] = 1. / (fMass[Npart] * 100.);
-            fPlim[il][1] = 1. / fMass[Npart];
-        }
-        fPlim[il + 1][0] = 0.;
-        fPlim[il + 1][1] = 0.;
-        fPlim[il + 2][0] = 0.;
-        fPlim[il + 2][1] = 0.;
         fPlim[il + 3][0] = -12.5 - Target[1] * 0.5;
         fPlim[il + 3][1] = 12.5 + Target[1] * 0.5;
 
@@ -988,7 +978,7 @@ public:
          ierr = 0 when all is correct; >0 in case of the error of the input
       parameters
       ************************************************************************/
-        Int_t il, ierr;
+        Int_t ierr;
         Float_t eng, einv, Ecl, Scst[4];
         Double_t tancl;
 
@@ -1038,24 +1028,6 @@ public:
         fErrSq[Npart][2] = (Float_t)(Scst[2] * Scst[2]);
         fErrSq[Npart][3] = (Float_t)(Scst[3] * Scst[3]);
 
-        il = Npart * 4;
-        fPlim[il][0] = 0.;
-        fPlim[il][1] = 200.;
-        fPlim[il + 1][0] = 0.;
-        Float_t thetup = 3.141;
-        if (fCalor[Npart] == 2)
-            thetup = 75.;
-        fPlim[il + 1][1] = thetup;
-        fPlim[il + 2][0] = 0.;
-        fPlim[il + 2][1] = 0.;
-        if (fCalor[Npart] == 1) {
-            fPlim[il + 3][0] = 20.;
-            fPlim[il + 3][1] = 80.;
-        }
-        if (fCalor[Npart] == 2) {
-            fPlim[il + 3][0] = (Float_t)Pacst[4] - 26.;
-            fPlim[il + 3][1] = (Float_t)Pacst[4] + 26.;
-        }
         return ierr;
     }
 
