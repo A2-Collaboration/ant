@@ -40,6 +40,8 @@ protected:
         physics::ProcessTaggEff::TreeScalarReads wrapTree;
 
         string setupName;
+        size_t nchannels;
+
 
         treeContainer_t(const string& filename):
             wrapFile(filename)
@@ -57,46 +59,111 @@ protected:
             ant::TAntHeader* h;
             wrapFile.GetObject("AntHeader",h);
             setupName = h->SetupName;
+            ExpConfig::Setup::SetManualName(setupName);
+            nchannels = ExpConfig::Setup::GetDetector<TaggerDetector_t>()->GetNChannels();
         }
+
+        struct means_t {
+            vector<double> electrons;
+            vector<double> livetime;
+            vector<double> tdcs;
+        };
+
+        means_t getMeans() const
+        {
+            means_t means;
+            means.electrons.resize(nchannels);
+            means.livetime.resize(nchannels);
+            means.tdcs.resize(nchannels);
+
+
+            vector<double> electrons;
+            for (auto entry = 0 ; entry < wrapTree.Tree->GetEntries() ; ++entry)
+            {
+                wrapTree.Tree->GetEntry(entry);
+                for ( auto channel = 0u ; channel < wrapTree.TaggRates().size(); ++channel)
+                {
+                    electrons.at(channel) += 1.0 * wrapTree.TaggRates().at(channel);
+                }
+            }
+            return means;
+        }
+
     };
 
-    treeContainer_t bkg1tree;
-    treeContainer_t runtree;
-    treeContainer_t bkg2tree;
+    treeContainer_t bkg1;
+    treeContainer_t run;
+    treeContainer_t bkg2;
+
+
 
 public:
 
-    taggEffTriple_t(const string& bkg1, const string& run, const string& bkg2):
-        bkg1tree(bkg1),
-        runtree(run),
-        bkg2tree(bkg2)
+    taggEffTriple_t(const string& bkg1f_, const string& runf_, const string& bkg2f_):
+        bkg1(bkg1f_),
+        run(runf_),
+        bkg2(bkg2f_)
     {
 
-        if ( !(bkg1tree.setupName == bkg2tree.setupName &&
-             bkg2tree.setupName == runtree.setupName ) )
+        if ( !(bkg1.setupName == bkg2.setupName &&
+             bkg2.setupName == run.setupName ) )
         {
             LOG(ERROR) << "Files in TaggEff-triple not from same Setup!";
             exit(EXIT_FAILURE);
         }
 
-        ExpConfig::Setup::SetManualName(bkg1tree.setupName);
+
+
+        cout << "bkg1  " << bkg1.wrapTree.Tree->GetEntries() << endl;
+        cout << "run  " << run.wrapTree.Tree->GetEntries() << endl;
+        cout << "bkg2  " << bkg2.wrapTree.Tree->GetEntries() << endl;
 
     }
 
-    string const SetupName() const{ return bkg1tree.setupName;}
+    string SetupName() const{ return bkg1.setupName;}
 
     // TODO: calibration data
-    vector<double> const Get()
+    vector<double> const GetTaggEff()
     {
-        auto tagger = ExpConfig::Setup::GetDetector<TaggerDetector_t>();
+        const auto nchannels = ExpConfig::Setup::GetDetector<TaggerDetector_t>()->GetNChannels();
+        vector<double> electrons(nchannels,0);
+        vector<double> electronBkg(nchannels,0);
 
-        //found setup should match
-        assert(tagger->GetNchannels() == bkg1tree.wrapTree.TDCHits().size());
+        for (auto entry = 0 ; entry < run.wrapTree.Tree->GetEntries() ; ++entry)
+        {
+            run.wrapTree.Tree->GetEntry(entry);
+            for ( auto channel = 0u ; channel < nchannels ; ++channel)
+            {
+                electrons.at(channel) += 1.0 * run.wrapTree.TaggRates().at(channel);
+            }
+        }
 
-//        for (int i = 0 ; i < tagger->GetNChannels() ; ++i )
-//            calcTaggeff(i)
+        for (auto entry = 0 ; entry < bkg1.wrapTree.Tree->GetEntries() ; ++entry)
+        {
+            bkg1.wrapTree.Tree->GetEntry(entry);
+            for ( auto channel = 0u ; channel < nchannels ; ++channel)
+            {
+                electronBkg.at(channel) += bkg1.wrapTree.TaggRates().at(channel);
+            }
+        }
 
-        return {};
+        for (auto entry = 0 ; entry < bkg2.wrapTree.Tree->GetEntries() ; ++entry)
+        {
+            bkg2.wrapTree.Tree->GetEntry(entry);
+            for ( auto channel = 0u ; channel < nchannels ; ++channel)
+            {
+                electronBkg.at(channel) += bkg2.wrapTree.TaggRates().at(channel);
+            }
+        }
+
+        vector<double> result(nchannels,0);
+        for (auto channel = 0u ; channel < nchannels ; ++channel)
+        {
+            result.at(channel) = electrons.at(channel) + ( electronBkg.at(channel) / 2.0 );
+        }
+
+
+        return result;
     }
 
 };
@@ -108,7 +175,7 @@ string processFiles(const string& bkg1, const string& run, const string& bkg2)
     taggEffTriple_t taggEff(bkg1,run,bkg2);
 
     cout << "TaggEff by channel:" << endl;
-    for (const auto eff: taggEff.Get())
+    for (const auto eff: taggEff.GetTaggEff())
         cout << eff << "  ";
     cout << endl;
 
@@ -216,10 +283,10 @@ int main( int argc, char** argv )
     }
 
     const auto inBkg1    = cmd_bkg1->getValue();
-    const auto inBkg2    = cmd_bkg2->getValue();
     const auto inTaggEff = cmd_taggEff->getValue();
+    const auto inBkg2    = cmd_bkg2->getValue();
 
-    LOG(INFO) << "Processed files for Setup " << processFiles(inBkg1,inBkg2,inTaggEff) << ".";
+    LOG(INFO) << "Processed files for Setup " << processFiles(inBkg1,inTaggEff,inBkg2) << ".";
 
     return EXIT_SUCCESS;
 }
