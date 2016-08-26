@@ -22,7 +22,7 @@ namespace utils {
  */
 struct Uncertainties_t {
 
-    double sigmaE;
+    double sigmaEk;
     double sigmaTheta;
     double sigmaPhi;
 
@@ -32,7 +32,7 @@ struct Uncertainties_t {
     double sigmaTAPS_Rxy;
     double sigmaTAPS_L;
 
-    Uncertainties_t(double E = std_ext::NaN,
+    Uncertainties_t(double Ek = std_ext::NaN,
                     double Theta = std_ext::NaN,
                     double Phi = std_ext::NaN,
                     Detector_t::Any_t detector = Detector_t::Any_t::None,
@@ -40,7 +40,7 @@ struct Uncertainties_t {
                     double CB_R = std_ext::NaN,
                     double TAPS_Rxy = std_ext::NaN,
                     double TAPS_L = std_ext::NaN) :
-        sigmaE(E), sigmaTheta(Theta), sigmaPhi(Phi),
+        sigmaEk(Ek), sigmaTheta(Theta), sigmaPhi(Phi),
         Detector(detector), ShowerDepth(showerDepth),
         sigmaCB_R(CB_R), sigmaTAPS_Rxy(TAPS_Rxy), sigmaTAPS_L(TAPS_L)
     {}

@@ -65,7 +65,7 @@ struct TestUncertaintyModel : utils::UncertaintyModel {
                     std_ext::degree_to_radian(2.0)
         };
         if(ProtonUnmeasured && particle.Type() == ParticleTypeDatabase::Proton)
-            u.sigmaE = 0;
+            u.sigmaEk = 0;
         return u;
     }
 };

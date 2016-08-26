@@ -112,8 +112,8 @@ void Fitter::FitParticle::Set(const TParticlePtr& p,
     const auto sigmas = uncertainty.GetSigmas(*p);
     Detector = sigmas.Detector;
 
-    const auto inverse_sigmaE = sigmas.sigmaE/p->Ek()/p->Ek();
-    Vars[0].SetValueSigma(1000.0/p->Ek(), inverse_sigmaE*1000.0);
+    const auto sigmaEkInverse = sigmas.sigmaEk/p->Ek()/p->Ek();
+    Vars[0].SetValueSigma(1000.0/p->Ek(), sigmaEkInverse*1000.0);
     Vars[2].SetValueSigma(p->Phi(),       sigmas.sigmaPhi);
 
     // the parametrization, and thus the meaning of the linked fitter variables,
@@ -266,8 +266,8 @@ KinFitter::~KinFitter()
 void KinFitter::SetEgammaBeam(const double ebeam)
 {
     // use inverse energy in 1/GeV here as well
-    const auto inverse_sigmaE = uncertainty->GetBeamEnergySigma(ebeam)/ebeam/ebeam;
-    BeamE->SetValueSigma(1000.0/ebeam, 1000.0*inverse_sigmaE);
+    const auto sigma_Einverse = uncertainty->GetBeamEnergySigma(ebeam)/ebeam/ebeam;
+    BeamE->SetValueSigma(1000.0/ebeam, 1000.0*sigma_Einverse);
 }
 
 void KinFitter::SetZVertexSigma(double sigma)

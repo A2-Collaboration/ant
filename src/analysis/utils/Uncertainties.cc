@@ -123,7 +123,7 @@ Uncertainties_t UncertaintyModels::MCExtracted::GetSigmasProton(const TParticle 
 
     Uncertainties_t sigmas;
 
-    sigmas.sigmaE = 0.0;  // unmeasured
+    sigmas.sigmaEk = 0.0;  // unmeasured
 
     if(proton.Candidate->Detector & Detector_t::Type_t::CB) {
         sigmas.sigmaTheta = degree_to_radian(5.43);
@@ -146,13 +146,13 @@ Uncertainties_t UncertaintyModels::MCExtracted::GetSigmasPhoton(const TParticle 
 
     if(photon.Candidate->Detector & Detector_t::Type_t::CB) {
 
-        sigmas.sigmaE     = 1.07134e-02 * photon.Ek();
+        sigmas.sigmaEk     = 1.07134e-02 * photon.Ek();
         sigmas.sigmaTheta = cb_sigma_theta.GetSigma(cluster->CentralElement, photon.Ek());
         sigmas.sigmaPhi   = cb_sigma_phi.GetSigma(cluster->CentralElement, photon.Ek());
 
     } else if(photon.Candidate->Detector & Detector_t::Type_t::TAPS) {
 
-        sigmas.sigmaE     = 3.5E-2 * photon.Ek();
+        sigmas.sigmaEk     = 3.5E-2 * photon.Ek();
         sigmas.sigmaTheta = taps_sigma_theta.GetSigma(cluster->CentralElement, photon.Ek());
         sigmas.sigmaPhi   = taps_sigma_phi.GetSigma(cluster->CentralElement, photon.Ek());
 
@@ -281,7 +281,7 @@ UncertaintyModels::ConstantRelativeE::~ConstantRelativeE()
 Uncertainties_t UncertaintyModels::ConstantRelativeE::GetSigmas(const TParticle &particle) const
 {
     auto s = Constant::GetSigmas(particle);
-    s.sigmaE *= particle.Ek();
+    s.sigmaEk *= particle.Ek();
 
     return s;
 }
@@ -313,7 +313,7 @@ Uncertainties_t UncertaintyModels::ConstantRelativeEpow::GetSigmas(const TPartic
 
         if(particle.Type() == ParticleTypeDatabase::Photon) {
             s = photon_cb;
-            s.sigmaE = s.sigmaE* particle.Ek() * pow(particle.Ek(), Eexp_cb);
+            s.sigmaEk = s.sigmaEk* particle.Ek() * pow(particle.Ek(), Eexp_cb);
         } else if(particle.Type() == ParticleTypeDatabase::Proton) {
             s = proton_cb;
         } else {
@@ -324,7 +324,7 @@ Uncertainties_t UncertaintyModels::ConstantRelativeEpow::GetSigmas(const TPartic
 
         if(particle.Type() == ParticleTypeDatabase::Photon) {
             s = photon_taps;
-            s.sigmaE = s.sigmaE* particle.Ek() * pow(particle.Ek(), Eexp_taps);
+            s.sigmaEk = s.sigmaEk* particle.Ek() * pow(particle.Ek(), Eexp_taps);
         } else if(particle.Type() == ParticleTypeDatabase::Proton) {
             s = proton_taps;
         } else {
@@ -383,7 +383,7 @@ Uncertainties_t UncertaintyModels::Optimized::GetSigmas(const TParticle& particl
     if(particle.Candidate->Detector & Detector_t::Type_t::CB) {
 
         if(particle.Type() == ParticleTypeDatabase::Photon) {
-            s.sigmaE     = dE(Ek, cb_photon_E_rel, cb_photon_E_exp, cb_photon_E_lin);
+            s.sigmaEk     = dE(Ek, cb_photon_E_rel, cb_photon_E_exp, cb_photon_E_lin);
             s.sigmaTheta = dThetaSin(theta, cb_photon_theta_const, cb_photon_theta_Sin);
             s.sigmaPhi   = cb_photon_phi / sin(theta);
         } else if(particle.Type() == ParticleTypeDatabase::Proton) {
@@ -400,7 +400,7 @@ Uncertainties_t UncertaintyModels::Optimized::GetSigmas(const TParticle& particl
     else if(particle.Candidate->Detector & Detector_t::Type_t::TAPS) {
 
         if(particle.Type() == ParticleTypeDatabase::Photon) {
-            s.sigmaE     = dE(Ek, taps_photon_E_rel, taps_photon_E_exp, taps_photon_E_lin);
+            s.sigmaEk     = dE(Ek, taps_photon_E_rel, taps_photon_E_exp, taps_photon_E_lin);
             s.sigmaTheta = taps_photon_theta;
             s.sigmaPhi   = taps_photon_phi;
         } else if(particle.Type() == ParticleTypeDatabase::Proton) {
@@ -573,7 +573,7 @@ void UncertaintyModels::Optimized::load_from_string(const string& data)
     cb_photon_E_rel        = numberinput(cb_photon_E_rel_d);
     cb_photon_E_exp        = numberinput(cb_photon_E_exp_d);
     cb_photon_E_lin        = numberinput(cb_photon_E_lin_d);
-    cb_proton.sigmaE       = 0.0;
+    cb_proton.sigmaEk       = 0.0;
     cb_proton.sigmaTheta   = angleinput(cb_proton_theta_d);
     cb_proton.sigmaPhi     = angleinput(cb_proton_phi_d);
     taps_photon_theta      = angleinput(taps_photon_theta_d);
@@ -581,7 +581,7 @@ void UncertaintyModels::Optimized::load_from_string(const string& data)
     taps_photon_E_rel      = numberinput(taps_photon_E_rel_d);
     taps_photon_E_exp      = numberinput(taps_photon_E_exp_d);
     taps_photon_E_lin      = numberinput(taps_photon_E_lin_d);
-    taps_proton.sigmaE     = 0.0;
+    taps_proton.sigmaEk     = 0.0;
     taps_proton.sigmaTheta = angleinput(taps_proton_theta_d);
     taps_proton.sigmaPhi   = angleinput(taps_proton_phi_d);
 }
@@ -1178,7 +1178,7 @@ Uncertainties_t UncertaintyModels::FitterSergey::GetSigmas(const TParticle& part
                 return sdep;
             };
 
-            u.sigmaE = dEovEclCB(Ek/1000.0)*Ek;
+            u.sigmaEk = dEovEclCB(Ek/1000.0)*Ek;
             u.sigmaTheta = dThetaCB(Ek/1000.0);
             u.ShowerDepth = DepthShowCB(Ek/1000.0);
             u.sigmaCB_R = dDepthShowCB(Ek/1000.0);
@@ -1217,7 +1217,7 @@ Uncertainties_t UncertaintyModels::FitterSergey::GetSigmas(const TParticle& part
                 return sdep;
             };
 
-            u.sigmaE = 0; // proton Ek is unmeasured
+            u.sigmaEk = 0; // proton Ek is unmeasured
             u.sigmaTheta = dThetaCB(Ek/1000.0);
             u.ShowerDepth = DepthShowCB(Ek/1000.0);
             u.sigmaCB_R = dDepthShowCB(Ek/1000.0);
@@ -1276,7 +1276,7 @@ Uncertainties_t UncertaintyModels::FitterSergey::GetSigmas(const TParticle& part
                 return p[0] / pow(Ecl + p[1], p[2]) + p[3];
             };
 
-            u.sigmaE = dEovEclTAPS(Ek/1000.0)*Ek;
+            u.sigmaEk = dEovEclTAPS(Ek/1000.0)*Ek;
             u.sigmaTAPS_Rxy = dTanThTAPS(Ek/1000.0);
             u.ShowerDepth = DepthShowTAPS(Ek/1000.0);
             u.sigmaTAPS_L = dDepthShowTAPS(Ek/1000.0);
@@ -1321,7 +1321,7 @@ Uncertainties_t UncertaintyModels::FitterSergey::GetSigmas(const TParticle& part
                 return p[0] + Ecl * p[1] + Ecl * Ecl * p[2] + Ecl * Ecl * Ecl * p[3];
             };
 
-            u.sigmaE = 0;
+            u.sigmaEk = 0;
             u.sigmaTAPS_Rxy = dTanThTAPS(Ek/1000.0, TAPS_Rxy);
             u.ShowerDepth = DepthShowTAPS(Ek/1000.0);
             u.sigmaTAPS_L = dDepthShowTAPS(Ek/1000.0);
