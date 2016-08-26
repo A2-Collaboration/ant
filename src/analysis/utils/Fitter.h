@@ -141,7 +141,12 @@ public:
     double GetZVertexPull() const;
 
     FitParticle::pulls_t GetProtonPulls() const;
-    std::vector<FitParticle::pulls_t> GetPhotonsPulls() const;
+    /**
+     * @brief GetPhotonsPulls
+     * @return matrix with first index specifying parameter (0...3), second the photons.
+     * in congruence with GetProtonPulls
+     */
+    std::vector<std::vector<double>> GetPhotonsPulls() const;
 
     /**
      * @brief GetFitParticles returns as first item the proton, then all n photons

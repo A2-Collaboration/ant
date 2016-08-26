@@ -354,11 +354,16 @@ Fitter::FitParticle::pulls_t KinFitter::GetProtonPulls() const
 }
 
 
-std::vector<Fitter::FitParticle::pulls_t> KinFitter::GetPhotonsPulls() const
+std::vector<std::vector<double>> KinFitter::GetPhotonsPulls() const
 {
-    std::vector<Fitter::FitParticle::pulls_t> pulls;
-    for(auto& photon : Photons)
-        pulls.emplace_back(photon->GetPulls());
+    /// \bug hardcoded number of parameters!
+    std::vector<std::vector<double>> pulls(4, vector<double>(Photons.size()));
+    for(unsigned i=0;i<Photons.size();i++) {
+        auto p = Photons.at(i)->GetPulls();
+        for(unsigned j=0;j<pulls.size();j++) {
+            pulls.at(j).at(i) = p[j];
+        }
+    }
     return pulls;
 }
 
