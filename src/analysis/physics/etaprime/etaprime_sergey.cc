@@ -11,29 +11,30 @@ using namespace ant::analysis;
 using namespace ant::analysis::physics;
 using namespace std;
 
+unique_ptr<utils::Fitter_traits> makeFitter(OptionsPtr opts) {
+    if(opts->Get<bool>("UseFitterSergey", false))
+        return std_ext::make_unique<utils::FitterSergey>();
+    auto fit_model = utils::UncertaintyModels::Interpolated::makeAndLoad(
+                         std::make_shared<utils::UncertaintyModels::FitterSergey>(),
+                         utils::UncertaintyModels::Interpolated::Mode_t::Fit);
+    return std_ext::make_unique<utils::KinFitter>(
+                "KinFit", 2, fit_model, opts->Get<bool>("EnableZVertex", true)
+                );
+}
+
 EtapSergey::EtapSergey(const string& name, OptionsPtr opts) :
     Physics(name, opts),
-    useFitterSergey(opts->Get<bool>("UseFitterSergey", false)),
-    fit_model(
-        utils::UncertaintyModels::Interpolated::makeAndLoad(
-            std::make_shared<utils::UncertaintyModels::FitterSergey>(),
-            utils::UncertaintyModels::Interpolated::Mode_t::Fit)
-//        std::make_shared<utils::UncertaintyModels::OptimizedOli1>()
-        ),
-    fitter_ant(std_ext::make_unique<utils::KinFitter>("KinFit", 2,
-                                                      fit_model, opts->Get<bool>("EnableZVertex", true))),
-    fitter_sergey(std_ext::make_unique<utils::FitterSergey>())
+    fitter(makeFitter(opts))
 {
     double sigma = opts->Get<double>("ZVertexSigma", 3.0);
-    if(fitter_ant->IsZVertexFitEnabled()) {
+    if(fitter->IsZVertexFitEnabled()) {
         // using a measured z vertex is probably better...
-        fitter_ant->SetZVertexSigma(sigma);
+        fitter->SetZVertexSigma(sigma);
         LOG(INFO) << "Fit Z vertex enabled with sigma=" << sigma;
     }
     else if(opts->HasOption("ZVertexSigma")) {
         throw std::runtime_error("ZVertex not enabled but sigma provided");
     }
-    fitter_sergey->SetZVertexSigma(sigma);
 
 
     promptrandom.AddPromptRange({ -7,   7});
@@ -110,17 +111,10 @@ void EtapSergey::ProcessEvent(const TEvent& event, manager_t&)
             steps->Fill("MM in [550;1300]",1);
 
             // do the fitting
-            auto& fitter = useFitterSergey ? *fitter_sergey : *fitter_ant;
-            auto& fitter_other = !useFitterSergey ? *fitter_sergey : *fitter_ant;
-            fitter.SetEgammaBeam(taggerhit.PhotonEnergy);
-            fitter.SetProton(proton);
-            fitter.SetPhotons(photons);
-            const auto& fit_result = fitter.DoFit();
-
-            fitter_other.SetEgammaBeam(taggerhit.PhotonEnergy);
-            fitter_other.SetProton(proton);
-            fitter_other.SetPhotons(photons);
-            fitter_other.DoFit();
+            fitter->SetEgammaBeam(taggerhit.PhotonEnergy);
+            fitter->SetProton(proton);
+            fitter->SetPhotons(photons);
+            const auto& fit_result = fitter->DoFit();
 
             if(fit_result.Status != APLCON::Result_Status_t::Success)
                 continue;
@@ -157,12 +151,12 @@ void EtapSergey::ProcessEvent(const TEvent& event, manager_t&)
             t.KinFitIterations = fit_result.NIterations;
 
 
-            auto fitted_proton = fitter.GetFittedProton();
+            auto fitted_proton = fitter->GetFittedProton();
             t.FittedProtonE =  fitted_proton->Ek();
             t.FittedProtonTheta = std_ext::radian_to_degree(fitted_proton->Theta());
 
 
-            auto fitted_photons = fitter.GetFittedPhotons();
+            auto fitted_photons = fitter->GetFittedPhotons();
             t.FittedPhotonsTheta().resize(0);
             t.FittedPhotonsE().resize(0);
             LorentzVec fitted_photon_sum({0,0,0},0);
@@ -173,7 +167,7 @@ void EtapSergey::ProcessEvent(const TEvent& event, manager_t&)
             }
             t.FittedPhotonSum = fitted_photon_sum.M();
 
-            t.FittedZVertex = fitter.GetFittedZVertex();
+            t.FittedZVertex = fitter->GetFittedZVertex();
         }
 
         if(!isfinite(best_prob))

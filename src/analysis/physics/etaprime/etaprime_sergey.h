@@ -61,11 +61,7 @@ protected:
 
     Tree_t t;
 
-    const bool useFitterSergey;
-
-    const utils::UncertaintyModelPtr fit_model;
-    std::unique_ptr<utils::Fitter_traits> fitter_ant;
-    std::unique_ptr<utils::Fitter_traits> fitter_sergey;
+    std::unique_ptr<utils::Fitter_traits> fitter;
 
 public:
     EtapSergey(const std::string& name, OptionsPtr opts);
