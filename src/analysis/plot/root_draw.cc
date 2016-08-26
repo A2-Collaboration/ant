@@ -89,8 +89,8 @@ void canvas::DrawObjs(TCanvas* c, unsigned cols, unsigned rows)
             }
 
             ++pad;
+            ++ninrow;
         }
-        ninrow++;
     }
 }
 
