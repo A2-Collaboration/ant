@@ -77,19 +77,24 @@ TParticlePtr Fitter::FitParticle::AsFitted() const
 {
     const auto z_vertex = Z_Vertex ? Z_Vertex->Value : 0;
 
-    auto vectorize = [] (const vector<FitVariable>& vars) {
-        vector<double> values(vars.size());
-        transform(vars.begin(), vars.end(), values.begin(),
+    vector<double> values(Vars.size());
+    transform(Vars.begin(), Vars.end(), values.begin(),
                   [] (const FitVariable& v) { return v.Value; });
-        return values;
-    };
 
     auto p = make_shared<TParticle>(Particle->Type(),
-                                    GetLorentzVec(vectorize(Vars), z_vertex)
+                                    GetLorentzVec(values, z_vertex)
                                     );
     *p *= 1000.0;
     p->Candidate = Particle->Candidate;
     return p;
+}
+
+std::vector<double> Fitter::FitParticle::GetSigmas() const
+{
+    vector<double> sigmas(Vars.size());
+    transform(Vars.begin(), Vars.end(), sigmas.begin(),
+                  [] (const FitVariable& v) { return v.Sigma; });
+    return sigmas;
 }
 
 Fitter::FitParticle::pulls_t Fitter::FitParticle::GetPulls() const
@@ -136,26 +141,26 @@ void Fitter::FitParticle::Set(const TParticlePtr& p,
     }
 }
 
-LorentzVec Fitter::FitParticle::GetLorentzVec(const std::vector<double>& vars,
+LorentzVec Fitter::FitParticle::GetLorentzVec(const std::vector<double>& values,
                                               const double z_vertex) const
 {
 
-    const radian_t& phi   = vars[2];
+    const radian_t& phi   = values[2];
 
     vec3 x;
 
     if(Detector & Detector_t::Type_t::CB)
     {
         // for CB, parametrization is (Ek, theta, phi, CB_R)
-        const radian_t& theta = vars[1];
-        const auto&     CB_R  = vars[3];
+        const radian_t& theta = values[1];
+        const auto&     CB_R  = values[3];
         x = vec3::RThetaPhi(CB_R, theta, phi);
     }
     else if(Detector & Detector_t::Type_t::TAPS)
     {
         // for TAPS, parametrization is (Ek, TAPS_Rxy, phi, TAPS_Lz)
-        const auto& TAPS_Rxy = vars[1];
-        const auto& TAPS_L   = vars[3];
+        const auto& TAPS_Rxy = values[1];
+        const auto& TAPS_L   = values[3];
         x = vec3(vec2::RPhi(TAPS_Rxy, phi),
                  sqrt(std_ext::sqr(TAPS_L) - std_ext::sqr(TAPS_Rxy)));
     }
@@ -165,7 +170,7 @@ LorentzVec Fitter::FitParticle::GetLorentzVec(const std::vector<double>& vars,
 
     x -= vec3(0, 0, z_vertex);
 
-    const mev_t& Ek       = 1.0/vars[0];
+    const mev_t& Ek       = 1.0/values[0];
 
     const mev_t& E = Ek + Particle->Type().Mass()/1000.0;
     const mev_t& p = sqrt( sqr(E) - sqr(Particle->Type().Mass()/1000.0) );

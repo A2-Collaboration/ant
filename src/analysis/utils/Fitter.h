@@ -64,7 +64,8 @@ public:
 
         TParticlePtr AsFitted() const;
 
-        using pulls_t = std::vector<double>;
+        using pulls_t = std::vector<double>; // used also in KinFitter
+        std::vector<double> GetSigmas() const;
         pulls_t GetPulls() const;
 
         FitParticle(const std::string& name,
@@ -83,7 +84,8 @@ public:
         const std::string Name;
         const std::shared_ptr<const FitVariable> Z_Vertex;
 
-        ant::LorentzVec GetLorentzVec(const std::vector<double>& EkThetaPhi, double z_vertex) const;
+        ant::LorentzVec GetLorentzVec(const std::vector<double>& values,
+                                      double z_vertex) const;
     };
 
 protected:
