@@ -3,6 +3,7 @@
 #include "base/printable.h"
 
 #include "base/vec/vec3.h"
+#include "base/std_ext/math.h"
 
 #include <cstdint>
 #include <stdexcept>
@@ -169,8 +170,19 @@ struct TaggerDetector_t : Detector_t {
      * @note Only works for taggers with more than one channel.
      */
     virtual double GetPhotonEnergyWidth(unsigned channel) const;
-
     bool TryGetChannelFromPhoton(double photonEnergy, unsigned& channel) const;
+
+    struct taggeff_t
+    {
+        double Value;
+        double Error;
+        taggeff_t(double value = std_ext::NaN, double error = std_ext::NaN):
+            Value(value),
+            Error(error){}
+    };
+    virtual taggeff_t GetTaggEff(unsigned channel) const = 0;
+    virtual void SetTaggEff(unsigned channel, const taggeff_t& taggEff) = 0;
+
 
     virtual vec3 GetPosition(unsigned) const final {
         throw Exception("You cannot ask a TaggerDetector_t for its position");
@@ -185,8 +197,9 @@ protected:
             Channel(channel),
             ElectronEnergy(electronEnergy)
         {}
-        unsigned Channel;
-        double   ElectronEnergy;
+        unsigned  Channel;
+        double    ElectronEnergy;
+        taggeff_t TaggEff;
     };
 
     double BeamEnergy;

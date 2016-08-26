@@ -15,6 +15,15 @@ struct EPT :
         return BeamEnergy - elements[channel].ElectronEnergy;
     }
 
+    virtual ant::TaggerDetector_t::taggeff_t GetTaggEff(unsigned channel) const override
+    {
+        return {};
+    }
+    virtual void SetTaggEff(unsigned channel, const ant::TaggerDetector_t::taggeff_t& taggeff) override
+    {
+
+    }
+
     virtual unsigned GetNChannels() const override {
         return elements.size();
     }
