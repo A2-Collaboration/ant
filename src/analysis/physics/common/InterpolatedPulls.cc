@@ -14,8 +14,8 @@ InterpolatedPulls::InterpolatedPulls(const string& name, OptionsPtr opts) :
     Physics(name, opts),
     TAPS_proton_meas(opts->Get<bool>("TAPSProtonMeas", false)),
     fit_model(utils::UncertaintyModels::Interpolated::makeAndLoad(
-                  // use OptimizedOli1 as starting point
-                  make_shared<utils::UncertaintyModels::Optimized_Oli1>(1.0, TAPS_proton_meas),
+                  // use Sergey as starting point
+                  make_shared<utils::UncertaintyModels::FitterSergey>(),
                   utils::UncertaintyModels::Interpolated::Mode_t::Fit,
                   TAPS_proton_meas
               )
