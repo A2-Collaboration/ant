@@ -15,28 +15,14 @@ EtapSergey::EtapSergey(const string& name, OptionsPtr opts) :
     Physics(name, opts),
     useFitterSergey(opts->Get<bool>("UseFitterSergey", false)),
     fit_model(
-//        utils::UncertaintyModels::Interpolated::makeAndLoad(
-//            utils::UncertaintyModels::Interpolated::Mode_t::Fit)
+        utils::UncertaintyModels::Interpolated::makeAndLoad(
+            std::make_shared<utils::UncertaintyModels::FitterSergey>(),
+            utils::UncertaintyModels::Interpolated::Mode_t::Fit)
 //        std::make_shared<utils::UncertaintyModels::OptimizedOli1>()
-        std::make_shared<utils::UncertaintyModels::FitterSergey>()
         ),
     fitter_ant(std_ext::make_unique<utils::KinFitter>("KinFit", 2,
                                                       fit_model, opts->Get<bool>("EnableZVertex", true))),
-    fitter_sergey(std_ext::make_unique<utils::FitterSergey>()),
-    mc_smear(opts->Get<bool>("MCFake", false) | opts->Get<bool>("MCSmear", true)
-             ? // use | to force evaluation of both opts!
-               std_ext::make_unique<utils::MCSmear>(
-                   opts->Get<bool>("MCFake", false) ?
-                       fit_model // in Fake mode use same model as fitter
-                     : utils::UncertaintyModels::Interpolated::makeAndLoad(
-                           utils::UncertaintyModels::Interpolated::Mode_t::MCSmear
-                           )
-                       )
-             : nullptr // no MCSmear
-               ),
-    mc_fake(opts->Get<bool>("MCFake", false) ?
-                std_ext::make_unique<utils::MCFakeReconstructed>()
-              : nullptr)
+    fitter_sergey(std_ext::make_unique<utils::FitterSergey>())
 {
     double sigma = opts->Get<double>("ZVertexSigma", 3.0);
     if(fitter_ant->IsZVertexFitEnabled()) {

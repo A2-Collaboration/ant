@@ -67,9 +67,6 @@ protected:
     std::unique_ptr<utils::Fitter_traits> fitter_ant;
     std::unique_ptr<utils::Fitter_traits> fitter_sergey;
 
-    std::unique_ptr<utils::MCSmear>             mc_smear;
-    std::unique_ptr<utils::MCFakeReconstructed> mc_fake;
-
 public:
     EtapSergey(const std::string& name, OptionsPtr opts);
 

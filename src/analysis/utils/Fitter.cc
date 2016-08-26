@@ -158,7 +158,7 @@ LorentzVec Fitter::FitParticle::GetLorentzVec(const std::vector<double>& values,
     }
     else if(Detector & Detector_t::Type_t::TAPS)
     {
-        // for TAPS, parametrization is (Ek, TAPS_Rxy, phi, TAPS_Lz)
+        // for TAPS, parametrization is (Ek, TAPS_Rxy, phi, TAPS_L)
         const auto& TAPS_Rxy = values[1];
         const auto& TAPS_L   = values[3];
         x = vec3(vec2::RPhi(TAPS_Rxy, phi),
