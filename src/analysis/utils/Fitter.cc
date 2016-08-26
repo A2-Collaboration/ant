@@ -387,13 +387,13 @@ APLCON::Result_t KinFitter::DoFit() {
         Z_Vertex->Sigma = Z_Vertex->Sigma_before;
     }
 
-//    double missing_E = BeamE->Value;
-//    for(auto& photon : Photons) {
-//        missing_E -= photon->Particle->Ek()/1000.0;
-//    }
-//    // asumme that 0th component is Ek
-//    Proton->Vars[0].Value = missing_E;
-//    Proton->Vars[0].Value_before = missing_E;
+    double missing_E = BeamE->Value;
+    for(auto& photon : Photons) {
+        missing_E -= photon->Particle->Ek()/1000.0;
+    }
+    // asumme that 0th component is inverse Ek
+    Proton->Vars[0].Value = 1.0/missing_E;
+    Proton->Vars[0].Value_before = 1.0/missing_E;
 
     const auto res = aplcon->DoFit();
 
