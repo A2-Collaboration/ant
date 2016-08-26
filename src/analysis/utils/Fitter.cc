@@ -224,7 +224,7 @@ KinFitter::KinFitter(const std::string& name,
 
         const auto  n = fit_particles.size();
         // n serves as an offset here
-        const auto& BeamE    = values[n+0][0];
+        const auto& BeamE    = 1.0/values[n+0][0];
         const auto  z_vertex = fit_Z_vertex ? values[n+1][0] : 0.0;
 
         // start with the incoming particle
@@ -252,7 +252,9 @@ KinFitter::~KinFitter()
 
 void KinFitter::SetEgammaBeam(const double ebeam)
 {
-    BeamE->SetValueSigma(ebeam/1000.0, uncertainty->GetBeamEnergySigma(ebeam)/1000.0);
+    // use inverse energy in 1/GeV here as well
+    const auto inverse_sigmaE = uncertainty->GetBeamEnergySigma(ebeam)/ebeam/ebeam;
+    BeamE->SetValueSigma(1000.0/ebeam, 1000.0*inverse_sigmaE);
 }
 
 void KinFitter::SetZVertexSigma(double sigma)
@@ -299,7 +301,7 @@ TParticleList KinFitter::GetFittedPhotons() const
 
 double KinFitter::GetFittedBeamE() const
 {
-    return BeamE->Value*1000.0;
+    return 1000.0/BeamE->Value;
 }
 
 TParticlePtr KinFitter::GetFittedBeamParticle() const
@@ -387,7 +389,8 @@ APLCON::Result_t KinFitter::DoFit() {
         Z_Vertex->Sigma = Z_Vertex->Sigma_before;
     }
 
-    double missing_E = BeamE->Value;
+    // assume that BeamE is inverse energy
+    double missing_E = 1.0/BeamE->Value;
     for(auto& photon : Photons) {
         missing_E -= photon->Particle->Ek()/1000.0;
     }
