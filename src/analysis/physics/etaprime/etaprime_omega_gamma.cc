@@ -42,8 +42,8 @@ EtapOmegaG::EtapOmegaG(const string& name, OptionsPtr opts) :
     Physics(name, opts),
     disable_Sig(opts->Get<bool>("DisableSig", false)),
     params(utils::UncertaintyModels::Interpolated::makeAndLoad(
-               // use OptimizedOli1 as default
-               make_shared<utils::UncertaintyModels::Optimized_Oli1>(),
+               // use FitterSergey as default
+               make_shared<utils::UncertaintyModels::FitterSergey>(),
                utils::UncertaintyModels::Interpolated::Mode_t::Fit
                ),
            true, // flag to enable z vertex

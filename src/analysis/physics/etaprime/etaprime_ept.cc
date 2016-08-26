@@ -41,8 +41,8 @@ EtapEPT::EtapEPT(const string& name, OptionsPtr opts) :
     taggChPerm(opts->Get<bool>("TaggChPerm", false)),
     kinfitter("kinfitter",2,
               utils::UncertaintyModels::Interpolated::makeAndLoad(
-                  // use OptimizedOli1 as default
-                  make_shared<utils::UncertaintyModels::Optimized_Oli1>(),
+                  // use FitterSergey as default
+                  make_shared<utils::UncertaintyModels::FitterSergey>(),
                   utils::UncertaintyModels::Interpolated::Mode_t::Fit
                   ),
               opts->Get<bool>("EnableZVertex", true),
