@@ -775,35 +775,24 @@ UncertaintyModels::Interpolated::~Interpolated()
 
 Uncertainties_t UncertaintyModels::Interpolated::GetSigmas(const TParticle& particle) const
 {
-    // use starting model if nothing was loaded so far
-    if(!loaded_sigmas) {
-        return starting_uncertainty->GetSigmas(particle);
-    }
+    auto u = starting_uncertainty ? starting_uncertainty->GetSigmas(particle) : Uncertainties_t{};
 
-    if(particle.Candidate->Detector & Detector_t::Type_t::CB) {
+    if(!loaded_sigmas)
+        return u;
 
+    if(u.Detector & Detector_t::Type_t::CB) {
         if(particle.Type() == ParticleTypeDatabase::Photon) {
-
-            return cb_photon.GetUncertainties(particle);
-
+            cb_photon.SetUncertainties(u, particle);
         } else if(particle.Type() == ParticleTypeDatabase::Proton) {
-
-            return HandleProtonUncertainty(cb_proton, particle);
-
+            cb_proton.SetUncertainties(u, particle);
         } else {
             throw Exception("Unexpected Particle in CB: " + particle.Type().Name());
         }
-
-    } else if(particle.Candidate->Detector & Detector_t::Type_t::TAPS) {
-
+    } else if(u.Detector & Detector_t::Type_t::TAPS) {
         if(particle.Type() == ParticleTypeDatabase::Photon) {
-
-            return taps_photon.GetUncertainties(particle);
-
+            taps_photon.SetUncertainties(u, particle);
         } else if(particle.Type() == ParticleTypeDatabase::Proton) {
-
-            return HandleProtonUncertainty(taps_proton, particle);
-
+            taps_proton.SetUncertainties(u, particle);
         } else {
             throw Exception("Unexpected Particle: " + particle.Type().Name());
         }
@@ -811,30 +800,28 @@ Uncertainties_t UncertaintyModels::Interpolated::GetSigmas(const TParticle& part
     else {
         throw Exception("Unexpected Detector: " + string(particle.Candidate->Detector));
     }
-}
 
-Uncertainties_t UncertaintyModels::Interpolated::HandleProtonUncertainty(const EkThetaPhi& proton,
-                                                                         const TParticle& particle) const
-{
-    auto u = proton.GetUncertainties(particle);
-
-
-    if(!use_proton_sigmaE
-       || !std::isfinite(u.sigmaE) || u.sigmaE < 1e-5  // sanitize interpolation
-       )
-    {
-        if(starting_uncertainty) {
-            // fallback to starting_model, but only for energy!
-            auto u_starting = starting_uncertainty->GetSigmas(particle);
-            u.sigmaE = u_starting.sigmaE;
-        }
-        else {
-            u.sigmaE = 0;
+    // special handling for proton E uncertainty (is unmeasured if not flagged)
+    if(particle.Type() == ParticleTypeDatabase::Proton) {
+        if (
+           !use_proton_sigmaE
+           || !std::isfinite(u.sigmaEk) || u.sigmaEk < 1e-5  // sanitize interpolation
+           )
+        {
+            if(starting_uncertainty) {
+                // fallback to starting_model, but only for energy!
+                auto u_starting = starting_uncertainty->GetSigmas(particle);
+                u.sigmaEk = u_starting.sigmaEk;
+            }
+            else {
+                u.sigmaEk = 0;
+            }
         }
     }
 
     return u;
 }
+
 
 std::vector<double> getBinPositions(const TAxis* axis) {
 
@@ -945,10 +932,8 @@ std::unique_ptr<const Interpolator2D> makeInterpolator(TH2D* hist) {
         }
     }
 
-    //flood fill averages the rest
+    // flood fill averages the rest
     FloodFillAverages::fillNeighborAverages(grid.z);
-
-
 
     return std_ext::make_unique<Interpolator2D>(grid.x,grid.y, grid.z.Data());
 }
@@ -1005,7 +990,7 @@ std::shared_ptr<UncertaintyModels::Interpolated> UncertaintyModels::Interpolated
     return makeAndLoad(nullptr, mode);
 }
 
-ostream&UncertaintyModels::Interpolated::Print(ostream& stream) const
+ostream& UncertaintyModels::Interpolated::Print(ostream& stream) const
 {
     stream << "Photon CB:\n"   << cb_photon   << "\n";
     stream << "Proton CB:\n"   << cb_proton   << "\n";
@@ -1014,27 +999,7 @@ ostream&UncertaintyModels::Interpolated::Print(ostream& stream) const
     return stream;
 }
 
-Uncertainties_t UncertaintyModels::Interpolated::EkThetaPhi::GetUncertainties(const TParticle& particle) const
-{
-    auto costheta = std::cos(particle.Theta());
-    auto Ek = particle.Ek();
-
-    return {
-        E.GetPoint(costheta, Ek),
-        Theta.GetPoint(costheta, Ek),
-        Phi.GetPoint(costheta, Ek)
-    };
-}
-
-void UncertaintyModels::Interpolated::EkThetaPhi::Load(WrapTFile& file, const std::string& prefix)
-{
-    E.setInterpolator(LoadInterpolator(file, prefix+"/sigma_E"));
-    Theta.setInterpolator(LoadInterpolator(file, prefix+"/sigma_Theta"));
-    Phi.setInterpolator(LoadInterpolator(file, prefix+"/sigma_Phi"));
-
-}
-
-std::unique_ptr<const Interpolator2D> UncertaintyModels::Interpolated::EkThetaPhi::LoadInterpolator(WrapTFile& file, const string& hname)
+std::unique_ptr<const Interpolator2D> UncertaintyModels::Interpolated::LoadInterpolator(WrapTFile& file, const string& hname)
 {
     TH2D* h = nullptr;
 
@@ -1047,13 +1012,60 @@ std::unique_ptr<const Interpolator2D> UncertaintyModels::Interpolated::EkThetaPh
 
 }
 
-ostream&UncertaintyModels::Interpolated::EkThetaPhi::Print(ostream& stream) const
+void UncertaintyModels::Interpolated::EkThetaPhiR::SetUncertainties(Uncertainties_t& u, const TParticle& particle) const
 {
-    stream << "E:\t"     << E     << "\n";
+    auto costheta = std::cos(particle.Theta());
+    auto Ekin = particle.Ek();
+    u.sigmaEk    = Ek.GetPoint(costheta, Ekin);
+    u.sigmaTheta = Theta.GetPoint(costheta, Ekin);
+    u.sigmaPhi   = Phi.GetPoint(costheta, Ekin);
+    u.sigmaCB_R  = CB_R.GetPoint(costheta, Ekin);
+}
+
+void UncertaintyModels::Interpolated::EkThetaPhiR::Load(WrapTFile& file, const std::string& prefix)
+{
+    Ek.setInterpolator(    LoadInterpolator(file, prefix+"/sigma_0"));
+    Theta.setInterpolator( LoadInterpolator(file, prefix+"/sigma_1"));
+    Phi.setInterpolator(   LoadInterpolator(file, prefix+"/sigma_2"));
+    CB_R.setInterpolator(  LoadInterpolator(file, prefix+"/sigma_3"));
+}
+
+ostream& UncertaintyModels::Interpolated::EkThetaPhiR::Print(ostream& stream) const
+{
+    stream << "Ek:\t"    << Ek     << "\n";
     stream << "Theta:\t" << Theta << "\n";
     stream << "Phi:\t"   << Phi   << "\n";
+    stream << "CB_R:\t"  << CB_R  << "\n";
     return stream;
 }
+
+void UncertaintyModels::Interpolated::EkRxyPhiL::SetUncertainties(Uncertainties_t& u, const TParticle& particle) const
+{
+    auto costheta = std::cos(particle.Theta());
+    auto Ekin = particle.Ek();
+    u.sigmaEk       = Ek.GetPoint(costheta, Ekin);
+    u.sigmaTAPS_Rxy = TAPS_Rxy.GetPoint(costheta, Ekin);
+    u.sigmaPhi      = Phi.GetPoint(costheta, Ekin);
+    u.sigmaTAPS_L   = TAPS_L.GetPoint(costheta, Ekin);
+}
+
+void UncertaintyModels::Interpolated::EkRxyPhiL::Load(WrapTFile& file, const std::string& prefix)
+{
+    Ek.setInterpolator(       LoadInterpolator(file, prefix+"/sigma_0"));
+    TAPS_Rxy.setInterpolator( LoadInterpolator(file, prefix+"/sigma_1"));
+    Phi.setInterpolator(      LoadInterpolator(file, prefix+"/sigma_2"));
+    TAPS_L.setInterpolator(   LoadInterpolator(file, prefix+"/sigma_3"));
+}
+
+ostream& UncertaintyModels::Interpolated::EkRxyPhiL::Print(ostream& stream) const
+{
+    stream << "Ek:\t"       << Ek     << "\n";
+    stream << "TAPS_Rxy:\t" << TAPS_Rxy << "\n";
+    stream << "Phi:\t"      << Phi   << "\n";
+    stream << "TAPS_L:\t"   << TAPS_L  << "\n";
+    return stream;
+}
+
 
 UncertaintyModels::Interpolated::ClippedInterpolatorWrapper::ClippedInterpolatorWrapper(UncertaintyModels::Interpolated::ClippedInterpolatorWrapper::interpolator_ptr_t i):
     interp(move(i)), xrange(interp->getXRange()), yrange(interp->getYRange())
@@ -1107,9 +1119,6 @@ ostream& UncertaintyModels::Interpolated::ClippedInterpolatorWrapper::boundsChec
     stream << range << "-> [" << underflow << "|" << unclipped << "|" << overflow << "]";
     return stream;
 }
-
-
-
 
 
 UncertaintyModels::FitterSergey::FitterSergey()

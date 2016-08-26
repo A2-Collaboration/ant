@@ -388,28 +388,36 @@ protected:
 
     bool loaded_sigmas = false;
 
+    static std::unique_ptr<const Interpolator2D> LoadInterpolator(ant::WrapTFile& file, const std::string& prefix);
 
+    struct EkThetaPhiR : ant::printable_traits {
 
-    struct EkThetaPhi : ant::printable_traits {
-
-        ClippedInterpolatorWrapper E;
+        ClippedInterpolatorWrapper Ek;
         ClippedInterpolatorWrapper Theta;
         ClippedInterpolatorWrapper Phi;
+        ClippedInterpolatorWrapper CB_R;
 
-        Uncertainties_t GetUncertainties(const TParticle& particle) const;
-
+        void SetUncertainties(Uncertainties_t& u, const TParticle& particle) const;
         void Load(ant::WrapTFile& file, const std::string& prefix);
-        static std::unique_ptr<const Interpolator2D> LoadInterpolator(ant::WrapTFile& file, const std::string& prefix);
-
         std::ostream& Print(std::ostream& stream) const override;
     };
 
-    Uncertainties_t HandleProtonUncertainty(const EkThetaPhi& proton, const TParticle& particle) const;
+    struct EkRxyPhiL : ant::printable_traits {
 
-    EkThetaPhi cb_photon;
-    EkThetaPhi taps_photon;
-    EkThetaPhi cb_proton;
-    EkThetaPhi taps_proton;
+        ClippedInterpolatorWrapper Ek;
+        ClippedInterpolatorWrapper TAPS_Rxy;
+        ClippedInterpolatorWrapper Phi;
+        ClippedInterpolatorWrapper TAPS_L;
+
+        void SetUncertainties(Uncertainties_t& u, const TParticle& particle) const;
+        void Load(ant::WrapTFile& file, const std::string& prefix);
+        std::ostream& Print(std::ostream& stream) const override;
+    };
+
+    EkThetaPhiR cb_photon;
+    EkRxyPhiL   taps_photon;
+    EkThetaPhiR cb_proton;
+    EkRxyPhiL   taps_proton;
 };
 
 }}}} // namespace ant::analysis::utils::UncertaintyModels
