@@ -147,30 +147,30 @@ LorentzVec Fitter::FitParticle::GetLorentzVec(const std::vector<double>& values,
 
     const radian_t& phi   = values[2];
 
-    vec3 x;
+    // start at the lab origin in the frame of the vertex
+    vec3 x{0,0,-z_vertex};
 
     if(Detector & Detector_t::Type_t::CB)
     {
-        // for CB, parametrization is (Ek, theta, phi, CB_R)
+        // for CB, parametrization is (1/Ek, theta, phi, CB_R)
         const radian_t& theta = values[1];
         const auto&     CB_R  = values[3];
-        x = vec3::RThetaPhi(CB_R, theta, phi);
+        x += vec3::RThetaPhi(CB_R, theta, phi);
     }
     else if(Detector & Detector_t::Type_t::TAPS)
     {
-        // for TAPS, parametrization is (Ek, TAPS_Rxy, phi, TAPS_L)
+        // for TAPS, parametrization is (1/Ek, TAPS_Rxy, phi, TAPS_L)
         const auto& TAPS_Rxy = values[1];
         const auto& TAPS_L   = values[3];
-        x = vec3(vec2::RPhi(TAPS_Rxy, phi),
-                 sqrt(std_ext::sqr(TAPS_L) - std_ext::sqr(TAPS_Rxy)));
+        const auto& TAPS_L_z = sqrt(std_ext::sqr(TAPS_L) - std_ext::sqr(TAPS_Rxy));
+        x += vec3(vec2::RPhi(TAPS_Rxy, phi), TAPS_L_z);
     }
     else {
         throw Exception("Unknown/none detector type provided from uncertainty model");
     }
 
-    x -= vec3(0, 0, z_vertex);
-
-    const mev_t& Ek       = 1.0/values[0];
+    // inverse Ek are used in the fit
+    const mev_t& Ek = 1.0/values[0];
 
     const mev_t& E = Ek + Particle->Type().Mass()/1000.0;
     const mev_t& p = sqrt( sqr(E) - sqr(Particle->Type().Mass()/1000.0) );
