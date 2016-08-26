@@ -7,10 +7,9 @@ class TGraph;
 
 namespace ant {
 
-namespace expconfig {
-namespace detector {
+namespace{
 struct TaggerDetector_t;
-}}
+}
 
 namespace calibration {
 
@@ -20,7 +19,7 @@ class DataManager;
 class TaggEff : public Calibration::Module
 {
 public:
-    TaggEff(const std::shared_ptr<expconfig::detector::TaggerDetector_t>&  tagger,
+    TaggEff(const std::shared_ptr<ant::TaggerDetector_t>&  tagger,
             const std::shared_ptr<DataManager>& calmgr
             );
     virtual ~TaggEff();
@@ -31,8 +30,8 @@ public:
     virtual std::list<Loader_t> GetLoaders() override;
 
 protected:
-    std::shared_ptr<expconfig::detector::TaggerDetector_t> pid_detector;
-    std::shared_ptr<DataManager> calibrationManager;
+    std::shared_ptr<ant::TaggerDetector_t> Tagger;
+    std::shared_ptr<DataManager> CalibrationManager;
 };
 
 }}
