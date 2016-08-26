@@ -42,18 +42,10 @@ void Pxyztpf(Float_t PXYZ[3], Float_t PTP[3]) {
 
     VPMOD = Vmodf(PXYZ, 3);
     PTP[0] = VPMOD;
-    if (VPMOD < 0.000001)
-        VPMOD = 0.000001;
     COSTHE = PXYZ[2] / VPMOD;
     PTP[1] = acosf(COSTHE);
     VPMOD2 = VPMOD * sqrtf(1. - COSTHE * COSTHE);
-    if (VPMOD2 < 0.0000001)
-        VPMOD2 = 0.0000001;
     COSPHI = PXYZ[0] / VPMOD2;
-    if (COSPHI > 1.)
-        COSPHI = 1.;
-    if (COSPHI < -1.)
-        COSPHI = -1.;
     PHI = acosf(COSPHI);
     if (PXYZ[1] < 0.)
         PHI = PI * 2. - PHI;
@@ -77,7 +69,7 @@ private:
 
     Double_t fMastg, fMass[NPMAX];
     Float_t fPin[NPMAX][4], fErrSq[NPMAX][4], fCov[10];
-    Float_t fSigzvr, fPlim[NXMAX][2], fProut[NPMAX][5];
+    Float_t fPlim[NXMAX][2], fProut[NPMAX][5];
     Int_t fKind[NPMAX], fCalor[NPMAX], fLcst, fLcstCB, fLcstTAPS;
     Int_t fNpmeas, fNptall;
     void Trevcm() {
@@ -1069,8 +1061,6 @@ public:
 
         //   calculating initial values for free parameters of the fit
 
-        if (Y[0] < 0.000001)
-            Y[0] = 0.000001;
         EBM = 1. / Y[0];
         PB = sqrt(EBM * EBM - fMass[0] * fMass[0]);
         EINIT = fMastg + EBM;
@@ -1104,11 +1094,7 @@ public:
                     Pxyztpf(DLPED, RTPGAM);
 
                     RDNPED = Vmodf(DLPED, 3);
-                    if (RDNPED < 0.00001)
-                        RDNPED = 0.00001;
 
-                    if (Y[IY] < 0.000001)
-                        Y[IY] = 0.000001;
                     EPAR = 1. / Y[IY] + fMass[I];
                     PPAR = sqrt(EPAR * EPAR - fMass[I] * fMass[I]);
                     EPRIMV += EPAR;
@@ -1184,8 +1170,6 @@ L11:
         //     The values of the constraint equations F(J) are computed
         //     using the corrected values Y(I)
 
-        if (Y[0] < 0.000001)
-            Y[0] = 0.000001;
         EBM = 1. / Y[0];
         PB = sqrt(EBM * EBM - fMass[0] * fMass[0]);
         EINIT = fMastg + EBM;
@@ -1217,11 +1201,7 @@ L11:
                     fProut[I][2] = RTPGAM[2];
 
                     RDNPED = Vmodf(DLPED, 3);
-                    if (RDNPED < 0.00001)
-                        RDNPED = 0.00001;
 
-                    if (Y[IY] < 0.000001)
-                        Y[IY] = 0.000001;
                     EPAR = 1. / Y[IY] + fMass[I];
                     PPAR = sqrt(EPAR * EPAR - fMass[I] * fMass[I]);
                     EPRIMV += EPAR;
