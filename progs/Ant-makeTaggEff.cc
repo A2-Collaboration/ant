@@ -1,4 +1,4 @@
-#include <assert.h>
+#include <map>
 
 #include "analysis/plot/HistogramFactories.h"
 
@@ -24,12 +24,17 @@
 
 #include "tree/TAntHeader.h"
 
+#include "tree/TCalibrationData.h"
+
 using namespace ant;
 using namespace std;
 using namespace ant::analysis;
 using namespace ant::std_ext;
 static volatile bool interrupt = false;
 
+const map<string,TID> startIDs({ {"Setup_2014_07_EPT_Prod", TID(1406592000)},
+                                 {"Setup_2014_10_EPT_Prod", TID(1413244800)},
+                                 {"Setup_2014_12_EPT_Prod", TID(1417395600)} });
 
 class taggEffTriple_t
 {
@@ -125,8 +130,14 @@ public:
 
     string SetupName() const{ return bkg1.setupName;}
 
+    TID LastID() const
+    {
+        bkg2.wrapTree.Tree->GetEntry(bkg2.wrapTree.Tree->GetEntries());
+        return bkg2.wrapTree.LastID();
+    }
+
     // TODO: calibration data
-    vector<double> const GetTaggEff()
+    vector<double>  GetTaggEff() const
     {
 
 
@@ -160,7 +171,7 @@ string processFiles(const string& bkg1, const string& run, const string& bkg2)
     for (const auto eff: taggEff.GetTaggEff())
         cout << eff << "  ";
 
-    cout << endl << endl;
+    cout << endl << taggEff.LastID() << endl;
 
     return taggEff.SetupName(); // any is ok, it is checked
 }
