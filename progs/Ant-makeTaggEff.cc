@@ -17,14 +17,16 @@
 #include "TRint.h"
 #include "TH1D.h"
 
-#include "calibration/Editor.h"
 #include "calibration/DataManager.h"
+#include "tree/TCalibrationData.h"
+#include "calibration/modules/TaggEff.h"
 
 #include "analysis/physics/common/ProcessTaggEff.h"
+#include "base/Detector_t.h"
+#include "expconfig/detectors/EPT.h"
 
 #include "tree/TAntHeader.h"
 
-#include "tree/TCalibrationData.h"
 
 using namespace ant;
 using namespace std;
@@ -35,6 +37,33 @@ static volatile bool interrupt = false;
 const map<string,TID> startIDs({ {"Setup_2014_07_EPT_Prod", TID(1406592000)},
                                  {"Setup_2014_10_EPT_Prod", TID(1413244800)},
                                  {"Setup_2014_12_EPT_Prod", TID(1417395600)} });
+
+struct resultSet_t
+{
+    string          Setup;
+    TID             FirstID;
+    vector<double>  TaggEffs;
+    vector<double>  TaggEffErrors;
+    resultSet_t(const string& setup, const TID& firstID):
+        Setup(setup),
+        FirstID(firstID),
+        TaggEffs(),
+        TaggEffErrors() {}
+};
+
+void storeResult(const TID& startID, shared_ptr<calibration::DataManager> manager, const string& calibrationName, vector<double> data)
+{
+    TCalibrationData cdata(
+                calibrationName,
+                startID,
+                startID
+                );
+
+    for ( auto ch=0u ; ch < data.size() ; ++ch )
+        cdata.Data.emplace_back(ch,data.at(ch));
+
+    manager->Add(cdata, Calibration::AddMode_t::RightOpen);
+}
 
 class taggEffTriple_t
 {
@@ -118,43 +147,38 @@ public:
         run(runf_),
         bkg2(bkg2f_)
     {
-
         if ( !(bkg1.setupName == bkg2.setupName &&
              bkg2.setupName == run.setupName ) )
-        {
-            LOG(ERROR) << "Files in TaggEff-triple not from same Setup!";
-            exit(EXIT_FAILURE);
-        }
-
+            throw runtime_error("Files in TaggEff-triple not from same Setup!");
     }
 
-    string SetupName() const{ return bkg1.setupName;}
+    string SetupName() const{return bkg1.setupName;}
 
-    TID LastID() const
+    TID startID() const
     {
         bkg2.wrapTree.Tree->GetEntry(bkg2.wrapTree.Tree->GetEntries());
         return bkg2.wrapTree.LastID();
     }
 
     // TODO: calibration data
-    vector<double>  GetTaggEff() const
+    resultSet_t  GetTaggEff() const
     {
-
+        resultSet_t result(SetupName(),startID());
 
         treeContainer_t::means_t m_bkg1 = bkg1.getMeans();
         treeContainer_t::means_t m_run = run.getMeans();
         treeContainer_t::means_t m_bkg2 = bkg2.getMeans();
 
         auto nchannels = bkg1.nchannels;
-
-
-        vector<double> result(nchannels,0);
+        result.TaggEffs.resize(nchannels,0);
+        result.TaggEffErrors.resize(nchannels,0);
 
         for (auto channel = 0u ; channel < nchannels ; ++channel)
         {
-            result.at(channel) = m_run.livetime * m_run.electrons.at(channel)
-                                 - ( (m_bkg1.livetime * m_bkg1.electrons.at(channel) + m_bkg2.livetime * m_bkg2.electrons.at(channel) )/ 2.0 );
-            result.at(channel) *= 1.0 / m_run.tdcs.at(channel);
+            result.TaggEffs.at(channel) = m_run.livetime * m_run.electrons.at(channel)
+                                            - ( (m_bkg1.livetime * m_bkg1.electrons.at(channel)
+                                                 + m_bkg2.livetime * m_bkg2.electrons.at(channel) ) / 2.0 );
+            result.TaggEffs.at(channel) *= 1.0 / m_run.tdcs.at(channel);
         }
 
         return result;
@@ -166,18 +190,22 @@ public:
 string processFiles(const string& bkg1, const string& run, const string& bkg2)
 {
     taggEffTriple_t taggEff(bkg1,run,bkg2);
+    resultSet_t result = taggEff.GetTaggEff();
 
+    cout << endl << "Starting from " << taggEff.startID() << ":  "<< endl;
     cout << "TaggEff by channel:" << endl;
-    for (const auto eff: taggEff.GetTaggEff())
+    for (const auto eff: result.TaggEffs)
         cout << eff << "  ";
+    cout << endl;
 
-    cout << endl << taggEff.LastID() << endl;
 
     return taggEff.SetupName(); // any is ok, it is checked
 }
 
 bool processCSV(const string& csvFile)
 {
+    shared_ptr<calibration::DataManager> manager = nullptr;
+
     ifstream csvStream(csvFile);
     if (!csvStream)
     {
@@ -210,19 +238,30 @@ bool processCSV(const string& csvFile)
         }
 
         if (record.size() != 3)
-        {
-            LOG(ERROR) << "Found line with wrong number of files, check your file list.";
-            return false;
-        }
+            throw runtime_error("Found line with wrong number of files, check your file list.");
 
-        string currentSetup(processFiles(record[0],record[1],record[2]));
+        taggEffTriple_t taggEff(record.at(0),record.at(1),record.at(2));
+        resultSet_t result = taggEff.GetTaggEff();
+
+        //check if setup is valid for this method --> String in map?
+        auto it = startIDs.find(result.Setup);
+        if (it == startIDs.end())
+            throw runtime_error("Setup not valid for csv mode!");
+        string databaseName("test");
+        if (n_TaggEffs == 0)
+        {
+            manager = make_shared<calibration::DataManager>(databaseName);
+            storeResult(it->second,manager,calibration::TaggEff::GetDataName(),result.TaggEffs);
+            storeResult(it->second,manager,calibration::TaggEff::GetDataErrorsName(),result.TaggEffErrors);
+        }
         if (n_TaggEffs > 0)
-            if (currentSetup != setupName)
-            {
-                LOG(ERROR) << "Different Setupnames within file list found!";
-                return false;
-            }
-        setupName = currentSetup;
+        {
+            if(result.Setup != setupName )
+                throw runtime_error("Different Setupnames within file list found!");
+            storeResult(result.FirstID,manager,calibration::TaggEff::GetDataName(),result.TaggEffs);
+            storeResult(result.FirstID,manager,calibration::TaggEff::GetDataErrorsName(),result.TaggEffErrors);
+        }
+        setupName = result.Setup;
         n_TaggEffs++;
     }
 
