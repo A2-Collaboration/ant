@@ -93,7 +93,9 @@ std::vector<double> Fitter::FitParticle::GetSigmas() const
 {
     vector<double> sigmas(Vars.size());
     transform(Vars.begin(), Vars.end(), sigmas.begin(),
-                  [] (const FitVariable& v) { return v.Sigma; });
+                  [] (const FitVariable& v) { return v.Sigma_before; });
+    // take care that the Vars[0] is the inverse energy in GeV
+    sigmas.front() *= 1000.0/std_ext::sqr(Vars.front().Value_before);
     return sigmas;
 }
 
@@ -109,10 +111,10 @@ void Fitter::FitParticle::Set(const TParticlePtr& p,
                               const UncertaintyModel& uncertainty)
 {
     Particle = p;
-    const auto sigmas = uncertainty.GetSigmas(*p);
+    const auto& sigmas = uncertainty.GetSigmas(*p);
     Detector = sigmas.Detector;
 
-    const auto sigmaEkInverse = sigmas.sigmaEk/p->Ek()/p->Ek();
+    const auto sigmaEkInverse = sigmas.sigmaEk/std_ext::sqr(p->Ek());
     Vars[0].SetValueSigma(1000.0/p->Ek(), sigmaEkInverse*1000.0);
     Vars[2].SetValueSigma(p->Phi(),       sigmas.sigmaPhi);
 
@@ -266,7 +268,7 @@ KinFitter::~KinFitter()
 void KinFitter::SetEgammaBeam(const double ebeam)
 {
     // use inverse energy in 1/GeV here as well
-    const auto sigma_Einverse = uncertainty->GetBeamEnergySigma(ebeam)/ebeam/ebeam;
+    const auto sigma_Einverse = uncertainty->GetBeamEnergySigma(ebeam)/std_ext::sqr(ebeam);
     BeamE->SetValueSigma(1000.0/ebeam, 1000.0*sigma_Einverse);
 }
 
