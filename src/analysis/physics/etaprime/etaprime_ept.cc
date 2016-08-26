@@ -317,12 +317,12 @@ bool EtapEPT::doKinfit(const TTaggerHit& taggerhit,
     t.KinFitZVertex = kinfitter.GetFittedZVertex();
 
     t.KinFitBeamEPull = kinfitter.GetBeamEPull();
-    t.KinFitProtonEPull = kinfitter.GetProtonEPull();
-    t.KinFitProtonThetaPull = kinfitter.GetProtonThetaPull();
-    t.KinFitProtonPhiPull = kinfitter.GetProtonPhiPull();
-    t.KinFitPhotonEPulls = kinfitter.GetPhotonEPulls();
-    t.KinFitPhotonThetaPulls = kinfitter.GetPhotonThetaPulls();
-    t.KinFitPhotonPhiPulls = kinfitter.GetPhotonPhiPulls();
+//    t.KinFitProtonEPull = kinfitter.GetProtonEPull();
+//    t.KinFitProtonThetaPull = kinfitter.GetProtonThetaPull();
+//    t.KinFitProtonPhiPull = kinfitter.GetProtonPhiPull();
+//    t.KinFitPhotonEPulls = kinfitter.GetPhotonEPulls();
+//    t.KinFitPhotonThetaPulls = kinfitter.GetPhotonThetaPulls();
+//    t.KinFitPhotonPhiPulls = kinfitter.GetPhotonPhiPulls();
 
     const auto& fitted_proton = kinfitter.GetFittedProton();
     t.FittedProtonE = fitted_proton->Ek();

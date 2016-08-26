@@ -445,13 +445,13 @@ bool EtapOmegaG::doKinfit(const TTaggerHit& taggerhit,
     t.KinFitIterations = result.NIterations;
     t.KinFitZVertex = kinfitter.GetFittedZVertex();
 
-    t.KinFitBeamEPull = kinfitter.GetBeamEPull();
-    t.KinFitProtonEPull = kinfitter.GetProtonEPull();
-    t.KinFitProtonThetaPull = kinfitter.GetProtonThetaPull();
-    t.KinFitProtonPhiPull = kinfitter.GetProtonPhiPull();
-    t.KinFitPhotonEPulls = kinfitter.GetPhotonEPulls();
-    t.KinFitPhotonThetaPulls = kinfitter.GetPhotonThetaPulls();
-    t.KinFitPhotonPhiPulls = kinfitter.GetPhotonPhiPulls();
+//    t.KinFitBeamEPull = kinfitter.GetBeamEPull();
+//    t.KinFitProtonEPull = kinfitter.GetProtonEPull();
+//    t.KinFitProtonThetaPull = kinfitter.GetProtonThetaPull();
+//    t.KinFitProtonPhiPull = kinfitter.GetProtonPhiPull();
+//    t.KinFitPhotonEPulls = kinfitter.GetPhotonEPulls();
+//    t.KinFitPhotonThetaPulls = kinfitter.GetPhotonThetaPulls();
+//    t.KinFitPhotonPhiPulls = kinfitter.GetPhotonPhiPulls();
 
     const auto& fitted_proton = kinfitter.GetFittedProton();
     t.FittedProtonE = fitted_proton->Ek();
@@ -594,12 +594,12 @@ void EtapOmegaG::Sig_t::DoAntiPi0Eta(const Particles_t& particles)
         const auto& fitter = treefitter_Pi0Pi0;
         t.AntiPi0FitZVertex = fitter.GetFittedZVertex();
         t.AntiPi0BeamEPull = fitter.GetBeamEPull();
-        t.AntiPi0ProtonEPull = fitter.GetProtonEPull();
-        t.AntiPi0ProtonThetaPull = fitter.GetProtonThetaPull();
-        t.AntiPi0ProtonPhiPull = fitter.GetProtonPhiPull();
-        t.AntiPi0PhotonEPulls = fitter.GetPhotonEPulls();
-        t.AntiPi0PhotonThetaPulls = fitter.GetPhotonThetaPulls();
-        t.AntiPi0PhotonPhiPulls = fitter.GetPhotonPhiPulls();
+//        t.AntiPi0ProtonEPull = fitter.GetProtonEPull();
+//        t.AntiPi0ProtonThetaPull = fitter.GetProtonThetaPull();
+//        t.AntiPi0ProtonPhiPull = fitter.GetProtonPhiPull();
+//        t.AntiPi0PhotonEPulls = fitter.GetPhotonEPulls();
+//        t.AntiPi0PhotonThetaPulls = fitter.GetPhotonThetaPulls();
+//        t.AntiPi0PhotonPhiPulls = fitter.GetPhotonPhiPulls();
     }
 
     treefitter_Pi0Eta.SetEgammaBeam(particles.PhotonEnergy);
@@ -616,12 +616,12 @@ void EtapOmegaG::Sig_t::DoAntiPi0Eta(const Particles_t& particles)
         const auto& fitter = treefitter_Pi0Eta;
         t.AntiEtaFitZVertex = fitter.GetFittedZVertex();
         t.AntiEtaBeamEPull = fitter.GetBeamEPull();
-        t.AntiEtaProtonEPull = fitter.GetProtonEPull();
-        t.AntiEtaProtonThetaPull = fitter.GetProtonThetaPull();
-        t.AntiEtaProtonPhiPull = fitter.GetProtonPhiPull();
-        t.AntiEtaPhotonEPulls = fitter.GetPhotonEPulls();
-        t.AntiEtaPhotonThetaPulls = fitter.GetPhotonThetaPulls();
-        t.AntiEtaPhotonPhiPulls = fitter.GetPhotonPhiPulls();
+//        t.AntiEtaProtonEPull = fitter.GetProtonEPull();
+//        t.AntiEtaProtonThetaPull = fitter.GetProtonThetaPull();
+//        t.AntiEtaProtonPhiPull = fitter.GetProtonPhiPull();
+//        t.AntiEtaPhotonEPulls = fitter.GetPhotonEPulls();
+//        t.AntiEtaPhotonThetaPulls = fitter.GetPhotonThetaPulls();
+//        t.AntiEtaPhotonPhiPulls = fitter.GetPhotonPhiPulls();
     }
 }
 
@@ -756,12 +756,12 @@ void EtapOmegaG::Sig_t::Pi0_t::Process(const EtapOmegaG::Particles_t& particles,
 
         t.TreeFitZVertex = treefitter.GetFittedZVertex();
         t.TreeFitBeamEPull = treefitter.GetBeamEPull();
-        t.TreeFitProtonEPull = treefitter.GetProtonEPull();
-        t.TreeFitProtonThetaPull = treefitter.GetProtonThetaPull();
-        t.TreeFitProtonPhiPull = treefitter.GetProtonPhiPull();
-        t.TreeFitPhotonEPulls = treefitter.GetPhotonEPulls();
-        t.TreeFitPhotonThetaPulls = treefitter.GetPhotonThetaPulls();
-        t.TreeFitPhotonPhiPulls = treefitter.GetPhotonPhiPulls();
+//        t.TreeFitProtonEPull = treefitter.GetProtonEPull();
+//        t.TreeFitProtonThetaPull = treefitter.GetProtonThetaPull();
+//        t.TreeFitProtonPhiPull = treefitter.GetProtonPhiPull();
+//        t.TreeFitPhotonEPulls = treefitter.GetPhotonEPulls();
+//        t.TreeFitPhotonThetaPulls = treefitter.GetPhotonThetaPulls();
+//        t.TreeFitPhotonPhiPulls = treefitter.GetPhotonPhiPulls();
 
         // IM fitted expected to be delta peaks since they were fitted...
         const LorentzVec& Pi0_fitted = fitted_Pi0->Get().LVSum;
@@ -909,12 +909,12 @@ void EtapOmegaG::Sig_t::OmegaPi0_t::Process(const EtapOmegaG::Particles_t& parti
         t.TreeFitZVertex = treefitter.GetFittedZVertex();
 
         t.TreeFitBeamEPull = treefitter.GetBeamEPull();
-        t.TreeFitProtonEPull = treefitter.GetProtonEPull();
-        t.TreeFitProtonThetaPull = treefitter.GetProtonThetaPull();
-        t.TreeFitProtonPhiPull = treefitter.GetProtonPhiPull();
-        t.TreeFitPhotonEPulls = treefitter.GetPhotonEPulls();
-        t.TreeFitPhotonThetaPulls = treefitter.GetPhotonThetaPulls();
-        t.TreeFitPhotonPhiPulls = treefitter.GetPhotonPhiPulls();
+//        t.TreeFitProtonEPull = treefitter.GetProtonEPull();
+//        t.TreeFitProtonThetaPull = treefitter.GetProtonThetaPull();
+//        t.TreeFitProtonPhiPull = treefitter.GetProtonPhiPull();
+//        t.TreeFitPhotonEPulls = treefitter.GetPhotonEPulls();
+//        t.TreeFitPhotonThetaPulls = treefitter.GetPhotonThetaPulls();
+//        t.TreeFitPhotonPhiPulls = treefitter.GetPhotonPhiPulls();
 
         // IM fitted expected to be delta peaks since they were fitted...
         EtaPrime_fitted = fitted_EtaPrime->Get().LVSum;
