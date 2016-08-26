@@ -384,7 +384,7 @@ int main( int argc, char** argv )
     auto cmd_output       = cmd.add<TCLAP::ValueArg<string>>("o","",           "sigma hists",                                    false, "", "rootfile");
     auto cmd_batchmode    = cmd.add<TCLAP::MultiSwitchArg>  ("b","batch",      "Run in batch mode (no ROOT shell afterwards)",   false);
     auto cmd_maxevents    = cmd.add<TCLAP::MultiArg<int>>   ("m","maxevents",  "Process only max events",                        false, "maxevents");
-    auto cmd_tree         = cmd.add<TCLAP::ValueArg<string>>("t","tree",       "Treename",false,"JustPi0/m2Pi0/pulls_photon_cb","treename");
+    auto cmd_tree         = cmd.add<TCLAP::ValueArg<string>>("t","tree",       "Treename",false,"InterpolatedPulls/pulls_photon_cb","treename");
     auto cmd_fitprob_cut  = cmd.add<TCLAP::ValueArg<double>>("", "fitprob_cut","Min. required Fit Probability",                  false, 0.01,"probability");
     auto cmd_integral_cut = cmd.add<TCLAP::ValueArg<double>>("", "integral_cut","Min. required integral in Bins",                false, 100.0,"integral");
 
@@ -578,7 +578,7 @@ int main( int argc, char** argv )
         summary << drawoption("colz");
 
         for( auto r : newResults) {
-            summary << r.newSigmas << r.oldSigmas << r.pulls;
+            summary << r.newSigmas << r.oldSigmas << r.pulls << endr;
         }
         summary << endc;
 
