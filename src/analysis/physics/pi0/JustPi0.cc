@@ -295,9 +295,9 @@ void JustPi0::MultiPi0::ProcessData(const TEventData& data, const TParticleTree_
 
                 best_fitParticles = fitter.GetFitParticles();
 
-//                t.fit_proton_E_pull     = best_fitParticles.at(0).Ek.Pull;
-//                t.fit_proton_Theta_pull = best_fitParticles.at(0).Theta.Pull;
-//                t.fit_proton_Phi_pull   = best_fitParticles.at(0).Phi.Pull;
+                t.fit_proton_E_pull     = best_fitParticles.at(0).Ek.Pull;
+                t.fit_proton_Theta_pull = best_fitParticles.at(0).Theta.Pull;
+                t.fit_proton_Phi_pull   = best_fitParticles.at(0).Phi.Pull;
 
                 const auto photons_fitted = fitter.GetFittedPhotons();
 
@@ -313,9 +313,9 @@ void JustPi0::MultiPi0::ProcessData(const TEventData& data, const TParticleTree_
                     t.photons_vetoE().at(i)  = photons.at(i)->Candidate->VetoEnergy;
                     t.photons_Time().at(i)   = photons.at(i)->Candidate->Time;
 
-//                    t.fit_photons_E_pulls().at(i)     = best_fitParticles.at(i+1).Ek.Pull;
-//                    t.fit_photons_Theta_pulls().at(i) = best_fitParticles.at(i+1).Theta.Pull;
-//                    t.fit_photons_Phi_pulls().at(i)   = best_fitParticles.at(i+1).Phi.Pull;
+                    t.fit_photons_E_pulls().at(i)     = best_fitParticles.at(i+1).Ek.Pull;
+                    t.fit_photons_Theta_pulls().at(i) = best_fitParticles.at(i+1).Theta.Pull;
+                    t.fit_photons_Phi_pulls().at(i)   = best_fitParticles.at(i+1).Phi.Pull;
                 }
 
                 selected_proton  = proton;

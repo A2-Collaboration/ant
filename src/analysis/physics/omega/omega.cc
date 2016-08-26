@@ -534,8 +534,8 @@ void OmegaEtaG2::Analyse(const TEventData &data, const TEvent& event, manager_t&
                 const auto fitparticles = fitter.GetFitParticles();
                 assert(fitparticles.size() == nphotons +1);
 
-//                t.p_theta_pull  = fitparticles.at(0).Theta.Pull;
-//                t.p_phi_pull    = fitparticles.at(0).Phi.Pull;
+                t.p_theta_pull  = fitparticles.at(0).Theta.Pull;
+                t.p_phi_pull    = fitparticles.at(0).Phi.Pull;
 
                 for(size_t i=0; i<nphotons; ++i) {
                     t.photons().at(i)            = *(selected_photons.at(i));
@@ -544,9 +544,9 @@ void OmegaEtaG2::Analyse(const TEventData &data, const TEvent& event, manager_t&
                     t.photons_vetoE().at(i)      = selected_photons.at(i)->Candidate->VetoEnergy;
                     t.photons_PSA().at(i)        = getPSAVector(selected_photons.at(i));
                     t.photons_detector().at(i)   = getDetectorAsInt(selected_photons.at(i)->Candidate->Detector);
-//                    t.photon_E_pulls().at(i)     = fitparticles.at(i+1).Ek.Pull;
-//                    t.photon_theta_pulls().at(i) = fitparticles.at(i+1).Theta.Pull;
-//                    t.photon_phi_pulls().at(i)   = fitparticles.at(i+1).Phi.Pull;
+                    t.photon_E_pulls().at(i)     = fitparticles.at(i+1).Ek.Pull;
+                    t.photon_theta_pulls().at(i) = fitparticles.at(i+1).Theta.Pull;
+                    t.photon_phi_pulls().at(i)   = fitparticles.at(i+1).Phi.Pull;
                 }
 
                 // other
