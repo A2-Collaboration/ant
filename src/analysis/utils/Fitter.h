@@ -64,28 +64,15 @@ public:
 
         TParticlePtr AsFitted() const;
 
+        using pulls_t = std::vector<double>;
+        pulls_t GetPulls() const;
+
         FitParticle(const std::string& name,
                     APLCON& aplcon,
                     std::shared_ptr<FitVariable> z_vertex);
         virtual ~FitParticle();
 
     protected:
-//        template<typename T>
-//        std::vector< typename std::result_of<T(double&)>::type >
-//        vectorize(double FitVariable::* member, T f)
-//        {
-
-//        };
-
-//        template<typename T>
-//        std::vector< typename std::result_of<T(double)>::type >
-//        vectorize(double FitVariable::* member, T f) const
-//        {
-//            std::vector<typename std::result_of<T(double)>::type> ptrs(Vars.size());
-//            std::transform(Vars.begin(), Vars.end(), ptrs.begin(),
-//                           [member, f] (FitVariable& v) { return f(v.*member); });
-//            return ptrs;
-//        };
 
         friend class Fitter;
         friend class KinFitter;
@@ -151,13 +138,8 @@ public:
     double GetBeamEPull() const;
     double GetZVertexPull() const;
 
-    double GetProtonEPull() const;
-    double GetProtonThetaPull() const;
-    double GetProtonPhiPull() const;
-
-    std::vector<double> GetPhotonEPulls() const;
-    std::vector<double> GetPhotonThetaPulls() const;
-    std::vector<double> GetPhotonPhiPulls() const;
+    FitParticle::pulls_t GetProtonPulls() const;
+    std::vector<FitParticle::pulls_t> GetPhotonsPulls() const;
 
     /**
      * @brief GetFitParticles returns as first item the proton, then all n photons

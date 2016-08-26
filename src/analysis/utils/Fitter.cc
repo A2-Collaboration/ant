@@ -92,6 +92,14 @@ TParticlePtr Fitter::FitParticle::AsFitted() const
     return p;
 }
 
+Fitter::FitParticle::pulls_t Fitter::FitParticle::GetPulls() const
+{
+    pulls_t pulls(Vars.size());
+    transform(Vars.begin(), Vars.end(), pulls.begin(),
+                  [] (const FitVariable& v) { return v.Pull; });
+    return pulls;
+}
+
 void Fitter::FitParticle::Set(const TParticlePtr& p,
                               const UncertaintyModel& uncertainty)
 {
@@ -333,44 +341,21 @@ double KinFitter::GetZVertexPull() const
         return std_ext::NaN; // ignore silently
 }
 
-double KinFitter::GetProtonEPull() const
+Fitter::FitParticle::pulls_t KinFitter::GetProtonPulls() const
 {
-//    return Proton->Ek.Pull;
+    return Proton->GetPulls();
 }
 
-double KinFitter::GetProtonThetaPull() const
-{
-//    return Proton->Theta.Pull;
-}
 
-double KinFitter::GetProtonPhiPull() const
+std::vector<Fitter::FitParticle::pulls_t> KinFitter::GetPhotonsPulls() const
 {
-//    return Proton->Phi.Pull;
-}
-
-std::vector<double> KinFitter::GetPhotonEPulls() const
-{
-    std::vector<double> pulls;
-//    for(auto& photon : Photons)
-//        pulls.push_back(photon->Ek.Pull);
+    std::vector<Fitter::FitParticle::pulls_t> pulls;
+    for(auto& photon : Photons)
+        pulls.emplace_back(photon->GetPulls());
     return pulls;
 }
 
-std::vector<double> KinFitter::GetPhotonThetaPulls() const
-{
-    std::vector<double> pulls;
-//    for(auto& photon : Photons)
-//        pulls.push_back(photon->Theta.Pull);
-    return pulls;
-}
 
-std::vector<double> KinFitter::GetPhotonPhiPulls() const
-{
-    std::vector<double> pulls;
-//    for(auto& photon : Photons)
-//        pulls.push_back(photon->Phi.Pull);
-    return pulls;
-}
 
 std::vector<Fitter::FitParticle> KinFitter::GetFitParticles() const
 {
