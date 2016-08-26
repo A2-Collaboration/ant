@@ -73,8 +73,7 @@ JustPi0::MultiPi0::MultiPi0(HistogramFactory& histFac, unsigned nPi0, utils::Unc
     IM_2g_byMM(promptrandom),
     IM_2g_byFit(promptrandom),
     IM_2g_fitted(promptrandom),
-    treefitter("treefit_jusitpi0_"+to_string(nPi0), directPi0, model, true),
-    pullOut(HistFac)
+    treefitter("treefit_jusitpi0_"+to_string(nPi0), directPi0, model, true)
 {
     fitter.SetZVertexSigma(0);
     treefitter.SetZVertexSigma(0);
@@ -331,8 +330,6 @@ void JustPi0::MultiPi0::ProcessData(const TEventData& data, const TParticleTree_
 
         if(kinfit_ok) {
 
-
-
             t.treefit_prob    = std_ext::NaN;
             t.treefit_chi2dof = std_ext::NaN;
 
@@ -363,8 +360,6 @@ void JustPi0::MultiPi0::ProcessData(const TEventData& data, const TParticleTree_
 
                 }
             }
-
-            pullOut.Fill(best_fitParticles, t.Tagg_W, t.treefit_prob);
 
             tree->Fill();
         } // end KinFit ok

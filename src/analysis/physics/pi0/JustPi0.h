@@ -98,8 +98,6 @@ protected:
 
         static ParticleTypeTree getParticleTree(const unsigned nPi0);
 
-        utils::PullsWriter pullOut;
-
     };
 
     utils::UncertaintyModelPtr model;
