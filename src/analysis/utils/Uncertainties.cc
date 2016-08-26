@@ -1339,3 +1339,8 @@ Uncertainties_t UncertaintyModels::FitterSergey::GetSigmas(const TParticle& part
 
     return u;
 }
+
+double UncertaintyModels::FitterSergey::GetBeamEnergySigma(double) const
+{
+    return 1.3;
+}
