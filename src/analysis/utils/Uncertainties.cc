@@ -394,8 +394,8 @@ Uncertainties_t UncertaintyModels::Optimized::GetSigmas(const TParticle& particl
 
         static auto cb = ExpConfig::Setup::GetDetector<expconfig::detector::CB>();
         auto elem = cb->GetClusterElement(calocluster->CentralElement);
-        s.ShowerDepth = elem->RadiationLength*std::log2(Ek/elem->CriticalE)/std::pow(std::sin(theta),3.0);
-        s.sigmaCB_R = 10; // in cm
+        s.ShowerDepth = elem->RadiationLength*std::log2(Ek/elem->CriticalE); // /std::pow(std::sin(theta),3.0);
+        s.sigmaCB_R = 2; // in cm
     }
     else if(particle.Candidate->Detector & Detector_t::Type_t::TAPS) {
 

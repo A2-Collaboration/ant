@@ -17,6 +17,7 @@ EtapSergey::EtapSergey(const string& name, OptionsPtr opts) :
     fit_model(
 //        utils::UncertaintyModels::Interpolated::makeAndLoad(
 //            utils::UncertaintyModels::Interpolated::Mode_t::Fit)
+//        std::make_shared<utils::UncertaintyModels::OptimizedOli1>()
         std::make_shared<utils::UncertaintyModels::FitterSergey>()
         ),
     fitter_ant(std_ext::make_unique<utils::KinFitter>("KinFit", 2,
