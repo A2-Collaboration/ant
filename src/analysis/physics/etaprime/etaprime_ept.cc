@@ -288,12 +288,8 @@ bool EtapEPT::doKinfit(const TTaggerHit& taggerhit,
     t.KinFitZVertex = std_ext::NaN;
 
     t.KinFitBeamEPull = std_ext::NaN;
-    t.KinFitProtonEPull = std_ext::NaN;
-    t.KinFitProtonThetaPull = std_ext::NaN;
-    t.KinFitProtonPhiPull = std_ext::NaN;
-    t.KinFitPhotonEPulls().resize(0);
-    t.KinFitPhotonThetaPulls().resize(0);
-    t.KinFitPhotonPhiPulls().resize(0);
+    t.KinFitProtonPulls().resize(0);
+    t.KinFitPhotonsPulls().resize(0);
 
     t.FittedProtonE = std_ext::NaN;
 
@@ -317,12 +313,8 @@ bool EtapEPT::doKinfit(const TTaggerHit& taggerhit,
     t.KinFitZVertex = kinfitter.GetFittedZVertex();
 
     t.KinFitBeamEPull = kinfitter.GetBeamEPull();
-    t.KinFitProtonEPull = kinfitter.GetProtonEPull();
-    t.KinFitProtonThetaPull = kinfitter.GetProtonThetaPull();
-    t.KinFitProtonPhiPull = kinfitter.GetProtonPhiPull();
-    t.KinFitPhotonEPulls = kinfitter.GetPhotonEPulls();
-    t.KinFitPhotonThetaPulls = kinfitter.GetPhotonThetaPulls();
-    t.KinFitPhotonPhiPulls = kinfitter.GetPhotonPhiPulls();
+    t.KinFitProtonPulls = kinfitter.GetProtonPulls();
+    t.KinFitPhotonsPulls = kinfitter.GetPhotonsPulls();
 
     const auto& fitted_proton = kinfitter.GetFittedProton();
     t.FittedProtonE = fitted_proton->Ek();
