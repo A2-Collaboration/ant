@@ -30,7 +30,7 @@ struct Uncertainties_t {
     double ShowerDepth;
     double sigmaCB_R;
     double sigmaTAPS_Rxy;
-    double sigmaTAPS_Lz;
+    double sigmaTAPS_L;
 
     Uncertainties_t(double E = std_ext::NaN,
                     double Theta = std_ext::NaN,
@@ -39,10 +39,10 @@ struct Uncertainties_t {
                     double showerDepth = std_ext::NaN,
                     double CB_R = std_ext::NaN,
                     double TAPS_Rxy = std_ext::NaN,
-                    double TAPS_Lz = std_ext::NaN) :
+                    double TAPS_L = std_ext::NaN) :
         sigmaE(E), sigmaTheta(Theta), sigmaPhi(Phi),
         Detector(detector), ShowerDepth(showerDepth),
-        sigmaCB_R(CB_R), sigmaTAPS_Rxy(TAPS_Rxy), sigmaTAPS_Lz(TAPS_Lz)
+        sigmaCB_R(CB_R), sigmaTAPS_Rxy(TAPS_Rxy), sigmaTAPS_L(TAPS_L)
     {}
 };
 

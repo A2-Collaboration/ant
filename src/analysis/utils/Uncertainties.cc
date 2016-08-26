@@ -412,7 +412,7 @@ Uncertainties_t UncertaintyModels::Optimized::GetSigmas(const TParticle& particl
         static auto taps = ExpConfig::Setup::GetDetector<expconfig::detector::TAPS>();
         auto elem = taps->GetClusterElement(calocluster->CentralElement);
         s.ShowerDepth = elem->RadiationLength*std::log2(Ek/elem->CriticalE);
-        s.sigmaTAPS_Lz  = 2; // in cm
+        s.sigmaTAPS_L  = 2; // in cm
         s.sigmaTAPS_Rxy = 1; // in cm
     }
     else {
@@ -1279,7 +1279,7 @@ Uncertainties_t UncertaintyModels::FitterSergey::GetSigmas(const TParticle& part
             u.sigmaE = dEovEclTAPS(Ek/1000.0)*Ek;
             u.sigmaTAPS_Rxy = dTanThTAPS(Ek/1000.0);
             u.ShowerDepth = DepthShowTAPS(Ek/1000.0);
-            u.sigmaTAPS_Lz = dDepthShowTAPS(Ek/1000.0);
+            u.sigmaTAPS_L = dDepthShowTAPS(Ek/1000.0);
         }
         else if(particle.Type() == ParticleTypeDatabase::Proton) {
 
@@ -1324,7 +1324,7 @@ Uncertainties_t UncertaintyModels::FitterSergey::GetSigmas(const TParticle& part
             u.sigmaE = 0;
             u.sigmaTAPS_Rxy = dTanThTAPS(Ek/1000.0, TAPS_Rxy);
             u.ShowerDepth = DepthShowTAPS(Ek/1000.0);
-            u.sigmaTAPS_Lz = dDepthShowTAPS(Ek/1000.0);
+            u.sigmaTAPS_L = dDepthShowTAPS(Ek/1000.0);
         }
         else {
             throw Exception("Unexpected Particle: " + particle.Type().Name());

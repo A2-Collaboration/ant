@@ -49,7 +49,7 @@ Fitter::FitParticle::FitParticle(const string& name,
                                  APLCON& aplcon,
                                  std::shared_ptr<Fitter::FitVariable> z_vertex) :
     Detector(Detector_t::Any_t::None),
-    Vars(4), // it's a lucky coincidence that any particle is parametrized by 4 values
+    Vars(4), // it's a lucky coincidence that particles in CB/TAPS are both parametrized by 4 values
     Name(name),
     Z_Vertex(z_vertex)
 {
@@ -115,10 +115,13 @@ void Fitter::FitParticle::Set(const TParticlePtr& p,
     else if(Detector & Detector_t::Type_t::TAPS)
     {
         static auto taps = ExpConfig::Setup::GetDetector<expconfig::detector::TAPS>();
-        const auto& TAPS_Lz = taps->GetZPosition() + sigmas.ShowerDepth;
-        const auto& TAPS_Rxy = std::tan(p->Theta())*TAPS_Lz;
-        Vars[1].SetValueSigma(TAPS_Rxy, sigmas.sigmaTAPS_Rxy);
-        Vars[3].SetValueSigma(TAPS_Lz,  sigmas.sigmaTAPS_Lz);
+        const auto& TAPS_Lz = taps->GetZPosition() + sigmas.ShowerDepth*std::cos(p->Theta());
+        auto& pos = p->Candidate->FindCaloCluster()->Position;
+        const vec3 TAPS_L{pos.x, pos.y, TAPS_Lz};
+        const auto& TAPS_Rxy = std::sin(p->Theta())*TAPS_L.R();
+
+        Vars[1].SetValueSigma(TAPS_Rxy,   sigmas.sigmaTAPS_Rxy);
+        Vars[3].SetValueSigma(TAPS_L.R(), sigmas.sigmaTAPS_L);
     }
     else {
         throw Exception("Unknown/none detector type provided from uncertainty model");
@@ -128,34 +131,38 @@ void Fitter::FitParticle::Set(const TParticlePtr& p,
 LorentzVec Fitter::FitParticle::GetLorentzVec(const std::vector<double>& vars,
                                               const double z_vertex) const
 {
-    double theta_corr = std_ext::NaN;
+
+    const radian_t& phi   = vars[2];
+
+    vec3 x;
 
     if(Detector & Detector_t::Type_t::CB)
     {
         // for CB, parametrization is (Ek, theta, phi, CB_R)
         const radian_t& theta = vars[1];
         const auto&     CB_R  = vars[3];
-        theta_corr = std::acos(( CB_R*std::cos(theta) - z_vertex) / CB_R );
-
+        x = vec3::RThetaPhi(CB_R, theta, phi);
     }
     else if(Detector & Detector_t::Type_t::TAPS)
     {
         // for TAPS, parametrization is (Ek, TAPS_Rxy, phi, TAPS_Lz)
         const auto& TAPS_Rxy = vars[1];
-        const auto& TAPS_Lz  = vars[3];
-        theta_corr = std::atan(TAPS_Rxy / (TAPS_Lz - z_vertex));
+        const auto& TAPS_L   = vars[3];
+        x = vec3(vec2::RPhi(TAPS_Rxy, phi),
+                 sqrt(std_ext::sqr(TAPS_L) - std_ext::sqr(TAPS_Rxy)));
     }
     else {
         throw Exception("Unknown/none detector type provided from uncertainty model");
     }
 
+    x -= vec3(0, 0, z_vertex);
+
     const mev_t& Ek       = 1.0/vars[0];
-    const radian_t& phi   = vars[2];
 
     const mev_t& E = Ek + Particle->Type().Mass()/1000.0;
     const mev_t& p = sqrt( sqr(E) - sqr(Particle->Type().Mass()/1000.0) );
 
-    return LorentzVec::EPThetaPhi(E, p, theta_corr, phi);
+    return LorentzVec::EPThetaPhi(E, p, x.Theta(), x.Phi());
 }
 
 
