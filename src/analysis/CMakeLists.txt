@@ -101,8 +101,6 @@ set(ANALYSIS_UTILS
   utils/MCSmear.cc
   utils/MCFakeReconstructed.cc
   utils/PullsWriter.cc
-  utils/FitterSergey.cc
-  utils/Fitter_traits.h
   )
 
 set(ANALYSIS_ALL

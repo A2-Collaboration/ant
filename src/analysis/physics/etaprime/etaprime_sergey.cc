@@ -1,6 +1,5 @@
 #include "etaprime_sergey.h"
 
-#include "utils/FitterSergey.h"
 #include "plot/root_draw.h"
 #include "base/std_ext/misc.h"
 #include "base/Logger.h"
@@ -11,9 +10,7 @@ using namespace ant::analysis;
 using namespace ant::analysis::physics;
 using namespace std;
 
-unique_ptr<utils::Fitter_traits> makeFitter(OptionsPtr opts) {
-    if(opts->Get<bool>("UseFitterSergey", false))
-        return std_ext::make_unique<utils::FitterSergey>();
+unique_ptr<utils::KinFitter> makeFitter(OptionsPtr opts) {
     auto fit_model = utils::UncertaintyModels::Interpolated::makeAndLoad(
                          std::make_shared<utils::UncertaintyModels::FitterSergey>(),
                          utils::UncertaintyModels::Interpolated::Mode_t::Fit);

@@ -7,8 +7,6 @@
 #include "analysis/utils/Uncertainties.h"
 #include "base/std_ext/math.h"
 
-#include "Fitter_traits.h"
-
 #include "APLCON.hpp"
 
 #include <stdexcept>
@@ -106,7 +104,7 @@ private:
 };
 
 
-class KinFitter : public Fitter, public Fitter_traits
+class KinFitter : public Fitter
 {
 public:
 
@@ -124,18 +122,18 @@ public:
     KinFitter(KinFitter&&) = default;
     KinFitter& operator=(KinFitter&&) = default;
 
-    virtual void SetEgammaBeam(double ebeam) override;
-    virtual void SetZVertexSigma(double sigma) override;
-    virtual void SetProton(const TParticlePtr& proton) override;
-    virtual void SetPhotons(const TParticleList& photons) override;
+    void SetEgammaBeam(double ebeam);
+    void SetZVertexSigma(double sigma);
+    void SetProton(const TParticlePtr& proton);
+    virtual void SetPhotons(const TParticleList& photons);
 
-    virtual bool IsZVertexFitEnabled() const noexcept override;
+    bool IsZVertexFitEnabled() const noexcept;
 
-    virtual TParticlePtr GetFittedProton() const override;
-    virtual TParticleList GetFittedPhotons() const override;
-    virtual double GetFittedBeamE() const override;
+    TParticlePtr GetFittedProton() const;
+    TParticleList GetFittedPhotons() const;
+    double GetFittedBeamE() const;
     TParticlePtr GetFittedBeamParticle() const;
-    virtual double GetFittedZVertex() const override;
+    double GetFittedZVertex() const;
 
     double GetBeamEPull() const;
     double GetZVertexPull() const;
@@ -154,7 +152,7 @@ public:
      */
     std::vector<FitParticle> GetFitParticles() const;
 
-    virtual APLCON::Result_t DoFit() override;
+    APLCON::Result_t DoFit();
 
 protected:
 

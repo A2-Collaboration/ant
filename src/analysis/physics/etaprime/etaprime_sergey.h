@@ -61,7 +61,7 @@ protected:
 
     Tree_t t;
 
-    std::unique_ptr<utils::Fitter_traits> fitter;
+    std::unique_ptr<utils::KinFitter> fitter;
 
 public:
     EtapSergey(const std::string& name, OptionsPtr opts);
