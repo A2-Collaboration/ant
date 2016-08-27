@@ -1024,10 +1024,10 @@ void UncertaintyModels::Interpolated::EkThetaPhiR::SetUncertainties(Uncertaintie
 
 void UncertaintyModels::Interpolated::EkThetaPhiR::Load(WrapTFile& file, const std::string& prefix)
 {
-    Ek.setInterpolator(    LoadInterpolator(file, prefix+"/sigma_0"));
-    Theta.setInterpolator( LoadInterpolator(file, prefix+"/sigma_1"));
-    Phi.setInterpolator(   LoadInterpolator(file, prefix+"/sigma_2"));
-    CB_R.setInterpolator(  LoadInterpolator(file, prefix+"/sigma_3"));
+    Ek.setInterpolator(    LoadInterpolator(file, prefix+"/sigma_Ek"));
+    Theta.setInterpolator( LoadInterpolator(file, prefix+"/sigma_Theta"));
+    Phi.setInterpolator(   LoadInterpolator(file, prefix+"/sigma_Phi"));
+    CB_R.setInterpolator(  LoadInterpolator(file, prefix+"/sigma_R"));
 }
 
 ostream& UncertaintyModels::Interpolated::EkThetaPhiR::Print(ostream& stream) const
@@ -1051,10 +1051,10 @@ void UncertaintyModels::Interpolated::EkRxyPhiL::SetUncertainties(Uncertainties_
 
 void UncertaintyModels::Interpolated::EkRxyPhiL::Load(WrapTFile& file, const std::string& prefix)
 {
-    Ek.setInterpolator(       LoadInterpolator(file, prefix+"/sigma_0"));
-    TAPS_Rxy.setInterpolator( LoadInterpolator(file, prefix+"/sigma_1"));
-    Phi.setInterpolator(      LoadInterpolator(file, prefix+"/sigma_2"));
-    TAPS_L.setInterpolator(   LoadInterpolator(file, prefix+"/sigma_3"));
+    Ek.setInterpolator(       LoadInterpolator(file, prefix+"/sigma_Ek"));
+    TAPS_Rxy.setInterpolator( LoadInterpolator(file, prefix+"/sigma_Rxy"));
+    Phi.setInterpolator(      LoadInterpolator(file, prefix+"/sigma_Phi"));
+    TAPS_L.setInterpolator(   LoadInterpolator(file, prefix+"/sigma_L"));
 }
 
 ostream& UncertaintyModels::Interpolated::EkRxyPhiL::Print(ostream& stream) const
