@@ -154,9 +154,10 @@ public:
 
     string SetupName() const{return bkg1.setupName;}
 
+    // startID for these taggEff values should be the end of this taggEff-triple:
     TID startID() const
     {
-        bkg2.wrapTree.Tree->GetEntry(bkg2.wrapTree.Tree->GetEntries());
+        bkg2.wrapTree.Tree->GetEntry(bkg2.wrapTree.Tree->GetEntries()-1);
         return bkg2.wrapTree.LastID();
     }
 
@@ -180,6 +181,7 @@ public:
                                                  + m_bkg2.livetime * m_bkg2.electrons.at(channel) ) / 2.0 );
             result.TaggEffs.at(channel) *= 1.0 / m_run.tdcs.at(channel);
         }
+
 
         return result;
     }
