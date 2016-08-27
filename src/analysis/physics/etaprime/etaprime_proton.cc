@@ -67,7 +67,7 @@ EtapProton::EtapProton(const string& name, OptionsPtr opts):
     if(!setup)
         throw runtime_error("EtapProton needs a setup");
 
-    auto uncertainty = utils::UncertaintyModels::MCExtracted::makeAndLoad();
+    auto uncertainty = make_shared<utils::UncertaintyModels::FitterSergey>();
 
     for(unsigned mult=enclosing.Start();mult<=enclosing.Stop();mult++) {
         if(!multiplicities.Contains(mult))
