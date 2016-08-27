@@ -27,6 +27,7 @@
 #include "TRint.h"
 #include "TStyle.h"
 #include "TGraph.h"
+#include "TTree.h"
 
 
 using namespace std;
@@ -122,6 +123,15 @@ void show_time(const string& dbfolder, const string& calibID)
     auto points_x = new std::vector<double>();
     auto points_y = new std::vector<double>();
 
+    auto drawTree = new TTree();
+    double key;
+    double timestamp;
+    double value;
+    drawTree->Branch("key",addressof(key));
+    drawTree->Branch("time",addressof(timestamp));
+    drawTree->Branch("value",addressof(value));
+
+
     auto ranges = onDiskDB.GetDataRanges(calibID);
 
     unsigned i = 0;
@@ -137,6 +147,12 @@ void show_time(const string& dbfolder, const string& calibID)
             const double x = i + span*(double)j/length - span/2;
             points_x->push_back(x);
             points_y->push_back(entry.Value);
+
+            key   = (double) j;
+            timestamp = 1.0 * ((double)dataBuffer.FirstID.Timestamp + (double)dataBuffer.LastID.Timestamp) / 2.0;
+            value  = entry.Value;
+            drawTree->Fill();
+
             j++;
         }
 
@@ -147,8 +163,10 @@ void show_time(const string& dbfolder, const string& calibID)
     graph->SetTitle(calibID.c_str());
     graph->GetXaxis()->SetTitle("Range");
     graph->GetYaxis()->SetTitle("Value");
+
+
     canvas c("view");
-    c << drawoption("AP") << graph << endc;
+    c << drawoption("AP") << graph << drawoption("PCOL") << TTree_drawable(drawTree,"value:time:k") << endc;
 
 }
 
