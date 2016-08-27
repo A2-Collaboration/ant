@@ -84,7 +84,6 @@ TParticlePtr Fitter::FitParticle::AsFitted() const
     auto p = make_shared<TParticle>(Particle->Type(),
                                     GetLorentzVec(values, z_vertex)
                                     );
-    *p *= 1000.0;
     p->Candidate = Particle->Candidate;
     return p;
 }
@@ -94,8 +93,6 @@ std::vector<double> Fitter::FitParticle::GetSigmas() const
     vector<double> sigmas(Vars.size());
     transform(Vars.begin(), Vars.end(), sigmas.begin(),
                   [] (const FitVariable& v) { return v.Sigma_before; });
-    // take care that the Vars[0] is the inverse energy in GeV
-    sigmas.front() *= 1000.0/std_ext::sqr(Vars.front().Value_before);
     return sigmas;
 }
 
@@ -114,9 +111,8 @@ void Fitter::FitParticle::Set(const TParticlePtr& p,
     const auto& sigmas = uncertainty.GetSigmas(*p);
     Detector = sigmas.Detector;
 
-    const auto sigmaEkInverse = sigmas.sigmaEk/std_ext::sqr(p->Ek());
-    Vars[0].SetValueSigma(1000.0/p->Ek(), sigmaEkInverse*1000.0);
-    Vars[2].SetValueSigma(p->Phi(),       sigmas.sigmaPhi);
+    Vars[0].SetValueSigma(p->Ek(),  sigmas.sigmaEk);
+    Vars[2].SetValueSigma(p->Phi(), sigmas.sigmaPhi);
 
     // the parametrization, and thus the meaning of the linked fitter variables,
     // depends on the calorimeter
@@ -171,11 +167,9 @@ LorentzVec Fitter::FitParticle::GetLorentzVec(const std::vector<double>& values,
         throw Exception("Unknown/none detector type provided from uncertainty model");
     }
 
-    // inverse Ek are used in the fit
-    const mev_t& Ek = 1.0/values[0];
-
-    const mev_t& E = Ek + Particle->Type().Mass()/1000.0;
-    const mev_t& p = sqrt( sqr(E) - sqr(Particle->Type().Mass()/1000.0) );
+    const mev_t& Ek = values[0];
+    const mev_t& E = Ek + Particle->Type().Mass();
+    const mev_t& p = sqrt( sqr(E) - sqr(Particle->Type().Mass()) );
 
     return LorentzVec::EPThetaPhi(E, p, x.Theta(), x.Phi());
 }
@@ -239,7 +233,7 @@ KinFitter::KinFitter(const std::string& name,
 
         const auto  n = fit_particles.size();
         // n serves as an offset here
-        const auto& BeamE    = 1.0/values[n+0][0];
+        const auto& BeamE    = values[n+0][0];
         const auto  z_vertex = fit_Z_vertex ? values[n+1][0] : 0.0;
 
         // start with the incoming particle
@@ -268,8 +262,7 @@ KinFitter::~KinFitter()
 void KinFitter::SetEgammaBeam(const double ebeam)
 {
     // use inverse energy in 1/GeV here as well
-    const auto sigma_Einverse = uncertainty->GetBeamEnergySigma(ebeam)/std_ext::sqr(ebeam);
-    BeamE->SetValueSigma(1000.0/ebeam, 1000.0*sigma_Einverse);
+    BeamE->SetValueSigma(ebeam, uncertainty->GetBeamEnergySigma(ebeam));
 }
 
 void KinFitter::SetZVertexSigma(double sigma)
@@ -316,15 +309,13 @@ TParticleList KinFitter::GetFittedPhotons() const
 
 double KinFitter::GetFittedBeamE() const
 {
-    return 1000.0/BeamE->Value;
+    return BeamE->Value;
 }
 
 TParticlePtr KinFitter::GetFittedBeamParticle() const
 {
-    auto p = std::make_shared<TParticle>(ParticleTypeDatabase::BeamProton,
+    return std::make_shared<TParticle>(ParticleTypeDatabase::BeamProton,
                                          MakeBeamLorentzVec(BeamE->Value));
-    *p *= 1000.0;
-    return p;
 }
 
 double KinFitter::GetFittedZVertex() const
@@ -386,14 +377,13 @@ APLCON::Result_t KinFitter::DoFit() {
         Z_Vertex->Sigma = Z_Vertex->Sigma_before;
     }
 
-    // assume that BeamE is inverse energy
-    double missing_E = 1.0/BeamE->Value;
+    double missing_E = BeamE->Value;
     for(auto& photon : Photons) {
-        missing_E -= photon->Particle->Ek()/1000.0;
+        missing_E -= photon->Particle->Ek();
     }
-    // asumme that 0th component is inverse Ek
-    Proton->Vars[0].Value = 1.0/missing_E;
-    Proton->Vars[0].Value_before = 1.0/missing_E;
+    // asumme that 0th component is Ek
+    Proton->Vars[0].Value = missing_E;
+    Proton->Vars[0].Value_before = missing_E;
 
     const auto res = aplcon->DoFit();
 
@@ -412,7 +402,7 @@ LorentzVec KinFitter::MakeBeamLorentzVec(double BeamE)
     // target  LorentzVec(0.0, 0.0, 0.0, ParticleTypeDatabase::Proton.Mass())
     const LorentzVec beam({0, 0, BeamE}, BeamE);
     /// \todo Target is always assumed proton...
-    const LorentzVec target({0,0,0}, ParticleTypeDatabase::Proton.Mass()/1000.0);
+    const LorentzVec target({0,0,0}, ParticleTypeDatabase::Proton.Mass());
 
     return target + beam;
 }
@@ -485,7 +475,7 @@ TreeFitter::TreeFitter(const string& name,
         node_constraints.emplace_back([tnode, IM_Sigma] () {
             node_t& node = tnode->Get();
             const double IM_calc = node.LVSum.M();
-            const double IM_expected = tnode->Get().TypeTree->Get().Mass()/1000.0;
+            const double IM_expected = tnode->Get().TypeTree->Get().Mass();
             return (IM_calc - IM_expected)/IM_Sigma;
         });
     });
