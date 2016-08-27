@@ -28,11 +28,11 @@ using namespace ant::analysis::utils;
 
 const APLCON::Fit_Settings_t Fitter::Fitter::DefaultSettings = Fitter::MakeDefaultSettings();
 
-Fitter::Fitter(const string& fittername, const APLCON::Fit_Settings_t& settings, utils::UncertaintyModelPtr uncertainty_model):
-    uncertainty(uncertainty_model)
-{
-    aplcon = std_ext::make_unique<APLCON>(fittername, settings);
-}
+Fitter::Fitter(const string& fittername, const APLCON::Fit_Settings_t& settings,
+               utils::UncertaintyModelPtr uncertainty_model) :
+    uncertainty(uncertainty_model),
+    aplcon(std_ext::make_unique<APLCON>(fittername, settings))
+{}
 
 Fitter::~Fitter()
 {}
@@ -42,6 +42,7 @@ APLCON::Fit_Settings_t Fitter::MakeDefaultSettings()
 {
     auto settings = APLCON::Fit_Settings_t::Default;
     settings.MaxIterations = 30;
+    settings.SkipCovariancesInResult = true;
     return settings;
 }
 
@@ -172,7 +173,6 @@ LorentzVec Fitter::FitParticle::GetLorentzVec(const std::vector<double>& values,
     const mev_t& p = sqrt( sqr(E) - sqr(Particle->Type().Mass()) );
 
     const vec3& p_vec = x*p/x.R();
-
     return {p_vec, E};
 }
 
