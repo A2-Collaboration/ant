@@ -171,7 +171,9 @@ LorentzVec Fitter::FitParticle::GetLorentzVec(const std::vector<double>& values,
     const mev_t& E = Ek + Particle->Type().Mass();
     const mev_t& p = sqrt( sqr(E) - sqr(Particle->Type().Mass()) );
 
-    return LorentzVec::EPThetaPhi(E, p, x.Theta(), x.Phi());
+    const vec3& p_vec = x*p/x.R();
+
+    return {p_vec, E};
 }
 
 
