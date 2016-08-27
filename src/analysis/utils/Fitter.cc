@@ -112,6 +112,9 @@ void Fitter::FitParticle::Set(const TParticlePtr& p,
     const auto& sigmas = uncertainty.GetSigmas(*p);
     Detector = sigmas.Detector;
 
+    if(!p->Candidate)
+        throw Exception("Need particle with candidate for fitting");
+
     Vars[0].SetValueSigma(p->Ek(),  sigmas.sigmaEk);
     Vars[2].SetValueSigma(p->Phi(), sigmas.sigmaPhi);
 
