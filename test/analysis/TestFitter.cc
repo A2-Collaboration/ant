@@ -72,13 +72,18 @@ struct TestUncertaintyModel : utils::UncertaintyModel {
 
 struct Pulls_t {
     std_ext::RMS Ek;
-    std_ext::RMS Theta;
+    std_ext::RMS Theta_Rxy;
     std_ext::RMS Phi;
+    std_ext::RMS R_L;
+
 
     void Fill(const utils::Fitter::FitParticle& p) {
-        Ek.Add(p.Ek.Pull);
-        Theta.Add(p.Theta.Pull);
-        Phi.Add(p.Phi.Pull);
+        const auto& pulls = p.GetPulls();
+        CHECK(pulls.size()==4);
+        Ek.Add(pulls[0]);
+        Theta_Rxy.Add(pulls[1]);
+        Phi.Add(pulls[2]);
+        R_L.Add(pulls[3]);
     }
 };
 
@@ -271,15 +276,15 @@ void dotest(bool z_vertex, bool proton_unmeas, bool smeared) {
             CHECK(pulls_Proton.Ek.GetRMS() == Approx(1).epsilon(0.04));
         }
 
-        CHECK(pulls_Proton.Theta.GetMean() == Approx(0).scale(pulls_Proton.Theta.GetRMS()).epsilon(0.1));
-        CHECK(pulls_Proton.Theta.GetRMS() == Approx(1).epsilon(0.006));
+        CHECK(pulls_Proton.Theta_Rxy.GetMean() == Approx(0).scale(pulls_Proton.Theta_Rxy.GetRMS()).epsilon(0.1));
+        CHECK(pulls_Proton.Theta_Rxy.GetRMS() == Approx(1).epsilon(0.006));
         CHECK(pulls_Proton.Phi.GetMean() == Approx(0).scale(pulls_Proton.Phi.GetRMS()).epsilon(0.1));
         CHECK(pulls_Proton.Phi.GetRMS() == Approx(1).epsilon(0.01));
 
         CHECK(pulls_Photons.Ek.GetMean() == Approx(0).scale(pulls_Photons.Ek.GetRMS()).epsilon(0.1));
         CHECK(pulls_Photons.Ek.GetRMS() == Approx(1).epsilon(0.03));
-        CHECK(pulls_Photons.Theta.GetMean() == Approx(0).scale(pulls_Photons.Theta.GetRMS()).epsilon(0.1));
-        CHECK(pulls_Photons.Theta.GetRMS() == Approx(1).epsilon(0.05));
+        CHECK(pulls_Photons.Theta_Rxy.GetMean() == Approx(0).scale(pulls_Photons.Theta_Rxy.GetRMS()).epsilon(0.1));
+        CHECK(pulls_Photons.Theta_Rxy.GetRMS() == Approx(1).epsilon(0.05));
         CHECK(pulls_Photons.Phi.GetMean() == Approx(0).scale(pulls_Photons.Phi.GetRMS()).epsilon(0.1));
         CHECK(pulls_Photons.Phi.GetRMS() == Approx(1).epsilon(0.03));
 
@@ -329,15 +334,15 @@ void dotest(bool z_vertex, bool proton_unmeas, bool smeared) {
         CHECK(pulls_Beam.GetRMS() == Approx(0).epsilon(eps_pulls));
         CHECK(pulls_Proton.Ek.GetMean() == Approx(0).epsilon(eps_pulls));
         CHECK(pulls_Proton.Ek.GetRMS() == Approx(0).epsilon(eps_pulls));
-        CHECK(pulls_Proton.Theta.GetMean() == Approx(0).epsilon(eps_pulls));
-        CHECK(pulls_Proton.Theta.GetRMS() == Approx(0).epsilon(eps_pulls));
+        CHECK(pulls_Proton.Theta_Rxy.GetMean() == Approx(0).epsilon(eps_pulls));
+        CHECK(pulls_Proton.Theta_Rxy.GetRMS() == Approx(0).epsilon(eps_pulls));
         CHECK(pulls_Proton.Phi.GetMean() == Approx(0).epsilon(eps_pulls));
         CHECK(pulls_Proton.Phi.GetRMS() == Approx(0).epsilon(eps_pulls));
 
         CHECK(pulls_Photons.Ek.GetMean() == Approx(0).epsilon(eps_pulls));
         CHECK(pulls_Photons.Ek.GetRMS() == Approx(0).epsilon(eps_pulls));
-        CHECK(pulls_Photons.Theta.GetMean() == Approx(0).epsilon(eps_pulls));
-        CHECK(pulls_Photons.Theta.GetRMS() == Approx(0).epsilon(eps_pulls));
+        CHECK(pulls_Photons.Theta_Rxy.GetMean() == Approx(0).epsilon(eps_pulls));
+        CHECK(pulls_Photons.Theta_Rxy.GetRMS() == Approx(0).epsilon(eps_pulls));
         CHECK(pulls_Photons.Phi.GetMean() == Approx(0).epsilon(eps_pulls));
         CHECK(pulls_Photons.Phi.GetRMS() == Approx(0).epsilon(eps_pulls));
 
