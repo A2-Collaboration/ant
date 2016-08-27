@@ -503,7 +503,7 @@ int main( int argc, char** argv )
                               hist_settings.bins_cosTheta,
                               hist_settings.bins_E,
                               bins_pulls,
-                              "h_pulls"+to_string(n)
+                              "h_pulls_"+label
                               ));
     }
 
@@ -515,7 +515,7 @@ int main( int argc, char** argv )
                                hist_settings.bins_cosTheta,
                                hist_settings.bins_E,
                                hist_settings.bins_Sigmas.at(n),
-                               "h_sigmas"+to_string(n)
+                               "h_sigmas_"+label
                                ));
     }
 
