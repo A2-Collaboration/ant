@@ -67,7 +67,7 @@ void FindProton::branches_t::Reset()
 FindProton::FindProton(const string& name, OptionsPtr opts):
     Physics(name,opts),
     nPhotons(opts->Get<unsigned>("nPhotons", 3)),
-    fitter("FindProton", nPhotons, utils::UncertaintyModels::MCExtracted::makeAndLoad())
+    fitter("FindProton", nPhotons, make_shared<utils::UncertaintyModels::FitterSergey>())
 {
     tree = HistFac.makeTTree("tree");
     tree_branches.SetBranchtes(tree);
