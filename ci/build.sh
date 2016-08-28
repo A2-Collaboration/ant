@@ -3,7 +3,7 @@
 set -e
 
 CACHE=$HOME/cache
-CACHE_REV=$CACHE/.rev4
+CACHE_REV=$CACHE/.rev5
 NCPU=2
 
 pushd $PWD
