@@ -42,8 +42,8 @@ EtapOmegaG::EtapOmegaG(const string& name, OptionsPtr opts) :
     Physics(name, opts),
     disable_Sig(opts->Get<bool>("DisableSig", false)),
     params(utils::UncertaintyModels::Interpolated::makeAndLoad(
-               // use OptimizedOli1 as default
-               make_shared<utils::UncertaintyModels::Optimized_Oli1>(),
+               // use FitterSergey as default
+               make_shared<utils::UncertaintyModels::FitterSergey>(),
                utils::UncertaintyModels::Interpolated::Mode_t::Fit
                ),
            true, // flag to enable z vertex
@@ -417,12 +417,8 @@ bool EtapOmegaG::doKinfit(const TTaggerHit& taggerhit,
     t.KinFitZVertex = std_ext::NaN;
 
     t.KinFitBeamEPull = std_ext::NaN;
-    t.KinFitProtonEPull = std_ext::NaN;
-    t.KinFitProtonThetaPull = std_ext::NaN;
-    t.KinFitProtonPhiPull = std_ext::NaN;
-    t.KinFitPhotonEPulls().resize(0);
-    t.KinFitPhotonThetaPulls().resize(0);
-    t.KinFitPhotonPhiPulls().resize(0);
+    t.KinFitProtonPulls().resize(0);
+    t.KinFitPhotonsPulls().resize(0);
 
     t.FittedProtonE = std_ext::NaN;
 
@@ -446,12 +442,8 @@ bool EtapOmegaG::doKinfit(const TTaggerHit& taggerhit,
     t.KinFitZVertex = kinfitter.GetFittedZVertex();
 
     t.KinFitBeamEPull = kinfitter.GetBeamEPull();
-    t.KinFitProtonEPull = kinfitter.GetProtonEPull();
-    t.KinFitProtonThetaPull = kinfitter.GetProtonThetaPull();
-    t.KinFitProtonPhiPull = kinfitter.GetProtonPhiPull();
-    t.KinFitPhotonEPulls = kinfitter.GetPhotonEPulls();
-    t.KinFitPhotonThetaPulls = kinfitter.GetPhotonThetaPulls();
-    t.KinFitPhotonPhiPulls = kinfitter.GetPhotonPhiPulls();
+    t.KinFitProtonPulls = kinfitter.GetProtonPulls();
+    t.KinFitPhotonsPulls = kinfitter.GetPhotonsPulls();
 
     const auto& fitted_proton = kinfitter.GetFittedProton();
     t.FittedProtonE = fitted_proton->Ek();
@@ -525,24 +517,17 @@ void EtapOmegaG::Sig_t::SharedTree_t::Reset()
     AntiPi0FitZVertex = std_ext::NaN;
 
     AntiPi0BeamEPull = std_ext::NaN;
-    AntiPi0ProtonEPull = std_ext::NaN;
-    AntiPi0ProtonThetaPull = std_ext::NaN;
-    AntiPi0ProtonPhiPull = std_ext::NaN;
-    AntiPi0PhotonEPulls().resize(0);
-    AntiPi0PhotonThetaPulls().resize(0);
-    AntiPi0PhotonPhiPulls().resize(0);
+    AntiPi0ProtonPulls().resize(0);
+    AntiPi0PhotonsPulls().resize(0);
+
 
     AntiEtaFitProb = std_ext::NaN;
     AntiEtaFitIterations = 0;
     AntiEtaFitZVertex = std_ext::NaN;
 
     AntiEtaBeamEPull = std_ext::NaN;
-    AntiEtaProtonEPull = std_ext::NaN;
-    AntiEtaProtonThetaPull = std_ext::NaN;
-    AntiEtaProtonPhiPull = std_ext::NaN;
-    AntiEtaPhotonEPulls().resize(0);
-    AntiEtaPhotonThetaPulls().resize(0);
-    AntiEtaPhotonPhiPulls().resize(0);
+    AntiEtaProtonPulls().resize(0);
+    AntiEtaPhotonsPulls().resize(0);
 }
 
 void EtapOmegaG::Sig_t::Process(const Particles_t& particles, const TParticleTree_t& ptree_sigref)
@@ -594,12 +579,8 @@ void EtapOmegaG::Sig_t::DoAntiPi0Eta(const Particles_t& particles)
         const auto& fitter = treefitter_Pi0Pi0;
         t.AntiPi0FitZVertex = fitter.GetFittedZVertex();
         t.AntiPi0BeamEPull = fitter.GetBeamEPull();
-        t.AntiPi0ProtonEPull = fitter.GetProtonEPull();
-        t.AntiPi0ProtonThetaPull = fitter.GetProtonThetaPull();
-        t.AntiPi0ProtonPhiPull = fitter.GetProtonPhiPull();
-        t.AntiPi0PhotonEPulls = fitter.GetPhotonEPulls();
-        t.AntiPi0PhotonThetaPulls = fitter.GetPhotonThetaPulls();
-        t.AntiPi0PhotonPhiPulls = fitter.GetPhotonPhiPulls();
+        t.AntiPi0ProtonPulls = fitter.GetProtonPulls();
+        t.AntiPi0PhotonsPulls = fitter.GetPhotonsPulls();
     }
 
     treefitter_Pi0Eta.SetEgammaBeam(particles.PhotonEnergy);
@@ -616,12 +597,8 @@ void EtapOmegaG::Sig_t::DoAntiPi0Eta(const Particles_t& particles)
         const auto& fitter = treefitter_Pi0Eta;
         t.AntiEtaFitZVertex = fitter.GetFittedZVertex();
         t.AntiEtaBeamEPull = fitter.GetBeamEPull();
-        t.AntiEtaProtonEPull = fitter.GetProtonEPull();
-        t.AntiEtaProtonThetaPull = fitter.GetProtonThetaPull();
-        t.AntiEtaProtonPhiPull = fitter.GetProtonPhiPull();
-        t.AntiEtaPhotonEPulls = fitter.GetPhotonEPulls();
-        t.AntiEtaPhotonThetaPulls = fitter.GetPhotonThetaPulls();
-        t.AntiEtaPhotonPhiPulls = fitter.GetPhotonPhiPulls();
+        t.AntiEtaProtonPulls = fitter.GetProtonPulls();
+        t.AntiEtaPhotonsPulls = fitter.GetPhotonsPulls();
     }
 }
 
@@ -691,12 +668,8 @@ void EtapOmegaG::Sig_t::Fit_t::BaseTree_t::Reset()
     TreeFitZVertex = std_ext::NaN;
 
     TreeFitBeamEPull = std_ext::NaN;
-    TreeFitProtonEPull = std_ext::NaN;
-    TreeFitProtonThetaPull = std_ext::NaN;
-    TreeFitProtonPhiPull = std_ext::NaN;
-    TreeFitPhotonEPulls().resize(0);
-    TreeFitPhotonThetaPulls().resize(0);
-    TreeFitPhotonPhiPulls().resize(0);
+    TreeFitProtonPulls().resize(0);
+    TreeFitPhotonsPulls().resize(0);
 
     IM_Pi0_fitted = std_ext::NaN;
     IM_Pi0_best = std_ext::NaN;
@@ -756,12 +729,8 @@ void EtapOmegaG::Sig_t::Pi0_t::Process(const EtapOmegaG::Particles_t& particles,
 
         t.TreeFitZVertex = treefitter.GetFittedZVertex();
         t.TreeFitBeamEPull = treefitter.GetBeamEPull();
-        t.TreeFitProtonEPull = treefitter.GetProtonEPull();
-        t.TreeFitProtonThetaPull = treefitter.GetProtonThetaPull();
-        t.TreeFitProtonPhiPull = treefitter.GetProtonPhiPull();
-        t.TreeFitPhotonEPulls = treefitter.GetPhotonEPulls();
-        t.TreeFitPhotonThetaPulls = treefitter.GetPhotonThetaPulls();
-        t.TreeFitPhotonPhiPulls = treefitter.GetPhotonPhiPulls();
+        t.TreeFitProtonPulls = treefitter.GetProtonPulls();
+        t.TreeFitPhotonsPulls = treefitter.GetPhotonsPulls();
 
         // IM fitted expected to be delta peaks since they were fitted...
         const LorentzVec& Pi0_fitted = fitted_Pi0->Get().LVSum;
@@ -909,12 +878,8 @@ void EtapOmegaG::Sig_t::OmegaPi0_t::Process(const EtapOmegaG::Particles_t& parti
         t.TreeFitZVertex = treefitter.GetFittedZVertex();
 
         t.TreeFitBeamEPull = treefitter.GetBeamEPull();
-        t.TreeFitProtonEPull = treefitter.GetProtonEPull();
-        t.TreeFitProtonThetaPull = treefitter.GetProtonThetaPull();
-        t.TreeFitProtonPhiPull = treefitter.GetProtonPhiPull();
-        t.TreeFitPhotonEPulls = treefitter.GetPhotonEPulls();
-        t.TreeFitPhotonThetaPulls = treefitter.GetPhotonThetaPulls();
-        t.TreeFitPhotonPhiPulls = treefitter.GetPhotonPhiPulls();
+        t.TreeFitProtonPulls = treefitter.GetProtonPulls();
+        t.TreeFitPhotonsPulls = treefitter.GetPhotonsPulls();
 
         // IM fitted expected to be delta peaks since they were fitted...
         EtaPrime_fitted = fitted_EtaPrime->Get().LVSum;

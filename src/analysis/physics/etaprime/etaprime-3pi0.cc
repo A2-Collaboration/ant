@@ -67,8 +67,6 @@ Etap3pi0::Etap3pi0(const std::string& name, OptionsPtr opts) :
     AddHist1D(cat,"tagHits",            "# Tagger hits", "# hits", "", BinSettings(15));
 
 
-    kinFitterEMB.SetupBranches(tree, "kinFitEMB");
-
     vars.SetBranches(tree);
 
     auto SetupIntermediates = [] (const utils::TreeFitter& theFitter,vector<utils::TreeFitter::tree_t>& intermediates)

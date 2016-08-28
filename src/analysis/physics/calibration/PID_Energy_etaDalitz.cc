@@ -513,10 +513,10 @@ void PID_Energy_etaDalitz::ProcessEvent(const TEvent& event, manager_t&)
                 if (proton->Candidate->VetoEnergy)
                     t.p_vetoChannel = proton->Candidate->FindVetoCluster()->CentralElement;
 
-                t.p_kinfit_theta_pull  = kinfit_particles.at(0).Theta.Pull;
-                t.p_kinfit_phi_pull    = kinfit_particles.at(0).Phi.Pull;
-                t.p_treefit_theta_pull = treefit_particles.at(0).Theta.Pull;
-                t.p_treefit_phi_pull   = treefit_particles.at(0).Phi.Pull;
+                t.p_kinfit_theta_pull  = kinfit_particles.at(0).GetPulls().at(1);
+                t.p_kinfit_phi_pull    = kinfit_particles.at(0).GetPulls().at(2);
+                t.p_treefit_theta_pull = treefit_particles.at(0).GetPulls().at(1);
+                t.p_treefit_phi_pull   = treefit_particles.at(0).GetPulls().at(2);
 
                 for (size_t i = 0; i < N_FINAL_STATE-1; ++i) {
                     t.photons().at(i)             = *(photons.at(i));
@@ -532,12 +532,12 @@ void PID_Energy_etaDalitz::ProcessEvent(const TEvent& event, manager_t&)
                     if (photons.at(i)->Candidate->VetoEnergy)
                         t.photons_vetoChannel().at(i) = photons.at(i)->Candidate->FindVetoCluster()->CentralElement;
 
-                    t.photon_kinfit_E_pulls().at(i)      = kinfit_particles.at(i+1).Ek.Pull;
-                    t.photon_kinfit_theta_pulls().at(i)  = kinfit_particles.at(i+1).Theta.Pull;
-                    t.photon_kinfit_phi_pulls().at(i)    = kinfit_particles.at(i+1).Phi.Pull;
-                    t.photon_treefit_E_pulls().at(i)     = treefit_particles.at(i+1).Ek.Pull;
-                    t.photon_treefit_theta_pulls().at(i) = treefit_particles.at(i+1).Theta.Pull;
-                    t.photon_treefit_phi_pulls().at(i)   = treefit_particles.at(i+1).Phi.Pull;
+                    t.photon_kinfit_E_pulls().at(i)      = kinfit_particles.at(i+1).GetPulls().at(0);
+                    t.photon_kinfit_theta_pulls().at(i)  = kinfit_particles.at(i+1).GetPulls().at(1);
+                    t.photon_kinfit_phi_pulls().at(i)    = kinfit_particles.at(i+1).GetPulls().at(2);
+                    t.photon_treefit_E_pulls().at(i)     = treefit_particles.at(i+1).GetPulls().at(0);
+                    t.photon_treefit_theta_pulls().at(i) = treefit_particles.at(i+1).GetPulls().at(1);
+                    t.photon_treefit_phi_pulls().at(i)   = treefit_particles.at(i+1).GetPulls().at(2);
                 }
 
                 t.eta = eta;

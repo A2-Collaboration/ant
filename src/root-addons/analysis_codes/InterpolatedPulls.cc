@@ -243,8 +243,8 @@ void scanModel(analysis::utils::UncertaintyModelPtr model,  const Detector_t::Ty
     const double xmin = det & Detector_t::Type_t::TAPS ? 0.9 : -0.9;
     const double xmax = det & Detector_t::Type_t::TAPS ? 1.0 :  0.9;
 
-    const string E_title = formatter() << particle.Name() << " " << Detector_t::ToString(det) << " E, interpolated";
-    TH2D* h_E     = new TH2D("", E_title.c_str(),     100, xmin, xmax, 100, 0, 1000);
+    const string E_title = formatter() << particle.Name() << " " << Detector_t::ToString(det) << " Ek, interpolated";
+    TH2D* h_Ek     = new TH2D("", E_title.c_str(),     100, xmin, xmax, 100, 0, 1000);
 
     const string Theta_title = formatter() << particle.Name() << " " << Detector_t::ToString(det) << " Theta, interpolated";
     TH2D* h_Theta = new TH2D("",Theta_title.c_str(),  100, xmin, xmax, 100, 0, 1000);
@@ -252,10 +252,10 @@ void scanModel(analysis::utils::UncertaintyModelPtr model,  const Detector_t::Ty
     const string Phi_title = formatter() << particle.Name() << " " << Detector_t::ToString(det) << " Phi, interpolated";
     TH2D* h_Phi   = new TH2D("", Phi_title.c_str(),   100, xmin, xmax, 100, 0, 1000);
 
-    for(int x=1; x<h_E->GetNbinsX(); ++x) {
-        for(int y=1; y<h_E->GetNbinsY(); ++y) {
-            const auto Theta = acos(h_E->GetXaxis()->GetBinCenter(x));
-            const auto E     = h_E->GetYaxis()->GetBinCenter(y);
+    for(int x=1; x<h_Ek->GetNbinsX(); ++x) {
+        for(int y=1; y<h_Ek->GetNbinsY(); ++y) {
+            const auto Theta = acos(h_Ek->GetXaxis()->GetBinCenter(x));
+            const auto E     = h_Ek->GetYaxis()->GetBinCenter(y);
 
             auto cand = make_shared<TCandidate>(det,
                                                 E,
@@ -272,13 +272,13 @@ void scanModel(analysis::utils::UncertaintyModelPtr model,  const Detector_t::Ty
 
             const auto v = model->GetSigmas(part);
 
-            h_E->SetBinContent(     x, y, v.sigmaE);
+            h_Ek->SetBinContent(     x, y, v.sigmaEk);
             h_Theta->SetBinContent( x, y, v.sigmaTheta);
             h_Phi->SetBinContent(   x, y, v.sigmaPhi);
         }
     }
 
-    canvas() << drawoption("colz") << h_E << h_Theta << h_Phi << endr << endc;
+    canvas() << drawoption("colz") << h_Ek << h_Theta << h_Phi << endr << endc;
 }
 
 void InterpolatedPulls::TestInterpolation(const string& filename)

@@ -61,12 +61,7 @@ protected:
 
     Tree_t t;
 
-
-    const utils::UncertaintyModelPtr fit_model;
-    std::unique_ptr<utils::Fitter_traits> fitter;
-
-    std::unique_ptr<utils::MCSmear>             mc_smear;
-    std::unique_ptr<utils::MCFakeReconstructed> mc_fake;
+    std::unique_ptr<utils::KinFitter> fitter;
 
 public:
     EtapSergey(const std::string& name, OptionsPtr opts);

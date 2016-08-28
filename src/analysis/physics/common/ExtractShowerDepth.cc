@@ -87,6 +87,8 @@ void ExtractShowerDepth::ShowResult()
     canvas("Overview") << steps
                        << drawoption("colz")
                        << TTree_drawable(t.Tree, "Ek:TrueEk >> (1000,0,1600,1000,0,1600)","")
+                       << TTree_drawable(t.Tree, "(Ek-TrueEk)/TrueEk >> (200,-0.2,0.2)","")
+                       << TTree_drawable(t.Tree, "(1.0/Ek-1.0/TrueEk)/(1.0/TrueEk) >> (200,-0.2,0.2)","")
                        << TTree_drawable(t.Tree, "Theta:TrueTheta >>("+bins_theta+","+bins_theta+")","")
                        << TTree_drawable(t.Tree, "ThetaCorr:TrueTheta >>("+bins_theta+","+bins_theta+")","")
                        << endc;

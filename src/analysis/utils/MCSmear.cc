@@ -27,7 +27,7 @@ ant::TParticlePtr MCSmear::Smear(const TParticlePtr& p, Uncertainties_t& sigmas)
         // be careful about this composite particle
         // beamparticle = gamma + nucleon (at rest)
 
-        const double Ek = rng->Gaus(p->Ek(), sigmas.sigmaE); // photon energy
+        const double Ek = rng->Gaus(p->Ek(), sigmas.sigmaEk); // photon energy
 
         smeared = make_shared<TParticle>(
                       type,
@@ -39,7 +39,7 @@ ant::TParticlePtr MCSmear::Smear(const TParticlePtr& p, Uncertainties_t& sigmas)
     else {
         sigmas = model->GetSigmas(*p);
 
-        const double Ek    = rng->Gaus(p->Ek(),    sigmas.sigmaE);
+        const double Ek    = rng->Gaus(p->Ek(),    sigmas.sigmaEk);
         const double Theta = rng->Gaus(p->Theta(), sigmas.sigmaTheta);
         const double Phi   = rng->Gaus(p->Phi(),   sigmas.sigmaPhi);
 

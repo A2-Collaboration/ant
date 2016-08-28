@@ -1,6 +1,5 @@
 #include "etaprime_sergey.h"
 
-#include "utils/FitterSergey.h"
 #include "plot/root_draw.h"
 #include "base/std_ext/misc.h"
 #include "base/Logger.h"
@@ -11,44 +10,29 @@ using namespace ant::analysis;
 using namespace ant::analysis::physics;
 using namespace std;
 
-unique_ptr<utils::Fitter_traits> makeFitter(OptionsPtr opts, utils::UncertaintyModelPtr fit_model) {
-    if(opts->Get<bool>("UseFitterSergey", false))
-        return std_ext::make_unique<utils::FitterSergey>();
-    return std_ext::make_unique<utils::KinFitter>("KinFit", 2, fit_model, opts->Get<bool>("EnableZVertex", true));
+unique_ptr<utils::KinFitter> makeFitter(OptionsPtr opts) {
+    auto fit_model = utils::UncertaintyModels::Interpolated::makeAndLoad(
+                         std::make_shared<utils::UncertaintyModels::FitterSergey>(),
+                         utils::UncertaintyModels::Interpolated::Mode_t::Fit);
+    return std_ext::make_unique<utils::KinFitter>(
+                "KinFit", 2, fit_model, opts->Get<bool>("EnableZVertex", true)
+                );
 }
 
 EtapSergey::EtapSergey(const string& name, OptionsPtr opts) :
     Physics(name, opts),
-    fit_model(
-        utils::UncertaintyModels::Interpolated::makeAndLoad(
-            utils::UncertaintyModels::Interpolated::Mode_t::Fit)
-//        std::make_shared<utils::UncertaintyModels::Optimized_Oli1>()
-        ),
-    fitter(makeFitter(opts, fit_model)),
-    mc_smear(opts->Get<bool>("MCFake", false) | opts->Get<bool>("MCSmear", true)
-             ? // use | to force evaluation of both opts!
-               std_ext::make_unique<utils::MCSmear>(
-                   opts->Get<bool>("MCFake", false) ?
-                       fit_model // in Fake mode use same model as fitter
-                     : utils::UncertaintyModels::Interpolated::makeAndLoad(
-                           utils::UncertaintyModels::Interpolated::Mode_t::MCSmear
-                           )
-                       )
-             : nullptr // no MCSmear
-               ),
-    mc_fake(opts->Get<bool>("MCFake", false) ?
-                std_ext::make_unique<utils::MCFakeReconstructed>()
-              : nullptr)
+    fitter(makeFitter(opts))
 {
+    double sigma = opts->Get<double>("ZVertexSigma", 3.0);
     if(fitter->IsZVertexFitEnabled()) {
         // using a measured z vertex is probably better...
-        double sigma = opts->Get<double>("ZVertexSigma", 3.0);
         fitter->SetZVertexSigma(sigma);
         LOG(INFO) << "Fit Z vertex enabled with sigma=" << sigma;
     }
     else if(opts->HasOption("ZVertexSigma")) {
         throw std::runtime_error("ZVertex not enabled but sigma provided");
     }
+
 
     promptrandom.AddPromptRange({ -7,   7});
     promptrandom.AddRandomRange({-65, -15});
@@ -124,7 +108,6 @@ void EtapSergey::ProcessEvent(const TEvent& event, manager_t&)
             steps->Fill("MM in [550;1300]",1);
 
             // do the fitting
-
             fitter->SetEgammaBeam(taggerhit.PhotonEnergy);
             fitter->SetProton(proton);
             fitter->SetPhotons(photons);

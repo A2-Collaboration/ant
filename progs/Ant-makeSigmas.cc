@@ -322,7 +322,7 @@ FitSlices1DHists FitSlicesZ(const TH3D* hist, HistogramFactory& hf_, const bool 
     return result;
 }
 
-struct NewSigamsResult_t {
+struct NewSigmasResult_t {
     TH2D* newSigmas = nullptr;
     TH2D* oldSigmas = nullptr;
     TH2D* pulls     = nullptr;
@@ -332,14 +332,14 @@ enum class Mode_t {
     Multiply, Divide
 };
 
-NewSigamsResult_t makeNewSigmas(const TH3D* pulls, const TH3D* sigmas, HistogramFactory& hf, const string& output_name,
+NewSigmasResult_t makeNewSigmas(const TH3D* pulls, const TH3D* sigmas, HistogramFactory& hf, const string& output_name,
                                 const string& treename, const double integral_cut, Mode_t mode) {
     const string newTitle = formatter() << "new " << sigmas->GetTitle();
 
     auto pull_values  = FitSlicesZ(pulls,  hf, false, treename, integral_cut);
     auto sigma_values = FitSlicesZ(sigmas, hf, false, treename, integral_cut);
 
-    NewSigamsResult_t result;
+    NewSigmasResult_t result;
 
     result.oldSigmas = sigma_values.Mean;
     result.pulls     = pull_values.RMS;
@@ -384,7 +384,7 @@ int main( int argc, char** argv )
     auto cmd_output       = cmd.add<TCLAP::ValueArg<string>>("o","",           "sigma hists",                                    false, "", "rootfile");
     auto cmd_batchmode    = cmd.add<TCLAP::MultiSwitchArg>  ("b","batch",      "Run in batch mode (no ROOT shell afterwards)",   false);
     auto cmd_maxevents    = cmd.add<TCLAP::MultiArg<int>>   ("m","maxevents",  "Process only max events",                        false, "maxevents");
-    auto cmd_tree         = cmd.add<TCLAP::ValueArg<string>>("t","tree",       "Treename",false,"JustPi0/m2Pi0/pulls_photon_cb","treename");
+    auto cmd_tree         = cmd.add<TCLAP::ValueArg<string>>("t","tree",       "Treename",false,"InterpolatedPulls/pulls_photon_cb","treename");
     auto cmd_fitprob_cut  = cmd.add<TCLAP::ValueArg<double>>("", "fitprob_cut","Min. required Fit Probability",                  false, 0.01,"probability");
     auto cmd_integral_cut = cmd.add<TCLAP::ValueArg<double>>("", "integral_cut","Min. required integral in Bins",                false, 100.0,"integral");
 
@@ -435,34 +435,52 @@ int main( int argc, char** argv )
 
     struct hist_settings_t {
         string name;
+        vector<string> labels;
         BinSettings bins_cosTheta{0};
         BinSettings bins_E{0};
+        vector<BinSettings> bins_Sigmas;
     };
 
     auto get_hist_settings = [] (const std::string& treename) {
         hist_settings_t s;
-        BinSettings bins_cosTheta_cb{15, std::cos(std_ext::degree_to_radian(160.0)), std::cos(std_ext::degree_to_radian(20.0))};
-        BinSettings bins_cosTheta_taps{10, std::cos(std_ext::degree_to_radian(25.0)), std::cos(std_ext::degree_to_radian(0.0))};
         if(std_ext::string_ends_with(treename, "pulls_photon_cb")) {
             s.name = "sigma_photon_cb";
-            s.bins_cosTheta = bins_cosTheta_cb;
             s.bins_E = {10, 0, 1000};
         }
         if(std_ext::string_ends_with(treename, "pulls_photon_taps")) {
             s.name = "sigma_photon_taps";
-            s.bins_cosTheta = bins_cosTheta_taps;
             s.bins_E = {10, 0, 1000};
         }
         if(std_ext::string_ends_with(treename, "pulls_proton_cb")) {
             s.name = "sigma_proton_cb";
-            s.bins_cosTheta = bins_cosTheta_cb;
             s.bins_E = {1, 0, 1000};
         }
         if(std_ext::string_ends_with(treename, "pulls_proton_taps")) {
             s.name = "sigma_proton_taps";
-            s.bins_cosTheta = bins_cosTheta_taps;
             s.bins_E = {1, 0, 1000};
         }
+
+        if(std_ext::string_ends_with(treename, "cb")) {
+            s.bins_cosTheta = {15, std::cos(std_ext::degree_to_radian(160.0)), std::cos(std_ext::degree_to_radian(20.0))};
+            s.labels = {"Ek","Theta","Phi","R"};
+            s.bins_Sigmas = {
+                {50,0.0,50.0},
+                {50,0.0,degree_to_radian(10.0)},
+                {50,0.0,degree_to_radian(10.0)},
+                {50,0.0,5.0}
+            };
+        }
+        if(std_ext::string_ends_with(treename, "taps")) {
+            s.bins_cosTheta = {10, std::cos(std_ext::degree_to_radian(25.0)), std::cos(std_ext::degree_to_radian(0.0))};
+            s.labels = {"Ek","Rxy","Phi","L"};
+            s.bins_Sigmas = {
+                {50,0.0,50.0},
+                {50,0.0,5.0},
+                {50,0.0,degree_to_radian(10.0)},
+                {50,0.0,5.0}
+            };
+        }
+
         return s;
     };
 
@@ -473,50 +491,33 @@ int main( int argc, char** argv )
     }
     HistogramFactory HistFac(hist_settings.name);
 
-    BinSettings bins_pulls(50,-5,5);
+    /// \bug hardcoded number of parameters
+    constexpr auto nParameters = 4;
 
-    auto h_pullsE = HistFac.makeTH3D("Pulls Ek","cos #theta","Ek","Pulls Ek",
-                                     hist_settings.bins_cosTheta,
-                                     hist_settings.bins_E,
-                                     bins_pulls,
-                                     "h_pullsE"
-                                     );
+    const BinSettings bins_pulls(50,-5,5);
+    std::vector<TH3D*> h_pulls;
+    for(auto n=0;n<nParameters;n++) {
+        auto& label = hist_settings.labels.at(n);
+        h_pulls.push_back(HistFac.makeTH3D(
+                              "Pulls "+label,"cos #theta","Ek","Pulls "+label,
+                              hist_settings.bins_cosTheta,
+                              hist_settings.bins_E,
+                              bins_pulls,
+                              "h_pulls_"+label
+                              ));
+    }
 
-    auto h_pullsTheta = HistFac.makeTH3D("Pulls Theta","cos #theta","Ek","Pulls #theta",
-                                     hist_settings.bins_cosTheta,
-                                     hist_settings.bins_E,
-                                     bins_pulls,
-                                     "h_pullsTheta"
-                                     );
-
-    auto h_pullsPhi = HistFac.makeTH3D("Pulls Phi","cos #theta","Ek","Pulls #phi",
-                                     hist_settings.bins_cosTheta,
-                                     hist_settings.bins_E,
-                                     bins_pulls,
-                                     "h_pullsPhi"
-                                     );
-
-    auto h_sigmasE = HistFac.makeTH3D("Sigmas Ek","cos #theta","Ek","Sigmas Ek",
-                                     hist_settings.bins_cosTheta,
-                                     hist_settings.bins_E,
-                                     BinSettings(50,0.0,50.0),
-                                     "h_sigmasE"
-                                     );
-
-    auto h_sigmasTheta = HistFac.makeTH3D("Sigmas Theta","cos #theta","Ek","Sigmas #theta",
-                                     hist_settings.bins_cosTheta,
-                                     hist_settings.bins_E,
-                                     BinSettings(50,0.0,degree_to_radian(10.0)),
-                                     "h_sigmasTheta"
-                                     );
-
-    auto h_sigmasPhi = HistFac.makeTH3D("Sigmas Phi","cos #theta","Ek","Sigmas #phi",
-                                     hist_settings.bins_cosTheta,
-                                     hist_settings.bins_E,
-                                     BinSettings(50,0.0,degree_to_radian(10.0)),
-                                     "h_sigmasPhi"
-                                     );
-
+    std::vector<TH3D*> h_sigmas;
+    for(auto n=0;n<nParameters;n++) {
+        auto& label = hist_settings.labels.at(n);
+        h_sigmas.push_back(HistFac.makeTH3D(
+                               "Sigmas "+label,"cos #theta","Ek","Sigmas "+label,
+                               hist_settings.bins_cosTheta,
+                               hist_settings.bins_E,
+                               hist_settings.bins_Sigmas.at(n),
+                               "h_sigmas_"+label
+                               ));
+    }
 
     LOG(INFO) << "Tree entries=" << entries;
     auto max_entries = entries;
@@ -543,16 +544,16 @@ int main( int argc, char** argv )
 
         if(pulltree.FitProb > fitprob_cut ) {
 
-            h_pullsE->Fill(     cos(pulltree.Theta), pulltree.E, pulltree.PullE,      pulltree.TaggW);
-            h_pullsTheta->Fill( cos(pulltree.Theta), pulltree.E, pulltree.PullTheta,  pulltree.TaggW);
-            h_pullsPhi->Fill(   cos(pulltree.Theta), pulltree.E, pulltree.PullPhi,    pulltree.TaggW);
+            for(auto n=0u;n<pulltree.Pulls().size();n++) {
+                h_pulls.at(n)->Fill(cos(pulltree.Theta), pulltree.E,
+                                    pulltree.Pulls().at(n), pulltree.TaggW);
+            }
 
-            h_sigmasE->Fill(    cos(pulltree.Theta), pulltree.E, pulltree.SigmaE,     pulltree.TaggW);
-            h_sigmasTheta->Fill(cos(pulltree.Theta), pulltree.E, pulltree.SigmaTheta, pulltree.TaggW);
-            h_sigmasPhi->Fill(  cos(pulltree.Theta), pulltree.E, pulltree.SigmaPhi,   pulltree.TaggW);
-
+            for(auto n=0u;n<pulltree.Sigmas().size();n++) {
+                h_sigmas.at(n)->Fill(cos(pulltree.Theta), pulltree.E,
+                                     pulltree.Sigmas().at(n), pulltree.TaggW);
+            }
         }
-
     }
 
     argc=1; // prevent TRint to parse any cmdline except prog name
@@ -560,16 +561,24 @@ int main( int argc, char** argv )
                ? nullptr
                : std_ext::make_unique<TRint>("Ant-makeSigmas",&argc,argv,nullptr,0,true);
 
-    auto new_E     = makeNewSigmas(h_pullsE,     h_sigmasE,     HistFac, "sigma_E",    cmd_tree->getValue(), integral_cut, mode);
-    auto new_Theta = makeNewSigmas(h_pullsTheta, h_sigmasTheta, HistFac, "sigma_Theta",cmd_tree->getValue(), integral_cut, mode);
-    auto new_Phi   = makeNewSigmas(h_pullsPhi,   h_sigmasPhi,   HistFac, "sigma_Phi",  cmd_tree->getValue(), integral_cut, mode);
+    std::vector<NewSigmasResult_t> newResults;
+    for(auto n=0;n<nParameters;n++) {
+        auto& label = hist_settings.labels.at(n);
+        auto r =  makeNewSigmas(h_pulls.at(n),
+                                h_sigmas.at(n),
+                                HistFac,
+                                "sigma_"+label,
+                                cmd_tree->getValue(), integral_cut, mode);
+        newResults.emplace_back(r);
+
+    }
 
     if(app) {
         canvas summary(cmd_tree->getValue());
         summary << drawoption("colz");
 
-        for( auto r : {new_E, new_Theta, new_Phi}) {
-            summary << r.newSigmas << r.oldSigmas << r.pulls;
+        for( auto r : newResults) {
+            summary << r.newSigmas << r.oldSigmas << r.pulls << endr;
         }
         summary << endc;
 

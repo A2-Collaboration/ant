@@ -15,26 +15,24 @@ class PullsWriter {
 public:
     struct PullTree_t : WrapTTree {
 
-        ADD_BRANCH_T(double, FitProb)
         ADD_BRANCH_T(double, TaggW) // for prompt-random subtraction
+        ADD_BRANCH_T(double, FitProb)
+        ADD_BRANCH_T(double, FittedZVertex)
+        ADD_BRANCH_T(unsigned, Multiplicity)
+
+        // for Particle ID debugging (time of flight),
+        // and coverage testing
+        ADD_BRANCH_T(double, ProtonE)
+        ADD_BRANCH_T(double, ProtonTheta)
+        ADD_BRANCH_T(double, ProtonTime)
 
         ADD_BRANCH_T(double, E)
         ADD_BRANCH_T(double, Theta)
         ADD_BRANCH_T(double, Phi)
 
-        ADD_BRANCH_T(double, ProtonE)
-        ADD_BRANCH_T(double, ProtonTheta)
-        ADD_BRANCH_T(double, ProtonTime)
-
-        ADD_BRANCH_T(double, SigmaE)
-        ADD_BRANCH_T(double, SigmaTheta)
-        ADD_BRANCH_T(double, SigmaPhi)
-
-        ADD_BRANCH_T(double, PullE)
-        ADD_BRANCH_T(double, PullTheta)
-        ADD_BRANCH_T(double, PullPhi)
-
-        ADD_BRANCH_T(unsigned, Multiplicity)
+        // see utils::Fitter::FitParticle for the parametrization
+        ADD_BRANCH_T(std::vector<double>, Sigmas)
+        ADD_BRANCH_T(std::vector<double>, Pulls)
     };
 
 protected:
@@ -51,13 +49,8 @@ public:
     PullsWriter(ant::analysis::HistogramFactory& histfac);
     ~PullsWriter();
 
-    using smear_sigmas_t = std::map<TParticlePtr, Uncertainties_t>;
-
     void Fill(const std::vector<Fitter::FitParticle>& fitParticles,
-              double tagger_weight, double fitprob);
-    void Fill(const std::vector<Fitter::FitParticle>& fitParticles,
-              const smear_sigmas_t& smear_sigmas,
-              double tagger_weight, double fitprob);
+              double tagger_weight, double fitprob, double fitted_z_vertex);
 
 };
 

@@ -7,8 +7,6 @@
 #include "analysis/utils/Uncertainties.h"
 #include "base/std_ext/math.h"
 
-#include "Fitter_traits.h"
-
 #include "APLCON.hpp"
 
 #include <stdexcept>
@@ -17,8 +15,8 @@
 #include <memory>
 #include <set>
 #include <functional>
+#include <type_traits>
 
-class TTree;
 class TH1D;
 class TF1;
 
@@ -47,11 +45,9 @@ public:
         double Sigma = 0;
         double Sigma_before = std_ext::NaN;
         double Pull = 0;
-        void SetValue(double v) {
+        void SetValueSigma(double v, double s) {
             Value = v;
             Value_before = v;
-        }
-        void SetSigma(double s) {
             Sigma = s;
             Sigma_before = s;
         }
@@ -59,56 +55,35 @@ public:
 
     struct FitParticle
     {
-        TParticlePtr Particle; // pointer to unfitted value
+        TParticlePtr      Particle;      // pointer to unfitted particle
+        Detector_t::Any_t Detector; // remember detector type provided by uncertainty model
 
-        struct Var_t : FitVariable {
-        protected:
-            friend struct FitParticle;
-            void SetupBranches(TTree* tree, const std::string& prefix);
-        };
-
-        Var_t Ek;
-        Var_t Theta;
-        Var_t Phi;
-
-        FitParticle(const std::string& name, std::shared_ptr<FitVariable> z_vertex);
-        virtual ~FitParticle();
+        std::vector<FitVariable> Vars;
 
         TParticlePtr AsFitted() const;
 
+        using pulls_t = std::vector<double>; // used also in KinFitter
+        std::vector<double> GetSigmas() const;
+        pulls_t GetPulls() const;
+
+        FitParticle(const std::string& name,
+                    APLCON& aplcon,
+                    std::shared_ptr<FitVariable> z_vertex);
+        virtual ~FitParticle();
+
     protected:
+
         friend class Fitter;
         friend class KinFitter;
         friend class TreeFitter;
 
-        void SetEkThetaPhi(const TParticlePtr& p, const UncertaintyModelPtr& uncertainty);
+        void Set(const TParticlePtr& p, const UncertaintyModel& uncertainty);
 
         const std::string Name;
-        std::shared_ptr<FitVariable> Z_Vertex;
+        const std::shared_ptr<const FitVariable> Z_Vertex;
 
-        void SetupBranches(TTree* tree, const std::string& prefix);
-        ant::LorentzVec GetVector(const std::vector<double>& EkThetaPhi, double z_vertex) const;
-
-
-        std::vector<double*> Addresses()
-        {
-            return { std::addressof(Ek.Value),
-                     std::addressof(Theta.Value),
-                     std::addressof(Phi.Value)};
-        }
-        std::vector<double*> Addresses_Sigma()
-        {
-            return { std::addressof(Ek.Sigma),
-                     std::addressof(Theta.Sigma),
-                     std::addressof(Phi.Sigma)};
-        }
-
-        std::vector<double*> Addresses_Pulls()
-        {
-            return { std::addressof(Ek.Pull),
-                     std::addressof(Theta.Pull),
-                     std::addressof(Phi.Pull)};
-        }
+        ant::LorentzVec GetLorentzVec(const std::vector<double>& values,
+                                      double z_vertex) const;
     };
 
 protected:
@@ -123,15 +98,13 @@ protected:
     UncertaintyModelPtr uncertainty;
     std::unique_ptr<APLCON> aplcon;
 
-    void LinkVariable(FitParticle& particle);
-
 private:
     static APLCON::Fit_Settings_t MakeDefaultSettings();
 
 };
 
 
-class KinFitter : public Fitter, public Fitter_traits
+class KinFitter : public Fitter
 {
 public:
 
@@ -149,29 +122,29 @@ public:
     KinFitter(KinFitter&&) = default;
     KinFitter& operator=(KinFitter&&) = default;
 
-    virtual void SetEgammaBeam(double ebeam) override;
-    virtual void SetZVertexSigma(double sigma) override;
-    virtual void SetProton(const TParticlePtr& proton) override;
-    virtual void SetPhotons(const TParticleList& photons) override;
+    void SetEgammaBeam(double ebeam);
+    void SetZVertexSigma(double sigma);
+    void SetProton(const TParticlePtr& proton);
+    virtual void SetPhotons(const TParticleList& photons);
 
-    virtual bool IsZVertexFitEnabled() const noexcept override;
+    bool IsZVertexFitEnabled() const noexcept;
 
-    virtual TParticlePtr GetFittedProton() const override;
-    virtual TParticleList GetFittedPhotons() const override;
-    virtual double GetFittedBeamE() const override;
+    TParticlePtr GetFittedProton() const;
+    TParticleList GetFittedPhotons() const;
+    double GetFittedBeamE() const;
     TParticlePtr GetFittedBeamParticle() const;
-    virtual double GetFittedZVertex() const override;
+    double GetFittedZVertex() const;
 
     double GetBeamEPull() const;
     double GetZVertexPull() const;
 
-    double GetProtonEPull() const;
-    double GetProtonThetaPull() const;
-    double GetProtonPhiPull() const;
-
-    std::vector<double> GetPhotonEPulls() const;
-    std::vector<double> GetPhotonThetaPulls() const;
-    std::vector<double> GetPhotonPhiPulls() const;
+    FitParticle::pulls_t GetProtonPulls() const;
+    /**
+     * @brief GetPhotonsPulls
+     * @return matrix with first index specifying parameter (0...3), second the photons.
+     * in congruence with GetProtonPulls
+     */
+    std::vector<std::vector<double>> GetPhotonsPulls() const;
 
     /**
      * @brief GetFitParticles returns as first item the proton, then all n photons
@@ -179,9 +152,7 @@ public:
      */
     std::vector<FitParticle> GetFitParticles() const;
 
-    void SetupBranches(TTree* tree, std::string branch_prefix="");
-
-    virtual APLCON::Result_t DoFit() override;
+    APLCON::Result_t DoFit();
 
 protected:
 

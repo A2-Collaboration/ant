@@ -14,8 +14,6 @@
 
 #include "APLCON.hpp" // external project
 
-#include "TTree.h"
-
 #include <cassert>
 #include <functional>
 #include <cmath>
@@ -30,11 +28,11 @@ using namespace ant::analysis::utils;
 
 const APLCON::Fit_Settings_t Fitter::Fitter::DefaultSettings = Fitter::MakeDefaultSettings();
 
-Fitter::Fitter(const string& fittername, const APLCON::Fit_Settings_t& settings, utils::UncertaintyModelPtr uncertainty_model):
-    uncertainty(uncertainty_model)
-{
-    aplcon = std_ext::make_unique<APLCON>(fittername, settings);
-}
+Fitter::Fitter(const string& fittername, const APLCON::Fit_Settings_t& settings,
+               utils::UncertaintyModelPtr uncertainty_model) :
+    uncertainty(uncertainty_model),
+    aplcon(std_ext::make_unique<APLCON>(fittername, settings))
+{}
 
 Fitter::~Fitter()
 {}
@@ -44,44 +42,31 @@ APLCON::Fit_Settings_t Fitter::MakeDefaultSettings()
 {
     auto settings = APLCON::Fit_Settings_t::Default;
     settings.MaxIterations = 30;
+    settings.SkipCovariancesInResult = true;
     return settings;
 }
 
-void Fitter::LinkVariable(Fitter::FitParticle& particle)
+Fitter::FitParticle::FitParticle(const string& name,
+                                 APLCON& aplcon,
+                                 std::shared_ptr<Fitter::FitVariable> z_vertex) :
+    Detector(Detector_t::Any_t::None),
+    Vars(4), // it's a lucky coincidence that particles in CB/TAPS are both parametrized by 4 values
+    Name(name),
+    Z_Vertex(z_vertex)
 {
-    aplcon->LinkVariable(particle.Name,
-                         particle.Addresses(),
-                         particle.Addresses_Sigma(),
-                         particle.Addresses_Pulls());
-}
+    auto vectorize = [] (vector<FitVariable>& vars, double FitVariable::* member) {
+        vector<double*> ptrs(vars.size());
+        transform(vars.begin(), vars.end(), ptrs.begin(),
+                  [member] (FitVariable& v) { return std::addressof(v.*member); });
+        return ptrs;
+    };
 
-void Fitter::FitParticle::SetEkThetaPhi(const TParticlePtr& p,
-                                        const UncertaintyModelPtr& uncertainty)
-{
-    const auto sigmas = uncertainty->GetSigmas(*p);
-
-    Particle = p;
-
-    Ek.SetValue(p->Ek());
-    Theta.SetValue(p->Theta());
-    Phi.SetValue(p->Phi());
-
-    Ek.SetSigma(sigmas.sigmaE);
-    Theta.SetSigma(sigmas.sigmaTheta);
-    Phi.SetSigma(sigmas.sigmaPhi);
-}
-
-void Fitter::FitParticle::Var_t::SetupBranches(TTree* tree, const string& prefix)
-{
-    tree->Branch(prefix.c_str(), addressof(Value));
-    tree->Branch((prefix+"_pull").c_str(), addressof(Pull));
-    tree->Branch((prefix+"_sigma").c_str(), addressof(Sigma));
-}
-
-Fitter::FitParticle::FitParticle(const string& name, std::shared_ptr<Fitter::FitVariable> z_vertex) :
-    Name(name), Z_Vertex(z_vertex)
-{
-
+    aplcon.LinkVariable(
+                Name,
+                vectorize(Vars, &FitVariable::Value),
+                vectorize(Vars, &FitVariable::Sigma),
+                vectorize(Vars, &FitVariable::Pull)
+                );
 }
 
 Fitter::FitParticle::~FitParticle()
@@ -93,63 +78,105 @@ TParticlePtr Fitter::FitParticle::AsFitted() const
 {
     const auto z_vertex = Z_Vertex ? Z_Vertex->Value : 0;
 
+    vector<double> values(Vars.size());
+    transform(Vars.begin(), Vars.end(), values.begin(),
+                  [] (const FitVariable& v) { return v.Value; });
+
     auto p = make_shared<TParticle>(Particle->Type(),
-                                    GetVector({Ek.Value, Theta.Value, Phi.Value},
-                                              z_vertex
-                                              ));
+                                    GetLorentzVec(values, z_vertex)
+                                    );
     p->Candidate = Particle->Candidate;
     return p;
 }
 
-void Fitter::FitParticle::SetupBranches(TTree* tree, const string& prefix)
+std::vector<double> Fitter::FitParticle::GetSigmas() const
 {
-    Ek.SetupBranches(tree, prefix+"_"+Name+"_Ek");
-    Theta.SetupBranches(tree, prefix+"_"+Name+"_Theta");
-    Phi.SetupBranches(tree, prefix+"_"+Name+"_Phi");
+    vector<double> sigmas(Vars.size());
+    transform(Vars.begin(), Vars.end(), sigmas.begin(),
+                  [] (const FitVariable& v) { return v.Sigma_before; });
+    return sigmas;
 }
 
-LorentzVec Fitter::FitParticle::GetVector(const std::vector<double>& EkThetaPhi,
-                                          const double z_vertex) const
+Fitter::FitParticle::pulls_t Fitter::FitParticle::GetPulls() const
 {
-    const mev_t& Ek = EkThetaPhi[0];
-    const radian_t& theta = EkThetaPhi[1];
-    const radian_t& phi   = EkThetaPhi[2];
+    pulls_t pulls(Vars.size());
+    transform(Vars.begin(), Vars.end(), pulls.begin(),
+                  [] (const FitVariable& v) { return v.Pull; });
+    return pulls;
+}
 
+void Fitter::FitParticle::Set(const TParticlePtr& p,
+                              const UncertaintyModel& uncertainty)
+{
+    Particle = p;
+    const auto& sigmas = uncertainty.GetSigmas(*p);
+    Detector = sigmas.Detector;
 
+    if(!p->Candidate)
+        throw Exception("Need particle with candidate for fitting");
+
+    Vars[0].SetValueSigma(p->Ek(),  sigmas.sigmaEk);
+    Vars[2].SetValueSigma(p->Phi(), sigmas.sigmaPhi);
+
+    // the parametrization, and thus the meaning of the linked fitter variables,
+    // depends on the calorimeter
+    if(Detector & Detector_t::Type_t::CB)
+    {
+        static auto cb = ExpConfig::Setup::GetDetector<expconfig::detector::CB>();
+        Vars[1].SetValueSigma(p->Theta(), sigmas.sigmaTheta);
+        const auto& CB_R = cb->GetInnerRadius() + sigmas.ShowerDepth;
+        Vars[3].SetValueSigma(CB_R, sigmas.sigmaCB_R);
+    }
+    else if(Detector & Detector_t::Type_t::TAPS)
+    {
+        static auto taps = ExpConfig::Setup::GetDetector<expconfig::detector::TAPS>();
+        const auto& TAPS_Lz = taps->GetZPosition() + sigmas.ShowerDepth*std::cos(p->Theta());
+        auto& pos = p->Candidate->FindCaloCluster()->Position;
+        const vec3 TAPS_L{pos.x, pos.y, TAPS_Lz};
+        const auto& TAPS_Rxy = std::sin(p->Theta())*TAPS_L.R();
+
+        Vars[1].SetValueSigma(TAPS_Rxy,   sigmas.sigmaTAPS_Rxy);
+        Vars[3].SetValueSigma(TAPS_L.R(), sigmas.sigmaTAPS_L);
+    }
+    else {
+        throw Exception("Unknown/none detector type provided from uncertainty model");
+    }
+}
+
+LorentzVec Fitter::FitParticle::GetLorentzVec(const std::vector<double>& values,
+                                              const double z_vertex) const
+{
+
+    const radian_t& phi   = values[2];
+
+    // start at the lab origin in the frame of the vertex
+    vec3 x{0,0,-z_vertex};
+
+    if(Detector & Detector_t::Type_t::CB)
+    {
+        // for CB, parametrization is (1/Ek, theta, phi, CB_R)
+        const radian_t& theta = values[1];
+        const auto&     CB_R  = values[3];
+        x += vec3::RThetaPhi(CB_R, theta, phi);
+    }
+    else if(Detector & Detector_t::Type_t::TAPS)
+    {
+        // for TAPS, parametrization is (1/Ek, TAPS_Rxy, phi, TAPS_L)
+        const auto& TAPS_Rxy = values[1];
+        const auto& TAPS_L   = values[3];
+        const auto& TAPS_L_z = sqrt(std_ext::sqr(TAPS_L) - std_ext::sqr(TAPS_Rxy));
+        x += vec3(vec2::RPhi(TAPS_Rxy, phi), TAPS_L_z);
+    }
+    else {
+        throw Exception("Unknown/none detector type provided from uncertainty model");
+    }
+
+    const mev_t& Ek = values[0];
     const mev_t& E = Ek + Particle->Type().Mass();
     const mev_t& p = sqrt( sqr(E) - sqr(Particle->Type().Mass()) );
 
-    if(z_vertex == 0.0)
-        return LorentzVec::EPThetaPhi(E, p, theta, phi);
-
-
-    double theta_corr = std_ext::NaN;
-
-    if(!Particle->Candidate)
-        throw Exception("Z Vertex fitting requires particles with candidates");
-
-    auto calocluster = Particle->Candidate->FindCaloCluster();
-
-    if(!calocluster)
-        throw Exception("No calo cluster found");
-
-    if(calocluster->DetectorType == Detector_t::Type_t::CB) {
-        static auto cb = ExpConfig::Setup::GetDetector<expconfig::detector::CB>();
-        auto elem = cb->GetClusterElement(calocluster->CentralElement);
-        const auto R  = cb->GetInnerRadius() + elem->RadiationLength*std::log2(Ek/elem->CriticalE)/std::pow(std::sin(theta),3.0);
-        theta_corr = std::acos(( R*std::cos(theta) - z_vertex) / R );
-    }
-    else if(calocluster->DetectorType == Detector_t::Type_t::TAPS) {
-        static auto taps = ExpConfig::Setup::GetDetector<expconfig::detector::TAPS>();
-        auto elem = taps->GetClusterElement(calocluster->CentralElement);
-        const auto Z  =  taps->GetZPosition() + elem->RadiationLength*std::log2(Ek/elem->CriticalE);
-        theta_corr = std::atan( Z*std::tan(theta) / (Z - z_vertex));
-    }
-    else {
-        throw Exception("Unknown calo cluster encountered");
-    }
-
-    return LorentzVec::EPThetaPhi(E, p, theta_corr, phi);
+    const vec3& p_vec = x*p/x.R();
+    return {p_vec, E};
 }
 
 
@@ -175,20 +202,16 @@ KinFitter::KinFitter(const std::string& name,
         Z_Vertex = std::make_shared<Z_Vertex_t>();
 
     for(unsigned i=0; i<numGammas;++i) {
-        Photons.emplace_back(make_shared<FitParticle>("Photon"+to_string(i), Z_Vertex));
+        Photons.emplace_back(make_shared<FitParticle>("Photon"+to_string(i), *aplcon, Z_Vertex));
     }
 
-
-
-    Proton = std::make_shared<FitParticle>("Proton", Z_Vertex);
-    LinkVariable(*Proton);
+    Proton = std::make_shared<FitParticle>("Proton", *aplcon, Z_Vertex);
 
     vector<string> variable_names      = {Proton->Name};
     vector<std::shared_ptr<FitParticle>> fit_particles{Proton};
 
     for ( auto& photon: Photons)
     {
-        LinkVariable(*photon);
         variable_names.emplace_back(photon->Name);
         fit_particles.emplace_back(photon);
     }
@@ -222,7 +245,7 @@ KinFitter::KinFitter(const std::string& name,
         auto diff = MakeBeamLorentzVec(BeamE);
 
         for(size_t i=0;i<n;i++)
-            diff -= fit_particles[i]->GetVector(values[i], z_vertex); // minus outgoing
+            diff -= fit_particles[i]->GetLorentzVec(values[i], z_vertex); // minus outgoing
 
         return vector<double>(
                { diff.p.x,
@@ -243,9 +266,8 @@ KinFitter::~KinFitter()
 
 void KinFitter::SetEgammaBeam(const double ebeam)
 {
-    BeamE->Value        = ebeam;
-    BeamE->Value_before = ebeam;
-    BeamE->Sigma = uncertainty->GetBeamEnergySigma(ebeam);
+    // use inverse energy in 1/GeV here as well
+    BeamE->SetValueSigma(ebeam, uncertainty->GetBeamEnergySigma(ebeam));
 }
 
 void KinFitter::SetZVertexSigma(double sigma)
@@ -258,7 +280,7 @@ void KinFitter::SetZVertexSigma(double sigma)
 
 void KinFitter::SetProton(const TParticlePtr& proton)
 {
-    Proton->SetEkThetaPhi(proton, uncertainty);
+    Proton->Set(proton, *uncertainty);
 }
 
 void KinFitter::SetPhotons(const TParticleList& photons)
@@ -267,7 +289,7 @@ void KinFitter::SetPhotons(const TParticleList& photons)
         throw Exception("Given number of photons does not match configured fitter");
 
     for ( unsigned i = 0 ; i < Photons.size() ; ++ i) {
-        Photons[i]->SetEkThetaPhi(photons[i], uncertainty);
+        Photons[i]->Set(photons[i], *uncertainty);
     }
 }
 
@@ -298,7 +320,7 @@ double KinFitter::GetFittedBeamE() const
 TParticlePtr KinFitter::GetFittedBeamParticle() const
 {
     return std::make_shared<TParticle>(ParticleTypeDatabase::BeamProton,
-                                       MakeBeamLorentzVec(GetFittedBeamE()));
+                                         MakeBeamLorentzVec(BeamE->Value));
 }
 
 double KinFitter::GetFittedZVertex() const
@@ -322,45 +344,26 @@ double KinFitter::GetZVertexPull() const
         return std_ext::NaN; // ignore silently
 }
 
-double KinFitter::GetProtonEPull() const
+Fitter::FitParticle::pulls_t KinFitter::GetProtonPulls() const
 {
-    return Proton->Ek.Pull;
+    return Proton->GetPulls();
 }
 
-double KinFitter::GetProtonThetaPull() const
-{
-    return Proton->Theta.Pull;
 
-}
-
-double KinFitter::GetProtonPhiPull() const
+std::vector<std::vector<double>> KinFitter::GetPhotonsPulls() const
 {
-    return Proton->Phi.Pull;
-}
-
-std::vector<double> KinFitter::GetPhotonEPulls() const
-{
-    std::vector<double> pulls;
-    for(auto& photon : Photons)
-        pulls.push_back(photon->Ek.Pull);
+    /// \bug hardcoded number of parameters!
+    std::vector<std::vector<double>> pulls(4, vector<double>(Photons.size()));
+    for(unsigned i=0;i<Photons.size();i++) {
+        auto p = Photons.at(i)->GetPulls();
+        for(unsigned j=0;j<pulls.size();j++) {
+            pulls.at(j).at(i) = p[j];
+        }
+    }
     return pulls;
 }
 
-std::vector<double> KinFitter::GetPhotonThetaPulls() const
-{
-    std::vector<double> pulls;
-    for(auto& photon : Photons)
-        pulls.push_back(photon->Theta.Pull);
-    return pulls;
-}
 
-std::vector<double> KinFitter::GetPhotonPhiPulls() const
-{
-    std::vector<double> pulls;
-    for(auto& photon : Photons)
-        pulls.push_back(photon->Phi.Pull);
-    return pulls;
-}
 
 std::vector<Fitter::FitParticle> KinFitter::GetFitParticles() const
 {
@@ -371,26 +374,6 @@ std::vector<Fitter::FitParticle> KinFitter::GetFitParticles() const
 }
 
 
-
-void KinFitter::SetupBranches(TTree* tree, string branch_prefix)
-{
-    if(branch_prefix.empty())
-        branch_prefix = aplcon->GetName();
-
-    Proton->SetupBranches(tree, branch_prefix);
-    for(auto& p : Photons) {
-        p->SetupBranches(tree, branch_prefix);
-    }
-
-    tree->Branch((branch_prefix+"_chi2dof").c_str(),     &result_chi2ndof);
-    tree->Branch((branch_prefix+"_iterations").c_str(),  &result_iterations);
-    tree->Branch((branch_prefix+"_status").c_str(),      &result_status);
-    tree->Branch((branch_prefix+"_probability").c_str(), &result_probability);
-    tree->Branch((branch_prefix+"_EBeam").c_str(),       &BeamE->Value);
-    tree->Branch((branch_prefix+"_EBeam_Pull").c_str(),  &BeamE->Pull);
-    tree->Branch((branch_prefix+"_EBeam_Sigma").c_str(),  &BeamE->Sigma);
-}
-
 APLCON::Result_t KinFitter::DoFit() {
     if(Z_Vertex) {
         if(!std::isfinite(Z_Vertex->Sigma_before))
@@ -398,6 +381,14 @@ APLCON::Result_t KinFitter::DoFit() {
         Z_Vertex->Value = 0;
         Z_Vertex->Sigma = Z_Vertex->Sigma_before;
     }
+
+    double missing_E = BeamE->Value;
+    for(auto& photon : Photons) {
+        missing_E -= photon->Particle->Ek();
+    }
+    // asumme that 0th component is Ek
+    Proton->Vars[0].Value = missing_E;
+    Proton->Vars[0].Value_before = missing_E;
 
     const auto res = aplcon->DoFit();
 
@@ -507,7 +498,7 @@ TreeFitter::TreeFitter(const string& name,
         // assign values v to leaves' LVSum
         for(unsigned i=0;i<n;i++) {
             node_t& node = tree_leaves_copy[i]->Get();
-            node.LVSum = node.Leave->GetVector(v[i], z_vertex);
+            node.LVSum = node.Leave->GetLorentzVec(v[i], z_vertex);
         }
 
         // sum daughters' Particle
@@ -562,7 +553,7 @@ bool TreeFitter::NextFit(APLCON::Result_t& fit_result)
         const auto perm_idx = current_perm->at(i);
         tree_leaves[i]->Get().PhotonLeaveIndex = comb_indices[perm_idx];
         const TParticlePtr& p = current_comb.at(perm_idx);
-        Photons[i]->SetEkThetaPhi(p, uncertainty);
+        Photons[i]->Set(p, *uncertainty);
     }
 
     auto it_not_comb = current_comb.begin_not();
@@ -571,7 +562,7 @@ bool TreeFitter::NextFit(APLCON::Result_t& fit_result)
 
     // and by construction, the non-leaves are from k..n-1
     for(auto i=k;i<n;i++) {
-        Photons[i]->SetEkThetaPhi(*it_not_comb, uncertainty);
+        Photons[i]->Set(*it_not_comb, *uncertainty);
         ++it_not_comb;
     }
 

@@ -71,12 +71,8 @@ struct EtapEPT : Physics {
         ADD_BRANCH_T(double,   KinFitZVertex)
 
         ADD_BRANCH_T(double,   KinFitBeamEPull)
-        ADD_BRANCH_T(double,   KinFitProtonEPull)
-        ADD_BRANCH_T(double,   KinFitProtonThetaPull)
-        ADD_BRANCH_T(double,   KinFitProtonPhiPull)
-        ADD_BRANCH_T(std::vector<double>,  KinFitPhotonEPulls)
-        ADD_BRANCH_T(std::vector<double>,  KinFitPhotonThetaPulls)
-        ADD_BRANCH_T(std::vector<double>,  KinFitPhotonPhiPulls)
+        ADD_BRANCH_T(std::vector<double>, KinFitProtonPulls)
+        ADD_BRANCH_T(std::vector<std::vector<double>>, KinFitPhotonsPulls)
 
         ADD_BRANCH_T(double,   IM_2g)
     };

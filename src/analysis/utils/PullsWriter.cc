@@ -51,18 +51,11 @@ PullsWriter::~PullsWriter()
 {}
 
 void PullsWriter::Fill(const std::vector<Fitter::FitParticle>& fitParticles,
-                       double tagger_weight, double fitprob)
-{
-    Fill(fitParticles, {}, tagger_weight, fitprob);
-}
-
-void PullsWriter::Fill(const std::vector<Fitter::FitParticle>& fitParticles,
-                       const smear_sigmas_t& smear_sigmas,
-                       double tagger_weight, double fitprob)
+                       double tagger_weight, double fitprob, double fitted_z_vertex)
 {
 
-    const Fitter::FitParticle& proton = fitParticles.front();
-    if(proton.Particle->Type() != ParticleTypeDatabase::Proton)
+    const TParticlePtr& proton = fitParticles.front().Particle;
+    if(proton->Type() != ParticleTypeDatabase::Proton)
         throw std::runtime_error("First particle given is not a proton");
 
     for(const Fitter::FitParticle& p : fitParticles) {
@@ -71,32 +64,19 @@ void PullsWriter::Fill(const std::vector<Fitter::FitParticle>& fitParticles,
 
         tree.TaggW = tagger_weight;
         tree.FitProb = fitprob;
-
-        tree.E     = p.Ek.Value_before;
-        tree.Theta = p.Theta.Value_before;
-        tree.Phi   = p.Phi.Value_before;
-        tree.ProtonTheta =  proton.Theta.Value_before;
-        tree.ProtonE = proton.Ek.Value_before;
-        tree.ProtonTime = proton.Particle->Candidate->Time;
-
-        const auto it_smear = smear_sigmas.find(p.Particle);
-        if(it_smear == smear_sigmas.end()) {
-            tree.SigmaE = p.Ek.Sigma_before;
-            tree.SigmaTheta = p.Theta.Sigma_before;
-            tree.SigmaPhi = p.Phi.Sigma_before;
-        }
-        else {
-            const Uncertainties_t& u = it_smear->second;
-            tree.SigmaE = u.sigmaE;
-            tree.SigmaTheta = u.sigmaTheta;
-            tree.SigmaPhi = u.sigmaPhi;
-        }
-
-        tree.PullE     = p.Ek.Pull;
-        tree.PullTheta = p.Theta.Pull;
-        tree.PullPhi   = p.Phi.Pull;
-
+        tree.FittedZVertex = fitted_z_vertex;
         tree.Multiplicity = fitParticles.size();
+
+        tree.E = p.Particle->Ek();
+        tree.Theta = p.Particle->Theta();
+        tree.Phi = p.Particle->Phi();
+
+        tree.ProtonE = proton->Ek();
+        tree.ProtonTheta = proton->Theta();
+        tree.ProtonTime = proton->Candidate->Time;
+
+        tree.Sigmas = p.GetSigmas();
+        tree.Pulls = p.GetPulls();
 
         tree.Tree->Fill();
 

@@ -16,7 +16,6 @@ using namespace std;
 EtapProton::EtapProton(const string& name, OptionsPtr opts):
     Physics(name, opts),
     multiplicities(opts->Get<decltype(multiplicities)>("PhotonMulti",{{2,2},{4,4},{6,6}})),
-    fitter_branches(opts->Get<bool>("FitterBranches", false)),
     save_events(opts->Get<bool>("SaveEvents",false))
 {
     auto enclosing = multiplicities.EnclosingInterval();
@@ -68,7 +67,7 @@ EtapProton::EtapProton(const string& name, OptionsPtr opts):
     if(!setup)
         throw runtime_error("EtapProton needs a setup");
 
-    auto uncertainty = utils::UncertaintyModels::MCExtracted::makeAndLoad();
+    auto uncertainty = make_shared<utils::UncertaintyModels::FitterSergey>();
 
     for(unsigned mult=enclosing.Start();mult<=enclosing.Stop();mult++) {
         if(!multiplicities.Contains(mult))
@@ -79,8 +78,6 @@ EtapProton::EtapProton(const string& name, OptionsPtr opts):
                           uncertainty
                           );
 
-        if(fitter_branches)
-            fitter->SetupBranches(tree);
         fitters[mult-1] = move(fitter);
     }
 

@@ -19,7 +19,6 @@ class EtapProton : public Physics {
 
 protected:
     const PiecewiseInterval<unsigned> multiplicities;
-    const bool fitter_branches;
     const bool save_events;
 
     TH1D* steps;

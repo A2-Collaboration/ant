@@ -14,8 +14,8 @@ InterpolatedPulls::InterpolatedPulls(const string& name, OptionsPtr opts) :
     Physics(name, opts),
     TAPS_proton_meas(opts->Get<bool>("TAPSProtonMeas", false)),
     fit_model(utils::UncertaintyModels::Interpolated::makeAndLoad(
-                  // use OptimizedOli1 as starting point
-                  make_shared<utils::UncertaintyModels::Optimized_Oli1>(1.0, TAPS_proton_meas),
+                  // use Sergey as starting point
+                  make_shared<utils::UncertaintyModels::FitterSergey>(),
                   utils::UncertaintyModels::Interpolated::Mode_t::Fit,
                   TAPS_proton_meas
               )
@@ -125,7 +125,6 @@ void InterpolatedPulls::ProcessEvent(const TEvent& event, manager_t&)
         double best_prob = std_ext::NaN;
         std::vector<utils::Fitter::FitParticle> best_fitParticles;
         double best_zvertex = std_ext::NaN;
-        utils::PullsWriter::smear_sigmas_t best_smearSigmas;
 
         // use any candidate as proton, and do the analysis (ignore ParticleID stuff)
         for(auto i_proton : cands.get_iter()) {
@@ -144,25 +143,6 @@ void InterpolatedPulls::ProcessEvent(const TEvent& event, manager_t&)
             LorentzVec photon_sum({0,0,0},0);
             for(const auto& p : photons) {
                 photon_sum += *p;
-            }
-
-            // do MC smearing and track the used sigmas
-            utils::PullsWriter::smear_sigmas_t smearSigmas;
-
-            if(mc_smear && data.ID.isSet(TID::Flags_t::MC)) {
-                if(!fit_model->HasLoadedSigmas()) {
-                    LOG_N_TIMES(1, ERROR) << "Without having a properly loaded fit model, working on MC Smear makes no sense! YOU HAVE BEEN WARNED.";
-                }
-                {
-                    utils::Uncertainties_t sigmas;
-                    proton = mc_smear->Smear(proton, sigmas);
-                    smearSigmas.emplace(proton, sigmas);
-                }
-                for(auto& p : photons) {
-                    utils::Uncertainties_t sigmas;
-                    p = mc_smear->Smear(p, sigmas);
-                    smearSigmas.emplace(p, sigmas);
-                }
             }
 
             // proton coplanarity
@@ -241,7 +221,6 @@ void InterpolatedPulls::ProcessEvent(const TEvent& event, manager_t&)
 
             best_fitParticles = fitter.GetFitParticles();
             best_zvertex = fitter.GetFittedZVertex();
-            best_smearSigmas = smearSigmas;
         }
 
         if(!isfinite(best_prob))
@@ -251,7 +230,7 @@ void InterpolatedPulls::ProcessEvent(const TEvent& event, manager_t&)
 
         h_zvertex->Fill(best_zvertex, TaggW);
 
-        pullswriter.Fill(best_fitParticles, best_smearSigmas, TaggW, best_prob);
+        pullswriter.Fill(best_fitParticles, TaggW, best_prob, best_zvertex);
 
         // fill the many check hists
         LorentzVec best_photon_sum({0,0,0},0);

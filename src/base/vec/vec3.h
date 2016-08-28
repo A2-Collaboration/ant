@@ -18,6 +18,7 @@ struct vec3 : printable_traits {
     vec3(const vec3&) noexcept = default;
     vec3(vec3&&) noexcept  = default;
     vec3(const double X, const double Y, const double Z) noexcept : x(X), y(Y), z(Z) {}
+    vec3(const vec2& XY, const double Z) noexcept : vec3(XY.x, XY.y, Z) {}
 
     vec3& operator= (const vec3&) noexcept = default;
     vec3& operator= (vec3&&) noexcept = default;

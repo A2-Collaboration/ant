@@ -18,25 +18,40 @@ namespace utils {
 
 /**
  * @brief Uncertainties for E, theta, and phi
+ * and some CB/TAPS specific values
  */
 struct Uncertainties_t {
-    double sigmaE     = {};
-    double sigmaTheta = {};
-    double sigmaPhi   = {};
 
-    Uncertainties_t() = default;
-    Uncertainties_t(const double E, const double Theta, const double Phi) : sigmaE(E), sigmaTheta(Theta), sigmaPhi(Phi) {}
+    double sigmaEk;
+    double sigmaTheta;
+    double sigmaPhi;
 
-    bool operator==(const Uncertainties_t& other) const noexcept {
-        return sigmaE == other.sigmaE && sigmaTheta == other.sigmaTheta && sigmaPhi == other.sigmaPhi;
-    }
+    Detector_t::Any_t Detector;
+    double ShowerDepth;
+    double sigmaCB_R;
+    double sigmaTAPS_Rxy;
+    double sigmaTAPS_L;
+
+    Uncertainties_t(double Ek = std_ext::NaN,
+                    double Theta = std_ext::NaN,
+                    double Phi = std_ext::NaN,
+                    Detector_t::Any_t detector = Detector_t::Any_t::None,
+                    double showerDepth = std_ext::NaN,
+                    double CB_R = std_ext::NaN,
+                    double TAPS_Rxy = std_ext::NaN,
+                    double TAPS_L = std_ext::NaN) :
+        sigmaEk(Ek), sigmaTheta(Theta), sigmaPhi(Phi),
+        Detector(detector), ShowerDepth(showerDepth),
+        sigmaCB_R(CB_R), sigmaTAPS_Rxy(TAPS_Rxy), sigmaTAPS_L(TAPS_L)
+    {}
 };
 
 /**
- * @brief Virtual base class for different Uncertainty Models for kion fitter.
- *        Derive and implement the GetSigmas() method.
+ * @brief Virtual base class for different Uncertainty Models for fitter.
+ *        Implement at least the GetSigmas() method.
  * @see UncertaintyModels::Constant
  * @see UncertaintyModels::MCExtracted
+ * @see UncertaintyModels::Interpolated
  */
 class UncertaintyModel {
 public:
@@ -78,7 +93,8 @@ public:
 };
 
 /**
- * @brief Simple kin fitter uncertainty model. has a fixed value for {cb,taps}{photon,proton}{theta,phi}, Energries are relative values and get multipied with the particle energy on GetSigmas()
+ * @brief Simple kin fitter uncertainty model. has a fixed value for {cb,taps}{photon,proton}{theta,phi},
+ * Energies are relative values and get multipied with the particle energy on GetSigmas()
  */
 struct ConstantRelativeE : public Constant {
 public:
@@ -125,7 +141,8 @@ public:
 };
 
 /**
- * @brief Kin fitter uncertainties, uses histograms. Energy depenent values for each detector element. Histograms can be loaded from root files in setup database.
+ * @brief Kin fitter uncertainties, uses histograms. Energy dependent values for each detector element.
+ * Histograms can be loaded from root files in setup database.
  */
 class MCExtracted : public UncertaintyModel {
 public:
@@ -269,6 +286,8 @@ struct Optimized_Oli1 : Optimized {
 
 /**
  * @brief Uncertainties from Patrik Adlarson for MC Smearing
+ *
+ * It uses a random generator, for whatever reason.
  */
 struct MCSmearingAdlarson : public UncertaintyModel {
 public:
@@ -289,8 +308,22 @@ protected:
 };
 
 /**
+ * @brief Uncertainties from Sergey's fitter
+ */
+struct FitterSergey : public UncertaintyModel {
+public:
+    FitterSergey();
+    virtual ~FitterSergey();
+
+    Uncertainties_t GetSigmas(const TParticle& particle) const override;
+    double GetBeamEnergySigma(double photon_energy) const override;
+};
+
+/**
  * @brief Uncertainties with interpolated surfaces in (E,theta) plane,
  * determined with iterative procedure
+ * @see progs/Ant-makeSigmas.cc
+ * @see src/analysis/physics/common/InterpolatedPulls.h
  */
 struct Interpolated : public UncertaintyModel, public ant::printable_traits {
 public:
@@ -355,28 +388,36 @@ protected:
 
     bool loaded_sigmas = false;
 
+    static std::unique_ptr<const Interpolator2D> LoadInterpolator(ant::WrapTFile& file, const std::string& prefix);
 
+    struct EkThetaPhiR : ant::printable_traits {
 
-    struct EkThetaPhi : ant::printable_traits {
-
-        ClippedInterpolatorWrapper E;
+        ClippedInterpolatorWrapper Ek;
         ClippedInterpolatorWrapper Theta;
         ClippedInterpolatorWrapper Phi;
+        ClippedInterpolatorWrapper CB_R;
 
-        Uncertainties_t GetUncertainties(const TParticle& particle) const;
-
+        void SetUncertainties(Uncertainties_t& u, const TParticle& particle) const;
         void Load(ant::WrapTFile& file, const std::string& prefix);
-        static std::unique_ptr<const Interpolator2D> LoadInterpolator(ant::WrapTFile& file, const std::string& prefix);
-
         std::ostream& Print(std::ostream& stream) const override;
     };
 
-    Uncertainties_t HandleProtonUncertainty(const EkThetaPhi& proton, const TParticle& particle) const;
+    struct EkRxyPhiL : ant::printable_traits {
 
-    EkThetaPhi cb_photon;
-    EkThetaPhi taps_photon;
-    EkThetaPhi cb_proton;
-    EkThetaPhi taps_proton;
+        ClippedInterpolatorWrapper Ek;
+        ClippedInterpolatorWrapper TAPS_Rxy;
+        ClippedInterpolatorWrapper Phi;
+        ClippedInterpolatorWrapper TAPS_L;
+
+        void SetUncertainties(Uncertainties_t& u, const TParticle& particle) const;
+        void Load(ant::WrapTFile& file, const std::string& prefix);
+        std::ostream& Print(std::ostream& stream) const override;
+    };
+
+    EkThetaPhiR cb_photon;
+    EkRxyPhiL   taps_photon;
+    EkThetaPhiR cb_proton;
+    EkRxyPhiL   taps_proton;
 };
 
 }}}} // namespace ant::analysis::utils::UncertaintyModels
