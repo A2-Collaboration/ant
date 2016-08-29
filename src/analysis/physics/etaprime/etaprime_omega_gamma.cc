@@ -358,6 +358,9 @@ bool EtapOmegaG::doKinfit(const TTaggerHit& taggerhit,
     if(!std_ext::copy_if_greater(t.KinFitProb, result.Probability))
         return false;
 
+    if(t.KinFitProb<0.01)
+        return false;
+
     t.DiscardedEk = particles.DiscardedEk;
 
     TParticlePtr& proton = particles.Proton;
