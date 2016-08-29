@@ -47,7 +47,7 @@ EtapOmegaG::EtapOmegaG(const string& name, OptionsPtr opts) :
                utils::UncertaintyModels::Interpolated::Mode_t::Fit
                ),
            true, // flag to enable z vertex
-           0.0 // Z_vertex_sigma, =0 means unmeasured
+           3.0 // Z_vertex_sigma, =0 means unmeasured
            ),
     kinfitter_sig("kinfitter_sig",4,
                   params.Fit_uncertainty_model, params.Fit_Z_vertex,
