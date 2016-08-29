@@ -836,9 +836,12 @@ OmegaEtaG2::OmegaEtaG2(const std::string& name, OptionsPtr opts):
     // initbialize fitter Z Vertex sigma
     {
         const auto fitter_z_sigma = 3.0;
-        fitter.SetZVertexSigma(fitter_z_sigma);
-        fitter_eta.treefitter.SetZVertexSigma(fitter_z_sigma);
-        fitter_pi0.treefitter.SetZVertexSigma(fitter_z_sigma);
+        if(fitter.IsZVertexFitEnabled())
+            fitter.SetZVertexSigma(fitter_z_sigma);
+        if(fitter_eta.treefitter.IsZVertexFitEnabled())
+            fitter_eta.treefitter.SetZVertexSigma(fitter_z_sigma);
+        if(fitter_pi0.treefitter.IsZVertexFitEnabled())
+            fitter_pi0.treefitter.SetZVertexSigma(fitter_z_sigma);
     }
 
     promptrandom.AddPromptRange({-5,5});
