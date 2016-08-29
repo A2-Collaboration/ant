@@ -833,6 +833,13 @@ OmegaEtaG2::OmegaEtaG2(const std::string& name, OptionsPtr opts):
     dCounters(HistFac)
 
 {
+    // initbialize fitter Z Vertex sigma
+    {
+        const auto fitter_z_sigma = 3.0;
+        fitter.SetZVertexSigma(fitter_z_sigma);
+        fitter_eta.treefitter.SetZVertexSigma(fitter_z_sigma);
+        fitter_pi0.treefitter.SetZVertexSigma(fitter_z_sigma);
+    }
 
     promptrandom.AddPromptRange({-5,5});
     promptrandom.AddRandomRange({-20, -10});
