@@ -189,19 +189,13 @@ public:
 };
 
 
-string processFiles(const string& bkg1, const string& run, const string& bkg2)
+void processFiles(const string& bkg1, const string& run, const string& bkg2)
 {
     taggEffTriple_t taggEff(bkg1,run,bkg2);
     resultSet_t result = taggEff.GetTaggEff();
+    auto manager = ExpConfig::Setup::GetLastFound()->GetCalibrationDataManager();
 
-    cout << endl << "Starting from " << taggEff.startID() << ":  "<< endl;
-    cout << "TaggEff by channel:" << endl;
-    for (const auto eff: result.TaggEffs)
-        cout << eff << "  ";
-    cout << endl;
-
-
-    return taggEff.SetupName(); // any is ok, it is checked
+    storeResult(result.FirstID,manager,calibration::TaggEff::GetDataName(),result.TaggEffs);
 }
 
 bool processCSV(const string& csvFile)
@@ -218,7 +212,7 @@ bool processCSV(const string& csvFile)
     string setupName;
     size_t n_TaggEffs(0);
 
-    while (csvStream)
+    while (csvStream && !interrupt )
     {
         string line;
         if (!getline(csvStream, line))
@@ -249,19 +243,17 @@ bool processCSV(const string& csvFile)
         auto it = startIDs.find(result.Setup);
         if (it == startIDs.end())
             throw runtime_error("Setup not valid for csv mode!");
-        string databaseName("test");
+
         if (n_TaggEffs == 0)
         {
-            manager = make_shared<calibration::DataManager>(databaseName);
+            manager = ExpConfig::Setup::GetLastFound()->GetCalibrationDataManager();
             storeResult(it->second,manager,calibration::TaggEff::GetDataName(),result.TaggEffs);
-            storeResult(it->second,manager,calibration::TaggEff::GetDataErrorsName(),result.TaggEffErrors);
         }
         if (n_TaggEffs > 0)
         {
             if(result.Setup != setupName )
                 throw runtime_error("Different Setupnames within file list found!");
             storeResult(result.FirstID,manager,calibration::TaggEff::GetDataName(),result.TaggEffs);
-            storeResult(result.FirstID,manager,calibration::TaggEff::GetDataErrorsName(),result.TaggEffErrors);
         }
         setupName = result.Setup;
         n_TaggEffs++;
@@ -280,7 +272,7 @@ int main( int argc, char** argv )
         interrupt = true;
     });
 
-    TCLAP::CmdLine cmd("Ant-makeSigmas", ' ', "0.1");
+    TCLAP::CmdLine cmd("Ant-makeTaggEff", ' ', "0.1");
 
     auto cmd_input        = cmd.add<TCLAP::ValueArg<string>>("i","input",      "CSV file with bkg1-run-bkg2 groups",             false,  "", "csv");
     auto cmd_bkg1         = cmd.add<TCLAP::ValueArg<string>>("f","first-bkg",  "input for first background",                     false,  "", "root");
@@ -288,18 +280,9 @@ int main( int argc, char** argv )
     auto cmd_bkg2         = cmd.add<TCLAP::ValueArg<string>>("s","second-bkg", "input for second background",                    false,  "", "root");
 
 
-    auto cmd_output       = cmd.add<TCLAP::ValueArg<string>>("o","",           "output-file",                                    false, "", "rootfile");
-
-    auto cmd_batchmode    = cmd.add<TCLAP::MultiSwitchArg>  ("b","batch",      "Run in batch mode (no ROOT shell afterwards)",   false);
-
-
     cmd.parse(argc, argv);
 
     const auto inCsv   = cmd_input->getValue();
-
-
-    const auto outfile = cmd_output->getValue();
-
 
     if (cmd_input->isSet())
     {
@@ -318,7 +301,7 @@ int main( int argc, char** argv )
     const auto inTaggEff = cmd_taggEff->getValue();
     const auto inBkg2    = cmd_bkg2->getValue();
 
-    LOG(INFO) << "Processed files for Setup " << processFiles(inBkg1,inTaggEff,inBkg2) << ".";
+    processFiles(inBkg1,inTaggEff,inBkg2);
 
     return EXIT_SUCCESS;
 }
