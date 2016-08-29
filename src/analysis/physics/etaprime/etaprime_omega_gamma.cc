@@ -40,7 +40,6 @@ APLCON::Fit_Settings_t EtapOmegaG::MakeFitSettings(unsigned max_iterations)
 
 EtapOmegaG::EtapOmegaG(const string& name, OptionsPtr opts) :
     Physics(name, opts),
-    disable_Sig(opts->Get<bool>("DisableSig", false)),
     params(utils::UncertaintyModels::Interpolated::makeAndLoad(
                // use FitterSergey as default
                make_shared<utils::UncertaintyModels::FitterSergey>(),
@@ -937,27 +936,6 @@ void EtapOmegaG::ShowResult()
     Sig.Pi0.t.Tree->AddFriend(Sig.t.Tree);
     Sig.OmegaPi0.t.Tree->AddFriend(t.Tree);
     Sig.OmegaPi0.t.Tree->AddFriend(Sig.t.Tree);
-
-    if(disable_Sig)
-        return;
-
-    canvas("Signal") << TTree_drawable(Sig.OmegaPi0.t.Tree, "Bachelor_E_fitted >> (100,100,200)",
-                                       "DiscardedEk==0 && KinFitProb>0.01 && !(AntiPi0FitProb>0.0002) && !(AntiEtaFitProb>0.0005) && TreeFitProb>0.32")
-                     << endc;
-    canvas("Z Vertex Sig")
-            << drawoption("colz")
-            << TTree_drawable(Sig.Pi0.t.Tree, "KinFitZVertex:TrueZVertex >> (100,-5,5,100,-5,5)","KinFitProb>0.1")
-            << TTree_drawable(Sig.Pi0.t.Tree, "IM_Pi0gg_fitted:TrueZVertex >> (100,-5,5,200,900,1000)","KinFitProb>0.1")
-            << TTree_drawable(Sig.OmegaPi0.t.Tree, "KinFitZVertex:TrueZVertex >> (100,-5,5,100,-5,5)","KinFitProb>0.1")
-            << TTree_drawable(Sig.OmegaPi0.t.Tree, "IM_Pi0gg_fitted:TrueZVertex >> (100,-5,5,200,900,1000)","KinFitProb>0.1")
-            << endc;
-    canvas("Z Vertex Ref")
-            << drawoption("colz")
-            << TTree_drawable(Ref.t.Tree, "KinFitZVertex:TrueZVertex >> (100,-5,5,100,-5,5)","KinFitProb>0.1")
-            << TTree_drawable(Ref.t.Tree, "IM_2g:TrueZVertex >> (100,-5,5,200,900,1000)","KinFitProb>0.01")
-            << TTree_drawable(Ref.t.Tree, "KinFitPhotonThetaPulls:PhotonThetas >> (100,5,175,50,-3,3)","KinFitProb>0.1")
-            << endc;
-
 }
 
 
