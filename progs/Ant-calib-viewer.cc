@@ -166,7 +166,7 @@ void show_time(const string& dbfolder, const string& calibID)
 
 
     canvas c("view");
-    c << drawoption("AP") << graph << drawoption("PCOL") << TTree_drawable(drawTree,"value:time:k") << endc;
+    c << drawoption("AP") << graph << drawoption("PCOL") << TTree_drawable(drawTree,"value:time:key") << endc;
 
 }
 
