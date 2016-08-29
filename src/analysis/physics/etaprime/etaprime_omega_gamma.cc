@@ -132,16 +132,15 @@ void EtapOmegaG::ProcessEvent(const TEvent& event, manager_t&)
     // do some MCTrue identification (if available)
     t.MCTrue = 0; // indicate data by default
     t.TrueZVertex = event.MCTrue().Target.Vertex.z; // NaN in case of data
-    TParticleTree_t ptree_sigref = nullptr; // used by Sig_t::Process to check matching
+    TParticleTree_t ptree_sig = nullptr; // used by Sig_t::Process to check matching
     if(particletree) {
         // 1=Signal, 2=Reference, 9=MissedBkg, >=10 found in ptreeBackgrounds
         if(particletree->IsEqual(ptreeSignal, utils::ParticleTools::MatchByParticleName)) {
             t.MCTrue = 1;
-            ptree_sigref = particletree;
+            ptree_sig = particletree;
         }
         else if(particletree->IsEqual(ptreeReference, utils::ParticleTools::MatchByParticleName)) {
             t.MCTrue = 2;
-            ptree_sigref = particletree;
         }
         else {
             t.MCTrue = 10;
@@ -202,16 +201,20 @@ void EtapOmegaG::ProcessEvent(const TEvent& event, manager_t&)
         return;
     h_CommonCuts->Fill("CBAvgTime ok",1.0);
 
+    if(data.Candidates.size()<3)
+        return;
+    h_CommonCuts->Fill("nCands>=3", 1.0);
+
     // gather candidates sorted by energy
     TCandidatePtrList candidates;
-    bool haveTAPS = false;
+    TCandidatePtrList candidates_taps;
     for(const auto& cand : data.Candidates.get_iter()) {
         if(cand->Detector & Detector_t::Type_t::TAPS) {
-            haveTAPS = true;
+            candidates_taps.emplace_back(cand);
         }
         candidates.emplace_back(cand);
     }
-    if(!haveTAPS)
+    if(candidates_taps.empty())
         return;
     h_CommonCuts->Fill("1 in TAPS",1.0);
 
@@ -219,17 +222,6 @@ void EtapOmegaG::ProcessEvent(const TEvent& event, manager_t&)
               [] (const TCandidatePtr& a, const TCandidatePtr& b) {
         return a->CaloEnergy > b->CaloEnergy;
     });
-
-    // fill sig/ref particles
-    Particles_t sig_particles;
-    Particles_t ref_particles;
-    auto true_proton = utils::ParticleTools::FindParticle(ParticleTypeDatabase::Proton, particletree);
-    bool haveSig = disable_Sig ? false : findParticles(candidates, 4, true_proton, sig_particles, Sig.t, h_CommonCuts_sig);
-    bool haveRef = findParticles(candidates, 2, true_proton, ref_particles, Ref.t, h_CommonCuts_ref);
-
-    if(!haveSig && !haveRef)
-        return;
-    h_CommonCuts->Fill("Sig||Ref",1.0);
 
     // sum up the PID energy
     // (might be different to matched CB/PID Veto energy)
@@ -240,23 +232,10 @@ void EtapOmegaG::ProcessEvent(const TEvent& event, manager_t&)
         }
     }
 
-
-
-    // additionally smear the particles in MC
-    if(mc_smear && is_MC) {
-        auto smear_particles = [this] (Particles_t& particles) {
-            particles.Proton = mc_smear->Smear(particles.Proton);
-            for(auto& p : particles.Photons)
-                p = mc_smear->Smear(p);
-        };
-        if(haveSig)
-            smear_particles(sig_particles);
-        if(haveRef)
-            smear_particles(ref_particles);
-    }
-
     t.TaggNPrompt = 0;
     t.TaggNRandom = 0;
+
+    auto true_proton = utils::ParticleTools::FindParticle(ParticleTypeDatabase::Proton, particletree);
 
     for(const TTaggerHit& taggerhit : data.TaggerHits) {
         promptrandom.SetTaggerHit(taggerhit.Time - t.CBAvgTime);
@@ -268,24 +247,72 @@ void EtapOmegaG::ProcessEvent(const TEvent& event, manager_t&)
         if(promptrandom.State() == PromptRandom::Case::Random)
             t.TaggNRandom()++;
 
-        t.TaggW = promptrandom.FillWeight();
-        t.TaggE = taggerhit.PhotonEnergy;
-        t.TaggT = taggerhit.Time;
+        t.TaggW =  promptrandom.FillWeight();
+        t.TaggE =  taggerhit.PhotonEnergy;
+        t.TaggT =  taggerhit.Time;
         t.TaggCh = taggerhit.Channel;
-
-        Sig.ResetBranches();
-        Ref.ResetBranches();
 
         bool dofill = false;
 
-        if(haveSig && doKinfit(taggerhit, kinfitter_sig, sig_particles, Sig.t, h_CommonCuts_sig)) {
-            Sig.Process(sig_particles, ptree_sigref);
-            dofill = true;
-        }
+        Sig.t.KinFitProb = std_ext::NaN;
+        Ref.t.KinFitProb = std_ext::NaN;
 
-        if(haveRef && doKinfit(taggerhit, kinfitter_ref, ref_particles, Ref.t, h_CommonCuts_ref)) {
-            Ref.Process(ref_particles);
-            dofill = true;
+        for(const auto& cand_proton :  candidates_taps) {
+
+            Particles_t sig_particles;
+            Particles_t ref_particles;
+
+            auto proton = make_shared<TParticle>(ParticleTypeDatabase::Proton, cand_proton);
+            sig_particles.Proton = proton;
+            ref_particles.Proton = proton;
+
+            for(const auto& cand : candidates) {
+                if(cand == cand_proton)
+                    continue;
+                auto photon = make_shared<TParticle>(ParticleTypeDatabase::Photon, cand);
+
+                if(sig_particles.Photons.size()<4) {
+                    sig_particles.PhotonSum += *photon;
+                    sig_particles.Photons.emplace_back(photon);
+                }
+                else
+                    sig_particles.DiscardedEk += cand->CaloEnergy;
+
+                if(ref_particles.Photons.size()<2) {
+                    ref_particles.PhotonSum += *photon;
+                    ref_particles.Photons.emplace_back(photon);
+                }
+                else
+                    ref_particles.DiscardedEk += cand->CaloEnergy;
+            }
+
+            bool haveSig = sig_particles.Photons.size() >= 4;
+            bool haveRef = ref_particles.Photons.size() >= 2;
+
+            // additionally smear the particles in MC
+            if(mc_smear && is_MC) {
+                auto smear_particles = [this] (Particles_t& particles) {
+                    particles.Proton = mc_smear->Smear(particles.Proton);
+                    for(auto& p : particles.Photons)
+                        p = mc_smear->Smear(p);
+                };
+                if(haveSig)
+                    smear_particles(sig_particles);
+                if(haveRef)
+                    smear_particles(ref_particles);
+            }
+
+            if(haveSig && doKinfit(taggerhit, true_proton, kinfitter_sig, sig_particles, Sig.t, h_CommonCuts_sig)) {
+                Sig.ResetBranches();
+                Sig.Process(sig_particles, ptree_sig);
+                dofill = true;
+            }
+
+            if(haveRef && doKinfit(taggerhit, true_proton, kinfitter_ref, ref_particles, Ref.t, h_CommonCuts_ref)) {
+                Ref.ResetBranches();
+                Ref.Process(ref_particles);
+                dofill = true;
+            }
         }
 
         if(dofill) {
@@ -293,137 +320,29 @@ void EtapOmegaG::ProcessEvent(const TEvent& event, manager_t&)
             Sig.Fill();
             Ref.t.Tree->Fill();
         }
+
+
     }
 
-}
-
-bool EtapOmegaG::findParticles(const TCandidatePtrList& candidates,
-                               unsigned nPhotons,
-                               TParticlePtr true_proton,
-                               EtapOmegaG::Particles_t& particles,
-                               EtapOmegaG::SharedTree_t& t,
-                               TH1D* h_CommonCuts)
-{
-    t.ProtonE = std_ext::NaN;
-    t.ProtonTheta = std_ext::NaN;
-    t.ProtonVetoE = std_ext::NaN;
-    t.ProtonShortE = std_ext::NaN;
-    t.ProtonTrueAngle = std_ext::NaN;
-    t.DiscardedEk = std_ext::NaN;
-    t.PhotonsEk = std_ext::NaN;
-    t.nPhotonsCB   = 0;
-    t.nPhotonsTAPS = 0;
-    t.CBSumVetoE = std_ext::NaN;
-    t.PhotonSum  = std_ext::NaN;
-    t.PhotonThetas().resize(0);
-    t.ProtonCopl = std_ext::NaN;
-
-    h_CommonCuts->Fill("Seen", 1.0);
-
-    t.nCandidates = candidates.size();
-    if(t.nCandidates<nPhotons+1)
-        return false;
-    h_CommonCuts->Fill("nCands ok", 1.0);
-    h_CommonCuts->Fill("nCands exact", t.nCandidates==(nPhotons+1));
-
-    // identify the proton here as slowest cluster in TAPS
-    // using CBAvgTime does not help here, since it's constant
-    // over each TAPS clusters
-    /// \todo think about using beta here as in EtapProton?
-    t.ProtonTime = std_ext::NaN;
-    TParticlePtr& proton = particles.Proton;
-    for(unsigned i=0;i<nPhotons+1;i++) {
-        const auto& cand = candidates[i];
-        if(cand->Detector & Detector_t::Type_t::TAPS) {
-            if(!isfinite(t.ProtonTime) || t.ProtonTime < cand->Time) {
-                t.ProtonTime = cand->Time;
-                proton = make_shared<TParticle>(ParticleTypeDatabase::Proton, cand);
-            }
-        }
-    }
-
-    if(!proton)
-        return false;
-    h_CommonCuts->Fill("p in TAPS", 1.0);
-
-    t.ProtonE = proton->Ek();
-    t.ProtonTheta = std_ext::radian_to_degree(proton->Theta());
-    t.ProtonVetoE = proton->Candidate->VetoEnergy;
-    t.ProtonShortE = proton->Candidate->FindCaloCluster()->ShortEnergy;
-
-    // sum up discarded candidates
-    t.DiscardedEk = 0;
-    for(unsigned i=nPhotons+1;i<t.nCandidates;i++) {
-        const auto& cand = candidates[i];
-        t.DiscardedEk += cand->CaloEnergy;
-    }
-
-    // remaining candidates are photons
-    LorentzVec& photon_sum = particles.PhotonSum;
-    photon_sum = {{0,0,0},0};
-    t.PhotonsEk = 0;
-    t.nPhotonsCB = 0;
-    t.nPhotonsTAPS = 0;
-    t.CBSumVetoE = 0;
-    for(unsigned i=0;i<nPhotons+1;i++) {
-        const auto& cand = candidates[i];
-        if(cand == proton->Candidate)
-            continue;
-        t.PhotonsEk += cand->CaloEnergy;
-        if(cand->Detector & Detector_t::Type_t::CB) {
-            t.nPhotonsCB++;
-            t.CBSumVetoE += cand->VetoEnergy;
-        }
-        if(cand->Detector & Detector_t::Type_t::TAPS)
-            t.nPhotonsTAPS++;
-        auto photon = make_shared<TParticle>(ParticleTypeDatabase::Photon, cand);
-        photon_sum += *photon;
-        t.PhotonThetas().emplace_back(std_ext::radian_to_degree(cand->Theta));
-        particles.Photons.emplace_back(move(photon));
-    }
-    assert(particles.Photons.size() == nPhotons);
-    assert(nPhotons == t.nPhotonsCB + t.nPhotonsTAPS);
-
-    t.PhotonSum = photon_sum.M();
-
-    // don't bother with events where proton coplanarity is not ok
-    // we use some rather large window here...
-    t.ProtonCopl = std_ext::radian_to_degree(vec2::Phi_mpi_pi(proton->Phi() - photon_sum.Phi() - M_PI ));
-    const interval<double> ProtonCopl_cut(-45, 45);
-    if(!ProtonCopl_cut.Contains(t.ProtonCopl))
-        return false;
-    h_CommonCuts->Fill("ProtonCopl ok", 1.0);
-
-    if(true_proton)
-        t.ProtonTrueAngle = std_ext::radian_to_degree(proton->Angle(*true_proton));
-
-    return true;
 }
 
 bool EtapOmegaG::doKinfit(const TTaggerHit& taggerhit,
+                          TParticlePtr true_proton,
                           utils::KinFitter& kinfitter,
                           EtapOmegaG::Particles_t& particles,
                           EtapOmegaG::SharedTree_t& t,
                           TH1D* h_CommonCuts)
 {
-    h_CommonCuts->Fill("Seen Tagger", 1.0);
+    h_CommonCuts->Fill("Seen KinFit", 1.0);
+
+    const LorentzVec& photon_sum = particles.PhotonSum;
 
     // missing mass
     const LorentzVec beam_target = taggerhit.GetPhotonBeam() + LorentzVec({0, 0, 0}, ParticleTypeDatabase::Proton.Mass());
-    t.MissingMass = (beam_target - particles.PhotonSum).M();
-
-    t.KinFitProb = std_ext::NaN;
-    t.KinFitIterations = 0;
-    t.KinFitZVertex = std_ext::NaN;
-
-    t.KinFitBeamEPull = std_ext::NaN;
-    t.KinFitProtonPulls().resize(0);
-    t.KinFitPhotonsPulls().resize(0);
-
-    t.FittedProtonE = std_ext::NaN;
+    const auto& missing_mass = (beam_target - photon_sum).M();
 
     const auto& missingmass_cut = ParticleTypeDatabase::Proton.GetWindow(300);
-    if(!missingmass_cut.Contains(t.MissingMass))
+    if(!missingmass_cut.Contains(missing_mass))
         return false;
     h_CommonCuts->Fill("MM ok", 1.0);
 
@@ -436,6 +355,43 @@ bool EtapOmegaG::doKinfit(const TTaggerHit& taggerhit,
 
     if(result.Status != APLCON::Result_Status_t::Success)
         return false;
+
+    if(!std_ext::copy_if_greater(t.KinFitProb, result.Probability))
+        return false;
+
+    t.DiscardedEk = particles.DiscardedEk;
+
+    TParticlePtr& proton = particles.Proton;
+
+    t.ProtonTime = proton->Candidate->Time;
+    t.ProtonE = proton->Ek();
+    t.ProtonTheta = std_ext::radian_to_degree(proton->Theta());
+    t.ProtonVetoE = proton->Candidate->VetoEnergy;
+    t.ProtonShortE = proton->Candidate->FindCaloCluster()->ShortEnergy;
+
+    t.PhotonsEk = 0;
+    t.nPhotonsCB = 0;
+    t.nPhotonsTAPS = 0;
+    t.CBSumVetoE = 0;
+    for(const auto& photon : particles.Photons) {
+        const auto& cand = photon->Candidate;
+        t.PhotonsEk += cand->CaloEnergy;
+        if(cand->Detector & Detector_t::Type_t::CB) {
+            t.nPhotonsCB++;
+            t.CBSumVetoE += cand->VetoEnergy;
+        }
+        if(cand->Detector & Detector_t::Type_t::TAPS)
+            t.nPhotonsTAPS++;
+        t.PhotonThetas().emplace_back(std_ext::radian_to_degree(cand->Theta));
+    }
+    t.PhotonSum = photon_sum.M();
+
+    t.ProtonCopl = std_ext::radian_to_degree(vec2::Phi_mpi_pi(proton->Phi() - photon_sum.Phi() - M_PI ));
+
+    if(true_proton)
+        t.ProtonTrueAngle = std_ext::radian_to_degree(proton->Angle(*true_proton));
+
+    t.MissingMass = missing_mass;
 
     t.KinFitProb = result.Probability;
     t.KinFitIterations = result.NIterations;
@@ -530,12 +486,12 @@ void EtapOmegaG::Sig_t::SharedTree_t::Reset()
     AntiEtaPhotonsPulls().resize(0);
 }
 
-void EtapOmegaG::Sig_t::Process(const Particles_t& particles, const TParticleTree_t& ptree_sigref)
+void EtapOmegaG::Sig_t::Process(const Particles_t& particles, const TParticleTree_t& ptree_sig)
 {
     DoPhotonCombinatorics(particles.FittedPhotons);
     DoAntiPi0Eta(particles);
-    OmegaPi0.Process(particles, ptree_sigref);
-    Pi0.Process(particles, ptree_sigref);
+    OmegaPi0.Process(particles, ptree_sig);
+    Pi0.Process(particles, ptree_sig);
 }
 
 void EtapOmegaG::Sig_t::DoPhotonCombinatorics(const TParticleList& photons)
@@ -701,7 +657,7 @@ void EtapOmegaG::Sig_t::Pi0_t::BaseTree_t::Reset()
 }
 
 void EtapOmegaG::Sig_t::Pi0_t::Process(const EtapOmegaG::Particles_t& particles,
-                                       const TParticleTree_t& ptree_sigref)
+                                       const TParticleTree_t& ptree_sig)
 {
     assert(particles.Photons.size() == 4);
 
@@ -791,8 +747,8 @@ void EtapOmegaG::Sig_t::Pi0_t::Process(const EtapOmegaG::Particles_t& particles,
     if(isfinite(t.TreeFitProb)) {
 
         // check MC matching
-        if(ptree_sigref) {
-            auto true_photons = utils::ParticleTools::FindParticles(ParticleTypeDatabase::Photon, ptree_sigref);
+        if(ptree_sig) {
+            auto true_photons = utils::ParticleTools::FindParticles(ParticleTypeDatabase::Photon, ptree_sig);
             assert(true_photons.size() == 4);
             auto match_bycandidate = [] (const TParticlePtr& mctrue, const TParticlePtr& recon) {
                 return mctrue->Angle(*recon->Candidate); // TCandidate converts into vec3
@@ -802,7 +758,7 @@ void EtapOmegaG::Sig_t::Pi0_t::Process(const EtapOmegaG::Particles_t& particles,
             if(matched.size() == 4) {
                 // find the two photons of the pi0
                 TParticleList pi0_photons;
-                ptree_sigref->Map_nodes([&pi0_photons] (const TParticleTree_t& t) {
+                ptree_sig->Map_nodes([&pi0_photons] (const TParticleTree_t& t) {
                     const auto& parent = t->GetParent();
                     if(!parent)
                         return;
@@ -845,7 +801,7 @@ void EtapOmegaG::Sig_t::OmegaPi0_t::BaseTree_t::Reset()
 
 
 void EtapOmegaG::Sig_t::OmegaPi0_t::Process(const EtapOmegaG::Particles_t& particles,
-                                            const TParticleTree_t& ptree_sigref)
+                                            const TParticleTree_t& ptree_sig)
 {
 
     assert(particles.Photons.size() == 4);
@@ -920,9 +876,9 @@ void EtapOmegaG::Sig_t::OmegaPi0_t::Process(const EtapOmegaG::Particles_t& parti
         t.Bachelor_E_fitted = Boost(*g_EtaPrime_fitted, -EtaPrime_fitted.BoostVector()).E;
 
         // check MC matching
-        if(ptree_sigref) {
+        if(ptree_sig) {
 
-            auto true_photons = utils::ParticleTools::FindParticles(ParticleTypeDatabase::Photon, ptree_sigref);
+            auto true_photons = utils::ParticleTools::FindParticles(ParticleTypeDatabase::Photon, ptree_sig);
             assert(true_photons.size() == 4);
             auto match_bycandidate = [] (const TParticlePtr& mctrue, const TParticlePtr& recon) {
                 return mctrue->Angle(*recon->Candidate); // TCandidate converts into vec3
@@ -939,7 +895,7 @@ void EtapOmegaG::Sig_t::OmegaPi0_t::Process(const EtapOmegaG::Particles_t& parti
                     return d;
                 };
 
-                auto etap = select_daughter(ptree_sigref, ParticleTypeDatabase::EtaPrime);
+                auto etap = select_daughter(ptree_sig, ParticleTypeDatabase::EtaPrime);
                 auto g_Etap = select_daughter(etap, ParticleTypeDatabase::Photon);
                 auto omega = select_daughter(etap, ParticleTypeDatabase::Omega);
                 auto g_Omega = select_daughter(omega, ParticleTypeDatabase::Photon);
@@ -1017,6 +973,10 @@ const std::vector<EtapOmegaG::Background_t> EtapOmegaG::ptreeBackgrounds = {
     {"3Pi0Dalitz", ParticleTypeTreeDatabase::Get(ParticleTypeTreeDatabase::Channel::ThreePi0_4ggEpEm)},
     {"1Eta", ParticleTypeTreeDatabase::Get(ParticleTypeTreeDatabase::Channel::Eta_2g)},
 };
+
+
+
+
 
 
 

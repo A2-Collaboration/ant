@@ -109,7 +109,6 @@ struct CommonHist_t {
     TH1D* h_PIDSumE = nullptr;
     TH1D* h_MissingMass = nullptr;
     TH1D* h_DiscardedEk = nullptr;
-    TH1D* h_nCandidates = nullptr;
     TH2D* h_ProtonTOF = nullptr;
     TH2D* h_ProtonTOFFitted = nullptr;
     TH2D* h_ProtonVetoE = nullptr;
@@ -129,7 +128,6 @@ struct CommonHist_t {
         h_PIDSumE = HistFac.makeTH1D("PID Sum E","E / MeV","",BinSettings(50,0,10),"h_PIDSumE");
         h_MissingMass = HistFac.makeTH1D("MissingMass","m / MeV","",BinSettings(200,600,1300),"h_MissingMass");
         h_DiscardedEk = HistFac.makeTH1D("DiscardedEk","E / MeV","",BinSettings(200,0,500),"h_DiscardedEk");
-        h_nCandidates = HistFac.makeTH1D("nCandidates","n","",BinSettings(10),"h_nCandidates");
         if(!isLeaf)
             return;
         BinSettings bins_protonE(100,0,600);
@@ -152,7 +150,6 @@ struct CommonHist_t {
         h_PIDSumE->Fill(f.Common.PIDSumE, f.TaggW());
         h_MissingMass->Fill(f.Shared.MissingMass, f.TaggW());
         h_DiscardedEk->Fill(f.Shared.DiscardedEk, f.TaggW());
-        h_nCandidates->Fill(f.Shared.nCandidates, f.TaggW());
         if(!isLeaf)
             return;
         h_ProtonTOF->Fill(f.Shared.ProtonTime, f.Shared.ProtonE, f.TaggW());
@@ -163,7 +160,7 @@ struct CommonHist_t {
 
     std::vector<TH1*> GetHists() const {
         return {h_KinFitProb, h_CBSumE, h_CBSumVetoE, h_PIDSumE, h_MissingMass,
-                    h_DiscardedEk, h_nCandidates};
+                    h_DiscardedEk};
     }
 
     // Sig and Ref channel (can) share some cuts...

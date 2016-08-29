@@ -55,7 +55,6 @@ struct EtapOmegaG : Physics {
     };
 
     struct SharedTree_t : WrapTTree {
-        ADD_BRANCH_T(unsigned, nCandidates)
         ADD_BRANCH_T(double,   PhotonsEk)
         ADD_BRANCH_T(double,   DiscardedEk)
 
@@ -120,17 +119,11 @@ struct EtapOmegaG : Physics {
         TParticleList  FittedPhotons;
         LorentzVec     PhotonSum;
         LorentzVec     FittedPhotonSum;
+        double         DiscardedEk = 0;
     };
 
-    static bool findParticles(const TCandidatePtrList& candidates,
-                              unsigned nPhotons,
-                              TParticlePtr true_proton,
-                              Particles_t& particles,
-                              SharedTree_t& t,
-                              TH1D* h_CommonCuts
-                              );
-
     static bool doKinfit(const TTaggerHit& taggerhit,
+                         TParticlePtr true_proton,
                          utils::KinFitter& kinfitter,
                          Particles_t& particles,
                          SharedTree_t& t,
@@ -209,7 +202,7 @@ struct EtapOmegaG : Physics {
 
             BaseTree_t t;
 
-            void Process(const Particles_t& particles, const TParticleTree_t& ptree_sigref);
+            void Process(const Particles_t& particles, const TParticleTree_t& ptree_sig);
         };
 
         struct OmegaPi0_t : Fit_t {
@@ -228,7 +221,7 @@ struct EtapOmegaG : Physics {
 
             BaseTree_t t;
 
-            void Process(const Particles_t& particles, const TParticleTree_t& ptree_sigref);
+            void Process(const Particles_t& particles, const TParticleTree_t& ptree_sig);
 
         };
 
@@ -265,7 +258,7 @@ struct EtapOmegaG : Physics {
         void SetupTrees(HistogramFactory HistFac);
         void Fill();
         void ResetBranches();
-        void Process(const Particles_t& particles, const TParticleTree_t& ptree_sigref);
+        void Process(const Particles_t& particles, const TParticleTree_t& ptree_sig);
 
         SharedTree_t t;
 
