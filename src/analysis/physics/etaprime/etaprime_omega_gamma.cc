@@ -50,11 +50,11 @@ EtapOmegaG::EtapOmegaG(const string& name, OptionsPtr opts) :
            ),
     kinfitter_sig("kinfitter_sig",4,
                   params.Fit_uncertainty_model, params.Fit_Z_vertex,
-                  EtapOmegaG::MakeFitSettings(25)
+                  EtapOmegaG::MakeFitSettings(15)
                   ),
     kinfitter_ref("kinfitter_ref",2,
                   params.Fit_uncertainty_model, params.Fit_Z_vertex,
-                  EtapOmegaG::MakeFitSettings(25)
+                  EtapOmegaG::MakeFitSettings(15)
                   ),
     mc_smear(opts->Get<bool>("MCFake", false) | opts->Get<bool>("MCSmear", true)
              ? // use | to force evaluation of both opts!
@@ -251,10 +251,12 @@ void EtapOmegaG::ProcessEvent(const TEvent& event, manager_t&)
         t.TaggT =  taggerhit.Time;
         t.TaggCh = taggerhit.Channel;
 
-        bool dofill = false;
 
         Sig.t.KinFitProb = std_ext::NaN;
         Ref.t.KinFitProb = std_ext::NaN;
+
+        Particles_t best_sig_particles;
+        Particles_t best_ref_particles;
 
         for(const auto& cand_proton :  candidates_taps) {
 
@@ -302,16 +304,27 @@ void EtapOmegaG::ProcessEvent(const TEvent& event, manager_t&)
             }
 
             if(haveSig && doKinfit(taggerhit, true_proton, kinfitter_sig, sig_particles, Sig.t, h_CommonCuts_sig)) {
-                Sig.ResetBranches();
-                Sig.Process(sig_particles, ptree_sig);
-                dofill = true;
+                best_sig_particles = sig_particles;
             }
 
             if(haveRef && doKinfit(taggerhit, true_proton, kinfitter_ref, ref_particles, Ref.t, h_CommonCuts_ref)) {
-                Ref.ResetBranches();
-                Ref.Process(ref_particles);
-                dofill = true;
+                best_ref_particles = ref_particles;
             }
+        }
+
+        Sig.ResetBranches();
+        Ref.ResetBranches();
+
+        bool dofill = false;
+
+        if(!best_sig_particles.Photons.empty()) {
+            Sig.Process(best_sig_particles, ptree_sig);
+            dofill = true;
+        }
+
+        if(!best_ref_particles.Photons.empty()) {
+            Ref.Process(best_ref_particles);
+            dofill = true;
         }
 
         if(dofill) {
@@ -319,8 +332,6 @@ void EtapOmegaG::ProcessEvent(const TEvent& event, manager_t&)
             Sig.Fill();
             Ref.t.Tree->Fill();
         }
-
-
     }
 
 }
@@ -340,10 +351,18 @@ bool EtapOmegaG::doKinfit(const TTaggerHit& taggerhit,
     const LorentzVec beam_target = taggerhit.GetPhotonBeam() + LorentzVec({0, 0, 0}, ParticleTypeDatabase::Proton.Mass());
     const auto& missing_mass = (beam_target - photon_sum).M();
 
-    const auto& missingmass_cut = ParticleTypeDatabase::Proton.GetWindow(300);
+    const auto& missingmass_cut = ParticleTypeDatabase::Proton.GetWindow(400);
     if(!missingmass_cut.Contains(missing_mass))
         return false;
     h_CommonCuts->Fill("MM ok", 1.0);
+
+    if(photon_sum.M()<600)
+        return false;
+    h_CommonCuts->Fill("IM ok", 1.0);
+
+    if(particles.DiscardedEk>70)
+        return false;
+    h_CommonCuts->Fill("DiscEk ok", 1.0);
 
     particles.PhotonEnergy = taggerhit.PhotonEnergy;
     kinfitter.SetEgammaBeam(particles.PhotonEnergy);
@@ -492,6 +511,8 @@ void EtapOmegaG::Sig_t::Process(const Particles_t& particles, const TParticleTre
 {
     DoPhotonCombinatorics(particles.FittedPhotons);
     DoAntiPi0Eta(particles);
+    if(t.AntiEtaFitProb>0.1 || t.AntiPi0FitProb>0.1)
+        return;
     OmegaPi0.Process(particles, ptree_sig);
     Pi0.Process(particles, ptree_sig);
 }
