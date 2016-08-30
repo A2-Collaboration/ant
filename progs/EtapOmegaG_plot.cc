@@ -167,23 +167,10 @@ struct CommonHist_t {
     static cuttree::Cuts_t<Fill_t> GetCuts() {
         using cuttree::MultiCut_t;
         cuttree::Cuts_t<Fill_t> cuts;
-//        cuts.emplace_back(MultiCut_t<Fill_t>{
-//                              // Use non-null PID cuts only when PID calibrated...
-//                              {"CBSumVeto=0", [] (const Fill_t& f) { return f.Shared.CBSumVetoE==0; } },
-////                              {"CBSumVeto<0.25", [] (const Fill_t& f) { return f.Shared.CBSumVetoE<0.25; } },
-//                              {"PIDSumE=0", [] (const Fill_t& f) { return f.Common.PIDSumE==0; } },
-////                              {"PIDSumE<1", [] (const Fill_t& f) { return f.Common.PIDSumE<1; } },
-//                          });
         cuts.emplace_back(MultiCut_t<Fill_t>{
                               {"DiscardedEk=0", [] (const Fill_t& f) { return f.Shared.DiscardedEk == 0; } },
                               {"DiscardedEk<50", [] (const Fill_t& f) { return f.Shared.DiscardedEk < 50; } },
-//                              {"DiscardedEk<100", [] (const Fill_t& f) { return f.Shared.DiscardedEk < 100; } },
                           });
-//        cuts.emplace_back(MultiCut_t<Fill_t>{
-//                              {"MissingMass", [] (const Fill_t& f) { return f.Shared.MissingMass < 1085 && f.Shared.MissingMass > 785; } },
-//                              //{"NoMissingMass", [] (const Fill_t&) { return true; } },
-//                          });
-
         return cuts;
     }
 
@@ -261,11 +248,6 @@ struct SigHist_t : CommonHist_t {
         CommonHist_t::Fill(f);
         const SharedTree_t& s = f.Shared;
         const Tree_t& tree = f.Tree;
-
-//        for(unsigned i=0;i<s.gg_gg1().size();i++) {
-//            h_IM_gg_gg->Fill(s.gg_gg1()[i], s.gg_gg2()[i], f.TaggW());
-//            h_IM_gg_gg->Fill(s.gg_gg2()[i], s.gg_gg1()[i], f.TaggW());
-//        }
 
         h_IM_4g_fitted->Fill(tree.IM_Pi0gg_fitted, f.TaggW());
         h_IM_4g_best->Fill(tree.IM_Pi0gg_best, f.TaggW());
@@ -424,33 +406,19 @@ struct RefHist_t : CommonHist_t {
     };
 
     TH1D* h_IM_2g;
-    TH1D* h_IM_2g_prompt;
-    TH1D* h_IM_2g_random;
 
     TH2D* h_IM_2g_TaggCh;
-    TH2D* h_IM_2g_TaggE;
 
     TH1D* h_TaggT;
 
     RefHist_t(HistogramFactory HistFac, cuttree::TreeInfo_t treeInfo) : CommonHist_t(HistFac, treeInfo) {
         BinSettings bins_im(200,800,1050);
-        BinSettings bins_im_wide(1100,0,1100);
 
-        h_IM_2g = HistFac.makeTH1D("IM 2g","IM / MeV","",bins_im_wide,"h_IM_2g");
-        h_IM_2g_prompt = HistFac.makeTH1D("IM 2g prompt","IM / MeV","",bins_im_wide,"h_IM_2g_prompt");
-        h_IM_2g_random = HistFac.makeTH1D("IM 2g random","IM / MeV","",bins_im_wide,"h_IM_2g_random");
+        h_IM_2g = HistFac.makeTH1D("IM 2g","IM / MeV","",bins_im,"h_IM_2g");
 
         auto ept = ExpConfig::Setup::GetDetector<expconfig::detector::EPT>();
-        vector<double> photon_energies;
-        for(unsigned ch=0;ch<ept->GetNChannels();ch++) {
-            photon_energies.emplace_back(ept->GetPhotonEnergy(ch));
-        }
-        std::sort(photon_energies.begin(), photon_energies.end());
-
         h_IM_2g_TaggCh = HistFac.makeTH2D("IM 2g vs. TaggCh","IM / MeV","Tagger Channel",
                                           bins_im, BinSettings(ept->GetNChannels()), "h_IM_2g_TaggCh");
-        h_IM_2g_TaggE = HistFac.makeTH2D("IM 2g vs. TaggE","IM / MeV","Photon E / MeV",
-                                          bins_im, BinSettings::Make(photon_energies), "h_IM_2g_TaggE");
 
         h_TaggT = HistFac.makeTH1D("Tagger Time","t / ns","",BinSettings(400,-50,50),"h_TaggT");
     }
@@ -459,11 +427,8 @@ struct RefHist_t : CommonHist_t {
         CommonHist_t::Fill(f);
         const Tree_t& tree = f.Tree;
         h_IM_2g->Fill(tree.IM_2g, f.TaggW());
-        h_IM_2g_prompt->Fill(tree.IM_2g, f.TaggW()>0);
-        h_IM_2g_random->Fill(tree.IM_2g, f.TaggW()<0);
 
         h_IM_2g_TaggCh->Fill(tree.IM_2g, f.Common.TaggCh, f.TaggW());
-        h_IM_2g_TaggE->Fill(tree.IM_2g,  f.Common.TaggE, f.TaggW());
 
         h_TaggT->Fill(f.Common.TaggT-f.Common.CBAvgTime, f.TaggW()<0 ? -1.0 : 1.0);
     }
@@ -479,12 +444,8 @@ struct RefHist_t : CommonHist_t {
         auto cuts = cuttree::ConvertCuts<Fill_t, CommonHist_t::Fill_t>(CommonHist_t::GetCuts());
 
         cuts.emplace_back(MultiCut_t<Fill_t>{
-                              {"Prompt==1", [] (const Fill_t& f) { return f.Common.TaggNPrompt==1; } },
-                              {"PromptDontCare", [] (const Fill_t&) { return true; } },
-                          });
-
-        cuts.emplace_back(MultiCut_t<Fill_t>{
-                              {"KinFitProb>0.01", [] (const Fill_t& f) { return f.Shared.KinFitProb>0.01; } },
+                              {"KinFitProb>0.02", [] (const Fill_t& f) { return f.Shared.KinFitProb>0.01; } },
+                              {"KinFitProb>0.05", [] (const Fill_t& f) { return f.Shared.KinFitProb>0.01; } },
                           });
         return cuts;
     }
@@ -652,7 +613,6 @@ int main(int argc, char** argv) {
             masterFile = nullptr;   // and to destroy the master WrapTFile before TRint is destroyed
         }
     }
-
 
     return 0;
 }
