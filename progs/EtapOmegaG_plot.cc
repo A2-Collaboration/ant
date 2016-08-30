@@ -444,8 +444,8 @@ struct RefHist_t : CommonHist_t {
         auto cuts = cuttree::ConvertCuts<Fill_t, CommonHist_t::Fill_t>(CommonHist_t::GetCuts());
 
         cuts.emplace_back(MultiCut_t<Fill_t>{
-                              {"KinFitProb>0.02", [] (const Fill_t& f) { return f.Shared.KinFitProb>0.01; } },
-                              {"KinFitProb>0.05", [] (const Fill_t& f) { return f.Shared.KinFitProb>0.01; } },
+                              {"KinFitProb>0.02", [] (const Fill_t& f) { return f.Shared.KinFitProb>0.02; } },
+                              {"KinFitProb>0.05", [] (const Fill_t& f) { return f.Shared.KinFitProb>0.05; } },
                           });
         return cuts;
     }
