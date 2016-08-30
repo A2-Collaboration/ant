@@ -291,7 +291,7 @@ struct OmegaHist_t {
 
         // ======= Values after KinFit ======
 
-        AddTH1("3#gamma IM",      "3#gamma IM [MeV]",     "",       IMbins,     "ggg_IM",
+        AddTH1("3#gamma IM",      "3#gamma IM [MeV]",     "",       gggIMbins,     "ggg_IM",
                [] (TH1D* h, const Fill_t& f) { h->Fill(f.Tree.ggg_fitted().M(), f.TaggW());
         });
 
@@ -371,14 +371,14 @@ struct OmegaHist_t {
                 h->Fill(f.Tree.etaprob().at(size_t(i)), f.TaggW());
         });
 
-        AddTH1("#eta Hyp: #omega IM", "m(#omega_{#eta})", "", IMbins, "etahyp_omega",
+        AddTH1("#eta Hyp: #omega IM", "m(#omega_{#eta})", "", gggIMbins, "etahyp_omega",
                [] (TH1D* h, const Fill_t& f) {
             const auto& i = f.Tree.iBestEta;
             if(i >= 0)
                 h->Fill(f.Tree.eta_omega_im().at(size_t(i)), f.TaggW());
         });
 
-        AddTH1("#pi^{0} Hyp: #omega IM", "m(#omega_{#pi^{0}}})", "", IMbins, "pi0hyp_omega",
+        AddTH1("#pi^{0} Hyp: #omega IM", "m(#omega_{#pi^{0}}})", "", gggIMbins, "pi0hyp_omega",
                [] (TH1D* h, const Fill_t& f) {
             const auto& i = f.Tree.iBestPi0;
             if(i >= 0)
