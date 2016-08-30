@@ -394,6 +394,7 @@ bool EtapOmegaG::doKinfit(const TTaggerHit& taggerhit,
     t.nPhotonsCB = 0;
     t.nPhotonsTAPS = 0;
     t.CBSumVetoE = 0;
+    t.PhotonThetas().clear();
     for(const auto& photon : particles.Photons) {
         const auto& cand = photon->Candidate;
         t.PhotonsEk += cand->CaloEnergy;
