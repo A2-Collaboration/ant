@@ -573,7 +573,7 @@ struct OmegaHist_t {
             const auto& etaprob  = f.Tree.etaprob()[f.Tree.iBestEta];
             const auto& iBestPi0 = f.Tree.iBestPi0;
 
-            return etaprob > 0.1 && (iBestPi0==-1 || f.Tree.pi0prob()[iBestPi0] < 0.3);
+            return etaprob > 0.3 && (iBestPi0==-1 || f.Tree.pi0prob()[iBestPi0] < 0.1);
         };
 
         auto pi0HypCut = [] (const Fill_t& f) {
