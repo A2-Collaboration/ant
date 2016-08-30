@@ -56,22 +56,16 @@ EtapOmegaG::EtapOmegaG(const string& name, OptionsPtr opts) :
                   params.Fit_uncertainty_model, params.Fit_Z_vertex,
                   EtapOmegaG::MakeFitSettings(15)
                   ),
-    mc_smear(opts->Get<bool>("MCFake", false) | opts->Get<bool>("MCSmear", true)
-             ? // use | to force evaluation of both opts!
+    mc_smear(opts->Get<bool>("MCSmear", false) ?
                std_ext::make_unique<utils::MCSmear>(
-                   opts->Get<bool>("MCFake", false) ?
-                       params.Fit_uncertainty_model // in Fake mode use same model as fitter
-                     : utils::UncertaintyModels::Interpolated::makeAndLoad(
-                           // use Adlarson as default (30% version of Oli is maybe better?)
-                           make_shared<utils::UncertaintyModels::MCSmearingAdlarson>(),
-                           utils::UncertaintyModels::Interpolated::Mode_t::MCSmear
-                           )
-                       )
-             : nullptr // no MCSmear
+                     utils::UncertaintyModels::Interpolated::makeAndLoad(
+                         // use Adlarson as default (30% version of Oli is maybe better?)
+                         make_shared<utils::UncertaintyModels::MCSmearingAdlarson>(),
+                         utils::UncertaintyModels::Interpolated::Mode_t::MCSmear
+                         )
+                     )
+               : nullptr // no MCSmear
                ),
-    mc_fake(opts->Get<bool>("MCFake", false) ?
-                std_ext::make_unique<utils::MCFakeReconstructed>()
-              : nullptr),
     Sig(params)
 {
     if(mc_smear)
@@ -110,7 +104,7 @@ void EtapOmegaG::ProcessEvent(const TEvent& event, manager_t&)
 
     const bool have_MCTrue = !event.MCTrue().ID.IsInvalid();
 
-    const TEventData& data = mc_fake && have_MCTrue ? mc_fake->Get(event.MCTrue()) : event.Reconstructed();
+    const TEventData& data = event.Reconstructed();
 
     const bool is_MC = data.ID.isSet(TID::Flags_t::MC);
 
