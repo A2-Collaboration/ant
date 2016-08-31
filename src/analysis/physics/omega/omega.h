@@ -213,6 +213,8 @@ public:
         ADD_BRANCH_T(std::vector<double>,         eta_omega_im,3)
         ADD_BRANCH_T(std::vector<double>,         pi0_omega_im,3)
 
+        ADD_BRANCH_T(std::vector<TLorentzVector>, LostGammas);
+
     };
 
 protected:

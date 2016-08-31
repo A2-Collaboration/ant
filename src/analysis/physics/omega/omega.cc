@@ -353,6 +353,8 @@ static int getDetectorAsInt(const Detector_t::Any_t& d) {
 
 void OmegaEtaG2::Analyse(const TEventData &data, const TEvent& event, manager_t&) {
 
+    t.LostGammas().clear();
+
     dCounters.EventStart();
 
     t.Channel = reaction_channels.identify(event.MCTrue().ParticleTree);
@@ -672,6 +674,17 @@ void OmegaEtaG2::Analyse(const TEventData &data, const TEvent& event, manager_t&
 
         }
 
+
+
+        if(event.HasMCTrue()) {
+
+            for(const auto& p : event.MCTrue().Particles.Get(ParticleTypeDatabase::Photon)) {
+                if(geo.DetectorFromAngles(p->Theta(), p->Phi()) == Detector_t::Any_t::None) {
+                    t.LostGammas().emplace_back(*p);
+                }
+            }
+        }
+
         dCounters.TaggerLoopEnd();
         tree->Fill();
 
@@ -764,6 +777,8 @@ utils::UncertaintyModelPtr OmegaEtaG2::getModel(const string& modelname)
                       utils::UncertaintyModels::Interpolated::Mode_t::Fit,
                       false);
 
+    } else if(modelname == "Sergey") {
+        return make_shared<utils::UncertaintyModels::FitterSergey>();
     }
 
     throw std::runtime_error("Invalid model name " + modelname);
