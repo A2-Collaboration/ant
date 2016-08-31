@@ -3,8 +3,6 @@
 #include <sstream>
 #include <vector>
 
-
-
 #include "analysis/plot/root_draw.h"
 
 #include "base/CmdLine.h"
@@ -13,12 +11,9 @@
 #include "base/Logger.h"
 #include "base/detail/tclap/ValuesConstraintExtra.h"
 #include "base/WrapTFile.h"
-
 #include "calibration/DataBase.h"
 #include "calibration/DataManager.h"
-
 #include "expconfig/ExpConfig.h"
-
 #include "tree/TCalibrationData.h"
 
 #include "TH1.h"
@@ -36,6 +31,7 @@ using namespace ant::calibration;
 
 void show_2d(const string& dbfolder, const string& calibID);
 void show_time(const string& dbfolder, const string& calibID);
+void show_channels(const string& dbfolder, const string& calibID);
 
 
 int main(int argc, char** argv)
@@ -53,8 +49,9 @@ int main(int argc, char** argv)
     TCLAP::SwitchArg cmd_mode_show_2d("","show_2d","Show 2D Hist with SetProjectionX", false);
     TCLAP::SwitchArg cmd_mode_show_convergence("","show_convergence","Show values vs. iteration", false);
     TCLAP::SwitchArg cmd_mode_show_time("","show_time","Show values vs. time", false);
+    TCLAP::SwitchArg cmd_mode_show_channels("","show_channels","Show values vs. time seperatly for each key",false);
 
-    cmd.xorAdd({&cmd_mode_show_2d, &cmd_mode_show_convergence, &cmd_mode_show_time});
+    cmd.xorAdd({&cmd_mode_show_2d, &cmd_mode_show_convergence, &cmd_mode_show_time, &cmd_mode_show_channels});
 
     cmd.parse(argc, argv);
 
@@ -101,6 +98,9 @@ int main(int argc, char** argv)
         show_time(dbfolder, calibrationID);
     }
 
+    if(cmd_mode_show_channels.isSet())
+        show_channels(dbfolder, calibrationID);
+
     app->Run(kTRUE);
 
     return 0;
@@ -112,6 +112,63 @@ void GetData(const DataBase::OnDiskLayout& onDiskDB,
 {
     WrapTFileInput wfi(onDiskDB.GetCurrentFile(range));
     wfi.GetObjectClone("cdata",dataBuffer);
+}
+
+void show_channels(const string& dbfolder, const string& calibID)
+{
+
+    struct channelGraph_t
+    {
+        double* X;
+        double* Y;
+        TGraph* G;
+
+        channelGraph_t(const string& title)
+        {
+            G = new TGraph(0,X,Y);
+            G->SetTitle(title.c_str());
+            G->GetXaxis()->SetTitle("time");
+            G->GetXaxis()->SetTimeDisplay(true);
+            G->GetXaxis()->SetTimeFormat("%d\/%m\/%y%F 1970-01-01 00:00:00");
+        }
+
+        void AddPoint(double x, double y)
+        {
+            G->SetPoint(G->GetN(),x,y);
+        }
+    };
+
+    TCalibrationData dataBuffer;
+
+    DataBase::OnDiskLayout onDiskDB(dbfolder);
+    auto dataRanges = onDiskDB.GetDataRanges(calibID);
+    auto nRanges = dataRanges.size();
+
+    if (nRanges == 0 )
+        throw runtime_error("Ranges empty, this should not happen!");
+
+    GetData(onDiskDB, dataRanges.front(),dataBuffer);
+    auto nChannels = dataBuffer.Data.size();
+    vector<channelGraph_t> graphs;
+
+    for ( auto i = 0u ; i < nChannels ; ++i )
+    {
+        string t = std_ext::formatter() << calibID << " - channel " << i;
+        graphs.emplace_back(channelGraph_t(t));
+    }
+
+    for (const auto& range: dataRanges)
+    {
+        GetData(onDiskDB, range, dataBuffer);
+        for (auto channel = 0u ; channel < dataBuffer.Data.size() ; ++ channel)
+            graphs.at(channel).AddPoint( dataBuffer.FirstID.Timestamp,
+                                         dataBuffer.Data.at(channel).Value);
+    }
+
+    canvas c(calibID);
+    for (const auto& graph: graphs)
+        c << drawoption("AB") << graph.G;
+    c << endc;
 }
 
 void show_time(const string& dbfolder, const string& calibID)
