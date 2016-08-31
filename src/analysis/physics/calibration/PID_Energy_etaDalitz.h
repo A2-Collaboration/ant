@@ -193,6 +193,13 @@ public:
 
     static APLCON::Fit_Settings_t MakeFitSettings(unsigned);
 
+    bool doFit_checkProb(const TTaggerHit& taggerhit,
+                                const TParticlePtr proton,
+                                const TParticleList photons,
+                                PerChannel_t& h,
+                                Tree_t& t,
+                                double& best_prob_fit);
+
     virtual void ProcessEvent(const TEvent& event, manager_t& manager) override;
     virtual void ShowResult() override;
 
