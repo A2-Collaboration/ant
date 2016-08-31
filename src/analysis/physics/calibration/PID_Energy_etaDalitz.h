@@ -57,6 +57,7 @@ public:
         ADD_BRANCH_T(double,                      p_treefit_phi_pull)
 
         ADD_BRANCH_T(double,                      TaggW)
+        ADD_BRANCH_T(double,                      TaggW_wide)
         ADD_BRANCH_T(double,                      TaggE)
         ADD_BRANCH_T(double,                      TaggT)
         ADD_BRANCH_T(unsigned,                    TaggCh)
@@ -165,6 +166,7 @@ protected:
 
     Tree_t t;
     PromptRandom::Switch promptrandom;
+    PromptRandom::Switch promptrandom_wide;
     using uncertainty_model_t = utils::UncertaintyModels::Optimized_Oli1;
     utils::UncertaintyModelPtr model;
     utils::KinFitter kinfit;

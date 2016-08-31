@@ -158,9 +158,9 @@ static int getDetectorAsInt(const Detector_t::Any_t& d)
 PID_Energy_etaDalitz::PID_Energy_etaDalitz(const string& name, OptionsPtr opts) :
     Physics(name, opts),
     model(utils::UncertaintyModels::Interpolated::makeAndLoad(
-              make_shared<const uncertainty_model_t>(),
+              make_shared<utils::UncertaintyModels::FitterSergey>(),
               utils::UncertaintyModels::Interpolated::Mode_t::Fit,
-              false)
+              false)  // use_proton_sigmaE
           ),
     kinfit("kinfit", N_FINAL_STATE-1, model,
            opts->HasOption("SigmaZ"), MakeFitSettings(20)
@@ -173,6 +173,10 @@ PID_Energy_etaDalitz::PID_Energy_etaDalitz(const string& name, OptionsPtr opts) 
     promptrandom.AddPromptRange({-3, 2});
     promptrandom.AddRandomRange({-30, -10});
     promptrandom.AddRandomRange({10, 30});
+    // for uncorrected Tagger time
+    promptrandom_wide.AddPromptRange({-7, 7});
+    promptrandom_wide.AddRandomRange({-50, -15});
+    promptrandom_wide.AddRandomRange({15, 50});
 
     cb = ExpConfig::Setup::GetDetector(Detector_t::Type_t::CB);
     auto detector = ExpConfig::Setup::GetDetector(Detector_t::Type_t::PID);
@@ -329,11 +333,14 @@ void PID_Energy_etaDalitz::ProcessEvent(const TEvent& event, manager_t&)
         }
 
         promptrandom.SetTaggerHit(taggerhit.Time - t.CBAvgTime);
-        if (promptrandom.State() == PromptRandom::Case::Outside)
+        promptrandom_wide.SetTaggerHit(taggerhit.Time);
+        if (promptrandom.State() == PromptRandom::Case::Outside &&
+                promptrandom_wide.State() == PromptRandom::Case::Outside)
             continue;
         h.steps->Fill("time window", 1);
 
         t.TaggW = promptrandom.FillWeight();
+        t.TaggW_wide = promptrandom_wide.FillWeight();
         t.TaggE = taggerhit.PhotonEnergy;
         t.TaggT = taggerhit.Time;
         t.TaggCh = taggerhit.Channel;
