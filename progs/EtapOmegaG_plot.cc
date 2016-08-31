@@ -412,7 +412,7 @@ struct RefHist_t : CommonHist_t {
     TH1D* h_TaggT;
 
     RefHist_t(HistogramFactory HistFac, cuttree::TreeInfo_t treeInfo) : CommonHist_t(HistFac, treeInfo) {
-        BinSettings bins_im(200,800,1050);
+        BinSettings bins_im(150,800,1050);
 
         h_IM_2g = HistFac.makeTH1D("IM 2g","IM / MeV","",bins_im,"h_IM_2g");
 
