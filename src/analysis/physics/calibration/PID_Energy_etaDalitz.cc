@@ -388,7 +388,9 @@ void PID_Energy_etaDalitz::ProcessEvent(const TEvent& event, manager_t&)
             shift_right(comb);
         }
 
-        t.Tree->Fill();
+        // only fill tree if a valid combination for the current Tagger hit was found
+        if (best_comb_fit < cands.size() && isfinite(best_prob_fit))
+            t.Tree->Fill();
     }
 
     // fit debug
