@@ -635,9 +635,9 @@ struct OmegaHist_t {
                                  {"Prob+mm", [] (const Fill_t& f) { return f.Tree.KinFitProb>0.1 && f.Tree.mm().M()<1100 && f.Tree.mm().M() > 780; } }
                              });
 
-        cuts.emplace_back(MultiCut_t<Fill_t>{
-                                 {"#omega mass", wmasscut}
-                             });
+//        cuts.emplace_back(MultiCut_t<Fill_t>{
+//                                 {"#omega mass", wmasscut}
+//                             });
 
         cuts.emplace_back(MultiCut_t<Fill_t>{
                                  {"dEECut", dEECut },
