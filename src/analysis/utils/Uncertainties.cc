@@ -1121,7 +1121,8 @@ ostream& UncertaintyModels::Interpolated::ClippedInterpolatorWrapper::boundsChec
 }
 
 
-UncertaintyModels::FitterSergey::FitterSergey()
+UncertaintyModels::FitterSergey::FitterSergey(beamtime_t beamtime) :
+    Beamtime(beamtime)
 {
 
 }
@@ -1151,7 +1152,7 @@ Uncertainties_t UncertaintyModels::FitterSergey::GetSigmas(const TParticle& part
     {
         if(particle.Type() == ParticleTypeDatabase::Photon) {
 
-            auto dEovEclCB = [] (double Ecl) {
+            auto dEovEclCB = [this] (double Ecl) {
                 auto dEovEclCBInit = [] (double Ecl) {
                     Double_t p[5] = {5.69464e-05, 1.48943e-01, 3.41725, 1.11244e-02,
                                      -1.77329e-03};
@@ -1163,8 +1164,18 @@ Uncertainties_t UncertaintyModels::FitterSergey::GetSigmas(const TParticle& part
                     Double_t Er0 = p[0] / pow(Ecl + p[1], p[2]) + p[3] + p[4] * Ecl;
                     return Er0;
                 };
+                auto dEovEclCBAdd = [this] (double Ecl) {
+                    (void)Ecl; // prevent unused variable warning
+                    switch(Beamtime) {
+                    case beamtime_t::EPT_2014:
+                        return 0.052;
+                    case beamtime_t::Eta_2007:
+                        return 0.0255;
+                    }
+                    return std_ext::NaN;
+                };
                 Double_t Er0 = dEovEclCBInit(Ecl);
-                Double_t Era = 0.052;
+                Double_t Era = dEovEclCBAdd(Ecl);
                 return sqrt(pow(Er0, 2) + pow(Era, 2));
             };
 
