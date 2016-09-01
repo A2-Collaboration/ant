@@ -25,6 +25,7 @@
 #include "TTree.h"
 
 
+
 using namespace std;
 using namespace ant;
 using namespace ant::calibration;
@@ -128,8 +129,7 @@ void show_channels(const string& dbfolder, const string& calibID)
             G = new TGraph(0,X,Y);
             G->SetTitle(title.c_str());
             G->GetXaxis()->SetTitle("time");
-            G->GetXaxis()->SetTimeDisplay(true);
-            G->GetXaxis()->SetTimeFormat("%d\/%m\/%y%F 1970-01-01 00:00:00");
+
         }
 
         void AddPoint(double x, double y)
@@ -167,7 +167,12 @@ void show_channels(const string& dbfolder, const string& calibID)
 
     canvas c(calibID);
     for (const auto& graph: graphs)
-        c << drawoption("AB") << graph.G;
+    {
+        graph.G->GetXaxis()->SetTimeDisplay(true);
+        graph.G->GetXaxis()->SetTimeFormat("%d.%m.%y%F 1970-01-01 00:00:00");
+        graph.G->SetMarkerStyle(kPlus);
+        c << drawoption("AP") << graph.G;
+    }
     c << endc;
 }
 
