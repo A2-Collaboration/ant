@@ -167,12 +167,8 @@ PID_Energy_etaDalitz::PID_Energy_etaDalitz(const string& name, OptionsPtr opts) 
 {
     //promptrandom.AddPromptRange({-5, 5});
     promptrandom.AddPromptRange({-3, 2});
-    promptrandom.AddRandomRange({-30, -10});
-    promptrandom.AddRandomRange({10, 30});
-    // for uncorrected Tagger time
-    promptrandom_wide.AddPromptRange({-7, 7});
-    promptrandom_wide.AddRandomRange({-50, -15});
-    promptrandom_wide.AddRandomRange({15, 50});
+    promptrandom.AddRandomRange({-35, -10});
+    promptrandom.AddRandomRange({10, 35});
 
     cb = ExpConfig::Setup::GetDetector(Detector_t::Type_t::CB);
     auto detector = ExpConfig::Setup::GetDetector(Detector_t::Type_t::PID);
@@ -220,8 +216,7 @@ void PID_Energy_etaDalitz::ProcessEvent(const TEvent& event, manager_t&)
     const bool MC = event.MCTrue().ParticleTree != nullptr;
     t.MCtrue = MC;
     t.channel = reaction_channels.identify(event.MCTrue().ParticleTree);
-    if (MC)
-        t.trueZVertex = event.MCTrue().Target.Vertex.z;
+    t.trueZVertex = event.MCTrue().Target.Vertex.z;  // NaN in case of data
 
     if (t.channel == ReactionChannelList_t::other_index) {
         if (MC)
@@ -264,6 +259,11 @@ void PID_Energy_etaDalitz::ProcessEvent(const TEvent& event, manager_t&)
     t.nCands = cands.size();
     h.steps->Fill("seen", 1);
 
+    if (MC) {
+        if (data.Trigger.CBEnergySum <= 550)
+            return;
+        h.steps->Fill("MC CB ESum > 550", 1);
+    }
     t.CBSumE = data.Trigger.CBEnergySum;
 
     if (cands.size() != N_FINAL_STATE)
@@ -310,6 +310,7 @@ void PID_Energy_etaDalitz::ProcessEvent(const TEvent& event, manager_t&)
         t.CBAvgTime = 0;
     if (!isfinite(t.CBAvgTime))
         return;
+    h.steps->Fill("CBAvgTime OK", 1);
 
     TParticleList photons;
     double best_prob_fit = -std_ext::inf;
@@ -324,17 +325,23 @@ void PID_Energy_etaDalitz::ProcessEvent(const TEvent& event, manager_t&)
         }
 
         promptrandom.SetTaggerHit(taggerhit.Time - t.CBAvgTime);
-        promptrandom_wide.SetTaggerHit(taggerhit.Time);
-        if (promptrandom.State() == PromptRandom::Case::Outside &&
-                promptrandom_wide.State() == PromptRandom::Case::Outside)
+        if (promptrandom.State() == PromptRandom::Case::Outside)
             continue;
         h.steps->Fill("time window", 1);
 
         t.TaggW = promptrandom.FillWeight();
-        t.TaggW_wide = promptrandom_wide.FillWeight();
         t.TaggE = taggerhit.PhotonEnergy;
         t.TaggT = taggerhit.Time;
         t.TaggCh = taggerhit.Channel;
+
+        // find best combination for each Tagger hit
+        best_prob_fit = -std_ext::inf;
+        best_comb_fit = cands.size();
+        // fit debug
+        best_prob_kinfit = -std_ext::inf;
+        best_prob_treefit = -std_ext::inf;
+        best_comb_kinfit = cands.size();
+        best_comb_treefit = cands.size();
 
         for (size_t i = 0; i < cands.size(); i++) {  // loop to test all different combinations
             // ensure the possible proton candidate is kinematically allowed
@@ -386,7 +393,10 @@ void PID_Energy_etaDalitz::ProcessEvent(const TEvent& event, manager_t&)
 
         // only fill tree if a valid combination for the current Tagger hit was found
         if (best_comb_fit < cands.size() && isfinite(best_prob_fit))
-            t.Tree->Fill();
+            continue;
+
+        t.Tree->Fill();
+        h.steps->Fill("Tree filled", 1);
     }
 
     // fit debug
@@ -609,77 +619,76 @@ bool PID_Energy_etaDalitz::doFit_checkProb(const TTaggerHit& taggerhit,
     h.etaIM_treefit->Fill(eta_treefit.M(), t.TaggW);
 
 
-    if (prob > best_prob_fit) {
-        best_prob_fit = prob;
+    if (!std_ext::copy_if_greater(best_prob_fit, prob))
+        return false;
 
-        assert(kinfit_particles.size() == N_FINAL_STATE &&
-               treefit_particles.size() == N_FINAL_STATE);
+    assert(kinfit_particles.size() == N_FINAL_STATE &&
+           treefit_particles.size() == N_FINAL_STATE);
 
-        // update tree branches
-        t.kinfit_chi2 = kinfit_chi2;
-        t.kinfit_probability = kinfit_prob;
-        t.kinfit_iterations = kinfit_iterations;
-        t.kinfit_DoF = kinfit_result.NDoF;
-        t.treefit_chi2 = treefit_chi2;
-        t.treefit_probability = treefit_prob;
-        t.treefit_iterations = treefit_iterations;
-        t.treefit_DoF = treefit_result.NDoF;
+    // update tree branches
+    t.kinfit_chi2 = kinfit_chi2;
+    t.kinfit_probability = kinfit_prob;
+    t.kinfit_iterations = kinfit_iterations;
+    t.kinfit_DoF = kinfit_result.NDoF;
+    t.treefit_chi2 = treefit_chi2;
+    t.treefit_probability = treefit_prob;
+    t.treefit_iterations = treefit_iterations;
+    t.treefit_DoF = treefit_result.NDoF;
 
-        t.beam_E_kinfitted = kinfitted_beam;
-        t.beam_kinfit_E_pull = kinfitted_beam_pull;
-        t.beam_E_treefitted = treefitted_beam;
-        t.beam_treefit_E_pull = treefitted_beam_pull;
-        t.kinfit_ZVertex = kinfit.GetFittedZVertex();
-        t.kinfit_ZVertex_pull = kinfit.GetZVertexPull();
-        t.treefit_ZVertex = treefitter_eta.GetFittedZVertex();
-        t.treefit_ZVertex_pull = treefitter_eta.GetZVertexPull();
+    t.beam_E_kinfitted = kinfitted_beam;
+    t.beam_kinfit_E_pull = kinfitted_beam_pull;
+    t.beam_E_treefitted = treefitted_beam;
+    t.beam_treefit_E_pull = treefitted_beam_pull;
+    t.kinfit_ZVertex = kinfit.GetFittedZVertex();
+    t.kinfit_ZVertex_pull = kinfit.GetZVertexPull();
+    t.treefit_ZVertex = treefitter_eta.GetFittedZVertex();
+    t.treefit_ZVertex_pull = treefitter_eta.GetZVertexPull();
 
-        t.p             = *proton;
-        t.p_kinfitted   = *kinfitted_proton;
-        t.p_treefitted  = *treefitted_proton;
-        t.p_Time        = proton->Candidate->Time;
-        t.p_PSA         = getPSAVector(proton);
-        t.p_vetoE       = proton->Candidate->VetoEnergy;
-        t.p_detector    = getDetectorAsInt(proton->Candidate->Detector);
-        t.p_clusterSize = proton->Candidate->ClusterSize;
-        t.p_centralElem = proton->Candidate->FindCaloCluster()->CentralElement;
-        t.p_vetoChannel = -1;
-        if (proton->Candidate->VetoEnergy)
-            t.p_vetoChannel = proton->Candidate->FindVetoCluster()->CentralElement;
+    t.p             = *proton;
+    t.p_kinfitted   = *kinfitted_proton;
+    t.p_treefitted  = *treefitted_proton;
+    t.p_Time        = proton->Candidate->Time;
+    t.p_PSA         = getPSAVector(proton);
+    t.p_vetoE       = proton->Candidate->VetoEnergy;
+    t.p_detector    = getDetectorAsInt(proton->Candidate->Detector);
+    t.p_clusterSize = proton->Candidate->ClusterSize;
+    t.p_centralElem = proton->Candidate->FindCaloCluster()->CentralElement;
+    t.p_vetoChannel = -1;
+    if (proton->Candidate->VetoEnergy)
+        t.p_vetoChannel = proton->Candidate->FindVetoCluster()->CentralElement;
 
-        t.p_kinfit_theta_pull  = kinfit_particles.at(0).GetPulls().at(1);
-        t.p_kinfit_phi_pull    = kinfit_particles.at(0).GetPulls().at(2);
-        t.p_treefit_theta_pull = treefit_particles.at(0).GetPulls().at(1);
-        t.p_treefit_phi_pull   = treefit_particles.at(0).GetPulls().at(2);
+    t.p_kinfit_theta_pull  = kinfit_particles.at(0).GetPulls().at(1);
+    t.p_kinfit_phi_pull    = kinfit_particles.at(0).GetPulls().at(2);
+    t.p_treefit_theta_pull = treefit_particles.at(0).GetPulls().at(1);
+    t.p_treefit_phi_pull   = treefit_particles.at(0).GetPulls().at(2);
 
-        for (size_t i = 0; i < N_FINAL_STATE-1; ++i) {
-            t.photons().at(i)             = *(photons.at(i));
-            t.photons_kinfitted().at(i)   = *(kinfitted_photons.at(i));
-            t.photons_treefitted().at(i)  = *(treefitted_photons.at(i));
-            t.photons_Time().at(i)        = photons.at(i)->Candidate->Time;
-            t.photons_vetoE().at(i)       = photons.at(i)->Candidate->VetoEnergy;
-            t.photons_PSA().at(i)         = getPSAVector(photons.at(i));
-            t.photons_detector().at(i)    = getDetectorAsInt(photons.at(i)->Candidate->Detector);
-            t.photons_clusterSize().at(i) = photons.at(i)->Candidate->ClusterSize;
-            t.photons_centralElem().at(i) = photons.at(i)->Candidate->FindCaloCluster()->CentralElement;
-            t.photons_vetoChannel().at(i) = -1;
-            if (photons.at(i)->Candidate->VetoEnergy)
-                t.photons_vetoChannel().at(i) = photons.at(i)->Candidate->FindVetoCluster()->CentralElement;
+    for (size_t i = 0; i < N_FINAL_STATE-1; ++i) {
+        t.photons().at(i)             = *(photons.at(i));
+        t.photons_kinfitted().at(i)   = *(kinfitted_photons.at(i));
+        t.photons_treefitted().at(i)  = *(treefitted_photons.at(i));
+        t.photons_Time().at(i)        = photons.at(i)->Candidate->Time;
+        t.photons_vetoE().at(i)       = photons.at(i)->Candidate->VetoEnergy;
+        t.photons_PSA().at(i)         = getPSAVector(photons.at(i));
+        t.photons_detector().at(i)    = getDetectorAsInt(photons.at(i)->Candidate->Detector);
+        t.photons_clusterSize().at(i) = photons.at(i)->Candidate->ClusterSize;
+        t.photons_centralElem().at(i) = photons.at(i)->Candidate->FindCaloCluster()->CentralElement;
+        t.photons_vetoChannel().at(i) = -1;
+        if (photons.at(i)->Candidate->VetoEnergy)
+            t.photons_vetoChannel().at(i) = photons.at(i)->Candidate->FindVetoCluster()->CentralElement;
 
-            t.photon_kinfit_E_pulls().at(i)      = kinfit_particles.at(i+1).GetPulls().at(0);
-            t.photon_kinfit_theta_pulls().at(i)  = kinfit_particles.at(i+1).GetPulls().at(1);
-            t.photon_kinfit_phi_pulls().at(i)    = kinfit_particles.at(i+1).GetPulls().at(2);
-            t.photon_treefit_E_pulls().at(i)     = treefit_particles.at(i+1).GetPulls().at(0);
-            t.photon_treefit_theta_pulls().at(i) = treefit_particles.at(i+1).GetPulls().at(1);
-            t.photon_treefit_phi_pulls().at(i)   = treefit_particles.at(i+1).GetPulls().at(2);
-        }
-
-        t.eta = eta;
-        t.eta_kinfit = eta_kinfit;
-        t.eta_treefit = eta_treefit;
-        t.mm = missing;
-        t.copl = copl;
+        t.photon_kinfit_E_pulls().at(i)      = kinfit_particles.at(i+1).GetPulls().at(0);
+        t.photon_kinfit_theta_pulls().at(i)  = kinfit_particles.at(i+1).GetPulls().at(1);
+        t.photon_kinfit_phi_pulls().at(i)    = kinfit_particles.at(i+1).GetPulls().at(2);
+        t.photon_treefit_E_pulls().at(i)     = treefit_particles.at(i+1).GetPulls().at(0);
+        t.photon_treefit_theta_pulls().at(i) = treefit_particles.at(i+1).GetPulls().at(1);
+        t.photon_treefit_phi_pulls().at(i)   = treefit_particles.at(i+1).GetPulls().at(2);
     }
+
+    t.eta = eta;
+    t.eta_kinfit = eta_kinfit;
+    t.eta_treefit = eta_treefit;
+    t.mm = missing;
+    t.copl = copl;
 
     return true;
 }

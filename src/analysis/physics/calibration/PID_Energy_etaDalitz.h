@@ -166,7 +166,6 @@ protected:
 
     Tree_t t;
     PromptRandom::Switch promptrandom;
-    PromptRandom::Switch promptrandom_wide;
     using uncertainty_model_t = utils::UncertaintyModels::Optimized_Oli1;
     utils::UncertaintyModelPtr model;
     utils::KinFitter kinfit;
