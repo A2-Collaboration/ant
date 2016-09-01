@@ -811,6 +811,8 @@ OmegaEtaG2::ReactionChannelList_t OmegaEtaG2::makeChannels()
     m.channels[12] = {ParticleTypeTreeDatabase::Get(ParticleTypeTreeDatabase::Channel::ThreePi0_6g), "#pi^{0} #pi^{0} #pi^{0}",kGreen-9};
     m.channels[13] = {ParticleTypeTreeDatabase::Get(ParticleTypeTreeDatabase::Channel::Pi0Eta_4g),   "#pi^{0} #eta",kBlue};
     m.channels[14] = {ParticleTypeTreeDatabase::Get(ParticleTypeTreeDatabase::Channel::Omega_Pi0PiPPiM_2g),"#omega #rightarrow #pi^{0} #pi^{+} #pi^{-}",kMagenta};
+    m.channels[15] = {ParticleTypeTreeDatabase::Get(ParticleTypeTreeDatabase::Channel::Rho_PiPi),          "#rho #rightarrow #pi^{+} #pi^{-}",kTeal};
+    m.channels[16] = {ParticleTypeTreeDatabase::Get(ParticleTypeTreeDatabase::Channel::Pi0PiPi_2gPiPi),    "#pi^{0} (#rightarrow 2 #gamma) #pi^{+} #pi^{-}", kPink};
     m.channels[m.other_index] = ReactionChannel_t(nullptr, "Others", kCyan);
 
     return m;
