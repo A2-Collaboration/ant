@@ -772,13 +772,24 @@ utils::UncertaintyModelPtr OmegaEtaG2::getModel(const string& modelname)
     if(modelname == "Oli1") {
         return make_shared<utils::UncertaintyModels::Optimized_Oli1>();
     } else if (modelname == "Interpolated") {
+        LOG(INFO) << "Using Interpolated Model";
         return utils::UncertaintyModels::Interpolated::makeAndLoad(
                       make_shared<utils::UncertaintyModels::Optimized_Oli1>(),
                       utils::UncertaintyModels::Interpolated::Mode_t::Fit,
                       false);
 
     } else if(modelname == "Sergey") {
+        const auto setup = ExpConfig::Setup::GetLastFound();
+
+        if(setup) {
+            if( string_starts_with(setup->GetName(), "Setup_2007")) {
+                LOG(INFO) << "Using Sergey 2007 Model";
+                return make_shared<utils::UncertaintyModels::FitterSergey>(utils::UncertaintyModels::FitterSergey::beamtime_t::Eta_2007);
+            }
+        }
+        LOG(INFO) << "Using Sergey 2014 Model";
         return make_shared<utils::UncertaintyModels::FitterSergey>();
+
     }
 
     throw std::runtime_error("Invalid model name " + modelname);
