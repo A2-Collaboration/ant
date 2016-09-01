@@ -80,6 +80,8 @@ protected:
 
     //===================== KinFitting ========================================================
 
+    std::shared_ptr<utils::UncertaintyModel> uncertModel = std::make_shared<utils::UncertaintyModels::FitterSergey>();
+
     utils::TreeFitter fitterSig;
     std::vector<utils::TreeFitter::tree_t> intermediatesTreeSig= std::vector<utils::TreeFitter::tree_t>(3);
 

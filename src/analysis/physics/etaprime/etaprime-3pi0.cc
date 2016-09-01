@@ -26,7 +26,7 @@ Etap3pi0::Etap3pi0(const std::string& name, OptionsPtr opts) :
     reference_tree(ParticleTypeTreeDatabase::Get(ParticleTypeTreeDatabase::Channel::EtaPrime_2Pi0Eta_6g)),
     bkg_tree(ParticleTypeTreeDatabase::Get(ParticleTypeTreeDatabase::Channel::ThreePi0_6g)),
     fitterSig("fitterSig",utils::ParticleTools::GetProducedParticle(signal_tree),
-              utils::UncertaintyModels::MCExtracted::makeAndLoad(), false,
+              uncertModel, true,
               [] (ParticleTypeTree tree)
               {
                 if(tree->Get() == ParticleTypeDatabase::EtaPrime)
@@ -35,7 +35,7 @@ Etap3pi0::Etap3pi0(const std::string& name, OptionsPtr opts) :
                     return utils::TreeFitter::nodesetup_t{};
                } ),
     fitterRef("fitterRef",utils::ParticleTools::GetProducedParticle(reference_tree),
-              utils::UncertaintyModels::MCExtracted::makeAndLoad(), false,
+              uncertModel, true,
               [] (ParticleTypeTree tree)
               {
                 if(tree->Get() == ParticleTypeDatabase::EtaPrime)
@@ -43,8 +43,11 @@ Etap3pi0::Etap3pi0(const std::string& name, OptionsPtr opts) :
                 else
                     return utils::TreeFitter::nodesetup_t{};
               } ),
-    kinFitterEMB(GetName(), 6, utils::UncertaintyModels::MCExtracted::makeAndLoad())
+    kinFitterEMB(GetName(), 6, uncertModel,true)
 {
+        fitterSig.SetZVertexSigma(3);
+        fitterRef.SetZVertexSigma(3);
+        kinFitterEMB.SetZVertexSigma(3);
     const auto setup = ant::ExpConfig::Setup::GetLastFound();
     if(!setup) {
         throw std::runtime_error("No Setup found");
