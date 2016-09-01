@@ -16,6 +16,8 @@
 #include "expconfig/ExpConfig.h"
 #include "tree/TCalibrationData.h"
 
+#include "base/std_ext/iterators.h"
+
 #include "TH1.h"
 #include "TH1D.h"
 #include "TH2D.h"
@@ -23,8 +25,7 @@
 #include "TStyle.h"
 #include "TGraph.h"
 #include "TTree.h"
-
-
+#include "TMultiGraph.h"
 
 using namespace std;
 using namespace ant;
@@ -34,6 +35,27 @@ void show_2d(const string& dbfolder, const string& calibID);
 void show_time(const string& dbfolder, const string& calibID);
 void show_channels(const string& dbfolder, const string& calibID);
 
+struct channelGraph_t
+{
+    double* X;
+    double* Y;
+    TGraph* G;
+
+    channelGraph_t(const string& title)
+    {
+        G = new TGraph(0,X,Y);
+        G->SetTitle(title.c_str());
+        G->GetXaxis()->SetTitle("time");
+
+    }
+
+    void AddPoint(double x, double y)
+    {
+        G->SetPoint(G->GetN(),x,y);
+    }
+};
+
+typedef vector<channelGraph_t> graphStack_t;
 
 int main(int argc, char** argv)
 {
@@ -115,29 +137,8 @@ void GetData(const DataBase::OnDiskLayout& onDiskDB,
     wfi.GetObjectClone("cdata",dataBuffer);
 }
 
-void show_channels(const string& dbfolder, const string& calibID)
+graphStack_t makeChannelGraphs(const string& dbfolder, const string& calibID)
 {
-
-    struct channelGraph_t
-    {
-        double* X;
-        double* Y;
-        TGraph* G;
-
-        channelGraph_t(const string& title)
-        {
-            G = new TGraph(0,X,Y);
-            G->SetTitle(title.c_str());
-            G->GetXaxis()->SetTitle("time");
-
-        }
-
-        void AddPoint(double x, double y)
-        {
-            G->SetPoint(G->GetN(),x,y);
-        }
-    };
-
     TCalibrationData dataBuffer;
 
     DataBase::OnDiskLayout onDiskDB(dbfolder);
@@ -149,7 +150,7 @@ void show_channels(const string& dbfolder, const string& calibID)
 
     GetData(onDiskDB, dataRanges.front(),dataBuffer);
     auto nChannels = dataBuffer.Data.size();
-    vector<channelGraph_t> graphs;
+    graphStack_t graphs;
 
     for ( auto i = 0u ; i < nChannels ; ++i )
     {
@@ -165,15 +166,32 @@ void show_channels(const string& dbfolder, const string& calibID)
                                          dataBuffer.Data.at(channel).Value);
     }
 
+    return graphs;
+}
+
+void show_channels(const string& dbfolder, const string& calibID)
+{
+
+    auto graphs = makeChannelGraphs(dbfolder,calibID);
+    auto cit = std_ext::getCircularIterator(ColorPalette::Colors.begin(), ColorPalette::Colors.end());
+    auto mg = new TMultiGraph();
+
     canvas c(calibID);
+    canvas c_all(calibID);
+
     for (const auto& graph: graphs)
     {
         graph.G->GetXaxis()->SetTimeDisplay(true);
         graph.G->GetXaxis()->SetTimeFormat("%d.%m.%y%F 1970-01-01 00:00:00");
         graph.G->SetMarkerStyle(kPlus);
+        graph.G->SetMarkerColor(*cit);
+        mg->Add(graph.G);
+        cit.next();
         c << drawoption("AP") << graph.G;
     }
     c << endc;
+
+    c_all << drawoption("AP") << mg << endc;
 }
 
 void show_time(const string& dbfolder, const string& calibID)
