@@ -176,10 +176,11 @@ public:
 
         for (auto channel = 0u ; channel < nchannels ; ++channel)
         {
-            result.TaggEffs.at(channel) = m_run.livetime * m_run.electrons.at(channel)
+            result.TaggEffs.at(channel)  =  (m_run.tdcs.at(channel)
+                                            - ( (m_bkg1.tdcs.at(channel) + m_bkg2.tdcs.at(channel)) / 2.0 ) ) ;
+            result.TaggEffs.at(channel) *= 1.0 / ( m_run.livetime * m_run.electrons.at(channel)
                                             - ( (m_bkg1.livetime * m_bkg1.electrons.at(channel)
-                                                 + m_bkg2.livetime * m_bkg2.electrons.at(channel) ) / 2.0 );
-            result.TaggEffs.at(channel) *= 1.0 / m_run.tdcs.at(channel);
+                                                + m_bkg2.livetime * m_bkg2.electrons.at(channel) ) / 2.0) );
         }
 
 
