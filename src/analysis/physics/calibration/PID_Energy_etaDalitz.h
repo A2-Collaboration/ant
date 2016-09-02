@@ -107,7 +107,6 @@ protected:
     TH2D* h_IM2d = nullptr;
     TH2* h_eta = nullptr;
     TH2* h_proton = nullptr;
-    TH2* h_kin_tree_fit_corr = nullptr;
 
     TH1D* h_counts = nullptr;
     TH1D* missed_channels = nullptr;
