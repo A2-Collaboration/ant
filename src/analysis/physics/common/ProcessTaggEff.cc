@@ -12,11 +12,20 @@ using namespace ant::analysis;
 using namespace ant::analysis::physics;
 
 ProcessTaggEff::ProcessTaggEff(const std::string& name, OptionsPtr opts) :
-    Physics(name, opts)
+    Physics(name, opts),
+    histFac("hfac")
 {
     auto Tagger = ExpConfig::Setup::GetDetector<TaggerDetector_t>();
     if (!Tagger) throw std::runtime_error("No Tagger found");
     auto nchannels = Tagger->GetNChannels();
+
+    auto bs = BinSettings(nchannels);
+    hist_scalers = histFac.makeTH1D("scalars - e^{-} counts",    "channel no.","# per scaler block", bs);
+    hist_tdchits = histFac.makeTH1D("tdc     - #gamma counts",      "channel no.","# per scaler block", bs);
+
+    hist_scalers_rate = histFac.makeTH1D("scalars - e^{-} rate",    "channel no.","freq [Hz]", bs);
+    hist_tdchits_rate = histFac.makeTH1D("tdc     - #gamma rate",    "channel no.","freq [Hz]", bs);
+
 
     slowcontrol::Variables::TaggerScalers->Request();
     slowcontrol::Variables::FreeRates->Request();
@@ -61,28 +70,27 @@ void ProcessTaggEff::Finish()
 
 void ProcessTaggEff::ShowResult()
 {
-    const HistogramFactory histFac("hfac");
+
     canvas("check") << TTree_drawable(scalerReads.Tree, "PbRate")
                     << TTree_drawable(scalerReads.Tree, "TDCHits")
                     <<  endc;
+    hist_scalers->SetLineColor(kRed);
+    canvas("channels") << padoption::Legend << hist_scalers      << samepad << hist_tdchits
+                       << padoption::Legend << hist_scalers_rate << samepad << hist_tdchits_rate
+                       << endc;
 }
 
 void ProcessTaggEff::processBlock(const TEvent& ev)
 {
-    const auto Scalers = slowcontrol::Variables::TaggerScalers->Get();
-    unsigned channel = 0;
-    for (const auto& value: Scalers)
-    {
-        scalerReads.TaggRates().at(channel) = value;
-        channel++;
-    }
+    scalerReads.TaggRates() = slowcontrol::Variables::TaggerScalers->GetCounts();
 
+    for ( auto ch = 0u ; ch < scalerReads.TaggRates().size() ; ++ch)
+        hist_scalers->Fill(ch,scalerReads.TaggRates().at(ch));
 
     scalerReads.ExpLivetime = slowcontrol::Variables::FreeRates->GetExpLivetime();
     scalerReads.PbRate = slowcontrol::Variables::FreeRates->GetPbGlass();
     scalerReads.LastID = ev.Reconstructed().ID;
     scalerReads.ExpTriggerRate = slowcontrol::Variables::FreeRates->GetExpTrigger();
-
 }
 
 void ProcessTaggEff::processTaggerHits(const TEvent &ev)
@@ -90,6 +98,7 @@ void ProcessTaggEff::processTaggerHits(const TEvent &ev)
     for (const auto& taggerhit: ev.Reconstructed().TaggerHits)
     {
         scalerReads.TDCHits().at(taggerhit.Channel)++;
+        hist_tdchits->Fill(taggerhit.Channel);
         scalerReads.TaggTimings().at(taggerhit.Channel).emplace_back(taggerhit.Time);
     }
 }

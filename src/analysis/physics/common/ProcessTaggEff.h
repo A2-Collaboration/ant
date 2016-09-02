@@ -12,8 +12,16 @@ namespace physics {
 
 struct ProcessTaggEff: public Physics {
 
-
     unsigned seenEvents = 0;
+
+    const HistogramFactory histFac;
+
+    TH1D* hist_scalers;
+    TH1D* hist_tdchits;
+
+    TH1D* hist_scalers_rate;
+    TH1D* hist_tdchits_rate;
+
 
     struct TreeScalarReads : WrapTTree {
         ADD_BRANCH_T(TID,   LastID)
