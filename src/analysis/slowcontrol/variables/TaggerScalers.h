@@ -22,6 +22,13 @@ struct TaggerScalers : Variable {
      */
     std::vector<double> Get() const;
 
+    /**
+     * @brief GetCounts returns the counts for current scalar block
+     * @return
+     */
+    std::vector<double> GetCounts() const;
+
+
 protected:
 
     enum class mode_t {

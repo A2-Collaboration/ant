@@ -42,3 +42,19 @@ std::vector<double> TaggerScalers::Get() const
     return scalers;
 }
 
+std::vector<double> TaggerScalers::GetCounts() const
+{
+    vector<double> counts(nChannels, std::numeric_limits<double>::quiet_NaN());
+    if (mode == mode_t::EPT_2014)
+    {
+        for (const auto& kv: Processors::EPT_Scalers->Get())
+        {
+            if (kv.Key < counts.size())
+                counts[kv.Key] = kv.Value;
+        }
+    }
+    return counts;
+}
+
+
+
