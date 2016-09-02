@@ -26,7 +26,7 @@ struct TaggerScalers : Variable {
      * @brief GetCounts returns the counts for current scalar block
      * @return
      */
-    std::vector<double> GetCounts() const;
+    std::vector<int64_t> GetCounts() const;
 
 
 protected:

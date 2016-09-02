@@ -42,9 +42,9 @@ std::vector<double> TaggerScalers::Get() const
     return scalers;
 }
 
-std::vector<double> TaggerScalers::GetCounts() const
+std::vector<int64_t> TaggerScalers::GetCounts() const
 {
-    vector<double> counts(nChannels, std::numeric_limits<double>::quiet_NaN());
+    vector<int64_t> counts(nChannels, std::numeric_limits<int64_t>::quiet_NaN());
     if (mode == mode_t::EPT_2014)
     {
         for (const auto& kv: Processors::EPT_Scalers->Get())
