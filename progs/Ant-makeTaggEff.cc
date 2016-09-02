@@ -117,7 +117,7 @@ protected:
                 for ( auto channel = 0u ; channel < wrapTree.TaggRates().size(); ++channel)
                 {
                     means.electrons.at(channel) += 1.0 * wrapTree.TaggRates().at(channel);
-                    means.tdcs.at(channel)      += 1.0 * wrapTree.TDCHits().at(channel);
+                    means.tdcs.at(channel)      += 1.0 * wrapTree.TDCCounts().at(channel);
                 }
                 means.livetime += 1.0 * wrapTree.ExpLivetime;
 
@@ -138,6 +138,7 @@ protected:
     treeContainer_t run;
     treeContainer_t bkg2;
 
+    TID startID;
 
 
 public:
@@ -150,21 +151,21 @@ public:
         if ( !(bkg1.setupName == bkg2.setupName &&
              bkg2.setupName == run.setupName ) )
             throw runtime_error("Files in TaggEff-triple not from same Setup!");
+        WrapTFileInput file(bkg2f_);
+        ant::TAntHeader* header;
+        file.GetObject("AntHeader",header);
+        if (!header)
+            throw runtime_error("No Ant header in found!");
+        startID = header->LastID;
     }
 
     string SetupName() const{return bkg1.setupName;}
 
-    // startID for these taggEff values should be the end of this taggEff-triple:
-    TID startID() const
-    {
-        bkg2.wrapTree.Tree->GetEntry(bkg2.wrapTree.Tree->GetEntries()-1);
-        return bkg2.wrapTree.LastID();
-    }
 
-    // TODO: calibration data
+
     resultSet_t  GetTaggEff() const
     {
-        resultSet_t result(SetupName(),startID());
+        resultSet_t result(SetupName(),startID);
 
         treeContainer_t::means_t m_bkg1 = bkg1.getMeans();
         treeContainer_t::means_t m_run = run.getMeans();

@@ -13,6 +13,8 @@ namespace physics {
 struct ProcessTaggEff: public Physics {
 
     unsigned seenEvents = 0;
+    unsigned seenScalerBlocks = 0;
+    unsigned nchannels = std::numeric_limits<unsigned>::quiet_NaN();
 
     const HistogramFactory histFac;
 
@@ -24,17 +26,19 @@ struct ProcessTaggEff: public Physics {
 
 
     struct TreeScalarReads : WrapTTree {
-        ADD_BRANCH_T(TID,   LastID)
         ADD_BRANCH_T(int,   nEvtsPerRead)
 
         ADD_BRANCH_T(double,    ExpLivetime)
+
         ADD_BRANCH_T(double,    ExpTriggerRate)
+        ADD_BRANCH_T(double,    PbRate)
 
-        ADD_BRANCH_T(double,              PbRate)
-        ADD_BRANCH_T(std::vector<double>, TaggRates)
+        ADD_BRANCH_T(std::vector<int>,   TaggCounts)
+        ADD_BRANCH_T(std::vector<double>,   TaggRates)
 
-        ADD_BRANCH_T(std::vector<int>,                  TDCHits)
-//        ADD_BRANCH_T(std::vector<int>,                  CoincidentTDCHits)
+        ADD_BRANCH_T(std::vector<int>,   TDCCounts)
+        ADD_BRANCH_T(std::vector<double>,   TDCRates)
+
         ADD_BRANCH_T(std::vector<std::vector<double>>,  TaggTimings)
     };
 
@@ -50,8 +54,9 @@ struct ProcessTaggEff: public Physics {
     virtual void Finish() override;
     virtual void ShowResult() override;
 
-    void processBlock(const TEvent& ev);
+    void processBlock();
     void processTaggerHits(const TEvent& ev);
+    void resetAll();
 };
 
 }}} // namespace ant::analysis::physics
