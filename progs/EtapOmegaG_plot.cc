@@ -283,6 +283,12 @@ struct SigHist_t : CommonHist_t {
         auto cuts = cuttree::ConvertCuts<Fill_t, CommonHist_t::Fill_t>(CommonHist_t::GetCuts());
 
         cuts.emplace_back(MultiCut_t<Fill_t>{
+                              {"PIDSumE=0", [] (const Fill_t& f) { return f.Common.PIDSumE==0; } },
+                              {"CBSumVetoE=0", [] (const Fill_t& f) { return f.Shared.CBSumVetoE==0; } },
+                              {"NoCut", [] (const Fill_t&) { return true; } },
+                          });
+
+        cuts.emplace_back(MultiCut_t<Fill_t>{
                               {"AntiPi0FitProb<0.02||nan", [] (const Fill_t& f) { return std::isnan(f.Shared.AntiPi0FitProb) || f.Shared.AntiPi0FitProb<0.002; } },
                               {"AntiPi0FitProb<0.0002||nan", [] (const Fill_t& f) { return std::isnan(f.Shared.AntiPi0FitProb) || f.Shared.AntiPi0FitProb<0.0002; } },
                           });
