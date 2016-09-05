@@ -471,15 +471,23 @@ void EtapOmegaG::Sig_t::ResetBranches()
 
 
 template<typename T>
-void fill_NaN(T& v) {
-    std::fill(v.begin(), v.end(), std_ext::NaN);
+struct reset_val {
+    static T value() { return {}; }
+};
+template<>
+struct reset_val<double> {
+    static double value() { return std_ext::NaN; }
+};
+template<typename T>
+void fill_reset(std::vector<T>& v) {
+    std::fill(v.begin(), v.end(), reset_val<T>::value());
 }
 
 void EtapOmegaG::Sig_t::SharedTree_t::Reset()
 {
-    fill_NaN(ggg());
-    fill_NaN(gg_gg1());
-    fill_NaN(gg_gg2());
+    fill_reset(ggg());
+    fill_reset(gg_gg1());
+    fill_reset(gg_gg2());
 
     AntiPi0FitProb = std_ext::NaN;
     AntiPi0FitIterations = 0;
@@ -640,6 +648,28 @@ void EtapOmegaG::Sig_t::Fit_t::BaseTree_t::Reset()
     IM_gg= std_ext::NaN;
 
     MCTrueMatch = 0;
+
+    fill_reset(gNonPi0_IsCB());
+    fill_reset(gNonPi0_CaloE());
+    fill_reset(gNonPi0_ClusterSize());
+    fill_reset(gNonPi0_VetoE());
+}
+
+void fill_gNonPi0(
+        EtapOmegaG::Sig_t::Fit_t::BaseTree_t& t,
+        const TCandidatePtr& cand1, const TCandidatePtr& cand2)
+{
+    t.gNonPi0_IsCB().front() = static_cast<bool>(cand1->Detector & Detector_t::Type_t::CB);
+    t.gNonPi0_IsCB().back()  = static_cast<bool>(cand2->Detector & Detector_t::Type_t::CB);
+
+    t.gNonPi0_CaloE().front() = cand1->CaloEnergy;
+    t.gNonPi0_CaloE().back() = cand2->CaloEnergy;
+
+    t.gNonPi0_ClusterSize().front() = cand1->ClusterSize;
+    t.gNonPi0_ClusterSize().back() = cand2->ClusterSize;
+
+    t.gNonPi0_VetoE().front() = cand1->VetoEnergy;
+    t.gNonPi0_VetoE().back() = cand2->VetoEnergy;
 }
 
 EtapOmegaG::Sig_t::Pi0_t::Pi0_t(params_t params) :
@@ -651,8 +681,8 @@ EtapOmegaG::Sig_t::Pi0_t::Pi0_t(params_t params) :
 void EtapOmegaG::Sig_t::Pi0_t::BaseTree_t::Reset()
 {
     Fit_t::BaseTree_t::Reset();
-    fill_NaN(IM_Pi0g());
-    fill_NaN(Bachelor_E());
+    fill_reset(IM_Pi0g());
+    fill_reset(Bachelor_E());
 }
 
 void EtapOmegaG::Sig_t::Pi0_t::Process(const EtapOmegaG::Particles_t& particles,
@@ -696,21 +726,29 @@ void EtapOmegaG::Sig_t::Pi0_t::Process(const EtapOmegaG::Particles_t& particles,
 
         // there are two photon combinations possible for the omega
         // MC shows that it's the one with the higher IM_3g = IM_Pi0g
-        const TParticlePtr& g1 = fitted_g_Omega->Get().Leave->AsFitted();
-        const TParticlePtr& g2 = fitted_g_EtaPrime->Get().Leave->AsFitted();
+        auto leave1 = fitted_g_Omega->Get().Leave;
+        auto leave2 = fitted_g_EtaPrime->Get().Leave;
+        LorentzVec g1 = *leave1->AsFitted();
+        LorentzVec g2 = *leave2->AsFitted();
 
-        t.IM_gg = (*g1 + *g2).M();
-        t.IM_Pi0g().front() = (Pi0 + *g1).M();
-        t.IM_Pi0g().back()  = (Pi0 + *g2).M();
-        const LorentzVec EtaPrime = *g1 + *g2 + Pi0;
-        t.Bachelor_E().front() = Boost(*g1, -EtaPrime.BoostVector()).E;
-        t.Bachelor_E().back() =  Boost(*g2, -EtaPrime.BoostVector()).E;
+        // invariant under swap
+        t.IM_gg = (g1 + g2).M();
+        const LorentzVec EtaPrime = g1 + g2 + Pi0;
 
+        t.IM_Pi0g().front() = (Pi0 + g1).M();
+        t.IM_Pi0g().back()  = (Pi0 + g2).M();
         if(t.IM_Pi0g().front() > t.IM_Pi0g().back()) {
             std::swap(t.IM_Pi0g().front(), t.IM_Pi0g().back());
-            std::swap(t.Bachelor_E().front(), t.Bachelor_E().back());
+            std::swap(leave1, leave2);
+            std::swap(g1, g2);
         }
 
+        // g1/leave1 is now the EtaPrime, g2/leave2 is now the Omega bachelor photon
+
+        t.Bachelor_E().front() = Boost(g1, -EtaPrime.BoostVector()).E;
+        t.Bachelor_E().back() =  Boost(g2, -EtaPrime.BoostVector()).E;
+
+        fill_gNonPi0(t, leave1->Particle->Candidate, leave2->Particle->Candidate);
     }
 
 
@@ -819,6 +857,9 @@ void EtapOmegaG::Sig_t::OmegaPi0_t::Process(const EtapOmegaG::Particles_t& parti
         t.IM_gg = ( *fitted_g_EtaPrime->Get().Leave->AsFitted()
                   + *fitted_g_Omega->Get().Leave->AsFitted()).M();
 
+        fill_gNonPi0(t,
+                     fitted_g_EtaPrime->Get().Leave->Particle->Candidate,
+                     fitted_g_Omega->Get().Leave->Particle->Candidate);
     }
 
 

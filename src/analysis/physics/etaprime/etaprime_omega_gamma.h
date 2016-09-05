@@ -152,6 +152,12 @@ struct EtapOmegaG : Physics {
 
                 ADD_BRANCH_T(unsigned, MCTrueMatch)
 
+                // information about the two photons NOT belonging to the Pi0
+                ADD_BRANCH_T(std::vector<bool>,     gNonPi0_IsCB,        2)
+                ADD_BRANCH_T(std::vector<double>,   gNonPi0_CaloE,       2)
+                ADD_BRANCH_T(std::vector<unsigned>, gNonPi0_ClusterSize, 2)
+                ADD_BRANCH_T(std::vector<double>,   gNonPi0_VetoE,       2)
+
                 void Reset();
             };
 
