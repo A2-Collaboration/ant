@@ -952,6 +952,13 @@ void EtapOmegaG::ShowResult()
     Sig.Pi0.t.Tree->AddFriend(Sig.t.Tree);
     Sig.OmegaPi0.t.Tree->AddFriend(t.Tree);
     Sig.OmegaPi0.t.Tree->AddFriend(Sig.t.Tree);
+
+    canvas("Signal")
+            << TTree_drawable(Sig.OmegaPi0.t.Tree, "Bachelor_E")
+            << TTree_drawable(Sig.Pi0.t.Tree, "Bachelor_E")
+            << TTree_drawable(Sig.OmegaPi0.t.Tree, "MCTrueMatch")
+            << TTree_drawable(Sig.Pi0.t.Tree, "MCTrueMatch")
+            << endc;
 }
 
 
