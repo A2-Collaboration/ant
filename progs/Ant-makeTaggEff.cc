@@ -7,6 +7,7 @@
 #include "base/CmdLine.h"
 #include "base/WrapTFile.h"
 #include "base/std_ext/string.h"
+#include "base/std_ext/time.h"
 
 #include "expconfig/setups/Setup.h"
 #include "expconfig/ExpConfig.h"
@@ -16,6 +17,7 @@
 #include "TTree.h"
 #include "TRint.h"
 #include "TH1D.h"
+#include "TH2D.h"
 
 #include "calibration/DataManager.h"
 #include "tree/TCalibrationData.h"
@@ -38,6 +40,9 @@ const map<string,TID> startIDs({ {"Setup_2014_07_EPT_Prod", TID(1406592000)},
                                  {"Setup_2014_10_EPT_Prod", TID(1413244800)},
                                  {"Setup_2014_12_EPT_Prod", TID(1417395600)} });
 
+static TH1D* hist_channels(nullptr);
+static TH2D* hist_channels_2d(nullptr);
+
 struct resultSet_t
 {
     string          Setup;
@@ -50,6 +55,31 @@ struct resultSet_t
         TaggEffs(),
         TaggEffErrors() {}
 };
+
+void fillHistSingle( const vector<double>& data)
+{
+    if ( !hist_channels )
+    {
+        hist_channels = new TH1D("taggEff", "Generated Tagging Efficiencies", data.size(),0,data.size());
+        hist_channels->SetXTitle("channel");
+        hist_channels->SetYTitle("Efficiency");
+    }
+    for ( auto ch = 0u ; ch < data.size() ; ++ch)
+        hist_channels->Fill(ch,data.at(ch));
+}
+
+void fillHistTime( const vector<double>& data, const unsigned time )
+{
+    if ( !hist_channels_2d )
+    {
+        hist_channels_2d = new TH2D("taggEffTime","Generated Tagging Efficiencies", 1 ,0,0,data.size(),0,data.size());
+        hist_channels_2d->SetXTitle("time");
+        hist_channels_2d->SetYTitle("channel");
+    }
+
+    for ( auto ch = 0u ; ch < data.size() ; ++ch )
+        hist_channels_2d->Fill(std_ext::to_iso8601(time).c_str(), ch,data.at(ch));
+}
 
 void storeResult(const TID& startID, shared_ptr<calibration::DataManager> manager, const string& calibrationName, vector<double> data)
 {
@@ -117,7 +147,7 @@ protected:
                 for ( auto channel = 0u ; channel < wrapTree.TaggRates().size(); ++channel)
                 {
                     means.electrons.at(channel) += 1.0 * wrapTree.TaggRates().at(channel);
-                    means.tdcs.at(channel)      += 1.0 * wrapTree.TDCCounts().at(channel);
+                    means.tdcs.at(channel)      += 1.0 * wrapTree.TDCRates().at(channel);
                 }
                 means.livetime += 1.0 * wrapTree.ExpLivetime;
 
@@ -125,9 +155,9 @@ protected:
 
             means.livetime = means.livetime / nentries;
             for (auto& e: means.electrons)
-                e = e / nentries;
+                e = 1.0 * e / nentries;
             for (auto& t: means.tdcs)
-                t = t / nentries;
+                t = 1.0 * t / nentries;
 
             return means;
         }
@@ -167,9 +197,9 @@ public:
     {
         resultSet_t result(SetupName(),startID);
 
-        treeContainer_t::means_t m_bkg1 = bkg1.getMeans();
-        treeContainer_t::means_t m_run = run.getMeans();
-        treeContainer_t::means_t m_bkg2 = bkg2.getMeans();
+        auto m_bkg1 = bkg1.getMeans();
+        auto m_run = run.getMeans();
+        auto m_bkg2 = bkg2.getMeans();
 
         auto nchannels = bkg1.nchannels;
         result.TaggEffs.resize(nchannels,0);
@@ -191,16 +221,19 @@ public:
 };
 
 
-void processFiles(const string& bkg1, const string& run, const string& bkg2)
+void processFiles(const string& bkg1, const string& run, const string& bkg2, const bool noStore)
 {
     taggEffTriple_t taggEff(bkg1,run,bkg2);
     resultSet_t result = taggEff.GetTaggEff();
     auto manager = ExpConfig::Setup::GetLastFound()->GetCalibrationDataManager();
 
-    storeResult(result.FirstID,manager,calibration::TaggEff::GetDataName(),result.TaggEffs);
+    fillHistSingle(result.TaggEffs);
+
+    if (!noStore)
+        storeResult(result.FirstID,manager,calibration::TaggEff::GetDataName(),result.TaggEffs);
 }
 
-bool processCSV(const string& csvFile)
+bool processCSV(const string& csvFile, const bool noStore)
 {
     shared_ptr<calibration::DataManager> manager = nullptr;
 
@@ -249,13 +282,17 @@ bool processCSV(const string& csvFile)
         if (n_TaggEffs == 0)
         {
             manager = ExpConfig::Setup::GetLastFound()->GetCalibrationDataManager();
-            storeResult(it->second,manager,calibration::TaggEff::GetDataName(),result.TaggEffs);
+            fillHistTime(result.TaggEffs,it->second.Timestamp);
+            if (!noStore)
+                storeResult(it->second,manager,calibration::TaggEff::GetDataName(),result.TaggEffs);
         }
         if (n_TaggEffs > 0)
         {
             if(result.Setup != setupName )
                 throw runtime_error("Different Setupnames within file list found!");
-            storeResult(result.FirstID,manager,calibration::TaggEff::GetDataName(),result.TaggEffs);
+            fillHistTime(result.TaggEffs,result.FirstID.Timestamp);
+            if (!noStore)
+                storeResult(result.FirstID,manager,calibration::TaggEff::GetDataName(),result.TaggEffs);
         }
         setupName = result.Setup;
         n_TaggEffs++;
@@ -281,6 +318,8 @@ int main( int argc, char** argv )
     auto cmd_taggEff      = cmd.add<TCLAP::ValueArg<string>>("t","taggEff",    "TaggEff - run",                                  false,  "", "root");
     auto cmd_bkg2         = cmd.add<TCLAP::ValueArg<string>>("s","second-bkg", "input for second background",                    false,  "", "root");
 
+    auto cmd_batchmode    = cmd.add<TCLAP::MultiSwitchArg>  ("b","batch",      "Run in batch mode (no ROOT shell afterwards)",   false);
+    auto cmd_nostore      = cmd.add<TCLAP::SwitchArg>("","nostore","don't store, only show results");
 
     cmd.parse(argc, argv);
 
@@ -295,15 +334,33 @@ int main( int argc, char** argv )
             LOG(ERROR) << "Provide either csv file list or triple of backgrounds and TaggEff run!";
             return EXIT_FAILURE;
         }
-        if (processCSV(inCsv))
-            return EXIT_SUCCESS;
+        processCSV(inCsv, cmd_nostore->isSet());
     }
 
-    const auto inBkg1    = cmd_bkg1->getValue();
-    const auto inTaggEff = cmd_taggEff->getValue();
-    const auto inBkg2    = cmd_bkg2->getValue();
+    if (!cmd_input->isSet())
+    {
+        const auto inBkg1    = cmd_bkg1->getValue();
+        const auto inTaggEff = cmd_taggEff->getValue();
+        const auto inBkg2    = cmd_bkg2->getValue();
 
-    processFiles(inBkg1,inTaggEff,inBkg2);
+        processFiles(inBkg1,inTaggEff,inBkg2,cmd_nostore->isSet());
+    }
+    argc=1; // prevent TRint to parse any cmdline except prog name
+    auto app = cmd_batchmode->isSet() || !std_ext::system::isInteractive()
+               ? nullptr
+               : std_ext::make_unique<TRint>("Ant-makeSigmas",&argc,argv,nullptr,0,true);
+
+    if(app) {
+        canvas c("TaggEff");
+        if (hist_channels)
+            c << hist_channels;
+        if (hist_channels_2d)
+            c << drawoption("colz") << hist_channels_2d;
+        c << endc;
+
+        app->Run(kTRUE); // really important to return...
+    }
+
 
     return EXIT_SUCCESS;
 }
