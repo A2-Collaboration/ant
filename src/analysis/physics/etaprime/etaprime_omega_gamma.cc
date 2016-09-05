@@ -694,8 +694,7 @@ void EtapOmegaG::Sig_t::Pi0_t::Process(const EtapOmegaG::Particles_t& particles,
 
         t.IM_Pi0gg = fitted_EtaPrime->Get().LVSum.M();
 
-        // there are two photon combinations possible
-        // for the omega
+        // there are two photon combinations possible for the omega
         // MC shows that it's the one with the higher IM_3g = IM_Pi0g
         const TParticlePtr& g1 = fitted_g_Omega->Get().Leave->AsFitted();
         const TParticlePtr& g2 = fitted_g_EtaPrime->Get().Leave->AsFitted();
@@ -894,7 +893,7 @@ void EtapOmegaG::ShowResult()
 
     canvas("Signal")
             << TTree_drawable(Sig.OmegaPi0.t.Tree, "Bachelor_E")
-            << TTree_drawable(Sig.Pi0.t.Tree, "Bachelor_E")
+            << TTree_drawable(Sig.Pi0.t.Tree, "Bachelor_E[0]")
             << TTree_drawable(Sig.OmegaPi0.t.Tree, "MCTrueMatch")
             << TTree_drawable(Sig.Pi0.t.Tree, "MCTrueMatch")
             << endc;
