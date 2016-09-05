@@ -128,16 +128,19 @@ protected:
         }
 
         struct means_t {
-            vector<double> electrons;
-            double livetime = 0;
-            vector<double> tdcs;
+            vector<double> Scalers;
+            vector<double> ScalersErrors;
+            double Livetime = 0;
+            double LivetimeError;
+            vector<double> Tdcs;
+            vector<double> TdcsErrors;
         };
 
         means_t getMeans() const
         {
             means_t means;
-            means.electrons.resize(nchannels);
-            means.tdcs.resize(nchannels);
+            means.Scalers.resize(nchannels);
+            means.Tdcs.resize(nchannels);
 
             auto nentries = wrapTree.Tree->GetEntries();
 
@@ -146,17 +149,17 @@ protected:
                 wrapTree.Tree->GetEntry(entry);
                 for ( auto channel = 0u ; channel < wrapTree.TaggRates().size(); ++channel)
                 {
-                    means.electrons.at(channel) += 1.0 * wrapTree.TaggRates().at(channel);
-                    means.tdcs.at(channel)      += 1.0 * wrapTree.TDCRates().at(channel);
+                    means.Scalers.at(channel) += 1.0 * wrapTree.TaggRates().at(channel);
+                    means.Tdcs.at(channel)    += 1.0 * wrapTree.TDCRates().at(channel);
                 }
-                means.livetime += 1.0 * wrapTree.ExpLivetime;
+                means.Livetime += 1.0 * wrapTree.ExpLivetime;
 
             }
 
-            means.livetime = means.livetime / nentries;
-            for (auto& e: means.electrons)
+            means.Livetime = means.Livetime / nentries;
+            for (auto& e: means.Scalers)
                 e = 1.0 * e / nentries;
-            for (auto& t: means.tdcs)
+            for (auto& t: means.Tdcs)
                 t = 1.0 * t / nentries;
 
             return means;
@@ -178,6 +181,11 @@ public:
         run(runf_),
         bkg2(bkg2f_)
     {
+        LOG(INFO) << "Loading TaggEff measurement for:  "
+                  << "1st bkg: " << bkg1f_ << "  "
+                  << "run: "     << runf_  << "  "
+                  << "2nd bkg: " << bkg2f_;
+
         if ( !(bkg1.setupName == bkg2.setupName &&
              bkg2.setupName == run.setupName ) )
             throw runtime_error("Files in TaggEff-triple not from same Setup!");
@@ -191,15 +199,56 @@ public:
 
     string SetupName() const{return bkg1.setupName;}
 
+   unsigned sanityChecks(const treeContainer_t::means_t& bkg1,
+                 const treeContainer_t::means_t& run,
+                 const treeContainer_t::means_t& bkg2) const
+    {
+        auto severity = 0u;
+        auto nchannels = bkg1.Scalers.size();
 
 
-    resultSet_t  GetTaggEff() const
+
+
+        // per file checks:
+        for ( auto m: {bkg1, run, bkg2})
+        {
+            for (auto ch = 0u ; ch < nchannels ; ++ch)
+            {
+                if (m.Scalers.at(ch) < m.Tdcs.at(ch))
+                {
+                    LOG(ERROR) << "Detected file with higher TDC rate than scaler rate!";
+                    LOG(ERROR) << m.Scalers.at(ch) << " < " << m.Tdcs.at(ch);
+                    severity++;
+                }
+            }
+            if ( !(0 <= m.Livetime && m.Livetime <= 1))
+            {
+                LOG(ERROR) << "Detected file with live time not in [0,1]!";
+                LOG(ERROR) << "livetime: " << m.Livetime;
+                severity++;
+            }
+        }
+
+        // bkg
+        for ( auto ch = 0u ; ch < nchannels ; ++ch)
+        {
+            if ( run.Scalers.at(ch) < bkg1.Scalers.at(ch) || run.Scalers.at(ch) < bkg2.Scalers.at(ch))
+                LOG(WARNING) << "Detected file with higher background in scalers, channel " << ch << "!";
+            if ( run.Tdcs.at(ch) < bkg1.Tdcs.at(ch) || run.Tdcs.at(ch) < bkg2.Tdcs.at(ch))
+                LOG(WARNING) << "Detected file with higher background in TDCs, channel " << ch << "!";
+        }
+        return severity;
+    }
+
+    const resultSet_t  GetTaggEff() const
     {
         resultSet_t result(SetupName(),startID);
 
-        auto m_bkg1 = bkg1.getMeans();
-        auto m_run = run.getMeans();
-        auto m_bkg2 = bkg2.getMeans();
+        const auto m_bkg1 = bkg1.getMeans();
+        const auto m_run = run.getMeans();
+        const auto m_bkg2 = bkg2.getMeans();
+        if ( sanityChecks(m_bkg1,m_run,m_bkg2) > 0 )
+            throw runtime_error("Tagg-Eff-triple didn't pass sanity checks, doublecheck input files!");
 
         auto nchannels = bkg1.nchannels;
         result.TaggEffs.resize(nchannels,0);
@@ -207,13 +256,16 @@ public:
 
         for (auto channel = 0u ; channel < nchannels ; ++channel)
         {
-            result.TaggEffs.at(channel)  =  (m_run.tdcs.at(channel)
-                                            - ( (m_bkg1.tdcs.at(channel) + m_bkg2.tdcs.at(channel)) / 2.0 ) ) ;
-            result.TaggEffs.at(channel) *= 1.0 / ( m_run.livetime * m_run.electrons.at(channel)
-                                            - ( (m_bkg1.livetime * m_bkg1.electrons.at(channel)
-                                                + m_bkg2.livetime * m_bkg2.electrons.at(channel) ) / 2.0) );
+            result.TaggEffs.at(channel)  =  m_run.Tdcs.at(channel)
+                                            - ( (m_bkg1.Tdcs.at(channel) + m_bkg2.Tdcs.at(channel)) / 2.0 );
+            result.TaggEffs.at(channel) *=  1.0 / (( m_run.Livetime * m_run.Scalers.at(channel))
+                                            - ( (m_bkg1.Livetime * m_bkg1.Scalers.at(channel)
+                                                + m_bkg2.Livetime * m_bkg2.Scalers.at(channel) ) / 2.0) );
+            if ( !(IntervalD(0,1).Contains(result.TaggEffs.at(channel))) )
+                LOG(WARNING)  << "Calculated Tagging efficiency for channel " << channel
+                              << " not in [0,1]: "
+                              << result.TaggEffs.at(channel) << "!";
         }
-
 
         return result;
     }
