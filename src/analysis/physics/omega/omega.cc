@@ -848,13 +848,15 @@ OmegaEtaG2::OmegaEtaG2(const std::string& name, OptionsPtr opts):
         ParticleTypeTreeDatabase::Get(ParticleTypeTreeDatabase::Channel::Omega_gPi0_3g),
         ParticleTypeDatabase::Pi0,
         model,
-        opt_FitZVertex
+        opt_FitZVertex,
+        opts->Get<bool>(                      "KinFit_FixOmegaMass",     false)
         ),
     fitter_eta(
         ParticleTypeTreeDatabase::Get(ParticleTypeTreeDatabase::Channel::Omega_gEta_3g),
         ParticleTypeDatabase::Eta,
         model,
-        opt_FitZVertex
+        opt_FitZVertex,
+        opts->Get<bool>(                      "KinFit_FixOmegaMass",     false)
         ),
     tagChMult(HistFac),
     dTaggerHitsAccepted(HistFac.makeTH1D("Tagger Hits Accepted Per Event","","",BinSettings(10),"dTHAcceptedperEvent")),
@@ -964,14 +966,21 @@ const OmegaEtaG2::ReactionChannelList_t OmegaEtaG2::reaction_channels = OmegaEta
 
 const unsigned OmegaEtaG2::ReactionChannelList_t::other_index = 1000;
 
+utils::TreeFitter::nodesetup_t::getter fgetter(const bool& fixmass) {
 
+    if(fixmass)
+        return {};
 
-OmegaEtaG2::MyTreeFitter_t::MyTreeFitter_t(const ParticleTypeTree& ttree, const ParticleTypeDatabase::Type& mesonT, utils::UncertaintyModelPtr model, const bool fix_z_vertex):
+    return [] (const ParticleTypeTree& t) { return utils::TreeFitter::nodesetup_t(1.0, (t->Get() == ParticleTypeDatabase::Omega)); };
+
+}
+
+OmegaEtaG2::MyTreeFitter_t::MyTreeFitter_t(const ParticleTypeTree& ttree, const ParticleTypeDatabase::Type& mesonT, utils::UncertaintyModelPtr model, const bool fix_z_vertex, const bool fix_omega_mass):
     treefitter(
         "treefit_"+mesonT.Name(),
         ttree,
         model, fix_z_vertex,
-        [] (const ParticleTypeTree& t) { return utils::TreeFitter::nodesetup_t(1.0, (t->Get() == ParticleTypeDatabase::Omega)); }
+        fgetter(fix_omega_mass)
         )
 {
     auto find_daughter = [] (utils::TreeFitter::tree_t& node, const ParticleTypeDatabase::Type& type) {

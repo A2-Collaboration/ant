@@ -270,7 +270,7 @@ protected:
         utils::TreeFitter::tree_t fitted_g1_X;
         utils::TreeFitter::tree_t fitted_g2_X;
 
-        MyTreeFitter_t(const ParticleTypeTree& ttree, const ParticleTypeDatabase::Type& mesonT, utils::UncertaintyModelPtr model, const bool fix_z_vertex);
+        MyTreeFitter_t(const ParticleTypeTree& ttree, const ParticleTypeDatabase::Type& mesonT, utils::UncertaintyModelPtr model, const bool fix_z_vertex, const bool FixOmegaMass=false);
 
         void HypTestCombis(const TParticleList& photons, doubles& chi2s, doubles& probs, doubles& ggims, doubles& gggims, int& bestIndex);
         ~MyTreeFitter_t();
