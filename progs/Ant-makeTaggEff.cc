@@ -8,6 +8,7 @@
 #include "base/WrapTFile.h"
 #include "base/std_ext/string.h"
 #include "base/std_ext/time.h"
+#include "base/std_ext/math.h"
 
 #include "expconfig/setups/Setup.h"
 #include "expconfig/ExpConfig.h"
@@ -73,7 +74,7 @@ void fillHistTime( const vector<double>& data, const unsigned time )
     if ( !hist_channels_2d )
     {
         hist_channels_2d = new TH2D("taggEffTime","Generated Tagging Efficiencies", 1 ,0,0,data.size(),0,data.size());
-        hist_channels_2d->SetXTitle("time");
+        hist_channels_2d->SetXTitle("");
         hist_channels_2d->SetYTitle("channel");
     }
 
@@ -131,7 +132,7 @@ protected:
             vector<double> Scalers;
             vector<double> ScalersErrors;
             double Livetime = 0;
-            double LivetimeError;
+            double LivetimeError = std::numeric_limits<double>::quiet_NaN();
             vector<double> Tdcs;
             vector<double> TdcsErrors;
         };
@@ -140,27 +141,38 @@ protected:
         {
             means_t means;
             means.Scalers.resize(nchannels);
+            means.ScalersErrors.resize(nchannels);
             means.Tdcs.resize(nchannels);
+            means.TdcsErrors.resize(nchannels);
+
+            vector<std_ext::RMS> rms_scalers(nchannels);
+            vector<std_ext::RMS> rms_tds(nchannels);
+            std_ext::RMS rms_livetime;
+
 
             auto nentries = wrapTree.Tree->GetEntries();
 
             for (auto entry = 0 ; entry < nentries ; ++entry)
             {
                 wrapTree.Tree->GetEntry(entry);
-                for ( auto channel = 0u ; channel < wrapTree.TaggRates().size(); ++channel)
+                for ( auto channel = 0u ; channel < nchannels; ++channel)
                 {
-                    means.Scalers.at(channel) += 1.0 * wrapTree.TaggRates().at(channel);
-                    means.Tdcs.at(channel)    += 1.0 * wrapTree.TDCRates().at(channel);
+                    rms_scalers.at(channel).Add(1.0 * wrapTree.TaggRates().at(channel));
+                    rms_tds.at(channel).Add(1.0 * wrapTree.TDCRates().at(channel));
                 }
-                means.Livetime += 1.0 * wrapTree.ExpLivetime;
-
+                rms_livetime.Add(1.0 * wrapTree.ExpLivetime);
             }
 
-            means.Livetime = means.Livetime / nentries;
-            for (auto& e: means.Scalers)
-                e = 1.0 * e / nentries;
-            for (auto& t: means.Tdcs)
-                t = 1.0 * t / nentries;
+            for ( auto channel = 0u ; channel < nchannels ; ++channel)
+            {
+                means.Scalers.at(channel)       = rms_scalers.at(channel).GetMean();
+                means.ScalersErrors.at(channel) = rms_scalers.at(channel).GetRMS();
+
+                means.Tdcs.at(channel)          = rms_tds.at(channel).GetMean();
+                means.TdcsErrors.at(channel)    = rms_tds.at(channel).GetRMS();
+            }
+            means.Livetime      = rms_livetime.GetMean();
+            means.LivetimeError = rms_livetime.GetRMS();
 
             return means;
         }
@@ -233,9 +245,9 @@ public:
         for ( auto ch = 0u ; ch < nchannels ; ++ch)
         {
             if ( run.Scalers.at(ch) < bkg1.Scalers.at(ch) || run.Scalers.at(ch) < bkg2.Scalers.at(ch))
-                LOG(WARNING) << "Detected file with higher background in scalers, channel " << ch << "!";
+                LOG(WARNING) << "Detected file with higher background than actual measurement in scalers, channel " << ch << "!";
             if ( run.Tdcs.at(ch) < bkg1.Tdcs.at(ch) || run.Tdcs.at(ch) < bkg2.Tdcs.at(ch))
-                LOG(WARNING) << "Detected file with higher background in TDCs, channel " << ch << "!";
+                LOG(WARNING) << "Detected file with higher background than actual measurement in TDCs, channel " << ch << "!";
         }
         return severity;
     }
