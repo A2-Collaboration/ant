@@ -33,21 +33,14 @@ std::list<Updateable_traits::Loader_t> TaggEff::GetLoaders()
     return {
         [this] (const TID& currPoint, TID& nextChangePoint) {
             TCalibrationData cdata;
-            TCalibrationData cdataErrrors;
             if(!CalibrationManager->GetData(GetName(), currPoint, cdata, nextChangePoint))
                 return;
             if(cdata.Data.size() != 1)
                 return;
-            // if errors are defined:
-            const TKeyValue<double>& kv = cdata.Data.front();
-            if(CalibrationManager->GetData(GetDataErrorsName(), currPoint, cdataErrrors,nextChangePoint))
-            {
-                const TKeyValue<double>& kverr = cdataErrrors.Data.front();
-                Tagger->SetTaggEff(kv.Key,{kv.Value,kverr.Value});
-                return;
-            }
-            // if errors not defined:
-            Tagger->SetTaggEff(kv.Key,kv.Value); // error on tagg eff still missing
+
+            const auto& kv  = cdata.Data.front();
+            const auto& kvE = cdata.FitParameters.front();  // error on TaggEff stored in fit-params!!!
+            Tagger->SetTaggEff(kv.Key,{kv.Value,kvE.Value.front()});
         }
     };
 }
