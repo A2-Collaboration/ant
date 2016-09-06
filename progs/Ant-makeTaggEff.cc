@@ -94,20 +94,24 @@ void fillHistTime( const vector<double>& data, const vector<double>& dataErrors,
     for ( auto ch = 0u ; ch < data.size() ; ++ch )
     {
         hist_channels_2d->Fill(std_ext::to_iso8601(time).c_str(), ch,data.at(ch));
-        hist_channels_2d_errors->Fill(std_ext::to_iso8601(time).c_str(), ch, 1.0 * dataErrors.at(ch) / data.at(ch));
+        hist_channels_2d_errors->Fill(std_ext::to_iso8601(time).c_str(), ch,std::abs( 1.0 * dataErrors.at(ch) / data.at(ch)));
     }
 }
 
-void storeResult(const TID& startID, shared_ptr<calibration::DataManager> manager, const string& calibrationName, vector<double> data)
+void storeResult(const resultSet_t& result, shared_ptr<calibration::DataManager> manager, const string& calibrationName)
 {
     TCalibrationData cdata(
                 calibrationName,
-                startID,
-                startID
+                result.FirstID,
+                result.FirstID
                 );
 
-    for ( auto ch=0u ; ch < data.size() ; ++ch )
-        cdata.Data.emplace_back(ch,data.at(ch));
+    for ( auto ch=0u ; ch < result.TaggEffs.size() ; ++ch )
+    {
+        cdata.Data.emplace_back(ch,result.TaggEffs.at(ch));
+        // see mudule: errors stored in fit-parameters!!!
+        cdata.FitParameters.emplace_back(ch,vector<double>(1,result.TaggEffErrors.at(ch)));
+    }
 
     manager->Add(cdata, Calibration::AddMode_t::RightOpen);
 }
@@ -341,7 +345,7 @@ void processFiles(const string& bkg1, const string& run, const string& bkg2, con
     fillHistSingle(result.TaggEffs,result.TaggEffErrors);
 
     if (!noStore)
-        storeResult(result.FirstID,manager,calibration::TaggEff::GetDataName(),result.TaggEffs);
+        storeResult(result,manager,calibration::TaggEff::GetDataName());
 }
 
 bool processCSV(const string& csvFile, const bool noStore)
@@ -386,25 +390,21 @@ bool processCSV(const string& csvFile, const bool noStore)
         resultSet_t result = taggEff.GetTaggEff();
 
         //check if setup is valid for this method --> String in map?
-        auto it = startIDs.find(result.Setup);
-        if (it == startIDs.end())
-            throw runtime_error("Setup not valid for csv mode!");
+        auto it_beamtime = startIDs.find(result.Setup);
 
+        if (it_beamtime == startIDs.end())
+            throw runtime_error("Setup not valid for csv mode!");
         if (n_TaggEffs == 0)
         {
             manager = ExpConfig::Setup::GetLastFound()->GetCalibrationDataManager();
-            fillHistTime(result.TaggEffs,result.TaggEffErrors,it->second.Timestamp);
-            if (!noStore)
-                storeResult(it->second,manager,calibration::TaggEff::GetDataName(),result.TaggEffs);
+            result.FirstID = it_beamtime->second;
         }
-        if (n_TaggEffs > 0)
-        {
-            if(result.Setup != setupName )
+        if (n_TaggEffs > 0 && result.Setup != setupName )
                 throw runtime_error("Different Setupnames within file list found!");
-            fillHistTime(result.TaggEffs,result.TaggEffErrors,result.FirstID.Timestamp);
-            if (!noStore)
-                storeResult(result.FirstID,manager,calibration::TaggEff::GetDataName(),result.TaggEffs);
-        }
+
+        fillHistTime(result.TaggEffs,result.TaggEffErrors,result.FirstID.Timestamp);
+        if (!noStore)
+            storeResult(result,manager,calibration::TaggEff::GetDataName());
         setupName = result.Setup;
         n_TaggEffs++;
     }
