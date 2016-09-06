@@ -274,27 +274,51 @@ struct SigHist_t : CommonHist_t {
         using cuttree::MultiCut_t;
         auto cuts = cuttree::ConvertCuts<Fill_t, CommonHist_t::Fill_t>(CommonHist_t::GetCuts());
 
+//        cuts.emplace_back(MultiCut_t<Fill_t>{
+//                              {"PIDSumE=0", [] (const Fill_t& f) { return f.Common.PIDSumE==0; } },
+//                              {"CBSumVetoE=0", [] (const Fill_t& f) { return f.Shared.CBSumVetoE==0; } },
+//                              {"NoCut", [] (const Fill_t&) { return true; } },
+//                          });
+
         cuts.emplace_back(MultiCut_t<Fill_t>{
-                              {"PIDSumE=0", [] (const Fill_t& f) { return f.Common.PIDSumE==0; } },
-                              {"CBSumVetoE=0", [] (const Fill_t& f) { return f.Shared.CBSumVetoE==0; } },
-                              {"NoCut", [] (const Fill_t&) { return true; } },
+                              {"AntiPi0FitProb<0.0001||nan", [] (const Fill_t& f)  { return std::isnan(f.Shared.AntiPi0FitProb) || f.Shared.AntiPi0FitProb<0.0001; } },
+                              {"AntiPi0FitProb<0.00001||nan", [] (const Fill_t& f) { return std::isnan(f.Shared.AntiPi0FitProb) || f.Shared.AntiPi0FitProb<0.00001; } },
                           });
 
         cuts.emplace_back(MultiCut_t<Fill_t>{
-                              {"AntiPi0FitProb<0.02||nan", [] (const Fill_t& f) { return std::isnan(f.Shared.AntiPi0FitProb) || f.Shared.AntiPi0FitProb<0.002; } },
-                              {"AntiPi0FitProb<0.0002||nan", [] (const Fill_t& f) { return std::isnan(f.Shared.AntiPi0FitProb) || f.Shared.AntiPi0FitProb<0.0002; } },
+                              {"AntiEtaFitProb<0.0001||nan", [] (const Fill_t& f)  { return std::isnan(f.Shared.AntiEtaFitProb) || f.Shared.AntiEtaFitProb<0.0001; } },
+                              {"AntiEtaFitProb<0.00001||nan", [] (const Fill_t& f) { return std::isnan(f.Shared.AntiEtaFitProb) || f.Shared.AntiEtaFitProb<0.00001; } },
                           });
 
         cuts.emplace_back(MultiCut_t<Fill_t>{
-                              {"AntiEtaFitProb<0.05||nan", [] (const Fill_t& f) { return std::isnan(f.Shared.AntiEtaFitProb) || f.Shared.AntiEtaFitProb<0.005; } },
-                              {"AntiEtaFitProb<0.0005||nan", [] (const Fill_t& f) { return std::isnan(f.Shared.AntiEtaFitProb) || f.Shared.AntiEtaFitProb<0.0005; } },
+                              {"TreeFitProb>0.2", [] (const Fill_t& f) { return f.Tree.TreeFitProb>0.2; } },
+                              {"TreeFitProb>0.1", [] (const Fill_t& f) { return f.Tree.TreeFitProb>0.1; } },
                           });
 
+        auto LowE_cut =  [] (const Fill_t& f)  {
+            if(f.Tree.gNonPi0_CaloE().front()<100 || f.Tree.gNonPi0_CaloE().back()<100)
+                return false;
+            return true;
+        };
+
         cuts.emplace_back(MultiCut_t<Fill_t>{
-                              {"TreeFitProb>0.32", [] (const Fill_t& f) { return f.Tree.TreeFitProb>0.32; } },
-                              {"TreeFitProb>0.16", [] (const Fill_t& f) { return f.Tree.TreeFitProb>0.16; } },
-                              {"TreeFitProb>0.04", [] (const Fill_t& f) { return f.Tree.TreeFitProb>0.04; } },
+                              {"LowE", LowE_cut},
                           });
+
+        auto PID_cut =  [] (const Fill_t& f)  {
+            // require both in CB
+            if(!f.Tree.gNonPi0_IsCB().front() || !f.Tree.gNonPi0_IsCB().back())
+                return false;
+            if(f.Tree.gNonPi0_VetoE().front()>1.0 || f.Tree.gNonPi0_VetoE().back()>1.0)
+                return false;
+            return true;
+        };
+
+        cuts.emplace_back(MultiCut_t<Fill_t>{
+                              {"PID", PID_cut},
+                          });
+
+
 
         return cuts;
     }
