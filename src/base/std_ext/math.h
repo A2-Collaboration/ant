@@ -43,6 +43,9 @@ struct RMS_t {
     T GetRMS() const {
         return std::sqrt(std::abs(sum2/n - std_ext::sqr(GetMean())));
     }
+    T GetSigmaMean() const {
+        return GetRMS() / sqrt(n);
+    }
 };
 
 using RMS = RMS_t<double>;
