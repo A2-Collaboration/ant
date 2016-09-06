@@ -19,6 +19,7 @@
 #include "TRint.h"
 #include "TH1D.h"
 #include "TH2D.h"
+#include "TStyle.h"
 
 #include "calibration/DataManager.h"
 #include "tree/TCalibrationData.h"
@@ -42,7 +43,9 @@ const map<string,TID> startIDs({ {"Setup_2014_07_EPT_Prod", TID(1406592000)},
                                  {"Setup_2014_12_EPT_Prod", TID(1417395600)} });
 
 static TH1D* hist_channels(nullptr);
+
 static TH2D* hist_channels_2d(nullptr);
+static TH2D* hist_channels_2d_errors(nullptr);
 
 struct resultSet_t
 {
@@ -57,7 +60,7 @@ struct resultSet_t
         TaggEffErrors() {}
 };
 
-void fillHistSingle( const vector<double>& data)
+void fillHistSingle( const vector<double>& data, const vector<double>& dataErrors)
 {
     if ( !hist_channels )
     {
@@ -65,11 +68,15 @@ void fillHistSingle( const vector<double>& data)
         hist_channels->SetXTitle("channel");
         hist_channels->SetYTitle("Efficiency");
     }
+
     for ( auto ch = 0u ; ch < data.size() ; ++ch)
+    {
         hist_channels->Fill(ch,data.at(ch));
+        hist_channels->SetBinError(ch+1,dataErrors.at(ch)); // bin-numbering ( bin 0 is underflow ) ...
+    }
 }
 
-void fillHistTime( const vector<double>& data, const unsigned time )
+void fillHistTime( const vector<double>& data, const vector<double>& dataErrors, const unsigned time )
 {
     if ( !hist_channels_2d )
     {
@@ -77,9 +84,18 @@ void fillHistTime( const vector<double>& data, const unsigned time )
         hist_channels_2d->SetXTitle("");
         hist_channels_2d->SetYTitle("channel");
     }
+    if ( !hist_channels_2d_errors )
+    {
+        hist_channels_2d_errors = new TH2D("taggEffErrTime","Tagging Efficiencies - relative errors", 1 ,0,0,data.size(),0,data.size());
+        hist_channels_2d_errors->SetXTitle("");
+        hist_channels_2d_errors->SetYTitle("channel");
+    }
 
     for ( auto ch = 0u ; ch < data.size() ; ++ch )
+    {
         hist_channels_2d->Fill(std_ext::to_iso8601(time).c_str(), ch,data.at(ch));
+        hist_channels_2d_errors->Fill(std_ext::to_iso8601(time).c_str(), ch, 1.0 * dataErrors.at(ch) / data.at(ch));
+    }
 }
 
 void storeResult(const TID& startID, shared_ptr<calibration::DataManager> manager, const string& calibrationName, vector<double> data)
@@ -166,13 +182,13 @@ protected:
             for ( auto channel = 0u ; channel < nchannels ; ++channel)
             {
                 means.Scalers.at(channel)       = rms_scalers.at(channel).GetMean();
-                means.ScalersErrors.at(channel) = rms_scalers.at(channel).GetRMS();
+                means.ScalersErrors.at(channel) = rms_scalers.at(channel).GetSigmaMean();
 
                 means.Tdcs.at(channel)          = rms_tds.at(channel).GetMean();
-                means.TdcsErrors.at(channel)    = rms_tds.at(channel).GetRMS();
+                means.TdcsErrors.at(channel)    = rms_tds.at(channel).GetSigmaMean();
             }
             means.Livetime      = rms_livetime.GetMean();
-            means.LivetimeError = rms_livetime.GetRMS();
+            means.LivetimeError = rms_livetime.GetSigmaMean();
 
             return means;
         }
@@ -322,7 +338,7 @@ void processFiles(const string& bkg1, const string& run, const string& bkg2, con
     resultSet_t result = taggEff.GetTaggEff();
     auto manager = ExpConfig::Setup::GetLastFound()->GetCalibrationDataManager();
 
-    fillHistSingle(result.TaggEffs);
+    fillHistSingle(result.TaggEffs,result.TaggEffErrors);
 
     if (!noStore)
         storeResult(result.FirstID,manager,calibration::TaggEff::GetDataName(),result.TaggEffs);
@@ -377,7 +393,7 @@ bool processCSV(const string& csvFile, const bool noStore)
         if (n_TaggEffs == 0)
         {
             manager = ExpConfig::Setup::GetLastFound()->GetCalibrationDataManager();
-            fillHistTime(result.TaggEffs,it->second.Timestamp);
+            fillHistTime(result.TaggEffs,result.TaggEffErrors,it->second.Timestamp);
             if (!noStore)
                 storeResult(it->second,manager,calibration::TaggEff::GetDataName(),result.TaggEffs);
         }
@@ -385,7 +401,7 @@ bool processCSV(const string& csvFile, const bool noStore)
         {
             if(result.Setup != setupName )
                 throw runtime_error("Different Setupnames within file list found!");
-            fillHistTime(result.TaggEffs,result.FirstID.Timestamp);
+            fillHistTime(result.TaggEffs,result.TaggEffErrors,result.FirstID.Timestamp);
             if (!noStore)
                 storeResult(result.FirstID,manager,calibration::TaggEff::GetDataName(),result.TaggEffs);
         }
@@ -446,11 +462,14 @@ int main( int argc, char** argv )
                : std_ext::make_unique<TRint>("Ant-makeSigmas",&argc,argv,nullptr,0,true);
 
     if(app) {
+        gStyle->SetOptStat(false);
         canvas c("TaggEff");
         if (hist_channels)
-            c << hist_channels;
+            c << drawoption("E") << hist_channels;
         if (hist_channels_2d)
-            c << drawoption("colz") << hist_channels_2d;
+            c << drawoption("colz") << hist_channels_2d << endr;
+        if (hist_channels_2d_errors)
+            c << drawoption("colz") << hist_channels_2d_errors << endr;
         c << endc;
 
         app->Run(kTRUE); // really important to return...
