@@ -132,7 +132,7 @@ protected:
             vector<double> Scalers;
             vector<double> ScalersErrors;
             double Livetime = 0;
-            double LivetimeError = std::numeric_limits<double>::quiet_NaN();
+            double LivetimeError = 0;
             vector<double> Tdcs;
             vector<double> TdcsErrors;
         };
@@ -252,9 +252,25 @@ public:
         return severity;
     }
 
+
+
     const resultSet_t  GetTaggEff() const
     {
         resultSet_t result(SetupName(),startID);
+
+        auto denum = [] (const double L,  const double s,
+                          const double L1, const double s1,
+                          const double L2, const double s2)
+        {
+            return L * s - ( ( L1 * s1 + L2 * s2 ) / 2.0 );
+        };
+        auto denum_bkg = [] (const double L,  const double s,
+                          const double L1, const double s1,
+                          const double L2, const double s2)
+        {
+            return 2 * L *s - L1 * s1 - L2 * s2;
+        };
+
 
         const auto m_bkg1 = bkg1.getMeans();
         const auto m_run = run.getMeans();
@@ -266,17 +282,32 @@ public:
         result.TaggEffs.resize(nchannels,0);
         result.TaggEffErrors.resize(nchannels,0);
 
-        for (auto channel = 0u ; channel < nchannels ; ++channel)
+        for (auto ch = 0u ; ch < nchannels ; ++ch)
         {
-            result.TaggEffs.at(channel)  =  m_run.Tdcs.at(channel)
-                                            - ( (m_bkg1.Tdcs.at(channel) + m_bkg2.Tdcs.at(channel)) / 2.0 );
-            result.TaggEffs.at(channel) *=  1.0 / (( m_run.Livetime * m_run.Scalers.at(channel))
-                                            - ( (m_bkg1.Livetime * m_bkg1.Scalers.at(channel)
-                                                + m_bkg2.Livetime * m_bkg2.Scalers.at(channel) ) / 2.0) );
-            if ( !(IntervalD(0,1).Contains(result.TaggEffs.at(channel))) )
-                LOG(WARNING)  << "Calculated Tagging efficiency for channel " << channel
+            auto denum_ch         = denum(m_run.Livetime,  m_run.Scalers.at(ch),
+                                          m_bkg1.Livetime, m_bkg1.Scalers.at(ch),
+                                          m_bkg2.Livetime, m_bkg2.Scalers.at(ch));
+            auto denum_bkg_ch_sqr = denum_bkg(m_run.Livetime,  m_run.Scalers.at(ch),
+                                          m_bkg1.Livetime, m_bkg1.Scalers.at(ch),
+                                          m_bkg2.Livetime, m_bkg2.Scalers.at(ch));
+
+
+            result.TaggEffs.at(ch)  = 1.0 * m_run.Tdcs.at(ch) / denum_ch;
+
+            result.TaggEffErrors.at(ch) =
+                    sqrt(   sqr( m_run.TdcsErrors.at(ch)/denum_ch )
+                          + sqr( m_run.LivetimeError * m_run.Tdcs.at(ch) * m_run.Scalers.at(ch)  / sqr(denum_ch) )
+                          + sqr( m_run.ScalersErrors.at(ch) * m_run.Livetime * m_run.Tdcs.at(ch) / sqr(denum_ch) )
+                          + sqr( m_bkg1.LivetimeError * 2.0 * m_run.Tdcs.at(ch) * m_bkg1.Scalers.at(ch)  / denum_bkg_ch_sqr )
+                          + sqr( m_bkg1.ScalersErrors.at(ch) * 2.0 * m_run.Tdcs.at(ch) * m_bkg1.Livetime / denum_bkg_ch_sqr )
+                          + sqr( m_bkg2.LivetimeError * 2.0 * m_run.Tdcs.at(ch) * m_bkg2.Scalers.at(ch)  / denum_bkg_ch_sqr )
+                          + sqr( m_bkg2.ScalersErrors.at(ch) * 2.0 * m_run.Tdcs.at(ch) * m_bkg2.Livetime / denum_bkg_ch_sqr )
+                         );
+
+            if ( !(IntervalD(0,1).Contains(result.TaggEffs.at(ch))) )
+                LOG(WARNING)  << "Calculated Tagging efficiency for channel " << ch
                               << " not in [0,1]: "
-                              << result.TaggEffs.at(channel) << "!";
+                              << result.TaggEffs.at(ch) << "!";
         }
 
         return result;
