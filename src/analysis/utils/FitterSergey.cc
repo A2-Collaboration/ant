@@ -2,6 +2,7 @@
 
 #include "base/std_ext/memory.h"
 
+#include "Rtypes.h"
 #include "TLorentzVector.h"
 
 using namespace std;
@@ -1850,32 +1851,7 @@ FitterSergey::~FitterSergey()
 
 }
 
-void FitterSergey::SetEgammaBeam(double ebeam)
-{
-    Ebeam = ebeam;
-}
-
-void FitterSergey::SetProton(const TParticlePtr& proton)
-{
-    Proton = proton;
-}
-
-void FitterSergey::SetPhotons(const TParticleList& photons)
-{
-    Photons = photons;
-}
-
-void FitterSergey::SetZVertexSigma(double sigma)
-{
-    ZVertexSigma = sigma;
-}
-
-bool FitterSergey::IsZVertexFitEnabled() const noexcept
-{
-    return true;
-}
-
-APLCON::Result_t FitterSergey::DoFit()
+FitterSergey::result_t FitterSergey::Process(const TEventData& data)
 {
     constexpr double MeVtoGeV = 1.0 / 1000.0;
 
@@ -3063,36 +3039,36 @@ NEWV51:
 
 }
 
-TParticlePtr FitterSergey::GetFittedProton() const
-{
-    auto& fKfit = *I;
-    auto proton = make_shared<TParticle>(ParticleTypeDatabase::Proton, fKfit.Particle(14, 1));
-    *proton *= 1000.0; // GeV to Mev
-    return proton;
-}
+//TParticlePtr FitterSergey::GetFittedProton() const
+//{
+//    auto& fKfit = *I;
+//    auto proton = make_shared<TParticle>(ParticleTypeDatabase::Proton, fKfit.Particle(14, 1));
+//    *proton *= 1000.0; // GeV to Mev
+//    return proton;
+//}
 
-TParticleList FitterSergey::GetFittedPhotons() const
-{
-    auto& fKfit = *I;
-    TParticleList photons;
-    for(unsigned i=0;i<Photons.size();i++) {
-        auto photon = make_shared<TParticle>(ParticleTypeDatabase::Photon,
-                                             fKfit.Particle(1, i+1));
-        *photon *= 1000.0; // GeV to Mev
-        photons.emplace_back(photon);
-    }
-    return photons;
-}
+//TParticleList FitterSergey::GetFittedPhotons() const
+//{
+//    auto& fKfit = *I;
+//    TParticleList photons;
+//    for(unsigned i=0;i<Photons.size();i++) {
+//        auto photon = make_shared<TParticle>(ParticleTypeDatabase::Photon,
+//                                             fKfit.Particle(1, i+1));
+//        *photon *= 1000.0; // GeV to Mev
+//        photons.emplace_back(photon);
+//    }
+//    return photons;
+//}
 
-double FitterSergey::GetFittedBeamE() const
-{
-    auto& fKfit = *I;
-    return 1000.0*fKfit.BeamE();
-}
+//double FitterSergey::GetFittedBeamE() const
+//{
+//    auto& fKfit = *I;
+//    return 1000.0*fKfit.BeamE();
+//}
 
-double FitterSergey::GetFittedZVertex() const
-{
-    auto& fKfit = *I;
-    return fKfit.VertexZ();
-}
+//double FitterSergey::GetFittedZVertex() const
+//{
+//    auto& fKfit = *I;
+//    return fKfit.VertexZ();
+//}
 

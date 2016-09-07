@@ -1,10 +1,6 @@
 #pragma once
 
-#include "tree/TParticle.h"
-
-#include "APLCON.hpp"
-
-#include "Rtypes.h"
+#include "tree/TEventData.h"
 
 #include <memory>
 
@@ -18,27 +14,16 @@ class FitterSergey {
     class TA2KFitC;
     std::unique_ptr<TA2KFitC> I;
 
-    double ZVertexSigma;
-    double Ebeam;
-    TParticlePtr Proton;
-    TParticleList Photons;
-
 public:
     FitterSergey();
     virtual ~FitterSergey();
 
-    void SetEgammaBeam(double ebeam);
-    void SetProton(const TParticlePtr& proton);
-    void SetPhotons(const TParticleList& photons);
-    void SetZVertexSigma(double sigma);
-    bool IsZVertexFitEnabled() const noexcept;
+    struct result_t {
 
-    APLCON::Result_t DoFit();
+    };
 
-    TParticlePtr GetFittedProton() const;
-    TParticleList GetFittedPhotons() const;
-    double GetFittedBeamE() const;
-    double GetFittedZVertex() const;
+    result_t Process(const TEventData& data);
+
 };
 
 
