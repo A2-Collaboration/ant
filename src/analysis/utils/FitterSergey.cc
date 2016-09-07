@@ -1013,24 +1013,23 @@ public:
 
     Int_t Kinfit(Int_t Nptall, Int_t Ndecay,
                  Int_t Ikind[NDMAX], Double_t Amsdec[NDMAX],
-                 Int_t Jdecay[NDMAX], Int_t Ldecay[NDMAX],
-                 Int_t Idecay[NDMAX][10], Int_t Ifzfree) {
+                 Int_t Ldecay[NDMAX], Int_t Idecay[NDMAX][10], Int_t Ifzfree) {
         Int_t i, j, k, ierr;
-        Int_t Nunme, NY, NF, NFF, IV, ISV, I, J, IY, K, I2;
-        Int_t Isecvt[NPMAX], lclsec, jdecfl, idechk, ideca, Lpart, Iunmea;
+        Int_t Nunme, NY, NF, NFF, IV, I, J, IY, K, I2;
+        Int_t Isecvt[NPMAX], lclsec, jdecfl, Lpart, Iunmea;
         Int_t NZDIV, IZPOS, IfZfree;
         Int_t ICDEC, IFSCND, LLDEC, IDE, INDE, IEF;
 
         Float_t Y[NXMAX], F[NFMAX], WBEST[2], ZBEST[2];
-        Float_t ZV1, ZV2, DZMV, VRT[3], VRTN[3];
-        Float_t RLPED[3], DLPED[3], RTPGAM[3], RDNPED, VRTSEC[3];
-        Float_t FF, RDINI, RDNSEC, YSTP;
+        Float_t ZV1, ZV2, DZMV, VRT[3];
+        Float_t RLPED[3], DLPED[3], RTPGAM[3], RDNPED;
+        Float_t FF, YSTP;
         const Int_t NVY = (NXMAX + NXMAX * NXMAX) / 2;
         Float_t VY[NVY];
         Double_t EPRIMV, PRIMV[3], PMISS[3], PPMISS, EMISS, MMISS2;
         Double_t EBM, PB, EINIT, PBM[3];
-        Double_t EPAR, PPAR, ETOT, PDEC[3], PPDEC, EDEC, PJPAR;
-        Double_t PDTP[3], ESECV, PSECV[3], PRES[3], ERES;
+        Double_t EPAR, PPAR, PDEC[3], EDEC, PJPAR;
+        Double_t PDTP[3], PRES[3], ERES;
 
         ierr = 0;
         fNptall = Nptall;
@@ -1088,9 +1087,8 @@ public:
             for (k = 0; k < 4; k++)
                 Y[j + k] = fPin[i][k];
         }
-        // index of primary and secondary vertex
+        // index of primary vertex
         IV = 3;
-        ISV = fNpmeas * 4;
 
         // search for the initial vertex Z coordinate when it is a free parameter
         WBEST[0] = WBEST[1] = 0.;
@@ -1987,12 +1985,9 @@ APLCON::Result_t FitterSergey::DoFit()
     Double_t Amsdec[10]; // irrelevant since Ndecay = 0
 
     auto ide = 0;
-    Int_t Jdecay[10];
     Int_t Idecay[10][10];
     Int_t Ldecay[10];
 
-    auto Ngam = Photons.size();
-    Jdecay[ide] = Ngam + 2 + ide;
     Ldecay[ide] = 2;
     for(Int_t m = 0; m < Ldecay[ide]; m++)
       Idecay[ide][m] = m + 1;
@@ -2000,7 +1995,7 @@ APLCON::Result_t FitterSergey::DoFit()
     auto Nptall = Npart + Ndecay + 1;
 
 
-    ierr = fKfit.Kinfit(Nptall, Ndecay, Dkind, Amsdec, Jdecay,
+    ierr = fKfit.Kinfit(Nptall, Ndecay, Dkind, Amsdec,
                              Ldecay, Idecay, IfZfree);
     if (ierr != 0)
         printf(" Kinfit error = %d\n", ierr);
