@@ -47,6 +47,8 @@ static TH1D* hist_channels(nullptr);
 static TH2D* hist_channels_2d(nullptr);
 static TH2D* hist_channels_2d_errors(nullptr);
 
+static bool noStore = false;
+
 struct resultSet_t
 {
     string          Setup;
@@ -58,6 +60,12 @@ struct resultSet_t
         FirstID(firstID),
         TaggEffs(),
         TaggEffErrors() {}
+};
+
+auto failExit = [] (const string& message)
+{
+    LOG(ERROR) << message;
+    exit(EXIT_FAILURE);
 };
 
 void fillHistSingle( const vector<double>& data, const vector<double>& dataErrors)
@@ -336,9 +344,9 @@ public:
 };
 
 
-void processFiles(const string& bkg1, const string& run, const string& bkg2, const bool noStore)
+void processFiles(const vector<string>& files)
 {
-    taggEffTriple_t taggEff(bkg1,run,bkg2);
+    taggEffTriple_t taggEff(files.at(0),files.at(1),files.at(2));
     resultSet_t result = taggEff.GetTaggEff();
     auto manager = ExpConfig::Setup::GetLastFound()->GetCalibrationDataManager();
 
@@ -348,14 +356,14 @@ void processFiles(const string& bkg1, const string& run, const string& bkg2, con
         storeResult(result,manager,calibration::TaggEff::GetDataName());
 }
 
-bool processCSV(const string& csvFile, const bool noStore)
+bool processCSV(const string& csvFile)
 {
     shared_ptr<calibration::DataManager> manager = nullptr;
 
     ifstream csvStream(csvFile);
     if (!csvStream)
     {
-        LOG(ERROR) << "Error reading File list " << csvFile << ".";
+        failExit(std_ext::formatter() << "Error reading File list " << csvFile << ".");
         return false;
     }
 
@@ -412,6 +420,50 @@ bool processCSV(const string& csvFile, const bool noStore)
     return true;
 }
 
+void processManualData(const string& dataFile)
+{
+    ifstream fstream(dataFile);
+
+
+    if (!fstream)
+        failExit(std_ext::formatter() << "Error opening File " << dataFile << ".");
+
+    auto nChannels = 47u;
+
+    resultSet_t result("setup",TID());
+
+    auto ch = 0u;
+    while(fstream)
+    {
+        string line;
+        if (!(getline(fstream,line)))
+            break;
+        if (ch >= nChannels)
+        {
+            LOG(WARNING) << "File contains more entries than tagger-channels in setup! skipping the rest";
+            break;
+        }
+
+        istringstream sstream(line);
+        double val(0.);
+        sstream >> val;
+        result.TaggEffs.emplace_back(val);
+        //default error is zero
+        val = 0;
+        sstream >> val;
+        result.TaggEffErrors.emplace_back(val);
+        ch++;
+    }
+
+    fillHistSingle(result.TaggEffs,result.TaggEffErrors);
+
+    if (!noStore)
+    {
+        auto manager = ExpConfig::Setup::GetLastFound()->GetCalibrationDataManager();
+        storeResult(result,manager,calibration::TaggEff::GetDataName());
+    }
+}
+
 
 int main( int argc, char** argv )
 {
@@ -424,38 +476,67 @@ int main( int argc, char** argv )
 
     TCLAP::CmdLine cmd("Ant-makeTaggEff", ' ', "0.1");
 
-    auto cmd_input        = cmd.add<TCLAP::ValueArg<string>>("i","input",      "CSV file with bkg1-run-bkg2 groups",             false,  "", "csv");
-    auto cmd_bkg1         = cmd.add<TCLAP::ValueArg<string>>("f","first-bkg",  "input for first background",                     false,  "", "root");
-    auto cmd_taggEff      = cmd.add<TCLAP::ValueArg<string>>("t","taggEff",    "TaggEff - run",                                  false,  "", "root");
-    auto cmd_bkg2         = cmd.add<TCLAP::ValueArg<string>>("s","second-bkg", "input for second background",                    false,  "", "root");
+    //modes
+    auto cmd_csv        = cmd.add<TCLAP::SwitchArg>("","csv",
+                                                    "CSV file with bkg1-run-bkg2 groups - calibration data will be added as right open patches for each group");
+    auto cmd_group      = cmd.add<TCLAP::SwitchArg>("","group",
+                                                    "provide single group for adding a right open patch");
+    auto cmd_manual     = cmd.add<TCLAP::SwitchArg>("","manual",
+                                                    "manually set taggeffs per channel for given setup");
+    //register modes here:
+    auto modes = {&cmd_csv, &cmd_group, &cmd_manual};
 
-    auto cmd_batchmode    = cmd.add<TCLAP::MultiSwitchArg>  ("b","batch",      "Run in batch mode (no ROOT shell afterwards)",   false);
-    auto cmd_nostore      = cmd.add<TCLAP::SwitchArg>("","nostore","don't store, only show results");
+    // manual settings:
+    auto cmd_setup      = cmd.add<TCLAP::ValueArg<string>>("","setup", "set setup manually",        false, "", "name");
+    auto cmd_startDate  = cmd.add<TCLAP::ValueArg<string>>("","start", "set start date manually",   false, "", "date");
+    auto cmd_stopDate   = cmd.add<TCLAP::ValueArg<string>>("","stop",  "set end date manually",     false, "", "date");
+
+    //switches
+    auto cmd_batchmode  = cmd.add<TCLAP::SwitchArg>("b","batch",  "Run in batch mode (no ROOT shell afterwards)");
+    auto cmd_nostore    = cmd.add<TCLAP::SwitchArg>("n","nostore","don't store, only show results");
+
+    //files
+    auto cmd_filelist   = cmd.add<TCLAP::UnlabeledMultiArg<string>>("inputfiles","inputfiles to read from",true,"inputfiles");
+
 
     cmd.parse(argc, argv);
 
-    const auto inCsv   = cmd_input->getValue();
 
-    if (cmd_input->isSet())
+    auto inputCount = 0u;
+    for ( auto m: modes )
+        inputCount+=m->get()->isSet();
+    if (inputCount!=1)
     {
-        if ( cmd_bkg1->isSet()    ||
-             cmd_bkg2->isSet()    ||
-             cmd_taggEff->isSet()    )
-        {
-            LOG(ERROR) << "Provide either csv file list or triple of backgrounds and TaggEff run!";
-            return EXIT_FAILURE;
-        }
-        processCSV(inCsv, cmd_nostore->isSet());
+        string msg = "Exactly one mode is allowed:  ";
+        for ( auto m: modes)
+            msg += std_ext::formatter() << "--" << m->get()->getName() << "  ";
+        failExit(msg);
+    }
+    auto fileList = cmd_filelist->getValue();
+    noStore = cmd_nostore->isSet();
+
+    if (cmd_csv->isSet())
+    {
+        if (fileList.size() != 1)
+            failExit("Provide one csv file!");
+        processCSV(fileList.at(0));
     }
 
-    if (!cmd_input->isSet())
+    if (cmd_group->isSet())
     {
-        const auto inBkg1    = cmd_bkg1->getValue();
-        const auto inTaggEff = cmd_taggEff->getValue();
-        const auto inBkg2    = cmd_bkg2->getValue();
-
-        processFiles(inBkg1,inTaggEff,inBkg2,cmd_nostore->isSet());
+        if (fileList.size() != 3)
+            failExit("Group should contain three files in following order: 1st background, TaggEff-run, background 2.");
+        processFiles(fileList);
     }
+
+    if (cmd_manual->isSet())
+    {
+        if (fileList.size() != 1)
+            failExit("Provide one data file!");
+        processManualData(fileList.at(0));
+    }
+
+
     argc=1; // prevent TRint to parse any cmdline except prog name
     auto app = cmd_batchmode->isSet() || !std_ext::system::isInteractive()
                ? nullptr
