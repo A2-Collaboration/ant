@@ -1890,9 +1890,7 @@ FitterSergey::result_t FitterSergey::Process(const TEventData& data)
 
 //    // setup the photons
 
-//    Int_t Pkind = 0;
-//    Double_t Pacst[6] = {};
-//    Int_t Npart = 1; // start counting at 1, 0 is beam particle
+
 
 //    for(const auto& Photon : Photons) {
 //        Pacst[0] = 0; // photon mass
@@ -1984,11 +1982,11 @@ FitterSergey::result_t FitterSergey::Process(const TEventData& data)
 //    r.Probability = TMath::Prob(r.ChiSquare, r.NDoF);
 //    return r;
 
-
+    result_t r;
 
     auto fphN = data.Candidates.size();
     if(fphN != 5)
-       return {};
+       return r;
 
     int fphNLadd = data.TaggerHits.size();
 
@@ -1998,13 +1996,16 @@ FitterSergey::result_t FitterSergey::Process(const TEventData& data)
 
     auto nhyp = 4;
     auto IfEpr = 0;
-    auto Ifpmea = 1;
     auto Ngam = fphN - 1;
 
 
+    Int_t Pkind = 0;
+    Double_t Pacst[6] = {};
+    Int_t Npart = 1; // start counting at 1, 0 is beam particle
+
 
     for (auto i = 0; i < fphNLadd; i++) {
-        fNPhTAPS = 0;
+        auto fNPhTAPS = 0;
         Pbs4g[i] = 0.;
         Pbs2pi0[i] = 0.;
         Pbspi0eta[i] = 0.;
@@ -2080,11 +2081,11 @@ FitterSergey::result_t FitterSergey::Process(const TEventData& data)
             Pacst[3] = p4pr[ipr].Phi();
             Pacst[4] = ClDepthProt[ipr];
             if (ipr < fphNCB) {
-                if (Ifpmea != 0 && fEcl > 0.45 + 0.25)
+                if (fEcl > 0.45 + 0.25)
                     continue;
                 Pacst[2] = p4pr[ipr].Theta();
                 thetpa = Pacst[2] * TMath::RadToDeg();
-                if (Ifpmea != 0 && thetpa > 90.)
+                if (thetpa > 90.)
                     continue;
                 Pkind = 14;
             }
@@ -2092,18 +2093,16 @@ FitterSergey::result_t FitterSergey::Process(const TEventData& data)
             if (ipr >= fphNCB) {
                 Pacst[2] =
                         Pacst[4] * sin(p4pr[ipr].Theta()); // radius on TAPS X-Y plane
-                if (Ifpmea != 0 && fEcl > 0.37 + 0.35)
+                if (fEcl > 0.37 + 0.35)
                     continue;
                 Pkind = -14;
             }
             Npart = fphN;
-            if (Ifpmea == 0)
-                ierr = fKfit.Kfilunm(Npart, 14, Amastag); // unmeasured  proton
-            else {
-                ierr = fKfit.Kfilcst(Npart, Pkind, Pacst);
-                if (ierr != 0)
-                    printf(" Kfilcst error = %d\n", ierr);
-            }
+
+            ierr = fKfit.Kfilcst(Npart, Pkind, Pacst);
+            if (ierr != 0)
+                printf(" Kfilcst error = %d\n", ierr);
+
 
             for (iver = 0; iver < 3; iver++) {
                 for (ihyp = 0; ihyp < nhyp; ihyp++) {
@@ -2274,16 +2273,14 @@ NEWPR5:
                 Pkind = -14;
             }
             Npart = fphN;
-            if (Ifpmea == 0)
-                ierr = fKfit.Kfilunm(Npart, 14, Amastag); // unmeasured  proton
-            else {
-                ierr = fKfit.Kfilcst(Npart, Pkind, Pacst);
-                if (ierr != 0)
-                    printf(" Kfilcst error = %d\n", ierr);
-            }
+
+            ierr = fKfit.Kfilcst(Npart, Pkind, Pacst);
+            if (ierr != 0)
+                printf(" Kfilcst error = %d\n", ierr);
+
 
             Nptall = Npart + 1 + Ndecay;
-            ierr = fKfit.Kinfit(Nptall, Ndecay, Idecfl, Dkind, Amsdec, Jdecay,
+            ierr = fKfit.Kinfit(Nptall, Ndecay, Dkind, Amsdec,
                                 Ldecay, Idecay, IfZfree);
             if (ierr != 0)
                 printf(" Kinfit error = %d\n", ierr);
@@ -2421,10 +2418,6 @@ NEWPR5:
                         fNCrCBpr = (Double_t)clnhits[ipr] - 0.5;
                     } else {
                         fTAEh = fKfit.ParticleE(14, 1);
-                        fTAPulTheh = fKfit.PullParticleTheta(14, 1);
-                        fTAPulPhih = fKfit.PullParticlePhi(14, 1);
-                        fTAPulEh = fKfit.PullParticleE(14, 1);
-                        fTAPulDeph = fKfit.PullParticleDepth(14, 1);
 
                         if (ifRAW == 0)
                             fTOFTAPSpr = cltime[ipr] - fRefTime + gRandom->Gaus(0.0, 0.5);
@@ -2467,7 +2460,7 @@ NEWPR5:
                 if (ifPi0gg == 0 && ifpi0eta == 0) {
                     Ndecay = 0;
                     Nptall = Npart + 1 + Ndecay;
-                    ierr = fKfit.Kinfit(Nptall, Ndecay, Idecfl, Dkind, Amsdec, Jdecay,
+                    ierr = fKfit.Kinfit(Nptall, Ndecay, Dkind, Amsdec,
                                         Ldecay, Idecay, IfZfree);
                     if (ierr != 0)
                         printf(" Kinfit error = %d\n", ierr);
@@ -2510,7 +2503,6 @@ NEWPR5:
 
     nhyp = 1;
     IfEpr = 0;
-    Ifpmea = 1;
     Ngam = fphN - 1;
 
     for (i = 0; i < fphNLadd; i++) {
@@ -2606,13 +2598,11 @@ NEWPR5:
                     }
                 }
                 Npart = iv + 1;
-                if (Ifpmea == 0 && iv == fphN - 1)
-                    ierr = fKfit.Kfilunm(Npart, 14, Amastag); // unmeasured  proton
-                else {
-                    ierr = fKfit.Kfilcst(Npart, Pkind, Pacst);
-                    if (ierr != 0)
-                        printf(" Kfilcst error = %d\n", ierr);
-                }
+
+                ierr = fKfit.Kfilcst(Npart, Pkind, Pacst);
+                if (ierr != 0)
+                    printf(" Kfilcst error = %d\n", ierr);
+
             }
             p4tot = p4bm + p4tg - fp4g;
             MM = p4tot.M() / 1000.;
@@ -2643,7 +2633,7 @@ NEWPR5:
                     }
 
                     Nptall = Npart + 1 + Ndecay;
-                    ierr = fKfit.Kinfit(Nptall, Ndecay, Idecfl, Dkind, Amsdec, Jdecay,
+                    ierr = fKfit.Kinfit(Nptall, Ndecay, Dkind, Amsdec,
                                         Ldecay, Idecay, IfZfree);
                     if (ierr != 0)
                         printf(" Kinfit error = %d\n", ierr);
@@ -2717,16 +2707,14 @@ NEWV51:
                     }
                 }
                 Npart = iv + 1;
-                if (Ifpmea == 0 && iv == fphN - 1)
-                    ierr = fKfit.Kfilunm(Npart, 14, Amastag); // unmeasured  proton
-                else {
-                    ierr = fKfit.Kfilcst(Npart, Pkind, Pacst);
-                    if (ierr != 0)
-                        printf(" Kfilcst error = %d\n", ierr);
-                }
+
+                ierr = fKfit.Kfilcst(Npart, Pkind, Pacst);
+                if (ierr != 0)
+                    printf(" Kfilcst error = %d\n", ierr);
+
             }
             Nptall = Npart + 1 + Ndecay;
-            ierr = fKfit.Kinfit(Nptall, Ndecay, Idecfl, Dkind, Amsdec, Jdecay,
+            ierr = fKfit.Kinfit(Nptall, Ndecay, Dkind, Amsdec,
                                 Ldecay, Idecay, IfZfree);
             if (ierr != 0)
                 printf(" Kinfit error = %d\n", ierr);
@@ -2871,7 +2859,7 @@ NEWV51:
             fTreeRec->Fill();
     } // end of loop on fphNLadd
 
-
+    return r;
 }
 
 //TParticlePtr FitterSergey::GetFittedProton() const
