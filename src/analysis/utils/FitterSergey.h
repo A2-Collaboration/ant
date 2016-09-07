@@ -1,7 +1,5 @@
 #pragma once
 
-#include "Fitter_traits.h"
-
 #include "tree/TParticle.h"
 
 #include "APLCON.hpp"
@@ -14,7 +12,7 @@ namespace ant {
 namespace analysis {
 namespace utils {
 
-class FitterSergey : public Fitter_traits {
+class FitterSergey {
 
     // use PIMPL idiom to hide all the implementation (copied from Sergey's Acqu)
     class TA2KFitC;
@@ -29,18 +27,18 @@ public:
     FitterSergey();
     virtual ~FitterSergey();
 
-    virtual void SetEgammaBeam(double ebeam) override;
-    virtual void SetProton(const TParticlePtr& proton) override;
-    virtual void SetPhotons(const TParticleList& photons) override;
-    virtual void SetZVertexSigma(double sigma) override;
-    virtual bool IsZVertexFitEnabled() const noexcept override;
+    void SetEgammaBeam(double ebeam);
+    void SetProton(const TParticlePtr& proton);
+    void SetPhotons(const TParticleList& photons);
+    void SetZVertexSigma(double sigma);
+    bool IsZVertexFitEnabled() const noexcept;
 
-    virtual APLCON::Result_t DoFit() override;
+    APLCON::Result_t DoFit();
 
-    virtual TParticlePtr GetFittedProton() const override;
-    virtual TParticleList GetFittedPhotons() const override;
-    virtual double GetFittedBeamE() const override;
-    virtual double GetFittedZVertex() const override;
+    TParticlePtr GetFittedProton() const;
+    TParticleList GetFittedPhotons() const;
+    double GetFittedBeamE() const;
+    double GetFittedZVertex() const;
 };
 
 
