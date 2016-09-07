@@ -1986,61 +1986,31 @@ FitterSergey::result_t FitterSergey::Process(const TEventData& data)
 
 
 
+    auto fphN = data.Candidates.size();
+    if(fphN != 5)
+       return {};
 
-
+    int fphNLadd = data.TaggerHits.size();
 
     Double_t Pbs4g[fphNLadd];
     Double_t Pbs2pi0[fphNLadd];
     Double_t Pbspi0eta[fphNLadd];
 
-    N5cl++;
-    if ((ifPi0ee == 0 || ifEegg == 0) && fphNCB == 5 && fOpAnMean < 9.)
-        return;
+    auto nhyp = 4;
+    auto IfEpr = 0;
+    auto Ifpmea = 1;
+    auto Ngam = fphN - 1;
 
-    nhyp = 4;
-    if (ifCalb != 0)
-        nhyp = 2;
-    if (ifEegg != 0)
-        nhyp = 1;
-    if (IfEPT != 0 && ifE4gtg != 0)
-        nhyp = 1;
-    IfEpr = 0;
-    Ifpmea = 1;
-    Ngam = fphN - 1;
 
-    if (fphNCB > 1) {
-        for (j = 0; j < fphNCB - 1; j++) {
-            p4cl[j].GetXYZT(Lvec);
-            fcord.SetXYZ(Lvec[0], Lvec[1], Lvec[2]);
-            for (m = j + 1; m < fphNCB; m++)
-                if (p4cl[m].Angle(fcord) * TMath::RadToDeg() < OpAnMa)
-                    fNbadcl++;
-        }
-    }
-    if (fphNTAPS > 1) {
-        for (j = fphNCB; j < fphN - 1; j++) {
-            vcl.SetMagThetaPhi(zTAPS, p4cl[j].Theta(), p4cl[j].Phi());
-            for (m = j + 1; m < fphN; m++) {
-                vcln.SetMagThetaPhi(zTAPS, p4cl[m].Theta(), p4cl[m].Phi());
-                fcord = vcln - vcl;
-                if (fcord.Mag() < 21.)
-                    fNbadcl++;
-            }
-        }
-    }
 
-    Int_t nbadcl = fNbadcl;
-
-    for (i = 0; i < fphNLadd; i++) {
-        iffiltree = 0;
-        fNbadcl = nbadcl;
+    for (auto i = 0; i < fphNLadd; i++) {
         fNPhTAPS = 0;
         Pbs4g[i] = 0.;
         Pbs2pi0[i] = 0.;
         Pbspi0eta[i] = 0.;
-        for (m = 0; m < nhypos * 2; m++)
+        for (auto m = 0; m < nhypos * 2; m++)
             fProbab[m] = 0.;
-        for (m = 0; m < nhyp; m++) {
+        for (auto m = 0; m < nhyp; m++) {
             chisqb[m] = 1000000.;
             Itagb[m] = -1;
             Iverb[m] = -1;
@@ -2054,14 +2024,9 @@ FitterSergey::result_t FitterSergey::Process(const TEventData& data)
                 Ldecay[ide] = 2;
             }
         }
-        if (ifPi0gg != 0 && Beampr[1] < 0.705)
+        if (Beampr[1] < 0.705)
             continue;
-        if (ifpi0eta != 0 && if2pi0 == 0 && Beampr[1] < 0.93)
-            continue; // pi0 eta
-        if (ifPi0ee != 0 && Beampr[1] < 1.1)
-            continue;
-        if (ifEegg != 0 && Beampr[1] < 1.1)
-            continue;
+
         delP = fdphTagg[i] / 1000.;
         Sbeam[0] = delP / Beampr[1];
         p4bm.SetPxPyPzE(0., 0., Beampr[1] * 1000., Beampr[1] * 1000.);
@@ -2191,7 +2156,7 @@ FitterSergey::result_t FitterSergey::Process(const TEventData& data)
                         }
                     }
                     Nptall = Npart + 1 + Ndecay;
-                    ierr = fKfit.Kinfit(Nptall, Ndecay, Idecfl, Dkind, Amsdec, Jdecay,
+                    ierr = fKfit.Kinfit(Nptall, Ndecay, Dkind, Amsdec,
                                         Ldecay, Idecay, IfZfree);
                     if (ierr != 0)
                         printf(" Kinfit error = %d\n", ierr);
@@ -2384,62 +2349,6 @@ NEWPR5:
                 }
             }
             if (ihyp == 1) {
-                //++ tree information
-                if (ifPi0gg == 0) {
-                    if (ifCalb == 0)
-                        iffiltree = 1;
-                    // if ( Ievent<10000 ) printf("%d %f\n",Ievent,prb);
-                    fProbab[ihyp - 1] = prb;
-                    fZvert[ihyp - 1] = fKfit.VertexZ();
-                    fBeam[(ihyp - 1) * 3] = fKfit.BeamE();
-                    fBeam[(ihyp - 1) * 3 + 1] = Beampr[1];
-                    fBeam[(ihyp - 1) * 3 + 2] = fphWinTDC[i];
-                    fNGTAPS[ihyp - 1] = fNPhTAPS;
-                    if (ifRAW != 0 && (fData == 4 || fData == 5))
-                        fEtaZeta = SignPol;
-                    fIPrCl[ihyp - 1] = ipr;
-                    // fThetaPr = p4pr[ipr].Theta()*TMath::RadToDeg();
-                    fCoscmPr[ihyp - 1] = fKfit.ParticlecmCosTheta(14, 1);
-                    m = 0;
-                    for (j = 0; j < fphN; j++) {
-                        if (j == ipr)
-                            continue;
-                        if (m == 0)
-                            fp4g = p4ph[j];
-                        else
-                            fp4g += p4ph[j];
-                        m++;
-                    }
-                    // fIMraw[ihyp-1] = fp4g.M()/1000.;
-                    fpTot = fKfit.Particle(7, 1) + fKfit.Particle(7, 2);
-                    fIMfit[ihyp - 1] = fpTot.M();
-                    fFitProt[(ihyp - 1) * 3] = fKfit.ParticleE(14, 1);
-                    fFitProt[(ihyp - 1) * 3 + 1] = fKfit.ParticleTheta(14, 1);
-                    fFitProt[(ihyp - 1) * 3 + 2] = fKfit.ParticlePhi(14, 1);
-
-                    if (ipr >= fphNCB) {
-                        ind = id_clBaF[ipr - fphNCB];
-                        cl = clBaF[ind];
-                        vcl = *(cl->GetMeanPosition());
-                        fXtaps = vcl.X();
-                        fYtaps = vcl.Y();
-                        fTAEkpr = fFitProt[(ihyp - 1) * 3] - Amastag;
-                        fTAEcpr = p4cl[ipr].E() / 1000.;
-                        fDEEPr = fTAEkpr / fTAEcpr - 1.;
-                    } else {
-                        fCBEkpr = fFitProt[(ihyp - 1) * 3] - Amastag;
-                        fCBEcpr = p4cl[ipr].E() / 1000.;
-                        fDEEPr = fCBEkpr / fCBEcpr - 1.;
-                        fDEPr = fDEEPr * cos(p4pr[ipr].Theta());
-                    }
-                    for (imes = 0; imes < 2; imes++) {
-                        fFitMeson[imes * 3] = fKfit.ParticleE(7, imes + 1);
-                        fFitMeson[imes * 3 + 1] = fKfit.ParticleTheta(7, imes + 1);
-                        fFitMeson[imes * 3 + 2] = fKfit.ParticlePhi(7, imes + 1);
-                    }
-                    fLMeson = 2 * 3;
-                }
-                //--
                 if (prb > fP2Pi0p) {
                     fCosCM = fKfit.ParticlecmCosTheta(14, 1);
                     fCosCMPi0[0] = fKfit.ParticlecmCosTheta(7, 1);
@@ -2504,16 +2413,9 @@ NEWPR5:
                         if (fDPhiPr > 180.)
                             fDPhiPr = 360. - fDPhiPr;
                     }
-                    fPulEb = fKfit.PullEbeam();
-                    fPulXv = fKfit.PullXvrtx();
-                    fPulYv = fKfit.PullYvrtx();
-                    fPulZv = fKfit.PullZvrtx();
                     if (ipr < fphNCB) {
                         fEh = fKfit.ParticleE(14, 1);
-                        fPulTheh = fKfit.PullParticleTheta(14, 1);
-                        fPulPhih = fKfit.PullParticlePhi(14, 1);
-                        fPulEh = fKfit.PullParticleE(14, 1);
-                        fPulDeph = fKfit.PullParticleDepth(14, 1);
+
 
                         fEclCBpr = p4cl[ipr].E() / 1000.;
                         fNCrCBpr = (Double_t)clnhits[ipr] - 0.5;
@@ -2543,20 +2445,11 @@ NEWPR5:
                         fThetaG[m - 1] = p4ph[j].Theta() * TMath::RadToDeg();
                         if (j < fphNCB) {
                             fEg[nCB] = fKfit.ParticleE(1, m);
-                            fPulEg[nCB] = fKfit.PullParticleE(1, m);
-                            fPulTheg[nCB] = fKfit.PullParticleTheta(1, m);
-                            fPulPhig[nCB] = fKfit.PullParticlePhi(1, m);
-                            fPulDepg[nCB] = fKfit.PullParticleDepth(1, m);
-
                             fEclCBg[nCB] = p4cl[j].E() / 1000.;
                             fNCrCBg[nCB] = (Double_t)clnhits[j] - 0.5;
                             nCB++;
                         } else {
                             fTAEg[nTAPS] = fKfit.ParticleE(1, m);
-                            fTAPulEg[nTAPS] = fKfit.PullParticleE(1, m);
-                            fTAPulTheg[nTAPS] = fKfit.PullParticleTheta(1, m);
-                            fTAPulPhig[nTAPS] = fKfit.PullParticlePhi(1, m);
-                            fTAPulDepg[nTAPS] = fKfit.PullParticleDepth(1, m);
 
                             if (ifRAW == 0)
                                 fTOFTAPSg[nTAPS] =
@@ -2568,25 +2461,6 @@ NEWPR5:
 
                             nTAPS++;
                         }
-                    }
-                    if (nCB > 0) {
-                        fEg[nCB] = (Double_t)EBufferEnd;
-                        fPulEg[nCB] = (Double_t)EBufferEnd;
-                        fPulTheg[nCB] = (Double_t)EBufferEnd;
-                        fPulPhig[nCB] = (Double_t)EBufferEnd;
-                        fPulDepg[nCB] = (Double_t)EBufferEnd;
-                        fEclCBg[nCB] = (Double_t)EBufferEnd;
-                        fNCrCBg[nCB] = (Double_t)EBufferEnd;
-                    }
-                    if (nTAPS > 0) {
-                        fTAEg[nTAPS] = (Double_t)EBufferEnd;
-                        fTAPulEg[nTAPS] = (Double_t)EBufferEnd;
-                        fTAPulTheg[nTAPS] = (Double_t)EBufferEnd;
-                        fTAPulPhig[nTAPS] = (Double_t)EBufferEnd;
-                        fTAPulDepg[nTAPS] = (Double_t)EBufferEnd;
-                        fTOFTAPSg[nTAPS] = (Double_t)EBufferEnd;
-                        fEclTAPSg[nTAPS] = (Double_t)EBufferEnd;
-                        fNCrTAPSg[nTAPS] = (Double_t)EBufferEnd;
                     }
                 }
                 // repeat the fit without pi0 constraints
@@ -2612,41 +2486,6 @@ NEWPR5:
                 }
             }
             if (ihyp > 1) {
-                //++ tree information
-                if (ifPi0gg == 0) {
-                    if (ifCalb == 0)
-                        iffiltree = 1;
-                    ihypf = 1;
-                    fProbab[ihypf + 1] = prb;
-                    if (fProbab[0] < 0.01)
-                        fProbab[0] = Pbs2pi0[i];
-                    fZvert[ihypf] = fKfit.VertexZ();
-                    fBeam[ihypf * 3] = fKfit.BeamE();
-                    fBeam[ihypf * 3 + 1] = Beampr[1];
-                    fBeam[ihypf * 3 + 2] = fphWinTDC[i];
-                    if (ifRAW != 0 && (fData == 4 || fData == 5))
-                        fEtaZeta = SignPol;
-                    fIPrCl[ihypf] = ipr;
-                    fCoscmPr[ihypf] = fKfit.ParticlecmCosTheta(14, 1);
-                    fpTot = fKfit.Particle(7, 1) + fKfit.Particle(17, 1);
-                    fIMfit[ihypf] = fpTot.M();
-                    fpTot = fKfit.Particle(7, 1) + fKfit.Particle(14, 1);
-                    fIMfit[ihypf + 1] = fpTot.M();
-                    fpTot = fKfit.Particle(17, 1) + fKfit.Particle(14, 1);
-                    fIMfit[ihypf + 2] = fpTot.M();
-                    fFitProt[ihypf * 3] = fKfit.ParticleE(14, 1);
-                    fFitProt[ihypf * 3 + 1] = fKfit.ParticleTheta(14, 1);
-                    fFitProt[ihypf * 3 + 2] = fKfit.ParticlePhi(14, 1);
-                    imes = 2;
-                    fFitMeson[imes * 3] = fKfit.ParticleE(7, 1);
-                    fFitMeson[imes * 3 + 1] = fKfit.ParticleTheta(7, 1);
-                    fFitMeson[imes * 3 + 2] = fKfit.ParticlePhi(7, 1);
-                    imes = 3;
-                    fFitMeson[imes * 3] = fKfit.ParticleE(17, 1);
-                    fFitMeson[imes * 3 + 1] = fKfit.ParticleTheta(17, 1);
-                    fFitMeson[imes * 3 + 2] = fKfit.ParticlePhi(17, 1);
-                    fLMeson = 4 * 3;
-                }
                 //--
                 if (prb > fPEtaPi04gp) {
                     fCosCM = fKfit.ParticlecmCosTheta(14, 1);
@@ -2667,10 +2506,6 @@ NEWPR5:
                 }
             }
         } // end of ihyp loop
-        if (ifTreeRec != 0 && iffiltree != 0) {
-            fTreeRec->Fill();
-            Nwrev++;
-        }
     } // end of loop on fphNLadd
 
     nhyp = 1;
