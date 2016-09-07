@@ -31,9 +31,8 @@ void MCChannels::ProcessEvent(const TEvent &event, manager_t&)
         noTree++;
     }
 }
+void MCChannels::Finish() {
 
-void MCChannels::ShowResult()
-{
     hist=HistFac.makeTH1D("Production Channels", "Channel", "#", BinSettings(2+counter.size()),"channels");
 
     hist->SetBinContent(1, total);
@@ -49,6 +48,9 @@ void MCChannels::ShowResult()
         ++b;
     }
 
+}
+void MCChannels::ShowResult()
+{
     canvas(GetName()) << hist << endc;
 }
 

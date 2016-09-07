@@ -29,6 +29,7 @@ public:
 
     virtual void ProcessEvent(const TEvent& event, manager_t& manager) override;
     virtual void ShowResult() override;
+    virtual void Finish() override;
 
 };
 
