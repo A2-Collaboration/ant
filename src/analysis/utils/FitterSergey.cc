@@ -1851,7 +1851,7 @@ FitterSergey::~FitterSergey()
 
 }
 
-FitterSergey::result_t FitterSergey::Process(const TEventData& data)
+std::vector<FitterSergey::result_t> FitterSergey::Process(const TEventData& data)
 {
     constexpr double MeVtoGeV = 1.0 / 1000.0;
 
@@ -1977,8 +1977,6 @@ FitterSergey::result_t FitterSergey::Process(const TEventData& data)
 //    return r;
 
 
-    result_t r;
-
     // fill the tagger hits
     int fphNLadd = data.TaggerHits.size();
     Double_t fphTagg[fphNLadd];
@@ -1988,11 +1986,13 @@ FitterSergey::result_t FitterSergey::Process(const TEventData& data)
         if(taggerhit.Time<-60 || taggerhit.Time>60)
             continue;
         fphTagg[fphNLadd] = taggerhit.PhotonEnergy;
-        fphTagg[fphNLadd] = 1.3;
+        fdphTagg[fphNLadd] = 1.3;
         fphNLadd++;
     }
 
     Double_t Amastag = ParticleTypeDatabase::Proton.Mass() *MeVtoGeV;
+    TLorentzVector p4tg;
+    p4tg.SetXYZM(0., 0., 0., Amastag * 1000.);
     Double_t Beampr[4];
     Beampr[0] = Beampr[2] = Beampr[3] = 0.;
     Double_t Sbeam[3];
@@ -2050,7 +2050,7 @@ FitterSergey::result_t FitterSergey::Process(const TEventData& data)
     }
 
     if(fphN != 5)
-       return r;
+       return {};
 
 
     // start some fixed constants stuff,
@@ -2096,7 +2096,7 @@ FitterSergey::result_t FitterSergey::Process(const TEventData& data)
     const Int_t nhypmax = 10;
     Float_t fProbab[nhypos * 2];
 
-    TLorentzVector p4bm, p4tg, p4tot, p4GTot, fp4g;
+    TLorentzVector p4bm, p4GTot, fp4g, p4tot;
     Int_t Itagb[nhypmax], Iverb[nhypmax], Ipi0b[nhypmax];
     Int_t in[2];
     Int_t Nptall, Ndecay, Dkind[10], Ldecay[10], Idecay[10][10];
@@ -2278,6 +2278,8 @@ NEWPR5:
 
 
     } // end of loop on fphNLadd
+
+    vector<result_t> r;
 
     nhyp = 1;
     Ngam = fphN - 1;

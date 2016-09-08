@@ -19,10 +19,12 @@ public:
     virtual ~FitterSergey();
 
     struct result_t {
+        double TaggT;
+        double TaggCh;
 
     };
 
-    result_t Process(const TEventData& data);
+    std::vector<result_t> Process(const TEventData& data);
 
 };
 
