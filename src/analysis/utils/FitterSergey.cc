@@ -2043,15 +2043,13 @@ FitterSergey::result_t FitterSergey::Process(const TEventData& data)
     const Int_t nhypmax = 10;
     Float_t fProbab[nhypos * 2];
 
-    int iver;
-    TLorentzVector p4ph[16], p4bm, p4tg, p4tot, p4GTot, fpTot;
+    TLorentzVector p4ph[16], p4bm, p4tg, p4tot, p4GTot;
     TLorentzVector fp4g, p4pr[16];
-    TVector3 fcord;
     Int_t ierr, Ndf;
-    Int_t Itagb[nhypmax], Iverb[nhypmax], Iprb[nhypmax], Ipi0b[nhypmax];
-    Int_t ide, ihyp, ihypf, m, ipr, in[2];
+    Int_t Itagb[nhypmax], Iverb[nhypmax], Ipi0b[nhypmax];
+    Int_t in[2];
     Double_t delP;
-    Int_t Nptall, Ndecay, Dkind[10], Jdecay[10], Ldecay[10], Idecay[10][10];
+    Int_t Nptall, Ndecay, Dkind[10], Ldecay[10], Idecay[10][10];
     Double_t Amsdec[10], ClDepthGam[12], ClDepthProt[12];
     Double_t chisq, chisqb[nhypmax], prb, MM, im[6];
     Double_t thetpa, fEcl;
@@ -2068,13 +2066,11 @@ FitterSergey::result_t FitterSergey::Process(const TEventData& data)
             chisqb[m] = 1000000.;
             Itagb[m] = -1;
             Iverb[m] = -1;
-            Iprb[m] = -1;
         }
         Beampr[1] = fphTagg[i] / 1000.;
         if (i == 0) {
             Ndecay = 2;
-            for (ide = 0; ide < Ndecay; ide++) {
-                Jdecay[ide] = Ngam + 2 + ide;
+            for (auto ide = 0; ide < Ndecay; ide++) {
                 Ldecay[ide] = 2;
             }
         }
@@ -2156,8 +2152,8 @@ FitterSergey::result_t FitterSergey::Process(const TEventData& data)
                 printf(" Kfilcst error = %d\n", ierr);
 
 
-            for (iver = 0; iver < 3; iver++) {
-                for (ihyp = 0; ihyp < nhyp; ihyp++) {
+            for (auto iver = 0; iver < 3; iver++) {
+                for (auto ihyp = 0; ihyp < nhyp; ihyp++) {
                     if (ihyp == 0) {
                         //  testing  g + p -> 4g p hypothesis
                         Ndecay = 0;
@@ -2166,8 +2162,8 @@ FitterSergey::result_t FitterSergey::Process(const TEventData& data)
                     } else if (ihyp > 0) {
                         //  testing  g + p -> pi0+pi0/eta+pi0 + p -> 4g p  hypothesis
                         Ndecay = 2;
-                        for (ide = 0; ide < Ndecay; ide++) {
-                            for (m = 0; m < Ldecay[ide]; m++) {
+                        for (auto ide = 0; ide < Ndecay; ide++) {
+                            for (auto m = 0; m < Ldecay[ide]; m++) {
                                 in[m] = Idecay[ide][m] = idver4[iver][2 * ide + m];
                                 in[m]--;
                                 if (in[m] >= ipr)
@@ -2219,7 +2215,6 @@ FitterSergey::result_t FitterSergey::Process(const TEventData& data)
                         chisqb[ihyp] = chisq;
                         Itagb[ihyp] = i;
                         Iverb[ihyp] = iver;
-                        Iprb[ihyp] = ipr;
                     }
                     if (ihyp == 0 && prb > Pbs4g[i]) {
                         Pbs4g[i] = prb;
@@ -2245,15 +2240,13 @@ NEWPR5:
 
     for (auto i = 0; i < fphNLadd; i++) {
         if (i == 0) {
-            Jdecay[0] = Ngam + 2;
             Ldecay[0] = 2;
             Amsdec[0] = ParticleTypeDatabase::Pi0.Mass();
             Dkind[0] = 7;
-            Jdecay[1] = Ngam + 3;
             Ldecay[1] = 4;
             Amsdec[1] = ParticleTypeDatabase::Eta.Mass();
             Dkind[1] = 17;
-            for (m = 0; m < Ldecay[1]; m++)
+            for (auto m = 0; m < Ldecay[1]; m++)
                 Idecay[1][m] = m + 1;
         }
         if (Pbs4g[i] < 0.005)
@@ -2262,11 +2255,10 @@ NEWPR5:
         if (Pbs2pi0[i] > 0.001)
             continue;
 
-        for (m = 0; m < 4; m++) {
+        for (auto m = 0; m < 4; m++) {
             chisqb[m] = 1000000.;
             Itagb[m] = -1;
             Iverb[m] = -1;
-            Iprb[m] = -1;
             Ipi0b[m] = -1;
         }
         Beampr[1] = fphTagg[i] / 1000.;
@@ -2278,7 +2270,7 @@ NEWPR5:
         ierr = fKfit.Kfilbm(Amastag, 1, Beampr, Sbeam, Target);
         if (ierr != 0)
             printf(" Kfilbm error = %d\n", ierr);
-        for (iver = 0; iver < 15; iver++) {
+        for (auto iver = 0; iver < 15; iver++) {
             for (auto iv = 0; iv < fphN; iv++) {
                 auto j = idver5[iver][iv] - 1;
                 fEcl = Pacst[5] = p4cl[j].E() / 1000.; // cluster energy
@@ -2338,12 +2330,12 @@ NEWPR5:
             if (MM < mm_down || MM > mm_up)
                 continue;
 
-            for (ide = 0; ide < 2; ide++) {
-                for (m = 0; m < Ldecay[0]; m++) {
+            for (auto ide = 0; ide < 2; ide++) {
+                for (auto m = 0; m < Ldecay[0]; m++) {
                     Idecay[0][m] = ide * 2 + m + 1;
                     in[m] = idver5[iver][ide * 2 + m];
                 }
-                for (ihyp = 0; ihyp < nhyp; ihyp++) {
+                for (auto ihyp = 0; ihyp < nhyp; ihyp++) {
                     if (ihyp == 0) {
                         //  testing  g + p -> pi0 2g p
                         Ndecay = 1;
@@ -2379,13 +2371,13 @@ NEWV51:
             continue;
         }
 
-        for (ihyp = 0; ihyp < nhyp; ihyp++) {
+        for (auto ihyp = 0; ihyp < nhyp; ihyp++) {
             if (Itagb[ihyp] < 0)
                 continue;
 
-            iver = Iverb[ihyp];
-            ide = Ipi0b[ihyp];
-            for (m = 0; m < Ldecay[0]; m++)
+            auto iver = Iverb[ihyp];
+            auto ide = Ipi0b[ihyp];
+            for (auto m = 0; m < Ldecay[0]; m++)
                 Idecay[0][m] = ide * 2 + m + 1;
             if (ihyp == 0) {
                 //  testing  g + p -> pi0 2g p
