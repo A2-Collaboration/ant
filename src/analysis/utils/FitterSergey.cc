@@ -1857,139 +1857,24 @@ std::vector<FitterSergey::result_t> FitterSergey::Process(const TEventData& data
 
     TA2KFitC& fKfit = *I; // some shortcut...
 
-//    auto fData = 10; // Aug 2014 beamtime...
-//    auto ifmcsmear = 3;
-//    auto ifRAW = 1;  // raw data
-//    fKfit.SetResol(fData, ifmcsmear, ifRAW);
-
-
-//    Int_t ierr;
-
-//    // handle the incoming photon (Ebeam)
-
-//    Beampr[0] = Beampr[2] = Beampr[3] = 0.;
-//    Beampr[1] = Ebeam *MeVtoGeV;
-
-//    Sbeam[1] = Sbeam[2] = 0.2;
-//    auto delP = 1.3 *MeVtoGeV; // approximate value taken from gdb
-//    Sbeam[0] = delP / Beampr[1];
-
-
-//    Target[0] = 0.; // center of target
-//    Target[1] = IfZfree ? 10.0 : ZVertexSigma/0.333;  // target length (0.333*length = sigma)
-
-//    ierr = fKfit.Kfilbm(Amastag, 1, Beampr, Sbeam, Target);
-//    if (ierr != 0)
-//        printf(" Kfilbm error = %d\n", ierr);
-
-//    // setup the photons
-
-
-
-//    for(const auto& Photon : Photons) {
-//        Pacst[0] = 0; // photon mass
-//        Pacst[1] = Photon->E *MeVtoGeV; // photon energy
-//        Pacst[3] = Photon->Phi();
-//        Pacst[5] = Photon->E *MeVtoGeV; // cluster energy
-
-//        if(Photon->Candidate->Detector & Detector_t::Type_t::CB) {
-//            Pacst[4] = fKfit.DepthShowCB(Photon->Ek() *MeVtoGeV, 1);
-//            Pacst[2] = Photon->Theta();
-//            Pkind = 1;
-//        }
-//        else if(Photon->Candidate->Detector & Detector_t::Type_t::TAPS) {
-//            TVector3 vcl, vcln;
-//            vcl = Photon->Candidate->FindCaloCluster()->Position;
-//            auto zTAPS = vcl.Z();
-//            auto costh = vcl.CosTheta();
-//            auto cldepth = fKfit.DepthShowTAPS(Photon->Ek() *MeVtoGeV, 1);
-
-//            vcln.SetXYZ(vcl.X(), vcl.Y(), zTAPS + cldepth * costh);
-
-//            Pacst[4] = vcln.Mag();
-//            Pacst[2] = Pacst[4] * sin(Photon->Theta()); // radius on TAPS X-Y plane
-//            Pkind = -1;
-//        }
-
-//        ierr = fKfit.Kfilcst(Npart, Pkind, Pacst);
-//        if (ierr != 0)
-//            printf(" Kfilcst error = %d\n", ierr);
-//        Npart++;
-//    }
-
-//    // setup the proton
-
-//    Pacst[0] = Proton->Type().Mass() *MeVtoGeV; // proton mass
-//    Pacst[1] = 0.;      // proton kinetic energy
-//    Pacst[3] = Proton->Phi();
-//    Pacst[5] = Proton->Ek() *MeVtoGeV; // cluster energy, probably unused anyway?
-
-//    if(Proton->Candidate->Detector & Detector_t::Type_t::CB) {
-//        Pacst[4] = fKfit.DepthShowCB(Proton->Ek() *MeVtoGeV, 14);
-//        Pacst[2] = Proton->Theta();
-//        Pkind = 14;
-//    }
-//    else if(Proton->Candidate->Detector & Detector_t::Type_t::TAPS) {
-//        TVector3 vcl, vcln;
-//        vcl = Proton->Candidate->FindCaloCluster()->Position;
-//        auto zTAPS = vcl.Z();
-//        auto costh = vcl.CosTheta();
-//        auto cldepth = fKfit.DepthShowTAPS(Proton->Ek() *MeVtoGeV, 14);
-
-//        vcln.SetXYZ(vcl.X(), vcl.Y(), zTAPS + cldepth * costh);
-
-//        Pacst[4] = vcln.Mag();
-//        Pacst[2] = Pacst[4] * sin(Proton->Theta()); // radius on TAPS X-Y plane
-//        Pkind = -14;
-//    }
-
-//    ierr = fKfit.Kfilcst(Npart, Pkind, Pacst);
-//    if (ierr != 0)
-//        printf(" Kfilcst error = %d\n", ierr);
-
-//    // start handling the Kinfit call
-//    auto Ndecay = 0; // ihyp = 0, no addtional IM constraints
-//    Int_t Dkind[10]; // irrelevant since Ndecay = 0
-//    Double_t Amsdec[10]; // irrelevant since Ndecay = 0
-
-//    auto ide = 0;
-//    Int_t Idecay[10][10];
-//    Int_t Ldecay[10];
-
-//    Ldecay[ide] = 2;
-//    for(Int_t m = 0; m < Ldecay[ide]; m++)
-//        Idecay[ide][m] = m + 1;
-
-//    auto Nptall = Npart + Ndecay + 1;
-
-
-//    ierr = fKfit.Kinfit(Nptall, Ndecay, Dkind, Amsdec,
-//                        Ldecay, Idecay, IfZfree);
-//    if (ierr != 0)
-//        printf(" Kinfit error = %d\n", ierr);
-
-//    auto r = APLCON::Result_t::Default;
-//    r.ChiSquare = fKfit.Chisq();
-//    r.NDoF = fKfit.NDF();
-//    // use some heuristic to determine successful fit...
-//    r.Status = r.ChiSquare < 100000 ? APLCON::Result_Status_t::Success : APLCON::Result_Status_t::_Unknown;
-//    r.Probability = TMath::Prob(r.ChiSquare, r.NDoF);
-//    return r;
-
-
     // fill the tagger hits
     int fphNLadd = data.TaggerHits.size();
     Double_t fphTagg[fphNLadd];
     Double_t fdphTagg[fphNLadd];
+    Double_t TaggT[fphNLadd];
+    unsigned TaggCh[fphNLadd];
     fphNLadd = 0;
     for(const TTaggerHit& taggerhit : data.TaggerHits) {
         if(taggerhit.Time<-60 || taggerhit.Time>60)
             continue;
         fphTagg[fphNLadd] = taggerhit.PhotonEnergy;
         fdphTagg[fphNLadd] = 1.3;
+        TaggT[fphNLadd] = taggerhit.Time;
+        TaggCh[fphNLadd] = taggerhit.Channel;
         fphNLadd++;
     }
 
+    // setup some general beam stuff
     Double_t Amastag = ParticleTypeDatabase::Proton.Mass() *MeVtoGeV;
     TLorentzVector p4tg;
     p4tg.SetXYZM(0., 0., 0., Amastag * 1000.);
@@ -2050,7 +1935,7 @@ std::vector<FitterSergey::result_t> FitterSergey::Process(const TEventData& data
     }
 
     if(fphN != 5)
-       return {};
+        return {};
 
 
     // start some fixed constants stuff,
@@ -2092,9 +1977,7 @@ std::vector<FitterSergey::result_t> FitterSergey::Process(const TEventData& data
     Double_t Pacst[6] = {};
     Int_t Npart = 1; // start counting at 1, 0 is beam particle
 
-    const Int_t nhypos = 2;
     const Int_t nhypmax = 10;
-    Float_t fProbab[nhypos * 2];
 
     TLorentzVector p4bm, p4GTot, fp4g, p4tot;
     Int_t Itagb[nhypmax], Iverb[nhypmax], Ipi0b[nhypmax];
@@ -2108,8 +1991,6 @@ std::vector<FitterSergey::result_t> FitterSergey::Process(const TEventData& data
         Pbs4g[i] = 0.;
         Pbs2pi0[i] = 0.;
         Pbspi0eta[i] = 0.;
-        for (auto m = 0; m < nhypos * 2; m++)
-            fProbab[m] = 0.;
         for (auto m = 0; m < nhyp; m++) {
             chisqb[m] = 1000000.;
             Itagb[m] = -1;
@@ -2279,7 +2160,7 @@ NEWPR5:
 
     } // end of loop on fphNLadd
 
-    vector<result_t> r;
+    vector<result_t> results;
 
     nhyp = 1;
     Ngam = fphN - 1;
@@ -2381,35 +2262,31 @@ NEWPR5:
                     Idecay[0][m] = ide * 2 + m + 1;
                     in[m] = idver5[iver][ide * 2 + m];
                 }
-                for (auto ihyp = 0; ihyp < nhyp; ihyp++) {
-                    if (ihyp == 0) {
-                        //  testing  g + p -> pi0 2g p
-                        Ndecay = 1;
-                        p4GTot = p4ph[in[0] - 1] + p4ph[in[1] - 1];
-                        im[0] = p4GTot.M() / 1000.;
-                        if (im[0] < mpi0_down || im[0] > mpi0_up)
-                            continue;
-                    }
+                //  testing  g + p -> pi0 2g p
+                Ndecay = 1;
+                p4GTot = p4ph[in[0] - 1] + p4ph[in[1] - 1];
+                im[0] = p4GTot.M() / 1000.;
+                if (im[0] < mpi0_down || im[0] > mpi0_up)
+                    continue;
 
+                Nptall = Npart + 1 + Ndecay;
+                ierr = fKfit.Kinfit(Nptall, Ndecay, Dkind, Amsdec,
+                                    Ldecay, Idecay, IfZfree);
+                if (ierr != 0)
+                    printf(" Kinfit error = %d\n", ierr);
 
-                    Nptall = Npart + 1 + Ndecay;
-                    ierr = fKfit.Kinfit(Nptall, Ndecay, Dkind, Amsdec,
-                                        Ldecay, Idecay, IfZfree);
-                    if (ierr != 0)
-                        printf(" Kinfit error = %d\n", ierr);
-
-                    auto chisq = fKfit.Chisq();
-                    auto Ndf = fKfit.NDF();
-                    prb = TMath::Prob(chisq, Ndf);
-                    if (ihyp == 0 && prb < 0.005)
-                        goto Nextvr5;
-                    if (prb > 0.01 && chisqb[ihyp] > chisq) {
-                        chisqb[ihyp] = chisq;
-                        Itagb[ihyp] = i;
-                        Iverb[ihyp] = iver;
-                        Ipi0b[ihyp] = ide;
-                    }
+                auto chisq = fKfit.Chisq();
+                auto Ndf = fKfit.NDF();
+                prb = TMath::Prob(chisq, Ndf);
+                if (prb < 0.005)
+                    goto Nextvr5;
+                if (prb > 0.01 && chisqb[0] > chisq) {
+                    chisqb[0] = chisq;
+                    Itagb[0] = i;
+                    Iverb[0] = iver;
+                    Ipi0b[0] = ide;
                 }
+
 Nextvr5:
                 continue;
             }
@@ -2417,184 +2294,162 @@ NEWV51:
             continue;
         }
 
-        for (auto ihyp = 0; ihyp < nhyp; ihyp++) {
-            if (Itagb[ihyp] < 0)
-                continue;
 
-            auto iver = Iverb[ihyp];
-            auto ide = Ipi0b[ihyp];
-            for (auto m = 0; m < Ldecay[0]; m++)
-                Idecay[0][m] = ide * 2 + m + 1;
-            if (ihyp == 0) {
-                //  testing  g + p -> pi0 2g p
-                Ndecay = 1;
-            }
-            //  testing  g + p -> eta p -> pi0 2g p
-            else if (ihyp == 1) {
-                Ndecay = 2;
-            }
-            for (auto iv = 0; iv < fphN; iv++) {
-                auto j = idver5[iver][iv] - 1;
-                Pacst[5] = p4ph[j].E() / 1000.; // cluster energy
-                if (iv < Ngam) {
-                    Pacst[0] = 0.;                  // photon mass
-                    Pacst[1] = p4ph[j].E() / 1000.; // photon energy
-                    Pacst[3] = p4ph[j].Phi();
-                    Pacst[4] = ClDepthGam[j];
-                    if (j < fphNCB) {
-                        Pacst[2] = p4ph[j].Theta();
-                        Pkind = 1;
-                    }
-                    if (j >= fphNCB) {
-                        Pacst[2] =
-                                Pacst[4] * sin(p4ph[j].Theta()); // radius on TAPS X-Y plane
-                        Pkind = -1;
-                    }
-                } else {
-                    Pacst[0] = Amastag; // proton mass
-                    Pacst[1] = 0.;      // proton kinetic energy
-                    Pacst[3] = p4pr[j].Phi();
-                    Pacst[4] = ClDepthProt[j];
-                    if (j < fphNCB) {
-                        Pacst[2] = p4pr[j].Theta();
-                        Pkind = 14;
-                    }
+        if (Itagb[0] < 0)
+            continue;
 
-                    if (j >= fphNCB) {
-                        Pacst[2] =
-                                Pacst[4] * sin(p4pr[j].Theta()); // radius on TAPS X-Y plane
-                        Pkind = -14;
-                    }
+        auto iver = Iverb[0];
+        auto ide = Ipi0b[0];
+        for (auto m = 0; m < Ldecay[0]; m++)
+            Idecay[0][m] = ide * 2 + m + 1;
+        //  testing  g + p -> pi0 2g p
+        Ndecay = 1;
+
+        for (auto iv = 0; iv < fphN; iv++) {
+            auto j = idver5[iver][iv] - 1;
+            Pacst[5] = p4ph[j].E() / 1000.; // cluster energy
+            if (iv < Ngam) {
+                Pacst[0] = 0.;                  // photon mass
+                Pacst[1] = p4ph[j].E() / 1000.; // photon energy
+                Pacst[3] = p4ph[j].Phi();
+                Pacst[4] = ClDepthGam[j];
+                if (j < fphNCB) {
+                    Pacst[2] = p4ph[j].Theta();
+                    Pkind = 1;
                 }
-                Npart = iv + 1;
+                if (j >= fphNCB) {
+                    Pacst[2] = Pacst[4] * sin(p4ph[j].Theta()); // radius on TAPS X-Y plane
+                    Pkind = -1;
+                }
+            } else {
+                Pacst[0] = Amastag; // proton mass
+                Pacst[1] = 0.;      // proton kinetic energy
+                Pacst[3] = p4pr[j].Phi();
+                Pacst[4] = ClDepthProt[j];
+                if (j < fphNCB) {
+                    Pacst[2] = p4pr[j].Theta();
+                    Pkind = 14;
+                }
 
-                ierr = fKfit.Kfilcst(Npart, Pkind, Pacst);
-                if (ierr != 0)
-                    printf(" Kfilcst error = %d\n", ierr);
-
+                if (j >= fphNCB) {
+                    Pacst[2] =
+                            Pacst[4] * sin(p4pr[j].Theta()); // radius on TAPS X-Y plane
+                    Pkind = -14;
+                }
             }
-            Nptall = Npart + 1 + Ndecay;
-            ierr = fKfit.Kinfit(Nptall, Ndecay, Dkind, Amsdec,
-                                Ldecay, Idecay, IfZfree);
+            Npart = iv + 1;
+
+            ierr = fKfit.Kfilcst(Npart, Pkind, Pacst);
             if (ierr != 0)
-                printf(" Kinfit error = %d\n", ierr);
+                printf(" Kfilcst error = %d\n", ierr);
 
-            auto chisq = fKfit.Chisq();
-            if (fabs(chisqb[ihyp] - chisq) > 0.001)
-                printf("5 cl chisqb != chisq, ihyp %lf, %lf, %d \n", chisqb[ihyp],
-                       chisq, ihyp);
-            auto Ndf = fKfit.NDF();
-            prb = TMath::Prob(chisq, Ndf);
-            if (ihyp == 0) {
-//                fPpi02gp = (Double_t)prb;
-//                fEbmfit = fKfit.BeamE();
-//                fZvfit = fKfit.VertexZ();
-//                fCosCM = fKfit.ParticlecmCosTheta(14, 1);
-//                fp4g = fKfit.Particle(1, 1) + fKfit.Particle(1, 2) +
-//                       fKfit.Particle(1, 3) + fKfit.Particle(1, 4);
-//                fMpi02g = fp4g.M();
+        }
+        Nptall = Npart + 1 + Ndecay;
+        ierr = fKfit.Kinfit(Nptall, Ndecay, Dkind, Amsdec,
+                            Ldecay, Idecay, IfZfree);
+        if (ierr != 0)
+            printf(" Kinfit error = %d\n", ierr);
 
-//                ind = 0;
-//                fMpi0gmax = 0.;
-//                fMgg1 = 0.;
-//                fNPhTAPS = 0;
-//                for (m = 1; m < 5; m++) {
-//                    ig = idver5[iver][m - 1];
-//                    if (ig > fphNCB)
-//                        fNPhTAPS++;
-//                    if (m == Idecay[0][0])
-//                        continue;
-//                    if (m == Idecay[0][1])
-//                        continue;
-//                    in[ind] = m;
-//                    fInGam[ind++] = ig - 1;
-//                    fp4g = fKfit.Particle(7, 1);
-//                    fp4g += fKfit.Particle(1, m);
-//                    if (fp4g.M() > fMpi0gmax)
-//                        fMpi0gmax = fp4g.M();
-//                }
-//                ipr = idver5[iver][4] - 1;
-//                fThetaPr = p4pr[ipr].Theta() * TMath::RadToDeg();
+        auto chisq = fKfit.Chisq();
+        if (fabs(chisqb[0] - chisq) > 0.001)
+            printf("5 cl chisqb != chisq, ihyp %lf, %lf, %d \n", chisqb[0],
+                   chisq, 0);
+        auto Ndf = fKfit.NDF();
+        prb = TMath::Prob(chisq, Ndf);
 
-//                fLGam = ind;
-//                fp4g = fKfit.Particle(1, in[0]) + fKfit.Particle(1, in[1]);
-//                fMgg1 = fp4g.M();
-//                //++ tree information
-//                ihypf = ihyp;
-////                iffiltree = 1;
-//                fProbab[ihypf] = prb;
-//                fProbab[ihypf + 1] = Pbs2pi0[i];
-//                fProbab[ihypf + 2] = Pbspi0eta[i];
-//                fZvert[ihypf] = fZvfit;
-//                fBeam[(ihypf)*3] = fEbmfit;
-//                fBeam[(ihypf)*3 + 1] = Beampr[1];
-//                fBeam[(ihypf)*3 + 2] = fphWinTDC[i];
-//                fNGTAPS[ihypf] = fNPhTAPS;
-//                fIPrCl[ihypf] = idver5[iver][4] - 1;
-//                fCoscmPr[ihypf] = fCosCM;
-//                if (ifPi0ee == 0)
-//                    fIMraw[ihypf] = fMpi0gmax;
-//                else
-//                    fIMraw[ihypf] = fMgg1;
-//                fIMfit[ihypf] = fMpi02g;
-//                fFitProt[(ihypf)*3] = fKfit.ParticleE(14, 1);
-//                fFitProt[(ihypf)*3 + 1] = fKfit.ParticleTheta(14, 1);
-//                fFitProt[(ihypf)*3 + 2] = fKfit.ParticlePhi(14, 1);
-//                Int_t imesa = 0;
-//                if (ifEegg != 0)
-//                    imesa = 4 * 3;
-//                for (imes = 0; imes < 2; imes++) {
-//                    fFitMeson[imesa + imes * 3] = fKfit.ParticleE(1, in[imes]);
-//                    fFitMeson[imesa + imes * 3 + 1] = fKfit.ParticleTheta(1, in[imes]);
-//                    fFitMeson[imesa + imes * 3 + 2] = fKfit.ParticlePhi(1, in[imes]);
-//                }
-//                imes = 2;
-//                fFitMeson[imesa + imes * 3] = fKfit.ParticleE(7, 1);
-//                fFitMeson[imesa + imes * 3 + 1] = fKfit.ParticleTheta(7, 1);
-//                fFitMeson[imesa + imes * 3 + 2] = fKfit.ParticlePhi(7, 1);
-//                fLMeson = imesa + 3 * 3;
-                //--
-            }
+        result_t r;
+        r.TaggE = fphTagg[i];
+        r.TaggT = TaggT[i];
+        r.TaggCh = TaggCh[i];
+        r.TreeFitProb = prb;
+        r.AntiPi0FitProb = Pbs2pi0[i];
+        r.AntiEtaFitProb = Pbspi0eta[i];
 
-        } // end of ihyp loop
+
+        results.emplace_back(move(r));
+
+        //                fPpi02gp = (Double_t)prb;
+        //                fEbmfit = fKfit.BeamE();
+        //                fZvfit = fKfit.VertexZ();
+        //                fCosCM = fKfit.ParticlecmCosTheta(14, 1);
+        //                fp4g = fKfit.Particle(1, 1) + fKfit.Particle(1, 2) +
+        //                       fKfit.Particle(1, 3) + fKfit.Particle(1, 4);
+        //                fMpi02g = fp4g.M();
+
+        //                ind = 0;
+        //                fMpi0gmax = 0.;
+        //                fMgg1 = 0.;
+        //                fNPhTAPS = 0;
+        //                for (m = 1; m < 5; m++) {
+        //                    ig = idver5[iver][m - 1];
+        //                    if (ig > fphNCB)
+        //                        fNPhTAPS++;
+        //                    if (m == Idecay[0][0])
+        //                        continue;
+        //                    if (m == Idecay[0][1])
+        //                        continue;
+        //                    in[ind] = m;
+        //                    fInGam[ind++] = ig - 1;
+        //                    fp4g = fKfit.Particle(7, 1);
+        //                    fp4g += fKfit.Particle(1, m);
+        //                    if (fp4g.M() > fMpi0gmax)
+        //                        fMpi0gmax = fp4g.M();
+        //                }
+        //                ipr = idver5[iver][4] - 1;
+        //                fThetaPr = p4pr[ipr].Theta() * TMath::RadToDeg();
+
+        //                fLGam = ind;
+        //                fp4g = fKfit.Particle(1, in[0]) + fKfit.Particle(1, in[1]);
+        //                fMgg1 = fp4g.M();
+        //                //++ tree information
+        //                ihypf = ihyp;
+        ////                iffiltree = 1;
+        //                fProbab[ihypf] = prb;
+        //                fProbab[ihypf + 1] = Pbs2pi0[i];
+        //                fProbab[ihypf + 2] = Pbspi0eta[i];
+        //                fZvert[ihypf] = fZvfit;
+        //                fBeam[(ihypf)*3] = fEbmfit;
+        //                fBeam[(ihypf)*3 + 1] = Beampr[1];
+        //                fBeam[(ihypf)*3 + 2] = fphWinTDC[i];
+        //                fNGTAPS[ihypf] = fNPhTAPS;
+        //                fIPrCl[ihypf] = idver5[iver][4] - 1;
+        //                fCoscmPr[ihypf] = fCosCM;
+        //                if (ifPi0ee == 0)
+        //                    fIMraw[ihypf] = fMpi0gmax;
+        //                else
+        //                    fIMraw[ihypf] = fMgg1;
+        //                fIMfit[ihypf] = fMpi02g;
+        //                fFitProt[(ihypf)*3] = fKfit.ParticleE(14, 1);
+        //                fFitProt[(ihypf)*3 + 1] = fKfit.ParticleTheta(14, 1);
+        //                fFitProt[(ihypf)*3 + 2] = fKfit.ParticlePhi(14, 1);
+        //                Int_t imesa = 0;
+        //                if (ifEegg != 0)
+        //                    imesa = 4 * 3;
+        //                for (imes = 0; imes < 2; imes++) {
+        //                    fFitMeson[imesa + imes * 3] = fKfit.ParticleE(1, in[imes]);
+        //                    fFitMeson[imesa + imes * 3 + 1] = fKfit.ParticleTheta(1, in[imes]);
+        //                    fFitMeson[imesa + imes * 3 + 2] = fKfit.ParticlePhi(1, in[imes]);
+        //                }
+        //                imes = 2;
+        //                fFitMeson[imesa + imes * 3] = fKfit.ParticleE(7, 1);
+        //                fFitMeson[imesa + imes * 3 + 1] = fKfit.ParticleTheta(7, 1);
+        //                fFitMeson[imesa + imes * 3 + 2] = fKfit.ParticlePhi(7, 1);
+        //                fLMeson = imesa + 3 * 3;
+        //--
+
+
         /// \todo fill result here?
         //        if (ifTreeRec != 0 && iffiltree != 0)
         //            fTreeRec->Fill();
     } // end of loop on fphNLadd
 
-    return r;
+    return results;
 }
 
-//TParticlePtr FitterSergey::GetFittedProton() const
-//{
-//    auto& fKfit = *I;
-//    auto proton = make_shared<TParticle>(ParticleTypeDatabase::Proton, fKfit.Particle(14, 1));
-//    *proton *= 1000.0; // GeV to Mev
-//    return proton;
-//}
-
-//TParticleList FitterSergey::GetFittedPhotons() const
-//{
-//    auto& fKfit = *I;
-//    TParticleList photons;
-//    for(unsigned i=0;i<Photons.size();i++) {
-//        auto photon = make_shared<TParticle>(ParticleTypeDatabase::Photon,
-//                                             fKfit.Particle(1, i+1));
-//        *photon *= 1000.0; // GeV to Mev
-//        photons.emplace_back(photon);
-//    }
-//    return photons;
-//}
-
-//double FitterSergey::GetFittedBeamE() const
-//{
-//    auto& fKfit = *I;
-//    return 1000.0*fKfit.BeamE();
-//}
-
-//double FitterSergey::GetFittedZVertex() const
-//{
-//    auto& fKfit = *I;
-//    return fKfit.VertexZ();
-//}
-
+ostream& FitterSergey::result_t::Print(ostream& stream) const
+{
+    return stream << "(TaggCh=" << TaggCh << ")"
+                  << " TreeFitProb=" << TreeFitProb
+                  << " AntiPi0FitProb=" << AntiPi0FitProb
+                  << " AntiEtaFitProb=" << AntiEtaFitProb;
+}

@@ -18,10 +18,16 @@ public:
     FitterSergey();
     virtual ~FitterSergey();
 
-    struct result_t {
+    struct result_t : printable_traits {
+        double TaggE;
         double TaggT;
         double TaggCh;
 
+        double TreeFitProb;
+        double AntiPi0FitProb;
+        double AntiEtaFitProb;
+
+        virtual std::ostream& Print(std::ostream& stream) const;
     };
 
     std::vector<result_t> Process(const TEventData& data);

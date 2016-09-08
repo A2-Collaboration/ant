@@ -22,6 +22,13 @@ void EtapSergey::ProcessEvent(const TEvent& event, manager_t&)
 
     auto result = fitter_sergey.Process(data);
 
+    if(result.empty())
+        return;
+
+    cout << ">>>> Sergey:" << endl;
+    for(auto& r : result)
+        cout << r << endl;
+    cout << endl;
 }
 
 void EtapSergey::ShowResult()
