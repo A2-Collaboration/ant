@@ -258,6 +258,8 @@ struct OmegaHist_t {
     const BinSettings TaggTime   = BinSettings(200, -25, 25);
     const BinSettings CoplBins   = Bins(300, 0, 30.0);
 
+    const BinSettings zVertexBins = Bins(200,-10,10);
+
     const BinSettings dalitzBins = Bins(200, -0.4, 0.4);
     const BinSettings evtoEbins  = Bins(150,  0, 15);
 
@@ -430,6 +432,10 @@ struct OmegaHist_t {
 
         AddTH1("Tagger Time - CB Average Time", "t [ns]", "",       TaggTime,   "TaggTime",
                [] (TH1D* h, const Fill_t& f) { h->Fill(f.Tree.TaggT - f.Tree.CBAvgTime);
+                                             });
+
+        AddTH1("Z Vertex", "z [cm]", "",       zVertexBins,   "zVertex",
+               [] (TH1D* h, const Fill_t& f) { h->Fill(f.Tree.zVertex);
                                              });
 
         // ===== Pulls =====
