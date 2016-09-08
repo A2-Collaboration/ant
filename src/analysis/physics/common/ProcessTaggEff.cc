@@ -89,7 +89,7 @@ void ProcessTaggEff::processBlock()
         hist_tdchits_rate->Fill(ch,scalerReads.TDCRates().at(ch));
     }
 
-
+    scalerReads.Clock = slowcontrol::Variables::FreeRates->GetExpClock();
     scalerReads.ExpLivetime = slowcontrol::Variables::FreeRates->GetExpLivetime();
     scalerReads.PbRate = slowcontrol::Variables::FreeRates->GetPbGlass();
     scalerReads.ExpTriggerRate = slowcontrol::Variables::FreeRates->GetExpTrigger();

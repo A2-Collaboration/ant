@@ -30,8 +30,9 @@ struct ProcessTaggEff: public Physics {
 
         ADD_BRANCH_T(double,    ExpLivetime)
 
-        ADD_BRANCH_T(double,    ExpTriggerRate)
-        ADD_BRANCH_T(double,    PbRate)
+        ADD_BRANCH_T(double,        Clock)
+        ADD_BRANCH_T(double,        ExpTriggerRate)
+        ADD_BRANCH_T(double,        PbRate)
 
         ADD_BRANCH_T(std::vector<int>,   TaggCounts)
         ADD_BRANCH_T(std::vector<double>,   TaggRates)
