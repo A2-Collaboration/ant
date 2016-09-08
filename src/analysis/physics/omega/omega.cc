@@ -414,6 +414,15 @@ void OmegaEtaG2::Analyse(const TEventData &data, const TEvent& event, manager_t&
     if(data.TaggerHits.size() > 0)
         steps->Fill("6 has TaggHits", 1);
 
+
+    t.p_true().SetPxPyPzE(0.0,0.0,0.0,-1.0);
+    if(event.HasMCTrue()) {
+        const auto& mctrue_protons = event.MCTrue().Particles.Get(ParticleTypeDatabase::Proton);
+        if(mctrue_protons.size() == 1) {
+            t.p_true = *(mctrue_protons.front());
+        }
+    }
+
     tagChMult.Fill(data.TaggerHits);
 
     auto dcTaggerHitsAccepted = dTaggerHitsAccepted.getHandle();

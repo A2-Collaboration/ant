@@ -159,6 +159,7 @@ public:
 
         ADD_BRANCH_T(TLorentzVector,              p)
         ADD_BRANCH_T(TLorentzVector,              p_fitted)
+        ADD_BRANCH_T(TLorentzVector,              p_true)
         ADD_BRANCH_T(double,                      p_Time)
         ADD_BRANCH_T(TVector2,                    p_PSA)
         ADD_BRANCH_T(int,                         p_detector)
