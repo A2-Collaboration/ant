@@ -932,6 +932,10 @@ void EtapOmegaG::ShowResult()
     Sig.OmegaPi0.t.Tree->AddFriend(t.Tree);
     Sig.OmegaPi0.t.Tree->AddFriend(Sig.t.Tree);
 
+    canvas("Reference")
+            << TTree_drawable(Ref.t.Tree, "IM_2g")
+            << endc;
+
     canvas("Signal")
             << TTree_drawable(Sig.OmegaPi0.t.Tree, "Bachelor_E")
             << TTree_drawable(Sig.Pi0.t.Tree, "Bachelor_E[0]")
