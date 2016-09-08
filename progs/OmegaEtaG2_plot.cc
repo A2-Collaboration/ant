@@ -562,6 +562,70 @@ struct OmegaHist_t {
 
     static TCutG* dalitzCut;
 
+
+    struct TreeCuts {
+
+        /**
+        * @brief omega -> eta gamma hypothesis cut with omega -> pi0 gamma veto
+        * @param f
+        * @return
+        */
+        static bool etaHypCut(const Fill_t& f) {
+
+            if(f.Tree.bestHyp != 2)
+                return false;
+
+            const auto& etaprob  = f.Tree.etaprob()[f.Tree.iBestEta];
+            const auto& iBestPi0 = f.Tree.iBestPi0;
+
+            return etaprob > 0.3 && (iBestPi0==-1 || f.Tree.pi0prob()[iBestPi0] < 0.01);
+        }
+
+        /**
+         * @brief omega -> pi0 gamma hypothesis cut
+         * @param f
+         * @return
+         */
+        static bool pi0HypCut(const Fill_t& f) {
+            if(f.Tree.bestHyp != 1)
+                return false;
+
+            const auto& iBestPi0 = f.Tree.iBestPi0;
+            const auto& pi0prob  = f.Tree.pi0prob()[iBestPi0];
+
+            return pi0prob > 0.3;
+        }
+
+        /**
+        * @brief Cut on the omega mass in m(3gamma) spectrum
+        * @param f
+        * @return
+        * @note not useful
+        */
+        static bool wmasscut(const Fill_t& f) noexcept {
+            return interval<double>(700,900).Contains(f.Tree.ggg().M());
+        }
+
+        /**
+         * @brief Always true
+         * @return true
+         */
+        static bool dontcare(const Fill_t&) noexcept {
+            return true;
+        }
+
+        static bool KinFitProb_MM(const Fill_t& f) noexcept {
+            return f.Tree.KinFitProb>0.1 && f.Tree.mm().M()<1100 && f.Tree.mm().M() > 780;
+        }
+
+        static bool dEECut(const Fill_t& f) {
+            for(const auto& photonVetoE : f.Tree.photons_vetoE()) {
+                if (photonVetoE > .1) return false;
+            }
+            return f.Tree.p_vetoE > .25;
+        }
+    };
+
     // Sig and Ref channel share some cuts...
     static cuttree::Cuts_t<Fill_t> GetCuts() {
 
@@ -571,30 +635,8 @@ struct OmegaHist_t {
 
 
 
-        auto etaHypCut = [] (const Fill_t& f) {
 
-            if(f.Tree.bestHyp != 2)
-                return false;
 
-            const auto& etaprob  = f.Tree.etaprob()[f.Tree.iBestEta];
-            const auto& iBestPi0 = f.Tree.iBestPi0;
-
-            return etaprob > 0.3 && (iBestPi0==-1 || f.Tree.pi0prob()[iBestPi0] < 0.01);
-        };
-
-        auto pi0HypCut = [] (const Fill_t& f) {
-            if(f.Tree.bestHyp != 1)
-                return false;
-
-            const auto& iBestPi0 = f.Tree.iBestPi0;
-            const auto& pi0prob  = f.Tree.pi0prob()[iBestPi0];
-
-            return pi0prob > 0.3;
-        };
-
-        auto wmasscut = [] (const Fill_t& f) {
-            return interval<double>(700,900).Contains(f.Tree.ggg().M());
-        };
 
 //        auto DalitzCut = [] (const Fill_t& f) {
 //            OmegaDalitzPlot p(f.Tree.photons_fitted(), f.Tree.ggg_fitted());
@@ -621,43 +663,40 @@ struct OmegaHist_t {
 //            return !f.Tree.nCandsClean();
 //        };
 
-        auto dontcare = [] (const Fill_t&) {
-            return true;
-        };
+
 
 //        cuts.emplace_back(MultiCut_t<Fill_t>{
 //                              {"clean",         cleanEvent}
-////                              {"dontcare",   dontcareclean}
+//                              {"dontcare",   dontcareclean}
 //                          });
 
-        auto dEECut = [] (const Fill_t& f) {
-            for(const auto& photonVetoE : f.Tree.photons_vetoE()) {
-                if (photonVetoE > .1) return false;
-            }
-            return f.Tree.p_vetoE > .25;
-        };
+
 
         cuts.emplace_back(MultiCut_t<Fill_t>{
-                                 {"Prob+mm", [] (const Fill_t& f) { return f.Tree.KinFitProb>0.1 && f.Tree.mm().M()<1100 && f.Tree.mm().M() > 780; } }
+                                 {"Prob+mm",  TreeCuts::KinFitProb_MM}
                              });
 
 //        cuts.emplace_back(MultiCut_t<Fill_t>{
 //                                 {"#omega mass", wmasscut}
 //                             });
 
-        cuts.emplace_back(MultiCut_t<Fill_t>{
-                                 {"dEECut", dEECut },
-                                 {"nodEECut", dontcare }
-                             });
+//        cuts.emplace_back(MultiCut_t<Fill_t>{
+//                                 {"dEECut",   TreeCuts::dEECut },
+//                                 {"nodEECut", TreeCuts::dontcare }
+//                             });
 
         cuts.emplace_back(MultiCut_t<Fill_t>{
-                              {"etaHyp",               etaHypCut},
-                              {"pi0Hyp",               pi0HypCut}
+                              {"NoPunch",     [] (const Fill_t& f) { return f.Tree.p_fitted().Energy() < 400.0 + ParticleTypeDatabase::Proton.Mass();} }
                           });
 
         cuts.emplace_back(MultiCut_t<Fill_t>{
-                              {"NoLostPhotons",               [] (const Fill_t& f) { return f.Tree.LostGammas().size() == 0;} }
+                              {"etaHyp",               TreeCuts::etaHypCut},
+                              {"pi0Hyp",               TreeCuts::pi0HypCut}
                           });
+
+//        cuts.emplace_back(MultiCut_t<Fill_t>{
+//                              {"NoLostPhotons",               [] (const Fill_t& f) { return f.Tree.LostGammas().size() == 0;} }
+//                          });
 
 //        cuts.emplace_back(MultiCut_t<Fill_t>{
 //                              {"dalitzCut",      DalitzCut}
