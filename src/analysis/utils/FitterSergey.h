@@ -23,6 +23,7 @@ public:
         double TaggT;
         double TaggCh;
 
+        double KinFitProb;
         double TreeFitProb;
         double AntiPi0FitProb;
         double AntiEtaFitProb;

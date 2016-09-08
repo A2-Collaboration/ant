@@ -2368,6 +2368,8 @@ NEWV51:
         r.TaggE = fphTagg[i];
         r.TaggT = TaggT[i];
         r.TaggCh = TaggCh[i];
+
+        r.KinFitProb = Pbs4g[i];
         r.TreeFitProb = prb;
         r.AntiPi0FitProb = Pbs2pi0[i];
         r.AntiEtaFitProb = Pbspi0eta[i];
@@ -2456,6 +2458,7 @@ NEWV51:
 ostream& FitterSergey::result_t::Print(ostream& stream) const
 {
     return stream << "(TaggCh=" << TaggCh << ")"
+                  << " KinFitProb=" << KinFitProb
                   << " TreeFitProb=" << TreeFitProb
                   << " AntiPi0FitProb=" << AntiPi0FitProb
                   << " AntiEtaFitProb=" << AntiEtaFitProb;
