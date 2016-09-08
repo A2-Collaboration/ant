@@ -2003,11 +2003,13 @@ FitterSergey::result_t FitterSergey::Process(const TEventData& data)
     Target[1] = 10.0; // length of target
     auto IfZfree = 0; // measured Z vertex
 
-    int fphN = data.Candidates.size();
+    TLorentzVector p4ph[16],p4pr[16];
+
+    int fphN = 0;
+
     if(fphN != 5)
        return r;
 
-    TLorentzVector p4cl[16],p4ph[16],p4pr[16];
 
     // start some fixed constants stuff,
     // and variables used for the algorithm
@@ -2124,7 +2126,7 @@ FitterSergey::result_t FitterSergey::Process(const TEventData& data)
                 continue;
 
             // proton
-            fEcl = Pacst[5] = p4cl[ipr].E() / 1000.; // cluster energy
+            fEcl = Pacst[5] = p4ph[ipr].E() / 1000.; // cluster energy
             Pacst[0] = Amastag;                      // proton mass
             Pacst[1] = 0.; // proton kinetic energy
             Pacst[3] = p4pr[ipr].Phi();
@@ -2273,7 +2275,7 @@ NEWPR5:
         for (auto iver = 0; iver < 15; iver++) {
             for (auto iv = 0; iv < fphN; iv++) {
                 auto j = idver5[iver][iv] - 1;
-                fEcl = Pacst[5] = p4cl[j].E() / 1000.; // cluster energy
+                fEcl = Pacst[5] = p4ph[j].E() / 1000.; // cluster energy
                 if (iv < Ngam) {
                     if (iv == 0)
                         fp4g = p4ph[j];
@@ -2389,7 +2391,7 @@ NEWV51:
             }
             for (auto iv = 0; iv < fphN; iv++) {
                 auto j = idver5[iver][iv] - 1;
-                Pacst[5] = p4cl[j].E() / 1000.; // cluster energy
+                Pacst[5] = p4ph[j].E() / 1000.; // cluster energy
                 if (iv < Ngam) {
                     Pacst[0] = 0.;                  // photon mass
                     Pacst[1] = p4ph[j].E() / 1000.; // photon energy
