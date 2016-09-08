@@ -1980,7 +1980,6 @@ FitterSergey::result_t FitterSergey::Process(const TEventData& data)
     result_t r;
 
     // fill the tagger hits
-    Int_t fphNCB;
     int fphNLadd = data.TaggerHits.size();
     Double_t fphTagg[fphNLadd];
     Double_t fdphTagg[fphNLadd];
@@ -2003,9 +2002,52 @@ FitterSergey::result_t FitterSergey::Process(const TEventData& data)
     Target[1] = 10.0; // length of target
     auto IfZfree = 0; // measured Z vertex
 
-    TLorentzVector p4ph[16],p4pr[16];
-
+    // fill the lorentzvectors from candidates
+    TLorentzVector p4ph[16], p4pr[16];
+    double ClDepthGam[12], ClDepthProt[12];
     int fphN = 0;
+    int fphNCB = 0;
+
+    // start with the CB candidates
+    for(const auto& cand : data.Candidates.get_iter()) {
+        if(cand->Detector & Detector_t::Type_t::CB) {
+            p4ph[fphN] = TParticle(ParticleTypeDatabase::Photon, cand);
+            ClDepthGam[fphN] = fKfit.DepthShowCB(cand->CaloEnergy *MeVtoGeV, 1);
+
+            p4pr[fphN] = TParticle(ParticleTypeDatabase::Proton, cand);
+            ClDepthProt[fphN] = fKfit.DepthShowCB(cand->CaloEnergy *MeVtoGeV, 14);
+
+            fphN++;
+            fphNCB++;
+        }
+    }
+
+    // then TAPS candidates
+    for(const auto& cand : data.Candidates.get_iter()) {
+        if(cand->Detector & Detector_t::Type_t::TAPS) {
+            TVector3 vcl = cand->FindCaloCluster()->Position;
+            auto zTAPS = vcl.Z();
+            auto costh = vcl.CosTheta();
+
+            p4ph[fphN] = TParticle(ParticleTypeDatabase::Photon, cand);
+            {
+                auto cldepth = fKfit.DepthShowTAPS(cand->CaloEnergy *MeVtoGeV, 14);
+                TVector3 vcln;
+                vcln.SetXYZ(vcl.X(), vcl.Y(), zTAPS + cldepth * costh);
+                ClDepthGam[fphN] = vcln.Mag();
+            }
+
+            p4pr[fphN] = TParticle(ParticleTypeDatabase::Proton, cand);
+            {
+                auto cldepth = fKfit.DepthShowTAPS(cand->CaloEnergy *MeVtoGeV, 14);
+                TVector3 vcln;
+                vcln.SetXYZ(vcl.X(), vcl.Y(), zTAPS + cldepth * costh);
+                ClDepthProt[fphN] = vcln.Mag();
+            }
+
+            fphN++;
+        }
+    }
 
     if(fphN != 5)
        return r;
@@ -2058,7 +2100,7 @@ FitterSergey::result_t FitterSergey::Process(const TEventData& data)
     Int_t Itagb[nhypmax], Iverb[nhypmax], Ipi0b[nhypmax];
     Int_t in[2];
     Int_t Nptall, Ndecay, Dkind[10], Ldecay[10], Idecay[10][10];
-    Double_t Amsdec[10], ClDepthGam[12], ClDepthProt[12];
+    Double_t Amsdec[10];
     Double_t chisqb[nhypmax], prb, MM, im[6];
     Double_t thetpa, fEcl;
 
