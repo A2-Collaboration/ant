@@ -1857,6 +1857,13 @@ std::vector<FitterSergey::result_t> FitterSergey::Process(const TEventData& data
 
     TA2KFitC& fKfit = *I; // some shortcut...
 
+    {
+        auto fData = 10; // Aug 2014 beamtime...
+        auto ifmcsmear = 3;
+        auto ifRAW = 1;
+        fKfit.SetResol(fData, ifmcsmear, ifRAW);
+    }
+
     // fill the tagger hits
     int fphNLadd = data.TaggerHits.size();
     Double_t fphTagg[fphNLadd];
