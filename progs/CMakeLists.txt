@@ -4,7 +4,7 @@ include_directories(
 
 macro(add_ant_executable name)
   set(EXEFILE "${name}.cc")
-  add_executable(${name} ${EXEFILE})
+  add_executable(${name} ${EXEFILE} ${ARGN})
   target_link_libraries(${name} analysis base calibration unpacker reconstruct pluto)
 endmacro()
 
