@@ -255,7 +255,7 @@ struct OmegaHist_t {
     const BinSettings PSARBins   = Bins( 100,  0,  450);
     const BinSettings TaggChBins = BinSettings(47);
 
-    const BinSettings TaggTime   = BinSettings(200, -25, 25);
+    const BinSettings TaggTimeBins   = BinSettings(200, -25, 25);
     const BinSettings CoplBins   = Bins(300, 0, 30.0);
 
     const BinSettings zVertexBins = Bins(200,-10,10);
@@ -430,7 +430,7 @@ struct OmegaHist_t {
 //               [] (TH1D* h, const Fill_t& f) { h->Fill(radian_to_degree(f.Tree.copl_angle()), f.TaggW());
 //                                             });
 
-        AddTH1("Tagger Time - CB Average Time", "t [ns]", "",       TaggTime,   "TaggTime",
+        AddTH1("Tagger Time - CB Average Time", "t [ns]", "",       TaggTimeBins,   "TaggTime",
                [] (TH1D* h, const Fill_t& f) { h->Fill(f.Tree.TaggT - f.Tree.CBAvgTime);
                                              });
 
