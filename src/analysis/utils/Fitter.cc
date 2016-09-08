@@ -154,14 +154,14 @@ LorentzVec Fitter::FitParticle::GetLorentzVec(const std::vector<double>& values,
 
     if(Detector & Detector_t::Type_t::CB)
     {
-        // for CB, parametrization is (1/Ek, theta, phi, CB_R)
+        // for CB, parametrization is (Ek, theta, phi, CB_R)
         const radian_t& theta = values[1];
         const auto&     CB_R  = values[3];
         x += vec3::RThetaPhi(CB_R, theta, phi);
     }
     else if(Detector & Detector_t::Type_t::TAPS)
     {
-        // for TAPS, parametrization is (1/Ek, TAPS_Rxy, phi, TAPS_L)
+        // for TAPS, parametrization is (Ek, TAPS_Rxy, phi, TAPS_L)
         const auto& TAPS_Rxy = values[1];
         const auto& TAPS_L   = values[3];
         const auto& TAPS_L_z = sqrt(std_ext::sqr(TAPS_L) - std_ext::sqr(TAPS_Rxy));
@@ -266,7 +266,6 @@ KinFitter::~KinFitter()
 
 void KinFitter::SetEgammaBeam(const double ebeam)
 {
-    // use inverse energy in 1/GeV here as well
     BeamE->SetValueSigma(ebeam, uncertainty->GetBeamEnergySigma(ebeam));
 }
 
