@@ -17,7 +17,7 @@ add_ant_executable(Ant-calib-regedit)
 add_ant_executable(Ant-calib-editor)
 add_ant_executable(Ant-calib-viewer)
 
-add_ant_executable(Ant-makeTaggEff)
+add_ant_executable(Ant-makeTaggEff detail/taggEffClasses.cc)
 
 add_ant_executable(Ant-chain)
 add_ant_executable(Ant-hadd)
