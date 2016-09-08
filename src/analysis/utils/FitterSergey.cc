@@ -1979,25 +1979,35 @@ FitterSergey::result_t FitterSergey::Process(const TEventData& data)
 
     result_t r;
 
-    // variables to be filled/taken care of
+    // fill the tagger hits
     Int_t fphNCB;
-    Double_t *fphTagg;
-    Double_t *fdphTagg;
+    int fphNLadd = data.TaggerHits.size();
+    Double_t fphTagg[fphNLadd];
+    Double_t fdphTagg[fphNLadd];
+    fphNLadd = 0;
+    for(const TTaggerHit& taggerhit : data.TaggerHits) {
+        if(taggerhit.Time<-60 || taggerhit.Time>60)
+            continue;
+        fphTagg[fphNLadd] = taggerhit.PhotonEnergy;
+        fphTagg[fphNLadd] = 1.3;
+        fphNLadd++;
+    }
 
     Double_t Amastag = ParticleTypeDatabase::Proton.Mass() *MeVtoGeV;
     Double_t Beampr[4];
+    Beampr[0] = Beampr[2] = Beampr[3] = 0.;
     Double_t Sbeam[3];
+    Sbeam[1] = Sbeam[2] = 0.2;
     Double_t Target[2];
-
-    TLorentzVector p4cl[16];
+    Target[0] = 0.; // center of target
+    Target[1] = 10.0; // length of target
+    auto IfZfree = 0; // measured Z vertex
 
     int fphN = data.Candidates.size();
     if(fphN != 5)
        return r;
 
-    int fphNLadd = data.TaggerHits.size();
-
-    auto IfZfree = 0; // measured Z vertex
+    TLorentzVector p4cl[16],p4ph[16],p4pr[16];
 
     // start some fixed constants stuff,
     // and variables used for the algorithm
@@ -2032,7 +2042,6 @@ FitterSergey::result_t FitterSergey::Process(const TEventData& data)
     Double_t Pbspi0eta[fphNLadd];
 
     int nhyp = 4;
-    int IfEpr = 0;
     int Ngam = fphN - 1;
 
     Int_t Pkind = 0;
@@ -2043,18 +2052,13 @@ FitterSergey::result_t FitterSergey::Process(const TEventData& data)
     const Int_t nhypmax = 10;
     Float_t fProbab[nhypos * 2];
 
-    TLorentzVector p4ph[16], p4bm, p4tg, p4tot, p4GTot;
-    TLorentzVector fp4g, p4pr[16];
-    Int_t ierr, Ndf;
+    TLorentzVector p4bm, p4tg, p4tot, p4GTot, fp4g;
     Int_t Itagb[nhypmax], Iverb[nhypmax], Ipi0b[nhypmax];
     Int_t in[2];
-    Double_t delP;
     Int_t Nptall, Ndecay, Dkind[10], Ldecay[10], Idecay[10][10];
     Double_t Amsdec[10], ClDepthGam[12], ClDepthProt[12];
-    Double_t chisq, chisqb[nhypmax], prb, MM, im[6];
+    Double_t chisqb[nhypmax], prb, MM, im[6];
     Double_t thetpa, fEcl;
-
-
 
     for (auto i = 0; i < fphNLadd; i++) {
         Pbs4g[i] = 0.;
@@ -2077,10 +2081,10 @@ FitterSergey::result_t FitterSergey::Process(const TEventData& data)
         if (Beampr[1] < 0.705)
             continue;
 
-        delP = fdphTagg[i] / 1000.;
+        auto delP = fdphTagg[i] / 1000.;
         Sbeam[0] = delP / Beampr[1];
         p4bm.SetPxPyPzE(0., 0., Beampr[1] * 1000., Beampr[1] * 1000.);
-        ierr = fKfit.Kfilbm(Amastag, 1, Beampr, Sbeam, Target);
+        auto ierr = fKfit.Kfilbm(Amastag, 1, Beampr, Sbeam, Target);
         if (ierr != 0)
             printf(" Kfilbm error = %d\n", ierr);
         for (auto ipr = 0; ipr < fphN; ipr++) {
@@ -2122,10 +2126,7 @@ FitterSergey::result_t FitterSergey::Process(const TEventData& data)
             // proton
             fEcl = Pacst[5] = p4cl[ipr].E() / 1000.; // cluster energy
             Pacst[0] = Amastag;                      // proton mass
-            if (IfEpr == 0)
-                Pacst[1] = 0.; // proton kinetic energy
-            else
-                Pacst[1] = p4pr[ipr].E() / 1000. - Amastag;
+            Pacst[1] = 0.; // proton kinetic energy
             Pacst[3] = p4pr[ipr].Phi();
             Pacst[4] = ClDepthProt[ipr];
             if (ipr < fphNCB) {
@@ -2171,10 +2172,10 @@ FitterSergey::result_t FitterSergey::Process(const TEventData& data)
                             }
                             fp4g = p4ph[in[0]] + p4ph[in[1]];
                             im[ide] = fp4g.M() / 1000.;
-                            Amsdec[ide] = ParticleTypeDatabase::Pi0.Mass();
+                            Amsdec[ide] = ParticleTypeDatabase::Pi0.Mass() *MeVtoGeV;
                             Dkind[ide] = 7;
                             if (ihyp > 1 && ihyp == ide + 2) {
-                                Amsdec[ide] = ParticleTypeDatabase::Eta.Mass();
+                                Amsdec[ide] = ParticleTypeDatabase::Eta.Mass() *MeVtoGeV;
                                 Dkind[ide] = 17;
                             }
                         }
@@ -2208,8 +2209,8 @@ FitterSergey::result_t FitterSergey::Process(const TEventData& data)
                     if (ierr != 0)
                         printf(" Kinfit error = %d\n", ierr);
 
-                    chisq = fKfit.Chisq();
-                    Ndf = fKfit.NDF();
+                    auto chisq = fKfit.Chisq();
+                    auto Ndf = fKfit.NDF();
                     prb = TMath::Prob(chisq, Ndf);
                     if (prb > 0.01 && chisqb[ihyp] > chisq) {
                         chisqb[ihyp] = chisq;
@@ -2235,16 +2236,15 @@ NEWPR5:
     } // end of loop on fphNLadd
 
     nhyp = 1;
-    IfEpr = 0;
     Ngam = fphN - 1;
 
     for (auto i = 0; i < fphNLadd; i++) {
         if (i == 0) {
             Ldecay[0] = 2;
-            Amsdec[0] = ParticleTypeDatabase::Pi0.Mass();
+            Amsdec[0] = ParticleTypeDatabase::Pi0.Mass() *MeVtoGeV;
             Dkind[0] = 7;
             Ldecay[1] = 4;
-            Amsdec[1] = ParticleTypeDatabase::Eta.Mass();
+            Amsdec[1] = ParticleTypeDatabase::Eta.Mass() *MeVtoGeV;
             Dkind[1] = 17;
             for (auto m = 0; m < Ldecay[1]; m++)
                 Idecay[1][m] = m + 1;
@@ -2264,10 +2264,10 @@ NEWPR5:
         Beampr[1] = fphTagg[i] / 1000.;
         if (Beampr[1] < 0.705)
             continue;
-        delP = fdphTagg[i] / 1000.;
+        auto delP = fdphTagg[i] / 1000.;
         Sbeam[0] = delP / Beampr[1];
         p4bm.SetPxPyPzE(0., 0., Beampr[1] * 1000., Beampr[1] * 1000.);
-        ierr = fKfit.Kfilbm(Amastag, 1, Beampr, Sbeam, Target);
+        auto ierr = fKfit.Kfilbm(Amastag, 1, Beampr, Sbeam, Target);
         if (ierr != 0)
             printf(" Kfilbm error = %d\n", ierr);
         for (auto iver = 0; iver < 15; iver++) {
@@ -2352,8 +2352,8 @@ NEWPR5:
                     if (ierr != 0)
                         printf(" Kinfit error = %d\n", ierr);
 
-                    chisq = fKfit.Chisq();
-                    Ndf = fKfit.NDF();
+                    auto chisq = fKfit.Chisq();
+                    auto Ndf = fKfit.NDF();
                     prb = TMath::Prob(chisq, Ndf);
                     if (ihyp == 0 && prb < 0.005)
                         goto Nextvr5;
@@ -2433,11 +2433,11 @@ NEWV51:
             if (ierr != 0)
                 printf(" Kinfit error = %d\n", ierr);
 
-            chisq = fKfit.Chisq();
+            auto chisq = fKfit.Chisq();
             if (fabs(chisqb[ihyp] - chisq) > 0.001)
                 printf("5 cl chisqb != chisq, ihyp %lf, %lf, %d \n", chisqb[ihyp],
                        chisq, ihyp);
-            Ndf = fKfit.NDF();
+            auto Ndf = fKfit.NDF();
             prb = TMath::Prob(chisq, Ndf);
             if (ihyp == 0) {
 //                fPpi02gp = (Double_t)prb;
