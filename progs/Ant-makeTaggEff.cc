@@ -43,7 +43,6 @@ const map<string,TID> startIDs({ {"Setup_2014_07_EPT_Prod", TID(1406592000)},
 static TH1D* hist_channels(nullptr);
 static TH2D* hist_channels_2d(nullptr);
 static TH2D* hist_channels_2d_errors(nullptr);
-static TGraph* graph_livetimes(nullptr);
 
 static bool noStore = false;
 
@@ -61,7 +60,6 @@ void storeResult(const taggEff_t& result, shared_ptr<calibration::DataManager> m
 void processFiles(const vector<string>& files);
 bool processCSV(const string& csvFile);
 void processManualData(const string& dataFile);
-void processLiveTime(const vector<string>& fileList);
 
 int main( int argc, char** argv )
 {
@@ -81,11 +79,9 @@ int main( int argc, char** argv )
                                                     "provide single group for adding a right open patch");
     auto mode_manual     = cmd.add<TCLAP::SwitchArg>("","manual",
                                                     "manually set taggeffs per channel for given setup");
-    auto mode_showLt     = cmd.add<TCLAP::SwitchArg>("","livetime",
-                                                     "plot livetime for bkg1 and bkg2");
 
     //register modes here:
-    auto modes = {&mode_csv, &mode_group, &mode_manual, &mode_showLt};
+    auto modes = {&mode_csv, &mode_group, &mode_manual};
 
     // manual settings:
     auto cmd_setup      = cmd.add<TCLAP::ValueArg<string>>("","setup", "set setup manually",        false, "", "name");
@@ -137,12 +133,7 @@ int main( int argc, char** argv )
         processManualData(fileList.at(0));
     }
 
-    if (mode_showLt->isSet())
-    {
-        if (fileList.size() != 2)
-            failExit("Provide files: bkg1 and bkg2");
-        processLiveTime(fileList);
-    }
+
 
     argc=1; // prevent TRint to parse any cmdline except prog name
     auto app = cmd_batchmode->isSet() || !std_ext::system::isInteractive()
@@ -155,8 +146,6 @@ int main( int argc, char** argv )
         canvas c("TaggEff");
         if (hist_channels)
             c << drawoption("E") << hist_channels;
-        if (graph_livetimes)
-            c << drawoption("AP") << graph_livetimes;
         if (hist_channels_2d)
             c << drawoption("colz") << hist_channels_2d << endr;
         if (hist_channels_2d_errors)
@@ -290,23 +279,7 @@ bool processCSV(const string& csvFile)
     return true;
 }
 
-void processLiveTime(const vector<string>& fileList)
-{
-    treeContainer_t b1(fileList.at(0));
-    treeContainer_t b2(fileList.at(1));
 
-
-    if ( !graph_livetimes )
-    {
-        graph_livetimes = new TGraph();
-        graph_livetimes->GetXaxis()->SetTitle("time [s]");
-        graph_livetimes->GetYaxis()->SetTitle("tivelime [%]");
-    }
-
-    for (const auto& tc: {&b1,&b2})
-        for ( const auto& timeLT: tc->getLiveTimes() )
-            graph_livetimes->SetPoint(graph_livetimes->GetN(),timeLT.first,timeLT.second);
-}
 
 void fillHistSingle( const vector<double>& data, const vector<double>& dataErrors)
 {
