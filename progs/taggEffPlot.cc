@@ -2,6 +2,7 @@
 
 #include "base/CmdLine.h"
 #include "base/Logger.h"
+#include "base/std_ext/system.h"
 
 #include "TGraph.h"
 #include "TRint.h"
@@ -37,8 +38,9 @@ int main( int argc, char** argv )
 
     auto plot_Lt       = cmd.add<TCLAP::SwitchArg>("","livetime", "plot livetime for bkg1 and bkg2");
     auto plot_rate     = cmd.add<TCLAP::SwitchArg>("","rate", "plot livetime for bkg1 and bkg2");
-
     auto modes = {&plot_Lt,&plot_rate};
+
+    auto cmd_batchmode   = cmd.add<TCLAP::SwitchArg>("b","batch",  "Run in batch mode (no ROOT shell afterwards)");
 
     auto cmd_filelist   = cmd.add<TCLAP::UnlabeledMultiArg<string>>("inputfiles","inputfiles to read from",true,"inputfiles");
 
@@ -70,7 +72,10 @@ int main( int argc, char** argv )
     }
 
     argc=1; // prevent TRint to parse any cmdline except prog name
-    auto app = std_ext::make_unique<TRint>("Ant-makeSigmas",&argc,argv,nullptr,0,true);
+
+    auto app = cmd_batchmode->isSet() || !std_ext::system::isInteractive()
+               ? nullptr
+               : std_ext::make_unique<TRint>("plots",&argc,argv,nullptr,0,true);
 
     if(app) {
         canvas c("TaggEff");
@@ -109,14 +114,10 @@ void plotRates(const vector<string>& fileList)
     initGraph("time","rate");
     vector<unique_ptr<treeLoader_t>> tContainers;
 
-    LOG(INFO) << "Loading files:";
 
     for (const auto& fN: fileList)
-    {
-        cout << fN << "  ";
         tContainers.emplace_back(new treeLoader_t(fN));
-    }
-    cout << endl;
+
 
 
     for ( const auto& t: tContainers)
@@ -132,8 +133,8 @@ void plotRates(const vector<string>& fileList)
                              + t->wrapTree.EvID.Value->Timestamp );
 
             std_ext::RMS rmsRate;
-            for ( auto ch = 0u ; ch < t->nchannels ; ++ ch)
-                rmsRate.Add(t->wrapTree.TaggRates().at(ch));
+            for ( const auto& tr: t->wrapTree.TaggRates())
+                rmsRate.Add(tr);
 
             graph2d->SetPoint(graph2d->GetN(),
                               evTime,
