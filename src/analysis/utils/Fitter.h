@@ -55,7 +55,7 @@ public:
 
     struct FitParticle
     {
-        TParticlePtr      Particle;      // pointer to unfitted particle
+        TParticlePtr      Particle; // pointer to unfitted particle
         Detector_t::Any_t Detector; // remember detector type provided by uncertainty model
 
         std::vector<FitVariable> Vars;
@@ -77,6 +77,7 @@ public:
         friend class KinFitter;
         friend class TreeFitter;
 
+        FitVariable& GetEk();
         void Set(const TParticlePtr& p, const UncertaintyModel& uncertainty);
 
         const std::string Name;

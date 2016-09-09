@@ -105,6 +105,11 @@ Fitter::FitParticle::pulls_t Fitter::FitParticle::GetPulls() const
     return pulls;
 }
 
+Fitter::FitVariable& Fitter::FitParticle::GetEk() {
+    // asumme that 0th component is Ek
+    return Vars[0];
+}
+
 void Fitter::FitParticle::Set(const TParticlePtr& p,
                               const UncertaintyModel& uncertainty)
 {
@@ -115,6 +120,7 @@ void Fitter::FitParticle::Set(const TParticlePtr& p,
     if(!p->Candidate)
         throw Exception("Need particle with candidate for fitting");
 
+    // change GetEk() if you don't assume Vars[0] is Ek
     Vars[0].SetValueSigma(p->Ek(),  sigmas.sigmaEk);
     Vars[2].SetValueSigma(p->Phi(), sigmas.sigmaPhi);
 
@@ -381,13 +387,13 @@ APLCON::Result_t KinFitter::DoFit() {
         Z_Vertex->Sigma = Z_Vertex->Sigma_before;
     }
 
-    // asumme that 0th component is Ek
-    auto& Var_Ek = Proton->Vars[0];
+
+    auto& Var_Ek = Proton->GetEk();
     // only set Proton Ek to missing energy if unmeasured
     if(Var_Ek.Sigma == 0) {
         double missing_E = BeamE->Value;
         for(auto& photon : Photons) {
-            missing_E -= photon->Particle->Ek();
+            missing_E -= photon->GetEk().Value;
         }
         Var_Ek.SetValueSigma(missing_E, Var_Ek.Sigma);
     }
