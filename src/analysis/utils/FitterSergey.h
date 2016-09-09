@@ -28,6 +28,9 @@ public:
         double AntiPi0FitProb;
         double AntiEtaFitProb;
 
+        std::vector<double> IM_3g;
+        double IM_4g;
+
         virtual std::ostream& Print(std::ostream& stream) const;
     };
 

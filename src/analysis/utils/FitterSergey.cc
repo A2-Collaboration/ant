@@ -2177,11 +2177,6 @@ NEWPR5:
             Ldecay[0] = 2;
             Amsdec[0] = ParticleTypeDatabase::Pi0.Mass() *MeVtoGeV;
             Dkind[0] = 7;
-            Ldecay[1] = 4;
-            Amsdec[1] = ParticleTypeDatabase::Eta.Mass() *MeVtoGeV;
-            Dkind[1] = 17;
-            for (auto m = 0; m < Ldecay[1]; m++)
-                Idecay[1][m] = m + 1;
         }
         if (Pbs4g[i] < 0.005)
             continue;
@@ -2374,82 +2369,29 @@ NEWV51:
         r.AntiPi0FitProb = Pbs2pi0[i];
         r.AntiEtaFitProb = Pbspi0eta[i];
 
+        fp4g = fKfit.Particle(1, 1) + fKfit.Particle(1, 2) +
+               fKfit.Particle(1, 3) + fKfit.Particle(1, 4);
+        r.IM_4g = fp4g.M()/MeVtoGeV;
+
+        auto ind = 0;
+        for (auto m = 1; m < 5; m++) {
+            if (m == Idecay[0][0])
+                continue;
+            if (m == Idecay[0][1])
+                continue;
+            in[ind] = m;
+            ind++;
+        }
+
+        for(int imes=0;imes<2;imes++) {
+            // add to the pi0 the two other gammas
+            fp4g = fKfit.Particle(7, 1) + fKfit.Particle(1, in[imes]);
+            r.IM_3g.emplace_back(fp4g.M()/MeVtoGeV);
+        }
+        std::sort(r.IM_3g.begin(), r.IM_3g.end());
 
         results.emplace_back(move(r));
 
-        //                fPpi02gp = (Double_t)prb;
-        //                fEbmfit = fKfit.BeamE();
-        //                fZvfit = fKfit.VertexZ();
-        //                fCosCM = fKfit.ParticlecmCosTheta(14, 1);
-        //                fp4g = fKfit.Particle(1, 1) + fKfit.Particle(1, 2) +
-        //                       fKfit.Particle(1, 3) + fKfit.Particle(1, 4);
-        //                fMpi02g = fp4g.M();
-
-        //                ind = 0;
-        //                fMpi0gmax = 0.;
-        //                fMgg1 = 0.;
-        //                fNPhTAPS = 0;
-        //                for (m = 1; m < 5; m++) {
-        //                    ig = idver5[iver][m - 1];
-        //                    if (ig > fphNCB)
-        //                        fNPhTAPS++;
-        //                    if (m == Idecay[0][0])
-        //                        continue;
-        //                    if (m == Idecay[0][1])
-        //                        continue;
-        //                    in[ind] = m;
-        //                    fInGam[ind++] = ig - 1;
-        //                    fp4g = fKfit.Particle(7, 1);
-        //                    fp4g += fKfit.Particle(1, m);
-        //                    if (fp4g.M() > fMpi0gmax)
-        //                        fMpi0gmax = fp4g.M();
-        //                }
-        //                ipr = idver5[iver][4] - 1;
-        //                fThetaPr = p4pr[ipr].Theta() * TMath::RadToDeg();
-
-        //                fLGam = ind;
-        //                fp4g = fKfit.Particle(1, in[0]) + fKfit.Particle(1, in[1]);
-        //                fMgg1 = fp4g.M();
-        //                //++ tree information
-        //                ihypf = ihyp;
-        ////                iffiltree = 1;
-        //                fProbab[ihypf] = prb;
-        //                fProbab[ihypf + 1] = Pbs2pi0[i];
-        //                fProbab[ihypf + 2] = Pbspi0eta[i];
-        //                fZvert[ihypf] = fZvfit;
-        //                fBeam[(ihypf)*3] = fEbmfit;
-        //                fBeam[(ihypf)*3 + 1] = Beampr[1];
-        //                fBeam[(ihypf)*3 + 2] = fphWinTDC[i];
-        //                fNGTAPS[ihypf] = fNPhTAPS;
-        //                fIPrCl[ihypf] = idver5[iver][4] - 1;
-        //                fCoscmPr[ihypf] = fCosCM;
-        //                if (ifPi0ee == 0)
-        //                    fIMraw[ihypf] = fMpi0gmax;
-        //                else
-        //                    fIMraw[ihypf] = fMgg1;
-        //                fIMfit[ihypf] = fMpi02g;
-        //                fFitProt[(ihypf)*3] = fKfit.ParticleE(14, 1);
-        //                fFitProt[(ihypf)*3 + 1] = fKfit.ParticleTheta(14, 1);
-        //                fFitProt[(ihypf)*3 + 2] = fKfit.ParticlePhi(14, 1);
-        //                Int_t imesa = 0;
-        //                if (ifEegg != 0)
-        //                    imesa = 4 * 3;
-        //                for (imes = 0; imes < 2; imes++) {
-        //                    fFitMeson[imesa + imes * 3] = fKfit.ParticleE(1, in[imes]);
-        //                    fFitMeson[imesa + imes * 3 + 1] = fKfit.ParticleTheta(1, in[imes]);
-        //                    fFitMeson[imesa + imes * 3 + 2] = fKfit.ParticlePhi(1, in[imes]);
-        //                }
-        //                imes = 2;
-        //                fFitMeson[imesa + imes * 3] = fKfit.ParticleE(7, 1);
-        //                fFitMeson[imesa + imes * 3 + 1] = fKfit.ParticleTheta(7, 1);
-        //                fFitMeson[imesa + imes * 3 + 2] = fKfit.ParticlePhi(7, 1);
-        //                fLMeson = imesa + 3 * 3;
-        //--
-
-
-        /// \todo fill result here?
-        //        if (ifTreeRec != 0 && iffiltree != 0)
-        //            fTreeRec->Fill();
     } // end of loop on fphNLadd
 
     return results;

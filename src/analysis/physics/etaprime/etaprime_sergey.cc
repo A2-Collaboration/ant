@@ -99,8 +99,8 @@ void EtapSergey::fillTree(EtapSergey::Tree_t& t, const std::vector<EtapSergey::r
         t.AntiPi0FitProb = r.AntiPi0FitProb;
         t.AntiEtaFitProb = r.AntiEtaFitProb;
 
-//        t.IM_3g = r.IM_3g;
-//        t.IM_4g = r.IM_4g;
+        t.IM_3g = r.IM_3g;
+        t.IM_4g = r.IM_4g;
 
         t.Tree->Fill();
     }
