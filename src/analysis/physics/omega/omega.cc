@@ -799,6 +799,10 @@ utils::UncertaintyModelPtr OmegaEtaG2::getModel(const string& modelname)
         LOG(INFO) << "Using Sergey 2014 Model";
         return make_shared<utils::UncertaintyModels::FitterSergey>();
 
+    } else if(modelname == "SergeyProton") {
+        LOG(INFO) << "Using Sergey Proton Model";
+        auto base = getModel("Sergey");
+        return make_shared<utils::UncertaintyModels::MeasuredProton>(base);
     }
 
     throw std::runtime_error("Invalid model name " + modelname);
@@ -846,12 +850,12 @@ OmegaEtaG2::OmegaEtaG2(const std::string& name, OptionsPtr opts):
     cut_Copl(    degree_to_radian(opts->Get<double>(                    "CoplAngle",             15.0))),
     photon_E_cb(                  opts->Get<decltype(photon_E_cb)>  (   "PhotonECB",        { 50.0, 1600.0})),
     photon_E_taps(                opts->Get<decltype(photon_E_taps)>(   "PhotonETAPS",      {100.0, 1600.0})),
-    proton_theta(degree_to_radian(opts->Get<decltype(proton_theta)> (   "ProtonThetaRange", {  4.0,   45.0}))),
+    proton_theta(degree_to_radian(opts->Get<decltype(proton_theta)> (   "ProtonThetaRange", { 25.0,   45.0}))),
     cut_missing_mass(             opts->Get<decltype(cut_missing_mass)>("MissingMassWindow",{780.0, 1200.0})),
     opt_kinfit_chi2cut(           opts->Get<double>(                    "KinFit_Chi2Cut",        10.0)),
     opt_FitZVertex(               opts->Get<bool>(                      "KinFit_FitVertex",     false)),
 
-    model(getModel(opts->Get<string>("Model", "Oli1"))),
+    model(getModel(opts->Get<string>("Model", "SergeyProton"))),
     fitter("OmegaEtaG2", 3, model, opt_FitZVertex),
     fitter_pi0(
         ParticleTypeTreeDatabase::Get(ParticleTypeTreeDatabase::Channel::Omega_gPi0_3g),
