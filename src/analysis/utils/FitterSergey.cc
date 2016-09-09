@@ -1853,6 +1853,9 @@ FitterSergey::~FitterSergey()
 
 std::vector<FitterSergey::result_t> FitterSergey::Process(const TEventData& data)
 {
+    if(data.Candidates.size() != 5)
+        return {};
+
     constexpr double MeVtoGeV = 1.0 / 1000.0;
 
     TA2KFitC& fKfit = *I; // some shortcut...
@@ -1940,10 +1943,6 @@ std::vector<FitterSergey::result_t> FitterSergey::Process(const TEventData& data
             fphN++;
         }
     }
-
-    if(fphN != 5)
-        return {};
-
 
     // start some fixed constants stuff,
     // and variables used for the algorithm
