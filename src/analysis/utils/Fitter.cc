@@ -381,13 +381,16 @@ APLCON::Result_t KinFitter::DoFit() {
         Z_Vertex->Sigma = Z_Vertex->Sigma_before;
     }
 
-    double missing_E = BeamE->Value;
-    for(auto& photon : Photons) {
-        missing_E -= photon->Particle->Ek();
-    }
     // asumme that 0th component is Ek
-    Proton->Vars[0].Value = missing_E;
-    Proton->Vars[0].Value_before = missing_E;
+    auto& Var_Ek = Proton->Vars[0];
+    // only set Proton Ek to missing energy if unmeasured
+    if(Var_Ek.Sigma == 0) {
+        double missing_E = BeamE->Value;
+        for(auto& photon : Photons) {
+            missing_E -= photon->Particle->Ek();
+        }
+        Var_Ek.SetValueSigma(missing_E, Var_Ek.Sigma);
+    }
 
     const auto res = aplcon->DoFit();
 
