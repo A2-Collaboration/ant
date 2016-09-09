@@ -27,6 +27,7 @@ struct ProcessTaggEff: public Physics {
 
     struct TreeScalarReads : WrapTTree {
         ADD_BRANCH_T(int,   nEvtsPerRead)
+        ADD_BRANCH_T(TID,   EvID)
 
         ADD_BRANCH_T(double,    ExpLivetime)
 

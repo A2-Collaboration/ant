@@ -53,6 +53,7 @@ void ProcessTaggEff::ProcessEvent(const TEvent& ev, manager_t& )
 
     if(slowcontrol::Variables::FreeRates->HasChanged())
     {
+        scalerReads.EvID = ev.Reconstructed().ID;
         seenScalerBlocks++;
 
         processBlock();

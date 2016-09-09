@@ -16,6 +16,8 @@ using namespace std;
 using namespace ant::analysis;
 using namespace ant::std_ext;
 
+
+
 struct taggEff_t
 {
     string          Setup;
@@ -29,7 +31,7 @@ struct taggEff_t
         TaggEffErrors() {}
 };
 
-struct treeContainer_t
+struct treeLoader_t
 {
     WrapTFileInput wrapFile;
     physics::ProcessTaggEff::TreeScalarReads wrapTree;
@@ -38,7 +40,7 @@ struct treeContainer_t
     size_t nchannels;
 
 
-    treeContainer_t(const string& filename):
+    treeLoader_t(const string& filename):
         wrapFile(filename)
     {
         auto treeName = physics::ProcessTaggEff::treeAccessName();
@@ -107,7 +109,9 @@ struct treeContainer_t
         return means;
     }
 
-    vector<pair<double,double>> getLiveTimes()
+    TTree* Tree() const { return wrapTree.Tree; }
+
+    vector<pair<double,double>> getLiveTimes() const
     {
         vector<pair<double,double>> vTimeLivetime;
 
@@ -128,9 +132,9 @@ class taggEffTriple_t
 {
 protected:
 
-    treeContainer_t bkg1;
-    treeContainer_t run;
-    treeContainer_t bkg2;
+    treeLoader_t bkg1;
+    treeLoader_t run;
+    treeLoader_t bkg2;
 
     TID startID;
 
@@ -160,9 +164,9 @@ public:
 
     string SetupName() const{return bkg1.setupName;}
 
-   unsigned sanityChecks(const treeContainer_t::means_t& bkg1,
-                 const treeContainer_t::means_t& run,
-                 const treeContainer_t::means_t& bkg2) const
+   unsigned sanityChecks(const treeLoader_t::means_t& bkg1,
+                 const treeLoader_t::means_t& run,
+                 const treeLoader_t::means_t& bkg2) const
     {
         auto severity = 0u;
         auto nchannels = bkg1.Scalers.size();
