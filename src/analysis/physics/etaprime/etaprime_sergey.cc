@@ -35,8 +35,11 @@ utils::TreeFitter Make(const EtapSergey::params_t& params)
     return treefitter;
 }
 
+
+
 EtapSergey::EtapSergey(const string& name, OptionsPtr opts) :
     Physics(name, opts),
+    Debug(opts->Get<bool>("Debug", false)),
     params(// use FitterSergey as default
            make_shared<utils::UncertaintyModels::FitterSergey>(),
            true, // flag to enable z vertex
@@ -81,6 +84,26 @@ EtapSergey::EtapSergey(const string& name, OptionsPtr opts) :
 
     fitted_g_EtaPrime = find_photons(fitted_EtaPrime).at(0);
 
+    treeSergey.CreateBranches(HistFac.makeTTree("treeSergey"));
+}
+
+void EtapSergey::fillTree(EtapSergey::Tree_t& t, const std::vector<EtapSergey::result_t>& results)
+{
+    for(const result_t& r : results) {
+        t.TaggE  = r.TaggE;
+        t.TaggT  = r.TaggT;
+        t.TaggCh = r.TaggCh;
+
+        t.KinFitProb     = r.KinFitProb;
+        t.TreeFitProb    = r.TreeFitProb;
+        t.AntiPi0FitProb = r.AntiPi0FitProb;
+        t.AntiEtaFitProb = r.AntiEtaFitProb;
+
+//        t.IM_3g = r.IM_3g;
+//        t.IM_4g = r.IM_4g;
+
+        t.Tree->Fill();
+    }
 }
 
 void EtapSergey::ProcessEvent(const TEvent& event, manager_t&)
@@ -89,6 +112,11 @@ void EtapSergey::ProcessEvent(const TEvent& event, manager_t&)
 
     auto results_sergey = fitter_sergey.Process(data);
 
+    fillTree(treeSergey, results_sergey);
+
+    if(!Debug)
+        return;
+
     if(results_sergey.empty())
         return;
 
@@ -96,18 +124,15 @@ void EtapSergey::ProcessEvent(const TEvent& event, manager_t&)
     for(auto& r : results_sergey)
         cout << r << endl;
 
-    vector<double> photon_energies(results_sergey.size());
-    std::transform(results_sergey.begin(), results_sergey.end(), photon_energies.begin(),
-                   [] (const utils::FitterSergey::result_t& r) {
-        return r.TaggE;
-    });
-
-    vector<utils::FitterSergey::result_t> results_ant;
+    vector<result_t> results_ant;
 
     // try to reproduce the result from Sergey
-    for(const auto& photon_energy : photon_energies) {
+    for(const auto& r_sergey : results_sergey) {
 
-        utils::FitterSergey::result_t r;
+        result_t r;
+        r.TaggE = r_sergey.TaggE;
+        r.TaggCh = r_sergey.TaggCh;
+        r.TaggT = r_sergey.TaggT;
 
         r.KinFitProb = std_ext::NaN;
 
@@ -123,7 +148,7 @@ void EtapSergey::ProcessEvent(const TEvent& event, manager_t&)
                 photons.emplace_back(photon);
             }
 
-            kinfitter_sig.SetEgammaBeam(photon_energy);
+            kinfitter_sig.SetEgammaBeam(r.TaggE);
             kinfitter_sig.SetProton(proton);
             kinfitter_sig.SetPhotons(photons);
 

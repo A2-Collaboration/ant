@@ -14,6 +14,22 @@ namespace physics {
 class EtapSergey : public Physics {
 public:
 
+    struct Tree_t : WrapTTree {
+        ADD_BRANCH_T(double, TaggE)
+        ADD_BRANCH_T(double, TaggT)
+        ADD_BRANCH_T(double, TaggCh)
+
+        ADD_BRANCH_T(double, KinFitProb)
+        ADD_BRANCH_T(double, TreeFitProb)
+        ADD_BRANCH_T(double, AntiPi0FitProb)
+        ADD_BRANCH_T(double, AntiEtaFitProb)
+
+        ADD_BRANCH_T(std::vector<double>, IM_3g)
+        ADD_BRANCH_T(double, IM_4g)
+    };
+
+    Tree_t treeSergey;
+
     struct params_t {
         const utils::UncertaintyModelPtr Fit_uncertainty_model;
         const bool Fit_Z_vertex;
@@ -28,6 +44,9 @@ public:
 
 protected:
 
+    using result_t = utils::FitterSergey::result_t;
+
+    const bool Debug;
     const params_t params;
 
     utils::FitterSergey fitter_sergey;
@@ -47,6 +66,8 @@ protected:
 
     utils::TreeFitter::tree_t fitted_EtaPrime;
     utils::TreeFitter::tree_t fitted_g_EtaPrime;
+
+    static void fillTree(Tree_t& t, const std::vector<result_t>& results);
 
 public:
     EtapSergey(const std::string& name, OptionsPtr opts);
