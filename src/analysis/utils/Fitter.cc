@@ -392,14 +392,7 @@ APLCON::Result_t KinFitter::DoFit() {
         Var_Ek.SetValueSigma(missing_E, Var_Ek.Sigma);
     }
 
-    const auto res = aplcon->DoFit();
-
-    result_chi2ndof    = res.ChiSquare / res.NDoF;
-    result_iterations  = res.NIterations;
-    result_status      = static_cast<int>(res.Status);
-    result_probability = res.Probability;
-
-    return res;
+    return aplcon->DoFit();
 }
 
 LorentzVec KinFitter::MakeBeamLorentzVec(double BeamE)

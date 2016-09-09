@@ -175,11 +175,6 @@ protected:
 
     static LorentzVec MakeBeamLorentzVec(double BeamE);
 
-private:
-    double result_chi2ndof       =  0.0;
-    int result_iterations        =  0;
-    int result_status            = -1;
-    double result_probability    =  0.0;
 };
 
 class TreeFitter : public KinFitter
