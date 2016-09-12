@@ -50,7 +50,7 @@ void CandidateBuilder::Build_PID_CB(sorted_clusters_t& sorted_clusters,
 
         auto& pid_cluster = *it_pid_cluster;
         const auto pid_phi = pid_cluster.Position.Phi();
-        const auto dphi_max = (pid->dPhi(pid_cluster.CentralElement) + config.PID_Phi_Epsilon) / 2.0;
+        const auto dphi_max = (pid->dPhi(pid_cluster.CentralElement) + config.PID_Phi_Epsilon);
 
         bool matched = false;
 
