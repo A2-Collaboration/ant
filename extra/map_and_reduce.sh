@@ -39,3 +39,8 @@ fi
 
 echo "Merging results..."
 Ant-hadd -f $OUT $(for i in $JOBFILES; do echo out_$i.root; done | xargs)
+
+rm $JOBFILES
+rm $(for i in $JOBFILES; do echo out_$i.root; done | xargs)
+rm $(for i in $JOBFILES; do echo chain_$i.root; done | xargs)
+
