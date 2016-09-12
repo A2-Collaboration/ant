@@ -371,10 +371,7 @@ bool OmegaEtaG2::StrictPhotonVeto(const TCandidate& photon, const TCandidate& pr
         if(photon.VetoEnergy == 0.0)
             return true;
 
-        const auto& photon_pid_hit = photon.FindVetoCluster();
-        const auto& proton_pid_hit = proton.FindVetoCluster();
-
-        if(photon_pid_hit && proton_pid_hit && (photon_pid_hit->CentralElement == proton_pid_hit->CentralElement)) {
+        if(fabs(vec2::Phi_mpi_pi(proton.Phi - photon.Phi - M_PI)) < degree_to_radian(15.0)) {
             return true;
         }
 
