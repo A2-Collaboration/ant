@@ -9,6 +9,9 @@
 #include <iostream>
 
 namespace ant {
+
+struct TCandidate;
+
 namespace expconfig {
 namespace detector {
 
@@ -40,9 +43,16 @@ struct TAPS :
      * @param trigger_reftime usually given by trigger, e.g. energy-averaged CB timing
      * @return time in nanoseconds
      */
-    virtual double GetTimeOfFlight(double clustertime, unsigned channel, double trigger_reftime) const override {
-        return clustertime - clusterelements.at(channel)->ToFOffset - trigger_reftime;
-    }
+    virtual double GetTimeOfFlight(double clustertime, unsigned channel, double trigger_reftime) const;
+
+    /**
+     * @brief GetBeta uses GetTimeOfFlight() to calculate the beta=v/c of the particle
+     * @param cand_taps the candidate from the event
+     * @param trigger_reftime the reference time, needs to match the calibration
+     * @return the beta=v/c of the candidate
+     * @note relies on proper calibration such that ToF is zero for phtotons w.r.t. given trigger_reftime
+     */
+    virtual double GetBeta(const TCandidate& cand_taps, double trigger_reftime) const;
 
     /**
      * @brief GetZPosition distance of front face from center of target

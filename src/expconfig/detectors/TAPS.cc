@@ -6,6 +6,8 @@
 
 
 #include "tree/TID.h"
+#include "tree/TCandidate.h"
+
 #include "base/interval.h"
 
 #include <iostream>
@@ -21,6 +23,21 @@ void TAPS::SetIgnored(unsigned channel) {
     for(auto neighbour : clusterelements[channel]->Neighbours) {
         clusterelements[neighbour]->TouchesHole = true;
     }
+}
+
+double TAPS::GetTimeOfFlight(double clustertime, unsigned channel, double trigger_reftime) const {
+    return clustertime - clusterelements.at(channel)->ToFOffset - trigger_reftime;
+}
+
+double TAPS::GetBeta(const TCandidate& cand_taps, double trigger_reftime) const {
+    const auto taps_cluster = cand_taps.FindCaloCluster();
+    if(!taps_cluster)
+        return std_ext::NaN;
+    const auto dt = GetTimeOfFlight(taps_cluster->Time, taps_cluster->CentralElement,
+                                    trigger_reftime);
+    const auto s = GetZPosition();
+    constexpr auto c = 30.0; // velocity of light in cm/ns
+    return s / (s + c * dt * cos(cand_taps.Theta));
 }
 
 double TAPS::GetZPosition() const
