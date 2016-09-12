@@ -351,6 +351,39 @@ static int getDetectorAsInt(const Detector_t::Any_t& d) {
     return 0;
 }
 
+/**
+ * @brief StrictPhotonVeto
+ * @param photon
+ * @param proton
+ *
+ * in TAPS -> accept
+ * in CB:
+ *   uncharged -> accept
+ *   charged:
+ *      same PID element as proton -> accept
+ *      different element -> reject
+ * @return
+ */
+bool OmegaEtaG2::StrictPhotonVeto(const TCandidate& photon, const TCandidate& proton) const {
+
+    if(photon.Detector & Detector_t::Type_t::CB) {
+
+        if(photon.VetoEnergy == 0.0)
+            return true;
+
+        const auto& photon_pid_hit = photon.FindVetoCluster();
+        const auto& proton_pid_hit = proton.FindVetoCluster();
+
+        if(photon_pid_hit && proton_pid_hit && (photon_pid_hit->CentralElement == proton_pid_hit->CentralElement)) {
+            return true;
+        }
+
+        return false;
+    }
+
+    return true;
+}
+
 void OmegaEtaG2::Analyse(const TEventData &data, const TEvent& event, manager_t&) {
 
     t.LostGammas().clear();
@@ -473,8 +506,13 @@ void OmegaEtaG2::Analyse(const TEventData &data, const TEvent& event, manager_t&
                 if(it_photon == it_proton)
                     continue;
 
-                if(PhotonCheck(*it_proton))
-                    photons.emplace_back(make_shared<TParticle>(ParticleTypeDatabase::Photon, *it_photon));
+                if(PhotonCheck(*it_proton)) {
+
+                    if(!opt_strict_Vetos || StrictPhotonVeto(**it_photon, **it_proton)) {
+                        photons.emplace_back(make_shared<TParticle>(ParticleTypeDatabase::Photon, *it_photon));
+                    }
+
+                }
             }
 
             if(photons.size() != nphotons)
@@ -854,6 +892,7 @@ OmegaEtaG2::OmegaEtaG2(const std::string& name, OptionsPtr opts):
     cut_missing_mass(             opts->Get<decltype(cut_missing_mass)>("MissingMassWindow",{780.0, 1200.0})),
     opt_kinfit_chi2cut(           opts->Get<double>(                    "KinFit_Chi2Cut",        10.0)),
     opt_FitZVertex(               opts->Get<bool>(                      "KinFit_FitVertex",     false)),
+    opt_strict_Vetos(             opts->Get<bool>(                      "Strict_Vetos",         false)),
 
     model(getModel(opts->Get<string>("Model", "SergeyProton"))),
     fitter("OmegaEtaG2", 3, model, opt_FitZVertex),

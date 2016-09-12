@@ -248,6 +248,7 @@ protected:
     const interval<double> cut_missing_mass;
     const double opt_kinfit_chi2cut;
     const bool   opt_FitZVertex;
+    const bool   opt_strict_Vetos;
 
     const unsigned nphotons    = 3;
     const unsigned nCandsMin   = nphotons  + 1;
@@ -283,6 +284,7 @@ protected:
 
     bool ProtonCheck(const TCandidatePtr& c) const;
     bool PhotonCheck(const TCandidatePtr& c) const;
+    bool StrictPhotonVeto(const TCandidate& photon, const TCandidate& proton) const;
 
     const LorentzVec target = LorentzVec({0, 0, 0}, ParticleTypeDatabase::Proton.Mass());
 
