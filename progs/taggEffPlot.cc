@@ -6,6 +6,7 @@
 
 #include "TGraph.h"
 #include "TRint.h"
+#include "TF1.h"
 
 #include <algorithm>
 
@@ -118,19 +119,24 @@ void plotRates(const vector<string>& fileList)
     for (const auto& fN: fileList)
         tContainers.emplace_back(new treeLoader_t(fN));
 
-
+    auto first_time = numeric_limits<uint32_t>::quiet_NaN();
+    double timeInRun(0);
 
     for ( const auto& t: tContainers)
     {
-        double timeInRun =  0;
+        timeInRun = 0;
         for ( auto en = 0u ; en < t->Tree()->GetEntries() ; ++en)
         {
             t->Tree()->GetEntry(en);
+            if (first_time == numeric_limits<uint32_t>::quiet_NaN() && en == 0)
+                first_time = t->wrapTree.EvID.Value->Timestamp;
+
 
             timeInRun += t->wrapTree.Clock() / 1.0e6;
 
             auto evTime = (  timeInRun
-                             + t->wrapTree.EvID.Value->Timestamp );
+                             + t->wrapTree.EvID.Value->Timestamp
+                             - first_time );
 
             std_ext::RMS rmsRate;
             for ( const auto& tr: t->wrapTree.TaggRates())
@@ -141,4 +147,10 @@ void plotRates(const vector<string>& fileList)
                               rmsRate.GetMean());
         }
     }
+    auto fitFunc = new TF1("bkgfit","[0] + [1] * exp(- [2] * x)",
+                           0,   timeInRun
+                              + tContainers.back()->wrapTree.EvID.Value->Timestamp   //
+                              - first_time);
+
+    graph2d->Fit("bkgfit");
 }
