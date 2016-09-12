@@ -102,11 +102,11 @@ void EtapSergey::fillTree(EtapSergey::Tree_t& t, const std::vector<EtapSergey::r
         t.IM_3g = r.IM_3g;
         t.IM_4g = r.IM_4g;
 
-        t.gNonPi0_IsCB  = r.gNonPi0_IsCB;
+        t.gNonPi0_Theta = r.gNonPi0_Theta;
         t.gNonPi0_CaloE = r.gNonPi0_CaloE;
 
         t.CBVetoSumE = r.CBVetoSumE;
-        t.PIDSumE = r.PIDSumE;
+        t.PIDSumE    = r.PIDSumE;
 
         t.Tree->Fill();
     }

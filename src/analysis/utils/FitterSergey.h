@@ -31,7 +31,7 @@ public:
         std::vector<double> IM_3g;
         double IM_4g;
 
-        std::vector<bool>   gNonPi0_IsCB;
+        std::vector<double> gNonPi0_Theta;
         std::vector<double> gNonPi0_CaloE;
 
         double CBVetoSumE;

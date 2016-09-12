@@ -2392,7 +2392,7 @@ NEWV51:
 
             auto ig = idver5[iver][in[imes]-1]-1;
 
-            r.gNonPi0_IsCB.push_back(ig<fphNCB);
+            r.gNonPi0_Theta.push_back(p4ph[ig].Theta()*TMath::RadToDeg());
             r.gNonPi0_CaloE.push_back(p4ph[ig].E());
         }
         std::sort(r.IM_3g.begin(), r.IM_3g.end());
