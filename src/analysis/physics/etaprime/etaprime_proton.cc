@@ -124,18 +124,16 @@ void EtapProton::ProcessEvent(const TEvent& event, manager_t& manager)
         // calculate the beta = v/c of the particle from time of flight
         // note that the time of flight is only correct if the correct reference time
         // is used...
+        const auto& trigger_reftime = event.Reconstructed().Trigger.CBTiming;
         const auto taps_cluster = cand_taps->FindCaloCluster();
-        const double dt = taps_detector->GetTimeOfFlight(taps_cluster->Time, taps_cluster->CentralElement,
-                                                          event.Reconstructed().Trigger.CBTiming);
-        const double s = taps_detector->GetZPosition();
-        constexpr double c = 30; // velocity of light in cm/ns
-
-        const double beta = s / (s + c * dt * cos(cand_taps->Theta));
+        const auto dt = taps_detector->GetTimeOfFlight(taps_cluster->Time,
+                                                       taps_cluster->CentralElement,
+                                                       trigger_reftime);
+        const auto beta = taps_detector->GetBeta(*cand_taps, trigger_reftime);
 
         if(!isfinite(b_ProtonBeta) || b_ProtonBeta > beta) {
-
             b_ProtonBeta = beta;
-            b_ProtonToF = dt;
+            b_ProtonToF  = dt;
             b_ProtonPSA_R     = taps_cluster->GetPSARadius();
             b_ProtonPSA_Angle = taps_cluster->GetPSAAngle();
             proton = make_shared<TParticle>(ParticleTypeDatabase::Proton, cand_taps);

@@ -1,6 +1,7 @@
 #include "Time.h"
 
 #include "expconfig/ExpConfig.h"
+#include "expconfig/detectors/TAPS.h"
 
 #include "calibration/converters/MultiHitReference.h"
 
@@ -12,8 +13,9 @@ Time::Time(const Detector_t::Type_t& detectorType,
            const string& name, OptionsPtr opts)
     :
       Physics(name, opts),
-       Detector(ExpConfig::Setup::GetDetector(detectorType)),
-       isTagger(dynamic_pointer_cast<TaggerDetector_t, Detector_t>(Detector) != nullptr)
+      Detector(ExpConfig::Setup::GetDetector(detectorType)),
+      isTagger(dynamic_pointer_cast<TaggerDetector_t, Detector_t>(Detector) != nullptr),
+      taps_detector(dynamic_pointer_cast<expconfig::detector::TAPS, Detector_t>(Detector))
 {
 
     string detectorName(Detector_t::ToString(Detector->Type));
@@ -29,7 +31,7 @@ Time::Time(const Detector_t::Type_t& detectorType,
                              BinSettings(Detector->GetNChannels()),
                              "Time"
                              );
-    hTimeToF = HistFac.makeTH2D(detectorName + " - Time for ToF",
+    hTimeToF = HistFac.makeTH2D(detectorName + " - Time for TAPS ToF",
                              "time [ns]",
                              detectorName + " channel",
                              BinSettings(1000,-50,50),
@@ -85,10 +87,13 @@ void Time::ProcessEvent(const TEvent& event, manager_t&)
                     continue;
                 hTime->Fill(cluster.Time, cluster.CentralElement);
                 ++multiplicity[cluster.CentralElement];
-                const double tof = Detector->GetTimeOfFlight(cluster.Time,
-                                                             cluster.CentralElement,
-                                                             CBTimeAvg);
-                hTimeToF->Fill(tof, cluster.CentralElement);
+                if(taps_detector) {
+                    const double tof = taps_detector->GetTimeOfFlight(
+                                           cluster.Time,
+                                           cluster.CentralElement,
+                                           CBTimeAvg);
+                    hTimeToF->Fill(tof, cluster.CentralElement);
+                }
                 for(const auto& taggerhit : event.Reconstructed().TaggerHits) {
                     const double relative_time = cluster.Time - taggerhit.Time;
                     hTimeToTagger->Fill(relative_time, cluster.CentralElement);

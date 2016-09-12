@@ -3,6 +3,13 @@
 #include "analysis/physics/Physics.h"
 
 namespace ant {
+
+namespace expconfig {
+namespace detector {
+struct TAPS;
+}
+}
+
 namespace analysis {
 namespace physics {
 
@@ -18,9 +25,10 @@ protected:
 
     std::shared_ptr<Detector_t> Detector;
     bool isTagger;
-
+    std::shared_ptr<expconfig::detector::TAPS> taps_detector;
 
 public:
+
 
     Time(const Detector_t::Type_t& detectorType,
          const std::string& name, OptionsPtr opts);
