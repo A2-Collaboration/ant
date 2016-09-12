@@ -85,10 +85,15 @@ EtapSergey::EtapSergey(const string& name, OptionsPtr opts) :
     fitted_g_EtaPrime = find_photons(fitted_EtaPrime).at(0);
 
     treeSergey.CreateBranches(HistFac.makeTTree("treeSergey"));
+
+    h_MissedBkg = HistFac.makeTH1D("Missed Background", "", "#", BinSettings(10),"h_MissedBkg");
 }
 
-void EtapSergey::fillTree(EtapSergey::Tree_t& t, const std::vector<EtapSergey::result_t>& results)
+void EtapSergey::fillTree(EtapSergey::Tree_t& t,
+                          const std::vector<EtapSergey::result_t>& results,
+                          unsigned MCTrue)
 {
+    t.MCTrue = MCTrue;
     for(const result_t& r : results) {
         t.TaggE  = r.TaggE;
         t.TaggT  = r.TaggT;
@@ -116,9 +121,46 @@ void EtapSergey::ProcessEvent(const TEvent& event, manager_t&)
 {
     const TEventData& data = event.Reconstructed();
 
+    // run Sergey's analysis
     auto results_sergey = fitter_sergey.Process(data);
 
-    fillTree(treeSergey, results_sergey);
+    if(results_sergey.empty())
+        return;
+
+    // do some MCTrue identification (if available)
+    auto MCTrue = 0; // indicate data by default
+    {
+        auto& particletree = event.MCTrue().ParticleTree;
+        if(particletree) {
+            // 1=Signal, 2=Reference, 9=MissedBkg, >=10 found in ptreeBackgrounds
+            if(particletree->IsEqual(ptreeSignal, utils::ParticleTools::MatchByParticleName)) {
+                MCTrue = 1;
+            }
+            else {
+                MCTrue = 10;
+                bool found = false;
+                for(const auto& ptreeBkg : ptreeBackgrounds) {
+                    if(particletree->IsEqual(ptreeBkg.Tree, utils::ParticleTools::MatchByParticleName)) {
+                        found = true;
+                        break;
+                    }
+                    MCTrue++;
+                }
+                if(!found) {
+                    MCTrue = 9;
+                    const auto& decaystr = utils::ParticleTools::GetDecayString(particletree);
+                    h_MissedBkg->Fill(decaystr.c_str(), 1.0);
+                }
+            }
+        }
+        else if(!event.MCTrue().ID.IsInvalid()) {
+            // in rare cases, the particletree is not available, although we're running on MCTrue
+            // mark this as other MC background
+            MCTrue = 9;
+        }
+    }
+
+    fillTree(treeSergey, results_sergey, MCTrue);
 
     if(!Debug)
         return;
@@ -178,5 +220,21 @@ void EtapSergey::ShowResult()
 {
 
 }
+
+const ParticleTypeTree EtapSergey::ptreeSignal = ParticleTypeTreeDatabase::Get(ParticleTypeTreeDatabase::Channel::EtaPrime_gOmega_ggPi0_4g);
+
+const std::vector<EtapSergey::Background_t> EtapSergey::ptreeBackgrounds = {
+    {"1Pi0", ParticleTypeTreeDatabase::Get(ParticleTypeTreeDatabase::Channel::Pi0_2g)},
+    {"2Pi0", ParticleTypeTreeDatabase::Get(ParticleTypeTreeDatabase::Channel::TwoPi0_4g)},
+    {"Pi0Eta", ParticleTypeTreeDatabase::Get(ParticleTypeTreeDatabase::Channel::Pi0Eta_4g)},
+    {"3Pi0", ParticleTypeTreeDatabase::Get(ParticleTypeTreeDatabase::Channel::ThreePi0_6g)},
+    {"Pi0PiPi", ParticleTypeTreeDatabase::Get(ParticleTypeTreeDatabase::Channel::Pi0PiPi_2gPiPi)},
+    {"OmegaPi0g", ParticleTypeTreeDatabase::Get(ParticleTypeTreeDatabase::Channel::Omega_gPi0_3g)},
+    {"OmegaPi0PiPPiM", ParticleTypeTreeDatabase::Get(ParticleTypeTreeDatabase::Channel::Omega_Pi0PiPPiM_2g)},
+    {"EtaP2Pi0Eta", ParticleTypeTreeDatabase::Get(ParticleTypeTreeDatabase::Channel::EtaPrime_2Pi0Eta_6g)},
+    {"2Pi0Dalitz", ParticleTypeTreeDatabase::Get(ParticleTypeTreeDatabase::Channel::TwoPi0_2ggEpEm)},
+    {"3Pi0Dalitz", ParticleTypeTreeDatabase::Get(ParticleTypeTreeDatabase::Channel::ThreePi0_4ggEpEm)},
+    {"1Eta", ParticleTypeTreeDatabase::Get(ParticleTypeTreeDatabase::Channel::Eta_2g)},
+};
 
 AUTO_REGISTER_PHYSICS(EtapSergey)

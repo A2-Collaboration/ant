@@ -33,6 +33,8 @@ public:
         ADD_BRANCH_T(double, CBVetoSumE)
         ADD_BRANCH_T(double, PIDSumE)
 
+        ADD_BRANCH_T(unsigned, MCTrue)
+
     };
 
     Tree_t treeSergey;
@@ -74,7 +76,17 @@ protected:
     utils::TreeFitter::tree_t fitted_EtaPrime;
     utils::TreeFitter::tree_t fitted_g_EtaPrime;
 
-    static void fillTree(Tree_t& t, const std::vector<result_t>& results);
+    static void fillTree(Tree_t& t, const std::vector<result_t>& results, unsigned MCTrue);
+
+    TH1D* h_MissedBkg;
+    static const ParticleTypeTree ptreeSignal;
+    struct Background_t {
+        const std::string Name;
+        const ParticleTypeTree Tree;
+        Background_t(const std::string& name, ParticleTypeTree tree) :
+            Name(name), Tree(tree) {}
+    };
+    static const std::vector<Background_t> ptreeBackgrounds;
 
 public:
     EtapSergey(const std::string& name, OptionsPtr opts);
