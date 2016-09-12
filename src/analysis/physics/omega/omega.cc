@@ -952,6 +952,7 @@ OmegaEtaG2::OmegaEtaG2(const std::string& name, OptionsPtr opts):
     LOG(INFO) << " Proton Theta Angle   " << proton_theta               << " deg";
     LOG(INFO) << " Missing Mass Window  " << cut_missing_mass           << " MeV";
     LOG(INFO) << " Max. Chi2/dof KinFit " << opt_kinfit_chi2cut;
+    LOG(INFO) << " Strict Vetos         " << opt_strict_Vetos ? "On " : "Off";
 }
 
 OmegaEtaG2::~OmegaEtaG2()
