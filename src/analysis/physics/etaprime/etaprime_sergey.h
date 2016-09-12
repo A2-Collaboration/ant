@@ -26,6 +26,13 @@ public:
 
         ADD_BRANCH_T(std::vector<double>, IM_3g)
         ADD_BRANCH_T(double, IM_4g)
+
+        ADD_BRANCH_T(std::vector<bool>,   gNonPi0_IsCB)
+        ADD_BRANCH_T(std::vector<double>, gNonPi0_CaloE)
+
+        ADD_BRANCH_T(double, CBVetoSumE)
+        ADD_BRANCH_T(double, PIDSumE)
+
     };
 
     Tree_t treeSergey;

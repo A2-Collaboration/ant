@@ -1899,7 +1899,7 @@ std::vector<FitterSergey::result_t> FitterSergey::Process(const TEventData& data
 
     // fill the lorentzvectors from candidates
     TLorentzVector p4ph[16], p4pr[16];
-    double ClDepthGam[12], ClDepthProt[12];
+    double ClDepthGam[12], ClDepthProt[12], CBVetoE[12];
     int fphN = 0;
     int fphNCB = 0;
 
@@ -1911,6 +1911,8 @@ std::vector<FitterSergey::result_t> FitterSergey::Process(const TEventData& data
 
             p4pr[fphN] = TParticle(ParticleTypeDatabase::Proton, cand);
             ClDepthProt[fphN] = fKfit.DepthShowCB(cand->CaloEnergy *MeVtoGeV, 14);
+
+            CBVetoE[fphN] = cand->VetoEnergy;
 
             fphN++;
             fphNCB++;
@@ -2382,12 +2384,36 @@ NEWV51:
             ind++;
         }
 
+
         for(int imes=0;imes<2;imes++) {
             // add to the pi0 the two other gammas
             fp4g = fKfit.Particle(7, 1) + fKfit.Particle(1, in[imes]);
             r.IM_3g.emplace_back(fp4g.M()/MeVtoGeV);
+
+            auto ig = idver5[iver][in[imes]-1]-1;
+
+            r.gNonPi0_IsCB.push_back(ig<fphNCB);
+            r.gNonPi0_CaloE.push_back(p4ph[ig].E());
         }
         std::sort(r.IM_3g.begin(), r.IM_3g.end());
+
+        r.CBVetoSumE = 0;
+        for (auto iv = 0; iv < fphN; iv++) {
+            auto j = idver5[iver][iv] - 1;
+            if (iv < Ngam) {
+                if (j < fphNCB) {
+                    r.CBVetoSumE += CBVetoE[j];
+                }
+            }
+        }
+
+        r.PIDSumE = 0;
+        for(const TCluster& cl : data.Clusters) {
+            if(cl.DetectorType == Detector_t::Type_t::PID) {
+                r.PIDSumE += cl.Energy;
+            }
+        }
+
 
         results.emplace_back(move(r));
 
