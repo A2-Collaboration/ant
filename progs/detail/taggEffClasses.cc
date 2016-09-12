@@ -8,7 +8,8 @@
 #include "expconfig/detectors/EPT.h"
 
 #include "tree/TAntHeader.h"
-
+#include "TF1.h"
+#include "TGraph.h"
 
 
 using namespace ant;
@@ -128,6 +129,47 @@ struct treeLoader_t
 
 };
 
+static TGraph* getRatesVsTime(const list<shared_ptr<treeLoader_t>>& tContainers)
+{
+    auto graph2d = new TGraph();
+
+    //in vain for our canvas, but ...
+    graph2d->SetMarkerStyle('+');
+    graph2d->GetXaxis()->SetTitle("time [s]");
+    graph2d->GetYaxis()->SetTitle("avg. rate [Hz]");
+
+    auto first_time = numeric_limits<uint32_t>::quiet_NaN();
+    double timeInRun(0);
+
+    for ( const auto& t : tContainers )
+    {
+        timeInRun = 0;
+        for ( auto en = 0u ; en < t->Tree()->GetEntries() ; ++en)
+        {
+            t->Tree()->GetEntry(en);
+            if (first_time == numeric_limits<uint32_t>::quiet_NaN() && en == 0)
+                first_time = t->wrapTree.EvID.Value->Timestamp;
+
+
+            timeInRun += t->wrapTree.Clock() / 1.0e6;
+
+            auto evTime = (  timeInRun
+                             + t->wrapTree.EvID.Value->Timestamp
+                             - first_time );
+
+            std_ext::RMS rmsRate;
+            for ( const auto& tr: t->wrapTree.TaggRates())
+                rmsRate.Add(tr);
+
+            graph2d->SetPoint(graph2d->GetN(),
+                              evTime,
+                              rmsRate.GetMean());
+        }
+    }
+
+    return graph2d;
+}
+
 class taggEffTriple_t
 {
 protected:
@@ -136,8 +178,14 @@ protected:
     treeLoader_t run;
     treeLoader_t bkg2;
 
+    TF1* bkgFit = nullptr;
+
     TID startID;
 
+    void initBkgFuntion()
+    {
+        bkgFit = new TF1();
+    }
 
 public:
 
@@ -160,6 +208,8 @@ public:
         if (!header)
             throw runtime_error("No Ant header in found!");
         startID = header->LastID;
+
+
     }
 
     string SetupName() const{return bkg1.setupName;}
