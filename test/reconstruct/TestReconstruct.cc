@@ -183,7 +183,7 @@ void dotest_sanity() {
     CHECK(nReads == 221);
     CHECK(nHits == 32243);
     CHECK(nCandidates == 862);
-    CHECK(nCandidatesCBPID == 136);
+    CHECK(nCandidatesCBPID == 284);
     CHECK(nCandidatesTAPSVeto == 146);
 
 }
