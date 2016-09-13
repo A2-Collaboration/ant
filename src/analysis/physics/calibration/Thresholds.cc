@@ -4,21 +4,24 @@
 
 using namespace std;
 using namespace ant;
+using namespace ant::analysis;
 using namespace ant::analysis::physics;
 
-Thresholds::Thresholds(const Detector_t::Type_t& detectorType, const string& name, OptionsPtr opts) :
+Thresholds::Thresholds(const Detector_t::Type_t& detectorType,
+                       const BinSettings& bins_x,
+                       const string& name, OptionsPtr opts) :
     Physics(name, opts)
 {
     auto setup = ExpConfig::Setup::GetLastFound();
     Detector = setup->GetDetector(detectorType);
 
     hThresholds_ADC = HistFac.makeTH2D("Thresholds ADC","Energy","Element",
-                                       BinSettings(300,0,50),
+                                       bins_x,
                                        BinSettings(Detector->GetNChannels()),
                                        "hThresholds_ADC");
 
     hThresholds_TDC = HistFac.makeTH2D("Thresholds TDC","Energy","Element",
-                                       BinSettings(300,0,50),
+                                       bins_x,
                                        BinSettings(Detector->GetNChannels()),
                                        "hThresholds_TDC");
 }
@@ -59,16 +62,29 @@ void Thresholds::ShowResult()
                       << endc;
 }
 
+struct EPT_Thresholds : Thresholds {
+    EPT_Thresholds(const std::string& name, OptionsPtr opts) :
+        Thresholds(Detector_t::Type_t::EPT,
+                   BinSettings(2500),
+                   name, opts)
+    {}
+};
+AUTO_REGISTER_PHYSICS(EPT_Thresholds)
+
 struct CB_Thresholds : Thresholds {
     CB_Thresholds(const std::string& name, OptionsPtr opts) :
-        Thresholds(Detector_t::Type_t::CB, name, opts)
+        Thresholds(Detector_t::Type_t::CB,
+                   BinSettings(300,0,50),
+                   name, opts)
     {}
 };
 AUTO_REGISTER_PHYSICS(CB_Thresholds)
 
 struct TAPS_Thresholds : Thresholds {
     TAPS_Thresholds(const std::string& name, OptionsPtr opts) :
-        Thresholds(Detector_t::Type_t::TAPS, name, opts)
+        Thresholds(Detector_t::Type_t::TAPS,
+                   BinSettings(300,0,50),
+                   name, opts)
     {}
 };
 AUTO_REGISTER_PHYSICS(TAPS_Thresholds)

@@ -16,6 +16,7 @@ protected:
 public:
 
     Thresholds(const Detector_t::Type_t& detectorType,
+               const BinSettings& bins_x,
                const std::string& name, OptionsPtr opts);
 
     virtual void ProcessEvent(const TEvent& event, manager_t& manager) override;
