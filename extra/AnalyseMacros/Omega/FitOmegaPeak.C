@@ -19,7 +19,7 @@ void SumSetNames(TF1* sum, const TF1* sig, const TF1* bg) {
 	for(int i=0; i<bg->GetNpar(); ++i) {
 		sum->SetParName(n++, bg->GetParName(i));
 	}
-	
+
 	for(int i=0; i<sig->GetNpar(); ++i) {
 		sum->SetParName(n++, sig->GetParName(i));
 	}
@@ -27,32 +27,22 @@ void SumSetNames(TF1* sum, const TF1* sig, const TF1* bg) {
 }
 
 void CopyParLimits(TF1* sum, const TF1* sig, const TF1* bg) {
-	
+
 	int n=0;
 	double a,b;
 
 	for(int i=0; i<bg->GetNpar(); ++i) {
 		bg->GetParLimits(i, a, b);
-		const double v = bg->GetParameter(i);
 
-			if(a==0.0 && b==0.0) {
-				sum->ReleaseParameter(n);
-			} else {
-				sum->SetParLimits(n, a, b);
-			}
-			++n;
+		sum->SetParLimits(n, a, b);
+		++n;
 	}
-	
+
 	for(int i=0; i<sig->GetNpar(); ++i) {
 		sig->GetParLimits(i, a, b);
-		const double v = sig->GetParameter(i);
 
-			if(a==0.0 && b==0.0) {
-				sum->ReleaseParameter(n);
-			} else {
-				sum->SetParLimits(n, a, b);
-			}
-			++n;
+		sum->SetParLimits(n, a, b);
+		++n;
 	}
 
 }
@@ -90,7 +80,7 @@ void FitOmegaPeak() {
 
 	// width
 	sig->SetParameter(2, expected_width);
-	
+
 
 
 	TF1* bg = new TF1("bg", "pol2", r_min, r_max);
@@ -111,7 +101,7 @@ void FitOmegaPeak() {
 	SumSetNames(sum, sig, bg);
 
 	CopyParLimits(sum, sig, bg);
-	
+
 	sum->Print();
 
 	for(int i=0; i<sum->GetNpar(); ++i){
