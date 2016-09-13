@@ -1,3 +1,12 @@
+#include "TF1.h"
+#include "TH1.h"
+#include "TDirectory.h"
+#include "TCanvas.h"
+#include "TLatex.h"
+#include <iostream>
+
+using namespace std;
+
 void CopyBack(const TF1* sum, TF1* sig, TF1* bg) {
 	bg->SetParameters(sum->GetParameters());
 	bg->SetParErrors(sum->GetParErrors());
@@ -49,7 +58,7 @@ void CopyParLimits(TF1* sum, const TF1* sig, const TF1* bg) {
 }
 
 
-void test() {
+void FitOmegaPeak() {
 
 	const char*  hist_name = "ggg_IM";
 	const double r_min = 700;
