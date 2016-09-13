@@ -13,7 +13,9 @@ namespace calibration {
 
 class DataManager;
 
-class TaggEff : public Calibration::Module
+class TaggEff :
+        public Calibration::BaseModule,
+        public Updateable_traits
 {
 public:
     TaggEff(const std::shared_ptr<ant::TaggerDetector_t>&  tagger,
@@ -21,11 +23,8 @@ public:
             );
     virtual ~TaggEff();
 
-    virtual void GetGUIs(std::list<std::unique_ptr<calibration::gui::CalibModule_traits> >&) override;
-
     static const std::string GetDataName() {return "TaggEff";}
 
-    // Updateable_traits interface
     virtual std::list<Loader_t> GetLoaders() override;
 
 protected:

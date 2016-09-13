@@ -15,7 +15,7 @@ using namespace ant::calibration;
 TaggEff::TaggEff(
         const shared_ptr<ant::TaggerDetector_t>& tagger,
         const shared_ptr<DataManager>& calmgr) :
-    Module(GetDataName()),
+    BaseModule(GetDataName()),
     Tagger(tagger),
     CalibrationManager(calmgr)
 {
@@ -25,8 +25,7 @@ TaggEff::~TaggEff()
 {
 }
 
-void TaggEff::GetGUIs(std::list<std::unique_ptr<gui::CalibModule_traits> >& ) {
-}
+
 
 std::list<Updateable_traits::Loader_t> TaggEff::GetLoaders()
 {
