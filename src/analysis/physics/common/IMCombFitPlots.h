@@ -18,7 +18,8 @@ class IMCombFitPlots : public Physics {
 protected:
     const unsigned MAX_GAMMA;
     const bool USE_MC_SIGNAL;
-    const ParticleTypeTreeDatabase::Channel signal = ParticleTypeTreeDatabase::Channel::Pi0_eeg;
+    static constexpr ParticleTypeTreeDatabase::Channel signal = ParticleTypeTreeDatabase::Channel::Pi0_eeg;
+    static const ParticleTypeTree ptreeSignal;
     static constexpr bool PROBABILITY_CUT = false;
     static constexpr double PROBABILITY = .01;
 

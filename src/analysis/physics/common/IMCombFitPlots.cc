@@ -33,6 +33,8 @@ APLCON::Fit_Settings_t IMCombFitPlots::MakeFitSettings(unsigned max_iterations)
     return settings;
 }
 
+const ParticleTypeTree IMCombFitPlots::ptreeSignal = ParticleTypeTreeDatabase::Get(signal);
+
 IMCombFitPlots::IMCombFitPlots(const std::string& name, OptionsPtr opts):
     Physics(name, opts),
     MAX_GAMMA(opts->Get<unsigned>("MaxGamma", 5)),
@@ -79,12 +81,10 @@ void IMCombFitPlots::ProcessEvent(const TEvent& event, manager_t&)
     if (cands.size() > MaxNGamma()+1 || cands.size() < MinNGamma()+1)
         return;
 
-    if (USE_MC_SIGNAL) {
-        auto channel = ParticleTypeTreeDatabase::Get(signal);
-        if (event.Reconstructed().ID.isSet(TID::Flags_t::MC)
-                && !event.MCTrue().ParticleTree->IsEqual(channel, utils::ParticleTools::MatchByParticleName))
+    if (USE_MC_SIGNAL)
+        if (event.Reconstructed().ID.isSet(TID::Flags_t::MC) && event.MCTrue().ParticleTree
+            && !event.MCTrue().ParticleTree->IsEqual(ptreeSignal, utils::ParticleTools::MatchByParticleName))
             return;
-    }
 
     TCandidatePtrList comb;
     TParticleList fitted_photons;
