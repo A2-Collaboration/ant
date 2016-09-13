@@ -2,8 +2,10 @@
 #include "analysis/physics/common/ProcessTaggEff.h"
 #include "analysis/plot/HistogramFactories.h"
 
+
 #include "base/Logger.h"
 #include "base/WrapTFile.h"
+#include "base/interval.h"
 
 #include "expconfig/detectors/EPT.h"
 
@@ -140,7 +142,7 @@ struct treeLoader_t
 
 };
 
-static TGraph* getRatesVsTime(const list<treeLoader_t*>& tContainers)
+static TGraph* getRatesVsTime(const list<treeLoader_t*>& tContainers, const size_t channel = numeric_limits<size_t>::quiet_NaN())
 {
     auto graph2d = new TGraph();
 
@@ -168,11 +170,18 @@ static TGraph* getRatesVsTime(const list<treeLoader_t*>& tContainers)
                              + t->wrapTree.EvID.Value->Timestamp
                              - first_time );
 
-            std_ext::RMS rmsRate;
-            for ( const auto& tr: t->wrapTree.TaggRates())
-                rmsRate.Add(tr);
+            if ( channel == numeric_limits<size_t>::quiet_NaN())
+            {
+                std_ext::RMS rmsRate;
+                for ( const auto& tr: t->wrapTree.TaggRates())
+                    rmsRate.Add(tr);
 
-            FillGraph(graph2d,evTime, rmsRate.GetMean());
+                FillGraph(graph2d,evTime, rmsRate.GetMean());
+            }
+            else
+            {
+                FillGraph(graph2d,evTime,t->wrapTree.TaggRates().at(channel));
+            }
         }
     }
 
@@ -190,27 +199,42 @@ protected:
 
     TID startID;
 
-    void initBkgFuntion()
+    void initBkgFits()
     {
-        bkgGraph = getRatesVsTime({addressof(bkg1),addressof(bkg2)});
-
-        double tmax(0);
-        double dummy(0);
-        bkgGraph->GetPoint(bkgGraph->GetN()-1,tmax,dummy);
-        bkgFit = new TF1("bkgFit","[0] + [1] * exp( - [2] * x)",
-                         0, tmax);
-        bkgGraph->Fit("bkgFit");
-
-        LOG(INFO) << " bkg-fit: b(t) = "
-                  << bkgFit->GetParameter(0) << " + "
-                  << bkgFit->GetParameter(1) << " * exp( - "
-                  << bkgFit->GetParameter(2) << " * t )";
+        for ( auto ch = 0u ; ch < run.nchannels ; ++ch)
+        {
+            auto graph = getRatesVsTime({addressof(bkg1),addressof(bkg2)},ch);
+            double dummy(0);
+            double tmax(0);
+            graph->GetPoint(graph->GetN()-1,tmax,dummy);
+            bkgFits.emplace_back(bkgFit_t(graph,IntervalD(0,tmax),ch));
+            graph->Fit(bkgFits.back().Fit);
+        }
     }
 
 public:
 
-    TF1*    bkgFit      = nullptr;
-    TGraph* bkgGraph    = nullptr;
+    struct bkgFit_t
+    {
+        TGraph* Graph;
+        TF1*    Fit;
+        bkgFit_t(TGraph* graph, const IntervalD& fitrange, const size_t channel): Graph(graph)
+        {
+            Graph->SetMarkerStyle(kPlus);
+            Graph->SetMarkerColor(kBlue);
+
+            string name = std_ext::formatter() << "bkgFit" << channel;
+            Fit   = new TF1(name.c_str(),"[0] + [1] * exp( - [2] * x)",
+                            fitrange.Start(),fitrange.Stop());
+        }
+        double operator ()(const double time)  const
+        {
+            return Fit->Eval(time);
+        }
+    };
+
+    vector<bkgFit_t> bkgFits;
+
     TGraph* avgRates    = nullptr;
     TGraph* avgRatesSub = nullptr;
 
@@ -234,7 +258,8 @@ public:
             throw runtime_error("No Ant header in found!");
         startID = header->LastID;
 
-        initBkgFuntion();
+        initBkgFits();
+
         avgRates = new TGraph();
         avgRates->SetMarkerStyle(kPlus);
         avgRates->SetMarkerColor(kBlue);
@@ -315,18 +340,22 @@ public:
        {
            run.wrapTree.Tree->GetEntry(entry);
            time += run.wrapTree.Clock() / 1.0e6;
-           std_ext::RMS graphTDC;
-           std_ext::RMS graphTDCsub;
+
+           std_ext::RMS graphScaler;
+           std_ext::RMS graphScalerSub;
+
            for (auto  ch = 0u ; ch < run.nchannels ; ++ch)
            {
                TDCs.at(ch).Add(run.wrapTree.TDCRates().at(ch));
-               auto rate_sub = run.wrapTree.TaggRates().at(ch) - bkgFit->Eval(time);
+
+               auto rate_sub = run.wrapTree.TaggRates().at(ch) - bkgFits[ch](time);
                scalers.at(ch).Add( rate_sub );
-               graphTDC.Add(run.wrapTree.TaggRates().at(ch));
-               graphTDCsub.Add(rate_sub);
+
+               graphScaler.Add(run.wrapTree.TaggRates().at(ch));
+               graphScalerSub.Add(rate_sub);
            }
-           FillGraph(avgRates,time,graphTDC.GetMean());
-           FillGraph(avgRatesSub,time,graphTDCsub.GetMean());
+           FillGraph(avgRates,time,graphScaler.GetMean());
+           FillGraph(avgRatesSub,time,graphScalerSub.GetMean());
            L.Add(run.wrapTree.ExpLivetime);
        }
 

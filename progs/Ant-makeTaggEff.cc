@@ -157,7 +157,6 @@ int main( int argc, char** argv )
             auto mg = new TMultiGraph();
             mg->Add(triple_grp->avgRates);
             mg->Add(triple_grp->avgRatesSub);
-            mg->Add(triple_grp->bkgGraph);
             control << drawoption("AP") << mg << endc;
             mg->GetXaxis()->SetTitle("time[s]");
             mg->GetYaxis()->SetTitle("avg. rate [Hz]");
