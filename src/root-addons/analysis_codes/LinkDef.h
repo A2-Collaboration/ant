@@ -29,5 +29,7 @@
 
 #pragma link C++ class std::list<TDirectory*>+;
 
+#pragma link C++ class ant::TFSum+;
+
 #endif // __CINT__
 
