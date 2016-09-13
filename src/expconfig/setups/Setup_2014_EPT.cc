@@ -22,6 +22,7 @@
 #include "calibration/modules/TAPS_ToF.h"
 #include "calibration/modules/TAPSVeto_Energy.h"
 #include "calibration/modules/TAPSVeto_Time.h"
+#include "calibration/modules/Tagger_QDC.h"
 
 #include "calibration/fitfunctions/FitGaus.h"
 #include "calibration/fitfunctions/FitGausPol0.h"
@@ -85,6 +86,9 @@ Setup_2014_EPT::Setup_2014_EPT(const string& name, OptionsPtr opt) :
     AddHook(convert_CATCH_Tagger);
     AddHook(convert_CATCH_CB);
     AddHook(convert_V1190_TAPSPbWO4);
+
+    // Tagger/EPT QDC measurements need some simple hook
+    AddHook<calibration::Tagger_QDC>(EPT->Type, convert_MultiHit16bit);
 
     const bool timecuts = !opt->Get<bool>("DisableTimecuts");
     interval<double> no_timecut(-std_ext::inf, std_ext::inf);

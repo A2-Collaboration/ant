@@ -21,6 +21,7 @@ set(SRCS
     modules/TAPSVeto_Time.cc
     modules/TaggEff.cc
     modules/CB_SourceCalib.cc
+    modules/Tagger_QDC.cc
     converters/GeSiCa_SADC.h
     converters/MultiHit.h
     converters/MultiHitReference.cc
