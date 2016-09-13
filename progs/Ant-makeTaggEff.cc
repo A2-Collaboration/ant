@@ -20,6 +20,7 @@
 #include "TH2D.h"
 #include "TStyle.h"
 #include "TGraph.h"
+#include "TMultiGraph.h"
 
 #include "calibration/DataManager.h"
 #include "tree/TCalibrationData.h"
@@ -57,7 +58,7 @@ void fillHistTime( const vector<double>& data, const vector<double>& dataErrors,
 
 void storeResult(const taggEff_t& result, shared_ptr<calibration::DataManager> manager, const string& calibrationName);
 
-void processFiles(const vector<string>& files);
+taggEffTriple_t* processFiles(const vector<string>& files);
 bool processCSV(const string& csvFile);
 void processManualData(const string& dataFile);
 
@@ -119,11 +120,12 @@ int main( int argc, char** argv )
         processCSV(fileList.at(0));
     }
 
+    taggEffTriple_t* triple_grp = nullptr;
     if (mode_group->isSet())
     {
         if (fileList.size() != 3)
             failExit("Group should contain three files in following order: 1st background, TaggEff-run, background 2.");
-        processFiles(fileList);
+        triple_grp = processFiles(fileList);
     }
 
     if (mode_manual->isSet())
@@ -151,6 +153,16 @@ int main( int argc, char** argv )
         if (hist_channels_2d_errors)
             c << drawoption("colz") << hist_channels_2d_errors << endr;
         c << endc;
+
+        if ( triple_grp )
+        {
+            canvas control("cotrol");
+            auto mg = new TMultiGraph();
+            mg->Add(triple_grp->avgRates);
+            mg->Add(triple_grp->avgRatesSub);
+            mg->Add(triple_grp->bkgGraph);
+            control << drawoption("AP") << mg << endc;
+        }
 
         app->Run(kTRUE); // really important to return...
     }
@@ -203,16 +215,17 @@ void processManualData(const string& dataFile)
     }
 }
 
-void processFiles(const vector<string>& files)
+taggEffTriple_t* processFiles(const vector<string>& files)
 {
-    taggEffTriple_t taggEff(files.at(0),files.at(1),files.at(2));
-    taggEff_t result = taggEff.GetTaggEffSubtracted();
+    auto taggEff = new taggEffTriple_t(files.at(0),files.at(1),files.at(2));
+    taggEff_t result = taggEff->GetTaggEffSubtracted();
     auto manager = ExpConfig::Setup::GetLastFound()->GetCalibrationDataManager();
 
     fillHistSingle(result.TaggEffs,result.TaggEffErrors);
 
     if (!noStore)
         storeResult(result,manager,calibration::TaggEff::GetDataName());
+    return taggEff;
 }
 
 bool processCSV(const string& csvFile)
