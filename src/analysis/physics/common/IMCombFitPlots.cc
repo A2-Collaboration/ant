@@ -36,6 +36,7 @@ APLCON::Fit_Settings_t IMCombFitPlots::MakeFitSettings(unsigned max_iterations)
 IMCombFitPlots::IMCombFitPlots(const std::string& name, OptionsPtr opts):
     Physics(name, opts),
     MAX_GAMMA(opts->Get<unsigned>("MaxGamma", 5)),
+    USE_MC_SIGNAL(opts->Get<bool>("Signal", false)),
     raw_2(MaxNGamma()-1, {prs}),
     raw_n(MaxNGamma()-1, {prs}),
     fit_2(MaxNGamma()-1, {prs}),
@@ -48,6 +49,8 @@ IMCombFitPlots::IMCombFitPlots(const std::string& name, OptionsPtr opts):
 
     LOG(INFO) << "Promt Random Ratio = " << prs.Ratio();
     LOG(INFO) << "Test events with up to " << MaxNGamma() << " Photons";
+    if (USE_MC_SIGNAL)
+        LOG(INFO) << "For MC only the specified signal channel will be considered";
 
     unsigned n = MinNGamma()-1;
     string nf = "kinfit_";
@@ -75,6 +78,13 @@ void IMCombFitPlots::ProcessEvent(const TEvent& event, manager_t&)
     const auto& cands = event.Reconstructed().Candidates;
     if (cands.size() > MaxNGamma()+1 || cands.size() < MinNGamma()+1)
         return;
+
+    if (USE_MC_SIGNAL) {
+        auto channel = ParticleTypeTreeDatabase::Get(signal);
+        if (event.Reconstructed().ID.isSet(TID::Flags_t::MC)
+                && !event.MCTrue().ParticleTree->IsEqual(channel, utils::ParticleTools::MatchByParticleName))
+            return;
+    }
 
     TCandidatePtrList comb;
     TParticleList fitted_photons;

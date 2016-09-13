@@ -5,6 +5,7 @@
 #include "analysis/physics/Physics.h"
 #include "plot/PromptRandomHist.h"
 #include "analysis/utils/Fitter.h"
+#include "analysis/utils/particle_tools.h"
 #include "TLorentzVector.h"
 
 class TH1D;
@@ -16,6 +17,8 @@ namespace physics {
 class IMCombFitPlots : public Physics {
 protected:
     const unsigned MAX_GAMMA;
+    const bool USE_MC_SIGNAL;
+    const ParticleTypeTreeDatabase::Channel signal = ParticleTypeTreeDatabase::Channel::Pi0_eeg;
     static constexpr bool PROBABILITY_CUT = false;
     static constexpr double PROBABILITY = .01;
 
