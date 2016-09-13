@@ -10,11 +10,9 @@
 using namespace std;
 using namespace ant;
 
-void FitOmegaPeak() {
+void FitOmegaPeak(const bool fixOmegaMass=false, const double r_min=700.0, const double r_max=850.0) {
 
 	const char*  hist_name = "ggg_IM";
-	const double r_min = 700;
-	const double r_max = 850;
 	const int    npx   = 500;
 	const double omega_mass     = 782.0;
 	const double expected_width =  15.0;
@@ -38,7 +36,10 @@ void FitOmegaPeak() {
 	sig->SetParameter(0, 0.5 * h->GetMaximum());
 
 	// position
-	sig->FixParameter(1, omega_mass);
+	if(fixOmegaMass)
+		sig->FixParameter(1, omega_mass);
+	else
+		sig->SetParameter(1, omega_mass);
 
 	// width
 	sig->SetParameter(2, expected_width);
@@ -56,7 +57,7 @@ void FitOmegaPeak() {
 	bg->SetParName(2, "BG p_{2}");
 
 	TFSum* sum = new TFSum("sum", sig, bg, r_min, r_max);
-	sum->SetNpx(300);
+	sum->SetNpx(npx);
 
 
 	TCanvas* c = new TCanvas();
