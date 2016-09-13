@@ -169,7 +169,7 @@ void processManualData(const string& dataFile)
 
     auto nChannels = 47u;
 
-    taggEff_t result("setup",TID());
+    taggEff_t result("setup",TID(),nChannels);
 
     auto ch = 0u;
     while(fstream)
@@ -206,7 +206,7 @@ void processManualData(const string& dataFile)
 void processFiles(const vector<string>& files)
 {
     taggEffTriple_t taggEff(files.at(0),files.at(1),files.at(2));
-    taggEff_t result = taggEff.GetTaggEff();
+    taggEff_t result = taggEff.GetTaggEffSubtracted();
     auto manager = ExpConfig::Setup::GetLastFound()->GetCalibrationDataManager();
 
     fillHistSingle(result.TaggEffs,result.TaggEffErrors);
