@@ -38,7 +38,6 @@ struct MCTrue_Splitter : cuttree::StackedHists_t<Hist_t> {
         using histstyle::Mod_t;
         this->GetHist(0, "Data", Mod_t::MakeDataPoints(kBlack));
         this->GetHist(1, "Sig",  Mod_t::MakeLine(kRed, 2.0));
-        this->GetHist(2, "Ref",  Mod_t::MakeLine(kRed, 2.0));
         // mctrue is never >=3 (and <9) in tree, use this to sum up all MC and all bkg MC
         // see also Fill()
         this->GetHist(3, "Sum_MC", Mod_t::MakeLine(kBlack, 2.0));
@@ -86,6 +85,10 @@ struct Hist_t {
 
     TH1D* h_IM_4g;
     TH2D* h_IM_3g_4g_high;
+    TH1D* h_CBVetoSumE;
+    TH2D* h_gNonPi0_CaloE_Theta_lo;
+    TH2D* h_gNonPi0_CaloE_Theta_hi;
+
 
     Hist_t(HistogramFactory HistFac, cuttree::TreeInfo_t)
     {
@@ -97,6 +100,15 @@ struct Hist_t {
         h_IM_3g_4g_high = HistFac.makeTH2D("IM 3g vs. 4g high","IM 4g","IM 3g high",bins_IM,bins_IM,"h_IM_3g_4g_high");
         h_IM_4g = HistFac.makeTH1D("IM 4g","IM 4g","",bins_IM,"h_IM_4g");
 
+        h_gNonPi0_CaloE_Theta_lo = HistFac.makeTH2D("gNonPi0 low","Theta","CaloE",
+                                                 BinSettings(180),BinSettings(100,0,300),
+                                                 "h_gNonPi0_CaloE_Theta_lo");
+        h_gNonPi0_CaloE_Theta_hi = HistFac.makeTH2D("gNonPi0 high","Theta","CaloE",
+                                                 BinSettings(180),BinSettings(100,0,300),
+                                                 "h_gNonPi0_CaloE_Theta_hi");
+
+
+        h_CBVetoSumE = HistFac.makeTH1D("CB Veto SumE","VetoE / MeV","",BinSettings(100,0,20),"h_CBVetoSumE");
     }
 
 
@@ -110,10 +122,20 @@ struct Hist_t {
 
         h_IM_4g->Fill(f.IM_4g, TaggW);
         h_IM_3g_4g_high->Fill(f.IM_4g, f.IM_3g()[1], TaggW);
+
+        {
+            auto& caloEs = f.gNonPi0_CaloE();
+            auto i_minE = caloEs.front() < caloEs.back() ? 0 : 1;
+            auto i_maxE = 1-i_minE;
+            h_gNonPi0_CaloE_Theta_lo->Fill(f.gNonPi0_Theta().at(i_minE), f.gNonPi0_CaloE().at(i_minE), TaggW);
+            h_gNonPi0_CaloE_Theta_hi->Fill(f.gNonPi0_Theta().at(i_maxE), f.gNonPi0_CaloE().at(i_maxE), TaggW);
+        }
+
+        h_CBVetoSumE->Fill(f.CBVetoSumE, TaggW);
     }
 
     std::vector<TH1*> GetHists() const {
-        return { h_KinFitProb, h_IM_4g};
+        return {h_KinFitProb, h_IM_4g, h_CBVetoSumE};
     }
 
     static cuttree::Cuts_t<Fill_t> GetCuts() {
@@ -135,6 +157,21 @@ struct Hist_t {
                                }},
                           });
 
+        cuts.emplace_back(MultiCut_t<Fill_t>{
+                              {"CBVetoSumE", [] (const Fill_t& f) { return f.CBVetoSumE<0.4; }},
+                          });
+
+        auto gNonPi0_cut = [] (const Fill_t& f) {
+            auto& caloEs = f.gNonPi0_CaloE();
+            auto i_minE = caloEs.front() < caloEs.back() ? 0 : 1;
+            auto theta = f.gNonPi0_Theta().at(i_minE);
+            auto caloE = caloEs.at(i_minE);
+            return caloE > 230.0*(1.0-theta/160.0);
+        };
+
+        cuts.emplace_back(MultiCut_t<Fill_t>{
+                              {"gNonPi0", gNonPi0_cut},
+                          });
 
         return cuts;
     }
