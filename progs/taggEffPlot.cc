@@ -147,10 +147,4 @@ void plotRates(const vector<string>& fileList)
                               rmsRate.GetMean());
         }
     }
-    auto fitFunc = new TF1("bkgfit","[0] + [1] * exp(- [2] * x)",
-                           0,   timeInRun
-                              + tContainers.back()->wrapTree.EvID.Value->Timestamp   //
-                              - first_time);
-
-    graph2d->Fit("bkgfit");
 }
