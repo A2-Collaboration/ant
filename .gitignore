@@ -12,3 +12,7 @@
 *.swp
 *~
 *.autosave
+
+# ROOT ACLiC generated files
+*.so
+*.d
