@@ -13,4 +13,7 @@
 
     if(gSystem->Load("@LIBRARY_OUTPUT_PATH@/libanalysis_codes.so") == 0)
         cout << "Ant analysis_codes library successfully loaded" << endl;
+
+    gROOT->ProcessLine(".include @CMAKE_SOURCE_DIR@/src");
+    cout << "Added '@CMAKE_SOURCE_DIR@/src' to include path for ACLiC" << endl;
 }
