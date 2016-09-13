@@ -25,6 +25,55 @@ using namespace std;
 
 volatile bool interrupt = false;
 
+template<typename Hist_t>
+struct MCTrue_Splitter : cuttree::StackedHists_t<Hist_t> {
+
+    // Hist_t should have that type defined
+    using Fill_t = typename Hist_t::Fill_t;
+
+    MCTrue_Splitter(const HistogramFactory& histFac,
+                    const cuttree::TreeInfo_t& treeInfo) :
+        cuttree::StackedHists_t<Hist_t>(histFac, treeInfo)
+    {
+        using histstyle::Mod_t;
+        this->GetHist(0, "Data", Mod_t::MakeDataPoints(kBlack));
+        this->GetHist(1, "Sig",  Mod_t::MakeLine(kRed, 2.0));
+        this->GetHist(2, "Ref",  Mod_t::MakeLine(kRed, 2.0));
+        // mctrue is never >=3 (and <9) in tree, use this to sum up all MC and all bkg MC
+        // see also Fill()
+        this->GetHist(3, "Sum_MC", Mod_t::MakeLine(kBlack, 2.0));
+        this->GetHist(4, "Bkg_MC", Mod_t::MakeFill(kGray+2));
+    }
+
+    void Fill(const Fill_t& f) {
+
+        const unsigned mctrue = f.MCTrue;
+
+        auto get_bkg_name = [] (unsigned mctrue) {
+            const string& name = mctrue>=10 ?
+                                     physics::EtapSergey::ptreeBackgrounds[mctrue-10].Name
+                                 : "Other";
+            return "Bkg_"+name;
+        };
+
+        using histstyle::Mod_t;
+        const Hist_t& hist = mctrue<9 ? this->GetHist(mctrue) :
+                                        this->GetHist(mctrue,
+                                                      get_bkg_name(mctrue),
+                                                      Mod_t::MakeLine(histstyle::color_t::Get(mctrue-9), 1, kGray+2)
+                                                      );
+
+        hist.Fill(f);
+
+        // handle MC_all and MC_bkg
+        if(mctrue>0) {
+            this->GetHist(3).Fill(f);
+            if(mctrue >= 9)
+                this->GetHist(4).Fill(f);
+        }
+    }
+};
+
 // define the structs containing the histograms
 // and the cuts. for simple branch variables, that could
 // be combined...
@@ -61,6 +110,10 @@ struct Hist_t {
 
         h_IM_4g->Fill(f.IM_4g, TaggW);
         h_IM_3g_4g_high->Fill(f.IM_4g, f.IM_3g()[1], TaggW);
+    }
+
+    std::vector<TH1*> GetHists() const {
+        return { h_KinFitProb, h_IM_4g};
     }
 
     static cuttree::Cuts_t<Fill_t> GetCuts() {
@@ -139,7 +192,10 @@ int main(int argc, char** argv) {
 
     HistogramFactory HistFac("EtapSergey");
 
-    auto cuttree = cuttree::Make<Hist_t>(HistFac, "EtapSergey", Hist_t::GetCuts());
+    auto cuttree = cuttree::Make<MCTrue_Splitter<Hist_t>>(HistFac,
+                                                          "EtapSergey",
+                                                          Hist_t::GetCuts()
+                                                          );
 
 
     LOG(INFO) << "Tree entries=" << entries;
@@ -162,7 +218,7 @@ int main(int argc, char** argv) {
 
         tree.Tree->GetEntry(entry);
 
-        cuttree::Fill<Hist_t>(cuttree, tree);
+        cuttree::Fill<MCTrue_Splitter<Hist_t>>(cuttree, tree);
 
         ProgressCounter::Tick();
     }

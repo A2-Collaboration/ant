@@ -86,13 +86,14 @@ protected:
         Background_t(const std::string& name, ParticleTypeTree tree) :
             Name(name), Tree(tree) {}
     };
-    static const std::vector<Background_t> ptreeBackgrounds;
 
 public:
     EtapSergey(const std::string& name, OptionsPtr opts);
 
     virtual void ProcessEvent(const TEvent& event, manager_t& manager) override;
     virtual void ShowResult() override;
+
+    static const std::vector<Background_t> ptreeBackgrounds;
 };
 
 
