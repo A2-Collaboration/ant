@@ -25,11 +25,11 @@ struct taggEff_t
     TID             FirstID;
     vector<double>  TaggEffs;
     vector<double>  TaggEffErrors;
-    taggEff_t(const string& setup, const TID& firstID):
+    taggEff_t(const string& setup, const TID& firstID, const size_t nChannels):
         Setup(setup),
         FirstID(firstID),
-        TaggEffs(),
-        TaggEffErrors() {}
+        TaggEffs(nChannels),
+        TaggEffErrors(nChannels) {}
 };
 
 struct treeLoader_t
@@ -39,6 +39,8 @@ struct treeLoader_t
 
     string setupName;
     size_t nchannels;
+
+    uint32_t startTime;
 
 
     treeLoader_t(const string& filename):
@@ -59,6 +61,9 @@ struct treeLoader_t
         setupName = h->SetupName;
         ExpConfig::Setup::SetManualName(setupName);
         nchannels = ExpConfig::Setup::GetDetector<TaggerDetector_t>()->GetNChannels();
+
+        wrapTree.Tree->GetEntry(0);
+        startTime = wrapTree.EvID.Value->Timestamp;
     }
 
     struct means_t {
@@ -129,7 +134,7 @@ struct treeLoader_t
 
 };
 
-static TGraph* getRatesVsTime(const list<shared_ptr<treeLoader_t>>& tContainers)
+static TGraph* getRatesVsTime(const list<treeLoader_t*>& tContainers)
 {
     auto graph2d = new TGraph();
 
@@ -141,7 +146,7 @@ static TGraph* getRatesVsTime(const list<shared_ptr<treeLoader_t>>& tContainers)
     auto first_time = numeric_limits<uint32_t>::quiet_NaN();
     double timeInRun(0);
 
-    for ( const auto& t : tContainers )
+    for ( auto t : tContainers )
     {
         timeInRun = 0;
         for ( auto en = 0u ; en < t->Tree()->GetEntries() ; ++en)
@@ -184,7 +189,19 @@ protected:
 
     void initBkgFuntion()
     {
-        bkgFit = new TF1();
+        auto graph = getRatesVsTime({addressof(bkg1),addressof(bkg2)});
+
+        double tmax(0);
+        double dummy(0);
+        graph->GetPoint(graph->GetN()-1,tmax,dummy);
+        bkgFit = new TF1("bkgFit","[0] + [1] * exp( - [2] * x)",
+                         0, tmax);
+        graph->Fit("bkgFit");
+
+        LOG(INFO) << " bkg-fit: b(t) = "
+                  << bkgFit->GetParameter(0) << " + "
+                  << bkgFit->GetParameter(1) << " * exp( - "
+                  << bkgFit->GetParameter(2) << " * t )";
     }
 
 public:
@@ -209,7 +226,7 @@ public:
             throw runtime_error("No Ant header in found!");
         startID = header->LastID;
 
-
+        initBkgFuntion();
     }
 
     string SetupName() const{return bkg1.setupName;}
@@ -255,11 +272,63 @@ public:
         return severity;
     }
 
+   const taggEff_t  GetTaggEffSubtracted() const
+   {
+       taggEff_t result(SetupName(),startID,run.nchannels);
 
+       auto formula = [] (const double TDC,
+                          const double L,
+                          const double scaler)
+       {
+           return 1.0 * TDC / (L * scaler);
+       };
+
+       auto formula_err = [] (const double err_a, const double TDC,
+                          const double a,
+                          const double b)
+       {
+           return 1.0 * err_a * TDC / (a*a*b);
+       };
+
+       vector<std_ext::RMS> TDCs(run.nchannels);
+       vector<std_ext::RMS> scalers(run.nchannels);
+       std_ext::RMS         L;
+
+       auto time = 1.0 * run.startTime - bkg1.startTime;
+       auto nentries = run.wrapTree.Tree->GetEntries();
+
+       for (auto entry = 0 ; entry < nentries ; ++entry)
+       {
+           run.wrapTree.Tree->GetEntry(entry);
+           time += run.wrapTree.Clock() / 1.0e6;
+           for (auto  ch = 0u ; ch < run.nchannels ; ++ch)
+           {
+               TDCs.at(ch).Add(run.wrapTree.TDCRates().at(ch));
+               scalers.at(ch).Add(run.wrapTree.TaggRates().at(ch) - bkgFit->Eval(time) );
+           }
+           L.Add(run.wrapTree.ExpLivetime);
+       }
+
+       for ( auto ch = 0u ; ch < run.nchannels ; ++ch)
+       {
+           result.TaggEffs.at(ch) = formula(TDCs.at(ch).GetMean(),
+                                            L.GetMean(),
+                                            scalers.at(ch).GetMean() );
+           result.TaggEffErrors.at(ch) = sqrt(  sqr(    formula(TDCs.at(ch).GetSigmaMean(), L.GetMean(), scalers.at(ch).GetMean()))
+                                              + sqr(formula_err(L.GetSigmaMean(),TDCs.at(ch).GetMean(),
+                                                                L.GetMean(),scalers.at(ch).GetMean()))
+                                              + sqr(formula_err(scalers.at(ch).GetSigmaMean(),TDCs.at(ch).GetMean(),
+                                                                scalers.at(ch).GetMean(),L.GetMean()))
+                                             );
+       }
+
+
+       return result;
+   }
 
     const taggEff_t  GetTaggEff() const
     {
-        taggEff_t result(SetupName(),startID);
+        taggEff_t result(SetupName(),startID,run.nchannels);
 
         auto denum = [] (const double L,  const double s,
                           const double L1, const double s1,
