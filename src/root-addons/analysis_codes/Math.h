@@ -8,6 +8,8 @@ namespace ant {
 struct Math {
     static TF1* AsymGaus();
 
+    static TF1* CrystalBall();
+
 };
 
 
