@@ -145,7 +145,7 @@ static TGraph* getRatesVsTime(const list<treeLoader_t*>& tContainers)
     auto graph2d = new TGraph();
 
     //in vain for our canvas, but ...
-    graph2d->SetMarkerStyle('+');
+    graph2d->SetMarkerStyle(kPlus);
     graph2d->GetXaxis()->SetTitle("time [s]");
     graph2d->GetYaxis()->SetTitle("avg. rate [Hz]");
 
@@ -172,9 +172,7 @@ static TGraph* getRatesVsTime(const list<treeLoader_t*>& tContainers)
             for ( const auto& tr: t->wrapTree.TaggRates())
                 rmsRate.Add(tr);
 
-            graph2d->SetPoint(graph2d->GetN(),
-                              evTime,
-                              rmsRate.GetMean());
+            FillGraph(graph2d,evTime, rmsRate.GetMean());
         }
     }
 
@@ -238,7 +236,11 @@ public:
 
         initBkgFuntion();
         avgRates = new TGraph();
+        avgRates->SetMarkerStyle(kPlus);
+        avgRates->SetMarkerColor(kBlue);
         avgRatesSub = new TGraph();
+        avgRatesSub->SetMarkerStyle(kPlus);
+        avgRatesSub->SetMarkerColor(kRed);
     }
 
     string SetupName() const{return bkg1.setupName;}

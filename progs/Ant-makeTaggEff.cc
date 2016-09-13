@@ -18,7 +18,6 @@
 #include "TRint.h"
 #include "TH1D.h"
 #include "TH2D.h"
-#include "TStyle.h"
 #include "TGraph.h"
 #include "TMultiGraph.h"
 
@@ -143,8 +142,6 @@ int main( int argc, char** argv )
                : std_ext::make_unique<TRint>("Ant-makeSigmas",&argc,argv,nullptr,0,true);
 
     if(app) {
-        gStyle->SetOptStat(false);
-        gStyle->SetMarkerStyle('+');
         canvas c("TaggEff");
         if (hist_channels)
             c << drawoption("E") << hist_channels;
@@ -162,6 +159,8 @@ int main( int argc, char** argv )
             mg->Add(triple_grp->avgRatesSub);
             mg->Add(triple_grp->bkgGraph);
             control << drawoption("AP") << mg << endc;
+            mg->GetXaxis()->SetTitle("time[s]");
+            mg->GetYaxis()->SetTitle("avg. rate [Hz]");
         }
 
         app->Run(kTRUE); // really important to return...
