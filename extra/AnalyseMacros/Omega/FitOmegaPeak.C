@@ -3,50 +3,12 @@
 #include "TDirectory.h"
 #include "TCanvas.h"
 #include "TLatex.h"
+#include "TStyle.h"
 #include <iostream>
+#include "root-addons/analysis_codes/Math.h"
 
 using namespace std;
-
-void CopyBack(const TF1* sum, TF1* sig, TF1* bg) {
-	bg->SetParameters(sum->GetParameters());
-	bg->SetParErrors(sum->GetParErrors());
-	sig->SetParameters(&(sum->GetParameters()[bg->GetNpar()]));
-	sig->SetParErrors(&(sum->GetParErrors()[bg->GetNpar()]));
-}
-
-void SumSetNames(TF1* sum, const TF1* sig, const TF1* bg) {
-	int n=0;
-	for(int i=0; i<bg->GetNpar(); ++i) {
-		sum->SetParName(n++, bg->GetParName(i));
-	}
-
-	for(int i=0; i<sig->GetNpar(); ++i) {
-		sum->SetParName(n++, sig->GetParName(i));
-	}
-
-}
-
-void CopyParLimits(TF1* sum, const TF1* sig, const TF1* bg) {
-
-	int n=0;
-	double a,b;
-
-	for(int i=0; i<bg->GetNpar(); ++i) {
-		bg->GetParLimits(i, a, b);
-
-		sum->SetParLimits(n, a, b);
-		++n;
-	}
-
-	for(int i=0; i<sig->GetNpar(); ++i) {
-		sig->GetParLimits(i, a, b);
-
-		sum->SetParLimits(n, a, b);
-		++n;
-	}
-
-}
-
+using namespace ant;
 
 void FitOmegaPeak() {
 
@@ -85,7 +47,6 @@ void FitOmegaPeak() {
 
 	TF1* bg = new TF1("bg", "pol2", r_min, r_max);
 	bg->SetLineColor(kBlue);
-	bg->SetNpx(npx);
 
 	bg->SetParameter(0,0);
 	bg->SetParName(0, "BG p_{0}");
@@ -94,37 +55,23 @@ void FitOmegaPeak() {
 	bg->SetParameter(2,0);
 	bg->SetParName(2, "BG p_{2}");
 
-
-	TF1* sum = new TF1("sum", "bg+sig", r_min, r_max);
-	sum->SetLineColor(kBlack);
-	sum->SetNpx(npx);
-	SumSetNames(sum, sig, bg);
-
-	CopyParLimits(sum, sig, bg);
-
-	sum->Print();
-
-	for(int i=0; i<sum->GetNpar(); ++i){
-		double a,b;
-		sum->GetParLimits(i,a,b);
-		cout << i << " " << a << " " << b << endl;
-	}
+	TFSum* sum = new TFSum("sum", sig, bg, r_min, r_max);
+	sum->SetNpx(300);
 
 
 	TCanvas* c = new TCanvas();
 	c->SetTitle(Form("Fit to %s", hist_name));
 	h->SetStats(true);
+	gStyle->SetOptFit(1);
 	h->Draw();
-	h->Fit(sum, "REM0NB");
-	//TODO: Find a way to switch on SetOptFit(). This is a TPaveStats option.
+	h->Fit(sum->Function(), "REM0NB");
 
-	CopyBack(sum, sig, bg);
+	sum->SyncToFcts();
 
-	sum->Draw("same");
-	bg->Draw("same");
+	sum->Draw();
 
 
-	const double total_area = sum->Integral(r_min, r_max);
+	const double total_area = sum->Function()->Integral(r_min, r_max);
 	const double bg_area    =  bg->Integral(r_min, r_max);
 	const double sig_area   = total_area - bg_area;
 
