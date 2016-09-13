@@ -14,7 +14,7 @@ OUT=$2
 PREFIX="__MAPREDUCE"
 JOBFILES=$(eval echo ${PREFIX}{00..$(($JOBS -1))})
 
-PARALLEL=$(tryget "wich parallel" "")
+PARALLEL=$(tryget "which parallel" "")
 
 echo "Splitting files into ${JOBS} groups"
 split -d -a 2 --number=r/${JOBS} - ${PREFIX}
