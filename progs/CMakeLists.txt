@@ -43,7 +43,7 @@ if(AntProgs_SimpleTools)
     add_ant_executable(compare_ant_goat)
     add_ant_executable(compare_tree_events)
     add_ant_executable(simulate_livetime)
-    add_ant_executable(taggEffPlot detail/taggEffClasses.cc)
+    add_ant_executable(taggEffPlot detail/taggEffClasses.cc detail/tools.h)
 endif()
 
 option(AntProgs_XmasCB "Crystal Ball Christmas ornaments" OFF)

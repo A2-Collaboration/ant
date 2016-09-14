@@ -1,14 +1,19 @@
-#include "detail/taggEffClasses.cc"
+#include "detail/taggEffClasses.h"
 
 #include "base/CmdLine.h"
 #include "base/Logger.h"
 #include "base/std_ext/system.h"
+#include "base/std_ext/string.h"
 
 #include "TGraph.h"
 #include "TRint.h"
 #include "TF1.h"
 
 #include <algorithm>
+
+using namespace ant;
+using namespace std;
+using namespace ant::progs::taggeff;
 
 static TGraph* graph2d(nullptr);
 void initGraph(const string& xtitle, const string& ytitle)

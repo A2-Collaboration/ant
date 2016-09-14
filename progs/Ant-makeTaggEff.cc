@@ -1,6 +1,6 @@
 #include <map>
 
-#include "detail/taggEffClasses.cc"
+#include "detail/taggEffClasses.h"
 
 
 #include "base/std_ext/system.h"
@@ -28,12 +28,14 @@
 #include "analysis/physics/common/ProcessTaggEff.h"
 #include "base/Detector_t.h"
 
+#include "base/Logger.h"
 
 
 using namespace ant;
 using namespace std;
 using namespace ant::analysis;
 using namespace ant::std_ext;
+using namespace ant::progs::taggeff;
 static volatile bool interrupt = false;
 
 const map<string,TID> startIDs({ {"Setup_2014_07_EPT_Prod", TID(1406592000)},
