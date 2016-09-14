@@ -9,6 +9,8 @@
 
 #include "TF1.h"
 
+class TH1;
+class TFitResultPtr;
 
 namespace ant {
 
@@ -28,6 +30,8 @@ protected:
 
     TF1* BuildTF1(const std::string &name, const double min, const double max) const;
 
+    static void syncTF1Par(TF1* src, TF1* dst);
+    static void syncTF1Par(TF1* src, TF1* dst, int src_j, int dst_j);
 public:
 
     // for ROOT CINT
@@ -74,10 +78,18 @@ public:
 
     void SetNpx(int n);
 
-    static TF1* MakeRanged(TF1* f, double x_low, double x_high);
+    static TFitResultPtr FitRanged(TH1* h, TF1* f,
+                                   double x1_low, double x1_high, double x2_low, double x2_high,
+                                   const std::string& fitopts = "REM0NB");
+
     static TF1* MakeRanged(TF1* f, double x1_low, double x1_high, double x2_low, double x2_high);
 
 #ifndef __CINT__
+    static TFitResultPtr FitRanged(
+            TH1* h, TF1* f,
+            const PiecewiseInterval<double>& range,
+            const std::string& fitopts = "REM0NB");
+
     static TF1* MakeRanged(TF1* f, const PiecewiseInterval<double>& range);
 
     template<typename Filter>
@@ -87,9 +99,11 @@ public:
                 TF1::RejectPoint();
             return f->EvalPar(x, p);
         };
-        return new TF1((f->GetName()+std::string("_filtered")).c_str(),
-                       filtered_fct,
-                       f->GetXmin(), f->GetXmax(), f->GetNpar());
+        auto f_filtered = new TF1((f->GetName()+std::string("_filtered")).c_str(),
+                                  filtered_fct,
+                                  f->GetXmin(), f->GetXmax(), f->GetNpar());
+        syncTF1Par(f, f_filtered);
+        return f_filtered;
     }
 #endif
 

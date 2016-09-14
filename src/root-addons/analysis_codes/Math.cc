@@ -2,30 +2,40 @@
 #include "base/math_functions/AsymGaus.h"
 #include "base/math_functions/CrystalBall.h"
 
-#include "TF1.h"
+#include "TH1.h"
 
-
-TF1*ant::Math::AsymGaus()
+TF1* ant::Math::AsymGaus()
 {
     return math::AsymGaus::GetTF1();
 }
 
-TF1 *ant::Math::CrystalBall()
+TF1 * ant::Math::CrystalBall()
 {
     return math::CrystalBall::GetTF1();
 }
 
+void ant::TFSum::syncTF1Par(TF1* src, TF1* dst) {
+    if(src->GetNpar() != dst->GetNpar())
+        throw std::runtime_error("Not equal parameters");
+    for(int j=0;j<src->GetNpar();j++)
+        syncTF1Par(src, dst, j, j);
+}
+
+void ant::TFSum::syncTF1Par(TF1* src, TF1* dst, int src_j, int dst_j) {
+    dst->SetParameter(dst_j, src->GetParameter(src_j));
+    double low, high;
+    src->GetParLimits(src_j, low, high);
+    dst->SetParLimits(dst_j, low, high);
+    dst->SetParError(dst_j, src->GetParError(src_j));
+    dst->SetParName(dst_j,  src->GetParName(src_j));
+}
+
 void ant::TFSum::SyncToSum()
 {
-    unsigned par = 0;
+    int par = 0;
     for(const auto& f : functions) {
         for(int j=0; j<f->GetNpar(); ++j) {
-            sum->SetParameter(par, f->GetParameter(j));
-            double low, high;
-            f->GetParLimits(j, low, high);
-            sum->SetParLimits(par, low, high);
-            sum->SetParError(par, f->GetParError(j));
-            sum->SetParName(par, f->GetParName(j));
+            syncTF1Par(f, sum, j, par);
             ++par;
         }
     }
@@ -33,15 +43,10 @@ void ant::TFSum::SyncToSum()
 
 void ant::TFSum::SyncToFcts()
 {
-    unsigned par = 0;
+    int par = 0;
     for(auto& f : functions) {
         for(int j=0; j<f->GetNpar(); ++j) {
-            f->SetParameter(j, sum->GetParameter(par));
-            double low, high;
-            sum->GetParLimits(par, low, high);
-            f->SetParLimits(j, low, high);
-            f->SetParError(j, sum->GetParError(par));
-            f->SetParName(j, sum->GetParName(par));
+            syncTF1Par(sum, f, par, j);
             ++par;
         }
     }
@@ -126,14 +131,24 @@ void ant::TFSum::SetNpx(int n)
     sum->SetNpx(n);
 }
 
-TF1* ant::TFSum::MakeRanged(TF1* f, double x_low, double x_high)
+TFitResultPtr ant::TFSum::FitRanged(TH1* h, TF1* f,
+                                    double x1_low, double x1_high, double x2_low, double x2_high,
+                                    const std::string& fitopts)
 {
-    return MakeRanged(f, {{x_low, x_high}});
+    return FitRanged(h, f, {{x1_low, x1_high},{x2_low, x2_high}}, fitopts);
 }
 
 TF1* ant::TFSum::MakeRanged(TF1* f, double x1_low, double x1_high, double x2_low, double x2_high)
 {
     return MakeRanged(f, {{x1_low, x1_high},{x2_low, x2_high}});
+}
+
+TFitResultPtr ant::TFSum::FitRanged(TH1* h, TF1* f, const PiecewiseInterval<double>& range, const std::string& fitopts)
+{
+    auto f_ranged = MakeRanged(f, range);
+    auto r = h->Fit(f_ranged, fitopts.c_str());
+    syncTF1Par(f_ranged, f);
+    return r;
 }
 
 TF1*ant::TFSum::MakeRanged(TF1* f, const PiecewiseInterval<double>& range)
