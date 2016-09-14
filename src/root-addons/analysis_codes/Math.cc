@@ -125,3 +125,20 @@ void ant::TFSum::SetNpx(int n)
 
     sum->SetNpx(n);
 }
+
+TF1* ant::TFSum::MakeRanged(TF1* f, double x_low, double x_high)
+{
+    return MakeRanged(f, {{x_low, x_high}});
+}
+
+TF1* ant::TFSum::MakeRanged(TF1* f, double x1_low, double x1_high, double x2_low, double x2_high)
+{
+    return MakeRanged(f, {{x1_low, x1_high},{x2_low, x2_high}});
+}
+
+TF1*ant::TFSum::MakeRanged(TF1* f, const PiecewiseInterval<double>& range)
+{
+    return MakeFiltered(f, [range] (double* x) {
+        return range.Contains(x[0]);
+    });
+}

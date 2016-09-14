@@ -4,9 +4,10 @@
 
 #ifndef __CINT__
 #include "base/interval.h"
+#include "base/piecewise_interval.h"
 #endif
 
-class TF1;
+#include "TF1.h"
 
 
 namespace ant {
@@ -73,9 +74,23 @@ public:
 
     void SetNpx(int n);
 
+    static TF1* MakeRanged(TF1* f, double x_low, double x_high);
+    static TF1* MakeRanged(TF1* f, double x1_low, double x1_high, double x2_low, double x2_high);
+
 #ifndef __CINT__
-//    interval<double> GetRange() const;
-//    void SetRange(const interval<double>& i);
+    static TF1* MakeRanged(TF1* f, const PiecewiseInterval<double>& range);
+
+    template<typename Filter>
+    static TF1* MakeFiltered(TF1* f, Filter filter) {
+        auto filtered_fct = [f, filter] (double* x, double* p) {
+            if(!filter(x))
+                TF1::RejectPoint();
+            return f->EvalPar(x, p);
+        };
+        return new TF1((f->GetName()+std::string("_filtered")).c_str(),
+                       filtered_fct,
+                       f->GetXmin(), f->GetXmax(), f->GetNpar());
+    }
 #endif
 
 };
