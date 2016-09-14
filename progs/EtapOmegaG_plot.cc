@@ -274,11 +274,6 @@ struct SigHist_t : CommonHist_t {
         using cuttree::MultiCut_t;
         auto cuts = cuttree::ConvertCuts<Fill_t, CommonHist_t::Fill_t>(CommonHist_t::GetCuts());
 
-//        cuts.emplace_back(MultiCut_t<Fill_t>{
-//                              {"PIDSumE=0", [] (const Fill_t& f) { return f.Common.PIDSumE==0; } },
-//                              {"CBSumVetoE=0", [] (const Fill_t& f) { return f.Shared.CBSumVetoE==0; } },
-//                              {"NoCut", [] (const Fill_t&) { return true; } },
-//                          });
 
         cuts.emplace_back(MultiCut_t<Fill_t>{
                               {"AntiPi0FitProb<0.0001||nan", [] (const Fill_t& f)  { return std::isnan(f.Shared.AntiPi0FitProb) || f.Shared.AntiPi0FitProb<0.0001; } },
@@ -295,31 +290,35 @@ struct SigHist_t : CommonHist_t {
                               {"TreeFitProb>0.1", [] (const Fill_t& f) { return f.Tree.TreeFitProb>0.1; } },
                           });
 
-        auto LowE_cut =  [] (const Fill_t& f)  {
-            if(f.Tree.gNonPi0_CaloE().front()<100 || f.Tree.gNonPi0_CaloE().back()<100)
-                return false;
-            return true;
+        auto gNonPi0_cut_1 = [] (const Fill_t& f) {
+            auto& caloEs = f.Tree.gNonPi0_CaloE();
+            auto i_minE = caloEs.front() < caloEs.back() ? 0 : 1;
+            auto theta = f.Tree.gNonPi0_Theta().at(i_minE);
+            auto caloE = caloEs.at(i_minE);
+            return caloE > 230.0*(1.0-theta/160.0);
+        };
+
+        auto gNonPi0_cut_2 = [] (const Fill_t& f) {
+            auto& caloEs = f.Tree.gNonPi0_CaloE();
+            auto i_minE = caloEs.front() < caloEs.back() ? 0 : 1;
+            auto theta = f.Tree.gNonPi0_Theta().at(i_minE);
+            auto caloE = caloEs.at(i_minE);
+            if(theta<22)
+                return caloE > 140;
+            else
+                return caloE > 60;
         };
 
         cuts.emplace_back(MultiCut_t<Fill_t>{
-                              {"LowE", LowE_cut},
+                              {"gNonPi0_1", gNonPi0_cut_1},
+                              {"gNonPi0_2", gNonPi0_cut_2},
                           });
-
-        auto PID_cut =  [] (const Fill_t& f)  {
-//            // require both in CB
-//            if(!f.Tree.gNonPi0_IsCB().front() || !f.Tree.gNonPi0_IsCB().back())
-//                return false;
-//            if(f.Tree.gNonPi0_VetoE().front()>1.0 || f.Tree.gNonPi0_VetoE().back()>1.0)
-//                return false;
-            return true;
-        };
 
         cuts.emplace_back(MultiCut_t<Fill_t>{
-                              {"PID", PID_cut},
+                              {"CBSumVetoE<0.4", [] (const Fill_t& f) { return f.Shared.CBSumVetoE<0.4; }},
+                              {"CBSumVetoE<0.2", [] (const Fill_t& f) { return f.Shared.CBSumVetoE<0.2; }},
+                              {"-", [] (const Fill_t&) { return true; }},
                           });
-
-
-
         return cuts;
     }
 };
