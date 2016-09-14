@@ -68,10 +68,9 @@ EtapOmegaG::EtapOmegaG(const string& name, OptionsPtr opts) :
     if(mc_smear)
         LOG(INFO) << "Additional MC Smearing enabled";
 
-    const interval<double> prompt_range{-3.0,1.5};
-    promptrandom.AddPromptRange(prompt_range); // slight offset due to CBAvgTime reference
-    promptrandom.AddRandomRange({-35,-10});  // just ensure to be way off prompt peak
-    promptrandom.AddRandomRange({ 10, 35});
+    promptrandom.AddPromptRange({ -7,  7}); // slight offset due to CBAvgTime reference
+    promptrandom.AddRandomRange({-65,-10});  // just ensure to be way off prompt peak
+    promptrandom.AddRandomRange({ 10, 65});
 
     h_CommonCuts = HistFac.makeTH1D("Common Cuts", "", "#", BinSettings(15),"h_CommonCuts");
     h_CommonCuts_sig = HistFac.makeTH1D("Common Cuts Sig", "", "#", BinSettings(15),"h_CommonCuts_sig");
@@ -222,20 +221,12 @@ void EtapOmegaG::ProcessEvent(const TEvent& event, manager_t&)
         }
     }
 
-    t.TaggNPrompt = 0;
-    t.TaggNRandom = 0;
-
     auto true_proton = utils::ParticleTools::FindParticle(ParticleTypeDatabase::Proton, particletree);
 
     for(const TTaggerHit& taggerhit : data.TaggerHits) {
-        promptrandom.SetTaggerHit(taggerhit.Time - t.CBAvgTime);
+        promptrandom.SetTaggerHit(taggerhit.Time);
         if(promptrandom.State() == PromptRandom::Case::Outside)
             continue;
-
-        if(promptrandom.State() == PromptRandom::Case::Prompt)
-            t.TaggNPrompt()++;
-        if(promptrandom.State() == PromptRandom::Case::Random)
-            t.TaggNRandom()++;
 
         t.TaggW =  promptrandom.FillWeight();
         t.TaggE =  taggerhit.PhotonEnergy;
@@ -649,27 +640,19 @@ void EtapOmegaG::Sig_t::Fit_t::BaseTree_t::Reset()
 
     MCTrueMatch = 0;
 
-    fill_reset(gNonPi0_IsCB());
+    fill_reset(gNonPi0_Theta());
     fill_reset(gNonPi0_CaloE());
-    fill_reset(gNonPi0_ClusterSize());
-    fill_reset(gNonPi0_VetoE());
 }
 
 void fill_gNonPi0(
         EtapOmegaG::Sig_t::Fit_t::BaseTree_t& t,
         const TCandidatePtr& cand1, const TCandidatePtr& cand2)
 {
-    t.gNonPi0_IsCB().front() = static_cast<bool>(cand1->Detector & Detector_t::Type_t::CB);
-    t.gNonPi0_IsCB().back()  = static_cast<bool>(cand2->Detector & Detector_t::Type_t::CB);
+    t.gNonPi0_Theta().front() = cand1->Theta;
+    t.gNonPi0_Theta().back()  = cand2->Theta;
 
     t.gNonPi0_CaloE().front() = cand1->CaloEnergy;
     t.gNonPi0_CaloE().back() = cand2->CaloEnergy;
-
-    t.gNonPi0_ClusterSize().front() = cand1->ClusterSize;
-    t.gNonPi0_ClusterSize().back() = cand2->ClusterSize;
-
-    t.gNonPi0_VetoE().front() = cand1->VetoEnergy;
-    t.gNonPi0_VetoE().back() = cand2->VetoEnergy;
 }
 
 EtapOmegaG::Sig_t::Pi0_t::Pi0_t(params_t params) :

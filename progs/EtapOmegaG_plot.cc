@@ -306,11 +306,11 @@ struct SigHist_t : CommonHist_t {
                           });
 
         auto PID_cut =  [] (const Fill_t& f)  {
-            // require both in CB
-            if(!f.Tree.gNonPi0_IsCB().front() || !f.Tree.gNonPi0_IsCB().back())
-                return false;
-            if(f.Tree.gNonPi0_VetoE().front()>1.0 || f.Tree.gNonPi0_VetoE().back()>1.0)
-                return false;
+//            // require both in CB
+//            if(!f.Tree.gNonPi0_IsCB().front() || !f.Tree.gNonPi0_IsCB().back())
+//                return false;
+//            if(f.Tree.gNonPi0_VetoE().front()>1.0 || f.Tree.gNonPi0_VetoE().back()>1.0)
+//                return false;
             return true;
         };
 
