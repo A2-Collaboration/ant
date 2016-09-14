@@ -265,7 +265,7 @@ bool processCSV(const string& csvFile)
             throw runtime_error("Found line with wrong number of files, check your file list.");
 
         taggEffTriple_t taggEff(record.at(0),record.at(1),record.at(2));
-        taggEff_t result = taggEff.GetTaggEff();
+        taggEff_t result = taggEff.GetTaggEffSubtracted();
 
         //check if setup is valid for this method --> String in map?
         auto it_beamtime = startIDs.find(result.Setup);
