@@ -141,45 +141,23 @@ struct treeLoader_t
 
 
 };
-/*
+
 template<typename Func>
 void runOverContainer(const list<treeLoader_t*>& tContainers, Func f) {
+
     uint32_t first_time = 0;
-    double
-    for ( auto t : tContainers )
+    bool first_time_valid = false;
+
+    for(const auto& t : tContainers )
     {
-        timeInRun = 0;
+        double timeInRun = 0;
         for ( auto en = 0u ; en < t->Tree()->GetEntries() ; ++en)
         {
             t->Tree()->GetEntry(en);
-            if (first_time == numeric_limits<uint32_t>::quiet_NaN() && en == 0)
+            if (!first_time_valid && en == 0) {
                 first_time = t->wrapTree.EvID.Value->Timestamp;
-        }
-    }
-
-}*/
-
-static TGraph* getRatesVsTime(const list<treeLoader_t*>& tContainers, const size_t channel = numeric_limits<size_t>::quiet_NaN())
-{
-    auto graph2d = new TGraph();
-
-    //in vain for our canvas, but ...
-    graph2d->SetMarkerStyle(kPlus);
-    graph2d->GetXaxis()->SetTitle("time [s]");
-    graph2d->GetYaxis()->SetTitle("avg. rate [Hz]");
-
-    auto first_time = numeric_limits<uint32_t>::quiet_NaN();
-    double timeInRun(0);
-
-    for ( auto t : tContainers )
-    {
-        timeInRun = 0;
-        for ( auto en = 0u ; en < t->Tree()->GetEntries() ; ++en)
-        {
-            t->Tree()->GetEntry(en);
-            if (first_time == numeric_limits<uint32_t>::quiet_NaN() && en == 0)
-                first_time = t->wrapTree.EvID.Value->Timestamp;
-
+                first_time_valid = true;
+            }
 
             timeInRun += t->wrapTree.Clock() / 1.0e6;
 
@@ -187,21 +165,43 @@ static TGraph* getRatesVsTime(const list<treeLoader_t*>& tContainers, const size
                              + t->wrapTree.EvID.Value->Timestamp
                              - first_time );
 
-            if ( channel == numeric_limits<size_t>::quiet_NaN())
-            {
-                std_ext::RMS rmsRate;
-                for ( const auto& tr: t->wrapTree.TaggRates())
-                    rmsRate.Add(tr);
-
-                FillGraph(graph2d,evTime, rmsRate.GetMean());
-            }
-            else
-            {
-                FillGraph(graph2d,evTime,t->wrapTree.TaggRates().at(channel));
-            }
+            f(t, evTime);
         }
     }
+}
 
+static TGraph* getRatesVsTime(const list<treeLoader_t*>& tContainers)
+{
+    auto graph2d = new TGraph();
+
+    graph2d->SetMarkerStyle(kPlus);
+    graph2d->GetXaxis()->SetTitle("time [s]");
+    graph2d->GetYaxis()->SetTitle("avg. rate [Hz]");
+
+    auto f = [graph2d] (treeLoader_t* t, double evTime) {
+        std_ext::RMS rmsRate;
+        for ( const auto& tr: t->wrapTree.TaggRates())
+            rmsRate.Add(tr);
+        FillGraph(graph2d,evTime, rmsRate.GetMean());
+    };
+
+    runOverContainer(tContainers, f);
+    return graph2d;
+}
+
+static TGraph* getRatesVsTime(const list<treeLoader_t*>& tContainers, const size_t channel)
+{
+    auto graph2d = new TGraph();
+
+    graph2d->SetMarkerStyle(kPlus);
+    graph2d->GetXaxis()->SetTitle("time [s]");
+    graph2d->GetYaxis()->SetTitle("avg. rate [Hz]");
+
+    auto f = [channel, graph2d] (treeLoader_t* t, double evTime) {
+        FillGraph(graph2d,evTime,t->wrapTree.TaggRates().at(channel));
+    };
+
+    runOverContainer(tContainers, f);
     return graph2d;
 }
 
