@@ -43,7 +43,7 @@ double CrystalBall::Eval_ROOT(const double *x, const double *p) {
 }
 
 TF1* CrystalBall::GetTF1() {
-    auto f = new TF1("CrystalBall", Eval_ROOT, 4, -10, 10);
+    auto f = new TF1("CrystalBall", Eval_ROOT, -10, 10, 4);
     f->SetParName(0, "#alpha");
     f->SetParName(1, "N");
     f->SetParName(2, "#sigma");
