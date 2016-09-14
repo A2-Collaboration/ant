@@ -10,7 +10,7 @@
 using namespace std;
 using namespace ant;
 
-void FitOmegaPeak(const bool fixOmegaMass=false, const double r_min=700.0, const double r_max=850.0) {
+void FitOmegaPeak(const bool fixOmegaMass=false, const double r_min=650.0, const double r_max=900.0) {
 
 	const char*  hist_name = "ggg_IM";
 	const int    npx   = 500;
@@ -55,6 +55,12 @@ void FitOmegaPeak(const bool fixOmegaMass=false, const double r_min=700.0, const
 	bg->SetParName(1, "BG p_{1}");
 	bg->SetParameter(2,0);
 	bg->SetParName(2, "BG p_{2}");
+
+	TFSum::FitRanged(h, bg, 650, 730, 830, 900);
+	//bg->FixParameter(0, bg->GetParameter(0));
+	//bg->FixParameter(1, bg->GetParameter(1));
+	//bg->FixParameter(2, bg->GetParameter(2));
+
 
 	TFSum* sum = new TFSum("sum", sig, bg, r_min, r_max);
 	sum->SetNpx(npx);
