@@ -141,6 +141,23 @@ struct treeLoader_t
 
 
 };
+/*
+template<typename Func>
+void runOverContainer(const list<treeLoader_t*>& tContainers, Func f) {
+    uint32_t first_time = 0;
+    double
+    for ( auto t : tContainers )
+    {
+        timeInRun = 0;
+        for ( auto en = 0u ; en < t->Tree()->GetEntries() ; ++en)
+        {
+            t->Tree()->GetEntry(en);
+            if (first_time == numeric_limits<uint32_t>::quiet_NaN() && en == 0)
+                first_time = t->wrapTree.EvID.Value->Timestamp;
+        }
+    }
+
+}*/
 
 static TGraph* getRatesVsTime(const list<treeLoader_t*>& tContainers, const size_t channel = numeric_limits<size_t>::quiet_NaN())
 {
@@ -201,41 +218,56 @@ protected:
 
     void initBkgFits()
     {
+        AvgRates = getRatesVsTime({addressof(bkg1),addressof(bkg2)});
+        double dummy(0);
+        double tmax(0);
+        AvgRates->GetPoint(AvgRates->GetN()-1,tmax,dummy);
+        AvgFit   = new TF1("avg","[0] + [1] * exp( - [2] * x)",0,tmax);
+        AvgRates->Fit(AvgFit);
         for ( auto ch = 0u ; ch < run.nchannels ; ++ch)
         {
             auto graph = getRatesVsTime({addressof(bkg1),addressof(bkg2)},ch);
-            double dummy(0);
-            double tmax(0);
-            graph->GetPoint(graph->GetN()-1,tmax,dummy);
-            bkgFits.emplace_back(bkgFit_t(graph,IntervalD(0,tmax),ch));
-            graph->Fit(bkgFits.back().Fit);
+            bkgFits.emplace_back(bkgFit_t(graph,ch));
+            bkgFits.back().doFit(IntervalD(0,tmax),AvgFit->GetParameter(2));
         }
     }
 
 public:
 
+    TGraph* AvgRates;
+    TF1*    AvgFit;
     struct bkgFit_t
     {
         TGraph* Graph;
         TF1*    Fit;
-        bkgFit_t(TGraph* graph, const IntervalD& fitrange, const size_t channel): Graph(graph)
+
+        bkgFit_t(TGraph* graph, const size_t channel): Graph(graph)
         {
+            string name = std_ext::formatter() << "channel" << channel;
             Graph->SetMarkerStyle(kPlus);
             Graph->SetMarkerColor(kBlue);
-
-            string name = std_ext::formatter() << "bkgFit" << channel;
-            Fit   = new TF1(name.c_str(),"[0] + [1] * exp( - [2] * x)",
+            Graph->SetTitle(name.c_str());
+        }
+        void doFit(const IntervalD& fitrange, const double lambda)
+        {
+            string name = std_ext::formatter() << Graph->GetTitle() << "fit" ;
+            string fitFkt = std_ext::formatter() << "[0] + [1] * exp( - " << lambda << " * x)";
+            Fit   = new TF1(name.c_str(),fitFkt.c_str(),
                             fitrange.Start(),fitrange.Stop());
+            Graph->Fit(Fit);
         }
         double operator ()(const double time)  const
         {
-            return Fit->Eval(time);
+            if ( Fit )
+                return Fit->Eval(time);
+            return std_ext::NaN;
         }
     };
 
     vector<bkgFit_t> bkgFits;
 
-    TGraph* avgRates    = nullptr;
+
+
     TGraph* avgRatesSub = nullptr;
 
     taggEffTriple_t(const string& bkg1f_, const string& runf_, const string& bkg2f_):
@@ -260,9 +292,6 @@ public:
 
         initBkgFits();
 
-        avgRates = new TGraph();
-        avgRates->SetMarkerStyle(kPlus);
-        avgRates->SetMarkerColor(kBlue);
         avgRatesSub = new TGraph();
         avgRatesSub->SetMarkerStyle(kPlus);
         avgRatesSub->SetMarkerColor(kRed);
@@ -354,7 +383,6 @@ public:
                graphScaler.Add(run.wrapTree.TaggRates().at(ch));
                graphScalerSub.Add(rate_sub);
            }
-           FillGraph(avgRates,time,graphScaler.GetMean());
            FillGraph(avgRatesSub,time,graphScalerSub.GetMean());
            L.Add(run.wrapTree.ExpLivetime);
        }
