@@ -78,11 +78,19 @@ public:
 
     void SetNpx(int n);
 
+
+    static TFitResultPtr FitRanged(TH1* h, TF1* f,
+                                   double x_low, double x_high,
+                                   const std::string& fitopts = "REM0NB");
     static TFitResultPtr FitRanged(TH1* h, TF1* f,
                                    double x1_low, double x1_high, double x2_low, double x2_high,
                                    const std::string& fitopts = "REM0NB");
 
+    static TF1* MakeRanged(TF1* f, double x_low, double x_high);
     static TF1* MakeRanged(TF1* f, double x1_low, double x1_high, double x2_low, double x2_high);
+
+
+
 
 #ifndef __CINT__
     static TFitResultPtr FitRanged(

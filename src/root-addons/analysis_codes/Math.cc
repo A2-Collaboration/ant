@@ -134,11 +134,21 @@ void TFSum::SetNpx(int n)
     sum->SetNpx(n);
 }
 
+TFitResultPtr TFSum::FitRanged(TH1* h, TF1* f, double x_low, double x_high, const string& fitopts)
+{
+    return FitRanged(h, f, {{x_low, x_high}}, fitopts);
+}
+
 TFitResultPtr TFSum::FitRanged(TH1* h, TF1* f,
-                                    double x1_low, double x1_high, double x2_low, double x2_high,
-                                    const string& fitopts)
+                               double x1_low, double x1_high, double x2_low, double x2_high,
+                               const string& fitopts)
 {
     return FitRanged(h, f, {{x1_low, x1_high},{x2_low, x2_high}}, fitopts);
+}
+
+TF1* TFSum::MakeRanged(TF1* f, double x_low, double x_high)
+{
+    return MakeRanged(f, {{x_low, x_high}});
 }
 
 TF1* TFSum::MakeRanged(TF1* f, double x1_low, double x1_high, double x2_low, double x2_high)
