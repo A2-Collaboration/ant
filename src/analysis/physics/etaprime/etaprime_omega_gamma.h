@@ -76,10 +76,6 @@ struct EtapOmegaG : Physics {
         ADD_BRANCH_T(double,   KinFitProb)
         ADD_BRANCH_T(int,      KinFitIterations)
         ADD_BRANCH_T(double,   KinFitZVertex)
-
-        ADD_BRANCH_T(double, KinFitBeamEPull)
-        ADD_BRANCH_T(std::vector<double>, KinFitProtonPulls)
-        ADD_BRANCH_T(std::vector<std::vector<double>>, KinFitPhotonsPulls)
     };
 
     TreeCommon t;
@@ -138,10 +134,6 @@ struct EtapOmegaG : Physics {
                 ADD_BRANCH_T(double, TreeFitProb)
                 ADD_BRANCH_T(int,    TreeFitIterations)
                 ADD_BRANCH_T(double, TreeFitZVertex)
-
-                ADD_BRANCH_T(double, TreeFitBeamEPull)
-                ADD_BRANCH_T(std::vector<double>, TreeFitProtonPulls)
-                ADD_BRANCH_T(std::vector<std::vector<double>>, TreeFitPhotonsPulls)
 
                 ADD_BRANCH_T(double, IM_Pi0)
                 ADD_BRANCH_T(double, IM_Pi0gg)
@@ -226,17 +218,9 @@ struct EtapOmegaG : Physics {
             ADD_BRANCH_T(int,    AntiPi0FitIterations)
             ADD_BRANCH_T(double, AntiPi0FitZVertex)
 
-            ADD_BRANCH_T(double,   AntiPi0BeamEPull)
-            ADD_BRANCH_T(std::vector<double>, AntiPi0ProtonPulls)
-            ADD_BRANCH_T(std::vector<std::vector<double>>, AntiPi0PhotonsPulls)
-
             ADD_BRANCH_T(double, AntiEtaFitProb)
             ADD_BRANCH_T(int,    AntiEtaFitIterations)
             ADD_BRANCH_T(double, AntiEtaFitZVertex)
-
-            ADD_BRANCH_T(double,   AntiEtaBeamEPull)
-            ADD_BRANCH_T(std::vector<double>, AntiEtaProtonPulls)
-            ADD_BRANCH_T(std::vector<std::vector<double>>, AntiEtaPhotonsPulls)
 
             void Reset();
         };
