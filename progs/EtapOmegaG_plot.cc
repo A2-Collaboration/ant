@@ -339,10 +339,10 @@ struct SigPi0Hist_t : SigHist_t {
     };
 
     SigPi0Hist_t(HistogramFactory HistFac, cuttree::TreeInfo_t treeInfo) : SigHist_t(HistFac, treeInfo) {
-        h_IM_3g_4g_high = HistFac.makeTH2D("Best #omega vs. #eta' IM",
+        h_IM_3g_4g_high = HistFac.makeTH2D("#omega vs. #eta' IM",
                                            "IM(#pi^{0}#gamma#gamma) / MeV",
                                            "IM(#pi^{0}#gamma) / MeV",
-                                           bins_IM_Etap, bins_IM_Omega,"h_IM_3g_4g_high_best"
+                                           bins_IM_Etap, bins_IM_Omega,"h_IM_3g_4g_high"
                                            );
     }
 
