@@ -155,11 +155,22 @@ int main( int argc, char** argv )
         {
             canvas control("cotrol");
             auto mg = new TMultiGraph();
-            mg->Add(triple_grp->avgRates);
+            mg->Add(triple_grp->AvgRates);
             mg->Add(triple_grp->avgRatesSub);
             control << drawoption("AP") << mg << endc;
-            mg->GetXaxis()->SetTitle("time[s]");
+            mg->GetXaxis()->SetTitle("time [s]");
             mg->GetYaxis()->SetTitle("avg. rate [Hz]");
+
+            canvas control_channels("channels");
+            control_channels << drawoption("AP");
+            for (const auto& b: triple_grp->bkgFits)
+                control_channels  << b.Graph;
+            control_channels << endc;
+            for (const auto& b: triple_grp->bkgFits)
+            {
+                b.Graph->GetXaxis()->SetTitle("time [s]");
+                b.Graph->GetYaxis()->SetTitle("rate [Hz]");
+            }
         }
 
         app->Run(kTRUE); // really important to return...
