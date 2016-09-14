@@ -100,56 +100,59 @@ int main( int argc, char** argv )
 
 void plotLiveTimes(const vector<string>& fileList)
 {
-    vector<unique_ptr<treeLoader_t>> tContainers;
+    list<treeLoader_t*> tContainers;
     for (const auto& fN: fileList)
         tContainers.emplace_back(new treeLoader_t(fN));
 
     if ( graph2d )
         throw runtime_error("graph already exists, this should never happen");
 
-    initGraph("time [s]","tivelime [%]");
-    graph2d->SetObjectStat(false);
-
-    for (const auto& tc: tContainers)
-        for ( const auto& timeLT: tc->getLiveTimes() )
-            graph2d->SetPoint(graph2d->GetN(),timeLT.first,timeLT.second);
+    graph2d = timedData::getLtVsTime(tContainers);
 }
 
 void plotRates(const vector<string>& fileList)
 {
-    initGraph("time","rate");
-    vector<unique_ptr<treeLoader_t>> tContainers;
-
-
+    list<treeLoader_t*> tContainers;
     for (const auto& fN: fileList)
         tContainers.emplace_back(new treeLoader_t(fN));
 
-    auto first_time = numeric_limits<uint32_t>::quiet_NaN();
-    double timeInRun(0);
+    if ( graph2d )
+        throw runtime_error("graph already exists, this should never happen");
 
-    for ( const auto& t: tContainers)
-    {
-        timeInRun = 0;
-        for ( auto en = 0u ; en < t->Tree()->GetEntries() ; ++en)
-        {
-            t->Tree()->GetEntry(en);
-            if (first_time == numeric_limits<uint32_t>::quiet_NaN() && en == 0)
-                first_time = t->wrapTree.EvID.Value->Timestamp;
+    graph2d = timedData::getRatesVsTime(tContainers);
+//    initGraph("time","rate");
+//    vector<unique_ptr<treeLoader_t>> tContainers;
 
 
-            timeInRun += t->wrapTree.Clock() / 1.0e6;
+//    for (const auto& fN: fileList)
+//        tContainers.emplace_back(new treeLoader_t(fN));
 
-            auto evTime = (  timeInRun
-                             + t->wrapTree.EvID.Value->Timestamp
-                             - first_time );
+//    auto first_time = numeric_limits<uint32_t>::quiet_NaN();
+//    double timeInRun(0);
 
-            std_ext::RMS rmsRate;
-            for ( const auto& tr: t->wrapTree.TaggRates())
-                rmsRate.Add(tr);
+//    for ( const auto& t: tContainers)
+//    {
+//        timeInRun = 0;
+//        for ( auto en = 0u ; en < t->Tree()->GetEntries() ; ++en)
+//        {
+//            t->Tree()->GetEntry(en);
+//            if (first_time == numeric_limits<uint32_t>::quiet_NaN() && en == 0)
+//                first_time = t->wrapTree.EvID.Value->Timestamp;
 
-            graph2d->SetPoint(graph2d->GetN(),
-                              evTime,
-                              rmsRate.GetMean());
-        }
-    }
+
+//            timeInRun += t->wrapTree.Clock() / 1.0e6;
+
+//            auto evTime = (  timeInRun
+//                             + t->wrapTree.EvID.Value->Timestamp
+//                             - first_time );
+
+//            std_ext::RMS rmsRate;
+//            for ( const auto& tr: t->wrapTree.TaggRates())
+//                rmsRate.Add(tr);
+
+//            graph2d->SetPoint(graph2d->GetN(),
+//                              evTime,
+//                              rmsRate.GetMean());
+//        }
+//    }
 }

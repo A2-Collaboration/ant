@@ -1,6 +1,7 @@
 #pragma once
 #include <string>
 #include <vector>
+#include <list>
 
 
 #include "tree/TID.h"
@@ -17,6 +18,15 @@ namespace progs
 {
 namespace taggeff
 {
+
+struct treeLoader_t;
+struct timedData
+{
+    static TGraph* getRatesVsTime(const std::list<treeLoader_t*>& tContainers);
+    static TGraph* getRatesVsTime(const std::list<treeLoader_t*>& tContainers, const size_t channel);
+    static TGraph* getLtVsTime(const std::list<treeLoader_t*>& tContainers);
+};
+
 
 
 struct taggEff_t

@@ -51,43 +51,6 @@ void runOverContainer(const list<treeLoader_t*>& tContainers, Func f) {
     }
 }
 
-static TGraph* getRatesVsTime(const list<treeLoader_t*>& tContainers)
-{
-    auto graph2d = new TGraph();
-
-    graph2d->SetMarkerStyle(kPlus);
-    graph2d->GetXaxis()->SetTitle("time [s]");
-    graph2d->GetYaxis()->SetTitle("avg. rate [Hz]");
-
-    auto f = [graph2d] (treeLoader_t* t, double evTime) {
-        std_ext::RMS rmsRate;
-        for ( const auto& tr: t->wrapTree.TaggRates())
-            rmsRate.Add(tr);
-        FillGraph(graph2d,evTime, rmsRate.GetMean());
-    };
-
-    runOverContainer(tContainers, f);
-    return graph2d;
-}
-
-static TGraph* getRatesVsTime(const list<treeLoader_t*>& tContainers, const size_t channel)
-{
-    auto graph2d = new TGraph();
-
-    graph2d->SetMarkerStyle(kPlus);
-    graph2d->GetXaxis()->SetTitle("time [s]");
-    graph2d->GetYaxis()->SetTitle("avg. rate [Hz]");
-
-    auto f = [channel, graph2d] (treeLoader_t* t, double evTime) {
-        FillGraph(graph2d,evTime,t->wrapTree.TaggRates().at(channel));
-    };
-
-    runOverContainer(tContainers, f);
-    return graph2d;
-}
-
-
-
 
 
 treeLoader_t::treeLoader_t(const string& filename):
@@ -153,23 +116,9 @@ treeLoader_t::means_t treeLoader_t::getMeans() const
     return means;
 }
 
-std::vector<std::pair<double, double> > treeLoader_t::getLiveTimes() const
-{
-    vector<pair<double,double>> vTimeLivetime;
-
-    auto nentries = wrapTree.Tree->GetEntries();
-    for ( auto en = 0u ; en < nentries ; ++en )
-    {
-        wrapTree.Tree->GetEntry(en);
-        vTimeLivetime.emplace_back(pair<double,double>({wrapTree.Clock,wrapTree.ExpLivetime}));
-    }
-
-    return vTimeLivetime;
-}
-
 void taggEffTriple_t::initBkgFits()
 {
-    AvgRates = getRatesVsTime({addressof(Bkg1),addressof(Bkg2)});
+    AvgRates = timedData::getRatesVsTime({addressof(Bkg1),addressof(Bkg2)});
     double dummy(0);
     double tmax(0);
     AvgRates->GetPoint(AvgRates->GetN()-1,tmax,dummy);
@@ -177,7 +126,7 @@ void taggEffTriple_t::initBkgFits()
     AvgRates->Fit(AvgFit);
     for ( auto ch = 0u ; ch < Run.nchannels ; ++ch)
     {
-        auto graph = getRatesVsTime({addressof(Bkg1),addressof(Bkg2)},ch);
+        auto graph = timedData::getRatesVsTime({addressof(Bkg1),addressof(Bkg2)},ch);
         bkgFits.emplace_back(bkgFit_t(graph,ch));
         bkgFits.back().doFit(IntervalD(0,tmax),AvgFit->GetParameter(2));
     }
@@ -394,4 +343,57 @@ double taggEffTriple_t::bkgFit_t::operator ()(const double time) const
     if ( Fit )
         return Fit->Eval(time);
     return std_ext::NaN;
+}
+
+
+
+TGraph* timedData::getRatesVsTime(const std::list<treeLoader_t*>& tContainers)
+{
+    auto graph2d = new TGraph();
+
+    graph2d->SetMarkerStyle(kPlus);
+    graph2d->GetXaxis()->SetTitle("time [s]");
+    graph2d->GetYaxis()->SetTitle("avg. rate [Hz]");
+
+    auto f = [graph2d] (treeLoader_t* t, double evTime) {
+        std_ext::RMS rmsRate;
+        for ( const auto& tr: t->wrapTree.TaggRates())
+            rmsRate.Add(tr);
+        FillGraph(graph2d,evTime, rmsRate.GetMean());
+    };
+
+    runOverContainer(tContainers, f);
+    return graph2d;
+}
+
+TGraph* timedData::getRatesVsTime(const std::list<treeLoader_t*>& tContainers, const size_t channel)
+{
+    auto graph2d = new TGraph();
+
+    graph2d->SetMarkerStyle(kPlus);
+    graph2d->GetXaxis()->SetTitle("time [s]");
+    graph2d->GetYaxis()->SetTitle("avg. rate [Hz]");
+
+    auto f = [channel, graph2d] (treeLoader_t* t, double evTime) {
+        FillGraph(graph2d,evTime,t->wrapTree.TaggRates().at(channel));
+    };
+
+    runOverContainer(tContainers, f);
+    return graph2d;
+}
+
+TGraph* timedData::getLtVsTime(const std::list<treeLoader_t*>& tContainers)
+{
+    auto graph = new TGraph();
+
+    graph->SetMarkerStyle(kPlus);
+    graph->GetXaxis()->SetTitle("time [s]");
+    graph->GetYaxis()->SetTitle("livetime");
+
+    auto f = [graph] (treeLoader_t* t, double evTime)
+    {
+        FillGraph(graph,evTime,t->wrapTree.ExpLivetime);
+    };
+    runOverContainer(tContainers,f);
+    return graph;
 }
