@@ -207,10 +207,6 @@ struct SigHist_t : CommonHist_t {
     TH1D* h_AntiEtaZVertex;
     TH1D* h_TreeZVertex;
 
-    TH2D* h_Pi0EtaFitProb;
-    TH2D* h_Pi0TreeFitProb;
-    TH2D* h_EtaTreeFitProb;
-
     TH1D* h_Bachelor_E;
 
     const BinSettings bins_IM_Etap {100, 800,1050};
@@ -227,10 +223,6 @@ struct SigHist_t : CommonHist_t {
         h_AntiPi0ZVertex = HistFac.makeTH1D("AntiPi0ZVertex", "z / cm","",bins_ZVertex,"h_AntiPi0ZVertex");
         h_AntiEtaZVertex = HistFac.makeTH1D("AntiEtaZVertex", "z / cm","",bins_ZVertex,"h_AntiEtaZVertex");
         h_TreeZVertex = HistFac.makeTH1D("TreeZVertex", "z / cm","",bins_ZVertex,"h_TreeZVertex");
-
-        h_Pi0EtaFitProb = HistFac.makeTH2D("Pi0 vs. Eta","Pi0 p","Eta p",bins_FitProb,bins_FitProb,"h_Pi0EtaFitProb");
-        h_Pi0TreeFitProb = HistFac.makeTH2D("Pi0 vs. Tree","Pi0 p","Tree p",bins_FitProb,bins_FitProb,"h_Pi0TreeFitProb");
-        h_EtaTreeFitProb = HistFac.makeTH2D("Eta vs. Tree","Eta p","Tree p",bins_FitProb,bins_FitProb,"h_EtaTreeFitProb");
 
         BinSettings bins_BachelorE(100,100,200);
         h_Bachelor_E = HistFac.makeTH1D("E_#gamma in #eta' frame","E_{#gamma} / MeV","",
@@ -252,11 +244,6 @@ struct SigHist_t : CommonHist_t {
         h_AntiPi0ZVertex->Fill(s.AntiPi0FitZVertex, f.TaggW());
         h_AntiEtaZVertex->Fill(s.AntiEtaFitZVertex, f.TaggW());
         h_TreeZVertex->Fill(tree.TreeFitZVertex, f.TaggW());
-
-        h_Pi0EtaFitProb->Fill(f.AntiPi0FitProb, f.AntiEtaFitProb, f.TaggW());
-        h_Pi0TreeFitProb->Fill(f.AntiPi0FitProb, f.TreeFitProb, f.TaggW());
-        h_EtaTreeFitProb->Fill(f.AntiEtaFitProb, f.TreeFitProb, f.TaggW());
-
     }
 
     std::vector<TH1*> GetHists() const {
