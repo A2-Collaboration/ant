@@ -480,7 +480,6 @@ int main(int argc, char** argv) {
     auto cmd_maxevents = cmd.add<TCLAP::MultiArg<int>>("m","maxevents","Process only max events",false,"maxevents");
     auto cmd_output = cmd.add<TCLAP::ValueArg<string>>("o","output","Output file",false,"","filename");
 
-    auto cmd_tree = cmd.add<TCLAP::ValueArg<string>>("t","tree","Tree name",false,"SigOmegaPi0","treename");
     auto cmd_setupname = cmd.add<TCLAP::ValueArg<string>>("s","setup","Override setup name", false, "Setup_2014_07_EPT_Prod", "setup");
 
     cmd.parse(argc, argv);
@@ -516,34 +515,26 @@ int main(int argc, char** argv) {
 
     auto entries = treeCommon.Tree->GetEntries();
 
-
-
+    SigHist_t::SharedTree_t treeSigShared;
     SigPi0Hist_t::Tree_t treeSigPi0;
     SigOmegaPi0Hist_t::Tree_t treeSigOmegaPi0;
     RefHist_t::Tree_t treeRef;
 
-    // auto-detect which tree "type" to use
-    const auto& treename = cmd_tree->getValue();
-    if(link_branches("EtapOmegaG/"+treename, treeSigPi0, entries)) {
-        LOG(INFO) << "Identified " << treename << " as signal tree (Pi0)";
-    }
-    else if(link_branches("EtapOmegaG/"+treename, treeSigOmegaPi0, entries)) {
-        LOG(INFO) << "Identified " << treename << " as signal tree (OmegaPi0)";
-    }
-    else if(link_branches("EtapOmegaG/"+treename, treeRef, entries)) {
-        LOG(INFO) << "Identified " << treename << " as reference tree";
-    }
-    else {
-        LOG(ERROR) << "Could not identify " << treename;
+    if(!link_branches("EtapOmegaG/SigShared", treeSigShared, entries)) {
+        LOG(ERROR) << "Cannot find SigShared tree";
         return 1;
     }
-
-    SigHist_t::SharedTree_t treeSigShared;
-    if(treeSigPi0 || treeSigOmegaPi0) {
-        if(!link_branches("EtapOmegaG/SigShared", treeSigShared, entries)) {
-            LOG(ERROR) << "Cannot find SigShared tree";
-            return 1;
-        }
+    if(!link_branches("EtapOmegaG/SigPi0", treeSigPi0, entries)) {
+        LOG(ERROR) << "Cannot find SigPi0 tree";
+        return 1;
+    }
+    if(!link_branches("EtapOmegaG/SigOmegaPi0", treeSigOmegaPi0, entries)) {
+        LOG(ERROR) << "Cannot find SigOmegaPi0 tree";
+        return 1;
+    }
+    if(!link_branches("EtapOmegaG/Ref", treeRef, entries)) {
+        LOG(ERROR) << "Cannot find Ref tree";
+        return 1;
     }
 
     unique_ptr<WrapTFileOutput> masterFile;
@@ -559,10 +550,9 @@ int main(int argc, char** argv) {
 
     HistogramFactory HistFac("EtapOmegaG");
 
-    const auto& sanitized_treename = std_ext::replace_str(cmd_tree->getValue(),"/","_");
-    auto cuttreeSigPi0 = treeSigPi0 ? makeMCSplitTree<SigPi0Hist_t>(HistFac, sanitized_treename) : nullptr;
-    auto cuttreeSigOmegaPi0 = treeSigOmegaPi0 ? makeMCSplitTree<SigOmegaPi0Hist_t>(HistFac, sanitized_treename) : nullptr;
-    auto cuttreeRef = treeRef ? makeMCSplitTree<RefHist_t>(HistFac, sanitized_treename) : nullptr;
+    auto cuttreeSigPi0 = makeMCSplitTree<SigPi0Hist_t>(HistFac, "SigPi0");
+    auto cuttreeSigOmegaPi0 = makeMCSplitTree<SigOmegaPi0Hist_t>(HistFac, "SigOmegaPi0");
+    auto cuttreeRef = makeMCSplitTree<RefHist_t>(HistFac, "Ref");
 
     LOG(INFO) << "Tree entries=" << entries;
     auto max_entries = entries;
@@ -583,23 +573,15 @@ int main(int argc, char** argv) {
             break;
 
         treeCommon.Tree->GetEntry(entry);
+        treeSigShared.Tree->GetEntry(entry);
+        treeSigPi0.Tree->GetEntry(entry);
+        treeSigOmegaPi0.Tree->GetEntry(entry);
+        treeRef.Tree->GetEntry(entry);
 
-        // we handle the Ref/Sig cut here to save some reading work
-        if(treeSigPi0 || treeSigOmegaPi0) {
-            treeSigShared.Tree->GetEntry(entry);
-            if(treeSigPi0) {
-                treeSigPi0.Tree->GetEntry(entry);
-                cuttree::Fill<MCSigPi0Hist_t>(cuttreeSigPi0, {treeCommon, treeSigShared, treeSigPi0});
-            }
-            else if(treeSigOmegaPi0) {
-                treeSigOmegaPi0.Tree->GetEntry(entry);
-                cuttree::Fill<MCSigOmegaPi0Hist_t>(cuttreeSigOmegaPi0, {treeCommon, treeSigShared, treeSigOmegaPi0});
-            }
-        }
-        else if(treeRef) {
-            treeRef.Tree->GetEntry(entry);
-            cuttree::Fill<MCRefHist_t>(cuttreeRef, {treeCommon, treeRef});
-        }
+        cuttree::Fill<MCSigPi0Hist_t>(cuttreeSigPi0, {treeCommon, treeSigShared, treeSigPi0});
+        cuttree::Fill<MCSigOmegaPi0Hist_t>(cuttreeSigOmegaPi0, {treeCommon, treeSigShared, treeSigOmegaPi0});
+        cuttree::Fill<MCRefHist_t>(cuttreeRef, {treeCommon, treeRef});
+
         ProgressCounter::Tick();
     }
 
