@@ -1,34 +1,35 @@
+#include <string>
 #include <map>
+
+#include "analysis/physics/common/ProcessTaggEff.h"
+#include "analysis/plot/root_draw.h"
+
+#include "base/CmdLine.h"
+#include "base/Detector_t.h"
+#include "base/Logger.h"
+#include "base/std_ext/math.h"
+#include "base/std_ext/string.h"
+#include "base/std_ext/system.h"
+#include "base/std_ext/time.h"
+
+#include "calibration/DataManager.h"
+#include "calibration/modules/TaggEff.h"
 
 #include "detail/taggEffClasses.h"
 
-
-#include "base/std_ext/system.h"
-#include "base/CmdLine.h"
-#include "base/std_ext/string.h"
-#include "base/std_ext/time.h"
-#include "base/std_ext/math.h"
-
-#include "expconfig/setups/Setup.h"
 #include "expconfig/ExpConfig.h"
+#include "expconfig/setups/Setup.h"
 
-#include "analysis/plot/root_draw.h"
+#include "tree/TCalibrationData.h"
 
-#include "TTree.h"
-#include "TRint.h"
+
+#include "TGraph.h"
 #include "TH1D.h"
 #include "TH2D.h"
-#include "TGraph.h"
 #include "TMultiGraph.h"
+#include "TRint.h"
+#include "TTree.h"
 
-#include "calibration/DataManager.h"
-#include "tree/TCalibrationData.h"
-#include "calibration/modules/TaggEff.h"
-
-#include "analysis/physics/common/ProcessTaggEff.h"
-#include "base/Detector_t.h"
-
-#include "base/Logger.h"
 
 
 using namespace ant;
@@ -36,7 +37,9 @@ using namespace std;
 using namespace ant::analysis;
 using namespace ant::std_ext;
 using namespace ant::progs::taggeff;
-static volatile bool interrupt = false;
+
+
+
 
 const map<string,TID> startIDs({ {"Setup_2014_07_EPT_Prod", TID(1406592000)},
                                  {"Setup_2014_10_EPT_Prod", TID(1413244800)},
@@ -46,7 +49,11 @@ static TH1D* hist_channels(nullptr);
 static TH2D* hist_channels_2d(nullptr);
 static TH2D* hist_channels_2d_errors(nullptr);
 
+static shared_ptr<HistogramFactory> histfac = nullptr;
+
+static volatile bool interrupt = false;
 static bool noStore = false;
+static bool histOut = false;
 
 auto failExit = [] (const string& message)
 {
@@ -57,11 +64,14 @@ auto failExit = [] (const string& message)
 void fillHistSingle( const vector<double>& data, const vector<double>& dataErrors);
 void fillHistTime( const vector<double>& data, const vector<double>& dataErrors, const unsigned time );
 
-void storeResult(const taggEff_t& result, shared_ptr<calibration::DataManager> manager, const string& calibrationName);
+void storeHist(const taggEff_t& result);
+void storeResult(const taggEff_t& result, shared_ptr<calibration::DataManager> manager, const string& calibrationName,
+                 const Calibration::AddMode_t& addMode = Calibration::AddMode_t::RightOpen);
 
 taggEffTriple_t* processFiles(const vector<string>& files);
-bool processCSV(const string& csvFile);
-void processManualData(const string& dataFile);
+void mediateCSV(const vector<string>& csvFiles);
+void processCSV(const string& csvFile);
+void processManualData(const string& dataFile, const string& setupName);
 
 int main( int argc, char** argv )
 {
@@ -77,22 +87,23 @@ int main( int argc, char** argv )
     //modes
     auto mode_csv        = cmd.add<TCLAP::SwitchArg>("","csv",
                                                     "CSV file with bkg1-run-bkg2 groups - calibration data will be added as right open patches for each group");
+    auto mode_csv_mean   = cmd.add<TCLAP::SwitchArg>("","csv-mean",
+                                                     "CSV file with bkg1-run-bkg2 groups - calibration data will be the mean over all measurements.");
     auto mode_group      = cmd.add<TCLAP::SwitchArg>("","group",
                                                     "provide single group for adding a right open patch");
     auto mode_manual     = cmd.add<TCLAP::SwitchArg>("","manual",
                                                     "manually set taggeffs per channel for given setup");
 
     //register modes here:
-    auto modes = {&mode_csv, &mode_group, &mode_manual};
+    auto modes = {&mode_csv, &mode_csv_mean, &mode_group, &mode_manual};
 
-    // manual settings:
+    // other settings:
     auto cmd_setup      = cmd.add<TCLAP::ValueArg<string>>("","setup", "set setup manually",        false, "", "name");
-    auto cmd_startDate  = cmd.add<TCLAP::ValueArg<string>>("","start", "set start date manually",   false, "", "date");
-    auto cmd_stopDate   = cmd.add<TCLAP::ValueArg<string>>("","stop",  "set end date manually",     false, "", "date");
 
     //switches
-    auto cmd_batchmode  = cmd.add<TCLAP::SwitchArg>("b","batch",  "Run in batch mode (no ROOT shell afterwards)");
-    auto cmd_nostore    = cmd.add<TCLAP::SwitchArg>("n","nostore","don't store, only show results");
+    auto cmd_batchmode  = cmd.add<TCLAP::SwitchArg>("b", "batch",     "Run in batch mode (no ROOT shell afterwards)");
+    auto cmd_nostore    = cmd.add<TCLAP::SwitchArg>("n", "nostore",   "don't store, only show results");
+    auto cmd_histout    = cmd.add<TCLAP::SwitchArg>("",  "save-hist", "Save results to a histogram");
 
     //files
     auto cmd_filelist   = cmd.add<TCLAP::UnlabeledMultiArg<string>>("inputfiles","inputfiles to read from",true,"inputfiles");
@@ -111,14 +122,25 @@ int main( int argc, char** argv )
             msg += std_ext::formatter() << "--" << m->get()->getName() << "  ";
         failExit(msg);
     }
+
     auto fileList = cmd_filelist->getValue();
     noStore = cmd_nostore->isSet();
+    histOut = cmd_histout->isSet();
 
     if (mode_csv->isSet())
     {
+        if (cmd_histout)
         if (fileList.size() != 1)
             failExit("Provide one csv file!");
         processCSV(fileList.at(0));
+    }
+
+    if (mode_csv_mean->isSet())
+    {
+        if (cmd_histout)
+        if (fileList.size() < 1)
+            failExit("Provide at least one csv file!");
+        mediateCSV(fileList);
     }
 
     taggEffTriple_t* triple_grp = nullptr;
@@ -131,9 +153,11 @@ int main( int argc, char** argv )
 
     if (mode_manual->isSet())
     {
+        if (!cmd_setup->isSet())
+            failExit("Must provide setup name for data.");
         if (fileList.size() != 1)
             failExit("Provide one data file!");
-        processManualData(fileList.at(0));
+        processManualData(fileList.at(0),cmd_setup->getValue());
     }
 
 
@@ -182,16 +206,15 @@ int main( int argc, char** argv )
     return EXIT_SUCCESS;
 }
 
-void processManualData(const string& dataFile)
+void processManualData(const string& dataFile, const string& setupName)
 {
     ifstream fstream(dataFile);
-
 
     if (!fstream)
         failExit(std_ext::formatter() << "Error opening File " << dataFile << ".");
 
-    auto nChannels = 47u;
-
+    ExpConfig::Setup::SetManualName(setupName);
+    auto nChannels = ExpConfig::Setup::GetLastFound()->GetDetector<TaggerDetector_t>()->GetNChannels();
     taggEff_t result("setup",TID(),nChannels);
 
     auto ch = 0u;
@@ -201,21 +224,21 @@ void processManualData(const string& dataFile)
         if (!(getline(fstream,line)))
             break;
         if (ch >= nChannels)
-        {
-            LOG(WARNING) << "File contains more entries than tagger-channels in setup! skipping the rest";
-            break;
-        }
+            failExit("File contains more entries than tagger-channels in setup!");
 
         istringstream sstream(line);
         double val(0.);
         sstream >> val;
-        result.TaggEffs.emplace_back(val);
+        result.TaggEffs.at(ch) = val;
         //default error is zero
         val = 0;
         sstream >> val;
-        result.TaggEffErrors.emplace_back(val);
+        result.TaggEffErrors.at(ch) = val;
         ch++;
     }
+
+    if (ch != nChannels)
+        failExit("File contains less entries than tagger-channels in setup.");
 
     fillHistSingle(result.TaggEffs,result.TaggEffErrors);
 
@@ -224,6 +247,8 @@ void processManualData(const string& dataFile)
         auto manager = ExpConfig::Setup::GetLastFound()->GetCalibrationDataManager();
         storeResult(result,manager,calibration::TaggEff::GetDataName());
     }
+    if ( histOut )
+        storeHist(result);
 }
 
 taggEffTriple_t* processFiles(const vector<string>& files)
@@ -236,19 +261,20 @@ taggEffTriple_t* processFiles(const vector<string>& files)
 
     if (!noStore)
         storeResult(result,manager,calibration::TaggEff::GetDataName());
+    if (histOut)
+        storeHist(result);
+
     return taggEff;
 }
 
-bool processCSV(const string& csvFile)
+void processCSV(const string& csvFile)
 {
     shared_ptr<calibration::DataManager> manager = nullptr;
 
     ifstream csvStream(csvFile);
     if (!csvStream)
-    {
         failExit(std_ext::formatter() << "Error reading File list " << csvFile << ".");
-        return false;
-    }
+
 
     string setupName;
     size_t n_TaggEffs(0);
@@ -299,11 +325,85 @@ bool processCSV(const string& csvFile)
         setupName = result.Setup;
         n_TaggEffs++;
     }
-
-    return true;
 }
 
+void mediateCSV(const vector<string>& csvFiles)
+{
+    string setupName;
+    size_t n_TaggEffs(0);
+    size_t nCh(0);
 
+    shared_ptr<calibration::DataManager> manager = nullptr;
+
+    vector<double> vS;
+    vector<double> vSy;
+
+    for ( const auto& csvFile: csvFiles)
+    {
+        ifstream csvStream(csvFile);
+        if (!csvStream)
+            failExit(std_ext::formatter() << "Error reading File list " << csvFile << ".");
+
+        while (csvStream && !interrupt )
+        {
+            string line;
+            if (!getline(csvStream, line))
+            {
+                LOG(INFO) << "Done reading File list " << csvFile << ".";
+                break;
+            }
+
+
+            istringstream sstream(line);
+            vector<string> record;
+
+            while (sstream)
+            {
+                string s;
+                if (!getline(sstream,s,','))
+                    break;
+                record.emplace_back(s);
+            }
+
+            if (record.size() != 3)
+                throw runtime_error("Found line with wrong number of files, check your file list.");
+
+            taggEffTriple_t taggEff(record.at(0),record.at(1),record.at(2));
+            taggEff_t result = taggEff.GetTaggEffSubtracted();
+            if (n_TaggEffs == 0)
+            {
+                if(!noStore)
+                    manager = ExpConfig::Setup::GetLastFound()->GetCalibrationDataManager();
+                nCh = result.TaggEffs.size();
+                vS.resize(nCh);
+                vSy.resize(nCh);
+                setupName = result.Setup;
+            }
+            if (n_TaggEffs > 0 && result.Setup != setupName )
+                throw runtime_error("Different Setupnames within file list found!");
+
+            for ( auto ch = 0u ; ch < nCh ; ++ch)
+            {
+                auto errorSqr = sqr(result.TaggEffErrors.at(ch));
+                vS.at(ch)   += 1.0 / errorSqr;
+                vSy.at(ch)  += result.TaggEffs.at(ch) / errorSqr;
+            }
+
+            n_TaggEffs++;
+        }
+    }
+    taggEff_t tagF(setupName,TID(),nCh);
+    for ( auto ch = 0u; ch < nCh ; ++ch)
+    {
+        tagF.TaggEffs.at(ch)      = 1.0 * vSy.at(ch) / vS.at(ch);
+        tagF.TaggEffErrors.at(ch) = sqrt(1.0 / vS.at(ch));
+    }
+
+
+    fillHistSingle(tagF.TaggEffs,tagF.TaggEffErrors);
+    if (!noStore)
+        storeResult(tagF,manager,calibration::TaggEff::GetDataName());
+}
 
 void fillHistSingle( const vector<double>& data, const vector<double>& dataErrors)
 {
@@ -343,7 +443,23 @@ void fillHistTime( const vector<double>& data, const vector<double>& dataErrors,
     }
 }
 
-void storeResult(const taggEff_t& result, shared_ptr<calibration::DataManager> manager, const string& calibrationName)
+void storeHist( const taggEff_t& result)
+{
+    if (histfac == nullptr)
+        histfac = make_shared<HistogramFactory>(result.Setup);
+
+    auto nCh = result.TaggEffs.size();
+
+    auto hist = histfac->makeTH1D(result.Setup,"channel","#eta",BinSettings(nCh));
+    for ( auto ch = 0u ; ch < nCh ; ++ch )
+    {
+        hist->Fill(ch,result.TaggEffs.at(ch));
+        hist->SetBinError(ch+1,result.TaggEffErrors.at(ch));
+    }
+}
+
+void storeResult(const taggEff_t& result, shared_ptr<calibration::DataManager> manager, const string& calibrationName,
+                 const Calibration::AddMode_t& addMode)
 {
     TCalibrationData cdata(
                 calibrationName,
@@ -358,7 +474,7 @@ void storeResult(const taggEff_t& result, shared_ptr<calibration::DataManager> m
         cdata.FitParameters.emplace_back(ch,vector<double>(1,result.TaggEffErrors.at(ch)));
     }
 
-    manager->Add(cdata, Calibration::AddMode_t::RightOpen);
+    manager->Add(cdata, addMode);
 }
 
 
