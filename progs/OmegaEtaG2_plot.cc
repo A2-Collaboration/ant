@@ -351,10 +351,10 @@ struct OmegaHist_t {
 //            h->Fill(f.Tree.p_PSA_Angle, f.Tree.p_PSA_Radius, f.TaggW());
 //        });
 
-//        AddTH2("3#gamma IM vs 2#gamma IM", "3#gamma IM [MeV]", "max(2#gamma IM) [MeV]", IMbins, IMbins, "ggg_max_gg",
-//               [] (TH2D* h, const Fill_t& f) {
-//            h->Fill(f.Tree.ggg_fitted().M(), max(f.Tree.ggIM_fitted()), f.TaggW());
-//        });
+        AddTH2("3#gamma IM vs 2#gamma IM", "3#gamma IM [MeV]", "max(2#gamma IM) [MeV]", IMbins, IMbins, "ggg_max_gg",
+               [] (TH2D* h, const Fill_t& f) {
+             h->Fill(f.Tree.ggg_fitted().M(), max(f.Tree.ggIM_fitted()), f.TaggW());
+        });
 
 
 //        AddTH2("Dalitz","X","Y", dalitzBins, dalitzBins, "dalitz",
@@ -634,6 +634,26 @@ struct OmegaHist_t {
             }
             return f.Tree.p_vetoE > .25;
         }
+
+        struct LineFct {
+            double m;
+            double b;
+
+            constexpr LineFct(const vec2& p1, const vec2& p2) :
+                m((p2.y - p1.y) / (p2.x - p1.x)),
+                b(p1.y - m * p1.x)
+            {}
+
+            double operator() (const double& x) const noexcept { return m*x+b; }
+        };
+
+        static bool gg_ggg_line_cut(const Fill_t& f) {
+            constexpr const LineFct l({667,459}, {902,641});
+            const double dist = 30.0;
+            const vec2 x = {f.Tree.ggg_fitted().M(), max(f.Tree.ggIM_fitted())};
+
+            return fabs( l(x.x) - x.y ) < dist;
+        }
     };
 
     // Sig and Ref channel share some cuts...
@@ -702,6 +722,10 @@ struct OmegaHist_t {
         cuts.emplace_back(MultiCut_t<Fill_t>{
                               {"etaHyp",               TreeCuts::etaHypCut},
                               {"pi0Hyp",               TreeCuts::pi0HypCut}
+                          });
+
+        cuts.emplace_back(MultiCut_t<Fill_t>{
+                              {"LineCut",               TreeCuts::gg_ggg_line_cut}
                           });
 
 //        cuts.emplace_back(MultiCut_t<Fill_t>{
