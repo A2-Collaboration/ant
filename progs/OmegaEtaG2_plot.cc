@@ -639,7 +639,7 @@ struct OmegaHist_t {
             double m;
             double b;
 
-            constexpr LineFct(const vec2& p1, const vec2& p2) :
+            LineFct(const vec2& p1, const vec2& p2) :
                 m((p2.y - p1.y) / (p2.x - p1.x)),
                 b(p1.y - m * p1.x)
             {}
@@ -648,7 +648,7 @@ struct OmegaHist_t {
         };
 
         static bool gg_ggg_line_cut(const Fill_t& f) {
-            constexpr const LineFct l({667,459}, {902,641});
+            static const LineFct l({667,459}, {902,641});
             const double dist = 30.0;
             const vec2 x = {f.Tree.ggg_fitted().M(), max(f.Tree.ggIM_fitted())};
 
