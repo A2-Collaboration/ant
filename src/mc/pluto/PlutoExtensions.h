@@ -1,6 +1,8 @@
 #pragma once
 
 #include "PStaticData.h"
+#include "PSimpleVMDFF.h"
+#include "PDistributionManager.h"
 #include "base/Logger.h"
 #include <iostream>
 
@@ -65,6 +67,13 @@ void UpdatePlutoDataBase()
     sdata->AddDecay("eta' --> pi+ pi- mu+ mu-", "eta'", "pi+,pi-,mu+,mu-", 2.9E-5);     // upper limit
     sdata->AddDecay("eta' --> pi+ pi- pi0",     "eta'", "pi+,pi-,pi0",     3.8E-4);
     sdata->AddDecay("eta' --> pi+ pi- e+ e-",   "eta'", "pi+,pi-,e+,e-",   2.4E-3);
+    // eta' Dalitz including TFF model
+    sdata->AddDecay("eta' --> dilepton + g (Dalitz)", "eta'", "dilepton,g", 9E-4);   // upper limit
+    // change the form factor
+    PSimpleVMDFF *ff = new PSimpleVMDFF("etaprime_ff@eta'_to_dilepton_g/formfactor", "Eta prime form factor", -1);
+    // use an approximation with more realistic width instead of something similar to a delta peak
+    ff->AddEquation((char*)"_ff2 = .5776*(.5776+.01)/((.5776-_q2)*(.5776-_q2)+.5776*.01)");  //equation from pluto paper page 11
+    makeDistributionManager()->Add(ff);
 
     VLOG(5) << "=============================================" << endl;
     VLOG(5) << "eta' after change:" << endl;
