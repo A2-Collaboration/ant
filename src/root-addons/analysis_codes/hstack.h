@@ -83,7 +83,6 @@ struct hstack : THStack
         SetTitle(origtitle.c_str());
         archive(static_cast<TNamed&>(*this), hists, simple);
         origtitle = GetTitle();
-        checkHists();
     }
 
     static double Global_MC_Scaling;
