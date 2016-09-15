@@ -10,10 +10,10 @@ struct vec2 {
     double x = {};
     double y = {};
 
-    vec2() noexcept = default;
-    vec2(const vec2&) noexcept = default;
-    vec2(vec2&&) noexcept  = default;
-    vec2(const double X, const double Y) noexcept : x(X), y(Y) {}
+    constexpr vec2() noexcept = default;
+    constexpr vec2(const vec2&) noexcept = default;
+    constexpr vec2(vec2&&) noexcept  = default;
+    constexpr vec2(const double X, const double Y) noexcept : x(X), y(Y) {}
 
     vec2& operator= (const vec2&) noexcept = default;
     vec2& operator= (vec2&&) noexcept = default;
