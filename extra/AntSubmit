@@ -12,6 +12,7 @@ use POSIX;
 my $filelist = '-';             # default STDIN
 my $clean = 0;
 my $backup = 0;
+my $resubmit = 0;
 my $help = 0;
 my $cwd = getcwd;
 my $jobtag = 'Ant';
@@ -33,6 +34,7 @@ GetOptions(
            'help|h' => \$help,
            'clean|c' => \$clean,
            'backup|b' => \$backup,
+           'resubmit' => \$resubmit,
            'tag|t=s' => \$jobtag,
            'filelist=s' => \$filelist,
            'no_log' => \$no_log,
@@ -47,8 +49,8 @@ if ($help) {
 }
 
 my $timestampstr = strftime('%Y-%m-%d-%H-%M-%S',localtime);
-if ($clean && $backup) {
-  die "Requesting --clean and --backup at once makes no sense\n";
+if ($clean | $backup | $resubmit && !($clean ^ $backup ^ $resubmit)) {
+  die "Options --clean --backup --resubmit are mutually exclusive\n";
 }
 
 &main;
@@ -163,9 +165,44 @@ sub main {
   my $total = scalar @jobs;
   die "No jobs to be submitted, abort.\n" if $total==0;
 
-  prepare_dir('outputfile', $OUT_DIR, \@jobs);
-  prepare_dir('logfile',    $LOG_DIR, \@jobs);
+  # check for resubmission mode
+  if($resubmit) {
+    # we expect both directories to be there
+    die "Resubmit mode requires '$LOG_DIR' dir to be existent" unless -d $LOG_DIR;
+    die "Resubmit mode requires '$OUT_DIR' dir to be existent" unless -d $OUT_DIR;
 
+    my @resubmit_jobs;
+    my $nNoLogfile = 0;
+    my $nNonZeroExit = 0;
+    for my $job (@jobs) {
+      if(-f $job->{logfile}) {
+        # search for exit code
+        my $jobexitcode = undef;
+        for my $lastline (`tail -n2 $job->{logfile}`) {
+          if($lastline =~/Job Exit Code: (\d+)/) {
+            $jobexitcode = $1;
+          }
+        }
+        next if defined($jobexitcode) && $jobexitcode == 0;
+        #print $job->{logfile}," ",$jobexitcode,"\n";
+        $nNonZeroExit++;
+      }
+      else {
+        $nNoLogfile++;
+      }
+      push(@resubmit_jobs, $job);
+      unlink $job->{outputfile};
+    }
+    if (@resubmit_jobs == 0) {
+      die "No jobs to be resubmitted found.\n";
+    }
+    print "Found $nNoLogfile jobs without logfile, $nNonZeroExit jobs with non-zero exit.\n";
+    @jobs = @resubmit_jobs;
+  }
+  else {
+    prepare_dir('outputfile', $OUT_DIR, \@jobs);
+    prepare_dir('logfile',    $LOG_DIR, \@jobs);
+  }
   # create items from jobs
   my @submissions;
   for my $job (@jobs) {
@@ -245,8 +282,9 @@ sub prepare_dir {
           my $basename = basename($file);
           my $backupfile = "$backupdir/$basename";
           rename $file,$backupfile or die "Cannot move $file to $backupfile: $!";
-        } else {
-          die "File $file already exists. Use --clean or --backup?\n";
+        }
+        else {
+          die "File $file already exists. Use --clean, --backup or --resubmit?\n";
         }
         $n_files++;
       }
@@ -355,6 +393,7 @@ Options:
 
   --clean     Delete <outputdir> (and logs) before submission.
   --backup    Rename <outputdir> (and logs) to timestamped folder before submission.
+  --resubmit  Resubmit jobs which have no log file or non-zero exit code
   --tag       Specify a custom job tag, default is Ant
   --filelist  Read from file instead of STDIN
   --no_log    Do not write submission into AntSubmit.log
