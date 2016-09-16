@@ -2,6 +2,7 @@
 #include "base/Logger.h"
 #include "base/std_ext/string.h"
 #include "base/std_ext/memory.h"
+#include "base/ProgressCounter.h"
 
 #include "TDirectory.h"
 #include "TFile.h"
@@ -24,11 +25,14 @@ using unique_ptrs_t = vector<unique_ptr<T>>;
 
 using sources_t = unique_ptrs_t<const TDirectory>;
 
+unsigned nPaths = 0;
 
 void MergeRecursive(TDirectory& target, const sources_t& sources)
 {
-    LOG(INFO) << target.GetPath();
+//    LOG(INFO) << target.GetPath();
 
+    nPaths++;
+    ProgressCounter::Tick();
 
     map<string, sources_t> dirs;
 
@@ -132,6 +136,12 @@ int main( int argc, char **argv )
    for(const auto& filename : filenames) {
        sources.emplace_back(std_ext::make_unique<TFile>(filename.c_str(), "READ"));
    }
+
+   ProgressCounter::Interval = 2;
+   ProgressCounter progress([] (chrono::duration<double> elapsed) {
+       LOG(INFO) << nPaths/elapsed.count() << " paths/s";
+       nPaths = 0;
+   });
 
    MergeRecursive(*outputfile, sources);
 
