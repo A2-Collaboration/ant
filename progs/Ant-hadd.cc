@@ -25,9 +25,9 @@ using unique_ptrs_t = vector<unique_ptr<T>>;
 using sources_t = unique_ptrs_t<const TDirectory>;
 
 
-void MergeRecursive(TDirectory* target, const sources_t& sources)
+void MergeRecursive(TDirectory& target, const sources_t& sources)
 {
-    LOG(INFO) << target->GetPath();
+    LOG(INFO) << target.GetPath();
 
 
     map<string, sources_t> dirs;
@@ -71,12 +71,12 @@ void MergeRecursive(TDirectory* target, const sources_t& sources)
 
 
     for(const auto& it_dirs : dirs) {
-        auto newdir = target->mkdir(it_dirs.first.c_str());
-        MergeRecursive(newdir, it_dirs.second);
+        auto newdir = target.mkdir(it_dirs.first.c_str());
+        MergeRecursive(*newdir, it_dirs.second);
     }
 
-    target->cd();
-    TFileMergeInfo info(target); // for calling Merge
+    target.cd();
+    TFileMergeInfo info(addressof(target)); // for calling Merge
 
     for(const auto& it_hists : hists) {
         auto& hists = it_hists.second;
@@ -84,7 +84,7 @@ void MergeRecursive(TDirectory* target, const sources_t& sources)
         for(auto it = next(hists.begin()); it != hists.end(); ++it) {
             first->Add(it->get());
         }
-        target->WriteTObject(first.get());
+        target.WriteTObject(first.get());
     }
 
 
@@ -96,7 +96,7 @@ void MergeRecursive(TDirectory* target, const sources_t& sources)
             c.Add(it->get());
         }
         first->Merge(addressof(c), addressof(info));
-        target->WriteTObject(first.get());
+        target.WriteTObject(first.get());
     }
 }
 
@@ -125,17 +125,19 @@ int main( int argc, char **argv )
        exit(EXIT_FAILURE);
    }
 
-   auto outputfile = new TFile(filenames.front().c_str(), "RECREATE");
+   auto outputfile = std_ext::make_unique<TFile>(filenames.front().c_str(), "RECREATE");
    filenames.pop_front();
 
    sources_t sources;
    for(const auto& filename : filenames) {
-       sources.emplace_back(new TFile(filename.c_str(), "READ"));
+       sources.emplace_back(std_ext::make_unique<TFile>(filename.c_str(), "READ"));
    }
 
-   MergeRecursive(outputfile, sources);
+   MergeRecursive(*outputfile, sources);
 
-   LOG(INFO) << "Recursion finished";
+   LOG(INFO) << "Finished, writing file...";
+
+   outputfile->Write();
 
    exit(EXIT_SUCCESS);
 }
