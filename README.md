@@ -118,6 +118,23 @@ The following items are still to-do:
   * ~~Implement Mk1 unpacker (many things already provided)~~ Done including GZ decompression. Scaler buffer decoding still TODO.
   * ~~Implement EPICS reader, and some more slow control variables~~ Done for tagging efficiency at least.  
 
+## Design Philosophy
+# Parallel Processing
+Ant is designed to run single threaded.
+This avoids a lot of programming problems and
+running it on the computation clusters is simpler
+and more efficient, since you only need to allocate
+one thread per job.
+For processing data we recommend to run an
+Ant process on each input file and then merge the
+results afterwards using Ant-hadd, Ant-chain,
+or ROOTs hadd tool.
+
+There is also no builtin option to run over multiple input files
+in one go. This should be handled by external tools like 
+GNU Parallel, or AntSubmit on a cluster (see also "--no_qusb" option),
+or your shell.
+
 ## Detector Type Mapping
 
 | Ant Reconstruct  | Ant Analysis  | Goat |
