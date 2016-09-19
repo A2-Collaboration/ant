@@ -21,7 +21,8 @@ using namespace ant::std_ext;
 using namespace ant::progs::taggeff;
 using namespace ant::progs::tools;
 
-
+const vector<double> startparams({0.66,1.60,0.001});
+constexpr double upperlimit = 100;
 
 template<typename Func>
 void runOverContainer(const list<treeLoader_t*>& tContainers, Func f) {
@@ -122,7 +123,12 @@ void taggEffTriple_t::initBkgFits()
     double dummy(0);
     double tmax(0);
     AvgRates->GetPoint(AvgRates->GetN()-1,tmax,dummy);
+
     AvgFit   = new TF1("avg","[0] + [1] * exp( - [2] * x)",0,tmax);
+    AvgFit->SetParameters(startparams.data());
+    for (auto i: {0,1,2})
+        AvgFit->SetParLimits(i,0,upperlimit);
+
     AvgRates->Fit(AvgFit);
     for ( auto ch = 0u ; ch < Run.nchannels ; ++ch)
     {
@@ -335,6 +341,12 @@ void taggEffTriple_t::bkgFit_t::doFit(const IntervalD& fitrange, const double la
     string fitFkt = std_ext::formatter() << "[0] + [1] * exp( - " << lambda << " * x)";
     Fit   = new TF1(name.c_str(),fitFkt.c_str(),
                     fitrange.Start(),fitrange.Stop());
+    for (auto i: {0,1})
+    {
+        Fit->SetParameter(i,startparams[i]);
+        Fit->SetParLimits(i,0,upperlimit);
+    }
+
     Graph->Fit(Fit);
 }
 
