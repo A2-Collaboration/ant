@@ -27,17 +27,39 @@ using sources_t = unique_ptrs_t<const TDirectory>;
 
 unsigned nPaths = 0;
 
+template<typename T>
+struct pair_t {
+    explicit pair_t(const string& name) : Name(name) {}
+    string Name;
+    T Item;
+};
+
+template<typename C, typename... Args>
+void add_by_name(C& c, const string& name, Args&&... args) {
+    using T = typename C::value_type;
+    auto it = std::find_if(c.begin(), c.end(), [name] (const T& item) {
+        return item.Name == name;
+    });
+    if(it == c.end()) {
+        c.emplace_back(name);
+        c.back().Item.emplace_back(std::forward<Args>(args)...);
+    }
+    else {
+        it->Item.emplace_back(std::forward<Args>(args)...);
+    }
+}
+
 void MergeRecursive(TDirectory& target, const sources_t& sources)
 {
-//    LOG(INFO) << target.GetPath();
-
     nPaths++;
     ProgressCounter::Tick();
 
-    map<string, sources_t> dirs;
+    vector<pair_t<sources_t>> dirs;
 
-    map<string, unique_ptrs_t<TH1>>    hists;
-    map<string, unique_ptrs_t<hstack>> stacks;
+    vector<pair_t<unique_ptrs_t<TH1>>>    hists;
+    vector<pair_t<unique_ptrs_t<hstack>>> stacks;
+
+
 
     for(auto& source : sources) {
         TList* keys = source->GetListOfKeys();
@@ -59,15 +81,15 @@ void MergeRecursive(TDirectory& target, const sources_t& sources)
 
             if(cl->InheritsFrom(TDirectory::Class())) {
                 auto dir = dynamic_cast<TDirectory*>(key->ReadObj());
-                dirs[keyname].emplace_back(dir);
+                add_by_name(dirs, keyname, dir);
             }
             else if(cl->InheritsFrom(TH1::Class())) {
                 auto obj = dynamic_cast<TH1*>(key->ReadObj());
-                hists[keyname].emplace_back(obj);
+                add_by_name(hists, keyname, obj);
             }
             else if(cl->InheritsFrom(hstack::Class())) {
                 auto obj = dynamic_cast<hstack*>(key->ReadObj());
-                stacks[keyname].emplace_back(obj);
+                add_by_name(stacks, keyname, obj);
             }
         }
     }
@@ -75,15 +97,15 @@ void MergeRecursive(TDirectory& target, const sources_t& sources)
 
 
     for(const auto& it_dirs : dirs) {
-        auto newdir = target.mkdir(it_dirs.first.c_str());
-        MergeRecursive(*newdir, it_dirs.second);
+        auto newdir = target.mkdir(it_dirs.Name.c_str());
+        MergeRecursive(*newdir, it_dirs.Item);
     }
 
     target.cd();
     TFileMergeInfo info(addressof(target)); // for calling Merge
 
     for(const auto& it_hists : hists) {
-        auto& hists = it_hists.second;
+        auto& hists = it_hists.Item;
         auto& first = hists.front();
         for(auto it = next(hists.begin()); it != hists.end(); ++it) {
             first->Add(it->get());
@@ -91,9 +113,8 @@ void MergeRecursive(TDirectory& target, const sources_t& sources)
         target.WriteTObject(first.get());
     }
 
-
     for(const auto& it_stacks : stacks) {
-        auto& stacks = it_stacks.second;
+        auto& stacks = it_stacks.Item;
         auto& first = stacks.front();
         TList c;
         for(auto it = next(stacks.begin()); it != stacks.end(); ++it) {
