@@ -654,6 +654,15 @@ struct OmegaHist_t {
 
             return fabs( l(x.x) - x.y ) < dist;
         }
+
+        static bool DalitzCut(const Fill_t& f) {
+            OmegaDalitzPlot p(f.Tree.photons_fitted(), f.Tree.ggg_fitted());
+            do {
+                if(!dalitzCut->IsInside(p.var.x, p.var.y))
+                    return false;
+            } while (p.Next());
+            return true;
+        }
     };
 
     // Sig and Ref channel share some cuts...
@@ -668,14 +677,7 @@ struct OmegaHist_t {
 
 
 
-//        auto DalitzCut = [] (const Fill_t& f) {
-//            OmegaDalitzPlot p(f.Tree.photons_fitted(), f.Tree.ggg_fitted());
-//            do {
-//                if(!dalitzCut->IsInside(p.var.x, p.var.y))
-//                    return false;
-//            } while (p.Next());
-//            return true;
-//        };
+
 
 //        auto etaBachelorCut = [] (const Fill_t& f) {
 //            return interval<double>::CenterWidth(200,40).Contains(f.BestBachelorE());
@@ -715,9 +717,9 @@ struct OmegaHist_t {
 //                                 {"nodEECut", TreeCuts::dontcare }
 //                             });
 
-        cuts.emplace_back(MultiCut_t<Fill_t>{
-                              {"NoPunch",     [] (const Fill_t& f) { return f.Tree.p_fitted().Energy() < 400.0 + ParticleTypeDatabase::Proton.Mass();} }
-                          });
+//        cuts.emplace_back(MultiCut_t<Fill_t>{
+//                              {"NoPunch",     [] (const Fill_t& f) { return f.Tree.p_fitted().Energy() < 400.0 + ParticleTypeDatabase::Proton.Mass();} }
+//                          });
 
         cuts.emplace_back(MultiCut_t<Fill_t>{
                               {"etaHyp",               TreeCuts::etaHypCut},
