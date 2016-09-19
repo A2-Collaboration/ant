@@ -159,9 +159,9 @@ struct Hist_t {
 
         cuts.emplace_back(MultiCut_t<Fill_t>{
                               {"CBVetoSumE", [] (const Fill_t& f) { return f.CBVetoSumE<0.4; }},
+                              {"-", [] (const Fill_t& ) { return true; }},
                           });
-
-        auto gNonPi0_cut = [] (const Fill_t& f) {
+        auto gNonPi0_cut_1 = [] (const Fill_t& f) {
             auto& caloEs = f.gNonPi0_CaloE();
             auto i_minE = caloEs.front() < caloEs.back() ? 0 : 1;
             auto theta = f.gNonPi0_Theta().at(i_minE);
@@ -169,8 +169,20 @@ struct Hist_t {
             return caloE > 230.0*(1.0-theta/160.0);
         };
 
+        auto gNonPi0_cut_2 = [] (const Fill_t& f) {
+            auto& caloEs = f.gNonPi0_CaloE();
+            auto i_minE = caloEs.front() < caloEs.back() ? 0 : 1;
+            auto theta = f.gNonPi0_Theta().at(i_minE);
+            auto caloE = caloEs.at(i_minE);
+            if(theta<22)
+                return caloE > 140;
+            else
+                return caloE > 60;
+        };
+
         cuts.emplace_back(MultiCut_t<Fill_t>{
-                              {"gNonPi0", gNonPi0_cut},
+                              {"gNonPi0_1", gNonPi0_cut_1},
+                              {"gNonPi0_2", gNonPi0_cut_2},
                           });
 
         return cuts;
