@@ -5,6 +5,9 @@
 #include "utils/Uncertainties.h"
 #include "base/Logger.h"
 #include "expconfig/ExpConfig.h"
+#include "tree/TParticle.h"
+#include "tree/TCandidate.h"
+#include "tree/TCluster.h"
 
 #include "TH1D.h"
 #include "TTree.h"
@@ -132,6 +135,12 @@ TVector2 getPSAVector(const TParticlePtr& p) {
 
     throw std::runtime_error("Incomplete Particle without candiate or CaloCluster");
 
+}
+
+unsigned DetectorNum(const Detector_t::Any_t& d) {
+    if(d & Detector_t::Type_t::CB) return 1;
+    if(d & Detector_t::Type_t::TAPS) return 2;
+    return 0;
 }
 
 void JustPi0::MultiPi0::ProcessData(const TEventData& data, const TParticleTree_t& ptree)
@@ -290,6 +299,12 @@ void JustPi0::MultiPi0::ProcessData(const TEventData& data, const TParticleTree_
                 t.proton_Time   = proton->Candidate->Time;
 
                 t.proton_PSA    = getPSAVector(proton);
+                t.proton_det    = DetectorNum(proton->Candidate->Detector);
+
+                const auto& vetoCl = proton->Candidate->FindVetoCluster();
+                if(vetoCl) {
+                    t.proton_vetoCh = vetoCl->CentralElement;
+                }
 
                 t.ProtonMCTrueMatches = proton->Candidate == proton_mctrue_match;
 

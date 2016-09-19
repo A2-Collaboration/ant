@@ -61,6 +61,8 @@ protected:
             ADD_BRANCH_T(TVector2,       proton_PSA)
             ADD_BRANCH_T(double,         proton_vetoE)
             ADD_BRANCH_T(double,         proton_Time)
+            ADD_BRANCH_T(unsigned,       proton_vetoCh)
+            ADD_BRANCH_T(unsigned,       proton_det)
 
 
             ADD_BRANCH_T(std::vector<TLorentzVector>, photons)
