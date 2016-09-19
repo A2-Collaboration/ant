@@ -175,8 +175,8 @@ public:
         ADD_BRANCH_T(double,                      copl_angle)
         ADD_BRANCH_T(double,                      p_mm_angle)
 
-        ADD_BRANCH_T(std::vector<double>,         ggIM, 3)
-        ADD_BRANCH_T(std::vector<double>,         ggIM_fitted, 3)
+        ADD_BRANCH_T(std::vector<TLorentzVector>,         ggIM, 3)
+        ADD_BRANCH_T(std::vector<TLorentzVector>,         ggIM_fitted, 3)
 
         ADD_BRANCH_T(std::vector<double>,         BachelorE, 3)
         ADD_BRANCH_T(std::vector<double>,         BachelorE_fitted, 3)

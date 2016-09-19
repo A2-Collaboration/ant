@@ -621,7 +621,7 @@ void OmegaEtaG2::Analyse(const TEventData &data, const TEvent& event, manager_t&
                         const auto& g3 = photons.at(comb[2]);
 
                         const auto gg = *g1 + *g2;
-                        t.ggIM().at(combindex) = gg.M();
+                        t.ggIM().at(combindex) = gg;
                         const auto g3_boosted = Boost(*g3, gggBoost);
                         t.BachelorE().at(combindex) = g3_boosted.E;
                     }
@@ -633,7 +633,7 @@ void OmegaEtaG2::Analyse(const TEventData &data, const TEvent& event, manager_t&
 
                         const auto gg = g1 + g2;
 
-                        t.ggIM_fitted().at(combindex) = gg.M();
+                        t.ggIM_fitted().at(combindex) = gg;
 
                         const auto g3_boosted = Boost(g3, gggBoost_fitted);
 

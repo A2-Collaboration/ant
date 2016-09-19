@@ -169,6 +169,10 @@ double max(const std::vector<double>& data) {
     return *max_element(data.cbegin(), data.cend());
 }
 
+double maxIM(const std::vector<TLorentzVector>& data) {
+    return max_element(data.cbegin(), data.cend(), [] (const TLorentzVector& v1, const TLorentzVector& v2) { return v1.M() < v2.M(); })->M();
+}
+
 
 // define the structs containing the histograms
 // and the cuts. for simple branch variables, that could
@@ -311,7 +315,7 @@ struct OmegaHist_t {
                [] (TH1D* h, const Fill_t& f) {
 
             for(const auto& v : f.Tree.ggIM_fitted())
-                h->Fill(v, f.TaggW());
+                h->Fill(v.M(), f.TaggW());
         });
 
         AddTH1("Bachelor Photon Energy",  "E [MeV]",     "",       IMbins,     "bachelorE",
@@ -333,7 +337,7 @@ struct OmegaHist_t {
                [] (TH1D* h, const Fill_t& f) {
 
             if( f.iBestIndex() != -1 ) {
-                h->Fill(f.Tree.ggIM().at(f.iBestIndex()), f.TaggW());
+                h->Fill(f.Tree.ggIM().at(f.iBestIndex()).M(), f.TaggW());
             }
         });
 
@@ -353,7 +357,12 @@ struct OmegaHist_t {
 
         AddTH2("3#gamma IM vs 2#gamma IM", "3#gamma IM [MeV]", "max(2#gamma IM) [MeV]", IMbins, IMbins, "ggg_max_gg",
                [] (TH2D* h, const Fill_t& f) {
-             h->Fill(f.Tree.ggg_fitted().M(), max(f.Tree.ggIM_fitted()), f.TaggW());
+             h->Fill(f.Tree.ggg_fitted().M(), maxIM(f.Tree.ggIM_fitted()), f.TaggW());
+        });
+
+        AddTH2("3#gamma E vs 2#gamma IM", "3#gamma E [MeV]", "max(2#gamma IM) [MeV]", IMbins, IMbins, "gggE_max_gg",
+               [] (TH2D* h, const Fill_t& f) {
+             h->Fill(f.Tree.ggg_fitted().E()-ParticleTypeDatabase::Omega.Mass(), maxIM(f.Tree.ggIM_fitted()), f.TaggW());
         });
 
 
@@ -650,7 +659,7 @@ struct OmegaHist_t {
         static bool gg_ggg_line_cut(const Fill_t& f) {
             static const LineFct l({667,459}, {902,641});
             const double dist = 30.0;
-            const vec2 x = {f.Tree.ggg_fitted().M(), max(f.Tree.ggIM_fitted())};
+            const vec2 x = {f.Tree.ggg_fitted().M(), maxIM(f.Tree.ggIM_fitted())};
 
             return fabs( l(x.x) - x.y ) < dist;
         }
