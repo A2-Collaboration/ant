@@ -923,9 +923,9 @@ OmegaEtaG2::OmegaEtaG2(const std::string& name, OptionsPtr opts):
             fitter_pi0.treefitter.SetZVertexSigma(fitter_z_sigma);
     }
 
-    promptrandom.AddPromptRange({-5,5});
-    promptrandom.AddRandomRange({-20, -10});
-    promptrandom.AddRandomRange({ 10,  20});
+    promptrandom.AddPromptRange({- 5,   5});
+    promptrandom.AddRandomRange({-50, -10});
+    promptrandom.AddRandomRange({ 10,  50});
 
     t.CreateBranches(tree);
 
