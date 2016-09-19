@@ -180,7 +180,7 @@ Ant-pluto is a frontend for Pluto for A2 physics (includes the Tagger).
 It can generate photoproduction and decays or shoot particles randomly in all directions.
 
 #### Example: Pluto Decay
-To use Pluto to simuale, for example, the omega ---> pi0 gamma do:
+To use Pluto to simulate, for example, the omega ---> pi0 gamma do:
 ```
 Ant-pluto --pluto --reaction "p omega [ pi0 g ]" --Emin 1400 --Emax 1600 --numEvents 10000 --saveIntermediate --enableBulk -v 2 -o sim.root
 ```
