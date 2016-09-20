@@ -28,6 +28,7 @@ add_ant_executable(Ant-treeTool)
 add_ant_executable(Ant-copyTree)
 add_ant_executable(Ant-makeSigmas)
 add_ant_executable(Ant-compareHists)
+add_ant_executable(Ant-altVetoCalTool)
 
 option(AntProgs_Omega "Build Omega Analysis Tools" OFF)
 
