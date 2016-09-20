@@ -212,9 +212,14 @@ void EtapSergey::ProcessEvent(const TEvent& event, manager_t&)
 
 void EtapSergey::ShowResult()
 {
+    treeAnt.Tree->AddFriend(treeSergey.Tree);
+
     canvas("Result")
-            << TTree_drawable(treeSergey.Tree, "IM_4g >> (100,800,1050)","KinFitProb>0.01")
-            << TTree_drawable(treeAnt.Tree,    "IM_4g >> (100,800,1050)","KinFitProb>0.01")
+            << TTree_drawable(treeAnt.Tree, "treeSergey.IM_4g >> (100,800,1050)","treeSergey.KinFitProb>0.01")
+            << TTree_drawable(treeAnt.Tree, "treeAnt.IM_4g >> (100,800,1050)","treeAnt.KinFitProb>0.01")
+            << drawoption("colz")
+            << TTree_drawable(treeAnt.Tree, "treeSergey.IM_4g:treeAnt.IM_4g >> (100,800,1050,100,800,1050)","")
+            << TTree_drawable(treeAnt.Tree, "treeSergey.KinFitProb:treeAnt.KinFitProb >> (100,0,1,100,0,1)","")
             << endc;
 }
 
