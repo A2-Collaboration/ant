@@ -33,6 +33,11 @@ public:
         ADD_BRANCH_T(double, CBVetoSumE)
         ADD_BRANCH_T(double, PIDSumE)
 
+        ADD_BRANCH_T(unsigned, KinFitProtonIdx)
+        ADD_BRANCH_T(unsigned, TreeFitProtonIdx)
+        ADD_BRANCH_T(unsigned, AntiPi0FitProtonIdx)
+        ADD_BRANCH_T(unsigned, AntiEtaFitProtonIdx)
+
         ADD_BRANCH_T(unsigned, MCTrue)
 
     };

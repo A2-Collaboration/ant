@@ -1851,9 +1851,10 @@ FitterSergey::~FitterSergey()
 
 }
 
-std::vector<FitterSergey::result_t> FitterSergey::Process(const TEventData& data)
+std::vector<FitterSergey::result_t> FitterSergey::Process(const std::vector<TTaggerHit>& taggerHits,
+                                                          const TCandidatePtrList& cands)
 {
-    if(data.Candidates.size() != 5)
+    if(cands.size() != 5)
         return {};
 
     constexpr double MeVtoGeV = 1.0 / 1000.0;
@@ -1868,13 +1869,13 @@ std::vector<FitterSergey::result_t> FitterSergey::Process(const TEventData& data
     }
 
     // fill the tagger hits
-    int fphNLadd = data.TaggerHits.size();
+    int fphNLadd = taggerHits.size();
     Double_t fphTagg[fphNLadd];
     Double_t fdphTagg[fphNLadd];
     Double_t TaggT[fphNLadd];
     unsigned TaggCh[fphNLadd];
     fphNLadd = 0;
-    for(const TTaggerHit& taggerhit : data.TaggerHits) {
+    for(const TTaggerHit& taggerhit : taggerHits) {
         if(taggerhit.Time<-60 || taggerhit.Time>60)
             continue;
         fphTagg[fphNLadd] = taggerhit.PhotonEnergy;
@@ -1904,7 +1905,7 @@ std::vector<FitterSergey::result_t> FitterSergey::Process(const TEventData& data
     int fphNCB = 0;
 
     // start with the CB candidates
-    for(const auto& cand : data.Candidates.get_iter()) {
+    for(const auto& cand : cands) {
         if(cand->Detector & Detector_t::Type_t::CB) {
             p4ph[fphN] = TParticle(ParticleTypeDatabase::Photon, cand);
             ClDepthGam[fphN] = fKfit.DepthShowCB(cand->CaloEnergy *MeVtoGeV, 1);
@@ -1920,7 +1921,7 @@ std::vector<FitterSergey::result_t> FitterSergey::Process(const TEventData& data
     }
 
     // then TAPS candidates
-    for(const auto& cand : data.Candidates.get_iter()) {
+    for(const auto& cand : cands) {
         if(cand->Detector & Detector_t::Type_t::TAPS) {
             TVector3 vcl = cand->FindCaloCluster()->Position;
             auto zTAPS = vcl.Z();
@@ -1977,6 +1978,10 @@ std::vector<FitterSergey::result_t> FitterSergey::Process(const TEventData& data
     Double_t Pbs4g[fphNLadd];
     Double_t Pbs2pi0[fphNLadd];
     Double_t Pbspi0eta[fphNLadd];
+
+    unsigned PrIdx4g[fphNLadd];
+    unsigned PrIdx2pi0[fphNLadd];
+    unsigned PrIdxpi0eta[fphNLadd];
 
     int nhyp = 4;
     int Ngam = fphN - 1;
@@ -2152,12 +2157,15 @@ std::vector<FitterSergey::result_t> FitterSergey::Process(const TEventData& data
                     }
                     if (ihyp == 0 && prb > Pbs4g[i]) {
                         Pbs4g[i] = prb;
+                        PrIdx4g[i] = ipr+1;
                     }
                     if (ihyp == 1 && prb > Pbs2pi0[i]) {
                         Pbs2pi0[i] = prb;
+                        PrIdx2pi0[i] = ipr+1;
                     }
                     if (ihyp > 1 && prb > Pbspi0eta[i]) {
                         Pbspi0eta[i] = prb;
+                        PrIdxpi0eta[i] = ipr+1;
                     }
                 } // ihyp
             }   // iver
@@ -2369,6 +2377,12 @@ NEWV51:
         r.TreeFitProb = prb;
         r.AntiPi0FitProb = Pbs2pi0[i];
         r.AntiEtaFitProb = Pbspi0eta[i];
+
+        r.KinFitProtonIdx = PrIdx4g[i];
+        r.TreeFitProtonIdx = idver5[iver][4];
+        r.AntiPi0FitProtonIdx = PrIdx2pi0[i];
+        r.AntiEtaFitProtonIdx = PrIdxpi0eta[i];
+
 
         fp4g = fKfit.Particle(1, 1) + fKfit.Particle(1, 2) +
                fKfit.Particle(1, 3) + fKfit.Particle(1, 4);

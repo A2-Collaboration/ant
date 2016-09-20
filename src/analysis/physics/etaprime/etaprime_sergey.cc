@@ -95,6 +95,7 @@ void EtapSergey::fillTree(EtapSergey::Tree_t& t,
 {
     t.MCTrue = MCTrue;
     t.PIDSumE = PIDSumE;
+
     for(const result_t& r : results) {
         t.TaggE  = r.TaggE;
         t.TaggT  = r.TaggT;
@@ -113,6 +114,11 @@ void EtapSergey::fillTree(EtapSergey::Tree_t& t,
 
         t.CBVetoSumE = r.CBVetoSumE;
 
+        t.KinFitProtonIdx = r.KinFitProtonIdx;
+        t.TreeFitProtonIdx = r.TreeFitProtonIdx;
+        t.AntiPi0FitProtonIdx = r.AntiPi0FitProtonIdx;
+        t.AntiEtaFitProtonIdx = r.AntiEtaFitProtonIdx;
+
         t.Tree->Fill();
     }
 }
@@ -121,8 +127,18 @@ void EtapSergey::ProcessEvent(const TEvent& event, manager_t&)
 {
     const TEventData& data = event.Reconstructed();
 
+    TCandidatePtrList cands;
+    for(auto& cand : data.Candidates.get_iter()) {
+        if(cand->Detector & Detector_t::Type_t::CB)
+            cands.push_back(cand);
+    }
+    for(auto& cand : data.Candidates.get_iter()) {
+        if(cand->Detector & Detector_t::Type_t::TAPS)
+            cands.push_back(cand);
+    }
+
     // run Sergey's analysis
-    auto results_sergey = fitter_sergey.Process(data);
+    auto results_sergey = fitter_sergey.Process(data.TaggerHits, cands);
 
     if(results_sergey.empty())
         return;
@@ -183,12 +199,14 @@ void EtapSergey::ProcessEvent(const TEvent& event, manager_t&)
 
         r.KinFitProb = std_ext::NaN;
 
-        for(const auto& cand_proton :  data.Candidates.get_iter()) {
+        unsigned protonIdx = 0;
 
+        for(const auto& cand_proton :  cands) {
+            protonIdx++;
             auto proton = make_shared<TParticle>(ParticleTypeDatabase::Proton, cand_proton);
 
             TParticleList photons;
-            for(const auto& cand : data.Candidates.get_iter()) {
+            for(const auto& cand : cands) {
                 if(cand == cand_proton)
                     continue;
                 auto photon = make_shared<TParticle>(ParticleTypeDatabase::Photon, cand);
@@ -209,6 +227,9 @@ void EtapSergey::ProcessEvent(const TEvent& event, manager_t&)
             for(auto& p : fitted_photons)
                 fitted_photon_sum += *p;
             r.IM_4g = fitted_photon_sum.M();
+            r.KinFitProtonIdx = protonIdx;
+
+
         }
 
         results_ant.emplace_back(move(r));
@@ -228,6 +249,13 @@ void EtapSergey::ShowResult()
             << drawoption("colz")
             << TTree_drawable(treeAnt.Tree, "treeSergey.IM_4g:treeAnt.IM_4g >> (100,800,1050,100,800,1050)","")
             << TTree_drawable(treeAnt.Tree, "treeSergey.KinFitProb:treeAnt.KinFitProb >> (100,0,1,100,0,1)","")
+            << endc;
+    canvas("ProtonIdx")
+            << drawoption("colz")
+            << TTree_drawable(treeAnt.Tree, "treeSergey.KinFitProtonIdx:treeAnt.KinFitProtonIdx >> (5,1,6,5,1,6)","")
+            << TTree_drawable(treeSergey.Tree, "TreeFitProtonIdx:KinFitProtonIdx >> (5,1,6,5,1,6)","")
+            << TTree_drawable(treeSergey.Tree, "AntiPi0FitProtonIdx:KinFitProtonIdx >> (5,1,6,5,1,6)","")
+            << TTree_drawable(treeSergey.Tree, "AntiEtaFitProtonIdx:KinFitProtonIdx >> (5,1,6,5,1,6)","")
             << endc;
 }
 

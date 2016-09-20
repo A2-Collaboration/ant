@@ -36,10 +36,17 @@ public:
 
         double CBVetoSumE;
 
+        unsigned KinFitProtonIdx;
+        unsigned TreeFitProtonIdx;
+        unsigned AntiPi0FitProtonIdx;
+        unsigned AntiEtaFitProtonIdx;
+
+
         virtual std::ostream& Print(std::ostream& stream) const;
     };
 
-    std::vector<result_t> Process(const TEventData& data);
+    std::vector<result_t> Process(const std::vector<TTaggerHit>& taggerHits,
+                                  const TCandidatePtrList& cands);
 
 };
 
