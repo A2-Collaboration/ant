@@ -19,9 +19,9 @@ public:
     virtual ~FitterSergey();
 
     struct result_t : printable_traits {
-        double TaggE;
-        double TaggT;
-        double TaggCh;
+        double   TaggE;
+        double   TaggT;
+        unsigned TaggCh;
 
         double KinFitProb;
         double TreeFitProb;
