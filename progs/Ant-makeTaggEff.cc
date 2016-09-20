@@ -46,6 +46,8 @@ const map<string,TID> startIDs({ {"Setup_2014_07_EPT_Prod", TID(1406592000)},
                                  {"Setup_2014_10_EPT_Prod", TID(1413244800)},
                                  {"Setup_2014_12_EPT_Prod", TID(1417395600)} });
 
+constexpr double chi2cut_channels = 15.0;
+
 static TH1D* hist_channels(nullptr);
 static TH2D* hist_channels_2d(nullptr);
 static TH2D* hist_channels_2d_errors(nullptr);
@@ -394,9 +396,16 @@ void mediateCSV(const vector<string>& csvFiles)
 
             for ( auto ch = 0u ; ch < nCh ; ++ch)
             {
-                auto errorSqr = sqr(result.TaggEffErrors.at(ch));
-                vS.at(ch)   += 1.0 / errorSqr;
-                vSy.at(ch)  += result.TaggEffs.at(ch) / errorSqr;
+                if (result.BkgFitChi2.at(ch) < chi2cut_channels )
+                {
+                    auto errorSqr = sqr(result.TaggEffErrors.at(ch));
+                    vS.at(ch)   += 1.0 / errorSqr;
+                    vSy.at(ch)  += result.TaggEffs.at(ch) / errorSqr;
+                }
+                else
+                {
+                    LOG(WARNING) << "Skipping channel " << ch << " for " << record.at(1) << ": bkg-chi2 = " << result.BkgFitChi2.at(ch) << ".";
+                }
             }
 
             n_TaggEffs++;

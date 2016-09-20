@@ -35,11 +35,13 @@ struct taggEff_t
     TID             FirstID;
     std::vector<double>  TaggEffs;
     std::vector<double>  TaggEffErrors;
+    std::vector<double>  BkgFitChi2;
     taggEff_t(const std::string& setup, const TID& firstID, const size_t nChannels):
         Setup(setup),
         FirstID(firstID),
         TaggEffs(nChannels),
-        TaggEffErrors(nChannels) {}
+        TaggEffErrors(nChannels),
+        BkgFitChi2(nChannels){}
 };
 
 

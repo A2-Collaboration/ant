@@ -129,7 +129,7 @@ void taggEffTriple_t::initBkgFits()
     for (auto i: {0,1,2})
         AvgBkgFit->SetParLimits(i,0,upperlimit);
 
-    AvgBkgRates->Fit(AvgBkgFit);
+    AvgBkgRates->Fit(AvgBkgFit,"Q");
     for ( auto ch = 0u ; ch < Run.nchannels ; ++ch)
     {
         auto graph = timedData::getRatesVsTime({addressof(Bkg1),addressof(Bkg2)},ch);
@@ -267,6 +267,7 @@ const taggEff_t taggEffTriple_t::GetTaggEffSubtracted() const
                                              + sqr(formula_err(scalers.at(ch).GetSigmaMean(),TDCs.at(ch).GetMean(),
                                                                scalers.at(ch).GetMean(),L.GetMean()))
                                              );
+        result.BkgFitChi2.at(ch) = bkgFits.at(ch).Fit->GetChisquare();
     }
 
 
@@ -300,6 +301,7 @@ const taggEff_t taggEffTriple_t::GetTaggEff() const
     auto nchannels = Bkg1.nchannels;
     result.TaggEffs.resize(nchannels,0);
     result.TaggEffErrors.resize(nchannels,0);
+    result.BkgFitChi2.resize(nchannels,0);
 
     for (auto ch = 0u ; ch < nchannels ; ++ch)
     {
@@ -352,7 +354,7 @@ void taggEffTriple_t::bkgFit_t::doFit(const IntervalD& fitrange, const double la
         Fit->SetParLimits(i,0,upperlimit);
     }
 
-    Graph->Fit(Fit);
+    Graph->Fit(Fit,"Q");
 }
 
 double taggEffTriple_t::bkgFit_t::operator ()(const double time) const
