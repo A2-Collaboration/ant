@@ -38,6 +38,8 @@ public:
     };
 
     Tree_t treeSergey;
+    Tree_t treeAnt;
+
 
     struct params_t {
         const utils::UncertaintyModelPtr Fit_uncertainty_model;
@@ -60,7 +62,7 @@ protected:
 
     utils::FitterSergey fitter_sergey;
 
-    utils::KinFitter kinfitter_sig;
+    utils::KinFitter kinfitter;
 
     utils::TreeFitter treefitter;
     utils::TreeFitter treefitter_Pi0Pi0;

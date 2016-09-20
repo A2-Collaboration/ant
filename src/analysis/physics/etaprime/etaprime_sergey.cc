@@ -45,7 +45,7 @@ EtapSergey::EtapSergey(const string& name, OptionsPtr opts) :
            true, // flag to enable z vertex
            3.0 // Z_vertex_sigma, =0 means unmeasured
            ),
-    kinfitter_sig("kinfitter_sig",4,
+    kinfitter("kinfitter_sig",4,
                   params.Fit_uncertainty_model, params.Fit_Z_vertex
                   ),
     treefitter(Make(params)),
@@ -62,7 +62,7 @@ EtapSergey::EtapSergey(const string& name, OptionsPtr opts) :
     fitted_EtaPrime(treefitter.GetTreeNode(ParticleTypeDatabase::EtaPrime))
 {
     if(params.Fit_Z_vertex) {
-        kinfitter_sig.SetZVertexSigma(params.Z_vertex_sigma);
+        kinfitter.SetZVertexSigma(params.Z_vertex_sigma);
         treefitter_Pi0Pi0.SetZVertexSigma(params.Z_vertex_sigma);
         treefitter_Pi0Eta.SetZVertexSigma(params.Z_vertex_sigma);
     }
@@ -85,6 +85,7 @@ EtapSergey::EtapSergey(const string& name, OptionsPtr opts) :
     fitted_g_EtaPrime = find_photons(fitted_EtaPrime).at(0);
 
     treeSergey.CreateBranches(HistFac.makeTTree("treeSergey"));
+    treeAnt.CreateBranches(HistFac.makeTTree("treeAnt"));
 
     h_MissedBkg = HistFac.makeTH1D("Missed Background", "", "#", BinSettings(10),"h_MissedBkg");
 }
@@ -162,16 +163,6 @@ void EtapSergey::ProcessEvent(const TEvent& event, manager_t&)
 
     fillTree(treeSergey, results_sergey, MCTrue);
 
-    if(!Debug)
-        return;
-
-    if(results_sergey.empty())
-        return;
-
-    cout << ">>>> Sergey:" << endl;
-    for(auto& r : results_sergey)
-        cout << r << endl;
-
     vector<result_t> results_ant;
 
     // try to reproduce the result from Sergey
@@ -196,29 +187,35 @@ void EtapSergey::ProcessEvent(const TEvent& event, manager_t&)
                 photons.emplace_back(photon);
             }
 
-            kinfitter_sig.SetEgammaBeam(r.TaggE);
-            kinfitter_sig.SetProton(proton);
-            kinfitter_sig.SetPhotons(photons);
+            kinfitter.SetEgammaBeam(r.TaggE);
+            kinfitter.SetProton(proton);
+            kinfitter.SetPhotons(photons);
 
-            auto result = kinfitter_sig.DoFit();
+            auto result = kinfitter.DoFit();
 
             if(!std_ext::copy_if_greater(r.KinFitProb, result.Probability))
                 continue;
+
+            const auto fitted_photons = kinfitter.GetFittedPhotons();
+            LorentzVec fitted_photon_sum;
+            for(auto& p : fitted_photons)
+                fitted_photon_sum += *p;
+            r.IM_4g = fitted_photon_sum.M();
         }
 
         results_ant.emplace_back(move(r));
     }
 
+    fillTree(treeAnt, results_ant, MCTrue);
 
-    cout << ">>>> Ant:" << endl;
-    for(auto& r : results_ant)
-        cout << r << endl;
-    cout << endl;
 }
 
 void EtapSergey::ShowResult()
 {
-
+    canvas("Result")
+            << TTree_drawable(treeSergey.Tree, "IM_4g >> (100,800,1050)","KinFitProb>0.01")
+            << TTree_drawable(treeAnt.Tree,    "IM_4g >> (100,800,1050)","KinFitProb>0.01")
+            << endc;
 }
 
 const ParticleTypeTree EtapSergey::ptreeSignal = ParticleTypeTreeDatabase::Get(ParticleTypeTreeDatabase::Channel::EtaPrime_gOmega_ggPi0_4g);
