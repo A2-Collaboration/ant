@@ -48,3 +48,10 @@ add_custom_target(link_AntSubmit ALL
   "${CMAKE_SOURCE_DIR}/extra/AntSubmit"
   "${EXECUTABLE_OUTPUT_PATH}/AntSubmit"
   )
+
+# link the AntSimSubmit file
+add_custom_target(link_AntSimSubmit ALL
+  COMMAND ${CMAKE_COMMAND} -E create_symlink
+  "${CMAKE_SOURCE_DIR}/extra/SimulationBlaster/Ant_simulation_blaster.py"
+  "${EXECUTABLE_OUTPUT_PATH}/AntSimSubmit"
+  )
