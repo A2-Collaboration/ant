@@ -4,6 +4,8 @@
 #include "base/std_ext/memory.h"
 #include "base/ProgressCounter.h"
 
+#include "tree/TAntHeader.h"
+
 #include "TDirectory.h"
 #include "TFile.h"
 #include "TList.h"
@@ -12,6 +14,7 @@
 #include "TH1.h"
 #include "TFileMergeInfo.h"
 #include "root-addons/analysis_codes/hstack.h"
+
 
 #include <list>
 #include <string>
@@ -58,8 +61,7 @@ void MergeRecursive(TDirectory& target, const sources_t& sources)
 
     vector<pair_t<unique_ptrs_t<TH1>>>    hists;
     vector<pair_t<unique_ptrs_t<hstack>>> stacks;
-
-
+    vector<pair_t<unique_ptrs_t<TAntHeader>>> headers;
 
     for(auto& source : sources) {
         TList* keys = source->GetListOfKeys();
@@ -91,6 +93,10 @@ void MergeRecursive(TDirectory& target, const sources_t& sources)
                 auto obj = dynamic_cast<hstack*>(key->ReadObj());
                 add_by_name(stacks, keyname, obj);
             }
+            else if(cl->InheritsFrom(TAntHeader::Class())) {
+                auto obj = dynamic_cast<TAntHeader*>(key->ReadObj());
+                add_by_name(headers, keyname, obj);
+            }
         }
     }
 
@@ -113,14 +119,25 @@ void MergeRecursive(TDirectory& target, const sources_t& sources)
         target.WriteTObject(first.get());
     }
 
-    for(const auto& it_stacks : stacks) {
-        auto& stacks = it_stacks.Item;
-        auto& first = stacks.front();
+    for(const auto& it : stacks) {
+        auto& items = it.Item;
+        auto& first = items.front();
         TList c;
-        for(auto it = next(stacks.begin()); it != stacks.end(); ++it) {
+        for(auto it = next(items.begin()); it != items.end(); ++it) {
             c.Add(it->get());
         }
         first->Merge(addressof(c), addressof(info));
+        target.WriteTObject(first.get());
+    }
+
+    for(const auto& it : headers) {
+        auto& items = it.Item;
+        auto& first = items.front();
+        TList c;
+        for(auto it = next(items.begin()); it != items.end(); ++it) {
+            c.Add(it->get());
+        }
+        first->Merge(addressof(c));
         target.WriteTObject(first.get());
     }
 }
