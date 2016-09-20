@@ -31,7 +31,7 @@ class Settings():
             'QUEUE': 'dflt',
             'WALLTIME': '12:00:00',
             'PRIORITY': 0,
-            'Emin': 1450,
+            'Emin': 1420,
             'Emax': 1580
             }
 

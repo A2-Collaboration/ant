@@ -13,12 +13,10 @@ import os, sys
 import re
 import errno
 import argparse
-import datetime
 import subprocess
 from os.path import abspath, dirname, join as pjoin
 from distutils.spawn import find_executable
 from math import ceil
-from time import sleep
 # import own modules (parse Pluto string, config file, provide colored output)
 from color import print_color, print_error
 import parse_pluto_string
@@ -163,9 +161,6 @@ def unit_prefix(number):
     else:
         return str(number)
 
-def timestamp():
-    return '[%s] ' % str(datetime.datetime.now()).split('.')[0]
-
 def max_file_number(lst):
     """Get the maximum file number from a list of files with the format *_[0-9]+.root"""
     if not lst:
@@ -190,13 +185,12 @@ def check_simulation_files(settings, channel):
     if max_geant > max_pluto:
         print_color("\t[Warning]", 'YELLOW')
         print("There are more Geant4 simulation files than Pluto generated\nfiles for channel %s"
-                % format_channel(channel, False))
+              % format_channel(channel, False))
         input("Will continue by pressing any key ")
-        maximum = max_geant
     elif max_geant < max_pluto:
         print_color("\t[Warning]", 'YELLOW')
         print("There are more Pluto generated files than Geant4 simulated\nfiles for channel %s"
-                % format_channel(channel, False))
+              % format_channel(channel, False))
         input("Will continue by pressing any key ")
 
     return max(max_pluto, max_geant)
@@ -273,7 +267,7 @@ def check_directory(settings, value, force, verbose, relative=None, write=True):
     settings.set(value, path)
     return True
 
-def check_directories(settings, ant_pluto = '', force=False, verbose=False):
+def check_directories(settings, ant_pluto='', force=False, verbose=False):
     """Check if all the needed directories exist and are writable"""
     # check if the given output path exists
     if not check_directory(settings, 'OUTPUT_PATH', force, verbose):
@@ -384,8 +378,6 @@ def check_binaries(settings, ant_pluto='', verbose=False):
 
     return pluto, geant
 
-    return True
-
 def input_digit(input_msg, max_retries=4, fail_msg='Invalid input, this channel will be skipped'):
     """Show the user an input dialogue to enter a digit, return 0 if it failed after max_retries"""
     num, count = 0, 0
@@ -394,7 +386,7 @@ def input_digit(input_msg, max_retries=4, fail_msg='Invalid input, this channel 
         try:
             num = int(input(input_msg + ' '))
             break
-        except:
+        except ValueError:
             if count < max_retries:
                 print("Your input wasn't a number, please try again:")
             else:
