@@ -29,9 +29,8 @@ JustPi0::JustPi0(const string& name, OptionsPtr opts) :
     if(!pi0_range.IsSane())
         throw runtime_error("Given Pi0 range not sane");
 
-    auto default_model = make_shared<utils::UncertaintyModels::FitterSergey>();
+    model = make_shared<utils::UncertaintyModels::FitterSergey>();
 
-    model = utils::UncertaintyModels::Interpolated::makeAndLoad(default_model);
 
     for(unsigned mult=pi0_range.Start();mult<=pi0_range.Stop();mult++) {
         multiPi0.emplace_back(std_ext::make_unique<MultiPi0>(HistFac, mult, model, opts->Get<bool>("SkipFitAndTree", false)));
