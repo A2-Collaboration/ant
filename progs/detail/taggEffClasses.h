@@ -87,8 +87,8 @@ protected:
 
 public:
 
-    TGraph* AvgRates;
-    TF1*    AvgFit;
+    TGraph* AvgBkgRates;
+    TF1*    AvgBkgFit;
     struct bkgFit_t
     {
         TGraph* Graph;
@@ -105,6 +105,7 @@ public:
 
 
     TGraph* avgRatesSub = nullptr;
+    TGraph* avgRates    = nullptr;
 
     taggEffTriple_t(const std::string& bkg1f, const std::string& runf, const std::string& bkg2f);
 

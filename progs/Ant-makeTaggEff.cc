@@ -29,6 +29,7 @@
 #include "TMultiGraph.h"
 #include "TRint.h"
 #include "TTree.h"
+#include "TGraphErrors.h"
 
 
 
@@ -48,6 +49,7 @@ const map<string,TID> startIDs({ {"Setup_2014_07_EPT_Prod", TID(1406592000)},
 static TH1D* hist_channels(nullptr);
 static TH2D* hist_channels_2d(nullptr);
 static TH2D* hist_channels_2d_errors(nullptr);
+static TGraphErrors* graphTime(nullptr);
 
 static shared_ptr<HistogramFactory> histfac = nullptr;
 
@@ -177,12 +179,20 @@ int main( int argc, char** argv )
             c << drawoption("colz") << hist_channels_2d_errors << endr;
         c << endc;
 
+        if ( graphTime )
+        {
+            canvas("means") << graphTime << endc;
+            graphTime->GetXaxis()->SetTimeDisplay(1);
+            graphTime->GetXaxis()->SetTimeFormat("%d.%m.%Y %F 1970-01-01 00:00:00");
+        }
+
         if ( triple_grp )
         {
             canvas control("cotrol");
             auto mg = new TMultiGraph();
-            mg->Add(triple_grp->AvgRates);
+            mg->Add(triple_grp->AvgBkgRates);
             mg->Add(triple_grp->avgRatesSub);
+            mg->Add(triple_grp->avgRates);
             control << drawoption("AP") << mg << endc;
             mg->GetXaxis()->SetTitle("time [s]");
             mg->GetYaxis()->SetTitle("avg. rate [Hz]");
@@ -435,12 +445,24 @@ void fillHistTime( const vector<double>& data, const vector<double>& dataErrors,
         hist_channels_2d_errors->SetXTitle("");
         hist_channels_2d_errors->SetYTitle("channel");
     }
+    if ( !graphTime )
+    {
+        graphTime = new TGraphErrors();
+    }
+    std_ext::RMS mte;
+    std_ext::RMS mtee;
 
     for ( auto ch = 0u ; ch < data.size() ; ++ch )
     {
         hist_channels_2d->Fill(std_ext::to_iso8601(time).c_str(), ch,data.at(ch));
+        mte.Add(data.at(ch));
         hist_channels_2d_errors->Fill(std_ext::to_iso8601(time).c_str(), ch,std::abs( 1.0 * dataErrors.at(ch) / data.at(ch)));
+        mtee.Add(dataErrors.at(ch));
     }
+    auto N = graphTime->GetN();
+    graphTime->SetPoint(N,time,mte.GetMean());
+    graphTime->SetPointError(N,0,mtee.GetMean());
+
 }
 
 void storeHist( const taggEff_t& result)

@@ -119,22 +119,22 @@ treeLoader_t::means_t treeLoader_t::getMeans() const
 
 void taggEffTriple_t::initBkgFits()
 {
-    AvgRates = timedData::getRatesVsTime({addressof(Bkg1),addressof(Bkg2)});
+    AvgBkgRates = timedData::getRatesVsTime({addressof(Bkg1),addressof(Bkg2)});
     double dummy(0);
     double tmax(0);
-    AvgRates->GetPoint(AvgRates->GetN()-1,tmax,dummy);
+    AvgBkgRates->GetPoint(AvgBkgRates->GetN()-1,tmax,dummy);
 
-    AvgFit   = new TF1("avg","[0] + [1] * exp( - [2] * x)",0,tmax);
-    AvgFit->SetParameters(startparams.data());
+    AvgBkgFit   = new TF1("avg","[0] + [1] * exp( - [2] * x)",0,tmax);
+    AvgBkgFit->SetParameters(startparams.data());
     for (auto i: {0,1,2})
-        AvgFit->SetParLimits(i,0,upperlimit);
+        AvgBkgFit->SetParLimits(i,0,upperlimit);
 
-    AvgRates->Fit(AvgFit);
+    AvgBkgRates->Fit(AvgBkgFit);
     for ( auto ch = 0u ; ch < Run.nchannels ; ++ch)
     {
         auto graph = timedData::getRatesVsTime({addressof(Bkg1),addressof(Bkg2)},ch);
         bkgFits.emplace_back(bkgFit_t(graph,ch));
-        bkgFits.back().doFit(IntervalD(0,tmax),AvgFit->GetParameter(2));
+        bkgFits.back().doFit(IntervalD(0,tmax),AvgBkgFit->GetParameter(2));
     }
 }
 
@@ -163,6 +163,10 @@ taggEffTriple_t::taggEffTriple_t(const string& bkg1f, const string& runf, const 
     avgRatesSub = new TGraph();
     avgRatesSub->SetMarkerStyle(kPlus);
     avgRatesSub->SetMarkerColor(kRed);
+
+    avgRates = new TGraph();
+    avgRates->SetMarkerStyle(kPlus);
+    avgRates->SetMarkerColor(kGray);
 }
 
 unsigned taggEffTriple_t::sanityChecks(const treeLoader_t::means_t& bkg1, const treeLoader_t::means_t& run, const treeLoader_t::means_t& bkg2) const
@@ -248,6 +252,7 @@ const taggEff_t taggEffTriple_t::GetTaggEffSubtracted() const
             graphScalerSub.Add(rate_sub);
         }
         FillGraph(avgRatesSub,time,graphScalerSub.GetMean());
+        FillGraph(avgRates,time,graphScaler.GetMean());
         L.Add(Run.wrapTree.ExpLivetime);
     }
 
