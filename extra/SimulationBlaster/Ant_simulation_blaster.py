@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# -*- coding: latin-1 -*-
 # vim: set ai ts=4 sw=4 sts=4 noet fileencoding=utf-8 ft=python
 
 '''
