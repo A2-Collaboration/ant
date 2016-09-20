@@ -2407,14 +2407,6 @@ NEWV51:
             }
         }
 
-        r.PIDSumE = 0;
-        for(const TCluster& cl : data.Clusters) {
-            if(cl.DetectorType == Detector_t::Type_t::PID) {
-                r.PIDSumE += cl.Energy;
-            }
-        }
-
-
         results.emplace_back(move(r));
 
     } // end of loop on fphNLadd

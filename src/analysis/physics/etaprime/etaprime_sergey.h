@@ -77,7 +77,8 @@ protected:
     utils::TreeFitter::tree_t fitted_EtaPrime;
     utils::TreeFitter::tree_t fitted_g_EtaPrime;
 
-    static void fillTree(Tree_t& t, const std::vector<result_t>& results, unsigned MCTrue);
+    static void fillTree(Tree_t& t, const std::vector<result_t>& results,
+                         unsigned MCTrue, double PIDSumE);
 
     TH1D* h_MissedBkg;
     static const ParticleTypeTree ptreeSignal;

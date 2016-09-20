@@ -35,7 +35,6 @@ public:
         std::vector<double> gNonPi0_CaloE;
 
         double CBVetoSumE;
-        double PIDSumE;
 
         virtual std::ostream& Print(std::ostream& stream) const;
     };

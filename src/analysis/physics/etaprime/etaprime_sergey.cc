@@ -91,9 +91,10 @@ EtapSergey::EtapSergey(const string& name, OptionsPtr opts) :
 
 void EtapSergey::fillTree(EtapSergey::Tree_t& t,
                           const std::vector<EtapSergey::result_t>& results,
-                          unsigned MCTrue)
+                          unsigned MCTrue, double PIDSumE)
 {
     t.MCTrue = MCTrue;
+    t.PIDSumE = PIDSumE;
     for(const result_t& r : results) {
         t.TaggE  = r.TaggE;
         t.TaggT  = r.TaggT;
@@ -111,7 +112,6 @@ void EtapSergey::fillTree(EtapSergey::Tree_t& t,
         t.gNonPi0_CaloE = r.gNonPi0_CaloE;
 
         t.CBVetoSumE = r.CBVetoSumE;
-        t.PIDSumE    = r.PIDSumE;
 
         t.Tree->Fill();
     }
@@ -160,7 +160,16 @@ void EtapSergey::ProcessEvent(const TEvent& event, manager_t&)
         }
     }
 
-    fillTree(treeSergey, results_sergey, MCTrue);
+
+    double PIDSumE = 0;
+    for(const TCluster& cl : data.Clusters) {
+        if(cl.DetectorType == Detector_t::Type_t::PID) {
+            PIDSumE += cl.Energy;
+        }
+    }
+
+    fillTree(treeSergey, results_sergey,
+             MCTrue, PIDSumE);
 
     vector<result_t> results_ant;
 
@@ -205,7 +214,7 @@ void EtapSergey::ProcessEvent(const TEvent& event, manager_t&)
         results_ant.emplace_back(move(r));
     }
 
-    fillTree(treeAnt, results_ant, MCTrue);
+    fillTree(treeAnt, results_ant, MCTrue, PIDSumE);
 
 }
 
