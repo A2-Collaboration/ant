@@ -124,10 +124,10 @@ class Settings():
             file.write('%s\n' % '# maximum energy of the photon beam')
             file.write('%s: %s\n\n' % ('Emax', self.__settings['Emax']))
             file.write('%s\n' % '[channels]')
-            file.write('%s\n' % '# channels which should be simulated, '
+            file.write('%s\n' % '# channels which should be simulated, line has to start with ";", '
                        'given in the syntax used in Pluto (do not forget the recoil proton!), '
                        'the amount of files and the number of events per file')
-            file.write('%s\n' % '"p pi0 [g g]" 10 100000')
+            file.write('%s\n' % ';"p pi0 [g g]" 10 100000')
 
         return True
 
@@ -157,12 +157,12 @@ def check_file(path, verbose=False):
 
 def read_config(config_file):
     """Read the given config file and return the parsed settings and channels"""
-    config = configparser.ConfigParser(comment_prefixes=('#', '"'))
+    config = configparser.ConfigParser()
     config.optionxform = str  # preserve case of the options
     config.read(config_file.name)
-    settings = list(config['settings'].items())
+    settings = list(config.items('settings'))
     settings = Settings(settings)
-    if 'channels' not in config:
+    if not config.has_section('channels'):
         print_color('[WARNING] No channels specified in %s' % config_file.name, 'YELLOW')
         return settings, []
     lines = [line.rstrip('\n') for line in config_file.readlines() if not line.startswith('#') and line.split()]  # last part excludes empty lines
@@ -174,7 +174,7 @@ def read_config(config_file):
     pattern = re.compile(r'''((?:[^%s"']|"[^"]*"|'[^']*')+)''' % delimiter)  # split using delimiter outside of quotations [http://stackoverflow.com/a/2787064]
     chnl = []
     for channel in channels:
-        option = pattern.split(channel)[1::2]
+        option = pattern.split(channel.lstrip(';'))[1::2]
         if len(option) != 3:
             print_error('[ERROR] Wrong number of arguments for channel %s' % option[0])
             print('        This channel will be skipped')
