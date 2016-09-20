@@ -29,7 +29,7 @@ JustPi0::JustPi0(const string& name, OptionsPtr opts) :
     if(!pi0_range.IsSane())
         throw runtime_error("Given Pi0 range not sane");
 
-    auto default_model = make_shared<utils::UncertaintyModels::Optimized_Oli1>();
+    auto default_model = make_shared<utils::UncertaintyModels::FitterSergey>();
 
     model = utils::UncertaintyModels::Interpolated::makeAndLoad(default_model);
 
@@ -78,8 +78,8 @@ JustPi0::MultiPi0::MultiPi0(HistogramFactory& histFac, unsigned nPi0, utils::Unc
     IM_2g_fitted(promptrandom),
     treefitter("treefit_jusitpi0_"+to_string(nPi0), directPi0, model, true)
 {
-    fitter.SetZVertexSigma(0);
-    treefitter.SetZVertexSigma(0);
+    fitter.SetZVertexSigma(3.0);
+    treefitter.SetZVertexSigma(3.0);
 
 
     promptrandom.AddPromptRange({-2.5,2.5});

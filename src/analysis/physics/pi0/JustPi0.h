@@ -1,13 +1,13 @@
 #pragma once
 
-#include "physics/Physics.h"
-#include "plot/PromptRandomHist.h"
-#include "utils/Fitter.h"
+#include "analysis/physics/Physics.h"
+#include "analysis/plot/PromptRandomHist.h"
+#include "analysis/utils/Fitter.h"
 #include "base/ParticleTypeTree.h"
 #include "TLorentzVector.h"
 #include "TVector2.h"
 #include "base/WrapTTree.h"
-#include "utils/PullsWriter.h"
+#include "analysis/utils/PullsWriter.h"
 
 class TH1D;
 
@@ -16,7 +16,7 @@ namespace analysis {
 namespace physics {
 
 class JustPi0 : public Physics {
-protected:
+public:
 
     struct MultiPi0 {
         MultiPi0(HistogramFactory& histFac, unsigned nPi0, utils::UncertaintyModelPtr FitterModel, bool nofitandnotree = false);
@@ -37,6 +37,7 @@ protected:
 
         std::vector<std::pair<utils::TreeFitter::tree_t,utils::TreeFitter::tree_t>> pions;
 
+        public:
         struct MultiPi0Tree : WrapTTree {
 
             ADD_BRANCH_T(bool,  isMC)
@@ -82,6 +83,8 @@ protected:
             ADD_BRANCH_T(double, fit_proton_Phi_pull)
         };
 
+    protected:
+
         TTree* tree;
         MultiPi0Tree t;
 
@@ -101,6 +104,8 @@ protected:
         static ParticleTypeTree getParticleTree(const unsigned nPi0);
 
     };
+
+protected:
 
     utils::UncertaintyModelPtr model;
     std::vector<std::unique_ptr<MultiPi0>> multiPi0;
