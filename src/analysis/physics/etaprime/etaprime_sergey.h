@@ -57,7 +57,6 @@ protected:
 
     using result_t = utils::FitterSergey::result_t;
 
-    const bool Debug;
     const params_t params;
 
     utils::FitterSergey fitter_sergey;

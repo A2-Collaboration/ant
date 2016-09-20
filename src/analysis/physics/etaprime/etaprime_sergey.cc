@@ -39,7 +39,6 @@ utils::TreeFitter Make(const EtapSergey::params_t& params)
 
 EtapSergey::EtapSergey(const string& name, OptionsPtr opts) :
     Physics(name, opts),
-    Debug(opts->Get<bool>("Debug", false)),
     params(// use FitterSergey as default
            make_shared<utils::UncertaintyModels::FitterSergey>(),
            true, // flag to enable z vertex
