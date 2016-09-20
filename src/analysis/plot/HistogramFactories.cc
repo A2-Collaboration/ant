@@ -155,10 +155,9 @@ TH3D *HistogramFactory::makeTH3D(const string &title,
     return h;
 }
 
-TTree*HistogramFactory::makeTTree(const string& name)
+TTree* HistogramFactory::makeTTree(const string& name) const
 {
-    TTree* t = make<TTree>(name.c_str(), MakeTitle(name.c_str()).c_str());
-    return t;
+    return make<TTree>(name.c_str(), MakeTitle(name.c_str()).c_str());
 }
 
 HistogramFactory::DirStackPush::DirStackPush(const HistogramFactory& hf): dir(gDirectory)

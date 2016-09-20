@@ -124,25 +124,19 @@ public:
             const BinSettings& zbins,
             const std::string& name="") const;
 
-    TTree* makeTTree(const std::string& name);
+    TTree* makeTTree(const std::string& name) const;
 
     template<class T, typename... Args>
     T* make(Args&&... args) const {
-
         // save current dir and cd back to it on exit
         DirStackPush dirstack(*this);
-
-        auto t = new T(std::forward<Args>(args)...);
-        return t;
+        return new T(std::forward<Args>(args)...);
     }
 
     template <typename T>
-    T clone(const T obj, const std::string& newName) {
+    T* clone(const T* obj, const std::string& newName) const {
         DirStackPush dirstack(*this);
-
-        auto a = dynamic_cast<T>(obj->Clone(newName.c_str()));
-
-        return a;
+        return dynamic_cast<T*>(obj->Clone(newName.c_str()));
     }
 
 };
