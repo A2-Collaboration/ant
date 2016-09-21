@@ -237,13 +237,11 @@ void EtapSergey::ProcessEvent(const TEvent& event, manager_t&)
             kinfitter.SetPhotons(p.Photons);
 
             auto result = kinfitter.DoFit();
+            if(result.Status != APLCON::Result_Status_t::Success)
+                continue;
             if(!std_ext::copy_if_greater(r.KinFitProb, result.Probability))
                 continue;
-//            const auto fitted_photons = kinfitter.GetFittedPhotons();
-//            LorentzVec fitted_photon_sum;
-//            for(auto& p : fitted_photons)
-//                fitted_photon_sum += *p;
-//            r.IM_4g = fitted_photon_sum.M();
+
             r.KinFitProtonIdx = p.ProtonIdx;
         }
 
@@ -256,9 +254,50 @@ void EtapSergey::ProcessEvent(const TEvent& event, manager_t&)
 
             APLCON::Result_t result;
             while(treefitter_Pi0Pi0.NextFit(result)) {
+                if(result.Status != APLCON::Result_Status_t::Success)
+                    continue;
                 if(!std_ext::copy_if_greater(r.AntiPi0FitProb, result.Probability))
                     continue;
                 r.AntiPi0FitProtonIdx = p.ProtonIdx;
+            }
+        }
+
+        // AntiEtaFit
+        r.AntiEtaFitProb = std_ext::NaN;
+        for(const auto& p : particles) {
+            treefitter_Pi0Eta.SetEgammaBeam(r.TaggE);
+            treefitter_Pi0Eta.SetProton(p.Proton);
+            treefitter_Pi0Eta.SetPhotons(p.Photons);
+
+            APLCON::Result_t result;
+            while(treefitter_Pi0Eta.NextFit(result)) {
+                if(result.Status != APLCON::Result_Status_t::Success)
+                    continue;
+                if(!std_ext::copy_if_greater(r.AntiEtaFitProb, result.Probability))
+                    continue;
+                r.AntiEtaFitProtonIdx = p.ProtonIdx;
+            }
+        }
+
+        // TreeFit
+        r.TreeFitProb = std_ext::NaN;
+        for(const auto& p : particles) {
+            treefitter.SetEgammaBeam(r.TaggE);
+            treefitter.SetProton(p.Proton);
+            treefitter.SetPhotons(p.Photons);
+
+            APLCON::Result_t result;
+            while(treefitter.NextFit(result)) {
+                if(result.Status != APLCON::Result_Status_t::Success)
+                    continue;
+                if(!std_ext::copy_if_greater(r.TreeFitProb, result.Probability))
+                    continue;
+                r.TreeFitProtonIdx = p.ProtonIdx;
+                const auto fitted_photons = treefitter.GetFittedPhotons();
+                LorentzVec fitted_photon_sum;
+                for(auto& p : fitted_photons)
+                    fitted_photon_sum += *p;
+                r.IM_4g = fitted_photon_sum.M();
             }
         }
 
@@ -279,6 +318,7 @@ void EtapSergey::ShowResult()
             << drawoption("colz")
             << TTree_drawable(treeAnt.Tree, "treeSergey.IM_4g:treeAnt.IM_4g >> (100,800,1050,100,800,1050)","")
             << TTree_drawable(treeAnt.Tree, "treeSergey.KinFitProb:treeAnt.KinFitProb >> (100,0,1,100,0,1)","")
+            << TTree_drawable(treeAnt.Tree, "treeSergey.AntiPi0FitProb:treeAnt.AntiPi0FitProb >> (100,0,1,100,0,1)","")
             << endc;
     canvas("ProtonIdx")
             << drawoption("colz")
