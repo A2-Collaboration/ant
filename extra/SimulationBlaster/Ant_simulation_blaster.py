@@ -313,7 +313,7 @@ def check_bin(path, file):
 
 def check_binaries(settings, ant_pluto='', verbose=False):
     """Check if the needed binaries exist, return the absolute paths to them"""
-    pluto, geant = None, None
+    pluto, tid, geant = None, None, None
 
     # first of all check if the specified qsub binary exists
     if not find_executable(settings.get('QSUB_BIN')):
@@ -322,12 +322,18 @@ def check_binaries(settings, ant_pluto='', verbose=False):
 
     if ant_pluto:
         if verbose:
-            print('Searching for Ant-pluto in %s' % ant_pluto)
+            print('Searching for Ant-pluto and Ant-addTID in %s' % ant_pluto)
         pluto = check_bin(ant_pluto, 'Ant-pluto')
         if pluto and verbose:
             print('Found Ant-pluto')
+        tid = check_bin(ant_pluto, 'Ant-addTID')
+        if tid and verbose:
+            print('Found Ant-addTID')
         if not pluto:
             print_error('[ERROR] Ant-pluto not found in %s!' % ant_pluto)
+            sys.exit(1)
+        if not tid:
+            print_error('[ERROR] Ant-addTID not found in %s!' % ant_pluto)
             sys.exit(1)
     else:
         pluto = find_executable('Ant-pluto')
@@ -336,10 +342,18 @@ def check_binaries(settings, ant_pluto='', verbose=False):
             if verbose:
                 print("Ant-pluto couldn't be found within your $PATH variable")
             sys.exit(1)
+        tid = find_executable('Ant-addTID')
+        if not tid:
+            print_error('[ERROR] Ant-addTID not found!')
+            if verbose:
+                print("Ant-addTID couldn't be found within your $PATH variable")
+            sys.exit(1)
         else:
             pluto = abspath(pluto)
+            tid = abspath(tid)
             if verbose:
                 print('Ant-pluto found:', pluto)
+                print('Ant-addTID found:', tid)
 
     geant_path = settings.get('A2_GEANT_PATH')
     if verbose:
@@ -376,7 +390,7 @@ def check_binaries(settings, ant_pluto='', verbose=False):
         print_color('          the specified target length is correctly set.', 'YELLOW')
         print()
 
-    return pluto, geant
+    return pluto, tid, geant
 
 def input_digit(input_msg, max_retries=4, fail_msg='Invalid input, this channel will be skipped'):
     """Show the user an input dialogue to enter a digit, return 0 if it failed after max_retries"""
@@ -460,7 +474,7 @@ def create_sub(log_file, job_tag, job_number, settings):
     qsub_cmd += " -N %s/%d" % (job_tag, job_number)
     qsub_cmd += " -j oe -o %s" % log_file
     qsub_cmd += " -z -q %s -V -p %d" % (settings.get('QUEUE'), settings.get('PRIORITY'))
-    qsub_cmd += " -l ncpus=1,nodes=1:x86_64,walltime=%s" % settings.get('WALLTIME')
+    qsub_cmd += " -l ncpus=1,walltime=%s" % settings.get('WALLTIME')
 
     return qsub_cmd
 
@@ -475,7 +489,7 @@ def submit_job(cmd, log_file, job_tag, job_number, settings):
 #        print(qsub_proc)
 #        print()
 
-def submit_jobs(settings, simulation, pluto, geant, total, length=20):
+def submit_jobs(settings, simulation, pluto, tid, geant, total, length=20):
     """Create the pluto and geant commands, submit the jobs, show progress bar"""
     # for progress bar
     bar = '='
@@ -498,8 +512,9 @@ def submit_jobs(settings, simulation, pluto, geant, total, length=20):
             log = get_path(log_data, get_file_name('sim', decay_string, number+i, 'log'))
             pluto_cmd = '%s --reaction %s -o %s -n %d --Emin %f --Emax %f --no-bulk' \
                         % (pluto, reaction, pluto_file, events, emin, emax)
+            tid_cmd = '%s %s' % (tid, pluto_file)
             geant_cmd = '%s %s %s' % (geant, pluto_file, geant_file)
-            submit_job('%s; %s' % (pluto_cmd, geant_cmd), log, 'Sim', job, settings)
+            submit_job('%s; %s; %s' % (pluto_cmd, tid_cmd, geant_cmd), log, 'Sim', job, settings)
 
             # progress bar
             sys.stdout.write('\r')
@@ -620,8 +635,8 @@ def main():
     if not check_directories(settings, ant_pluto, force, verbose):
         sys.exit(1)
 
-    pluto, geant = check_binaries(settings, ant_pluto, verbose)
-    if not pluto or not geant:
+    pluto, tid, geant = check_binaries(settings, ant_pluto, verbose)
+    if not pluto or not tid or not geant:
         sys.exit(1)
 
     if not channels:
@@ -662,10 +677,8 @@ def main():
     print(" Files will be stored in " + settings.get('OUTPUT_PATH'))
 
     # start the job submission
-    if verbose:
-        print('Start submitting jobs, total', total_files)
-
-    submit_jobs(settings, simulation, pluto, geant, total_files)
+    print('Start submitting jobs, total', total_files)
+    submit_jobs(settings, simulation, pluto, tid, geant, total_files)
     print_color('Done!', 'GREEN')
 
 
