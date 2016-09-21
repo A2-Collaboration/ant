@@ -199,10 +199,7 @@ void EtapSergey::ProcessEvent(const TEvent& event, manager_t&)
 
         r.KinFitProb = std_ext::NaN;
 
-        unsigned protonIdx = 0;
-
         for(const auto& cand_proton :  cands) {
-            protonIdx++;
             auto proton = make_shared<TParticle>(ParticleTypeDatabase::Proton, cand_proton);
 
             TParticleList photons;
@@ -227,8 +224,7 @@ void EtapSergey::ProcessEvent(const TEvent& event, manager_t&)
             for(auto& p : fitted_photons)
                 fitted_photon_sum += *p;
             r.IM_4g = fitted_photon_sum.M();
-            r.KinFitProtonIdx = protonIdx;
-
+            r.KinFitProtonIdx = std::distance(cands.begin(), std::find(cands.begin(), cands.end(), cand_proton))+1;
 
         }
 
