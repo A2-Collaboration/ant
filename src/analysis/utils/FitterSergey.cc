@@ -2002,8 +2002,11 @@ std::vector<FitterSergey::result_t> FitterSergey::Process(const std::vector<TTag
 
     for (auto i = 0; i < fphNLadd; i++) {
         Pbs4g[i] = 0.;
+        PrIdx4g[i] = 0;
         Pbs2pi0[i] = 0.;
+        PrIdx2pi0[i] = 0;
         Pbspi0eta[i] = 0.;
+        PrIdxpi0eta[i] = 0;
         for (auto m = 0; m < nhyp; m++) {
             chisqb[m] = 1000000.;
             Itagb[m] = -1;
