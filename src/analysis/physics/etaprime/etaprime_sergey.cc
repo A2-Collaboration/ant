@@ -229,6 +229,7 @@ void EtapSergey::ProcessEvent(const TEvent& event, manager_t&)
         r.TaggCh = r_sergey.TaggCh;
         r.TaggT = r_sergey.TaggT;
 
+        // KinFit
         r.KinFitProb = std_ext::NaN;
         for(const auto& p : particles) {
             kinfitter.SetEgammaBeam(r.TaggE);
@@ -244,6 +245,21 @@ void EtapSergey::ProcessEvent(const TEvent& event, manager_t&)
 //                fitted_photon_sum += *p;
 //            r.IM_4g = fitted_photon_sum.M();
             r.KinFitProtonIdx = p.ProtonIdx;
+        }
+
+        // AntiPi0Fit
+        r.AntiPi0FitProb = std_ext::NaN;
+        for(const auto& p : particles) {
+            treefitter_Pi0Pi0.SetEgammaBeam(r.TaggE);
+            treefitter_Pi0Pi0.SetProton(p.Proton);
+            treefitter_Pi0Pi0.SetPhotons(p.Photons);
+
+            APLCON::Result_t result;
+            while(treefitter_Pi0Pi0.NextFit(result)) {
+                if(!std_ext::copy_if_greater(r.AntiPi0FitProb, result.Probability))
+                    continue;
+                r.AntiPi0FitProtonIdx = p.ProtonIdx;
+            }
         }
 
         results_ant.emplace_back(move(r));
@@ -267,6 +283,7 @@ void EtapSergey::ShowResult()
     canvas("ProtonIdx")
             << drawoption("colz")
             << TTree_drawable(treeAnt.Tree, "treeSergey.KinFitProtonIdx:treeAnt.KinFitProtonIdx >> (5,1,6,5,1,6)","")
+            << TTree_drawable(treeAnt.Tree, "treeSergey.AntiPi0FitProtonIdx:treeAnt.AntiPi0FitProtonIdx >> (5,1,6,5,1,6)","")
             << TTree_drawable(treeSergey.Tree, "TreeFitProtonIdx:KinFitProtonIdx >> (5,1,6,5,1,6)","")
             << TTree_drawable(treeSergey.Tree, "AntiPi0FitProtonIdx:KinFitProtonIdx >> (5,1,6,5,1,6)","")
             << TTree_drawable(treeSergey.Tree, "AntiEtaFitProtonIdx:KinFitProtonIdx >> (5,1,6,5,1,6)","")
