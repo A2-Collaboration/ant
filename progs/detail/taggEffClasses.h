@@ -20,6 +20,7 @@ namespace taggeff
 {
 
 struct treeLoader_t;
+
 struct timedData
 {
     static TGraph* getRatesVsTime(const std::list<treeLoader_t*>& tContainers);
@@ -91,6 +92,7 @@ public:
 
     TGraph* AvgBkgRates;
     TF1*    AvgBkgFit;
+
     struct bkgFit_t
     {
         TGraph* Graph;
@@ -101,10 +103,7 @@ public:
         void doFit(const IntervalD& fitrange, const double lambda);
         double operator ()(const double time)  const;
     };
-
     std::vector<bkgFit_t> bkgFits;
-
-
 
     TGraph* avgRatesSub = nullptr;
     TGraph* avgRates    = nullptr;
@@ -113,9 +112,7 @@ public:
 
     std::string SetupName() const{return Bkg1.setupName;}
 
-    unsigned sanityChecks(const treeLoader_t::means_t& bkg1,
-                          const treeLoader_t::means_t& run,
-                          const treeLoader_t::means_t& bkg2) const;
+    void sanityChecks() const;
 
     const taggEff_t  GetTaggEffSubtracted() const;
 

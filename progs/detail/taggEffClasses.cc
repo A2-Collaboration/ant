@@ -158,6 +158,8 @@ taggEffTriple_t::taggEffTriple_t(const string& bkg1f, const string& runf, const 
         throw runtime_error("No Ant header in found!");
     startID = header->LastID;
 
+    sanityChecks();
+
     initBkgFits();
 
     avgRatesSub = new TGraph();
@@ -169,13 +171,14 @@ taggEffTriple_t::taggEffTriple_t(const string& bkg1f, const string& runf, const 
     avgRates->SetMarkerColor(kGray);
 }
 
-unsigned taggEffTriple_t::sanityChecks(const treeLoader_t::means_t& bkg1, const treeLoader_t::means_t& run, const treeLoader_t::means_t& bkg2) const
+void taggEffTriple_t::sanityChecks() const
 {
-    auto severity = 0u;
+
+    auto bkg1 = Bkg1.getMeans();
+    auto run  = Run.getMeans();
+    auto bkg2 = Bkg2.getMeans();
+
     auto nchannels = bkg1.Scalers.size();
-
-
-
 
     // per file checks:
     for ( auto m: {bkg1, run, bkg2})
@@ -184,16 +187,14 @@ unsigned taggEffTriple_t::sanityChecks(const treeLoader_t::means_t& bkg1, const 
         {
             if (m.Scalers.at(ch) < m.Tdcs.at(ch))
             {
-                LOG(ERROR) << "Detected file with higher TDC rate than scaler rate!";
-                LOG(ERROR) << m.Scalers.at(ch) << " < " << m.Tdcs.at(ch);
-                severity++;
+                LOG(WARNING) << "Detected file with higher TDC rate than scaler rate!";
+                LOG(WARNING) << m.Scalers.at(ch) << " < " << m.Tdcs.at(ch);
             }
         }
         if ( !(0 <= m.Livetime && m.Livetime <= 1))
         {
-            LOG(ERROR) << "Detected file with live time not in [0,1]!";
-            LOG(ERROR) << "livetime: " << m.Livetime;
-            severity++;
+            LOG(WARNING) << "Detected file with live time not in [0,1]!";
+            LOG(WARNING) << "livetime: " << m.Livetime;
         }
     }
 
@@ -205,7 +206,6 @@ unsigned taggEffTriple_t::sanityChecks(const treeLoader_t::means_t& bkg1, const 
         if ( run.Tdcs.at(ch) < bkg1.Tdcs.at(ch) || run.Tdcs.at(ch) < bkg2.Tdcs.at(ch))
             LOG(WARNING) << "Detected file with higher background than actual measurement in TDCs, channel " << ch << "!";
     }
-    return severity;
 }
 
 const taggEff_t taggEffTriple_t::GetTaggEffSubtracted() const
