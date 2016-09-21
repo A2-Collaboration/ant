@@ -189,6 +189,38 @@ void EtapSergey::ProcessEvent(const TEvent& event, manager_t&)
 
     vector<result_t> results_ant;
 
+    // build permuted protons
+    struct particles_t {
+        particles_t(const TParticlePtr& proton, unsigned protonIdx) :
+            Proton(proton), ProtonIdx(protonIdx) {}
+        TParticleList Photons;
+        TParticlePtr  Proton;
+        unsigned      ProtonIdx;
+    };
+
+    std::vector<particles_t> particles;
+    {
+        TParticleList all_photons;
+        TParticleList all_protons;
+
+        for(const auto& cand_proton :  cands) {
+            all_protons.emplace_back(make_shared<TParticle>(ParticleTypeDatabase::Proton, cand_proton));
+            all_photons.emplace_back(make_shared<TParticle>(ParticleTypeDatabase::Photon, cand_proton));
+        }
+
+        for(auto it_proton = all_protons.cbegin(); it_proton != all_protons.cend(); ++it_proton) {
+            auto& proton = *it_proton;
+            particles.emplace_back(proton, std::distance(all_protons.cbegin(), it_proton)+1);
+            auto& photons = particles.back().Photons;
+            for(const auto& photon : all_photons) {
+                if(proton->Candidate == photon->Candidate)
+                    continue;
+                photons.emplace_back(photon);
+            }
+        }
+    }
+
+
     // try to reproduce the result from Sergey
     for(const auto& r_sergey : results_sergey) {
 
@@ -198,34 +230,20 @@ void EtapSergey::ProcessEvent(const TEvent& event, manager_t&)
         r.TaggT = r_sergey.TaggT;
 
         r.KinFitProb = std_ext::NaN;
-
-        for(const auto& cand_proton :  cands) {
-            auto proton = make_shared<TParticle>(ParticleTypeDatabase::Proton, cand_proton);
-
-            TParticleList photons;
-            for(const auto& cand : cands) {
-                if(cand == cand_proton)
-                    continue;
-                auto photon = make_shared<TParticle>(ParticleTypeDatabase::Photon, cand);
-                photons.emplace_back(photon);
-            }
-
+        for(const auto& p : particles) {
             kinfitter.SetEgammaBeam(r.TaggE);
-            kinfitter.SetProton(proton);
-            kinfitter.SetPhotons(photons);
+            kinfitter.SetProton(p.Proton);
+            kinfitter.SetPhotons(p.Photons);
 
             auto result = kinfitter.DoFit();
-
             if(!std_ext::copy_if_greater(r.KinFitProb, result.Probability))
                 continue;
-
-            const auto fitted_photons = kinfitter.GetFittedPhotons();
-            LorentzVec fitted_photon_sum;
-            for(auto& p : fitted_photons)
-                fitted_photon_sum += *p;
-            r.IM_4g = fitted_photon_sum.M();
-            r.KinFitProtonIdx = std::distance(cands.begin(), std::find(cands.begin(), cands.end(), cand_proton))+1;
-
+//            const auto fitted_photons = kinfitter.GetFittedPhotons();
+//            LorentzVec fitted_photon_sum;
+//            for(auto& p : fitted_photons)
+//                fitted_photon_sum += *p;
+//            r.IM_4g = fitted_photon_sum.M();
+            r.KinFitProtonIdx = p.ProtonIdx;
         }
 
         results_ant.emplace_back(move(r));
