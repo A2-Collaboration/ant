@@ -119,8 +119,6 @@ public:
 
     const taggEff_t  GetTaggEffSubtracted() const;
 
-    const taggEff_t  GetTaggEff() const;
-
 };
 
 
