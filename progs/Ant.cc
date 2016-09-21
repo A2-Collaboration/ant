@@ -44,6 +44,8 @@ using namespace std;
 using namespace ant;
 
 volatile bool interrupt = false;
+volatile bool terminated = false;
+
 
 int main(int argc, char** argv) {
     SetupLogger();
@@ -51,6 +53,12 @@ int main(int argc, char** argv) {
     signal(SIGINT, [] (int) {
         cout << ">>> Interrupted" << endl;
         interrupt = true;
+    });
+
+    signal(SIGTERM, [] (int) {
+        cout << ">>> Terminated" << endl;
+        interrupt = true;
+        terminated = true;
     });
 
     // check for bash completion commands
@@ -61,14 +69,14 @@ int main(int argc, char** argv) {
             for(const auto& name : analysis::PhysicsRegistry::GetList()) {
                 cout << name << endl;
             }
-            return 0;
+            return EXIT_FAILURE;
         }
 
         if(arg1 == "--list-setups") {
             for(const auto& name : ExpConfig::Setup::GetNames()) {
                 cout << name << endl;
             }
-            return 0;
+            return EXIT_FAILURE;
         }
 
         if(arg1 == "--list-calibrations") {
@@ -87,7 +95,7 @@ int main(int argc, char** argv) {
                 }
             }
 
-            return 0;
+            return EXIT_SUCCESS;
         }
     }
 
@@ -138,7 +146,7 @@ int main(int argc, char** argv) {
         string errmsg;
         if(!std_ext::system::testopen(inputfile, errmsg)) {
             LOG(ERROR) << "Cannot open inputfile '" << inputfile << "': " << errmsg;
-            return 1;
+            return EXIT_FAILURE;
         }
     }
 
@@ -195,7 +203,7 @@ int main(int argc, char** argv) {
             auto unpacker_ = Unpacker::Get(inputfile);
             if(unpacker != nullptr && unpacker_ != nullptr) {
                 LOG(ERROR) << "Can only handle one unpacker, but given input files suggest to use more than one.";
-                return 1;
+                return EXIT_FAILURE;
             }
             LOG(INFO) << "Found unpacker for file " << inputfile;
             unpacker = move(unpacker_);
@@ -209,7 +217,7 @@ int main(int argc, char** argv) {
         catch(ExpConfig::ExceptionNoConfig) {
             LOG(ERROR) << "The inputfile " << inputfile << " cannot be unpacked without a manually specified setupname. "
                        << "Consider using " << cmd_setup->longID();
-            return 1;
+            return EXIT_FAILURE;
         }
     }
 
@@ -243,7 +251,7 @@ int main(int argc, char** argv) {
             }
             LOG(INFO)  << "Available setups: " << ss_setups.str();
             LOG(ERROR) << "Please specify a --setup if you want to use calibrations as physics modules";
-            return 1;
+            return EXIT_FAILURE;
         }
         else {
             stringstream ss_calibrations;
@@ -263,7 +271,7 @@ int main(int argc, char** argv) {
                 LOG(INFO) << "Available calibrations: " << ss_calibrations.str();
                 for(string leftover : leftovers)
                     LOG(ERROR) << "Specified calibration '" << leftover << "' not found in list of available calibrations";
-                return 1;
+                return EXIT_FAILURE;
             }
         }
     }
@@ -272,7 +280,7 @@ int main(int argc, char** argv) {
             +cmd_physicsclasses->getValue().size()
             +cmd_physicsclasses_opt->getValue().size() == 0) {
         LOG(ERROR) << "Please specify at least one physics module or enable at least one calibration";
-        return 1;
+        return EXIT_FAILURE;
     }
 
     // the real output file, create it here to get all
@@ -302,10 +310,10 @@ int main(int argc, char** argv) {
             LOG(INFO) << "Activated physics class '" << classname << "' as instance '" << instancename << "'";
         } catch (const std::exception& e) {
             LOG(ERROR) << "Error while activating physics class \"" << classname << "\": " << e.what();
-            return 1;
+            return EXIT_FAILURE;
         } catch (...) {
             LOG(ERROR) << "Could not activate physics class for unknown reason";
-            return 1;
+            return EXIT_FAILURE;
         }
     }
 
@@ -324,14 +332,14 @@ int main(int argc, char** argv) {
             LOG(INFO) << "Activated physics class '" << physicsname << "' as instance '" << instancename << "' with options " << optstr;
         } catch (...) {
             LOG(ERROR) << "Physics class '" << line << "' not found";
-            return 1;
+            return EXIT_FAILURE;
         }
 
         auto unused_popts = options->GetUnused();
         if(!unused_popts.empty()) {
             LOG(ERROR) << "Physics class '" << physicsname << "' did not use the options: " << unused_popts;
             LOG(INFO)  << "Did you mean: " << options->GetNotFound();
-            return 1;
+            return EXIT_FAILURE;
         }
     }
 
@@ -340,7 +348,7 @@ int main(int argc, char** argv) {
         if(physicsclasses.empty()) {
             // this is actually more an implementation error...
             LOG(ERROR) << "Calibration '" << calibration->GetName() << "' did not specify any physics classes";
-            return 1;
+            return EXIT_FAILURE;
         }
         for(const std::string classname : physicsclasses) {
             try {
@@ -350,7 +358,7 @@ int main(int argc, char** argv) {
                 LOG(ERROR) << "Physics class '" << classname << "' requested by calibration '"
                            << calibration->GetName()
                            << "' not found";
-                return 1;
+                return EXIT_FAILURE;
             }
         }
     }
@@ -360,7 +368,7 @@ int main(int argc, char** argv) {
     if(!global_unused_popts.empty()) {
         LOG(ERROR) << "The following global physics options were not used by any activated physics class: " << global_unused_popts;
         LOG(INFO)  << "Did you mean: " << popts->GetNotFound();
-        return 1;
+        return EXIT_FAILURE;
     }
 
     // check setup options after physics initialization
@@ -368,7 +376,7 @@ int main(int argc, char** argv) {
     if(!unused_setup_opts.empty()) {
         LOG(ERROR) << "The following setup options were not used: " << unused_setup_opts;
         LOG(INFO)  << "Did you mean: " << setup_opts->GetNotFound();
-        return 1;
+        return EXIT_FAILURE;
     }
 
     // set up particle ID
@@ -434,6 +442,9 @@ int main(int argc, char** argv) {
     }
     VLOG(5) << "Added command line: " << header->CmdLine;
 
+    if(terminated)
+        return EXIT_FAILURE+1;
+
     if(!cmd_batchmode->isSet()) {
         if(!std_ext::system::isInteractive()) {
             LOG(INFO) << "No TTY attached. Not starting ROOT shell.";
@@ -452,5 +463,5 @@ int main(int argc, char** argv) {
 
     }
 
-    return 0;
+    return EXIT_SUCCESS;
 }
