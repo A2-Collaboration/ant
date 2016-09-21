@@ -13,6 +13,7 @@ import os, sys
 import re
 import errno
 import argparse
+import datetime
 import subprocess
 from os.path import abspath, dirname, join as pjoin
 from distutils.spawn import find_executable
@@ -161,6 +162,10 @@ def unit_prefix(number):
     else:
         return str(number)
 
+def timestamp():
+    """Return a string with the current time stamp"""
+    return str(datetime.datetime.now()).split('.')[0]
+
 def max_file_number(lst):
     """Get the maximum file number from a list of files with the format *_[0-9]+.root"""
     if not lst:
@@ -183,12 +188,12 @@ def check_simulation_files(settings, channel):
     max_pluto = max_file_number(pluto_files)
     max_geant = max_file_number(geant_files)
     if max_geant > max_pluto:
-        print_color("\t[Warning]", 'YELLOW')
+        print_color("   [Warning]", 'YELLOW')
         print("There are more Geant4 simulation files than Pluto generated\nfiles for channel %s"
               % format_channel(channel, False))
         input("Will continue by pressing any key ")
     elif max_geant < max_pluto:
-        print_color("\t[Warning]", 'YELLOW')
+        print_color("   [Warning]", 'YELLOW')
         print("There are more Pluto generated files than Geant4 simulated\nfiles for channel %s"
               % format_channel(channel, False))
         input("Will continue by pressing any key ")
@@ -503,6 +508,18 @@ def submit_jobs(settings, simulation, pluto, tid, geant, total, length=20):
     pluto_data = settings.get('PLUTO_DATA')
     geant_data = settings.get('GEANT_DATA')
     log_data = settings.get('LOG_DATA')
+    time = timestamp()
+    submit_log = 'submit_%s.log' % time.replace(' ', '_').replace(':', '.')[:-3]  # remove seconds
+    submitted = ['Submitting %d jobs on %s\n\n' % (total, time)]
+    total_events = 0
+    for channel, _, files, events, _ in simulation:
+        amount = files*events
+        chnl = "  {0:<30s} {1:>4d} files per {2:>4s} events (total {3:>4s} events)\n" \
+               .format(channel.replace('_', ' --> '), files, unit_prefix(events), unit_prefix(amount))
+        submitted.append(chnl)
+        total_events += amount
+    submitted.append(" Total %s events in %d files\n\n" % (unit_prefix(total_events), total))
+    submitted.append('\nUsed qsub command: %s\n\n' % create_sub('"logfile"', 'Sim', 42, settings))
 
     for decay_string, reaction, files, events, number in simulation:
         for i in range(1, files+1):
@@ -515,6 +532,7 @@ def submit_jobs(settings, simulation, pluto, tid, geant, total, length=20):
             tid_cmd = '%s %s' % (tid, pluto_file)
             geant_cmd = '%s %s %s' % (geant, pluto_file, geant_file)
             submit_job('%s; %s; %s' % (pluto_cmd, tid_cmd, geant_cmd), log, 'Sim', job, settings)
+            submitted.append('%s; %s; %s\n' % (pluto_cmd, tid_cmd, geant_cmd))
 
             # progress bar
             sys.stdout.write('\r')
@@ -522,8 +540,10 @@ def submit_jobs(settings, simulation, pluto, tid, geant, total, length=20):
             # use ceil to ensure that 100% is reached, just in case of low precision
             sys.stdout.write("[%s%s] %3d%%" % (bar*fill, empty*(length-fill), ceil(job/point)))
             sys.stdout.flush()
-
     print()
+
+    with open(get_path(settings.get('OUTPUT_PATH'), submit_log), 'w') as log:
+        log.writelines(submitted)
 
 def is_valid_file(parser, arg):
     """Helper function for argparse to check if a file exists"""
