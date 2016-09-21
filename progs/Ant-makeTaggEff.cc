@@ -250,7 +250,10 @@ int main( int argc, char** argv )
         for ( auto i: {chHistMeanCsv,chHistGroup,chHistManual})
         {
             if (i)
+            {
+                i->Hist->SetStats(false);
                 canvas("TaggEff") << drawoption("E") << i->Hist << endc;
+            }
         }
         if (chHistCsv)
         {
