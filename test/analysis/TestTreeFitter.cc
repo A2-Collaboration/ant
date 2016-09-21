@@ -20,10 +20,10 @@ using namespace ant;
 using namespace ant::analysis;
 using namespace ant::analysis::input;
 
-void dotest();
+void dotest_simple();
 
-TEST_CASE("TreeFitter", "[analysis]") {
-    dotest();
+TEST_CASE("TreeFitter: Simple", "[analysis]") {
+    dotest_simple();
 }
 
 struct TestUncertaintyModel : utils::UncertaintyModel {
@@ -57,38 +57,7 @@ struct TestUncertaintyModel : utils::UncertaintyModel {
     }
 };
 
-struct Pulls_t {
-    std_ext::RMS Ek;
-    std_ext::RMS Theta_Rxy;
-    std_ext::RMS Phi;
-    std_ext::RMS R_L;
-
-
-    void Fill(const utils::Fitter::FitParticle& p) {
-        const auto& pulls = p.GetPulls();
-        CHECK(pulls.size()==4);
-        Ek.Add(pulls[0]);
-        Theta_Rxy.Add(pulls[1]);
-        Phi.Add(pulls[2]);
-        R_L.Add(pulls[3]);
-    }
-};
-
-struct Constraint_t {
-    std_ext::RMS E;
-    std_ext::RMS px;
-    std_ext::RMS py;
-    std_ext::RMS pz;
-
-    void Fill(const LorentzVec& v) {
-        E.Add(v.E);
-        px.Add(v.p.x);
-        py.Add(v.p.y);
-        pz.Add(v.p.z);
-    }
-};
-
-void dotest() {
+void dotest_simple() {
     test::EnsureSetup();
 
     auto rootfile = make_shared<WrapTFileInput>(string(TEST_BLOBS_DIRECTORY)+"/Pluto_EtapOmegaG.root");
@@ -110,8 +79,7 @@ void dotest() {
     auto mc_fake = std_ext::make_unique<utils::MCFakeReconstructed>(true);
 
     unsigned nEvents = 0;
-    unsigned nFitOk = 0;
-    unsigned nFitIterations = 0;
+    unsigned nFailed = 0;
 
     while(true) {
         TEvent event;
@@ -150,18 +118,27 @@ void dotest() {
         APLCON::Result_t res;
 
         unsigned nPerms = 0;
+        double prb = std_ext::NaN;
+        unsigned bestPerm = 0;
         while(treefitter.NextFit(res)) {
             nPerms++;
             if(res.Status != APLCON::Result_Status_t::Success)
                 continue;
-            nFitOk++;
-            nFitIterations += res.NIterations;
+            if(!std_ext::copy_if_greater(prb, res.Probability))
+                continue;
+            bestPerm = nPerms;
         }
         REQUIRE(nPerms == 12);
-
+        if(prb != Approx(1.0)) {
+            nFailed++;
+            continue;
+        }
+        REQUIRE(bestPerm == 6);
 
     }
 
+    REQUIRE(nFailed == 3);
+    REQUIRE(nEvents == 100);
 
 
 
