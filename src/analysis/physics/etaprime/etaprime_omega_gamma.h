@@ -97,28 +97,34 @@ struct EtapOmegaG : Physics {
     const params_t params;
 
     utils::KinFitter kinfitter_sig;
-    utils::KinFitter kinfitter_ref;
 
     std::unique_ptr<utils::MCSmear> mc_smear;
 
     utils::A2SimpleGeometry geometry;
 
-    struct Particles_t {
-        double         PhotonEnergy;
-        TParticlePtr   Proton;
-        TParticleList  Photons;
-        TParticleList  FittedPhotons;
-        LorentzVec     PhotonSum;
-        LorentzVec     FittedPhotonSum;
-        double         DiscardedEk = 0;
-    };
+//    struct Particles_t {
+//        double         PhotonEnergy;
+//        TParticlePtr   Proton;
+//        TParticleList  Photons;
+//        TParticleList  FittedPhotons;
+//        LorentzVec     PhotonSum;
+//        LorentzVec     FittedPhotonSum;
+//        double         DiscardedEk = 0;
+//    };
 
-    static bool doKinfit(const TTaggerHit& taggerhit,
-                         TParticlePtr true_proton,
-                         utils::KinFitter& kinfitter,
-                         Particles_t& particles,
-                         SharedTree_t& t,
-                         TH1D* h_CommonCuts);
+    struct particle_t {
+        particle_t(const TParticlePtr& proton) : Proton(proton) {}
+        TParticleList Photons;
+        TParticlePtr  Proton;
+    };
+    using particles_t = std::vector<particle_t>;
+
+//    static bool doKinfit(const TTaggerHit& taggerhit,
+//                         TParticlePtr true_proton,
+//                         utils::KinFitter& kinfitter,
+//                         Particles_t& particles,
+//                         SharedTree_t& t,
+//                         TH1D* h_CommonCuts);
 
     struct Sig_t {
 
@@ -228,7 +234,7 @@ struct EtapOmegaG : Physics {
         void SetupTrees(HistogramFactory HistFac);
         void Fill();
         void ResetBranches();
-        void Process(const Particles_t& particles, const TParticleTree_t& ptree_sig);
+        void Process(const particles_t& particles, const TParticleTree_t& ptree_sig);
 
         SharedTree_t t;
 
@@ -241,6 +247,9 @@ struct EtapOmegaG : Physics {
     };
 
     struct Ref_t {
+        Ref_t(params_t params);
+
+        utils::KinFitter kinfitter;
 
         struct Tree_t : EtapOmegaG::SharedTree_t {
             ADD_BRANCH_T(double,   IM_2g)
@@ -250,7 +259,7 @@ struct EtapOmegaG : Physics {
         Tree_t t;
 
         void ResetBranches();
-        void Process(const Particles_t& particles);
+        void Process(particles_t particles, double photon_energy);
     };
 
 
