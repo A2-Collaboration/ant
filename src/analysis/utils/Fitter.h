@@ -247,16 +247,26 @@ protected:
     static tree_t MakeTree(ParticleTypeTree ptree);
     static unsigned CountGammas(ParticleTypeTree ptree);
 
-
     const tree_t tree;
     std::vector<tree_t> tree_leaves;
+
     using permutations_t = std::vector<std::vector<size_t>>;
     permutations_t permutations;
-    permutations_t::const_iterator current_perm;
 
-    // use unique_ptr since KofNvector does not have default ctor
-    using current_comb_t = KofNvector<TParticlePtr>;
-    std::unique_ptr<current_comb_t> current_comb_ptr;
+    struct iteration_t {
+        struct particle_t {
+            particle_t(const TParticlePtr& p, int leaveIndex = -1) :
+                Particle(p), LeaveIndex(leaveIndex)
+            {}
+            TParticlePtr Particle;
+            int LeaveIndex;
+        };
+
+        std::vector<particle_t> Particles;
+    };
+
+    using iterations_t = std::list<iteration_t>;
+    iterations_t iterations;
 
 };
 

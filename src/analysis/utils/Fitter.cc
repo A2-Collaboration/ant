@@ -424,7 +424,6 @@ TreeFitter::TreeFitter(const string& name,
     tree(MakeTree(ptree))
 {
     tree->GetUniquePermutations(tree_leaves, permutations);
-    current_perm = permutations.end();
 
     LOG(INFO) << "Initialized TreeFitter '" << name
               << "' for " << utils::ParticleTools::GetDecayString(ptree, false)
@@ -524,47 +523,56 @@ void TreeFitter::SetPhotons(const TParticleList& photons)
     if(photons.size() != Photons.size())
         throw Exception("Given leave particles does not match configured TreeFitter");
 
-    current_perm = permutations.begin();
-    current_comb_ptr = std_ext::make_unique<current_comb_t>(photons, current_perm->size());
+    // iterations should normally be empty at this point,
+    // but the user might call SetPhotons multiple times before running NextFit
+    iterations.clear();
+
+    const auto k = tree_leaves.size();
+    const auto n = Photons.size();
+    assert(k<=n);
+
+    for(auto current_comb = makeCombination(photons, k);
+        !current_comb.Done(); ++current_comb)
+    {
+        for(const auto& current_perm : permutations)
+        {
+            iterations.emplace_back();
+            iteration_t& it = iterations.back();
+
+            const auto& comb_indices = current_comb.Indices();
+            for(unsigned i=0;i<k;i++) {
+                const auto perm_idx = current_perm.at(i);
+                it.Particles.emplace_back(current_comb.at(perm_idx), comb_indices[perm_idx]);
+            }
+
+            auto it_not_comb = current_comb.begin_not();
+            assert((unsigned)distance(it_not_comb, current_comb.end_not()) == n - k);
+
+            // and by construction, the non-leaves are from k..n-1
+            for(auto i=k;i<n;i++) {
+                it.Particles.emplace_back(*it_not_comb);
+                ++it_not_comb;
+            }
+        }
+    }
 }
 
 bool TreeFitter::NextFit(APLCON::Result_t& fit_result)
 {
-    assert(!permutations.empty());
-
-    if(!current_comb_ptr)
+    if(iterations.empty())
         return false;
 
-    auto& current_comb = *current_comb_ptr;
+    const iteration_t& it = iterations.front();
 
-    if(current_perm == permutations.end()) {
-        current_perm = permutations.begin();
-        ++current_comb;
-    }
-
-    if(current_comb.Done())
-        return false;
-
-    const auto k = current_perm->size();
+    const auto k = tree_leaves.size();
     const auto n = Photons.size();
 
-    // by construction, the photon leaves are 0..k-1
-    const auto& comb_indices = current_comb.Indices();
-    for(unsigned i=0;i<k;i++) {
-        const auto perm_idx = current_perm->at(i);
-        tree_leaves[i]->Get().PhotonLeaveIndex = comb_indices[perm_idx];
-        const TParticlePtr& p = current_comb.at(perm_idx);
-        Photons[i]->Set(p, *uncertainty);
-    }
-
-    auto it_not_comb = current_comb.begin_not();
-    assert(n>=k);
-    assert((unsigned)distance(it_not_comb, current_comb.end_not()) == n - k);
-
-    // and by construction, the non-leaves are from k..n-1
-    for(auto i=k;i<n;i++) {
-        Photons[i]->Set(*it_not_comb, *uncertainty);
-        ++it_not_comb;
+    for(unsigned i=0; i<n;i++) {
+        const auto& p = it.Particles[i];
+        // by construction, the photon leaves are 0..k-1
+        if(i<k)
+            tree_leaves[i]->Get().PhotonLeaveIndex = p.LeaveIndex;
+        Photons[i]->Set(p.Particle, *uncertainty);
     }
 
     // restore previous values
@@ -573,8 +581,7 @@ bool TreeFitter::NextFit(APLCON::Result_t& fit_result)
 
     fit_result = KinFitter::DoFit();
 
-    ++current_perm;
-
+    iterations.pop_front();
     return true;
 }
 
