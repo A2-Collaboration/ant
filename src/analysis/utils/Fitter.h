@@ -238,13 +238,6 @@ public:
 
     bool NextFit(APLCON::Result_t& fit_result);
 
-    using current_comb_t = KofNvector<TParticlePtr>;
-    const current_comb_t& GetCurrentCombination() const {
-        return *current_comb_ptr;
-    }
-
-
-
 protected:
 
     // use while(NextFit()) {} instead
@@ -262,6 +255,7 @@ protected:
     permutations_t::const_iterator current_perm;
 
     // use unique_ptr since KofNvector does not have default ctor
+    using current_comb_t = KofNvector<TParticlePtr>;
     std::unique_ptr<current_comb_t> current_comb_ptr;
 
 };
