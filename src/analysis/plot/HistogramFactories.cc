@@ -2,16 +2,18 @@
 
 #include "base/std_ext/string.h"
 
-#include "TMath.h"
 #include "TDirectory.h"
-#include "TTree.h"
+#include "TGraph.h"
+#include "TGraphErrors.h"
 #include "TH1D.h"
 #include "TH2D.h"
 #include "TH3D.h"
+#include "TMath.h"
+#include "TTree.h"
 
-#include <iomanip>
-#include <cmath>
 #include <algorithm>
+#include <cmath>
+#include <iomanip>
 #include <numeric>
 
 using namespace ant;
@@ -153,6 +155,34 @@ TH3D *HistogramFactory::makeTH3D(const string &title,
     h->SetYTitle(ylabel.c_str());
     h->SetZTitle(zlabel.c_str());
     return h;
+}
+
+TGraph* HistogramFactory::makeGraph(const string& title,
+                                    const string& name) const
+{
+    auto g = new TGraph();
+
+    g->SetName(GetNextHistName(name).c_str());
+    g->SetTitle(title.c_str());
+    g->SetMarkerStyle(kPlus);
+
+    DirStackPush dirstack(*this);
+    gDirectory->Add(g);
+    return g;
+}
+
+TGraphErrors*HistogramFactory::makeGraphErrors(const string& title,
+                                               const string& name) const
+{
+    auto g = new TGraphErrors();
+
+    g->SetName(GetNextHistName(name).c_str());
+    g->SetTitle(title.c_str());
+
+    DirStackPush dirstack(*this);
+    gDirectory->Add(g);
+
+    return g;
 }
 
 TTree* HistogramFactory::makeTTree(const string& name) const

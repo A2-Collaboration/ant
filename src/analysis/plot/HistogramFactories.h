@@ -10,6 +10,8 @@ class TH1D;
 class TH2D;
 class TH3D;
 class TTree;
+class TGraph;
+class TGraphErrors;
 
 namespace ant {
 namespace analysis {
@@ -57,6 +59,7 @@ public:
      */
     static BinSettings Make(const std::vector<double>& x_values);
 };
+
 
 class HistogramFactory {
 private:
@@ -122,6 +125,14 @@ public:
             const BinSettings& xbins,
             const BinSettings& ybins,
             const BinSettings& zbins,
+            const std::string& name="") const;
+
+    TGraph* makeGraph(
+            const std::string& title,
+            const std::string& name="") const;
+
+    TGraphErrors* makeGraphErrors(
+            const std::string& title,
             const std::string& name="") const;
 
     TTree* makeTTree(const std::string& name) const;
