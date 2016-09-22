@@ -38,7 +38,7 @@ macro(add_ant_test name)
       target_link_libraries(${TESTNAME} expconfig_helpers)
   endif()
   add_test(NAME ${TESTNAME} COMMAND ${TESTNAME})
-  set_tests_properties(${TESTNAME} PROPERTIES TIMEOUT 60)
+  set_tests_properties(${TESTNAME} PROPERTIES TIMEOUT 300)
   add_dependencies(build_and_test ${TESTNAME})
 endmacro()
 
