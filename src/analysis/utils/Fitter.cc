@@ -485,21 +485,26 @@ TreeFitter::TreeFitter(const string& name,
 
     LOG(INFO) << "Have " << node_constraints.size() << " constraints at " << sum_daughters.size() << " nodes";
 
-    // define the constraint
 
-    auto IM_at_nodes = [this, fit_Z_vertex, node_constraints] (const vector<vector<double>>& v) {
-        const auto  k = tree_leaves.size();
+    // define the constraint
+    // use local copies instead of this capture. capturing "this" is dangerous since
+    // fitter might be moved around in memory...
+    auto tree_leaves_copy   = tree_leaves;
+    auto sum_daughters_copy = sum_daughters;
+    auto IM_at_nodes = [tree_leaves_copy, sum_daughters_copy,
+                       fit_Z_vertex, node_constraints] (const vector<vector<double>>& v) {
+        const auto  k = tree_leaves_copy.size();
         // k serves as an offset here
         const auto  z_vertex = fit_Z_vertex ? v[k+0][0] : 0.0;
 
         // assign values v to leaves' LVSum
         for(unsigned i=0;i<k;i++) {
-            node_t& node = tree_leaves[i]->Get();
+            node_t& node = tree_leaves_copy[i]->Get();
             node.LVSum = node.Leave->GetLorentzVec(v[i], z_vertex);
         }
 
         // sum daughters' Particle
-        for(const auto& f : sum_daughters)
+        for(const auto& f : sum_daughters_copy)
             f();
 
         // calculate the IM constraint by evaluating the pre-defined functions
