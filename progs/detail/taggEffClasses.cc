@@ -129,7 +129,7 @@ TID taggEffTriple_t::extractStartID(const string& f)
 
 void taggEffTriple_t::initBkgFits()
 {
-    AvgBkgRates = timedData::getRatesVsTime({addressof(Bkg1),addressof(Bkg2)});
+    AvgBkgRates = timedData::getRatesVsTime({addressof(Bkg1),addressof(Bkg2)},HistFac);
     double dummy(0);
     double tmax(0);
     AvgBkgRates->GetPoint(AvgBkgRates->GetN()-1,tmax,dummy);
@@ -142,7 +142,7 @@ void taggEffTriple_t::initBkgFits()
     AvgBkgRates->Fit(AvgBkgFit,"Q");
     for ( auto ch = 0u ; ch < Run.nchannels ; ++ch)
     {
-        auto graph = timedData::getRatesVsTime({addressof(Bkg1),addressof(Bkg2)},ch);
+        auto graph = timedData::getRatesVsTime({addressof(Bkg1),addressof(Bkg2)},ch,HistFac);
         bkgFits.emplace_back(bkgFit_t(graph,ch));
         bkgFits.back().doFit(IntervalD(0,tmax),AvgBkgFit->GetParameter(2));
     }
@@ -170,12 +170,10 @@ taggEffTriple_t::taggEffTriple_t(const string& bkg1f, const string& runf, const 
 
     initBkgFits();
 
-    avgRatesSub = new TGraph();
-    avgRatesSub->SetMarkerStyle(kPlus);
+    avgRatesSub = HistFac.makeGraph("","runBkgSub");
     avgRatesSub->SetMarkerColor(kRed);
 
-    avgRates = new TGraph();
-    avgRates->SetMarkerStyle(kPlus);
+    avgRates = HistFac.makeGraph("","run");
     avgRates->SetMarkerColor(kGray);
 }
 
@@ -316,9 +314,9 @@ double taggEffTriple_t::bkgFit_t::operator ()(const double time) const
 
 
 
-TGraph* timedData::getRatesVsTime(const std::list<treeLoader_t*>& tContainers)
+TGraph* timedData::getRatesVsTime(const std::list<treeLoader_t*>& tContainers,const HistogramFactory& histfac)
 {
-    auto graph2d = new TGraph();
+    auto graph2d = histfac.makeGraph("","meanBkg");
 
     graph2d->SetMarkerStyle(kPlus);
     graph2d->GetXaxis()->SetTitle("time [s]");
@@ -335,9 +333,9 @@ TGraph* timedData::getRatesVsTime(const std::list<treeLoader_t*>& tContainers)
     return graph2d;
 }
 
-TGraph* timedData::getRatesVsTime(const std::list<treeLoader_t*>& tContainers, const size_t channel)
+TGraph* timedData::getRatesVsTime(const std::list<treeLoader_t*>& tContainers, const size_t channel, const HistogramFactory& histfac)
 {
-    auto graph2d = new TGraph();
+    auto graph2d = histfac.makeGraph("",std_ext::formatter() << "ch" << channel << "Bkg");
 
     graph2d->SetMarkerStyle(kPlus);
     graph2d->GetXaxis()->SetTitle("time [s]");
@@ -351,9 +349,9 @@ TGraph* timedData::getRatesVsTime(const std::list<treeLoader_t*>& tContainers, c
     return graph2d;
 }
 
-TGraph* timedData::getLtVsTime(const std::list<treeLoader_t*>& tContainers)
+TGraph* timedData::getLtVsTime(const std::list<treeLoader_t*>& tContainers, const HistogramFactory& histfac)
 {
-    auto graph = new TGraph();
+    auto graph = histfac.makeGraph("");
 
     graph->SetMarkerStyle(kPlus);
     graph->GetXaxis()->SetTitle("time [s]");
