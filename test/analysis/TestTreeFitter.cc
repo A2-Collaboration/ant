@@ -21,9 +21,18 @@ using namespace ant::analysis;
 using namespace ant::analysis::input;
 
 void dotest_simple();
+void dotest_filter(bool);
 
 TEST_CASE("TreeFitter: Simple", "[analysis]") {
     dotest_simple();
+}
+
+TEST_CASE("TreeFitter: Filter, cut", "[analysis]") {
+    dotest_filter(false);
+}
+
+TEST_CASE("TreeFitter: Filter, sort", "[analysis]") {
+    dotest_filter(true);
 }
 
 struct TestUncertaintyModel : utils::UncertaintyModel {
@@ -139,7 +148,115 @@ void dotest_simple() {
 
     REQUIRE(nFailed == 3);
     REQUIRE(nEvents == 100);
+}
 
 
+void dotest_filter(bool sort) {
+    test::EnsureSetup();
+
+    auto rootfile = make_shared<WrapTFileInput>(string(TEST_BLOBS_DIRECTORY)+"/Pluto_EtapOmegaG.root");
+    PlutoReader reader(rootfile);
+
+    REQUIRE_FALSE(reader.IsSource());
+
+    auto model = make_shared<TestUncertaintyModel>();
+
+    utils::TreeFitter treefitter(
+                "treefitter",
+                ParticleTypeTreeDatabase::Get(ParticleTypeTreeDatabase::Channel::EtaPrime_gOmega_ggPi0_4g),
+                model, true);
+
+    treefitter.SetZVertexSigma(3.0);
+
+    auto fitted_Pi0 = treefitter.GetTreeNode(ParticleTypeDatabase::Pi0);
+    REQUIRE(fitted_Pi0);
+
+    if(sort) {
+        // sort by inverse chi2
+        treefitter.SetIterationFilter([fitted_Pi0] () {
+            auto& node = fitted_Pi0->Get();
+            return 1.0/std_ext::sqr(ParticleTypeDatabase::Pi0.Mass() - node.LVSum.M());
+        },
+        3 // do the best 3 iterations...
+        );
+    }
+    else {
+        // simple cut
+        treefitter.SetIterationFilter([fitted_Pi0] () {
+            auto& node = fitted_Pi0->Get();
+            // the returned bool is implicitly converted to double
+            return ParticleTypeDatabase::Pi0.GetWindow(1).Contains(node.LVSum.M());
+        });
+    }
+
+
+    // use mc_fake with complete 4pi (no lost photons)
+    auto mc_fake = std_ext::make_unique<utils::MCFakeReconstructed>(true);
+
+    unsigned nEvents = 0;
+    unsigned nFailed = 0;
+
+    while(true) {
+        TEvent event;
+        if(!reader.ReadNextEvent(event))
+            break;
+        nEvents++;
+
+        INFO("nEvents="+to_string(nEvents));
+
+        const TEventData& eventdata = mc_fake->Get(event.MCTrue());
+        const auto& cands = eventdata.Candidates;
+        auto true_proton = eventdata.Particles.Get(ParticleTypeDatabase::Proton).front();
+
+        REQUIRE(cands.size() == 5);
+
+        for(const auto& taggerhit : eventdata.TaggerHits) {
+
+            double prb = std_ext::NaN;
+            TCandidatePtr best_proton;
+
+            for(auto cand_proton : cands.get_iter()) {
+                auto proton = make_shared<TParticle>(ParticleTypeDatabase::Proton, cand_proton);
+                TParticleList photons;
+                for(auto cand_photon : cands.get_iter()) {
+                    if(cand_photon == cand_proton)
+                        continue;
+                    photons.emplace_back(make_shared<TParticle>(ParticleTypeDatabase::Photon, cand_photon));
+                }
+
+                // do the fit
+                treefitter.SetEgammaBeam(taggerhit.PhotonEnergy);
+                treefitter.SetProton(proton);
+                treefitter.SetPhotons(photons);
+                APLCON::Result_t res;
+                unsigned nPerms = 0;
+                while(treefitter.NextFit(res)) {
+                    nPerms++;
+                    if(res.Status != APLCON::Result_Status_t::Success)
+                        continue;
+                    if(!std_ext::copy_if_greater(prb, res.Probability))
+                        continue;
+                    best_proton = cand_proton;
+                }
+                if(true_proton->Candidate == cand_proton) {
+                    if(sort)
+                        REQUIRE(nPerms==3);
+                    else
+                        REQUIRE(nPerms==2);
+
+                }
+            }
+
+            if(prb != Approx(1.0)) {
+                nFailed++;
+                continue;
+            }
+
+            REQUIRE(true_proton->Candidate == best_proton);
+        }
+    }
+
+    REQUIRE(nFailed == 3);
+    REQUIRE(nEvents == 100);
 
 }
