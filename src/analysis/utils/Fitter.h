@@ -223,9 +223,10 @@ public:
     /**
      * @brief SetIterationFilter
      * @param filter function returning a quality factor for the iteration. factor=0 means skip iteration.
+     * @param max only runs the best max number of iterations
      * @note the info about the current state should be managed by captured pointers to tree nodes of interest
      */
-    void SetIterationFilter(iteration_filter_t filter);
+    void SetIterationFilter(iteration_filter_t filter, unsigned max = 0);
 
     /**
      * @brief The node_t struct represents
@@ -273,6 +274,9 @@ protected:
     using permutations_t = std::vector<std::vector<size_t>>;
     permutations_t permutations;
 
+    using sum_daughters_t = std::vector<std::function<void()>>;
+    sum_daughters_t sum_daughters;
+
     struct iteration_t {
         struct particle_t {
             particle_t(const TParticlePtr& p, int leaveIndex = -1) :
@@ -285,6 +289,10 @@ protected:
         std::vector<particle_t> Particles;
         // given by iterationFilter
         double QualityFactor = std_ext::NaN;
+        // list::sort makes highest quality come first
+        bool operator<(const iteration_t& o) const {
+            return QualityFactor > o.QualityFactor;
+        }
     };
 
     using iterations_t = std::list<iteration_t>;

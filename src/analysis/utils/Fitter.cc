@@ -446,13 +446,11 @@ TreeFitter::TreeFitter(const string& name,
     // prepare the calculation at each constraint
     // the Map_nodes call can be done once and the
     // calculation is stored in little functions
-    using sum_daughters_t = function<void()>;
     using node_constraint_t = function<double()>;
 
-    vector<sum_daughters_t> sum_daughters;
     vector<node_constraint_t> node_constraints;
 
-    tree->Map_nodes([&sum_daughters, &node_constraints, nodeSetup] (const tree_t& tnode) {
+    tree->Map_nodes([this, &node_constraints, nodeSetup] (const tree_t& tnode) {
         // do not include leaves
         if(tnode->IsLeaf())
             return;
@@ -488,21 +486,20 @@ TreeFitter::TreeFitter(const string& name,
     LOG(INFO) << "Have " << node_constraints.size() << " constraints at " << sum_daughters.size() << " nodes";
 
     // define the constraint
-    auto tree_leaves_copy = tree_leaves;
-    auto IM_at_nodes = [fit_Z_vertex, tree_leaves_copy,
-                       sum_daughters, node_constraints] (const vector<vector<double>>& v) {
-        const auto  n = tree_leaves_copy.size();
-        // n serves as an offset here
-        const auto  z_vertex = fit_Z_vertex ? v[n+0][0] : 0.0;
+
+    auto IM_at_nodes = [this, fit_Z_vertex, node_constraints] (const vector<vector<double>>& v) {
+        const auto  k = tree_leaves.size();
+        // k serves as an offset here
+        const auto  z_vertex = fit_Z_vertex ? v[k+0][0] : 0.0;
 
         // assign values v to leaves' LVSum
-        for(unsigned i=0;i<n;i++) {
-            node_t& node = tree_leaves_copy[i]->Get();
+        for(unsigned i=0;i<k;i++) {
+            node_t& node = tree_leaves[i]->Get();
             node.LVSum = node.Leave->GetLorentzVec(v[i], z_vertex);
         }
 
         // sum daughters' Particle
-        for(const auto f : sum_daughters)
+        for(const auto& f : sum_daughters)
             f();
 
         // calculate the IM constraint by evaluating the pre-defined functions
@@ -555,6 +552,44 @@ void TreeFitter::SetPhotons(const TParticleList& photons)
             }
         }
     }
+
+    // filter iterations if requested
+    if(!iteration_filter)
+        return;
+
+    for(auto& it : iterations) {
+        // set the leaves' LVSum and sum up the tree (as in the constraint)
+        // the filtering function might use this to calculate the quality factor
+        for(unsigned i=0; i<k;i++) {
+            const auto& p = it.Particles[i];
+            node_t& leave = tree_leaves[i]->Get();
+            leave.LVSum = *p.Particle;
+            leave.Leave->Particle = p.Particle;
+        }
+
+        // sum the daughters
+        for(const auto& f : sum_daughters)
+            f();
+
+        it.QualityFactor = iteration_filter();
+    }
+
+    // remove all iterations with factor=0
+    iterations.remove_if([] (const iteration_t& it) {
+        return it.QualityFactor == 0;
+    });
+
+    // if requested, keep only max best iterations
+    if(max_iterations>0 && max_iterations<=iterations.size()) {
+        iterations.sort();
+        iterations.resize(max_iterations);
+    }
+}
+
+void TreeFitter::SetIterationFilter(TreeFitter::iteration_filter_t filter, unsigned max)
+{
+    iteration_filter = filter;
+    max_iterations = max;
 }
 
 bool TreeFitter::NextFit(APLCON::Result_t& fit_result)
