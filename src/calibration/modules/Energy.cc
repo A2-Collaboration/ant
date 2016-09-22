@@ -8,6 +8,8 @@
 #include "tree/TDetectorReadHit.h"
 
 #include "base/Logger.h"
+#include "base/std_ext/math.h"
+#include "base/math_functions/Linear.h"
 
 #include "TH2.h"
 #include "TH3.h"
@@ -23,6 +25,7 @@
 using namespace std;
 using namespace ant;
 using namespace ant::calibration;
+using namespace ant::std_ext;
 
 Energy::Energy(Detector_t::Type_t detectorType,
                std::shared_ptr<DataManager> calmgr,
@@ -329,18 +332,41 @@ bool Energy::GUI_Pedestals::FinishSlice()
 struct FitProtonPeak : gui::FitGausPol1 {
     virtual void SetDefaults(TH1 *hist) override {
 
+        const auto range = GetRange();
+
+        const auto startbin = hist->FindBin(range.Start());
+        const auto stopbin  = hist->FindBin(range.Stop());
+
+        // try to autodedect maximum within fit range
+        double maxx = range.Center();
+        double maxy = -inf;
+        for(int i=startbin; i<=stopbin; ++i) {
+            const auto v = hist->GetBinContent(i);
+            if(v > maxy) {
+                maxy = v;
+                maxx = hist->GetBinCenter(i);
+            }
+        }
+
+        if(!isfinite(maxy))
+           maxy = hist->GetMaximum();
+
+        // linear background
+        const math::LineFct bg({hist->GetBinCenter(startbin), hist->GetBinContent(startbin)},
+                               {hist->GetBinCenter(stopbin),  hist->GetBinContent(stopbin)} );
+
         // amplitude
-        func->SetParameter(0, 0.5*hist->GetMaximum());
+        func->SetParameter(0, maxy - bg(maxx));
 
         // x0
-        func->SetParameter(1, 8);
+        func->SetParameter(1, maxx);
 
         // sigma
         func->SetParameter(2, 1.5);
 
         // pol1
-        func->SetParameter(3, 0.1*hist->GetMaximum());
-        func->SetParameter(4, 0);
+        func->SetParameter(3, bg.b);
+        func->SetParameter(4, bg.m);
 
         Sync();
     }
