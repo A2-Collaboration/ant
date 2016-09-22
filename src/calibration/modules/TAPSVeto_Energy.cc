@@ -51,6 +51,8 @@ void TAPSVeto_Energy::GetGUIs(std::list<std::unique_ptr<gui::CalibModule_traits>
                           GetName(),
                           RelativeGains,
                           calibrationManager,
-                          tapsveto_detector
+                          tapsveto_detector,
+                          interval<double>(600.0,700.0),
+                          1.27 // MeV, from 2pi0 MC cocktail, -> same as PID, banana is quite flat there
                           ));
 }

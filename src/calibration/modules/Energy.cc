@@ -21,6 +21,7 @@
 #include <sstream>
 #include <vector>
 #include <list>
+#include <cmath>
 
 using namespace std;
 using namespace ant;
@@ -374,11 +375,16 @@ struct FitProtonPeak : gui::FitGausPol1 {
 };
 
 Energy::GUI_Banana::GUI_Banana(const string& basename,
-                                 Energy::CalibType& type,
-                                 const std::shared_ptr<DataManager>& calmgr,
-                                 const std::shared_ptr<Detector_t>& detector) :
+                               Energy::CalibType& type,
+                               const std::shared_ptr<DataManager>& calmgr,
+                               const std::shared_ptr<Detector_t>& detector,
+                               const interval<double>& projectionrange,
+                               const double proton_peak_mc_pos
+                               ) :
     GUI_CalibType(basename, type, calmgr, detector),
-    func(make_shared<FitProtonPeak>())
+    func(make_shared<FitProtonPeak>()),
+    projection_range(projectionrange),
+    proton_peak_mc(proton_peak_mc_pos)
 {
 
 }
@@ -413,16 +419,21 @@ gui::CalibModule_traits::DoFitReturn_t Energy::GUI_Banana::DoFit(TH1* hist, unsi
     auto xaxis = banana->GetXaxis();
     h_projection = dynamic_cast<TH1D*>(banana->ProjectionY(
                                            "_py",
-                                           xaxis->FindFixBin(130),
-                                           xaxis->FindFixBin(150)
+                                           xaxis->FindFixBin(projection_range.Start()),
+                                           xaxis->FindFixBin(projection_range.Stop())
                                            )
                                        );
+
+    if(h_projection->GetNbinsX() > 100) {
+        const auto grp = int(std::ceil(h_projection->GetNbinsX()/100.0));
+        h_projection->Rebin(grp);
+    }
 
     // stop at empty histograms
     if(h_projection->GetEntries()==0)
         return DoFitReturn_t::Display;
 
-    func->SetRange(interval<double>(5,13));
+    func->SetRange(interval<double>(0.5,6));
     func->SetDefaults(h_projection);
     const auto it_fit_param = fitParameters.find(ch);
     if(it_fit_param != fitParameters.end() && !IgnorePreviousFitParameters) {
@@ -462,11 +473,10 @@ void Energy::GUI_Banana::DisplayFit()
 void Energy::GUI_Banana::StoreFit(unsigned channel)
 {
     const double oldValue = previousValues[channel];
-    /// \todo obtain convergenceFactor and pi0mass from config or database
-    const double protonMC = 8.0;
+
     const double protonpeak = func->GetPeakPosition();
 
-    const double newValue = oldValue * protonMC/protonpeak;
+    const double newValue = oldValue * proton_peak_mc / protonpeak;
 
     calibType.Values[channel] = newValue;
 

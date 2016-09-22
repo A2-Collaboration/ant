@@ -129,7 +129,10 @@ protected:
         GUI_Banana(const std::string& basename,
                CalibType& type,
                const std::shared_ptr<DataManager>& calmgr,
-               const std::shared_ptr<Detector_t>& detector);
+               const std::shared_ptr<Detector_t>& detector,
+               const interval<double>& projectionrange,
+               const double proton_peak_mc_pos
+                   );
 
         virtual std::shared_ptr<TH1> GetHistogram(const WrapTFile& file) const override;
         virtual void InitGUI(gui::ManagerWindow_traits* window) override;
@@ -148,6 +151,9 @@ protected:
         TH2D* banana;
 
         TH1D* h_relative = nullptr;
+
+        interval<double> projection_range;
+        const double proton_peak_mc;
 
         double AutoStopOnChi2 = 6;
     }; // GUI_Banana
