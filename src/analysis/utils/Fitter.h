@@ -217,6 +217,19 @@ public:
 
     virtual ~TreeFitter();
 
+    virtual void SetPhotons(const TParticleList& photons) override;
+
+    using iteration_filter_t = std::function<double()>;
+    /**
+     * @brief SetIterationFilter
+     * @param filter function returning a quality factor for the iteration. factor=0 means skip iteration.
+     * @note the info about the current state should be managed by captured pointers to tree nodes of interest
+     */
+    void SetIterationFilter(iteration_filter_t filter);
+
+    /**
+     * @brief The node_t struct represents
+     */
     struct node_t {
         node_t(const ParticleTypeTree& ptree) : TypeTree(ptree) {}
         const ParticleTypeTree TypeTree;
@@ -229,19 +242,26 @@ public:
     };
 
     using tree_t = Tree<node_t>::node_t;
-
-    virtual void SetPhotons(const TParticleList& photons) override;
-
+    /**
+     * @brief GetTreeNode returns the first pointer to a tree node
+     * @param type
+     * @return nullptr if not found
+     * @see GetTreeNodes to get all matching nodes
+     */
     tree_t GetTreeNode(const ParticleTypeDatabase::Type& type) const;
-
     std::vector<tree_t> GetTreeNodes(const ParticleTypeDatabase::Type& type) const;
 
+    /**
+     * @brief NextFit runs the next fit iteration
+     * @param fit_result
+     * @return true if fit successfully run, false if no fit executed and thus fit_result unchanged
+     */
     bool NextFit(APLCON::Result_t& fit_result);
 
 protected:
 
     // use while(NextFit()) {} instead
-    // to run all fits
+    // to run all fit iterations
     using KinFitter::DoFit;
 
     static tree_t MakeTree(ParticleTypeTree ptree);
@@ -263,10 +283,15 @@ protected:
         };
 
         std::vector<particle_t> Particles;
+        // given by iterationFilter
+        double QualityFactor = std_ext::NaN;
     };
 
     using iterations_t = std::list<iteration_t>;
     iterations_t iterations;
+
+    unsigned           max_iterations = 0; // 0 means no filtering
+    iteration_filter_t iteration_filter;
 
 };
 

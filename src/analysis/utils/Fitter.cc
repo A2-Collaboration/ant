@@ -586,12 +586,8 @@ bool TreeFitter::NextFit(APLCON::Result_t& fit_result)
 }
 
 TreeFitter::tree_t TreeFitter::GetTreeNode(const ParticleTypeDatabase::Type& type) const {
-    tree_t treenode = nullptr;
-    tree->Map_nodes([&treenode, &type] (tree_t t) {
-        if(t->Get().TypeTree->Get() == type)
-            treenode = t;
-    });
-    return treenode;
+    auto nodes = GetTreeNodes(type);
+    return nodes.empty() ? nullptr : nodes.front();
 }
 
 std::vector<TreeFitter::tree_t> TreeFitter::GetTreeNodes(const ParticleTypeDatabase::Type& type) const {
