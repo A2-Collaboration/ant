@@ -78,13 +78,17 @@ struct treeLoader_t
 class taggEffTriple_t
 {
 protected:
+    static TID extractStartID(const std::string& f);
+
+    const TID startID;
+
+    analysis::HistogramFactory HistFac;
 
     treeLoader_t Bkg1;
     treeLoader_t Run;
     treeLoader_t Bkg2;
 
 
-    TID startID;
 
     void initBkgFits();
 
@@ -108,7 +112,8 @@ public:
     TGraph* avgRatesSub = nullptr;
     TGraph* avgRates    = nullptr;
 
-    taggEffTriple_t(const std::string& bkg1f, const std::string& runf, const std::string& bkg2f);
+    taggEffTriple_t(const std::string& bkg1f, const std::string& runf, const std::string& bkg2f,
+                    const analysis::HistogramFactory& histfac);
 
     std::string SetupName() const{return Bkg1.setupName;}
 

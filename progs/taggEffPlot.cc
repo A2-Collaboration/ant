@@ -5,6 +5,8 @@
 #include "base/std_ext/system.h"
 #include "base/std_ext/string.h"
 
+#include "analysis/plot/root_draw.h"
+
 #include "TGraph.h"
 #include "TRint.h"
 #include "TF1.h"
@@ -14,6 +16,7 @@
 using namespace ant;
 using namespace std;
 using namespace ant::progs::taggeff;
+
 
 static TGraph* graph2d(nullptr);
 void initGraph(const string& xtitle, const string& ytitle)
@@ -107,7 +110,7 @@ void plotLiveTimes(const vector<string>& fileList)
     if ( graph2d )
         throw runtime_error("graph already exists, this should never happen");
 
-    graph2d = timedData::getLtVsTime(tContainers);
+//    graph2d = timedData::getLtVsTime(tContainers,analysis::HistogramFactory("taggEffPlot"));
 }
 
 void plotRates(const vector<string>& fileList)
@@ -119,40 +122,6 @@ void plotRates(const vector<string>& fileList)
     if ( graph2d )
         throw runtime_error("graph already exists, this should never happen");
 
-    graph2d = timedData::getRatesVsTime(tContainers);
-//    initGraph("time","rate");
-//    vector<unique_ptr<treeLoader_t>> tContainers;
+//    graph2d = timedData::getRatesVsTime(tContainers,analysis::HistogramFactory("taggEffPlot"));
 
-
-//    for (const auto& fN: fileList)
-//        tContainers.emplace_back(new treeLoader_t(fN));
-
-//    auto first_time = numeric_limits<uint32_t>::quiet_NaN();
-//    double timeInRun(0);
-
-//    for ( const auto& t: tContainers)
-//    {
-//        timeInRun = 0;
-//        for ( auto en = 0u ; en < t->Tree()->GetEntries() ; ++en)
-//        {
-//            t->Tree()->GetEntry(en);
-//            if (first_time == numeric_limits<uint32_t>::quiet_NaN() && en == 0)
-//                first_time = t->wrapTree.EvID.Value->Timestamp;
-
-
-//            timeInRun += t->wrapTree.Clock() / 1.0e6;
-
-//            auto evTime = (  timeInRun
-//                             + t->wrapTree.EvID.Value->Timestamp
-//                             - first_time );
-
-//            std_ext::RMS rmsRate;
-//            for ( const auto& tr: t->wrapTree.TaggRates())
-//                rmsRate.Add(tr);
-
-//            graph2d->SetPoint(graph2d->GetN(),
-//                              evTime,
-//                              rmsRate.GetMean());
-//        }
-//    }
 }

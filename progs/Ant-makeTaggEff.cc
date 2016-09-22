@@ -126,9 +126,9 @@ auto failExit = [] (const string& message)
 
 void storeClibrationData(const taggEff_t& result, shared_ptr<calibration::DataManager> manager, const string& calibrationName,
                          const Calibration::AddMode_t& addMode = Calibration::AddMode_t::RightOpen);
-taggEffTriple_t* processFiles(const vector<string>& files, shared_ptr<channelHist_t> chHist);
-taggEff_t mediateCSV(const vector<string>& csvFiles);
-void processCSV(const string& csvFile, shared_ptr<channelHistTime_t> chHistTime);
+taggEffTriple_t* processFiles(const vector<string>& files, shared_ptr<channelHist_t> chHist,const HistogramFactory& histfac);
+taggEff_t mediateCSV(const vector<string>& csvFiles,const HistogramFactory& histfac);
+void processCSV(const string& csvFile, shared_ptr<channelHistTime_t> chHistTime,const HistogramFactory& histfac);
 taggEff_t processManualData(const string& dataFile, const string& setupName);
 
 int main( int argc, char** argv )
@@ -188,8 +188,8 @@ int main( int argc, char** argv )
     unique_ptr<WrapTFileOutput> masterFile;
     if(histOut) {
         masterFile = std_ext::make_unique<WrapTFileOutput>(cmd_output->getValue(),
-                                                    WrapTFileOutput::mode_t::recreate,
-                                                     true);
+                                                           WrapTFileOutput::mode_t::recreate,
+                                                           true);
     }
 
     auto histfac = make_shared<HistogramFactory>("makeTaggEff");
@@ -200,7 +200,7 @@ int main( int argc, char** argv )
         if (fileList.size() != 1)
             failExit("Provide one csv file!");
         chHistCsv = make_shared<channelHistTime_t>(fileList.at(0),histfac);
-        processCSV(fileList.at(0),chHistCsv);
+        processCSV(fileList.at(0),chHistCsv,*histfac);
     }
 
     shared_ptr<channelHist_t> chHistMeanCsv;
@@ -209,7 +209,7 @@ int main( int argc, char** argv )
         if (cmd_output)
         if (fileList.size() < 1)
             failExit("Provide at least one csv file!");
-        auto result = mediateCSV(fileList);
+        auto result = mediateCSV(fileList,*histfac);
         chHistMeanCsv = make_shared<channelHist_t>(result.Setup,histfac);
         chHistMeanCsv->Fill(result.TaggEffs,result.TaggEffErrors);
 
@@ -222,7 +222,7 @@ int main( int argc, char** argv )
         if (fileList.size() != 3)
             failExit("Group should contain three files in following order: 1st background, TaggEff-run, background 2.");
         chHistGroup = make_shared<channelHist_t>(fileList.at(1),histfac);
-        triple_grp = processFiles(fileList,chHistGroup);
+        triple_grp = processFiles(fileList,chHistGroup,*histfac);
     }
 
     shared_ptr<channelHist_t> chHistManual;
@@ -239,7 +239,7 @@ int main( int argc, char** argv )
 
 
 
-    // OUPUT ==============================
+    // OUTPUT ==============================
 
     argc=1; // prevent TRint to parse any cmdline except prog name
     auto app = cmd_batchmode->isSet() || !std_ext::system::isInteractive()
@@ -266,7 +266,7 @@ int main( int argc, char** argv )
 
         if ( triple_grp )
         {
-            canvas control("cotrol");
+            canvas control("control");
             auto mg = new TMultiGraph();
             mg->Add(triple_grp->AvgBkgRates);
             mg->Add(triple_grp->avgRatesSub);
@@ -279,6 +279,7 @@ int main( int argc, char** argv )
             control_channels << drawoption("AP");
             for (const auto& b: triple_grp->bkgFits)
                 control_channels  << b.Graph;
+
             control_channels << endc;
             for (const auto& b: triple_grp->bkgFits)
             {
@@ -341,9 +342,9 @@ taggEff_t processManualData(const string& dataFile, const string& setupName)
     return result;
 }
 
-taggEffTriple_t* processFiles(const vector<string>& files, shared_ptr<channelHist_t> chHist)
+taggEffTriple_t* processFiles(const vector<string>& files, shared_ptr<channelHist_t> chHist, const HistogramFactory& histfac)
 {
-    auto taggEff = new taggEffTriple_t(files.at(0),files.at(1),files.at(2));
+    auto taggEff = new taggEffTriple_t(files.at(0),files.at(1),files.at(2),histfac);
     taggEff_t result = taggEff->GetTaggEffSubtracted();
     auto manager = ExpConfig::Setup::GetLastFound()->GetCalibrationDataManager();
 
@@ -355,7 +356,7 @@ taggEffTriple_t* processFiles(const vector<string>& files, shared_ptr<channelHis
     return taggEff;
 }
 
-void processCSV(const string& csvFile, shared_ptr<channelHistTime_t> chHistTime)
+void processCSV(const string& csvFile, shared_ptr<channelHistTime_t> chHistTime, const HistogramFactory& histfac)
 {
     shared_ptr<calibration::DataManager> manager = nullptr;
 
@@ -391,7 +392,7 @@ void processCSV(const string& csvFile, shared_ptr<channelHistTime_t> chHistTime)
         if (record.size() != 3)
             throw runtime_error("Found line with wrong number of files, check your file list.");
 
-        taggEffTriple_t taggEff(record.at(0),record.at(1),record.at(2));
+        taggEffTriple_t taggEff(record.at(0),record.at(1),record.at(2),histfac);
         taggEff_t result = taggEff.GetTaggEffSubtracted();
 
         //check if setup is valid for this method --> String in map?
@@ -416,7 +417,7 @@ void processCSV(const string& csvFile, shared_ptr<channelHistTime_t> chHistTime)
     }
 }
 
-taggEff_t mediateCSV(const vector<string>& csvFiles)
+taggEff_t mediateCSV(const vector<string>& csvFiles, const HistogramFactory& histfac)
 {
     string setupName;
     size_t n_TaggEffs(0);
@@ -457,7 +458,7 @@ taggEff_t mediateCSV(const vector<string>& csvFiles)
             if (record.size() != 3)
                 throw runtime_error("Found line with wrong number of files, check your file list.");
 
-            taggEffTriple_t taggEff(record.at(0),record.at(1),record.at(2));
+            taggEffTriple_t taggEff(record.at(0),record.at(1),record.at(2),histfac);
             taggEff_t result = taggEff.GetTaggEffSubtracted();
             if (n_TaggEffs == 0)
             {

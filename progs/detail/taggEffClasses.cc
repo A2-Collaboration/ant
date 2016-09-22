@@ -117,6 +117,16 @@ treeLoader_t::means_t treeLoader_t::getMeans() const
     return means;
 }
 
+TID taggEffTriple_t::extractStartID(const string& f)
+{
+    WrapTFileInput file(f);
+    ant::TAntHeader* header;
+    file.GetObject("AntHeader",header);
+    if (!header)
+        throw runtime_error("No Ant header in found!");
+    return header->LastID;
+}
+
 void taggEffTriple_t::initBkgFits()
 {
     AvgBkgRates = timedData::getRatesVsTime({addressof(Bkg1),addressof(Bkg2)});
@@ -138,7 +148,10 @@ void taggEffTriple_t::initBkgFits()
     }
 }
 
-taggEffTriple_t::taggEffTriple_t(const string& bkg1f, const string& runf, const string& bkg2f):
+taggEffTriple_t::taggEffTriple_t(const string& bkg1f, const string& runf, const string& bkg2f,
+                                 const HistogramFactory& histfac):
+    startID(extractStartID(bkg2f)),
+    HistFac(std_ext::to_iso8601(startID.Timestamp),histfac),
     Bkg1(bkg1f),
     Run(runf),
     Bkg2(bkg2f)
@@ -151,12 +164,7 @@ taggEffTriple_t::taggEffTriple_t(const string& bkg1f, const string& runf, const 
     if ( !(Bkg1.setupName == Bkg2.setupName &&
            Bkg2.setupName == Run.setupName ) )
         throw runtime_error("Files in TaggEff-triple not from same Setup!");
-    WrapTFileInput file(bkg2f);
-    ant::TAntHeader* header;
-    file.GetObject("AntHeader",header);
-    if (!header)
-        throw runtime_error("No Ant header in found!");
-    startID = header->LastID;
+
 
     sanityChecks();
 
