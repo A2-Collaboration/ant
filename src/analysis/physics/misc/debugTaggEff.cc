@@ -1,0 +1,67 @@
+#include "debugTaggEff.h"
+
+#include "slowcontrol/SlowControlVariables.h"
+#include "plot/root_draw.h"
+#include "base/Logger.h"
+#include "expconfig/ExpConfig.h"
+
+using namespace ant;
+using namespace ant::analysis;
+using namespace ant::analysis::physics;
+
+using namespace std;
+
+
+size_t debugTaggEff::getNchannels()
+{
+    auto Tagger = ExpConfig::Setup::GetDetector<TaggerDetector_t>();
+    if (!Tagger) throw std::runtime_error("No Tagger found");
+    return Tagger->GetNChannels();
+}
+
+debugTaggEff::debugTaggEff(const string& name, OptionsPtr opts):
+    Physics(name, opts),
+    nchannels(getNchannels())
+{
+    slowcontrol::Variables::TaggerScalers->Request();
+    slowcontrol::Variables::FreeRates->Request();
+
+    TaggEffTree.CreateBranches(HistFac.makeTTree("taggEff"));
+
+    TaggEffTree.TaggEffs().resize(nchannels);
+    TaggEffTree.TaggEffErrors().resize(nchannels);
+}
+
+debugTaggEff::~debugTaggEff() {};
+
+void debugTaggEff::ProcessEvent(const TEvent& ev, manager_t&)
+{
+    SeenEvents++;
+
+    if(slowcontrol::Variables::FreeRates->HasChanged())
+    {
+        for (auto i = 0u ; i < nchannels ; ++i)
+        {
+            auto Tagger = ExpConfig::Setup::GetDetector<TaggerDetector_t>();
+            LOG(INFO) << Tagger->GetTaggEff(i).Value << "    " << Tagger->GetTaggEff(i).Error;
+            TaggEffTree.TaggEffs().at(i) = Tagger->GetTaggEff(i).Value;
+            TaggEffTree.TaggEffErrors().at(i) = Tagger->GetTaggEff(i).Error;
+        }
+    }
+}
+
+void debugTaggEff::Finish()
+{
+}
+
+void debugTaggEff::ShowResult()
+{
+    canvas c("TaggEffs");
+    for (auto i = 0u ; i < nchannels ; ++i )
+    {
+        c << TTree_drawable(TaggEffTree.Tree,std_ext::formatter() << "TaggEffs[" << i << "]");
+    }
+    c << endc;
+}
+
+AUTO_REGISTER_PHYSICS(debugTaggEff)

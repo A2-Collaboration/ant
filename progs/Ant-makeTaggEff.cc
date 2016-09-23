@@ -47,7 +47,7 @@ const map<string,TID> startIDs({ {"Setup_2014_07_EPT_Prod", TID(1406592000)},
                                  {"Setup_2014_10_EPT_Prod", TID(1413244800)},
                                  {"Setup_2014_12_EPT_Prod", TID(1417395600)} });
 
-constexpr double chi2cut_channels = 15.0;
+constexpr double chi2cut_channels = 1500.0;
 
 
 struct channelHist_t

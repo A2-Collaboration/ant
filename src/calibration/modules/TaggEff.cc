@@ -34,12 +34,24 @@ std::list<Updateable_traits::Loader_t> TaggEff::GetLoaders()
             TCalibrationData cdata;
             if(!CalibrationManager->GetData(GetName(), currPoint, cdata, nextChangePoint))
                 return;
-            if(cdata.Data.size() != 1)
-                return;
+            for ( const auto& data: cdata.Data )
+            {
+                auto channel = data.Key;
+                auto taggEff = data.Value;
+                auto taggEffError = std_ext::NaN;
 
-            const auto& kv  = cdata.Data.front();
-            const auto& kvE = cdata.FitParameters.front();  // error on TaggEff stored in fit-params!!!
-            Tagger->SetTaggEff(kv.Key,{kv.Value,kvE.Value.front()});
+                for ( const auto& fitP: cdata.FitParameters)
+                {
+                    if (channel == fitP.Key)
+                    {
+                        taggEffError = fitP.Value.front();
+                        break;
+                    }
+                }
+
+                Tagger->SetTaggEff(channel,{taggEff,taggEffError});
+
+            }
         }
     };
 }
