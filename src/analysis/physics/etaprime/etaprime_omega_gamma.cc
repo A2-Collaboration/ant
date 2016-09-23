@@ -369,17 +369,17 @@ EtapOmegaG::Sig_t::Sig_t(const HistogramFactory& HistFac, fitparams_t params) :
     OmegaPi0(params),
     kinfitter("kinfitter_sig",4,
               params.Fit_uncertainty_model, params.Fit_Z_vertex,
-              EtapOmegaG::MakeFitSettings(15)
+              EtapOmegaG::MakeFitSettings(10)
               ),
     treefitter_Pi0Pi0("treefit_Pi0Pi0",
                       ParticleTypeTreeDatabase::Get(ParticleTypeTreeDatabase::Channel::TwoPi0_4g),
                       params.Fit_uncertainty_model, params.Fit_Z_vertex, {},
-                      MakeFitSettings(20)
+                      MakeFitSettings(10)
                       ),
     treefitter_Pi0Eta("treefit_Pi0Eta",
                       ParticleTypeTreeDatabase::Get(ParticleTypeTreeDatabase::Channel::Pi0Eta_4g),
                       params.Fit_uncertainty_model, params.Fit_Z_vertex, {},
-                      MakeFitSettings(20)
+                      MakeFitSettings(10)
                       )
 {
     t.CreateBranches(HistFac.makeTTree("Shared"));
@@ -391,6 +391,34 @@ EtapOmegaG::Sig_t::Sig_t(const HistogramFactory& HistFac, fitparams_t params) :
         treefitter_Pi0Pi0.SetZVertexSigma(params.Z_vertex_sigma);
         treefitter_Pi0Eta.SetZVertexSigma(params.Z_vertex_sigma);
     }
+
+    {
+        auto pi0s = treefitter_Pi0Pi0.GetTreeNodes(ParticleTypeDatabase::Pi0);
+        treefitter_Pi0Pi0.SetIterationFilter([pi0s] () {
+            auto lvsum1 = pi0s.front()->Get().LVSum;
+            auto lvsum2 = pi0s.back()->Get().LVSum;
+
+            const auto& pi0_cut = ParticleTypeDatabase::Pi0.GetWindow(50);
+
+            return pi0_cut.Contains(lvsum1.M()) && pi0_cut.Contains(lvsum2.M());
+        });
+    }
+
+    {
+        auto pi0 = treefitter_Pi0Eta.GetTreeNode(ParticleTypeDatabase::Pi0);
+        auto eta = treefitter_Pi0Eta.GetTreeNode(ParticleTypeDatabase::Eta);
+
+        treefitter_Pi0Eta.SetIterationFilter([pi0,eta] () {
+            const auto& pi0_lvsum = pi0->Get().LVSum;
+            const auto& eta_lvsum = eta->Get().LVSum;
+
+            const auto& pi0_cut = ParticleTypeDatabase::Pi0.GetWindow(50);
+            const auto& eta_cut = ParticleTypeDatabase::Eta.GetWindow(100);
+
+            return pi0_cut.Contains(pi0_lvsum.M()) && eta_cut.Contains(eta_lvsum.M());
+        });
+    }
+
 }
 
 void EtapOmegaG::Sig_t::Process(params_t params)
@@ -517,6 +545,13 @@ EtapOmegaG::Sig_t::Fit_t::Fit_t(utils::TreeFitter fitter) :
     fitted_g_Omega = find_photons(fitted_Omega).at(0);
 
     fitted_g_EtaPrime = find_photons(fitted_EtaPrime).at(0);
+
+    {
+        treefitter.SetIterationFilter([this] () {
+            const auto& lvsum = fitted_Pi0->Get().LVSum;
+            return ParticleTypeDatabase::Pi0.GetWindow(80).Contains(lvsum.M());
+        });
+    }
 }
 
 utils::TreeFitter EtapOmegaG::Sig_t::Fit_t::Make(const ParticleTypeDatabase::Type& subtree, fitparams_t params)
