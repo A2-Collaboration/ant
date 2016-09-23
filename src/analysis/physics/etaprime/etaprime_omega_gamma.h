@@ -74,11 +74,21 @@ struct EtapOmegaG : Physics {
         particle_t(const TParticlePtr& proton) : Proton(proton) {}
         TParticleList Photons;
         TParticlePtr  Proton;
+
+        double     MissingMass;
+        LorentzVec PhotonSum{};
+        double     DiscardedEk = 0;
     };
 
     struct params_t {
+        bool Filter(unsigned n,
+                    double maxDiscardedEk = std_ext::inf,
+                    interval<double> missingMassCut = {-std_ext::inf, std_ext::inf},
+                    interval<double> photonSumCut = {-std_ext::inf, std_ext::inf}
+                                                    );
+        std::list<particle_t> Particles{};
+
         TTaggerHit TaggerHit{};
-        std::vector<particle_t> Particles{};
 
         TParticleTree_t ParticleTree = nullptr;
         bool IsSignalTree = false;
@@ -106,6 +116,7 @@ struct EtapOmegaG : Physics {
         ADD_BRANCH_T(double,   KinFitProb)
         ADD_BRANCH_T(int,      KinFitIterations)
         ADD_BRANCH_T(double,   KinFitZVertex)
+
         ADD_BRANCH_T(double,   FittedProtonE)
 
         void Fill(const params_t& params, const particle_t& p);
@@ -236,7 +247,7 @@ struct EtapOmegaG : Physics {
 
         utils::KinFitter kinfitter;
 
-        void Process(const params_t& params);
+        void Process(params_t params);
     };
 
 
