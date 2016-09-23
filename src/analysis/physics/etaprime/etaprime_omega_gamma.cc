@@ -549,8 +549,9 @@ EtapOmegaG::Sig_t::Fit_t::Fit_t(utils::TreeFitter fitter) :
     {
         treefitter.SetIterationFilter([this] () {
             const auto& lvsum = fitted_Pi0->Get().LVSum;
-            return ParticleTypeDatabase::Pi0.GetWindow(80).Contains(lvsum.M());
-        });
+            return 1.0/std_ext::sqr(ParticleTypeDatabase::Pi0.Mass() - lvsum.M());
+        },
+        4);
     }
 }
 
