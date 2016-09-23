@@ -75,17 +75,19 @@ struct EtapOmegaG : Physics {
         TParticleList Photons;
         TParticlePtr  Proton;
 
-        double     MissingMass;
+        double     MissingMass = std_ext::NaN;
         LorentzVec PhotonSum{};
         double     DiscardedEk = 0;
     };
 
     struct params_t {
-        bool Filter(unsigned n,
-                    double maxDiscardedEk = std_ext::inf,
-                    interval<double> missingMassCut = {-std_ext::inf, std_ext::inf},
-                    interval<double> photonSumCut = {-std_ext::inf, std_ext::inf}
-                                                    );
+        bool Filter(
+                unsigned n, TH1D* h_Cuts,
+                double maxDiscardedEk = std_ext::inf,
+                interval<double> missingMassCut = {-std_ext::inf, std_ext::inf},
+                interval<double> photonSumCut = {-std_ext::inf, std_ext::inf}
+                );
+
         std::list<particle_t> Particles{};
 
         TTaggerHit TaggerHit{};
@@ -94,7 +96,7 @@ struct EtapOmegaG : Physics {
         bool IsSignalTree = false;
     };
 
-    struct SharedTree_t : WrapTTree {
+    struct ProtonPhotonTree_t : WrapTTree {
         ADD_BRANCH_T(double,   DiscardedEk)
 
         ADD_BRANCH_T(double,   PhotonsEk)
@@ -113,26 +115,26 @@ struct EtapOmegaG : Physics {
         ADD_BRANCH_T(double,   ProtonCopl)
         ADD_BRANCH_T(double,   MissingMass)
 
-        ADD_BRANCH_T(double,   KinFitProb)
-        ADD_BRANCH_T(int,      KinFitIterations)
-        ADD_BRANCH_T(double,   KinFitZVertex)
-
         ADD_BRANCH_T(double,   FittedProtonE)
 
-        void Fill(const params_t& params, const particle_t& p);
+        void Fill(const params_t& params, const particle_t& p, double fitted_proton_E);
 
     };
 
     struct Sig_t {
 
-        // the subtree to be fitted is either pi0->2g
-        // or omega->pi0g->3g
+        // the subtree to be fitted is either
+        // pi0->2g or omega->pi0g->3g
         // fitting the whole decay tree would overconstrain the
         // photons
 
         struct Fit_t {
 
-            struct BaseTree_t : WrapTTree {
+            struct BaseTree_t : ProtonPhotonTree_t {
+
+                ADD_BRANCH_T(std::vector<double>, ggg, 4)
+                ADD_BRANCH_T(std::vector<double>, gg_gg1, 3)
+                ADD_BRANCH_T(std::vector<double>, gg_gg2, 3)
 
                 ADD_BRANCH_T(double, TreeFitProb)
                 ADD_BRANCH_T(int,    TreeFitIterations)
@@ -151,6 +153,8 @@ struct EtapOmegaG : Physics {
             };
 
             Fit_t(utils::TreeFitter fitter);
+
+            void FillPhotonCombs(BaseTree_t& t, const TParticleList& photons);
 
             static utils::TreeFitter Make(const ParticleTypeDatabase::Type& subtree, fitparams_t fitparams);
 
@@ -197,10 +201,10 @@ struct EtapOmegaG : Physics {
 
         };
 
-        struct SharedTree_t : EtapOmegaG::SharedTree_t {
-            ADD_BRANCH_T(std::vector<double>, ggg, 4)
-            ADD_BRANCH_T(std::vector<double>, gg_gg1, 3)
-            ADD_BRANCH_T(std::vector<double>, gg_gg2, 3)
+        struct SharedTree_t : WrapTTree {
+            ADD_BRANCH_T(double, KinFitProb)
+            ADD_BRANCH_T(int,    KinFitIterations)
+            ADD_BRANCH_T(double, KinFitZVertex)
 
             ADD_BRANCH_T(double, AntiPi0FitProb)
             ADD_BRANCH_T(int,    AntiPi0FitIterations)
@@ -228,13 +232,16 @@ struct EtapOmegaG : Physics {
 
         void Process(params_t params);
         void DoAntiPi0Eta(const params_t& params);
-        void FillPhotonCombs(const TParticleList& photons);
 
     };
 
     struct Ref_t {
 
-        struct Tree_t : EtapOmegaG::SharedTree_t {
+        struct Tree_t : EtapOmegaG::ProtonPhotonTree_t {
+            ADD_BRANCH_T(double, KinFitProb)
+            ADD_BRANCH_T(int,    KinFitIterations)
+            ADD_BRANCH_T(double, KinFitZVertex)
+
             ADD_BRANCH_T(double,   IM_2g)
         };
 

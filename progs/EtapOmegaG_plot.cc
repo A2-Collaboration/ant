@@ -79,13 +79,13 @@ struct MCTrue_Splitter : cuttree::StackedHists_t<Hist_t> {
 
 struct CommonHist_t {
     using Tree_t = physics::EtapOmegaG::TreeCommon;
-    using Shared_t = physics::EtapOmegaG::SharedTree_t;
+    using ProtonPhoton_t = physics::EtapOmegaG::ProtonPhotonTree_t;
     struct Fill_t {
         const Tree_t& Common;
-        const Shared_t& Shared;
+        const ProtonPhoton_t& ProtonPhoton;
 
-        Fill_t(const Tree_t& common, const Shared_t& shared) :
-            Common(common), Shared(shared) {}
+        Fill_t(const Tree_t& common, const ProtonPhoton_t& protonphoton) :
+            Common(common), ProtonPhoton(protonphoton) {}
         double TaggW() const {
             return Common.TaggW;
         }
@@ -97,13 +97,13 @@ struct CommonHist_t {
             const double& prob;
         };
 
-        LogProb_t KinFitProb{Shared.KinFitProb};
+//        LogProb_t KinFitProb{ProtonPhoton.KinFitProb};
     };
 
 
 
     const BinSettings bins_FitProb{100, -5, 0};
-    TH1D* h_KinFitProb = nullptr;
+//    TH1D* h_KinFitProb = nullptr;
     TH1D* h_CBSumE = nullptr;
     TH1D* h_CBSumVetoE = nullptr;
     TH1D* h_PIDSumE = nullptr;
@@ -114,15 +114,13 @@ struct CommonHist_t {
     TH2D* h_ProtonVetoE = nullptr;
     TH2D* h_ProtonShortE = nullptr;
 
-
-
     const bool isLeaf = false;
 
 
     CommonHist_t(HistogramFactory HistFac, cuttree::TreeInfo_t treeInfo) :
         isLeaf(treeInfo.nDaughters==0)
     {
-        h_KinFitProb = HistFac.makeTH1D("KinFitProb","log p","",bins_FitProb,"h_KinFitProb");
+//        h_KinFitProb = HistFac.makeTH1D("KinFitProb","log p","",bins_FitProb,"h_KinFitProb");
         h_CBSumE = HistFac.makeTH1D("CB Sum E","E / MeV","",BinSettings(100,500,1600),"h_CBSumE");
         h_CBSumVetoE = HistFac.makeTH1D("CB Veto Sum E","E / MeV","",BinSettings(50,0,10),"h_CBSumVetoE");
         h_PIDSumE = HistFac.makeTH1D("PID Sum E","E / MeV","",BinSettings(50,0,10),"h_PIDSumE");
@@ -144,22 +142,22 @@ struct CommonHist_t {
 
     void Fill(const Fill_t& f) const {
 
-        h_KinFitProb->Fill(f.KinFitProb, f.TaggW());
+//        h_KinFitProb->Fill(f.KinFitProb, f.TaggW());
         h_CBSumE->Fill(f.Common.CBSumE, f.TaggW());
-        h_CBSumVetoE->Fill(f.Shared.CBSumVetoE, f.TaggW());
+        h_CBSumVetoE->Fill(f.ProtonPhoton.CBSumVetoE, f.TaggW());
         h_PIDSumE->Fill(f.Common.PIDSumE, f.TaggW());
-        h_MissingMass->Fill(f.Shared.MissingMass, f.TaggW());
-        h_DiscardedEk->Fill(f.Shared.DiscardedEk, f.TaggW());
+        h_MissingMass->Fill(f.ProtonPhoton.MissingMass, f.TaggW());
+        h_DiscardedEk->Fill(f.ProtonPhoton.DiscardedEk, f.TaggW());
         if(!isLeaf)
             return;
-        h_ProtonTOF->Fill(f.Shared.ProtonTime, f.Shared.ProtonE, f.TaggW());
-        h_ProtonTOFFitted->Fill(f.Shared.ProtonTime, f.Shared.FittedProtonE, f.TaggW());
-        h_ProtonVetoE->Fill(f.Shared.FittedProtonE, f.Shared.ProtonVetoE, f.TaggW());
-        h_ProtonShortE->Fill(f.Shared.FittedProtonE, f.Shared.ProtonShortE, f.TaggW());
+        h_ProtonTOF->Fill(f.ProtonPhoton.ProtonTime, f.ProtonPhoton.ProtonE, f.TaggW());
+        h_ProtonTOFFitted->Fill(f.ProtonPhoton.ProtonTime, f.ProtonPhoton.FittedProtonE, f.TaggW());
+        h_ProtonVetoE->Fill(f.ProtonPhoton.FittedProtonE, f.ProtonPhoton.ProtonVetoE, f.TaggW());
+        h_ProtonShortE->Fill(f.ProtonPhoton.FittedProtonE, f.ProtonPhoton.ProtonShortE, f.TaggW());
     }
 
     std::vector<TH1*> GetHists() const {
-        return {h_KinFitProb, h_CBSumE, h_CBSumVetoE, h_PIDSumE, h_MissingMass,
+        return {h_CBSumE, h_CBSumVetoE, h_PIDSumE, h_MissingMass,
                     h_DiscardedEk};
     }
 
@@ -168,8 +166,8 @@ struct CommonHist_t {
         using cuttree::MultiCut_t;
         cuttree::Cuts_t<Fill_t> cuts;
         cuts.emplace_back(MultiCut_t<Fill_t>{
-                              {"DiscardedEk=0", [] (const Fill_t& f) { return f.Shared.DiscardedEk == 0; } },
-                              {"DiscardedEk<50", [] (const Fill_t& f) { return f.Shared.DiscardedEk < 50; } },
+                              {"DiscardedEk=0", [] (const Fill_t& f) { return f.ProtonPhoton.DiscardedEk == 0; } },
+                              {"DiscardedEk<50", [] (const Fill_t& f) { return f.ProtonPhoton.DiscardedEk < 50; } },
                           });
         return cuts;
     }
@@ -187,7 +185,7 @@ struct SigHist_t : CommonHist_t {
         Fill_t(const CommonHist_t::Tree_t& common,
                const SharedTree_t& shared,
                const Tree_t& tree) :
-            CommonHist_t::Fill_t(common, shared),
+            CommonHist_t::Fill_t(common, tree),
             Shared(shared),
             Tree(tree)
         {}
@@ -302,8 +300,8 @@ struct SigHist_t : CommonHist_t {
                           });
 
         cuts.emplace_back(MultiCut_t<Fill_t>{
-                              {"CBSumVetoE<0.4", [] (const Fill_t& f) { return f.Shared.CBSumVetoE<0.4; }},
-                              {"CBSumVetoE<0.2", [] (const Fill_t& f) { return f.Shared.CBSumVetoE<0.2; }},
+                              {"CBSumVetoE<0.4", [] (const Fill_t& f) { return f.ProtonPhoton.CBSumVetoE<0.4; }},
+                              {"CBSumVetoE<0.2", [] (const Fill_t& f) { return f.ProtonPhoton.CBSumVetoE<0.2; }},
                               {"-", [] (const Fill_t&) { return true; }},
                           });
         return cuts;
@@ -439,8 +437,8 @@ struct RefHist_t : CommonHist_t {
         auto cuts = cuttree::ConvertCuts<Fill_t, CommonHist_t::Fill_t>(CommonHist_t::GetCuts());
 
         cuts.emplace_back(MultiCut_t<Fill_t>{
-                              {"KinFitProb>0.02", [] (const Fill_t& f) { return f.Shared.KinFitProb>0.02; } },
-                              {"KinFitProb>0.05", [] (const Fill_t& f) { return f.Shared.KinFitProb>0.05; } },
+                              {"KinFitProb>0.02", [] (const Fill_t& f) { return f.Tree.KinFitProb>0.02; } },
+                              {"KinFitProb>0.05", [] (const Fill_t& f) { return f.Tree.KinFitProb>0.05; } },
                           });
         return cuts;
     }
