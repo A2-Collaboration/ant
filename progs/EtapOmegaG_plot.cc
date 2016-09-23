@@ -311,7 +311,7 @@ struct SigHist_t : CommonHist_t {
 };
 
 struct SigPi0Hist_t : SigHist_t {
-    using Tree_t = physics::EtapOmegaG::Sig_t::Pi0_t::BaseTree_t;
+    using Tree_t = physics::EtapOmegaG::Sig_t::Pi0_t::Tree_t;
 
     TH2D* h_IM_3g_4g_high;    // Omega IM vs. EtaPrime IM
 
@@ -355,7 +355,7 @@ struct SigPi0Hist_t : SigHist_t {
 };
 
 struct SigOmegaPi0Hist_t : SigHist_t {
-    using Tree_t = physics::EtapOmegaG::Sig_t::OmegaPi0_t::BaseTree_t;
+    using Tree_t = physics::EtapOmegaG::Sig_t::OmegaPi0_t::Tree_t;
     struct Fill_t : SigHist_t::Fill_t {
         const Tree_t& OmegaPi0;
         Fill_t(const CommonHist_t::Tree_t& common,
