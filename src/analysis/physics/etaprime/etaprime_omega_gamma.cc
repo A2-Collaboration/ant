@@ -630,6 +630,7 @@ EtapOmegaG::Sig_t::Pi0_t::Pi0_t(fitparams_t params) :
 void EtapOmegaG::Sig_t::Pi0_t::Process(const params_t& params)
 {
     t.TreeFitProb = std_ext::NaN;
+    t.MCTrueMatch = 0;
 
     // for MCtrue identification
     TParticlePtr g1_Pi0_best;
@@ -701,7 +702,6 @@ void EtapOmegaG::Sig_t::Pi0_t::Process(const params_t& params)
 
         // check MC matching
         if(params.IsSignalTree) {
-            t.MCTrueMatch = 0;
             auto& ptree_sig = params.ParticleTree;
             auto true_photons = utils::ParticleTools::FindParticles(ParticleTypeDatabase::Photon, ptree_sig);
             assert(true_photons.size() == 4);
@@ -747,6 +747,7 @@ EtapOmegaG::Sig_t::OmegaPi0_t::OmegaPi0_t(fitparams_t params) :
 void EtapOmegaG::Sig_t::OmegaPi0_t::Process(const params_t& params)
 {
     t.TreeFitProb = std_ext::NaN;
+    t.MCTrueMatch = 0;
 
     // for MCTrue identification
     TParticlePtr g_Omega_best;
@@ -809,7 +810,6 @@ void EtapOmegaG::Sig_t::OmegaPi0_t::Process(const params_t& params)
 
         // check MC matching
         if(params.IsSignalTree) {
-            t.MCTrueMatch = 0;
             auto& ptree_sig = params.ParticleTree;
             auto true_photons = utils::ParticleTools::FindParticles(ParticleTypeDatabase::Photon, ptree_sig);
             assert(true_photons.size() == 4);
