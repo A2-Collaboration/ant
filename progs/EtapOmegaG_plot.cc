@@ -492,33 +492,42 @@ int main(int argc, char** argv) {
     };
 
 
-    CommonHist_t::Tree_t treeCommon;
-    if(!link_branches("EtapOmegaG/treeCommon", treeCommon, -1)) {
-        LOG(ERROR) << "Cannot link branches of treeCommon";
+    CommonHist_t::Tree_t treeSigCommon;
+    if(!link_branches("EtapOmegaG/Sig/Common", treeSigCommon, -1)) {
+        LOG(ERROR) << "Cannot find Sig/Common tree";
         return 1;
     }
 
-    auto entries = treeCommon.Tree->GetEntries();
+    auto entries_sig = treeSigCommon.Tree->GetEntries();
 
     SigHist_t::SharedTree_t treeSigShared;
     SigPi0Hist_t::Tree_t treeSigPi0;
     SigOmegaPi0Hist_t::Tree_t treeSigOmegaPi0;
-    RefHist_t::Tree_t treeRef;
 
-    if(!link_branches("EtapOmegaG/SigShared", treeSigShared, entries)) {
-        LOG(ERROR) << "Cannot find SigShared tree";
+    if(!link_branches("EtapOmegaG/Sig/Shared", treeSigShared, entries_sig)) {
+        LOG(ERROR) << "Cannot find Sig/Shared tree";
         return 1;
     }
-    if(!link_branches("EtapOmegaG/SigPi0", treeSigPi0, entries)) {
-        LOG(ERROR) << "Cannot find SigPi0 tree";
+    if(!link_branches("EtapOmegaG/Sig/Pi0", treeSigPi0, entries_sig)) {
+        LOG(ERROR) << "Cannot find Sig/Pi0 tree";
         return 1;
     }
-    if(!link_branches("EtapOmegaG/SigOmegaPi0", treeSigOmegaPi0, entries)) {
-        LOG(ERROR) << "Cannot find SigOmegaPi0 tree";
+    if(!link_branches("EtapOmegaG/Sig/OmegaPi0", treeSigOmegaPi0, entries_sig)) {
+        LOG(ERROR) << "Cannot find Sig/OmegaPi0 tree";
         return 1;
     }
-    if(!link_branches("EtapOmegaG/Ref", treeRef, entries)) {
-        LOG(ERROR) << "Cannot find Ref tree";
+
+    CommonHist_t::Tree_t treeRefCommon;
+    if(!link_branches("EtapOmegaG/Ref/Common", treeRefCommon, -1)) {
+        LOG(ERROR) << "Cannot find Ref/Common tree";
+        return 1;
+    }
+
+    auto entries_ref = treeRefCommon.Tree->GetEntries();
+
+    RefHist_t::Tree_t treeRef;
+    if(!link_branches("EtapOmegaG/Ref/Ref", treeRef, entries_ref)) {
+        LOG(ERROR) << "Cannot find Ref/Ref tree";
         return 1;
     }
 
@@ -539,9 +548,10 @@ int main(int argc, char** argv) {
     auto cuttreeSigOmegaPi0 = makeMCSplitTree<SigOmegaPi0Hist_t>(HistFac, "SigOmegaPi0");
     auto cuttreeRef = makeMCSplitTree<RefHist_t>(HistFac, "Ref");
 
-    LOG(INFO) << "Tree entries=" << entries;
-    auto max_entries = entries;
-    if(cmd_maxevents->isSet() && cmd_maxevents->getValue().back()<entries) {
+    auto max_entries = max(entries_sig, entries_ref);
+
+    LOG(INFO) << "Max tree entries=" << max_entries;
+    if(cmd_maxevents->isSet() && cmd_maxevents->getValue().back()<entries_sig) {
         max_entries = cmd_maxevents->getValue().back();
         LOG(INFO) << "Running until " << max_entries;
     }
@@ -549,24 +559,29 @@ int main(int argc, char** argv) {
     long long entry = 0;
     ProgressCounter::Interval = 3;
     ProgressCounter progress(
-                [&entry, entries] (std::chrono::duration<double>) {
-        LOG(INFO) << "Processed " << 100.0*entry/entries << " %";
+                [&entry, entries_sig] (std::chrono::duration<double>) {
+        LOG(INFO) << "Processed " << 100.0*entry/entries_sig << " %";
     });
 
     for(entry=0;entry<max_entries;entry++) {
         if(interrupt)
             break;
 
-        treeCommon.Tree->GetEntry(entry);
-        treeSigShared.Tree->GetEntry(entry);
-        treeSigPi0.Tree->GetEntry(entry);
-        treeSigOmegaPi0.Tree->GetEntry(entry);
-        treeRef.Tree->GetEntry(entry);
+        if(entry<entries_sig) {
+            treeSigCommon.Tree->GetEntry(entry);
+            treeSigShared.Tree->GetEntry(entry);
+            treeSigPi0.Tree->GetEntry(entry);
+            treeSigOmegaPi0.Tree->GetEntry(entry);
 
-        cuttree::Fill<MCSigPi0Hist_t>(cuttreeSigPi0, {treeCommon, treeSigShared, treeSigPi0});
-        cuttree::Fill<MCSigOmegaPi0Hist_t>(cuttreeSigOmegaPi0, {treeCommon, treeSigShared, treeSigOmegaPi0});
-        cuttree::Fill<MCRefHist_t>(cuttreeRef, {treeCommon, treeRef});
+            cuttree::Fill<MCSigPi0Hist_t>(cuttreeSigPi0, {treeSigCommon, treeSigShared, treeSigPi0});
+            cuttree::Fill<MCSigOmegaPi0Hist_t>(cuttreeSigOmegaPi0, {treeSigCommon, treeSigShared, treeSigOmegaPi0});
+        }
 
+        if(entry<entries_ref) {
+            treeRefCommon.Tree->GetEntry(entry);
+            treeRef.Tree->GetEntry(entry);
+            cuttree::Fill<MCRefHist_t>(cuttreeRef, {treeRefCommon, treeRef});
+        }
         ProgressCounter::Tick();
     }
 
