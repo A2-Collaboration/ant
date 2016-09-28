@@ -34,7 +34,7 @@ debugTaggEff::debugTaggEff(const string& name, OptionsPtr opts):
 
 debugTaggEff::~debugTaggEff() {};
 
-void debugTaggEff::ProcessEvent(const TEvent& ev, manager_t&)
+void debugTaggEff::ProcessEvent(const TEvent&, manager_t&)
 {
     SeenEvents++;
 
@@ -47,6 +47,12 @@ void debugTaggEff::ProcessEvent(const TEvent& ev, manager_t&)
             TaggEffTree.TaggEffs().at(i) = Tagger->GetTaggEff(i).Value;
             TaggEffTree.TaggEffErrors().at(i) = Tagger->GetTaggEff(i).Error;
         }
+        TaggEffTree.TaggerOrRate = slowcontrol::Variables::TaggerScalers->GetTaggerOr();
+        TaggEffTree.P2Rate       = slowcontrol::Variables::FreeRates->GetIonChamber();
+        LOG(INFO) << " ladder/p2 = "
+                  << TaggEffTree.TaggerOrRate << " / " << TaggEffTree.P2Rate
+                  << " = " << 1.0 * TaggEffTree.TaggerOrRate / TaggEffTree.P2Rate;
+        TaggEffTree.Tree->Fill();
     }
 }
 
@@ -62,6 +68,12 @@ void debugTaggEff::ShowResult()
         c << TTree_drawable(TaggEffTree.Tree,std_ext::formatter() << "TaggEffs[" << i << "]");
     }
     c << endc;
+
+    canvas d("Ladder/P2");
+    d << TTree_drawable(TaggEffTree.Tree,"TaggerOrRate")
+      << TTree_drawable(TaggEffTree.Tree,"P2Rate")
+      << TTree_drawable(TaggEffTree.Tree,"1.0 * TaggerOrRate / P2Rate")
+      << endc;
 }
 
 AUTO_REGISTER_PHYSICS(debugTaggEff)

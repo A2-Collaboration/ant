@@ -29,7 +29,7 @@ struct debugTaggEff: public Physics {
     debugTaggEff(const std::string& name, OptionsPtr opts=nullptr);
     virtual ~debugTaggEff();
 
-    virtual void ProcessEvent(const TEvent& ev, manager_t&) override;
+    virtual void ProcessEvent(const TEvent&, manager_t&) override;
     virtual void Finish() override;
     virtual void ShowResult() override;
 };
