@@ -15,6 +15,7 @@ struct Processors {
 
     static const std::shared_ptr<processor::Beampolmon>  Beampolmon;
     static const std::shared_ptr<processor::EPT_Scalers> EPT_Scalers;
+    static const std::shared_ptr<processor::EPT_Or>      EPT_Or;
     static const std::shared_ptr<processor::ExpTrigger>  ExpTrigger;
 
 };
