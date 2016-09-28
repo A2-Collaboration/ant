@@ -28,6 +28,8 @@ struct TaggerScalers : Variable {
      */
     std::vector<int64_t> GetCounts() const;
 
+    double GetTaggerOr() const;
+
 
 protected:
 

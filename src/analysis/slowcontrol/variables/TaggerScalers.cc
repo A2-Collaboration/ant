@@ -1,8 +1,11 @@
 #include "TaggerScalers.h"
 
+#include <numeric>
+
 #include "SlowControlProcessors.h"
 
 #include "expconfig/ExpConfig.h"
+
 
 using namespace std;
 using namespace ant::analysis::slowcontrol;
@@ -54,6 +57,12 @@ std::vector<int64_t> TaggerScalers::GetCounts() const
         }
     }
     return counts;
+}
+
+double TaggerScalers::GetTaggerOr() const
+{
+    auto scalers = Get();
+    return accumulate(scalers.begin(),scalers.end(),0);
 }
 
 
