@@ -67,6 +67,8 @@ struct Trigger :
         static const std::string ExpTrigger;
         static const std::string L1Trigger;
 
+        static const std::string EPTReferenceOR;
+
         static const std::string PairSpecGate;
         static const std::string TaggerReferenceOR;
         static const std::string PbGlass;

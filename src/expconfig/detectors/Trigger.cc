@@ -12,6 +12,8 @@ const std::string Trigger::ScalerName::Exptrigger_1MHz = "Exptrigger_1Mhz";
 const std::string Trigger::ScalerName::ExpTrigger      = "ExpTrigger";
 const std::string Trigger::ScalerName::L1Trigger       = "L1Trigger";
 
+const std::string Trigger::ScalerName::EPTReferenceOR  = "EPTReferenceOR";
+
 const std::string Trigger::ScalerName::PairSpecGate      = "PairSpecGate";
 const std::string Trigger::ScalerName::TaggerReferenceOR = "TaggerReferenceOR";
 const std::string Trigger::ScalerName::PbGlass           = "PbGlass";
@@ -183,6 +185,8 @@ Trigger_2014::scaler_mapping_t Trigger_2014::MakeScalerMapping()
     m[ScalerName::Exptrigger_1MHz] = 191;   // free clock
     m[ScalerName::ExpTrigger]      = 192;
     m[ScalerName::L1Trigger]       = 194;
+
+    m[ScalerName::EPTReferenceOR]  = 307;
 
     m[ScalerName::PairSpecGate]      = 308;
     m[ScalerName::TaggerReferenceOR] = 309;
