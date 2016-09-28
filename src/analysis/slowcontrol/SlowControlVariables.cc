@@ -22,4 +22,7 @@ struct AddToAll {
     AddToAll addToAll ## var (Variables::var);
 
 DEFINE_VARIABLE(TaggerScalers)
-DEFINE_VARIABLE(FreeRates)
+DEFINE_VARIABLE(Clocks);
+DEFINE_VARIABLE(PhotonBeam);
+DEFINE_VARIABLE(Pairspec);
+DEFINE_VARIABLE(Trigger);

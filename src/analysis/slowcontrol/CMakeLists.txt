@@ -20,9 +20,10 @@ set(SLOWCONTROL_VARIABLES
   SlowControlVariables.cc
   variables/Variable.h
   variables/TaggerScalers.cc
-  variables/TotalLivetime.h
-  variables/BeamCurrent.h
-  variables/ScalarRates.cc
+  variables/Clocks.cc
+  variables/PhotonBeam.cc
+  variables/Pairspec.cc
+  variables/Trigger.cc
 )
 
 # since the processors and the variables are

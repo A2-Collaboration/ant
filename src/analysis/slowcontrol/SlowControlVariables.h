@@ -2,7 +2,10 @@
 
 #include "variables/Variable.h"
 #include "variables/TaggerScalers.h"
-#include "variables/ScalarRates.h"
+#include "variables/Clocks.h"
+#include "variables/PhotonBeam.h"
+#include "variables/Pairspec.h"
+#include "variables/Trigger.h"
 
 #include <memory>
 
@@ -16,7 +19,10 @@ struct AddToAll;
 struct Variables {
 
     static const std::shared_ptr<const variable::TaggerScalers> TaggerScalers;
-    static const std::shared_ptr<const variable::FreeRates>   FreeRates;
+    static const std::shared_ptr<const variable::Clocks>        Clocks;
+    static const std::shared_ptr<const variable::PhotonBeam>    PhotonBeam;
+    static const std::shared_ptr<const variable::Pairspec>      Pairspec;
+    static const std::shared_ptr<const variable::Trigger>       Trigger;
 
 
 protected:

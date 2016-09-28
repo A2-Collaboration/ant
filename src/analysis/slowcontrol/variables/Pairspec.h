@@ -11,17 +11,10 @@ namespace analysis {
 namespace slowcontrol {
 namespace variable {
 
-struct FreeRates : Variable {
+struct Pairspec : Variable {
 
     virtual std::list<ProcessorPtr> GetNeededProcessors() const override;
 
-    double GetPbGlass() const;
-    double GetExpClock() const;
-    double GetBeampolmonClock() const;
-    double GetExpLivetime() const;
-    double GetExpTrigger() const;
-    double GetL1Trigger() const;
-    double GetIonChamber() const;
     double GetPairSpecGate() const;
 };
 

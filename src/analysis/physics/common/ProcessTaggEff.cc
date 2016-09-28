@@ -29,7 +29,9 @@ ProcessTaggEff::ProcessTaggEff(const std::string& name, OptionsPtr opts) :
 
 
     slowcontrol::Variables::TaggerScalers->Request();
-    slowcontrol::Variables::FreeRates->Request();
+    slowcontrol::Variables::Clocks->Request();
+    slowcontrol::Variables::Trigger->Request();
+    slowcontrol::Variables::PhotonBeam->Request();
 
     scalerReads.CreateBranches(HistFac.makeTTree(treeName()));
 
@@ -51,7 +53,7 @@ void ProcessTaggEff::ProcessEvent(const TEvent& ev, manager_t& )
 
     processTaggerHits(ev);
 
-    if(slowcontrol::Variables::FreeRates->HasChanged())
+    if(slowcontrol::Variables::TaggerScalers->HasChanged())
     {
         scalerReads.EvID = ev.Reconstructed().ID;
         seenScalerBlocks++;
@@ -84,16 +86,16 @@ void ProcessTaggEff::processBlock()
     {
         scalerReads.TaggCounts().at(ch) = slowcontrol::Variables::TaggerScalers->GetCounts().at(ch);
         scalerReads.TDCRates().at(ch) = ( 1.0e6 * scalerReads.TDCCounts().at(ch)
-                                          / slowcontrol::Variables::FreeRates->GetExpClock() );
+                                          / slowcontrol::Variables::Clocks->GetExpClock() );
         hist_scalers->Fill(ch,scalerReads.TaggCounts().at(ch));
         hist_scalers_rate->Fill(ch,scalerReads.TaggRates().at(ch));
         hist_tdchits_rate->Fill(ch,scalerReads.TDCRates().at(ch));
     }
 
-    scalerReads.Clock = slowcontrol::Variables::FreeRates->GetExpClock();
-    scalerReads.ExpLivetime = slowcontrol::Variables::FreeRates->GetExpLivetime();
-    scalerReads.PbRate = slowcontrol::Variables::FreeRates->GetPbGlass();
-    scalerReads.ExpTriggerRate = slowcontrol::Variables::FreeRates->GetExpTrigger();
+    scalerReads.Clock = slowcontrol::Variables::Clocks->GetExpClock();
+    scalerReads.ExpLivetime = slowcontrol::Variables::Trigger->GetExpLivetime();
+    scalerReads.PbRate = slowcontrol::Variables::PhotonBeam->GetPbGlass();
+    scalerReads.ExpTriggerRate = slowcontrol::Variables::Trigger->GetExpTrigger();
 }
 
 void ProcessTaggEff::resetAll()

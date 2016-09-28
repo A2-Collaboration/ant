@@ -18,7 +18,10 @@ debugScaler::debugScaler(const std::string& name, OptionsPtr opts) :
     auto nchannels = Tagger->GetNChannels();
 
     slowcontrol::Variables::TaggerScalers->Request();
-    slowcontrol::Variables::FreeRates->Request();
+    slowcontrol::Variables::Clocks->Request();
+    slowcontrol::Variables::Trigger->Request();
+    slowcontrol::Variables::PhotonBeam->Request();
+
 
     scalerReads.CreateBranches(HistFac.makeTTree("scalerReads"));
 
@@ -38,7 +41,7 @@ void debugScaler::ProcessEvent(const TEvent& ev, manager_t& )
 
     processTaggerHits(ev);
 
-    if(slowcontrol::Variables::FreeRates->HasChanged())
+    if(slowcontrol::Variables::TaggerScalers->HasChanged())
     {
         processBlock(ev);
         scalerReads.Tree->Fill();
@@ -83,13 +86,13 @@ void debugScaler::processBlock(const TEvent& ev)
         channel++;
     }
 
-    scalerReads.Exp1MHz = slowcontrol::Variables::FreeRates->GetExpClock();
-    scalerReads.BeamPolMon1MHz = slowcontrol::Variables::FreeRates->GetBeampolmonClock();
-    scalerReads.ExpLivetime = slowcontrol::Variables::FreeRates->GetExpLivetime();
-    scalerReads.PbRate = slowcontrol::Variables::FreeRates->GetPbGlass();
+    scalerReads.Exp1MHz = slowcontrol::Variables::Clocks->GetExpClock();
+    scalerReads.BeamPolMon1MHz = slowcontrol::Variables::Clocks->GetBeampolmonClock();
+    scalerReads.ExpLivetime = slowcontrol::Variables::Trigger->GetExpLivetime();
+    scalerReads.PbRate = slowcontrol::Variables::PhotonBeam->GetPbGlass();
     scalerReads.LastID = ev.Reconstructed().ID;
-    scalerReads.ExpTriggerRate = slowcontrol::Variables::FreeRates->GetExpTrigger();
-    scalerReads.L1TriggerRate = slowcontrol::Variables::FreeRates->GetL1Trigger();
+    scalerReads.ExpTriggerRate = slowcontrol::Variables::Trigger->GetExpTrigger();
+    scalerReads.L1TriggerRate = slowcontrol::Variables::Trigger->GetL1Trigger();
 }
 
 void debugScaler::processTaggerHits(const TEvent &ev)

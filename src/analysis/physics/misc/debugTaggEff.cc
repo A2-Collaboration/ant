@@ -24,7 +24,7 @@ debugTaggEff::debugTaggEff(const string& name, OptionsPtr opts):
     nchannels(getNchannels())
 {
     slowcontrol::Variables::TaggerScalers->Request();
-    slowcontrol::Variables::FreeRates->Request();
+    slowcontrol::Variables::PhotonBeam->Request();
 
     TaggEffTree.CreateBranches(HistFac.makeTTree("taggEff"));
 
@@ -38,7 +38,7 @@ void debugTaggEff::ProcessEvent(const TEvent&, manager_t&)
 {
     SeenEvents++;
 
-    if(slowcontrol::Variables::FreeRates->HasChanged())
+    if(slowcontrol::Variables::TaggerScalers->HasChanged())
     {
         for (auto i = 0u ; i < nchannels ; ++i)
         {
@@ -48,7 +48,7 @@ void debugTaggEff::ProcessEvent(const TEvent&, manager_t&)
             TaggEffTree.TaggEffErrors().at(i) = Tagger->GetTaggEff(i).Error;
         }
         TaggEffTree.TaggerOrRate = slowcontrol::Variables::TaggerScalers->GetTaggerOr();
-        TaggEffTree.P2Rate       = slowcontrol::Variables::FreeRates->GetIonChamber();
+        TaggEffTree.P2Rate       = slowcontrol::Variables::PhotonBeam->GetIonChamber();
         LOG(INFO) << " ladder/p2 = "
                   << TaggEffTree.TaggerOrRate << " / " << TaggEffTree.P2Rate
                   << " = " << 1.0 * TaggEffTree.TaggerOrRate / TaggEffTree.P2Rate;
