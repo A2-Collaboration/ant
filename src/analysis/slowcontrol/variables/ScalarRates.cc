@@ -13,7 +13,7 @@ using namespace ant::analysis::slowcontrol::variable;
 
 list<Variable::ProcessorPtr> FreeRates::GetNeededProcessors() const
 {
-    return {Processors::Beampolmon,Processors::ExpTrigger};
+    return {Processors::Beampolmon,Processors::ExpTrigger,Processors::Beam};
 }
 
 double FreeRates::GetPbGlass() const
@@ -44,4 +44,14 @@ double FreeRates::GetExpTrigger() const
 double FreeRates::GetL1Trigger() const
 {
     return Processors::ExpTrigger->L1Trigger.Get() * 1.0e6 / Processors::ExpTrigger->Reference_1MHz.Get();
+}
+
+double FreeRates::GetIonChamber() const
+{
+    return Processors::Beam->IonChamber.Get() * 1.0e6 / Processors::ExpTrigger->Reference_1MHz.Get();
+}
+
+double FreeRates::GetPairSpecGate() const
+{
+    return Processors::Beam->PairSpecGate.Get() * 1.0e6 / Processors::ExpTrigger->Reference_1MHz.Get();
 }

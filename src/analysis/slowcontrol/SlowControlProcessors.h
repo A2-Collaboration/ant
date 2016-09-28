@@ -3,6 +3,7 @@
 #include "processors/EPT_Scalers.h"
 #include "processors/Beampolmon.h"
 #include "processors/ExpTrigger.h"
+#include "processors/PairSpec.h"
 
 #include <memory>
 
@@ -17,6 +18,7 @@ struct Processors {
     static const std::shared_ptr<processor::EPT_Scalers> EPT_Scalers;
     static const std::shared_ptr<processor::EPT_Or>      EPT_Or;
     static const std::shared_ptr<processor::ExpTrigger>  ExpTrigger;
+    static const std::shared_ptr<processor::Beam>        Beam;
 
 };
 

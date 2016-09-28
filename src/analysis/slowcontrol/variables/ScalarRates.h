@@ -21,6 +21,8 @@ struct FreeRates : Variable {
     double GetExpLivetime() const;
     double GetExpTrigger() const;
     double GetL1Trigger() const;
+    double GetIonChamber() const;
+    double GetPairSpecGate() const;
 };
 
 }}}} // namespace ant::analysis::slowcontrol::processor

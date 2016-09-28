@@ -13,7 +13,7 @@ set(SLOWCONTROL_PROCESSORS
   processors/Beampolmon.cc
   processors/EPT_Scalers.h
   processors/Tagger_Scalers.h
-  processors/PairSpec.h
+  processors/PairSpec.cc
 )
 
 set(SLOWCONTROL_VARIABLES
