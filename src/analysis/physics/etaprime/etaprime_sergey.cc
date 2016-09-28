@@ -187,6 +187,8 @@ void EtapSergey::ProcessEvent(const TEvent& event, manager_t&)
     fillTree(treeSergey, results_sergey,
              MCTrue, PIDSumE);
 
+    return;
+
     vector<result_t> results_ant;
 
     // build permuted protons
@@ -310,24 +312,30 @@ void EtapSergey::ProcessEvent(const TEvent& event, manager_t&)
 
 void EtapSergey::ShowResult()
 {
-    treeAnt.Tree->AddFriend(treeSergey.Tree);
-
     canvas("Result")
-            << TTree_drawable(treeAnt.Tree, "treeSergey.IM_4g >> (100,800,1050)","treeSergey.KinFitProb>0.01")
-            << TTree_drawable(treeAnt.Tree, "treeAnt.IM_4g >> (100,800,1050)","treeAnt.KinFitProb>0.01")
             << drawoption("colz")
-            << TTree_drawable(treeAnt.Tree, "treeSergey.IM_4g:treeAnt.IM_4g >> (100,800,1050,100,800,1050)","")
-            << TTree_drawable(treeAnt.Tree, "treeSergey.KinFitProb:treeAnt.KinFitProb >> (100,0,1,100,0,1)","")
-            << TTree_drawable(treeAnt.Tree, "treeSergey.AntiPi0FitProb:treeAnt.AntiPi0FitProb >> (100,0,1,100,0,1)","")
+            << TTree_drawable(treeSergey.Tree, "IM_4g >> (100,700,1050)","TreeFitProb>0.01")
+            << TTree_drawable(treeSergey.Tree, "IM_3g[1]:IM_4g >> (100,700,1050,100,700,1050)","TreeFitProb>0.01")
             << endc;
-    canvas("ProtonIdx")
-            << drawoption("colz")
-            << TTree_drawable(treeAnt.Tree, "treeSergey.KinFitProtonIdx:treeAnt.KinFitProtonIdx >> (5,1,6,5,1,6)","")
-            << TTree_drawable(treeAnt.Tree, "treeSergey.AntiPi0FitProtonIdx:treeAnt.AntiPi0FitProtonIdx >> (5,1,6,5,1,6)","")
-            << TTree_drawable(treeSergey.Tree, "TreeFitProtonIdx:KinFitProtonIdx >> (5,1,6,5,1,6)","")
-            << TTree_drawable(treeSergey.Tree, "AntiPi0FitProtonIdx:KinFitProtonIdx >> (5,1,6,5,1,6)","")
-            << TTree_drawable(treeSergey.Tree, "AntiEtaFitProtonIdx:KinFitProtonIdx >> (5,1,6,5,1,6)","")
-            << endc;
+
+//    treeAnt.Tree->AddFriend(treeSergey.Tree);
+
+//    canvas("Result")
+//            << TTree_drawable(treeAnt.Tree, "treeSergey.IM_4g >> (100,800,1050)","treeSergey.TreeFitProb>0.01")
+//            << TTree_drawable(treeAnt.Tree, "treeAnt.IM_4g >> (100,800,1050)","treeAnt.KinFitProb>0.01")
+//            << drawoption("colz")
+//            << TTree_drawable(treeAnt.Tree, "treeSergey.IM_4g:treeAnt.IM_4g >> (100,800,1050,100,800,1050)","")
+//            << TTree_drawable(treeAnt.Tree, "treeSergey.KinFitProb:treeAnt.KinFitProb >> (100,0,1,100,0,1)","")
+//            << TTree_drawable(treeAnt.Tree, "treeSergey.AntiPi0FitProb:treeAnt.AntiPi0FitProb >> (100,0,1,100,0,1)","")
+//            << endc;
+//    canvas("ProtonIdx")
+//            << drawoption("colz")
+//            << TTree_drawable(treeAnt.Tree, "treeSergey.KinFitProtonIdx:treeAnt.KinFitProtonIdx >> (5,1,6,5,1,6)","")
+//            << TTree_drawable(treeAnt.Tree, "treeSergey.AntiPi0FitProtonIdx:treeAnt.AntiPi0FitProtonIdx >> (5,1,6,5,1,6)","")
+//            << TTree_drawable(treeSergey.Tree, "TreeFitProtonIdx:KinFitProtonIdx >> (5,1,6,5,1,6)","")
+//            << TTree_drawable(treeSergey.Tree, "AntiPi0FitProtonIdx:KinFitProtonIdx >> (5,1,6,5,1,6)","")
+//            << TTree_drawable(treeSergey.Tree, "AntiEtaFitProtonIdx:KinFitProtonIdx >> (5,1,6,5,1,6)","")
+//            << endc;
 }
 
 const ParticleTypeTree EtapSergey::ptreeSignal = ParticleTypeTreeDatabase::Get(ParticleTypeTreeDatabase::Channel::EtaPrime_gOmega_ggPi0_4g);
