@@ -30,6 +30,7 @@ struct TaggerScalers : Variable {
 
     double GetTaggerOr() const;
 
+    double GetTaggerOrAsSum() const;
 
 protected:
 

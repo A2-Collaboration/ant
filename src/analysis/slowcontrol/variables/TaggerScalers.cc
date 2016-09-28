@@ -27,7 +27,7 @@ list<Variable::ProcessorPtr> TaggerScalers::GetNeededProcessors() const
     if(mode == mode_t::EPT_2014) {
         /// \todo check how EPT_2012 scalers were recorded
         /// for 2014, we know that EPT_Scalers are in Beampolmon VUPROMs
-        return {Processors::EPT_Scalers, Processors::Beampolmon};
+        return {Processors::EPT_Scalers, Processors::Beampolmon, Processors::EPT_Or};
     }
     return {};
 }
@@ -60,6 +60,12 @@ std::vector<int64_t> TaggerScalers::GetCounts() const
 }
 
 double TaggerScalers::GetTaggerOr() const
+{
+    return Processors::EPT_Or->Get() * 1.0e6 / Processors::Beampolmon->Reference_1MHz.Get();
+
+}
+
+double TaggerScalers::GetTaggerOrAsSum() const
 {
     auto scalers = Get();
     return accumulate(scalers.begin(),scalers.end(),0);
