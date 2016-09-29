@@ -1193,10 +1193,6 @@ public:
             fCov[7] = 0.;
             fCov[8] = 0.;
             fCov[9] = fErrSq[I][3];
-            if (I == 0 && IfZfree != 0) {
-                fCov[9] = 0.;
-                SIMSTP(IV, 1.8);
-            }
             SMTOS(fCov, 1, VY, K + 1, 4);
         }
 
