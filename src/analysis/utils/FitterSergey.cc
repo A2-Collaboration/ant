@@ -99,7 +99,6 @@ private:
 
     TVector3 fVertex;
     Double_t fPulls[NXMAX];
-    Double_t fDeclen;
 
     Double_t fMastg, fMass[NPMAX];
     Float_t fPin[NPMAX][4], fErrSq[NPMAX][4], fCov[10];
@@ -1019,7 +1018,7 @@ public:
         Int_t Nunme, NY, NF, NFF, IV, I, J, IY, K, I2;
         Int_t Isecvt[NPMAX], lclsec, jdecfl, Lpart, Iunmea;
         Int_t NZDIV, IZPOS, IfZfree;
-        Int_t ICDEC, IFSCND, LLDEC, IDE, INDE, IEF;
+        Int_t LLDEC, IDE, INDE, IEF;
 
         Float_t Y[NXMAX], F[NFMAX], WBEST[2], ZBEST[2];
         Float_t ZV1, ZV2, DZMV, VRT[3];
@@ -1157,8 +1156,6 @@ public:
             if (Iunmea > 0) {
                 Vsub(PBM, PRIMV, PMISS, 3);
                 PPMISS = Vmod(PMISS, 3);
-                if (PPMISS < 0.000001)
-                    PPMISS = 0.000001;
                 if (Isecvt[Iunmea] == 0)
                     EMISS = sqrt(PPMISS * PPMISS + fMMiss * fMMiss);
                 else
@@ -1201,8 +1198,6 @@ public:
                 SIMSTP(IV, 1.8);
             }
             SMTOS(fCov, 1, VY, K + 1, 4);
-            //            for (j = K; j < K + 4; j++)
-            //                SIMLIM(j, fPlim[j][0], fPlim[j][1]);
         }
 
         if (Iunmea > 0 && fKind[Iunmea] < 0) {
@@ -1264,8 +1259,6 @@ L11:
         if (Isecvt[Iunmea] == 0 && Iunmea == fNpmeas) {
             //  the energy constraint calculation in case of fully unmeasured particle
             Pxyztp(PMISS, PDTP);
-            if (PDTP[0] < 0.000001)
-                PDTP[0] = 0.000001;
             EMISS = sqrt(PDTP[0] * PDTP[0] + fMMiss * fMMiss);
             fProut[Iunmea][0] = EMISS - fMMiss;
             fProut[Iunmea][1] = PDTP[1];
@@ -1282,16 +1275,13 @@ L11:
         }
 
 
-        ICDEC = 0;
         // calculation of the constraints due to decaying particles
         //  (1 more constraint for every decaying particle)
-        IFSCND = 0;
-        if (Ndecay - IFSCND > 0) {
+        if (Ndecay > 0) {
             for (I = Lpart; I < Nptall; I++) {
                 if (I != jdecfl) {
                     K = I - Lpart;
                     LLDEC = Ldecay[K];
-                    ICDEC++;
                     ERES = 0.;
                     for (J = 0; J < 3; J++)
                         PRES[J] = 0.;
@@ -1299,12 +1289,8 @@ L11:
                         INDE = Idecay[K][IDE];
                         I2 = INDE * 4;
                         if (INDE < fNpmeas) {
-                            if (Y[I2] < 0.000001)
-                                Y[I2] = 0.000001;
                             EDEC = 1. / Y[I2] + fMass[INDE];
                         } else {
-                            if (fProut[INDE][0] < 0.000001)
-                                fProut[INDE][0] = 0.000001;
                             EDEC = fProut[INDE][0] + fMass[INDE];
                         }
                         PDTP[0] = sqrt(EDEC * EDEC - fMass[INDE] * fMass[INDE]);
@@ -1317,17 +1303,12 @@ L11:
                     }
 
                     Pxyztp(PRES, PDTP);
-                    if (PDTP[0] < 0.000001)
-                        PDTP[0] = 0.000001;
                     fProut[I][0] = sqrt(PDTP[0] * PDTP[0] + fMass[I] * fMass[I]) - fMass[I];
                     fProut[I][1] = PDTP[1];
                     fProut[I][2] = PDTP[2];
                     MMISS2 = ERES * ERES - PDTP[0] * PDTP[0];
 
-                    if (MMISS2 < 0.000001)
-                        F[NFF] = fMass[I] * fMass[I] - MMISS2;
-                    else
-                        F[NFF] = fMass[I] - sqrt(MMISS2);
+                    F[NFF] = fMass[I] - sqrt(MMISS2);
                     NFF++;
                 }
             }
@@ -1439,22 +1420,6 @@ L11:
         LVvel.SetPxPyPzE(vcm[0], vcm[1], vcm[2], vcm[3]);
         return LVvel;
     }
-    Double_t Zeta() {
-        Double_t zeta = 0., edif;
-        Double_t veleta[4];
-        const Double_t etamass = 0.5475, pi0mass = 0.1349764;
-        Double_t zfact = 6. / (etamass - 3. * pi0mass) / (etamass - 3. * pi0mass);
-        TLorentzVector p4eta, p4pi0, p4pi0eta;
-        p4eta = Particle(17, 1);
-        Trevrest(p4eta, veleta);
-        for (Int_t ip = 1; ip <= 3; ip++) {
-            p4pi0 = Particle(7, ip);
-            p4pi0eta = Loren(veleta, p4pi0);
-            edif = p4pi0eta.E() - etamass / 3.;
-            zeta += zfact * edif * edif;
-        }
-        return zeta;
-    }
     void SetResol(Int_t fData, Int_t fMCres, Int_t IRaw) {
         fTypDat = fData;
         fMCsmear = fMCres;
@@ -1522,44 +1487,11 @@ L11:
         TLorentzVector Temp = Particlecm(ikind, ip);
         return Temp.Phi();
     }
-    Double_t *Pulls() { return fPulls; }
-    Double_t PullEbeam() { return fPulls[0]; }
-    Double_t PullXvrtx() { return fPulls[1]; }
-    Double_t PullYvrtx() { return fPulls[2]; }
-    Double_t PullZvrtx() { return fPulls[3]; }
-    Double_t *PullsParticle(Int_t ikind, Int_t ip) {
-        static Double_t ZerPl[4] = {4 * 0.};
-        Int_t np = 0, kind;
-        for (Int_t jp = 1; jp <= fNpmeas; jp++) {
-            kind = abs(fKind[jp]);
-            if (kind == ikind)
-                np++;
-            if (np == ip)
-                return fPulls + jp * 4;
-        }
-        return ZerPl;
-    }
-    Double_t PullParticleE(Int_t ikind, Int_t ip) {
-        Double_t *Pl = PullsParticle(ikind, ip);
-        return *Pl;
-    }
-    Double_t PullParticleTheta(Int_t ikind, Int_t ip) {
-        Double_t *Pl = PullsParticle(ikind, ip);
-        return *(Pl + 1);
-    }
-    Double_t PullParticlePhi(Int_t ikind, Int_t ip) {
-        Double_t *Pl = PullsParticle(ikind, ip);
-        return *(Pl + 2);
-    }
-    Double_t PullParticleDepth(Int_t ikind, Int_t ip) {
-        Double_t *Pl = PullsParticle(ikind, ip);
-        return *(Pl + 3);
-    }
+
     TVector3 Vertex() { return fVertex; }
     Double_t VertexX() { return fVertex.X(); }
     Double_t VertexY() { return fVertex.Y(); }
     Double_t VertexZ() { return fVertex.Z(); }
-    Double_t Declen() { return fDeclen; }
 
     Double_t DepthShowCB(Double_t Ecl, Int_t IPart) { // a shower depth in CB
         Double_t dep;
@@ -1632,45 +1564,6 @@ L11:
             return 4.;
     }
 
-    Double_t EclCorCB(Double_t Ecl, Int_t IPart,
-                      Int_t IRaw) { // CB energy correction
-        // correction for 12 MeV cluster threshold in the CB.
-        Double_t p[5] = {1.52950e-02, 5.92991e-03, 4.57857e-01, 8.98180e-03,
-                         7.75002e-03}; // photon smeared smcal11
-        if (IPart == 14) { // proton
-            p[4] = 0.;
-            if (IRaw != 0) {
-                if (Ecl < 0.08) {
-                    p[0] = 0.43;
-                    p[1] = -0.01;
-                    p[2] = 0.4;
-                    p[3] = -1.18;
-                } else {
-                    p[0] = 0.16;
-                    p[1] = -0.07;
-                    p[2] = 0.15;
-                    p[3] = -0.25;
-                }
-            } else {
-                if (Ecl < 0.08) {
-                    p[0] = 0.4;
-                    p[1] = -0.01;
-                    p[2] = 0.38;
-                    p[3] = -0.9;
-                } else {
-                    p[0] = 0.18;
-                    p[1] = -0.06;
-                    p[2] = 0.2;
-                    p[3] = -0.21;
-                }
-            }
-            if (Ecl < 0.011)
-                Ecl = 0.011;
-        }
-        Double_t Fcor = p[0] / pow(Ecl + p[1], p[2]) + p[3] + p[4] * Ecl;
-        return Fcor;
-    }
-
     Double_t dEovEclCB(Double_t Ecl, Int_t IPart) { // CB dE/E
         Double_t Er0 = dEovEclCBInit(Ecl, IPart);
         Double_t Era = dEovEclCBAdd(Ecl, IPart);
@@ -1701,58 +1594,6 @@ L11:
     Double_t dEovEclCBAdd(Double_t, Int_t) { // CB dE/E
         return 0.052; // EPT Aug 2014 res4
 
-    }
-    Double_t ELossPID(Double_t Ecl, Double_t Thetacl, Int_t IPart) {
-        Double_t p[4] = {7.71580e-02, 1.02080e-01, 1.96421, 9.59329e-01};
-        if (IPart == 14) { // proton
-            p[0] = 7.71580e-02;
-            p[1] = 1.02080e-01;
-            p[2] = 1.96421;
-            p[3] = 9.59329e-01;
-        }
-        Double_t Els = p[0] / pow(Ecl + p[1], p[2]) + p[3];
-        return Els / 1000. / sin(Thetacl);
-    }
-    Double_t EclCorTAPS(Double_t Ecl, Int_t IPart,
-                        Int_t IRaw) { // TAPS cluster energy correction
-        // correction for 12 MeV cluster threshold.
-
-        Double_t p[4] = {1.07370e-02, 4.74417e-01, 6.38448e-02,
-                         5.73663e-02}; // for err=v3
-        Double_t Fcor = p[0] / pow(Ecl - 0.005, p[1]) + p[2] + p[3] * Ecl;
-        if (IPart == 14) { // proton
-            if (IRaw != 0) {
-                if (Ecl < 0.13) {
-                    p[0] = 0.38;
-                    p[1] = -0.012;
-                    p[2] = 0.4;
-                    p[3] = -0.78;
-                } else {
-                    p[0] = 0.23;
-                    p[1] = 0.;
-                    p[2] = 0.25;
-                    p[3] = -0.275;
-                }
-            } else {
-                if (Ecl < 0.1) {
-                    p[0] = 0.33;
-                    p[1] = -0.012;
-                    p[2] = 0.37;
-                    p[3] = -0.7;
-                } else {
-                    p[0] = 0.23;
-                    p[1] = 0.;
-                    p[2] = 0.21;
-                    p[3] = -0.275;
-                }
-            }
-            if (Ecl < 0.0125)
-                Ecl = 0.0125;
-            Fcor = p[0] / pow(Ecl + p[1], p[2]) + p[3];
-            if (Ecl > 0.4)
-                Fcor = 0.;
-        }
-        return Fcor;
     }
 
     Double_t dEovEclTAPS(Double_t Ecl, Int_t IPart) { // TAPS dE/E
@@ -1822,18 +1663,12 @@ L11:
         return dtan;
     }
 
-    Double_t EKinProt(Double_t Ecl) { // proton E correction
-        return Ecl + 0.018 / pow(Ecl + 0.012, 0.36) - 0.0315;
-    }
     Double_t dThetaProt(Double_t Ecl, Double_t Tcl) { // proton dTheta
         Double_t Tclg = Tcl * TMath::RadToDeg();
         if (Tclg < 27.)
             return 0.639357 / pow(Ecl + 1.6797, 7.78758) + 0.0387287;
         else
             return 0.00017517 / pow(Ecl + 0.0464427, 1.58624) + 0.0357436;
-    }
-    Double_t dEovEKinProt(Double_t Ecl) { // proton dE/Ekin
-        return (0.011472 + 0.051288 * Ecl) / EKinProt(Ecl);
     }
     Double_t dEProt(Double_t Ecl) { // proton dE
         return (0.006 / pow(Ecl - 0.00733, 0.588) - 0.002) * Ecl;
