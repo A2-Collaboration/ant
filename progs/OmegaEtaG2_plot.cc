@@ -648,7 +648,9 @@ struct OmegaHist_t {
         }
 
         static bool KinFitProb_MM(const Fill_t& f) noexcept {
-            return f.Tree.KinFitProb>0.1 && f.Tree.mm().M()<1100 && f.Tree.mm().M() > 780;
+            return     f.Tree.KinFitProb >  0.05
+                    && f.Tree.mm().M() < 1100.0
+                    && f.Tree.mm().M() >  780.0;
         }
 
         static bool dEECut(const Fill_t& f) {
