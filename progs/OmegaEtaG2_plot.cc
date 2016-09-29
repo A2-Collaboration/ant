@@ -173,6 +173,9 @@ double maxIM(const std::vector<TLorentzVector>& data) {
     return max_element(data.cbegin(), data.cend(), [] (const TLorentzVector& v1, const TLorentzVector& v2) { return v1.M() < v2.M(); })->M();
 }
 
+double maxE(const std::vector<TLorentzVector>& data) {
+    return max_element(data.cbegin(), data.cend(), [] (const TLorentzVector& v1, const TLorentzVector& v2) { return v1.E() < v2.E(); })->M();
+}
 
 // define the structs containing the histograms
 // and the cuts. for simple branch variables, that could
@@ -311,6 +314,10 @@ struct OmegaHist_t {
                [] (TH1D* h, const Fill_t& f) { h->Fill(f.Tree.ggg_fitted().M(), f.TaggW());
                                              });
 
+        AddTH1("3#gamma IM unfitted",      "3#gamma IM [MeV]",     "",       gggIMbins,     "ggg_IM_unf",
+               [] (TH1D* h, const Fill_t& f) { h->Fill(f.Tree.ggg().M(), f.TaggW());
+                                             });
+
         AddTH1("2#gamma sub-IM",  "2#gamma IM [MeV]",     "",       IMbins,     "gg_IM",
                [] (TH1D* h, const Fill_t& f) {
 
@@ -363,6 +370,11 @@ struct OmegaHist_t {
         AddTH2("3#gamma E vs 2#gamma IM", "3#gamma E [MeV]", "max(2#gamma IM) [MeV]", IMbins, IMbins, "gggE_max_gg",
                [] (TH2D* h, const Fill_t& f) {
             h->Fill(f.Tree.ggg_fitted().E()-ParticleTypeDatabase::Omega.Mass(), maxIM(f.Tree.ggIM_fitted()), f.TaggW());
+        });
+
+        AddTH2("3#gamma IM vs 2#gamma max E", "3#gamma IM [MeV]", "max(2#gamma E) [MeV]", IMbins, IMbins, "ggg_max_ggE",
+               [] (TH2D* h, const Fill_t& f) {
+            h->Fill(f.Tree.ggg_fitted().M(), maxE(f.Tree.ggIM_fitted()), f.TaggW());
         });
 
 
