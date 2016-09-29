@@ -55,7 +55,7 @@ void dotest() {
         }
     }
 
-    REQUIRE(nSlowControls == 20);
+    REQUIRE(nSlowControls == 21);
     REQUIRE(nEvents == 211);
     REQUIRE(nHits == 30563);
     REQUIRE(nEmptyEvents == 0);
