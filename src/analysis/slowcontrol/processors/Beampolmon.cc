@@ -13,6 +13,7 @@ Processor::return_t Beampolmon::ProcessEventData(const TEventData& recon, manage
 
     returnStates.insert(Reference_1MHz.ProcessEventData(recon, manager));
     returnStates.insert(PbGlass.ProcessEventData(recon, manager));
+    returnStates.insert(FaradayCup.ProcessEventData(recon,manager));
 
     if (returnStates.size() != 1)
         throw runtime_error("Bug: Multiple return values for Scalar block.)");
@@ -23,5 +24,6 @@ Processor::return_t Beampolmon::ProcessEventData(const TEventData& recon, manage
 void Beampolmon::PopQueue() {
     Reference_1MHz.PopQueue();
     PbGlass.PopQueue();
+    FaradayCup.PopQueue();
 }
 

@@ -13,10 +13,12 @@ struct Beampolmon : Processor {
 
     AcquScalerScalar Reference_1MHz;
     AcquScalerScalar PbGlass;
+    AcquScalerScalar FaradayCup;
 
     Beampolmon() :
          Reference_1MHz(expconfig::detector::Trigger::ScalerName::Beampolmon_1MHz),
-         PbGlass(expconfig::detector::Trigger::ScalerName::PbGlass)
+         PbGlass(expconfig::detector::Trigger::ScalerName::PbGlass),
+         FaradayCup(expconfig::detector::Trigger::ScalerName::FaradayCup)
     {}
 
     virtual return_t ProcessEventData(const TEventData& recon, physics::manager_t& manager) override;
