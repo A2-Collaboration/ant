@@ -270,7 +270,7 @@ struct OmegaHist_t {
     const BinSettings zVertexBins = Bins(200,-10,10);
 
     const BinSettings dalitzBins = Bins(200, -0.4, 0.4);
-    const BinSettings evtoEbins  = Bins(150,  0, 15);
+    const BinSettings evtoEbins  = Bins(150,  0, 8);
 
     const BinSettings pullBins   = Bins(100,-5,5);
 
@@ -737,10 +737,10 @@ struct OmegaHist_t {
         //                                 {"#omega mass", wmasscut}
         //                             });
 
-        //        cuts.emplace_back(MultiCut_t<Fill_t>{
-        //                                 {"dEECut",   TreeCuts::dEECut },
-        //                                 {"nodEECut", TreeCuts::dontcare }
-        //                             });
+                cuts.emplace_back(MultiCut_t<Fill_t>{
+                                         {"dEECut",   TreeCuts::dEECut },
+                                         {"nodEECut", TreeCuts::dontcare }
+                                     });
 
         //        cuts.emplace_back(MultiCut_t<Fill_t>{
         //                              {"NoPunch",     [] (const Fill_t& f) { return f.Tree.p_fitted().Energy() < 400.0 + ParticleTypeDatabase::Proton.Mass();} }
@@ -751,9 +751,9 @@ struct OmegaHist_t {
                               {"pi0Hyp",               TreeCuts::pi0HypCut}
                           });
 
-        cuts.emplace_back(MultiCut_t<Fill_t>{
-                              {"LineCut",               TreeCuts::gg_ggg_line_cut}
-                          });
+//        cuts.emplace_back(MultiCut_t<Fill_t>{
+//                              {"LineCut",               TreeCuts::gg_ggg_line_cut}
+//                          });
 
         //        cuts.emplace_back(MultiCut_t<Fill_t>{
         //                              {"NoLostPhotons",               [] (const Fill_t& f) { return f.Tree.LostGammas().size() == 0;} }
