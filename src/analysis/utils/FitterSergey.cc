@@ -1013,15 +1013,15 @@ public:
 
     Int_t Kinfit(Int_t Nptall, Int_t Ndecay,
                  Int_t Ikind[NDMAX], Double_t Amsdec[NDMAX],
-                 Int_t Ldecay[NDMAX], Int_t Idecay[NDMAX][10], Int_t Ifzfree) {
+                 Int_t Ldecay[NDMAX], Int_t Idecay[NDMAX][10]) {
         Int_t i, j, k, ierr;
         Int_t Nunme, NY, NF, NFF, IV, I, J, IY, K, I2;
         Int_t Isecvt[NPMAX], lclsec, jdecfl, Lpart, Iunmea;
-        Int_t NZDIV, IZPOS, IfZfree;
+        Int_t NZDIV, IZPOS;
         Int_t LLDEC, IDE, INDE, IEF;
 
         Float_t Y[NXMAX], F[NFMAX], WBEST[2], ZBEST[2];
-        Float_t ZV1, ZV2, DZMV, VRT[3];
+        Float_t ZV1, DZMV, VRT[3];
         Float_t RLPED[3], DLPED[3], RTPGAM[3], RDNPED;
         Float_t FF, YSTP;
         const Int_t NVY = (NXMAX + NXMAX * NXMAX) / 2;
@@ -1044,16 +1044,6 @@ public:
             }
             if (fKind[i] < 1000)
                 fNpmeas++;
-        }
-
-        IfZfree = Ifzfree;
-        if (Ifzfree != 0) {
-            if (fLcstCB < 2)
-                IfZfree = 0;
-            if (fLcst < 3)
-                IfZfree = 0;
-            if (Ndecay == 0 && fNpmeas < Lpart)
-                IfZfree = 0;
         }
 
         Float_t fMMiss = fMass[Iunmea];
@@ -1095,12 +1085,9 @@ public:
         ZBEST[0] = ZBEST[1] = 0.;
 
         ZV1 = fPlim[IV][0];
-        ZV2 = fPlim[IV][1];
         DZMV = 0.25;
-        if (IfZfree == 0)
-            NZDIV = 1;
-        else
-            NZDIV = (Int_t)((ZV2 - ZV1) / DZMV) + 1;
+        NZDIV = 1;
+
 
         //   calculating initial values for free parameters of the fit
 
@@ -1727,7 +1714,6 @@ std::vector<FitterSergey::result_t> FitterSergey::Process(const std::vector<TTag
     Double_t Target[2];
     Target[0] = 0.; // center of target
     Target[1] = 10.0; // length of target
-    auto IfZfree = 0; // measured Z vertex
 
     // fill the lorentzvectors from candidates
     TLorentzVector p4ph[16], p4pr[16];
@@ -1967,7 +1953,7 @@ std::vector<FitterSergey::result_t> FitterSergey::Process(const std::vector<TTag
                     }
                     Nptall = Npart + 1 + Ndecay;
                     ierr = fKfit.Kinfit(Nptall, Ndecay, Dkind, Amsdec,
-                                        Ldecay, Idecay, IfZfree);
+                                        Ldecay, Idecay);
                     if (ierr != 0)
                         printf(" Kinfit error = %d\n", ierr);
 
@@ -2107,7 +2093,7 @@ std::vector<FitterSergey::result_t> FitterSergey::Process(const std::vector<TTag
 
                 Nptall = Npart + 1 + Ndecay;
                 ierr = fKfit.Kinfit(Nptall, Ndecay, Dkind, Amsdec,
-                                    Ldecay, Idecay, IfZfree);
+                                    Ldecay, Idecay);
                 if (ierr != 0)
                     printf(" Kinfit error = %d\n", ierr);
 
@@ -2182,7 +2168,7 @@ NEWV51:
         }
         Nptall = Npart + 1 + Ndecay;
         ierr = fKfit.Kinfit(Nptall, Ndecay, Dkind, Amsdec,
-                            Ldecay, Idecay, IfZfree);
+                            Ldecay, Idecay);
         if (ierr != 0)
             printf(" Kinfit error = %d\n", ierr);
 
