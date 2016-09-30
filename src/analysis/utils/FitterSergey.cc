@@ -1814,7 +1814,7 @@ std::vector<FitterSergey::result_t> FitterSergey::Process(const std::vector<TTag
     unsigned PrIdx2pi0[fphNLadd];
     unsigned PrIdxpi0eta[fphNLadd];
 
-    int nhyp = 4;
+    int nhyp = 1;
     int Ngam = fphN - 1;
 
     Int_t Pkind = 0;
@@ -1831,7 +1831,14 @@ std::vector<FitterSergey::result_t> FitterSergey::Process(const std::vector<TTag
     Double_t chisqb[nhypmax], prb, MM, im[6];
     Double_t thetpa, fEcl;
 
+    vector<result_t> results;
+
     for (auto i = 0; i < fphNLadd; i++) {
+        result_t r;
+        r.TaggE = fphTagg[i];
+        r.TaggT = TaggT[i];
+        r.TaggCh = TaggCh[i];
+
         Pbs4g[i] = 0.;
         PrIdx4g[i] = 0;
         Pbs2pi0[i] = 0.;
@@ -1992,6 +1999,12 @@ std::vector<FitterSergey::result_t> FitterSergey::Process(const std::vector<TTag
                     if (ihyp == 0 && prb > Pbs4g[i]) {
                         Pbs4g[i] = prb;
                         PrIdx4g[i] = ipr+1;
+
+                        r.KinFitProb = Pbs4g[i];
+                        r.KinFitProtonIdx = PrIdx4g[i];
+                        fp4g = fKfit.Particle(1, 1) + fKfit.Particle(1, 2) +
+                               fKfit.Particle(1, 3) + fKfit.Particle(1, 4);
+                        r.IM_4g = fp4g.M()/MeVtoGeV;
                     }
                     if (ihyp == 1 && prb > Pbs2pi0[i]) {
                         Pbs2pi0[i] = prb;
@@ -2007,10 +2020,11 @@ NEWPR5:
             continue;
         } // ipr
 
+        results.emplace_back(move(r));
 
     } // end of loop on fphNLadd
 
-    vector<result_t> results;
+    return results;
 
     nhyp = 1;
     Ngam = fphN - 1;

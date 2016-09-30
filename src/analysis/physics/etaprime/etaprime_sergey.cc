@@ -242,6 +242,12 @@ void EtapSergey::ProcessEvent(const TEvent& event, manager_t&)
             if(!std_ext::copy_if_greater(r.KinFitProb, result.Probability))
                 continue;
 
+            const auto fitted_photons = kinfitter.GetFittedPhotons();
+            LorentzVec fitted_photon_sum;
+            for(auto& p : fitted_photons)
+                fitted_photon_sum += *p;
+            r.IM_4g = fitted_photon_sum.M();
+
             r.KinFitProtonIdx = p.ProtonIdx;
         }
 
@@ -315,9 +321,10 @@ void EtapSergey::ShowResult()
 
     canvas("Result")
             << drawoption("colz")
-            << TTree_drawable(treeSergey.Tree, "IM_4g >> (100,700,1050)","TreeFitProb>0.01")
-            << TTree_drawable(treeSergey.Tree, "IM_3g[1]:IM_4g >> (100,700,1050,100,700,1050)","TreeFitProb>0.01")
+            << TTree_drawable(treeSergey.Tree, "IM_4g >> (100,700,1050)","KinFitProb>0.01")
+            << TTree_drawable(treeAnt.Tree, "treeSergey.IM_4g:treeAnt.IM_4g >> (100,800,1050,100,800,1050)","treeSergey.KinFitProb>0.01 && treeAnt.KinFitProb>0.01")
             << TTree_drawable(treeAnt.Tree, "treeSergey.KinFitProb:treeAnt.KinFitProb >> (100,0,1,100,0,1)","")
+            << TTree_drawable(treeAnt.Tree, "treeSergey.KinFitProtonIdx:treeAnt.KinFitProtonIdx >> (5,1,6,5,1,6)","")
             << endc;
 
 

@@ -23,20 +23,20 @@ public:
         double   TaggT;
         unsigned TaggCh;
 
-        double KinFitProb;
+        double KinFitProb = std_ext::NaN;
         double TreeFitProb;
         double AntiPi0FitProb;
         double AntiEtaFitProb;
 
         std::vector<double> IM_3g;
-        double IM_4g;
+        double IM_4g = std_ext::NaN;
 
         std::vector<double> gNonPi0_Theta;
         std::vector<double> gNonPi0_CaloE;
 
         double CBVetoSumE;
 
-        unsigned KinFitProtonIdx;
+        unsigned KinFitProtonIdx = 0;
         unsigned TreeFitProtonIdx;
         unsigned AntiPi0FitProtonIdx;
         unsigned AntiEtaFitProtonIdx;
