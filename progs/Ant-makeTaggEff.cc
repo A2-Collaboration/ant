@@ -360,6 +360,7 @@ void processCSV(const string& csvFile, shared_ptr<channelHistTime_t> chHistTime,
 {
     shared_ptr<calibration::DataManager> manager = nullptr;
 
+    auto histLambda     = histfac.makeTH1D("Decay constants","decay constant [1/s]","#",BinSettings(100,0,0),"histDecayConst");
     ifstream csvStream(csvFile);
     if (!csvStream)
         failExit(std_ext::formatter() << "Error reading File list " << csvFile << ".");
@@ -394,6 +395,7 @@ void processCSV(const string& csvFile, shared_ptr<channelHistTime_t> chHistTime,
 
         taggEffTriple_t taggEff(record.at(0),record.at(1),record.at(2),histfac);
         taggEff_t result = taggEff.GetTaggEffSubtracted();
+        histLambda->Fill(taggEff.GetDecayConstant());
 
         //check if setup is valid for this method --> String in map?
         auto it_beamtime = startIDs.find(result.Setup);
