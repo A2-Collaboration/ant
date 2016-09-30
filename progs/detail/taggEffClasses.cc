@@ -280,6 +280,11 @@ const taggEff_t taggEffTriple_t::GetTaggEffSubtracted() const
     return result;
 }
 
+double taggEffTriple_t::GetDecayConstant() const
+{
+    return AvgBkgFit->GetParameter(2);
+}
+
 
 
 taggEffTriple_t::bkgFit_t::bkgFit_t(TGraph* graph, const size_t channel): Graph(graph)

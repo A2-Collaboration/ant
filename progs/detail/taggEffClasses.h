@@ -121,6 +121,8 @@ public:
 
     const taggEff_t  GetTaggEffSubtracted() const;
 
+    double GetDecayConstant() const;
+
 };
 
 
