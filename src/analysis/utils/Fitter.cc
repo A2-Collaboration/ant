@@ -46,21 +46,37 @@ APLCON::Fit_Settings_t Fitter::MakeDefaultSettings()
     return settings;
 }
 
+vector<double*> vectorize(vector<Fitter::FitVariable>& vars, double Fitter::FitVariable::* member) {
+    vector<double*> ptrs(vars.size());
+    transform(vars.begin(), vars.end(), ptrs.begin(),
+              [member] (Fitter::FitVariable& v) { return std::addressof(v.*member); });
+    return ptrs;
+}
+
+Fitter::Vertex_t::Vertex_t(APLCON& aplcon) :
+    XYZ(3)
+{
+    aplcon.LinkVariable(
+                Name,
+                vectorize(XYZ, &FitVariable::Value),
+                vectorize(XYZ, &FitVariable::Sigma),
+                vectorize(XYZ, &FitVariable::Pull)
+                );
+}
+
+std::vector<double> Fitter::Vertex_t::GetXYZ() const
+{
+    return {XYZ[0].Value, XYZ[1].Value, XYZ[2].Value};
+}
+
 Fitter::FitParticle::FitParticle(const string& name,
                                  APLCON& aplcon,
-                                 std::shared_ptr<Fitter::FitVariable> z_vertex) :
+                                 std::shared_ptr<const Vertex_t> vertex) :
     Detector(Detector_t::Any_t::None),
     Vars(4), // it's a lucky coincidence that particles in CB/TAPS are both parametrized by 4 values
     Name(name),
-    Z_Vertex(z_vertex)
+    Vertex(vertex)
 {
-    auto vectorize = [] (vector<FitVariable>& vars, double FitVariable::* member) {
-        vector<double*> ptrs(vars.size());
-        transform(vars.begin(), vars.end(), ptrs.begin(),
-                  [member] (FitVariable& v) { return std::addressof(v.*member); });
-        return ptrs;
-    };
-
     aplcon.LinkVariable(
                 Name,
                 vectorize(Vars, &FitVariable::Value),
@@ -76,14 +92,14 @@ Fitter::FitParticle::~FitParticle()
 
 TParticlePtr Fitter::FitParticle::AsFitted() const
 {
-    const auto z_vertex = Z_Vertex ? Z_Vertex->Value : 0;
+    const auto& vertex = Vertex ? Vertex->GetXYZ() : vector<double>{0.0, 0.0, 0.0};
 
     vector<double> values(Vars.size());
     transform(Vars.begin(), Vars.end(), values.begin(),
                   [] (const FitVariable& v) { return v.Value; });
 
     auto p = make_shared<TParticle>(Particle->Type(),
-                                    GetLorentzVec(values, z_vertex)
+                                    GetLorentzVec(values, vertex)
                                     );
     p->Candidate = Particle->Candidate;
     return p;
@@ -147,13 +163,13 @@ void Fitter::FitParticle::Set(const TParticlePtr& p,
 }
 
 LorentzVec Fitter::FitParticle::GetLorentzVec(const std::vector<double>& values,
-                                              const double z_vertex) const
+                                              const std::vector<double>& vertex) const
 {
 
     const radian_t& phi   = values[2];
 
     // start at the lab origin in the frame of the vertex
-    vec3 x{0,0,-z_vertex};
+    vec3 x{-vertex.at(0),-vertex.at(1),-vertex.at(2)};
 
     if(Detector & Detector_t::Type_t::CB)
     {
@@ -194,21 +210,21 @@ LorentzVec Fitter::FitParticle::GetLorentzVec(const std::vector<double>& values,
 KinFitter::KinFitter(const std::string& name,
                      unsigned numGammas,
                      utils::UncertaintyModelPtr Uncertainty_model,
-                     bool fit_Z_vertex,
+                     bool fit_vertex,
                      const APLCON::Fit_Settings_t& settings) :
     Fitter(name, settings, Uncertainty_model)
 {
     if(numGammas==0)
         throw Exception("No gammas are not allowed");
 
-    if(fit_Z_vertex)
-        Z_Vertex = std::make_shared<Z_Vertex_t>();
+    if(fit_vertex)
+        Vertex = std::make_shared<Vertex_t>(*aplcon);
 
     for(unsigned i=0; i<numGammas;++i) {
-        Photons.emplace_back(make_shared<FitParticle>("Photon"+to_string(i), *aplcon, Z_Vertex));
+        Photons.emplace_back(make_shared<FitParticle>("Photon"+to_string(i), *aplcon, Vertex));
     }
 
-    Proton = std::make_shared<FitParticle>("Proton", *aplcon, Z_Vertex);
+    Proton = std::make_shared<FitParticle>("Proton", *aplcon, Vertex);
 
     vector<string> variable_names      = {Proton->Name};
     vector<std::shared_ptr<FitParticle>> fit_particles{Proton};
@@ -227,28 +243,23 @@ KinFitter::KinFitter(const std::string& name,
                          );
     variable_names.emplace_back(BeamE->Name);
 
-    if(fit_Z_vertex) {
-        aplcon->LinkVariable(Z_Vertex->Name,
-                             {std::addressof(Z_Vertex->Value)},
-                             {std::addressof(Z_Vertex->Sigma)},
-                             {std::addressof(Z_Vertex->Pull)}
-                             );
-        variable_names.emplace_back(Z_Vertex->Name);
+    if(fit_vertex) {
+        variable_names.emplace_back(Vertex->Name);
     }
 
-    auto EnergyMomentum = [fit_Z_vertex, fit_particles] (const vector<vector<double>>& values)
+    auto EnergyMomentum = [fit_vertex, fit_particles] (const vector<vector<double>>& values)
     {
 
         const auto  n = fit_particles.size();
         // n serves as an offset here
         const auto& BeamE    = values[n+0][0];
-        const auto  z_vertex = fit_Z_vertex ? values[n+1][0] : 0.0;
+        const auto& vertex = fit_vertex ? values[n+1] : vector<double>{0.0, 0.0, 0.0};
 
         // start with the incoming particle
         auto diff = MakeBeamLorentzVec(1.0/BeamE);
 
         for(size_t i=0;i<n;i++)
-            diff -= fit_particles[i]->GetLorentzVec(values[i], z_vertex); // minus outgoing
+            diff -= fit_particles[i]->GetLorentzVec(values[i], vertex); // minus outgoing
 
         return vector<double>(
                { diff.p.x,
@@ -276,10 +287,9 @@ void KinFitter::SetEgammaBeam(const double ebeam)
 
 void KinFitter::SetZVertexSigma(double sigma)
 {
-    if(!Z_Vertex)
+    if(!Vertex)
         throw Exception("Z Vertex fitting not enabled");
-    Z_Vertex->Sigma = sigma;
-    Z_Vertex->Sigma_before = sigma;
+    Vertex->XYZ[2].SetValueSigma(0.0, sigma);
 }
 
 void KinFitter::SetProton(const TParticlePtr& proton)
@@ -299,7 +309,7 @@ void KinFitter::SetPhotons(const TParticleList& photons)
 
 bool KinFitter::IsZVertexFitEnabled() const noexcept
 {
-    return Z_Vertex != nullptr;
+    return Vertex != nullptr;
 }
 
 TParticlePtr KinFitter::GetFittedProton() const
@@ -329,8 +339,8 @@ TParticlePtr KinFitter::GetFittedBeamParticle() const
 
 double KinFitter::GetFittedZVertex() const
 {
-    if(Z_Vertex)
-        return Z_Vertex->Value;
+    if(Vertex)
+        return Vertex->XYZ[2].Value;
     else
         return std_ext::NaN; // ignore silently
 }
@@ -342,8 +352,8 @@ double KinFitter::GetBeamEPull() const
 
 double KinFitter::GetZVertexPull() const
 {
-    if(Z_Vertex)
-        return Z_Vertex->Pull;
+    if(Vertex)
+        return Vertex->XYZ[2].Pull;
     else
         return std_ext::NaN; // ignore silently
 }
@@ -379,11 +389,12 @@ std::vector<Fitter::FitParticle> KinFitter::GetFitParticles() const
 
 
 APLCON::Result_t KinFitter::DoFit() {
-    if(Z_Vertex) {
-        if(!std::isfinite(Z_Vertex->Sigma_before))
+    if(Vertex) {
+        if(!std::isfinite(Vertex->XYZ[2].Sigma_before))
             throw Exception("Z Vertex sigma not set although enabled");
-        Z_Vertex->Value = 0;
-        Z_Vertex->Sigma = Z_Vertex->Sigma_before;
+        Vertex->XYZ[0].SetValueSigma(0, 0.2);
+        Vertex->XYZ[1].SetValueSigma(0, 0.2);
+        Vertex->XYZ[2].SetValueSigma(0, Vertex->XYZ[2].Sigma_before);
     }
 
 
@@ -416,10 +427,10 @@ LorentzVec KinFitter::MakeBeamLorentzVec(double BeamE)
 TreeFitter::TreeFitter(const string& name,
                        ParticleTypeTree ptree,
                        utils::UncertaintyModelPtr uncertainty_model,
-                       bool fit_Z_vertex,
+                       bool fit_vertex,
                        nodesetup_t::getter nodeSetup,
                        const APLCON::Fit_Settings_t& settings) :
-    KinFitter(name, CountGammas(ptree), uncertainty_model, fit_Z_vertex, settings),
+    KinFitter(name, CountGammas(ptree), uncertainty_model, fit_vertex, settings),
     tree(MakeTree(ptree))
 {
     tree->GetUniquePermutations(tree_leaves, permutations);
@@ -438,8 +449,8 @@ TreeFitter::TreeFitter(const string& name,
     }
 
     // the variable is already setup in KinFitter ctor
-    if(fit_Z_vertex) {
-        variable_names.emplace_back(Z_Vertex->Name);
+    if(fit_vertex) {
+        variable_names.emplace_back(Vertex->Name);
     }
 
     // prepare the calculation at each constraint
@@ -491,15 +502,15 @@ TreeFitter::TreeFitter(const string& name,
     auto tree_leaves_copy   = tree_leaves;
     auto sum_daughters_copy = sum_daughters;
     auto IM_at_nodes = [tree_leaves_copy, sum_daughters_copy,
-                       fit_Z_vertex, node_constraints] (const vector<vector<double>>& v) {
+                       fit_vertex, node_constraints] (const vector<vector<double>>& v) {
         const auto  k = tree_leaves_copy.size();
         // k serves as an offset here
-        const auto  z_vertex = fit_Z_vertex ? v[k+0][0] : 0.0;
+        const auto& vertex = fit_vertex ? v[k+0] : vector<double>{0.0, 0.0, 0.0};
 
         // assign values v to leaves' LVSum
         for(unsigned i=0;i<k;i++) {
             node_t& node = tree_leaves_copy[i]->Get();
-            node.LVSum = node.Leave->GetLorentzVec(v[i], z_vertex);
+            node.LVSum = node.Leave->GetLorentzVec(v[i], vertex);
         }
 
         // sum daughters' Particle

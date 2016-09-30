@@ -53,6 +53,15 @@ public:
         }
     };
 
+    struct Vertex_t {
+        std::vector<FitVariable> XYZ;
+
+        std::vector<double> GetXYZ() const;
+
+        Vertex_t(APLCON& aplcon);
+        const std::string Name = "Vertex";
+    };
+
     struct FitParticle
     {
         TParticlePtr      Particle; // pointer to unfitted particle
@@ -68,7 +77,7 @@ public:
 
         FitParticle(const std::string& name,
                     APLCON& aplcon,
-                    std::shared_ptr<FitVariable> z_vertex);
+                    std::shared_ptr<const Vertex_t> vertex);
         virtual ~FitParticle();
 
     protected:
@@ -80,10 +89,10 @@ public:
         void Set(const TParticlePtr& p, const UncertaintyModel& uncertainty);
 
         const std::string Name;
-        const std::shared_ptr<const FitVariable> Z_Vertex;
+        const std::shared_ptr<const Vertex_t> Vertex;
 
         ant::LorentzVec GetLorentzVec(const std::vector<double>& values,
-                                      double z_vertex) const;
+                                      const std::vector<double>& vertex) const;
     };
 
 protected:
@@ -160,18 +169,14 @@ protected:
         const std::string Name = "Beam";
     };
 
-    struct Z_Vertex_t : FitVariable {
-        const std::string Name = "ZVertex";
-    };
-
     // it's pretty important that those things are pointers,
     // since the members are linked to APLCON in ctor!
     // A move/copy of those members may not happen, so we just
     // point to their fixed location in memory.
     std::vector<std::shared_ptr<FitParticle>> Photons;
     std::shared_ptr<FitParticle> Proton;
-    std::unique_ptr<BeamE_t>    BeamE;
-    std::shared_ptr<Z_Vertex_t> Z_Vertex;
+    std::unique_ptr<BeamE_t>     BeamE;
+    std::shared_ptr<Vertex_t>    Vertex;
 
     static LorentzVec MakeBeamLorentzVec(double BeamE);
 
@@ -204,7 +209,7 @@ public:
     TreeFitter(const std::string& name,
                ParticleTypeTree ptree,
                UncertaintyModelPtr uncertainty_model,
-               bool fit_Z_vertex = false,
+               bool fit_vertex = false,
                nodesetup_t::getter nodeSetup = {},
                const APLCON::Fit_Settings_t& settings = DefaultSettings
               );
