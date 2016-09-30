@@ -185,4 +185,6 @@ struct ColorPalette {
     static const std::vector<Color_t> Colors;
 };
 
+
+
 }

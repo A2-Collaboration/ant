@@ -7,6 +7,7 @@
 #include "base/CmdLine.h"
 #include "base/Detector_t.h"
 #include "base/Logger.h"
+#include "base/PlotExt.h"
 #include "base/std_ext/math.h"
 #include "base/std_ext/string.h"
 #include "base/std_ext/system.h"
@@ -107,9 +108,7 @@ struct channelHistTime_t
             HistErrors->Fill(std_ext::to_iso8601(time).c_str(), ch,std::abs( 1.0 * dataErrors.at(ch) / data.at(ch)));
             mtee.Add(dataErrors.at(ch));
         }
-        auto N = GraphMeans->GetN();
-        GraphMeans->SetPoint(N,time,mte.GetMean());
-        GraphMeans->SetPointError(N,0,mtee.GetMean());
+        GraphExt::FillGraphErrors(GraphMeans,time,mte.GetMean(),0.,mtee.GetMean());
     }
 };
 
@@ -361,6 +360,8 @@ void processCSV(const string& csvFile, shared_ptr<channelHistTime_t> chHistTime,
     shared_ptr<calibration::DataManager> manager = nullptr;
 
     auto histLambda     = histfac.makeTH1D("Decay constants","decay constant [1/s]","#",BinSettings(100,0,0),"histDecayConst");
+    auto graphLambda    = histfac.makeGraph("Decay Constants","graphDecayConsts");
+
     ifstream csvStream(csvFile);
     if (!csvStream)
         failExit(std_ext::formatter() << "Error reading File list " << csvFile << ".");
@@ -396,6 +397,8 @@ void processCSV(const string& csvFile, shared_ptr<channelHistTime_t> chHistTime,
         taggEffTriple_t taggEff(record.at(0),record.at(1),record.at(2),histfac);
         taggEff_t result = taggEff.GetTaggEffSubtracted();
         histLambda->Fill(taggEff.GetDecayConstant());
+        GraphExt::FillGraph(graphLambda,result.FirstID.Timestamp,taggEff.GetDecayConstant());
+
 
         //check if setup is valid for this method --> String in map?
         auto it_beamtime = startIDs.find(result.Setup);

@@ -25,7 +25,7 @@ set(SRCS_BASE
   OptionsList.cc
   ProgressCounter.cc
   TF1Ext.h
-  TH1Ext.cc
+  PlotExt.cc
   WrapTTree.cc
   Interpolator.cc
   Array2D.cc

@@ -10,7 +10,7 @@
 #include "tree/TCalibrationData.h"
 
 #include "base/Logger.h"
-#include "base/TH1Ext.h"
+#include "base/PlotExt.h"
 
 #include "TH1D.h"
 #include "TH2D.h"

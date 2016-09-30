@@ -10,7 +10,7 @@
 #include "TList.h"
 #include "TKey.h"
 #include <iostream>
-#include "base/TH1Ext.h"
+#include "base/PlotExt.h"
 #include "THStack.h"
 #include "TClass.h"
 #include <list>

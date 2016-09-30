@@ -7,6 +7,9 @@
 class TH1;
 class TH2;
 class TH2D;
+class TGraph;
+class TGraphErrors;
+
 
 namespace ant{
 
@@ -19,6 +22,14 @@ struct TH2Ext {
     static void ClearHistogram(TH2D* hist, const double v=0.0);
 
     static interval<double> getZRange(const TH2& hist);
+};
+
+struct GraphExt
+{
+    static std::size_t FillGraph(TGraph* graph, const double x, const double y);
+    static std::size_t FillGraphErrors(TGraphErrors* graph,
+                                       const double x, const double y,
+                                       const double xerr, const double yerr);
 };
 
 }

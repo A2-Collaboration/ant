@@ -5,6 +5,7 @@
 
 #include "base/Logger.h"
 #include "base/interval.h"
+#include "base/PlotExt.h"
 
 #include "expconfig/detectors/EPT.h"
 
@@ -257,8 +258,8 @@ const taggEff_t taggEffTriple_t::GetTaggEffSubtracted() const
             graphScaler.Add(Run.wrapTree.TaggRates().at(ch));
             graphScalerSub.Add(rate_sub);
         }
-        FillGraph(avgRatesSub,time,graphScalerSub.GetMean());
-        FillGraph(avgRates,time,graphScaler.GetMean());
+        GraphExt::FillGraph(avgRatesSub,time,graphScalerSub.GetMean());
+        GraphExt::FillGraph(avgRates,time,graphScaler.GetMean());
         L.Add(Run.wrapTree.ExpLivetime);
     }
 
@@ -331,7 +332,7 @@ TGraph* timedData::getRatesVsTime(const std::list<treeLoader_t*>& tContainers,co
         std_ext::RMS rmsRate;
         for ( const auto& tr: t->wrapTree.TaggRates())
             rmsRate.Add(tr);
-        FillGraph(graph2d,evTime, rmsRate.GetMean());
+        GraphExt::FillGraph(graph2d,evTime, rmsRate.GetMean());
     };
 
     runOverContainer(tContainers, f);
@@ -347,7 +348,7 @@ TGraph* timedData::getRatesVsTime(const std::list<treeLoader_t*>& tContainers, c
     graph2d->GetYaxis()->SetTitle("avg. rate [Hz]");
 
     auto f = [channel, graph2d] (treeLoader_t* t, double evTime) {
-        FillGraph(graph2d,evTime,t->wrapTree.TaggRates().at(channel));
+        GraphExt::FillGraph(graph2d,evTime,t->wrapTree.TaggRates().at(channel));
     };
 
     runOverContainer(tContainers, f);
@@ -364,7 +365,7 @@ TGraph* timedData::getLtVsTime(const std::list<treeLoader_t*>& tContainers, cons
 
     auto f = [graph] (treeLoader_t* t, double evTime)
     {
-        FillGraph(graph,evTime,t->wrapTree.ExpLivetime);
+        GraphExt::FillGraph(graph,evTime,t->wrapTree.ExpLivetime);
     };
     runOverContainer(tContainers,f);
     return graph;

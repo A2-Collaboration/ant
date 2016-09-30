@@ -1,6 +1,10 @@
-#include "TH1Ext.h"
+#include "PlotExt.h"
+
 #include "TH1.h"
 #include "TH2.h"
+#include "TGraph.h"
+#include "TGraphErrors.h"
+
 
 using namespace ant;
 
@@ -46,4 +50,19 @@ interval<double> TH2Ext::getZRange(const TH2& hist) {
 
 double ant::GetMaxPos(TH1* hist){
     return hist->GetXaxis()->GetBinCenter(hist->GetMaximumBin());
+}
+
+
+std::size_t GraphExt::FillGraph(TGraph* graph, const double x, const double y)
+{
+    graph->SetPoint(graph->GetN(),x,y);
+    return graph->GetN();
+}
+
+std::size_t GraphExt::FillGraphErrors(TGraphErrors* graph, const double x, const double y, const double xerr, const double yerr)
+{
+    auto N = graph->GetN();
+    graph->SetPoint(N,x,y);
+    graph->SetPointError(N,xerr,yerr);
+    return graph->GetN();
 }
