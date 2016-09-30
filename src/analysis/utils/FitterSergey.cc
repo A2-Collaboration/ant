@@ -1845,11 +1845,7 @@ std::vector<FitterSergey::result_t> FitterSergey::Process(const std::vector<TTag
         PrIdx2pi0[i] = 0;
         Pbspi0eta[i] = 0.;
         PrIdxpi0eta[i] = 0;
-        for (auto m = 0; m < nhyp; m++) {
-            chisqb[m] = 1000000.;
-            Itagb[m] = -1;
-            Iverb[m] = -1;
-        }
+
         Beampr[1] = fphTagg[i] / 1000.;
         if (i == 0) {
             Ndecay = 2;
@@ -1857,8 +1853,6 @@ std::vector<FitterSergey::result_t> FitterSergey::Process(const std::vector<TTag
                 Ldecay[ide] = 2;
             }
         }
-        if (Beampr[1] < 0.705)
-            continue;
 
         auto delP = fdphTagg[i] / 1000.;
         Sbeam[0] = delP / Beampr[1];
@@ -1991,11 +1985,7 @@ std::vector<FitterSergey::result_t> FitterSergey::Process(const std::vector<TTag
                     auto chisq = fKfit.Chisq();
                     auto Ndf = fKfit.NDF();
                     prb = TMath::Prob(chisq, Ndf);
-                    if (prb > 0.01 && chisqb[ihyp] > chisq) {
-                        chisqb[ihyp] = chisq;
-                        Itagb[ihyp] = i;
-                        Iverb[ihyp] = iver;
-                    }
+
                     if (ihyp == 0 && prb > Pbs4g[i]) {
                         Pbs4g[i] = prb;
                         PrIdx4g[i] = ipr+1;
