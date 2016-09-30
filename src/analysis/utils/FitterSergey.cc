@@ -1880,8 +1880,6 @@ std::vector<FitterSergey::result_t> FitterSergey::Process(const std::vector<TTag
                 }
                 if (j >= fphNCB) {
                     thetpa = p4ph[j].Theta() * TMath::RadToDeg();
-                    if (thetpa < 5.5)
-                        goto NEWPR5;
                     Pacst[2] =
                             Pacst[4] * sin(p4ph[j].Theta()); // radius on TAPS X-Y plane
                     Pkind = -1;
@@ -1893,8 +1891,6 @@ std::vector<FitterSergey::result_t> FitterSergey::Process(const std::vector<TTag
             }
             p4tot = p4bm + p4tg - fp4g;
             MM = p4tot.M() / 1000.;
-            if (MM < mm_down || MM > mm_up)
-                continue;
 
             // proton
             fEcl = Pacst[5] = p4ph[ipr].E() / 1000.; // cluster energy
@@ -1903,20 +1899,13 @@ std::vector<FitterSergey::result_t> FitterSergey::Process(const std::vector<TTag
             Pacst[3] = p4pr[ipr].Phi();
             Pacst[4] = ClDepthProt[ipr];
             if (ipr < fphNCB) {
-                if (fEcl > 0.45 + 0.25)
-                    continue;
                 Pacst[2] = p4pr[ipr].Theta();
                 thetpa = Pacst[2] * TMath::RadToDeg();
-                if (thetpa > 90.)
-                    continue;
                 Pkind = 14;
             }
 
             if (ipr >= fphNCB) {
-                Pacst[2] =
-                        Pacst[4] * sin(p4pr[ipr].Theta()); // radius on TAPS X-Y plane
-                if (fEcl > 0.37 + 0.35)
-                    continue;
+                Pacst[2] = Pacst[4] * sin(p4pr[ipr].Theta()); // radius on TAPS X-Y plane
                 Pkind = -14;
             }
             Npart = fphN;
@@ -2006,8 +1995,6 @@ std::vector<FitterSergey::result_t> FitterSergey::Process(const std::vector<TTag
                     }
                 } // ihyp
             }   // iver
-NEWPR5:
-            continue;
         } // ipr
 
         results.emplace_back(move(r));
