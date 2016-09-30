@@ -1017,11 +1017,10 @@ public:
         Int_t i, j, k, ierr;
         Int_t Nunme, NY, NF, NFF, IV, I, J, IY, K, I2;
         Int_t Isecvt[NPMAX], lclsec, jdecfl, Lpart, Iunmea;
-        Int_t NZDIV, IZPOS;
         Int_t LLDEC, IDE, INDE, IEF;
 
         Float_t Y[NXMAX], F[NFMAX], WBEST[2], ZBEST[2];
-        Float_t ZV1, DZMV, VRT[3];
+        Float_t VRT[3];
         Float_t RLPED[3], DLPED[3], RTPGAM[3], RDNPED;
         Float_t FF, YSTP;
         const Int_t NVY = (NXMAX + NXMAX * NXMAX) / 2;
@@ -1084,10 +1083,6 @@ public:
         WBEST[0] = WBEST[1] = 0.;
         ZBEST[0] = ZBEST[1] = 0.;
 
-        ZV1 = fPlim[IV][0];
-        DZMV = 0.25;
-        NZDIV = 1;
-
 
         //   calculating initial values for free parameters of the fit
 
@@ -1101,64 +1096,59 @@ public:
 
         VRT[0] = Y[1];
         VRT[1] = Y[2];
+        VRT[2] = Y[IV];
 
-        for (IZPOS = 0; IZPOS < NZDIV; IZPOS++) {
-            if (NZDIV > 1)
-                Y[IV] = ZV1 + DZMV * (Float_t)IZPOS;
-            VRT[2] = Y[IV];
+        EPRIMV = 0.;
+        for (i = 0; i < 3; i++)
+            PRIMV[i] = PDEC[i] = 0.;
+        //   loop on clusters from a primary vertex
+        for (I = 1; I <= fLcst; I++) {
+            if ((Iunmea > 0 && Isecvt[Iunmea] == 0) || Isecvt[I] == 0) {
+                if (I == Iunmea)
+                    continue;
+                IY = I * 4;
+                RLPED[0] = Y[IY + 3];
+                RLPED[1] = Y[IY + 1];
+                RLPED[2] = Y[IY + 2];
+                Dvpxyz(fCalor[I], RLPED, VRT, DLPED);
 
-            EPRIMV = 0.;
-            for (i = 0; i < 3; i++)
-                PRIMV[i] = PDEC[i] = 0.;
-            //   loop on clusters from a primary vertex
-            for (I = 1; I <= fLcst; I++) {
-                if ((Iunmea > 0 && Isecvt[Iunmea] == 0) || Isecvt[I] == 0) {
-                    if (I == Iunmea)
-                        continue;
-                    IY = I * 4;
-                    RLPED[0] = Y[IY + 3];
-                    RLPED[1] = Y[IY + 1];
-                    RLPED[2] = Y[IY + 2];
-                    Dvpxyz(fCalor[I], RLPED, VRT, DLPED);
+                Pxyztpf(DLPED, RTPGAM);
 
-                    Pxyztpf(DLPED, RTPGAM);
+                RDNPED = Vmodf(DLPED, 3);
 
-                    RDNPED = Vmodf(DLPED, 3);
-
-                    EPAR = 1. / Y[IY] + fMass[I];
-                    PPAR = sqrt(EPAR * EPAR - fMass[I] * fMass[I]);
-                    EPRIMV += EPAR;
-                    for (J = 0; J < 3; J++) {
-                        PJPAR = PPAR * DLPED[J] / RDNPED;
-                        PRIMV[J] += PJPAR;
-                        if (Isecvt[I] != 0)
-                            PDEC[J] += PJPAR;
-                    }
+                EPAR = 1. / Y[IY] + fMass[I];
+                PPAR = sqrt(EPAR * EPAR - fMass[I] * fMass[I]);
+                EPRIMV += EPAR;
+                for (J = 0; J < 3; J++) {
+                    PJPAR = PPAR * DLPED[J] / RDNPED;
+                    PRIMV[J] += PJPAR;
+                    if (Isecvt[I] != 0)
+                        PDEC[J] += PJPAR;
                 }
             }
+        }
 
-            //  the energy constraint calculation
+        //  the energy constraint calculation
 
-            EMISS = 0.;
-            if (Iunmea > 0) {
-                Vsub(PBM, PRIMV, PMISS, 3);
-                PPMISS = Vmod(PMISS, 3);
-                if (Isecvt[Iunmea] == 0)
-                    EMISS = sqrt(PPMISS * PPMISS + fMMiss * fMMiss);
-                else
-                    EMISS = sqrt(PPMISS * PPMISS + fMass[jdecfl] * fMass[jdecfl]);
-            }
-            F[0] = EINIT - EPRIMV - EMISS;
+        EMISS = 0.;
+        if (Iunmea > 0) {
+            Vsub(PBM, PRIMV, PMISS, 3);
+            PPMISS = Vmod(PMISS, 3);
+            if (Isecvt[Iunmea] == 0)
+                EMISS = sqrt(PPMISS * PPMISS + fMMiss * fMMiss);
+            else
+                EMISS = sqrt(PPMISS * PPMISS + fMass[jdecfl] * fMass[jdecfl]);
+        }
+        F[0] = EINIT - EPRIMV - EMISS;
 
-            FF = fabsf(F[0]) + 0.0000001;
-            if (WBEST[0] < 1. / FF) {
-                WBEST[0] = 1. / FF;
-                ZBEST[0] = Y[IV];
-                if (Iunmea > 0 && fKind[Iunmea] < 0 && Isecvt[Iunmea] == 0)
-                    Y[Iunmea * 4] = 1. / (EMISS - fMMiss);
+        FF = fabsf(F[0]) + 0.0000001;
+        if (WBEST[0] < 1. / FF) {
+            WBEST[0] = 1. / FF;
+            ZBEST[0] = Y[IV];
+            if (Iunmea > 0 && fKind[Iunmea] < 0 && Isecvt[Iunmea] == 0)
+                Y[Iunmea * 4] = 1. / (EMISS - fMMiss);
 
-            }
-        } //    end of the primary vertex loop
+        }
 
         Y[IV] = ZBEST[0];
 
