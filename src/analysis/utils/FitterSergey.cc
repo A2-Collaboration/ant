@@ -1016,7 +1016,7 @@ public:
                  Int_t Ldecay[NDMAX], Int_t Idecay[NDMAX][10]) {
         Int_t i, j, k, ierr;
         Int_t Nunme, NY, NF, NFF, IV, I, J, IY, K, I2;
-        Int_t Isecvt[NPMAX], lclsec, jdecfl, Lpart, Iunmea;
+        Int_t lclsec, Lpart, Iunmea;
         Int_t LLDEC, IDE, INDE, IEF;
 
         Float_t Y[NXMAX], F[NFMAX], WBEST[2], ZBEST[2];
@@ -1058,8 +1058,6 @@ public:
         NF += Ndecay;
 
         //   filling the hypothesis on the decay chain
-        for (i = 0; i < NPMAX; i++)
-            Isecvt[i] = 0;
         if (Ndecay > 0) {
             for (j = 0; j < Ndecay; j++) {
                 fMass[Lpart + j] = Amsdec[j];
@@ -1068,7 +1066,6 @@ public:
         }
 
         lclsec = 0;
-        jdecfl = 0;
 
         //  beam information and cluster information
         for (i = 0; i <= fLcst; i++) {
@@ -1082,7 +1079,6 @@ public:
         // search for the initial vertex Z coordinate when it is a free parameter
         WBEST[0] = WBEST[1] = 0.;
         ZBEST[0] = ZBEST[1] = 0.;
-
 
         //   calculating initial values for free parameters of the fit
 
@@ -1103,29 +1099,27 @@ public:
             PRIMV[i] = PDEC[i] = 0.;
         //   loop on clusters from a primary vertex
         for (I = 1; I <= fLcst; I++) {
-            if ((Iunmea > 0 && Isecvt[Iunmea] == 0) || Isecvt[I] == 0) {
-                if (I == Iunmea)
-                    continue;
-                IY = I * 4;
-                RLPED[0] = Y[IY + 3];
-                RLPED[1] = Y[IY + 1];
-                RLPED[2] = Y[IY + 2];
-                Dvpxyz(fCalor[I], RLPED, VRT, DLPED);
+            if (I == Iunmea)
+                continue;
+            IY = I * 4;
+            RLPED[0] = Y[IY + 3];
+            RLPED[1] = Y[IY + 1];
+            RLPED[2] = Y[IY + 2];
+            Dvpxyz(fCalor[I], RLPED, VRT, DLPED);
 
-                Pxyztpf(DLPED, RTPGAM);
+            Pxyztpf(DLPED, RTPGAM);
 
-                RDNPED = Vmodf(DLPED, 3);
+            RDNPED = Vmodf(DLPED, 3);
 
-                EPAR = 1. / Y[IY] + fMass[I];
-                PPAR = sqrt(EPAR * EPAR - fMass[I] * fMass[I]);
-                EPRIMV += EPAR;
-                for (J = 0; J < 3; J++) {
-                    PJPAR = PPAR * DLPED[J] / RDNPED;
-                    PRIMV[J] += PJPAR;
-                    if (Isecvt[I] != 0)
-                        PDEC[J] += PJPAR;
-                }
+            EPAR = 1. / Y[IY] + fMass[I];
+            PPAR = sqrt(EPAR * EPAR - fMass[I] * fMass[I]);
+            EPRIMV += EPAR;
+            for (J = 0; J < 3; J++) {
+                PJPAR = PPAR * DLPED[J] / RDNPED;
+                PRIMV[J] += PJPAR;
+
             }
+
         }
 
         //  the energy constraint calculation
@@ -1134,10 +1128,7 @@ public:
         if (Iunmea > 0) {
             Vsub(PBM, PRIMV, PMISS, 3);
             PPMISS = Vmod(PMISS, 3);
-            if (Isecvt[Iunmea] == 0)
-                EMISS = sqrt(PPMISS * PPMISS + fMMiss * fMMiss);
-            else
-                EMISS = sqrt(PPMISS * PPMISS + fMass[jdecfl] * fMass[jdecfl]);
+            EMISS = sqrt(PPMISS * PPMISS + fMMiss * fMMiss);
         }
         F[0] = EINIT - EPRIMV - EMISS;
 
@@ -1145,7 +1136,7 @@ public:
         if (WBEST[0] < 1. / FF) {
             WBEST[0] = 1. / FF;
             ZBEST[0] = Y[IV];
-            if (Iunmea > 0 && fKind[Iunmea] < 0 && Isecvt[Iunmea] == 0)
+            if (Iunmea > 0 && fKind[Iunmea] < 0)
                 Y[Iunmea * 4] = 1. / (EMISS - fMMiss);
 
         }
@@ -1202,34 +1193,32 @@ L11:
         //   loop on clusters from a primary vertex
         if (lclsec < fLcst) {
             for (I = 1; I <= fLcst; I++) {
-                if (Isecvt[I] == 0) {
-                    IY = I * 4;
-                    RLPED[0] = Y[IY + 3];
-                    RLPED[1] = Y[IY + 1];
-                    RLPED[2] = Y[IY + 2];
-                    Dvpxyz(fCalor[I], RLPED, VRT, DLPED);
+                IY = I * 4;
+                RLPED[0] = Y[IY + 3];
+                RLPED[1] = Y[IY + 1];
+                RLPED[2] = Y[IY + 2];
+                Dvpxyz(fCalor[I], RLPED, VRT, DLPED);
 
-                    Pxyztpf(DLPED, RTPGAM);
+                Pxyztpf(DLPED, RTPGAM);
 
-                    fProut[I][1] = RTPGAM[1];
-                    fProut[I][2] = RTPGAM[2];
+                fProut[I][1] = RTPGAM[1];
+                fProut[I][2] = RTPGAM[2];
 
-                    RDNPED = Vmodf(DLPED, 3);
+                RDNPED = Vmodf(DLPED, 3);
 
-                    EPAR = 1. / Y[IY] + fMass[I];
-                    PPAR = sqrt(EPAR * EPAR - fMass[I] * fMass[I]);
-                    EPRIMV += EPAR;
-                    for (J = 0; J < 3; J++) {
-                        PJPAR = PPAR * DLPED[J] / RDNPED;
-                        PRIMV[J] += PJPAR;
-                    }
+                EPAR = 1. / Y[IY] + fMass[I];
+                PPAR = sqrt(EPAR * EPAR - fMass[I] * fMass[I]);
+                EPRIMV += EPAR;
+                for (J = 0; J < 3; J++) {
+                    PJPAR = PPAR * DLPED[J] / RDNPED;
+                    PRIMV[J] += PJPAR;
                 }
             }
         }
 
         Vsub(PBM, PRIMV, PMISS, 3);
 
-        if (Isecvt[Iunmea] == 0 && Iunmea == fNpmeas) {
+        if (Iunmea == fNpmeas) {
             //  the energy constraint calculation in case of fully unmeasured particle
             Pxyztp(PMISS, PDTP);
             EMISS = sqrt(PDTP[0] * PDTP[0] + fMMiss * fMMiss);
@@ -1252,39 +1241,38 @@ L11:
         //  (1 more constraint for every decaying particle)
         if (Ndecay > 0) {
             for (I = Lpart; I < Nptall; I++) {
-                if (I != jdecfl) {
-                    K = I - Lpart;
-                    LLDEC = Ldecay[K];
-                    ERES = 0.;
-                    for (J = 0; J < 3; J++)
-                        PRES[J] = 0.;
-                    for (IDE = 0; IDE < LLDEC; IDE++) {
-                        INDE = Idecay[K][IDE];
-                        I2 = INDE * 4;
-                        if (INDE < fNpmeas) {
-                            EDEC = 1. / Y[I2] + fMass[INDE];
-                        } else {
-                            EDEC = fProut[INDE][0] + fMass[INDE];
-                        }
-                        PDTP[0] = sqrt(EDEC * EDEC - fMass[INDE] * fMass[INDE]);
-                        PDTP[1] = fProut[INDE][1];
-                        PDTP[2] = fProut[INDE][2];
-                        Ptpxyz(PDTP, PDEC);
-                        for (J = 0; J < 3; J++)
-                            PRES[J] += PDEC[J];
-                        ERES += EDEC;
+                K = I - Lpart;
+                LLDEC = Ldecay[K];
+                ERES = 0.;
+                for (J = 0; J < 3; J++)
+                    PRES[J] = 0.;
+                for (IDE = 0; IDE < LLDEC; IDE++) {
+                    INDE = Idecay[K][IDE];
+                    I2 = INDE * 4;
+                    if (INDE < fNpmeas) {
+                        EDEC = 1. / Y[I2] + fMass[INDE];
+                    } else {
+                        EDEC = fProut[INDE][0] + fMass[INDE];
                     }
-
-                    Pxyztp(PRES, PDTP);
-                    fProut[I][0] = sqrt(PDTP[0] * PDTP[0] + fMass[I] * fMass[I]) - fMass[I];
-                    fProut[I][1] = PDTP[1];
-                    fProut[I][2] = PDTP[2];
-                    MMISS2 = ERES * ERES - PDTP[0] * PDTP[0];
-
-                    F[NFF] = fMass[I] - sqrt(MMISS2);
-                    NFF++;
+                    PDTP[0] = sqrt(EDEC * EDEC - fMass[INDE] * fMass[INDE]);
+                    PDTP[1] = fProut[INDE][1];
+                    PDTP[2] = fProut[INDE][2];
+                    Ptpxyz(PDTP, PDEC);
+                    for (J = 0; J < 3; J++)
+                        PRES[J] += PDEC[J];
+                    ERES += EDEC;
                 }
+
+                Pxyztp(PRES, PDTP);
+                fProut[I][0] = sqrt(PDTP[0] * PDTP[0] + fMass[I] * fMass[I]) - fMass[I];
+                fProut[I][1] = PDTP[1];
+                fProut[I][2] = PDTP[2];
+                MMISS2 = ERES * ERES - PDTP[0] * PDTP[0];
+
+                F[NFF] = fMass[I] - sqrt(MMISS2);
+                NFF++;
             }
+
         }
 
         IEF = APLCON(Y, VY, F);
