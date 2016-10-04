@@ -1830,6 +1830,7 @@ std::vector<FitterSergey::result_t> FitterSergey::Process(const std::vector<TTag
             for (auto j = 0; j < fphN; j++) {
                 if (j == ipr)
                     continue;
+                fEcl = Pacst[5] = p4ph[j].E() / 1000.; // cluster energy
                 if (Npart == 1)
                     fp4g = p4ph[j];
                 else
