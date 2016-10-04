@@ -217,35 +217,34 @@ KinFitter::KinFitter(const std::string& name,
     if(numGammas==0)
         throw Exception("No gammas are not allowed");
 
-    if(fit_vertex)
-        Vertex = std::make_shared<Vertex_t>(*aplcon);
-
-    for(unsigned i=0; i<numGammas;++i) {
-        Photons.emplace_back(make_shared<FitParticle>("Photon"+to_string(i), *aplcon, Vertex));
-    }
-
-    Proton = std::make_shared<FitParticle>("Proton", *aplcon, Vertex);
-
-    vector<string> variable_names      = {Proton->Name};
-    vector<std::shared_ptr<FitParticle>> fit_particles{Proton};
-
-    for ( auto& photon: Photons)
-    {
-        variable_names.emplace_back(photon->Name);
-        fit_particles.emplace_back(photon);
-    }
-
     BeamE = std_ext::make_unique<BeamE_t>();
     aplcon->LinkVariable(BeamE->Name,
                          {std::addressof(BeamE->Value)},
                          {std::addressof(BeamE->Sigma)},
                          {std::addressof(BeamE->Pull)}
                          );
-    variable_names.emplace_back(BeamE->Name);
+    vector<string> variable_names;
 
-    if(fit_vertex) {
-        variable_names.emplace_back(Vertex->Name);
+    if(fit_vertex)
+        Vertex = std::make_shared<Vertex_t>(*aplcon);
+
+    vector<std::shared_ptr<FitParticle>> fit_particles;
+
+    for(unsigned i=0; i<numGammas;++i) {
+        auto photon = make_shared<FitParticle>("Photon"+to_string(i), *aplcon, Vertex);
+        Photons.emplace_back(photon);
+        variable_names.emplace_back(photon->Name);
+        fit_particles.emplace_back(photon);
     }
+
+    Proton = std::make_shared<FitParticle>("Proton", *aplcon, Vertex);
+    variable_names.emplace_back(Proton->Name);
+    fit_particles.emplace_back(Proton);
+
+    variable_names.emplace_back(BeamE->Name);
+    if(fit_vertex)
+        variable_names.emplace_back(Vertex->Name);
+
 
     auto EnergyMomentum = [fit_vertex, fit_particles] (const vector<vector<double>>& values)
     {
