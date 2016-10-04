@@ -42,7 +42,7 @@ EtapSergey::EtapSergey(const string& name, OptionsPtr opts) :
     params(// use FitterSergey as default
            make_shared<utils::UncertaintyModels::FitterSergey>(),
            true, // flag to enable z vertex
-           3.0 // Z_vertex_sigma, =0 means unmeasured
+           0.333*10.0 // Z_vertex_sigma, =0 means unmeasured
            ),
     kinfitter("kinfitter_sig",4,
                   params.Fit_uncertainty_model, params.Fit_Z_vertex
