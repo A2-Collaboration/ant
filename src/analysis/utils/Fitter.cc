@@ -131,8 +131,8 @@ void Fitter::FitParticle::Set(const TParticlePtr& p,
     if(!p->Candidate)
         throw Exception("Need particle with candidate for fitting");
 
-    const auto inverseEk = 1.0/p->Ek();
-    const auto sigma_inverseEk = sigmas.sigmaEk*std_ext::sqr(inverseEk);
+    const auto inverseEk = 1000.0/p->Ek();
+    const auto sigma_inverseEk = sigmas.sigmaEk*std_ext::sqr(inverseEk)/1000.0;
     Vars[0].SetValueSigma(inverseEk, sigma_inverseEk);
 
     Vars[2].SetValueSigma(p->Phi(), sigmas.sigmaPhi);
@@ -190,7 +190,7 @@ LorentzVec Fitter::FitParticle::GetLorentzVec(const std::vector<double>& values,
         throw Exception("Unknown/none detector type provided from uncertainty model");
     }
 
-    const mev_t& Ek = 1.0/values[0];
+    const mev_t& Ek = 1000.0/values[0];
     const mev_t& E = Ek + Particle->Type().Mass();
     const mev_t& p = sqrt( sqr(E) - sqr(Particle->Type().Mass()) );
 
@@ -256,7 +256,7 @@ KinFitter::KinFitter(const std::string& name,
         const auto& vertex = fit_vertex ? values[n+1] : vector<double>{0.0, 0.0, 0.0};
 
         // start with the incoming particle
-        auto diff = MakeBeamLorentzVec(1.0/BeamE);
+        auto diff = MakeBeamLorentzVec(1000.0/BeamE);
 
         for(size_t i=0;i<n;i++)
             diff -= fit_particles[i]->GetLorentzVec(values[i], vertex); // minus outgoing
@@ -280,8 +280,8 @@ KinFitter::~KinFitter()
 
 void KinFitter::SetEgammaBeam(const double ebeam)
 {
-    const auto invBeam = 1.0/ebeam;
-    const auto sigma_invBeam = uncertainty->GetBeamEnergySigma(ebeam)*std_ext::sqr(invBeam);
+    const auto invBeam = 1000.0/ebeam;
+    const auto sigma_invBeam = uncertainty->GetBeamEnergySigma(ebeam)*std_ext::sqr(invBeam)/1000.0;
     BeamE->SetValueSigma(invBeam, sigma_invBeam);
 }
 
@@ -334,7 +334,7 @@ double KinFitter::GetFittedBeamE() const
 TParticlePtr KinFitter::GetFittedBeamParticle() const
 {
     return std::make_shared<TParticle>(ParticleTypeDatabase::BeamProton,
-                                         MakeBeamLorentzVec(1.0/BeamE->Value));
+                                         MakeBeamLorentzVec(1000.0/BeamE->Value));
 }
 
 double KinFitter::GetFittedZVertex() const
