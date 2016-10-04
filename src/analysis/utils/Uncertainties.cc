@@ -1235,8 +1235,6 @@ Uncertainties_t UncertaintyModels::FitterSergey::GetSigmas(const TParticle& part
     }
     else if(u.Detector & Detector_t::Type_t::TAPS)
     {
-        const auto& TAPS_Rxy = particle.Candidate->FindCaloCluster()->Position.XY().R();
-
         if(particle.Type() == ParticleTypeDatabase::Photon) {
 
             auto dEovEclTAPS = [] (double Ecl) {
@@ -1276,6 +1274,13 @@ Uncertainties_t UncertaintyModels::FitterSergey::GetSigmas(const TParticle& part
             u.sigmaTAPS_Rxy = dTanThTAPS(Ek/GeVMeV);
             u.ShowerDepth = DepthShowTAPS(Ek/GeVMeV);
             u.sigmaTAPS_L = dDepthShowTAPS(Ek/GeVMeV);
+
+            auto& pos = particle.Candidate->FindCaloCluster()->Position;
+            const auto& TAPS_Lz = pos.z + u.ShowerDepth*std::cos(particle.Theta());
+            const vec3 TAPS_L{pos.x, pos.y, TAPS_Lz};
+            const auto& TAPS_Rxy = std::sin(particle.Theta())*TAPS_L.R();
+
+            u.sigmaPhi = u.sigmaTAPS_Rxy / TAPS_Rxy;
         }
         else if(particle.Type() == ParticleTypeDatabase::Proton) {
 
@@ -1298,16 +1303,22 @@ Uncertainties_t UncertaintyModels::FitterSergey::GetSigmas(const TParticle& part
                 return p[0] + Ecl * p[1] + Ecl * Ecl * p[2] + Ecl * Ecl * Ecl * p[3];
             };
 
+            u.ShowerDepth = DepthShowTAPS(Ek/GeVMeV);
+
+            auto& pos = particle.Candidate->FindCaloCluster()->Position;
+            const auto& TAPS_Lz = pos.z + u.ShowerDepth*std::cos(particle.Theta());
+            const vec3 TAPS_L{pos.x, pos.y, TAPS_Lz};
+            const auto& TAPS_Rxy = std::sin(particle.Theta())*TAPS_L.R();
+
             u.sigmaEk = 0; // proton is unmeasured
             u.sigmaTAPS_Rxy = dTanThTAPS(Ek/GeVMeV, TAPS_Rxy);
-            u.ShowerDepth = DepthShowTAPS(Ek/GeVMeV);
             u.sigmaTAPS_L = dDepthShowTAPS(Ek/GeVMeV);
+            u.sigmaPhi = u.sigmaTAPS_Rxy / TAPS_Rxy;
         }
         else {
             throw Exception("Unexpected Particle: " + particle.Type().Name());
         }
 
-        u.sigmaPhi = u.sigmaTAPS_Rxy / TAPS_Rxy;
     }
     else {
         throw Exception("Unexpected Detector: " + string(particle.Candidate->Detector));
