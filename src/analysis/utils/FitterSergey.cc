@@ -1778,7 +1778,7 @@ std::vector<FitterSergey::result_t> FitterSergey::Process(const std::vector<TTag
     unsigned PrIdx2pi0[fphNLadd];
     unsigned PrIdxpi0eta[fphNLadd];
 
-    int nhyp = 1;
+//    int nhyp = 1;
     int Ngam = fphN - 1;
 
     Int_t Pkind = 0;
@@ -1881,7 +1881,7 @@ std::vector<FitterSergey::result_t> FitterSergey::Process(const std::vector<TTag
 
 
             for (auto iver = 0; iver < 3; iver++) {
-                for (auto ihyp = 0; ihyp < nhyp; ihyp++) {
+                for (auto ihyp = 1; ihyp < 2; ihyp++) {
                     if (ihyp == 0) {
                         //  testing  g + p -> 4g p hypothesis
                         Ndecay = 0;
@@ -1953,6 +1953,9 @@ std::vector<FitterSergey::result_t> FitterSergey::Process(const std::vector<TTag
                     if (ihyp == 1 && prb > Pbs2pi0[i]) {
                         Pbs2pi0[i] = prb;
                         PrIdx2pi0[i] = ipr+1;
+
+                        r.AntiPi0FitProb = Pbs2pi0[i];
+                        r.AntiPi0FitProtonIdx = PrIdx2pi0[i];
                     }
                     if (ihyp > 1 && prb > Pbspi0eta[i]) {
                         Pbspi0eta[i] = prb;
@@ -1968,7 +1971,6 @@ std::vector<FitterSergey::result_t> FitterSergey::Process(const std::vector<TTag
 
     return results;
 
-    nhyp = 1;
     Ngam = fphN - 1;
 
     for (auto i = 0; i < fphNLadd; i++) {
