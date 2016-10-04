@@ -401,11 +401,13 @@ APLCON::Result_t KinFitter::DoFit() {
     // only set Proton Ek to missing energy if unmeasured
     auto& Var_invEk = Proton->Vars[0];
     if(Var_invEk.Sigma == 0) {
-        double missing_E = 1.0/BeamE->Value;
-        for(auto& photon : Photons) {
-            missing_E -= 1.0/photon->Vars[0].Value;
-        }
-        Var_invEk.SetValueSigma(1.0/missing_E, Var_invEk.Sigma);
+        LorentzVec missing = MakeBeamLorentzVec(1000.0/BeamE->Value);
+        for(const auto& photon : Photons)
+            missing -= *photon->Particle;
+        const double M = Proton->Particle->Type().Mass();
+        using std_ext::sqr;
+        const double missing_E = sqrt(sqr(missing.P()) + sqr(M)) - M;
+        Var_invEk.SetValueSigma(1000.0/missing_E, Var_invEk.Sigma);
     }
 
     return aplcon->DoFit();
