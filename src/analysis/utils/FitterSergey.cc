@@ -1724,7 +1724,7 @@ std::vector<FitterSergey::result_t> FitterSergey::Process(const std::vector<TTag
 
             p4ph[fphN] = TParticle(ParticleTypeDatabase::Photon, cand);
             {
-                auto cldepth = fKfit.DepthShowTAPS(cand->CaloEnergy *MeVtoGeV, 14);
+                auto cldepth = fKfit.DepthShowTAPS(cand->CaloEnergy *MeVtoGeV, 1);
                 TVector3 vcln;
                 vcln.SetXYZ(vcl.X(), vcl.Y(), zTAPS + cldepth * costh);
                 ClDepthGam[fphN] = vcln.Mag();
