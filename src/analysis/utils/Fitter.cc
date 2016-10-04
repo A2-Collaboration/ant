@@ -261,12 +261,12 @@ KinFitter::KinFitter(const std::string& name,
         for(size_t i=0;i<n;i++)
             diff -= fit_particles[i]->GetLorentzVec(values[i], vertex); // minus outgoing
 
-        return vector<double>(
-               { diff.p.x,
-                 diff.p.y,
-                 diff.p.z,
-                 diff.E }
-               );
+        return vector<double>({
+                        diff.E/1000.0,
+                        diff.p.x/1000.0,
+                        diff.p.y/1000.0,
+                        diff.p.z/1000.0,
+                    });
     };
 
     aplcon->AddConstraint("E-p", variable_names, EnergyMomentum);
