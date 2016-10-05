@@ -96,7 +96,7 @@ public:
 
 };
 
-
+static string data_name = "Data";
 
 template<typename Hist_t>
 struct MCTrue_Splitter : cuttree::StackedHists_t<Hist_t> {
@@ -114,7 +114,7 @@ struct MCTrue_Splitter : cuttree::StackedHists_t<Hist_t> {
         using histstyle::Mod_t;
 
         // TODO: derive this from channel map
-        this->GetHist(0, "Data", Mod_t::MakeDataPoints(kBlack));
+        this->GetHist(0, data_name, Mod_t::MakeDataPoints(kBlack));
         this->GetHist(1, "Sig",  Mod_t::MakeLine(kRed, 2));
         this->GetHist(2, "Ref",  Mod_t::MakeLine(kGreen, 2));
         // mctrue is never >=3 (and <9) in tree, use this to sum up all MC and all bkg MC
@@ -785,6 +785,8 @@ int main(int argc, char** argv) {
     auto cmd_binscale = cmd.add<TCLAP::ValueArg<double>>("B","bin-scale","Bin Scaleing", false, 1.0, "bins");
     auto cmd_verbose = cmd.add<TCLAP::ValueArg<int>>("v","verbose","Verbosity level (0..9)", false, 0,"int");
 
+    auto cmd_dataName = cmd.add<TCLAP::ValueArg<string>>("","DataName","Name of the data set",false,"Data","dataname");
+
     cmd.parse(argc, argv);
 
     if(cmd_verbose->isSet()) {
@@ -799,6 +801,10 @@ int main(int argc, char** argv) {
 
     if(cmd_binscale->isSet()) {
         binScale = cmd_binscale->getValue();
+    }
+
+    if(cmd_dataName->isSet()) {
+        data_name = cmd_dataName->getValue();
     }
 
 
