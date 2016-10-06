@@ -87,6 +87,19 @@ EtapSergey::EtapSergey(const string& name, OptionsPtr opts) :
     treeAnt.CreateBranches(HistFac.makeTTree("treeAnt"));
 
     h_MissedBkg = HistFac.makeTH1D("Missed Background", "", "#", BinSettings(10),"h_MissedBkg");
+
+    {
+        auto pi0s = treefitter_Pi0Pi0.GetTreeNodes(ParticleTypeDatabase::Pi0);
+        treefitter_Pi0Pi0.SetIterationFilter([pi0s] () {
+            auto lvsum1 = pi0s.front()->Get().LVSum;
+            auto lvsum2 = pi0s.back()->Get().LVSum;
+
+            const interval<double> pi0_cut{75,210};
+
+            return pi0_cut.Contains(lvsum1.M()) && pi0_cut.Contains(lvsum2.M());
+        });
+    }
+
 }
 
 void EtapSergey::fillTree(EtapSergey::Tree_t& t,
