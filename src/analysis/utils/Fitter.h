@@ -59,7 +59,7 @@ public:
         std::vector<double> GetXYZ() const;
 
         Vertex_t(APLCON& aplcon);
-        const std::string Name = "B_Vertex";
+        const std::string Name = "Vertex";
     };
 
     struct FitParticle
@@ -166,7 +166,7 @@ public:
 protected:
 
     struct BeamE_t : FitVariable {
-        const std::string Name = "A_Beam";
+        const std::string Name = "Beam";
     };
 
     // it's pretty important that those things are pointers,
