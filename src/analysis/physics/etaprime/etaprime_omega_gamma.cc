@@ -398,7 +398,7 @@ EtapOmegaG::Sig_t::Sig_t(const HistogramFactory& HistFac, fitparams_t params) :
             auto lvsum1 = pi0s.front()->Get().LVSum;
             auto lvsum2 = pi0s.back()->Get().LVSum;
 
-            const auto& pi0_cut = ParticleTypeDatabase::Pi0.GetWindow(50);
+            const auto& pi0_cut = ParticleTypeDatabase::Pi0.GetWindow(80);
 
             return pi0_cut.Contains(lvsum1.M()) && pi0_cut.Contains(lvsum2.M());
         });
@@ -412,8 +412,8 @@ EtapOmegaG::Sig_t::Sig_t(const HistogramFactory& HistFac, fitparams_t params) :
             const auto& pi0_lvsum = pi0->Get().LVSum;
             const auto& eta_lvsum = eta->Get().LVSum;
 
-            const auto& pi0_cut = ParticleTypeDatabase::Pi0.GetWindow(50);
-            const auto& eta_cut = ParticleTypeDatabase::Eta.GetWindow(100);
+            const auto& pi0_cut = ParticleTypeDatabase::Pi0.GetWindow(80);
+            const auto& eta_cut = ParticleTypeDatabase::Eta.GetWindow(120);
 
             return pi0_cut.Contains(pi0_lvsum.M()) && eta_cut.Contains(eta_lvsum.M());
         });
@@ -424,7 +424,7 @@ EtapOmegaG::Sig_t::Sig_t(const HistogramFactory& HistFac, fitparams_t params) :
 void EtapOmegaG::Sig_t::Process(params_t params)
 {
     if(!params.Filter(4, h_Cuts,
-                      70.0, ParticleTypeDatabase::Proton.GetWindow(350), {600, std_ext::inf}))
+                      70.0, ParticleTypeDatabase::Proton.GetWindow(350), {550, std_ext::inf}))
         return;
 
     t.KinFitProb = std_ext::NaN;
@@ -454,9 +454,9 @@ void EtapOmegaG::Sig_t::Process(params_t params)
 
     DoAntiPi0Eta(params);
 
-    if(t.AntiPi0FitProb > 0.1)
+    if(t.AntiPi0FitProb > 0.05)
         return;
-    if(t.AntiEtaFitProb > 0.1)
+    if(t.AntiEtaFitProb > 0.05)
         return;
     h_Cuts->Fill("Anti ok", 1.0);
 
@@ -907,12 +907,12 @@ void EtapOmegaG::ShowResult()
     Sig.OmegaPi0.t.Tree->AddFriend(Sig.t.Tree);
 
     canvas("Reference")
-            << TTree_drawable(Ref.t.Tree, "IM_2g")
+            << TTree_drawable(Ref.t.Tree, "IM_2g >> (200,650,1050)")
             << endc;
 
     canvas("Signal")
-            << TTree_drawable(Sig.OmegaPi0.t.Tree, "Bachelor_E","TreeFitProb>0")
-            << TTree_drawable(Sig.Pi0.t.Tree, "Bachelor_E[0]","TreeFitProb>0")
+            << TTree_drawable(Sig.OmegaPi0.t.Tree, "Bachelor_E >> (100,50,250)","TreeFitProb>0.01")
+            << TTree_drawable(Sig.Pi0.t.Tree, "Bachelor_E[0] >> (100,50,250)","TreeFitProb>0.01")
             << TTree_drawable(Sig.OmegaPi0.t.Tree, "MCTrueMatch")
             << TTree_drawable(Sig.Pi0.t.Tree, "MCTrueMatch")
             << endc;
