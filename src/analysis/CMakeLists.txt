@@ -47,6 +47,7 @@ set(ANALYSIS_PHYSICS
   physics/common/IMPlots.cc
   physics/common/ProtonTagger.cc
   physics/common/ExtractTimings.cc
+  physics/common/ExtractScalers.cc
   physics/misc/XMasCB.cc
   physics/misc/debugScalers.cc
   physics/misc/debugTaggEff.cc
