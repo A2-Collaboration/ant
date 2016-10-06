@@ -1856,6 +1856,8 @@ std::vector<FitterSergey::result_t> FitterSergey::Process(const std::vector<TTag
             }
             p4tot = p4bm + p4tg - fp4g;
             MM = p4tot.M() / 1000.;
+            if (MM < mm_down || MM > mm_up)
+              continue;
 
             // proton
             fEcl = Pacst[5] = p4ph[ipr].E() / 1000.; // cluster energy
