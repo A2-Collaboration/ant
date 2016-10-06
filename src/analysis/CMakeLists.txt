@@ -59,9 +59,7 @@ set(ANALYSIS_PHYSICS
   physics/misc/GoatComparison.cc
   physics/pi0/RarePion.cc
   physics/common/InterpolatedPulls.cc
-  physics/etaprime/etaprime_ept.cc
   physics/common/ReconstructCheck.cc
-  physics/etaprime/etaprime_sergey.cc
   physics/common/ExtractShowerDepth.cc
   physics/common/MCChannels.cc
   physics/common/IMCombFitPlots.cc

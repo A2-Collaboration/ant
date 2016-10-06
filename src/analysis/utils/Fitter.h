@@ -77,7 +77,6 @@ public:
         friend class KinFitter;
         friend class TreeFitter;
 
-        FitVariable& GetEk();
         void Set(const TParticlePtr& p, const UncertaintyModel& uncertainty);
 
         const std::string Name;
