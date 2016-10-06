@@ -31,7 +31,7 @@ ProcessTaggEff::ProcessTaggEff(const std::string& name, OptionsPtr opts) :
     slowcontrol::Variables::TaggerScalers->Request();
     slowcontrol::Variables::Clocks->Request();
     slowcontrol::Variables::Trigger->Request();
-    slowcontrol::Variables::PhotonBeam->Request();
+    slowcontrol::Variables::Beam->Request();
 
     scalerReads.CreateBranches(HistFac.makeTTree(treeName()));
 
@@ -94,7 +94,7 @@ void ProcessTaggEff::processBlock()
 
     scalerReads.Clock = slowcontrol::Variables::Clocks->GetExpClock();
     scalerReads.ExpLivetime = slowcontrol::Variables::Trigger->GetExpLivetime();
-    scalerReads.PbRate = slowcontrol::Variables::PhotonBeam->GetPbGlass();
+    scalerReads.PbRate = slowcontrol::Variables::Beam->GetPbGlass();
     scalerReads.ExpTriggerRate = slowcontrol::Variables::Trigger->GetExpTrigger();
 }
 

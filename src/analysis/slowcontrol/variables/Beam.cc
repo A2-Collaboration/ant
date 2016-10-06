@@ -1,4 +1,4 @@
-#include "PhotonBeam.h"
+#include "Beam.h"
 
 #include "SlowControlProcessors.h"
 
@@ -11,17 +11,17 @@ using namespace ant::analysis::slowcontrol;
 using namespace ant::analysis::slowcontrol::variable;
 
 
-list<Variable::ProcessorPtr> PhotonBeam::GetNeededProcessors() const
+list<Variable::ProcessorPtr> Beam::GetNeededProcessors() const
 {
     return {Processors::Beampolmon,Processors::Beam};
 }
 
-double PhotonBeam::GetPbGlass() const
+double Beam::GetPbGlass() const
 {
     return Processors::Beampolmon->PbGlass.Get() * 1.0e6 / Processors::Beampolmon->Reference_1MHz.Get();
 }
 
-double PhotonBeam::GetIonChamber() const
+double Beam::GetIonChamber() const
 {
     return Processors::Beam->IonChamber.Get() * 1.0e6 / Processors::Beampolmon->Reference_1MHz.Get();
 }

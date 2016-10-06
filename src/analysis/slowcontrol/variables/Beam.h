@@ -11,7 +11,7 @@ namespace analysis {
 namespace slowcontrol {
 namespace variable {
 
-struct PhotonBeam : Variable {
+struct Beam : Variable {
 
     virtual std::list<ProcessorPtr> GetNeededProcessors() const override;
 

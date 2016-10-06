@@ -20,7 +20,7 @@ debugScaler::debugScaler(const std::string& name, OptionsPtr opts) :
     slowcontrol::Variables::TaggerScalers->Request();
     slowcontrol::Variables::Clocks->Request();
     slowcontrol::Variables::Trigger->Request();
-    slowcontrol::Variables::PhotonBeam->Request();
+    slowcontrol::Variables::Beam->Request();
 
 
     scalerReads.CreateBranches(HistFac.makeTTree("scalerReads"));
@@ -89,7 +89,7 @@ void debugScaler::processBlock(const TEvent& ev)
     scalerReads.Exp1MHz = slowcontrol::Variables::Clocks->GetExpClock();
     scalerReads.BeamPolMon1MHz = slowcontrol::Variables::Clocks->GetBeampolmonClock();
     scalerReads.ExpLivetime = slowcontrol::Variables::Trigger->GetExpLivetime();
-    scalerReads.PbRate = slowcontrol::Variables::PhotonBeam->GetPbGlass();
+    scalerReads.PbRate = slowcontrol::Variables::Beam->GetPbGlass();
     scalerReads.LastID = ev.Reconstructed().ID;
     scalerReads.ExpTriggerRate = slowcontrol::Variables::Trigger->GetExpTrigger();
     scalerReads.L1TriggerRate = slowcontrol::Variables::Trigger->GetL1Trigger();

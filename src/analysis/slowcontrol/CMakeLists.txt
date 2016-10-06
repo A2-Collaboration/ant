@@ -21,7 +21,7 @@ set(SLOWCONTROL_VARIABLES
   variables/Variable.h
   variables/TaggerScalers.cc
   variables/Clocks.cc
-  variables/PhotonBeam.cc
+  variables/Beam.cc
   variables/Pairspec.cc
   variables/Trigger.cc
 )
