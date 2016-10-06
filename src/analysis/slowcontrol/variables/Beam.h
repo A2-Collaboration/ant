@@ -17,6 +17,7 @@ struct Beam : Variable {
 
     double GetPbGlass() const;
     double GetIonChamber() const;
+    double GetFaradyCup() const;
 };
 
 }}}} // namespace ant::analysis::slowcontrol::processor

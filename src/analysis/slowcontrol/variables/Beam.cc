@@ -25,3 +25,8 @@ double Beam::GetIonChamber() const
 {
     return Processors::Beam->IonChamber.Get() * 1.0e6 / Processors::Beampolmon->Reference_1MHz.Get();
 }
+
+double Beam::GetFaradyCup() const
+{
+    return Processors::Beampolmon->FaradayCup.Get();
+}
