@@ -491,7 +491,7 @@ TreeFitter::TreeFitter(const string& name,
             node_t& node = tnode->Get();
             const double IM_calc = node.LVSum.M();
             const double IM_expected = tnode->Get().TypeTree->Get().Mass();
-            return (IM_calc - IM_expected)/IM_Sigma;
+            return (IM_expected - IM_calc)/IM_Sigma/1000.0;
         });
     });
 
@@ -629,7 +629,7 @@ bool TreeFitter::NextFit(APLCON::Result_t& fit_result)
 
     // restore previous values
     SetProton(Proton->Particle);
-    SetEgammaBeam(BeamE->Value_before);
+    SetEgammaBeam(1000.0/BeamE->Value_before);
 
     fit_result = KinFitter::DoFit();
 
