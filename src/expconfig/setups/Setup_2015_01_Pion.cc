@@ -2,6 +2,7 @@
 
 #include "detectors/CB.h"
 #include "detectors/PID.h"
+#include "detectors/Tagger.h"
 #include "detectors/TAPS.h"
 #include "detectors/TAPSVeto.h"
 
@@ -30,6 +31,9 @@ public:
         auto pid = make_shared<detector::PID_2014>();
         AddDetector(pid);
 
+        auto tagger = make_shared<detector::Tagger_2015>();
+        AddDetector(tagger);
+
         const bool cherenkovInstalled = false;
         auto taps = make_shared<detector::TAPS_2013>(cherenkovInstalled, false);
         AddDetector(taps);
@@ -44,9 +48,9 @@ public:
         return true;
     }
 
-    virtual double GetElectronBeamEnergy() const override {
-        return 450.0;
-    }
+//    virtual double GetElectronBeamEnergy() const override {
+//        return 450.0;
+//    }
 };
 
 
