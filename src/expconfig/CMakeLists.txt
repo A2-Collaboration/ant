@@ -30,6 +30,7 @@ set(SRCS_DETECTORS
   detectors/TAPSVeto.cc
   detectors/detail/EPT_2014_elements.h
   detectors/detail/Tagger_2007_1508_elements.h
+  detectors/detail/Tagger_2015_450_elements.h
   detectors/detail/CB_elements.h
   detectors/detail/TAPS_2007_BaF2_elements.h
   detectors/detail/TAPS_2013_BaF2_elements.h
