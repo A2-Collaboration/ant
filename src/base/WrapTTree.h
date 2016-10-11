@@ -71,15 +71,18 @@ struct WrapTTree {
         template<typename... Args>
         Branch_t(WrapTTree* wraptree, const std::string& name, Args&&... args) :
             Name(name),
+            // can't use unique_ptr because of std::addressof below
             Value(new T(std::forward<Args>(args)...))
-        { wraptree->branches.emplace_back(ROOT_branch_t::Make(Name, std::addressof(Value))); }
+        {
+            wraptree->branches.emplace_back(ROOT_branch_t::Make(Name, std::addressof(Value)));
+        }
         ~Branch_t() { delete Value; }
         Branch_t(const Branch_t&) = delete;
-        Branch_t(Branch_t&&) = delete;
         Branch_t& operator= (const Branch_t& other) {
-            *Value = *(other.value);
+            *Value = *(other.Value);
+            return *this;
         }
-
+        Branch_t(Branch_t&&) = delete;
         Branch_t& operator= (Branch_t&&) = delete;
 
         const std::string Name;

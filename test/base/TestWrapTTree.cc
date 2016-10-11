@@ -68,5 +68,18 @@ void dotest_copy() {
     t1.B().at(2) = 3;
     t1.C = TLorentzVector(1,2,3,4);
 
+    // test with same type
+    {
+        MyTree t2;
+        t2 = t1;
+        REQUIRE(t2.A == 5);
+        REQUIRE(t2.C().E() == Approx(4));
+    }
 
+//    struct MyTree2 : MyTree {
+//        ADD_BRANCH_T(double, D)
+//    };
+
+//    MyTree2 t3;
+//    t3 = t2;
 }
