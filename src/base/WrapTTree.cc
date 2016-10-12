@@ -3,6 +3,8 @@
 #include "base/std_ext/vector.h"
 #include "base/Logger.h"
 
+#include "TBufferFile.h"
+
 using namespace std;
 using namespace ant;
 
@@ -70,5 +72,36 @@ bool WrapTTree::Matches(TTree* tree, bool exact, bool nowarn) const {
     }
 
     // all branch names found, so we match
+    return true;
+}
+
+bool WrapTTree::CopyFrom(const WrapTTree& src) {
+    // src has more branches than us, this can't work
+    if(src.branches.size()>branches.size())
+        return false;
+
+    // copy branches by name
+    for(const ROOT_branch_t& src_b : src.branches) {
+        auto it_b = std::find(branches.begin(), branches.end(), src_b);
+        // src branch not found in our list of branches
+        if(it_b == branches.end())
+            return false;
+        if(it_b->ROOTType != src_b.ROOTType)
+            return false;
+        // for complex types, we rely on the ROOT machinery to copy them
+        if(src_b.ROOTType == kOther_t) {
+            if(it_b->ROOTClass != src_b.ROOTClass)
+                return false;
+            TBufferFile R__b(TBufferFile::EMode::kWrite);
+            R__b.WriteClassBuffer(src_b.ROOTClass, *src_b.ValuePtr);
+            R__b.SetBufferOffset(); // rewind buffer to read from it
+            R__b.ReadClassBuffer(it_b->ROOTClass,*(it_b->ValuePtr),0);
+        }
+        else {
+            auto datatype = TDataType::GetDataType(src_b.ROOTType);
+            std::memcpy(*(it_b->ValuePtr), *src_b.ValuePtr, datatype->Size());
+        }
+    }
+
     return true;
 }

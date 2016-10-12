@@ -24,9 +24,12 @@ TEST_CASE("WrapTTree: Copy", "[base]") {
 }
 
 struct MyTree : WrapTTree {
-    ADD_BRANCH_T(unsigned,       A)    // simple type
-    ADD_BRANCH_T(vector<double>, B, 3) // use ctor of std::vector
-    ADD_BRANCH_T(TLorentzVector, C)    // complex ROOT type
+    ADD_BRANCH_T(bool,           Flag1)       // simple type
+    ADD_BRANCH_T(unsigned,       N1)          // simple type
+    ADD_BRANCH_T(short,          N2)          // simple type
+    ADD_BRANCH_T(bool,           Flag2, true) // simple type
+    ADD_BRANCH_T(vector<double>, Array, 3)    // use ctor of std::vector
+    ADD_BRANCH_T(TLorentzVector, LV)          // complex ROOT type
 };
 
 void dotest() {
@@ -42,9 +45,11 @@ void dotest() {
         t.CreateBranches(outputfile.CreateInside<TTree>("test","test"));
         REQUIRE(t.Tree != nullptr);
 
-        t.A = 3;
-        REQUIRE(t.B().size() == 3);
-        t.C = TLorentzVector(1,2,3,4);
+        REQUIRE(t.Flag2);
+        t.N1 = 3;
+        t.N2 = 5;
+        REQUIRE(t.Array().size() == 3);
+        t.LV = TLorentzVector(1,2,3,4);
         t.Tree->Fill();
         REQUIRE(t.Tree->GetEntries()==1);
     }
@@ -55,8 +60,10 @@ void dotest() {
         t.LinkBranches(t.Tree);
         REQUIRE(t.Tree->GetEntries()==1);
         t.Tree->GetEntry(0);
-        REQUIRE(t.B().size() == 3);
-        REQUIRE(t.C().E() == Approx(4));
+        REQUIRE(t.N1 == 3);
+        REQUIRE(t.N2 == 5);
+        REQUIRE(t.Array().size() == 3);
+        REQUIRE(t.LV().E() == Approx(4));
     }
 
 }
@@ -64,22 +71,34 @@ void dotest() {
 void dotest_copy() {
 
     MyTree t1;
-    t1.A = 5;
-    t1.B().at(2) = 3;
-    t1.C = TLorentzVector(1,2,3,4);
+    t1.N1 = 5;
+    t1.N2 = 7;
+    t1.Array().at(2) = 3;
+    t1.LV = TLorentzVector(1,2,3,4);
 
     // test with same type
     {
         MyTree t2;
         t2 = t1;
-        REQUIRE(t2.A == 5);
-        REQUIRE(t2.C().E() == Approx(4));
+        REQUIRE(t2.N1 == 5);
+        REQUIRE(t2.N2 == 7);
+        REQUIRE(t2.Array().at(2) == 3);
+        REQUIRE(t2.LV().E() == Approx(4));
     }
 
-//    struct MyTree2 : MyTree {
-//        ADD_BRANCH_T(double, D)
-//    };
+    // test with derived type
+    {
+        REQUIRE_FALSE(t1.Flag1);
+        t1.Flag1 = true;
+        struct MyTree2 : MyTree {
+            ADD_BRANCH_T(double, SomeValue)
+        };
 
-//    MyTree2 t3;
-//    t3 = t2;
+        MyTree2 t2;
+        REQUIRE(t2.CopyFrom(t1));
+
+        REQUIRE(t2.Flag1);
+        REQUIRE(t2.Array().at(2) == 3);
+        REQUIRE(t2.LV().E() == Approx(4));
+    }
 }

@@ -60,6 +60,13 @@ struct WrapTTree {
     bool Matches(TTree* tree, bool exact = true, bool nowarn = false) const;
 
     /**
+     * @brief CopyFrom copies contents in branches by name
+     * @param src the source of the contents to be copied
+     * @return true if successful, false on mismatch
+     */
+    bool CopyFrom(const WrapTTree& src);
+
+    /**
      * @brief operator bool returns true if Tree is not null
      */
     explicit operator bool() const {
