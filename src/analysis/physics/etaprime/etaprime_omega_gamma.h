@@ -10,6 +10,8 @@
 #include "base/ParticleTypeTree.h"
 #include "base/WrapTTree.h"
 
+#include "TLorentzVector.h"
+
 #include <cassert>
 
 class TH1D;
@@ -33,7 +35,7 @@ struct EtapOmegaG : Physics {
     TH1D* h_LostPhotons_ref;
     TH1D* h_MissedBkg;
 
-    struct TreeCommon : WrapTTree {
+    struct TreeCommon : virtual WrapTTree {
         ADD_BRANCH_T(unsigned, MCTrue)
         ADD_BRANCH_T(double,   TrueZVertex)
         ADD_BRANCH_T(double,   CBSumE)
@@ -60,6 +62,7 @@ struct EtapOmegaG : Physics {
         {}
     };
 
+    const bool FlagWolfgang;
     const fitparams_t fitparams;
 
     std::unique_ptr<utils::MCSmear> mc_smear;
@@ -96,7 +99,7 @@ struct EtapOmegaG : Physics {
         bool IsSignalTree = false;
     };
 
-    struct ProtonPhotonTree_t : WrapTTree {
+    struct ProtonPhotonTree_t : virtual WrapTTree {
         ADD_BRANCH_T(double,   DiscardedEk)
 
         ADD_BRANCH_T(double,   PhotonsEk)
@@ -128,9 +131,24 @@ struct EtapOmegaG : Physics {
         // fitting the whole decay tree would overconstrain the
         // photons
 
+        struct SharedTree_t : virtual WrapTTree {
+            ADD_BRANCH_T(double, KinFitProb)
+            ADD_BRANCH_T(int,    KinFitIterations)
+            ADD_BRANCH_T(double, KinFitZVertex)
+
+            ADD_BRANCH_T(double, AntiPi0FitProb)
+            ADD_BRANCH_T(int,    AntiPi0FitIterations)
+            ADD_BRANCH_T(double, AntiPi0FitZVertex)
+
+            ADD_BRANCH_T(double, AntiEtaFitProb)
+            ADD_BRANCH_T(int,    AntiEtaFitIterations)
+            ADD_BRANCH_T(double, AntiEtaFitZVertex)
+
+        };
+
         struct Fit_t {
 
-            struct BaseTree_t : ProtonPhotonTree_t {
+            struct BaseTree_t : virtual ProtonPhotonTree_t {
 
                 ADD_BRANCH_T(std::vector<double>, ggg, 4)
                 ADD_BRANCH_T(std::vector<double>, gg_gg1, 3)
@@ -173,14 +191,26 @@ struct EtapOmegaG : Physics {
 
         struct Pi0_t : Fit_t {
 
-            Pi0_t(fitparams_t fitparams);
+            const bool FlagWolfgang;
 
-            struct Tree_t : Fit_t::BaseTree_t {
+            Pi0_t(fitparams_t fitparams, bool flagWolfgang);
+
+            struct Tree_t : virtual Fit_t::BaseTree_t {
                 ADD_BRANCH_T(std::vector<double>, IM_Pi0g, 2)
                 ADD_BRANCH_T(std::vector<double>, Bachelor_E, 2)
             };
 
             Tree_t t;
+
+            struct WolfgangsTree_t : TreeCommon, SharedTree_t, Pi0_t::Tree_t {
+                ADD_BRANCH_T(TLorentzVector, Proton)
+                ADD_BRANCH_T(TLorentzVector, Photon1)
+                ADD_BRANCH_T(TLorentzVector, Photon2)
+                ADD_BRANCH_T(TLorentzVector, Photon3)
+                ADD_BRANCH_T(TLorentzVector, Photon4)
+            };
+
+            WolfgangsTree_t t_w;
 
             void Process(const params_t& params);
         };
@@ -201,22 +231,9 @@ struct EtapOmegaG : Physics {
 
         };
 
-        struct SharedTree_t : WrapTTree {
-            ADD_BRANCH_T(double, KinFitProb)
-            ADD_BRANCH_T(int,    KinFitIterations)
-            ADD_BRANCH_T(double, KinFitZVertex)
+        const bool FlagWolfgang;
 
-            ADD_BRANCH_T(double, AntiPi0FitProb)
-            ADD_BRANCH_T(int,    AntiPi0FitIterations)
-            ADD_BRANCH_T(double, AntiPi0FitZVertex)
-
-            ADD_BRANCH_T(double, AntiEtaFitProb)
-            ADD_BRANCH_T(int,    AntiEtaFitIterations)
-            ADD_BRANCH_T(double, AntiEtaFitZVertex)
-
-        };
-
-        Sig_t(const HistogramFactory& HistFac, fitparams_t fitparams);
+        Sig_t(const HistogramFactory& HistFac, fitparams_t fitparams, bool flagWolfgang);
 
         TH1D* h_Cuts;
 
@@ -245,7 +262,7 @@ struct EtapOmegaG : Physics {
             ADD_BRANCH_T(double,   IM_2g)
         };
 
-        Ref_t(const HistogramFactory& HistFac, fitparams_t fitparams);
+        Ref_t(const HistogramFactory& HistFac, fitparams_t fitparams, bool flagWolfgang);
 
         TH1D* h_Cuts;
 

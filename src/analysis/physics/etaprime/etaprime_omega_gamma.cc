@@ -42,10 +42,11 @@ APLCON::Fit_Settings_t EtapOmegaG::MakeFitSettings(unsigned max_iterations)
 
 EtapOmegaG::EtapOmegaG(const string& name, OptionsPtr opts) :
     Physics(name, opts),
+    FlagWolfgang(opts->Get<bool>("Wolfgang", false)),
     fitparams(// use FitterSergey as default
               make_shared<utils::UncertaintyModels::FitterSergey>(),
               true, // flag to enable z vertex
-              3.0 // Z_vertex_sigma, =0 means unmeasured
+              3.0  // Z_vertex_sigma, =0 means unmeasured
               ),
     mc_smear(opts->Get<bool>("MCSmear", false) ?
                  std_ext::make_unique<utils::MCSmear>(
@@ -57,8 +58,8 @@ EtapOmegaG::EtapOmegaG(const string& name, OptionsPtr opts) :
                      )
                : nullptr // no MCSmear
                  ),
-    Sig(HistogramFactory("Sig",HistFac), fitparams),
-    Ref(HistogramFactory("Ref",HistFac), fitparams)
+    Sig(HistogramFactory("Sig",HistFac), fitparams, FlagWolfgang),
+    Ref(HistogramFactory("Ref",HistFac), fitparams, FlagWolfgang)
 {
     if(mc_smear)
         LOG(INFO) << "Additional MC Smearing enabled";
@@ -76,11 +77,11 @@ EtapOmegaG::EtapOmegaG(const string& name, OptionsPtr opts) :
     h_LostPhotons_sig = HistFac.makeTH1D("LostPhotons Sig", "#theta", "#", BinSettings(200,0,180),"h_LostPhotons_sig");
     h_LostPhotons_ref = HistFac.makeTH1D("LostPhotons Ref", "#theta", "#", BinSettings(200,0,180),"h_LostPhotons_ref");
 
-    t.CreateBranches(Sig.treeCommon);
-    t.CreateBranches(Ref.treeCommon);
+    if(!FlagWolfgang) {
+        t.CreateBranches(Sig.treeCommon);
+        t.CreateBranches(Ref.treeCommon);
+    }
     t.Tree = nullptr; // prevent accidental misuse...
-
-
 }
 
 void EtapOmegaG::ProcessEvent(const TEvent& event, manager_t&)
@@ -259,8 +260,13 @@ void EtapOmegaG::ProcessEvent(const TEvent& event, manager_t&)
 
         p.TaggerHit = taggerhit;
 
+        if(FlagWolfgang)
+            Sig.Pi0.t_w.CopyFrom(t);
+
         Sig.Process(p);
-        Ref.Process(p);
+
+        if(!FlagWolfgang)
+            Ref.Process(p);
     }
 
 }
@@ -362,10 +368,11 @@ void EtapOmegaG::ProtonPhotonTree_t::Fill(const EtapOmegaG::params_t& params, co
     FittedProtonE = fitted_proton_E;
 }
 
-EtapOmegaG::Sig_t::Sig_t(const HistogramFactory& HistFac, fitparams_t params) :
+EtapOmegaG::Sig_t::Sig_t(const HistogramFactory& HistFac, fitparams_t params, bool flagWolfgang) :
+    FlagWolfgang(flagWolfgang),
     h_Cuts(HistFac.makeTH1D("Cuts", "", "#", BinSettings(15),"h_Cuts")),
-    treeCommon(HistFac.makeTTree("Common")),
-    Pi0(params),
+    treeCommon(FlagWolfgang ? nullptr : HistFac.makeTTree("Common")),
+    Pi0(params, FlagWolfgang),
     OmegaPi0(params),
     kinfitter("kinfitter_sig",4,
               params.Fit_uncertainty_model, params.Fit_Z_vertex,
@@ -382,10 +389,14 @@ EtapOmegaG::Sig_t::Sig_t(const HistogramFactory& HistFac, fitparams_t params) :
                       MakeFitSettings(10)
                       )
 {
-    t.CreateBranches(HistFac.makeTTree("Shared"));
-    OmegaPi0.t.CreateBranches(HistFac.makeTTree("OmegaPi0"));
-    Pi0.t.CreateBranches(HistFac.makeTTree("Pi0"));
-
+    if(!flagWolfgang) {
+        t.CreateBranches(HistFac.makeTTree("Shared"));
+        OmegaPi0.t.CreateBranches(HistFac.makeTTree("OmegaPi0"));
+        Pi0.t.CreateBranches(HistFac.makeTTree("Pi0"));
+    }
+    else {
+        Pi0.t_w.CreateBranches(HistFac.makeTTree("t"));
+    }
     if(params.Fit_Z_vertex) {
         kinfitter.SetZVertexSigma(params.Z_vertex_sigma);
         treefitter_Pi0Pi0.SetZVertexSigma(params.Z_vertex_sigma);
@@ -475,10 +486,17 @@ void EtapOmegaG::Sig_t::Process(params_t params)
     h_Cuts->Fill("OmegaPi0 ok", isfinite(OmegaPi0.t.TreeFitProb));
 
     // fill them all to keep them in sync
-    treeCommon->Fill();
-    t.Tree->Fill();
-    Pi0.t.Tree->Fill();
-    OmegaPi0.t.Tree->Fill();
+    if(!FlagWolfgang) {
+        treeCommon->Fill();
+        t.Tree->Fill();
+        Pi0.t.Tree->Fill();
+        OmegaPi0.t.Tree->Fill();
+    }
+    else {
+        Pi0.t_w.CopyFrom(t);
+        Pi0.t_w.CopyFrom(Pi0.t);
+        Pi0.t_w.Tree->Fill();
+    }
 }
 
 void EtapOmegaG::Sig_t::DoAntiPi0Eta(const params_t& params)
@@ -621,8 +639,9 @@ void fill_PhotonCombs(EtapOmegaG::Sig_t::Fit_t::BaseTree_t& t, const TParticleLi
 }
 
 
-EtapOmegaG::Sig_t::Pi0_t::Pi0_t(fitparams_t params) :
-    Fit_t(Fit_t::Make(ParticleTypeDatabase::Pi0, params))
+EtapOmegaG::Sig_t::Pi0_t::Pi0_t(fitparams_t params, bool flagWolfgang) :
+    Fit_t(Fit_t::Make(ParticleTypeDatabase::Pi0, params)),
+    FlagWolfgang(flagWolfgang)
 {
 
 }
@@ -693,6 +712,14 @@ void EtapOmegaG::Sig_t::Pi0_t::Process(const params_t& params)
             fill_gNonPi0(t, leave1->Particle->Candidate, leave2->Particle->Candidate);
             fill_PhotonCombs(t, p.Photons);
             t.Fill(params, p, treefitter.GetFittedProton()->Ek());
+
+            if(FlagWolfgang) {
+                t_w.Proton = *treefitter.GetFittedProton();
+                t_w.Photon1 = *fitted_g1_Pi0->Get().Leave->AsFitted();
+                t_w.Photon2 = *fitted_g2_Pi0->Get().Leave->AsFitted();
+                t_w.Photon3 = g1;
+                t_w.Photon4 = g2;
+            }
         }
 
     }
@@ -844,15 +871,16 @@ void EtapOmegaG::Sig_t::OmegaPi0_t::Process(const params_t& params)
     }
 }
 
-EtapOmegaG::Ref_t::Ref_t(const HistogramFactory& HistFac, EtapOmegaG::fitparams_t params) :
+EtapOmegaG::Ref_t::Ref_t(const HistogramFactory& HistFac, EtapOmegaG::fitparams_t params, bool flagWolfgang) :
     h_Cuts(HistFac.makeTH1D("Cuts", "", "#", BinSettings(15),"h_Cuts")),
-    treeCommon(HistFac.makeTTree("Common")),
+    treeCommon(flagWolfgang ? nullptr :HistFac.makeTTree("Common")),
     kinfitter("kinfitter_ref",2,
               params.Fit_uncertainty_model, params.Fit_Z_vertex,
               EtapOmegaG::MakeFitSettings(15)
               )
 {
-    t.CreateBranches(HistFac.makeTTree("Ref"));
+    if(!flagWolfgang)
+        t.CreateBranches(HistFac.makeTTree("Ref"));
     if(params.Fit_Z_vertex)
         kinfitter.SetZVertexSigma(params.Z_vertex_sigma);
 }
@@ -899,6 +927,9 @@ void EtapOmegaG::Ref_t::Process(params_t params)
 
 void EtapOmegaG::ShowResult()
 {
+    if(FlagWolfgang)
+        return;
+
     canvas("Overview") << h_Cuts << h_MissedBkg
                        << Sig.h_Cuts << Ref.h_Cuts
                        << h_LostPhotons_sig << h_LostPhotons_ref
