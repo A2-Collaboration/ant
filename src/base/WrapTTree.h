@@ -4,6 +4,7 @@
 
 #include <vector>
 #include <string>
+#include <algorithm>
 
 namespace ant {
 
@@ -76,12 +77,19 @@ struct WrapTTree {
     template<typename T>
     struct Branch_t {
         template<typename... Args>
-        Branch_t(WrapTTree* wraptree, const std::string& name, Args&&... args) :
+        Branch_t(WrapTTree& wraptree, const std::string& name, Args&&... args) :
             Name(name),
             // can't use unique_ptr because of std::addressof below
             Value(new T(std::forward<Args>(args)...))
         {
-            wraptree->branches.emplace_back(ROOT_branch_t::Make(Name, std::addressof(Value)));
+            if(Name.empty())
+                throw std::runtime_error("Branch name empty");
+            auto b = ROOT_branch_t::Make(Name, std::addressof(Value));
+            auto& branches = wraptree.branches;
+            // check if branch with this name already exists
+            if(std::find(branches.begin(), branches.end(), b) != branches.end())
+                throw std::runtime_error("Branch with name '"+Name+"' already exists");
+            branches.emplace_back(b);
         }
         ~Branch_t() { delete Value; }
         Branch_t(const Branch_t&) = delete;
@@ -145,4 +153,4 @@ protected:
 }
 
 // macro to define branches consistently
-#define ADD_BRANCH_T(type, name, args...) Branch_t<type> name{this, #name, args};
+#define ADD_BRANCH_T(type, name, args...) Branch_t<type> name{*this, #name, args};

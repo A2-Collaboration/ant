@@ -13,6 +13,7 @@ using namespace ant;
 
 void dotest();
 void dotest_copy();
+void dotest_nasty();
 
 
 TEST_CASE("WrapTTree: Basics", "[base]") {
@@ -21,6 +22,10 @@ TEST_CASE("WrapTTree: Basics", "[base]") {
 
 TEST_CASE("WrapTTree: Copy", "[base]") {
     dotest_copy();
+}
+
+TEST_CASE("WrapTTree: Nasty", "[base]") {
+    dotest_nasty();
 }
 
 struct MyTree : WrapTTree {
@@ -101,4 +106,11 @@ void dotest_copy() {
         REQUIRE(t2.Array().at(2) == 3);
         REQUIRE(t2.LV().E() == Approx(4));
     }
+}
+
+void dotest_nasty() {
+    struct MyTree2 : MyTree {
+        ADD_BRANCH_T(double, Array)
+    };
+    REQUIRE_THROWS_AS(std_ext::make_unique<MyTree2>(),std::runtime_error);
 }
