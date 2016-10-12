@@ -69,9 +69,6 @@ protected:
     TTree*  treeEvents;
     TEvent* treeEventPtr;
 
-    // for progress
-    double last_PercentDone;
-
 public:
 
     PhysicsManager(volatile bool* interrupt_ = nullptr);

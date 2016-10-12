@@ -92,14 +92,18 @@ void PhysicsManager::ReadFrom(
     bool reached_maxevents = false;
 
 
-    last_PercentDone = 0;
     ProgressCounter progress(
-                [this] (std::chrono::duration<double> elapsed) {
-        if(!source)
-            return;
-        const double percent = source->PercentDone();
+                [this, &nEventsAnalyzed, maxevents]
+                (std::chrono::duration<double> elapsed)
+    {
+        const double percent = maxevents == numeric_limits<decltype(maxevents)>::max() ?
+                                   source->PercentDone() :
+                                   (double)nEventsAnalyzed/maxevents;
+
+        static double last_PercentDone = 0;
         const double speed = (percent - last_PercentDone)/elapsed.count();
-        LOG(INFO) << setw(2) << std::setprecision(4) << percent*100 << " % done, ETA: " << ProgressCounter::TimeToStr((1-percent)/speed);
+        LOG(INFO) << setw(2) << std::setprecision(4)
+                  << percent*100 << " % done, ETA: " << ProgressCounter::TimeToStr((1-percent)/speed);
         last_PercentDone = percent;
     });
     while(true) {
