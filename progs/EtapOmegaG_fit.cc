@@ -134,17 +134,24 @@ int main(int argc, char** argv) {
             const double bg_area    = bg->Integral(r.Start(), r.Stop());
             const double sig_area   = total_area - bg_area;
 
+            const double total_area_r = sum->Function()->Integral(peak_pos, r.Stop());
+            const double bg_area_r    = bg->Integral(peak_pos, r.Stop());
+            const double sig_area_r   = total_area_r - bg_area_r;
+
             const double sig_to_bg = sig_area / bg_area;
 
             cout << "Mass offset = " << peak_pos - etap_mass << " MeV\n";
             cout << "Sig/BG      = " << sig_to_bg << "\n";
             cout << "Sig         = " << sig_area << endl;
+            cout << "Sig_r       = " << sig_area_r << endl;
+
 
             auto pt = new TPaveText(.1,.5,.4,.9,"NDC");
             auto add_text = [pt] (const string& txt) {
                 pt->AddText(txt.c_str());
             };
             add_text("N="+to_string(sig_area));
+            add_text("N_r="+to_string(sig_area_r));
             add_text("#sigma="+to_string(fitted_sigma));
             add_text("#mu="+to_string(peak_pos));
             pt->Draw();
