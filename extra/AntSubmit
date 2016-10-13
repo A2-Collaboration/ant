@@ -162,8 +162,7 @@ sub main {
   }
   close $filelist_fh;
 
-  my $total = scalar @jobs;
-  die "No jobs to be submitted, abort.\n" if $total==0;
+  die "No jobs to be submitted, nothing to do.\n" if @jobs==0;
 
   # check for resubmission mode
   if($resubmit) {
@@ -238,6 +237,7 @@ sub main {
   } else {
     # finally submit the jobs
     my $submitted = 0;
+    my $total = scalar @submissions;
     for my $sub (@submissions) {
       submit_job($sub);
       $submitted++;
