@@ -183,7 +183,7 @@ int main( int argc, char **argv )
 
    MergeRecursive(*outputfile, sources);
 
-   LOG(INFO) << "Finished, writing file...";
+   LOG(INFO) << "Finished, writing file " << outputfile->GetName();
 
    outputfile->Write();
 
