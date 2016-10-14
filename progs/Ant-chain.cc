@@ -40,12 +40,18 @@ string get_path(T* dir) {
 
 set<string> GetTreeNames(const std::vector<string> filenames) {
     set<string> chains; // we use a set to avoid adding the TTree more than once
-    if(filenames.size() > 0) {
-        WrapTFileInput firstfile(filenames.front());
-        firstfile.Traverse([&chains] (TKey* key) {
-            if(string(key->GetClassName()) == "TTree")
-                chains.insert(get_path(key));
-        });
+    for(const auto& filename : filenames) {
+        try {
+            WrapTFileInput firstfile(filename);
+            firstfile.Traverse([&chains] (TKey* key) {
+                if(string(key->GetClassName()) == "TTree")
+                    chains.insert(get_path(key));
+            });
+            break;
+        }
+        catch(WrapTFile::Exception) {
+            continue;
+        }
     }
     return chains;
 }
@@ -73,7 +79,7 @@ int main(int argc, char** argv) {
 
         const auto chain_names = GetTreeNames(inputs);
         if(chain_names.empty()) {
-            LOG(ERROR) << "No TTree found in first input file: " <<cmd_inputfiles->getValue().front();
+            LOG(ERROR) << "No TTrees found in input files";
             return EXIT_FAILURE;
         }
 
