@@ -82,7 +82,7 @@ int main(int argc, char** argv) {
     struct MySetup : expconfig::Setup {
 
         MySetup(const PiecewiseInterval<unsigned>& adc_ranges_) :
-            Setup("Setup_Raw", nullptr),
+            Setup("Setup_Raw", make_shared<OptionsList>()),
             ADC_ranges(adc_ranges_) {}
 
         bool Matches(const TID&) const override {
