@@ -63,6 +63,7 @@ set(ANALYSIS_PHYSICS
   physics/common/ExtractShowerDepth.cc
   physics/common/MCChannels.cc
   physics/common/IMCombFitPlots.cc
+  physics/etaprime/etaprime_dalitz.cc
   )
 
 set(ANALYSIS_PHYSICS_CALIBRATION
