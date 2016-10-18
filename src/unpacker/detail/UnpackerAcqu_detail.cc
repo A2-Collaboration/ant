@@ -256,7 +256,9 @@ void acqu::FileFormatBase::FillEvents(queue_t& queue) noexcept
     if(buffer.empty()) {
         // still issue some TEvent if there are messages left or
         // it's the very first buffer now, then the data consisted of header-only data
-        if(!messages.empty() || nUnpackedBuffers==0) {
+        // the header parsing always fills some info messages, so even header-only data emits
+        // at least one event (which is completely empty except some messages)
+        if(!messages.empty()) {
             queue.emplace_back(id);
             AppendMessagesToEvent(queue.back());
         }
