@@ -94,7 +94,7 @@ protected:
         virtual void StoreFinishSlice(const interval<TID>& range) override;
 
     protected:
-        const std::string histogram_path;
+        OptionsPtr options;
         CalibType& calibType;
         std::shared_ptr<DataManager> calibrationManager;
         std::shared_ptr<Detector_t> detector;
@@ -161,6 +161,7 @@ protected:
         const double proton_peak_mc;
 
         double AutoStopOnChi2 = 6;
+        const std::string full_hist_name;
     }; // GUI_Banana
 
 

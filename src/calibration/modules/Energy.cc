@@ -163,13 +163,13 @@ std::list<Updateable_traits::Loader_t> Energy::GetLoaders()
     return loaders;
 }
 
-Energy::GUI_CalibType::GUI_CalibType(const string& basename, OptionsPtr options,
+Energy::GUI_CalibType::GUI_CalibType(const string& basename, OptionsPtr opts,
                                      CalibType& type,
                                      const shared_ptr<DataManager>& calmgr,
                                      const shared_ptr<Detector_t>& detector_,
                                      Calibration::AddMode_t mode) :
     gui::CalibModule_traits(basename),
-    histogram_path(options->Get<string>("HistogramPath", CalibModule_traits::GetName())),
+    options(opts),
     calibType(type),
     calibrationManager(calmgr),
     detector(detector_),
@@ -185,7 +185,7 @@ string Energy::GUI_CalibType::GetName() const
 shared_ptr<TH1> Energy::GUI_CalibType::GetHistogram(const WrapTFile& file) const
 {
     // histogram name created by the specified Physics class
-    return file.GetSharedHist<TH1>(histogram_path + "/"+calibType.HistogramName);
+    return file.GetSharedHist<TH1>(options->Get<string>("HistogramPath", CalibModule_traits::GetName()) + "/"+calibType.HistogramName);
 }
 
 unsigned Energy::GUI_CalibType::GetNumberOfChannels() const
@@ -388,15 +388,18 @@ Energy::GUI_Banana::GUI_Banana(const string& basename,
     GUI_CalibType(basename, options, type, calmgr, detector),
     func(make_shared<FitProtonPeak>()),
     projection_range(projectionrange),
-    proton_peak_mc(proton_peak_mc_pos)
+    proton_peak_mc(proton_peak_mc_pos),
+    full_hist_name(
+            options->Get<string>("HistogramPath", CalibModule_traits::GetName())
+            + "/"
+            + options->Get<string>("HistogramName", "Bananas"))
 {
 
 }
 
 std::shared_ptr<TH1> Energy::GUI_Banana::GetHistogram(const WrapTFile& file) const
 {
-    LOG(INFO) << histogram_path+"/Bananas";
-    return file.GetSharedHist<TH1>(histogram_path+"/Bananas");
+    return file.GetSharedHist<TH1>(full_hist_name);
 }
 
 void Energy::GUI_Banana::InitGUI(gui::ManagerWindow_traits* window)
